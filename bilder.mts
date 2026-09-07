@@ -2009,6 +2009,89 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  dokumentsuche: {
+    titel: 'Die Suche über mehrere Dokumente (E487)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      Store.setMeta('dokFindAlle', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const mach = (name: string, icon: string, texte: string[]) => {
+        const seite = Store.addPage(null, { text: name, icon });
+        texte.forEach((t, i) => Store.addBlock(seite.id, 'pdfseite',
+          { text: '', nr: i + 1, vonSeiten: texte.length, bw: 595, bh: 842,
+            quelleId: 'q-' + name, raumVersion: 1, suchtext: t }));
+        Store.updateBlock(seite.id, { dokumentModus: true });
+        return seite;
+      };
+      const offen = mach('Elektrotechnik — Skript', '📕', [
+        'Kapitel 3 — Das Ohmsche Gesetz beschreibt den Zusammenhang von Spannung, Strom und Widerstand.',
+        'Übungen zum Kapitel']);
+      mach('Mitschrift 12. Mai', '📗', ['Tafelbild',
+        'Der Lehrer hat das Ohmsche Gesetz an einem Beispiel gerechnet: U = R · I']);
+      mach('Prüfungsstoff', '📘', ['Ohmsches Gesetz, Kirchhoff, Leistung']);
+      mach('Laborbericht', '📙', ['Messreihe 1', 'Ohmsches Gesetz überprüft, Abweichung 2 %']);
+      App.oeffne(offen.id);
+      await new Promise(r => setTimeout(r, 1400));
+      document.querySelector<HTMLElement>('.document-find-button')?.click();
+      await new Promise(r => setTimeout(r, 300));
+      const feld = document.querySelector<HTMLInputElement>('[data-document-find]');
+      if (feld) { feld.value = 'Ohmsche'; feld.dispatchEvent(new Event('input', { bubbles: true })); }
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
+  pdfausfuhr: {
+    titel: 'Das ganze Dokument als PDF sichern (E488)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const seite = Store.addPage(null, { text: 'Elektrotechnik — Skript', icon: '📕' });
+      for (let i = 1; i <= 4; i++)
+        Store.addBlock(seite.id, 'blatt', { text: '', blattBreite: 595.28, blattHoehe: 841.89,
+          raumVersion: 1, papier: 'kariert', marken: [
+            { id: 's' + i, art: 'stift', farbe: '#d64545', breite: 3,
+              pts: [[60, 120 + i * 10], [420, 120 + i * 10]] },
+            { id: 'z' + i, art: 'zettel', farbe: '#e0a419', pts: [[330, 220], [560, 300]],
+              text: 'Seite ' + i + ' — hier nachfragen' }
+          ] });
+      Store.updateBlock(seite.id, { dokumentModus: true });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1400));
+      document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+      await new Promise(r => setTimeout(r, 600));
+    }
+  },
+
+  schutzleiter: {
+    titel: 'Der Schutzleiter-Stift: grün-gelb und Strich-Punkt (E490)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const p = Store.addPage(null, { text: 'Schaltplan mit Schutzleiter', icon: '⚡' });
+      const blatt = Store.addBlock(p.id, 'blatt', { text: '', papier: 'kariert' });
+      Store.addBlock(blatt.id, 'text', { text: 'Steckdose an L, N und PE — der Schutzleiter grün-gelb' });
+      Store.updateBlock(blatt.id, { marken: [
+        /* Zwei gewöhnliche Adern und darunter der Schutzleiter: gerade
+           gezogen (gehalten) und einmal von Hand. */
+        { id: 'l', art: 'line', farbe: '#111111', breite: 2.4, pts: [[70, 150], [430, 150]] },
+        { id: 'n', art: 'line', farbe: '#2f7ed8', breite: 2.4, pts: [[70, 190], [430, 190]] },
+        { id: 'pe1', art: 'line', stil: 'schutzleiter', breite: 3, pts: [[70, 230], [430, 230]] },
+        { id: 'pe2', art: 'stift', stil: 'schutzleiter', breite: 3,
+          pts: Array.from({ length: 40 }, (_, i) => {
+            const t = i / 39;
+            return [70 + t * 360, 300 + Math.sin(t * 6) * 26];
+          }) },
+        { id: 'z', art: 'zettel', farbe: '#e0a419', pts: [[70, 380], [400, 450]],
+          text: 'PE: gerade ziehen und halten — er bleibt grün-gelb' }
+      ] });
+      App.oeffne(p.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
   notizhefteFach: {
     titel: 'Ein offenes Fach in der Listenform (E265)',
     bauen: async () => {

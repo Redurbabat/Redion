@@ -4208,8 +4208,70 @@ auswendig kannte. Sie misst jetzt, was §38 wirklich verlangt: dass sich
 die FORM ändert (`fill` von `none` auf `currentColor`), nicht nur die
 Farbe.
 
+**Die Suche über mehrere Dokumente (E487, test459).** Der Schalter „📚" in
+der Suchleiste nimmt die anderen Dokumente dazu; ihre Seiten stehen als
+Klappe unter der Leiste, mit Name, Seitenzahl und Textausschnitt, und ein
+Tipp öffnet das Dokument auf genau dieser Seite und sucht dort weiter. Der
+Unterschied ist am Knopf genannt statt verschwiegen: im offenen Dokument
+findet die Suche die Stelle, in fremden die Seite — denn die Stelle steht
+in der PDF-Textschicht, und die für jedes fremde Dokument zu lesen macht
+das Suchfeld unbenutzbar.
+
+Zwei Entwürfe der Klappe hat das BILD widerlegt, nicht der Prüflauf. Der
+erste liess die Liste in der Flex-Zeile stehen und drückte das Suchfeld
+auf 22 px — 29 grüne Zusagen, und auf dem Bildschirm eine Suchleiste ohne
+Suchfeld. Der zweite brach die Zeile um und riss am Telefon die Pfeile
+auseinander. Jetzt hängt sie als Klappe darunter, und der Prüflauf misst
+die Lage mit.
+
+**Das ganze Dokument als PDF (E488, test460).** Der letzte Punkt unter
+„Import und Export" — und er brauchte einen PDF-Schreiber, den es jetzt
+gibt: rund hundertfünfzig Zeilen, jede Seite als JPEG in einem
+`DCTDecode`-Strom, ohne eine Bibliothek und ohne die Bildbytes je zu
+lesen. Nur die Grösse jedes Bildes geht in die Rechnung; ein Dokument mit
+hundert Seiten kostet deshalb so viel Arbeitsspeicher wie eines mit einer.
+
+Was er nicht kann, steht am Knopf: das PDF ist die Abbildung des
+Dokuments, nicht sein Text. Keine falschen Versprechen (§33).
+
+Der wichtigste Fund kam vom RÜCKWEG, nicht vom Lesen: der erste Entwurf
+vergab die Objektnummern ab 1, das erste Bild bekam die 1, und der Katalog
+überschrieb sie am Ende. Das PDF ging auf, hatte die richtige Seitenzahl,
+die richtigen Masse — und auf der ersten Seite fehlte das Bild. Genau
+dafür steht §13: schreiben, zurücklesen, vergleichen. Der Prüflauf macht
+das PDF mit Redions eigenem Leser wieder auf und misst einen Pixel dort,
+wo ein roter Strich liegen muss.
+
+**Der Stift, wie Redur ihn wollte (E490, test461).** Drei Sätze und ein
+Bild von ihm: die gehaltene Linie soll gerade werden, es braucht eine
+Schutzleiter-Farbe grün-gelb mit Strich-Punkt, und das Zurücknehmen gehört
+nach links wie bei GoodNotes.
+
+Der erste Punkt war ein echter Fehler, und zwar seit E355: „am Ende kurz
+halten" setzte die Uhr bei JEDEM aufgezeichneten Punkt zurück. Eine Hand,
+die einen Stift ruhig hält, zittert aber — mit der Maus ging es, mit
+Finger und Stift so gut wie nie. Der Strich hat jetzt einen Ruhepunkt;
+gezählt wird erst, wenn der Zeiger ihn verlässt.
+
+Bevor an der Formerkennung etwas gelockert wurde, wurde gemessen: eine
+Linie darf bis ±12 Einheiten zittern und wird trotzdem erkannt. Also blieb
+sie, wie sie war (§36).
+
+Der Schutzleiter ist zweimal derselbe Weg — unten grün, darüber gelb als
+Strich-Punkt —, und das Bild hat das Muster zweimal korrigiert: die runden
+Strichenden verlängern jeden Strich um eine Strichbreite, und der erste
+Entwurf war deshalb fast ganz gelb.
+
+**Ein Fund nebenbei (E489).** Beim Suchen nach Namen für die Markenarten
+kam heraus, dass der Radiermodus „Band" aus E482 **nie etwas radiert
+hat**: er verglich gegen `art: 'band'`, und das Abdeckband heisst als
+Marke `abdeck`. Aufgefallen war es nicht, weil `test455` sich seine
+Prüfmarke selbst gebaut hatte — mit der Kennung des Modus statt der der
+Art. Ein Prüflauf, der seinen Bestand selbst baut, muss ihn bauen wie die
+App; sonst prüft er eine Erfindung.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
-die verbliebenen Reste (getippter Text im gesicherten Bild, Verbinder,
-Auswahl über mehrere Blätter, Suche über mehrere Dokumente, gesperrte
-Marken im Inspector).
+die verbliebenen Reste (getippter Text im gesicherten Bild und ein PDF mit
+echter Textschicht, Verbinder, Auswahl über mehrere Blätter, gesperrte
+Marken im Inspector, die Schalensuche mit Stellen).

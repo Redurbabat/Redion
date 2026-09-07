@@ -107,7 +107,18 @@ const DocumentMode = (() => {
         i.onerror = () => nein(new Error('Bild nicht lesbar'));
         i.src = url;
     });
-    const seiteAlsBild = async (block) => {
+    /**
+     * Eine Seite auf eine Leinwand malen und als Bild herausgeben.
+     *
+     * ZWEI AUFRUFER, EINE RECHNUNG (E488). „Als Bild sichern" will nur den
+     * Blob, der PDF-Export braucht auch die Masse — und zwar dieselben. Eine
+     * zweite Stelle, die aus `bw`, `bh` und der Drehung Pixel rechnet, wäre
+     * die Sorte Abschrift, die irgendwann von der ersten abweicht (§8).
+     *
+     * `typ` und `guete` gehen an `toBlob`: PNG für ein einzelnes Bild
+     * (verlustfrei), JPEG für das PDF (weil `DCTDecode` genau das nimmt).
+     */
+    const seiteZeichnen = async (block, typ = 'image/png', guete = 0.92) => {
         if (!block)
             return null;
         const bw = Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE;
@@ -215,10 +226,51 @@ const DocumentMode = (() => {
                 URL.revokeObjectURL(url);
             }
         }
-        const blob = await new Promise(fertig => leinwand.toBlob(b => fertig(b), 'image/png'));
+        const pixelBreite = leinwand.width, pixelHoehe = leinwand.height;
+        const blob = await new Promise(fertig => leinwand.toBlob(b => fertig(b), typ, guete));
         leinwand.width = 0;
         leinwand.height = 0;
-        return blob;
+        if (!blob)
+            return null;
+        /* Die SEITE misst in PDF-Punkten, das BILD in Pixeln — hier doppelt so
+           viele, damit auch ein Ausdruck scharf bleibt. Bei einer gedrehten
+           Seite tauschen beide ihre Kanten, und zwar gemeinsam. */
+        return { blob, pixelBreite, pixelHoehe,
+            breite: quer ? bh : bw, hoehe: quer ? bw : bh };
+    };
+    const seiteAlsBild = async (block) => (await seiteZeichnen(block))?.blob ?? null;
+    /* ══ DAS GANZE DOKUMENT ALS PDF (E488, L133) ════════════════════════════
+       Jede Seite wird gemalt wie für „Als Bild sichern" — Seitenbild, Marken,
+       Drehung — und als JPEG in ein PDF gelegt (`PdfWriter`). Was dabei
+       entsteht, ist die ABBILDUNG des Dokuments mit allem darauf; der Text
+       der ursprünglichen PDF ist darin nicht mehr durchsuchbar. Das ist eine
+       Grenze und keine Schwäche des Wegs: das Original bleibt unangetastet
+       (E106), und wer den Text braucht, hat es noch.
+  
+       STÜCKWEISE, mit einem Rückruf für den Fortschritt: bei vierzig Seiten
+       dauert es Sekunden, und eine Oberfläche, die dabei nichts sagt, sieht
+       kaputt aus. Der Rückruf darf auch `false` sagen — dann bricht es ab
+       und gibt `null`, statt ein halbes Dokument zu liefern. */
+    const alsPdf = async (seiten, melden) => {
+        if (typeof PdfWriter === 'undefined' || !Array.isArray(seiten) || !seiten.length)
+            return null;
+        const schreiber = PdfWriter.neu();
+        for (let i = 0; i < seiten.length; i++) {
+            if (melden && melden(i, seiten.length) === false)
+                return null;
+            const bild = await seiteZeichnen(seiten[i], 'image/jpeg', 0.88);
+            if (!bild)
+                continue;
+            schreiber.seite({ bild: bild.blob, pixelBreite: bild.pixelBreite, pixelHoehe: bild.pixelHoehe,
+                breite: bild.breite, hoehe: bild.hoehe });
+        }
+        /* Keine einzige Seite hat sich malen lassen — dann ist ein PDF mit null
+           Seiten die falsche Antwort. Lieber gar keines und ein Wort dazu. */
+        if (!schreiber.seiten())
+            return null;
+        if (melden)
+            melden(seiten.length, seiten.length);
+        return schreiber.schliessen();
     };
     /** Ein Blob als Datei zum Speichern anbieten — ohne Server, ohne Fenster. */
     const herunterladen = (blob, name) => {
@@ -294,6 +346,17 @@ const DocumentMode = (() => {
         quellen.forEach(id => { void PdfEinlesen.verweiseNachtragen(id); });
     };
     /** Dokumentbausteine auch innerhalb vorhandener Spalten finden. */
+    /* ══ EIN SPRUNG IN EIN ANDERES DOKUMENT (E487) ══════════════════════════
+       Die Suche im Studio galt bis hierher dem OFFENEN Dokument (L133). Mit
+       „Alle Dokumente" findet sie auch Stellen in fremden — und dann muss
+       Redion dorthin springen: erst die andere Seite öffnen, dann in ihr die
+       richtige Dokumentseite wählen und dieselbe Suche wieder aufmachen.
+  
+       `App.oeffne` baut den Studio-Aufbau neu; alles, was der neue Aufbau
+       von diesem Sprung wissen muss, steht so lange hier. Nicht in `meta` —
+       ein Wunsch, der einen Neustart überlebt, wäre ein Gespenst: man öffnet
+       Redion und die Suche geht von selbst auf. */
+    let sprungWunsch = null;
     const documentsIn = (page) => {
         if (!page?.id)
             return [];
@@ -321,6 +384,110 @@ const DocumentMode = (() => {
            genau das soll man sehen. `nr` bleibt, was es ist — die Seite der
            QUELLE, nach der „feiner rechnen" greift —, und darf nicht wandern. */
         return found;
+    };
+    /* ══ DIE SUCHE ÜBER ALLE DOKUMENTE (E487) ═══════════════════════════════
+       Was durchsucht wird, ist NICHT die PDF-Quelle: die läge für jedes
+       fremde Dokument einzeln zu lesen an, und ein Suchfeld, das dabei
+       zehn Sekunden steht, benutzt niemand. Durchsucht wird, was ohnehin im
+       Speicher liegt — `suchtext` der PDF-Seite (E107), der Text der Text-
+       und Zettelmarken eines Blatts und der Text seiner Kinder.
+  
+       Der Unterschied ist ehrlich zu nennen und steht am Knopf: im OFFENEN
+       Dokument findet die Suche die Stelle auf der Seite, in fremden findet
+       sie die SEITE. Wer hinspringt, sucht dort mit derselben Frage weiter
+       und bekommt die Stelle.
+  
+       GRENZEN: höchstens 60 fremde Treffer und höchstens 4000 durchsuchte
+       Blöcke. Beides wird GESAGT, wenn es greift (§35) — eine Liste, die
+       stillschweigend aufhört, behauptet, es gebe nicht mehr. */
+    const FREMD_HOECHSTENS = 60;
+    const FREMD_BLOECKE = 4000;
+    /** Die Seite, zu der ein Dokumentblock gehört — dieselbe Leiter, die
+     *  `documentsIn` hinabsteigt, nur andersherum. */
+    const seiteZu = (block) => {
+        let jetzt = block;
+        for (let n = 0; jetzt && n < 10; n++) {
+            const eltern = jetzt.parentId ? Store.getBlock(jetzt.parentId) : null;
+            if (!eltern)
+                return null;
+            if (eltern.type === 'page')
+                return eltern;
+            jetzt = eltern;
+        }
+        return null;
+    };
+    /**
+     * Alle Dokumentseiten ausserhalb der gegebenen Seite, die das Wort tragen.
+     *
+     * `ausser` ist die Seite, die gerade offen ist — ihre Treffer stehen
+     * schon als Kästen auf dem Papier und gehören nicht noch einmal in die
+     * Liste.
+     */
+    const fremdeTreffer = (wort, ausser) => {
+        const q = String(wort || '').trim().toLowerCase();
+        if (q.length < 2)
+            return { liste: [], mehr: false };
+        const liste = [];
+        let gesehen = 0;
+        let mehr = false;
+        const stelle = (text) => {
+            const roh = String(text ?? '').replace(/\s+/g, ' ');
+            const wo = roh.toLowerCase().indexOf(q);
+            if (wo < 0)
+                return roh.slice(0, 90);
+            const von = Math.max(0, wo - 30);
+            return (von > 0 ? '… ' : '') + roh.slice(von, von + 90).trim() + (roh.length > von + 90 ? ' …' : '');
+        };
+        for (const block of Object.values(Store.cache.blocks)) {
+            if (liste.length >= FREMD_HOECHSTENS) {
+                mehr = true;
+                break;
+            }
+            if (++gesehen > FREMD_BLOECKE) {
+                mehr = true;
+                break;
+            }
+            if (!block || block.alive === false)
+                continue;
+            if (block.type !== 'pdfseite' && block.type !== 'blatt')
+                continue;
+            const seite = seiteZu(block);
+            if (!seite || !seite.alive || seite.id === ausser)
+                continue;
+            if (typeof Konten !== 'undefined' && Konten.darf && !Konten.darf('lesen', seite.id))
+                continue;
+            let fund = '';
+            if (block.type === 'pdfseite') {
+                const text = String(block.suchtext || block.ocrText || '');
+                if (text.toLowerCase().includes(q))
+                    fund = text;
+            }
+            else {
+                for (const m of (Array.isArray(block.marken) ? block.marken : [])) {
+                    if ((m?.art === 'text' || m?.art === 'zettel') && String(m.text ?? '').toLowerCase().includes(q)) {
+                        fund = String(m.text);
+                        break;
+                    }
+                }
+                if (!fund)
+                    for (const kind of Store.childrenOf(block.id)) {
+                        if (String(kind?.text ?? '').toLowerCase().includes(q)) {
+                            fund = String(kind.text);
+                            break;
+                        }
+                    }
+            }
+            if (!fund)
+                continue;
+            liste.push({ seiteId: seite.id, blockId: block.id,
+                name: String(seite.text || 'Ohne Titel'), icon: String(seite.icon || '📄'),
+                nr: documentsIn(seite).findIndex(b => b.id === block.id) + 1,
+                auszug: stelle(fund) });
+        }
+        /* Nach Dokument, dann nach Seite — sonst stünden die Seiten eines
+           Dokuments in der Reihenfolge des Speichers durcheinander. */
+        liste.sort((a, b) => a.name.localeCompare(b.name) || a.nr - b.nr);
+        return { liste, mehr };
     };
     const available = (page) => documentsIn(page).length > 0;
     const active = (page) => !!page?.dokumentModus && available(page);
@@ -537,6 +704,24 @@ const DocumentMode = (() => {
             return button;
         };
         actions.append(makeAction('source-actions', '＋ Aus Inhalt'), makeAction('select-region', '⌗ Ausschnitt'), makeAction('recognize', '⌁ Erkennen'));
+        /* DER EXPORT GILT DEM DOKUMENT, nicht der Seite (E488).
+    
+           ER STEHT NEBEN „PDF hinzufügen", und das Bild hat den Platz gewählt:
+           im ersten Entwurf lag er in der Gruppe ganz unten, unter „Mit dieser
+           Seite verbunden" — auf dem Bildschirmfoto war er gar nicht zu sehen,
+           weil der Inspector vorher endet. Hier oben steht die Ausfuhr neben
+           der Einfuhr, direkt unter den Seitengriffen.
+    
+           „Als Bild sichern" dort unten meint weiterhin genau die eine Seite,
+           die man ansieht — deshalb sind es zwei Knöpfe und nicht einer mit
+           einer Frage. */
+        /* Dasselbe Zeichen wie „Als Bild sichern" darüber: beides ist ein
+           Herunterladen, und „⤓" kam auf dem Bild schmal und eng am Wort
+           heraus. Zwei Zeichen für dieselbe Sache wären eine Sprache zu viel. */
+        const pdfKnopf = makeAction('export-pdf', '⬇ Als PDF sichern');
+        pdfKnopf.className = 'document-import';
+        pdfKnopf.title = 'Das ganze Dokument mit allen Marken als PDF speichern — '
+            + 'jede Seite als Bild; der Text der ursprünglichen PDF ist darin nicht mehr durchsuchbar.';
         const importButton = makeAction('import', '＋ PDF hinzufügen');
         importButton.className = 'document-import';
         /* DIE KENNUNG, NICHT DAS OBJEKT (E471, L102 zum zweiten Mal). `darf`
@@ -726,7 +911,14 @@ const DocumentMode = (() => {
         lupeKnopf.textContent = lupeAn ? '🔍 Zoom-Fenster aus' : '🔍 Zoom-Fenster an';
         lupeKnopf.setAttribute('aria-pressed', lupeAn ? 'true' : 'false');
         lupeKnopf.title = 'Die Seite gross zum Kleinschreiben; unten die Übersicht mit dem Ausschnitt.';
-        container.append(importButton, viewTitle, randKnopf, lupeKnopf);
+        /* EIN- UND AUSFUHR IN EINER ZEILE (E488). Beide waren vorher lose
+           Knöpfe im Fluss; mit zweien standen sie eng aneinander und der Text
+           stiess an den Rand — auf dem Bild gut zu sehen. Eine eigene Zeile mit
+           zwei gleichen Spalten gibt jedem seine Breite und beiden 44 px. */
+        const datenZeile = document.createElement('div');
+        datenZeile.className = 'document-inspector-daten';
+        datenZeile.append(pdfKnopf, importButton);
+        container.append(datenZeile, viewTitle, randKnopf, lupeKnopf);
         if (laufKnopf)
             container.appendChild(laufKnopf);
         container.append(linkedTitle, actions, summary, list);
@@ -1053,12 +1245,22 @@ const DocumentMode = (() => {
         const moreTools = topButton('ink-options', '···', 'Alle Stiftoptionen und Bearbeitungsaktionen');
         moreTools.setAttribute('aria-expanded', 'false');
         drawingbar.appendChild(moreTools);
+        /* ZURÜCK UND VOR STEHEN LINKS (E490, Redurs Bild vom 7. September).
+           So steht es bei GoodNotes: ganz links in der Leiste, vor den
+           Werkzeugen — und die Hand sucht sie dort, weil sie dort immer waren.
+           Vorher standen sie ganz rechts.
+    
+           `prepend`, nicht `appendChild`: die Reihenfolge im Baum ist auch die
+           Reihenfolge für die Tastatur, und wer mit Tab durch die Leiste geht,
+           soll sie in derselben Folge treffen wie mit den Augen (§38). Die
+           Mitte bleibt die Mitte — das besorgen zwei `auto`-Ränder im
+           Stilblatt, nicht ein zweiter Kasten hier. */
         const history = document.createElement('div');
         history.className = 'document-ink-history';
         history.setAttribute('role', 'group');
         history.setAttribute('aria-label', 'Zeichenverlauf');
         history.append(topButton('ink-undo', '↶', 'Letzten Zeichenstrich rückgängig machen'), topButton('ink-redo', '↷', 'Zeichenstrich wiederholen'));
-        drawingbar.appendChild(history);
+        drawingbar.prepend(history);
         /* WELCHE SPALTEN ES GIBT, STEHT AM KASTEN (E296). Vorher war das Raster
            fest — 190 px links, 280 px rechts, bei jeder Fensterbreite ueber
            1100 px. Auf 1440 px blieben der Seite damit rund 900, obwohl beide
@@ -1486,7 +1688,26 @@ const DocumentMode = (() => {
         const findZahl = document.createElement('span');
         findZahl.className = 'document-find-zahl';
         findZahl.setAttribute('aria-live', 'polite');
-        findbar.append(findFeld, findZahl, topButton('find-previous', '‹', 'Voriger Treffer'), topButton('find-next', '›', 'Nächster Treffer'), topButton('find-close', '✕', 'Suche schließen'));
+        /* DER SCHALTER „ALLE DOKUMENTE" (E487). Er steht VOR den Pfeilen, weil
+           die Pfeile dem offenen Dokument gehören und er die Frage stellt, auf
+           welches Dokument sich alles bezieht. Sein Zustand hält sich in `meta`:
+           wer über alles sucht, sucht meist wieder über alles. */
+        /* „📚" und nicht „🗂": das Karteikartenzeichen kam auf dem Bild als
+           blasses Kästchen heraus — es steht nicht in jeder Schrift. Der
+           Bücherstapel steht überall und meint dasselbe (die Bibliothek). */
+        const findAlleKnopf = topButton('find-alle', '📚', 'Auch in den anderen Dokumenten suchen');
+        findAlleKnopf.className = 'document-find-alle';
+        let findAlle = Store.getMeta('dokFindAlle') === true;
+        findAlleKnopf.setAttribute('aria-pressed', String(findAlle));
+        findAlleKnopf.classList.toggle('an', findAlle);
+        /* DIE LISTE DER FREMDEN TREFFER. Sie hängt UNTER der Suchleiste und
+           nicht im Papier: ein Treffer in einem anderen Dokument hat auf
+           diesem Blatt keinen Ort, und ein Kasten irgendwo wäre eine
+           Behauptung. */
+        const findListe = document.createElement('div');
+        findListe.className = 'document-find-liste';
+        findListe.hidden = true;
+        findbar.append(findFeld, findZahl, findAlleKnopf, topButton('find-previous', '‹', 'Voriger Treffer'), topButton('find-next', '›', 'Nächster Treffer'), topButton('find-close', '✕', 'Suche schließen'), findListe);
         workspace.append(top, findbar, drawingbar, commandbar, body);
         wrap.appendChild(workspace);
         if (typeof Register !== 'undefined')
@@ -1944,6 +2165,63 @@ const DocumentMode = (() => {
             trefferNr = -1;
             trefferMalen();
             zahlZeigen();
+            fremdZeigen(wort);
+        };
+        /* ══ DIE FREMDEN TREFFER ANZEIGEN (E487) ══════════════════════════════
+           Der Name steht vorne, die Seitenzahl daneben, der Textausschnitt
+           darunter — und der Ausschnitt wird ESCAPT, weil er Nutzertext ist
+           (§19). Ein PDF mit `<img src=x onerror=…>` im Text ist kein Scherz;
+           genau daran hing E112. */
+        const fremdZeigen = (wort) => {
+            const q = String(wort || '').trim();
+            if (!findAlle || q.length < 2) {
+                findListe.hidden = true;
+                findListe.textContent = '';
+                return;
+            }
+            const { liste, mehr } = fremdeTreffer(q, page.id);
+            findListe.textContent = '';
+            if (!liste.length) {
+                findListe.hidden = false;
+                const leer = document.createElement('p');
+                leer.className = 'document-find-leer';
+                leer.textContent = 'In anderen Dokumenten: nichts gefunden.';
+                findListe.appendChild(leer);
+                return;
+            }
+            const kopf = document.createElement('p');
+            kopf.className = 'document-find-kopf';
+            kopf.textContent = liste.length + (liste.length === 1 ? ' Seite' : ' Seiten')
+                + ' in anderen Dokumenten' + (mehr ? ' (es sind mehr — Begriff eingrenzen)' : '');
+            findListe.appendChild(kopf);
+            for (const t of liste) {
+                const knopf = document.createElement('button');
+                knopf.type = 'button';
+                knopf.className = 'document-find-fund';
+                knopf.dataset.documentFund = t.seiteId;
+                knopf.dataset.documentFundBlock = t.blockId;
+                knopf.title = t.name + ' — Seite ' + t.nr;
+                const zeile = document.createElement('span');
+                zeile.className = 'document-find-fund-zeile';
+                zeile.textContent = t.icon + ' ' + t.name + ' · Seite ' + t.nr;
+                const auszug = document.createElement('span');
+                auszug.className = 'document-find-fund-text';
+                auszug.textContent = t.auszug;
+                knopf.append(zeile, auszug);
+                findListe.appendChild(knopf);
+            }
+            findListe.hidden = false;
+        };
+        /** Zu einem fremden Treffer springen: Seite wählen, öffnen, dort weitersuchen. */
+        const zumFremden = (seiteId, blockId) => {
+            const ziel = Store.getBlock(seiteId);
+            if (!ziel) {
+                UI.toast('Diese Seite gibt es nicht mehr.');
+                return;
+            }
+            select(ziel, blockId);
+            sprungWunsch = { seiteId, wort: findFeld.value };
+            App.oeffne(seiteId);
         };
         const zumTreffer = (n) => {
             if (!treffer.length)
@@ -1993,6 +2271,8 @@ const DocumentMode = (() => {
                 trefferNr = -1;
                 trefferMalen();
                 findZahl.textContent = '';
+                findListe.hidden = true;
+                findListe.textContent = '';
             }
         };
         /* ══ SEITEN WIE GOODNOTES (E467) ═════════════════════════════════════════
@@ -2603,6 +2883,13 @@ const DocumentMode = (() => {
             }
             /* Der Menüknopf einer Miniatur (E480) — vor allen Tatnamen, denn er
                trägt keinen. */
+            /* EIN FUND IN EINEM ANDEREN DOKUMENT (E487) — vor den Tatnamen, denn
+               er trägt keinen; er trägt die Seite, die er meint. */
+            const fund = element?.closest('[data-document-fund]');
+            if (fund?.dataset.documentFund) {
+                zumFremden(fund.dataset.documentFund, String(fund.dataset.documentFundBlock || ''));
+                return;
+            }
             const menueKnopf = element?.closest('[data-document-thumb-menue]');
             if (menueKnopf) {
                 if (!darfSeiten()) {
@@ -2692,6 +2979,57 @@ const DocumentMode = (() => {
                     herunterladen(blob, String(page.text || 'Seite').replace(/[\\/:*?"<>|]+/g, ' ').trim() + ' – Seite ' + nr + '.png');
                     UI.toast('Seite ' + nr + ' als PNG gesichert');
                 });
+                return;
+            }
+            if (action === 'export-pdf') {
+                const knopf = tatKnopf;
+                if (knopf?.disabled)
+                    return;
+                const seiten = documentsIn(page);
+                if (!seiten.length) {
+                    UI.toast('Dieses Dokument hat keine Seiten.');
+                    return;
+                }
+                /* DER KNOPF SAGT, WIE WEIT ES IST. Ohne das sieht eine Ausfuhr von
+                   vierzig Seiten aus wie eine App, die hängt — und der zweite Klick
+                   startet dann eine zweite (deshalb `disabled`). */
+                const wort = knopf?.textContent || '';
+                if (knopf)
+                    knopf.disabled = true;
+                void alsPdf(seiten, (fertig, gesamt) => {
+                    if (knopf)
+                        knopf.textContent = fertig >= gesamt
+                            ? '⤓ Wird gesichert …' : '⤓ Seite ' + (fertig + 1) + '/' + gesamt + ' …';
+                }).then(blob => {
+                    if (knopf) {
+                        knopf.disabled = false;
+                        knopf.textContent = wort;
+                    }
+                    if (!blob) {
+                        UI.toast('Das Dokument liess sich nicht als PDF schreiben.');
+                        return;
+                    }
+                    herunterladen(blob, String(page.text || 'Dokument').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.pdf');
+                    UI.toast(seiten.length + (seiten.length === 1 ? ' Seite' : ' Seiten') + ' als PDF gesichert');
+                }).catch(() => {
+                    if (knopf) {
+                        knopf.disabled = false;
+                        knopf.textContent = wort;
+                    }
+                    UI.toast('Das Dokument liess sich nicht als PDF schreiben.');
+                });
+                return;
+            }
+            if (action === 'find-alle') {
+                findAlle = !findAlle;
+                try {
+                    Store.setMeta('dokFindAlle', findAlle);
+                }
+                catch { /* nur diese Sitzung */ }
+                findAlleKnopf.setAttribute('aria-pressed', String(findAlle));
+                findAlleKnopf.classList.toggle('an', findAlle);
+                fremdZeigen(findFeld.value);
+                findFeld.focus();
                 return;
             }
             if (action === 'find-next') {
@@ -3149,12 +3487,30 @@ const DocumentMode = (() => {
             staende.forEach((_stand, i) => { if (gezeichnet.has(i))
                 verweiseMalen(i); });
         });
+        /* ══ DER SPRUNG AUS EINER FREMDEN SUCHE (E487) ═════════════════════════
+           Wer in der Liste auf eine Seite eines anderen Dokuments tippt, landet
+           hier: `App.oeffne` hat den Aufbau neu gebaut, `select` hat die Seite
+           schon gewählt, und der Wunsch sagt, mit welcher Frage weitergesucht
+           wird. Die Suche IM Dokument gibt dann die Stelle — das ist genau der
+           Unterschied, den der Knopf verspricht.
+    
+           Der Wunsch wird SOFORT gelöscht, nicht erst nach der Suche: sonst
+           ginge die Suchleiste bei jedem weiteren Neuzeichnen dieser Seite
+           wieder auf, und niemand wüsste, warum. */
+        if (sprungWunsch && sprungWunsch.seiteId === page.id) {
+            const wort = sprungWunsch.wort;
+            sprungWunsch = null;
+            findFeld.value = wort;
+            findbarSetzen(true);
+            void suchen(wort).then(() => { if (treffer.length)
+                zumTreffer(0); });
+        }
         return true;
     };
     /* `freigeben` lässt die offenen PDF-Quellen der Suche los (E473): jede
        Seitenzeichnung läuft durch `schale.ts`, und wer das Dokument verlässt,
        soll pdf.js nicht im Rücken behalten. */
-    return { available, active, select, toggle, documentsIn, render, sourceLabel, seiteAlsBild,
+    return { available, active, select, toggle, documentsIn, render, sourceLabel, seiteAlsBild, alsPdf,
         freigeben: () => { griffeSchliessen(); verweisHorchenAus(); } };
 })();
 window.DocumentMode = DocumentMode;

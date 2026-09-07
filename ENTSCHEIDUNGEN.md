@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-466 Entscheidungen, E1 bis E486 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+470 Entscheidungen, E1 bis E490 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -530,6 +530,10 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E484** — Treffer und Verweise sitzen genauer: gemessen statt gezählt, und ein Strich bekommt eine Trefffläche statt eines Kastens
 * **E485** — Der breite Lauf nach elf Bögen: ein Knopf lag unter der Zeichenschicht, und drei Prüfläufe kannten Anzahlen auswendig
 * **E486** — Farbsätze: die eigenen Farben unter einem Namen — und zwei alte Fehler, die dabei ans Licht kamen
+* **E487** — Die Suche über mehrere Dokumente: fremde Seiten in einer Klappe, und der Sprung sucht dort weiter
+* **E488** — Ein eigener PDF-Schreiber: das ganze Dokument mit Marken, ohne die Bildbytes je zu lesen
+* **E489** — Der Radierer „Band“ radierte nichts: er verglich gegen eine Markenart, die es nicht gibt
+* **E490** — Der Stift wie GoodNotes: Halten gilt auch bei zitternder Hand, ein Schutzleiter grün-gelb, Zurück nach links
 
 ---
 
@@ -38740,3 +38744,386 @@ zweiten Knopf umgeworfen hat — sowie test87, test96, test100, test105,
 test109, test180, test343, test344, test356, test362, test365, test375,
 test438, test455, test456. Dazu `npm run typecheck`, `npm run bauen:ts`,
 `node bauen.mts`.
+
+
+---
+
+E487 — Die Suche über mehrere Dokumente: fremde Seiten in einer Klappe, und der Sprung sucht dort weiter
+--------------------------------------------------------------------------
+
+L133, unter „Suche und Verweise":
+
+> **Suche über mehrere Dokumente** — die Suche gilt dem offenen Dokument;
+> die Schalensuche (Strg P) findet Seiten, nicht Stellen.
+
+## Was entschieden wurde
+
+Ein Schalter in der Suchleiste des Studios („📚", `aria-pressed`, gemerkt
+in `meta`) nimmt die anderen Dokumente dazu. Ihre Treffer stehen nicht im
+Papier, sondern in einer **Klappe unter der Leiste**: Zeichen, Name,
+Seitenzahl, Textausschnitt. Ein Tipp öffnet das Dokument auf genau dieser
+Seite, mit der Suchleiste offen und demselben Wort darin.
+
+## Der Unterschied ist ehrlich zu nennen
+
+Im OFFENEN Dokument findet die Suche die **Stelle** — Kästen im Papier,
+gemessen mit `InkGeometry.textWidth` (E484). In fremden findet sie die
+**Seite**. Das ist kein halbes Ergebnis, sondern der Preis für eine Suche,
+die tippbar bleibt: die Stelle steht in der PDF-Textschicht, und die läge
+für jedes fremde Dokument einzeln zu lesen an. Ein Suchfeld, das dabei
+zehn Sekunden steht, benutzt niemand.
+
+Deshalb der Sprung: wer hinspringt, sucht dort mit derselben Frage weiter
+und bekommt auch dort die Stelle. Was der Nutzer will, bekommt er — nur in
+zwei Schritten statt in einem, und der zweite ist ein Tipp.
+
+Durchsucht wird darum, was ohnehin im Speicher liegt:
+
+    pdfseite    `suchtext` (E107), ersatzweise `ocrText`
+    blatt       Text- und Zettelmarken, dann der Text der Kinder
+
+## Die Grenzen werden GESAGT
+
+Höchstens 60 fremde Treffer, höchstens 4000 durchsuchte Blöcke. Greift
+eine der beiden, steht es in der Kopfzeile der Klappe („es sind mehr —
+Begriff eingrenzen"). Eine Liste, die stillschweigend aufhört, behauptet,
+es gebe nicht mehr (§35).
+
+## Der Sprung merkt sich nichts über die Sitzung hinaus
+
+`App.oeffne` baut den Studio-Aufbau neu; was der neue Aufbau vom Sprung
+wissen muss, steht so lange in einer modulweiten Veränderlichen. **Nicht in
+`meta`** — ein Wunsch, der einen Neustart überlebt, wäre ein Gespenst: man
+öffnet Redion am nächsten Tag, und die Suche geht von selbst auf. Und er
+wird gelöscht, BEVOR gesucht wird, sonst ginge die Leiste bei jedem
+weiteren Neuzeichnen dieser Seite wieder auf.
+
+## Zwei Entwürfe, die das BILD widerlegt hat (§55)
+
+Beide waren grün geprüft, und beide waren falsch.
+
+**1. `flex-basis:100%` in der Leiste.** Die Suchleiste steht auf
+`display:flex` OHNE `flex-wrap` — die 100 % breite Liste blieb also in
+derselben Zeile und drückte das Suchfeld auf **22 px**. Auf dem Bild sah
+man eine Suchleiste ohne Suchfeld; alle 29 Zusagen des Prüflaufs waren
+grün, weil sie den INHALT der Liste prüften und nicht ihre Lage.
+
+**2. Also `flex-wrap:wrap` dazu.** Am Telefon (390 px) riss der Umbruch
+dann die Knöpfe auseinander: „‹" stand am Ende der ersten Zeile, „›" und
+„✕" allein in der zweiten. Auch das sah nur das Bild.
+
+Jetzt steht die Liste GAR NICHT in der Zeile, sondern als Klappe darunter
+(`position:absolute`). Die Leiste ist auf jeder Breite wieder genau so
+lang wie vorher. Der Prüflauf misst seither die LAGE mit: Feldbreite über
+200 px, Listenoberkante unter der Feldunterkante — beides rot, wenn die
+Klappe zurück in die Zeile geht.
+
+**Und ein drittes, kleineres:** der Schalter trug zuerst „🗂". Auf dem Bild
+kam ein blasses Kästchen heraus — das Zeichen steht nicht in jeder
+Schrift. „📚" steht überall und meint dasselbe.
+
+## Nutzertext bleibt Text
+
+Der Ausschnitt kommt aus einer PDF und ist Fremdtext. Er wird mit
+`textContent` gesetzt, nicht mit `innerHTML` (§19). `test459 §4` legt eine
+Seite mit `<img src=x onerror=…>` im Namen UND im Text an und misst
+nach: kein Code gelaufen, kein Bild entstanden, die spitzen Klammern
+stehen als Text da. Das ist dieselbe Prüfung, die E112 nach dem echten
+Vorfall gefordert hat.
+
+GEPRÜFT. `test459` mit 31 Zusagen, vier Gegenproben rot gesehen (§55.2):
+ohne den Schalter, ohne die Ausnahme der offenen Seite (drei Funde statt
+zwei), ohne den Sprungwunsch, und mit der Liste zurück in der Zeile.
+Dazu test385, test441, test449, test457. Und `npm run typecheck`,
+`npm run bauen:ts`, `node bauen.mts`.
+Bild: `node bilder.mts dokumentsuche` — die Ansicht ist neu.
+
+
+---
+
+E488 — Ein eigener PDF-Schreiber: das ganze Dokument mit Marken, ohne die Bildbytes je zu lesen
+--------------------------------------------------------------------------
+
+L133, unter „Import und Export": „**Ganzes Dokument als PDF mit Marken** —
+braucht einen PDF-Schreiber; Drucken über den Browser kann es heute."
+
+## Was entschieden wurde
+
+`src/core/export/pdfWriter.ts` — hundertfünfzig Zeilen, die fertige
+Seitenbilder als JPEG in ein PDF legen. Der Knopf „⬇ Als PDF sichern"
+steht im Inspector neben „＋ PDF hinzufügen": Ausfuhr neben Einfuhr, beide
+für das ganze DOKUMENT. „Als Bild sichern" bei den Seitengriffen meint
+weiter genau die eine Seite, die man ansieht.
+
+## Warum selbst geschrieben, und nicht eine Bibliothek
+
+Eine PDF-Bibliothek wiegt ein Vielfaches dieser Datei und käme als
+Abhängigkeit in eine App, die per Doppelklick startet (§6, §47). Redion
+schreibt seinen ZIP-Container aus demselben Grund selbst (E38) — und der
+war schwieriger als das hier.
+
+## Der Aufbau, und warum JPEG
+
+    %PDF-1.4
+    1  Catalog          → Pages
+    2  Pages            → Kids [...], Count N
+    je Seite drei Objekte: Page, Contents (ein „cm … Do"), Image
+    xref, trailer, startxref, %%EOF
+
+`DCTDecode` nimmt die JPEG-Bytes, **wie sie sind**. PNG bräuchte
+`FlateDecode` mit Prädiktoren und ein Umschreiben jedes Bildes — und genau
+das wäre der Punkt, an dem die Bytes doch durch den Arbeitsspeicher
+müssten.
+
+## Der Speicher: die Bildbytes werden NIE gelesen
+
+Das ist der Entwurfspunkt, an dem alles hängt (§9, §36). Ein Bild kommt
+als `Blob` herein; in die Rechnung geht nur seine `size`, und am Ende
+setzt `new Blob([...])` die Teile zusammen — der Browser darf sie auf die
+Platte auslagern. Kein `arrayBuffer()`, nirgends. Ein Dokument mit hundert
+Seiten kostet damit so viel Arbeitsspeicher wie eines mit einer.
+`test460 §6` prüft es an der Quelle nach: kommt `arrayBuffer()` im
+Schreiber vor, ist der Lauf rot.
+
+## Was das PDF NICHT kann, und warum es dasteht
+
+Es ist die **Abbildung** des Dokuments, nicht sein Text: der Text der
+ursprünglichen PDF ist darin nicht mehr durchsuchbar, und Schriften sind
+keine Schriften mehr. Das steht am Knopf (§33: keine falschen
+Versprechen), es steht in `LUECKEN.md`, und `test460 §5` prüft, dass es
+dort steht. Wer den Text braucht, behält das Original — Redion fasst es
+ohnehin nie an (E106).
+
+## Der Fehler, den nur der Rückweg gefunden hat
+
+Der erste Entwurf vergab die Objektnummern ab 1 — und das erste BILD
+bekam die 1. Am Ende schrieb der Schreiber den Katalog als Objekt 1 und
+überschrieb dessen Eintrag in der xref-Tabelle. Das Ergebnis:
+
+    · Das PDF ging auf.
+    · Die Seitenzahl stimmte.
+    · Die Seitenmasse stimmten.
+    · Und das Bild der ERSTEN Seite fehlte, weil „/Im0 1 0 R" auf den
+      Katalog zeigte.
+
+Gefunden hat es nicht das Lesen des Codes, sondern die Regel aus §13:
+schreiben, ZURÜCKLESEN, vergleichen. `test460` macht das PDF mit Redions
+eigenem Leser (pdf.js) wieder auf, rendert Seite 1 und Seite 2 und misst
+einen Pixel dort, wo ein roter Strich liegen muss.
+
+Und noch etwas hat die Gegenprobe gelehrt: die erste Fassung von §4 legte
+den Strich nur auf Seite 2 — und blieb bei zurückgedrehter Reservierung
+GRÜN, weil die Kollision nur die erste Seite trifft. Eine Gegenprobe, die
+nur eine der beiden Zusagen rot macht, sagt genau das: die andere deckt
+den Fehler nicht. Jetzt tragen Seite 1 UND Seite 2 einen Strich.
+
+## Zwei Dinge, die das Bild entschieden hat
+
+**Der Platz des Knopfes.** Zuerst stand er in der Gruppe ganz unten, unter
+„Mit dieser Seite verbunden" — auf dem Bildschirmfoto war er gar nicht zu
+sehen, weil der Inspector vorher endet. Jetzt steht er dort, wo die Einfuhr
+steht.
+
+**Die Zeile.** Ein- und Ausfuhr waren lose Knöpfe im Fluss; zu zweit
+standen sie eng aneinander und der Text stiess an den Rand. Jetzt eine
+eigene Zeile mit zwei gleichen Spalten, beide 44 px (§37). Und „⤓" wurde
+zu „⬇" — dasselbe Zeichen wie „Als Bild sichern", denn beides ist ein
+Herunterladen.
+
+## Eine Rechnung, zwei Aufrufer
+
+`seiteAlsBild` (E469/E479) und der PDF-Export brauchen dasselbe Bild, nur
+in verschiedenen Formaten und mit verschiedenen Angaben. Statt einer
+zweiten Stelle, die aus `bw`, `bh` und der Drehung Pixel rechnet, gibt es
+jetzt `seiteZeichnen(block, typ, guete)`; `seiteAlsBild` ist drei Zeilen
+darüber. `test460 §6` hält fest, dass es bei EINER bleibt (§8).
+
+GEPRÜFT. `test460` mit 38 Zusagen, drei Gegenproben rot gesehen (§55.2):
+ohne die Reservierung der Nummern 1 und 2 (Bild der ersten Seite weg),
+mit einer xref-Zeile von 19 statt 20 Bytes, und mit PNG statt JPEG (beide
+Seiten leer). Dazu test87, test105, test109. Und `npm run typecheck`,
+`npm run bauen:ts`, `node bauen.mts`, `npm run stand`.
+Bild: `node bilder.mts pdfausfuhr` — die Ansicht ist neu.
+
+
+---
+
+E489 — Der Radierer „Band“ radierte nichts: er verglich gegen eine Markenart, die es nicht gibt
+--------------------------------------------------------------------------
+
+Gefunden beim Suchen nach etwas anderem (einem Namen für jede Markenart,
+für die Liste der gesperrten Marken), und deshalb steht er hier eigens:
+**E482 hat einen Radiermodus gebaut, der nie etwas radiert hat.**
+
+## Der Fehler
+
+    RADIERER: { id: 'band', …, nur: 'band' }
+    radiereEine:   if (nur && mark.art !== nur) return false;
+    beim Zeichnen: running = { id, art: tool, … }   // tool ist 'abdeck'
+    zeichneMarke:  } else if (art === 'abdeck' && …)
+
+Das Werkzeug heißt `abdeck`, also heißt die Marke `abdeck`. Der Modus
+heißt `band`, und `nur` trug seinen eigenen Namen statt den der Marke.
+Ein Zug mit „Radierer: nur Abdeckband“ liess deshalb **jedes** Band
+stehen — und alles andere auch, denn er beschränkte sich ja.
+
+## Warum es niemandem auffiel
+
+`test455 §2` legte drei Marken an: Stift, Marker und — `art: 'band'`. Der
+Prüflauf hat sich seine eigene Marke gebaut, und zwar mit der Kennung des
+MODUS statt der der ART. Damit prüfte er einen Bestand, den die App nie
+erzeugt: eine Marke `band` zeichnet `zeichneMarke` nicht einmal (sie
+fällt in den Strich-Zweig ganz unten).
+
+Das ist die teuerste Sorte grüner Lauf: er misst nicht das Produkt,
+sondern seine eigene Annahme. Verwandt mit §55.2 („eine Prüfung, die
+immer ja sagt, ist keine“), aber eine Stufe schlimmer — diese hier sagte
+ja UND hatte einen echten Fehler unter sich.
+
+## Die Reparatur
+
+`nur: 'abdeck'`. Die Kennung des MODUS bleibt `band`: sie steht so in
+`meta` bei jedem, der ihn einmal gewählt hat, und sie umzubenennen wäre
+eine Datenwanderung ohne Gewinn (§53.3, Grenze 1 sinngemäss).
+
+`test455 §2` legt jetzt eine Marke `abdeck` an. Gegenprobe: `nur` zurück
+auf `'band'` — der Lauf ist rot („Modus band: es bleibt st, mk“ ergab
+`bd, mk, st`).
+
+## Was daraus folgt
+
+Ein Prüflauf, der seinen Bestand SELBST baut, muss ihn so bauen, wie die
+App ihn baut — sonst prüft er eine Erfindung. Wo es geht, holt man die
+Werte aus der Quelle (`Marken.RADIERER.length` in E485 war genau dieser
+Schritt); wo man sie hinschreibt, schreibt man sie ab, statt sie zu
+erraten (E21).
+
+GEPRÜFT. `test455` (18 Zusagen) mit der Gegenprobe rot gesehen; dazu
+test87, test105, test109, test344.
+
+
+---
+
+E490 — Der Stift wie GoodNotes: Halten gilt auch bei zitternder Hand, ein Schutzleiter grün-gelb, Zurück nach links
+--------------------------------------------------------------------------
+
+Redur am 7. September, drei Sätze und ein Bild:
+
+> „Könntest du den Stift verbessern — wenn ich eine Linie zeichne und mehr
+> als drei Sekunden gedrückt halte, sollte sie gerade werden. Dann brauche
+> ich eine spezielle Farbe, die ist Schutzleiterfarbe, so grün-gelb, und
+> Strich-Punkt-Strich-Punkt, es muss so sein. Und schau, wie ist der
+> GoodNotes-Stift, und bau es 1:1 so. Ich will das Zurücknehmen ungefähr
+> hier haben wie GoodNotes." — auf dem Bild ein Kasten links oben.
+
+## 1. Halten hat nie funktioniert, und der Grund war eine Zeile
+
+„Am Ende kurz halten, und der Strich wird eine Form" gibt es seit E355.
+Die Uhr dafür war:
+
+    running.bewegtUm = Date.now();     // bei JEDEM aufgezeichneten Punkt
+
+Ein Punkt kommt ab 0,6 Einheiten Abstand dazu. Eine Hand, die einen Stift
+ruhig hält, zittert um mehr als das — sie liefert also weiter Punkte, und
+die Uhr fing bei jedem von vorn an. Mit der MAUS ging es (die steht
+wirklich still), mit Finger und Stift so gut wie nie. Genau das hat Redur
+gemeldet, und er hat drei Sekunden gehalten, wo 450 Millisekunden reichen
+sollten.
+
+Zwei Fragen, die vorher eine waren:
+
+    Kommt ein neuer PUNKT in den Strich?   ab 0,6 Einheiten
+    Hat die HAND sich bewegt?              ab RUHE_RADIUS = 3 Einheiten
+
+Der Strich bekommt seinen Ruhepunkt; die Uhr läuft erst weiter, wenn der
+Zeiger ihn verlässt. Drei Einheiten sind rund zweieinhalb Bildschirmpixel
+bei 100 % — mehr als ein Zittern, weniger als eine Absicht. `test461 §1`
+fährt beides: ±2 Einheiten über 900 ms MUSS als Halten gelten, ±10 nicht.
+
+## 2. Die Erkennung war nicht das Problem — nachgemessen
+
+Bevor an `InkShapes` etwas gelockert wurde, wurde gemessen, wie krumm eine
+mit der Hand gezogene Linie sein darf, bis sie durchfällt:
+
+    Zittern (Einheiten)   0     4    12    18    25
+    heute erkannt        ja    ja    ja  NEIN  NEIN
+
+Bis ±12 auf 400 Einheiten Länge — das ist deutlich krummer, als eine Hand
+zieht. Die Schwellen bleiben also, wie sie sind. §36: erst messen, dann
+bauen; und was nach dem Messen keine Arbeit braucht, bekommt keine.
+`test461 §2` schreibt die Messung als Zusage fest.
+
+## 3. Der Schutzleiter
+
+Kein gewöhnlicher Stift, sondern die Leitung, die im Schaltplan grün-gelb
+und strichpunktiert gezeichnet wird. Redion ist eine App für einen
+Elektriker; das ist der eine Strich, den er täglich braucht.
+
+**Grün-gelb ist keine Mischfarbe, sondern zwei Farben.** Also wird
+derselbe Weg zweimal gezeichnet: unten das Grün (`#158a3a`), darüber das
+Gelb (`#f2d200`) als Strich-Punkt-Muster. Dazwischen scheint das Grün
+durch, und was man sieht, ist die Ader.
+
+Eine GRUPPE und nicht zwei Marken: es ist EIN Strich. Zwei Marken liessen
+sich einzeln verschieben, einzeln radieren, einzeln auswählen — und die
+eine Hälfte des Schutzleiters bliebe liegen. Die Geometrie steht
+weiterhin genau einmal da; nur das Bild ist doppelt.
+
+**Die Farbe der Leiste gilt für ihn nicht.** Ein Schutzleiter in Blau wäre
+keiner. Und er schwillt nicht mit dem Druck: eine Leitung hat eine Stärke,
+keine Handschrift.
+
+**Er überlebt das Geradeziehen.** Jeder andere Stil fällt weg, wenn ein
+gehaltener Strich zur Form wird (eine Form hat keine Handschrift) — beim
+Schutzleiter wäre genau die eine Sache, für die man ihn braucht, die
+Sache, bei der er vergeht: man zieht die Erdungsleitung, hält, und heraus
+kommt eine schwarze Linie.
+
+### Das Muster hat das Bild bestimmt, nicht die Rechnung
+
+Der erste Entwurf stand auf 4 / 2,2 / 0,35 / 2,2 Strichbreiten. Auf dem
+Bild war die Ader **gelb**. Der Grund: `stroke-linecap:round` setzt an
+jedes Strichende eine Halbkugel — jeder Strich wird um eine ganze
+Strichbreite länger und jede Lücke um dieselbe kürzer. Gezeichnet waren
+also 5 / 1,2 / 1,35 / 1,2, und das Gelb deckte drei Viertel.
+
+Zweiter Anlauf 2 / 4 / 0,1 / 4: grün-dominant, aber Strich und Punkt fast
+gleich lang — eine gestrichelte Linie, kein Strich-Punkt. Jetzt
+3,5 / 4 / 0,1 / 4, gezeichnet 4,5 / 3 / 1,1 / 3: das Grün liegt mit gut
+der Hälfte obenauf, und der Strich ist viermal so lang wie der Punkt.
+
+Zweimal hingesehen, zweimal etwas gefunden, das keine Rechnung gesagt
+hätte (§55).
+
+## 4. Zurück und Vor stehen links
+
+So steht es bei GoodNotes, und so zeigte es Redurs Bild. Vorher standen
+sie ganz rechts. `prepend` und nicht `appendChild`: die Reihenfolge im
+Baum ist auch die für die Tastatur, und wer mit Tab durch die Leiste geht,
+soll sie in derselben Folge treffen wie mit den Augen (§38). Die Mitte
+bleibt die Mitte — das besorgen zwei `auto`-Ränder im Stilblatt und nicht
+ein zweiter Kasten im Baum.
+
+## Was „1:1 wie GoodNotes" hier heisst
+
+Der GoodNotes-Stift kann: drei Stiftarten mit Druck, feste Stärken plus
+freien Regler, Farbfeld mit eigenen Farben, Halten für Formen, Zurück und
+Vor links. Redion hatte alles davon ausser dem letzten — und das Halten
+nur auf dem Papier. Beides steht jetzt. Was Redion DARÜBER hinaus hat, ist
+der Schutzleiter; GoodNotes kennt ihn nicht, und Redur braucht ihn.
+
+## Und ein roter Lauf, den E486 hinterlassen hat (§46)
+
+`test343 §6` klickte das „+" und erwartete sofort den Farbwähler des
+Systems. Seit E486 liegt der hinter der Farbwahl — dieselbe Prüfung, einen
+Tipp später. Nachgezogen mit dem Grund daneben; er war beim Bündel zu E486
+nicht dabei und ist erst hier aufgefallen. Genau dafür steht der breite
+Lauf aus E485.
+
+GEPRÜFT. `test461` mit 34 Zusagen, vier Gegenproben rot gesehen (§55.2):
+die Uhr wieder bei jedem Punkt zurückgesetzt (der gehaltene Strich bleibt
+krumm), ohne die Schutzleiter-Gruppe (ein Strich statt zwei), `stil` wieder
+ohne Ausnahme gelöscht (die gerade Leitung wird schwarz), und `prepend`
+zurück zu `appendChild` (Zurück steht rechts). Dazu test343, test347,
+test351, test355, test356, test362, test376.
+Bild: `node bilder.mts schutzleiter` — die Ansicht ist neu.

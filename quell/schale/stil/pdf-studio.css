@@ -98,7 +98,12 @@ body[data-dokument="an"] .document-studio .document-topbar button:hover{backgrou
 .document-drawingbar button:hover{background:#ffffff18}
 .document-drawingbar button[aria-pressed="true"],.document-drawingbar button[aria-expanded="true"]{background:#d8e4f1;color:#193859;box-shadow:inset 0 1px 0 #fff8}
 .document-drawingbar button:active:not(:disabled){transform:scale(var(--press-scale))}
-.document-ink-history{display:flex;gap:0;border-left:1px solid #ffffff30;padding-left:12px;margin-left:12px}
+/* ZURÜCK UND VOR GANZ LINKS (E490). Der Trennstrich wandert mit auf die
+   andere Seite. `margin-right:auto` hier und `margin-left:auto` am „···"
+   halten die Werkzeuge dazwischen in der Mitte — ohne einen zweiten Kasten
+   im Baum, den die Tastatur mitzählen müsste. */
+.document-ink-history{display:flex;gap:0;border-right:1px solid #ffffff30;padding-right:12px;margin-right:auto}
+.document-drawingbar [data-document-action="ink-options"]{margin-left:auto}
 .document-ink-history button{font-size:1.75rem}
 /* ZURÜCK UND VOR SIND NICHT DURCHSICHTIG (test393 §3, E396): abgeschaltet
    werden sie blass, nicht durchscheinend — sonst blitzen beim Rollen die

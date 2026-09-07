@@ -33,7 +33,15 @@ const Marken = (() => {
         { id: 'teil', name: 'Teil', zeichen: '½', titel: 'Radierer: nur den berührten Teil eines Strichs', nur: '' },
         { id: 'stift', name: 'Stift', zeichen: '✎', titel: 'Radierer: nur Stiftstriche — Marker, Band und Formen bleiben', nur: 'stift' },
         { id: 'marker', name: 'Marker', zeichen: '▰', titel: 'Radierer: nur Marker', nur: 'marker' },
-        { id: 'band', name: 'Band', zeichen: '▭', titel: 'Radierer: nur Abdeckband', nur: 'band' }
+        /* `nur` NENNT DIE MARKENART, NICHT DEN MODUS (E489).
+           Hier stand `nur: 'band'` — und das Abdeckband heisst als Marke
+           `abdeck` (so setzt es `art: tool` beim Zeichnen, so liest es
+           `zeichneMarke`). Der Modus „Band" radierte deshalb NICHTS: er
+           verglich gegen eine Art, die es im Bestand nicht gibt.
+           Die Kennung des MODUS bleibt `band` — sie steht so in `meta` bei
+           jedem, der ihn einmal gewählt hat, und sie umzubenennen wäre eine
+           Datenwanderung ohne Gewinn (§53.3). */
+        { id: 'band', name: 'Band', zeichen: '▭', titel: 'Radierer: nur Abdeckband', nur: 'abdeck' }
     ];
     /** Die Markenart, auf die ein Radiermodus sich beschränkt — '' heisst: alle. */
     const RADIER_NUR = (id) => RADIERER.find(r => r.id === id)?.nur || '';
@@ -89,8 +97,98 @@ const Marken = (() => {
            nur schmaler und mit 72 % Deckung. Er steht am Ende der Reihe,
            damit der Wechsel Fueller → Kugel → Pinsel bleibt, wie test343 ihn
            kennt. */
-        { id: 'bleistift', name: 'Bleistift', zeichen: '✏' }
+        { id: 'bleistift', name: 'Bleistift', zeichen: '✏' },
+        /* DER SCHUTZLEITER (E490, Redurs Wunsch vom 7. September). Kein
+           gewöhnlicher Stift, sondern die Leitung, die im Schaltplan grün-gelb
+           und strichpunktiert gezeichnet wird — Redion ist eine App für einen
+           Elektriker, und das ist der eine Strich, den er täglich braucht.
+    
+           ER STEHT AM ENDE DER REIHE, wie der Bleistift aus demselben Grund:
+           der Wechsel Füller → Kugel → Pinsel bleibt, wie `test343` ihn kennt. */
+        { id: 'schutzleiter', name: 'Schutzleiter', zeichen: '⏚' }
     ];
+    /* ══ DIE FARBEN DES SCHUTZLEITERS ═══════════════════════════════════════
+       Grün-gelb ist keine Mischfarbe, sondern ZWEI Farben — deshalb wird der
+       Strich zweimal gezeichnet: einmal ganz in Grün, darüber Gelb als
+       Strich-Punkt. Was man sieht, ist grün mit gelben Strichen und Punkten,
+       genau wie die Ader.
+  
+       Die Werte sind die üblichen der Schutzleiter-Kennzeichnung: ein sattes
+       Grün und ein Signalgelb, beide dunkel genug für weisses Papier.
+       WER DIESEN STIFT WÄHLT, WÄHLT AUCH DIE FARBE — die Farbe der Leiste
+       gilt für ihn nicht. Ein Schutzleiter in Blau wäre keiner. */
+    const PE_GRUEN = '#158a3a';
+    const PE_GELB = '#f2d200';
+    /* Strich, Lücke, Punkt, Lücke — als Vielfaches der Strichbreite, damit
+       das Muster bei jeder Stärke gleich aussieht.
+  
+       DIE ZAHLEN SIND KLEINER, ALS SIE AUSSEHEN (E490, Fund des Bildes).
+       `stroke-linecap:round` setzt an JEDES Strichende eine Halbkugel — ein
+       gestrichelter Weg wird dadurch je Strich um eine ganze Strichbreite
+       länger und jede Lücke um dieselbe kürzer. Der erste Entwurf stand auf
+       4 / 2,2 / 0,35 / 2,2; gezeichnet waren daraus 5 / 1,2 / 1,35 / 1,2 —
+       das Gelb deckte drei Viertel, und auf dem Bild war die Ader GELB statt
+       grün-gelb.
+  
+       Jetzt: 3,5 / 4 / 0,1 / 4 → gezeichnet 4,5 / 3 / 1,1 / 3. Das Grün liegt
+       mit gut der Hälfte obenauf, und der Strich ist VIERMAL so lang wie der
+       Punkt — bei 3 zu 1 sah man auf dem Bild nur eine gestrichelte Linie,
+       kein Strich-Punkt. */
+    const PE_MUSTER = [3.5, 4, 0.1, 4];
+    /* ══ DIE WERKZEUGE, EINMAL AUFGESCHRIEBEN (E490) ════════════════════════
+       Bis hierher standen Kennung, Zeichen, Wort und Beschreibung jedes
+       Werkzeugs als Aufruf in der Zeile, die die Leiste baut — nirgends
+       sonst. Wer sie woanders brauchte (die Liste der gesperrten Marken im
+       Inspector braucht genau diese Wörter), hätte sie abgeschrieben, und
+       eine Abschrift läuft weg (§8).
+  
+       DIE KENNUNG IST DIE MARKENART. `art: tool` beim Zeichnen macht aus dem
+       Werkzeug `abdeck` die Marke `abdeck` — deshalb steht hier auch das
+       Wort für eine fertige Marke. Was E489 gekostet hat, ist genau der
+       Unterschied zwischen dieser Kennung und der eines Radiermodus.
+  
+       `formen` ist kein Werkzeug, sondern ein Knopf für sieben (E375). Er
+       steht in der Reihenfolge mit, damit die Leiste an EINER Liste hängt,
+       und wird beim Bauen eigens behandelt; die Formen selbst stehen in
+       `FORMEN`. */
+    const WERKZEUGE = [
+        { id: 'schreiben', zeichen: '✎', name: 'Schreiben', titel: 'Schreiben — die Zeichenschicht ist durchlässig' },
+        { id: 'select', zeichen: '⌖', name: 'Auswahl', titel: 'Marken auswählen, gemeinsam bewegen oder löschen' },
+        { id: 'stift', zeichen: '🖍', name: 'Stift', titel: 'Freihand mit geglätteter Linie' },
+        { id: 'marker', zeichen: '▰', name: 'Marker', titel: 'Transparenter Marker' },
+        { id: 'formen', zeichen: '□', name: 'Form', titel: 'Formen — welche, steht darunter' },
+        { id: 'abdeck', zeichen: '▬', name: 'Abdeckband',
+            titel: 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf' },
+        { id: 'zettel', zeichen: '🗒', name: 'Haftnotiz',
+            titel: 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn' },
+        { id: 'text', zeichen: 'T', name: 'Text', titel: 'Textanmerkung' },
+        { id: 'zeichen', zeichen: '⚡', name: 'Fachzeichen', titel: 'Ein elektrotechnisches Symbol auf die Seite setzen' },
+        { id: 'bild', zeichen: '🖼', name: 'Bild',
+            titel: 'Ein Foto oder Bild auf das Blatt legen — danach verschieben und ziehen wie jede Marke' },
+        { id: 'radierer', zeichen: '⌫', name: 'Radieren',
+            titel: 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker' }
+    ];
+    /**
+     * Wie eine Marke heisst, für einen Menschen.
+     *
+     * Erst die Formen (sie sind genauer: „Pfeil" statt „Form"), dann die
+     * Werkzeuge. Was beide nicht kennen, behält seine Kennung — eine Marke
+     * aus einer neueren Fassung soll sich nennen können, statt „unbekannt"
+     * zu heissen (§18: unbekannte Blocktypen nicht löschen, hier sinngemäss).
+     */
+    const artWort = (art) => {
+        const id = String(art ?? '');
+        return FORMEN.find(f => f.id === id)?.name
+            ?? WERKZEUGE.find(w => w.id === id)?.name
+            ?? (id || 'Marke');
+    };
+    /** Das Zeichen zur Art — dieselbe Reihenfolge, dieselbe Quelle. */
+    const artZeichen = (art) => {
+        const id = String(art ?? '');
+        return FORMEN.find(f => f.id === id)?.zeichen
+            ?? WERKZEUGE.find(w => w.id === id)?.zeichen
+            ?? '•';
+    };
     const STIL_VORGABE = 'fueller';
     const HOECHSTENS_EIGENE_FARBEN = 4;
     /* WIE VIELE FARBSAETZE (E486).
@@ -143,6 +241,9 @@ const Marken = (() => {
            dunkler, nicht breiter; das Bisschen Breite hier ist der Winkel. */
         if (stil === 'bleistift')
             return 0.35 + d * 0.6;
+        /* Eine Leitung hat eine Stärke, keine Handschrift (E490). */
+        if (stil === 'schutzleiter')
+            return 1;
         return 0.5 + d * 1.0;
     };
     /** Die drei Stifte, die als FLAECHE gezeichnet werden (der Kugelschreiber ist die Linie). */
@@ -559,6 +660,35 @@ const Marken = (() => {
             if (art === 'rectangle' || art === 'ellipse' || art === 'triangle' || art === 'roundrect')
                 element.setAttribute('pointer-events', 'all');
         }
+        /* ══ DER SCHUTZLEITER: ZWEI STRICHE, EINER DARÜBER (E490) ═════════════
+           Grün-gelb lässt sich mit EINER Farbe nicht sagen. Also wird derselbe
+           Weg zweimal gezeichnet: unten das Grün, oben das Gelb als
+           Strich-Punkt-Muster — dazwischen scheint das Grün durch, und was man
+           sieht, ist die grün-gelbe Ader.
+    
+           WARUM EINE GRUPPE UND NICHT ZWEI MARKEN: es ist EIN Strich. Zwei
+           Marken liessen sich einzeln verschieben, einzeln radieren, einzeln
+           auswählen — und die eine Hälfte des Schutzleiters bliebe liegen. Die
+           Geometrie (`pts`) steht weiterhin genau einmal da; nur das Bild ist
+           doppelt.
+    
+           Das Muster rechnet in Strichbreiten, damit es bei 1 px wie bei 12 px
+           dasselbe Verhältnis hat. `stroke-linecap:round` macht aus dem sehr
+           kurzen Strich den Punkt. */
+        if (String(mark.stil) === 'schutzleiter' && art !== 'text' && art !== 'zettel'
+            && art !== 'abdeck' && art !== 'bild' && art !== 'zeichen') {
+            const gruppe = svg('g');
+            element.setAttribute('stroke', PE_GRUEN);
+            const oben = element.cloneNode(false);
+            oben.setAttribute('stroke', PE_GELB);
+            oben.setAttribute('stroke-dasharray', PE_MUSTER.map(v => Math.max(0.2, v * width)).join(' '));
+            oben.setAttribute('pointer-events', 'none');
+            gruppe.append(element, oben);
+            gruppe.setAttribute('data-sid', idOf(mark));
+            gruppe.setAttribute('data-ink-art', art);
+            gruppe.setAttribute('data-ink-stil', 'schutzleiter');
+            return gruppe;
+        }
         element.setAttribute('data-sid', idOf(mark));
         element.setAttribute('data-ink-art', art);
         return element;
@@ -692,6 +822,23 @@ const Marken = (() => {
            ohne Halten bleibt jeder Strich, was er ist. Abschaltbar, gemerkt in
            `zeichnen:formen`. */
         const HALTEN_MS = 450;
+        /* ══ WAS „GEHALTEN" HEISST (E490) ═════════════════════════════════════
+           Bis hierher galt jeder aufgezeichnete Punkt als Bewegung, und die
+           Uhr fing von vorn an. Eine Hand, die einen Stift ruhig hält, zittert
+           aber — sie liefert weiter Punkte, nur ganz kleine. Ergebnis: „am Ende
+           kurz halten" funktionierte mit der Maus (die steht wirklich still)
+           und mit dem Finger und dem Stift so gut wie nie. Redur hat es
+           gemeldet: „wenn ich eine Linie zeichne und mehr als drei Sekunden
+           halte, sollte sie gerade werden."
+    
+           Also zwei verschiedene Fragen, die vorher eine waren:
+             · Kommt ein neuer PUNKT in den Strich?  → ab 0,6 Einheiten
+             · Hat die HAND sich bewegt?             → ab RUHE_RADIUS
+    
+           Drei Einheiten sind rund zweieinhalb Bildschirmpixel bei 100 %: mehr
+           als ein Zittern, weniger als eine Absicht. `test461` fährt beides —
+           ein Zittern von ±2 muss als Halten gelten, ein Rücken um 10 nicht. */
+        const RUHE_RADIUS = 3;
         let formen = typeof Store !== 'undefined' ? Store.getMeta('zeichnen:formen') !== false : true;
         /* KRITZEL-LOESCHEN (E466), wie GoodNotes' Scribble to Erase: ein
            Hin-und-her ueber einem Strich nimmt den Strich weg. Abschaltbar,
@@ -1417,7 +1564,13 @@ const Marken = (() => {
                 return;
             running.pts.push(point);
             running.pressure.push(druck);
-            running.bewegtUm = Date.now();
+            /* Die Uhr läuft erst weiter, wenn die Hand ihren Ruhepunkt VERLÄSST
+               (E490) — ein Zittern an derselben Stelle ist keine Bewegung. */
+            const ruhe = running.ruhePunkt;
+            if (!ruhe || Math.hypot(point[0] - ruhe[0], point[1] - ruhe[1]) > RUHE_RADIUS) {
+                running.ruhePunkt = [point[0], point[1]];
+                running.bewegtUm = Date.now();
+            }
             feder?.punkt(point, halbeBreite(running, druck));
         };
         /* Die halbe Strichbreite an einer Stelle — dieselbe Rechnung, die
@@ -1761,6 +1914,7 @@ const Marken = (() => {
             delete mark.zeigerArt;
             const gehalten = Date.now() - (Number(mark.bewegtUm) || 0) >= HALTEN_MS;
             delete mark.bewegtUm;
+            delete mark.ruhePunkt;
             /* EINE FERTIGE KURVE HAT DREI PUNKTE (E483). Beim Ziehen sind es
                zwei; der dritte kommt beim Absetzen dazu und liegt in der Mitte
                — dann ist die Kurve eine Gerade, und der Griff steht bereit. */
@@ -1823,7 +1977,14 @@ const Marken = (() => {
                     else
                         delete mark.dreh;
                     delete mark.pressure;
-                    delete mark.stil;
+                    /* DER SCHUTZLEITER ÜBERLEBT DAS GERADEZIEHEN (E490). Sonst wäre
+                       die eine Sache, für die man ihn braucht — eine gerade
+                       Erdungsleitung im Schaltplan —, genau die, bei der er vergeht:
+                       man zieht den Strich, hält, und heraus kommt eine schwarze
+                       Linie. Jeder andere Stil fällt weg wie bisher; eine Form hat
+                       keine Handschrift. */
+                    if (mark.stil !== 'schutzleiter')
+                        delete mark.stil;
                     delete mark.zuletzt;
                 }
             }
@@ -2849,14 +3010,17 @@ const Marken = (() => {
     
            2. Welches Werkzeug GILT, stand nur in einer CSS-Klasse. Eine Klasse
               ist für ein Vorleseprogramm nicht da. `aria-pressed` sagt es. */
-        const button = (tool, icon, word, title) => `<button data-wz="${tool}"${tool === 'schreiben' ? ' class="on"' : ''} ` +
-            `aria-pressed="${tool === 'schreiben' ? 'true' : 'false'}" title="${title}">` +
-            `<span class="zeichen" aria-hidden="true">${icon}</span><span class="wort">${word}</span></button>`;
+        const button = (tool) => {
+            const w = WERKZEUGE.find(x => x.id === tool);
+            return `<button data-wz="${w.id}"${w.id === 'schreiben' ? ' class="on"' : ''} ` +
+                `aria-pressed="${w.id === 'schreiben' ? 'true' : 'false'}" title="${w.titel}">` +
+                `<span class="zeichen" aria-hidden="true">${w.zeichen}</span><span class="wort">${w.name}</span></button>`;
+        };
         tools.innerHTML =
-            button('schreiben', '✎', 'Schreiben', 'Schreiben — die Zeichenschicht ist durchlässig') +
-                button('select', '⌖', 'Auswahl', 'Marken auswählen, gemeinsam bewegen oder löschen') +
-                button('stift', '🖍', 'Stift', 'Freihand mit geglätteter Linie') +
-                button('marker', '▰', 'Marker', 'Transparenter Marker') +
+            button('schreiben') +
+                button('select') +
+                button('stift') +
+                button('marker') +
                 /* VIER WERKZEUGE WURDEN EINES (E375, L115 Punkt 9, Rest).
                    Linie, Pfeil, Rechteck und Ellipse standen als vier Knöpfe
                    nebeneinander — vierzehn Werkzeuge in einer Leiste, die am Telefon
@@ -2870,14 +3034,14 @@ const Marken = (() => {
                         `title="${jetzt.titel} — die Form wählst du darunter">` +
                         `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">Form</span></button>`;
                 })() +
-                button('abdeck', '▬', 'Abdecken', 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf') +
-                button('zettel', '🗒', 'Haftnotiz', 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn') +
-                button('text', 'T', 'Text', 'Textanmerkung') +
-                button('zeichen', '⚡', 'Fachzeichen', 'Ein elektrotechnisches Symbol auf die Seite setzen') +
+                button('abdeck') +
+                button('zettel') +
+                button('text') +
+                button('zeichen') +
                 /* DAS BILD (E357): kein Werkzeug, das man haelt, sondern ein Weg —
                    ein Tipp oeffnet den Waehler, danach fuehrt die Auswahl. */
-                button('bild', '🖼', 'Bild', 'Ein Foto oder Bild auf das Blatt legen — danach verschieben und ziehen wie jede Marke') +
-                button('radierer', '⌫', 'Radieren', 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker') +
+                button('bild') +
+                button('radierer') +
                 /* DER ZEILENBRUCH (E359): am Rechner stehen die Werkzeuge in einer
                    Zeile und ihr Zubehoer darunter; dieses leere Element mit voller
                    Breite ist der Umbruch. Am Telefon und in der Spalte blendet das
@@ -3679,7 +3843,8 @@ const Marken = (() => {
     };
     if (typeof document !== 'undefined')
         document.addEventListener('keydown', kuerzel);
-    return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, FORMEN, druckFaktor, RADIERER, TASTEN,
+    return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, FORMEN, WERKZEUGE, artWort, artZeichen,
+        druckFaktor, RADIERER, TASTEN,
         /* DIE FARBSÄTZE NACH AUSSEN (E486). Nicht, damit jemand anders eine
            zweite Leiste baut — sondern damit der Prüflauf an derselben Rechnung
            misst, die die Leiste benutzt. Eine Prüfung, die die Meta-Liste selbst

@@ -4977,7 +4977,7 @@ body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
    greifbar, drehen mit); die Verweise der PDF als Schicht UEBER dem
    Papier, aber ausserhalb (das Papier ist im Lesemodus `inert`), beim
    Annotieren weg, sonst finge sie den Stift. */
-.document-findbar{display:flex; align-items:center; gap:6px; padding:6px 10px;
+.document-findbar{position:relative; display:flex; align-items:center; gap:6px; padding:6px 10px;
   background:var(--bg-card); border-bottom:1px solid var(--line)}
 /* `hidden` muss gewinnen — `display:flex` allein schlug es (test385: das
    Blatt begann 56 px tiefer, weil die zugeklappte Leiste doch stand). */
@@ -4993,6 +4993,41 @@ body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
 .document-find-zahl{font-size:13px; color:var(--text-dim); min-width:4.5em; text-align:right;
   font-variant-numeric:tabular-nums}
 .document-topbar .document-find-button.an{background:var(--accent-soft); border-color:var(--accent-text)}
+/* ══ DIE SUCHE ÜBER ALLE DOKUMENTE (E487) ═════════════════════════════════
+   Der Schalter sieht aus wie die Lupe im Kopf, wenn er an ist — derselbe
+   Zustand, dieselbe Sprache. Und er sagt es NICHT nur über die Farbe: er
+   trägt `aria-pressed`, und der Rahmen wechselt mit (§38). */
+.document-find-alle.an{background:var(--accent-soft); border-color:var(--accent-text)}
+/* DIE LISTE HÄNGT UNTER DER LEISTE, nicht im Papier: ein Treffer in einem
+   anderen Dokument hat auf diesem Blatt keinen Ort.
+
+   ZWEI ENTWÜRFE, BEIDE VOM BILD WIDERLEGT (§55):
+
+   1. `flex-basis:100%` in der Leiste. Die Leiste stand aber auf
+      `display:flex` OHNE `flex-wrap` — die 100 % breite Liste blieb in
+      derselben Zeile und drückte das Suchfeld auf 22 px. Man sah eine
+      Suchleiste ohne Suchfeld, und alles andere stimmte.
+   2. Also `flex-wrap:wrap` dazu. Am Telefon (390 px) riss der Umbruch dann
+      die Knöpfe auseinander: „‹" stand am Ende der ersten Zeile, „›" und
+      „✕" allein in der zweiten.
+
+   Deshalb steht die Liste jetzt GAR NICHT in der Zeile, sondern als Klappe
+   darunter (`position:absolute`). Die Leiste ist wieder genau so lang wie
+   vorher, auf jeder Breite, und die Klappe deckt für die Dauer der Suche
+   zu, was unter ihr liegt — das tut jede Klappe. */
+.document-find-liste{position:absolute; top:100%; left:0; right:0; z-index:6;
+  max-height:min(46vh, 320px); overflow-y:auto;
+  padding:4px 10px 8px; background:var(--bg-card);
+  border-bottom:1px solid var(--line); box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.document-find-liste[hidden]{display:none}
+.document-find-kopf, .document-find-leer{margin:4px 2px 6px; font-size:12px; color:var(--text-dim)}
+.document-find-fund{display:flex; flex-direction:column; align-items:flex-start; gap:2px;
+  width:100%; min-height:var(--touch-min); padding:6px 8px; border:1px solid transparent;
+  border-radius:8px; background:none; color:var(--text); text-align:left; font:inherit}
+.document-find-fund:hover, .document-find-fund:focus-visible{background:var(--bg-hover); border-color:var(--line)}
+.document-find-fund-zeile{font-size:13px; font-weight:600}
+.document-find-fund-text{font-size:12px; color:var(--text-dim); line-height:1.4;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
 .document-stage{position:relative}
 .document-trefferschicht{position:absolute; inset:0; pointer-events:none; z-index:3}
 .document-treffer{position:absolute; background:rgba(255,196,0,.45); border-radius:2px;
@@ -5072,6 +5107,11 @@ body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2
 .document-inspector-source{font-size:13px;color:var(--text-dim);margin-bottom:10px}
 .document-inspector-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
 .document-inspector-actions button{padding:7px}.document-inspector-actions button:first-child{grid-column:1/-1}
+/* DIE EIN- UND DIE AUSFUHR DES DOKUMENTS (E488). Zwei gleich breite
+   Knöpfe in einer Zeile: „Als PDF sichern" und „PDF hinzufügen" gehören
+   zusammen, und getrennt untereinander sähen sie aus wie zwei Absätze. */
+.document-inspector-daten{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:12px 0}
+.document-inspector-daten button{min-height:var(--touch-min); padding:8px 10px}
 .document-inspector-summary{display:grid;gap:5px;padding:10px 0;border-block:1px solid var(--border)}
 .document-inspector-summary>div{display:flex;justify-content:space-between;gap:8px}
 .document-inspector-list{display:grid;gap:5px;margin-top:10px}

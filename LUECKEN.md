@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G19)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G21)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6435,7 +6435,10 @@ Zeichnen (nach G1, E465):
     `test451`.
   · ~~**Radierer-Filter** nach Werkzeugart~~ — **GESCHLOSSEN mit E482.**
     Fünf Arten: Ganz und Teil sagen, wie viel weggeht; Stift, Marker und
-    Band, wovon. **Offen bleibt „nur Bleistift":** der Bleistift ist in
+    Band, wovon. **Nachtrag E489:** „Band" radierte anfangs nichts — es
+    verglich gegen `art: 'band'`, und die Marke heisst `abdeck`. Der
+    Prüflauf hatte sich seine Marke selbst falsch gebaut und war deshalb
+    grün. Behoben, Gegenprobe rot gesehen. **Offen bleibt „nur Bleistift":** der Bleistift ist in
     Redion kein Werkzeug, sondern ein Stil des Stifts (E375) — er stünde
     in einer Reihe mit Werkzeugen und meinte etwas anderes als sie.
     `test455 §2`.
@@ -6508,8 +6511,18 @@ Offen bleibt:
     und bei einer gedrehten Seite misst man ihre Hülle), sondern IM
     Papier mit `inset:0`. Dort dreht sie mit — und liegt nebenbei auf dem
     Innenkasten, dort, wo auch das Seitenbild liegt. `test454 §3`.
-  · **Suche über mehrere Dokumente** — die Suche gilt dem offenen
-    Dokument; die Schalensuche (Strg P) findet Seiten, nicht Stellen.
+  · ~~**Suche über mehrere Dokumente**~~ — **GESCHLOSSEN mit E487.** Der
+    Schalter „📚" in der Suchleiste nimmt die anderen Dokumente dazu; ihre
+    Treffer stehen als Klappe unter der Leiste, mit Name, Seitenzahl und
+    Textausschnitt, und ein Tipp öffnet das Dokument auf DER Seite und
+    sucht dort weiter.
+    **Der Unterschied bleibt und steht am Knopf:** im offenen Dokument
+    findet die Suche die STELLE (Kästen im Papier), in fremden die SEITE —
+    denn die Stelle steht in der PDF-Textschicht, und die für jedes fremde
+    Dokument zu lesen macht das Suchfeld unbenutzbar. Der Sprung ist der
+    zweite Schritt, der die Stelle nachliefert.
+    Die Schalensuche (Strg P) findet weiterhin Seiten, nicht Stellen — sie
+    ist eine andere Suche, und das bleibt offen. `test459`.
   · ~~**Ziele der PDF innerhalb der Seite**~~ — **GESCHLOSSEN mit E481.**
     `/XYZ`, `/FitH` und `/FitR` nennen eine Höhe; sie steht seit dem
     Einlesen als `zielY` am Verweis, und der Sprung rollt dorthin. `/Fit`
@@ -6545,8 +6558,21 @@ Seite als Bild, Zoom-Fenster stehen. Offen bleibt:
     SVG-`<text>` nachzubauen — das ist ein zweiter Blockrenderer und
     ein eigener Bogen. `Drucken` (E117) hat beides und bleibt der Weg
     für eine vollständige Seite.
-  · **Ganzes Dokument als PDF mit Marken** — braucht einen PDF-Schreiber;
-    Drucken über den Browser kann es heute.
+  · ~~**Ganzes Dokument als PDF mit Marken**~~ — **GESCHLOSSEN mit E488.**
+    Den PDF-Schreiber gibt es jetzt: `src/core/export/pdfWriter.ts`, rund
+    hundertfünfzig Zeilen, jede Seite als JPEG in einem `DCTDecode`-Strom.
+    Er liest die Bildbytes NIE — nur ihre Grösse geht in die Rechnung —,
+    also kostet ein Dokument mit hundert Seiten so viel Arbeitsspeicher wie
+    eines mit einer.
+    **Was es NICHT kann, und das steht am Knopf:** es ist die Abbildung des
+    Dokuments, nicht sein Text. Der Text der ursprünglichen PDF ist darin
+    nicht mehr durchsuchbar, und Schriften sind keine Schriften mehr. Wer
+    ihn braucht, behält das Original — Redion fasst es nie an (E106).
+    Ein PDF mit echter Textschicht wäre ein eigener Bogen: er bräuchte
+    Schrifteinbettung und den Text jeder Marke als PDF-Text, und er läuft
+    in dieselbe Wand wie „getippter Text im gesicherten Bild" (unten).
+    `test460` schreibt, liest mit Redions eigenem Leser zurück und misst
+    einen Pixel dort, wo ein Strich liegen muss.
   · ~~**Fotografieren mit der Kamera** als Seite~~ — **GESCHLOSSEN mit
     E482.** „Foto aufnehmen" steht im Seitenmenü und im Menü an der
     Miniatur; der Wähler dahinter trägt `capture="environment"`. Am

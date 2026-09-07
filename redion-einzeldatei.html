@@ -13014,7 +13014,7 @@ body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
    greifbar, drehen mit); die Verweise der PDF als Schicht UEBER dem
    Papier, aber ausserhalb (das Papier ist im Lesemodus `inert`), beim
    Annotieren weg, sonst finge sie den Stift. */
-.document-findbar{display:flex; align-items:center; gap:6px; padding:6px 10px;
+.document-findbar{position:relative; display:flex; align-items:center; gap:6px; padding:6px 10px;
   background:var(--bg-card); border-bottom:1px solid var(--line)}
 /* `hidden` muss gewinnen — `display:flex` allein schlug es (test385: das
    Blatt begann 56 px tiefer, weil die zugeklappte Leiste doch stand). */
@@ -13030,6 +13030,41 @@ body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
 .document-find-zahl{font-size:13px; color:var(--text-dim); min-width:4.5em; text-align:right;
   font-variant-numeric:tabular-nums}
 .document-topbar .document-find-button.an{background:var(--accent-soft); border-color:var(--accent-text)}
+/* ══ DIE SUCHE ÜBER ALLE DOKUMENTE (E487) ═════════════════════════════════
+   Der Schalter sieht aus wie die Lupe im Kopf, wenn er an ist — derselbe
+   Zustand, dieselbe Sprache. Und er sagt es NICHT nur über die Farbe: er
+   trägt `aria-pressed`, und der Rahmen wechselt mit (§38). */
+.document-find-alle.an{background:var(--accent-soft); border-color:var(--accent-text)}
+/* DIE LISTE HÄNGT UNTER DER LEISTE, nicht im Papier: ein Treffer in einem
+   anderen Dokument hat auf diesem Blatt keinen Ort.
+
+   ZWEI ENTWÜRFE, BEIDE VOM BILD WIDERLEGT (§55):
+
+   1. `flex-basis:100%` in der Leiste. Die Leiste stand aber auf
+      `display:flex` OHNE `flex-wrap` — die 100 % breite Liste blieb in
+      derselben Zeile und drückte das Suchfeld auf 22 px. Man sah eine
+      Suchleiste ohne Suchfeld, und alles andere stimmte.
+   2. Also `flex-wrap:wrap` dazu. Am Telefon (390 px) riss der Umbruch dann
+      die Knöpfe auseinander: „‹" stand am Ende der ersten Zeile, „›" und
+      „✕" allein in der zweiten.
+
+   Deshalb steht die Liste jetzt GAR NICHT in der Zeile, sondern als Klappe
+   darunter (`position:absolute`). Die Leiste ist wieder genau so lang wie
+   vorher, auf jeder Breite, und die Klappe deckt für die Dauer der Suche
+   zu, was unter ihr liegt — das tut jede Klappe. */
+.document-find-liste{position:absolute; top:100%; left:0; right:0; z-index:6;
+  max-height:min(46vh, 320px); overflow-y:auto;
+  padding:4px 10px 8px; background:var(--bg-card);
+  border-bottom:1px solid var(--line); box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.document-find-liste[hidden]{display:none}
+.document-find-kopf, .document-find-leer{margin:4px 2px 6px; font-size:12px; color:var(--text-dim)}
+.document-find-fund{display:flex; flex-direction:column; align-items:flex-start; gap:2px;
+  width:100%; min-height:var(--touch-min); padding:6px 8px; border:1px solid transparent;
+  border-radius:8px; background:none; color:var(--text); text-align:left; font:inherit}
+.document-find-fund:hover, .document-find-fund:focus-visible{background:var(--bg-hover); border-color:var(--line)}
+.document-find-fund-zeile{font-size:13px; font-weight:600}
+.document-find-fund-text{font-size:12px; color:var(--text-dim); line-height:1.4;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
 .document-stage{position:relative}
 .document-trefferschicht{position:absolute; inset:0; pointer-events:none; z-index:3}
 .document-treffer{position:absolute; background:rgba(255,196,0,.45); border-radius:2px;
@@ -13109,6 +13144,11 @@ body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2
 .document-inspector-source{font-size:13px;color:var(--text-dim);margin-bottom:10px}
 .document-inspector-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
 .document-inspector-actions button{padding:7px}.document-inspector-actions button:first-child{grid-column:1/-1}
+/* DIE EIN- UND DIE AUSFUHR DES DOKUMENTS (E488). Zwei gleich breite
+   Knöpfe in einer Zeile: „Als PDF sichern" und „PDF hinzufügen" gehören
+   zusammen, und getrennt untereinander sähen sie aus wie zwei Absätze. */
+.document-inspector-daten{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:12px 0}
+.document-inspector-daten button{min-height:var(--touch-min); padding:8px 10px}
 .document-inspector-summary{display:grid;gap:5px;padding:10px 0;border-block:1px solid var(--border)}
 .document-inspector-summary>div{display:flex;justify-content:space-between;gap:8px}
 .document-inspector-list{display:grid;gap:5px;margin-top:10px}
@@ -16733,7 +16773,12 @@ body[data-dokument="an"] .document-studio .document-topbar button:hover{backgrou
 .document-drawingbar button:hover{background:#ffffff18}
 .document-drawingbar button[aria-pressed="true"],.document-drawingbar button[aria-expanded="true"]{background:#d8e4f1;color:#193859;box-shadow:inset 0 1px 0 #fff8}
 .document-drawingbar button:active:not(:disabled){transform:scale(var(--press-scale))}
-.document-ink-history{display:flex;gap:0;border-left:1px solid #ffffff30;padding-left:12px;margin-left:12px}
+/* ZURÜCK UND VOR GANZ LINKS (E490). Der Trennstrich wandert mit auf die
+   andere Seite. `margin-right:auto` hier und `margin-left:auto` am „···"
+   halten die Werkzeuge dazwischen in der Mitte — ohne einen zweiten Kasten
+   im Baum, den die Tastatur mitzählen müsste. */
+.document-ink-history{display:flex;gap:0;border-right:1px solid #ffffff30;padding-right:12px;margin-right:auto}
+.document-drawingbar [data-document-action="ink-options"]{margin-left:auto}
 .document-ink-history button{font-size:1.75rem}
 /* ZURÜCK UND VOR SIND NICHT DURCHSICHTIG (test393 §3, E396): abgeschaltet
    werden sie blass, nicht durchscheinend — sonst blitzen beim Rollen die
@@ -18839,7 +18884,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 599, inhalt: '1939e4799c1744ea', gebaut: '2026-09-07T19:15:09.794Z' };
+const Stand = { fassung: 633, inhalt: 'c6da55c0ce658324', gebaut: '2026-09-07T20:33:03.263Z' };
 window.Stand = Stand;
 
 </script>
@@ -20429,6 +20474,198 @@ const InkGeometry = (() => {
         boundsLokal: boundsRoh, ecken, drehung, drehePunkte, overlapConvex, kastenEcken };
 })();
 window.InkGeometry = InkGeometry;
+
+</script>
+<script>
+/* ===== quell/core/export/pdfWriter.js ===== */
+"use strict";
+/* ============================================================================
+ * core/export/pdfWriter.ts — ein PDF aus fertigen Seitenbildern schreiben
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/export/pdfWriter.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/export/pdfWriter.js`.
+ * ----------------------------------------------------------------------------
+ * WOZU (L133, E488). „Ganzes Dokument als PDF mit Marken" war der letzte
+ * Punkt unter „Import und Export", und die Lücke sagte dazu: „braucht einen
+ * PDF-Schreiber". Hier ist er.
+ *
+ * WARUM SELBST GESCHRIEBEN. Eine Bibliothek dafür wiegt ein Vielfaches der
+ * hundertfünfzig Zeilen, die es braucht, und sie käme als Abhängigkeit in
+ * eine App, die per Doppelklick startet (§6, §47). Redion schreibt seinen
+ * ZIP-Container aus demselben Grund selbst (E38).
+ *
+ * WAS ER KANN, UND WAS NICHT. Er setzt fertige BILDER auf Seiten — je Seite
+ * eines. Kein Text, keine Schriften, keine Vektoren: das PDF ist die
+ * Abbildung dessen, was auf dem Bildschirm steht, mit allen Marken darauf.
+ * Der Text der ursprünglichen PDF ist darin nicht mehr durchsuchbar. Das
+ * ist eine echte Grenze und steht in `LUECKEN.md`; wer den Text braucht,
+ * behält das Original — Redion fasst es ohnehin nie an (E106).
+ *
+ * WIE ER MIT DEM SPEICHER UMGEHT (§9, §36). Die Bildbytes werden NIE
+ * gelesen. Sie kommen als `Blob` herein, und nur ihre `size` geht in die
+ * Rechnung; am Ende setzt `new Blob([...])` die Teile zusammen, und der
+ * Browser darf sie auf die Platte auslagern. Ein Dokument mit hundert
+ * Seiten kostet damit so viel Arbeitsspeicher wie eines mit einer.
+ *
+ * DER AUFBAU, den er schreibt — die kleinste Form, die jeder Leser kennt:
+ *
+ *     %PDF-1.4
+ *     1  Catalog          → Pages
+ *     2  Pages            → Kids [ ... ], Count N
+ *     je Seite drei Objekte:
+ *       Page              → MediaBox, Resources /Im0, Contents
+ *       Contents (Strom)  → „q  W 0 0 H 0 0 cm  /Im0 Do  Q"
+ *       Image (Strom)     → DCTDecode, also das JPEG unverändert
+ *     xref-Tabelle, trailer, startxref, %%EOF
+ *
+ * WARUM JPEG. `DCTDecode` nimmt die JPEG-Bytes, wie sie sind — das PDF
+ * trägt die Datei unverändert. PNG bräuchte `FlateDecode` mit Prädiktoren
+ * und ein Umschreiben jedes Bildes; das wäre der Punkt, an dem die Bytes
+ * doch durch den Arbeitsspeicher müssten.
+ * ==========================================================================*/
+const PdfWriter = (() => {
+    const roh = new TextEncoder();
+    /**
+     * Die Länge eines Teils in BYTES.
+     *
+     * Nicht in Zeichen: die xref-Tabelle nennt Byte-Abstände, und ein
+     * einziges falsch gezähltes Zeichen macht das ganze Dokument unlesbar.
+     * Deshalb wird jeder Text durch `TextEncoder` geschickt, bevor er zählt.
+     */
+    const laenge = (teil) => teil instanceof Blob ? teil.size : teil.byteLength;
+    /**
+     * Ein Schreiber, dem man Seite für Seite gibt.
+     *
+     * Der Weg über einen Bau statt einer einzigen Funktion ist Absicht: die
+     * Seitenbilder entstehen nacheinander und asynchron (jedes ist eine
+     * Leinwand, ein `toBlob` und womöglich ein Bild aus der Ablage). Wer erst
+     * alle sammeln müsste, hielte sie auch alle gleichzeitig.
+     */
+    const neu = () => {
+        const teile = [];
+        /* Die Stelle jedes Objekts im fertigen Strom — `stellen[n]` gehört zum
+           Objekt mit der Nummer n.
+    
+           DREI PLÄTZE STEHEN VORNE FEST, und das ist keine Zierde:
+             0  gibt es nicht — PDF zählt ab 1, die Null ist der Kopf der
+                freien Liste in der xref-Tabelle.
+             1  der Katalog, 2 der Seitenbaum. Beide werden erst am ENDE
+                geschrieben (sie brauchen die Nummern aller Seiten), aber ihre
+                Nummern müssen von Anfang an vergeben sein: jede Seite zeigt
+                mit „/Parent 2 0 R" auf den Baum.
+    
+           Ohne diese Reservierung bekam das erste Bild die Nummer 1 — und der
+           Katalog überschrieb es am Ende. `test460` hat es gefunden: das PDF
+           ging auf, die Seitenmasse stimmten, und das Bild fehlte, weil
+           „/Im0 1 0 R" auf den Katalog zeigte. Ein Fehler, den nur das
+           Zurücklesen sieht (§13). */
+        const stellen = [0, 0, 0];
+        let bisher = 0;
+        let fertig = false;
+        const seitenObjekte = [];
+        const dazu = (teil) => { teile.push(teil); bisher += laenge(teil); };
+        const text = (s) => dazu(roh.encode(s));
+        /** Ein Objekt anfangen: Nummer vergeben, Stelle merken, Kopf schreiben. */
+        const objekt = () => {
+            const nr = stellen.length;
+            stellen.push(bisher);
+            text(nr + ' 0 obj\n');
+            return nr;
+        };
+        const objektEnde = () => { text('endobj\n'); };
+        text('%PDF-1.4\n');
+        /* Vier Bytes über 127 gleich hinter dem Kopf. Der Kommentar sagt jedem
+           Werkzeug, das die Datei weiterreicht: das hier ist BINÄR, nicht Text.
+           Ohne ihn machen manche Übertragungswege aus \r\n ein \n und zerlegen
+           die Bilder. Er steht so in der PDF-Spezifikation. */
+        dazu(new Uint8Array([0x25, 0xE2, 0xE3, 0xCF, 0xD3, 0x0A]));
+        /**
+         * Eine Seite anhängen.
+         *
+         * Gibt `false` zurück, wenn das Bild leer ist oder die Masse unsinnig
+         * sind — statt eine Seite zu schreiben, die kein Leser öffnen kann.
+         */
+        const seite = (auftrag) => {
+            if (fertig)
+                return false;
+            const { bild, pixelBreite, pixelHoehe } = auftrag;
+            const breite = Math.round(auftrag.breite), hoehe = Math.round(auftrag.hoehe);
+            if (!(bild instanceof Blob) || bild.size < 1)
+                return false;
+            if (!(pixelBreite > 0) || !(pixelHoehe > 0) || !(breite > 0) || !(hoehe > 0))
+                return false;
+            /* DAS BILD. `DCTDecode` heisst: die folgenden Bytes SIND ein JPEG.
+               `/ColorSpace /DeviceRGB` stimmt für alles, was eine Leinwand
+               ausgibt; ein Graustufen-JPEG von aussen wäre hier falsch, und
+               genau deshalb nimmt dieser Schreiber nur, was Redion selbst malt. */
+            const bildNr = objekt();
+            text('<< /Type /XObject /Subtype /Image /Width ' + Math.round(pixelBreite) +
+                ' /Height ' + Math.round(pixelHoehe) +
+                ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' +
+                bild.size + ' >>\nstream\n');
+            dazu(bild);
+            text('\nendstream\n');
+            objektEnde();
+            /* DER INHALT DER SEITE: das Bild einmal, auf die ganze Seite gelegt.
+               `cm` setzt die Matrix — Breite, 0, 0, Höhe, x, y —, `Do` zeichnet.
+               `q`/`Q` klammern das ein, damit nichts davon nach aussen wirkt. */
+            const strom = 'q\n' + breite + ' 0 0 ' + hoehe + ' 0 0 cm\n/Im0 Do\nQ\n';
+            const stromBytes = roh.encode(strom);
+            const inhaltNr = objekt();
+            text('<< /Length ' + stromBytes.byteLength + ' >>\nstream\n');
+            dazu(stromBytes);
+            text('endstream\n');
+            objektEnde();
+            const seitenNr = objekt();
+            text('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + breite + ' ' + hoehe + '] ' +
+                '/Resources << /XObject << /Im0 ' + bildNr + ' 0 R >> /ProcSet [/PDF /ImageC] >> ' +
+                '/Contents ' + inhaltNr + ' 0 R >>\n');
+            objektEnde();
+            seitenObjekte.push(seitenNr);
+            return true;
+        };
+        /**
+         * Das Dokument schliessen und als Blob herausgeben.
+         *
+         * Katalog und Seitenbaum stehen ans ENDE, nicht an den Anfang: sie
+         * brauchen die Nummern aller Seiten, und die stehen erst hier fest.
+         * PDF ist es gleich, wo ein Objekt liegt — die xref-Tabelle sagt es.
+         * Nur die NUMMERN 1 und 2 sind fest, weil jede Seite auf „2 0 R" zeigt.
+         */
+        const schliessen = () => {
+            if (fertig)
+                return new Blob(teile, { type: 'application/pdf' });
+            fertig = true;
+            /* Die zwei festen Nummern nachtragen. `stellen[1]` und `stellen[2]`
+               sind noch nicht vergeben — der Katalog ist Objekt 1, der Seitenbaum
+               Objekt 2, und beide werden jetzt an ihrer wirklichen Stelle
+               geschrieben. */
+            stellen[1] = bisher;
+            text('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+            stellen[2] = bisher;
+            text('2 0 obj\n<< /Type /Pages /Kids [' +
+                seitenObjekte.map(n => n + ' 0 R').join(' ') +
+                '] /Count ' + seitenObjekte.length + ' >>\nendobj\n');
+            /* DIE XREF-TABELLE. Jede Zeile ist GENAU zwanzig Bytes lang — zehn
+               Ziffern, ein Leerzeichen, fünf Ziffern, ein Leerzeichen, ein
+               Buchstabe, zwei Zeichen Zeilenende. Ein Leser rechnet die Stelle
+               einer Zeile aus, statt sie zu suchen; eine Zeile mit neunzehn
+               Bytes verschiebt alles danach. */
+            const xrefStelle = bisher;
+            const anzahl = stellen.length;
+            let tabelle = 'xref\n0 ' + anzahl + '\n0000000000 65535 f \n';
+            for (let n = 1; n < anzahl; n++)
+                tabelle += String(stellen[n] ?? 0).padStart(10, '0') + ' 00000 n \n';
+            text(tabelle);
+            text('trailer\n<< /Size ' + anzahl + ' /Root 1 0 R >>\nstartxref\n' + xrefStelle + '\n%%EOF\n');
+            return new Blob(teile, { type: 'application/pdf' });
+        };
+        return { seite, schliessen, seiten: () => seitenObjekte.length };
+    };
+    return { neu };
+})();
+window.PdfWriter = PdfWriter;
 
 </script>
 <script>
@@ -52306,7 +52543,15 @@ const Marken = (() => {
         { id: 'teil', name: 'Teil', zeichen: '½', titel: 'Radierer: nur den berührten Teil eines Strichs', nur: '' },
         { id: 'stift', name: 'Stift', zeichen: '✎', titel: 'Radierer: nur Stiftstriche — Marker, Band und Formen bleiben', nur: 'stift' },
         { id: 'marker', name: 'Marker', zeichen: '▰', titel: 'Radierer: nur Marker', nur: 'marker' },
-        { id: 'band', name: 'Band', zeichen: '▭', titel: 'Radierer: nur Abdeckband', nur: 'band' }
+        /* `nur` NENNT DIE MARKENART, NICHT DEN MODUS (E489).
+           Hier stand `nur: 'band'` — und das Abdeckband heisst als Marke
+           `abdeck` (so setzt es `art: tool` beim Zeichnen, so liest es
+           `zeichneMarke`). Der Modus „Band" radierte deshalb NICHTS: er
+           verglich gegen eine Art, die es im Bestand nicht gibt.
+           Die Kennung des MODUS bleibt `band` — sie steht so in `meta` bei
+           jedem, der ihn einmal gewählt hat, und sie umzubenennen wäre eine
+           Datenwanderung ohne Gewinn (§53.3). */
+        { id: 'band', name: 'Band', zeichen: '▭', titel: 'Radierer: nur Abdeckband', nur: 'abdeck' }
     ];
     /** Die Markenart, auf die ein Radiermodus sich beschränkt — '' heisst: alle. */
     const RADIER_NUR = (id) => RADIERER.find(r => r.id === id)?.nur || '';
@@ -52362,8 +52607,98 @@ const Marken = (() => {
            nur schmaler und mit 72 % Deckung. Er steht am Ende der Reihe,
            damit der Wechsel Fueller → Kugel → Pinsel bleibt, wie test343 ihn
            kennt. */
-        { id: 'bleistift', name: 'Bleistift', zeichen: '✏' }
+        { id: 'bleistift', name: 'Bleistift', zeichen: '✏' },
+        /* DER SCHUTZLEITER (E490, Redurs Wunsch vom 7. September). Kein
+           gewöhnlicher Stift, sondern die Leitung, die im Schaltplan grün-gelb
+           und strichpunktiert gezeichnet wird — Redion ist eine App für einen
+           Elektriker, und das ist der eine Strich, den er täglich braucht.
+    
+           ER STEHT AM ENDE DER REIHE, wie der Bleistift aus demselben Grund:
+           der Wechsel Füller → Kugel → Pinsel bleibt, wie `test343` ihn kennt. */
+        { id: 'schutzleiter', name: 'Schutzleiter', zeichen: '⏚' }
     ];
+    /* ══ DIE FARBEN DES SCHUTZLEITERS ═══════════════════════════════════════
+       Grün-gelb ist keine Mischfarbe, sondern ZWEI Farben — deshalb wird der
+       Strich zweimal gezeichnet: einmal ganz in Grün, darüber Gelb als
+       Strich-Punkt. Was man sieht, ist grün mit gelben Strichen und Punkten,
+       genau wie die Ader.
+  
+       Die Werte sind die üblichen der Schutzleiter-Kennzeichnung: ein sattes
+       Grün und ein Signalgelb, beide dunkel genug für weisses Papier.
+       WER DIESEN STIFT WÄHLT, WÄHLT AUCH DIE FARBE — die Farbe der Leiste
+       gilt für ihn nicht. Ein Schutzleiter in Blau wäre keiner. */
+    const PE_GRUEN = '#158a3a';
+    const PE_GELB = '#f2d200';
+    /* Strich, Lücke, Punkt, Lücke — als Vielfaches der Strichbreite, damit
+       das Muster bei jeder Stärke gleich aussieht.
+  
+       DIE ZAHLEN SIND KLEINER, ALS SIE AUSSEHEN (E490, Fund des Bildes).
+       `stroke-linecap:round` setzt an JEDES Strichende eine Halbkugel — ein
+       gestrichelter Weg wird dadurch je Strich um eine ganze Strichbreite
+       länger und jede Lücke um dieselbe kürzer. Der erste Entwurf stand auf
+       4 / 2,2 / 0,35 / 2,2; gezeichnet waren daraus 5 / 1,2 / 1,35 / 1,2 —
+       das Gelb deckte drei Viertel, und auf dem Bild war die Ader GELB statt
+       grün-gelb.
+  
+       Jetzt: 3,5 / 4 / 0,1 / 4 → gezeichnet 4,5 / 3 / 1,1 / 3. Das Grün liegt
+       mit gut der Hälfte obenauf, und der Strich ist VIERMAL so lang wie der
+       Punkt — bei 3 zu 1 sah man auf dem Bild nur eine gestrichelte Linie,
+       kein Strich-Punkt. */
+    const PE_MUSTER = [3.5, 4, 0.1, 4];
+    /* ══ DIE WERKZEUGE, EINMAL AUFGESCHRIEBEN (E490) ════════════════════════
+       Bis hierher standen Kennung, Zeichen, Wort und Beschreibung jedes
+       Werkzeugs als Aufruf in der Zeile, die die Leiste baut — nirgends
+       sonst. Wer sie woanders brauchte (die Liste der gesperrten Marken im
+       Inspector braucht genau diese Wörter), hätte sie abgeschrieben, und
+       eine Abschrift läuft weg (§8).
+  
+       DIE KENNUNG IST DIE MARKENART. `art: tool` beim Zeichnen macht aus dem
+       Werkzeug `abdeck` die Marke `abdeck` — deshalb steht hier auch das
+       Wort für eine fertige Marke. Was E489 gekostet hat, ist genau der
+       Unterschied zwischen dieser Kennung und der eines Radiermodus.
+  
+       `formen` ist kein Werkzeug, sondern ein Knopf für sieben (E375). Er
+       steht in der Reihenfolge mit, damit die Leiste an EINER Liste hängt,
+       und wird beim Bauen eigens behandelt; die Formen selbst stehen in
+       `FORMEN`. */
+    const WERKZEUGE = [
+        { id: 'schreiben', zeichen: '✎', name: 'Schreiben', titel: 'Schreiben — die Zeichenschicht ist durchlässig' },
+        { id: 'select', zeichen: '⌖', name: 'Auswahl', titel: 'Marken auswählen, gemeinsam bewegen oder löschen' },
+        { id: 'stift', zeichen: '🖍', name: 'Stift', titel: 'Freihand mit geglätteter Linie' },
+        { id: 'marker', zeichen: '▰', name: 'Marker', titel: 'Transparenter Marker' },
+        { id: 'formen', zeichen: '□', name: 'Form', titel: 'Formen — welche, steht darunter' },
+        { id: 'abdeck', zeichen: '▬', name: 'Abdeckband',
+            titel: 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf' },
+        { id: 'zettel', zeichen: '🗒', name: 'Haftnotiz',
+            titel: 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn' },
+        { id: 'text', zeichen: 'T', name: 'Text', titel: 'Textanmerkung' },
+        { id: 'zeichen', zeichen: '⚡', name: 'Fachzeichen', titel: 'Ein elektrotechnisches Symbol auf die Seite setzen' },
+        { id: 'bild', zeichen: '🖼', name: 'Bild',
+            titel: 'Ein Foto oder Bild auf das Blatt legen — danach verschieben und ziehen wie jede Marke' },
+        { id: 'radierer', zeichen: '⌫', name: 'Radieren',
+            titel: 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker' }
+    ];
+    /**
+     * Wie eine Marke heisst, für einen Menschen.
+     *
+     * Erst die Formen (sie sind genauer: „Pfeil" statt „Form"), dann die
+     * Werkzeuge. Was beide nicht kennen, behält seine Kennung — eine Marke
+     * aus einer neueren Fassung soll sich nennen können, statt „unbekannt"
+     * zu heissen (§18: unbekannte Blocktypen nicht löschen, hier sinngemäss).
+     */
+    const artWort = (art) => {
+        const id = String(art ?? '');
+        return FORMEN.find(f => f.id === id)?.name
+            ?? WERKZEUGE.find(w => w.id === id)?.name
+            ?? (id || 'Marke');
+    };
+    /** Das Zeichen zur Art — dieselbe Reihenfolge, dieselbe Quelle. */
+    const artZeichen = (art) => {
+        const id = String(art ?? '');
+        return FORMEN.find(f => f.id === id)?.zeichen
+            ?? WERKZEUGE.find(w => w.id === id)?.zeichen
+            ?? '•';
+    };
     const STIL_VORGABE = 'fueller';
     const HOECHSTENS_EIGENE_FARBEN = 4;
     /* WIE VIELE FARBSAETZE (E486).
@@ -52416,6 +52751,9 @@ const Marken = (() => {
            dunkler, nicht breiter; das Bisschen Breite hier ist der Winkel. */
         if (stil === 'bleistift')
             return 0.35 + d * 0.6;
+        /* Eine Leitung hat eine Stärke, keine Handschrift (E490). */
+        if (stil === 'schutzleiter')
+            return 1;
         return 0.5 + d * 1.0;
     };
     /** Die drei Stifte, die als FLAECHE gezeichnet werden (der Kugelschreiber ist die Linie). */
@@ -52832,6 +53170,35 @@ const Marken = (() => {
             if (art === 'rectangle' || art === 'ellipse' || art === 'triangle' || art === 'roundrect')
                 element.setAttribute('pointer-events', 'all');
         }
+        /* ══ DER SCHUTZLEITER: ZWEI STRICHE, EINER DARÜBER (E490) ═════════════
+           Grün-gelb lässt sich mit EINER Farbe nicht sagen. Also wird derselbe
+           Weg zweimal gezeichnet: unten das Grün, oben das Gelb als
+           Strich-Punkt-Muster — dazwischen scheint das Grün durch, und was man
+           sieht, ist die grün-gelbe Ader.
+    
+           WARUM EINE GRUPPE UND NICHT ZWEI MARKEN: es ist EIN Strich. Zwei
+           Marken liessen sich einzeln verschieben, einzeln radieren, einzeln
+           auswählen — und die eine Hälfte des Schutzleiters bliebe liegen. Die
+           Geometrie (`pts`) steht weiterhin genau einmal da; nur das Bild ist
+           doppelt.
+    
+           Das Muster rechnet in Strichbreiten, damit es bei 1 px wie bei 12 px
+           dasselbe Verhältnis hat. `stroke-linecap:round` macht aus dem sehr
+           kurzen Strich den Punkt. */
+        if (String(mark.stil) === 'schutzleiter' && art !== 'text' && art !== 'zettel'
+            && art !== 'abdeck' && art !== 'bild' && art !== 'zeichen') {
+            const gruppe = svg('g');
+            element.setAttribute('stroke', PE_GRUEN);
+            const oben = element.cloneNode(false);
+            oben.setAttribute('stroke', PE_GELB);
+            oben.setAttribute('stroke-dasharray', PE_MUSTER.map(v => Math.max(0.2, v * width)).join(' '));
+            oben.setAttribute('pointer-events', 'none');
+            gruppe.append(element, oben);
+            gruppe.setAttribute('data-sid', idOf(mark));
+            gruppe.setAttribute('data-ink-art', art);
+            gruppe.setAttribute('data-ink-stil', 'schutzleiter');
+            return gruppe;
+        }
         element.setAttribute('data-sid', idOf(mark));
         element.setAttribute('data-ink-art', art);
         return element;
@@ -52965,6 +53332,23 @@ const Marken = (() => {
            ohne Halten bleibt jeder Strich, was er ist. Abschaltbar, gemerkt in
            `zeichnen:formen`. */
         const HALTEN_MS = 450;
+        /* ══ WAS „GEHALTEN" HEISST (E490) ═════════════════════════════════════
+           Bis hierher galt jeder aufgezeichnete Punkt als Bewegung, und die
+           Uhr fing von vorn an. Eine Hand, die einen Stift ruhig hält, zittert
+           aber — sie liefert weiter Punkte, nur ganz kleine. Ergebnis: „am Ende
+           kurz halten" funktionierte mit der Maus (die steht wirklich still)
+           und mit dem Finger und dem Stift so gut wie nie. Redur hat es
+           gemeldet: „wenn ich eine Linie zeichne und mehr als drei Sekunden
+           halte, sollte sie gerade werden."
+    
+           Also zwei verschiedene Fragen, die vorher eine waren:
+             · Kommt ein neuer PUNKT in den Strich?  → ab 0,6 Einheiten
+             · Hat die HAND sich bewegt?             → ab RUHE_RADIUS
+    
+           Drei Einheiten sind rund zweieinhalb Bildschirmpixel bei 100 %: mehr
+           als ein Zittern, weniger als eine Absicht. `test461` fährt beides —
+           ein Zittern von ±2 muss als Halten gelten, ein Rücken um 10 nicht. */
+        const RUHE_RADIUS = 3;
         let formen = typeof Store !== 'undefined' ? Store.getMeta('zeichnen:formen') !== false : true;
         /* KRITZEL-LOESCHEN (E466), wie GoodNotes' Scribble to Erase: ein
            Hin-und-her ueber einem Strich nimmt den Strich weg. Abschaltbar,
@@ -53690,7 +54074,13 @@ const Marken = (() => {
                 return;
             running.pts.push(point);
             running.pressure.push(druck);
-            running.bewegtUm = Date.now();
+            /* Die Uhr läuft erst weiter, wenn die Hand ihren Ruhepunkt VERLÄSST
+               (E490) — ein Zittern an derselben Stelle ist keine Bewegung. */
+            const ruhe = running.ruhePunkt;
+            if (!ruhe || Math.hypot(point[0] - ruhe[0], point[1] - ruhe[1]) > RUHE_RADIUS) {
+                running.ruhePunkt = [point[0], point[1]];
+                running.bewegtUm = Date.now();
+            }
             feder?.punkt(point, halbeBreite(running, druck));
         };
         /* Die halbe Strichbreite an einer Stelle — dieselbe Rechnung, die
@@ -54034,6 +54424,7 @@ const Marken = (() => {
             delete mark.zeigerArt;
             const gehalten = Date.now() - (Number(mark.bewegtUm) || 0) >= HALTEN_MS;
             delete mark.bewegtUm;
+            delete mark.ruhePunkt;
             /* EINE FERTIGE KURVE HAT DREI PUNKTE (E483). Beim Ziehen sind es
                zwei; der dritte kommt beim Absetzen dazu und liegt in der Mitte
                — dann ist die Kurve eine Gerade, und der Griff steht bereit. */
@@ -54096,7 +54487,14 @@ const Marken = (() => {
                     else
                         delete mark.dreh;
                     delete mark.pressure;
-                    delete mark.stil;
+                    /* DER SCHUTZLEITER ÜBERLEBT DAS GERADEZIEHEN (E490). Sonst wäre
+                       die eine Sache, für die man ihn braucht — eine gerade
+                       Erdungsleitung im Schaltplan —, genau die, bei der er vergeht:
+                       man zieht den Strich, hält, und heraus kommt eine schwarze
+                       Linie. Jeder andere Stil fällt weg wie bisher; eine Form hat
+                       keine Handschrift. */
+                    if (mark.stil !== 'schutzleiter')
+                        delete mark.stil;
                     delete mark.zuletzt;
                 }
             }
@@ -55122,14 +55520,17 @@ const Marken = (() => {
     
            2. Welches Werkzeug GILT, stand nur in einer CSS-Klasse. Eine Klasse
               ist für ein Vorleseprogramm nicht da. `aria-pressed` sagt es. */
-        const button = (tool, icon, word, title) => `<button data-wz="${tool}"${tool === 'schreiben' ? ' class="on"' : ''} ` +
-            `aria-pressed="${tool === 'schreiben' ? 'true' : 'false'}" title="${title}">` +
-            `<span class="zeichen" aria-hidden="true">${icon}</span><span class="wort">${word}</span></button>`;
+        const button = (tool) => {
+            const w = WERKZEUGE.find(x => x.id === tool);
+            return `<button data-wz="${w.id}"${w.id === 'schreiben' ? ' class="on"' : ''} ` +
+                `aria-pressed="${w.id === 'schreiben' ? 'true' : 'false'}" title="${w.titel}">` +
+                `<span class="zeichen" aria-hidden="true">${w.zeichen}</span><span class="wort">${w.name}</span></button>`;
+        };
         tools.innerHTML =
-            button('schreiben', '✎', 'Schreiben', 'Schreiben — die Zeichenschicht ist durchlässig') +
-                button('select', '⌖', 'Auswahl', 'Marken auswählen, gemeinsam bewegen oder löschen') +
-                button('stift', '🖍', 'Stift', 'Freihand mit geglätteter Linie') +
-                button('marker', '▰', 'Marker', 'Transparenter Marker') +
+            button('schreiben') +
+                button('select') +
+                button('stift') +
+                button('marker') +
                 /* VIER WERKZEUGE WURDEN EINES (E375, L115 Punkt 9, Rest).
                    Linie, Pfeil, Rechteck und Ellipse standen als vier Knöpfe
                    nebeneinander — vierzehn Werkzeuge in einer Leiste, die am Telefon
@@ -55143,14 +55544,14 @@ const Marken = (() => {
                         `title="${jetzt.titel} — die Form wählst du darunter">` +
                         `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">Form</span></button>`;
                 })() +
-                button('abdeck', '▬', 'Abdecken', 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf') +
-                button('zettel', '🗒', 'Haftnotiz', 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn') +
-                button('text', 'T', 'Text', 'Textanmerkung') +
-                button('zeichen', '⚡', 'Fachzeichen', 'Ein elektrotechnisches Symbol auf die Seite setzen') +
+                button('abdeck') +
+                button('zettel') +
+                button('text') +
+                button('zeichen') +
                 /* DAS BILD (E357): kein Werkzeug, das man haelt, sondern ein Weg —
                    ein Tipp oeffnet den Waehler, danach fuehrt die Auswahl. */
-                button('bild', '🖼', 'Bild', 'Ein Foto oder Bild auf das Blatt legen — danach verschieben und ziehen wie jede Marke') +
-                button('radierer', '⌫', 'Radieren', 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker') +
+                button('bild') +
+                button('radierer') +
                 /* DER ZEILENBRUCH (E359): am Rechner stehen die Werkzeuge in einer
                    Zeile und ihr Zubehoer darunter; dieses leere Element mit voller
                    Breite ist der Umbruch. Am Telefon und in der Spalte blendet das
@@ -55952,7 +56353,8 @@ const Marken = (() => {
     };
     if (typeof document !== 'undefined')
         document.addEventListener('keydown', kuerzel);
-    return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, FORMEN, druckFaktor, RADIERER, TASTEN,
+    return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, FORMEN, WERKZEUGE, artWort, artZeichen,
+        druckFaktor, RADIERER, TASTEN,
         /* DIE FARBSÄTZE NACH AUSSEN (E486). Nicht, damit jemand anders eine
            zweite Leiste baut — sondern damit der Prüflauf an derselben Rechnung
            misst, die die Leiste benutzt. Eine Prüfung, die die Meta-Liste selbst
@@ -65707,7 +66109,18 @@ const DocumentMode = (() => {
         i.onerror = () => nein(new Error('Bild nicht lesbar'));
         i.src = url;
     });
-    const seiteAlsBild = async (block) => {
+    /**
+     * Eine Seite auf eine Leinwand malen und als Bild herausgeben.
+     *
+     * ZWEI AUFRUFER, EINE RECHNUNG (E488). „Als Bild sichern" will nur den
+     * Blob, der PDF-Export braucht auch die Masse — und zwar dieselben. Eine
+     * zweite Stelle, die aus `bw`, `bh` und der Drehung Pixel rechnet, wäre
+     * die Sorte Abschrift, die irgendwann von der ersten abweicht (§8).
+     *
+     * `typ` und `guete` gehen an `toBlob`: PNG für ein einzelnes Bild
+     * (verlustfrei), JPEG für das PDF (weil `DCTDecode` genau das nimmt).
+     */
+    const seiteZeichnen = async (block, typ = 'image/png', guete = 0.92) => {
         if (!block)
             return null;
         const bw = Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE;
@@ -65815,10 +66228,51 @@ const DocumentMode = (() => {
                 URL.revokeObjectURL(url);
             }
         }
-        const blob = await new Promise(fertig => leinwand.toBlob(b => fertig(b), 'image/png'));
+        const pixelBreite = leinwand.width, pixelHoehe = leinwand.height;
+        const blob = await new Promise(fertig => leinwand.toBlob(b => fertig(b), typ, guete));
         leinwand.width = 0;
         leinwand.height = 0;
-        return blob;
+        if (!blob)
+            return null;
+        /* Die SEITE misst in PDF-Punkten, das BILD in Pixeln — hier doppelt so
+           viele, damit auch ein Ausdruck scharf bleibt. Bei einer gedrehten
+           Seite tauschen beide ihre Kanten, und zwar gemeinsam. */
+        return { blob, pixelBreite, pixelHoehe,
+            breite: quer ? bh : bw, hoehe: quer ? bw : bh };
+    };
+    const seiteAlsBild = async (block) => (await seiteZeichnen(block))?.blob ?? null;
+    /* ══ DAS GANZE DOKUMENT ALS PDF (E488, L133) ════════════════════════════
+       Jede Seite wird gemalt wie für „Als Bild sichern" — Seitenbild, Marken,
+       Drehung — und als JPEG in ein PDF gelegt (`PdfWriter`). Was dabei
+       entsteht, ist die ABBILDUNG des Dokuments mit allem darauf; der Text
+       der ursprünglichen PDF ist darin nicht mehr durchsuchbar. Das ist eine
+       Grenze und keine Schwäche des Wegs: das Original bleibt unangetastet
+       (E106), und wer den Text braucht, hat es noch.
+  
+       STÜCKWEISE, mit einem Rückruf für den Fortschritt: bei vierzig Seiten
+       dauert es Sekunden, und eine Oberfläche, die dabei nichts sagt, sieht
+       kaputt aus. Der Rückruf darf auch `false` sagen — dann bricht es ab
+       und gibt `null`, statt ein halbes Dokument zu liefern. */
+    const alsPdf = async (seiten, melden) => {
+        if (typeof PdfWriter === 'undefined' || !Array.isArray(seiten) || !seiten.length)
+            return null;
+        const schreiber = PdfWriter.neu();
+        for (let i = 0; i < seiten.length; i++) {
+            if (melden && melden(i, seiten.length) === false)
+                return null;
+            const bild = await seiteZeichnen(seiten[i], 'image/jpeg', 0.88);
+            if (!bild)
+                continue;
+            schreiber.seite({ bild: bild.blob, pixelBreite: bild.pixelBreite, pixelHoehe: bild.pixelHoehe,
+                breite: bild.breite, hoehe: bild.hoehe });
+        }
+        /* Keine einzige Seite hat sich malen lassen — dann ist ein PDF mit null
+           Seiten die falsche Antwort. Lieber gar keines und ein Wort dazu. */
+        if (!schreiber.seiten())
+            return null;
+        if (melden)
+            melden(seiten.length, seiten.length);
+        return schreiber.schliessen();
     };
     /** Ein Blob als Datei zum Speichern anbieten — ohne Server, ohne Fenster. */
     const herunterladen = (blob, name) => {
@@ -65894,6 +66348,17 @@ const DocumentMode = (() => {
         quellen.forEach(id => { void PdfEinlesen.verweiseNachtragen(id); });
     };
     /** Dokumentbausteine auch innerhalb vorhandener Spalten finden. */
+    /* ══ EIN SPRUNG IN EIN ANDERES DOKUMENT (E487) ══════════════════════════
+       Die Suche im Studio galt bis hierher dem OFFENEN Dokument (L133). Mit
+       „Alle Dokumente" findet sie auch Stellen in fremden — und dann muss
+       Redion dorthin springen: erst die andere Seite öffnen, dann in ihr die
+       richtige Dokumentseite wählen und dieselbe Suche wieder aufmachen.
+  
+       `App.oeffne` baut den Studio-Aufbau neu; alles, was der neue Aufbau
+       von diesem Sprung wissen muss, steht so lange hier. Nicht in `meta` —
+       ein Wunsch, der einen Neustart überlebt, wäre ein Gespenst: man öffnet
+       Redion und die Suche geht von selbst auf. */
+    let sprungWunsch = null;
     const documentsIn = (page) => {
         if (!page?.id)
             return [];
@@ -65921,6 +66386,110 @@ const DocumentMode = (() => {
            genau das soll man sehen. `nr` bleibt, was es ist — die Seite der
            QUELLE, nach der „feiner rechnen" greift —, und darf nicht wandern. */
         return found;
+    };
+    /* ══ DIE SUCHE ÜBER ALLE DOKUMENTE (E487) ═══════════════════════════════
+       Was durchsucht wird, ist NICHT die PDF-Quelle: die läge für jedes
+       fremde Dokument einzeln zu lesen an, und ein Suchfeld, das dabei
+       zehn Sekunden steht, benutzt niemand. Durchsucht wird, was ohnehin im
+       Speicher liegt — `suchtext` der PDF-Seite (E107), der Text der Text-
+       und Zettelmarken eines Blatts und der Text seiner Kinder.
+  
+       Der Unterschied ist ehrlich zu nennen und steht am Knopf: im OFFENEN
+       Dokument findet die Suche die Stelle auf der Seite, in fremden findet
+       sie die SEITE. Wer hinspringt, sucht dort mit derselben Frage weiter
+       und bekommt die Stelle.
+  
+       GRENZEN: höchstens 60 fremde Treffer und höchstens 4000 durchsuchte
+       Blöcke. Beides wird GESAGT, wenn es greift (§35) — eine Liste, die
+       stillschweigend aufhört, behauptet, es gebe nicht mehr. */
+    const FREMD_HOECHSTENS = 60;
+    const FREMD_BLOECKE = 4000;
+    /** Die Seite, zu der ein Dokumentblock gehört — dieselbe Leiter, die
+     *  `documentsIn` hinabsteigt, nur andersherum. */
+    const seiteZu = (block) => {
+        let jetzt = block;
+        for (let n = 0; jetzt && n < 10; n++) {
+            const eltern = jetzt.parentId ? Store.getBlock(jetzt.parentId) : null;
+            if (!eltern)
+                return null;
+            if (eltern.type === 'page')
+                return eltern;
+            jetzt = eltern;
+        }
+        return null;
+    };
+    /**
+     * Alle Dokumentseiten ausserhalb der gegebenen Seite, die das Wort tragen.
+     *
+     * `ausser` ist die Seite, die gerade offen ist — ihre Treffer stehen
+     * schon als Kästen auf dem Papier und gehören nicht noch einmal in die
+     * Liste.
+     */
+    const fremdeTreffer = (wort, ausser) => {
+        const q = String(wort || '').trim().toLowerCase();
+        if (q.length < 2)
+            return { liste: [], mehr: false };
+        const liste = [];
+        let gesehen = 0;
+        let mehr = false;
+        const stelle = (text) => {
+            const roh = String(text ?? '').replace(/\s+/g, ' ');
+            const wo = roh.toLowerCase().indexOf(q);
+            if (wo < 0)
+                return roh.slice(0, 90);
+            const von = Math.max(0, wo - 30);
+            return (von > 0 ? '… ' : '') + roh.slice(von, von + 90).trim() + (roh.length > von + 90 ? ' …' : '');
+        };
+        for (const block of Object.values(Store.cache.blocks)) {
+            if (liste.length >= FREMD_HOECHSTENS) {
+                mehr = true;
+                break;
+            }
+            if (++gesehen > FREMD_BLOECKE) {
+                mehr = true;
+                break;
+            }
+            if (!block || block.alive === false)
+                continue;
+            if (block.type !== 'pdfseite' && block.type !== 'blatt')
+                continue;
+            const seite = seiteZu(block);
+            if (!seite || !seite.alive || seite.id === ausser)
+                continue;
+            if (typeof Konten !== 'undefined' && Konten.darf && !Konten.darf('lesen', seite.id))
+                continue;
+            let fund = '';
+            if (block.type === 'pdfseite') {
+                const text = String(block.suchtext || block.ocrText || '');
+                if (text.toLowerCase().includes(q))
+                    fund = text;
+            }
+            else {
+                for (const m of (Array.isArray(block.marken) ? block.marken : [])) {
+                    if ((m?.art === 'text' || m?.art === 'zettel') && String(m.text ?? '').toLowerCase().includes(q)) {
+                        fund = String(m.text);
+                        break;
+                    }
+                }
+                if (!fund)
+                    for (const kind of Store.childrenOf(block.id)) {
+                        if (String(kind?.text ?? '').toLowerCase().includes(q)) {
+                            fund = String(kind.text);
+                            break;
+                        }
+                    }
+            }
+            if (!fund)
+                continue;
+            liste.push({ seiteId: seite.id, blockId: block.id,
+                name: String(seite.text || 'Ohne Titel'), icon: String(seite.icon || '📄'),
+                nr: documentsIn(seite).findIndex(b => b.id === block.id) + 1,
+                auszug: stelle(fund) });
+        }
+        /* Nach Dokument, dann nach Seite — sonst stünden die Seiten eines
+           Dokuments in der Reihenfolge des Speichers durcheinander. */
+        liste.sort((a, b) => a.name.localeCompare(b.name) || a.nr - b.nr);
+        return { liste, mehr };
     };
     const available = (page) => documentsIn(page).length > 0;
     const active = (page) => !!page?.dokumentModus && available(page);
@@ -66137,6 +66706,24 @@ const DocumentMode = (() => {
             return button;
         };
         actions.append(makeAction('source-actions', '＋ Aus Inhalt'), makeAction('select-region', '⌗ Ausschnitt'), makeAction('recognize', '⌁ Erkennen'));
+        /* DER EXPORT GILT DEM DOKUMENT, nicht der Seite (E488).
+    
+           ER STEHT NEBEN „PDF hinzufügen", und das Bild hat den Platz gewählt:
+           im ersten Entwurf lag er in der Gruppe ganz unten, unter „Mit dieser
+           Seite verbunden" — auf dem Bildschirmfoto war er gar nicht zu sehen,
+           weil der Inspector vorher endet. Hier oben steht die Ausfuhr neben
+           der Einfuhr, direkt unter den Seitengriffen.
+    
+           „Als Bild sichern" dort unten meint weiterhin genau die eine Seite,
+           die man ansieht — deshalb sind es zwei Knöpfe und nicht einer mit
+           einer Frage. */
+        /* Dasselbe Zeichen wie „Als Bild sichern" darüber: beides ist ein
+           Herunterladen, und „⤓" kam auf dem Bild schmal und eng am Wort
+           heraus. Zwei Zeichen für dieselbe Sache wären eine Sprache zu viel. */
+        const pdfKnopf = makeAction('export-pdf', '⬇ Als PDF sichern');
+        pdfKnopf.className = 'document-import';
+        pdfKnopf.title = 'Das ganze Dokument mit allen Marken als PDF speichern — '
+            + 'jede Seite als Bild; der Text der ursprünglichen PDF ist darin nicht mehr durchsuchbar.';
         const importButton = makeAction('import', '＋ PDF hinzufügen');
         importButton.className = 'document-import';
         /* DIE KENNUNG, NICHT DAS OBJEKT (E471, L102 zum zweiten Mal). `darf`
@@ -66326,7 +66913,14 @@ const DocumentMode = (() => {
         lupeKnopf.textContent = lupeAn ? '🔍 Zoom-Fenster aus' : '🔍 Zoom-Fenster an';
         lupeKnopf.setAttribute('aria-pressed', lupeAn ? 'true' : 'false');
         lupeKnopf.title = 'Die Seite gross zum Kleinschreiben; unten die Übersicht mit dem Ausschnitt.';
-        container.append(importButton, viewTitle, randKnopf, lupeKnopf);
+        /* EIN- UND AUSFUHR IN EINER ZEILE (E488). Beide waren vorher lose
+           Knöpfe im Fluss; mit zweien standen sie eng aneinander und der Text
+           stiess an den Rand — auf dem Bild gut zu sehen. Eine eigene Zeile mit
+           zwei gleichen Spalten gibt jedem seine Breite und beiden 44 px. */
+        const datenZeile = document.createElement('div');
+        datenZeile.className = 'document-inspector-daten';
+        datenZeile.append(pdfKnopf, importButton);
+        container.append(datenZeile, viewTitle, randKnopf, lupeKnopf);
         if (laufKnopf)
             container.appendChild(laufKnopf);
         container.append(linkedTitle, actions, summary, list);
@@ -66653,12 +67247,22 @@ const DocumentMode = (() => {
         const moreTools = topButton('ink-options', '···', 'Alle Stiftoptionen und Bearbeitungsaktionen');
         moreTools.setAttribute('aria-expanded', 'false');
         drawingbar.appendChild(moreTools);
+        /* ZURÜCK UND VOR STEHEN LINKS (E490, Redurs Bild vom 7. September).
+           So steht es bei GoodNotes: ganz links in der Leiste, vor den
+           Werkzeugen — und die Hand sucht sie dort, weil sie dort immer waren.
+           Vorher standen sie ganz rechts.
+    
+           `prepend`, nicht `appendChild`: die Reihenfolge im Baum ist auch die
+           Reihenfolge für die Tastatur, und wer mit Tab durch die Leiste geht,
+           soll sie in derselben Folge treffen wie mit den Augen (§38). Die
+           Mitte bleibt die Mitte — das besorgen zwei `auto`-Ränder im
+           Stilblatt, nicht ein zweiter Kasten hier. */
         const history = document.createElement('div');
         history.className = 'document-ink-history';
         history.setAttribute('role', 'group');
         history.setAttribute('aria-label', 'Zeichenverlauf');
         history.append(topButton('ink-undo', '↶', 'Letzten Zeichenstrich rückgängig machen'), topButton('ink-redo', '↷', 'Zeichenstrich wiederholen'));
-        drawingbar.appendChild(history);
+        drawingbar.prepend(history);
         /* WELCHE SPALTEN ES GIBT, STEHT AM KASTEN (E296). Vorher war das Raster
            fest — 190 px links, 280 px rechts, bei jeder Fensterbreite ueber
            1100 px. Auf 1440 px blieben der Seite damit rund 900, obwohl beide
@@ -67086,7 +67690,26 @@ const DocumentMode = (() => {
         const findZahl = document.createElement('span');
         findZahl.className = 'document-find-zahl';
         findZahl.setAttribute('aria-live', 'polite');
-        findbar.append(findFeld, findZahl, topButton('find-previous', '‹', 'Voriger Treffer'), topButton('find-next', '›', 'Nächster Treffer'), topButton('find-close', '✕', 'Suche schließen'));
+        /* DER SCHALTER „ALLE DOKUMENTE" (E487). Er steht VOR den Pfeilen, weil
+           die Pfeile dem offenen Dokument gehören und er die Frage stellt, auf
+           welches Dokument sich alles bezieht. Sein Zustand hält sich in `meta`:
+           wer über alles sucht, sucht meist wieder über alles. */
+        /* „📚" und nicht „🗂": das Karteikartenzeichen kam auf dem Bild als
+           blasses Kästchen heraus — es steht nicht in jeder Schrift. Der
+           Bücherstapel steht überall und meint dasselbe (die Bibliothek). */
+        const findAlleKnopf = topButton('find-alle', '📚', 'Auch in den anderen Dokumenten suchen');
+        findAlleKnopf.className = 'document-find-alle';
+        let findAlle = Store.getMeta('dokFindAlle') === true;
+        findAlleKnopf.setAttribute('aria-pressed', String(findAlle));
+        findAlleKnopf.classList.toggle('an', findAlle);
+        /* DIE LISTE DER FREMDEN TREFFER. Sie hängt UNTER der Suchleiste und
+           nicht im Papier: ein Treffer in einem anderen Dokument hat auf
+           diesem Blatt keinen Ort, und ein Kasten irgendwo wäre eine
+           Behauptung. */
+        const findListe = document.createElement('div');
+        findListe.className = 'document-find-liste';
+        findListe.hidden = true;
+        findbar.append(findFeld, findZahl, findAlleKnopf, topButton('find-previous', '‹', 'Voriger Treffer'), topButton('find-next', '›', 'Nächster Treffer'), topButton('find-close', '✕', 'Suche schließen'), findListe);
         workspace.append(top, findbar, drawingbar, commandbar, body);
         wrap.appendChild(workspace);
         if (typeof Register !== 'undefined')
@@ -67544,6 +68167,63 @@ const DocumentMode = (() => {
             trefferNr = -1;
             trefferMalen();
             zahlZeigen();
+            fremdZeigen(wort);
+        };
+        /* ══ DIE FREMDEN TREFFER ANZEIGEN (E487) ══════════════════════════════
+           Der Name steht vorne, die Seitenzahl daneben, der Textausschnitt
+           darunter — und der Ausschnitt wird ESCAPT, weil er Nutzertext ist
+           (§19). Ein PDF mit `<img src=x onerror=…>` im Text ist kein Scherz;
+           genau daran hing E112. */
+        const fremdZeigen = (wort) => {
+            const q = String(wort || '').trim();
+            if (!findAlle || q.length < 2) {
+                findListe.hidden = true;
+                findListe.textContent = '';
+                return;
+            }
+            const { liste, mehr } = fremdeTreffer(q, page.id);
+            findListe.textContent = '';
+            if (!liste.length) {
+                findListe.hidden = false;
+                const leer = document.createElement('p');
+                leer.className = 'document-find-leer';
+                leer.textContent = 'In anderen Dokumenten: nichts gefunden.';
+                findListe.appendChild(leer);
+                return;
+            }
+            const kopf = document.createElement('p');
+            kopf.className = 'document-find-kopf';
+            kopf.textContent = liste.length + (liste.length === 1 ? ' Seite' : ' Seiten')
+                + ' in anderen Dokumenten' + (mehr ? ' (es sind mehr — Begriff eingrenzen)' : '');
+            findListe.appendChild(kopf);
+            for (const t of liste) {
+                const knopf = document.createElement('button');
+                knopf.type = 'button';
+                knopf.className = 'document-find-fund';
+                knopf.dataset.documentFund = t.seiteId;
+                knopf.dataset.documentFundBlock = t.blockId;
+                knopf.title = t.name + ' — Seite ' + t.nr;
+                const zeile = document.createElement('span');
+                zeile.className = 'document-find-fund-zeile';
+                zeile.textContent = t.icon + ' ' + t.name + ' · Seite ' + t.nr;
+                const auszug = document.createElement('span');
+                auszug.className = 'document-find-fund-text';
+                auszug.textContent = t.auszug;
+                knopf.append(zeile, auszug);
+                findListe.appendChild(knopf);
+            }
+            findListe.hidden = false;
+        };
+        /** Zu einem fremden Treffer springen: Seite wählen, öffnen, dort weitersuchen. */
+        const zumFremden = (seiteId, blockId) => {
+            const ziel = Store.getBlock(seiteId);
+            if (!ziel) {
+                UI.toast('Diese Seite gibt es nicht mehr.');
+                return;
+            }
+            select(ziel, blockId);
+            sprungWunsch = { seiteId, wort: findFeld.value };
+            App.oeffne(seiteId);
         };
         const zumTreffer = (n) => {
             if (!treffer.length)
@@ -67593,6 +68273,8 @@ const DocumentMode = (() => {
                 trefferNr = -1;
                 trefferMalen();
                 findZahl.textContent = '';
+                findListe.hidden = true;
+                findListe.textContent = '';
             }
         };
         /* ══ SEITEN WIE GOODNOTES (E467) ═════════════════════════════════════════
@@ -68203,6 +68885,13 @@ const DocumentMode = (() => {
             }
             /* Der Menüknopf einer Miniatur (E480) — vor allen Tatnamen, denn er
                trägt keinen. */
+            /* EIN FUND IN EINEM ANDEREN DOKUMENT (E487) — vor den Tatnamen, denn
+               er trägt keinen; er trägt die Seite, die er meint. */
+            const fund = element?.closest('[data-document-fund]');
+            if (fund?.dataset.documentFund) {
+                zumFremden(fund.dataset.documentFund, String(fund.dataset.documentFundBlock || ''));
+                return;
+            }
             const menueKnopf = element?.closest('[data-document-thumb-menue]');
             if (menueKnopf) {
                 if (!darfSeiten()) {
@@ -68292,6 +68981,57 @@ const DocumentMode = (() => {
                     herunterladen(blob, String(page.text || 'Seite').replace(/[\\/:*?"<>|]+/g, ' ').trim() + ' – Seite ' + nr + '.png');
                     UI.toast('Seite ' + nr + ' als PNG gesichert');
                 });
+                return;
+            }
+            if (action === 'export-pdf') {
+                const knopf = tatKnopf;
+                if (knopf?.disabled)
+                    return;
+                const seiten = documentsIn(page);
+                if (!seiten.length) {
+                    UI.toast('Dieses Dokument hat keine Seiten.');
+                    return;
+                }
+                /* DER KNOPF SAGT, WIE WEIT ES IST. Ohne das sieht eine Ausfuhr von
+                   vierzig Seiten aus wie eine App, die hängt — und der zweite Klick
+                   startet dann eine zweite (deshalb `disabled`). */
+                const wort = knopf?.textContent || '';
+                if (knopf)
+                    knopf.disabled = true;
+                void alsPdf(seiten, (fertig, gesamt) => {
+                    if (knopf)
+                        knopf.textContent = fertig >= gesamt
+                            ? '⤓ Wird gesichert …' : '⤓ Seite ' + (fertig + 1) + '/' + gesamt + ' …';
+                }).then(blob => {
+                    if (knopf) {
+                        knopf.disabled = false;
+                        knopf.textContent = wort;
+                    }
+                    if (!blob) {
+                        UI.toast('Das Dokument liess sich nicht als PDF schreiben.');
+                        return;
+                    }
+                    herunterladen(blob, String(page.text || 'Dokument').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.pdf');
+                    UI.toast(seiten.length + (seiten.length === 1 ? ' Seite' : ' Seiten') + ' als PDF gesichert');
+                }).catch(() => {
+                    if (knopf) {
+                        knopf.disabled = false;
+                        knopf.textContent = wort;
+                    }
+                    UI.toast('Das Dokument liess sich nicht als PDF schreiben.');
+                });
+                return;
+            }
+            if (action === 'find-alle') {
+                findAlle = !findAlle;
+                try {
+                    Store.setMeta('dokFindAlle', findAlle);
+                }
+                catch { /* nur diese Sitzung */ }
+                findAlleKnopf.setAttribute('aria-pressed', String(findAlle));
+                findAlleKnopf.classList.toggle('an', findAlle);
+                fremdZeigen(findFeld.value);
+                findFeld.focus();
                 return;
             }
             if (action === 'find-next') {
@@ -68749,12 +69489,30 @@ const DocumentMode = (() => {
             staende.forEach((_stand, i) => { if (gezeichnet.has(i))
                 verweiseMalen(i); });
         });
+        /* ══ DER SPRUNG AUS EINER FREMDEN SUCHE (E487) ═════════════════════════
+           Wer in der Liste auf eine Seite eines anderen Dokuments tippt, landet
+           hier: `App.oeffne` hat den Aufbau neu gebaut, `select` hat die Seite
+           schon gewählt, und der Wunsch sagt, mit welcher Frage weitergesucht
+           wird. Die Suche IM Dokument gibt dann die Stelle — das ist genau der
+           Unterschied, den der Knopf verspricht.
+    
+           Der Wunsch wird SOFORT gelöscht, nicht erst nach der Suche: sonst
+           ginge die Suchleiste bei jedem weiteren Neuzeichnen dieser Seite
+           wieder auf, und niemand wüsste, warum. */
+        if (sprungWunsch && sprungWunsch.seiteId === page.id) {
+            const wort = sprungWunsch.wort;
+            sprungWunsch = null;
+            findFeld.value = wort;
+            findbarSetzen(true);
+            void suchen(wort).then(() => { if (treffer.length)
+                zumTreffer(0); });
+        }
         return true;
     };
     /* `freigeben` lässt die offenen PDF-Quellen der Suche los (E473): jede
        Seitenzeichnung läuft durch `schale.ts`, und wer das Dokument verlässt,
        soll pdf.js nicht im Rücken behalten. */
-    return { available, active, select, toggle, documentsIn, render, sourceLabel, seiteAlsBild,
+    return { available, active, select, toggle, documentsIn, render, sourceLabel, seiteAlsBild, alsPdf,
         freigeben: () => { griffeSchliessen(); verweisHorchenAus(); } };
 })();
 window.DocumentMode = DocumentMode;

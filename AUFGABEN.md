@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — neunzehn Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — zweiundzwanzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -315,6 +315,27 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Der Bogen fand zwei ältere Fehler: die Tupfer standen nach dem Wählen
     verkehrt herum, und `Dialog.wahl` schnitt bei vielen Knöpfen den
     letzten stumm ab. **Steht.**
+  · **G20 — Suche über mehrere Dokumente** (E487, test459): der Schalter
+    „📚" nimmt die anderen Dokumente dazu; ihre Seiten stehen als Klappe
+    unter der Suchleiste, und ein Tipp öffnet das Dokument auf DER Seite
+    und sucht dort weiter. Der Unterschied — Stelle im offenen Dokument,
+    Seite in fremden — steht am Knopf, statt behauptet zu werden. Zwei
+    Entwürfe der Klappe hat das BILD widerlegt, nicht der Prüflauf.
+    **Steht.**
+  · **G21 — Das ganze Dokument als PDF** (E488, test460): ein eigener
+    PDF-Schreiber (`src/core/export/pdfWriter.ts`), jede Seite als JPEG,
+    ohne die Bildbytes je zu lesen. Was er nicht kann — eine echte
+    Textschicht — steht am Knopf und in L133. Der Rückweg über Redions
+    eigenen PDF-Leser hat einen Fehler gefunden, den kein Lesen des Codes
+    gefunden hätte: das Bild der ersten Seite trug die Objektnummer des
+    Katalogs. **Steht.**
+  · **G22 — Der Stift** (E490, test461): Redurs eigene Bitte. „Am Ende
+    halten" hat nie funktioniert, weil jeder aufgezeichnete Punkt die Uhr
+    zurücksetzte — eine ruhig gehaltene Hand zittert. Jetzt hat der Strich
+    einen Ruhepunkt. Dazu der **Schutzleiter**: grün-gelb und
+    Strich-Punkt, in EINER Marke, und er überlebt das Geradeziehen. Und
+    Zurück/Vor stehen links, wie bei GoodNotes und wie auf Redurs Bild.
+    **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).
