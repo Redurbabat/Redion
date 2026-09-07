@@ -4140,6 +4140,22 @@ Kurven falsch herum.
 Der Verbinder bleibt offen, und zwar begründet: er ist keine dritte
 Koordinate, sondern eine Beziehung zu zwei anderen Marken.
 
+**Und Treffer und Verweise sitzen genauer (E484, test457).** Zwei
+Näherungen, die in L133 als „stimmt ungefähr" standen. Der Suchtreffer
+bekam seinen Kasten anteilig nach der ZAHL der Zeichen — bei „iiiiWWWW"
+galt „iiii" damit als halbes Stück, obwohl es ein Fünftel ist; gemessen
+sitzt der Kasten für „WWWW" bei 13,3 % statt bei 17,8 %, und 13,3 ist
+richtig. Und ein Verweis an einem Strich hat jetzt eine Trefffläche —
+aber nicht den KASTEN, den L133 vorschlug: ein Bogen über eine halbe
+Seite hätte einen Kasten über die halbe Seite, und der finge alles ein,
+was daneben steht (dieselbe Lehre wie E476). Stattdessen derselbe Weg,
+nur breiter: eine durchsichtige Kopie des Pfades mit 24 Punkten Strich.
+
+Eine Zahl behauptet der Prüflauf absichtlich nicht: wo genau die
+Trefffläche endet. Zehn Punkte treffen, zwanzig nicht — die Grenze
+dazwischen hängt am Rundungsverhalten des Browsers und wäre irgendwann
+rot, ohne dass etwas kaputt ist.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
 die verbliebenen Reste (getippter Text im gesicherten Bild, Farbsets,

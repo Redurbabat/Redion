@@ -233,6 +233,45 @@ const Marken = (() => {
       hinweis.textContent = mark.href ? String(mark.href)
         : 'Zur Seite „' + String(Store.getBlock(String(mark.zielSeite))?.text || 'Ohne Titel') + '"';
       node.appendChild(hinweis);
+      /* EIN STRICH IST ZU DÜNN ZUM TREFFEN (E484, L133, §37).
+         „Ein Strich trägt seinen Verweis, ist aber dünn; ein Kasten um ihn
+         ist der bessere Träger." — der Kasten wäre aber falsch: ein Bogen
+         um eine halbe Seite hätte einen Kasten über die halbe Seite, und
+         der finge alles ein, was daneben steht (dieselbe Lehre wie E476).
+
+         Also derselbe WEG, nur breiter: eine Kopie des Pfades ohne
+         Füllung, mit durchsichtiger Strichfarbe und 24 Punkten Breite,
+         hinter dem sichtbaren. Sie malt nichts und trifft alles, was
+         näher als zwölf Punkte liegt. `cloneNode(false)` nimmt genau die
+         Geometrie mit und sonst nichts.
+
+         Nur für Linienzüge: Rechteck, Ellipse und die anderen Formen sind
+         seit E353 ohnehin in ihrer Fläche greifbar. */
+      const art = String(mark.art || '');
+      if (InkGeometry.LINIEN.has(art) && node.tagName.toLowerCase() === 'path') {
+        const gruppe = svg('g');
+        const feld = node.cloneNode(false) as SVGElement;
+        feld.removeAttribute('data-sid');
+        feld.removeAttribute('data-ink-art');
+        feld.removeAttribute('data-verweis');
+        feld.setAttribute('fill', 'none');
+        feld.setAttribute('stroke', 'transparent');
+        feld.setAttribute('stroke-width', String(Math.max(24, strokeWidth(mark))));
+        feld.setAttribute('stroke-linecap', 'round');
+        feld.setAttribute('stroke-linejoin', 'round');
+        feld.setAttribute('opacity', '1');
+        feld.removeAttribute('style');
+        feld.setAttribute('class', 'blatt-verweisfeld');
+        /* Die Kennung wandert an die Gruppe: wer `[data-sid]` sucht, soll
+           das Ganze finden und nicht die Hälfte. */
+        gruppe.setAttribute('data-sid', String(node.getAttribute('data-sid') || ''));
+        gruppe.setAttribute('data-ink-art', art);
+        gruppe.setAttribute('data-verweis', String(node.getAttribute('data-verweis') || ''));
+        gruppe.setAttribute('pointer-events', 'all');
+        node.removeAttribute('data-sid');
+        gruppe.append(feld, node);
+        return gruppe;
+      }
     }
     return node;
   };

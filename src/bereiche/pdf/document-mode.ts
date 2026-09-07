@@ -1769,11 +1769,28 @@ const DocumentMode = (() => {
                  Anteilig nach Zeichen — eine Naeherung (Buchstaben sind
                  verschieden breit), aber eine, die das Wort trifft statt
                  die Zeile; das Bild vom 7. September zeigte die Zeile. */
+              /* ANTEILIG NACH BREITE, NICHT NACH ZEICHEN (E484, L133).
+                 Bis hierher war der Kasten anteilig an der ZAHL der
+                 Zeichen — „iiii" und „WWWW" galten damit als gleich
+                 breit, und ein Treffer daneben sass ein paar Punkte
+                 daneben. Gemessen wird jetzt mit `InkGeometry.textWidth`,
+                 und zwar als VERHÄLTNIS: die gemessene Breite bis hierhin
+                 geteilt durch die gemessene Breite des ganzen Stücks. Ob
+                 die Schrift der Messung dieselbe ist wie die der PDF,
+                 fällt im Verhältnis weitgehend heraus — was bleibt, ist,
+                 dass ein „i" schmaler zählt als ein „W". */
+              const anteil = (text: string, bis2: number): number => {
+                const ganz = InkGeometry.textWidth(text, 1);
+                if (!(ganz > 0)) return bis2 / Math.max(1, text.length);
+                return Math.max(0, Math.min(1, InkGeometry.textWidth(text.slice(0, bis2), 1) / ganz));
+              };
               const kaesten = [...ks].map(k => {
                 const st = stuecke[k]; if (!st) return null;
-                const len = Math.max(1, String(st.s).length);
+                const text = String(st.s);
+                const len = Math.max(1, text.length);
                 const a = Math.max(0, von - (anfang[k] ?? 0)), z = Math.min(len, bis - (anfang[k] ?? 0));
-                return { x: st.x + st.w * a / len, y: st.y, w: Math.max(2, st.w * (z - a) / len), h: st.h };
+                const p1 = anteil(text, a), p2 = anteil(text, z);
+                return { x: st.x + st.w * p1, y: st.y, w: Math.max(2, st.w * (p2 - p1)), h: st.h };
               }).filter((k): k is Kasten => !!k);
               neu.push({ index: i, rect: kaesten.length ? vereint(kaesten) : null });
               von = bis;

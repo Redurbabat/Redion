@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G17)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G18)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6482,9 +6482,12 @@ Suche und Verweise (nach G4, E468): die Suche im Studio mit Treffern an
 der Stelle, die Verweise der PDF, eigene Verweise an Marken stehen.
 Offen bleibt:
 
-  · **Treffer-Kästen sind eine Näherung** — anteilig nach Zeichen im
-    Stück der Textebene, nicht gemessen; bei sehr ungleichen Buchstaben
-    („iiii" neben „WWWW") sitzt der Kasten ein paar Punkte daneben.
+  · ~~**Treffer-Kästen sind eine Näherung**~~ — **GESCHLOSSEN mit E484.**
+    Gemessen wird jetzt mit `InkGeometry.textWidth`, als Verhältnis
+    innerhalb des Stücks; dass die Messschrift nicht die der PDF ist,
+    fällt darin weitgehend heraus. Bei „iiiiWWWW" sitzt der Kasten für
+    „WWWW" gemessen bei 13,3 % statt gezählt bei 17,8 % — und 13,3 ist
+    richtig. `test457 §1`.
   · ~~**PDF-Verweise auf gedrehten Seiten**~~ — **GESCHLOSSEN mit E481.**
     Die Schicht liegt nicht mehr NEBEN dem Papier (von Hand nachgemessen,
     und bei einer gedrehten Seite misst man ihre Hülle), sondern IM
@@ -6497,8 +6500,13 @@ Offen bleibt:
     Einlesen als `zielY` am Verweis, und der Sprung rollt dorthin. `/Fit`
     nennt keine — und dann steht auch keine da (dieselbe Regel wie E477).
     `test454 §1, §2`.
-  · **Verweise auf Striche antippen** — ein Strich trägt seinen Verweis,
-    ist aber dünn; ein Kasten um ihn ist der bessere Träger.
+  · ~~**Verweise auf Striche antippen**~~ — **GESCHLOSSEN mit E484**, aber
+    NICHT mit dem Kasten, den diese Zeile vorschlug: ein Bogen über eine
+    halbe Seite hätte einen Kasten über die halbe Seite, und der finge
+    alles ein, was daneben steht (dieselbe Lehre wie E476). Stattdessen
+    derselbe WEG, nur breiter — eine durchsichtige Kopie des Pfades mit
+    24 Punkten Strich. Gemessen: zehn Punkte daneben trifft, zwanzig
+    nicht. `test457 §2`.
 
 Import und Export (nach G5, E469): Bilder als Seiten, PDF an einer Stelle,
 Seite als Bild, Zoom-Fenster stehen. Offen bleibt:

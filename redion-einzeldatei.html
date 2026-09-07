@@ -18815,7 +18815,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 583, inhalt: '455f3512aa2d26cb', gebaut: '2026-09-07T17:39:10.591Z' };
+const Stand = { fassung: 586, inhalt: '0d730e67ece2abc5', gebaut: '2026-09-07T17:53:41.630Z' };
 window.Stand = Stand;
 
 </script>
@@ -52474,6 +52474,45 @@ const Marken = (() => {
             hinweis.textContent = mark.href ? String(mark.href)
                 : 'Zur Seite „' + String(Store.getBlock(String(mark.zielSeite))?.text || 'Ohne Titel') + '"';
             node.appendChild(hinweis);
+            /* EIN STRICH IST ZU DÜNN ZUM TREFFEN (E484, L133, §37).
+               „Ein Strich trägt seinen Verweis, ist aber dünn; ein Kasten um ihn
+               ist der bessere Träger." — der Kasten wäre aber falsch: ein Bogen
+               um eine halbe Seite hätte einen Kasten über die halbe Seite, und
+               der finge alles ein, was daneben steht (dieselbe Lehre wie E476).
+      
+               Also derselbe WEG, nur breiter: eine Kopie des Pfades ohne
+               Füllung, mit durchsichtiger Strichfarbe und 24 Punkten Breite,
+               hinter dem sichtbaren. Sie malt nichts und trifft alles, was
+               näher als zwölf Punkte liegt. `cloneNode(false)` nimmt genau die
+               Geometrie mit und sonst nichts.
+      
+               Nur für Linienzüge: Rechteck, Ellipse und die anderen Formen sind
+               seit E353 ohnehin in ihrer Fläche greifbar. */
+            const art = String(mark.art || '');
+            if (InkGeometry.LINIEN.has(art) && node.tagName.toLowerCase() === 'path') {
+                const gruppe = svg('g');
+                const feld = node.cloneNode(false);
+                feld.removeAttribute('data-sid');
+                feld.removeAttribute('data-ink-art');
+                feld.removeAttribute('data-verweis');
+                feld.setAttribute('fill', 'none');
+                feld.setAttribute('stroke', 'transparent');
+                feld.setAttribute('stroke-width', String(Math.max(24, strokeWidth(mark))));
+                feld.setAttribute('stroke-linecap', 'round');
+                feld.setAttribute('stroke-linejoin', 'round');
+                feld.setAttribute('opacity', '1');
+                feld.removeAttribute('style');
+                feld.setAttribute('class', 'blatt-verweisfeld');
+                /* Die Kennung wandert an die Gruppe: wer `[data-sid]` sucht, soll
+                   das Ganze finden und nicht die Hälfte. */
+                gruppe.setAttribute('data-sid', String(node.getAttribute('data-sid') || ''));
+                gruppe.setAttribute('data-ink-art', art);
+                gruppe.setAttribute('data-verweis', String(node.getAttribute('data-verweis') || ''));
+                gruppe.setAttribute('pointer-events', 'all');
+                node.removeAttribute('data-sid');
+                gruppe.append(feld, node);
+                return gruppe;
+            }
         }
         return node;
     };
@@ -67143,13 +67182,31 @@ const DocumentMode = (() => {
                                Anteilig nach Zeichen — eine Naeherung (Buchstaben sind
                                verschieden breit), aber eine, die das Wort trifft statt
                                die Zeile; das Bild vom 7. September zeigte die Zeile. */
+                            /* ANTEILIG NACH BREITE, NICHT NACH ZEICHEN (E484, L133).
+                               Bis hierher war der Kasten anteilig an der ZAHL der
+                               Zeichen — „iiii" und „WWWW" galten damit als gleich
+                               breit, und ein Treffer daneben sass ein paar Punkte
+                               daneben. Gemessen wird jetzt mit `InkGeometry.textWidth`,
+                               und zwar als VERHÄLTNIS: die gemessene Breite bis hierhin
+                               geteilt durch die gemessene Breite des ganzen Stücks. Ob
+                               die Schrift der Messung dieselbe ist wie die der PDF,
+                               fällt im Verhältnis weitgehend heraus — was bleibt, ist,
+                               dass ein „i" schmaler zählt als ein „W". */
+                            const anteil = (text, bis2) => {
+                                const ganz = InkGeometry.textWidth(text, 1);
+                                if (!(ganz > 0))
+                                    return bis2 / Math.max(1, text.length);
+                                return Math.max(0, Math.min(1, InkGeometry.textWidth(text.slice(0, bis2), 1) / ganz));
+                            };
                             const kaesten = [...ks].map(k => {
                                 const st = stuecke[k];
                                 if (!st)
                                     return null;
-                                const len = Math.max(1, String(st.s).length);
+                                const text = String(st.s);
+                                const len = Math.max(1, text.length);
                                 const a = Math.max(0, von - (anfang[k] ?? 0)), z = Math.min(len, bis - (anfang[k] ?? 0));
-                                return { x: st.x + st.w * a / len, y: st.y, w: Math.max(2, st.w * (z - a) / len), h: st.h };
+                                const p1 = anteil(text, a), p2 = anteil(text, z);
+                                return { x: st.x + st.w * p1, y: st.y, w: Math.max(2, st.w * (p2 - p1)), h: st.h };
                             }).filter((k) => !!k);
                             neu.push({ index: i, rect: kaesten.length ? vereint(kaesten) : null });
                             von = bis;

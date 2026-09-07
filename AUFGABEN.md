@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — siebzehn Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — achtzehn Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -293,6 +293,11 @@ Gegenprobe, Bild und Entscheidung:
     mit drei Punkten — und ohne ein neues Feld, weil `pts` eine Liste ist
     und `move`, `scale` und `rotate` ohnehin alle Punkte anfassen. Der
     Verbinder bleibt offen: er ist eine Beziehung, kein Punkt. **Steht.**
+  · **G18 — Treffer und Verweise sitzen genauer** (E484, test457): der
+    Suchtreffer wird gemessen statt gezählt („iiii" ist kein halbes
+    „iiiiWWWW"), und ein Verweis an einem Strich bekommt eine
+    Trefffläche entlang des WEGES — nicht den Kasten, den L133
+    vorschlug, denn der finge die Nachbarn mit ein. **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

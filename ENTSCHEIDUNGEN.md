@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-463 Entscheidungen, E1 bis E483 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+464 Entscheidungen, E1 bis E484 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -527,6 +527,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E481** — Verweise treffen die Stelle, auch auf gedrehten Seiten — und die Schicht zieht ins Papier
 * **E482** — Die Kamera macht eine Seite, und der Radierer nimmt nur, was er meint
 * **E483** — Die Kurve mit ihrem Griff: die erste Form mit drei Punkten — und ohne ein neues Feld
+* **E484** — Treffer und Verweise sitzen genauer: gemessen statt gezählt, und ein Strich bekommt eine Trefffläche statt eines Kastens
 
 ---
 
@@ -38426,3 +38427,74 @@ dem Griff in der Mitte, die darum eine Gerade ist.
 GEPRÜFT. 11 Läufe grün: test87, test105, test109, test347, test438,
 test439, test445, test447, test451, test455, test456; dazu
 `npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.
+
+---
+
+E484 — Treffer und Verweise sitzen genauer: gemessen statt gezählt, und ein Strich bekommt eine Trefffläche statt eines Kastens
+--------------------------------------------------------------------------
+
+Zwei Näherungen aus L133. Beide standen dort als „stimmt ungefähr" — und
+ungefähr ist bei einem Treffer zu wenig.
+
+## 1. Der Trefferkasten wird gemessen
+
+Ein Suchtreffer bekam seinen Kasten ANTEILIG NACH DER ZAHL DER ZEICHEN im
+Textstück: die ersten vier von acht Zeichen galten als die linke Hälfte.
+Bei „iiiiWWWW" ist das falsch — „iiii" macht in Wirklichkeit ein Fünftel
+aus, nicht die Hälfte.
+
+Gemessen wird jetzt mit `InkGeometry.textWidth`, und zwar als
+VERHÄLTNIS: die Breite bis hierhin geteilt durch die Breite des ganzen
+Stücks. Dass die Schrift der Messung nicht die der PDF ist, fällt im
+Verhältnis weitgehend heraus — was bleibt, ist, dass ein „i" schmaler
+zählt als ein „W".
+
+In Zahlen, aus der Gegenprobe von `test457 §1`: bei „iiiiWWWW" sitzt der
+Kasten für „WWWW" gemessen bei 13,3 % der Seitenbreite und gezählt bei
+17,8 %. Die Wahrheit ist 13,3.
+
+## 2. Ein Verweis am Strich bekommt eine Trefffläche
+
+L133 schlug vor: „ein Kasten um ihn ist der bessere Träger." Der Kasten
+wäre aber falsch, und zwar aus demselben Grund wie in E476: ein Bogen über
+eine halbe Seite hat einen KASTEN über die halbe Seite, und der finge
+alles ein, was daneben steht.
+
+Also derselbe WEG, nur breiter: eine Kopie des Pfades (`cloneNode(false)`
+nimmt genau die Geometrie mit und sonst nichts), ohne Füllung, mit
+durchsichtiger Strichfarbe und 24 Punkten Breite, hinter dem sichtbaren
+Strich. Sie malt nichts und trifft alles, was rund zwölf Punkte um den
+Strich liegt. Gemessen: zehn Punkte daneben trifft, zwanzig nicht mehr.
+
+Damit steht ein Linienzug MIT Verweis in einer Gruppe, und die Kennung
+wandert an sie — wer `[data-sid]` sucht, soll das Ganze finden und nicht
+die Hälfte. Ohne Verweis bleibt alles, wie es war (ein Pfad, keine
+Gruppe): was niemand antippen soll, braucht auch kein Feld.
+
+Formen bekommen keins: Rechteck, Ellipse, Dreieck und rundes Rechteck
+sind seit E353 ohnehin in ihrer Fläche greifbar.
+
+## Wächter
+
+`test457` (neu, 23 Punkte): §1 mit einer PDF, die „iiiiWWWW" trägt — die
+Lage des Stücks wird vom Leser GEMESSEN statt hingeschrieben, damit die
+Prüfung richtig bleibt, wenn jemand die Schriftgrösse der Probe ändert;
+§2 der Bau der Gruppe (ein Feld, 24 breit, durchsichtig) und vier Tipps
+in wachsendem Abstand; §3 ohne Verweis bleibt es ein Pfad; §4 eine Form
+braucht kein Feld; §5 die Quellen.
+
+Zwei Gegenproben, beide gelaufen und rot.
+
+EINE ZAHL, DIE ABSICHTLICH NICHT BEHAUPTET WIRD: wo genau die Trefffläche
+endet. Zehn trifft, zwanzig nicht — die Grenze dazwischen hängt vom
+Rundungsverhalten des Browsers ab und läge auf dem nächsten Bildschirm
+anders. Eine Prüfung, die sie festnagelt, wäre irgendwann rot, ohne dass
+etwas kaputt ist.
+
+KEIN BILD (§55.3): ein Kasten, der vier Prozent weiter links sitzt, und
+eine Fläche, die man nicht sieht — beides ist eine Messung.
+
+GEPRÜFT. 15 Läufe grün: test87, test105, test109, test437, test438,
+test439, test441, test442, test445, test447, test451, test453, test455,
+test456, test457; dazu `npm run typecheck`, `npm run bauen:ts`,
+`node bauen.mts`.
