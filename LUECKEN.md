@@ -6435,7 +6435,10 @@ Zeichnen (nach G1, E465):
     `test451`.
   · ~~**Radierer-Filter** nach Werkzeugart~~ — **GESCHLOSSEN mit E482.**
     Fünf Arten: Ganz und Teil sagen, wie viel weggeht; Stift, Marker und
-    Band, wovon. **Offen bleibt „nur Bleistift":** der Bleistift ist in
+    Band, wovon. **Nachtrag E489:** „Band" radierte anfangs nichts — es
+    verglich gegen `art: 'band'`, und die Marke heisst `abdeck`. Der
+    Prüflauf hatte sich seine Marke selbst falsch gebaut und war deshalb
+    grün. Behoben, Gegenprobe rot gesehen. **Offen bleibt „nur Bleistift":** der Bleistift ist in
     Redion kein Werkzeug, sondern ein Stil des Stifts (E375) — er stünde
     in einer Reihe mit Werkzeugen und meinte etwas anderes als sie.
     `test455 §2`.

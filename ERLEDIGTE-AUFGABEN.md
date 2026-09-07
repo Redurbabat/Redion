@@ -4242,6 +4242,14 @@ dafür steht §13: schreiben, zurücklesen, vergleichen. Der Prüflauf macht
 das PDF mit Redions eigenem Leser wieder auf und misst einen Pixel dort,
 wo ein roter Strich liegen muss.
 
+**Ein Fund nebenbei (E489).** Beim Suchen nach Namen für die Markenarten
+kam heraus, dass der Radiermodus „Band" aus E482 **nie etwas radiert
+hat**: er verglich gegen `art: 'band'`, und das Abdeckband heisst als
+Marke `abdeck`. Aufgefallen war es nicht, weil `test455` sich seine
+Prüfmarke selbst gebaut hatte — mit der Kennung des Modus statt der der
+Art. Ein Prüflauf, der seinen Bestand selbst baut, muss ihn bauen wie die
+App; sonst prüft er eine Erfindung.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
 die verbliebenen Reste (getippter Text im gesicherten Bild und ein PDF mit

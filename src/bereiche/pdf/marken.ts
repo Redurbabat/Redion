@@ -33,7 +33,15 @@ const Marken = (() => {
     { id: 'teil', name: 'Teil', zeichen: '½', titel: 'Radierer: nur den berührten Teil eines Strichs', nur: '' },
     { id: 'stift', name: 'Stift', zeichen: '✎', titel: 'Radierer: nur Stiftstriche — Marker, Band und Formen bleiben', nur: 'stift' },
     { id: 'marker', name: 'Marker', zeichen: '▰', titel: 'Radierer: nur Marker', nur: 'marker' },
-    { id: 'band', name: 'Band', zeichen: '▭', titel: 'Radierer: nur Abdeckband', nur: 'band' }
+    /* `nur` NENNT DIE MARKENART, NICHT DEN MODUS (E489).
+       Hier stand `nur: 'band'` — und das Abdeckband heisst als Marke
+       `abdeck` (so setzt es `art: tool` beim Zeichnen, so liest es
+       `zeichneMarke`). Der Modus „Band" radierte deshalb NICHTS: er
+       verglich gegen eine Art, die es im Bestand nicht gibt.
+       Die Kennung des MODUS bleibt `band` — sie steht so in `meta` bei
+       jedem, der ihn einmal gewählt hat, und sie umzubenennen wäre eine
+       Datenwanderung ohne Gewinn (§53.3). */
+    { id: 'band', name: 'Band', zeichen: '▭', titel: 'Radierer: nur Abdeckband', nur: 'abdeck' }
   ] as const;
   /** Die Markenart, auf die ein Radiermodus sich beschränkt — '' heisst: alle. */
   const RADIER_NUR = (id: string): string =>

@@ -19,6 +19,8 @@
  *        Dateiwähler. Gelaufen, rot.
  *   §2 → in `radiereEine` die Beschränkung auslassen: der Radierer nimmt
  *        wieder alles mit. Gelaufen, rot.
+ *   §2 (E489) → `nur` des Modus „Band" wieder auf `'band'` stellen: er
+ *        radiert nichts mehr, weil die Marke `abdeck` heisst. Gelaufen, rot.
  *
  *   node pruefungen/lauf/test455.mts
  * ==========================================================================*/
@@ -145,7 +147,13 @@ const mitBlatt = async (): Promise<Page> => {
     Store.addBlock(seite.id, 'blatt', { text: '', blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1, marken: [
       { id: 'st', art: 'stift', farbe: '#111111', breite: 3, pts: [[80, 300], [160, 300]], pressure: [0.6, 0.6] },
       { id: 'mk', art: 'marker', farbe: '#ffd75e', breite: 18, pts: [[200, 300], [280, 300]] },
-      { id: 'bd', art: 'band', farbe: '#dddddd', breite: 2, pts: [[320, 280], [420, 320]] }
+      /* DIE MARKE HEISST `abdeck`, NICHT `band` (E489). Hier stand `band`
+         — die Kennung des RADIERMODUS —, und damit prüfte diese Suite
+         eine Art, die die App nie anlegt: `art: tool` beim Zeichnen macht
+         aus dem Werkzeug `abdeck` die Marke `abdeck`. Der Modus „Band"
+         radierte in Wirklichkeit nichts, und diese Zeile war der Grund,
+         warum es niemand sah. */
+      { id: 'bd', art: 'abdeck', farbe: '#dddddd', breite: 2, pts: [[320, 280], [420, 320]] }
     ] });
     await Store.flush();
     App.oeffne(seite.id);

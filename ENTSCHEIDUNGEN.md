@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-468 Entscheidungen, E1 bis E488 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+469 Entscheidungen, E1 bis E489 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -532,6 +532,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E486** — Farbsätze: die eigenen Farben unter einem Namen — und zwei alte Fehler, die dabei ans Licht kamen
 * **E487** — Die Suche über mehrere Dokumente: fremde Seiten in einer Klappe, und der Sprung sucht dort weiter
 * **E488** — Ein eigener PDF-Schreiber: das ganze Dokument mit Marken, ohne die Bildbytes je zu lesen
+* **E489** — Der Radierer „Band“ radierte nichts: er verglich gegen eine Markenart, die es nicht gibt
 
 ---
 
@@ -38942,3 +38943,59 @@ mit einer xref-Zeile von 19 statt 20 Bytes, und mit PNG statt JPEG (beide
 Seiten leer). Dazu test87, test105, test109. Und `npm run typecheck`,
 `npm run bauen:ts`, `node bauen.mts`, `npm run stand`.
 Bild: `node bilder.mts pdfausfuhr` — die Ansicht ist neu.
+
+
+---
+
+E489 — Der Radierer „Band“ radierte nichts: er verglich gegen eine Markenart, die es nicht gibt
+--------------------------------------------------------------------------
+
+Gefunden beim Suchen nach etwas anderem (einem Namen für jede Markenart,
+für die Liste der gesperrten Marken), und deshalb steht er hier eigens:
+**E482 hat einen Radiermodus gebaut, der nie etwas radiert hat.**
+
+## Der Fehler
+
+    RADIERER: { id: 'band', …, nur: 'band' }
+    radiereEine:   if (nur && mark.art !== nur) return false;
+    beim Zeichnen: running = { id, art: tool, … }   // tool ist 'abdeck'
+    zeichneMarke:  } else if (art === 'abdeck' && …)
+
+Das Werkzeug heißt `abdeck`, also heißt die Marke `abdeck`. Der Modus
+heißt `band`, und `nur` trug seinen eigenen Namen statt den der Marke.
+Ein Zug mit „Radierer: nur Abdeckband“ liess deshalb **jedes** Band
+stehen — und alles andere auch, denn er beschränkte sich ja.
+
+## Warum es niemandem auffiel
+
+`test455 §2` legte drei Marken an: Stift, Marker und — `art: 'band'`. Der
+Prüflauf hat sich seine eigene Marke gebaut, und zwar mit der Kennung des
+MODUS statt der der ART. Damit prüfte er einen Bestand, den die App nie
+erzeugt: eine Marke `band` zeichnet `zeichneMarke` nicht einmal (sie
+fällt in den Strich-Zweig ganz unten).
+
+Das ist die teuerste Sorte grüner Lauf: er misst nicht das Produkt,
+sondern seine eigene Annahme. Verwandt mit §55.2 („eine Prüfung, die
+immer ja sagt, ist keine“), aber eine Stufe schlimmer — diese hier sagte
+ja UND hatte einen echten Fehler unter sich.
+
+## Die Reparatur
+
+`nur: 'abdeck'`. Die Kennung des MODUS bleibt `band`: sie steht so in
+`meta` bei jedem, der ihn einmal gewählt hat, und sie umzubenennen wäre
+eine Datenwanderung ohne Gewinn (§53.3, Grenze 1 sinngemäss).
+
+`test455 §2` legt jetzt eine Marke `abdeck` an. Gegenprobe: `nur` zurück
+auf `'band'` — der Lauf ist rot („Modus band: es bleibt st, mk“ ergab
+`bd, mk, st`).
+
+## Was daraus folgt
+
+Ein Prüflauf, der seinen Bestand SELBST baut, muss ihn so bauen, wie die
+App ihn baut — sonst prüft er eine Erfindung. Wo es geht, holt man die
+Werte aus der Quelle (`Marken.RADIERER.length` in E485 war genau dieser
+Schritt); wo man sie hinschreibt, schreibt man sie ab, statt sie zu
+erraten (E21).
+
+GEPRÜFT. `test455` (18 Zusagen) mit der Gegenprobe rot gesehen; dazu
+test87, test105, test109, test344.
