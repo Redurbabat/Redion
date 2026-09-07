@@ -3990,7 +3990,29 @@ Code gehört, sondern in die Prüfung: §1.1 misst an 400 Fällen, dass eine
 Marke OHNE Drehung Zahl für Zahl streckt wie vorher — eine Änderung, die
 alte Marken um ein Hundertstel verschiebt, sieht niemand.
 
+**Und was der Finger trifft (E475, test448).** §37 ist hart im Kern —
+44 px auf den Hauptwegen —, und L133 führte drei Stellen, die es nicht
+waren. Erst gemessen (§36), dann gebaut; am Telefon 390×780, die Seite
+344×487 gerendert: der Verweis einer PDF **6,9 px** hoch, der Regler der
+Strichstärke **16** (die Klappe darum mass 44 — getroffen werden muss der
+Regler), die Papierauswahl **36**.
+
+Zwei davon sind eine Zeile CSS. Der Verweis nicht: ihn selbst zu
+vergrössern hiesse, eine Textseite mit dreissig Verweisen unter dreissig
+blaue Kästen zu legen. Also bleibt der sichtbare Verweis, was er ist, und
+nur seine Trefffläche wächst — **aber nie über die Hälfte des Abstands zum
+nächsten Verweis**. Eine Fläche, die den Nachbarn verschluckt, tauscht
+„nicht getroffen" gegen „das Falsche getroffen", und in einem
+Inhaltsverzeichnis wäre das ein Sprung in ein fremdes Dokument. So gehört
+jeder Punkt dem nächstgelegenen Verweis: keine tote Zone dazwischen, keine
+Überdeckung. Gemessen: der freistehende wächst von 6 auf 44×45, zwei mit
+26 Punkten Zeilenabstand auf je 15.
+
+Drei Gegenproben rot gesehen. Und ein Bild, auf dem die Trefffläche rot
+gestrichelt zu sehen ist — man sieht darauf sofort, dass die zwei engen
+Verweise sich genau in der Mitte treffen.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
 die verbliebenen Reste (gedrehte Dreiecke, Kamera als Seite, Farbsets,
-Menü je Miniatur, Kritzel-Kasten, die drei Trefferflächen unter 44 px).
+Menü je Miniatur, der Kasten beim Kritzel-Löschen, `trefferMalen`).

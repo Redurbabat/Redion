@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-454 Entscheidungen, E1 bis E474 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+455 Entscheidungen, E1 bis E475 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -518,6 +518,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E472** — Die kleinen GoodNotes-Reste: Dreieck erkennen, Bild aus der Ablage, mehrere PDFs, Rand-Vorschub
 * **E473** — Was die Prüfung fand: eine Farbe kann Code sein, die Sperre hatte sechs Türen, pdf.js stand wieder im Anzeigeweg
 * **E474** — Das Gedrehte ist wirklich gedreht: der Griff läuft nicht mehr weg, der Radierer trifft die Marke statt ihren Kasten
+* **E475** — Was der Finger trifft: sieben Pixel sind kein Ziel — und eine Trefffläche darf den Nachbarn nicht verschlucken
 
 ---
 
@@ -37654,3 +37655,91 @@ GEPRÜFT. 21 Läufe grün: test87, test105, test109, test344, test345,
 test349, test352, test353, test367, test368, test384, test385, test425,
 test439, test440, test441, test442, test443, test445, test446, test447;
 dazu `npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.
+
+---
+
+E475 — Was der Finger trifft: sieben Pixel sind kein Ziel — und eine Trefffläche darf den Nachbarn nicht verschlucken
+--------------------------------------------------------------------------
+
+§37 ist hart im Kern: „44 px Mindestgrösse auf den Hauptwegen." L133 führte
+seit dem 7. September drei Stellen, die es nicht waren — und weil §36 sagt
+„erst messen, dann bauen", stehen hier die gemessenen Zahlen und nicht
+geschätzte. Telefon 390×780, die Seite 344×487 gerendert:
+
+    Verweis einer PDF                 6,9 px hoch
+    Regler der Strichstärke          16   px hoch   (die Klappe darum: 44)
+    Papierauswahl im Seitenmenü      36   px hoch
+
+ZWEI DAVON SIND EINE ZEILE CSS.
+
+  · Der Regler: `input[type=range]` bekommt seine Höhe vom Element, nicht
+    von der Spur. `height:var(--touch-min)` — Spur und Knopf bleiben darin
+    mittig. Dazu `outline-offset:-2px`, damit der Fokusrahmen (§38) bei
+    44 px nicht aus der Klappe ragt. Dass die KLAPPE 44 mass, half nichts:
+    getroffen werden muss der Regler.
+  · Die Papierauswahl stand direkt über „Seite danach" und hatte gar keine
+    Regel — sie nahm die des Browsers. `min-height:var(--touch-min)` am
+    `select` des Inspectors. Nachgemessen: die Knöpfe des Seitenmenüs
+    massen bereits alle 44, der `select` war der einzige darunter.
+
+DER VERWEIS IST ES NICHT, und das ist der eigentliche Gegenstand dieses
+Eintrags.
+
+Ihn selbst zu vergrössern kam nicht in Frage: eine PDF-Textseite mit
+dreissig Verweisen läge dann unter dreissig blauen Kästen von 44 px, die
+einander überlappen. Der SICHTBARE Verweis bleibt also genau die Fläche,
+die in der PDF steht; gewachsen wird nur die TREFFFLÄCHE, als `::before`
+rundherum.
+
+    .document-verweis::before{ content:''; position:absolute;
+      inset:calc(-1 * var(--verweis-hoch,0px)) calc(-1 * var(--verweis-breit,0px)) }
+
+WIE WEIT SIE WÄCHST, IST DIE GANZE FRAGE. 44 px klingt nach der Antwort,
+ist aber die falsche: in einem Inhaltsverzeichnis stehen die Zeilen acht
+Pixel auseinander. Eine Trefffläche von 44 px deckt dort drei Nachbarn zu
+— sie tauscht „nicht getroffen" gegen „das Falsche getroffen", und das ist
+schlimmer, weil es unbemerkt in ein fremdes Dokument springt.
+
+Die Regel, die `verweisLuft` (in `document-mode.ts`, gerufen aus
+`verweiseLegen`) durchsetzt, lautet deshalb:
+
+> So viel Luft, dass 44 px daraus werden — aber nie mehr als die HÄLFTE
+> des Abstands zum nächsten Verweis.
+
+Damit gehört jeder Punkt der Seite dem NÄCHSTGELEGENEN Verweis: zwischen
+zwei Zeilen bleibt keine tote Zone (beide Flächen stossen genau in der
+Mitte an), und keine deckt die andere. Waagerecht und senkrecht wird
+getrennt gerechnet, denn zwei Verweise in EINER Zeile stehen sich seitlich
+im Weg und nicht nach oben. Überlappen sich zwei Verweise schon in der
+PDF, bekommt keiner Luft.
+
+Gemessen im Prüflauf: der freistehende Verweis wächst von 6 auf 44×45;
+die zwei mit 26 Punkten Zeilenabstand bekommen je 4 px und kommen auf 15 —
+mehr als das Doppelte, und die Grenze zwischen ihnen liegt auf dem Punkt
+genau in der Mitte.
+
+WARUM NICHT EINFACH IN JAVASCRIPT DEN NÄCHSTEN VERWEIS SUCHEN? Ein
+Zeigerereignis abfangen, den nächstgelegenen Verweis im Umkreis suchen und
+ihn auslösen, wäre ebenso genau. Es wäre aber ein zweiter Trefferweg neben
+dem des Browsers — und damit zwei Wege, die auseinanderlaufen können
+(Tastatur, Screenreader, Rechtsklick, „Link in neuem Tab"). Die Fläche im
+DOM zu vergrössern lässt alles das unverändert: es ist derselbe `<a>`, nur
+grösser zu treffen.
+
+WÄCHTER. `test448` (neu, 22 Punkte), am Telefon-Viewport: §1 die drei
+Masse, dazu die Zusicherung, dass im ganzen Seitenmenü nichts mehr unter
+44 steht; §2 die Nachbarschaftsregel (eng genug, keiner deckt den
+anderen, keine tote Zone dazwischen, beide trotzdem gewachsen); §3 der
+sichtbare Verweis ist weiter 7 px, nicht 44; §4 `elementFromPoint` an
+fünf Stellen — Mitte, 16 darüber, 16 darunter, 20 daneben treffen, 60 weg
+nicht mehr; §5 die Quellen. Drei Gegenproben, alle gelaufen und rot:
+`verweisLuft` als Leerlauf (6 Punkte rot), die Reglerhöhe entfernt (2 rot),
+`min-height` der Papierauswahl entfernt (3 rot).
+
+BILDER. `bilder/e475-verweise-trefflaeche.png` (die Trefffläche rot
+gestrichelt: die zwei engen stossen in der Mitte an, der freistehende hat
+sein Quadrat), `e475-regler-telefon.png`, `e475-seitenmenue-telefon.png`.
+
+GEPRÜFT. 17 Läufe grün: test87, test105, test109, test341, test351,
+test395, test424, test437, test440–test448; dazu `npm run typecheck`,
+`npm run bauen:ts`, `node bauen.mts`.

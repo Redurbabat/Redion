@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — acht Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — neun Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -250,6 +250,11 @@ Gegenprobe, Bild und Entscheidung:
     Marke statt weit um sie herum, der Griff läuft beim Ziehen nicht mehr
     weg, der Radierer trifft die Marke statt ihren Kasten, der Kastenzug
     fängt nicht ein, was in der leeren Ecke steht. **Steht.**
+  · **G9 — Was der Finger trifft** (E475, test448): die drei §37-Stellen
+    aus L133 — der PDF-Verweis (gemessen 6,9 px) bekommt eine Trefffläche,
+    die bei der Hälfte des Nachbarabstands haltmacht; der Regler der
+    Strichstärke misst 44 statt 16; die Papierauswahl 44 statt 36.
+    **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

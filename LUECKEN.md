@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G8)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G9)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6502,12 +6502,14 @@ Aus der Prüfung nach den Bögen (E473) bleibt ehrlich stehen:
     gehalten und sind behoben; die übrigen 25 sind nicht widerlegt,
     sondern nur nicht geprüft. Einer davon ist seit E474 erledigt
     (`InkGeometry.scale` kannte `dreh` nicht — eine gedrehte Marke
-    verzerrte beim Ziehen am Eckgriff). Offen bleiben darunter:
-    Kritzel-Löschen greift über den achsenparallelen Kasten des ganzen
-    Gekritzels, `trefferMalen` zeichnet bei jeder nachgezogenen Seite die
-    Treffer aller Seiten neu, die Trefferfläche der PDF-Verweise ist am
-    Telefon rund 7 px hoch, der Ziehbereich des Stärke-Reglers rund 20,
-    und die Papierauswahl im Seitenmenü misst 36 statt 44 px (§37).
+    verzerrte beim Ziehen am Eckgriff). Erledigt sind ausserdem die drei
+    §37-Stellen mit E475: gemessen waren es 6,9 px am PDF-Verweis, 16 am
+    Regler der Strichstärke und 36 an der Papierauswahl — alle drei jetzt
+    44, der Verweis über eine Trefffläche, die beim halben Nachbarabstand
+    haltmacht (`test448`). Offen bleiben darunter: Kritzel-Löschen greift
+    über den achsenparallelen Kasten des ganzen Gekritzels, und
+    `trefferMalen` zeichnet bei jeder nachgezogenen Seite die Treffer
+    aller Seiten neu.
 
 Was Redion auch nach G5 nicht haben wird, und warum:
 

@@ -150,3 +150,12 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
 }
 @media(prefers-reduced-motion:reduce){.document-drawingbar button{transition:none}.document-drawingbar button:active:not(:disabled){transform:none}}
 @media print{.document-drawingbar,.document-source-master,.document-copy-label,.document-studio .blatt-reihe{display:none!important}}
+
+/* §37 · DIE PAPIERAUSWAHL IM SEITENMENÜ (E475, L133)
+   ---------------------------------------------------------------------
+   Gemessen am Telefon: 36 px. Sie steht direkt über „Seite danach" und
+   wird bei jeder neuen Seite angefasst — ein Hauptweg, kein Nebenweg,
+   also 44 px ohne Ausnahme. Die Knöpfe des Inspectors messen bereits 44
+   (nachgemessen: keiner darunter); der `select` hatte gar keine Regel und
+   nahm die des Browsers. */
+.document-inspector select{ min-height:var(--touch-min); padding:0 8px }

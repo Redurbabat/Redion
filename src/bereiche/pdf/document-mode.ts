@@ -1059,7 +1059,55 @@ const DocumentMode = (() => {
         schicht.style.top = (p.top - s.top) + 'px';
         schicht.style.width = p.width + 'px';
         schicht.style.height = p.height + 'px';
+        verweisLuft(schicht);
       });
+    };
+    /**
+     * DER FINGER BRAUCHT MEHR ALS SIEBEN PIXEL (E475, §37, L133).
+     *
+     * GEMESSEN am Telefon (390×780, Seite 344×487 gerendert): eine
+     * Verweiszeile einer PDF ist **6,9 px** hoch. Das ist keine Frage des
+     * Geschmacks — mit dem Finger ist sie nicht zu treffen, und der Verweis
+     * ist im Lesemodus einer der wenigen Wege, die es überhaupt gibt.
+     *
+     * Der SICHTBARE Verweis bleibt, was er ist: seine echte Fläche aus der
+     * PDF. Ihn zu vergrössern hiesse, die halbe Seite unter blaue Kästen
+     * zu legen. Gewachsen wird nur die TREFFFLÄCHE — ein `::before` rund
+     * um ihn herum, so viel Luft, dass 44 px daraus werden.
+     *
+     * UND SIE WÄCHST NUR SO WEIT, WIE SIE DARF. Nie über die Hälfte des
+     * Abstands zum nächsten Verweis: eine Trefffläche, die den Nachbarn
+     * verschluckt, ist keine Verbesserung — sie tauscht „nicht getroffen"
+     * gegen „das Falsche getroffen", und das ist schlimmer. In einem
+     * Inhaltsverzeichnis mit zwölf Zeilen bekommt also jede Zeile den
+     * halben Zeilenabstand, im freien Text die vollen 44 px.
+     *
+     * Waagerecht und senkrecht getrennt gerechnet: zwei Verweise in EINER
+     * Zeile stehen sich seitlich im Weg, nicht nach oben.
+     */
+    const verweisLuft = (schicht: HTMLElement): void => {
+      const ZIEL = 44;
+      const kaesten = [...schicht.querySelectorAll<HTMLElement>('.document-verweis')]
+        .map(el => ({ el, r: el.getBoundingClientRect() }));
+      if (!kaesten.length) return;
+      for (const a of kaesten) {
+        /* Unsichtbar (Werkzeuge offen) hat nichts eine Fläche — dann gibt
+           es auch nichts zu rechnen; die nächste Lage holt es nach. */
+        if (!a.r.width && !a.r.height) { a.el.style.removeProperty('--verweis-hoch');
+          a.el.style.removeProperty('--verweis-breit'); continue; }
+        let hoch = Math.max(0, (ZIEL - a.r.height) / 2);
+        let breit = Math.max(0, (ZIEL - a.r.width) / 2);
+        for (const b of kaesten) {
+          if (b === a || (!b.r.width && !b.r.height)) continue;
+          const dx = Math.max(b.r.left - a.r.right, a.r.left - b.r.right, 0);
+          const dy = Math.max(b.r.top - a.r.bottom, a.r.top - b.r.bottom, 0);
+          if (!dx && !dy) { hoch = 0; breit = 0; break; }   /* sie überlappen schon */
+          if (dy) hoch = Math.min(hoch, dy / 2);
+          if (dx) breit = Math.min(breit, dx / 2);
+        }
+        a.el.style.setProperty('--verweis-hoch', Math.round(hoch) + 'px');
+        a.el.style.setProperty('--verweis-breit', Math.round(breit) + 'px');
+      }
     };
     const verweiseMalen = (i: number): void => {
       const stand = staende[i];

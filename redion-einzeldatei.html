@@ -13010,6 +13010,19 @@ body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
   background:rgba(47,126,216,.08); outline:1px dashed rgba(47,126,216,.55); cursor:pointer;
   padding:0; border:0; min-height:0; min-width:0}
 .document-verweis:hover, .document-verweis:focus-visible{background:rgba(47,126,216,.22)}
+/* DIE TREFFFLÄCHE IST GRÖSSER ALS DER VERWEIS (E475, §37). Gemessen am
+   Telefon war eine Verweiszeile 6,9 px hoch. Der sichtbare Kasten bleibt,
+   was er ist; `--verweis-hoch` und `--verweis-breit` setzt
+   `document-mode.ts` je Verweis so, dass 44 px daraus werden — aber nie
+   weiter als bis zur Hälfte des Abstands zum Nachbarn. */
+.document-verweis::before{content:''; position:absolute;
+  inset:calc(-1 * var(--verweis-hoch, 0px)) calc(-1 * var(--verweis-breit, 0px))}
+
+/* §37: DER ZIEHBEREICH DES REGLERS. Die Klappe misst 44 px, der Regler
+   darin mass 16 — und getroffen werden muss der Regler, nicht die Klappe.
+   `input[type=range]` bekommt seine Höhe vom Element, die Spur und der
+   Knopf bleiben darin mittig. */
+.blatt-werk > label.blatt-staerke input{ height:var(--touch-min); outline-offset:-2px }
 .document-workspace[data-document-tools="open"] .document-verweise{display:none}
 .blatt-marken [data-verweis]{cursor:pointer}
 .blatt-marken [data-verweis]:hover{filter:drop-shadow(0 0 3px rgba(47,126,216,.9))}
@@ -16740,6 +16753,15 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
 @media(prefers-reduced-motion:reduce){.document-drawingbar button{transition:none}.document-drawingbar button:active:not(:disabled){transform:none}}
 @media print{.document-drawingbar,.document-source-master,.document-copy-label,.document-studio .blatt-reihe{display:none!important}}
 
+/* §37 · DIE PAPIERAUSWAHL IM SEITENMENÜ (E475, L133)
+   ---------------------------------------------------------------------
+   Gemessen am Telefon: 36 px. Sie steht direkt über „Seite danach" und
+   wird bei jeder neuen Seite angefasst — ein Hauptweg, kein Nebenweg,
+   also 44 px ohne Ausnahme. Die Knöpfe des Inspectors messen bereits 44
+   (nachgemessen: keiner darunter); der `select` hatte gar keine Regel und
+   nahm die des Browsers. */
+.document-inspector select{ min-height:var(--touch-min); padding:0 8px }
+
 </style>
 
 <!-- =========================================================================
@@ -18743,7 +18765,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 534, inhalt: 'f0e732c1fb15dcd9', gebaut: '2026-09-07T15:01:53.881Z' };
+const Stand = { fassung: 538, inhalt: 'f6237526c3ebe99e', gebaut: '2026-09-07T15:29:31.860Z' };
 window.Stand = Stand;
 
 </script>
@@ -65881,7 +65903,66 @@ const DocumentMode = (() => {
                 schicht.style.top = (p.top - s.top) + 'px';
                 schicht.style.width = p.width + 'px';
                 schicht.style.height = p.height + 'px';
+                verweisLuft(schicht);
             });
+        };
+        /**
+         * DER FINGER BRAUCHT MEHR ALS SIEBEN PIXEL (E475, §37, L133).
+         *
+         * GEMESSEN am Telefon (390×780, Seite 344×487 gerendert): eine
+         * Verweiszeile einer PDF ist **6,9 px** hoch. Das ist keine Frage des
+         * Geschmacks — mit dem Finger ist sie nicht zu treffen, und der Verweis
+         * ist im Lesemodus einer der wenigen Wege, die es überhaupt gibt.
+         *
+         * Der SICHTBARE Verweis bleibt, was er ist: seine echte Fläche aus der
+         * PDF. Ihn zu vergrössern hiesse, die halbe Seite unter blaue Kästen
+         * zu legen. Gewachsen wird nur die TREFFFLÄCHE — ein `::before` rund
+         * um ihn herum, so viel Luft, dass 44 px daraus werden.
+         *
+         * UND SIE WÄCHST NUR SO WEIT, WIE SIE DARF. Nie über die Hälfte des
+         * Abstands zum nächsten Verweis: eine Trefffläche, die den Nachbarn
+         * verschluckt, ist keine Verbesserung — sie tauscht „nicht getroffen"
+         * gegen „das Falsche getroffen", und das ist schlimmer. In einem
+         * Inhaltsverzeichnis mit zwölf Zeilen bekommt also jede Zeile den
+         * halben Zeilenabstand, im freien Text die vollen 44 px.
+         *
+         * Waagerecht und senkrecht getrennt gerechnet: zwei Verweise in EINER
+         * Zeile stehen sich seitlich im Weg, nicht nach oben.
+         */
+        const verweisLuft = (schicht) => {
+            const ZIEL = 44;
+            const kaesten = [...schicht.querySelectorAll('.document-verweis')]
+                .map(el => ({ el, r: el.getBoundingClientRect() }));
+            if (!kaesten.length)
+                return;
+            for (const a of kaesten) {
+                /* Unsichtbar (Werkzeuge offen) hat nichts eine Fläche — dann gibt
+                   es auch nichts zu rechnen; die nächste Lage holt es nach. */
+                if (!a.r.width && !a.r.height) {
+                    a.el.style.removeProperty('--verweis-hoch');
+                    a.el.style.removeProperty('--verweis-breit');
+                    continue;
+                }
+                let hoch = Math.max(0, (ZIEL - a.r.height) / 2);
+                let breit = Math.max(0, (ZIEL - a.r.width) / 2);
+                for (const b of kaesten) {
+                    if (b === a || (!b.r.width && !b.r.height))
+                        continue;
+                    const dx = Math.max(b.r.left - a.r.right, a.r.left - b.r.right, 0);
+                    const dy = Math.max(b.r.top - a.r.bottom, a.r.top - b.r.bottom, 0);
+                    if (!dx && !dy) {
+                        hoch = 0;
+                        breit = 0;
+                        break;
+                    } /* sie überlappen schon */
+                    if (dy)
+                        hoch = Math.min(hoch, dy / 2);
+                    if (dx)
+                        breit = Math.min(breit, dx / 2);
+                }
+                a.el.style.setProperty('--verweis-hoch', Math.round(hoch) + 'px');
+                a.el.style.setProperty('--verweis-breit', Math.round(breit) + 'px');
+            }
         };
         const verweiseMalen = (i) => {
             const stand = staende[i];
