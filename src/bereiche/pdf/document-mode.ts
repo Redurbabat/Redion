@@ -1989,12 +1989,26 @@ const DocumentMode = (() => {
       lupeBild.replaceChildren();
       const { bw, bh } = SheetSpace.masseVon(block);
       lupeBild.style.setProperty('aspect-ratio', bw + ' / ' + bh);
-      if (block.bildDateiId && typeof Dateien !== 'undefined') {
-        const img = document.createElement('img');
-        img.alt = '';
-        void Dateien.adresse(String(block.bildDateiId)).then((u: string | null) => { if (u && lupeSeite === state.index) img.src = u; });
-        lupeBild.appendChild(img);
-      }
+      /* DIE UEBERSICHT IST EIN ABBILD DER SEITE MIT MARKEN (E469 Nachtrag):
+         `seiteAlsBild` zeichnet Papier, Seitenbild und Marken — das erste
+         Bild zeigte fuer ein leeres Blatt nur Weiss, und wer klein
+         schreibt, will sehen, WO auf der Seite er ist. Bis das Abbild da
+         ist, steht das rohe Seitenbild (wenn es eins gibt). Neu gezeichnet
+         wird beim Seitenwechsel — nicht bei jedem Strich, das kostete je
+         Strich eine Leinwand von 1191 × 1684. */
+      const img = document.createElement('img');
+      img.alt = '';
+      if (block.bildDateiId && typeof Dateien !== 'undefined')
+        void Dateien.adresse(String(block.bildDateiId)).then((u: string | null) => { if (u && lupeSeite === state.index && !img.dataset.abbild) img.src = u; });
+      lupeBild.appendChild(img);
+      const meine = state.index;
+      void seiteAlsBild(block).then(blob => {
+        if (!blob || lupeSeite !== meine || !img.isConnected) return;
+        const url = URL.createObjectURL(blob);
+        img.dataset.abbild = '1';
+        img.addEventListener('load', () => URL.revokeObjectURL(url), { once: true });
+        img.src = url;
+      });
       if (lupeBand) lupeBild.appendChild(lupeBand);
     };
     const lupeBandZeichnen = (): void => {

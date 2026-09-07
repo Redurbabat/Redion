@@ -37203,3 +37203,31 @@ Stelle (Reihenfolge, eigene Quelle, keine Rückfrage, Anhang oben), §3
 Seite als Bild (1191 × 1684, Kante rot, innen weiss, gedreht 1684 × 1191,
 Bildseite rot), §4 Zoom-Fenster (250 %, Band, ▼, Ziehen, ✕, Escape), §5
 Rechte, §6 Quellen.
+
+GEGENPROBEN (§55.2): §1 → die Höhe der Bildseite fest auf A4 — das
+Querbild wurde hochkant, vier Punkte rot. §2 → die Stelle ignoriert
+(immer ans Ende) — die Seiten landeten hinter den Bildern, rot. Beide
+zurückgedreht, 26/26, beide Bauten sauber.
+
+NACHTRAG (7. September 2026). Die Übersicht des Zoom-Fensters zeigte für
+ein leeres Blatt nur Weiss (auf dem Bild gesehen, §55) — wer klein
+schreibt, will sehen, WO auf der Seite er ist. Sie ist jetzt ein Abbild
+der Seite MIT Marken über `seiteAlsBild`, neu gezeichnet beim
+Seitenwechsel, nicht bei jedem Strich (das kostete je Strich eine
+Leinwand von 1191 × 1684). Bis das Abbild da ist, steht das rohe
+Seitenbild.
+
+GEPRÜFT. test442 (26 Punkte, neu), test440 (zehn Griffe), test441,
+test437, test424, test285, test395, test385, test386, test393, test177,
+test210, test228, test341, test351, test362, test290, test105, test109,
+test87, test426, test365, test174, test202 — alle 24 grün; `npm run
+typecheck`, `npm run bauen:ts`, `node bauen.mts`.
+
+BILDER ANGESEHEN: `bilder/lupe-rechner-hell.png` (die Seite auf 250 %,
+unten die Übersicht mit dem Band und den vier Pfeilen, im Seitenmenü die
+drei neuen Griffe), `lupe-handy-dunkel` (das Seitenmenü als Bogen, der
+Schalter „Zoom-Fenster aus" gedrückt), `seiten-rechner-hell`.
+
+DATEIEN. `src/bereiche/pdf/einlesen.ts`, `src/bereiche/pdf/document-mode.ts`,
+`quell/schale/stil/bausteine.css`, `bilder.mts`,
+`pruefungen/lauf/test442.mts` (neu), `test440.mts`.

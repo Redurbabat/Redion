@@ -18731,7 +18731,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 506, inhalt: '694af530f54c9e13', gebaut: '2026-09-07T09:14:50.082Z' };
+const Stand = { fassung: 507, inhalt: 'bcf51ae821e4131d', gebaut: '2026-09-07T09:23:37.154Z' };
 window.Stand = Stand;
 
 </script>
@@ -66687,13 +66687,28 @@ const DocumentMode = (() => {
             lupeBild.replaceChildren();
             const { bw, bh } = SheetSpace.masseVon(block);
             lupeBild.style.setProperty('aspect-ratio', bw + ' / ' + bh);
-            if (block.bildDateiId && typeof Dateien !== 'undefined') {
-                const img = document.createElement('img');
-                img.alt = '';
-                void Dateien.adresse(String(block.bildDateiId)).then((u) => { if (u && lupeSeite === state.index)
+            /* DIE UEBERSICHT IST EIN ABBILD DER SEITE MIT MARKEN (E469 Nachtrag):
+               `seiteAlsBild` zeichnet Papier, Seitenbild und Marken — das erste
+               Bild zeigte fuer ein leeres Blatt nur Weiss, und wer klein
+               schreibt, will sehen, WO auf der Seite er ist. Bis das Abbild da
+               ist, steht das rohe Seitenbild (wenn es eins gibt). Neu gezeichnet
+               wird beim Seitenwechsel — nicht bei jedem Strich, das kostete je
+               Strich eine Leinwand von 1191 × 1684. */
+            const img = document.createElement('img');
+            img.alt = '';
+            if (block.bildDateiId && typeof Dateien !== 'undefined')
+                void Dateien.adresse(String(block.bildDateiId)).then((u) => { if (u && lupeSeite === state.index && !img.dataset.abbild)
                     img.src = u; });
-                lupeBild.appendChild(img);
-            }
+            lupeBild.appendChild(img);
+            const meine = state.index;
+            void seiteAlsBild(block).then(blob => {
+                if (!blob || lupeSeite !== meine || !img.isConnected)
+                    return;
+                const url = URL.createObjectURL(blob);
+                img.dataset.abbild = '1';
+                img.addEventListener('load', () => URL.revokeObjectURL(url), { once: true });
+                img.src = url;
+            });
             if (lupeBand)
                 lupeBild.appendChild(lupeBand);
         };
