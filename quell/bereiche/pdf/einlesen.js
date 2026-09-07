@@ -151,24 +151,25 @@ const PdfEinlesen = (() => {
                er fragt einmal oder gar nicht und reicht die Antwort herein. Die
                Merkregel `pdfAnordnung` bleibt dann unberührt — sie gehört dem
                Menschen, nicht dem Massenimport. */
-            const anordnung = vorgabe && vorgabe.anordnung ? vorgabe.anordnung
-                : typeof Dialog !== 'undefined'
-                    ? await Dialog.wahl({
-                        titel: datei.name,
-                        text: 'Wie soll „' + datei.name + '" auf der Seite liegen?',
-                        knoepfe: [
-                            ...(zuletzt === 'untereinander' ? [knopfNur, knopfSeite]
-                                : [knopfSeite, knopfNur]),
-                            { id: '', text: 'Abbrechen',
-                                hinweis: 'Die Datei bleibt als Anhang liegen' }
-                        ]
-                    })
-                    : zuletzt;
+            const anordnung = vorgabe && vorgabe.anStelle ? 'untereinander'
+                : vorgabe && vorgabe.anordnung ? vorgabe.anordnung
+                    : typeof Dialog !== 'undefined'
+                        ? await Dialog.wahl({
+                            titel: datei.name,
+                            text: 'Wie soll „' + datei.name + '" auf der Seite liegen?',
+                            knoepfe: [
+                                ...(zuletzt === 'untereinander' ? [knopfNur, knopfSeite]
+                                    : [knopfSeite, knopfNur]),
+                                { id: '', text: 'Abbrechen',
+                                    hinweis: 'Die Datei bleibt als Anhang liegen' }
+                            ]
+                        })
+                        : zuletzt;
             if (!anordnung) {
                 wegMelden();
                 return nurAnhaengen('liegt als Anhang auf der Seite.');
             }
-            if (!(vorgabe && vorgabe.anordnung))
+            if (!(vorgabe && (vorgabe.anordnung || vorgabe.anStelle)))
                 Store.setMeta('pdfAnordnung', anordnung);
             const daneben = anordnung === 'nebeneinander';
             let bis = gesamt;
@@ -200,6 +201,8 @@ const PdfEinlesen = (() => {
                 bis = antwort === 'erste' ? OHNE_FRAGE : gesamt;
             }
             const gemacht = [];
+            /* Die Stelle wandert mit jeder Seite eine weiter (E469). */
+            let stelle = vorgabe && vorgabe.anStelle ? vorgabe.anStelle.index : -1;
             for (let n = 1; n <= bis; n++) {
                 sageAn('Seite ' + n + ' von ' + bis + ' …');
                 const geo = await griff.geometrie(n);
@@ -208,7 +211,7 @@ const PdfEinlesen = (() => {
                    die von Hand angelegten Spalten (E102) — columns → spalte →
                    Inhalt. Eine eigene Bauform wäre eine zweite Wahrheit über
                    dasselbe Ding. */
-                let wohin = elternId;
+                let wohin = vorgabe && vorgabe.anStelle ? vorgabe.anStelle.elternId : elternId;
                 let nachher = () => { };
                 if (daneben) {
                     const sp = Store.addBlock(elternId, 'columns', { text: '', spalten: 2 });
@@ -257,7 +260,7 @@ const PdfEinlesen = (() => {
                        überhaupt eines ist, und das ist die Frage, die man beim
                        Wiederlesen stellt. */
                     herkunft: 'quelle'
-                });
+                }, stelle >= 0 ? stelle++ : -1);
                 nachher();
                 const satz = await Dateien.ablegen(new File([bild], datei.name.replace(/\.pdf$/i, '') + '-s' + n + '.webp', { type: 'image/webp' }), { blockId: b.id, abgeleitet: true });
                 Store.updateBlock(b.id, { bildDateiId: satz.id });
@@ -729,7 +732,7 @@ const PdfEinlesen = (() => {
      * einem Elternblock an; ohne den wüsste niemand, wohin. Ein Knopf, der
      * still nichts tut, ist schlimmer als einer, der sagt warum.
      */
-    const waehlen = async (elternId) => {
+    const waehlen = async (elternId, vorgabe) => {
         const ziel = elternId || (typeof App !== 'undefined' ? App.aktuelleSeite() : '');
         if (!ziel) {
             UI.toast('Erst eine Seite öffnen — dorthin kommen die PDF-Seiten.');
@@ -759,7 +762,7 @@ const PdfEinlesen = (() => {
                     return;
                 }
                 try {
-                    fertig(await alsSeiten(datei, ziel));
+                    fertig(await alsSeiten(datei, ziel, vorgabe));
                 }
                 catch (e) {
                     UI.toast('Die PDF liess sich nicht einlesen: ' +
@@ -781,6 +784,120 @@ const PdfEinlesen = (() => {
             input.click();
         });
     };
-    return { alsSeiten, waehlen, neuBerechnen, ohneBild, schaerfer, BREITE_MAX, OHNE_FRAGE };
+    /* ══ BILDER ALS SEITEN (E469) ══════════════════════════════════════════════
+       Ein Foto, ein Scan, eine PNG-Grafik wird eine SEITE des Dokuments — wie
+       in GoodNotes „Bild als Seite einfügen". Dieselbe Bauart wie eine
+       PDF-Seite (`pdfseite` mit `bildDateiId`, `bw`, `bh`), nur ohne
+       `quelleId`: es gibt kein Original, aus dem sich etwas neu rechnen
+       liesse, und `herkunft: 'bild'` sagt es. Das Bild ist NUTZERDATEN, kein
+       abgeleitetes Seitenbild — darum `abgeleitet: false`, damit es in jede
+       `.redion`-Sicherung kommt (§11, §14).
+  
+       Die Seite ist A4-breit; ihre Hoehe folgt dem Bild. Riesige Fotos werden
+       auf 2480 px Kantenlaenge gebracht (300 dpi bei A4): mehr sieht niemand,
+       und ein 12-Megapixel-Foto je Seite spraengte das Telefon (§36). */
+    const BILD_KANTE_MAX = 2480;
+    const bildMass = (blob) => new Promise((ok, nein) => {
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); ok({ w: img.naturalWidth, h: img.naturalHeight }); };
+        img.onerror = () => { URL.revokeObjectURL(url); nein(new Error('Das Bild liess sich nicht lesen.')); };
+        img.src = url;
+    });
+    const bildVerkleinern = async (datei) => {
+        const { w, h } = await bildMass(datei);
+        if (!w || !h)
+            throw new Error('Das Bild hat keine Masse.');
+        if (Math.max(w, h) <= BILD_KANTE_MAX)
+            return { blob: datei, w, h };
+        const f = BILD_KANTE_MAX / Math.max(w, h);
+        const zw = Math.max(1, Math.round(w * f)), zh = Math.max(1, Math.round(h * f));
+        const url = URL.createObjectURL(datei);
+        try {
+            const img = await new Promise((ok, nein) => {
+                const i = new Image();
+                i.onload = () => ok(i);
+                i.onerror = () => nein(new Error('Das Bild liess sich nicht lesen.'));
+                i.src = url;
+            });
+            const leinwand = document.createElement('canvas');
+            leinwand.width = zw;
+            leinwand.height = zh;
+            const stift = leinwand.getContext('2d');
+            if (!stift)
+                throw new Error('Der Browser gibt keine Zeichenfläche her.');
+            stift.drawImage(img, 0, 0, zw, zh);
+            const blob = await new Promise(fertig => leinwand.toBlob(b => fertig(b), 'image/webp', 0.85));
+            leinwand.width = 0;
+            leinwand.height = 0;
+            if (!blob)
+                throw new Error('Das Bild liess sich nicht verkleinern.');
+            return { blob, w: zw, h: zh };
+        }
+        finally {
+            URL.revokeObjectURL(url);
+        }
+    };
+    const bilderAlsSeiten = async (dateien, elternId, anStelle) => {
+        const bilder = Array.from(dateien).filter(d => /^image\//i.test(d.type));
+        if (!bilder.length) {
+            UI.toast('Keine Bilddatei dabei — es gehen PNG, JPG, WebP, GIF.');
+            return [];
+        }
+        const wohin = anStelle ? anStelle.elternId : elternId;
+        let stelle = anStelle ? anStelle.index : -1;
+        const ids = [];
+        for (let k = 0; k < bilder.length; k++) {
+            const datei = bilder[k];
+            try {
+                const { blob, w, h } = await bildVerkleinern(datei);
+                const bw = SheetSpace.A4_BREITE;
+                const bh = SheetSpace.rund(bw * h / w);
+                const b = Store.addBlock(wohin, 'pdfseite', {
+                    text: '', nr: k + 1, vonSeiten: bilder.length, bw, bh,
+                    raumVersion: SheetSpace.RAUM_VERSION, herkunft: 'bild', bildName: datei.name
+                }, stelle >= 0 ? stelle++ : -1);
+                const name = blob === datei ? datei.name : datei.name.replace(/\.[a-z0-9]+$/i, '') + '.webp';
+                const satz = await Dateien.ablegen(new File([blob], name, { type: blob.type || datei.type }), { blockId: b.id, abgeleitet: false });
+                Store.updateBlock(b.id, { bildDateiId: satz.id, bildBreite: w });
+                ids.push(b.id);
+            }
+            catch (e) {
+                UI.toast('„' + datei.name + '" liess sich nicht als Seite ablegen: ' + (e instanceof Error ? e.message : String(e)));
+            }
+            await new Promise(r => setTimeout(r, 0));
+        }
+        await Store.flush();
+        if (ids.length)
+            UI.toast(ids.length === 1 ? 'Ein Bild ist jetzt eine Seite' : ids.length + ' Bilder sind jetzt Seiten');
+        return ids;
+    };
+    const bilderWaehlen = (elternId, anStelle) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.multiple = true;
+        input.style.display = 'none';
+        document.body.appendChild(input);
+        return new Promise(fertig => {
+            let entschieden = false;
+            input.addEventListener('change', () => {
+                if (entschieden)
+                    return;
+                entschieden = true;
+                const dateien = input.files ? Array.from(input.files) : [];
+                input.remove();
+                if (!dateien.length) {
+                    fertig([]);
+                    return;
+                }
+                bilderAlsSeiten(dateien, elternId, anStelle).then(fertig, () => fertig([]));
+            });
+            input.addEventListener('cancel', () => { if (entschieden)
+                return; entschieden = true; input.remove(); fertig([]); });
+            input.click();
+        });
+    };
+    return { alsSeiten, waehlen, neuBerechnen, ohneBild, schaerfer, bilderAlsSeiten, bilderWaehlen, BREITE_MAX, OHNE_FRAGE, BILD_KANTE_MAX };
 })();
 window.PdfEinlesen = PdfEinlesen;

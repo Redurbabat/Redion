@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-448 Entscheidungen, E1 bis E468 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+449 Entscheidungen, E1 bis E469 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -512,6 +512,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E466** — Auswahl wie GoodNotes, zweiter Bogen: Drehen, Ausschneiden, Reihenfolge, Sperren, Kritzel-Löschen, Kreis-Lasso
 * **E467** — Seiten wie GoodNotes, dritter Bogen: einfügen, duplizieren, drehen, schieben, Lesezeichen, löschen
 * **E468** — Suche und Verweise im Dokument, vierter Bogen: Textschicht mit Lage, Treffer, PDF-Verweise, eigene Verweise
+* **E469** — Import und Export wie GoodNotes, fünfter Bogen: Bilder als Seiten, PDF an einer Stelle, Seite als Bild, Zoom-Fenster
 
 ---
 
@@ -37123,3 +37124,82 @@ DATEIEN. `src/bereiche/pdf/leser.ts`, `src/bereiche/pdf/document-mode.ts`,
 `src/bereiche/pdf/marken.ts`, `quell/schale/stil/bausteine.css`,
 `bilder.mts`, `pruefungen/lauf/test441.mts` (neu), `test424.mts`,
 `test437.mts`, `test351.mts`.
+
+---
+
+E469 — Import und Export wie GoodNotes, fünfter Bogen: Bilder als Seiten, PDF an einer Stelle, Seite als Bild, Zoom-Fenster
+--------------------------------------------------------------------------
+
+Fünfter und letzter der Bögen aus Redurs Auftrag vom 7. September (E465,
+`AUFGABEN.md` 7). Vier Dinge, alle additiv; was danach ehrlich offen
+bleibt, steht in L133.
+
+WAS ENTSCHIEDEN WURDE.
+
+  1. BILDER ALS SEITEN — `PdfEinlesen.bilderAlsSeiten(dateien, elternId,
+     anStelle?)` und der Knopf „Bild als Seite" im Seitenmenü: ein Foto,
+     ein Scan, eine Grafik wird eine `pdfseite` OHNE `quelleId` — es gibt
+     kein Original, aus dem sich etwas neu rechnen liesse —, mit
+     `herkunft: 'bild'` und `bildName`. Die Seite ist A4-breit, ihre Höhe
+     folgt dem Bild. Riesige Fotos werden auf 2480 px Kantenlänge gebracht
+     (300 dpi bei A4, als WebP): mehr sieht niemand, und ein
+     12-Megapixel-Foto je Seite sprengte das Telefon (§36). Das Bild ist
+     NUTZERDATEN, kein abgeleitetes Seitenbild — `abgeleitet: false`,
+     damit es in jede `.redion`-Sicherung kommt (§11, §14). Alles, was an
+     `quelleId` hängt (feiner rechnen, zurückholen, Suche mit Lage,
+     PDF-Verweise), bleibt bei Bildseiten still, statt zu raten.
+  2. PDF AN EINER STELLE — `Vorgabe.anStelle = { elternId, index }`: die
+     Seiten kommen in den `content` dieser Eltern an dieser Stelle, jede
+     eine weiter, statt ans Ende der Seite; immer untereinander, ohne
+     Rückfrage (ein Spaltenblock mitten im Dokument ergäbe keinen Sinn),
+     und die Merkregel `pdfAnordnung` bleibt unberührt. Das Original liegt
+     wie immer als Anhang oben (E299). Der Knopf „PDF hier einfügen" im
+     Seitenmenü; „PDF hinzufügen" (ans Ende) bleibt.
+  3. SEITE ALS BILD — `DocumentMode.seiteAlsBild(block)`: weisses Papier
+     oder das Seitenbild, darüber die Marken als SVG durch dieselbe Hand
+     wie auf dem Blatt (`Marken.zeichneMarke`), doppelt so gross wie
+     Blattpunkte (A4 → 1191 × 1684), gedreht, wie die Seite steht; als
+     PNG zum Speichern (`<a download>`, ohne Server). Sichern darf, wer
+     lesen darf.
+  4. DAS ZOOM-FENSTER — GoodNotes' Lupe zum Kleinschreiben, aber mit
+     EINER Zeichenschicht: die Seite selbst wird gross (250 %, über den
+     Regler hinaus), und unten steht die ÜBERSICHT — die Seite im Kleinen
+     mit dem Band, das gerade im Bild ist. Ein Tipp oder Ziehen auf der
+     Übersicht stellt das Band dorthin, vier Pfeile rücken es, ✕ und
+     Escape stellen den alten Zoom zurück. Kein Spiegel der Schicht: zwei
+     Schichten auf demselben Block hielten zwei Kopien der Marken
+     (`marken.ts`, `marks`) und überschrieben einander — das wäre
+     Datenverlust (§51). Nur Ansicht, kein Merker.
+
+WARUM SO, UND NICHT ANDERS.
+
+  · Bildseiten als `pdfseite` statt als neuer Blocktyp: der Zeichner, das
+    Studio, Drucken, Sicherung — alles kennt `pdfseite` mit `bildDateiId`
+    schon; ein neuer Typ wäre ein zweiter Weg für dasselbe (§8).
+  · Zoom-Fenster als Zoom plus Übersicht statt als zweite Schreibfläche:
+    die zweite Fläche wäre entweder ein Spiegel (Datenverlust, oben) oder
+    ein Umbau der Zeichenschicht auf zwei Sichten — ein eigener Bogen, der
+    hier nicht im Auftrag steckt. Was GoodNotes' Fenster leistet — klein
+    schreiben, den Ausschnitt führen, sehen, wo man ist — leistet die
+    Übersicht.
+  · Sichern als PNG statt PDF: eine PDF mit Marken bräuchte einen
+    PDF-Schreiber (E39-Nähe: keine grosse Abhängigkeit); Drucken (E117)
+    kann sie schon über den Browser.
+
+ALTERNATIVEN. Ein Spiegel der Zeichenschicht (verworfen, §51). Ein
+`image`-Block als Seite (verworfen: das Studio kennt nur `pdfseite` und
+`blatt`). Bilder ungekürzt ablegen (verworfen, §36).
+
+KOSTEN. Zwei neue optionale Felder an Seitenblöcken (`herkunft: 'bild'`,
+`bildName`), ein neues Feld an der Importvorgabe (`anStelle`). Drei
+Knöpfe mehr im Seitenmenü (zehn), ein Schalter mehr unter „Papier &
+Ansicht". Die Seite als Bild lässt die Textblöcke eines Blatts und
+Bildmarken aus (L133).
+
+WÄCHTER. `test442` (neu): §1 Bilder als Seiten (Reihenfolge hinter der
+Seite, A4-breit und so hoch wie das Bild, Riesenbild 2480 px WebP, Datei
+am Block und nicht abgeleitet, Beschriftung, Stand quer), §2 PDF an einer
+Stelle (Reihenfolge, eigene Quelle, keine Rückfrage, Anhang oben), §3
+Seite als Bild (1191 × 1684, Kante rot, innen weiss, gedreht 1684 × 1191,
+Bildseite rot), §4 Zoom-Fenster (250 %, Band, ▼, Ziehen, ✕, Escape), §5
+Rechte, §6 Quellen.

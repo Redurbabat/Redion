@@ -235,9 +235,9 @@ Gegenprobe, Bild und Entscheidung:
     Treffern an der Stelle; die Verweise der PDF (pdf.js `getAnnotations`)
     antippbar; eigene Verweise an Marken (Adresse oder [[Seite]]).
     **Steht.**
-  · **G5 — Import und Export**: JPG/PNG als Seiten, PDF-Seiten in ein
-    offenes Dokument einfügen, eine Seite als Bild sichern, das
-    Zoom-Fenster (Lupe zum Kleinschreiben).
+  · **G5 — Import und Export** (E469, test442): JPG/PNG als Seiten,
+    PDF-Seiten an einer Stelle einfügen, eine Seite als Bild sichern, das
+    Zoom-Fenster (Seite gross, Übersicht mit Band). **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

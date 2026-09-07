@@ -4976,6 +4976,24 @@ body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
 .document-workspace[data-document-tools="open"] .document-verweise{display:none}
 .blatt-marken [data-verweis]{cursor:pointer}
 .blatt-marken [data-verweis]:hover{filter:drop-shadow(0 0 3px rgba(47,126,216,.9))}
+/* ══ DAS ZOOM-FENSTER (E469) ══════════════════════════════════════════════
+   Unten im Arbeitsraum: die Seite im Kleinen mit dem Band, das im Bild
+   ist, und vier Pfeile. Im Schreibstudio schwebt die Zeichenleiste am
+   unteren Rand (E464) — die Polsterung unten laesst ihr den Platz. */
+.document-lupe{flex:none; display:flex; align-items:center; gap:10px; padding:6px 12px;
+  background:var(--bg-card); border-top:1px solid var(--line); z-index:7}
+.document-lupe-blatt{position:relative; height:6.5rem; aspect-ratio:595 / 842; background:#fff;
+  border:1px solid var(--line); border-radius:4px; overflow:hidden; cursor:crosshair; touch-action:none;
+  flex:none; box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.document-lupe-blatt img{position:absolute; inset:0; width:100%; height:100%; object-fit:fill; pointer-events:none}
+.document-lupe-band{position:absolute; left:0; top:0; width:100%; height:20%; box-sizing:border-box;
+  border:2px solid var(--accent-text, #2f7ed8); background:rgba(47,126,216,.18); pointer-events:none}
+.document-lupe-griffe{display:grid; grid-template-columns:repeat(5, auto); gap:4px}
+.document-lupe-griffe button{min-height:var(--touch-min); min-width:var(--touch-min)}
+.document-inspector .document-lupe-knopf{display:block; width:100%; min-height:40px;
+  margin-bottom:14px; padding:7px 12px; text-align:left; font-size:13px}
+.document-inspector .document-lupe-knopf.an{border-color:var(--accent-text); background:var(--bg-hover); font-weight:600}
+body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2.5rem)}
 /* Das Seitenmenue im Inspector (E467): sieben Griffe, 44 hoch (§37), das
    Wort neben dem Zeichen (§38). */
 .document-inspector-seite{margin-bottom:14px}

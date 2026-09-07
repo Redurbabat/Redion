@@ -124,7 +124,8 @@ const { s, seiteId } = await mitSkript();
 {
   gleich('Drei PDF-Seiten, drei Bühnen', await reihe(s, seiteId), ['pdf1', 'pdf2', 'pdf3']);
   const knoepfe = await s.evaluate(() => [...document.querySelectorAll('.document-seite-knoepfe button')].map(b => (b as HTMLElement).dataset.documentAction));
-  gleich('Das Seitenmenü hat sieben Griffe', knoepfe, ['page-add', 'page-duplicate', 'page-rotate', 'page-up', 'page-down', 'page-bookmark', 'page-delete']);
+  /* ZEHN SEIT E469: Bild als Seite, PDF hier einfügen, Als Bild sichern. */
+  gleich('Das Seitenmenü hat zehn Griffe', knoepfe, ['page-add', 'page-duplicate', 'page-rotate', 'page-up', 'page-down', 'page-bookmark', 'page-delete', 'page-add-image', 'page-add-pdf', 'page-export-image']);
   const hoch = await s.evaluate(() => Math.min(...[...document.querySelectorAll('.document-seite-knoepfe button')].map(b => b.getBoundingClientRect().height)));
   p('… und jeder misst 44 (§37)', hoch >= 44, String(hoch));
   await s.selectOption('.document-inspector select[data-document-papier]', 'kariert');
@@ -264,7 +265,7 @@ console.log('\n§7 Rechte');
   await s.click('[data-document-action="inspector"]').catch(() => {});
   await s.waitForTimeout(300);
   const r = await s.evaluate(() => [...document.querySelectorAll('.document-seite-knoepfe button')].map(b => (b as HTMLButtonElement).disabled));
-  gleich('Gesperrt: alles aus ausser dem Lesezeichen', r, [true, true, true, true, true, false, true]);
+  gleich('Gesperrt: alles aus ausser Lesezeichen und Sichern (E469)', r, [true, true, true, true, true, false, true, true, true, false]);
   await s.evaluate(() => { const k = document.querySelector<HTMLButtonElement>('.document-inspector [data-document-action="page-add"]'); if (k) { k.disabled = false; k.click(); } });
   await s.waitForTimeout(500);
   gleich('… und ein erzwungener Tipp ändert nichts', await reihe(s, seiteId), ['pdf1', 'blatt:kariert', 'pdf2', 'pdf3']);

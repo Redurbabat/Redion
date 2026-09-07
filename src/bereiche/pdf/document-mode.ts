@@ -14,6 +14,9 @@ const DocumentMode = (() => {
     inspectorOpen: boolean;
     einzeln: boolean;
     toolsOpen: boolean;
+    /* Das Zoom-Fenster (E469): nur Ansicht, kein Merker. */
+    lupe: boolean;
+    zoomVorher: number;
   };
 
   type SourceRegion = { x: number; y: number; width: number; height: number };
@@ -99,12 +102,65 @@ const DocumentMode = (() => {
        stand dort bisher offen, weil Platz da war — 280 px, dauerhaft, fuer
        eine Liste, die bei einem frisch eingelesenen PDF leer ist. Wer sie
        braucht, holt sie mit `ⓘ`; wer liest, liest. */
-    const created = { index: gemerkteSeite(pageId), zoom: gemerkterZoom(pageId),
+    const created = { index: gemerkteSeite(pageId), zoom: gemerkterZoom(pageId), lupe: false, zoomVorher: 0,
                       thumbnailsOpen: false, inspectorOpen: false,
                       einzeln: gemerkterLauf(pageId),
                       toolsOpen: Store.getMeta('dokWerkzeuge:' + pageId) !== false };
     states.set(pageId, created);
     return created;
+  };
+
+  /* ══ EINE SEITE ALS BILD (E469) ═════════════════════════════════════════
+     Seitenbild (oder weisses Papier) und die Marken darueber, doppelt so
+     gross wie Blattpunkte (A4 → 1191 × 1684), gedreht, wie die Seite
+     steht. Die Marken kommen als SVG durch dieselbe Hand wie auf dem
+     Blatt (`Marken.zeichneMarke`), dann als Bild auf die Leinwand. Was
+     nicht mitkommt, steht in L133: die Textbloecke eines Blatts und
+     Bildmarken (ein `<img>` im SVG darf die Leinwand nicht anfassen). */
+  const bildLaden = (url: string): Promise<HTMLImageElement> => new Promise((ok, nein) => {
+    const i = new Image(); i.onload = () => ok(i); i.onerror = () => nein(new Error('Bild nicht lesbar')); i.src = url; });
+  const seiteAlsBild = async (block: any): Promise<Blob | null> => {
+    if (!block) return null;
+    const bw = Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE;
+    const bh = Number(block.bh) || Number(block.blattHoehe) || SheetSpace.A4_HOEHE;
+    const g = SheetSpace.gedrehtVon(block);
+    const W = Math.round(bw * 2), H = Math.round(bh * 2);
+    const quer = g === 90 || g === 270;
+    const leinwand = document.createElement('canvas');
+    leinwand.width = quer ? H : W; leinwand.height = quer ? W : H;
+    const stift = leinwand.getContext('2d');
+    if (!stift) return null;
+    stift.fillStyle = '#ffffff';
+    stift.fillRect(0, 0, leinwand.width, leinwand.height);
+    stift.translate(leinwand.width / 2, leinwand.height / 2);
+    stift.rotate(g * Math.PI / 180);
+    stift.translate(-W / 2, -H / 2);
+    if (block.bildDateiId && typeof Dateien !== 'undefined') {
+      try {
+        const url = await Dateien.adresse(String(block.bildDateiId));
+        if (url) stift.drawImage(await bildLaden(url), 0, 0, W, H);
+      } catch { /* dann ohne Seitenbild — die Marken kommen trotzdem */ }
+    }
+    const marken = Array.isArray(block.marken) ? block.marken : [];
+    if (marken.length && typeof Marken !== 'undefined') {
+      const innen = marken.map((m: any) => { try { return Marken.zeichneMarke(m)?.outerHTML || ''; } catch { return ''; } }).join('');
+      const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + bw + ' ' + bh + '" width="' + W + '" height="' + H + '">' + innen + '</svg>';
+      const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
+      try { stift.drawImage(await bildLaden(url), 0, 0, W, H); }
+      catch { /* eine Marke, die das SVG-Bild verweigert, laesst den Rest stehen */ }
+      finally { URL.revokeObjectURL(url); }
+    }
+    const blob: Blob | null = await new Promise(fertig => leinwand.toBlob(b => fertig(b), 'image/png'));
+    leinwand.width = 0; leinwand.height = 0;
+    return blob;
+  };
+  /** Ein Blob als Datei zum Speichern anbieten — ohne Server, ohne Fenster. */
+  const herunterladen = (blob: Blob, name: string): void => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.style.display = 'none';
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 2000);
   };
 
   /* Die offenen PDF-Quellen der Suche (E468), je Quelle ein Griff. Ein
@@ -164,7 +220,9 @@ const DocumentMode = (() => {
 
   const sourceLabel = (documentBlock: any): string =>
     documentBlock.type === 'pdfseite'
-      ? 'PDF · Seite ' + (Number(documentBlock.nr) || 1)
+      ? (documentBlock.herkunft === 'bild'
+          ? 'Bild' + (documentBlock.bildName ? ' · ' + String(documentBlock.bildName).slice(0, 40) : '')
+          : 'PDF · Seite ' + (Number(documentBlock.nr) || 1))
       : 'A4-Blatt';
 
   const linkedObjects = (page: any, documentBlock: any): any[] =>
@@ -197,7 +255,7 @@ const DocumentMode = (() => {
     } else {
       const blank = document.createElement('span');
       blank.className = 'document-thumbnail-blank';
-      blank.textContent = documentBlock.type === 'blatt' ? '✎' : 'PDF';
+      blank.textContent = documentBlock.type === 'blatt' ? '✎' : documentBlock.herkunft === 'bild' ? '🖼' : 'PDF';
       preview.appendChild(blank);
     }
     const label = document.createElement('span');
@@ -440,8 +498,15 @@ const DocumentMode = (() => {
       seitenKnopf('page-up', '↑', 'Nach oben', 'Diese Seite eine Stelle nach vorn'),
       seitenKnopf('page-down', '↓', 'Nach unten', 'Diese Seite eine Stelle nach hinten'),
       seitenKnopf('page-bookmark', '🔖', 'Lesezeichen', documentBlock.lesezeichen ? 'Lesezeichen entfernen' : 'Diese Seite mit einem Lesezeichen merken', !!documentBlock.lesezeichen),
-      seitenKnopf('page-delete', '🗑', 'Löschen', 'Diese Seite in den Papierkorb legen — von dort kommt sie zurück')
+      seitenKnopf('page-delete', '🗑', 'Löschen', 'Diese Seite in den Papierkorb legen — von dort kommt sie zurück'),
+      /* E469: Bilder und weitere PDF-Seiten hinter diese Seite; die Seite als Bild sichern. */
+      seitenKnopf('page-add-image', '🖼', 'Bild als Seite', 'Ein Foto, einen Scan oder eine Grafik als neue Seite hinter dieser einfügen'),
+      seitenKnopf('page-add-pdf', '📕', 'PDF hier einfügen', 'Die Seiten einer weiteren PDF hinter dieser Seite einfügen'),
+      seitenKnopf('page-export-image', '⬇', 'Als Bild sichern', 'Diese Seite mit allem darauf als PNG speichern')
     );
+    /* Sichern darf jeder, der lesen darf. */
+    const sichernKnopf = knoepfe.querySelector<HTMLButtonElement>('[data-document-action="page-export-image"]');
+    if (sichernKnopf) sichernKnopf.disabled = false;
     /* Das Lesezeichen darf jeder setzen, der lesen darf: es aendert die
        Seite nicht, nur die eigene Ansicht auf sie. */
     const lesezeichenKnopf = knoepfe.querySelector<HTMLButtonElement>('[data-document-action="page-bookmark"]');
@@ -492,7 +557,18 @@ const DocumentMode = (() => {
     const viewTitle = document.createElement('h3');
     viewTitle.className = 'document-section-title';
     viewTitle.textContent = 'Papier & Ansicht';
-    container.append(importButton, viewTitle, randKnopf);
+    /* DAS ZOOM-FENSTER (E469), GoodNotes' Lupe zum Kleinschreiben: ein
+       Schalter wie Randstreifen und Einzelseite. Nur eine Ansicht, kein
+       Merker: wer das Dokument wieder oeffnet, sieht es normal. */
+    const lupeAn = !!stateFor(page.id).lupe;
+    const lupeKnopf = document.createElement('button');
+    lupeKnopf.type = 'button';
+    lupeKnopf.dataset.documentAction = 'lupe';
+    lupeKnopf.className = 'document-lupe-knopf' + (lupeAn ? ' an' : '');
+    lupeKnopf.textContent = lupeAn ? '🔍 Zoom-Fenster aus' : '🔍 Zoom-Fenster an';
+    lupeKnopf.setAttribute('aria-pressed', lupeAn ? 'true' : 'false');
+    lupeKnopf.title = 'Die Seite gross zum Kleinschreiben; unten die Übersicht mit dem Ausschnitt.';
+    container.append(importButton, viewTitle, randKnopf, lupeKnopf);
     if (laufKnopf) container.appendChild(laufKnopf);
     container.append(linkedTitle, actions, summary, list);
   };
@@ -1206,6 +1282,7 @@ const DocumentMode = (() => {
       center.style.setProperty('--doc-blatt', Math.max(120, breit) + 'px');
       platzhalterSetzen(Math.max(120, breit));
       verweiseLegen();
+      if (state.lupe) requestAnimationFrame(lupeBandZeichnen);
     };
 
     /* ══ E399 · DER PLATZHALTER WAR 283 PX HOCH STATT 1922 ═══════════════════
@@ -1345,7 +1422,7 @@ const DocumentMode = (() => {
     center.addEventListener('scroll', () => {
       if (rollWartet) return;
       rollWartet = true;
-      requestAnimationFrame(() => { rollWartet = false; nachziehen(); });
+      requestAnimationFrame(() => { rollWartet = false; nachziehen(); if (state.lupe) { lupeBlattSetzen(); lupeBandZeichnen(); } });
     }, { passive: true });
 
     requestAnimationFrame(() => {
@@ -1669,6 +1746,9 @@ const DocumentMode = (() => {
       if (event.key === 'Escape' && !findbar.hidden) {
         findbarSetzen(false); findButton.focus(); event.stopPropagation(); return;
       }
+      if (event.key === 'Escape' && state.lupe) {
+        lupeSetzen(false); event.stopPropagation(); return;
+      }
       if (event.key === 'Escape' && workspace.dataset.inkOptions === 'open') {
         workspace.dataset.inkOptions = 'closed'; moreTools.setAttribute('aria-expanded', 'false');
         moreTools.focus(); event.stopPropagation(); return;
@@ -1760,6 +1840,22 @@ const DocumentMode = (() => {
       if (action === 'previous') springe(state.index - 1);
       if (action === 'next') springe(state.index + 1);
       if (action === 'find') { findbarSetzen(findbar.hidden); return; }
+      if (action === 'lupe') { lupeSetzen(!state.lupe); return; }
+      if (action === 'lupe-zu') { lupeSetzen(false); return; }
+      if (action === 'lupe-hoch') { lupeRuecken(0, -1); return; }
+      if (action === 'lupe-runter') { lupeRuecken(0, 1); return; }
+      if (action === 'lupe-links') { lupeRuecken(-1, 0); return; }
+      if (action === 'lupe-rechts') { lupeRuecken(1, 0); return; }
+      if (action === 'page-export-image') {
+        const block = jetzt();
+        void seiteAlsBild(block).then(blob => {
+          if (!blob) { UI.toast('Die Seite liess sich nicht als Bild zeichnen.'); return; }
+          const nr = documentsIn(page).findIndex(b => b.id === block.id) + 1;
+          herunterladen(blob, String(page.text || 'Seite').replace(/[\\/:*?"<>|]+/g, ' ').trim() + ' – Seite ' + nr + '.png');
+          UI.toast('Seite ' + nr + ' als PNG gesichert');
+        });
+        return;
+      }
       if (action === 'find-next') { zumTreffer(trefferNr + 1); return; }
       if (action === 'find-previous') { zumTreffer(trefferNr - 1); return; }
       if (action === 'find-close') { findbarSetzen(false); findButton.focus(); return; }
@@ -1769,6 +1865,15 @@ const DocumentMode = (() => {
       if (action?.startsWith('page-')) {
         if (!darfSeiten()) { UI.toast('Zum Ändern der Seiten brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.'); return; }
         if (action === 'page-add') seiteEinfuegen();
+        if (action === 'page-add-image' || action === 'page-add-pdf') {
+          const stelle = stelleVon(jetzt());
+          const anStelle = stelle ? { elternId: stelle.eltern.id, index: stelle.index + 1 } : undefined;
+          if (action === 'page-add-image') {
+            void PdfEinlesen.bilderWaehlen(page.id, anStelle).then((ids: string[]) => { if (ids.length) neuMit(ids[ids.length - 1] ?? null); });
+          } else {
+            void PdfEinlesen.waehlen(page.id, anStelle ? { anStelle } : undefined).then((result: unknown) => { if (result) rerender(); });
+          }
+        }
         if (action === 'page-duplicate') seiteDuplizieren();
         if (action === 'page-delete') seiteLoeschen();
         if (action === 'page-up') seiteSchieben(-1);
@@ -1856,14 +1961,125 @@ const DocumentMode = (() => {
        Regler, Zahl und Ansicht nie auseinanderlaufen. Ohne Strg rollt das
        Rad wie immer; das Kneifen zaehlt nur Finger, nie Stift oder Maus. */
     const zoomSetzen = (wert: number): void => {
-      const neu = Math.max(60, Math.min(180, Math.round(wert)));
+      /* Im Zoom-Fenster (E469) darf es 300 sein — der Regler bleibt bei 180. */
+      const neu = Math.max(60, Math.min(state.lupe ? 300 : 180, Math.round(wert)));
       if (neu === state.zoom) return;
       state.zoom = neu;
-      zoomMerken(page.id, neu);                 /* F07 — auch Strg+Rad und Kneifen */
+      if (!state.lupe) zoomMerken(page.id, neu);   /* F07 — auch Strg+Rad und Kneifen; die Lupe merkt nicht */
       zoom.value = String(neu);
       zoomLabel.textContent = neu + ' %';
       passen();
     };
+    /* ══ DAS ZOOM-FENSTER (E469) ═══════════════════════════════════════════
+       Die Seite selbst wird gross (250 %), damit man klein schreiben kann,
+       und unten steht die UEBERSICHT: die Seite im Kleinen mit dem Band,
+       das gerade im Bild ist. Das Band laesst sich ziehen, vier Pfeile
+       ruecken es. EINE Zeichenschicht, kein Spiegel: zwei Schichten auf
+       demselben Block hielten zwei Kopien der Marken und ueberschrieben
+       einander (marken.ts, `marks`) — das waere Datenverlust (§51). */
+    let lupe: HTMLElement | null = null;
+    let lupeBand: HTMLElement | null = null;
+    let lupeBild: HTMLElement | null = null;
+    let lupeSeite = -1;
+    const lupeBlattSetzen = (): void => {
+      if (!lupe || !lupeBild || lupeSeite === state.index) return;
+      lupeSeite = state.index;
+      const block = documents[state.index];
+      if (!block) return;
+      lupeBild.replaceChildren();
+      const { bw, bh } = SheetSpace.masseVon(block);
+      lupeBild.style.setProperty('aspect-ratio', bw + ' / ' + bh);
+      if (block.bildDateiId && typeof Dateien !== 'undefined') {
+        const img = document.createElement('img');
+        img.alt = '';
+        void Dateien.adresse(String(block.bildDateiId)).then((u: string | null) => { if (u && lupeSeite === state.index) img.src = u; });
+        lupeBild.appendChild(img);
+      }
+      if (lupeBand) lupeBild.appendChild(lupeBand);
+    };
+    const lupeBandZeichnen = (): void => {
+      if (!lupe || !lupeBand) return;
+      const stand = staende[state.index];
+      const papier = stand?.querySelector<HTMLElement>('.blatt-papier');
+      if (!papier) return;
+      const pr = papier.getBoundingClientRect(), cr = center.getBoundingClientRect();
+      if (pr.width < 1 || pr.height < 1) return;
+      const x = Math.max(0, Math.min(1, (cr.left - pr.left) / pr.width));
+      const y = Math.max(0, Math.min(1, (cr.top - pr.top) / pr.height));
+      const w = Math.max(0.02, Math.min(1 - x, cr.width / pr.width));
+      const h = Math.max(0.02, Math.min(1 - y, cr.height / pr.height));
+      lupeBand.style.left = (x * 100) + '%'; lupeBand.style.top = (y * 100) + '%';
+      lupeBand.style.width = (w * 100) + '%'; lupeBand.style.height = (h * 100) + '%';
+    };
+    /** Das Band dorthin, wo der Finger auf der Uebersicht ist. */
+    const lupeZielen = (fx: number, fy: number): void => {
+      const stand = staende[state.index];
+      const papier = stand?.querySelector<HTMLElement>('.blatt-papier');
+      if (!papier) return;
+      const pr = papier.getBoundingClientRect(), cr = center.getBoundingClientRect();
+      const oben = pr.top - cr.top + center.scrollTop, links = pr.left - cr.left + center.scrollLeft;
+      center.scrollTop = Math.max(0, oben + fy * pr.height - cr.height / 2);
+      center.scrollLeft = Math.max(0, links + fx * pr.width - cr.width / 2);
+      lupeBandZeichnen();
+    };
+    const lupeSetzen = (an: boolean): void => {
+      if (an === !!state.lupe) return;
+      if (an) {
+        state.zoomVorher = state.zoom;
+        state.lupe = true;
+        workspace.dataset.lupe = 'an';
+        lupe = document.createElement('div');
+        lupe.className = 'document-lupe';
+        lupe.setAttribute('role', 'group');
+        lupe.setAttribute('aria-label', 'Zoom-Fenster: Übersicht der Seite');
+        lupeBild = document.createElement('div');
+        lupeBild.className = 'document-lupe-blatt';
+        lupeBand = document.createElement('div');
+        lupeBand.className = 'document-lupe-band';
+        lupeBand.setAttribute('aria-hidden', 'true');
+        const griffe = document.createElement('div');
+        griffe.className = 'document-lupe-griffe';
+        griffe.append(
+          topButton('lupe-links', '◀', 'Ausschnitt nach links'),
+          topButton('lupe-hoch', '▲', 'Ausschnitt nach oben'),
+          topButton('lupe-runter', '▼', 'Ausschnitt nach unten'),
+          topButton('lupe-rechts', '▶', 'Ausschnitt nach rechts'),
+          topButton('lupe-zu', '✕', 'Zoom-Fenster schließen'));
+        lupe.append(lupeBild, griffe);
+        lupeBild.addEventListener('pointerdown', (event: PointerEvent) => {
+          if (!lupeBild) return;
+          const r = lupeBild.getBoundingClientRect();
+          const ziel = (e: PointerEvent): void => lupeZielen((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
+          ziel(event);
+          const zieh = (e: PointerEvent): void => ziel(e);
+          const los = (): void => { window.removeEventListener('pointermove', zieh); window.removeEventListener('pointerup', los); };
+          window.addEventListener('pointermove', zieh);
+          window.addEventListener('pointerup', los);
+          event.preventDefault();
+        });
+        workspace.appendChild(lupe);
+        lupeSeite = -1;
+        lupeBlattSetzen();
+        zoomSetzen(250);
+        requestAnimationFrame(lupeBandZeichnen);
+      } else {
+        state.lupe = false;
+        workspace.dataset.lupe = 'aus';
+        lupe?.remove(); lupe = null; lupeBand = null; lupeBild = null; lupeSeite = -1;
+        zoomSetzen(state.zoomVorher || 100);
+      }
+      inspector.querySelectorAll<HTMLButtonElement>('.document-lupe-knopf').forEach(k => {
+        k.classList.toggle('an', an);
+        k.setAttribute('aria-pressed', an ? 'true' : 'false');
+        k.textContent = an ? '🔍 Zoom-Fenster aus' : '🔍 Zoom-Fenster an';
+      });
+    };
+    const lupeRuecken = (dx: number, dy: number): void => {
+      center.scrollTop = Math.max(0, center.scrollTop + dy * center.clientHeight * 0.85);
+      center.scrollLeft = Math.max(0, center.scrollLeft + dx * center.clientWidth * 0.5);
+      lupeBandZeichnen();
+    };
+
     center.addEventListener('wheel', (event: WheelEvent) => {
       if (!event.ctrlKey && !event.metaKey) return;
       event.preventDefault();
@@ -1895,7 +2111,7 @@ const DocumentMode = (() => {
     return true;
   };
 
-  return { available, active, select, toggle, documentsIn, render, sourceLabel };
+  return { available, active, select, toggle, documentsIn, render, sourceLabel, seiteAlsBild };
 })();
 
 (window as any).DocumentMode = DocumentMode;

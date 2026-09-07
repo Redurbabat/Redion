@@ -2378,6 +2378,32 @@ ANSICHTEN['suche'] = {
   }
 };
 
+ANSICHTEN['lupe'] = {
+  titel: 'Das Zoom-Fenster: die Seite gross, unten die Übersicht mit dem Band (E469)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const seite = Store.addPage(null, { text: 'Mathe, Übungsblatt', icon: '📕' });
+    const welle = (y: number) => { const pts: number[][] = []; for (let i = 0; i <= 40; i++) pts.push([90 + i * 10, y + Math.sin(i / 2.5) * 10]); return pts; };
+    Store.addBlock(seite.id, 'blatt', { text: '', papier: 'kariert', blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1,
+      marken: [{ id: 'l1', art: 'text', farbe: '#111111', breite: 2.4, point: [70, 80], text: 'Aufgabe 3: Löse die Gleichung 2x + 5 = 17', fontSize: 16 },
+               { id: 'l2', art: 'stift', stil: 'fueller', farbe: '#2f7ed8', breite: 2.4, pts: welle(160) },
+               { id: 'l3', art: 'stift', stil: 'fueller', farbe: '#2f7ed8', breite: 2.4, pts: welle(200) },
+               { id: 'l4', art: 'rectangle', farbe: '#d64545', breite: 2.4, pts: [[80, 250], [300, 300]] }] });
+    Store.updateBlock(seite.id, { dokumentModus: true });
+    await Store.flush();
+    App.oeffne(seite.id);
+    await new Promise(r => setTimeout(r, 1200));
+    document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+    await new Promise(r => setTimeout(r, 300));
+    document.querySelector<HTMLElement>('.document-inspector [data-document-action="lupe"]')?.click();
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
 ANSICHTEN['willkommen'] = {
   titel: 'Willkommen: Rauschtextur im Kopf (E462)',
   bauen: async () => {

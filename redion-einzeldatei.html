@@ -13013,6 +13013,24 @@ body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
 .document-workspace[data-document-tools="open"] .document-verweise{display:none}
 .blatt-marken [data-verweis]{cursor:pointer}
 .blatt-marken [data-verweis]:hover{filter:drop-shadow(0 0 3px rgba(47,126,216,.9))}
+/* ══ DAS ZOOM-FENSTER (E469) ══════════════════════════════════════════════
+   Unten im Arbeitsraum: die Seite im Kleinen mit dem Band, das im Bild
+   ist, und vier Pfeile. Im Schreibstudio schwebt die Zeichenleiste am
+   unteren Rand (E464) — die Polsterung unten laesst ihr den Platz. */
+.document-lupe{flex:none; display:flex; align-items:center; gap:10px; padding:6px 12px;
+  background:var(--bg-card); border-top:1px solid var(--line); z-index:7}
+.document-lupe-blatt{position:relative; height:6.5rem; aspect-ratio:595 / 842; background:#fff;
+  border:1px solid var(--line); border-radius:4px; overflow:hidden; cursor:crosshair; touch-action:none;
+  flex:none; box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.document-lupe-blatt img{position:absolute; inset:0; width:100%; height:100%; object-fit:fill; pointer-events:none}
+.document-lupe-band{position:absolute; left:0; top:0; width:100%; height:20%; box-sizing:border-box;
+  border:2px solid var(--accent-text, #2f7ed8); background:rgba(47,126,216,.18); pointer-events:none}
+.document-lupe-griffe{display:grid; grid-template-columns:repeat(5, auto); gap:4px}
+.document-lupe-griffe button{min-height:var(--touch-min); min-width:var(--touch-min)}
+.document-inspector .document-lupe-knopf{display:block; width:100%; min-height:40px;
+  margin-bottom:14px; padding:7px 12px; text-align:left; font-size:13px}
+.document-inspector .document-lupe-knopf.an{border-color:var(--accent-text); background:var(--bg-hover); font-weight:600}
+body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2.5rem)}
 /* Das Seitenmenue im Inspector (E467): sieben Griffe, 44 hoch (§37), das
    Wort neben dem Zeichen (§38). */
 .document-inspector-seite{margin-bottom:14px}
@@ -18713,7 +18731,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 502, inhalt: '277435a06bf95775', gebaut: '2026-09-07T09:06:20.518Z' };
+const Stand = { fassung: 506, inhalt: '694af530f54c9e13', gebaut: '2026-09-07T09:14:50.082Z' };
 window.Stand = Stand;
 
 </script>
@@ -55683,24 +55701,25 @@ const PdfEinlesen = (() => {
                er fragt einmal oder gar nicht und reicht die Antwort herein. Die
                Merkregel `pdfAnordnung` bleibt dann unberührt — sie gehört dem
                Menschen, nicht dem Massenimport. */
-            const anordnung = vorgabe && vorgabe.anordnung ? vorgabe.anordnung
-                : typeof Dialog !== 'undefined'
-                    ? await Dialog.wahl({
-                        titel: datei.name,
-                        text: 'Wie soll „' + datei.name + '" auf der Seite liegen?',
-                        knoepfe: [
-                            ...(zuletzt === 'untereinander' ? [knopfNur, knopfSeite]
-                                : [knopfSeite, knopfNur]),
-                            { id: '', text: 'Abbrechen',
-                                hinweis: 'Die Datei bleibt als Anhang liegen' }
-                        ]
-                    })
-                    : zuletzt;
+            const anordnung = vorgabe && vorgabe.anStelle ? 'untereinander'
+                : vorgabe && vorgabe.anordnung ? vorgabe.anordnung
+                    : typeof Dialog !== 'undefined'
+                        ? await Dialog.wahl({
+                            titel: datei.name,
+                            text: 'Wie soll „' + datei.name + '" auf der Seite liegen?',
+                            knoepfe: [
+                                ...(zuletzt === 'untereinander' ? [knopfNur, knopfSeite]
+                                    : [knopfSeite, knopfNur]),
+                                { id: '', text: 'Abbrechen',
+                                    hinweis: 'Die Datei bleibt als Anhang liegen' }
+                            ]
+                        })
+                        : zuletzt;
             if (!anordnung) {
                 wegMelden();
                 return nurAnhaengen('liegt als Anhang auf der Seite.');
             }
-            if (!(vorgabe && vorgabe.anordnung))
+            if (!(vorgabe && (vorgabe.anordnung || vorgabe.anStelle)))
                 Store.setMeta('pdfAnordnung', anordnung);
             const daneben = anordnung === 'nebeneinander';
             let bis = gesamt;
@@ -55732,6 +55751,8 @@ const PdfEinlesen = (() => {
                 bis = antwort === 'erste' ? OHNE_FRAGE : gesamt;
             }
             const gemacht = [];
+            /* Die Stelle wandert mit jeder Seite eine weiter (E469). */
+            let stelle = vorgabe && vorgabe.anStelle ? vorgabe.anStelle.index : -1;
             for (let n = 1; n <= bis; n++) {
                 sageAn('Seite ' + n + ' von ' + bis + ' …');
                 const geo = await griff.geometrie(n);
@@ -55740,7 +55761,7 @@ const PdfEinlesen = (() => {
                    die von Hand angelegten Spalten (E102) — columns → spalte →
                    Inhalt. Eine eigene Bauform wäre eine zweite Wahrheit über
                    dasselbe Ding. */
-                let wohin = elternId;
+                let wohin = vorgabe && vorgabe.anStelle ? vorgabe.anStelle.elternId : elternId;
                 let nachher = () => { };
                 if (daneben) {
                     const sp = Store.addBlock(elternId, 'columns', { text: '', spalten: 2 });
@@ -55789,7 +55810,7 @@ const PdfEinlesen = (() => {
                        überhaupt eines ist, und das ist die Frage, die man beim
                        Wiederlesen stellt. */
                     herkunft: 'quelle'
-                });
+                }, stelle >= 0 ? stelle++ : -1);
                 nachher();
                 const satz = await Dateien.ablegen(new File([bild], datei.name.replace(/\.pdf$/i, '') + '-s' + n + '.webp', { type: 'image/webp' }), { blockId: b.id, abgeleitet: true });
                 Store.updateBlock(b.id, { bildDateiId: satz.id });
@@ -56261,7 +56282,7 @@ const PdfEinlesen = (() => {
      * einem Elternblock an; ohne den wüsste niemand, wohin. Ein Knopf, der
      * still nichts tut, ist schlimmer als einer, der sagt warum.
      */
-    const waehlen = async (elternId) => {
+    const waehlen = async (elternId, vorgabe) => {
         const ziel = elternId || (typeof App !== 'undefined' ? App.aktuelleSeite() : '');
         if (!ziel) {
             UI.toast('Erst eine Seite öffnen — dorthin kommen die PDF-Seiten.');
@@ -56291,7 +56312,7 @@ const PdfEinlesen = (() => {
                     return;
                 }
                 try {
-                    fertig(await alsSeiten(datei, ziel));
+                    fertig(await alsSeiten(datei, ziel, vorgabe));
                 }
                 catch (e) {
                     UI.toast('Die PDF liess sich nicht einlesen: ' +
@@ -56313,7 +56334,121 @@ const PdfEinlesen = (() => {
             input.click();
         });
     };
-    return { alsSeiten, waehlen, neuBerechnen, ohneBild, schaerfer, BREITE_MAX, OHNE_FRAGE };
+    /* ══ BILDER ALS SEITEN (E469) ══════════════════════════════════════════════
+       Ein Foto, ein Scan, eine PNG-Grafik wird eine SEITE des Dokuments — wie
+       in GoodNotes „Bild als Seite einfügen". Dieselbe Bauart wie eine
+       PDF-Seite (`pdfseite` mit `bildDateiId`, `bw`, `bh`), nur ohne
+       `quelleId`: es gibt kein Original, aus dem sich etwas neu rechnen
+       liesse, und `herkunft: 'bild'` sagt es. Das Bild ist NUTZERDATEN, kein
+       abgeleitetes Seitenbild — darum `abgeleitet: false`, damit es in jede
+       `.redion`-Sicherung kommt (§11, §14).
+  
+       Die Seite ist A4-breit; ihre Hoehe folgt dem Bild. Riesige Fotos werden
+       auf 2480 px Kantenlaenge gebracht (300 dpi bei A4): mehr sieht niemand,
+       und ein 12-Megapixel-Foto je Seite spraengte das Telefon (§36). */
+    const BILD_KANTE_MAX = 2480;
+    const bildMass = (blob) => new Promise((ok, nein) => {
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); ok({ w: img.naturalWidth, h: img.naturalHeight }); };
+        img.onerror = () => { URL.revokeObjectURL(url); nein(new Error('Das Bild liess sich nicht lesen.')); };
+        img.src = url;
+    });
+    const bildVerkleinern = async (datei) => {
+        const { w, h } = await bildMass(datei);
+        if (!w || !h)
+            throw new Error('Das Bild hat keine Masse.');
+        if (Math.max(w, h) <= BILD_KANTE_MAX)
+            return { blob: datei, w, h };
+        const f = BILD_KANTE_MAX / Math.max(w, h);
+        const zw = Math.max(1, Math.round(w * f)), zh = Math.max(1, Math.round(h * f));
+        const url = URL.createObjectURL(datei);
+        try {
+            const img = await new Promise((ok, nein) => {
+                const i = new Image();
+                i.onload = () => ok(i);
+                i.onerror = () => nein(new Error('Das Bild liess sich nicht lesen.'));
+                i.src = url;
+            });
+            const leinwand = document.createElement('canvas');
+            leinwand.width = zw;
+            leinwand.height = zh;
+            const stift = leinwand.getContext('2d');
+            if (!stift)
+                throw new Error('Der Browser gibt keine Zeichenfläche her.');
+            stift.drawImage(img, 0, 0, zw, zh);
+            const blob = await new Promise(fertig => leinwand.toBlob(b => fertig(b), 'image/webp', 0.85));
+            leinwand.width = 0;
+            leinwand.height = 0;
+            if (!blob)
+                throw new Error('Das Bild liess sich nicht verkleinern.');
+            return { blob, w: zw, h: zh };
+        }
+        finally {
+            URL.revokeObjectURL(url);
+        }
+    };
+    const bilderAlsSeiten = async (dateien, elternId, anStelle) => {
+        const bilder = Array.from(dateien).filter(d => /^image\//i.test(d.type));
+        if (!bilder.length) {
+            UI.toast('Keine Bilddatei dabei — es gehen PNG, JPG, WebP, GIF.');
+            return [];
+        }
+        const wohin = anStelle ? anStelle.elternId : elternId;
+        let stelle = anStelle ? anStelle.index : -1;
+        const ids = [];
+        for (let k = 0; k < bilder.length; k++) {
+            const datei = bilder[k];
+            try {
+                const { blob, w, h } = await bildVerkleinern(datei);
+                const bw = SheetSpace.A4_BREITE;
+                const bh = SheetSpace.rund(bw * h / w);
+                const b = Store.addBlock(wohin, 'pdfseite', {
+                    text: '', nr: k + 1, vonSeiten: bilder.length, bw, bh,
+                    raumVersion: SheetSpace.RAUM_VERSION, herkunft: 'bild', bildName: datei.name
+                }, stelle >= 0 ? stelle++ : -1);
+                const name = blob === datei ? datei.name : datei.name.replace(/\.[a-z0-9]+$/i, '') + '.webp';
+                const satz = await Dateien.ablegen(new File([blob], name, { type: blob.type || datei.type }), { blockId: b.id, abgeleitet: false });
+                Store.updateBlock(b.id, { bildDateiId: satz.id, bildBreite: w });
+                ids.push(b.id);
+            }
+            catch (e) {
+                UI.toast('„' + datei.name + '" liess sich nicht als Seite ablegen: ' + (e instanceof Error ? e.message : String(e)));
+            }
+            await new Promise(r => setTimeout(r, 0));
+        }
+        await Store.flush();
+        if (ids.length)
+            UI.toast(ids.length === 1 ? 'Ein Bild ist jetzt eine Seite' : ids.length + ' Bilder sind jetzt Seiten');
+        return ids;
+    };
+    const bilderWaehlen = (elternId, anStelle) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.multiple = true;
+        input.style.display = 'none';
+        document.body.appendChild(input);
+        return new Promise(fertig => {
+            let entschieden = false;
+            input.addEventListener('change', () => {
+                if (entschieden)
+                    return;
+                entschieden = true;
+                const dateien = input.files ? Array.from(input.files) : [];
+                input.remove();
+                if (!dateien.length) {
+                    fertig([]);
+                    return;
+                }
+                bilderAlsSeiten(dateien, elternId, anStelle).then(fertig, () => fertig([]));
+            });
+            input.addEventListener('cancel', () => { if (entschieden)
+                return; entschieden = true; input.remove(); fertig([]); });
+            input.click();
+        });
+    };
+    return { alsSeiten, waehlen, neuBerechnen, ohneBild, schaerfer, bilderAlsSeiten, bilderWaehlen, BREITE_MAX, OHNE_FRAGE, BILD_KANTE_MAX };
 })();
 window.PdfEinlesen = PdfEinlesen;
 
@@ -64389,12 +64524,86 @@ const DocumentMode = (() => {
            stand dort bisher offen, weil Platz da war — 280 px, dauerhaft, fuer
            eine Liste, die bei einem frisch eingelesenen PDF leer ist. Wer sie
            braucht, holt sie mit `ⓘ`; wer liest, liest. */
-        const created = { index: gemerkteSeite(pageId), zoom: gemerkterZoom(pageId),
+        const created = { index: gemerkteSeite(pageId), zoom: gemerkterZoom(pageId), lupe: false, zoomVorher: 0,
             thumbnailsOpen: false, inspectorOpen: false,
             einzeln: gemerkterLauf(pageId),
             toolsOpen: Store.getMeta('dokWerkzeuge:' + pageId) !== false };
         states.set(pageId, created);
         return created;
+    };
+    /* ══ EINE SEITE ALS BILD (E469) ═════════════════════════════════════════
+       Seitenbild (oder weisses Papier) und die Marken darueber, doppelt so
+       gross wie Blattpunkte (A4 → 1191 × 1684), gedreht, wie die Seite
+       steht. Die Marken kommen als SVG durch dieselbe Hand wie auf dem
+       Blatt (`Marken.zeichneMarke`), dann als Bild auf die Leinwand. Was
+       nicht mitkommt, steht in L133: die Textbloecke eines Blatts und
+       Bildmarken (ein `<img>` im SVG darf die Leinwand nicht anfassen). */
+    const bildLaden = (url) => new Promise((ok, nein) => {
+        const i = new Image();
+        i.onload = () => ok(i);
+        i.onerror = () => nein(new Error('Bild nicht lesbar'));
+        i.src = url;
+    });
+    const seiteAlsBild = async (block) => {
+        if (!block)
+            return null;
+        const bw = Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE;
+        const bh = Number(block.bh) || Number(block.blattHoehe) || SheetSpace.A4_HOEHE;
+        const g = SheetSpace.gedrehtVon(block);
+        const W = Math.round(bw * 2), H = Math.round(bh * 2);
+        const quer = g === 90 || g === 270;
+        const leinwand = document.createElement('canvas');
+        leinwand.width = quer ? H : W;
+        leinwand.height = quer ? W : H;
+        const stift = leinwand.getContext('2d');
+        if (!stift)
+            return null;
+        stift.fillStyle = '#ffffff';
+        stift.fillRect(0, 0, leinwand.width, leinwand.height);
+        stift.translate(leinwand.width / 2, leinwand.height / 2);
+        stift.rotate(g * Math.PI / 180);
+        stift.translate(-W / 2, -H / 2);
+        if (block.bildDateiId && typeof Dateien !== 'undefined') {
+            try {
+                const url = await Dateien.adresse(String(block.bildDateiId));
+                if (url)
+                    stift.drawImage(await bildLaden(url), 0, 0, W, H);
+            }
+            catch { /* dann ohne Seitenbild — die Marken kommen trotzdem */ }
+        }
+        const marken = Array.isArray(block.marken) ? block.marken : [];
+        if (marken.length && typeof Marken !== 'undefined') {
+            const innen = marken.map((m) => { try {
+                return Marken.zeichneMarke(m)?.outerHTML || '';
+            }
+            catch {
+                return '';
+            } }).join('');
+            const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + bw + ' ' + bh + '" width="' + W + '" height="' + H + '">' + innen + '</svg>';
+            const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
+            try {
+                stift.drawImage(await bildLaden(url), 0, 0, W, H);
+            }
+            catch { /* eine Marke, die das SVG-Bild verweigert, laesst den Rest stehen */ }
+            finally {
+                URL.revokeObjectURL(url);
+            }
+        }
+        const blob = await new Promise(fertig => leinwand.toBlob(b => fertig(b), 'image/png'));
+        leinwand.width = 0;
+        leinwand.height = 0;
+        return blob;
+    };
+    /** Ein Blob als Datei zum Speichern anbieten — ohne Server, ohne Fenster. */
+    const herunterladen = (blob, name) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 2000);
     };
     /* Die offenen PDF-Quellen der Suche (E468), je Quelle ein Griff. Ein
        neuer Aufbau schliesst die alten — pdf.js haelt sonst je Dokument
@@ -64456,7 +64665,9 @@ const DocumentMode = (() => {
         App.zeichneSeite();
     };
     const sourceLabel = (documentBlock) => documentBlock.type === 'pdfseite'
-        ? 'PDF · Seite ' + (Number(documentBlock.nr) || 1)
+        ? (documentBlock.herkunft === 'bild'
+            ? 'Bild' + (documentBlock.bildName ? ' · ' + String(documentBlock.bildName).slice(0, 40) : '')
+            : 'PDF · Seite ' + (Number(documentBlock.nr) || 1))
         : 'A4-Blatt';
     const linkedObjects = (page, documentBlock) => Object.values(Store.cache.blocks).filter(block => {
         if (!block?.alive || !block.sourceRef)
@@ -64487,7 +64698,7 @@ const DocumentMode = (() => {
         else {
             const blank = document.createElement('span');
             blank.className = 'document-thumbnail-blank';
-            blank.textContent = documentBlock.type === 'blatt' ? '✎' : 'PDF';
+            blank.textContent = documentBlock.type === 'blatt' ? '✎' : documentBlock.herkunft === 'bild' ? '🖼' : 'PDF';
             preview.appendChild(blank);
         }
         const label = document.createElement('span');
@@ -64733,7 +64944,13 @@ const DocumentMode = (() => {
             }
             return knopf;
         };
-        knoepfe.append(seitenKnopf('page-add', '＋', 'Seite danach', 'Eine leere Seite hinter dieser einfügen — mit dem Papier aus der Auswahl darunter'), seitenKnopf('page-duplicate', '⧉', 'Duplizieren', 'Diese Seite mit allem darauf verdoppeln'), seitenKnopf('page-rotate', '⟳', 'Drehen', 'Diese Seite um 90° im Uhrzeigersinn drehen'), seitenKnopf('page-up', '↑', 'Nach oben', 'Diese Seite eine Stelle nach vorn'), seitenKnopf('page-down', '↓', 'Nach unten', 'Diese Seite eine Stelle nach hinten'), seitenKnopf('page-bookmark', '🔖', 'Lesezeichen', documentBlock.lesezeichen ? 'Lesezeichen entfernen' : 'Diese Seite mit einem Lesezeichen merken', !!documentBlock.lesezeichen), seitenKnopf('page-delete', '🗑', 'Löschen', 'Diese Seite in den Papierkorb legen — von dort kommt sie zurück'));
+        knoepfe.append(seitenKnopf('page-add', '＋', 'Seite danach', 'Eine leere Seite hinter dieser einfügen — mit dem Papier aus der Auswahl darunter'), seitenKnopf('page-duplicate', '⧉', 'Duplizieren', 'Diese Seite mit allem darauf verdoppeln'), seitenKnopf('page-rotate', '⟳', 'Drehen', 'Diese Seite um 90° im Uhrzeigersinn drehen'), seitenKnopf('page-up', '↑', 'Nach oben', 'Diese Seite eine Stelle nach vorn'), seitenKnopf('page-down', '↓', 'Nach unten', 'Diese Seite eine Stelle nach hinten'), seitenKnopf('page-bookmark', '🔖', 'Lesezeichen', documentBlock.lesezeichen ? 'Lesezeichen entfernen' : 'Diese Seite mit einem Lesezeichen merken', !!documentBlock.lesezeichen), seitenKnopf('page-delete', '🗑', 'Löschen', 'Diese Seite in den Papierkorb legen — von dort kommt sie zurück'), 
+        /* E469: Bilder und weitere PDF-Seiten hinter diese Seite; die Seite als Bild sichern. */
+        seitenKnopf('page-add-image', '🖼', 'Bild als Seite', 'Ein Foto, einen Scan oder eine Grafik als neue Seite hinter dieser einfügen'), seitenKnopf('page-add-pdf', '📕', 'PDF hier einfügen', 'Die Seiten einer weiteren PDF hinter dieser Seite einfügen'), seitenKnopf('page-export-image', '⬇', 'Als Bild sichern', 'Diese Seite mit allem darauf als PNG speichern'));
+        /* Sichern darf jeder, der lesen darf. */
+        const sichernKnopf = knoepfe.querySelector('[data-document-action="page-export-image"]');
+        if (sichernKnopf)
+            sichernKnopf.disabled = false;
         /* Das Lesezeichen darf jeder setzen, der lesen darf: es aendert die
            Seite nicht, nur die eigene Ansicht auf sie. */
         const lesezeichenKnopf = knoepfe.querySelector('[data-document-action="page-bookmark"]');
@@ -64790,7 +65007,18 @@ const DocumentMode = (() => {
         const viewTitle = document.createElement('h3');
         viewTitle.className = 'document-section-title';
         viewTitle.textContent = 'Papier & Ansicht';
-        container.append(importButton, viewTitle, randKnopf);
+        /* DAS ZOOM-FENSTER (E469), GoodNotes' Lupe zum Kleinschreiben: ein
+           Schalter wie Randstreifen und Einzelseite. Nur eine Ansicht, kein
+           Merker: wer das Dokument wieder oeffnet, sieht es normal. */
+        const lupeAn = !!stateFor(page.id).lupe;
+        const lupeKnopf = document.createElement('button');
+        lupeKnopf.type = 'button';
+        lupeKnopf.dataset.documentAction = 'lupe';
+        lupeKnopf.className = 'document-lupe-knopf' + (lupeAn ? ' an' : '');
+        lupeKnopf.textContent = lupeAn ? '🔍 Zoom-Fenster aus' : '🔍 Zoom-Fenster an';
+        lupeKnopf.setAttribute('aria-pressed', lupeAn ? 'true' : 'false');
+        lupeKnopf.title = 'Die Seite gross zum Kleinschreiben; unten die Übersicht mit dem Ausschnitt.';
+        container.append(importButton, viewTitle, randKnopf, lupeKnopf);
         if (laufKnopf)
             container.appendChild(laufKnopf);
         container.append(linkedTitle, actions, summary, list);
@@ -65552,6 +65780,8 @@ const DocumentMode = (() => {
             center.style.setProperty('--doc-blatt', Math.max(120, breit) + 'px');
             platzhalterSetzen(Math.max(120, breit));
             verweiseLegen();
+            if (state.lupe)
+                requestAnimationFrame(lupeBandZeichnen);
         };
         /* ══ E399 · DER PLATZHALTER WAR 283 PX HOCH STATT 1922 ═══════════════════
            E299 schrieb an die Stelle oben: „Der Platzhalter in der Hoehe, die die
@@ -65710,7 +65940,10 @@ const DocumentMode = (() => {
             if (rollWartet)
                 return;
             rollWartet = true;
-            requestAnimationFrame(() => { rollWartet = false; nachziehen(); });
+            requestAnimationFrame(() => { rollWartet = false; nachziehen(); if (state.lupe) {
+                lupeBlattSetzen();
+                lupeBandZeichnen();
+            } });
         }, { passive: true });
         requestAnimationFrame(() => {
             hoeheSetzen();
@@ -66098,6 +66331,11 @@ const DocumentMode = (() => {
                 event.stopPropagation();
                 return;
             }
+            if (event.key === 'Escape' && state.lupe) {
+                lupeSetzen(false);
+                event.stopPropagation();
+                return;
+            }
             if (event.key === 'Escape' && workspace.dataset.inkOptions === 'open') {
                 workspace.dataset.inkOptions = 'closed';
                 moreTools.setAttribute('aria-expanded', 'false');
@@ -66220,6 +66458,43 @@ const DocumentMode = (() => {
                 findbarSetzen(findbar.hidden);
                 return;
             }
+            if (action === 'lupe') {
+                lupeSetzen(!state.lupe);
+                return;
+            }
+            if (action === 'lupe-zu') {
+                lupeSetzen(false);
+                return;
+            }
+            if (action === 'lupe-hoch') {
+                lupeRuecken(0, -1);
+                return;
+            }
+            if (action === 'lupe-runter') {
+                lupeRuecken(0, 1);
+                return;
+            }
+            if (action === 'lupe-links') {
+                lupeRuecken(-1, 0);
+                return;
+            }
+            if (action === 'lupe-rechts') {
+                lupeRuecken(1, 0);
+                return;
+            }
+            if (action === 'page-export-image') {
+                const block = jetzt();
+                void seiteAlsBild(block).then(blob => {
+                    if (!blob) {
+                        UI.toast('Die Seite liess sich nicht als Bild zeichnen.');
+                        return;
+                    }
+                    const nr = documentsIn(page).findIndex(b => b.id === block.id) + 1;
+                    herunterladen(blob, String(page.text || 'Seite').replace(/[\\/:*?"<>|]+/g, ' ').trim() + ' – Seite ' + nr + '.png');
+                    UI.toast('Seite ' + nr + ' als PNG gesichert');
+                });
+                return;
+            }
             if (action === 'find-next') {
                 zumTreffer(trefferNr + 1);
                 return;
@@ -66246,6 +66521,18 @@ const DocumentMode = (() => {
                 }
                 if (action === 'page-add')
                     seiteEinfuegen();
+                if (action === 'page-add-image' || action === 'page-add-pdf') {
+                    const stelle = stelleVon(jetzt());
+                    const anStelle = stelle ? { elternId: stelle.eltern.id, index: stelle.index + 1 } : undefined;
+                    if (action === 'page-add-image') {
+                        void PdfEinlesen.bilderWaehlen(page.id, anStelle).then((ids) => { if (ids.length)
+                            neuMit(ids[ids.length - 1] ?? null); });
+                    }
+                    else {
+                        void PdfEinlesen.waehlen(page.id, anStelle ? { anStelle } : undefined).then((result) => { if (result)
+                            rerender(); });
+                    }
+                }
                 if (action === 'page-duplicate')
                     seiteDuplizieren();
                 if (action === 'page-delete')
@@ -66368,14 +66655,137 @@ const DocumentMode = (() => {
            Regler, Zahl und Ansicht nie auseinanderlaufen. Ohne Strg rollt das
            Rad wie immer; das Kneifen zaehlt nur Finger, nie Stift oder Maus. */
         const zoomSetzen = (wert) => {
-            const neu = Math.max(60, Math.min(180, Math.round(wert)));
+            /* Im Zoom-Fenster (E469) darf es 300 sein — der Regler bleibt bei 180. */
+            const neu = Math.max(60, Math.min(state.lupe ? 300 : 180, Math.round(wert)));
             if (neu === state.zoom)
                 return;
             state.zoom = neu;
-            zoomMerken(page.id, neu); /* F07 — auch Strg+Rad und Kneifen */
+            if (!state.lupe)
+                zoomMerken(page.id, neu); /* F07 — auch Strg+Rad und Kneifen; die Lupe merkt nicht */
             zoom.value = String(neu);
             zoomLabel.textContent = neu + ' %';
             passen();
+        };
+        /* ══ DAS ZOOM-FENSTER (E469) ═══════════════════════════════════════════
+           Die Seite selbst wird gross (250 %), damit man klein schreiben kann,
+           und unten steht die UEBERSICHT: die Seite im Kleinen mit dem Band,
+           das gerade im Bild ist. Das Band laesst sich ziehen, vier Pfeile
+           ruecken es. EINE Zeichenschicht, kein Spiegel: zwei Schichten auf
+           demselben Block hielten zwei Kopien der Marken und ueberschrieben
+           einander (marken.ts, `marks`) — das waere Datenverlust (§51). */
+        let lupe = null;
+        let lupeBand = null;
+        let lupeBild = null;
+        let lupeSeite = -1;
+        const lupeBlattSetzen = () => {
+            if (!lupe || !lupeBild || lupeSeite === state.index)
+                return;
+            lupeSeite = state.index;
+            const block = documents[state.index];
+            if (!block)
+                return;
+            lupeBild.replaceChildren();
+            const { bw, bh } = SheetSpace.masseVon(block);
+            lupeBild.style.setProperty('aspect-ratio', bw + ' / ' + bh);
+            if (block.bildDateiId && typeof Dateien !== 'undefined') {
+                const img = document.createElement('img');
+                img.alt = '';
+                void Dateien.adresse(String(block.bildDateiId)).then((u) => { if (u && lupeSeite === state.index)
+                    img.src = u; });
+                lupeBild.appendChild(img);
+            }
+            if (lupeBand)
+                lupeBild.appendChild(lupeBand);
+        };
+        const lupeBandZeichnen = () => {
+            if (!lupe || !lupeBand)
+                return;
+            const stand = staende[state.index];
+            const papier = stand?.querySelector('.blatt-papier');
+            if (!papier)
+                return;
+            const pr = papier.getBoundingClientRect(), cr = center.getBoundingClientRect();
+            if (pr.width < 1 || pr.height < 1)
+                return;
+            const x = Math.max(0, Math.min(1, (cr.left - pr.left) / pr.width));
+            const y = Math.max(0, Math.min(1, (cr.top - pr.top) / pr.height));
+            const w = Math.max(0.02, Math.min(1 - x, cr.width / pr.width));
+            const h = Math.max(0.02, Math.min(1 - y, cr.height / pr.height));
+            lupeBand.style.left = (x * 100) + '%';
+            lupeBand.style.top = (y * 100) + '%';
+            lupeBand.style.width = (w * 100) + '%';
+            lupeBand.style.height = (h * 100) + '%';
+        };
+        /** Das Band dorthin, wo der Finger auf der Uebersicht ist. */
+        const lupeZielen = (fx, fy) => {
+            const stand = staende[state.index];
+            const papier = stand?.querySelector('.blatt-papier');
+            if (!papier)
+                return;
+            const pr = papier.getBoundingClientRect(), cr = center.getBoundingClientRect();
+            const oben = pr.top - cr.top + center.scrollTop, links = pr.left - cr.left + center.scrollLeft;
+            center.scrollTop = Math.max(0, oben + fy * pr.height - cr.height / 2);
+            center.scrollLeft = Math.max(0, links + fx * pr.width - cr.width / 2);
+            lupeBandZeichnen();
+        };
+        const lupeSetzen = (an) => {
+            if (an === !!state.lupe)
+                return;
+            if (an) {
+                state.zoomVorher = state.zoom;
+                state.lupe = true;
+                workspace.dataset.lupe = 'an';
+                lupe = document.createElement('div');
+                lupe.className = 'document-lupe';
+                lupe.setAttribute('role', 'group');
+                lupe.setAttribute('aria-label', 'Zoom-Fenster: Übersicht der Seite');
+                lupeBild = document.createElement('div');
+                lupeBild.className = 'document-lupe-blatt';
+                lupeBand = document.createElement('div');
+                lupeBand.className = 'document-lupe-band';
+                lupeBand.setAttribute('aria-hidden', 'true');
+                const griffe = document.createElement('div');
+                griffe.className = 'document-lupe-griffe';
+                griffe.append(topButton('lupe-links', '◀', 'Ausschnitt nach links'), topButton('lupe-hoch', '▲', 'Ausschnitt nach oben'), topButton('lupe-runter', '▼', 'Ausschnitt nach unten'), topButton('lupe-rechts', '▶', 'Ausschnitt nach rechts'), topButton('lupe-zu', '✕', 'Zoom-Fenster schließen'));
+                lupe.append(lupeBild, griffe);
+                lupeBild.addEventListener('pointerdown', (event) => {
+                    if (!lupeBild)
+                        return;
+                    const r = lupeBild.getBoundingClientRect();
+                    const ziel = (e) => lupeZielen((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
+                    ziel(event);
+                    const zieh = (e) => ziel(e);
+                    const los = () => { window.removeEventListener('pointermove', zieh); window.removeEventListener('pointerup', los); };
+                    window.addEventListener('pointermove', zieh);
+                    window.addEventListener('pointerup', los);
+                    event.preventDefault();
+                });
+                workspace.appendChild(lupe);
+                lupeSeite = -1;
+                lupeBlattSetzen();
+                zoomSetzen(250);
+                requestAnimationFrame(lupeBandZeichnen);
+            }
+            else {
+                state.lupe = false;
+                workspace.dataset.lupe = 'aus';
+                lupe?.remove();
+                lupe = null;
+                lupeBand = null;
+                lupeBild = null;
+                lupeSeite = -1;
+                zoomSetzen(state.zoomVorher || 100);
+            }
+            inspector.querySelectorAll('.document-lupe-knopf').forEach(k => {
+                k.classList.toggle('an', an);
+                k.setAttribute('aria-pressed', an ? 'true' : 'false');
+                k.textContent = an ? '🔍 Zoom-Fenster aus' : '🔍 Zoom-Fenster an';
+            });
+        };
+        const lupeRuecken = (dx, dy) => {
+            center.scrollTop = Math.max(0, center.scrollTop + dy * center.clientHeight * 0.85);
+            center.scrollLeft = Math.max(0, center.scrollLeft + dx * center.clientWidth * 0.5);
+            lupeBandZeichnen();
         };
         center.addEventListener('wheel', (event) => {
             if (!event.ctrlKey && !event.metaKey)
@@ -66411,7 +66821,7 @@ const DocumentMode = (() => {
         center.addEventListener('pointercancel', fingerWeg, true);
         return true;
     };
-    return { available, active, select, toggle, documentsIn, render, sourceLabel };
+    return { available, active, select, toggle, documentsIn, render, sourceLabel, seiteAlsBild };
 })();
 window.DocumentMode = DocumentMode;
 /* ============================================================================

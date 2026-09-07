@@ -6399,13 +6399,13 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G4)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G5)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
-ohne eine Funktion zu löschen. Diese Lücke ist die ehrliche Restliste —
-sie wird mit jedem Bogen (G2 bis G5 in `AUFGABEN.md` 7) kürzer, und was
-hier steht, ist NICHT gebaut, wie schön das Dossier es auch beschreibt.
+ohne eine Funktion zu löschen. Die fünf Bögen (G1–G5, E465–E469,
+`AUFGABEN.md` 7) sind gebaut; diese Lücke ist die ehrliche Restliste, und
+was hier steht, ist NICHT gebaut, wie schön das Dossier es auch beschreibt.
 
 Zeichnen (nach G1, E465):
 
@@ -6462,8 +6462,25 @@ Offen bleibt:
   · **Verweise auf Striche antippen** — ein Strich trägt seinen Verweis,
     ist aber dünn; ein Kasten um ihn ist der bessere Träger.
 
-Noch nicht angefangen (G5, siehe `AUFGABEN.md`): Bilder als Seiten, PDF in
-ein offenes Dokument, Seite als Bild, Zoom-Fenster.
+Import und Export (nach G5, E469): Bilder als Seiten, PDF an einer Stelle,
+Seite als Bild, Zoom-Fenster stehen. Offen bleibt:
+
+  · **Das Zoom-Fenster ist Zoom plus Übersicht**, keine zweite
+    Schreibfläche: GoodNotes zeigt unten einen vergrösserten Streifen, in
+    den man schreibt, und oben die ganze Seite live. Hier wird die Seite
+    selbst gross, und die Übersicht führt den Ausschnitt. Eine zweite
+    Fläche auf derselben Zeichenschicht ist ein eigener Bogen (zwei
+    Sichten, eine Wahrheit — heute hält jede Schicht ihre Kopie der
+    Marken).
+  · **Seite als Bild** lässt die Textblöcke eines Blatts (getippter Text)
+    und Bildmarken aus — ein `<img>` im SVG darf die Leinwand nicht
+    anfassen. Drucken (E117) hat beides.
+  · **Ganzes Dokument als PDF mit Marken** — braucht einen PDF-Schreiber;
+    Drucken über den Browser kann es heute.
+  · **Bilder aus der Zwischenablage** (Strg V eines Fotos als Seite) und
+    **Fotografieren mit der Kamera** als Seite — der Bildwähler nimmt
+    Dateien.
+  · **Mehrere PDFs auf einmal** einfügen — der Wähler nimmt eine.
 
 Was Redion auch nach G5 nicht haben wird, und warum:
 
