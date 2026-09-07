@@ -6485,7 +6485,12 @@ Kreis-Lasso stehen. Offen bleibt:
     `test462`.
 
 Seiten (nach G3, E467): einfügen, duplizieren, drehen, schieben,
-Lesezeichen und löschen stehen im Inspector. Offen bleibt:
+Lesezeichen und löschen stehen im Inspector; seit **E496** auch
+**„In anderes Dokument"** — GoodNotes' „Copy to…" und „Move to…". Kopieren
+gibt frische Kennungen und ein eigenes Seitenbild, Verschieben behält die
+Kennung (sonst zeigte jeder Verweis auf die Seite ins Leere). Die einzige
+Seite eines Dokuments lässt sich nur kopieren. `test466`.
+Offen bleibt:
 
   · ~~**Seiten ziehen in der Miniaturenleiste** und ein Menü je Miniatur~~
     — **GESCHLOSSEN mit E480.** Jede Miniatur hat ihren „⋯"-Knopf mit

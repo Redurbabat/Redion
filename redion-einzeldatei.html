@@ -19094,7 +19094,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 661, inhalt: '0b4b572101cddd72', gebaut: '2026-09-07T22:49:20.975Z' };
+const Stand = { fassung: 663, inhalt: '428ac95258da83c0', gebaut: '2026-09-07T23:14:07.322Z' };
 window.Stand = Stand;
 
 </script>
@@ -67494,7 +67494,9 @@ const DocumentMode = (() => {
         };
         knoepfe.append(seitenKnopf('page-add', '＋', 'Seite danach', 'Eine leere Seite hinter dieser einfügen — mit dem Papier aus der Auswahl darunter'), seitenKnopf('page-duplicate', '⧉', 'Duplizieren', 'Diese Seite mit allem darauf verdoppeln'), seitenKnopf('page-rotate', '⟳', 'Drehen', 'Diese Seite um 90° im Uhrzeigersinn drehen'), seitenKnopf('page-up', '↑', 'Nach oben', 'Diese Seite eine Stelle nach vorn'), seitenKnopf('page-down', '↓', 'Nach unten', 'Diese Seite eine Stelle nach hinten'), seitenKnopf('page-bookmark', '🔖', 'Lesezeichen', documentBlock.lesezeichen ? 'Lesezeichen entfernen' : 'Diese Seite mit einem Lesezeichen merken', !!documentBlock.lesezeichen), seitenKnopf('page-delete', '🗑', 'Löschen', 'Diese Seite in den Papierkorb legen — von dort kommt sie zurück'), 
         /* E469: Bilder und weitere PDF-Seiten hinter diese Seite; die Seite als Bild sichern. */
-        seitenKnopf('page-add-image', '🖼', 'Bild als Seite', 'Ein Foto, einen Scan oder eine Grafik als neue Seite hinter dieser einfügen'), seitenKnopf('page-add-camera', '📷', 'Foto aufnehmen', 'Mit der Kamera eine neue Seite hinter dieser aufnehmen — am Rechner ohne Kamera öffnet sich der Dateiwähler'), seitenKnopf('page-add-pdf', '📕', 'PDF hier einfügen', 'Die Seiten einer weiteren PDF hinter dieser Seite einfügen'), seitenKnopf('page-export-image', '⬇', 'Als Bild sichern', 'Diese Seite mit allem darauf als PNG speichern'));
+        seitenKnopf('page-add-image', '🖼', 'Bild als Seite', 'Ein Foto, einen Scan oder eine Grafik als neue Seite hinter dieser einfügen'), seitenKnopf('page-add-camera', '📷', 'Foto aufnehmen', 'Mit der Kamera eine neue Seite hinter dieser aufnehmen — am Rechner ohne Kamera öffnet sich der Dateiwähler'), seitenKnopf('page-add-pdf', '📕', 'PDF hier einfügen', 'Die Seiten einer weiteren PDF hinter dieser Seite einfügen'), seitenKnopf('page-export-image', '⬇', 'Als Bild sichern', 'Diese Seite mit allem darauf als PNG speichern'), 
+        /* E496: dieselbe Seite in ein anderes Dokument — kopieren oder verschieben. */
+        seitenKnopf('page-to-doc', '↗', 'In anderes Dokument', 'Diese Seite mit allem darauf in ein anderes Dokument kopieren oder verschieben'));
         /* Sichern darf jeder, der lesen darf. */
         const sichernKnopf = knoepfe.querySelector('[data-document-action="page-export-image"]');
         if (sichernKnopf)
@@ -69282,6 +69284,25 @@ const DocumentMode = (() => {
                eine `bildDateiId`, verloere die Kopie ihr Bild, sobald das Original
                aus dem Papierkorb faellt. Bis die Kopie da ist, zeigt die neue
                Seite das alte Bild; danach ihr eigenes. */
+            seitenbildKopieren(block, neu.id);
+            UI.toast('Seite verdoppelt');
+            neuMit(neu.id);
+        };
+        /**
+         * DAS SEITENBILD WIRD KOPIERT, NICHT GETEILT (E467, hierher gehoben mit
+         * E496).
+         *
+         * `purgeBlock` nimmt die Anhänge SEINES Blocks mit — teilten sich
+         * Original und Kopie eine `bildDateiId`, verlöre die Kopie ihr Bild,
+         * sobald das Original aus dem Papierkorb fällt. Bis die Kopie da ist,
+         * zeigt die neue Seite das alte Bild; danach ihr eigenes.
+         *
+         * Es steht seit E496 an EINER Stelle, weil es zwei Aufrufer hat:
+         * Duplizieren und Kopieren in ein anderes Dokument. Zwei Abschriften
+         * derselben Regel laufen auseinander, und die zweite hätte den ganzen
+         * Absatz oben nicht mitbekommen (§8).
+         */
+        const seitenbildKopieren = (block, zielId) => {
             if (block.type === 'pdfseite' && block.bildDateiId && typeof Dateien !== 'undefined') {
                 const alt = String(block.bildDateiId);
                 void (async () => {
@@ -69300,16 +69321,140 @@ const DocumentMode = (() => {
                            PDF-Seite bleibt abgeleitet, eine Bild-Seite bleibt
                            Nutzerdatei. `herkunft` ist nur der Rückfall, wenn der
                            Dateisatz fehlt. */
-                        { blockId: neu.id, abgeleitet: satz ? !!satz.abgeleitet : block.herkunft !== 'bild' });
-                        Store.updateBlock(neu.id, { bildDateiId: kopie.id });
+                        { blockId: zielId, abgeleitet: satz ? !!satz.abgeleitet : block.herkunft !== 'bild' });
+                        Store.updateBlock(zielId, { bildDateiId: kopie.id });
                     }
                     catch (e) {
                         UI.toast('Das Seitenbild liess sich nicht mitkopieren: ' + (e instanceof Error ? e.message : String(e)));
                     }
                 })();
             }
-            UI.toast('Seite verdoppelt');
-            neuMit(neu.id);
+        };
+        const ZIELE_HOECHSTENS = 40;
+        const andereDokumente = (ausser) => {
+            const raus = [];
+            const gesehen = new Set();
+            let bloecke = 0;
+            for (const block of Object.values(Store.cache.blocks)) {
+                if (raus.length >= ZIELE_HOECHSTENS)
+                    break;
+                if (++bloecke > FREMD_BLOECKE)
+                    break;
+                if (!block || block.alive === false)
+                    continue;
+                if (block.type !== 'pdfseite' && block.type !== 'blatt')
+                    continue;
+                const seite = seiteZu(block);
+                if (!seite || !seite.alive || seite.id === ausser || gesehen.has(seite.id))
+                    continue;
+                gesehen.add(seite.id);
+                /* `bearbeiten`, NICHT `edit` — und das ist kein Schönheitsfehler.
+                   `edit` ist der Name einer ROLLE (§26); die Frage an das Tor heisst
+                   `bearbeiten`, wie überall sonst in dieser Datei (`darfSeiten`,
+                   `canAnnotate`). Mit `edit` sagte das Tor auf JEDER Seite nein, und
+                   die Liste der Ziele war immer leer — gefunden von `test466`, nicht
+                   vom Lesen. Genau der Fehler aus E21: eine Schnittstelle aus dem
+                   Gedächtnis geschrieben statt nachgeschlagen.
+                   Und eine gesperrte Seite ist auch kein Ziel — dieselbe zweite
+                   Bedingung, die `darfSeiten` für die eigene Seite stellt. */
+                if (seite.gesperrt)
+                    continue;
+                if (typeof Konten !== 'undefined' && Konten.darf && !Konten.darf('bearbeiten', seite.id))
+                    continue;
+                raus.push({ id: seite.id, name: String(seite.text || 'Ohne Titel'),
+                    icon: String(seite.icon || '📄'), seiten: documentsIn(seite).length });
+            }
+            raus.sort((a, b) => a.name.localeCompare(b.name));
+            return raus;
+        };
+        /** Wohin die Seite im Zieldokument kommt: zu den Eltern seiner letzten Seite. */
+        const zielEltern = (zielSeite) => {
+            const seiten = documentsIn(zielSeite);
+            const letzte = seiten[seiten.length - 1];
+            const eltern = letzte ? Store.getBlock(letzte.parentId) : null;
+            return eltern || zielSeite;
+        };
+        /**
+         * Verschieben oder kopieren — nach der Frage, die der Nutzer beantwortet.
+         *
+         * DIE REIHENFOLGE BEIM VERSCHIEBEN IST DIE GANZE SICHERHEIT: erst in
+         * die neuen Eltern legen, dann `parentId` umhängen, ZULETZT aus den
+         * alten nehmen. Bräche irgendetwas dazwischen ab, stünde die Seite in
+         * beiden Dokumenten — sichtbar und zu berichtigen. In der anderen
+         * Reihenfolge stünde sie in keinem, und niemand wüsste, wo sie war
+         * (§51: lieber langsamer als jemals Nutzerdaten verlieren).
+         */
+        const seiteInsDokument = async (wen) => {
+            const block = wen || jetzt();
+            if (!block)
+                return;
+            if (typeof Dialog === 'undefined') {
+                UI.toast('Der Dialog ist gerade nicht da.');
+                return;
+            }
+            const ziele = andereDokumente(page.id);
+            if (!ziele.length) {
+                UI.toast('Es gibt kein anderes Dokument, in das die Seite passen würde.');
+                return;
+            }
+            const wohin = await Dialog.wahl({
+                titel: 'In welches Dokument?',
+                text: 'Die Seite kommt ans Ende des gewählten Dokuments — mit allem, was darauf steht.',
+                knoepfe: ziele.map(z => ({ id: 'ziel:' + z.id, text: z.icon + ' ' + z.name,
+                    hinweis: z.seiten === 1 ? 'eine Seite' : z.seiten + ' Seiten' }))
+            });
+            if (!wohin.startsWith('ziel:'))
+                return;
+            const zielSeite = Store.getBlock(wohin.slice(5));
+            if (!zielSeite || zielSeite.alive === false) {
+                UI.toast('Dieses Dokument gibt es nicht mehr.');
+                return;
+            }
+            const liste = documentsIn(page);
+            const letzte = liste.length < 2;
+            const wie = await Dialog.wahl({
+                titel: 'Kopieren oder verschieben?',
+                text: letzte
+                    ? 'Dies ist die einzige Seite dieses Dokuments — verschieben würde es leeren, darum geht hier nur kopieren.'
+                    : 'Beim Verschieben ist die Seite hier weg; beim Kopieren bleibt sie stehen.',
+                knoepfe: [
+                    { id: 'kopieren', text: '⧉ Kopieren', hinweis: 'Die Seite steht danach in beiden Dokumenten' },
+                    ...(letzte ? [] : [{ id: 'verschieben', text: '↗ Verschieben',
+                            hinweis: 'Die Seite verlässt dieses Dokument' }])
+                ]
+            });
+            if (wie !== 'kopieren' && wie !== 'verschieben')
+                return;
+            const ziel = zielEltern(zielSeite);
+            if (wie === 'kopieren') {
+                const daten = Store.baum(block.id);
+                if (!daten) {
+                    UI.toast('Diese Seite liess sich nicht lesen.');
+                    return;
+                }
+                /* Das Lesezeichen bleibt am Original — dieselbe Regel wie beim
+                   Verdoppeln: zwei Zeichen für dieselbe Stelle wären eines zu viel. */
+                delete daten.lesezeichen;
+                const neu = Store.baumEinfuegen(daten, ziel.id, -1);
+                if (!neu) {
+                    UI.toast('Die Kopie liess sich nicht anlegen.');
+                    return;
+                }
+                seitenbildKopieren(block, neu.id);
+                UI.toast('Seite nach „' + String(zielSeite.text || 'Ohne Titel') + '" kopiert');
+                return;
+            }
+            const stelle = stelleVon(block);
+            if (!stelle) {
+                UI.toast('Diese Seite hat keinen Platz, aus dem sie sich lösen liesse.');
+                return;
+            }
+            Store.updateBlock(ziel.id, { content: [...(ziel.content || []), block.id] });
+            Store.updateBlock(block.id, { parentId: ziel.id, parentTable: 'block' });
+            Store.updateBlock(stelle.eltern.id, { content: (stelle.eltern.content || []).filter((id) => id !== block.id) });
+            UI.toast('Seite nach „' + String(zielSeite.text || 'Ohne Titel') + '" verschoben');
+            const rest = documentsIn(page);
+            neuMit(rest[Math.min(rest.length - 1, Math.max(0, stelle.index))]?.id || null);
         };
         const seiteLoeschen = (wen) => {
             const block = wen || jetzt();
@@ -69445,6 +69590,7 @@ const DocumentMode = (() => {
             eintrag('page-down', '↓', 'Nach unten');
             eintrag('page-bookmark', '🔖', block.lesezeichen ? 'Lesezeichen weg' : 'Lesezeichen');
             eintrag('page-export-image', '⬇', 'Als Bild sichern');
+            eintrag('page-to-doc', '↗', 'In anderes Dokument');
             eintrag('page-delete', '🗑', 'Löschen');
             thumbnails.appendChild(kasten);
             /* An seinen Knopf legen — und zurückrücken, wo die Leiste zu Ende ist.
@@ -70091,6 +70237,8 @@ const DocumentMode = (() => {
                 }
                 if (action === 'page-duplicate')
                     seiteDuplizieren(zielSeite);
+                if (action === 'page-to-doc')
+                    void seiteInsDokument(zielSeite);
                 if (action === 'page-delete')
                     seiteLoeschen(zielSeite);
                 if (action === 'page-up')

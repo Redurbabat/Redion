@@ -4358,3 +4358,29 @@ Isometrisches Papier hat GoodNotes und Redion bekommt es nicht — mit
 geschriebenem Grund im Quelltext, damit niemand es „schnell noch dazu"
 macht: ein schräger Verlauf misst seinen Abstand senkrecht zur Linie, und
 in Prozent einer Fläche ändert der sich mit dem Seitenverhältnis.
+
+**Eine Seite in ein anderes Dokument (E496, test466).** GoodNotes hat
+„Copy to…" und „Move to…"; Redion hatte Verdoppeln und Löschen. Wer eine
+Seite aus dem Skript in seine Mitschrift holen wollte, sicherte sie als
+Bild und fügte sie wieder ein — danach war sie ein Foto ohne Marken und
+ohne Textschicht.
+
+Kopieren und Verschieben sind nicht dasselbe mit einem Häkchen: Kopieren
+gibt frische Kennungen und ein eigenes Seitenbild, Verschieben hängt
+denselben Block um und behält seine Kennung. Ein Verweis auf eine Seite
+zeigt auf ihre Kennung — wäre Verschieben ein Kopieren mit anschliessendem
+Löschen, zeigte danach jeder Verweis in den Papierkorb.
+
+Die Reihenfolge beim Verschieben ist die ganze Sicherheit: erst in die
+neuen Eltern legen, dann umhängen, zuletzt aus den alten nehmen. Bricht
+etwas dazwischen ab, steht die Seite in beiden Dokumenten statt in keinem.
+
+Der Fund kam vom Prüflauf, nicht vom Lesen: die erste Fassung fragte das
+Rechtetor mit `darf('edit', …)`. `edit` ist der Name einer Rolle; die Frage
+heisst `bearbeiten`. Das Tor sagte auf jeder Seite nein, und die Funktion
+meldete „Es gibt kein anderes Dokument" auf einem Gerät mit vier
+Dokumenten — keine Warnung, nur eine falsche Auskunft, die plausibel
+aussah. Deshalb klickt `test466` den Weg wirklich, statt die Funktion
+aufzurufen: ein Prüflauf, der sie direkt riefe, hätte denselben Fehler
+mitgemacht.
+

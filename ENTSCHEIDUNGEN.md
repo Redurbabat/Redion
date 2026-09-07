@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-475 Entscheidungen, E1 bis E495 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+476 Entscheidungen, E1 bis E496 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -539,6 +539,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E493** — Präsentieren mit Laserpointer: der Punkt zeigt und schreibt nicht
 * **E494** — Die Elemente-Bibliothek: eine Auswahl wird ein Stempel, und der Stempel überlebt das Dokument
 * **E495** — Cornell und Notenlinien: zwei Papiere, und die Lehre, dass Prozent in einem Verlauf die Kachel meint
+* **E496** — Eine Seite in ein anderes Dokument: kopieren mit frischer Kennung, verschieben mit derselben
 
 ---
 
@@ -39604,3 +39605,84 @@ weiterreicht. Angepasst, weil sie zählen: `test207` (sieben statt fünf),
 `test351` (die Klappe trägt sieben). Dazu test87, test105, test109,
 test265 — alle grün. Nicht geprüft: die Gesamtsuite.
 Bilder: `node bilder.mts papiere` und `papierfuss` — beide Ansichten sind neu.
+
+---
+
+E496 — Eine Seite in ein anderes Dokument
+--------------------------------------------------------------------------
+
+GoodNotes hat im Seitenmenü „Copy to…" und „Move to…". Redion hatte
+Verdoppeln und Löschen — und sonst nichts, was eine Seite über die Grenze
+ihres Dokuments gebracht hätte. Wer eine Seite aus dem Skript in seine
+Mitschrift holen wollte, sicherte sie als Bild und fügte sie wieder ein:
+danach war sie ein Foto. Jede Marke weg, die Textschicht weg, der Verweis
+weg.
+
+## Kopieren und Verschieben sind NICHT dasselbe mit einem Häkchen
+
+    Kopieren     `Store.baum` + `baumEinfuegen` → FRISCHE Kennungen, und
+                 das Seitenbild wird kopiert, nicht geteilt (E467)
+    Verschieben  derselbe Block hängt um → DIESELBE Kennung, kein neues
+                 Bild, kein zweiter Eintrag im Dateispeicher
+
+Der Unterschied ist nicht Sparsamkeit. Ein Verweis auf eine Seite (E468,
+`zielSeite`) zeigt auf ihre KENNUNG. Wäre Verschieben ein Kopieren mit
+anschliessendem Löschen, zeigte danach jeder Verweis auf eine Seite im
+Papierkorb — und niemand sähe, warum. `test466 §3` misst deshalb nicht,
+dass „eine Seite da ist", sondern dass es DIESELBE ist.
+
+## Die Reihenfolge beim Verschieben ist die ganze Sicherheit
+
+    1 in die neuen Eltern legen
+    2 `parentId` umhängen
+    3 aus den alten nehmen
+
+Bräche irgendetwas dazwischen ab, stünde die Seite in BEIDEN Dokumenten —
+sichtbar, und mit einem Griff zu berichtigen. In der anderen Reihenfolge
+stünde sie in keinem, und niemand wüsste, wo sie war. §51 in drei Zeilen.
+
+## Was nicht geht, und warum es gesagt wird
+
+Die **einzige** Seite eines Dokuments lässt sich kopieren, aber nicht
+verschieben: sonst bliebe ein Dokument ohne Seite zurück, und das gibt es
+in Redion nicht — ein Dokument entsteht mit seiner ersten Seite. „Verschieben"
+steht dann gar nicht erst zur Wahl, und daneben steht, warum (§35).
+
+## Der Fund des Prüflaufs: `edit` ist kein Verb
+
+Die erste Fassung fragte das Rechtetor mit `Konten.darf('edit', seite.id)`.
+`edit` ist der Name einer ROLLE (§26: `voll · edit · komm · lesen · kein`);
+die Frage an das Tor heisst `bearbeiten`, wie überall sonst in derselben
+Datei (`darfSeiten`, `canAnnotate`).
+
+Das Tor sagte damit auf JEDER Seite nein. Die Liste der Ziele war immer
+leer, und die Funktion meldete „Es gibt kein anderes Dokument" — auf einem
+Gerät mit vier Dokumenten. Kein Absturz, keine Warnung, nur eine Auskunft,
+die falsch war und plausibel aussah.
+
+Das ist E21 zum wiederholten Mal: eine Schnittstelle aus dem Gedächtnis
+geschrieben, statt sie nachzuschlagen. Und es ist zugleich der Grund, warum
+`test466` den Weg wirklich klickt statt die Funktion aufzurufen — ein
+Prüflauf, der `seiteInsDokument` direkt riefe, hätte denselben Fehler
+mitgemacht.
+
+**Nachgezogen bei der Gelegenheit:** eine GESPERRTE Seite ist auch kein
+Ziel. `darfSeiten` stellt diese zweite Bedingung für die eigene Seite seit
+je; für das Ziel fehlte sie.
+
+## Eine Tür für das Seitenbild
+
+`seitenbildKopieren` stand bis hierher im Rumpf von `seiteDuplizieren` —
+mit dem ganzen Absatz darüber, warum das Bild kopiert und nicht geteilt
+wird (`purgeBlock` nimmt die Anhänge seines Blocks mit). Mit dem zweiten
+Aufrufer wäre daraus eine Abschrift geworden, und die zweite hätte den
+Absatz nicht mitbekommen. Also steht sie jetzt einmal da (§8).
+
+GEPRÜFT. `test466` mit 32 Zusagen, vier Gegenproben rot gesehen (§55.2):
+ohne den Knopf im Inspector, mit einer Kopie ohne Kindblöcke, mit einem
+Verschieben über Kopie und Papierkorb (neue Kennung), ohne die Grenze für
+die einzige Seite. Angepasst, weil es zählt: `test453` (zehn Griffe im
+Menü an der Miniatur). Dazu test87, test105, test109, test386, test424,
+test437, test450, test461, test462 — alle grün.
+Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts seitenumzug` — die Wahl ist neu.

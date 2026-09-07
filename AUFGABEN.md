@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — sechsundzwanzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — siebenundzwanzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -364,7 +364,16 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     eine Linie je System statt fünf, und kein Prüflauf hätte das gemeldet.
     **Steht.**
 
-Der Auftrag heisst deshalb jetzt **sechsundzwanzig Bögen**; die Überschrift
+  · **G27 — Eine Seite in ein anderes Dokument** (E496, test466): GoodNotes'
+    „Copy to…" und „Move to…". Kopieren gibt frische Kennungen und ein
+    eigenes Seitenbild; Verschieben hängt denselben Block um und behält
+    seine Kennung — sonst zeigte jeder Verweis auf die Seite ins Leere.
+    Die Reihenfolge beim Verschieben ist die Sicherheit: erst dazulegen,
+    dann umhängen, zuletzt wegnehmen. Der Prüflauf fand, dass die erste
+    Fassung das Rechtetor mit `edit` statt `bearbeiten` fragte — die Liste
+    der Ziele war auf jedem Gerät leer. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **siebenundzwanzig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

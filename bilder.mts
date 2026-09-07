@@ -2009,6 +2009,37 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  seitenumzug: {
+    titel: 'Eine Seite in ein anderes Dokument — kopieren oder verschieben (E496)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const mach = (name: string, icon: string, seiten: number) => {
+        const seite = Store.addPage(null, { text: name, icon });
+        for (let i = 0; i < seiten; i++) {
+          const blatt = Store.addBlock(seite.id, 'blatt', { text: '', papier: 'liniert',
+            blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1, marken: [
+              { id: name + i, art: 'stift', farbe: '#2f7ed8', breite: 3,
+                pts: [[70, 120 + i * 40], [420, 120 + i * 40]] }] });
+          Store.addBlock(blatt.id, 'text', { text: name + ' — Seite ' + (i + 1) });
+        }
+        Store.updateBlock(seite.id, { dokumentModus: true });
+        return seite;
+      };
+      const skript = mach('Elektrotechnik — Skript', '📕', 3);
+      mach('Mitschrift 12. Mai', '📗', 2);
+      mach('Prüfungsstoff', '📘', 4);
+      mach('Laborbericht', '📙', 1);
+      App.oeffne(skript.id);
+      await new Promise(r => setTimeout(r, 1300));
+      document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+      document.querySelector<HTMLElement>('[data-document-action="page-to-doc"]')?.click();
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+
   papiere: {
     titel: 'Cornell-Notizen und Notenlinien — die zwei Papiere von GoodNotes (E495)',
     bauen: async () => {
