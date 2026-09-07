@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — fünf Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — acht Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -245,6 +245,11 @@ Gegenprobe, Bild und Entscheidung:
   · **G7 — Die kleinen Reste** (E472, test445): Dreieck erkennen, Bild aus
     der Zwischenablage, mehrere PDFs auf einmal, Rand-Vorschub im
     Zoom-Fenster. **Steht.**
+  · **G8 — Das Gedrehte ist wirklich gedreht** (E474, test447): die
+    Geometrie kennt `dreh` — der Auswahlrahmen liegt auf der schiefen
+    Marke statt weit um sie herum, der Griff läuft beim Ziehen nicht mehr
+    weg, der Radierer trifft die Marke statt ihren Kasten, der Kastenzug
+    fängt nicht ein, was in der leeren Ecke steht. **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

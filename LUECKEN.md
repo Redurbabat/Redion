@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G7)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G8)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6433,12 +6433,15 @@ Auswahl (nach G2, E466; Sperre nachgezogen in E473): Drehen,
 Ausschneiden, nach vorn und hinten, Sperren, Kritzel-Löschen und
 Kreis-Lasso stehen. Offen bleibt:
 
-  · **Treffer auf gedrehten Kästen** — ein gedrehter Kasten (Form, Text,
-    Zettel, Bild) steht als `transform` schief, aber Tipp, Lasso und
-    Radierer rechnen mit seinen zwei ungedrehten Eckpunkten. Bei kleinen
-    Winkeln merkt man nichts; ein um 45° gedrehtes langes Rechteck trifft
-    man neben seiner Kante und verfehlt es an der Ecke. Wählen geht immer
-    über den Kasten der gedrehten Ecken (`InkGeometry.bounds`).
+  · ~~**Treffer auf gedrehten Kästen**~~ — **GESCHLOSSEN mit E474.** Die
+    Geometrie kennt seit `ecken`, `drehung` und `overlapConvex` die
+    wirklichen vier Ecken einer schiefen Marke: der Radierer misst an
+    ihnen (an 3000 Stellen gegen die genaue Rechnung geprüft, vorher 1013
+    falsche Antworten), der Kastenzug fängt nicht mehr ein, was in der
+    leeren Ecke steht, der Auswahlrahmen liegt auf der Marke statt weit um
+    sie herum, und das Ziehen am Griff verzerrt sie nicht mehr. Der Tipp
+    ging schon immer über den gezeichneten Knoten, das Lasso über die
+    Mitte des Kastens — die ist beim Drehen dieselbe. `test447`.
   · **Auswahl über mehrere Blätter** — das Lasso gilt je Blatt (E353).
   · **Sperren im Inspector** — die Sperre sitzt am Knopf der Leiste; eine
     Liste aller gesperrten Marken gibt es nicht.
@@ -6497,12 +6500,13 @@ Aus der Prüfung nach den Bögen (E473) bleibt ehrlich stehen:
     Auftragsmaschine (wie `bilderLaeufer`) wäre der Weg.
   · **Der Rest der 33 Funde.** Acht wurden adversarial geprüft, fünf haben
     gehalten und sind behoben; die übrigen 25 sind nicht widerlegt,
-    sondern nur nicht geprüft — darunter: Kritzel-Löschen greift über den
-    achsenparallelen Kasten des ganzen Gekritzels, `InkGeometry.scale`
-    kennt das Feld `dreh` nicht (eine gedrehte Marke verzerrt beim Ziehen
-    am Eckgriff), `trefferMalen` zeichnet bei jeder nachgezogenen Seite
-    die Treffer aller Seiten neu, die Trefferfläche der PDF-Verweise ist
-    am Telefon rund 7 px hoch, der Ziehbereich des Stärke-Reglers rund 20,
+    sondern nur nicht geprüft. Einer davon ist seit E474 erledigt
+    (`InkGeometry.scale` kannte `dreh` nicht — eine gedrehte Marke
+    verzerrte beim Ziehen am Eckgriff). Offen bleiben darunter:
+    Kritzel-Löschen greift über den achsenparallelen Kasten des ganzen
+    Gekritzels, `trefferMalen` zeichnet bei jeder nachgezogenen Seite die
+    Treffer aller Seiten neu, die Trefferfläche der PDF-Verweise ist am
+    Telefon rund 7 px hoch, der Ziehbereich des Stärke-Reglers rund 20,
     und die Papierauswahl im Seitenmenü misst 36 statt 44 px (§37).
 
 Was Redion auch nach G5 nicht haben wird, und warum:

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-453 Entscheidungen, E1 bis E473 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+454 Entscheidungen, E1 bis E474 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -517,6 +517,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E471** — Die Rechte im Dokument galten nicht: eine Kennung statt eines Objekts (L102 zum zweiten Mal)
 * **E472** — Die kleinen GoodNotes-Reste: Dreieck erkennen, Bild aus der Ablage, mehrere PDFs, Rand-Vorschub
 * **E473** — Was die Prüfung fand: eine Farbe kann Code sein, die Sperre hatte sechs Türen, pdf.js stand wieder im Anzeigeweg
+* **E474** — Das Gedrehte ist wirklich gedreht: der Griff läuft nicht mehr weg, der Radierer trifft die Marke statt ihren Kasten
 
 ---
 
@@ -37543,3 +37544,113 @@ test285, test395, test385, test386, test393, test177, test210, test228,
 test341, test351, test362, test290, test105, test109, test87, test426,
 test365, test174, test202; `npm run typecheck`, `npm run bauen:ts`,
 `node bauen.mts`.
+
+---
+
+E474 — Das Gedrehte ist wirklich gedreht: der Griff läuft nicht mehr weg, der Radierer trifft die Marke statt ihren Kasten
+--------------------------------------------------------------------------
+
+DER FUND. Seit E466 kann eine Marke schief stehen: sie merkt sich den
+Winkel in `dreh`, ihre zwei Eckpunkte bleiben aufrecht, und der fertige
+Knoten bekommt ein `rotate(...)`. Für das ZEICHNEN war das richtig und
+sparsam — zwei Punkte und ein Winkel, kein neues Feld an einer Million
+vorhandener Marken.
+
+Für alles, was danach kommt, war es unvollständig. Drei Stellen rechneten
+weiter, als stünde die Marke gerade, und jede von ihnen wird bei 45° am
+falschesten:
+
+  1. DER GRIFF LIEF UNTER DEM FINGER WEG. `InkGeometry.scale` legte die
+     Faktoren des BLATTES auf die Punkte der MARKE. Der Mensch zieht nach
+     rechts, die Marke wächst schräg. Am deutlichsten bei 90°: ein
+     Rechteck, das auf der Seite liegt, wurde beim Breiterziehen HÖHER
+     (gemessen im Prüflauf: 40 breit blieb 40, 100 hoch wurde 200).
+
+  2. DER RADIERER TRAF DEN KASTEN, NICHT DIE MARKE. `touchesCircle` mass
+     den aufrechten Kasten UM die gedrehte Marke. Der ist bei einem
+     langen Rechteck auf 45° fast doppelt so gross wie sie: in der leeren
+     Ecke des Kastens — hundertfünfzig Punkte neben der Marke — löschte
+     ein Radierzug sie weg. An 3000 zufälligen Stellen gemessen: 1013
+     falsche Antworten.
+
+  3. DER RAHMEN LOG ÜBER DIE AUSWAHL. Derselbe zu grosse Kasten war der
+     Auswahlrahmen, und der Kastenzug fing damit ein, was in seiner leeren
+     Ecke gar nicht stand.
+
+WAS ENTSCHIEDEN WURDE. `dreh` ist keine Anzeigesache mehr. Die Geometrie
+kennt vier neue Begriffe, und sie sind alle klein:
+
+    drehung(mark)      der Winkel — bei einem Linienzug immer 0 (E466)
+    ecken(mark)        die vier WIRKLICHEN Ecken, im Umlauf
+    boundsLokal(mark)  der Kasten OHNE die Drehung
+    drehePunkte(…)     die eine Drehformel des Hauses
+    overlapConvex(…)   Trennachsen-Test für zwei konvexe Vierecke
+
+`bounds` bleibt, was es war — der aufrechte Kasten UM die gedrehte Marke.
+Er ist die richtige Antwort auf „könnte es hier überhaupt sein" und
+bleibt überall dort der billige Vorfilter. Falsch war nur, ihn auch als
+Antwort auf „ist es hier" zu nehmen.
+
+DIE STRECKUNG, UND WARUM SIE NICHT IMMER EXAKT SEIN KANN. `scale` nimmt
+jetzt eine ACHSE entgegen: in welchen Achsen `sx` und `sy` gemeint sind.
+
+  · Steht die Auswahl auf GENAU EINER gedrehten Marke, steht der Rahmen
+    schief wie sie, die Griffe sitzen auf ihren Ecken, und die Achse ist
+    ihr eigener Winkel. Dann ist die Rechnung exakt: der Punkt, auf dem
+    der Finger aufsetzt, bleibt auf den Hundertstel stehen.
+  · Steht sie auf MEHREREN, bleibt der Rahmen aufrecht — ein gemeinsamer
+    Rahmen für zwei verschieden gedrehte Marken hat keine Achsen. Eine
+    gedrehte Marke darin bekommt die Faktoren, die in IHREN Achsen
+    ankommen:
+
+        d = dreh − achse,  sxL = sx·cos²d + sy·sin²d,  syL = sx·sin²d + sy·cos²d
+
+    Das ist die Hauptdiagonale der gedrehten Streckung. Die Scherung
+    daneben fällt weg, und das ist die einzige Näherung des Bogens.
+
+WARUM NICHT GANZ EXAKT? Weil ganz exakt eine Scherung wäre, und die kann
+dieses Datenmodell nicht beschreiben: zwei Punkte und ein Winkel geben
+keinen schiefen Kasten (E466). Die Alternative wäre ein drittes Feld —
+eine Matrix je Marke —, und das ist eine Datenänderung an jeder bereits
+gespeicherten Marke (§53.3, Grenze 1), für einen Fall, der nur auftritt,
+wenn jemand eine gedrehte Marke MIT anderen zusammen ungleichmässig
+zieht. Die Näherung ist exakt bei rechten Winkeln (die Faktoren tauschen,
+wie es sein muss) und exakt bei gleichmässiger Streckung; am schiefsten
+steht sie bei 45°, und dort wachsen beide Richtungen gleich, statt sich zu
+scheren. Verzerren kann sie nicht.
+
+WAS SIE KOSTET. `bounds` rechnet unverändert; `touchesCircle` dreht bei
+einer gedrehten Marke einen einzigen Punkt zusätzlich (bei einer geraden
+gar nichts); `scale` nimmt den alten, direkten Weg, solange weder Marke
+noch Achse gedreht sind — `test447 §1.1` prüft an 400 Fällen, dass dabei
+Zahl für Zahl dasselbe herauskommt wie vorher. Eine Änderung an der
+Streckung, die alte Marken um ein Hundertstel verschiebt, wäre kein
+Fehler, den man sieht, und genau darum wird sie gemessen.
+
+DER TINTENRAND BLEIBT, WIE ER WAR. `boundsLokal` legt um die Punkte
+`max(2, breite/2)` — so weit steht die Tinte über den Weg hinaus. Diese
+Zugabe wächst nicht mit der Streckung mit, also wandert die Ecke der Marke
+selbst um bis zu 5·|s−1|, während der gehaltene Punkt exakt steht. Das war
+vor E474 an einer geraden Marke genauso, es ist keine Folge dieses Bogens,
+und es steht hier, damit niemand es später für eine sucht.
+
+WÄCHTER. `test447` (neu, 31 Punkte): §1 die Rechnung gegen eine zweite,
+dumme über 1200 Fälle — ohne Drehung Zahl für Zahl wie vorher, mit
+eigener Achse exakt, bei 90° tauschen die Faktoren, gleichmässig immer
+genau, ein Stiftstrich unberührt; §2 der Radierer an 3000 zufälligen
+Stellen gegen den Abstand zum echten Viereck; §3 im Browser: der Rahmen
+steht in einer gedrehten Gruppe, ist 270 statt 340 breit, der gehaltene
+Punkt bleibt stehen, der Radierzug in der leeren Ecke lässt die Marke
+stehen; §4 der Kastenzug. Vier Gegenproben, alle gelaufen und rot: den
+Drehzweig in `scale` übersprungen (7 Punkte rot), `touchesCircle` auf den
+Stand vor E474 zurück (3 rot), `auswahlAchse` immer 0 (4 rot), den
+Trennachsen-Test im Kastenzug weggelassen (1 rot).
+
+BILD. `bilder/e474-rahmen-schief.png` — drei gedrehte Marken, die erste
+gewählt: der Rahmen liegt auf ihr, die vier Griffe auf ihren Ecken, der
+Drehgriff an seiner Leine über ihrer eigenen Oberkante.
+
+GEPRÜFT. 21 Läufe grün: test87, test105, test109, test344, test345,
+test349, test352, test353, test367, test368, test384, test385, test425,
+test439, test440, test441, test442, test443, test445, test446, test447;
+dazu `npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.

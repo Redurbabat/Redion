@@ -180,6 +180,9 @@ const Marken = (() => {
             }
         }).catch(() => { });
     };
+    /** Zwei Nachkommastellen — fuer `transform`-Werte, die sonst als
+     *  0.30000000000000004 im Baum stehen. */
+    const rund2 = (wert) => Math.round(wert * 100) / 100;
     /** Bildschirm, Druck und Praesentation rufen denselben Zeichner auf. */
     /* DIE DREHUNG (E466) liegt als `transform` am fertigen Knoten — ein
        Zweig fuer alle Bauarten, weil jede Bauart ihren eigenen Rueckweg
@@ -885,8 +888,28 @@ const Marken = (() => {
             historyUndo.push(snapshot());
             restore(next);
         };
-        /** Der gemeinsame Kasten der Auswahl, mit demselben Rand wie die Rahmen. */
+        /**
+         * DIE ACHSEN DES AUSWAHLKASTENS (E474). Steht die Auswahl auf GENAU
+         * EINER gedrehten Marke, sind es ihre eigenen Achsen — der Kasten
+         * steht dann schief wie sie, die Griffe sitzen auf ihren Ecken, und
+         * Ziehen macht sie breiter, nicht schief. Bei mehreren Marken (oder
+         * einer geraden) bleibt der Kasten aufrecht: ein gemeinsamer Rahmen
+         * fuer zwei verschieden gedrehte Marken hat keine Achsen.
+         */
+        const auswahlAchse = () => {
+            if (selection.size !== 1)
+                return 0;
+            const mark = marks.find(item => idOf(item) === [...selection][0]);
+            return mark ? InkGeometry.drehung(mark) : 0;
+        };
+        /** Der gemeinsame Kasten der Auswahl, mit demselben Rand wie die Rahmen —
+         *  bei einer gedrehten Marke in IHREN Achsen (E474), sonst aufrecht. */
         const auswahlKasten = () => {
+            if (auswahlAchse()) {
+                const mark = marks.find(item => idOf(item) === [...selection][0]);
+                const b = InkGeometry.boundsLokal(mark);
+                return { x: b.x - 3, y: b.y - 3, width: b.width + 6, height: b.height + 6 };
+            }
             const boxes = [...selection]
                 .map(id => marks.find(item => idOf(item) === id))
                 .filter(Boolean)
@@ -900,14 +923,28 @@ const Marken = (() => {
                 const mark = marks.find(item => idOf(item) === id);
                 if (!mark)
                     continue;
-                const box = InkGeometry.bounds(mark);
-                flaeche.appendChild(svg('rect', { x: box.x - 3, y: box.y - 3,
+                /* DER RAHMEN STEHT SCHIEF, WENN DIE MARKE SCHIEF STEHT (E474). Bis
+                   hierher war es der aufrechte Kasten UM die gedrehte Marke — bei
+                   45° fast doppelt so gross wie sie selbst, und ein Rahmen, der
+                   weit um eine Marke liegt, sagt etwas Falsches darueber, was
+                   gewaehlt ist. Gedreht wird derselbe Weg wie bei der Marke: der
+                   aufrechte Rahmen in einer Gruppe, die sich um die Mitte dreht. */
+                const grad = InkGeometry.drehung(mark);
+                const box = grad ? InkGeometry.boundsLokal(mark) : InkGeometry.bounds(mark);
+                const ziel = grad
+                    ? flaeche.appendChild(svg('g', { 'data-ink-ui': 'selection',
+                        transform: `rotate(${grad} ${rund2(box.x + box.width / 2)} ${rund2(box.y + box.height / 2)})` }))
+                    : flaeche;
+                ziel.appendChild(svg('rect', { x: box.x - 3, y: box.y - 3,
                     width: box.width + 6, height: box.height + 6,
                     class: 'blatt-auswahlrahmen' + (mark.gesperrt ? ' blatt-auswahlrahmen-gesperrt' : ''),
                     'data-ink-ui': 'selection' }));
-                /* Das Schloss sagt, warum sich die Marke nicht bewegt (E466). */
+                /* Das Schloss sagt, warum sich die Marke nicht bewegt (E466). Es
+                   bleibt AUFRECHT und am aufrechten Kasten: ein Schloss, das auf
+                   dem Kopf steht, liest niemand. */
                 if (mark.gesperrt) {
-                    const schloss = svg('text', { x: box.x - 3, y: box.y - 6, class: 'blatt-schloss', 'data-ink-ui': 'selection' });
+                    const aussen = InkGeometry.bounds(mark);
+                    const schloss = svg('text', { x: aussen.x - 3, y: aussen.y - 6, class: 'blatt-schloss', 'data-ink-ui': 'selection' });
                     schloss.textContent = '🔒';
                     flaeche.appendChild(schloss);
                 }
@@ -917,7 +954,11 @@ const Marken = (() => {
                Telefon waere ein Griff von fuenf Einheiten sonst nicht zu fassen. */
             if (selection.size) {
                 const k = auswahlKasten();
-                const g = svg('g', { 'data-ink-ui': 'griffe' });
+                const achse = auswahlAchse();
+                const g = svg('g', achse
+                    ? { 'data-ink-ui': 'griffe',
+                        transform: `rotate(${achse} ${rund2(k.x + k.width / 2)} ${rund2(k.y + k.height / 2)})` }
+                    : { 'data-ink-ui': 'griffe' });
                 g.appendChild(svg('rect', { x: k.x, y: k.y, width: k.width, height: k.height,
                     class: 'blatt-auswahlkasten' }));
                 const ecken = [
@@ -1554,8 +1595,18 @@ const Marken = (() => {
                     else if (pts.length >= 2) {
                         const a = pts[0], z = pts[pts.length - 1];
                         const box = InkGeometry.rectangle([a[0] ?? 0, a[1] ?? 0], [z[0] ?? 0, z[1] ?? 0]);
-                        marks.forEach(mark => { if (InkGeometry.intersects(box, InkGeometry.bounds(mark)))
-                            selection.add(idOf(mark)); });
+                        marks.forEach(mark => {
+                            /* Der aufrechte Kasten ist der billige Vorfilter … */
+                            if (!InkGeometry.intersects(box, InkGeometry.bounds(mark)))
+                                return;
+                            /* … und bei einer GEDREHTEN Marke nur der Vorfilter (E474):
+                               gewaehlt wird, was der Zug wirklich schneidet. Sonst faengt
+                               ein Zug in der leeren Ecke des Kastens eine Marke ein, die
+                               hundertfuenfzig Punkte daneben steht. */
+                            if (InkGeometry.drehung(mark) && !InkGeometry.overlapConvex(InkGeometry.kastenEcken(box), InkGeometry.ecken(mark)))
+                                return;
+                            selection.add(idOf(mark));
+                        });
                     }
                     renderSelection();
                 }
@@ -1992,12 +2043,19 @@ const Marken = (() => {
                 }
                 if (griff && selection.size) {
                     const kasten = auswahlKasten();
+                    const achse = auswahlAchse();
                     const ecke = String(griff.getAttribute('data-griff') || 'se');
-                    const anker = [
+                    /* Der Anker ist die GEGENUEBERLIEGENDE Ecke — im Kasten gerechnet,
+                       und bei einem schiefen Kasten von dort ins Blatt gedreht
+                       (E474). `InkGeometry.scale` bekommt ihn im Blattraum und den
+                       Winkel dazu; genau dieser Punkt bleibt dann stehen. */
+                    const eckeIm = [
                         ecke.includes('e') ? kasten.x : kasten.x + kasten.width,
                         ecke.includes('s') ? kasten.y : kasten.y + kasten.height
                     ];
-                    selectDrag = { mode: 'scale', start: point, anker, before: snapshot(), moved: false,
+                    const mitteIm = [kasten.x + kasten.width / 2, kasten.y + kasten.height / 2];
+                    const anker = achse ? InkGeometry.drehePunkte([eckeIm], mitteIm, achse)[0] : eckeIm;
+                    selectDrag = { mode: 'scale', start: point, anker, achse, before: snapshot(), moved: false,
                         originals: new Map([...selection].map(id => [id, clone(marks.find(mark => idOf(mark) === id))])) };
                     try {
                         flaeche.setPointerCapture(event.pointerId);
@@ -2125,9 +2183,17 @@ const Marken = (() => {
                 }
                 else if (selectDrag.mode === 'scale') {
                     const [ax, ay] = selectDrag.anker;
-                    const dx0 = selectDrag.start[0] - ax, dy0 = selectDrag.start[1] - ay;
-                    let sx = Math.abs(dx0) < 1 ? 1 : (point[0] - ax) / dx0;
-                    let sy = Math.abs(dy0) < 1 ? 1 : (point[1] - ay) / dy0;
+                    /* In den Achsen des Kastens messen (E474): bei einem schiefen
+                       Kasten sind „breiter" und „hoeher" nicht die Richtungen des
+                       Blattes, sondern die der Marke. */
+                    const achse = Number(selectDrag.achse) || 0;
+                    const imKasten = (q) => achse
+                        ? InkGeometry.drehePunkte([[q[0] ?? 0, q[1] ?? 0]], [ax, ay], -achse)[0]
+                        : [q[0] ?? 0, q[1] ?? 0];
+                    const von = imKasten(selectDrag.start), nach = imKasten(point);
+                    const dx0 = von[0] - ax, dy0 = von[1] - ay;
+                    let sx = Math.abs(dx0) < 1 ? 1 : (nach[0] - ax) / dx0;
+                    let sy = Math.abs(dy0) < 1 ? 1 : (nach[1] - ay) / dy0;
                     /* Mit Umschalt bleibt das Seitenverhaeltnis — bei einem BILD in
                        der Auswahl ist es umgekehrt (E357): ein Foto bleibt von sich
                        aus im Verhaeltnis, wie in GoodNotes, und Umschalt gibt es frei.
@@ -2146,7 +2212,7 @@ const Marken = (() => {
                         const original = selectDrag.originals.get(id);
                         if (index < 0 || !original || original.gesperrt)
                             continue;
-                        marks[index] = InkGeometry.scale(clone(original), [ax, ay], sx, sy);
+                        marks[index] = InkGeometry.scale(clone(original), [ax, ay], sx, sy, achse);
                         updateNode(nodeFor(id), marks[index]);
                         merke(marks[index]);
                     }

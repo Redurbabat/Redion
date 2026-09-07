@@ -3962,7 +3962,35 @@ richtig aus. Gefunden hat sie erst ein Leser, der nichts bauen wollte und
 nur eine Frage hatte, und gehalten haben sie erst, nachdem ein zweiter
 Leser sie zu widerlegen versuchte — drei von acht fielen dabei.
 
+**Und der Bogen danach: das Gedrehte ist wirklich gedreht (E474,
+test447).** Zwei der 25 ungeprüften Funde aus derselben Runde hatten
+dieselbe Wurzel — `dreh` war seit E466 eine reine Anzeigesache. Wer eine
+schiefe Marke am Eckgriff zog, zog sie in eine andere Richtung, als seine
+Hand ging (ein Rechteck auf der Seite wurde beim Breiterziehen HÖHER); wer
+neben ihr radierte, löschte sie trotzdem, weil der Radierer den aufrechten
+Kasten UM sie mass — bei einem langen Rechteck auf 45° hundertfünfzig
+Punkte daneben, an 3000 Stellen gemessen 1013 falsche Antworten. Und der
+Auswahlrahmen war derselbe zu grosse Kasten.
+
+Die Geometrie kennt jetzt `ecken`, `drehung`, `boundsLokal`,
+`drehePunkte` und einen Trennachsen-Test. `bounds` bleibt, was es war —
+die richtige Antwort auf „könnte es hier überhaupt sein", und überall der
+billige Vorfilter; falsch war nur, es auch als Antwort auf „ist es hier"
+zu nehmen. Der Rahmen steht jetzt schief wie die Marke, die Griffe sitzen
+auf ihren Ecken, und der gehaltene Punkt bleibt auf die Hundertstel
+stehen. Was NICHT geht und in E474 begründet steht: eine gedrehte Marke
+ungleichmässig zusammen mit anderen ziehen wäre eine Scherung, und die
+kann das Datenmodell nicht beschreiben — statt ein drittes Feld an jeder
+gespeicherten Marke einzuführen (§53.3), nimmt `scale` dort die
+Hauptdiagonale der gedrehten Streckung: exakt bei rechten Winkeln, exakt
+bei gleichmässiger Streckung, nie verzerrend.
+
+Vier Gegenproben, alle rot gesehen. Und ein Prüfpunkt, der nicht in den
+Code gehört, sondern in die Prüfung: §1.1 misst an 400 Fällen, dass eine
+Marke OHNE Drehung Zahl für Zahl streckt wie vorher — eine Änderung, die
+alte Marken um ein Hundertstel verschiebt, sieht niemand.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
 die verbliebenen Reste (gedrehte Dreiecke, Kamera als Seite, Farbsets,
-Menü je Miniatur).
+Menü je Miniatur, Kritzel-Kasten, die drei Trefferflächen unter 44 px).
