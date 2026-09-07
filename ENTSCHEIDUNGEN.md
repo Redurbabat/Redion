@@ -36817,3 +36817,28 @@ nicht; entsperrt wieder alles), §5 Kritzel-Löschen (Welle bleibt Strich,
 Gekritzel nimmt die Linie und wird keiner, Zurück, Schalter aus), §6
 Kreis-Lasso (wählt das Rechteck, Auswahl führt, kein Strich; leere
 Schlinge wird ein Kreis), §7 Quellen.
+
+GEGENPROBEN (§55.2), gelaufen am 7. September: `InkGeometry.rotate` im
+Drehen-Zweig durch die Kopie ersetzt → §1 rot (drei Punkte: Linie ungedreht,
+Rechteck ohne Winkel, Knoten ohne `transform`); `istKritzel` immer false →
+§5 rot („Gekritzel nimmt die Linie weg" — ist drei Marken, soll eine).
+Zurückgedreht, 34/34.
+
+GEPRÜFT. test439 (neu), dazu der breite Lauf: test343, 344, 345, 351, 365,
+201, 174, 386, 393, 210, 437, 362, 290, 105, 109, 87, 272, 414, 438, 355,
+353, 358 — 21 von 22 grün; test345 zählte fünf Griffe statt vier, weil
+der Drehgriff auch `data-griff` trägt: der Punkt zählt jetzt die Ecken
+ohne ihn und einen neuen Punkt für den Drehgriff. test351 zählt sieben in
+der Gruppe „Auswahl" (drei alte, vier neue). `npm run typecheck`,
+`npm run bauen:ts`, `node bauen.mts`.
+
+BILDER ANGESEHEN: `bilder/auswahl-rechner-hell.png` (Drehgriff an der
+Leine über dem gemeinsamen Kasten, das runde Rechteck um −14° schief, der
+gesperrte Zettel mit Schloss und gestricheltem Rahmen, die Leiste mit
+✂ ⤒ ⤓ 🔒), `auswahl-handy-dunkel` (dieselbe Seite, die Zeile mit
+Ausschneiden vor den klebenden Pfeilen).
+
+DATEIEN. `src/core/ink/geometry.ts` (`rotate`, `bounds` gedreht, `LINIEN`),
+`src/bereiche/pdf/marken.ts`, `quell/schale/stil/bausteine.css`,
+`bilder.mts` (Ansicht `auswahl`), `pruefungen/lauf/test439.mts` (neu),
+`test345.mts`, `test351.mts`.
