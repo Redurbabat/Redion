@@ -193,6 +193,18 @@ const Marken = (() => {
       const b = InkGeometry.bounds(mark);
       node.setAttribute('transform', `rotate(${grad} ${Math.round((b.x + b.width / 2) * 100) / 100} ${Math.round((b.y + b.height / 2) * 100) / 100})`);
     }
+    /* EIN VERWEIS AN DER MARKE (E468): `href` nach draussen oder
+       `zielSeite` in Redion. Kein eigener Markentyp — jede Marke kann
+       einer sein. Der Knoten wird greifbar (auch ein Strich, der es sonst
+       nicht ist) und sagt im Hinweis, wohin er fuehrt. */
+    if (node && mark && (mark.href || mark.zielSeite)) {
+      node.setAttribute('data-verweis', mark.href ? 'aussen' : 'seite');
+      node.setAttribute('pointer-events', 'all');
+      const hinweis = svg('title');
+      hinweis.textContent = mark.href ? String(mark.href)
+        : 'Zur Seite „' + String(Store.getBlock(String(mark.zielSeite))?.text || 'Ohne Titel') + '"';
+      node.appendChild(hinweis);
+    }
     return node;
   };
 
@@ -913,6 +925,64 @@ const Marken = (() => {
        ziehen, drehen, loeschen oder radieren — fuer Bilder, Textkaesten
        und Zettel, die als Vorlage dienen und ueber die man schreibt.
        Umfaerben geht weiter: die Sperre gilt dem Ort, nicht der Farbe. */
+    /* ══ EIGENE VERWEISE (E468) ══════════════════════════════════════════════
+       Ein Verweis ist ein FELD an einer Marke — `href` nach draussen (nur
+       http, https, mailto; §19) oder `zielSeite` (die Kennung einer Seite,
+       aufgeloest aus [[Name]] ueber `Links`) — und kein eigener Markentyp:
+       ein Rechteck um eine Aufgabe, ein Text, ein Bild, alles kann einer
+       sein. Leer eingegeben heisst: Verweis weg. Ein Schritt im Verlauf. */
+    const verweisSetzen = async (): Promise<void> => {
+      if (!selection.size) return;
+      const erste = marks.find(m => selection.has(idOf(m)));
+      const vorgabe = erste?.href ? String(erste.href)
+        : erste?.zielSeite ? '[[' + String(Store.getBlock(String(erste.zielSeite))?.text || '') + ']]' : '';
+      const antwort = await Dialog.frage('Verweis: eine Adresse (https://…) oder eine Seite ([[Name]])', vorgabe);
+      if (antwort === null) return;
+      const wert = antwort.trim();
+      const setze = (patch: Record<string, unknown>, weg: string[]): void => {
+        for (let i = 0; i < marks.length; i++) {
+          if (!selection.has(idOf(marks[i]))) continue;
+          const neu: any = { ...marks[i], ...patch };
+          for (const f of weg) delete neu[f];
+          marks[i] = neu;
+        }
+      };
+      const before = snapshot();
+      if (!wert) {
+        setze({}, ['href', 'zielSeite']);
+        redraw(); commit(before); UI.toast('Verweis entfernt');
+        return;
+      }
+      const seitenName = wert.match(/^\[\[(.+?)\]\]$/)?.[1];
+      if (seitenName || !/^[a-z][a-z0-9+.-]*:/i.test(wert)) {
+        const name = String(seitenName || wert).trim();
+        const ziel = (typeof Links !== 'undefined' && typeof Links.loeseSeitenverweis === 'function')
+          ? Links.loeseSeitenverweis(name).page : null;
+        if (!ziel) { UI.toast('Keine Seite „' + name + '" gefunden.'); return; }
+        setze({ zielSeite: ziel.id }, ['href']);
+      } else {
+        const sicher = typeof Sanitize !== 'undefined' ? Sanitize.url(wert) : '';
+        if (!sicher || !/^(https?:|mailto:)/i.test(sicher)) {
+          UI.toast('Diese Adresse nimmt Redion nicht: nur http, https oder mailto (§19).');
+          return;
+        }
+        setze({ href: sicher }, ['zielSeite']);
+      }
+      redraw(); commit(before);
+      UI.toast('🔗 Verweis gesetzt — im Lesemodus antippen');
+    };
+    const verweisFolgen = (mark: any): void => {
+      if (mark.href) {
+        const sicher = typeof Sanitize !== 'undefined' ? Sanitize.url(mark.href) : '';
+        if (sicher && /^(https?:|mailto:)/i.test(sicher)) window.open(sicher, '_blank', 'noopener');
+        return;
+      }
+      if (mark.zielSeite) {
+        const ziel = Store.getBlock(String(mark.zielSeite));
+        if (ziel && ziel.alive !== false) App.oeffne(ziel.id);
+        else UI.toast('Die Zielseite gibt es nicht mehr.');
+      }
+    };
     const gesperrtGewaehlt = (): boolean =>
       selection.size > 0 && [...selection].every(id => !!marks.find(mark => idOf(mark) === id)?.gesperrt);
     const sperren = (an?: boolean): void => {
@@ -1877,6 +1947,14 @@ const Marken = (() => {
        Modus gilt der Tipp dem Werkzeug (zeichnen, radieren, wählen). */
     flaeche.addEventListener('click', (event: MouseEvent) => {
       if (tool !== 'schreiben') return;
+      /* Ein Verweis (E468) geht vor: er ist der Grund, warum man tippt. */
+      const verweis = (event.target as Element)?.closest?.('[data-verweis]') as SVGElement | null;
+      if (verweis) {
+        event.preventDefault(); event.stopPropagation();
+        const mark = marks.find(m => idOf(m) === verweis.getAttribute('data-sid'));
+        if (mark) verweisFolgen(mark);
+        return;
+      }
       const ziel = (event.target as Element)?.closest?.('[data-ink-art="abdeck"]') as SVGElement | null;
       if (!ziel) return;
       event.preventDefault();
@@ -2016,6 +2094,8 @@ const Marken = (() => {
       setzeSchrift, schriftVon,
       /* E466: Auswahl wie GoodNotes. */
       cutSelection, nachVorn, nachHinten, sperren, gesperrtGewaehlt,
+      /* E468: ein Verweis an der Auswahl. */
+      verweisSetzen,
       setzeKritzel: (an: boolean): void => {
         kritzel = !!an;
         if (typeof Store !== 'undefined') { try { Store.setMeta('zeichnen:kritzel', kritzel); } catch { /* nur diese Sitzung */ } }
@@ -2158,6 +2238,8 @@ const Marken = (() => {
       '<button data-act="vor" data-gruppe="auswahl" title="Auswahl nach vorn — über alles andere" disabled><span class="zeichen" aria-hidden="true">⤒</span><span class="wort">Nach vorn</span></button>' +
       '<button data-act="hinten" data-gruppe="auswahl" title="Auswahl nach hinten — unter alles andere" disabled><span class="zeichen" aria-hidden="true">⤓</span><span class="wort">Nach hinten</span></button>' +
       '<button data-act="sperren" data-gruppe="auswahl" aria-pressed="false" title="Auswahl sperren: nicht mehr schieben, ziehen, drehen, löschen oder radieren" disabled><span class="zeichen" aria-hidden="true">🔒</span><span class="wort">Sperren</span></button>' +
+      /* EIN VERWEIS (E468): der Auswahl eine Adresse oder eine Seite geben. */
+      '<button data-act="verweis" data-gruppe="auswahl" title="Der Auswahl einen Verweis geben: eine Adresse (https://…) oder eine Seite ([[Name]]) — im Lesemodus antippen" disabled><span class="zeichen" aria-hidden="true">🔗</span><span class="wort">Verweis</span></button>' +
       /* Das Lineal ist ein SCHALTER neben den Werkzeugen: solange es
          anliegt, rasten Linie und Pfeil auf 15°-Schritte (E267). */
       '<button data-act="lineal" data-gruppe="lineal" aria-pressed="false" ' +
@@ -2262,7 +2344,7 @@ const Marken = (() => {
       const paste = tools.querySelector<HTMLButtonElement>('[data-act="paste"]');
       if (copy) copy.disabled = !next.selected;
       if (paste) paste.disabled = !next.clipboard;
-      for (const act of ['cut', 'vor', 'hinten', 'sperren']) {
+      for (const act of ['cut', 'vor', 'hinten', 'sperren', 'verweis']) {
         const k = tools.querySelector<HTMLButtonElement>(`[data-act="${act}"]`);
         if (k) k.disabled = !next.selected;
       }
@@ -2438,6 +2520,7 @@ const Marken = (() => {
         if (target.dataset.act === 'vor' && controls.nachVorn) controls.nachVorn();
         if (target.dataset.act === 'hinten' && controls.nachHinten) controls.nachHinten();
         if (target.dataset.act === 'sperren' && controls.sperren) { controls.sperren(); return; }
+        if (target.dataset.act === 'verweis' && controls.verweisSetzen) { void controls.verweisSetzen(); return; }
         if (target.dataset.act === 'kritzel' && controls.setzeKritzel) {
           const an = !controls.kritzelAn?.();
           controls.setzeKritzel(an);

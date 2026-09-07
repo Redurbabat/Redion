@@ -230,10 +230,11 @@ Gegenprobe, Bild und Entscheidung:
   · **G3 — Seiten** (E467, test440): einfügen (leer, mit Papier, als
     Duplikat), löschen, verschieben, drehen; Lesezeichen je Seite mit
     Liste im Inspector. **Steht.**
-  · **G4 — Suche und Links**: die Textschicht der PDF beim Einlesen ablegen
-    (`leser.text` gibt es), ein Suchfeld im Schreibtisch mit Treffern auf
-    der Seite; die Links der PDF (pdf.js `getAnnotations`) anklickbar;
-    eigene Links (extern, auf eine andere Seite).
+  · **G4 — Suche und Verweise** (E468, test441): die Textschicht mit
+    Lage aus der Quelle (nicht gespeichert), ein Suchfeld im Studio mit
+    Treffern an der Stelle; die Verweise der PDF (pdf.js `getAnnotations`)
+    antippbar; eigene Verweise an Marken (Adresse oder [[Seite]]).
+    **Steht.**
   · **G5 — Import und Export**: JPG/PNG als Seiten, PDF-Seiten in ein
     offenes Dokument einfügen, eine Seite als Bild sichern, das
     Zoom-Fenster (Lupe zum Kleinschreiben).

@@ -94,6 +94,17 @@ const DocumentMode = (() => {
         states.set(pageId, created);
         return created;
     };
+    /* Die offenen PDF-Quellen der Suche (E468), je Quelle ein Griff. Ein
+       neuer Aufbau schliesst die alten — pdf.js haelt sonst je Dokument
+       einen Arbeiter. */
+    const griffe = new Map();
+    const griffeSchliessen = () => {
+        griffe.forEach(g => { void g.then(x => { try {
+            x?.schliessen?.();
+        }
+        catch { /* egal */ } }); });
+        griffe.clear();
+    };
     /** Dokumentbausteine auch innerhalb vorhandener Spalten finden. */
     const documentsIn = (page) => {
         if (!page?.id)
@@ -635,6 +646,9 @@ const DocumentMode = (() => {
         const current = documents[state.index];
         if (!current)
             return false;
+        /* Die PDF-Quellen der letzten Suche loslassen (E468): ein neuer Aufbau
+           oeffnet sie bei Bedarf wieder. */
+        griffeSchliessen();
         const workspace = document.createElement('section');
         workspace.className = 'document-workspace document-studio';
         workspace.dataset.pageId = page.id;
@@ -734,7 +748,12 @@ const DocumentMode = (() => {
         const viewButton = topButton('view', '☷', 'Ansicht, Lesemodus und Zoom');
         viewButton.className = 'document-view-button';
         viewButton.setAttribute('aria-expanded', 'false');
-        topActions.append(viewButton, inspectorButton, topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'), topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
+        /* SUCHEN IM DOKUMENT (E468): der Knopf steht bei den Kopfaktionen,
+           wie GoodNotes' Lupe; die Leiste dazu klappt unter dem Kopf auf. */
+        const findButton = topButton('find', '🔍', 'Im Dokument suchen (Strg F)');
+        findButton.className = 'document-find-button';
+        findButton.setAttribute('aria-expanded', 'false');
+        topActions.append(findButton, viewButton, inspectorButton, topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'), topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
         top.append(topActions);
         const commandbar = document.createElement('div');
         commandbar.className = 'document-commandbar';
@@ -874,6 +893,173 @@ const DocumentMode = (() => {
                 return;
             toolbar?.querySelector('[data-wz="' + key + '"]')?.click();
         };
+        let treffer = [];
+        let trefferNr = -1;
+        let suchLauf = 0;
+        const lagen = new Map();
+        const verweisLagen = new Map();
+        const griffVon = (quelleId) => {
+            let g = griffe.get(quelleId);
+            if (!g) {
+                g = (async () => {
+                    if (typeof PdfLeser === 'undefined' || typeof Dateien === 'undefined')
+                        return null;
+                    const roh = await Dateien.alsBlob(quelleId);
+                    if (!roh)
+                        return null;
+                    return PdfLeser.oeffne(new Uint8Array(await roh.arrayBuffer()));
+                })().catch(() => null);
+                griffe.set(quelleId, g);
+            }
+            return g;
+        };
+        const lageVon = (block) => {
+            let l = lagen.get(block.id);
+            if (!l) {
+                l = (async () => {
+                    if (block.type !== 'pdfseite' || !block.quelleId)
+                        return [];
+                    const griff = await griffVon(String(block.quelleId));
+                    return griff ? griff.textMitLage(Number(block.nr) || 1) : [];
+                })().catch(() => []);
+                lagen.set(block.id, l);
+            }
+            return l;
+        };
+        const norm = (s) => String(s || '').toLowerCase();
+        const vereint = (k) => {
+            const x0 = Math.min(...k.map(r => r.x)), y0 = Math.min(...k.map(r => r.y));
+            return { x: x0, y: y0, w: Math.max(...k.map(r => r.x + r.w)) - x0, h: Math.max(...k.map(r => r.y + r.h)) - y0 };
+        };
+        const blattMasse = (block) => ({
+            bw: Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE,
+            bh: Number(block.bh) || Number(block.blattHoehe) || SheetSpace.A4_HOEHE
+        });
+        const trefferMalen = () => {
+            staende.forEach((stand, i) => {
+                stand.querySelectorAll('.document-trefferschicht').forEach(e => e.remove());
+                const meine = treffer.map((t, n) => ({ t, n })).filter(x => x.t.index === i);
+                stand.classList.toggle('hat-treffer', meine.length > 0);
+                if (!meine.length || !gezeichnet.has(i))
+                    return;
+                const papier = stand.querySelector('.blatt-papier');
+                const block = documents[i];
+                if (!papier || !block)
+                    return;
+                const { bw, bh } = blattMasse(block);
+                const schicht = document.createElement('div');
+                schicht.className = 'document-trefferschicht';
+                schicht.setAttribute('aria-hidden', 'true');
+                meine.forEach(({ t, n }) => {
+                    const el = document.createElement('span');
+                    el.className = 'document-treffer' + (n === trefferNr ? ' ist-aktiv' : '');
+                    el.dataset.treffer = String(n);
+                    if (t.rect) {
+                        el.style.left = (t.rect.x / bw * 100) + '%';
+                        el.style.top = (t.rect.y / bh * 100) + '%';
+                        el.style.width = (Math.max(t.rect.w, 4) / bw * 100) + '%';
+                        el.style.height = (Math.max(t.rect.h, 4) / bh * 100) + '%';
+                    }
+                    else {
+                        /* Ohne Kasten: ein Band am linken Rand sagt „auf dieser Seite". */
+                        el.classList.add('ist-seite');
+                    }
+                    schicht.appendChild(el);
+                });
+                papier.appendChild(schicht);
+            });
+        };
+        /* DIE VERWEISE DER PDF liegen als Schicht UEBER dem Papier, aber
+           AUSSERHALB davon: sie gehoeren dem Dokument, nicht dem Zeichner der
+           Seite (§5 Regel 1), und sie duerfen nicht in der Zeichenschicht
+           liegen, die beim Annotieren jeden Zeiger nimmt. Beim Annotieren ist
+           die Schicht weg (CSS), sonst finge sie den Stift. Gedrehte Seiten
+           bleiben ohne (L133): ihr Papier steht schief, die Schicht nicht. */
+        const verweiseLegen = (nur) => {
+            staende.forEach((stand, k) => {
+                if (nur !== undefined && k !== nur)
+                    return;
+                const schicht = stand.querySelector('.document-verweise');
+                const papier = stand.querySelector('.blatt-papier');
+                if (!schicht || !papier)
+                    return;
+                const p = papier.getBoundingClientRect(), s = stand.getBoundingClientRect();
+                schicht.style.left = (p.left - s.left) + 'px';
+                schicht.style.top = (p.top - s.top) + 'px';
+                schicht.style.width = p.width + 'px';
+                schicht.style.height = p.height + 'px';
+            });
+        };
+        const verweiseMalen = (i) => {
+            const stand = staende[i];
+            const block = documents[i];
+            if (!stand || !block || block.type !== 'pdfseite' || !block.quelleId)
+                return;
+            if (SheetSpace.gedrehtVon(block))
+                return;
+            let l = verweisLagen.get(block.id);
+            if (!l) {
+                l = griffVon(String(block.quelleId)).then(g => (g ? g.verweise(Number(block.nr) || 1) : [])).catch(() => []);
+                verweisLagen.set(block.id, l);
+            }
+            void l.then((liste) => {
+                if (!liste.length || !stand.isConnected)
+                    return;
+                stand.querySelectorAll('.document-verweise').forEach(e => e.remove());
+                const schicht = document.createElement('div');
+                schicht.className = 'document-verweise';
+                const { bw, bh } = blattMasse(block);
+                liste.forEach((v) => {
+                    let el;
+                    if (v.url) {
+                        /* NUR http, https und mailto — alles andere ist kein Verweis,
+                           sondern ein Versteck (§19). */
+                        const sicher = typeof Sanitize !== 'undefined' ? Sanitize.url(v.url) : '';
+                        if (!sicher || !/^(https?:|mailto:)/i.test(sicher))
+                            return;
+                        const a = document.createElement('a');
+                        a.href = sicher;
+                        a.target = '_blank';
+                        a.rel = 'noopener noreferrer';
+                        a.title = sicher;
+                        el = a;
+                    }
+                    else {
+                        const ziel = documents.findIndex(b => b.quelleId === block.quelleId && Number(b.nr) === Number(v.seite));
+                        if (ziel < 0)
+                            return;
+                        const k = document.createElement('button');
+                        k.type = 'button';
+                        k.dataset.documentIndex = String(ziel);
+                        k.title = 'Zu Seite ' + (ziel + 1);
+                        k.setAttribute('aria-label', 'Verweis zu Seite ' + (ziel + 1));
+                        el = k;
+                    }
+                    el.classList.add('document-verweis');
+                    el.style.left = (v.x / bw * 100) + '%';
+                    el.style.top = (v.y / bh * 100) + '%';
+                    el.style.width = (v.w / bw * 100) + '%';
+                    el.style.height = (v.h / bh * 100) + '%';
+                    schicht.appendChild(el);
+                });
+                if (!schicht.childElementCount)
+                    return;
+                stand.appendChild(schicht);
+                verweiseLegen(i);
+            });
+        };
+        /** Im Lesemodus: der Text des Blatts wird `inert`, das Papier selbst
+            nicht (E468, siehe zeichneStand). Ein PDF-Blatt hat keinen Text —
+            dann bleibt nichts zu tun. */
+        const stillSetzen = (paper, still) => {
+            const flur = paper.closest('.blatt-flur');
+            if (flur)
+                flur.inert = false;
+            paper.inert = false;
+            paper.querySelectorAll('.blatt-inhalt').forEach(inhalt => { inhalt.inert = still; });
+        };
+        /* VOR `zeichneStand` erklaert, nicht dahinter: die erste Buehne wird
+           schon beim Aufbau gezeichnet, und `let` kennt keine Vorwegnahme. */
         const zeichneStand = (i) => {
             if (gezeichnet.has(i))
                 return;
@@ -884,8 +1070,21 @@ const DocumentMode = (() => {
             gezeichnet.add(i);
             stand.style.removeProperty('height');
             renderDocument(stand, block);
+            /* E468: im Lesemodus beginnt auch diese Buehne mit der Hand; dazu die
+               Treffer der laufenden Suche und die Verweise der PDF. */
+            if (!state.toolsOpen)
+                stand.querySelector('.blatt-werk [data-wz="schreiben"]')?.click();
+            if (treffer.length)
+                trefferMalen();
+            verweiseMalen(i);
             stand.querySelectorAll('.blatt-papier').forEach(paper => {
-                (paper.closest('.blatt-flur') || paper).inert = !state.toolsOpen;
+                /* NUR DER TEXT WIRD STILL, NICHT DAS PAPIER (E468). Bis hier war das
+                   ganze Papier im Lesemodus `inert` — und damit auch jede Marke,
+                   die man gerade im Lesemodus antippen soll: das Abdeckband
+                   (E266) und die Verweise (E468). Der Text darunter bleibt still,
+                   die Zeichenschicht ist im Lesemodus ohnehin durchlaessig
+                   (pointer-events:none) bis auf die Marken, die es sein wollen. */
+                stillSetzen(paper, !state.toolsOpen);
             });
             requestAnimationFrame(() => applyPen(stand));
         };
@@ -922,7 +1121,28 @@ const DocumentMode = (() => {
         inspectorButton.setAttribute('aria-controls', inspector.id);
         renderInspector(inspector, page, current);
         body.append(thumbnails, center, inspector);
-        workspace.append(top, drawingbar, commandbar, body);
+        /* ══ DIE SUCHLEISTE (E468) ══════════════════════════════════════════════
+           Ein Feld, die Zahl, vor und zurueck, zu. Enter springt zum naechsten
+           Treffer, Umschalt+Enter zum vorigen, Escape schliesst (E302). Die
+           Treffer selbst liegen NICHT im DOM, sondern in `treffer` (Seite +
+           Kasten in Blattpunkten): so findet die Suche auch Seiten, die noch
+           nicht gezeichnet sind, und `zeichneStand` malt beim Zeichnen nach. */
+        const findbar = document.createElement('div');
+        findbar.className = 'document-findbar';
+        findbar.hidden = true;
+        findbar.setAttribute('role', 'search');
+        findbar.id = 'document-find-' + page.id;
+        findButton.setAttribute('aria-controls', findbar.id);
+        const findFeld = document.createElement('input');
+        findFeld.type = 'search';
+        findFeld.placeholder = 'Im Dokument suchen …';
+        findFeld.setAttribute('aria-label', 'Im Dokument suchen');
+        findFeld.dataset.documentFind = '';
+        const findZahl = document.createElement('span');
+        findZahl.className = 'document-find-zahl';
+        findZahl.setAttribute('aria-live', 'polite');
+        findbar.append(findFeld, findZahl, topButton('find-previous', '‹', 'Voriger Treffer'), topButton('find-next', '›', 'Nächster Treffer'), topButton('find-close', '✕', 'Suche schließen'));
+        workspace.append(top, findbar, drawingbar, commandbar, body);
         wrap.appendChild(workspace);
         if (typeof Register !== 'undefined')
             Register.symbole.fuelle(drawingbar);
@@ -1022,6 +1242,7 @@ const DocumentMode = (() => {
                es hier nicht gibt. */
             center.style.setProperty('--doc-blatt', Math.max(120, breit) + 'px');
             platzhalterSetzen(Math.max(120, breit));
+            verweiseLegen();
         };
         /* ══ E399 · DER PLATZHALTER WAR 283 PX HOCH STATT 1922 ═══════════════════
            E299 schrieb an die Stelle oben: „Der Platzhalter in der Hoehe, die die
@@ -1239,6 +1460,150 @@ const DocumentMode = (() => {
             passen();
         };
         const rerender = () => App.zeichneSeite();
+        const zahlZeigen = () => {
+            if (!findFeld.value.trim() || findFeld.value.trim().length < 2) {
+                findZahl.textContent = '';
+                return;
+            }
+            findZahl.textContent = !treffer.length ? 'Nichts gefunden'
+                : trefferNr < 0 ? treffer.length + (treffer.length === 1 ? ' Treffer' : ' Treffer')
+                    : (trefferNr + 1) + '/' + treffer.length;
+        };
+        const suchen = async (wort) => {
+            const q = norm(wort.trim());
+            const lauf = ++suchLauf;
+            treffer = [];
+            trefferNr = -1;
+            if (q.length < 2) {
+                trefferMalen();
+                zahlZeigen();
+                return;
+            }
+            const neu = [];
+            for (let i = 0; i < documents.length && neu.length < 500; i++) {
+                const block = documents[i];
+                if (!block)
+                    continue;
+                if (block.type === 'pdfseite') {
+                    const stuecke = await lageVon(block);
+                    if (lauf !== suchLauf)
+                        return;
+                    if (stuecke.length) {
+                        /* Der Text der Seite, Zeichen fuer Zeichen auf sein Stueck
+                           abgebildet — so hat ein Treffer, der ueber zwei Stuecke
+                           geht („Aufga" + „be"), den Kasten beider. */
+                        let text = '';
+                        const karte = [];
+                        const anfang = [];
+                        stuecke.forEach((s, k) => {
+                            const teil = String(s.s);
+                            anfang[k] = text.length;
+                            for (let c = 0; c < teil.length; c++)
+                                karte.push(k);
+                            text += teil;
+                            if (s.eol) {
+                                text += '\n';
+                                karte.push(-1);
+                            }
+                        });
+                        const t = norm(text);
+                        let von = 0;
+                        while (neu.length < 500) {
+                            von = t.indexOf(q, von);
+                            if (von < 0)
+                                break;
+                            const bis = von + q.length;
+                            const ks = new Set();
+                            for (let c = von; c < bis; c++) {
+                                const k = karte[c];
+                                if (k !== undefined && k >= 0)
+                                    ks.add(k);
+                            }
+                            /* NUR DIE GETROFFENEN ZEICHEN, nicht das ganze Stueck: pdf.js
+                               liefert oft eine ganze Zeile als EIN Stueck, und ein Treffer
+                               ueber der ganzen Zeile sagt nicht, wo das Wort steht.
+                               Anteilig nach Zeichen — eine Naeherung (Buchstaben sind
+                               verschieden breit), aber eine, die das Wort trifft statt
+                               die Zeile; das Bild vom 7. September zeigte die Zeile. */
+                            const kaesten = [...ks].map(k => {
+                                const st = stuecke[k];
+                                if (!st)
+                                    return null;
+                                const len = Math.max(1, String(st.s).length);
+                                const a = Math.max(0, von - (anfang[k] ?? 0)), z = Math.min(len, bis - (anfang[k] ?? 0));
+                                return { x: st.x + st.w * a / len, y: st.y, w: Math.max(2, st.w * (z - a) / len), h: st.h };
+                            }).filter((k) => !!k);
+                            neu.push({ index: i, rect: kaesten.length ? vereint(kaesten) : null });
+                            von = bis;
+                        }
+                        continue;
+                    }
+                    if (norm(block.suchtext).includes(q))
+                        neu.push({ index: i, rect: null });
+                }
+                else {
+                    let da = false;
+                    for (const m of (Array.isArray(block.marken) ? block.marken : [])) {
+                        if ((m.art === 'text' || m.art === 'zettel') && norm(m.text).includes(q)) {
+                            const b = InkGeometry.bounds(m);
+                            neu.push({ index: i, rect: { x: b.x, y: b.y, w: b.width, h: b.height } });
+                            da = true;
+                        }
+                    }
+                    if (!da && Store.childrenOf(block.id).some((k) => norm(k.text).includes(q)))
+                        neu.push({ index: i, rect: null });
+                }
+            }
+            if (lauf !== suchLauf)
+                return;
+            treffer = neu;
+            trefferNr = -1;
+            trefferMalen();
+            zahlZeigen();
+        };
+        const zumTreffer = (n) => {
+            if (!treffer.length)
+                return;
+            trefferNr = ((n % treffer.length) + treffer.length) % treffer.length;
+            const t = treffer[trefferNr];
+            springe(t.index, false);
+            trefferMalen();
+            zahlZeigen();
+            const el = staende[t.index]?.querySelector('.document-treffer.ist-aktiv');
+            if (el && !el.classList.contains('ist-seite')) {
+                const r = el.getBoundingClientRect(), c = center.getBoundingClientRect();
+                center.scrollTop += (r.top - c.top) - c.height / 3;
+            }
+        };
+        let suchTimer = null;
+        findFeld.addEventListener('input', () => {
+            if (suchTimer)
+                clearTimeout(suchTimer);
+            suchTimer = setTimeout(() => { void suchen(findFeld.value); }, 200);
+        });
+        findFeld.addEventListener('keydown', event => {
+            if (event.key !== 'Enter')
+                return;
+            event.preventDefault();
+            zumTreffer(trefferNr + (event.shiftKey ? -1 : 1));
+        });
+        const findbarSetzen = (an) => {
+            findbar.hidden = !an;
+            findButton.setAttribute('aria-expanded', String(an));
+            findButton.classList.toggle('an', an);
+            if (an) {
+                findFeld.focus();
+                if (findFeld.value.trim())
+                    void suchen(findFeld.value);
+            }
+            else {
+                suchLauf++;
+                treffer = [];
+                trefferNr = -1;
+                trefferMalen();
+                findZahl.textContent = '';
+            }
+        };
         /* ══ SEITEN WIE GOODNOTES (E467) ═════════════════════════════════════════
            Alles hier arbeitet am `content` der Eltern — der Reihenfolge, die
            auch der gewoehnliche Editor zeigt — und mit den Griffen, die der Kern
@@ -1378,7 +1743,20 @@ const DocumentMode = (() => {
             readButton.setAttribute('aria-pressed', String(!an));
             annotateButton.setAttribute('aria-pressed', String(an));
             center.querySelectorAll('.blatt-papier').forEach(paper => {
-                (paper.closest('.blatt-flur') || paper).inert = !an;
+                stillSetzen(paper, !an);
+            });
+            /* LESEN HEISST HAND (E468). Bis hier blieb beim Wechsel auf „Lesen"
+               das Werkzeug der Zeichenschicht, wie es war — der Stift, die
+               Auswahl —, und nur das `inert` des Papiers hielt es fern. Seit das
+               Papier nicht mehr still ist (siehe stillSetzen), muss die Schicht
+               selbst in die Hand: dann ist sie durchlaessig, bis auf Abdeckband
+               und Verweise, die man im Lesemodus antippen soll. Beim Annotieren
+               holt `applyPen` den Stift zurueck. */
+            staende.forEach(stand => {
+                if (!an)
+                    stand.querySelector('.blatt-werk [data-wz="schreiben"]')?.click();
+                else
+                    applyPen(stand);
             });
             passen();
             inkSync();
@@ -1397,6 +1775,20 @@ const DocumentMode = (() => {
             passen();
         };
         workspace.addEventListener('keydown', event => {
+            /* Strg F sucht IM DOKUMENT (E468), nicht auf der Seite (Strg F der
+               Schale, `seitenSuche`): hier ist die Seite ein Bild. */
+            if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'f') {
+                event.preventDefault();
+                event.stopPropagation();
+                findbarSetzen(true);
+                return;
+            }
+            if (event.key === 'Escape' && !findbar.hidden) {
+                findbarSetzen(false);
+                findButton.focus();
+                event.stopPropagation();
+                return;
+            }
             if (event.key === 'Escape' && workspace.dataset.inkOptions === 'open') {
                 workspace.dataset.inkOptions = 'closed';
                 moreTools.setAttribute('aria-expanded', 'false');
@@ -1511,6 +1903,23 @@ const DocumentMode = (() => {
                 springe(state.index - 1);
             if (action === 'next')
                 springe(state.index + 1);
+            if (action === 'find') {
+                findbarSetzen(findbar.hidden);
+                return;
+            }
+            if (action === 'find-next') {
+                zumTreffer(trefferNr + 1);
+                return;
+            }
+            if (action === 'find-previous') {
+                zumTreffer(trefferNr - 1);
+                return;
+            }
+            if (action === 'find-close') {
+                findbarSetzen(false);
+                findButton.focus();
+                return;
+            }
             /* Seiten wie GoodNotes (E467). Das Lesezeichen braucht keine
                Bearbeitungsrechte, alles andere schon. */
             if (action === 'page-bookmark') {

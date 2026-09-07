@@ -2327,6 +2327,57 @@ ANSICHTEN['seiten'] = {
   }
 };
 
+ANSICHTEN['suche'] = {
+  titel: 'Suchen im Dokument und die Verweise der PDF (E468)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    /* Dieselbe kleine PDF wie in test441: Text, ein Verweis nach draussen,
+       einer auf Seite 2 — von Hand gebaut, ohne Bibliothek. */
+    const objs: string[] = [];
+    objs.push('<< /Type /Pages /Count 2 /Kids [4 0 R 6 0 R] >>');
+    objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+    const s1 = 'BT /F1 24 Tf 50 770 Td (Reihenschaltung: R = R1 + R2) Tj ET\n' +
+               'BT /F1 14 Tf 50 720 Td (Der Widerstand in Ohm addiert sich. Ohm ist die Einheit,) Tj ET\n' +
+               'BT /F1 14 Tf 50 700 Td (benannt nach Georg Simon Ohm.) Tj ET\n' +
+               'BT /F1 12 Tf 50 650 Td (Weiter zu Seite 2  |  Mehr im Netz) Tj ET\n';
+    objs.push('<< /Length ' + s1.length + ' >>\nstream\n' + s1 + 'endstream');
+    objs.push('<< /Type /Page /Parent 1 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 2 0 R >> >> /Contents 3 0 R /Annots [7 0 R 8 0 R] >>');
+    const s2 = 'BT /F1 24 Tf 50 770 Td (Kapitel 2: Parallelschaltung) Tj ET\n';
+    objs.push('<< /Length ' + s2.length + ' >>\nstream\n' + s2 + 'endstream');
+    objs.push('<< /Type /Page /Parent 1 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 2 0 R >> >> /Contents 5 0 R >>');
+    objs.push('<< /Type /Annot /Subtype /Link /Rect [160 640 250 665] /Border [0 0 0] /A << /S /URI /URI (https://example.org/ohm) >> >>');
+    objs.push('<< /Type /Annot /Subtype /Link /Rect [50 640 150 665] /Border [0 0 0] /Dest [6 0 R /XYZ 0 842 0] >>');
+    objs.push('<< /Type /Catalog /Pages 1 0 R >>');
+    let text = '%PDF-1.4\n'; const offsets: number[] = [];
+    objs.forEach((obj, i) => { offsets.push(text.length); text += (i + 1) + ' 0 obj\n' + obj + '\nendobj\n'; });
+    const xref = text.length;
+    text += 'xref\n0 ' + (objs.length + 1) + '\n0000000000 65535 f \n' + offsets.map(n => String(n).padStart(10, '0') + ' 00000 n \n').join('');
+    text += 'trailer\n<< /Size ' + (objs.length + 1) + ' /Root ' + objs.length + ' 0 R >>\nstartxref\n' + xref + '\n%%EOF';
+    const bytes = new TextEncoder().encode(text);
+    const seite = Store.addPage(null, { text: 'Elektrotechnik, Skript', icon: '📕' });
+    await PdfEinlesen.alsSeiten(new File([bytes], 'skript.pdf', { type: 'application/pdf' }), seite.id, { anordnung: 'untereinander', ueberGrenze: 'alle' });
+    Store.updateBlock(seite.id, { dokumentModus: true });
+    await Store.flush();
+    App.oeffne(seite.id);
+    await new Promise(r => setTimeout(r, 1500));
+    document.querySelector<HTMLElement>('[data-document-action="read"]')?.click();
+    document.querySelector<HTMLElement>('[data-document-action="find"]')?.click();
+    await new Promise(r => setTimeout(r, 200));
+    const feld = document.querySelector<HTMLInputElement>('.document-findbar input');
+    if (feld) {
+      feld.value = 'ohm';
+      feld.dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise(r => setTimeout(r, 900));
+      feld.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+};
+
 ANSICHTEN['willkommen'] = {
   titel: 'Willkommen: Rauschtextur im Kopf (E462)',
   bauen: async () => {

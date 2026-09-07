@@ -163,9 +163,10 @@ z = await leiste(pg);
 gleich('Radierer: sein Modus und der Verlauf, sonst nichts', [z.gruppen.radierer, z.gruppen.verlauf, z.gruppen.farbe, z.gruppen.stil, z.gruppen.breite], [1, 2, 0, 0, 0]);
 await werkzeug(pg, 'select');
 z = await leiste(pg);
-/* SIEBEN IN DER GRUPPE „AUSWAHL" (E466): Löschen, Kopieren, Einsetzen und
-   dazu Ausschneiden, nach vorn, nach hinten, Sperren. */
-gleich('Auswahl: Löschen, Kopieren, Einsetzen, Ausschneiden, Vor, Hinten, Sperren, Farben, Breiten', [z.gruppen.auswahl, z.gruppen.farbe >= 6, z.gruppen.breite, z.gruppen.stil], [7, true, 3, 0]);
+/* ACHT IN DER GRUPPE „AUSWAHL": Löschen, Kopieren, Einsetzen; dazu seit
+   E466 Ausschneiden, nach vorn, nach hinten, Sperren — und seit E468 der
+   Verweis. */
+gleich('Auswahl: Löschen, Kopieren, Einsetzen, Ausschneiden, Vor, Hinten, Sperren, Verweis, Farben, Breiten', [z.gruppen.auswahl, z.gruppen.farbe >= 6, z.gruppen.breite, z.gruppen.stil], [8, true, 3, 0]);
 gleich('… und immer noch eine Werkzeugzeile', z.werkzeugZeilen, 1);
 await werkzeug(pg, 'line');
 z = await leiste(pg);

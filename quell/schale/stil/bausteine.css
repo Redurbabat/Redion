@@ -4941,6 +4941,33 @@ body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
 .document-thumbnail[data-gedreht="180"] .document-thumbnail-preview img{transform:rotate(180deg)}
 .document-thumbnail-mark{position:absolute; top:-4px; right:4px; font-size:1rem; line-height:1;
   filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+/* ══ SUCHEN IM DOKUMENT UND VERWEISE (E468) ══════════════════════════════
+   Die Suchleiste unter dem Kopf; Treffer als Schicht IM Papier (nicht
+   greifbar, drehen mit); die Verweise der PDF als Schicht UEBER dem
+   Papier, aber ausserhalb (das Papier ist im Lesemodus `inert`), beim
+   Annotieren weg, sonst finge sie den Stift. */
+.document-findbar{display:flex; align-items:center; gap:6px; padding:6px 10px;
+  background:var(--bg-card); border-bottom:1px solid var(--line)}
+.document-findbar input{flex:1 1 12rem; min-width:0; min-height:var(--touch-min); padding:6px 10px;
+  border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); font:inherit}
+.document-findbar button{min-height:var(--touch-min); min-width:var(--touch-min)}
+.document-find-zahl{font-size:13px; color:var(--text-dim); min-width:4.5em; text-align:right;
+  font-variant-numeric:tabular-nums}
+.document-topbar .document-find-button.an{background:var(--accent-soft); border-color:var(--accent-text)}
+.document-stage{position:relative}
+.document-trefferschicht{position:absolute; inset:0; pointer-events:none; z-index:3}
+.document-treffer{position:absolute; background:rgba(255,196,0,.45); border-radius:2px;
+  box-shadow:0 0 0 1px rgba(200,140,0,.55)}
+.document-treffer.ist-aktiv{background:rgba(255,120,0,.55); box-shadow:0 0 0 2px rgba(220,90,0,.9)}
+.document-treffer.ist-seite{left:0; top:0; width:6px; height:100%; border-radius:0}
+.document-verweise{position:absolute; pointer-events:none; z-index:4}
+.document-verweis{position:absolute; display:block; pointer-events:auto; border-radius:3px;
+  background:rgba(47,126,216,.08); outline:1px dashed rgba(47,126,216,.55); cursor:pointer;
+  padding:0; border:0; min-height:0; min-width:0}
+.document-verweis:hover, .document-verweis:focus-visible{background:rgba(47,126,216,.22)}
+.document-workspace[data-document-tools="open"] .document-verweise{display:none}
+.blatt-marken [data-verweis]{cursor:pointer}
+.blatt-marken [data-verweis]:hover{filter:drop-shadow(0 0 3px rgba(47,126,216,.9))}
 /* Das Seitenmenue im Inspector (E467): sieben Griffe, 44 hoch (§37), das
    Wort neben dem Zeichen (§38). */
 .document-inspector-seite{margin-bottom:14px}

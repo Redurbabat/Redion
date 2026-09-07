@@ -152,11 +152,67 @@ const PdfLeser = (() => {
                 return '';
             }
         };
+        const textMitLage = async (nr) => {
+            try {
+                const seite = await doc.getPage(nr);
+                const sicht = seite.getViewport({ scale: 1 });
+                const inhalt = await seite.getTextContent();
+                const aus = [];
+                for (const i of (inhalt.items || [])) {
+                    if (typeof i.str !== 'string')
+                        continue;
+                    const t = Array.isArray(i.transform) ? i.transform : [1, 0, 0, 1, 0, 0];
+                    const h = Math.abs(Number(i.height) || Math.hypot(t[2] ?? 0, t[3] ?? 1)) || 0;
+                    const w = Math.abs(Number(i.width) || 0);
+                    /* Der Ursprung eines Stuecks ist seine Grundlinie links. */
+                    const [x, y] = sicht.convertToViewportPoint(t[4] ?? 0, t[5] ?? 0);
+                    aus.push({ s: i.str, x: rund(x), y: rund(y - h), w: rund(w), h: rund(h), eol: !!i.hasEOL });
+                }
+                return aus;
+            }
+            catch {
+                return [];
+            }
+        };
+        const verweise = async (nr) => {
+            try {
+                const seite = await doc.getPage(nr);
+                const sicht = seite.getViewport({ scale: 1 });
+                const liste = await seite.getAnnotations();
+                const aus = [];
+                for (const a of (liste || [])) {
+                    if (!a || a.subtype !== 'Link' || !Array.isArray(a.rect) || a.rect.length < 4)
+                        continue;
+                    const [x1, y1] = sicht.convertToViewportPoint(a.rect[0], a.rect[1]);
+                    const [x2, y2] = sicht.convertToViewportPoint(a.rect[2], a.rect[3]);
+                    const eintrag = { x: rund(Math.min(x1, x2)), y: rund(Math.min(y1, y2)),
+                        w: rund(Math.abs(x2 - x1)), h: rund(Math.abs(y2 - y1)) };
+                    if (typeof a.url === 'string' && a.url)
+                        eintrag.url = a.url;
+                    else if (a.dest) {
+                        const ziel = typeof a.dest === 'string' ? await doc.getDestination(a.dest) : a.dest;
+                        const ref = Array.isArray(ziel) ? ziel[0] : null;
+                        if (ref) {
+                            try {
+                                eintrag.seite = (await doc.getPageIndex(ref)) + 1;
+                            }
+                            catch { /* kein Ziel */ }
+                        }
+                    }
+                    if (eintrag.url || eintrag.seite)
+                        aus.push(eintrag);
+                }
+                return aus;
+            }
+            catch {
+                return [];
+            }
+        };
         const schliessen = () => { try {
             doc.destroy();
         }
         catch { /* egal */ } };
-        return { seiten: doc.numPages, geometrie, alsBild, text, schliessen };
+        return { seiten: doc.numPages, geometrie, alsBild, text, textMitLage, verweise, schliessen };
     };
     return { oeffne, BREITE_PX, TEXT_MAX };
 })();

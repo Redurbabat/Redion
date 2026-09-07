@@ -6399,7 +6399,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G3)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G4)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6445,9 +6445,25 @@ Lesezeichen und löschen stehen im Inspector. Offen bleibt:
     Höhe (E118); Seitengriffe gelten ihm als Ganzem. Ein Heft mit drei
     Blattseiten lässt sich nicht seitenweise drehen oder löschen.
 
-Noch nicht angefangen (G4–G5, siehe `AUFGABEN.md`): Suche in der
-Textschicht, PDF-Links, eigene Links; Bilder als Seiten, PDF in ein offenes
-Dokument, Seite als Bild, Zoom-Fenster.
+Suche und Verweise (nach G4, E468): die Suche im Studio mit Treffern an
+der Stelle, die Verweise der PDF, eigene Verweise an Marken stehen.
+Offen bleibt:
+
+  · **Treffer-Kästen sind eine Näherung** — anteilig nach Zeichen im
+    Stück der Textebene, nicht gemessen; bei sehr ungleichen Buchstaben
+    („iiii" neben „WWWW") sitzt der Kasten ein paar Punkte daneben.
+  · **PDF-Verweise auf gedrehten Seiten** — die Schicht liegt über dem
+    ungedrehten Papier; eine um 90° gedrehte Seite zeigt ihre Verweise
+    nicht (die Suche findet dort weiter).
+  · **Suche über mehrere Dokumente** — die Suche gilt dem offenen
+    Dokument; die Schalensuche (Strg P) findet Seiten, nicht Stellen.
+  · **Ziele der PDF innerhalb der Seite** (`/XYZ` mit Koordinaten) —
+    der Sprung geht zur Seite, nicht zur Stelle darauf.
+  · **Verweise auf Striche antippen** — ein Strich trägt seinen Verweis,
+    ist aber dünn; ein Kasten um ihn ist der bessere Träger.
+
+Noch nicht angefangen (G5, siehe `AUFGABEN.md`): Bilder als Seiten, PDF in
+ein offenes Dokument, Seite als Bild, Zoom-Fenster.
 
 Was Redion auch nach G5 nicht haben wird, und warum:
 

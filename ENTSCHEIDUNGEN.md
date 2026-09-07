@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-447 Entscheidungen, E1 bis E467 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+448 Entscheidungen, E1 bis E468 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -511,6 +511,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E465** — Zeichnen wie GoodNotes, erster Bogen: Dreieck, rundes Rechteck, Bleistift, freie Stärke, Buchstabentasten
 * **E466** — Auswahl wie GoodNotes, zweiter Bogen: Drehen, Ausschneiden, Reihenfolge, Sperren, Kritzel-Löschen, Kreis-Lasso
 * **E467** — Seiten wie GoodNotes, dritter Bogen: einfügen, duplizieren, drehen, schieben, Lesezeichen, löschen
+* **E468** — Suche und Verweise im Dokument, vierter Bogen: Textschicht mit Lage, Treffer, PDF-Verweise, eigene Verweise
 
 ---
 
@@ -36976,3 +36977,108 @@ DATEIEN. `src/core/sheet/space.ts` (`gedrehtVon`, `masseVon`, `drehHuelle`),
 `src/bereiche/pdf/document-mode.ts`, `quell/schale/stil/bausteine.css`,
 `bilder.mts` (Ansicht `seiten`), `pruefungen/lauf/test440.mts` (neu),
 `test395.mts`, `test341.mts`.
+
+---
+
+E468 — Suche und Verweise im Dokument, vierter Bogen: Textschicht mit Lage, Treffer, PDF-Verweise, eigene Verweise
+--------------------------------------------------------------------------
+
+Vierter der fünf Bögen aus Redurs Auftrag vom 7. September (E465,
+`AUFGABEN.md` 7): GoodNotes' Suche im Dokument und seine Links. Vier
+Dinge, alle additiv; kein Weg, den es gab, ist weg.
+
+WAS ENTSCHIEDEN WURDE.
+
+  1. DER LESER GIBT DIE LAGE — `PdfLeser.textMitLage(nr)`: jedes Stück der
+     Textebene mit seinem Kasten in Blattpunkten (oben links, wie die
+     Marken; gerechnet über die Sicht mit Massstab 1, dieselbe Grundlage
+     wie `geometrie`). NICHT gespeichert: eine dichte Seite hat fünfhundert
+     Stücke, und die stünden in jeder Sicherung (E107 hat den Text schon
+     auf 8000 Zeichen gedeckelt, aus demselben Grund). Gerechnet wird beim
+     Suchen aus der QUELLE — einmal je Quelle geöffnet, einmal je Seite —
+     und beim nächsten Aufbau wieder losgelassen (`griffeSchliessen`).
+     `text(nr)` bleibt, was es war.
+  2. DIE SUCHE IM STUDIO — 🔍 bei den Kopfaktionen (wie GoodNotes' Lupe),
+     Strg F im Dokument (nicht Strg F der Schale: die Seite ist hier ein
+     Bild), eine Leiste unter dem Kopf: Feld, Zahl, ‹ ›, ✕. Die Treffer
+     liegen NICHT im DOM, sondern in `treffer` (Seite und Kasten): so
+     findet die Suche auch Seiten, die noch nicht gezeichnet sind, und
+     `zeichneStand` malt beim Zeichnen nach. Ein Treffer ist ein Kasten IM
+     Papier (`.document-trefferschicht`, nicht greifbar, dreht mit der
+     Seite). Er deckt NUR DIE GETROFFENEN ZEICHEN, anteilig nach Zeichen
+     — pdf.js liefert oft eine ganze Zeile als ein Stück, und das erste
+     Bild zeigte die ganze Zeile. Enter springt zum nächsten, Umschalt+Enter
+     zum vorigen, Escape schliesst (E302). Blätter ohne Quelle durchsucht
+     sie in Text- und Zettelmarken (mit Kasten) und in ihren Textblöcken
+     (ganze Seite: ein Band am Rand); PDF-Seiten ohne Quelle fallen auf
+     `suchtext` zurück (E107).
+  3. DIE VERWEISE DER PDF — `PdfLeser.verweise(nr)`: die Link-Anmerkungen,
+     eine Adresse nach draussen oder ein Ziel im Dokument (Seitenzahl).
+     Im Studio eine Schicht ÜBER dem Papier, aber AUSSERHALB davon (sie
+     gehört dem Dokument, nicht dem Zeichner, §5 Regel 1): eine Adresse als
+     `<a target=_blank rel=noopener noreferrer>`, ein Ziel als Sprung über
+     `data-document-index` — derselbe Weg wie die Miniaturen. Nur http,
+     https und mailto (§19, `Sanitize.url`); beim Annotieren ist die
+     Schicht weg, sonst finge sie den Stift. Gedrehte Seiten bleiben ohne
+     (L133).
+  4. EIGENE VERWEISE — ein FELD an einer Marke, kein eigener Markentyp:
+     `href` nach draussen oder `zielSeite` (die Kennung einer Seite,
+     aufgelöst aus [[Name]] über `Links.loeseSeitenverweis`). Ein Rechteck
+     um eine Aufgabe, ein Text, ein Bild — alles kann einer sein. Der
+     Knopf „Verweis" in der Auswahlgruppe fragt (`Dialog.frage`), leer
+     nimmt ihn weg, ein Schritt im Verlauf. Der Knoten wird greifbar
+     (`pointer-events:all`, auch ein Strich) und sagt im `<title>`, wohin
+     er führt; im Lesemodus öffnet ein Tipp die Adresse (neues Fenster,
+     noopener) oder die Seite.
+
+UND ZWEI DINGE, DIE DABEI HERAUSKAMEN.
+
+  · LESEN HEISST HAND. Im Studio blieb beim Wechsel auf „Lesen" das
+    Werkzeug der Zeichenschicht, wie es war — der Stift, die Auswahl —,
+    und nur das `inert` des ganzen Papiers hielt es fern. Das `inert`
+    machte aber auch jede Marke taub, die man im Lesemodus antippen
+    soll: das Abdeckband (E266) ging im Studio nie auf, und die Verweise
+    hätten es auch nicht getan. Jetzt wird nur noch der TEXT des Blatts
+    still (`stillSetzen`), und „Lesen" stellt jede Bühne auf die Hand;
+    „Annotieren" holt den Stift über `applyPen` zurück. Eine später
+    gezeichnete Bühne beginnt im Lesemodus ebenfalls mit der Hand.
+  · Die Suche der Schale (Strg P) kennt keinen Rahmen „nur dieses
+    Dokument", und ihre Strg-F-Seitensuche (`seitenSuche`) läuft über
+    DOM-Text — eine PDF-Seite ist ein Bild. Darum eine eigene Suche im
+    Studio statt eines Schalters an der Schalensuche.
+
+WARUM SO, UND NICHT ANDERS.
+
+  · Lage beim Suchen rechnen statt speichern: ein Jahr Sicherungen mit
+    fünfhundert Kästen je Seite wäre der Preis; eine Quelle zu öffnen
+    kostet Millisekunden, und sie liegt ohnehin in der Ablage.
+  · Treffer als Modell statt als DOM: die Bühnen sind faul (E299) — nur
+    ein Modell findet, was noch nicht gezeichnet ist.
+  · Verweis als Feld statt als Markentyp: ein zwölfter Werkzeugknopf
+    hätte die Leiste gebrochen (E375 hat sie mit Absicht auf elf
+    gebracht), und ein Verweis IST eine Eigenschaft von etwas, das schon
+    auf der Seite steht.
+  · PDF-Verweise ausserhalb des Papiers: im Papier lägen sie in der
+    Zeichenschicht des Blatts, das vom Dokument nichts weiss (§5).
+
+ALTERNATIVEN. Die Textebene beim Einlesen mitspeichern (verworfen,
+Sicherungen). Die Treffer über pdf.js' TextLayer zeichnen (verworfen: die
+Bibliothek ist nach dem Einlesen nicht mehr da, E107, und der Layer wäre
+ein zweiter DOM je Seite). Ein Markentyp „link" (verworfen, siehe oben).
+
+KOSTEN. Zwei neue optionale Felder an Marken (`href`, `zielSeite`), die
+`.json` und `.redion` unverändert mitnehmen; alte Fassungen zeigen die
+Marke ohne Verweis. Ein fünfter Knopf in den Kopfaktionen des Studios, ein
+achter in der Auswahlgruppe. Beim Suchen liegt je Quelle ein pdf.js-Dokument
+offen, bis das Studio neu gebaut wird. Treffer-Kästen sind eine Näherung
+(anteilig nach Zeichen, nicht gemessen).
+
+WÄCHTER. `test441` (neu, 41 Punkte): §1 Leser (Stücke mit Kasten, „Ohm"
+bei 50/128/14, zwei Verweise mit Kasten, `text` unverändert), §2 Suche
+(zu, 🔍, Fokus, drei Treffer als drei Wortkästen auf einer Höhe, Enter,
+Umschalt+Enter, Sprung auf Seite 2, „Nichts gefunden", Escape, Strg F),
+§3 PDF-Verweise (zwei, Link mit noopener, Sprung, Schicht deckt das Papier,
+Kasten bei 8 %/21 %, beim Annotieren weg), §4 eigene Verweise (Adresse,
+Knoten greifbar mit Titel, Tipp öffnet; [[Zielseite]], Tipp öffnet die
+Seite), §5 Sicherheit (javascript:, data: werden keine; leer nimmt weg),
+§6 Quellen.

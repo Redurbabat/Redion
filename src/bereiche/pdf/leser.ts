@@ -150,9 +150,72 @@ const PdfLeser = (() => {
       }
     };
 
+    /* ══ TEXT MIT LAGE (E468) — fuer die Suche im Schreibstudio ═══════════
+       Jedes Stueck der Textebene mit seinem Kasten in Blattpunkten, oben
+       links wie die Marken (`convertToViewportPoint` der Sicht mit Massstab
+       1 — dieselbe Grundlage wie `geometrie`, darum liegen Treffer und
+       Marken im selben Raum). NICHT gespeichert: eine dichte Seite hat
+       fuenfhundert Stuecke, und die stuenden in JEDER Sicherung (siehe
+       TEXT_MAX oben). Gerechnet wird beim Suchen aus der Quelle, und der
+       Aufrufer merkt es sich je Seite. */
+    type Stueck = { s: string; x: number; y: number; w: number; h: number; eol: boolean };
+    const textMitLage = async (nr: number): Promise<Stueck[]> => {
+      try {
+        const seite = await doc.getPage(nr);
+        const sicht = seite.getViewport({ scale: 1 });
+        const inhalt = await seite.getTextContent();
+        const aus: Stueck[] = [];
+        for (const i of (inhalt.items || []) as any[]) {
+          if (typeof i.str !== 'string') continue;
+          const t: number[] = Array.isArray(i.transform) ? i.transform : [1, 0, 0, 1, 0, 0];
+          const h = Math.abs(Number(i.height) || Math.hypot(t[2] ?? 0, t[3] ?? 1)) || 0;
+          const w = Math.abs(Number(i.width) || 0);
+          /* Der Ursprung eines Stuecks ist seine Grundlinie links. */
+          const [x, y] = sicht.convertToViewportPoint(t[4] ?? 0, t[5] ?? 0) as [number, number];
+          aus.push({ s: i.str, x: rund(x), y: rund(y - h), w: rund(w), h: rund(h), eol: !!i.hasEOL });
+        }
+        return aus;
+      } catch {
+        return [];
+      }
+    };
+
+    /* ══ DIE VERWEISE DER PDF (E468) ═══════════════════════════════════════
+       Link-Anmerkungen der Seite: eine Adresse nach draussen (`url`) oder
+       ein Ziel im Dokument (`seite`, 1-basiert). Kaesten in Blattpunkten.
+       Was weder das eine noch das andere hat, faellt weg — ein Kasten ohne
+       Ziel ist kein Verweis. Ob die Adresse harmlos ist, prueft der
+       Aufrufer (§19, `Sanitize.url`); hier wird nur gelesen. */
+    type Verweis = { x: number; y: number; w: number; h: number; url?: string; seite?: number };
+    const verweise = async (nr: number): Promise<Verweis[]> => {
+      try {
+        const seite = await doc.getPage(nr);
+        const sicht = seite.getViewport({ scale: 1 });
+        const liste = await seite.getAnnotations();
+        const aus: Verweis[] = [];
+        for (const a of (liste || []) as any[]) {
+          if (!a || a.subtype !== 'Link' || !Array.isArray(a.rect) || a.rect.length < 4) continue;
+          const [x1, y1] = sicht.convertToViewportPoint(a.rect[0], a.rect[1]) as [number, number];
+          const [x2, y2] = sicht.convertToViewportPoint(a.rect[2], a.rect[3]) as [number, number];
+          const eintrag: Verweis = { x: rund(Math.min(x1, x2)), y: rund(Math.min(y1, y2)),
+            w: rund(Math.abs(x2 - x1)), h: rund(Math.abs(y2 - y1)) };
+          if (typeof a.url === 'string' && a.url) eintrag.url = a.url;
+          else if (a.dest) {
+            const ziel = typeof a.dest === 'string' ? await doc.getDestination(a.dest) : a.dest;
+            const ref = Array.isArray(ziel) ? ziel[0] : null;
+            if (ref) { try { eintrag.seite = (await doc.getPageIndex(ref)) + 1; } catch { /* kein Ziel */ } }
+          }
+          if (eintrag.url || eintrag.seite) aus.push(eintrag);
+        }
+        return aus;
+      } catch {
+        return [];
+      }
+    };
+
     const schliessen = () => { try { doc.destroy(); } catch { /* egal */ } };
 
-    return { seiten: doc.numPages as number, geometrie, alsBild, text, schliessen };
+    return { seiten: doc.numPages as number, geometrie, alsBild, text, textMitLage, verweise, schliessen };
   };
 
   return { oeffne, BREITE_PX, TEXT_MAX };
