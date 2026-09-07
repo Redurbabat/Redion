@@ -172,8 +172,15 @@ const modus = (pg: Seite) => pg.evaluate(() => ({
   an: document.querySelector<HTMLElement>('.blatt-werk [data-wz].on')?.dataset.wz ?? null
 }));
 /** Bis der Modus-Knopf den gewünschten Modus zeigt (höchstens drei Tipps). */
+/* WIE OFT MUSS MAN WEITERTIPPEN? So oft, wie es Arten gibt — und die
+   Zahl wird ERFRAGT, nicht gewusst. Hier stand eine feste 3, weil es drei
+   Modi gab; mit den fünf aus E482 reichte sie nicht mehr, und der Lauf
+   fiel an einer Stelle um, die mit dem Radierermodus gar nichts zu tun
+   hatte. Eine Prüfung, die eine Anzahl auswendig kennt, wird beim
+   nächsten Eintrag rot, ohne dass etwas kaputt ist. */
 const modusSetzen = async (pg: Seite, ziel: string) => {
-  for (let i = 0; i < 3; i++) {
+  const runde = Number(await pg.evaluate(`Marken.RADIERER.length`)) || 3;
+  for (let i = 0; i <= runde; i++) {
     if ((await modus(pg)).knopf === ziel) return;
     await modusKnopf(pg);
     await pg.waitForTimeout(80);
@@ -299,8 +306,18 @@ const m1 = await modus(pg);
 gleich('Ein Tipp: Teil', m1.knopf, 'teil');
 gleich('… und die Marke sagt dasselbe', m1.meta, 'teil');
 gleich('… und der Radierer ist das Werkzeug', m1.an, 'radierer');
-await modusKnopf(pg);
-gleich('Noch ein Tipp: Marker', (await modus(pg)).knopf, 'marker');
+/* SEIT E482 SIND ES FÜNF ARTEN: ganz, teil, stift, marker, band. Der
+   Knopf geht sie der Reihe nach durch, und der Kreis schliesst sich nach
+   der letzten. Die Liste wird ERFRAGT und nicht aufgezählt — sonst fällt
+   dieser Lauf beim nächsten Eintrag wieder um, ohne dass etwas kaputt
+   ist. */
+const arten: string[] = await pg.evaluate(() => Marken.RADIERER.map((r: any) => String(r.id)));
+p('Es sind mindestens fünf Arten, und sie beginnen mit ganz und teil',
+  arten.length >= 5 && arten[0] === 'ganz' && arten[1] === 'teil', JSON.stringify(arten));
+for (let i = 2; i < arten.length; i++) {
+  await modusKnopf(pg);
+  gleich('Noch ein Tipp: ' + arten[i], (await modus(pg)).knopf, arten[i]);
+}
 await modusKnopf(pg);
 gleich('Und wieder Ganz — der Kreis schliesst sich', (await modus(pg)).knopf, 'ganz');
 await modusKnopf(pg); /* teil bleibt gespeichert */
@@ -323,8 +340,11 @@ await strich(pg, [100, 150], [400, 150], 31);
 await werkzeug(pg, 'radierer');
 await zug(pg, [[250, 130], [250, 170]], { art: 'pen' });
 gleich('… und die Schicht radiert auch so: Teil, zwei Stücke', (await marken(pg, blattId)).length, 2);
-p('Marken.RADIERER nennt die drei Arten', await pg.evaluate(() =>
-  Array.isArray(Marken.RADIERER) && Marken.RADIERER.map((r: any) => r.id).join(',') === 'ganz,teil,marker'));
+p('Marken.RADIERER nennt die Arten — die zwei Mengen (wie viel) zuerst, dann die Werkzeuge (wovon)',
+  await pg.evaluate(() => Array.isArray(Marken.RADIERER)
+    && Marken.RADIERER.map((r: any) => r.id).join(',').startsWith('ganz,teil,')
+    && Marken.RADIERER.filter((r: any) => r.nur).length >= 3
+    && Marken.RADIERER.slice(0, 2).every((r: any) => !r.nur)));
 
 /* ======================================================================== */
 console.log('\n7 · Ein Tipp ohne Bewegung nimmt, was darunter liegt — und sonst nichts');

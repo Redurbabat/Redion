@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-464 Entscheidungen, E1 bis E484 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+465 Entscheidungen, E1 bis E485 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -528,6 +528,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E482** — Die Kamera macht eine Seite, und der Radierer nimmt nur, was er meint
 * **E483** — Die Kurve mit ihrem Griff: die erste Form mit drei Punkten — und ohne ein neues Feld
 * **E484** — Treffer und Verweise sitzen genauer: gemessen statt gezählt, und ein Strich bekommt eine Trefffläche statt eines Kastens
+* **E485** — Der breite Lauf nach elf Bögen: ein Knopf lag unter der Zeichenschicht, und drei Prüfläufe kannten Anzahlen auswendig
 
 ---
 
@@ -38497,4 +38498,81 @@ eine Fläche, die man nicht sieht — beides ist eine Messung.
 GEPRÜFT. 15 Läufe grün: test87, test105, test109, test437, test438,
 test439, test441, test442, test445, test447, test451, test453, test455,
 test456, test457; dazu `npm run typecheck`, `npm run bauen:ts`,
+`node bauen.mts`.
+
+---
+
+E485 — Der breite Lauf nach elf Bögen: ein Knopf lag unter der Zeichenschicht, und drei Prüfläufe kannten Anzahlen auswendig
+--------------------------------------------------------------------------
+
+Nach E474 bis E484 — elf Bögen, alle mit eigenem Prüflauf und gezielten
+Bündeln — ein BREITER Lauf über alles, was `marken.ts`, `document-mode.ts`
+oder die Stilblätter anfasst: 68 Läufe in drei Stücken (§30).
+
+Er hat vier Dinge gefunden, und nur eines davon war ein Fehler im Produkt.
+Aber das eine war einer, den kein einzelner Bogen hätte finden können.
+
+## 1. Der Knopf lag unter der Zeichenschicht (der echte Fund)
+
+Eine PDF-Seite ohne Bild zeigt „Aus dem Original zurückholen" (E106). Der
+Hinweis mit dem Knopf steht auf `z-index:1`, die Zeichenschicht auf 2 —
+mit einem Zeichenwerkzeug in der Hand war der Knopf NICHT ZU DRÜCKEN. Die
+Seite bot einen Weg an, den es nicht gab; man musste erst auf die Hand
+umschalten, um ihn zu finden, und niemand kommt darauf.
+
+`test180` lief genau darauf in eine Zeitüberschreitung — und zwar SCHON
+VORHER: derselbe Lauf ist auf dem Stand vor diesen elf Bögen (`c449f980`,
+in einem eigenen Arbeitsbaum geprüft) genauso rot. Der Fehler ist also
+nicht neu; er lag nur ausserhalb jedes Bündels, das seither gefahren
+wurde.
+
+Der Hinweis geht jetzt HÖHER (`z-index:3`), bleibt aber durchlässig
+(`pointer-events:none`); nur der Knopf selbst fängt den Zeiger. Gezeichnet
+wird weiter auf der ganzen Seite — die Marken liegen in Blattpunkten
+(E100) und warten nicht auf ein Bild. Und der Knopf misst jetzt 44 px
+statt 36 (§37): er ist der einzige Weg auf dieser Seite.
+
+`test180` ist damit grün, 36 von 36.
+
+## 2. Drei Prüfläufe kannten eine Anzahl auswendig
+
+Sie fielen nicht, weil etwas kaputt war, sondern weil etwas dazugekommen
+ist — und das ist eine eigene Sorte Fehler, die im Prüflauf steckt:
+
+  · `test344` drehte den Radierermodus HÖCHSTENS DREIMAL weiter, weil es
+    drei Arten gab. Mit den fünf aus E482 erreichte er sein Ziel nicht
+    mehr und fiel an vier Stellen um, die mit dem Modus gar nichts zu tun
+    hatten. Er FRAGT die Zahl jetzt (`Marken.RADIERER.length`) und zählt
+    die Arten nicht mehr auf.
+  · `test365` und `test438` zählten die Formen im Zubehör. Sie tragen
+    jetzt sieben statt sechs (die Kurve aus E483).
+  · `test362` hält eine Decke über die rohen Pixelzahlen in den
+    Stilblättern (`marken-decke.json`, dieselbe Bauform wie
+    `js-bestand.json`). Zwei Zahlen sind gewachsen: ein `16px` und ein
+    `28px` aus dem Menü der Miniaturenleiste (E480) — eine Innenluft und
+    ein Schattenradius, beides keine Trefferfläche. Nachgetragen.
+
+Die Lehre steht in `test344` daneben geschrieben: eine Prüfung, die eine
+ANZAHL auswendig kennt, wird beim nächsten Eintrag rot, ohne dass etwas
+kaputt ist. Wer die Zahl erfragen kann, soll sie erfragen.
+
+## 3. Und ein Wackler, der keiner war
+
+`test202` fiel im Bündel und lief allein grün — beim zweiten Mal in beiden
+Bäumen. Er steht hier, damit die nächste Runde ihn nicht für einen Fund
+hält.
+
+## Was das über das Vorgehen sagt
+
+Elf Bögen mit je einem eigenen Prüflauf und einem Bündel von zehn bis
+zwanzig Läufen — und trotzdem lag ein Knopf ausserhalb aller Bündel. Das
+ist kein Argument gegen die Bündel (sie halten die Sitzung überhaupt erst
+am Laufen, §30) und keines für den vollen Lauf nach jedem Bogen (er dauert
+länger, als eine Sitzung sicher steht). Es ist ein Argument für DIESEN
+Schritt: nach einer Reihe von Bögen ein breiter Lauf, bevor die nächste
+Reihe beginnt.
+
+GEPRÜFT. 68 Läufe in drei Stücken; danach die Bestätigung von test87,
+test96, test100, test105, test109, test180, test202, test344, test362,
+test365 — alle grün. Dazu `npm run typecheck`, `npm run bauen:ts`,
 `node bauen.mts`.

@@ -4156,6 +4156,24 @@ Trefffläche endet. Zehn Punkte treffen, zwanzig nicht — die Grenze
 dazwischen hängt am Rundungsverhalten des Browsers und wäre irgendwann
 rot, ohne dass etwas kaputt ist.
 
+**Und dann ein breiter Lauf (E485).** Nach elf Bögen mit je eigenem
+Prüflauf ein Lauf über 68 Prüfungen in drei Stücken — alles, was
+`marken.ts`, `document-mode.ts` oder die Stilblätter anfasst. Er fand
+EINEN echten Fehler, und zwar einen, den kein einzelner Bogen hätte
+finden können: auf einer PDF-Seite ohne Bild lag der Knopf „Aus dem
+Original zurückholen" unter der Zeichenschicht und war mit einem Stift in
+der Hand nicht zu drücken. Die Seite bot einen Weg an, den es nicht gab.
+Der Fehler ist ÄLTER als diese Bögen — derselbe Lauf ist auf dem Stand
+davor (in einem eigenen Arbeitsbaum geprüft) genauso rot; er lag nur
+ausserhalb jedes Bündels.
+
+Drei weitere rote Läufe waren keine Fehler im Produkt, sondern Prüfungen,
+die eine ANZAHL auswendig kannten: der Radierermodus wurde höchstens
+dreimal weitergedreht (es sind jetzt fünf), die Formen wurden abgezählt
+(es sind jetzt sieben), und die Pixel-Decke musste zwei gewachsene Zahlen
+nachtragen. Die Lehre steht im Lauf daneben: wer eine Zahl erfragen kann,
+soll sie erfragen.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
 die verbliebenen Reste (getippter Text im gesicherten Bild, Farbsets,

@@ -12719,6 +12719,17 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 /* Untereinander, nicht nebeneinander: `.pdfs-wartet` ist ein Flex-Kasten,
    und Satz und Knopf drängelten sich in einer Zeile (mit Augen gesehen). */
 .pdfs-wartet{flex-direction:column; gap:2px; text-align:center; padding:0 16px}
+/* DER KNOPF LAG UNTER DER ZEICHENSCHICHT (E485, von `test180` gefunden).
+   `.blatt-marken` steht auf `z-index:2`, dieser Hinweis auf 1 — mit einem
+   Zeichenwerkzeug in der Hand war „Aus dem Original zurückholen" nicht zu
+   drücken. Eine Seite ohne Bild bot damit einen Weg an, den es nicht gab,
+   und man musste erst auf die Hand umschalten, um ihn zu finden.
+
+   Der Hinweis geht darum HÖHER — bleibt aber durchlässig: gezeichnet wird
+   weiter auf der ganzen Seite (die Marken liegen in Blattpunkten und
+   warten nicht auf ein Bild), nur der Knopf selbst fängt den Zeiger. */
+.pdfs-wartet{z-index:3; pointer-events:none}
+.pdfs-wartet button{pointer-events:auto}
 /* Ein Blatt auf einer Folie (E109). Die HÖHE ist der begrenzende Wert —
    eine Folie ist breit und flach, ein Blatt hoch und schmal. `45vh` Breite
    ergibt bei A4 rund 64vh Höhe; zwei davon stehen nebeneinander bequem. */
@@ -12737,7 +12748,8 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .folie-blatt .marken{position:absolute; inset:0; width:100%; height:100%; color:#111}
 .folie-blatt .fehlt{padding:14vh 2vh; text-align:center; color:#666}
 
-.pdfs-neu{margin-top:10px; padding:8px 14px; min-height:36px; border-radius:8px;
+/* §37: 36 px waren es — der Knopf ist der einzige Weg auf dieser Seite. */
+.pdfs-neu{margin-top:10px; padding:8px 14px; min-height:var(--touch-min); border-radius:8px;
           border:1px solid #c8c8c8; background:#f3f3f3; color:#111;
           font-size:13px; cursor:pointer}
 .pdfs-neu:hover{background:#e8e8e8}
@@ -18815,7 +18827,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 586, inhalt: '0d730e67ece2abc5', gebaut: '2026-09-07T17:53:41.630Z' };
+const Stand = { fassung: 587, inhalt: '683234925253e963', gebaut: '2026-09-07T18:25:30.968Z' };
 window.Stand = Stand;
 
 </script>

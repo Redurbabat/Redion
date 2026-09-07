@@ -299,6 +299,11 @@ Gegenprobe, Bild und Entscheidung:
     Trefffläche entlang des WEGES — nicht den Kasten, den L133
     vorschlug, denn der finge die Nachbarn mit ein. **Steht.**
 
+Nach diesen achtzehn Bögen lief ein **breiter Lauf** über 68 Prüfungen
+(E485). Er fand einen echten Fehler, der ausserhalb aller Bündel lag: der
+Knopf „Aus dem Original zurückholen" auf einer Seite ohne Bild war unter
+der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
+
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).
 
