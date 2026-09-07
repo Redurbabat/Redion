@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G6)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G7)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6420,8 +6420,10 @@ Zeichnen (nach G1, E465):
   · **Kurve** und **Verbinder** des Shape-Tools — beides braucht Griffe an
     einer fertigen Marke (die Mitte der Kurve nachziehen; ein Verbinder,
     der an zwei Formen hängt). Kommt nach dem Drehgriff aus G2.
-  · **Formerkennung fürs Dreieck** — `InkShapes.recognize` kennt Linie,
-    Rechteck, Ellipse; ein gehaltener Dreieckszug bleibt ein Strich.
+  · **Formerkennung für gedrehte Dreiecke** — seit E472 wird ein
+    AUFRECHTES Dreieck erkannt; eines auf dem Kopf oder auf der Seite
+    bleibt ein Strich, weil die Marke gleichschenklig mit der Spitze oben
+    ist und keine andere Lage beschreiben kann.
   · **Radierer-Filter** nach Werkzeugart über Marker hinaus (GoodNotes:
     Pen, Pencil, Highlighter, Tape einzeln) — heute Ganz, Teil, Marker.
   · **Farbsets** speichern und zurücksetzen — heute sieben feste und vier
@@ -6475,18 +6477,15 @@ Seite als Bild, Zoom-Fenster stehen. Offen bleibt:
 
   · **Das Zoom-Fenster** ist seit E470 der Streifen, in den man schreibt,
     mit der ganzen Seite darüber — und mit EINER Zeichenfläche (das Papier
-    zieht um). Was daran noch fehlt: der Streifen rückt nicht von selbst
-    weiter, wenn man an seinem Rand schreibt (in GoodNotes wandert er
-    mit); und „Ausschnitt" und „Erkennen" ruhen, solange er offen ist.
+    zieht um); seit E472 rückt es am rechten Rand von selbst weiter. Was
+    noch fehlt: „Ausschnitt" und „Erkennen" ruhen, solange es offen ist.
   · **Seite als Bild** lässt die Textblöcke eines Blatts (getippter Text)
     und Bildmarken aus — ein `<img>` im SVG darf die Leinwand nicht
     anfassen. Drucken (E117) hat beides.
   · **Ganzes Dokument als PDF mit Marken** — braucht einen PDF-Schreiber;
     Drucken über den Browser kann es heute.
-  · **Bilder aus der Zwischenablage** (Strg V eines Fotos als Seite) und
-    **Fotografieren mit der Kamera** als Seite — der Bildwähler nimmt
-    Dateien.
-  · **Mehrere PDFs auf einmal** einfügen — der Wähler nimmt eine.
+  · **Fotografieren mit der Kamera** als Seite — Strg V aus der
+    Zwischenablage geht seit E472, der Wähler nimmt Dateien.
 
 Was Redion auch nach G5 nicht haben wird, und warum:
 

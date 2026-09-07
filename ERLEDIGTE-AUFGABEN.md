@@ -3912,7 +3912,31 @@ Fehler fanden nur die Augen: der Regler brach in eine dritte Zeile, die
 Treffer der Suche deckten die ganze Zeile statt des Wortes, und das
 Abbild der Seite war flachgedrückt, weil der Klon sein `style` verlor.
 
+* **G7 · Die kleinen Reste (E472, test445).** Die Formerkennung kennt das
+  Dreieck (nur aufrecht — die Marke kann keine andere Lage), ein Bild aus
+  der Zwischenablage wird mit Strg V eine Seite, der Dateiwähler nimmt
+  mehrere PDFs mit einer einzigen Frage nach der Anordnung, und der
+  Streifen des Zoom-Fensters rückt weiter, wenn man bis an seinen rechten
+  Rand schreibt.
+
+**Und ein Fehler, den erst die Prüfung fand (E471).** Eine adversariale
+Runde über die fünf Bögen — fünf Leser mit je einer Dimension, ihre Funde
+danach von Skeptikern widerlegt — brachte einen Rechte-Fehler ans Licht,
+der nichts mit GoodNotes zu tun hat: `Konten.darf` wurde im Dokumentmodus
+an sechs Stellen mit dem Seiten-OBJEKT statt seiner Kennung gerufen. Ein
+Objekt ist truthy, `rolleAuf` findet damit nichts, läuft die
+Freigabenkette nie ab und endet bei der Standardrolle „voll". **Jede
+Rechtefrage im PDF-Teil sagte ja**, gleich welche Freigabe an der Seite
+hing. Vier der sechs Stellen sind älter als die Bögen. Es ist wörtlich der
+Fehler aus L102, den §26 seitdem beim Namen nennt — und er kam wieder,
+weil es keinen Wächter gab. Jetzt gibt es einen (`test444 §1`), und zwar
+über die ganze Quelle: jede Rechtefrage muss erkennbar eine Kennung
+übergeben. Er fand sofort drei weitere Stellen, die richtig waren, aber
+`current` und `unter` hiessen. Dazu ein zweiter Fund derselben Runde: eine
+verdoppelte BILD-Seite legte ihr Bild als „abgeleitet" ab — nach dem
+Einspielen einer Sicherung wäre die Kopie leer gewesen.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
-die kleinen Reste (Formerkennung fürs Dreieck, Bild aus der
-Zwischenablage, Farbsets, Menü je Miniatur).
+die verbliebenen Reste (gedrehte Dreiecke, Kamera als Seite, Farbsets,
+Menü je Miniatur).

@@ -7,8 +7,8 @@
  * ----------------------------------------------------------------------------
  * Wer in GoodNotes einen Kreis zieht und am Ende kurz haelt, bekommt einen
  * Kreis. Diese Datei beantwortet nur die geometrische Frage: Ist dieser
- * Linienzug eine LINIE, eine ELLIPSE (ein Kreis) oder ein RECHTECK — und wenn
- * ja, mit welchen zwei Punkten? Ob gehalten wurde, ob der Schalter an ist,
+ * Linienzug eine LINIE, eine ELLIPSE (ein Kreis), ein RECHTECK oder ein
+ * DREIECK (E471) — und wenn ja, mit welchen zwei Punkten? Ob gehalten wurde, ob der Schalter an ist,
  * welches Werkzeug fuehrte: das entscheidet die Zeichenschicht. Diese Datei
  * kennt weder Store noch DOM noch Zeit (E125, wie geometry.ts).
  *
@@ -18,7 +18,7 @@
  * ==========================================================================*/
 
 type ShapePoint = [number, number];
-type ShapeArt = 'line' | 'ellipse' | 'rectangle';
+type ShapeArt = 'line' | 'ellipse' | 'rectangle' | 'triangle';
 type Shape = { art: ShapeArt; pts: ShapePoint[] };
 
 const InkShapes = (() => {
@@ -101,6 +101,50 @@ const InkShapes = (() => {
     const eckenBesucht = ecken.every(e => input.some(p => Math.hypot(p[0] - e[0], p[1] - e[1]) <= 0.08 * diag));
     if (anKante >= 0.85 * n && eckenBesucht)
       return { art: 'rectangle', pts: [[r2(x0), r2(y0)], [r2(x1), r2(y1)]] };
+
+    /* ══ DREIECK (E471) ═══════════════════════════════════════════════════
+       Vor der Ellipse, weil ein Dreieck seinen Abstand zur Mitte NICHT
+       haelt und sonst als Ellipse durchginge, wenn die Schwelle je
+       weicher wird. Drei Ecken werden so gesucht, wie man es von Hand
+       taete: der Punkt am weitesten vom Anfang (B), dann der Punkt am
+       weitesten von der Strecke A–B (C). Bei einem Dreieck sind das seine
+       Ecken; bei allem anderen liegen die uebrigen Punkte nicht auf den
+       drei Kanten.
+
+       NUR AUFRECHTE DREIECKE. Redions `triangle`-Marke ist gleichschenklig
+       mit der Spitze oben in der Mitte (E465) — sie kann gar keine andere
+       Lage beschreiben. Ein auf den Kopf gezogenes Dreieck bekaeme also
+       eine Spitze, die es nicht gezogen hat; darum bleibt es ein Strich.
+       Was fehlt, steht in L133. */
+    const eckA = first;
+    let eckB = first, weit = 0;
+    for (const p of input) {
+      const d = Math.hypot(p[0] - eckA[0], p[1] - eckA[1]);
+      if (d > weit) { weit = d; eckB = p; }
+    }
+    let eckC = first, weitC = 0;
+    for (const p of input) {
+      const d = distanceToSegment(p, eckA, eckB);
+      if (d > weitC) { weitC = d; eckC = p; }
+    }
+    if (weitC > 0.12 * diag) {
+      const kanten: [ShapePoint, ShapePoint][] = [[eckA, eckB], [eckB, eckC], [eckC, eckA]];
+      const nahKante = 0.09 * diag;
+      const anDreieck = input.filter(p =>
+        Math.min(...kanten.map(k => distanceToSegment(p, k[0], k[1]))) <= nahKante).length;
+      /* Die Flaeche sagt, dass es KEIN Rechteck ist: ein Dreieck deckt
+         hoechstens die halbe Kastenflaeche, ein Rechteck fast die ganze. */
+      const flaeche = Math.abs((eckB[0] - eckA[0]) * (eckC[1] - eckA[1])
+                             - (eckC[0] - eckA[0]) * (eckB[1] - eckA[1])) / 2;
+      const kasten = Math.max(1, w * h);
+      const drei = [eckA, eckB, eckC].sort((p, q) => p[1] - q[1]);
+      const spitze = drei[0]!, unten1 = drei[1]!, unten2 = drei[2]!;
+      const aufrecht = spitze[1] <= y0 + 0.25 * h
+        && unten1[1] >= y0 + 0.7 * h && unten2[1] >= y0 + 0.7 * h
+        && Math.abs(spitze[0] - (x0 + w / 2)) <= 0.28 * w;
+      if (anDreieck >= 0.82 * n && flaeche <= 0.62 * kasten && aufrecht)
+        return { art: 'triangle', pts: [[r2(x0), r2(y0)], [r2(x1), r2(y1)]] };
+    }
 
     /* ELLIPSE: die Punkte halten ihren Abstand zur Mitte. */
     const cx = x0 + w / 2, cy = y0 + h / 2;

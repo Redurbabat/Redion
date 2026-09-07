@@ -741,6 +741,11 @@ const PdfEinlesen = (() => {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'application/pdf,.pdf';
+        /* MEHRERE AUF EINMAL (E471): wer ein Semester einliest, hat selten eine
+           Datei. Gefragt wird nur bei der ERSTEN nach der Anordnung; die
+           uebrigen folgen ihr, sonst staende der Mensch vor zehn gleichen
+           Fragen. Mit `anStelle` wird ohnehin nicht gefragt. */
+        input.multiple = true;
         /* Der Wähler hängt im Dokument. In Chromium öffnet er sich auch ohne
            das — nachgemessen mit der Gegenprobe zu test247 §13. Es bleibt
            trotzdem stehen, weil andere Browser hier bekanntermassen
@@ -755,14 +760,20 @@ const PdfEinlesen = (() => {
                 if (entschieden)
                     return;
                 entschieden = true;
-                const datei = input.files?.[0];
+                const dateien = input.files ? Array.from(input.files) : [];
                 input.remove();
-                if (!datei) {
+                if (!dateien.length) {
                     fertig(null);
                     return;
                 }
                 try {
-                    fertig(await alsSeiten(datei, ziel, vorgabe));
+                    let ergebnis = await alsSeiten(dateien[0], ziel, vorgabe);
+                    for (let k = 1; k < dateien.length; k++) {
+                        const wie = vorgabe && vorgabe.anordnung ? vorgabe.anordnung
+                            : String(Store.getMeta('pdfAnordnung', 'untereinander'));
+                        ergebnis = await alsSeiten(dateien[k], ziel, { ...(vorgabe || {}), anordnung: wie, ueberGrenze: (vorgabe && vorgabe.ueberGrenze) || 'alle' });
+                    }
+                    fertig(ergebnis);
                 }
                 catch (e) {
                     UI.toast('Die PDF liess sich nicht einlesen: ' +

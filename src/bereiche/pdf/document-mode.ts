@@ -1672,9 +1672,15 @@ const DocumentMode = (() => {
           try {
             const [blob, satz] = await Promise.all([Dateien.alsBlob(alt), Store.dateiHolen(alt)]);
             if (!blob) return;
+            /* ABGELEITET IST NUR, WAS SICH NEU RECHNEN LAESST (E471, Fund der
+               Prüfung). Das Seitenbild einer PDF-Seite kommt aus der Quelle
+               zurueck und darf darum aus der Sicherung bleiben. Eine
+               BILD-Seite (E469) hat keine Quelle: ihr Bild IST die
+               Nutzerdatei, und mit `abgeleitet: true` waere die Kopie nach
+               dem Einspielen einer `.redion` leer gewesen (§11, §14). */
             const kopie = await Dateien.ablegen(
               new File([blob], String(satz?.name || 'seite.webp'), { type: blob.type || 'image/webp' }),
-              { blockId: neu.id, abgeleitet: true });
+              { blockId: neu.id, abgeleitet: block.herkunft !== 'bild' });
             Store.updateBlock(neu.id, { bildDateiId: kopie.id });
           } catch (e: unknown) {
             UI.toast('Das Seitenbild liess sich nicht mitkopieren: ' + (e instanceof Error ? e.message : String(e)));
@@ -1761,6 +1767,24 @@ const DocumentMode = (() => {
       if (state.thumbnailsOpen) activateVisibleThumbnails(thumbnails);
       passen();
     };
+    /* EIN BILD AUS DER ZWISCHENABLAGE WIRD EINE SEITE (E471). Wer einen
+       Ausschnitt kopiert oder ein Foto in der Ablage hat, drueckt Strg V —
+       und muss es nicht erst als Datei speichern. Nur im Dokument, nur
+       wenn wirklich ein Bild darin liegt, und nur mit Bearbeitungsrechten;
+       Text in der Ablage geht weiter dorthin, wo der Fokus steht. */
+    workspace.addEventListener('paste', (event: ClipboardEvent) => {
+      const ziel = event.target as HTMLElement | null;
+      if (ziel && (ziel.closest('input, textarea, [contenteditable="true"]'))) return;
+      const dateien = Array.from(event.clipboardData?.files || []).filter(d => /^image\//i.test(d.type));
+      if (!dateien.length) return;
+      event.preventDefault();
+      if (!darfSeiten()) { UI.toast('Zum Einfügen brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.'); return; }
+      const stelle = stelleVon(jetzt());
+      void PdfEinlesen.bilderAlsSeiten(dateien, page.id,
+        stelle ? { elternId: stelle.eltern.id, index: stelle.index + 1 } : undefined)
+        .then((ids: string[]) => { if (ids.length) neuMit(ids[ids.length - 1] ?? null); });
+    });
+
     workspace.addEventListener('keydown', event => {
       /* Strg F sucht IM DOKUMENT (E468), nicht auf der Seite (Strg F der
          Schale, `seitenSuche`): hier ist die Seite ein Bild. */
@@ -2135,8 +2159,15 @@ const DocumentMode = (() => {
           lupeBeobachter = new MutationObserver(() => lupeAbbildFrisch());
           lupeBeobachter.observe(flaeche, { childList: true, subtree: true, attributes: true });
         }
+        /* AM RAND GEHT ES VON SELBST WEITER (E471), wie in GoodNotes: wer
+           bis an den rechten Rand des Streifens schreibt, will die naechste
+           Stelle sehen und nicht erst einen Knopf suchen. Nur nach einem
+           echten Strich (ein Zeichenwerkzeug fuehrt) und nur, wenn der
+           Zeiger im rechten Achtel losgelassen wird. */
+        knoten.addEventListener('pointerup', lupeRandWeiter);
         requestAnimationFrame(lupeLegen);
       } else {
+        lupeKnoten?.removeEventListener('pointerup', lupeRandWeiter);
         lupeBeobachter?.disconnect(); lupeBeobachter = null;
         if (lupeKnoten && lupeHeimat) {
           lupeKnoten.style.removeProperty('width');
@@ -2196,6 +2227,15 @@ const DocumentMode = (() => {
         k.textContent = an ? '🔍 Zoom-Fenster aus' : '🔍 Zoom-Fenster an';
       });
     };
+
+    function lupeRandWeiter(event: PointerEvent): void {
+      if (!state.lupe || !lupeFenster) return;
+      const werk = lupeKnoten?.querySelector<HTMLElement>('svg.blatt-marken')?.dataset.tool || '';
+      if (!['stift', 'marker', 'line', 'arrow'].includes(werk)) return;
+      const r = lupeFenster.getBoundingClientRect();
+      if (event.clientX < r.right - r.width / 8) return;
+      lupeWeiter();
+    }
 
     function lupeTipp(event: PointerEvent): void {
       if (!state.lupe || !lupeAbbild) return;

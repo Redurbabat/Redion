@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-451 Entscheidungen, E1 bis E471 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+452 Entscheidungen, E1 bis E472 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -515,6 +515,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E469** — Import und Export wie GoodNotes, fünfter Bogen: Bilder als Seiten, PDF an einer Stelle, Seite als Bild, Zoom-Fenster
 * **E470** — Das Zoom-Fenster ist dieselbe Fläche: gross schreiben, ganze Seite sehen
 * **E471** — Die Rechte im Dokument galten nicht: eine Kennung statt eines Objekts (L102 zum zweiten Mal)
+* **E472** — Die kleinen GoodNotes-Reste: Dreieck erkennen, Bild aus der Ablage, mehrere PDFs, Rand-Vorschub
 
 ---
 
@@ -37384,3 +37385,67 @@ Objekt, in ganz `src/`), §2 die Wirkung (nur lesen sperrt wirklich, auch
 gegen einen erzwungenen Tipp), §3 mit vollem Recht geht alles wieder.
 Gegenprobe: eine Stelle zurück auf das Objekt — der Wächter nennt die
 Zeile, und die Wirkung fällt.
+
+---
+
+E472 — Die kleinen GoodNotes-Reste: Dreieck erkennen, Bild aus der Ablage, mehrere PDFs, Rand-Vorschub
+--------------------------------------------------------------------------
+
+Siebter Bogen aus Redurs Auftrag vom 7. September (E465). Vier Reste aus
+`LUECKEN.md` L133 — jeder klein, jeder täglich im Weg.
+
+  1. DAS DREIECK WIRD ERKANNT. Seit E465 gibt es die Dreieck-Marke, aber
+     `InkShapes.recognize` kannte nur Linie, Rechteck und Ellipse: wer ein
+     Dreieck zog und hielt, behielt einen Strich. Die Ecken werden so
+     gesucht, wie man es von Hand täte — der Punkt am weitesten vom Anfang
+     (B), dann der Punkt am weitesten von der Strecke A–B (C). Bei einem
+     Dreieck sind das seine Ecken; bei allem anderen liegen die übrigen
+     Punkte nicht auf den drei Kanten (82 % Schwelle) oder die Fläche
+     verrät ein Rechteck (ein Dreieck deckt höchstens 62 % seines Kastens).
+     Geprüft wird VOR der Ellipse: ein Dreieck hält seinen Abstand zur
+     Mitte nicht und ginge sonst durch, sobald jene Schwelle je weicher
+     wird.
+
+     NUR AUFRECHTE DREIECKE. Redions Marke ist gleichschenklig mit der
+     Spitze oben in der Mitte — sie kann gar keine andere Lage
+     beschreiben. Ein auf den Kopf gezogenes Dreieck bekäme also eine
+     Spitze, die es nicht gezogen hat; es bleibt darum ein Strich, und das
+     steht in L133.
+
+  2. EIN BILD AUS DER ZWISCHENABLAGE WIRD EINE SEITE. Strg V im Studio,
+     wenn wirklich ein Bild in der Ablage liegt (`clipboardData.files`),
+     mit Bearbeitungsrechten und ausserhalb von Eingabefeldern — Text
+     geht weiter dorthin, wo der Fokus steht. Die Seite entsteht hinter
+     der, die man ansieht (dieselbe Stelle wie „Bild als Seite", E469).
+
+  3. MEHRERE PDFs AUF EINMAL. Der Wähler nimmt jetzt mehrere Dateien; wer
+     ein Semester einliest, hat selten eine. Gefragt wird nur bei der
+     ERSTEN nach der Anordnung, die übrigen folgen ihr — zehn gleiche
+     Fragen sind keine Frage mehr, sondern eine Hürde. Mit `anStelle`
+     (E469) wird ohnehin nicht gefragt.
+
+  4. DER STREIFEN RÜCKT AM RAND MIT. Wer im Zoom-Fenster (E470) bis an den
+     rechten Rand schreibt, will die nächste Stelle sehen und nicht erst
+     einen Knopf suchen — wie in GoodNotes. Der Vorschub greift nur nach
+     einem echten Strich (ein Zeichenwerkzeug führt) und nur, wenn der
+     Zeiger im rechten Achtel losgelassen wird; mit der Hand oder mitten
+     im Streifen passiert nichts.
+
+WARUM KEIN BILD (§55.3). Drei der vier Punkte sind Abläufe ohne eigenes
+Bild (Ablage, Dateiwähler, Vorschub), und der vierte ist Geometrie: dass
+aus einem gezogenen Dreieck ein Dreieck wird, ist eine Messung, keine
+Ansicht — `test445 §1` misst sie an vier Zügen, und die Dreieck-Marke
+selbst steht seit E465 auf `bilder/zeichnen-rechner-hell.png`.
+
+DAZU EIN FUND AUS DER PRÜFUNG (dieselbe adversariale Runde wie E471):
+`seiteDuplizieren` legte die Kopie des Seitenbilds immer als
+`abgeleitet: true` ab. Für eine PDF-Seite stimmt das — ihr Bild kommt aus
+der Quelle zurück und darf aus der Sicherung bleiben. Eine BILD-Seite
+(E469) hat keine Quelle: ihr Bild IST die Nutzerdatei, und die Kopie wäre
+nach dem Einspielen einer `.redion` leer gewesen (§11, §14). Jetzt hängt
+das Kennzeichen an der Herkunft, und `test442 §1` hält es fest.
+
+WÄCHTER. `test445` (neu, 19 Punkte): §1 vier Züge gegen die Erkennung und
+einer auf dem Blatt, §2 Bild und Text in der Ablage, §3 zwei PDFs mit
+einer Frage, §4 drei Fälle am Rand. Gegenproben: die Dreieckprüfung
+übersprungen (§1 rot) und der Rand-Vorschub abgeklemmt (§4 rot).

@@ -18743,7 +18743,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 516, inhalt: '1599acf551903e8b', gebaut: '2026-09-07T11:05:12.112Z' };
+const Stand = { fassung: 520, inhalt: 'c09e30da3148a96b', gebaut: '2026-09-07T11:11:35.540Z' };
 window.Stand = Stand;
 
 </script>
@@ -20173,8 +20173,8 @@ window.InkGeometry = InkGeometry;
  * ----------------------------------------------------------------------------
  * Wer in GoodNotes einen Kreis zieht und am Ende kurz haelt, bekommt einen
  * Kreis. Diese Datei beantwortet nur die geometrische Frage: Ist dieser
- * Linienzug eine LINIE, eine ELLIPSE (ein Kreis) oder ein RECHTECK — und wenn
- * ja, mit welchen zwei Punkten? Ob gehalten wurde, ob der Schalter an ist,
+ * Linienzug eine LINIE, eine ELLIPSE (ein Kreis), ein RECHTECK oder ein
+ * DREIECK (E471) — und wenn ja, mit welchen zwei Punkten? Ob gehalten wurde, ob der Schalter an ist,
  * welches Werkzeug fuehrte: das entscheidet die Zeichenschicht. Diese Datei
  * kennt weder Store noch DOM noch Zeit (E125, wie geometry.ts).
  *
@@ -20259,6 +20259,54 @@ const InkShapes = (() => {
         const eckenBesucht = ecken.every(e => input.some(p => Math.hypot(p[0] - e[0], p[1] - e[1]) <= 0.08 * diag));
         if (anKante >= 0.85 * n && eckenBesucht)
             return { art: 'rectangle', pts: [[r2(x0), r2(y0)], [r2(x1), r2(y1)]] };
+        /* ══ DREIECK (E471) ═══════════════════════════════════════════════════
+           Vor der Ellipse, weil ein Dreieck seinen Abstand zur Mitte NICHT
+           haelt und sonst als Ellipse durchginge, wenn die Schwelle je
+           weicher wird. Drei Ecken werden so gesucht, wie man es von Hand
+           taete: der Punkt am weitesten vom Anfang (B), dann der Punkt am
+           weitesten von der Strecke A–B (C). Bei einem Dreieck sind das seine
+           Ecken; bei allem anderen liegen die uebrigen Punkte nicht auf den
+           drei Kanten.
+    
+           NUR AUFRECHTE DREIECKE. Redions `triangle`-Marke ist gleichschenklig
+           mit der Spitze oben in der Mitte (E465) — sie kann gar keine andere
+           Lage beschreiben. Ein auf den Kopf gezogenes Dreieck bekaeme also
+           eine Spitze, die es nicht gezogen hat; darum bleibt es ein Strich.
+           Was fehlt, steht in L133. */
+        const eckA = first;
+        let eckB = first, weit = 0;
+        for (const p of input) {
+            const d = Math.hypot(p[0] - eckA[0], p[1] - eckA[1]);
+            if (d > weit) {
+                weit = d;
+                eckB = p;
+            }
+        }
+        let eckC = first, weitC = 0;
+        for (const p of input) {
+            const d = distanceToSegment(p, eckA, eckB);
+            if (d > weitC) {
+                weitC = d;
+                eckC = p;
+            }
+        }
+        if (weitC > 0.12 * diag) {
+            const kanten = [[eckA, eckB], [eckB, eckC], [eckC, eckA]];
+            const nahKante = 0.09 * diag;
+            const anDreieck = input.filter(p => Math.min(...kanten.map(k => distanceToSegment(p, k[0], k[1]))) <= nahKante).length;
+            /* Die Flaeche sagt, dass es KEIN Rechteck ist: ein Dreieck deckt
+               hoechstens die halbe Kastenflaeche, ein Rechteck fast die ganze. */
+            const flaeche = Math.abs((eckB[0] - eckA[0]) * (eckC[1] - eckA[1])
+                - (eckC[0] - eckA[0]) * (eckB[1] - eckA[1])) / 2;
+            const kasten = Math.max(1, w * h);
+            const drei = [eckA, eckB, eckC].sort((p, q) => p[1] - q[1]);
+            const spitze = drei[0], unten1 = drei[1], unten2 = drei[2];
+            const aufrecht = spitze[1] <= y0 + 0.25 * h
+                && unten1[1] >= y0 + 0.7 * h && unten2[1] >= y0 + 0.7 * h
+                && Math.abs(spitze[0] - (x0 + w / 2)) <= 0.28 * w;
+            if (anDreieck >= 0.82 * n && flaeche <= 0.62 * kasten && aufrecht)
+                return { art: 'triangle', pts: [[r2(x0), r2(y0)], [r2(x1), r2(y1)]] };
+        }
         /* ELLIPSE: die Punkte halten ihren Abstand zur Mitte. */
         const cx = x0 + w / 2, cy = y0 + h / 2;
         const rx = Math.max(1, w / 2), ry = Math.max(1, h / 2);
@@ -56303,6 +56351,11 @@ const PdfEinlesen = (() => {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'application/pdf,.pdf';
+        /* MEHRERE AUF EINMAL (E471): wer ein Semester einliest, hat selten eine
+           Datei. Gefragt wird nur bei der ERSTEN nach der Anordnung; die
+           uebrigen folgen ihr, sonst staende der Mensch vor zehn gleichen
+           Fragen. Mit `anStelle` wird ohnehin nicht gefragt. */
+        input.multiple = true;
         /* Der Wähler hängt im Dokument. In Chromium öffnet er sich auch ohne
            das — nachgemessen mit der Gegenprobe zu test247 §13. Es bleibt
            trotzdem stehen, weil andere Browser hier bekanntermassen
@@ -56317,14 +56370,20 @@ const PdfEinlesen = (() => {
                 if (entschieden)
                     return;
                 entschieden = true;
-                const datei = input.files?.[0];
+                const dateien = input.files ? Array.from(input.files) : [];
                 input.remove();
-                if (!datei) {
+                if (!dateien.length) {
                     fertig(null);
                     return;
                 }
                 try {
-                    fertig(await alsSeiten(datei, ziel, vorgabe));
+                    let ergebnis = await alsSeiten(dateien[0], ziel, vorgabe);
+                    for (let k = 1; k < dateien.length; k++) {
+                        const wie = vorgabe && vorgabe.anordnung ? vorgabe.anordnung
+                            : String(Store.getMeta('pdfAnordnung', 'untereinander'));
+                        ergebnis = await alsSeiten(dateien[k], ziel, { ...(vorgabe || {}), anordnung: wie, ueberGrenze: (vorgabe && vorgabe.ueberGrenze) || 'alle' });
+                    }
+                    fertig(ergebnis);
                 }
                 catch (e) {
                     UI.toast('Die PDF liess sich nicht einlesen: ' +
@@ -66252,7 +66311,13 @@ const DocumentMode = (() => {
                         const [blob, satz] = await Promise.all([Dateien.alsBlob(alt), Store.dateiHolen(alt)]);
                         if (!blob)
                             return;
-                        const kopie = await Dateien.ablegen(new File([blob], String(satz?.name || 'seite.webp'), { type: blob.type || 'image/webp' }), { blockId: neu.id, abgeleitet: true });
+                        /* ABGELEITET IST NUR, WAS SICH NEU RECHNEN LAESST (E471, Fund der
+                           Prüfung). Das Seitenbild einer PDF-Seite kommt aus der Quelle
+                           zurueck und darf darum aus der Sicherung bleiben. Eine
+                           BILD-Seite (E469) hat keine Quelle: ihr Bild IST die
+                           Nutzerdatei, und mit `abgeleitet: true` waere die Kopie nach
+                           dem Einspielen einer `.redion` leer gewesen (§11, §14). */
+                        const kopie = await Dateien.ablegen(new File([blob], String(satz?.name || 'seite.webp'), { type: blob.type || 'image/webp' }), { blockId: neu.id, abgeleitet: block.herkunft !== 'bild' });
                         Store.updateBlock(neu.id, { bildDateiId: kopie.id });
                     }
                     catch (e) {
@@ -66352,6 +66417,28 @@ const DocumentMode = (() => {
                 activateVisibleThumbnails(thumbnails);
             passen();
         };
+        /* EIN BILD AUS DER ZWISCHENABLAGE WIRD EINE SEITE (E471). Wer einen
+           Ausschnitt kopiert oder ein Foto in der Ablage hat, drueckt Strg V —
+           und muss es nicht erst als Datei speichern. Nur im Dokument, nur
+           wenn wirklich ein Bild darin liegt, und nur mit Bearbeitungsrechten;
+           Text in der Ablage geht weiter dorthin, wo der Fokus steht. */
+        workspace.addEventListener('paste', (event) => {
+            const ziel = event.target;
+            if (ziel && (ziel.closest('input, textarea, [contenteditable="true"]')))
+                return;
+            const dateien = Array.from(event.clipboardData?.files || []).filter(d => /^image\//i.test(d.type));
+            if (!dateien.length)
+                return;
+            event.preventDefault();
+            if (!darfSeiten()) {
+                UI.toast('Zum Einfügen brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.');
+                return;
+            }
+            const stelle = stelleVon(jetzt());
+            void PdfEinlesen.bilderAlsSeiten(dateien, page.id, stelle ? { elternId: stelle.eltern.id, index: stelle.index + 1 } : undefined)
+                .then((ids) => { if (ids.length)
+                neuMit(ids[ids.length - 1] ?? null); });
+        });
         workspace.addEventListener('keydown', event => {
             /* Strg F sucht IM DOKUMENT (E468), nicht auf der Seite (Strg F der
                Schale, `seitenSuche`): hier ist die Seite ein Bild. */
@@ -66851,9 +66938,16 @@ const DocumentMode = (() => {
                     lupeBeobachter = new MutationObserver(() => lupeAbbildFrisch());
                     lupeBeobachter.observe(flaeche, { childList: true, subtree: true, attributes: true });
                 }
+                /* AM RAND GEHT ES VON SELBST WEITER (E471), wie in GoodNotes: wer
+                   bis an den rechten Rand des Streifens schreibt, will die naechste
+                   Stelle sehen und nicht erst einen Knopf suchen. Nur nach einem
+                   echten Strich (ein Zeichenwerkzeug fuehrt) und nur, wenn der
+                   Zeiger im rechten Achtel losgelassen wird. */
+                knoten.addEventListener('pointerup', lupeRandWeiter);
                 requestAnimationFrame(lupeLegen);
             }
             else {
+                lupeKnoten?.removeEventListener('pointerup', lupeRandWeiter);
                 lupeBeobachter?.disconnect();
                 lupeBeobachter = null;
                 if (lupeKnoten && lupeHeimat) {
@@ -66920,6 +67014,17 @@ const DocumentMode = (() => {
                 k.textContent = an ? '🔍 Zoom-Fenster aus' : '🔍 Zoom-Fenster an';
             });
         };
+        function lupeRandWeiter(event) {
+            if (!state.lupe || !lupeFenster)
+                return;
+            const werk = lupeKnoten?.querySelector('svg.blatt-marken')?.dataset.tool || '';
+            if (!['stift', 'marker', 'line', 'arrow'].includes(werk))
+                return;
+            const r = lupeFenster.getBoundingClientRect();
+            if (event.clientX < r.right - r.width / 8)
+                return;
+            lupeWeiter();
+        }
         function lupeTipp(event) {
             if (!state.lupe || !lupeAbbild)
                 return;

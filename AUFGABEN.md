@@ -242,6 +242,9 @@ Gegenprobe, Bild und Entscheidung:
     zieht in einen vergrösserten Streifen um, in der Bühne bleibt ein
     stilles Abbild mit dem Rahmen; eine Zeichenfläche, kein Spiegel.
     **Steht.**
+  · **G7 — Die kleinen Reste** (E472, test445): Dreieck erkennen, Bild aus
+    der Zwischenablage, mehrere PDFs auf einmal, Rand-Vorschub im
+    Zoom-Fenster. **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

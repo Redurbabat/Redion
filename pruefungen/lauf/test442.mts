@@ -140,6 +140,19 @@ const seiteId = await s.evaluate(async () => {
     return { img: !!img && img.src.startsWith('blob:'), quer: !!r && r.width > r.height * 1.3, mini: document.querySelector('.document-thumbnails [data-document-index="1"] .document-thumbnail-label')?.textContent };
   });
   p('Die Bildseite zeigt ihr Bild und steht quer; die Miniatur heisst „Bild · quer.png"', bild.img && bild.quer && bild.mini === 'Bild · quer.png', JSON.stringify(bild));
+  /* DIE KOPIE EINER BILDSEITE BLEIBT NUTZERDATEI (E471). Eine PDF-Seite darf
+     ihr Bild aus der Quelle zurückholen, eine Bildseite hat keine Quelle —
+     mit `abgeleitet: true` wäre die Kopie nach dem Einspielen leer (§11). */
+  const kopie = await s.evaluate(async () => {
+    const stelle = document.querySelector<HTMLElement>('.document-inspector [data-document-action="page-duplicate"]');
+    stelle?.click();
+    await new Promise(r => setTimeout(r, 1200));
+    const b = DocumentMode.documentsIn(Store.getBlock(App.aktuelleSeite())).find((x: any, i: number) => x.herkunft === 'bild' && i > 1);
+    const satz = b?.bildDateiId ? await Store.dateiHolen(b.bildDateiId) : null;
+    return { da: !!b, abgeleitet: satz?.abgeleitet, eigen: !!satz && satz.blockId === b.id };
+  });
+  p('Eine verdoppelte Bildseite behält ihr Bild als Nutzerdatei, nicht als abgeleitetes',
+    kopie.da && kopie.abgeleitet === false && kopie.eigen, JSON.stringify(kopie));
 }
 
 /* ═══ §2 PDF an einer Stelle ═══════════════════════════════════════════════ */
