@@ -6399,7 +6399,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G5)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G6)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6465,13 +6465,11 @@ Offen bleibt:
 Import und Export (nach G5, E469): Bilder als Seiten, PDF an einer Stelle,
 Seite als Bild, Zoom-Fenster stehen. Offen bleibt:
 
-  · **Das Zoom-Fenster ist Zoom plus Übersicht**, keine zweite
-    Schreibfläche: GoodNotes zeigt unten einen vergrösserten Streifen, in
-    den man schreibt, und oben die ganze Seite live. Hier wird die Seite
-    selbst gross, und die Übersicht führt den Ausschnitt. Eine zweite
-    Fläche auf derselben Zeichenschicht ist ein eigener Bogen (zwei
-    Sichten, eine Wahrheit — heute hält jede Schicht ihre Kopie der
-    Marken).
+  · **Das Zoom-Fenster** ist seit E470 der Streifen, in den man schreibt,
+    mit der ganzen Seite darüber — und mit EINER Zeichenfläche (das Papier
+    zieht um). Was daran noch fehlt: der Streifen rückt nicht von selbst
+    weiter, wenn man an seinem Rand schreibt (in GoodNotes wandert er
+    mit); und „Ausschnitt" und „Erkennen" ruhen, solange er offen ist.
   · **Seite als Bild** lässt die Textblöcke eines Blatts (getippter Text)
     und Bildmarken aus — ein `<img>` im SVG darf die Leinwand nicht
     anfassen. Drucken (E117) hat beides.

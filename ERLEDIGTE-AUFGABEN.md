@@ -3861,3 +3861,58 @@ fehlendes Semikolon machte vier CSS-Regeln ungültig, ohne dass irgendetwas
 gemeckert hätte.
 
 **Prüfung.** `test402`, ohne Browser und ohne Port. Mutation rot gesehen.
+
+## Der PDF-Teil wie GoodNotes — sechs Bögen (E465–E470)
+
+**Auftrag.** Redur am 7. September, mit einem 32-seitigen GoodNotes-Dossier:
+„alles, was GoodNotes machen kann, 1:1 — nur beim PDF-Teil: wie die
+bearbeitet wird, importiert, die Stifte usw.", und „ohne eine Funktion zu
+löschen". Das Dossier wurde gegen den Bestand gelesen (E351–E360,
+E375–E385, E464); daraus wurden sechs Bögen, jeder mit Prüflauf,
+Gegenprobe, Bild und Entscheidung.
+
+**Bau.**
+
+* **G1 · Zeichnen (E465, test438).** Dreieck und rundes Rechteck als
+  Formen, der Bleistift als vierter Stift mit eigener Druckkurve, die
+  freie Strichstärke als Klappe an der gewählten Stufe (der Regler in der
+  Zeile hob die Leiste auf drei Reihen), Buchstabentasten
+  P/2/H/E/S/V/T/A/N/M/R/I.
+* **G2 · Auswahl (E466, test439).** Drehgriff — Linienzüge drehen ihre
+  Punkte, Kästen merken sich `dreh` —, Ausschneiden, nach vorn und hinten,
+  Sperren mit Schloss, Kritzel-Löschen und Kreis-Lasso.
+* **G3 · Seiten (E467, test440).** Das Seitenmenü im Inspector: einfügen
+  mit Papierwahl, duplizieren mit eigenem Seitenbild (eine geteilte Datei
+  wäre mit dem Original gestorben), drehen, schieben, Lesezeichen mit
+  Liste, löschen in den Papierkorb.
+* **G4 · Suche und Verweise (E468, test441).** Die Textschicht der PDF mit
+  Lage aus pdf.js, eine Suchleiste im Studio mit Treffern über den
+  getroffenen Zeichen, die Links der PDF als eigene Schicht, eigene
+  Verweise als Feld an jeder Marke.
+* **G5 · Import und Export (E469, test442).** Bilder als Seiten, PDF an
+  einer Stelle einfügen, Seite als PNG sichern, Zoom-Fenster.
+* **G6 · Das Zoom-Fenster als Schreibfläche (E470, test443).** Das Papier
+  zieht in einen vergrösserten Streifen um, in der Bühne bleibt ein
+  stilles Abbild mit dem Rahmen. EINE Zeichenfläche: zwei Schichten auf
+  demselben Block hielten zwei Kopien der Marken (§51).
+
+**Was dabei nebenbei gefunden wurde.** „Lesen" liess im Studio das
+Werkzeug der Zeichenschicht stehen und machte das ganze Papier `inert` —
+das Abdeckband (E266) ging dort nie auf, und die neuen Verweise hätten es
+auch nicht getan. Jetzt wird nur der Text still, und Lesen heisst Hand.
+Zwei weitere Funde hingen daran: der Klick, mit dem „Lesen" umschaltet,
+klappte die Ansichtsklappe zu, aus der er kam; und die Hand wurde als
+Stift gemerkt, sodass „Annotieren" wieder die Hand brachte.
+
+**Prüfung.** Sechs neue Läufe (test438–test443, zusammen 210 Punkte), je
+zwei Gegenproben rot gesehen, sieben ältere Studio-Läufe angepasst — jeder
+mit geschriebenem Grund. Bilder angesehen: `zeichnen`, `staerke`,
+`auswahl`, `seiten`, `suche`, `lupe`, je am Rechner und am Telefon. Drei
+Fehler fanden nur die Augen: der Regler brach in eine dritte Zeile, die
+Treffer der Suche deckten die ganze Zeile statt des Wortes, und das
+Abbild der Seite war flachgedrückt, weil der Klon sein `style` verlor.
+
+**Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
+Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
+die kleinen Reste (Formerkennung fürs Dreieck, Bild aus der
+Zwischenablage, Farbsets, Menü je Miniatur).

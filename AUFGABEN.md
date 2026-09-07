@@ -238,6 +238,10 @@ Gegenprobe, Bild und Entscheidung:
   · **G5 — Import und Export** (E469, test442): JPG/PNG als Seiten,
     PDF-Seiten an einer Stelle einfügen, eine Seite als Bild sichern, das
     Zoom-Fenster (Seite gross, Übersicht mit Band). **Steht.**
+  · **G6 — Das Zoom-Fenster als Schreibfläche** (E470, test443): das Papier
+    zieht in einen vergrösserten Streifen um, in der Bühne bleibt ein
+    stilles Abbild mit dem Rahmen; eine Zeichenfläche, kein Spiegel.
+    **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

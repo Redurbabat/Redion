@@ -2397,10 +2397,28 @@ ANSICHTEN['lupe'] = {
     await Store.flush();
     App.oeffne(seite.id);
     await new Promise(r => setTimeout(r, 1200));
+    document.querySelector<HTMLElement>('[data-document-action="annotate"]')?.click();
+    await new Promise(r => setTimeout(r, 200));
     document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
     await new Promise(r => setTimeout(r, 300));
     document.querySelector<HTMLElement>('.document-inspector [data-document-action="lupe"]')?.click();
     await new Promise(r => setTimeout(r, 900));
+    /* Ein Strich IM STREIFEN, damit auf dem Bild zu sehen ist, dass dort
+       wirklich geschrieben wird — und dass er oben im Abbild ankommt. */
+    const f = document.querySelector<HTMLElement>('.document-lupe-fenster');
+    const flaeche = f?.querySelector<SVGElement>('svg.blatt-marken');
+    if (f && flaeche) {
+      const r = f.getBoundingClientRect();
+      const ev = (typ: string, x: number, y: number, tasten: number) =>
+        new PointerEvent(typ, { bubbles: true, cancelable: true, clientX: x, clientY: y,
+          pointerId: 12, pointerType: 'mouse', isPrimary: true, button: 0, buttons: tasten, pressure: 0.6 });
+      const y0 = r.top + r.height * 0.55;
+      flaeche.dispatchEvent(ev('pointerdown', r.left + 60, y0, 1));
+      for (let i = 1; i <= 24; i++)
+        flaeche.dispatchEvent(ev('pointermove', r.left + 60 + i * 18, y0 + Math.sin(i / 2.2) * 16, 1));
+      flaeche.dispatchEvent(ev('pointerup', r.left + 60 + 24 * 18, y0, 0));
+      await new Promise(r2 => setTimeout(r2, 600));
+    }
   }
 };
 

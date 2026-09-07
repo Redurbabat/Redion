@@ -742,6 +742,9 @@ const DocumentMode = (() => {
         /* Die PDF-Quellen der letzten Suche loslassen (E468): ein neuer Aufbau
            oeffnet sie bei Bedarf wieder. */
         griffeSchliessen();
+        /* Das Zoom-Fenster ist Ansicht, kein Merker (E469) — und sein Papier
+           haengt an DIESEM Aufbau. Ein neuer beginnt ohne (E470). */
+        state.lupe = false;
         const workspace = document.createElement('section');
         workspace.className = 'document-workspace document-studio';
         workspace.dataset.pageId = page.id;
@@ -1321,7 +1324,17 @@ const DocumentMode = (() => {
       
                Gemessen auf 1440 px war die Seite mit der Hoehenrechnung 432 px
                breit; die Mitte hatte 1360. Ein Skript liest sich so nicht. */
-            const breit = Math.round(Math.min(raum - 36, 980) * (state.zoom / 100));
+            let breit = Math.round(Math.min(raum - 36, 980) * (state.zoom / 100));
+            /* IM ZOOM-FENSTER GIBT DIE HOEHE DAS MASS (E470). Oben soll die GANZE
+               Seite stehen — sonst rollt man oben und schreibt unten, und der
+               Rahmen zeigt auf etwas, das man nicht sieht. Der Streifen unten ist
+               die Vergroesserung; die Buehne darf klein sein. */
+            if (state.lupe) {
+                const platz = center.clientHeight - 24;
+                const masse = SheetSpace.masseVon(documents[state.index] || {});
+                if (platz > 80 && masse.bh > 0)
+                    breit = Math.round(Math.max(120, Math.min(breit, platz * masse.bw / masse.bh)));
+            }
             /* DAS MASS GEHT ANS PAPIER, NICHT AN DIE BUEHNE. Die Zeichenleiste
                gehoert zum Blatt und steht in derselben Huelle; haette die Buehne
                das Passmass, waere die Leiste so schmal wie die Seite — gemessen:
@@ -1344,7 +1357,7 @@ const DocumentMode = (() => {
             platzhalterSetzen(Math.max(120, breit));
             verweiseLegen();
             if (state.lupe)
-                requestAnimationFrame(lupeBandZeichnen);
+                requestAnimationFrame(lupeLegen);
         };
         /* ══ E399 · DER PLATZHALTER WAR 283 PX HOCH STATT 1922 ═══════════════════
            E299 schrieb an die Stelle oben: „Der Platzhalter in der Hoehe, die die
@@ -1503,10 +1516,7 @@ const DocumentMode = (() => {
             if (rollWartet)
                 return;
             rollWartet = true;
-            requestAnimationFrame(() => { rollWartet = false; nachziehen(); if (state.lupe) {
-                lupeBlattSetzen();
-                lupeBandZeichnen();
-            } });
+            requestAnimationFrame(() => { rollWartet = false; nachziehen(); });
         }, { passive: true });
         requestAnimationFrame(() => {
             hoeheSetzen();
@@ -1556,6 +1566,15 @@ const DocumentMode = (() => {
                 .forEach(el => el.classList.remove('is-selected'));
             thumbnails.querySelector('[data-document-index="' + nr + '"]')
                 ?.classList.add('is-selected');
+            /* Der Streifen des Zoom-Fensters folgt der Seite (E470): erst das
+               alte Papier zurueck, dann das neue holen. */
+            if (state.lupe && lupeKnoten && documents[nr] && lupeKnoten !== lupePapierVon(staende[nr])) {
+                lupeUmziehen(false);
+                lupeX = 0;
+                lupeY = 0;
+                lupeUmziehen(true);
+                requestAnimationFrame(lupeLegen);
+            }
             /* AUCH NACH EINEM SPRUNG (E467): der Inspector traegt jetzt das
                Seitenmenue („Seite 2 von 5", Lesezeichen gedrueckt oder nicht),
                und das Nachziehen schweigt nach einem Sprung, bis die Rolle
@@ -2045,6 +2064,10 @@ const DocumentMode = (() => {
                 lupeRuecken(1, 0);
                 return;
             }
+            if (action === 'lupe-weiter') {
+                lupeWeiter();
+                return;
+            }
             if (action === 'page-export-image') {
                 const block = jetzt();
                 void seiteAlsBild(block).then(blob => {
@@ -2183,6 +2206,10 @@ const DocumentMode = (() => {
                 toggle(page, false);
             if (action === 'source-actions')
                 openSourceActions(page, jetzt());
+            if ((action === 'select-region' || action === 'recognize') && state.lupe) {
+                UI.toast('Schliess zuerst das Zoom-Fenster — der Ausschnitt gilt der ganzen Seite.');
+                return;
+            }
             if (action === 'select-region' || action === 'recognize') {
                 /* AM STAND DER SEITE, DIE MAN ANSIEHT (E299). Vorher gab es genau
                    eine Bühne; in der Rolle ist es die, auf der der Blick steht. */
@@ -2229,129 +2256,208 @@ const DocumentMode = (() => {
             zoomLabel.textContent = neu + ' %';
             passen();
         };
-        /* ══ DAS ZOOM-FENSTER (E469) ═══════════════════════════════════════════
-           Die Seite selbst wird gross (250 %), damit man klein schreiben kann,
-           und unten steht die UEBERSICHT: die Seite im Kleinen mit dem Band,
-           das gerade im Bild ist. Das Band laesst sich ziehen, vier Pfeile
-           ruecken es. EINE Zeichenschicht, kein Spiegel: zwei Schichten auf
-           demselben Block hielten zwei Kopien der Marken und ueberschrieben
-           einander (marken.ts, `marks`) — das waere Datenverlust (§51). */
+        /* ══ DAS ZOOM-FENSTER (E469, umgebaut E470) ═════════════════════════════
+           GoodNotes' Lupe: unten ein Streifen, in den man in Handschriftgroesse
+           schreibt, oben die ganze Seite mit dem Rahmen, der zeigt, wo man
+           gerade ist.
+    
+           UND ES IST DIESELBE FLAECHE, nicht zwei. Das echte Papier der aktiven
+           Seite WANDERT in den Streifen (ein DOM-Umzug) und wird dort per
+           `transform` vergroessert; in der Buehne bleibt ein stilles ABBILD —
+           ein Klon ohne Zeigerwege, der bei jeder Aenderung neu entsteht.
+           Zwei Zeichenschichten auf demselben Block hielten zwei Kopien der
+           Marken (marken.ts, `marks`) und ueberschrieben einander: das waere
+           Datenverlust (§51), und darum gibt es sie nicht.
+    
+           Dass der Zeiger im vergroesserten Streifen trotzdem an der richtigen
+           Stelle des Blatts ankommt, rechnet `SheetSpace.zuBlatt` ueber
+           `getScreenCTM` — die kennt jede CSS-Verwandlung der Vorfahren.
+           Dieselbe Grundlage traegt schon die gedrehte Seite (E467). */
+        const LUPE_FAKTOR = 2.6;
         let lupe = null;
-        let lupeBand = null;
-        let lupeBild = null;
-        let lupeSeite = -1;
-        const lupeBlattSetzen = () => {
-            if (!lupe || !lupeBild || lupeSeite === state.index)
+        let lupeFenster = null;
+        let lupeKnoten = null;
+        let lupeHeimat = null;
+        let lupeAbbild = null;
+        let lupeRahmen = null;
+        let lupeBeobachter = null;
+        let lupeFrischWartet = false;
+        let lupeX = 0, lupeY = 0;
+        /** Das Papier einer Buehne: das Kind der Huelle, das nicht die Leiste ist.
+            Bei Randstreifen ist es der Flur, bei gedrehten Seiten die Drehhuelle. */
+        const lupePapierVon = (stand) => stand?.querySelector('.blatt-huelle > :not(.blatt-reihe):not(.blatt-abbild)') || null;
+        /** Das stille Abbild in der Buehne auf den neuesten Stand bringen. */
+        const lupeAbbildFrisch = () => {
+            if (lupeFrischWartet || !lupeAbbild || !lupeKnoten)
                 return;
-            lupeSeite = state.index;
-            const block = documents[state.index];
-            if (!block)
-                return;
-            lupeBild.replaceChildren();
-            const { bw, bh } = SheetSpace.masseVon(block);
-            lupeBild.style.setProperty('aspect-ratio', bw + ' / ' + bh);
-            /* DIE UEBERSICHT IST EIN ABBILD DER SEITE MIT MARKEN (E469 Nachtrag):
-               `seiteAlsBild` zeichnet Papier, Seitenbild und Marken — das erste
-               Bild zeigte fuer ein leeres Blatt nur Weiss, und wer klein
-               schreibt, will sehen, WO auf der Seite er ist. Bis das Abbild da
-               ist, steht das rohe Seitenbild (wenn es eins gibt). Neu gezeichnet
-               wird beim Seitenwechsel — nicht bei jedem Strich, das kostete je
-               Strich eine Leinwand von 1191 × 1684. */
-            const img = document.createElement('img');
-            img.alt = '';
-            if (block.bildDateiId && typeof Dateien !== 'undefined')
-                void Dateien.adresse(String(block.bildDateiId)).then((u) => { if (u && lupeSeite === state.index && !img.dataset.abbild)
-                    img.src = u; });
-            lupeBild.appendChild(img);
-            const meine = state.index;
-            void seiteAlsBild(block).then(blob => {
-                if (!blob || lupeSeite !== meine || !img.isConnected)
+            lupeFrischWartet = true;
+            requestAnimationFrame(() => {
+                lupeFrischWartet = false;
+                if (!lupeAbbild || !lupeKnoten)
                     return;
-                const url = URL.createObjectURL(blob);
-                img.dataset.abbild = '1';
-                img.addEventListener('load', () => URL.revokeObjectURL(url), { once: true });
-                img.src = url;
+                const klon = lupeKnoten.cloneNode(true);
+                /* DAS `style` BLEIBT (auf dem Bild gefunden, §55): darin stehen das
+                   Seitenverhaeltnis des Papiers und die Masse seiner Linien. Ein
+                   `removeAttribute('style')` machte aus der A4-Seite oben einen
+                   flachen Streifen mit gequetschter Schrift. Nur die zwei Werte,
+                   die dem STREIFEN gehoeren, werden zurueckgenommen. */
+                klon.style.removeProperty('transform');
+                klon.style.width = '100%';
+                klon.classList.add('ist-abbild');
+                klon.setAttribute('aria-hidden', 'true');
+                lupeAbbild.replaceChildren(klon);
+                if (lupeRahmen)
+                    lupeAbbild.appendChild(lupeRahmen);
+                /* Die Treffer der Suche haengen im Papier und sind mit ihm gewandert;
+                   im Abbild werden sie mitgeklont — der Rahmen kommt darueber. */
             });
-            if (lupeBand)
-                lupeBild.appendChild(lupeBand);
         };
-        const lupeBandZeichnen = () => {
-            if (!lupe || !lupeBand)
+        /** Streifen und Rahmen an die Stelle legen, die `lupeX`/`lupeY` meinen. */
+        const lupeLegen = () => {
+            if (!lupeFenster || !lupeKnoten)
                 return;
-            const stand = staende[state.index];
-            const papier = stand?.querySelector('.blatt-papier');
-            if (!papier)
-                return;
-            const pr = papier.getBoundingClientRect(), cr = center.getBoundingClientRect();
-            if (pr.width < 1 || pr.height < 1)
-                return;
-            const x = Math.max(0, Math.min(1, (cr.left - pr.left) / pr.width));
-            const y = Math.max(0, Math.min(1, (cr.top - pr.top) / pr.height));
-            const w = Math.max(0.02, Math.min(1 - x, cr.width / pr.width));
-            const h = Math.max(0.02, Math.min(1 - y, cr.height / pr.height));
-            lupeBand.style.left = (x * 100) + '%';
-            lupeBand.style.top = (y * 100) + '%';
-            lupeBand.style.width = (w * 100) + '%';
-            lupeBand.style.height = (h * 100) + '%';
+            const breit = Math.max(120, lupeFenster.clientWidth * LUPE_FAKTOR);
+            lupeKnoten.style.width = breit + 'px';
+            const hoch = lupeKnoten.getBoundingClientRect().height || breit * 1.414;
+            const maxX = Math.max(0, breit - lupeFenster.clientWidth);
+            const maxY = Math.max(0, hoch - lupeFenster.clientHeight);
+            const tx = Math.min(maxX, Math.max(0, lupeX * breit));
+            const ty = Math.min(maxY, Math.max(0, lupeY * hoch));
+            lupeX = breit > 0 ? tx / breit : 0;
+            lupeY = hoch > 0 ? ty / hoch : 0;
+            lupeKnoten.style.transform = 'translate(' + (-tx) + 'px, ' + (-ty) + 'px)';
+            if (lupeRahmen && hoch > 0) {
+                lupeRahmen.style.left = (tx / breit * 100) + '%';
+                lupeRahmen.style.top = (ty / hoch * 100) + '%';
+                lupeRahmen.style.width = Math.min(100, lupeFenster.clientWidth / breit * 100) + '%';
+                lupeRahmen.style.height = Math.min(100, lupeFenster.clientHeight / hoch * 100) + '%';
+            }
         };
-        /** Das Band dorthin, wo der Finger auf der Uebersicht ist. */
+        /** Den Ausschnitt auf einen Punkt des Abbilds stellen (Anteile 0..1). */
         const lupeZielen = (fx, fy) => {
-            const stand = staende[state.index];
-            const papier = stand?.querySelector('.blatt-papier');
-            if (!papier)
+            if (!lupeFenster || !lupeKnoten)
                 return;
-            const pr = papier.getBoundingClientRect(), cr = center.getBoundingClientRect();
-            const oben = pr.top - cr.top + center.scrollTop, links = pr.left - cr.left + center.scrollLeft;
-            center.scrollTop = Math.max(0, oben + fy * pr.height - cr.height / 2);
-            center.scrollLeft = Math.max(0, links + fx * pr.width - cr.width / 2);
-            lupeBandZeichnen();
+            const breit = Math.max(120, lupeFenster.clientWidth * LUPE_FAKTOR);
+            const hoch = lupeKnoten.getBoundingClientRect().height || breit * 1.414;
+            lupeX = fx - (lupeFenster.clientWidth / breit) / 2;
+            lupeY = fy - (lupeFenster.clientHeight / hoch) / 2;
+            lupeLegen();
+        };
+        /** Ruecken: waagrecht ein halbes Fenster, senkrecht 85 Prozent. */
+        const lupeRuecken = (dx, dy) => {
+            if (!lupeFenster || !lupeKnoten)
+                return;
+            const breit = Math.max(120, lupeFenster.clientWidth * LUPE_FAKTOR);
+            const hoch = lupeKnoten.getBoundingClientRect().height || breit * 1.414;
+            lupeX += dx * (lupeFenster.clientWidth / breit) * 0.5;
+            lupeY += dy * (lupeFenster.clientHeight / hoch) * 0.85;
+            lupeLegen();
+        };
+        /** „Weiter": eine Streifenhoehe tiefer, am Zeilenende zurueck nach links.
+            Der Griff, mit dem man in GoodNotes eine Seite vollschreibt. */
+        const lupeWeiter = () => {
+            if (!lupeFenster || !lupeKnoten)
+                return;
+            const breit = Math.max(120, lupeFenster.clientWidth * LUPE_FAKTOR);
+            const hoch = lupeKnoten.getBoundingClientRect().height || breit * 1.414;
+            const sichtbarX = lupeFenster.clientWidth / breit;
+            if (lupeX + sichtbarX * 1.5 < 1) {
+                lupeX += sichtbarX * 0.9;
+                lupeLegen();
+                return;
+            }
+            lupeX = 0;
+            lupeY += (lupeFenster.clientHeight / hoch) * 0.85;
+            lupeLegen();
+        };
+        /** Das Papier der aktiven Seite in den Streifen holen (oder zurueckgeben). */
+        const lupeUmziehen = (hinein) => {
+            if (hinein) {
+                const stand = staende[state.index];
+                const knoten = lupePapierVon(stand);
+                const huelle = knoten?.parentElement;
+                if (!knoten || !huelle || !lupeFenster)
+                    return;
+                lupeKnoten = knoten;
+                lupeHeimat = huelle;
+                lupeAbbild = document.createElement('div');
+                lupeAbbild.className = 'blatt-abbild';
+                lupeAbbild.setAttribute('aria-hidden', 'true');
+                lupeAbbild.inert = true;
+                lupeRahmen = document.createElement('div');
+                lupeRahmen.className = 'document-lupe-rahmen';
+                huelle.insertBefore(lupeAbbild, knoten);
+                lupeFenster.appendChild(knoten);
+                lupeAbbildFrisch();
+                /* Jede Aenderung an der echten Flaeche zieht das Abbild nach — ein
+                   Beobachter statt eines Hakens in `marken.ts`: der Zeichner soll
+                   von der Lupe nichts wissen muessen (§5). */
+                const flaeche = knoten.querySelector('svg.blatt-marken');
+                if (flaeche) {
+                    lupeBeobachter = new MutationObserver(() => lupeAbbildFrisch());
+                    lupeBeobachter.observe(flaeche, { childList: true, subtree: true, attributes: true });
+                }
+                requestAnimationFrame(lupeLegen);
+            }
+            else {
+                lupeBeobachter?.disconnect();
+                lupeBeobachter = null;
+                if (lupeKnoten && lupeHeimat) {
+                    lupeKnoten.style.removeProperty('width');
+                    lupeKnoten.style.removeProperty('transform');
+                    if (lupeAbbild && lupeAbbild.parentElement === lupeHeimat)
+                        lupeHeimat.insertBefore(lupeKnoten, lupeAbbild);
+                    else
+                        lupeHeimat.appendChild(lupeKnoten);
+                }
+                lupeAbbild?.remove();
+                lupeKnoten = null;
+                lupeHeimat = null;
+                lupeAbbild = null;
+                lupeRahmen = null;
+            }
         };
         const lupeSetzen = (an) => {
             if (an === !!state.lupe)
                 return;
             if (an) {
-                state.zoomVorher = state.zoom;
+                if (!canAnnotate) {
+                    UI.toast('Zum Schreiben im Zoom-Fenster brauchst du Bearbeitungsrechte.');
+                    return;
+                }
                 state.lupe = true;
                 workspace.dataset.lupe = 'an';
+                /* Die ganze Seite soll oben stehen — der Streifen ist die
+                   Vergroesserung, nicht der Zoom der Buehne. */
+                state.zoomVorher = state.zoom;
+                zoomSetzen(100);
                 lupe = document.createElement('div');
                 lupe.className = 'document-lupe';
                 lupe.setAttribute('role', 'group');
-                lupe.setAttribute('aria-label', 'Zoom-Fenster: Übersicht der Seite');
-                lupeBild = document.createElement('div');
-                lupeBild.className = 'document-lupe-blatt';
-                lupeBand = document.createElement('div');
-                lupeBand.className = 'document-lupe-band';
-                lupeBand.setAttribute('aria-hidden', 'true');
+                lupe.setAttribute('aria-label', 'Zoom-Fenster: hier gross schreiben');
+                lupeFenster = document.createElement('div');
+                lupeFenster.className = 'document-lupe-fenster';
                 const griffe = document.createElement('div');
                 griffe.className = 'document-lupe-griffe';
-                griffe.append(topButton('lupe-links', '◀', 'Ausschnitt nach links'), topButton('lupe-hoch', '▲', 'Ausschnitt nach oben'), topButton('lupe-runter', '▼', 'Ausschnitt nach unten'), topButton('lupe-rechts', '▶', 'Ausschnitt nach rechts'), topButton('lupe-zu', '✕', 'Zoom-Fenster schließen'));
-                lupe.append(lupeBild, griffe);
-                lupeBild.addEventListener('pointerdown', (event) => {
-                    if (!lupeBild)
-                        return;
-                    const r = lupeBild.getBoundingClientRect();
-                    const ziel = (e) => lupeZielen((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
-                    ziel(event);
-                    const zieh = (e) => ziel(e);
-                    const los = () => { window.removeEventListener('pointermove', zieh); window.removeEventListener('pointerup', los); };
-                    window.addEventListener('pointermove', zieh);
-                    window.addEventListener('pointerup', los);
-                    event.preventDefault();
-                });
+                griffe.append(topButton('lupe-links', '◀', 'Ausschnitt nach links'), topButton('lupe-hoch', '▲', 'Ausschnitt nach oben'), topButton('lupe-runter', '▼', 'Ausschnitt nach unten'), topButton('lupe-rechts', '▶', 'Ausschnitt nach rechts'), topButton('lupe-weiter', '⏎', 'Weiter — ein Streifen weiter, wie eine neue Zeile'), topButton('lupe-zu', '✕', 'Zoom-Fenster schließen'));
+                lupe.append(lupeFenster, griffe);
                 workspace.appendChild(lupe);
-                lupeSeite = -1;
-                lupeBlattSetzen();
-                zoomSetzen(250);
-                requestAnimationFrame(lupeBandZeichnen);
+                lupeX = 0;
+                lupeY = 0;
+                lupeUmziehen(true);
+                /* Ein Tipp ins Abbild stellt den Streifen dorthin — der schnellste
+                   Weg zu der Stelle, an der man schreiben will. */
+                center.addEventListener('pointerdown', lupeTipp, true);
+                requestAnimationFrame(() => { lupeLegen(); passen(); });
             }
             else {
                 state.lupe = false;
                 workspace.dataset.lupe = 'aus';
+                center.removeEventListener('pointerdown', lupeTipp, true);
+                lupeUmziehen(false);
                 lupe?.remove();
                 lupe = null;
-                lupeBand = null;
-                lupeBild = null;
-                lupeSeite = -1;
+                lupeFenster = null;
                 zoomSetzen(state.zoomVorher || 100);
             }
             inspector.querySelectorAll('.document-lupe-knopf').forEach(k => {
@@ -2360,11 +2466,19 @@ const DocumentMode = (() => {
                 k.textContent = an ? '🔍 Zoom-Fenster aus' : '🔍 Zoom-Fenster an';
             });
         };
-        const lupeRuecken = (dx, dy) => {
-            center.scrollTop = Math.max(0, center.scrollTop + dy * center.clientHeight * 0.85);
-            center.scrollLeft = Math.max(0, center.scrollLeft + dx * center.clientWidth * 0.5);
-            lupeBandZeichnen();
-        };
+        function lupeTipp(event) {
+            if (!state.lupe || !lupeAbbild)
+                return;
+            const ziel = event.target;
+            if (!ziel || !lupeAbbild.contains(ziel))
+                return;
+            const r = lupeAbbild.getBoundingClientRect();
+            if (r.width < 1 || r.height < 1)
+                return;
+            lupeZielen((event.clientX - r.left) / r.width, (event.clientY - r.top) / r.height);
+            event.preventDefault();
+            event.stopPropagation();
+        }
         center.addEventListener('wheel', (event) => {
             if (!event.ctrlKey && !event.metaKey)
                 return;

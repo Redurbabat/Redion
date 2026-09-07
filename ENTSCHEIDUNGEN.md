@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-449 Entscheidungen, E1 bis E469 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+450 Entscheidungen, E1 bis E470 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -513,6 +513,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E467** — Seiten wie GoodNotes, dritter Bogen: einfügen, duplizieren, drehen, schieben, Lesezeichen, löschen
 * **E468** — Suche und Verweise im Dokument, vierter Bogen: Textschicht mit Lage, Treffer, PDF-Verweise, eigene Verweise
 * **E469** — Import und Export wie GoodNotes, fünfter Bogen: Bilder als Seiten, PDF an einer Stelle, Seite als Bild, Zoom-Fenster
+* **E470** — Das Zoom-Fenster ist dieselbe Fläche: gross schreiben, ganze Seite sehen
 
 ---
 
@@ -37231,3 +37232,81 @@ Schalter „Zoom-Fenster aus" gedrückt), `seiten-rechner-hell`.
 DATEIEN. `src/bereiche/pdf/einlesen.ts`, `src/bereiche/pdf/document-mode.ts`,
 `quell/schale/stil/bausteine.css`, `bilder.mts`,
 `pruefungen/lauf/test442.mts` (neu), `test440.mts`.
+
+---
+
+E470 — Das Zoom-Fenster ist dieselbe Fläche: gross schreiben, ganze Seite sehen
+--------------------------------------------------------------------------
+
+Sechster Bogen aus Redurs Auftrag vom 7. September (E465). E469 hatte das
+Zoom-Fenster als „Seite gross (250 %) plus kleine Übersicht" gebaut und in
+L133 ehrlich hingeschrieben, was daran fehlt: GoodNotes hat einen
+STREIFEN, in den man in Handschriftgrösse schreibt, während oben die ganze
+Seite stehen bleibt. Dieser Bogen baut genau das — und zwar ohne die
+zweite Zeichenschicht, an der es in E469 gescheitert war.
+
+DIE FRAGE, AN DER ALLES HING. Zwei Sichten auf dieselbe Seite hiessen bis
+hierher zwei Aufrufe von `Marken.schicht` — und die Schicht KOPIERT
+`block.marken` in ihr eigenes `marks` und schreibt es mit
+`Store.updateBlock` zurück (marken.ts). Zwei Kopien, die einander
+überschreiben, sind kein Anzeigefehler, sondern Datenverlust (§51). Ein
+Spiegel war deshalb nie eine Möglichkeit.
+
+WAS ENTSCHIEDEN WURDE: DAS PAPIER ZIEHT UM. Es gibt weiterhin genau EINE
+Zeichenfläche. Beim Öffnen des Zoom-Fensters wandert das echte Papier der
+aktiven Seite (bei Randstreifen der Flur, bei gedrehten Seiten die
+Drehhülle) per DOM-Umzug in den Streifen und wird dort mit `transform:
+translate(...)` und einer festen Breite vergrössert — 2,6-fach der
+Fensterbreite. In der Bühne bleibt an seiner Stelle ein stilles ABBILD:
+ein `cloneNode(true)` desselben Knotens, `inert`, `aria-hidden`,
+`pointer-events:none`, das ein MutationObserver auf der echten Fläche bei
+jeder Änderung neu erzeugt (rAF-gedrosselt). Darüber liegt der Rahmen, der
+zeigt, welcher Ausschnitt gerade unten steht.
+
+Dass der Zeiger im vergrösserten Streifen an der richtigen Stelle des
+Blatts ankommt, rechnet `SheetSpace.zuBlatt` über `getScreenCTM` — die
+kennt jede CSS-Verwandlung der Vorfahren. Dieselbe Grundlage trägt schon
+die gedrehte Seite (E467); hier zahlt sie sich ein zweites Mal aus.
+
+DIE BEDIENUNG. Vier Pfeile rücken den Ausschnitt (waagrecht ein halbes
+Fenster, senkrecht 85 Prozent), „⏎ Weiter" geht wie eine neue Zeile — erst
+nach rechts in derselben Zeile, am Ende zurück nach links und eine
+Streifenhöhe tiefer —, ein Tipp ins Abbild stellt den Streifen dorthin,
+✕ und Escape schliessen. Beim Seitenwechsel folgt der Streifen der Seite:
+das alte Papier zurück, das neue geholt.
+
+WARUM DER UMZUG UND NICHT EIN ZWEITER ZEICHNER. Ein zweiter Zeichner auf
+demselben Block wäre die zweite Kopie (oben). Ein Zeichner mit zwei
+Sichten wäre ein Umbau von `Marken.schicht` — jede Fläche, jeder Prüflauf,
+jeder Bereich, der eine Fläche baut, hinge daran. Der Umzug fasst nichts
+davon an: `marken.ts` weiss von der Lupe nichts (§5), und was umzieht, ist
+ein DOM-Knoten, kein Datenstand.
+
+WAS DER UMZUG KOSTET, UND WIE ES ABGEFANGEN IST.
+
+  · Ein Neuaufbau des Studios (`render`) würde das Papier neu zeichnen,
+    während das alte im Streifen hängt — zwei Flächen. Darum beginnt jeder
+    Aufbau mit `state.lupe = false`; das Zoom-Fenster ist Ansicht, kein
+    Merker (schon E469).
+  · Suchen nach `.blatt-papier` in einer Bühne finden bei offenem Streifen
+    das Abbild. Für Masse und Rahmen ist das richtig; für „Ausschnitt" und
+    „Erkennen" wäre es falsch, weil sie in einen Klon zeichneten, den der
+    nächste Strich ersetzt. Beide sagen deshalb bei offenem Streifen einen
+    Satz und tun nichts.
+  · Das Abbild trägt dieselben Klassen wie das Papier. Es ist an
+    `.blatt-abbild` (Elternteil) und `.ist-abbild` erkennbar, und
+    `lupePapierVon` schliesst es ausdrücklich aus.
+
+ALTERNATIVEN. Den Streifen als zweite Schicht (verworfen, §51). Den
+oberen Teil als PNG-Abbild statt als DOM-Klon (verworfen: eine Leinwand
+von 1191 × 1684 je Strich — der Klon kostet nichts und ist immer aktuell).
+Die Bühne stark zoomen und unten eine Mini-Übersicht (das war E469; es
+zeigt die Seite nicht ganz).
+
+WÄCHTER. `test443` (neu): §1 der Umzug (echtes Papier im Streifen, Abbild
+mit Rahmen in der Bühne, GENAU EINE bedienbare Zeichenfläche, 2,6-fach,
+Bühne bei 100 %), §2 Schreiben im Streifen (ein Zug, ein Strich, in
+Blattpunkten an der richtigen Stelle, alte Marke unberührt), §3 das Abbild
+zieht nach und bleibt still, §4 Führen (▼, ⏎, Tipp ins Abbild, Rahmen),
+§5 zurück ohne Reste und ohne verlorene Marke, §6 Seitenwechsel, §7 Rechte,
+§8 Telefon (Streifen da, sechs Griffe, 44 hoch), §9 Quellen.
