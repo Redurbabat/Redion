@@ -654,7 +654,7 @@ const DocumentMode = (() => {
         };
         knoepfe.append(seitenKnopf('page-add', '＋', 'Seite danach', 'Eine leere Seite hinter dieser einfügen — mit dem Papier aus der Auswahl darunter'), seitenKnopf('page-duplicate', '⧉', 'Duplizieren', 'Diese Seite mit allem darauf verdoppeln'), seitenKnopf('page-rotate', '⟳', 'Drehen', 'Diese Seite um 90° im Uhrzeigersinn drehen'), seitenKnopf('page-up', '↑', 'Nach oben', 'Diese Seite eine Stelle nach vorn'), seitenKnopf('page-down', '↓', 'Nach unten', 'Diese Seite eine Stelle nach hinten'), seitenKnopf('page-bookmark', '🔖', 'Lesezeichen', documentBlock.lesezeichen ? 'Lesezeichen entfernen' : 'Diese Seite mit einem Lesezeichen merken', !!documentBlock.lesezeichen), seitenKnopf('page-delete', '🗑', 'Löschen', 'Diese Seite in den Papierkorb legen — von dort kommt sie zurück'), 
         /* E469: Bilder und weitere PDF-Seiten hinter diese Seite; die Seite als Bild sichern. */
-        seitenKnopf('page-add-image', '🖼', 'Bild als Seite', 'Ein Foto, einen Scan oder eine Grafik als neue Seite hinter dieser einfügen'), seitenKnopf('page-add-pdf', '📕', 'PDF hier einfügen', 'Die Seiten einer weiteren PDF hinter dieser Seite einfügen'), seitenKnopf('page-export-image', '⬇', 'Als Bild sichern', 'Diese Seite mit allem darauf als PNG speichern'));
+        seitenKnopf('page-add-image', '🖼', 'Bild als Seite', 'Ein Foto, einen Scan oder eine Grafik als neue Seite hinter dieser einfügen'), seitenKnopf('page-add-camera', '📷', 'Foto aufnehmen', 'Mit der Kamera eine neue Seite hinter dieser aufnehmen — am Rechner ohne Kamera öffnet sich der Dateiwähler'), seitenKnopf('page-add-pdf', '📕', 'PDF hier einfügen', 'Die Seiten einer weiteren PDF hinter dieser Seite einfügen'), seitenKnopf('page-export-image', '⬇', 'Als Bild sichern', 'Diese Seite mit allem darauf als PNG speichern'));
         /* Sichern darf jeder, der lesen darf. */
         const sichernKnopf = knoepfe.querySelector('[data-document-action="page-export-image"]');
         if (sichernKnopf)
@@ -2202,6 +2202,7 @@ const DocumentMode = (() => {
                 kasten.appendChild(k);
             };
             eintrag('page-add', '＋', 'Seite danach');
+            eintrag('page-add-camera', '📷', 'Foto aufnehmen');
             eintrag('page-duplicate', '⧉', 'Duplizieren');
             eintrag('page-rotate', '⟳', 'Drehen');
             eintrag('page-up', '↑', 'Nach oben');
@@ -2699,11 +2700,14 @@ const DocumentMode = (() => {
                     lesezeichenWechseln(zielSeite);
                 if (action === 'page-add')
                     seiteEinfuegen(zielSeite);
-                if (action === 'page-add-image' || action === 'page-add-pdf') {
+                if (action === 'page-add-image' || action === 'page-add-pdf' || action === 'page-add-camera') {
                     const stelle = stelleVon(zielSeite || jetzt());
                     const anStelle = stelle ? { elternId: stelle.eltern.id, index: stelle.index + 1 } : undefined;
-                    if (action === 'page-add-image') {
-                        void PdfEinlesen.bilderWaehlen(page.id, anStelle).then((ids) => { if (ids.length)
+                    if (action === 'page-add-image' || action === 'page-add-camera') {
+                        /* Derselbe Weg, ein anderer Wähler (E482): die Kamera macht
+                           eine Aufnahme, der Wähler nimmt Dateien. */
+                        const holen = action === 'page-add-camera' ? PdfEinlesen.kameraWaehlen : PdfEinlesen.bilderWaehlen;
+                        void holen(page.id, anStelle).then((ids) => { if (ids.length)
                             neuMit(ids[ids.length - 1] ?? null); });
                     }
                     else {

@@ -9,6 +9,7 @@
  * Genau daran hängt §2.
  *
  *   §1 JEDE MINIATUR hat ihren Knopf, 44 px, und er sagt, wozu er gehört.
+ *      (Seit E482 stehen neun Griffe im Menü, mit „Foto aufnehmen".)
  *   §2 DAS MENÜ MEINT SEINE SEITE: gelöscht wird die, an der es hängt —
  *      nicht die, die auf der Bühne steht.
  *   §3 UND ES GEHT WIEDER ZU: Escape, ein Tipp daneben, das Rollen.
@@ -159,7 +160,8 @@ const s = await frisch();
       drin: !!r && r.left >= s.left - 1 && r.right <= s.right + 1,
       knopf: document.querySelector('[data-document-thumb-menue="2"]').getAttribute('aria-expanded') });
   })()`) as string);
-  p('Ein Tipp öffnet das Menü mit acht Griffen', auf.da && auf.eintraege === 8, JSON.stringify(auf));
+  p('Ein Tipp öffnet das Menü mit neun Griffen (seit E482 mit der Kamera)',
+    auf.da && auf.eintraege === 9, JSON.stringify(auf));
   p('… jeder 44 px hoch (§37)', auf.kleinste >= 44, JSON.stringify(auf));
   p('… es steht ganz in der Leiste', auf.drin === true, JSON.stringify(auf));
   gleich('… und der Knopf sagt, dass es offen ist', auf.knopf, 'true');

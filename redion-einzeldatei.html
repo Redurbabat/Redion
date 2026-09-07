@@ -18811,7 +18811,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 574, inhalt: 'f26707c6eb75e12b', gebaut: '2026-09-07T17:09:36.511Z' };
+const Stand = { fassung: 578, inhalt: 'd502e02c4e805c6f', gebaut: '2026-09-07T17:25:54.045Z' };
 window.Stand = Stand;
 
 </script>
@@ -52257,11 +52257,24 @@ const Marken = (() => {
     /* DER RADIERER (E352): drei Arten, wie in GoodNotes — die ganze Marke,
        nur den beruehrten Teil eines Strichs, nur Marker. Die Wahl liegt in
        `zeichnen:radierer` und ueberlebt den Neustart. */
+    /* DIE ARTEN DES RADIERERS.
+       `ganz` und `teil` sagen, WIE VIEL weggeht; die drei danach sagen,
+       WOVON — GoodNotes' „Erase highlighter only", auf Redions Werkzeuge
+       übersetzt (E482, L133). Was `nur` nennt, wird allein radiert.
+  
+       WARUM NICHT AUCH „NUR BLEISTIFT": der Bleistift ist in Redion kein
+       eigenes Werkzeug, sondern ein STIL des Stifts (E375) — er stünde in
+       einer Reihe mit Werkzeugen und meinte etwas anderes als sie. Das
+       steht in L133. */
     const RADIERER = [
-        { id: 'ganz', name: 'Ganz', zeichen: '●', titel: 'Radierer: ganze Marken' },
-        { id: 'teil', name: 'Teil', zeichen: '½', titel: 'Radierer: nur den berührten Teil eines Strichs' },
-        { id: 'marker', name: 'Marker', zeichen: '▰', titel: 'Radierer: nur Marker' }
+        { id: 'ganz', name: 'Ganz', zeichen: '●', titel: 'Radierer: ganze Marken', nur: '' },
+        { id: 'teil', name: 'Teil', zeichen: '½', titel: 'Radierer: nur den berührten Teil eines Strichs', nur: '' },
+        { id: 'stift', name: 'Stift', zeichen: '✎', titel: 'Radierer: nur Stiftstriche — Marker, Band und Formen bleiben', nur: 'stift' },
+        { id: 'marker', name: 'Marker', zeichen: '▰', titel: 'Radierer: nur Marker', nur: 'marker' },
+        { id: 'band', name: 'Band', zeichen: '▭', titel: 'Radierer: nur Abdeckband', nur: 'band' }
     ];
+    /** Die Markenart, auf die ein Radiermodus sich beschränkt — '' heisst: alle. */
+    const RADIER_NUR = (id) => RADIERER.find(r => r.id === id)?.nur || '';
     const RADIER_VORGABE = 'ganz';
     /* DIE FORMEN (E375). Vier Werkzeuge, die dasselbe tun — zwei Punkte
        aufziehen — und sich nur im Ergebnis unterscheiden. Sie stehen deshalb
@@ -53423,7 +53436,10 @@ const Marken = (() => {
             const mark = marks[index];
             if (!mark)
                 return false;
-            if (radierModus === 'marker' && mark.art !== 'marker')
+            /* Beschränkt sich der Radierer auf eine Werkzeugart, geht alles
+               andere unangetastet durch (E482). */
+            const nur = RADIER_NUR(radierModus);
+            if (nur && mark.art !== nur)
                 return false;
             /* Ein Bild radiert man nicht weg — wie in GoodNotes: der Radierer
                gilt der Tinte, ein Bild geht ueber die Auswahl (E357). */
@@ -57132,7 +57148,46 @@ const PdfEinlesen = (() => {
             input.click();
         });
     };
-    return { alsSeiten, waehlen, neuBerechnen, ohneBild, schaerfer, bilderAlsSeiten, bilderWaehlen,
+    /**
+     * MIT DER KAMERA EINE SEITE MACHEN (E482, L133).
+     *
+     * GoodNotes hat „Foto aufnehmen"; Redion hatte nur den Dateiwähler.
+     * Der Unterschied ist EIN Attribut: `capture` sagt dem Telefon, dass es
+     * die Kamera aufmachen soll statt der Galerie. Am Rechner ohne Kamera
+     * tut es nichts — dort kommt der gewohnte Wähler, und das ist die
+     * richtige Antwort und kein Fehler.
+     *
+     * `multiple` bleibt aus: eine Aufnahme ist eine Seite. Alles Weitere —
+     * Grösse, Einpassen, Anlegen — macht `bilderAlsSeiten`, dieselbe
+     * Stelle wie beim Wähler (kein zweiter Weg für dasselbe Ziel).
+     */
+    const kameraWaehlen = (elternId, anStelle) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.setAttribute('capture', 'environment');
+        input.style.display = 'none';
+        document.body.appendChild(input);
+        return new Promise(fertig => {
+            let entschieden = false;
+            input.addEventListener('change', () => {
+                if (entschieden)
+                    return;
+                entschieden = true;
+                const dateien = input.files ? Array.from(input.files) : [];
+                input.remove();
+                if (!dateien.length) {
+                    fertig([]);
+                    return;
+                }
+                bilderAlsSeiten(dateien, elternId, anStelle).then(fertig, () => fertig([]));
+            });
+            input.addEventListener('cancel', () => { if (entschieden)
+                return; entschieden = true; input.remove(); fertig([]); });
+            input.click();
+        });
+    };
+    return { alsSeiten, waehlen, neuBerechnen, ohneBild, schaerfer, bilderAlsSeiten, bilderWaehlen, kameraWaehlen,
         verweiseNachtragen, ohneVerweise, AUFTRAG_VERWEISE, BREITE_MAX, OHNE_FRAGE, BILD_KANTE_MAX };
 })();
 window.PdfEinlesen = PdfEinlesen;
@@ -65776,7 +65831,7 @@ const DocumentMode = (() => {
         };
         knoepfe.append(seitenKnopf('page-add', '＋', 'Seite danach', 'Eine leere Seite hinter dieser einfügen — mit dem Papier aus der Auswahl darunter'), seitenKnopf('page-duplicate', '⧉', 'Duplizieren', 'Diese Seite mit allem darauf verdoppeln'), seitenKnopf('page-rotate', '⟳', 'Drehen', 'Diese Seite um 90° im Uhrzeigersinn drehen'), seitenKnopf('page-up', '↑', 'Nach oben', 'Diese Seite eine Stelle nach vorn'), seitenKnopf('page-down', '↓', 'Nach unten', 'Diese Seite eine Stelle nach hinten'), seitenKnopf('page-bookmark', '🔖', 'Lesezeichen', documentBlock.lesezeichen ? 'Lesezeichen entfernen' : 'Diese Seite mit einem Lesezeichen merken', !!documentBlock.lesezeichen), seitenKnopf('page-delete', '🗑', 'Löschen', 'Diese Seite in den Papierkorb legen — von dort kommt sie zurück'), 
         /* E469: Bilder und weitere PDF-Seiten hinter diese Seite; die Seite als Bild sichern. */
-        seitenKnopf('page-add-image', '🖼', 'Bild als Seite', 'Ein Foto, einen Scan oder eine Grafik als neue Seite hinter dieser einfügen'), seitenKnopf('page-add-pdf', '📕', 'PDF hier einfügen', 'Die Seiten einer weiteren PDF hinter dieser Seite einfügen'), seitenKnopf('page-export-image', '⬇', 'Als Bild sichern', 'Diese Seite mit allem darauf als PNG speichern'));
+        seitenKnopf('page-add-image', '🖼', 'Bild als Seite', 'Ein Foto, einen Scan oder eine Grafik als neue Seite hinter dieser einfügen'), seitenKnopf('page-add-camera', '📷', 'Foto aufnehmen', 'Mit der Kamera eine neue Seite hinter dieser aufnehmen — am Rechner ohne Kamera öffnet sich der Dateiwähler'), seitenKnopf('page-add-pdf', '📕', 'PDF hier einfügen', 'Die Seiten einer weiteren PDF hinter dieser Seite einfügen'), seitenKnopf('page-export-image', '⬇', 'Als Bild sichern', 'Diese Seite mit allem darauf als PNG speichern'));
         /* Sichern darf jeder, der lesen darf. */
         const sichernKnopf = knoepfe.querySelector('[data-document-action="page-export-image"]');
         if (sichernKnopf)
@@ -67324,6 +67379,7 @@ const DocumentMode = (() => {
                 kasten.appendChild(k);
             };
             eintrag('page-add', '＋', 'Seite danach');
+            eintrag('page-add-camera', '📷', 'Foto aufnehmen');
             eintrag('page-duplicate', '⧉', 'Duplizieren');
             eintrag('page-rotate', '⟳', 'Drehen');
             eintrag('page-up', '↑', 'Nach oben');
@@ -67821,11 +67877,14 @@ const DocumentMode = (() => {
                     lesezeichenWechseln(zielSeite);
                 if (action === 'page-add')
                     seiteEinfuegen(zielSeite);
-                if (action === 'page-add-image' || action === 'page-add-pdf') {
+                if (action === 'page-add-image' || action === 'page-add-pdf' || action === 'page-add-camera') {
                     const stelle = stelleVon(zielSeite || jetzt());
                     const anStelle = stelle ? { elternId: stelle.eltern.id, index: stelle.index + 1 } : undefined;
-                    if (action === 'page-add-image') {
-                        void PdfEinlesen.bilderWaehlen(page.id, anStelle).then((ids) => { if (ids.length)
+                    if (action === 'page-add-image' || action === 'page-add-camera') {
+                        /* Derselbe Weg, ein anderer Wähler (E482): die Kamera macht
+                           eine Aufnahme, der Wähler nimmt Dateien. */
+                        const holen = action === 'page-add-camera' ? PdfEinlesen.kameraWaehlen : PdfEinlesen.bilderWaehlen;
+                        void holen(page.id, anStelle).then((ids) => { if (ids.length)
                             neuMit(ids[ids.length - 1] ?? null); });
                     }
                     else {

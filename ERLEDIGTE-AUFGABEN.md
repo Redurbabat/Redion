@@ -4119,8 +4119,16 @@ INS PAPIER gezogen: `inset:0`, dort liegt sie von selbst richtig und
 dreht mit. Weniger Code, ein Fall mehr, und nebenbei einen Rahmen
 genauer.
 
+**Und die Kamera macht eine Seite (E482, test455).** Zwei kleine
+GoodNotes-Griffe: „Foto aufnehmen" — der Unterschied zum Dateiwähler ist
+ein Attribut (`capture="environment"`), und am Rechner ohne Kamera kommt
+der gewohnte Wähler, was der Hinweis am Knopf auch sagt. Und der Radierer
+kennt jetzt fünf Arten: Ganz und Teil sagen, wie viel weggeht, Stift,
+Marker und Band, wovon. „Nur Bleistift" bleibt bewusst aus — der
+Bleistift ist in Redion kein Werkzeug, sondern ein Stil des Stifts.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
-die verbliebenen Reste (getippter Text im gesicherten Bild, Kamera als
-Seite, Farbsets, Kurve und Verbinder, Auswahl über mehrere Blätter,
-Suche über mehrere Dokumente).
+die verbliebenen Reste (getippter Text im gesicherten Bild, Farbsets,
+Kurve und Verbinder, Auswahl über mehrere Blätter, Suche über mehrere
+Dokumente, gesperrte Marken im Inspector).

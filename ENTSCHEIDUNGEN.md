@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-461 Entscheidungen, E1 bis E481 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+462 Entscheidungen, E1 bis E482 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -525,6 +525,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E479** — „Seite als Bild" nimmt die Fotos mit: `blob:` ist im SVG gesperrt, `data:` nicht, und `foreignObject` trübt die Leinwand
 * **E480** — Die Miniaturenleiste wie GoodNotes: ein Menü je Seite, das SEINE Seite meint, und Ziehen zum Umordnen
 * **E481** — Verweise treffen die Stelle, auch auf gedrehten Seiten — und die Schicht zieht ins Papier
+* **E482** — Die Kamera macht eine Seite, und der Radierer nimmt nur, was er meint
 
 ---
 
@@ -38265,4 +38266,77 @@ besser. Was man sehen könnte — die Trefffläche —, zeigt bereits
 
 GEPRÜFT. 14 Läufe grün: test87, test105, test109, test437, test440–test443,
 test445, test448, test450, test452, test453, test454; dazu
+`npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.
+
+---
+
+E482 — Die Kamera macht eine Seite, und der Radierer nimmt nur, was er meint
+--------------------------------------------------------------------------
+
+Zwei kleine Reste aus L133, beide GoodNotes-Griffe, die Redion nicht hatte.
+
+## Die Kamera
+
+„Fotografieren mit der Kamera als Seite" — der Unterschied zum
+Dateiwähler ist EIN Attribut:
+
+    input.setAttribute('capture', 'environment');
+
+Es sagt dem Telefon, dass es die Kamera aufmachen soll statt der Galerie.
+Am Rechner ohne Kamera tut es nichts; dort kommt der gewohnte Wähler, und
+das ist die richtige Antwort und kein Fehler — der Hinweis am Knopf sagt
+es auch so.
+
+`multiple` bleibt aus: eine Aufnahme ist eine Seite. Alles Weitere —
+Grösse, Einpassen, Anlegen — macht `bilderAlsSeiten`, dieselbe Stelle wie
+beim Wähler. Kein zweiter Weg für dasselbe Ziel (§8).
+
+Der Griff steht im Seitenmenü UND im Menü an der Miniatur (E480) — dort
+also für die Seite, an der er hängt.
+
+## Der Radierer nach Werkzeugart
+
+GoodNotes lässt den Radierer auf eine Werkzeugart beschränken (Pen,
+Pencil, Highlighter, Tape). Redion hatte `ganz`, `teil` und `marker`.
+Jetzt sind es fünf:
+
+    ganz    wie viel weggeht: die ganze Marke
+    teil    nur der berührte Teil eines Strichs (E352)
+    stift   wovon: nur Stiftstriche
+    marker  nur Marker
+    band    nur Abdeckband (E266)
+
+Die ersten zwei sagen WIE VIEL, die drei danach WOVON. Im Code ist es eine
+Zeile: `RADIER_NUR(modus)` gibt die Markenart, auf die sich der Modus
+beschränkt, und was nicht passt, geht unangetastet durch.
+
+WARUM NICHT AUCH „NUR BLEISTIFT". Der Bleistift ist in Redion kein eigenes
+Werkzeug, sondern ein STIL des Stifts (E375). Er stünde in einer Reihe mit
+Werkzeugen und meinte etwas anderes als sie — das ist die Art von stiller
+Ungenauigkeit, die man ein Jahr später nicht mehr erklären kann. Steht in
+L133.
+
+## Wächter
+
+`test455` (neu, 18 Punkte): §1 die Kamera — der Griff steht im Seitenmenü
+und an der Miniatur, mit 44 px, und der WÄHLER selbst wird abgefangen,
+bevor er klickt (einen echten Dateidialog kann kein Prüflauf bedienen):
+`capture: environment`, `accept: image/*`, eine Aufnahme — und der
+gewöhnliche Wähler bleibt, was er war. §2 drei Marken nebeneinander
+(Stift, Marker, Band) und ein Zug quer darüber, in jedem der vier Modi:
+es bleibt genau, was der Modus nicht meint. §3 `teil` schneidet weiter nur
+das Stück heraus. §4 die Quellen.
+
+Zwei Gegenproben, beide gelaufen und rot: `capture` weglassen (2 Punkte
+rot), die Beschränkung auslassen (3 rot — der Radierer nimmt wieder alles).
+
+Vier ältere Läufe zählten die Griffe des Seitenmenüs und tragen jetzt
+elf statt zehn (`test440`, `test442`, `test453`) — mit dem Grund daneben.
+
+KEIN BILD (§55.3): ein Knopf mehr in einer Liste, die `bilder/e480-…`
+bereits zeigt, und ein Radierer, der weniger nimmt — beides ist eine
+Messung, kein Anblick.
+
+GEPRÜFT. 11 Läufe grün: test87, test105, test109, test352, test367,
+test439, test440, test442, test445, test453, test455; dazu
 `npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.

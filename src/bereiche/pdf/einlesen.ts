@@ -1004,7 +1004,42 @@ const PdfEinlesen = (() => {
     });
   };
 
-  return { alsSeiten, waehlen, neuBerechnen, ohneBild, schaerfer, bilderAlsSeiten, bilderWaehlen,
+  /**
+   * MIT DER KAMERA EINE SEITE MACHEN (E482, L133).
+   *
+   * GoodNotes hat „Foto aufnehmen"; Redion hatte nur den Dateiwähler.
+   * Der Unterschied ist EIN Attribut: `capture` sagt dem Telefon, dass es
+   * die Kamera aufmachen soll statt der Galerie. Am Rechner ohne Kamera
+   * tut es nichts — dort kommt der gewohnte Wähler, und das ist die
+   * richtige Antwort und kein Fehler.
+   *
+   * `multiple` bleibt aus: eine Aufnahme ist eine Seite. Alles Weitere —
+   * Grösse, Einpassen, Anlegen — macht `bilderAlsSeiten`, dieselbe
+   * Stelle wie beim Wähler (kein zweiter Weg für dasselbe Ziel).
+   */
+  const kameraWaehlen = (elternId: string, anStelle?: { elternId: string; index: number }): Promise<string[]> => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.setAttribute('capture', 'environment');
+    input.style.display = 'none';
+    document.body.appendChild(input);
+    return new Promise(fertig => {
+      let entschieden = false;
+      input.addEventListener('change', () => {
+        if (entschieden) return;
+        entschieden = true;
+        const dateien = input.files ? Array.from(input.files) : [];
+        input.remove();
+        if (!dateien.length) { fertig([]); return; }
+        bilderAlsSeiten(dateien, elternId, anStelle).then(fertig, () => fertig([]));
+      });
+      input.addEventListener('cancel', () => { if (entschieden) return; entschieden = true; input.remove(); fertig([]); });
+      input.click();
+    });
+  };
+
+  return { alsSeiten, waehlen, neuBerechnen, ohneBild, schaerfer, bilderAlsSeiten, bilderWaehlen, kameraWaehlen,
     verweiseNachtragen, ohneVerweise, AUFTRAG_VERWEISE, BREITE_MAX, OHNE_FRAGE, BILD_KANTE_MAX };
 })();
 

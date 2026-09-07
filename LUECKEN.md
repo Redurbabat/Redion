@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G15)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G16)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6427,8 +6427,12 @@ Zeichnen (nach G1, E465):
     Feld), und ein fast gleichseitiges bekommt die KLEINSTE der drei
     möglichen Drehungen — das fand das Bild, nicht der Prüflauf.
     `test451`.
-  · **Radierer-Filter** nach Werkzeugart über Marker hinaus (GoodNotes:
-    Pen, Pencil, Highlighter, Tape einzeln) — heute Ganz, Teil, Marker.
+  · ~~**Radierer-Filter** nach Werkzeugart~~ — **GESCHLOSSEN mit E482.**
+    Fünf Arten: Ganz und Teil sagen, wie viel weggeht; Stift, Marker und
+    Band, wovon. **Offen bleibt „nur Bleistift":** der Bleistift ist in
+    Redion kein Werkzeug, sondern ein Stil des Stifts (E375) — er stünde
+    in einer Reihe mit Werkzeugen und meinte etwas anderes als sie.
+    `test455 §2`.
   · **Farbsets** speichern und zurücksetzen — heute sieben feste und vier
     eigene Tupfer.
 
@@ -6514,8 +6518,11 @@ Seite als Bild, Zoom-Fenster stehen. Offen bleibt:
     für eine vollständige Seite.
   · **Ganzes Dokument als PDF mit Marken** — braucht einen PDF-Schreiber;
     Drucken über den Browser kann es heute.
-  · **Fotografieren mit der Kamera** als Seite — Strg V aus der
-    Zwischenablage geht seit E472, der Wähler nimmt Dateien.
+  · ~~**Fotografieren mit der Kamera** als Seite~~ — **GESCHLOSSEN mit
+    E482.** „Foto aufnehmen" steht im Seitenmenü und im Menü an der
+    Miniatur; der Wähler dahinter trägt `capture="environment"`. Am
+    Rechner ohne Kamera öffnet sich der gewohnte Dateiwähler, und der
+    Hinweis am Knopf sagt das. `test455 §1`.
 
 Aus der Prüfung nach den Bögen (E473) bleibt ehrlich stehen:
 

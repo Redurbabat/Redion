@@ -19,11 +19,25 @@ const Marken = (() => {
   /* DER RADIERER (E352): drei Arten, wie in GoodNotes — die ganze Marke,
      nur den beruehrten Teil eines Strichs, nur Marker. Die Wahl liegt in
      `zeichnen:radierer` und ueberlebt den Neustart. */
+  /* DIE ARTEN DES RADIERERS.
+     `ganz` und `teil` sagen, WIE VIEL weggeht; die drei danach sagen,
+     WOVON — GoodNotes' „Erase highlighter only", auf Redions Werkzeuge
+     übersetzt (E482, L133). Was `nur` nennt, wird allein radiert.
+
+     WARUM NICHT AUCH „NUR BLEISTIFT": der Bleistift ist in Redion kein
+     eigenes Werkzeug, sondern ein STIL des Stifts (E375) — er stünde in
+     einer Reihe mit Werkzeugen und meinte etwas anderes als sie. Das
+     steht in L133. */
   const RADIERER = [
-    { id: 'ganz', name: 'Ganz', zeichen: '●', titel: 'Radierer: ganze Marken' },
-    { id: 'teil', name: 'Teil', zeichen: '½', titel: 'Radierer: nur den berührten Teil eines Strichs' },
-    { id: 'marker', name: 'Marker', zeichen: '▰', titel: 'Radierer: nur Marker' }
+    { id: 'ganz', name: 'Ganz', zeichen: '●', titel: 'Radierer: ganze Marken', nur: '' },
+    { id: 'teil', name: 'Teil', zeichen: '½', titel: 'Radierer: nur den berührten Teil eines Strichs', nur: '' },
+    { id: 'stift', name: 'Stift', zeichen: '✎', titel: 'Radierer: nur Stiftstriche — Marker, Band und Formen bleiben', nur: 'stift' },
+    { id: 'marker', name: 'Marker', zeichen: '▰', titel: 'Radierer: nur Marker', nur: 'marker' },
+    { id: 'band', name: 'Band', zeichen: '▭', titel: 'Radierer: nur Abdeckband', nur: 'band' }
   ] as const;
+  /** Die Markenart, auf die ein Radiermodus sich beschränkt — '' heisst: alle. */
+  const RADIER_NUR = (id: string): string =>
+    RADIERER.find(r => r.id === id)?.nur || '';
   const RADIER_VORGABE = 'ganz';
 
   /* DIE FORMEN (E375). Vier Werkzeuge, die dasselbe tun — zwei Punkte
@@ -1083,7 +1097,10 @@ const Marken = (() => {
     const radiereEine = (index: number, center: [number, number], r: number): boolean => {
       const mark = marks[index];
       if (!mark) return false;
-      if (radierModus === 'marker' && mark.art !== 'marker') return false;
+      /* Beschränkt sich der Radierer auf eine Werkzeugart, geht alles
+         andere unangetastet durch (E482). */
+      const nur = RADIER_NUR(radierModus);
+      if (nur && mark.art !== nur) return false;
       /* Ein Bild radiert man nicht weg — wie in GoodNotes: der Radierer
          gilt der Tinte, ein Bild geht ueber die Auswahl (E357). */
       if (mark.art === 'bild') return false;

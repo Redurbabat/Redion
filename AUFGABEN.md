@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — fünfzehn Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — sechzehn Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -285,6 +285,10 @@ Gegenprobe, Bild und Entscheidung:
     `/FitH` und `/FitR` nennen eine Höhe auf der Zielseite — der Sprung
     rollt jetzt dorthin. Und die Verweisschicht zog ins Papier: damit
     zeigt auch eine gedrehte Seite ihre Verweise. **Steht.**
+  · **G16 — Kamera und Radierer** (E482, test455): „Foto aufnehmen" im
+    Seitenmenü und an der Miniatur (`capture="environment"`), und der
+    Radierer kennt fünf Arten — Ganz und Teil sagen, wie viel weggeht,
+    Stift, Marker und Band, wovon. **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).
