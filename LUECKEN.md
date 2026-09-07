@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G21)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G22)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6474,8 +6474,15 @@ Kreis-Lasso stehen. Offen bleibt:
     ging schon immer über den gezeichneten Knoten, das Lasso über die
     Mitte des Kastens — die ist beim Drehen dieselbe. `test447`.
   · **Auswahl über mehrere Blätter** — das Lasso gilt je Blatt (E353).
-  · **Sperren im Inspector** — die Sperre sitzt am Knopf der Leiste; eine
-    Liste aller gesperrten Marken gibt es nicht.
+  · ~~**Sperren im Inspector**~~ — **GESCHLOSSEN mit E492.** Die Liste steht
+    im Inspector, mit Namen aus derselben Quelle wie die Werkzeugleiste, je
+    einem „Entsperren" und einem „Alle N entsperren". Das war mehr als eine
+    fehlende Liste: sperren geht über die Auswahl, und die geht bei einer
+    gesperrten Marke nicht — die Sperre liess sich anlegen und nicht mehr
+    lösen. Zwei Funde kamen vom Bild: zwei Zeilen hiessen beide „Linie"
+    (jetzt steht der Stil dabei), und auch dann bleiben zwei gleiche Linien
+    gleich — deshalb leuchtet die Marke auf, wenn man ihre Zeile berührt.
+    `test462`.
 
 Seiten (nach G3, E467): einfügen, duplizieren, drehen, schieben,
 Lesezeichen und löschen stehen im Inspector. Offen bleibt:

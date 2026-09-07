@@ -4242,6 +4242,18 @@ dafür steht §13: schreiben, zurücklesen, vergleichen. Der Prüflauf macht
 das PDF mit Redions eigenem Leser wieder auf und misst einen Pixel dort,
 wo ein roter Strich liegen muss.
 
+**Was auf dieser Seite gesperrt ist (E492, test462).** Eine Liste im
+Inspector — und sie schliesst mehr als eine Lücke in der Oberfläche.
+Sperren ging über die AUSWAHL, und eine gesperrte Marke lässt sich nicht
+mehr auswählen: die Sperre liess sich anlegen und nicht mehr lösen. Ein
+Rundlauf ohne Ausgang.
+
+Zwei Funde kamen vom Bild, nicht vom Prüflauf: auf dem ersten Bild hiessen
+zwei Zeilen beide „Linie" (die eine war der Schutzleiter) — jetzt steht der
+Stil dabei. Und weil auch dann zwei gleiche Linien gleich heissen, leuchtet
+die Marke auf dem Papier auf, sobald man ihre Zeile berührt oder mit der
+Tastatur erreicht.
+
 **Der Stift, wie Redur ihn wollte (E490, test461).** Drei Sätze und ein
 Bild von ihm: die gehaltene Linie soll gerade werden, es braucht eine
 Schutzleiter-Farbe grün-gelb mit Strich-Punkt, und das Zurücknehmen gehört

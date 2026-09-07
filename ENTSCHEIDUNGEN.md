@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-471 Entscheidungen, E1 bis E491 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+472 Entscheidungen, E1 bis E492 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -535,6 +535,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E489** — Der Radierer „Band“ radierte nichts: er verglich gegen eine Markenart, die es nicht gibt
 * **E490** — Der Stift wie GoodNotes: Halten gilt auch bei zitternder Hand, ein Schutzleiter grün-gelb, Zurück nach links
 * **E491** — Redion ist keine Notion-Kopie mehr: mit Server und ohne, und der Nutzer entscheidet, wo seine Daten liegen
+* **E492** — Was auf dieser Seite gesperrt ist: eine Liste, die den Rundlauf ohne Ausgang öffnet
 
 ---
 
@@ -39194,3 +39195,74 @@ Notions Export-ZIP. Beides ist wahr und beides nützt dem Leser.
 Und §2 bleibt §2. Umgeschrieben, nicht umnummeriert — die Nummern sind
 fest, weil `ENTSCHEIDUNGEN.md`, `LUECKEN.md` und die Prüfläufe darauf
 zeigen.
+
+
+---
+
+E492 — Was auf dieser Seite gesperrt ist: eine Liste, die den Rundlauf ohne Ausgang öffnet
+--------------------------------------------------------------------------
+
+L133, unter „Auswahl": „**Sperren im Inspector** — die Sperre sitzt am Knopf
+der Leiste; eine Liste aller gesperrten Marken gibt es nicht."
+
+## Warum das mehr war als eine fehlende Liste
+
+Sperren geht seit E466 über die AUSWAHL: Marke wählen, Schloss drücken. Und
+eine gesperrte Marke lässt sich nicht mehr auswählen — das ist ja der Sinn.
+
+Damit war es ein Rundlauf ohne Ausgang: wer etwas gesperrt hatte, kam an die
+Sperre nicht mehr heran. Sie liess sich anlegen und nicht mehr lösen. Das
+ist kein fehlendes Bequemlichkeitsmerkmal, sondern eine Sackgasse im
+Datenmodell des Nutzers.
+
+## Was entschieden wurde
+
+Eine Liste im Inspector, wie die der Lesezeichen darüber: eine Zeile je
+gesperrter Marke mit ihrem Namen, dazu je ein „🔓 Entsperren" und bei
+mehreren ein „Alle N entsperren".
+
+**Die Namen kommen aus `Marken.artWort`** — derselben Quelle, aus der die
+Werkzeugleiste ihre Wörter nimmt (§8). Dafür wurde die Werkzeugliste im
+Zug davor zu `Marken.WERKZEUGE` zusammengezogen; vorher stand jedes Wort
+nur als Aufruf in der Zeile, die die Leiste baut, und die Liste hätte es
+abgeschrieben.
+
+**Sie steht nur da, wenn es etwas zu zeigen gibt.** Eine Überschrift über
+einer leeren Liste stünde bei fast jeder Seite und sagte nichts.
+
+**Geschrieben wird über den BLOCK**, nicht über die Zeichenschicht:
+`Store.updateBlock` und neu zeichnen, derselbe Weg wie „Drehen",
+„Lesezeichen" und „Löschen". Über die Schicht ginge es nur mit Auswahl —
+und genau die geht bei einer gesperrten Marke nicht. Der Weg, der sich
+anbietet, ist hier der einzige, der nicht funktioniert.
+
+**`gesperrt` wird gelöscht, nicht auf `false` gesetzt.** So macht es
+`Marken.sperren` seit E466; zwei Schreibweisen für einen Zustand laufen
+irgendwann auseinander (§17).
+
+## Zwei Funde des Bildes (§55)
+
+**Erstens: zwei Zeilen hiessen beide „Linie".** Auf dem ersten Bild waren
+drei Marken gesperrt — ein Schutzleiter, eine schwarze Linie, eine
+Haftnotiz —, und die ersten zwei Zeilen waren nicht zu unterscheiden. Die
+Liste war vollständig und trotzdem nicht zu gebrauchen. Jetzt steht der
+STIL dabei: „╱ Linie · Schutzleiter".
+
+**Zweitens: auch mit Stil bleiben zwei gleiche Linien gleich.** Deshalb
+leuchtet die Marke auf dem Papier auf, wenn man ihre Zeile berührt oder mit
+der Tastatur erreicht (`ist-gezeigt`, ein Schein im Stilblatt). Das
+beantwortet „welche denn?" ohne ein zusätzliches Wort — und es geht auch
+mit der Tastatur, nicht nur mit der Maus (§38).
+
+## Was es kostet
+
+Die Liste zeigt die Marken der ANGESEHENEN Seite. Was auf Seite 7 gesperrt
+ist, sieht man auf Seite 7 — das ist dieselbe Regel wie bei allen
+Seitengriffen (E480) und war die Alternative zu einer Liste über das ganze
+Dokument, die bei vierzig Seiten niemand mehr liest.
+
+GEPRÜFT. `test462` mit 34 Zusagen, fünf Gegenproben rot gesehen (§55.2):
+ohne die Liste, ohne das Löschen des Feldes, mit `false` statt `delete`,
+ohne den Stil im Namen (zwei Zeilen heissen wieder gleich), ohne das
+Aufleuchten. Dazu test87, test105, test109.
+Bild: `node bilder.mts gesperrt` — die Ansicht ist neu.

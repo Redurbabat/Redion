@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — zweiundzwanzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — dreiundzwanzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -336,6 +336,11 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Strich-Punkt, in EINER Marke, und er überlebt das Geradeziehen. Und
     Zurück/Vor stehen links, wie bei GoodNotes und wie auf Redurs Bild.
     **Steht.**
+  · **G23 — Was auf dieser Seite gesperrt ist** (E492, test462): eine Liste
+    im Inspector mit „Entsperren" je Marke. Das war ein Rundlauf ohne
+    Ausgang — sperren geht über die Auswahl, und die geht bei einer
+    gesperrten Marke nicht. Zwei Funde kamen vom Bild: der Stil im Namen
+    und das Aufleuchten der Marke beim Berühren der Zeile. **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

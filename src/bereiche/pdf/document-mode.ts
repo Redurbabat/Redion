@@ -854,6 +854,103 @@ const DocumentMode = (() => {
       seite.appendChild(liste);
     }
 
+    /* ══ WAS AUF DIESER SEITE GESPERRT IST (E492, L133) ═══════════════════
+       Die Sperre sitzt seit E466 am Knopf der Leiste: Marke wählen, Schloss
+       drücken. Damit kann man sperren — aber nicht mehr sehen, WAS gesperrt
+       ist. Eine gesperrte Marke lässt sich nicht anfassen; wer sie
+       entsperren will, muss sie erst auswählen, und genau das geht bei ihr
+       am schlechtesten. Ein Rundlauf ohne Ausgang.
+
+       Also eine Liste, wie bei den Lesezeichen darüber: eine Zeile je
+       gesperrter Marke, mit ihrem Namen aus `Marken.artWort` (derselben
+       Quelle wie die Werkzeugleiste, §8), und je Zeile ein Schloss zum
+       Öffnen.
+
+       SIE STEHT NUR DA, WENN ES ETWAS ZU ZEIGEN GIBT. Eine Überschrift über
+       einer leeren Liste sagt dem Leser nichts, was er nicht schon sieht —
+       und sie stünde bei fast jeder Seite (dieselbe Regel wie oben bei den
+       Lesezeichen).
+
+       GESCHRIEBEN WIRD ÜBER DEN BLOCK, nicht über die Zeichenschicht. Das
+       ist derselbe Weg, den „Drehen", „Lesezeichen" und „Löschen" hier
+       schon gehen: `Store.updateBlock` und neu zeichnen. Über die Schicht
+       ginge es nur, wenn die Marke ausgewählt wäre — und das ist genau das,
+       was bei einer gesperrten nicht geht. */
+    const gesperrte = (Array.isArray(documentBlock.marken) ? documentBlock.marken : [])
+      .map((mark: any, i: number) => ({ mark, i }))
+      .filter((x: any) => !!x.mark?.gesperrt);
+    if (gesperrte.length) {
+      const liste = document.createElement('div');
+      liste.className = 'document-gesperrt';
+      const kopf = document.createElement('strong');
+      kopf.textContent = 'Gesperrt auf dieser Seite (' + gesperrte.length + ')';
+      liste.appendChild(kopf);
+      gesperrte.forEach(({ mark }: any) => {
+        const zeile = document.createElement('div');
+        zeile.className = 'document-gesperrt-zeile';
+        const was = document.createElement('span');
+        was.className = 'document-gesperrt-was';
+        /* Bei einer Marke mit Text sagt der Text mehr als die Art — eine
+           Haftnotiz heisst „Haftnotiz", aber gemeint ist die mit dem Satz
+           darauf. Escapen muss hier niemand: `textContent`, kein HTML. */
+        const wort = typeof Marken !== 'undefined' ? Marken.artWort(mark.art) : String(mark.art || '');
+        const zeichen = typeof Marken !== 'undefined' ? Marken.artZeichen(mark.art) : '•';
+        const eigen = String(mark.text || '').replace(/\s+/g, ' ').trim();
+        /* DER STIL GEHÖRT DAZU (Fund des Bildes). Auf dem ersten Bild hiessen
+           zwei Zeilen beide „Linie" — die eine war der Schutzleiter, die
+           andere eine schwarze Linie, und niemand konnte sie auseinander-
+           halten. Der Stil sagt es: „Linie · Schutzleiter". */
+        const stil = typeof Marken !== 'undefined' && mark.stil
+          ? (Marken.STIFTE.find((x: any) => x.id === mark.stil)?.name ?? '') : '';
+        was.textContent = zeichen + ' ' + wort + (stil ? ' · ' + stil : '')
+          + (eigen ? ' · ' + eigen.slice(0, 40) : '');
+        const auf = document.createElement('button');
+        auf.type = 'button';
+        auf.dataset.documentAction = 'mark-entsperren';
+        auf.dataset.documentMarke = String(mark.id ?? '');
+        auf.textContent = '🔓 Entsperren';
+        auf.title = wort + ' entsperren — danach lässt sie sich wieder bewegen';
+        auf.disabled = !darfSeiten;
+        /* UND WELCHE ES IST, ZEIGT DAS BLATT (Fund des Bildes, zweiter Teil).
+           Zwei gleiche schwarze Linien heissen auch mit Stil gleich. Wer
+           die Zeile berührt oder mit der Tastatur erreicht, sieht die Marke
+           auf dem Papier aufleuchten — das beantwortet die Frage „welche
+           denn?" ohne ein einziges zusätzliches Wort.
+
+           Über eine KLASSE am Knoten, nicht über einen Stil am Element: das
+           Aufleuchten gehört ins Stilblatt (§39), und ein hier gesetzter
+           `style` überlebte das nächste `updateNode` ohnehin nicht. */
+        const zeigen = (an: boolean): void => {
+          /* Am `document` und nicht an einem Kasten aus `render`: der
+             Inspector wird auch von dort gerufen, wo es den nicht gibt.
+             `querySelectorAll`, weil dieselbe Kennung auf einer zweiten
+             gezeichneten Seite noch einmal stehen kann — dann leuchten
+             beide, und das ist richtiger, als eine zu raten. */
+          const sicher = String(mark.id ?? '').replace(/["\\]/g, '');
+          if (!sicher) return;
+          document.querySelectorAll<SVGElement>('.blatt-marken [data-sid="' + sicher + '"]')
+            .forEach(knoten => knoten.classList.toggle('ist-gezeigt', an));
+        };
+        zeile.addEventListener('mouseenter', () => zeigen(true));
+        zeile.addEventListener('mouseleave', () => zeigen(false));
+        auf.addEventListener('focus', () => zeigen(true));
+        auf.addEventListener('blur', () => zeigen(false));
+        zeile.append(was, auf);
+        liste.appendChild(zeile);
+      });
+      if (gesperrte.length > 1) {
+        const alle = document.createElement('button');
+        alle.type = 'button';
+        alle.className = 'document-gesperrt-alle';
+        alle.dataset.documentAction = 'mark-entsperren';
+        alle.dataset.documentMarke = '*';
+        alle.textContent = '🔓 Alle ' + gesperrte.length + ' entsperren';
+        alle.disabled = !darfSeiten;
+        liste.appendChild(alle);
+      }
+      seite.appendChild(liste);
+    }
+
     const original = originalKnopf(page, documentBlock);
     container.append(heading, source);
     if (original) container.appendChild(original);
@@ -2695,6 +2792,37 @@ const DocumentMode = (() => {
           herunterladen(blob, String(page.text || 'Seite').replace(/[\\/:*?"<>|]+/g, ' ').trim() + ' – Seite ' + nr + '.png');
           UI.toast('Seite ' + nr + ' als PNG gesichert');
         });
+        return;
+      }
+      /* ══ EINE MARKE ENTSPERREN (E492) ═══════════════════════════════════
+         `*` heisst alle auf dieser Seite. Geschrieben wird in den Block —
+         derselbe Weg wie „Drehen" und „Lesezeichen" darunter; über die
+         Zeichenschicht ginge es nur mit Auswahl, und gerade die geht bei
+         einer gesperrten Marke nicht.
+
+         `gesperrt` wird GELÖSCHT und nicht auf `false` gesetzt: so steht es
+         in `Marken.sperren` (E466), und eine Marke mit `gesperrt: false`
+         wäre dasselbe in anderen Worten — zwei Schreibweisen für einen
+         Zustand, und der Vergleich `!!mark.gesperrt` fiele irgendwann
+         auseinander (§17: Datenmodell stabil halten). */
+      if (action === 'mark-entsperren') {
+        if (!darfSeiten()) { UI.toast('Zum Ändern brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.'); return; }
+        const block = zielSeite || jetzt();
+        const welche = String(tatKnopf?.dataset.documentMarke ?? '');
+        const marken = Array.isArray(block?.marken) ? block.marken : [];
+        let offen = 0;
+        const neu = marken.map((mark: any) => {
+          if (!mark?.gesperrt) return mark;
+          if (welche !== '*' && String(mark.id ?? '') !== welche) return mark;
+          offen++;
+          const kopie = { ...mark };
+          delete kopie.gesperrt;
+          return kopie;
+        });
+        if (!offen) { UI.toast('Diese Marke gibt es nicht mehr.'); return; }
+        Store.updateBlock(block.id, { marken: neu });
+        UI.toast(offen === 1 ? 'Entsperrt' : offen + ' Marken entsperrt');
+        neuMit(block.id);
         return;
       }
       if (action === 'export-pdf') {

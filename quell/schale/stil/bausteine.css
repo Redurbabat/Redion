@@ -5099,6 +5099,24 @@ body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2
 .document-seite-papier{display:flex; align-items:center; justify-content:space-between; gap:8px;
   font-size:13px; color:var(--text-dim); min-height:var(--touch-min)}
 .document-seite-papier select{min-height:36px; max-width:55%}
+/* ══ WAS AUF DIESER SEITE GESPERRT IST (E492) ═════════════════════════════
+   Wie die Lesezeichenliste darüber gebaut, nur mit zwei Spalten je Zeile:
+   was es ist, und der Griff zum Öffnen. Der Name darf umbrechen, der Knopf
+   nicht — deshalb `auto` für ihn und `minmax(0,1fr)` für den Text (ohne die
+   Null schiebt ein langer Zettel-Text den Knopf aus dem Kasten). */
+.document-gesperrt{display:grid; gap:5px; margin-top:10px}
+.document-gesperrt strong{font-size:13px}
+.document-gesperrt-zeile{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px;
+  align-items:center}
+.document-gesperrt-was{font-size:13px; color:var(--text-dim); overflow-wrap:anywhere}
+.document-gesperrt-zeile button, .document-gesperrt-alle{min-height:var(--touch-min); padding:6px 10px}
+.document-gesperrt-alle{margin-top:2px}
+/* DIE MARKE LEUCHTET AUF, wenn man ihre Zeile berührt (E492). Ein Ring statt
+   einer Farbe — die Marke hat ihre eigene, und eine zweite darüber wäre
+   nicht mehr sie selbst. `paint-order` legt den Ring HINTER den Strich,
+   sonst deckt er dünne Linien zu. */
+.blatt-marken .ist-gezeigt{ stroke-width:inherit; filter:drop-shadow(0 0 3px var(--accent-text))
+  drop-shadow(0 0 7px var(--accent-text)); }
 .document-lesezeichen{display:grid; gap:5px; margin-top:10px}
 .document-lesezeichen strong{font-size:13px}
 .document-lesezeichen button{min-height:var(--touch-min); padding:8px; text-align:left}

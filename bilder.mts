@@ -2092,6 +2092,31 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  gesperrt: {
+    titel: 'Was auf dieser Seite gesperrt ist (E492)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const p = Store.addPage(null, { text: 'Schaltplan Werkstatt', icon: '⚡' });
+      Store.addBlock(p.id, 'blatt', { text: '', papier: 'kariert', marken: [
+        { id: 'pe', art: 'line', stil: 'schutzleiter', breite: 3,
+          pts: [[70, 120], [430, 120]], gesperrt: true },
+        { id: 'l1', art: 'line', farbe: '#111111', breite: 2.4,
+          pts: [[70, 170], [430, 170]], gesperrt: true },
+        { id: 'z1', art: 'zettel', farbe: '#e0a419', pts: [[70, 220], [400, 300]],
+          text: 'Vorlage vom Meister — nicht verschieben', gesperrt: true },
+        { id: 'frei', art: 'stift', farbe: '#d64545', breite: 2.4,
+          pts: [[70, 340], [200, 380], [330, 340]] }
+      ] });
+      Store.updateBlock(p.id, { dokumentModus: true });
+      App.oeffne(p.id);
+      await new Promise(r => setTimeout(r, 1400));
+      document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+      await new Promise(r => setTimeout(r, 600));
+    }
+  },
+
   notizhefteFach: {
     titel: 'Ein offenes Fach in der Listenform (E265)',
     bauen: async () => {
