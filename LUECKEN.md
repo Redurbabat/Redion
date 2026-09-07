@@ -4033,6 +4033,14 @@ Gefunden am 31. August 2026 (E284, bei der gemessenen Bestandsaufnahme).
 L102 — Was die Bestandsaufnahme vom 31. August sonst noch fand
 ================================================================================
 
+**DER RECHTE-FEHLER KAM ZUM ZWEITEN MAL (7. September 2026, E471).** Im
+Dokumentmodus wurde `Konten.darf` an sechs Stellen mit dem Seiten-OBJEKT
+statt seiner Kennung gerufen; `rolleAuf` fand damit nichts und fiel auf die
+Standardrolle „voll" zurück — jede Rechtefrage im PDF-Teil sagte ja. Behoben
+und mit `test444` bewacht, diesmal über die ganze Quelle: jeder Aufruf muss
+erkennbar eine Kennung übergeben. Wer L102 liest, liest damit auch, dass
+eine Regel ohne Wächter zweimal gebrochen wird.
+
 **PUNKT 1 GESCHLOSSEN am 31. August 2026 durch E290** (`core/calendar/
 wiederholung.ts` liest BYDAY, BYMONTHDAY, BYMONTH, BYSETPOS, WKST, EXDATE,
 RDATE; `test284`, 49 Punkte).

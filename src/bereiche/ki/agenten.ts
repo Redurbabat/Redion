@@ -185,10 +185,10 @@ const Agent = (() => {
            gerade offenen; wer dort nur lesen darf, darf dort auch nichts
            anlegen. Ohne offene Seite entsteht sie oben — dann ist es eine
            Frage der Rolle, und genau die beantwortet `darf` seit E331. */
-        const unter = App.aktuelleSeite();
-        if (!Konten.darf('bearbeiten', unter))
+        const unterId = App.aktuelleSeite();
+        if (!Konten.darf('bearbeiten', unterId))
           return 'Hier darfst du nichts anlegen.';
-        const p = Store.addPage(unter, { text: a.titel || 'Neue Seite', icon: a.icon || '📄' });
+        const p = Store.addPage(unterId, { text: a.titel || 'Neue Seite', icon: a.icon || '📄' });
         (a.bloecke || []).forEach((b: any) => {
           const typ = ['h1','h2','h3','text','bullet','number','todo','quote','callout','divider','code']
             .includes(b.typ) ? b.typ : 'text';
@@ -209,10 +209,10 @@ const Agent = (() => {
       lauf: async (a: any, protokoll: any) => {
         /* Wie bei `seiteAnlegen`: die Datenbank entsteht auf der offenen
            Seite, also entscheidet deren Freigabe (E331). */
-        const unter = App.aktuelleSeite();
-        if (!Konten.darf('bearbeiten', unter))
+        const unterId = App.aktuelleSeite();
+        if (!Konten.darf('bearbeiten', unterId))
           return 'Hier darfst du nichts anlegen.';
-        const erg = KI.datenbankBauenAus(a, unter);
+        const erg = KI.datenbankBauenAus(a, unterId);
         if (erg && erg.blockId) protokoll.ids.push(erg.blockId);
         return erg ? ('Datenbank „' + a.name + '" mit ' + erg.spalten + ' Spalten und ' +
                       erg.zeilen + ' Zeilen angelegt.')

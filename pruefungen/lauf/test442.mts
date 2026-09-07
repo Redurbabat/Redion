@@ -9,8 +9,9 @@
  *      die man ansieht — untereinander, ohne Rückfrage.
  *   §3 SEITE ALS BILD: Papier, Seitenbild und Marken als PNG, doppelt so
  *      gross wie Blattpunkte; gedreht, wie die Seite steht.
- *   §4 ZOOM-FENSTER: die Seite gross (250 %), unten die Übersicht mit dem
- *      Band; Pfeile und Ziehen rücken den Ausschnitt; aus stellt zurück.
+ *   §4 ZOOM-FENSTER: der Schalter im Inspector macht es auf und zu. Was es
+ *      kann, hält seit E470 `test443` fest — dort zieht das Papier in den
+ *      Streifen um, hier steht nur der Weg dorthin.
  *   §5 RECHTE: gesperrt lässt nur das Sichern zu.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
@@ -188,41 +189,31 @@ console.log('\n§3 Seite als Bild');
 /* ═══ §4 Zoom-Fenster ══════════════════════════════════════════════════════ */
 console.log('\n§4 Zoom-Fenster');
 {
+  /* SEIT E470 IST ES DER STREIFEN, in den man schreibt — das Papier zieht
+     um, in der Bühne bleibt ein Abbild. Was es kann, hält `test443` fest;
+     hier bleibt nur der Weg, der zu G5 gehört: der Schalter im Inspector
+     macht es auf und wieder zu. Die alten Punkte (Seite auf 250 %, das
+     Band in der kleinen Übersicht) prüften einen Bau, den es nicht mehr
+     gibt — sie stehen jetzt als das da, was sie meinten. */
   await s.evaluate(() => { document.querySelector<HTMLElement>('.document-thumbnails [data-document-index="0"]')?.click(); });
   await s.waitForTimeout(400);
-  const lage = () => s.evaluate(() => {
-    const ws = document.querySelector<HTMLElement>('.document-workspace');
-    const band = document.querySelector<HTMLElement>('.document-lupe-band');
-    const c = document.querySelector<HTMLElement>('.document-center');
-    return { an: ws?.dataset.lupe, panel: !!document.querySelector('.document-lupe'), zoom: document.querySelector('.document-zoom-label')?.textContent,
-      band: band ? { top: parseFloat(band.style.top), hoch: parseFloat(band.style.height), links: parseFloat(band.style.left) } : null,
-      scroll: c ? c.scrollTop : -1, knopf: document.querySelector('.document-lupe-knopf')?.getAttribute('aria-pressed') };
-  });
+  const lage = () => s.evaluate(() => ({
+    an: document.querySelector<HTMLElement>('.document-workspace')?.dataset.lupe,
+    panel: !!document.querySelector('.document-lupe'),
+    fenster: !!document.querySelector('.document-lupe-fenster'),
+    abbild: !!document.querySelector('.blatt-abbild'),
+    knopf: document.querySelector('.document-lupe-knopf')?.getAttribute('aria-pressed')
+  }));
   await s.click('.document-inspector [data-document-action="lupe"]');
-  await s.waitForTimeout(500);
+  await s.waitForTimeout(600);
   let l = await lage();
-  p('Das Zoom-Fenster: Seite auf 250 %, unten die Übersicht mit dem Band', l.an === 'an' && l.panel && l.zoom === '250 %' && !!l.band && l.knopf === 'true', JSON.stringify(l));
-  p('Das Band zeigt den Ausschnitt: oben, weniger als die halbe Seite hoch', !!l.band && l.band.top < 2 && l.band.hoch > 5 && l.band.hoch < 50, JSON.stringify(l.band));
-  const s0 = l.scroll;
-  await s.click('.document-lupe [data-document-action="lupe-runter"]');
-  await s.waitForTimeout(300);
-  l = await lage();
-  p('▼ rückt den Ausschnitt nach unten — die Seite rollt, das Band wandert', l.scroll > s0 + 100 && !!l.band && l.band.top > 5, JSON.stringify([s0, l.scroll, l.band]));
-  await s.evaluate(() => {
-    const b = document.querySelector<HTMLElement>('.document-lupe-blatt')!;
-    const r = b.getBoundingClientRect();
-    b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, clientX: r.left + r.width / 2, clientY: r.top + r.height * 0.8, pointerId: 3, pointerType: 'mouse', isPrimary: true, button: 0, buttons: 1 }));
-    window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 3, pointerType: 'mouse' }));
-  });
-  await s.waitForTimeout(300);
-  l = await lage();
-  p('Ein Tipp auf die Übersicht bei 80 % Höhe stellt das Band dorthin', !!l.band && l.band.top > 45 && l.band.top + l.band.hoch <= 100.5, JSON.stringify(l.band));
+  p('Der Schalter im Inspector öffnet das Zoom-Fenster', l.an === 'an' && l.panel && l.fenster && l.abbild && l.knopf === 'true', JSON.stringify(l));
   await s.click('.document-lupe [data-document-action="lupe-zu"]');
   await s.waitForTimeout(400);
   l = await lage();
-  p('✕ schliesst es: Zoom wieder 100 %, Übersicht weg', l.an === 'aus' && !l.panel && l.zoom === '100 %' && l.knopf === 'false', JSON.stringify(l));
+  p('✕ schliesst es wieder, ohne Reste', l.an === 'aus' && !l.panel && !l.abbild && l.knopf === 'false', JSON.stringify(l));
   await s.click('.document-inspector [data-document-action="lupe"]');
-  await s.waitForTimeout(300);
+  await s.waitForTimeout(400);
   await s.evaluate(() => { document.querySelector<HTMLElement>('.document-center')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); });
   await s.waitForTimeout(300);
   gleich('Escape schliesst es auch', (await lage()).panel, false);
@@ -242,7 +233,7 @@ console.log('\n§6 Eingebunden');
 {
   p('Der Import kennt anStelle und Bilder als Seiten', /anStelle\?: \{ elternId: string; index: number \}/.test(lies('src/bereiche/pdf/einlesen.ts')) && /bilderAlsSeiten, bilderWaehlen/.test(lies('src/bereiche/pdf/einlesen.ts')));
   p('Das Studio kennt Seite als Bild und das Zoom-Fenster', /seiteAlsBild \}/.test(lies('src/bereiche/pdf/document-mode.ts')) && /const lupeSetzen/.test(lies('src/bereiche/pdf/document-mode.ts')));
-  p('Das Stilblatt kennt die Übersicht', /\.document-lupe\{/.test(lies('quell/schale/stil/bausteine.css')) && /\.document-lupe-band\{/.test(lies('quell/schale/stil/bausteine.css')));
+  p('Das Stilblatt kennt den Streifen', /\.document-lupe\{/.test(lies('quell/schale/stil/bausteine.css')) && /\.document-lupe-fenster\{/.test(lies('quell/schale/stil/bausteine.css')));
 }
 
 console.log('\n§7 Keine Seitenfehler');

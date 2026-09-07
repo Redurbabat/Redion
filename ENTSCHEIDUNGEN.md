@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-450 Entscheidungen, E1 bis E470 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+451 Entscheidungen, E1 bis E471 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -514,6 +514,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E468** — Suche und Verweise im Dokument, vierter Bogen: Textschicht mit Lage, Treffer, PDF-Verweise, eigene Verweise
 * **E469** — Import und Export wie GoodNotes, fünfter Bogen: Bilder als Seiten, PDF an einer Stelle, Seite als Bild, Zoom-Fenster
 * **E470** — Das Zoom-Fenster ist dieselbe Fläche: gross schreiben, ganze Seite sehen
+* **E471** — Die Rechte im Dokument galten nicht: eine Kennung statt eines Objekts (L102 zum zweiten Mal)
 
 ---
 
@@ -37310,3 +37311,76 @@ Blattpunkten an der richtigen Stelle, alte Marke unberührt), §3 das Abbild
 zieht nach und bleibt still, §4 Führen (▼, ⏎, Tipp ins Abbild, Rahmen),
 §5 zurück ohne Reste und ohne verlorene Marke, §6 Seitenwechsel, §7 Rechte,
 §8 Telefon (Streifen da, sechs Griffe, 44 hoch), §9 Quellen.
+
+---
+
+E471 — Die Rechte im Dokument galten nicht: eine Kennung statt eines Objekts (L102 zum zweiten Mal)
+--------------------------------------------------------------------------
+
+DER FUND. Eine adversariale Prüfung der fünf Bögen (E465–E469) fand es in
+der Dimension „Rechte": `Konten.darf(was, seiteId)` wurde im Dokumentmodus
+an SECHS Stellen mit dem Seiten-OBJEKT gerufen statt mit seiner Kennung.
+
+    Konten.darf('bearbeiten', page)      statt      ('bearbeiten', page.id)
+
+Was das bewirkt, steht in `kern/zugang/sitzung.ts` und ist schlimmer als
+ein übersehener Punkt:
+
+    const darf = (was, seiteId) => {
+      const id = seiteId || App.aktuelleSeite();
+      if (!id) return darfUeberhaupt(was);
+      return rolle(rolleAuf(id, '')).darf.includes(was);
+    };
+
+Ein Objekt ist truthy — der Rückfall auf die offene Seite greift also
+nicht. `rolleAuf` schlägt damit in `Store.getBlock` nach, findet nichts,
+läuft die Freigabenkette nie ab und endet in der letzten Zeile:
+`strenger(Store.getMeta('rolleStandard', 'voll'), kontoRolle)`. Die
+Antwort ist **„voll"**. Jede Rechtefrage im Dokumentmodus sagte ja, gleich
+welche Freigabe an der Seite hing: Annotieren, Einlesen, das ganze
+Seitenmenü aus E467, Bilder und PDF aus E469.
+
+Es ist wörtlich derselbe Fehler wie in L102, und CLAUDE.md §26 nennt ihn
+seitdem beim Namen: „Ein Tor, das ohne Seitenkennung befragt wird, sagt
+ja." Vier der sechs Stellen sind älter als die Bögen (E296, E464), zwei
+kamen mit E467 dazu — die Regel war da, die Prüfung fehlte.
+
+WAS ENTSCHIEDEN WURDE.
+
+  1. Alle sechs Stellen bekommen `page.id`.
+  2. Ein WÄCHTER über die ganze Quelle, nicht nur über den PDF-Teil
+     (`test444 §1`): jeder `Konten.darf(…)`-Aufruf mit zwei Argumenten
+     wird gelesen, und das zweite muss erkennbar eine Kennung sein. Der
+     Wächter fand sofort drei weitere Stellen — in `recognition.ts` und
+     zweimal in `agenten.ts`. Sie waren richtig (`App.aktuelleSeite()`),
+     hiessen aber `current` und `unter`. Sie heissen jetzt
+     `aktuelleSeitenId` und `unterId`: an einer Rechtefrage soll der Name
+     sagen, was übergeben wird — genau daran war der Fehler entstanden.
+  3. Die WIRKUNG wird geprüft, nicht nur die Schreibweise (`test444 §2`):
+     eine Seite mit `freigaben: {'*': 'lesen'}` lässt im Studio kein
+     Annotieren, kein Einlesen, keine Seitengriffe und kein Zoom-Fenster
+     zu; ein erzwungener Tipp auf einen freigeschalteten Knopf legt keine
+     Seite an. Lesezeichen und „Als Bild sichern" bleiben an — sie ändern
+     die Seite nicht.
+
+WARUM EIN WÄCHTER ÜBER DIE SCHREIBWEISE. Eine Rechtefrage, die immer „ja"
+sagt, sieht im Code richtig aus und im Bild richtig aus; sie fällt erst
+auf, wenn jemand mit fremden Rechten arbeitet. Der einzige Ort, an dem sie
+auffallen KANN, ist die Quelle selbst.
+
+ALTERNATIVEN. `darf` so ändern, dass es ein Objekt annimmt (verworfen: die
+Funktion hat fünf Aufrufer, die absichtlich ohne Kennung fragen, und ein
+stillschweigend akzeptiertes Objekt wäre die nächste Falle). Nur die
+sechs Stellen reparieren (verworfen: dann fehlt der Wächter, und §55.2
+sagt, dass eine Reparatur ohne Wächter eine Behauptung ist).
+
+KOSTEN. Drei Umbenennungen ausserhalb des PDF-Teils. Der Wächter ist
+streng: wer künftig eine Rechtefrage mit einer Variablen stellt, deren
+Name keine Kennung erkennen lässt, wird rot — und muss den Namen
+schärfen.
+
+WÄCHTER. `test444` (neu, 13 Punkte): §1 die Quelle (kein Aufruf mit einem
+Objekt, in ganz `src/`), §2 die Wirkung (nur lesen sperrt wirklich, auch
+gegen einen erzwungenen Tipp), §3 mit vollem Recht geht alles wieder.
+Gegenprobe: eine Stelle zurück auf das Objekt — der Wächter nennt die
+Zeile, und die Wirkung fällt.

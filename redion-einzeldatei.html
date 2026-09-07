@@ -18743,7 +18743,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 512, inhalt: 'f7365f276575b881', gebaut: '2026-09-07T10:51:27.757Z' };
+const Stand = { fassung: 516, inhalt: '1599acf551903e8b', gebaut: '2026-09-07T11:05:12.112Z' };
 window.Stand = Stand;
 
 </script>
@@ -64848,7 +64848,12 @@ const DocumentMode = (() => {
         actions.append(makeAction('source-actions', '＋ Aus Inhalt'), makeAction('select-region', '⌗ Ausschnitt'), makeAction('recognize', '⌁ Erkennen'));
         const importButton = makeAction('import', '＋ PDF hinzufügen');
         importButton.className = 'document-import';
-        const mayEdit = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page));
+        /* DIE KENNUNG, NICHT DAS OBJEKT (E471, L102 zum zweiten Mal). `darf`
+           schlaegt mit dem zweiten Argument in `Store.getBlock` nach; mit einem
+           Objekt findet es nichts, laeuft die Freigabenkette nie ab und endet
+           bei der Standardrolle „voll" — jede Rechtefrage im Dokument sagte ja.
+           §26: „Ein Tor, das ohne Seitenkennung befragt wird, sagt ja." */
+        const mayEdit = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page.id));
         importButton.disabled = !mayEdit;
         importButton.title = mayEdit
             ? 'Eine weitere PDF in dieses Dokument einlesen'
@@ -64926,7 +64931,7 @@ const DocumentMode = (() => {
            Seite (`lesezeichen`) und keine zweite Liste (§8). */
         const seiten = documentsIn(page);
         const seitenIndex = Math.max(0, seiten.findIndex(block => block.id === documentBlock.id));
-        const darfSeiten = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page));
+        const darfSeiten = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page.id));
         const seite = document.createElement('div');
         seite.className = 'document-inspector-seite';
         const seiteTitel = document.createElement('h3');
@@ -65313,7 +65318,7 @@ const DocumentMode = (() => {
         const annotateButton = topButton('annotate', '✎ Annotieren', 'Annotieren — mit dem Stift auf der Seite schreiben');
         readButton.setAttribute('aria-pressed', String(!state.toolsOpen));
         annotateButton.setAttribute('aria-pressed', String(state.toolsOpen));
-        const canAnnotate = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page));
+        const canAnnotate = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page.id));
         if (!canAnnotate) {
             state.toolsOpen = false;
             workspace.dataset.documentTools = 'closed';
@@ -66183,7 +66188,7 @@ const DocumentMode = (() => {
            hat: `addBlock` mit Stelle, `baum`/`baumEinfuegen` (frische
            Kennungen), `trashBlock` (Papierkorb, nie endgueltig). Kein zweiter
            Katalog fuer Seiten (§8), kein Loeschen ohne Rueckweg (§9). */
-        const darfSeiten = () => !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page));
+        const darfSeiten = () => !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page.id));
         /** Die Stelle des Blocks im `content` seiner Eltern. */
         const stelleVon = (block) => {
             const eltern = block?.parentId ? Store.getBlock(block.parentId) : null;
@@ -66601,14 +66606,14 @@ const DocumentMode = (() => {
             if (action === 'read')
                 toolsSetzen(false);
             if (action === 'annotate' && !page.gesperrt &&
-                (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page)))
+                (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page.id)))
                 toolsSetzen(true);
             if (action === 'fit') {
                 zoomSetzen(100);
                 center.scrollLeft = 0;
             }
             if (action === 'import' && !page.gesperrt &&
-                (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page))) {
+                (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page.id))) {
                 void PdfEinlesen.waehlen(page.id).then(result => { if (result)
                     rerender(); });
             }
@@ -101432,10 +101437,10 @@ const Agent = (() => {
                    gerade offenen; wer dort nur lesen darf, darf dort auch nichts
                    anlegen. Ohne offene Seite entsteht sie oben — dann ist es eine
                    Frage der Rolle, und genau die beantwortet `darf` seit E331. */
-                const unter = App.aktuelleSeite();
-                if (!Konten.darf('bearbeiten', unter))
+                const unterId = App.aktuelleSeite();
+                if (!Konten.darf('bearbeiten', unterId))
                     return 'Hier darfst du nichts anlegen.';
-                const p = Store.addPage(unter, { text: a.titel || 'Neue Seite', icon: a.icon || '📄' });
+                const p = Store.addPage(unterId, { text: a.titel || 'Neue Seite', icon: a.icon || '📄' });
                 (a.bloecke || []).forEach((b) => {
                     const typ = ['h1', 'h2', 'h3', 'text', 'bullet', 'number', 'todo', 'quote', 'callout', 'divider', 'code']
                         .includes(b.typ) ? b.typ : 'text';
@@ -101455,10 +101460,10 @@ const Agent = (() => {
             lauf: async (a, protokoll) => {
                 /* Wie bei `seiteAnlegen`: die Datenbank entsteht auf der offenen
                    Seite, also entscheidet deren Freigabe (E331). */
-                const unter = App.aktuelleSeite();
-                if (!Konten.darf('bearbeiten', unter))
+                const unterId = App.aktuelleSeite();
+                if (!Konten.darf('bearbeiten', unterId))
                     return 'Hier darfst du nichts anlegen.';
-                const erg = KI.datenbankBauenAus(a, unter);
+                const erg = KI.datenbankBauenAus(a, unterId);
                 if (erg && erg.blockId)
                     protokoll.ids.push(erg.blockId);
                 return erg ? ('Datenbank „' + a.name + '" mit ' + erg.spalten + ' Spalten und ' +
@@ -120849,9 +120854,12 @@ const Recognition = (() => {
         if (!pageId) {
             if (subject)
                 return false;
-            const current = typeof App !== 'undefined' && App.aktuelleSeite
+            /* Der Name sagt, was es ist: eine KENNUNG. `darf` schlaegt damit in
+               `Store.getBlock` nach — ein Objekt faende dort nichts und liesse
+               alles durch (E471, L102). Der Waechter in test444 haelt es fest. */
+            const aktuelleSeitenId = typeof App !== 'undefined' && App.aktuelleSeite
                 ? App.aktuelleSeite() : null;
-            return current ? Konten.darf(action, current) : true;
+            return aktuelleSeitenId ? Konten.darf(action, aktuelleSeitenId) : true;
         }
         return Konten.darf(action, pageId);
     };

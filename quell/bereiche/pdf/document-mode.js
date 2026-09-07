@@ -399,7 +399,12 @@ const DocumentMode = (() => {
         actions.append(makeAction('source-actions', '＋ Aus Inhalt'), makeAction('select-region', '⌗ Ausschnitt'), makeAction('recognize', '⌁ Erkennen'));
         const importButton = makeAction('import', '＋ PDF hinzufügen');
         importButton.className = 'document-import';
-        const mayEdit = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page));
+        /* DIE KENNUNG, NICHT DAS OBJEKT (E471, L102 zum zweiten Mal). `darf`
+           schlaegt mit dem zweiten Argument in `Store.getBlock` nach; mit einem
+           Objekt findet es nichts, laeuft die Freigabenkette nie ab und endet
+           bei der Standardrolle „voll" — jede Rechtefrage im Dokument sagte ja.
+           §26: „Ein Tor, das ohne Seitenkennung befragt wird, sagt ja." */
+        const mayEdit = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page.id));
         importButton.disabled = !mayEdit;
         importButton.title = mayEdit
             ? 'Eine weitere PDF in dieses Dokument einlesen'
@@ -477,7 +482,7 @@ const DocumentMode = (() => {
            Seite (`lesezeichen`) und keine zweite Liste (§8). */
         const seiten = documentsIn(page);
         const seitenIndex = Math.max(0, seiten.findIndex(block => block.id === documentBlock.id));
-        const darfSeiten = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page));
+        const darfSeiten = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page.id));
         const seite = document.createElement('div');
         seite.className = 'document-inspector-seite';
         const seiteTitel = document.createElement('h3');
@@ -864,7 +869,7 @@ const DocumentMode = (() => {
         const annotateButton = topButton('annotate', '✎ Annotieren', 'Annotieren — mit dem Stift auf der Seite schreiben');
         readButton.setAttribute('aria-pressed', String(!state.toolsOpen));
         annotateButton.setAttribute('aria-pressed', String(state.toolsOpen));
-        const canAnnotate = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page));
+        const canAnnotate = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page.id));
         if (!canAnnotate) {
             state.toolsOpen = false;
             workspace.dataset.documentTools = 'closed';
@@ -1734,7 +1739,7 @@ const DocumentMode = (() => {
            hat: `addBlock` mit Stelle, `baum`/`baumEinfuegen` (frische
            Kennungen), `trashBlock` (Papierkorb, nie endgueltig). Kein zweiter
            Katalog fuer Seiten (§8), kein Loeschen ohne Rueckweg (§9). */
-        const darfSeiten = () => !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page));
+        const darfSeiten = () => !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page.id));
         /** Die Stelle des Blocks im `content` seiner Eltern. */
         const stelleVon = (block) => {
             const eltern = block?.parentId ? Store.getBlock(block.parentId) : null;
@@ -2152,14 +2157,14 @@ const DocumentMode = (() => {
             if (action === 'read')
                 toolsSetzen(false);
             if (action === 'annotate' && !page.gesperrt &&
-                (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page)))
+                (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page.id)))
                 toolsSetzen(true);
             if (action === 'fit') {
                 zoomSetzen(100);
                 center.scrollLeft = 0;
             }
             if (action === 'import' && !page.gesperrt &&
-                (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page))) {
+                (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page.id))) {
                 void PdfEinlesen.waehlen(page.id).then(result => { if (result)
                     rerender(); });
             }
