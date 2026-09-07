@@ -4987,6 +4987,13 @@ body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
 @media (max-width:760px){ .document-topbar .document-find-button{display:none} }
 .document-commandbar .document-find-klappe{display:none}
 @media (max-width:760px){ .document-commandbar .document-find-klappe{display:inline-flex} }
+/* Und „Präsentieren" genauso (E493): am Rechner im Kopf, am Telefon hier —
+   dort ist der Kopf voll, und der Titel braucht seine hundert Pixel. */
+.document-commandbar .document-zeigen-klappe{display:none}
+@media (max-width:760px){
+  .document-commandbar .document-zeigen-klappe{display:inline-flex}
+  .document-topbar [data-document-action="praesentieren"]{display:none}
+}
 .document-findbar input{flex:1 1 12rem; min-width:0; min-height:var(--touch-min); padding:6px 10px;
   border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); font:inherit}
 .document-findbar button{min-height:var(--touch-min); min-width:var(--touch-min)}

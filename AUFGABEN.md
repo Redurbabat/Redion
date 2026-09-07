@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — dreiundzwanzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — vierundzwanzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -341,6 +341,11 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Ausgang — sperren geht über die Auswahl, und die geht bei einer
     gesperrten Marke nicht. Zwei Funde kamen vom Bild: der Stil im Namen
     und das Aufleuchten der Marke beim Berühren der Zeile. **Steht.**
+  · **G24 — Präsentieren mit Laserpointer** (E493, test463): Vollbild ohne
+    Leisten, eine Seite ganz, blättern mit Tipp und Taste, ein roter Punkt,
+    der zeigt und nicht schreibt. Die L133-Zeile, die das für „ausserhalb
+    des PDF-Teils" erklärte, war falsch — es braucht weder Server noch
+    Konto. **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

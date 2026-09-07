@@ -13024,6 +13024,13 @@ body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
 @media (max-width:760px){ .document-topbar .document-find-button{display:none} }
 .document-commandbar .document-find-klappe{display:none}
 @media (max-width:760px){ .document-commandbar .document-find-klappe{display:inline-flex} }
+/* Und „Präsentieren" genauso (E493): am Rechner im Kopf, am Telefon hier —
+   dort ist der Kopf voll, und der Titel braucht seine hundert Pixel. */
+.document-commandbar .document-zeigen-klappe{display:none}
+@media (max-width:760px){
+  .document-commandbar .document-zeigen-klappe{display:inline-flex}
+  .document-topbar [data-document-action="praesentieren"]{display:none}
+}
 .document-findbar input{flex:1 1 12rem; min-width:0; min-height:var(--touch-min); padding:6px 10px;
   border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); font:inherit}
 .document-findbar button{min-height:var(--touch-min); min-width:var(--touch-min)}
@@ -16834,6 +16841,11 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
   body[data-dokument="an"] #reiterleiste .rt-tab{min-width:120px;max-width:180px;min-height:40px}
   body[data-dokument="an"] .document-studio .document-topbar{padding-inline:4px}
   .document-studio .document-topbar .document-zurueck .dz-wort{display:none}
+  /* „Präsentieren" ist am Telefon gar nicht im Kopf, sondern in der
+     Ansichtsklappe (E493, bausteine.css) — derselbe Weg wie bei der Suche.
+     Nur das Zeichen zu zeigen hätte nicht gereicht: gemessen blieben dem
+     Titel auch dann 70 px statt der hundert aus `test285`, weil der Knopf
+     seine 44 px Trefffläche behält (§37). */
   .document-studio .document-topbar [data-document-action="print"]{font-size:0}
   .document-studio .document-topbar [data-document-action="print"]::before{content:'↥';font-size:1.375rem}
   .document-studio .document-drawingbar{justify-content:flex-start;gap:4px;padding:4px 8px;min-height:52px}
@@ -16898,6 +16910,73 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
 .document-thumbnails.zieht-gerade{ cursor:grabbing; user-select:none }
 .document-thumb-marke{ position:absolute; left:8px; right:8px; height:3px; margin-top:-2px;
   border-radius:2px; background:var(--accent); pointer-events:none }
+
+/* ══ PRÄSENTIEREN MIT LASERPOINTER (E493) ═════════════════════════════════
+   GoodNotes' Presentation Mode: nur die Seite, sonst nichts. Alles, was zum
+   Arbeiten da ist — Kopf, Werkzeuge, Miniaturen, Inspector, die Zeichen-
+   leiste am Blatt —, geht weg; der Grund wird schwarz, damit das Papier die
+   einzige helle Fläche im Raum ist.
+
+   `[hidden]` wird hier NICHT benutzt: die Leisten sollen nur unsichtbar
+   sein, nicht ihren Zustand verlieren. Nach dem Beenden steht alles wieder
+   so, wie es war. */
+.document-workspace[data-document-zeigen="an"]{background:#000}
+.document-workspace[data-document-zeigen="an"] .document-topbar,
+.document-workspace[data-document-zeigen="an"] .document-drawingbar,
+.document-workspace[data-document-zeigen="an"] .document-commandbar,
+.document-workspace[data-document-zeigen="an"] .document-findbar,
+.document-workspace[data-document-zeigen="an"] .document-panel,
+.document-workspace[data-document-zeigen="an"] .document-verweise{display:none}
+/* DIE STIFTLEISTE AM BLATT heisst `.blatt-reihe` und steht im Studio als
+   schwebende Leiste unten (Zeile 121) — `.blatt-werk` allein traf sie
+   nicht, und auf dem ersten Bild stand sie mitten in der Präsentation.
+   `!important`, weil die Regel dort mit `position:fixed` und einer höheren
+   Spezifität gewinnt; hier ist es die Ausnahme, die §39 mit einem
+   geschriebenen Grund erlaubt. */
+.document-workspace[data-document-zeigen="an"] :is(.blatt-reihe,.blatt-werk,.blatt-fest){display:none!important}
+/* Die Mitte heisst `.document-center` und die Seite `.document-stage` —
+   nachgesehen in `document-mode.ts`, nicht geraten (E21). Sie braucht
+   `position:relative`, damit die Zeigefläche darin sitzt. */
+.document-workspace[data-document-zeigen="an"] .document-center,
+body[data-dokument="an"] .document-workspace[data-document-zeigen="an"] .document-center{
+  background:#000; position:relative; padding:18px}
+.document-workspace[data-document-zeigen="an"] .document-stage{box-shadow:0 0 0 1px #ffffff22}
+/* EINE SEITE, GANZ. Ein Vortrag zeigt eine Folie, nicht anderthalb — auf
+   dem ersten Bild lief die Seite unten aus dem Fenster und die nächste
+   schob sich schon herein. Derselbe Griff wie „Einzelseite zeigen"
+   (`[data-aktiv]`, bausteine.css), nur ohne die Einstellung des Nutzers
+   anzufassen: nach dem Beenden steht seine Wahl wieder da. */
+.document-workspace[data-document-zeigen="an"] .document-stage:not([data-aktiv]){display:none}
+.document-workspace[data-document-zeigen="an"] .document-stage[data-aktiv]{margin-block:0}
+
+/* DIE FLÄCHE ÜBER DEM PAPIER. Sie fängt jeden Zeiger ab — deshalb schreibt
+   der Laserpointer nicht, und deshalb blättert ein Tipp. `touch-action:none`
+   sorgt dafür, dass der Finger zeigt statt zu rollen. */
+.document-zeigen-flaeche{position:absolute; inset:0; z-index:40; cursor:crosshair;
+  touch-action:none; overflow:hidden}
+/* DER KNOPF MUSS AUF JEDEM UNTERGRUND LESBAR SEIN (Fund des Bildes). Er
+   stand zuerst auf `#ffffff1a` — fast durchsichtig —, und weil er oben
+   rechts das weisse Papier überlappt, war seine linke Hälfte weisser Text
+   auf Weiss. Jetzt ein deckendes Dunkel; er hält sich trotzdem zurück
+   (`opacity:.25`), bis man ihn sucht. */
+.document-zeigen-raus{position:absolute; top:12px; right:12px; z-index:2;
+  min-height:var(--touch-min); padding:8px 14px; border-radius:10px;
+  background:#000000cc; color:#fff; border:1px solid #ffffff44; cursor:pointer;
+  opacity:.25; transition:opacity var(--motion-fast) var(--ease)}
+.document-zeigen-raus:hover, .document-zeigen-raus:focus-visible{opacity:1}
+
+/* DER PUNKT. Er verglimmt in 700 ms — dieselbe Zahl steht in
+   `document-mode.ts` neben `laserLoeschen`. Ein Punkt, der abrupt weg ist,
+   sieht aus wie ein Fehler. */
+.document-laser{position:absolute; width:22px; height:22px; margin:-11px 0 0 -11px;
+  border-radius:50%; pointer-events:none; opacity:0;
+  background:radial-gradient(circle, #ff2d2d 0%, #ff2d2dcc 38%, #ff2d2d00 72%);
+  box-shadow:0 0 12px 4px #ff2d2d66;
+  transition:opacity 700ms var(--ease)}
+.document-laser.an{opacity:1; transition:opacity 60ms var(--ease)}
+@media (prefers-reduced-motion: reduce){
+  .document-laser, .document-laser.an{transition:none}
+}
 
 </style>
 
@@ -18902,7 +18981,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 647, inhalt: '6610ca55be21c133', gebaut: '2026-09-07T21:22:59.688Z' };
+const Stand = { fassung: 658, inhalt: '5f761b830d62be6a', gebaut: '2026-09-07T21:46:19.649Z' };
 window.Stand = Stand;
 
 </script>
@@ -67304,7 +67383,23 @@ const DocumentMode = (() => {
         const findButton = topButton('find', '🔍', 'Im Dokument suchen (Strg F)');
         findButton.className = 'document-find-button';
         findButton.setAttribute('aria-expanded', 'false');
-        topActions.append(findButton, viewButton, inspectorButton, topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'), topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
+        /* PRÄSENTIEREN (E493), GoodNotes' Presentation Mode: das Dokument
+           gross, ohne Leisten, mit einem Laserpointer und Blättern per Klick
+           oder Pfeiltaste. Er steht neben „Drucken", weil beides dasselbe ist —
+           das Dokument jemand anderem zeigen, einmal auf Papier, einmal an der
+           Wand. */
+        const zeigenKnopf = topButton('praesentieren', '▶', 'Vollbild ohne Leisten — blättern mit Klick oder Pfeiltasten, zeigen mit gedrückter Maus');
+        /* DAS WORT STEHT IN EINER HÜLLE, damit das Telefon es ausblenden kann
+           (E493, Fund von `test285`). Dort ist der Kopf eng: mit dem ganzen
+           Wort blieben dem Titel noch 70 px, und `test285` verlangt hundert —
+           „E." statt eines Namens ist genau der Fehler, den er hält. Am
+           Rechner steht das Wort; am Telefon das Zeichen, mit `aria-label`
+           darunter, damit der Knopf seinen Namen behält (§38). */
+        const zeigenWort = document.createElement('span');
+        zeigenWort.className = 'dz-wort';
+        zeigenWort.textContent = ' Präsentieren';
+        zeigenKnopf.append(zeigenWort);
+        topActions.append(findButton, viewButton, inspectorButton, zeigenKnopf, topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'), topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
         top.append(topActions);
         const commandbar = document.createElement('div');
         commandbar.className = 'document-commandbar';
@@ -67333,7 +67428,18 @@ const DocumentMode = (() => {
         /* Am Telefon steht die Suche hier statt im Kopf (E468, siehe CSS). */
         const findKlappe = topButton('find', '🔍 Suchen', 'Im Dokument suchen');
         findKlappe.className = 'document-find-klappe';
-        commandbar.append(modes, pagination, zoomGroup, findKlappe);
+        /* AM TELEFON STEHT AUCH „PRÄSENTIEREN" HIER (E493, Fund von `test285`).
+           Gemessen bei 390 px: die Kopfleiste trug fünf Knöpfe à 44 px plus 88
+           für die Navigation — dem Titel blieben 70 px, und `test285` verlangt
+           hundert („E." statt eines Namens ist genau der Fehler, den er hält).
+    
+           Derselbe Weg, den E468 für die Suche gegangen ist: oben ausgeblendet,
+           hier in der Ansichtsklappe sichtbar. Zwei Knöpfe für eine Sache sind
+           kein zweiter Katalog — es ist EIN `data-document-action`, und der
+           Verteiler unten kennt nur ihn. */
+        const zeigenKlappe = topButton('praesentieren', '▶ Präsentieren', 'Vollbild ohne Leisten — blättern mit Tipp oder Pfeiltasten');
+        zeigenKlappe.className = 'document-zeigen-klappe';
+        commandbar.append(modes, pagination, zoomGroup, findKlappe, zeigenKlappe);
         // One document-wide tool strip. Each action delegates to the existing page
         // controller; the original controls, undo stacks and mark objects stay intact.
         const drawingbar = document.createElement('div');
@@ -67889,6 +67995,14 @@ const DocumentMode = (() => {
            Breite. Der Zoom bleibt genau das, was er war — ein Faktor auf die
            Ansicht; `bw`/`bh` des Blocks werden nicht angefasst. Die Leiste zaehlt
            mit, weil sie im Fluss ueber dem Papier steht (auch als klebende). */
+        /* Die Präsentation (E493) steht weiter unten — ihre drei Merker stehen
+           aber HIER, weil `passen()` sie liest und vor ihnen laufen kann.
+           `let` in einem Block, das nach seinem ersten Leser deklariert wird,
+           wirft beim ersten Lesen (TDZ); der Fehler käme dann aus `passen` und
+           niemand suchte ihn in der Präsentation. */
+        let zeigenFlaeche = null;
+        let laser = null;
+        let laserWeg = null;
         const passen = () => {
             if (!workspace.isConnected)
                 return;
@@ -67914,6 +68028,17 @@ const DocumentMode = (() => {
                 const masse = SheetSpace.masseVon(documents[state.index] || {});
                 if (platz > 80 && masse.bh > 0)
                     breit = Math.round(Math.max(120, Math.min(breit, platz * masse.bw / masse.bh)));
+            }
+            /* IN DER PRÄSENTATION GIBT DIE HÖHE DAS MASS (E493). Ein Vortrag
+               zeigt eine ganze Folie; auf dem ersten Bild lief die Seite unten
+               aus dem Fenster. Und ohne den Zoom: wer präsentiert, will die Seite
+               sehen, nicht seine letzte Vergrösserung von gestern. */
+            if (zeigenFlaeche) {
+                const platz = center.clientHeight - 36;
+                const masse = SheetSpace.masseVon(documents[state.index] || {});
+                breit = masse.bh > 0 && platz > 80
+                    ? Math.round(Math.max(120, Math.min(raum - 36, platz * masse.bw / masse.bh)))
+                    : Math.round(raum - 36);
             }
             /* DAS MASS GEHT ANS PAPIER, NICHT AN DIE BUEHNE. Die Zeichenleiste
                gehoert zum Blatt und steht in derselben Huelle; haette die Buehne
@@ -68119,6 +68244,142 @@ const DocumentMode = (() => {
         /* Zu einer Seite springen — zeichnen, hinrollen, Stand merken. Kein
            Neuaufbau: ein Sprung, der die ganze Seite neu zeichnet, verlöre
            jeden angefangenen Strich und jede offene Textstelle. */
+        /* ══ PRÄSENTIEREN MIT LASERPOINTER (E493, L133) ═══════════════════════
+           GoodNotes' Presentation Mode, auf das übersetzt, was ein Browser kann:
+           Vollbild, keine Leisten, blättern mit Klick oder Pfeiltaste, und ein
+           roter Punkt, der zeigt und wieder vergeht.
+    
+           DER LASERPOINTER SCHREIBT NICHT. Das ist der Punkt, an dem sich
+           „zeigen" und „zeichnen" unterscheiden, und er ist wörtlich zu nehmen:
+           der Punkt ist ein `<div>` über dem Papier, er geht durch keine
+           Zeichenschicht, er landet in keiner Marke und in keinem Speicher.
+           Wer präsentiert, will nichts ändern — und ein Vortragender, der aus
+           Versehen in ein fremdes Skript malt, merkt es erst hinterher.
+    
+           Deshalb liegt über dem Papier eine eigene Fläche, die alle Zeiger
+           abfängt (`.document-zeigen-flaeche`). Sie ist zugleich der Grund,
+           warum das Blättern per Klick funktioniert: links blättert zurück,
+           rechts vor, wie bei jedem Vortragsprogramm.
+    
+           ESCAPE MUSS IMMER HERAUSFÜHREN. Das Vollbild kann der Browser von
+           sich aus beenden (der Nutzer drückt Escape, oder er wechselt den
+           Tab); dann darf die Ansicht nicht in einem Zustand hängenbleiben, den
+           niemand mehr verlässt. Darum hängt `zeigenAus` auch am
+           `fullscreenchange` — der Zustand wird nie gemerkt, sondern immer am
+           Browser abgelesen (dieselbe Lehre wie in `schale.ts`). */
+        const laserZeigen = (x, y) => {
+            if (!zeigenFlaeche)
+                return;
+            if (!laser) {
+                laser = document.createElement('div');
+                laser.className = 'document-laser';
+                laser.setAttribute('aria-hidden', 'true');
+                zeigenFlaeche.appendChild(laser);
+            }
+            const r = zeigenFlaeche.getBoundingClientRect();
+            laser.style.left = (x - r.left) + 'px';
+            laser.style.top = (y - r.top) + 'px';
+            laser.classList.add('an');
+            if (laserWeg)
+                clearTimeout(laserWeg);
+        };
+        const laserLoeschen = () => {
+            if (laserWeg)
+                clearTimeout(laserWeg);
+            /* Er verglimmt, statt zu verschwinden — ein Punkt, der abrupt weg ist,
+               sieht aus wie ein Fehler. Die 700 ms sind die Dauer im Stilblatt. */
+            laserWeg = setTimeout(() => { laser?.classList.remove('an'); }, 700);
+        };
+        const zeigenAn = async () => {
+            if (zeigenFlaeche)
+                return;
+            workspace.dataset.documentZeigen = 'an';
+            const flaeche = document.createElement('div');
+            flaeche.className = 'document-zeigen-flaeche';
+            /* Kein `aria-hidden`: der Knopf zum Verlassen liegt darin, und der
+               muss für ein Vorleseprogramm da sein. */
+            flaeche.setAttribute('role', 'group');
+            flaeche.setAttribute('aria-label', 'Präsentation — links zurück, rechts weiter');
+            const raus = document.createElement('button');
+            raus.type = 'button';
+            raus.className = 'document-zeigen-raus';
+            raus.dataset.documentAction = 'praesentieren-aus';
+            raus.textContent = '✕ Präsentation beenden';
+            flaeche.appendChild(raus);
+            center.appendChild(flaeche);
+            zeigenFlaeche = flaeche;
+            /* Wo der Tipp anfing — für die Unterscheidung „gezeigt" / „geblättert"
+               unten. Steht VOR den Horchern, damit die Lesereihenfolge stimmt. */
+            const tippVon = [0, 0];
+            flaeche.addEventListener('pointerdown', event => {
+                tippVon[0] = event.clientX;
+                tippVon[1] = event.clientY;
+                if (event.target?.closest('.document-zeigen-raus'))
+                    return;
+                event.preventDefault();
+                /* `setPointerCapture` WIRFT, wenn es den Zeiger nicht kennt — und
+                   ein Wurf hier bricht den Rest des Handlers ab, der Punkt käme gar
+                   nicht erst. Gefunden von `test463`: dort sind die Zeiger
+                   synthetisch, im Browser kann es dieselbe Lage geben (ein Zeiger,
+                   der zwischen `down` und dem Handler verschwindet). Derselbe
+                   Griff wie in `marken.ts`. */
+                try {
+                    flaeche.setPointerCapture?.(event.pointerId);
+                }
+                catch { /* dann ohne */ }
+                laserZeigen(event.clientX, event.clientY);
+            });
+            flaeche.addEventListener('pointermove', event => {
+                if (event.buttons)
+                    laserZeigen(event.clientX, event.clientY);
+            });
+            flaeche.addEventListener('pointerup', event => {
+                if (event.target?.closest('.document-zeigen-raus'))
+                    return;
+                laserLoeschen();
+                /* GEZOGEN IST GEZEIGT, GETIPPT IST GEBLÄTTERT. Wer den Zeiger
+                   bewegt hat, wollte zeigen; wer nur getippt hat, wollte weiter.
+                   Ohne diese Trennung blätterte jedes Zeigen eine Seite um. */
+                const r = flaeche.getBoundingClientRect();
+                if (Math.hypot(event.clientX - tippVon[0], event.clientY - tippVon[1]) > 8)
+                    return;
+                springe(state.index + (event.clientX - r.left < r.width / 3 ? -1 : 1), false);
+            });
+            if (typeof App !== 'undefined' && App.vollbild) {
+                try {
+                    await App.vollbild(true);
+                }
+                catch { /* dann eben im Fenster */ }
+            }
+            passen();
+            raus.focus();
+        };
+        const zeigenAus = () => {
+            if (!zeigenFlaeche)
+                return;
+            if (laserWeg)
+                clearTimeout(laserWeg);
+            laser = null;
+            laserWeg = null;
+            zeigenFlaeche.remove();
+            zeigenFlaeche = null;
+            delete workspace.dataset.documentZeigen;
+            if (typeof App !== 'undefined' && App.vollbildAn?.()) {
+                void App.vollbild(false);
+            }
+            passen();
+        };
+        /* Der Browser kann das Vollbild allein beenden — dann darf die Ansicht
+           nicht hängenbleiben. Der Zustand wird nie gemerkt, sondern gelesen. */
+        const vollbildGewechselt = () => {
+            if (!workspace.isConnected) {
+                document.removeEventListener('fullscreenchange', vollbildGewechselt);
+                return;
+            }
+            if (zeigenFlaeche && typeof App !== 'undefined' && App.vollbildAn && !App.vollbildAn())
+                zeigenAus();
+        };
+        document.addEventListener('fullscreenchange', vollbildGewechselt);
         const springe = (i, weich = true) => {
             const nr = Math.max(0, Math.min(documents.length - 1, i));
             state.index = nr;
@@ -68878,6 +69139,39 @@ const DocumentMode = (() => {
                 neuMit(ids[ids.length - 1] ?? null); });
         });
         workspace.addEventListener('keydown', event => {
+            /* IN DER PRÄSENTATION ZUERST (E493). Blättern mit den Pfeilen, mit
+               Leertaste und mit Bild-auf/ab — die Tasten, die jedes
+               Vortragsprogramm belegt, und die einzigen, die eine Hand am
+               Rednerpult findet. Escape beendet; es steht vor allen anderen
+               Escape-Zweigen darunter, weil die Präsentation die äusserste
+               Schicht ist. */
+            if (zeigenFlaeche) {
+                if (event.key === 'Escape') {
+                    zeigenAus();
+                    event.stopPropagation();
+                    return;
+                }
+                if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Spacebar'].includes(event.key)) {
+                    event.preventDefault();
+                    springe(state.index + 1, false);
+                    return;
+                }
+                if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(event.key)) {
+                    event.preventDefault();
+                    springe(state.index - 1, false);
+                    return;
+                }
+                if (event.key === 'Home') {
+                    event.preventDefault();
+                    springe(0, false);
+                    return;
+                }
+                if (event.key === 'End') {
+                    event.preventDefault();
+                    springe(documents.length - 1, false);
+                    return;
+                }
+            }
             /* Strg F sucht IM DOKUMENT (E468), nicht auf der Seite (Strg F der
                Schale, `seitenSuche`): hier ist die Seite ein Bild. */
             if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'f') {
@@ -69109,6 +69403,14 @@ const DocumentMode = (() => {
                wäre dasselbe in anderen Worten — zwei Schreibweisen für einen
                Zustand, und der Vergleich `!!mark.gesperrt` fiele irgendwann
                auseinander (§17: Datenmodell stabil halten). */
+            if (action === 'praesentieren') {
+                void zeigenAn();
+                return;
+            }
+            if (action === 'praesentieren-aus') {
+                zeigenAus();
+                return;
+            }
             if (action === 'mark-entsperren') {
                 if (!darfSeiten()) {
                     UI.toast('Zum Ändern brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.');

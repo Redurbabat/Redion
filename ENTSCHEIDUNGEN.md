@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-472 Entscheidungen, E1 bis E492 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+473 Entscheidungen, E1 bis E493 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -536,6 +536,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E490** — Der Stift wie GoodNotes: Halten gilt auch bei zitternder Hand, ein Schutzleiter grün-gelb, Zurück nach links
 * **E491** — Redion ist keine Notion-Kopie mehr: mit Server und ohne, und der Nutzer entscheidet, wo seine Daten liegen
 * **E492** — Was auf dieser Seite gesperrt ist: eine Liste, die den Rundlauf ohne Ausgang öffnet
+* **E493** — Präsentieren mit Laserpointer: der Punkt zeigt und schreibt nicht
 
 ---
 
@@ -39266,3 +39267,111 @@ ohne die Liste, ohne das Löschen des Feldes, mit `false` statt `delete`,
 ohne den Stil im Namen (zwei Zeilen heissen wieder gleich), ohne das
 Aufleuchten. Dazu test87, test105, test109.
 Bild: `node bilder.mts gesperrt` — die Ansicht ist neu.
+
+
+---
+
+E493 — Präsentieren mit Laserpointer: der Punkt zeigt und schreibt nicht
+--------------------------------------------------------------------------
+
+L133 führte GoodNotes' Presentation Mode unter „was Redion nicht haben wird
+— ausserhalb des PDF-Teils oder ausserhalb von local-first". Redur am
+7. September: „schau wie ist es bei GoodNotes und mache genau 1:1 so, ich
+will dass alles gemacht wird."
+
+**Er hatte recht, und die Zeile in L133 war falsch.** Präsentieren ist
+nicht ausserhalb des PDF-Teils — es ist das Zeigen des Dokuments, das der
+PDF-Teil hält. Und es braucht weder Server noch Konto noch Netz: Vollbild,
+eine Seite, ein roter Punkt. Was daneben stand („Wolken-Abgleich",
+„Freigabe-Links", „Marketplace"), braucht wirklich einen Server; das hier
+war mit ihnen in einen Absatz geraten und hat sich ihre Begründung geliehen.
+
+## Was gebaut wurde
+
+    ▶ Präsentieren      im Kopf, neben „Drucken" — beides zeigt das
+                        Dokument jemand anderem, einmal auf Papier,
+                        einmal an der Wand
+    Vollbild            über `App.vollbild` (E283); wird es abgelehnt,
+                        läuft es im Fenster weiter
+    keine Leisten       Kopf, Werkzeuge, Miniaturen, Inspector und die
+                        Stiftleiste am Blatt gehen weg — nicht `hidden`,
+                        nur unsichtbar: nach dem Beenden steht alles
+                        wieder so, wie es war
+    eine Seite ganz     die Höhe gibt das Mass, und der Zoom gilt nicht
+    blättern            links tippen zurück, rechts vor; Pfeile,
+                        Leertaste, Bild auf/ab, Pos1, Ende
+    Laserpointer        ein roter Punkt, der dem Zeiger folgt und in
+                        700 ms verglimmt
+    Escape              beendet, immer
+
+## Der Punkt, an dem alles hängt: er SCHREIBT NICHT
+
+Das ist der Unterschied zwischen „zeigen" und „zeichnen", und er ist
+wörtlich zu nehmen. Über dem Papier liegt eine eigene Fläche, die jeden
+Zeiger abfängt; der Punkt ist ein `<div>` darin, er geht durch keine
+Zeichenschicht, er landet in keiner Marke und in keinem Speicher.
+
+Ein Vortragender, der aus Versehen in ein fremdes Skript malt, merkt es
+erst hinterher — und dann ist es im Speicher. `test463 §2` zählt deshalb
+nicht Pixel, sondern MARKEN: nach zwanzig Bewegungen mit gedrücktem Zeiger
+muss ihre Zahl unverändert sein.
+
+Dieselbe Fläche ist auch der Grund, warum das Blättern per Tipp geht. Und
+sie stellt die Frage, die jedes Vortragsprogramm beantworten muss:
+
+> **Gezogen ist gezeigt, getippt ist geblättert.**
+
+Ohne diese Trennung (acht Pixel) blätterte jedes Zeigen eine Seite um.
+
+## Das Vollbild wird nie gemerkt
+
+Der Browser kann es allein beenden — Escape, ein Tabwechsel, eine
+Meldung des Systems. Ein gemerktes `let vollbild = true` stünde danach für
+immer falsch, und die Ansicht bliebe in einem Zustand hängen, den niemand
+mehr verlässt. Darum hängt `zeigenAus` am `fullscreenchange` und liest den
+Zustand am Browser ab. Dieselbe Lehre steht seit E283 in `schale.ts`; hier
+ist sie zum zweiten Mal fällig geworden.
+
+## Drei Funde des Bildes, zwei der Prüfläufe (§55)
+
+**Die Stiftleiste stand mitten in der Präsentation.** Sie heisst
+`.blatt-reihe` und nicht `.blatt-werk`, und im Studio steht sie als
+schwebende Leiste mit `position:fixed` — der erste Selektor traf sie nicht.
+
+**Der Beenden-Knopf war unlesbar.** Er stand auf `#ffffff1a`, fast
+durchsichtig, und überlappt oben rechts das weisse Papier: weisser Text auf
+Weiss. Jetzt ein deckendes Dunkel.
+
+**Die Seite lief unten aus dem Fenster.** Ein Vortrag zeigt eine ganze
+Folie. Jetzt gibt die Höhe das Mass, und es steht genau eine Seite da —
+über `[data-aktiv]`, ohne die Einstellung „Einzelseite zeigen" des Nutzers
+anzufassen.
+
+**Und `setPointerCapture` warf** — gefunden von `test463`, weil der Wurf
+als Seitenfehler auflief. Er bricht den Rest des Handlers ab, der Punkt
+käme also gar nicht erst; im Prüflauf fiel es nur nicht auf, weil das
+nächste `pointermove` ihn setzte. Jetzt in `try/catch`, wie in `marken.ts`.
+
+**Und der neue Knopf nahm dem Titel den Platz** — gefunden von `test285`,
+dem Wächter der Kopfzeile am Telefon. Fünf Knöpfe zu 44 px und 88 px
+Blättern liessen dem Dokumentnamen 70 px; er verlangt mindestens 100.
+Nachgemessen, nicht geraten. Am Telefon steht „Präsentieren" darum in der
+Klappe der Befehlsleiste — dieselbe Stelle, an die E468 schon die Suche
+gelegt hat, und derselbe Grund: der Kopf am Telefon ist voll, und ein
+Knopf, der den Namen des Dokuments verdrängt, ist kein Gewinn.
+
+## Was L133 dazu jetzt sagt
+
+Die Zeile wird nicht gelöscht, sondern berichtigt: der Präsentationsmodus
+ist gebaut, und der Satz daneben — dass das Übrige einen Server braucht —
+gilt weiter für das Übrige (§35: eine geschlossene Lücke wird als
+geschlossen eingetragen, mit Beleg).
+
+GEPRÜFT. `test463` mit 39 Zusagen, vier Gegenproben rot gesehen (§55.2):
+ohne die Marke am Arbeitsraum (die Leisten bleiben stehen), ohne die
+Zeigefläche, ohne die Acht-Pixel-Frage (jedes Zeigen blättert), ohne den
+Tastenzweig. Die vier Zusagen mehr sind der Fund von `test285`: am Telefon
+ist der Knopf im Kopf weg, in der Klappe da, 44 px gross und beschriftet,
+und der Titel behält seine 100 px. Dazu test87, test105, test109, test285,
+test351.
+Bild: `node bilder.mts praesentieren` — die Ansicht ist neu.

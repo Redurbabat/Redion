@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G22)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G23)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6625,9 +6625,16 @@ Was Redion auch nach G5 nicht haben wird, und warum:
     Handschrift; eine Wolken-Erkennung widerspricht §21 ohne Frage.
   · **Elemente-Bibliothek (Sticker, GIPHY)** — Redion hat die Fachzeichen;
     eine allgemeine Sammlung wiederverwendbarer Marken wäre neu.
-  · **Präsentationsmodus mit Laserpointer**, **Wolken-Abgleich der
-    Dokumente**, **Freigabe-Links**, **Marketplace** — ausserhalb des
-    PDF-Teils oder ausserhalb von local-first (§22, §24).
+  · ~~**Präsentationsmodus mit Laserpointer**~~ — **GESCHLOSSEN mit E493,
+    und diese Zeile war falsch.** Präsentieren ist nicht ausserhalb des
+    PDF-Teils: es ist das Zeigen des Dokuments, und es braucht weder
+    Server noch Konto noch Netz. Es war mit den drei Punkten darunter in
+    einen Absatz geraten und hat sich ihre Begründung geliehen.
+    Gebaut: Vollbild ohne Leisten, eine Seite ganz, blättern mit Tipp und
+    Taste, und ein roter Punkt, der ZEIGT und nicht schreibt — das misst
+    `test463 §2` an der Zahl der Marken, nicht am Bild.
+  · **Wolken-Abgleich der Dokumente**, **Freigabe-Links**, **Marketplace**
+    — die brauchen wirklich einen Server (§22, §24).
   · **DOCX/PPTX-Import** — GoodNotes wandelt sie zu PDF um (nur auf
     Apple); im Browser ohne Bibliothek nicht möglich, und eine grosse
     Abhängigkeit ist keine (§6).

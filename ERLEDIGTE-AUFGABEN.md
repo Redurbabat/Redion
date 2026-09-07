@@ -4242,6 +4242,25 @@ dafür steht §13: schreiben, zurücklesen, vergleichen. Der Prüflauf macht
 das PDF mit Redions eigenem Leser wieder auf und misst einen Pixel dort,
 wo ein roter Strich liegen muss.
 
+**Präsentieren mit Laserpointer (E493, test463).** GoodNotes' Presentation
+Mode — und die Zeile in `LUECKEN.md`, die ihn für „ausserhalb des PDF-Teils"
+erklärte, war falsch: er ist das Zeigen des Dokuments und braucht weder
+Server noch Konto noch Netz. Er war mit „Wolken-Abgleich", „Freigabe-Links"
+und „Marketplace" in einen Absatz geraten und hatte sich deren Begründung
+geliehen.
+
+Gebaut: Vollbild ohne Leisten, eine Seite ganz (die Höhe gibt das Mass),
+blättern mit Tipp links/rechts und mit den Tasten eines Vortragspults, und
+ein roter Punkt, der dem Zeiger folgt und verglimmt. Der Punkt SCHREIBT
+NICHT — das ist der ganze Unterschied zwischen Zeigen und Zeichnen, und der
+Prüflauf misst ihn an der Zahl der Marken, nicht am Bild.
+
+Drei Funde kamen vom Bild: die Stiftleiste stand mitten in der Präsentation
+(sie heisst `.blatt-reihe`, nicht `.blatt-werk`), der Beenden-Knopf war
+weisser Text auf weissem Papier, und die Seite lief unten aus dem Fenster.
+Einen fand der Prüflauf: `setPointerCapture` warf und brach damit den Rest
+des Handlers ab.
+
 **Was auf dieser Seite gesperrt ist (E492, test462).** Eine Liste im
 Inspector — und sie schliesst mehr als eine Lücke in der Oberfläche.
 Sperren ging über die AUSWAHL, und eine gesperrte Marke lässt sich nicht

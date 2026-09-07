@@ -2117,6 +2117,40 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  praesentieren: {
+    titel: 'Präsentieren mit Laserpointer (E493)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const p = Store.addPage(null, { text: 'Schulung Schutzmassnahmen', icon: '⚡' });
+      for (let i = 1; i <= 3; i++) {
+        const blatt = Store.addBlock(p.id, 'blatt', { text: '', papier: 'blanko' });
+        Store.addBlock(blatt.id, 'text', { text: 'Folie ' + i + ' — Schutzleiter und Fehlerstrom' });
+        Store.updateBlock(blatt.id, { marken: [
+          { id: 'pe' + i, art: 'line', stil: 'schutzleiter', breite: 4, pts: [[70, 200], [500, 200]] },
+          { id: 't' + i, art: 'stift', farbe: '#d64545', breite: 3,
+            pts: [[70, 300], [200, 260], [330, 320], [460, 280]] }
+        ] });
+      }
+      Store.updateBlock(p.id, { dokumentModus: true });
+      App.oeffne(p.id);
+      await new Promise(r => setTimeout(r, 1400));
+      document.querySelector<HTMLElement>('[data-document-action="praesentieren"]')?.click();
+      await new Promise(r => setTimeout(r, 900));
+      /* Einen Laserpunkt setzen, damit er auf dem Bild zu sehen ist. */
+      const f = document.querySelector<HTMLElement>('.document-zeigen-flaeche');
+      if (f) {
+        const r = f.getBoundingClientRect();
+        f.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: r.left + r.width * 0.55,
+          clientY: r.top + r.height * 0.42, pointerId: 1, buttons: 1 }));
+        f.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: r.left + r.width * 0.55,
+          clientY: r.top + r.height * 0.42, pointerId: 1, buttons: 1 }));
+      }
+      await new Promise(r => setTimeout(r, 300));
+    }
+  },
+
   notizhefteFach: {
     titel: 'Ein offenes Fach in der Listenform (E265)',
     bauen: async () => {
