@@ -2090,6 +2090,38 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  leiter: {
+    titel: 'Der Leiterstift: zehn Adern beim Namen (E509)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('zeichnen:stift', 'leiter');
+      const M = (window as any).Marken;
+      const seite = Store.addPage(null, { text: 'Wechselschaltung', icon: '⌁' });
+      /* Je Ader ein Strich, in ihrer Farbe und Strichart, mit dem Kürzel
+         daneben — genau die Reihe aus dem Katalog. */
+      const marken: any[] = [];
+      (M.LEITER as any[]).forEach((ader, i) => {
+        const y = 70 + i * 46;
+        marken.push({ id: 'a' + i, art: 'stift', stil: ader.stil, leiter: ader.id,
+          farbe: ader.farbe, breite: 3, pts: [[150, y], [520, y]] });
+        marken.push({ id: 't' + i, art: 'text', farbe: '#333333',
+          point: [56, y - 7], fontSize: 13, text: ader.kurz + '  ' + ader.name });
+      });
+      Store.addBlock(seite.id, 'blatt', { text: '', papier: 'blanko',
+        blattBreite: 595.28, blattHoehe: 560, raumVersion: 1, marken });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+      /* Den Stift wählen, damit die Adernreihe in der Leiste steht. */
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.click();
+      await new Promise(r => setTimeout(r, 250));
+      const knopf = document.querySelector<HTMLElement>('.blatt-werk [data-act="stil"]');
+      for (let i = 0; i < 8 && knopf && knopf.dataset.stil !== 'leiter'; i++) knopf.click();
+      await new Promise(r => setTimeout(r, 500));
+    }
+  },
+
   ordnerkarte: {
     titel: 'Der Blick in den Ordner kommt beim Hinschauen (E508)',
     bauen: async () => {

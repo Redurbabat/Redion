@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-488 Entscheidungen, E1 bis E508 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+490 Entscheidungen, E1 bis E510 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -552,6 +552,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E506** — Handschrift wird eine echte /Ink-Annotation mit eigenem Erscheinungsbild, statt Teil des Bildes zu sein
 * **E507** — Die Neigung des Stifts: der Bleistift schattiert, und der Druck sagt, woher er kommt
 * **E508** — Der Blick in den Ordner kommt beim Hinschauen, und die Blätter fächern als Welle
+* **E509** — Ein Stift für Fachzeichen: die zehn Adern eines Schaltplans, jede mit ihrem Namen
+* **E510** — Die Mitte einer Linie zählt auch: der Kritzel-Radierer misst Länge statt Ecken
 
 ---
 
@@ -40755,3 +40757,236 @@ Sprung (§7 in zwei Zusagen), und die drei stumpfen Wächter oben, die vor
 ihrer Reparatur grün blieben. Dazu test87, test105, test109, test265,
 test276, test307 — alle grün. Nicht geprüft: die Gesamtsuite.
 Bild: `node bilder.mts ordnerkarte`.
+
+---
+
+E509 — Ein Stift für Fachzeichen: die zehn Adern
+--------------------------------------------------------------------------
+
+Redur, 8. September, mit einem Bild der Farbreihe: „Die Schutzleiter sollte
+hier sein wie eine Farbe, und wenn ich mit Maus drauf gehe, sollte es mir
+dann zeigen Schutzleiter — und für die anderen Farben auch. Es sollte
+folgendes haben: ein spezieller Stift, füge oben, wo die Stifte markiert
+sind, dort ist — und das ist speziell für Fachzeichen gedacht. Die
+Schutzleiter, die Neutralleiter sollte blau sein, und es ist Strich Strich
+Strich, so nur Strich. Dann für L1 braun, L2 schwarz und L3 grau. Und für S
+(Lampendraht) solltest du eine passende Farbe finden. Und Korrespondierende
+1 und Korrespondierende 2 und Korrespondierende 3 bis 4 sollten
+verschiedene Farben haben."
+
+## Was entschieden wurde
+
+**Ein sechster Stift, kein sechstes Werkzeug.** Der Leiterstift steht in
+der Stiftreihe hinter dem Schutzleiter. Er zeichnet nicht anders als der
+Kugelschreiber — er bringt eine andere FARBREIHE mit. Das ist der Grund für
+die Einordnung: es ist etwas, das man führt, kein Ding, das man setzt.
+
+**Er steht am ENDE.** Die Reihenfolge Füller → Kugel → Pinsel → Bleistift →
+Schutzleiter ist die, die eine Hand sich gemerkt hat und die `test343` und
+`test438` kennen. Ein neuer Stift in der Mitte hätte jeden zweiten Klick
+woandershin geführt. Derselbe Grund, aus dem E465 den Bleistift und E490
+den Schutzleiter hinten angehängt haben — und die Regel für den nächsten:
+hinten anhängen.
+
+**Die Farbreihe wird zur Adernreihe.** Solange der Leiterstift geführt
+wird, stehen dort nicht fünf Farben und ein „+", sondern die zehn Adern
+eines Schaltplans:
+
+| | Ader | Farbe | Strich |
+|---|---|---|---|
+| PE | Schutzleiter | grün-gelb (`PE_GRUEN`) | Strich-Punkt (E490) |
+| N | Neutralleiter | `#1f6fd0` blau | nur Striche |
+| L1 | Aussenleiter L1 | `#7a4a21` braun | durchgezogen |
+| L2 | Aussenleiter L2 | `#111111` schwarz | durchgezogen |
+| L3 | Aussenleiter L3 | `#9a9a9a` grau | durchgezogen |
+| S | Lampendraht | `#e2761b` orange | durchgezogen |
+| 1 | Korrespondierende 1 | `#c2185b` magenta | durchgezogen |
+| 2 | Korrespondierende 2 | `#7c3aed` violett | durchgezogen |
+| 3 | Korrespondierende 3 | `#0d9488` türkis | durchgezogen |
+| 4 | Korrespondierende 4 | `#4d7c0f` oliv | durchgezogen |
+
+## Warum diese Farben
+
+Fünf sind keine Wahl: PE, N, L1, L2, L3 stehen so in der Norm und so in
+Redurs Auftrag. Fünf habe ich gewählt, und hier steht, warum:
+
+**S — der Lampendraht** hat keine genormte Zeichenfarbe. Gewählt ist ein
+kräftiges Orange. Es ist warm wie das Licht, an dessen Ende es hängt, und
+es ist der einzige Ton, der zwischen dem Braun von L1 und dem Gelb im
+Schutzleiter noch Platz hat, ohne mit einem von beiden verwechselt zu
+werden.
+
+**1 bis 4 — die Korrespondierenden** sind vier Töne, die weit
+auseinanderliegen: Magenta, Violett, Türkis, Oliv. Ausdrücklich NICHT vier
+Nuancen einer Farbe — wer eine Kreuzschaltung zeichnet, hat alle vier
+gleichzeitig auf dem Blatt, und dann ist Ähnlichkeit ein Fehler und keine
+Ordnung.
+
+## Der Neutralleiter: nur Striche
+
+Redur hat es zweimal gesagt — „Strich Strich Strich, so nur Strich". Der
+Unterschied zum Schutzleiter ist genau das, und er ist in den Zahlen
+sichtbar: der Schutzleiter hat VIER (Strich, Lücke, Punkt, Lücke), der
+Neutralleiter ZWEI (`N_MUSTER = [2.6, 3.2]`). Gerechnet wird in
+Strichbreiten, damit das Verhältnis bei 1 px dasselbe ist wie bei 12 px,
+und die kürzeste Zahl bleibt über 0,2 — `stroke-linecap:round` macht aus
+einem zu kurzen Strich sonst einen Punkt (der Fund aus E490).
+
+Der Neutralleiter braucht auch keine Gruppe aus zwei Linien, wie der
+Schutzleiter sie hat: grün-gelb sind zwei Farben, blau ist eine. Weniger
+Aufwand für weniger Anspruch.
+
+## Der Katalog steht EINMAL da
+
+`LEITER` ist ein Katalog nach §8, keine Farbliste. Jede Ader bringt vier
+Dinge mit, die zusammengehören: Kürzel, Name, Farbe, Strichart. Der
+Schutzleiter steht darin **nicht zweimal** — seine Farbe IST `PE_GRUEN`,
+dieselbe Konstante, die der Stift aus E490 zeichnet, und seine Strichart
+ist genau jener Stift. Ein zweiter Ort, an dem „Schutzleiter ist
+grün-gelb" steht, wäre der Anfang zweier Wahrheiten.
+
+Ein gezogener Strich trägt darum ZWEI Angaben: `stil` ist die
+Zeichenanweisung (dieselbe, die ein Schutzleiter aus E490 trägt, damit alte
+und neue Striche durch denselben Weg gehen), `leiter` ist die Bedeutung.
+Beides wird gebraucht — der Zeichner fragt das eine, ein Mensch und später
+ein Export das andere.
+
+## Jede Farbe heisst beim Namen
+
+Redur hat den Namen für die Adern verlangt. Beim Nachsehen stand an den
+fünf gewöhnlichen Tupfern fünfmal `title="Farbe"` — beim Überfahren also
+fünfmal dasselbe Wort, und ein Vorleser las fünfmal „Farbe". Sie heissen
+jetzt Schwarz, Rot, Blau, Grün, Gelb. Derselbe Satz aus §38 gilt für sie
+wie für die Adern.
+
+Und das Kürzel steht **auf** dem Tupfer, nicht nur im Titel: zehn Punkte,
+die sich allein durch die Farbe unterscheiden, sind genau das, was §38
+verbietet. Im Schaltplan steht das Kürzel ohnehin neben der Ader — man
+liest es sowieso.
+
+## Was schiefging
+
+**Die Reihe schaltete nur beim Stiftwechsel um.** `leiterReihe` lief in
+`stiftZeigen` — wer Redion mit dem Leiterstift schloss und wieder aufmachte,
+sah die fünf gewöhnlichen Farben und einen Stift, der etwas anderes
+zeichnet. Der Zustand stand am Knopf und nicht in der Reihe. GEFUNDEN HAT
+ES DAS BILD, nicht der Prüflauf: der klickte sich zum Leiterstift durch und
+löste den Wechsel damit selbst aus (§55 in einem Satz). Jetzt läuft
+`leiterReihe` auch einmal beim Aufbau, und §7 des Prüflaufs sieht ohne
+einen einzigen Klick nach.
+
+**Der Einschub zerschnitt eine CSS-Regel.** `.blatt-farbe-weg` landete
+mitten in einer mehrzeiligen Regel und galt darum nie. Der Prüflauf konnte
+es nicht sehen, weil er nach der KLASSE fragte statt nach der
+Sichtbarkeit — er zählte zehn Adern und fünf Farben und war zufrieden.
+Jetzt wird mit `getBoundingClientRect` gemessen: sichtbar sind genau zehn
+Tupfer.
+
+**L2 ist `#111111` — dasselbe Schwarz wie der erste Farbtupfer.** Die
+Hervorhebung verglich Farben, also leuchtete beim Öffnen L2 auf, egal
+welche Ader zuletzt geführt wurde. Sie vergleicht jetzt `data-leiter`. Die
+Farbe ist eine Eigenschaft der Ader, nicht ihr Name.
+
+## Die Kosten
+
+Die Adernreihe ist breiter als die Farbreihe: zehn Tupfer mit `min-width:
+var(--touch-min)` statt fünf mit 22 px. Die Leiste rollt seit E465
+waagerecht, das trägt sie — aber am Telefon ist die Reihe damit länger als
+das Bild, und man muss schieben. Das ist der Preis dafür, dass jede Ader
+44 px trifft (§37); zehn 22-px-Punkte hätte man nicht sicher getroffen, und
+zehn Punkte ohne Kürzel hätte man nicht auseinandergehalten.
+
+GEPRÜFT. `test477` neu mit 42 Zusagen. Zwei Gegenproben rot gesehen: die
+Reihe ohne den Aufruf beim Aufbau (§7 blieb bei den gewöhnlichen Farben),
+und das Muster des Neutralleiters mit einem Punkt darin (§5 sah die vierte
+Zahl). Dazu test87, test105, test109, test343, test437, test438, test439,
+test455, test456, test457, test458, test461, test462, test470 — alle grün;
+test438 und test461 mussten auf sechs Stifte nachgezogen werden. Nicht
+geprüft: die Gesamtsuite.
+Bild: `node bilder.mts leiter`.
+
+---
+
+E510 — Die Mitte einer Linie zählt auch
+--------------------------------------------------------------------------
+
+Kein Wunsch, sondern ein roter Prüflauf. `test439` §5 fiel bei der
+Regressionsrunde zu E509 aus, und §46 sagt: rot zuerst.
+
+## Was rot war, und warum es nicht E509 war
+
+Das Gekritzel über einer Linie nahm sie nicht mehr weg. Der Lauf war auch
+auf dem Stand VOR E509 rot (nachgesehen in einem eigenen Arbeitsbaum auf
+`HEAD`) — die Adernreihe hatte damit nichts zu tun. Gebrochen hat es
+**E504**, in diesem Durchgang, drei Bögen früher: seit dort glättet der
+Filter in ZEIT statt je Messung.
+
+Die synthetischen Zeigerereignisse eines Prüflaufs kommen alle in derselben
+Millisekunde. `dt` fällt damit auf seine Untergrenze von 1 ms, und ein Zug
+mit 20 px Schritt meldet ein Tempo von 20 px je Millisekunde — eine Hand,
+die es nicht gibt. Der Nachlauf des Filters ist `v · τ`; bei diesem Tempo
+sind das 28 px. Gemessen am gespeicherten Zug: die Diagonale des Gekritzels
+schrumpfte von 205 auf 181 px, seine Enden lagen also rund zwölf Pixel
+weiter innen als gezogen.
+
+**Auf echter Hardware passiert das nicht.** Bei 60 Hz und demselben Zug ist
+`dt` 16 ms, das Tempo 1,25 px/ms und der Nachlauf 1,7 px. Die Zahl, die
+E504 gross machte, ist die Zeit — und der Prüflauf lieferte keine.
+
+## Der eigentliche Fund liegt tiefer
+
+Zwölf Pixel hätten nichts ausmachen dürfen. Dass sie es taten, lag an einer
+Regel aus E466, die zwei sehr verschiedene Dinge gleich behandelte:
+
+> mindestens die Hälfte der Punkte der Marke liegt nah am Weg des
+> Gekritzels
+
+**Ein Stift-Strich über 200 px hat dreihundert Punkte. Eine gerade `line`
+über dieselben 200 px hat zwei — ihre Enden.** Dieselbe Regel fragte beim
+Strich nach seiner LÄNGE und bei der Linie nur nach ihren ENDEN. Die Folge
+war nicht nur der rote Lauf, sondern ein Loch, das seit E466 offenstand:
+
+> Ein Gekritzel quer über die MITTE einer Linie nahm sie nicht weg — egal
+> wie dicht, egal wie oft. Nur wer eines ihrer Enden traf, löschte sie.
+
+Das ist eine Funktion, die nach dem Zufall arbeitet, wie viele Punkte
+zufällig in einer Marke stehen.
+
+## Die Entscheidung
+
+`InkGeometry.densify(punkte, schritt)` legt Messpunkte im Abstand `schritt`
+auf einen Linienzug — die Ecken bleiben alle erhalten, es wird nur
+zwischen ihnen aufgefüllt. `kritzelTrifft` misst die Hälfte-Regel jetzt
+daran, mit `schritt = KRITZEL_NAH` (6 px).
+
+Für dichte Marken ändert sich **nichts**: ein Stift-Strich hat seine Punkte
+schon enger als 6 px, `densify` fügt keinen hinzu. Für `line` und `arrow`
+heisst die Regel ab jetzt dasselbe wie für einen Strich: die halbe LÄNGE.
+
+**Die Alternative wäre gewesen**, im Prüflauf echte Zeit zwischen die
+Ereignisse zu legen (`setTimeout` je Punkt). Das hätte den roten Lauf grün
+gemacht und das Loch offen gelassen — und es hätte jeden Zug in jeder Suite
+um eine halbe Sekunde verlängert. Die Zeitlosigkeit der synthetischen
+Ereignisse war der Bote, nicht die Nachricht.
+
+**Was es kostet:** `densify` hat eine Obergrenze von 4000 Punkten.
+`distanceToPolyline` läuft für jeden Messpunkt über den ganzen Gegenzug;
+ohne Grenze wäre ein seitenlanger Zug bei Schritt 6 eine Rechnung, die man
+sieht. Wer mehr als 4000 Messpunkte bräuchte, misst etwas, das mit 4000
+genauso beantwortet ist.
+
+## Die andere Richtung steht daneben
+
+Eine Reparatur am Löschen darf nicht dazu führen, dass mehr gelöscht wird
+(§9, §51). `test439` §5b hat deshalb zwei Zusagen, nicht eine: das
+Gekritzel über die mittleren 340 px einer 400-px-Linie nimmt sie weg — und
+ein kurzes Gekritzel über ihr linkes Viertel nimmt sie **nicht** weg. Die
+zweite blieb in der Gegenprobe grün, und das ist ihr Zweck: sie hält die
+Richtung, in die die erste nicht ziehen darf.
+
+GEPRÜFT. `test439` von 34 auf 38 Zusagen. Gegenprobe rot gesehen:
+`densify` zurück auf `points` — drei Zusagen rot (§5, §5b, §7), die
+Gegenzusage grün. Dazu test87, test105, test109, test466, test470, test472
+— alle grün. Nicht geprüft: die Gesamtsuite.
+Kein Bild: hier ist nichts zu sehen, was ein Bild zeigen könnte — die
+Rechnung ist der Beweis (§55.3).

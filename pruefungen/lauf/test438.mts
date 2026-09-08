@@ -161,11 +161,13 @@ console.log('\n§2 Der Bleistift');
   const s = await mitBlatt();
   await s.click('.blatt-werk [data-wz="stift"]');
   const stifte = await s.evaluate(`Marken.STIFTE.map(st => st.id)`) as string[];
-  /* FÜNF SEIT E490: der Schutzleiter steht am ENDE, damit der gewohnte
-     Rundlauf Füller → Kugel → Pinsel → Bleistift unverändert bleibt und
-     erst danach das Sonderzeichen kommt. */
-  gleich('Fünf Stifte, der Schutzleiter zuletzt', stifte,
-    ['fueller', 'kugel', 'pinsel', 'bleistift', 'schutzleiter']);
+  /* SECHS SEIT E509: die Sonderstifte stehen am ENDE, damit der gewohnte
+     Rundlauf Füller → Kugel → Pinsel → Bleistift unverändert bleibt. E490
+     hängte den Schutzleiter an, E509 den Leiterstift dahinter. Wer einen
+     weiteren Sonderstift baut, hängt ihn ebenfalls hinten an — die ersten
+     vier Stationen bleiben, wo die Hand sie sucht. */
+  gleich('Sechs Stifte, die Sonderstifte zuletzt', stifte,
+    ['fueller', 'kugel', 'pinsel', 'bleistift', 'schutzleiter', 'leiter']);
   p('Der Bleistift schwillt weniger als der Füller — und dünner ist er auch',
     await s.evaluate(`Marken.druckFaktor('bleistift', 0.9) < Marken.druckFaktor('fueller', 0.9) && Marken.druckFaktor('bleistift', 0.1) < Marken.druckFaktor('fueller', 0.1)`));
   const knoten = JSON.parse(await s.evaluate(`(() => {
@@ -176,14 +178,14 @@ console.log('\n§2 Der Bleistift');
   p('Er zeichnet eine Fläche wie der Füller, durchscheinend und mit rauer Kante',
     knoten?.tag === 'path' && knoten.flaeche && knoten.deckung === '0.72' && !!knoten.koernung && knoten.stil === 'bleistift', JSON.stringify(knoten));
   /* Der Knopf wechselt Füller → Kugel → Pinsel → Bleistift → Schutzleiter
-     → Füller (seit E490 fünf Stationen). */
+     → Leiter → Füller (seit E509 sechs Stationen). */
   const reihe: string[] = [];
-  for (let n = 0; n < 5; n++) {
+  for (let n = 0; n < 6; n++) {
     await s.click('.blatt-werk [data-act="stil"]');
     reihe.push(await s.evaluate(`document.querySelector('.blatt-werk [data-act="stil"]').dataset.stil`) as string);
   }
-  gleich('Der Knopf wechselt: Kugel, Pinsel, Bleistift, Schutzleiter, wieder Füller',
-    reihe, ['kugel', 'pinsel', 'bleistift', 'schutzleiter', 'fueller']);
+  gleich('Der Knopf wechselt: Kugel, Pinsel, Bleistift, Schutzleiter, Leiter, wieder Füller',
+    reihe, ['kugel', 'pinsel', 'bleistift', 'schutzleiter', 'leiter', 'fueller']);
   await s.click('.blatt-werk [data-act="stil"]'); await s.click('.blatt-werk [data-act="stil"]'); await s.click('.blatt-werk [data-act="stil"]');
   gleich('… und merkt sich den Bleistift', await s.evaluate(`Store.getMeta('zeichnen:stift')`), 'bleistift');
   await zug(s, [100, 400], [300, 420]);

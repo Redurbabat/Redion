@@ -105,7 +105,19 @@ const Marken = (() => {
     
            ER STEHT AM ENDE DER REIHE, wie der Bleistift aus demselben Grund:
            der Wechsel Füller → Kugel → Pinsel bleibt, wie `test343` ihn kennt. */
-        { id: 'schutzleiter', name: 'Schutzleiter', zeichen: '⏚' }
+        { id: 'schutzleiter', name: 'Schutzleiter', zeichen: '⏚' },
+        /* DER LEITERSTIFT (E509, Redurs Wunsch vom 8. September). Er zeichnet
+           nicht anders als der Kugelschreiber — er bringt eine andere
+           FARBREIHE mit: die zehn Adern eines Schaltplans, jede mit ihrem
+           Namen. „Speziell für Fachzeichen gedacht", und deshalb steht er in
+           der Stiftreihe und nicht als sechstes Werkzeug: es ist ein Stift,
+           den man führt, kein Ding, das man setzt.
+    
+           ER STEHT AM ENDE. Die Reihenfolge Füller → Kugel → Pinsel →
+           Bleistift → Schutzleiter ist die, die `test343` kennt und die eine
+           Hand sich gemerkt hat; ein neuer Stift in der Mitte hätte jeden
+           zweiten Klick woandershin geführt. */
+        { id: 'leiter', name: 'Leiter', zeichen: '⌁' }
     ];
     /* ══ DIE FARBEN DES SCHUTZLEITERS ═══════════════════════════════════════
        Grün-gelb ist keine Mischfarbe, sondern ZWEI Farben — deshalb wird der
@@ -135,6 +147,78 @@ const Marken = (() => {
        Punkt — bei 3 zu 1 sah man auf dem Bild nur eine gestrichelte Linie,
        kein Strich-Punkt. */
     const PE_MUSTER = [3.5, 4, 0.1, 4];
+    /* DER NEUTRALLEITER (E509): NUR Striche, kein Punkt. Redur hat es zweimal
+       gesagt — „Strich Strich Strich, so nur Strich". Der Unterschied zum
+       Schutzleiter ist genau das: vier Zahlen dort (Strich, Lücke, Punkt,
+       Lücke), zwei hier. Dieselbe Rechnung in Strichbreiten, damit das
+       Muster bei 1 px wie bei 12 px dasselbe Verhältnis hat, und dieselbe
+       Vorsicht wegen `stroke-linecap:round` (E490). */
+    const N_MUSTER = [2.6, 3.2];
+    /* ══ DIE ADERN EINES SCHALTPLANS (E509) ══════════════════════════════════
+     * Redur, 8. September: „ein spezieller Stift … das ist speziell für
+     * Fachzeichen gedacht. Die Schutzleiter, die Neutralleiter sollte blau
+     * sein … dann für L1 braun, L2 schwarz und L3 grau … und für S
+     * (Lampendraht) solltest du eine passende Farbe finden … und
+     * Korrespondierende 1 und 2 und 3 bis 4 sollten verschiedene Farben
+     * haben."
+     *
+     * DAS IST EIN KATALOG UND KEINE FARBLISTE (§8). Jede Ader bringt vier
+     * Dinge mit, die zusammengehören: ihr Kürzel (das im Plan danebensteht),
+     * ihren Namen (den ein Mensch liest und ein Vorleser vorliest), ihre
+     * Farbe und ihre Strichart. Eine Farbe ohne Namen wäre genau das, was
+     * §38 verbietet — eine Auskunft, die nur in der Farbe steckt.
+     *
+     * WOHER DIE FARBEN KOMMEN, und wo ich gewählt habe:
+     *
+     *   PE, N, L1, L2, L3   stehen so in der Norm und in Redurs Auftrag:
+     *                       grün-gelb, blau, braun, schwarz, grau.
+     *   S (Lampendraht)     hat keine genormte Zeichenfarbe. Gewählt ist ein
+     *                       kräftiges Orange: es ist warm wie das Licht, an
+     *                       dessen Ende es hängt, und es ist der einzige
+     *                       Farbton, der zwischen dem Braun von L1 und dem
+     *                       Gelb des PE noch Platz hat, ohne mit einem von
+     *                       beiden verwechselt zu werden.
+     *   1 bis 4             die Korrespondierenden. Vier Töne, die weit
+     *                       auseinanderliegen — Magenta, Violett, Türkis,
+     *                       Karmin. Nicht vier Nuancen einer Farbe: wer eine
+     *                       Kreuzschaltung zeichnet, hat alle vier
+     *                       gleichzeitig auf dem Blatt.
+     *
+     * DER SCHUTZLEITER STEHT NICHT ZWEIMAL DA. Seine Farbe ist `PE_GRUEN`,
+     * dieselbe Konstante, die auch der Stift aus E490 zeichnet, und seine
+     * Strichart ist genau jener Stift. Der Katalog ist der EINE Ort, an dem
+     * eine Ader beschrieben wird; die Stiftliste ist ein Weg dorthin.
+     * ---------------------------------------------------------------------- */
+    const LEITER = [
+        { id: 'pe', kurz: 'PE', name: 'Schutzleiter', farbe: PE_GRUEN, stil: 'schutzleiter' },
+        { id: 'n', kurz: 'N', name: 'Neutralleiter', farbe: '#1f6fd0', stil: 'neutralleiter' },
+        { id: 'l1', kurz: 'L1', name: 'Aussenleiter L1', farbe: '#7a4a21', stil: 'kugel' },
+        { id: 'l2', kurz: 'L2', name: 'Aussenleiter L2', farbe: '#111111', stil: 'kugel' },
+        { id: 'l3', kurz: 'L3', name: 'Aussenleiter L3', farbe: '#9a9a9a', stil: 'kugel' },
+        { id: 's', kurz: 'S', name: 'Lampendraht', farbe: '#e2761b', stil: 'kugel' },
+        { id: 'k1', kurz: '1', name: 'Korrespondierende 1', farbe: '#c2185b', stil: 'kugel' },
+        { id: 'k2', kurz: '2', name: 'Korrespondierende 2', farbe: '#7c3aed', stil: 'kugel' },
+        { id: 'k3', kurz: '3', name: 'Korrespondierende 3', farbe: '#0d9488', stil: 'kugel' },
+        { id: 'k4', kurz: '4', name: 'Korrespondierende 4', farbe: '#4d7c0f', stil: 'kugel' }
+    ];
+    /* WELCHE ADER GERADE GEFÜHRT WIRD. In `meta`, wie die Stiftwahl selbst:
+       wer gestern den Schutzleiter gezogen hat, zieht ihn heute weiter. */
+    const M_LEITER = 'zeichnen:leiter';
+    const leiterJetzt = () => (typeof Store !== 'undefined' ? String(Store.getMeta(M_LEITER, 'pe')) : 'pe');
+    const leiterMerken = (id) => {
+        if (typeof Store !== 'undefined')
+            Store.setMeta(M_LEITER, id);
+    };
+    /** Die Ader zu einer Farbe — für den Namen am Tupfer und am Strich. */
+    const leiterVon = (id) => LEITER.find(l => l.id === String(id || ''));
+    /* DIE FÜNF GEWÖHNLICHEN FARBEN HEISSEN AUCH BEIM NAMEN (E509). Sie
+       trugen alle den Titel „Farbe" — beim Überfahren stand also fünfmal
+       dasselbe da, und ein Vorleser las fünfmal „Farbe". Redur hat es für
+       die Adern verlangt; für die fünf hier gilt derselbe Satz. */
+    const FARBNAMEN = {
+        '#111111': 'Schwarz', '#d64545': 'Rot', '#2f7ed8': 'Blau',
+        '#3aa757': 'Grün', '#e0a419': 'Gelb'
+    };
     /* ══ DIE WERKZEUGE, EINMAL AUFGESCHRIEBEN (E490) ════════════════════════
        Bis hierher standen Kennung, Zeichen, Wort und Beschreibung jedes
        Werkzeugs als Aufruf in der Zeile, die die Leiste baut — nirgends
@@ -809,6 +893,19 @@ const Marken = (() => {
            Das Muster rechnet in Strichbreiten, damit es bei 1 px wie bei 12 px
            dasselbe Verhältnis hat. `stroke-linecap:round` macht aus dem sehr
            kurzen Strich den Punkt. */
+        /* ══ DER NEUTRALLEITER: NUR STRICHE (E509) ════════════════════════════
+           Eine Farbe, ein Muster, keine zweite Ebene — der Schutzleiter
+           braucht seine Gruppe, weil grün-gelb zwei Farben sind; der
+           Neutralleiter ist blau und sonst nichts. Deshalb steht er hier und
+           nicht dort unten: weniger Aufwand für weniger Anspruch. */
+        if (String(mark.stil) === 'neutralleiter' && art !== 'text' && art !== 'zettel'
+            && art !== 'abdeck' && art !== 'bild' && art !== 'zeichen') {
+            element.setAttribute('stroke-dasharray', N_MUSTER.map(v => Math.max(0.2, v * width)).join(' '));
+            element.setAttribute('data-sid', idOf(mark));
+            element.setAttribute('data-ink-art', art);
+            element.setAttribute('data-ink-stil', 'neutralleiter');
+            return element;
+        }
         if (String(mark.stil) === 'schutzleiter' && art !== 'text' && art !== 'zettel'
             && art !== 'abdeck' && art !== 'bild' && art !== 'zeichen') {
             const gruppe = svg('g');
@@ -2064,7 +2161,17 @@ const Marken = (() => {
                 if (!InkGeometry.intersects(k, InkGeometry.bounds(m)))
                     continue;
                 if (InkGeometry.LINIEN.has(String(m.art)) && Array.isArray(m.pts) && m.pts.length) {
-                    const punkte = InkGeometry.points(m.pts);
+                    /* DICHTER ABGETASTET, NICHT AN DEN ECKEN GEZÄHLT (E510).
+                       Hier stand `InkGeometry.points(m.pts)` — die gespeicherten
+                       Punkte. Ein Stift-Strich hat davon hunderte, eine gerade
+                       `line` genau zwei: ihre Enden. Dieselbe Hälfte-Regel fragte
+                       also beim Strich nach seiner LÄNGE und bei der Linie nur nach
+                       ihren ENDEN, und ein Gekritzel quer über die Mitte einer
+                       Linie nahm sie deshalb nicht weg. Jetzt wird beides an der
+                       Länge gemessen: `densify` legt Messpunkte im Abstand
+                       `KRITZEL_NAH` auf den Weg, dichte Striche bleiben davon
+                       unberührt. */
+                    const punkte = InkGeometry.densify(m.pts, KRITZEL_NAH);
                     const n = punkte.filter(q => InkGeometry.distanceToPolyline(zug, q) <= KRITZEL_NAH).length;
                     if (n * 2 >= punkte.length)
                         weg.add(idOf(m));
@@ -2744,6 +2851,17 @@ const Marken = (() => {
                     breite: width, pts: [point], pressure: [], zeigerArt: e.pointerType };
                 if (tool === 'stift' && stil !== 'kugel')
                     running.stil = stil;
+                /* ── DER LEITERSTIFT SETZT ZWEI DINGE (E509) ────────────────────
+                   `stil` ist die ZEICHENANWEISUNG — sie ist dieselbe, die ein
+                   Schutzleiter aus E490 trägt, damit alte und neue Striche durch
+                   denselben Weg gehen. `leiter` ist die BEDEUTUNG: welche Ader das
+                   ist. Beides steht da, weil beides gebraucht wird — der Zeichner
+                   fragt das eine, ein Mensch (und später ein Export) das andere. */
+                if (tool === 'stift' && stil === 'leiter') {
+                    const ader = leiterVon(leiterJetzt()) || LEITER[0];
+                    running.stil = ader.stil;
+                    running.leiter = ader.id;
+                }
                 /* DIE NEIGUNG WIRD MITGESCHRIEBEN (E507) — vorerst in ein Feld, das
                    es beim Absetzen nur behält, wenn wirklich etwas darin steht. */
                 running.neigung = [neigungAus(e)];
@@ -3774,8 +3892,13 @@ const Marken = (() => {
                     ` title="${f.titel}"><span class="zeichen" aria-hidden="true">${f.zeichen}</span>` +
                     `<span class="wort">${f.name}</span></button>`).join('') +
                 '<span class="blatt-trenn" data-gruppe="farbe"></span>' +
+                /* JEDE FARBE BEIM NAMEN (E509). Hier stand fünfmal `title="Farbe"` —
+                   beim Überfahren also fünfmal dasselbe Wort, und ein Vorleser las
+                   fünfmal „Farbe". Redur hat den Namen für die Adern verlangt; für
+                   diese fünf gilt derselbe Satz (§38). */
                 FARBEN.map((value, index) => `<button class="blatt-farbe${index === 0 ? ' on' : ''}" data-gruppe="farbe" ` +
-                    `data-c="${value}" style="background:${value}" title="Farbe"></button>`).join('') +
+                    `data-c="${value}" style="background:${value}" ` +
+                    `title="${FARBNAMEN[value] || value}" aria-label="Farbe ${FARBNAMEN[value] || value}"></button>`).join('') +
                 /* EIGENE FARBEN (E351): die zuletzt gewaehlten stehen als Tupfer da,
                    dahinter der Weg zum Farbwaehler des Browsers. */
                 eigeneFarben().map(value => `<button class="blatt-farbe blatt-farbe-eigen" data-gruppe="farbe" ` +
@@ -4151,6 +4274,49 @@ const Marken = (() => {
             knopf.innerHTML = `<span class="zeichen" aria-hidden="true">${stift.zeichen}</span>`
                 + `<span class="wort">${stift.name}</span>`;
             knopf.title = 'Stift wechseln: ' + STIFTE.map(st => st.name).join(' → ');
+            leiterReihe(stift.id === 'leiter');
+        };
+        /**
+         * DIE FARBREIHE WIRD ZUR ADERNREIHE (E509).
+         *
+         * Beim Leiterstift stehen dort nicht fünf Farben und ein „+", sondern
+         * die zehn Adern — jede mit ihrem Kürzel darauf und ihrem Namen im
+         * Titel. Beim Wechsel zurück ist alles wieder, wie es war.
+         *
+         * WEGGENOMMEN, NICHT ÜBERSCHRIEBEN. Die fünf festen Tupfer und die
+         * eigenen Farben bleiben im Baum und werden nur ausgeblendet: sie
+         * tragen die gewählte Farbe in ihrer `on`-Klasse, und wer sie
+         * wegwürfe, müsste sie beim Zurückschalten neu erfinden.
+         *
+         * DAS KÜRZEL STEHT AUF DEM TUPFER, nicht nur im Titel. Zehn Punkte,
+         * die sich allein durch die Farbe unterscheiden, sind genau das, was
+         * §38 verbietet — und im Schaltplan steht das Kürzel ohnehin neben der
+         * Ader, man liest es also sowieso.
+         */
+        const leiterReihe = (an) => {
+            tools.querySelectorAll('.blatt-farbe-leiter').forEach(node => node.remove());
+            tools.querySelectorAll('.blatt-farbe, .blatt-farbe-neu')
+                .forEach(node => node.classList.toggle('blatt-farbe-weg', an));
+            if (!an)
+                return;
+            const neuKnopf = tools.querySelector('.blatt-farbe-neu');
+            const jetzt = leiterJetzt();
+            LEITER.forEach(ader => {
+                const k = document.createElement('button');
+                k.className = 'blatt-farbe blatt-farbe-leiter' + (ader.id === jetzt ? ' on' : '');
+                k.dataset.gruppe = 'farbe';
+                k.dataset.c = ader.farbe;
+                k.dataset.leiter = ader.id;
+                k.style.background = ader.farbe;
+                k.title = ader.kurz + ' — ' + ader.name;
+                k.setAttribute('aria-label', 'Ader ' + ader.kurz + ': ' + ader.name);
+                const wort = document.createElement('span');
+                wort.className = 'blatt-farbe-kurz';
+                wort.setAttribute('aria-hidden', 'true');
+                wort.textContent = ader.kurz;
+                k.append(wort);
+                neuKnopf?.before(k);
+            });
         };
         const markiere = () => {
             if (!tools.isConnected) {
@@ -4176,9 +4342,17 @@ const Marken = (() => {
                 }
             }
             const farbe = Zeichenziel.farbeVon(controls);
+            /* EINE ADER WIRD AN IHRER KENNUNG ERKANNT, nicht an ihrer Farbe
+               (E509). L2 ist `#111111` — dasselbe Schwarz wie der erste
+               Farbtupfer. Wer hier die Farbe vergleicht, hebt beim Öffnen den
+               falschen Tupfer hervor: L2 statt der Ader, die man zuletzt geführt
+               hat. Die Farbe ist eine Eigenschaft der Ader, nicht ihr Name. */
+            const ader = leiterJetzt();
             if (farbe)
                 tools.querySelectorAll('.blatt-farbe').forEach(node => {
-                    node.classList.toggle('on', node.dataset.c === farbe);
+                    node.classList.toggle('on', node.dataset.leiter
+                        ? node.dataset.leiter === ader
+                        : node.dataset.c === farbe);
                 });
             const dicke = Zeichenziel.dickeVon(controls);
             if (dicke)
@@ -4274,6 +4448,16 @@ const Marken = (() => {
                 return;
             staerkeAuf(false);
         });
+        /* DIE ADERNREIHE MUSS AUCH BEIM ÖFFNEN STIMMEN (E509).
+           Hier stand nichts, und `leiterReihe` lief nur beim Stiftwechsel. Wer
+           Redion mit dem Leiterstift schloss und wieder aufmachte, sah die
+           fünf gewöhnlichen Farben und einen Stift, der etwas anderes zeichnet
+           — der Zustand stand am Knopf und nicht in der Reihe.
+    
+           GEFUNDEN HAT ES DAS BILD, nicht der Prüflauf: der klickte sich zum
+           Leiterstift durch und löste den Wechsel damit selbst aus. §55 in
+           einem Satz. */
+        leiterReihe((controls.stilVon ? controls.stilVon() : STIL_VORGABE) === 'leiter');
         if (typeof Zeichenziel !== 'undefined' && typeof Zeichenziel.horche === 'function') {
             try {
                 Zeichenziel.horche(markiere);
@@ -4513,6 +4697,11 @@ const Marken = (() => {
                 return;
             }
             if (target.dataset.c) {
+                /* Ein Aderntupfer merkt sich, WELCHE Ader er ist — die Farbe allein
+                   genügt nicht: zwei Adern könnten eines Tages dieselbe haben, und
+                   der Name soll trotzdem stimmen (E509). */
+                if (target.dataset.leiter)
+                    leiterMerken(target.dataset.leiter);
                 controls.setzeFarbe(target.dataset.c);
                 /* Dieselbe Gegenrichtung wie beim Werkzeug: sonst stünde oben eine
                    Farbe markiert, die niemand mehr benutzt. */
@@ -4607,7 +4796,7 @@ const Marken = (() => {
     if (typeof document !== 'undefined')
         document.addEventListener('keydown', kuerzel);
     return { schicht, leiste, zeichneMarke, annotierbar, alsAnnotation,
-        FARBEN, BREITEN, STIFTE, FORMEN, WERKZEUGE, artWort, artZeichen,
+        FARBEN, BREITEN, STIFTE, LEITER, FORMEN, WERKZEUGE, artWort, artZeichen,
         druckFaktor, RADIERER, TASTEN,
         /* DIE FARBSÄTZE NACH AUSSEN (E486). Nicht, damit jemand anders eine
            zweite Leiste baut — sondern damit der Prüflauf an derselben Rechnung

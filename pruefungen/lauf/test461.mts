@@ -218,8 +218,12 @@ console.log('\n§3 Grün-gelb und Strich-Punkt, in EINER Marke');
   gleich('Er schwillt nicht mit dem Druck', await s.evaluate(`[
     Marken.druckFaktor('schutzleiter', 0.1), Marken.druckFaktor('schutzleiter', 1)
   ]`), [1, 1]);
-  gleich('Er steht am ENDE der Stiftreihe — der alte Wechsel bleibt',
-    await s.evaluate(`Marken.STIFTE.map(x => x.id)`),
+  /* E509 hat den Leiterstift HINTER ihn gehängt. Geprüft wird darum nicht
+     mehr die ganze Reihe, sondern das, worauf es ankommt: die vier
+     gewöhnlichen Stifte stehen unverändert vorn, der Schutzleiter kommt
+     erst danach. */
+  gleich('Er steht hinter den vier gewöhnlichen Stiften — der alte Wechsel bleibt',
+    await s.evaluate(`Marken.STIFTE.map(x => x.id).slice(0, 5)`),
     ['fueller', 'kugel', 'pinsel', 'bleistift', 'schutzleiter']);
   await s.close();
 }

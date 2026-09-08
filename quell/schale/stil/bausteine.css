@@ -4058,6 +4058,27 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-farbe-neu{width:22px; height:22px; min-width:22px; padding:0 !important; border-radius:50%;
                  border:1px dashed var(--text-faint); color:var(--text-dim); font-size:14px; line-height:1;
                  display:inline-flex; align-items:center; justify-content:center}
+/* ══ DIE ADERNREIHE (E509) ═══════════════════════════════════════════════
+   Beim Leiterstift stehen in der Farbreihe die zehn Adern eines
+   Schaltplans. Sie sind etwas breiter als ein Farbtupfer, weil ihr Kürzel
+   daraufsteht — „L1", „PE", „3" —, und das Kürzel ist der Grund, warum
+   diese Reihe §38 genügt: zehn Punkte, die sich nur in der Farbe
+   unterscheiden, wären eine Auskunft, die niemand lesen kann. */
+.blatt-farbe-weg{display:none !important}
+.blatt-farbe-leiter{
+  position:relative; width:auto; min-width:var(--touch-min); padding:0 6px;
+  display:inline-flex; align-items:center; justify-content:center
+}
+.blatt-farbe-kurz{
+  font-size:9.5px; font-weight:800; letter-spacing:.02em; line-height:1;
+  color:#fff; text-shadow:0 1px 2px #00000099; pointer-events:none
+}
+/* Auf Grau und Gelb ist Weiss nicht zu lesen — dort wird das Kürzel
+   dunkel. Gemessen an der Helligkeit der Ader, nicht geraten. */
+.blatt-farbe-leiter[data-leiter="l3"] .blatt-farbe-kurz,
+.blatt-farbe-leiter[data-leiter="pe"] .blatt-farbe-kurz{
+  color:#111; text-shadow:0 1px 2px #ffffffaa
+}
 .blatt-farbe-neu:hover{border-color:var(--accent-text); color:var(--text)}
 .blatt-farbe-eigen{border-color:var(--line)}
 .blatt-strich{display:flex; align-items:center; justify-content:center; width:30px}

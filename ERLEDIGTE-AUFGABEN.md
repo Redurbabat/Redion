@@ -4683,3 +4683,49 @@ E459 gab; „ein bisschen Schwung" fand ein fremdes `@keyframes`; und „ein
 kurzes Überstreichen öffnet nichts" sah erst nach dem Weggehen nach — da
 ist die Karte auch ohne Wartezeit wieder zu. Alle drei messen jetzt im
 richtigen Augenblick, mit der echten Maus.
+
+**Ein Stift für Fachzeichen (E509, test477).** Redur hat ein Bild der
+Farbreihe geschickt: der Schutzleiter solle dort stehen wie eine Farbe und
+beim Überfahren seinen Namen sagen — und die anderen Farben auch. Dazu ein
+eigener Stift, „speziell für Fachzeichen gedacht", mit den Adern eines
+Schaltplans.
+
+Es sind zehn geworden: PE grün-gelb und strichpunktiert (der Stift aus
+E490, unverändert), N blau und mit NUR Strichen — Redur hat es zweimal
+gesagt —, L1 braun, L2 schwarz, L3 grau, S orange für den Lampendraht, und
+vier weit auseinanderliegende Töne für die Korrespondierenden 1 bis 4. Fünf
+davon stehen in der Norm, fünf habe ich gewählt, und in E509 steht, warum
+genau diese.
+
+Der Stift steht am ENDE der Reihe. Füller → Kugel → Pinsel → Bleistift ist
+der Weg, den eine Hand sich gemerkt hat; ein neuer Stift in der Mitte hätte
+jeden zweiten Klick woandershin geführt.
+
+Nebenbei heissen jetzt auch die fünf gewöhnlichen Farben beim Namen. An
+ihnen stand fünfmal `title="Farbe"` — ein Vorleser las fünfmal dasselbe
+Wort.
+
+Drei Fehler auf dem Weg. Die Adernreihe schaltete nur beim Stiftwechsel um,
+nicht beim Öffnen: wer Redion mit dem Leiterstift schloss, sah die alten
+Farben und einen Stift, der etwas anderes zeichnet. **Gefunden hat es das
+Bild**, nicht der Prüflauf — der klickte sich zum Stift durch und löste den
+Wechsel damit selbst aus. Der zweite: mein Einschub zerschnitt eine
+mehrzeilige CSS-Regel, und die Zusage konnte es nicht sehen, weil sie nach
+der Klasse fragte statt nach der Sichtbarkeit. Der dritte: L2 ist dasselbe
+Schwarz wie der erste Farbtupfer, und die Hervorhebung verglich Farben.
+
+**Die Mitte einer Linie zählt auch (E510, test439).** Bei der
+Regressionsrunde danach war `test439` rot — und zwar auch auf dem Stand
+davor. Gebrochen hatte es E504 aus demselben Durchgang: seit dort glättet
+der Filter in Zeit, und die Zeigerereignisse eines Prüflaufs kommen alle in
+derselben Millisekunde. Der Filter liest das als eine Hand mit 20 px je
+Millisekunde und lässt den Zug entsprechend nachlaufen — auf echter
+Hardware sind es 1,7 px statt 28.
+
+Der eigentliche Fund lag tiefer. Die Hälfte-Regel des Kritzel-Radierers
+zählte die GESPEICHERTEN Punkte einer Marke: ein Strich hat hunderte, eine
+gerade Linie zwei — ihre Enden. Ein Gekritzel quer über die Mitte einer
+Linie nahm sie deshalb seit E466 nie weg, egal wie dicht. Jetzt wird an der
+Länge gemessen. Und daneben steht die Gegenzusage, dass ein kurzes
+Gekritzel am Rand die Linie NICHT wegnimmt — eine Reparatur am Löschen darf
+nicht mehr löschen (§51).

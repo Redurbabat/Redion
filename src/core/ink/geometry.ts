@@ -460,6 +460,47 @@ const InkGeometry = (() => {
   };
 
   /**
+   * EINE LINIE DICHTER ABTASTEN (E510).
+   *
+   * DER FUND. Zwei Marken mit demselben Weg werden verschieden gemessen,
+   * je nachdem, wie viele Punkte zufällig darin stehen. Ein Stift-Strich
+   * über 200 px hat dreihundert Punkte; eine gerade `line` über dieselben
+   * 200 px hat ZWEI — ihre Enden. Jede Regel der Form „mindestens die
+   * Hälfte ihrer Punkte liegt nah am Zug" fragt beim Strich nach seiner
+   * LÄNGE und bei der Linie nur nach ihren ENDEN. Das ist nicht dieselbe
+   * Frage, und beim Kritzel-Löschen war es der Unterschied zwischen
+   * „gelöscht" und „passiert nichts": ein Gekritzel quer über die Mitte
+   * einer Linie berührte keines ihrer beiden Enden.
+   *
+   * Hier kommen Zwischenpunkte im Abstand `schritt` dazu — nicht als neue
+   * Daten, sondern als Messpunkte für genau solche Fragen. Die Ecken
+   * bleiben alle erhalten; es wird nur zwischen ihnen aufgefüllt.
+   *
+   * DIE OBERGRENZE IST KEIN SCHMUCK. Ein Zug über eine ganze Seite mit
+   * Schritt 1 wären Zehntausende Punkte, und `distanceToPolyline` läuft
+   * für jeden davon über den ganzen Gegenzug. `GRENZE` hält die Rechnung
+   * bei ein paar Tausend; wer mehr Punkte bräuchte, misst ohnehin etwas,
+   * das mit ein paar Tausend genauso beantwortet ist.
+   */
+  const DICHTER_GRENZE = 4000;
+  const densify = (raw: unknown, schritt = 6): InkPoint[] => {
+    const input = points(raw);
+    if (input.length < 2) return input;
+    const weite = Math.max(0.5, finite(schritt) || 6);
+    const out: InkPoint[] = [input[0]!];
+    for (let i = 1; i < input.length; i++) {
+      const a = input[i - 1]!, b = input[i]!;
+      const d = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const teile = Math.min(Math.ceil(d / weite), Math.max(1, DICHTER_GRENZE - out.length));
+      for (let k = 1; k < teile; k++)
+        out.push([a[0] + (b[0] - a[0]) * k / teile, a[1] + (b[1] - a[1]) * k / teile]);
+      out.push(b);
+      if (out.length >= DICHTER_GRENZE) break;
+    }
+    return out;
+  };
+
+  /**
    * TRIFFT DER RADIERER DIESE MARKE? (E352)
    * Linienzuege (Stift, Marker, Linie, Pfeil) werden am Weg gemessen, die
    * halbe Strichbreite als Zugabe; alles andere (Rechteck, Ellipse, Band,
@@ -731,7 +772,7 @@ const InkGeometry = (() => {
     return mark;
   };
 
-  return { points, simplify, simplifyIndices, outline, outlinePunkte, path, rectangle, bounds, move, intersects,
+  return { points, simplify, simplifyIndices, densify, outline, outlinePunkte, path, rectangle, bounds, move, intersects,
     distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale, rotate,
     textWidth, textLines, textLayout, LINIEN,
     /* Seit E474: der aufrechte Kasten der Marke OHNE ihre Drehung, ihre

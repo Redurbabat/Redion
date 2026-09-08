@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — neununddreissig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — einundvierzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -472,7 +472,28 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Blatt, das sich aufrichtet. Drei Wächter des ersten Entwurfs waren vor
     der Arbeit schon grün und mussten geschärft werden. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **neununddreissig Bögen**; die Überschrift
+  · **G40 — Ein Stift für Fachzeichen** (E509, test477): Redurs Wunsch —
+    die zehn Adern eines Schaltplans als eigene Farbreihe, jede mit ihrem
+    Namen beim Überfahren. PE grün-gelb und strichpunktiert, N blau und
+    NUR Striche, L1 braun, L2 schwarz, L3 grau, S orange, und vier weit
+    auseinanderliegende Töne für die Korrespondierenden. Der Stift steht
+    am ENDE der Stiftreihe, damit der gewohnte Rundlauf bleibt. Nebenbei
+    heissen jetzt auch die fünf gewöhnlichen Farben beim Namen statt
+    fünfmal „Farbe". Drei Fehler: die Reihe schaltete nur beim
+    Stiftwechsel um (gefunden vom Bild, nicht vom Prüflauf), der Einschub
+    zerschnitt eine CSS-Regel, und L2 ist dasselbe Schwarz wie der erste
+    Farbtupfer. **Steht.**
+
+  · **G41 — Die Mitte einer Linie zählt auch** (E510, test439 §5b): kein
+    Wunsch, sondern ein roter Lauf. Die Hälfte-Regel des
+    Kritzel-Radierers zählte gespeicherte Punkte — ein Strich hat
+    hunderte, eine gerade Linie zwei. Ein Gekritzel über ihre Mitte nahm
+    sie deshalb seit E466 nie weg. Jetzt wird an der LÄNGE gemessen
+    (`InkGeometry.densify`). Aufgefallen ist es, weil E504 die Glättung
+    auf Zeit umstellte und die zeitlosen Ereignisse eines Prüflaufs
+    seither wie eine Hand mit 20 px je Millisekunde aussehen. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **einundvierzig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

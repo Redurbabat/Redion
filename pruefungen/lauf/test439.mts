@@ -22,6 +22,10 @@
  *   §1 → in `marken.ts` im Drehen-Zweig `InkGeometry.rotate` durch die
  *        Kopie ersetzen: nichts dreht sich. Gelaufen am 7. September, rot.
  *   §5 → `istKritzel` immer false: das Gekritzel wird ein Strich. Gelaufen, rot.
+ *   §5b → in `kritzelTrifft` `InkGeometry.densify` durch `points` ersetzen:
+ *        die Mitte der Linie zählt wieder nicht. Gelaufen am 8. September,
+ *        rot in einer Zusage — die Gegenzusage daneben blieb grün, sie
+ *        haelt die andere Richtung.
  *
  *   node pruefungen/lauf/test439.mts
  * ==========================================================================*/
@@ -253,6 +257,62 @@ console.log('\n§5 Kritzel-Löschen');
   await s.close();
 }
 
+/* ═══ §5b Die Mitte einer Linie zählt auch (E510) ══════════════════════════
+ * DER FUND. Die Hälfte-Regel aus E466 zählte die GESPEICHERTEN Punkte
+ * einer Marke. Ein Stift-Strich über 200 px hat davon hunderte, eine
+ * gerade `line` über dieselben 200 px hat ZWEI — ihre Enden. Dieselbe
+ * Regel fragte damit beim Strich nach seiner Länge und bei der Linie nur
+ * nach ihren Enden: ein Gekritzel quer über die MITTE einer Linie nahm sie
+ * nicht weg, egal wie dicht es war.
+ *
+ * Aufgefallen ist es an §5, nicht am Auge: seit E504 glättet der Filter in
+ * ZEIT, und die synthetischen Ereignisse dieses Prüflaufs kommen ohne Zeit
+ * dazwischen — also mit dem Tempo einer Hand, die 20 px je Millisekunde
+ * fährt. Der Nachlauf zog die Enden des gespeicherten Gekritzels um
+ * ein paar Pixel nach innen, und damit lag KEIN Ende der Linie mehr nah
+ * genug. Die Regel hing an zwei Punkten, und zwei Punkte sind zu wenig,
+ * um daran etwas zu hängen.
+ * ------------------------------------------------------------------------ */
+console.log('\n§5b Die Mitte einer Linie zählt auch');
+{
+  const dicht = (x0: number, x1: number, y0: number): number[][] => {
+    const pts: number[][] = [];
+    for (let z = 0; z < 6; z++) {
+      const von = z % 2 ? x1 : x0, bis = z % 2 ? x0 : x1;
+      for (let i = 0; i < 10; i++) pts.push([von + (bis - von) * i / 10, y0 + z * 4]);
+    }
+    return pts;
+  };
+  /* Eine LANGE Linie, 400 px, und ein Gekritzel über ihre mittleren 340 —
+     mehr als die Hälfte, aber ohne ein einziges Ende zu berühren. */
+  const s = await mitBlatt([{ id: 'l1', art: 'line', farbe: '#111111', breite: 2.4, pts: [[100, 500], [500, 500]] }]);
+  await s.click('.blatt-werk [data-wz="stift"]');
+  await zug(s, dicht(130, 470, 490));
+  gleich('Ein Gekritzel über die Mitte nimmt die Linie weg — ohne ihre Enden zu berühren',
+    (await marken(s)).map(m => m.art), []);
+  await s.close();
+}
+{
+  const dicht = (x0: number, x1: number, y0: number): number[][] => {
+    const pts: number[][] = [];
+    for (let z = 0; z < 6; z++) {
+      const von = z % 2 ? x1 : x0, bis = z % 2 ? x0 : x1;
+      for (let i = 0; i < 10; i++) pts.push([von + (bis - von) * i / 10, y0 + z * 4]);
+    }
+    return pts;
+  };
+  /* UND DIE GEGENRICHTUNG. Dieselbe lange Linie, aber nur ihr linkes
+     Viertel überkritzelt. Sie muss BLEIBEN — sonst hätte die Reparatur
+     aus dem Kritzel-Radierer einen gemacht, der bei der leisesten
+     Berührung ganze Marken verschluckt (§9, §51). */
+  const s = await mitBlatt([{ id: 'l1', art: 'line', farbe: '#111111', breite: 2.4, pts: [[100, 500], [500, 500]] }]);
+  await s.click('.blatt-werk [data-wz="stift"]');
+  await zug(s, dicht(120, 190, 490));
+  gleich('Ein kurzes Gekritzel am Rand nimmt sie NICHT weg',
+    (await marken(s)).map(m => m.art), ['line', 'stift']);
+  await s.close();
+}
+
 /* ═══ §6 Kreis-Lasso ═══════════════════════════════════════════════════════ */
 console.log('\n§6 Kreis-Lasso');
 {
@@ -272,6 +332,11 @@ console.log('\n§6 Kreis-Lasso');
 
 console.log('\n§7 Eingebunden');
 p('InkGeometry kennt `rotate`', /const rotate = \(mark: any, pivot: InkPoint, degrees: number\)/.test(lies('src/core/ink/geometry.ts')));
+p('InkGeometry kennt `densify` — und der Kritzel-Weg benutzt es',
+  /const densify = /.test(lies('src/core/ink/geometry.ts'))
+  && /InkGeometry\.densify\(m\.pts, KRITZEL_NAH\)/.test(lies('src/bereiche/pdf/marken.ts')));
+p('Das erzeugte JS trägt es', /densify/.test(lies('quell/core/ink/geometry.js'))
+  && /densify\(m\.pts, KRITZEL_NAH\)/.test(lies('quell/bereiche/pdf/marken.js')));
 p('Das erzeugte JS auch', /rotate/.test(lies('quell/core/ink/geometry.js')) && /istKritzel/.test(lies('quell/bereiche/pdf/marken.js')));
 p('Keine Fehler auf den Seiten', fehler.length === 0, fehler.slice(0, 3).join(' | '));
 console.log(`\n${ok}/${ok + weg} bestanden · ✗=${weg}`);

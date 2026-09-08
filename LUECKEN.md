@@ -6768,3 +6768,42 @@ Was Redion auch nach G5 nicht haben wird, und warum:
     Abhängigkeit ist keine (§6).
 
 Gefunden beim Lesen des Dossiers gegen den Bestand, 7. September 2026.
+
+---
+
+L134 · Fachzeichnen: was der Leiterstift noch nicht kann
+--------------------------------------------------------------------------
+
+E509 hat die zehn Adern eines Schaltplans als eigene Farbreihe gebaut.
+Was daran ehrlich fehlt:
+
+  · **Die Ader steht nur im Strich, nicht am Blatt.** Ein Strich trägt
+    `leiter: 'l1'`, aber nirgends steht das Kürzel als Beschriftung neben
+    der Ader — in einem echten Schaltplan schreibt man es dazu. Wer es
+    heute will, setzt eine Textmarke daneben und muss sie selbst
+    mitbewegen.
+  · **Der PDF-Export weiss nichts davon.** Seit E506 wird Handschrift
+    eine `/Ink`-Annotation mit `/T` und `/Contents`; dort stünde die Ader
+    gut („L1 — Aussenleiter"). Heute steht dort der Stiftname.
+  · **Die Adernreihe ist am Telefon länger als das Bild.** Zehn Tupfer zu
+    44 px sind 440 px plus Abstände; die Leiste rollt, aber man muss
+    schieben, um an die Korrespondierenden zu kommen. Eine zweite Zeile
+    oder ein Blatt zum Aufklappen wäre besser — beides ist ein eigener
+    Bogen (§37).
+  · **Kein Sammelschienen- oder Klemmensymbol.** Redurs Auftrag nannte
+    nur die Adern; ein Schaltplan hat mehr. Was davon Redion wirklich
+    braucht, weiss nur er.
+
+L135 · Die Hälfte-Regel gilt jetzt an der Länge — aber nur beim Kritzeln
+--------------------------------------------------------------------------
+
+E510 hat den Kritzel-Radierer von „die Hälfte der gespeicherten Punkte"
+auf „die halbe Länge" umgestellt (`InkGeometry.densify`). Derselbe
+Unterschied zwischen einem dichten Strich und einer zweipunktigen Linie
+steckt noch an anderen Stellen, die mit gespeicherten Punkten rechnen —
+`touchesCircle` und `splitByCircle` für den gewöhnlichen Radierer messen
+dagegen schon am Weg, nicht an den Punkten, und sind damit in Ordnung.
+Was NICHT nachgesehen wurde: die Lasso-Auswahl (`insidePolygon` über die
+Punkte einer Marke). Eine lange Linie, deren Enden ausserhalb der Schlinge
+liegen und deren Mitte darin, wird dort vermutlich nicht gewählt. Vermutet,
+nicht gemessen — und nach §36 heisst das: erst messen, dann bauen.
