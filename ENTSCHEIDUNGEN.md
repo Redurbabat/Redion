@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-476 Entscheidungen, E1 bis E496 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+477 Entscheidungen, E1 bis E497 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -540,6 +540,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E494** — Die Elemente-Bibliothek: eine Auswahl wird ein Stempel, und der Stempel überlebt das Dokument
 * **E495** — Cornell und Notenlinien: zwei Papiere, und die Lehre, dass Prozent in einem Verlauf die Kachel meint
 * **E496** — Eine Seite in ein anderes Dokument: kopieren mit frischer Kennung, verschieben mit derselben
+* **E497** — Der breite Lauf nach E493–E496: zwei echte Fehler, die seit Wochen rot waren und die niemand laufen liess
 
 ---
 
@@ -39686,3 +39687,89 @@ Menü an der Miniatur). Dazu test87, test105, test109, test386, test424,
 test437, test450, test461, test462 — alle grün.
 Nicht geprüft: die Gesamtsuite.
 Bild: `node bilder.mts seitenumzug` — die Wahl ist neu.
+
+---
+
+E497 — Der breite Lauf: zwei Fehler, die seit Wochen rot waren
+--------------------------------------------------------------------------
+
+Nach vier Bögen am PDF-Teil (E493 bis E496) wurde gefahren, was E485 einmal
+gefahren hat: **alles, was die geänderten Bausteine anfasst.** Ausgewählt
+nicht nach Gefühl, sondern gesucht — jede Suite, die `blatt-werk`,
+`blatt-marken`, `document-workspace`, `Marken.`, `DocumentMode`,
+`blatt-papier` oder `Dialog.` erwähnt. Es sind **84**, gefahren in Stücken
+(§30).
+
+Ergebnis: **38 Suiten waren rot oder mussten nachgezogen werden, zwei davon
+wegen eines echten Fehlers.** Und beide Fehler stammen NICHT aus diesen vier
+Bögen, sondern aus früheren — sie lagen seit Wochen da, weil ihre Suite
+niemand gefahren hat.
+
+## Fehler 1: Ein Werkzeug mit zwei Namen
+
+Das Abdeckband hiess in der Blattleiste „Abdeckband" und im Menüband
+„Abdecken". Der zweite Name kam, als die Werkzeugliste zu EINEM Katalog
+zusammengezogen wurde (Vorarbeit zu E492): dabei bekam der Knopf im
+Vorbeigehen eine neue Beschriftung.
+
+Das ist genau, wovor §8 warnt — zwei Kataloge für dasselbe laufen
+auseinander, und niemand sieht, welcher gilt. `test266 §1` hielt es fest
+und war seither rot.
+
+Berichtigt auf „Abdecken": das ist der Name, den das Menüband trägt und den
+der Nutzer seit E266 kennt. Ein stillschweigend umbenannter Knopf ist keine
+Verbesserung, sondern eine zweite Wahrheit.
+
+## Fehler 2: „Zurück" und „Vor" rollten am Telefon aus dem Bild
+
+E490 hat die zwei nach GoodNotes-Art an den ANFANG der Zeichenleiste
+gestellt. Die Regel, die sie am Telefon festhält, blieb dabei stehen, wie
+sie war:
+
+    position:sticky; right:0; margin-left:auto      (für rechts)
+
+Ein klebendes Element hält an `right:0` nur, wenn es über den RECHTEN Rand
+hinauswandern würde. Das erste Element einer rollenden Leiste wandert beim
+Rollen aber nach LINKS hinaus — und dafür braucht es `left:0`.
+
+Gemessen bei 390 px: ganz nach rechts gerollt standen beide ausserhalb der
+Leiste. Wer am Telefon schreibt und etwas zurücknehmen will, musste erst
+zurückwischen — also genau das, was E396 abgeschafft hatte. `test393 §2`
+sah es.
+
+## Was sonst nachgezogen wurde (keine Fehler, sondern Zahlen)
+
+    test207, test351   sieben Papiere statt fünf (E495)
+    test210            fünfzehn Knöpfe in der Zeichenleiste (E494)
+    test348            elf Zubehörgruppen; dazu der Nachtrag von E486
+    test365, test437   zwölf Werkzeuge (E494)
+    test438            fünf Stifte, der Schutzleiter zuletzt (E490)
+    test440, test442,
+    test453            zwölf Seitengriffe (E496)
+    test362            das Verzeichnis der rohen Pixelwerte
+
+Bei `test362` wurde nicht nur die Zahl nachgetragen: die rohe `44px` des
+Papierkorbs in der Elemente-Bibliothek ist jetzt `var(--touch-min)` — die
+Marke IST die Zahl. Nur die 22 px des Laserpunkts sind wirklich roh
+geblieben, denn ein Punkt ist keine Trefferfläche; dafür steigt das
+Verzeichnis um zwei.
+
+## Die Lehre, und sie steht jetzt zum dritten Mal hier
+
+`test266` war rot seit der Werkzeugliste. `test348` war rot seit E486
+(gefunden bei E494). `test393` und `test438` waren rot seit E490.
+
+Vier Suiten, vier Wochen, und keine hat sich gemeldet — weil ein Prüflauf,
+den niemand fährt, nichts meldet. §46 sagt „rot zuerst"; das setzt voraus,
+dass man WEISS, was rot ist. Ein voller Lauf ist teuer (§30: er läuft in
+Stücken, weil er länger dauert als eine Sitzung sicher steht) — ein
+Lauf über die betroffenen Bausteine ist es nicht, und er hat hier zwei
+echte Fehler gefunden.
+
+**Also gehört er ans Ende jedes Bündels**, nicht nur ans Ende eines
+Jahres: wer mehrere Bögen an einem Bereich fertig hat, sucht die Suiten,
+die den Bereich erwähnen, und fährt sie.
+
+GEPRÜFT. 84 Suiten, in Stücken gefahren; danach die 38 betroffenen noch
+einmal in einem Zug — alle grün. Nicht geprüft: die Gesamtsuite (323
+Läufe).

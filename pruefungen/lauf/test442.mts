@@ -198,7 +198,7 @@ console.log('\n§3 Seite als Bild');
   p('Um 90° gedreht ist es 1684 × 1191, die Kante gedreht mit', r.gedreht.w === 1684 && r.gedreht.h === 1191 && r.gedreht.farben[0][0] > 150 && r.gedreht.farben[0][1] < 120, JSON.stringify(r.gedreht));
   p('Eine Bildseite nimmt ihr Bild mit (rot, 1191 × 794)', r.mitBild.w === 1191 && r.mitBild.h === 794 && r.mitBild.farben[0][0] > 150 && r.mitBild.farben[0][2] < 120, JSON.stringify(r.mitBild));
   const knopf = await s.evaluate(() => { document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click(); return new Promise(r => setTimeout(r, 300)).then(() => [...document.querySelectorAll('.document-seite-knoepfe button')].map(b => (b as HTMLElement).dataset.documentAction)); });
-  gleich('Das Seitenmenü hat jetzt elf Griffe (mit der Kamera, E482)', knopf, ['page-add', 'page-duplicate', 'page-rotate', 'page-up', 'page-down', 'page-bookmark', 'page-delete', 'page-add-image', 'page-add-camera', 'page-add-pdf', 'page-export-image']);
+  gleich('Das Seitenmenü hat jetzt zwölf Griffe (Kamera E482, in ein anderes Dokument E496)', knopf, ['page-add', 'page-duplicate', 'page-rotate', 'page-up', 'page-down', 'page-bookmark', 'page-delete', 'page-add-image', 'page-add-camera', 'page-add-pdf', 'page-export-image', 'page-to-doc']);
 }
 
 /* ═══ §4 Zoom-Fenster ══════════════════════════════════════════════════════ */

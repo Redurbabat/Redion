@@ -160,7 +160,13 @@ const Marken = (() => {
     { id: 'stift', zeichen: '🖍', name: 'Stift', titel: 'Freihand mit geglätteter Linie' },
     { id: 'marker', zeichen: '▰', name: 'Marker', titel: 'Transparenter Marker' },
     { id: 'formen', zeichen: '□', name: 'Form', titel: 'Formen — welche, steht darunter' },
-    { id: 'abdeck', zeichen: '▬', name: 'Abdeckband',
+    /* „Abdecken", NICHT „Abdeckband" (Fund des breiten Laufs nach E496).
+       Als die Werkzeugliste hierher zusammengezogen wurde, bekam dieser
+       Knopf im Vorbeigehen einen neuen Namen — und stand danach anders da
+       als im Menüband (`register/menueband.ts`), das weiter „Abdecken"
+       sagte. Ein Werkzeug mit zwei Namen ist genau das, wovor §8 warnt.
+       `test266 §1` hat es gehalten; nur hat den Lauf niemand gefahren. */
+    { id: 'abdeck', zeichen: '▬', name: 'Abdecken',
       titel: 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf' },
     { id: 'zettel', zeichen: '🗒', name: 'Haftnotiz',
       titel: 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn' },

@@ -4384,3 +4384,23 @@ aussah. Deshalb klickt `test466` den Weg wirklich, statt die Funktion
 aufzurufen: ein Prüflauf, der sie direkt riefe, hätte denselben Fehler
 mitgemacht.
 
+**Der breite Lauf nach den vier Bögen (E497).** Gefahren wurde, was die
+geänderten Bausteine anfasst — jede Suite, die `blatt-werk`,
+`blatt-marken`, `document-workspace`, `Marken.`, `DocumentMode`,
+`blatt-papier` oder `Dialog.` erwähnt. Es sind 84, gefahren in Stücken.
+
+Zwei echte Fehler, und beide stammen NICHT aus diesen Bögen: das
+Abdeckband hiess in der Blattleiste „Abdeckband" und im Menüband
+„Abdecken" (seit die Werkzeugliste zusammengezogen wurde), und „Zurück"
+und „Vor" rollten am Telefon aus dem Bild, weil E490 sie an den Anfang der
+Leiste gestellt hat, die Klebe-Regel aber weiter `right:0` sagte — ein
+sticky-Element hält dort nur, wenn es nach RECHTS hinauswandern würde.
+
+Dazu acht Suiten, die nur ihre Zahlen nachziehen mussten (sieben Papiere,
+zwölf Werkzeuge, fünf Stifte, zwölf Seitengriffe).
+
+Die Lehre steht damit zum dritten Mal in diesem Bündel: `test266` war rot
+seit der Werkzeugliste, `test348` seit E486, `test393` und `test438` seit
+E490. Vier Suiten, vier Wochen, keine hat sich gemeldet — ein Prüflauf, den
+niemand fährt, meldet nichts. Ein Lauf über die betroffenen Bausteine
+gehört ans Ende jedes Bündels.

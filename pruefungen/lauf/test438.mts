@@ -161,7 +161,11 @@ console.log('\n§2 Der Bleistift');
   const s = await mitBlatt();
   await s.click('.blatt-werk [data-wz="stift"]');
   const stifte = await s.evaluate(`Marken.STIFTE.map(st => st.id)`) as string[];
-  gleich('Vier Stifte, der Bleistift zuletzt', stifte, ['fueller', 'kugel', 'pinsel', 'bleistift']);
+  /* FÜNF SEIT E490: der Schutzleiter steht am ENDE, damit der gewohnte
+     Rundlauf Füller → Kugel → Pinsel → Bleistift unverändert bleibt und
+     erst danach das Sonderzeichen kommt. */
+  gleich('Fünf Stifte, der Schutzleiter zuletzt', stifte,
+    ['fueller', 'kugel', 'pinsel', 'bleistift', 'schutzleiter']);
   p('Der Bleistift schwillt weniger als der Füller — und dünner ist er auch',
     await s.evaluate(`Marken.druckFaktor('bleistift', 0.9) < Marken.druckFaktor('fueller', 0.9) && Marken.druckFaktor('bleistift', 0.1) < Marken.druckFaktor('fueller', 0.1)`));
   const knoten = JSON.parse(await s.evaluate(`(() => {
@@ -171,13 +175,15 @@ console.log('\n§2 Der Bleistift');
   })()`) as string);
   p('Er zeichnet eine Fläche wie der Füller, durchscheinend und mit rauer Kante',
     knoten?.tag === 'path' && knoten.flaeche && knoten.deckung === '0.72' && !!knoten.koernung && knoten.stil === 'bleistift', JSON.stringify(knoten));
-  /* Der Knopf wechselt weiter Füller → Kugel → Pinsel → Bleistift → Füller. */
+  /* Der Knopf wechselt Füller → Kugel → Pinsel → Bleistift → Schutzleiter
+     → Füller (seit E490 fünf Stationen). */
   const reihe: string[] = [];
-  for (let n = 0; n < 4; n++) {
+  for (let n = 0; n < 5; n++) {
     await s.click('.blatt-werk [data-act="stil"]');
     reihe.push(await s.evaluate(`document.querySelector('.blatt-werk [data-act="stil"]').dataset.stil`) as string);
   }
-  gleich('Der Knopf wechselt: Kugel, Pinsel, Bleistift, wieder Füller', reihe, ['kugel', 'pinsel', 'bleistift', 'fueller']);
+  gleich('Der Knopf wechselt: Kugel, Pinsel, Bleistift, Schutzleiter, wieder Füller',
+    reihe, ['kugel', 'pinsel', 'bleistift', 'schutzleiter', 'fueller']);
   await s.click('.blatt-werk [data-act="stil"]'); await s.click('.blatt-werk [data-act="stil"]'); await s.click('.blatt-werk [data-act="stil"]');
   gleich('… und merkt sich den Bleistift', await s.evaluate(`Store.getMeta('zeichnen:stift')`), 'bleistift');
   await zug(s, [100, 400], [300, 420]);

@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — siebenundzwanzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — achtundzwanzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -373,7 +373,14 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Fassung das Rechtetor mit `edit` statt `bearbeiten` fragte — die Liste
     der Ziele war auf jedem Gerät leer. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **siebenundzwanzig Bögen**; die Überschrift
+  · **G28 — Der breite Lauf** (E497): nach den vier Bögen alles gefahren,
+    was die geänderten Bausteine anfasst — 84 Suiten, gesucht statt
+    geraten. Zwei echte Fehler, beide älter als diese Bögen und beide rot,
+    ohne dass es jemand sah: das Abdeckband hiess in zwei Leisten
+    verschieden, und „Zurück"/„Vor" rollten am Telefon aus dem Bild, weil
+    die Klebe-Regel nach E490 noch auf `right:0` stand. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **achtundzwanzig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

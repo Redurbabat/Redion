@@ -150,9 +150,18 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
   .document-studio .document-topbar [data-document-action="print"]::before{content:'↥';font-size:1.375rem}
   .document-studio .document-drawingbar{justify-content:flex-start;gap:4px;padding:4px 8px;min-height:52px}
   /* ZURÜCK UND VOR ROLLEN AM TELEFON NICHT WEG (E396, Audit F14 — seit E464
-     für die Zeichenleiste): die Leiste rollt, die zwei kleben rechts. Wer
-     schreibt, greift zu ihnen, ohne erst zu wischen. */
-  .document-ink-history{position:sticky;right:0;z-index:1;padding-left:4px;margin-left:auto;background:var(--pdf-tools)}
+     für die Zeichenleiste): die Leiste rollt, die zwei kleben am Rand. Wer
+     schreibt, greift zu ihnen, ohne erst zu wischen.
+
+     LINKS, NICHT RECHTS — berichtigt nach E490 (Fund des breiten Laufs nach
+     E496). E490 hat die zwei nach GoodNotes-Art an den ANFANG der Leiste
+     gestellt (`prepend`, `margin-right:auto`); diese Regel hier blieb auf
+     `right:0` stehen. Ein sticky-Element hält an `right:0` nur, wenn es
+     über den rechten Rand hinauswandern würde — das erste Element wandert
+     beim Rollen nach LINKS hinaus, und dafür braucht es `left:0`. Gemessen
+     bei 390 px: ganz nach rechts gerollt standen beide ausserhalb der
+     Leiste, und `test393 §2` sah es. */
+  .document-ink-history{position:sticky;left:0;z-index:1;padding-right:12px;margin-right:auto;background:var(--pdf-tools)}
   .document-studio .document-commandbar{left:8px;right:8px}
   body[data-dokument="an"] .document-studio .document-center{padding:10px 8px 100px}
   .document-source-master .do-name{font-size:11px}.document-source-master .do-wort{font-size:10px}

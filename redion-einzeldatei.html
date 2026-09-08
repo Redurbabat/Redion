@@ -14355,7 +14355,10 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .elemente-kachel:hover, .elemente-kachel:focus-visible{border-color:var(--accent)}
 .elemente-kachel svg{width:74px; height:74px; flex:none; color:var(--text)}
 .elemente-kachel i{font-style:normal; overflow-wrap:anywhere; line-height:1.25}
-.elemente-weg{position:absolute; top:4px; right:4px; width:44px; height:44px;
+/* `--touch-min` statt einer rohen 44 — die Marke IST die Zahl (test362 §7
+   führt Verzeichnis über die rohen). */
+.elemente-weg{position:absolute; top:4px; right:4px;
+  width:var(--touch-min); height:var(--touch-min);
   display:flex; align-items:center; justify-content:center; border:0;
   border-radius:9px; background:transparent; color:var(--text-dim);
   cursor:pointer; font-size:15px; opacity:.65}
@@ -16963,9 +16966,18 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
   .document-studio .document-topbar [data-document-action="print"]::before{content:'↥';font-size:1.375rem}
   .document-studio .document-drawingbar{justify-content:flex-start;gap:4px;padding:4px 8px;min-height:52px}
   /* ZURÜCK UND VOR ROLLEN AM TELEFON NICHT WEG (E396, Audit F14 — seit E464
-     für die Zeichenleiste): die Leiste rollt, die zwei kleben rechts. Wer
-     schreibt, greift zu ihnen, ohne erst zu wischen. */
-  .document-ink-history{position:sticky;right:0;z-index:1;padding-left:4px;margin-left:auto;background:var(--pdf-tools)}
+     für die Zeichenleiste): die Leiste rollt, die zwei kleben am Rand. Wer
+     schreibt, greift zu ihnen, ohne erst zu wischen.
+
+     LINKS, NICHT RECHTS — berichtigt nach E490 (Fund des breiten Laufs nach
+     E496). E490 hat die zwei nach GoodNotes-Art an den ANFANG der Leiste
+     gestellt (`prepend`, `margin-right:auto`); diese Regel hier blieb auf
+     `right:0` stehen. Ein sticky-Element hält an `right:0` nur, wenn es
+     über den rechten Rand hinauswandern würde — das erste Element wandert
+     beim Rollen nach LINKS hinaus, und dafür braucht es `left:0`. Gemessen
+     bei 390 px: ganz nach rechts gerollt standen beide ausserhalb der
+     Leiste, und `test393 §2` sah es. */
+  .document-ink-history{position:sticky;left:0;z-index:1;padding-right:12px;margin-right:auto;background:var(--pdf-tools)}
   .document-studio .document-commandbar{left:8px;right:8px}
   body[data-dokument="an"] .document-studio .document-center{padding:10px 8px 100px}
   .document-source-master .do-name{font-size:11px}.document-source-master .do-wort{font-size:10px}
@@ -19094,7 +19106,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 663, inhalt: '428ac95258da83c0', gebaut: '2026-09-07T23:14:07.322Z' };
+const Stand = { fassung: 665, inhalt: '45988e8cee7b7af7', gebaut: '2026-09-08T03:11:31.478Z' };
 window.Stand = Stand;
 
 </script>
@@ -52877,7 +52889,13 @@ const Marken = (() => {
         { id: 'stift', zeichen: '🖍', name: 'Stift', titel: 'Freihand mit geglätteter Linie' },
         { id: 'marker', zeichen: '▰', name: 'Marker', titel: 'Transparenter Marker' },
         { id: 'formen', zeichen: '□', name: 'Form', titel: 'Formen — welche, steht darunter' },
-        { id: 'abdeck', zeichen: '▬', name: 'Abdeckband',
+        /* „Abdecken", NICHT „Abdeckband" (Fund des breiten Laufs nach E496).
+           Als die Werkzeugliste hierher zusammengezogen wurde, bekam dieser
+           Knopf im Vorbeigehen einen neuen Namen — und stand danach anders da
+           als im Menüband (`register/menueband.ts`), das weiter „Abdecken"
+           sagte. Ein Werkzeug mit zwei Namen ist genau das, wovor §8 warnt.
+           `test266 §1` hat es gehalten; nur hat den Lauf niemand gefahren. */
+        { id: 'abdeck', zeichen: '▬', name: 'Abdecken',
             titel: 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf' },
         { id: 'zettel', zeichen: '🗒', name: 'Haftnotiz',
             titel: 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn' },

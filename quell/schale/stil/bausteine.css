@@ -6318,7 +6318,10 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .elemente-kachel:hover, .elemente-kachel:focus-visible{border-color:var(--accent)}
 .elemente-kachel svg{width:74px; height:74px; flex:none; color:var(--text)}
 .elemente-kachel i{font-style:normal; overflow-wrap:anywhere; line-height:1.25}
-.elemente-weg{position:absolute; top:4px; right:4px; width:44px; height:44px;
+/* `--touch-min` statt einer rohen 44 — die Marke IST die Zahl (test362 §7
+   führt Verzeichnis über die rohen). */
+.elemente-weg{position:absolute; top:4px; right:4px;
+  width:var(--touch-min); height:var(--touch-min);
   display:flex; align-items:center; justify-content:center; border:0;
   border-radius:9px; background:transparent; color:var(--text-dim);
   cursor:pointer; font-size:15px; opacity:.65}
