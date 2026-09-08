@@ -6705,6 +6705,15 @@ Was Redion auch nach G5 nicht haben wird, und warum:
     Stifts fasst bei 596 px genau vierzehn Knöpfe und ist mit vierzehn
     voll — drei Plätze mehr brächen sie in eine dritte Zeile und die
     Leiste über die 100 px aus E359.
+  · **Das eigene Formelheft am TELEFON** ist ein fester Vorhang unten und
+    lässt sich dort weder schieben noch in der Grösse ziehen (`.fh-fenster`
+    im Block ab 640 px). Am Rechner geht beides seit E503 wirklich — dort
+    war der Griff seit jeher weggemalt worden. Am Telefon ist die feste
+    untere Hälfte eine bewusste Wahl (§37: ein 420-px-Fenster auf einem
+    360-px-Bildschirm ist kein Fenster), aber Redurs Satz „so dass ich es
+    schieben, kleiner grösser machen kann" gilt dort eben nicht. Was
+    fehlt, ist eine Höhe, die sich am Griff der Kopfzeile ziehen lässt —
+    ein Vorhang, den man höher und tiefer zieht, nicht ein Fenster.
   · ~~**Präsentationsmodus mit Laserpointer**~~ — **GESCHLOSSEN mit E493,
     und diese Zeile war falsch.** Präsentieren ist nicht ausserhalb des
     PDF-Teils: es ist das Zeigen des Dokuments, und es braucht weder

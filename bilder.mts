@@ -2090,6 +2090,41 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  heftimstudio: {
+    titel: 'Das eigene Formelheft über dem Dokument (E503)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('elektro:heftOrt', null);
+      Store.setMeta('elektro:heftAnsicht', 'kapitel');
+      Store.setMeta('elektro:heftPdf', '');
+      const skript = Store.addPage(null, { text: 'Elektro — Prüfungsvorbereitung', icon: '📘' });
+      const blatt = Store.addBlock(skript.id, 'blatt', { text: '', papier: 'liniert',
+        blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1,
+        marken: [
+          { id: 'a', art: 'text', farbe: '#111111', point: [58, 96], fontSize: 17,
+            text: 'Aufgabe 4 — Spannungsteiler' },
+          { id: 'b', art: 'stift', farbe: '#d64545', breite: 3,
+            pts: [[58, 118], [300, 118]] },
+          { id: 'c', art: 'text', farbe: '#2f6fd0', point: [58, 168], fontSize: 15,
+            text: 'U2 = U · R2 / (R1 + R2)' }
+        ] });
+      Store.addBlock(blatt.id, 'text', { text: '' });
+      Store.updateBlock(skript.id, { dokumentModus: true });
+      App.oeffne(skript.id);
+      await new Promise(r => setTimeout(r, 1400));
+      /* Das Heft aufklappen — über denselben Knopf, den auch der Mensch
+         trifft: neben dem Fachzeichen in der Zeichenleiste. */
+      document.querySelector<HTMLElement>(
+        '.document-drawingbar [data-document-action="formelheft"]')?.click();
+      await new Promise(r => setTimeout(r, 800));
+      /* Auf die Buchseiten stellen, damit im Bild etwas zu lesen steht. */
+      document.querySelector<HTMLElement>('.fh-fenster [data-a="buch"]')?.click();
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
   schalensuche: {
     titel: 'Die Schalensuche nennt die Seite im Dokument (E500)',
     bauen: async () => {

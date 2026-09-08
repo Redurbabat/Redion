@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-482 Entscheidungen, E1 bis E502 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+483 Entscheidungen, E1 bis E503 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -546,6 +546,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E500** — Die Schalensuche findet die Stelle im Dokument — und endlich auch, was von Hand geschrieben ist
 * **E501** — Ein Farbsatz wird eine Voreinstellung: Farben, Stift und Strichstärke unter einem Namen
 * **E502** — Das Formelbuch und das GIF auf dem Blatt: eine PDF-Seite als bewegliche, ziehbare Bildmarke
+* **E503** — Das eigene Formelheft liegt über dem Dokument — und war dabei seit jeher nicht in der Grösse zu ziehen
 
 ---
 
@@ -40136,3 +40137,109 @@ abschalten. Dazu test87, test105, test109, test343, test348, test351,
 test438, test458, test464 — alle grün. Nicht geprüft: die Gesamtsuite.
 Bild: `node bilder.mts formelbuch` — die Buchseite gewählt, mit Griffen zum
 Ziehen und Drehen, daneben ein GIF-Aufkleber.
+
+---
+
+E503 — Das eigene Formelheft liegt über dem Dokument
+--------------------------------------------------------------------------
+
+Redur, 8. September, gefragt, was mit seinem eigenen Heft gehen soll:
+
+> „Also so die Original bleibt, und wo — wenn beim Elektro, wo die
+> Elektrosymbol ist — beim Dokument arbeiten, die im PDF dort sehen kann,
+> so dass ich es schieben, kleiner grösser machen kann direkt auf dem PDF
+> und ein oder aus halten können."
+
+Vier Dinge stehen darin. Redion konnte eins davon.
+
+## Was es schon gab, und warum es niemand fand
+
+Das Formelheft gibt es seit E194: ein schwebendes Fenster mit Redions
+eigener Sammlung, mit Buchseiten in derselben Zählung wie das gedruckte
+Heft — und mit „Mein Heft", einer eigenen PDF, die man einmal lädt und
+danach durchblättert. Sie liegt als gewöhnlicher Anhang in der IndexedDB
+und geht durch Sicherung und Wiederherstellung wie jede andere Datei.
+
+Der Weg dorthin führte über die Befehlspalette (Strg K) und über einen
+Knopf auf der Planfläche. **Im Dokument gab es keinen** — und das Dokument
+ist genau der Ort, an dem nachgeschlagen wird.
+
+## Der Knopf steht neben dem Fachzeichen
+
+Aus demselben Grund, mit dem in E494 die Elemente dorthin kamen: es ist
+dieselbe Bewegung an derselben Stelle der Arbeit. Das Schaltzeichen setzen
+und die Formel dazu nachsehen gehören zusammen.
+
+Er ist **kein Werkzeug**, sondern ein Schalter — `data-document-action`
+und nicht `data-document-tool`. Ein Werkzeug hält man und zeichnet damit;
+dieses Fenster liegt daneben, während man mit einem anderen zeichnet, und
+darf deshalb die Werkzeugwahl nicht anrühren.
+
+Seinen Zustand besitzt er nicht: das Heft geht auch über sein ✕ und über
+Escape zu. Abgefragt würde das nie bemerkt, also **sagt das Heft Bescheid**
+— `Formelheft.horche`, dasselbe Muster wie `Zeichenziel.horche`, damit es
+nicht ein zweites gibt (§8).
+
+## Drei Fehler, die der Prüflauf gefunden hat und kein Auge
+
+**1 · Der Griff zum Ziehen war seit jeher weg.** `male()` schreibt
+`f.innerHTML` neu und nahm damit jedes Mal das Dreieck unten rechts weg.
+Angehängt wurde es einmal beim Öffnen, gleich darauf malte `neuMalen` das
+Fenster, und ab da war es fort. Das Heft liess sich also **nie** in der
+Grösse ändern — obwohl `pointermove` es konnte und `M_ORT` sogar Breite und
+Höhe merkte. Kein Bildschirmfoto hätte das gemeldet: ein 14-px-Dreieck, das
+fehlt, sieht aus wie eine Ecke. Gefunden hat es Redurs Satz „so dass ich es
+… kleiner grösser machen kann" — und dann `.fh-groesse`, das `null` war.
+
+**2 · Das Fenster legte sich auf den Knopf, der es öffnet.** Die Vorgabe
+`top: 90` stammt aus einer Zeit ohne Studio; im Studio stehen dort Kopf-
+und Zeichenleiste. Aufgehen ging noch, zugehen nicht mehr — die Kopfzeile
+des Hefts fing den Klick ab. Der Prüflauf sagte es wörtlich: „fh-kopf
+intercepts pointer events", und genau das täte auch ein Finger. Jetzt wird
+der untere Rand der Leiste **gemessen** statt geraten (§36), und die Regel
+gilt auch für einen gemerkten Ort: über der Leiste zu parken wählt niemand
+mit Absicht.
+
+**3 · Der Horcher meldete sich sofort wieder ab.** Er prüfte `heft.isConnected`
+— und der erste Ruf kam, bevor die Leiste im Baum hing. Danach blieb der
+Knopf für immer losgelassen. Gemessen wird jetzt am Arbeitsraum, wie beim
+`inkSync` daneben.
+
+Dazu ein vierter, kleinerer: `setPointerCapture` wirft, wenn der Zeiger
+nicht mehr aktiv ist, und darüber stand dann „Etwas ist schiefgelaufen" —
+eine Fehlerkarte für eine Fensterbewegung. Ohne Fang zieht das Fenster
+weiterhin; die Ausnahme ist jetzt abgefangen.
+
+## „Die im PDF dort sehen kann": die Ansicht wird gemerkt
+
+`pdfModus` war eine reine Sitzungsvariable. Wer sein Heft aufgeschlagen
+hatte, bekam beim nächsten Öffnen wieder das Kapitelverzeichnis. Jetzt
+trägt `M_ANSICHT` einen dritten Wert, und eine Tür (`ansichtMerken`)
+schreibt ihn — beim ersten Entwurf schrieb der „Buch"-Zweig `'kapitel'`,
+obwohl das eigene Heft offen blieb.
+
+Gezeigt wird die gemerkte Ansicht nur, **solange es ein Heft gibt**: wer
+seins über ⤒ gelöst hat, landet wieder bei den Formeln statt auf einer
+Einladung, die er kennt.
+
+## Das Original bleibt Original
+
+Nichts wird in die geladene PDF geschrieben — nicht beim Blättern, nicht
+beim Merken einer Seite, nicht beim Schieben oder Ziehen des Fensters.
+`test471` §5 rechnet vorher und nachher eine Prüfsumme über die Bytes in
+der Ablage und vergleicht Kennung, Länge, Summe und Typ. Das ist kein
+Wächter gegen einen bekannten Fehler, sondern gegen einen künftigen: der
+nächste, der hier „nur schnell" eine Seite hineinschreibt, wird rot (§51).
+
+GEPRÜFT. `test471` mit 39 Zusagen. Rot gesehen (§55.2) — die ersten vier
+vor dem Bauen, die fünfte danach eigens: §1 bis §4 ohne den Knopf und ohne
+die gemerkte Ansicht; §3 ohne das Wiederanhängen des Griffs (`.fh-groesse`
+ist `null`); §2 mit `heft.isConnected` statt `workspace.isConnected` (der
+Knopf bleibt losgelassen) und ohne die gemessene Vorgabe (der Klick wird
+abgefangen); §6 ohne das abgefangene `setPointerCapture` (Seitenfehler);
+§4 ohne `hatEigenes()` (die Einladung statt der Formelliste). Dazu test87,
+test105, test109, test240, test241, test244, test247, test438, test440,
+test442, test453, test459, test466, test467, test468, test469 — alle grün.
+Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts heftimstudio` — das Heft über der Aufgabe, der Knopf
+neben dem Fachzeichen gedrückt.

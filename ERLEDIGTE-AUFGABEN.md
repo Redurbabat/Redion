@@ -4504,3 +4504,34 @@ Markenart — nur einen zweiten Weg in `bildAblegen` hinein. Gerastert,
 nicht eingebettet (wie E488): der Text darin ist danach nicht mehr
 durchsuchbar, dafür braucht das Blatt beim Öffnen keine fremde
 Bibliothek.
+
+**Das eigene Formelheft über dem Dokument (E503, test471).** Redur wollte
+sein Original beim Arbeiten am Dokument sehen — dort, wo die Fachzeichen
+stehen —, es schieben, in der Grösse ziehen und ein- und ausschalten. Das
+Formelheft gab es seit E194 samt „Mein Heft" für die eigene PDF; den Weg
+dorthin gab es nur über die Befehlspalette und die Planfläche. Jetzt steht
+ein Knopf neben dem Fachzeichen, und das Heft merkt sich, dass es
+aufgeschlagen war — bis hierher bekam man beim nächsten Öffnen wieder das
+Kapitelverzeichnis.
+
+Drei Fehler kamen dabei heraus, und keinen davon hätte ein Bildschirmfoto
+gemeldet:
+
+Der Griff zum Ziehen war seit jeher weg. `male()` schreibt `innerHTML` neu
+und nahm das Dreieck unten rechts jedes Mal mit; angehängt wurde es einmal
+beim Öffnen, gleich darauf malte das Fenster. Das Heft liess sich also nie
+in der Grösse ändern, obwohl der Zieh-Griff funktionierte und `M_ORT` sogar
+Breite und Höhe merkte.
+
+Das Fenster legte sich auf den Knopf, der es öffnet. Die Vorgabe von 90 px
+stammt aus der Zeit vor dem Studio; dort stehen jetzt zwei Leisten.
+Aufgehen ging noch, zugehen nicht. Der untere Rand der Leiste wird jetzt
+gemessen statt geraten.
+
+Und der Horcher meldete sich vor seinem ersten Ruf wieder ab, weil er am
+Knopf statt am Arbeitsraum prüfte, ob er noch im Baum hängt.
+
+Was das Heft NICHT tut: in die geladene PDF schreiben. `test471` §5 rechnet
+vorher und nachher eine Prüfsumme über die Bytes und vergleicht Kennung,
+Länge, Summe und Typ — ein Wächter nicht gegen einen bekannten Fehler,
+sondern gegen einen künftigen.

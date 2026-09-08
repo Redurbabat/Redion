@@ -1835,6 +1835,52 @@ const DocumentMode = (() => {
       findListe);
     workspace.append(top, findbar, drawingbar, commandbar, body);
     wrap.appendChild(workspace);
+    /* ══ DAS EIGENE FORMELHEFT, NEBEN DEM FACHZEICHEN (E503) ═══════════════
+       Redur: „wo — wenn beim Elektro, wo die Elektrosymbol ist — beim
+       Dokument arbeiten, die im PDF dort sehen kann".
+
+       Das Formelheft gab es längst; es stand nur in der Befehlspalette
+       (Strg K) und auf der Planfläche. Wer im Dokument arbeitet, findet es
+       dort nicht — und das Dokument ist der Ort, an dem nachgeschlagen
+       wird: eine Formel braucht man NEBEN der Aufgabe, nicht statt ihrer.
+
+       ES STEHT NEBEN DEM FACHZEICHEN, und zwar mit demselben Grund, mit
+       dem in E494 die Elemente dorthin kamen: es ist dieselbe Bewegung an
+       derselben Stelle der Arbeit — das Schaltzeichen setzen und die
+       Formel dazu nachsehen gehören zusammen.
+
+       ES IST KEIN WERKZEUG, sondern ein Schalter: `data-document-action`
+       und nicht `data-document-tool`. Ein Werkzeug hält man und zeichnet
+       damit; dieses Fenster liegt daneben, während man mit einem anderen
+       zeichnet — und genau deshalb darf es die Werkzeugwahl nicht anrühren.
+
+       DEN ZUSTAND BESITZT ES NICHT. Das Heft geht auch über sein ✕ und
+       über Escape zu; abgefragt würde das nie bemerkt. Also horcht der
+       Knopf (`Formelheft.horche`) — ein Zustand, eine Quelle (§8). */
+    if (typeof Formelheft !== 'undefined') {
+      const heft = document.createElement('button');
+      heft.type = 'button';
+      heft.dataset.documentAction = 'formelheft';
+      heft.setAttribute('aria-label', 'Formelheft');
+      heft.title = 'Mein eigenes Formelheft — liegt über der Seite; schieben und '
+        + 'an der Ecke grösser ziehen';
+      heft.setAttribute('aria-pressed', 'false');
+      const heftZeichen = document.createElement('span');
+      heftZeichen.dataset.sym = 'book';
+      heftZeichen.setAttribute('aria-hidden', 'true');
+      heft.appendChild(heftZeichen);
+      drawingbar.querySelector('[data-document-tool="zeichen"]')?.after(heft);
+      const heftSync = (): void => {
+        /* AM ARBEITSRAUM MESSEN, NICHT AM KNOPF — wie `inkSync` daneben.
+           Am Knopf gemessen war der erste Ruf gleich der letzte: er kam,
+           bevor die Leiste im Baum hing, und meldete den Horcher sofort
+           wieder ab. Danach blieb der Knopf für immer losgelassen. */
+        if (!workspace.isConnected) { Formelheft.vergiss(heftSync); return; }
+        heft.setAttribute('aria-pressed', String(!!Formelheft.offen()));
+      };
+      Formelheft.horche(heftSync);
+      heftSync();
+    }
     if (typeof Register !== 'undefined') Register.symbole.fuelle(drawingbar);
 
     const inkToolbar = (): HTMLElement | null =>
@@ -3286,6 +3332,11 @@ const DocumentMode = (() => {
       if ((action === 'ink-undo' || action === 'ink-redo') && canAnnotate) {
         inkToolbar()?.querySelector<HTMLButtonElement>('[data-act="' + action.slice(4) + '"]')?.click();
         inkSync();
+      }
+      /* Das Heft auf- und zuklappen. Der Knopf sagt nichts über seinen
+         Zustand — den holt `heftSync` beim Ruf des Hefts (E503). */
+      if (action === 'formelheft') {
+        try { Formelheft.umschalten(); } catch { /* kein Heft, kein Schaden */ }
       }
       if (action === 'print') {
         const print = Register.menueband.eines('a-drucken');

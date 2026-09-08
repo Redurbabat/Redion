@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — dreiunddreissig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — vierunddreissig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -417,7 +417,17 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     verschieben, ziehen, drehen und sperren wie jede andere. Kein neues
     Werkzeug — ein zweiter Weg in `bildAblegen`. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **dreiunddreissig Bögen**; die Überschrift
+  · **G34 — Das eigene Formelheft über dem Dokument** (E503, test471):
+    Redur wollte sein Original im Studio sehen, schieben, in der Grösse
+    ziehen und ein- und ausschalten. Der Knopf steht jetzt neben dem
+    Fachzeichen, das Heft merkt sich, dass es aufgeschlagen war, und die
+    geladene PDF bleibt Byte für Byte dieselbe. Drei Fehler kamen dabei
+    heraus, die kein Auge gemeldet hätte: der Griff zum Ziehen war seit
+    jeher weg (jedes Neumalen nahm ihn mit), das Fenster legte sich auf
+    den Knopf, der es öffnet, und der Horcher meldete sich vor dem ersten
+    Ruf wieder ab. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **vierunddreissig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
