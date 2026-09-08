@@ -2009,6 +2009,32 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  zoomruhe: {
+    titel: '„Ausschnitt" und „Erkennen" ruhen im Zoom-Fenster (E498)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const seite = Store.addPage(null, { text: 'Elektrotechnik — Skript', icon: '📕' });
+      for (let i = 0; i < 2; i++) {
+        const blatt = Store.addBlock(seite.id, 'blatt', { text: '', papier: 'liniert',
+          blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1, marken: [
+            { id: 'z' + i, art: 'stift', farbe: '#2f7ed8', breite: 3,
+              pts: [[70, 120], [420, 120]] }] });
+        Store.addBlock(blatt.id, 'text', { text: 'Kapitel ' + (i + 1) });
+      }
+      Store.updateBlock(seite.id, { dokumentModus: true });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+      document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+      document.querySelector<HTMLElement>('[data-document-action="lupe"]')?.click();
+      await new Promise(r => setTimeout(r, 800));
+      document.querySelector('.document-inspector-actions')?.scrollIntoView({ block: 'center' });
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
   seitenumzug: {
     titel: 'Eine Seite in ein anderes Dokument — kopieren oder verschieben (E496)',
     bauen: async () => {

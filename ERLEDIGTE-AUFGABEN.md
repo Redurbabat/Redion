@@ -4404,3 +4404,23 @@ seit der Werkzeugliste, `test348` seit E486, `test393` und `test438` seit
 E490. Vier Suiten, vier Wochen, keine hat sich gemeldet — ein Prüflauf, den
 niemand fährt, meldet nichts. Ein Lauf über die betroffenen Bausteine
 gehört ans Ende jedes Bündels.
+
+**Die zwei letzten Reste (E498, test467).** „Ausschnitt" und „Erkennen"
+gelten der ganzen Seite; im Zoom-Fenster sieht man einen Streifen davon.
+E470 hat deshalb schon nein gesagt — aber erst nach dem Druck, als Meldung.
+Ein Knopf, der aussieht, als ginge er, und dann eine Absage gibt, muss
+zweimal gelesen werden. Jetzt steht der Zustand am Knopf, mit einem
+Hinweis, der sagt warum; die Meldung bleibt für den Weg über Tastatur und
+Befehlspalette.
+
+Und Seiten wandern über Spaltengrenzen. `seiteAnStelle` sagte nein, wenn
+die Seiten eines Dokuments in mehreren Spalten liegen — ehrlich, solange es
+keinen Weg gab, einen Block umzuhängen. Seit E496 gibt es ihn, und es ist
+derselbe, mit derselben Reihenfolge: erst dazulegen, dann umhängen, zuletzt
+wegnehmen.
+
+Beim Abarbeiten kam heraus, dass drei Zeilen in L133 gar keine Lücke
+gegenüber GoodNotes sind: dessen Formenwerkzeug hat auch keine Verbinder,
+sein Lasso gilt auch je Seite, und seine drei Stift-Favoriten sind
+Farb-Voreinstellungen — die hat Redion seit E486 als benannte Farbsätze.
+Alle drei stehen weiter da, aber als Wunsch statt als Rückstand.

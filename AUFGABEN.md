@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — achtundzwanzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — neunundzwanzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -380,7 +380,16 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     verschieden, und „Zurück"/„Vor" rollten am Telefon aus dem Bild, weil
     die Klebe-Regel nach E490 noch auf `right:0` stand. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **achtundzwanzig Bögen**; die Überschrift
+  · **G29 — Die zwei letzten Reste** (E498, test467): „Ausschnitt" und
+    „Erkennen" ruhen sichtbar am Knopf, solange das Zoom-Fenster offen ist
+    (bisher gab es die Absage erst nach dem Druck), und Seiten lassen sich
+    über Spaltengrenzen hinweg umordnen — mit der Umhänge-Maschinerie aus
+    E496. Beim Abarbeiten kam heraus, dass drei L133-Zeilen gar keine
+    Lücke gegenüber GoodNotes sind (Verbinder, Auswahl über mehrere
+    Blätter, Stift-Favoriten); sie stehen jetzt als Wunsch da, nicht als
+    Rückstand. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **neunundzwanzig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

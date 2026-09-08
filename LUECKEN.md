@@ -6422,10 +6422,13 @@ Zeichnen (nach G1, E465):
     `pts` ist eine Liste, und `move`, `scale` und `rotate` fassen ohnehin
     alle Punkte an. Der Griff steht auf dem Steuerpunkt und biegt in den
     Achsen der Marke. `test456`.
-  · **Verbinder** des Shape-Tools — offen, und etwas anderes als die
-    Kurve: eine Marke, die an ZWEI anderen hängt und mitgeht, wenn eine
-    sich bewegt. Das braucht Anker an fremden Marken und ein Nachziehen
-    bei jeder Änderung — keinen dritten Punkt, sondern eine Beziehung.
+  · **Verbinder** des Shape-Tools — offen, aber **kein Rückstand gegenüber
+    GoodNotes** (berichtigt mit E498): dessen Formenwerkzeug hat auch keine
+    Verbinder. Es ist ein Wunsch für den Schaltplan-Teil. Etwas anderes als
+    die Kurve wäre es auch: eine Marke, die an ZWEI anderen hängt und
+    mitgeht, wenn eine sich bewegt — Anker an fremden Marken und ein
+    Nachziehen bei jeder Änderung, keinen dritten Punkt, sondern eine
+    Beziehung.
   · ~~**Formerkennung für gedrehte Dreiecke**~~ — **GESCHLOSSEN mit E478.**
     Die Marke kann seit E466 schief stehen und seit E474 rechnet die
     Geometrie damit; also bekommt ein gedrehtes Dreieck jetzt seinen
@@ -6473,7 +6476,9 @@ Kreis-Lasso stehen. Offen bleibt:
     sie herum, und das Ziehen am Griff verzerrt sie nicht mehr. Der Tipp
     ging schon immer über den gezeichneten Knoten, das Lasso über die
     Mitte des Kastens — die ist beim Drehen dieselbe. `test447`.
-  · **Auswahl über mehrere Blätter** — das Lasso gilt je Blatt (E353).
+  · **Auswahl über mehrere Blätter** — das Lasso gilt je Blatt (E353), und
+    das ist **kein Rückstand gegenüber GoodNotes** (berichtigt mit E498):
+    dessen Lasso gilt ebenfalls je Seite. Ein Wunsch, kein Rückstand.
   · ~~**Sperren im Inspector**~~ — **GESCHLOSSEN mit E492.** Die Liste steht
     im Inspector, mit Namen aus derselben Quelle wie die Werkzeugleiste, je
     einem „Entsperren" und einem „Alle N entsperren". Das war mehr als eine
@@ -6498,9 +6503,12 @@ Offen bleibt:
     (dafür nehmen alle Seitengriffe jetzt entgegen, wen sie meinen).
     Gezogen wird mit dem Zeiger: mit der Maus nach acht Pixeln, mit dem
     Finger erst nach 350 ms Halten, damit die Leiste rollbar bleibt.
-    **Offen bleibt:** umgeordnet wird nur innerhalb derselben Eltern —
-    liegen die Seiten eines Dokuments in mehreren Spalten, sagt es das,
-    statt zu raten. `test453`.
+    **Auch über Spaltengrenzen — GESCHLOSSEN mit E498:** die Seite wandert
+    in die Eltern der Seite, vor die sie fällt, mit derselben sicheren
+    Reihenfolge wie E496 (erst dazulegen, dann umhängen, zuletzt
+    wegnehmen). Bis dahin sagte die Stelle nein, und das war ehrlich,
+    solange es keinen Weg gab, einen Block umzuhängen. `test453`,
+    `test467 §3`.
   · **Einfügen aus einer Vorlage mit Inhalt** — bleibt offen, aber die
     Zahl darin stimmt nicht mehr: „Seite danach" kennt seit **E495**
     SIEBEN Papiere. Dazugekommen sind **Cornell-Notizen** und
@@ -6564,8 +6572,12 @@ Seite als Bild, Zoom-Fenster stehen. Offen bleibt:
 
   · **Das Zoom-Fenster** ist seit E470 der Streifen, in den man schreibt,
     mit der ganzen Seite darüber — und mit EINER Zeichenfläche (das Papier
-    zieht um); seit E472 rückt es am rechten Rand von selbst weiter. Was
-    noch fehlt: „Ausschnitt" und „Erkennen" ruhen, solange es offen ist.
+    zieht um); seit E472 rückt es am rechten Rand von selbst weiter.
+    ~~„Ausschnitt" und „Erkennen" ruhen, solange es offen ist~~ —
+    **GESCHLOSSEN mit E498:** sie ruhen jetzt SICHTBAR, am Knopf statt erst
+    als Meldung nach dem Druck, mit einem Hinweis, der sagt warum (§38).
+    Die Meldung bleibt für den Weg über Tastatur und Befehlspalette.
+    `test467 §1, §2`.
   · **Seite als Bild** lässt den getippten Text eines Blatts aus. Die
     BILDMARKEN kommen seit **E479** mit; dabei wurde nachgemessen, was
     ein SVG auf der Leinwand darf, und das Ergebnis gehört hierher, damit
@@ -6658,6 +6670,15 @@ Was Redion auch nach G5 nicht haben wird, und warum:
   · **GIPHY** bleibt draussen, und das ist der Teil der Zeile, der stimmt:
     eine Bildersuche im Netz widerspricht §21 und §22 und brächte fremde
     Inhalte in eine App, die ohne Netz vollständig sein soll.
+  · **Stift-Favoriten** kommen NICHT, und das ist eine Entscheidung, keine
+    Lücke (E498). GoodNotes' drei Favoriten sind FARB-Voreinstellungen —
+    die hat Redion seit E486 als benannte Farbsätze, und die können mehr.
+    Ein zweiter Katalog daneben wäre genau das, wovor §8 warnt. Der Satz
+    steht hier, damit die Frage beim nächsten Durchgang nicht wiederkommt.
+    Nachgemessen wäre es ausserdem nicht umsonst: die Zubehörzeile des
+    Stifts fasst bei 596 px genau vierzehn Knöpfe und ist mit vierzehn
+    voll — drei Plätze mehr brächen sie in eine dritte Zeile und die
+    Leiste über die 100 px aus E359.
   · ~~**Präsentationsmodus mit Laserpointer**~~ — **GESCHLOSSEN mit E493,
     und diese Zeile war falsch.** Präsentieren ist nicht ausserhalb des
     PDF-Teils: es ist das Zeigen des Dokuments, und es braucht weder

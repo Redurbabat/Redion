@@ -19106,7 +19106,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 665, inhalt: '45988e8cee7b7af7', gebaut: '2026-09-08T03:11:31.478Z' };
+const Stand = { fassung: 668, inhalt: 'ff28738358c80270', gebaut: '2026-09-08T03:17:17.978Z' };
 window.Stand = Stand;
 
 </script>
@@ -67377,6 +67377,21 @@ const DocumentMode = (() => {
             return button;
         };
         actions.append(makeAction('source-actions', '＋ Aus Inhalt'), makeAction('select-region', '⌗ Ausschnitt'), makeAction('recognize', '⌁ Erkennen'));
+        /* BEIM NEUZEICHNEN DEN RUHEZUSTAND MITNEHMEN (E498). Der Inspector baut
+           seine Knöpfe frisch; ohne diese vier Zeilen stünden sie nach einem
+           Seitenwechsel wieder offen da, obwohl das Zoom-Fenster noch offen
+           ist. Denselben Zustand setzt `ausschnittRuhen` beim Öffnen und
+           Schliessen — hier ist er nur die Startstellung. */
+        if (stateFor(page.id).lupe) {
+            for (const was of ['select-region', 'recognize']) {
+                const knopf = actions.querySelector('[data-document-action="' + was + '"]');
+                if (!knopf)
+                    continue;
+                knopf.disabled = true;
+                knopf.setAttribute('aria-disabled', 'true');
+                knopf.title = 'Ruht, solange das Zoom-Fenster offen ist — der Ausschnitt gilt der ganzen Seite.';
+            }
+        }
         /* DER EXPORT GILT DEM DOKUMENT, nicht der Seite (E488).
     
            ER STEHT NEBEN „PDF hinzufügen", und das Bild hat den Platz gewählt:
@@ -69520,33 +69535,53 @@ const DocumentMode = (() => {
          * hinten), nicht in der Inhaltsliste der Eltern — dazwischen können
          * Textblöcke stehen, die keine Seiten sind.
          *
-         * NUR IN DENSELBEN ELTERN. Liegen die Seiten eines Dokuments in
-         * mehreren Spalten (das kann `documentsIn` finden), gibt es keine eine
-         * Reihenfolge, in die man einsortieren könnte — dann sagt es das,
-         * statt heimlich etwas anderes zu tun.
+         * AUCH ÜBER SPALTEN HINWEG (seit E498). Liegen die Seiten eines
+         * Dokuments in mehreren Spalten, wandert der Block in die Eltern der
+         * Seite, vor die er fällt — mit derselben sicheren Reihenfolge wie in
+         * E496. Bis dahin sagte diese Stelle nein, und das war ehrlich,
+         * solange es keinen Weg gab, einen Block umzuhängen.
          */
         const seiteAnStelle = (block, zielIndex) => {
             const liste = documentsIn(page);
-            const eltern = new Set(liste.map(b => String(b.parentId || '')));
-            if (eltern.size !== 1) {
-                UI.toast('Die Seiten dieses Dokuments liegen in mehreren Spalten — ziehen geht dort nicht.');
-                return false;
-            }
-            const stelle = stelleVon(block);
-            if (!stelle)
-                return false;
             const von = liste.findIndex(b => b.id === block.id);
             if (von < 0 || zielIndex === von || zielIndex === von + 1)
                 return false;
-            const inhalt = [...stelle.eltern.content];
-            const nachId = liste[zielIndex]?.id ?? null;
-            const raus = inhalt.indexOf(block.id);
-            if (raus < 0)
+            const stelle = stelleVon(block);
+            if (!stelle)
                 return false;
-            inhalt.splice(raus, 1);
-            const ziel = nachId ? inhalt.indexOf(nachId) : -1;
-            inhalt.splice(ziel < 0 ? inhalt.length : ziel, 0, block.id);
-            Store.updateBlock(stelle.eltern.id, { content: inhalt });
+            /* WOHIN: vor die Seite, die an der Zielstelle steht — und wenn dort
+               keine mehr steht, hinter die letzte. Die ELTERN ergeben sich
+               daraus; über Spalten hinweg sind es andere als die eigenen. */
+            const nach = liste[zielIndex] || null;
+            const nachbar = nach || liste[liste.length - 1] || block;
+            const zielEltern = Store.getBlock(String(nachbar.parentId || '')) || stelle.eltern;
+            if (zielEltern.id === stelle.eltern.id) {
+                const inhalt = [...(stelle.eltern.content || [])];
+                const raus = inhalt.indexOf(block.id);
+                if (raus < 0)
+                    return false;
+                inhalt.splice(raus, 1);
+                const ziel = nach ? inhalt.indexOf(nach.id) : -1;
+                inhalt.splice(ziel < 0 ? inhalt.length : ziel, 0, block.id);
+                Store.updateBlock(stelle.eltern.id, { content: inhalt });
+            }
+            else {
+                /* ÜBER SPALTEN HINWEG (E498). Bis hierher sagte diese Stelle nein:
+                   „die Seiten liegen in mehreren Spalten — ziehen geht dort nicht".
+                   Das war ehrlich, solange es keinen Weg gab, einen Block
+                   umzuhängen; seit E496 gibt es ihn, und es ist derselbe.
+        
+                   DIESELBE REIHENFOLGE WIE DORT, und aus demselben Grund: erst in
+                   die neuen Eltern legen, dann `parentId` umhängen, ZULETZT aus den
+                   alten nehmen. Bräche etwas dazwischen ab, stünde die Seite in
+                   beiden Spalten — sichtbar. In der anderen Reihenfolge in keiner. */
+                const hin = [...(zielEltern.content || [])];
+                const ziel = nach ? hin.indexOf(nach.id) : -1;
+                hin.splice(ziel < 0 ? hin.length : ziel, 0, block.id);
+                Store.updateBlock(zielEltern.id, { content: hin });
+                Store.updateBlock(block.id, { parentId: zielEltern.id, parentTable: 'block' });
+                Store.updateBlock(stelle.eltern.id, { content: (stelle.eltern.content || []).filter((id) => id !== block.id) });
+            }
             UI.toast('Seite verschoben');
             neuMit(block.id);
             return true;
@@ -70560,6 +70595,34 @@ const DocumentMode = (() => {
                 lupeRahmen = null;
             }
         };
+        /**
+         * „AUSSCHNITT" UND „ERKENNEN" RUHEN SICHTBAR, solange das Zoom-Fenster
+         * offen ist (E498, letzter offener Punkt aus L133 zum Zoom-Fenster).
+         *
+         * Beide gelten der GANZEN Seite; im Zoom-Fenster sieht man einen
+         * Streifen davon. Ein Ausschnitt, den man dort zieht, läge auf der
+         * ganzen Seite ganz woanders — deshalb sagte E470 schon nein, aber
+         * ERST NACH DEM DRUCK, als Meldung. Ein Knopf, der aussieht, als ginge
+         * er, und dann eine Absage gibt, ist ein Knopf, der zweimal gelesen
+         * werden muss (§38: der Zustand gehört an den Knopf).
+         *
+         * Die Meldung bleibt trotzdem stehen: sie fängt den Weg über die
+         * Tastatur und über die Befehlspalette, die den Knopf nicht sieht.
+         */
+        const ausschnittRuhen = (an) => {
+            for (const was of ['select-region', 'recognize']) {
+                const knopf = workspace.querySelector('.document-inspector-actions [data-document-action="' + was + '"]');
+                if (!knopf)
+                    continue;
+                knopf.disabled = an;
+                knopf.setAttribute('aria-disabled', an ? 'true' : 'false');
+                knopf.title = an
+                    ? 'Ruht, solange das Zoom-Fenster offen ist — der Ausschnitt gilt der ganzen Seite.'
+                    : (was === 'select-region'
+                        ? 'Einen Ausschnitt der Seite aufziehen'
+                        : 'Den Text im Ausschnitt erkennen lassen');
+            }
+        };
         const lupeSetzen = (an) => {
             if (an === !!state.lupe)
                 return;
@@ -70570,6 +70633,7 @@ const DocumentMode = (() => {
                 }
                 state.lupe = true;
                 workspace.dataset.lupe = 'an';
+                ausschnittRuhen(true);
                 /* Die ganze Seite soll oben stehen — der Streifen ist die
                    Vergroesserung, nicht der Zoom der Buehne. */
                 state.zoomVorher = state.zoom;
@@ -70596,6 +70660,7 @@ const DocumentMode = (() => {
             else {
                 state.lupe = false;
                 workspace.dataset.lupe = 'aus';
+                ausschnittRuhen(false);
                 center.removeEventListener('pointerdown', lupeTipp, true);
                 lupeUmziehen(false);
                 lupe?.remove();

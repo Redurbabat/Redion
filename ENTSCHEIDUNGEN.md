@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-477 Entscheidungen, E1 bis E497 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+478 Entscheidungen, E1 bis E498 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -541,6 +541,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E495** — Cornell und Notenlinien: zwei Papiere, und die Lehre, dass Prozent in einem Verlauf die Kachel meint
 * **E496** — Eine Seite in ein anderes Dokument: kopieren mit frischer Kennung, verschieben mit derselben
 * **E497** — Der breite Lauf nach E493–E496: zwei echte Fehler, die seit Wochen rot waren und die niemand laufen liess
+* **E498** — Die zwei letzten Reste: „Ausschnitt" ruht sichtbar, und Seiten wandern über Spaltengrenzen
 
 ---
 
@@ -39773,3 +39774,78 @@ die den Bereich erwähnen, und fährt sie.
 GEPRÜFT. 84 Suiten, in Stücken gefahren; danach die 38 betroffenen noch
 einmal in einem Zug — alle grün. Nicht geprüft: die Gesamtsuite (323
 Läufe).
+
+---
+
+E498 — Die zwei letzten Reste, und drei Zeilen, die keine Lücke waren
+--------------------------------------------------------------------------
+
+Zwei kleine Zeilen aus L133, beide seit G5 offen — und beim Abarbeiten kam
+heraus, dass drei andere Zeilen gar keine Lücke gegenüber GoodNotes sind.
+
+## 1 · „Ausschnitt" und „Erkennen" ruhen SICHTBAR
+
+Beide gelten der ganzen Seite; im Zoom-Fenster sieht man einen Streifen
+davon. Ein Ausschnitt, den man dort zöge, läge auf der Seite ganz woanders.
+E470 hat deshalb schon nein gesagt — **aber erst nach dem Druck**, als
+Meldung.
+
+Ein Knopf, der aussieht, als ginge er, und dann eine Absage gibt, muss
+zweimal gelesen werden. Jetzt steht der Zustand am Knopf: `disabled`,
+`aria-disabled` und ein Hinweis, der sagt WARUM (§38).
+
+Die Meldung bleibt trotzdem stehen — sie fängt den Weg über die Tastatur
+und über die Befehlspalette, die den Knopf nicht sieht.
+
+Der Ruhezustand überlebt ein Neuzeichnen des Inspectors: der baut seine
+Knöpfe frisch, und ohne vier Zeilen dort stünden sie nach dem Zuklappen und
+Aufklappen wieder offen da, während das Fenster noch offen ist. Genau das
+misst `test467 §2`.
+
+## 2 · Seiten wandern über Spaltengrenzen
+
+`seiteAnStelle` (E480) sagte nein, wenn die Seiten eines Dokuments in
+mehreren Spalten liegen: „es gibt keine eine Reihenfolge, in die man
+einsortieren könnte." Das war ehrlich, **solange es keinen Weg gab, einen
+Block umzuhängen.** Seit E496 gibt es ihn.
+
+Jetzt bestimmt die Zielstelle die Eltern: die Seite wandert in die Eltern
+der Seite, VOR die sie fällt — und fällt sie ans Ende, in die der letzten.
+Mit derselben Reihenfolge wie in E496, und aus demselben Grund:
+
+    1 in die neuen Eltern legen
+    2 `parentId` umhängen
+    3 aus den alten nehmen
+
+Bräche etwas dazwischen ab, stünde die Seite in beiden Spalten — sichtbar.
+In der anderen Reihenfolge in keiner.
+
+In DERSELBEN Spalte bleibt alles, wie es war: ein Umsortieren in einer
+Liste, kein Umhängen. Zwei Zweige, weil es zwei verschiedene Dinge sind —
+und `test467 §4` hält den einfachen Fall fest, damit der neue ihn nicht
+mitnimmt.
+
+## 3 · Drei Zeilen in L133 waren keine GoodNotes-Lücke
+
+Beim Nachlesen gegen GoodNotes:
+
+  · **„Verbinder des Shape-Tools"** — GoodNotes' Formenwerkzeug hat keine
+    Verbinder. Das ist ein Wunsch für den Schaltplan-Teil, kein Rückstand.
+  · **„Auswahl über mehrere Blätter"** — GoodNotes' Lasso gilt je Seite,
+    genau wie Redions. Kein Rückstand.
+  · **„Stift-Favoriten"** stand nirgends, und das ist richtig so: GoodNotes'
+    drei Favoriten sind FARB-Voreinstellungen, und die hat Redion seit E486
+    als Farbsätze — mächtiger und benannt. Ein zweiter Katalog daneben wäre
+    genau das, wovor §8 warnt. Der Absatz steht hier, weil die Frage sonst
+    beim nächsten Durchgang wiederkommt.
+
+Alle drei bleiben in `LUECKEN.md` stehen, aber unter dem richtigen Titel:
+als Wunsch, nicht als Rückstand. §35 sagt, eine Lücke wird nicht gelöscht —
+sie wird aber auch nicht falsch stehen gelassen.
+
+GEPRÜFT. `test467` mit 20 Zusagen, drei Gegenproben rot gesehen (§55.2):
+ohne `ausschnittRuhen` beim Öffnen, ohne den Block im Inspector (nach dem
+Neuzeichnen offen), und mit der alten Absage über Spaltengrenzen. Dazu
+test87, test105, test109, test440, test442, test443, test450, test453 —
+alle grün. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts zoomruhe` — die zwei ruhenden Knöpfe.
