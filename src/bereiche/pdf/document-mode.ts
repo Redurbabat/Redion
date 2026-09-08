@@ -407,6 +407,63 @@ const DocumentMode = (() => {
    * schon als Kästen auf dem Papier und gehören nicht noch einmal in die
    * Liste.
    */
+  /**
+   * TRÄGT DIESE DOKUMENTSEITE DAS WORT? Und wenn ja, in welchem Text?
+   *
+   * Die eine Stelle, an der das entschieden wird (§8) — seit E500 fragen
+   * zwei danach: die Suche über mehrere Dokumente (E487) und die
+   * Schalensuche, die jetzt die STELLE nachliefert statt nur das Dokument.
+   * Zwei Abschriften derselben Regel liefen auseinander, und dann fände die
+   * eine Suche etwas, das die andere nicht kennt.
+   *
+   * Was durchsucht wird, ist NICHT die PDF-Quelle: die läge für jedes
+   * Dokument einzeln zu lesen an. Durchsucht wird, was ohnehin im Speicher
+   * liegt — `suchtext` der PDF-Seite (E107), der Text der Text- und
+   * Zettelmarken eines Blatts und der Text seiner Kinder.
+   */
+  const fundIm = (block: any, q: string): string => {
+    if (!block || !q) return '';
+    if (block.type === 'pdfseite') {
+      const text = String(block.suchtext || block.ocrText || '');
+      return text.toLowerCase().includes(q) ? text : '';
+    }
+    for (const m of (Array.isArray(block.marken) ? block.marken : [])) {
+      if ((m?.art === 'text' || m?.art === 'zettel') && String(m.text ?? '').toLowerCase().includes(q)) {
+        return String(m.text);
+      }
+    }
+    for (const kind of Store.childrenOf(block.id) as any[]) {
+      if (String(kind?.text ?? '').toLowerCase().includes(q)) return String(kind.text);
+    }
+    return '';
+  };
+
+  /**
+   * DIE ERSTE STELLE IN DIESEM DOKUMENT, die das Wort trägt (E500).
+   *
+   * Die Schalensuche (Strg P) findet Seiten; bei einem Dokument mit
+   * zweihundert Seiten landete man damit auf Seite eins und musste dort
+   * ein zweites Mal suchen. Diese Funktion liefert die Seitenzahl, den
+   * Block und einen Ausschnitt nach — mit derselben Rechnung wie die
+   * Suche im Studio.
+   */
+  const stelleIn = (page: any, wort: string): { blockId: string; nr: number; auszug: string } | null => {
+    const q = String(wort || '').trim().toLowerCase();
+    if (q.length < 2 || !page) return null;
+    const liste = documentsIn(page);
+    for (let i = 0; i < liste.length; i++) {
+      const fund = fundIm(liste[i], q);
+      if (!fund) continue;
+      const roh = fund.replace(/\s+/g, ' ');
+      const wo = roh.toLowerCase().indexOf(q);
+      const von = Math.max(0, wo - 30);
+      const auszug = (von > 0 ? '… ' : '') + roh.slice(von, von + 90).trim()
+        + (roh.length > von + 90 ? ' …' : '');
+      return { blockId: String(liste[i]!.id), nr: i + 1, auszug };
+    }
+    return null;
+  };
+
   const fremdeTreffer = (wort: string, ausser: string): { liste: FremdTreffer[]; mehr: boolean } => {
     const q = String(wort || '').trim().toLowerCase();
     if (q.length < 2) return { liste: [], mehr: false };
@@ -428,20 +485,7 @@ const DocumentMode = (() => {
       const seite = seiteZu(block);
       if (!seite || !seite.alive || seite.id === ausser) continue;
       if (typeof Konten !== 'undefined' && Konten.darf && !Konten.darf('lesen', seite.id)) continue;
-      let fund = '';
-      if (block.type === 'pdfseite') {
-        const text = String(block.suchtext || block.ocrText || '');
-        if (text.toLowerCase().includes(q)) fund = text;
-      } else {
-        for (const m of (Array.isArray(block.marken) ? block.marken : [])) {
-          if ((m?.art === 'text' || m?.art === 'zettel') && String(m.text ?? '').toLowerCase().includes(q)) {
-            fund = String(m.text); break;
-          }
-        }
-        if (!fund) for (const kind of Store.childrenOf(block.id) as any[]) {
-          if (String(kind?.text ?? '').toLowerCase().includes(q)) { fund = String(kind.text); break; }
-        }
-      }
+      const fund = fundIm(block, q);
       if (!fund) continue;
       liste.push({ seiteId: seite.id, blockId: block.id,
         name: String(seite.text || 'Ohne Titel'), icon: String(seite.icon || '📄'),
@@ -3775,6 +3819,14 @@ const DocumentMode = (() => {
      Seitenzeichnung läuft durch `schale.ts`, und wer das Dokument verlässt,
      soll pdf.js nicht im Rücken behalten. */
   return { available, active, select, toggle, documentsIn, render, sourceLabel, seiteAlsBild, alsPdf,
+           /* E500: die Schalensuche fragt danach, welche SEITE eines
+              Dokuments das Wort trägt — mit derselben Rechnung wie die
+              Suche im Studio (§8). */
+           stelleIn,
+           /* E500: alle Dokumentstellen zu einem Wort — dieselbe Rechnung
+              wie die Suche über mehrere Dokumente (E487), nur ohne die
+              Seite auszunehmen, die gerade offen ist. */
+           stellenSuchen: (wort: string) => fremdeTreffer(wort, ''),
            freigeben: (): void => { griffeSchliessen(); verweisHorchenAus(); } };
 })();
 

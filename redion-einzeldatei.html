@@ -19106,7 +19106,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 669, inhalt: '9be5fe1e4d8fff5b', gebaut: '2026-09-08T03:30:21.615Z' };
+const Stand = { fassung: 673, inhalt: '1f57b118ccb0b412', gebaut: '2026-09-08T03:55:18.089Z' };
 window.Stand = Stand;
 
 </script>
@@ -67096,6 +67096,65 @@ const DocumentMode = (() => {
      * schon als Kästen auf dem Papier und gehören nicht noch einmal in die
      * Liste.
      */
+    /**
+     * TRÄGT DIESE DOKUMENTSEITE DAS WORT? Und wenn ja, in welchem Text?
+     *
+     * Die eine Stelle, an der das entschieden wird (§8) — seit E500 fragen
+     * zwei danach: die Suche über mehrere Dokumente (E487) und die
+     * Schalensuche, die jetzt die STELLE nachliefert statt nur das Dokument.
+     * Zwei Abschriften derselben Regel liefen auseinander, und dann fände die
+     * eine Suche etwas, das die andere nicht kennt.
+     *
+     * Was durchsucht wird, ist NICHT die PDF-Quelle: die läge für jedes
+     * Dokument einzeln zu lesen an. Durchsucht wird, was ohnehin im Speicher
+     * liegt — `suchtext` der PDF-Seite (E107), der Text der Text- und
+     * Zettelmarken eines Blatts und der Text seiner Kinder.
+     */
+    const fundIm = (block, q) => {
+        if (!block || !q)
+            return '';
+        if (block.type === 'pdfseite') {
+            const text = String(block.suchtext || block.ocrText || '');
+            return text.toLowerCase().includes(q) ? text : '';
+        }
+        for (const m of (Array.isArray(block.marken) ? block.marken : [])) {
+            if ((m?.art === 'text' || m?.art === 'zettel') && String(m.text ?? '').toLowerCase().includes(q)) {
+                return String(m.text);
+            }
+        }
+        for (const kind of Store.childrenOf(block.id)) {
+            if (String(kind?.text ?? '').toLowerCase().includes(q))
+                return String(kind.text);
+        }
+        return '';
+    };
+    /**
+     * DIE ERSTE STELLE IN DIESEM DOKUMENT, die das Wort trägt (E500).
+     *
+     * Die Schalensuche (Strg P) findet Seiten; bei einem Dokument mit
+     * zweihundert Seiten landete man damit auf Seite eins und musste dort
+     * ein zweites Mal suchen. Diese Funktion liefert die Seitenzahl, den
+     * Block und einen Ausschnitt nach — mit derselben Rechnung wie die
+     * Suche im Studio.
+     */
+    const stelleIn = (page, wort) => {
+        const q = String(wort || '').trim().toLowerCase();
+        if (q.length < 2 || !page)
+            return null;
+        const liste = documentsIn(page);
+        for (let i = 0; i < liste.length; i++) {
+            const fund = fundIm(liste[i], q);
+            if (!fund)
+                continue;
+            const roh = fund.replace(/\s+/g, ' ');
+            const wo = roh.toLowerCase().indexOf(q);
+            const von = Math.max(0, wo - 30);
+            const auszug = (von > 0 ? '… ' : '') + roh.slice(von, von + 90).trim()
+                + (roh.length > von + 90 ? ' …' : '');
+            return { blockId: String(liste[i].id), nr: i + 1, auszug };
+        }
+        return null;
+    };
     const fremdeTreffer = (wort, ausser) => {
         const q = String(wort || '').trim().toLowerCase();
         if (q.length < 2)
@@ -67129,27 +67188,7 @@ const DocumentMode = (() => {
                 continue;
             if (typeof Konten !== 'undefined' && Konten.darf && !Konten.darf('lesen', seite.id))
                 continue;
-            let fund = '';
-            if (block.type === 'pdfseite') {
-                const text = String(block.suchtext || block.ocrText || '');
-                if (text.toLowerCase().includes(q))
-                    fund = text;
-            }
-            else {
-                for (const m of (Array.isArray(block.marken) ? block.marken : [])) {
-                    if ((m?.art === 'text' || m?.art === 'zettel') && String(m.text ?? '').toLowerCase().includes(q)) {
-                        fund = String(m.text);
-                        break;
-                    }
-                }
-                if (!fund)
-                    for (const kind of Store.childrenOf(block.id)) {
-                        if (String(kind?.text ?? '').toLowerCase().includes(q)) {
-                            fund = String(kind.text);
-                            break;
-                        }
-                    }
-            }
+            const fund = fundIm(block, q);
             if (!fund)
                 continue;
             liste.push({ seiteId: seite.id, blockId: block.id,
@@ -70878,6 +70917,14 @@ const DocumentMode = (() => {
        Seitenzeichnung läuft durch `schale.ts`, und wer das Dokument verlässt,
        soll pdf.js nicht im Rücken behalten. */
     return { available, active, select, toggle, documentsIn, render, sourceLabel, seiteAlsBild, alsPdf,
+        /* E500: die Schalensuche fragt danach, welche SEITE eines
+           Dokuments das Wort trägt — mit derselben Rechnung wie die
+           Suche im Studio (§8). */
+        stelleIn,
+        /* E500: alle Dokumentstellen zu einem Wort — dieselbe Rechnung
+           wie die Suche über mehrere Dokumente (E487), nur ohne die
+           Seite auszunehmen, die gerade offen ist. */
+        stellenSuchen: (wort) => fremdeTreffer(wort, ''),
         freigeben: () => { griffeSchliessen(); verweisHorchenAus(); } };
 })();
 window.DocumentMode = DocumentMode;
@@ -149274,7 +149321,9 @@ const App = (() => {
                 `<span>${t.page.icon || '📄'}</span>` +
                 `<span style="flex:1"><span>${esc(t.page.text || 'Ohne Titel')}</span>` +
                 (t.pfad ? `<span class="snip pfad">${esc(t.pfad)}</span>` : '') +
-                (t.treffer === 'Inhalt' ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
+                /* Der Ausschnitt steht beim Inhaltstreffer — und seit E500 auch
+                   beim Dokumenttreffer, wo er die Stelle zeigt. */
+                (t.snippet && (t.treffer === 'Inhalt' || t.blockId) ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
                 `</span><span class="pth">${t.treffer}</span></button>`).join('');
             verlaufBinden();
             res.querySelectorAll('button[data-i]').forEach(b => {
@@ -149516,6 +149565,69 @@ const App = (() => {
                 snippet: match.snippet,
                 pfad: match.document.path
             })).filter(hit => !!hit.page);
+            /* ══ BEI EINEM DOKUMENT DIE STELLE NACHLIEFERN (E500) ════════════════
+               Die Schalensuche fand bisher SEITEN. Bei einem Skript mit
+               zweihundert PDF-Seiten landete man damit auf Seite eins und musste
+               dort ein zweites Mal suchen — genau der Weg, den die Suche im
+               Studio (E468, E487) abgeschafft hat, nur eine Ebene höher.
+      
+               DIE FREIEN WÖRTER, NICHT DIE ABFRAGE. `titel:"Projekt"` und
+               `tag:arbeit` sind Filter und stehen in keinem Seitentext; gesucht
+               wird mit dem, was daneben steht. Das ist eine Näherung, und sie
+               steht hier, weil die Abfragesprache ihren Klartext nicht
+               herausgibt — sie kennt weder DOM noch Ablage, und das soll so
+               bleiben (derselbe Grund wie beim Kennungszweig oben).
+      
+               NUR BEI DOKUMENTEN, und nur für die Treffer, die ohnehin schon da
+               sind: `stelleIn` liest, was im Speicher liegt, nicht die PDF. */
+            const freieWorte = roh.split(/\s+/)
+                .filter(w => w && !/^[\p{L}]+:/u.test(w)).join(' ').replace(/["']/g, '').trim();
+            const dok = typeof DocumentMode !== 'undefined' ? DocumentMode : null;
+            if (freieWorte.length >= 2 && dok && typeof dok.stelleIn === 'function') {
+                for (const hit of treffer) {
+                    if (!hit.page?.dokumentModus)
+                        continue;
+                    const stelle = dok.stelleIn(hit.page, freieWorte);
+                    if (!stelle)
+                        continue;
+                    hit.blockId = stelle.blockId;
+                    hit.treffer = 'Seite ' + stelle.nr;
+                    /* DER AUSSCHNITT DER STELLE SCHLÄGT DEN DER SEITE (Fund des
+                       Bildes). Die Abfragesprache schneidet aus dem Text der GANZEN
+                       Seite; bei einem Dokument ist das der Text aller Seiten
+                       hintereinander, und der Schnitt fiel mitten in ein Wort
+                       („…trom Kapitel 2 —"). `stelle.auszug` steht um das gesuchte
+                       Wort herum und sagt, was auf DIESER Seite steht. */
+                    hit.snippet = stelle.auszug;
+                }
+                /* ══ UND DIE STELLEN, DIE DIE ABFRAGESPRACHE NICHT KENNT ══════════
+                   Was ein Mensch auf ein Blatt SCHREIBT, steht in einer Marke — und
+                   Marken stehen in keinem Suchindex. Ein Skript, in dem „Knotensatz"
+                   nur handschriftlich als Textmarke steht, war über Strg P nicht zu
+                   finden; im Studio (E487) war es das längst.
+        
+                   NUR BEI EINER REINEN WORTSUCHE. Dieser Zweig geht an der
+                   Abfragesprache vorbei und damit an ihren Filtern — dieselbe
+                   Gefahr, die E175 am Kennungszweig gefunden hat: griffe er auch
+                   bei „nur Titel", zeigte dieser Filter plötzlich Inhaltstreffer.
+                   Also nur, wenn nichts gefiltert ist und die Abfrage aus genau
+                   den freien Wörtern besteht. */
+                if (!hasUiFilter && roh.trim() === freieWorte && typeof dok.stellenSuchen === 'function') {
+                    const schon = new Set(treffer.map(h => String(h.page?.id || '')));
+                    const gefunden = dok.stellenSuchen(freieWorte);
+                    for (const stelle of (gefunden?.liste || [])) {
+                        if (schon.has(stelle.seiteId))
+                            continue;
+                        const seite = Store.getBlock(stelle.seiteId);
+                        if (!seite || seite.alive === false)
+                            continue;
+                        schon.add(stelle.seiteId);
+                        treffer.push({ page: seite, treffer: 'Seite ' + stelle.nr,
+                            snippet: stelle.auszug, pfad: Store.pfadText(seite.id) || '',
+                            blockId: stelle.blockId });
+                    }
+                }
+            }
             i = 0;
             zeichne();
         };
@@ -149584,6 +149696,13 @@ const App = (() => {
     const zumTreffer = (t) => {
         if (!t)
             return;
+        /* DER SPRUNG INS DOKUMENT BRAUCHT HIER NICHTS NEUES (E500, Fund der
+           Gegenprobe). `zeigeBlock` kann ihn längst: es erkennt ein
+           `pdfseite`/`blatt`-Ziel, wählt über `DocumentMode.select` DIE Seite
+           und schaltet den Dokumentmodus notfalls ein. Der erste Entwurf hat
+           daneben einen zweiten Weg gebaut — und der wäre am Rechteweg und an
+           `Links.seiteVon` vorbeigelaufen (§8: keine zweite Tür).
+           Neu ist nur, dass ein Suchtreffer jetzt eine `blockId` MITBRINGT. */
         if (t.blockId && zeigeBlock(t.blockId))
             return;
         oeffne(t.page.id);

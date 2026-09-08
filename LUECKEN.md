@@ -6560,8 +6560,14 @@ Offen bleibt:
     denn die Stelle steht in der PDF-Textschicht, und die für jedes fremde
     Dokument zu lesen macht das Suchfeld unbenutzbar. Der Sprung ist der
     zweite Schritt, der die Stelle nachliefert.
-    Die Schalensuche (Strg P) findet weiterhin Seiten, nicht Stellen — sie
-    ist eine andere Suche, und das bleibt offen. `test459`.
+    ~~Die Schalensuche (Strg P) findet weiterhin Seiten, nicht Stellen~~ —
+    **GESCHLOSSEN mit E500:** sie nennt jetzt „Seite 3" statt „Inhalt",
+    zeigt den Ausschnitt der Stelle und springt dorthin. Und sie findet
+    seither überhaupt erst, was von HAND geschrieben ist: Text auf einem
+    Blatt steht in einer Marke, Marken stehen in keinem Suchindex — ein
+    Heft mit „Knotensatz" als Textmarke war über Strg P unauffindbar.
+    Der Zweig greift nur bei einer reinen Wortsuche, sonst ginge er an den
+    Filtern der Abfragesprache vorbei (E175). `test459`, `test469`.
   · ~~**Ziele der PDF innerhalb der Seite**~~ — **GESCHLOSSEN mit E481.**
     `/XYZ`, `/FitH` und `/FitR` nennen eine Höhe; sie steht seit dem
     Einlesen als `zielY` am Verweis, und der Sprung rollt dorthin. `/Fit`

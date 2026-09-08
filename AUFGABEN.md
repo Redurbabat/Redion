@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — dreissig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — einunddreissig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -396,7 +396,14 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     was über eine Grenze läuft, wird gezählt und gesagt, bevor etwas
     geschieht. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **dreissig Bögen**; die Überschrift
+  · **G31 — Die Schalensuche findet die Stelle** (E500, test469): Strg P
+    nennt bei einem Dokument die Seite, zeigt ihren Ausschnitt und springt
+    dorthin — und findet dabei zum ersten Mal, was von HAND geschrieben
+    ist: Marken stehen in keinem Suchindex, und ein Heft mit dem Wort als
+    Textmarke war unauffindbar. Die Gegenprobe hat einen zweiten Sprungweg
+    entlarvt, den `zeigeBlock` längst konnte. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **einunddreissig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-479 Entscheidungen, E1 bis E499 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+480 Entscheidungen, E1 bis E500 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -543,6 +543,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E497** — Der breite Lauf nach E493–E496: zwei echte Fehler, die seit Wochen rot waren und die niemand laufen liess
 * **E498** — Die zwei letzten Reste: „Ausschnitt" ruht sichtbar, und Seiten wandern über Spaltengrenzen
 * **E499** — Ein mehrseitiges Blatt in Seiten zerlegen: jede Marke behält ihre Seite, keine wird geschnitten
+* **E500** — Die Schalensuche findet die Stelle im Dokument — und endlich auch, was von Hand geschrieben ist
 
 ---
 
@@ -39918,3 +39919,84 @@ ohne den Ruhezweig, ohne das Verschieben der Höhe, ohne die Zählung der
 Grenzgänger. Dazu test87, test105, test109, test440, test442, test443,
 test453, test466, test467 — alle grün. Nicht geprüft: die Gesamtsuite.
 Bild: `node bilder.mts zerlegen` — die Frage vor dem Zerlegen.
+
+---
+
+E500 — Die Schalensuche findet die Stelle, nicht nur das Dokument
+--------------------------------------------------------------------------
+
+L133, unter „Suche und Verweise":
+
+> „Die Schalensuche (Strg P) findet weiterhin Seiten, nicht Stellen — sie
+> ist eine andere Suche, und das bleibt offen."
+
+Bei einem Skript mit zweihundert PDF-Seiten landete man damit auf Seite eins
+und musste dort ein zweites Mal suchen — genau der Weg, den E468 und E487 im
+Studio abgeschafft haben, nur eine Ebene höher.
+
+## Zwei Dinge, und das zweite ist das grössere
+
+**1 · Die Stelle nachliefern.** Für jeden Treffer, dessen Seite ein Dokument
+ist, sagt `DocumentMode.stelleIn` die Seitenzahl, den Block und einen
+Ausschnitt. In der Liste steht danach „Seite 3" statt „Inhalt", und ein Tipp
+öffnet das Dokument DORT.
+
+**2 · Was von Hand geschrieben ist, wird überhaupt erst gefunden.** Text auf
+einem Blatt steht in einer MARKE, und Marken stehen in keinem Suchindex. Ein
+Heft, in dem „Knotensatz" als Textmarke steht, war über Strg P **nicht
+auffindbar** — im Studio (E487) längst. Der zweite Zweig holt diese Treffer
+dazu, mit derselben Rechnung.
+
+Das war kein Punkt in L133. Es ist beim Bauen des ersten Punktes
+aufgefallen: der Prüflauf fand die Mitschrift nicht, und das lag nicht am
+neuen Code.
+
+## Der Zweig, der an der Abfragesprache vorbeigeht
+
+Er greift **nur bei einer reinen Wortsuche** — kein UI-Filter gesetzt, und
+die Abfrage besteht aus genau den freien Wörtern. Der Grund steht seit E175
+zwanzig Zeilen weiter oben am Kennungszweig: wer an der Abfragesprache
+vorbeigeht, geht auch an ihren Filtern vorbei, und dann zeigt „nur Titel"
+plötzlich Inhaltstreffer.
+
+Die freien Wörter werden dabei aus der Rohabfrage geschnitten
+(`titel:"Projekt"` und `tag:arbeit` fallen weg). Das ist eine Näherung, und
+sie steht in der Schale, weil die Abfragesprache ihren Klartext nicht
+herausgibt — sie kennt weder DOM noch Ablage, und das soll so bleiben.
+
+## Eine Fundregel, zwei Sucher
+
+`fundIm` entscheidet an EINER Stelle, ob eine Dokumentseite ein Wort trägt
+und in welchem Text: `suchtext` der PDF-Seite (E107), der Text der Text- und
+Zettelmarken, der Text der Kindblöcke. Vorher stand die Regel im Rumpf von
+`fremdeTreffer`; mit dem zweiten Sucher wäre sie zur Abschrift geworden, und
+dann fände die eine Suche etwas, das die andere nicht kennt (§8).
+
+## Der Fund der Gegenprobe: fast eine zweite Tür
+
+Der erste Entwurf hat in `zumTreffer` einen eigenen Sprungzweig gebaut —
+Seite wählen, dann öffnen. Die Gegenprobe zeigte, dass §3 auch OHNE ihn grün
+ist: `zeigeBlock` kann das längst. Es erkennt ein `pdfseite`/`blatt`-Ziel,
+wählt über `DocumentMode.select` die Seite und schaltet den Dokumentmodus
+notfalls ein.
+
+Der eigene Zweig wäre also nicht nur überflüssig gewesen, sondern an
+`Links.seiteVon` und am Rest jener Logik vorbeigelaufen. Er ist wieder weg.
+**Neu ist einzig, dass ein Suchtreffer eine `blockId` mitbringt** — den
+Rest konnte die Schale schon.
+
+## Der Fund des Bildes
+
+Der erste Ausschnitt in der Liste kam von der Abfragesprache und schnitt aus
+dem Text der GANZEN Seite; bei einem Dokument ist das der Text aller Seiten
+hintereinander, und der Schnitt fiel mitten in ein Wort: „…trom Kapitel 2 —".
+Jetzt gewinnt der Ausschnitt der STELLE, und dort steht, was auf dieser
+Seite steht.
+
+GEPRÜFT. `test469` mit 26 Zusagen, vier Gegenproben rot gesehen (§55.2):
+ohne den zweiten Zweig (die Mitschrift fehlt), ohne die `blockId` (der
+Sprung landet auf Seite 1), ohne die Marken in `fundIm`, und der Sprungzweig
+selbst — der grün blieb und deshalb wieder weg ist. Dazu test87, test105,
+test109, test229 (die Filter der Suche), test459 (die Suche im Studio) —
+alle grün. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts schalensuche` — die Liste mit „Seite 3" und „Seite 2".

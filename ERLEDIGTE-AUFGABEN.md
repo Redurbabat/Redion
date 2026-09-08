@@ -4441,3 +4441,26 @@ ist es nicht, und der Dialog sagt es mit Zahl, bevor etwas geschieht.
 Die Reihenfolge ist zum dritten Mal in diesem Bündel dieselbe: erst die
 neuen Blätter mit ihren Marken anlegen, dann das Original kürzen.
 Andersherum wären die Seiten zwei bis n weg, bevor es sie gibt.
+
+**Die Schalensuche findet die Stelle (E500, test469).** Strg P fand Seiten;
+bei einem Skript mit zweihundert PDF-Seiten landete man damit auf Seite eins
+und musste dort ein zweites Mal suchen. Jetzt steht „Seite 3" in der Liste,
+darunter der Ausschnitt der Stelle, und ein Tipp öffnet das Dokument dort.
+
+Das Grössere kam beim Bauen heraus: Text auf einem Blatt steht in einer
+MARKE, und Marken stehen in keinem Suchindex. Ein Heft, in dem „Knotensatz"
+handschriftlich als Textmarke steht, war über Strg P überhaupt nicht zu
+finden — im Studio (E487) längst. Der zweite Zweig holt diese Treffer dazu,
+und zwar nur bei einer reinen Wortsuche: wer an der Abfragesprache
+vorbeigeht, geht auch an ihren Filtern vorbei (E175).
+
+Die Gegenprobe hat einen Fehler verhindert, der schon geschrieben war: der
+erste Entwurf baute in `zumTreffer` einen eigenen Sprungweg ins Dokument.
+Ohne ihn blieb der Punkt grün — `zeigeBlock` kann das längst und macht es
+dabei richtiger. Er ist wieder weg; neu ist einzig, dass ein Treffer eine
+`blockId` mitbringt.
+
+Und das Bild fand den Ausschnitt: die Abfragesprache schnitt aus dem Text
+der ganzen Seite, bei einem Dokument also aus allen Seiten hintereinander —
+mitten im Wort („…trom Kapitel 2 —"). Jetzt gewinnt der Ausschnitt der
+Stelle.

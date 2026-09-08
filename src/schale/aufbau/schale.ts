@@ -1149,7 +1149,9 @@ const App = (() => {
           `<span>${t.page.icon || '📄'}</span>` +
           `<span style="flex:1"><span>${esc(t.page.text || 'Ohne Titel')}</span>` +
           (t.pfad ? `<span class="snip pfad">${esc(t.pfad)}</span>` : '') +
-          (t.treffer === 'Inhalt' ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
+          /* Der Ausschnitt steht beim Inhaltstreffer — und seit E500 auch
+             beim Dokumenttreffer, wo er die Stelle zeigt. */
+          (t.snippet && (t.treffer === 'Inhalt' || t.blockId) ? `<span class="snip">${esc(t.snippet)}</span>` : '') +
           `</span><span class="pth">${t.treffer}</span></button>`).join('');
       verlaufBinden();
       res.querySelectorAll<HTMLElement>('button[data-i]').forEach(b => {
@@ -1379,6 +1381,67 @@ const App = (() => {
         pfad: match.document.path
       })).filter(hit => !!hit.page);
 
+      /* ══ BEI EINEM DOKUMENT DIE STELLE NACHLIEFERN (E500) ════════════════
+         Die Schalensuche fand bisher SEITEN. Bei einem Skript mit
+         zweihundert PDF-Seiten landete man damit auf Seite eins und musste
+         dort ein zweites Mal suchen — genau der Weg, den die Suche im
+         Studio (E468, E487) abgeschafft hat, nur eine Ebene höher.
+
+         DIE FREIEN WÖRTER, NICHT DIE ABFRAGE. `titel:"Projekt"` und
+         `tag:arbeit` sind Filter und stehen in keinem Seitentext; gesucht
+         wird mit dem, was daneben steht. Das ist eine Näherung, und sie
+         steht hier, weil die Abfragesprache ihren Klartext nicht
+         herausgibt — sie kennt weder DOM noch Ablage, und das soll so
+         bleiben (derselbe Grund wie beim Kennungszweig oben).
+
+         NUR BEI DOKUMENTEN, und nur für die Treffer, die ohnehin schon da
+         sind: `stelleIn` liest, was im Speicher liegt, nicht die PDF. */
+      const freieWorte = roh.split(/\s+/)
+        .filter(w => w && !/^[\p{L}]+:/u.test(w)).join(' ').replace(/["']/g, '').trim();
+      const dok = typeof DocumentMode !== 'undefined' ? (DocumentMode as any) : null;
+      if (freieWorte.length >= 2 && dok && typeof dok.stelleIn === 'function') {
+        for (const hit of treffer) {
+          if (!hit.page?.dokumentModus) continue;
+          const stelle = dok.stelleIn(hit.page, freieWorte);
+          if (!stelle) continue;
+          hit.blockId = stelle.blockId;
+          hit.treffer = 'Seite ' + stelle.nr;
+          /* DER AUSSCHNITT DER STELLE SCHLÄGT DEN DER SEITE (Fund des
+             Bildes). Die Abfragesprache schneidet aus dem Text der GANZEN
+             Seite; bei einem Dokument ist das der Text aller Seiten
+             hintereinander, und der Schnitt fiel mitten in ein Wort
+             („…trom Kapitel 2 —"). `stelle.auszug` steht um das gesuchte
+             Wort herum und sagt, was auf DIESER Seite steht. */
+          hit.snippet = stelle.auszug;
+        }
+
+        /* ══ UND DIE STELLEN, DIE DIE ABFRAGESPRACHE NICHT KENNT ══════════
+           Was ein Mensch auf ein Blatt SCHREIBT, steht in einer Marke — und
+           Marken stehen in keinem Suchindex. Ein Skript, in dem „Knotensatz"
+           nur handschriftlich als Textmarke steht, war über Strg P nicht zu
+           finden; im Studio (E487) war es das längst.
+
+           NUR BEI EINER REINEN WORTSUCHE. Dieser Zweig geht an der
+           Abfragesprache vorbei und damit an ihren Filtern — dieselbe
+           Gefahr, die E175 am Kennungszweig gefunden hat: griffe er auch
+           bei „nur Titel", zeigte dieser Filter plötzlich Inhaltstreffer.
+           Also nur, wenn nichts gefiltert ist und die Abfrage aus genau
+           den freien Wörtern besteht. */
+        if (!hasUiFilter && roh.trim() === freieWorte && typeof dok.stellenSuchen === 'function') {
+          const schon = new Set(treffer.map(h => String(h.page?.id || '')));
+          const gefunden = dok.stellenSuchen(freieWorte);
+          for (const stelle of (gefunden?.liste || [])) {
+            if (schon.has(stelle.seiteId)) continue;
+            const seite = Store.getBlock(stelle.seiteId);
+            if (!seite || seite.alive === false) continue;
+            schon.add(stelle.seiteId);
+            treffer.push({ page: seite, treffer: 'Seite ' + stelle.nr,
+              snippet: stelle.auszug, pfad: Store.pfadText(seite.id) || '',
+              blockId: stelle.blockId });
+          }
+        }
+      }
+
       i = 0;
       zeichne();
     };
@@ -1433,6 +1496,13 @@ const App = (() => {
    */
   const zumTreffer = (t: any): void => {
     if (!t) return;
+    /* DER SPRUNG INS DOKUMENT BRAUCHT HIER NICHTS NEUES (E500, Fund der
+       Gegenprobe). `zeigeBlock` kann ihn längst: es erkennt ein
+       `pdfseite`/`blatt`-Ziel, wählt über `DocumentMode.select` DIE Seite
+       und schaltet den Dokumentmodus notfalls ein. Der erste Entwurf hat
+       daneben einen zweiten Weg gebaut — und der wäre am Rechteweg und an
+       `Links.seiteVon` vorbeigelaufen (§8: keine zweite Tür).
+       Neu ist nur, dass ein Suchtreffer jetzt eine `blockId` MITBRINGT. */
     if (t.blockId && zeigeBlock(t.blockId)) return;
     oeffne(t.page.id);
   };

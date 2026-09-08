@@ -2009,6 +2009,41 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  schalensuche: {
+    titel: 'Die Schalensuche nennt die Seite im Dokument (E500)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const skript = Store.addPage(null, { text: 'Elektrotechnik — Skript', icon: '📕' });
+      ['Vorwort und Aufbau', 'Kapitel 1 — Ladung und Strom',
+       'Kapitel 2 — Der Kirchhoffsche Knotensatz erklärt die Stromverteilung im Netz',
+       'Kapitel 3 — Leistung und Arbeit', 'Anhang: Formelsammlung']
+        .forEach((t, i) => Store.addBlock(skript.id, 'pdfseite', { text: '', nr: i + 1,
+          vonSeiten: 5, bw: 595, bh: 842, quelleId: 'q1', raumVersion: 1, suchtext: t }));
+      Store.updateBlock(skript.id, { dokumentModus: true });
+
+      const heft = Store.addPage(null, { text: 'Mitschrift 12. Mai', icon: '📗' });
+      for (let i = 0; i < 3; i++) {
+        const blatt = Store.addBlock(heft.id, 'blatt', { text: '', papier: 'liniert',
+          blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1,
+          marken: i === 1
+            ? [{ id: 'mk', art: 'text', farbe: '#111111', point: [60, 120], fontSize: 15,
+                text: 'Knotensatz: was reingeht, geht auch wieder raus' }]
+            : [] });
+        Store.addBlock(blatt.id, 'text', { text: '' });
+      }
+      Store.updateBlock(heft.id, { dokumentModus: true });
+      App.oeffne(skript.id);
+      await new Promise(r => setTimeout(r, 1200));
+      App.suche();
+      await new Promise(r => setTimeout(r, 400));
+      const feld = document.querySelector<HTMLInputElement>('.overlay #q');
+      if (feld) { feld.value = 'Knotensatz'; feld.dispatchEvent(new Event('input', { bubbles: true })); }
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+
   zerlegen: {
     titel: 'Ein mehrseitiges Blatt in Seiten zerlegen (E499)',
     bauen: async () => {
