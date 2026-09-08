@@ -6705,6 +6705,27 @@ Was Redion auch nach G5 nicht haben wird, und warum:
     Stifts fasst bei 596 px genau vierzehn Knöpfe und ist mit vierzehn
     voll — drei Plätze mehr brächen sie in eine dritte Zeile und die
     Leiste über die 100 px aus E359.
+  · **Der PDF-Export ist ein Bild je Seite** — und damit in der Sprache
+    des Stift-Dossiers (S.6) die unterste Stufe der Datenverlust-Pyramide:
+    „Flattened/Raster PDF — bewahrt im Extremfall nur Pixel; keine
+    editierbare Stroke-Semantik mehr." Wer eine in Redion beschriebene PDF
+    in Adobe Reader öffnet, sieht die Seite richtig, findet unter
+    „Kommentare" aber nichts: kein Strich lässt sich anklicken,
+    verschieben, färben oder löschen, der Text der Originalseite ist nicht
+    mehr markierbar, und ein Screenreader liest nichts.
+    Seit **E505** sagt Redion das wenigstens sichtbar, statt nur im
+    `title`. Was fehlt, ist die Wahl: echte `/Ink`-Annotationen mit
+    `/Rect`, `/InkList` in Default User Space und einem `/AP`-Stream, wie
+    das Dossier sie auf S.9 beschreibt — dann wäre die Handschrift in
+    jedem fremden Viewer ein Objekt und nicht ein Bildausschnitt. Der
+    Zwischenschritt, der kein Annotationsmodell braucht, wäre schon viel
+    wert: die Striche als VEKTORPFAD in den Seiteninhalt schreiben statt
+    sie zu rastern.
+    Nicht vergessen dabei: `/FreeText` für Text- und Zettelmarken (S.10 —
+    „FreeText sollte nicht mit Handschrift verwechselt werden"), und die
+    Frage, ob die Rohdaten als private Einträge mitreisen dürfen. Die
+    letzte ist eine Datenschutzfrage (S.15): dynamische Handschrift ist
+    als biometrisches Signal erforscht.
   · **Das eigene Formelheft am TELEFON** ist ein fester Vorhang unten und
     lässt sich dort weder schieben noch in der Grösse ziehen (`.fh-fenster`
     im Block ab 640 px). Am Rechner geht beides seit E503 wirklich — dort

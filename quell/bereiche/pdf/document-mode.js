@@ -774,8 +774,22 @@ const DocumentMode = (() => {
            heraus. Zwei Zeichen für dieselbe Sache wären eine Sprache zu viel. */
         const pdfKnopf = makeAction('export-pdf', '⬇ Als PDF sichern');
         pdfKnopf.className = 'document-import';
-        pdfKnopf.title = 'Das ganze Dokument mit allen Marken als PDF speichern — '
-            + 'jede Seite als Bild; der Text der ursprünglichen PDF ist darin nicht mehr durchsuchbar.';
+        /* WAS DIESER KNOPF WIRKLICH TUT, STEHT DA — und nicht nur im `title`
+           (E505). Das Stift-Dossier, Seite 9 und 18: Flattening ist eine
+           legitime Wahl fuer unveraenderliche Weitergabe, aber es soll eine
+           ENTSCHEIDUNG sein, und vorher soll eine editierbare Masterkopie
+           existieren.
+    
+           Beides ist bei Redion erfuellt — das Original wird nie angefasst
+           (E106), und die Marken bleiben in der Ablage. Nur WUSSTE es niemand:
+           der Satz stand im `title`, er nannte allein den verlorenen Suchtext,
+           und am Telefon gibt es kein Hover (§37). Wer dort exportierte, erfuhr
+           gar nichts und merkte es erst beim Empfaenger. */
+        pdfKnopf.title = 'Das ganze Dokument mit allen Marken als PDF speichern. '
+            + 'Jede Seite wird ein Bild: der Text der ursprünglichen PDF ist darin nicht mehr '
+            + 'durchsuchbar, Verweise sind keine Verweise mehr, und deine Striche sind für ein '
+            + 'fremdes Programm keine Anmerkungen mehr, sondern Teil des Bildes. '
+            + 'Dein Original und deine Marken bleiben in Redion unverändert.';
         const importButton = makeAction('import', '＋ PDF hinzufügen');
         importButton.className = 'document-import';
         /* DIE KENNUNG, NICHT DAS OBJEKT (E471, L102 zum zweiten Mal). `darf`
@@ -1090,7 +1104,14 @@ const DocumentMode = (() => {
         const datenZeile = document.createElement('div');
         datenZeile.className = 'document-inspector-daten';
         datenZeile.append(pdfKnopf, importButton);
-        container.append(datenZeile, viewTitle, randKnopf, lupeKnopf);
+        /* DERSELBE SATZ ALS SICHTBARER TEXT (E505) — zwei Zeilen, kurz genug,
+           dass man sie liest, und da, wo der Knopf steht. Am Telefon ist er
+           das Einzige, was der Mensch ueberhaupt zu sehen bekommt. */
+        const pdfHinweis = document.createElement('p');
+        pdfHinweis.className = 'document-export-hinweis';
+        pdfHinweis.textContent = 'Beim PDF wird jede Seite ein Bild: Text und Striche sind '
+            + 'darin nicht mehr wählbar. Dein Original und deine Marken bleiben in Redion.';
+        container.append(datenZeile, pdfHinweis, viewTitle, randKnopf, lupeKnopf);
         if (laufKnopf)
             container.appendChild(laufKnopf);
         container.append(linkedTitle, actions, summary, list);

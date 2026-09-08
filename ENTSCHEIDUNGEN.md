@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-484 Entscheidungen, E1 bis E504 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+485 Entscheidungen, E1 bis E505 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -548,6 +548,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E502** — Das Formelbuch und das GIF auf dem Blatt: eine PDF-Seite als bewegliche, ziehbare Bildmarke
 * **E503** — Das eigene Formelheft liegt über dem Dokument — und war dabei seit jeher nicht in der Grösse zu ziehen
 * **E504** — Der Glätter rechnet in Zeit statt in Messungen, und ein abgebrochener Handballen wird verworfen
+* **E505** — CropBox und /Rotate werden endlich gefahren, und der PDF-Export sagt sichtbar, was er tut
 
 ---
 
@@ -40353,3 +40354,79 @@ test442, test453, test464, test465, test470, test471 — alle grün.
 Nicht geprüft: die Gesamtsuite.
 Messung statt Bild: die drei Zahlen oben sind der Beweis, ein
 Bildschirmfoto einer geglätteten Linie wäre keiner (§55.3).
+
+---
+
+E505 — Die ungeprüfte Zusage und der halbe Satz
+--------------------------------------------------------------------------
+
+Zwei weitere Punkte aus dem Stift-Dossier (E504 nennt die ersten beiden).
+Beide sind keine Fehler im Code, sondern Löcher daneben: eine Zusage ohne
+Prüfung und eine Wahrheit, die niemand liest.
+
+## 1 · CropBox und /Rotate wurden nie gefahren
+
+Dossier Seite 6: „Koordinaten sind eine der häufigsten Fehlerquellen … In
+der Praxis müssen zusätzlich CropBox, MediaBox, Seitenrotation,
+Display-Scale, Scrolloffset … berücksichtigt werden."
+
+Redion rechnet das richtig — es fragt pdf.js nach dem Viewport, und der
+kennt beides. Nur trug **keine einzige der rund zwanzig Prüf-PDFs** je eine
+`/CropBox` oder ein `/Rotate`; jede hatte `MediaBox [0 0 595 842]` und sonst
+nichts. Querformat entstand über eine querformatige MediaBox, nicht über
+`/Rotate 90`.
+
+Eine Zusage, die nie gefahren wurde, ist eine Behauptung — und genau die
+Sorte, die beim nächsten Umbau still zerbricht. Deshalb gibt es jetzt eine
+Prüf-PDF mit **Papier 800×1000 und Ausschnitt 600×800, dessen Ursprung
+nicht bei null liegt** (`CropBox [50 100 650 900]`), Seite zwei zusätzlich
+mit `/Rotate 90`.
+
+**Gemessen wird an Pixeln, nicht an Zahlen im Block.** Auf jeder Seite steht
+ein schwarzes Quadrat, das im Papier bei (60|840) liegt. Im Ausschnitt muss
+es bei (10|20) landen — 60−50 und 900−880. Genau dort wird nachgesehen, und
+an drei Stellen daneben, an denen es hell sein muss. Das ist der Punkt, an
+dem ein vergessener CropBox-Ursprung auffällt.
+
+Ergebnis: **es stimmt alles.** Seite 1 misst 600×800, Seite 2 misst 800×600
+mit `dreh: 90`, das Quadrat sitzt richtig, und eine Marke liegt nach dem
+Neuladen Punkt für Punkt, wo sie lag. Die Gegenprobe — `geometrie` auf die
+MediaBox statt auf den Viewport umgestellt — macht sechs Zusagen rot.
+
+## 2 · Der Export sagte die halbe Wahrheit, und nur im `title`
+
+Dossier Seite 9 und 18: Flattening ist eine legitime Wahl für
+unveränderliche Weitergabe, aber es soll eine ENTSCHEIDUNG sein, und vorher
+soll eine editierbare Masterkopie existieren.
+
+Beides ist bei Redion erfüllt: das Original wird nie angefasst (E106), die
+Marken bleiben in der Ablage. **Nur wusste es niemand.** Der Satz stand im
+`title`, er nannte allein den verlorenen Suchtext — nicht, dass die eigenen
+Striche danach für ein fremdes Programm keine Anmerkungen mehr sind —, und
+am Telefon gibt es kein Hover. §37 nennt das Telefon den Normalfall; dort
+erfuhr der Mensch also gar nichts und merkte es erst beim Empfänger.
+
+Jetzt steht der Satz **sichtbar unter dem Knopf**, in zwei Zeilen:
+
+> Beim PDF wird jede Seite ein Bild: Text und Striche sind darin nicht mehr
+> wählbar. Dein Original und deine Marken bleiben in Redion.
+
+Der zweite Halbsatz ist so wichtig wie der erste. Eine Warnung ohne die
+Entwarnung würde Angst machen, wo keine hingehört (§33): es geht nichts
+verloren, es kann nur der Empfänger weniger damit tun.
+
+Der `title` trägt weiterhin die lange Fassung, jetzt vollständig — Suchtext,
+Verweise und Anmerkungen.
+
+## Was das NICHT ist
+
+Es ist keine Wahl zwischen „zum Weitergeben" und „zum Weiterbearbeiten".
+Die gibt es erst, wenn der Schreiber echte `/Ink`-Annotationen kann; das ist
+ein eigener Bogen und steht in `LUECKEN.md`.
+
+GEPRÜFT. `test473` neu mit 33 Zusagen. Zwei Gegenproben rot gesehen (§55.2):
+die Geometrie aus der MediaBox statt aus dem Viewport (sechs rot), und der
+Hinweis nicht eingehängt (acht rot). Dazu test87, test105, test109, test177,
+test178, test442, test443, test460, test466, test471 — alle grün.
+Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts exporthinweis` — der Satz unter den beiden Knöpfen.

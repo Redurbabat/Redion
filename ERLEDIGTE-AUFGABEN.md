@@ -4572,3 +4572,24 @@ Probepunkt in festem Abstand und prüfte ein Gehrungsartefakt statt der
 Breite. Der erste Reparaturversuch war eine Tautologie — die Gegenprobe mit
 festem Druck blieb grün, weil verglichen wurde mit dem ersten Punkt, und
 dort läuft jede Kontur aus.
+
+**Die ungeprüfte Zusage und der halbe Satz (E505, test473).** Zwei weitere
+Punkte aus dem Stift-Dossier, und beide sind keine Fehler im Code, sondern
+Löcher daneben.
+
+CropBox und `/Rotate` rechnet Redion richtig — es fragt pdf.js nach dem
+Viewport, und der kennt beides. Nur trug keine einzige der rund zwanzig
+Prüf-PDFs je eines von beidem. Jetzt gibt es eine mit einem Papier von
+800×1000 und einem Ausschnitt von 600×800, dessen Ursprung nicht bei null
+liegt, zweite Seite mit `/Rotate 90`. Gemessen wird an echten Pixeln: ein
+schwarzes Quadrat, das im Papier bei (60|840) steht, muss im Ausschnitt bei
+(10|20) landen. Es stimmt alles — und die Gegenprobe, die Geometrie aus der
+MediaBox statt aus dem Viewport zu holen, macht sechs Zusagen rot.
+
+Der PDF-Export sagte die halbe Wahrheit, und nur im `title`: er nannte den
+verlorenen Suchtext, nicht die verlorene Bearbeitbarkeit — und am Telefon
+gibt es kein Hover, dort erfuhr also niemand etwas. Jetzt steht der Satz
+sichtbar unter dem Knopf, mit beiden Hälften: was das PDF verliert, und
+dass Original und Marken in Redion bleiben. Die zweite Hälfte ist so
+wichtig wie die erste; eine Warnung ohne Entwarnung macht Angst, wo keine
+hingehört.

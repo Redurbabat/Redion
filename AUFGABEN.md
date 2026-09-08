@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — fünfunddreissig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — sechsunddreissig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -437,7 +437,14 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     schwächer als gemessen), und `pointercancel` speicherte den Strich,
     statt ihn zu verwerfen. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **fünfunddreissig Bögen**; die Überschrift
+  · **G36 — Die ungeprüfte Zusage und der halbe Satz** (E505, test473):
+    CropBox und `/Rotate` wurden von keiner einzigen Prüf-PDF je gefahren
+    — jetzt schon, mit einem Ausschnitt, dessen Ursprung nicht bei null
+    liegt, und an echten Pixeln gemessen. Es stimmt alles. Und der
+    PDF-Export sagt jetzt sichtbar, was er tut, statt nur im `title`, den
+    am Telefon niemand sieht. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **sechsunddreissig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

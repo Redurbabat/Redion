@@ -2090,6 +2090,28 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  exporthinweis: {
+    titel: 'Der PDF-Export sagt sichtbar, was er tut (E505)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const skript = Store.addPage(null, { text: 'Elektro — Skript', icon: '📘' });
+      Store.addBlock(skript.id, 'blatt', { text: '', papier: 'liniert',
+        blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1,
+        marken: [{ id: 'a', art: 'text', farbe: '#111111', point: [58, 96], fontSize: 16,
+          text: 'Kapitel 3 — Leistung und Arbeit' }] });
+      Store.updateBlock(skript.id, { dokumentModus: true });
+      App.oeffne(skript.id);
+      await new Promise(r => setTimeout(r, 1400));
+      document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+      await new Promise(r => setTimeout(r, 700));
+      document.querySelector('.document-export-hinweis')
+        ?.scrollIntoView({ block: 'center' });
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
   heftimstudio: {
     titel: 'Das eigene Formelheft über dem Dokument (E503)',
     bauen: async () => {
