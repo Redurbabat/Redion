@@ -233,9 +233,9 @@ console.log('\n§4 Die gerade Erdungsleitung');
 {
   const s = await mitStift('schutzleiter');
   await s.evaluate(() => {
-    /* Der Stiftknopf wechselt durch die Stile; hier wird er direkt gesetzt. */
-    const knopf = document.querySelector<HTMLButtonElement>('.blatt-werk [data-act="stil"]');
-    for (let n = 0; knopf && knopf.dataset.stil !== 'schutzleiter' && n < 8; n++) knopf.click();
+    /* Seit E512 steht jeder Stift als eigener Knopf da (E512). */
+    document.querySelector<HTMLButtonElement>(
+      '.blatt-werk [data-act="stilwahl"][data-stil="schutzleiter"]')?.click();
   });
   await s.waitForTimeout(250);
   await strichHalten(s, 2, 900);

@@ -175,8 +175,7 @@ console.log('\n§3 Ein eigener Stift für das Fachzeichnen');
   /* Den Leiterstift wählen und nachsehen, was in der Farbreihe steht. */
   const reihe = JSON.parse(await s.evaluate(`(() => {
     const werk = document.querySelector('.blatt-werk');
-    const knopf = werk.querySelector('[data-act="stil"]');
-    for (let i = 0; i < 8 && knopf.dataset.stil !== 'leiter'; i++) knopf.click();
+    werk.querySelector('[data-act="stilwahl"][data-stil="leiter"]').click();
     /* NUR DIE SICHTBAREN. Die fünf festen Tupfer bleiben im Baum und
        werden ausgeblendet — sie tragen die gewählte Farbe in ihrer
        on-Klasse, und wer sie wegwürfe, müsste sie beim Zurückschalten neu
@@ -184,7 +183,7 @@ console.log('\n§3 Ein eigener Stift für das Fachzeichnen');
        auch nicht. */
     const tupfer = Array.from(werk.querySelectorAll('.blatt-farbe:not(.blatt-farbe-weg)'));
     return JSON.stringify({
-      stil: knopf.dataset.stil,
+      stil: werk.querySelector('[data-act="stilwahl"].on').dataset.stil,
       zahl: tupfer.length,
       titel: tupfer.map(t => t.getAttribute('title') || ''),
       namen: tupfer.map(t => t.getAttribute('aria-label') || ''),
@@ -209,9 +208,8 @@ console.log('\n§3 Ein eigener Stift für das Fachzeichnen');
   /* Und die GEWÖHNLICHEN Farben, ohne Leiterstift. */
   const normal = JSON.parse(await s.evaluate(`(() => {
     const werk = document.querySelector('.blatt-werk');
-    const knopf = werk.querySelector('[data-act="stil"]');
-    for (let i = 0; i < 8 && knopf.dataset.stil !== 'fueller'; i++) knopf.click();
-    return JSON.stringify({ stil: knopf.dataset.stil,
+    werk.querySelector('[data-act="stilwahl"][data-stil="fueller"]').click();
+    return JSON.stringify({ stil: werk.querySelector('[data-act="stilwahl"].on').dataset.stil,
       titel: Array.from(werk.querySelectorAll('.blatt-farbe:not(.blatt-farbe-weg)'))
         .map(t => t.getAttribute('title') || '') });
   })()`) as string);
@@ -273,8 +271,7 @@ console.log('\n§6 Eine Ader wählen setzt Farbe und Strichart');
   const s = await mitBlatt();
   const r = JSON.parse(await s.evaluate(`(() => {
     const werk = document.querySelector('.blatt-werk');
-    const knopf = werk.querySelector('[data-act="stil"]');
-    for (let i = 0; i < 8 && knopf.dataset.stil !== 'leiter'; i++) knopf.click();
+    werk.querySelector('[data-act="stilwahl"][data-stil="leiter"]').click();
     const n = Array.from(werk.querySelectorAll('.blatt-farbe'))
       .find(t => (t.getAttribute('title') || '').includes('Neutralleiter'));
     n.click();
@@ -333,7 +330,7 @@ console.log('\n§7 Die Adernreihe steht schon beim Öffnen da');
     const werk = document.querySelector('.blatt-werk');
     const sichtbar = Array.from(werk.querySelectorAll('.blatt-farbe:not(.blatt-farbe-weg)'));
     return JSON.stringify({
-      stil: werk.querySelector('[data-act="stil"]').dataset.stil,
+      stil: werk.querySelector('[data-act="stilwahl"].on').dataset.stil,
       zahl: sichtbar.length,
       erste: sichtbar.map(t => t.getAttribute('title') || '').slice(0, 3),
       gewaehlt: sichtbar.filter(t => t.classList.contains('on'))

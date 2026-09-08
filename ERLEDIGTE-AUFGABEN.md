@@ -4779,3 +4779,40 @@ der Klecks an derselben Klasse hing wie die Auswahl — ausgerechnet der
 Tupfer, auf den man schaut, blieb stehen. Und die Zusage „alle Schritte
 der Welle sind gleich gross" war auch dann wahr, wenn alle null sind; sie
 blieb in der Gegenprobe grün, bis „grösser als null" dazukam.
+
+**Die Leiste wie GoodNotes, und eine Fläche, die nicht mehr stirbt (E512,
+test479 + test480).** Redur hat vier Sachen geschickt: drei Wünsche und
+einen Fehlerbericht. Der Fehler ging vor.
+
+Nach ein paar Minuten zeichnete nichts mehr — weder Stift noch Maus, und
+nur Neuladen half. Gemessen wurde zuerst gegen die naheliegende Vermutung:
+alle zehn wiederkehrenden Uhren der App einzeln ausgelöst und danach
+gezeichnet; jede unschuldig. Auch dreissig Runden mit Seitenwechsel und
+Neuzeichnen blieben grün.
+
+Es lag an einem einzigen verlorenen Ereignis. Die Kennung des führenden
+Zeigers — seit E354 der Schutz gegen den zweiten Finger — bleibt stehen,
+wenn für ihn nie ein Abheben ankommt. Danach weist die Fläche jeden anderen
+Zeiger ab, für immer. Jetzt wird das Ende auch am Fenster gehört, und wer
+aufsetzt, während der Führende eine halbe Sekunde geschwiegen hat,
+übernimmt — der alte Zug wird dabei abgeschlossen, nicht weggeworfen.
+
+Die halbe Sekunde ist gemessen: ein Eindringling setzt acht Millisekunden
+nach der letzten Bewegung auf, ein Mensch, der neu tippt, braucht länger
+als eine halbe.
+
+Dann die drei Wünsche. Die **Stiftreihe** ersetzt den Wechselknopf: sechs
+Knöpfe, ein Tipp je Stift, links vor den Farben — dort, wo Redur sie haben
+wollte. Der alte Rundlauf ist nicht weg, er liegt auf der Taste P. Der
+**Laserpointer** ist jetzt ein Werkzeug statt eines Vollbild-Sonderfalls,
+mit Punkt und Linie, und er schreibt nichts: keine Marke, kein Schritt im
+Verlauf. Und die **Leiste lässt sich verschieben** — oben, links, rechts
+oder unten in der Mitte.
+
+Gefunden hat das Bild wieder etwas, das kein Prüflauf sehen konnte: die
+Seitenleiste war im ersten Wurf ein zwanzig Pixel breiter Streifen, weil
+eine absolut gesetzte Flexbox auf ihren Inhalt schrumpft und der Inhalt
+`min-width:0` hat.
+
+Was es kostet, steht in L137: oben braucht die Leiste jetzt drei Zeilen
+statt zwei, und am Telefon liegt die erste Farbe hinter den Stiften.

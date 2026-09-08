@@ -6835,3 +6835,44 @@ gemessen ist, und das gehört hierher statt in eine Behauptung:
   · **Der Vorlauf ist auf ein Bild bei 60 Hz eingestellt** (`VORHER_MS`
     = 14 ms). Ein 120-Hz-Schirm bräuchte die Hälfte. Die Bildrate lässt
     sich messen; getan ist es nicht.
+
+L137 · Die Werkzeugleiste ist voll
+--------------------------------------------------------------------------
+
+E512 hat die Stiftreihe gebracht, E509 die zehn Adern. Beides wollte Redur,
+beides steht — und beides kostet Platz. Was daraus offen bleibt:
+
+  · **Oben braucht die Leiste jetzt drei Zeilen statt zwei.** E359
+    versprach zwei für vierzehn Zubehörknöpfe. Sechs Stifte sind ohne ihre
+    Namen rund 160 px; bei 596 px Leistenbreite ist die dritte Zeile
+    Arithmetik. `test351` und `test438` messen seither „höchstens drei
+    Zeilen". Der Ausweg ist gebaut (die Leiste an der Seite), aber er ist
+    eine Wahl, keine Vorgabe.
+  · **Am Telefon steht die erste Farbe hinter den Stiften.** Sechs Knöpfe
+    zu 44 px (§37) sind 264 px auf einer 390 px breiten Leiste. Man kommt
+    mit einer Wischbewegung hin; ohne Rollen sieht man sie nicht.
+    Denkbar wäre eine zweite Zeile am Telefon statt einer rollenden — das
+    ist ein eigener Bogen und braucht ein Bild, bevor man es baut.
+  · **Der Platz der Leiste gilt für alle Blätter gemeinsam.** Wer links
+    arbeitet, arbeitet überall links. Ob das je Dokument gehören sollte,
+    hat niemand gefragt; bis dahin ist eine Einstellung besser als zwanzig.
+  · **Die Seitenleiste liegt ÜBER dem Blatt**, wie in GoodNotes. Bei einer
+    sehr schmalen Seite verdeckt sie deren linken Rand. Sie danebenzustellen
+    hiesse, das Blatt schmaler zu machen — das ist eine Abwägung, die
+    Redur treffen soll, kein Fehler.
+
+L138 · Was am Laserpointer noch fehlt
+--------------------------------------------------------------------------
+
+  · **Die Farbe ist rot und fest.** GoodNotes lässt sie wählen; hier steht
+    sie im Stilblatt.
+  · **Der Präsentationsmodus hat weiterhin seinen eigenen Laser** (E493).
+    Er lebt auf einer anderen Fläche — einem `div` über der Vollbildseite,
+    nicht auf der Zeichenschicht —, deshalb sind es zwei Wege für dieselbe
+    Sache. Das ist genau das, wovor §8 warnt, und es steht hier, damit es
+    nicht in Vergessenheit gerät: wer den einen ändert, muss den anderen
+    ansehen.
+  · **Am Telefon ist der Laser mit dem Finger nicht erreichbar**, wenn ein
+    Stift gesehen wurde (die Finger-Sperre aus E354 greift vorher).
+    Nachgemessen ist das nicht — es steht als Vermutung hier, und §36 sagt:
+    erst messen, dann bauen.

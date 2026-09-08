@@ -334,14 +334,13 @@ console.log('\n§6 Die Bewegung');
   const s = await mitBlatt();
   const zumLeiter = `(() => {
     const werk = document.querySelector('.blatt-werk');
-    const knopf = werk.querySelector('[data-act="stil"]');
-    for (let i = 0; i < 8 && knopf.dataset.stil !== 'leiter'; i++) knopf.click();
-    return knopf.dataset.stil;
+    werk.querySelector('[data-act="stilwahl"][data-stil="leiter"]').click();
+    return werk.querySelector('[data-act="stilwahl"].on').dataset.stil;
   })()`;
   gleichWert('Der Leiterstift ist geführt', await s.evaluate(zumLeiter), 'leiter');
   const b = JSON.parse(await s.evaluate(`(() => {
     const werk = document.querySelector('.blatt-werk');
-    const stil = werk.querySelector('[data-act="stil"] .zeichen');
+    const stil = werk.querySelector('[data-act="stilwahl"].on .zeichen');
     const wz = werk.querySelector('[data-wz="stift"].on .zeichen');
     const tupfer = Array.from(werk.querySelectorAll('.blatt-farbe-leiter'));
     const nam = (n) => n ? getComputedStyle(n).animationName : null;
@@ -419,10 +418,10 @@ console.log('\n§6 Die Bewegung');
   await s.click('.blatt-werk [data-wz="stift"]');
   const ruhe = JSON.parse(await s.evaluate(`(() => {
     const werk = document.querySelector('.blatt-werk');
-    const knopf = werk.querySelector('[data-act="stil"]');
-    for (let i = 0; i < 8 && knopf.dataset.stil !== 'leiter'; i++) knopf.click();
+    werk.querySelector('[data-act="stilwahl"][data-stil="leiter"]').click();
+    const knopf = werk.querySelector('[data-act="stilwahl"].on');
     const namen = [
-      werk.querySelector('[data-act="stil"] .zeichen'),
+      werk.querySelector('[data-act="stilwahl"].on .zeichen'),
       werk.querySelector('[data-wz="stift"].on .zeichen'),
       werk.querySelector('.blatt-farbe-leiter'),
       (() => { const z = werk.querySelectorAll('.blatt-farbe-leiter')[4]; z.click(); return z; })()

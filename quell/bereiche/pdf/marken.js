@@ -262,8 +262,50 @@ const Marken = (() => {
             titel: 'Ein Foto, ein GIF oder eine Seite aus einer PDF auf das Blatt legen — '
                 + 'danach verschieben, ziehen und drehen wie jede Marke' },
         { id: 'radierer', zeichen: '⌫', name: 'Radieren',
-            titel: 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker' }
+            titel: 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker' },
+        /* ══ DER LASERPOINTER (E512) ═══════════════════════════════════════════
+           Redur, 8. September: „alter, wieso habe ich keinen Laserpointer?"
+    
+           Es GAB einen — aber nur im Vollbild-Präsentationsmodus (E493), und
+           dort findet ihn niemand, der gerade an einer Seite steht und etwas
+           zeigen will. Jetzt ist er ein Werkzeug wie jedes andere.
+    
+           ER SCHREIBT NICHTS. Kein Eintrag in `marks`, kein Schritt im
+           Verlauf, nichts in der Sicherung — er ist ein Finger, kein Stift.
+           Das ist die ganze Zusage dieses Werkzeugs, und `test480` hält sie. */
+        { id: 'laser', zeichen: '⦿', name: 'Laserpointer',
+            titel: 'Zeigen, nicht schreiben — der Strahl verblasst von selbst und wird nie gespeichert' }
     ];
+    /* ZWEI ARTEN, WIE IN GOODNOTES: ein Punkt, der mitgeht, oder eine Linie,
+       die hinter ihm herläuft und verblasst. */
+    const LASER = [
+        { id: 'punkt', zeichen: '•', name: 'Punkt', titel: 'Ein Punkt, der dem Zeiger folgt' },
+        { id: 'linie', zeichen: '⌇', name: 'Linie', titel: 'Eine Spur, die hinter dem Zeiger herläuft und verblasst' }
+    ];
+    /* ══ WO DIE LEISTE STEHT (E512) ═════════════════════════════════════════
+       Redur, 8. September: „und die Stift[leiste] sollte ich als komplett
+       bewegen können, also nach links, rechts, Mitte und ganz oben."
+  
+       Vier Plätze, EIN Katalog (§8) — Kennung, Zeichen, Name. Die Reihenfolge
+       ist die des Rundlaufs: oben (wie bisher) → links → rechts → unten in
+       der Mitte, wie die schwebende Leiste in GoodNotes. Gemerkt wird der
+       Platz in `meta`, also überlebt er das Schliessen. */
+    const LAGEN = [
+        { id: 'oben', zeichen: '⤒', name: 'oben' },
+        { id: 'links', zeichen: '⇤', name: 'links' },
+        { id: 'rechts', zeichen: '⇥', name: 'rechts' },
+        { id: 'unten', zeichen: '⤓', name: 'unten in der Mitte' }
+    ];
+    const M_LAGE = 'zeichnen:leistenlage';
+    const lageJetzt = () => {
+        const id = typeof Store !== 'undefined' ? String(Store.getMeta(M_LAGE, 'oben')) : 'oben';
+        return LAGEN.some(l => l.id === id) ? id : 'oben';
+    };
+    const M_LASER = 'zeichnen:laser';
+    const laserArt = () => (typeof Store !== 'undefined' ? String(Store.getMeta(M_LASER, 'punkt')) : 'punkt');
+    /* WIE LANGE DER STRAHL NACHLEUCHTET. Kurz genug, dass er nicht im Weg
+       steht; lang genug, dass ein Auge ihm folgen kann. */
+    const LASER_MS = 700;
     /**
      * Wie eine Marke heisst, für einen Menschen.
      *
@@ -1078,6 +1120,52 @@ const Marken = (() => {
         let stiftZuletzt = 0;
         let stiftTimer = null;
         let aktiverZeiger = null;
+        /* ══ WANN DER FÜHRENDE ZEIGER ZULETZT ETWAS GESAGT HAT (E512) ══════════
+           Redur, 8. September: „nach 5, 6 Minuten funktioniert der Stift nicht
+           mehr, auch die Maus — ich musste neu laden."
+    
+           DER FUND war nicht die Zeit, sondern EIN verlorenes Ereignis.
+           `aktiverZeiger` hält seit E354 fest, wer den Zug führt, damit ein
+           zweiter Finger ihn nicht kapert. Kommt für diesen Zeiger nie ein
+           `pointerup` oder `pointercancel` an — der Stift verlässt die
+           Reichweite, der Griff geht verloren, das Ende landet auf einem
+           anderen Element —, dann steht die Kennung für IMMER da, und jeder
+           andere Zeiger wird abgewiesen. Die Fläche ist tot; nur Neuladen half.
+    
+           Gemessen: ein Stiftzug ohne Abheben, danach vier weitere Züge mit
+           Maus und Stift — die Zahl der Marken blieb bei eins.
+    
+           DIE ANTWORT IST KEINE UHR IM HINTERGRUND. Ein Wecker, der einen Zug
+           nach n Sekunden schliesst, schneidet auch den Strich eines Menschen
+           durch, der beim Nachdenken die Hand aufliegen lässt. Stattdessen
+           zwei Wege, die beide nur im Fehlerfall greifen:
+    
+             · das Ende wird AUCH AM FENSTER gehört (`beiEndeGlobal`), damit
+               ein Abheben ausserhalb der Fläche zählt;
+             · und wer aufsetzt, während der Führende seit `VERWAIST_MS`
+               nichts mehr gesagt hat, ÜBERNIMMT — der alte Zug wird dabei
+               abgeschlossen, nicht weggeworfen (§51: lieber ein Strich zu
+               viel als eine Zeile Handschrift, die niemand wiederbekommt). */
+        let zeigerZuletzt = 0;
+        /* Der Laserpointer (E512): ein Knoten, der lebt, solange gezeigt wird,
+           und danach von selbst verblasst. Er steht bewusst NEBEN `running` —
+           ein Zug, der nichts speichert, ist kein laufender Strich. */
+        let laserZug = null;
+        /* WIE LANGE EIN FÜHRENDER SCHWEIGEN DARF, bevor er ein Rest ist.
+    
+           Die Zahl muss zwei Dinge trennen, und beide sind gemessen:
+    
+             · Ein EINDRINGLING — der zweite Finger, den E354 abwehrt — setzt
+               auf, WÄHREND die Hand fährt. In `test479 §2` liegen zwischen der
+               letzten Bewegung des Führenden und dem fremden Aufsetzen acht
+               Millisekunden.
+             · Ein MENSCH, der merkt, dass nichts passiert, hebt ab, schaut hin
+               und tippt neu. Das dauert nicht unter einer halben Sekunde.
+    
+           500 ms liegen weit über dem einen und unter dem anderen. Höher wäre
+           unnötig zäh: jede Millisekunde darüber ist Wartezeit für jemanden,
+           dessen Fläche gerade nicht reagiert. */
+        const VERWAIST_MS = 500;
         let fingerPan = null;
         let radierStrich = null;
         /* Der Stift, mit dem der naechste Strich entsteht — gemerkt ueber
@@ -1810,6 +1898,7 @@ const Marken = (() => {
            Rest, die spaeter niemand mehr erklaeren kann. */
         const verwerfen = () => {
             bildAbsagen();
+            laserAus(true);
             if (running) {
                 runningNode?.remove();
                 running = null;
@@ -1824,6 +1913,58 @@ const Marken = (() => {
             rohLetzter = null;
             rohDrei = [];
             aktiverZeiger = null;
+        };
+        /* ══ DER LASERSTRAHL (E512) ════════════════════════════════════════════
+           Drei kurze Wege, und keiner davon fasst `marks` an. Der Knoten hängt
+           in der Zeichenschicht, damit er dieselbe Geometrie hat wie alles
+           andere — und trägt `data-ink-ui`, damit ihn jeder Weg, der Marken
+           sucht, übersieht (dieselbe Marke wie der Radierkreis und der
+           Auswahlrahmen). */
+        const laserAn = (punkt) => {
+            laserAus(true);
+            const art = laserArt();
+            const knoten = svg('g', { 'data-ink-ui': 'laser', class: 'blatt-laser' });
+            const spur = svg('path', { class: 'blatt-laser-spur', d: '' });
+            const kopf = svg('circle', { class: 'blatt-laser-kopf', r: '4.5',
+                cx: String(punkt[0]), cy: String(punkt[1]) });
+            if (art === 'linie')
+                knoten.appendChild(spur);
+            knoten.appendChild(kopf);
+            flaeche.appendChild(knoten);
+            laserZug = { pts: [[punkt[0] ?? 0, punkt[1] ?? 0]], knoten };
+        };
+        const laserZeigen = (punkt) => {
+            if (!laserZug)
+                return;
+            const pts = laserZug.pts;
+            const letzt = pts[pts.length - 1];
+            if (Math.hypot((punkt[0] ?? 0) - letzt[0], (punkt[1] ?? 0) - letzt[1]) < 0.8)
+                return;
+            pts.push([punkt[0] ?? 0, punkt[1] ?? 0]);
+            /* NUR DAS LETZTE STÜCK BLEIBT SICHTBAR. Eine Spur, die den ganzen
+               Weg behält, ist eine Zeichnung — und genau das soll sie nicht
+               sein. Vierzig Punkte sind bei 60 Hz gut zwei Drittel Sekunde. */
+            if (pts.length > 40)
+                pts.splice(0, pts.length - 40);
+            const kopf = laserZug.knoten.querySelector('.blatt-laser-kopf');
+            kopf?.setAttribute('cx', String(punkt[0]));
+            kopf?.setAttribute('cy', String(punkt[1]));
+            const spur = laserZug.knoten.querySelector('.blatt-laser-spur');
+            if (spur)
+                spur.setAttribute('d', InkGeometry.path(pts));
+        };
+        /** Weg damit. `sofort` beim Neuanfang, sonst verblasst er. */
+        const laserAus = (sofort = false) => {
+            const zug = laserZug;
+            laserZug = null;
+            if (!zug)
+                return;
+            if (sofort) {
+                zug.knoten.remove();
+                return;
+            }
+            zug.knoten.classList.add('blatt-laser-weg');
+            setTimeout(() => zug.knoten.remove(), LASER_MS + 120);
         };
         /** Ein Punkt in den Strich. `um` ist der Umrechner DIESES Ereignisses
          *  (E511) — er holt die Bildschirmmatrix einmal statt je Punkt. */
@@ -2731,8 +2872,18 @@ const Marken = (() => {
                 verwerfen();
             if (e.pointerType === 'pen')
                 fingerPan = null;
-            if (aktiverZeiger !== null && aktiverZeiger !== e.pointerId)
-                return;
+            /* ── EIN VERWAISTER ZEIGER WIRD ÜBERNOMMEN (E512) ─────────────────
+               Der Schutz aus E354 bleibt: solange der Führende LEBT — also
+               gerade noch etwas gemeldet hat —, weist die Fläche jeden anderen
+               ab. Erst wenn er seit `VERWAIST_MS` schweigt, ist er kein
+               Führender mehr, sondern ein Rest. */
+            if (aktiverZeiger !== null && aktiverZeiger !== e.pointerId) {
+                if (Date.now() - zeigerZuletzt < VERWAIST_MS)
+                    return;
+                /* Abschliessen, nicht verwerfen: was gezogen wurde, bleibt. */
+                finish();
+                renderSelection();
+            }
             /* DER RUECKKNOPF DES STIFTS RADIERT (E352): das Radierende (button 5,
                buttons 32) und der Seitenknopf (button 2) eines Stifts halten den
                Radierer, solange sie gedrueckt sind — das gewaehlte Werkzeug
@@ -2747,9 +2898,16 @@ const Marken = (() => {
                 return;
             event.preventDefault();
             aktiverZeiger = e.pointerId;
+            zeigerZuletzt = Date.now();
             flaeche.focus({ preventScroll: true });
             const target = event.target?.closest?.('[data-sid]');
             const targetId = target?.getAttribute('data-sid') || '';
+            /* DER LASER ZEIGT NUR (E512) — vor allem anderen, weil er mit nichts
+               davon etwas zu tun hat: keine Marke, kein Verlauf, keine Auswahl. */
+            if (tool === 'laser' && !stiftRadiert) {
+                laserAn(point);
+                return;
+            }
             if (tool === 'radierer' || stiftRadiert) {
                 /* STREICHEN STATT TIPPEN (E352): der Radierer ist ein Kreis, der
                    mit dem Zeiger wandert; ein Tipp ohne Bewegung ist der Sonderfall
@@ -2945,6 +3103,14 @@ const Marken = (() => {
             /* Nur der Zeiger, der den Zug begonnen hat, fuehrt ihn (E354). */
             if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger)
                 return;
+            /* Er lebt (E512) — solange das hier zählt, übernimmt ihn niemand. */
+            zeigerZuletzt = Date.now();
+            if (laserZug) {
+                const q = R.zuBlatt(flaeche, event);
+                if (q)
+                    laserZeigen(q);
+                return;
+            }
             /* ══ DER SCHREIBWEG ZUERST, UND NUR EINE MATRIX (E511) ═══════════════
                Hier stand die Umrechnung des einen Zeigerpunktes ganz oben — vor
                allen Zweigen, also auch vor dem Zeichnen, das sie gar nicht
@@ -3110,6 +3276,13 @@ const Marken = (() => {
             }
             if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger)
                 return;
+            /* Der Laser verblasst und ist weg — kein `finish`, weil es nichts
+               abzuschliessen gibt (E512). */
+            if (laserZug) {
+                laserAus();
+                aktiverZeiger = null;
+                return;
+            }
             // pointerup may carry a final position that no pointermove delivered.
             // Keep the previous pressure: pen devices report zero pressure on lift.
             if (event.type === 'pointerup' && running && (running.art === 'stift' || running.art === 'marker')) {
@@ -3163,6 +3336,33 @@ const Marken = (() => {
         };
         flaeche.addEventListener('pointerup', beiEnde);
         flaeche.addEventListener('pointercancel', beiAbbruch);
+        /* ══ DAS ENDE ZÄHLT AUCH, WENN ES WOANDERS LANDET (E512) ═══════════════
+           Die drei Griffe darüber hängen an der Zeichenschicht. Ein Abheben,
+           das der Browser einem anderen Element zustellt — weil der Griff
+           (`setPointerCapture`) verlorenging, weil ein Fenster dazwischenkam,
+           weil der Zeiger die Fläche verlassen hat —, erreichte sie nie, und
+           der Zug blieb für immer offen.
+    
+           AM FENSTER, IN DER ABFANGPHASE, und nur für den Zeiger, der HIER
+           führt. Ein fremdes Abheben irgendwo auf der Seite geht die Fläche
+           nichts an; deshalb steht die Bedingung davor und nicht dahinter.
+    
+           Die Griffe werden mitgeführt, solange die Fläche lebt — die
+           Lebenswache (E115) räumt sie mit ihr ab. */
+        const beiEndeGlobal = (event) => {
+            if (aktiverZeiger === null || event.pointerId !== aktiverZeiger)
+                return;
+            if (event.target instanceof Node && flaeche.contains(event.target))
+                return;
+            if (event.type === 'pointercancel')
+                beiAbbruch(event);
+            else
+                beiEnde(event);
+        };
+        if (typeof addEventListener === 'function') {
+            addEventListener('pointerup', beiEndeGlobal, true);
+            addEventListener('pointercancel', beiEndeGlobal, true);
+        }
         flaeche.addEventListener('pointerleave', (event) => {
             if (!flaeche.hasPointerCapture(event.pointerId))
                 beiEnde(event);
@@ -3799,6 +3999,9 @@ const Marken = (() => {
         }
         const row = document.createElement('div');
         row.className = 'blatt-reihe';
+        /* Der gemerkte Platz gilt sofort, nicht erst nach dem ersten Klick —
+           derselbe Fund wie bei der Adernreihe in E509 (§55). */
+        row.dataset.lage = lageJetzt();
         const tools = document.createElement('div');
         tools.className = 'blatt-werk';
         tools.dataset.tool = 'schreiben';
@@ -3862,6 +4065,10 @@ const Marken = (() => {
                    ein Tipp oeffnet den Waehler, danach fuehrt die Auswahl. */
                 button('bild') +
                 button('radierer') +
+                /* DER LASERPOINTER (E512): er steht am ENDE der Werkzeuge, weil er
+                   als einziger nichts hinterlässt — wer die Leiste von links liest,
+                   geht von „schreibt viel" zu „schreibt nichts". */
+                button('laser') +
                 /* DER ZEILENBRUCH (E359): am Rechner stehen die Werkzeuge in einer
                    Zeile und ihr Zubehoer darunter; dieses leere Element mit voller
                    Breite ist der Umbruch. Am Telefon und in der Spalte blendet das
@@ -3881,6 +4088,17 @@ const Marken = (() => {
                 '<span class="blatt-trenn" data-gruppe="verlauf"></span>' +
                 '<button data-act="undo" data-gruppe="verlauf" title="Rückgängig" disabled><span class="zeichen" aria-hidden="true">↶</span><span class="wort">Zurück</span></button>' +
                 '<button data-act="redo" data-gruppe="verlauf" title="Wiederholen" disabled><span class="zeichen" aria-hidden="true">↷</span><span class="wort">Vor</span></button>' +
+                /* DER PLATZ DER LEISTE (E512) — bei „Zurück" und „Vor", weil beide
+                   zu JEDEM Werkzeug gehören und darum immer stehen. */
+                (() => {
+                    const jetzt = LAGEN.find(l => l.id === lageJetzt()) || LAGEN[0];
+                    const naechst = LAGEN[(LAGEN.findIndex(l => l.id === jetzt.id) + 1) % LAGEN.length];
+                    return `<button data-act="lage" data-gruppe="verlauf" data-lage="${jetzt.id}" ` +
+                        `title="Leiste verschieben — jetzt ${jetzt.name}, als Nächstes ${naechst.name}" ` +
+                        `aria-label="Leiste verschieben, jetzt ${jetzt.name}">` +
+                        `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span>` +
+                        `<span class="wort">Platz</span></button>`;
+                })() +
                 '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen" aria-hidden="true">🗑</span><span class="wort">Löschen</span></button>' +
                 /* KOPIEREN UND EINSETZEN (E353) — auch ohne Tastatur, am Telefon. */
                 '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen" aria-hidden="true">⧉</span><span class="wort">Kopieren</span></button>' +
@@ -3933,12 +4151,34 @@ const Marken = (() => {
                         `<button data-act="rahmen" data-gruppe="schrift" aria-pressed="${s.rahmen ? 'true' : 'false'}"${s.rahmen ? ' class="on"' : ''} title="Rahmen um den Text">` +
                         '<span class="zeichen" aria-hidden="true">▭</span><span class="wort">Rahmen</span></button>';
                 })() +
-                /* DER STIFT (E351): ein Knopf, der durch Fueller, Kugelschreiber und
-                   Pinsel wechselt und sagt, welcher gerade fuehrt. */
+                /* ══ DIE STIFTREIHE (E512) ═══════════════════════════════════════════
+                   Redur, 8. September, mit vier Bildern aus GoodNotes: „die
+                   Fachzeichen-Stift kommt, wenn ich die Stift klicke — sollte neben
+                   es, also links unten, wo die Farben dort sind, mir zeigen, welche
+                   Stift ich will."
+          
+                   BIS HIERHER WAR ES EIN WECHSELKNOPF (E351): ein Tipp, der nächste
+                   Stift. Sechs Stifte heissen bis zu fünf Tipps für den letzten, und
+                   welche es überhaupt gibt, stand nur im Titel — man musste es
+                   wissen. Jetzt steht die Reihe da, wie in GoodNotes, unmittelbar
+                   links vor den Farben.
+          
+                   DER WECHSEL IST NICHT WEG. Wer `P` drückt, während der Stift schon
+                   führt, geht weiter zum nächsten — dieselbe Bewegung wie vorher,
+                   nur ohne eigenen Knopf. Das steht bei den Tasten (`TASTEN`) und
+                   in `register/tasten.ts`. */
                 (() => {
-                    const jetzt = STIFTE.find(st => st.id === (controls.stilVon ? controls.stilVon() : STIL_VORGABE)) || STIFTE[0];
-                    return `<button data-act="stil" data-gruppe="stil" data-stil="${jetzt.id}" title="Stift wechseln: ${STIFTE.map(st => st.name).join(' → ')}">` +
-                        `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
+                    /* WELCHER STIFT SCHON BEIM BAUEN FÜHRT. Ohne das stünde die Reihe
+                       beim Öffnen ohne Markierung da, bis jemand etwas anfasst — der
+                       gleiche Fund wie bei der Adernreihe in E509, nur eine Ebene
+                       früher. `test343 §4` hält es fest. */
+                    const jetzt = (controls.stilVon ? controls.stilVon() : STIL_VORGABE);
+                    return STIFTE.map(st => `<button data-act="stilwahl" data-gruppe="stil" data-stil="${st.id}"` +
+                        (st.id === jetzt ? ' class="on"' : '') +
+                        ` aria-pressed="${st.id === jetzt ? 'true' : 'false'}"` +
+                        ` title="${st.name}" aria-label="Stift ${st.name}">` +
+                        `<span class="zeichen" aria-hidden="true">${st.zeichen}</span>` +
+                        `<span class="wort">${st.name}</span></button>`).join('');
                 })() +
                 /* DAS ZUBEHÖR ZUM FORMEN-WERKZEUG (E375). Es steht in derselben
                    Zeile wie Farbe und Breite und erscheint nach der Gruppenregel aus
@@ -3948,6 +4188,16 @@ const Marken = (() => {
                     (f.id === formArt ? ' class="on"' : '') + ` aria-pressed="${f.id === formArt ? 'true' : 'false'}"` +
                     ` title="${f.titel}"><span class="zeichen" aria-hidden="true">${f.zeichen}</span>` +
                     `<span class="wort">${f.name}</span></button>`).join('') +
+                /* ══ DIE ZWEI ARTEN DES LASERS (E512) ═══════════════════════════════
+                   Wie in GoodNotes: ein Punkt oder eine Spur. Sie stehen in der
+                   Gruppe `laser` und erscheinen nach der Regel aus E356 nur, wenn
+                   der Laserpointer geführt wird. */
+                '<span class="blatt-trenn" data-gruppe="laser"></span>' +
+                LASER.map(l => `<button data-act="laserart" data-gruppe="laser" data-laser="${l.id}"` +
+                    (l.id === laserArt() ? ' class="on"' : '') +
+                    ` aria-pressed="${l.id === laserArt() ? 'true' : 'false'}" title="${l.titel}">` +
+                    `<span class="zeichen" aria-hidden="true">${l.zeichen}</span>` +
+                    `<span class="wort">${l.name}</span></button>`).join('') +
                 '<span class="blatt-trenn" data-gruppe="farbe"></span>' +
                 /* JEDE FARBE BEIM NAMEN (E509). Hier stand fünfmal `title="Farbe"` —
                    beim Überfahren also fünfmal dasselbe Wort, und ein Vorleser las
@@ -4322,15 +4572,18 @@ const Marken = (() => {
          * Voreinstellung gibt es einen zweiten Aufrufer — und zwei Abschriften
          * derselben drei Zeilen laufen auseinander (§8).
          */
+        /** Welcher Stift führt — an der Reihe abzulesen (E512). Vorher stand
+         *  es an EINEM Knopf, der sich umbeschriftete; jetzt ist es die
+         *  `on`-Klasse in einer Reihe von sechs. */
         const stiftZeigen = (id) => {
-            const knopf = tools.querySelector('[data-act="stil"]');
             const stift = STIFTE.find(st => st.id === id);
-            if (!knopf || !stift)
+            if (!stift)
                 return;
-            knopf.dataset.stil = stift.id;
-            knopf.innerHTML = `<span class="zeichen" aria-hidden="true">${stift.zeichen}</span>`
-                + `<span class="wort">${stift.name}</span>`;
-            knopf.title = 'Stift wechseln: ' + STIFTE.map(st => st.name).join(' → ');
+            tools.querySelectorAll('[data-act="stilwahl"]').forEach(node => {
+                const an = node.dataset.stil === stift.id;
+                node.classList.toggle('on', an);
+                node.setAttribute('aria-pressed', an ? 'true' : 'false');
+            });
             leiterReihe(stift.id === 'leiter');
         };
         /**
@@ -4634,11 +4887,59 @@ const Marken = (() => {
                     target.classList.toggle('on', an);
                     return;
                 }
-                if (target.dataset.act === 'stil' && controls.setzeStil) {
-                    const jetzt = STIFTE.findIndex(st => st.id === target.dataset.stil);
-                    const naechster = STIFTE[(jetzt + 1) % STIFTE.length];
-                    controls.setzeStil(naechster.id);
-                    stiftZeigen(naechster.id);
+                if (target.dataset.act === 'lage') {
+                    /* WEITER ZUM NÄCHSTEN PLATZ. Ein Rundlauf statt eines Menüs:
+                       die Leiste zeigt ihr Ergebnis unmittelbar, indem sie
+                       hinspringt — eine Wahl, die man SIEHT, braucht keine Liste. */
+                    const i = LAGEN.findIndex(l => l.id === lageJetzt());
+                    const naechst = LAGEN[(i + 1) % LAGEN.length];
+                    const dann = LAGEN[(i + 2) % LAGEN.length];
+                    if (typeof Store !== 'undefined') {
+                        try {
+                            Store.setMeta(M_LAGE, naechst.id);
+                        }
+                        catch { /* nur diese Sitzung */ }
+                    }
+                    const reihe = tools.closest('.blatt-reihe');
+                    if (reihe)
+                        reihe.dataset.lage = naechst.id;
+                    target.dataset.lage = naechst.id;
+                    target.title = 'Leiste verschieben — jetzt ' + naechst.name + ', als Nächstes ' + dann.name;
+                    target.setAttribute('aria-label', 'Leiste verschieben, jetzt ' + naechst.name);
+                    const z = target.querySelector('.zeichen');
+                    if (z)
+                        z.textContent = naechst.zeichen;
+                    /* Und alle anderen Leisten derselben Seite ziehen mit — es ist
+                       EIN Platz, nicht einer je Blatt. */
+                    document.querySelectorAll('.blatt-reihe').forEach(r => { r.dataset.lage = naechst.id; });
+                    document.querySelectorAll('[data-act="lage"]').forEach(k => {
+                        k.dataset.lage = naechst.id;
+                        const zz = k.querySelector('.zeichen');
+                        if (zz)
+                            zz.textContent = naechst.zeichen;
+                    });
+                    return;
+                }
+                if (target.dataset.act === 'laserart') {
+                    const id = String(target.dataset.laser || 'punkt');
+                    if (typeof Store !== 'undefined') {
+                        try {
+                            Store.setMeta(M_LASER, id);
+                        }
+                        catch { /* nur diese Sitzung */ }
+                    }
+                    tools.querySelectorAll('[data-act="laserart"]').forEach(node => {
+                        const an = node.dataset.laser === id;
+                        node.classList.toggle('on', an);
+                        node.setAttribute('aria-pressed', an ? 'true' : 'false');
+                    });
+                    return;
+                }
+                if (target.dataset.act === 'stilwahl' && controls.setzeStil) {
+                    /* EIN TIPP, EIN STIFT (E512) — kein Weiterschalten mehr. */
+                    const gewaehlt = STIFTE.find(st => st.id === target.dataset.stil) || STIFTE[0];
+                    controls.setzeStil(gewaehlt.id);
+                    stiftZeigen(gewaehlt.id);
                     /* Ein Stift zeichnet — wer ihn wechselt, will ihn auch fuehren. */
                     if (Zeichenziel.werkzeugVon?.(controls) !== 'stift') {
                         controls.setzeWerkzeug('stift');
@@ -4845,13 +5146,24 @@ const Marken = (() => {
             return;
         event.preventDefault();
         if (ziel === 'bleistift') {
-            /* Der Bleistift ist ein Stift mit Stil: erst den Stift, dann so oft
-               wechseln, bis er fuehrt. */
-            const knopf = leiste.querySelector('[data-act="stil"]');
-            for (let n = 0; knopf && knopf.dataset.stil !== 'bleistift' && n < STIFTE.length; n++)
-                knopf.click();
+            /* Der Bleistift ist ein Stift mit Stil — seit E512 ein Knopf in der
+               Reihe, kein Weiterschalten mehr. */
+            leiste.querySelector('[data-act="stilwahl"][data-stil="bleistift"]')?.click();
             if (Zeichenziel.jetzt() !== 'stift')
                 leiste.querySelector('[data-wz="stift"]')?.click();
+            return;
+        }
+        /* ══ P WECHSELT WEITER, WENN DER STIFT SCHON FÜHRT (E512) ═════════════
+           Der Wechselknopf aus E351 ist der Reihe gewichen. Damit die alte
+           Bewegung — ein Tipp, der nächste Stift — nicht verlorengeht, tut sie
+           jetzt die Taste: `P` holt den Stift, und `P` noch einmal geht weiter.
+           Dieselbe Gewohnheit wie in GoodNotes, wo die Werkzeugtaste zweimal
+           gedrückt die Sorte wechselt. */
+        if (ziel === 'stift' && Zeichenziel.jetzt() === 'stift') {
+            const jetzt = leiste.querySelector('[data-act="stilwahl"].on');
+            const i = STIFTE.findIndex(st => st.id === jetzt?.dataset.stil);
+            const naechster = STIFTE[(i + 1) % STIFTE.length];
+            leiste.querySelector(`[data-act="stilwahl"][data-stil="${naechster.id}"]`)?.click();
             return;
         }
         if (ziel === 'lineal') {
@@ -4863,7 +5175,7 @@ const Marken = (() => {
     if (typeof document !== 'undefined')
         document.addEventListener('keydown', kuerzel);
     return { schicht, leiste, zeichneMarke, annotierbar, alsAnnotation,
-        FARBEN, BREITEN, STIFTE, LEITER, FORMEN, WERKZEUGE, artWort, artZeichen,
+        FARBEN, BREITEN, STIFTE, LEITER, LASER, FORMEN, WERKZEUGE, artWort, artZeichen,
         druckFaktor, RADIERER, TASTEN,
         /* DIE FARBSÄTZE NACH AUSSEN (E486). Nicht, damit jemand anders eine
            zweite Leiste baut — sondern damit der Prüflauf an derselben Rechnung

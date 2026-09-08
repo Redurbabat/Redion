@@ -246,38 +246,44 @@ const alt = await pg.evaluate((id: string) => {
 p('Ein Strich ohne Stil bleibt ein Strich: fill none, eine Breite', (alt as any).tag === 'path' && (alt as any).fill === 'none' && Math.abs(Number((alt as any).sw) - 2.366) < 0.01 && !(alt as any).stil, JSON.stringify(alt));
 
 /* ======================================================================== */
-console.log('\n4 · Drei Stifte — der Knopf wechselt, die Wahl bleibt');
+console.log('\n4 · Sechs Stifte — die Reihe zeigt sie, die Wahl bleibt');
 /* Seit E359 zeigt auch der Rechner nur das Zubehoer des Werkzeugs: der
    Stil-Knopf steht erst, wenn der Stift gewaehlt ist — wie am Telefon (§8). */
 await werkzeug(pg, 'stift');
+/* SEIT E512 IST ES EINE REIHE, KEIN WECHSELKNOPF. Redur wollte sehen,
+   welche Stifte es gibt, statt sie zu erraten — also steht jeder als
+   eigener Knopf da, und der geführte trägt `on`. */
 const knopf = await pg.evaluate(() => {
-  const k = document.querySelector<HTMLElement>('.blatt-werk [data-act="stil"]');
-  return { da: !!k, stil: k?.dataset.stil, wort: k?.textContent?.trim() };
+  const alle = [...document.querySelectorAll<HTMLElement>('.blatt-werk [data-act="stilwahl"]')];
+  const k = document.querySelector<HTMLElement>('.blatt-werk [data-act="stilwahl"].on');
+  return { da: alle.length > 0, zahl: alle.length, stil: k?.dataset.stil, wort: k?.textContent?.trim() };
 });
-p('Der Stift-Knopf steht in der Leiste und zeigt den Füller', knopf.da && knopf.stil === 'fueller' && /Füller/.test(String(knopf.wort)), JSON.stringify(knopf));
-await pg.click('.blatt-werk [data-act="stil"]');
+p('Die Stiftreihe steht in der Leiste, und der Füller ist geführt',
+  knopf.da && knopf.stil === 'fueller' && /Füller/.test(String(knopf.wort)), JSON.stringify(knopf));
+p('… mit einem Knopf je Stift', knopf.zahl === 6, JSON.stringify(knopf));
+await pg.click('.blatt-werk [data-act="stilwahl"][data-stil="kugel"]');
 await pg.waitForTimeout(150);
 const nachKlick = await pg.evaluate(() => ({
-  stil: document.querySelector<HTMLElement>('.blatt-werk [data-act="stil"]')?.dataset.stil,
+  stil: document.querySelector<HTMLElement>('.blatt-werk [data-act="stilwahl"].on')?.dataset.stil,
   meta: Store.getMeta('zeichnen:stift'),
   werkzeug: document.querySelector('.blatt-marken')?.getAttribute('data-tool')
 }));
-gleich('Ein Klick: Kugelschreiber', nachKlick.stil, 'kugel');
+gleich('Ein Tipp auf den Kugelschreiber: er führt', nachKlick.stil, 'kugel');
 gleich('… gemerkt', nachKlick.meta, 'kugel');
 gleich('… und der Stift ist das Werkzeug', nachKlick.werkzeug, 'stift');
 await strich(pg, bogen.map(([x, y, d]) => [x, y + 250, d] as [number, number, number]), 'pen');
 m = await letzteMarke(pg, blattId);
 p('Der Kugelschreiber schreibt den alten Strich: kein Stil, fill none', !!m && m.stil === null && m.fill === 'none', JSON.stringify(m));
-await pg.click('.blatt-werk [data-act="stil"]');
+await pg.click('.blatt-werk [data-act="stilwahl"][data-stil="pinsel"]');
 await pg.waitForTimeout(150);
 await strich(pg, bogen.map(([x, y, d]) => [x, y + 400, d] as [number, number, number]), 'pen');
 m = await letzteMarke(pg, blattId);
-gleich('Noch ein Klick: der Pinsel', m?.stil, 'pinsel');
+gleich('Ein Tipp auf den Pinsel: er zeichnet', m?.stil, 'pinsel');
 p('… als Fläche mit leichter Transparenz', !!m && m.fill !== 'none' && Number(m.opacity) > 0.8 && Number(m.opacity) < 1, JSON.stringify(m));
 p('Der Pinsel schwillt stärker als der Füller', await pg.evaluate(() => Marken.druckFaktor('pinsel', 0.9) > Marken.druckFaktor('fueller', 0.9) && Marken.druckFaktor('pinsel', 0.1) < Marken.druckFaktor('fueller', 0.1)));
 await pg.evaluate(() => App.zeichneSeite());
 await pg.waitForTimeout(400);
-const nachNeu = await pg.evaluate(() => document.querySelector<HTMLElement>('.blatt-werk [data-act="stil"]')?.dataset.stil);
+const nachNeu = await pg.evaluate(() => document.querySelector<HTMLElement>('.blatt-werk [data-act="stilwahl"].on')?.dataset.stil);
 gleich('Nach dem Neuzeichnen steht der Pinsel noch', nachNeu, 'pinsel');
 
 /* ======================================================================== */
@@ -351,7 +357,7 @@ console.log('\n8 · Am Telefon sind die neuen Knöpfe Fingerknöpfe');
   await werkzeug(p2, 'stift');
   const masse = await p2.evaluate(() => {
     const r = (sel: string) => { const e = document.querySelector<HTMLElement>(sel); const b = e?.getBoundingClientRect(); return b ? { w: Math.round(b.width), h: Math.round(b.height) } : null; };
-    return { stil: r('.blatt-werk [data-act="stil"]'), farbe: r('.blatt-werk [data-act="farbe"]') };
+    return { stil: r('.blatt-werk [data-act="stilwahl"]'), farbe: r('.blatt-werk [data-act="farbe"]') };
   });
   p('Der Stift-Knopf ist mindestens 44 px hoch', !!masse.stil && masse.stil.h >= 44, JSON.stringify(masse));
   p('Der Farb-Knopf ist mindestens 30 px gross', !!masse.farbe && masse.farbe.w >= 30 && masse.farbe.h >= 30, JSON.stringify(masse));

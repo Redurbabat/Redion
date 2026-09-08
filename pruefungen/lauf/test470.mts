@@ -169,16 +169,15 @@ console.log('\n§2 Sichern und Laden über die Leiste');
   const s = await mitBlatt();
   await s.click('.blatt-werk [data-wz="stift"]');
   await s.waitForTimeout(200);
-  /* Pinsel wählen (Füller → Kugel → Pinsel) und die dickste Stufe. */
-  await s.click('.blatt-werk [data-act="stil"]');
-  await s.click('.blatt-werk [data-act="stil"]');
+  /* Pinsel wählen — seit E512 mit einem Tipp — und die dickste Stufe. */
+  await s.click('.blatt-werk [data-act="stilwahl"][data-stil="pinsel"]');
   await s.evaluate(`(() => {
     const dick = [...document.querySelectorAll('.blatt-werk .blatt-strich')].pop();
     dick.click();
   })()`);
   await s.waitForTimeout(250);
   const vorher = JSON.parse(await s.evaluate(`(() => {
-    const k = document.querySelector('.blatt-werk [data-act="stil"]');
+    const k = document.querySelector('.blatt-werk [data-act="stilwahl"].on');
     const b = document.querySelector('.blatt-werk .blatt-strich.on');
     return JSON.stringify({ stil: k.dataset.stil, breite: Number(b.dataset.b) });
   })()`) as string);
@@ -197,10 +196,10 @@ console.log('\n§2 Sichern und Laden über die Leiste');
     [vorher.stil, vorher.breite]);
 
   /* Jetzt etwas anderes führen — und die Einstellung wieder laden. */
-  await s.click('.blatt-werk [data-act="stil"]');
+  await s.click('.blatt-werk [data-act="stilwahl"][data-stil="bleistift"]');
   await s.evaluate(`document.querySelector('.blatt-werk .blatt-strich').click()`);
   await s.waitForTimeout(250);
-  const dazwischen = await s.evaluate(`document.querySelector('.blatt-werk [data-act="stil"]').dataset.stil`);
+  const dazwischen = await s.evaluate(`document.querySelector('.blatt-werk [data-act="stilwahl"].on').dataset.stil`);
   p('Zwischendurch führt ein anderer Stift', dazwischen !== vorher.stil, String(dazwischen));
 
   await s.click('.blatt-werk .blatt-farbe-neu');
@@ -211,7 +210,7 @@ console.log('\n§2 Sichern und Laden über die Leiste');
   await s.click('.overlay [data-w="laden:Korrektur"]');
   await s.waitForTimeout(600);
   const nachher = JSON.parse(await s.evaluate(`(() => {
-    const k = document.querySelector('.blatt-werk [data-act="stil"]');
+    const k = document.querySelector('.blatt-werk [data-act="stilwahl"].on');
     const b = document.querySelector('.blatt-werk .blatt-strich.on');
     return JSON.stringify({ stil: k.dataset.stil, wort: k.querySelector('.wort').textContent,
       breite: b ? Number(b.dataset.b) : null,

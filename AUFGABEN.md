@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — zweiundvierzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — dreiundvierzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -505,7 +505,19 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     die etwas sagen, und eine Abschaltung für Menschen, die keine wollen.
     **Steht.**
 
-Der Auftrag heisst deshalb jetzt **zweiundvierzig Bögen**; die Überschrift
+  · **G43 — Die Leiste wie GoodNotes, und eine Fläche, die nicht mehr
+    stirbt** (E512, test479 + test480): Redurs Fehlerbericht zuerst — nach
+    ein paar Minuten zeichnete nichts mehr, weder Stift noch Maus. Es lag
+    nicht an der Zeit (alle zehn Uhren der App einzeln ausgelöst: unschuldig),
+    sondern an EINEM verlorenen `pointerup`: die Kennung des führenden
+    Zeigers blieb stehen und wies jeden anderen ab. Jetzt wird das Ende
+    auch am Fenster gehört, und ein verwaister Führender wird nach 500 ms
+    übernommen — sein Zug abgeschlossen, nicht verworfen. Dazu die drei
+    Wünsche: die Stiftreihe statt des Wechselknopfs, der Laserpointer als
+    Werkzeug (es gab ihn nur im Vollbild) und vier Plätze für die Leiste.
+    **Steht.**
+
+Der Auftrag heisst deshalb jetzt **dreiundvierzig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

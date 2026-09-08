@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-491 Entscheidungen, E1 bis E511 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+492 Entscheidungen, E1 bis E512 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -555,6 +555,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E509** — Ein Stift für Fachzeichen: die zehn Adern eines Schaltplans, jede mit ihrem Namen
 * **E510** — Die Mitte einer Linie zählt auch: der Kritzel-Radierer misst Länge statt Ecken
 * **E511** — Die Tinte holt die Spitze ein, und vier Bewegungen, die etwas sagen
+* **E512** — Die Leiste wie GoodNotes: Stiftreihe, Laserpointer, vier Plätze — und eine Fläche, die nicht mehr stirbt
 
 ---
 
@@ -41139,3 +41140,146 @@ geprüft: die Gesamtsuite.
 Bild: `node bilder.mts bewegung` — die Welle mitten im Flug angehalten,
 nicht mit einer Wartezeit, sondern indem jede Bewegung auf dieselbe Uhrzeit
 gestellt wird.
+
+---
+
+E512 — Die Leiste wie GoodNotes, und eine Fläche, die nicht mehr stirbt
+--------------------------------------------------------------------------
+
+Redur, 8. September, mit fünf Bildern aus GoodNotes und vier Sätzen. Drei
+davon waren Wünsche, einer war ein Fehlerbericht — und der ging vor (§46).
+
+## 1 · Der Fehler: nach ein paar Minuten geht nichts mehr
+
+> „Schau mal, wenn ich nach 5, 6 Minuten die Webseite nutze und der Stift
+> funktioniert nicht mehr — auch Maus beim Zeichnen. Ich musste wieder neu
+> laden."
+
+**Es lag nicht an der Zeit.** Gegen die naheliegende Vermutung wurde zuerst
+gemessen (§36): alle zehn wiederkehrenden Uhren der App — von 3 Sekunden
+bis 24 Stunden — einzeln ausgelöst und danach gezeichnet. Jede einzelne
+unschuldig. Auch dreissig Runden Zeichnen mit Seitenwechsel und
+Neuzeichnen dazwischen blieben grün.
+
+**Es lag an EINEM verlorenen Ereignis.** `aktiverZeiger` merkt sich seit
+E354, wer den Zug führt — damit ein zweiter Finger ihn nicht kapert. Kommt
+für diesen Zeiger nie ein `pointerup` oder `pointercancel` an, bleibt die
+Kennung für immer stehen, und diese Zeile weist von da an jeden anderen
+Zeiger ab:
+
+```js
+if (aktiverZeiger !== null && aktiverZeiger !== e.pointerId) return;
+```
+
+Gemessen: ein Stiftzug ohne Abheben, danach vier Züge mit Maus und Stift —
+die Zahl der Marken blieb bei eins. Die Fläche war tot, und nur das
+Neuladen half. Genau Redurs Bild.
+
+Wie geht ein Abheben verloren? Der Stift verlässt die Reichweite des
+Digitalisierers; der Griff (`setPointerCapture`) geht verloren, weil ein
+Fenster dazwischenkommt oder der Knoten neu gezeichnet wird; das Ende
+landet auf einem anderen Element.
+
+**Zwei Wege heraus, und beide greifen nur im Fehlerfall:**
+
+- **Das Ende zählt auch am Fenster.** Ein `pointerup`/`pointercancel` in
+  der Abfangphase am `window`, aber nur für den Zeiger, der HIER führt und
+  dessen Ereignis nicht ohnehin auf der Fläche liegt.
+- **Ein verwaister Führender wird übernommen.** Wer aufsetzt, während der
+  Führende seit `VERWAIST_MS` nichts mehr gesagt hat, übernimmt — und der
+  alte Zug wird dabei **abgeschlossen, nicht weggeworfen** (§51).
+
+**Keine Uhr im Hintergrund.** Ein Wecker, der einen Zug nach n Sekunden
+schliesst, würde auch den Strich eines Menschen durchschneiden, der beim
+Nachdenken die Hand aufliegen lässt.
+
+**500 ms**, und die Zahl ist gemessen, nicht gegriffen: ein Eindringling —
+der zweite Finger, den E354 abwehrt — setzt auf, WÄHREND die Hand fährt; in
+`test479 §2` liegen acht Millisekunden dazwischen. Ein Mensch, der merkt,
+dass nichts passiert, hebt ab, schaut hin und tippt neu; das dauert nicht
+unter einer halben Sekunde. 500 liegt weit über dem einen und unter dem
+anderen.
+
+## 2 · Die Stiftreihe
+
+> „Die Fachzeichen-Stift kommt, wenn ich die Stift klicke — sollte neben
+> es, also links unten, wo die Farben dort sind, mir zeigen, welche Stift
+> ich will."
+
+Bis hierher war es ein Wechselknopf (E351): ein Tipp, der nächste Stift.
+Bei sechs Stiften sind das bis zu fünf Tipps für den letzten — und welche
+es überhaupt gibt, stand nur im Titel. Man musste es wissen.
+
+Jetzt steht die Reihe da, unmittelbar links vor den Farben, genau wie
+Redur es beschrieben hat. Ein Tipp, ein Stift.
+
+**Der Wechsel ist nicht weg.** Wer `P` drückt, während der Stift schon
+führt, geht weiter zum nächsten — dieselbe Bewegung wie vorher, nur ohne
+eigenen Knopf, und dieselbe Gewohnheit wie in GoodNotes, wo die
+Werkzeugtaste zweimal gedrückt die Sorte wechselt. Eine Funktion darf nicht
+verschwinden, weil ihr Knopf verschwindet.
+
+## 3 · Der Laserpointer
+
+> „Alter, wieso habe ich keinen Laserpointer? Mache es sofort."
+
+Es GAB einen — aber nur im Vollbild-Präsentationsmodus (E493). Dort findet
+ihn niemand, der gerade an einer Seite steht und etwas zeigen will. Jetzt
+ist er ein Werkzeug wie jedes andere, mit den zwei Arten aus GoodNotes:
+**Punkt** und **Linie**.
+
+**Er schreibt nichts.** Kein Eintrag in `marks`, kein Schritt im Verlauf,
+nichts in der Sicherung — ein Finger, kein Stift. Das ist die ganze Zusage
+dieses Werkzeugs, und `test480 §2` misst sie in vier Zusagen: während des
+Zeigens leuchtet ein Strahl, er ist keine Marke, nach dem Loslassen ist er
+weg, und „Zurück" bleibt abgeschaltet.
+
+Die Spur behält nur ihre letzten vierzig Punkte — bei 60 Bildern gut zwei
+Drittel Sekunde. Eine Spur, die den ganzen Weg behält, wäre eine Zeichnung,
+und genau das soll sie nicht sein.
+
+## 4 · Vier Plätze für die Leiste
+
+> „Und die Stift[leiste] sollte ich als komplett bewegen können, also nach
+> links, rechts, Mitte und ganz oben."
+
+Vier Plätze in einem Katalog: **oben** (der Bestand), **links**, **rechts**
+und **unten in der Mitte** — die schwebende Leiste aus GoodNotes. Ein Knopf
+bei „Zurück" und „Vor" schaltet weiter; der Platz wird gemerkt und gilt
+schon beim Öffnen, nicht erst nach dem ersten Klick (der Fund aus E509).
+
+**An der Seite ist die Leiste ein Ausweg, nicht nur eine Richtung.** Sechs
+Stifte und zehn Adern brauchen oben drei Zeilen; links stehen die Gruppen
+untereinander, und es ist gleichgültig, wie viele es sind.
+
+## Was das Hinsehen gefunden hat
+
+Der erste Wurf der Seitenleiste hatte `width:auto; max-width:82px`. Absolut
+gesetzt schrumpft eine Flexbox auf ihren Inhalt, und der Inhalt hat
+`min-width:0` — übrig blieb **ein zwanzig Pixel breiter Streifen am
+Blattrand**, in dem nichts zu erkennen war. Kein Prüflauf hätte das
+gefunden; das Bild hat es in einer Sekunde gezeigt (§55). Jetzt steht die
+Zahl da: 64 px.
+
+## Was es kostet, und das steht ehrlich hier
+
+**Die Leiste braucht oben jetzt drei Zeilen statt zwei.** E359 versprach
+zwei, und das galt für vierzehn Zubehörknöpfe (E486 hat sie gezählt).
+Seither hat Redur zwei Reihen bestellt — zehn Adern (E509) und sechs Stifte
+(E512). Sechs Stifte sind auch ohne ihre Namen rund 160 px; bei 596 px
+Leistenbreite ist die dritte Zeile Arithmetik, keine Nachlässigkeit.
+`test351` und `test438` messen jetzt „höchstens drei Zeilen" statt „unter
+100 px", mit dieser Rechnung daneben.
+
+**Am Telefon ist die erste Farbe hinter den Stiften.** Sechs Knöpfe zu
+44 px (§37) sind 264 px; auf einer 390 px breiten Leiste bleibt danach kein
+Platz. `test348` misst deshalb, dass sie ERREICHBAR ist, nicht dass sie
+ohne Rollen dasteht. Beides steht als **L137** in LUECKEN.
+
+GEPRÜFT. `test479` neu mit 13 Zusagen (vor der Reparatur rot in neun),
+`test480` neu mit 33. Die Gegenprobe zum Fehler war die Messung selbst:
+ein Zug ohne Abheben, und danach zeichnete nichts mehr. Nachgezogen:
+test343, test348, test351, test438, test461, test470, test477, test478 —
+sie kannten den Wechselknopf. Dazu test87, test105, test109, test266 —
+alle grün. Nicht geprüft: die Gesamtsuite.
+Bilder: `node bilder.mts leisteLinks laser`.

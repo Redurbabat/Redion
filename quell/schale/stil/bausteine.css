@@ -4005,6 +4005,16 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk button::after{content:""; position:absolute; left:0; right:0; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .blatt-werk button:hover{background:var(--bg-hover)}
 .blatt-werk button.on{background:var(--accent); color:var(--auf-accent)}
+/* DIE STIFTREIHE (E512): sechs Knöpfe statt eines Wechslers. Ihr Wort
+   bleibt weg, wo es eng ist — das Zeichen trägt, der Titel und das
+   aria-label sagen den Namen (§38). */
+/* NUR DAS ZEICHEN, KEIN WORT. Sechs Stifte mit Namen sind rund 320 px
+   und kippen die Leiste in eine dritte Zeile — gegen E359 und `test351`,
+   nachgemessen an einer 120 px hohen Leiste statt 80. Der Name steht im
+   Titel und im `aria-label`; ein Vorleser liest ihn, ein Zeiger zeigt
+   ihn, und der geführte Stift ist an seiner Fläche zu erkennen (§38). */
+.blatt-werk button[data-act="stilwahl"]{padding:4px 6px}
+.blatt-werk button[data-act="stilwahl"] .wort{display:none}
 
 /* ══ DER STIFT WIRD IN DIE HAND GENOMMEN (E511) ═══════════════════════════
    Redur, 8. September: „mehr Animationen."
@@ -4026,7 +4036,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    16 Grad sind sichtbar und bleiben ein Kippen; bei 30 wäre es ein
    Umfallen. */
 .blatt-werk button[data-wz].on .zeichen,
-.blatt-werk button[data-act="stil"] .zeichen{
+.blatt-werk button[data-act="stilwahl"].on .zeichen{
   display:inline-block; animation:ru-stift-kippt var(--motion-normal) var(--ease-enter)
 }
 @keyframes ru-stift-kippt{
@@ -4071,6 +4081,20 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    Zeiger erwartet: hier passiert gerade etwas. Sechs, weil
    `stroke-dasharray:3 3` sich alle sechs Einheiten wiederholt; jede
    andere Zahl ergäbe einen Sprung. */
+/* ══ DER LASERSTRAHL (E512) ══════════════════════════════════════════════
+   Rot, weich, und er verblasst von selbst. Er trägt `data-ink-ui` und ist
+   damit für jeden Weg, der Marken sucht, unsichtbar — genau wie der
+   Radierkreis. Gespeichert wird er nie. */
+.blatt-laser{pointer-events:none}
+.blatt-laser-kopf{fill:#ff2d2d; stroke:#ffffffcc; stroke-width:1;
+                  vector-effect:non-scaling-stroke;
+                  filter:drop-shadow(0 0 5px #ff2d2daa)}
+.blatt-laser-spur{fill:none; stroke:#ff2d2d; stroke-width:3; stroke-linecap:round;
+                  stroke-linejoin:round; opacity:.75; vector-effect:non-scaling-stroke;
+                  filter:drop-shadow(0 0 4px #ff2d2d88)}
+.blatt-laser-weg{animation:ru-laser-weg 700ms var(--ease-exit) forwards}
+@keyframes ru-laser-weg{ to{opacity:0} }
+@media (prefers-reduced-motion: reduce){ .blatt-laser-weg{animation:none; opacity:0} }
 .blatt-radierkreis{animation:ru-radier-laeuft 700ms linear infinite}
 @keyframes ru-radier-laeuft{ to{stroke-dashoffset:-6} }
 
@@ -4079,7 +4103,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    stehen trotzdem da, der Kreis ist trotzdem gestrichelt. */
 @media (prefers-reduced-motion: reduce){
   .blatt-werk button[data-wz].on .zeichen,
-  .blatt-werk button[data-act="stil"] .zeichen,
+  .blatt-werk button[data-act="stilwahl"].on .zeichen,
   .blatt-farbe-leiter,
   .blatt-farbe.blatt-farbe-tipp,
   .blatt-radierkreis{animation:none}
@@ -4115,6 +4139,76 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 
    Links dagegen ist die Kante wirklich die Kante der Reihe, und dort steht
    ein Verlauf. */
+/* ══ WO DIE LEISTE STEHT (E512) ══════════════════════════════════════════
+   Redur: „die Stift[leiste] sollte ich komplett bewegen können — nach
+   links, rechts, Mitte und ganz oben."
+
+   VIER PLÄTZE, EINE REGEL JE PLATZ. `oben` ist der Bestand und braucht
+   nichts; die drei anderen heben die Leiste aus dem Fluss und legen sie
+   an den Rand des Blattes. Die Hülle (`.blatt-huelle`) ist der Bezug —
+   deshalb bekommt sie `position:relative`.
+
+   AN DER SEITE STEHEN DIE GRUPPEN UNTEREINANDER. Das ist nicht nur eine
+   andere Richtung, sondern der Ausweg aus der Enge: sechs Stifte und zehn
+   Adern brauchen oben drei Zeilen (L137), links eine Spalte, die rollt. */
+.blatt-huelle{position:relative}
+/* EINE FESTE BREITE, KEINE GERATENE. Der erste Wurf gab der Spalte
+   `width:auto; max-width:82px` — und das Bild hat gezeigt, warum das
+   falsch ist: absolut gesetzt schrumpft eine Flexbox auf ihren Inhalt,
+   und der Inhalt hat `min-width:0`. Übrig blieb ein zwanzig Pixel
+   breiter Streifen am Blattrand, in dem nichts zu erkennen war.
+   Jetzt steht die Zahl da: 64 px, und die Knöpfe füllen sie. (§55 — das
+   hat kein Prüflauf gefunden, sondern das Hinsehen.) */
+.blatt-reihe[data-lage="links"],
+.blatt-reihe[data-lage="rechts"]{
+  position:absolute; top:0; bottom:auto; max-height:min(78vh, 100%);
+  width:64px; flex-direction:column; z-index:6;
+  border-radius:10px; border:1px solid var(--line);
+  box-shadow:var(--shadow-3); background:var(--bg-card)
+}
+.blatt-reihe[data-lage="links"] .blatt-werk,
+.blatt-reihe[data-lage="rechts"] .blatt-werk{width:100%; padding:6px 4px}
+.blatt-reihe[data-lage="links"] .blatt-werk > button,
+.blatt-reihe[data-lage="rechts"] .blatt-werk > button{
+  width:100%; min-width:0; padding:4px 0;
+  display:inline-flex; align-items:center; justify-content:center
+}
+/* Die Farbtupfer bleiben rund und mittig — sie sind keine Knöpfe mit Text. */
+.blatt-reihe[data-lage="links"] .blatt-werk > .blatt-farbe,
+.blatt-reihe[data-lage="rechts"] .blatt-werk > .blatt-farbe{
+  width:26px; min-width:26px; align-self:center
+}
+.blatt-reihe[data-lage="links"] .blatt-werk > .blatt-farbe-leiter,
+.blatt-reihe[data-lage="rechts"] .blatt-werk > .blatt-farbe-leiter{
+  width:44px; min-width:44px
+}
+.blatt-reihe[data-lage="links"]{left:6px}
+.blatt-reihe[data-lage="rechts"]{right:6px}
+.blatt-reihe[data-lage="links"] .blatt-werk,
+.blatt-reihe[data-lage="rechts"] .blatt-werk{
+  flex-direction:column; flex-wrap:nowrap; align-items:stretch;
+  overflow-y:auto; overflow-x:hidden; max-height:min(74vh, 100%); scrollbar-width:none
+}
+.blatt-reihe[data-lage="links"] .blatt-werk::-webkit-scrollbar,
+.blatt-reihe[data-lage="rechts"] .blatt-werk::-webkit-scrollbar{display:none}
+.blatt-reihe[data-lage="links"] .blatt-fest,
+.blatt-reihe[data-lage="rechts"] .blatt-fest{flex-direction:column; padding:0 8px 6px}
+/* Ein Trenner, der in einer Spalte steht, ist ein Strich quer — nicht längs. */
+.blatt-reihe[data-lage="links"] .blatt-trenn,
+.blatt-reihe[data-lage="rechts"] .blatt-trenn{width:100%; height:1px; margin:3px 0}
+/* Die Wörter gehen weg: eine 82 px breite Spalte trägt Zeichen, keine
+   Namen. Titel und aria-label bleiben (§38). */
+.blatt-reihe[data-lage="links"] .wort,
+.blatt-reihe[data-lage="rechts"] .wort{display:none}
+
+/* UNTEN IN DER MITTE — die schwebende Leiste aus GoodNotes. */
+.blatt-reihe[data-lage="unten"]{
+  position:absolute; left:50%; transform:translateX(-50%);
+  bottom:10px; top:auto; z-index:6; max-width:calc(100% - 24px);
+  border-radius:12px; border:1px solid var(--line);
+  box-shadow:var(--shadow-4); background:var(--bg-card)
+}
+
 .blatt-reihe{position:relative}
 .blatt-reihe::before{
   content:""; position:absolute; top:1px; bottom:1px; left:1px; width:26px;
@@ -4492,6 +4586,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk[data-tool="select"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="select"] > [data-gruppe="breite"],
 .blatt-werk[data-tool="radierer"] > [data-gruppe="radierer"],
+.blatt-werk[data-tool="laser"] > [data-gruppe="laser"],
 .blatt-werk[data-tool="stift"] > [data-gruppe="stil"],
 .blatt-werk[data-tool="stift"] > [data-gruppe="formen"],
 .blatt-werk[data-tool="stift"] > [data-gruppe="farbe"],

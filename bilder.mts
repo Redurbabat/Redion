@@ -2122,6 +2122,63 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  leisteLinks: {
+    titel: 'Die Werkzeugleiste an der Seite — vier Plätze (E512)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('zeichnen:stift', 'fueller');
+      Store.setMeta('zeichnen:leistenlage', 'links');
+      const seite = Store.addPage(null, { text: 'Wechselschaltung', icon: '⌁' });
+      Store.addBlock(seite.id, 'blatt', { text: '', papier: 'kariert',
+        blattBreite: 595.28, blattHoehe: 700, raumVersion: 1, marken: [] });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
+  laser: {
+    titel: 'Der Laserpointer: zeigen statt schreiben (E512)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('zeichnen:leistenlage', 'oben');
+      Store.setMeta('zeichnen:laser', 'linie');
+      const seite = Store.addPage(null, { text: 'Wechselschaltung', icon: '⌁' });
+      /* Etwas, worauf man zeigen kann. */
+      const marken: any[] = [];
+      for (let i = 0; i < 3; i++) {
+        const y = 90 + i * 70;
+        marken.push({ id: 'l' + i, art: 'stift', stil: 'kugel', farbe: '#7a4a21',
+          breite: 3, pts: [[110, y], [480, y]] });
+      }
+      Store.addBlock(seite.id, 'blatt', { text: '', papier: 'blanko',
+        blattBreite: 595.28, blattHoehe: 380, raumVersion: 1, marken });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="laser"]')?.click();
+      await new Promise(r => setTimeout(r, 300));
+      /* Den Strahl WÄHREND des Zeigens festhalten: nach dem Loslassen ist
+         er weg, und genau das soll er ja sein (§55.3). */
+      const f = document.querySelector<SVGSVGElement>('.blatt-marken')!;
+      const ctm = f.getScreenCTM()!;
+      const px = (q: number[]) => { const pt = f.createSVGPoint(); pt.x = q[0]!; pt.y = q[1]!;
+        const c = pt.matrixTransform(ctm); return { x: c.x, y: c.y }; };
+      const ev = (typ: string, q: number[]) => { const c = px(q);
+        return new PointerEvent(typ, { bubbles: true, cancelable: true, clientX: c.x, clientY: c.y,
+          pointerId: 1, pointerType: 'mouse', isPrimary: true,
+          button: typ === 'pointermove' ? -1 : 0, buttons: 1, pressure: 0.6 }); };
+      f.dispatchEvent(ev('pointerdown', [120, 240]));
+      for (let i = 1; i <= 30; i++)
+        f.dispatchEvent(ev('pointermove', [120 + i * 11, 240 - Math.sin(i / 5) * 55]));
+      await new Promise(r => setTimeout(r, 120));
+    }
+  },
+
   bewegung: {
     titel: 'Die Adernreihe kommt als Welle (E511)',
     bauen: async () => {
