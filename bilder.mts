@@ -2009,6 +2009,35 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  zerlegen: {
+    titel: 'Ein mehrseitiges Blatt in Seiten zerlegen (E499)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const A4 = 841.89;
+      const seite = Store.addPage(null, { text: 'Mitschrift 12. Mai', icon: '📗' });
+      const blatt = Store.addBlock(seite.id, 'blatt', { text: '', papier: 'kariert',
+        blattBreite: 595.28, blattHoehe: A4 * 3, raumVersion: 1, marken: [
+          { id: 'a', art: 'stift', farbe: '#111111', breite: 3, pts: [[60, 120], [420, 120]] },
+          { id: 'b', art: 'stift', farbe: '#d64545', breite: 3,
+            pts: [[60, A4 + 120], [420, A4 + 120]] },
+          { id: 'c', art: 'stift', farbe: '#3aa757', breite: 3,
+            pts: [[60, A4 * 2 + 120], [420, A4 * 2 + 120]] },
+          { id: 'd', art: 'stift', farbe: '#2f7ed8', breite: 3,
+            pts: [[480, A4 - 80], [480, A4 + 80]] }
+        ] });
+      Store.addBlock(blatt.id, 'text', { text: 'Reihenschaltung, Parallelschaltung, Leistung' });
+      Store.updateBlock(seite.id, { dokumentModus: true });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+      document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+      document.querySelector<HTMLElement>('[data-document-action="page-split"]')?.click();
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+
   zoomruhe: {
     titel: '„Ausschnitt" und „Erkennen" ruhen im Zoom-Fenster (E498)',
     bauen: async () => {

@@ -4424,3 +4424,20 @@ gegenüber GoodNotes sind: dessen Formenwerkzeug hat auch keine Verbinder,
 sein Lasso gilt auch je Seite, und seine drei Stift-Favoriten sind
 Farb-Voreinstellungen — die hat Redion seit E486 als benannte Farbsätze.
 Alle drei stehen weiter da, aber als Wunsch statt als Rückstand.
+
+**Ein mehrseitiges Blatt in Seiten zerlegen (E499, test468).** Die letzte
+offene Zeile unter „Seiten" in L133. In GoodNotes ist jede Seite eine
+Seite; Redions mehrseitiges Blatt ist eine eigene Form — und sie ist nicht
+falsch, sie ist genau das, was ein Heft ist. Falsch war nur, dass die
+Seitengriffe mit ihr nichts anfangen konnten.
+
+Also nicht die Form abgeschafft, sondern einen Griff gebaut: aus einem
+Blatt von drei A4 werden drei Blätter von je einem. Jede Marke kommt auf
+die Seite, in der ihre Mitte liegt, und bleibt ganz — kein Strich wird
+geschnitten. Was über eine Seitengrenze läuft, ragt danach über den Rand
+hinaus und ist dort nicht mehr zu sehen (das Papier schneidet); verloren
+ist es nicht, und der Dialog sagt es mit Zahl, bevor etwas geschieht.
+
+Die Reihenfolge ist zum dritten Mal in diesem Bündel dieselbe: erst die
+neuen Blätter mit ihren Marken anlegen, dann das Original kürzen.
+Andersherum wären die Seiten zwei bis n weg, bevor es sie gibt.

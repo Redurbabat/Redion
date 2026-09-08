@@ -19106,7 +19106,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 668, inhalt: 'ff28738358c80270', gebaut: '2026-09-08T03:17:17.978Z' };
+const Stand = { fassung: 669, inhalt: '9be5fe1e4d8fff5b', gebaut: '2026-09-08T03:30:21.615Z' };
 window.Stand = Stand;
 
 </script>
@@ -67529,7 +67529,26 @@ const DocumentMode = (() => {
         /* E469: Bilder und weitere PDF-Seiten hinter diese Seite; die Seite als Bild sichern. */
         seitenKnopf('page-add-image', '🖼', 'Bild als Seite', 'Ein Foto, einen Scan oder eine Grafik als neue Seite hinter dieser einfügen'), seitenKnopf('page-add-camera', '📷', 'Foto aufnehmen', 'Mit der Kamera eine neue Seite hinter dieser aufnehmen — am Rechner ohne Kamera öffnet sich der Dateiwähler'), seitenKnopf('page-add-pdf', '📕', 'PDF hier einfügen', 'Die Seiten einer weiteren PDF hinter dieser Seite einfügen'), seitenKnopf('page-export-image', '⬇', 'Als Bild sichern', 'Diese Seite mit allem darauf als PNG speichern'), 
         /* E496: dieselbe Seite in ein anderes Dokument — kopieren oder verschieben. */
-        seitenKnopf('page-to-doc', '↗', 'In anderes Dokument', 'Diese Seite mit allem darauf in ein anderes Dokument kopieren oder verschieben'));
+        seitenKnopf('page-to-doc', '↗', 'In anderes Dokument', 'Diese Seite mit allem darauf in ein anderes Dokument kopieren oder verschieben'), 
+        /* E499: ein mehrseitiges Blatt (E118) in einzelne Seiten zerlegen. */
+        seitenKnopf('page-split', '⌸', 'In Seiten zerlegen', 'Dieses mehrseitige Blatt in einzelne A4-Seiten zerlegen — danach greifen Drehen, Löschen und Verschieben je Seite'));
+        /* DER GRIFF STEHT NUR BEI EINEM MEHRSEITIGEN BLATT (E499). Bei allem
+           anderen — einer PDF-Seite, einem einseitigen Blatt — gäbe es nichts
+           zu zerlegen; ein Knopf, der dann eine Absage gibt, wäre ein Knopf zu
+           viel. Er verschwindet nicht, er ruht: so bleibt die Reihe der Griffe
+           gleich, und wer ihn sucht, findet ihn mit seinem Grund. */
+        {
+            const teilbar = documentBlock?.type === 'blatt'
+                && SheetSpace.seiten(Number(documentBlock.blattHoehe) || SheetSpace.A4_HOEHE) > 1;
+            const knopf = knoepfe.querySelector('[data-document-action="page-split"]');
+            if (knopf && !teilbar) {
+                knopf.disabled = true;
+                knopf.setAttribute('aria-disabled', 'true');
+                knopf.title = documentBlock?.type === 'blatt'
+                    ? 'Dieses Blatt ist schon eine einzelne Seite.'
+                    : 'Nur ein mehrseitiges Blatt lässt sich zerlegen.';
+            }
+        }
         /* Sichern darf jeder, der lesen darf. */
         const sichernKnopf = knoepfe.querySelector('[data-document-action="page-export-image"]');
         if (sichernKnopf)
@@ -69489,6 +69508,101 @@ const DocumentMode = (() => {
             const rest = documentsIn(page);
             neuMit(rest[Math.min(rest.length - 1, Math.max(0, stelle.index))]?.id || null);
         };
+        /* ══ EIN MEHRSEITIGES BLATT IN SEITEN ZERLEGEN (E499) ══════════════════
+           L133: „Mehrseitige Notizhefte als EIN Block — ein `blatt` wächst in
+           die Höhe (E118); Seitengriffe gelten ihm als Ganzem. Ein Heft mit
+           drei Blattseiten lässt sich nicht seitenweise drehen oder löschen."
+    
+           In GoodNotes ist jede Seite eine Seite. Redions mehrseitiges Blatt
+           ist eine eigene Form, und sie ist nicht falsch — nur die Seitengriffe
+           können mit ihr nichts anfangen. Also gibt es einen Griff, der sie in
+           GoodNotes-Form bringt: aus einem Blatt von drei A4 werden drei
+           Blätter von je einem.
+    
+           WOHIN EINE MARKE KOMMT: auf die Seite, in der ihre MITTE liegt. Sie
+           bleibt dabei GANZ — kein Strich wird geschnitten (§9: nichts
+           verlieren). Eine Marke, die über eine Seitengrenze läuft, ragt danach
+           über den Rand ihrer Seite hinaus, und weil `.blatt-papier` schneidet,
+           ist der Überstand nicht mehr zu SEHEN. Er ist nicht weg — er kommt
+           zurück, sobald das Blatt wieder höher wird —, aber ein Nutzer sieht
+           das nicht. Darum wird es GESAGT, mit Zahl, bevor irgendetwas
+           geschieht (§35). */
+        const zerlegbar = (block) => {
+            if (!block || block.type !== 'blatt')
+                return 0;
+            return SheetSpace.seiten(Number(block.blattHoehe) || SheetSpace.A4_HOEHE);
+        };
+        const seiteZerlegen = async (wen) => {
+            const block = wen || jetzt();
+            const anzahl = zerlegbar(block);
+            if (anzahl < 2) {
+                UI.toast(block?.type === 'blatt'
+                    ? 'Dieses Blatt ist schon eine einzelne Seite.'
+                    : 'Nur ein mehrseitiges Blatt lässt sich in Seiten zerlegen.');
+                return;
+            }
+            const stelle = stelleVon(block);
+            if (!stelle) {
+                UI.toast('Dieses Blatt hat keinen Platz, an dem die Seiten stehen könnten.');
+                return;
+            }
+            if (typeof Dialog === 'undefined')
+                return;
+            const A4 = SheetSpace.A4_HOEHE;
+            const marken = Array.isArray(block.marken) ? block.marken : [];
+            const faecher = Array.from({ length: anzahl }, () => []);
+            let ueberGrenze = 0;
+            for (const roh of marken) {
+                const kopie = JSON.parse(JSON.stringify(roh));
+                const kasten = InkGeometry.bounds(kopie);
+                const mitte = kasten.y + kasten.height / 2;
+                const nr = Math.max(0, Math.min(anzahl - 1, Math.floor(mitte / A4)));
+                /* „Über die Grenze" heisst: Oberkante und Unterkante liegen in
+                   verschiedenen Seiten. Die Unterkante wird um einen Hauch
+                   hereingeholt, damit eine Marke, die genau auf der Grenze endet,
+                   nicht als Grenzgängerin zählt. */
+                const oben = Math.floor(kasten.y / A4);
+                const unten = Math.floor(Math.max(kasten.y, kasten.y + kasten.height - 0.01) / A4);
+                if (oben !== unten)
+                    ueberGrenze++;
+                faecher[nr].push(InkGeometry.move(kopie, 0, -nr * A4));
+            }
+            const wahl = await Dialog.wahl({
+                titel: 'Dieses Blatt in ' + anzahl + ' Seiten zerlegen?',
+                text: 'Aus einem Blatt von ' + anzahl + ' Seiten werden ' + anzahl
+                    + ' einzelne Blätter. Danach greifen Drehen, Löschen und Verschieben je Seite.'
+                    + (ueberGrenze
+                        ? ' ACHTUNG: ' + ueberGrenze + (ueberGrenze === 1 ? ' Marke läuft' : ' Marken laufen')
+                            + ' über eine Seitengrenze. Sie kommen ganz auf EINE Seite und ragen dort über den Rand'
+                            + ' hinaus — sichtbar ist der Überstand dann nicht mehr, verloren ist er nicht.'
+                        : ' Keine Marke läuft über eine Seitengrenze.'),
+                knoepfe: [
+                    { id: 'ja', text: 'In ' + anzahl + ' Seiten zerlegen',
+                        hinweis: ueberGrenze ? 'Mit dem Überstand, wie oben beschrieben' : 'Nichts geht dabei verloren' },
+                    { id: 'nein', text: 'Abbrechen', hinweis: 'Das Blatt bleibt, wie es ist' }
+                ]
+            });
+            if (wahl !== 'ja')
+                return;
+            /* DIE REIHENFOLGE, WIEDER: erst die neuen Blätter MIT ihren Marken
+               anlegen, dann das Original kürzen. Bräche etwas dazwischen ab,
+               stünden Marken doppelt da — sichtbar. Andersherum wären die Seiten
+               zwei bis n weg, bevor es sie gibt. */
+            for (let i = anzahl - 1; i >= 1; i--) {
+                const neu = Store.addBlock(stelle.eltern.id, 'blatt', {
+                    text: '', papier: block.papier || 'blanko',
+                    blattBreite: Number(block.blattBreite) || SheetSpace.A4_BREITE,
+                    blattHoehe: A4, raumVersion: SheetSpace.RAUM_VERSION,
+                    marken: faecher[i]
+                }, stelle.index + 1);
+                /* Eine Zeile muss da sein (E118) — sonst ist das Papier nur Malgrund. */
+                Store.addBlock(neu.id, 'text', { text: '' });
+            }
+            Store.updateBlock(block.id, { blattHoehe: A4, marken: faecher[0] });
+            UI.toast('In ' + anzahl + ' Seiten zerlegt'
+                + (ueberGrenze ? ' — ' + ueberGrenze + ' mit Überstand' : ''));
+            neuMit(block.id);
+        };
         const seiteLoeschen = (wen) => {
             const block = wen || jetzt();
             const liste = documentsIn(page);
@@ -69644,6 +69758,8 @@ const DocumentMode = (() => {
             eintrag('page-bookmark', '🔖', block.lesezeichen ? 'Lesezeichen weg' : 'Lesezeichen');
             eintrag('page-export-image', '⬇', 'Als Bild sichern');
             eintrag('page-to-doc', '↗', 'In anderes Dokument');
+            if (zerlegbar(block) > 1)
+                eintrag('page-split', '⌸', 'In Seiten zerlegen');
             eintrag('page-delete', '🗑', 'Löschen');
             thumbnails.appendChild(kasten);
             /* An seinen Knopf legen — und zurückrücken, wo die Leiste zu Ende ist.
@@ -70292,6 +70408,8 @@ const DocumentMode = (() => {
                     seiteDuplizieren(zielSeite);
                 if (action === 'page-to-doc')
                     void seiteInsDokument(zielSeite);
+                if (action === 'page-split')
+                    void seiteZerlegen(zielSeite);
                 if (action === 'page-delete')
                     seiteLoeschen(zielSeite);
                 if (action === 'page-up')

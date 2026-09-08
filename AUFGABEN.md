@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — neunundzwanzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — dreissig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -389,7 +389,14 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Blätter, Stift-Favoriten); sie stehen jetzt als Wunsch da, nicht als
     Rückstand. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **neunundzwanzig Bögen**; die Überschrift
+  · **G30 — Ein mehrseitiges Blatt in Seiten zerlegen** (E499, test468):
+    die letzte offene Zeile unter „Seiten". Nicht die Form abgeschafft,
+    sondern einen Griff gebaut, der sie in GoodNotes-Form bringt. Jede
+    Marke kommt auf die Seite, in der ihre Mitte liegt, und bleibt ganz;
+    was über eine Grenze läuft, wird gezählt und gesagt, bevor etwas
+    geschieht. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **dreissig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

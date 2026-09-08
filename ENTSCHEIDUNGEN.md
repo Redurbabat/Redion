@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-478 Entscheidungen, E1 bis E498 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+479 Entscheidungen, E1 bis E499 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -542,6 +542,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E496** — Eine Seite in ein anderes Dokument: kopieren mit frischer Kennung, verschieben mit derselben
 * **E497** — Der breite Lauf nach E493–E496: zwei echte Fehler, die seit Wochen rot waren und die niemand laufen liess
 * **E498** — Die zwei letzten Reste: „Ausschnitt" ruht sichtbar, und Seiten wandern über Spaltengrenzen
+* **E499** — Ein mehrseitiges Blatt in Seiten zerlegen: jede Marke behält ihre Seite, keine wird geschnitten
 
 ---
 
@@ -39849,3 +39850,71 @@ Neuzeichnen offen), und mit der alten Absage über Spaltengrenzen. Dazu
 test87, test105, test109, test440, test442, test443, test450, test453 —
 alle grün. Nicht geprüft: die Gesamtsuite.
 Bild: `node bilder.mts zoomruhe` — die zwei ruhenden Knöpfe.
+
+---
+
+E499 — Ein mehrseitiges Blatt in Seiten zerlegen
+--------------------------------------------------------------------------
+
+Die letzte offene Zeile unter „Seiten" in L133:
+
+> „**Mehrseitige Notizhefte als EIN Block** — ein `blatt` wächst in die Höhe
+> (E118); Seitengriffe gelten ihm als Ganzem. Ein Heft mit drei Blattseiten
+> lässt sich nicht seitenweise drehen oder löschen."
+
+In GoodNotes ist jede Seite eine Seite. Redions mehrseitiges Blatt ist eine
+eigene Form, und sie ist **nicht falsch** — sie ist genau das, was ein Heft
+ist, in das man fortlaufend schreibt. Falsch ist nur, dass die Seitengriffe
+mit ihr nichts anfangen können.
+
+Also nicht: die Form abschaffen. Sondern: **einen Griff, der sie in
+GoodNotes-Form bringt.** Aus einem Blatt von drei A4 werden drei Blätter
+von je einem, und danach greifen Drehen, Löschen, Verschieben, Duplizieren
+und alles Übrige je Seite.
+
+## Wohin eine Marke kommt
+
+**Auf die Seite, in der ihre MITTE liegt** — und sie bleibt dabei GANZ.
+Kein Strich wird geschnitten (§9: nichts verlieren). Ihre Höhe wandert um
+`nr × A4` mit, sonst läge sie unterhalb ihres neuen Papiers und wäre
+unsichtbar; genau das hat die Gegenprobe gezeigt (942 statt 100).
+
+## Der Satz, der vor dem Zerlegen steht
+
+Eine Marke, die über eine Seitengrenze läuft, ragt danach über den Rand
+ihrer Seite hinaus. Und weil `.blatt-papier` mit `overflow:hidden`
+schneidet, ist der Überstand **nicht mehr zu sehen**.
+
+Er ist nicht weg — er steht vollständig in den Daten und kommt zurück,
+sobald das Blatt wieder höher wird. Aber ein Nutzer sieht das nicht, und
+„unsichtbar" fühlt sich an wie „gelöscht". Darum wird es GESAGT, mit Zahl,
+BEVOR irgendetwas geschieht:
+
+    ACHTUNG: 1 Marke läuft über eine Seitengrenze. Sie kommen ganz auf
+    EINE Seite und ragen dort über den Rand hinaus — sichtbar ist der
+    Überstand dann nicht mehr, verloren ist er nicht.
+
+Läuft keine über eine Grenze, steht das genauso da. Ein Dialog, der nur bei
+Gefahr etwas sagt, macht das Schweigen zur Information — und dann liest man
+es nicht mehr.
+
+## Die Reihenfolge, zum dritten Mal in diesem Bündel
+
+    1 die neuen Blätter MIT ihren Marken anlegen
+    2 danach das Original kürzen
+
+Andersherum wären die Seiten zwei bis n weg, bevor es sie gibt. So stehen
+im schlimmsten Fall Marken doppelt da — sichtbar und zu berichtigen. §51.
+
+## Der Griff ruht, wo es nichts zu zerlegen gibt
+
+Bei einer PDF-Seite oder einem einseitigen Blatt ist er gesperrt, mit
+`aria-disabled` und einem Hinweis, der den Grund nennt. Er verschwindet
+nicht: so bleibt die Reihe der Seitengriffe gleich, und wer ihn sucht,
+findet ihn mit seinem Grund (§38, dieselbe Form wie E498).
+
+GEPRÜFT. `test468` mit 29 Zusagen, drei Gegenproben rot gesehen (§55.2):
+ohne den Ruhezweig, ohne das Verschieben der Höhe, ohne die Zählung der
+Grenzgänger. Dazu test87, test105, test109, test440, test442, test443,
+test453, test466, test467 — alle grün. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts zerlegen` — die Frage vor dem Zerlegen.

@@ -6523,9 +6523,17 @@ Offen bleibt:
     Prozent einer Fläche ändert der sich mit dem Seitenverhältnis — am
     Telefon wären es andere Dreiecke als am Rechner (dieselbe Falle wie
     E100). Das ginge nur mit einem gezeichneten Muster.
-  · **Mehrseitige Notizhefte als EIN Block** — ein `blatt` wächst in die
-    Höhe (E118); Seitengriffe gelten ihm als Ganzem. Ein Heft mit drei
-    Blattseiten lässt sich nicht seitenweise drehen oder löschen.
+  · ~~**Mehrseitige Notizhefte als EIN Block**~~ — **GESCHLOSSEN mit E499,
+    und zwar ohne die Form abzuschaffen.** Ein `blatt` darf weiter in die
+    Höhe wachsen (E118) — das IST ein Heft, in das man fortlaufend
+    schreibt. Neu ist der Griff „In Seiten zerlegen": aus einem Blatt von
+    drei A4 werden drei Blätter von je einem, und danach greifen Drehen,
+    Löschen und Verschieben je Seite.
+    Jede Marke kommt auf die Seite, in der ihre MITTE liegt, und bleibt
+    GANZ — keine wird geschnitten. Eine Marke über einer Seitengrenze ragt
+    danach über den Rand hinaus und ist dort nicht mehr zu sehen (das
+    Papier schneidet); verloren ist sie nicht, und der Dialog sagt es mit
+    Zahl, bevor etwas geschieht. `test468`.
 
 Suche und Verweise (nach G4, E468): die Suche im Studio mit Treffern an
 der Stelle, die Verweise der PDF, eigene Verweise an Marken stehen.
