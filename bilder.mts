@@ -2090,6 +2090,42 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  neigung: {
+    titel: 'Der Bleistift schattiert, wenn man ihn flach hält (E507)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const seite = Store.addPage(null, { text: 'Schattieren', icon: '✏' });
+      /* Drei Striche derselben Länge und desselben Drucks — nur die
+         Neigung wächst. Was man sieht, ist allein ihr Werk. */
+      const strich = (id: string, y: number, n: number) => {
+        const pts: number[][] = [];
+        const neigung: number[] = [];
+        for (let i = 0; i <= 20; i++) {
+          pts.push([70 + i * 22, y + Math.sin(i / 3) * 6]);
+          neigung.push(n);
+        }
+        return { id, art: 'stift', stil: 'bleistift', farbe: '#2b2b2b', breite: 4,
+                 pts, pressure: pts.map(() => 0.6), neigung };
+      };
+      const beschriftung = (id: string, y: number, text: string) =>
+        ({ id, art: 'text', farbe: '#666666', point: [70, y], fontSize: 13, text });
+      Store.addBlock(seite.id, 'blatt', { text: '', papier: 'blanko',
+        blattBreite: 595.28, blattHoehe: 500, raumVersion: 1,
+        marken: [
+          beschriftung('t1', 100, 'senkrecht gehalten'),
+          strich('s1', 140, 0),
+          beschriftung('t2', 220, 'halb geneigt'),
+          strich('s2', 260, 0.5),
+          beschriftung('t3', 340, 'flach gehalten — schattiert'),
+          strich('s3', 380, 1)
+        ] });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1400));
+    }
+  },
+
   exporthinweis: {
     titel: 'Der PDF-Export sagt sichtbar, was er tut (E505)',
     bauen: async () => {

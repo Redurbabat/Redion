@@ -4632,3 +4632,29 @@ habe ich `git checkout` auf `marken.ts` gerufen und die noch nicht
 eingecheckten Änderungen dieses Bogens weggeworfen. Wiederhergestellt und
 grün — aber die Regel aus §43 gilt für die einzelne Datei genauso wie für
 `git restore .`.
+
+**Die Neigung des Stifts (E507, test475).** Von allem, was Pointer Events
+über einen Stift sagen können, las Redion die Neigung nicht — `tiltX`,
+`tiltY`, `twist`, `altitudeAngle`, `azimuthAngle` kamen im ganzen `src/`
+kein einziges Mal vor. Wer den Apple Pencil flach hielt, um zu
+schattieren, bekam denselben schmalen Strich wie bei senkrechtem Stift.
+
+Jetzt wird der Winkel Punkt für Punkt mitgeschrieben und wirkt auf den
+Bleistift: flach gehalten liegt mehr Graphit auf dem Papier, bis zum
+Doppelten der Breite, und dieselbe Menge auf mehr Papier ist heller.
+Gemessen bei gleichem Druck: 1,8 pt senkrecht gegen 3,3 pt flach. Nur der
+Bleistift — ein Füller wird durch Schräghalten nicht breiter.
+
+Wer keinen Winkel meldet, bekommt kein Feld: eine Maus, ein Finger und ein
+Stift ohne Sensor lassen `neigung` weg, statt Nullen zu erfinden. Eine
+alte Marke sieht deshalb aus wie immer.
+
+Der Fund kam im ersten Lauf des Prüflaufs: das Vereinfachen beim Absetzen
+indiziert `pressure` neu, und das neue Feld blieb in seiner alten Länge
+stehen — fünfzehn Neigungen zu acht Punkten. Von Hand wäre das nie
+aufgefallen, weil die Wirkung erst bei schneller Handbewegung sichtbar
+wird.
+
+Und der Druck sagt jetzt, woher er kommt: `druckArt` unterscheidet den
+gemessenen Sensordruck vom Tempo-Ersatz für Maus und Finger. Bis hierher
+lagen beide im selben Feld nebeneinander, ununterscheidbar.

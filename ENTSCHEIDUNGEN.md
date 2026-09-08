@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-486 Entscheidungen, E1 bis E506 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+487 Entscheidungen, E1 bis E507 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -550,6 +550,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E504** — Der Glätter rechnet in Zeit statt in Messungen, und ein abgebrochener Handballen wird verworfen
 * **E505** — CropBox und /Rotate werden endlich gefahren, und der PDF-Export sagt sichtbar, was er tut
 * **E506** — Handschrift wird eine echte /Ink-Annotation mit eigenem Erscheinungsbild, statt Teil des Bildes zu sein
+* **E507** — Die Neigung des Stifts: der Bleistift schattiert, und der Druck sagt, woher er kommt
 
 ---
 
@@ -40559,3 +40560,94 @@ test366, test437, test438, test440, test442, test443, test453, test460,
 test464, test465, test470, test471, test472, test473 — alle grün.
 Nicht geprüft: die Gesamtsuite.
 Bild: `node bilder.mts exporthinweis` — der neue Satz am Knopf.
+
+---
+
+E507 — Die Neigung des Stifts
+--------------------------------------------------------------------------
+
+Aus dem Stift-Dossier, Seite 5 und 8. Pointer Events Level 3 gibt `tiltX`,
+`tiltY`, `twist`, `altitudeAngle` und `azimuthAngle`; als Beispiel für das,
+was eine App damit macht, nennt das Dossier ausdrücklich „ein
+Pencil-Shading-Modell anhand des Tilt-Winkels".
+
+Redion las von alldem **nichts**. Gesucht im ganzen `src/`: `tiltX`,
+`tiltY`, `twist`, `altitudeAngle`, `azimuthAngle` — null Treffer. Wer den
+Apple Pencil flach hielt, um zu schattieren, bekam denselben schmalen
+Strich wie bei senkrechtem Stift. Die Geste, die jeder von Papier kennt,
+tat nichts.
+
+## Was jetzt geschieht
+
+`neigungAus` rechnet aus `tiltX` und `tiltY` eine Zahl von 0 (senkrecht)
+bis 1 (ganz flach) — über den Tangens und nicht über `hypot(tx, ty)`:
+Neigungen addieren sich in der Ebene über ihren Tangens, nicht als Winkel.
+
+Sie wandert Punkt für Punkt mit dem Strich mit, im Feld `neigung`, und
+wirkt auf den **Bleistift**: flach gehalten liegt mehr Graphit auf dem
+Papier, bis zum Doppelten der Breite, und dieselbe Menge Graphit auf mehr
+Papier ist heller — die Deckkraft sinkt von 0,72 auf bis zu 0,50.
+
+Gemessen (`test475` §3, gleicher Druck, nur der Winkel anders):
+
+```txt
+senkrecht   1,8 pt Fläche
+flach       3,3 pt Fläche
+```
+
+**Nur der Bleistift.** Ein Füller wird durch Schräghalten nicht breiter —
+die Feder liegt auf —, und ein Kugelschreiber schon gar nicht.
+
+## `-1` heisst nicht null Grad
+
+Eine Maus, ein Finger und ein Stift ohne Neigungssensor melden nichts, und
+dann steht auch nichts im Papier: kein Feld, keine Nullen, keine
+Migration. Ein Feld voller Nullen wäre eine Behauptung über einen Winkel,
+den niemand gemessen hat — und jede alte Mausnotiz trüge plötzlich
+Stiftdaten (§9).
+
+`test475` §4 hält den Gegenfall fest: eine Marke ohne `neigung` sieht aus
+wie immer, bis auf die zweite Stelle der Deckkraft.
+
+## Der Fund: zwei Felder, die auseinanderliefen
+
+Beim Absetzen vereinfacht Redion den Strich (`simplifyIndices`) und
+indiziert `pressure` neu. `neigung` blieb in seiner alten Länge stehen —
+**fünfzehn Neigungen zu acht Punkten**, und ab da gehörte `neigung[i]` zu
+einem anderen Punkt als `pts[i]`. Der Prüflauf hat es in seinem ersten
+Lauf gesehen; von Hand wäre es nie aufgefallen, weil die Wirkung bei
+langsam wechselndem Winkel klein ist und erst bei einer schnellen
+Handbewegung sichtbar würde.
+
+Das ist die Sorte Fehler, die ein neues Parallelfeld immer mitbringt. Wer
+das nächste anlegt, sucht `simplifyIndices` und trägt es dort ein.
+
+## Und der Druck sagt jetzt, woher er kommt
+
+Bis hierher wurde `zeigerArt` beim Absetzen weggeworfen. Danach lagen im
+Feld `pressure` gemessene Sensorwerte und die Tempo-Erfindung für Maus und
+Finger (E351/E376) nebeneinander, **ununterscheidbar**. Das Dossier
+verlangt auf Seite 5 und 17 genau diese Trennung: normalisieren ja,
+vermischen nein.
+
+`druckArt` ist jetzt `'stift'` oder `'tempo'`. Ein Wort am Strich kostet
+nichts und beantwortet die Frage für immer — auch für den PDF-Export, für
+eine spätere Wiedergabe und für die Frage, welche Striche überhaupt echte
+Telemetrie tragen (§55.1 der Datenschutzzeile in `LUECKEN.md`).
+
+## An vier Stellen, nicht an einer
+
+Die Neigung wirkt im **laufenden** Strich (`halbeBreite` — sonst wüchse
+der Bleistift erst beim Loslassen), beim **Zeichnen der fertigen** Marke,
+im **PDF-Export** (`alsAnnotation`) und in der **Deckkraft**. Alle vier
+gehen durch dieselbe `druckFaktor`, die dafür ein drittes Argument bekommen
+hat — kein zweiter Faktor daneben (§8).
+
+GEPRÜFT. `test475` neu mit 22 Zusagen, vor dem Bauen rot in zwölf. Zwei
+Gegenproben rot gesehen: die Neigung ohne Wirkung auf die Breite (die
+Fläche bleibt bei 1,7 pt), und die Neigung beim Vereinfachen nicht neu
+indiziert (fünfzehn zu acht). Dazu test87, test105, test109, test343,
+test351, test362, test366, test437, test438, test453, test464, test465,
+test470, test472, test474 — alle grün. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts neigung` — drei Striche, gleicher Druck, nur der
+Winkel wächst.

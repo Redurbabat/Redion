@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — siebenunddreissig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — achtunddreissig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -453,7 +453,17 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Bytes: die Seite zweimal gerendert, einmal ohne und einmal mit
     Annotationen, und der Unterschied ist der Beweis. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **siebenunddreissig Bögen**; die Überschrift
+  · **G38 — Die Neigung des Stifts** (E507, test475): `tiltX`, `tiltY`,
+    `twist`, `altitudeAngle` und `azimuthAngle` kamen im ganzen `src/`
+    kein einziges Mal vor. Jetzt schattiert der Bleistift, wenn man ihn
+    flach hält — gemessen 1,8 pt gegen 3,3 pt bei gleichem Druck. Nur der
+    Bleistift; ein Füller wird durch Schräghalten nicht breiter. Und der
+    Druck sagt seither, ob er gemessen oder aus dem Tempo gerechnet ist.
+    Fund nebenbei: das Vereinfachen beim Absetzen indizierte `pressure`
+    neu, das neue Feld aber nicht — fünfzehn Neigungen zu acht Punkten.
+    **Steht.**
+
+Der Auftrag heisst deshalb jetzt **achtunddreissig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

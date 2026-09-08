@@ -6705,6 +6705,16 @@ Was Redion auch nach G5 nicht haben wird, und warum:
     Stifts fasst bei 596 px genau vierzehn Knöpfe und ist mit vierzehn
     voll — drei Plätze mehr brächen sie in eine dritte Zeile und die
     Leiste über die 100 px aus E359.
+  · **Vom Stift bleiben Azimut und Drehung ungenutzt.** Seit **E507** liest
+    Redion die NEIGUNG (`tiltX`/`tiltY`) und schattiert damit den
+    Bleistift. Was Pointer Events darüber hinaus gibt, liegt weiter brach:
+    `azimuthAngle` (in welche Richtung der Stift zeigt) würde eine
+    Keilspitze für den Marker tragen — flach quer breit, längs schmal, wie
+    ein echter Textmarker; `twist` (die Drehung um die Längsachse) einen
+    Kalligrafie-Federkiel; `tangentialPressure` das Rädchen mancher
+    Stifte. Keines davon ist eine Lücke gegenüber GoodNotes — es sind
+    Wünsche, und sie stehen hier, damit die Frage beim nächsten Durchgang
+    nicht wieder bei null anfängt.
   · ~~**Der PDF-Export ist ein Bild je Seite**~~ — **zur Hälfte
     GESCHLOSSEN mit E506.** Die HANDSCHRIFT geht seither als echte
     `/Ink`-Annotation heraus: `/Rect`, `/InkList` im Default User Space,

@@ -264,12 +264,29 @@ const Marken = (() => {
     return [...SCHRIFT_STUFEN].reverse().find(v => v < jetzt) ?? SCHRIFT_STUFEN[0]!;
   };
   /** Der Breitenfaktor eines Punkts nach Druck und Stift. */
-  const druckFaktor = (stil: string, p: number): number => {
+  /**
+   * DIE NEIGUNG SCHATTIERT (E507).
+   *
+   * Aus dem Stift-Dossier, Seite 8: als Beispiel für reiche Stiftdaten
+   * nennt es „ein Pencil-Shading-Modell anhand des Tilt-Winkels" — den
+   * Bleistift, den man flach hält, um zu schattieren. Genau die Geste, die
+   * jeder von Papier kennt.
+   *
+   * `neig` ist 0 bei senkrechtem Stift und 1 bei ganz flachem. Sie wirkt
+   * NUR auf den Bleistift: ein Füller wird durch Schräghalten nicht
+   * breiter (die Feder liegt auf), und ein Kugelschreiber schon gar nicht.
+   * Wer keine Neigung meldet — Maus, Finger, ein Stift ohne Sensor —,
+   * bekommt 0 und damit genau das Verhalten von vorher.
+   */
+  const druckFaktor = (stil: string, p: number, neig = 0): number => {
     const d = Math.max(0.05, Math.min(1, Number.isFinite(p) ? p : 0.5));
+    const n = Math.max(0, Math.min(1, Number.isFinite(neig) ? neig : 0));
     if (stil === 'pinsel') return 0.3 + d * 1.7;
     /* Der Bleistift schwillt kaum — ein Graphitstift wird mit Druck
-       dunkler, nicht breiter; das Bisschen Breite hier ist der Winkel. */
-    if (stil === 'bleistift') return 0.35 + d * 0.6;
+       dunkler, nicht breiter; das Bisschen Breite hier ist der Winkel.
+       UND SEIT E507 IST DER WINKEL WIRKLICH DER WINKEL: flach gehalten
+       liegt mehr Graphit auf dem Papier, bis zum Doppelten. */
+    if (stil === 'bleistift') return (0.35 + d * 0.6) * (1 + n * 1.3);
     /* Eine Leitung hat eine Stärke, keine Handschrift (E490). */
     if (stil === 'schutzleiter') return 1;
     return 0.5 + d * 1.0;
@@ -353,9 +370,14 @@ const Marken = (() => {
     const base = Math.max(0.5, Number(mark.breite) || BREITEN[1]);
     const flaeche = mark.art === 'stift' && FLAECHEN_STIFTE.has(String(mark.stil));
     const druck: number[] = Array.isArray(mark.pressure) ? mark.pressure.map(Number) : [];
+    /* DIE NEIGUNG GEHT MIT INS PDF (E507). Ohne sie käme ein schattierter
+       Bleistiftstrich dünner heraus, als er auf dem Bildschirm aussah —
+       und der Export soll zeigen, was dasteht. */
+    const neig: number[] = Array.isArray(mark.neigung) ? mark.neigung.map(Number) : [];
     const kontur = flaeche && punkte.length >= 3
       ? InkGeometry.outlinePunkte(punkte, punkte.map((_p, i) =>
-          base / 2 * druckFaktor(String(mark.stil), druck[i] ?? druck[druck.length - 1] ?? 0.5)))
+          base / 2 * druckFaktor(String(mark.stil), druck[i] ?? druck[druck.length - 1] ?? 0.5,
+            neig[i] ?? neig[neig.length - 1] ?? 0)))
       : null;
     return {
       striche: [punkte.map(q => [q[0], q[1]])],
@@ -364,7 +386,13 @@ const Marken = (() => {
       /* Der Marker ist auf dem Bildschirm viermal so breit wie seine Zahl
          (siehe `strokeWidth`) — im PDF muss er dieselbe Breite haben. */
       breite: mark.art === 'marker' ? base * 4 : base,
-      deckkraft: mark.art === 'marker' ? 0.32 : 1,
+      /* Der Bleistift ist durchscheinend, und flach gehalten noch mehr —
+         dieselbe Zahl wie am Bildschirm (E465, E507). */
+      deckkraft: mark.art === 'marker' ? 0.32
+        : String(mark.stil) === 'bleistift'
+          ? Math.round((0.72 - (neig.length
+              ? neig.reduce((a, b) => a + (Number(b) || 0), 0) / neig.length : 0) * 0.22) * 100) / 100
+        : String(mark.stil) === 'pinsel' ? 0.92 : 1,
       name: mark.art === 'marker' ? 'Marker' : 'Handschrift'
     };
   };
@@ -706,7 +734,13 @@ const Marken = (() => {
          (alter Bestand) bleibt es beim gleichmaessigen Strich unten. */
       const base = Math.max(0.5, Number(mark.breite) || BREITEN[1]);
       const druck: number[] = Array.isArray(mark.pressure) ? mark.pressure.map(Number) : [];
-      const halb = points.map((_p, i) => base / 2 * druckFaktor(String(mark.stil), druck[i] ?? druck[druck.length - 1] ?? 0.5));
+      /* Eine Marke ohne `neigung` ist alter Bestand oder mit der Maus
+         gezogen — dann ist die Neigung überall 0, und es kommt heraus,
+         was vorher herauskam (§9: rückwärts denken). */
+      const neig: number[] = Array.isArray(mark.neigung) ? mark.neigung.map(Number) : [];
+      const neigBei = (i: number): number => neig[i] ?? neig[neig.length - 1] ?? 0;
+      const halb = points.map((_p, i) => base / 2 * druckFaktor(String(mark.stil),
+        druck[i] ?? druck[druck.length - 1] ?? 0.5, neigBei(i)));
       element = svg('path', { d: InkGeometry.outline(points, halb), fill: color, stroke: color,
         'stroke-width': 0.25, 'stroke-linejoin': 'round' });
       if (mark.stil === 'pinsel') element.setAttribute('opacity', '0.92');
@@ -715,7 +749,13 @@ const Marken = (() => {
          die Flaeche bleibt durchscheinend. Kein Filter: ein `feTurbulence`
          je Strich kostet auf einer vollen Seite ein Bild je Bild. */
       if (mark.stil === 'bleistift') {
-        element.setAttribute('opacity', '0.72');
+        /* FLACH IST WEICHER (E507). Ein flach gehaltener Bleistift trägt
+           breiter auf, aber nicht dunkler — dieselbe Menge Graphit auf
+           mehr Papier. Ohne Neigung bleibt es bei den 0,72 von E465, und
+           genau das hält `test475` §4 fest. */
+        const mittel = neig.length
+          ? neig.reduce((a, b) => a + (Number(b) || 0), 0) / neig.length : 0;
+        element.setAttribute('opacity', String(Math.round((0.72 - mittel * 0.22) * 100) / 100));
         element.setAttribute('stroke-width', '0.7');
         element.setAttribute('stroke-dasharray', '0.9 0.6');
       }
@@ -1482,6 +1522,32 @@ const Marken = (() => {
       return radiereEine(index, [roh[0] ?? 0, roh[1] ?? 0], radierRadius());
     };
 
+    /**
+     * WIE FLACH LIEGT DER STIFT (E507)?
+     *
+     * Pointer Events Level 3 gibt `tiltX` und `tiltY` — die Neigung gegen
+     * die Senkrechte, je Achse, in Grad von −90 bis 90 (Dossier S.5).
+     * Zusammen ergeben sie den Winkel gegen das Papier; hier wird daraus
+     * eine Zahl von 0 (senkrecht) bis 1 (ganz flach).
+     *
+     * `-1` heisst NICHT GEMELDET, und das ist etwas anderes als „null
+     * Grad": eine Maus, ein Finger und ein Stift ohne Neigungssensor
+     * bekommen kein Feld, statt eines mit erfundenen Nullen. Sonst
+     * trüge jede alte Mausnotiz plötzlich Stiftdaten (§9).
+     */
+    const neigungAus = (event: PointerEvent): number => {
+      if (event.pointerType !== 'pen') return -1;
+      const tx = Number((event as any).tiltX) || 0;
+      const ty = Number((event as any).tiltY) || 0;
+      if (!tx && !ty) return -1;
+      /* Der Winkel gegen die Senkrechte aus beiden Achsen. `tan` addiert
+         sich in der Ebene, nicht die Winkel selbst — deshalb über den
+         Tangens und nicht über `hypot(tx, ty)`. */
+      const r = Math.PI / 180;
+      const w = Math.atan(Math.hypot(Math.tan(tx * r), Math.tan(ty * r))) / r;
+      return Math.round(Math.max(0, Math.min(1, w / 90)) * 100) / 100;
+    };
+
     const pressureOf = (event: PointerEvent): number => {
       const pressure = Number(event.pressure);
       return pressure > 0 ? Math.max(0.05, Math.min(1, pressure)) : 0.5;
@@ -1560,6 +1626,10 @@ const Marken = (() => {
       if (last && Math.abs(last[0] - point[0]) < 0.6 && Math.abs(last[1] - point[1]) < 0.6) return;
       running.pts.push(point);
       running.pressure.push(druck);
+      /* Die Neigung wandert Punkt für Punkt mit — aber nur, wenn der Stift
+         sie meldet. Eine `-1` heisst „nicht gemeldet"; sie wird beim
+         Absetzen zu nichts, statt zu einer Null zu werden (E507). */
+      if (running.neigung) running.neigung.push(neigungAus(event));
       /* Die Uhr läuft erst weiter, wenn die Hand ihren Ruhepunkt VERLÄSST
          (E490) — ein Zittern an derselben Stelle ist keine Bewegung. */
       const ruhe = running.ruhePunkt;
@@ -1575,7 +1645,15 @@ const Marken = (() => {
        hier anders, spraenge der Strich beim Absetzen des Stifts. */
     const halbeBreite = (mark: any, druck: number): number => {
       const base = Math.max(0.5, Number(mark?.breite) || BREITEN[1]);
-      return base / 2 * druckFaktor(String(mark?.stil || ''), druck);
+      /* AUCH DER NASSE STRICH KENNT DIE NEIGUNG (E507). Ohne diese Zeile
+         wüchse der Bleistift erst beim Absetzen — man hielte den Stift
+         flach, sähe einen schmalen Strich, liesse los, und er würde
+         plötzlich breit. Genommen wird die letzte gemeldete Neigung: der
+         Winkel ändert sich langsam, der Strich läuft schnell. */
+      const neig: number[] = Array.isArray(mark?.neigung) ? mark.neigung : [];
+      const n = Number(neig[neig.length - 1]);
+      return base / 2 * druckFaktor(String(mark?.stil || ''), druck,
+        Number.isFinite(n) && n > 0 ? n : 0);
     };
 
     /* ---- EIN BILD JE BILD, NICHT JE EREIGNIS (E376) ----------------------
@@ -1918,7 +1996,24 @@ const Marken = (() => {
       feder = null; glatt = null; druckGlatt = null; letzteZeit = 0; nassFlaeche = false;
       rohLetzter = null;
       running = null; runningNode = null; beforeRunning = null;
+      /* WOHER DER DRUCK KAM, BLEIBT AM STRICH (E507).
+         Bis hierher wurde `zeigerArt` beim Absetzen weggeworfen, und danach
+         lagen im Feld `pressure` gemessene Sensorwerte und die
+         Tempo-Erfindung für Maus und Finger nebeneinander, ununterscheidbar.
+         Das Dossier (S.5, S.17) verlangt genau diese Trennung: Druck und
+         Winkel normalisieren, aber die Herkunft nicht vergessen. Ein Wort
+         am Strich kostet nichts und beantwortet die Frage für immer. */
+      if (mark.art === 'stift' || mark.art === 'marker')
+        mark.druckArt = mark.zeigerArt === 'pen' ? 'stift' : 'tempo';
       delete mark.zeigerArt;
+      /* DIE NEIGUNG NUR, WENN SIE GEMELDET WURDE. `-1` heisst „kein
+         Sensor"; ein Feld voller Nullen wäre eine Behauptung über den
+         Winkel, den niemand gemessen hat. */
+      if (Array.isArray(mark.neigung)) {
+        const echt = mark.neigung.map((v: unknown) => Number(v));
+        if (echt.some((v: number) => v >= 0)) mark.neigung = echt.map((v: number) => v < 0 ? 0 : v);
+        else delete mark.neigung;
+      }
       const gehalten = Date.now() - (Number(mark.bewegtUm) || 0) >= HALTEN_MS;
       delete mark.bewegtUm;
       delete mark.ruhePunkt;
@@ -2022,10 +2117,20 @@ const Marken = (() => {
           if (original.length >= 8 && indizes.length < 8)
             indizes = Array.from({ length: 8 }, (_value, index) =>
               Math.round(index * (original.length - 1) / 7));
+          /* DIE NEIGUNG WIRD MIT NEU INDIZIERT (E507). Das Vereinfachen wirft
+             Stützpunkte weg; wer nur `pts` und `pressure` mitnimmt, lässt
+             `neigung` in der alten Länge stehen — und ab da gehört
+             `neigung[i]` zu einem anderen Punkt als `pts[i]`. Der Prüflauf
+             hat es gesehen: fünfzehn Neigungen zu acht Punkten. */
+          const neigRoh: number[] = Array.isArray(mark.neigung) ? mark.neigung.map(Number) : [];
           mark.pts = indizes.map(i => original[i]);
           mark.pressure = indizes.map(i => {
             const v = druckRoh[i];
             return Math.round((Number.isFinite(v) ? (v as number) : mittel) * 100) / 100;
+          });
+          if (neigRoh.length) mark.neigung = indizes.map(i => {
+            const v = neigRoh[i];
+            return Number.isFinite(v) ? (v as number) : 0;
           });
         }
       } else if (mark.pts.length < 2 ||
@@ -2373,6 +2478,9 @@ const Marken = (() => {
         running = { id, art: tool, farbe: tool === 'marker' && color === FARBEN[0] ? MARKER_FARBE : color,
           breite: width, pts: [point], pressure: [], zeigerArt: e.pointerType };
         if (tool === 'stift' && stil !== 'kugel') running.stil = stil;
+        /* DIE NEIGUNG WIRD MITGESCHRIEBEN (E507) — vorerst in ein Feld, das
+           es beim Absetzen nur behält, wenn wirklich etwas darin steht. */
+        running.neigung = [neigungAus(e)];
         running.pressure.push(druckAus(event, point));
         const p0 = running.pressure[0];
         /* DER AUFSETZPUNKT GEHT UNGEGLAETTET DURCH (E376): ein Strich, der
