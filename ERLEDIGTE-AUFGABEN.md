@@ -4464,3 +4464,43 @@ Und das Bild fand den Ausschnitt: die Abfragesprache schnitt aus dem Text
 der ganzen Seite, bei einem Dokument also aus allen Seiten hintereinander —
 mitten im Wort („…trom Kapitel 2 —"). Jetzt gewinnt der Ausschnitt der
 Stelle.
+
+**Ein Farbsatz wird eine Voreinstellung (E501, test470 §1–§3).** Das
+Dossier verlangt „Farben und Stärken … als Presets". Redion hatte seit
+E458 die Farben unter einem Namen; die Stärke und der Stift fehlten. Wer
+zum Korrigieren einen dünnen roten Kugelschreiber wollte und zum
+Markieren einen dicken Füller, holte die Farben zurück und stellte den
+Rest jedes Mal neu.
+
+Kein zweiter Katalog daneben (§8), sondern zwei optionale Felder am
+vorhandenen Satz. Optional ist die Rückwärtsregel: ein Satz aus der Zeit
+davor lädt weiter genau seine Farben und verspricht auch nichts anderes —
+der Hinweis in der Liste nennt Stift und Stärke nur, wenn der Satz sie
+trägt.
+
+Der Fund kam ungeplant und war grösser als die Aufgabe: eine
+Strichstärke steht an VIER Orten — in der Fläche, in `Zeichenziel`, in den
+Stufenknöpfen und im Regler. Der erste Entwurf setzte den ersten, und der
+Prüflauf las danach 1,2 statt 5. Regler und Stufenknöpfe hatten je ihre
+eigene Abschrift derselben vier Zeilen; jetzt gibt es `strichSetzen` als
+eine Tür, und alle drei Wege gehen hindurch.
+
+**GIF und Formelbuch als Marke (E502, test470 §4–§6).** Redurs Satz war
+„das ich gifs und mein Formelbuch hier einfügen kann und so kleiner
+grösser machen kann, verschieben kann" — und beides ging nicht so, wie er
+es meinte.
+
+Ein GIF kam durch `image/*` zwar herein, aber geprüft war nie, dass es als
+GIF liegen bleibt. Jetzt hält der Prüflauf fest, dass die Datei mit ihrem
+Typ und ihrer Länge in die Ablage geht; damit läuft die Bewegung auf dem
+Blatt weiter, statt als Standbild dazustehen.
+
+Eine PDF liess sich bis hierher nur als SEITEN einfügen (E469) — richtig
+für ein Skript, falsch für eine Formelsammlung, von der man EINE Seite
+neben die Aufgabe legen will. Als Bildmarke ist sie beides: verschieben,
+an den Ecken ziehen, drehen und sperren kann sie dieselbe Auswahl wie
+jede andere Marke. Es brauchte kein neues Werkzeug und keine neue
+Markenart — nur einen zweiten Weg in `bildAblegen` hinein. Gerastert,
+nicht eingebettet (wie E488): der Text darin ist danach nicht mehr
+durchsuchbar, dafür braucht das Blatt beim Öffnen keine fremde
+Bibliothek.

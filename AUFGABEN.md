@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — einunddreissig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — dreiunddreissig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -403,7 +403,21 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Textmarke war unauffindbar. Die Gegenprobe hat einen zweiten Sprungweg
     entlarvt, den `zeigeBlock` längst konnte. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **einunddreissig Bögen**; die Überschrift
+  · **G32 — Ein Farbsatz wird eine Voreinstellung** (E501, test470 §1–§3):
+    das Dossier verlangt „Farben und Stärken … als Presets". Redion hatte
+    die Farben; Stift und Strichstärke fehlten. Kein zweiter Katalog,
+    sondern zwei optionale Felder am vorhandenen Satz — ein Satz von
+    vorher lädt weiter genau seine Farben. Der Fund nebenbei: die
+    Strichstärke steht an vier Orten, und drei Wege dorthin waren drei
+    Abschriften. Jetzt eine Tür. **Steht.**
+
+  · **G33 — GIF und Formelbuch als Marke** (E502, test470 §4–§6): ein GIF
+    geht mit seinem Typ und seiner Länge in die Ablage und läuft deshalb
+    auf dem Blatt weiter; eine PDF-Seite wird zur Bildmarke und lässt sich
+    verschieben, ziehen, drehen und sperren wie jede andere. Kein neues
+    Werkzeug — ein zweiter Weg in `bildAblegen`. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **dreiunddreissig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

@@ -2009,6 +2009,87 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  formelbuch: {
+    titel: 'Das Formelbuch als Marke — verschieben, ziehen, drehen (E502)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      /* Eine Seite, die aussieht wie eine Formelbuchseite — gezeichnet,
+         damit das Bild ohne fremde Datei auskommt. Der WEG dahin ist im
+         Prüflauf (test470 §4): PDF wählen, Seite nennen, gerastert. */
+      const mal = (breit: number, hoch: number, tun: (c: CanvasRenderingContext2D) => void) => {
+        const l = document.createElement('canvas');
+        l.width = breit; l.height = hoch;
+        const c = l.getContext('2d')!;
+        tun(c);
+        return new Promise<Blob>(f => l.toBlob(b => f(b!), 'image/png'));
+      };
+      const seiteBlob = await mal(620, 877, c => {
+        c.fillStyle = '#fdfdfb'; c.fillRect(0, 0, 620, 877);
+        c.strokeStyle = '#d8d8d0'; c.lineWidth = 2; c.strokeRect(1, 1, 618, 875);
+        c.fillStyle = '#111'; c.font = 'bold 30px sans-serif';
+        c.fillText('Formelsammlung', 48, 76);
+        c.font = '18px sans-serif'; c.fillStyle = '#333';
+        const zeilen = ['Ohmsches Gesetz      U = R · I',
+          'Leistung             P = U · I = R · I²',
+          'Reihenschaltung      R = R₁ + R₂ + R₃',
+          'Parallelschaltung    1/R = 1/R₁ + 1/R₂',
+          'Arbeit               W = P · t',
+          'Wirkungsgrad         η = P_ab / P_zu',
+          'Leiterwiderstand     R = ρ · l / A',
+          'Spannungsteiler      U₂ = U · R₂/(R₁+R₂)'];
+        zeilen.forEach((z, i) => c.fillText(z, 48, 140 + i * 46));
+        c.strokeStyle = '#c9d4e4'; c.lineWidth = 1;
+        for (let y = 118; y < 860; y += 46) { c.beginPath(); c.moveTo(40, y); c.lineTo(580, y); c.stroke(); }
+      });
+      const gifBlob = await mal(120, 120, c => {
+        c.fillStyle = '#ffd75e'; c.beginPath(); c.arc(60, 60, 56, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#111'; c.beginPath(); c.arc(42, 48, 7, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(78, 48, 7, 0, Math.PI * 2); c.fill();
+        c.strokeStyle = '#111'; c.lineWidth = 6; c.beginPath();
+        c.arc(60, 62, 30, 0.25 * Math.PI, 0.75 * Math.PI); c.stroke();
+      });
+      const seite = Store.addPage(null, { text: 'Prüfungsvorbereitung', icon: '📐' });
+      const blatt = Store.addBlock(seite.id, 'blatt', { text: '', papier: 'liniert',
+        blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1, marken: [] });
+      Store.addBlock(blatt.id, 'text', { text: 'Aufgabe 4 — Reihenschaltung berechnen' });
+      const buch = await Dateien.ablegen(new File([seiteBlob], 'Formelbuch — Seite 12.png',
+        { type: 'image/png' }), { blockId: blatt.id, name: 'Formelbuch — Seite 12.png' });
+      const gif = await Dateien.ablegen(new File([gifBlob], 'daumen.gif',
+        { type: 'image/gif' }), { blockId: blatt.id, name: 'daumen.gif' });
+      Store.updateBlock(blatt.id, { marken: [
+        { id: 'buch', art: 'bild', dateiId: buch.id, pts: [[290, 60], [545, 420]] },
+        { id: 'gif', art: 'bild', dateiId: gif.id, pts: [[70, 300], [140, 370]] },
+        { id: 'notiz', art: 'stift', farbe: '#d64545', breite: 3,
+          pts: [[60, 120], [250, 120]] },
+        { id: 'notiz2', art: 'text', farbe: '#2f7ed8', point: [60, 170], fontSize: 15,
+          text: 'R gesamt = R1 + R2' }
+      ] });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1200));
+      /* Die Buchseite wählen, damit die Griffe zu sehen sind — genau das,
+         womit man sie kleiner macht und verschiebt. */
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="select"]')?.click();
+      await new Promise(r => setTimeout(r, 250));
+      const flaeche = document.querySelector<HTMLElement>('.blatt-marken');
+      const knoten = flaeche?.querySelector<HTMLElement>('[data-sid="buch"]');
+      const kasten = knoten?.getBoundingClientRect();
+      if (kasten && knoten) {
+        const x = kasten.left + kasten.width / 2, y = kasten.top + kasten.height / 2;
+        const ev = (typ: string, dx: number, buttons: number) => new PointerEvent(typ,
+          { bubbles: true, cancelable: true, clientX: x + dx, clientY: y,
+            pointerId: 3, pointerType: 'mouse', isPrimary: true, button: 0, buttons });
+        knoten.dispatchEvent(ev('pointerdown', 0, 1));
+        flaeche?.dispatchEvent(ev('pointermove', 1, 1));
+        flaeche?.dispatchEvent(ev('pointerup', 1, 0));
+      }
+      await new Promise(r => setTimeout(r, 600));
+      document.querySelector('.blatt-papier')?.scrollIntoView({ block: 'start' });
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
   schalensuche: {
     titel: 'Die Schalensuche nennt die Seite im Dokument (E500)',
     bauen: async () => {

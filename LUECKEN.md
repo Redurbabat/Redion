@@ -6684,9 +6684,21 @@ Was Redion auch nach G5 nicht haben wird, und warum:
   · **GIPHY** bleibt draussen, und das ist der Teil der Zeile, der stimmt:
     eine Bildersuche im Netz widerspricht §21 und §22 und brächte fremde
     Inhalte in eine App, die ohne Netz vollständig sein soll.
+    **Ein eigenes GIF geht dagegen seit E502** — und das war der Teil, der
+    Redur gemeint hat: die Datei geht mit IHREM Typ und IHRER Länge in die
+    Ablage, läuft also auf dem Blatt weiter, statt als Standbild
+    dazustehen. Nicht geprüft war das vorher nie; jetzt hält es `test470`.
+    Dasselbe Werkzeug nimmt seither eine PDF-SEITE als Bildmarke —
+    verschieben, ziehen, drehen, sperren wie jede andere Marke.
   · **Stift-Favoriten** kommen NICHT, und das ist eine Entscheidung, keine
     Lücke (E498). GoodNotes' drei Favoriten sind FARB-Voreinstellungen —
     die hat Redion seit E486 als benannte Farbsätze, und die können mehr.
+    **Seit E501 können sie wirklich mehr**, und bis dahin war der Satz
+    grosszügig: ein Farbsatz merkt sich jetzt AUCH den Stift und die
+    Strichstärke. Damit ist der Preset-Satz des Dossiers („Farben und
+    Stärken … als Presets") ganz erfüllt, ohne einen zweiten Katalog —
+    zwei optionale Felder am vorhandenen Satz, und ein alter Satz ohne sie
+    lädt weiter genau seine Farben.
     Ein zweiter Katalog daneben wäre genau das, wovor §8 warnt. Der Satz
     steht hier, damit die Frage beim nächsten Durchgang nicht wiederkommt.
     Nachgemessen wäre es ausserdem nicht umsonst: die Zubehörzeile des

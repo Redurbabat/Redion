@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-480 Entscheidungen, E1 bis E500 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+482 Entscheidungen, E1 bis E502 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -544,6 +544,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E498** — Die zwei letzten Reste: „Ausschnitt" ruht sichtbar, und Seiten wandern über Spaltengrenzen
 * **E499** — Ein mehrseitiges Blatt in Seiten zerlegen: jede Marke behält ihre Seite, keine wird geschnitten
 * **E500** — Die Schalensuche findet die Stelle im Dokument — und endlich auch, was von Hand geschrieben ist
+* **E501** — Ein Farbsatz wird eine Voreinstellung: Farben, Stift und Strichstärke unter einem Namen
+* **E502** — Das Formelbuch und das GIF auf dem Blatt: eine PDF-Seite als bewegliche, ziehbare Bildmarke
 
 ---
 
@@ -40000,3 +40002,137 @@ selbst — der grün blieb und deshalb wieder weg ist. Dazu test87, test105,
 test109, test229 (die Filter der Suche), test459 (die Suche im Studio) —
 alle grün. Nicht geprüft: die Gesamtsuite.
 Bild: `node bilder.mts schalensuche` — die Liste mit „Seite 3" und „Seite 2".
+
+---
+
+E501 — Ein Farbsatz wird eine Voreinstellung
+--------------------------------------------------------------------------
+
+Redurs Dossier, Abschnitt „Stift, Bleistift, Marker und Radierer":
+
+> „Farben und Stärken lassen sich anpassen und als Presets bereithalten."
+
+Redion hatte seit E458 Farbsätze — Farben unter einem Namen. Was fehlte,
+war die Hälfte des Satzes: die STÄRKE, und der Stift dazu. Wer für die
+Korrektur einen dünnen roten Kugelschreiber will und fürs Markieren einen
+dicken Füller, holte bisher die Farben zurück und stellte den Rest jedes
+Mal neu.
+
+## Kein zweiter Katalog, zwei Felder mehr
+
+Die naheliegende Lösung wäre ein eigenes Preset-Register neben den
+Farbsätzen gewesen. Das ist genau der zweite Katalog aus §8: zwei Listen
+für dieselbe Sache, die auseinanderlaufen, und niemand sieht, welche gilt.
+
+Stattdessen bekommt der vorhandene Satz zwei optionale Felder:
+
+```ts
+type Farbsatz = { name: string; farben: string[]; stil?: string; breite?: number }
+```
+
+**Beide sind optional, und das ist die Rückwärtsregel** (§9): ein Satz aus
+der Zeit vor E501 hat sie nicht und lädt weiter genau seine Farben. Er
+verspricht dann auch nichts anderes — der Hinweis in der Liste nennt Stift
+und Stärke nur, wenn der Satz sie wirklich trägt.
+
+Beim Einlesen wird geprüft, was es GIBT: ein Stift, den dieser Stand nicht
+kennt, fällt weg, statt beim Laden ins Leere zu greifen. Eine Breite muss
+eine endliche Zahl über null sein.
+
+## Der Fund, der nicht geplant war: die Stärke stand an vier Orten
+
+Der erste Entwurf setzte beim Laden `controls.setzeStrich(satz.breite)` —
+und der Prüflauf las danach 1,2 statt 5.
+
+Eine Strichstärke steht nämlich an VIER Stellen: in der Fläche, die
+zeichnet; in `Zeichenziel`, das sie für die anderen Anzeigen merkt; in den
+Stufenknöpfen, die sie zeigen; und im Regler, der ihre Zahl nennt. Wer nur
+die erste setzt, hat sie gesetzt und nirgends gezeigt — und `markiere()`
+las beim nächsten Malen den alten Wert zurück.
+
+Das war schon vorher so, nur fiel es nicht auf, weil Regler und
+Stufenknöpfe je ihre eigene Abschrift derselben vier Zeilen hatten. Jetzt
+gibt es `strichSetzen(wert)` als eine Tür, und alle drei Wege gehen
+hindurch — der Regler, die Stufenknöpfe und das Laden.
+
+Dieselbe Sache beim Stift: sein Zeichen, sein Wort und sein `data-stil`
+standen nur im Klickgriff. Mit dem Laden gäbe es einen zweiten Aufrufer,
+also gibt es `stiftZeigen(id)`.
+
+## Was der Nutzer sieht
+
+Der Knopf heisst nicht mehr „Diese Farben sichern", sondern „Diese
+Einstellung sichern", und der Hinweis sagt, was mitkommt. Beim Laden sagt
+eine Meldung, ob es nur Farben waren oder Farben, Stift und Strichstärke.
+Ein still verschluckter Unterschied wäre schlimmer als eine Absage (§35).
+
+GEPRÜFT. `test470` §1–§3 (Sichern mit Stift und Stärke, Laden setzt alle
+vier Orte, ein alter Satz ohne beides bleibt gültig), `test458` in der
+angepassten Form — `farbsatzLaden` gibt seit hier den ganzen Satz zurück
+und nicht nur die Farben, weil zwei Griffe für eine Voreinstellung einer zu
+viel wären (§8). Gegenproben rot gesehen (§55.2): ein Satz, der `stil` und
+`breite` vergisst; ein Laden ohne `stiftZeigen`. Dazu test87, test105,
+test109, test343, test348, test351, test438, test458, test464 — alle grün.
+Nicht geprüft: die Gesamtsuite.
+Messung statt Bild: die Werte stehen im Prüflauf, das Bild zeigte nichts
+Neues (§55.3).
+
+---
+
+E502 — Das GIF und die PDF-Seite als Marke: schieben, ziehen, drehen
+--------------------------------------------------------------------------
+
+Redur, zum Dossier:
+
+> „auch das ich gifs und mein Formelbuch hier einfügen kann und so kleiner
+> grösser machen kann, verschieben kann."
+
+Beides ging bis hierher nicht so, wie er es meinte.
+
+## Das GIF lief nicht
+
+Ein GIF kam durch `image/*` zwar herein, wurde aber wie jedes Bild
+behandelt. Geprüft war das nie. Der Prüflauf zeigt jetzt, dass die Datei
+mit IHREM Typ und IHRER Grösse in die Ablage geht — `image/gif`, Byte für
+Byte dieselbe Länge. Damit läuft die Bewegung auf dem Blatt weiter, statt
+als Standbild dazustehen: der Browser animiert ein `<image>` mit
+GIF-Quelle von selbst, solange die Bytes ein GIF bleiben.
+
+## Die PDF war nur als SEITEN einzufügen
+
+E469 kann eine PDF in ein Dokument einfügen — als ganze Seiten. Das ist
+das Richtige für ein Skript und das Falsche für eine Formelsammlung, von
+der man EINE Seite neben die Aufgabe legen will.
+
+Als Bildmarke ist sie beides, was Redur wollte: verschieben, an den Ecken
+ziehen, drehen und sperren kann sie danach dieselbe Auswahl wie jede
+andere Marke (E353, E466, E474). Es brauchte dafür kein neues Werkzeug und
+keine neue Markenart — nur einen zweiten Weg IN `bildAblegen` hinein.
+
+## Gerastert, nicht eingebettet
+
+Die gewählte Seite wird einmal gezeichnet und liegt danach als Bild im
+Dateispeicher; die PDF selbst reist nicht mit. Dieselbe Entscheidung wie
+E488 und aus demselben Grund: der Text darin ist danach nicht mehr
+durchsuchbar, dafür braucht das Blatt beim Öffnen keine fremde Bibliothek
+— und ein Blatt, das eine 40-MB-PDF nachladen muss, um eine Ecke zu
+zeigen, ist auf dem Telefon keins.
+
+Hat die PDF mehr als eine Seite, wird gefragt, welche. Eine Zahl ausserhalb
+sagt, welche es gibt, statt still die erste zu nehmen.
+
+## `accept` nennt die PDF ausdrücklich
+
+`image/*,image/gif,application/pdf,.pdf` — die beiden letzten Einträge
+stehen da, weil der Wähler je nach System sonst die PDF ausgraut, und
+`image/gif` steht da, obwohl `image/*` es abdeckt: ein Wähler, der die
+Sorte nicht ausdrücklich kennt, sortiert sie mancherorts weg.
+
+GEPRÜFT. `test470` §4–§6: eine echte GIF-Datei geht mit ihrem Typ und
+ihrer Länge in die Ablage; eine echte, im Prüflauf gebaute PDF wird zur
+Bildmarke; die Marke lässt sich wählen, ziehen und verschieben. Gegenproben
+rot gesehen (§55.2): das GIF mit anderem Typ ablegen; den PDF-Zweig
+abschalten. Dazu test87, test105, test109, test343, test348, test351,
+test438, test458, test464 — alle grün. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts formelbuch` — die Buchseite gewählt, mit Griffen zum
+Ziehen und Drehen, daneben ein GIF-Aufkleber.

@@ -178,7 +178,8 @@ const Marken = (() => {
     { id: 'elemente', zeichen: '⭐', name: 'Elemente',
       titel: 'Ein gesichertes Element setzen — sichern über die Auswahl («Als Element»)' },
     { id: 'bild', zeichen: '🖼', name: 'Bild',
-      titel: 'Ein Foto oder Bild auf das Blatt legen — danach verschieben und ziehen wie jede Marke' },
+      titel: 'Ein Foto, ein GIF oder eine Seite aus einer PDF auf das Blatt legen — '
+        + 'danach verschieben, ziehen und drehen wie jede Marke' },
     { id: 'radierer', zeichen: '⌫', name: 'Radieren',
       titel: 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker' }
   ] as const;
@@ -1606,10 +1607,68 @@ const Marken = (() => {
       commit(before);
       return true;
     };
+    /**
+     * EINE PDF-SEITE ALS BILD AUF DAS BLATT (E502).
+     *
+     * Redurs Bitte: „das ich … mein Formelbuch hier einfügen kann und so
+     * kleiner grösser machen kann, verschieben kann." Bis hierher konnte
+     * Redion eine PDF nur als SEITEN einfügen (E469) — ganze Seiten im
+     * Dokument, nicht verschiebbar, nicht skalierbar.
+     *
+     * Als BILDMARKE ist sie beides: verschieben, ziehen, drehen und sperren
+     * kann sie danach dieselbe Auswahl wie jede andere Marke (E353, E466,
+     * E474). Es braucht dafür kein neues Werkzeug und keine neue Marke —
+     * nur einen zweiten Weg IN `bildAblegen` hinein.
+     *
+     * GERASTERT, NICHT EINGEBETTET. Die Seite wird einmal gezeichnet und
+     * liegt danach als Bild im Dateispeicher; die PDF selbst reist nicht
+     * mit. Das ist dieselbe Entscheidung wie in E488 und aus demselben
+     * Grund: der Text darin ist danach nicht mehr durchsuchbar, dafür
+     * braucht das Blatt beim Öffnen keine fremde Bibliothek.
+     */
+    const pdfAlsBildmarke = async (datei: File, mitte?: number[]): Promise<boolean> => {
+      if (typeof PdfLeser === 'undefined') {
+        UI.toast('Der PDF-Leser ist gerade nicht da.');
+        return false;
+      }
+      let leser: any = null;
+      try {
+        /* `oeffne` will die BYTES, nicht die Datei — nachgeschlagen in
+           `leser.ts`, nicht geraten (E21). */
+        leser = await PdfLeser.oeffne(new Uint8Array(await datei.arrayBuffer()));
+        let nr = 1;
+        if (leser.seiten > 1) {
+          if (typeof Dialog === 'undefined') return false;
+          const antwort = await Dialog.frage(
+            'Welche Seite aus „' + datei.name + '"? (1 bis ' + leser.seiten + ')', '1');
+          if (antwort === null) return false;
+          const gewaehlt = Math.round(Number(String(antwort).replace(',', '.')));
+          if (!Number.isFinite(gewaehlt) || gewaehlt < 1 || gewaehlt > leser.seiten) {
+            UI.toast('Diese PDF hat die Seiten 1 bis ' + leser.seiten + '.');
+            return false;
+          }
+          nr = gewaehlt;
+        }
+        const blob = await leser.alsBild(nr);
+        const name = datei.name.replace(/\.pdf$/i, '') + ' — Seite ' + nr + '.webp';
+        return await bildAblegen(new File([blob], name, { type: blob.type || 'image/webp' }), mitte);
+      } catch (e: unknown) {
+        UI.toast('Diese PDF liess sich nicht einfügen: ' + (e instanceof Error ? e.message : String(e)));
+        return false;
+      } finally {
+        try { leser?.schliessen?.(); } catch { /* egal */ }
+      }
+    };
+
     const bildEinfuegen = (mitte?: number[]): Promise<boolean> => new Promise(fertig => {
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = 'image/*';
+      /* GIF STEHT IN `image/*` SCHON DRIN — und wird als GIF abgelegt, nicht
+         umgerechnet; darum läuft es auf dem Blatt weiter (E502). `.pdf`
+         kommt dazu: eine Seite daraus wird zur Bildmarke. Der Doppelweg
+         steht ausdrücklich da, weil `accept` sonst je nach System die PDF
+         ausgraut. */
+      input.accept = 'image/*,image/gif,application/pdf,.pdf';
       /* Im Dokument, wie beim PDF-Waehler (einlesen.ts) — und danach weg. */
       input.style.display = 'none';
       document.body.appendChild(input);
@@ -1620,7 +1679,10 @@ const Marken = (() => {
         const datei = input.files?.[0];
         input.remove();
         if (!datei) { fertig(false); return; }
-        bildAblegen(datei, mitte).then(fertig, () => {
+        /* Eine PDF geht den anderen Weg — gerastert, dann dieselbe Ablage. */
+        const istPdf = datei.type === 'application/pdf' || /\.pdf$/i.test(datei.name);
+        const weg = istPdf ? pdfAlsBildmarke(datei, mitte) : bildAblegen(datei, mitte);
+        weg.then(fertig, () => {
           if (typeof UI !== 'undefined' && UI.toast) UI.toast('Das Bild liess sich nicht ablegen.');
           fertig(false);
         });
@@ -2639,7 +2701,16 @@ const Marken = (() => {
    * Fächer der Sicherung (§9) — ein Farbsatz reist damit in `.json` und in
    * `.redion` mit, ohne dass hier etwas dafür zu tun wäre.
    * ────────────────────────────────────────────────────────────────────── */
-  type Farbsatz = { name: string; farben: string[] };
+  /* EIN SATZ IST SEIT E501 EINE VOREINSTELLUNG (Redurs Dossier, Abschnitt
+     „Stift, Bleistift, Marker und Radierer"): „Farben und Stärken lassen
+     sich anpassen und als Presets bereithalten."
+
+     Also KEIN zweiter Katalog neben den Farbsätzen (§8), sondern zwei
+     Felder mehr am vorhandenen: welcher Stift und welche Strichstärke beim
+     Sichern geführt haben. Beide sind optional — ein Satz aus der Zeit vor
+     E501 hat sie nicht und lädt weiter genau seine Farben (§9: rückwärts
+     denken). */
+  type Farbsatz = { name: string; farben: string[]; stil?: string; breite?: number };
 
   /** Ein Name, mit dem sich arbeiten lässt: ohne Rand, ohne Zeilenumbrüche, kurz. */
   const satzName = (roh: unknown): string =>
@@ -2654,7 +2725,14 @@ const Marken = (() => {
       const name = satzName((eintrag as any)?.name);
       if (!name) continue;
       if (raus.some(s => s.name.toLowerCase() === name.toLowerCase())) continue;
-      raus.push({ name, farben: farbenRein((eintrag as any)?.farben) });
+      const satz: Farbsatz = { name, farben: farbenRein((eintrag as any)?.farben) };
+      /* Nur, was es wirklich gibt: ein Stift, den dieser Stand nicht kennt,
+         wäre eine Voreinstellung, die beim Laden ins Leere greift. */
+      const stil = String((eintrag as any)?.stil || '');
+      if (STIFTE.some(st => st.id === stil)) satz.stil = stil;
+      const breite = Number((eintrag as any)?.breite);
+      if (Number.isFinite(breite) && breite > 0) satz.breite = breite;
+      raus.push(satz);
       if (raus.length >= HOECHSTENS_FARBSAETZE) break;
     }
     return raus;
@@ -2675,12 +2753,20 @@ const Marken = (() => {
    * Gibt `null` zurück, wenn die Liste voll ist und der Name neu wäre —
    * damit der Aufrufer es SAGEN kann, statt dass hier still nichts geschieht.
    */
-  const farbsatzSichern = (roh: unknown, farben: readonly string[] = eigeneFarben()): Farbsatz[] | null => {
+  const farbsatzSichern = (roh: unknown, farben: readonly string[] = eigeneFarben(),
+                          stift?: { stil?: unknown; breite?: unknown }): Farbsatz[] | null => {
     const name = satzName(roh);
     if (!name) return null;
     const liste = farbsaetze();
     const stelle = liste.findIndex(s => s.name.toLowerCase() === name.toLowerCase());
     const satz: Farbsatz = { name, farben: farbenRein(farben.slice()) };
+    /* E501: Stift und Strichstärke reisen mit, wenn der Aufrufer sie nennt.
+       Er tut es aus der Leiste heraus; wer `farbsatzSichern` ohne sie ruft
+       (der Prüflauf, ein Skript), bekommt weiter einen reinen Farbsatz. */
+    const stil = String(stift?.stil || '');
+    if (STIFTE.some(st => st.id === stil)) satz.stil = stil;
+    const breite = Number(stift?.breite);
+    if (Number.isFinite(breite) && breite > 0) satz.breite = breite;
     if (stelle >= 0) { liste[stelle] = satz; return farbsaetzeSchreiben(liste); }
     if (liste.length >= HOECHSTENS_FARBSAETZE) return null;
     return farbsaetzeSchreiben([...liste, satz]);
@@ -2691,12 +2777,21 @@ const Marken = (() => {
     return farbsaetzeSchreiben(farbsaetze().filter(s => s.name.toLowerCase() !== name));
   };
 
-  /** Die Farben eines Satzes zu den Tupfern machen. Unbekannter Name: nichts tut sich. */
-  const farbsatzLaden = (roh: unknown): string[] | null => {
+  /**
+   * Einen Satz laden: die Tupfer setzen und den GANZEN Satz zurückgeben.
+   *
+   * SEIT E501 GIBT ER DEN SATZ ZURÜCK, nicht nur die Farben — sonst
+   * bräuchte der Aufrufer einen zweiten Griff für Stift und Stärke, und
+   * zwei Griffe für eine Voreinstellung sind einer zu viel (§8). Die
+   * Farben stehen weiter darin, nur eine Ebene tiefer.
+   *
+   * Unbekannter Name: `null`, und nichts tut sich.
+   */
+  const farbsatzLaden = (roh: unknown): Farbsatz | null => {
     const name = satzName(roh).toLowerCase();
     const satz = farbsaetze().find(s => s.name.toLowerCase() === name);
     if (!satz) return null;
-    return farbenSetzen(satz.farben);
+    return { ...satz, farben: farbenSetzen(satz.farben) };
   };
 
   /** Zurück auf den Auslieferungsstand: keine eigenen Tupfer. Die Sätze bleiben. */
@@ -3321,11 +3416,17 @@ const Marken = (() => {
         knoepfe: [
           { id: 'waehlen', text: 'Andere Farbe wählen',
             hinweis: 'Der Farbwähler des Systems — die gewählte Farbe kommt danach als Tupfer dazu' },
-          ...saetze.map(satz => ({ id: 'laden:' + satz.name, text: satz.name, hinweis: zeigen(satz.farben) })),
-          { id: 'sichern', text: 'Diese Farben sichern',
-            hinweis: jetzt.length
-              ? 'Legt die ' + jetzt.length + ' eigenen Farben unter einem Namen ab'
-              : 'Legt einen leeren Satz ab — nur die fünf festen Farben' },
+          /* E501: der Hinweis nennt, was der Satz WIRKLICH zurückholt.
+             Ein Satz mit Stift und Stärke ist eine Voreinstellung; ein
+             älterer ohne beides bleibt ein Farbsatz, und das steht dann
+             auch so da — statt etwas zu versprechen, was er nicht kann. */
+          ...saetze.map(satz => ({ id: 'laden:' + satz.name, text: satz.name,
+            hinweis: zeigen(satz.farben)
+              + (satz.stil ? ' · ' + (STIFTE.find(st => st.id === satz.stil)?.name || satz.stil) : '')
+              + (satz.breite ? ' · ' + String(Math.round(satz.breite * 10) / 10).replace('.', ',') + ' px' : '') })),
+          { id: 'sichern', text: 'Diese Einstellung sichern',
+            hinweis: 'Farben, Stift und Strichstärke — zusammen unter einem Namen'
+              + (jetzt.length ? ' (' + jetzt.length + ' eigene Farben)' : '') },
           ...(saetze.length ? [{ id: 'entfernen', text: 'Einen Satz löschen',
             hinweis: 'Die Farben selbst bleiben, nur der Name geht weg' }] : []),
           { id: 'zuruecksetzen', text: 'Eigene Farben zurücksetzen',
@@ -3337,8 +3438,19 @@ const Marken = (() => {
       if (wahl === 'waehlen') { farbwaehlerOeffnen(); return; }
 
       if (wahl.startsWith('laden:')) {
-        const liste = farbsatzLaden(wahl.slice(6));
-        if (liste) tupferZeigen(liste, farbeJetzt());
+        const satz = farbsatzLaden(wahl.slice(6));
+        if (!satz) return;
+        tupferZeigen(satz.farben, farbeJetzt());
+        /* E501: Stift und Stärke kommen mit, wenn der Satz sie kennt — und
+           die Leiste zeigt es sofort, statt es erst beim nächsten Strich zu
+           verraten. `markiere()` liest den Zustand aus der Fläche zurück;
+           den Stiftknopf beschriftet `stiftZeigen`, weil sein Name und sein
+           Zeichen nirgends sonst herkommen. */
+        if (satz.stil && controls.setzeStil) { controls.setzeStil(satz.stil); stiftZeigen(satz.stil); }
+        if (satz.breite) strichSetzen(satz.breite);
+        markiere();
+        UI.toast('„' + satz.name + '" geladen'
+          + (satz.stil || satz.breite ? ' — mit Stift und Strichstärke' : ''));
         return;
       }
 
@@ -3360,11 +3472,16 @@ const Marken = (() => {
         }
         /* `null` heisst: voll. Das wird GESAGT — ein still verschluckter
            Speicherbefehl ist schlimmer als eine Absage (§35). */
-        if (!farbsatzSichern(name)) {
-          UI.toast('Es passen höchstens ' + HOECHSTENS_FARBSAETZE + ' Farbsätze — lösche zuerst einen.');
+        /* E501: Stift und Stärke reisen mit. Beide kommen aus derselben
+           Quelle, aus der die Leiste sie anzeigt — nicht aus einem zweiten
+           Merker, der auseinanderlaufen könnte. */
+        const stift = { stil: controls.stilVon ? controls.stilVon() : '',
+                        breite: Zeichenziel.dickeVon(controls) };
+        if (!farbsatzSichern(name, eigeneFarben(), stift)) {
+          UI.toast('Es passen höchstens ' + HOECHSTENS_FARBSAETZE + ' Voreinstellungen — lösche zuerst eine.');
           return;
         }
-        UI.toast('Farbsatz „' + satzName(name) + '" gesichert');
+        UI.toast('„' + satzName(name) + '" gesichert — Farben, Stift und Strichstärke');
         return;
       }
 
@@ -3442,6 +3559,24 @@ const Marken = (() => {
        `werkzeugVon(controls)` und nicht `jetzt()`: gemeint ist DIESE
        Fläche. Bei zwei Blättern auf einer Seite zeigte `jetzt()` beiden
        Leisten das Werkzeug des zuletzt berührten. */
+    /**
+     * DEN STIFTKNOPF BESCHRIFTEN (E501, eine Tür).
+     *
+     * Sein Zeichen, sein Wort und sein `data-stil` kommen aus `STIFTE` und
+     * standen bis hierher nur im Klickgriff. Mit dem Laden einer
+     * Voreinstellung gibt es einen zweiten Aufrufer — und zwei Abschriften
+     * derselben drei Zeilen laufen auseinander (§8).
+     */
+    const stiftZeigen = (id: string): void => {
+      const knopf = tools.querySelector<HTMLElement>('[data-act="stil"]');
+      const stift = STIFTE.find(st => st.id === id);
+      if (!knopf || !stift) return;
+      knopf.dataset.stil = stift.id;
+      knopf.innerHTML = `<span class="zeichen" aria-hidden="true">${stift.zeichen}</span>`
+        + `<span class="wort">${stift.name}</span>`;
+      knopf.title = 'Stift wechseln: ' + STIFTE.map(st => st.name).join(' → ');
+    };
+
     const markiere = (): void => {
       if (!tools.isConnected) { Zeichenziel.vergiss(markiere); return; }
       const wz = Zeichenziel.werkzeugVon(controls);
@@ -3497,11 +3632,17 @@ const Marken = (() => {
       if (feld && Number(feld.value) !== wert) feld.value = String(wert);
       if (zahl) zahl.textContent = String(Math.round(wert * 10) / 10).replace('.', ',');
     };
-    /* Der Regler meldet jeden Wert sofort — ohne Klick, ohne Loslassen. */
-    tools.addEventListener('input', event => {
-      const feld = event.target as HTMLInputElement | null;
-      if (!feld || !feld.matches('.blatt-staerke input')) return;
-      const wert = Math.max(0.5, Math.min(12, Number(feld.value) || BREITEN[1]));
+    /**
+     * EINE STRICHSTÄRKE SETZEN — an allen vier Orten, an denen sie steht
+     * (E501, eine Tür).
+     *
+     * Die Fläche führt sie, `Zeichenziel` merkt sie für die anderen
+     * Anzeigen, die Stufenknöpfe zeigen sie, und der Regler nennt ihre
+     * Zahl. Wer nur den ersten setzt, hat sie gesetzt und nirgends gezeigt
+     * — genau das ist beim Laden einer Voreinstellung passiert, und der
+     * Prüflauf sah 1,2 statt 5.
+     */
+    const strichSetzen = (wert: number): void => {
       controls.setzeStrich(wert);
       if (typeof Zeichenziel !== 'undefined') {
         try { Zeichenziel.uebernehmeStrich(controls, wert); } catch { /* egal */ }
@@ -3509,6 +3650,12 @@ const Marken = (() => {
       tools.querySelectorAll<HTMLElement>('.blatt-strich').forEach(node =>
         node.classList.toggle('on', Number(node.dataset.b) === wert));
       staerkeZeigen(wert);
+    };
+    /* Der Regler meldet jeden Wert sofort — ohne Klick, ohne Loslassen. */
+    tools.addEventListener('input', event => {
+      const feld = event.target as HTMLInputElement | null;
+      if (!feld || !feld.matches('.blatt-staerke input')) return;
+      strichSetzen(Math.max(0.5, Math.min(12, Number(feld.value) || BREITEN[1])));
     });
     /* Die Klappe geht zu, wenn der Blick woandershin geht: Escape, ein
        Tipp ins Blatt (der Regler verliert den Fokus) oder ein anderes
@@ -3612,8 +3759,7 @@ const Marken = (() => {
           const jetzt = STIFTE.findIndex(st => st.id === target.dataset.stil);
           const naechster = STIFTE[(jetzt + 1) % STIFTE.length]!;
           controls.setzeStil(naechster.id);
-          target.dataset.stil = naechster.id;
-          target.innerHTML = `<span class="zeichen" aria-hidden="true">${naechster.zeichen}</span><span class="wort">${naechster.name}</span>`;
+          stiftZeigen(naechster.id);
           /* Ein Stift zeichnet — wer ihn wechselt, will ihn auch fuehren. */
           if (Zeichenziel.werkzeugVon?.(controls) !== 'stift') {
             controls.setzeWerkzeug('stift');
@@ -3727,13 +3873,9 @@ const Marken = (() => {
         /* Die gewaehlte Stufe ein zweites Mal: Klappe mit dem Regler auf
            (oder wieder zu) — der Weg von GoodNotes (E465 Nachtrag). */
         if (target.classList.contains('on')) { staerkeAuf(!staerkeOffen()); return; }
-        controls.setzeStrich(Number(target.dataset.b));
-        if (typeof Zeichenziel !== 'undefined') {
-          try { Zeichenziel.uebernehmeStrich(controls, Number(target.dataset.b)); } catch { /* egal */ }
-        }
-        tools.querySelectorAll('.blatt-strich').forEach(node => node.classList.remove('on'));
-        target.classList.add('on');
-        staerkeZeigen(Number(target.dataset.b));
+        /* Dieselbe Tür wie der Regler und das Laden einer Voreinstellung
+           (E501) — sonst setzt jeder Weg drei von vier Orten. */
+        strichSetzen(Number(target.dataset.b));
       }
     });
     row.appendChild(tools);

@@ -128,7 +128,10 @@ console.log('\n§1 Was als eigene Farbe durchkommt');
   })()`) as string);
   gleich('Ein Satz merkt sich die Farben schon klein geschrieben',
     zweiWege.gesichert?.farben, ['#aa0011', '#bb0022']);
-  gleich('… und lädt sie so zurück', zweiWege.geladen, ['#aa0011', '#bb0022']);
+  /* SEIT E501 GIBT `farbsatzLaden` DEN GANZEN SATZ ZURÜCK, nicht nur die
+     Farben — ein Satz ist seither eine Voreinstellung (Farben, Stift,
+     Strichstärke), und zwei Griffe dafür wären einer zu viel (§8). */
+  gleich('… und lädt sie so zurück', zweiWege.geladen?.farben, ['#aa0011', '#bb0022']);
   await s.close();
 }
 
@@ -145,7 +148,7 @@ console.log('\n§2 Die vier Griffe');
     Marken.farbsatzSichern('Notiz');
     raus.namen = Marken.farbsaetze().map(x => x.name);
     /* Laden holt die alten Tupfer zurueck. */
-    raus.zurueck = Marken.farbsatzLaden('Korrektur');
+    raus.zurueck = Marken.farbsatzLaden('Korrektur')?.farben;
     /* Gleicher Name ersetzt, statt zweimal dazustehen. */
     Marken.farbenSetzen(['#010101']);
     Marken.farbsatzSichern('Korrektur');
