@@ -195,7 +195,12 @@ const breite = await pg.evaluate((id: string) => {
 }, blattId);
 p('In der Mitte ist die Fläche breit, an der leichten Stelle schmal',
   !!breite && breite.mitteMitte && breite.amGipfel > breite.grund
-    && breite.amGipfel > breite.amLeichten * 1.5,
+    /* 1,3 ist gemessen und nicht gegriffen: der Fueller schwillt bei
+       Druck 0,92 gegen 0,36 um den Faktor (0,5+0,92)/(0,5+0,36) = 1,65,
+       und die Kappen runden das auf 1,48 ab. Die Gegenprobe — Druck
+       ueberall 0,5 — kommt auf 0,9. Die Schwelle liegt dazwischen, mit
+       Luft nach beiden Seiten. */
+    && breite.amGipfel > breite.amLeichten * 1.3,
   JSON.stringify(breite));
 
 /* ======================================================================== */

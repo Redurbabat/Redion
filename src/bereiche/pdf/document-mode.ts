@@ -134,7 +134,8 @@ const DocumentMode = (() => {
    * `typ` und `guete` gehen an `toBlob`: PNG für ein einzelnes Bild
    * (verlustfrei), JPEG für das PDF (weil `DCTDecode` genau das nimmt).
    */
-  const seiteZeichnen = async (block: any, typ = 'image/png', guete = 0.92): Promise<SeitenBild | null> => {
+  const seiteZeichnen = async (block: any, typ = 'image/png', guete = 0.92,
+                               nimm?: (m: any) => boolean): Promise<SeitenBild | null> => {
     if (!block) return null;
     const bw = Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE;
     const bh = Number(block.bh) || Number(block.blattHoehe) || SheetSpace.A4_HOEHE;
@@ -156,7 +157,12 @@ const DocumentMode = (() => {
         if (url) stift.drawImage(await bildLaden(url), 0, 0, W, H);
       } catch { /* dann ohne Seitenbild — die Marken kommen trotzdem */ }
     }
-    const marken = Array.isArray(block.marken) ? block.marken : [];
+    /* WELCHE MARKEN INS BILD GEHEN (E506). Ohne Filter alle — so malt „Als
+       Bild sichern" weiterhin die ganze Seite. Der PDF-Export lässt die
+       weg, die er als echte Annotation obendrauf schreibt; stünden sie
+       auch im Bild, stände jeder Strich zweimal da. */
+    const alleMarken = Array.isArray(block.marken) ? block.marken : [];
+    const marken = nimm ? alleMarken.filter(nimm) : alleMarken;
     if (marken.length && typeof Marken !== 'undefined') {
       /* ── DIE BILDMARKEN (E479, L133) ────────────────────────────────────
          Ein Foto auf der Seite fehlte auf dem gesicherten Bild. ZWEI
@@ -246,16 +252,72 @@ const DocumentMode = (() => {
      dauert es Sekunden, und eine Oberfläche, die dabei nichts sagt, sieht
      kaputt aus. Der Rückruf darf auch `false` sagen — dann bricht es ab
      und gibt `null`, statt ein halbes Dokument zu liefern. */
+  /**
+   * EINE MARKE AUS BLATTPUNKTEN IN SEITENPUNKTE (E506).
+   *
+   * Marken liegen im Blattraum: Ursprung oben links der UNGEDREHTEN Seite.
+   * Das gemalte Bild dreht sich mit `gedreht` (E467) — bei 90 und 270 sind
+   * Breite und Höhe der fertigen Seite getauscht. Eine Annotation muss
+   * dieselbe Drehung mitmachen, sonst liegt sie quer zu ihrem eigenen
+   * Strich.
+   *
+   * DIE DREHUNG IST EINE MATRIX, kein Tausch von x und y — das Stift-
+   * Dossier nennt auf Seite 6 ausdrücklich den Ad-hoc-Tausch als den
+   * Fehler, nach dem Ink „versetzt, gespiegelt oder um 90 Grad gedreht"
+   * erscheint. Hier ist es die Drehung um die Blattmitte, danach die
+   * Verschiebung in die Mitte der fertigen Seite; genau die drei Schritte,
+   * die `seiteZeichnen` an der Leinwand macht.
+   *
+   * Der Schreiber dreht danach nur noch die y-Achse um (Seite → Default
+   * User Space) — das ist SEINE Sache und steht dort.
+   */
+  const aufSeite = (marke: any, block: any): any => {
+    if (!marke) return null;
+    const bw = Number(block?.bw) || Number(block?.blattBreite) || SheetSpace.A4_BREITE;
+    const bh = Number(block?.bh) || Number(block?.blattHoehe) || SheetSpace.A4_HOEHE;
+    const g = SheetSpace.gedrehtVon(block);
+    const quer = g === 90 || g === 270;
+    const pw = quer ? bh : bw, ph = quer ? bw : bh;
+    const dreh = (q: number[]): [number, number] => {
+      const dx = (Number(q[0]) || 0) - bw / 2, dy = (Number(q[1]) || 0) - bh / 2;
+      const rx = g === 90 ? -dy : g === 180 ? -dx : g === 270 ? dy : dx;
+      const ry = g === 90 ? dx : g === 180 ? -dy : g === 270 ? -dx : dy;
+      return [Math.round((pw / 2 + rx) * 100) / 100, Math.round((ph / 2 + ry) * 100) / 100];
+    };
+    return {
+      striche: (marke.striche || []).map((s: number[][]) => s.map(dreh)),
+      kontur: (marke.kontur || []).map((k: number[][] | null) => k ? k.map(dreh) : null),
+      farbe: marke.farbe, breite: marke.breite,
+      deckkraft: marke.deckkraft, name: marke.name
+    };
+  };
+
   const alsPdf = async (seiten: any[],
                         melden?: (fertig: number, gesamt: number) => boolean | void): Promise<Blob | null> => {
     if (typeof PdfWriter === 'undefined' || !Array.isArray(seiten) || !seiten.length) return null;
     const schreiber = PdfWriter.neu();
+    /* ══ HANDSCHRIFT WIRD ANNOTATION (E506) ═══════════════════════════════
+       Was `Marken.annotierbar` sagt, geht NICHT ins Bild, sondern als
+       echte `/Ink`-Annotation obendrauf. Die Regel steht in `marken.ts`,
+       weil dort auch Farbe, Breite und Druckkurve stehen (§8); hier wird
+       nur gefragt.
+
+       KANN DIE APP DAS ÜBERHAUPT? Ein älterer Stand von `Marken` oder ein
+       Schreiber ohne Annotationen darf das PDF nicht kaputt machen — dann
+       gehen alle Marken wie bisher ins Bild. */
+    const kannAnnot = typeof Marken !== 'undefined' && !!Marken.annotierbar && !!Marken.alsAnnotation;
     for (let i = 0; i < seiten.length; i++) {
       if (melden && melden(i, seiten.length) === false) return null;
-      const bild = await seiteZeichnen(seiten[i], 'image/jpeg', 0.88);
+      const block = seiten[i];
+      const roh = Array.isArray(block?.marken) ? block.marken : [];
+      const annot = kannAnnot ? roh.filter((m: any) => Marken.annotierbar(m)) : [];
+      const bild = await seiteZeichnen(block, 'image/jpeg', 0.88,
+        annot.length ? (m: any) => !Marken.annotierbar(m) : undefined);
       if (!bild) continue;
       schreiber.seite({ bild: bild.blob, pixelBreite: bild.pixelBreite, pixelHoehe: bild.pixelHoehe,
-                        breite: bild.breite, hoehe: bild.hoehe });
+                        breite: bild.breite, hoehe: bild.hoehe,
+                        marken: annot.map((m: any) => aufSeite(Marken.alsAnnotation(m), block))
+                                     .filter(Boolean) as any[] });
     }
     /* Keine einzige Seite hat sich malen lassen — dann ist ein PDF mit null
        Seiten die falsche Antwort. Lieber gar keines und ein Wort dazu. */
@@ -752,11 +814,15 @@ const DocumentMode = (() => {
        der Satz stand im `title`, er nannte allein den verlorenen Suchtext,
        und am Telefon gibt es kein Hover (§37). Wer dort exportierte, erfuhr
        gar nichts und merkte es erst beim Empfaenger. */
+    /* SEIT E506 STIMMT DIE HÄLFTE NICHT MEHR, DIE HIER STAND: die Striche
+       sind für ein fremdes Programm sehr wohl Anmerkungen. Ein Satz, der
+       schlechter redet, als die App ist, ist genauso falsch wie einer, der
+       zu viel verspricht (§33). */
     pdfKnopf.title = 'Das ganze Dokument mit allen Marken als PDF speichern. '
-      + 'Jede Seite wird ein Bild: der Text der ursprünglichen PDF ist darin nicht mehr '
-      + 'durchsuchbar, Verweise sind keine Verweise mehr, und deine Striche sind für ein '
-      + 'fremdes Programm keine Anmerkungen mehr, sondern Teil des Bildes. '
-      + 'Dein Original und deine Marken bleiben in Redion unverändert.';
+      + 'Deine Handschrift wird zu echten Anmerkungen, die ein fremdes PDF-Programm '
+      + 'anklicken, verschieben und löschen kann. Die Seite darunter wird ein Bild: '
+      + 'ihr Text ist darin nicht mehr durchsuchbar, und Verweise sind keine Verweise '
+      + 'mehr. Dein Original und deine Marken bleiben in Redion unverändert.';
     const importButton = makeAction('import', '＋ PDF hinzufügen');
     importButton.className = 'document-import';
     /* DIE KENNUNG, NICHT DAS OBJEKT (E471, L102 zum zweiten Mal). `darf`
@@ -1077,8 +1143,9 @@ const DocumentMode = (() => {
        das Einzige, was der Mensch ueberhaupt zu sehen bekommt. */
     const pdfHinweis = document.createElement('p');
     pdfHinweis.className = 'document-export-hinweis';
-    pdfHinweis.textContent = 'Beim PDF wird jede Seite ein Bild: Text und Striche sind '
-      + 'darin nicht mehr wählbar. Dein Original und deine Marken bleiben in Redion.';
+    pdfHinweis.textContent = 'Deine Handschrift wird eine echte Anmerkung — in jedem '
+      + 'PDF-Programm anklickbar. Die Seite darunter wird ein Bild: ihr Text ist darin '
+      + 'nicht mehr durchsuchbar. Original und Marken bleiben in Redion.';
     container.append(datenZeile, pdfHinweis, viewTitle, randKnopf, lupeKnopf);
     if (laufKnopf) container.appendChild(laufKnopf);
     container.append(linkedTitle, actions, summary, list);

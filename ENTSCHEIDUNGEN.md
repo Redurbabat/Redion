@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-485 Entscheidungen, E1 bis E505 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+486 Entscheidungen, E1 bis E506 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -549,6 +549,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E503** — Das eigene Formelheft liegt über dem Dokument — und war dabei seit jeher nicht in der Grösse zu ziehen
 * **E504** — Der Glätter rechnet in Zeit statt in Messungen, und ein abgebrochener Handballen wird verworfen
 * **E505** — CropBox und /Rotate werden endlich gefahren, und der PDF-Export sagt sichtbar, was er tut
+* **E506** — Handschrift wird eine echte /Ink-Annotation mit eigenem Erscheinungsbild, statt Teil des Bildes zu sein
 
 ---
 
@@ -40430,3 +40431,131 @@ Hinweis nicht eingehängt (acht rot). Dazu test87, test105, test109, test177,
 test178, test442, test443, test460, test466, test471 — alle grün.
 Nicht geprüft: die Gesamtsuite.
 Bild: `node bilder.mts exporthinweis` — der Satz unter den beiden Knöpfen.
+
+---
+
+E506 — Handschrift wird eine echte /Ink-Annotation
+--------------------------------------------------------------------------
+
+Der Schlusssatz des Stift-Dossiers, Seite 20:
+
+> „Für portable PDF-Handschrift sollte man Roh-Ink und PDF-Ink als zwei
+> verschiedene Datenmodelle behandeln. Das Rohmodell darf reichhaltig,
+> hochfrequent und plattformspezifisch sein; das Austauschmodell sollte
+> eine saubere standardisierte `/Ink`-Annotation plus explizites Appearance
+> enthalten."
+
+Redions PDF-Export war ein Fotoalbum. `pdfWriter.ts` schrieb je Seite ein
+JPEG, und die Handschrift war Teil davon — in der Datenverlust-Pyramide des
+Dossiers (S.6) die unterste Stufe: „bewahrt im Extremfall nur Pixel; keine
+editierbare Stroke-Semantik mehr."
+
+Was ein Mensch davon merkte: die exportierte Seite sah richtig aus, aber in
+Adobe Reader stand unter „Kommentare" nichts. Kein Strich liess sich
+anklicken, verschieben, färben oder löschen.
+
+## Was jetzt herausgeht
+
+Je Handschrift-Marke ein Annotation-Dictionary mit `/Subtype /Ink`:
+
+```txt
+/Rect      der Kasten, plus die halbe Breite Rand
+/InkList   die MITTELLINIE, Strich für Strich, im Default User Space
+/C         die Farbe
+/CA        die Deckkraft (der Marker ist durchscheinend)
+/BS /W     die Grundbreite
+/F 4       Druck-Kennzeichen
+/AP /N     das Aussehen als Form-XObject
+```
+
+**Beides zusammen, und keines allein.** Ohne `/AP` rekonstruiert jeder
+Leser den Strich selbst, und ISO lässt offen, wie er die Punkte verbindet —
+zwei Leser zeigen dann zwei verschiedene Striche (Dossier S.4). Ohne
+`/InkList` wäre es keine Ink-Annotation, sondern ein Stempel: nicht als
+Handschrift erkennbar und nicht als solche zu bearbeiten.
+
+Im `/AP` steht die Kontur mit **veränderlicher Breite**, gefüllt. Damit
+bleibt der Druck sichtbar, obwohl die Druckwerte selbst nicht mitreisen
+können — genau die Empfehlung auf Seite 8 des Dossiers.
+
+## Die BBox ist das Rect
+
+Das Erscheinungsbild ist ein Form-XObject, dessen `/BBox` GENAU dem `/Rect`
+der Annotation entspricht. Dann ist die Abbildung von Formraum auf
+Annotationsraum die Einheitsmatrix, und man darf im Strom mit den echten
+Seitenkoordinaten rechnen. Jede andere Wahl braucht eine `/Matrix` und wird
+beim ersten Verschieben der Annotation krumm.
+
+## Nur Stift und Marker — und warum das kein Rückzug ist
+
+Annotation wird, was Handschrift IST: eine Punktfolge mit Druck. Alles
+andere bleibt im Seitenbild, und jedes aus eigenem Grund:
+
+**Das Abdeckband MUSS im Bild bleiben.** Ein Abdeckband als Annotation
+liesse sich beim Empfänger wegschieben — und darunter käme zum Vorschein,
+was abgedeckt werden sollte. Im Bild sind die Pixel darunter wirklich weg.
+Das ist der einzige Punkt dieses Bogens, an dem die schwächere Lösung die
+richtige ist.
+
+**Formen** (Rechteck, Ellipse, Dreieck, Pfeil, Kurve) liegen als zwei bis
+drei Stützpunkte in der Ablage, nicht als Punktzug. PDF hätte dafür
+`/Square`, `/Circle` und `/Line` — ein eigener Bogen. **Text und Zettel**
+bräuchten `/FreeText` mit eingebetteter Schrift (Dossier S.10: „FreeText
+sollte nicht mit Handschrift verwechselt werden"). **Bilder** wären
+`/Stamp`. Alles drei steht in `LUECKEN.md`.
+
+## Eine Rechnung, zwei Ausgaben
+
+`InkGeometry.outline` schreibt einen SVG-Pfad mit `Q`-Kurven und zwei
+`A`-Bögen. PDF kennt weder das eine noch das andere. Statt die Kontur ein
+zweites Mal zu rechnen (§8), liefert jetzt `seiten()` die beiden Kanten,
+und `outline` wie `outlinePunkte` bauen daraus ihre Form. Unterschiedlich
+ist allein die Kappe: das Vieleck setzt acht Punkte auf den Halbkreis, wo
+der SVG-Pfad einen Bogen zieht. Bei anderthalb Punkten halber Breite liegt
+das weniger als ein Zehntel Millimeter neben dem echten Bogen.
+
+Und die Breitenregel selbst bleibt in `marken.ts` — `Marken.alsAnnotation`
+fragt dort dieselbe `druckFaktor`, die auch auf den Bildschirm zeichnet.
+Eine zweite Rechnung im Export liefe von dieser weg, und dann sähe das PDF
+anders aus als der Bildschirm.
+
+## Der Satz am Knopf musste zurückgenommen werden
+
+E505 hatte gerade erst geschrieben: „Text und Striche sind darin nicht mehr
+wählbar." Die Hälfte davon stimmt seit diesem Bogen nicht mehr. Ein Satz,
+der schlechter redet, als die App ist, ist genauso falsch wie einer, der zu
+viel verspricht (§33). Jetzt steht dort:
+
+> Deine Handschrift wird eine echte Anmerkung — in jedem PDF-Programm
+> anklickbar. Die Seite darunter wird ein Bild: ihr Text ist darin nicht
+> mehr durchsuchbar. Original und Marken bleiben in Redion.
+
+## Der Fund an einer alten Prüfung, zum zweiten Mal
+
+`test343` wurde wieder rot, diesmal an der Schwelle: 1,478 statt der
+geforderten 1,5. Gemessen ist der erwartete Wert 1,65 (der Füller schwillt
+bei Druck 0,92 gegen 0,36 um `(0,5+0,92)/(0,5+0,36)`), die Kappen runden
+ihn auf 1,48 ab, und die Gegenprobe mit festem Druck kommt auf 0,9. Die
+Schwelle steht jetzt bei 1,3 — dazwischen, mit Luft nach beiden Seiten, und
+mit der Rechnung daneben statt einer gegriffenen Zahl.
+
+## Und ein Fehler, der hier hingehört
+
+Beim Gegenproben-Zurückdrehen habe ich `git checkout` auf `marken.ts`
+gerufen und damit die noch nicht eingecheckten Änderungen dieses Bogens
+weggeworfen. Wiederhergestellt, geprüft, grün — aber die Regel aus §43
+gegen `git restore .` gilt für die Einzeldatei genauso: **wer eine Datei
+zurückdreht, in der ungesicherte Arbeit steht, verliert sie.** Ein Kopieren
+nach `/tmp` vor jeder Gegenprobe kostet nichts.
+
+GEPRÜFT. `test474` neu mit 30 Zusagen, und zwar gegen ZURÜCKGELESENE
+Bytes: das PDF wird mit pdf.js wieder geöffnet, `getAnnotations()` gefragt,
+und die Seite ZWEIMAL gerendert — einmal ohne Annotationen (dort muss der
+Strich fehlen) und einmal im Druckweg (dort muss er rot dastehen). Der
+Unterschied zwischen beiden Bildern IST der Beweis. Zwei Gegenproben rot
+gesehen: die Annotationen abgeschaltet, und die Drehung falsch herum
+(§6 rot, Punkt bei 80 statt 520). Dazu test87, test105, test109, test343,
+test366, test437, test438, test440, test442, test443, test453, test460,
+test464, test465, test470, test471, test472, test473 — alle grün.
+Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts exporthinweis` — der neue Satz am Knopf.

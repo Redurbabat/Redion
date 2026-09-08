@@ -289,6 +289,76 @@ const Marken = (() => {
         const pressureFactor = Math.max(0.55, Math.min(1.55, 0.65 + average * 0.7));
         return base * pressureFactor * (mark?.art === 'marker' ? 4 : 1);
     };
+    /* ══ EINE MARKE ALS PDF-ANNOTATION (E506) ════════════════════════════════
+     * Der PDF-Export schreibt Handschrift seit E506 nicht mehr ins Bild,
+     * sondern als echte `/Ink`-Annotation. WAS dabei herauskommt, entscheidet
+     * dieselbe Stelle, die auch auf den Bildschirm zeichnet — Farbe, Breite,
+     * Druckkurve und Deckkraft stehen hier und nirgends sonst (§8). Eine
+     * zweite Rechnung im Export liefe von dieser weg, und dann sähe das PDF
+     * anders aus als der Bildschirm.
+     *
+     * NUR STIFT UND MARKER. Das sind die Marken, die Handschrift SIND: eine
+     * Punktfolge mit Druck. Alles andere bleibt im Seitenbild, und zwar aus
+     * je eigenem Grund:
+     *
+     *   `abdeck`   MUSS im Bild bleiben. Ein Abdeckband, das eine
+     *              Annotation wäre, liesse sich beim Empfänger
+     *              wegschieben — und darunter käme zum Vorschein, was
+     *              abgedeckt werden sollte. Im Bild sind die Pixel darunter
+     *              wirklich weg.
+     *   Formen     Rechteck, Ellipse, Dreieck, Pfeil und Kurve liegen als
+     *              zwei bis drei Stützpunkte in der Ablage, nicht als
+     *              Punktzug. PDF hätte dafür `/Square`, `/Circle` und
+     *              `/Line`; das ist ein eigener Bogen und steht in
+     *              `LUECKEN.md`.
+     *   Text,      brauchten `/FreeText` mit eingebetteter Schrift — auch
+     *   Zettel     ein eigener Bogen (Dossier S.10).
+     *   Bild,      wären `/Stamp` mit eigenem Bild-XObject.
+     *   Fachzeichen
+     * ---------------------------------------------------------------------- */
+    const annotierbar = (mark) => !!mark && (mark.art === 'stift' || mark.art === 'marker')
+        && InkGeometry.points(mark.pts).length >= 2;
+    /** `#rrggbb` zu drei Werten von 0 bis 1. Unlesbares wird schwarz. */
+    const farbeRgb = (wert) => {
+        const t = String(wert || '').trim();
+        const kurz = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(t);
+        const lang = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(t);
+        const teile = lang ? [lang[1], lang[2], lang[3]]
+            : kurz ? [kurz[1] + kurz[1], kurz[2] + kurz[2], kurz[3] + kurz[3]] : null;
+        if (!teile)
+            return [0, 0, 0];
+        return teile.map(h => Math.round(parseInt(h, 16) / 255 * 1000) / 1000);
+    };
+    /**
+     * Was der PDF-Schreiber von dieser Marke wissen muss.
+     *
+     * `kontur` ist das gefüllte Vieleck mit VERÄNDERLICHER Breite — dort,
+     * wo der Bildschirm eine Fläche zeichnet (Füller, Pinsel, Bleistift).
+     * Wo er eine Linie zieht (Kugelschreiber, Marker, Schutzleiter), bleibt
+     * `null`, und der Schreiber streicht die Mittellinie mit fester Breite.
+     * Dieselbe Unterscheidung wie in `zeichneMarke`, aus derselben Menge.
+     */
+    const alsAnnotation = (mark) => {
+        if (!annotierbar(mark))
+            return null;
+        const punkte = InkGeometry.points(mark.pts);
+        const base = Math.max(0.5, Number(mark.breite) || BREITEN[1]);
+        const flaeche = mark.art === 'stift' && FLAECHEN_STIFTE.has(String(mark.stil));
+        const druck = Array.isArray(mark.pressure) ? mark.pressure.map(Number) : [];
+        const kontur = flaeche && punkte.length >= 3
+            ? InkGeometry.outlinePunkte(punkte, punkte.map((_p, i) => base / 2 * druckFaktor(String(mark.stil), druck[i] ?? druck[druck.length - 1] ?? 0.5)))
+            : null;
+        return {
+            striche: [punkte.map(q => [q[0], q[1]])],
+            kontur: [kontur && kontur.length >= 3 ? kontur.map(q => [q[0], q[1]]) : null],
+            farbe: farbeRgb(mark.farbe),
+            /* Der Marker ist auf dem Bildschirm viermal so breit wie seine Zahl
+               (siehe `strokeWidth`) — im PDF muss er dieselbe Breite haben. */
+            breite: mark.art === 'marker' ? base * 4 : base,
+            deckkraft: mark.art === 'marker' ? 0.32 : 1,
+            name: mark.art === 'marker' ? 'Marker' : 'Handschrift'
+        };
+    };
     const arrowPath = (start, end) => {
         const dx = end[0] - start[0];
         const dy = end[1] - start[1];
@@ -4426,7 +4496,8 @@ const Marken = (() => {
     };
     if (typeof document !== 'undefined')
         document.addEventListener('keydown', kuerzel);
-    return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, FORMEN, WERKZEUGE, artWort, artZeichen,
+    return { schicht, leiste, zeichneMarke, annotierbar, alsAnnotation,
+        FARBEN, BREITEN, STIFTE, FORMEN, WERKZEUGE, artWort, artZeichen,
         druckFaktor, RADIERER, TASTEN,
         /* DIE FARBSÄTZE NACH AUSSEN (E486). Nicht, damit jemand anders eine
            zweite Leiste baut — sondern damit der Prüflauf an derselben Rechnung

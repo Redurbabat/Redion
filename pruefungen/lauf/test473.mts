@@ -308,7 +308,9 @@ for (const [wie, breite] of [['am Rechner', 1280], ['am Telefon', 390]] as Array
     });
   })()`) as string);
   p(`${wie}: der Satz steht sichtbar unter dem Knopf`, k.sichtbar, JSON.stringify(k).slice(0, 160));
-  p(`${wie}: … und sagt, dass jede Seite ein Bild wird`, /Bild/.test(k.text), k.text);
+  p(`${wie}: … und sagt, dass die Seite darunter ein Bild wird`, /Bild/.test(k.text), k.text);
+  p(`${wie}: … und dass die Handschrift eine echte Anmerkung wird (seit E506)`,
+    /Anmerkung/.test(k.text), k.text);
   p(`${wie}: … und dass Original und Marken bleiben (§33: keine Angst machen, wo keine ist)`,
     /bleiben/.test(k.text), k.text);
   p(`${wie}: … lesbar, nicht Kleingedrucktes unter 11 px`, k.groesse >= 11, String(k.groesse));

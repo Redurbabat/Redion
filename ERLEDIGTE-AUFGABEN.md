@@ -4593,3 +4593,42 @@ sichtbar unter dem Knopf, mit beiden Hälften: was das PDF verliert, und
 dass Original und Marken in Redion bleiben. Die zweite Hälfte ist so
 wichtig wie die erste; eine Warnung ohne Entwarnung macht Angst, wo keine
 hingehört.
+
+**Handschrift wird eine echte /Ink-Annotation (E506, test474).** Der
+Schlusssatz des Stift-Dossiers verlangt, Roh-Ink und PDF-Ink als zwei
+Datenmodelle zu behandeln: das eine reich und plattformspezifisch, das
+andere eine standardisierte `/Ink`-Annotation plus explizites Appearance.
+Redions Export war bis hierher das Gegenteil — ein JPEG je Seite, die
+Handschrift Teil des Bildes. In Adobe Reader stand unter „Kommentare"
+nichts.
+
+Jetzt geht je Handschrift-Marke ein Annotation-Dictionary heraus: `/Rect`,
+`/InkList` mit der Mittellinie im Default User Space, `/C`, `/CA`, `/BS`,
+das Druck-Kennzeichen `/F 4` und ein `/AP`-Erscheinungsbild, das die
+Kontur mit veränderlicher Breite füllt. Beides zusammen und keines allein:
+ohne `/AP` verbindet jeder Leser die Punkte anders, ohne `/InkList` wäre
+es ein Stempel statt Handschrift.
+
+Annotation wird nur, was Handschrift IST — Stift und Marker. Das
+Abdeckband bleibt mit Absicht im Bild: eines, das der Empfänger
+wegschieben kann, deckt nichts ab, und im Bild sind die Pixel darunter
+wirklich weg. Formen, Text, Zettel und Bilder brauchen `/Square`,
+`/FreeText` und `/Stamp` und stehen als eigene Bögen in `LUECKEN.md`.
+
+Die Kontur wird nur EINMAL gerechnet: `seiten()` liefert die beiden
+Kanten, `outline` macht daraus einen SVG-Pfad mit Bögen, `outlinePunkte`
+ein Vieleck mit acht Punkten je Kappe — PDF kennt keine Bögen. Und die
+Breitenregel bleibt in `marken.ts`, wo auch der Bildschirm sie holt; eine
+zweite Rechnung im Export liefe von dieser weg.
+
+Geprüft wurde an zurückgelesenen Bytes: das PDF wird mit pdf.js wieder
+geöffnet, nach seinen Annotationen gefragt und die Seite ZWEIMAL
+gerendert — einmal ohne Annotationen, wo der Strich fehlen muss, und
+einmal im Druckweg, wo er rot dastehen muss. Der Unterschied zwischen
+beiden Bildern ist der Beweis.
+
+Und ein Fehler, der hierher gehört: beim Zurückdrehen einer Gegenprobe
+habe ich `git checkout` auf `marken.ts` gerufen und die noch nicht
+eingecheckten Änderungen dieses Bogens weggeworfen. Wiederhergestellt und
+grün — aber die Regel aus §43 gilt für die einzelne Datei genauso wie für
+`git restore .`.

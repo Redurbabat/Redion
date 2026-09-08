@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — sechsunddreissig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — siebenunddreissig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -444,7 +444,16 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     PDF-Export sagt jetzt sichtbar, was er tut, statt nur im `title`, den
     am Telefon niemand sieht. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **sechsunddreissig Bögen**; die Überschrift
+  · **G37 — Handschrift wird eine echte Annotation** (E506, test474): der
+    Schlusssatz des Stift-Dossiers, umgesetzt. Stift und Marker gehen als
+    `/Ink`-Annotation mit `/InkList` und `/AP` heraus statt als Pixel im
+    Seitenbild; in Adobe Reader sind sie damit anklickbar, verschiebbar
+    und löschbar. Das Abdeckband bleibt mit Absicht im Bild — eines, das
+    man wegschieben kann, deckt nichts ab. Geprüft an zurückgelesenen
+    Bytes: die Seite zweimal gerendert, einmal ohne und einmal mit
+    Annotationen, und der Unterschied ist der Beweis. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **siebenunddreissig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

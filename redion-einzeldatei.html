@@ -19112,7 +19112,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 695, inhalt: '7195f6758c7d44b8', gebaut: '2026-09-08T11:05:52.716Z' };
+const Stand = { fassung: 701, inhalt: '25d1e99e1a8350b5', gebaut: '2026-09-08T11:32:22.994Z' };
 window.Stand = Stand;
 
 </script>
@@ -20095,11 +20095,17 @@ const InkGeometry = (() => {
      * und auslaufen, wie es der Druck sagt. Die Punkte bleiben, was sie sind:
      * die Mittellinie, die auch der alte Zeichner kennt.
      */
-    const outline = (raw, halfWidths) => {
+    /**
+     * DIE ZWEI KANTEN EINES STRICHS — die Rechnung, die `outline` und
+     * `outlinePunkte` teilen (E506). Sie stand vorher im Rumpf von
+     * `outline`; mit dem zweiten Nutzer waere sie zur Abschrift geworden,
+     * und dann zeichnete der Bildschirm eine andere Kontur als das PDF (§8).
+     */
+    const seiten = (raw, halfWidths) => {
         const input = points(raw);
         const n = input.length;
         if (n < 2)
-            return '';
+            return null;
         const links = [];
         const rechts = [];
         const halb = (i) => {
@@ -20119,13 +20125,72 @@ const InkGeometry = (() => {
             links.push([r2(input[i][0] - ty * w), r2(input[i][1] + tx * w)]);
             rechts.push([r2(input[i][0] + ty * w), r2(input[i][1] - tx * w)]);
         }
-        const ende = halb(n - 1);
-        const anfang = halb(0);
+        return { links, rechts, anfang: halb(0), ende: halb(n - 1) };
+    };
+    const outline = (raw, halfWidths) => {
+        const kanten = seiten(raw, halfWidths);
+        if (!kanten)
+            return '';
+        const { links, rechts, anfang, ende } = kanten;
+        const r2 = (v) => Math.round(v * 100) / 100;
         const rueck = [...rechts].reverse();
         return `M${links[0][0]} ${links[0][1]}` + seite(links) +
             ` A${r2(ende)} ${r2(ende)} 0 0 1 ${rueck[0][0]} ${rueck[0][1]}` +
             seite(rueck) +
             ` A${r2(anfang)} ${r2(anfang)} 0 0 1 ${links[0][0]} ${links[0][1]} Z`;
+    };
+    /**
+     * DERSELBE UMRISS ALS PUNKTZUG (E506).
+     *
+     * `outline` oben schreibt einen SVG-Pfad mit `Q`-Kurven und zwei
+     * `A`-Boegen fuer die Kappen. PDF kennt weder das eine noch das andere:
+     * es hat `m`, `l` und `c` und sonst nichts. Fuer den PDF-Export braucht
+     * es deshalb dieselbe Kontur als reine Punktfolge — ein geschlossenes
+     * Vieleck, das ein Schreiber Zeile fuer Zeile ausgeben kann.
+     *
+     * DIE RECHNUNG IST DIESELBE und steht bewusst nur einmal da: `seiten`
+     * liefert die linke und die rechte Kante, und `outline` wie
+     * `outlinePunkte` bauen daraus ihre Form. Was sich unterscheidet, ist
+     * allein die Kappe — dort setzt das Vieleck `kappen` Punkte auf den
+     * Halbkreis, wo der SVG-Pfad einen Bogen zieht. Bei einer halben Breite
+     * von anderthalb Punkten liegen acht Punkte weniger als ein Zehntel
+     * Millimeter neben dem echten Bogen; auf Papier ist das nichts.
+     */
+    const outlinePunkte = (raw, halfWidths, kappen = 8) => {
+        const kanten = seiten(raw, halfWidths);
+        if (!kanten)
+            return [];
+        const { links, rechts, anfang, ende } = kanten;
+        const r2 = (v) => Math.round(v * 100) / 100;
+        /* Ein Halbkreis von `von` nach `nach` um `mitte`, gegen den Uhrzeigersinn
+           — genau die Drehrichtung, die der `A`-Bogen mit `sweep 1` nimmt. */
+        const kappe = (mitte, von, nach) => {
+            const a0 = Math.atan2(von[1] - mitte[1], von[0] - mitte[0]);
+            const a1 = Math.atan2(nach[1] - mitte[1], nach[0] - mitte[0]);
+            let d = a1 - a0;
+            while (d <= 0)
+                d += Math.PI * 2;
+            const r = Math.hypot(von[0] - mitte[0], von[1] - mitte[1]);
+            const raus = [];
+            for (let i = 1; i < kappen; i++) {
+                const a = a0 + d * (i / kappen);
+                raus.push([r2(mitte[0] + Math.cos(a) * r), r2(mitte[1] + Math.sin(a) * r)]);
+            }
+            return raus;
+        };
+        const mitte = points(raw);
+        const rueck = [...rechts].reverse();
+        return [...links,
+            ...kappe(mitte[mitte.length - 1], links[links.length - 1], rueck[0]),
+            ...rueck,
+            ...kappe(mitte[0], rueck[rueck.length - 1], links[0])]
+            .filter(q => Number.isFinite(q[0]) && Number.isFinite(q[1]));
+        /* `anfang` und `ende` werden hier nicht gebraucht — die Kappe rechnet
+           ihren Radius aus dem Abstand zur Mittellinie und kommt damit auf
+           dieselbe Zahl. Sie stehen im Rueckgabewert von `seiten`, weil
+           `outline` sie fuer seine Boegen braucht. */
+        void anfang;
+        void ende;
     };
     /** Ein geglaetteter SVG-Pfad; zwei Punkte bleiben absichtlich eine Linie. */
     const path = (raw) => {
@@ -20694,7 +20759,7 @@ const InkGeometry = (() => {
             mark.breiteBox = Math.max(24, r2(Number(mark.breiteBox) * Math.abs(lx)));
         return mark;
     };
-    return { points, simplify, simplifyIndices, outline, path, rectangle, bounds, move, intersects,
+    return { points, simplify, simplifyIndices, outline, outlinePunkte, path, rectangle, bounds, move, intersects,
         distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale, rotate,
         textWidth, textLines, textLayout, LINIEN,
         /* Seit E474: der aufrechte Kasten der Marke OHNE ihre Drehung, ihre
@@ -20845,14 +20910,144 @@ const PdfWriter = (() => {
             dazu(stromBytes);
             text('endstream\n');
             objektEnde();
+            /* ══ DIE ANNOTATIONEN (E506) ══════════════════════════════════════
+               Je Marke ein Aussehen (Form-XObject) und eine Ink-Annotation. Sie
+               werden VOR der Seite geschrieben, weil die Seite ihre Nummern
+               braucht — dasselbe Muster wie beim Bild darüber. */
+            const annots = [];
+            for (const marke of (auftrag.marken || [])) {
+                const nr = annotation(marke, hoehe);
+                if (nr)
+                    annots.push(nr);
+            }
             const seitenNr = objekt();
             text('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + breite + ' ' + hoehe + '] ' +
                 '/Resources << /XObject << /Im0 ' + bildNr + ' 0 R >> /ProcSet [/PDF /ImageC] >> ' +
-                '/Contents ' + inhaltNr + ' 0 R >>\n');
+                '/Contents ' + inhaltNr + ' 0 R' +
+                (annots.length ? ' /Annots [' + annots.map(n => n + ' 0 R').join(' ') + ']' : '') +
+                ' >>\n');
             objektEnde();
             seitenObjekte.push(seitenNr);
             return true;
         };
+        /* ── EINE ZAHL, WIE PDF SIE MAG ──────────────────────────────────────
+           Zwei Nachkommastellen, kein Exponent, kein `-0`. `String(0.1+0.2)`
+           gibt `0.30000000000000004`, und dreissig solcher Zahlen je Strich
+           machen aus einem Kilobyte zwanzig. */
+        const z = (v) => {
+            const n = Math.round((Number(v) || 0) * 100) / 100;
+            return Object.is(n, -0) ? '0' : String(n);
+        };
+        /** Ein Punkt der SEITE (y nach unten) in den Default User Space (y nach oben). */
+        const hoch = (q, hoehe) => [q[0], hoehe - q[1]];
+        /**
+         * Eine Marke als `/Ink`-Annotation mit eigenem Erscheinungsbild.
+         *
+         * DAS AUSSEHEN IST EIN FORM-XOBJECT, dessen `/BBox` GENAU dem `/Rect`
+         * der Annotation entspricht. Dann ist die Abbildung von Formraum auf
+         * Annotationsraum die Einheitsmatrix, und man darf im Strom mit den
+         * echten Seitenkoordinaten rechnen. Jede andere Wahl braucht eine
+         * `/Matrix` und wird beim ersten Verschieben der Annotation krumm.
+         *
+         * Gibt `0` zurück, wenn nichts zu zeichnen ist — dann steht auch keine
+         * leere Annotation in der Seite.
+         */
+        const annotation = (marke, hoehe) => {
+            const striche = (marke.striche || []).filter(s => Array.isArray(s) && s.length >= 2);
+            if (!striche.length)
+                return 0;
+            const breite = Math.max(0.1, Number(marke.breite) || 1);
+            const deck = Math.max(0, Math.min(1, marke.deckkraft === undefined ? 1 : marke.deckkraft));
+            const [r, g, b] = marke.farbe;
+            /* Der Kasten: alles, was gezeichnet wird, plus die halbe Breite —
+               eine Annotation, deren `/Rect` den eigenen Strich abschneidet,
+               wird in manchen Lesern abgeschnitten gezeigt. */
+            let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+            const merken = (q) => {
+                if (q[0] < x0)
+                    x0 = q[0];
+                if (q[0] > x1)
+                    x1 = q[0];
+                if (q[1] < y0)
+                    y0 = q[1];
+                if (q[1] > y1)
+                    y1 = q[1];
+            };
+            striche.forEach(s => s.forEach(q => merken(hoch(q, hoehe))));
+            (marke.kontur || []).forEach(k => (k || []).forEach(q => merken(hoch(q, hoehe))));
+            if (!Number.isFinite(x0))
+                return 0;
+            const rand = breite / 2 + 1;
+            x0 -= rand;
+            y0 -= rand;
+            x1 += rand;
+            y1 += rand;
+            /* DER STROM DES AUSSEHENS. Eine Kontur wird GEFUELLT (variable
+               Breite, der Druck bleibt sichtbar); ein Strich ohne Kontur wird
+               GESTRICHEN, mit runden Enden und Ecken. */
+            let strom = 'q\n';
+            if (deck < 1)
+                strom += '/GS0 gs\n';
+            strom += z(r) + ' ' + z(g) + ' ' + z(b) + ' rg\n'
+                + z(r) + ' ' + z(g) + ' ' + z(b) + ' RG\n'
+                + z(breite) + ' w 1 J 1 j\n';
+            let gefuellt = false, gestrichen = false;
+            striche.forEach((strich, i) => {
+                const kontur = (marke.kontur || [])[i];
+                const zug = (kontur && kontur.length >= 3) ? kontur : strich;
+                const gefuelltJetzt = !!(kontur && kontur.length >= 3);
+                const punkte = zug.map(q => hoch(q, hoehe));
+                strom += z(punkte[0][0]) + ' ' + z(punkte[0][1]) + ' m\n';
+                for (let k = 1; k < punkte.length; k++)
+                    strom += z(punkte[k][0]) + ' ' + z(punkte[k][1]) + ' l\n';
+                if (gefuelltJetzt) {
+                    strom += 'h f\n';
+                    gefuellt = true;
+                }
+                else {
+                    strom += 'S\n';
+                    gestrichen = true;
+                }
+            });
+            strom += 'Q\n';
+            void gefuellt;
+            void gestrichen;
+            const stromBytes = roh.encode(strom);
+            const formNr = objekt();
+            text('<< /Type /XObject /Subtype /Form /FormType 1 /BBox ['
+                + z(x0) + ' ' + z(y0) + ' ' + z(x1) + ' ' + z(y1) + '] '
+                + '/Resources << /ProcSet [/PDF]'
+                + (deck < 1
+                    ? ' /ExtGState << /GS0 << /Type /ExtGState /ca ' + z(deck)
+                        + ' /CA ' + z(deck) + ' /BM /Multiply >> >>'
+                    : '')
+                + ' >> /Length ' + stromBytes.byteLength + ' >>\nstream\n');
+            dazu(stromBytes);
+            text('endstream\n');
+            objektEnde();
+            const listen = striche.map(s => '[' + s.map(q => {
+                const h = hoch(q, hoehe);
+                return z(h[0]) + ' ' + z(h[1]);
+            }).join(' ') + ']').join(' ');
+            const annotNr = objekt();
+            /* `/F 4` ist das Druck-Kennzeichen: ohne es lassen manche Leser die
+               Annotation beim Ausdrucken weg — und eine Handschrift, die auf dem
+               Papier fehlt, ist der schlimmste Fall dieses ganzen Weges. */
+            text('<< /Type /Annot /Subtype /Ink /F 4 '
+                + '/Rect [' + z(x0) + ' ' + z(y0) + ' ' + z(x1) + ' ' + z(y1) + '] '
+                + '/InkList [' + listen + '] '
+                + '/C [' + z(r) + ' ' + z(g) + ' ' + z(b) + '] '
+                + (deck < 1 ? '/CA ' + z(deck) + ' ' : '')
+                + '/BS << /Type /Border /W ' + z(breite) + ' /S /S >> '
+                + '/T (Redion) '
+                + '/Contents (' + klammerFrei(marke.name || 'Handschrift') + ') '
+                + '/AP << /N ' + formNr + ' 0 R >> >>\n');
+            objektEnde();
+            return annotNr;
+        };
+        /** Klammern und Backslash in einer PDF-Zeichenkette müssen entwertet
+            werden — sonst endet die Zeichenkette mitten im Wort. */
+        const klammerFrei = (s) => String(s).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
         /**
          * Das Dokument schliessen und als Blob herausgeben.
          *
@@ -53066,6 +53261,76 @@ const Marken = (() => {
         const pressureFactor = Math.max(0.55, Math.min(1.55, 0.65 + average * 0.7));
         return base * pressureFactor * (mark?.art === 'marker' ? 4 : 1);
     };
+    /* ══ EINE MARKE ALS PDF-ANNOTATION (E506) ════════════════════════════════
+     * Der PDF-Export schreibt Handschrift seit E506 nicht mehr ins Bild,
+     * sondern als echte `/Ink`-Annotation. WAS dabei herauskommt, entscheidet
+     * dieselbe Stelle, die auch auf den Bildschirm zeichnet — Farbe, Breite,
+     * Druckkurve und Deckkraft stehen hier und nirgends sonst (§8). Eine
+     * zweite Rechnung im Export liefe von dieser weg, und dann sähe das PDF
+     * anders aus als der Bildschirm.
+     *
+     * NUR STIFT UND MARKER. Das sind die Marken, die Handschrift SIND: eine
+     * Punktfolge mit Druck. Alles andere bleibt im Seitenbild, und zwar aus
+     * je eigenem Grund:
+     *
+     *   `abdeck`   MUSS im Bild bleiben. Ein Abdeckband, das eine
+     *              Annotation wäre, liesse sich beim Empfänger
+     *              wegschieben — und darunter käme zum Vorschein, was
+     *              abgedeckt werden sollte. Im Bild sind die Pixel darunter
+     *              wirklich weg.
+     *   Formen     Rechteck, Ellipse, Dreieck, Pfeil und Kurve liegen als
+     *              zwei bis drei Stützpunkte in der Ablage, nicht als
+     *              Punktzug. PDF hätte dafür `/Square`, `/Circle` und
+     *              `/Line`; das ist ein eigener Bogen und steht in
+     *              `LUECKEN.md`.
+     *   Text,      brauchten `/FreeText` mit eingebetteter Schrift — auch
+     *   Zettel     ein eigener Bogen (Dossier S.10).
+     *   Bild,      wären `/Stamp` mit eigenem Bild-XObject.
+     *   Fachzeichen
+     * ---------------------------------------------------------------------- */
+    const annotierbar = (mark) => !!mark && (mark.art === 'stift' || mark.art === 'marker')
+        && InkGeometry.points(mark.pts).length >= 2;
+    /** `#rrggbb` zu drei Werten von 0 bis 1. Unlesbares wird schwarz. */
+    const farbeRgb = (wert) => {
+        const t = String(wert || '').trim();
+        const kurz = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(t);
+        const lang = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(t);
+        const teile = lang ? [lang[1], lang[2], lang[3]]
+            : kurz ? [kurz[1] + kurz[1], kurz[2] + kurz[2], kurz[3] + kurz[3]] : null;
+        if (!teile)
+            return [0, 0, 0];
+        return teile.map(h => Math.round(parseInt(h, 16) / 255 * 1000) / 1000);
+    };
+    /**
+     * Was der PDF-Schreiber von dieser Marke wissen muss.
+     *
+     * `kontur` ist das gefüllte Vieleck mit VERÄNDERLICHER Breite — dort,
+     * wo der Bildschirm eine Fläche zeichnet (Füller, Pinsel, Bleistift).
+     * Wo er eine Linie zieht (Kugelschreiber, Marker, Schutzleiter), bleibt
+     * `null`, und der Schreiber streicht die Mittellinie mit fester Breite.
+     * Dieselbe Unterscheidung wie in `zeichneMarke`, aus derselben Menge.
+     */
+    const alsAnnotation = (mark) => {
+        if (!annotierbar(mark))
+            return null;
+        const punkte = InkGeometry.points(mark.pts);
+        const base = Math.max(0.5, Number(mark.breite) || BREITEN[1]);
+        const flaeche = mark.art === 'stift' && FLAECHEN_STIFTE.has(String(mark.stil));
+        const druck = Array.isArray(mark.pressure) ? mark.pressure.map(Number) : [];
+        const kontur = flaeche && punkte.length >= 3
+            ? InkGeometry.outlinePunkte(punkte, punkte.map((_p, i) => base / 2 * druckFaktor(String(mark.stil), druck[i] ?? druck[druck.length - 1] ?? 0.5)))
+            : null;
+        return {
+            striche: [punkte.map(q => [q[0], q[1]])],
+            kontur: [kontur && kontur.length >= 3 ? kontur.map(q => [q[0], q[1]]) : null],
+            farbe: farbeRgb(mark.farbe),
+            /* Der Marker ist auf dem Bildschirm viermal so breit wie seine Zahl
+               (siehe `strokeWidth`) — im PDF muss er dieselbe Breite haben. */
+            breite: mark.art === 'marker' ? base * 4 : base,
+            deckkraft: mark.art === 'marker' ? 0.32 : 1,
+            name: mark.art === 'marker' ? 'Marker' : 'Handschrift'
+        };
+    };
     const arrowPath = (start, end) => {
         const dx = end[0] - start[0];
         const dy = end[1] - start[1];
@@ -57203,7 +57468,8 @@ const Marken = (() => {
     };
     if (typeof document !== 'undefined')
         document.addEventListener('keydown', kuerzel);
-    return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, FORMEN, WERKZEUGE, artWort, artZeichen,
+    return { schicht, leiste, zeichneMarke, annotierbar, alsAnnotation,
+        FARBEN, BREITEN, STIFTE, FORMEN, WERKZEUGE, artWort, artZeichen,
         druckFaktor, RADIERER, TASTEN,
         /* DIE FARBSÄTZE NACH AUSSEN (E486). Nicht, damit jemand anders eine
            zweite Leiste baut — sondern damit der Prüflauf an derselben Rechnung
@@ -67115,7 +67381,7 @@ const DocumentMode = (() => {
      * `typ` und `guete` gehen an `toBlob`: PNG für ein einzelnes Bild
      * (verlustfrei), JPEG für das PDF (weil `DCTDecode` genau das nimmt).
      */
-    const seiteZeichnen = async (block, typ = 'image/png', guete = 0.92) => {
+    const seiteZeichnen = async (block, typ = 'image/png', guete = 0.92, nimm) => {
         if (!block)
             return null;
         const bw = Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE;
@@ -67142,7 +67408,12 @@ const DocumentMode = (() => {
             }
             catch { /* dann ohne Seitenbild — die Marken kommen trotzdem */ }
         }
-        const marken = Array.isArray(block.marken) ? block.marken : [];
+        /* WELCHE MARKEN INS BILD GEHEN (E506). Ohne Filter alle — so malt „Als
+           Bild sichern" weiterhin die ganze Seite. Der PDF-Export lässt die
+           weg, die er als echte Annotation obendrauf schreibt; stünden sie
+           auch im Bild, stände jeder Strich zweimal da. */
+        const alleMarken = Array.isArray(block.marken) ? block.marken : [];
+        const marken = nimm ? alleMarken.filter(nimm) : alleMarken;
         if (marken.length && typeof Marken !== 'undefined') {
             /* ── DIE BILDMARKEN (E479, L133) ────────────────────────────────────
                Ein Foto auf der Seite fehlte auf dem gesicherten Bild. ZWEI
@@ -67248,18 +67519,73 @@ const DocumentMode = (() => {
        dauert es Sekunden, und eine Oberfläche, die dabei nichts sagt, sieht
        kaputt aus. Der Rückruf darf auch `false` sagen — dann bricht es ab
        und gibt `null`, statt ein halbes Dokument zu liefern. */
+    /**
+     * EINE MARKE AUS BLATTPUNKTEN IN SEITENPUNKTE (E506).
+     *
+     * Marken liegen im Blattraum: Ursprung oben links der UNGEDREHTEN Seite.
+     * Das gemalte Bild dreht sich mit `gedreht` (E467) — bei 90 und 270 sind
+     * Breite und Höhe der fertigen Seite getauscht. Eine Annotation muss
+     * dieselbe Drehung mitmachen, sonst liegt sie quer zu ihrem eigenen
+     * Strich.
+     *
+     * DIE DREHUNG IST EINE MATRIX, kein Tausch von x und y — das Stift-
+     * Dossier nennt auf Seite 6 ausdrücklich den Ad-hoc-Tausch als den
+     * Fehler, nach dem Ink „versetzt, gespiegelt oder um 90 Grad gedreht"
+     * erscheint. Hier ist es die Drehung um die Blattmitte, danach die
+     * Verschiebung in die Mitte der fertigen Seite; genau die drei Schritte,
+     * die `seiteZeichnen` an der Leinwand macht.
+     *
+     * Der Schreiber dreht danach nur noch die y-Achse um (Seite → Default
+     * User Space) — das ist SEINE Sache und steht dort.
+     */
+    const aufSeite = (marke, block) => {
+        if (!marke)
+            return null;
+        const bw = Number(block?.bw) || Number(block?.blattBreite) || SheetSpace.A4_BREITE;
+        const bh = Number(block?.bh) || Number(block?.blattHoehe) || SheetSpace.A4_HOEHE;
+        const g = SheetSpace.gedrehtVon(block);
+        const quer = g === 90 || g === 270;
+        const pw = quer ? bh : bw, ph = quer ? bw : bh;
+        const dreh = (q) => {
+            const dx = (Number(q[0]) || 0) - bw / 2, dy = (Number(q[1]) || 0) - bh / 2;
+            const rx = g === 90 ? -dy : g === 180 ? -dx : g === 270 ? dy : dx;
+            const ry = g === 90 ? dx : g === 180 ? -dy : g === 270 ? -dx : dy;
+            return [Math.round((pw / 2 + rx) * 100) / 100, Math.round((ph / 2 + ry) * 100) / 100];
+        };
+        return {
+            striche: (marke.striche || []).map((s) => s.map(dreh)),
+            kontur: (marke.kontur || []).map((k) => k ? k.map(dreh) : null),
+            farbe: marke.farbe, breite: marke.breite,
+            deckkraft: marke.deckkraft, name: marke.name
+        };
+    };
     const alsPdf = async (seiten, melden) => {
         if (typeof PdfWriter === 'undefined' || !Array.isArray(seiten) || !seiten.length)
             return null;
         const schreiber = PdfWriter.neu();
+        /* ══ HANDSCHRIFT WIRD ANNOTATION (E506) ═══════════════════════════════
+           Was `Marken.annotierbar` sagt, geht NICHT ins Bild, sondern als
+           echte `/Ink`-Annotation obendrauf. Die Regel steht in `marken.ts`,
+           weil dort auch Farbe, Breite und Druckkurve stehen (§8); hier wird
+           nur gefragt.
+    
+           KANN DIE APP DAS ÜBERHAUPT? Ein älterer Stand von `Marken` oder ein
+           Schreiber ohne Annotationen darf das PDF nicht kaputt machen — dann
+           gehen alle Marken wie bisher ins Bild. */
+        const kannAnnot = typeof Marken !== 'undefined' && !!Marken.annotierbar && !!Marken.alsAnnotation;
         for (let i = 0; i < seiten.length; i++) {
             if (melden && melden(i, seiten.length) === false)
                 return null;
-            const bild = await seiteZeichnen(seiten[i], 'image/jpeg', 0.88);
+            const block = seiten[i];
+            const roh = Array.isArray(block?.marken) ? block.marken : [];
+            const annot = kannAnnot ? roh.filter((m) => Marken.annotierbar(m)) : [];
+            const bild = await seiteZeichnen(block, 'image/jpeg', 0.88, annot.length ? (m) => !Marken.annotierbar(m) : undefined);
             if (!bild)
                 continue;
             schreiber.seite({ bild: bild.blob, pixelBreite: bild.pixelBreite, pixelHoehe: bild.pixelHoehe,
-                breite: bild.breite, hoehe: bild.hoehe });
+                breite: bild.breite, hoehe: bild.hoehe,
+                marken: annot.map((m) => aufSeite(Marken.alsAnnotation(m), block))
+                    .filter(Boolean) });
         }
         /* Keine einzige Seite hat sich malen lassen — dann ist ein PDF mit null
            Seiten die falsche Antwort. Lieber gar keines und ein Wort dazu. */
@@ -67782,11 +68108,15 @@ const DocumentMode = (() => {
            der Satz stand im `title`, er nannte allein den verlorenen Suchtext,
            und am Telefon gibt es kein Hover (§37). Wer dort exportierte, erfuhr
            gar nichts und merkte es erst beim Empfaenger. */
+        /* SEIT E506 STIMMT DIE HÄLFTE NICHT MEHR, DIE HIER STAND: die Striche
+           sind für ein fremdes Programm sehr wohl Anmerkungen. Ein Satz, der
+           schlechter redet, als die App ist, ist genauso falsch wie einer, der
+           zu viel verspricht (§33). */
         pdfKnopf.title = 'Das ganze Dokument mit allen Marken als PDF speichern. '
-            + 'Jede Seite wird ein Bild: der Text der ursprünglichen PDF ist darin nicht mehr '
-            + 'durchsuchbar, Verweise sind keine Verweise mehr, und deine Striche sind für ein '
-            + 'fremdes Programm keine Anmerkungen mehr, sondern Teil des Bildes. '
-            + 'Dein Original und deine Marken bleiben in Redion unverändert.';
+            + 'Deine Handschrift wird zu echten Anmerkungen, die ein fremdes PDF-Programm '
+            + 'anklicken, verschieben und löschen kann. Die Seite darunter wird ein Bild: '
+            + 'ihr Text ist darin nicht mehr durchsuchbar, und Verweise sind keine Verweise '
+            + 'mehr. Dein Original und deine Marken bleiben in Redion unverändert.';
         const importButton = makeAction('import', '＋ PDF hinzufügen');
         importButton.className = 'document-import';
         /* DIE KENNUNG, NICHT DAS OBJEKT (E471, L102 zum zweiten Mal). `darf`
@@ -68106,8 +68436,9 @@ const DocumentMode = (() => {
            das Einzige, was der Mensch ueberhaupt zu sehen bekommt. */
         const pdfHinweis = document.createElement('p');
         pdfHinweis.className = 'document-export-hinweis';
-        pdfHinweis.textContent = 'Beim PDF wird jede Seite ein Bild: Text und Striche sind '
-            + 'darin nicht mehr wählbar. Dein Original und deine Marken bleiben in Redion.';
+        pdfHinweis.textContent = 'Deine Handschrift wird eine echte Anmerkung — in jedem '
+            + 'PDF-Programm anklickbar. Die Seite darunter wird ein Bild: ihr Text ist darin '
+            + 'nicht mehr durchsuchbar. Original und Marken bleiben in Redion.';
         container.append(datenZeile, pdfHinweis, viewTitle, randKnopf, lupeKnopf);
         if (laufKnopf)
             container.appendChild(laufKnopf);
