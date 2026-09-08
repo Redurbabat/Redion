@@ -2090,6 +2090,33 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  ordnerkarte: {
+    titel: 'Der Blick in den Ordner kommt beim Hinschauen (E508)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const fach = Store.addPage(null, { text: 'BT-Arbeitssicherheit', icon: '📁',
+        heftArt: 'fach' });
+      ['Chemie für Elektroberufe', 'Schutzmassnahmen nach NIV',
+       'Erste Hilfe im Betrieb', 'Gefahrstoffe und Kennzeichnung',
+       'Prüfprotokoll Anlage 4', 'Anhang: Formelblatt']
+        .forEach(t => Store.addPage(fach.id, { text: t }));
+      await Store.flush();
+      (window as any).Bibliothek?.oeffne?.();
+      await new Promise(r => setTimeout(r, 900));
+      /* Über denselben Weg, den auch die Maus nimmt: hinschauen, warten. */
+      const knopf = document.querySelector<HTMLElement>('.bib-blick[data-blick]');
+      const k = knopf?.getBoundingClientRect();
+      if (knopf && k) {
+        knopf.dispatchEvent(new PointerEvent('pointerenter', { bubbles: false,
+          pointerId: 1, pointerType: 'mouse', isPrimary: true,
+          clientX: k.left + k.width / 2, clientY: k.top + k.height / 2 }));
+      }
+      await new Promise(r => setTimeout(r, 1400));
+    }
+  },
+
   neigung: {
     titel: 'Der Bleistift schattiert, wenn man ihn flach hält (E507)',
     bauen: async () => {

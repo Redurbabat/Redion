@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — achtunddreissig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — neununddreissig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -463,7 +463,16 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     neu, das neue Feld aber nicht — fünfzehn Neigungen zu acht Punkten.
     **Steht.**
 
-Der Auftrag heisst deshalb jetzt **achtunddreissig Bögen**; die Überschrift
+  · **G39 — Der Blick kommt beim Hinschauen** (E508, test476): Redurs
+    Wunsch — die Ordnerkarte beim Überfahren statt beim Klicken. Beides,
+    nicht statt: erzeigt geht sie wieder zu, angetippt bleibt sie (§37,
+    das Telefon kennt kein Überfahren). 280 ms Wartezeit trennen die
+    Absicht vom Vorbeifahren. Dazu das Lustige: eine Welle aus EINER Zahl
+    statt fünf geratener, Überschwingen, eine wippende Klappe, und ein
+    Blatt, das sich aufrichtet. Drei Wächter des ersten Entwurfs waren vor
+    der Arbeit schon grün und mussten geschärft werden. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **neununddreissig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-487 Entscheidungen, E1 bis E507 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+488 Entscheidungen, E1 bis E508 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -551,6 +551,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E505** — CropBox und /Rotate werden endlich gefahren, und der PDF-Export sagt sichtbar, was er tut
 * **E506** — Handschrift wird eine echte /Ink-Annotation mit eigenem Erscheinungsbild, statt Teil des Bildes zu sein
 * **E507** — Die Neigung des Stifts: der Bleistift schattiert, und der Druck sagt, woher er kommt
+* **E508** — Der Blick in den Ordner kommt beim Hinschauen, und die Blätter fächern als Welle
 
 ---
 
@@ -40651,3 +40652,106 @@ test351, test362, test366, test437, test438, test453, test464, test465,
 test470, test472, test474 — alle grün. Nicht geprüft: die Gesamtsuite.
 Bild: `node bilder.mts neigung` — drei Striche, gleicher Druck, nur der
 Winkel wächst.
+
+---
+
+E508 — Der Blick kommt beim Hinschauen
+--------------------------------------------------------------------------
+
+Redur, 8. September, mit zwei Bildern der Ordnerkarte: „das sieht brutal
+gut aus … so was wollte ich haben. Könntest du nicht, wenn ich klicke, das
+kommen, sondern wenn ich mit Maus drauf gehe? Und ich will, dass du es
+bisschen lustig machst."
+
+## Beides, nicht statt
+
+Die Karte kommt jetzt beim Überfahren — **aber der Klick bleibt.** §37 nennt
+das Telefon den Normalfall, und dort gibt es kein Überfahren; eine Karte,
+die nur mit der Maus aufgeht, wäre auf dem Gerät, an dem Redur am meisten
+arbeitet, gar nicht zu bekommen.
+
+Die zwei Wege unterscheiden sich in EINEM Punkt: eine **erzeigte** Karte
+geht wieder zu, wenn der Zeiger fortgeht; eine **angetippte** bleibt, bis
+man sie schliesst. Wer tippt, will halten.
+
+## Die Wartezeit ist der ganze Unterschied
+
+Zwischen „hilfreich" und „springt mich an" liegen 280 Millisekunden. Wer
+mit der Maus quer über das Regal fährt, berührt fünf Ordner in einer halben
+Sekunde; ohne Wartezeit klappten fünf Karten hinter ihm auf. 280 ms ist
+länger als ein Vorbeifahren und kürzer als eine Absicht.
+
+Beim Fortgehen sind es 220 ms, und die dürfen nicht null sein: der Weg vom
+Knopf in die Karte führt für einen Augenblick über nichts von beidem, und
+eine Karte, die in diesem Augenblick verschwindet, ist nicht zu benutzen.
+Deshalb horchen beide — Knopf und Karte —, und jeder neue Zeigerkontakt
+sagt das Zuklappen ab.
+
+**Nur die Maus.** Ein Finger meldet auf manchen Geräten ein `pointerenter`,
+das kein Überfahren ist — er tippt gerade. Geprüft wird `pointerType` UND
+`(hover: hover) and (pointer: fine)`.
+
+## Und der Fokus wird nicht gestohlen
+
+Eine angetippte Karte nimmt den Fokus (man will in ihr weiterarbeiten). Eine
+erzeigte nicht: der Fokus steht womöglich in der Suche des Regals, und ihn
+wegzuziehen, weil die Maus über einen Ordner fuhr, wäre ein Diebstahl (§38).
+
+## Das Lustige
+
+**Die Welle.** Hier standen fünf von Hand gewählte Zahlen — .15 / .1 / .05 /
+.02 / 0. Beim Nachrechnen fiel auf, dass der Schritt von .05 auf .02 halb so
+gross ist wie die anderen; es sah aus wie eine Welle und war keine. Jetzt
+gibt es EINE Zahl (`--ru-fach-welle: 38ms`), und die vier anderen rechnen
+sich daraus: 0,152 / 0,114 / 0,076 / 0,038 / 0. Das vorderste Blatt kommt
+zuletzt — so legt eine Hand Karten hin.
+
+**Das Überschwingen.** Die Blätter fliegen einen Hauch über ihren Platz
+hinaus und setzen sich (`cubic-bezier(.34,1.36,.5,1.14)`). Bei 138 px Weg
+sind 14 % Überschuss keine zwanzig Pixel: man sieht es als Schwung, nicht
+als Fehler.
+
+**Die Klappe wippt** einmal, wenn der Ordner aufgeht — anderthalb Grad,
+zweimal hin und her. Mehr wäre ein Spielzeug.
+
+**Ein Blatt richtet sich auf**, wenn man darauf zeigt. Es hebt sich schon
+seit E459; neu ist, dass dabei seine Schräge verschwindet, als nähme man es
+heraus.
+
+Alles davon ist bei `prefers-reduced-motion` weg (§39). Die Karte kommt
+trotzdem — nur eben auf einmal. Wer Bewegung abstellt, will die Auskunft
+und nicht die Vorstellung.
+
+## Drei Wächter, die nicht wachten
+
+Der erste Entwurf des Prüflaufs hatte drei Zusagen, die **vor der Arbeit
+schon grün waren** — und eine Zusage, die nicht rot werden kann, ist keine
+(§55.2):
+
+**1 · „Ein Blatt hebt sich"** suchte nach der Regel `.ru-fach-blatt:hover`.
+Die gab es seit E459. Jetzt wird mit der ECHTEN Maus gefahren und der
+Kasten gemessen — ein gesendetes `pointerover` lässt CSS `:hover` kalt, das
+entscheidet der Browser nach der wirklichen Zeigerlage.
+
+**2 · „Ein bisschen Schwung"** suchte `@keyframes ru-fach…`, und
+`ru-fach-puls` stand längst da. Jetzt heisst die neue Regel beim Namen.
+
+**3 · „Ein kurzes Überstreichen öffnet nichts"** sah erst NACH dem Weggehen
+nach. Da ist die Karte auch ohne Wartezeit wieder zu, weil das Zuklappen
+sie holt — die Gegenprobe mit `SCHAU_AUF_MS = 0` blieb grün. Jetzt wird
+gemessen, WÄHREND der Zeiger noch darauf liegt.
+
+## Und ein Fehler im Zuklappen
+
+Der erste Wurf schloss die erzeigte Karte mit `lage.remove()`. Die Karte
+hängt aber zwei Horcher an das Dokument (Escape und der Klick daneben) —
+wer nur den Knoten entfernt, lässt beide liegen, und nach fünf Ordnern
+horchen fünf tote Karten auf jede Taste. Sie gibt jetzt ihren eigenen
+Schliessweg heraus, und der wird gerufen.
+
+GEPRÜFT. `test476` neu mit 26 Zusagen, vor dem Bauen rot in zwölf. Drei
+Gegenproben rot gesehen: die Wartezeit auf null (§2), die Welle mit einem
+Sprung (§7 in zwei Zusagen), und die drei stumpfen Wächter oben, die vor
+ihrer Reparatur grün blieben. Dazu test87, test105, test109, test265,
+test276, test307 — alle grün. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts ordnerkarte`.

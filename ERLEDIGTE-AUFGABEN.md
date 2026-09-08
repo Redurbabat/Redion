@@ -4658,3 +4658,28 @@ wird.
 Und der Druck sagt jetzt, woher er kommt: `druckArt` unterscheidet den
 gemessenen Sensordruck vom Tempo-Ersatz für Maus und Finger. Bis hierher
 lagen beide im selben Feld nebeneinander, ununterscheidbar.
+
+**Der Blick kommt beim Hinschauen (E508, test476).** Redur hat zwei Bilder
+der Ordnerkarte geschickt und gesagt, sie solle beim Überfahren mit der
+Maus kommen statt beim Klicken — und ein bisschen lustig sein.
+
+Beides, nicht statt: eine erzeigte Karte geht wieder zu, wenn der Zeiger
+fortgeht, eine angetippte bleibt. §37 nennt das Telefon den Normalfall,
+und dort gibt es kein Überfahren. Zwischen „hilfreich" und „springt mich
+an" liegen 280 Millisekunden; beim Fortgehen sind es 220, und die dürfen
+nicht null sein, weil der Weg vom Knopf in die Karte für einen Augenblick
+über nichts von beidem führt.
+
+Das Lustige: die fünf von Hand gewählten Verzugszeiten sind einer Zahl
+gewichen, aus der sich alle rechnen — beim Nachrechnen war der mittlere
+Schritt halb so gross wie die anderen, es sah aus wie eine Welle und war
+keine. Dazu ein Überschwingen von 14 %, eine Klappe, die einmal wippt, und
+ein Blatt, das sich aufrichtet, wenn man darauf zeigt. Alles weg bei
+`prefers-reduced-motion`.
+
+Der grösste Fund war am Prüflauf selbst: drei seiner Zusagen waren vor der
+Arbeit schon grün. „Ein Blatt hebt sich" suchte eine CSS-Regel, die es seit
+E459 gab; „ein bisschen Schwung" fand ein fremdes `@keyframes`; und „ein
+kurzes Überstreichen öffnet nichts" sah erst nach dem Weggehen nach — da
+ist die Karte auch ohne Wartezeit wieder zu. Alle drei messen jetzt im
+richtigen Augenblick, mit der echten Maus.

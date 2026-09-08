@@ -7272,13 +7272,28 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   box-shadow:inset 0 1px 1px #ffffff4d, 0 4px 12px #0000002e;
   transition:transform var(--motion-slow) var(--ease-enter), filter var(--motion-fast) var(--ease)
 }
-.ru-fach-blatt[data-nr="0"]{background:#c2410c; z-index:25; transition-delay:.15s}
-.ru-fach-blatt[data-nr="1"]{background:#b45309; z-index:24; transition-delay:.1s}
-.ru-fach-blatt[data-nr="2"]{background:#0369a1; z-index:23; transition-delay:.05s}
-.ru-fach-blatt[data-nr="3"]{background:#0f766e; z-index:22; transition-delay:.02s}
+/* ══ DIE WELLE (E508) ══════════════════════════════════════════════════════
+   Hier standen vier von Hand gewählte Zahlen: .15 / .1 / .05 / .02 / 0 —
+   kein gleichmässiger Abstand, und beim Nachrechnen fiel auf, dass der
+   Schritt von .05 auf .02 halb so gross ist wie die anderen. Jetzt gibt es
+   EINE Zahl, und die vier anderen rechnen sich daraus. Wer die Welle
+   schneller oder langsamer haben will, ändert eine Stelle.
+
+   DIE RICHTUNG: das VORDERSTE Blatt kommt zuletzt. So legt eine Hand
+   Karten hin — von hinten nach vorn —, und das Blatt, dessen Name man
+   zuerst liest, landet als letztes im Blick. */
+.ru-fach{--ru-fach-welle:38ms}
+.ru-fach-blatt[data-nr="0"]{background:#c2410c; z-index:25;
+  transition-delay:calc(var(--ru-fach-welle) * 4)}
+.ru-fach-blatt[data-nr="1"]{background:#b45309; z-index:24;
+  transition-delay:calc(var(--ru-fach-welle) * 3)}
+.ru-fach-blatt[data-nr="2"]{background:#0369a1; z-index:23;
+  transition-delay:calc(var(--ru-fach-welle) * 2)}
+.ru-fach-blatt[data-nr="3"]{background:#0f766e; z-index:22;
+  transition-delay:var(--ru-fach-welle)}
 /* NICHT VIOLETT. #6d28d9 war die Farbe des Ordners selbst — das fünfte
    Blatt stand unsichtbar vor der Klappe. */
-.ru-fach-blatt[data-nr="4"]{background:#9d174d; z-index:21}
+.ru-fach-blatt[data-nr="4"]{background:#9d174d; z-index:21; transition-delay:0s}
 /* EINE ZEILE AM UNTEREN RAND, und was nicht passt, endet mit „…". Der
    ganze Name steht im `title` und im `aria-label`. */
 .ru-fach-zeile{
@@ -7313,9 +7328,35 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 .ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="2"]{transform:translateY(-86px) translateX(-4px) rotate(-3.5deg)}
 .ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="3"]{transform:translateY(-60px) translateX(5px) rotate(3deg)}
 .ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="4"]{transform:translateY(-34px) rotate(-1.5deg)}
+/* ÜBERSCHWINGEN (E508). Die Blätter fliegen einen Hauch über ihren Platz
+   hinaus und setzen sich. Der letzte Wert der Kurve ist 1.14, also 14 %
+   Überschuss — bei 138 px Weg sind das keine zwanzig Pixel, und man sieht
+   es als Schwung, nicht als Fehler. */
+.ru-fach[data-offen="ja"] .ru-fach-blatt{
+  transition-timing-function:cubic-bezier(.34,1.36,.5,1.14)
+}
+/* UND DIE KLAPPE WIPPT EINMAL, wenn der Ordner aufgeht — als hätte man
+   den Deckel angehoben und losgelassen. Ein halber Grad, zweimal hin und
+   her; mehr wäre ein Spielzeug. */
+@keyframes ru-fach-wippe{
+  0%{transform:rotate(0deg)} 30%{transform:rotate(-1.6deg)}
+  60%{transform:rotate(.8deg)} 100%{transform:rotate(0deg)}
+}
+.ru-fach[data-offen="ja"] .ru-fach-klappe{
+  animation:ru-fach-wippe .5s var(--ease) 1;
+  transform-origin:50% 100%
+}
 .ru-fach-blatt:hover,.ru-fach-blatt:focus-visible{filter:brightness(1.12)}
 .ru-fach-blatt:focus-visible{outline:2px solid var(--text); outline-offset:2px}
-.ru-fach[data-offen="ja"] .ru-fach-blatt:is(:hover,:focus-visible){translate:0 -10px}
+/* EIN BLATT, DAS MAN ANSIEHT, RICHTET SICH AUF (E508). Es hebt sich schon
+   seit E459; neu ist, dass es dabei GERADE wird — die kleine Schräge, mit
+   der es im Fächer liegt, verschwindet, als nähme man es heraus. Zusammen
+   mit dem Schatten ist das der Unterschied zwischen „ist markiert" und
+   „liegt in der Hand". */
+.ru-fach[data-offen="ja"] .ru-fach-blatt:is(:hover,:focus-visible){
+  translate:0 -10px; rotate:0deg; scale:1.02;
+  box-shadow:inset 0 1px 1px #ffffff66, 0 10px 22px #00000047
+}
 .ru-fach-name{flex:1 1 auto; min-width:0; margin:0; font-size:13px; font-weight:600; line-height:1.35; overflow-wrap:anywhere}
 .ru-fach-rest{margin:8px 0 0; font-size:11px; color:var(--text-dim); line-height:1.4}
 .ru-fach-gehen{margin-top:10px; width:100%; justify-content:center}
@@ -7327,7 +7368,13 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 @media (prefers-reduced-motion: reduce){
   .ru-fach :is(.ru-fach-klappe,.ru-fach-blatt,.ru-fach-glanz){transition:none}
   .ru-fach[data-sucht="ja"] .ru-fach-punkt::after{animation:none; opacity:0}
-  .ru-fach[data-offen="ja"] .ru-fach-blatt:is(:hover,:focus-visible){translate:none}
+  .ru-fach[data-offen="ja"] .ru-fach-blatt:is(:hover,:focus-visible){translate:none; scale:none}
+  /* KEINE WELLE, KEIN WIPPEN, KEIN ÜBERSCHWINGEN (E508, §39). Die Karte
+     kommt trotzdem — nur eben auf einmal. Wer Bewegung abstellt, will die
+     Auskunft, nicht die Vorstellung. */
+  .ru-fach{--ru-fach-welle:0ms}
+  .ru-fach-blatt[data-nr]{transition-delay:0s}
+  .ru-fach[data-offen="ja"] .ru-fach-klappe{animation:none}
 }
 
 /* Redion-Bedienung · Baumansicht */

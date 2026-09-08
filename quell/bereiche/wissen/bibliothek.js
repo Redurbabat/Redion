@@ -519,8 +519,62 @@ const Bibliothek = (() => {
         }
         return raus;
     };
-    /** Die Karte über dem Deckel aufschlagen. `r` ist das Rechteck des Deckels. */
-    const blickHinein = (p, r) => {
+    /* ══ DER BLICK KOMMT BEIM HINSCHAUEN (E508) ═══════════════════════════════
+     * Redur, 8. September: „Könntest du nicht, wenn ich klicke, das kommen,
+     * sondern wenn ich mit Maus drauf gehe?"
+     *
+     * Ja — aber NICHT statt des Klicks. §37 nennt das Telefon den Normalfall,
+     * und dort gibt es kein Überfahren; eine Karte, die nur mit der Maus
+     * aufgeht, wäre auf dem Gerät, an dem Redur am meisten arbeitet, gar
+     * nicht zu bekommen. Also beides, und die zwei Wege unterscheiden sich
+     * in EINEM Punkt: eine erzeigte Karte geht wieder zu, wenn der Zeiger
+     * fortgeht; eine ANGETIPPTE bleibt, bis man sie schliesst. Wer tippt,
+     * will halten.
+     *
+     * DIE WARTEZEIT IST DER GANZE UNTERSCHIED zwischen „hilfreich" und
+     * „springt mich an". Wer mit der Maus quer über das Regal fährt, berührt
+     * fünf Ordner in einer halben Sekunde; ohne Wartezeit klappten fünf
+     * Karten hinter ihm auf. 280 ms ist länger als ein Vorbeifahren und
+     * kürzer als eine Absicht.
+     *
+     * DIE ZEIT BEIM FORTGEHEN ist kürzer, aber nicht null: der Weg vom Knopf
+     * in die Karte führt für einen Augenblick über nichts von beidem, und
+     * eine Karte, die in diesem Augenblick verschwindet, ist nicht zu
+     * benutzen.
+     * ---------------------------------------------------------------------- */
+    const SCHAU_AUF_MS = 280;
+    const SCHAU_ZU_MS = 220;
+    let schauUhr = 0;
+    let schauZuUhr = 0;
+    /** Der Ordner, dessen Karte gerade per Zeigen offen ist. Leer = keine. */
+    let schauId = '';
+    /* IHR EIGENER SCHLIESSWEG, nicht `lage.remove()`. Die Karte hängt zwei
+       Horcher an das Dokument (Escape und der Klick daneben) und gibt den
+       Fokus zurück; wer nur den Knoten entfernt, lässt beides liegen — und
+       nach fünf Ordnern horchen fünf tote Karten auf jede Taste. */
+    let schauZu = null;
+    const schauAbsagen = () => {
+        if (schauUhr) {
+            clearTimeout(schauUhr);
+            schauUhr = 0;
+        }
+        if (schauZuUhr) {
+            clearTimeout(schauZuUhr);
+            schauZuUhr = 0;
+        }
+    };
+    /** Gibt es an diesem Gerät überhaupt ein Überfahren? */
+    const zeigerHatHover = () => {
+        try {
+            return matchMedia('(hover: hover) and (pointer: fine)').matches;
+        }
+        catch {
+            return false;
+        }
+    };
+    /** Die Karte über dem Deckel aufschlagen. `r` ist das Rechteck des Deckels.
+     *  `perZeigen` heisst: sie geht wieder zu, sobald der Zeiger fortgeht. */
+    const blickHinein = (p, r, perZeigen = false) => {
         if (typeof Ordnerkarte === 'undefined') {
             geheIn(p.id);
             return;
@@ -564,15 +618,63 @@ const Bibliothek = (() => {
         zu = () => {
             document.removeEventListener('keydown', beiTaste, true);
             document.removeEventListener('mousedown', beiKlick);
+            schauAbsagen();
+            schauId = '';
+            schauZu = null;
             lage.remove();
-            zurueck?.focus?.();
+            /* Den Fokus nur zurückgeben, wenn er auch genommen wurde. Eine Karte,
+               die vom blossen Hinschauen kam, hat ihn nie gehabt. */
+            if (!perZeigen)
+                zurueck?.focus?.();
         };
+        /* ── DIE KARTE HÄLT SICH SELBST, SOLANGE MAN AUF IHR LIEGT (E508) ────
+           Sie hängt in einer eigenen Lage neben dem Knopf, nicht in ihm. Der
+           Weg mit der Maus führt also aus dem Knopf HERAUS und in die Karte
+           HINEIN — und dazwischen liegt für einen Augenblick nichts von
+           beidem. Deshalb horchen beide, und das Zuklappen wird jedes Mal neu
+           abgesagt, wenn der Zeiger irgendwo landet, wo er hingehört. */
+        if (perZeigen) {
+            schauId = String(p.id);
+            schauZu = () => zu();
+            lage.addEventListener('pointerenter', () => {
+                if (schauZuUhr) {
+                    clearTimeout(schauZuUhr);
+                    schauZuUhr = 0;
+                }
+            });
+            lage.addEventListener('pointerleave', ereignis => {
+                if (ereignis.pointerType === 'touch')
+                    return;
+                schauZuSpaeter();
+            });
+        }
         document.addEventListener('keydown', beiTaste, true);
         /* Erst im nächsten Zug horchen: der Klick, der die Karte öffnet, würde
            sie sonst im selben Zug wieder schliessen. */
         setTimeout(() => document.addEventListener('mousedown', beiKlick), 0);
         griff.klappen(true);
-        griff.element.querySelector('.ru-fach-griff')?.focus();
+        /* NUR BEIM TIPPEN DEN FOKUS NEHMEN. Wer bloss hinschaut, hat den Fokus
+           womöglich in der Suche des Regals — ihn wegzuziehen, weil die Maus
+           über einen Ordner fuhr, wäre ein Diebstahl (§38). */
+        if (!perZeigen)
+            griff.element.querySelector('.ru-fach-griff')?.focus();
+    };
+    /** Nach einer kurzen Frist zuklappen — jeder neue Zeigerkontakt sagt ab. */
+    const schauZuSpaeter = () => {
+        if (schauZuUhr)
+            clearTimeout(schauZuUhr);
+        schauZuUhr = window.setTimeout(() => {
+            schauZuUhr = 0;
+            if (!schauId)
+                return;
+            const zu = schauZu;
+            schauId = '';
+            schauZu = null;
+            if (zu)
+                zu();
+            else
+                document.querySelectorAll('.ru-fach-lage').forEach(a => a.remove());
+        }, SCHAU_ZU_MS);
     };
     /** Die Brotkrume der Ablage. An der Wurzel schweigt sie — ein Pfad mit
      *  genau einem Glied ist kein Pfad, sondern eine Zeile Luft. */
@@ -1351,13 +1453,53 @@ const Bibliothek = (() => {
             krume.scrollLeft = krume.scrollWidth;
         });
         wrap.querySelectorAll('[data-ordner]').forEach(b => b.addEventListener('click', () => geheIn(b.dataset['ordner'] || null)));
-        /* Das Auge am Ordner (E463) — derselbe Weg wie im ⌄-Menü, ohne Menü. */
+        /* Das Auge am Ordner (E463) — derselbe Weg wie im ⌄-Menü, ohne Menü.
+           Seit E508 öffnet auch das blosse HINSCHAUEN, siehe `blickHinein`. */
         wrap.querySelectorAll('.bib-blick[data-blick]').forEach(b => {
+            const seiteVon = () => Store.getBlock(b.dataset['blick'] || '');
             b.addEventListener('click', ereignis => {
                 ereignis.stopPropagation();
-                const p = Store.getBlock(b.dataset['blick'] || '');
+                schauAbsagen();
+                const p = seiteVon();
+                /* Ein Tipp auf denselben Ordner, dessen Karte gerade vom Zeigen
+                   offen steht, klappt sie nicht zu und wieder auf — er HÄLT sie
+                   fest. Alles andere wäre ein Flackern für nichts. */
+                if (p && schauId === String(p.id) && document.querySelector('.ru-fach-lage')) {
+                    schauId = '';
+                    return;
+                }
                 if (p)
                     blickHinein(p, b.getBoundingClientRect());
+            });
+            b.addEventListener('pointerenter', ereignis => {
+                const e = ereignis;
+                /* NUR DIE MAUS. Ein Finger meldet auf manchen Geräten ein
+                   `pointerenter`, das kein Überfahren ist — er tippt gerade. Und
+                   ein Gerät ohne Zeiger meldet gar keines; die Abfrage kostet
+                   dort nichts. */
+                if (e.pointerType !== 'mouse' || !zeigerHatHover())
+                    return;
+                if (document.querySelector('.ru-fach-lage'))
+                    return;
+                schauAbsagen();
+                schauUhr = window.setTimeout(() => {
+                    schauUhr = 0;
+                    const p = seiteVon();
+                    if (p)
+                        blickHinein(p, b.getBoundingClientRect(), true);
+                }, SCHAU_AUF_MS);
+            });
+            b.addEventListener('pointerleave', ereignis => {
+                if (ereignis.pointerType === 'touch')
+                    return;
+                /* Noch nicht aufgegangen: die Absicht war keine. Schon offen: die
+                   Karte selbst entscheidet, ob der Zeiger zu ihr gewandert ist. */
+                if (schauUhr) {
+                    clearTimeout(schauUhr);
+                    schauUhr = 0;
+                }
+                if (schauId)
+                    schauZuSpaeter();
             });
         });
         wrap.querySelectorAll('.bib-deckel[data-id]').forEach(k => {
