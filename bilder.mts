@@ -2122,6 +2122,40 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  bewegung: {
+    titel: 'Die Adernreihe kommt als Welle (E511)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('zeichnen:stift', 'kugel');
+      const seite = Store.addPage(null, { text: 'Wechselschaltung', icon: '⌁' });
+      Store.addBlock(seite.id, 'blatt', { text: '', papier: 'blanko',
+        blattBreite: 595.28, blattHoehe: 420, raumVersion: 1, marken: [] });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.click();
+      await new Promise(r => setTimeout(r, 250));
+      /* MITTEN IN DER WELLE ANHALTEN. Eine Bewegung lässt sich auf einem
+         stehenden Bild nur zeigen, solange sie läuft: 130 ms nach dem
+         Umschalten sind die vorderen Tupfer da, die hinteren noch
+         unterwegs, und genau das ist die Welle (§55.3). */
+      const knopf = document.querySelector<HTMLElement>('.blatt-werk [data-act="stil"]');
+      for (let i = 0; i < 8 && knopf && knopf.dataset.stil !== 'leiter'; i++) knopf.click();
+      await new Promise(r => requestAnimationFrame(() => r(null)));
+      /* MITTEN IN DER WELLE ANHALTEN, und zwar GENAU — nicht mit einer
+         Wartezeit, die beim nächsten Rechner anders ausgeht. Jede
+         Bewegung wird auf dieselbe Uhrzeit gestellt und angehalten; weil
+         jeder Tupfer eine andere Verzögerung hat, steht jeder an einer
+         anderen Stelle seiner eigenen Bewegung. Das IST die Welle. */
+      document.querySelectorAll('.blatt-werk .blatt-farbe-leiter, .blatt-werk .zeichen')
+        .forEach(el => (el as any).getAnimations?.().forEach((a: any) => {
+          a.currentTime = 260; a.pause();
+        }));
+      await new Promise(r => setTimeout(r, 60));
+    }
+  },
+
   ordnerkarte: {
     titel: 'Der Blick in den Ordner kommt beim Hinschauen (E508)',
     bauen: async () => {

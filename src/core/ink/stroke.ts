@@ -388,6 +388,37 @@ const InkStroke = (() => {
    * MUSS herein: ohne sie waere die Vorhersage in Punkten gerechnet statt in
    * Millisekunden, und derselbe Vorlauf waere bei 60 Hz doppelt so lang wie
    * bei 120 Hz — gemessen 17,5 px statt 8,8 px bei gleichem Zug.
+   *
+   * ══ HIER GEHEN ROHE PUNKTE HEREIN, KEINE GEGLAETTETEN (E511) ═══════════
+   * Bis hierher bekam diese Funktion `running.pts` — die GEGLAETTETEN
+   * Punkte. Sie verlaengerte damit einen Strich, der selbst schon hinter
+   * der Hand herlief, und der Vorlauf ging fuer den Nachlauf drauf.
+   *
+   * GEMESSEN (§36), Abstand der gezeichneten Spitze von der Stelle, an der
+   * der Stift beim Erscheinen des Bildes WIRKLICH ist (ein Bild = 16,7 ms):
+   *
+   *     Tempo        alt        neu
+   *     0,1 px/ms    3,40 px    0,00 px
+   *     0,4 px/ms    7,16 px    0,00 px      <- das Tempo der Handschrift
+   *     1,2 px/ms    4,91 px    0,00 px
+   *     2,5 px/ms   19,23 px   15,75 px      <- die 26-px-Grenze bremst
+   *
+   * Der Fehler war am groessten genau dort, wo ein Mensch schreibt, und er
+   * wechselte das Vorzeichen: langsam blieb die Tinte zurueck, schnell
+   * schoss sie voraus. Beides fuehlt sich an wie ein Stift, der nicht am
+   * Papier klebt.
+   *
+   * DIE GLAETTUNG BLEIBT, WIE SIE IST. Sie nimmt das Zittern, und dafuer
+   * ist ihr Nachlauf der Preis. Bezahlt wird er jetzt dort, wo er nichts
+   * kostet: im nassen Schwanz, der gezeichnet und NIE gespeichert wird.
+   *
+   * Und der Deckel `min(3, ms/abstand)` ist weg. Er begrenzte den Vorlauf
+   * auf das Dreifache des letzten Schrittes und war damit wieder von der
+   * Abtastrate abhaengig — bei 240 Hz griff er, bei 60 Hz nie. Genau die
+   * Sorte Abhaengigkeit, die E504 aus dem Glaetter genommen hat. Was
+   * bleibt, ist die Grenze in PIXELN, und die ist ehrlich: sie sagt, wie
+   * weit eine Vermutung reichen darf, unabhaengig davon, wie oft ein
+   * Geraet sich meldet.
    */
   const vorhersage = (pts: StrokePoint[], ms: number = VORHER_MS, abstand: number = 8): StrokePoint[] => {
     const n = Array.isArray(pts) ? pts.length : 0;
@@ -400,7 +431,7 @@ const InkStroke = (() => {
     /* Kippt die Richtung, wird nicht geraten. */
     if (l1 > 0.3 && (v1x * v2x + v1y * v2y) / (l1 * l2) < KEHRE) return [];
     const dt = Math.max(1, Number.isFinite(abstand) ? abstand : 8);
-    const weit = Math.min(VORHER_PX, l2 * Math.max(0, Math.min(3, ms / dt)));
+    const weit = Math.min(VORHER_PX, l2 / dt * Math.max(0, ms));
     if (weit < 0.4) return [];
     const ux = v2x / l2, uy = v2y / l2;
     /* Zwei Punkte, der zweite gedaempft — so laeuft der Schwanz aus,

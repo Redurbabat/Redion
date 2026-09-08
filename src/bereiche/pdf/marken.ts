@@ -1087,9 +1087,17 @@ const Marken = (() => {
     let glatt: ((p: [number, number], dt: number) => [number, number]) | null = null;
     let druckGlatt: ((p: number) => number) | null = null;
     let letzteZeit = 0;
+    /* Der gemessene Abstand der letzten zwei Meldungen. Der nasse Schwanz
+       rechnet in Millisekunden und braucht ihn (E511). */
+    let dtLetzt = 16;
     /* Wo der Zeiger ZULETZT WIRKLICH WAR — ungeglaettet. Beim Absetzen wird
        der letzte gespeicherte Punkt dorthin gezogen (siehe `finish`). */
     let rohLetzter: number[] | null = null;
+    /* DIE LETZTEN DREI ROHEN PUNKTE (E511). Der nasse Schwanz rechnet an
+       ihnen, nicht an den geglätteten: er soll die Spitze EINHOLEN, nicht
+       einen Strich verlängern, der selbst schon hinterherläuft. Drei, weil
+       `InkStroke.vorhersage` an dreien erkennt, ob die Richtung kippt. */
+    let rohDrei: number[][] = [];
     /* Ob der laufende Strich gerade als FLAECHE gezeichnet wird (Fueller,
        Pinsel ab drei Punkten) oder als Linie. Wechselt er die Bauart, wird
        der Knoten einmal ganz neu gebaut statt sein `d` gesetzt. */
@@ -1706,12 +1714,14 @@ const Marken = (() => {
       bildAbsagen();
       if (running) { runningNode?.remove(); running = null; runningNode = null; beforeRunning = null; }
       feder = null; glatt = null; druckGlatt = null;
-      letzteZeit = 0; nassFlaeche = false; rohLetzter = null;
+      letzteZeit = 0; nassFlaeche = false; rohLetzter = null; rohDrei = [];
       aktiverZeiger = null;
     };
-    const addSample = (event: PointerEvent): void => {
+    /** Ein Punkt in den Strich. `um` ist der Umrechner DIESES Ereignisses
+     *  (E511) — er holt die Bildschirmmatrix einmal statt je Punkt. */
+    const addSample = (event: PointerEvent, um?: (e: PointerEvent) => [number, number] | null): void => {
       if (!running) return;
-      const roh = R.zuBlatt(flaeche, event);
+      const roh = um ? um(event) : R.zuBlatt(flaeche, event);
       if (!roh) return;
       /* DER DRUCK KOMMT AUS DEM ROHEN PUNKT (E376): der Ersatzdruck fuer
          Maus und Finger rechnet aus der Geschwindigkeit, und geglaettete
@@ -1720,11 +1730,14 @@ const Marken = (() => {
       const jetzt = Number(event.timeStamp) || letzteZeit;
       const dt = letzteZeit ? Math.max(1, jetzt - letzteZeit) : 16;
       letzteZeit = jetzt;
+      dtLetzt = dt;
       /* GEGLAETTET WIRD IMMER, GESPEICHERT NICHT (E376). Der Filter laeuft
          auch dann weiter, wenn der Punkt unter der Schwelle bleibt — sonst
          bliebe er bei langsamer Hand fuer immer hinter ihr zurueck. */
       const point = glatt ? glatt(roh as [number, number], dt) : roh;
       rohLetzter = roh;
+      rohDrei.push(roh);
+      if (rohDrei.length > 3) rohDrei.shift();
       const druck = druckGlatt ? druckGlatt(drucken) : drucken;
       const last = running.pts[running.pts.length - 1];
       if (last && Math.abs(last[0] - point[0]) < 0.6 && Math.abs(last[1] - point[1]) < 0.6) return;
@@ -1797,7 +1810,7 @@ const Marken = (() => {
      * gezogen hat. `Feder.nass()` zeichnet ihn, `Feder.punkte()` kennt ihn
      * nicht — test366 haelt genau das fest.
      * -------------------------------------------------------------------- */
-    const nassenSchwanz = (event: PointerEvent): void => {
+    const nassenSchwanz = (event: PointerEvent, um?: (e: PointerEvent) => [number, number] | null): void => {
       if (!feder || !running) return;
       const druck = running.pressure[running.pressure.length - 1] ?? 0.5;
       const halb = halbeBreite(running, druck);
@@ -1806,14 +1819,31 @@ const Marken = (() => {
         ? (event as any).getPredictedEvents() as PointerEvent[] : [];
       if (vom.length) {
         for (const p of vom.slice(0, 3)) {
-          const q = R.zuBlatt(flaeche, p);
+          const q = um ? um(p) : R.zuBlatt(flaeche, p);
           if (q) pts.push(q);
         }
       }
       if (!pts.length) {
-        const jetzt = Number(event.timeStamp) || 0;
-        pts = InkStroke.vorhersage(running.pts as any, InkStroke.VORHER_MS,
-          letzteZeit && jetzt > letzteZeit ? jetzt - letzteZeit : 8) as any;
+        /* AN DEN ROHEN PUNKTEN GERECHNET (E511), nicht an `running.pts`:
+           die sind geglättet und laufen selbst hinterher. */
+        pts = InkStroke.vorhersage(rohDrei as any, InkStroke.VORHER_MS, dtLetzt) as any;
+      }
+      /* ══ DIE TINTE HOLT DIE SPITZE EIN (E511) ═══════════════════════════
+         Vor der Vermutung steht eine MESSUNG: der letzte rohe Punkt ist
+         die Stelle, an der der Stift wirklich war — kein Raten, kein
+         Filter. Er kommt als erster Punkt des Schwanzes dazu, und erst
+         dahinter das Vorausgezeichnete.
+
+         Das ist der ganze Unterschied zwischen „die Tinte klebt am Stift"
+         und „die Tinte kommt hinterher": der geglättete Strich darf
+         ruhig 6 px zurückliegen, solange der SICHTBARE Kopf dort ist, wo
+         die Hand ist. Gespeichert wird davon nichts (E376). */
+      const spitze = rohLetzter;
+      if (spitze) {
+        const letzterFest = running.pts[running.pts.length - 1];
+        const weg = letzterFest
+          ? Math.hypot(spitze[0]! - letzterFest[0]!, spitze[1]! - letzterFest[1]!) : 0;
+        if (weg > 0.2) pts = [[spitze[0]!, spitze[1]!], ...pts];
       }
       feder.nass(pts as any, pts.map(() => halb));
     };
@@ -2108,7 +2138,7 @@ const Marken = (() => {
       bildAbsagen();
       const letzterRoh = rohLetzter;
       feder = null; glatt = null; druckGlatt = null; letzteZeit = 0; nassFlaeche = false;
-      rohLetzter = null;
+      rohLetzter = null; rohDrei = [];
       running = null; runningNode = null; beforeRunning = null;
       /* WOHER DER DRUCK KAM, BLEIBT AM STRICH (E507).
          Bis hierher wurde `zeigerArt` beim Absetzen weggeworfen, und danach
@@ -2613,6 +2643,7 @@ const Marken = (() => {
            falsch — und kein Filter kann das spaeter zurueckholen. */
         glatt = InkStroke.glaetter(point as [number, number]);
         rohLetzter = null;
+        rohDrei = [point];
         druckGlatt = InkStroke.druckGlaetter(p0);
         letzteZeit = Number(event.timeStamp) || 0;
         feder = new InkStroke.Feder();
@@ -2643,6 +2674,33 @@ const Marken = (() => {
       if (event.pointerType === 'pen') stiftGesehen();
       /* Nur der Zeiger, der den Zug begonnen hat, fuehrt ihn (E354). */
       if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger) return;
+      /* ══ DER SCHREIBWEG ZUERST, UND NUR EINE MATRIX (E511) ═══════════════
+         Hier stand die Umrechnung des einen Zeigerpunktes ganz oben — vor
+         allen Zweigen, also auch vor dem Zeichnen, das sie gar nicht
+         braucht: `addSample` rechnet sich seine Punkte selbst aus den
+         gesammelten Meldungen. Ein Schreibzug bezahlte damit ZWEI
+         `getScreenCTM` je Punkt, und einer davon wurde weggeworfen.
+
+         Gemessen (§36): 400 Punkte, 200 Marken auf dem Blatt, je vier
+         Punkte ein Bild — 52,9 ms im Zeichenweg, davon 23,9 ms allein in
+         `getScreenCTM`. Das sind 45,2 %, für eine Zahl, die zur Hälfte
+         niemand las.
+
+         Jetzt geht der Schreibzug VOR der Umrechnung heraus und holt sich
+         EINEN Umrechner für alle Punkte dieses Ereignisses — die
+         gesammelten und die vorhergesagten. Erreichbar war dieser Zweig
+         ohnehin nur, wenn weder radiert noch gezogen wird: beide Zweige
+         darunter enden mit `return`. Die Bedingung schreibt das hin,
+         statt es aus der Reihenfolge zu schliessen. */
+      if (!radierStrich && !selectDrag && running
+          && (running.art === 'stift' || running.art === 'marker')) {
+        const um = R.umrechner(flaeche);
+        const coalesced = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
+        (coalesced.length ? coalesced : [event]).forEach(e => addSample(e, um));
+        nassenSchwanz(event, um);
+        bildAnfordern();
+        return;
+      }
       const point = R.zuBlatt(flaeche, event);
       if (!point) return;
       if (radierStrich) {
@@ -2752,13 +2810,7 @@ const Marken = (() => {
         return;
       }
       if (!running) return;
-      if (running.art === 'stift' || running.art === 'marker') {
-        const coalesced = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
-        (coalesced.length ? coalesced : [event]).forEach(addSample);
-        nassenSchwanz(event);
-        bildAnfordern();
-        return;
-      }
+      /* Stift und Marker sind oben schon heraus (E511). */
       running.pts[1] = lineal && (running.art === 'line' || running.art === 'arrow')
         ? rasten(running.pts[0], point) : point;
       runningNode = updateNode(runningNode, running);
@@ -3959,6 +4011,10 @@ const Marken = (() => {
       LEITER.forEach(ader => {
         const k = document.createElement('button');
         k.className = 'blatt-farbe blatt-farbe-leiter' + (ader.id === jetzt ? ' on' : '');
+        /* DIE NUMMER FÜR DIE WELLE (E511). Die Verzögerung rechnet das CSS
+           aus EINER Zahl (`--ru-tupfer-welle`); hier steht nur, der
+           wievielte Tupfer das ist. */
+        k.style.setProperty('--tupfer-n', String(LEITER.indexOf(ader as any)));
         k.dataset.gruppe = 'farbe';
         k.dataset.c = ader.farbe;
         k.dataset.leiter = ader.id;
@@ -4278,6 +4334,13 @@ const Marken = (() => {
            genügt nicht: zwei Adern könnten eines Tages dieselbe haben, und
            der Name soll trotzdem stimmen (E509). */
         if (target.dataset.leiter) leiterMerken(target.dataset.leiter);
+        /* DER KLECKS GEHÖRT DEM ANTIPPEN (E511) — nicht der `on`-Klasse:
+           die trägt der gewählte Tupfer schon, wenn die Reihe entsteht,
+           und dann gewönne der Klecks gegen die Welle. Die Klasse räumt
+           sich selbst weg, damit sie beim nächsten Tippen wieder greift. */
+        target.classList.add('blatt-farbe-tipp');
+        target.addEventListener('animationend',
+          () => target.classList.remove('blatt-farbe-tipp'), { once: true });
         controls.setzeFarbe(target.dataset.c);
         /* Dieselbe Gegenrichtung wie beim Werkzeug: sonst stünde oben eine
            Farbe markiert, die niemand mehr benutzt. */

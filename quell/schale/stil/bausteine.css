@@ -4005,6 +4005,85 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk button::after{content:""; position:absolute; left:0; right:0; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .blatt-werk button:hover{background:var(--bg-hover)}
 .blatt-werk button.on{background:var(--accent); color:var(--auf-accent)}
+
+/* ══ DER STIFT WIRD IN DIE HAND GENOMMEN (E511) ═══════════════════════════
+   Redur, 8. September: „mehr Animationen."
+
+   VIER BEWEGUNGEN, und jede sagt etwas — das ist die Bedingung, unter der
+   sie hier stehen dürfen. Eine Bewegung, die nur hübsch ist, macht die
+   nächste unsichtbar, die etwas bedeutet (§39, die Lehre aus E508).
+
+     1 · Der gewählte Stift KIPPT einmal, als nähme man ihn aus dem Kasten.
+     2 · Die Farbreihe kommt gestaffelt herein, wenn sie wechselt.
+     3 · Ein gewählter Farbtupfer gibt einen Klecks.
+     4 · Der Radierkreis läuft, solange er radiert.
+
+   Alles davon ist bei `prefers-reduced-motion` weg — ganz unten in diesem
+   Block, an EINER Stelle, damit niemand eine vergisst. */
+
+/* 1 · DER STIFT KIPPT. Nur der Werkzeug- und der Stiftknopf, NICHT die
+   Farbtupfer: die tragen dieselbe `on`-Klasse und würden mitwackeln.
+   16 Grad sind sichtbar und bleiben ein Kippen; bei 30 wäre es ein
+   Umfallen. */
+.blatt-werk button[data-wz].on .zeichen,
+.blatt-werk button[data-act="stil"] .zeichen{
+  display:inline-block; animation:ru-stift-kippt var(--motion-normal) var(--ease-enter)
+}
+@keyframes ru-stift-kippt{
+  0%{transform:rotate(0) translateY(0)}
+  45%{transform:rotate(-16deg) translateY(-3px)}
+  100%{transform:rotate(0) translateY(0)}
+}
+
+/* 2 · DIE REIHE KOMMT ALS WELLE. EINE Zahl, der Rest rechnet sich (E508):
+   `--ru-tupfer-welle` ist der Schritt, `--tupfer-n` die Nummer des
+   Tupfers. Fünf von Hand gewählte Verzögerungen waren beim Nachrechnen
+   keine Welle. */
+.blatt-werk{--ru-tupfer-welle:26ms}
+.blatt-farbe-leiter{
+  animation:ru-tupfer-rein var(--motion-normal) var(--ease-enter) backwards;
+  animation-delay:calc(var(--ru-tupfer-welle) * var(--tupfer-n, 0))
+}
+@keyframes ru-tupfer-rein{
+  from{opacity:0; transform:translateY(6px) scale(.82)}
+  to{opacity:1; transform:none}
+}
+
+/* 3 · DER KLECKS. Der ANGETIPPTE Tupfer sackt kurz ein und kommt zurück —
+   ein Tropfen, der aufs Papier fällt. Der Ring darum ist der Rand, der
+   sich verläuft.
+
+   AM TIPPEN, NICHT AN `on` (E511). Zuerst stand hier `.blatt-farbe.on`,
+   und der Prüflauf hat gezeigt, warum das falsch ist: die GEWÄHLTE Ader
+   trägt `on` schon, wenn die Reihe entsteht — der Klecks gewann gegen die
+   Welle, und ausgerechnet der Tupfer, auf den man schaut, flog nicht mit
+   herein. Zwei Anlässe, zwei Klassen: die Welle gehört dem Erscheinen,
+   der Klecks dem Antippen. */
+.blatt-farbe.blatt-farbe-tipp{animation:ru-tupfer-klecks var(--motion-normal) var(--ease)}
+@keyframes ru-tupfer-klecks{
+  0%{transform:scale(1); box-shadow:0 0 0 0 currentColor}
+  40%{transform:scale(.86)}
+  100%{transform:scale(1); box-shadow:0 0 0 7px transparent}
+}
+
+/* 4 · DER RADIERKREIS LÄUFT. Die gestrichelte Linie wandert, solange
+   radiert wird — dieselbe Auskunft, die ein Mensch von einem laufenden
+   Zeiger erwartet: hier passiert gerade etwas. Sechs, weil
+   `stroke-dasharray:3 3` sich alle sechs Einheiten wiederholt; jede
+   andere Zahl ergäbe einen Sprung. */
+.blatt-radierkreis{animation:ru-radier-laeuft 700ms linear infinite}
+@keyframes ru-radier-laeuft{ to{stroke-dashoffset:-6} }
+
+/* DIE EINE ABSCHALTUNG (§39). Wer keine Bewegung will, bekommt dieselbe
+   Auskunft ohne Vorstellung: der Stift ist trotzdem gewählt, die Tupfer
+   stehen trotzdem da, der Kreis ist trotzdem gestrichelt. */
+@media (prefers-reduced-motion: reduce){
+  .blatt-werk button[data-wz].on .zeichen,
+  .blatt-werk button[data-act="stil"] .zeichen,
+  .blatt-farbe-leiter,
+  .blatt-farbe.blatt-farbe-tipp,
+  .blatt-radierkreis{animation:none}
+}
 /* DIE BLASSE STELLE GEHÖRT DEM INHALT, NICHT DEM KNOPF (E396).
    `opacity` am Knopf macht ALLES durchsichtig, auch seinen Hintergrund —
    und das fiel erst auf, als „Zurück" und „Vor" am Telefon am rechten Rand

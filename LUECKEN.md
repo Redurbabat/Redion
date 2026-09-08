@@ -6807,3 +6807,31 @@ Was NICHT nachgesehen wurde: die Lasso-Auswahl (`insidePolygon` über die
 Punkte einer Marke). Eine lange Linie, deren Enden ausserhalb der Schlinge
 liegen und deren Mitte darin, wird dort vermutlich nicht gewählt. Vermutet,
 nicht gemessen — und nach §36 heisst das: erst messen, dann bauen.
+
+L136 · Was am Zeichnen gemessen ist — und was nicht
+--------------------------------------------------------------------------
+
+E511 hat gemessen, statt zu vermuten. Damit steht auch fest, was NICHT
+gemessen ist, und das gehört hierher statt in eine Behauptung:
+
+  · **Gemessen im Container, nicht auf Redurs Geräten.** Der Prüfrechner
+    hat keine GPU und keinen echten Stift. Die 16,7 ms je Bild sind ein
+    unterer Riegel („selbst hier reicht es"), keine Aussage über ein
+    Telefon mit einer 300-seitigen PDF im Hintergrund.
+  · **`getCoalescedEvents` ist nie mit echten Daten gelaufen.** Ein
+    synthetisches Zeigerereignis trägt keine gesammelten Meldungen; der
+    Weg dafür steht im Code und ist ungeprüft. Ein 240-Hz-Stift auf einem
+    echten Gerät ist der einzige Weg, ihn zu prüfen.
+  · **`getPredictedEvents` genauso.** Wo der Browser selbst vorhersagt,
+    nimmt Redion dessen Punkte — dieser Zweig ist im Container tot.
+  · **Die Zeichenkette des nassen Strichs wächst weiter mit ihm.** Ein
+    1600-Punkte-Strich schreibt je Bild 94 kB `d`. In JavaScript kostet
+    das gemessene 0,2 ms; was der Browser darunter an Aufwand hat, ist
+    hier nicht messbar. Wenn ein echtes Gerät bei langen Strichen ruckelt,
+    liegt es hier — und die Antwort wäre, den ruhenden Teil des Strichs
+    von seinem laufenden Ende zu trennen. Das ist ein eigener Bogen und
+    nicht ohne Not zu bauen: bei durchscheinenden Stiften (Bleistift,
+    Marker) würde die Nahtstelle zweier Flächen doppelt dunkel.
+  · **Der Vorlauf ist auf ein Bild bei 60 Hz eingestellt** (`VORHER_MS`
+    = 14 ms). Ein 120-Hz-Schirm bräuchte die Hälfte. Die Bildrate lässt
+    sich messen; getan ist es nicht.

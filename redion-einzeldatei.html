@@ -12042,6 +12042,85 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk button::after{content:""; position:absolute; left:0; right:0; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .blatt-werk button:hover{background:var(--bg-hover)}
 .blatt-werk button.on{background:var(--accent); color:var(--auf-accent)}
+
+/* ══ DER STIFT WIRD IN DIE HAND GENOMMEN (E511) ═══════════════════════════
+   Redur, 8. September: „mehr Animationen."
+
+   VIER BEWEGUNGEN, und jede sagt etwas — das ist die Bedingung, unter der
+   sie hier stehen dürfen. Eine Bewegung, die nur hübsch ist, macht die
+   nächste unsichtbar, die etwas bedeutet (§39, die Lehre aus E508).
+
+     1 · Der gewählte Stift KIPPT einmal, als nähme man ihn aus dem Kasten.
+     2 · Die Farbreihe kommt gestaffelt herein, wenn sie wechselt.
+     3 · Ein gewählter Farbtupfer gibt einen Klecks.
+     4 · Der Radierkreis läuft, solange er radiert.
+
+   Alles davon ist bei `prefers-reduced-motion` weg — ganz unten in diesem
+   Block, an EINER Stelle, damit niemand eine vergisst. */
+
+/* 1 · DER STIFT KIPPT. Nur der Werkzeug- und der Stiftknopf, NICHT die
+   Farbtupfer: die tragen dieselbe `on`-Klasse und würden mitwackeln.
+   16 Grad sind sichtbar und bleiben ein Kippen; bei 30 wäre es ein
+   Umfallen. */
+.blatt-werk button[data-wz].on .zeichen,
+.blatt-werk button[data-act="stil"] .zeichen{
+  display:inline-block; animation:ru-stift-kippt var(--motion-normal) var(--ease-enter)
+}
+@keyframes ru-stift-kippt{
+  0%{transform:rotate(0) translateY(0)}
+  45%{transform:rotate(-16deg) translateY(-3px)}
+  100%{transform:rotate(0) translateY(0)}
+}
+
+/* 2 · DIE REIHE KOMMT ALS WELLE. EINE Zahl, der Rest rechnet sich (E508):
+   `--ru-tupfer-welle` ist der Schritt, `--tupfer-n` die Nummer des
+   Tupfers. Fünf von Hand gewählte Verzögerungen waren beim Nachrechnen
+   keine Welle. */
+.blatt-werk{--ru-tupfer-welle:26ms}
+.blatt-farbe-leiter{
+  animation:ru-tupfer-rein var(--motion-normal) var(--ease-enter) backwards;
+  animation-delay:calc(var(--ru-tupfer-welle) * var(--tupfer-n, 0))
+}
+@keyframes ru-tupfer-rein{
+  from{opacity:0; transform:translateY(6px) scale(.82)}
+  to{opacity:1; transform:none}
+}
+
+/* 3 · DER KLECKS. Der ANGETIPPTE Tupfer sackt kurz ein und kommt zurück —
+   ein Tropfen, der aufs Papier fällt. Der Ring darum ist der Rand, der
+   sich verläuft.
+
+   AM TIPPEN, NICHT AN `on` (E511). Zuerst stand hier `.blatt-farbe.on`,
+   und der Prüflauf hat gezeigt, warum das falsch ist: die GEWÄHLTE Ader
+   trägt `on` schon, wenn die Reihe entsteht — der Klecks gewann gegen die
+   Welle, und ausgerechnet der Tupfer, auf den man schaut, flog nicht mit
+   herein. Zwei Anlässe, zwei Klassen: die Welle gehört dem Erscheinen,
+   der Klecks dem Antippen. */
+.blatt-farbe.blatt-farbe-tipp{animation:ru-tupfer-klecks var(--motion-normal) var(--ease)}
+@keyframes ru-tupfer-klecks{
+  0%{transform:scale(1); box-shadow:0 0 0 0 currentColor}
+  40%{transform:scale(.86)}
+  100%{transform:scale(1); box-shadow:0 0 0 7px transparent}
+}
+
+/* 4 · DER RADIERKREIS LÄUFT. Die gestrichelte Linie wandert, solange
+   radiert wird — dieselbe Auskunft, die ein Mensch von einem laufenden
+   Zeiger erwartet: hier passiert gerade etwas. Sechs, weil
+   `stroke-dasharray:3 3` sich alle sechs Einheiten wiederholt; jede
+   andere Zahl ergäbe einen Sprung. */
+.blatt-radierkreis{animation:ru-radier-laeuft 700ms linear infinite}
+@keyframes ru-radier-laeuft{ to{stroke-dashoffset:-6} }
+
+/* DIE EINE ABSCHALTUNG (§39). Wer keine Bewegung will, bekommt dieselbe
+   Auskunft ohne Vorstellung: der Stift ist trotzdem gewählt, die Tupfer
+   stehen trotzdem da, der Kreis ist trotzdem gestrichelt. */
+@media (prefers-reduced-motion: reduce){
+  .blatt-werk button[data-wz].on .zeichen,
+  .blatt-werk button[data-act="stil"] .zeichen,
+  .blatt-farbe-leiter,
+  .blatt-farbe.blatt-farbe-tipp,
+  .blatt-radierkreis{animation:none}
+}
 /* DIE BLASSE STELLE GEHÖRT DEM INHALT, NICHT DEM KNOPF (E396).
    `opacity` am Knopf macht ALLES durchsichtig, auch seinen Hintergrund —
    und das fiel erst auf, als „Zurück" und „Vor" am Telefon am rechten Rand
@@ -19180,7 +19259,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 724, inhalt: '1d5fed20b4e0db66', gebaut: '2026-09-08T17:33:53.303Z' };
+const Stand = { fassung: 728, inhalt: '34fd5a17b9588fde', gebaut: '2026-09-08T21:14:03.457Z' };
 window.Stand = Stand;
 
 </script>
@@ -19979,16 +20058,50 @@ const SheetSpace = (() => {
      * das passiert bei einem Element, das nicht im Dokument hängt oder
      * `display: none` ist. Dann wird NICHT geraten.
      */
-    const zuBlatt = (svg, e) => {
-        if (!svg || !svg.getScreenCTM)
-            return null;
-        const matrix = svg.getScreenCTM();
+    const zuBlatt = (svg, e) => umrechner(svg)(e);
+    /**
+     * DIE MATRIX EINMAL HOLEN, VIELE PUNKTE RECHNEN (E511).
+     *
+     * `getScreenCTM()` ist keine Abfrage, sondern eine ANFORDERUNG: der
+     * Browser muss dafür alles nachrechnen, was seit der letzten Zeichnung an
+     * Aufbau offen ist. Beim Zeichnen fällt das ins Gewicht, weil zwischen
+     * zwei Zeigermeldungen genau das passiert — der nasse Strich schreibt
+     * sein `d`, und die nächste Anfrage muss den Aufbau neu rechnen.
+     *
+     * GEMESSEN (§36), 400 Punkte auf einem Blatt mit 200 Marken, je vier
+     * Punkte ein Bild — also ein 240-Hz-Stift auf einem 60-Hz-Schirm:
+     *
+     *     der ganze Zeichenweg      52,9 ms
+     *     davon `getScreenCTM`      23,9 ms   =  45,2 %
+     *     Aufrufe je Punkt          2
+     *
+     * Ohne echte Bilder dazwischen misst dieselbe Messung 15 % — der Browser
+     * gibt dann eine gemerkte Matrix zurück, weil nichts schmutzig ist. Das
+     * ist die falsche Zahl, und sie stand hier fast im Text (§36: L103).
+     *
+     * Diese Tür gibt einen Rechner heraus, der die Matrix EINMAL holt und
+     * beliebig viele Punkte damit umrechnet. `zuBlatt` geht denselben Weg,
+     * damit es nicht zwei Umrechnungsformeln gibt (§8).
+     *
+     * ER DARF EIN EREIGNIS NICHT ÜBERLEBEN. Die Matrix beschreibt, wo das
+     * Blatt in diesem Augenblick auf dem Glas liegt. Wird gescrollt, gezoomt
+     * oder die Seite gedreht, gilt sie nicht mehr — und ein Strich, der
+     * daneben landet, ist kein Schönheitsfehler, sondern eine falsche Notiz
+     * (§51). Innerhalb EINES Zeigerereignisses kann nichts davon passieren:
+     * JavaScript läuft allein, und die gesammelten `getCoalescedEvents`
+     * gehören alle zu demselben Augenblick.
+     */
+    const umrechner = (svg) => {
+        const matrix = svg && svg.getScreenCTM ? svg.getScreenCTM() : null;
         if (!matrix)
-            return null;
-        const punkt = new DOMPoint(e.clientX, e.clientY).matrixTransform(matrix.inverse());
-        if (!isFinite(punkt.x) || !isFinite(punkt.y))
-            return null;
-        return [rund(punkt.x), rund(punkt.y)];
+            return () => null;
+        const invers = matrix.inverse();
+        return (e) => {
+            const punkt = new DOMPoint(e.clientX, e.clientY).matrixTransform(invers);
+            if (!isFinite(punkt.x) || !isFinite(punkt.y))
+                return null;
+            return [rund(punkt.x), rund(punkt.y)];
+        };
     };
     /** Wie viele Blattseiten hoch ist dieses Blatt? Mindestens eine. */
     const seiten = (hoehe) => Math.max(1, Math.ceil((Number(hoehe) || A4_HOEHE) / A4_HOEHE));
@@ -20042,7 +20155,7 @@ const SheetSpace = (() => {
         huelle.appendChild(inhalt);
         return huelle;
     };
-    return { A4_BREITE, A4_HOEHE, RAND, RAUM_VERSION, rund, zuBlatt, seiten, gedrehtVon, masseVon, drehHuelle };
+    return { A4_BREITE, A4_HOEHE, RAND, RAUM_VERSION, rund, zuBlatt, umrechner, seiten, gedrehtVon, masseVon, drehHuelle };
 })();
 window.SheetSpace = SheetSpace;
 
@@ -21805,6 +21918,37 @@ const InkStroke = (() => {
      * MUSS herein: ohne sie waere die Vorhersage in Punkten gerechnet statt in
      * Millisekunden, und derselbe Vorlauf waere bei 60 Hz doppelt so lang wie
      * bei 120 Hz — gemessen 17,5 px statt 8,8 px bei gleichem Zug.
+     *
+     * ══ HIER GEHEN ROHE PUNKTE HEREIN, KEINE GEGLAETTETEN (E511) ═══════════
+     * Bis hierher bekam diese Funktion `running.pts` — die GEGLAETTETEN
+     * Punkte. Sie verlaengerte damit einen Strich, der selbst schon hinter
+     * der Hand herlief, und der Vorlauf ging fuer den Nachlauf drauf.
+     *
+     * GEMESSEN (§36), Abstand der gezeichneten Spitze von der Stelle, an der
+     * der Stift beim Erscheinen des Bildes WIRKLICH ist (ein Bild = 16,7 ms):
+     *
+     *     Tempo        alt        neu
+     *     0,1 px/ms    3,40 px    0,00 px
+     *     0,4 px/ms    7,16 px    0,00 px      <- das Tempo der Handschrift
+     *     1,2 px/ms    4,91 px    0,00 px
+     *     2,5 px/ms   19,23 px   15,75 px      <- die 26-px-Grenze bremst
+     *
+     * Der Fehler war am groessten genau dort, wo ein Mensch schreibt, und er
+     * wechselte das Vorzeichen: langsam blieb die Tinte zurueck, schnell
+     * schoss sie voraus. Beides fuehlt sich an wie ein Stift, der nicht am
+     * Papier klebt.
+     *
+     * DIE GLAETTUNG BLEIBT, WIE SIE IST. Sie nimmt das Zittern, und dafuer
+     * ist ihr Nachlauf der Preis. Bezahlt wird er jetzt dort, wo er nichts
+     * kostet: im nassen Schwanz, der gezeichnet und NIE gespeichert wird.
+     *
+     * Und der Deckel `min(3, ms/abstand)` ist weg. Er begrenzte den Vorlauf
+     * auf das Dreifache des letzten Schrittes und war damit wieder von der
+     * Abtastrate abhaengig — bei 240 Hz griff er, bei 60 Hz nie. Genau die
+     * Sorte Abhaengigkeit, die E504 aus dem Glaetter genommen hat. Was
+     * bleibt, ist die Grenze in PIXELN, und die ist ehrlich: sie sagt, wie
+     * weit eine Vermutung reichen darf, unabhaengig davon, wie oft ein
+     * Geraet sich meldet.
      */
     const vorhersage = (pts, ms = VORHER_MS, abstand = 8) => {
         const n = Array.isArray(pts) ? pts.length : 0;
@@ -21820,7 +21964,7 @@ const InkStroke = (() => {
         if (l1 > 0.3 && (v1x * v2x + v1y * v2y) / (l1 * l2) < KEHRE)
             return [];
         const dt = Math.max(1, Number.isFinite(abstand) ? abstand : 8);
-        const weit = Math.min(VORHER_PX, l2 * Math.max(0, Math.min(3, ms / dt)));
+        const weit = Math.min(VORHER_PX, l2 / dt * Math.max(0, ms));
         if (weit < 0.4)
             return [];
         const ux = v2x / l2, uy = v2y / l2;
@@ -54185,9 +54329,17 @@ const Marken = (() => {
         let glatt = null;
         let druckGlatt = null;
         let letzteZeit = 0;
+        /* Der gemessene Abstand der letzten zwei Meldungen. Der nasse Schwanz
+           rechnet in Millisekunden und braucht ihn (E511). */
+        let dtLetzt = 16;
         /* Wo der Zeiger ZULETZT WIRKLICH WAR — ungeglaettet. Beim Absetzen wird
            der letzte gespeicherte Punkt dorthin gezogen (siehe `finish`). */
         let rohLetzter = null;
+        /* DIE LETZTEN DREI ROHEN PUNKTE (E511). Der nasse Schwanz rechnet an
+           ihnen, nicht an den geglätteten: er soll die Spitze EINHOLEN, nicht
+           einen Strich verlängern, der selbst schon hinterherläuft. Drei, weil
+           `InkStroke.vorhersage` an dreien erkennt, ob die Richtung kippt. */
+        let rohDrei = [];
         /* Ob der laufende Strich gerade als FLAECHE gezeichnet wird (Fueller,
            Pinsel ab drei Punkten) oder als Linie. Wechselt er die Bauart, wird
            der Knoten einmal ganz neu gebaut statt sein `d` gesetzt. */
@@ -54896,12 +55048,15 @@ const Marken = (() => {
             letzteZeit = 0;
             nassFlaeche = false;
             rohLetzter = null;
+            rohDrei = [];
             aktiverZeiger = null;
         };
-        const addSample = (event) => {
+        /** Ein Punkt in den Strich. `um` ist der Umrechner DIESES Ereignisses
+         *  (E511) — er holt die Bildschirmmatrix einmal statt je Punkt. */
+        const addSample = (event, um) => {
             if (!running)
                 return;
-            const roh = R.zuBlatt(flaeche, event);
+            const roh = um ? um(event) : R.zuBlatt(flaeche, event);
             if (!roh)
                 return;
             /* DER DRUCK KOMMT AUS DEM ROHEN PUNKT (E376): der Ersatzdruck fuer
@@ -54911,11 +55066,15 @@ const Marken = (() => {
             const jetzt = Number(event.timeStamp) || letzteZeit;
             const dt = letzteZeit ? Math.max(1, jetzt - letzteZeit) : 16;
             letzteZeit = jetzt;
+            dtLetzt = dt;
             /* GEGLAETTET WIRD IMMER, GESPEICHERT NICHT (E376). Der Filter laeuft
                auch dann weiter, wenn der Punkt unter der Schwelle bleibt — sonst
                bliebe er bei langsamer Hand fuer immer hinter ihr zurueck. */
             const point = glatt ? glatt(roh, dt) : roh;
             rohLetzter = roh;
+            rohDrei.push(roh);
+            if (rohDrei.length > 3)
+                rohDrei.shift();
             const druck = druckGlatt ? druckGlatt(drucken) : drucken;
             const last = running.pts[running.pts.length - 1];
             if (last && Math.abs(last[0] - point[0]) < 0.6 && Math.abs(last[1] - point[1]) < 0.6)
@@ -54990,7 +55149,7 @@ const Marken = (() => {
          * gezogen hat. `Feder.nass()` zeichnet ihn, `Feder.punkte()` kennt ihn
          * nicht — test366 haelt genau das fest.
          * -------------------------------------------------------------------- */
-        const nassenSchwanz = (event) => {
+        const nassenSchwanz = (event, um) => {
             if (!feder || !running)
                 return;
             const druck = running.pressure[running.pressure.length - 1] ?? 0.5;
@@ -55000,14 +55159,33 @@ const Marken = (() => {
                 ? event.getPredictedEvents() : [];
             if (vom.length) {
                 for (const p of vom.slice(0, 3)) {
-                    const q = R.zuBlatt(flaeche, p);
+                    const q = um ? um(p) : R.zuBlatt(flaeche, p);
                     if (q)
                         pts.push(q);
                 }
             }
             if (!pts.length) {
-                const jetzt = Number(event.timeStamp) || 0;
-                pts = InkStroke.vorhersage(running.pts, InkStroke.VORHER_MS, letzteZeit && jetzt > letzteZeit ? jetzt - letzteZeit : 8);
+                /* AN DEN ROHEN PUNKTEN GERECHNET (E511), nicht an `running.pts`:
+                   die sind geglättet und laufen selbst hinterher. */
+                pts = InkStroke.vorhersage(rohDrei, InkStroke.VORHER_MS, dtLetzt);
+            }
+            /* ══ DIE TINTE HOLT DIE SPITZE EIN (E511) ═══════════════════════════
+               Vor der Vermutung steht eine MESSUNG: der letzte rohe Punkt ist
+               die Stelle, an der der Stift wirklich war — kein Raten, kein
+               Filter. Er kommt als erster Punkt des Schwanzes dazu, und erst
+               dahinter das Vorausgezeichnete.
+      
+               Das ist der ganze Unterschied zwischen „die Tinte klebt am Stift"
+               und „die Tinte kommt hinterher": der geglättete Strich darf
+               ruhig 6 px zurückliegen, solange der SICHTBARE Kopf dort ist, wo
+               die Hand ist. Gespeichert wird davon nichts (E376). */
+            const spitze = rohLetzter;
+            if (spitze) {
+                const letzterFest = running.pts[running.pts.length - 1];
+                const weg = letzterFest
+                    ? Math.hypot(spitze[0] - letzterFest[0], spitze[1] - letzterFest[1]) : 0;
+                if (weg > 0.2)
+                    pts = [[spitze[0], spitze[1]], ...pts];
             }
             feder.nass(pts, pts.map(() => halb));
         };
@@ -55354,6 +55532,7 @@ const Marken = (() => {
             letzteZeit = 0;
             nassFlaeche = false;
             rohLetzter = null;
+            rohDrei = [];
             running = null;
             runningNode = null;
             beforeRunning = null;
@@ -55954,6 +56133,7 @@ const Marken = (() => {
                    falsch — und kein Filter kann das spaeter zurueckholen. */
                 glatt = InkStroke.glaetter(point);
                 rohLetzter = null;
+                rohDrei = [point];
                 druckGlatt = InkStroke.druckGlaetter(p0);
                 letzteZeit = Number(event.timeStamp) || 0;
                 feder = new InkStroke.Feder();
@@ -55991,6 +56171,33 @@ const Marken = (() => {
             /* Nur der Zeiger, der den Zug begonnen hat, fuehrt ihn (E354). */
             if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger)
                 return;
+            /* ══ DER SCHREIBWEG ZUERST, UND NUR EINE MATRIX (E511) ═══════════════
+               Hier stand die Umrechnung des einen Zeigerpunktes ganz oben — vor
+               allen Zweigen, also auch vor dem Zeichnen, das sie gar nicht
+               braucht: `addSample` rechnet sich seine Punkte selbst aus den
+               gesammelten Meldungen. Ein Schreibzug bezahlte damit ZWEI
+               `getScreenCTM` je Punkt, und einer davon wurde weggeworfen.
+      
+               Gemessen (§36): 400 Punkte, 200 Marken auf dem Blatt, je vier
+               Punkte ein Bild — 52,9 ms im Zeichenweg, davon 23,9 ms allein in
+               `getScreenCTM`. Das sind 45,2 %, für eine Zahl, die zur Hälfte
+               niemand las.
+      
+               Jetzt geht der Schreibzug VOR der Umrechnung heraus und holt sich
+               EINEN Umrechner für alle Punkte dieses Ereignisses — die
+               gesammelten und die vorhergesagten. Erreichbar war dieser Zweig
+               ohnehin nur, wenn weder radiert noch gezogen wird: beide Zweige
+               darunter enden mit `return`. Die Bedingung schreibt das hin,
+               statt es aus der Reihenfolge zu schliessen. */
+            if (!radierStrich && !selectDrag && running
+                && (running.art === 'stift' || running.art === 'marker')) {
+                const um = R.umrechner(flaeche);
+                const coalesced = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
+                (coalesced.length ? coalesced : [event]).forEach(e => addSample(e, um));
+                nassenSchwanz(event, um);
+                bildAnfordern();
+                return;
+            }
             const point = R.zuBlatt(flaeche, event);
             if (!point)
                 return;
@@ -56117,13 +56324,7 @@ const Marken = (() => {
             }
             if (!running)
                 return;
-            if (running.art === 'stift' || running.art === 'marker') {
-                const coalesced = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
-                (coalesced.length ? coalesced : [event]).forEach(addSample);
-                nassenSchwanz(event);
-                bildAnfordern();
-                return;
-            }
+            /* Stift und Marker sind oben schon heraus (E511). */
             running.pts[1] = lineal && (running.art === 'line' || running.art === 'arrow')
                 ? rasten(running.pts[0], point) : point;
             runningNode = updateNode(runningNode, running);
@@ -57386,6 +57587,10 @@ const Marken = (() => {
             LEITER.forEach(ader => {
                 const k = document.createElement('button');
                 k.className = 'blatt-farbe blatt-farbe-leiter' + (ader.id === jetzt ? ' on' : '');
+                /* DIE NUMMER FÜR DIE WELLE (E511). Die Verzögerung rechnet das CSS
+                   aus EINER Zahl (`--ru-tupfer-welle`); hier steht nur, der
+                   wievielte Tupfer das ist. */
+                k.style.setProperty('--tupfer-n', String(LEITER.indexOf(ader)));
                 k.dataset.gruppe = 'farbe';
                 k.dataset.c = ader.farbe;
                 k.dataset.leiter = ader.id;
@@ -57784,6 +57989,12 @@ const Marken = (() => {
                    der Name soll trotzdem stimmen (E509). */
                 if (target.dataset.leiter)
                     leiterMerken(target.dataset.leiter);
+                /* DER KLECKS GEHÖRT DEM ANTIPPEN (E511) — nicht der `on`-Klasse:
+                   die trägt der gewählte Tupfer schon, wenn die Reihe entsteht,
+                   und dann gewönne der Klecks gegen die Welle. Die Klasse räumt
+                   sich selbst weg, damit sie beim nächsten Tippen wieder greift. */
+                target.classList.add('blatt-farbe-tipp');
+                target.addEventListener('animationend', () => target.classList.remove('blatt-farbe-tipp'), { once: true });
                 controls.setzeFarbe(target.dataset.c);
                 /* Dieselbe Gegenrichtung wie beim Werkzeug: sonst stünde oben eine
                    Farbe markiert, die niemand mehr benutzt. */

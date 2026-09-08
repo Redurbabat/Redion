@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — einundvierzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — zweiundvierzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -493,7 +493,19 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     auf Zeit umstellte und die zeitlosen Ereignisse eines Prüflaufs
     seither wie eine Hand mit 20 px je Millisekunde aussehen. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **einundvierzig Bögen**; die Überschrift
+  · **G42 — Die Tinte holt die Spitze ein** (E511, test478): Redurs Wunsch
+    „flüssiger zeichnen, mehr Animationen". Gemessen wurde zuerst, und die
+    naheliegende Vermutung war falsch: 1200 Punkte auf einem vollen Blatt
+    laufen flach bei 16,7 ms je Bild, kein einziger Aussetzer. Was fehlte,
+    war nicht Geschwindigkeit, sondern WO die Tinte liegt: bei 0,4 px/ms —
+    dem Tempo der Handschrift — lag sie 7,16 px neben der Stiftspitze, und
+    der Fehler wechselte mit dem Tempo das Vorzeichen. Der nasse Schwanz
+    rechnet jetzt an den ROHEN Punkten und beginnt an der gemessenen
+    Stelle; gespeichert wird davon weiterhin nichts. Dazu vier Bewegungen,
+    die etwas sagen, und eine Abschaltung für Menschen, die keine wollen.
+    **Steht.**
+
+Der Auftrag heisst deshalb jetzt **zweiundvierzig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

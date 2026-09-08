@@ -4729,3 +4729,53 @@ Linie nahm sie deshalb seit E466 nie weg, egal wie dicht. Jetzt wird an der
 Länge gemessen. Und daneben steht die Gegenzusage, dass ein kurzes
 Gekritzel am Rand die Linie NICHT wegnimmt — eine Reparatur am Löschen darf
 nicht mehr löschen (§51).
+
+**Die Tinte holt die Spitze ein (E511, test478).** Redur wollte flüssiger
+zeichnen können und mehr Bewegung.
+
+Gemessen wurde zuerst, und die naheliegende Vermutung war falsch. Ein Zug
+über 1200 Punkte auf einem Blatt mit 200 Marken läuft flach bei 16,7 ms je
+Bild — vom ersten Drittel bis zum letzten, kein einziger Aussetzer über
+20 ms. „Schneller" wäre Arbeit an etwas gewesen, das bereits sechzig Bilder
+in der Sekunde hält.
+
+Auf dem Weg dahin noch ein zweiter Messfehler, der aufgeschrieben gehört:
+dieselbe Messung ohne echte Bilder dazwischen sagte für `getScreenCTM`
+15 % der Zeit, mit Bildern 45 %. Der Browser merkt sich die Matrix,
+solange nichts schmutzig ist — und beim echten Zeichnen ist es das. Eine
+Messung ohne das, was gemessen werden soll, misst nichts.
+
+Was ein Mensch als „nicht flüssig" fühlt, ist etwas anderes: WO die Tinte
+liegt, während er schreibt. Bei 0,4 px je Millisekunde — dem Tempo der
+Handschrift — lag die gezeichnete Spitze 7,16 px neben der Stelle, an der
+der Stift beim Erscheinen des Bildes wirklich ist. Und der Fehler wechselte
+mit dem Tempo das Vorzeichen: langsam blieb die Tinte zurück, schnell
+schoss sie voraus.
+
+Der Grund war, dass die Vorhersage die GEGLÄTTETEN Punkte verlängerte. Die
+laufen selbst hinter der Hand her — das ist der richtige Preis der
+Glättung, sie nimmt das Zittern —, und der Vorlauf ging für den Nachlauf
+drauf. Jetzt rechnet der nasse Schwanz an den rohen Punkten und beginnt an
+der zuletzt gemessenen Stelle: vor der Vermutung steht eine Messung. Der
+Fehler ist bei drei von vier Tempi auf null; beim vierten bremst die
+26-px-Grenze mit Absicht.
+
+Erlaubt ist das nur, weil der Schwanz nie gespeichert wird. Der abgelegte
+Strich endet dort, wo der Stift abgehoben hat — das ist die Zusage, die
+alles andere trägt, und sie steht jetzt als eigene im Prüflauf.
+
+Nebenbei fiel auf, dass jeder Punkt beim Zeichnen zweimal umgerechnet
+wurde und eine der beiden Zahlen weggeworfen wurde. Sie ist weg. Schneller
+wurde es davon nicht messbar — der zweite Aufruf war fast umsonst —, und
+auch das steht in E511, damit niemand später misst und sich wundert.
+
+Dazu vier Bewegungen, und jede sagt etwas: der gewählte Stift kippt, wie
+wenn man ihn aus dem Kasten nimmt; die Adernreihe kommt als Welle herein;
+ein angetippter Farbtupfer klekst; der Radierkreis läuft, solange radiert
+wird. Alles davon ist bei `prefers-reduced-motion` weg.
+
+Zwei Funde des Prüflaufs: die GEWÄHLTE Ader flog nicht mit herein, weil
+der Klecks an derselben Klasse hing wie die Auswahl — ausgerechnet der
+Tupfer, auf den man schaut, blieb stehen. Und die Zusage „alle Schritte
+der Welle sind gleich gross" war auch dann wahr, wenn alle null sind; sie
+blieb in der Gegenprobe grün, bis „grösser als null" dazukam.

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-490 Entscheidungen, E1 bis E510 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+491 Entscheidungen, E1 bis E511 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -554,6 +554,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E508** — Der Blick in den Ordner kommt beim Hinschauen, und die Blätter fächern als Welle
 * **E509** — Ein Stift für Fachzeichen: die zehn Adern eines Schaltplans, jede mit ihrem Namen
 * **E510** — Die Mitte einer Linie zählt auch: der Kritzel-Radierer misst Länge statt Ecken
+* **E511** — Die Tinte holt die Spitze ein, und vier Bewegungen, die etwas sagen
 
 ---
 
@@ -40990,3 +40991,151 @@ Gegenzusage grün. Dazu test87, test105, test109, test466, test470, test472
 — alle grün. Nicht geprüft: die Gesamtsuite.
 Kein Bild: hier ist nichts zu sehen, was ein Bild zeigen könnte — die
 Rechnung ist der Beweis (§55.3).
+
+---
+
+E511 — Die Tinte holt die Spitze ein
+--------------------------------------------------------------------------
+
+Redur, 8. September: „mache die Stift-Teil besser, ich muss flüssiger
+zeichnen können, mehr Animationen".
+
+## Zuerst gemessen — und die naheliegende Vermutung war falsch
+
+„Flüssiger" klingt nach „schneller". Gemessen wurde deshalb zuerst, ob
+Redion beim Zeichnen Bilder verliert: 1200 Punkte, 200 Marken auf dem
+Blatt, je vier Punkte ein Bild — ein 240-Hz-Stift auf einem 60-Hz-Schirm.
+
+```txt
+erstes Drittel   16,7 ms je Bild        letztes Drittel  16,7 ms
+Bilder über 20 ms:  0                   über 33 ms:  0
+```
+
+Kein einziger Aussetzer, und der Aufwand wächst nicht mit der Länge des
+Strichs — das hatte E376 erledigt. Wer hier „schneller" gebaut hätte, hätte
+Wochen an etwas gearbeitet, das flach bei sechzig Bildern liegt. Das ist
+wörtlich der Fehler aus L103 Punkt 2, und §36 steht deswegen da.
+
+**Ein zweiter Messfehler auf dem Weg, und er gehört aufgeschrieben.** Die
+erste Messung des Zeichenwegs lief ohne echte Bilder dazwischen und ergab
+für `getScreenCTM` 15 % der Zeit. Mit Bildern dazwischen waren es 45 %:
+der Browser gibt eine gemerkte Matrix heraus, solange nichts am Aufbau
+schmutzig ist — und beim echten Zeichnen ist er das, weil der nasse Strich
+zwischendurch sein `d` schreibt. Eine Messung ohne das, was gemessen werden
+soll, misst nichts.
+
+## Was „flüssig" wirklich heisst
+
+Nicht die Bildrate, sondern WO die Tinte liegt, während die Hand schreibt.
+Gemessen als Abstand der gezeichneten Spitze von der Stelle, an der der
+Stift beim Erscheinen des Bildes wirklich ist (ein Bild = 16,7 ms):
+
+| Tempo | alt | neu |
+|---|---|---|
+| 0,1 px/ms (langsam) | 3,40 px | 0,00 px |
+| 0,4 px/ms (**Handschrift**) | 7,16 px | 0,00 px |
+| 1,2 px/ms (schnell) | 4,91 px | 0,00 px |
+| 2,5 px/ms (sehr schnell) | 19,23 px | 15,75 px |
+
+Der Fehler war am grössten genau dort, wo ein Mensch schreibt — und er
+wechselte das Vorzeichen: langsam blieb die Tinte zurück, schnell schoss
+sie voraus. Beides fühlt sich an wie ein Stift, der nicht am Papier klebt.
+
+**Der Grund:** die Vorhersage verlängerte die GEGLÄTTETEN Punkte. Die
+laufen selbst hinter der Hand her (das ist der Preis der Glättung, und der
+ist richtig so — sie nimmt das Zittern), und der Vorlauf ging für den
+Nachlauf drauf.
+
+**Die Entscheidung:** der nasse Schwanz rechnet an den ROHEN Punkten und
+beginnt an der zuletzt GEMESSENEN Stelle. Vor der Vermutung steht eine
+Messung — dort war der Stift wirklich, das ist kein Raten. Erst dahinter
+kommt das Vorausgezeichnete.
+
+Das darf man, weil der Schwanz **nie gespeichert wird** (E376). Er ist
+Bild, keine Daten; `test478 §4` hält fest, dass der abgelegte Strich dort
+endet, wo der Stift abgehoben hat, und nicht 26 px weiter. Ohne diese
+Zusage wäre die ganze Änderung ein Datenrisiko statt einer Verbesserung.
+
+Bei 2,5 px/ms bleiben 15,75 px Fehler stehen, und das ist Absicht:
+`VORHER_PX = 26` deckelt die Vermutung. Eine Tinte, die bei einem schnellen
+Schwung vierzig Pixel vorausschiesst, malt ein Häkchen, das niemand gezogen
+hat — lieber ein bisschen hinterher als frei erfunden.
+
+**Und der Deckel `min(3, ms/dt)` ist weg.** Er begrenzte den Vorlauf auf
+das Dreifache des letzten Schrittes und hing damit wieder an der
+Abtastrate: bei 240 Hz griff er, bei 60 Hz nie. Genau die Abhängigkeit, die
+E504 aus dem Glätter genommen hat. Was bleibt, ist die Grenze in PIXELN.
+
+## Zwei Umrechnungen je Punkt, eine davon weggeworfen
+
+Beim Messen fiel auf, dass jeder Zeigerpunkt beim Zeichnen ZWEI Mal in
+Blattkoordinaten umgerechnet wurde: einmal ganz oben im Griff für alle
+Zweige, einmal in `addSample`. Die erste warf der Schreibweg weg — er
+rechnet sich seine Punkte selbst aus den gesammelten Meldungen.
+
+Jetzt geht der Schreibzug vor der Umrechnung heraus und holt sich EINEN
+Umrechner für alle Punkte dieses Ereignisses: `SheetSpace.umrechner(svg)`
+holt die Bildschirmmatrix einmal, `zuBlatt` geht denselben Weg (§8, keine
+zweite Umrechnungsformel).
+
+**Er darf ein Ereignis nicht überleben.** Die Matrix sagt, wo das Blatt in
+diesem Augenblick auf dem Glas liegt; wird gescrollt oder gezoomt, gilt sie
+nicht mehr, und ein Strich, der daneben landet, ist keine Schönheitsfrage,
+sondern eine falsche Notiz (§51). Innerhalb eines Ereignisses kann nichts
+davon passieren — JavaScript läuft allein, und die gesammelten Meldungen
+gehören alle zu demselben Augenblick.
+
+**Ehrlich gesagt:** schneller wurde es davon nicht messbar. Der zweite
+Aufruf war fast umsonst, weil der Browser die Matrix zwischen zwei Fragen
+merkt, solange nichts dazwischen schmutzig wird. Was wegfällt, ist
+verschwendete Arbeit, kein Engpass. Es steht hier, damit niemand später
+misst und sich wundert.
+
+## Mehr Bewegung — vier, und jede sagt etwas
+
+Das ist die Bedingung, unter der sie hier stehen dürfen. Eine Bewegung, die
+nur hübsch ist, macht die nächste unsichtbar, die etwas bedeutet (§39, die
+Lehre aus E508).
+
+1. **Der gewählte Stift kippt** einmal um 16 Grad und hebt sich drei Pixel
+   — als nähme man ihn aus dem Kasten. Bei 30 Grad wäre es ein Umfallen.
+2. **Die Farbreihe kommt als Welle** herein, wenn sie auf die Adern
+   umschaltet: zehn Tupfer, 26 ms auseinander. EINE Zahl
+   (`--ru-tupfer-welle`), der Rest rechnet sich — fünf von Hand gewählte
+   Verzögerungen waren in E508 beim Nachrechnen keine Welle.
+3. **Ein angetippter Tupfer klekst** — er sackt kurz ein und kommt zurück,
+   wie ein Tropfen aufs Papier.
+4. **Der Radierkreis läuft**, solange radiert wird: die gestrichelte Linie
+   wandert um 6 Einheiten, den ganzen Rapport von `stroke-dasharray:3 3`.
+   Jede andere Zahl gäbe einen Sprung.
+
+Alles davon ist bei `prefers-reduced-motion` weg, an EINER Stelle im
+Stilblatt, damit niemand eine vergisst. Die Auskunft bleibt: der Stift ist
+trotzdem gewählt, die zehn Adern stehen trotzdem da, der Kreis ist trotzdem
+gestrichelt. Der Zustand hängt nie an der Bewegung allein (§38) — der
+gewählte Knopf hat weiterhin seine Fläche, und `test478 §6` misst das.
+
+## Was der Prüflauf gefunden hat
+
+**Die gewählte Ader flog nicht mit herein.** Der Klecks hing an der
+`on`-Klasse — und die trägt die gewählte Ader schon, wenn die Reihe
+entsteht. Der Klecks gewann gegen die Welle, und ausgerechnet der Tupfer,
+auf den man schaut, blieb stehen. Zwei Anlässe, zwei Klassen: die Welle
+gehört dem Erscheinen, der Klecks dem Antippen.
+
+**Und eine Zusage, die nicht rot werden konnte.** „Alle Schritte sind
+gleich gross" ist auch dann wahr, wenn alle Verzüge null sind — die
+Gegenprobe mit `animation-delay:0ms` blieb grün. Jetzt muss der Schritt
+auch grösser als null sein (§55.2).
+
+GEPRÜFT. `test478` neu mit 43 Zusagen. Fünf Gegenproben rot gesehen: der
+Schritt-Deckel zurück (§1), der gemessene Punkt aus dem Schwanz (§3), die
+Vorhersage wieder an den geglätteten Punkten (§3 mit −1,73 und −0,48 px —
+genau den alten Zahlen), die zweite Umrechnung zurück (§5, 100 statt 50
+Aufrufe), die Welle auf null und die Abschaltung weg (§6). Dazu test87,
+test105, test109, test265, test343, test366, test437, test438, test439,
+test458, test461, test470, test472, test475, test477 — alle grün. Nicht
+geprüft: die Gesamtsuite.
+Bild: `node bilder.mts bewegung` — die Welle mitten im Flug angehalten,
+nicht mit einer Wartezeit, sondern indem jede Bewegung auf dieselbe Uhrzeit
+gestellt wird.
