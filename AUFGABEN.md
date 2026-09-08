@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — vierunddreissig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — fünfunddreissig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -427,7 +427,17 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     den Knopf, der es öffnet, und der Horcher meldete sich vor dem ersten
     Ruf wieder ab. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **vierunddreissig Bögen**; die Überschrift
+  · **G35 — Was das Stift-Dossier gefunden hat** (E504, test472): ein
+    Prüflauf über einundzwanzig Punkte von „Digitale Stifte und
+    PDF-Annotationen", jeder Fund adversarisch gegengelesen. Fünf Punkte
+    standen schon (coalesced Samples im gespeicherten Strich, Vorhersage
+    nie in den Daten, Drehung als affine Matrix, Full Rewrite, Kontur mit
+    variabler Breite). Zwei waren echte Fehler und sind repariert: der
+    Glätter hing an der Abtastrate des Geräts (bei 240 Hz viermal
+    schwächer als gemessen), und `pointercancel` speicherte den Strich,
+    statt ihn zu verwerfen. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **fünfunddreissig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

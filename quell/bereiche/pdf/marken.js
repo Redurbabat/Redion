@@ -1559,14 +1559,29 @@ const Marken = (() => {
             (flaeche.closest('.document-workspace')?.dataset.documentPen === 'seen' ||
                 Date.now() - stiftZuletzt < STIFT_SPERRE_MS || (running !== null && running.zeigerArt === 'pen'));
         /* Einen angefangenen Strich VERWERFEN: kein Knoten, kein Schritt im
-           Verlauf — als haette es ihn nie gegeben. */
+           Verlauf — als haette es ihn nie gegeben.
+    
+           AUFGERAEUMT WIRD DASSELBE WIE IN `finish` (E504). Bis hierher blieben
+           `feder`, `glatt`, `druckGlatt` und ein bestelltes Bild stehen; das
+           fiel nicht auf, weil der naechste Aufsetzpunkt sie ohnehin neu setzt.
+           Mit dem Abbruch durch den Browser gibt es jetzt einen Weg hierher,
+           der NICHT von einem Aufsetzen gefolgt sein muss — und ein bestelltes
+           Bild fuer einen Strich, den es nicht mehr gibt, ist genau die Sorte
+           Rest, die spaeter niemand mehr erklaeren kann. */
         const verwerfen = () => {
+            bildAbsagen();
             if (running) {
                 runningNode?.remove();
                 running = null;
                 runningNode = null;
                 beforeRunning = null;
             }
+            feder = null;
+            glatt = null;
+            druckGlatt = null;
+            letzteZeit = 0;
+            nassFlaeche = false;
+            rohLetzter = null;
             aktiverZeiger = null;
         };
         const addSample = (event) => {
@@ -2755,8 +2770,44 @@ const Marken = (() => {
             }
             finish();
         };
+        /* ══ DER ABBRUCH IST NICHT DAS ENDE (E504) ═════════════════════════════
+           Aus dem Stift-Dossier, Seite 17: „Android verlangt bei ACTION_CANCEL /
+           Palm-Rejection ausdruecklich das Entfernen des betreffenden Motion
+           Sets und Re-Rendering. Eine App, die Cancel ignoriert, produziert
+           Artefakte."
+    
+           Redion ignorierte es nicht — es SPEICHERTE. `pointercancel` hing am
+           selben Griff wie `pointerup`, und damit landete jeder vom Browser
+           abgebrochene Zug als Strich im Papier. Der Fall, in dem das weh tut,
+           ist der Alltag: der Handballen beruehrt das Glas VOR dem Stift (so
+           setzt jede Hand auf), der Browser erkennt ihn selbst als Palm und
+           nimmt den Zeiger weg — und Redion schrieb einen Fremdstrich.
+    
+           ES WIRD NACH DER ZEIGERART ENTSCHIEDEN, und das ist die ganze
+           Vorsicht dieser Stelle. Ein Handballen ist ein `touch`; ein
+           abgebrochener STIFT-Zug ist Handschrift, die ein Mensch gezogen hat,
+           und §51 steht ueber jedem Dossier: lieber ein Strich zu viel als eine
+           Zeile Handschrift, die niemand wiederbekommt. Deshalb verwirft der
+           Abbruch nur den Finger.
+    
+           `pagehide` (weiter oben) bleibt davon unberuehrt und schliesst
+           weiterhin ab — dort ist Abbrechen nicht die Absicht des Browsers,
+           sondern das Ende der Seite. */
+        const beiAbbruch = (event) => {
+            if (fingerPan?.id === event.pointerId) {
+                fingerPan = null;
+                return;
+            }
+            if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger)
+                return;
+            if (running && running.zeigerArt !== 'pen') {
+                verwerfen();
+                return;
+            }
+            beiEnde(event);
+        };
         flaeche.addEventListener('pointerup', beiEnde);
-        flaeche.addEventListener('pointercancel', beiEnde);
+        flaeche.addEventListener('pointercancel', beiAbbruch);
         flaeche.addEventListener('pointerleave', (event) => {
             if (!flaeche.hasPointerCapture(event.pointerId))
                 beiEnde(event);

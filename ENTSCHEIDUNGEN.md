@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-483 Entscheidungen, E1 bis E503 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+484 Entscheidungen, E1 bis E504 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -547,6 +547,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E501** — Ein Farbsatz wird eine Voreinstellung: Farben, Stift und Strichstärke unter einem Namen
 * **E502** — Das Formelbuch und das GIF auf dem Blatt: eine PDF-Seite als bewegliche, ziehbare Bildmarke
 * **E503** — Das eigene Formelheft liegt über dem Dokument — und war dabei seit jeher nicht in der Grösse zu ziehen
+* **E504** — Der Glätter rechnet in Zeit statt in Messungen, und ein abgebrochener Handballen wird verworfen
 
 ---
 
@@ -40243,3 +40244,112 @@ test442, test453, test459, test466, test467, test468, test469 — alle grün.
 Nicht geprüft: die Gesamtsuite.
 Bild: `node bilder.mts heftimstudio` — das Heft über der Aufgabe, der Knopf
 neben dem Fachzeichen gedrückt.
+
+---
+
+E504 — Der Glätter rechnet in Zeit, und der Abbruch ist nicht das Ende
+--------------------------------------------------------------------------
+
+Redur, 8. September, mit einem 22-seitigen Dossier („Digitale Stifte und
+PDF-Annotationen: Vom Sensorsignal bis zur gespeicherten Tintenlinie"):
+„schau mal das genauer an."
+
+Ein Prüflauf über einundzwanzig Punkte des Dossiers — jeder von einem
+zweiten Agenten gegengelesen, der ihn widerlegen sollte — fand zwei Dinge,
+die kein Auge sieht und keine bisherige Prüfung hielt. Beide sind hier
+repariert.
+
+## 1 · Der Filter hing an der Abtastrate des Geräts
+
+`stroke.ts` rechnete `alpha` aus dem Tempo und wandte es dann JE PUNKT an,
+ohne `dt`. Das Tempo war zeitnormiert, die Wirkung nicht.
+
+Die Zeitkonstante eines solchen Filters ist τ = dt·(1−α)/α. Bei festem α
+**schrumpft sie mit der Abtastrate**: derselbe Filter ist auf einem
+240-Hz-Stift viermal schwächer als auf dem 60-Hz-Gerät, an dem die drei
+Zahlen gemessen wurden. Also genau auf dem Gerät, für das man diese Schicht
+baut. Das Dossier sagt es auf Seite 8: „Muss pro Gerät und Samplingrate
+abgestimmt werden; falsche Parameter verzerren Schrift."
+
+**Gemessen, nicht hergeleitet.** `test472` §1 fährt DIESELBE physische
+Bewegung — 0,3 px je Millisekunde — einmal mit 60, einmal mit 120 und
+einmal mit 240 Hz abgetastet, und misst den Rückstand des geglätteten
+Punktes in Pixeln:
+
+```txt
+vorher    60 Hz 3,467 px   120 Hz 1,734 px   240 Hz 0,867 px
+nachher   60 Hz 5,760 px   120 Hz 5,760 px   240 Hz 5,760 px
+```
+
+Halbiert und geviertelt, genau mit der Rate. Und die andere Seite derselben
+Münze: das Restzittern je Millisekunde war bei 240 Hz **fünfmal grösser**
+(0,043 gegen 0,0089).
+
+## Zwei Änderungen, und die zweite war die grössere
+
+**Die Zeitkonstante.** Aus dem gemessenen Anteil wird erst ein τ und daraus
+der Anteil für DIESES `dt` — die Form des 1-Euro-Filters, α = 1/(1 + τ/dt).
+Bei 16 ms kommt Zeichen für Zeichen dasselbe heraus wie vorher, also ändert
+sich am Gerät, an dem gemessen wurde, nichts.
+
+**Das Tempo ist das der Hand.** Hier stand `|p − x| / ms` — der Abstand zum
+GEGLÄTTETEN Punkt. Der ist selbst ein Ergebnis des Filters, und damit hing
+die Filterstärke wieder an der Rate: nach der ersten Reparatur blieb eine
+Restabhängigkeit von 1,9 (5,76 gegen 1,84 px). Von Eingabepunkt zu
+Eingabepunkt gemessen ist es die Geschwindigkeit, die die Hand wirklich hat
+— und die drei Zahlen wurden identisch.
+
+Die drei gemessenen Konstanten (0,28 · 0,92 · 1,1) stehen unverändert da.
+Neu ist einzig `MESS_MS = 16`, und das ist keine neue Stellschraube, sondern
+die Angabe, WOBEI sie gemessen wurden.
+
+## 2 · `pointercancel` speicherte den Strich
+
+Dossier Seite 17: „Android verlangt bei ACTION_CANCEL / Palm-Rejection
+ausdrücklich das Entfernen des betreffenden Motion Sets und Re-Rendering.
+Eine App, die Cancel ignoriert, produziert Artefakte."
+
+Redion ignorierte es nicht — es SPEICHERTE. `pointercancel` hing am selben
+Griff wie `pointerup`. Der Fall, in dem das weh tut, ist der Alltag: der
+Handballen berührt das Glas VOR dem Stift (so setzt jede Hand auf), der
+Browser erkennt ihn selbst als Palm und nimmt den Zeiger weg — und Redion
+schrieb einen Fremdstrich ins Papier.
+
+**Entschieden wird nach der Zeigerart, und das ist die ganze Vorsicht
+dieser Stelle.** Ein Handballen ist ein `touch`; ein abgebrochener
+STIFT-Zug ist Handschrift, die ein Mensch gezogen hat, und §51 steht über
+jedem Dossier: lieber ein Strich zu viel als eine Zeile Handschrift, die
+niemand wiederbekommt. Der Abbruch verwirft deshalb nur den Finger.
+`pagehide` bleibt unberührt und schliesst weiter ab — dort ist Abbrechen
+nicht die Absicht des Browsers, sondern das Ende der Seite.
+
+`verwerfen()` räumt seither dasselbe auf wie `finish()`. Bis hierher blieben
+`feder`, `glatt`, `druckGlatt` und ein bestelltes Bild stehen; das fiel
+nicht auf, weil der nächste Aufsetzpunkt sie ohnehin neu setzt. Mit dem
+Abbruch gibt es einen Weg hierher, dem kein Aufsetzen folgen muss.
+
+## Der Fund an einer alten Prüfung
+
+`test343` wurde von der Filteränderung rot: „In der Mitte ist die Fläche
+breit, am leichten Anfang schmal". Nachgemessen war die Fläche am
+Druckgipfel **dicker** geworden (3,35 statt 3,30 pt) — die Zusage hing an
+einem einzigen Probepunkt in festem Abstand, und der prüfte nicht die
+Breite, sondern ob die Kontur an genau diesem Eckpunkt gerade nach oben
+ausbeult. Ein Gehrungsartefakt, das mit jedem geänderten Punktabstand
+kippt.
+
+Jetzt wird die Höhe der Fläche abgetastet und der Druckgipfel gegen die
+leichteste Stelle DAZWISCHEN gestellt. Der erste Versuch verglich mit dem
+ersten Punkt — und die Gegenprobe (Druck überall 0,5) blieb grün, weil der
+erste Punkt die Spitze der Kontur ist und dort immer ausläuft. Eine
+Zusage, die nicht rot werden kann, ist keine (§55.2).
+
+GEPRÜFT. `test472` neu mit 21 Zusagen, vor dem Bauen rot in zehn davon.
+Gegenproben rot gesehen: die Zeitnormierung weglassen (§1 rot in zwei), den
+eigenen Abbruchgriff weglassen (§2 und §4 rot in vier), und in `test343`
+der gespeicherte Druck ignoriert (die reparierte Zusage rot). Dazu test87,
+test105, test109, test201, test343, test366, test437, test438, test440,
+test442, test453, test464, test465, test470, test471 — alle grün.
+Nicht geprüft: die Gesamtsuite.
+Messung statt Bild: die drei Zahlen oben sind der Beweis, ein
+Bildschirmfoto einer geglätteten Linie wäre keiner (§55.3).

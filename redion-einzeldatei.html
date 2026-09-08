@@ -19106,7 +19106,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 682, inhalt: 'e02838b95a6b35c9', gebaut: '2026-09-08T06:43:15.174Z' };
+const Stand = { fassung: 690, inhalt: '4fc98b8b6257c27c', gebaut: '2026-09-08T10:46:12.236Z' };
 window.Stand = Stand;
 
 </script>
@@ -21381,6 +21381,10 @@ const InkStroke = (() => {
     const ALPHA_LANGSAM = 0.28; /* bei stehender Hand: viel mitteln */
     const ALPHA_SCHNELL = 0.92; /* im Zug: fast unveraendert durchlassen */
     const TEMPO_VOLL = 1.1; /* px je ms, ab hier gilt ALPHA_SCHNELL */
+    /* WORAN DIE DREI ZAHLEN GEMESSEN WURDEN (E504): an 60 Hz, also 16 ms je
+       Punkt. Sie stehen unveraendert da — diese Zahl sagt nur, WOBEI sie
+       galten, und macht sie damit auf jede andere Rate uebertragbar. */
+    const MESS_MS = 16;
     /**
      * Ein Glaetter mit Gedaechtnis. Der erste Punkt geht unveraendert durch —
      * ein Strich, der nicht dort beginnt, wo der Stift aufsetzte, ist falsch.
@@ -21388,12 +21392,47 @@ const InkStroke = (() => {
     const glaetter = (start) => {
         let x = endlich(start[0]);
         let y = endlich(start[1]);
+        /* DAS TEMPO IST DAS DER HAND, nicht das des Rueckstands (E504).
+           Hier stand `|p − x| / ms` — der Abstand zum GEGLAETTETEN Punkt. Der
+           ist selbst ein Ergebnis des Filters, und damit hing die Filterstaerke
+           wieder an der Abtastrate: bei 240 Hz meldete derselbe Zug ein
+           doppelt so hohes „Tempo" wie bei 60 Hz, weil der Rueckstand kleiner
+           war, das `dt` aber viermal kleiner. Gemessen von Punkt zu Punkt der
+           EINGABE ist es die Geschwindigkeit, die die Hand wirklich hat. */
+        let vx = endlich(start[0]);
+        let vy = endlich(start[1]);
         return (p, dt) => {
             const px = endlich(p[0]), py = endlich(p[1]);
             const ms = Math.max(1, Number.isFinite(dt) ? dt : 16);
-            const tempo = Math.hypot(px - x, py - y) / ms;
+            const tempo = Math.hypot(px - vx, py - vy) / ms;
+            vx = px;
+            vy = py;
             const teil = Math.min(1, tempo / TEMPO_VOLL);
-            const alpha = ALPHA_LANGSAM + (ALPHA_SCHNELL - ALPHA_LANGSAM) * teil;
+            const gemessen = ALPHA_LANGSAM + (ALPHA_SCHNELL - ALPHA_LANGSAM) * teil;
+            /* ── ZEIT, NICHT MESSUNGEN (E504) ────────────────────────────────────
+             * Bis hierher wurde `gemessen` unmittelbar angewandt — ein fester
+             * Anteil JE PUNKT. Das Tempo war schon zeitnormiert, die Wirkung
+             * nicht, und das ist genau der Fehler, den das Stift-Dossier auf
+             * Seite 8 beschreibt: „Muss pro Geraet und Samplingrate abgestimmt
+             * werden; falsche Parameter verzerren Schrift."
+             *
+             * Die Zeitkonstante eines solchen Filters ist tau = dt·(1−a)/a. Bei
+             * festem `a` SCHRUMPFT sie mit der Abtastrate: derselbe Filter ist
+             * auf einem 240-Hz-Stift viermal schwaecher als auf dem 60-Hz-Geraet,
+             * an dem die drei Zahlen oben gemessen wurden. Nachgemessen in
+             * `test472` §1, VOR der Reparatur: derselbe Zug verzoegerte bei
+             * 60 Hz um 3,467 px, bei 120 Hz um 1,734 und bei 240 Hz um 0,867 —
+             * halbiert und geviertelt, genau mit der Rate. Und das Restzittern
+             * je Millisekunde war bei 240 Hz FUENFMAL groesser.
+             *
+             * Jetzt wird aus dem gemessenen Anteil erst eine Zeitkonstante und
+             * daraus der Anteil fuer DIESES `dt` — die Form des 1-Euro-Filters,
+             * a = 1/(1 + tau/dt). Bei 16 ms kommt Zeichen fuer Zeichen dasselbe
+             * heraus wie vorher (a = a_gemessen), also aendert sich am Geraet,
+             * an dem gemessen wurde, nichts. `test366` haelt genau das fest.
+             * ------------------------------------------------------------------ */
+            const tau = MESS_MS * (1 - gemessen) / gemessen;
+            const alpha = ms / (ms + tau);
             x += (px - x) * alpha;
             y += (py - y) * alpha;
             return [x, y];
@@ -54291,14 +54330,29 @@ const Marken = (() => {
             (flaeche.closest('.document-workspace')?.dataset.documentPen === 'seen' ||
                 Date.now() - stiftZuletzt < STIFT_SPERRE_MS || (running !== null && running.zeigerArt === 'pen'));
         /* Einen angefangenen Strich VERWERFEN: kein Knoten, kein Schritt im
-           Verlauf — als haette es ihn nie gegeben. */
+           Verlauf — als haette es ihn nie gegeben.
+    
+           AUFGERAEUMT WIRD DASSELBE WIE IN `finish` (E504). Bis hierher blieben
+           `feder`, `glatt`, `druckGlatt` und ein bestelltes Bild stehen; das
+           fiel nicht auf, weil der naechste Aufsetzpunkt sie ohnehin neu setzt.
+           Mit dem Abbruch durch den Browser gibt es jetzt einen Weg hierher,
+           der NICHT von einem Aufsetzen gefolgt sein muss — und ein bestelltes
+           Bild fuer einen Strich, den es nicht mehr gibt, ist genau die Sorte
+           Rest, die spaeter niemand mehr erklaeren kann. */
         const verwerfen = () => {
+            bildAbsagen();
             if (running) {
                 runningNode?.remove();
                 running = null;
                 runningNode = null;
                 beforeRunning = null;
             }
+            feder = null;
+            glatt = null;
+            druckGlatt = null;
+            letzteZeit = 0;
+            nassFlaeche = false;
+            rohLetzter = null;
             aktiverZeiger = null;
         };
         const addSample = (event) => {
@@ -55487,8 +55541,44 @@ const Marken = (() => {
             }
             finish();
         };
+        /* ══ DER ABBRUCH IST NICHT DAS ENDE (E504) ═════════════════════════════
+           Aus dem Stift-Dossier, Seite 17: „Android verlangt bei ACTION_CANCEL /
+           Palm-Rejection ausdruecklich das Entfernen des betreffenden Motion
+           Sets und Re-Rendering. Eine App, die Cancel ignoriert, produziert
+           Artefakte."
+    
+           Redion ignorierte es nicht — es SPEICHERTE. `pointercancel` hing am
+           selben Griff wie `pointerup`, und damit landete jeder vom Browser
+           abgebrochene Zug als Strich im Papier. Der Fall, in dem das weh tut,
+           ist der Alltag: der Handballen beruehrt das Glas VOR dem Stift (so
+           setzt jede Hand auf), der Browser erkennt ihn selbst als Palm und
+           nimmt den Zeiger weg — und Redion schrieb einen Fremdstrich.
+    
+           ES WIRD NACH DER ZEIGERART ENTSCHIEDEN, und das ist die ganze
+           Vorsicht dieser Stelle. Ein Handballen ist ein `touch`; ein
+           abgebrochener STIFT-Zug ist Handschrift, die ein Mensch gezogen hat,
+           und §51 steht ueber jedem Dossier: lieber ein Strich zu viel als eine
+           Zeile Handschrift, die niemand wiederbekommt. Deshalb verwirft der
+           Abbruch nur den Finger.
+    
+           `pagehide` (weiter oben) bleibt davon unberuehrt und schliesst
+           weiterhin ab — dort ist Abbrechen nicht die Absicht des Browsers,
+           sondern das Ende der Seite. */
+        const beiAbbruch = (event) => {
+            if (fingerPan?.id === event.pointerId) {
+                fingerPan = null;
+                return;
+            }
+            if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger)
+                return;
+            if (running && running.zeigerArt !== 'pen') {
+                verwerfen();
+                return;
+            }
+            beiEnde(event);
+        };
         flaeche.addEventListener('pointerup', beiEnde);
-        flaeche.addEventListener('pointercancel', beiEnde);
+        flaeche.addEventListener('pointercancel', beiAbbruch);
         flaeche.addEventListener('pointerleave', (event) => {
             if (!flaeche.hasPointerCapture(event.pointerId))
                 beiEnde(event);

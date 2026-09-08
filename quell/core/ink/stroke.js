@@ -213,6 +213,10 @@ const InkStroke = (() => {
     const ALPHA_LANGSAM = 0.28; /* bei stehender Hand: viel mitteln */
     const ALPHA_SCHNELL = 0.92; /* im Zug: fast unveraendert durchlassen */
     const TEMPO_VOLL = 1.1; /* px je ms, ab hier gilt ALPHA_SCHNELL */
+    /* WORAN DIE DREI ZAHLEN GEMESSEN WURDEN (E504): an 60 Hz, also 16 ms je
+       Punkt. Sie stehen unveraendert da — diese Zahl sagt nur, WOBEI sie
+       galten, und macht sie damit auf jede andere Rate uebertragbar. */
+    const MESS_MS = 16;
     /**
      * Ein Glaetter mit Gedaechtnis. Der erste Punkt geht unveraendert durch —
      * ein Strich, der nicht dort beginnt, wo der Stift aufsetzte, ist falsch.
@@ -220,12 +224,47 @@ const InkStroke = (() => {
     const glaetter = (start) => {
         let x = endlich(start[0]);
         let y = endlich(start[1]);
+        /* DAS TEMPO IST DAS DER HAND, nicht das des Rueckstands (E504).
+           Hier stand `|p − x| / ms` — der Abstand zum GEGLAETTETEN Punkt. Der
+           ist selbst ein Ergebnis des Filters, und damit hing die Filterstaerke
+           wieder an der Abtastrate: bei 240 Hz meldete derselbe Zug ein
+           doppelt so hohes „Tempo" wie bei 60 Hz, weil der Rueckstand kleiner
+           war, das `dt` aber viermal kleiner. Gemessen von Punkt zu Punkt der
+           EINGABE ist es die Geschwindigkeit, die die Hand wirklich hat. */
+        let vx = endlich(start[0]);
+        let vy = endlich(start[1]);
         return (p, dt) => {
             const px = endlich(p[0]), py = endlich(p[1]);
             const ms = Math.max(1, Number.isFinite(dt) ? dt : 16);
-            const tempo = Math.hypot(px - x, py - y) / ms;
+            const tempo = Math.hypot(px - vx, py - vy) / ms;
+            vx = px;
+            vy = py;
             const teil = Math.min(1, tempo / TEMPO_VOLL);
-            const alpha = ALPHA_LANGSAM + (ALPHA_SCHNELL - ALPHA_LANGSAM) * teil;
+            const gemessen = ALPHA_LANGSAM + (ALPHA_SCHNELL - ALPHA_LANGSAM) * teil;
+            /* ── ZEIT, NICHT MESSUNGEN (E504) ────────────────────────────────────
+             * Bis hierher wurde `gemessen` unmittelbar angewandt — ein fester
+             * Anteil JE PUNKT. Das Tempo war schon zeitnormiert, die Wirkung
+             * nicht, und das ist genau der Fehler, den das Stift-Dossier auf
+             * Seite 8 beschreibt: „Muss pro Geraet und Samplingrate abgestimmt
+             * werden; falsche Parameter verzerren Schrift."
+             *
+             * Die Zeitkonstante eines solchen Filters ist tau = dt·(1−a)/a. Bei
+             * festem `a` SCHRUMPFT sie mit der Abtastrate: derselbe Filter ist
+             * auf einem 240-Hz-Stift viermal schwaecher als auf dem 60-Hz-Geraet,
+             * an dem die drei Zahlen oben gemessen wurden. Nachgemessen in
+             * `test472` §1, VOR der Reparatur: derselbe Zug verzoegerte bei
+             * 60 Hz um 3,467 px, bei 120 Hz um 1,734 und bei 240 Hz um 0,867 —
+             * halbiert und geviertelt, genau mit der Rate. Und das Restzittern
+             * je Millisekunde war bei 240 Hz FUENFMAL groesser.
+             *
+             * Jetzt wird aus dem gemessenen Anteil erst eine Zeitkonstante und
+             * daraus der Anteil fuer DIESES `dt` — die Form des 1-Euro-Filters,
+             * a = 1/(1 + tau/dt). Bei 16 ms kommt Zeichen fuer Zeichen dasselbe
+             * heraus wie vorher (a = a_gemessen), also aendert sich am Geraet,
+             * an dem gemessen wurde, nichts. `test366` haelt genau das fest.
+             * ------------------------------------------------------------------ */
+            const tau = MESS_MS * (1 - gemessen) / gemessen;
+            const alpha = ms / (ms + tau);
             x += (px - x) * alpha;
             y += (py - y) * alpha;
             return [x, y];

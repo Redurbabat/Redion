@@ -162,13 +162,41 @@ const breite = await pg.evaluate((id: string) => {
   const svg = document.querySelector<SVGSVGElement>('.blatt-marken');
   if (!node || !svg) return null;
   const drin = (x: number, y: number) => { const pt = svg.createSVGPoint(); pt.x = x; pt.y = y; return node.isPointInFill(pt); };
-  const anfang = m.pts[0], mitte = m.pts[Math.floor(m.pts.length / 2)];
-  const ab = Number(m.breite) * 0.9;   /* deutlich mehr als die halbe Grundbreite */
-  return { mitteDick: drin(mitte[0], mitte[1] - ab) || drin(mitte[0], mitte[1] + ab),
-           anfangDuenn: !drin(anfang[0], anfang[1] - ab) && !drin(anfang[0], anfang[1] + ab),
-           mitteMitte: drin(mitte[0], mitte[1]) };
+  /* WIE HOCH IST DIE FLÄCHE WIRKLICH (E504)? Hier stand ein einziger
+     Punkt in festem Abstand („liegt 0,9·Breite über der Mittellinie noch
+     drin?"). Das misst nicht die Breite, sondern ob die Kontur an genau
+     diesem Eckpunkt gerade nach oben ausbeult — ein Gehrungsartefakt, das
+     mit jedem geänderten Punktabstand kippt. Genau das ist bei E504
+     passiert: die Fläche wurde am Druckgipfel MESSBAR DICKER (3,35 statt
+     3,30 pt), und die alte Zusage wurde trotzdem rot.
+
+     Jetzt wird die Höhe abgetastet: von der Mittellinie nach oben und
+     unten, bis nichts mehr drin ist. Das ist die Zahl, die der Satz
+     behauptet, und sie ist gegen den Punktabstand unempfindlich. */
+  const hoehe = (q: number[]) => {
+    let oben = 0, unten = 0;
+    for (let d = 0.05; d <= 6; d += 0.05) { if (drin(q[0]!, q[1]! - d)) oben = d; }
+    for (let d = 0.05; d <= 6; d += 0.05) { if (drin(q[0]!, q[1]! + d)) unten = d; }
+    return Math.round((oben + unten) * 100) / 100;
+  };
+  /* VERGLICHEN WIRD MIT EINEM INNEREN PUNKT, nie mit dem ersten.
+     Der erste Punkt ist die SPITZE der Kontur — dort läuft sie aus, egal
+     welcher Druck dort steht. Gegen ihn gemessen bliebe die Zusage auch
+     dann grün, wenn der Druck gar nicht mehr wirkte: die Gegenprobe mit
+     festem Druck (0,5 an jeder Stelle) lief genau so durch. Jetzt steht
+     der Druckgipfel gegen die leichteste Stelle DAZWISCHEN, und dort
+     entscheidet wirklich der Druck. */
+  const innen = m.pressure.slice(1, -1);
+  const leichtI = 1 + innen.indexOf(Math.min(...innen));
+  const gipfel = m.pts[m.pressure.indexOf(Math.max(...m.pressure))];
+  return { amGipfel: hoehe(gipfel), amLeichten: hoehe(m.pts[leichtI]),
+           amAnfang: hoehe(m.pts[0]), grund: Number(m.breite),
+           mitteMitte: drin(gipfel[0], gipfel[1]) };
 }, blattId);
-p('In der Mitte ist die Fläche breit, am leichten Anfang schmal', !!breite && breite.mitteDick && breite.anfangDuenn && breite.mitteMitte, JSON.stringify(breite));
+p('In der Mitte ist die Fläche breit, an der leichten Stelle schmal',
+  !!breite && breite.mitteMitte && breite.amGipfel > breite.grund
+    && breite.amGipfel > breite.amLeichten * 1.5,
+  JSON.stringify(breite));
 
 /* ======================================================================== */
 console.log('\n2 · Ohne Drucksensor zählt das Tempo — langsam dick, schnell dünn');

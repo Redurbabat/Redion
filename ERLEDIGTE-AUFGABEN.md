@@ -4535,3 +4535,40 @@ Was das Heft NICHT tut: in die geladene PDF schreiben. `test471` §5 rechnet
 vorher und nachher eine Prüfsumme über die Bytes und vergleicht Kennung,
 Länge, Summe und Typ — ein Wächter nicht gegen einen bekannten Fehler,
 sondern gegen einen künftigen.
+
+**Was das Stift-Dossier gefunden hat (E504, test472).** Redur hat ein
+22-seitiges technisches Dossier über digitale Stifte und PDF-Annotationen
+mitgebracht und „schau mal das genauer an" gesagt. Geprüft wurden
+einundzwanzig Punkte, jeder von einem zweiten Durchgang gegengelesen, der
+ihn widerlegen sollte.
+
+Fünf Punkte standen bereits, und zwar sauber: coalescierte Samples landen
+wirklich im gespeicherten Strich (nicht nur im Bild), Vorhersagepunkte
+gehen nie in die Daten, die Drehung wird als affine Matrix gerechnet statt
+mit vertauschten Achsen, das PDF wird neu geschrieben statt angehängt, und
+ein drucksensitiver Strich ist eine Kontur mit variabler Breite.
+
+Zwei waren echte Fehler.
+
+Der erste war nicht zu sehen, nur zu rechnen: der Glätter war pro MESSUNG
+normiert, nicht pro ZEIT. Die Zeitkonstante eines solchen Filters schrumpft
+mit der Abtastrate — auf einem 240-Hz-Stift war er viermal schwächer als
+auf dem 60-Hz-Gerät, an dem seine drei Zahlen gemessen wurden. Der Prüflauf
+fährt dieselbe physische Bewegung mit drei Raten ab: vorher 3,467 / 1,734 /
+0,867 px Rückstand, nachher dreimal 5,760. Und beim Beheben kam die zweite
+Hälfte heraus: das Tempo wurde aus dem Abstand zum GEGLÄTTETEN Punkt
+gerechnet, also aus einem Ergebnis des Filters selbst; von Eingabepunkt zu
+Eingabepunkt gemessen ist es die Geschwindigkeit der Hand.
+
+Der zweite ist Alltag: `pointercancel` hing am selben Griff wie
+`pointerup`. Berührt der Handballen das Glas vor dem Stift — so setzt jede
+Hand auf — und erkennt der Browser ihn als Palm, schrieb Redion einen
+Fremdstrich. Verworfen wird jetzt, was ein Finger war; ein abgebrochener
+Stift-Zug bleibt, weil §51 über jedem Dossier steht.
+
+Und ein Fund an einer alten Prüfung: `test343` wurde rot, obwohl die Fläche
+am Druckgipfel messbar dicker geworden war. Die Zusage hing an einem
+Probepunkt in festem Abstand und prüfte ein Gehrungsartefakt statt der
+Breite. Der erste Reparaturversuch war eine Tautologie — die Gegenprobe mit
+festem Druck blieb grün, weil verglichen wurde mit dem ersten Punkt, und
+dort läuft jede Kontur aus.
