@@ -6994,12 +6994,11 @@ L142 · Was am Weg auf den Laptop noch fehlt
 
 E517 hat `holen.bat` einen Zweig beigebracht. Was daraus offen bleibt:
 
-  · **`vergleichen.bat` sieht weiterhin nur gegen `main`.** Wer auf einem
-    Arbeitszweig steht und wissen will, was sich unterscheidet, bekommt den
-    Vergleich gegen den geprüften Stand — richtig gerechnet, aber selten
-    die Frage, die er stellt. Dieselbe Umstellung wie bei `holen.bat`, und
-    dieselbe Falle: jeder git-Befehl einzeln, sonst meldet es Erfolg und
-    vergleicht das Falsche (E271).
+  · ~~`vergleichen.bat` sieht weiterhin nur gegen `main`.~~
+    **GESCHLOSSEN mit E519** — es vergleicht jetzt gegen den Zweig, auf dem
+    der Ordner steht, und `vergleichen.bat main` ausdrücklich gegen den
+    geprüften Stand. Sieben git-Stellen einzeln geprüft; die vier Antworten
+    von `git status -sb` in einem echten Repo gemessen statt behauptet.
   · **`hochladen.bat` ebenso.** Es lädt auf den Zweig, auf dem der Ordner
     steht — das ist heute schon richtig, aber es ist nirgends geprüft.
   · **Der Doppelklick selbst ist nicht geprüft.** Windows-Batch lässt sich

@@ -374,6 +374,20 @@ const ChronikDaten = {
                     "gemeint": "Gib mir immer die fertigen PowerShell-Befehle für Windows — zum Kopieren, statt Anleitungen zum Klicken.",
                     "besser": "Gib mir die Befehle immer fertig für PowerShell unter Windows.",
                     "besserePrompt": "„Ich kopiere lieber Befehle, als zu klicken. Gib mir alles als fertige PowerShell-Zeile.\" — der Grund dazu spart die Rückfrage, ob die .bat-Dateien überhaupt noch gewollt sind. (Sie sind es: der Befehl ruft sie auf, weil in ihnen die Rettung steckt.)"
+                },
+                {
+                    "zeit": "ca. 09:10",
+                    "wortlaut": "wie kann ich wiessen ob meien github und laptop version gleich sind und ich weiss nich wo meien github ordner ist für BABAT Red schau mal es und gebe mir wie ich im termilan es hollen kann",
+                    "gemeint": "Zwei Fragen, beide zu BABAT-RED: wie sehe ich, ob GitHub und Laptop gleich sind — und wo liegt der Ordner, beziehungsweise wie hole ich ihn im Terminal?",
+                    "besser": "Für BABAT-RED: wie sehe ich, ob mein Laptop denselben Stand hat wie GitHub? Und ich finde den Ordner nicht — wie hole ich ihn im Terminal?",
+                    "besserePrompt": "Das Projekt gehört an den ANFANG, nicht ans Ende. Hier stand es in der Mitte, und die erste Frage wurde deshalb auf Redion bezogen — Redur musste nachschieben: „nein ich meinte für babat red\". Ein Satz pro Frage hätte es auch getrennt."
+                },
+                {
+                    "zeit": "ca. 09:20",
+                    "wortlaut": "nein ich meinte für babat red nicht für redion",
+                    "gemeint": "Beide Fragen galten BABAT-RED, nicht Redion.",
+                    "besser": "Beides meinte ich für BABAT-RED.",
+                    "besserePrompt": "Keine Verbesserung nötig — die Korrektur kam sofort und war eindeutig. Sie war nur nötig, weil das Projekt in der Nachricht davor zu spät stand."
                 }
             ],
             "arbeit": [
@@ -420,14 +434,22 @@ const ChronikDaten = {
                 {
                     "was": "E518 — Die fertigen PowerShell-Befehle stehen im Verzeichnis, nicht im Gespräch",
                     "vonCommit": "9812d8a8",
+                    "bisCommit": "42cf96ba",
+                    "zeitraum": "08:25 – 09:05",
+                    "pruefungen": "test353 von 81 auf 88 Zusagen",
+                    "dauer": "ca. 40 min"
+                },
+                {
+                    "was": "E519 — Der Vergleich sieht gegen deinen Zweig, nicht gegen main",
+                    "vonCommit": "42cf96ba",
                     "bisCommit": "(dieser Bogen)",
-                    "zeitraum": "ab 08:25",
-                    "pruefungen": "test353 von 81 auf 88 Zusagen"
+                    "zeitraum": "ab 09:05",
+                    "pruefungen": "test353 von 88 auf 105 Zusagen"
                 }
             ],
             "zahlen": {
-                "commits": 6,
-                "entscheidungen": 6
+                "commits": 7,
+                "entscheidungen": 7
             },
             "groesstesProblem": "Die drei sauberen Messungen aus E513. Sie waren richtig gerechnet und haben trotzdem nichts bewiesen, weil sie die falsche Frage gestellt haben: „legt der Import die richtige Datei ab?\" statt „welchen Knopf drückt er?\". Eine Messung, die die falsche Frage stellt, ist gefährlicher als gar keine — sie kommt grün zurück und man glaubt ihr.",
             "interessantesteAnfrage": "„Wieter mit L139\" — drei Wörter, und sie haben gereicht, weil die Frage schon in LUECKEN.md stand. Das ist der Nutzen dieser Datei, den man erst sieht, wenn man ihn braucht: eine Lücke, die aufgeschrieben ist, lässt sich mit einer Nummer wieder aufnehmen. Eine, die nur im Kopf stand, hätte die ganze Geschichte noch einmal gebraucht.",
@@ -491,6 +513,12 @@ const ChronikDaten = {
                     "was": "Benutzerpfad aus START-MIT-CLAUDE-CODE.md und SERVER-EINRICHTEN.md entfernt.",
                     "warum": "Ein ausgeschriebener Benutzerpfad stimmt auf keinem zweiten Rechner und gehört nicht in ein offenes Verzeichnis. Die drei in ENTSCHEIDUNGEN.md, UR.md und im Audit bleiben: das sind Protokolle.",
                     "risiko": "keins"
+                },
+                {
+                    "zeit": "09:30",
+                    "was": "`vergleichen.bat` vergleicht gegen den Zweig, auf dem der Ordner steht.",
+                    "warum": "Seit E517 kann ein Arbeitszweig geholt werden; der Vergleich sah weiter fest gegen main und meldete hunderte Unterschiede, die keine sind. Die Vorgabe ist absichtlich eine andere als bei holen.bat: das eine ändert den Ordner (sichere Wahl), das andere sieht nur nach (ehrliche Wahl).",
+                    "risiko": "keins — das Skript schreibt weiterhin nichts ausser fetch; sieben git-Stellen einzeln geprüft"
                 }
             ]
         }
@@ -714,6 +742,19 @@ const ChronikDaten = {
             "behebung": "Die Zeile umgeschrieben; SERVER-EINRICHTEN.md gleich mit, dort stand derselbe Pfad in einem cd zum Kopieren. Die drei in ENTSCHEIDUNGEN.md, UR.md und im Audit bleiben stehen — Protokolle schreibt man nicht um.",
             "stand": "Behoben. Der Wächter misst genau die eine Datei, die jemand kopiert.",
             "lehre": "Ein Wächter, der beim ersten Lauf grün ist, hat nichts bewiesen. Dieser war beim ersten Lauf rot, und zwar an einer Stelle, die niemand vermutet hätte."
+        },
+        {
+            "nr": "P19",
+            "datum": "2026-09-09",
+            "titel": "Ein Skript, das richtig rechnet und die falsche Frage beantwortet",
+            "schwere": "mittel",
+            "symptom": "vergleichen.bat hätte Redur auf dem Arbeitszweig hunderte Unterschiede gemeldet, die keine sind — es verglich gegen main, und main liegt sechs Bögen zurück.",
+            "falscheVermutung": "Keine im engeren Sinn — der Fehler war einen Bogen zuvor selbst aufgeschrieben worden (L142, erster Punkt) und galt als „später\". Dass Redur genau danach fragen würde, war absehbar: er hatte gerade den Arbeitszweig bekommen.",
+            "wieGesucht": "Beim Lesen der Frage. Vor der Antwort nachgesehen, was das Skript tatsächlich vergleicht, statt es zu empfehlen.",
+            "ursache": "E517 hat holen.bat einen Zweig beigebracht und vergleichen.bat vergessen. Eine Umstellung, die an einer von drei Stellen halt macht.",
+            "behebung": "Vorgabe ist der Zweig, auf dem der Ordner steht; vergleichen.bat main sieht ausdrücklich gegen den geprüften Stand. Sieben git-Stellen einzeln geprüft, die vier Antworten von git status -sb in einem echten Repo gemessen.",
+            "stand": "Behoben. L142 Punkt 1 geschlossen.",
+            "lehre": "Eine Lücke, die man selbst aufschreibt, ist kein Ablagefach — sie ist eine Verabredung. Diese hier wurde nach einem einzigen Bogen fällig, und zwar durch die Frage, für die das kaputte Werkzeug gedacht war. Bevor man ein Werkzeug empfiehlt, sieht man nach, ob es die gestellte Frage beantwortet."
         }
     ]
 };

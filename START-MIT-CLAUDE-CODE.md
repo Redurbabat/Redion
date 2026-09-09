@@ -161,11 +161,30 @@ Ein blosses `git checkout` täte das nicht.
 cd "$env:USERPROFILE\Documents\ChatGPT\Redion\Redion-src"; .\holen.bat
 ```
 
-**Nur nachsehen, ohne etwas anzufassen:**
+**Nur nachsehen, ohne etwas anzufassen** — es vergleicht gegen den Zweig,
+auf dem dein Ordner steht:
 
 ```powershell
 cd "$env:USERPROFILE\Documents\ChatGPT\Redion\Redion-src"; .\vergleichen.bat
 ```
+
+Ausdrücklich gegen den geprüften Stand: `.\vergleichen.bat main`.
+
+**Ohne die Skripte**, nur mit git — die kürzeste Auskunft überhaupt:
+
+```powershell
+git fetch origin
+git status -sb
+```
+
+Die erste Zeile ist die Antwort:
+
+| Ausgabe | Bedeutung |
+|---|---|
+| `## zweig...origin/zweig` | **gleich** — nichts dahinter |
+| `… [behind 1]` | GitHub ist weiter, dir fehlt ein Schritt |
+| `… [ahead 1]` | du bist weiter, GitHub fehlt einer |
+| `?? datei.txt` darunter | ungespeichert, nur bei dir |
 
 **Beim allerersten Mal** — solange das alte `holen.bat` im Ordner liegt, das
 noch keinen Zweignamen annimmt, geht es einmal von Hand. Diese drei Zeilen

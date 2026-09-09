@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-498 Entscheidungen, E1 bis E518 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+499 Entscheidungen, E1 bis E519 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -562,6 +562,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E516** — L139 gefunden: der Import war nie kaputt, das Wort war es — „PDF öffnen" holte die aktuelle PDF zurück
 * **E517** — Ein Zweig statt `main`: der Arbeitsstand kommt auf den Laptop, und `main` bleibt die Zusage „geprüft"
 * **E518** — Die fertigen PowerShell-Befehle stehen im Verzeichnis, nicht im Gespräch — und der Alltagsbefehl ruft `holen.bat`, nicht `git`
+* **E519** — Der Vergleich sieht gegen deinen Zweig, nicht gegen `main` — zwei Skripte, zwei Vorgaben, jede mit ihrem Grund
 
 ---
 
@@ -41878,3 +41879,75 @@ ersetzt — beide Zusagen rot, und die Meldung nennt die Stellen. Die
 git-Folge selbst ist in einem echten Repo gefahren, nicht abgeschrieben.
 Nicht geprüft: die Gesamtsuite, und nicht geprüft ist PowerShell selbst —
 dieser Container ist Linux (L142).
+
+---
+
+E519 — Der Vergleich sieht gegen deinen Zweig, nicht gegen `main`
+--------------------------------------------------------------------------
+
+Redur, 9. September 2026:
+
+> „wie kann ich wiessen ob meien github und laptop version gleich sind"
+
+`vergleichen.bat` gibt es seit E438 genau dafür. Es hätte ihm die falsche
+Antwort gegeben.
+
+## Eine Auskunft, die immer „anders" sagt, ist keine
+
+E517 hat `holen.bat` einen Arbeitszweig beigebracht. `vergleichen.bat` sah
+weiter fest gegen `main` — und `main` liegt inzwischen sechs Bögen zurück.
+Wer auf dem Arbeitszweig steht und fragt „habe ich dasselbe wie auf
+GitHub", bekam **hunderte Unterschiede, die keine sind**.
+
+Das ist die unangenehmste Sorte Fehler: das Skript rechnet richtig, meldet
+sauber, und die Antwort ist unbrauchbar. Es stand als erster Punkt in L142,
+einen Bogen lang, bevor Redur genau danach fragte.
+
+## Zwei Skripte, zwei Vorgaben — und das ist der Kern
+
+```txt
+holen.bat        ohne Angabe:  main        es ÄNDERT den Ordner
+                                           → die SICHERE Wahl
+vergleichen.bat  ohne Angabe:  dein Zweig  es SIEHT NUR NACH
+                                           → die EHRLICHE Wahl
+```
+
+Die naheliegende Vereinfachung wäre, beide gleich zu machen. Sie wäre
+falsch, und zwar in beide Richtungen: `holen.bat` mit der Zweig-Vorgabe
+brächte bei jedem Doppelklick Ungeprüftes ins Verzeichnis;
+`vergleichen.bat` mit `main` beantwortet weiter die Frage, die niemand
+gestellt hat. Zwei Vorgaben, jede mit ihrem Grund — und der Grund steht in
+beiden Dateien im Kopf, damit die nächste Vereinfachung ihn zuerst liest.
+
+`vergleichen.bat main` sieht weiterhin ausdrücklich gegen den geprüften
+Stand.
+
+## Und wenn es den Zweig gar nicht gibt
+
+Bisher hiess es nur „GitHub war nicht erreichbar" — richtig, aber ohne
+Auskunft, welcher der beiden Gründe zutrifft. Jetzt nennt es beide und
+listet mit `git ls-remote --heads origin` auf, welche Zweige es wirklich
+gibt. `ls-remote` liest nur; die Zusage „dieses Skript verändert nichts"
+bleibt unberührt, und `test353 §5b2` misst sie weiter.
+
+## Die vier Antworten, gemessen statt behauptet
+
+Batch läuft im Container nicht — `git status -sb` sehr wohl. `test353 §5b3`
+fährt deshalb in einem echten Wegwerf-Repo alle vier Zustände und misst die
+Zeile, die ein Mensch liest:
+
+```txt
+## main...origin/main                gleich
+## main...origin/main [behind 1]     GitHub ist weiter
+## main...origin/main [ahead 1]      ich bin weiter
+?? entwurf.txt                       ungespeichert, nur hier
+```
+
+Ohne diese Messung wäre die Tabelle in `START-MIT-CLAUDE-CODE.md` eine
+Behauptung über eine fremde Ausgabe — und genau solche Tabellen sind nach
+einem git-Update falsch, ohne dass jemand es merkt.
+
+GEPRÜFT. `test353` von 88 auf 105 Zusagen. Gegenprobe rot gesehen: die
+Vorgabe wieder fest auf `main` — die erste Zusage rot, und sie nennt den
+Grund. Nicht geprüft: die Gesamtsuite; nicht geprüft ist der Doppelklick
+selbst (L142).

@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — neunundvierzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — fünfzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -585,7 +585,16 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     wehtut; die letzte war beim ersten Lauf rot und hat den Satz gefangen,
     der die Regel erklärt. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **neunundvierzig Bögen**; die Überschrift
+  · **G50 — Der Vergleich gegen den Zweig** (E519, test353 §5b2/§5b3):
+    Redur fragte, wie er sieht, ob GitHub und Laptop gleich sind — und
+    `vergleichen.bat` hätte ihm die falsche Antwort gegeben: es sah fest
+    gegen `main`, das sechs Bögen zurückliegt. Jetzt vergleicht es gegen
+    den Zweig, auf dem der Ordner steht; `vergleichen.bat main` ausdrücklich
+    gegen den geprüften Stand. Zwei Skripte, zwei Vorgaben, jede mit ihrem
+    Grund. Die vier Antworten von `git status -sb` sind in einem echten
+    Repo gemessen statt behauptet. Schliesst L142 Punkt 1. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **fünfzig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

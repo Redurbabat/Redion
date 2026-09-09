@@ -341,13 +341,100 @@ for (const [name, muster] of [
   p('Kein ' + name + ' — es veraendert nichts', !muster.test(vergl));
 }
 /* Und der eine Schreibvorgang, den es geben DARF, ist benannt. */
-p('Es holt den Fernstand mit fetch', /git fetch origin main/.test(vergl));
+p('Es holt den Fernstand mit fetch', /git fetch origin %ZIEL%/.test(vergl));
 p('… und sagt selbst, dass das der einzige Schreibvorgang ist',
   /einzige Schreibvorgang/.test(vergl));
 /* Die Kernfrage wird ueber INHALTE beantwortet, nicht ueber Kennungen —
    dieselbe Lehre, die holen.bat in E271 gekostet hat. */
 p('Der Vergleich fragt nach den Dateien, nicht nach den Kennungen',
-  /git diff --name-only origin\/main HEAD/.test(vergl));
+  /git diff --name-only origin\/%ZIEL% HEAD/.test(vergl));
+
+/* ── 5b2 — GEGEN DEINEN ZWEIG, NICHT GEGEN main (E519) ────────────────────
+   Redur, 9. September: „wie kann ich wissen, ob meine GitHub- und
+   Laptop-Version gleich sind."
+
+   Seit E517 kann er einen Arbeitszweig holen — und `vergleichen.bat` sah
+   weiter fest gegen `main`. Wer auf einem Zweig steht und fragt „habe ich
+   dasselbe wie auf GitHub", bekam den Vergleich gegen den GEPRÜFTEN Stand:
+   hunderte Unterschiede, die keine sind. Eine Auskunft, die immer „anders"
+   sagt, ist keine.
+
+   DIE VORGABE IST HIER EINE ANDERE ALS BEI holen.bat, und das ist der Kern:
+
+     holen.bat        ohne Angabe: main       — es ÄNDERT den Ordner
+     vergleichen.bat  ohne Angabe: dein Zweig — es SIEHT NUR NACH
+
+   Zwei Skripte, zwei Vorgaben, und jede hat ihren Grund. Wer sie
+   angleicht, macht eines von beiden falsch. */
+console.log('\n5b2 · Der Vergleich sieht gegen DEINEN Zweig');
+p('Ohne Angabe ist es der Zweig, auf dem der Ordner steht',
+  /set "ZIEL=%~1"/.test(vergl)
+  && /git rev-parse --abbrev-ref HEAD 2\^>nul'\) do set "ZIEL=%%c"/.test(vergl));
+p('… und bei losgelöstem HEAD bleibt main', /if "%ZIEL%"=="HEAD" set "ZIEL=main"/.test(vergl));
+p('Der Kopf sagt, wogegen verglichen wird', /Vergleich gegen:  %ZIEL%/.test(vergl));
+for (const [was, muster] of [
+  ['fetch',      /git fetch origin %ZIEL%/],
+  ['der Stand',  /git rev-parse --short origin\/%ZIEL%/],
+  ['der Inhalt', /git diff --name-only origin\/%ZIEL% HEAD/],
+  ['die Zählung vorwärts',  /git rev-list --count origin\/%ZIEL%\.\.HEAD/],
+  ['die Zählung rückwärts', /git rev-list --count HEAD\.\.origin\/%ZIEL%/],
+  ['das Protokoll', /git log --oneline HEAD\.\.origin\/%ZIEL%/],
+  ['die Aufstellung', /git diff --stat origin\/%ZIEL% HEAD/]
+] as Array<[string, RegExp]>) {
+  p('… und ' + was + ' nimmt ihn auch', muster.test(vergl));
+}
+p('Kein fest verdrahtetes origin/main mehr im Ablauf',
+  !/origin\/main/.test(vergl.replace(/^REM.*$/gm, '')));
+/* UND ES BLEIBT HARMLOS. `ls-remote` liest nur — aber es steht jetzt neu
+   darin, und die Liste oben prüft es nicht. Also hier. */
+p('Der neue ls-remote-Hinweis liest nur und schreibt nichts',
+  /git ls-remote --heads origin/.test(vergl));
+p('Der Hinweis zum Holen nennt den Zweig', /holen\.bat %ZIEL%/.test(vergl));
+
+/* ── 5b3 — DIE VIER ANTWORTEN, IN EINEM ECHTEN REPO ───────────────────────
+   Batch läuft hier nicht; `git status -sb` sehr wohl. Gemessen wird, dass
+   die vier Zustände wirklich unterscheidbar sind — sonst wäre die ganze
+   Auskunft eine Behauptung. */
+console.log('\n5b3 · Die vier Antworten, in einem echten Repo gemessen');
+{
+  const heim = fs.mkdtempSync(path.join(os.tmpdir(), 'vergl-'));
+  const git = (wo: string, ...a: string[]): string => {
+    const r = spawnSync('git', a, { cwd: wo, encoding: 'utf8' });
+    return (r.stdout || '') + (r.stderr || '');
+  };
+  try {
+    const fern = path.join(heim, 'fern.git');
+    git(heim, 'init', '-q', '--bare', '-b', 'main', fern);
+    const bau = path.join(heim, 'bau');
+    git(heim, 'clone', '-q', fern, 'bau');
+    git(bau, 'config', 'user.email', 'p@t.de'); git(bau, 'config', 'user.name', 'P');
+    git(bau, 'checkout', '-q', '-b', 'main');
+    fs.writeFileSync(path.join(bau, 'datei.txt'), 'v1');
+    git(bau, 'add', '-A'); git(bau, 'commit', '-qm', 'erst'); git(bau, 'push', '-q', 'origin', 'main');
+    const laptop = path.join(heim, 'laptop');
+    git(heim, 'clone', '-q', fern, 'laptop');
+    git(laptop, 'config', 'user.email', 'r@t.de'); git(laptop, 'config', 'user.name', 'R');
+
+    const zeile = (): string => (git(laptop, 'status', '-sb').split('\n')[0] || '').trim();
+    gleich('Gleicher Stand: keine Klammer hinter dem Zweig', zeile(), '## main...origin/main');
+
+    fs.writeFileSync(path.join(bau, 'datei.txt'), 'v2');
+    git(bau, 'add', '-A'); git(bau, 'commit', '-qm', 'zweit'); git(bau, 'push', '-q', 'origin', 'main');
+    git(laptop, 'fetch', '-q', 'origin');
+    gleich('GitHub ist weiter: behind', zeile(), '## main...origin/main [behind 1]');
+
+    git(laptop, 'merge', '-q', '--ff-only', 'origin/main');
+    fs.writeFileSync(path.join(laptop, 'eigenes.txt'), 'meins');
+    git(laptop, 'add', '-A'); git(laptop, 'commit', '-qm', 'meine aenderung');
+    gleich('Ich bin weiter: ahead', zeile(), '## main...origin/main [ahead 1]');
+
+    fs.writeFileSync(path.join(laptop, 'entwurf.txt'), 'noch nicht gespeichert');
+    const alles = git(laptop, 'status', '-sb');
+    p('Ungespeichertes steht als ?? darunter', /\?\? entwurf\.txt/.test(alles), alles.slice(0, 120));
+  } finally {
+    fs.rmSync(heim, { recursive: true, force: true });
+  }
+}
 /* Kein `find /c`: die Zahl kommt mit fuehrenden Leerzeichen und der
    Vergleich schlaegt still fehl. */
 p('Es zaehlt nicht mit find /c, sondern fragt ob es Ausgabe gibt',

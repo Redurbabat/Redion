@@ -5007,3 +5007,29 @@ aus. Behoben, und `SERVER-EINRICHTEN.md` gleich mit; dort stand derselbe
 Pfad in einem `cd` zum Kopieren. Die drei in `ENTSCHEIDUNGEN.md`, `UR.md`
 und im Studien-Audit bleiben stehen: das sind Protokolle, und ein Protokoll
 schreibt man nicht um.
+
+**Der Vergleich sieht gegen deinen Zweig (E519, test353).** Redur fragte,
+wie er weiss, ob GitHub und Laptop gleich sind. Genau dafür gibt es
+`vergleichen.bat` seit E438 — und es hätte ihm die falsche Antwort gegeben.
+
+E517 hatte `holen.bat` einen Arbeitszweig beigebracht, `vergleichen.bat` sah
+weiter fest gegen `main`, und `main` liegt inzwischen sechs Bögen zurück.
+Wer auf dem Arbeitszweig steht und fragt „habe ich dasselbe wie auf GitHub",
+bekam hunderte Unterschiede, die keine sind. Das Skript rechnete dabei
+richtig — nur beantwortete es eine Frage, die niemand gestellt hatte.
+
+Die Vorgabe ist jetzt eine andere als bei `holen.bat`, und das ist der Kern:
+`holen.bat` ändert den Ordner und nimmt deshalb ohne Angabe den geprüften
+Stand; `vergleichen.bat` sieht nur nach und nimmt deshalb ohne Angabe den
+Zweig, auf dem man steht. Beide gleich zu machen wäre in beide Richtungen
+falsch, und der Grund steht in beiden Dateien im Kopf.
+
+Dazu sagt es jetzt, wenn es den Zweig auf GitHub gar nicht gibt, und listet
+auf, welche es gibt — vorher hiess es nur „nicht erreichbar", was einer von
+zwei möglichen Gründen war.
+
+Und die vier Antworten, die ein Mensch liest, sind gemessen statt behauptet:
+gleicher Stand, GitHub weiter, ich weiter, ungespeichertes daneben — in
+einem echten Wegwerf-Repo gefahren. Ohne das wäre die Tabelle in der
+Anleitung eine Behauptung über eine fremde Ausgabe, und solche Tabellen sind
+nach einem git-Update falsch, ohne dass es jemand merkt.

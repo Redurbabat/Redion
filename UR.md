@@ -395,6 +395,28 @@ Die zehn Adern. Nicht wegen der Technik — zehn Farben und zwei Strichmuster �
 **Besserer Prompt:** „Ich kopiere lieber Befehle, als zu klicken. Gib mir alles als fertige PowerShell-Zeile." — der Grund dazu spart die Rückfrage, ob die .bat-Dateien überhaupt noch gewollt sind. (Sie sind es: der Befehl ruft sie auf, weil in ihnen die Rettung steckt.)
 
 
+**7 · ca. 09:10**
+
+> wie kann ich wiessen ob meien github und laptop version gleich sind und ich weiss nich wo meien github ordner ist für BABAT Red schau mal es und gebe mir wie ich im termilan es hollen kann
+
+**Gemeint:** Zwei Fragen, beide zu BABAT-RED: wie sehe ich, ob GitHub und Laptop gleich sind — und wo liegt der Ordner, beziehungsweise wie hole ich ihn im Terminal?
+
+**Besser geschrieben:** Für BABAT-RED: wie sehe ich, ob mein Laptop denselben Stand hat wie GitHub? Und ich finde den Ordner nicht — wie hole ich ihn im Terminal?
+
+**Besserer Prompt:** Das Projekt gehört an den ANFANG, nicht ans Ende. Hier stand es in der Mitte, und die erste Frage wurde deshalb auf Redion bezogen — Redur musste nachschieben: „nein ich meinte für babat red". Ein Satz pro Frage hätte es auch getrennt.
+
+
+**8 · ca. 09:20**
+
+> nein ich meinte für babat red nicht für redion
+
+**Gemeint:** Beide Fragen galten BABAT-RED, nicht Redion.
+
+**Besser geschrieben:** Beides meinte ich für BABAT-RED.
+
+**Besserer Prompt:** Keine Verbesserung nötig — die Korrektur kam sofort und war eindeutig. Sie war nur nötig, weil das Projekt in der Nachricht davor zu spät stand.
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -404,12 +426,13 @@ Die zehn Adern. Nicht wegen der Technik — zehn Farben und zwei Strichmuster �
 | E515 — Die Zeichen der Leiste: vierunddreissig gezeichnete statt Emoji, und fünfundsiebzig Pixel, die niemand sah | `dd694ff7` → `a33cceb1` | 04:47 – 06:45 | ca. 1 h 58 min | test480 §5 neu (acht Zusagen); test351 war rot und ist wieder grün |
 | E516 — L139 gefunden: der Import war nie kaputt, das Wort war es | `a33cceb1` → `0f8f0a1c` | 06:45 – 07:35 | ca. 50 min | test482 neu, 28 Zusagen |
 | E517 — Ein Zweig statt main: der Arbeitsstand kommt auf den Laptop | `0f8f0a1c` → `9812d8a8` | 07:35 – 08:25 | ca. 50 min | test353 von 60 auf 81 Zusagen |
-| E518 — Die fertigen PowerShell-Befehle stehen im Verzeichnis, nicht im Gespräch | `9812d8a8` → `(dieser Bogen)` | ab 08:25 | — | test353 von 81 auf 88 Zusagen |
+| E518 — Die fertigen PowerShell-Befehle stehen im Verzeichnis, nicht im Gespräch | `9812d8a8` → `42cf96ba` | 08:25 – 09:05 | ca. 40 min | test353 von 81 auf 88 Zusagen |
+| E519 — Der Vergleich sieht gegen deinen Zweig, nicht gegen main | `42cf96ba` → `(dieser Bogen)` | ab 09:05 | — | test353 von 88 auf 105 Zusagen |
 
 #### Zahlen des Tages
 
-- **commits:** 6
-- **entscheidungen:** 6
+- **commits:** 7
+- **entscheidungen:** 7
 
 #### Das grösste Problem
 
@@ -433,10 +456,11 @@ Die drei sauberen Messungen aus E513. Sie waren richtig gerechnet und haben trot
 | 08:05 | `holen.bat` nimmt einen Zweignamen; `holen-zweig.bat` fragt danach. | Der Arbeitsstand war vom Laptop aus nicht erreichbar: holen.bat holt main, main steht still bis zum grünen Gesamtlauf, gearbeitet wird auf einem Zweig. Ohne Angabe bleibt es main — wer doppelklickt, soll den geprüften Stand bekommen. | gering, aber genau die Stelle aus E271: ein vergessener origin/main meldet Erfolg und wirft Arbeit weg. Sechs Stellen einzeln geprüft, die Folge in einem echten Repo nachgefahren. |
 | 08:40 | Die fertigen PowerShell-Befehle in START-MIT-CLAUDE-CODE.md geschrieben, mit einem Wächter dafür. | Ein Befehl, der nur im Gespräch steht, ist morgen weg. Und der Alltagsbefehl ruft holen.bat statt git checkout: das kurze git checkout überspränge die ganze Rettung. | keins an Daten; die git-Folge wurde vorher in einem echten Repo gefahren, nicht abgeschrieben |
 | 08:55 | Benutzerpfad aus START-MIT-CLAUDE-CODE.md und SERVER-EINRICHTEN.md entfernt. | Ein ausgeschriebener Benutzerpfad stimmt auf keinem zweiten Rechner und gehört nicht in ein offenes Verzeichnis. Die drei in ENTSCHEIDUNGEN.md, UR.md und im Audit bleiben: das sind Protokolle. | keins |
+| 09:30 | `vergleichen.bat` vergleicht gegen den Zweig, auf dem der Ordner steht. | Seit E517 kann ein Arbeitszweig geholt werden; der Vergleich sah weiter fest gegen main und meldete hunderte Unterschiede, die keine sind. Die Vorgabe ist absichtlich eine andere als bei holen.bat: das eine ändert den Ordner (sichere Wahl), das andere sieht nur nach (ehrliche Wahl). | keins — das Skript schreibt weiterhin nichts ausser fetch; sieben git-Stellen einzeln geprüft |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 18 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 19 Einträge.
 

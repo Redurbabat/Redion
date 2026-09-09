@@ -32,6 +32,7 @@ sind der teuerste Teil und der lehrreichste.
 | P16 | 2026-09-09 | „Eine neue PDF kopiert die aktuelle" — der Import war nie kaputt | hoch | — |
 | P17 | 2026-09-09 | Der Laptop bekam den Arbeitsstand gar nicht — drei richtige Regeln ergaben zusammen eine Sackgasse | 🟠 mittel | — |
 | P18 | 2026-09-09 | Der Wächter fing den Satz, der die Regel erklärt | 🟡 klein | — |
+| P19 | 2026-09-09 | Ein Skript, das richtig rechnet und die falsche Frage beantwortet | 🟠 mittel | — |
 
 ---
 
@@ -345,4 +346,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Stand.** Behoben. Der Wächter misst genau die eine Datei, die jemand kopiert.
 
 **Die Lehre.** Ein Wächter, der beim ersten Lauf grün ist, hat nichts bewiesen. Dieser war beim ersten Lauf rot, und zwar an einer Stelle, die niemand vermutet hätte.
+
+
+---
+
+## P19 · Ein Skript, das richtig rechnet und die falsche Frage beantwortet
+
+*2026-09-09 · 🟠 mittel*
+
+**Das Bild.** vergleichen.bat hätte Redur auf dem Arbeitszweig hunderte Unterschiede gemeldet, die keine sind — es verglich gegen main, und main liegt sechs Bögen zurück.
+
+**Die falsche Vermutung.** Keine im engeren Sinn — der Fehler war einen Bogen zuvor selbst aufgeschrieben worden (L142, erster Punkt) und galt als „später". Dass Redur genau danach fragen würde, war absehbar: er hatte gerade den Arbeitszweig bekommen.
+
+**Wie gesucht wurde.** Beim Lesen der Frage. Vor der Antwort nachgesehen, was das Skript tatsächlich vergleicht, statt es zu empfehlen.
+
+**Die Ursache.** E517 hat holen.bat einen Zweig beigebracht und vergleichen.bat vergessen. Eine Umstellung, die an einer von drei Stellen halt macht.
+
+**Der Stand.** Behoben. L142 Punkt 1 geschlossen.
+
+**Die Lehre.** Eine Lücke, die man selbst aufschreibt, ist kein Ablagefach — sie ist eine Verabredung. Diese hier wurde nach einem einzigen Bogen fällig, und zwar durch die Frage, für die das kaputte Werkzeug gedacht war. Bevor man ein Werkzeug empfiehlt, sieht man nach, ob es die gestellte Frage beantwortet.
 
