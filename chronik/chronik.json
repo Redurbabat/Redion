@@ -387,6 +387,13 @@
           "gemeint": "Im Cloudflare-Deploy heisst der Worker red-ion, in wrangler.toml steht redion. Den Namen dort ändern — aber nur den Worker-Namen, nichts anderes.",
           "besser": "Cloudflare nennt den Worker red-ion, wrangler.toml sagt redion. Ändere nur den Worker-Namen, nicht den Datenbanknamen.",
           "besserePrompt": "Das „nur wo Workername ist\" war die wichtigste Angabe im Satz und stand am Ende — sie hat verhindert, dass auch database_name geändert wurde, was eine andere Datenbank gewesen wäre. Solche Einschränkungen gehören nach vorn. Das mitgeschickte Protokoll war goldrichtig: darin stand der eigentliche Fehler, nach dem er gar nicht gefragt hatte."
+        },
+        {
+          "zeit": "ca. 10:20",
+          "wortlaut": "pusche es auf eien neu branche al wenn eine brahce gepuscht ist muss du immer eien neu erstelle so ist besser",
+          "gemeint": "Push das auf einen neuen Zweig — und ab jetzt immer: sobald ein Zweig gepusht ist, einen neuen anlegen.",
+          "besser": "Push das auf einen neuen Zweig. Und ab jetzt bitte immer so: wenn ein Zweig gepusht ist, leg für die nächste Arbeit einen neuen an.",
+          "besserePrompt": "Der zweite Satz ist eine DAUERREGEL, der erste eine einmalige Bitte — getrennt geschrieben sind sie beide klarer. Und ein Wort zum Grund hätte geholfen („damit ich weiss, was in welchem Zweig steht\"); so musste ich ihn selbst erschliessen, und der Grund entscheidet, wie die Zweige heissen sollen."
         }
       ],
       "arbeit": [
@@ -449,17 +456,25 @@
         {
           "was": "E520 — Der Worker heisst red-ion, und ein Zeugnis lag im Netz",
           "vonCommit": "9db488d0",
+          "bisCommit": "db27ad64",
+          "zeitraum": "09:40 – 10:15",
+          "pruefungen": "test270 von 63 auf 74 Zusagen",
+          "dauer": "ca. 35 min"
+        },
+        {
+          "was": "E521 — Ein Zweig, ein Push, dann ein neuer Zweig",
+          "vonCommit": "db27ad64",
           "bisCommit": "(dieser Bogen)",
-          "zeitraum": "ab 09:40",
-          "pruefungen": "test270 von 63 auf 74 Zusagen"
+          "zeitraum": "ab 10:15",
+          "pruefungen": "keiner — eine Arbeitsregel, kein Verhalten der App"
         }
       ],
       "zahlen": {
-        "commits": 8,
-        "entscheidungen": 8
+        "commits": 9,
+        "entscheidungen": 9
       },
-      "groesstesProblem": "Die drei sauberen Messungen aus E513. Sie waren richtig gerechnet und haben trotzdem nichts bewiesen, weil sie die falsche Frage gestellt haben: „legt der Import die richtige Datei ab?\" statt „welchen Knopf drückt er?\". Eine Messung, die die falsche Frage stellt, ist gefährlicher als gar keine — sie kommt grün zurück und man glaubt ihr.",
-      "interessantesteAnfrage": "„Wieter mit L139\" — drei Wörter, und sie haben gereicht, weil die Frage schon in LUECKEN.md stand. Das ist der Nutzen dieser Datei, den man erst sieht, wenn man ihn braucht: eine Lücke, die aufgeschrieben ist, lässt sich mit einer Nummer wieder aufnehmen. Eine, die nur im Kopf stand, hätte die ganze Geschichte noch einmal gebraucht.",
+      "groesstesProblem": "Nicht ein Fehler, sondern eine Kette: Redur fragte nach dem Worker-Namen, und im mitgeschickten Protokoll lagen zwei Dinge, nach denen er nicht gefragt hatte — der echte Deploy-Fehler und ein Zeugnis, das im Netz lag. Das teuerste Muster des Tages war, dass mehrere Werkzeuge richtig rechneten und die falsche Frage beantworteten: vergleichen.bat gegen main, die drei Import-Messungen aus E513, die Ausschlussliste aus E270. Jedes war korrekt und keines war brauchbar.",
+      "interessantesteAnfrage": "„wenn eine branche gepuscht ist musst du immer eine neue erstellen, so ist besser\" — eine Arbeitsregel, die aus dem Gebrauch kommt, nicht aus einem Lehrbuch. Redur hat gemerkt, was ihm beim Holen fehlte: ein Zweigname, der sagt, was darin steht. Zwei Bögen zuvor hatte er das Holen bekommen; jetzt kam die Regel, die es erst brauchbar macht.",
       "massnahmen": [
         {
           "zeit": "04:12",
@@ -538,6 +553,12 @@
           "was": "Persönliche PDF, Schul Inhalt, chronik/, quell/entwicklung/ und .gitattributes in .assetsignore aufgenommen.",
           "warum": "Sie standen im Upload-Protokoll und waren damit im Netz abrufbar. Fünf Megabyte Zeugnis unter einer ratbaren Adresse.",
           "risiko": "keins — GELÖSCHT WURDE NICHTS (§43); die Dateien liegen unverändert im Verzeichnis und gehen nur nicht mehr mit ins Netz"
+        },
+        {
+          "zeit": "10:25",
+          "was": "Neuer Zweig `claude/redion-cloudflare-l143`; die Regel in CLAUDE.md §43 aufgenommen.",
+          "warum": "Redurs Regel. Der Grund dahinter: ein Zweig, auf den immer weiter geschoben wird, verliert seinen Namen — sechs Bögen lagen unter einem Namen, der nur den ersten beschreibt.",
+          "risiko": "keins — der alte Zweig bleibt unangetastet, der neue beginnt auf seinem Stand; nachgemessen mit einem leeren git diff"
         }
       ]
     }

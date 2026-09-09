@@ -5074,3 +5074,28 @@ Nachzügler: `.gitattributes` stand in keiner Liste.
 Was den Deploy wirklich gekippt hat, steht als L143: die D1-Kennung in
 `wrangler.toml` gehört zu keiner Datenbank in Redurs Konto. Das ist L82
 Punkt 1, und kein Prüflauf im Container kann es lösen.
+
+**Ein Zweig, ein Push, dann ein neuer (E521).** Redurs Regel vom
+9. September: sobald ein Zweig gepusht ist, beginnt die nächste Arbeit auf
+einem frischen.
+
+Der Grund liegt offen: sechs Bögen — E515 bis E520 — lagen auf einem Zweig
+namens `claude/redion-goodnotes-weiter`. Der Name beschreibt den ersten
+davon. Er beschreibt nicht die Chronik, nicht `holen.bat`, nicht
+`vergleichen.bat`, nicht `.assetsignore` und nicht Cloudflare. Ein Zweig, auf
+den immer weiter geschoben wird, verliert seinen Namen — er heisst nach dem
+ersten Bogen und trägt den zwanzigsten.
+
+Das trifft ausgerechnet das, was zwei Bögen zuvor gebaut wurde: seit E517
+kann Redur einen Zweig auf den Laptop holen. Wer dann sagt „hol mir den
+Zweig", muss wissen, was darin steht.
+
+§43 sagte den Kern schon — „kleine Zweige, eine Änderung, ein klares Ziel" —,
+nur stand nirgends, wann ein Zweig fertig ist. Jetzt steht es: mit dem Push.
+Der alte bleibt dabei unangetastet, und der neue beginnt Commit für Commit
+auf seinem Stand; nachgemessen mit einem leeren `git diff`.
+
+Der Preis steht als L144 dabei: mehr Zweige. Bei BABAT-RED sind daraus 265
+geworden. Der Unterschied ist, dass dort nie zusammengeführt wurde — hier
+holt `main` sie ein, sobald ein voller Lauf grün ist. Nur steht genau dieser
+Lauf seit E511 aus, und das ist die ehrlichere Lücke von beiden.

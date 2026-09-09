@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-500 Entscheidungen, E1 bis E520 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+501 Entscheidungen, E1 bis E521 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -564,6 +564,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E518** — Die fertigen PowerShell-Befehle stehen im Verzeichnis, nicht im Gespräch — und der Alltagsbefehl ruft `holen.bat`, nicht `git`
 * **E519** — Der Vergleich sieht gegen deinen Zweig, nicht gegen `main` — zwei Skripte, zwei Vorgaben, jede mit ihrem Grund
 * **E520** — Der Worker heisst `red-ion`, und ein Zeugnis lag im Netz — die Namenswarnung verdeckte den echten Fehler
+* **E521** — Ein Zweig, ein Push, dann ein neuer Zweig — ein Zweig, der weiterwächst, verliert seinen Namen
 
 ---
 
@@ -42057,3 +42058,55 @@ PDF-Ausschluss entfernt (drei Zusagen rot, und eine nennt die Datei beim
 Namen) und den Worker wieder `redion` genannt. Nicht geprüft: die
 Gesamtsuite; **nicht geprüft ist der Deploy selbst** — er braucht Redurs
 Cloudflare-Konto (L82, L143).
+
+---
+
+E521 — Ein Zweig, ein Push, dann ein neuer Zweig
+--------------------------------------------------------------------------
+
+Redur, 9. September 2026:
+
+> „pusche es auf eien neu branche al wenn eine brahce gepuscht ist muss du
+> immer eien neu erstelle so ist besser"
+
+## Warum das besser ist, und nicht nur anders
+
+Sechs Bögen — E515 bis E520 — lagen auf einem Zweig namens
+`claude/redion-goodnotes-weiter`. Der Name beschreibt den ersten davon. Er
+beschreibt nicht die Chronik, nicht `holen.bat`, nicht `vergleichen.bat`,
+nicht `.assetsignore` und nicht Cloudflare.
+
+Das ist der ganze Grund. **Ein Zweig, auf den immer weiter geschoben wird,
+verliert seinen Namen.** Er heisst nach dem ersten Bogen und trägt den
+zwanzigsten. Wer dann sagt „hol mir den Zweig", weiss nicht, was er bekommt
+— und ausgerechnet dieses Holen hat Redur zwei Bögen zuvor gebaut (E517).
+Die Regel schliesst die Lücke, die dabei entstanden ist.
+
+§43 sagte es im Kern schon: „Kleine Zweige, kleine Änderungen. Eine
+Änderung = ein klares Ziel." Nur stand nirgends, wann ein Zweig FERTIG ist.
+Jetzt steht es: mit dem Push.
+
+## Was die Regel nicht sagt
+
+**Der alte Zweig bleibt stehen.** Nichts wird gelöscht, nichts
+umgeschrieben, kein Force-Push (§43). Der neue beginnt Commit für Commit
+auf dem Stand des alten — nachgemessen mit `git diff <alt> HEAD`, und das
+muss leer sein.
+
+Der erste Zweig nach der Regel heisst `claude/redion-cloudflare-l143`, nach
+dem, was als Nächstes offen ist — nicht nach dem, was gerade fertig wurde.
+
+## Der Preis, ehrlich
+
+Mehr Zweige auf GitHub. Bei BABAT-RED sind daraus 265 geworden, und das ist
+kein Vorbild. Der Unterschied: dort sind es Zweige, die nie zusammengeführt
+wurden. Hier ist jeder Zweig ein abgeschlossener Bogen mit einem Namen, der
+sagt, was darin steht — und `main` holt sie ein, sobald ein voller Lauf
+grün ist (§46).
+
+Wenn die Zahl trotzdem zum Problem wird, ist die Antwort nicht „wieder
+weiterschieben", sondern `main` öfter vorspulen. Das steht als **L144**.
+
+GEPRÜFT. Kein Prüflauf: das ist eine Arbeitsregel, kein Verhalten der App.
+Was messbar war, ist gemessen — der neue Zweig trägt Zeichen für Zeichen
+denselben Stand wie der alte (`git diff` leer).

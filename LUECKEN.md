@@ -7044,3 +7044,32 @@ Cloudflare-Konto. Drei Wege stehen offen, und die Wahl gehört ihm:
 Nachgesehen, nicht vermutet: `bedienen()` prüft `if (!env || !env.DB)` und
 antwortet auf `/api/stand` auch ohne Datenbank. Weg 3 macht die App also
 nicht kaputt — er macht sie zu dem, was sie ohne Server ohnehin ist.
+
+L144 · Ein Zweig je Bogen — und was daraus wächst
+--------------------------------------------------------------------------
+
+E521 hat entschieden: ein Zweig, ein Push, dann ein neuer. Was daraus
+offen bleibt:
+
+  · **Die Zahl der Zweige wächst mit jedem Bogen.** Bei BABAT-RED sind
+    daraus 265 geworden. Der Unterschied ist real — dort wurde nie
+    zusammengeführt, hier holt `main` sie ein, sobald ein voller Lauf grün
+    ist (§46). Aber genau dieser Lauf steht seit E511 aus: elf Bögen liegen
+    auf Zweigen, `main` bewegt sich nicht. Wenn die Zahl zum Problem wird,
+    ist die Antwort nicht „wieder weiterschieben", sondern `main` öfter
+    vorspulen.
+  · **Alte Zweige werden nie aufgeräumt.** Absicht (§43: nichts löschen
+    ohne Rückfrage), aber es fehlt ein Weg, einen gemergten Zweig als
+    erledigt zu KENNZEICHNEN — sonst sieht in einem Jahr niemand mehr, welche
+    noch etwas tragen. Ein Präfix wie `fertig/` beim Zusammenführen wäre
+    eine Möglichkeit; entschieden ist nichts.
+  · **Der Name muss beim Anlegen erraten werden.** Ein Zweig wird benannt,
+    bevor die Arbeit darin getan ist — der aktuelle heisst nach dem, was
+    als Nächstes offen ist (`claude/redion-cloudflare-l143`), nicht nach dem,
+    was daraus wird. Das geht meistens gut und wird gelegentlich daneben
+    liegen. Umbenennen ist möglich, solange nichts gepusht ist.
+  · **`holen-zweig.bat` schlägt den Zweig vor, auf dem der Ordner steht.**
+    Nach einem Zweigwechsel hier ist das der ALTE. Redur muss den neuen
+    Namen einmal eintippen — deshalb steht er ab jetzt unter jeder Meldung.
+    Ein `git ls-remote --heads origin | sort` als Vorschlagsliste wäre die
+    bequemere Lösung und ist nicht gebaut.
