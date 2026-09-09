@@ -42425,6 +42425,28 @@ der Alphakanal stimmte, die Datei war ein gültiges PNG.
 Gefunden hat es das Bild (§55). Das ist der zweite Fall in diesem Projekt,
 in dem eine Zahl richtig und das Bild falsch war.
 
+## Zweimal geschnitten, und beim ersten Mal falsch
+
+Der erste Schnitt suchte die Kachel dort, wo die Vorlage VOLLSTÄNDIG
+deckend ist: 64…1173 waagerecht. Die Kachel geht aber bis 50…1199 — ihr
+Lichtsaum ist nicht ganz deckend, und genau er gehört zur Marke. Links 14
+und rechts 26 Punkte zu viel weg, und der Ausschnitt 1110 × 1079 wurde dann
+auch noch auf ein Quadrat GEZOGEN.
+
+Beides zusammen sah aus wie ein anderes Bild: der Saum oben rechts
+abgeschnitten, die Marke um 2,8 % in die Höhe verzerrt, alles eine Spur zu
+nah heran. Redur hat es sofort gesehen und gefragt, ob das denn wie sein
+Bild aussehe. Es sah nicht so aus.
+
+Jetzt wird an der echten Kachelkante geschnitten und ein QUADRAT von 1150
+um die Kachelmitte gelegt — nichts gezogen, nichts abgeschnitten. Die
+Messung dafür steht nicht im Kopf, sondern kommt aus einem Abtasten der
+mittleren Zeile und Spalte: wo hört das reine Aussen auf.
+
+Die Lehre ist dieselbe wie beim Kastenfilter zwei Absätze weiter oben, nur
+von der anderen Seite: dort hat ein Bild einen Rechenfehler gefunden, hier
+hat ein Bild einen Messfehler gefunden. Beide Male war die Zahl plausibel.
+
 ## Und die kleinen Grössen werden aufgehellt
 
 Redurs Marke ist dunkel. Bei 180 px ist das ihre Wirkung; bei 16 px im
