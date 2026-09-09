@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-493 Entscheidungen, E1 bis E513 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+494 Entscheidungen, E1 bis E514 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -557,6 +557,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E511** — Die Tinte holt die Spitze ein, und vier Bewegungen, die etwas sagen
 * **E512** — Die Leiste wie GoodNotes: Stiftreihe, Laserpointer, vier Plätze — und eine Fläche, die nicht mehr stirbt
 * **E513** — Das Notizbuch stand nicht im „Neu erstellen", obwohl es Redion seit E264 kann
+* **E514** — Die Chronik „Red-ur": eine Quelle, drei Ansichten — UR.md, PROBLEME.md und ein Fenster in Redion
 
 ---
 
@@ -41341,3 +41342,125 @@ Liste stehen im Katalog (vorher vier von fünf — die Zusage war rot, bevor
 der Eintrag da war). 39 Zusagen grün. Nicht geprüft: die Gesamtsuite.
 Kein Bild: ein Menüeintrag mehr ist keine Ansicht, die man beurteilen
 müsste (§55.3).
+
+---
+
+E514 — Die Chronik „Red-ur"
+--------------------------------------------------------------------------
+
+Redur, 9. September 2026:
+
+> „speicher das alles im problemw.md … dann will ich, dass du eine ur.md
+> erstellst und dort alles speicherst als ein 2. Gehirn … du musst deine
+> Arbeit, wie du planst, wie du Probleme löst und wie du arbeitest, warum so
+> oder nicht so, alles dort speichern … auch was ich dir schreibe, mit
+> genauem Zeitraum, genauem Datum, und für jeden Tag separat … von welchem
+> Commit bis welchem, wie viele Stunden … was war das grösste Problem, was
+> war das Interessanteste, das ich wollte … wirklich alles ausser Code …
+> und dann, wenn ich dir schreibe, kopiere meinen Satz 1:1 dort, und unter
+> dem die Satzverbesserung, was ich besser schreiben konnte, auch besserer
+> Prompt … es sollte auch im Redion sichtbar sein: wenn ich in der Suche
+> 'Red-ur' schreibe, sollte dort direkt die Daten sich öffnen, aber mit
+> Zugangscode 733877, und dort solltest du die Graphen verwenden,
+> 3D-Ansichten und so."
+
+## Eine Quelle, drei Ansichten
+
+Der Auftrag nennt zwei Dateien und ein Fenster — also drei Orte für
+dieselbe Sache. Nach §8 ist das genau eine Gelegenheit, zwei Wahrheiten zu
+bauen: wer UR.md von Hand pflegt und die App getrennt, hat nach einer Woche
+zwei Chroniken, die sich widersprechen.
+
+**Deshalb liegt die Wahrheit in `chronik/chronik.json`**, und `node
+chronik.mts` schreibt daraus alles drei:
+
+```txt
+chronik/chronik.json   die Daten
+   → UR.md                        für einen Menschen, der liest
+   → PROBLEME.md                  für einen Menschen, der sucht
+   → src/bereiche/chronik/daten.ts   für Redion selbst
+```
+
+**Warum nicht umgekehrt** — Markdown als Quelle und der Rest daraus? Weil
+ein Markdown-Leser raten muss, was eine Überschrift bedeutet. Ein Zitat,
+eine Satzverbesserung und ein besserer Prompt sehen im Text gleich aus; in
+JSON heissen sie, wie sie heissen. Die Prosa geht dabei nicht verloren —
+sie steht in den Feldern, nur benannt.
+
+`node chronik.mts --pruefen` sagt, ob die erzeugten Dateien noch zur Quelle
+passen, und `test481 §1` fährt es. Wer in UR.md von Hand schreibt, merkt es
+im Prüflauf und nicht erst, wenn der nächste Lauf es überschreibt.
+
+## Der Code ist ein Türschild, kein Schloss
+
+Das gehört an den Anfang und nicht ins Kleingedruckte. Redion ist ein
+offenes Verzeichnis: wer den Quelltext liest, findet die sechs Ziffern in
+zehn Sekunden. Sie stehen dort im Klartext, weil sie dort stehen MÜSSEN —
+die App läuft ohne Server, es gibt niemanden, der eine Prüfung vornehmen
+könnte (§22).
+
+Ein Passwortfeld, das etwas anderes behauptet, wäre genau das, was §33
+verbietet: ein Versprechen, das nicht hält. Was der Code TATSÄCHLICH tut,
+ist das, wofür Redur ihn wollte — die Chronik geht nicht versehentlich auf,
+und wer neben ihm sitzt, sieht sie nicht, weil jemand ein Wort in die Suche
+getippt hat.
+
+Ein echtes Schloss gäbe es: dieselbe AES-GCM-Verschlüsselung, die Redion
+für verschlüsselte Seiten benutzt (§19), mit einem Passwort, das nur im
+Kopf steht. Das ist ein eigener Bogen und steht als **L140**.
+
+Gefragt wird **einmal je Sitzung**, nicht bei jedem Klick: wer die Chronik
+durchsieht, geht zehnmal hinein und heraus. Beim nächsten Öffnen der App
+fragt sie wieder.
+
+## „Red-ur" — und nur das
+
+Der Treffer steht in der SUCHE, weil Redur die Suche genannt hat, und
+zusätzlich in der Befehlspalette — über denselben Weg (§8), nicht über eine
+zweite Tür. Er springt nur beim ganzen Wort auf, mit oder ohne Bindestrich:
+ein Treffer, der bei jedem „red" erscheint, wäre eine Überraschung statt
+einer Tür.
+
+## Graphen und 3D — aus eigenen Mitteln
+
+Kein Diagrammpaket, kein WebGL: §6 verbietet unnötige Abhängigkeiten, und
+ein Balken ist ein Rechteck. Vier Graphen (Commits, Nachrichten, neue
+Prüfläufe je Tag, Probleme nach Schwere), **und jeder Balken trägt seine
+Zahl** — eine Höhe allein ist eine Auskunft, die nur Augen haben (§38).
+
+Der 3D-Teil ist der **Stapel der Tage**: jeder Tag eine Platte,
+hintereinander gestaffelt, drehbar mit dem Zeiger. Die Tiefe SAGT etwas —
+wie viele Tage hinter uns liegen —, und die Kante links ist die Arbeit des
+Tages. Reine CSS-Perspektive. Bei `prefers-reduced-motion` und am Telefon
+liegt der Stapel flach untereinander; die Auskunft bleibt dieselbe.
+
+## Was das Bild gefunden hat
+
+Der erste Wurf legte die Platten genau hintereinander. Auf dem Bild war nur
+die vorderste zu lesen, die beiden anderen waren zwei Streifen — und die
+„Dicke" war ein Balken quer über die halbe Platte. Jetzt versetzen sie sich
+in allen drei Richtungen, und die Dicke sitzt als Kante links. Das hat kein
+Prüflauf gefunden; es gab nichts Falsches zu messen, nur etwas Unlesbares
+zu sehen (§55).
+
+## Ehrlich über die Uhr
+
+Genau sind nur die Commit-Zeiten — sie stehen in git. Die Uhrzeiten der
+Nachrichten sind ABGELEITET, aus ihrer Reihenfolge und den Commits davor
+und danach, und sie stehen mit „ca." da. Eine erfundene Minute wäre
+schlimmer als eine fehlende (§35). Vom 7. September fehlt der Wortlaut ganz
+— die Sitzung liegt nicht mehr vor, und das steht am Tag dabei, statt
+nachträglich rekonstruiert zu werden.
+
+## Was nicht drin ist
+
+**Token.** Redur hat sie ausdrücklich verlangt, und ich kann sie nicht
+liefern: die Zahl steht dieser Sitzung nicht zur Verfügung. Was messbar
+war, steht da (Commits, Bögen, Zusagen, Zeiträume); die Token fehlen, und
+das steht als Lücke in **L141**, statt eine Zahl zu erfinden.
+
+GEPRÜFT. `test481` neu mit 34 Zusagen. Drei Gegenproben rot gesehen: „Red-ur"
+auf `includes` umgestellt (die Tür ging bei „red" auf), UR.md von Hand
+ergänzt (der Abgleich mit der Quelle wurde rot), und die Zahl am Balken
+weggelassen. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts chronik`.

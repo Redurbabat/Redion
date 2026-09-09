@@ -7850,3 +7850,117 @@ body[data-dokument="an"] .blatt-werk > label.blatt-staerke.auf{
   .blatt-werk > label.blatt-staerke.auf{ position:static; box-shadow:none; border:0; background:none; padding:0 6px }
   .blatt-werk > label.blatt-staerke input{ width:6rem }
 }
+
+/* ══ DIE CHRONIK „Red-ur" (E514) ═════════════════════════════════════════════
+   Redur, 9. September: „es sollte auch im Redion sichtbar sein … dort
+   solltest du die Graphen verwenden, 3D-Ansichten und so."
+
+   ALLES AUS EIGENEN MITTELN. Kein Diagrammpaket, kein WebGL — §6 verbietet
+   unnötige Abhängigkeiten, und ein Balken ist ein Rechteck, eine Tiefe ist
+   eine Perspektive. Was die Bewegung sagt, steht im Quelltext des Bereichs.
+   ========================================================================== */
+.chr-lage{align-items:flex-start; padding:24px 12px; overflow:auto}
+.chr-fenster{width:min(1080px, 96vw); margin:0 auto; background:var(--bg-card);
+             border:1px solid var(--line); border-radius:14px;
+             box-shadow:var(--shadow-4); overflow:hidden}
+.chr-kopf{display:flex; align-items:center; gap:12px; padding:14px 16px;
+          border-bottom:1px solid var(--line); background:var(--bg-2)}
+.chr-kopf h2{margin:0; font-size:20px; letter-spacing:.01em}
+.chr-kopf p{margin:0; flex:1; color:var(--text-dim); font-size:12.5px}
+.chr-kopf button{min-width:var(--touch-min); min-height:var(--touch-min);
+                 border:0; background:none; color:var(--text); cursor:pointer;
+                 border-radius:8px; font-size:16px}
+.chr-kopf button:hover{background:var(--bg-hover)}
+.chr-reiter{display:flex; gap:4px; padding:8px 12px; border-bottom:1px solid var(--line);
+            overflow-x:auto; scrollbar-width:none}
+.chr-reiter::-webkit-scrollbar{display:none}
+.chr-reiter button{min-height:var(--touch-min); padding:6px 12px; border:0; cursor:pointer;
+                   border-radius:8px; background:none; color:var(--text); font-size:13.5px;
+                   white-space:nowrap}
+.chr-reiter button:hover{background:var(--bg-hover)}
+.chr-reiter button.on{background:var(--accent); color:var(--auf-accent)}
+.chr-inhalt{padding:16px; max-height:min(74vh, 900px); overflow:auto}
+
+/* Der Suchtreffer, der die Tür ist. */
+.chr-treffer{display:flex; gap:10px; align-items:center; width:100%; text-align:left;
+             padding:9px 10px; border:0; border-radius:8px; background:none;
+             color:var(--text); cursor:pointer; min-height:var(--touch-min)}
+.chr-treffer:hover, .chr-treffer.on{background:var(--bg-hover)}
+
+/* ── Die Graphen ─────────────────────────────────────────────────────────
+   Jeder Balken trägt seine Zahl. Eine Höhe allein ist eine Auskunft, die
+   nur Augen haben (§38); die Zahl daneben hat auch ein Vorleser. */
+.chr-raster{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:14px}
+.chr-graph{margin:0; padding:10px 12px; border:1px solid var(--line);
+           border-radius:10px; background:var(--bg-2)}
+.chr-graph figcaption{font-size:12.5px; color:var(--text-dim); margin-bottom:6px}
+.chr-graph svg{width:100%; height:auto; display:block}
+.chr-balken{fill:var(--accent)}
+.chr-wert{fill:var(--text); font-size:4px; text-anchor:middle}
+.chr-name{fill:var(--text-dim); font-size:3.6px; text-anchor:middle}
+
+/* ── Der 3D-Stapel ───────────────────────────────────────────────────────
+   Die Tiefe SAGT etwas: wie viele Tage hinter uns liegen und wie dick
+   jeder war. Deshalb ist sie da und nicht als Zierde. */
+/* DIE PLATTEN MÜSSEN ALLE LESBAR SEIN — sonst ist die Tiefe eine Zierde
+   und keine Auskunft. Der erste Wurf legte sie genau hintereinander: auf
+   dem Bild war nur die vorderste zu lesen, die anderen waren zwei
+   Streifen. Jetzt versetzen sie sich in ALLEN drei Richtungen — nach
+   hinten, nach unten und nach rechts —, und die Dicke sitzt als KANTE
+   links statt als Balken unten (§55, gefunden vom Bild). */
+.chr-3d{margin-top:16px; perspective:1100px; padding:8px 0}
+.chr-buehne{position:relative; height:300px; transform-style:preserve-3d;
+            transform:rotateY(var(--dx, -14deg)) rotateX(var(--dy, 6deg));
+            transition:transform var(--motion-normal) var(--ease)}
+.chr-platte{position:absolute; left:8%; top:14px; width:min(400px, 62%);
+            transform:translateZ(calc(var(--i) * -70px))
+                      translateY(calc(var(--i) * 84px))
+                      translateX(calc(var(--i) * 34px));
+            padding:9px 13px 9px calc(13px + var(--dick));
+            border:1px solid var(--line); border-radius:10px;
+            background:var(--bg-card); box-shadow:var(--shadow-2);
+            border-left:var(--dick) solid var(--accent)}
+.chr-platte b{display:block; font-size:13px}
+.chr-platte span{display:block; font-size:12.5px; color:var(--text-dim); margin:2px 0 4px}
+.chr-platte i{display:block; font-size:11.5px; color:var(--text-faint); font-style:normal}
+.chr-fuss{margin:10px 0 0; font-size:12px; color:var(--text-dim); text-align:center}
+
+/* ── Tage, Nachrichten, Probleme ─────────────────────────────────────────*/
+.chr-tag{margin:0 0 22px; padding:0 0 14px; border-bottom:1px solid var(--line)}
+.chr-tag h3{margin:0 0 2px; font-size:16px}
+.chr-tag h4{margin:14px 0 6px; font-size:13.5px; color:var(--text-dim)}
+.chr-titel{margin:0 0 8px; font-size:13.5px}
+.chr-hinweis{font-size:12.5px; color:var(--text-dim); font-style:italic}
+.chr-nachricht, .chr-problem{border:1px solid var(--line); border-radius:9px;
+                             padding:8px 11px; margin:0 0 7px; background:var(--bg-2)}
+.chr-nachricht summary, .chr-problem summary{cursor:pointer; font-size:13px;
+                                             display:flex; gap:8px; align-items:baseline;
+                                             min-height:32px; align-content:center}
+.chr-anriss{color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.chr-zeit{color:var(--text-faint); font-size:11.5px; white-space:nowrap}
+.chr-wort{margin:8px 0; padding:8px 11px; border-left:3px solid var(--accent);
+          background:var(--bg-card); border-radius:0 8px 8px 0; font-size:13px;
+          white-space:pre-wrap}
+.chr-nachricht p, .chr-problem p{margin:6px 0; font-size:13px; line-height:1.55}
+.chr-ampel{font-size:13px}
+.chr-tab{width:100%; border-collapse:collapse; font-size:12.5px; display:block;
+         overflow-x:auto}
+.chr-tab th, .chr-tab td{border:1px solid var(--line); padding:5px 8px; text-align:left;
+                         vertical-align:top}
+.chr-tab th{background:var(--bg-2); font-weight:600}
+.chr-plan li{font-size:13px; margin:4px 0}
+
+/* Wer keine Bewegung will, bekommt den Stapel flach und still — die
+   Auskunft steht in den Platten, nicht in der Drehung. */
+@media (prefers-reduced-motion: reduce){
+  .chr-buehne{transition:none; transform:none; height:auto; position:static;
+              display:flex; flex-direction:column; gap:8px}
+  .chr-platte{position:static; transform:none; width:auto; margin:0}
+}
+@media (max-width:760px){
+  .chr-fenster{width:100%}
+  .chr-inhalt{padding:12px; max-height:none}
+  .chr-buehne{height:auto; position:static; transform:none;
+              display:flex; flex-direction:column; gap:8px}
+  .chr-platte{position:static; transform:none; width:auto; margin:0}
+}

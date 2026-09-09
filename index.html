@@ -580,6 +580,10 @@
 <script src="quell/bereiche/elektro/arbeitsplatz.js" defer></script>
 <script src="quell/bereiche/elektro/lernbilder.js" defer></script>
 <script src="quell/bereiche/elektro/skizzen.js" defer></script>
+<!-- DIE CHRONIK (E514). `daten.js` ist erzeugt (node chronik.mts) und muss
+     VOR `chronik.js` stehen — die Ansicht liest die Daten beim Bauen. -->
+<script src="quell/bereiche/chronik/daten.js" defer></script>
+<script src="quell/bereiche/chronik/chronik.js" defer></script>
 <!-- Die Elektro-Startseite (L65). Sie liest das Menüband-Register und
      muss deshalb NACH ihm geladen werden — die Reihenfolge hier ist
      keine Formsache. -->

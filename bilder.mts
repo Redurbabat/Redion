@@ -2122,6 +2122,25 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  chronik: {
+    titel: 'Red-ur — die Chronik mit Graphen und dem Stapel der Tage (E514)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      /* Direkt zeigen — der Code ist die Tür, nicht der Inhalt, und ein
+         Bild von einem Passwortfeld zeigt nichts (§55.3). */
+      (window as any).Chronik?.zeigen?.();
+      await new Promise(r => setTimeout(r, 500));
+      /* Den Stapel einmal drehen, damit die Tiefe im stehenden Bild zu
+         sehen ist — sonst liegen die Platten genau hintereinander. */
+      const buehne = document.querySelector<HTMLElement>('.chr-buehne');
+      buehne?.style.setProperty('--dx', '-26deg');
+      buehne?.style.setProperty('--dy', '9deg');
+      await new Promise(r => setTimeout(r, 260));
+    }
+  },
+
   leisteLinks: {
     titel: 'Die Werkzeugleiste an der Seite — vier Plätze (E512)',
     bauen: async () => {

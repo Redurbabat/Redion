@@ -1425,6 +1425,32 @@ const App = (() => {
         };
         const suchen = () => {
             const roh = inp.value;
+            /* ══ „Red-ur" ÖFFNET DIE CHRONIK (E514) ═══════════════════════════════
+               Redur, 9. September: „wenn ich bei der Redion in der Suche 'Red-ur'
+               schreibe, sollte dort direkt die Daten sich öffnen."
+      
+               HIER UND NICHT IN DER BEFEHLSPALETTE, weil er die SUCHE genannt hat
+               — und weil eine Chronik über Redion selbst dort hingehört, wo man
+               nach Dingen sucht, nicht wo man Befehle gibt. In der Palette steht
+               sie trotzdem, über denselben Weg (§8): `Chronik.oeffnen`.
+      
+               DER TEXT MUSS GENAU PASSEN. Ein Treffer, der bei jedem „red"
+               aufspringt, wäre eine Überraschung statt einer Tür — deshalb prüft
+               `Chronik.trifft` auf das ganze Wort, mit oder ohne Bindestrich. */
+            if (typeof Chronik !== 'undefined' && Chronik.trifft(roh)) {
+                queryError = '';
+                treffer = [];
+                res.innerHTML =
+                    '<button class="chr-treffer on" data-chr-tuer>' +
+                        '<span>🧠</span><span style="flex:1"><span>Red-ur — die Chronik</span>' +
+                        '<span class="snip">Tage, Probleme, Arbeitsweise · braucht einen Zugangscode</span>' +
+                        '</span><span class="pth">Chronik</span></button>';
+                res.querySelector('[data-chr-tuer]')?.addEventListener('click', () => {
+                    o.remove();
+                    void Chronik.oeffnen();
+                });
+                return;
+            }
             const uiFilters = readUiFilters();
             const hasUiFilter = uiFilters.scope !== 'all' || uiFilters.documentType !== 'all' ||
                 uiFilters.changed !== 'all' || !!uiFilters.location;

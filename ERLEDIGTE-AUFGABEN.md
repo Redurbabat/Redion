@@ -4816,3 +4816,32 @@ eine absolut gesetzte Flexbox auf ihren Inhalt schrumpft und der Inhalt
 
 Was es kostet, steht in L137: oben braucht die Leiste jetzt drei Zeilen
 statt zwei, und am Telefon liegt die erste Farbe hinter den Stiften.
+
+**Die Chronik „Red-ur" (E514, test481).** Redur wollte ein zweites Gehirn:
+zwei Dateien mit allem, was passiert ist und warum — und dasselbe in Redion
+sichtbar, hinter einem Code, mit Graphen und 3D.
+
+Der Auftrag nennt drei Orte für dieselbe Sache, und das ist die
+Gelegenheit, zwei Wahrheiten zu bauen. Also liegt die Wahrheit in einer
+Datei, und ein Skript schreibt daraus UR.md, PROBLEME.md und die Daten für
+die App. Ein Prüflauf sagt, wenn sie auseinandergelaufen sind.
+
+In UR.md steht alles über Redur, wie hier gearbeitet wird und warum so —
+und für jeden Tag: seine Nachrichten Wort für Wort, was gemeint war, wie er
+es besser hätte schreiben können, ein besserer Prompt, die Arbeit von
+Commit zu Commit mit Zeitraum und Dauer, das grösste Problem, die
+interessanteste Anfrage und jede Massnahme an den Daten mit Uhrzeit und
+Begründung. In PROBLEME.md steht jedes Problem mit seiner FALSCHEN
+VERMUTUNG — der teuerste und lehrreichste Teil.
+
+In Redion öffnet die Suche nach „Red-ur" ein Fenster: vier Graphen, der
+Stapel der Tage in echter Perspektive (drehbar, jede Platte so dick wie die
+Arbeit des Tages), und alle vier Ansichten aus derselben Quelle.
+
+Drei Dinge stehen ehrlich dabei statt versteckt: die Uhrzeiten der
+Nachrichten sind abgeleitet und mit „ca." gekennzeichnet; die Token fehlen,
+weil die Zahl der Sitzung nicht zur Verfügung steht (L141); und der
+Zugangscode ist ein Türschild, kein Schloss — er steht im Quelltext (L140).
+
+Das Bild hat wieder etwas gefunden: der erste Stapel legte die Platten
+genau hintereinander, und nur die vorderste war lesbar.

@@ -6900,3 +6900,37 @@ danach seine alte PDF mit etwas dahinter.
 Was fehlt, ist Redurs Antwort auf eine Frage: welcher Knopf, in welcher
 Ansicht. Bis dahin ist der Fehler weder behoben noch widerlegt — er ist
 nicht gefunden, und das ist etwas anderes als nicht vorhanden (§35).
+
+L140 · Der Zugangscode der Chronik ist ein Türschild
+--------------------------------------------------------------------------
+
+Die sechs Ziffern stehen im Quelltext, im Klartext. Sie müssen dort stehen:
+Redion läuft ohne Server, es gibt niemanden, der eine Prüfung vornehmen
+könnte (§22). Wer den Quelltext liest, ist drin.
+
+Was der Code leistet, ist das, wofür er gedacht war: die Chronik geht nicht
+versehentlich auf. Was er NICHT leistet, ist Schutz vor jemandem, der ihn
+sucht — und das steht hier, weil ein Passwortfeld sonst etwas verspricht,
+was es nicht hält (§33).
+
+Ein echtes Schloss gäbe es und wäre ein eigener Bogen: dieselbe
+AES-GCM-Verschlüsselung, die Redion für verschlüsselte Seiten benutzt
+(§19). Die Chronik läge dann verschlüsselt in der Ablage, und ohne das
+Passwort im Kopf wäre sie unlesbar — auch für den, der den Quelltext hat.
+Der Preis: ein vergessenes Passwort heisst eine verlorene Chronik, und
+`chronik/chronik.json` müsste dann aus dem Verzeichnis heraus (§42).
+
+L141 · Die Token je Tag fehlen in der Chronik
+--------------------------------------------------------------------------
+
+Redur hat sie ausdrücklich verlangt: „wie viele Token du genutzt hast".
+Die Zahl steht der Sitzung nicht zur Verfügung — es gibt keinen Weg, sie
+von innen zu lesen.
+
+Was stattdessen da ist und wirklich gemessen wurde: Commits je Tag, Bögen,
+neue Prüfläufe, Zusagen, Zeiträume aus den Commit-Zeiten und die Dauer je
+Arbeit. Eine erfundene Tokenzahl wäre schlimmer als eine fehlende (§35).
+
+Möglich wäre es von aussen: wer die Sitzungsprotokolle hat, kann sie
+zählen und in `chronik/chronik.json` unter `zahlen.token` eintragen — das
+Feld wird von der Ansicht gelesen, sobald es da ist.

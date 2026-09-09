@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — vierundvierzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — fünfundvierzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -526,7 +526,16 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Wegen NICHT nachstellen; die Frage nach der genauen Stelle steht als
     **L139**. **Steht, mit offener Frage.**
 
-Der Auftrag heisst deshalb jetzt **vierundvierzig Bögen**; die Überschrift
+  · **G45 — Die Chronik „Red-ur"** (E514, test481): Redurs zweites Gehirn.
+    Eine Quelle (`chronik/chronik.json`), drei Ansichten — UR.md,
+    PROBLEME.md und ein Fenster in Redion, das die Suche nach „Red-ur"
+    öffnet. Mit vier Graphen, dem Stapel der Tage in echter Perspektive,
+    jeder Nachricht 1:1 samt Satzverbesserung und besserem Prompt, und
+    jedem Problem mit seiner falschen Vermutung. Ehrlich dabei: die
+    Uhrzeiten der Nachrichten sind abgeleitet (L139-Stil), die Token
+    fehlen (L141), und der Code ist ein Türschild (L140). **Steht.**
+
+Der Auftrag heisst deshalb jetzt **fünfundvierzig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
