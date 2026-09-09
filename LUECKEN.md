@@ -7009,3 +7009,38 @@ E517 hat `holen.bat` einen Zweig beigebracht. Was daraus offen bleibt:
   · **Ein Zweig, den es auf GitHub nicht gibt**, führt zu „Auf GitHub gibt
     es keinen Zweig X" — richtig, aber ohne Vorschlag, welche es gibt. Ein
     `git ls-remote --heads` daneben wäre eine Zeile und eine Hilfe.
+
+L143 · Die D1-Datenbank gibt es nicht — der Deploy scheitert daran
+--------------------------------------------------------------------------
+
+Aus dem Cloudflare-Protokoll vom 9. September, der Zeile, an der es
+wirklich abbrach:
+
+```txt
+✘ [ERROR] D1 binding 'DB' references database
+  '2a4f6708-b7e7-43c5-9e18-17b33713dbb9' which was not found.
+  Verify the database exists in your account and that the database_id in
+  your configuration is correct. [code: 10181]
+```
+
+Diese Kennung steht seit E323 in `wrangler.toml` und gehört zu keiner
+Datenbank in Redurs Konto (`56cd8e4d…`). Sie war nie eine echte — das ist
+**L82 Punkt 1** in einer Zeile: geschrieben und geprüft ist alles, gegen
+einen echten Dienst lief es nie.
+
+**Kein Prüflauf im Container kann das schliessen.** Es braucht Redurs
+Cloudflare-Konto. Drei Wege stehen offen, und die Wahl gehört ihm:
+
+  1. **Die Datenbank anlegen.** `npx wrangler d1 create redion` gibt eine
+     echte `database_id` aus; sie ersetzt die alte in `wrangler.toml`. Der
+     Server kann danach alles: Konto, Abgleich, Rechte, Teilen.
+  2. **Die vorhandene finden.** Gibt es sie schon unter anderer Kennung,
+     nennt `npx wrangler d1 list` sie, und nur die Kennung wird getauscht.
+  3. **Die Bindung stilllegen.** `[[d1_databases]]` auskommentieren — der
+     Deploy geht sofort durch, und Redion läuft vollständig: der Server ist
+     freiwillig (§22), und `server/cloudflare.ts` behandelt `!env.DB`
+     ausdrücklich. Nur Konto und Abgleich schlafen dann.
+
+Nachgesehen, nicht vermutet: `bedienen()` prüft `if (!env || !env.DB)` und
+antwortet auf `/api/stand` auch ohne Datenbank. Weg 3 macht die App also
+nicht kaputt — er macht sie zu dem, was sie ohne Server ohnehin ist.

@@ -39,6 +39,39 @@ dienste/
 bilder/
 doku/
 
+# --- PERSÖNLICHES: gehört Redur, nicht dem Netz (E520) ---------------------
+#  GEFUNDEN IM DEPLOY-LOG vom 9. September, Zeile für Zeile mitgelesen:
+#
+#      + /Redur_Babat_FZ_MOE_Lehrpersonen.pdf
+#      + /Schul Inhalt
+#
+#  Fünf Megabyte Zeugnis, unter einer Adresse, die jeder raten kann. Das
+#  Verzeichnis ist privat — die veröffentlichte Seite ist es nicht.
+#
+#  GELÖSCHT WIRD HIER NICHTS (§43). Die Dateien bleiben, wo sie sind; sie
+#  gehen nur nicht mehr mit ins Netz.
+Redur_Babat_FZ_MOE_Lehrpersonen.pdf
+Schul Inhalt
+*.pdf
+*.redion
+
+#  UND DIE CHRONIK. `chronik/chronik.json` ist die QUELLE von UR.md und
+#  PROBLEME.md — Redurs Nachrichten im Wortlaut, jeder Arbeitstag, jedes
+#  Problem. Der Browser lädt sie nie: er liest `quell/bereiche/chronik/
+#  daten.js`, und das ist Absicht (E514). Die Quelle daneben ist Werkstatt
+#  und hat im Netz nichts verloren.
+#
+#  Was das NICHT heilt: `daten.js` liegt unter `quell/` und geht mit — die
+#  Chronik ist damit im Netz lesbar, und der Zugangscode ist ein Türschild,
+#  kein Schloss (L140). Wer das anders will, braucht L140, nicht diese Zeile.
+chronik/
+
+# --- Werkstatt, zweiter Teil: was der Browser nie lädt ---------------------
+#  Nachgesehen, nicht vermutet: weder `index.html` noch `sw.js` nennen
+#  `ui-reserve` auch nur einmal. Es sind die Originale der 50 Uiverse-
+#  Komponenten aus dem Handoff — Vorlage, kein Programm.
+quell/entwicklung/
+
 # --- Geheimnisse: gehören nie ins Netz und nie ins Repository (§42) --------
 .env
 .env.*
@@ -57,6 +90,7 @@ package-lock.json
 wrangler.toml
 .assetsignore
 .gitignore
+.gitattributes
 .editorconfig
 
 # Ausnahme: worker.ts ist der Einstiegspunkt des Workers selbst. Wrangler
