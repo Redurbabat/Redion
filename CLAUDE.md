@@ -1163,6 +1163,17 @@ niemand die Wolke aufsetzen.
 - **Nichts löschen ohne Rückfrage.** Auch keine Datei, die überflüssig
   aussieht.
 
+**Ein Zweig, ein Push, dann ein neuer Zweig** (Redur, 9. September 2026,
+E521). Sobald ein Zweig gepusht ist, gilt er als abgeschlossen; die nächste
+Arbeit beginnt auf einem frischen. Der Grund ist derselbe wie bei „kleine
+Zweige" eine Zeile höher, nur konsequent zu Ende gedacht: ein Zweig, auf den
+immer weiter geschoben wird, verliert seinen Namen — er heisst nach dem
+ersten Bogen und trägt den zwanzigsten. Wer dann sagt „hol mir den Zweig X",
+weiss nicht mehr, was darin steht.
+
+Was das NICHT heisst: den alten Zweig löschen oder umschreiben. Er bleibt
+stehen, wo er steht (§43 oben). Der neue beginnt genau auf seinem Stand.
+
 `main` wird erst vorgespult, wenn ein **voller Lauf grün** ist (§46).
 
 ---

@@ -311,7 +311,10 @@ const pruef = (n: any, ist: any, soll: any) => {
     document.querySelectorAll<HTMLElement>('.overlay').forEach(o => o.remove());
     return { gruppen, anzahl, zahl, doppelt };
   });
-  pruef('Dreizehn Gruppen in der Übersicht', uebersicht.gruppen.length, 13);
+  /* VIERZEHN SEIT E465 — die Gruppe „Blatt und PDF" mit den Zeichenkürzeln.
+     Dieselbe Zusage steht in `test86`, und beide waren seit E465 rot; gesehen
+     wurde es erst beim vollen Lauf am 9. September (E522). */
+  pruef('Vierzehn Gruppen in der Übersicht', uebersicht.gruppen.length, 14);
   pruef('Die neue Gruppe ist dabei',
         (uebersicht.gruppen ?? '').includes('Mehrere Blöcke auf einmal'), true);
   pruef('Markdown-Gruppe ist dabei',

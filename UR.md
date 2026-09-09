@@ -428,6 +428,17 @@ Die zehn Adern. Nicht wegen der Technik — zehn Farben und zwei Strichmuster �
 **Besserer Prompt:** Das „nur wo Workername ist" war die wichtigste Angabe im Satz und stand am Ende — sie hat verhindert, dass auch database_name geändert wurde, was eine andere Datenbank gewesen wäre. Solche Einschränkungen gehören nach vorn. Das mitgeschickte Protokoll war goldrichtig: darin stand der eigentliche Fehler, nach dem er gar nicht gefragt hatte.
 
 
+**10 · ca. 10:20**
+
+> pusche es auf eien neu branche al wenn eine brahce gepuscht ist muss du immer eien neu erstelle so ist besser
+
+**Gemeint:** Push das auf einen neuen Zweig — und ab jetzt immer: sobald ein Zweig gepusht ist, einen neuen anlegen.
+
+**Besser geschrieben:** Push das auf einen neuen Zweig. Und ab jetzt bitte immer so: wenn ein Zweig gepusht ist, leg für die nächste Arbeit einen neuen an.
+
+**Besserer Prompt:** Der zweite Satz ist eine DAUERREGEL, der erste eine einmalige Bitte — getrennt geschrieben sind sie beide klarer. Und ein Wort zum Grund hätte geholfen („damit ich weiss, was in welchem Zweig steht"); so musste ich ihn selbst erschliessen, und der Grund entscheidet, wie die Zweige heissen sollen.
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -439,20 +450,21 @@ Die zehn Adern. Nicht wegen der Technik — zehn Farben und zwei Strichmuster �
 | E517 — Ein Zweig statt main: der Arbeitsstand kommt auf den Laptop | `0f8f0a1c` → `9812d8a8` | 07:35 – 08:25 | ca. 50 min | test353 von 60 auf 81 Zusagen |
 | E518 — Die fertigen PowerShell-Befehle stehen im Verzeichnis, nicht im Gespräch | `9812d8a8` → `42cf96ba` | 08:25 – 09:05 | ca. 40 min | test353 von 81 auf 88 Zusagen |
 | E519 — Der Vergleich sieht gegen deinen Zweig, nicht gegen main | `42cf96ba` → `9db488d0` | 09:05 – 09:40 | ca. 35 min | test353 von 88 auf 105 Zusagen |
-| E520 — Der Worker heisst red-ion, und ein Zeugnis lag im Netz | `9db488d0` → `(dieser Bogen)` | ab 09:40 | — | test270 von 63 auf 74 Zusagen |
+| E520 — Der Worker heisst red-ion, und ein Zeugnis lag im Netz | `9db488d0` → `db27ad64` | 09:40 – 10:15 | ca. 35 min | test270 von 63 auf 74 Zusagen |
+| E521 — Ein Zweig, ein Push, dann ein neuer Zweig | `db27ad64` → `(dieser Bogen)` | ab 10:15 | — | keiner — eine Arbeitsregel, kein Verhalten der App |
 
 #### Zahlen des Tages
 
-- **commits:** 8
-- **entscheidungen:** 8
+- **commits:** 9
+- **entscheidungen:** 9
 
 #### Das grösste Problem
 
-Die drei sauberen Messungen aus E513. Sie waren richtig gerechnet und haben trotzdem nichts bewiesen, weil sie die falsche Frage gestellt haben: „legt der Import die richtige Datei ab?" statt „welchen Knopf drückt er?". Eine Messung, die die falsche Frage stellt, ist gefährlicher als gar keine — sie kommt grün zurück und man glaubt ihr.
+Nicht ein Fehler, sondern eine Kette: Redur fragte nach dem Worker-Namen, und im mitgeschickten Protokoll lagen zwei Dinge, nach denen er nicht gefragt hatte — der echte Deploy-Fehler und ein Zeugnis, das im Netz lag. Das teuerste Muster des Tages war, dass mehrere Werkzeuge richtig rechneten und die falsche Frage beantworteten: vergleichen.bat gegen main, die drei Import-Messungen aus E513, die Ausschlussliste aus E270. Jedes war korrekt und keines war brauchbar.
 
 #### Das Interessanteste, das Redur wollte
 
-„Wieter mit L139" — drei Wörter, und sie haben gereicht, weil die Frage schon in LUECKEN.md stand. Das ist der Nutzen dieser Datei, den man erst sieht, wenn man ihn braucht: eine Lücke, die aufgeschrieben ist, lässt sich mit einer Nummer wieder aufnehmen. Eine, die nur im Kopf stand, hätte die ganze Geschichte noch einmal gebraucht.
+„wenn eine branche gepuscht ist musst du immer eine neue erstellen, so ist besser" — eine Arbeitsregel, die aus dem Gebrauch kommt, nicht aus einem Lehrbuch. Redur hat gemerkt, was ihm beim Holen fehlte: ein Zweigname, der sagt, was darin steht. Zwei Bögen zuvor hatte er das Holen bekommen; jetzt kam die Regel, die es erst brauchbar macht.
 
 #### Massnahmen an den Daten
 
@@ -471,6 +483,7 @@ Die drei sauberen Messungen aus E513. Sie waren richtig gerechnet und haben trot
 | 09:30 | `vergleichen.bat` vergleicht gegen den Zweig, auf dem der Ordner steht. | Seit E517 kann ein Arbeitszweig geholt werden; der Vergleich sah weiter fest gegen main und meldete hunderte Unterschiede, die keine sind. Die Vorgabe ist absichtlich eine andere als bei holen.bat: das eine ändert den Ordner (sichere Wahl), das andere sieht nur nach (ehrliche Wahl). | keins — das Skript schreibt weiterhin nichts ausser fetch; sieben git-Stellen einzeln geprüft |
 | 09:50 | Worker-Name in wrangler.toml von redion auf red-ion; database_name bleibt redion. | Cloudflare hat das Projekt red-ion genannt und überschrieb den Namen bei jedem Bau mit einer Warnung. Eine Warnung, die immer kommt, verdeckt die daneben — genau das war passiert. | keins — Wrangler benutzte ohnehin red-ion; jetzt steht es auch so da |
 | 10:05 | Persönliche PDF, Schul Inhalt, chronik/, quell/entwicklung/ und .gitattributes in .assetsignore aufgenommen. | Sie standen im Upload-Protokoll und waren damit im Netz abrufbar. Fünf Megabyte Zeugnis unter einer ratbaren Adresse. | keins — GELÖSCHT WURDE NICHTS (§43); die Dateien liegen unverändert im Verzeichnis und gehen nur nicht mehr mit ins Netz |
+| 10:25 | Neuer Zweig `claude/redion-cloudflare-l143`; die Regel in CLAUDE.md §43 aufgenommen. | Redurs Regel. Der Grund dahinter: ein Zweig, auf den immer weiter geschoben wird, verliert seinen Namen — sechs Bögen lagen unter einem Namen, der nur den ersten beschreibt. | keins — der alte Zweig bleibt unangetastet, der neue beginnt auf seinem Stand; nachgemessen mit einem leeren git diff |
 
 ---
 

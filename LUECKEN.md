@@ -7044,3 +7044,85 @@ Cloudflare-Konto. Drei Wege stehen offen, und die Wahl gehört ihm:
 Nachgesehen, nicht vermutet: `bedienen()` prüft `if (!env || !env.DB)` und
 antwortet auf `/api/stand` auch ohne Datenbank. Weg 3 macht die App also
 nicht kaputt — er macht sie zu dem, was sie ohne Server ohnehin ist.
+
+L144 · Ein Zweig je Bogen — und was daraus wächst
+--------------------------------------------------------------------------
+
+E521 hat entschieden: ein Zweig, ein Push, dann ein neuer. Was daraus
+offen bleibt:
+
+  · **Die Zahl der Zweige wächst mit jedem Bogen.** Bei BABAT-RED sind
+    daraus 265 geworden. Der Unterschied ist real — dort wurde nie
+    zusammengeführt, hier holt `main` sie ein, sobald ein voller Lauf grün
+    ist (§46). Aber genau dieser Lauf steht seit E511 aus: elf Bögen liegen
+    auf Zweigen, `main` bewegt sich nicht. Wenn die Zahl zum Problem wird,
+    ist die Antwort nicht „wieder weiterschieben", sondern `main` öfter
+    vorspulen.
+  · **Alte Zweige werden nie aufgeräumt.** Absicht (§43: nichts löschen
+    ohne Rückfrage), aber es fehlt ein Weg, einen gemergten Zweig als
+    erledigt zu KENNZEICHNEN — sonst sieht in einem Jahr niemand mehr, welche
+    noch etwas tragen. Ein Präfix wie `fertig/` beim Zusammenführen wäre
+    eine Möglichkeit; entschieden ist nichts.
+  · **Der Name muss beim Anlegen erraten werden.** Ein Zweig wird benannt,
+    bevor die Arbeit darin getan ist — der aktuelle heisst nach dem, was
+    als Nächstes offen ist (`claude/redion-cloudflare-l143`), nicht nach dem,
+    was daraus wird. Das geht meistens gut und wird gelegentlich daneben
+    liegen. Umbenennen ist möglich, solange nichts gepusht ist.
+  · **`holen-zweig.bat` schlägt den Zweig vor, auf dem der Ordner steht.**
+    Nach einem Zweigwechsel hier ist das der ALTE. Redur muss den neuen
+    Namen einmal eintippen — deshalb steht er ab jetzt unter jeder Meldung.
+    Ein `git ls-remote --heads origin | sort` als Vorschlagsliste wäre die
+    bequemere Lösung und ist nicht gebaut.
+
+L145 · Wirkt `.assetsignore` überhaupt? — offen
+--------------------------------------------------------------------------
+
+E270 hat `.assetsignore` gebaut, E520 sie um das Persönliche erweitert, und
+**beide haben die Wirkung nie gemessen**. Geprüft wurde jeweils der INHALT
+der Datei (`test270 §1`, `§1b`) — ob die genannten Zeilen darin stehen.
+
+Gemessen am 9. September mit `wrangler deploy --dry-run`, Fassung 4.130.0,
+dieselbe wie auf Cloudflare:
+
+```txt
+mit den Ausschlüssen              5348 Dateien
+ohne die Ausschlüsse              5348 Dateien
+zusätzlich quell/ ausgeschlossen  5348 Dateien
+.assetsignore ganz entfernt       5347 Dateien
+```
+
+Nicht einmal `quell/` mit seinen 305 Dateien macht einen Unterschied. **Was
+das heisst, ist offen**, und es wird hier nicht behauptet:
+
+  · Entweder wirkt `.assetsignore` in dieser Fassung an dieser Stelle
+    nicht — dann wären `src/`, `pruefungen/`, eine etwaige `.env` und das
+    Persönliche allesamt im Netz, sobald ein Deploy durchgeht. Das wäre
+    schwer.
+  · Oder „Read N files" ist der Rohscan VOR dem Filtern und sagt über die
+    hochgeladene Menge nichts. Dann ist alles in Ordnung und nur die
+    Messung war die falsche.
+
+**Was dagegen spricht, dass alles offen ist:** E270 hat gemessen, dass der
+Deploy OHNE `.assetsignore` an `.git/objects/pack/…` scheiterte (78,6 MB
+gegen ein 25-MB-Limit). Er scheitert heute nicht daran. Etwas filtert also.
+
+**Was dagegen spricht, dass alles in Ordnung ist:** Cloudflare las am
+9. September um 09:03 noch 2264 Dateien und um 09:35 nur 2254 — zehn
+weniger. Ausgeschlossen wurden zwischen den beiden Läufen aber 83
+(79 unter `quell/entwicklung/`, die Chronik, die PDF, „Schul Inhalt",
+`.gitattributes`). Zehn ist nicht 83.
+
+**Wie man es entscheidet** — und keiner der Wege geht von hier aus:
+
+  1. Ein Deploy, der DURCHGEHT (dafür muss L143 gelöst sein), und danach
+     `https://<adresse>/Redur_Babat_FZ_MOE_Lehrpersonen.pdf` aufrufen.
+     404 heisst: es wirkt. Ein PDF heisst: es wirkt nicht.
+  2. `npx wrangler deploy --dry-run` mit `WRANGLER_LOG=debug` — im
+     Protokoll vom 9. September stand der Hinweis, dass das den vollen
+     Datei-Vergleich zeigt.
+  3. Im Cloudflare-Dashboard unter Workers → red-ion → Assets nachsehen,
+     was wirklich dort liegt.
+
+Bis dahin gilt: **die Wirkung ist unbekannt**, und der Satz aus E520 („sie
+gehen nur nicht mehr mit ins Netz") ist nicht belegt. Er steht in E522
+richtiggestellt.

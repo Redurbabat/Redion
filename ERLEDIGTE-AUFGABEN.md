@@ -5074,3 +5074,64 @@ Nachzügler: `.gitattributes` stand in keiner Liste.
 Was den Deploy wirklich gekippt hat, steht als L143: die D1-Kennung in
 `wrangler.toml` gehört zu keiner Datenbank in Redurs Konto. Das ist L82
 Punkt 1, und kein Prüflauf im Container kann es lösen.
+
+**Ein Zweig, ein Push, dann ein neuer (E521).** Redurs Regel vom
+9. September: sobald ein Zweig gepusht ist, beginnt die nächste Arbeit auf
+einem frischen.
+
+Der Grund liegt offen: sechs Bögen — E515 bis E520 — lagen auf einem Zweig
+namens `claude/redion-goodnotes-weiter`. Der Name beschreibt den ersten
+davon. Er beschreibt nicht die Chronik, nicht `holen.bat`, nicht
+`vergleichen.bat`, nicht `.assetsignore` und nicht Cloudflare. Ein Zweig, auf
+den immer weiter geschoben wird, verliert seinen Namen — er heisst nach dem
+ersten Bogen und trägt den zwanzigsten.
+
+Das trifft ausgerechnet das, was zwei Bögen zuvor gebaut wurde: seit E517
+kann Redur einen Zweig auf den Laptop holen. Wer dann sagt „hol mir den
+Zweig", muss wissen, was darin steht.
+
+§43 sagte den Kern schon — „kleine Zweige, eine Änderung, ein klares Ziel" —,
+nur stand nirgends, wann ein Zweig fertig ist. Jetzt steht es: mit dem Push.
+Der alte bleibt dabei unangetastet, und der neue beginnt Commit für Commit
+auf seinem Stand; nachgemessen mit einem leeren `git diff`.
+
+Der Preis steht als L144 dabei: mehr Zweige. Bei BABAT-RED sind daraus 265
+geworden. Der Unterschied ist, dass dort nie zusammengeführt wurde — hier
+holt `main` sie ein, sobald ein voller Lauf grün ist. Nur steht genau dieser
+Lauf seit E511 aus, und das ist die ehrlichere Lücke von beiden.
+
+**Der volle Lauf, und was er fand (E522).** Redur wollte alles auf `main`.
+`main` bewegt sich erst nach einem vollen grünen Lauf (§46), und der stand
+seit E511 aus. Also einmal wirklich gefahren — 431 Läufe.
+
+Drei Dinge kamen dabei heraus, und das erste geht gegen mich.
+
+**Eine Behauptung aus E520 ist nicht belegt.** Dort steht über die
+persönliche PDF: „sie gehen nur nicht mehr mit ins Netz." Gemessen habe ich
+das nie. Der Prüflauf richtet sich auf den Inhalt der Ausschlussliste — ob
+die Zeilen darin stehen. Die Wirkung habe ich behauptet, als hätte ich sie
+geprüft.
+
+Nachgemessen mit `wrangler deploy --dry-run`, gleiche Fassung wie auf
+Cloudflare: 5348 Dateien mit den Ausschlüssen, 5348 ohne, 5348 auch dann,
+wenn man `quell/` mit seinen 305 Dateien ausschliesst. Kein Unterschied.
+Was das heisst, ist offen — entweder wirkt die Datei nicht, oder die Zahl
+misst den Rohscan vor dem Filtern. Beides ist möglich; behauptet wird
+keines. Es steht als L145, mit drei Wegen, es zu entscheiden, und keiner
+davon geht ohne Redurs Konto.
+
+**Die D1-Bindung ist stillgelegt.** Zweimal dasselbe an zwei Deploys: die
+Datenbank gibt es in seinem Konto nicht, und solange sie in `wrangler.toml`
+steht, scheitert jeder Deploy — dann ist gar nichts im Netz, auch nicht der
+Teil, der ohne Datenbank liefe. Nachgesehen, dass der Server das aushält,
+und auskommentiert, mit den zwei Befehlen daneben, die ihn zurückholen.
+
+**Zwei Zusagen waren seit E465 rot.** „Dreizehn Gruppen" in `test86` und
+`test65` — E465 hat die Gruppe „Blatt und PDF" angelegt und die Zahl nicht
+mitgehoben. Diese Zeilen haben getan, wofür sie da sind, und trotzdem hat
+sie niemand gehört: sie stehen in Lauf 61 von 431, und wer nur die Läufe
+seines eigenen Bogens fährt, sieht sie nie. Elf Bögen liegen dazwischen.
+
+Genau dafür besteht §46 auf einem vollen Lauf, bevor `main` sich bewegt.
+Und genau deshalb war es richtig, ihn zu fahren, statt den einen kleinen
+Commit durchzuwinken.

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-500 Entscheidungen, E1 bis E520 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+502 Entscheidungen, E1 bis E522 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -564,6 +564,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E518** — Die fertigen PowerShell-Befehle stehen im Verzeichnis, nicht im Gespräch — und der Alltagsbefehl ruft `holen.bat`, nicht `git`
 * **E519** — Der Vergleich sieht gegen deinen Zweig, nicht gegen `main` — zwei Skripte, zwei Vorgaben, jede mit ihrem Grund
 * **E520** — Der Worker heisst `red-ion`, und ein Zeugnis lag im Netz — die Namenswarnung verdeckte den echten Fehler
+* **E521** — Ein Zweig, ein Push, dann ein neuer Zweig — ein Zweig, der weiterwächst, verliert seinen Namen
+* **E522** — Der volle Lauf: die D1-Bindung stillgelegt, zwei Zusagen seit E465 rot — und eine Behauptung aus E520 zurückgenommen
 
 ---
 
@@ -42057,3 +42059,142 @@ PDF-Ausschluss entfernt (drei Zusagen rot, und eine nennt die Datei beim
 Namen) und den Worker wieder `redion` genannt. Nicht geprüft: die
 Gesamtsuite; **nicht geprüft ist der Deploy selbst** — er braucht Redurs
 Cloudflare-Konto (L82, L143).
+
+---
+
+E521 — Ein Zweig, ein Push, dann ein neuer Zweig
+--------------------------------------------------------------------------
+
+Redur, 9. September 2026:
+
+> „pusche es auf eien neu branche al wenn eine brahce gepuscht ist muss du
+> immer eien neu erstelle so ist besser"
+
+## Warum das besser ist, und nicht nur anders
+
+Sechs Bögen — E515 bis E520 — lagen auf einem Zweig namens
+`claude/redion-goodnotes-weiter`. Der Name beschreibt den ersten davon. Er
+beschreibt nicht die Chronik, nicht `holen.bat`, nicht `vergleichen.bat`,
+nicht `.assetsignore` und nicht Cloudflare.
+
+Das ist der ganze Grund. **Ein Zweig, auf den immer weiter geschoben wird,
+verliert seinen Namen.** Er heisst nach dem ersten Bogen und trägt den
+zwanzigsten. Wer dann sagt „hol mir den Zweig", weiss nicht, was er bekommt
+— und ausgerechnet dieses Holen hat Redur zwei Bögen zuvor gebaut (E517).
+Die Regel schliesst die Lücke, die dabei entstanden ist.
+
+§43 sagte es im Kern schon: „Kleine Zweige, kleine Änderungen. Eine
+Änderung = ein klares Ziel." Nur stand nirgends, wann ein Zweig FERTIG ist.
+Jetzt steht es: mit dem Push.
+
+## Was die Regel nicht sagt
+
+**Der alte Zweig bleibt stehen.** Nichts wird gelöscht, nichts
+umgeschrieben, kein Force-Push (§43). Der neue beginnt Commit für Commit
+auf dem Stand des alten — nachgemessen mit `git diff <alt> HEAD`, und das
+muss leer sein.
+
+Der erste Zweig nach der Regel heisst `claude/redion-cloudflare-l143`, nach
+dem, was als Nächstes offen ist — nicht nach dem, was gerade fertig wurde.
+
+## Der Preis, ehrlich
+
+Mehr Zweige auf GitHub. Bei BABAT-RED sind daraus 265 geworden, und das ist
+kein Vorbild. Der Unterschied: dort sind es Zweige, die nie zusammengeführt
+wurden. Hier ist jeder Zweig ein abgeschlossener Bogen mit einem Namen, der
+sagt, was darin steht — und `main` holt sie ein, sobald ein voller Lauf
+grün ist (§46).
+
+Wenn die Zahl trotzdem zum Problem wird, ist die Antwort nicht „wieder
+weiterschieben", sondern `main` öfter vorspulen. Das steht als **L144**.
+
+GEPRÜFT. Kein Prüflauf: das ist eine Arbeitsregel, kein Verhalten der App.
+Was messbar war, ist gemessen — der neue Zweig trägt Zeichen für Zeichen
+denselben Stand wie der alte (`git diff` leer).
+
+---
+
+E522 — Der volle Lauf: was er fand, und eine Behauptung, die ich zurücknehme
+--------------------------------------------------------------------------
+
+Redur, 9. September 2026: „alles auf main pusche" — und dazu ein zweites
+gescheitertes Deploy-Protokoll.
+
+`main` bewegt sich erst nach einem vollen grünen Lauf (§46). Der stand seit
+E511 aus. Also einmal wirklich gefahren, 431 Läufe. Was dabei herauskam,
+steht hier — auch das Unangenehme.
+
+## 1. Eine Behauptung aus E520 ist nicht belegt
+
+Dort steht über die persönliche PDF: „sie gehen nur nicht mehr mit ins
+Netz." **Das habe ich nicht gemessen.** Ich habe `.assetsignore` ergänzt,
+den Prüflauf auf den INHALT der Datei gerichtet — und die WIRKUNG
+behauptet, als hätte ich sie geprüft.
+
+Nachgemessen mit `wrangler deploy --dry-run`, Fassung 4.130.0, dieselbe wie
+auf Cloudflare:
+
+```txt
+mit den Ausschlüssen              5348 Dateien
+ohne die Ausschlüsse              5348 Dateien
+zusätzlich quell/ ausgeschlossen  5348 Dateien
+.assetsignore ganz entfernt       5347 Dateien
+```
+
+Kein Unterschied — nicht einmal, wenn man `quell/` mit seinen 305 Dateien
+ausschliesst. **Was das bedeutet, weiss ich nicht sicher**, und ich behaupte
+es deshalb nicht: entweder wirkt `.assetsignore` in dieser Fassung gar
+nicht, oder „Read N files" ist der Rohscan VOR dem Filtern und sagt über
+die hochgeladene Menge nichts. Der `--outdir` half nicht weiter; er
+schreibt nur das Worker-Bündel, kein Datei-Verzeichnis.
+
+Sicher ist nur: **beide Deploys sind gescheitert**, es wurde nie eine
+Fassung aktiv, und ob die Datei im Netz erreichbar ist, lässt sich von hier
+nicht feststellen. Das gehört Redur und seinem Cloudflare-Konto.
+
+Der Satz in E520 bleibt stehen — Protokolle schreibt man nicht um —, aber
+er ist ab hier falsch gelesen, wenn man ihn ohne diesen Eintrag liest. Was
+`test270 §1b` wirklich misst, ist der Inhalt der Ausschlussliste und dass
+die Datei nicht gelöscht wurde. Nicht mehr. Die offene Frage steht als
+**L145**.
+
+## 2. Die D1-Bindung ist stillgelegt
+
+Zweimal dasselbe, an zwei Deploys: die Datenbank `2a4f6708-…` gibt es in
+Redurs Konto nicht. Solange sie in `wrangler.toml` steht, scheitert JEDER
+Deploy — und dann ist gar nichts im Netz, auch nicht der Teil, der ohne
+Datenbank liefe.
+
+Nachgesehen in `server/cloudflare.ts`: `if (!env || !env.DB)` ist ein
+eigener Zweig, `/api/stand` antwortet auch dort. Der Server ist freiwillig
+(§22). Also auskommentiert, mit den zwei Befehlen daneben, die ihn
+zurückholen. Gemessen: der Trockenlauf zeigt jetzt nur noch `env.ASSETS`
+und geht durch.
+
+Das ist Weg 3 aus L143 — die Wahl gehört Redur, und sie ist eine Zeile weit
+umkehrbar. Ohne sie hätte er nichts; mit ihr hat er alles ausser Konto und
+Abgleich, und die liefen mit einer toten Kennung ohnehin nicht.
+
+## 3. Zwei Zusagen waren seit E465 rot
+
+```txt
+test86  „Dreizehn Gruppen"                → 14
+test65  „Dreizehn Gruppen in der Übersicht" → 14
+```
+
+E465 hat die Gruppe **„Blatt und PDF"** angelegt — die Zeichenkürzel — und
+die Zahl in beiden Läufen nicht mitgehoben. Seither sind sie rot.
+
+**Diese Zeilen haben getan, wofür sie da sind, und trotzdem hat sie niemand
+gehört.** Sie stehen in Lauf 61 von 431, und wer nur die Läufe seines
+eigenen Bogens fährt, sieht sie nie. Elf Bögen liegen dazwischen.
+
+Genau dafür besteht §46 auf einem vollen Lauf, bevor `main` sich bewegt —
+und genau deshalb war es richtig, ihn zu fahren, statt E521
+durchzuwinken. Die Zahl bleibt übrigens eine Zahl statt `>= 1`: dass sie
+den Zuwachs überhaupt gemeldet hat, verdankt sie genau dem.
+
+GEPRÜFT. `test65` und `test86` wieder grün. Der volle Lauf war beim
+Schreiben dieses Eintrags noch nicht durch — was danach kommt, kommt als
+eigener Eintrag dazu. Der Trockenlauf des Deploys geht durch; **der Deploy
+selbst ist nicht geprüft**, er braucht Redurs Konto.
