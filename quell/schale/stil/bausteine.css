@@ -1747,12 +1747,55 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
             Marke sagte 58, und die Schublade endete einen Punkt zu tief —
             genau auf der Linie. Ein Punkt ist kein Schaden, aber eine
             Marke, die nicht stimmt, ist der Anfang von zehn. */
-         --hunten: calc(59px + env(safe-area-inset-bottom)) }
+         /* ══════════════════════════════════════════════════════════
+          * DIE LEISTE IST EINE KAPSEL (E526)
+          * ----------------------------------------------------------
+          * Redur mit einem Bild der Apple-TV-Leiste: „kannst du so rund
+          * machen". Vorher lag die Leiste als Balken über die ganze
+          * Breite am unteren Rand, mit einer Trennlinie nach oben.
+          *
+          * Jetzt schwebt sie: 10 px Luft links und rechts, 9 px unten
+          * über der sicheren Fläche, und der Radius ist die halbe Höhe
+          * — 58 / 2 = 29. Das ist der Unterschied zwischen „abgerundete
+          * Ecken" und „Kapsel": bei genau der halben Höhe sind die
+          * Seiten Halbkreise, bei 24 px wären es Ecken mit Rundung.
+          *
+          * DIE HÖHE STEHT WEITER AN EINER STELLE. `--hunten` ist die
+          * Marke, an der ALLES hängt, was über der Leiste schwebt —
+          * die Schaltflächen, die Uhr, das Notizheft-Knöpfchen. Sie
+          * meint jetzt 9 unten + die Leiste, und wer sie ändert,
+          * ändert alle sechs Stellen mit.
+          *
+          * DIE HÖHE WIRD NICHT WIEDERHOLT, sondern aus
+          * `--mobile-nav-height` genommen (marken.css: 5 + 48 + 5 + 2
+          * Linien = 60). Hier stand erst 67, weil ich die 1-px-Linie
+          * oben und unten vergessen hatte — und `test141` hat genau die
+          * zwei Punkte gefunden: die Schublade endete bei 777, die
+          * Leiste beginnt bei 775. Zwei Punkte sieht niemand; eine
+          * Marke, die nicht stimmt, ist der Anfang von zehn. Eine
+          * Summe, die an zwei Stellen von Hand steht, geht irgendwann
+          * auseinander — also steht sie an einer.
+          * ════════════════════════════════════════════════════════ */
+         --hunten: calc(9px + var(--mobile-nav-height) + env(safe-area-inset-bottom)) }
   #handy-oben{
     display:flex; align-items:stretch; gap:2px;
-    position:fixed; left:0; right:0; bottom:0; top:auto; z-index:401;
-    padding:5px 8px calc(5px + env(safe-area-inset-bottom));
-    background:var(--bg); border-top:1px solid var(--line);
+    position:fixed; left:10px; right:10px; top:auto; z-index:401;
+    bottom:calc(9px + env(safe-area-inset-bottom));
+    padding:5px 6px; border-radius:29px;
+    /* DER INHALT LÄUFT DAHINTER DURCH, also muss die Fläche tragen.
+       `--bg-card` allein wäre auf einem hellen Regal zu durchsichtig;
+       der Weichzeichner dahinter macht aus dem, was durchscheint, eine
+       Fläche statt eines Musters. Wo es ihn nicht gibt (ältere Browser),
+       bleibt die volle Farbe stehen — deshalb steht sie zuerst da. */
+    background:var(--bg-card);
+    background:color-mix(in srgb,var(--bg-card) 88%,transparent);
+    -webkit-backdrop-filter:blur(20px) saturate(1.6);
+    backdrop-filter:blur(20px) saturate(1.6);
+    border:1px solid var(--line);
+    /* DER SCHATTEN STEHT IN `studio.css` und nicht hier. Diese Datei lädt
+       früher; zwei Schatten für dasselbe Ding wären einer, der gewinnt,
+       und einer, den niemand findet. Dort steht auch der Radius — er ist
+       die halbe Höhe, siehe den Absatz dort. */
   }
   /* JEDER NAME STEHT DA, NICHT NUR DER AKTIVE.
      Oben war Platz für genau einen Namen — fünf nebeneinander hätten die
@@ -1763,7 +1806,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   #handy-oben > button{
     flex:1 1 0; min-width:0; min-height:48px;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:3px; padding:5px 2px 4px; border:0; border-radius:12px; background:none;
+    gap:3px; padding:5px 2px 4px; border:0; border-radius:var(--radius-2xl); background:none;
     color:var(--text-dim);
     /* ÜBER DER GLEITENDEN FLÄCHE, NICHT DARUNTER. `#ho-pille` liegt auf
        `z-index:0`; ohne diese zwei Wörter lag der aktive Knopf DAHINTER
@@ -1834,7 +1877,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
        eine Pille: 48 statt 56, und der Radius passt zu den Knöpfen. Der
        Abstand von oben ist das Polster der Leiste (5 px). */
     position:absolute; left:0; top:5px; z-index:0;
-    height:48px; width:0; border-radius:12px;
+    height:48px; width:0; border-radius:var(--radius-2xl);
     background:var(--bg-hover);
     pointer-events:none; opacity:0;
     transition:transform var(--motion-normal) var(--ease-standard),
@@ -1976,10 +2019,10 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 
   /* Der rote Punkt an den Chats — klein, aber am richtigen Ort. */
   #handy-oben .hl-punkt{
-    position:absolute; top:9px; right:11px;
+    position:absolute; top:7px; right:calc(50% - 15px);
     width:8px; height:8px; border-radius:50%;
     background:var(--c-red, #e03e3e);
-    border:2px solid var(--bg);
+    border:2px solid var(--bg-card);
   }
   #handy-oben button.an .hl-punkt{ border-color:var(--bg-hover) }
 
@@ -2009,6 +2052,35 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   /* Der Inhalt muss unter der Navigationsleiste durchlaufen können, ohne
      dass die letzte Zeile darunter verschwindet: ihre Höhe plus Luft. */
   #scroll{ padding-bottom:calc(var(--hunten) + 24px) }
+
+  /* ══════════════════════════════════════════════════════════════════
+   * DER INHALT KOMMT VON DER SEITE HEREIN (E526)
+   * ------------------------------------------------------------------
+   * `wischen.ts` legt eine dieser beiden Klassen auf `#scroll`, nachdem
+   * der Reiter gedrückt wurde. Sie sagt nur eines, und das ist wichtig:
+   * AUS WELCHER RICHTUNG. Ein Bildschirm, der einfach da ist, sieht aus
+   * wie ein Fehler; einer, der von rechts hereinkommt, sagt „du bist
+   * nach rechts gegangen".
+   *
+   * Eine Bewegung, kein Ausblenden: `opacity` von .35 aufwärts, damit
+   * beim Hereinkommen nichts flackert, wenn der neue Bildschirm noch
+   * zeichnet.
+   *
+   * `prefers-reduced-motion` fasst `wischen.ts` selbst ab — dort wird
+   * die Klasse gar nicht erst gesetzt. Die Regel hier steht trotzdem
+   * unter dem Schirm, falls sie jemand anders benutzt. */
+  @media (prefers-reduced-motion: no-preference){
+    #scroll.wisch-links { animation:wisch-rein-links  .24s var(--ease-standard,ease) }
+    #scroll.wisch-rechts{ animation:wisch-rein-rechts .24s var(--ease-standard,ease) }
+  }
+  @keyframes wisch-rein-links{
+    from{ transform:translateX(34px);  opacity:.35 }
+    to  { transform:translateX(0);     opacity:1 }
+  }
+  @keyframes wisch-rein-rechts{
+    from{ transform:translateX(-34px); opacity:.35 }
+    to  { transform:translateX(0);     opacity:1 }
+  }
   #ai.open{ bottom:0 }
 }
 

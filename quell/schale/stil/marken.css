@@ -59,12 +59,21 @@
      misst sie deshalb gegen den echten Balken. */
   --mobile-topbar: 56px;
 
-  /* 59 IST DIE SUMME, NICHT EINE WAHL: 5 Polster oben + 48 Knopf + 5
-     Polster unten + 1 Linie. Die Marke stand auf 56 und wurde NIRGENDS
+  /* 60 IST DIE SUMME, NICHT EINE WAHL: 5 Polster oben + 48 Knopf + 5
+     Polster unten + 2 Linien. Die Marke stand auf 56 und wurde NIRGENDS
      benutzt — sie war eine Behauptung ohne Leser. Wer die Polster oder die
      Knopfhöhe ändert, macht test362 rot und muss diese Zahl nachziehen;
-     das ist der Zweck. */
-  --mobile-nav-height: 59px;
+     das ist der Zweck.
+
+     ZWEI LINIEN, NICHT EINE (E526). Seit die Leiste eine schwebende Kapsel
+     ist, hat sie oben UND unten einen Rahmen; vorher war es die eine
+     Trennlinie nach oben. `test141` hat die zwei Punkte gefunden: die
+     Schublade endete bei 777, die Leiste beginnt bei 775.
+
+     UND SIE HAT JETZT LESER. `--hunten` in `bausteine.css` rechnet mit ihr,
+     und der Radius der Kapsel in `studio.css` ist ihre Hälfte. Damit ist
+     die Marke keine Behauptung mehr, sondern die Quelle. */
+  --mobile-nav-height: 60px;
   --sheet-radius: 16px;
   --sheet-max-height: 88vh;
   --table-row-touch: 44px;

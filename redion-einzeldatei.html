@@ -112,12 +112,21 @@
      misst sie deshalb gegen den echten Balken. */
   --mobile-topbar: 56px;
 
-  /* 59 IST DIE SUMME, NICHT EINE WAHL: 5 Polster oben + 48 Knopf + 5
-     Polster unten + 1 Linie. Die Marke stand auf 56 und wurde NIRGENDS
+  /* 60 IST DIE SUMME, NICHT EINE WAHL: 5 Polster oben + 48 Knopf + 5
+     Polster unten + 2 Linien. Die Marke stand auf 56 und wurde NIRGENDS
      benutzt — sie war eine Behauptung ohne Leser. Wer die Polster oder die
      Knopfhöhe ändert, macht test362 rot und muss diese Zahl nachziehen;
-     das ist der Zweck. */
-  --mobile-nav-height: 59px;
+     das ist der Zweck.
+
+     ZWEI LINIEN, NICHT EINE (E526). Seit die Leiste eine schwebende Kapsel
+     ist, hat sie oben UND unten einen Rahmen; vorher war es die eine
+     Trennlinie nach oben. `test141` hat die zwei Punkte gefunden: die
+     Schublade endete bei 777, die Leiste beginnt bei 775.
+
+     UND SIE HAT JETZT LESER. `--hunten` in `bausteine.css` rechnet mit ihr,
+     und der Radius der Kapsel in `studio.css` ist ihre Hälfte. Damit ist
+     die Marke keine Behauptung mehr, sondern die Quelle. */
+  --mobile-nav-height: 60px;
   --sheet-radius: 16px;
   --sheet-max-height: 88vh;
   --table-row-touch: 44px;
@@ -9784,12 +9793,55 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
             Marke sagte 58, und die Schublade endete einen Punkt zu tief —
             genau auf der Linie. Ein Punkt ist kein Schaden, aber eine
             Marke, die nicht stimmt, ist der Anfang von zehn. */
-         --hunten: calc(59px + env(safe-area-inset-bottom)) }
+         /* ══════════════════════════════════════════════════════════
+          * DIE LEISTE IST EINE KAPSEL (E526)
+          * ----------------------------------------------------------
+          * Redur mit einem Bild der Apple-TV-Leiste: „kannst du so rund
+          * machen". Vorher lag die Leiste als Balken über die ganze
+          * Breite am unteren Rand, mit einer Trennlinie nach oben.
+          *
+          * Jetzt schwebt sie: 10 px Luft links und rechts, 9 px unten
+          * über der sicheren Fläche, und der Radius ist die halbe Höhe
+          * — 58 / 2 = 29. Das ist der Unterschied zwischen „abgerundete
+          * Ecken" und „Kapsel": bei genau der halben Höhe sind die
+          * Seiten Halbkreise, bei 24 px wären es Ecken mit Rundung.
+          *
+          * DIE HÖHE STEHT WEITER AN EINER STELLE. `--hunten` ist die
+          * Marke, an der ALLES hängt, was über der Leiste schwebt —
+          * die Schaltflächen, die Uhr, das Notizheft-Knöpfchen. Sie
+          * meint jetzt 9 unten + die Leiste, und wer sie ändert,
+          * ändert alle sechs Stellen mit.
+          *
+          * DIE HÖHE WIRD NICHT WIEDERHOLT, sondern aus
+          * `--mobile-nav-height` genommen (marken.css: 5 + 48 + 5 + 2
+          * Linien = 60). Hier stand erst 67, weil ich die 1-px-Linie
+          * oben und unten vergessen hatte — und `test141` hat genau die
+          * zwei Punkte gefunden: die Schublade endete bei 777, die
+          * Leiste beginnt bei 775. Zwei Punkte sieht niemand; eine
+          * Marke, die nicht stimmt, ist der Anfang von zehn. Eine
+          * Summe, die an zwei Stellen von Hand steht, geht irgendwann
+          * auseinander — also steht sie an einer.
+          * ════════════════════════════════════════════════════════ */
+         --hunten: calc(9px + var(--mobile-nav-height) + env(safe-area-inset-bottom)) }
   #handy-oben{
     display:flex; align-items:stretch; gap:2px;
-    position:fixed; left:0; right:0; bottom:0; top:auto; z-index:401;
-    padding:5px 8px calc(5px + env(safe-area-inset-bottom));
-    background:var(--bg); border-top:1px solid var(--line);
+    position:fixed; left:10px; right:10px; top:auto; z-index:401;
+    bottom:calc(9px + env(safe-area-inset-bottom));
+    padding:5px 6px; border-radius:29px;
+    /* DER INHALT LÄUFT DAHINTER DURCH, also muss die Fläche tragen.
+       `--bg-card` allein wäre auf einem hellen Regal zu durchsichtig;
+       der Weichzeichner dahinter macht aus dem, was durchscheint, eine
+       Fläche statt eines Musters. Wo es ihn nicht gibt (ältere Browser),
+       bleibt die volle Farbe stehen — deshalb steht sie zuerst da. */
+    background:var(--bg-card);
+    background:color-mix(in srgb,var(--bg-card) 88%,transparent);
+    -webkit-backdrop-filter:blur(20px) saturate(1.6);
+    backdrop-filter:blur(20px) saturate(1.6);
+    border:1px solid var(--line);
+    /* DER SCHATTEN STEHT IN `studio.css` und nicht hier. Diese Datei lädt
+       früher; zwei Schatten für dasselbe Ding wären einer, der gewinnt,
+       und einer, den niemand findet. Dort steht auch der Radius — er ist
+       die halbe Höhe, siehe den Absatz dort. */
   }
   /* JEDER NAME STEHT DA, NICHT NUR DER AKTIVE.
      Oben war Platz für genau einen Namen — fünf nebeneinander hätten die
@@ -9800,7 +9852,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   #handy-oben > button{
     flex:1 1 0; min-width:0; min-height:48px;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:3px; padding:5px 2px 4px; border:0; border-radius:12px; background:none;
+    gap:3px; padding:5px 2px 4px; border:0; border-radius:var(--radius-2xl); background:none;
     color:var(--text-dim);
     /* ÜBER DER GLEITENDEN FLÄCHE, NICHT DARUNTER. `#ho-pille` liegt auf
        `z-index:0`; ohne diese zwei Wörter lag der aktive Knopf DAHINTER
@@ -9871,7 +9923,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
        eine Pille: 48 statt 56, und der Radius passt zu den Knöpfen. Der
        Abstand von oben ist das Polster der Leiste (5 px). */
     position:absolute; left:0; top:5px; z-index:0;
-    height:48px; width:0; border-radius:12px;
+    height:48px; width:0; border-radius:var(--radius-2xl);
     background:var(--bg-hover);
     pointer-events:none; opacity:0;
     transition:transform var(--motion-normal) var(--ease-standard),
@@ -10013,10 +10065,10 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 
   /* Der rote Punkt an den Chats — klein, aber am richtigen Ort. */
   #handy-oben .hl-punkt{
-    position:absolute; top:9px; right:11px;
+    position:absolute; top:7px; right:calc(50% - 15px);
     width:8px; height:8px; border-radius:50%;
     background:var(--c-red, #e03e3e);
-    border:2px solid var(--bg);
+    border:2px solid var(--bg-card);
   }
   #handy-oben button.an .hl-punkt{ border-color:var(--bg-hover) }
 
@@ -10046,6 +10098,35 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   /* Der Inhalt muss unter der Navigationsleiste durchlaufen können, ohne
      dass die letzte Zeile darunter verschwindet: ihre Höhe plus Luft. */
   #scroll{ padding-bottom:calc(var(--hunten) + 24px) }
+
+  /* ══════════════════════════════════════════════════════════════════
+   * DER INHALT KOMMT VON DER SEITE HEREIN (E526)
+   * ------------------------------------------------------------------
+   * `wischen.ts` legt eine dieser beiden Klassen auf `#scroll`, nachdem
+   * der Reiter gedrückt wurde. Sie sagt nur eines, und das ist wichtig:
+   * AUS WELCHER RICHTUNG. Ein Bildschirm, der einfach da ist, sieht aus
+   * wie ein Fehler; einer, der von rechts hereinkommt, sagt „du bist
+   * nach rechts gegangen".
+   *
+   * Eine Bewegung, kein Ausblenden: `opacity` von .35 aufwärts, damit
+   * beim Hereinkommen nichts flackert, wenn der neue Bildschirm noch
+   * zeichnet.
+   *
+   * `prefers-reduced-motion` fasst `wischen.ts` selbst ab — dort wird
+   * die Klasse gar nicht erst gesetzt. Die Regel hier steht trotzdem
+   * unter dem Schirm, falls sie jemand anders benutzt. */
+  @media (prefers-reduced-motion: no-preference){
+    #scroll.wisch-links { animation:wisch-rein-links  .24s var(--ease-standard,ease) }
+    #scroll.wisch-rechts{ animation:wisch-rein-rechts .24s var(--ease-standard,ease) }
+  }
+  @keyframes wisch-rein-links{
+    from{ transform:translateX(34px);  opacity:.35 }
+    to  { transform:translateX(0);     opacity:1 }
+  }
+  @keyframes wisch-rein-rechts{
+    from{ transform:translateX(-34px); opacity:.35 }
+    to  { transform:translateX(0);     opacity:1 }
+  }
   #ai.open{ bottom:0 }
 }
 
@@ -17052,7 +17133,17 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 }
 @media(max-width:760px){
   #studio-bar{display:none}
-  #handy-oben{border-radius:var(--radius-2xl);box-shadow:var(--studio-highlight),var(--studio-elevation)}
+  /* DIE KAPSEL (E526). Hier stand `var(--radius-2xl)` — 20 px, also
+     abgerundete Ecken statt einer Kapsel. Der Radius muss die HALBE HÖHE
+     sein, sonst sind die Seiten Bögen und keine Halbkreise; gemessen ist
+     die Leiste 60 px hoch (5 Polster + 48 Weg + 5 Polster + 2 Linien).
+     Die Zahl steht deshalb NICHT hier, sondern wird aus
+     `--mobile-nav-height` gerechnet — wer die Leiste höher macht, ändert
+     eine Marke und nicht zwei Zahlen. Die Geometrie steht in
+     `bausteine.css` bei `#handy-oben`, der Radius hier, weil diese Datei
+     später lädt und sonst gewinnt. */
+  #handy-oben{border-radius:calc(var(--mobile-nav-height) / 2);
+               box-shadow:var(--studio-highlight),var(--studio-elevation)}
   :is(.finder,.dlg){border-radius:var(--radius-2xl) var(--radius-2xl) 0 0}
   .lernwelt .lw-desk{grid-template-columns:minmax(0,1fr);padding:26px 22px;gap:12px}
   .lernwelt .lw-desk h2{font-size:34px;letter-spacing:-1px}
@@ -19512,7 +19603,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 766, inhalt: '2ed19d292fe46f11', gebaut: '2026-09-09T18:20:52.626Z' };
+const Stand = { fassung: 793, inhalt: 'db400c61ffcddacd', gebaut: '2026-09-09T19:13:22.673Z' };
 window.Stand = Stand;
 
 </script>
@@ -117249,6 +117340,352 @@ window.Fenster = Fenster;
 
 </script>
 <script>
+/* ===== quell/schale/aufbau/wischen.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/aufbau/wischen.ts — mit dem Daumen zwischen den Bereichen
+ * ----------------------------------------------------------------------------
+ * Redur, 9. September, mit einem Bild der Apple-TV-Leiste:
+ *
+ *   „das ich zwischen bereichen mit maus so wenn ich draus von links nach
+ *    rechst oder umketerk dort gehe … jetzt ist bei redion nur wenn man
+ *    klick kann man wechseln"
+ *
+ * WAS DIESE DATEI WEISS: dass es unten eine Leiste mit Reitern gibt, und
+ * sonst nichts. Sie ruft keinen Bereich auf, sie kennt keinen Namen eines
+ * Bildschirms — sie sucht den nächsten Knopf und DRÜCKT IHN. Damit gilt für
+ * das Wischen automatisch alles, was für das Tippen gilt: dieselbe
+ * Schublade schliesst sich, dieselbe Pille wandert, dieselbe Markierung
+ * stimmt. Ein zweiter Weg mit eigener Logik wäre ein zweiter Katalog (§8),
+ * und der läuft mit dem ersten auseinander.
+ *
+ * DIE FÜNF DINGE, DIE EIN WISCHEN NICHT SEIN DARF
+ *
+ *   1. Ein Rollen. Wer waagerecht rollt — eine Tabelle, ein Bilderband, die
+ *      Zeichenfläche —, will rollen und nicht den Bereich wechseln. Deshalb
+ *      wird der Baum nach oben abgesucht, ob unter dem Finger etwas liegt,
+ *      das waagerecht rollen KANN.
+ *   2. Ein Strich. Beim Zeichnen (`body.schreibt`) und im offenen Dokument
+ *      ist die ganze Fläche eine Leinwand.
+ *   3. Ein Zurück. Die äusseren 24 px sind am iPhone die Systemgeste; wer
+ *      dort anfängt, meint den Browser und nicht Redion.
+ *   4. Ein Zoomen. Zwei Finger sind nie ein Wischen.
+ *   5. Ein Tippen, das verrutscht. Deshalb 70 px Weg, und der Weg muss
+ *      deutlicher waagerecht als senkrecht sein.
+ *
+ * UND EIN WISCHEN IST KEIN ERSATZ. Getippt werden kann weiter; die Geste
+ * kommt dazu (§38: keine Auskunft, die es nur über die Geste gibt).
+ * ==========================================================================*/
+const Wischen = (() => {
+    /** Wie weit der Finger gehen muss, damit es zählt. */
+    const WEG = 70;
+    /** Ab hier gilt die Geste als waagerecht und nicht als Rollen. */
+    const FANG = 12;
+    /** Der Rand, an dem das Betriebssystem selbst zuhört. */
+    const RANDTABU = 24;
+    /** Wie weit der Inhalt beim Ziehen mitgeht — gedämpft, damit es sich
+     *  nach Widerstand anfühlt und nicht nach Wegrutschen. */
+    const ZUG = 0.32, ZUG_MAX = 46;
+    /** Und wenn es in dieser Richtung keinen Bereich mehr gibt: die Wand. */
+    const ZUG_WAND = 0.10, ZUG_WAND_MAX = 16;
+    const leiste = () => document.getElementById('handy-oben');
+    /** Die Reiter in der Reihenfolge, in der sie dastehen. */
+    const reiter = () => {
+        const l = leiste();
+        if (!l)
+            return [];
+        return Array.from(l.querySelectorAll('button[role="tab"]'));
+    };
+    /**
+     * Ist die Leiste überhaupt da? Am Rechner steht sie auf `display:none`,
+     * im offenen Dokument ebenfalls — dann gibt es nichts zu wechseln.
+     *
+     * HIER STAND `!!l.offsetParent`, UND DAS WAR IMMER FALSCH. `offsetParent`
+     * ist bei einem Element mit `position:fixed` grundsätzlich `null`, ganz
+     * gleich ob es sichtbar ist — und die Leiste IST fixiert. Die Geste hat
+     * damit nie ausgelöst, und zwar völlig lautlos: kein Fehler, keine
+     * Meldung, nur nichts. Gemessen mit vier Wischbewegungen, die alle auf
+     * demselben Reiter endeten.
+     *
+     * Das gemessene Rechteck sagt beides auf einmal: `display:none` ergibt
+     * 0 × 0, alles andere die echte Grösse.
+     */
+    const leisteDa = () => {
+        const l = leiste();
+        if (!l)
+            return false;
+        const r = l.getBoundingClientRect();
+        return r.width > 0 && r.height > 0;
+    };
+    /**
+     * Welcher Reiter ist gerade an? −1, wenn keiner — das ist der Normalfall
+     * im Kompass und im Posteingang, und dann wird nicht gewischt: es gäbe
+     * keinen Ort, von dem aus „der nächste" etwas bedeutet.
+     */
+    const jetzt = () => reiter().findIndex(b => b.classList.contains('an'));
+    /**
+     * Der Nachbar in dieser Richtung, oder nichts.
+     *
+     * KEIN UMLAUF. Von „Mehr" nach rechts kommt nicht wieder „Dokumente" —
+     * eine Liste, die hinten wieder vorn anfängt, nimmt der Geste ihre einzige
+     * Auskunft darüber, wo man ist.
+     */
+    const nachbar = (schritt) => {
+        const alle = reiter();
+        const i = jetzt();
+        if (i < 0)
+            return null;
+        return alle[i + schritt] ?? null;
+    };
+    /** Rollt dieses Element waagerecht — oder eines darüber? */
+    const rolltWaagerecht = (start) => {
+        let el = start;
+        for (let tiefe = 0; el && tiefe < 24; tiefe++, el = el.parentElement) {
+            if (!(el instanceof HTMLElement))
+                continue;
+            if (el.dataset.keinWisch !== undefined)
+                return true;
+            if (el.scrollWidth > el.clientWidth + 2) {
+                const wie = getComputedStyle(el).overflowX;
+                if (wie === 'auto' || wie === 'scroll')
+                    return true;
+            }
+        }
+        return false;
+    };
+    /** Liegt etwas über allem — ein Blatt, ein Fenster, eine Schublade? */
+    const etwasOffen = () => !!document.querySelector('.overlay, dialog[open], .finder, #r-blatt.auf');
+    /** Darf hier überhaupt gewischt werden? */
+    const darf = (ziel, x) => {
+        if (!leisteDa())
+            return false;
+        const k = document.body.classList;
+        if (k.contains('schreibt'))
+            return false;
+        if (document.body.dataset.dokument === 'an')
+            return false;
+        if (etwasOffen())
+            return false;
+        if (x < RANDTABU || x > innerWidth - RANDTABU)
+            return false;
+        const el = ziel instanceof Element ? ziel : null;
+        if (el?.closest('#handy-oben'))
+            return false;
+        if (rolltWaagerecht(el))
+            return false;
+        return true;
+    };
+    /* ------------------------------------------------------------------------
+     * Die Geste selbst
+     * ----------------------------------------------------------------------*/
+    /**
+     * Was die letzte Geste war — für Prüfläufe und für die Fehlersuche.
+     *
+     * Ohne das ist eine Geste, die nicht auslöst, eine schwarze Kiste: es gibt
+     * keinen Fehler, keine Meldung, nur nichts. Genau daran sind bei dieser
+     * Datei zwei Fehler hintereinander lange unentdeckt geblieben (siehe
+     * `leisteDa` und `ende`). Hier steht danach, WORAN es lag.
+     */
+    let letzte = null;
+    /**
+     * NACH DEM WISCHEN KOMMT NOCH EIN KLICK — und der muss geschluckt werden.
+     *
+     * Der Browser erzeugt aus `pointerdown` … `pointerup` zusätzlich ein
+     * `click`-Ereignis, und zwar auf dem gemeinsamen Vorfahren von Anfang und
+     * Ende. Wer über eine Liste wischt, drückt damit die Zeile, über der er
+     * angefangen hat.
+     *
+     * GEMESSEN, und zwar von `test484 §3`: im Mehr-Blatt nach links gewischt —
+     * die Geste tat richtig nichts (ganz rechts ist Schluss), und der Klick
+     * danach öffnete „Dokumente". Ein Wischen, das etwas öffnet, das man nicht
+     * angetippt hat, ist schlimmer als eines, das nichts tut.
+     *
+     * NICHT BEI JEDER GESTE. Ab 12 px gilt eine Bewegung als waagerecht; ein
+     * Tipp, der um 15 px verrutscht, ist aber immer noch ein Tipp und soll
+     * wirken. Geschluckt wird erst ab 40 px — dann hat niemand mehr getippt.
+     *
+     * UND NICHT AUF DER LEISTE. Der Wechsel selbst läuft über `ziel.click()`,
+     * und der ginge sonst mit demselben Riegel unter.
+     */
+    const SCHLUCK_AB = 40;
+    let schlucken = false;
+    /**
+     * DER BROWSER ZIEHT SONST DEN TEXT MIT.
+     *
+     * Liegt eine Auswahl unter dem Zeiger — und die entsteht schon beim
+     * vorherigen Ziehen über Text —, dann macht Chromium aus dem nächsten
+     * Ziehen ein Text-Ziehen: `dragstart` feuert, und danach kommt KEIN
+     * `pointerup` mehr. Die Geste stirbt lautlos mitten drin.
+     *
+     * GEMESSEN mit einer Spur über `pointerdown`, `dragstart` und
+     * `pointerup`: drei Wischbewegungen hintereinander ergaben
+     * `down · up · down · up · down · dragstart` — die dritte hatte kein
+     * Ende. Am Telefon fällt das kaum auf, mit der Maus bei jedem zweiten
+     * Wischen.
+     *
+     * `preventDefault` nimmt dem Zug den Anfang; die Zeigerereignisse laufen
+     * danach normal weiter. Nur solange eine Geste läuft — wer eine Datei
+     * oder einen Block ziehen will, soll das weiter können.
+     */
+    addEventListener('dragstart', (e) => {
+        if (zeiger !== -1)
+            e.preventDefault();
+    }, true);
+    addEventListener('click', (e) => {
+        if (!schlucken)
+            return;
+        const el = e.target instanceof Element ? e.target : null;
+        if (el?.closest('#handy-oben'))
+            return;
+        e.stopPropagation();
+        e.preventDefault();
+    }, true);
+    let zeiger = -1; /* die Kennung des Fingers, −1 = keiner */
+    let x0 = 0, y0 = 0, t0 = 0;
+    let gefangen = false; /* schon als waagerecht erkannt? */
+    const buehne = () => document.getElementById('scroll');
+    /** Wer weniger Bewegung will, bekommt weniger Bewegung (§38). */
+    const ruhig = () => {
+        try {
+            return matchMedia('(prefers-reduced-motion: reduce)').matches;
+        }
+        catch {
+            return false;
+        }
+    };
+    const schieben = (dx) => {
+        const b = buehne();
+        if (!b || ruhig())
+            return;
+        /* Beim Ziehen folgt die Fläche dem Finger OHNE Übergang — ein Übergang
+           liefe der Hand hinterher. Erst beim Loslassen wird er eingeschaltet,
+           damit das Zurückschnellen weich ist. */
+        b.style.transition = 'none';
+        const wand = !nachbar(dx < 0 ? 1 : -1);
+        const f = wand ? ZUG_WAND : ZUG;
+        const max = wand ? ZUG_WAND_MAX : ZUG_MAX;
+        const weit = Math.max(-max, Math.min(max, dx * f));
+        b.style.transform = `translateX(${weit.toFixed(1)}px)`;
+    };
+    const loslassen = () => {
+        const b = buehne();
+        if (b && b.style.transform) {
+            b.style.transition = 'transform .22s var(--ease-standard, ease)';
+            b.style.transform = '';
+            setTimeout(() => { b.style.transition = ''; }, 260);
+        }
+        zeiger = -1;
+        gefangen = false;
+    };
+    /**
+     * Den Wechsel spielen: der Inhalt kommt von der Seite herein, aus der
+     * Richtung, in die gewischt wurde. Das ist der ganze Unterschied zwischen
+     * „es ist etwas anderes da" und „ich bin woanders hingegangen".
+     */
+    const einblenden = (nachLinks) => {
+        const b = buehne();
+        if (!b || ruhig())
+            return;
+        b.classList.remove('wisch-links', 'wisch-rechts');
+        /* Neu zeichnen erzwingen, sonst startet dieselbe Bewegung nicht noch
+           einmal, wenn zweimal in dieselbe Richtung gewischt wird. */
+        void b.offsetWidth;
+        b.classList.add(nachLinks ? 'wisch-links' : 'wisch-rechts');
+        setTimeout(() => b.classList.remove('wisch-links', 'wisch-rechts'), 400);
+    };
+    const starten = () => {
+        if (!document.body)
+            return;
+        addEventListener('pointerdown', (e) => {
+            /* Der Stift zeichnet, er wischt nicht. */
+            if (e.pointerType === 'pen')
+                return;
+            if (zeiger !== -1) {
+                zeiger = -1;
+                return;
+            } /* zweiter Finger: aus */
+            if (!darf(e.target, e.clientX))
+                return;
+            zeiger = e.pointerId;
+            x0 = e.clientX;
+            y0 = e.clientY;
+            t0 = e.timeStamp;
+            gefangen = false;
+        }, { passive: true });
+        addEventListener('pointermove', (e) => {
+            if (e.pointerId !== zeiger)
+                return;
+            const dx = e.clientX - x0, dy = e.clientY - y0;
+            if (!gefangen) {
+                if (Math.abs(dy) > Math.abs(dx)) {
+                    zeiger = -1;
+                    return;
+                } /* rollt */
+                if (Math.abs(dx) < FANG)
+                    return;
+                gefangen = true;
+            }
+            schieben(dx);
+        }, { passive: true });
+        const ende = (e) => {
+            if (e.pointerId !== zeiger)
+                return;
+            const dx = e.clientX - x0, dy = e.clientY - y0;
+            const dauer = e.timeStamp - t0;
+            /* ERST MERKEN, DANN LOSLASSEN. `loslassen()` setzt `gefangen` zurück —
+               es räumt ja die Geste weg. Wer danach `gefangen` liest, liest immer
+               `false` und verwirft jedes Wischen. Genau das tat diese Funktion:
+               die Geste lief sauber durch, wurde erkannt, verschob die Fläche —
+               und verwarf sich in der letzten Zeile selbst. Vier Wischbewegungen
+               endeten alle auf demselben Reiter, ohne einen einzigen Fehler. */
+            const war = gefangen;
+            loslassen();
+            if (war && Math.abs(dx) >= SCHLUCK_AB) {
+                schlucken = true;
+                /* Genau ein Bild lang. Der Klick des Browsers folgt unmittelbar auf
+                   `pointerup`; alles Spätere ist wieder ein echter Tipp. */
+                setTimeout(() => { schlucken = false; }, 0);
+            }
+            const merke = (grund) => {
+                letzte = { dx: Math.round(dx), dy: Math.round(dy), dauer: Math.round(dauer),
+                    gefangen: war, grund };
+            };
+            if (!war) {
+                merke('nicht waagerecht');
+                return;
+            }
+            if (Math.abs(dx) < WEG) {
+                merke('zu kurz');
+                return;
+            }
+            if (Math.abs(dx) < Math.abs(dy) * 1.8) {
+                merke('zu schräg');
+                return;
+            }
+            if (dauer > 900) {
+                merke('zu langsam');
+                return;
+            }
+            const ziel = nachbar(dx < 0 ? 1 : -1);
+            if (!ziel) {
+                merke('kein Nachbar');
+                return;
+            }
+            merke('gewechselt');
+            einblenden(dx < 0);
+            ziel.click();
+        };
+        addEventListener('pointerup', ende, { passive: true });
+        addEventListener('pointercancel', () => loslassen(), { passive: true });
+    };
+    /* `reiter`, `nachbar` und `darf` stehen mit im Rückgabewert, damit ein
+       Prüflauf sie einzeln befragen kann, ohne einen Finger zu erfinden. */
+    return { starten, reiter, nachbar, darf, jetzt, letzte: () => letzte };
+})();
+window.Wischen = Wischen;
+
+</script>
+<script>
 /* ===== quell/bereiche/einstellungen/ansicht/aussehen.js ===== */
 "use strict";
 /* ============================================================================
@@ -140433,9 +140870,36 @@ const Lernwelt = (() => {
         document.addEventListener('keydown', taste);
         zeichnen();
     };
+    /**
+     * DER TITEL SAGT, WO MAN IST — und das ist keine Zierde (E526).
+     *
+     * Hier stand für ALLE elf Ansichten derselbe Titel „Lernen & Alltag".
+     * Die Schale rechnet den Schauplatz aus genau diesem Titel aus
+     * (`SCHAUPLATZ_NAMEN` in `schale.ts`), und „Lernen & Alltag" bedeutet
+     * dort `heute`. Also meldete das Lernzentrum sich als „Heute", und die
+     * untere Leiste markierte „Heute", obwohl man auf „Lernen" getippt
+     * hatte.
+     *
+     * GEMESSEN, nicht vermutet: ein Klick auf `#hl-lernen` liess `#hl-start`
+     * markiert — vor dem Wischen, mit der Maus, in der Bibliothek genauso.
+     * Der Fehler war älter als die Geste; das Wischen hat ihn nur sichtbar
+     * gemacht, weil man dabei zusieht, wohin man geht.
+     *
+     * Zwei Titel, beide in `SCHAUPLATZ_NAMEN` bereits eingetragen: „Heute"
+     * für die Tagesansicht, „Lernzentrum" für alle übrigen. Die zehn
+     * anderen Ansichten gehören unten alle unter „Lernen".
+     *
+     * WAS DAMIT NOCH NICHT GELÖST IST: `wechseln()` schaltet die Ansicht
+     * INNERHALB der Welt um, ohne `zeigeSonder` noch einmal zu rufen — der
+     * Titel bleibt dann der vom Öffnen. Wer über „Heute" hereinkommt und
+     * drinnen auf „Lernweg" wechselt, sieht unten weiter „Heute". Das steht
+     * als L147 und nicht hier: es zu beheben heisst, den Schauplatz beim
+     * Umschalten neu zu melden, und das ist ein eigener Bogen.
+     */
     const oeffnen = (ansicht = 'heute') => {
         const start = ansichtGueltig(ansicht) ? ansicht : 'heute';
-        App.zeigeSonder('Lernen & Alltag', (ziel) => render(ziel, start));
+        const titel = start === 'heute' ? 'Heute' : 'Lernzentrum';
+        App.zeigeSonder(titel, (ziel) => render(ziel, start));
     };
     const aktualisieren = () => {
         zustand.extern = null;
@@ -155923,6 +156387,14 @@ const App = (() => {
            `btn-search` in der Seitenleiste, `btn-suche-handy` am Telefon; alle
            vier rufen dasselbe `suche()`. */
         an('btn-neu-handy', () => neueSeite());
+        /* MIT DEM DAUMEN ZWISCHEN DEN BEREICHEN (E526). `Wischen` kennt keinen
+           Bereich — es sucht den nächsten Reiter und DRÜCKT IHN, damit für die
+           Geste alles gilt, was für den Tipp darüber gilt. Deshalb steht der
+           Aufruf hier, hinter den fünf Bindungen, und nicht früher. */
+        try {
+            window.Wischen?.starten?.();
+        }
+        catch { /* ohne Geste */ }
         handyLeiste();
         /* Reiterleiste oben in der Seitenleiste */
         document.getElementById('side-reiter')?.addEventListener('click', (e) => {

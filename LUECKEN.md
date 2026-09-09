@@ -7203,3 +7203,78 @@ Was hier NICHT hingehört: die 1,6 MB der Symbole aus E525. Der Start holt
 davon nur `favicon-16` und `favicon-32` (zusammen 3 KB); die grossen
 Symbole holt das Betriebssystem beim Installieren, nicht der Browser beim
 Öffnen.
+
+---
+
+L147 · Innerhalb der Lernwelt umschalten meldet den Ort nicht neu — offen
+--------------------------------------------------------------------------
+
+Gefunden beim Bau des Wischens (E526), als Rest des dort behobenen Fehlers.
+
+Die untere Leiste liest den Schauplatz, und den rechnet `schale.ts` aus dem
+TITEL, unter dem sich ein Bildschirm über `App.zeigeSonder` anmeldet. E526
+hat `lernwelt.ts` beigebracht, zwei Titel zu benutzen statt einem: „Heute"
+für die Tagesansicht, „Lernzentrum" für die übrigen zehn.
+
+**Das gilt aber nur beim Öffnen.** `wechseln()` schaltet die Ansicht
+innerhalb der Welt um — über die Navigation im Lernzentrum — und ruft
+`zeigeSonder` NICHT noch einmal. Der Titel bleibt der vom Öffnen:
+
+```txt
+über „Heute" hereinkommen  →  Titel „Heute"  →  unten „Heute"   richtig
+drinnen auf „Lernweg"      →  Titel „Heute"  →  unten „Heute"   falsch
+```
+
+**Was zu tun ist:** `wechseln()` muss den Schauplatz neu melden. Der Weg
+dafür existiert — `App.zeigeSonder` mit dem neuen Titel —, aber er zeichnet
+die Welt neu, und genau das soll `wechseln()` nicht: es tauscht nur den
+Inhalt aus. Es braucht also entweder einen schmalen Weg „nur den Titel
+ändern" in der Schale, oder `wechseln()` geht über `zeigeSonder` und die
+Welt muss ein Neuzeichnen vertragen.
+
+**Warum es hier steht und nicht behoben ist:** beides ist ein eigener Bogen
+mit eigener Prüfung. Der Fall aus E526 — über die untere Leiste auf „Lernen"
+tippen — geht IMMER über `oeffnen()` und ist damit vollständig behoben; das
+hier trifft nur, wer drinnen weiterklickt.
+
+---
+
+L148 · Die Marken-Decke steht zehn zu tief — offen
+--------------------------------------------------------------------------
+
+`pruefungen/marken-decke.json` hält fest, wie oft rohe Pixelwerte in den
+Stildateien stehen, und die Regel dazu ist streng: **genau gleich, nicht
+höchstens** (`test362 §7`). Wer eine rohe 44px durch die Marke ersetzt, sieht
+den Lauf rot und trägt die kleinere Zahl nach; wer eine hinzufügt, ebenso.
+
+Gemessen am 9. September, mit derselben Zählung wie im Prüflauf, einmal
+gegen den letzten Commit und einmal gegen den Arbeitsbaum:
+
+```txt
+Wert |  Decke |  HEAD |  jetzt
+  16 |    246 |   253 |    253
+  22 |     77 |    78 |     78
+  28 |     56 |    56 |     56
+  44 |    153 |   155 |    155
+  46 |     14 |    14 |     14
+  56 |     12 |    12 |     12
+```
+
+**HEAD und Arbeitsbaum sind gleich.** Die Abweichung von zehn ist also
+älter als E526 und stammt aus früheren Bögen — jemand hat rohe Werte
+hinzugefügt, ohne die Decke nachzuziehen, und der Lauf steht seither rot.
+
+**Was NICHT zu tun ist:** die Zahlen einfach hochsetzen. Damit wäre der
+Lauf grün und die Decke um zehn gestiegen — genau das, was sie verhindern
+soll. Das Verzeichnis darf nur schrumpfen.
+
+**Was zu tun ist:** die zehn Stellen finden (`git log -p` über
+`quell/schale/stil/` seit dem letzten Stand der Decke) und je Stelle
+entscheiden, ob dort eine Marke hingehört. `--radius-xl` ist 16, `--touch-min`
+und `--table-row-touch` sind 44 — für die meisten wird es eine geben. Was
+wirklich keine Marke braucht (ein Zeichen, das zufällig 44 px misst), wird
+eingetragen; dann steigt die Decke mit geschriebenem Grund statt still.
+
+E526 selbst ist auf null: die zwei rohen `22px` der Kapsel sind durch
+`var(--radius-2xl)` ersetzt, und ihr Radius wird aus `--mobile-nav-height`
+gerechnet statt als Zahl wiederholt.

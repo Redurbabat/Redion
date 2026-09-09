@@ -4386,6 +4386,14 @@ const App = (() => {
            `btn-search` in der Seitenleiste, `btn-suche-handy` am Telefon; alle
            vier rufen dasselbe `suche()`. */
         an('btn-neu-handy', () => neueSeite());
+        /* MIT DEM DAUMEN ZWISCHEN DEN BEREICHEN (E526). `Wischen` kennt keinen
+           Bereich — es sucht den nächsten Reiter und DRÜCKT IHN, damit für die
+           Geste alles gilt, was für den Tipp darüber gilt. Deshalb steht der
+           Aufruf hier, hinter den fünf Bindungen, und nicht früher. */
+        try {
+            window.Wischen?.starten?.();
+        }
+        catch { /* ohne Geste */ }
         handyLeiste();
         /* Reiterleiste oben in der Seitenleiste */
         document.getElementById('side-reiter')?.addEventListener('click', (e) => {

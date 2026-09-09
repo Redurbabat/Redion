@@ -212,7 +212,17 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 }
 @media(max-width:760px){
   #studio-bar{display:none}
-  #handy-oben{border-radius:var(--radius-2xl);box-shadow:var(--studio-highlight),var(--studio-elevation)}
+  /* DIE KAPSEL (E526). Hier stand `var(--radius-2xl)` — 20 px, also
+     abgerundete Ecken statt einer Kapsel. Der Radius muss die HALBE HÖHE
+     sein, sonst sind die Seiten Bögen und keine Halbkreise; gemessen ist
+     die Leiste 60 px hoch (5 Polster + 48 Weg + 5 Polster + 2 Linien).
+     Die Zahl steht deshalb NICHT hier, sondern wird aus
+     `--mobile-nav-height` gerechnet — wer die Leiste höher macht, ändert
+     eine Marke und nicht zwei Zahlen. Die Geometrie steht in
+     `bausteine.css` bei `#handy-oben`, der Radius hier, weil diese Datei
+     später lädt und sonst gewinnt. */
+  #handy-oben{border-radius:calc(var(--mobile-nav-height) / 2);
+               box-shadow:var(--studio-highlight),var(--studio-elevation)}
   :is(.finder,.dlg){border-radius:var(--radius-2xl) var(--radius-2xl) 0 0}
   .lernwelt .lw-desk{grid-template-columns:minmax(0,1fr);padding:26px 22px;gap:12px}
   .lernwelt .lw-desk h2{font-size:34px;letter-spacing:-1px}
