@@ -4901,3 +4901,42 @@ Haftnotiz mit umgeschlagener Ecke.
 
 `test480 §7` hält es: kein Paar über 60 %, und die Grenze liegt in der
 gemessenen Lücke zwischen 38 und 69, nicht im Gefühl.
+
+**L139 gefunden — der Import war nie kaputt (E516, test482).** Redur am
+8. September: „wenn ich oben eine neue PDF einfügen will, kopiert es immer
+die aktuelle PDF." E513 hatte drei Wege gemessen, alle drei sauber, und der
+Fehler blieb als Lücke stehen.
+
+Die drei Messungen haben die falsche Frage gestellt. Sie fragten, ob der
+Import die richtige Datei ablegt — er tat es immer. Redurs Satz stellt eine
+andere Frage: welchen Knopf drückt er.
+
+Im Regal waren oben zwei Knöpfe zu sehen. Der eine hiess „PDF öffnen" und
+holte die zuletzt geöffnete PDF zurück. Der andere hiess „PDF importieren"
+und las eine neue ein. Der dritte, der in der Kopfleiste, heisst ebenfalls
+„PDF öffnen" und importiert wirklich — er ist im Regal aber ausgeblendet.
+
+Wer eine PDF öffnen will, drückt „PDF öffnen". Er bekommt seine aktuelle
+PDF. Jedes Mal, völlig korrekt, und es sieht aus wie eine Kopie. Das war
+der ganze Fehler: kein Datenverlust, keine falsche Quelle, keine doppelte
+Kennung — ein Wort an der falschen Stelle und ein zweites, das dasselbe
+meinte und anders hiess.
+
+Jetzt heissen beide Importknöpfe „PDF öffnen" und tragen dasselbe
+gezeichnete Zeichen; die Karte heisst „Weiterlesen" und sagt damit, dass sie
+zurückführt. Der Prüflauf misst den sichtbaren Text jedes Knopfes und lässt
+kein zweites „PDF öffnen" zu.
+
+Auch der vierte Weg ist jetzt gefahren — „PDF hier einfügen" im Seitenmenü,
+den kein Prüflauf öffnen konnte, weil er im Inspector sitzt und der zu ist,
+solange ihn niemand aufmacht. Ein Klick mehr, und der Weg lässt sich prüfen:
+zwei Seiten vorher, fünf nachher, zwei Quellen, fünf verschiedene
+Seitenbilder, und die drei neuen tragen den Text der neuen Datei an der
+richtigen Stelle. Sauber.
+
+Und ein zweiter Fund in derselben Zeile: der Importeur schrieb in
+`button.textContent` und nahm dem Knopf damit sein gezeichnetes Zeichen aus
+E515 — für den Rest der Sitzung, weil der Kopfknopf fest in der Startseite
+steht und nie neu gezeichnet wird. Dazu hiess der Knopf danach anders als
+vorher. Beschriftet wird jetzt an einer Stelle, in ein Wortfeld statt in den
+Knopf.

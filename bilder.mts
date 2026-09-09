@@ -1305,6 +1305,33 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* DER KOPF DES REGALS (E516, L139). Genau die Stelle, an der Redur
+     „oben eine neue PDF einfügen" wollte: die Karte „Weiterarbeiten" und
+     der Importknopf nebeneinander. Sie hiessen beide „PDF öffnen" und
+     machten das Gegenteil voneinander — hier sieht man, ob das eine Wort
+     jetzt nur noch einmal dasteht. */
+  regalkopf: {
+    titel: 'Der Kopf des Regals: Weiterlesen und PDF öffnen',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const akte = Store.addPage(null, { text: 'Elektrotechnik Skript', icon: '📕' });
+      Store.addBlock(akte.id, 'pdfseite', { text: '', nr: 1, bw: 595, bh: 842, herkunft: 'quelle' });
+      Store.updateBlock(akte.id, { zuletztGeoeffnet: new Date().toISOString() });
+      [['Wochenplan KW 35', '📅'], ['Prüfungsvorbereitung', '📝'],
+       ['Baustelle Halle 3', '💼']].forEach(([name, icon]) => {
+        const s = Store.addPage(null, { text: String(name), icon: String(icon) });
+        Store.addBlock(s.id, 'text', { text: 'Ein Satz auf ' + name + '.' });
+      });
+      await Store.flush();
+      w.Produktwelten.bibliothek();
+      await new Promise(r => setTimeout(r, 1200));
+    }
+  },
+
   aufgaben: {
     titel: 'Aufgaben aus mehreren Quellen in einer Liste',
     bauen: async () => {

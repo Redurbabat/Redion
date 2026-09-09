@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-495 Entscheidungen, E1 bis E515 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+496 Entscheidungen, E1 bis E516 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -559,6 +559,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E513** — Das Notizbuch stand nicht im „Neu erstellen", obwohl es Redion seit E264 kann
 * **E514** — Die Chronik „Red-ur": eine Quelle, drei Ansichten — UR.md, PROBLEME.md und ein Fenster in Redion
 * **E515** — Die Zeichen der Leiste sind gezeichnet, nicht getippt — dreiunddreissig neue im Register, und fünfundsiebzig Pixel, die niemand sah
+* **E516** — L139 gefunden: der Import war nie kaputt, das Wort war es — „PDF öffnen" holte die aktuelle PDF zurück
 
 ---
 
@@ -41613,3 +41614,102 @@ Werkzeugzeilen statt einer) und ist nach der Messung wieder grün, 26
 Zusagen. Nicht geprüft: die Gesamtsuite.
 Bild: `node bilder.mts zeichnen leisteLinks` und ein Blatt mit allen
 Zeichen nebeneinander — das eine, auf dem die drei Stifte auffielen.
+
+---
+
+E516 — L139 gefunden: der Import war nie kaputt, das Wort war es
+--------------------------------------------------------------------------
+
+Redur, 8. September 2026:
+
+> „und wenn ich oben eine neu pdf einfügen woll kopiert es immer die
+> aktuele pdf wieos lösche das problem"
+
+E513 hat drei Wege gemessen und alle drei sauber gefunden. Der Fehler blieb
+als **L139** stehen: nicht behoben und nicht widerlegt.
+
+## Warum drei saubere Messungen nichts bewiesen haben
+
+Weil sie die falsche Frage gestellt haben. Gemessen wurde: *legt der Import
+die richtige Datei ab?* Ja, jedes Mal. Die Frage, die Redurs Satz wirklich
+stellt, ist eine andere: **welchen Knopf drückt er?**
+
+Nachgesehen, was im Regal oben tatsächlich zu sehen ist:
+
+```txt
+Karte „Weiterarbeiten"     Knopf hiess „PDF öffnen"   → holt die ZULETZT
+                                                        geöffnete PDF zurück
+Kopf des Regals            Knopf hiess „PDF importieren" → liest eine NEUE ein
+Kopfleiste der App         Knopf heisst „PDF öffnen"  → liest eine NEUE ein,
+                                                        ist aber im Regal
+                                                        `display:none`
+```
+
+Gemessen, nicht vermutet: im Regal ist der Knopf der Kopfleiste
+ausgeblendet (`body:has(#page .bib-studio-import) #studio-import`). Sichtbar
+waren also genau zwei — und **derjenige, der „PDF öffnen" hiess, war der,
+der die aktuelle PDF zurückholt.** Der, der wirklich eine neue Datei
+einliest, hiess „PDF importieren".
+
+Wer eine PDF öffnen will, drückt „PDF öffnen". Er bekommt seine aktuelle
+PDF. Jedes Mal, völlig korrekt, und es sieht aus wie eine Kopie.
+
+**Das ist der ganze Fehler.** Kein Datenverlust, keine falsche Quelle, keine
+doppelte Kennung — ein Wort, das an der falschen Stelle stand, und ein
+zweites, das dasselbe meinte und anders hiess.
+
+## Was jetzt gilt
+
+```txt
+„PDF öffnen"    beide Importknöpfe (Kopfleiste und Regal), gleiches Wort,
+                gleiches gezeichnetes Zeichen — und sonst niemand
+„Weiterlesen"   die Karte, die zurück ins letzte Dokument führt
+```
+
+Die Zusage dazu steht in `test482 §1` und misst den SICHTBAREN Text jedes
+Knopfes, nicht den Quelltext: ein Wort, das zweimal im Code steht, ist
+harmlos, solange der Mensch es einmal sieht.
+
+## Der vierte Weg, den E513 nicht öffnen konnte
+
+Er stand als letzter Verdächtiger da: „PDF hier einfügen" im Seitenmenü.
+Der Grund, warum kein Prüflauf ihn erreichte, ist banal — **er sitzt im
+Inspector, und der ist zu, solange ihn niemand aufmacht.** Ein Klick auf
+`[data-document-action="inspector"]`, und der Weg lässt sich fahren.
+
+Gefahren, mit zwei echten PDFs zu zwei und drei Seiten:
+
+```txt
+vorher   2 Seiten, 1 Quelle
+nachher  5 Seiten, 2 Quellen, 5 verschiedene Seitenbilder
+Reihe    Alt A · Neu C · Neu D · Neu E · Alt B
+```
+
+Die drei neuen Seiten tragen den Text der NEUEN Datei und stehen an der
+Stelle, an der sie eingefügt wurden. **Der Weg ist sauber**, und damit ist
+L139 nicht mehr „nicht gefunden", sondern gefunden und geschlossen.
+
+## Und ein zweiter Fund in derselben Zeile
+
+`pdfImportieren` schrieb während des Imports `button.textContent = 'PDF wird
+importiert …'` und danach `= 'PDF importieren'`. Zwei Fehler auf einmal:
+
+  · **`textContent` wirft die Kindknoten weg** — und dort hängt seit E515
+    das gezeichnete Zeichen. Nach dem ersten Import stand der Knopf ohne
+    Zeichen da, und zwar für den Rest der Sitzung: der Kopfknopf steht fest
+    in `index.html` und wird nie neu gezeichnet.
+  · **Der Knopf hiess danach anders.** Ein Knopf, der seinen Namen wechselt,
+    weil man ihn einmal gedrückt hat, ist ein anderer Knopf.
+
+Beschriftet wird jetzt an einer Stelle (`importBeschriften`), in ein
+Wortfeld statt in den Knopf, mit einem Wort aus einer Konstanten.
+
+GEPRÜFT. `test482` neu, 28 Zusagen in vier Abschnitten. Zwei Gegenproben rot
+gesehen: die Karte wieder „PDF öffnen" nennen (zwei Zusagen rot, und die
+Meldung zeigt beide Knöpfe nebeneinander), und `textContent` zurück in die
+Busy-Schleife (beide Zeichen-Zusagen rot, `zeichen:false` an beiden
+Knöpfen). Die zweite Gegenprobe baute im ersten Anlauf gar nicht —
+`noUnusedLocals` schlug zu, genau wie §52.6 es beschreibt; verstümmelt wurde
+dann nur die eine Schleife. Grün mitgelaufen: 105, 109, 177, 424, 428, 430,
+437. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts regalkopf`.

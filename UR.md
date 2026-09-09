@@ -362,26 +362,38 @@ Die zehn Adern. Nicht wegen der Technik — zehn Farben und zwei Strichmuster �
 **Besserer Prompt:** „Ersetze in der Zeichenleiste jedes Emoji durch ein gezeichnetes Zeichen wie im Bild (gleiche Strichstärke, currentColor). Wo ein Buchstabe mehr sagt als ein Strich, sag mir welche und warum." — der zweite Satz spart die Rückfrage, was mit dem „Aa" der Schriftart passieren soll.
 
 
+**4 · ca. 06:50**
+
+> Wieter mit L139
+
+**Gemeint:** Weiter mit der offenen Lücke L139 — der PDF, die angeblich die aktuelle kopiert.
+
+**Besser geschrieben:** Weiter mit L139.
+
+**Besserer Prompt:** Hier war nichts zu verbessern: die Nummer war die ganze Auskunft. Genau das ist der Nutzen von LUECKEN.md — zwei Wörter reichen, weil die Frage schon aufgeschrieben ist. Was gefehlt hätte, wenn es die Nummer nicht gäbe: welcher Knopf, in welcher Ansicht.
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
 |---|---|---|---|---|
 | E513 — Das Notizbuch fehlte im „Neu erstellen"; die kopierte PDF gemessen und NICHT gefunden | `2f059f1d` → `dc9bbcab` | 22:16 – 04:12 | ca. 1 h 56 min (der grösste Teil davon die Suche nach der PDF) | test265 um eine Zusage erweitert |
 | E514 — Die Chronik: PROBLEME.md, UR.md und die Ansicht in Redion | `dc9bbcab` → `dd694ff7` | 04:12 – 04:47 | ca. 35 min | test481 |
-| E515 — Die Zeichen der Leiste: vierunddreissig gezeichnete statt Emoji, und fünfundsiebzig Pixel, die niemand sah | `dd694ff7` → `(dieser Bogen)` | ab 04:47 | — | test480 §5 neu (acht Zusagen); test351 war rot und ist wieder grün |
+| E515 — Die Zeichen der Leiste: vierunddreissig gezeichnete statt Emoji, und fünfundsiebzig Pixel, die niemand sah | `dd694ff7` → `a33cceb1` | 04:47 – 06:45 | ca. 1 h 58 min | test480 §5 neu (acht Zusagen); test351 war rot und ist wieder grün |
+| E516 — L139 gefunden: der Import war nie kaputt, das Wort war es | `a33cceb1` → `(dieser Bogen)` | ab 06:45 | — | test482 neu, 28 Zusagen |
 
 #### Zahlen des Tages
 
-- **commits:** 3
-- **entscheidungen:** 3
+- **commits:** 4
+- **entscheidungen:** 4
 
 #### Das grösste Problem
 
-Nicht die Zeichen selbst, sondern was sie kosteten. Die gezeichneten Zeichen sind fest 18 px breit, die Emoji davor im Mittel rund 12 — dreizehnmal sechs Pixel sind fünfundsiebzig, und daran kippte die Werkzeugzeile am Rechner in eine zweite. Das Bild hätte es nie gemeldet: zwei Zeilen sehen ordentlich aus. Gefunden hat es test351, weil dort seit E359 eine Zahl steht statt eines Eindrucks. Daneben bleibt die PDF aus L139 offen — nicht behoben und nicht widerlegt.
+Die drei sauberen Messungen aus E513. Sie waren richtig gerechnet und haben trotzdem nichts bewiesen, weil sie die falsche Frage gestellt haben: „legt der Import die richtige Datei ab?" statt „welchen Knopf drückt er?". Eine Messung, die die falsche Frage stellt, ist gefährlicher als gar keine — sie kommt grün zurück und man glaubt ihr.
 
 #### Das Interessanteste, das Redur wollte
 
-„Nehme die symbole. Für die redion bitte 1:1" — vier Wörter, und der richtige Schluss daraus war nicht „male dreizehn neue Bilder", sondern „Redion hat diese Sorte Zeichen längst, nur die meistbenutzte Fläche der App war beim Emoji geblieben". Wer die Zeichen in der PDF-Fläche gezeichnet hätte, hätte einen zweiten Zeichensatz gebaut, der nach dem zweiten Durchgang anders aussieht als der erste.
+„Wieter mit L139" — drei Wörter, und sie haben gereicht, weil die Frage schon in LUECKEN.md stand. Das ist der Nutzen dieser Datei, den man erst sieht, wenn man ihn braucht: eine Lücke, die aufgeschrieben ist, lässt sich mit einer Nummer wieder aufnehmen. Eine, die nur im Kopf stand, hätte die ganze Geschichte noch einmal gebraucht.
 
 #### Massnahmen an den Daten
 
@@ -391,10 +403,12 @@ Nicht die Zeichen selbst, sondern was sie kosteten. Die gezeichneten Zeichen sin
 | 05:10 | Vierunddreissig Zeichen in `Register.symbole` ergänzt; die Leiste nennt nur noch ihren Namen. | Ein zweiter Zeichensatz in der PDF-Fläche wäre nach dem zweiten Durchgang verschieden, und niemand hätte gemerkt, welcher gilt (§8). | keins an Daten — Oberfläche; die vier Stellen, die ihr Markup neu schreiben, mussten das Malen wiederholen |
 | 05:40 | Polsterung der Werkzeugknöpfe 9 → 7 px, Abstand zum Wort 5 → 4 px, Zeichen neben einem Wort 18 → 16 px. | Gemessen: mit Wort brauchten die dreizehn Werkzeuge 1190 px von 1168 vorhandenen. Danach 1099 — eine Zeile, 69 px Luft. Wo kein Wort steht, bleibt das Zeichen 18 px, in der Seitenspalte 20. | keins an Daten; die 44-px-Trefffläche hängt an der Höhe, nicht an der Polsterung (§37) |
 | 06:20 | Fueller, Kugelschreiber und Zettel neu gezeichnet — nicht an der Spitze, sondern am Umriss. | Gemessen: die drei Stifte teilten bis zu 73 % ihrer Tinte bei 16 px. Der erste Versuch mit schärferen Spitzen machte es schlimmer (85 %), weil bei dieser Grösse der Schaft die ganze Tinte trägt. Jetzt: Feder, aufrechter Kugelschreiber, schräger Bleistift — drei Umrisse. | keins an Daten — Oberfläche |
+| 07:05 | Die Karte „Weiterarbeiten" heisst „Weiterlesen"; beide Importknöpfe heissen „PDF öffnen". | Sichtbar waren im Regal zwei Knöpfe: „PDF öffnen" holte die zuletzt geöffnete PDF zurück, „PDF importieren" las eine neue ein. Wer eine PDF öffnen will, drückt „PDF öffnen" — und bekommt seine aktuelle. | keins an Daten — nur Beschriftung; die Handlungen dahinter sind unverändert |
+| 07:20 | Der Importeur beschriftet den Knopf über ein Wortfeld statt über `textContent`. | `textContent` wirft die Kindknoten weg, und dort hängt seit E515 das gezeichnete Zeichen. Nach dem ersten Import stand der Knopf ohne Zeichen da — für den Rest der Sitzung, weil er fest in der Startseite steht. | keins an Daten — Oberfläche |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 15 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 16 Einträge.
 

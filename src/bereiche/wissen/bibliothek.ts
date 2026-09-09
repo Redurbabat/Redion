@@ -748,10 +748,42 @@ const Bibliothek = (() => {
         (bild ? '<img data-vorschau="' + esc(bild) + '" alt="" loading="lazy">' : '<span>PDF</span>') + '</span>' +
       '<div><span class="bib-studio-eyebrow">Weiterarbeiten</span><h2>' + esc(letzte.text || 'Ohne Titel') +
         '</h2><p>Zuletzt geöffnet ' + esc(wannText(letzte.zuletztGeoeffnet)) + '</p></div>' +
-      '<button type="button" data-studio-weiter="' + esc(letzte.id) + '">PDF öffnen' +
+      /* „WEITERLESEN", NICHT „PDF ÖFFNEN" (E516, L139). Hier stand ein
+         Jahr lang dasselbe Wort wie am Importeur, und dieser Knopf macht
+         das GEGENTEIL: er holt die zuletzt geöffnete PDF zurück. Redur
+         hat es als Fehler gemeldet — „wenn ich oben eine neue PDF einfügen
+         will, kopiert es immer die aktuelle PDF" —, und drei gemessene
+         Importwege waren sauber, weil der Import nie kaputt war. Kaputt
+         war das Wort. */
+      '<button type="button" data-studio-weiter="' + esc(letzte.id) + '">Weiterlesen' +
         '<span aria-hidden="true">↗</span></button></section>';
   };
 
+  /* DAS WORT DES IMPORTKNOPFES steht EINMAL da (§8). Es steht auch in
+     `index.html` am Kopfknopf; `test482 §4` hält beide zusammen. */
+  const IMPORT_WORT = 'PDF öffnen';
+  /**
+   * Den Importknopf beschriften, ohne ihm sein Zeichen wegzunehmen.
+   *
+   * VORHER STAND HIER `button.textContent = …`, und das ist genau die
+   * Zeile, die seit E515 wehtut: `textContent` wirft die KINDKNOTEN weg,
+   * und dort hängt seit E515 das gezeichnete Zeichen. Nach dem ersten
+   * Import stand der Knopf ohne Zeichen da — für den Rest der Sitzung, und
+   * kein Neuladen der Bibliothek holte es zurück, weil der Kopfknopf in
+   * `index.html` steht und nicht neu gezeichnet wird.
+   *
+   * Der zweite Fehler in derselben Zeile war der Name: der Knopf hiess
+   * danach „PDF importieren" statt „PDF öffnen". Ein Knopf, der seinen
+   * Namen wechselt, weil man ihn einmal gedrückt hat, ist ein anderer Knopf.
+   */
+  const importBeschriften = (wort?: string): void => {
+    document.querySelectorAll<HTMLButtonElement>('[data-studio-import]').forEach(knopf => {
+      const feld = knopf.querySelector<HTMLElement>('.wort')
+        || knopf.querySelector<HTMLElement>('span:not([data-sym])');
+      if (feld) feld.textContent = wort || IMPORT_WORT;
+      else knopf.textContent = wort || IMPORT_WORT;
+    });
+  };
   let pdfImportLaeuft = false;
   /** Derselbe PDF-Importer wie beim Archivimport, mit direktem Weg ins Dokument. */
   const pdfImportieren = (): void => {
@@ -779,8 +811,8 @@ const Bibliothek = (() => {
       pdfImportLaeuft = true;
       document.querySelectorAll<HTMLButtonElement>('[data-studio-import]').forEach(button => {
         button.disabled = true; button.setAttribute('aria-busy', 'true');
-        button.textContent = 'PDF wird importiert …';
       });
+      importBeschriften('PDF wird gelesen …');
       try {
         const ergebnis = await ArchivImport.dateiAlsDokument(datei, ziel);
         App.zeichneBaum();
@@ -793,8 +825,9 @@ const Bibliothek = (() => {
         pdfImportLaeuft = false;
         document.querySelectorAll<HTMLButtonElement>('[data-studio-import]').forEach(button => {
           button.disabled = !permitted('bearbeiten', zustand.ordner || undefined);
-          button.removeAttribute('aria-busy'); button.textContent = 'PDF importieren';
+          button.removeAttribute('aria-busy');
         });
+        importBeschriften();
       }
     }, { once: true });
     eingabe.click();
@@ -1319,10 +1352,17 @@ const Bibliothek = (() => {
       '<h1>' + esc(hier) + '</h1>' +
       '<button class="bib-neu" data-neu-auf>' +
         '<b aria-hidden="true">+</b><span>Neu</span></button>' +
+      /* EIN WORT FÜR EINE HANDLUNG (E516). Der Knopf im Kopf heisst „PDF
+         öffnen", dieser hiess „PDF importieren" — zwei Namen für dasselbe,
+         und keiner von beiden war der, den man las: sichtbar war im Regal
+         nur die Karte „Weiterarbeiten", die auch „PDF öffnen" hiess.
+         Jetzt tragen beide Importknöpfe dasselbe Wort und dasselbe
+         gezeichnete Zeichen, und sonst niemand. */
       '<button class="bib-studio-import" data-studio-import' +
         (pdfImportLaeuft || !permitted('bearbeiten', zustand.ordner || undefined)
           ? ' disabled title="Import läuft oder Bearbeitungsrechte fehlen"' : '') +
-        '>PDF importieren</button>' +
+        '><span data-sym="plus" aria-hidden="true"></span>' +
+        '<span class="wort">' + IMPORT_WORT + '</span></button>' +
       '<button class="bib-form-knopf" data-form="' + (form() === 'liste' ? 'deckel' : 'liste') + '" ' +
         'aria-label="' + (form() === 'liste' ? 'Als Dokumente anzeigen' : 'Als Liste anzeigen') + '">' +
         '<span data-sym="' + (form() === 'liste' ? 'library' : 'menu') + '" aria-hidden="true"></span></button>' +

@@ -6866,6 +6866,12 @@ beides steht — und beides kostet Platz. Was daraus offen bleibt:
     An der Schwelle selbst (1150 px Leiste) sind es 35. Das reicht heute;
     ein vierzehntes Werkzeug mit einem langen Namen kippt die Zeile wieder.
     Wer eins hinzufügt, misst vorher — `test351 §3` sagt es sonst hinterher.
+  · **Das Seitenmenü im Dokument trägt noch Emoji** (E516, Fund am Rand).
+    Die dreizehn Griffe dort — ＋ ⧉ ⟳ ↑ ↓ 🔖 🗑 🖼 📷 📕 ⬇ ↗ ⌸ — sind
+    dieselbe Mischung, die E515 aus der Zeichenleiste geholt hat, nur eine
+    Fläche weiter. Sie stehen in `document-mode.ts` und gehören in denselben
+    Durchgang; die Zeichen dafür liegen bereits im Register (`page`, `copy`,
+    `trash`, `inkImage`, `inkNote`, …). Ein eigener Bogen, kein Nachtrag.
   · **Nur die sechs Stifte werden auf Ähnlichkeit gemessen** (E515,
     `test480 §7`). Die dreizehn Werkzeuge, die vierzehn Zubehörzeichen und
     die sieben Formen nicht — dort steht heute nichts zu dicht beieinander,
@@ -6890,8 +6896,41 @@ L138 · Was am Laserpointer noch fehlt
     Nachgemessen ist das nicht — es steht als Vermutung hier, und §36 sagt:
     erst messen, dann bauen.
 
-L139 · „Eine neue PDF kopiert die aktuelle" — nicht gefunden
+L139 · „Eine neue PDF kopiert die aktuelle" — GESCHLOSSEN (E516)
 --------------------------------------------------------------------------
+
+**Gefunden am 9. September 2026, und es war kein Import-Fehler.**
+
+Im Regal waren oben zwei Knöpfe zu sehen. Der eine hiess **„PDF öffnen"**
+und holte die ZULETZT GEÖFFNETE PDF zurück; der andere hiess **„PDF
+importieren"** und las eine neue ein. Der Knopf der Kopfleiste, der
+ebenfalls „PDF öffnen" heisst und wirklich importiert, ist im Regal
+ausgeblendet (`body:has(#page .bib-studio-import) #studio-import`).
+
+Wer eine PDF öffnen will, drückt „PDF öffnen" — und bekommt seine aktuelle
+PDF. Jedes Mal, völlig korrekt, und es sieht aus wie eine Kopie.
+
+Deshalb waren die drei Messungen aus E513 sauber: sie haben gefragt, ob der
+Import die richtige Datei ablegt. Er tat es immer. Die Frage, die Redurs
+Satz stellte, war eine andere — welchen Knopf drückt er.
+
+Jetzt heissen beide Importknöpfe „PDF öffnen" und die Karte „Weiterlesen".
+`test482 §1` misst den SICHTBAREN Text jedes Knopfes und lässt kein zweites
+„PDF öffnen" zu.
+
+**Auch der vierte Weg ist gefahren** — „PDF hier einfügen" im Seitenmenü,
+den E513 nicht öffnen konnte, weil er im Inspector sitzt: zwei Seiten
+vorher, fünf nachher, zwei Quellen, fünf verschiedene Seitenbilder, und die
+drei neuen tragen den Text der neuen Datei an der richtigen Stelle. Sauber.
+
+Was in derselben Arbeit mit auffiel und behoben wurde: `pdfImportieren`
+schrieb in `button.textContent` und nahm dem Knopf damit sein gezeichnetes
+Zeichen (E515) — für den Rest der Sitzung, weil der Kopfknopf fest in
+`index.html` steht.
+
+<details>
+<summary>Der Stand, solange die Lücke offen war</summary>
+
 
 Redur, 8. September: „wenn ich oben eine neue PDF einfügen will, kopiert es
 immer die aktuelle PDF."
@@ -6913,6 +6952,8 @@ danach seine alte PDF mit etwas dahinter.
 Was fehlt, ist Redurs Antwort auf eine Frage: welcher Knopf, in welcher
 Ansicht. Bis dahin ist der Fehler weder behoben noch widerlegt — er ist
 nicht gefunden, und das ist etwas anderes als nicht vorhanden (§35).
+
+</details>
 
 L140 · Der Zugangscode der Chronik ist ein Türschild
 --------------------------------------------------------------------------

@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — sechsundvierzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — siebenundvierzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -524,7 +524,8 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     dieselbe Anlege-Maschine (§8). Der zweite Teil derselben Nachricht —
     „eine neue PDF kopiert die aktuelle" — liess sich auf drei gemessenen
     Wegen NICHT nachstellen; die Frage nach der genauen Stelle steht als
-    **L139**. **Steht, mit offener Frage.**
+    **L139** — und ist mit **G47** gefunden: es war kein Import-Fehler,
+    sondern ein Wort an der falschen Stelle. **Steht.**
 
   · **G45 — Die Chronik „Red-ur"** (E514, test481): Redurs zweites Gehirn.
     Eine Quelle (`chronik/chronik.json`), drei Ansichten — UR.md,
@@ -532,7 +533,7 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     öffnet. Mit vier Graphen, dem Stapel der Tage in echter Perspektive,
     jeder Nachricht 1:1 samt Satzverbesserung und besserem Prompt, und
     jedem Problem mit seiner falschen Vermutung. Ehrlich dabei: die
-    Uhrzeiten der Nachrichten sind abgeleitet (L139-Stil), die Token
+    Uhrzeiten der Nachrichten sind abgeleitet und mit „ca." gekennzeichnet, die Token
     fehlen (L141), und der Code ist ein Türschild (L140). **Steht.**
 
   · **G46 — Die Zeichen der Leiste** (E515, test480 §5): Redur schickte
@@ -554,7 +555,19 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Jetzt drei Umrisse statt dreier Spitzen, kein Paar über 46 %, und
     `test480 §7` hält die Grenze bei 60. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **sechsundvierzig Bögen**; die Überschrift
+  · **G47 — L139 gefunden** (E516, test482): Redurs „eine neue PDF kopiert
+    die aktuelle" war kein Import-Fehler. Im Regal waren oben zwei Knöpfe
+    zu sehen: „PDF öffnen" holte die ZULETZT geöffnete PDF zurück, „PDF
+    importieren" las eine neue ein — und der Knopf der Kopfleiste, der
+    ebenfalls „PDF öffnen" heisst und wirklich importiert, ist dort
+    ausgeblendet. Wer eine PDF öffnen will, drückt „PDF öffnen" und bekommt
+    seine aktuelle. Deshalb waren die drei Messungen aus E513 sauber: sie
+    fragten, ob der Import die richtige Datei ablegt, nicht welchen Knopf
+    ein Mensch drückt. Jetzt heissen beide Importknöpfe gleich und die
+    Karte „Weiterlesen". Der vierte Weg — „PDF hier einfügen" im Inspector,
+    den kein Prüflauf öffnen konnte — ist gefahren und sauber. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **siebenundvierzig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

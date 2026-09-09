@@ -29,6 +29,7 @@ sind der teuerste Teil und der lehrreichste.
 | P13 | 2026-09-09 | „Eine neue PDF kopiert die aktuelle" — nicht gefunden | ⚪ offen | — |
 | P14 | 2026-09-09 | Die Werkzeugzeile kippte in eine zweite — durch Zeichen, die schöner waren | 🟠 mittel | — |
 | P15 | 2026-09-09 | Drei Stifte, ein Bild — und die Reparatur, die es schlimmer machte | 🟠 mittel | — |
+| P16 | 2026-09-09 | „Eine neue PDF kopiert die aktuelle" — der Import war nie kaputt | hoch | — |
 
 ---
 
@@ -285,4 +286,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Stand.** Behoben. `test480 §7` hält die Grenze bei 60 %, und die Gegenprobe mit den drei alten Stiften meldet 73 %.
 
 **Die Lehre.** Ein Bild findet, dass etwas gleich AUSSIEHT. Eine Messung sagt, ob eine Reparatur hilft — und diese hat den zweiten Irrtum in dreissig Sekunden gemeldet, statt ihn in die App zu lassen. Beides zusammen, nicht eins davon (§55).
+
+
+---
+
+## P16 · „Eine neue PDF kopiert die aktuelle" — der Import war nie kaputt
+
+*2026-09-09 · hoch*
+
+**Das Bild.** Redur: beim Einfügen einer neuen PDF oben wird immer die aktuelle kopiert. Stand seit dem 8. September als L139 offen — nicht behoben und nicht widerlegt.
+
+**Die falsche Vermutung.** Dass es ein Import-Fehler sei. Drei Wege wurden gemessen (E513) und waren sauber; der vierte, das Seitenmenü, galt als letzter Verdächtiger, „weil dieser Weg mit Absicht ins offene Dokument einfügt". Auch das war falsch — er ist sauber. Die Messungen waren richtig gerechnet und haben trotzdem nichts bewiesen, weil sie fragten, ob der Import die richtige Datei ablegt, statt zu fragen, welchen Knopf ein Mensch drückt.
+
+**Wie gesucht wurde.** Nachgesehen, was im Regal oben WIRKLICH SICHTBAR ist, statt im Import zu suchen. Gemessen: der Knopf der Kopfleiste ist dort ausgeblendet; sichtbar waren genau zwei, und derjenige mit dem Wort „PDF öffnen" war der, der die zuletzt geöffnete PDF zurückholt. Der, der importiert, hiess „PDF importieren". Dazu wurde der vierte Weg endlich gefahren — sein Knopf sitzt im Inspector, und der ist zu, solange ihn niemand aufmacht; ein Klick mehr, und er lässt sich prüfen.
+
+**Die Ursache.** Ein Wort an der falschen Stelle. „PDF öffnen" stand am Knopf, der zurückführt; der Knopf, der öffnet, hiess „importieren".
+
+**Der Stand.** Geschlossen. Der vierte Weg ist gefahren und sauber: zwei Seiten vorher, fünf nachher, zwei Quellen, fünf verschiedene Seitenbilder, die neuen an der richtigen Stelle.
+
+**Die Lehre.** Wenn drei gute Messungen einen gemeldeten Fehler nicht finden, ist meist die FRAGE falsch, nicht der Melder. Redur hat genau beschrieben, was er sieht — „oben", „einfügen", „kopiert die aktuelle". Die Antwort stand die ganze Zeit im Bild, nicht im Datenfluss.
 

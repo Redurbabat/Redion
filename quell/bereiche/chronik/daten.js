@@ -353,6 +353,13 @@ const ChronikDaten = {
                     "gemeint": "Die Werkzeugzeichen aus dem mitgeschickten GoodNotes-Bild sollen Redions Zeichenleiste tragen — genau diese Sorte Zeichen, nicht ähnliche.",
                     "besser": "Nimm die Symbole aus dem Bild — dieselbe Strichstärke, dieselbe Farbe — und ersetze damit die Emoji in der Zeichenleiste.",
                     "besserePrompt": "„Ersetze in der Zeichenleiste jedes Emoji durch ein gezeichnetes Zeichen wie im Bild (gleiche Strichstärke, currentColor). Wo ein Buchstabe mehr sagt als ein Strich, sag mir welche und warum.\" — der zweite Satz spart die Rückfrage, was mit dem „Aa\" der Schriftart passieren soll."
+                },
+                {
+                    "zeit": "ca. 06:50",
+                    "wortlaut": "Wieter mit L139",
+                    "gemeint": "Weiter mit der offenen Lücke L139 — der PDF, die angeblich die aktuelle kopiert.",
+                    "besser": "Weiter mit L139.",
+                    "besserePrompt": "Hier war nichts zu verbessern: die Nummer war die ganze Auskunft. Genau das ist der Nutzen von LUECKEN.md — zwei Wörter reichen, weil die Frage schon aufgeschrieben ist. Was gefehlt hätte, wenn es die Nummer nicht gäbe: welcher Knopf, in welcher Ansicht."
                 }
             ],
             "arbeit": [
@@ -375,17 +382,25 @@ const ChronikDaten = {
                 {
                     "was": "E515 — Die Zeichen der Leiste: vierunddreissig gezeichnete statt Emoji, und fünfundsiebzig Pixel, die niemand sah",
                     "vonCommit": "dd694ff7",
+                    "bisCommit": "a33cceb1",
+                    "zeitraum": "04:47 – 06:45",
+                    "pruefungen": "test480 §5 neu (acht Zusagen); test351 war rot und ist wieder grün",
+                    "dauer": "ca. 1 h 58 min"
+                },
+                {
+                    "was": "E516 — L139 gefunden: der Import war nie kaputt, das Wort war es",
+                    "vonCommit": "a33cceb1",
                     "bisCommit": "(dieser Bogen)",
-                    "zeitraum": "ab 04:47",
-                    "pruefungen": "test480 §5 neu (acht Zusagen); test351 war rot und ist wieder grün"
+                    "zeitraum": "ab 06:45",
+                    "pruefungen": "test482 neu, 28 Zusagen"
                 }
             ],
             "zahlen": {
-                "commits": 3,
-                "entscheidungen": 3
+                "commits": 4,
+                "entscheidungen": 4
             },
-            "groesstesProblem": "Nicht die Zeichen selbst, sondern was sie kosteten. Die gezeichneten Zeichen sind fest 18 px breit, die Emoji davor im Mittel rund 12 — dreizehnmal sechs Pixel sind fünfundsiebzig, und daran kippte die Werkzeugzeile am Rechner in eine zweite. Das Bild hätte es nie gemeldet: zwei Zeilen sehen ordentlich aus. Gefunden hat es test351, weil dort seit E359 eine Zahl steht statt eines Eindrucks. Daneben bleibt die PDF aus L139 offen — nicht behoben und nicht widerlegt.",
-            "interessantesteAnfrage": "„Nehme die symbole. Für die redion bitte 1:1\" — vier Wörter, und der richtige Schluss daraus war nicht „male dreizehn neue Bilder\", sondern „Redion hat diese Sorte Zeichen längst, nur die meistbenutzte Fläche der App war beim Emoji geblieben\". Wer die Zeichen in der PDF-Fläche gezeichnet hätte, hätte einen zweiten Zeichensatz gebaut, der nach dem zweiten Durchgang anders aussieht als der erste.",
+            "groesstesProblem": "Die drei sauberen Messungen aus E513. Sie waren richtig gerechnet und haben trotzdem nichts bewiesen, weil sie die falsche Frage gestellt haben: „legt der Import die richtige Datei ab?\" statt „welchen Knopf drückt er?\". Eine Messung, die die falsche Frage stellt, ist gefährlicher als gar keine — sie kommt grün zurück und man glaubt ihr.",
+            "interessantesteAnfrage": "„Wieter mit L139\" — drei Wörter, und sie haben gereicht, weil die Frage schon in LUECKEN.md stand. Das ist der Nutzen dieser Datei, den man erst sieht, wenn man ihn braucht: eine Lücke, die aufgeschrieben ist, lässt sich mit einer Nummer wieder aufnehmen. Eine, die nur im Kopf stand, hätte die ganze Geschichte noch einmal gebraucht.",
             "massnahmen": [
                 {
                     "zeit": "04:12",
@@ -409,6 +424,18 @@ const ChronikDaten = {
                     "zeit": "06:20",
                     "was": "Fueller, Kugelschreiber und Zettel neu gezeichnet — nicht an der Spitze, sondern am Umriss.",
                     "warum": "Gemessen: die drei Stifte teilten bis zu 73 % ihrer Tinte bei 16 px. Der erste Versuch mit schärferen Spitzen machte es schlimmer (85 %), weil bei dieser Grösse der Schaft die ganze Tinte trägt. Jetzt: Feder, aufrechter Kugelschreiber, schräger Bleistift — drei Umrisse.",
+                    "risiko": "keins an Daten — Oberfläche"
+                },
+                {
+                    "zeit": "07:05",
+                    "was": "Die Karte „Weiterarbeiten\" heisst „Weiterlesen\"; beide Importknöpfe heissen „PDF öffnen\".",
+                    "warum": "Sichtbar waren im Regal zwei Knöpfe: „PDF öffnen\" holte die zuletzt geöffnete PDF zurück, „PDF importieren\" las eine neue ein. Wer eine PDF öffnen will, drückt „PDF öffnen\" — und bekommt seine aktuelle.",
+                    "risiko": "keins an Daten — nur Beschriftung; die Handlungen dahinter sind unverändert"
+                },
+                {
+                    "zeit": "07:20",
+                    "was": "Der Importeur beschriftet den Knopf über ein Wortfeld statt über `textContent`.",
+                    "warum": "`textContent` wirft die Kindknoten weg, und dort hängt seit E515 das gezeichnete Zeichen. Nach dem ersten Import stand der Knopf ohne Zeichen da — für den Rest der Sitzung, weil er fest in der Startseite steht.",
                     "risiko": "keins an Daten — Oberfläche"
                 }
             ]
@@ -594,6 +621,19 @@ const ChronikDaten = {
             "behebung": "Die Umrisse getrennt statt der Spitzen: der Füller ist eine Feder (Schlitz, Luftloch, nach unten spitz), der Kugelschreiber steht aufrecht mit Clip und Kugel, der Bleistift bleibt schräg. Danach kein Paar über 46 %.",
             "stand": "Behoben. `test480 §7` hält die Grenze bei 60 %, und die Gegenprobe mit den drei alten Stiften meldet 73 %.",
             "lehre": "Ein Bild findet, dass etwas gleich AUSSIEHT. Eine Messung sagt, ob eine Reparatur hilft — und diese hat den zweiten Irrtum in dreissig Sekunden gemeldet, statt ihn in die App zu lassen. Beides zusammen, nicht eins davon (§55)."
+        },
+        {
+            "nr": "P16",
+            "datum": "2026-09-09",
+            "titel": "„Eine neue PDF kopiert die aktuelle\" — der Import war nie kaputt",
+            "schwere": "hoch",
+            "symptom": "Redur: beim Einfügen einer neuen PDF oben wird immer die aktuelle kopiert. Stand seit dem 8. September als L139 offen — nicht behoben und nicht widerlegt.",
+            "falscheVermutung": "Dass es ein Import-Fehler sei. Drei Wege wurden gemessen (E513) und waren sauber; der vierte, das Seitenmenü, galt als letzter Verdächtiger, „weil dieser Weg mit Absicht ins offene Dokument einfügt\". Auch das war falsch — er ist sauber. Die Messungen waren richtig gerechnet und haben trotzdem nichts bewiesen, weil sie fragten, ob der Import die richtige Datei ablegt, statt zu fragen, welchen Knopf ein Mensch drückt.",
+            "wieGesucht": "Nachgesehen, was im Regal oben WIRKLICH SICHTBAR ist, statt im Import zu suchen. Gemessen: der Knopf der Kopfleiste ist dort ausgeblendet; sichtbar waren genau zwei, und derjenige mit dem Wort „PDF öffnen\" war der, der die zuletzt geöffnete PDF zurückholt. Der, der importiert, hiess „PDF importieren\". Dazu wurde der vierte Weg endlich gefahren — sein Knopf sitzt im Inspector, und der ist zu, solange ihn niemand aufmacht; ein Klick mehr, und er lässt sich prüfen.",
+            "ursache": "Ein Wort an der falschen Stelle. „PDF öffnen\" stand am Knopf, der zurückführt; der Knopf, der öffnet, hiess „importieren\".",
+            "behebung": "Beide Importknöpfe heissen „PDF öffnen\" und tragen dasselbe Zeichen; die Karte heisst „Weiterlesen\". `test482 §1` misst den SICHTBAREN Text jedes Knopfes und lässt kein zweites „PDF öffnen\" zu.",
+            "stand": "Geschlossen. Der vierte Weg ist gefahren und sauber: zwei Seiten vorher, fünf nachher, zwei Quellen, fünf verschiedene Seitenbilder, die neuen an der richtigen Stelle.",
+            "lehre": "Wenn drei gute Messungen einen gemeldeten Fehler nicht finden, ist meist die FRAGE falsch, nicht der Melder. Redur hat genau beschrieben, was er sieht — „oben\", „einfügen\", „kopiert die aktuelle\". Die Antwort stand die ganze Zeit im Bild, nicht im Datenfluss."
         }
     ]
 };
