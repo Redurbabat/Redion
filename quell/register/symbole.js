@@ -104,6 +104,141 @@ Register.symbole = (() => {
         inkEraser: '<path d="m14 3 7 7-10 11H6l-4-4zM8 11l8 8M11 21h10"/>',
         inkText: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M12 8v9M9 17h6"/>',
         inkShapes: '<path d="m7 3 5 8H2z"/><circle cx="17" cy="7" r="4"/><rect x="4" y="15" width="7" height="6" rx="1"/><circle cx="18" cy="18" r="3"/>',
+        /* ══ DIE WERKZEUGE DER ZEICHENLEISTE (E515) ═════════════════════════════
+         * Redur, 9. September, mit einem Ausschnitt der GoodNotes-Leiste:
+         * „nehme die Symbole für die Redion bitte 1:1."
+         *
+         * WAS „1:1" HIER HEISST, und was nicht. Nicht: fremde Bilddateien
+         * übernehmen — das wäre eine Kopie, und Redion ist keine (§2). Sondern:
+         * dieselben WERKZEUGE, in derselben Bildsprache, an derselben Stelle.
+         * Ein Lasso ist eine gestrichelte Schlinge, ein Radierer ein schräger
+         * Klotz, ein Lineal ein Balken mit Teilstrichen — das sind keine
+         * Erfindungen einer App, das ist die Werkstatt.
+         *
+         * SIE FOLGEN DEM RASTER DIESER DATEI: 24 × 24, Striche in
+         * `currentColor`, keine Fläche, runde Enden. Genau deshalb sehen sie
+         * nebeneinander wie eine Familie aus und nicht wie zwölf Aufkleber —
+         * was Emoji in dieser Leiste waren, und was der Kopf dieser Datei seit
+         * jeher beschreibt.
+         * ------------------------------------------------------------------- */
+        /* Der Füller: die Feder schräg im Bild, wie ein Stift in der Hand. */
+        inkPen: '<path d="m16.5 2.9 4.6 4.6-1.9 1.9-4.6-4.6z"/>' +
+            '<path d="m14.6 4.8 4.6 4.6-8.6 8.6-6.1 1.5 1.5-6.1z"/>' +
+            '<path d="m5.5 14.9 3.6 3.6"/>',
+        /* HIER STAND EIN ZWEITER PINSEL (E515). `inkBrush` war Strich für
+           Strich dasselbe Bild wie `penBrush` zwanzig Zeilen weiter unten —
+           derselbe Fehler wie die zweite Sonne oben, nur zehn Minuten alt statt
+           zwei Monate. Niemand benutzte ihn; er ist raus, bevor ihn jemand
+           benutzt. Wer einen Pinsel braucht, nimmt `penBrush`. */
+        /* Der Zettel: eine HAFTNOTIZ mit umgeschlagener Ecke unten rechts.
+           Der erste Wurf war ein Blatt MIT ZEILEN und einer Ecke oben — und
+           damit dasselbe Bild wie ein Dokument, direkt neben dem `inkText`
+           daneben in der Reihe. Ein Zettel hat keine Zeilen; das Erkennbare
+           an ihm ist die Ecke, die sich hochbiegt. */
+        inkNote: '<path d="M4.2 5.4a1.6 1.6 0 0 1 1.6-1.6h12.4a1.6 1.6 0 0 1 1.6 1.6v8.4L13.8 19.8H5.8a1.6 1.6 0 0 1-1.6-1.6z"/>' +
+            '<path d="M19.8 13.8h-4.4a1.6 1.6 0 0 0-1.6 1.6v4.4"/>',
+        /* Der Laserpointer: ein Griffel mit Funken an der Spitze. */
+        inkLaser: '<path d="m14.8 4.2 5 5-9.4 9.4-5-5z"/>' +
+            '<path d="m5.4 13.6-2.2 5.9 5.9-2.2"/>' +
+            '<path d="M18.4 2.6v2.4M21.4 5.6h-2.4M20.6 2.4l-1.4 1.4"/>',
+        /* Das Lineal: ein schräger Balken mit Teilstrichen. */
+        inkRuler: '<rect x="1.6" y="7.4" width="20.8" height="9.2" rx="1.8" ' +
+            'transform="rotate(-20 12 12)"/>' +
+            '<path d="m7.1 8.6 1.2 2.4M10.6 7.3l1.2 2.4M14.1 6.1l1.2 2.4M17.6 4.8l1.2 2.4"/>',
+        /* Das Abdeckband: ein Streifen, der etwas verdeckt. */
+        inkCover: '<rect x="2.6" y="9" width="18.8" height="6" rx="1.6"/>' +
+            '<path d="M5.4 5.6h13.2M5.4 18.4h13.2"/>',
+        /* Das Fachzeichen: ein Blitz im Rahmen — Redions eigenes Werkzeug,
+           das GoodNotes nicht hat. Es gehört trotzdem in dieselbe Familie. */
+        inkSymbol: '<rect x="3.2" y="3.2" width="17.6" height="17.6" rx="3"/>' +
+            '<path d="M13.2 6.8 8.6 13h3.4l-.8 4.6 4.6-6.2h-3.4z"/>',
+        /* Die Elemente: ein Stempel. */
+        inkStamp: '<path d="M8.4 10.4V7.2a3.6 3.6 0 0 1 7.2 0v3.2"/>' +
+            '<path d="M4.6 14.4h14.8l-.8-2.2a2 2 0 0 0-1.9-1.4H7.3a2 2 0 0 0-1.9 1.4z"/>' +
+            '<rect x="4.6" y="17.4" width="14.8" height="3.4" rx="1.4"/>',
+        /* ── DIE SECHS STIFTE (E515) ──────────────────────────────────────────
+           Sie standen als 🖋 🖊 🖌 ✏ ⏚ ⌁ in der Reihe — sechs Emoji aus vier
+           Familien, direkt neben dreizehn gezeichneten Werkzeugen. Der
+           Prüflauf hat es gefunden, nicht das Auge: `test480 §5` zählt, was an
+           Text übrig ist.
+    
+           „Jeder Stift ist an seiner SPITZE zu erkennen" — das stand hier, und
+           es stimmte nicht. NACHGEMESSEN, jedes Zeichen in 16 × 16 gerastert
+           und Punkt für Punkt verglichen: Kugelschreiber und Bleistift teilten
+           73 % ihrer Tinte, Füller und Bleistift 69 %. Drei von sechs waren
+           dasselbe Bild mit einer anderen Spitze — und die Spitze ist bei
+           16 px zwei Punkte gross.
+    
+           Deshalb unterscheiden sie sich jetzt am GANZEN Zeichen, nicht nur
+           unten: der Füller an seiner breiten Feder mit Schlitz und Luftloch,
+           der Kugelschreiber an seinem schlanken Schaft mit Griffrillen und
+           der Kugel als Punkt, der Bleistift an seinen zwei Querbändern —
+           Zwinge hinten, Holzkante vorn. `test480 §7` misst es und lässt kein
+           Paar über 60 % steigen. */
+        penFountain: '<path d="M12 20.8c-3.7-3.8-5.6-7.2-5.6-10.4A5.6 5.6 0 0 1 12 4.8' +
+            'a5.6 5.6 0 0 1 5.6 5.6c0 3.2-1.9 6.6-5.6 10.4z"/>' +
+            '<path d="M12 8.6v8.8"/><circle cx="12" cy="11" r="1.1"/>',
+        penBall: '<path d="M9.2 6.4a2.8 2.8 0 0 1 5.6 0v8.4H9.2Z"/>' +
+            '<path d="M9.2 14.8h5.6L12 19.2Z"/>' +
+            '<circle cx="12" cy="20.6" r="1.1"/>' +
+            '<path d="M14.8 6.6h1.6v5"/>',
+        penBrush: '<path d="M14.2 3.4 20.6 9.8"/>' +
+            '<path d="m17.4 6.6-7.2 7.2a3.2 3.2 0 0 0-.9 1.7l-.4 2.2 2.2-.4a3.2 3.2 0 0 0 1.7-.9z"/>' +
+            '<path d="M8.4 15.4c-1.5 1.5-1.1 3.6-3.6 4.6 1 .6 2.2.8 3.3.4 1.6-.5 2.5-2 2.1-3.5"/>',
+        penPencil: '<path d="M19 2.6 21.4 5 10.6 15.8 3.6 20.4 8.2 13.4Z"/>' +
+            '<path d="M17 4.6 19.4 7M8.2 13.4 10.6 15.8"/>',
+        /* Der Schutzleiter: das Erdungszeichen, wie im Schaltplan. */
+        penEarth: '<path d="M12 3.4v9.2"/><path d="M5.6 12.6h12.8M7.8 16.2h8.4M10 19.8h4"/>',
+        /* Der Leiterstift: die Adern eines Schaltplans, drei Striche und ein
+           Knoten — dasselbe Zeichen, das die Elektrotechnik für eine
+           mehradrige Leitung benutzt. */
+        penWire: '<path d="M3.4 8.2h17.2M3.4 12h17.2M3.4 15.8h17.2"/>' +
+            '<circle cx="16.4" cy="8.2" r="1.5"/><circle cx="12" cy="12" r="1.5"/>' +
+            '<circle cx="7.6" cy="15.8" r="1.5"/>',
+        /* ── DIE DREI RADIERARTEN (E515) ─────────────────────────────────────*/
+        eraseAll: '<circle cx="12" cy="12" r="7.4"/>',
+        eraseHalf: '<circle cx="12" cy="12" r="7.4"/><path d="M12 4.6v14.8"/>' +
+            '<path d="M12 4.6a7.4 7.4 0 0 1 0 14.8" fill="currentColor" stroke="none"/>',
+        eraseMarker: '<path d="m13 3.6 6.4 6.4-7.4 7.4-6.4-6.4z"/><path d="M5.2 12.4 3.4 19l6.6-1.8"/>',
+        /* ── WOHIN DIE LEISTE GEHT (E515) ────────────────────────────────────
+           Vier Pfeile in einen Rahmen: das Bild sagt, WO sie landet, nicht nur
+           in welche Richtung sie zeigt. */
+        dockTop: '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="2.6"/>' +
+            '<path d="M3.4 8.4h17.2" stroke-width="2.4"/>',
+        dockLeft: '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="2.6"/>' +
+            '<path d="M8.4 3.4v17.2" stroke-width="2.4"/>',
+        dockRight: '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="2.6"/>' +
+            '<path d="M15.6 3.4v17.2" stroke-width="2.4"/>',
+        dockBottom: '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="2.6"/>' +
+            '<path d="M3.4 15.6h17.2" stroke-width="2.4"/>',
+        /* Die sieben Formen des Formen-Werkzeugs. Sie stehen hier und nicht
+           als Textzeichen in der Leiste, weil der Formknopf ZEIGT, welche
+           Form gewählt ist — und ein „╱" neben zwölf gezeichneten Werkzeugen
+           sieht aus wie ein Fehler, nicht wie eine Linie. */
+        formLine: '<path d="M4.6 19.4 19.4 4.6"/>',
+        formArrow: '<path d="M4.6 19.4 19.4 4.6M13.4 4.6h6v6"/>',
+        formRect: '<rect x="3.6" y="5.6" width="16.8" height="12.8"/>',
+        formEllipse: '<ellipse cx="12" cy="12" rx="8.6" ry="6.6"/>',
+        formTriangle: '<path d="M12 4.4 20.6 19.6H3.4z"/>',
+        formRoundrect: '<rect x="3.6" y="5.6" width="16.8" height="12.8" rx="4.2"/>',
+        formCurve: '<path d="M3.4 17.6c4.4 0 5.2-11.2 9.4-11.2s4.4 11.2 7.8 11.2"/>',
+        /* Die Schere — Ausschneiden. Es gab sie im Register noch nicht. */
+        scissors: '<circle cx="6.4" cy="6.4" r="2.6"/><circle cx="6.4" cy="17.6" r="2.6"/>' +
+            '<path d="M8.6 8.2 20 19.4M20 4.6 8.6 15.8"/>',
+        /* Nach vorn und nach hinten: eine Platte über bzw. unter zweien. */
+        layerUp: '<rect x="7.4" y="3.2" width="9.2" height="9.2" rx="1.8"/>' +
+            '<path d="M4.4 11.4v7.4a2 2 0 0 0 2 2h7.4"/>',
+        layerDown: '<rect x="7.4" y="11.6" width="9.2" height="9.2" rx="1.8"/>' +
+            '<path d="M19.6 12.6V5.2a2 2 0 0 0-2-2h-7.4"/>',
+        /* Das Kritzeln, das löscht: ein dichtes Hin und Her. */
+        scribble: '<path d="M2.8 15.6c2.6-4.4 4.6 3 7-1.6s4.6 3 7-1.6 3.2 1.2 4.4-1.2"/>',
+        /* Der Kreis für die Formerkennung — eine gezogene Form, die einrastet. */
+        shapeSnap: '<circle cx="12" cy="12" r="7.4" stroke-dasharray="3.4 2.6"/>' +
+            '<path d="M12 4.6v14.8M4.6 12h14.8"/>',
+        /* Das Bild als Seite: ein Rahmen mit Berg und Sonne. */
+        inkImage: '<rect x="3.2" y="4.6" width="17.6" height="14.8" rx="2.6"/>' +
+            '<circle cx="8.6" cy="9.6" r="1.7"/>' +
+            '<path d="m4.4 17.4 4.8-4.6a1.6 1.6 0 0 1 2.2 0l3 2.9M14.6 14l1.6-1.5a1.6 1.6 0 0 1 2.2 0l1.4 1.3"/>',
         /* --- Werkzeuge der Seitenleiste --------------------------------------- */
         calendar: '<rect x="3.2" y="5" width="17.6" height="16" rx="2.6"/>' +
             '<path d="M3.2 10h17.6M8.2 3v4M15.8 3v4"/>',

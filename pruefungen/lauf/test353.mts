@@ -27,6 +27,7 @@ import http from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import fs from 'node:fs';
 import os from 'node:os';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { grundstock, inhaltsStempel, gelesen, abgleichen } from '../../dienststand.mts';
 
@@ -128,7 +129,8 @@ p('Der schnelle CI-Job prüft den Stand (rot, wenn der Bau vergessen wurde)', li
 /* ── 5 ────────────────────────────────────────────────────────────────── */
 console.log('\n5 · holen.bat fragt GitHub, ob der Stand geprüft ist');
 const holen = lies('holen.bat');
-p('Es fragt die Läufe von main ab', holen.includes('actions/runs?branch=main'));
+p('Es fragt die Läufe des Zweigs ab, den es holt',
+  holen.includes('actions/runs?branch=%ZIEL%'));
 /* JE ZWEIG SEINE FRAGE: zwischen der Meldung und dem Weiter muss das
    `choice` stehen — eine einzige Frage irgendwo in der Datei reicht nicht
    (die erste Fassung dieses Punkts liess genau das durch, Mutation d). */
@@ -143,10 +145,175 @@ p('Läuft noch heisst: dasselbe', zweigFragt('LAEUFT NOCH'));
 p('Ohne Antwort: Warnung, kein Abbruch — holen darf man immer', holen.includes('unbekannt') && holen.includes('Geholt wird trotzdem'));
 p('Grün wird genannt, mit Kennung', holen.includes('GRUEN'));
 p('Nach dem Holen: die Kennung des Geprüften gegen die des Geholten', holen.includes('Geprueft wurde ein anderer Stand'));
-const vorFetch = holen.indexOf('git fetch origin main');
-const frage = holen.indexOf('actions/runs?branch=main');
+const vorFetch = holen.indexOf('git fetch origin %ZIEL%');
+const frage = holen.indexOf('actions/runs?branch=%ZIEL%');
 p('Gefragt wird VOR dem Holen', frage > 0 && frage < vorFetch, `${frage} / ${vorFetch}`);
 p('Und das Skript lädt weiterhin nichts hoch', !/git push/.test(holen));
+
+/* ── 5a — EIN ZWEIG STATT main (E517) ─────────────────────────────────────
+   Redur, 9. September: „gebe mir immer nach jeder Änderung, wie kann ich die
+   aktuelle GitHub-Version auf Laptop speichern."
+
+   Das ging nicht. `holen.bat` holte fest `main`, und `main` bewegt sich erst,
+   wenn ein voller Lauf grün ist (§46) — der Arbeitsstand liegt auf einem
+   Zweig und war vom Laptop aus nicht erreichbar. Kein Fehler, aber es sah
+   aus wie einer: der Laptop zeigte tagelang denselben Stand.
+
+   DIE ZUSAGE HAT ZWEI HÄLFTEN, und die zweite ist die wichtigere:
+     · ohne Angabe bleibt es `main` — wer doppelklickt, bekommt weiterhin den
+       GEPRÜFTEN Stand, nicht den letzten;
+     · und `holen-zweig.bat` hat KEINE eigene Logik. Alles, was rettet und
+       warnt, steht in `holen.bat`. Zwei Dateien mit derselben Rettungslogik
+       laufen nach dem dritten Durchgang auseinander (§8). */
+console.log('\n5a · Ein Zweig statt main — und nur EINE Datei mit Logik');
+p('Ohne Angabe bleibt es main', /set "ZIEL=%~1"/.test(holen) && /if "%ZIEL%"=="" set "ZIEL=main"/.test(holen));
+p('Ein anderer Zweig wird als Arbeitsstand angesagt, nicht als geprüfter',
+  /ARBEITSZWEIG, nicht  main/.test(holen));
+/* JEDER git-BEFEHL MUSS DEN ZWEIG NEHMEN. Ein einziger vergessener
+   `origin/main` mitten drin holt den Arbeitsstand und setzt danach auf
+   main zurück — und das Fenster meldet Erfolg. Genau der Fund aus E271,
+   eine Ebene höher. */
+for (const [was, muster] of [
+  ['fetch',        /git fetch origin %ZIEL%/],
+  ['rev-parse',    /git rev-parse --verify --quiet origin\/%ZIEL%/],
+  ['der Vergleich',/git rev-parse origin\/%ZIEL%/],
+  ['das Protokoll',/HEAD\.\.origin\/%ZIEL%/],
+  ['die Zählung',  /origin\/%ZIEL%\.\.HEAD/],
+  ['der Umzug',    /git checkout -B "%ZIEL%" "origin\/%ZIEL%"/]
+] as Array<[string, RegExp]>) {
+  p('… und ' + was + ' nimmt ihn auch', muster.test(holen));
+}
+p('Kein fest verdrahtetes origin/main mehr im Ablauf',
+  !/origin\/main/.test(holen.replace(/^REM.*$/gm, '')));
+/* DER NAME WIRD IN ANFÜHRUNGSZEICHEN GEREICHT. Ein Zweig heisst hier
+   `claude/…` und trägt einen Schrägstrich; ohne Anführungszeichen zerlegt
+   die Eingabeaufforderung ihn nicht, aber ein Leerzeichen täte es. */
+p('Der Name wird in Anführungszeichen gereicht',
+  /git checkout -B "%ZIEL%"/.test(holen) && /git branch "sicherung\/vor-holen-%STEMPEL%-ort" "%ZIEL%"/.test(holen));
+
+const zweigBat = lies('holen-zweig.bat');
+p('Es gibt holen-zweig.bat', zweigBat.length > 500, String(zweigBat.length));
+p('… und es ruft holen.bat mit dem Namen auf',
+  /call "%~dp0holen\.bat" "%ZIEL%"/.test(zweigBat));
+p('… schlägt den Zweig vor, auf dem der Ordner gerade steht',
+  /git rev-parse --abbrev-ref HEAD/.test(zweigBat) && /Zweig \[%VORGABE%\]/.test(zweigBat));
+/* KEINE ZWEITE RETTUNGSLOGIK. Das ist die Zusage, die den §8-Fehler hält. */
+for (const [name, muster] of [
+  ['checkout', /git checkout/],
+  ['branch',   /git branch/],
+  ['stash',    /git stash/],
+  ['reset',    /git reset/],
+  ['fetch',    /git fetch/],
+  ['merge',    /git merge/],
+  ['push',     /git push/]
+] as Array<[string, RegExp]>) {
+  p('holen-zweig.bat macht kein ' + name + ' — die Logik steht in holen.bat',
+    !muster.test(zweigBat));
+}
+
+/* ── 5a2 — UND JETZT WIRKLICH GEFAHREN ────────────────────────────────────
+   Batch läuft in diesem Container nicht (Linux). Die GIT-BEFEHLE darin
+   laufen sehr wohl — und genau sie sind das Risiko, nicht die Hülle.
+   Nachgefahren wird deshalb dieselbe Folge in einem echten Wegwerf-Repo,
+   mit einem Zweignamen MIT SCHRÄGSTRICH, wie ihn dieses Projekt benutzt. */
+console.log('\n5a2 · Dieselbe Befehlsfolge in einem echten Repo gefahren');
+{
+  const heim = fs.mkdtempSync(path.join(os.tmpdir(), 'holen-'));
+  const fern = path.join(heim, 'fern');
+  const hier = path.join(heim, 'hier');
+  const ZWEIG = 'claude/probe-mit-schraegstrich';
+  const git = (wo: string, ...args: string[]): string => {
+    const r = spawnSync('git', args, { cwd: wo, encoding: 'utf8' });
+    return (r.stdout || '') + (r.stderr || '');
+  };
+  try {
+    fs.mkdirSync(fern);
+    git(fern, 'init', '-q', '-b', 'main');
+    git(fern, 'config', 'user.email', 'probe@redion.test');
+    git(fern, 'config', 'user.name', 'Probe');
+    fs.writeFileSync(path.join(fern, 'index.html'), 'alt');
+    git(fern, 'add', '-A'); git(fern, 'commit', '-qm', 'main');
+    git(fern, 'checkout', '-q', '-b', ZWEIG);
+    fs.writeFileSync(path.join(fern, 'index.html'), 'neu vom Zweig');
+    git(fern, 'add', '-A'); git(fern, 'commit', '-qm', 'zweig');
+    git(fern, 'checkout', '-q', 'main');
+
+    git(heim, 'clone', '-q', fern, 'hier');
+    git(hier, 'config', 'user.email', 'probe@redion.test');
+    git(hier, 'config', 'user.name', 'Probe');
+    gleich('Der Klon steht auf main mit dem alten Inhalt',
+      fs.readFileSync(path.join(hier, 'index.html'), 'utf8'), 'alt');
+
+    /* Genau die Folge aus holen.bat, mit %ZIEL% = dem Zweig. */
+    git(hier, 'fetch', 'origin', ZWEIG);
+    const gibt = spawnSync('git', ['rev-parse', '--verify', '--quiet', 'origin/' + ZWEIG],
+                           { cwd: hier, encoding: 'utf8' });
+    p('rev-parse findet den Zweig auf der Gegenseite', gibt.status === 0, gibt.stdout.trim());
+    git(hier, 'checkout', '-B', ZWEIG, 'origin/' + ZWEIG);
+    gleich('Nach dem Umzug steht der Inhalt DES ZWEIGS da',
+      fs.readFileSync(path.join(hier, 'index.html'), 'utf8'), 'neu vom Zweig');
+    gleich('… und der Ordner steht wirklich auf diesem Zweig',
+      git(hier, 'rev-parse', '--abbrev-ref', 'HEAD').trim(), ZWEIG);
+
+    /* UND DIE RETTUNG GREIFT AUCH HIER. Eigene Arbeit auf dem Zweig darf
+       der nächste Lauf nicht wegnehmen — dieselbe Zusage wie bei main. */
+    fs.writeFileSync(path.join(hier, 'eigenes.txt'), 'meine Arbeit');
+    git(hier, 'add', '-A'); git(hier, 'commit', '-qm', 'eigenes');
+    const eigene = git(hier, 'rev-list', '--count', 'origin/' + ZWEIG + '..HEAD').trim();
+    gleich('Ein eigener Commit auf dem Zweig wird gezählt', eigene, '1');
+    git(hier, 'branch', 'sicherung/vor-holen-probe');
+    git(hier, 'checkout', '-B', ZWEIG, 'origin/' + ZWEIG);
+    p('… und liegt nach dem Umzug in der Sicherung, nicht im Nichts',
+      /eigenes/.test(git(hier, 'log', '--oneline', 'sicherung/vor-holen-probe')),
+      git(hier, 'log', '--oneline', 'sicherung/vor-holen-probe').slice(0, 120));
+  } finally {
+    fs.rmSync(heim, { recursive: true, force: true });
+  }
+}
+
+/* ── 5c — DIE FERTIGEN BEFEHLE STEHEN IM REPOSITORY (E518) ────────────────
+   Redur, 9. September: „geb mir immer im powerschell im windows die fertige
+   befel."
+
+   Ein Befehl, der nur im Gespräch steht, ist morgen weg. Er steht deshalb in
+   START-MIT-CLAUDE-CODE.md — und damit kann er von der Wirklichkeit
+   abdriften. Diese Zusagen halten die vier Punkte, an denen ein Abdriften
+   WEHTUT:
+
+     · der Alltagsbefehl ruft `holen.bat` MIT einem Zweig — ein blosses
+       `git checkout` überspränge die ganze Rettung;
+     · gerettet wird VOR dem Umzug, nicht danach (die Reihenfolge IST die
+       Rettung);
+     · zurückgeholt wird mit `apply`, nicht mit `pop` (E271: `pop` wirft die
+       Ablage weg, wenn es schiefgeht);
+     · und der Pfad steht als `$env:USERPROFILE` da, nicht ausgeschrieben —
+       ein Benutzerpfad stimmt auf keinem zweiten Rechner und gehört ohnehin
+       nicht in ein offenes Verzeichnis.
+
+   GEPRÜFT WIRD NUR DIESE EINE DATEI. Im Verzeichnis stehen noch drei
+   Benutzerpfade, und die bleiben: `ENTSCHEIDUNGEN.md`, `UR.md` und das
+   Studien-Audit sind PROTOKOLLE — sie halten fest, was gesagt und gelesen
+   wurde. Ein Protokoll umzuschreiben wäre schlimmer als der Pfad darin. */
+console.log('\n5c · Die fertigen PowerShell-Befehle stehen im Repository');
+{
+  const anleitung = lies('START-MIT-CLAUDE-CODE.md');
+  p('Es gibt einen PowerShell-Abschnitt', /```powershell/.test(anleitung));
+  p('Der Alltagsbefehl ruft holen.bat mit einem Zweig',
+    /\.\\holen\.bat claude\/[a-z0-9-]+/.test(anleitung));
+  p('… und es steht auch der Weg ohne Zweig da, für den geprüften Stand',
+    /\.\\holen\.bat\s*\n/.test(anleitung));
+  /* DIE REIHENFOLGE. Ein `checkout -B` vor dem `stash` macht aus der Rettung
+     eine Meldung. */
+  const stash = anleitung.indexOf('git stash push -u');
+  const umzug = anleitung.indexOf('git checkout -B claude/');
+  p('Gerettet wird VOR dem Umzug', stash > 0 && umzug > stash, `${stash} / ${umzug}`);
+  p('Zurückgeholt wird mit apply, nicht mit pop',
+    /git stash apply/.test(anleitung) && !/git stash pop/.test(anleitung));
+  /* KEIN PERSÖNLICHER PFAD IM VERZEICHNIS. */
+  p('Der Pfad steht als $env:USERPROFILE da', /\$env:USERPROFILE/.test(anleitung));
+  p('… und nirgends als C:\\Users\\<name>',
+    !/C:\\Users\\[A-Za-z]/.test(anleitung), 'ein persönlicher Pfad steht darin');
+}
 
 /* ── 5b ───────────────────────────────────────────────────────────────── */
 console.log('\n5b · vergleichen.bat sieht nur nach und faesst nichts an');
@@ -174,13 +341,100 @@ for (const [name, muster] of [
   p('Kein ' + name + ' — es veraendert nichts', !muster.test(vergl));
 }
 /* Und der eine Schreibvorgang, den es geben DARF, ist benannt. */
-p('Es holt den Fernstand mit fetch', /git fetch origin main/.test(vergl));
+p('Es holt den Fernstand mit fetch', /git fetch origin %ZIEL%/.test(vergl));
 p('… und sagt selbst, dass das der einzige Schreibvorgang ist',
   /einzige Schreibvorgang/.test(vergl));
 /* Die Kernfrage wird ueber INHALTE beantwortet, nicht ueber Kennungen —
    dieselbe Lehre, die holen.bat in E271 gekostet hat. */
 p('Der Vergleich fragt nach den Dateien, nicht nach den Kennungen',
-  /git diff --name-only origin\/main HEAD/.test(vergl));
+  /git diff --name-only origin\/%ZIEL% HEAD/.test(vergl));
+
+/* ── 5b2 — GEGEN DEINEN ZWEIG, NICHT GEGEN main (E519) ────────────────────
+   Redur, 9. September: „wie kann ich wissen, ob meine GitHub- und
+   Laptop-Version gleich sind."
+
+   Seit E517 kann er einen Arbeitszweig holen — und `vergleichen.bat` sah
+   weiter fest gegen `main`. Wer auf einem Zweig steht und fragt „habe ich
+   dasselbe wie auf GitHub", bekam den Vergleich gegen den GEPRÜFTEN Stand:
+   hunderte Unterschiede, die keine sind. Eine Auskunft, die immer „anders"
+   sagt, ist keine.
+
+   DIE VORGABE IST HIER EINE ANDERE ALS BEI holen.bat, und das ist der Kern:
+
+     holen.bat        ohne Angabe: main       — es ÄNDERT den Ordner
+     vergleichen.bat  ohne Angabe: dein Zweig — es SIEHT NUR NACH
+
+   Zwei Skripte, zwei Vorgaben, und jede hat ihren Grund. Wer sie
+   angleicht, macht eines von beiden falsch. */
+console.log('\n5b2 · Der Vergleich sieht gegen DEINEN Zweig');
+p('Ohne Angabe ist es der Zweig, auf dem der Ordner steht',
+  /set "ZIEL=%~1"/.test(vergl)
+  && /git rev-parse --abbrev-ref HEAD 2\^>nul'\) do set "ZIEL=%%c"/.test(vergl));
+p('… und bei losgelöstem HEAD bleibt main', /if "%ZIEL%"=="HEAD" set "ZIEL=main"/.test(vergl));
+p('Der Kopf sagt, wogegen verglichen wird', /Vergleich gegen:  %ZIEL%/.test(vergl));
+for (const [was, muster] of [
+  ['fetch',      /git fetch origin %ZIEL%/],
+  ['der Stand',  /git rev-parse --short origin\/%ZIEL%/],
+  ['der Inhalt', /git diff --name-only origin\/%ZIEL% HEAD/],
+  ['die Zählung vorwärts',  /git rev-list --count origin\/%ZIEL%\.\.HEAD/],
+  ['die Zählung rückwärts', /git rev-list --count HEAD\.\.origin\/%ZIEL%/],
+  ['das Protokoll', /git log --oneline HEAD\.\.origin\/%ZIEL%/],
+  ['die Aufstellung', /git diff --stat origin\/%ZIEL% HEAD/]
+] as Array<[string, RegExp]>) {
+  p('… und ' + was + ' nimmt ihn auch', muster.test(vergl));
+}
+p('Kein fest verdrahtetes origin/main mehr im Ablauf',
+  !/origin\/main/.test(vergl.replace(/^REM.*$/gm, '')));
+/* UND ES BLEIBT HARMLOS. `ls-remote` liest nur — aber es steht jetzt neu
+   darin, und die Liste oben prüft es nicht. Also hier. */
+p('Der neue ls-remote-Hinweis liest nur und schreibt nichts',
+  /git ls-remote --heads origin/.test(vergl));
+p('Der Hinweis zum Holen nennt den Zweig', /holen\.bat %ZIEL%/.test(vergl));
+
+/* ── 5b3 — DIE VIER ANTWORTEN, IN EINEM ECHTEN REPO ───────────────────────
+   Batch läuft hier nicht; `git status -sb` sehr wohl. Gemessen wird, dass
+   die vier Zustände wirklich unterscheidbar sind — sonst wäre die ganze
+   Auskunft eine Behauptung. */
+console.log('\n5b3 · Die vier Antworten, in einem echten Repo gemessen');
+{
+  const heim = fs.mkdtempSync(path.join(os.tmpdir(), 'vergl-'));
+  const git = (wo: string, ...a: string[]): string => {
+    const r = spawnSync('git', a, { cwd: wo, encoding: 'utf8' });
+    return (r.stdout || '') + (r.stderr || '');
+  };
+  try {
+    const fern = path.join(heim, 'fern.git');
+    git(heim, 'init', '-q', '--bare', '-b', 'main', fern);
+    const bau = path.join(heim, 'bau');
+    git(heim, 'clone', '-q', fern, 'bau');
+    git(bau, 'config', 'user.email', 'p@t.de'); git(bau, 'config', 'user.name', 'P');
+    git(bau, 'checkout', '-q', '-b', 'main');
+    fs.writeFileSync(path.join(bau, 'datei.txt'), 'v1');
+    git(bau, 'add', '-A'); git(bau, 'commit', '-qm', 'erst'); git(bau, 'push', '-q', 'origin', 'main');
+    const laptop = path.join(heim, 'laptop');
+    git(heim, 'clone', '-q', fern, 'laptop');
+    git(laptop, 'config', 'user.email', 'r@t.de'); git(laptop, 'config', 'user.name', 'R');
+
+    const zeile = (): string => (git(laptop, 'status', '-sb').split('\n')[0] || '').trim();
+    gleich('Gleicher Stand: keine Klammer hinter dem Zweig', zeile(), '## main...origin/main');
+
+    fs.writeFileSync(path.join(bau, 'datei.txt'), 'v2');
+    git(bau, 'add', '-A'); git(bau, 'commit', '-qm', 'zweit'); git(bau, 'push', '-q', 'origin', 'main');
+    git(laptop, 'fetch', '-q', 'origin');
+    gleich('GitHub ist weiter: behind', zeile(), '## main...origin/main [behind 1]');
+
+    git(laptop, 'merge', '-q', '--ff-only', 'origin/main');
+    fs.writeFileSync(path.join(laptop, 'eigenes.txt'), 'meins');
+    git(laptop, 'add', '-A'); git(laptop, 'commit', '-qm', 'meine aenderung');
+    gleich('Ich bin weiter: ahead', zeile(), '## main...origin/main [ahead 1]');
+
+    fs.writeFileSync(path.join(laptop, 'entwurf.txt'), 'noch nicht gespeichert');
+    const alles = git(laptop, 'status', '-sb');
+    p('Ungespeichertes steht als ?? darunter', /\?\? entwurf\.txt/.test(alles), alles.slice(0, 120));
+  } finally {
+    fs.rmSync(heim, { recursive: true, force: true });
+  }
+}
 /* Kein `find /c`: die Zahl kommt mit fuehrenden Leerzeichen und der
    Vergleich schlaegt still fehl. */
 p('Es zaehlt nicht mit find /c, sondern fragt ob es Ausgabe gibt',

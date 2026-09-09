@@ -125,7 +125,7 @@ const { s, seiteId } = await mitSkript();
   gleich('Drei PDF-Seiten, drei Bühnen', await reihe(s, seiteId), ['pdf1', 'pdf2', 'pdf3']);
   const knoepfe = await s.evaluate(() => [...document.querySelectorAll('.document-seite-knoepfe button')].map(b => (b as HTMLElement).dataset.documentAction));
   /* ZEHN SEIT E469: Bild als Seite, PDF hier einfügen, Als Bild sichern. */
-  gleich('Das Seitenmenü hat elf Griffe (seit E482 mit der Kamera)', knoepfe, ['page-add', 'page-duplicate', 'page-rotate', 'page-up', 'page-down', 'page-bookmark', 'page-delete', 'page-add-image', 'page-add-camera', 'page-add-pdf', 'page-export-image']);
+  gleich('Das Seitenmenü hat dreizehn Griffe (E482 Kamera, E496 anderes Dokument, E499 zerlegen)', knoepfe, ['page-add', 'page-duplicate', 'page-rotate', 'page-up', 'page-down', 'page-bookmark', 'page-delete', 'page-add-image', 'page-add-camera', 'page-add-pdf', 'page-export-image', 'page-to-doc', 'page-split']);
   const hoch = await s.evaluate(() => Math.min(...[...document.querySelectorAll('.document-seite-knoepfe button')].map(b => b.getBoundingClientRect().height)));
   p('… und jeder misst 44 (§37)', hoch >= 44, String(hoch));
   await s.selectOption('.document-inspector select[data-document-papier]', 'kariert');
@@ -268,7 +268,9 @@ console.log('\n§7 Rechte');
   /* SEIT E473 IST AUCH DAS LESEZEICHEN GESPERRT: es schreibt in den Block,
      also gilt dieselbe Prüfung wie für jeden anderen Seitengriff (§26).
      „Als Bild sichern" bleibt an — es ändert nichts. */
-  gleich('Gesperrt: alles aus ausser Sichern', r, [true, true, true, true, true, true, true, true, true, true, false]);
+  /* ZWÖLF SEIT E496 — „In anderes Dokument" ist ein Seitengriff wie jeder
+     andere und darum ohne Recht gesperrt. */
+  gleich('Gesperrt: alles aus ausser Sichern', r, [true, true, true, true, true, true, true, true, true, true, false, true, true]);
   await s.evaluate(() => { const k = document.querySelector<HTMLButtonElement>('.document-inspector [data-document-action="page-add"]'); if (k) { k.disabled = false; k.click(); } });
   await s.waitForTimeout(500);
   gleich('… und ein erzwungener Tipp ändert nichts', await reihe(s, seiteId), ['pdf1', 'blatt:kariert', 'pdf2', 'pdf3']);

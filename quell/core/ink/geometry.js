@@ -112,11 +112,17 @@ const InkGeometry = (() => {
      * und auslaufen, wie es der Druck sagt. Die Punkte bleiben, was sie sind:
      * die Mittellinie, die auch der alte Zeichner kennt.
      */
-    const outline = (raw, halfWidths) => {
+    /**
+     * DIE ZWEI KANTEN EINES STRICHS — die Rechnung, die `outline` und
+     * `outlinePunkte` teilen (E506). Sie stand vorher im Rumpf von
+     * `outline`; mit dem zweiten Nutzer waere sie zur Abschrift geworden,
+     * und dann zeichnete der Bildschirm eine andere Kontur als das PDF (§8).
+     */
+    const seiten = (raw, halfWidths) => {
         const input = points(raw);
         const n = input.length;
         if (n < 2)
-            return '';
+            return null;
         const links = [];
         const rechts = [];
         const halb = (i) => {
@@ -136,13 +142,72 @@ const InkGeometry = (() => {
             links.push([r2(input[i][0] - ty * w), r2(input[i][1] + tx * w)]);
             rechts.push([r2(input[i][0] + ty * w), r2(input[i][1] - tx * w)]);
         }
-        const ende = halb(n - 1);
-        const anfang = halb(0);
+        return { links, rechts, anfang: halb(0), ende: halb(n - 1) };
+    };
+    const outline = (raw, halfWidths) => {
+        const kanten = seiten(raw, halfWidths);
+        if (!kanten)
+            return '';
+        const { links, rechts, anfang, ende } = kanten;
+        const r2 = (v) => Math.round(v * 100) / 100;
         const rueck = [...rechts].reverse();
         return `M${links[0][0]} ${links[0][1]}` + seite(links) +
             ` A${r2(ende)} ${r2(ende)} 0 0 1 ${rueck[0][0]} ${rueck[0][1]}` +
             seite(rueck) +
             ` A${r2(anfang)} ${r2(anfang)} 0 0 1 ${links[0][0]} ${links[0][1]} Z`;
+    };
+    /**
+     * DERSELBE UMRISS ALS PUNKTZUG (E506).
+     *
+     * `outline` oben schreibt einen SVG-Pfad mit `Q`-Kurven und zwei
+     * `A`-Boegen fuer die Kappen. PDF kennt weder das eine noch das andere:
+     * es hat `m`, `l` und `c` und sonst nichts. Fuer den PDF-Export braucht
+     * es deshalb dieselbe Kontur als reine Punktfolge — ein geschlossenes
+     * Vieleck, das ein Schreiber Zeile fuer Zeile ausgeben kann.
+     *
+     * DIE RECHNUNG IST DIESELBE und steht bewusst nur einmal da: `seiten`
+     * liefert die linke und die rechte Kante, und `outline` wie
+     * `outlinePunkte` bauen daraus ihre Form. Was sich unterscheidet, ist
+     * allein die Kappe — dort setzt das Vieleck `kappen` Punkte auf den
+     * Halbkreis, wo der SVG-Pfad einen Bogen zieht. Bei einer halben Breite
+     * von anderthalb Punkten liegen acht Punkte weniger als ein Zehntel
+     * Millimeter neben dem echten Bogen; auf Papier ist das nichts.
+     */
+    const outlinePunkte = (raw, halfWidths, kappen = 8) => {
+        const kanten = seiten(raw, halfWidths);
+        if (!kanten)
+            return [];
+        const { links, rechts, anfang, ende } = kanten;
+        const r2 = (v) => Math.round(v * 100) / 100;
+        /* Ein Halbkreis von `von` nach `nach` um `mitte`, gegen den Uhrzeigersinn
+           — genau die Drehrichtung, die der `A`-Bogen mit `sweep 1` nimmt. */
+        const kappe = (mitte, von, nach) => {
+            const a0 = Math.atan2(von[1] - mitte[1], von[0] - mitte[0]);
+            const a1 = Math.atan2(nach[1] - mitte[1], nach[0] - mitte[0]);
+            let d = a1 - a0;
+            while (d <= 0)
+                d += Math.PI * 2;
+            const r = Math.hypot(von[0] - mitte[0], von[1] - mitte[1]);
+            const raus = [];
+            for (let i = 1; i < kappen; i++) {
+                const a = a0 + d * (i / kappen);
+                raus.push([r2(mitte[0] + Math.cos(a) * r), r2(mitte[1] + Math.sin(a) * r)]);
+            }
+            return raus;
+        };
+        const mitte = points(raw);
+        const rueck = [...rechts].reverse();
+        return [...links,
+            ...kappe(mitte[mitte.length - 1], links[links.length - 1], rueck[0]),
+            ...rueck,
+            ...kappe(mitte[0], rueck[rueck.length - 1], links[0])]
+            .filter(q => Number.isFinite(q[0]) && Number.isFinite(q[1]));
+        /* `anfang` und `ende` werden hier nicht gebraucht — die Kappe rechnet
+           ihren Radius aus dem Abstand zur Mittellinie und kommt damit auf
+           dieselbe Zahl. Sie stehen im Rueckgabewert von `seiten`, weil
+           `outline` sie fuer seine Boegen braucht. */
+        void anfang;
+        void ende;
     };
     /** Ein geglaetteter SVG-Pfad; zwei Punkte bleiben absichtlich eine Linie. */
     const path = (raw) => {
@@ -421,6 +486,48 @@ const InkGeometry = (() => {
         for (let i = 1; i < input.length; i++)
             best = Math.min(best, distanceToSegment(point, input[i - 1], input[i]));
         return best;
+    };
+    /**
+     * EINE LINIE DICHTER ABTASTEN (E510).
+     *
+     * DER FUND. Zwei Marken mit demselben Weg werden verschieden gemessen,
+     * je nachdem, wie viele Punkte zufällig darin stehen. Ein Stift-Strich
+     * über 200 px hat dreihundert Punkte; eine gerade `line` über dieselben
+     * 200 px hat ZWEI — ihre Enden. Jede Regel der Form „mindestens die
+     * Hälfte ihrer Punkte liegt nah am Zug" fragt beim Strich nach seiner
+     * LÄNGE und bei der Linie nur nach ihren ENDEN. Das ist nicht dieselbe
+     * Frage, und beim Kritzel-Löschen war es der Unterschied zwischen
+     * „gelöscht" und „passiert nichts": ein Gekritzel quer über die Mitte
+     * einer Linie berührte keines ihrer beiden Enden.
+     *
+     * Hier kommen Zwischenpunkte im Abstand `schritt` dazu — nicht als neue
+     * Daten, sondern als Messpunkte für genau solche Fragen. Die Ecken
+     * bleiben alle erhalten; es wird nur zwischen ihnen aufgefüllt.
+     *
+     * DIE OBERGRENZE IST KEIN SCHMUCK. Ein Zug über eine ganze Seite mit
+     * Schritt 1 wären Zehntausende Punkte, und `distanceToPolyline` läuft
+     * für jeden davon über den ganzen Gegenzug. `GRENZE` hält die Rechnung
+     * bei ein paar Tausend; wer mehr Punkte bräuchte, misst ohnehin etwas,
+     * das mit ein paar Tausend genauso beantwortet ist.
+     */
+    const DICHTER_GRENZE = 4000;
+    const densify = (raw, schritt = 6) => {
+        const input = points(raw);
+        if (input.length < 2)
+            return input;
+        const weite = Math.max(0.5, finite(schritt) || 6);
+        const out = [input[0]];
+        for (let i = 1; i < input.length; i++) {
+            const a = input[i - 1], b = input[i];
+            const d = Math.hypot(b[0] - a[0], b[1] - a[1]);
+            const teile = Math.min(Math.ceil(d / weite), Math.max(1, DICHTER_GRENZE - out.length));
+            for (let k = 1; k < teile; k++)
+                out.push([a[0] + (b[0] - a[0]) * k / teile, a[1] + (b[1] - a[1]) * k / teile]);
+            out.push(b);
+            if (out.length >= DICHTER_GRENZE)
+                break;
+        }
+        return out;
     };
     /**
      * TRIFFT DER RADIERER DIESE MARKE? (E352)
@@ -711,7 +818,7 @@ const InkGeometry = (() => {
             mark.breiteBox = Math.max(24, r2(Number(mark.breiteBox) * Math.abs(lx)));
         return mark;
     };
-    return { points, simplify, simplifyIndices, outline, path, rectangle, bounds, move, intersects,
+    return { points, simplify, simplifyIndices, densify, outline, outlinePunkte, path, rectangle, bounds, move, intersects,
         distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale, rotate,
         textWidth, textLines, textLayout, LINIEN,
         /* Seit E474: der aufrechte Kasten der Marke OHNE ihre Drehung, ihre

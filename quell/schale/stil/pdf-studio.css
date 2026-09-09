@@ -141,13 +141,27 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
   body[data-dokument="an"] #reiterleiste .rt-tab{min-width:120px;max-width:180px;min-height:40px}
   body[data-dokument="an"] .document-studio .document-topbar{padding-inline:4px}
   .document-studio .document-topbar .document-zurueck .dz-wort{display:none}
+  /* „Präsentieren" ist am Telefon gar nicht im Kopf, sondern in der
+     Ansichtsklappe (E493, bausteine.css) — derselbe Weg wie bei der Suche.
+     Nur das Zeichen zu zeigen hätte nicht gereicht: gemessen blieben dem
+     Titel auch dann 70 px statt der hundert aus `test285`, weil der Knopf
+     seine 44 px Trefffläche behält (§37). */
   .document-studio .document-topbar [data-document-action="print"]{font-size:0}
   .document-studio .document-topbar [data-document-action="print"]::before{content:'↥';font-size:1.375rem}
   .document-studio .document-drawingbar{justify-content:flex-start;gap:4px;padding:4px 8px;min-height:52px}
   /* ZURÜCK UND VOR ROLLEN AM TELEFON NICHT WEG (E396, Audit F14 — seit E464
-     für die Zeichenleiste): die Leiste rollt, die zwei kleben rechts. Wer
-     schreibt, greift zu ihnen, ohne erst zu wischen. */
-  .document-ink-history{position:sticky;right:0;z-index:1;padding-left:4px;margin-left:auto;background:var(--pdf-tools)}
+     für die Zeichenleiste): die Leiste rollt, die zwei kleben am Rand. Wer
+     schreibt, greift zu ihnen, ohne erst zu wischen.
+
+     LINKS, NICHT RECHTS — berichtigt nach E490 (Fund des breiten Laufs nach
+     E496). E490 hat die zwei nach GoodNotes-Art an den ANFANG der Leiste
+     gestellt (`prepend`, `margin-right:auto`); diese Regel hier blieb auf
+     `right:0` stehen. Ein sticky-Element hält an `right:0` nur, wenn es
+     über den rechten Rand hinauswandern würde — das erste Element wandert
+     beim Rollen nach LINKS hinaus, und dafür braucht es `left:0`. Gemessen
+     bei 390 px: ganz nach rechts gerollt standen beide ausserhalb der
+     Leiste, und `test393 §2` sah es. */
+  .document-ink-history{position:sticky;left:0;z-index:1;padding-right:12px;margin-right:auto;background:var(--pdf-tools)}
   .document-studio .document-commandbar{left:8px;right:8px}
   body[data-dokument="an"] .document-studio .document-center{padding:10px 8px 100px}
   .document-source-master .do-name{font-size:11px}.document-source-master .do-wort{font-size:10px}
@@ -205,3 +219,70 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
 .document-thumbnails.zieht-gerade{ cursor:grabbing; user-select:none }
 .document-thumb-marke{ position:absolute; left:8px; right:8px; height:3px; margin-top:-2px;
   border-radius:2px; background:var(--accent); pointer-events:none }
+
+/* ══ PRÄSENTIEREN MIT LASERPOINTER (E493) ═════════════════════════════════
+   GoodNotes' Presentation Mode: nur die Seite, sonst nichts. Alles, was zum
+   Arbeiten da ist — Kopf, Werkzeuge, Miniaturen, Inspector, die Zeichen-
+   leiste am Blatt —, geht weg; der Grund wird schwarz, damit das Papier die
+   einzige helle Fläche im Raum ist.
+
+   `[hidden]` wird hier NICHT benutzt: die Leisten sollen nur unsichtbar
+   sein, nicht ihren Zustand verlieren. Nach dem Beenden steht alles wieder
+   so, wie es war. */
+.document-workspace[data-document-zeigen="an"]{background:#000}
+.document-workspace[data-document-zeigen="an"] .document-topbar,
+.document-workspace[data-document-zeigen="an"] .document-drawingbar,
+.document-workspace[data-document-zeigen="an"] .document-commandbar,
+.document-workspace[data-document-zeigen="an"] .document-findbar,
+.document-workspace[data-document-zeigen="an"] .document-panel,
+.document-workspace[data-document-zeigen="an"] .document-verweise{display:none}
+/* DIE STIFTLEISTE AM BLATT heisst `.blatt-reihe` und steht im Studio als
+   schwebende Leiste unten (Zeile 121) — `.blatt-werk` allein traf sie
+   nicht, und auf dem ersten Bild stand sie mitten in der Präsentation.
+   `!important`, weil die Regel dort mit `position:fixed` und einer höheren
+   Spezifität gewinnt; hier ist es die Ausnahme, die §39 mit einem
+   geschriebenen Grund erlaubt. */
+.document-workspace[data-document-zeigen="an"] :is(.blatt-reihe,.blatt-werk,.blatt-fest){display:none!important}
+/* Die Mitte heisst `.document-center` und die Seite `.document-stage` —
+   nachgesehen in `document-mode.ts`, nicht geraten (E21). Sie braucht
+   `position:relative`, damit die Zeigefläche darin sitzt. */
+.document-workspace[data-document-zeigen="an"] .document-center,
+body[data-dokument="an"] .document-workspace[data-document-zeigen="an"] .document-center{
+  background:#000; position:relative; padding:18px}
+.document-workspace[data-document-zeigen="an"] .document-stage{box-shadow:0 0 0 1px #ffffff22}
+/* EINE SEITE, GANZ. Ein Vortrag zeigt eine Folie, nicht anderthalb — auf
+   dem ersten Bild lief die Seite unten aus dem Fenster und die nächste
+   schob sich schon herein. Derselbe Griff wie „Einzelseite zeigen"
+   (`[data-aktiv]`, bausteine.css), nur ohne die Einstellung des Nutzers
+   anzufassen: nach dem Beenden steht seine Wahl wieder da. */
+.document-workspace[data-document-zeigen="an"] .document-stage:not([data-aktiv]){display:none}
+.document-workspace[data-document-zeigen="an"] .document-stage[data-aktiv]{margin-block:0}
+
+/* DIE FLÄCHE ÜBER DEM PAPIER. Sie fängt jeden Zeiger ab — deshalb schreibt
+   der Laserpointer nicht, und deshalb blättert ein Tipp. `touch-action:none`
+   sorgt dafür, dass der Finger zeigt statt zu rollen. */
+.document-zeigen-flaeche{position:absolute; inset:0; z-index:40; cursor:crosshair;
+  touch-action:none; overflow:hidden}
+/* DER KNOPF MUSS AUF JEDEM UNTERGRUND LESBAR SEIN (Fund des Bildes). Er
+   stand zuerst auf `#ffffff1a` — fast durchsichtig —, und weil er oben
+   rechts das weisse Papier überlappt, war seine linke Hälfte weisser Text
+   auf Weiss. Jetzt ein deckendes Dunkel; er hält sich trotzdem zurück
+   (`opacity:.25`), bis man ihn sucht. */
+.document-zeigen-raus{position:absolute; top:12px; right:12px; z-index:2;
+  min-height:var(--touch-min); padding:8px 14px; border-radius:10px;
+  background:#000000cc; color:#fff; border:1px solid #ffffff44; cursor:pointer;
+  opacity:.25; transition:opacity var(--motion-fast) var(--ease)}
+.document-zeigen-raus:hover, .document-zeigen-raus:focus-visible{opacity:1}
+
+/* DER PUNKT. Er verglimmt in 700 ms — dieselbe Zahl steht in
+   `document-mode.ts` neben `laserLoeschen`. Ein Punkt, der abrupt weg ist,
+   sieht aus wie ein Fehler. */
+.document-laser{position:absolute; width:22px; height:22px; margin:-11px 0 0 -11px;
+  border-radius:50%; pointer-events:none; opacity:0;
+  background:radial-gradient(circle, #ff2d2d 0%, #ff2d2dcc 38%, #ff2d2d00 72%);
+  box-shadow:0 0 12px 4px #ff2d2d66;
+  transition:opacity 700ms var(--ease)}
+.document-laser.an{opacity:1; transition:opacity 60ms var(--ease)}
+@media (prefers-reduced-motion: reduce){
+  .document-laser, .document-laser.an{transition:none}
+}

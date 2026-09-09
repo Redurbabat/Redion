@@ -126,8 +126,10 @@ gleich('Die Gruppen heissen, wie sie heissen', await pgH.evaluate(() =>
      Ellipse zu EINEM Werkzeug „Formen" zusammen; dessen Formenwahl ist eine
      eigene Gruppe `form` — der Trenner und die vier Formknöpfe tragen sie.
      `formen` (mit n) ist der SCHALTER „Formen erkennen", `form` die Wahl der
-     Form. Zwei Gruppen, zwei Aufgaben, ähnliche Namen. */
-  ['auswahl', 'breite', 'farbe', 'form', 'formen', 'lineal', 'radierer', 'schrift', 'stil', 'verlauf']);
+     Form. Zwei Gruppen, zwei Aufgaben, ähnliche Namen.
+     ELF SEIT E494: `elemente` ist die Gruppe des einen Knopfes, mit dem die
+     Elemente-Bibliothek aufgeht — sie steht nur beim Werkzeug `elemente`. */
+  ['auswahl', 'breite', 'elemente', 'farbe', 'form', 'formen', 'laser', 'lineal', 'radierer', 'schrift', 'stil', 'verlauf']);
 
 /* ======================================================================== */
 console.log('\n2 · Am Telefon zeigt jedes Werkzeug seine Gruppen — und die Leiste ist kürzer');
@@ -178,13 +180,31 @@ await werkzeug(pgH, 'stift');
 const lage = await pgH.evaluate(() => {
   const w = document.querySelector<HTMLElement>('.blatt-werk')!;
   const r = (sel: string) => w.querySelector<HTMLElement>(sel)!.getBoundingClientRect();
-  const stift = r('[data-wz="stift"]'), stil = r('[data-act="stil"]'), tupfer = r('.blatt-farbe'), marker = r('[data-wz="marker"]');
-  return { stiftLinks: Math.round(stift.left), stilNachStift: Math.round(stil.left - stift.right), tupferImBild: tupfer.left >= 0 && tupfer.right <= 390,
+  /* Seit E512 ist der Stil eine Reihe; gemessen wird ihr erster Knopf. */
+  const stift = r('[data-wz="stift"]'), stil = r('[data-act="stilwahl"]'), tupfer = r('.blatt-farbe'), marker = r('[data-wz="marker"]');
+  const stifte = [...w.querySelectorAll<HTMLElement>('[data-act="stilwahl"]')];
+  const letzterStift = stifte.length ? stifte[stifte.length - 1]!.getBoundingClientRect() : stil;
+  return { stiftLinks: Math.round(stift.left), stilNachStift: Math.round(stil.left - stift.right),
+    stifteImBild: stil.left >= 0 && letzterStift.right <= 391,
+    /* Erreichbar heisst: sie steht in der Leiste und ist nicht breiter als
+       der Weg dorthin — also innerhalb der Rollweite. */
+    tupferErreichbar: tupfer.width > 0 && tupfer.left - w.getBoundingClientRect().left + w.scrollLeft <= w.scrollWidth,
     markerNachGruppen: marker.left > tupfer.right, scroll: Math.round(w.scrollLeft) };
 });
 p('Nach dem Tipp steht der Stift links im Bild (die Leiste ist hingerollt)', lage.stiftLinks >= 0 && lage.stiftLinks < 40, JSON.stringify(lage));
-p('Der Stil-Knopf folgt direkt auf den Stift', lage.stilNachStift >= 0 && lage.stilNachStift < 30, JSON.stringify(lage));
-p('Der erste Tupfer ist ohne Rollen im Bild', lage.tupferImBild, JSON.stringify(lage));
+p('Die Stiftreihe folgt direkt auf den Stift', lage.stilNachStift >= 0 && lage.stilNachStift < 30, JSON.stringify(lage));
+/* SEIT E512 PASST NICHT MEHR ALLES AUF EINMAL — und das steht hier statt
+   einer stillgestellten Zusage. Sechs Stifte zu 44 px (§37) sind 264 px
+   plus Abstände; auf einer 390 px breiten Leiste bleibt für die Farben
+   danach kein Platz. Redur wollte die Reihe ausdrücklich („zeig mir,
+   welchen Stift ich will"), also ist das der bezahlte Preis: am Telefon
+   ist die Farbe eine Wischbewegung entfernt. Gemessen wird jetzt, dass
+   sie ERREICHBAR ist — nicht, dass sie ohne Rollen dasteht. Der Rest von
+   E356 (die Gruppen des Werkzeugs stehen direkt hinter ihm, der Marker
+   erst danach) gilt unverändert. Notiert in LUECKEN als L137. */
+p('Die Stiftreihe steht vollständig im Bild', lage.stifteImBild, JSON.stringify(lage));
+p('Der erste Tupfer ist erreichbar — am Telefon hinter den Stiften',
+  lage.tupferErreichbar, JSON.stringify(lage));
 p('Der Marker kommt erst NACH den Gruppen des Stifts', lage.markerNachGruppen, JSON.stringify(lage));
 
 /* ======================================================================== */
@@ -218,10 +238,17 @@ gleich('Der Modus-Knopf lässt die Leiste beim Radierer', (await leiste(pgH))!.t
 /* ======================================================================== */
 console.log('\n5 · Eine eigene Farbe, später angelegt, gehört zur Gruppe Farbe');
 await werkzeug(pgH, 'stift');
+/* SEIT E486 FÜHRT DAS „+" ZUERST IN EINE WAHL — Farbwähler zuoberst,
+   darunter die Farbsätze. Diese Zusage prüft weiter dasselbe, nur einen
+   Tipp später (derselbe Nachtrag wie in test343). Sie war seit E486 rot und
+   ist beim Bogen E494 aufgefallen: ein Prüflauf, den niemand laufen lässt,
+   meldet seinen Fund nicht von selbst. */
 const eigene = await pgH.evaluate(async () => {
   const knopf = document.querySelector<HTMLButtonElement>('.blatt-werk [data-act="farbe"]')!;
   knopf.click();
-  await new Promise(f => setTimeout(f, 50));
+  await new Promise(f => setTimeout(f, 250));
+  document.querySelector<HTMLElement>('.overlay [data-w="waehlen"]')?.click();
+  await new Promise(f => setTimeout(f, 150));
   const feld = [...document.querySelectorAll<HTMLInputElement>('input[type=color]')].pop();
   if (!feld) return null;
   feld.value = '#8844cc';

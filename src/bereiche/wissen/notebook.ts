@@ -1368,7 +1368,11 @@ const Notebook = (() => {
   return { oeffnen, open: oeffnen, resume, render,
            istFach, isNotebook, faecher, alleFaecher, unterFaecher, fachWeg,
            fachHefte, loseHefte, fachInhaltSatz, FACH_TIEFE,
-           ziehenAblegen };
+           ziehenAblegen,
+           /* NACH AUSSEN SEIT E513 — damit „Neu erstellen" ein Notizbuch
+              anlegen kann, ohne eine zweite Anlege-Maschine zu bauen (§8,
+              derselbe Grund wie bei `App.erstellenWeg` in E265). */
+           createNotebook };
 })();
 
 (window as any).Notebook = Notebook;

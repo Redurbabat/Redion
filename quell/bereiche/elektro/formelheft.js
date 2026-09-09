@@ -124,7 +124,28 @@ const Formelheft = (() => {
     /* Nur EIN Heft zur Zeit — ein zweites Fenster wäre ein zweiter Zustand. */
     let fenster = null;
     const offen = () => !!fenster && document.body.contains(fenster);
-    const schliessen = () => { fenster?.remove(); fenster = null; };
+    /* ------------------------------------------------------------------------
+     * WER WISSEN WILL, OB DAS HEFT OFFEN IST (E503)
+     * ------------------------------------------------------------------------
+     * Der Knopf in der Zeichenleiste des Studios ZEIGT einen Zustand, den er
+     * nicht besitzt. Er könnte ihn abfragen — aber wann? Das Fenster geht auch
+     * über sein eigenes ✕ zu und über Escape, und beides sieht die Leiste
+     * nicht. Ein Knopf, der dann noch gedrückt aussieht, lügt.
+     *
+     * Also sagt das Heft Bescheid. Dasselbe Muster wie `Zeichenziel.horche`,
+     * damit es nicht ein zweites gibt (§8): eine Menge, ein Ruf, und wer nicht
+     * mehr im Baum hängt, meldet sich beim nächsten Ruf mit `vergiss` ab.
+     * ----------------------------------------------------------------------*/
+    const horcher = new Set();
+    const horche = (fn) => { horcher.add(fn); };
+    const vergiss = (fn) => { horcher.delete(fn); };
+    const sagen = () => {
+        horcher.forEach(fn => { try {
+            fn();
+        }
+        catch { /* ein toter Horcher hält niemanden auf */ } });
+    };
+    const schliessen = () => { fenster?.remove(); fenster = null; sagen(); };
     /* ------------------------------------------------------------------------
      * DER RECHNER AN DER FORMEL (Punkte 61–90)
      * ------------------------------------------------------------------------
@@ -397,14 +418,50 @@ const Formelheft = (() => {
         /* Im Bild bleiben, aber die Kante DARF die Kante sein. Ein erzwungener
            Rand von 8 px verschiebt jedes gemerkte Fenster bei jedem Öffnen. */
         f.style.left = Math.max(0, Math.min(zahl(ort?.x, window.innerWidth - breite - 30), Math.max(0, window.innerWidth - breite))) + 'px';
-        f.style.top = Math.max(0, Math.min(zahl(ort?.y, 90), Math.max(0, window.innerHeight - hoehe))) + 'px';
+        /* ES DARF NICHT DEN KNOPF VERDECKEN, DER ES ÖFFNET (E503).
+         *
+         * Im Studio stehen Kopfleiste und Zeichenleiste oben; die alte Vorgabe
+         * von 90 px legte das Heft mit seiner Kopfzeile genau darauf. Aufgehen
+         * ging danach noch — zugehen nicht mehr, weil das Fenster den Knopf
+         * abfängt. Gefunden hat es der Prüflauf, nicht das Auge: Playwright
+         * sagte „fh-kopf intercepts pointer events", und genau das täte auch
+         * ein Finger.
+         *
+         * GEMESSEN, NICHT GERATEN (§36): der tiefste Rand der Leiste, nicht
+         * eine Zahl, die beim nächsten Umbau wieder falsch ist. Ohne Studio
+         * gibt es keine Leiste, und dann bleibt es bei 90.
+         *
+         * Und es gilt AUCH für einen gemerkten Ort: über der Leiste zu parken
+         * wählt niemand mit Absicht — das ist der Zustand, in dem der Knopf
+         * nicht mehr zu treffen ist. */
+        const leiste = document.querySelector('.document-drawingbar');
+        const untenVon = leiste
+            ? Math.round(leiste.getBoundingClientRect().bottom) + 10
+            : 0;
+        f.style.top = Math.max(0, Math.min(Math.max(zahl(ort?.y, 90), untenVon), Math.max(0, window.innerHeight - hoehe))) + 'px';
         document.body.appendChild(f);
         /* --- Inhalt ---------------------------------------------------------- */
         let suchtext = '';
-        let pdfModus = false;
-        /* Welche der beiden eigenen Ansichten offen ist. Sie überlebt das
-           Schliessen: wer im Buch liest, liest beim nächsten Öffnen weiter. */
-        let buchModus = String(gemerkt(M_ANSICHT, 'kapitel')) === 'buch';
+        /* WELCHE ANSICHT OFFEN WAR, ÜBERLEBT DAS SCHLIESSEN — und seit E503
+           gilt das auch für das EIGENE Heft.
+    
+           Bis dahin war `pdfModus` eine reine Sitzungsvariable: wer sein Heft
+           aufgeschlagen hatte, bekam beim nächsten Öffnen wieder das
+           Kapitelverzeichnis und musste sich durchklicken. Genau das hat Redur
+           gemeint mit „die im PDF dort sehen kann" — es soll DA sein, nicht
+           zwei Tipps entfernt.
+    
+           `&& hatEigenes()`: gemerkt wird die Ansicht, aber gezeigt wird sie
+           nur, solange es ein Heft gibt. Wer seins über ⤒ gelöst hat, landet
+           wieder bei den Formeln statt auf einer Einladung, die er kennt. */
+        const ansicht = String(gemerkt(M_ANSICHT, 'kapitel'));
+        const hatEigenes = () => !!String(gemerkt(M_PDF, ''));
+        let pdfModus = ansicht === 'pdf' && hatEigenes();
+        let buchModus = ansicht === 'buch';
+        /* EINE TÜR für die drei Ansichten (§8). Zwei `merke`-Aufrufe mit je
+           eigener Fallunterscheidung liefen beim ersten Entwurf auseinander:
+           „Buch" schrieb 'kapitel', obwohl das eigene Heft offen blieb. */
+        const ansichtMerken = () => merke(M_ANSICHT, pdfModus ? 'pdf' : (buchModus ? 'buch' : 'kapitel'));
         /* Welche Formel nach dem nächsten Malen aufgeklappt werden soll — der
            Weg von einem Suchtreffer zur Formel auf ihrer Seite. Wird nach dem
            Malen wieder geleert, sonst klappt sie bei jedem Blättern erneut auf. */
@@ -556,6 +613,22 @@ const Formelheft = (() => {
         };
         neuMalen = () => {
             void male().then(() => {
+                /* DER GRIFF ZUM ZIEHEN KOMMT ZURÜCK (E503).
+                 *
+                 * `male` schreibt `f.innerHTML` neu — und nahm damit jedes Mal den
+                 * Griff unten rechts weg. Angehängt wurde er einmal beim Öffnen,
+                 * gleich darauf malte `neuMalen` das Fenster, und ab da war er fort:
+                 * das Heft liess sich seit jeher NICHT in der Grösse ändern, obwohl
+                 * `pointermove` es konnte und `M_ORT` sogar Breite und Höhe merkte.
+                 *
+                 * Gefunden hat es Redurs Satz „so dass ich es … kleiner grösser
+                 * machen kann" — und dann der Prüflauf, der `.fh-groesse` suchte
+                 * und `null` bekam. Kein Auge hätte es gemeldet: ein 14-px-Dreieck,
+                 * das fehlt, sieht aus wie eine Ecke.
+                 *
+                 * `appendChild` mit demselben Knoten ist ein Verschieben ans Ende,
+                 * also auch beim zweiten Mal richtig. */
+                f.appendChild(griff);
                 if (!buchOeffnen)
                     return;
                 const ziel = f.querySelector(`[data-buchformel="${CSS.escape(buchOeffnen)}"]`);
@@ -577,7 +650,18 @@ const Formelheft = (() => {
             zieht = amRand
                 ? { dx: e.clientX - r.width, dy: e.clientY - r.height, art: 'groesse' }
                 : { dx: e.clientX - r.left, dy: e.clientY - r.top, art: 'ort' };
-            f.setPointerCapture(e.pointerId);
+            /* EIN VERWEIGERTER FANG IST KEIN ABSTURZ (E503).
+               `setPointerCapture` wirft `NotFoundError`, wenn der Zeiger nicht
+               mehr aktiv ist — ein abgebrochener Stift, ein Finger, den das
+               System schon zurückgezogen hat. Ohne Fang zieht das Fenster
+               weiterhin (die Griffe hängen an `f`, nicht am Zeiger); MIT einer
+               geworfenen Ausnahme stand stattdessen „Etwas ist schiefgelaufen"
+               über der Seite. Eine Fehlerkarte für eine Fensterbewegung ist
+               nicht verhältnismässig (§35: sagen, was zählt — und nur das). */
+            try {
+                f.setPointerCapture(e.pointerId);
+            }
+            catch { /* ohne Fang geht es auch */ }
             e.preventDefault();
         });
         f.addEventListener('pointermove', e => {
@@ -619,11 +703,12 @@ const Formelheft = (() => {
             if (b.dataset.a === 'buch') {
                 buchModus = !buchModus;
                 pdfModus = false;
-                merke(M_ANSICHT, buchModus ? 'buch' : 'kapitel');
+                ansichtMerken();
                 return neuMalen();
             }
             if (b.dataset.a === 'pdf') {
                 pdfModus = !pdfModus;
+                ansichtMerken();
                 return neuMalen();
             }
             if (b.dataset.a === 'zurueckSeite' || b.dataset.a === 'vorSeite') {
@@ -800,6 +885,7 @@ const Formelheft = (() => {
         if (kapitelWunsch)
             merke(M_KAPITEL, kapitelWunsch);
         neuMalen();
+        sagen();
         return f;
     };
     /** Auf- und zuklappen — für Tastenkürzel und Menüeinträge. */
@@ -837,7 +923,7 @@ const Formelheft = (() => {
             tun: () => { oeffne(); void pdfLaden(); }
         });
     }
-    return { oeffne, schliessen, umschalten, offen,
+    return { oeffne, schliessen, umschalten, offen, horche, vergiss,
         favoriten, favoritUmschalten, seitenFavoriten, seiteUmschalten,
         pdfLaden, pdfLoesen };
 })();

@@ -161,7 +161,13 @@ console.log('\n§2 Der Bleistift');
   const s = await mitBlatt();
   await s.click('.blatt-werk [data-wz="stift"]');
   const stifte = await s.evaluate(`Marken.STIFTE.map(st => st.id)`) as string[];
-  gleich('Vier Stifte, der Bleistift zuletzt', stifte, ['fueller', 'kugel', 'pinsel', 'bleistift']);
+  /* SECHS SEIT E509: die Sonderstifte stehen am ENDE, damit der gewohnte
+     Rundlauf Füller → Kugel → Pinsel → Bleistift unverändert bleibt. E490
+     hängte den Schutzleiter an, E509 den Leiterstift dahinter. Wer einen
+     weiteren Sonderstift baut, hängt ihn ebenfalls hinten an — die ersten
+     vier Stationen bleiben, wo die Hand sie sucht. */
+  gleich('Sechs Stifte, die Sonderstifte zuletzt', stifte,
+    ['fueller', 'kugel', 'pinsel', 'bleistift', 'schutzleiter', 'leiter']);
   p('Der Bleistift schwillt weniger als der Füller — und dünner ist er auch',
     await s.evaluate(`Marken.druckFaktor('bleistift', 0.9) < Marken.druckFaktor('fueller', 0.9) && Marken.druckFaktor('bleistift', 0.1) < Marken.druckFaktor('fueller', 0.1)`));
   const knoten = JSON.parse(await s.evaluate(`(() => {
@@ -171,14 +177,17 @@ console.log('\n§2 Der Bleistift');
   })()`) as string);
   p('Er zeichnet eine Fläche wie der Füller, durchscheinend und mit rauer Kante',
     knoten?.tag === 'path' && knoten.flaeche && knoten.deckung === '0.72' && !!knoten.koernung && knoten.stil === 'bleistift', JSON.stringify(knoten));
-  /* Der Knopf wechselt weiter Füller → Kugel → Pinsel → Bleistift → Füller. */
+  /* SEIT E512 STEHT DIE REIHE DA (Redurs Wunsch): ein Knopf je Stift,
+     ein Tipp und er führt — kein Weiterschalten mehr. Der Wechsel ist
+     nicht weg, er liegt auf der Taste P (siehe §6). */
   const reihe: string[] = [];
-  for (let n = 0; n < 4; n++) {
-    await s.click('.blatt-werk [data-act="stil"]');
-    reihe.push(await s.evaluate(`document.querySelector('.blatt-werk [data-act="stil"]').dataset.stil`) as string);
+  for (const id of ['kugel', 'pinsel', 'bleistift', 'schutzleiter', 'leiter', 'fueller']) {
+    await s.click(`.blatt-werk [data-act="stilwahl"][data-stil="${id}"]`);
+    reihe.push(await s.evaluate(`document.querySelector('.blatt-werk [data-act="stilwahl"].on').dataset.stil`) as string);
   }
-  gleich('Der Knopf wechselt: Kugel, Pinsel, Bleistift, wieder Füller', reihe, ['kugel', 'pinsel', 'bleistift', 'fueller']);
-  await s.click('.blatt-werk [data-act="stil"]'); await s.click('.blatt-werk [data-act="stil"]'); await s.click('.blatt-werk [data-act="stil"]');
+  gleich('Jeder Stift ist mit EINEM Tipp erreichbar',
+    reihe, ['kugel', 'pinsel', 'bleistift', 'schutzleiter', 'leiter', 'fueller']);
+  await s.click('.blatt-werk [data-act="stilwahl"][data-stil="bleistift"]');
   gleich('… und merkt sich den Bleistift', await s.evaluate(`Store.getMeta('zeichnen:stift')`), 'bleistift');
   await zug(s, [100, 400], [300, 420]);
   const marken = JSON.parse(await s.evaluate(MARKEN) as string) as any[];
@@ -204,12 +213,22 @@ console.log('\n§3 Die freie Stärke');
      Mal getippt wird — wie in GoodNotes. In der Zeile hatte der Regler die
      Leiste bei 596 px auf drei Reihen gehoben (test351). */
   let regler = JSON.parse(await s.evaluate(REGLER) as string);
-  p('Der Regler ist da, aber zu — die Leiste bleibt zwei Zeilen',
-    regler.da && regler.gruppe === 'breite' && !regler.sichtbar && regler.leiste < 100, JSON.stringify(regler));
+  /* DREI ZEILEN STATT ZWEI — und das ist gemessen, nicht nachgegeben.
+     E359 versprach zwei Zeilen, und das galt für vierzehn Knöpfe (E486
+     hat sie gezählt). Seither hat Redur zwei Reihen dazubestellt: die
+     zehn Adern (E509) und die sechs Stifte (E512). Sechs Stifte sind auch
+     ohne ihre Namen rund 160 px; bei einer 596 px breiten Leiste ist die
+     dritte Zeile Arithmetik, keine Nachlässigkeit.
+     Was hier geprüft wird, bleibt das Eigentliche: der Regler ist ZU, und
+     die Leiste wächst nicht ins Unbegrenzte. Der Ausweg aus der Enge ist
+     die Leiste an der Seite (E512, `data-lage`) — dort stehen alle
+     Gruppen untereinander. Notiert in LUECKEN als L137. */
+  p('Der Regler ist da, aber zu — und die Leiste bleibt bei höchstens drei Zeilen',
+    regler.da && regler.gruppe === 'breite' && !regler.sichtbar && regler.leiste < 140, JSON.stringify(regler));
   await s.click('.blatt-werk .blatt-strich.on');
   regler = JSON.parse(await s.evaluate(REGLER) as string);
   p('Die gewählte Stufe nochmal getippt: der Regler von 0,5 bis 12 hängt unter der Leiste, mit Vorlesenamen',
-    regler.da && regler.min === '0.5' && regler.max === '12' && regler.sichtbar && !!regler.name && regler.lage === 'absolute' && regler.unterhalb && regler.leiste < 100, JSON.stringify(regler));
+    regler.da && regler.min === '0.5' && regler.max === '12' && regler.sichtbar && !!regler.name && regler.lage === 'absolute' && regler.unterhalb && regler.leiste < 140, JSON.stringify(regler));
   await s.evaluate(`(() => { const i = document.querySelector('.blatt-werk .blatt-staerke input'); i.value = '7.5'; i.dispatchEvent(new Event('input', { bubbles: true })); })()`);
   gleich('Der Regler setzt die Stärke sofort', await s.evaluate(`Zeichenziel.jetztDicke()`), 7.5);
   gleich('… keine Stufe ist mehr markiert', await s.evaluate(`document.querySelectorAll('.blatt-werk .blatt-strich.on').length`), 0);
@@ -248,7 +267,7 @@ console.log('\n§4 Die Tasten wie GoodNotes');
   gleich('S — die Form (die zuletzt gewählte: Linie)', await drueck('s'), 'line');
   gleich('P — der Stift', await drueck('p'), 'stift');
   await drueck('2');
-  gleich('2 — der Bleistift: Stift mit Stil', await s.evaluate(`document.querySelector('.blatt-werk [data-act="stil"]').dataset.stil`), 'bleistift');
+  gleich('2 — der Bleistift: Stift mit Stil', await s.evaluate(`document.querySelector('.blatt-werk [data-act="stilwahl"].on').dataset.stil`), 'bleistift');
   gleich('… und der Stift führt', await s.evaluate(`Zeichenziel.jetzt()`), 'stift');
   await drueck('r');
   gleich('R — das Lineal liegt an', await s.evaluate(`document.querySelector('.blatt-werk [data-act="lineal"]').getAttribute('aria-pressed')`), 'true');

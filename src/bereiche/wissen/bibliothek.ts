@@ -548,8 +548,55 @@ const Bibliothek = (() => {
     return raus;
   };
 
-  /** Die Karte über dem Deckel aufschlagen. `r` ist das Rechteck des Deckels. */
-  const blickHinein = (p: any, r: DOMRect): void => {
+  /* ══ DER BLICK KOMMT BEIM HINSCHAUEN (E508) ═══════════════════════════════
+   * Redur, 8. September: „Könntest du nicht, wenn ich klicke, das kommen,
+   * sondern wenn ich mit Maus drauf gehe?"
+   *
+   * Ja — aber NICHT statt des Klicks. §37 nennt das Telefon den Normalfall,
+   * und dort gibt es kein Überfahren; eine Karte, die nur mit der Maus
+   * aufgeht, wäre auf dem Gerät, an dem Redur am meisten arbeitet, gar
+   * nicht zu bekommen. Also beides, und die zwei Wege unterscheiden sich
+   * in EINEM Punkt: eine erzeigte Karte geht wieder zu, wenn der Zeiger
+   * fortgeht; eine ANGETIPPTE bleibt, bis man sie schliesst. Wer tippt,
+   * will halten.
+   *
+   * DIE WARTEZEIT IST DER GANZE UNTERSCHIED zwischen „hilfreich" und
+   * „springt mich an". Wer mit der Maus quer über das Regal fährt, berührt
+   * fünf Ordner in einer halben Sekunde; ohne Wartezeit klappten fünf
+   * Karten hinter ihm auf. 280 ms ist länger als ein Vorbeifahren und
+   * kürzer als eine Absicht.
+   *
+   * DIE ZEIT BEIM FORTGEHEN ist kürzer, aber nicht null: der Weg vom Knopf
+   * in die Karte führt für einen Augenblick über nichts von beidem, und
+   * eine Karte, die in diesem Augenblick verschwindet, ist nicht zu
+   * benutzen.
+   * ---------------------------------------------------------------------- */
+  const SCHAU_AUF_MS = 280;
+  const SCHAU_ZU_MS = 220;
+  let schauUhr = 0;
+  let schauZuUhr = 0;
+  /** Der Ordner, dessen Karte gerade per Zeigen offen ist. Leer = keine. */
+  let schauId = '';
+  /* IHR EIGENER SCHLIESSWEG, nicht `lage.remove()`. Die Karte hängt zwei
+     Horcher an das Dokument (Escape und der Klick daneben) und gibt den
+     Fokus zurück; wer nur den Knoten entfernt, lässt beides liegen — und
+     nach fünf Ordnern horchen fünf tote Karten auf jede Taste. */
+  let schauZu: (() => void) | null = null;
+
+  const schauAbsagen = (): void => {
+    if (schauUhr) { clearTimeout(schauUhr); schauUhr = 0; }
+    if (schauZuUhr) { clearTimeout(schauZuUhr); schauZuUhr = 0; }
+  };
+
+  /** Gibt es an diesem Gerät überhaupt ein Überfahren? */
+  const zeigerHatHover = (): boolean => {
+    try { return matchMedia('(hover: hover) and (pointer: fine)').matches; }
+    catch { return false; }
+  };
+
+  /** Die Karte über dem Deckel aufschlagen. `r` ist das Rechteck des Deckels.
+   *  `perZeigen` heisst: sie geht wieder zu, sobald der Zeiger fortgeht. */
+  const blickHinein = (p: any, r: DOMRect, perZeigen = false): void => {
     if (typeof Ordnerkarte === 'undefined') { geheIn(p.id); return; }
     document.querySelectorAll('.ru-fach-lage').forEach(a => a.remove());
     const zurueck = document.activeElement as HTMLElement | null;
@@ -583,15 +630,51 @@ const Bibliothek = (() => {
     zu = () => {
       document.removeEventListener('keydown', beiTaste, true);
       document.removeEventListener('mousedown', beiKlick);
+      schauAbsagen();
+      schauId = ''; schauZu = null;
       lage.remove();
-      zurueck?.focus?.();
+      /* Den Fokus nur zurückgeben, wenn er auch genommen wurde. Eine Karte,
+         die vom blossen Hinschauen kam, hat ihn nie gehabt. */
+      if (!perZeigen) zurueck?.focus?.();
     };
+    /* ── DIE KARTE HÄLT SICH SELBST, SOLANGE MAN AUF IHR LIEGT (E508) ────
+       Sie hängt in einer eigenen Lage neben dem Knopf, nicht in ihm. Der
+       Weg mit der Maus führt also aus dem Knopf HERAUS und in die Karte
+       HINEIN — und dazwischen liegt für einen Augenblick nichts von
+       beidem. Deshalb horchen beide, und das Zuklappen wird jedes Mal neu
+       abgesagt, wenn der Zeiger irgendwo landet, wo er hingehört. */
+    if (perZeigen) {
+      schauId = String(p.id);
+      schauZu = () => zu();
+      lage.addEventListener('pointerenter', () => {
+        if (schauZuUhr) { clearTimeout(schauZuUhr); schauZuUhr = 0; }
+      });
+      lage.addEventListener('pointerleave', ereignis => {
+        if ((ereignis as PointerEvent).pointerType === 'touch') return;
+        schauZuSpaeter();
+      });
+    }
     document.addEventListener('keydown', beiTaste, true);
     /* Erst im nächsten Zug horchen: der Klick, der die Karte öffnet, würde
        sie sonst im selben Zug wieder schliessen. */
     setTimeout(() => document.addEventListener('mousedown', beiKlick), 0);
     griff.klappen(true);
-    griff.element.querySelector<HTMLElement>('.ru-fach-griff')?.focus();
+    /* NUR BEIM TIPPEN DEN FOKUS NEHMEN. Wer bloss hinschaut, hat den Fokus
+       womöglich in der Suche des Regals — ihn wegzuziehen, weil die Maus
+       über einen Ordner fuhr, wäre ein Diebstahl (§38). */
+    if (!perZeigen) griff.element.querySelector<HTMLElement>('.ru-fach-griff')?.focus();
+  };
+
+  /** Nach einer kurzen Frist zuklappen — jeder neue Zeigerkontakt sagt ab. */
+  const schauZuSpaeter = (): void => {
+    if (schauZuUhr) clearTimeout(schauZuUhr);
+    schauZuUhr = window.setTimeout(() => {
+      schauZuUhr = 0;
+      if (!schauId) return;
+      const zu = schauZu;
+      schauId = ''; schauZu = null;
+      if (zu) zu(); else document.querySelectorAll('.ru-fach-lage').forEach(a => a.remove());
+    }, SCHAU_ZU_MS);
   };
 
   /** Die Brotkrume der Ablage. An der Wurzel schweigt sie — ein Pfad mit
@@ -665,10 +748,42 @@ const Bibliothek = (() => {
         (bild ? '<img data-vorschau="' + esc(bild) + '" alt="" loading="lazy">' : '<span>PDF</span>') + '</span>' +
       '<div><span class="bib-studio-eyebrow">Weiterarbeiten</span><h2>' + esc(letzte.text || 'Ohne Titel') +
         '</h2><p>Zuletzt geöffnet ' + esc(wannText(letzte.zuletztGeoeffnet)) + '</p></div>' +
-      '<button type="button" data-studio-weiter="' + esc(letzte.id) + '">PDF öffnen' +
+      /* „WEITERLESEN", NICHT „PDF ÖFFNEN" (E516, L139). Hier stand ein
+         Jahr lang dasselbe Wort wie am Importeur, und dieser Knopf macht
+         das GEGENTEIL: er holt die zuletzt geöffnete PDF zurück. Redur
+         hat es als Fehler gemeldet — „wenn ich oben eine neue PDF einfügen
+         will, kopiert es immer die aktuelle PDF" —, und drei gemessene
+         Importwege waren sauber, weil der Import nie kaputt war. Kaputt
+         war das Wort. */
+      '<button type="button" data-studio-weiter="' + esc(letzte.id) + '">Weiterlesen' +
         '<span aria-hidden="true">↗</span></button></section>';
   };
 
+  /* DAS WORT DES IMPORTKNOPFES steht EINMAL da (§8). Es steht auch in
+     `index.html` am Kopfknopf; `test482 §4` hält beide zusammen. */
+  const IMPORT_WORT = 'PDF öffnen';
+  /**
+   * Den Importknopf beschriften, ohne ihm sein Zeichen wegzunehmen.
+   *
+   * VORHER STAND HIER `button.textContent = …`, und das ist genau die
+   * Zeile, die seit E515 wehtut: `textContent` wirft die KINDKNOTEN weg,
+   * und dort hängt seit E515 das gezeichnete Zeichen. Nach dem ersten
+   * Import stand der Knopf ohne Zeichen da — für den Rest der Sitzung, und
+   * kein Neuladen der Bibliothek holte es zurück, weil der Kopfknopf in
+   * `index.html` steht und nicht neu gezeichnet wird.
+   *
+   * Der zweite Fehler in derselben Zeile war der Name: der Knopf hiess
+   * danach „PDF importieren" statt „PDF öffnen". Ein Knopf, der seinen
+   * Namen wechselt, weil man ihn einmal gedrückt hat, ist ein anderer Knopf.
+   */
+  const importBeschriften = (wort?: string): void => {
+    document.querySelectorAll<HTMLButtonElement>('[data-studio-import]').forEach(knopf => {
+      const feld = knopf.querySelector<HTMLElement>('.wort')
+        || knopf.querySelector<HTMLElement>('span:not([data-sym])');
+      if (feld) feld.textContent = wort || IMPORT_WORT;
+      else knopf.textContent = wort || IMPORT_WORT;
+    });
+  };
   let pdfImportLaeuft = false;
   /** Derselbe PDF-Importer wie beim Archivimport, mit direktem Weg ins Dokument. */
   const pdfImportieren = (): void => {
@@ -696,8 +811,8 @@ const Bibliothek = (() => {
       pdfImportLaeuft = true;
       document.querySelectorAll<HTMLButtonElement>('[data-studio-import]').forEach(button => {
         button.disabled = true; button.setAttribute('aria-busy', 'true');
-        button.textContent = 'PDF wird importiert …';
       });
+      importBeschriften('PDF wird gelesen …');
       try {
         const ergebnis = await ArchivImport.dateiAlsDokument(datei, ziel);
         App.zeichneBaum();
@@ -710,8 +825,9 @@ const Bibliothek = (() => {
         pdfImportLaeuft = false;
         document.querySelectorAll<HTMLButtonElement>('[data-studio-import]').forEach(button => {
           button.disabled = !permitted('bearbeiten', zustand.ordner || undefined);
-          button.removeAttribute('aria-busy'); button.textContent = 'PDF importieren';
+          button.removeAttribute('aria-busy');
         });
+        importBeschriften();
       }
     }, { once: true });
     eingabe.click();
@@ -1236,10 +1352,17 @@ const Bibliothek = (() => {
       '<h1>' + esc(hier) + '</h1>' +
       '<button class="bib-neu" data-neu-auf>' +
         '<b aria-hidden="true">+</b><span>Neu</span></button>' +
+      /* EIN WORT FÜR EINE HANDLUNG (E516). Der Knopf im Kopf heisst „PDF
+         öffnen", dieser hiess „PDF importieren" — zwei Namen für dasselbe,
+         und keiner von beiden war der, den man las: sichtbar war im Regal
+         nur die Karte „Weiterarbeiten", die auch „PDF öffnen" hiess.
+         Jetzt tragen beide Importknöpfe dasselbe Wort und dasselbe
+         gezeichnete Zeichen, und sonst niemand. */
       '<button class="bib-studio-import" data-studio-import' +
         (pdfImportLaeuft || !permitted('bearbeiten', zustand.ordner || undefined)
           ? ' disabled title="Import läuft oder Bearbeitungsrechte fehlen"' : '') +
-        '>PDF importieren</button>' +
+        '><span data-sym="plus" aria-hidden="true"></span>' +
+        '<span class="wort">' + IMPORT_WORT + '</span></button>' +
       '<button class="bib-form-knopf" data-form="' + (form() === 'liste' ? 'deckel' : 'liste') + '" ' +
         'aria-label="' + (form() === 'liste' ? 'Als Dokumente anzeigen' : 'Als Liste anzeigen') + '">' +
         '<span data-sym="' + (form() === 'liste' ? 'library' : 'menu') + '" aria-hidden="true"></span></button>' +
@@ -1399,12 +1522,44 @@ const Bibliothek = (() => {
     });
     wrap.querySelectorAll<HTMLElement>('[data-ordner]').forEach(b =>
       b.addEventListener('click', () => geheIn(b.dataset['ordner'] || null)));
-    /* Das Auge am Ordner (E463) — derselbe Weg wie im ⌄-Menü, ohne Menü. */
+    /* Das Auge am Ordner (E463) — derselbe Weg wie im ⌄-Menü, ohne Menü.
+       Seit E508 öffnet auch das blosse HINSCHAUEN, siehe `blickHinein`. */
     wrap.querySelectorAll<HTMLElement>('.bib-blick[data-blick]').forEach(b => {
+      const seiteVon = (): any => Store.getBlock(b.dataset['blick'] || '');
       b.addEventListener('click', ereignis => {
         ereignis.stopPropagation();
-        const p = Store.getBlock(b.dataset['blick'] || '');
+        schauAbsagen();
+        const p = seiteVon();
+        /* Ein Tipp auf denselben Ordner, dessen Karte gerade vom Zeigen
+           offen steht, klappt sie nicht zu und wieder auf — er HÄLT sie
+           fest. Alles andere wäre ein Flackern für nichts. */
+        if (p && schauId === String(p.id) && document.querySelector('.ru-fach-lage')) {
+          schauId = '';
+          return;
+        }
         if (p) blickHinein(p, b.getBoundingClientRect());
+      });
+      b.addEventListener('pointerenter', ereignis => {
+        const e = ereignis as PointerEvent;
+        /* NUR DIE MAUS. Ein Finger meldet auf manchen Geräten ein
+           `pointerenter`, das kein Überfahren ist — er tippt gerade. Und
+           ein Gerät ohne Zeiger meldet gar keines; die Abfrage kostet
+           dort nichts. */
+        if (e.pointerType !== 'mouse' || !zeigerHatHover()) return;
+        if (document.querySelector('.ru-fach-lage')) return;
+        schauAbsagen();
+        schauUhr = window.setTimeout(() => {
+          schauUhr = 0;
+          const p = seiteVon();
+          if (p) blickHinein(p, b.getBoundingClientRect(), true);
+        }, SCHAU_AUF_MS);
+      });
+      b.addEventListener('pointerleave', ereignis => {
+        if ((ereignis as PointerEvent).pointerType === 'touch') return;
+        /* Noch nicht aufgegangen: die Absicht war keine. Schon offen: die
+           Karte selbst entscheidet, ob der Zeiger zu ihr gewandert ist. */
+        if (schauUhr) { clearTimeout(schauUhr); schauUhr = 0; }
+        if (schauId) schauZuSpaeter();
       });
     });
     wrap.querySelectorAll<HTMLElement>('.bib-deckel[data-id]').forEach(k => {

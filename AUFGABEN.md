@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — zweiundzwanzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — fünfzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -336,9 +336,274 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Strich-Punkt, in EINER Marke, und er überlebt das Geradeziehen. Und
     Zurück/Vor stehen links, wie bei GoodNotes und wie auf Redurs Bild.
     **Steht.**
+  · **G23 — Was auf dieser Seite gesperrt ist** (E492, test462): eine Liste
+    im Inspector mit „Entsperren" je Marke. Das war ein Rundlauf ohne
+    Ausgang — sperren geht über die Auswahl, und die geht bei einer
+    gesperrten Marke nicht. Zwei Funde kamen vom Bild: der Stil im Namen
+    und das Aufleuchten der Marke beim Berühren der Zeile. **Steht.**
+  · **G24 — Präsentieren mit Laserpointer** (E493, test463): Vollbild ohne
+    Leisten, eine Seite ganz, blättern mit Tipp und Taste, ein roter Punkt,
+    der zeigt und nicht schreibt. Die L133-Zeile, die das für „ausserhalb
+    des PDF-Teils" erklärte, war falsch — es braucht weder Server noch
+    Konto. **Steht.**
+  · **G25 — Die Elemente-Bibliothek** (E494, test464): eine Auswahl wird
+    unter einem Namen zum Stempel und überlebt das Dokument — das zwölfte
+    Werkzeug ⭐, „Als Element" bei der Auswahl, ein Feld von Kacheln mit
+    dem Bild jedes Elements, gesetzt mittig unter dem Zeiger. Auch hier
+    war die L133-Begründung keine: „wäre neu" ist eine Beschreibung. Die
+    Bibliothek liegt in `meta` und reist in jeder Sicherung mit; sechzig
+    Elemente, keines über 200 KB, und beide Grenzen werden gesagt.
+    Nebenbei fiel auf, dass `test348 §5` seit E486 rot war. **Steht.**
+
+  · **G26 — Cornell und Notenlinien** (E495, test465): die zwei Papiere, an
+    denen man GoodNotes' Vorlagenwähler erkennt — 50 mm Spalte, 30 mm Kopf,
+    50 mm Zusammenfassung; fünf Linien im Abstand von 3 mm, dann 15 mm
+    Luft. Sie stehen im selben Katalog wie die fünf alten und damit auch im
+    Wähler des Studios. Das Bild fand, dass Prozentzahlen in einem Verlauf
+    die KACHEL meinen und nicht das Element: das erste Notenpapier zeigte
+    eine Linie je System statt fünf, und kein Prüflauf hätte das gemeldet.
+    **Steht.**
+
+  · **G27 — Eine Seite in ein anderes Dokument** (E496, test466): GoodNotes'
+    „Copy to…" und „Move to…". Kopieren gibt frische Kennungen und ein
+    eigenes Seitenbild; Verschieben hängt denselben Block um und behält
+    seine Kennung — sonst zeigte jeder Verweis auf die Seite ins Leere.
+    Die Reihenfolge beim Verschieben ist die Sicherheit: erst dazulegen,
+    dann umhängen, zuletzt wegnehmen. Der Prüflauf fand, dass die erste
+    Fassung das Rechtetor mit `edit` statt `bearbeiten` fragte — die Liste
+    der Ziele war auf jedem Gerät leer. **Steht.**
+
+  · **G28 — Der breite Lauf** (E497): nach den vier Bögen alles gefahren,
+    was die geänderten Bausteine anfasst — 84 Suiten, gesucht statt
+    geraten. Zwei echte Fehler, beide älter als diese Bögen und beide rot,
+    ohne dass es jemand sah: das Abdeckband hiess in zwei Leisten
+    verschieden, und „Zurück"/„Vor" rollten am Telefon aus dem Bild, weil
+    die Klebe-Regel nach E490 noch auf `right:0` stand. **Steht.**
+
+  · **G29 — Die zwei letzten Reste** (E498, test467): „Ausschnitt" und
+    „Erkennen" ruhen sichtbar am Knopf, solange das Zoom-Fenster offen ist
+    (bisher gab es die Absage erst nach dem Druck), und Seiten lassen sich
+    über Spaltengrenzen hinweg umordnen — mit der Umhänge-Maschinerie aus
+    E496. Beim Abarbeiten kam heraus, dass drei L133-Zeilen gar keine
+    Lücke gegenüber GoodNotes sind (Verbinder, Auswahl über mehrere
+    Blätter, Stift-Favoriten); sie stehen jetzt als Wunsch da, nicht als
+    Rückstand. **Steht.**
+
+  · **G30 — Ein mehrseitiges Blatt in Seiten zerlegen** (E499, test468):
+    die letzte offene Zeile unter „Seiten". Nicht die Form abgeschafft,
+    sondern einen Griff gebaut, der sie in GoodNotes-Form bringt. Jede
+    Marke kommt auf die Seite, in der ihre Mitte liegt, und bleibt ganz;
+    was über eine Grenze läuft, wird gezählt und gesagt, bevor etwas
+    geschieht. **Steht.**
+
+  · **G31 — Die Schalensuche findet die Stelle** (E500, test469): Strg P
+    nennt bei einem Dokument die Seite, zeigt ihren Ausschnitt und springt
+    dorthin — und findet dabei zum ersten Mal, was von HAND geschrieben
+    ist: Marken stehen in keinem Suchindex, und ein Heft mit dem Wort als
+    Textmarke war unauffindbar. Die Gegenprobe hat einen zweiten Sprungweg
+    entlarvt, den `zeigeBlock` längst konnte. **Steht.**
+
+  · **G32 — Ein Farbsatz wird eine Voreinstellung** (E501, test470 §1–§3):
+    das Dossier verlangt „Farben und Stärken … als Presets". Redion hatte
+    die Farben; Stift und Strichstärke fehlten. Kein zweiter Katalog,
+    sondern zwei optionale Felder am vorhandenen Satz — ein Satz von
+    vorher lädt weiter genau seine Farben. Der Fund nebenbei: die
+    Strichstärke steht an vier Orten, und drei Wege dorthin waren drei
+    Abschriften. Jetzt eine Tür. **Steht.**
+
+  · **G33 — GIF und Formelbuch als Marke** (E502, test470 §4–§6): ein GIF
+    geht mit seinem Typ und seiner Länge in die Ablage und läuft deshalb
+    auf dem Blatt weiter; eine PDF-Seite wird zur Bildmarke und lässt sich
+    verschieben, ziehen, drehen und sperren wie jede andere. Kein neues
+    Werkzeug — ein zweiter Weg in `bildAblegen`. **Steht.**
+
+  · **G34 — Das eigene Formelheft über dem Dokument** (E503, test471):
+    Redur wollte sein Original im Studio sehen, schieben, in der Grösse
+    ziehen und ein- und ausschalten. Der Knopf steht jetzt neben dem
+    Fachzeichen, das Heft merkt sich, dass es aufgeschlagen war, und die
+    geladene PDF bleibt Byte für Byte dieselbe. Drei Fehler kamen dabei
+    heraus, die kein Auge gemeldet hätte: der Griff zum Ziehen war seit
+    jeher weg (jedes Neumalen nahm ihn mit), das Fenster legte sich auf
+    den Knopf, der es öffnet, und der Horcher meldete sich vor dem ersten
+    Ruf wieder ab. **Steht.**
+
+  · **G35 — Was das Stift-Dossier gefunden hat** (E504, test472): ein
+    Prüflauf über einundzwanzig Punkte von „Digitale Stifte und
+    PDF-Annotationen", jeder Fund adversarisch gegengelesen. Fünf Punkte
+    standen schon (coalesced Samples im gespeicherten Strich, Vorhersage
+    nie in den Daten, Drehung als affine Matrix, Full Rewrite, Kontur mit
+    variabler Breite). Zwei waren echte Fehler und sind repariert: der
+    Glätter hing an der Abtastrate des Geräts (bei 240 Hz viermal
+    schwächer als gemessen), und `pointercancel` speicherte den Strich,
+    statt ihn zu verwerfen. **Steht.**
+
+  · **G36 — Die ungeprüfte Zusage und der halbe Satz** (E505, test473):
+    CropBox und `/Rotate` wurden von keiner einzigen Prüf-PDF je gefahren
+    — jetzt schon, mit einem Ausschnitt, dessen Ursprung nicht bei null
+    liegt, und an echten Pixeln gemessen. Es stimmt alles. Und der
+    PDF-Export sagt jetzt sichtbar, was er tut, statt nur im `title`, den
+    am Telefon niemand sieht. **Steht.**
+
+  · **G37 — Handschrift wird eine echte Annotation** (E506, test474): der
+    Schlusssatz des Stift-Dossiers, umgesetzt. Stift und Marker gehen als
+    `/Ink`-Annotation mit `/InkList` und `/AP` heraus statt als Pixel im
+    Seitenbild; in Adobe Reader sind sie damit anklickbar, verschiebbar
+    und löschbar. Das Abdeckband bleibt mit Absicht im Bild — eines, das
+    man wegschieben kann, deckt nichts ab. Geprüft an zurückgelesenen
+    Bytes: die Seite zweimal gerendert, einmal ohne und einmal mit
+    Annotationen, und der Unterschied ist der Beweis. **Steht.**
+
+  · **G38 — Die Neigung des Stifts** (E507, test475): `tiltX`, `tiltY`,
+    `twist`, `altitudeAngle` und `azimuthAngle` kamen im ganzen `src/`
+    kein einziges Mal vor. Jetzt schattiert der Bleistift, wenn man ihn
+    flach hält — gemessen 1,8 pt gegen 3,3 pt bei gleichem Druck. Nur der
+    Bleistift; ein Füller wird durch Schräghalten nicht breiter. Und der
+    Druck sagt seither, ob er gemessen oder aus dem Tempo gerechnet ist.
+    Fund nebenbei: das Vereinfachen beim Absetzen indizierte `pressure`
+    neu, das neue Feld aber nicht — fünfzehn Neigungen zu acht Punkten.
+    **Steht.**
+
+  · **G39 — Der Blick kommt beim Hinschauen** (E508, test476): Redurs
+    Wunsch — die Ordnerkarte beim Überfahren statt beim Klicken. Beides,
+    nicht statt: erzeigt geht sie wieder zu, angetippt bleibt sie (§37,
+    das Telefon kennt kein Überfahren). 280 ms Wartezeit trennen die
+    Absicht vom Vorbeifahren. Dazu das Lustige: eine Welle aus EINER Zahl
+    statt fünf geratener, Überschwingen, eine wippende Klappe, und ein
+    Blatt, das sich aufrichtet. Drei Wächter des ersten Entwurfs waren vor
+    der Arbeit schon grün und mussten geschärft werden. **Steht.**
+
+  · **G40 — Ein Stift für Fachzeichen** (E509, test477): Redurs Wunsch —
+    die zehn Adern eines Schaltplans als eigene Farbreihe, jede mit ihrem
+    Namen beim Überfahren. PE grün-gelb und strichpunktiert, N blau und
+    NUR Striche, L1 braun, L2 schwarz, L3 grau, S orange, und vier weit
+    auseinanderliegende Töne für die Korrespondierenden. Der Stift steht
+    am ENDE der Stiftreihe, damit der gewohnte Rundlauf bleibt. Nebenbei
+    heissen jetzt auch die fünf gewöhnlichen Farben beim Namen statt
+    fünfmal „Farbe". Drei Fehler: die Reihe schaltete nur beim
+    Stiftwechsel um (gefunden vom Bild, nicht vom Prüflauf), der Einschub
+    zerschnitt eine CSS-Regel, und L2 ist dasselbe Schwarz wie der erste
+    Farbtupfer. **Steht.**
+
+  · **G41 — Die Mitte einer Linie zählt auch** (E510, test439 §5b): kein
+    Wunsch, sondern ein roter Lauf. Die Hälfte-Regel des
+    Kritzel-Radierers zählte gespeicherte Punkte — ein Strich hat
+    hunderte, eine gerade Linie zwei. Ein Gekritzel über ihre Mitte nahm
+    sie deshalb seit E466 nie weg. Jetzt wird an der LÄNGE gemessen
+    (`InkGeometry.densify`). Aufgefallen ist es, weil E504 die Glättung
+    auf Zeit umstellte und die zeitlosen Ereignisse eines Prüflaufs
+    seither wie eine Hand mit 20 px je Millisekunde aussehen. **Steht.**
+
+  · **G42 — Die Tinte holt die Spitze ein** (E511, test478): Redurs Wunsch
+    „flüssiger zeichnen, mehr Animationen". Gemessen wurde zuerst, und die
+    naheliegende Vermutung war falsch: 1200 Punkte auf einem vollen Blatt
+    laufen flach bei 16,7 ms je Bild, kein einziger Aussetzer. Was fehlte,
+    war nicht Geschwindigkeit, sondern WO die Tinte liegt: bei 0,4 px/ms —
+    dem Tempo der Handschrift — lag sie 7,16 px neben der Stiftspitze, und
+    der Fehler wechselte mit dem Tempo das Vorzeichen. Der nasse Schwanz
+    rechnet jetzt an den ROHEN Punkten und beginnt an der gemessenen
+    Stelle; gespeichert wird davon weiterhin nichts. Dazu vier Bewegungen,
+    die etwas sagen, und eine Abschaltung für Menschen, die keine wollen.
+    **Steht.**
+
+  · **G43 — Die Leiste wie GoodNotes, und eine Fläche, die nicht mehr
+    stirbt** (E512, test479 + test480): Redurs Fehlerbericht zuerst — nach
+    ein paar Minuten zeichnete nichts mehr, weder Stift noch Maus. Es lag
+    nicht an der Zeit (alle zehn Uhren der App einzeln ausgelöst: unschuldig),
+    sondern an EINEM verlorenen `pointerup`: die Kennung des führenden
+    Zeigers blieb stehen und wies jeden anderen ab. Jetzt wird das Ende
+    auch am Fenster gehört, und ein verwaister Führender wird nach 500 ms
+    übernommen — sein Zug abgeschlossen, nicht verworfen. Dazu die drei
+    Wünsche: die Stiftreihe statt des Wechselknopfs, der Laserpointer als
+    Werkzeug (es gab ihn nur im Vollbild) und vier Plätze für die Leiste.
+    **Steht.**
+
+  · **G44 — Das Notizbuch im Katalog** (E513, test265): Redur wollte
+    hinter dem „+" dieselben fünf Wege wie in GoodNotes. Vier standen da;
+    das Notizbuch fehlte, obwohl Redion es seit E264 kann — der Weg lag
+    nur im Regal „Notizhefte". Jetzt steht er im einen Katalog, über
+    dieselbe Anlege-Maschine (§8). Der zweite Teil derselben Nachricht —
+    „eine neue PDF kopiert die aktuelle" — liess sich auf drei gemessenen
+    Wegen NICHT nachstellen; die Frage nach der genauen Stelle steht als
+    **L139** — und ist mit **G47** gefunden: es war kein Import-Fehler,
+    sondern ein Wort an der falschen Stelle. **Steht.**
+
+  · **G45 — Die Chronik „Red-ur"** (E514, test481): Redurs zweites Gehirn.
+    Eine Quelle (`chronik/chronik.json`), drei Ansichten — UR.md,
+    PROBLEME.md und ein Fenster in Redion, das die Suche nach „Red-ur"
+    öffnet. Mit vier Graphen, dem Stapel der Tage in echter Perspektive,
+    jeder Nachricht 1:1 samt Satzverbesserung und besserem Prompt, und
+    jedem Problem mit seiner falschen Vermutung. Ehrlich dabei: die
+    Uhrzeiten der Nachrichten sind abgeleitet und mit „ca." gekennzeichnet, die Token
+    fehlen (L141), und der Code ist ein Türschild (L140). **Steht.**
+
+  · **G46 — Die Zeichen der Leiste** (E515, test480 §5): Redur schickte
+    ein Foto der GoodNotes-Leiste — „Nehme die symbole. Für die redion
+    bitte 1:1". Die dreizehn Werkzeuge trugen Emoji: eigene Farbe, eigene
+    Strichstärke, eigene Grundlinie, auf jedem System anders. Jetzt sind
+    es dreiunddreissig neue Zeichen im Register (24 × 24, Strichstärke
+    1,7, `currentColor`), nach demselben Raster wie die hundert seit E273
+    — kein zweiter Zeichensatz in der PDF-Fläche (§8). Sieben Textzeichen
+    bleiben mit Grund, allen voran das `Aa` der Schriftart: es ist eine
+    Schriftprobe und zeigt, was keine Zeichnung zeigen kann. Nachgemessen
+    dabei: die festen 18 px sind rund 6 breiter als ein Emoji, dreizehnmal
+    fünfundsiebzig Pixel — die Werkzeugzeile kippte in eine zweite, und
+    `test351` hat es gefunden. Zurückgeholt an drei Stellen, jede mit
+    Grund. Und danach fand das BILD, was keine Zahl gemeldet hatte: Füller,
+    Kugelschreiber und Bleistift waren derselbe schräge Stift — gemessen
+    73 % gemeinsame Tinte bei 16 px. Der erste Versuch (schärfere Spitzen)
+    machte es schlimmer, 85 %; bei dieser Grösse trägt der Schaft alles.
+    Jetzt drei Umrisse statt dreier Spitzen, kein Paar über 46 %, und
+    `test480 §7` hält die Grenze bei 60. **Steht.**
+
+  · **G47 — L139 gefunden** (E516, test482): Redurs „eine neue PDF kopiert
+    die aktuelle" war kein Import-Fehler. Im Regal waren oben zwei Knöpfe
+    zu sehen: „PDF öffnen" holte die ZULETZT geöffnete PDF zurück, „PDF
+    importieren" las eine neue ein — und der Knopf der Kopfleiste, der
+    ebenfalls „PDF öffnen" heisst und wirklich importiert, ist dort
+    ausgeblendet. Wer eine PDF öffnen will, drückt „PDF öffnen" und bekommt
+    seine aktuelle. Deshalb waren die drei Messungen aus E513 sauber: sie
+    fragten, ob der Import die richtige Datei ablegt, nicht welchen Knopf
+    ein Mensch drückt. Jetzt heissen beide Importknöpfe gleich und die
+    Karte „Weiterlesen". Der vierte Weg — „PDF hier einfügen" im Inspector,
+    den kein Prüflauf öffnen konnte — ist gefahren und sauber. **Steht.**
+
+  · **G48 — Der Arbeitsstand auf dem Laptop** (E517, test353): Redur wollte
+    nach jeder Änderung wissen, wie er den aktuellen Stand holt — und es
+    ging nicht. `holen.bat` holt `main`, `main` steht still bis zum grünen
+    Gesamtlauf (§46), gearbeitet wird auf einem Zweig (§43). Drei richtige
+    Regeln, und zusammen war der Arbeitsstand vom Laptop aus unerreichbar.
+    Jetzt nimmt `holen.bat` einen Zweignamen (ohne Angabe weiterhin `main`,
+    das ist Absicht), und `holen-zweig.bat` fragt danach — ohne eigene
+    Rettungslogik, die steht in einer Datei (§8). Sechs git-Stellen einzeln
+    geprüft, die Folge in einem echten Repo nachgefahren. **Steht.**
+
+  · **G49 — Die fertigen Befehle** (E518, test353 §5c): Redur klickt nicht,
+    er kopiert. Die PowerShell-Zeilen stehen jetzt in
+    `START-MIT-CLAUDE-CODE.md` statt nur im Gespräch — und der Alltagsbefehl
+    ruft `holen.bat`, nicht `git checkout`: das kürzere überspränge die
+    ganze Rettung. Vier Zusagen halten die Stellen, an denen ein Abdriften
+    wehtut; die letzte war beim ersten Lauf rot und hat den Satz gefangen,
+    der die Regel erklärt. **Steht.**
+
+  · **G50 — Der Vergleich gegen den Zweig** (E519, test353 §5b2/§5b3):
+    Redur fragte, wie er sieht, ob GitHub und Laptop gleich sind — und
+    `vergleichen.bat` hätte ihm die falsche Antwort gegeben: es sah fest
+    gegen `main`, das sechs Bögen zurückliegt. Jetzt vergleicht es gegen
+    den Zweig, auf dem der Ordner steht; `vergleichen.bat main` ausdrücklich
+    gegen den geprüften Stand. Zwei Skripte, zwei Vorgaben, jede mit ihrem
+    Grund. Die vier Antworten von `git status -sb` sind in einem echten
+    Repo gemessen statt behauptet. Schliesst L142 Punkt 1. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **fünfzig Bögen**; die Überschrift
+zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
-Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).
+Handschrift-zu-Text, Mathe, GIPHY, Wolke, DOCX/PPTX) — und dazu die
+benannten Reste: der Verbinder des Shape-Tools, die Auswahl über mehrere
+Blätter, das Umordnen über mehrere Spalten, die Vorlagenseite mit Inhalt,
+mehrseitige Notizhefte als EIN Block, „Ausschnitt" und „Erkennen" im
+Zoom-Fenster, der getippte Text im gesicherten Bild und die Schalensuche
+mit Stellen.
 
 **Priorität** — hoch; es ist Redurs Auftrag vom 7. September.
 

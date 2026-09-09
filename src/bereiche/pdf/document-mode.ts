@@ -134,7 +134,8 @@ const DocumentMode = (() => {
    * `typ` und `guete` gehen an `toBlob`: PNG für ein einzelnes Bild
    * (verlustfrei), JPEG für das PDF (weil `DCTDecode` genau das nimmt).
    */
-  const seiteZeichnen = async (block: any, typ = 'image/png', guete = 0.92): Promise<SeitenBild | null> => {
+  const seiteZeichnen = async (block: any, typ = 'image/png', guete = 0.92,
+                               nimm?: (m: any) => boolean): Promise<SeitenBild | null> => {
     if (!block) return null;
     const bw = Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE;
     const bh = Number(block.bh) || Number(block.blattHoehe) || SheetSpace.A4_HOEHE;
@@ -156,7 +157,12 @@ const DocumentMode = (() => {
         if (url) stift.drawImage(await bildLaden(url), 0, 0, W, H);
       } catch { /* dann ohne Seitenbild — die Marken kommen trotzdem */ }
     }
-    const marken = Array.isArray(block.marken) ? block.marken : [];
+    /* WELCHE MARKEN INS BILD GEHEN (E506). Ohne Filter alle — so malt „Als
+       Bild sichern" weiterhin die ganze Seite. Der PDF-Export lässt die
+       weg, die er als echte Annotation obendrauf schreibt; stünden sie
+       auch im Bild, stände jeder Strich zweimal da. */
+    const alleMarken = Array.isArray(block.marken) ? block.marken : [];
+    const marken = nimm ? alleMarken.filter(nimm) : alleMarken;
     if (marken.length && typeof Marken !== 'undefined') {
       /* ── DIE BILDMARKEN (E479, L133) ────────────────────────────────────
          Ein Foto auf der Seite fehlte auf dem gesicherten Bild. ZWEI
@@ -246,16 +252,72 @@ const DocumentMode = (() => {
      dauert es Sekunden, und eine Oberfläche, die dabei nichts sagt, sieht
      kaputt aus. Der Rückruf darf auch `false` sagen — dann bricht es ab
      und gibt `null`, statt ein halbes Dokument zu liefern. */
+  /**
+   * EINE MARKE AUS BLATTPUNKTEN IN SEITENPUNKTE (E506).
+   *
+   * Marken liegen im Blattraum: Ursprung oben links der UNGEDREHTEN Seite.
+   * Das gemalte Bild dreht sich mit `gedreht` (E467) — bei 90 und 270 sind
+   * Breite und Höhe der fertigen Seite getauscht. Eine Annotation muss
+   * dieselbe Drehung mitmachen, sonst liegt sie quer zu ihrem eigenen
+   * Strich.
+   *
+   * DIE DREHUNG IST EINE MATRIX, kein Tausch von x und y — das Stift-
+   * Dossier nennt auf Seite 6 ausdrücklich den Ad-hoc-Tausch als den
+   * Fehler, nach dem Ink „versetzt, gespiegelt oder um 90 Grad gedreht"
+   * erscheint. Hier ist es die Drehung um die Blattmitte, danach die
+   * Verschiebung in die Mitte der fertigen Seite; genau die drei Schritte,
+   * die `seiteZeichnen` an der Leinwand macht.
+   *
+   * Der Schreiber dreht danach nur noch die y-Achse um (Seite → Default
+   * User Space) — das ist SEINE Sache und steht dort.
+   */
+  const aufSeite = (marke: any, block: any): any => {
+    if (!marke) return null;
+    const bw = Number(block?.bw) || Number(block?.blattBreite) || SheetSpace.A4_BREITE;
+    const bh = Number(block?.bh) || Number(block?.blattHoehe) || SheetSpace.A4_HOEHE;
+    const g = SheetSpace.gedrehtVon(block);
+    const quer = g === 90 || g === 270;
+    const pw = quer ? bh : bw, ph = quer ? bw : bh;
+    const dreh = (q: number[]): [number, number] => {
+      const dx = (Number(q[0]) || 0) - bw / 2, dy = (Number(q[1]) || 0) - bh / 2;
+      const rx = g === 90 ? -dy : g === 180 ? -dx : g === 270 ? dy : dx;
+      const ry = g === 90 ? dx : g === 180 ? -dy : g === 270 ? -dx : dy;
+      return [Math.round((pw / 2 + rx) * 100) / 100, Math.round((ph / 2 + ry) * 100) / 100];
+    };
+    return {
+      striche: (marke.striche || []).map((s: number[][]) => s.map(dreh)),
+      kontur: (marke.kontur || []).map((k: number[][] | null) => k ? k.map(dreh) : null),
+      farbe: marke.farbe, breite: marke.breite,
+      deckkraft: marke.deckkraft, name: marke.name
+    };
+  };
+
   const alsPdf = async (seiten: any[],
                         melden?: (fertig: number, gesamt: number) => boolean | void): Promise<Blob | null> => {
     if (typeof PdfWriter === 'undefined' || !Array.isArray(seiten) || !seiten.length) return null;
     const schreiber = PdfWriter.neu();
+    /* ══ HANDSCHRIFT WIRD ANNOTATION (E506) ═══════════════════════════════
+       Was `Marken.annotierbar` sagt, geht NICHT ins Bild, sondern als
+       echte `/Ink`-Annotation obendrauf. Die Regel steht in `marken.ts`,
+       weil dort auch Farbe, Breite und Druckkurve stehen (§8); hier wird
+       nur gefragt.
+
+       KANN DIE APP DAS ÜBERHAUPT? Ein älterer Stand von `Marken` oder ein
+       Schreiber ohne Annotationen darf das PDF nicht kaputt machen — dann
+       gehen alle Marken wie bisher ins Bild. */
+    const kannAnnot = typeof Marken !== 'undefined' && !!Marken.annotierbar && !!Marken.alsAnnotation;
     for (let i = 0; i < seiten.length; i++) {
       if (melden && melden(i, seiten.length) === false) return null;
-      const bild = await seiteZeichnen(seiten[i], 'image/jpeg', 0.88);
+      const block = seiten[i];
+      const roh = Array.isArray(block?.marken) ? block.marken : [];
+      const annot = kannAnnot ? roh.filter((m: any) => Marken.annotierbar(m)) : [];
+      const bild = await seiteZeichnen(block, 'image/jpeg', 0.88,
+        annot.length ? (m: any) => !Marken.annotierbar(m) : undefined);
       if (!bild) continue;
       schreiber.seite({ bild: bild.blob, pixelBreite: bild.pixelBreite, pixelHoehe: bild.pixelHoehe,
-                        breite: bild.breite, hoehe: bild.hoehe });
+                        breite: bild.breite, hoehe: bild.hoehe,
+                        marken: annot.map((m: any) => aufSeite(Marken.alsAnnotation(m), block))
+                                     .filter(Boolean) as any[] });
     }
     /* Keine einzige Seite hat sich malen lassen — dann ist ein PDF mit null
        Seiten die falsche Antwort. Lieber gar keines und ein Wort dazu. */
@@ -407,6 +469,63 @@ const DocumentMode = (() => {
    * schon als Kästen auf dem Papier und gehören nicht noch einmal in die
    * Liste.
    */
+  /**
+   * TRÄGT DIESE DOKUMENTSEITE DAS WORT? Und wenn ja, in welchem Text?
+   *
+   * Die eine Stelle, an der das entschieden wird (§8) — seit E500 fragen
+   * zwei danach: die Suche über mehrere Dokumente (E487) und die
+   * Schalensuche, die jetzt die STELLE nachliefert statt nur das Dokument.
+   * Zwei Abschriften derselben Regel liefen auseinander, und dann fände die
+   * eine Suche etwas, das die andere nicht kennt.
+   *
+   * Was durchsucht wird, ist NICHT die PDF-Quelle: die läge für jedes
+   * Dokument einzeln zu lesen an. Durchsucht wird, was ohnehin im Speicher
+   * liegt — `suchtext` der PDF-Seite (E107), der Text der Text- und
+   * Zettelmarken eines Blatts und der Text seiner Kinder.
+   */
+  const fundIm = (block: any, q: string): string => {
+    if (!block || !q) return '';
+    if (block.type === 'pdfseite') {
+      const text = String(block.suchtext || block.ocrText || '');
+      return text.toLowerCase().includes(q) ? text : '';
+    }
+    for (const m of (Array.isArray(block.marken) ? block.marken : [])) {
+      if ((m?.art === 'text' || m?.art === 'zettel') && String(m.text ?? '').toLowerCase().includes(q)) {
+        return String(m.text);
+      }
+    }
+    for (const kind of Store.childrenOf(block.id) as any[]) {
+      if (String(kind?.text ?? '').toLowerCase().includes(q)) return String(kind.text);
+    }
+    return '';
+  };
+
+  /**
+   * DIE ERSTE STELLE IN DIESEM DOKUMENT, die das Wort trägt (E500).
+   *
+   * Die Schalensuche (Strg P) findet Seiten; bei einem Dokument mit
+   * zweihundert Seiten landete man damit auf Seite eins und musste dort
+   * ein zweites Mal suchen. Diese Funktion liefert die Seitenzahl, den
+   * Block und einen Ausschnitt nach — mit derselben Rechnung wie die
+   * Suche im Studio.
+   */
+  const stelleIn = (page: any, wort: string): { blockId: string; nr: number; auszug: string } | null => {
+    const q = String(wort || '').trim().toLowerCase();
+    if (q.length < 2 || !page) return null;
+    const liste = documentsIn(page);
+    for (let i = 0; i < liste.length; i++) {
+      const fund = fundIm(liste[i], q);
+      if (!fund) continue;
+      const roh = fund.replace(/\s+/g, ' ');
+      const wo = roh.toLowerCase().indexOf(q);
+      const von = Math.max(0, wo - 30);
+      const auszug = (von > 0 ? '… ' : '') + roh.slice(von, von + 90).trim()
+        + (roh.length > von + 90 ? ' …' : '');
+      return { blockId: String(liste[i]!.id), nr: i + 1, auszug };
+    }
+    return null;
+  };
+
   const fremdeTreffer = (wort: string, ausser: string): { liste: FremdTreffer[]; mehr: boolean } => {
     const q = String(wort || '').trim().toLowerCase();
     if (q.length < 2) return { liste: [], mehr: false };
@@ -428,20 +547,7 @@ const DocumentMode = (() => {
       const seite = seiteZu(block);
       if (!seite || !seite.alive || seite.id === ausser) continue;
       if (typeof Konten !== 'undefined' && Konten.darf && !Konten.darf('lesen', seite.id)) continue;
-      let fund = '';
-      if (block.type === 'pdfseite') {
-        const text = String(block.suchtext || block.ocrText || '');
-        if (text.toLowerCase().includes(q)) fund = text;
-      } else {
-        for (const m of (Array.isArray(block.marken) ? block.marken : [])) {
-          if ((m?.art === 'text' || m?.art === 'zettel') && String(m.text ?? '').toLowerCase().includes(q)) {
-            fund = String(m.text); break;
-          }
-        }
-        if (!fund) for (const kind of Store.childrenOf(block.id) as any[]) {
-          if (String(kind?.text ?? '').toLowerCase().includes(q)) { fund = String(kind.text); break; }
-        }
-      }
+      const fund = fundIm(block, q);
       if (!fund) continue;
       liste.push({ seiteId: seite.id, blockId: block.id,
         name: String(seite.text || 'Ohne Titel'), icon: String(seite.icon || '📄'),
@@ -667,6 +773,20 @@ const DocumentMode = (() => {
       makeAction('select-region', '⌗ Ausschnitt'),
       makeAction('recognize', '⌁ Erkennen')
     );
+    /* BEIM NEUZEICHNEN DEN RUHEZUSTAND MITNEHMEN (E498). Der Inspector baut
+       seine Knöpfe frisch; ohne diese vier Zeilen stünden sie nach einem
+       Seitenwechsel wieder offen da, obwohl das Zoom-Fenster noch offen
+       ist. Denselben Zustand setzt `ausschnittRuhen` beim Öffnen und
+       Schliessen — hier ist er nur die Startstellung. */
+    if (stateFor(page.id).lupe) {
+      for (const was of ['select-region', 'recognize']) {
+        const knopf = actions.querySelector<HTMLButtonElement>('[data-document-action="' + was + '"]');
+        if (!knopf) continue;
+        knopf.disabled = true;
+        knopf.setAttribute('aria-disabled', 'true');
+        knopf.title = 'Ruht, solange das Zoom-Fenster offen ist — der Ausschnitt gilt der ganzen Seite.';
+      }
+    }
     /* DER EXPORT GILT DEM DOKUMENT, nicht der Seite (E488).
 
        ER STEHT NEBEN „PDF hinzufügen", und das Bild hat den Platz gewählt:
@@ -683,8 +803,26 @@ const DocumentMode = (() => {
        heraus. Zwei Zeichen für dieselbe Sache wären eine Sprache zu viel. */
     const pdfKnopf = makeAction('export-pdf', '⬇ Als PDF sichern');
     pdfKnopf.className = 'document-import';
-    pdfKnopf.title = 'Das ganze Dokument mit allen Marken als PDF speichern — '
-      + 'jede Seite als Bild; der Text der ursprünglichen PDF ist darin nicht mehr durchsuchbar.';
+    /* WAS DIESER KNOPF WIRKLICH TUT, STEHT DA — und nicht nur im `title`
+       (E505). Das Stift-Dossier, Seite 9 und 18: Flattening ist eine
+       legitime Wahl fuer unveraenderliche Weitergabe, aber es soll eine
+       ENTSCHEIDUNG sein, und vorher soll eine editierbare Masterkopie
+       existieren.
+
+       Beides ist bei Redion erfuellt — das Original wird nie angefasst
+       (E106), und die Marken bleiben in der Ablage. Nur WUSSTE es niemand:
+       der Satz stand im `title`, er nannte allein den verlorenen Suchtext,
+       und am Telefon gibt es kein Hover (§37). Wer dort exportierte, erfuhr
+       gar nichts und merkte es erst beim Empfaenger. */
+    /* SEIT E506 STIMMT DIE HÄLFTE NICHT MEHR, DIE HIER STAND: die Striche
+       sind für ein fremdes Programm sehr wohl Anmerkungen. Ein Satz, der
+       schlechter redet, als die App ist, ist genauso falsch wie einer, der
+       zu viel verspricht (§33). */
+    pdfKnopf.title = 'Das ganze Dokument mit allen Marken als PDF speichern. '
+      + 'Deine Handschrift wird zu echten Anmerkungen, die ein fremdes PDF-Programm '
+      + 'anklicken, verschieben und löschen kann. Die Seite darunter wird ein Bild: '
+      + 'ihr Text ist darin nicht mehr durchsuchbar, und Verweise sind keine Verweise '
+      + 'mehr. Dein Original und deine Marken bleiben in Redion unverändert.';
     const importButton = makeAction('import', '＋ PDF hinzufügen');
     importButton.className = 'document-import';
     /* DIE KENNUNG, NICHT DAS OBJEKT (E471, L102 zum zweiten Mal). `darf`
@@ -808,8 +946,29 @@ const DocumentMode = (() => {
       seitenKnopf('page-add-image', '🖼', 'Bild als Seite', 'Ein Foto, einen Scan oder eine Grafik als neue Seite hinter dieser einfügen'),
       seitenKnopf('page-add-camera', '📷', 'Foto aufnehmen', 'Mit der Kamera eine neue Seite hinter dieser aufnehmen — am Rechner ohne Kamera öffnet sich der Dateiwähler'),
       seitenKnopf('page-add-pdf', '📕', 'PDF hier einfügen', 'Die Seiten einer weiteren PDF hinter dieser Seite einfügen'),
-      seitenKnopf('page-export-image', '⬇', 'Als Bild sichern', 'Diese Seite mit allem darauf als PNG speichern')
+      seitenKnopf('page-export-image', '⬇', 'Als Bild sichern', 'Diese Seite mit allem darauf als PNG speichern'),
+      /* E496: dieselbe Seite in ein anderes Dokument — kopieren oder verschieben. */
+      seitenKnopf('page-to-doc', '↗', 'In anderes Dokument', 'Diese Seite mit allem darauf in ein anderes Dokument kopieren oder verschieben'),
+      /* E499: ein mehrseitiges Blatt (E118) in einzelne Seiten zerlegen. */
+      seitenKnopf('page-split', '⌸', 'In Seiten zerlegen', 'Dieses mehrseitige Blatt in einzelne A4-Seiten zerlegen — danach greifen Drehen, Löschen und Verschieben je Seite')
     );
+    /* DER GRIFF STEHT NUR BEI EINEM MEHRSEITIGEN BLATT (E499). Bei allem
+       anderen — einer PDF-Seite, einem einseitigen Blatt — gäbe es nichts
+       zu zerlegen; ein Knopf, der dann eine Absage gibt, wäre ein Knopf zu
+       viel. Er verschwindet nicht, er ruht: so bleibt die Reihe der Griffe
+       gleich, und wer ihn sucht, findet ihn mit seinem Grund. */
+    {
+      const teilbar = documentBlock?.type === 'blatt'
+        && SheetSpace.seiten(Number(documentBlock.blattHoehe) || SheetSpace.A4_HOEHE) > 1;
+      const knopf = knoepfe.querySelector<HTMLButtonElement>('[data-document-action="page-split"]');
+      if (knopf && !teilbar) {
+        knopf.disabled = true;
+        knopf.setAttribute('aria-disabled', 'true');
+        knopf.title = documentBlock?.type === 'blatt'
+          ? 'Dieses Blatt ist schon eine einzelne Seite.'
+          : 'Nur ein mehrseitiges Blatt lässt sich zerlegen.';
+      }
+    }
     /* Sichern darf jeder, der lesen darf. */
     const sichernKnopf = knoepfe.querySelector<HTMLButtonElement>('[data-document-action="page-export-image"]');
     if (sichernKnopf) sichernKnopf.disabled = false;
@@ -854,6 +1013,103 @@ const DocumentMode = (() => {
       seite.appendChild(liste);
     }
 
+    /* ══ WAS AUF DIESER SEITE GESPERRT IST (E492, L133) ═══════════════════
+       Die Sperre sitzt seit E466 am Knopf der Leiste: Marke wählen, Schloss
+       drücken. Damit kann man sperren — aber nicht mehr sehen, WAS gesperrt
+       ist. Eine gesperrte Marke lässt sich nicht anfassen; wer sie
+       entsperren will, muss sie erst auswählen, und genau das geht bei ihr
+       am schlechtesten. Ein Rundlauf ohne Ausgang.
+
+       Also eine Liste, wie bei den Lesezeichen darüber: eine Zeile je
+       gesperrter Marke, mit ihrem Namen aus `Marken.artWort` (derselben
+       Quelle wie die Werkzeugleiste, §8), und je Zeile ein Schloss zum
+       Öffnen.
+
+       SIE STEHT NUR DA, WENN ES ETWAS ZU ZEIGEN GIBT. Eine Überschrift über
+       einer leeren Liste sagt dem Leser nichts, was er nicht schon sieht —
+       und sie stünde bei fast jeder Seite (dieselbe Regel wie oben bei den
+       Lesezeichen).
+
+       GESCHRIEBEN WIRD ÜBER DEN BLOCK, nicht über die Zeichenschicht. Das
+       ist derselbe Weg, den „Drehen", „Lesezeichen" und „Löschen" hier
+       schon gehen: `Store.updateBlock` und neu zeichnen. Über die Schicht
+       ginge es nur, wenn die Marke ausgewählt wäre — und das ist genau das,
+       was bei einer gesperrten nicht geht. */
+    const gesperrte = (Array.isArray(documentBlock.marken) ? documentBlock.marken : [])
+      .map((mark: any, i: number) => ({ mark, i }))
+      .filter((x: any) => !!x.mark?.gesperrt);
+    if (gesperrte.length) {
+      const liste = document.createElement('div');
+      liste.className = 'document-gesperrt';
+      const kopf = document.createElement('strong');
+      kopf.textContent = 'Gesperrt auf dieser Seite (' + gesperrte.length + ')';
+      liste.appendChild(kopf);
+      gesperrte.forEach(({ mark }: any) => {
+        const zeile = document.createElement('div');
+        zeile.className = 'document-gesperrt-zeile';
+        const was = document.createElement('span');
+        was.className = 'document-gesperrt-was';
+        /* Bei einer Marke mit Text sagt der Text mehr als die Art — eine
+           Haftnotiz heisst „Haftnotiz", aber gemeint ist die mit dem Satz
+           darauf. Escapen muss hier niemand: `textContent`, kein HTML. */
+        const wort = typeof Marken !== 'undefined' ? Marken.artWort(mark.art) : String(mark.art || '');
+        const zeichen = typeof Marken !== 'undefined' ? Marken.artZeichen(mark.art) : '•';
+        const eigen = String(mark.text || '').replace(/\s+/g, ' ').trim();
+        /* DER STIL GEHÖRT DAZU (Fund des Bildes). Auf dem ersten Bild hiessen
+           zwei Zeilen beide „Linie" — die eine war der Schutzleiter, die
+           andere eine schwarze Linie, und niemand konnte sie auseinander-
+           halten. Der Stil sagt es: „Linie · Schutzleiter". */
+        const stil = typeof Marken !== 'undefined' && mark.stil
+          ? (Marken.STIFTE.find((x: any) => x.id === mark.stil)?.name ?? '') : '';
+        was.textContent = zeichen + ' ' + wort + (stil ? ' · ' + stil : '')
+          + (eigen ? ' · ' + eigen.slice(0, 40) : '');
+        const auf = document.createElement('button');
+        auf.type = 'button';
+        auf.dataset.documentAction = 'mark-entsperren';
+        auf.dataset.documentMarke = String(mark.id ?? '');
+        auf.textContent = '🔓 Entsperren';
+        auf.title = wort + ' entsperren — danach lässt sie sich wieder bewegen';
+        auf.disabled = !darfSeiten;
+        /* UND WELCHE ES IST, ZEIGT DAS BLATT (Fund des Bildes, zweiter Teil).
+           Zwei gleiche schwarze Linien heissen auch mit Stil gleich. Wer
+           die Zeile berührt oder mit der Tastatur erreicht, sieht die Marke
+           auf dem Papier aufleuchten — das beantwortet die Frage „welche
+           denn?" ohne ein einziges zusätzliches Wort.
+
+           Über eine KLASSE am Knoten, nicht über einen Stil am Element: das
+           Aufleuchten gehört ins Stilblatt (§39), und ein hier gesetzter
+           `style` überlebte das nächste `updateNode` ohnehin nicht. */
+        const zeigen = (an: boolean): void => {
+          /* Am `document` und nicht an einem Kasten aus `render`: der
+             Inspector wird auch von dort gerufen, wo es den nicht gibt.
+             `querySelectorAll`, weil dieselbe Kennung auf einer zweiten
+             gezeichneten Seite noch einmal stehen kann — dann leuchten
+             beide, und das ist richtiger, als eine zu raten. */
+          const sicher = String(mark.id ?? '').replace(/["\\]/g, '');
+          if (!sicher) return;
+          document.querySelectorAll<SVGElement>('.blatt-marken [data-sid="' + sicher + '"]')
+            .forEach(knoten => knoten.classList.toggle('ist-gezeigt', an));
+        };
+        zeile.addEventListener('mouseenter', () => zeigen(true));
+        zeile.addEventListener('mouseleave', () => zeigen(false));
+        auf.addEventListener('focus', () => zeigen(true));
+        auf.addEventListener('blur', () => zeigen(false));
+        zeile.append(was, auf);
+        liste.appendChild(zeile);
+      });
+      if (gesperrte.length > 1) {
+        const alle = document.createElement('button');
+        alle.type = 'button';
+        alle.className = 'document-gesperrt-alle';
+        alle.dataset.documentAction = 'mark-entsperren';
+        alle.dataset.documentMarke = '*';
+        alle.textContent = '🔓 Alle ' + gesperrte.length + ' entsperren';
+        alle.disabled = !darfSeiten;
+        liste.appendChild(alle);
+      }
+      seite.appendChild(liste);
+    }
+
     const original = originalKnopf(page, documentBlock);
     container.append(heading, source);
     if (original) container.appendChild(original);
@@ -882,7 +1138,15 @@ const DocumentMode = (() => {
     const datenZeile = document.createElement('div');
     datenZeile.className = 'document-inspector-daten';
     datenZeile.append(pdfKnopf, importButton);
-    container.append(datenZeile, viewTitle, randKnopf, lupeKnopf);
+    /* DERSELBE SATZ ALS SICHTBARER TEXT (E505) — zwei Zeilen, kurz genug,
+       dass man sie liest, und da, wo der Knopf steht. Am Telefon ist er
+       das Einzige, was der Mensch ueberhaupt zu sehen bekommt. */
+    const pdfHinweis = document.createElement('p');
+    pdfHinweis.className = 'document-export-hinweis';
+    pdfHinweis.textContent = 'Deine Handschrift wird eine echte Anmerkung — in jedem '
+      + 'PDF-Programm anklickbar. Die Seite darunter wird ein Bild: ihr Text ist darin '
+      + 'nicht mehr durchsuchbar. Original und Marken bleiben in Redion.';
+    container.append(datenZeile, pdfHinweis, viewTitle, randKnopf, lupeKnopf);
     if (laufKnopf) container.appendChild(laufKnopf);
     container.append(linkedTitle, actions, summary, list);
   };
@@ -1130,7 +1394,26 @@ const DocumentMode = (() => {
     const findButton = topButton('find', '🔍', 'Im Dokument suchen (Strg F)');
     findButton.className = 'document-find-button';
     findButton.setAttribute('aria-expanded', 'false');
-    topActions.append(findButton, viewButton, inspectorButton, topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'), topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
+    /* PRÄSENTIEREN (E493), GoodNotes' Presentation Mode: das Dokument
+       gross, ohne Leisten, mit einem Laserpointer und Blättern per Klick
+       oder Pfeiltaste. Er steht neben „Drucken", weil beides dasselbe ist —
+       das Dokument jemand anderem zeigen, einmal auf Papier, einmal an der
+       Wand. */
+    const zeigenKnopf = topButton('praesentieren', '▶',
+      'Vollbild ohne Leisten — blättern mit Klick oder Pfeiltasten, zeigen mit gedrückter Maus');
+    /* DAS WORT STEHT IN EINER HÜLLE, damit das Telefon es ausblenden kann
+       (E493, Fund von `test285`). Dort ist der Kopf eng: mit dem ganzen
+       Wort blieben dem Titel noch 70 px, und `test285` verlangt hundert —
+       „E." statt eines Namens ist genau der Fehler, den er hält. Am
+       Rechner steht das Wort; am Telefon das Zeichen, mit `aria-label`
+       darunter, damit der Knopf seinen Namen behält (§38). */
+    const zeigenWort = document.createElement('span');
+    zeigenWort.className = 'dz-wort';
+    zeigenWort.textContent = ' Präsentieren';
+    zeigenKnopf.append(zeigenWort);
+    topActions.append(findButton, viewButton, inspectorButton, zeigenKnopf,
+      topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'),
+      topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
     top.append(topActions);
     const commandbar = document.createElement('div');
     commandbar.className = 'document-commandbar';
@@ -1156,7 +1439,19 @@ const DocumentMode = (() => {
     /* Am Telefon steht die Suche hier statt im Kopf (E468, siehe CSS). */
     const findKlappe = topButton('find', '🔍 Suchen', 'Im Dokument suchen');
     findKlappe.className = 'document-find-klappe';
-    commandbar.append(modes, pagination, zoomGroup, findKlappe);
+    /* AM TELEFON STEHT AUCH „PRÄSENTIEREN" HIER (E493, Fund von `test285`).
+       Gemessen bei 390 px: die Kopfleiste trug fünf Knöpfe à 44 px plus 88
+       für die Navigation — dem Titel blieben 70 px, und `test285` verlangt
+       hundert („E." statt eines Namens ist genau der Fehler, den er hält).
+
+       Derselbe Weg, den E468 für die Suche gegangen ist: oben ausgeblendet,
+       hier in der Ansichtsklappe sichtbar. Zwei Knöpfe für eine Sache sind
+       kein zweiter Katalog — es ist EIN `data-document-action`, und der
+       Verteiler unten kennt nur ihn. */
+    const zeigenKlappe = topButton('praesentieren', '▶ Präsentieren',
+      'Vollbild ohne Leisten — blättern mit Tipp oder Pfeiltasten');
+    zeigenKlappe.className = 'document-zeigen-klappe';
+    commandbar.append(modes, pagination, zoomGroup, findKlappe, zeigenKlappe);
 
     // One document-wide tool strip. Each action delegates to the existing page
     // controller; the original controls, undo stacks and mark objects stay intact.
@@ -1169,7 +1464,11 @@ const DocumentMode = (() => {
       ['stift', 'pencil', 'Stift'], ['marker', 'inkMarker', 'Marker'],
       ['radierer', 'inkEraser', 'Radierer'], ['text', 'inkText', 'Text'],
       ['formen', 'inkShapes', 'Formen'], ['zettel', 'comment', 'Haftnotiz'],
-      ['bild', 'image', 'Bild'], ['zeichen', 'bolt', 'Fachzeichen'], ['abdeck', 'eye', 'Abdecken']
+      ['bild', 'image', 'Bild'], ['zeichen', 'bolt', 'Fachzeichen'], ['abdeck', 'eye', 'Abdecken'],
+      /* DIE ELEMENTE (E494): im Studio steht das Werkzeug mit in der Leiste,
+         weil das Studio der Ort ist, an dem gestempelt wird — ein Häkchen
+         auf zwanzig Seiten, eine Unterschrift, ein Kastenrahmen. */
+      ['elemente', 'star', 'Elemente']
     ];
     drawingTools.forEach(([tool, icon, label]) => {
       const button = document.createElement('button');
@@ -1624,6 +1923,52 @@ const DocumentMode = (() => {
       findListe);
     workspace.append(top, findbar, drawingbar, commandbar, body);
     wrap.appendChild(workspace);
+    /* ══ DAS EIGENE FORMELHEFT, NEBEN DEM FACHZEICHEN (E503) ═══════════════
+       Redur: „wo — wenn beim Elektro, wo die Elektrosymbol ist — beim
+       Dokument arbeiten, die im PDF dort sehen kann".
+
+       Das Formelheft gab es längst; es stand nur in der Befehlspalette
+       (Strg K) und auf der Planfläche. Wer im Dokument arbeitet, findet es
+       dort nicht — und das Dokument ist der Ort, an dem nachgeschlagen
+       wird: eine Formel braucht man NEBEN der Aufgabe, nicht statt ihrer.
+
+       ES STEHT NEBEN DEM FACHZEICHEN, und zwar mit demselben Grund, mit
+       dem in E494 die Elemente dorthin kamen: es ist dieselbe Bewegung an
+       derselben Stelle der Arbeit — das Schaltzeichen setzen und die
+       Formel dazu nachsehen gehören zusammen.
+
+       ES IST KEIN WERKZEUG, sondern ein Schalter: `data-document-action`
+       und nicht `data-document-tool`. Ein Werkzeug hält man und zeichnet
+       damit; dieses Fenster liegt daneben, während man mit einem anderen
+       zeichnet — und genau deshalb darf es die Werkzeugwahl nicht anrühren.
+
+       DEN ZUSTAND BESITZT ES NICHT. Das Heft geht auch über sein ✕ und
+       über Escape zu; abgefragt würde das nie bemerkt. Also horcht der
+       Knopf (`Formelheft.horche`) — ein Zustand, eine Quelle (§8). */
+    if (typeof Formelheft !== 'undefined') {
+      const heft = document.createElement('button');
+      heft.type = 'button';
+      heft.dataset.documentAction = 'formelheft';
+      heft.setAttribute('aria-label', 'Formelheft');
+      heft.title = 'Mein eigenes Formelheft — liegt über der Seite; schieben und '
+        + 'an der Ecke grösser ziehen';
+      heft.setAttribute('aria-pressed', 'false');
+      const heftZeichen = document.createElement('span');
+      heftZeichen.dataset.sym = 'book';
+      heftZeichen.setAttribute('aria-hidden', 'true');
+      heft.appendChild(heftZeichen);
+      drawingbar.querySelector('[data-document-tool="zeichen"]')?.after(heft);
+      const heftSync = (): void => {
+        /* AM ARBEITSRAUM MESSEN, NICHT AM KNOPF — wie `inkSync` daneben.
+           Am Knopf gemessen war der erste Ruf gleich der letzte: er kam,
+           bevor die Leiste im Baum hing, und meldete den Horcher sofort
+           wieder ab. Danach blieb der Knopf für immer losgelassen. */
+        if (!workspace.isConnected) { Formelheft.vergiss(heftSync); return; }
+        heft.setAttribute('aria-pressed', String(!!Formelheft.offen()));
+      };
+      Formelheft.horche(heftSync);
+      heftSync();
+    }
     if (typeof Register !== 'undefined') Register.symbole.fuelle(drawingbar);
 
     const inkToolbar = (): HTMLElement | null =>
@@ -1680,6 +2025,15 @@ const DocumentMode = (() => {
        Breite. Der Zoom bleibt genau das, was er war — ein Faktor auf die
        Ansicht; `bw`/`bh` des Blocks werden nicht angefasst. Die Leiste zaehlt
        mit, weil sie im Fluss ueber dem Papier steht (auch als klebende). */
+    /* Die Präsentation (E493) steht weiter unten — ihre drei Merker stehen
+       aber HIER, weil `passen()` sie liest und vor ihnen laufen kann.
+       `let` in einem Block, das nach seinem ersten Leser deklariert wird,
+       wirft beim ersten Lesen (TDZ); der Fehler käme dann aus `passen` und
+       niemand suchte ihn in der Präsentation. */
+    let zeigenFlaeche: HTMLElement | null = null;
+    let laser: HTMLElement | null = null;
+    let laserWeg: ReturnType<typeof setTimeout> | null = null;
+
     const passen = (): void => {
       if (!workspace.isConnected) return;
       const raum = center.clientWidth;
@@ -1703,6 +2057,17 @@ const DocumentMode = (() => {
         const masse = SheetSpace.masseVon(documents[state.index] || {});
         if (platz > 80 && masse.bh > 0)
           breit = Math.round(Math.max(120, Math.min(breit, platz * masse.bw / masse.bh)));
+      }
+      /* IN DER PRÄSENTATION GIBT DIE HÖHE DAS MASS (E493). Ein Vortrag
+         zeigt eine ganze Folie; auf dem ersten Bild lief die Seite unten
+         aus dem Fenster. Und ohne den Zoom: wer präsentiert, will die Seite
+         sehen, nicht seine letzte Vergrösserung von gestern. */
+      if (zeigenFlaeche) {
+        const platz = center.clientHeight - 36;
+        const masse = SheetSpace.masseVon(documents[state.index] || {});
+        breit = masse.bh > 0 && platz > 80
+          ? Math.round(Math.max(120, Math.min(raum - 36, platz * masse.bw / masse.bh)))
+          : Math.round(raum - 36);
       }
       /* DAS MASS GEHT ANS PAPIER, NICHT AN DIE BUEHNE. Die Zeichenleiste
          gehoert zum Blatt und steht in derselben Huelle; haette die Buehne
@@ -1890,6 +2255,122 @@ const DocumentMode = (() => {
     /* Zu einer Seite springen — zeichnen, hinrollen, Stand merken. Kein
        Neuaufbau: ein Sprung, der die ganze Seite neu zeichnet, verlöre
        jeden angefangenen Strich und jede offene Textstelle. */
+    /* ══ PRÄSENTIEREN MIT LASERPOINTER (E493, L133) ═══════════════════════
+       GoodNotes' Presentation Mode, auf das übersetzt, was ein Browser kann:
+       Vollbild, keine Leisten, blättern mit Klick oder Pfeiltaste, und ein
+       roter Punkt, der zeigt und wieder vergeht.
+
+       DER LASERPOINTER SCHREIBT NICHT. Das ist der Punkt, an dem sich
+       „zeigen" und „zeichnen" unterscheiden, und er ist wörtlich zu nehmen:
+       der Punkt ist ein `<div>` über dem Papier, er geht durch keine
+       Zeichenschicht, er landet in keiner Marke und in keinem Speicher.
+       Wer präsentiert, will nichts ändern — und ein Vortragender, der aus
+       Versehen in ein fremdes Skript malt, merkt es erst hinterher.
+
+       Deshalb liegt über dem Papier eine eigene Fläche, die alle Zeiger
+       abfängt (`.document-zeigen-flaeche`). Sie ist zugleich der Grund,
+       warum das Blättern per Klick funktioniert: links blättert zurück,
+       rechts vor, wie bei jedem Vortragsprogramm.
+
+       ESCAPE MUSS IMMER HERAUSFÜHREN. Das Vollbild kann der Browser von
+       sich aus beenden (der Nutzer drückt Escape, oder er wechselt den
+       Tab); dann darf die Ansicht nicht in einem Zustand hängenbleiben, den
+       niemand mehr verlässt. Darum hängt `zeigenAus` auch am
+       `fullscreenchange` — der Zustand wird nie gemerkt, sondern immer am
+       Browser abgelesen (dieselbe Lehre wie in `schale.ts`). */
+
+    const laserZeigen = (x: number, y: number): void => {
+      if (!zeigenFlaeche) return;
+      if (!laser) {
+        laser = document.createElement('div');
+        laser.className = 'document-laser';
+        laser.setAttribute('aria-hidden', 'true');
+        zeigenFlaeche.appendChild(laser);
+      }
+      const r = zeigenFlaeche.getBoundingClientRect();
+      laser.style.left = (x - r.left) + 'px';
+      laser.style.top = (y - r.top) + 'px';
+      laser.classList.add('an');
+      if (laserWeg) clearTimeout(laserWeg);
+    };
+    const laserLoeschen = (): void => {
+      if (laserWeg) clearTimeout(laserWeg);
+      /* Er verglimmt, statt zu verschwinden — ein Punkt, der abrupt weg ist,
+         sieht aus wie ein Fehler. Die 700 ms sind die Dauer im Stilblatt. */
+      laserWeg = setTimeout(() => { laser?.classList.remove('an'); }, 700);
+    };
+
+    const zeigenAn = async (): Promise<void> => {
+      if (zeigenFlaeche) return;
+      workspace.dataset.documentZeigen = 'an';
+      const flaeche = document.createElement('div');
+      flaeche.className = 'document-zeigen-flaeche';
+      /* Kein `aria-hidden`: der Knopf zum Verlassen liegt darin, und der
+         muss für ein Vorleseprogramm da sein. */
+      flaeche.setAttribute('role', 'group');
+      flaeche.setAttribute('aria-label', 'Präsentation — links zurück, rechts weiter');
+      const raus = document.createElement('button');
+      raus.type = 'button';
+      raus.className = 'document-zeigen-raus';
+      raus.dataset.documentAction = 'praesentieren-aus';
+      raus.textContent = '✕ Präsentation beenden';
+      flaeche.appendChild(raus);
+      center.appendChild(flaeche);
+      zeigenFlaeche = flaeche;
+
+      /* Wo der Tipp anfing — für die Unterscheidung „gezeigt" / „geblättert"
+         unten. Steht VOR den Horchern, damit die Lesereihenfolge stimmt. */
+      const tippVon: [number, number] = [0, 0];
+      flaeche.addEventListener('pointerdown', event => {
+        tippVon[0] = event.clientX; tippVon[1] = event.clientY;
+        if ((event.target as Element)?.closest('.document-zeigen-raus')) return;
+        event.preventDefault();
+        /* `setPointerCapture` WIRFT, wenn es den Zeiger nicht kennt — und
+           ein Wurf hier bricht den Rest des Handlers ab, der Punkt käme gar
+           nicht erst. Gefunden von `test463`: dort sind die Zeiger
+           synthetisch, im Browser kann es dieselbe Lage geben (ein Zeiger,
+           der zwischen `down` und dem Handler verschwindet). Derselbe
+           Griff wie in `marken.ts`. */
+        try { flaeche.setPointerCapture?.(event.pointerId); } catch { /* dann ohne */ }
+        laserZeigen(event.clientX, event.clientY);
+      });
+      flaeche.addEventListener('pointermove', event => {
+        if (event.buttons) laserZeigen(event.clientX, event.clientY);
+      });
+      flaeche.addEventListener('pointerup', event => {
+        if ((event.target as Element)?.closest('.document-zeigen-raus')) return;
+        laserLoeschen();
+        /* GEZOGEN IST GEZEIGT, GETIPPT IST GEBLÄTTERT. Wer den Zeiger
+           bewegt hat, wollte zeigen; wer nur getippt hat, wollte weiter.
+           Ohne diese Trennung blätterte jedes Zeigen eine Seite um. */
+        const r = flaeche.getBoundingClientRect();
+        if (Math.hypot(event.clientX - tippVon[0], event.clientY - tippVon[1]) > 8) return;
+        springe(state.index + (event.clientX - r.left < r.width / 3 ? -1 : 1), false);
+      });
+      if (typeof App !== 'undefined' && App.vollbild) { try { await App.vollbild(true); } catch { /* dann eben im Fenster */ } }
+      passen();
+      raus.focus();
+    };
+
+    const zeigenAus = (): void => {
+      if (!zeigenFlaeche) return;
+      if (laserWeg) clearTimeout(laserWeg);
+      laser = null; laserWeg = null;
+      zeigenFlaeche.remove();
+      zeigenFlaeche = null;
+      delete workspace.dataset.documentZeigen;
+      if (typeof App !== 'undefined' && App.vollbildAn?.()) { void App.vollbild(false); }
+      passen();
+    };
+
+    /* Der Browser kann das Vollbild allein beenden — dann darf die Ansicht
+       nicht hängenbleiben. Der Zustand wird nie gemerkt, sondern gelesen. */
+    const vollbildGewechselt = (): void => {
+      if (!workspace.isConnected) { document.removeEventListener('fullscreenchange', vollbildGewechselt); return; }
+      if (zeigenFlaeche && typeof App !== 'undefined' && App.vollbildAn && !App.vollbildAn()) zeigenAus();
+    };
+    document.addEventListener('fullscreenchange', vollbildGewechselt);
+
     const springe = (i: number, weich = true): void => {
       const nr = Math.max(0, Math.min(documents.length - 1, i));
       state.index = nr;
@@ -2181,6 +2662,26 @@ const DocumentMode = (() => {
          eine `bildDateiId`, verloere die Kopie ihr Bild, sobald das Original
          aus dem Papierkorb faellt. Bis die Kopie da ist, zeigt die neue
          Seite das alte Bild; danach ihr eigenes. */
+      seitenbildKopieren(block, neu.id);
+      UI.toast('Seite verdoppelt');
+      neuMit(neu.id);
+    };
+
+    /**
+     * DAS SEITENBILD WIRD KOPIERT, NICHT GETEILT (E467, hierher gehoben mit
+     * E496).
+     *
+     * `purgeBlock` nimmt die Anhänge SEINES Blocks mit — teilten sich
+     * Original und Kopie eine `bildDateiId`, verlöre die Kopie ihr Bild,
+     * sobald das Original aus dem Papierkorb fällt. Bis die Kopie da ist,
+     * zeigt die neue Seite das alte Bild; danach ihr eigenes.
+     *
+     * Es steht seit E496 an EINER Stelle, weil es zwei Aufrufer hat:
+     * Duplizieren und Kopieren in ein anderes Dokument. Zwei Abschriften
+     * derselben Regel laufen auseinander, und die zweite hätte den ganzen
+     * Absatz oben nicht mitbekommen (§8).
+     */
+    const seitenbildKopieren = (block: any, zielId: string): void => {
       if (block.type === 'pdfseite' && block.bildDateiId && typeof Dateien !== 'undefined') {
         const alt = String(block.bildDateiId);
         void (async () => {
@@ -2199,16 +2700,229 @@ const DocumentMode = (() => {
                  PDF-Seite bleibt abgeleitet, eine Bild-Seite bleibt
                  Nutzerdatei. `herkunft` ist nur der Rückfall, wenn der
                  Dateisatz fehlt. */
-              { blockId: neu.id, abgeleitet: satz ? !!satz.abgeleitet : block.herkunft !== 'bild' });
-            Store.updateBlock(neu.id, { bildDateiId: kopie.id });
+              { blockId: zielId, abgeleitet: satz ? !!satz.abgeleitet : block.herkunft !== 'bild' });
+            Store.updateBlock(zielId, { bildDateiId: kopie.id });
           } catch (e: unknown) {
             UI.toast('Das Seitenbild liess sich nicht mitkopieren: ' + (e instanceof Error ? e.message : String(e)));
           }
         })();
       }
-      UI.toast('Seite verdoppelt');
-      neuMit(neu.id);
     };
+    /* ══ EINE SEITE IN EIN ANDERES DOKUMENT (E496) ═════════════════════════
+       GoodNotes hat „Copy to…" und „Move to…" im Seitenmenü; Redion hatte
+       nur Verdoppeln und Löschen. Wer eine Seite aus dem Skript in seine
+       Mitschrift holen wollte, musste sie als Bild sichern und wieder
+       einfügen — und verlor dabei jede Marke und die Textschicht.
+
+       WAS EIN ZIEL IST: eine andere Seite, die schon Dokumentseiten hält.
+       Ein leeres Dokument gibt es nicht — es entsteht mit seiner ersten
+       Seite —, also ist „wo kann etwas hin" dieselbe Frage wie „wo liegt
+       schon etwas".
+
+       DAS RECHT GILT DEM ZIEL, nicht dem, was offen ist (§26, L102). Wer
+       hier nur lesen darf, steht nicht in der Liste. */
+    type ZielDokument = { id: string; name: string; icon: string; seiten: number };
+    const ZIELE_HOECHSTENS = 40;
+    const andereDokumente = (ausser: string): ZielDokument[] => {
+      const raus: ZielDokument[] = [];
+      const gesehen = new Set<string>();
+      let bloecke = 0;
+      for (const block of Object.values<any>(Store.cache.blocks)) {
+        if (raus.length >= ZIELE_HOECHSTENS) break;
+        if (++bloecke > FREMD_BLOECKE) break;
+        if (!block || block.alive === false) continue;
+        if (block.type !== 'pdfseite' && block.type !== 'blatt') continue;
+        const seite = seiteZu(block);
+        if (!seite || !seite.alive || seite.id === ausser || gesehen.has(seite.id)) continue;
+        gesehen.add(seite.id);
+        /* `bearbeiten`, NICHT `edit` — und das ist kein Schönheitsfehler.
+           `edit` ist der Name einer ROLLE (§26); die Frage an das Tor heisst
+           `bearbeiten`, wie überall sonst in dieser Datei (`darfSeiten`,
+           `canAnnotate`). Mit `edit` sagte das Tor auf JEDER Seite nein, und
+           die Liste der Ziele war immer leer — gefunden von `test466`, nicht
+           vom Lesen. Genau der Fehler aus E21: eine Schnittstelle aus dem
+           Gedächtnis geschrieben statt nachgeschlagen.
+           Und eine gesperrte Seite ist auch kein Ziel — dieselbe zweite
+           Bedingung, die `darfSeiten` für die eigene Seite stellt. */
+        if (seite.gesperrt) continue;
+        if (typeof Konten !== 'undefined' && Konten.darf && !Konten.darf('bearbeiten', seite.id)) continue;
+        raus.push({ id: seite.id, name: String(seite.text || 'Ohne Titel'),
+          icon: String(seite.icon || '📄'), seiten: documentsIn(seite).length });
+      }
+      raus.sort((a, b) => a.name.localeCompare(b.name));
+      return raus;
+    };
+
+    /** Wohin die Seite im Zieldokument kommt: zu den Eltern seiner letzten Seite. */
+    const zielEltern = (zielSeite: any): any => {
+      const seiten = documentsIn(zielSeite);
+      const letzte = seiten[seiten.length - 1];
+      const eltern = letzte ? Store.getBlock(letzte.parentId) : null;
+      return eltern || zielSeite;
+    };
+
+    /**
+     * Verschieben oder kopieren — nach der Frage, die der Nutzer beantwortet.
+     *
+     * DIE REIHENFOLGE BEIM VERSCHIEBEN IST DIE GANZE SICHERHEIT: erst in
+     * die neuen Eltern legen, dann `parentId` umhängen, ZULETZT aus den
+     * alten nehmen. Bräche irgendetwas dazwischen ab, stünde die Seite in
+     * beiden Dokumenten — sichtbar und zu berichtigen. In der anderen
+     * Reihenfolge stünde sie in keinem, und niemand wüsste, wo sie war
+     * (§51: lieber langsamer als jemals Nutzerdaten verlieren).
+     */
+    const seiteInsDokument = async (wen?: any): Promise<void> => {
+      const block = wen || jetzt();
+      if (!block) return;
+      if (typeof Dialog === 'undefined') { UI.toast('Der Dialog ist gerade nicht da.'); return; }
+      const ziele = andereDokumente(page.id);
+      if (!ziele.length) {
+        UI.toast('Es gibt kein anderes Dokument, in das die Seite passen würde.');
+        return;
+      }
+      const wohin = await Dialog.wahl({
+        titel: 'In welches Dokument?',
+        text: 'Die Seite kommt ans Ende des gewählten Dokuments — mit allem, was darauf steht.',
+        knoepfe: ziele.map(z => ({ id: 'ziel:' + z.id, text: z.icon + ' ' + z.name,
+          hinweis: z.seiten === 1 ? 'eine Seite' : z.seiten + ' Seiten' }))
+      });
+      if (!wohin.startsWith('ziel:')) return;
+      const zielSeite = Store.getBlock(wohin.slice(5));
+      if (!zielSeite || zielSeite.alive === false) { UI.toast('Dieses Dokument gibt es nicht mehr.'); return; }
+
+      const liste = documentsIn(page);
+      const letzte = liste.length < 2;
+      const wie = await Dialog.wahl({
+        titel: 'Kopieren oder verschieben?',
+        text: letzte
+          ? 'Dies ist die einzige Seite dieses Dokuments — verschieben würde es leeren, darum geht hier nur kopieren.'
+          : 'Beim Verschieben ist die Seite hier weg; beim Kopieren bleibt sie stehen.',
+        knoepfe: [
+          { id: 'kopieren', text: '⧉ Kopieren', hinweis: 'Die Seite steht danach in beiden Dokumenten' },
+          ...(letzte ? [] : [{ id: 'verschieben', text: '↗ Verschieben',
+            hinweis: 'Die Seite verlässt dieses Dokument' }])
+        ]
+      });
+      if (wie !== 'kopieren' && wie !== 'verschieben') return;
+
+      const ziel = zielEltern(zielSeite);
+      if (wie === 'kopieren') {
+        const daten = Store.baum(block.id);
+        if (!daten) { UI.toast('Diese Seite liess sich nicht lesen.'); return; }
+        /* Das Lesezeichen bleibt am Original — dieselbe Regel wie beim
+           Verdoppeln: zwei Zeichen für dieselbe Stelle wären eines zu viel. */
+        delete daten.lesezeichen;
+        const neu = Store.baumEinfuegen(daten, ziel.id, -1);
+        if (!neu) { UI.toast('Die Kopie liess sich nicht anlegen.'); return; }
+        seitenbildKopieren(block, neu.id);
+        UI.toast('Seite nach „' + String(zielSeite.text || 'Ohne Titel') + '" kopiert');
+        return;
+      }
+
+      const stelle = stelleVon(block);
+      if (!stelle) { UI.toast('Diese Seite hat keinen Platz, aus dem sie sich lösen liesse.'); return; }
+      Store.updateBlock(ziel.id, { content: [...(ziel.content || []), block.id] });
+      Store.updateBlock(block.id, { parentId: ziel.id, parentTable: 'block' });
+      Store.updateBlock(stelle.eltern.id,
+        { content: (stelle.eltern.content || []).filter((id: string) => id !== block.id) });
+      UI.toast('Seite nach „' + String(zielSeite.text || 'Ohne Titel') + '" verschoben');
+      const rest = documentsIn(page);
+      neuMit(rest[Math.min(rest.length - 1, Math.max(0, stelle.index))]?.id || null);
+    };
+
+    /* ══ EIN MEHRSEITIGES BLATT IN SEITEN ZERLEGEN (E499) ══════════════════
+       L133: „Mehrseitige Notizhefte als EIN Block — ein `blatt` wächst in
+       die Höhe (E118); Seitengriffe gelten ihm als Ganzem. Ein Heft mit
+       drei Blattseiten lässt sich nicht seitenweise drehen oder löschen."
+
+       In GoodNotes ist jede Seite eine Seite. Redions mehrseitiges Blatt
+       ist eine eigene Form, und sie ist nicht falsch — nur die Seitengriffe
+       können mit ihr nichts anfangen. Also gibt es einen Griff, der sie in
+       GoodNotes-Form bringt: aus einem Blatt von drei A4 werden drei
+       Blätter von je einem.
+
+       WOHIN EINE MARKE KOMMT: auf die Seite, in der ihre MITTE liegt. Sie
+       bleibt dabei GANZ — kein Strich wird geschnitten (§9: nichts
+       verlieren). Eine Marke, die über eine Seitengrenze läuft, ragt danach
+       über den Rand ihrer Seite hinaus, und weil `.blatt-papier` schneidet,
+       ist der Überstand nicht mehr zu SEHEN. Er ist nicht weg — er kommt
+       zurück, sobald das Blatt wieder höher wird —, aber ein Nutzer sieht
+       das nicht. Darum wird es GESAGT, mit Zahl, bevor irgendetwas
+       geschieht (§35). */
+    const zerlegbar = (block: any): number => {
+      if (!block || block.type !== 'blatt') return 0;
+      return SheetSpace.seiten(Number(block.blattHoehe) || SheetSpace.A4_HOEHE);
+    };
+
+    const seiteZerlegen = async (wen?: any): Promise<void> => {
+      const block = wen || jetzt();
+      const anzahl = zerlegbar(block);
+      if (anzahl < 2) {
+        UI.toast(block?.type === 'blatt'
+          ? 'Dieses Blatt ist schon eine einzelne Seite.'
+          : 'Nur ein mehrseitiges Blatt lässt sich in Seiten zerlegen.');
+        return;
+      }
+      const stelle = stelleVon(block);
+      if (!stelle) { UI.toast('Dieses Blatt hat keinen Platz, an dem die Seiten stehen könnten.'); return; }
+      if (typeof Dialog === 'undefined') return;
+
+      const A4 = SheetSpace.A4_HOEHE;
+      const marken = Array.isArray(block.marken) ? block.marken : [];
+      const faecher: any[][] = Array.from({ length: anzahl }, () => []);
+      let ueberGrenze = 0;
+      for (const roh of marken) {
+        const kopie = JSON.parse(JSON.stringify(roh));
+        const kasten = InkGeometry.bounds(kopie);
+        const mitte = kasten.y + kasten.height / 2;
+        const nr = Math.max(0, Math.min(anzahl - 1, Math.floor(mitte / A4)));
+        /* „Über die Grenze" heisst: Oberkante und Unterkante liegen in
+           verschiedenen Seiten. Die Unterkante wird um einen Hauch
+           hereingeholt, damit eine Marke, die genau auf der Grenze endet,
+           nicht als Grenzgängerin zählt. */
+        const oben = Math.floor(kasten.y / A4);
+        const unten = Math.floor(Math.max(kasten.y, kasten.y + kasten.height - 0.01) / A4);
+        if (oben !== unten) ueberGrenze++;
+        faecher[nr]!.push(InkGeometry.move(kopie, 0, -nr * A4));
+      }
+
+      const wahl = await Dialog.wahl({
+        titel: 'Dieses Blatt in ' + anzahl + ' Seiten zerlegen?',
+        text: 'Aus einem Blatt von ' + anzahl + ' Seiten werden ' + anzahl
+          + ' einzelne Blätter. Danach greifen Drehen, Löschen und Verschieben je Seite.'
+          + (ueberGrenze
+            ? ' ACHTUNG: ' + ueberGrenze + (ueberGrenze === 1 ? ' Marke läuft' : ' Marken laufen')
+              + ' über eine Seitengrenze. Sie kommen ganz auf EINE Seite und ragen dort über den Rand'
+              + ' hinaus — sichtbar ist der Überstand dann nicht mehr, verloren ist er nicht.'
+            : ' Keine Marke läuft über eine Seitengrenze.'),
+        knoepfe: [
+          { id: 'ja', text: 'In ' + anzahl + ' Seiten zerlegen',
+            hinweis: ueberGrenze ? 'Mit dem Überstand, wie oben beschrieben' : 'Nichts geht dabei verloren' },
+          { id: 'nein', text: 'Abbrechen', hinweis: 'Das Blatt bleibt, wie es ist' }
+        ]
+      });
+      if (wahl !== 'ja') return;
+
+      /* DIE REIHENFOLGE, WIEDER: erst die neuen Blätter MIT ihren Marken
+         anlegen, dann das Original kürzen. Bräche etwas dazwischen ab,
+         stünden Marken doppelt da — sichtbar. Andersherum wären die Seiten
+         zwei bis n weg, bevor es sie gibt. */
+      for (let i = anzahl - 1; i >= 1; i--) {
+        const neu = Store.addBlock(stelle.eltern.id, 'blatt', {
+          text: '', papier: block.papier || 'blanko',
+          blattBreite: Number(block.blattBreite) || SheetSpace.A4_BREITE,
+          blattHoehe: A4, raumVersion: SheetSpace.RAUM_VERSION,
+          marken: faecher[i]
+        }, stelle.index + 1);
+        /* Eine Zeile muss da sein (E118) — sonst ist das Papier nur Malgrund. */
+        Store.addBlock(neu.id, 'text', { text: '' });
+      }
+      Store.updateBlock(block.id, { blattHoehe: A4, marken: faecher[0] });
+      UI.toast('In ' + anzahl + ' Seiten zerlegt'
+        + (ueberGrenze ? ' — ' + ueberGrenze + ' mit Überstand' : ''));
+      neuMit(block.id);
+    };
+
     const seiteLoeschen = (wen?: any): void => {
       const block = wen || jetzt();
       const liste = documentsIn(page);
@@ -2247,30 +2961,51 @@ const DocumentMode = (() => {
      * hinten), nicht in der Inhaltsliste der Eltern — dazwischen können
      * Textblöcke stehen, die keine Seiten sind.
      *
-     * NUR IN DENSELBEN ELTERN. Liegen die Seiten eines Dokuments in
-     * mehreren Spalten (das kann `documentsIn` finden), gibt es keine eine
-     * Reihenfolge, in die man einsortieren könnte — dann sagt es das,
-     * statt heimlich etwas anderes zu tun.
+     * AUCH ÜBER SPALTEN HINWEG (seit E498). Liegen die Seiten eines
+     * Dokuments in mehreren Spalten, wandert der Block in die Eltern der
+     * Seite, vor die er fällt — mit derselben sicheren Reihenfolge wie in
+     * E496. Bis dahin sagte diese Stelle nein, und das war ehrlich,
+     * solange es keinen Weg gab, einen Block umzuhängen.
      */
     const seiteAnStelle = (block: any, zielIndex: number): boolean => {
       const liste = documentsIn(page);
-      const eltern = new Set(liste.map(b => String(b.parentId || '')));
-      if (eltern.size !== 1) {
-        UI.toast('Die Seiten dieses Dokuments liegen in mehreren Spalten — ziehen geht dort nicht.');
-        return false;
-      }
-      const stelle = stelleVon(block);
-      if (!stelle) return false;
       const von = liste.findIndex(b => b.id === block.id);
       if (von < 0 || zielIndex === von || zielIndex === von + 1) return false;
-      const inhalt = [...stelle.eltern.content] as string[];
-      const nachId = liste[zielIndex]?.id ?? null;
-      const raus = inhalt.indexOf(block.id);
-      if (raus < 0) return false;
-      inhalt.splice(raus, 1);
-      const ziel = nachId ? inhalt.indexOf(nachId) : -1;
-      inhalt.splice(ziel < 0 ? inhalt.length : ziel, 0, block.id);
-      Store.updateBlock(stelle.eltern.id, { content: inhalt });
+      const stelle = stelleVon(block);
+      if (!stelle) return false;
+      /* WOHIN: vor die Seite, die an der Zielstelle steht — und wenn dort
+         keine mehr steht, hinter die letzte. Die ELTERN ergeben sich
+         daraus; über Spalten hinweg sind es andere als die eigenen. */
+      const nach = liste[zielIndex] || null;
+      const nachbar = nach || liste[liste.length - 1] || block;
+      const zielEltern = Store.getBlock(String(nachbar.parentId || '')) || stelle.eltern;
+
+      if (zielEltern.id === stelle.eltern.id) {
+        const inhalt = [...(stelle.eltern.content || [])] as string[];
+        const raus = inhalt.indexOf(block.id);
+        if (raus < 0) return false;
+        inhalt.splice(raus, 1);
+        const ziel = nach ? inhalt.indexOf(nach.id) : -1;
+        inhalt.splice(ziel < 0 ? inhalt.length : ziel, 0, block.id);
+        Store.updateBlock(stelle.eltern.id, { content: inhalt });
+      } else {
+        /* ÜBER SPALTEN HINWEG (E498). Bis hierher sagte diese Stelle nein:
+           „die Seiten liegen in mehreren Spalten — ziehen geht dort nicht".
+           Das war ehrlich, solange es keinen Weg gab, einen Block
+           umzuhängen; seit E496 gibt es ihn, und es ist derselbe.
+
+           DIESELBE REIHENFOLGE WIE DORT, und aus demselben Grund: erst in
+           die neuen Eltern legen, dann `parentId` umhängen, ZULETZT aus den
+           alten nehmen. Bräche etwas dazwischen ab, stünde die Seite in
+           beiden Spalten — sichtbar. In der anderen Reihenfolge in keiner. */
+        const hin = [...(zielEltern.content || [])] as string[];
+        const ziel = nach ? hin.indexOf(nach.id) : -1;
+        hin.splice(ziel < 0 ? hin.length : ziel, 0, block.id);
+        Store.updateBlock(zielEltern.id, { content: hin });
+        Store.updateBlock(block.id, { parentId: zielEltern.id, parentTable: 'block' });
+        Store.updateBlock(stelle.eltern.id,
+          { content: (stelle.eltern.content || []).filter((id: string) => id !== block.id) });
+      }
       UI.toast('Seite verschoben');
       neuMit(block.id);
       return true;
@@ -2329,6 +3064,8 @@ const DocumentMode = (() => {
       eintrag('page-down', '↓', 'Nach unten');
       eintrag('page-bookmark', '🔖', block.lesezeichen ? 'Lesezeichen weg' : 'Lesezeichen');
       eintrag('page-export-image', '⬇', 'Als Bild sichern');
+      eintrag('page-to-doc', '↗', 'In anderes Dokument');
+      if (zerlegbar(block) > 1) eintrag('page-split', '⌸', 'In Seiten zerlegen');
       eintrag('page-delete', '🗑', 'Löschen');
       thumbnails.appendChild(kasten);
       /* An seinen Knopf legen — und zurückrücken, wo die Leiste zu Ende ist.
@@ -2546,6 +3283,23 @@ const DocumentMode = (() => {
     });
 
     workspace.addEventListener('keydown', event => {
+      /* IN DER PRÄSENTATION ZUERST (E493). Blättern mit den Pfeilen, mit
+         Leertaste und mit Bild-auf/ab — die Tasten, die jedes
+         Vortragsprogramm belegt, und die einzigen, die eine Hand am
+         Rednerpult findet. Escape beendet; es steht vor allen anderen
+         Escape-Zweigen darunter, weil die Präsentation die äusserste
+         Schicht ist. */
+      if (zeigenFlaeche) {
+        if (event.key === 'Escape') { zeigenAus(); event.stopPropagation(); return; }
+        if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Spacebar'].includes(event.key)) {
+          event.preventDefault(); springe(state.index + 1, false); return;
+        }
+        if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(event.key)) {
+          event.preventDefault(); springe(state.index - 1, false); return;
+        }
+        if (event.key === 'Home') { event.preventDefault(); springe(0, false); return; }
+        if (event.key === 'End') { event.preventDefault(); springe(documents.length - 1, false); return; }
+      }
       /* Strg F sucht IM DOKUMENT (E468), nicht auf der Seite (Strg F der
          Schale, `seitenSuche`): hier ist die Seite ein Bild. */
       if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'f') {
@@ -2667,6 +3421,11 @@ const DocumentMode = (() => {
         inkToolbar()?.querySelector<HTMLButtonElement>('[data-act="' + action.slice(4) + '"]')?.click();
         inkSync();
       }
+      /* Das Heft auf- und zuklappen. Der Knopf sagt nichts über seinen
+         Zustand — den holt `heftSync` beim Ruf des Hefts (E503). */
+      if (action === 'formelheft') {
+        try { Formelheft.umschalten(); } catch { /* kein Heft, kein Schaden */ }
+      }
       if (action === 'print') {
         const print = Register.menueband.eines('a-drucken');
         if (print?.tun) print.tun();
@@ -2695,6 +3454,39 @@ const DocumentMode = (() => {
           herunterladen(blob, String(page.text || 'Seite').replace(/[\\/:*?"<>|]+/g, ' ').trim() + ' – Seite ' + nr + '.png');
           UI.toast('Seite ' + nr + ' als PNG gesichert');
         });
+        return;
+      }
+      /* ══ EINE MARKE ENTSPERREN (E492) ═══════════════════════════════════
+         `*` heisst alle auf dieser Seite. Geschrieben wird in den Block —
+         derselbe Weg wie „Drehen" und „Lesezeichen" darunter; über die
+         Zeichenschicht ginge es nur mit Auswahl, und gerade die geht bei
+         einer gesperrten Marke nicht.
+
+         `gesperrt` wird GELÖSCHT und nicht auf `false` gesetzt: so steht es
+         in `Marken.sperren` (E466), und eine Marke mit `gesperrt: false`
+         wäre dasselbe in anderen Worten — zwei Schreibweisen für einen
+         Zustand, und der Vergleich `!!mark.gesperrt` fiele irgendwann
+         auseinander (§17: Datenmodell stabil halten). */
+      if (action === 'praesentieren') { void zeigenAn(); return; }
+      if (action === 'praesentieren-aus') { zeigenAus(); return; }
+      if (action === 'mark-entsperren') {
+        if (!darfSeiten()) { UI.toast('Zum Ändern brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.'); return; }
+        const block = zielSeite || jetzt();
+        const welche = String(tatKnopf?.dataset.documentMarke ?? '');
+        const marken = Array.isArray(block?.marken) ? block.marken : [];
+        let offen = 0;
+        const neu = marken.map((mark: any) => {
+          if (!mark?.gesperrt) return mark;
+          if (welche !== '*' && String(mark.id ?? '') !== welche) return mark;
+          offen++;
+          const kopie = { ...mark };
+          delete kopie.gesperrt;
+          return kopie;
+        });
+        if (!offen) { UI.toast('Diese Marke gibt es nicht mehr.'); return; }
+        Store.updateBlock(block.id, { marken: neu });
+        UI.toast(offen === 1 ? 'Entsperrt' : offen + ' Marken entsperrt');
+        neuMit(block.id);
         return;
       }
       if (action === 'export-pdf') {
@@ -2752,6 +3544,8 @@ const DocumentMode = (() => {
           }
         }
         if (action === 'page-duplicate') seiteDuplizieren(zielSeite);
+        if (action === 'page-to-doc') void seiteInsDokument(zielSeite);
+        if (action === 'page-split') void seiteZerlegen(zielSeite);
         if (action === 'page-delete') seiteLoeschen(zielSeite);
         if (action === 'page-up') seiteSchieben(-1, zielSeite);
         if (action === 'page-down') seiteSchieben(1, zielSeite);
@@ -3008,12 +3802,42 @@ const DocumentMode = (() => {
       }
     };
 
+    /**
+     * „AUSSCHNITT" UND „ERKENNEN" RUHEN SICHTBAR, solange das Zoom-Fenster
+     * offen ist (E498, letzter offener Punkt aus L133 zum Zoom-Fenster).
+     *
+     * Beide gelten der GANZEN Seite; im Zoom-Fenster sieht man einen
+     * Streifen davon. Ein Ausschnitt, den man dort zieht, läge auf der
+     * ganzen Seite ganz woanders — deshalb sagte E470 schon nein, aber
+     * ERST NACH DEM DRUCK, als Meldung. Ein Knopf, der aussieht, als ginge
+     * er, und dann eine Absage gibt, ist ein Knopf, der zweimal gelesen
+     * werden muss (§38: der Zustand gehört an den Knopf).
+     *
+     * Die Meldung bleibt trotzdem stehen: sie fängt den Weg über die
+     * Tastatur und über die Befehlspalette, die den Knopf nicht sieht.
+     */
+    const ausschnittRuhen = (an: boolean): void => {
+      for (const was of ['select-region', 'recognize']) {
+        const knopf = workspace.querySelector<HTMLButtonElement>(
+          '.document-inspector-actions [data-document-action="' + was + '"]');
+        if (!knopf) continue;
+        knopf.disabled = an;
+        knopf.setAttribute('aria-disabled', an ? 'true' : 'false');
+        knopf.title = an
+          ? 'Ruht, solange das Zoom-Fenster offen ist — der Ausschnitt gilt der ganzen Seite.'
+          : (was === 'select-region'
+            ? 'Einen Ausschnitt der Seite aufziehen'
+            : 'Den Text im Ausschnitt erkennen lassen');
+      }
+    };
+
     const lupeSetzen = (an: boolean): void => {
       if (an === !!state.lupe) return;
       if (an) {
         if (!canAnnotate) { UI.toast('Zum Schreiben im Zoom-Fenster brauchst du Bearbeitungsrechte.'); return; }
         state.lupe = true;
         workspace.dataset.lupe = 'an';
+        ausschnittRuhen(true);
         /* Die ganze Seite soll oben stehen — der Streifen ist die
            Vergroesserung, nicht der Zoom der Buehne. */
         state.zoomVorher = state.zoom;
@@ -3044,6 +3868,7 @@ const DocumentMode = (() => {
       } else {
         state.lupe = false;
         workspace.dataset.lupe = 'aus';
+        ausschnittRuhen(false);
         center.removeEventListener('pointerdown', lupeTipp, true);
         lupeUmziehen(false);
         lupe?.remove(); lupe = null; lupeFenster = null;
@@ -3133,6 +3958,14 @@ const DocumentMode = (() => {
      Seitenzeichnung läuft durch `schale.ts`, und wer das Dokument verlässt,
      soll pdf.js nicht im Rücken behalten. */
   return { available, active, select, toggle, documentsIn, render, sourceLabel, seiteAlsBild, alsPdf,
+           /* E500: die Schalensuche fragt danach, welche SEITE eines
+              Dokuments das Wort trägt — mit derselben Rechnung wie die
+              Suche im Studio (§8). */
+           stelleIn,
+           /* E500: alle Dokumentstellen zu einem Wort — dieselbe Rechnung
+              wie die Suche über mehrere Dokumente (E487), nur ohne die
+              Seite auszunehmen, die gerade offen ist. */
+           stellenSuchen: (wort: string) => fremdeTreffer(wort, ''),
            freigeben: (): void => { griffeSchliessen(); verweisHorchenAus(); } };
 })();
 

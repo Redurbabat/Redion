@@ -356,12 +356,14 @@ if (rollen) {
    solange ein anderes gewaehlt ist. Von 38 gebauten Knoepfen sind 13 sichtbar,
    und das ist die richtige Zahl. Eine Schranke, die eine bewusste Vereinfachung
    als Verlust meldet, misst die Vergangenheit. */
-/* SEIT E464 TEILT SICH DAS: die elf Werkzeuge, „···" und Zurück/Vor stehen
-   in der Zeichenleiste des Schreibtischs (`.document-drawingbar`, 14
-   Knöpfe); die Blattleiste darunter trägt die Stiftoptionen. Gezählt wird
-   die Zeichenleiste — und die Blattleiste muss weiter rollen (unten). */
-gleich('Die vierzehn Knöpfe der Zeichenleiste stehen da (elf Werkzeuge, ···, Zurück, Vor)',
-  rollen.zeichenleiste, 14);
+/* SEIT E464 TEILT SICH DAS: die Werkzeuge, „···" und Zurück/Vor stehen in
+   der Zeichenleiste des Schreibtischs (`.document-drawingbar`); die
+   Blattleiste darunter trägt die Stiftoptionen. Gezählt wird die
+   Zeichenleiste — und die Blattleiste muss weiter rollen (unten).
+   FÜNFZEHN SEIT E494: die Elemente-Bibliothek ist als zwölftes Werkzeug
+   dazugekommen. */
+gleich('Die fünfzehn Knöpfe der Zeichenleiste stehen da (zwölf Werkzeuge, ···, Zurück, Vor)',
+  rollen.zeichenleiste, 15);
   gleich('Und keines ist auf Breite null gesetzt', rollen.ohneBreite, 0);
   p('Sie nimmt mehr als ein Drittel der Fensterbreite',
     rollen.breit >= 290, `${rollen.breit} von 390 px`);

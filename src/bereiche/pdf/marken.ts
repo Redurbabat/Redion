@@ -29,10 +29,10 @@ const Marken = (() => {
      einer Reihe mit Werkzeugen und meinte etwas anderes als sie. Das
      steht in L133. */
   const RADIERER = [
-    { id: 'ganz', name: 'Ganz', zeichen: '●', titel: 'Radierer: ganze Marken', nur: '' },
-    { id: 'teil', name: 'Teil', zeichen: '½', titel: 'Radierer: nur den berührten Teil eines Strichs', nur: '' },
-    { id: 'stift', name: 'Stift', zeichen: '✎', titel: 'Radierer: nur Stiftstriche — Marker, Band und Formen bleiben', nur: 'stift' },
-    { id: 'marker', name: 'Marker', zeichen: '▰', titel: 'Radierer: nur Marker', nur: 'marker' },
+    { id: 'ganz', name: 'Ganz', zeichen: '●', sym: 'eraseAll', titel: 'Radierer: ganze Marken', nur: '' },
+    { id: 'teil', name: 'Teil', zeichen: '½', sym: 'eraseHalf', titel: 'Radierer: nur den berührten Teil eines Strichs', nur: '' },
+    { id: 'stift', name: 'Stift', zeichen: '✎', sym: 'penFountain', titel: 'Radierer: nur Stiftstriche — Marker, Band und Formen bleiben', nur: 'stift' },
+    { id: 'marker', name: 'Marker', zeichen: '▰', sym: 'eraseMarker', titel: 'Radierer: nur Marker', nur: 'marker' },
     /* `nur` NENNT DIE MARKENART, NICHT DEN MODUS (E489).
        Hier stand `nur: 'band'` — und das Abdeckband heisst als Marke
        `abdeck` (so setzt es `art: tool` beim Zeichnen, so liest es
@@ -54,16 +54,16 @@ const Marken = (() => {
      sind die alten (`line`, `arrow`, `rectangle`, `ellipse`): sie stehen so
      in jeder gespeicherten Marke, und daran wird nichts geändert (§53.3). */
   const FORMEN = [
-    { id: 'line', name: 'Linie', zeichen: '╱', titel: 'Gerade Linie' },
-    { id: 'arrow', name: 'Pfeil', zeichen: '→', titel: 'Pfeil' },
-    { id: 'rectangle', name: 'Rechteck', zeichen: '□', titel: 'Rechteck' },
-    { id: 'ellipse', name: 'Ellipse', zeichen: '○', titel: 'Ellipse' },
+    { id: 'line', name: 'Linie', zeichen: '╱', sym: 'formLine', titel: 'Gerade Linie' },
+    { id: 'arrow', name: 'Pfeil', zeichen: '→', sym: 'formArrow', titel: 'Pfeil' },
+    { id: 'rectangle', name: 'Rechteck', zeichen: '□', sym: 'formRect', titel: 'Rechteck' },
+    { id: 'ellipse', name: 'Ellipse', zeichen: '○', sym: 'formEllipse', titel: 'Ellipse' },
     /* ZWEI MEHR, WIE GOODNOTES (E465): das Dreieck und das Rechteck mit
        runden Ecken. Beide sind Zweipunkt-Formen wie die vier davor —
        der Zeichner unterscheidet sie nur im Ergebnis. Neue Kennungen,
        englisch wie die alten, weil sie so in der Marke stehen (§53.3). */
-    { id: 'triangle', name: 'Dreieck', zeichen: '△', titel: 'Dreieck' },
-    { id: 'roundrect', name: 'Rund', zeichen: '▢', titel: 'Rechteck mit runden Ecken' },
+    { id: 'triangle', name: 'Dreieck', zeichen: '△', sym: 'formTriangle', titel: 'Dreieck' },
+    { id: 'roundrect', name: 'Rund', zeichen: '▢', sym: 'formRoundrect', titel: 'Rechteck mit runden Ecken' },
     /* DIE KURVE (E483, L133). Sie ist die erste Form mit DREI Punkten:
        Anfang, Ende und der Griff dazwischen, der sie biegt. Gezogen wird
        sie wie eine Linie; danach steht am Rahmen ein zusaetzlicher Griff
@@ -74,7 +74,7 @@ const Marken = (() => {
        vorhandene Marke sich aendert (§53.3). `move`, `scale` und `rotate`
        fassen ohnehin ALLE Punkte an — die Kurve wandert, waechst und
        dreht sich damit von selbst richtig. */
-    { id: 'curve', name: 'Kurve', zeichen: '⌒', titel: 'Kurve — nach dem Ziehen biegt der Griff in der Mitte sie' }
+    { id: 'curve', name: 'Kurve', zeichen: '⌒', sym: 'formCurve', titel: 'Kurve — nach dem Ziehen biegt der Griff in der Mitte sie' }
   ] as const;
   const FORM_VORGABE = 'line';
   const formArtLesen = (): string => {
@@ -91,15 +91,16 @@ const Marken = (() => {
      Breite dem Druck folgt: der Fueller massvoll, der Pinsel kraeftig.
      Alte Marken ohne `stil` bleiben, wie sie waren (§53.3). */
   const STIFTE = [
-    { id: 'fueller', name: 'Füller', zeichen: '🖋' },
-    { id: 'kugel',   name: 'Kugelschreiber', zeichen: '🖊' },
-    { id: 'pinsel',  name: 'Pinsel', zeichen: '🖌' },
+    { id: 'fueller', name: 'Füller', zeichen: '🖋', sym: 'penFountain' },
+    { id: 'kugel',   name: 'Kugelschreiber', zeichen: '🖊', sym: 'penBall' },
+    { id: 'pinsel',  name: 'Pinsel', zeichen: '🖌', sym: 'penBrush' },
     /* DER BLEISTIFT (E465), wie GoodNotes' Pencil: duenn, leicht
        durchscheinend, mit koerniger Kante — die Flaeche des Fuellers,
        nur schmaler und mit 72 % Deckung. Er steht am Ende der Reihe,
        damit der Wechsel Fueller → Kugel → Pinsel bleibt, wie test343 ihn
        kennt. */
-    { id: 'bleistift', name: 'Bleistift', zeichen: '✏' },
+    { id: 'bleistift', name: 'Bleistift', zeichen: '✏', sym: 'penPencil' },
+
     /* DER SCHUTZLEITER (E490, Redurs Wunsch vom 7. September). Kein
        gewöhnlicher Stift, sondern die Leitung, die im Schaltplan grün-gelb
        und strichpunktiert gezeichnet wird — Redion ist eine App für einen
@@ -107,7 +108,19 @@ const Marken = (() => {
 
        ER STEHT AM ENDE DER REIHE, wie der Bleistift aus demselben Grund:
        der Wechsel Füller → Kugel → Pinsel bleibt, wie `test343` ihn kennt. */
-    { id: 'schutzleiter', name: 'Schutzleiter', zeichen: '⏚' }
+    { id: 'schutzleiter', name: 'Schutzleiter', zeichen: '⏚', sym: 'penEarth' },
+    /* DER LEITERSTIFT (E509, Redurs Wunsch vom 8. September). Er zeichnet
+       nicht anders als der Kugelschreiber — er bringt eine andere
+       FARBREIHE mit: die zehn Adern eines Schaltplans, jede mit ihrem
+       Namen. „Speziell für Fachzeichen gedacht", und deshalb steht er in
+       der Stiftreihe und nicht als sechstes Werkzeug: es ist ein Stift,
+       den man führt, kein Ding, das man setzt.
+
+       ER STEHT AM ENDE. Die Reihenfolge Füller → Kugel → Pinsel →
+       Bleistift → Schutzleiter ist die, die `test343` kennt und die eine
+       Hand sich gemerkt hat; ein neuer Stift in der Mitte hätte jeden
+       zweiten Klick woandershin geführt. */
+    { id: 'leiter', name: 'Leiter', zeichen: '⌁', sym: 'penWire' }
   ] as const;
 
   /* ══ DIE FARBEN DES SCHUTZLEITERS ═══════════════════════════════════════
@@ -138,6 +151,83 @@ const Marken = (() => {
      Punkt — bei 3 zu 1 sah man auf dem Bild nur eine gestrichelte Linie,
      kein Strich-Punkt. */
   const PE_MUSTER = [3.5, 4, 0.1, 4];
+  /* DER NEUTRALLEITER (E509): NUR Striche, kein Punkt. Redur hat es zweimal
+     gesagt — „Strich Strich Strich, so nur Strich". Der Unterschied zum
+     Schutzleiter ist genau das: vier Zahlen dort (Strich, Lücke, Punkt,
+     Lücke), zwei hier. Dieselbe Rechnung in Strichbreiten, damit das
+     Muster bei 1 px wie bei 12 px dasselbe Verhältnis hat, und dieselbe
+     Vorsicht wegen `stroke-linecap:round` (E490). */
+  const N_MUSTER = [2.6, 3.2];
+
+  /* ══ DIE ADERN EINES SCHALTPLANS (E509) ══════════════════════════════════
+   * Redur, 8. September: „ein spezieller Stift … das ist speziell für
+   * Fachzeichen gedacht. Die Schutzleiter, die Neutralleiter sollte blau
+   * sein … dann für L1 braun, L2 schwarz und L3 grau … und für S
+   * (Lampendraht) solltest du eine passende Farbe finden … und
+   * Korrespondierende 1 und 2 und 3 bis 4 sollten verschiedene Farben
+   * haben."
+   *
+   * DAS IST EIN KATALOG UND KEINE FARBLISTE (§8). Jede Ader bringt vier
+   * Dinge mit, die zusammengehören: ihr Kürzel (das im Plan danebensteht),
+   * ihren Namen (den ein Mensch liest und ein Vorleser vorliest), ihre
+   * Farbe und ihre Strichart. Eine Farbe ohne Namen wäre genau das, was
+   * §38 verbietet — eine Auskunft, die nur in der Farbe steckt.
+   *
+   * WOHER DIE FARBEN KOMMEN, und wo ich gewählt habe:
+   *
+   *   PE, N, L1, L2, L3   stehen so in der Norm und in Redurs Auftrag:
+   *                       grün-gelb, blau, braun, schwarz, grau.
+   *   S (Lampendraht)     hat keine genormte Zeichenfarbe. Gewählt ist ein
+   *                       kräftiges Orange: es ist warm wie das Licht, an
+   *                       dessen Ende es hängt, und es ist der einzige
+   *                       Farbton, der zwischen dem Braun von L1 und dem
+   *                       Gelb des PE noch Platz hat, ohne mit einem von
+   *                       beiden verwechselt zu werden.
+   *   1 bis 4             die Korrespondierenden. Vier Töne, die weit
+   *                       auseinanderliegen — Magenta, Violett, Türkis,
+   *                       Karmin. Nicht vier Nuancen einer Farbe: wer eine
+   *                       Kreuzschaltung zeichnet, hat alle vier
+   *                       gleichzeitig auf dem Blatt.
+   *
+   * DER SCHUTZLEITER STEHT NICHT ZWEIMAL DA. Seine Farbe ist `PE_GRUEN`,
+   * dieselbe Konstante, die auch der Stift aus E490 zeichnet, und seine
+   * Strichart ist genau jener Stift. Der Katalog ist der EINE Ort, an dem
+   * eine Ader beschrieben wird; die Stiftliste ist ein Weg dorthin.
+   * ---------------------------------------------------------------------- */
+  const LEITER = [
+    { id: 'pe', kurz: 'PE', name: 'Schutzleiter',        farbe: PE_GRUEN,  stil: 'schutzleiter' },
+    { id: 'n',  kurz: 'N',  name: 'Neutralleiter',       farbe: '#1f6fd0', stil: 'neutralleiter' },
+    { id: 'l1', kurz: 'L1', name: 'Aussenleiter L1',     farbe: '#7a4a21', stil: 'kugel' },
+    { id: 'l2', kurz: 'L2', name: 'Aussenleiter L2',     farbe: '#111111', stil: 'kugel' },
+    { id: 'l3', kurz: 'L3', name: 'Aussenleiter L3',     farbe: '#9a9a9a', stil: 'kugel' },
+    { id: 's',  kurz: 'S',  name: 'Lampendraht',         farbe: '#e2761b', stil: 'kugel' },
+    { id: 'k1', kurz: '1',  name: 'Korrespondierende 1', farbe: '#c2185b', stil: 'kugel' },
+    { id: 'k2', kurz: '2',  name: 'Korrespondierende 2', farbe: '#7c3aed', stil: 'kugel' },
+    { id: 'k3', kurz: '3',  name: 'Korrespondierende 3', farbe: '#0d9488', stil: 'kugel' },
+    { id: 'k4', kurz: '4',  name: 'Korrespondierende 4', farbe: '#4d7c0f', stil: 'kugel' }
+  ] as const;
+
+  /* WELCHE ADER GERADE GEFÜHRT WIRD. In `meta`, wie die Stiftwahl selbst:
+     wer gestern den Schutzleiter gezogen hat, zieht ihn heute weiter. */
+  const M_LEITER = 'zeichnen:leiter';
+  const leiterJetzt = (): string =>
+    (typeof Store !== 'undefined' ? String(Store.getMeta(M_LEITER, 'pe')) : 'pe');
+  const leiterMerken = (id: string): void => {
+    if (typeof Store !== 'undefined') Store.setMeta(M_LEITER, id);
+  };
+
+  /** Die Ader zu einer Farbe — für den Namen am Tupfer und am Strich. */
+  const leiterVon = (id: unknown): typeof LEITER[number] | undefined =>
+    LEITER.find(l => l.id === String(id || ''));
+
+  /* DIE FÜNF GEWÖHNLICHEN FARBEN HEISSEN AUCH BEIM NAMEN (E509). Sie
+     trugen alle den Titel „Farbe" — beim Überfahren stand also fünfmal
+     dasselbe da, und ein Vorleser las fünfmal „Farbe". Redur hat es für
+     die Adern verlangt; für die fünf hier gilt derselbe Satz. */
+  const FARBNAMEN: Record<string, string> = {
+    '#111111': 'Schwarz', '#d64545': 'Rot', '#2f7ed8': 'Blau',
+    '#3aa757': 'Grün', '#e0a419': 'Gelb'
+  };
   /* ══ DIE WERKZEUGE, EINMAL AUFGESCHRIEBEN (E490) ════════════════════════
      Bis hierher standen Kennung, Zeichen, Wort und Beschreibung jedes
      Werkzeugs als Aufruf in der Zeile, die die Leiste baut — nirgends
@@ -155,22 +245,78 @@ const Marken = (() => {
      und wird beim Bauen eigens behandelt; die Formen selbst stehen in
      `FORMEN`. */
   const WERKZEUGE = [
-    { id: 'schreiben', zeichen: '✎', name: 'Schreiben', titel: 'Schreiben — die Zeichenschicht ist durchlässig' },
-    { id: 'select', zeichen: '⌖', name: 'Auswahl', titel: 'Marken auswählen, gemeinsam bewegen oder löschen' },
-    { id: 'stift', zeichen: '🖍', name: 'Stift', titel: 'Freihand mit geglätteter Linie' },
-    { id: 'marker', zeichen: '▰', name: 'Marker', titel: 'Transparenter Marker' },
-    { id: 'formen', zeichen: '□', name: 'Form', titel: 'Formen — welche, steht darunter' },
-    { id: 'abdeck', zeichen: '▬', name: 'Abdeckband',
+    { id: 'schreiben', zeichen: '✎', sym: 'inkHand', name: 'Schreiben', titel: 'Schreiben — die Zeichenschicht ist durchlässig' },
+    { id: 'select', zeichen: '⌖', sym: 'inkLasso', name: 'Auswahl', titel: 'Marken auswählen, gemeinsam bewegen oder löschen' },
+    { id: 'stift', zeichen: '🖍', sym: 'inkPen', name: 'Stift', titel: 'Freihand mit geglätteter Linie' },
+    { id: 'marker', zeichen: '▰', sym: 'inkMarker', name: 'Marker', titel: 'Transparenter Marker' },
+    { id: 'formen', zeichen: '□', sym: 'inkShapes', name: 'Form', titel: 'Formen — welche, steht darunter' },
+    /* „Abdecken", NICHT „Abdeckband" (Fund des breiten Laufs nach E496).
+       Als die Werkzeugliste hierher zusammengezogen wurde, bekam dieser
+       Knopf im Vorbeigehen einen neuen Namen — und stand danach anders da
+       als im Menüband (`register/menueband.ts`), das weiter „Abdecken"
+       sagte. Ein Werkzeug mit zwei Namen ist genau das, wovor §8 warnt.
+       `test266 §1` hat es gehalten; nur hat den Lauf niemand gefahren. */
+    { id: 'abdeck', zeichen: '▬', sym: 'inkCover', name: 'Abdecken',
       titel: 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf' },
-    { id: 'zettel', zeichen: '🗒', name: 'Haftnotiz',
+    { id: 'zettel', zeichen: '🗒', sym: 'inkNote', name: 'Haftnotiz',
       titel: 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn' },
-    { id: 'text', zeichen: 'T', name: 'Text', titel: 'Textanmerkung' },
-    { id: 'zeichen', zeichen: '⚡', name: 'Fachzeichen', titel: 'Ein elektrotechnisches Symbol auf die Seite setzen' },
-    { id: 'bild', zeichen: '🖼', name: 'Bild',
-      titel: 'Ein Foto oder Bild auf das Blatt legen — danach verschieben und ziehen wie jede Marke' },
-    { id: 'radierer', zeichen: '⌫', name: 'Radieren',
-      titel: 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker' }
+    { id: 'text', zeichen: 'T', sym: 'inkText', name: 'Text', titel: 'Textanmerkung' },
+    { id: 'zeichen', zeichen: '⚡', sym: 'inkSymbol', name: 'Fachzeichen', titel: 'Ein elektrotechnisches Symbol auf die Seite setzen' },
+    /* DIE ELEMENTE (E494): dieselbe Bewegung wie beim Fachzeichen — ein Tipp
+       setzt etwas Fertiges —, nur kommt es nicht aus dem Register, sondern
+       aus dem, was der Nutzer selbst gezeichnet und gesichert hat. */
+    { id: 'elemente', zeichen: '⭐', sym: 'inkStamp', name: 'Elemente',
+      titel: 'Ein gesichertes Element setzen — sichern über die Auswahl («Als Element»)' },
+    { id: 'bild', zeichen: '🖼', sym: 'inkImage', name: 'Bild',
+      titel: 'Ein Foto, ein GIF oder eine Seite aus einer PDF auf das Blatt legen — '
+        + 'danach verschieben, ziehen und drehen wie jede Marke' },
+    { id: 'radierer', zeichen: '⌫', sym: 'inkEraser', name: 'Radieren',
+      titel: 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker' },
+    /* ══ DER LASERPOINTER (E512) ═══════════════════════════════════════════
+       Redur, 8. September: „alter, wieso habe ich keinen Laserpointer?"
+
+       Es GAB einen — aber nur im Vollbild-Präsentationsmodus (E493), und
+       dort findet ihn niemand, der gerade an einer Seite steht und etwas
+       zeigen will. Jetzt ist er ein Werkzeug wie jedes andere.
+
+       ER SCHREIBT NICHTS. Kein Eintrag in `marks`, kein Schritt im
+       Verlauf, nichts in der Sicherung — er ist ein Finger, kein Stift.
+       Das ist die ganze Zusage dieses Werkzeugs, und `test480` hält sie. */
+    { id: 'laser', zeichen: '⦿', sym: 'inkLaser', name: 'Laserpointer',
+      titel: 'Zeigen, nicht schreiben — der Strahl verblasst von selbst und wird nie gespeichert' }
   ] as const;
+
+  /* ZWEI ARTEN, WIE IN GOODNOTES: ein Punkt, der mitgeht, oder eine Linie,
+     die hinter ihm herläuft und verblasst. */
+  const LASER = [
+    { id: 'punkt', zeichen: '•', name: 'Punkt', titel: 'Ein Punkt, der dem Zeiger folgt' },
+    { id: 'linie', zeichen: '⌇', name: 'Linie', titel: 'Eine Spur, die hinter dem Zeiger herläuft und verblasst' }
+  ] as const;
+  /* ══ WO DIE LEISTE STEHT (E512) ═════════════════════════════════════════
+     Redur, 8. September: „und die Stift[leiste] sollte ich als komplett
+     bewegen können, also nach links, rechts, Mitte und ganz oben."
+
+     Vier Plätze, EIN Katalog (§8) — Kennung, Zeichen, Name. Die Reihenfolge
+     ist die des Rundlaufs: oben (wie bisher) → links → rechts → unten in
+     der Mitte, wie die schwebende Leiste in GoodNotes. Gemerkt wird der
+     Platz in `meta`, also überlebt er das Schliessen. */
+  const LAGEN = [
+    { id: 'oben',   zeichen: '⤒', sym: 'dockTop', name: 'oben' },
+    { id: 'links',  zeichen: '⇤', sym: 'dockLeft', name: 'links' },
+    { id: 'rechts', zeichen: '⇥', sym: 'dockRight', name: 'rechts' },
+    { id: 'unten',  zeichen: '⤓', sym: 'dockBottom', name: 'unten in der Mitte' }
+  ] as const;
+  const M_LAGE = 'zeichnen:leistenlage';
+  const lageJetzt = (): string => {
+    const id = typeof Store !== 'undefined' ? String(Store.getMeta(M_LAGE, 'oben')) : 'oben';
+    return LAGEN.some(l => l.id === id) ? id : 'oben';
+  };
+  const M_LASER = 'zeichnen:laser';
+  const laserArt = (): string =>
+    (typeof Store !== 'undefined' ? String(Store.getMeta(M_LASER, 'punkt')) : 'punkt');
+  /* WIE LANGE DER STRAHL NACHLEUCHTET. Kurz genug, dass er nicht im Weg
+     steht; lang genug, dass ein Auge ihm folgen kann. */
+  const LASER_MS = 700;
 
   /**
    * Wie eine Marke heisst, für einen Menschen.
@@ -209,6 +355,20 @@ const Marken = (() => {
      Wer den NEUNTEN sichern will, bekommt es gesagt — nicht stillschweigend
      den aeltesten weggeworfen (§35). */
   const HOECHSTENS_FARBSAETZE = 8;
+  /* WIE VIELE ELEMENTE (E494).
+
+     Die Bibliothek liegt in `meta` — im selben Fach wie die Farbsaetze, und
+     damit in jeder Sicherung (§9). Das ist ihr Vorteil (sie reist mit) und
+     ihre Grenze: `meta` haelt Einstellungen, keine Anhaenge. Ein Element ist
+     eine Handvoll Marken, kein Bild von zwei Megabyte.
+
+     Zwei Zahlen halten das fest, und beide SAGEN es, statt still etwas
+     wegzuwerfen (§35): hoechstens sechzig Elemente, und keines ueber
+     `HOECHSTENS_ELEMENT_BYTES`. Gemessen ist ein voller handschriftlicher
+     Absatz (rund vierzig Striche) etwa 30 KB — sechzig davon waeren 1,8 MB
+     in `meta`, und das ist die Obergrenze, die hier bewusst steht. */
+  const HOECHSTENS_ELEMENTE = 60;
+  const HOECHSTENS_ELEMENT_BYTES = 200 * 1024;
   /* DIE SCHRIFT AUF DEM BLATT (E360, L115 Punkt 6): dieselben fuenf Familien
      wie am Block (E101, Register.textstile), hier als Stapel fuer SVG —
      Attribute kennen keine CSS-Variablen, und der Druck liest sie roh.
@@ -238,12 +398,29 @@ const Marken = (() => {
     return [...SCHRIFT_STUFEN].reverse().find(v => v < jetzt) ?? SCHRIFT_STUFEN[0]!;
   };
   /** Der Breitenfaktor eines Punkts nach Druck und Stift. */
-  const druckFaktor = (stil: string, p: number): number => {
+  /**
+   * DIE NEIGUNG SCHATTIERT (E507).
+   *
+   * Aus dem Stift-Dossier, Seite 8: als Beispiel für reiche Stiftdaten
+   * nennt es „ein Pencil-Shading-Modell anhand des Tilt-Winkels" — den
+   * Bleistift, den man flach hält, um zu schattieren. Genau die Geste, die
+   * jeder von Papier kennt.
+   *
+   * `neig` ist 0 bei senkrechtem Stift und 1 bei ganz flachem. Sie wirkt
+   * NUR auf den Bleistift: ein Füller wird durch Schräghalten nicht
+   * breiter (die Feder liegt auf), und ein Kugelschreiber schon gar nicht.
+   * Wer keine Neigung meldet — Maus, Finger, ein Stift ohne Sensor —,
+   * bekommt 0 und damit genau das Verhalten von vorher.
+   */
+  const druckFaktor = (stil: string, p: number, neig = 0): number => {
     const d = Math.max(0.05, Math.min(1, Number.isFinite(p) ? p : 0.5));
+    const n = Math.max(0, Math.min(1, Number.isFinite(neig) ? neig : 0));
     if (stil === 'pinsel') return 0.3 + d * 1.7;
     /* Der Bleistift schwillt kaum — ein Graphitstift wird mit Druck
-       dunkler, nicht breiter; das Bisschen Breite hier ist der Winkel. */
-    if (stil === 'bleistift') return 0.35 + d * 0.6;
+       dunkler, nicht breiter; das Bisschen Breite hier ist der Winkel.
+       UND SEIT E507 IST DER WINKEL WIRKLICH DER WINKEL: flach gehalten
+       liegt mehr Graphit auf dem Papier, bis zum Doppelten. */
+    if (stil === 'bleistift') return (0.35 + d * 0.6) * (1 + n * 1.3);
     /* Eine Leitung hat eine Stärke, keine Handschrift (E490). */
     if (stil === 'schutzleiter') return 1;
     return 0.5 + d * 1.0;
@@ -265,6 +442,93 @@ const Marken = (() => {
     const average = values.length ? values.reduce((sum: number, value: number) => sum + value, 0) / values.length : 0.5;
     const pressureFactor = Math.max(0.55, Math.min(1.55, 0.65 + average * 0.7));
     return base * pressureFactor * (mark?.art === 'marker' ? 4 : 1);
+  };
+
+  /* ══ EINE MARKE ALS PDF-ANNOTATION (E506) ════════════════════════════════
+   * Der PDF-Export schreibt Handschrift seit E506 nicht mehr ins Bild,
+   * sondern als echte `/Ink`-Annotation. WAS dabei herauskommt, entscheidet
+   * dieselbe Stelle, die auch auf den Bildschirm zeichnet — Farbe, Breite,
+   * Druckkurve und Deckkraft stehen hier und nirgends sonst (§8). Eine
+   * zweite Rechnung im Export liefe von dieser weg, und dann sähe das PDF
+   * anders aus als der Bildschirm.
+   *
+   * NUR STIFT UND MARKER. Das sind die Marken, die Handschrift SIND: eine
+   * Punktfolge mit Druck. Alles andere bleibt im Seitenbild, und zwar aus
+   * je eigenem Grund:
+   *
+   *   `abdeck`   MUSS im Bild bleiben. Ein Abdeckband, das eine
+   *              Annotation wäre, liesse sich beim Empfänger
+   *              wegschieben — und darunter käme zum Vorschein, was
+   *              abgedeckt werden sollte. Im Bild sind die Pixel darunter
+   *              wirklich weg.
+   *   Formen     Rechteck, Ellipse, Dreieck, Pfeil und Kurve liegen als
+   *              zwei bis drei Stützpunkte in der Ablage, nicht als
+   *              Punktzug. PDF hätte dafür `/Square`, `/Circle` und
+   *              `/Line`; das ist ein eigener Bogen und steht in
+   *              `LUECKEN.md`.
+   *   Text,      brauchten `/FreeText` mit eingebetteter Schrift — auch
+   *   Zettel     ein eigener Bogen (Dossier S.10).
+   *   Bild,      wären `/Stamp` mit eigenem Bild-XObject.
+   *   Fachzeichen
+   * ---------------------------------------------------------------------- */
+  const annotierbar = (mark: any): boolean =>
+    !!mark && (mark.art === 'stift' || mark.art === 'marker')
+    && InkGeometry.points(mark.pts).length >= 2;
+
+  /** `#rrggbb` zu drei Werten von 0 bis 1. Unlesbares wird schwarz. */
+  const farbeRgb = (wert: unknown): [number, number, number] => {
+    const t = String(wert || '').trim();
+    const kurz = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(t);
+    const lang = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(t);
+    const teile = lang ? [lang[1]!, lang[2]!, lang[3]!]
+      : kurz ? [kurz[1]! + kurz[1]!, kurz[2]! + kurz[2]!, kurz[3]! + kurz[3]!] : null;
+    if (!teile) return [0, 0, 0];
+    return teile.map(h => Math.round(parseInt(h, 16) / 255 * 1000) / 1000) as [number, number, number];
+  };
+
+  /**
+   * Was der PDF-Schreiber von dieser Marke wissen muss.
+   *
+   * `kontur` ist das gefüllte Vieleck mit VERÄNDERLICHER Breite — dort,
+   * wo der Bildschirm eine Fläche zeichnet (Füller, Pinsel, Bleistift).
+   * Wo er eine Linie zieht (Kugelschreiber, Marker, Schutzleiter), bleibt
+   * `null`, und der Schreiber streicht die Mittellinie mit fester Breite.
+   * Dieselbe Unterscheidung wie in `zeichneMarke`, aus derselben Menge.
+   */
+  const alsAnnotation = (mark: any): {
+    striche: number[][][]; kontur: Array<number[][] | null>;
+    farbe: [number, number, number]; breite: number; deckkraft: number; name: string;
+  } | null => {
+    if (!annotierbar(mark)) return null;
+    const punkte = InkGeometry.points(mark.pts);
+    const base = Math.max(0.5, Number(mark.breite) || BREITEN[1]);
+    const flaeche = mark.art === 'stift' && FLAECHEN_STIFTE.has(String(mark.stil));
+    const druck: number[] = Array.isArray(mark.pressure) ? mark.pressure.map(Number) : [];
+    /* DIE NEIGUNG GEHT MIT INS PDF (E507). Ohne sie käme ein schattierter
+       Bleistiftstrich dünner heraus, als er auf dem Bildschirm aussah —
+       und der Export soll zeigen, was dasteht. */
+    const neig: number[] = Array.isArray(mark.neigung) ? mark.neigung.map(Number) : [];
+    const kontur = flaeche && punkte.length >= 3
+      ? InkGeometry.outlinePunkte(punkte, punkte.map((_p, i) =>
+          base / 2 * druckFaktor(String(mark.stil), druck[i] ?? druck[druck.length - 1] ?? 0.5,
+            neig[i] ?? neig[neig.length - 1] ?? 0)))
+      : null;
+    return {
+      striche: [punkte.map(q => [q[0], q[1]])],
+      kontur: [kontur && kontur.length >= 3 ? kontur.map(q => [q[0], q[1]]) : null],
+      farbe: farbeRgb(mark.farbe),
+      /* Der Marker ist auf dem Bildschirm viermal so breit wie seine Zahl
+         (siehe `strokeWidth`) — im PDF muss er dieselbe Breite haben. */
+      breite: mark.art === 'marker' ? base * 4 : base,
+      /* Der Bleistift ist durchscheinend, und flach gehalten noch mehr —
+         dieselbe Zahl wie am Bildschirm (E465, E507). */
+      deckkraft: mark.art === 'marker' ? 0.32
+        : String(mark.stil) === 'bleistift'
+          ? Math.round((0.72 - (neig.length
+              ? neig.reduce((a, b) => a + (Number(b) || 0), 0) / neig.length : 0) * 0.22) * 100) / 100
+        : String(mark.stil) === 'pinsel' ? 0.92 : 1,
+      name: mark.art === 'marker' ? 'Marker' : 'Handschrift'
+    };
   };
 
   const arrowPath = (start: InkPoint, end: InkPoint): string => {
@@ -604,7 +868,13 @@ const Marken = (() => {
          (alter Bestand) bleibt es beim gleichmaessigen Strich unten. */
       const base = Math.max(0.5, Number(mark.breite) || BREITEN[1]);
       const druck: number[] = Array.isArray(mark.pressure) ? mark.pressure.map(Number) : [];
-      const halb = points.map((_p, i) => base / 2 * druckFaktor(String(mark.stil), druck[i] ?? druck[druck.length - 1] ?? 0.5));
+      /* Eine Marke ohne `neigung` ist alter Bestand oder mit der Maus
+         gezogen — dann ist die Neigung überall 0, und es kommt heraus,
+         was vorher herauskam (§9: rückwärts denken). */
+      const neig: number[] = Array.isArray(mark.neigung) ? mark.neigung.map(Number) : [];
+      const neigBei = (i: number): number => neig[i] ?? neig[neig.length - 1] ?? 0;
+      const halb = points.map((_p, i) => base / 2 * druckFaktor(String(mark.stil),
+        druck[i] ?? druck[druck.length - 1] ?? 0.5, neigBei(i)));
       element = svg('path', { d: InkGeometry.outline(points, halb), fill: color, stroke: color,
         'stroke-width': 0.25, 'stroke-linejoin': 'round' });
       if (mark.stil === 'pinsel') element.setAttribute('opacity', '0.92');
@@ -613,7 +883,13 @@ const Marken = (() => {
          die Flaeche bleibt durchscheinend. Kein Filter: ein `feTurbulence`
          je Strich kostet auf einer vollen Seite ein Bild je Bild. */
       if (mark.stil === 'bleistift') {
-        element.setAttribute('opacity', '0.72');
+        /* FLACH IST WEICHER (E507). Ein flach gehaltener Bleistift trägt
+           breiter auf, aber nicht dunkler — dieselbe Menge Graphit auf
+           mehr Papier. Ohne Neigung bleibt es bei den 0,72 von E465, und
+           genau das hält `test475` §4 fest. */
+        const mittel = neig.length
+          ? neig.reduce((a, b) => a + (Number(b) || 0), 0) / neig.length : 0;
+        element.setAttribute('opacity', String(Math.round((0.72 - mittel * 0.22) * 100) / 100));
         element.setAttribute('stroke-width', '0.7');
         element.setAttribute('stroke-dasharray', '0.9 0.6');
       }
@@ -656,6 +932,20 @@ const Marken = (() => {
        Das Muster rechnet in Strichbreiten, damit es bei 1 px wie bei 12 px
        dasselbe Verhältnis hat. `stroke-linecap:round` macht aus dem sehr
        kurzen Strich den Punkt. */
+    /* ══ DER NEUTRALLEITER: NUR STRICHE (E509) ════════════════════════════
+       Eine Farbe, ein Muster, keine zweite Ebene — der Schutzleiter
+       braucht seine Gruppe, weil grün-gelb zwei Farben sind; der
+       Neutralleiter ist blau und sonst nichts. Deshalb steht er hier und
+       nicht dort unten: weniger Aufwand für weniger Anspruch. */
+    if (String(mark.stil) === 'neutralleiter' && art !== 'text' && art !== 'zettel'
+        && art !== 'abdeck' && art !== 'bild' && art !== 'zeichen') {
+      element.setAttribute('stroke-dasharray',
+        N_MUSTER.map(v => Math.max(0.2, v * width)).join(' '));
+      element.setAttribute('data-sid', idOf(mark));
+      element.setAttribute('data-ink-art', art);
+      element.setAttribute('data-ink-stil', 'neutralleiter');
+      return element;
+    }
     if (String(mark.stil) === 'schutzleiter' && art !== 'text' && art !== 'zettel'
         && art !== 'abdeck' && art !== 'bild' && art !== 'zeichen') {
       const gruppe = svg('g');
@@ -816,6 +1106,52 @@ const Marken = (() => {
     let stiftZuletzt = 0;
     let stiftTimer: ReturnType<typeof setTimeout> | null = null;
     let aktiverZeiger: number | null = null;
+    /* ══ WANN DER FÜHRENDE ZEIGER ZULETZT ETWAS GESAGT HAT (E512) ══════════
+       Redur, 8. September: „nach 5, 6 Minuten funktioniert der Stift nicht
+       mehr, auch die Maus — ich musste neu laden."
+
+       DER FUND war nicht die Zeit, sondern EIN verlorenes Ereignis.
+       `aktiverZeiger` hält seit E354 fest, wer den Zug führt, damit ein
+       zweiter Finger ihn nicht kapert. Kommt für diesen Zeiger nie ein
+       `pointerup` oder `pointercancel` an — der Stift verlässt die
+       Reichweite, der Griff geht verloren, das Ende landet auf einem
+       anderen Element —, dann steht die Kennung für IMMER da, und jeder
+       andere Zeiger wird abgewiesen. Die Fläche ist tot; nur Neuladen half.
+
+       Gemessen: ein Stiftzug ohne Abheben, danach vier weitere Züge mit
+       Maus und Stift — die Zahl der Marken blieb bei eins.
+
+       DIE ANTWORT IST KEINE UHR IM HINTERGRUND. Ein Wecker, der einen Zug
+       nach n Sekunden schliesst, schneidet auch den Strich eines Menschen
+       durch, der beim Nachdenken die Hand aufliegen lässt. Stattdessen
+       zwei Wege, die beide nur im Fehlerfall greifen:
+
+         · das Ende wird AUCH AM FENSTER gehört (`beiEndeGlobal`), damit
+           ein Abheben ausserhalb der Fläche zählt;
+         · und wer aufsetzt, während der Führende seit `VERWAIST_MS`
+           nichts mehr gesagt hat, ÜBERNIMMT — der alte Zug wird dabei
+           abgeschlossen, nicht weggeworfen (§51: lieber ein Strich zu
+           viel als eine Zeile Handschrift, die niemand wiederbekommt). */
+    let zeigerZuletzt = 0;
+    /* Der Laserpointer (E512): ein Knoten, der lebt, solange gezeigt wird,
+       und danach von selbst verblasst. Er steht bewusst NEBEN `running` —
+       ein Zug, der nichts speichert, ist kein laufender Strich. */
+    let laserZug: { pts: number[][]; knoten: SVGElement } | null = null;
+    /* WIE LANGE EIN FÜHRENDER SCHWEIGEN DARF, bevor er ein Rest ist.
+
+       Die Zahl muss zwei Dinge trennen, und beide sind gemessen:
+
+         · Ein EINDRINGLING — der zweite Finger, den E354 abwehrt — setzt
+           auf, WÄHREND die Hand fährt. In `test479 §2` liegen zwischen der
+           letzten Bewegung des Führenden und dem fremden Aufsetzen acht
+           Millisekunden.
+         · Ein MENSCH, der merkt, dass nichts passiert, hebt ab, schaut hin
+           und tippt neu. Das dauert nicht unter einer halben Sekunde.
+
+       500 ms liegen weit über dem einen und unter dem anderen. Höher wäre
+       unnötig zäh: jede Millisekunde darüber ist Wartezeit für jemanden,
+       dessen Fläche gerade nicht reagiert. */
+    const VERWAIST_MS = 500;
     let fingerPan: { id: number; x: number; y: number; left: number; top: number; center: HTMLElement } | null = null;
     let radierStrich: { before: any[]; geaendert: boolean; letzter: number[]; kreis: SVGElement | null } | null = null;
     /* Der Stift, mit dem der naechste Strich entsteht — gemerkt ueber
@@ -841,9 +1177,17 @@ const Marken = (() => {
     let glatt: ((p: [number, number], dt: number) => [number, number]) | null = null;
     let druckGlatt: ((p: number) => number) | null = null;
     let letzteZeit = 0;
+    /* Der gemessene Abstand der letzten zwei Meldungen. Der nasse Schwanz
+       rechnet in Millisekunden und braucht ihn (E511). */
+    let dtLetzt = 16;
     /* Wo der Zeiger ZULETZT WIRKLICH WAR — ungeglaettet. Beim Absetzen wird
        der letzte gespeicherte Punkt dorthin gezogen (siehe `finish`). */
     let rohLetzter: number[] | null = null;
+    /* DIE LETZTEN DREI ROHEN PUNKTE (E511). Der nasse Schwanz rechnet an
+       ihnen, nicht an den geglätteten: er soll die Spitze EINHOLEN, nicht
+       einen Strich verlängern, der selbst schon hinterherläuft. Drei, weil
+       `InkStroke.vorhersage` an dreien erkennt, ob die Richtung kippt. */
+    let rohDrei: number[][] = [];
     /* Ob der laufende Strich gerade als FLAECHE gezeichnet wird (Fueller,
        Pinsel ab drei Punkten) oder als Linie. Wechselt er die Bauart, wird
        der Knoten einmal ganz neu gebaut statt sein `d` gesetzt. */
@@ -980,7 +1324,10 @@ const Marken = (() => {
       return neu;
     };
     const state = () => ({ undo: historyUndo.length > 0, redo: historyRedo.length > 0,
-      selected: selection.size, clipboard: zwischenablage.length > 0, gesperrt: gesperrtGewaehlt() });
+      selected: selection.size, clipboard: zwischenablage.length > 0, gesperrt: gesperrtGewaehlt(),
+      /* E494: welches Element der nächste Tipp setzt — die Leiste schreibt
+         es an ihren Knopf, damit die gemerkte Wahl sichtbar ist. */
+      element: letztesElement });
     const notifyState = (): void => stateListeners.forEach(listener => listener(state()));
     const save = (): void => Store.updateBlock(block.id, { marken: marks, raumVersion: R.RAUM_VERSION });
     /* ZWEI LISTEN VERGLEICHEN, OHNE SIE ZU SCHREIBEN (E378). Bis hierher
@@ -1377,6 +1724,32 @@ const Marken = (() => {
       return radiereEine(index, [roh[0] ?? 0, roh[1] ?? 0], radierRadius());
     };
 
+    /**
+     * WIE FLACH LIEGT DER STIFT (E507)?
+     *
+     * Pointer Events Level 3 gibt `tiltX` und `tiltY` — die Neigung gegen
+     * die Senkrechte, je Achse, in Grad von −90 bis 90 (Dossier S.5).
+     * Zusammen ergeben sie den Winkel gegen das Papier; hier wird daraus
+     * eine Zahl von 0 (senkrecht) bis 1 (ganz flach).
+     *
+     * `-1` heisst NICHT GEMELDET, und das ist etwas anderes als „null
+     * Grad": eine Maus, ein Finger und ein Stift ohne Neigungssensor
+     * bekommen kein Feld, statt eines mit erfundenen Nullen. Sonst
+     * trüge jede alte Mausnotiz plötzlich Stiftdaten (§9).
+     */
+    const neigungAus = (event: PointerEvent): number => {
+      if (event.pointerType !== 'pen') return -1;
+      const tx = Number((event as any).tiltX) || 0;
+      const ty = Number((event as any).tiltY) || 0;
+      if (!tx && !ty) return -1;
+      /* Der Winkel gegen die Senkrechte aus beiden Achsen. `tan` addiert
+         sich in der Ebene, nicht die Winkel selbst — deshalb über den
+         Tangens und nicht über `hypot(tx, ty)`. */
+      const r = Math.PI / 180;
+      const w = Math.atan(Math.hypot(Math.tan(tx * r), Math.tan(ty * r))) / r;
+      return Math.round(Math.max(0, Math.min(1, w / 90)) * 100) / 100;
+    };
+
     const pressureOf = (event: PointerEvent): number => {
       const pressure = Number(event.pressure);
       return pressure > 0 ? Math.max(0.05, Math.min(1, pressure)) : 0.5;
@@ -1418,14 +1791,72 @@ const Marken = (() => {
       (flaeche.closest<HTMLElement>('.document-workspace')?.dataset.documentPen === 'seen' ||
        Date.now() - stiftZuletzt < STIFT_SPERRE_MS || (running !== null && running.zeigerArt === 'pen'));
     /* Einen angefangenen Strich VERWERFEN: kein Knoten, kein Schritt im
-       Verlauf — als haette es ihn nie gegeben. */
+       Verlauf — als haette es ihn nie gegeben.
+
+       AUFGERAEUMT WIRD DASSELBE WIE IN `finish` (E504). Bis hierher blieben
+       `feder`, `glatt`, `druckGlatt` und ein bestelltes Bild stehen; das
+       fiel nicht auf, weil der naechste Aufsetzpunkt sie ohnehin neu setzt.
+       Mit dem Abbruch durch den Browser gibt es jetzt einen Weg hierher,
+       der NICHT von einem Aufsetzen gefolgt sein muss — und ein bestelltes
+       Bild fuer einen Strich, den es nicht mehr gibt, ist genau die Sorte
+       Rest, die spaeter niemand mehr erklaeren kann. */
     const verwerfen = (): void => {
+      bildAbsagen();
+      laserAus(true);
       if (running) { runningNode?.remove(); running = null; runningNode = null; beforeRunning = null; }
+      feder = null; glatt = null; druckGlatt = null;
+      letzteZeit = 0; nassFlaeche = false; rohLetzter = null; rohDrei = [];
       aktiverZeiger = null;
     };
-    const addSample = (event: PointerEvent): void => {
+    /* ══ DER LASERSTRAHL (E512) ════════════════════════════════════════════
+       Drei kurze Wege, und keiner davon fasst `marks` an. Der Knoten hängt
+       in der Zeichenschicht, damit er dieselbe Geometrie hat wie alles
+       andere — und trägt `data-ink-ui`, damit ihn jeder Weg, der Marken
+       sucht, übersieht (dieselbe Marke wie der Radierkreis und der
+       Auswahlrahmen). */
+    const laserAn = (punkt: number[]): void => {
+      laserAus(true);
+      const art = laserArt();
+      const knoten = svg('g', { 'data-ink-ui': 'laser', class: 'blatt-laser' });
+      const spur = svg('path', { class: 'blatt-laser-spur', d: '' });
+      const kopf = svg('circle', { class: 'blatt-laser-kopf', r: '4.5',
+        cx: String(punkt[0]), cy: String(punkt[1]) });
+      if (art === 'linie') knoten.appendChild(spur);
+      knoten.appendChild(kopf);
+      flaeche.appendChild(knoten);
+      laserZug = { pts: [[punkt[0] ?? 0, punkt[1] ?? 0]], knoten };
+    };
+    const laserZeigen = (punkt: number[]): void => {
+      if (!laserZug) return;
+      const pts = laserZug.pts;
+      const letzt = pts[pts.length - 1]!;
+      if (Math.hypot((punkt[0] ?? 0) - letzt[0]!, (punkt[1] ?? 0) - letzt[1]!) < 0.8) return;
+      pts.push([punkt[0] ?? 0, punkt[1] ?? 0]);
+      /* NUR DAS LETZTE STÜCK BLEIBT SICHTBAR. Eine Spur, die den ganzen
+         Weg behält, ist eine Zeichnung — und genau das soll sie nicht
+         sein. Vierzig Punkte sind bei 60 Hz gut zwei Drittel Sekunde. */
+      if (pts.length > 40) pts.splice(0, pts.length - 40);
+      const kopf = laserZug.knoten.querySelector('.blatt-laser-kopf');
+      kopf?.setAttribute('cx', String(punkt[0]));
+      kopf?.setAttribute('cy', String(punkt[1]));
+      const spur = laserZug.knoten.querySelector('.blatt-laser-spur');
+      if (spur) spur.setAttribute('d', InkGeometry.path(pts));
+    };
+    /** Weg damit. `sofort` beim Neuanfang, sonst verblasst er. */
+    const laserAus = (sofort = false): void => {
+      const zug = laserZug;
+      laserZug = null;
+      if (!zug) return;
+      if (sofort) { zug.knoten.remove(); return; }
+      zug.knoten.classList.add('blatt-laser-weg');
+      setTimeout(() => zug.knoten.remove(), LASER_MS + 120);
+    };
+
+    /** Ein Punkt in den Strich. `um` ist der Umrechner DIESES Ereignisses
+     *  (E511) — er holt die Bildschirmmatrix einmal statt je Punkt. */
+    const addSample = (event: PointerEvent, um?: (e: PointerEvent) => [number, number] | null): void => {
       if (!running) return;
-      const roh = R.zuBlatt(flaeche, event);
+      const roh = um ? um(event) : R.zuBlatt(flaeche, event);
       if (!roh) return;
       /* DER DRUCK KOMMT AUS DEM ROHEN PUNKT (E376): der Ersatzdruck fuer
          Maus und Finger rechnet aus der Geschwindigkeit, und geglaettete
@@ -1434,16 +1865,23 @@ const Marken = (() => {
       const jetzt = Number(event.timeStamp) || letzteZeit;
       const dt = letzteZeit ? Math.max(1, jetzt - letzteZeit) : 16;
       letzteZeit = jetzt;
+      dtLetzt = dt;
       /* GEGLAETTET WIRD IMMER, GESPEICHERT NICHT (E376). Der Filter laeuft
          auch dann weiter, wenn der Punkt unter der Schwelle bleibt — sonst
          bliebe er bei langsamer Hand fuer immer hinter ihr zurueck. */
       const point = glatt ? glatt(roh as [number, number], dt) : roh;
       rohLetzter = roh;
+      rohDrei.push(roh);
+      if (rohDrei.length > 3) rohDrei.shift();
       const druck = druckGlatt ? druckGlatt(drucken) : drucken;
       const last = running.pts[running.pts.length - 1];
       if (last && Math.abs(last[0] - point[0]) < 0.6 && Math.abs(last[1] - point[1]) < 0.6) return;
       running.pts.push(point);
       running.pressure.push(druck);
+      /* Die Neigung wandert Punkt für Punkt mit — aber nur, wenn der Stift
+         sie meldet. Eine `-1` heisst „nicht gemeldet"; sie wird beim
+         Absetzen zu nichts, statt zu einer Null zu werden (E507). */
+      if (running.neigung) running.neigung.push(neigungAus(event));
       /* Die Uhr läuft erst weiter, wenn die Hand ihren Ruhepunkt VERLÄSST
          (E490) — ein Zittern an derselben Stelle ist keine Bewegung. */
       const ruhe = running.ruhePunkt;
@@ -1459,7 +1897,15 @@ const Marken = (() => {
        hier anders, spraenge der Strich beim Absetzen des Stifts. */
     const halbeBreite = (mark: any, druck: number): number => {
       const base = Math.max(0.5, Number(mark?.breite) || BREITEN[1]);
-      return base / 2 * druckFaktor(String(mark?.stil || ''), druck);
+      /* AUCH DER NASSE STRICH KENNT DIE NEIGUNG (E507). Ohne diese Zeile
+         wüchse der Bleistift erst beim Absetzen — man hielte den Stift
+         flach, sähe einen schmalen Strich, liesse los, und er würde
+         plötzlich breit. Genommen wird die letzte gemeldete Neigung: der
+         Winkel ändert sich langsam, der Strich läuft schnell. */
+      const neig: number[] = Array.isArray(mark?.neigung) ? mark.neigung : [];
+      const n = Number(neig[neig.length - 1]);
+      return base / 2 * druckFaktor(String(mark?.stil || ''), druck,
+        Number.isFinite(n) && n > 0 ? n : 0);
     };
 
     /* ---- EIN BILD JE BILD, NICHT JE EREIGNIS (E376) ----------------------
@@ -1499,7 +1945,7 @@ const Marken = (() => {
      * gezogen hat. `Feder.nass()` zeichnet ihn, `Feder.punkte()` kennt ihn
      * nicht — test366 haelt genau das fest.
      * -------------------------------------------------------------------- */
-    const nassenSchwanz = (event: PointerEvent): void => {
+    const nassenSchwanz = (event: PointerEvent, um?: (e: PointerEvent) => [number, number] | null): void => {
       if (!feder || !running) return;
       const druck = running.pressure[running.pressure.length - 1] ?? 0.5;
       const halb = halbeBreite(running, druck);
@@ -1508,14 +1954,31 @@ const Marken = (() => {
         ? (event as any).getPredictedEvents() as PointerEvent[] : [];
       if (vom.length) {
         for (const p of vom.slice(0, 3)) {
-          const q = R.zuBlatt(flaeche, p);
+          const q = um ? um(p) : R.zuBlatt(flaeche, p);
           if (q) pts.push(q);
         }
       }
       if (!pts.length) {
-        const jetzt = Number(event.timeStamp) || 0;
-        pts = InkStroke.vorhersage(running.pts as any, InkStroke.VORHER_MS,
-          letzteZeit && jetzt > letzteZeit ? jetzt - letzteZeit : 8) as any;
+        /* AN DEN ROHEN PUNKTEN GERECHNET (E511), nicht an `running.pts`:
+           die sind geglättet und laufen selbst hinterher. */
+        pts = InkStroke.vorhersage(rohDrei as any, InkStroke.VORHER_MS, dtLetzt) as any;
+      }
+      /* ══ DIE TINTE HOLT DIE SPITZE EIN (E511) ═══════════════════════════
+         Vor der Vermutung steht eine MESSUNG: der letzte rohe Punkt ist
+         die Stelle, an der der Stift wirklich war — kein Raten, kein
+         Filter. Er kommt als erster Punkt des Schwanzes dazu, und erst
+         dahinter das Vorausgezeichnete.
+
+         Das ist der ganze Unterschied zwischen „die Tinte klebt am Stift"
+         und „die Tinte kommt hinterher": der geglättete Strich darf
+         ruhig 6 px zurückliegen, solange der SICHTBARE Kopf dort ist, wo
+         die Hand ist. Gespeichert wird davon nichts (E376). */
+      const spitze = rohLetzter;
+      if (spitze) {
+        const letzterFest = running.pts[running.pts.length - 1];
+        const weg = letzterFest
+          ? Math.hypot(spitze[0]! - letzterFest[0]!, spitze[1]! - letzterFest[1]!) : 0;
+        if (weg > 0.2) pts = [[spitze[0]!, spitze[1]!], ...pts];
       }
       feder.nass(pts as any, pts.map(() => halb));
     };
@@ -1578,10 +2041,68 @@ const Marken = (() => {
       commit(before);
       return true;
     };
+    /**
+     * EINE PDF-SEITE ALS BILD AUF DAS BLATT (E502).
+     *
+     * Redurs Bitte: „das ich … mein Formelbuch hier einfügen kann und so
+     * kleiner grösser machen kann, verschieben kann." Bis hierher konnte
+     * Redion eine PDF nur als SEITEN einfügen (E469) — ganze Seiten im
+     * Dokument, nicht verschiebbar, nicht skalierbar.
+     *
+     * Als BILDMARKE ist sie beides: verschieben, ziehen, drehen und sperren
+     * kann sie danach dieselbe Auswahl wie jede andere Marke (E353, E466,
+     * E474). Es braucht dafür kein neues Werkzeug und keine neue Marke —
+     * nur einen zweiten Weg IN `bildAblegen` hinein.
+     *
+     * GERASTERT, NICHT EINGEBETTET. Die Seite wird einmal gezeichnet und
+     * liegt danach als Bild im Dateispeicher; die PDF selbst reist nicht
+     * mit. Das ist dieselbe Entscheidung wie in E488 und aus demselben
+     * Grund: der Text darin ist danach nicht mehr durchsuchbar, dafür
+     * braucht das Blatt beim Öffnen keine fremde Bibliothek.
+     */
+    const pdfAlsBildmarke = async (datei: File, mitte?: number[]): Promise<boolean> => {
+      if (typeof PdfLeser === 'undefined') {
+        UI.toast('Der PDF-Leser ist gerade nicht da.');
+        return false;
+      }
+      let leser: any = null;
+      try {
+        /* `oeffne` will die BYTES, nicht die Datei — nachgeschlagen in
+           `leser.ts`, nicht geraten (E21). */
+        leser = await PdfLeser.oeffne(new Uint8Array(await datei.arrayBuffer()));
+        let nr = 1;
+        if (leser.seiten > 1) {
+          if (typeof Dialog === 'undefined') return false;
+          const antwort = await Dialog.frage(
+            'Welche Seite aus „' + datei.name + '"? (1 bis ' + leser.seiten + ')', '1');
+          if (antwort === null) return false;
+          const gewaehlt = Math.round(Number(String(antwort).replace(',', '.')));
+          if (!Number.isFinite(gewaehlt) || gewaehlt < 1 || gewaehlt > leser.seiten) {
+            UI.toast('Diese PDF hat die Seiten 1 bis ' + leser.seiten + '.');
+            return false;
+          }
+          nr = gewaehlt;
+        }
+        const blob = await leser.alsBild(nr);
+        const name = datei.name.replace(/\.pdf$/i, '') + ' — Seite ' + nr + '.webp';
+        return await bildAblegen(new File([blob], name, { type: blob.type || 'image/webp' }), mitte);
+      } catch (e: unknown) {
+        UI.toast('Diese PDF liess sich nicht einfügen: ' + (e instanceof Error ? e.message : String(e)));
+        return false;
+      } finally {
+        try { leser?.schliessen?.(); } catch { /* egal */ }
+      }
+    };
+
     const bildEinfuegen = (mitte?: number[]): Promise<boolean> => new Promise(fertig => {
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = 'image/*';
+      /* GIF STEHT IN `image/*` SCHON DRIN — und wird als GIF abgelegt, nicht
+         umgerechnet; darum läuft es auf dem Blatt weiter (E502). `.pdf`
+         kommt dazu: eine Seite daraus wird zur Bildmarke. Der Doppelweg
+         steht ausdrücklich da, weil `accept` sonst je nach System die PDF
+         ausgraut. */
+      input.accept = 'image/*,image/gif,application/pdf,.pdf';
       /* Im Dokument, wie beim PDF-Waehler (einlesen.ts) — und danach weg. */
       input.style.display = 'none';
       document.body.appendChild(input);
@@ -1592,7 +2113,10 @@ const Marken = (() => {
         const datei = input.files?.[0];
         input.remove();
         if (!datei) { fertig(false); return; }
-        bildAblegen(datei, mitte).then(fertig, () => {
+        /* Eine PDF geht den anderen Weg — gerastert, dann dieselbe Ablage. */
+        const istPdf = datei.type === 'application/pdf' || /\.pdf$/i.test(datei.name);
+        const weg = istPdf ? pdfAlsBildmarke(datei, mitte) : bildAblegen(datei, mitte);
+        weg.then(fertig, () => {
           if (typeof UI !== 'undefined' && UI.toast) UI.toast('Das Bild liess sich nicht ablegen.');
           fertig(false);
         });
@@ -1657,7 +2181,17 @@ const Marken = (() => {
         if (m.art === 'bild' || m.gesperrt) continue;
         if (!InkGeometry.intersects(k, InkGeometry.bounds(m))) continue;
         if (InkGeometry.LINIEN.has(String(m.art)) && Array.isArray(m.pts) && m.pts.length) {
-          const punkte = InkGeometry.points(m.pts);
+          /* DICHTER ABGETASTET, NICHT AN DEN ECKEN GEZÄHLT (E510).
+             Hier stand `InkGeometry.points(m.pts)` — die gespeicherten
+             Punkte. Ein Stift-Strich hat davon hunderte, eine gerade
+             `line` genau zwei: ihre Enden. Dieselbe Hälfte-Regel fragte
+             also beim Strich nach seiner LÄNGE und bei der Linie nur nach
+             ihren ENDEN, und ein Gekritzel quer über die Mitte einer
+             Linie nahm sie deshalb nicht weg. Jetzt wird beides an der
+             Länge gemessen: `densify` legt Messpunkte im Abstand
+             `KRITZEL_NAH` auf den Weg, dichte Striche bleiben davon
+             unberührt. */
+          const punkte = InkGeometry.densify(m.pts, KRITZEL_NAH);
           const n = punkte.filter(q => InkGeometry.distanceToPolyline(zug, q) <= KRITZEL_NAH).length;
           if (n * 2 >= punkte.length) weg.add(idOf(m));
         } else {
@@ -1739,9 +2273,26 @@ const Marken = (() => {
       bildAbsagen();
       const letzterRoh = rohLetzter;
       feder = null; glatt = null; druckGlatt = null; letzteZeit = 0; nassFlaeche = false;
-      rohLetzter = null;
+      rohLetzter = null; rohDrei = [];
       running = null; runningNode = null; beforeRunning = null;
+      /* WOHER DER DRUCK KAM, BLEIBT AM STRICH (E507).
+         Bis hierher wurde `zeigerArt` beim Absetzen weggeworfen, und danach
+         lagen im Feld `pressure` gemessene Sensorwerte und die
+         Tempo-Erfindung für Maus und Finger nebeneinander, ununterscheidbar.
+         Das Dossier (S.5, S.17) verlangt genau diese Trennung: Druck und
+         Winkel normalisieren, aber die Herkunft nicht vergessen. Ein Wort
+         am Strich kostet nichts und beantwortet die Frage für immer. */
+      if (mark.art === 'stift' || mark.art === 'marker')
+        mark.druckArt = mark.zeigerArt === 'pen' ? 'stift' : 'tempo';
       delete mark.zeigerArt;
+      /* DIE NEIGUNG NUR, WENN SIE GEMELDET WURDE. `-1` heisst „kein
+         Sensor"; ein Feld voller Nullen wäre eine Behauptung über den
+         Winkel, den niemand gemessen hat. */
+      if (Array.isArray(mark.neigung)) {
+        const echt = mark.neigung.map((v: unknown) => Number(v));
+        if (echt.some((v: number) => v >= 0)) mark.neigung = echt.map((v: number) => v < 0 ? 0 : v);
+        else delete mark.neigung;
+      }
       const gehalten = Date.now() - (Number(mark.bewegtUm) || 0) >= HALTEN_MS;
       delete mark.bewegtUm;
       delete mark.ruhePunkt;
@@ -1845,10 +2396,20 @@ const Marken = (() => {
           if (original.length >= 8 && indizes.length < 8)
             indizes = Array.from({ length: 8 }, (_value, index) =>
               Math.round(index * (original.length - 1) / 7));
+          /* DIE NEIGUNG WIRD MIT NEU INDIZIERT (E507). Das Vereinfachen wirft
+             Stützpunkte weg; wer nur `pts` und `pressure` mitnimmt, lässt
+             `neigung` in der alten Länge stehen — und ab da gehört
+             `neigung[i]` zu einem anderen Punkt als `pts[i]`. Der Prüflauf
+             hat es gesehen: fünfzehn Neigungen zu acht Punkten. */
+          const neigRoh: number[] = Array.isArray(mark.neigung) ? mark.neigung.map(Number) : [];
           mark.pts = indizes.map(i => original[i]);
           mark.pressure = indizes.map(i => {
             const v = druckRoh[i];
             return Math.round((Number.isFinite(v) ? (v as number) : mittel) * 100) / 100;
+          });
+          if (neigRoh.length) mark.neigung = indizes.map(i => {
+            const v = neigRoh[i];
+            return Number.isFinite(v) ? (v as number) : 0;
           });
         }
       } else if (mark.pts.length < 2 ||
@@ -1958,6 +2519,43 @@ const Marken = (() => {
       redraw(); commit(before);
     };
 
+    /**
+     * Ein Element setzen (E494) — der Stempel der Elemente-Bibliothek.
+     *
+     * Beim ERSTEN Tipp öffnet sich die Bibliothek, danach setzt jeder
+     * weitere Tipp dasselbe Element. Das ist der Weg von GoodNotes und der
+     * Grund, warum die Wahl gemerkt wird: wer zwanzig Häkchen setzt, will
+     * die Bibliothek nicht zwanzigmal durchsuchen. Die Leiste zeigt dabei,
+     * WELCHES Element der nächste Tipp setzt — sonst wäre der gemerkte
+     * Zustand unsichtbar (§38).
+     */
+    const setzeElement = async (point: number[]): Promise<void> => {
+      if (!letztesElement || !elementHolen(letztesElement)) {
+        const gewaehlt = await elementWaehlen();
+        if (!gewaehlt) return;
+        letztesElement = gewaehlt;
+        notifyState();
+      }
+      const neue = elementMarken(letztesElement, point[0] ?? 0, point[1] ?? 0);
+      if (!neue.length) {
+        letztesElement = '';
+        notifyState();
+        UI.toast('Dieses Element gibt es nicht mehr.');
+        return;
+      }
+      const before = snapshot();
+      marks.push(...neue);
+      neue.forEach(mark => {
+        const node = zeichneMarke(mark);
+        if (node) { flaeche.appendChild(node); merke(mark); }
+      });
+      commit(before);
+    };
+
+    /** Die Auswahl als Element ablegen. Der Name kommt von der Leiste. */
+    const elementAusAuswahl = (name: unknown) =>
+      elementSichern(name, marks.filter(mark => selection.has(idOf(mark))));
+
     let letztesZeichen = '';
     let letzteGroesse = 64;
 
@@ -2044,7 +2642,17 @@ const Marken = (() => {
          nimmt der Stift ihm den Strich weg (E354). */
       if (e.pointerType === 'pen' && running && running.zeigerArt === 'touch') verwerfen();
       if (e.pointerType === 'pen') fingerPan = null;
-      if (aktiverZeiger !== null && aktiverZeiger !== e.pointerId) return;
+      /* ── EIN VERWAISTER ZEIGER WIRD ÜBERNOMMEN (E512) ─────────────────
+         Der Schutz aus E354 bleibt: solange der Führende LEBT — also
+         gerade noch etwas gemeldet hat —, weist die Fläche jeden anderen
+         ab. Erst wenn er seit `VERWAIST_MS` schweigt, ist er kein
+         Führender mehr, sondern ein Rest. */
+      if (aktiverZeiger !== null && aktiverZeiger !== e.pointerId) {
+        if (Date.now() - zeigerZuletzt < VERWAIST_MS) return;
+        /* Abschliessen, nicht verwerfen: was gezogen wurde, bleibt. */
+        finish();
+        renderSelection();
+      }
       /* DER RUECKKNOPF DES STIFTS RADIERT (E352): das Radierende (button 5,
          buttons 32) und der Seitenknopf (button 2) eines Stifts halten den
          Radierer, solange sie gedrueckt sind — das gewaehlte Werkzeug
@@ -2057,9 +2665,14 @@ const Marken = (() => {
       if (!point) return;
       event.preventDefault();
       aktiverZeiger = e.pointerId;
+      zeigerZuletzt = Date.now();
       flaeche.focus({ preventScroll: true });
       const target = (event.target as Element)?.closest?.('[data-sid]') as SVGElement | null;
       const targetId = target?.getAttribute('data-sid') || '';
+
+      /* DER LASER ZEIGT NUR (E512) — vor allem anderen, weil er mit nichts
+         davon etwas zu tun hat: keine Marke, kein Verlauf, keine Auswahl. */
+      if (tool === 'laser' && !stiftRadiert) { laserAn(point); return; }
 
       if (tool === 'radierer' || stiftRadiert) {
         /* STREICHEN STATT TIPPEN (E352): der Radierer ist ein Kreis, der
@@ -2086,6 +2699,8 @@ const Marken = (() => {
         return;
       }
       if (tool === 'zeichen') { void setzeZeichen(point, targetId); return; }
+      /* Die Elemente-Bibliothek (E494): ein Tipp stempelt, wie beim Fachzeichen. */
+      if (tool === 'elemente') { void setzeElement(point); return; }
       /* Mit dem Bild-Werkzeug (ueber `Zeichenziel.setze`) oeffnet der Tipp
          den Waehler, und das Bild kommt dorthin, wo getippt wurde (E357). */
       if (tool === 'bild') { void bildEinfuegen(point); return; }
@@ -2157,6 +2772,20 @@ const Marken = (() => {
         running = { id, art: tool, farbe: tool === 'marker' && color === FARBEN[0] ? MARKER_FARBE : color,
           breite: width, pts: [point], pressure: [], zeigerArt: e.pointerType };
         if (tool === 'stift' && stil !== 'kugel') running.stil = stil;
+        /* ── DER LEITERSTIFT SETZT ZWEI DINGE (E509) ────────────────────
+           `stil` ist die ZEICHENANWEISUNG — sie ist dieselbe, die ein
+           Schutzleiter aus E490 trägt, damit alte und neue Striche durch
+           denselben Weg gehen. `leiter` ist die BEDEUTUNG: welche Ader das
+           ist. Beides steht da, weil beides gebraucht wird — der Zeichner
+           fragt das eine, ein Mensch (und später ein Export) das andere. */
+        if (tool === 'stift' && stil === 'leiter') {
+          const ader = leiterVon(leiterJetzt()) || LEITER[0];
+          running.stil = ader.stil;
+          running.leiter = ader.id;
+        }
+        /* DIE NEIGUNG WIRD MITGESCHRIEBEN (E507) — vorerst in ein Feld, das
+           es beim Absetzen nur behält, wenn wirklich etwas darin steht. */
+        running.neigung = [neigungAus(e)];
         running.pressure.push(druckAus(event, point));
         const p0 = running.pressure[0];
         /* DER AUFSETZPUNKT GEHT UNGEGLAETTET DURCH (E376): ein Strich, der
@@ -2164,6 +2793,7 @@ const Marken = (() => {
            falsch — und kein Filter kann das spaeter zurueckholen. */
         glatt = InkStroke.glaetter(point as [number, number]);
         rohLetzter = null;
+        rohDrei = [point];
         druckGlatt = InkStroke.druckGlaetter(p0);
         letzteZeit = Number(event.timeStamp) || 0;
         feder = new InkStroke.Feder();
@@ -2194,6 +2824,40 @@ const Marken = (() => {
       if (event.pointerType === 'pen') stiftGesehen();
       /* Nur der Zeiger, der den Zug begonnen hat, fuehrt ihn (E354). */
       if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger) return;
+      /* Er lebt (E512) — solange das hier zählt, übernimmt ihn niemand. */
+      zeigerZuletzt = Date.now();
+      if (laserZug) {
+        const q = R.zuBlatt(flaeche, event);
+        if (q) laserZeigen(q);
+        return;
+      }
+      /* ══ DER SCHREIBWEG ZUERST, UND NUR EINE MATRIX (E511) ═══════════════
+         Hier stand die Umrechnung des einen Zeigerpunktes ganz oben — vor
+         allen Zweigen, also auch vor dem Zeichnen, das sie gar nicht
+         braucht: `addSample` rechnet sich seine Punkte selbst aus den
+         gesammelten Meldungen. Ein Schreibzug bezahlte damit ZWEI
+         `getScreenCTM` je Punkt, und einer davon wurde weggeworfen.
+
+         Gemessen (§36): 400 Punkte, 200 Marken auf dem Blatt, je vier
+         Punkte ein Bild — 52,9 ms im Zeichenweg, davon 23,9 ms allein in
+         `getScreenCTM`. Das sind 45,2 %, für eine Zahl, die zur Hälfte
+         niemand las.
+
+         Jetzt geht der Schreibzug VOR der Umrechnung heraus und holt sich
+         EINEN Umrechner für alle Punkte dieses Ereignisses — die
+         gesammelten und die vorhergesagten. Erreichbar war dieser Zweig
+         ohnehin nur, wenn weder radiert noch gezogen wird: beide Zweige
+         darunter enden mit `return`. Die Bedingung schreibt das hin,
+         statt es aus der Reihenfolge zu schliessen. */
+      if (!radierStrich && !selectDrag && running
+          && (running.art === 'stift' || running.art === 'marker')) {
+        const um = R.umrechner(flaeche);
+        const coalesced = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
+        (coalesced.length ? coalesced : [event]).forEach(e => addSample(e, um));
+        nassenSchwanz(event, um);
+        bildAnfordern();
+        return;
+      }
       const point = R.zuBlatt(flaeche, event);
       if (!point) return;
       if (radierStrich) {
@@ -2303,13 +2967,7 @@ const Marken = (() => {
         return;
       }
       if (!running) return;
-      if (running.art === 'stift' || running.art === 'marker') {
-        const coalesced = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
-        (coalesced.length ? coalesced : [event]).forEach(addSample);
-        nassenSchwanz(event);
-        bildAnfordern();
-        return;
-      }
+      /* Stift und Marker sind oben schon heraus (E511). */
       running.pts[1] = lineal && (running.art === 'line' || running.art === 'arrow')
         ? rasten(running.pts[0], point) : point;
       runningNode = updateNode(runningNode, running);
@@ -2317,6 +2975,9 @@ const Marken = (() => {
     const beiEnde = (event: PointerEvent): void => {
       if (fingerPan?.id === event.pointerId) { fingerPan = null; return; }
       if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger) return;
+      /* Der Laser verblasst und ist weg — kein `finish`, weil es nichts
+         abzuschliessen gibt (E512). */
+      if (laserZug) { laserAus(); aktiverZeiger = null; return; }
       // pointerup may carry a final position that no pointermove delivered.
       // Keep the previous pressure: pen devices report zero pressure on lift.
       if (event.type === 'pointerup' && running && (running.art === 'stift' || running.art === 'marker')) {
@@ -2332,8 +2993,59 @@ const Marken = (() => {
       }
       finish();
     };
+    /* ══ DER ABBRUCH IST NICHT DAS ENDE (E504) ═════════════════════════════
+       Aus dem Stift-Dossier, Seite 17: „Android verlangt bei ACTION_CANCEL /
+       Palm-Rejection ausdruecklich das Entfernen des betreffenden Motion
+       Sets und Re-Rendering. Eine App, die Cancel ignoriert, produziert
+       Artefakte."
+
+       Redion ignorierte es nicht — es SPEICHERTE. `pointercancel` hing am
+       selben Griff wie `pointerup`, und damit landete jeder vom Browser
+       abgebrochene Zug als Strich im Papier. Der Fall, in dem das weh tut,
+       ist der Alltag: der Handballen beruehrt das Glas VOR dem Stift (so
+       setzt jede Hand auf), der Browser erkennt ihn selbst als Palm und
+       nimmt den Zeiger weg — und Redion schrieb einen Fremdstrich.
+
+       ES WIRD NACH DER ZEIGERART ENTSCHIEDEN, und das ist die ganze
+       Vorsicht dieser Stelle. Ein Handballen ist ein `touch`; ein
+       abgebrochener STIFT-Zug ist Handschrift, die ein Mensch gezogen hat,
+       und §51 steht ueber jedem Dossier: lieber ein Strich zu viel als eine
+       Zeile Handschrift, die niemand wiederbekommt. Deshalb verwirft der
+       Abbruch nur den Finger.
+
+       `pagehide` (weiter oben) bleibt davon unberuehrt und schliesst
+       weiterhin ab — dort ist Abbrechen nicht die Absicht des Browsers,
+       sondern das Ende der Seite. */
+    const beiAbbruch = (event: PointerEvent): void => {
+      if (fingerPan?.id === event.pointerId) { fingerPan = null; return; }
+      if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger) return;
+      if (running && running.zeigerArt !== 'pen') { verwerfen(); return; }
+      beiEnde(event);
+    };
     flaeche.addEventListener('pointerup', beiEnde);
-    flaeche.addEventListener('pointercancel', beiEnde);
+    flaeche.addEventListener('pointercancel', beiAbbruch);
+    /* ══ DAS ENDE ZÄHLT AUCH, WENN ES WOANDERS LANDET (E512) ═══════════════
+       Die drei Griffe darüber hängen an der Zeichenschicht. Ein Abheben,
+       das der Browser einem anderen Element zustellt — weil der Griff
+       (`setPointerCapture`) verlorenging, weil ein Fenster dazwischenkam,
+       weil der Zeiger die Fläche verlassen hat —, erreichte sie nie, und
+       der Zug blieb für immer offen.
+
+       AM FENSTER, IN DER ABFANGPHASE, und nur für den Zeiger, der HIER
+       führt. Ein fremdes Abheben irgendwo auf der Seite geht die Fläche
+       nichts an; deshalb steht die Bedingung davor und nicht dahinter.
+
+       Die Griffe werden mitgeführt, solange die Fläche lebt — die
+       Lebenswache (E115) räumt sie mit ihr ab. */
+    const beiEndeGlobal = (event: PointerEvent): void => {
+      if (aktiverZeiger === null || event.pointerId !== aktiverZeiger) return;
+      if (event.target instanceof Node && flaeche.contains(event.target)) return;
+      if (event.type === 'pointercancel') beiAbbruch(event); else beiEnde(event);
+    };
+    if (typeof addEventListener === 'function') {
+      addEventListener('pointerup', beiEndeGlobal, true);
+      addEventListener('pointercancel', beiEndeGlobal, true);
+    }
     flaeche.addEventListener('pointerleave', (event: PointerEvent) => {
       if (!flaeche.hasPointerCapture(event.pointerId)) beiEnde(event);
     });
@@ -2498,6 +3210,14 @@ const Marken = (() => {
       cutSelection, nachVorn, nachHinten, sperren, gesperrtGewaehlt,
       /* E468: ein Verweis an der Auswahl. */
       verweisSetzen,
+      /* E494: die Elemente-Bibliothek — sichern aus der Auswahl, setzen per Tipp. */
+      elementAusAuswahl,
+      elementGewaehlt: (): string => letztesElement,
+      elementWaehlen: async (): Promise<string> => {
+        const gewaehlt = await elementWaehlen();
+        if (gewaehlt) { letztesElement = gewaehlt; notifyState(); }
+        return gewaehlt;
+      },
       setzeKritzel: (an: boolean): void => {
         kritzel = !!an;
         if (typeof Store !== 'undefined') { try { Store.setMeta('zeichnen:kritzel', kritzel); } catch { /* nur diese Sitzung */ } }
@@ -2564,7 +3284,16 @@ const Marken = (() => {
    * Fächer der Sicherung (§9) — ein Farbsatz reist damit in `.json` und in
    * `.redion` mit, ohne dass hier etwas dafür zu tun wäre.
    * ────────────────────────────────────────────────────────────────────── */
-  type Farbsatz = { name: string; farben: string[] };
+  /* EIN SATZ IST SEIT E501 EINE VOREINSTELLUNG (Redurs Dossier, Abschnitt
+     „Stift, Bleistift, Marker und Radierer"): „Farben und Stärken lassen
+     sich anpassen und als Presets bereithalten."
+
+     Also KEIN zweiter Katalog neben den Farbsätzen (§8), sondern zwei
+     Felder mehr am vorhandenen: welcher Stift und welche Strichstärke beim
+     Sichern geführt haben. Beide sind optional — ein Satz aus der Zeit vor
+     E501 hat sie nicht und lädt weiter genau seine Farben (§9: rückwärts
+     denken). */
+  type Farbsatz = { name: string; farben: string[]; stil?: string; breite?: number };
 
   /** Ein Name, mit dem sich arbeiten lässt: ohne Rand, ohne Zeilenumbrüche, kurz. */
   const satzName = (roh: unknown): string =>
@@ -2579,7 +3308,14 @@ const Marken = (() => {
       const name = satzName((eintrag as any)?.name);
       if (!name) continue;
       if (raus.some(s => s.name.toLowerCase() === name.toLowerCase())) continue;
-      raus.push({ name, farben: farbenRein((eintrag as any)?.farben) });
+      const satz: Farbsatz = { name, farben: farbenRein((eintrag as any)?.farben) };
+      /* Nur, was es wirklich gibt: ein Stift, den dieser Stand nicht kennt,
+         wäre eine Voreinstellung, die beim Laden ins Leere greift. */
+      const stil = String((eintrag as any)?.stil || '');
+      if (STIFTE.some(st => st.id === stil)) satz.stil = stil;
+      const breite = Number((eintrag as any)?.breite);
+      if (Number.isFinite(breite) && breite > 0) satz.breite = breite;
+      raus.push(satz);
       if (raus.length >= HOECHSTENS_FARBSAETZE) break;
     }
     return raus;
@@ -2600,12 +3336,20 @@ const Marken = (() => {
    * Gibt `null` zurück, wenn die Liste voll ist und der Name neu wäre —
    * damit der Aufrufer es SAGEN kann, statt dass hier still nichts geschieht.
    */
-  const farbsatzSichern = (roh: unknown, farben: readonly string[] = eigeneFarben()): Farbsatz[] | null => {
+  const farbsatzSichern = (roh: unknown, farben: readonly string[] = eigeneFarben(),
+                          stift?: { stil?: unknown; breite?: unknown }): Farbsatz[] | null => {
     const name = satzName(roh);
     if (!name) return null;
     const liste = farbsaetze();
     const stelle = liste.findIndex(s => s.name.toLowerCase() === name.toLowerCase());
     const satz: Farbsatz = { name, farben: farbenRein(farben.slice()) };
+    /* E501: Stift und Strichstärke reisen mit, wenn der Aufrufer sie nennt.
+       Er tut es aus der Leiste heraus; wer `farbsatzSichern` ohne sie ruft
+       (der Prüflauf, ein Skript), bekommt weiter einen reinen Farbsatz. */
+    const stil = String(stift?.stil || '');
+    if (STIFTE.some(st => st.id === stil)) satz.stil = stil;
+    const breite = Number(stift?.breite);
+    if (Number.isFinite(breite) && breite > 0) satz.breite = breite;
     if (stelle >= 0) { liste[stelle] = satz; return farbsaetzeSchreiben(liste); }
     if (liste.length >= HOECHSTENS_FARBSAETZE) return null;
     return farbsaetzeSchreiben([...liste, satz]);
@@ -2616,16 +3360,281 @@ const Marken = (() => {
     return farbsaetzeSchreiben(farbsaetze().filter(s => s.name.toLowerCase() !== name));
   };
 
-  /** Die Farben eines Satzes zu den Tupfern machen. Unbekannter Name: nichts tut sich. */
-  const farbsatzLaden = (roh: unknown): string[] | null => {
+  /**
+   * Einen Satz laden: die Tupfer setzen und den GANZEN Satz zurückgeben.
+   *
+   * SEIT E501 GIBT ER DEN SATZ ZURÜCK, nicht nur die Farben — sonst
+   * bräuchte der Aufrufer einen zweiten Griff für Stift und Stärke, und
+   * zwei Griffe für eine Voreinstellung sind einer zu viel (§8). Die
+   * Farben stehen weiter darin, nur eine Ebene tiefer.
+   *
+   * Unbekannter Name: `null`, und nichts tut sich.
+   */
+  const farbsatzLaden = (roh: unknown): Farbsatz | null => {
     const name = satzName(roh).toLowerCase();
     const satz = farbsaetze().find(s => s.name.toLowerCase() === name);
     if (!satz) return null;
-    return farbenSetzen(satz.farben);
+    return { ...satz, farben: farbenSetzen(satz.farben) };
   };
 
   /** Zurück auf den Auslieferungsstand: keine eigenen Tupfer. Die Sätze bleiben. */
   const farbenZuruecksetzen = (): string[] => farbenSetzen([]);
+
+  /* ────────────────────────────────────────────────────────────────────── *
+   * DIE ELEMENTE-BIBLIOTHEK (E494)
+   *
+   * GoodNotes nennt sie „Elements": eine Sammlung fertiger Zeichnungen, die
+   * man auf jede Seite stempelt — ein Pfeil, ein Häkchen, ein Schaltplan-
+   * Ausschnitt, eine Unterschrift. In Redion ist ein Element GENAU DAS, was
+   * ohnehin schon da ist: eine Auswahl von Marken, benannt und abgelegt.
+   * Kein neues Zeichenmodell, kein zweiter Katalog (§8) — dieselben Marken,
+   * die auch die Zwischenablage kopiert, nur überleben sie das Dokument.
+   *
+   * WO SIE LIEGEN: in `meta`, wie die Farbsätze. Damit reisen sie in `.json`
+   * und in `.redion` mit, ohne dass hier etwas dafür zu tun wäre (§9, §11).
+   *
+   * WAS DAS NICHT KANN, und es steht in `LUECKEN.md`: ein Element mit einer
+   * BILDMARKE trägt nur die Kennung der Datei, nicht die Datei. Wer es aus
+   * einer `.json`-Sicherung zurückholt (die keine Anhänge kennt, §11), hat
+   * das Element und nicht sein Bild. Die Marke bleibt trotzdem stehen und
+   * zeigt ihren Platzhalter — sie wird nicht stillschweigend gelöscht (§18).
+   * ────────────────────────────────────────────────────────────────────── */
+  /* DER NAME IST ENGLISCH UND ER IST NICHT „Element" (§53.1 und ein Fund des
+     Typprüfers): `Element` ist im Browser die DOM-Klasse, und ein Typ dieses
+     Namens verdeckt sie in der ganzen Datei. `npm run typecheck` meldete
+     danach an achtzehn Stellen „Property 'closest' does not exist on type
+     'Element'" — Fehler in Zeilen, die niemand angefasst hatte. */
+  type LibraryElement = { id: string; name: string; marken: any[]; breite: number; hoehe: number };
+
+  const kurzeId = (): string =>
+    typeof Ids !== 'undefined' ? Ids.short(8) : 'e' + Math.random().toString(36).slice(2, 10);
+
+  /** Der Name eines Elements — dieselbe Regel wie beim Farbsatz. */
+  const elementName = (roh: unknown): string => satzName(roh);
+
+  const elemente = (): LibraryElement[] => {
+    if (typeof Store === 'undefined') return [];
+    const roh = Store.getMeta('zeichnen:elemente');
+    if (!Array.isArray(roh)) return [];
+    const raus: LibraryElement[] = [];
+    for (const eintrag of roh) {
+      const name = elementName((eintrag as any)?.name);
+      const marken = (eintrag as any)?.marken;
+      if (!name || !Array.isArray(marken) || !marken.length) continue;
+      raus.push({
+        id: String((eintrag as any)?.id || kurzeId()),
+        name,
+        marken: marken.map(m => clone(m)),
+        breite: Math.max(1, Number((eintrag as any)?.breite) || 1),
+        hoehe: Math.max(1, Number((eintrag as any)?.hoehe) || 1)
+      });
+      if (raus.length >= HOECHSTENS_ELEMENTE) break;
+    }
+    return raus;
+  };
+
+  const elementeSchreiben = (liste: LibraryElement[]): LibraryElement[] => {
+    const rein = liste.slice(0, HOECHSTENS_ELEMENTE);
+    if (typeof Store !== 'undefined') {
+      try { Store.setMeta('zeichnen:elemente', rein); } catch { /* nur diese Sitzung */ }
+    }
+    return rein;
+  };
+
+  /**
+   * Marken zu einem Element machen: auf den Nullpunkt gerückt, ohne Auswahl-
+   * zustand, ohne Sperre.
+   *
+   * DIE SPERRE FÄLLT WEG, und das ist Absicht: sie gehört zu einer Marke auf
+   * EINER Seite („diese hier nicht mehr anfassen"), nicht zur Vorlage. Ein
+   * Element, das gesperrt ankommt, liesse sich nach dem Setzen nicht mehr
+   * verschieben — und E492 hat gezeigt, wie teuer eine Sperre ist, die man
+   * nicht mehr löst.
+   */
+  const elementNormieren = (roh: readonly any[]): { marken: any[]; breite: number; hoehe: number } | null => {
+    const marken = (roh || []).filter(m => m && typeof m === 'object').map(m => clone(m));
+    if (!marken.length) return null;
+    const kasten = InkGeometry.union(marken.map(m => InkGeometry.bounds(m)));
+    const verschoben = marken.map(m => {
+      const kopie = InkGeometry.move(m, -kasten.x, -kasten.y);
+      delete kopie.gesperrt;
+      delete kopie.id;
+      return kopie;
+    });
+    return { marken: verschoben, breite: Math.max(1, kasten.width), hoehe: Math.max(1, kasten.height) };
+  };
+
+  /**
+   * Ein Element ablegen.
+   *
+   * Gibt einen Grund zurück statt `null`, weil es drei verschiedene Gründe
+   * gibt, und „es ging nicht" ist bei jedem von ihnen die falsche Auskunft:
+   * nichts gewählt, die Bibliothek voll, das Element zu gross. Wer es
+   * anzeigt, kann dann sagen, WAS zu tun ist.
+   */
+  const elementSichern = (roh: unknown, marken: readonly any[]):
+    { ok: true; liste: LibraryElement[]; element: LibraryElement } | { ok: false; grund: string } => {
+    const name = elementName(roh);
+    if (!name) return { ok: false, grund: 'Ein Element braucht einen Namen.' };
+    const teil = elementNormieren(marken);
+    if (!teil) return { ok: false, grund: 'Es ist nichts ausgewählt, das ein Element werden könnte.' };
+    let gross = 0;
+    try { gross = JSON.stringify(teil.marken).length; } catch { gross = HOECHSTENS_ELEMENT_BYTES + 1; }
+    if (gross > HOECHSTENS_ELEMENT_BYTES) {
+      return { ok: false, grund: 'Dieses Element ist zu gross (' + Math.round(gross / 1024) + ' KB von höchstens '
+        + Math.round(HOECHSTENS_ELEMENT_BYTES / 1024) + '). Elemente liegen bei den Einstellungen und reisen mit jeder Sicherung — wähle weniger Striche.' };
+    }
+    const liste = elemente();
+    const element: LibraryElement = { id: kurzeId(), name, ...teil };
+    const stelle = liste.findIndex(e => e.name.toLowerCase() === name.toLowerCase());
+    if (stelle >= 0) {
+      element.id = liste[stelle]!.id;
+      liste[stelle] = element;
+      return { ok: true, liste: elementeSchreiben(liste), element };
+    }
+    if (liste.length >= HOECHSTENS_ELEMENTE) {
+      return { ok: false, grund: 'Es passen höchstens ' + HOECHSTENS_ELEMENTE + ' Elemente — lösche zuerst eines.' };
+    }
+    return { ok: true, liste: elementeSchreiben([...liste, element]), element };
+  };
+
+  const elementLoeschen = (id: unknown): LibraryElement[] =>
+    elementeSchreiben(elemente().filter(e => e.id !== String(id ?? '')));
+
+  const elementHolen = (id: unknown): LibraryElement | null =>
+    elemente().find(e => e.id === String(id ?? '')) || null;
+
+  /**
+   * Die Marken eines Elements, gesetzt an eine Stelle — MITTIG unter dem
+   * Zeiger, nicht mit der Ecke daran.
+   *
+   * Ein Stempel liegt dort, wo man hintippt; bei einem Element von 200 px
+   * Breite läge er sonst um hundert Pixel daneben, und man müsste jedes
+   * gesetzte Element hinterher verschieben.
+   */
+  const elementMarken = (id: unknown, x: number, y: number): any[] => {
+    const element = elementHolen(id);
+    if (!element) return [];
+    return element.marken.map(m =>
+      InkGeometry.move({ ...clone(m), id: kurzeId() }, x - element.breite / 2, y - element.hoehe / 2));
+  };
+
+  /** Welches Element der nächste Tipp setzt. Nur diese Sitzung — die
+      Bibliothek überlebt, die Wahl darin nicht. */
+  let letztesElement = '';
+
+  /**
+   * Ein kleines Bild eines Elements — GEZEICHNET MIT `zeichneMarke`, nicht
+   * mit einem zweiten Zeichner.
+   *
+   * Das ist derselbe Grund wie bei der Palette der Fachzeichen: zwei
+   * Zeichner für dieselben Marken laufen auseinander, und die Vorschau
+   * zeigte dann etwas anderes als die Seite (§8).
+   */
+  const elementBild = (element: LibraryElement, kante = 74): SVGSVGElement => {
+    const box = document.createElementNS(NS, 'svg') as SVGSVGElement;
+    /* Ein Rand von vier Einheiten, damit ein dicker Strich am Kastenrand
+       nicht halb abgeschnitten dasteht. */
+    const rand = 4;
+    box.setAttribute('viewBox', `${-rand} ${-rand} ${element.breite + rand * 2} ${element.hoehe + rand * 2}`);
+    box.setAttribute('width', String(kante));
+    box.setAttribute('height', String(kante));
+    box.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    box.setAttribute('aria-hidden', 'true');
+    for (const mark of element.marken) {
+      const node = zeichneMarke({ ...mark, id: kurzeId() });
+      if (node) box.appendChild(node);
+    }
+    return box;
+  };
+
+  /**
+   * Die Bibliothek zeigen. Gibt die Kennung des gewählten Elements zurück,
+   * `''` bei Abbruch. Löschen geschieht im Dialog und schliesst ihn nicht —
+   * wer aufräumt, räumt meistens mehr als eines weg.
+   */
+  const elementWaehlen = (): Promise<string> => new Promise(fertig => {
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    const finder = document.createElement('div');
+    finder.className = 'finder';
+    finder.style.width = 'min(680px,94vw)';
+    const kopf = document.createElement('div');
+    kopf.className = 'fh';
+    kopf.textContent = 'Elemente';
+    const zu = document.createElement('button');
+    zu.className = 'icon-btn';
+    zu.dataset.a = 'zu';
+    zu.setAttribute('aria-label', 'Schliessen');
+    zu.textContent = '✕';
+    kopf.appendChild(zu);
+    finder.appendChild(kopf);
+    const liste = document.createElement('div');
+    liste.className = 'mz-liste elemente-liste';
+    finder.appendChild(liste);
+    o.appendChild(finder);
+
+    const schliessen = (wert: string): void => {
+      o.remove();
+      document.removeEventListener('keydown', beiTaste);
+      fertig(wert);
+    };
+    const beiTaste = (e: KeyboardEvent): void => { if (e.key === 'Escape') schliessen(''); };
+
+    const malen = (): void => {
+      liste.textContent = '';
+      const alle = elemente();
+      if (!alle.length) {
+        const leer = document.createElement('p');
+        leer.className = 'elemente-leer';
+        /* KEIN LEERER KASTEN OHNE WEG HINAUS. Wer die Bibliothek zum ersten
+           Mal öffnet, sieht hier, WIE etwas hineinkommt — sonst sieht er
+           nichts und schliesst wieder. */
+        leer.textContent = 'Noch kein Element. Wähle auf dem Blatt etwas aus '
+          + '(Werkzeug «Auswahl») und tippe dort auf «Als Element».';
+        liste.appendChild(leer);
+        return;
+      }
+      for (const element of alle) {
+        const fach = document.createElement('div');
+        fach.className = 'elemente-fach';
+        const kachel = document.createElement('button');
+        kachel.className = 'elemente-kachel';
+        kachel.dataset.el = element.id;
+        kachel.title = element.name + ' setzen';
+        kachel.appendChild(elementBild(element));
+        const wort = document.createElement('i');
+        wort.textContent = element.name;
+        kachel.appendChild(wort);
+        const weg = document.createElement('button');
+        weg.className = 'elemente-weg';
+        weg.dataset.weg = element.id;
+        weg.setAttribute('aria-label', 'Element „' + element.name + '" löschen');
+        weg.title = 'Element „' + element.name + '" löschen';
+        weg.textContent = '🗑';
+        fach.append(kachel, weg);
+        liste.appendChild(fach);
+      }
+    };
+    malen();
+
+    o.addEventListener('click', e => {
+      const ziel = e.target instanceof Element ? e.target : null;
+      if (!ziel || ziel === o || ziel.closest('[data-a="zu"]')) { schliessen(''); return; }
+      const weg = ziel.closest<HTMLElement>('[data-weg]');
+      if (weg) {
+        elementLoeschen(weg.dataset.weg);
+        if (letztesElement === weg.dataset.weg) letztesElement = '';
+        malen();
+        return;
+      }
+      const kachel = ziel.closest<HTMLElement>('[data-el]');
+      if (kachel) schliessen(String(kachel.dataset.el || ''));
+    });
+    document.addEventListener('keydown', beiTaste);
+    document.body.appendChild(o);
+    zu.focus();
+  });
 
   const leiste = (controls: any, extra = ''): HTMLElement => {
     /* WELCHE FORM DER FORMEN-KNOPF FÜHRT (E375). Das ist Zustand der
@@ -2659,6 +3668,9 @@ const Marken = (() => {
 
     const row = document.createElement('div');
     row.className = 'blatt-reihe';
+    /* Der gemerkte Platz gilt sofort, nicht erst nach dem ersten Klick —
+       derselbe Fund wie bei der Adernreihe in E509 (§55). */
+    row.dataset.lage = lageJetzt();
     const tools = document.createElement('div');
     tools.className = 'blatt-werk';
     tools.dataset.tool = 'schreiben';
@@ -2683,11 +3695,32 @@ const Marken = (() => {
 
        2. Welches Werkzeug GILT, stand nur in einer CSS-Klasse. Eine Klasse
           ist für ein Vorleseprogramm nicht da. `aria-pressed` sagt es. */
+    /* ══ GEZEICHNETE ZEICHEN STATT EMOJI (E515) ═══════════════════════════
+       Redur, 9. September, mit einem Ausschnitt der GoodNotes-Leiste:
+       „nehme die Symbole für die Redion bitte 1:1."
+
+       Die Leiste trug ✎ ⌖ 🖍 ▰ □ ▬ 🗒 T ⚡ ⭐ 🖼 ⌫ ⦿ — dreizehn Zeichen aus
+       fünf verschiedenen Welten. `register/symbole.ts` beschreibt seit
+       jeher, warum das nicht geht: Emoji sind Bilder, keine Zeichen. Sie
+       tragen eigene Farbe und eigene Strichstärke, sie sehen auf jedem
+       System anders aus, und sie sitzen nicht auf einer Linie.
+
+       Jetzt kommt jedes aus demselben Register wie der Rest der Schale:
+       24 × 24, Striche in der Farbe der Zeile, überall dieselbe Stärke.
+
+       DAS EMOJI BLEIBT ALS RÜCKFALL. `artZeichen` braucht ein TEXTzeichen —
+       in der Sperrliste, im Inspector, in einer Meldung —, und dort ist ein
+       SVG keine Antwort. Deshalb trägt jedes Werkzeug beides (§8: EINE
+       Liste, zwei Ansichten davon). */
     const button = (tool: string) => {
       const w = WERKZEUGE.find(x => x.id === tool)!;
+      const sym = (w as any).sym as string | undefined;
+      const bild = sym
+        ? `<span class="zeichen" data-sym="${sym}" aria-hidden="true"></span>`
+        : `<span class="zeichen" aria-hidden="true">${w.zeichen}</span>`;
       return `<button data-wz="${w.id}"${w.id === 'schreiben' ? ' class="on"' : ''} ` +
         `aria-pressed="${w.id === 'schreiben' ? 'true' : 'false'}" title="${w.titel}">` +
-        `<span class="zeichen" aria-hidden="true">${w.zeichen}</span><span class="wort">${w.name}</span></button>`;
+        bild + `<span class="wort">${w.name}</span></button>`;
     };
     tools.innerHTML =
       button('schreiben') +
@@ -2703,18 +3736,32 @@ const Marken = (() => {
          ihn wiedererkennt, ohne ihn zu öffnen. */
       (() => {
         const jetzt = FORMEN.find(f => f.id === formArt) || FORMEN[0]!;
+        /* HIER BLEIBT DAS FORMZEICHEN (E515): der Knopf zeigt nicht „Formen",
+           sondern WELCHE Form gerade gewählt ist — ein Dreieck, ein Pfeil,
+           eine Kurve. Ein gemeinsames Werkzeugzeichen nähme genau die
+           Auskunft weg, für die dieser Knopf da ist. */
         return `<button data-wz="formen" data-form="${jetzt.id}" ` +
           `title="${jetzt.titel} — die Form wählst du darunter">` +
-          `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">Form</span></button>`;
+          `<span class="zeichen" data-sym="${(jetzt as any).sym || 'inkShapes'}" aria-hidden="true"></span>` +
+          '<span class="wort">Form</span></button>';
       })() +
       button('abdeck') +
       button('zettel') +
       button('text') +
       button('zeichen') +
+      /* DIE ELEMENTE (E494): steht neben dem Fachzeichen, weil es dieselbe
+         Bewegung ist — ein Tipp setzt etwas Fertiges. Nachgemessen passt der
+         zwoelfte Knopf: bei 1360 px Fenster belegen die Werkzeuge 437 px von
+         596, mit Woertern bei 1600 px 919 von 1184 — eine Zeile bleibt eine. */
+      button('elemente') +
       /* DAS BILD (E357): kein Werkzeug, das man haelt, sondern ein Weg —
          ein Tipp oeffnet den Waehler, danach fuehrt die Auswahl. */
       button('bild') +
       button('radierer') +
+      /* DER LASERPOINTER (E512): er steht am ENDE der Werkzeuge, weil er
+         als einziger nichts hinterlässt — wer die Leiste von links liest,
+         geht von „schreibt viel" zu „schreibt nichts". */
+      button('laser') +
       /* DER ZEILENBRUCH (E359): am Rechner stehen die Werkzeuge in einer
          Zeile und ihr Zubehoer darunter; dieses leere Element mit voller
          Breite ist der Umbruch. Am Telefon und in der Spalte blendet das
@@ -2725,44 +3772,62 @@ const Marken = (() => {
       (() => {
         const jetzt = RADIERER.find(r => r.id === (controls.radierModusVon ? controls.radierModusVon() : RADIER_VORGABE)) || RADIERER[0];
         return `<button data-act="radiermodus" data-gruppe="radierer" data-modus="${jetzt.id}" title="${jetzt.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}">` +
-          `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
+          `<span class="zeichen" data-sym="${(jetzt as any).sym}" aria-hidden="true"></span>` +
+          `<span class="wort">${jetzt.name}</span></button>`;
       })() +
       /* JEDER KNOPF KENNT SEINE GRUPPE (E356): am Telefon zeigt die Leiste
          nur die Gruppen des gewaehlten Werkzeugs — Farben und Breiten beim
          Stift, den Modus beim Radierer, Kopieren und Loeschen bei der
          Auswahl. Das CSS liest `data-gruppe` gegen `data-tool` der Leiste. */
       '<span class="blatt-trenn" data-gruppe="verlauf"></span>' +
-      '<button data-act="undo" data-gruppe="verlauf" title="Rückgängig" disabled><span class="zeichen" aria-hidden="true">↶</span><span class="wort">Zurück</span></button>' +
-      '<button data-act="redo" data-gruppe="verlauf" title="Wiederholen" disabled><span class="zeichen" aria-hidden="true">↷</span><span class="wort">Vor</span></button>' +
-      '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen" aria-hidden="true">🗑</span><span class="wort">Löschen</span></button>' +
+      '<button data-act="undo" data-gruppe="verlauf" title="Rückgängig" disabled><span class="zeichen" data-sym="undo" aria-hidden="true"></span><span class="wort">Zurück</span></button>' +
+      '<button data-act="redo" data-gruppe="verlauf" title="Wiederholen" disabled><span class="zeichen" data-sym="redo" aria-hidden="true"></span><span class="wort">Vor</span></button>' +
+      /* DER PLATZ DER LEISTE (E512) — bei „Zurück" und „Vor", weil beide
+         zu JEDEM Werkzeug gehören und darum immer stehen. */
+      (() => {
+        const jetzt = LAGEN.find(l => l.id === lageJetzt()) || LAGEN[0];
+        const naechst = LAGEN[(LAGEN.findIndex(l => l.id === jetzt.id) + 1) % LAGEN.length]!;
+        return `<button data-act="lage" data-gruppe="verlauf" data-lage="${jetzt.id}" ` +
+          `title="Leiste verschieben — jetzt ${jetzt.name}, als Nächstes ${naechst.name}" ` +
+          `aria-label="Leiste verschieben, jetzt ${jetzt.name}">` +
+          `<span class="zeichen" data-sym="${jetzt.sym}" aria-hidden="true"></span>` +
+          `<span class="wort">Platz</span></button>`;
+      })() +
+      '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen" data-sym="trash" aria-hidden="true"></span><span class="wort">Löschen</span></button>' +
       /* KOPIEREN UND EINSETZEN (E353) — auch ohne Tastatur, am Telefon. */
-      '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen" aria-hidden="true">⧉</span><span class="wort">Kopieren</span></button>' +
-      '<button data-act="paste" data-gruppe="auswahl" title="Kopiertes einsetzen (Strg+V)" disabled><span class="zeichen" aria-hidden="true">📋</span><span class="wort">Einsetzen</span></button>' +
+      '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen" data-sym="copy" aria-hidden="true"></span><span class="wort">Kopieren</span></button>' +
+      '<button data-act="paste" data-gruppe="auswahl" title="Kopiertes einsetzen (Strg+V)" disabled><span class="zeichen" data-sym="clipboard" aria-hidden="true"></span><span class="wort">Einsetzen</span></button>' +
       /* AUSWAHL WIE GOODNOTES (E466): Ausschneiden, nach vorn, nach hinten,
          Sperren — alles an der Auswahl, alles ein Schritt im Verlauf. */
-      '<button data-act="cut" data-gruppe="auswahl" title="Auswahl ausschneiden (Strg+X)" disabled><span class="zeichen" aria-hidden="true">✂</span><span class="wort">Ausschneiden</span></button>' +
-      '<button data-act="vor" data-gruppe="auswahl" title="Auswahl nach vorn — über alles andere" disabled><span class="zeichen" aria-hidden="true">⤒</span><span class="wort">Nach vorn</span></button>' +
-      '<button data-act="hinten" data-gruppe="auswahl" title="Auswahl nach hinten — unter alles andere" disabled><span class="zeichen" aria-hidden="true">⤓</span><span class="wort">Nach hinten</span></button>' +
-      '<button data-act="sperren" data-gruppe="auswahl" aria-pressed="false" title="Auswahl sperren: nicht mehr schieben, ziehen, drehen, löschen oder radieren" disabled><span class="zeichen" aria-hidden="true">🔒</span><span class="wort">Sperren</span></button>' +
+      '<button data-act="cut" data-gruppe="auswahl" title="Auswahl ausschneiden (Strg+X)" disabled><span class="zeichen" data-sym="scissors" aria-hidden="true"></span><span class="wort">Ausschneiden</span></button>' +
+      '<button data-act="vor" data-gruppe="auswahl" title="Auswahl nach vorn — über alles andere" disabled><span class="zeichen" data-sym="layerUp" aria-hidden="true"></span><span class="wort">Nach vorn</span></button>' +
+      '<button data-act="hinten" data-gruppe="auswahl" title="Auswahl nach hinten — unter alles andere" disabled><span class="zeichen" data-sym="layerDown" aria-hidden="true"></span><span class="wort">Nach hinten</span></button>' +
+      '<button data-act="sperren" data-gruppe="auswahl" aria-pressed="false" title="Auswahl sperren: nicht mehr schieben, ziehen, drehen, löschen oder radieren" disabled><span class="zeichen" data-sym="lock" aria-hidden="true"></span><span class="wort">Sperren</span></button>' +
       /* EIN VERWEIS (E468): der Auswahl eine Adresse oder eine Seite geben. */
-      '<button data-act="verweis" data-gruppe="auswahl" title="Der Auswahl einen Verweis geben: eine Adresse (https://…) oder eine Seite ([[Name]]) — im Lesemodus antippen" disabled><span class="zeichen" aria-hidden="true">🔗</span><span class="wort">Verweis</span></button>' +
+      '<button data-act="verweis" data-gruppe="auswahl" title="Der Auswahl einen Verweis geben: eine Adresse (https://…) oder eine Seite ([[Name]]) — im Lesemodus antippen" disabled><span class="zeichen" data-sym="link" aria-hidden="true"></span><span class="wort">Verweis</span></button>' +
+      /* ALS ELEMENT SICHERN (E494): der einzige Weg IN die Bibliothek. Er
+         steht bei der Auswahl, weil ein Element eine Auswahl ist. */
+      '<button data-act="element-sichern" data-gruppe="auswahl" title="Die Auswahl als Element sichern — danach mit dem Werkzeug «Elemente» auf jede Seite setzen" disabled><span class="zeichen" data-sym="star" aria-hidden="true"></span><span class="wort">Als Element</span></button>' +
+      /* DAS ZUBEHÖR DER ELEMENTE: ein Knopf, der die Bibliothek öffnet und
+         sagt, welches Element der nächste Tipp setzt. */
+      '<button data-act="elemente" data-gruppe="elemente" title="Elemente-Bibliothek öffnen und wählen, was der nächste Tipp setzt"><span class="zeichen" data-sym="star" aria-hidden="true"></span><span class="wort">Elemente</span></button>' +
       /* Das Lineal ist ein SCHALTER neben den Werkzeugen: solange es
          anliegt, rasten Linie und Pfeil auf 15°-Schritte (E267). */
       '<button data-act="lineal" data-gruppe="lineal" aria-pressed="false" ' +
       'title="Lineal: Linie und Pfeil rasten auf 15°-Schritte">' +
-      '<span class="zeichen" aria-hidden="true">📐</span><span class="wort">Lineal</span></button>' +
+      '<span class="zeichen" data-sym="inkRuler" aria-hidden="true"></span><span class="wort">Lineal</span></button>' +
       /* FORMEN (E355): ein Schalter wie das Lineal — an, und ein gehaltener
          Strich wird zur Linie, zum Kreis, zum Rechteck. */
       `<button data-act="formen" data-gruppe="formen" aria-pressed="${controls.formenAn ? (controls.formenAn() ? 'true' : 'false') : 'true'}"` +
       `${controls.formenAn && controls.formenAn() ? ' class="on"' : ''} ` +
       'title="Formen erkennen: einen Kreis, ein Rechteck oder eine Linie ziehen und am Ende kurz halten">' +
-      '<span class="zeichen" aria-hidden="true">◯</span><span class="wort">Formen</span></button>' +
+      '<span class="zeichen" data-sym="shapeSnap" aria-hidden="true"></span><span class="wort">Formen</span></button>' +
       /* KRITZELN LOESCHT (E466): ein Schalter wie „Formen" — an, und ein
          dichtes Hin-und-her ueber einem Strich nimmt ihn weg. */
       `<button data-act="kritzel" data-gruppe="formen" aria-pressed="${controls.kritzelAn ? (controls.kritzelAn() ? 'true' : 'false') : 'true'}"` +
       `${controls.kritzelAn && controls.kritzelAn() ? ' class="on"' : ''} ` +
       'title="Kritzeln löscht: dicht über einen Strich hin und her fahren, und er ist weg">' +
-      '<span class="zeichen" aria-hidden="true">〰</span><span class="wort">Kritzeln</span></button>' +
+      '<span class="zeichen" data-sym="scribble" aria-hidden="true"></span><span class="wort">Kritzeln</span></button>' +
       /* DIE SCHRIFT (E360): Familie, Groesse, Fett, Rahmen — beim Text und
          bei der Auswahl; wirkt auf Gewaehltes und auf den naechsten Text. */
       (() => {
@@ -2780,12 +3845,34 @@ const Marken = (() => {
           `<button data-act="rahmen" data-gruppe="schrift" aria-pressed="${s.rahmen ? 'true' : 'false'}"${s.rahmen ? ' class="on"' : ''} title="Rahmen um den Text">` +
           '<span class="zeichen" aria-hidden="true">▭</span><span class="wort">Rahmen</span></button>';
       })() +
-      /* DER STIFT (E351): ein Knopf, der durch Fueller, Kugelschreiber und
-         Pinsel wechselt und sagt, welcher gerade fuehrt. */
+      /* ══ DIE STIFTREIHE (E512) ═══════════════════════════════════════════
+         Redur, 8. September, mit vier Bildern aus GoodNotes: „die
+         Fachzeichen-Stift kommt, wenn ich die Stift klicke — sollte neben
+         es, also links unten, wo die Farben dort sind, mir zeigen, welche
+         Stift ich will."
+
+         BIS HIERHER WAR ES EIN WECHSELKNOPF (E351): ein Tipp, der nächste
+         Stift. Sechs Stifte heissen bis zu fünf Tipps für den letzten, und
+         welche es überhaupt gibt, stand nur im Titel — man musste es
+         wissen. Jetzt steht die Reihe da, wie in GoodNotes, unmittelbar
+         links vor den Farben.
+
+         DER WECHSEL IST NICHT WEG. Wer `P` drückt, während der Stift schon
+         führt, geht weiter zum nächsten — dieselbe Bewegung wie vorher,
+         nur ohne eigenen Knopf. Das steht bei den Tasten (`TASTEN`) und
+         in `register/tasten.ts`. */
       (() => {
-        const jetzt = STIFTE.find(st => st.id === (controls.stilVon ? controls.stilVon() : STIL_VORGABE)) || STIFTE[0];
-        return `<button data-act="stil" data-gruppe="stil" data-stil="${jetzt.id}" title="Stift wechseln: ${STIFTE.map(st => st.name).join(' → ')}">` +
-          `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
+        /* WELCHER STIFT SCHON BEIM BAUEN FÜHRT. Ohne das stünde die Reihe
+           beim Öffnen ohne Markierung da, bis jemand etwas anfasst — der
+           gleiche Fund wie bei der Adernreihe in E509, nur eine Ebene
+           früher. `test343 §4` hält es fest. */
+        const jetzt = (controls.stilVon ? controls.stilVon() : STIL_VORGABE) as string;
+        return STIFTE.map(st => `<button data-act="stilwahl" data-gruppe="stil" data-stil="${st.id}"` +
+          (st.id === jetzt ? ' class="on"' : '') +
+          ` aria-pressed="${st.id === jetzt ? 'true' : 'false'}"` +
+          ` title="${st.name}" aria-label="Stift ${st.name}">` +
+          `<span class="zeichen" data-sym="${(st as any).sym}" aria-hidden="true"></span>` +
+          `<span class="wort">${st.name}</span></button>`).join('');
       })() +
       /* DAS ZUBEHÖR ZUM FORMEN-WERKZEUG (E375). Es steht in derselben
          Zeile wie Farbe und Breite und erscheint nach der Gruppenregel aus
@@ -2793,11 +3880,26 @@ const Marken = (() => {
       '<span class="blatt-trenn" data-gruppe="form"></span>' +
       FORMEN.map(f => `<button data-act="formart" data-gruppe="form" data-form="${f.id}"` +
         (f.id === formArt ? ' class="on"' : '') + ` aria-pressed="${f.id === formArt ? 'true' : 'false'}"` +
-        ` title="${f.titel}"><span class="zeichen" aria-hidden="true">${f.zeichen}</span>` +
+        ` title="${f.titel}"><span class="zeichen" data-sym="${(f as any).sym || 'inkShapes'}" aria-hidden="true"></span>` +
         `<span class="wort">${f.name}</span></button>`).join('') +
+      /* ══ DIE ZWEI ARTEN DES LASERS (E512) ═══════════════════════════════
+         Wie in GoodNotes: ein Punkt oder eine Spur. Sie stehen in der
+         Gruppe `laser` und erscheinen nach der Regel aus E356 nur, wenn
+         der Laserpointer geführt wird. */
+      '<span class="blatt-trenn" data-gruppe="laser"></span>' +
+      LASER.map(l => `<button data-act="laserart" data-gruppe="laser" data-laser="${l.id}"` +
+        (l.id === laserArt() ? ' class="on"' : '') +
+        ` aria-pressed="${l.id === laserArt() ? 'true' : 'false'}" title="${l.titel}">` +
+        `<span class="zeichen" aria-hidden="true">${l.zeichen}</span>` +
+        `<span class="wort">${l.name}</span></button>`).join('') +
       '<span class="blatt-trenn" data-gruppe="farbe"></span>' +
+      /* JEDE FARBE BEIM NAMEN (E509). Hier stand fünfmal `title="Farbe"` —
+         beim Überfahren also fünfmal dasselbe Wort, und ein Vorleser las
+         fünfmal „Farbe". Redur hat den Namen für die Adern verlangt; für
+         diese fünf gilt derselbe Satz (§38). */
       FARBEN.map((value, index) => `<button class="blatt-farbe${index === 0 ? ' on' : ''}" data-gruppe="farbe" ` +
-        `data-c="${value}" style="background:${value}" title="Farbe"></button>`).join('') +
+        `data-c="${value}" style="background:${value}" ` +
+        `title="${FARBNAMEN[value] || value}" aria-label="Farbe ${FARBNAMEN[value] || value}"></button>`).join('') +
       /* EIGENE FARBEN (E351): die zuletzt gewaehlten stehen als Tupfer da,
          dahinter der Weg zum Farbwaehler des Browsers. */
       eigeneFarben().map(value => `<button class="blatt-farbe blatt-farbe-eigen" data-gruppe="farbe" ` +
@@ -2928,6 +4030,37 @@ const Marken = (() => {
       feld.click();
     };
 
+    /**
+     * Die Auswahl als Element ablegen (E494).
+     *
+     * Der Weg ist derselbe wie beim Farbsatz: nach dem Namen fragen, bei
+     * gleichem Namen NACHFRAGEN, und eine Absage aussprechen statt sie zu
+     * verschlucken (§35). Die drei Absagegründe kommen aus `elementSichern`
+     * im Klartext — „es ging nicht" wäre bei jedem von ihnen die falsche
+     * Auskunft.
+     */
+    const elementSichernDialog = async (): Promise<void> => {
+      if (typeof Dialog === 'undefined') return;
+      const name = await Dialog.frage('Als Element sichern — unter welchem Namen?', '');
+      if (name === null) return;
+      if (!satzName(name)) { UI.toast('Ein Element braucht einen Namen.'); return; }
+      const schon = elemente().some(e => e.name.toLowerCase() === satzName(name).toLowerCase());
+      if (schon) {
+        const ersetzen = await Dialog.wahl({
+          titel: 'Das Element ersetzen?',
+          text: 'Es gibt schon ein Element „' + satzName(name) + '".',
+          knoepfe: [
+            { id: 'ja', text: 'Ersetzen', hinweis: 'Die bisherige Zeichnung dieses Elements geht weg' },
+            { id: 'nein', text: 'Abbrechen', hinweis: 'Nichts ändert sich' }
+          ]
+        });
+        if (ersetzen !== 'ja') return;
+      }
+      const ergebnis = controls.elementAusAuswahl(name);
+      if (!ergebnis.ok) { UI.toast(ergebnis.grund); return; }
+      UI.toast('Element „' + ergebnis.element.name + '" gesichert — Werkzeug «Elemente» setzt es');
+    };
+
     const farbenDialog = async (): Promise<void> => {
       /* OHNE DIALOG BLEIBT DER ALTE WEG. `Dialog` liegt in der Schale; ein
          Prüflauf, der nur den Kern hochfährt, hätte sonst gar keinen
@@ -2948,11 +4081,17 @@ const Marken = (() => {
         knoepfe: [
           { id: 'waehlen', text: 'Andere Farbe wählen',
             hinweis: 'Der Farbwähler des Systems — die gewählte Farbe kommt danach als Tupfer dazu' },
-          ...saetze.map(satz => ({ id: 'laden:' + satz.name, text: satz.name, hinweis: zeigen(satz.farben) })),
-          { id: 'sichern', text: 'Diese Farben sichern',
-            hinweis: jetzt.length
-              ? 'Legt die ' + jetzt.length + ' eigenen Farben unter einem Namen ab'
-              : 'Legt einen leeren Satz ab — nur die fünf festen Farben' },
+          /* E501: der Hinweis nennt, was der Satz WIRKLICH zurückholt.
+             Ein Satz mit Stift und Stärke ist eine Voreinstellung; ein
+             älterer ohne beides bleibt ein Farbsatz, und das steht dann
+             auch so da — statt etwas zu versprechen, was er nicht kann. */
+          ...saetze.map(satz => ({ id: 'laden:' + satz.name, text: satz.name,
+            hinweis: zeigen(satz.farben)
+              + (satz.stil ? ' · ' + (STIFTE.find(st => st.id === satz.stil)?.name || satz.stil) : '')
+              + (satz.breite ? ' · ' + String(Math.round(satz.breite * 10) / 10).replace('.', ',') + ' px' : '') })),
+          { id: 'sichern', text: 'Diese Einstellung sichern',
+            hinweis: 'Farben, Stift und Strichstärke — zusammen unter einem Namen'
+              + (jetzt.length ? ' (' + jetzt.length + ' eigene Farben)' : '') },
           ...(saetze.length ? [{ id: 'entfernen', text: 'Einen Satz löschen',
             hinweis: 'Die Farben selbst bleiben, nur der Name geht weg' }] : []),
           { id: 'zuruecksetzen', text: 'Eigene Farben zurücksetzen',
@@ -2964,8 +4103,19 @@ const Marken = (() => {
       if (wahl === 'waehlen') { farbwaehlerOeffnen(); return; }
 
       if (wahl.startsWith('laden:')) {
-        const liste = farbsatzLaden(wahl.slice(6));
-        if (liste) tupferZeigen(liste, farbeJetzt());
+        const satz = farbsatzLaden(wahl.slice(6));
+        if (!satz) return;
+        tupferZeigen(satz.farben, farbeJetzt());
+        /* E501: Stift und Stärke kommen mit, wenn der Satz sie kennt — und
+           die Leiste zeigt es sofort, statt es erst beim nächsten Strich zu
+           verraten. `markiere()` liest den Zustand aus der Fläche zurück;
+           den Stiftknopf beschriftet `stiftZeigen`, weil sein Name und sein
+           Zeichen nirgends sonst herkommen. */
+        if (satz.stil && controls.setzeStil) { controls.setzeStil(satz.stil); stiftZeigen(satz.stil); }
+        if (satz.breite) strichSetzen(satz.breite);
+        markiere();
+        UI.toast('„' + satz.name + '" geladen'
+          + (satz.stil || satz.breite ? ' — mit Stift und Strichstärke' : ''));
         return;
       }
 
@@ -2987,11 +4137,16 @@ const Marken = (() => {
         }
         /* `null` heisst: voll. Das wird GESAGT — ein still verschluckter
            Speicherbefehl ist schlimmer als eine Absage (§35). */
-        if (!farbsatzSichern(name)) {
-          UI.toast('Es passen höchstens ' + HOECHSTENS_FARBSAETZE + ' Farbsätze — lösche zuerst einen.');
+        /* E501: Stift und Stärke reisen mit. Beide kommen aus derselben
+           Quelle, aus der die Leiste sie anzeigt — nicht aus einem zweiten
+           Merker, der auseinanderlaufen könnte. */
+        const stift = { stil: controls.stilVon ? controls.stilVon() : '',
+                        breite: Zeichenziel.dickeVon(controls) };
+        if (!farbsatzSichern(name, eigeneFarben(), stift)) {
+          UI.toast('Es passen höchstens ' + HOECHSTENS_FARBSAETZE + ' Voreinstellungen — lösche zuerst eine.');
           return;
         }
-        UI.toast('Farbsatz „' + satzName(name) + '" gesichert');
+        UI.toast('„' + satzName(name) + '" gesichert — Farben, Stift und Strichstärke');
         return;
       }
 
@@ -3027,7 +4182,7 @@ const Marken = (() => {
       const paste = tools.querySelector<HTMLButtonElement>('[data-act="paste"]');
       if (copy) copy.disabled = !next.selected;
       if (paste) paste.disabled = !next.clipboard;
-      for (const act of ['cut', 'vor', 'hinten', 'sperren', 'verweis']) {
+      for (const act of ['cut', 'vor', 'hinten', 'sperren', 'verweis', 'element-sichern']) {
         const k = tools.querySelector<HTMLButtonElement>(`[data-act="${act}"]`);
         if (k) k.disabled = !next.selected;
       }
@@ -3036,6 +4191,21 @@ const Marken = (() => {
         schloss.setAttribute('aria-pressed', next.gesperrt ? 'true' : 'false');
         schloss.classList.toggle('on', !!next.gesperrt);
       }
+      elementKnopfMalen(next.element);
+    };
+
+    /* WELCHES ELEMENT DER NÄCHSTE TIPP SETZT (E494). `textContent`, nicht
+       `innerHTML` — der Name kommt vom Nutzer (§19). */
+    const elementKnopfMalen = (id: unknown): void => {
+      const knopf = tools.querySelector<HTMLButtonElement>('[data-act="elemente"]');
+      if (!knopf) return;
+      const gewaehlt = id ? elementHolen(id) : null;
+      const wort = knopf.querySelector<HTMLElement>('.wort');
+      if (wort) wort.textContent = gewaehlt ? gewaehlt.name : 'Elemente';
+      knopf.title = gewaehlt
+        ? 'Der nächste Tipp setzt „' + gewaehlt.name + '" — antippen wählt ein anderes'
+        : 'Elemente-Bibliothek öffnen und wählen, was der nächste Tipp setzt';
+      knopf.classList.toggle('on', !!gewaehlt);
     };
     controls.beiAenderung?.(updateState);
 
@@ -3054,6 +4224,74 @@ const Marken = (() => {
        `werkzeugVon(controls)` und nicht `jetzt()`: gemeint ist DIESE
        Fläche. Bei zwei Blättern auf einer Seite zeigte `jetzt()` beiden
        Leisten das Werkzeug des zuletzt berührten. */
+    /**
+     * DEN STIFTKNOPF BESCHRIFTEN (E501, eine Tür).
+     *
+     * Sein Zeichen, sein Wort und sein `data-stil` kommen aus `STIFTE` und
+     * standen bis hierher nur im Klickgriff. Mit dem Laden einer
+     * Voreinstellung gibt es einen zweiten Aufrufer — und zwei Abschriften
+     * derselben drei Zeilen laufen auseinander (§8).
+     */
+    /** Welcher Stift führt — an der Reihe abzulesen (E512). Vorher stand
+     *  es an EINEM Knopf, der sich umbeschriftete; jetzt ist es die
+     *  `on`-Klasse in einer Reihe von sechs. */
+    const stiftZeigen = (id: string): void => {
+      const stift = STIFTE.find(st => st.id === id);
+      if (!stift) return;
+      tools.querySelectorAll<HTMLElement>('[data-act="stilwahl"]').forEach(node => {
+        const an = node.dataset.stil === stift.id;
+        node.classList.toggle('on', an);
+        node.setAttribute('aria-pressed', an ? 'true' : 'false');
+      });
+      leiterReihe(stift.id === 'leiter');
+    };
+
+    /**
+     * DIE FARBREIHE WIRD ZUR ADERNREIHE (E509).
+     *
+     * Beim Leiterstift stehen dort nicht fünf Farben und ein „+", sondern
+     * die zehn Adern — jede mit ihrem Kürzel darauf und ihrem Namen im
+     * Titel. Beim Wechsel zurück ist alles wieder, wie es war.
+     *
+     * WEGGENOMMEN, NICHT ÜBERSCHRIEBEN. Die fünf festen Tupfer und die
+     * eigenen Farben bleiben im Baum und werden nur ausgeblendet: sie
+     * tragen die gewählte Farbe in ihrer `on`-Klasse, und wer sie
+     * wegwürfe, müsste sie beim Zurückschalten neu erfinden.
+     *
+     * DAS KÜRZEL STEHT AUF DEM TUPFER, nicht nur im Titel. Zehn Punkte,
+     * die sich allein durch die Farbe unterscheiden, sind genau das, was
+     * §38 verbietet — und im Schaltplan steht das Kürzel ohnehin neben der
+     * Ader, man liest es also sowieso.
+     */
+    const leiterReihe = (an: boolean): void => {
+      tools.querySelectorAll('.blatt-farbe-leiter').forEach(node => node.remove());
+      tools.querySelectorAll<HTMLElement>('.blatt-farbe, .blatt-farbe-neu')
+        .forEach(node => node.classList.toggle('blatt-farbe-weg', an));
+      if (!an) return;
+      const neuKnopf = tools.querySelector('.blatt-farbe-neu');
+      const jetzt = leiterJetzt();
+      LEITER.forEach(ader => {
+        const k = document.createElement('button');
+        k.className = 'blatt-farbe blatt-farbe-leiter' + (ader.id === jetzt ? ' on' : '');
+        /* DIE NUMMER FÜR DIE WELLE (E511). Die Verzögerung rechnet das CSS
+           aus EINER Zahl (`--ru-tupfer-welle`); hier steht nur, der
+           wievielte Tupfer das ist. */
+        k.style.setProperty('--tupfer-n', String(LEITER.indexOf(ader as any)));
+        k.dataset.gruppe = 'farbe';
+        k.dataset.c = ader.farbe;
+        k.dataset.leiter = ader.id;
+        k.style.background = ader.farbe;
+        k.title = ader.kurz + ' — ' + ader.name;
+        k.setAttribute('aria-label', 'Ader ' + ader.kurz + ': ' + ader.name);
+        const wort = document.createElement('span');
+        wort.className = 'blatt-farbe-kurz';
+        wort.setAttribute('aria-hidden', 'true');
+        wort.textContent = ader.kurz;
+        k.append(wort);
+        neuKnopf?.before(k);
+      });
+    };
+
     const markiere = (): void => {
       if (!tools.isConnected) { Zeichenziel.vergiss(markiere); return; }
       const wz = Zeichenziel.werkzeugVon(controls);
@@ -3072,8 +4310,16 @@ const Marken = (() => {
         if (tools.dataset.tool !== wz) { tools.dataset.tool = wz; zumWerkzeugRollen(wz); }
       }
       const farbe = Zeichenziel.farbeVon(controls);
+      /* EINE ADER WIRD AN IHRER KENNUNG ERKANNT, nicht an ihrer Farbe
+         (E509). L2 ist `#111111` — dasselbe Schwarz wie der erste
+         Farbtupfer. Wer hier die Farbe vergleicht, hebt beim Öffnen den
+         falschen Tupfer hervor: L2 statt der Ader, die man zuletzt geführt
+         hat. Die Farbe ist eine Eigenschaft der Ader, nicht ihr Name. */
+      const ader = leiterJetzt();
       if (farbe) tools.querySelectorAll<HTMLElement>('.blatt-farbe').forEach(node => {
-        node.classList.toggle('on', node.dataset.c === farbe);
+        node.classList.toggle('on', node.dataset.leiter
+          ? node.dataset.leiter === ader
+          : node.dataset.c === farbe);
       });
       const dicke = Zeichenziel.dickeVon(controls);
       if (dicke) tools.querySelectorAll<HTMLElement>('.blatt-strich').forEach(node => {
@@ -3109,11 +4355,17 @@ const Marken = (() => {
       if (feld && Number(feld.value) !== wert) feld.value = String(wert);
       if (zahl) zahl.textContent = String(Math.round(wert * 10) / 10).replace('.', ',');
     };
-    /* Der Regler meldet jeden Wert sofort — ohne Klick, ohne Loslassen. */
-    tools.addEventListener('input', event => {
-      const feld = event.target as HTMLInputElement | null;
-      if (!feld || !feld.matches('.blatt-staerke input')) return;
-      const wert = Math.max(0.5, Math.min(12, Number(feld.value) || BREITEN[1]));
+    /**
+     * EINE STRICHSTÄRKE SETZEN — an allen vier Orten, an denen sie steht
+     * (E501, eine Tür).
+     *
+     * Die Fläche führt sie, `Zeichenziel` merkt sie für die anderen
+     * Anzeigen, die Stufenknöpfe zeigen sie, und der Regler nennt ihre
+     * Zahl. Wer nur den ersten setzt, hat sie gesetzt und nirgends gezeigt
+     * — genau das ist beim Laden einer Voreinstellung passiert, und der
+     * Prüflauf sah 1,2 statt 5.
+     */
+    const strichSetzen = (wert: number): void => {
       controls.setzeStrich(wert);
       if (typeof Zeichenziel !== 'undefined') {
         try { Zeichenziel.uebernehmeStrich(controls, wert); } catch { /* egal */ }
@@ -3121,6 +4373,12 @@ const Marken = (() => {
       tools.querySelectorAll<HTMLElement>('.blatt-strich').forEach(node =>
         node.classList.toggle('on', Number(node.dataset.b) === wert));
       staerkeZeigen(wert);
+    };
+    /* Der Regler meldet jeden Wert sofort — ohne Klick, ohne Loslassen. */
+    tools.addEventListener('input', event => {
+      const feld = event.target as HTMLInputElement | null;
+      if (!feld || !feld.matches('.blatt-staerke input')) return;
+      strichSetzen(Math.max(0.5, Math.min(12, Number(feld.value) || BREITEN[1])));
     });
     /* Die Klappe geht zu, wenn der Blick woandershin geht: Escape, ein
        Tipp ins Blatt (der Regler verliert den Fokus) oder ein anderes
@@ -3137,6 +4395,16 @@ const Marken = (() => {
       if (zu && (label.contains(zu) || zu.matches?.('.blatt-strich'))) return;
       staerkeAuf(false);
     });
+    /* DIE ADERNREIHE MUSS AUCH BEIM ÖFFNEN STIMMEN (E509).
+       Hier stand nichts, und `leiterReihe` lief nur beim Stiftwechsel. Wer
+       Redion mit dem Leiterstift schloss und wieder aufmachte, sah die
+       fünf gewöhnlichen Farben und einen Stift, der etwas anderes zeichnet
+       — der Zustand stand am Knopf und nicht in der Reihe.
+
+       GEFUNDEN HAT ES DAS BILD, nicht der Prüflauf: der klickte sich zum
+       Leiterstift durch und löste den Wechsel damit selbst aus. §55 in
+       einem Satz. */
+    leiterReihe((controls.stilVon ? controls.stilVon() : STIL_VORGABE) === 'leiter');
     if (typeof Zeichenziel !== 'undefined' && typeof Zeichenziel.horche === 'function') {
       try { Zeichenziel.horche(markiere); } catch { /* dann eben nur die Leiste */ }
     }
@@ -3204,6 +4472,15 @@ const Marken = (() => {
         if (target.dataset.act === 'hinten' && controls.nachHinten) controls.nachHinten();
         if (target.dataset.act === 'sperren' && controls.sperren) { controls.sperren(); return; }
         if (target.dataset.act === 'verweis' && controls.verweisSetzen) { void controls.verweisSetzen(); return; }
+        /* E494: die Bibliothek öffnen, und die Auswahl hineinlegen. */
+        if (target.dataset.act === 'elemente' && controls.elementWaehlen) {
+          void controls.elementWaehlen().then(() => elementKnopfMalen(controls.elementGewaehlt?.()));
+          return;
+        }
+        if (target.dataset.act === 'element-sichern' && controls.elementAusAuswahl) {
+          void elementSichernDialog();
+          return;
+        }
         if (target.dataset.act === 'kritzel' && controls.setzeKritzel) {
           const an = !controls.kritzelAn?.();
           controls.setzeKritzel(an);
@@ -3211,12 +4488,48 @@ const Marken = (() => {
           target.classList.toggle('on', an);
           return;
         }
-        if (target.dataset.act === 'stil' && controls.setzeStil) {
-          const jetzt = STIFTE.findIndex(st => st.id === target.dataset.stil);
-          const naechster = STIFTE[(jetzt + 1) % STIFTE.length]!;
-          controls.setzeStil(naechster.id);
-          target.dataset.stil = naechster.id;
-          target.innerHTML = `<span class="zeichen" aria-hidden="true">${naechster.zeichen}</span><span class="wort">${naechster.name}</span>`;
+        if (target.dataset.act === 'lage') {
+          /* WEITER ZUM NÄCHSTEN PLATZ. Ein Rundlauf statt eines Menüs:
+             die Leiste zeigt ihr Ergebnis unmittelbar, indem sie
+             hinspringt — eine Wahl, die man SIEHT, braucht keine Liste. */
+          const i = LAGEN.findIndex(l => l.id === lageJetzt());
+          const naechst = LAGEN[(i + 1) % LAGEN.length]!;
+          const dann = LAGEN[(i + 2) % LAGEN.length]!;
+          if (typeof Store !== 'undefined') { try { Store.setMeta(M_LAGE, naechst.id); } catch { /* nur diese Sitzung */ } }
+          const reihe = tools.closest<HTMLElement>('.blatt-reihe');
+          if (reihe) reihe.dataset.lage = naechst.id;
+          target.dataset.lage = naechst.id;
+          target.title = 'Leiste verschieben — jetzt ' + naechst.name + ', als Nächstes ' + dann.name;
+          target.setAttribute('aria-label', 'Leiste verschieben, jetzt ' + naechst.name);
+          const z = target.querySelector<HTMLElement>('.zeichen');
+          if (z) { z.dataset.sym = naechst.sym; z.textContent = ''; }
+          try { Register.symbole.fuelle(target); } catch { /* dann bleibt es leer */ }
+          /* Und alle anderen Leisten derselben Seite ziehen mit — es ist
+             EIN Platz, nicht einer je Blatt. */
+          document.querySelectorAll<HTMLElement>('.blatt-reihe').forEach(r => { r.dataset.lage = naechst.id; });
+          document.querySelectorAll<HTMLElement>('[data-act="lage"]').forEach(k => {
+            k.dataset.lage = naechst.id;
+            const zz = k.querySelector<HTMLElement>('.zeichen');
+            if (zz) { zz.dataset.sym = naechst.sym; zz.textContent = ''; }
+            try { Register.symbole.fuelle(k); } catch { /* dann bleibt es leer */ }
+          });
+          return;
+        }
+        if (target.dataset.act === 'laserart') {
+          const id = String(target.dataset.laser || 'punkt');
+          if (typeof Store !== 'undefined') { try { Store.setMeta(M_LASER, id); } catch { /* nur diese Sitzung */ } }
+          tools.querySelectorAll<HTMLElement>('[data-act="laserart"]').forEach(node => {
+            const an = node.dataset.laser === id;
+            node.classList.toggle('on', an);
+            node.setAttribute('aria-pressed', an ? 'true' : 'false');
+          });
+          return;
+        }
+        if (target.dataset.act === 'stilwahl' && controls.setzeStil) {
+          /* EIN TIPP, EIN STIFT (E512) — kein Weiterschalten mehr. */
+          const gewaehlt = STIFTE.find(st => st.id === target.dataset.stil) || STIFTE[0];
+          controls.setzeStil(gewaehlt.id);
+          stiftZeigen(gewaehlt.id);
           /* Ein Stift zeichnet — wer ihn wechselt, will ihn auch fuehren. */
           if (Zeichenziel.werkzeugVon?.(controls) !== 'stift') {
             controls.setzeWerkzeug('stift');
@@ -3248,7 +4561,12 @@ const Marken = (() => {
           if (kopf && f) {
             kopf.dataset.form = wahl;
             kopf.title = f.titel + ' — die Form wählst du darunter';
-            kopf.innerHTML = `<span class="zeichen" aria-hidden="true">${f.zeichen}</span><span class="wort">Form</span>`;
+            /* Auch beim Wechsel gezeichnet, nicht als Textzeichen (E515) —
+               sonst stünde nach dem ersten Klick wieder ein „□" in einer
+               Reihe von gezeichneten Werkzeugen. */
+            kopf.innerHTML = `<span class="zeichen" data-sym="${(f as any).sym || 'inkShapes'}" aria-hidden="true"></span>` +
+              '<span class="wort">Form</span>';
+            try { Register.symbole.fuelle(kopf); } catch { /* dann bleibt es leer */ }
             tools.querySelectorAll('[data-wz]').forEach(node => node.classList.remove('on'));
             kopf.classList.add('on');
           }
@@ -3265,7 +4583,9 @@ const Marken = (() => {
           controls.setzeRadierModus(naechster.id);
           target.dataset.modus = naechster.id;
           target.title = `${naechster.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}`;
-          target.innerHTML = `<span class="zeichen" aria-hidden="true">${naechster.zeichen}</span><span class="wort">${naechster.name}</span>`;
+          target.innerHTML = `<span class="zeichen" data-sym="${(naechster as any).sym}" aria-hidden="true"></span>` +
+            `<span class="wort">${naechster.name}</span>`;
+          try { Register.symbole.fuelle(target); } catch { /* dann bleibt es leer */ }
           /* Wer den Radierer einstellt, will radieren. */
           if (Zeichenziel.werkzeugVon?.(controls) !== 'radierer') {
             controls.setzeWerkzeug('radierer');
@@ -3316,6 +4636,17 @@ const Marken = (() => {
         return;
       }
       if (target.dataset.c) {
+        /* Ein Aderntupfer merkt sich, WELCHE Ader er ist — die Farbe allein
+           genügt nicht: zwei Adern könnten eines Tages dieselbe haben, und
+           der Name soll trotzdem stimmen (E509). */
+        if (target.dataset.leiter) leiterMerken(target.dataset.leiter);
+        /* DER KLECKS GEHÖRT DEM ANTIPPEN (E511) — nicht der `on`-Klasse:
+           die trägt der gewählte Tupfer schon, wenn die Reihe entsteht,
+           und dann gewönne der Klecks gegen die Welle. Die Klasse räumt
+           sich selbst weg, damit sie beim nächsten Tippen wieder greift. */
+        target.classList.add('blatt-farbe-tipp');
+        target.addEventListener('animationend',
+          () => target.classList.remove('blatt-farbe-tipp'), { once: true });
         controls.setzeFarbe(target.dataset.c);
         /* Dieselbe Gegenrichtung wie beim Werkzeug: sonst stünde oben eine
            Farbe markiert, die niemand mehr benutzt. */
@@ -3330,15 +4661,15 @@ const Marken = (() => {
         /* Die gewaehlte Stufe ein zweites Mal: Klappe mit dem Regler auf
            (oder wieder zu) — der Weg von GoodNotes (E465 Nachtrag). */
         if (target.classList.contains('on')) { staerkeAuf(!staerkeOffen()); return; }
-        controls.setzeStrich(Number(target.dataset.b));
-        if (typeof Zeichenziel !== 'undefined') {
-          try { Zeichenziel.uebernehmeStrich(controls, Number(target.dataset.b)); } catch { /* egal */ }
-        }
-        tools.querySelectorAll('.blatt-strich').forEach(node => node.classList.remove('on'));
-        target.classList.add('on');
-        staerkeZeigen(Number(target.dataset.b));
+        /* Dieselbe Tür wie der Regler und das Laden einer Voreinstellung
+           (E501) — sonst setzt jeder Weg drei von vier Orten. */
+        strichSetzen(Number(target.dataset.b));
       }
     });
+    /* DIE ZEICHEN MALEN (E515). `data-sym` ist eine Bestellung, kein Bild —
+       das Register füllt sie. Ohne das Register bleibt das Feld leer und
+       die Wörter tragen die Leiste; deshalb der Griff drumherum. */
+    try { Register.symbole.fuelle(tools); } catch { /* dann ohne Zeichen */ }
     row.appendChild(tools);
     if (extra) {
       const fixed = document.createElement('div');
@@ -3383,11 +4714,23 @@ const Marken = (() => {
     if (!leiste) return;
     event.preventDefault();
     if (ziel === 'bleistift') {
-      /* Der Bleistift ist ein Stift mit Stil: erst den Stift, dann so oft
-         wechseln, bis er fuehrt. */
-      const knopf = leiste.querySelector<HTMLButtonElement>('[data-act="stil"]');
-      for (let n = 0; knopf && knopf.dataset.stil !== 'bleistift' && n < STIFTE.length; n++) knopf.click();
+      /* Der Bleistift ist ein Stift mit Stil — seit E512 ein Knopf in der
+         Reihe, kein Weiterschalten mehr. */
+      leiste.querySelector<HTMLButtonElement>('[data-act="stilwahl"][data-stil="bleistift"]')?.click();
       if (Zeichenziel.jetzt() !== 'stift') leiste.querySelector<HTMLButtonElement>('[data-wz="stift"]')?.click();
+      return;
+    }
+    /* ══ P WECHSELT WEITER, WENN DER STIFT SCHON FÜHRT (E512) ═════════════
+       Der Wechselknopf aus E351 ist der Reihe gewichen. Damit die alte
+       Bewegung — ein Tipp, der nächste Stift — nicht verlorengeht, tut sie
+       jetzt die Taste: `P` holt den Stift, und `P` noch einmal geht weiter.
+       Dieselbe Gewohnheit wie in GoodNotes, wo die Werkzeugtaste zweimal
+       gedrückt die Sorte wechselt. */
+    if (ziel === 'stift' && Zeichenziel.jetzt() === 'stift') {
+      const jetzt = leiste.querySelector<HTMLElement>('[data-act="stilwahl"].on');
+      const i = STIFTE.findIndex(st => st.id === jetzt?.dataset.stil);
+      const naechster = STIFTE[(i + 1) % STIFTE.length]!;
+      leiste.querySelector<HTMLButtonElement>(`[data-act="stilwahl"][data-stil="${naechster.id}"]`)?.click();
       return;
     }
     if (ziel === 'lineal') { leiste.querySelector<HTMLButtonElement>('[data-act="lineal"]')?.click(); return; }
@@ -3395,7 +4738,8 @@ const Marken = (() => {
   };
   if (typeof document !== 'undefined') document.addEventListener('keydown', kuerzel);
 
-  return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, FORMEN, WERKZEUGE, artWort, artZeichen,
+  return { schicht, leiste, zeichneMarke, annotierbar, alsAnnotation,
+           FARBEN, BREITEN, STIFTE, LEITER, LASER, FORMEN, WERKZEUGE, artWort, artZeichen,
     druckFaktor, RADIERER, TASTEN,
     /* DIE FARBSÄTZE NACH AUSSEN (E486). Nicht, damit jemand anders eine
        zweite Leiste baut — sondern damit der Prüflauf an derselben Rechnung
@@ -3404,6 +4748,11 @@ const Marken = (() => {
     HOECHSTENS_EIGENE_FARBEN, HOECHSTENS_FARBSAETZE,
     eigeneFarben, farbenSetzen, farbenZuruecksetzen,
     farbsaetze, farbsatzSichern, farbsatzLaden, farbsatzLoeschen,
+    /* DIE ELEMENTE-BIBLIOTHEK NACH AUSSEN (E494) — aus demselben Grund:
+       der Prüflauf soll an DIESER Rechnung messen, nicht an einer eigenen
+       Abschrift der Meta-Liste. */
+    HOECHSTENS_ELEMENTE, HOECHSTENS_ELEMENT_BYTES,
+    elemente, elementSichern, elementLoeschen, elementHolen, elementMarken,
     zwischenablage: (): any[] => zwischenablage.map(mark => clone(mark)) };
 })();
 

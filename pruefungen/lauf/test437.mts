@@ -53,7 +53,9 @@ try{
   check('Original ausdrücklich geschützt',/geschützt/.test(await page.locator('.document-source-master').innerText()));
   check('Genau zwei kanonische PDF-Seiten',await page.locator('.document-stage').count()===2);
   check('Stift ist direkt bereit',await page.locator('.document-stage[data-aktiv] .blatt-marken').getAttribute('data-tool')==='stift');
-  check('Elf echte Zeichenwerkzeuge',await page.locator('[data-document-tool] svg').count()===11);
+  /* ZWÖLF SEIT E494 — die Elemente-Bibliothek steht im Studio mit in der
+     Zeichenleiste. Vorher elf (E465 ff.). */
+  check('Zwölf echte Zeichenwerkzeuge',await page.locator('[data-document-tool] svg').count()===12);
   const identity=await page.evaluate<any>(`(() => {const p=Store.getBlock(App.aktuelleSeite());const b=DocumentMode.documentsIn(p)[0];return {page:p.id,block:b.id,source:b.quelleId,image:b.bildDateiId};})()`);
   const originalBytes=await page.evaluate<number[]>(`Dateien.alsBlob(${JSON.stringify(identity.source)}).then(b=>b.arrayBuffer()).then(b=>Array.from(new Uint8Array(b)))`);
   const ink=page.locator('.document-stage[data-aktiv] .blatt-marken');

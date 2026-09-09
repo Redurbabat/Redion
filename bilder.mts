@@ -1305,6 +1305,33 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* DER KOPF DES REGALS (E516, L139). Genau die Stelle, an der Redur
+     „oben eine neue PDF einfügen" wollte: die Karte „Weiterarbeiten" und
+     der Importknopf nebeneinander. Sie hiessen beide „PDF öffnen" und
+     machten das Gegenteil voneinander — hier sieht man, ob das eine Wort
+     jetzt nur noch einmal dasteht. */
+  regalkopf: {
+    titel: 'Der Kopf des Regals: Weiterlesen und PDF öffnen',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const akte = Store.addPage(null, { text: 'Elektrotechnik Skript', icon: '📕' });
+      Store.addBlock(akte.id, 'pdfseite', { text: '', nr: 1, bw: 595, bh: 842, herkunft: 'quelle' });
+      Store.updateBlock(akte.id, { zuletztGeoeffnet: new Date().toISOString() });
+      [['Wochenplan KW 35', '📅'], ['Prüfungsvorbereitung', '📝'],
+       ['Baustelle Halle 3', '💼']].forEach(([name, icon]) => {
+        const s = Store.addPage(null, { text: String(name), icon: String(icon) });
+        Store.addBlock(s.id, 'text', { text: 'Ein Satz auf ' + name + '.' });
+      });
+      await Store.flush();
+      w.Produktwelten.bibliothek();
+      await new Promise(r => setTimeout(r, 1200));
+    }
+  },
+
   aufgaben: {
     titel: 'Aufgaben aus mehreren Quellen in einer Liste',
     bauen: async () => {
@@ -2009,6 +2036,575 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  formelbuch: {
+    titel: 'Das Formelbuch als Marke — verschieben, ziehen, drehen (E502)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      /* Eine Seite, die aussieht wie eine Formelbuchseite — gezeichnet,
+         damit das Bild ohne fremde Datei auskommt. Der WEG dahin ist im
+         Prüflauf (test470 §4): PDF wählen, Seite nennen, gerastert. */
+      const mal = (breit: number, hoch: number, tun: (c: CanvasRenderingContext2D) => void) => {
+        const l = document.createElement('canvas');
+        l.width = breit; l.height = hoch;
+        const c = l.getContext('2d')!;
+        tun(c);
+        return new Promise<Blob>(f => l.toBlob(b => f(b!), 'image/png'));
+      };
+      const seiteBlob = await mal(620, 877, c => {
+        c.fillStyle = '#fdfdfb'; c.fillRect(0, 0, 620, 877);
+        c.strokeStyle = '#d8d8d0'; c.lineWidth = 2; c.strokeRect(1, 1, 618, 875);
+        c.fillStyle = '#111'; c.font = 'bold 30px sans-serif';
+        c.fillText('Formelsammlung', 48, 76);
+        c.font = '18px sans-serif'; c.fillStyle = '#333';
+        const zeilen = ['Ohmsches Gesetz      U = R · I',
+          'Leistung             P = U · I = R · I²',
+          'Reihenschaltung      R = R₁ + R₂ + R₃',
+          'Parallelschaltung    1/R = 1/R₁ + 1/R₂',
+          'Arbeit               W = P · t',
+          'Wirkungsgrad         η = P_ab / P_zu',
+          'Leiterwiderstand     R = ρ · l / A',
+          'Spannungsteiler      U₂ = U · R₂/(R₁+R₂)'];
+        zeilen.forEach((z, i) => c.fillText(z, 48, 140 + i * 46));
+        c.strokeStyle = '#c9d4e4'; c.lineWidth = 1;
+        for (let y = 118; y < 860; y += 46) { c.beginPath(); c.moveTo(40, y); c.lineTo(580, y); c.stroke(); }
+      });
+      const gifBlob = await mal(120, 120, c => {
+        c.fillStyle = '#ffd75e'; c.beginPath(); c.arc(60, 60, 56, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#111'; c.beginPath(); c.arc(42, 48, 7, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(78, 48, 7, 0, Math.PI * 2); c.fill();
+        c.strokeStyle = '#111'; c.lineWidth = 6; c.beginPath();
+        c.arc(60, 62, 30, 0.25 * Math.PI, 0.75 * Math.PI); c.stroke();
+      });
+      const seite = Store.addPage(null, { text: 'Prüfungsvorbereitung', icon: '📐' });
+      const blatt = Store.addBlock(seite.id, 'blatt', { text: '', papier: 'liniert',
+        blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1, marken: [] });
+      Store.addBlock(blatt.id, 'text', { text: 'Aufgabe 4 — Reihenschaltung berechnen' });
+      const buch = await Dateien.ablegen(new File([seiteBlob], 'Formelbuch — Seite 12.png',
+        { type: 'image/png' }), { blockId: blatt.id, name: 'Formelbuch — Seite 12.png' });
+      const gif = await Dateien.ablegen(new File([gifBlob], 'daumen.gif',
+        { type: 'image/gif' }), { blockId: blatt.id, name: 'daumen.gif' });
+      Store.updateBlock(blatt.id, { marken: [
+        { id: 'buch', art: 'bild', dateiId: buch.id, pts: [[290, 60], [545, 420]] },
+        { id: 'gif', art: 'bild', dateiId: gif.id, pts: [[70, 300], [140, 370]] },
+        { id: 'notiz', art: 'stift', farbe: '#d64545', breite: 3,
+          pts: [[60, 120], [250, 120]] },
+        { id: 'notiz2', art: 'text', farbe: '#2f7ed8', point: [60, 170], fontSize: 15,
+          text: 'R gesamt = R1 + R2' }
+      ] });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1200));
+      /* Die Buchseite wählen, damit die Griffe zu sehen sind — genau das,
+         womit man sie kleiner macht und verschiebt. */
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="select"]')?.click();
+      await new Promise(r => setTimeout(r, 250));
+      const flaeche = document.querySelector<HTMLElement>('.blatt-marken');
+      const knoten = flaeche?.querySelector<HTMLElement>('[data-sid="buch"]');
+      const kasten = knoten?.getBoundingClientRect();
+      if (kasten && knoten) {
+        const x = kasten.left + kasten.width / 2, y = kasten.top + kasten.height / 2;
+        const ev = (typ: string, dx: number, buttons: number) => new PointerEvent(typ,
+          { bubbles: true, cancelable: true, clientX: x + dx, clientY: y,
+            pointerId: 3, pointerType: 'mouse', isPrimary: true, button: 0, buttons });
+        knoten.dispatchEvent(ev('pointerdown', 0, 1));
+        flaeche?.dispatchEvent(ev('pointermove', 1, 1));
+        flaeche?.dispatchEvent(ev('pointerup', 1, 0));
+      }
+      await new Promise(r => setTimeout(r, 600));
+      document.querySelector('.blatt-papier')?.scrollIntoView({ block: 'start' });
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
+  leiter: {
+    titel: 'Der Leiterstift: zehn Adern beim Namen (E509)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('zeichnen:stift', 'leiter');
+      const M = (window as any).Marken;
+      const seite = Store.addPage(null, { text: 'Wechselschaltung', icon: '⌁' });
+      /* Je Ader ein Strich, in ihrer Farbe und Strichart, mit dem Kürzel
+         daneben — genau die Reihe aus dem Katalog. */
+      const marken: any[] = [];
+      (M.LEITER as any[]).forEach((ader, i) => {
+        const y = 70 + i * 46;
+        marken.push({ id: 'a' + i, art: 'stift', stil: ader.stil, leiter: ader.id,
+          farbe: ader.farbe, breite: 3, pts: [[150, y], [520, y]] });
+        marken.push({ id: 't' + i, art: 'text', farbe: '#333333',
+          point: [56, y - 7], fontSize: 13, text: ader.kurz + '  ' + ader.name });
+      });
+      Store.addBlock(seite.id, 'blatt', { text: '', papier: 'blanko',
+        blattBreite: 595.28, blattHoehe: 560, raumVersion: 1, marken });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+      /* Den Stift wählen, damit die Adernreihe in der Leiste steht. */
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.click();
+      await new Promise(r => setTimeout(r, 250));
+      const knopf = document.querySelector<HTMLElement>('.blatt-werk [data-act="stil"]');
+      for (let i = 0; i < 8 && knopf && knopf.dataset.stil !== 'leiter'; i++) knopf.click();
+      await new Promise(r => setTimeout(r, 500));
+    }
+  },
+
+  chronik: {
+    titel: 'Red-ur — die Chronik mit Graphen und dem Stapel der Tage (E514)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      /* Direkt zeigen — der Code ist die Tür, nicht der Inhalt, und ein
+         Bild von einem Passwortfeld zeigt nichts (§55.3). */
+      (window as any).Chronik?.zeigen?.();
+      await new Promise(r => setTimeout(r, 500));
+      /* Den Stapel einmal drehen, damit die Tiefe im stehenden Bild zu
+         sehen ist — sonst liegen die Platten genau hintereinander. */
+      const buehne = document.querySelector<HTMLElement>('.chr-buehne');
+      buehne?.style.setProperty('--dx', '-26deg');
+      buehne?.style.setProperty('--dy', '9deg');
+      await new Promise(r => setTimeout(r, 260));
+    }
+  },
+
+  leisteLinks: {
+    titel: 'Die Werkzeugleiste an der Seite — vier Plätze (E512)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('zeichnen:stift', 'fueller');
+      Store.setMeta('zeichnen:leistenlage', 'links');
+      const seite = Store.addPage(null, { text: 'Wechselschaltung', icon: '⌁' });
+      Store.addBlock(seite.id, 'blatt', { text: '', papier: 'kariert',
+        blattBreite: 595.28, blattHoehe: 700, raumVersion: 1, marken: [] });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
+  laser: {
+    titel: 'Der Laserpointer: zeigen statt schreiben (E512)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('zeichnen:leistenlage', 'oben');
+      Store.setMeta('zeichnen:laser', 'linie');
+      const seite = Store.addPage(null, { text: 'Wechselschaltung', icon: '⌁' });
+      /* Etwas, worauf man zeigen kann. */
+      const marken: any[] = [];
+      for (let i = 0; i < 3; i++) {
+        const y = 90 + i * 70;
+        marken.push({ id: 'l' + i, art: 'stift', stil: 'kugel', farbe: '#7a4a21',
+          breite: 3, pts: [[110, y], [480, y]] });
+      }
+      Store.addBlock(seite.id, 'blatt', { text: '', papier: 'blanko',
+        blattBreite: 595.28, blattHoehe: 380, raumVersion: 1, marken });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="laser"]')?.click();
+      await new Promise(r => setTimeout(r, 300));
+      /* Den Strahl WÄHREND des Zeigens festhalten: nach dem Loslassen ist
+         er weg, und genau das soll er ja sein (§55.3). */
+      const f = document.querySelector<SVGSVGElement>('.blatt-marken')!;
+      const ctm = f.getScreenCTM()!;
+      const px = (q: number[]) => { const pt = f.createSVGPoint(); pt.x = q[0]!; pt.y = q[1]!;
+        const c = pt.matrixTransform(ctm); return { x: c.x, y: c.y }; };
+      const ev = (typ: string, q: number[]) => { const c = px(q);
+        return new PointerEvent(typ, { bubbles: true, cancelable: true, clientX: c.x, clientY: c.y,
+          pointerId: 1, pointerType: 'mouse', isPrimary: true,
+          button: typ === 'pointermove' ? -1 : 0, buttons: 1, pressure: 0.6 }); };
+      f.dispatchEvent(ev('pointerdown', [120, 240]));
+      for (let i = 1; i <= 30; i++)
+        f.dispatchEvent(ev('pointermove', [120 + i * 11, 240 - Math.sin(i / 5) * 55]));
+      await new Promise(r => setTimeout(r, 120));
+    }
+  },
+
+  bewegung: {
+    titel: 'Die Adernreihe kommt als Welle (E511)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('zeichnen:stift', 'kugel');
+      const seite = Store.addPage(null, { text: 'Wechselschaltung', icon: '⌁' });
+      Store.addBlock(seite.id, 'blatt', { text: '', papier: 'blanko',
+        blattBreite: 595.28, blattHoehe: 420, raumVersion: 1, marken: [] });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.click();
+      await new Promise(r => setTimeout(r, 250));
+      /* MITTEN IN DER WELLE ANHALTEN. Eine Bewegung lässt sich auf einem
+         stehenden Bild nur zeigen, solange sie läuft: 130 ms nach dem
+         Umschalten sind die vorderen Tupfer da, die hinteren noch
+         unterwegs, und genau das ist die Welle (§55.3). */
+      const knopf = document.querySelector<HTMLElement>('.blatt-werk [data-act="stil"]');
+      for (let i = 0; i < 8 && knopf && knopf.dataset.stil !== 'leiter'; i++) knopf.click();
+      await new Promise(r => requestAnimationFrame(() => r(null)));
+      /* MITTEN IN DER WELLE ANHALTEN, und zwar GENAU — nicht mit einer
+         Wartezeit, die beim nächsten Rechner anders ausgeht. Jede
+         Bewegung wird auf dieselbe Uhrzeit gestellt und angehalten; weil
+         jeder Tupfer eine andere Verzögerung hat, steht jeder an einer
+         anderen Stelle seiner eigenen Bewegung. Das IST die Welle. */
+      document.querySelectorAll('.blatt-werk .blatt-farbe-leiter, .blatt-werk .zeichen')
+        .forEach(el => (el as any).getAnimations?.().forEach((a: any) => {
+          a.currentTime = 260; a.pause();
+        }));
+      await new Promise(r => setTimeout(r, 60));
+    }
+  },
+
+  ordnerkarte: {
+    titel: 'Der Blick in den Ordner kommt beim Hinschauen (E508)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const fach = Store.addPage(null, { text: 'BT-Arbeitssicherheit', icon: '📁',
+        heftArt: 'fach' });
+      ['Chemie für Elektroberufe', 'Schutzmassnahmen nach NIV',
+       'Erste Hilfe im Betrieb', 'Gefahrstoffe und Kennzeichnung',
+       'Prüfprotokoll Anlage 4', 'Anhang: Formelblatt']
+        .forEach(t => Store.addPage(fach.id, { text: t }));
+      await Store.flush();
+      (window as any).Bibliothek?.oeffne?.();
+      await new Promise(r => setTimeout(r, 900));
+      /* Über denselben Weg, den auch die Maus nimmt: hinschauen, warten. */
+      const knopf = document.querySelector<HTMLElement>('.bib-blick[data-blick]');
+      const k = knopf?.getBoundingClientRect();
+      if (knopf && k) {
+        knopf.dispatchEvent(new PointerEvent('pointerenter', { bubbles: false,
+          pointerId: 1, pointerType: 'mouse', isPrimary: true,
+          clientX: k.left + k.width / 2, clientY: k.top + k.height / 2 }));
+      }
+      await new Promise(r => setTimeout(r, 1400));
+    }
+  },
+
+  neigung: {
+    titel: 'Der Bleistift schattiert, wenn man ihn flach hält (E507)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const seite = Store.addPage(null, { text: 'Schattieren', icon: '✏' });
+      /* Drei Striche derselben Länge und desselben Drucks — nur die
+         Neigung wächst. Was man sieht, ist allein ihr Werk. */
+      const strich = (id: string, y: number, n: number) => {
+        const pts: number[][] = [];
+        const neigung: number[] = [];
+        for (let i = 0; i <= 20; i++) {
+          pts.push([70 + i * 22, y + Math.sin(i / 3) * 6]);
+          neigung.push(n);
+        }
+        return { id, art: 'stift', stil: 'bleistift', farbe: '#2b2b2b', breite: 4,
+                 pts, pressure: pts.map(() => 0.6), neigung };
+      };
+      const beschriftung = (id: string, y: number, text: string) =>
+        ({ id, art: 'text', farbe: '#666666', point: [70, y], fontSize: 13, text });
+      Store.addBlock(seite.id, 'blatt', { text: '', papier: 'blanko',
+        blattBreite: 595.28, blattHoehe: 500, raumVersion: 1,
+        marken: [
+          beschriftung('t1', 100, 'senkrecht gehalten'),
+          strich('s1', 140, 0),
+          beschriftung('t2', 220, 'halb geneigt'),
+          strich('s2', 260, 0.5),
+          beschriftung('t3', 340, 'flach gehalten — schattiert'),
+          strich('s3', 380, 1)
+        ] });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1400));
+    }
+  },
+
+  exporthinweis: {
+    titel: 'Der PDF-Export sagt sichtbar, was er tut (E505)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const skript = Store.addPage(null, { text: 'Elektro — Skript', icon: '📘' });
+      Store.addBlock(skript.id, 'blatt', { text: '', papier: 'liniert',
+        blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1,
+        marken: [{ id: 'a', art: 'text', farbe: '#111111', point: [58, 96], fontSize: 16,
+          text: 'Kapitel 3 — Leistung und Arbeit' }] });
+      Store.updateBlock(skript.id, { dokumentModus: true });
+      App.oeffne(skript.id);
+      await new Promise(r => setTimeout(r, 1400));
+      document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+      await new Promise(r => setTimeout(r, 700));
+      document.querySelector('.document-export-hinweis')
+        ?.scrollIntoView({ block: 'center' });
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
+  heftimstudio: {
+    titel: 'Das eigene Formelheft über dem Dokument (E503)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('elektro:heftOrt', null);
+      Store.setMeta('elektro:heftAnsicht', 'kapitel');
+      Store.setMeta('elektro:heftPdf', '');
+      const skript = Store.addPage(null, { text: 'Elektro — Prüfungsvorbereitung', icon: '📘' });
+      const blatt = Store.addBlock(skript.id, 'blatt', { text: '', papier: 'liniert',
+        blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1,
+        marken: [
+          { id: 'a', art: 'text', farbe: '#111111', point: [58, 96], fontSize: 17,
+            text: 'Aufgabe 4 — Spannungsteiler' },
+          { id: 'b', art: 'stift', farbe: '#d64545', breite: 3,
+            pts: [[58, 118], [300, 118]] },
+          { id: 'c', art: 'text', farbe: '#2f6fd0', point: [58, 168], fontSize: 15,
+            text: 'U2 = U · R2 / (R1 + R2)' }
+        ] });
+      Store.addBlock(blatt.id, 'text', { text: '' });
+      Store.updateBlock(skript.id, { dokumentModus: true });
+      App.oeffne(skript.id);
+      await new Promise(r => setTimeout(r, 1400));
+      /* Das Heft aufklappen — über denselben Knopf, den auch der Mensch
+         trifft: neben dem Fachzeichen in der Zeichenleiste. */
+      document.querySelector<HTMLElement>(
+        '.document-drawingbar [data-document-action="formelheft"]')?.click();
+      await new Promise(r => setTimeout(r, 800));
+      /* Auf die Buchseiten stellen, damit im Bild etwas zu lesen steht. */
+      document.querySelector<HTMLElement>('.fh-fenster [data-a="buch"]')?.click();
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
+  schalensuche: {
+    titel: 'Die Schalensuche nennt die Seite im Dokument (E500)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const skript = Store.addPage(null, { text: 'Elektrotechnik — Skript', icon: '📕' });
+      ['Vorwort und Aufbau', 'Kapitel 1 — Ladung und Strom',
+       'Kapitel 2 — Der Kirchhoffsche Knotensatz erklärt die Stromverteilung im Netz',
+       'Kapitel 3 — Leistung und Arbeit', 'Anhang: Formelsammlung']
+        .forEach((t, i) => Store.addBlock(skript.id, 'pdfseite', { text: '', nr: i + 1,
+          vonSeiten: 5, bw: 595, bh: 842, quelleId: 'q1', raumVersion: 1, suchtext: t }));
+      Store.updateBlock(skript.id, { dokumentModus: true });
+
+      const heft = Store.addPage(null, { text: 'Mitschrift 12. Mai', icon: '📗' });
+      for (let i = 0; i < 3; i++) {
+        const blatt = Store.addBlock(heft.id, 'blatt', { text: '', papier: 'liniert',
+          blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1,
+          marken: i === 1
+            ? [{ id: 'mk', art: 'text', farbe: '#111111', point: [60, 120], fontSize: 15,
+                text: 'Knotensatz: was reingeht, geht auch wieder raus' }]
+            : [] });
+        Store.addBlock(blatt.id, 'text', { text: '' });
+      }
+      Store.updateBlock(heft.id, { dokumentModus: true });
+      App.oeffne(skript.id);
+      await new Promise(r => setTimeout(r, 1200));
+      App.suche();
+      await new Promise(r => setTimeout(r, 400));
+      const feld = document.querySelector<HTMLInputElement>('.overlay #q');
+      if (feld) { feld.value = 'Knotensatz'; feld.dispatchEvent(new Event('input', { bubbles: true })); }
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+
+  zerlegen: {
+    titel: 'Ein mehrseitiges Blatt in Seiten zerlegen (E499)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const A4 = 841.89;
+      const seite = Store.addPage(null, { text: 'Mitschrift 12. Mai', icon: '📗' });
+      const blatt = Store.addBlock(seite.id, 'blatt', { text: '', papier: 'kariert',
+        blattBreite: 595.28, blattHoehe: A4 * 3, raumVersion: 1, marken: [
+          { id: 'a', art: 'stift', farbe: '#111111', breite: 3, pts: [[60, 120], [420, 120]] },
+          { id: 'b', art: 'stift', farbe: '#d64545', breite: 3,
+            pts: [[60, A4 + 120], [420, A4 + 120]] },
+          { id: 'c', art: 'stift', farbe: '#3aa757', breite: 3,
+            pts: [[60, A4 * 2 + 120], [420, A4 * 2 + 120]] },
+          { id: 'd', art: 'stift', farbe: '#2f7ed8', breite: 3,
+            pts: [[480, A4 - 80], [480, A4 + 80]] }
+        ] });
+      Store.addBlock(blatt.id, 'text', { text: 'Reihenschaltung, Parallelschaltung, Leistung' });
+      Store.updateBlock(seite.id, { dokumentModus: true });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+      document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+      document.querySelector<HTMLElement>('[data-document-action="page-split"]')?.click();
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+
+  zoomruhe: {
+    titel: '„Ausschnitt" und „Erkennen" ruhen im Zoom-Fenster (E498)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const seite = Store.addPage(null, { text: 'Elektrotechnik — Skript', icon: '📕' });
+      for (let i = 0; i < 2; i++) {
+        const blatt = Store.addBlock(seite.id, 'blatt', { text: '', papier: 'liniert',
+          blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1, marken: [
+            { id: 'z' + i, art: 'stift', farbe: '#2f7ed8', breite: 3,
+              pts: [[70, 120], [420, 120]] }] });
+        Store.addBlock(blatt.id, 'text', { text: 'Kapitel ' + (i + 1) });
+      }
+      Store.updateBlock(seite.id, { dokumentModus: true });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+      document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+      document.querySelector<HTMLElement>('[data-document-action="lupe"]')?.click();
+      await new Promise(r => setTimeout(r, 800));
+      document.querySelector('.document-inspector-actions')?.scrollIntoView({ block: 'center' });
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
+  seitenumzug: {
+    titel: 'Eine Seite in ein anderes Dokument — kopieren oder verschieben (E496)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const mach = (name: string, icon: string, seiten: number) => {
+        const seite = Store.addPage(null, { text: name, icon });
+        for (let i = 0; i < seiten; i++) {
+          const blatt = Store.addBlock(seite.id, 'blatt', { text: '', papier: 'liniert',
+            blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1, marken: [
+              { id: name + i, art: 'stift', farbe: '#2f7ed8', breite: 3,
+                pts: [[70, 120 + i * 40], [420, 120 + i * 40]] }] });
+          Store.addBlock(blatt.id, 'text', { text: name + ' — Seite ' + (i + 1) });
+        }
+        Store.updateBlock(seite.id, { dokumentModus: true });
+        return seite;
+      };
+      const skript = mach('Elektrotechnik — Skript', '📕', 3);
+      mach('Mitschrift 12. Mai', '📗', 2);
+      mach('Prüfungsstoff', '📘', 4);
+      mach('Laborbericht', '📙', 1);
+      App.oeffne(skript.id);
+      await new Promise(r => setTimeout(r, 1300));
+      document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+      document.querySelector<HTMLElement>('[data-document-action="page-to-doc"]')?.click();
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+
+  papiere: {
+    titel: 'Cornell-Notizen und Notenlinien — die zwei Papiere von GoodNotes (E495)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Papiere', icon: '📐' });
+      const cornell = Store.addBlock(s.id, 'blatt', { text: '', papier: 'cornell' });
+      Store.addBlock(cornell.id, 'text', { text: '' });
+      Store.updateBlock(cornell.id, { marken: [
+        { id: 'c1', art: 'text', farbe: '#111111', breite: 2, point: [120, 52],
+          text: 'Ohmsches Gesetz', fontSize: 22 },
+        { id: 'c2', art: 'text', farbe: '#2f7ed8', breite: 2, point: [24, 150],
+          text: 'Was ist R?', fontSize: 13 },
+        { id: 'c3', art: 'text', farbe: '#111111', breite: 2, point: [160, 150],
+          text: 'U = R · I — der Widerstand ist der Quotient', fontSize: 13 },
+        { id: 'c4', art: 'text', farbe: '#2f7ed8', breite: 2, point: [24, 200],
+          text: 'Einheit?', fontSize: 13 },
+        { id: 'c5', art: 'text', farbe: '#111111', breite: 2, point: [160, 200],
+          text: 'Ohm (Ω) = Volt je Ampere', fontSize: 13 },
+        { id: 'c6', art: 'text', farbe: '#3aa757', breite: 2, point: [24, 700],
+          text: 'Zusammenfassung: Spannung, Strom und Widerstand hängen zusammen.', fontSize: 13 }
+      ] });
+      const noten = Store.addBlock(s.id, 'blatt', { text: '', papier: 'noten' });
+      Store.addBlock(noten.id, 'text', { text: '' });
+      App.oeffne(s.id);
+      await new Promise(r => setTimeout(r, 1100));
+    }
+  },
+
+  papierfuss: {
+    titel: 'Der Fuss des Cornell-Blatts und die Notenlinien (E495)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Papiere unten', icon: '📐' });
+      const cornell = Store.addBlock(s.id, 'blatt', { text: '', papier: 'cornell' });
+      Store.addBlock(cornell.id, 'text', { text: '' });
+      Store.updateBlock(cornell.id, { marken: [
+        { id: 'f1', art: 'text', farbe: '#3aa757', breite: 2, point: [30, 760],
+          text: 'Zusammenfassung: U = R · I verknüpft alle drei Grössen.', fontSize: 13 }
+      ] });
+      const noten = Store.addBlock(s.id, 'blatt', { text: '', papier: 'noten' });
+      Store.addBlock(noten.id, 'text', { text: '' });
+      App.oeffne(s.id);
+      await new Promise(r => setTimeout(r, 1200));
+      /* Bis an den Fuss des ersten Blatts rollen — dort steht die
+         Zusammenfassungslinie, und gleich darunter fangen die Noten an. */
+      const zweites = document.querySelectorAll('.blatt-papier')[1];
+      zweites?.scrollIntoView({ block: 'start' });
+      await new Promise(r => setTimeout(r, 600));
+      /* `window.scrollBy` tut hier nichts — gerollt wird ein Kasten INNEN,
+         nicht das Fenster. Also den ersten Vorfahren suchen, der wirklich
+         rollt, und ihn zurücknehmen. */
+      let kasten = zweites?.parentElement as HTMLElement | null;
+      while (kasten && kasten.scrollHeight <= kasten.clientHeight + 2) kasten = kasten.parentElement;
+      if (kasten) kasten.scrollTop -= 620;
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
+  elemente: {
+    titel: 'Die Elemente-Bibliothek — gesicherte Marken stempeln (E494)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      /* Vier Elemente, wie sie nach ein paar Wochen Arbeit dastünden:
+         ein Häkchen, ein Kreuz, ein Rahmen, eine Unterschrift. */
+      Store.setMeta('zeichnen:elemente', [
+        { id: 'el-haken', name: 'Häkchen', breite: 60, hoehe: 52, marken: [
+          { art: 'stift', farbe: '#3aa757', breite: 5, pts: [[2, 28], [22, 50], [58, 2]] }] },
+        { id: 'el-kreuz', name: 'Kreuz rot', breite: 48, hoehe: 48, marken: [
+          { art: 'stift', farbe: '#d64545', breite: 5, pts: [[2, 2], [46, 46]] },
+          { art: 'stift', farbe: '#d64545', breite: 5, pts: [[46, 2], [2, 46]] }] },
+        { id: 'el-rahmen', name: 'Merkkasten', breite: 150, hoehe: 70, marken: [
+          { art: 'rectangle', farbe: '#e0a419', breite: 2.4, pts: [[0, 0], [150, 70]] },
+          { art: 'marker', farbe: '#e0a419', breite: 16, pts: [[10, 35], [140, 35]] }] },
+        { id: 'el-name', name: 'Unterschrift', breite: 160, hoehe: 54, marken: [
+          { art: 'stift', farbe: '#2f7ed8', breite: 2.4, stil: 'pinsel', pts: [
+            [2, 40], [16, 8], [30, 44], [46, 10], [62, 42], [86, 16], [110, 40],
+            [132, 12], [158, 34]] }] }
+      ]);
+      const s = Store.addPage(null, { text: 'Hefte durchsehen', icon: '⭐' });
+      const blatt = Store.addBlock(s.id, 'blatt', { text: '', papier: 'liniert' });
+      Store.addBlock(blatt.id, 'text', { text: 'Aufgabe 3 — Reihenschaltung' });
+      /* Gestempelt: zweimal das Häkchen, einmal das Kreuz. */
+      Store.updateBlock(blatt.id, { marken: [
+        { id: 's1', art: 'stift', farbe: '#3aa757', breite: 5, pts: [[92, 118], [112, 140], [148, 92]] },
+        { id: 's2', art: 'stift', farbe: '#3aa757', breite: 5, pts: [[92, 208], [112, 230], [148, 182]] },
+        { id: 's3', art: 'stift', farbe: '#d64545', breite: 5, pts: [[96, 282], [140, 326]] },
+        { id: 's4', art: 'stift', farbe: '#d64545', breite: 5, pts: [[140, 282], [96, 326]] }
+      ] });
+      App.oeffne(s.id);
+      await new Promise(r => setTimeout(r, 900));
+      /* Das Werkzeug wählen — dann steht sein Knopf in der Zubehörzeile —
+         und die Bibliothek öffnen. */
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="elemente"]')?.click();
+      await new Promise(r => setTimeout(r, 250));
+      document.querySelector<HTMLElement>('.blatt-werk [data-act="elemente"]')?.click();
+      await new Promise(r => setTimeout(r, 500));
+    }
+  },
+
   dokumentsuche: {
     titel: 'Die Suche über mehrere Dokumente (E487)',
     bauen: async () => {
@@ -2089,6 +2685,65 @@ const ANSICHTEN: Record<string, {
       ] });
       App.oeffne(p.id);
       await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
+  gesperrt: {
+    titel: 'Was auf dieser Seite gesperrt ist (E492)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const p = Store.addPage(null, { text: 'Schaltplan Werkstatt', icon: '⚡' });
+      Store.addBlock(p.id, 'blatt', { text: '', papier: 'kariert', marken: [
+        { id: 'pe', art: 'line', stil: 'schutzleiter', breite: 3,
+          pts: [[70, 120], [430, 120]], gesperrt: true },
+        { id: 'l1', art: 'line', farbe: '#111111', breite: 2.4,
+          pts: [[70, 170], [430, 170]], gesperrt: true },
+        { id: 'z1', art: 'zettel', farbe: '#e0a419', pts: [[70, 220], [400, 300]],
+          text: 'Vorlage vom Meister — nicht verschieben', gesperrt: true },
+        { id: 'frei', art: 'stift', farbe: '#d64545', breite: 2.4,
+          pts: [[70, 340], [200, 380], [330, 340]] }
+      ] });
+      Store.updateBlock(p.id, { dokumentModus: true });
+      App.oeffne(p.id);
+      await new Promise(r => setTimeout(r, 1400));
+      document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+      await new Promise(r => setTimeout(r, 600));
+    }
+  },
+
+  praesentieren: {
+    titel: 'Präsentieren mit Laserpointer (E493)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const p = Store.addPage(null, { text: 'Schulung Schutzmassnahmen', icon: '⚡' });
+      for (let i = 1; i <= 3; i++) {
+        const blatt = Store.addBlock(p.id, 'blatt', { text: '', papier: 'blanko' });
+        Store.addBlock(blatt.id, 'text', { text: 'Folie ' + i + ' — Schutzleiter und Fehlerstrom' });
+        Store.updateBlock(blatt.id, { marken: [
+          { id: 'pe' + i, art: 'line', stil: 'schutzleiter', breite: 4, pts: [[70, 200], [500, 200]] },
+          { id: 't' + i, art: 'stift', farbe: '#d64545', breite: 3,
+            pts: [[70, 300], [200, 260], [330, 320], [460, 280]] }
+        ] });
+      }
+      Store.updateBlock(p.id, { dokumentModus: true });
+      App.oeffne(p.id);
+      await new Promise(r => setTimeout(r, 1400));
+      document.querySelector<HTMLElement>('[data-document-action="praesentieren"]')?.click();
+      await new Promise(r => setTimeout(r, 900));
+      /* Einen Laserpunkt setzen, damit er auf dem Bild zu sehen ist. */
+      const f = document.querySelector<HTMLElement>('.document-zeigen-flaeche');
+      if (f) {
+        const r = f.getBoundingClientRect();
+        f.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: r.left + r.width * 0.55,
+          clientY: r.top + r.height * 0.42, pointerId: 1, buttons: 1 }));
+        f.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: r.left + r.width * 0.55,
+          clientY: r.top + r.height * 0.42, pointerId: 1, buttons: 1 }));
+      }
+      await new Promise(r => setTimeout(r, 300));
     }
   },
 

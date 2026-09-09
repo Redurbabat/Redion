@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G21)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G23)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6422,10 +6422,13 @@ Zeichnen (nach G1, E465):
     `pts` ist eine Liste, und `move`, `scale` und `rotate` fassen ohnehin
     alle Punkte an. Der Griff steht auf dem Steuerpunkt und biegt in den
     Achsen der Marke. `test456`.
-  · **Verbinder** des Shape-Tools — offen, und etwas anderes als die
-    Kurve: eine Marke, die an ZWEI anderen hängt und mitgeht, wenn eine
-    sich bewegt. Das braucht Anker an fremden Marken und ein Nachziehen
-    bei jeder Änderung — keinen dritten Punkt, sondern eine Beziehung.
+  · **Verbinder** des Shape-Tools — offen, aber **kein Rückstand gegenüber
+    GoodNotes** (berichtigt mit E498): dessen Formenwerkzeug hat auch keine
+    Verbinder. Es ist ein Wunsch für den Schaltplan-Teil. Etwas anderes als
+    die Kurve wäre es auch: eine Marke, die an ZWEI anderen hängt und
+    mitgeht, wenn eine sich bewegt — Anker an fremden Marken und ein
+    Nachziehen bei jeder Änderung, keinen dritten Punkt, sondern eine
+    Beziehung.
   · ~~**Formerkennung für gedrehte Dreiecke**~~ — **GESCHLOSSEN mit E478.**
     Die Marke kann seit E466 schief stehen und seit E474 rechnet die
     Geometrie damit; also bekommt ein gedrehtes Dreieck jetzt seinen
@@ -6473,12 +6476,26 @@ Kreis-Lasso stehen. Offen bleibt:
     sie herum, und das Ziehen am Griff verzerrt sie nicht mehr. Der Tipp
     ging schon immer über den gezeichneten Knoten, das Lasso über die
     Mitte des Kastens — die ist beim Drehen dieselbe. `test447`.
-  · **Auswahl über mehrere Blätter** — das Lasso gilt je Blatt (E353).
-  · **Sperren im Inspector** — die Sperre sitzt am Knopf der Leiste; eine
-    Liste aller gesperrten Marken gibt es nicht.
+  · **Auswahl über mehrere Blätter** — das Lasso gilt je Blatt (E353), und
+    das ist **kein Rückstand gegenüber GoodNotes** (berichtigt mit E498):
+    dessen Lasso gilt ebenfalls je Seite. Ein Wunsch, kein Rückstand.
+  · ~~**Sperren im Inspector**~~ — **GESCHLOSSEN mit E492.** Die Liste steht
+    im Inspector, mit Namen aus derselben Quelle wie die Werkzeugleiste, je
+    einem „Entsperren" und einem „Alle N entsperren". Das war mehr als eine
+    fehlende Liste: sperren geht über die Auswahl, und die geht bei einer
+    gesperrten Marke nicht — die Sperre liess sich anlegen und nicht mehr
+    lösen. Zwei Funde kamen vom Bild: zwei Zeilen hiessen beide „Linie"
+    (jetzt steht der Stil dabei), und auch dann bleiben zwei gleiche Linien
+    gleich — deshalb leuchtet die Marke auf, wenn man ihre Zeile berührt.
+    `test462`.
 
 Seiten (nach G3, E467): einfügen, duplizieren, drehen, schieben,
-Lesezeichen und löschen stehen im Inspector. Offen bleibt:
+Lesezeichen und löschen stehen im Inspector; seit **E496** auch
+**„In anderes Dokument"** — GoodNotes' „Copy to…" und „Move to…". Kopieren
+gibt frische Kennungen und ein eigenes Seitenbild, Verschieben behält die
+Kennung (sonst zeigte jeder Verweis auf die Seite ins Leere). Die einzige
+Seite eines Dokuments lässt sich nur kopieren. `test466`.
+Offen bleibt:
 
   · ~~**Seiten ziehen in der Miniaturenleiste** und ein Menü je Miniatur~~
     — **GESCHLOSSEN mit E480.** Jede Miniatur hat ihren „⋯"-Knopf mit
@@ -6486,15 +6503,37 @@ Lesezeichen und löschen stehen im Inspector. Offen bleibt:
     (dafür nehmen alle Seitengriffe jetzt entgegen, wen sie meinen).
     Gezogen wird mit dem Zeiger: mit der Maus nach acht Pixeln, mit dem
     Finger erst nach 350 ms Halten, damit die Leiste rollbar bleibt.
-    **Offen bleibt:** umgeordnet wird nur innerhalb derselben Eltern —
-    liegen die Seiten eines Dokuments in mehreren Spalten, sagt es das,
-    statt zu raten. `test453`.
-  · **Einfügen aus einer Vorlage mit Inhalt** — „Seite danach" kennt die
-    fünf Papiere; eine Vorlagenseite aus dem Vorlagenregister (mit Text
-    und Marken) ist ein eigener Bogen.
-  · **Mehrseitige Notizhefte als EIN Block** — ein `blatt` wächst in die
-    Höhe (E118); Seitengriffe gelten ihm als Ganzem. Ein Heft mit drei
-    Blattseiten lässt sich nicht seitenweise drehen oder löschen.
+    **Auch über Spaltengrenzen — GESCHLOSSEN mit E498:** die Seite wandert
+    in die Eltern der Seite, vor die sie fällt, mit derselben sicheren
+    Reihenfolge wie E496 (erst dazulegen, dann umhängen, zuletzt
+    wegnehmen). Bis dahin sagte die Stelle nein, und das war ehrlich,
+    solange es keinen Weg gab, einen Block umzuhängen. `test453`,
+    `test467 §3`.
+  · **Einfügen aus einer Vorlage mit Inhalt** — bleibt offen, aber die
+    Zahl darin stimmt nicht mehr: „Seite danach" kennt seit **E495**
+    SIEBEN Papiere. Dazugekommen sind **Cornell-Notizen** und
+    **Notenlinien** — die zwei, an denen man GoodNotes' Vorlagenwähler
+    erkennt, und zugleich das, was er zum grössten Teil ist: Papiere, keine
+    Seiten mit Inhalt. Beide sind reine Darstellung (E100), beide stehen im
+    selben Katalog und damit auch im Wähler des Studios. `test465`.
+    Was offen bleibt, ist der Rest: eine Vorlagenseite aus dem
+    Vorlagenregister, MIT Text und Marken, ist ein eigener Bogen.
+    Nicht kommen wird **isometrisches Papier**, obwohl GoodNotes es hat:
+    ein schräger Verlauf misst seinen Abstand senkrecht zur Linie, und in
+    Prozent einer Fläche ändert der sich mit dem Seitenverhältnis — am
+    Telefon wären es andere Dreiecke als am Rechner (dieselbe Falle wie
+    E100). Das ginge nur mit einem gezeichneten Muster.
+  · ~~**Mehrseitige Notizhefte als EIN Block**~~ — **GESCHLOSSEN mit E499,
+    und zwar ohne die Form abzuschaffen.** Ein `blatt` darf weiter in die
+    Höhe wachsen (E118) — das IST ein Heft, in das man fortlaufend
+    schreibt. Neu ist der Griff „In Seiten zerlegen": aus einem Blatt von
+    drei A4 werden drei Blätter von je einem, und danach greifen Drehen,
+    Löschen und Verschieben je Seite.
+    Jede Marke kommt auf die Seite, in der ihre MITTE liegt, und bleibt
+    GANZ — keine wird geschnitten. Eine Marke über einer Seitengrenze ragt
+    danach über den Rand hinaus und ist dort nicht mehr zu sehen (das
+    Papier schneidet); verloren ist sie nicht, und der Dialog sagt es mit
+    Zahl, bevor etwas geschieht. `test468`.
 
 Suche und Verweise (nach G4, E468): die Suche im Studio mit Treffern an
 der Stelle, die Verweise der PDF, eigene Verweise an Marken stehen.
@@ -6521,8 +6560,14 @@ Offen bleibt:
     denn die Stelle steht in der PDF-Textschicht, und die für jedes fremde
     Dokument zu lesen macht das Suchfeld unbenutzbar. Der Sprung ist der
     zweite Schritt, der die Stelle nachliefert.
-    Die Schalensuche (Strg P) findet weiterhin Seiten, nicht Stellen — sie
-    ist eine andere Suche, und das bleibt offen. `test459`.
+    ~~Die Schalensuche (Strg P) findet weiterhin Seiten, nicht Stellen~~ —
+    **GESCHLOSSEN mit E500:** sie nennt jetzt „Seite 3" statt „Inhalt",
+    zeigt den Ausschnitt der Stelle und springt dorthin. Und sie findet
+    seither überhaupt erst, was von HAND geschrieben ist: Text auf einem
+    Blatt steht in einer Marke, Marken stehen in keinem Suchindex — ein
+    Heft mit „Knotensatz" als Textmarke war über Strg P unauffindbar.
+    Der Zweig greift nur bei einer reinen Wortsuche, sonst ginge er an den
+    Filtern der Abfragesprache vorbei (E175). `test459`, `test469`.
   · ~~**Ziele der PDF innerhalb der Seite**~~ — **GESCHLOSSEN mit E481.**
     `/XYZ`, `/FitH` und `/FitR` nennen eine Höhe; sie steht seit dem
     Einlesen als `zielY` am Verweis, und der Sprung rollt dorthin. `/Fit`
@@ -6541,8 +6586,12 @@ Seite als Bild, Zoom-Fenster stehen. Offen bleibt:
 
   · **Das Zoom-Fenster** ist seit E470 der Streifen, in den man schreibt,
     mit der ganzen Seite darüber — und mit EINER Zeichenfläche (das Papier
-    zieht um); seit E472 rückt es am rechten Rand von selbst weiter. Was
-    noch fehlt: „Ausschnitt" und „Erkennen" ruhen, solange es offen ist.
+    zieht um); seit E472 rückt es am rechten Rand von selbst weiter.
+    ~~„Ausschnitt" und „Erkennen" ruhen, solange es offen ist~~ —
+    **GESCHLOSSEN mit E498:** sie ruhen jetzt SICHTBAR, am Knopf statt erst
+    als Meldung nach dem Druck, mit einem Hinweis, der sagt warum (§38).
+    Die Meldung bleibt für den Weg über Tastatur und Befehlspalette.
+    `test467 §1, §2`.
   · **Seite als Bild** lässt den getippten Text eines Blatts aus. Die
     BILDMARKEN kommen seit **E479** mit; dabei wurde nachgemessen, was
     ein SVG auf der Leinwand darf, und das Ergebnis gehört hierher, damit
@@ -6616,13 +6665,347 @@ Was Redion auch nach G5 nicht haben wird, und warum:
   · **Handschrift → Text, Mathe → Formel** — braucht eine Erkennung, die
     lokal läuft. Tesseract erkennt gedruckten Text (OCR-Auftrag), keine
     Handschrift; eine Wolken-Erkennung widerspricht §21 ohne Frage.
-  · **Elemente-Bibliothek (Sticker, GIPHY)** — Redion hat die Fachzeichen;
-    eine allgemeine Sammlung wiederverwendbarer Marken wäre neu.
-  · **Präsentationsmodus mit Laserpointer**, **Wolken-Abgleich der
-    Dokumente**, **Freigabe-Links**, **Marketplace** — ausserhalb des
-    PDF-Teils oder ausserhalb von local-first (§22, §24).
+  · ~~**Elemente-Bibliothek (Sticker)**~~ — **GESCHLOSSEN mit E494, und die
+    Begründung dieser Zeile war keine.** „Wäre neu" ist eine Beschreibung,
+    kein Grund; und wiederverwendbare Marken sind in Redion nichts Neues —
+    es sind dieselben, die die Zwischenablage seit E353 kopiert, nur
+    überleben sie das Dokument.
+    Gebaut: das zwölfte Werkzeug ⭐, „Als Element" bei der Auswahl als
+    einziger Weg hinein, ein Feld von Kacheln mit dem Bild jedes Elements
+    (gezeichnet mit `zeichneMarke`, nicht mit einem zweiten Zeichner), und
+    der Stempel mittig unter dem Zeiger — der erste Tipp öffnet die
+    Bibliothek, jeder weitere setzt dasselbe wieder.
+    Sie liegt in `meta` und reist damit in jeder Sicherung mit (§9, §11).
+    **Offen bleibt der Anhang:** ein Element mit einer BILDMARKE trägt die
+    Kennung der Datei, nicht die Datei. Wer es aus einer `.json`-Sicherung
+    zurückholt (die keine Anhänge kennt), hat das Element und nicht sein
+    Bild; die Marke bleibt stehen und zeigt ihren Platzhalter, statt still
+    gelöscht zu werden (§18). `test464`.
+  · **GIPHY** bleibt draussen, und das ist der Teil der Zeile, der stimmt:
+    eine Bildersuche im Netz widerspricht §21 und §22 und brächte fremde
+    Inhalte in eine App, die ohne Netz vollständig sein soll.
+    **Ein eigenes GIF geht dagegen seit E502** — und das war der Teil, der
+    Redur gemeint hat: die Datei geht mit IHREM Typ und IHRER Länge in die
+    Ablage, läuft also auf dem Blatt weiter, statt als Standbild
+    dazustehen. Nicht geprüft war das vorher nie; jetzt hält es `test470`.
+    Dasselbe Werkzeug nimmt seither eine PDF-SEITE als Bildmarke —
+    verschieben, ziehen, drehen, sperren wie jede andere Marke.
+  · **Stift-Favoriten** kommen NICHT, und das ist eine Entscheidung, keine
+    Lücke (E498). GoodNotes' drei Favoriten sind FARB-Voreinstellungen —
+    die hat Redion seit E486 als benannte Farbsätze, und die können mehr.
+    **Seit E501 können sie wirklich mehr**, und bis dahin war der Satz
+    grosszügig: ein Farbsatz merkt sich jetzt AUCH den Stift und die
+    Strichstärke. Damit ist der Preset-Satz des Dossiers („Farben und
+    Stärken … als Presets") ganz erfüllt, ohne einen zweiten Katalog —
+    zwei optionale Felder am vorhandenen Satz, und ein alter Satz ohne sie
+    lädt weiter genau seine Farben.
+    Ein zweiter Katalog daneben wäre genau das, wovor §8 warnt. Der Satz
+    steht hier, damit die Frage beim nächsten Durchgang nicht wiederkommt.
+    Nachgemessen wäre es ausserdem nicht umsonst: die Zubehörzeile des
+    Stifts fasst bei 596 px genau vierzehn Knöpfe und ist mit vierzehn
+    voll — drei Plätze mehr brächen sie in eine dritte Zeile und die
+    Leiste über die 100 px aus E359.
+  · **Vom Stift bleiben Azimut und Drehung ungenutzt.** Seit **E507** liest
+    Redion die NEIGUNG (`tiltX`/`tiltY`) und schattiert damit den
+    Bleistift. Was Pointer Events darüber hinaus gibt, liegt weiter brach:
+    `azimuthAngle` (in welche Richtung der Stift zeigt) würde eine
+    Keilspitze für den Marker tragen — flach quer breit, längs schmal, wie
+    ein echter Textmarker; `twist` (die Drehung um die Längsachse) einen
+    Kalligrafie-Federkiel; `tangentialPressure` das Rädchen mancher
+    Stifte. Keines davon ist eine Lücke gegenüber GoodNotes — es sind
+    Wünsche, und sie stehen hier, damit die Frage beim nächsten Durchgang
+    nicht wieder bei null anfängt.
+  · ~~**Der PDF-Export ist ein Bild je Seite**~~ — **zur Hälfte
+    GESCHLOSSEN mit E506.** Die HANDSCHRIFT geht seither als echte
+    `/Ink`-Annotation heraus: `/Rect`, `/InkList` im Default User Space,
+    `/C`, `/CA`, `/BS` und ein `/AP`-Erscheinungsbild mit veränderlicher
+    Breite. In Adobe Reader steht sie damit unter „Kommentare" und lässt
+    sich anklicken, verschieben, färben und löschen. `test474` prüft es an
+    zurückgelesenen Bytes.
+    **Offen bleibt der Rest der Seite und die anderen Markenarten:**
+    · Die SEITE selbst ist weiter ein JPEG — ihr Text ist nicht
+      durchsuchbar, nicht markierbar, und ein Screenreader liest nichts.
+      Dafür müsste Redion den Inhalt der Original-PDF übernehmen, statt
+      ihn zu rastern; das heisst einen PDF-Leser UND -Schreiber, der
+      Seitenobjekte kopiert.
+    · FORMEN (Rechteck, Ellipse, Dreieck, Pfeil, Kurve) liegen als zwei
+      bis drei Stützpunkte in der Ablage. PDF hätte `/Square`, `/Circle`
+      und `/Line`.
+    · TEXT- UND ZETTELMARKEN bräuchten `/FreeText` mit eingebetteter
+      Schrift (Dossier S.10: „FreeText sollte nicht mit Handschrift
+      verwechselt werden"). Heute sind sie Pixel: nicht markierbar, nicht
+      kopierbar, kein Screenreader liest sie.
+    · BILDMARKEN wären `/Stamp` mit eigenem Bild-XObject.
+    · Das ABDECKBAND bleibt mit Absicht im Bild und soll es bleiben: eine
+      Annotation liesse sich wegschieben, und darunter käme zum Vorschein,
+      was abgedeckt werden sollte.
+    · Und die Frage, ob die ROHDATEN (Druck je Punkt) als private Einträge
+      im Annotation-Dictionary mitreisen dürfen — das Referenzdesign aus
+      dem Dossier S.9. Das ist eine Datenschutzfrage (S.15): dynamische
+      Handschrift ist als biometrisches Signal erforscht, und sie gehört
+      nicht ungefragt in eine Datei, die weitergegeben wird.
+  · **Das eigene Formelheft am TELEFON** ist ein fester Vorhang unten und
+    lässt sich dort weder schieben noch in der Grösse ziehen (`.fh-fenster`
+    im Block ab 640 px). Am Rechner geht beides seit E503 wirklich — dort
+    war der Griff seit jeher weggemalt worden. Am Telefon ist die feste
+    untere Hälfte eine bewusste Wahl (§37: ein 420-px-Fenster auf einem
+    360-px-Bildschirm ist kein Fenster), aber Redurs Satz „so dass ich es
+    schieben, kleiner grösser machen kann" gilt dort eben nicht. Was
+    fehlt, ist eine Höhe, die sich am Griff der Kopfzeile ziehen lässt —
+    ein Vorhang, den man höher und tiefer zieht, nicht ein Fenster.
+  · ~~**Präsentationsmodus mit Laserpointer**~~ — **GESCHLOSSEN mit E493,
+    und diese Zeile war falsch.** Präsentieren ist nicht ausserhalb des
+    PDF-Teils: es ist das Zeigen des Dokuments, und es braucht weder
+    Server noch Konto noch Netz. Es war mit den drei Punkten darunter in
+    einen Absatz geraten und hat sich ihre Begründung geliehen.
+    Gebaut: Vollbild ohne Leisten, eine Seite ganz, blättern mit Tipp und
+    Taste, und ein roter Punkt, der ZEIGT und nicht schreibt — das misst
+    `test463 §2` an der Zahl der Marken, nicht am Bild.
+  · **Wolken-Abgleich der Dokumente**, **Freigabe-Links**, **Marketplace**
+    — die brauchen wirklich einen Server (§22, §24).
   · **DOCX/PPTX-Import** — GoodNotes wandelt sie zu PDF um (nur auf
     Apple); im Browser ohne Bibliothek nicht möglich, und eine grosse
     Abhängigkeit ist keine (§6).
 
 Gefunden beim Lesen des Dossiers gegen den Bestand, 7. September 2026.
+
+---
+
+L134 · Fachzeichnen: was der Leiterstift noch nicht kann
+--------------------------------------------------------------------------
+
+E509 hat die zehn Adern eines Schaltplans als eigene Farbreihe gebaut.
+Was daran ehrlich fehlt:
+
+  · **Die Ader steht nur im Strich, nicht am Blatt.** Ein Strich trägt
+    `leiter: 'l1'`, aber nirgends steht das Kürzel als Beschriftung neben
+    der Ader — in einem echten Schaltplan schreibt man es dazu. Wer es
+    heute will, setzt eine Textmarke daneben und muss sie selbst
+    mitbewegen.
+  · **Der PDF-Export weiss nichts davon.** Seit E506 wird Handschrift
+    eine `/Ink`-Annotation mit `/T` und `/Contents`; dort stünde die Ader
+    gut („L1 — Aussenleiter"). Heute steht dort der Stiftname.
+  · **Die Adernreihe ist am Telefon länger als das Bild.** Zehn Tupfer zu
+    44 px sind 440 px plus Abstände; die Leiste rollt, aber man muss
+    schieben, um an die Korrespondierenden zu kommen. Eine zweite Zeile
+    oder ein Blatt zum Aufklappen wäre besser — beides ist ein eigener
+    Bogen (§37).
+  · **Kein Sammelschienen- oder Klemmensymbol.** Redurs Auftrag nannte
+    nur die Adern; ein Schaltplan hat mehr. Was davon Redion wirklich
+    braucht, weiss nur er.
+
+L135 · Die Hälfte-Regel gilt jetzt an der Länge — aber nur beim Kritzeln
+--------------------------------------------------------------------------
+
+E510 hat den Kritzel-Radierer von „die Hälfte der gespeicherten Punkte"
+auf „die halbe Länge" umgestellt (`InkGeometry.densify`). Derselbe
+Unterschied zwischen einem dichten Strich und einer zweipunktigen Linie
+steckt noch an anderen Stellen, die mit gespeicherten Punkten rechnen —
+`touchesCircle` und `splitByCircle` für den gewöhnlichen Radierer messen
+dagegen schon am Weg, nicht an den Punkten, und sind damit in Ordnung.
+Was NICHT nachgesehen wurde: die Lasso-Auswahl (`insidePolygon` über die
+Punkte einer Marke). Eine lange Linie, deren Enden ausserhalb der Schlinge
+liegen und deren Mitte darin, wird dort vermutlich nicht gewählt. Vermutet,
+nicht gemessen — und nach §36 heisst das: erst messen, dann bauen.
+
+L136 · Was am Zeichnen gemessen ist — und was nicht
+--------------------------------------------------------------------------
+
+E511 hat gemessen, statt zu vermuten. Damit steht auch fest, was NICHT
+gemessen ist, und das gehört hierher statt in eine Behauptung:
+
+  · **Gemessen im Container, nicht auf Redurs Geräten.** Der Prüfrechner
+    hat keine GPU und keinen echten Stift. Die 16,7 ms je Bild sind ein
+    unterer Riegel („selbst hier reicht es"), keine Aussage über ein
+    Telefon mit einer 300-seitigen PDF im Hintergrund.
+  · **`getCoalescedEvents` ist nie mit echten Daten gelaufen.** Ein
+    synthetisches Zeigerereignis trägt keine gesammelten Meldungen; der
+    Weg dafür steht im Code und ist ungeprüft. Ein 240-Hz-Stift auf einem
+    echten Gerät ist der einzige Weg, ihn zu prüfen.
+  · **`getPredictedEvents` genauso.** Wo der Browser selbst vorhersagt,
+    nimmt Redion dessen Punkte — dieser Zweig ist im Container tot.
+  · **Die Zeichenkette des nassen Strichs wächst weiter mit ihm.** Ein
+    1600-Punkte-Strich schreibt je Bild 94 kB `d`. In JavaScript kostet
+    das gemessene 0,2 ms; was der Browser darunter an Aufwand hat, ist
+    hier nicht messbar. Wenn ein echtes Gerät bei langen Strichen ruckelt,
+    liegt es hier — und die Antwort wäre, den ruhenden Teil des Strichs
+    von seinem laufenden Ende zu trennen. Das ist ein eigener Bogen und
+    nicht ohne Not zu bauen: bei durchscheinenden Stiften (Bleistift,
+    Marker) würde die Nahtstelle zweier Flächen doppelt dunkel.
+  · **Der Vorlauf ist auf ein Bild bei 60 Hz eingestellt** (`VORHER_MS`
+    = 14 ms). Ein 120-Hz-Schirm bräuchte die Hälfte. Die Bildrate lässt
+    sich messen; getan ist es nicht.
+
+L137 · Die Werkzeugleiste ist voll
+--------------------------------------------------------------------------
+
+E512 hat die Stiftreihe gebracht, E509 die zehn Adern. Beides wollte Redur,
+beides steht — und beides kostet Platz. Was daraus offen bleibt:
+
+  · **Oben braucht die Leiste jetzt drei Zeilen statt zwei.** E359
+    versprach zwei für vierzehn Zubehörknöpfe. Sechs Stifte sind ohne ihre
+    Namen rund 160 px; bei 596 px Leistenbreite ist die dritte Zeile
+    Arithmetik. `test351` und `test438` messen seither „höchstens drei
+    Zeilen". Der Ausweg ist gebaut (die Leiste an der Seite), aber er ist
+    eine Wahl, keine Vorgabe.
+  · **Am Telefon steht die erste Farbe hinter den Stiften.** Sechs Knöpfe
+    zu 44 px (§37) sind 264 px auf einer 390 px breiten Leiste. Man kommt
+    mit einer Wischbewegung hin; ohne Rollen sieht man sie nicht.
+    Denkbar wäre eine zweite Zeile am Telefon statt einer rollenden — das
+    ist ein eigener Bogen und braucht ein Bild, bevor man es baut.
+  · **Der Platz der Leiste gilt für alle Blätter gemeinsam.** Wer links
+    arbeitet, arbeitet überall links. Ob das je Dokument gehören sollte,
+    hat niemand gefragt; bis dahin ist eine Einstellung besser als zwanzig.
+  · **Die Seitenleiste liegt ÜBER dem Blatt**, wie in GoodNotes. Bei einer
+    sehr schmalen Seite verdeckt sie deren linken Rand. Sie danebenzustellen
+    hiesse, das Blatt schmaler zu machen — das ist eine Abwägung, die
+    Redur treffen soll, kein Fehler.
+  · **Die Wörter stehen erst ab 1150 px Leistenbreite, und der Rand ist
+    schmaler geworden** (E515). Gemessen bei 1600 px Fenster: die dreizehn
+    Werkzeuge mit Wort brauchen 1099 px von 1168 vorhandenen — 69 px Luft.
+    An der Schwelle selbst (1150 px Leiste) sind es 35. Das reicht heute;
+    ein vierzehntes Werkzeug mit einem langen Namen kippt die Zeile wieder.
+    Wer eins hinzufügt, misst vorher — `test351 §3` sagt es sonst hinterher.
+  · **Das Seitenmenü im Dokument trägt noch Emoji** (E516, Fund am Rand).
+    Die dreizehn Griffe dort — ＋ ⧉ ⟳ ↑ ↓ 🔖 🗑 🖼 📷 📕 ⬇ ↗ ⌸ — sind
+    dieselbe Mischung, die E515 aus der Zeichenleiste geholt hat, nur eine
+    Fläche weiter. Sie stehen in `document-mode.ts` und gehören in denselben
+    Durchgang; die Zeichen dafür liegen bereits im Register (`page`, `copy`,
+    `trash`, `inkImage`, `inkNote`, …). Ein eigener Bogen, kein Nachtrag.
+  · **Nur die sechs Stifte werden auf Ähnlichkeit gemessen** (E515,
+    `test480 §7`). Die dreizehn Werkzeuge, die vierzehn Zubehörzeichen und
+    die sieben Formen nicht — dort steht heute nichts zu dicht beieinander,
+    aber es gibt keine Zusage, die es hielte. Der Prüflauf misst pro Paar
+    in 16 × 16; ihn auf alle Zeichen des Registers auszuweiten wären über
+    tausend Paare statt fünfzehn und ein spürbar längerer Lauf. Wer ein
+    neues Zeichen anlegt, nimmt es in §7 auf oder sieht es sich an.
+
+L138 · Was am Laserpointer noch fehlt
+--------------------------------------------------------------------------
+
+  · **Die Farbe ist rot und fest.** GoodNotes lässt sie wählen; hier steht
+    sie im Stilblatt.
+  · **Der Präsentationsmodus hat weiterhin seinen eigenen Laser** (E493).
+    Er lebt auf einer anderen Fläche — einem `div` über der Vollbildseite,
+    nicht auf der Zeichenschicht —, deshalb sind es zwei Wege für dieselbe
+    Sache. Das ist genau das, wovor §8 warnt, und es steht hier, damit es
+    nicht in Vergessenheit gerät: wer den einen ändert, muss den anderen
+    ansehen.
+  · **Am Telefon ist der Laser mit dem Finger nicht erreichbar**, wenn ein
+    Stift gesehen wurde (die Finger-Sperre aus E354 greift vorher).
+    Nachgemessen ist das nicht — es steht als Vermutung hier, und §36 sagt:
+    erst messen, dann bauen.
+
+L139 · „Eine neue PDF kopiert die aktuelle" — GESCHLOSSEN (E516)
+--------------------------------------------------------------------------
+
+**Gefunden am 9. September 2026, und es war kein Import-Fehler.**
+
+Im Regal waren oben zwei Knöpfe zu sehen. Der eine hiess **„PDF öffnen"**
+und holte die ZULETZT GEÖFFNETE PDF zurück; der andere hiess **„PDF
+importieren"** und las eine neue ein. Der Knopf der Kopfleiste, der
+ebenfalls „PDF öffnen" heisst und wirklich importiert, ist im Regal
+ausgeblendet (`body:has(#page .bib-studio-import) #studio-import`).
+
+Wer eine PDF öffnen will, drückt „PDF öffnen" — und bekommt seine aktuelle
+PDF. Jedes Mal, völlig korrekt, und es sieht aus wie eine Kopie.
+
+Deshalb waren die drei Messungen aus E513 sauber: sie haben gefragt, ob der
+Import die richtige Datei ablegt. Er tat es immer. Die Frage, die Redurs
+Satz stellte, war eine andere — welchen Knopf drückt er.
+
+Jetzt heissen beide Importknöpfe „PDF öffnen" und die Karte „Weiterlesen".
+`test482 §1` misst den SICHTBAREN Text jedes Knopfes und lässt kein zweites
+„PDF öffnen" zu.
+
+**Auch der vierte Weg ist gefahren** — „PDF hier einfügen" im Seitenmenü,
+den E513 nicht öffnen konnte, weil er im Inspector sitzt: zwei Seiten
+vorher, fünf nachher, zwei Quellen, fünf verschiedene Seitenbilder, und die
+drei neuen tragen den Text der neuen Datei an der richtigen Stelle. Sauber.
+
+Was in derselben Arbeit mit auffiel und behoben wurde: `pdfImportieren`
+schrieb in `button.textContent` und nahm dem Knopf damit sein gezeichnetes
+Zeichen (E515) — für den Rest der Sitzung, weil der Kopfknopf fest in
+`index.html` steht.
+
+<details>
+<summary>Der Stand, solange die Lücke offen war</summary>
+
+
+Redur, 8. September: „wenn ich oben eine neue PDF einfügen will, kopiert es
+immer die aktuelle PDF."
+
+Drei Wege gemessen (E513), alle drei sauber:
+
+  · `ArchivImport.dateiAlsDokument` mit zwei verschiedenen PDFs — zwei
+    Dokumente, zwei Quellen, 2 gegen 4 Seiten, 600 gegen 420 pt.
+  · Der Kopfknopf „PDF öffnen" bei offener erster Akte.
+  · Das „+" → „PDF einlesen" bei offener erster Akte.
+
+Ungeprüft blieb der vierte: `page-add-pdf` im Seitenmenü des Dokuments
+(„PDF hier einfügen", E482). Der Knopf sitzt in einem Menü, das der
+Prüflauf nicht geöffnet bekam — er steht damit als EINZIGER Kandidat noch
+offen, und dort wäre auch die plausibelste Ursache: dieser Weg fügt mit
+Absicht IN das offene Dokument ein, und wer das nicht erwartet, sieht
+danach seine alte PDF mit etwas dahinter.
+
+Was fehlt, ist Redurs Antwort auf eine Frage: welcher Knopf, in welcher
+Ansicht. Bis dahin ist der Fehler weder behoben noch widerlegt — er ist
+nicht gefunden, und das ist etwas anderes als nicht vorhanden (§35).
+
+</details>
+
+L140 · Der Zugangscode der Chronik ist ein Türschild
+--------------------------------------------------------------------------
+
+Die sechs Ziffern stehen im Quelltext, im Klartext. Sie müssen dort stehen:
+Redion läuft ohne Server, es gibt niemanden, der eine Prüfung vornehmen
+könnte (§22). Wer den Quelltext liest, ist drin.
+
+Was der Code leistet, ist das, wofür er gedacht war: die Chronik geht nicht
+versehentlich auf. Was er NICHT leistet, ist Schutz vor jemandem, der ihn
+sucht — und das steht hier, weil ein Passwortfeld sonst etwas verspricht,
+was es nicht hält (§33).
+
+Ein echtes Schloss gäbe es und wäre ein eigener Bogen: dieselbe
+AES-GCM-Verschlüsselung, die Redion für verschlüsselte Seiten benutzt
+(§19). Die Chronik läge dann verschlüsselt in der Ablage, und ohne das
+Passwort im Kopf wäre sie unlesbar — auch für den, der den Quelltext hat.
+Der Preis: ein vergessenes Passwort heisst eine verlorene Chronik, und
+`chronik/chronik.json` müsste dann aus dem Verzeichnis heraus (§42).
+
+L141 · Die Token je Tag fehlen in der Chronik
+--------------------------------------------------------------------------
+
+Redur hat sie ausdrücklich verlangt: „wie viele Token du genutzt hast".
+Die Zahl steht der Sitzung nicht zur Verfügung — es gibt keinen Weg, sie
+von innen zu lesen.
+
+Was stattdessen da ist und wirklich gemessen wurde: Commits je Tag, Bögen,
+neue Prüfläufe, Zusagen, Zeiträume aus den Commit-Zeiten und die Dauer je
+Arbeit. Eine erfundene Tokenzahl wäre schlimmer als eine fehlende (§35).
+
+Möglich wäre es von aussen: wer die Sitzungsprotokolle hat, kann sie
+zählen und in `chronik/chronik.json` unter `zahlen.token` eintragen — das
+Feld wird von der Ansicht gelesen, sobald es da ist.
+
+L142 · Was am Weg auf den Laptop noch fehlt
+--------------------------------------------------------------------------
+
+E517 hat `holen.bat` einen Zweig beigebracht. Was daraus offen bleibt:
+
+  · ~~`vergleichen.bat` sieht weiterhin nur gegen `main`.~~
+    **GESCHLOSSEN mit E519** — es vergleicht jetzt gegen den Zweig, auf dem
+    der Ordner steht, und `vergleichen.bat main` ausdrücklich gegen den
+    geprüften Stand. Sieben git-Stellen einzeln geprüft; die vier Antworten
+    von `git status -sb` in einem echten Repo gemessen statt behauptet.
+  · **`hochladen.bat` ebenso.** Es lädt auf den Zweig, auf dem der Ordner
+    steht — das ist heute schon richtig, aber es ist nirgends geprüft.
+  · **Der Doppelklick selbst ist nicht geprüft.** Windows-Batch lässt sich
+    im Container nicht ausführen; geprüft sind der Text der Datei und die
+    git-Befehle darin, einzeln nachgefahren. Diese Grenze steht seit E438
+    in `test353` und gilt weiter. Was sie nicht abdeckt: Anführungszeichen,
+    Klammern und Umlaute in der Batch-Hülle selbst.
+  · **Ein Zweig, den es auf GitHub nicht gibt**, führt zu „Auf GitHub gibt
+    es keinen Zweig X" — richtig, aber ohne Vorschlag, welche es gibt. Ein
+    `git ls-remote --heads` daneben wäre eine Zeile und eine Hilfe.

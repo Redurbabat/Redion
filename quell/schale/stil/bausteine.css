@@ -3995,8 +3995,16 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 /* `position:relative`, damit das weggeklemmte Wort (Audit F04) an SEINEM
    Knopf hängt und nicht am Seitenanfang — sichtbar ist es nie, aber ein
    Vorleseprogramm liest in Dokumentreihenfolge, und die soll stimmen. */
+/* SIEBEN STATT NEUN PIXEL SEITLICH (E515). GEMESSEN, nicht geschätzt: mit
+   Emoji brauchten die dreizehn Werkzeuge samt Wort 1067 px, mit den
+   gezeichneten Zeichen 1142 — die fest 18 px breite Zeichnung ist rund
+   6 px breiter als der Durchschnitt der Emoji davor, dreizehnmal. Bei
+   9 px Polsterung kippte die Werkzeugzeile dadurch in eine zweite
+   (1190 px nötig, 1168 vorhanden), und `test351` sah es.
+   Sieben ist keine neue Zahl: die enge Ansicht unter 1150 px benutzt sie
+   seit E359. */
 .blatt-werk button{position:relative;
-                   min-height:32px; padding:4px 9px; border-radius:6px;
+                   min-height:32px; padding:4px 7px; border-radius:6px;
                    font-size:13px; color:var(--text); background:none; cursor:pointer}
 /* 44 px TREFFFLÄCHE (§37, E406). HAUPTWEG: Die Zeichenleiste ist der Hauptweg beim Schreiben von Hand.
    Sie wächst nur nach oben und unten — waagerecht stehen die
@@ -4005,6 +4013,109 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk button::after{content:""; position:absolute; left:0; right:0; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .blatt-werk button:hover{background:var(--bg-hover)}
 .blatt-werk button.on{background:var(--accent); color:var(--auf-accent)}
+/* DIE STIFTREIHE (E512): sechs Knöpfe statt eines Wechslers. Ihr Wort
+   bleibt weg, wo es eng ist — das Zeichen trägt, der Titel und das
+   aria-label sagen den Namen (§38). */
+/* NUR DAS ZEICHEN, KEIN WORT. Sechs Stifte mit Namen sind rund 320 px
+   und kippen die Leiste in eine dritte Zeile — gegen E359 und `test351`,
+   nachgemessen an einer 120 px hohen Leiste statt 80. Der Name steht im
+   Titel und im `aria-label`; ein Vorleser liest ihn, ein Zeiger zeigt
+   ihn, und der geführte Stift ist an seiner Fläche zu erkennen (§38). */
+.blatt-werk button[data-act="stilwahl"]{padding:4px 6px}
+.blatt-werk button[data-act="stilwahl"] .wort{display:none}
+
+/* ══ DER STIFT WIRD IN DIE HAND GENOMMEN (E511) ═══════════════════════════
+   Redur, 8. September: „mehr Animationen."
+
+   VIER BEWEGUNGEN, und jede sagt etwas — das ist die Bedingung, unter der
+   sie hier stehen dürfen. Eine Bewegung, die nur hübsch ist, macht die
+   nächste unsichtbar, die etwas bedeutet (§39, die Lehre aus E508).
+
+     1 · Der gewählte Stift KIPPT einmal, als nähme man ihn aus dem Kasten.
+     2 · Die Farbreihe kommt gestaffelt herein, wenn sie wechselt.
+     3 · Ein gewählter Farbtupfer gibt einen Klecks.
+     4 · Der Radierkreis läuft, solange er radiert.
+
+   Alles davon ist bei `prefers-reduced-motion` weg — ganz unten in diesem
+   Block, an EINER Stelle, damit niemand eine vergisst. */
+
+/* 1 · DER STIFT KIPPT. Nur der Werkzeug- und der Stiftknopf, NICHT die
+   Farbtupfer: die tragen dieselbe `on`-Klasse und würden mitwackeln.
+   16 Grad sind sichtbar und bleiben ein Kippen; bei 30 wäre es ein
+   Umfallen. */
+.blatt-werk button[data-wz].on .zeichen,
+.blatt-werk button[data-act="stilwahl"].on .zeichen{
+  display:inline-block; animation:ru-stift-kippt var(--motion-normal) var(--ease-enter)
+}
+@keyframes ru-stift-kippt{
+  0%{transform:rotate(0) translateY(0)}
+  45%{transform:rotate(-16deg) translateY(-3px)}
+  100%{transform:rotate(0) translateY(0)}
+}
+
+/* 2 · DIE REIHE KOMMT ALS WELLE. EINE Zahl, der Rest rechnet sich (E508):
+   `--ru-tupfer-welle` ist der Schritt, `--tupfer-n` die Nummer des
+   Tupfers. Fünf von Hand gewählte Verzögerungen waren beim Nachrechnen
+   keine Welle. */
+.blatt-werk{--ru-tupfer-welle:26ms}
+.blatt-farbe-leiter{
+  animation:ru-tupfer-rein var(--motion-normal) var(--ease-enter) backwards;
+  animation-delay:calc(var(--ru-tupfer-welle) * var(--tupfer-n, 0))
+}
+@keyframes ru-tupfer-rein{
+  from{opacity:0; transform:translateY(6px) scale(.82)}
+  to{opacity:1; transform:none}
+}
+
+/* 3 · DER KLECKS. Der ANGETIPPTE Tupfer sackt kurz ein und kommt zurück —
+   ein Tropfen, der aufs Papier fällt. Der Ring darum ist der Rand, der
+   sich verläuft.
+
+   AM TIPPEN, NICHT AN `on` (E511). Zuerst stand hier `.blatt-farbe.on`,
+   und der Prüflauf hat gezeigt, warum das falsch ist: die GEWÄHLTE Ader
+   trägt `on` schon, wenn die Reihe entsteht — der Klecks gewann gegen die
+   Welle, und ausgerechnet der Tupfer, auf den man schaut, flog nicht mit
+   herein. Zwei Anlässe, zwei Klassen: die Welle gehört dem Erscheinen,
+   der Klecks dem Antippen. */
+.blatt-farbe.blatt-farbe-tipp{animation:ru-tupfer-klecks var(--motion-normal) var(--ease)}
+@keyframes ru-tupfer-klecks{
+  0%{transform:scale(1); box-shadow:0 0 0 0 currentColor}
+  40%{transform:scale(.86)}
+  100%{transform:scale(1); box-shadow:0 0 0 7px transparent}
+}
+
+/* 4 · DER RADIERKREIS LÄUFT. Die gestrichelte Linie wandert, solange
+   radiert wird — dieselbe Auskunft, die ein Mensch von einem laufenden
+   Zeiger erwartet: hier passiert gerade etwas. Sechs, weil
+   `stroke-dasharray:3 3` sich alle sechs Einheiten wiederholt; jede
+   andere Zahl ergäbe einen Sprung. */
+/* ══ DER LASERSTRAHL (E512) ══════════════════════════════════════════════
+   Rot, weich, und er verblasst von selbst. Er trägt `data-ink-ui` und ist
+   damit für jeden Weg, der Marken sucht, unsichtbar — genau wie der
+   Radierkreis. Gespeichert wird er nie. */
+.blatt-laser{pointer-events:none}
+.blatt-laser-kopf{fill:#ff2d2d; stroke:#ffffffcc; stroke-width:1;
+                  vector-effect:non-scaling-stroke;
+                  filter:drop-shadow(0 0 5px #ff2d2daa)}
+.blatt-laser-spur{fill:none; stroke:#ff2d2d; stroke-width:3; stroke-linecap:round;
+                  stroke-linejoin:round; opacity:.75; vector-effect:non-scaling-stroke;
+                  filter:drop-shadow(0 0 4px #ff2d2d88)}
+.blatt-laser-weg{animation:ru-laser-weg 700ms var(--ease-exit) forwards}
+@keyframes ru-laser-weg{ to{opacity:0} }
+@media (prefers-reduced-motion: reduce){ .blatt-laser-weg{animation:none; opacity:0} }
+.blatt-radierkreis{animation:ru-radier-laeuft 700ms linear infinite}
+@keyframes ru-radier-laeuft{ to{stroke-dashoffset:-6} }
+
+/* DIE EINE ABSCHALTUNG (§39). Wer keine Bewegung will, bekommt dieselbe
+   Auskunft ohne Vorstellung: der Stift ist trotzdem gewählt, die Tupfer
+   stehen trotzdem da, der Kreis ist trotzdem gestrichelt. */
+@media (prefers-reduced-motion: reduce){
+  .blatt-werk button[data-wz].on .zeichen,
+  .blatt-werk button[data-act="stilwahl"].on .zeichen,
+  .blatt-farbe-leiter,
+  .blatt-farbe.blatt-farbe-tipp,
+  .blatt-radierkreis{animation:none}
+}
 /* DIE BLASSE STELLE GEHÖRT DEM INHALT, NICHT DEM KNOPF (E396).
    `opacity` am Knopf macht ALLES durchsichtig, auch seinen Hintergrund —
    und das fiel erst auf, als „Zurück" und „Vor" am Telefon am rechten Rand
@@ -4036,6 +4147,76 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 
    Links dagegen ist die Kante wirklich die Kante der Reihe, und dort steht
    ein Verlauf. */
+/* ══ WO DIE LEISTE STEHT (E512) ══════════════════════════════════════════
+   Redur: „die Stift[leiste] sollte ich komplett bewegen können — nach
+   links, rechts, Mitte und ganz oben."
+
+   VIER PLÄTZE, EINE REGEL JE PLATZ. `oben` ist der Bestand und braucht
+   nichts; die drei anderen heben die Leiste aus dem Fluss und legen sie
+   an den Rand des Blattes. Die Hülle (`.blatt-huelle`) ist der Bezug —
+   deshalb bekommt sie `position:relative`.
+
+   AN DER SEITE STEHEN DIE GRUPPEN UNTEREINANDER. Das ist nicht nur eine
+   andere Richtung, sondern der Ausweg aus der Enge: sechs Stifte und zehn
+   Adern brauchen oben drei Zeilen (L137), links eine Spalte, die rollt. */
+.blatt-huelle{position:relative}
+/* EINE FESTE BREITE, KEINE GERATENE. Der erste Wurf gab der Spalte
+   `width:auto; max-width:82px` — und das Bild hat gezeigt, warum das
+   falsch ist: absolut gesetzt schrumpft eine Flexbox auf ihren Inhalt,
+   und der Inhalt hat `min-width:0`. Übrig blieb ein zwanzig Pixel
+   breiter Streifen am Blattrand, in dem nichts zu erkennen war.
+   Jetzt steht die Zahl da: 64 px, und die Knöpfe füllen sie. (§55 — das
+   hat kein Prüflauf gefunden, sondern das Hinsehen.) */
+.blatt-reihe[data-lage="links"],
+.blatt-reihe[data-lage="rechts"]{
+  position:absolute; top:0; bottom:auto; max-height:min(78vh, 100%);
+  width:64px; flex-direction:column; z-index:6;
+  border-radius:10px; border:1px solid var(--line);
+  box-shadow:var(--shadow-3); background:var(--bg-card)
+}
+.blatt-reihe[data-lage="links"] .blatt-werk,
+.blatt-reihe[data-lage="rechts"] .blatt-werk{width:100%; padding:6px 4px}
+.blatt-reihe[data-lage="links"] .blatt-werk > button,
+.blatt-reihe[data-lage="rechts"] .blatt-werk > button{
+  width:100%; min-width:0; padding:4px 0;
+  display:inline-flex; align-items:center; justify-content:center
+}
+/* Die Farbtupfer bleiben rund und mittig — sie sind keine Knöpfe mit Text. */
+.blatt-reihe[data-lage="links"] .blatt-werk > .blatt-farbe,
+.blatt-reihe[data-lage="rechts"] .blatt-werk > .blatt-farbe{
+  width:26px; min-width:26px; align-self:center
+}
+.blatt-reihe[data-lage="links"] .blatt-werk > .blatt-farbe-leiter,
+.blatt-reihe[data-lage="rechts"] .blatt-werk > .blatt-farbe-leiter{
+  width:44px; min-width:44px
+}
+.blatt-reihe[data-lage="links"]{left:6px}
+.blatt-reihe[data-lage="rechts"]{right:6px}
+.blatt-reihe[data-lage="links"] .blatt-werk,
+.blatt-reihe[data-lage="rechts"] .blatt-werk{
+  flex-direction:column; flex-wrap:nowrap; align-items:stretch;
+  overflow-y:auto; overflow-x:hidden; max-height:min(74vh, 100%); scrollbar-width:none
+}
+.blatt-reihe[data-lage="links"] .blatt-werk::-webkit-scrollbar,
+.blatt-reihe[data-lage="rechts"] .blatt-werk::-webkit-scrollbar{display:none}
+.blatt-reihe[data-lage="links"] .blatt-fest,
+.blatt-reihe[data-lage="rechts"] .blatt-fest{flex-direction:column; padding:0 8px 6px}
+/* Ein Trenner, der in einer Spalte steht, ist ein Strich quer — nicht längs. */
+.blatt-reihe[data-lage="links"] .blatt-trenn,
+.blatt-reihe[data-lage="rechts"] .blatt-trenn{width:100%; height:1px; margin:3px 0}
+/* Die Wörter gehen weg: eine 82 px breite Spalte trägt Zeichen, keine
+   Namen. Titel und aria-label bleiben (§38). */
+.blatt-reihe[data-lage="links"] .wort,
+.blatt-reihe[data-lage="rechts"] .wort{display:none}
+
+/* UNTEN IN DER MITTE — die schwebende Leiste aus GoodNotes. */
+.blatt-reihe[data-lage="unten"]{
+  position:absolute; left:50%; transform:translateX(-50%);
+  bottom:10px; top:auto; z-index:6; max-width:calc(100% - 24px);
+  border-radius:12px; border:1px solid var(--line);
+  box-shadow:var(--shadow-4); background:var(--bg-card)
+}
+
 .blatt-reihe{position:relative}
 .blatt-reihe::before{
   content:""; position:absolute; top:1px; bottom:1px; left:1px; width:26px;
@@ -4058,6 +4239,27 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-farbe-neu{width:22px; height:22px; min-width:22px; padding:0 !important; border-radius:50%;
                  border:1px dashed var(--text-faint); color:var(--text-dim); font-size:14px; line-height:1;
                  display:inline-flex; align-items:center; justify-content:center}
+/* ══ DIE ADERNREIHE (E509) ═══════════════════════════════════════════════
+   Beim Leiterstift stehen in der Farbreihe die zehn Adern eines
+   Schaltplans. Sie sind etwas breiter als ein Farbtupfer, weil ihr Kürzel
+   daraufsteht — „L1", „PE", „3" —, und das Kürzel ist der Grund, warum
+   diese Reihe §38 genügt: zehn Punkte, die sich nur in der Farbe
+   unterscheiden, wären eine Auskunft, die niemand lesen kann. */
+.blatt-farbe-weg{display:none !important}
+.blatt-farbe-leiter{
+  position:relative; width:auto; min-width:var(--touch-min); padding:0 6px;
+  display:inline-flex; align-items:center; justify-content:center
+}
+.blatt-farbe-kurz{
+  font-size:9.5px; font-weight:800; letter-spacing:.02em; line-height:1;
+  color:#fff; text-shadow:0 1px 2px #00000099; pointer-events:none
+}
+/* Auf Grau und Gelb ist Weiss nicht zu lesen — dort wird das Kürzel
+   dunkel. Gemessen an der Helligkeit der Ader, nicht geraten. */
+.blatt-farbe-leiter[data-leiter="l3"] .blatt-farbe-kurz,
+.blatt-farbe-leiter[data-leiter="pe"] .blatt-farbe-kurz{
+  color:#111; text-shadow:0 1px 2px #ffffffaa
+}
 .blatt-farbe-neu:hover{border-color:var(--accent-text); color:var(--text)}
 .blatt-farbe-eigen{border-color:var(--line)}
 .blatt-strich{display:flex; align-items:center; justify-content:center; width:30px}
@@ -4189,6 +4391,69 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     var(--blatt-mm-zehn-quer) 100%, 100% var(--blatt-mm-zehn-hoch),
     var(--blatt-mm-quer) 100%,      100% var(--blatt-mm-hoch)}
 
+/* CORNELL-NOTIZEN (E495). Das Papier von Walter Pauk: links eine 50 mm
+   breite Spalte für Stichworte, oben 30 mm für den Titel, unten 50 mm für
+   die Zusammenfassung, dazwischen Zeilen.
+
+   FÜNF SCHICHTEN, UND IHRE REIHENFOLGE IST DIE GANZE LÖSUNG. CSS kann
+   keinen Verlauf, der nur in einem Ausschnitt gilt — die senkrechte
+   Spaltenlinie liefe also durch Kopf und Fuss. Also läuft sie ganz durch
+   und wird oben und unten mit zwei Bändern in Papierfarbe wieder
+   ZUGEDECKT; über den Bändern liegen die beiden kräftigen Querlinien.
+   Die erste Schicht ist die oberste.
+
+   Alle senkrechten Takte sind `--blatt-seite-hoch` — EINE Seite. Bei einem
+   dreiseitigen Blatt wiederholt sich der Aufbau also je Seite und nicht
+   dreimal gestaucht. */
+.blatt-papier[data-papier="cornell"]{
+  background-image:
+    /* 1 · die Kopflinie und die Fusslinie, je Seite */
+    linear-gradient(to bottom, transparent 0, transparent calc(var(--blatt-cornell-kopf) - 1px),
+                    var(--blatt-linie-stark) calc(var(--blatt-cornell-kopf) - 1px),
+                    var(--blatt-linie-stark) var(--blatt-cornell-kopf), transparent var(--blatt-cornell-kopf)),
+    linear-gradient(to top, transparent 0, transparent calc(var(--blatt-cornell-fuss) - 1px),
+                    var(--blatt-linie-stark) calc(var(--blatt-cornell-fuss) - 1px),
+                    var(--blatt-linie-stark) var(--blatt-cornell-fuss), transparent var(--blatt-cornell-fuss)),
+    /* 2 · zwei Bänder in Papierfarbe: sie decken Zeilen und Spaltenlinie
+           im Kopf und in der Zusammenfassung ab */
+    linear-gradient(to bottom, var(--paper,#fff) 0 var(--blatt-cornell-kopf), transparent var(--blatt-cornell-kopf)),
+    linear-gradient(to top,    var(--paper,#fff) 0 var(--blatt-cornell-fuss), transparent var(--blatt-cornell-fuss)),
+    /* 3 · die senkrechte Spalte — läuft durch und wird von den Bändern gedeckt */
+    linear-gradient(to right, transparent 0, transparent calc(var(--blatt-cornell-spalte) - 1px),
+                    var(--blatt-linie-stark) calc(var(--blatt-cornell-spalte) - 1px),
+                    var(--blatt-linie-stark) var(--blatt-cornell-spalte), transparent var(--blatt-cornell-spalte)),
+    /* 4 · die Zeilen im Notizfeld */
+    linear-gradient(to bottom, var(--blatt-linie) 0 1px, transparent 1px);
+  background-size:
+    100% var(--blatt-seite-hoch), 100% var(--blatt-seite-hoch),
+    100% var(--blatt-seite-hoch), 100% var(--blatt-seite-hoch),
+    100% var(--blatt-seite-hoch),
+    100% var(--blatt-zeile);
+  background-repeat:repeat-y}
+
+/* NOTENLINIEN (E495). Fünf Linien im Abstand von 3 mm, dann 15 mm Luft —
+   ein Takt von 27 mm, elf Systeme auf A4. Ein einziger Verlauf: die fünf
+   Linien stehen als Farbstopps darin, der Rest des Taktes ist durchsichtig.
+   `repeating-linear-gradient` wäre hier falsch — sein Takt wäre der Abstand
+   ZWEIER Linien, nicht der eines Systems. */
+.blatt-papier[data-papier="noten"]{
+  background-image:linear-gradient(to bottom,
+    var(--blatt-linie-stark) 0 1px, transparent 1px,
+    transparent calc(var(--blatt-noten-linie) - 1px),
+    var(--blatt-linie-stark) calc(var(--blatt-noten-linie) - 1px), var(--blatt-linie-stark) var(--blatt-noten-linie),
+    transparent var(--blatt-noten-linie),
+    transparent calc(var(--blatt-noten-linie) * 2 - 1px),
+    var(--blatt-linie-stark) calc(var(--blatt-noten-linie) * 2 - 1px), var(--blatt-linie-stark) calc(var(--blatt-noten-linie) * 2),
+    transparent calc(var(--blatt-noten-linie) * 2),
+    transparent calc(var(--blatt-noten-linie) * 3 - 1px),
+    var(--blatt-linie-stark) calc(var(--blatt-noten-linie) * 3 - 1px), var(--blatt-linie-stark) calc(var(--blatt-noten-linie) * 3),
+    transparent calc(var(--blatt-noten-linie) * 3),
+    transparent calc(var(--blatt-noten-satz) - 1px),
+    var(--blatt-linie-stark) calc(var(--blatt-noten-satz) - 1px), var(--blatt-linie-stark) var(--blatt-noten-satz),
+    transparent var(--blatt-noten-satz));
+  background-size:100% var(--blatt-noten-takt);
+  background-repeat:repeat-y}
+
 /* --- Der Wähler in der Werkzeugleiste --------------------------------------
    Jeder Knopf zeigt SEIN Papier, nicht ein Sinnbild dafür. Bei den
    Ausrichtungsknöpfen hat ein Sinnbild schon einmal wie eine Klammer
@@ -4227,6 +4492,25 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-papierwahl i[data-vorschau="punkte"], .blatt-papierknopf i[data-vorschau="punkte"]{
   background-image:radial-gradient(circle at center, #8ea3bd 0 1px, transparent 1.1px);
   background-size:4px 4px}
+/* Die Vorschau zeigt das Papier, nicht ein Sinnbild dafür — bei Cornell
+   also die Spalte mit der Kopflinie, bei den Noten fünf Linien. Diese
+   beiden rechnen in Pixeln, weil das Kästchen 26 px misst und kein Blatt
+   ist; die Muster auf dem Papier rechnen weiter in Prozent. */
+.blatt-papierwahl i[data-vorschau="cornell"], .blatt-papierknopf i[data-vorschau="cornell"]{
+  background-image:
+    linear-gradient(to bottom, #8ea3bd 0 1px, transparent 1px),
+    linear-gradient(to right, transparent 0 5px, #8ea3bd 5px 6px, transparent 6px),
+    linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
+  background-size:100% 100%, 100% 100%, 100% 4px;
+  background-position:0 5px, 0 0, 0 7px;
+  background-repeat:no-repeat, no-repeat, repeat}
+.blatt-papierwahl i[data-vorschau="noten"], .blatt-papierknopf i[data-vorschau="noten"]{
+  background-image:linear-gradient(to bottom,
+    #8ea3bd 0 1px, transparent 1px 3px, #8ea3bd 3px 4px, transparent 4px 6px,
+    #8ea3bd 6px 7px, transparent 7px 9px, #8ea3bd 9px 10px, transparent 10px 12px,
+    #8ea3bd 12px 13px, transparent 13px);
+  background-size:100% 20px;
+  background-position:0 3px}
 .blatt-papierwahl i[data-vorschau="mm"], .blatt-papierknopf i[data-vorschau="mm"]{
   background-image:
     linear-gradient(to right,  #8ea3bd 0 1px, transparent 1px),
@@ -4235,7 +4519,31 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
   background-size:8px 100%, 100% 8px, 2px 100%, 100% 2px}
 
-.blatt-werk .zeichen{margin-right:5px}
+.blatt-werk .zeichen{margin-right:4px}
+/* GEZEICHNETE ZEICHEN SITZEN AUF DER LINIE (E515). Ein `<svg>` ist ein
+   Inline-Element und stünde sonst auf der Grundlinie wie ein Buchstabe —
+   also drei Pixel zu tief. `inline-flex` setzt es mittig, und die feste
+   Breite hält alle dreizehn Knöpfe auf demselben Raster; vorher bestimmte
+   jedes Emoji seine eigene. */
+.blatt-werk .zeichen[data-sym]{display:inline-flex; align-items:center;
+                               justify-content:center; width:16px; height:16px}
+.blatt-werk .zeichen[data-sym] svg{display:block}
+/* WO KEIN WORT STEHT, TRÄGT DAS ZEICHEN ALLEIN — und darf grösser sein.
+   16 px neben einem Wort von 13 px ist reichlich; 16 px ALLEIN in einem
+   36-px-Knopf ist knapp. Die drei wortlosen Zustände (enge Leiste, Spalte,
+   Telefon) bekommen deshalb 18 px zurück, die Seitenspalte 20. */
+@media (min-width:761px){
+  @container (max-width:1150px){
+    .blatt-werk .zeichen[data-sym]{width:18px; height:18px}
+  }
+}
+.spalte .blatt-werk .zeichen[data-sym]{width:18px; height:18px}
+@media (max-width:760px){
+  .blatt-werk .zeichen[data-sym]{width:18px; height:18px}
+}
+.blatt-reihe[data-lage="links"] .blatt-werk .zeichen[data-sym],
+.blatt-reihe[data-lage="rechts"] .blatt-werk .zeichen[data-sym]{width:20px; height:20px;
+                                                                margin-right:0}
 /* Die Schrift-Knoepfe (E360): das Muster zeigt die Familie, das F ist fett. */
 .blatt-werk [data-act="schriftart"] .zeichen{font-size:15px}
 .blatt-werk [data-act="fett"] .zeichen{font-weight:800}
@@ -4310,6 +4618,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk[data-tool="select"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="select"] > [data-gruppe="breite"],
 .blatt-werk[data-tool="radierer"] > [data-gruppe="radierer"],
+.blatt-werk[data-tool="laser"] > [data-gruppe="laser"],
 .blatt-werk[data-tool="stift"] > [data-gruppe="stil"],
 .blatt-werk[data-tool="stift"] > [data-gruppe="formen"],
 .blatt-werk[data-tool="stift"] > [data-gruppe="farbe"],
@@ -4346,7 +4655,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk[data-tool="text"] > [data-gruppe="schrift"],
 .blatt-werk[data-tool="select"] > [data-gruppe="schrift"],
 .blatt-werk[data-tool="text"] > [data-gruppe="farbe"],
-.blatt-werk[data-tool="zeichen"] > [data-gruppe="farbe"]{display:inline-flex}
+.blatt-werk[data-tool="zeichen"] > [data-gruppe="farbe"],
+/* DIE ELEMENTE (E494): nur ihr eigener Knopf. KEINE Farbgruppe — ein
+   Element bringt die Farben mit, in denen es gezeichnet wurde; eine
+   Farbwahl daneben verspräche etwas, das der Stempel nicht tut. */
+.blatt-werk[data-tool="elemente"] > [data-gruppe="elemente"]{display:inline-flex}
 .blatt-werk[data-tool] > span.blatt-trenn[data-gruppe]{display:none}
 
 /* ── Am Rechner ZWEI Zeilen: oben die Werkzeuge, darunter ihr Zubehör (E359).
@@ -4987,6 +5300,13 @@ body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
 @media (max-width:760px){ .document-topbar .document-find-button{display:none} }
 .document-commandbar .document-find-klappe{display:none}
 @media (max-width:760px){ .document-commandbar .document-find-klappe{display:inline-flex} }
+/* Und „Präsentieren" genauso (E493): am Rechner im Kopf, am Telefon hier —
+   dort ist der Kopf voll, und der Titel braucht seine hundert Pixel. */
+.document-commandbar .document-zeigen-klappe{display:none}
+@media (max-width:760px){
+  .document-commandbar .document-zeigen-klappe{display:inline-flex}
+  .document-topbar [data-document-action="praesentieren"]{display:none}
+}
 .document-findbar input{flex:1 1 12rem; min-width:0; min-height:var(--touch-min); padding:6px 10px;
   border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); font:inherit}
 .document-findbar button{min-height:var(--touch-min); min-width:var(--touch-min)}
@@ -5099,6 +5419,24 @@ body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2
 .document-seite-papier{display:flex; align-items:center; justify-content:space-between; gap:8px;
   font-size:13px; color:var(--text-dim); min-height:var(--touch-min)}
 .document-seite-papier select{min-height:36px; max-width:55%}
+/* ══ WAS AUF DIESER SEITE GESPERRT IST (E492) ═════════════════════════════
+   Wie die Lesezeichenliste darüber gebaut, nur mit zwei Spalten je Zeile:
+   was es ist, und der Griff zum Öffnen. Der Name darf umbrechen, der Knopf
+   nicht — deshalb `auto` für ihn und `minmax(0,1fr)` für den Text (ohne die
+   Null schiebt ein langer Zettel-Text den Knopf aus dem Kasten). */
+.document-gesperrt{display:grid; gap:5px; margin-top:10px}
+.document-gesperrt strong{font-size:13px}
+.document-gesperrt-zeile{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px;
+  align-items:center}
+.document-gesperrt-was{font-size:13px; color:var(--text-dim); overflow-wrap:anywhere}
+.document-gesperrt-zeile button, .document-gesperrt-alle{min-height:var(--touch-min); padding:6px 10px}
+.document-gesperrt-alle{margin-top:2px}
+/* DIE MARKE LEUCHTET AUF, wenn man ihre Zeile berührt (E492). Ein Ring statt
+   einer Farbe — die Marke hat ihre eigene, und eine zweite darüber wäre
+   nicht mehr sie selbst. `paint-order` legt den Ring HINTER den Strich,
+   sonst deckt er dünne Linien zu. */
+.blatt-marken .ist-gezeigt{ stroke-width:inherit; filter:drop-shadow(0 0 3px var(--accent-text))
+  drop-shadow(0 0 7px var(--accent-text)); }
 .document-lesezeichen{display:grid; gap:5px; margin-top:10px}
 .document-lesezeichen strong{font-size:13px}
 .document-lesezeichen button{min-height:var(--touch-min); padding:8px; text-align:left}
@@ -5112,6 +5450,12 @@ body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2
    zusammen, und getrennt untereinander sähen sie aus wie zwei Absätze. */
 .document-inspector-daten{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:12px 0}
 .document-inspector-daten button{min-height:var(--touch-min); padding:8px 10px}
+/* DER SATZ ZUM PDF-KNOPF (E505). Er steht sichtbar unter der Zeile, nicht
+   nur im `title` — am Telefon gibt es kein Hover, und §37 nennt das Telefon
+   den Normalfall. Klein, aber nicht unlesbar: `--text-faint` ist die Farbe
+   der Nebensaetze in diesem Bereich, dieselbe wie bei `.fh-klein`. */
+.document-export-hinweis{margin:-6px 0 12px; font-size:11.5px; line-height:1.45;
+  color:var(--text-faint)}
 .document-inspector-summary{display:grid;gap:5px;padding:10px 0;border-block:1px solid var(--border)}
 .document-inspector-summary>div{display:flex;justify-content:space-between;gap:8px}
 .document-inspector-list{display:grid;gap:5px;margin-top:10px}
@@ -6192,6 +6536,36 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .mz-zuletzt i{font-style:normal}
 .mz-liste{max-height:min(46vh, 420px); overflow-y:auto; padding:10px 16px 16px}
 
+/* ── DIE ELEMENTE-BIBLIOTHEK (E494) ───────────────────────────────────────
+   Ein Raster von Kacheln: das Bild des Elements, sein Name, und ein
+   Papierkorb daneben. Die Kachel ist 44 px hoch und breit genug für zwei
+   Wörter — sie ist ein Hauptweg (§37), der Papierkorb steht daneben und
+   ist es auch: wer aufräumt, trifft ihn sonst nicht. */
+.elemente-liste{display:grid; grid-template-columns:repeat(auto-fill, minmax(132px, 1fr));
+  gap:10px}
+.elemente-fach{position:relative; display:flex}
+.elemente-kachel{flex:1; display:flex; flex-direction:column; align-items:center;
+  gap:6px; padding:10px 8px; min-height:112px; border:1px solid var(--line);
+  border-radius:11px; background:var(--bg-card); color:var(--text);
+  cursor:pointer; font-size:12.5px; text-align:center}
+.elemente-kachel:hover, .elemente-kachel:focus-visible{border-color:var(--accent)}
+.elemente-kachel svg{width:74px; height:74px; flex:none; color:var(--text)}
+.elemente-kachel i{font-style:normal; overflow-wrap:anywhere; line-height:1.25}
+/* `--touch-min` statt einer rohen 44 — die Marke IST die Zahl (test362 §7
+   führt Verzeichnis über die rohen). */
+.elemente-weg{position:absolute; top:4px; right:4px;
+  width:var(--touch-min); height:var(--touch-min);
+  display:flex; align-items:center; justify-content:center; border:0;
+  border-radius:9px; background:transparent; color:var(--text-dim);
+  cursor:pointer; font-size:15px; opacity:.65}
+/* `--gefahr` und `--bg-hover`, nicht `--danger` und `--bg-2`: die beiden
+   letzten gibt es nicht, und ein erfundenes Token ist unsichtbar statt rot
+   (§39 — dreimal ist genau das hier schon passiert). */
+.elemente-weg:hover, .elemente-weg:focus-visible{opacity:1; color:var(--gefahr);
+  background:var(--bg-hover)}
+.elemente-leer{margin:0; padding:26px 8px; text-align:center; color:var(--text-dim);
+  font-size:13px; line-height:1.5}
+
 /* Ein gesetztes Fachzeichen auf der Seite. Der Zeiger sagt, dass man es
    anfassen kann — ein Tipp dreht es um 90°. */
 .blatt-marken [data-ink-art="zeichen"]{cursor:pointer}
@@ -7125,13 +7499,28 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   box-shadow:inset 0 1px 1px #ffffff4d, 0 4px 12px #0000002e;
   transition:transform var(--motion-slow) var(--ease-enter), filter var(--motion-fast) var(--ease)
 }
-.ru-fach-blatt[data-nr="0"]{background:#c2410c; z-index:25; transition-delay:.15s}
-.ru-fach-blatt[data-nr="1"]{background:#b45309; z-index:24; transition-delay:.1s}
-.ru-fach-blatt[data-nr="2"]{background:#0369a1; z-index:23; transition-delay:.05s}
-.ru-fach-blatt[data-nr="3"]{background:#0f766e; z-index:22; transition-delay:.02s}
+/* ══ DIE WELLE (E508) ══════════════════════════════════════════════════════
+   Hier standen vier von Hand gewählte Zahlen: .15 / .1 / .05 / .02 / 0 —
+   kein gleichmässiger Abstand, und beim Nachrechnen fiel auf, dass der
+   Schritt von .05 auf .02 halb so gross ist wie die anderen. Jetzt gibt es
+   EINE Zahl, und die vier anderen rechnen sich daraus. Wer die Welle
+   schneller oder langsamer haben will, ändert eine Stelle.
+
+   DIE RICHTUNG: das VORDERSTE Blatt kommt zuletzt. So legt eine Hand
+   Karten hin — von hinten nach vorn —, und das Blatt, dessen Name man
+   zuerst liest, landet als letztes im Blick. */
+.ru-fach{--ru-fach-welle:38ms}
+.ru-fach-blatt[data-nr="0"]{background:#c2410c; z-index:25;
+  transition-delay:calc(var(--ru-fach-welle) * 4)}
+.ru-fach-blatt[data-nr="1"]{background:#b45309; z-index:24;
+  transition-delay:calc(var(--ru-fach-welle) * 3)}
+.ru-fach-blatt[data-nr="2"]{background:#0369a1; z-index:23;
+  transition-delay:calc(var(--ru-fach-welle) * 2)}
+.ru-fach-blatt[data-nr="3"]{background:#0f766e; z-index:22;
+  transition-delay:var(--ru-fach-welle)}
 /* NICHT VIOLETT. #6d28d9 war die Farbe des Ordners selbst — das fünfte
    Blatt stand unsichtbar vor der Klappe. */
-.ru-fach-blatt[data-nr="4"]{background:#9d174d; z-index:21}
+.ru-fach-blatt[data-nr="4"]{background:#9d174d; z-index:21; transition-delay:0s}
 /* EINE ZEILE AM UNTEREN RAND, und was nicht passt, endet mit „…". Der
    ganze Name steht im `title` und im `aria-label`. */
 .ru-fach-zeile{
@@ -7166,9 +7555,35 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 .ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="2"]{transform:translateY(-86px) translateX(-4px) rotate(-3.5deg)}
 .ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="3"]{transform:translateY(-60px) translateX(5px) rotate(3deg)}
 .ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="4"]{transform:translateY(-34px) rotate(-1.5deg)}
+/* ÜBERSCHWINGEN (E508). Die Blätter fliegen einen Hauch über ihren Platz
+   hinaus und setzen sich. Der letzte Wert der Kurve ist 1.14, also 14 %
+   Überschuss — bei 138 px Weg sind das keine zwanzig Pixel, und man sieht
+   es als Schwung, nicht als Fehler. */
+.ru-fach[data-offen="ja"] .ru-fach-blatt{
+  transition-timing-function:cubic-bezier(.34,1.36,.5,1.14)
+}
+/* UND DIE KLAPPE WIPPT EINMAL, wenn der Ordner aufgeht — als hätte man
+   den Deckel angehoben und losgelassen. Ein halber Grad, zweimal hin und
+   her; mehr wäre ein Spielzeug. */
+@keyframes ru-fach-wippe{
+  0%{transform:rotate(0deg)} 30%{transform:rotate(-1.6deg)}
+  60%{transform:rotate(.8deg)} 100%{transform:rotate(0deg)}
+}
+.ru-fach[data-offen="ja"] .ru-fach-klappe{
+  animation:ru-fach-wippe .5s var(--ease) 1;
+  transform-origin:50% 100%
+}
 .ru-fach-blatt:hover,.ru-fach-blatt:focus-visible{filter:brightness(1.12)}
 .ru-fach-blatt:focus-visible{outline:2px solid var(--text); outline-offset:2px}
-.ru-fach[data-offen="ja"] .ru-fach-blatt:is(:hover,:focus-visible){translate:0 -10px}
+/* EIN BLATT, DAS MAN ANSIEHT, RICHTET SICH AUF (E508). Es hebt sich schon
+   seit E459; neu ist, dass es dabei GERADE wird — die kleine Schräge, mit
+   der es im Fächer liegt, verschwindet, als nähme man es heraus. Zusammen
+   mit dem Schatten ist das der Unterschied zwischen „ist markiert" und
+   „liegt in der Hand". */
+.ru-fach[data-offen="ja"] .ru-fach-blatt:is(:hover,:focus-visible){
+  translate:0 -10px; rotate:0deg; scale:1.02;
+  box-shadow:inset 0 1px 1px #ffffff66, 0 10px 22px #00000047
+}
 .ru-fach-name{flex:1 1 auto; min-width:0; margin:0; font-size:13px; font-weight:600; line-height:1.35; overflow-wrap:anywhere}
 .ru-fach-rest{margin:8px 0 0; font-size:11px; color:var(--text-dim); line-height:1.4}
 .ru-fach-gehen{margin-top:10px; width:100%; justify-content:center}
@@ -7180,7 +7595,13 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 @media (prefers-reduced-motion: reduce){
   .ru-fach :is(.ru-fach-klappe,.ru-fach-blatt,.ru-fach-glanz){transition:none}
   .ru-fach[data-sucht="ja"] .ru-fach-punkt::after{animation:none; opacity:0}
-  .ru-fach[data-offen="ja"] .ru-fach-blatt:is(:hover,:focus-visible){translate:none}
+  .ru-fach[data-offen="ja"] .ru-fach-blatt:is(:hover,:focus-visible){translate:none; scale:none}
+  /* KEINE WELLE, KEIN WIPPEN, KEIN ÜBERSCHWINGEN (E508, §39). Die Karte
+     kommt trotzdem — nur eben auf einmal. Wer Bewegung abstellt, will die
+     Auskunft, nicht die Vorstellung. */
+  .ru-fach{--ru-fach-welle:0ms}
+  .ru-fach-blatt[data-nr]{transition-delay:0s}
+  .ru-fach[data-offen="ja"] .ru-fach-klappe{animation:none}
 }
 
 /* Redion-Bedienung · Baumansicht */
@@ -7460,4 +7881,118 @@ body[data-dokument="an"] .blatt-werk > label.blatt-staerke.auf{
 @media (max-width:760px){
   .blatt-werk > label.blatt-staerke.auf{ position:static; box-shadow:none; border:0; background:none; padding:0 6px }
   .blatt-werk > label.blatt-staerke input{ width:6rem }
+}
+
+/* ══ DIE CHRONIK „Red-ur" (E514) ═════════════════════════════════════════════
+   Redur, 9. September: „es sollte auch im Redion sichtbar sein … dort
+   solltest du die Graphen verwenden, 3D-Ansichten und so."
+
+   ALLES AUS EIGENEN MITTELN. Kein Diagrammpaket, kein WebGL — §6 verbietet
+   unnötige Abhängigkeiten, und ein Balken ist ein Rechteck, eine Tiefe ist
+   eine Perspektive. Was die Bewegung sagt, steht im Quelltext des Bereichs.
+   ========================================================================== */
+.chr-lage{align-items:flex-start; padding:24px 12px; overflow:auto}
+.chr-fenster{width:min(1080px, 96vw); margin:0 auto; background:var(--bg-card);
+             border:1px solid var(--line); border-radius:14px;
+             box-shadow:var(--shadow-4); overflow:hidden}
+.chr-kopf{display:flex; align-items:center; gap:12px; padding:14px 16px;
+          border-bottom:1px solid var(--line); background:var(--bg-2)}
+.chr-kopf h2{margin:0; font-size:20px; letter-spacing:.01em}
+.chr-kopf p{margin:0; flex:1; color:var(--text-dim); font-size:12.5px}
+.chr-kopf button{min-width:var(--touch-min); min-height:var(--touch-min);
+                 border:0; background:none; color:var(--text); cursor:pointer;
+                 border-radius:8px; font-size:16px}
+.chr-kopf button:hover{background:var(--bg-hover)}
+.chr-reiter{display:flex; gap:4px; padding:8px 12px; border-bottom:1px solid var(--line);
+            overflow-x:auto; scrollbar-width:none}
+.chr-reiter::-webkit-scrollbar{display:none}
+.chr-reiter button{min-height:var(--touch-min); padding:6px 12px; border:0; cursor:pointer;
+                   border-radius:8px; background:none; color:var(--text); font-size:13.5px;
+                   white-space:nowrap}
+.chr-reiter button:hover{background:var(--bg-hover)}
+.chr-reiter button.on{background:var(--accent); color:var(--auf-accent)}
+.chr-inhalt{padding:16px; max-height:min(74vh, 900px); overflow:auto}
+
+/* Der Suchtreffer, der die Tür ist. */
+.chr-treffer{display:flex; gap:10px; align-items:center; width:100%; text-align:left;
+             padding:9px 10px; border:0; border-radius:8px; background:none;
+             color:var(--text); cursor:pointer; min-height:var(--touch-min)}
+.chr-treffer:hover, .chr-treffer.on{background:var(--bg-hover)}
+
+/* ── Die Graphen ─────────────────────────────────────────────────────────
+   Jeder Balken trägt seine Zahl. Eine Höhe allein ist eine Auskunft, die
+   nur Augen haben (§38); die Zahl daneben hat auch ein Vorleser. */
+.chr-raster{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:14px}
+.chr-graph{margin:0; padding:10px 12px; border:1px solid var(--line);
+           border-radius:10px; background:var(--bg-2)}
+.chr-graph figcaption{font-size:12.5px; color:var(--text-dim); margin-bottom:6px}
+.chr-graph svg{width:100%; height:auto; display:block}
+.chr-balken{fill:var(--accent)}
+.chr-wert{fill:var(--text); font-size:4px; text-anchor:middle}
+.chr-name{fill:var(--text-dim); font-size:3.6px; text-anchor:middle}
+
+/* ── Der 3D-Stapel ───────────────────────────────────────────────────────
+   Die Tiefe SAGT etwas: wie viele Tage hinter uns liegen und wie dick
+   jeder war. Deshalb ist sie da und nicht als Zierde. */
+/* DIE PLATTEN MÜSSEN ALLE LESBAR SEIN — sonst ist die Tiefe eine Zierde
+   und keine Auskunft. Der erste Wurf legte sie genau hintereinander: auf
+   dem Bild war nur die vorderste zu lesen, die anderen waren zwei
+   Streifen. Jetzt versetzen sie sich in ALLEN drei Richtungen — nach
+   hinten, nach unten und nach rechts —, und die Dicke sitzt als KANTE
+   links statt als Balken unten (§55, gefunden vom Bild). */
+.chr-3d{margin-top:16px; perspective:1100px; padding:8px 0}
+.chr-buehne{position:relative; height:300px; transform-style:preserve-3d;
+            transform:rotateY(var(--dx, -14deg)) rotateX(var(--dy, 6deg));
+            transition:transform var(--motion-normal) var(--ease)}
+.chr-platte{position:absolute; left:8%; top:14px; width:min(400px, 62%);
+            transform:translateZ(calc(var(--i) * -70px))
+                      translateY(calc(var(--i) * 84px))
+                      translateX(calc(var(--i) * 34px));
+            padding:9px 13px 9px calc(13px + var(--dick));
+            border:1px solid var(--line); border-radius:10px;
+            background:var(--bg-card); box-shadow:var(--shadow-2);
+            border-left:var(--dick) solid var(--accent)}
+.chr-platte b{display:block; font-size:13px}
+.chr-platte span{display:block; font-size:12.5px; color:var(--text-dim); margin:2px 0 4px}
+.chr-platte i{display:block; font-size:11.5px; color:var(--text-faint); font-style:normal}
+.chr-fuss{margin:10px 0 0; font-size:12px; color:var(--text-dim); text-align:center}
+
+/* ── Tage, Nachrichten, Probleme ─────────────────────────────────────────*/
+.chr-tag{margin:0 0 22px; padding:0 0 14px; border-bottom:1px solid var(--line)}
+.chr-tag h3{margin:0 0 2px; font-size:16px}
+.chr-tag h4{margin:14px 0 6px; font-size:13.5px; color:var(--text-dim)}
+.chr-titel{margin:0 0 8px; font-size:13.5px}
+.chr-hinweis{font-size:12.5px; color:var(--text-dim); font-style:italic}
+.chr-nachricht, .chr-problem{border:1px solid var(--line); border-radius:9px;
+                             padding:8px 11px; margin:0 0 7px; background:var(--bg-2)}
+.chr-nachricht summary, .chr-problem summary{cursor:pointer; font-size:13px;
+                                             display:flex; gap:8px; align-items:baseline;
+                                             min-height:32px; align-content:center}
+.chr-anriss{color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.chr-zeit{color:var(--text-faint); font-size:11.5px; white-space:nowrap}
+.chr-wort{margin:8px 0; padding:8px 11px; border-left:3px solid var(--accent);
+          background:var(--bg-card); border-radius:0 8px 8px 0; font-size:13px;
+          white-space:pre-wrap}
+.chr-nachricht p, .chr-problem p{margin:6px 0; font-size:13px; line-height:1.55}
+.chr-ampel{font-size:13px}
+.chr-tab{width:100%; border-collapse:collapse; font-size:12.5px; display:block;
+         overflow-x:auto}
+.chr-tab th, .chr-tab td{border:1px solid var(--line); padding:5px 8px; text-align:left;
+                         vertical-align:top}
+.chr-tab th{background:var(--bg-2); font-weight:600}
+.chr-plan li{font-size:13px; margin:4px 0}
+
+/* Wer keine Bewegung will, bekommt den Stapel flach und still — die
+   Auskunft steht in den Platten, nicht in der Drehung. */
+@media (prefers-reduced-motion: reduce){
+  .chr-buehne{transition:none; transform:none; height:auto; position:static;
+              display:flex; flex-direction:column; gap:8px}
+  .chr-platte{position:static; transform:none; width:auto; margin:0}
+}
+@media (max-width:760px){
+  .chr-fenster{width:100%}
+  .chr-inhalt{padding:12px; max-height:none}
+  .chr-buehne{height:auto; position:static; transform:none;
+              display:flex; flex-direction:column; gap:8px}
+  .chr-platte{position:static; transform:none; width:auto; margin:0}
 }

@@ -218,8 +218,12 @@ console.log('\n§3 Grün-gelb und Strich-Punkt, in EINER Marke');
   gleich('Er schwillt nicht mit dem Druck', await s.evaluate(`[
     Marken.druckFaktor('schutzleiter', 0.1), Marken.druckFaktor('schutzleiter', 1)
   ]`), [1, 1]);
-  gleich('Er steht am ENDE der Stiftreihe — der alte Wechsel bleibt',
-    await s.evaluate(`Marken.STIFTE.map(x => x.id)`),
+  /* E509 hat den Leiterstift HINTER ihn gehängt. Geprüft wird darum nicht
+     mehr die ganze Reihe, sondern das, worauf es ankommt: die vier
+     gewöhnlichen Stifte stehen unverändert vorn, der Schutzleiter kommt
+     erst danach. */
+  gleich('Er steht hinter den vier gewöhnlichen Stiften — der alte Wechsel bleibt',
+    await s.evaluate(`Marken.STIFTE.map(x => x.id).slice(0, 5)`),
     ['fueller', 'kugel', 'pinsel', 'bleistift', 'schutzleiter']);
   await s.close();
 }
@@ -229,9 +233,9 @@ console.log('\n§4 Die gerade Erdungsleitung');
 {
   const s = await mitStift('schutzleiter');
   await s.evaluate(() => {
-    /* Der Stiftknopf wechselt durch die Stile; hier wird er direkt gesetzt. */
-    const knopf = document.querySelector<HTMLButtonElement>('.blatt-werk [data-act="stil"]');
-    for (let n = 0; knopf && knopf.dataset.stil !== 'schutzleiter' && n < 8; n++) knopf.click();
+    /* Seit E512 steht jeder Stift als eigener Knopf da (E512). */
+    document.querySelector<HTMLButtonElement>(
+      '.blatt-werk [data-act="stilwahl"][data-stil="schutzleiter"]')?.click();
   });
   await s.waitForTimeout(250);
   await strichHalten(s, 2, 900);

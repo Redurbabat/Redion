@@ -269,6 +269,10 @@ const InkStroke = (() => {
   const ALPHA_LANGSAM = 0.28;   /* bei stehender Hand: viel mitteln */
   const ALPHA_SCHNELL = 0.92;   /* im Zug: fast unveraendert durchlassen */
   const TEMPO_VOLL = 1.1;       /* px je ms, ab hier gilt ALPHA_SCHNELL */
+  /* WORAN DIE DREI ZAHLEN GEMESSEN WURDEN (E504): an 60 Hz, also 16 ms je
+     Punkt. Sie stehen unveraendert da — diese Zahl sagt nur, WOBEI sie
+     galten, und macht sie damit auf jede andere Rate uebertragbar. */
+  const MESS_MS = 16;
 
   type Glaetter = {
     /** Naechster Punkt herein, geglaetteter Punkt heraus. `dt` in ms. */
@@ -282,12 +286,46 @@ const InkStroke = (() => {
   const glaetter = (start: StrokePoint): Glaetter => {
     let x = endlich(start[0]);
     let y = endlich(start[1]);
+    /* DAS TEMPO IST DAS DER HAND, nicht das des Rueckstands (E504).
+       Hier stand `|p − x| / ms` — der Abstand zum GEGLAETTETEN Punkt. Der
+       ist selbst ein Ergebnis des Filters, und damit hing die Filterstaerke
+       wieder an der Abtastrate: bei 240 Hz meldete derselbe Zug ein
+       doppelt so hohes „Tempo" wie bei 60 Hz, weil der Rueckstand kleiner
+       war, das `dt` aber viermal kleiner. Gemessen von Punkt zu Punkt der
+       EINGABE ist es die Geschwindigkeit, die die Hand wirklich hat. */
+    let vx = endlich(start[0]);
+    let vy = endlich(start[1]);
     return (p: StrokePoint, dt: number): StrokePoint => {
       const px = endlich(p[0]), py = endlich(p[1]);
       const ms = Math.max(1, Number.isFinite(dt) ? dt : 16);
-      const tempo = Math.hypot(px - x, py - y) / ms;
+      const tempo = Math.hypot(px - vx, py - vy) / ms;
+      vx = px; vy = py;
       const teil = Math.min(1, tempo / TEMPO_VOLL);
-      const alpha = ALPHA_LANGSAM + (ALPHA_SCHNELL - ALPHA_LANGSAM) * teil;
+      const gemessen = ALPHA_LANGSAM + (ALPHA_SCHNELL - ALPHA_LANGSAM) * teil;
+      /* ── ZEIT, NICHT MESSUNGEN (E504) ────────────────────────────────────
+       * Bis hierher wurde `gemessen` unmittelbar angewandt — ein fester
+       * Anteil JE PUNKT. Das Tempo war schon zeitnormiert, die Wirkung
+       * nicht, und das ist genau der Fehler, den das Stift-Dossier auf
+       * Seite 8 beschreibt: „Muss pro Geraet und Samplingrate abgestimmt
+       * werden; falsche Parameter verzerren Schrift."
+       *
+       * Die Zeitkonstante eines solchen Filters ist tau = dt·(1−a)/a. Bei
+       * festem `a` SCHRUMPFT sie mit der Abtastrate: derselbe Filter ist
+       * auf einem 240-Hz-Stift viermal schwaecher als auf dem 60-Hz-Geraet,
+       * an dem die drei Zahlen oben gemessen wurden. Nachgemessen in
+       * `test472` §1, VOR der Reparatur: derselbe Zug verzoegerte bei
+       * 60 Hz um 3,467 px, bei 120 Hz um 1,734 und bei 240 Hz um 0,867 —
+       * halbiert und geviertelt, genau mit der Rate. Und das Restzittern
+       * je Millisekunde war bei 240 Hz FUENFMAL groesser.
+       *
+       * Jetzt wird aus dem gemessenen Anteil erst eine Zeitkonstante und
+       * daraus der Anteil fuer DIESES `dt` — die Form des 1-Euro-Filters,
+       * a = 1/(1 + tau/dt). Bei 16 ms kommt Zeichen fuer Zeichen dasselbe
+       * heraus wie vorher (a = a_gemessen), also aendert sich am Geraet,
+       * an dem gemessen wurde, nichts. `test366` haelt genau das fest.
+       * ------------------------------------------------------------------ */
+      const tau = MESS_MS * (1 - gemessen) / gemessen;
+      const alpha = ms / (ms + tau);
       x += (px - x) * alpha;
       y += (py - y) * alpha;
       return [x, y];
@@ -350,6 +388,37 @@ const InkStroke = (() => {
    * MUSS herein: ohne sie waere die Vorhersage in Punkten gerechnet statt in
    * Millisekunden, und derselbe Vorlauf waere bei 60 Hz doppelt so lang wie
    * bei 120 Hz — gemessen 17,5 px statt 8,8 px bei gleichem Zug.
+   *
+   * ══ HIER GEHEN ROHE PUNKTE HEREIN, KEINE GEGLAETTETEN (E511) ═══════════
+   * Bis hierher bekam diese Funktion `running.pts` — die GEGLAETTETEN
+   * Punkte. Sie verlaengerte damit einen Strich, der selbst schon hinter
+   * der Hand herlief, und der Vorlauf ging fuer den Nachlauf drauf.
+   *
+   * GEMESSEN (§36), Abstand der gezeichneten Spitze von der Stelle, an der
+   * der Stift beim Erscheinen des Bildes WIRKLICH ist (ein Bild = 16,7 ms):
+   *
+   *     Tempo        alt        neu
+   *     0,1 px/ms    3,40 px    0,00 px
+   *     0,4 px/ms    7,16 px    0,00 px      <- das Tempo der Handschrift
+   *     1,2 px/ms    4,91 px    0,00 px
+   *     2,5 px/ms   19,23 px   15,75 px      <- die 26-px-Grenze bremst
+   *
+   * Der Fehler war am groessten genau dort, wo ein Mensch schreibt, und er
+   * wechselte das Vorzeichen: langsam blieb die Tinte zurueck, schnell
+   * schoss sie voraus. Beides fuehlt sich an wie ein Stift, der nicht am
+   * Papier klebt.
+   *
+   * DIE GLAETTUNG BLEIBT, WIE SIE IST. Sie nimmt das Zittern, und dafuer
+   * ist ihr Nachlauf der Preis. Bezahlt wird er jetzt dort, wo er nichts
+   * kostet: im nassen Schwanz, der gezeichnet und NIE gespeichert wird.
+   *
+   * Und der Deckel `min(3, ms/abstand)` ist weg. Er begrenzte den Vorlauf
+   * auf das Dreifache des letzten Schrittes und war damit wieder von der
+   * Abtastrate abhaengig — bei 240 Hz griff er, bei 60 Hz nie. Genau die
+   * Sorte Abhaengigkeit, die E504 aus dem Glaetter genommen hat. Was
+   * bleibt, ist die Grenze in PIXELN, und die ist ehrlich: sie sagt, wie
+   * weit eine Vermutung reichen darf, unabhaengig davon, wie oft ein
+   * Geraet sich meldet.
    */
   const vorhersage = (pts: StrokePoint[], ms: number = VORHER_MS, abstand: number = 8): StrokePoint[] => {
     const n = Array.isArray(pts) ? pts.length : 0;
@@ -362,7 +431,7 @@ const InkStroke = (() => {
     /* Kippt die Richtung, wird nicht geraten. */
     if (l1 > 0.3 && (v1x * v2x + v1y * v2y) / (l1 * l2) < KEHRE) return [];
     const dt = Math.max(1, Number.isFinite(abstand) ? abstand : 8);
-    const weit = Math.min(VORHER_PX, l2 * Math.max(0, Math.min(3, ms / dt)));
+    const weit = Math.min(VORHER_PX, l2 / dt * Math.max(0, ms));
     if (weit < 0.4) return [];
     const ux = v2x / l2, uy = v2y / l2;
     /* Zwei Punkte, der zweite gedaempft — so laeuft der Schwanz aus,

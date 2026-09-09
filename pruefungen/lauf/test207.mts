@@ -97,12 +97,16 @@ const waehler = await seite.evaluate(() => {
     vorschauen: knoepfe.map(k => k.querySelector('i')?.getAttribute('data-vorschau') ?? ''),
   };
 });
-gleich('Es gibt fünf', waehler.anzahl, 5);
-gleich('… und zwar diese', waehler.arten, ['blanko', 'liniert', 'kariert', 'punkte', 'mm']);
+/* SIEBEN SEIT E495: Cornell-Notizen und Notenlinien sind dazugekommen —
+   die zwei Papiere, die GoodNotes' Vorlagenwähler hat und Redion nicht
+   hatte. Die Zusage bleibt dieselbe: der Wähler zeigt GENAU den Katalog. */
+gleich('Es gibt sieben', waehler.anzahl, 7);
+gleich('… und zwar diese', waehler.arten,
+       ['blanko', 'liniert', 'kariert', 'punkte', 'mm', 'cornell', 'noten']);
 p('Jeder trägt eine Beschriftung für die Sprachausgabe (§38)', waehler.beschriftet);
 gleich('Genau einer ist gedrückt', waehler.gedrueckt, 1);
 gleich('Und jeder zeigt sein eigenes Muster', waehler.vorschauen,
-       ['blanko', 'liniert', 'kariert', 'punkte', 'mm']);
+       ['blanko', 'liniert', 'kariert', 'punkte', 'mm', 'cornell', 'noten']);
 
 /* ==========================================================================
  * §2 · Ein Klick stellt um — am Block UND am Papier

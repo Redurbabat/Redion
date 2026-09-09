@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-470 Entscheidungen, E1 bis E490 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+499 Entscheidungen, E1 bis E519 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -534,6 +534,35 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E488** — Ein eigener PDF-Schreiber: das ganze Dokument mit Marken, ohne die Bildbytes je zu lesen
 * **E489** — Der Radierer „Band“ radierte nichts: er verglich gegen eine Markenart, die es nicht gibt
 * **E490** — Der Stift wie GoodNotes: Halten gilt auch bei zitternder Hand, ein Schutzleiter grün-gelb, Zurück nach links
+* **E491** — Redion ist keine Notion-Kopie mehr: mit Server und ohne, und der Nutzer entscheidet, wo seine Daten liegen
+* **E492** — Was auf dieser Seite gesperrt ist: eine Liste, die den Rundlauf ohne Ausgang öffnet
+* **E493** — Präsentieren mit Laserpointer: der Punkt zeigt und schreibt nicht
+* **E494** — Die Elemente-Bibliothek: eine Auswahl wird ein Stempel, und der Stempel überlebt das Dokument
+* **E495** — Cornell und Notenlinien: zwei Papiere, und die Lehre, dass Prozent in einem Verlauf die Kachel meint
+* **E496** — Eine Seite in ein anderes Dokument: kopieren mit frischer Kennung, verschieben mit derselben
+* **E497** — Der breite Lauf nach E493–E496: zwei echte Fehler, die seit Wochen rot waren und die niemand laufen liess
+* **E498** — Die zwei letzten Reste: „Ausschnitt" ruht sichtbar, und Seiten wandern über Spaltengrenzen
+* **E499** — Ein mehrseitiges Blatt in Seiten zerlegen: jede Marke behält ihre Seite, keine wird geschnitten
+* **E500** — Die Schalensuche findet die Stelle im Dokument — und endlich auch, was von Hand geschrieben ist
+* **E501** — Ein Farbsatz wird eine Voreinstellung: Farben, Stift und Strichstärke unter einem Namen
+* **E502** — Das Formelbuch und das GIF auf dem Blatt: eine PDF-Seite als bewegliche, ziehbare Bildmarke
+* **E503** — Das eigene Formelheft liegt über dem Dokument — und war dabei seit jeher nicht in der Grösse zu ziehen
+* **E504** — Der Glätter rechnet in Zeit statt in Messungen, und ein abgebrochener Handballen wird verworfen
+* **E505** — CropBox und /Rotate werden endlich gefahren, und der PDF-Export sagt sichtbar, was er tut
+* **E506** — Handschrift wird eine echte /Ink-Annotation mit eigenem Erscheinungsbild, statt Teil des Bildes zu sein
+* **E507** — Die Neigung des Stifts: der Bleistift schattiert, und der Druck sagt, woher er kommt
+* **E508** — Der Blick in den Ordner kommt beim Hinschauen, und die Blätter fächern als Welle
+* **E509** — Ein Stift für Fachzeichen: die zehn Adern eines Schaltplans, jede mit ihrem Namen
+* **E510** — Die Mitte einer Linie zählt auch: der Kritzel-Radierer misst Länge statt Ecken
+* **E511** — Die Tinte holt die Spitze ein, und vier Bewegungen, die etwas sagen
+* **E512** — Die Leiste wie GoodNotes: Stiftreihe, Laserpointer, vier Plätze — und eine Fläche, die nicht mehr stirbt
+* **E513** — Das Notizbuch stand nicht im „Neu erstellen", obwohl es Redion seit E264 kann
+* **E514** — Die Chronik „Red-ur": eine Quelle, drei Ansichten — UR.md, PROBLEME.md und ein Fenster in Redion
+* **E515** — Die Zeichen der Leiste sind gezeichnet, nicht getippt — dreiunddreissig neue im Register, und fünfundsiebzig Pixel, die niemand sah
+* **E516** — L139 gefunden: der Import war nie kaputt, das Wort war es — „PDF öffnen" holte die aktuelle PDF zurück
+* **E517** — Ein Zweig statt `main`: der Arbeitsstand kommt auf den Laptop, und `main` bleibt die Zusage „geprüft"
+* **E518** — Die fertigen PowerShell-Befehle stehen im Verzeichnis, nicht im Gespräch — und der Alltagsbefehl ruft `holen.bat`, nicht `git`
+* **E519** — Der Vergleich sieht gegen deinen Zweig, nicht gegen `main` — zwei Skripte, zwei Vorgaben, jede mit ihrem Grund
 
 ---
 
@@ -39127,3 +39156,2798 @@ ohne Ausnahme gelöscht (die gerade Leitung wird schwarz), und `prepend`
 zurück zu `appendChild` (Zurück steht rechts). Dazu test343, test347,
 test351, test355, test356, test362, test376.
 Bild: `node bilder.mts schutzleiter` — die Ansicht ist neu.
+
+
+---
+
+E491 — Redion ist keine Notion-Kopie mehr: mit Server und ohne, und der Nutzer entscheidet, wo seine Daten liegen
+--------------------------------------------------------------------------
+
+Redur am 7. September:
+
+> „Also korrigiere es: es ist nicht mehr eine Kopie von Notion, es ist eine
+> bessere App als Notion, und sie braucht Server sowie ohne, und man kann
+> entscheiden, wo man die Daten haben will."
+
+## Was geändert wurde, und wo
+
+Vier Stellen beschrieben Redion als Nachbau:
+
+    CLAUDE.md §2       „eine lokale Notion-Alternative"
+    CLAUDE.md §52.17   „Notion-artige App"
+    README.md          „im Stil von Notion", „Notion-ähnliche App",
+                       „Notion-ähnlicher Editor", „Etappe 6: Notion-ähnliche
+                       Vollständigkeit"
+    index.html         `<meta name="description">`: „unser eigenes Notion"
+
+Sie sagen jetzt, was Redion ist: eine eigene App, die über diese
+Beschreibung hinausgewachsen ist. Das Schreibstudio für PDFs mit Stift,
+Fachzeichen und Schutzleiter, die Lernwelt, die Prüfungsplanung, das
+`.redion`-Paket — davon hat Notion nichts.
+
+## Zwei Sätze, die dabei geradegerückt wurden
+
+**„Optional" war das falsche Wort für den Server.** Es klang nach Normalfall
+und Zubehör. Richtig ist: **beides ist ein vollwertiger Weg.** Ohne Server
+ist Redion VOLLSTÄNDIG — Seiten, Datenbanken, Formeln, PDFs, Zeichnen,
+Suche, KI und Sicherung arbeiten auf dem Gerät. Mit Server kommt dazu, was
+mehr als ein Gerät braucht: Abgleich, Konto, Rechte, Teilen. §22 bleibt
+Wort für Wort, wie es ist — der Server darf keine Bedingung sein; nur die
+BESCHREIBUNG hörte sich an, als wäre die Wolke die eigentliche Fassung.
+
+**Und wo die Daten liegen, ist eine Wahl, keine Vorgabe.** Vier Wege, und
+alle vier gibt es wirklich:
+
+    nur auf diesem Gerät        Vorgabe, ohne Konto
+    im eigenen Ordner           Redion sichert selbst hinein (E270)
+    in der eigenen Wolke        eigenes Cloudflare-Konto, eigene Datenbank
+    in der Hand                 `.redion` mit allem darin
+
+Das stand schon in §24 als Regel; jetzt steht es auch dort, wo ein Mensch
+zuerst hinsieht.
+
+## Was NICHT geändert wurde, und warum
+
+Die rund dreissig Stellen im Quelltext, an denen „wie in Notion" steht
+(vor allem `editor.ts`), bleiben. Sie sind keine Herkunftsangabe, sondern
+eine Begründung: sie sagen dem nächsten Leser, WARUM eine Taste so belegt
+ist oder ein Menü so aufgebaut. Ein Kommentar, der eine bekannte Lösung
+nennt, ist besser als einer, der eine Entscheidung behauptet, die niemand
+mehr nachvollziehen kann (§45).
+
+Ebenso bleiben die zwei sachlichen Nennungen im README: die Formelsprache
+ist nach dem Vorbild von Notion Formulas 2.0 gebaut, und der Import liest
+Notions Export-ZIP. Beides ist wahr und beides nützt dem Leser.
+
+Und §2 bleibt §2. Umgeschrieben, nicht umnummeriert — die Nummern sind
+fest, weil `ENTSCHEIDUNGEN.md`, `LUECKEN.md` und die Prüfläufe darauf
+zeigen.
+
+
+---
+
+E492 — Was auf dieser Seite gesperrt ist: eine Liste, die den Rundlauf ohne Ausgang öffnet
+--------------------------------------------------------------------------
+
+L133, unter „Auswahl": „**Sperren im Inspector** — die Sperre sitzt am Knopf
+der Leiste; eine Liste aller gesperrten Marken gibt es nicht."
+
+## Warum das mehr war als eine fehlende Liste
+
+Sperren geht seit E466 über die AUSWAHL: Marke wählen, Schloss drücken. Und
+eine gesperrte Marke lässt sich nicht mehr auswählen — das ist ja der Sinn.
+
+Damit war es ein Rundlauf ohne Ausgang: wer etwas gesperrt hatte, kam an die
+Sperre nicht mehr heran. Sie liess sich anlegen und nicht mehr lösen. Das
+ist kein fehlendes Bequemlichkeitsmerkmal, sondern eine Sackgasse im
+Datenmodell des Nutzers.
+
+## Was entschieden wurde
+
+Eine Liste im Inspector, wie die der Lesezeichen darüber: eine Zeile je
+gesperrter Marke mit ihrem Namen, dazu je ein „🔓 Entsperren" und bei
+mehreren ein „Alle N entsperren".
+
+**Die Namen kommen aus `Marken.artWort`** — derselben Quelle, aus der die
+Werkzeugleiste ihre Wörter nimmt (§8). Dafür wurde die Werkzeugliste im
+Zug davor zu `Marken.WERKZEUGE` zusammengezogen; vorher stand jedes Wort
+nur als Aufruf in der Zeile, die die Leiste baut, und die Liste hätte es
+abgeschrieben.
+
+**Sie steht nur da, wenn es etwas zu zeigen gibt.** Eine Überschrift über
+einer leeren Liste stünde bei fast jeder Seite und sagte nichts.
+
+**Geschrieben wird über den BLOCK**, nicht über die Zeichenschicht:
+`Store.updateBlock` und neu zeichnen, derselbe Weg wie „Drehen",
+„Lesezeichen" und „Löschen". Über die Schicht ginge es nur mit Auswahl —
+und genau die geht bei einer gesperrten Marke nicht. Der Weg, der sich
+anbietet, ist hier der einzige, der nicht funktioniert.
+
+**`gesperrt` wird gelöscht, nicht auf `false` gesetzt.** So macht es
+`Marken.sperren` seit E466; zwei Schreibweisen für einen Zustand laufen
+irgendwann auseinander (§17).
+
+## Zwei Funde des Bildes (§55)
+
+**Erstens: zwei Zeilen hiessen beide „Linie".** Auf dem ersten Bild waren
+drei Marken gesperrt — ein Schutzleiter, eine schwarze Linie, eine
+Haftnotiz —, und die ersten zwei Zeilen waren nicht zu unterscheiden. Die
+Liste war vollständig und trotzdem nicht zu gebrauchen. Jetzt steht der
+STIL dabei: „╱ Linie · Schutzleiter".
+
+**Zweitens: auch mit Stil bleiben zwei gleiche Linien gleich.** Deshalb
+leuchtet die Marke auf dem Papier auf, wenn man ihre Zeile berührt oder mit
+der Tastatur erreicht (`ist-gezeigt`, ein Schein im Stilblatt). Das
+beantwortet „welche denn?" ohne ein zusätzliches Wort — und es geht auch
+mit der Tastatur, nicht nur mit der Maus (§38).
+
+## Was es kostet
+
+Die Liste zeigt die Marken der ANGESEHENEN Seite. Was auf Seite 7 gesperrt
+ist, sieht man auf Seite 7 — das ist dieselbe Regel wie bei allen
+Seitengriffen (E480) und war die Alternative zu einer Liste über das ganze
+Dokument, die bei vierzig Seiten niemand mehr liest.
+
+GEPRÜFT. `test462` mit 34 Zusagen, fünf Gegenproben rot gesehen (§55.2):
+ohne die Liste, ohne das Löschen des Feldes, mit `false` statt `delete`,
+ohne den Stil im Namen (zwei Zeilen heissen wieder gleich), ohne das
+Aufleuchten. Dazu test87, test105, test109.
+Bild: `node bilder.mts gesperrt` — die Ansicht ist neu.
+
+
+---
+
+E493 — Präsentieren mit Laserpointer: der Punkt zeigt und schreibt nicht
+--------------------------------------------------------------------------
+
+L133 führte GoodNotes' Presentation Mode unter „was Redion nicht haben wird
+— ausserhalb des PDF-Teils oder ausserhalb von local-first". Redur am
+7. September: „schau wie ist es bei GoodNotes und mache genau 1:1 so, ich
+will dass alles gemacht wird."
+
+**Er hatte recht, und die Zeile in L133 war falsch.** Präsentieren ist
+nicht ausserhalb des PDF-Teils — es ist das Zeigen des Dokuments, das der
+PDF-Teil hält. Und es braucht weder Server noch Konto noch Netz: Vollbild,
+eine Seite, ein roter Punkt. Was daneben stand („Wolken-Abgleich",
+„Freigabe-Links", „Marketplace"), braucht wirklich einen Server; das hier
+war mit ihnen in einen Absatz geraten und hat sich ihre Begründung geliehen.
+
+## Was gebaut wurde
+
+    ▶ Präsentieren      im Kopf, neben „Drucken" — beides zeigt das
+                        Dokument jemand anderem, einmal auf Papier,
+                        einmal an der Wand
+    Vollbild            über `App.vollbild` (E283); wird es abgelehnt,
+                        läuft es im Fenster weiter
+    keine Leisten       Kopf, Werkzeuge, Miniaturen, Inspector und die
+                        Stiftleiste am Blatt gehen weg — nicht `hidden`,
+                        nur unsichtbar: nach dem Beenden steht alles
+                        wieder so, wie es war
+    eine Seite ganz     die Höhe gibt das Mass, und der Zoom gilt nicht
+    blättern            links tippen zurück, rechts vor; Pfeile,
+                        Leertaste, Bild auf/ab, Pos1, Ende
+    Laserpointer        ein roter Punkt, der dem Zeiger folgt und in
+                        700 ms verglimmt
+    Escape              beendet, immer
+
+## Der Punkt, an dem alles hängt: er SCHREIBT NICHT
+
+Das ist der Unterschied zwischen „zeigen" und „zeichnen", und er ist
+wörtlich zu nehmen. Über dem Papier liegt eine eigene Fläche, die jeden
+Zeiger abfängt; der Punkt ist ein `<div>` darin, er geht durch keine
+Zeichenschicht, er landet in keiner Marke und in keinem Speicher.
+
+Ein Vortragender, der aus Versehen in ein fremdes Skript malt, merkt es
+erst hinterher — und dann ist es im Speicher. `test463 §2` zählt deshalb
+nicht Pixel, sondern MARKEN: nach zwanzig Bewegungen mit gedrücktem Zeiger
+muss ihre Zahl unverändert sein.
+
+Dieselbe Fläche ist auch der Grund, warum das Blättern per Tipp geht. Und
+sie stellt die Frage, die jedes Vortragsprogramm beantworten muss:
+
+> **Gezogen ist gezeigt, getippt ist geblättert.**
+
+Ohne diese Trennung (acht Pixel) blätterte jedes Zeigen eine Seite um.
+
+## Das Vollbild wird nie gemerkt
+
+Der Browser kann es allein beenden — Escape, ein Tabwechsel, eine
+Meldung des Systems. Ein gemerktes `let vollbild = true` stünde danach für
+immer falsch, und die Ansicht bliebe in einem Zustand hängen, den niemand
+mehr verlässt. Darum hängt `zeigenAus` am `fullscreenchange` und liest den
+Zustand am Browser ab. Dieselbe Lehre steht seit E283 in `schale.ts`; hier
+ist sie zum zweiten Mal fällig geworden.
+
+## Drei Funde des Bildes, zwei der Prüfläufe (§55)
+
+**Die Stiftleiste stand mitten in der Präsentation.** Sie heisst
+`.blatt-reihe` und nicht `.blatt-werk`, und im Studio steht sie als
+schwebende Leiste mit `position:fixed` — der erste Selektor traf sie nicht.
+
+**Der Beenden-Knopf war unlesbar.** Er stand auf `#ffffff1a`, fast
+durchsichtig, und überlappt oben rechts das weisse Papier: weisser Text auf
+Weiss. Jetzt ein deckendes Dunkel.
+
+**Die Seite lief unten aus dem Fenster.** Ein Vortrag zeigt eine ganze
+Folie. Jetzt gibt die Höhe das Mass, und es steht genau eine Seite da —
+über `[data-aktiv]`, ohne die Einstellung „Einzelseite zeigen" des Nutzers
+anzufassen.
+
+**Und `setPointerCapture` warf** — gefunden von `test463`, weil der Wurf
+als Seitenfehler auflief. Er bricht den Rest des Handlers ab, der Punkt
+käme also gar nicht erst; im Prüflauf fiel es nur nicht auf, weil das
+nächste `pointermove` ihn setzte. Jetzt in `try/catch`, wie in `marken.ts`.
+
+**Und der neue Knopf nahm dem Titel den Platz** — gefunden von `test285`,
+dem Wächter der Kopfzeile am Telefon. Fünf Knöpfe zu 44 px und 88 px
+Blättern liessen dem Dokumentnamen 70 px; er verlangt mindestens 100.
+Nachgemessen, nicht geraten. Am Telefon steht „Präsentieren" darum in der
+Klappe der Befehlsleiste — dieselbe Stelle, an die E468 schon die Suche
+gelegt hat, und derselbe Grund: der Kopf am Telefon ist voll, und ein
+Knopf, der den Namen des Dokuments verdrängt, ist kein Gewinn.
+
+## Was L133 dazu jetzt sagt
+
+Die Zeile wird nicht gelöscht, sondern berichtigt: der Präsentationsmodus
+ist gebaut, und der Satz daneben — dass das Übrige einen Server braucht —
+gilt weiter für das Übrige (§35: eine geschlossene Lücke wird als
+geschlossen eingetragen, mit Beleg).
+
+GEPRÜFT. `test463` mit 39 Zusagen, vier Gegenproben rot gesehen (§55.2):
+ohne die Marke am Arbeitsraum (die Leisten bleiben stehen), ohne die
+Zeigefläche, ohne die Acht-Pixel-Frage (jedes Zeigen blättert), ohne den
+Tastenzweig. Die vier Zusagen mehr sind der Fund von `test285`: am Telefon
+ist der Knopf im Kopf weg, in der Klappe da, 44 px gross und beschriftet,
+und der Titel behält seine 100 px. Dazu test87, test105, test109, test285,
+test351.
+Bild: `node bilder.mts praesentieren` — die Ansicht ist neu.
+
+---
+
+E494 — Die Elemente-Bibliothek: eine Auswahl wird ein Stempel
+--------------------------------------------------------------------------
+
+L133 führte GoodNotes' „Elements" unter dem, was Redion nicht haben wird, mit
+dieser Begründung:
+
+> „**Elemente-Bibliothek (Sticker, GIPHY)** — Redion hat die Fachzeichen;
+> eine allgemeine Sammlung wiederverwendbarer Marken wäre neu."
+
+**Der zweite Halbsatz ist kein Grund, sondern eine Beschreibung.** Neu ist
+jede Funktion, bevor sie da ist. Und „wiederverwendbare Marken" sind in
+Redion nichts Neues: es sind dieselben Marken, die die Zwischenablage seit
+E353 kopiert — nur überleben sie das Dokument und den Neustart.
+
+(Was an der Zeile stimmt, ist die Klammer: **GIPHY kommt nicht.** Eine
+Bildersuche im Netz widerspricht §21 und §22 und bringt fremde Inhalte in
+eine App, die ohne Netz vollständig sein soll. Die Bibliothek hält, was der
+Nutzer selbst gezeichnet hat.)
+
+## Was gebaut wurde
+
+    ⭐ Elemente        das zwölfte Werkzeug, neben dem Fachzeichen — beides
+                      setzt mit einem Tipp etwas Fertiges
+    ⭐ Als Element     der einzige Weg HINEIN, bei der Auswahl: was gewählt
+                      ist, wird unter einem Namen abgelegt
+    die Bibliothek    ein Feld von Kacheln, jede mit dem Bild ihres Elements,
+                      seinem Namen und einem Papierkorb
+    stempeln          der erste Tipp öffnet die Bibliothek, jeder weitere
+                      setzt dasselbe wieder — mittig unter dem Zeiger
+    im Studio         das Werkzeug steht auch in der Zeichenleiste des
+                      PDF-Studios, dort wird gestempelt
+
+## Warum es KEIN neues Zeichenmodell ist
+
+Ein Element ist eine Liste Marken, auf den Nullpunkt gerückt. Kein neues
+Format, kein zweiter Katalog (§8), keine eigene Zeichenroutine: die Vorschau
+in der Kachel entsteht mit `zeichneMarke`, derselben Funktion, die auch die
+Seite malt. Zwei Zeichner für dieselben Marken laufen auseinander, und dann
+zeigt die Vorschau etwas anderes als das Blatt.
+
+Dieselbe Sparsamkeit beim Speicher: die Bibliothek liegt in `meta`, wie die
+Farbsätze aus E486. Damit reist sie in `.json` und in `.redion` mit, ohne
+dass am Sicherungscode etwas zu tun war (§9, §11).
+
+## Die Sperre reist nicht mit
+
+`elementNormieren` wirft `gesperrt` weg, und das ist Absicht. Eine Sperre
+gehört zu einer Marke auf EINER Seite („diese hier nicht mehr anfassen"),
+nicht zu einer Vorlage. Ein Element, das gesperrt ankommt, liesse sich nach
+dem Setzen nicht mehr verschieben — und E492 hat gerade erst gezeigt, was
+eine Sperre kostet, die man nicht mehr löst.
+
+## Zwei Zahlen, und beide sagen es
+
+`meta` hält Einstellungen, keine Anhänge. Darum sechzig Elemente und keines
+über 200 KB. Beides wird **gesagt**, nicht still gemacht (§35): wer das
+einundsechzigste sichern will, bekommt eine Absage statt dass das erste
+verschwindet, und wer zu viel wählt, liest die Zahl in KB.
+
+`elementSichern` gibt deshalb keinen `null`-Wert zurück, sondern einen
+Grund. Es gibt drei — nichts gewählt, voll, zu gross —, und „es ging nicht"
+wäre bei jedem von ihnen die falsche Auskunft.
+
+## Was die Bibliothek NICHT kann, und es steht in `LUECKEN.md`
+
+Ein Element mit einer BILDMARKE trägt die Kennung der Datei, nicht die Datei.
+Wer es aus einer `.json`-Sicherung zurückholt (die keine Anhänge kennt, §11),
+hat das Element und nicht sein Bild. Die Marke bleibt trotzdem stehen und
+zeigt ihren Platzhalter — sie wird nicht stillschweigend gelöscht (§18).
+
+Und kein Tastenkürzel: GoodNotes hat für „Elements" auch keines, und die
+Kürzelliste steht an zwei Stellen (`marken.ts` und `register/tasten.ts`,
+zusammengehalten von `test438`). Eines nur der Vollständigkeit halber wäre
+ein zweiter Ort mehr für denselben Zustand.
+
+## Vier Funde, und keiner kam vom Lesen
+
+**Der Typ hiess `Element`.** Das ist die DOM-Klasse. Ein Typ dieses Namens
+verdeckt sie in der ganzen Datei, und `npm run typecheck` meldete danach an
+achtzehn Stellen „Property 'closest' does not exist on type 'Element'" — in
+Zeilen, die niemand angefasst hatte. Jetzt `LibraryElement`.
+
+**`--danger` und `--bg-2` gibt es nicht.** Beide waren im ersten Wurf des
+Stilblatts, beide wären unsichtbar geblieben statt rot zu werden. Die echten
+heissen `--gefahr` und `--bg-hover` (§39, und es ist das vierte Mal).
+
+**Der Kasten beginnt nicht am Punkt.** `InkGeometry.bounds` rechnet die halbe
+Strichbreite mit; ein Element aus einem 5er Strich misst 61 × 61 statt
+56 × 56, und sein erster Punkt liegt bei 2,5. Das ist richtig so — ein
+Stempel, dessen Punkte auf 0 lägen, hätte die halbe Linie ausserhalb seines
+Kastens. Die erste Fassung des Prüflaufs behauptete das Gegenteil.
+
+**Der Knopf mass 43,34 px.** Nachgemessen, während `.finder` mit der
+Animation `studio-arrive` einfuhr: dort steht das Fenster auf
+`matrix(0.985, …)`. Der Knopf ist 44 px und war es immer; gemessen wurde die
+Animation. Der Prüflauf wartet jetzt, bis das Fenster angekommen ist.
+
+## Und ein Fund ausserhalb dieses Bogens
+
+`test348 §5` war seit **E486** rot, ohne dass es jemandem aufgefallen wäre:
+das „+" der Farbgruppe führt seither erst in eine Wahl, und der Prüflauf
+suchte den Farbwähler direkt dahinter. `test343` hatte den Nachtrag damals
+bekommen, `test348` nicht. Behoben, denselben Weg.
+
+Die Lehre steht schon in §46 und ist hier zum zweiten Mal fällig: ein
+Prüflauf, den niemand laufen lässt, meldet seinen Fund nicht von selbst.
+
+## Was vorher gemessen wurde (§36)
+
+Ein zwölftes Werkzeug und ein neunter Auswahlknopf hätten die Leiste brechen
+können. Nachgemessen, bevor sie gebaut wurden:
+
+    1360 px Fenster   Leiste 596 px, Werkzeuge belegen 437 px
+    1600 px, breit    Leiste 1184 px, mit Wörtern 919 px
+    Auswahlzeile      120 px hoch mit acht Knöpfen, 120 px mit neun
+    Telefon           die Zeile rollt ohnehin, wie seit E356
+
+Eine Zeile bleibt eine Zeile. Wäre sie es nicht geworden, wäre das Werkzeug
+wie die Farbsätze hinter einen vorhandenen Knopf gewandert (E486).
+
+GEPRÜFT. `test464` mit 62 Zusagen, fünf Gegenproben rot gesehen (§55.2):
+ohne den Knopf in der Leiste, ohne `delete kopie.gesperrt`, mit stillem
+Wegwerfen des ältesten, mit der Ecke statt der Mitte, ohne den Zweig in
+`pointerdown`. Angepasst, weil sie zählen: `test348` (elf Gruppen, und der
+Nachtrag von E486), `test351` (zwölf Werkzeuge, neun Auswahlknöpfe),
+`test365` (zwölf), `test437` (zwölf im Studio). Dazu test87, test105,
+test109, test247, test344, test349, test386, test424, test461 — alle grün.
+Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts elemente` — die Bibliothek ist neu.
+
+---
+
+E495 — Cornell und Notenlinien: zwei Papiere, und was Prozent in einem Verlauf bedeutet
+--------------------------------------------------------------------------
+
+GoodNotes' Vorlagenwähler hat neben Blanko, Liniert, Kariert und Punktraster
+zwei Papiere, die Redion nicht hatte und die man an ihrer Form erkennt:
+**Cornell-Notizen** und **Notenlinien**. Beide sind in Redion, was alle
+Papiere sind — reine Darstellung (E100): ein Feld am Block, Verläufe im
+Stilblatt. Wer von Cornell auf blanko wechselt, verliert kein Wort und
+keinen Strich; `test465 §5` fährt fünf Wechsel und zählt danach nach.
+
+## Was gebaut wurde
+
+    Cornell    50 mm Spalte links, 30 mm Kopf, 50 mm Zusammenfassung
+               unten, dazwischen Zeilen — die Masse des Originals von
+               Walter Pauk, nicht geraten
+    Noten      fünf Linien im Abstand von 3 mm, dann 15 mm Luft: ein
+               Takt von 27 mm, elf Systeme auf A4
+
+Beide stehen im selben Katalog wie die fünf alten (`Blatt.PAPIERE`), und
+deshalb stehen sie ohne weiteres Zutun auch in der Klappe der Blattleiste
+UND im Wähler „Papier für neue Seiten" des PDF-Studios — der liest denselben
+Katalog (§8).
+
+## Der Fund, um den es hier wirklich geht
+
+Das erste Notenpapier zeigte **eine Linie je System statt fünf**. Der Grund
+ist ein Satz, den man einmal gelesen haben muss:
+
+> **Prozentzahlen IN einem Verlauf beziehen sich auf die KACHEL
+> (`background-size`), nicht auf das Element.**
+
+Die Notenabstände standen in Prozent des BLATTES: 3 mm sind dort rund 1 %,
+und 1 % einer 27 mm hohen Kachel ist ein viertel Millimeter. Alle fünf
+Linien fielen aufeinander. Auf dem Papier stand eine Linie, und sie sah aus
+wie liniertes Papier mit grossem Abstand — also wie etwas, das jemand so
+gewollt haben könnte.
+
+**Kein Prüflauf hätte das gemeldet.** Beide Fassungen zeichnen Linien; nur
+die falsche zeichnet die falschen. Das Bild hat es gefunden, in dreissig
+Sekunden (§55.1).
+
+Danach gibt es in `blatt.ts` drei Rechenwege mit drei Namen, und der Name
+sagt, worauf sich die Zahl bezieht:
+
+    seite(mm)            Anteil am ganzen Blatt   → background-size
+    inSeitenkachel(mm)   Anteil an EINER Seite    → Stopps bei Cornell
+    inKachel(mm, kachel) Anteil an der Kachel     → Stopps bei den Noten
+
+`test465 §2` hält sie auseinander, und zwar an der einzigen Stelle, an der
+sie sich unterscheiden: auf einem DREISEITIGEN Blatt. Bei einem einseitigen
+sind Blatt und Seite dasselbe, und der Fehler wäre unsichtbar geblieben.
+
+## Cornell braucht sechs Schichten, und ihre Reihenfolge ist die Lösung
+
+CSS kann keinen Verlauf, der nur in einem Ausschnitt gilt. Die senkrechte
+Spaltenlinie liefe also durch Kopf und Zusammenfassung. Sie läuft deshalb
+ganz durch und wird oben und unten mit zwei **Bändern in Papierfarbe**
+wieder zugedeckt; über den Bändern liegen die zwei kräftigen Querlinien:
+
+    1 Kopflinie · 2 Fusslinie · 3 Kopfband · 4 Fussband
+    5 Spaltenlinie · 6 Zeilen
+
+Die Bänder nehmen `var(--paper)` und nicht Weiss. Das Papier ist `#f8f8f5`;
+ein Band in reinem Weiss stünde als hellerer Streifen darauf, und niemand
+wüsste, warum.
+
+## Warum kein isometrisches Papier
+
+GoodNotes hat es, Redion bekommt es nicht — und der Grund ist derselbe wie
+in E100. Seine Linien laufen schräg, und ein schräger
+`repeating-linear-gradient` misst seinen Abstand SENKRECHT zur Linie. In
+Prozent einer Fläche heisst das: der Abstand ändert sich mit dem
+Seitenverhältnis. Am Telefon wären es andere Dreiecke als am Rechner. Das
+ginge nur mit einem gezeichneten Muster, und das ist ein eigener Bogen. Der
+Satz steht im Quelltext, damit niemand es „schnell noch dazu" macht.
+
+## Was L133 dazu weiter sagt
+
+Die Zeile „Einfügen aus einer Vorlage mit Inhalt" bleibt **offen**. Diese
+Papiere sind das, was GoodNotes' Vorlagenwähler zum grössten Teil ist —
+Papiere, keine Seiten mit Text und Marken. Eine Vorlagenseite aus dem
+Vorlagenregister ist weiterhin ein eigener Bogen, und das steht so da,
+statt die Zeile zu schliessen, weil zwei Drittel davon jetzt gehen.
+
+GEPRÜFT. `test465` mit 41 Zusagen, fünf Gegenproben rot gesehen (§55.2):
+ohne den Katalogeintrag, mit blattbezogenem Notenabstand (1,01 statt
+11,11 %), mit blattbezogenem Cornell-Kopf (3,37 statt 10,1 %), ohne die
+zwei Bänder, und mit einem Aufbau, der das gewählte Papier nicht mehr
+weiterreicht. Angepasst, weil sie zählen: `test207` (sieben statt fünf),
+`test351` (die Klappe trägt sieben). Dazu test87, test105, test109,
+test265 — alle grün. Nicht geprüft: die Gesamtsuite.
+Bilder: `node bilder.mts papiere` und `papierfuss` — beide Ansichten sind neu.
+
+---
+
+E496 — Eine Seite in ein anderes Dokument
+--------------------------------------------------------------------------
+
+GoodNotes hat im Seitenmenü „Copy to…" und „Move to…". Redion hatte
+Verdoppeln und Löschen — und sonst nichts, was eine Seite über die Grenze
+ihres Dokuments gebracht hätte. Wer eine Seite aus dem Skript in seine
+Mitschrift holen wollte, sicherte sie als Bild und fügte sie wieder ein:
+danach war sie ein Foto. Jede Marke weg, die Textschicht weg, der Verweis
+weg.
+
+## Kopieren und Verschieben sind NICHT dasselbe mit einem Häkchen
+
+    Kopieren     `Store.baum` + `baumEinfuegen` → FRISCHE Kennungen, und
+                 das Seitenbild wird kopiert, nicht geteilt (E467)
+    Verschieben  derselbe Block hängt um → DIESELBE Kennung, kein neues
+                 Bild, kein zweiter Eintrag im Dateispeicher
+
+Der Unterschied ist nicht Sparsamkeit. Ein Verweis auf eine Seite (E468,
+`zielSeite`) zeigt auf ihre KENNUNG. Wäre Verschieben ein Kopieren mit
+anschliessendem Löschen, zeigte danach jeder Verweis auf eine Seite im
+Papierkorb — und niemand sähe, warum. `test466 §3` misst deshalb nicht,
+dass „eine Seite da ist", sondern dass es DIESELBE ist.
+
+## Die Reihenfolge beim Verschieben ist die ganze Sicherheit
+
+    1 in die neuen Eltern legen
+    2 `parentId` umhängen
+    3 aus den alten nehmen
+
+Bräche irgendetwas dazwischen ab, stünde die Seite in BEIDEN Dokumenten —
+sichtbar, und mit einem Griff zu berichtigen. In der anderen Reihenfolge
+stünde sie in keinem, und niemand wüsste, wo sie war. §51 in drei Zeilen.
+
+## Was nicht geht, und warum es gesagt wird
+
+Die **einzige** Seite eines Dokuments lässt sich kopieren, aber nicht
+verschieben: sonst bliebe ein Dokument ohne Seite zurück, und das gibt es
+in Redion nicht — ein Dokument entsteht mit seiner ersten Seite. „Verschieben"
+steht dann gar nicht erst zur Wahl, und daneben steht, warum (§35).
+
+## Der Fund des Prüflaufs: `edit` ist kein Verb
+
+Die erste Fassung fragte das Rechtetor mit `Konten.darf('edit', seite.id)`.
+`edit` ist der Name einer ROLLE (§26: `voll · edit · komm · lesen · kein`);
+die Frage an das Tor heisst `bearbeiten`, wie überall sonst in derselben
+Datei (`darfSeiten`, `canAnnotate`).
+
+Das Tor sagte damit auf JEDER Seite nein. Die Liste der Ziele war immer
+leer, und die Funktion meldete „Es gibt kein anderes Dokument" — auf einem
+Gerät mit vier Dokumenten. Kein Absturz, keine Warnung, nur eine Auskunft,
+die falsch war und plausibel aussah.
+
+Das ist E21 zum wiederholten Mal: eine Schnittstelle aus dem Gedächtnis
+geschrieben, statt sie nachzuschlagen. Und es ist zugleich der Grund, warum
+`test466` den Weg wirklich klickt statt die Funktion aufzurufen — ein
+Prüflauf, der `seiteInsDokument` direkt riefe, hätte denselben Fehler
+mitgemacht.
+
+**Nachgezogen bei der Gelegenheit:** eine GESPERRTE Seite ist auch kein
+Ziel. `darfSeiten` stellt diese zweite Bedingung für die eigene Seite seit
+je; für das Ziel fehlte sie.
+
+## Eine Tür für das Seitenbild
+
+`seitenbildKopieren` stand bis hierher im Rumpf von `seiteDuplizieren` —
+mit dem ganzen Absatz darüber, warum das Bild kopiert und nicht geteilt
+wird (`purgeBlock` nimmt die Anhänge seines Blocks mit). Mit dem zweiten
+Aufrufer wäre daraus eine Abschrift geworden, und die zweite hätte den
+Absatz nicht mitbekommen. Also steht sie jetzt einmal da (§8).
+
+GEPRÜFT. `test466` mit 32 Zusagen, vier Gegenproben rot gesehen (§55.2):
+ohne den Knopf im Inspector, mit einer Kopie ohne Kindblöcke, mit einem
+Verschieben über Kopie und Papierkorb (neue Kennung), ohne die Grenze für
+die einzige Seite. Angepasst, weil es zählt: `test453` (zehn Griffe im
+Menü an der Miniatur). Dazu test87, test105, test109, test386, test424,
+test437, test450, test461, test462 — alle grün.
+Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts seitenumzug` — die Wahl ist neu.
+
+---
+
+E497 — Der breite Lauf: zwei Fehler, die seit Wochen rot waren
+--------------------------------------------------------------------------
+
+Nach vier Bögen am PDF-Teil (E493 bis E496) wurde gefahren, was E485 einmal
+gefahren hat: **alles, was die geänderten Bausteine anfasst.** Ausgewählt
+nicht nach Gefühl, sondern gesucht — jede Suite, die `blatt-werk`,
+`blatt-marken`, `document-workspace`, `Marken.`, `DocumentMode`,
+`blatt-papier` oder `Dialog.` erwähnt. Es sind **84**, gefahren in Stücken
+(§30).
+
+Ergebnis: **38 Suiten waren rot oder mussten nachgezogen werden, zwei davon
+wegen eines echten Fehlers.** Und beide Fehler stammen NICHT aus diesen vier
+Bögen, sondern aus früheren — sie lagen seit Wochen da, weil ihre Suite
+niemand gefahren hat.
+
+## Fehler 1: Ein Werkzeug mit zwei Namen
+
+Das Abdeckband hiess in der Blattleiste „Abdeckband" und im Menüband
+„Abdecken". Der zweite Name kam, als die Werkzeugliste zu EINEM Katalog
+zusammengezogen wurde (Vorarbeit zu E492): dabei bekam der Knopf im
+Vorbeigehen eine neue Beschriftung.
+
+Das ist genau, wovor §8 warnt — zwei Kataloge für dasselbe laufen
+auseinander, und niemand sieht, welcher gilt. `test266 §1` hielt es fest
+und war seither rot.
+
+Berichtigt auf „Abdecken": das ist der Name, den das Menüband trägt und den
+der Nutzer seit E266 kennt. Ein stillschweigend umbenannter Knopf ist keine
+Verbesserung, sondern eine zweite Wahrheit.
+
+## Fehler 2: „Zurück" und „Vor" rollten am Telefon aus dem Bild
+
+E490 hat die zwei nach GoodNotes-Art an den ANFANG der Zeichenleiste
+gestellt. Die Regel, die sie am Telefon festhält, blieb dabei stehen, wie
+sie war:
+
+    position:sticky; right:0; margin-left:auto      (für rechts)
+
+Ein klebendes Element hält an `right:0` nur, wenn es über den RECHTEN Rand
+hinauswandern würde. Das erste Element einer rollenden Leiste wandert beim
+Rollen aber nach LINKS hinaus — und dafür braucht es `left:0`.
+
+Gemessen bei 390 px: ganz nach rechts gerollt standen beide ausserhalb der
+Leiste. Wer am Telefon schreibt und etwas zurücknehmen will, musste erst
+zurückwischen — also genau das, was E396 abgeschafft hatte. `test393 §2`
+sah es.
+
+## Was sonst nachgezogen wurde (keine Fehler, sondern Zahlen)
+
+    test207, test351   sieben Papiere statt fünf (E495)
+    test210            fünfzehn Knöpfe in der Zeichenleiste (E494)
+    test348            elf Zubehörgruppen; dazu der Nachtrag von E486
+    test365, test437   zwölf Werkzeuge (E494)
+    test438            fünf Stifte, der Schutzleiter zuletzt (E490)
+    test440, test442,
+    test453            zwölf Seitengriffe (E496)
+    test362            das Verzeichnis der rohen Pixelwerte
+
+Bei `test362` wurde nicht nur die Zahl nachgetragen: die rohe `44px` des
+Papierkorbs in der Elemente-Bibliothek ist jetzt `var(--touch-min)` — die
+Marke IST die Zahl. Nur die 22 px des Laserpunkts sind wirklich roh
+geblieben, denn ein Punkt ist keine Trefferfläche; dafür steigt das
+Verzeichnis um zwei.
+
+## Die Lehre, und sie steht jetzt zum dritten Mal hier
+
+`test266` war rot seit der Werkzeugliste. `test348` war rot seit E486
+(gefunden bei E494). `test393` und `test438` waren rot seit E490.
+
+Vier Suiten, vier Wochen, und keine hat sich gemeldet — weil ein Prüflauf,
+den niemand fährt, nichts meldet. §46 sagt „rot zuerst"; das setzt voraus,
+dass man WEISS, was rot ist. Ein voller Lauf ist teuer (§30: er läuft in
+Stücken, weil er länger dauert als eine Sitzung sicher steht) — ein
+Lauf über die betroffenen Bausteine ist es nicht, und er hat hier zwei
+echte Fehler gefunden.
+
+**Also gehört er ans Ende jedes Bündels**, nicht nur ans Ende eines
+Jahres: wer mehrere Bögen an einem Bereich fertig hat, sucht die Suiten,
+die den Bereich erwähnen, und fährt sie.
+
+GEPRÜFT. 84 Suiten, in Stücken gefahren; danach die 38 betroffenen noch
+einmal in einem Zug — alle grün. Nicht geprüft: die Gesamtsuite (323
+Läufe).
+
+---
+
+E498 — Die zwei letzten Reste, und drei Zeilen, die keine Lücke waren
+--------------------------------------------------------------------------
+
+Zwei kleine Zeilen aus L133, beide seit G5 offen — und beim Abarbeiten kam
+heraus, dass drei andere Zeilen gar keine Lücke gegenüber GoodNotes sind.
+
+## 1 · „Ausschnitt" und „Erkennen" ruhen SICHTBAR
+
+Beide gelten der ganzen Seite; im Zoom-Fenster sieht man einen Streifen
+davon. Ein Ausschnitt, den man dort zöge, läge auf der Seite ganz woanders.
+E470 hat deshalb schon nein gesagt — **aber erst nach dem Druck**, als
+Meldung.
+
+Ein Knopf, der aussieht, als ginge er, und dann eine Absage gibt, muss
+zweimal gelesen werden. Jetzt steht der Zustand am Knopf: `disabled`,
+`aria-disabled` und ein Hinweis, der sagt WARUM (§38).
+
+Die Meldung bleibt trotzdem stehen — sie fängt den Weg über die Tastatur
+und über die Befehlspalette, die den Knopf nicht sieht.
+
+Der Ruhezustand überlebt ein Neuzeichnen des Inspectors: der baut seine
+Knöpfe frisch, und ohne vier Zeilen dort stünden sie nach dem Zuklappen und
+Aufklappen wieder offen da, während das Fenster noch offen ist. Genau das
+misst `test467 §2`.
+
+## 2 · Seiten wandern über Spaltengrenzen
+
+`seiteAnStelle` (E480) sagte nein, wenn die Seiten eines Dokuments in
+mehreren Spalten liegen: „es gibt keine eine Reihenfolge, in die man
+einsortieren könnte." Das war ehrlich, **solange es keinen Weg gab, einen
+Block umzuhängen.** Seit E496 gibt es ihn.
+
+Jetzt bestimmt die Zielstelle die Eltern: die Seite wandert in die Eltern
+der Seite, VOR die sie fällt — und fällt sie ans Ende, in die der letzten.
+Mit derselben Reihenfolge wie in E496, und aus demselben Grund:
+
+    1 in die neuen Eltern legen
+    2 `parentId` umhängen
+    3 aus den alten nehmen
+
+Bräche etwas dazwischen ab, stünde die Seite in beiden Spalten — sichtbar.
+In der anderen Reihenfolge in keiner.
+
+In DERSELBEN Spalte bleibt alles, wie es war: ein Umsortieren in einer
+Liste, kein Umhängen. Zwei Zweige, weil es zwei verschiedene Dinge sind —
+und `test467 §4` hält den einfachen Fall fest, damit der neue ihn nicht
+mitnimmt.
+
+## 3 · Drei Zeilen in L133 waren keine GoodNotes-Lücke
+
+Beim Nachlesen gegen GoodNotes:
+
+  · **„Verbinder des Shape-Tools"** — GoodNotes' Formenwerkzeug hat keine
+    Verbinder. Das ist ein Wunsch für den Schaltplan-Teil, kein Rückstand.
+  · **„Auswahl über mehrere Blätter"** — GoodNotes' Lasso gilt je Seite,
+    genau wie Redions. Kein Rückstand.
+  · **„Stift-Favoriten"** stand nirgends, und das ist richtig so: GoodNotes'
+    drei Favoriten sind FARB-Voreinstellungen, und die hat Redion seit E486
+    als Farbsätze — mächtiger und benannt. Ein zweiter Katalog daneben wäre
+    genau das, wovor §8 warnt. Der Absatz steht hier, weil die Frage sonst
+    beim nächsten Durchgang wiederkommt.
+
+Alle drei bleiben in `LUECKEN.md` stehen, aber unter dem richtigen Titel:
+als Wunsch, nicht als Rückstand. §35 sagt, eine Lücke wird nicht gelöscht —
+sie wird aber auch nicht falsch stehen gelassen.
+
+GEPRÜFT. `test467` mit 20 Zusagen, drei Gegenproben rot gesehen (§55.2):
+ohne `ausschnittRuhen` beim Öffnen, ohne den Block im Inspector (nach dem
+Neuzeichnen offen), und mit der alten Absage über Spaltengrenzen. Dazu
+test87, test105, test109, test440, test442, test443, test450, test453 —
+alle grün. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts zoomruhe` — die zwei ruhenden Knöpfe.
+
+---
+
+E499 — Ein mehrseitiges Blatt in Seiten zerlegen
+--------------------------------------------------------------------------
+
+Die letzte offene Zeile unter „Seiten" in L133:
+
+> „**Mehrseitige Notizhefte als EIN Block** — ein `blatt` wächst in die Höhe
+> (E118); Seitengriffe gelten ihm als Ganzem. Ein Heft mit drei Blattseiten
+> lässt sich nicht seitenweise drehen oder löschen."
+
+In GoodNotes ist jede Seite eine Seite. Redions mehrseitiges Blatt ist eine
+eigene Form, und sie ist **nicht falsch** — sie ist genau das, was ein Heft
+ist, in das man fortlaufend schreibt. Falsch ist nur, dass die Seitengriffe
+mit ihr nichts anfangen können.
+
+Also nicht: die Form abschaffen. Sondern: **einen Griff, der sie in
+GoodNotes-Form bringt.** Aus einem Blatt von drei A4 werden drei Blätter
+von je einem, und danach greifen Drehen, Löschen, Verschieben, Duplizieren
+und alles Übrige je Seite.
+
+## Wohin eine Marke kommt
+
+**Auf die Seite, in der ihre MITTE liegt** — und sie bleibt dabei GANZ.
+Kein Strich wird geschnitten (§9: nichts verlieren). Ihre Höhe wandert um
+`nr × A4` mit, sonst läge sie unterhalb ihres neuen Papiers und wäre
+unsichtbar; genau das hat die Gegenprobe gezeigt (942 statt 100).
+
+## Der Satz, der vor dem Zerlegen steht
+
+Eine Marke, die über eine Seitengrenze läuft, ragt danach über den Rand
+ihrer Seite hinaus. Und weil `.blatt-papier` mit `overflow:hidden`
+schneidet, ist der Überstand **nicht mehr zu sehen**.
+
+Er ist nicht weg — er steht vollständig in den Daten und kommt zurück,
+sobald das Blatt wieder höher wird. Aber ein Nutzer sieht das nicht, und
+„unsichtbar" fühlt sich an wie „gelöscht". Darum wird es GESAGT, mit Zahl,
+BEVOR irgendetwas geschieht:
+
+    ACHTUNG: 1 Marke läuft über eine Seitengrenze. Sie kommen ganz auf
+    EINE Seite und ragen dort über den Rand hinaus — sichtbar ist der
+    Überstand dann nicht mehr, verloren ist er nicht.
+
+Läuft keine über eine Grenze, steht das genauso da. Ein Dialog, der nur bei
+Gefahr etwas sagt, macht das Schweigen zur Information — und dann liest man
+es nicht mehr.
+
+## Die Reihenfolge, zum dritten Mal in diesem Bündel
+
+    1 die neuen Blätter MIT ihren Marken anlegen
+    2 danach das Original kürzen
+
+Andersherum wären die Seiten zwei bis n weg, bevor es sie gibt. So stehen
+im schlimmsten Fall Marken doppelt da — sichtbar und zu berichtigen. §51.
+
+## Der Griff ruht, wo es nichts zu zerlegen gibt
+
+Bei einer PDF-Seite oder einem einseitigen Blatt ist er gesperrt, mit
+`aria-disabled` und einem Hinweis, der den Grund nennt. Er verschwindet
+nicht: so bleibt die Reihe der Seitengriffe gleich, und wer ihn sucht,
+findet ihn mit seinem Grund (§38, dieselbe Form wie E498).
+
+GEPRÜFT. `test468` mit 29 Zusagen, drei Gegenproben rot gesehen (§55.2):
+ohne den Ruhezweig, ohne das Verschieben der Höhe, ohne die Zählung der
+Grenzgänger. Dazu test87, test105, test109, test440, test442, test443,
+test453, test466, test467 — alle grün. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts zerlegen` — die Frage vor dem Zerlegen.
+
+---
+
+E500 — Die Schalensuche findet die Stelle, nicht nur das Dokument
+--------------------------------------------------------------------------
+
+L133, unter „Suche und Verweise":
+
+> „Die Schalensuche (Strg P) findet weiterhin Seiten, nicht Stellen — sie
+> ist eine andere Suche, und das bleibt offen."
+
+Bei einem Skript mit zweihundert PDF-Seiten landete man damit auf Seite eins
+und musste dort ein zweites Mal suchen — genau der Weg, den E468 und E487 im
+Studio abgeschafft haben, nur eine Ebene höher.
+
+## Zwei Dinge, und das zweite ist das grössere
+
+**1 · Die Stelle nachliefern.** Für jeden Treffer, dessen Seite ein Dokument
+ist, sagt `DocumentMode.stelleIn` die Seitenzahl, den Block und einen
+Ausschnitt. In der Liste steht danach „Seite 3" statt „Inhalt", und ein Tipp
+öffnet das Dokument DORT.
+
+**2 · Was von Hand geschrieben ist, wird überhaupt erst gefunden.** Text auf
+einem Blatt steht in einer MARKE, und Marken stehen in keinem Suchindex. Ein
+Heft, in dem „Knotensatz" als Textmarke steht, war über Strg P **nicht
+auffindbar** — im Studio (E487) längst. Der zweite Zweig holt diese Treffer
+dazu, mit derselben Rechnung.
+
+Das war kein Punkt in L133. Es ist beim Bauen des ersten Punktes
+aufgefallen: der Prüflauf fand die Mitschrift nicht, und das lag nicht am
+neuen Code.
+
+## Der Zweig, der an der Abfragesprache vorbeigeht
+
+Er greift **nur bei einer reinen Wortsuche** — kein UI-Filter gesetzt, und
+die Abfrage besteht aus genau den freien Wörtern. Der Grund steht seit E175
+zwanzig Zeilen weiter oben am Kennungszweig: wer an der Abfragesprache
+vorbeigeht, geht auch an ihren Filtern vorbei, und dann zeigt „nur Titel"
+plötzlich Inhaltstreffer.
+
+Die freien Wörter werden dabei aus der Rohabfrage geschnitten
+(`titel:"Projekt"` und `tag:arbeit` fallen weg). Das ist eine Näherung, und
+sie steht in der Schale, weil die Abfragesprache ihren Klartext nicht
+herausgibt — sie kennt weder DOM noch Ablage, und das soll so bleiben.
+
+## Eine Fundregel, zwei Sucher
+
+`fundIm` entscheidet an EINER Stelle, ob eine Dokumentseite ein Wort trägt
+und in welchem Text: `suchtext` der PDF-Seite (E107), der Text der Text- und
+Zettelmarken, der Text der Kindblöcke. Vorher stand die Regel im Rumpf von
+`fremdeTreffer`; mit dem zweiten Sucher wäre sie zur Abschrift geworden, und
+dann fände die eine Suche etwas, das die andere nicht kennt (§8).
+
+## Der Fund der Gegenprobe: fast eine zweite Tür
+
+Der erste Entwurf hat in `zumTreffer` einen eigenen Sprungzweig gebaut —
+Seite wählen, dann öffnen. Die Gegenprobe zeigte, dass §3 auch OHNE ihn grün
+ist: `zeigeBlock` kann das längst. Es erkennt ein `pdfseite`/`blatt`-Ziel,
+wählt über `DocumentMode.select` die Seite und schaltet den Dokumentmodus
+notfalls ein.
+
+Der eigene Zweig wäre also nicht nur überflüssig gewesen, sondern an
+`Links.seiteVon` und am Rest jener Logik vorbeigelaufen. Er ist wieder weg.
+**Neu ist einzig, dass ein Suchtreffer eine `blockId` mitbringt** — den
+Rest konnte die Schale schon.
+
+## Der Fund des Bildes
+
+Der erste Ausschnitt in der Liste kam von der Abfragesprache und schnitt aus
+dem Text der GANZEN Seite; bei einem Dokument ist das der Text aller Seiten
+hintereinander, und der Schnitt fiel mitten in ein Wort: „…trom Kapitel 2 —".
+Jetzt gewinnt der Ausschnitt der STELLE, und dort steht, was auf dieser
+Seite steht.
+
+GEPRÜFT. `test469` mit 26 Zusagen, vier Gegenproben rot gesehen (§55.2):
+ohne den zweiten Zweig (die Mitschrift fehlt), ohne die `blockId` (der
+Sprung landet auf Seite 1), ohne die Marken in `fundIm`, und der Sprungzweig
+selbst — der grün blieb und deshalb wieder weg ist. Dazu test87, test105,
+test109, test229 (die Filter der Suche), test459 (die Suche im Studio) —
+alle grün. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts schalensuche` — die Liste mit „Seite 3" und „Seite 2".
+
+---
+
+E501 — Ein Farbsatz wird eine Voreinstellung
+--------------------------------------------------------------------------
+
+Redurs Dossier, Abschnitt „Stift, Bleistift, Marker und Radierer":
+
+> „Farben und Stärken lassen sich anpassen und als Presets bereithalten."
+
+Redion hatte seit E458 Farbsätze — Farben unter einem Namen. Was fehlte,
+war die Hälfte des Satzes: die STÄRKE, und der Stift dazu. Wer für die
+Korrektur einen dünnen roten Kugelschreiber will und fürs Markieren einen
+dicken Füller, holte bisher die Farben zurück und stellte den Rest jedes
+Mal neu.
+
+## Kein zweiter Katalog, zwei Felder mehr
+
+Die naheliegende Lösung wäre ein eigenes Preset-Register neben den
+Farbsätzen gewesen. Das ist genau der zweite Katalog aus §8: zwei Listen
+für dieselbe Sache, die auseinanderlaufen, und niemand sieht, welche gilt.
+
+Stattdessen bekommt der vorhandene Satz zwei optionale Felder:
+
+```ts
+type Farbsatz = { name: string; farben: string[]; stil?: string; breite?: number }
+```
+
+**Beide sind optional, und das ist die Rückwärtsregel** (§9): ein Satz aus
+der Zeit vor E501 hat sie nicht und lädt weiter genau seine Farben. Er
+verspricht dann auch nichts anderes — der Hinweis in der Liste nennt Stift
+und Stärke nur, wenn der Satz sie wirklich trägt.
+
+Beim Einlesen wird geprüft, was es GIBT: ein Stift, den dieser Stand nicht
+kennt, fällt weg, statt beim Laden ins Leere zu greifen. Eine Breite muss
+eine endliche Zahl über null sein.
+
+## Der Fund, der nicht geplant war: die Stärke stand an vier Orten
+
+Der erste Entwurf setzte beim Laden `controls.setzeStrich(satz.breite)` —
+und der Prüflauf las danach 1,2 statt 5.
+
+Eine Strichstärke steht nämlich an VIER Stellen: in der Fläche, die
+zeichnet; in `Zeichenziel`, das sie für die anderen Anzeigen merkt; in den
+Stufenknöpfen, die sie zeigen; und im Regler, der ihre Zahl nennt. Wer nur
+die erste setzt, hat sie gesetzt und nirgends gezeigt — und `markiere()`
+las beim nächsten Malen den alten Wert zurück.
+
+Das war schon vorher so, nur fiel es nicht auf, weil Regler und
+Stufenknöpfe je ihre eigene Abschrift derselben vier Zeilen hatten. Jetzt
+gibt es `strichSetzen(wert)` als eine Tür, und alle drei Wege gehen
+hindurch — der Regler, die Stufenknöpfe und das Laden.
+
+Dieselbe Sache beim Stift: sein Zeichen, sein Wort und sein `data-stil`
+standen nur im Klickgriff. Mit dem Laden gäbe es einen zweiten Aufrufer,
+also gibt es `stiftZeigen(id)`.
+
+## Was der Nutzer sieht
+
+Der Knopf heisst nicht mehr „Diese Farben sichern", sondern „Diese
+Einstellung sichern", und der Hinweis sagt, was mitkommt. Beim Laden sagt
+eine Meldung, ob es nur Farben waren oder Farben, Stift und Strichstärke.
+Ein still verschluckter Unterschied wäre schlimmer als eine Absage (§35).
+
+GEPRÜFT. `test470` §1–§3 (Sichern mit Stift und Stärke, Laden setzt alle
+vier Orte, ein alter Satz ohne beides bleibt gültig), `test458` in der
+angepassten Form — `farbsatzLaden` gibt seit hier den ganzen Satz zurück
+und nicht nur die Farben, weil zwei Griffe für eine Voreinstellung einer zu
+viel wären (§8). Gegenproben rot gesehen (§55.2): ein Satz, der `stil` und
+`breite` vergisst; ein Laden ohne `stiftZeigen`. Dazu test87, test105,
+test109, test343, test348, test351, test438, test458, test464 — alle grün.
+Nicht geprüft: die Gesamtsuite.
+Messung statt Bild: die Werte stehen im Prüflauf, das Bild zeigte nichts
+Neues (§55.3).
+
+---
+
+E502 — Das GIF und die PDF-Seite als Marke: schieben, ziehen, drehen
+--------------------------------------------------------------------------
+
+Redur, zum Dossier:
+
+> „auch das ich gifs und mein Formelbuch hier einfügen kann und so kleiner
+> grösser machen kann, verschieben kann."
+
+Beides ging bis hierher nicht so, wie er es meinte.
+
+## Das GIF lief nicht
+
+Ein GIF kam durch `image/*` zwar herein, wurde aber wie jedes Bild
+behandelt. Geprüft war das nie. Der Prüflauf zeigt jetzt, dass die Datei
+mit IHREM Typ und IHRER Grösse in die Ablage geht — `image/gif`, Byte für
+Byte dieselbe Länge. Damit läuft die Bewegung auf dem Blatt weiter, statt
+als Standbild dazustehen: der Browser animiert ein `<image>` mit
+GIF-Quelle von selbst, solange die Bytes ein GIF bleiben.
+
+## Die PDF war nur als SEITEN einzufügen
+
+E469 kann eine PDF in ein Dokument einfügen — als ganze Seiten. Das ist
+das Richtige für ein Skript und das Falsche für eine Formelsammlung, von
+der man EINE Seite neben die Aufgabe legen will.
+
+Als Bildmarke ist sie beides, was Redur wollte: verschieben, an den Ecken
+ziehen, drehen und sperren kann sie danach dieselbe Auswahl wie jede
+andere Marke (E353, E466, E474). Es brauchte dafür kein neues Werkzeug und
+keine neue Markenart — nur einen zweiten Weg IN `bildAblegen` hinein.
+
+## Gerastert, nicht eingebettet
+
+Die gewählte Seite wird einmal gezeichnet und liegt danach als Bild im
+Dateispeicher; die PDF selbst reist nicht mit. Dieselbe Entscheidung wie
+E488 und aus demselben Grund: der Text darin ist danach nicht mehr
+durchsuchbar, dafür braucht das Blatt beim Öffnen keine fremde Bibliothek
+— und ein Blatt, das eine 40-MB-PDF nachladen muss, um eine Ecke zu
+zeigen, ist auf dem Telefon keins.
+
+Hat die PDF mehr als eine Seite, wird gefragt, welche. Eine Zahl ausserhalb
+sagt, welche es gibt, statt still die erste zu nehmen.
+
+## `accept` nennt die PDF ausdrücklich
+
+`image/*,image/gif,application/pdf,.pdf` — die beiden letzten Einträge
+stehen da, weil der Wähler je nach System sonst die PDF ausgraut, und
+`image/gif` steht da, obwohl `image/*` es abdeckt: ein Wähler, der die
+Sorte nicht ausdrücklich kennt, sortiert sie mancherorts weg.
+
+GEPRÜFT. `test470` §4–§6: eine echte GIF-Datei geht mit ihrem Typ und
+ihrer Länge in die Ablage; eine echte, im Prüflauf gebaute PDF wird zur
+Bildmarke; die Marke lässt sich wählen, ziehen und verschieben. Gegenproben
+rot gesehen (§55.2): das GIF mit anderem Typ ablegen; den PDF-Zweig
+abschalten. Dazu test87, test105, test109, test343, test348, test351,
+test438, test458, test464 — alle grün. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts formelbuch` — die Buchseite gewählt, mit Griffen zum
+Ziehen und Drehen, daneben ein GIF-Aufkleber.
+
+---
+
+E503 — Das eigene Formelheft liegt über dem Dokument
+--------------------------------------------------------------------------
+
+Redur, 8. September, gefragt, was mit seinem eigenen Heft gehen soll:
+
+> „Also so die Original bleibt, und wo — wenn beim Elektro, wo die
+> Elektrosymbol ist — beim Dokument arbeiten, die im PDF dort sehen kann,
+> so dass ich es schieben, kleiner grösser machen kann direkt auf dem PDF
+> und ein oder aus halten können."
+
+Vier Dinge stehen darin. Redion konnte eins davon.
+
+## Was es schon gab, und warum es niemand fand
+
+Das Formelheft gibt es seit E194: ein schwebendes Fenster mit Redions
+eigener Sammlung, mit Buchseiten in derselben Zählung wie das gedruckte
+Heft — und mit „Mein Heft", einer eigenen PDF, die man einmal lädt und
+danach durchblättert. Sie liegt als gewöhnlicher Anhang in der IndexedDB
+und geht durch Sicherung und Wiederherstellung wie jede andere Datei.
+
+Der Weg dorthin führte über die Befehlspalette (Strg K) und über einen
+Knopf auf der Planfläche. **Im Dokument gab es keinen** — und das Dokument
+ist genau der Ort, an dem nachgeschlagen wird.
+
+## Der Knopf steht neben dem Fachzeichen
+
+Aus demselben Grund, mit dem in E494 die Elemente dorthin kamen: es ist
+dieselbe Bewegung an derselben Stelle der Arbeit. Das Schaltzeichen setzen
+und die Formel dazu nachsehen gehören zusammen.
+
+Er ist **kein Werkzeug**, sondern ein Schalter — `data-document-action`
+und nicht `data-document-tool`. Ein Werkzeug hält man und zeichnet damit;
+dieses Fenster liegt daneben, während man mit einem anderen zeichnet, und
+darf deshalb die Werkzeugwahl nicht anrühren.
+
+Seinen Zustand besitzt er nicht: das Heft geht auch über sein ✕ und über
+Escape zu. Abgefragt würde das nie bemerkt, also **sagt das Heft Bescheid**
+— `Formelheft.horche`, dasselbe Muster wie `Zeichenziel.horche`, damit es
+nicht ein zweites gibt (§8).
+
+## Drei Fehler, die der Prüflauf gefunden hat und kein Auge
+
+**1 · Der Griff zum Ziehen war seit jeher weg.** `male()` schreibt
+`f.innerHTML` neu und nahm damit jedes Mal das Dreieck unten rechts weg.
+Angehängt wurde es einmal beim Öffnen, gleich darauf malte `neuMalen` das
+Fenster, und ab da war es fort. Das Heft liess sich also **nie** in der
+Grösse ändern — obwohl `pointermove` es konnte und `M_ORT` sogar Breite und
+Höhe merkte. Kein Bildschirmfoto hätte das gemeldet: ein 14-px-Dreieck, das
+fehlt, sieht aus wie eine Ecke. Gefunden hat es Redurs Satz „so dass ich es
+… kleiner grösser machen kann" — und dann `.fh-groesse`, das `null` war.
+
+**2 · Das Fenster legte sich auf den Knopf, der es öffnet.** Die Vorgabe
+`top: 90` stammt aus einer Zeit ohne Studio; im Studio stehen dort Kopf-
+und Zeichenleiste. Aufgehen ging noch, zugehen nicht mehr — die Kopfzeile
+des Hefts fing den Klick ab. Der Prüflauf sagte es wörtlich: „fh-kopf
+intercepts pointer events", und genau das täte auch ein Finger. Jetzt wird
+der untere Rand der Leiste **gemessen** statt geraten (§36), und die Regel
+gilt auch für einen gemerkten Ort: über der Leiste zu parken wählt niemand
+mit Absicht.
+
+**3 · Der Horcher meldete sich sofort wieder ab.** Er prüfte `heft.isConnected`
+— und der erste Ruf kam, bevor die Leiste im Baum hing. Danach blieb der
+Knopf für immer losgelassen. Gemessen wird jetzt am Arbeitsraum, wie beim
+`inkSync` daneben.
+
+Dazu ein vierter, kleinerer: `setPointerCapture` wirft, wenn der Zeiger
+nicht mehr aktiv ist, und darüber stand dann „Etwas ist schiefgelaufen" —
+eine Fehlerkarte für eine Fensterbewegung. Ohne Fang zieht das Fenster
+weiterhin; die Ausnahme ist jetzt abgefangen.
+
+## „Die im PDF dort sehen kann": die Ansicht wird gemerkt
+
+`pdfModus` war eine reine Sitzungsvariable. Wer sein Heft aufgeschlagen
+hatte, bekam beim nächsten Öffnen wieder das Kapitelverzeichnis. Jetzt
+trägt `M_ANSICHT` einen dritten Wert, und eine Tür (`ansichtMerken`)
+schreibt ihn — beim ersten Entwurf schrieb der „Buch"-Zweig `'kapitel'`,
+obwohl das eigene Heft offen blieb.
+
+Gezeigt wird die gemerkte Ansicht nur, **solange es ein Heft gibt**: wer
+seins über ⤒ gelöst hat, landet wieder bei den Formeln statt auf einer
+Einladung, die er kennt.
+
+## Das Original bleibt Original
+
+Nichts wird in die geladene PDF geschrieben — nicht beim Blättern, nicht
+beim Merken einer Seite, nicht beim Schieben oder Ziehen des Fensters.
+`test471` §5 rechnet vorher und nachher eine Prüfsumme über die Bytes in
+der Ablage und vergleicht Kennung, Länge, Summe und Typ. Das ist kein
+Wächter gegen einen bekannten Fehler, sondern gegen einen künftigen: der
+nächste, der hier „nur schnell" eine Seite hineinschreibt, wird rot (§51).
+
+GEPRÜFT. `test471` mit 39 Zusagen. Rot gesehen (§55.2) — die ersten vier
+vor dem Bauen, die fünfte danach eigens: §1 bis §4 ohne den Knopf und ohne
+die gemerkte Ansicht; §3 ohne das Wiederanhängen des Griffs (`.fh-groesse`
+ist `null`); §2 mit `heft.isConnected` statt `workspace.isConnected` (der
+Knopf bleibt losgelassen) und ohne die gemessene Vorgabe (der Klick wird
+abgefangen); §6 ohne das abgefangene `setPointerCapture` (Seitenfehler);
+§4 ohne `hatEigenes()` (die Einladung statt der Formelliste). Dazu test87,
+test105, test109, test240, test241, test244, test247, test438, test440,
+test442, test453, test459, test466, test467, test468, test469 — alle grün.
+Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts heftimstudio` — das Heft über der Aufgabe, der Knopf
+neben dem Fachzeichen gedrückt.
+
+---
+
+E504 — Der Glätter rechnet in Zeit, und der Abbruch ist nicht das Ende
+--------------------------------------------------------------------------
+
+Redur, 8. September, mit einem 22-seitigen Dossier („Digitale Stifte und
+PDF-Annotationen: Vom Sensorsignal bis zur gespeicherten Tintenlinie"):
+„schau mal das genauer an."
+
+Ein Prüflauf über einundzwanzig Punkte des Dossiers — jeder von einem
+zweiten Agenten gegengelesen, der ihn widerlegen sollte — fand zwei Dinge,
+die kein Auge sieht und keine bisherige Prüfung hielt. Beide sind hier
+repariert.
+
+## 1 · Der Filter hing an der Abtastrate des Geräts
+
+`stroke.ts` rechnete `alpha` aus dem Tempo und wandte es dann JE PUNKT an,
+ohne `dt`. Das Tempo war zeitnormiert, die Wirkung nicht.
+
+Die Zeitkonstante eines solchen Filters ist τ = dt·(1−α)/α. Bei festem α
+**schrumpft sie mit der Abtastrate**: derselbe Filter ist auf einem
+240-Hz-Stift viermal schwächer als auf dem 60-Hz-Gerät, an dem die drei
+Zahlen gemessen wurden. Also genau auf dem Gerät, für das man diese Schicht
+baut. Das Dossier sagt es auf Seite 8: „Muss pro Gerät und Samplingrate
+abgestimmt werden; falsche Parameter verzerren Schrift."
+
+**Gemessen, nicht hergeleitet.** `test472` §1 fährt DIESELBE physische
+Bewegung — 0,3 px je Millisekunde — einmal mit 60, einmal mit 120 und
+einmal mit 240 Hz abgetastet, und misst den Rückstand des geglätteten
+Punktes in Pixeln:
+
+```txt
+vorher    60 Hz 3,467 px   120 Hz 1,734 px   240 Hz 0,867 px
+nachher   60 Hz 5,760 px   120 Hz 5,760 px   240 Hz 5,760 px
+```
+
+Halbiert und geviertelt, genau mit der Rate. Und die andere Seite derselben
+Münze: das Restzittern je Millisekunde war bei 240 Hz **fünfmal grösser**
+(0,043 gegen 0,0089).
+
+## Zwei Änderungen, und die zweite war die grössere
+
+**Die Zeitkonstante.** Aus dem gemessenen Anteil wird erst ein τ und daraus
+der Anteil für DIESES `dt` — die Form des 1-Euro-Filters, α = 1/(1 + τ/dt).
+Bei 16 ms kommt Zeichen für Zeichen dasselbe heraus wie vorher, also ändert
+sich am Gerät, an dem gemessen wurde, nichts.
+
+**Das Tempo ist das der Hand.** Hier stand `|p − x| / ms` — der Abstand zum
+GEGLÄTTETEN Punkt. Der ist selbst ein Ergebnis des Filters, und damit hing
+die Filterstärke wieder an der Rate: nach der ersten Reparatur blieb eine
+Restabhängigkeit von 1,9 (5,76 gegen 1,84 px). Von Eingabepunkt zu
+Eingabepunkt gemessen ist es die Geschwindigkeit, die die Hand wirklich hat
+— und die drei Zahlen wurden identisch.
+
+Die drei gemessenen Konstanten (0,28 · 0,92 · 1,1) stehen unverändert da.
+Neu ist einzig `MESS_MS = 16`, und das ist keine neue Stellschraube, sondern
+die Angabe, WOBEI sie gemessen wurden.
+
+## 2 · `pointercancel` speicherte den Strich
+
+Dossier Seite 17: „Android verlangt bei ACTION_CANCEL / Palm-Rejection
+ausdrücklich das Entfernen des betreffenden Motion Sets und Re-Rendering.
+Eine App, die Cancel ignoriert, produziert Artefakte."
+
+Redion ignorierte es nicht — es SPEICHERTE. `pointercancel` hing am selben
+Griff wie `pointerup`. Der Fall, in dem das weh tut, ist der Alltag: der
+Handballen berührt das Glas VOR dem Stift (so setzt jede Hand auf), der
+Browser erkennt ihn selbst als Palm und nimmt den Zeiger weg — und Redion
+schrieb einen Fremdstrich ins Papier.
+
+**Entschieden wird nach der Zeigerart, und das ist die ganze Vorsicht
+dieser Stelle.** Ein Handballen ist ein `touch`; ein abgebrochener
+STIFT-Zug ist Handschrift, die ein Mensch gezogen hat, und §51 steht über
+jedem Dossier: lieber ein Strich zu viel als eine Zeile Handschrift, die
+niemand wiederbekommt. Der Abbruch verwirft deshalb nur den Finger.
+`pagehide` bleibt unberührt und schliesst weiter ab — dort ist Abbrechen
+nicht die Absicht des Browsers, sondern das Ende der Seite.
+
+`verwerfen()` räumt seither dasselbe auf wie `finish()`. Bis hierher blieben
+`feder`, `glatt`, `druckGlatt` und ein bestelltes Bild stehen; das fiel
+nicht auf, weil der nächste Aufsetzpunkt sie ohnehin neu setzt. Mit dem
+Abbruch gibt es einen Weg hierher, dem kein Aufsetzen folgen muss.
+
+## Der Fund an einer alten Prüfung
+
+`test343` wurde von der Filteränderung rot: „In der Mitte ist die Fläche
+breit, am leichten Anfang schmal". Nachgemessen war die Fläche am
+Druckgipfel **dicker** geworden (3,35 statt 3,30 pt) — die Zusage hing an
+einem einzigen Probepunkt in festem Abstand, und der prüfte nicht die
+Breite, sondern ob die Kontur an genau diesem Eckpunkt gerade nach oben
+ausbeult. Ein Gehrungsartefakt, das mit jedem geänderten Punktabstand
+kippt.
+
+Jetzt wird die Höhe der Fläche abgetastet und der Druckgipfel gegen die
+leichteste Stelle DAZWISCHEN gestellt. Der erste Versuch verglich mit dem
+ersten Punkt — und die Gegenprobe (Druck überall 0,5) blieb grün, weil der
+erste Punkt die Spitze der Kontur ist und dort immer ausläuft. Eine
+Zusage, die nicht rot werden kann, ist keine (§55.2).
+
+GEPRÜFT. `test472` neu mit 21 Zusagen, vor dem Bauen rot in zehn davon.
+Gegenproben rot gesehen: die Zeitnormierung weglassen (§1 rot in zwei), den
+eigenen Abbruchgriff weglassen (§2 und §4 rot in vier), und in `test343`
+der gespeicherte Druck ignoriert (die reparierte Zusage rot). Dazu test87,
+test105, test109, test201, test343, test366, test437, test438, test440,
+test442, test453, test464, test465, test470, test471 — alle grün.
+Nicht geprüft: die Gesamtsuite.
+Messung statt Bild: die drei Zahlen oben sind der Beweis, ein
+Bildschirmfoto einer geglätteten Linie wäre keiner (§55.3).
+
+---
+
+E505 — Die ungeprüfte Zusage und der halbe Satz
+--------------------------------------------------------------------------
+
+Zwei weitere Punkte aus dem Stift-Dossier (E504 nennt die ersten beiden).
+Beide sind keine Fehler im Code, sondern Löcher daneben: eine Zusage ohne
+Prüfung und eine Wahrheit, die niemand liest.
+
+## 1 · CropBox und /Rotate wurden nie gefahren
+
+Dossier Seite 6: „Koordinaten sind eine der häufigsten Fehlerquellen … In
+der Praxis müssen zusätzlich CropBox, MediaBox, Seitenrotation,
+Display-Scale, Scrolloffset … berücksichtigt werden."
+
+Redion rechnet das richtig — es fragt pdf.js nach dem Viewport, und der
+kennt beides. Nur trug **keine einzige der rund zwanzig Prüf-PDFs** je eine
+`/CropBox` oder ein `/Rotate`; jede hatte `MediaBox [0 0 595 842]` und sonst
+nichts. Querformat entstand über eine querformatige MediaBox, nicht über
+`/Rotate 90`.
+
+Eine Zusage, die nie gefahren wurde, ist eine Behauptung — und genau die
+Sorte, die beim nächsten Umbau still zerbricht. Deshalb gibt es jetzt eine
+Prüf-PDF mit **Papier 800×1000 und Ausschnitt 600×800, dessen Ursprung
+nicht bei null liegt** (`CropBox [50 100 650 900]`), Seite zwei zusätzlich
+mit `/Rotate 90`.
+
+**Gemessen wird an Pixeln, nicht an Zahlen im Block.** Auf jeder Seite steht
+ein schwarzes Quadrat, das im Papier bei (60|840) liegt. Im Ausschnitt muss
+es bei (10|20) landen — 60−50 und 900−880. Genau dort wird nachgesehen, und
+an drei Stellen daneben, an denen es hell sein muss. Das ist der Punkt, an
+dem ein vergessener CropBox-Ursprung auffällt.
+
+Ergebnis: **es stimmt alles.** Seite 1 misst 600×800, Seite 2 misst 800×600
+mit `dreh: 90`, das Quadrat sitzt richtig, und eine Marke liegt nach dem
+Neuladen Punkt für Punkt, wo sie lag. Die Gegenprobe — `geometrie` auf die
+MediaBox statt auf den Viewport umgestellt — macht sechs Zusagen rot.
+
+## 2 · Der Export sagte die halbe Wahrheit, und nur im `title`
+
+Dossier Seite 9 und 18: Flattening ist eine legitime Wahl für
+unveränderliche Weitergabe, aber es soll eine ENTSCHEIDUNG sein, und vorher
+soll eine editierbare Masterkopie existieren.
+
+Beides ist bei Redion erfüllt: das Original wird nie angefasst (E106), die
+Marken bleiben in der Ablage. **Nur wusste es niemand.** Der Satz stand im
+`title`, er nannte allein den verlorenen Suchtext — nicht, dass die eigenen
+Striche danach für ein fremdes Programm keine Anmerkungen mehr sind —, und
+am Telefon gibt es kein Hover. §37 nennt das Telefon den Normalfall; dort
+erfuhr der Mensch also gar nichts und merkte es erst beim Empfänger.
+
+Jetzt steht der Satz **sichtbar unter dem Knopf**, in zwei Zeilen:
+
+> Beim PDF wird jede Seite ein Bild: Text und Striche sind darin nicht mehr
+> wählbar. Dein Original und deine Marken bleiben in Redion.
+
+Der zweite Halbsatz ist so wichtig wie der erste. Eine Warnung ohne die
+Entwarnung würde Angst machen, wo keine hingehört (§33): es geht nichts
+verloren, es kann nur der Empfänger weniger damit tun.
+
+Der `title` trägt weiterhin die lange Fassung, jetzt vollständig — Suchtext,
+Verweise und Anmerkungen.
+
+## Was das NICHT ist
+
+Es ist keine Wahl zwischen „zum Weitergeben" und „zum Weiterbearbeiten".
+Die gibt es erst, wenn der Schreiber echte `/Ink`-Annotationen kann; das ist
+ein eigener Bogen und steht in `LUECKEN.md`.
+
+GEPRÜFT. `test473` neu mit 33 Zusagen. Zwei Gegenproben rot gesehen (§55.2):
+die Geometrie aus der MediaBox statt aus dem Viewport (sechs rot), und der
+Hinweis nicht eingehängt (acht rot). Dazu test87, test105, test109, test177,
+test178, test442, test443, test460, test466, test471 — alle grün.
+Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts exporthinweis` — der Satz unter den beiden Knöpfen.
+
+---
+
+E506 — Handschrift wird eine echte /Ink-Annotation
+--------------------------------------------------------------------------
+
+Der Schlusssatz des Stift-Dossiers, Seite 20:
+
+> „Für portable PDF-Handschrift sollte man Roh-Ink und PDF-Ink als zwei
+> verschiedene Datenmodelle behandeln. Das Rohmodell darf reichhaltig,
+> hochfrequent und plattformspezifisch sein; das Austauschmodell sollte
+> eine saubere standardisierte `/Ink`-Annotation plus explizites Appearance
+> enthalten."
+
+Redions PDF-Export war ein Fotoalbum. `pdfWriter.ts` schrieb je Seite ein
+JPEG, und die Handschrift war Teil davon — in der Datenverlust-Pyramide des
+Dossiers (S.6) die unterste Stufe: „bewahrt im Extremfall nur Pixel; keine
+editierbare Stroke-Semantik mehr."
+
+Was ein Mensch davon merkte: die exportierte Seite sah richtig aus, aber in
+Adobe Reader stand unter „Kommentare" nichts. Kein Strich liess sich
+anklicken, verschieben, färben oder löschen.
+
+## Was jetzt herausgeht
+
+Je Handschrift-Marke ein Annotation-Dictionary mit `/Subtype /Ink`:
+
+```txt
+/Rect      der Kasten, plus die halbe Breite Rand
+/InkList   die MITTELLINIE, Strich für Strich, im Default User Space
+/C         die Farbe
+/CA        die Deckkraft (der Marker ist durchscheinend)
+/BS /W     die Grundbreite
+/F 4       Druck-Kennzeichen
+/AP /N     das Aussehen als Form-XObject
+```
+
+**Beides zusammen, und keines allein.** Ohne `/AP` rekonstruiert jeder
+Leser den Strich selbst, und ISO lässt offen, wie er die Punkte verbindet —
+zwei Leser zeigen dann zwei verschiedene Striche (Dossier S.4). Ohne
+`/InkList` wäre es keine Ink-Annotation, sondern ein Stempel: nicht als
+Handschrift erkennbar und nicht als solche zu bearbeiten.
+
+Im `/AP` steht die Kontur mit **veränderlicher Breite**, gefüllt. Damit
+bleibt der Druck sichtbar, obwohl die Druckwerte selbst nicht mitreisen
+können — genau die Empfehlung auf Seite 8 des Dossiers.
+
+## Die BBox ist das Rect
+
+Das Erscheinungsbild ist ein Form-XObject, dessen `/BBox` GENAU dem `/Rect`
+der Annotation entspricht. Dann ist die Abbildung von Formraum auf
+Annotationsraum die Einheitsmatrix, und man darf im Strom mit den echten
+Seitenkoordinaten rechnen. Jede andere Wahl braucht eine `/Matrix` und wird
+beim ersten Verschieben der Annotation krumm.
+
+## Nur Stift und Marker — und warum das kein Rückzug ist
+
+Annotation wird, was Handschrift IST: eine Punktfolge mit Druck. Alles
+andere bleibt im Seitenbild, und jedes aus eigenem Grund:
+
+**Das Abdeckband MUSS im Bild bleiben.** Ein Abdeckband als Annotation
+liesse sich beim Empfänger wegschieben — und darunter käme zum Vorschein,
+was abgedeckt werden sollte. Im Bild sind die Pixel darunter wirklich weg.
+Das ist der einzige Punkt dieses Bogens, an dem die schwächere Lösung die
+richtige ist.
+
+**Formen** (Rechteck, Ellipse, Dreieck, Pfeil, Kurve) liegen als zwei bis
+drei Stützpunkte in der Ablage, nicht als Punktzug. PDF hätte dafür
+`/Square`, `/Circle` und `/Line` — ein eigener Bogen. **Text und Zettel**
+bräuchten `/FreeText` mit eingebetteter Schrift (Dossier S.10: „FreeText
+sollte nicht mit Handschrift verwechselt werden"). **Bilder** wären
+`/Stamp`. Alles drei steht in `LUECKEN.md`.
+
+## Eine Rechnung, zwei Ausgaben
+
+`InkGeometry.outline` schreibt einen SVG-Pfad mit `Q`-Kurven und zwei
+`A`-Bögen. PDF kennt weder das eine noch das andere. Statt die Kontur ein
+zweites Mal zu rechnen (§8), liefert jetzt `seiten()` die beiden Kanten,
+und `outline` wie `outlinePunkte` bauen daraus ihre Form. Unterschiedlich
+ist allein die Kappe: das Vieleck setzt acht Punkte auf den Halbkreis, wo
+der SVG-Pfad einen Bogen zieht. Bei anderthalb Punkten halber Breite liegt
+das weniger als ein Zehntel Millimeter neben dem echten Bogen.
+
+Und die Breitenregel selbst bleibt in `marken.ts` — `Marken.alsAnnotation`
+fragt dort dieselbe `druckFaktor`, die auch auf den Bildschirm zeichnet.
+Eine zweite Rechnung im Export liefe von dieser weg, und dann sähe das PDF
+anders aus als der Bildschirm.
+
+## Der Satz am Knopf musste zurückgenommen werden
+
+E505 hatte gerade erst geschrieben: „Text und Striche sind darin nicht mehr
+wählbar." Die Hälfte davon stimmt seit diesem Bogen nicht mehr. Ein Satz,
+der schlechter redet, als die App ist, ist genauso falsch wie einer, der zu
+viel verspricht (§33). Jetzt steht dort:
+
+> Deine Handschrift wird eine echte Anmerkung — in jedem PDF-Programm
+> anklickbar. Die Seite darunter wird ein Bild: ihr Text ist darin nicht
+> mehr durchsuchbar. Original und Marken bleiben in Redion.
+
+## Der Fund an einer alten Prüfung, zum zweiten Mal
+
+`test343` wurde wieder rot, diesmal an der Schwelle: 1,478 statt der
+geforderten 1,5. Gemessen ist der erwartete Wert 1,65 (der Füller schwillt
+bei Druck 0,92 gegen 0,36 um `(0,5+0,92)/(0,5+0,36)`), die Kappen runden
+ihn auf 1,48 ab, und die Gegenprobe mit festem Druck kommt auf 0,9. Die
+Schwelle steht jetzt bei 1,3 — dazwischen, mit Luft nach beiden Seiten, und
+mit der Rechnung daneben statt einer gegriffenen Zahl.
+
+## Und ein Fehler, der hier hingehört
+
+Beim Gegenproben-Zurückdrehen habe ich `git checkout` auf `marken.ts`
+gerufen und damit die noch nicht eingecheckten Änderungen dieses Bogens
+weggeworfen. Wiederhergestellt, geprüft, grün — aber die Regel aus §43
+gegen `git restore .` gilt für die Einzeldatei genauso: **wer eine Datei
+zurückdreht, in der ungesicherte Arbeit steht, verliert sie.** Ein Kopieren
+nach `/tmp` vor jeder Gegenprobe kostet nichts.
+
+GEPRÜFT. `test474` neu mit 30 Zusagen, und zwar gegen ZURÜCKGELESENE
+Bytes: das PDF wird mit pdf.js wieder geöffnet, `getAnnotations()` gefragt,
+und die Seite ZWEIMAL gerendert — einmal ohne Annotationen (dort muss der
+Strich fehlen) und einmal im Druckweg (dort muss er rot dastehen). Der
+Unterschied zwischen beiden Bildern IST der Beweis. Zwei Gegenproben rot
+gesehen: die Annotationen abgeschaltet, und die Drehung falsch herum
+(§6 rot, Punkt bei 80 statt 520). Dazu test87, test105, test109, test343,
+test366, test437, test438, test440, test442, test443, test453, test460,
+test464, test465, test470, test471, test472, test473 — alle grün.
+Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts exporthinweis` — der neue Satz am Knopf.
+
+---
+
+E507 — Die Neigung des Stifts
+--------------------------------------------------------------------------
+
+Aus dem Stift-Dossier, Seite 5 und 8. Pointer Events Level 3 gibt `tiltX`,
+`tiltY`, `twist`, `altitudeAngle` und `azimuthAngle`; als Beispiel für das,
+was eine App damit macht, nennt das Dossier ausdrücklich „ein
+Pencil-Shading-Modell anhand des Tilt-Winkels".
+
+Redion las von alldem **nichts**. Gesucht im ganzen `src/`: `tiltX`,
+`tiltY`, `twist`, `altitudeAngle`, `azimuthAngle` — null Treffer. Wer den
+Apple Pencil flach hielt, um zu schattieren, bekam denselben schmalen
+Strich wie bei senkrechtem Stift. Die Geste, die jeder von Papier kennt,
+tat nichts.
+
+## Was jetzt geschieht
+
+`neigungAus` rechnet aus `tiltX` und `tiltY` eine Zahl von 0 (senkrecht)
+bis 1 (ganz flach) — über den Tangens und nicht über `hypot(tx, ty)`:
+Neigungen addieren sich in der Ebene über ihren Tangens, nicht als Winkel.
+
+Sie wandert Punkt für Punkt mit dem Strich mit, im Feld `neigung`, und
+wirkt auf den **Bleistift**: flach gehalten liegt mehr Graphit auf dem
+Papier, bis zum Doppelten der Breite, und dieselbe Menge Graphit auf mehr
+Papier ist heller — die Deckkraft sinkt von 0,72 auf bis zu 0,50.
+
+Gemessen (`test475` §3, gleicher Druck, nur der Winkel anders):
+
+```txt
+senkrecht   1,8 pt Fläche
+flach       3,3 pt Fläche
+```
+
+**Nur der Bleistift.** Ein Füller wird durch Schräghalten nicht breiter —
+die Feder liegt auf —, und ein Kugelschreiber schon gar nicht.
+
+## `-1` heisst nicht null Grad
+
+Eine Maus, ein Finger und ein Stift ohne Neigungssensor melden nichts, und
+dann steht auch nichts im Papier: kein Feld, keine Nullen, keine
+Migration. Ein Feld voller Nullen wäre eine Behauptung über einen Winkel,
+den niemand gemessen hat — und jede alte Mausnotiz trüge plötzlich
+Stiftdaten (§9).
+
+`test475` §4 hält den Gegenfall fest: eine Marke ohne `neigung` sieht aus
+wie immer, bis auf die zweite Stelle der Deckkraft.
+
+## Der Fund: zwei Felder, die auseinanderliefen
+
+Beim Absetzen vereinfacht Redion den Strich (`simplifyIndices`) und
+indiziert `pressure` neu. `neigung` blieb in seiner alten Länge stehen —
+**fünfzehn Neigungen zu acht Punkten**, und ab da gehörte `neigung[i]` zu
+einem anderen Punkt als `pts[i]`. Der Prüflauf hat es in seinem ersten
+Lauf gesehen; von Hand wäre es nie aufgefallen, weil die Wirkung bei
+langsam wechselndem Winkel klein ist und erst bei einer schnellen
+Handbewegung sichtbar würde.
+
+Das ist die Sorte Fehler, die ein neues Parallelfeld immer mitbringt. Wer
+das nächste anlegt, sucht `simplifyIndices` und trägt es dort ein.
+
+## Und der Druck sagt jetzt, woher er kommt
+
+Bis hierher wurde `zeigerArt` beim Absetzen weggeworfen. Danach lagen im
+Feld `pressure` gemessene Sensorwerte und die Tempo-Erfindung für Maus und
+Finger (E351/E376) nebeneinander, **ununterscheidbar**. Das Dossier
+verlangt auf Seite 5 und 17 genau diese Trennung: normalisieren ja,
+vermischen nein.
+
+`druckArt` ist jetzt `'stift'` oder `'tempo'`. Ein Wort am Strich kostet
+nichts und beantwortet die Frage für immer — auch für den PDF-Export, für
+eine spätere Wiedergabe und für die Frage, welche Striche überhaupt echte
+Telemetrie tragen (§55.1 der Datenschutzzeile in `LUECKEN.md`).
+
+## An vier Stellen, nicht an einer
+
+Die Neigung wirkt im **laufenden** Strich (`halbeBreite` — sonst wüchse
+der Bleistift erst beim Loslassen), beim **Zeichnen der fertigen** Marke,
+im **PDF-Export** (`alsAnnotation`) und in der **Deckkraft**. Alle vier
+gehen durch dieselbe `druckFaktor`, die dafür ein drittes Argument bekommen
+hat — kein zweiter Faktor daneben (§8).
+
+GEPRÜFT. `test475` neu mit 22 Zusagen, vor dem Bauen rot in zwölf. Zwei
+Gegenproben rot gesehen: die Neigung ohne Wirkung auf die Breite (die
+Fläche bleibt bei 1,7 pt), und die Neigung beim Vereinfachen nicht neu
+indiziert (fünfzehn zu acht). Dazu test87, test105, test109, test343,
+test351, test362, test366, test437, test438, test453, test464, test465,
+test470, test472, test474 — alle grün. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts neigung` — drei Striche, gleicher Druck, nur der
+Winkel wächst.
+
+---
+
+E508 — Der Blick kommt beim Hinschauen
+--------------------------------------------------------------------------
+
+Redur, 8. September, mit zwei Bildern der Ordnerkarte: „das sieht brutal
+gut aus … so was wollte ich haben. Könntest du nicht, wenn ich klicke, das
+kommen, sondern wenn ich mit Maus drauf gehe? Und ich will, dass du es
+bisschen lustig machst."
+
+## Beides, nicht statt
+
+Die Karte kommt jetzt beim Überfahren — **aber der Klick bleibt.** §37 nennt
+das Telefon den Normalfall, und dort gibt es kein Überfahren; eine Karte,
+die nur mit der Maus aufgeht, wäre auf dem Gerät, an dem Redur am meisten
+arbeitet, gar nicht zu bekommen.
+
+Die zwei Wege unterscheiden sich in EINEM Punkt: eine **erzeigte** Karte
+geht wieder zu, wenn der Zeiger fortgeht; eine **angetippte** bleibt, bis
+man sie schliesst. Wer tippt, will halten.
+
+## Die Wartezeit ist der ganze Unterschied
+
+Zwischen „hilfreich" und „springt mich an" liegen 280 Millisekunden. Wer
+mit der Maus quer über das Regal fährt, berührt fünf Ordner in einer halben
+Sekunde; ohne Wartezeit klappten fünf Karten hinter ihm auf. 280 ms ist
+länger als ein Vorbeifahren und kürzer als eine Absicht.
+
+Beim Fortgehen sind es 220 ms, und die dürfen nicht null sein: der Weg vom
+Knopf in die Karte führt für einen Augenblick über nichts von beidem, und
+eine Karte, die in diesem Augenblick verschwindet, ist nicht zu benutzen.
+Deshalb horchen beide — Knopf und Karte —, und jeder neue Zeigerkontakt
+sagt das Zuklappen ab.
+
+**Nur die Maus.** Ein Finger meldet auf manchen Geräten ein `pointerenter`,
+das kein Überfahren ist — er tippt gerade. Geprüft wird `pointerType` UND
+`(hover: hover) and (pointer: fine)`.
+
+## Und der Fokus wird nicht gestohlen
+
+Eine angetippte Karte nimmt den Fokus (man will in ihr weiterarbeiten). Eine
+erzeigte nicht: der Fokus steht womöglich in der Suche des Regals, und ihn
+wegzuziehen, weil die Maus über einen Ordner fuhr, wäre ein Diebstahl (§38).
+
+## Das Lustige
+
+**Die Welle.** Hier standen fünf von Hand gewählte Zahlen — .15 / .1 / .05 /
+.02 / 0. Beim Nachrechnen fiel auf, dass der Schritt von .05 auf .02 halb so
+gross ist wie die anderen; es sah aus wie eine Welle und war keine. Jetzt
+gibt es EINE Zahl (`--ru-fach-welle: 38ms`), und die vier anderen rechnen
+sich daraus: 0,152 / 0,114 / 0,076 / 0,038 / 0. Das vorderste Blatt kommt
+zuletzt — so legt eine Hand Karten hin.
+
+**Das Überschwingen.** Die Blätter fliegen einen Hauch über ihren Platz
+hinaus und setzen sich (`cubic-bezier(.34,1.36,.5,1.14)`). Bei 138 px Weg
+sind 14 % Überschuss keine zwanzig Pixel: man sieht es als Schwung, nicht
+als Fehler.
+
+**Die Klappe wippt** einmal, wenn der Ordner aufgeht — anderthalb Grad,
+zweimal hin und her. Mehr wäre ein Spielzeug.
+
+**Ein Blatt richtet sich auf**, wenn man darauf zeigt. Es hebt sich schon
+seit E459; neu ist, dass dabei seine Schräge verschwindet, als nähme man es
+heraus.
+
+Alles davon ist bei `prefers-reduced-motion` weg (§39). Die Karte kommt
+trotzdem — nur eben auf einmal. Wer Bewegung abstellt, will die Auskunft
+und nicht die Vorstellung.
+
+## Drei Wächter, die nicht wachten
+
+Der erste Entwurf des Prüflaufs hatte drei Zusagen, die **vor der Arbeit
+schon grün waren** — und eine Zusage, die nicht rot werden kann, ist keine
+(§55.2):
+
+**1 · „Ein Blatt hebt sich"** suchte nach der Regel `.ru-fach-blatt:hover`.
+Die gab es seit E459. Jetzt wird mit der ECHTEN Maus gefahren und der
+Kasten gemessen — ein gesendetes `pointerover` lässt CSS `:hover` kalt, das
+entscheidet der Browser nach der wirklichen Zeigerlage.
+
+**2 · „Ein bisschen Schwung"** suchte `@keyframes ru-fach…`, und
+`ru-fach-puls` stand längst da. Jetzt heisst die neue Regel beim Namen.
+
+**3 · „Ein kurzes Überstreichen öffnet nichts"** sah erst NACH dem Weggehen
+nach. Da ist die Karte auch ohne Wartezeit wieder zu, weil das Zuklappen
+sie holt — die Gegenprobe mit `SCHAU_AUF_MS = 0` blieb grün. Jetzt wird
+gemessen, WÄHREND der Zeiger noch darauf liegt.
+
+## Und ein Fehler im Zuklappen
+
+Der erste Wurf schloss die erzeigte Karte mit `lage.remove()`. Die Karte
+hängt aber zwei Horcher an das Dokument (Escape und der Klick daneben) —
+wer nur den Knoten entfernt, lässt beide liegen, und nach fünf Ordnern
+horchen fünf tote Karten auf jede Taste. Sie gibt jetzt ihren eigenen
+Schliessweg heraus, und der wird gerufen.
+
+GEPRÜFT. `test476` neu mit 26 Zusagen, vor dem Bauen rot in zwölf. Drei
+Gegenproben rot gesehen: die Wartezeit auf null (§2), die Welle mit einem
+Sprung (§7 in zwei Zusagen), und die drei stumpfen Wächter oben, die vor
+ihrer Reparatur grün blieben. Dazu test87, test105, test109, test265,
+test276, test307 — alle grün. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts ordnerkarte`.
+
+---
+
+E509 — Ein Stift für Fachzeichen: die zehn Adern
+--------------------------------------------------------------------------
+
+Redur, 8. September, mit einem Bild der Farbreihe: „Die Schutzleiter sollte
+hier sein wie eine Farbe, und wenn ich mit Maus drauf gehe, sollte es mir
+dann zeigen Schutzleiter — und für die anderen Farben auch. Es sollte
+folgendes haben: ein spezieller Stift, füge oben, wo die Stifte markiert
+sind, dort ist — und das ist speziell für Fachzeichen gedacht. Die
+Schutzleiter, die Neutralleiter sollte blau sein, und es ist Strich Strich
+Strich, so nur Strich. Dann für L1 braun, L2 schwarz und L3 grau. Und für S
+(Lampendraht) solltest du eine passende Farbe finden. Und Korrespondierende
+1 und Korrespondierende 2 und Korrespondierende 3 bis 4 sollten
+verschiedene Farben haben."
+
+## Was entschieden wurde
+
+**Ein sechster Stift, kein sechstes Werkzeug.** Der Leiterstift steht in
+der Stiftreihe hinter dem Schutzleiter. Er zeichnet nicht anders als der
+Kugelschreiber — er bringt eine andere FARBREIHE mit. Das ist der Grund für
+die Einordnung: es ist etwas, das man führt, kein Ding, das man setzt.
+
+**Er steht am ENDE.** Die Reihenfolge Füller → Kugel → Pinsel → Bleistift →
+Schutzleiter ist die, die eine Hand sich gemerkt hat und die `test343` und
+`test438` kennen. Ein neuer Stift in der Mitte hätte jeden zweiten Klick
+woandershin geführt. Derselbe Grund, aus dem E465 den Bleistift und E490
+den Schutzleiter hinten angehängt haben — und die Regel für den nächsten:
+hinten anhängen.
+
+**Die Farbreihe wird zur Adernreihe.** Solange der Leiterstift geführt
+wird, stehen dort nicht fünf Farben und ein „+", sondern die zehn Adern
+eines Schaltplans:
+
+| | Ader | Farbe | Strich |
+|---|---|---|---|
+| PE | Schutzleiter | grün-gelb (`PE_GRUEN`) | Strich-Punkt (E490) |
+| N | Neutralleiter | `#1f6fd0` blau | nur Striche |
+| L1 | Aussenleiter L1 | `#7a4a21` braun | durchgezogen |
+| L2 | Aussenleiter L2 | `#111111` schwarz | durchgezogen |
+| L3 | Aussenleiter L3 | `#9a9a9a` grau | durchgezogen |
+| S | Lampendraht | `#e2761b` orange | durchgezogen |
+| 1 | Korrespondierende 1 | `#c2185b` magenta | durchgezogen |
+| 2 | Korrespondierende 2 | `#7c3aed` violett | durchgezogen |
+| 3 | Korrespondierende 3 | `#0d9488` türkis | durchgezogen |
+| 4 | Korrespondierende 4 | `#4d7c0f` oliv | durchgezogen |
+
+## Warum diese Farben
+
+Fünf sind keine Wahl: PE, N, L1, L2, L3 stehen so in der Norm und so in
+Redurs Auftrag. Fünf habe ich gewählt, und hier steht, warum:
+
+**S — der Lampendraht** hat keine genormte Zeichenfarbe. Gewählt ist ein
+kräftiges Orange. Es ist warm wie das Licht, an dessen Ende es hängt, und
+es ist der einzige Ton, der zwischen dem Braun von L1 und dem Gelb im
+Schutzleiter noch Platz hat, ohne mit einem von beiden verwechselt zu
+werden.
+
+**1 bis 4 — die Korrespondierenden** sind vier Töne, die weit
+auseinanderliegen: Magenta, Violett, Türkis, Oliv. Ausdrücklich NICHT vier
+Nuancen einer Farbe — wer eine Kreuzschaltung zeichnet, hat alle vier
+gleichzeitig auf dem Blatt, und dann ist Ähnlichkeit ein Fehler und keine
+Ordnung.
+
+## Der Neutralleiter: nur Striche
+
+Redur hat es zweimal gesagt — „Strich Strich Strich, so nur Strich". Der
+Unterschied zum Schutzleiter ist genau das, und er ist in den Zahlen
+sichtbar: der Schutzleiter hat VIER (Strich, Lücke, Punkt, Lücke), der
+Neutralleiter ZWEI (`N_MUSTER = [2.6, 3.2]`). Gerechnet wird in
+Strichbreiten, damit das Verhältnis bei 1 px dasselbe ist wie bei 12 px,
+und die kürzeste Zahl bleibt über 0,2 — `stroke-linecap:round` macht aus
+einem zu kurzen Strich sonst einen Punkt (der Fund aus E490).
+
+Der Neutralleiter braucht auch keine Gruppe aus zwei Linien, wie der
+Schutzleiter sie hat: grün-gelb sind zwei Farben, blau ist eine. Weniger
+Aufwand für weniger Anspruch.
+
+## Der Katalog steht EINMAL da
+
+`LEITER` ist ein Katalog nach §8, keine Farbliste. Jede Ader bringt vier
+Dinge mit, die zusammengehören: Kürzel, Name, Farbe, Strichart. Der
+Schutzleiter steht darin **nicht zweimal** — seine Farbe IST `PE_GRUEN`,
+dieselbe Konstante, die der Stift aus E490 zeichnet, und seine Strichart
+ist genau jener Stift. Ein zweiter Ort, an dem „Schutzleiter ist
+grün-gelb" steht, wäre der Anfang zweier Wahrheiten.
+
+Ein gezogener Strich trägt darum ZWEI Angaben: `stil` ist die
+Zeichenanweisung (dieselbe, die ein Schutzleiter aus E490 trägt, damit alte
+und neue Striche durch denselben Weg gehen), `leiter` ist die Bedeutung.
+Beides wird gebraucht — der Zeichner fragt das eine, ein Mensch und später
+ein Export das andere.
+
+## Jede Farbe heisst beim Namen
+
+Redur hat den Namen für die Adern verlangt. Beim Nachsehen stand an den
+fünf gewöhnlichen Tupfern fünfmal `title="Farbe"` — beim Überfahren also
+fünfmal dasselbe Wort, und ein Vorleser las fünfmal „Farbe". Sie heissen
+jetzt Schwarz, Rot, Blau, Grün, Gelb. Derselbe Satz aus §38 gilt für sie
+wie für die Adern.
+
+Und das Kürzel steht **auf** dem Tupfer, nicht nur im Titel: zehn Punkte,
+die sich allein durch die Farbe unterscheiden, sind genau das, was §38
+verbietet. Im Schaltplan steht das Kürzel ohnehin neben der Ader — man
+liest es sowieso.
+
+## Was schiefging
+
+**Die Reihe schaltete nur beim Stiftwechsel um.** `leiterReihe` lief in
+`stiftZeigen` — wer Redion mit dem Leiterstift schloss und wieder aufmachte,
+sah die fünf gewöhnlichen Farben und einen Stift, der etwas anderes
+zeichnet. Der Zustand stand am Knopf und nicht in der Reihe. GEFUNDEN HAT
+ES DAS BILD, nicht der Prüflauf: der klickte sich zum Leiterstift durch und
+löste den Wechsel damit selbst aus (§55 in einem Satz). Jetzt läuft
+`leiterReihe` auch einmal beim Aufbau, und §7 des Prüflaufs sieht ohne
+einen einzigen Klick nach.
+
+**Der Einschub zerschnitt eine CSS-Regel.** `.blatt-farbe-weg` landete
+mitten in einer mehrzeiligen Regel und galt darum nie. Der Prüflauf konnte
+es nicht sehen, weil er nach der KLASSE fragte statt nach der
+Sichtbarkeit — er zählte zehn Adern und fünf Farben und war zufrieden.
+Jetzt wird mit `getBoundingClientRect` gemessen: sichtbar sind genau zehn
+Tupfer.
+
+**L2 ist `#111111` — dasselbe Schwarz wie der erste Farbtupfer.** Die
+Hervorhebung verglich Farben, also leuchtete beim Öffnen L2 auf, egal
+welche Ader zuletzt geführt wurde. Sie vergleicht jetzt `data-leiter`. Die
+Farbe ist eine Eigenschaft der Ader, nicht ihr Name.
+
+## Die Kosten
+
+Die Adernreihe ist breiter als die Farbreihe: zehn Tupfer mit `min-width:
+var(--touch-min)` statt fünf mit 22 px. Die Leiste rollt seit E465
+waagerecht, das trägt sie — aber am Telefon ist die Reihe damit länger als
+das Bild, und man muss schieben. Das ist der Preis dafür, dass jede Ader
+44 px trifft (§37); zehn 22-px-Punkte hätte man nicht sicher getroffen, und
+zehn Punkte ohne Kürzel hätte man nicht auseinandergehalten.
+
+GEPRÜFT. `test477` neu mit 42 Zusagen. Zwei Gegenproben rot gesehen: die
+Reihe ohne den Aufruf beim Aufbau (§7 blieb bei den gewöhnlichen Farben),
+und das Muster des Neutralleiters mit einem Punkt darin (§5 sah die vierte
+Zahl). Dazu test87, test105, test109, test343, test437, test438, test439,
+test455, test456, test457, test458, test461, test462, test470 — alle grün;
+test438 und test461 mussten auf sechs Stifte nachgezogen werden. Nicht
+geprüft: die Gesamtsuite.
+Bild: `node bilder.mts leiter`.
+
+---
+
+E510 — Die Mitte einer Linie zählt auch
+--------------------------------------------------------------------------
+
+Kein Wunsch, sondern ein roter Prüflauf. `test439` §5 fiel bei der
+Regressionsrunde zu E509 aus, und §46 sagt: rot zuerst.
+
+## Was rot war, und warum es nicht E509 war
+
+Das Gekritzel über einer Linie nahm sie nicht mehr weg. Der Lauf war auch
+auf dem Stand VOR E509 rot (nachgesehen in einem eigenen Arbeitsbaum auf
+`HEAD`) — die Adernreihe hatte damit nichts zu tun. Gebrochen hat es
+**E504**, in diesem Durchgang, drei Bögen früher: seit dort glättet der
+Filter in ZEIT statt je Messung.
+
+Die synthetischen Zeigerereignisse eines Prüflaufs kommen alle in derselben
+Millisekunde. `dt` fällt damit auf seine Untergrenze von 1 ms, und ein Zug
+mit 20 px Schritt meldet ein Tempo von 20 px je Millisekunde — eine Hand,
+die es nicht gibt. Der Nachlauf des Filters ist `v · τ`; bei diesem Tempo
+sind das 28 px. Gemessen am gespeicherten Zug: die Diagonale des Gekritzels
+schrumpfte von 205 auf 181 px, seine Enden lagen also rund zwölf Pixel
+weiter innen als gezogen.
+
+**Auf echter Hardware passiert das nicht.** Bei 60 Hz und demselben Zug ist
+`dt` 16 ms, das Tempo 1,25 px/ms und der Nachlauf 1,7 px. Die Zahl, die
+E504 gross machte, ist die Zeit — und der Prüflauf lieferte keine.
+
+## Der eigentliche Fund liegt tiefer
+
+Zwölf Pixel hätten nichts ausmachen dürfen. Dass sie es taten, lag an einer
+Regel aus E466, die zwei sehr verschiedene Dinge gleich behandelte:
+
+> mindestens die Hälfte der Punkte der Marke liegt nah am Weg des
+> Gekritzels
+
+**Ein Stift-Strich über 200 px hat dreihundert Punkte. Eine gerade `line`
+über dieselben 200 px hat zwei — ihre Enden.** Dieselbe Regel fragte beim
+Strich nach seiner LÄNGE und bei der Linie nur nach ihren ENDEN. Die Folge
+war nicht nur der rote Lauf, sondern ein Loch, das seit E466 offenstand:
+
+> Ein Gekritzel quer über die MITTE einer Linie nahm sie nicht weg — egal
+> wie dicht, egal wie oft. Nur wer eines ihrer Enden traf, löschte sie.
+
+Das ist eine Funktion, die nach dem Zufall arbeitet, wie viele Punkte
+zufällig in einer Marke stehen.
+
+## Die Entscheidung
+
+`InkGeometry.densify(punkte, schritt)` legt Messpunkte im Abstand `schritt`
+auf einen Linienzug — die Ecken bleiben alle erhalten, es wird nur
+zwischen ihnen aufgefüllt. `kritzelTrifft` misst die Hälfte-Regel jetzt
+daran, mit `schritt = KRITZEL_NAH` (6 px).
+
+Für dichte Marken ändert sich **nichts**: ein Stift-Strich hat seine Punkte
+schon enger als 6 px, `densify` fügt keinen hinzu. Für `line` und `arrow`
+heisst die Regel ab jetzt dasselbe wie für einen Strich: die halbe LÄNGE.
+
+**Die Alternative wäre gewesen**, im Prüflauf echte Zeit zwischen die
+Ereignisse zu legen (`setTimeout` je Punkt). Das hätte den roten Lauf grün
+gemacht und das Loch offen gelassen — und es hätte jeden Zug in jeder Suite
+um eine halbe Sekunde verlängert. Die Zeitlosigkeit der synthetischen
+Ereignisse war der Bote, nicht die Nachricht.
+
+**Was es kostet:** `densify` hat eine Obergrenze von 4000 Punkten.
+`distanceToPolyline` läuft für jeden Messpunkt über den ganzen Gegenzug;
+ohne Grenze wäre ein seitenlanger Zug bei Schritt 6 eine Rechnung, die man
+sieht. Wer mehr als 4000 Messpunkte bräuchte, misst etwas, das mit 4000
+genauso beantwortet ist.
+
+## Die andere Richtung steht daneben
+
+Eine Reparatur am Löschen darf nicht dazu führen, dass mehr gelöscht wird
+(§9, §51). `test439` §5b hat deshalb zwei Zusagen, nicht eine: das
+Gekritzel über die mittleren 340 px einer 400-px-Linie nimmt sie weg — und
+ein kurzes Gekritzel über ihr linkes Viertel nimmt sie **nicht** weg. Die
+zweite blieb in der Gegenprobe grün, und das ist ihr Zweck: sie hält die
+Richtung, in die die erste nicht ziehen darf.
+
+GEPRÜFT. `test439` von 34 auf 38 Zusagen. Gegenprobe rot gesehen:
+`densify` zurück auf `points` — drei Zusagen rot (§5, §5b, §7), die
+Gegenzusage grün. Dazu test87, test105, test109, test466, test470, test472
+— alle grün. Nicht geprüft: die Gesamtsuite.
+Kein Bild: hier ist nichts zu sehen, was ein Bild zeigen könnte — die
+Rechnung ist der Beweis (§55.3).
+
+---
+
+E511 — Die Tinte holt die Spitze ein
+--------------------------------------------------------------------------
+
+Redur, 8. September: „mache die Stift-Teil besser, ich muss flüssiger
+zeichnen können, mehr Animationen".
+
+## Zuerst gemessen — und die naheliegende Vermutung war falsch
+
+„Flüssiger" klingt nach „schneller". Gemessen wurde deshalb zuerst, ob
+Redion beim Zeichnen Bilder verliert: 1200 Punkte, 200 Marken auf dem
+Blatt, je vier Punkte ein Bild — ein 240-Hz-Stift auf einem 60-Hz-Schirm.
+
+```txt
+erstes Drittel   16,7 ms je Bild        letztes Drittel  16,7 ms
+Bilder über 20 ms:  0                   über 33 ms:  0
+```
+
+Kein einziger Aussetzer, und der Aufwand wächst nicht mit der Länge des
+Strichs — das hatte E376 erledigt. Wer hier „schneller" gebaut hätte, hätte
+Wochen an etwas gearbeitet, das flach bei sechzig Bildern liegt. Das ist
+wörtlich der Fehler aus L103 Punkt 2, und §36 steht deswegen da.
+
+**Ein zweiter Messfehler auf dem Weg, und er gehört aufgeschrieben.** Die
+erste Messung des Zeichenwegs lief ohne echte Bilder dazwischen und ergab
+für `getScreenCTM` 15 % der Zeit. Mit Bildern dazwischen waren es 45 %:
+der Browser gibt eine gemerkte Matrix heraus, solange nichts am Aufbau
+schmutzig ist — und beim echten Zeichnen ist er das, weil der nasse Strich
+zwischendurch sein `d` schreibt. Eine Messung ohne das, was gemessen werden
+soll, misst nichts.
+
+## Was „flüssig" wirklich heisst
+
+Nicht die Bildrate, sondern WO die Tinte liegt, während die Hand schreibt.
+Gemessen als Abstand der gezeichneten Spitze von der Stelle, an der der
+Stift beim Erscheinen des Bildes wirklich ist (ein Bild = 16,7 ms):
+
+| Tempo | alt | neu |
+|---|---|---|
+| 0,1 px/ms (langsam) | 3,40 px | 0,00 px |
+| 0,4 px/ms (**Handschrift**) | 7,16 px | 0,00 px |
+| 1,2 px/ms (schnell) | 4,91 px | 0,00 px |
+| 2,5 px/ms (sehr schnell) | 19,23 px | 15,75 px |
+
+Der Fehler war am grössten genau dort, wo ein Mensch schreibt — und er
+wechselte das Vorzeichen: langsam blieb die Tinte zurück, schnell schoss
+sie voraus. Beides fühlt sich an wie ein Stift, der nicht am Papier klebt.
+
+**Der Grund:** die Vorhersage verlängerte die GEGLÄTTETEN Punkte. Die
+laufen selbst hinter der Hand her (das ist der Preis der Glättung, und der
+ist richtig so — sie nimmt das Zittern), und der Vorlauf ging für den
+Nachlauf drauf.
+
+**Die Entscheidung:** der nasse Schwanz rechnet an den ROHEN Punkten und
+beginnt an der zuletzt GEMESSENEN Stelle. Vor der Vermutung steht eine
+Messung — dort war der Stift wirklich, das ist kein Raten. Erst dahinter
+kommt das Vorausgezeichnete.
+
+Das darf man, weil der Schwanz **nie gespeichert wird** (E376). Er ist
+Bild, keine Daten; `test478 §4` hält fest, dass der abgelegte Strich dort
+endet, wo der Stift abgehoben hat, und nicht 26 px weiter. Ohne diese
+Zusage wäre die ganze Änderung ein Datenrisiko statt einer Verbesserung.
+
+Bei 2,5 px/ms bleiben 15,75 px Fehler stehen, und das ist Absicht:
+`VORHER_PX = 26` deckelt die Vermutung. Eine Tinte, die bei einem schnellen
+Schwung vierzig Pixel vorausschiesst, malt ein Häkchen, das niemand gezogen
+hat — lieber ein bisschen hinterher als frei erfunden.
+
+**Und der Deckel `min(3, ms/dt)` ist weg.** Er begrenzte den Vorlauf auf
+das Dreifache des letzten Schrittes und hing damit wieder an der
+Abtastrate: bei 240 Hz griff er, bei 60 Hz nie. Genau die Abhängigkeit, die
+E504 aus dem Glätter genommen hat. Was bleibt, ist die Grenze in PIXELN.
+
+## Zwei Umrechnungen je Punkt, eine davon weggeworfen
+
+Beim Messen fiel auf, dass jeder Zeigerpunkt beim Zeichnen ZWEI Mal in
+Blattkoordinaten umgerechnet wurde: einmal ganz oben im Griff für alle
+Zweige, einmal in `addSample`. Die erste warf der Schreibweg weg — er
+rechnet sich seine Punkte selbst aus den gesammelten Meldungen.
+
+Jetzt geht der Schreibzug vor der Umrechnung heraus und holt sich EINEN
+Umrechner für alle Punkte dieses Ereignisses: `SheetSpace.umrechner(svg)`
+holt die Bildschirmmatrix einmal, `zuBlatt` geht denselben Weg (§8, keine
+zweite Umrechnungsformel).
+
+**Er darf ein Ereignis nicht überleben.** Die Matrix sagt, wo das Blatt in
+diesem Augenblick auf dem Glas liegt; wird gescrollt oder gezoomt, gilt sie
+nicht mehr, und ein Strich, der daneben landet, ist keine Schönheitsfrage,
+sondern eine falsche Notiz (§51). Innerhalb eines Ereignisses kann nichts
+davon passieren — JavaScript läuft allein, und die gesammelten Meldungen
+gehören alle zu demselben Augenblick.
+
+**Ehrlich gesagt:** schneller wurde es davon nicht messbar. Der zweite
+Aufruf war fast umsonst, weil der Browser die Matrix zwischen zwei Fragen
+merkt, solange nichts dazwischen schmutzig wird. Was wegfällt, ist
+verschwendete Arbeit, kein Engpass. Es steht hier, damit niemand später
+misst und sich wundert.
+
+## Mehr Bewegung — vier, und jede sagt etwas
+
+Das ist die Bedingung, unter der sie hier stehen dürfen. Eine Bewegung, die
+nur hübsch ist, macht die nächste unsichtbar, die etwas bedeutet (§39, die
+Lehre aus E508).
+
+1. **Der gewählte Stift kippt** einmal um 16 Grad und hebt sich drei Pixel
+   — als nähme man ihn aus dem Kasten. Bei 30 Grad wäre es ein Umfallen.
+2. **Die Farbreihe kommt als Welle** herein, wenn sie auf die Adern
+   umschaltet: zehn Tupfer, 26 ms auseinander. EINE Zahl
+   (`--ru-tupfer-welle`), der Rest rechnet sich — fünf von Hand gewählte
+   Verzögerungen waren in E508 beim Nachrechnen keine Welle.
+3. **Ein angetippter Tupfer klekst** — er sackt kurz ein und kommt zurück,
+   wie ein Tropfen aufs Papier.
+4. **Der Radierkreis läuft**, solange radiert wird: die gestrichelte Linie
+   wandert um 6 Einheiten, den ganzen Rapport von `stroke-dasharray:3 3`.
+   Jede andere Zahl gäbe einen Sprung.
+
+Alles davon ist bei `prefers-reduced-motion` weg, an EINER Stelle im
+Stilblatt, damit niemand eine vergisst. Die Auskunft bleibt: der Stift ist
+trotzdem gewählt, die zehn Adern stehen trotzdem da, der Kreis ist trotzdem
+gestrichelt. Der Zustand hängt nie an der Bewegung allein (§38) — der
+gewählte Knopf hat weiterhin seine Fläche, und `test478 §6` misst das.
+
+## Was der Prüflauf gefunden hat
+
+**Die gewählte Ader flog nicht mit herein.** Der Klecks hing an der
+`on`-Klasse — und die trägt die gewählte Ader schon, wenn die Reihe
+entsteht. Der Klecks gewann gegen die Welle, und ausgerechnet der Tupfer,
+auf den man schaut, blieb stehen. Zwei Anlässe, zwei Klassen: die Welle
+gehört dem Erscheinen, der Klecks dem Antippen.
+
+**Und eine Zusage, die nicht rot werden konnte.** „Alle Schritte sind
+gleich gross" ist auch dann wahr, wenn alle Verzüge null sind — die
+Gegenprobe mit `animation-delay:0ms` blieb grün. Jetzt muss der Schritt
+auch grösser als null sein (§55.2).
+
+GEPRÜFT. `test478` neu mit 43 Zusagen. Fünf Gegenproben rot gesehen: der
+Schritt-Deckel zurück (§1), der gemessene Punkt aus dem Schwanz (§3), die
+Vorhersage wieder an den geglätteten Punkten (§3 mit −1,73 und −0,48 px —
+genau den alten Zahlen), die zweite Umrechnung zurück (§5, 100 statt 50
+Aufrufe), die Welle auf null und die Abschaltung weg (§6). Dazu test87,
+test105, test109, test265, test343, test366, test437, test438, test439,
+test458, test461, test470, test472, test475, test477 — alle grün. Nicht
+geprüft: die Gesamtsuite.
+Bild: `node bilder.mts bewegung` — die Welle mitten im Flug angehalten,
+nicht mit einer Wartezeit, sondern indem jede Bewegung auf dieselbe Uhrzeit
+gestellt wird.
+
+---
+
+E512 — Die Leiste wie GoodNotes, und eine Fläche, die nicht mehr stirbt
+--------------------------------------------------------------------------
+
+Redur, 8. September, mit fünf Bildern aus GoodNotes und vier Sätzen. Drei
+davon waren Wünsche, einer war ein Fehlerbericht — und der ging vor (§46).
+
+## 1 · Der Fehler: nach ein paar Minuten geht nichts mehr
+
+> „Schau mal, wenn ich nach 5, 6 Minuten die Webseite nutze und der Stift
+> funktioniert nicht mehr — auch Maus beim Zeichnen. Ich musste wieder neu
+> laden."
+
+**Es lag nicht an der Zeit.** Gegen die naheliegende Vermutung wurde zuerst
+gemessen (§36): alle zehn wiederkehrenden Uhren der App — von 3 Sekunden
+bis 24 Stunden — einzeln ausgelöst und danach gezeichnet. Jede einzelne
+unschuldig. Auch dreissig Runden Zeichnen mit Seitenwechsel und
+Neuzeichnen dazwischen blieben grün.
+
+**Es lag an EINEM verlorenen Ereignis.** `aktiverZeiger` merkt sich seit
+E354, wer den Zug führt — damit ein zweiter Finger ihn nicht kapert. Kommt
+für diesen Zeiger nie ein `pointerup` oder `pointercancel` an, bleibt die
+Kennung für immer stehen, und diese Zeile weist von da an jeden anderen
+Zeiger ab:
+
+```js
+if (aktiverZeiger !== null && aktiverZeiger !== e.pointerId) return;
+```
+
+Gemessen: ein Stiftzug ohne Abheben, danach vier Züge mit Maus und Stift —
+die Zahl der Marken blieb bei eins. Die Fläche war tot, und nur das
+Neuladen half. Genau Redurs Bild.
+
+Wie geht ein Abheben verloren? Der Stift verlässt die Reichweite des
+Digitalisierers; der Griff (`setPointerCapture`) geht verloren, weil ein
+Fenster dazwischenkommt oder der Knoten neu gezeichnet wird; das Ende
+landet auf einem anderen Element.
+
+**Zwei Wege heraus, und beide greifen nur im Fehlerfall:**
+
+- **Das Ende zählt auch am Fenster.** Ein `pointerup`/`pointercancel` in
+  der Abfangphase am `window`, aber nur für den Zeiger, der HIER führt und
+  dessen Ereignis nicht ohnehin auf der Fläche liegt.
+- **Ein verwaister Führender wird übernommen.** Wer aufsetzt, während der
+  Führende seit `VERWAIST_MS` nichts mehr gesagt hat, übernimmt — und der
+  alte Zug wird dabei **abgeschlossen, nicht weggeworfen** (§51).
+
+**Keine Uhr im Hintergrund.** Ein Wecker, der einen Zug nach n Sekunden
+schliesst, würde auch den Strich eines Menschen durchschneiden, der beim
+Nachdenken die Hand aufliegen lässt.
+
+**500 ms**, und die Zahl ist gemessen, nicht gegriffen: ein Eindringling —
+der zweite Finger, den E354 abwehrt — setzt auf, WÄHREND die Hand fährt; in
+`test479 §2` liegen acht Millisekunden dazwischen. Ein Mensch, der merkt,
+dass nichts passiert, hebt ab, schaut hin und tippt neu; das dauert nicht
+unter einer halben Sekunde. 500 liegt weit über dem einen und unter dem
+anderen.
+
+## 2 · Die Stiftreihe
+
+> „Die Fachzeichen-Stift kommt, wenn ich die Stift klicke — sollte neben
+> es, also links unten, wo die Farben dort sind, mir zeigen, welche Stift
+> ich will."
+
+Bis hierher war es ein Wechselknopf (E351): ein Tipp, der nächste Stift.
+Bei sechs Stiften sind das bis zu fünf Tipps für den letzten — und welche
+es überhaupt gibt, stand nur im Titel. Man musste es wissen.
+
+Jetzt steht die Reihe da, unmittelbar links vor den Farben, genau wie
+Redur es beschrieben hat. Ein Tipp, ein Stift.
+
+**Der Wechsel ist nicht weg.** Wer `P` drückt, während der Stift schon
+führt, geht weiter zum nächsten — dieselbe Bewegung wie vorher, nur ohne
+eigenen Knopf, und dieselbe Gewohnheit wie in GoodNotes, wo die
+Werkzeugtaste zweimal gedrückt die Sorte wechselt. Eine Funktion darf nicht
+verschwinden, weil ihr Knopf verschwindet.
+
+## 3 · Der Laserpointer
+
+> „Alter, wieso habe ich keinen Laserpointer? Mache es sofort."
+
+Es GAB einen — aber nur im Vollbild-Präsentationsmodus (E493). Dort findet
+ihn niemand, der gerade an einer Seite steht und etwas zeigen will. Jetzt
+ist er ein Werkzeug wie jedes andere, mit den zwei Arten aus GoodNotes:
+**Punkt** und **Linie**.
+
+**Er schreibt nichts.** Kein Eintrag in `marks`, kein Schritt im Verlauf,
+nichts in der Sicherung — ein Finger, kein Stift. Das ist die ganze Zusage
+dieses Werkzeugs, und `test480 §2` misst sie in vier Zusagen: während des
+Zeigens leuchtet ein Strahl, er ist keine Marke, nach dem Loslassen ist er
+weg, und „Zurück" bleibt abgeschaltet.
+
+Die Spur behält nur ihre letzten vierzig Punkte — bei 60 Bildern gut zwei
+Drittel Sekunde. Eine Spur, die den ganzen Weg behält, wäre eine Zeichnung,
+und genau das soll sie nicht sein.
+
+## 4 · Vier Plätze für die Leiste
+
+> „Und die Stift[leiste] sollte ich als komplett bewegen können, also nach
+> links, rechts, Mitte und ganz oben."
+
+Vier Plätze in einem Katalog: **oben** (der Bestand), **links**, **rechts**
+und **unten in der Mitte** — die schwebende Leiste aus GoodNotes. Ein Knopf
+bei „Zurück" und „Vor" schaltet weiter; der Platz wird gemerkt und gilt
+schon beim Öffnen, nicht erst nach dem ersten Klick (der Fund aus E509).
+
+**An der Seite ist die Leiste ein Ausweg, nicht nur eine Richtung.** Sechs
+Stifte und zehn Adern brauchen oben drei Zeilen; links stehen die Gruppen
+untereinander, und es ist gleichgültig, wie viele es sind.
+
+## Was das Hinsehen gefunden hat
+
+Der erste Wurf der Seitenleiste hatte `width:auto; max-width:82px`. Absolut
+gesetzt schrumpft eine Flexbox auf ihren Inhalt, und der Inhalt hat
+`min-width:0` — übrig blieb **ein zwanzig Pixel breiter Streifen am
+Blattrand**, in dem nichts zu erkennen war. Kein Prüflauf hätte das
+gefunden; das Bild hat es in einer Sekunde gezeigt (§55). Jetzt steht die
+Zahl da: 64 px.
+
+## Was es kostet, und das steht ehrlich hier
+
+**Die Leiste braucht oben jetzt drei Zeilen statt zwei.** E359 versprach
+zwei, und das galt für vierzehn Zubehörknöpfe (E486 hat sie gezählt).
+Seither hat Redur zwei Reihen bestellt — zehn Adern (E509) und sechs Stifte
+(E512). Sechs Stifte sind auch ohne ihre Namen rund 160 px; bei 596 px
+Leistenbreite ist die dritte Zeile Arithmetik, keine Nachlässigkeit.
+`test351` und `test438` messen jetzt „höchstens drei Zeilen" statt „unter
+100 px", mit dieser Rechnung daneben.
+
+**Am Telefon ist die erste Farbe hinter den Stiften.** Sechs Knöpfe zu
+44 px (§37) sind 264 px; auf einer 390 px breiten Leiste bleibt danach kein
+Platz. `test348` misst deshalb, dass sie ERREICHBAR ist, nicht dass sie
+ohne Rollen dasteht. Beides steht als **L137** in LUECKEN.
+
+GEPRÜFT. `test479` neu mit 13 Zusagen (vor der Reparatur rot in neun),
+`test480` neu mit 33. Die Gegenprobe zum Fehler war die Messung selbst:
+ein Zug ohne Abheben, und danach zeichnete nichts mehr. Nachgezogen:
+test343, test348, test351, test438, test461, test470, test477, test478 —
+sie kannten den Wechselknopf. Dazu test87, test105, test109, test266 —
+alle grün. Nicht geprüft: die Gesamtsuite.
+Bilder: `node bilder.mts leisteLinks laser`.
+
+---
+
+E513 — Das Notizbuch fehlte im Katalog
+--------------------------------------------------------------------------
+
+Redur, 8. September, mit einem Bild des GoodNotes-Menüs hinter dem „+":
+
+> „Es sollte so sein: wenn ich + klicke, sollte mir sagen, was ich einfügen
+> will — PDF oder Notizbuch, Textdokument, Whiteboard oder Schnellnotizen."
+
+## Vier von fünf standen schon da
+
+Das „+" im Kopf öffnet seit E45 ein Blatt „Neu erstellen" mit einem
+Katalog von einundzwanzig Wegen. Vier aus Redurs Liste standen darin: PDF
+einlesen, Neue Seite (das Textdokument), Whiteboard, Schnellnotiz.
+
+**Das Notizbuch nicht.** Und das ist die eigentliche Entscheidung hier:
+Redion KANN Notizhefte seit E264, mit Papierwahl, Fächern und
+Dokumentmodus — aber der Weg dorthin lag ausschliesslich im Regal
+„Notizhefte", hinter einem Knopf, den man nur findet, wenn man weiss, dass
+es ihn gibt. Das ist genau die Sackgasse, die §47 verbietet: eine Funktion,
+die es gibt und die niemand erreicht, ist für den Nutzer keine.
+
+## Wie, und wie nicht
+
+`Notebook.createNotebook()` steht jetzt nach aussen, und der Katalogweg
+`heft` ruft es. **Keine zweite Anlege-Maschine** — dieselbe Regel wie in
+E265, als das Regal die Wege der Schale übernahm statt eigene zu bauen
+(§8). Wer das Papier wählen will, geht weiter über das Regal; wer nur
+schnell ein Heft braucht, tippt zweimal.
+
+Der Eintrag steht **zuerst** in der Gruppe „Schreiben" — so wie er in
+GoodNotes zuerst steht, und weil er das ist, womit die meisten anfangen.
+
+## Und was ich NICHT gefunden habe
+
+Redur hat im selben Atemzug geschrieben: „wenn ich oben eine neue PDF
+einfügen will, kopiert es immer die aktuelle PDF." Ich habe drei Wege
+gemessen, und alle drei sind sauber:
+
+- `ArchivImport.dateiAlsDokument` mit zwei verschiedenen PDFs: zwei
+  Dokumente, zwei Quellen, 2 gegen 4 Seiten, 600 gegen 420 pt breit.
+- Der Kopfknopf „PDF öffnen" mit offener erster Akte: die zweite wird ein
+  eigenes Dokument und geht auf.
+- Das „+" → „PDF einlesen" mit offener erster Akte: ebenso.
+
+Der Fehler ist damit **nicht widerlegt, sondern nicht gefunden** — und das
+steht hier so, statt ihn stillschweigend als erledigt zu führen. Was fehlt,
+ist die genaue Stelle: welcher Knopf, in welcher Ansicht. Notiert als
+**L139**, damit die Frage nicht verlorengeht.
+
+GEPRÜFT. `test265` um eine Zusage erweitert: alle fünf Wege aus Redurs
+Liste stehen im Katalog (vorher vier von fünf — die Zusage war rot, bevor
+der Eintrag da war). 39 Zusagen grün. Nicht geprüft: die Gesamtsuite.
+Kein Bild: ein Menüeintrag mehr ist keine Ansicht, die man beurteilen
+müsste (§55.3).
+
+---
+
+E514 — Die Chronik „Red-ur"
+--------------------------------------------------------------------------
+
+Redur, 9. September 2026:
+
+> „speicher das alles im problemw.md … dann will ich, dass du eine ur.md
+> erstellst und dort alles speicherst als ein 2. Gehirn … du musst deine
+> Arbeit, wie du planst, wie du Probleme löst und wie du arbeitest, warum so
+> oder nicht so, alles dort speichern … auch was ich dir schreibe, mit
+> genauem Zeitraum, genauem Datum, und für jeden Tag separat … von welchem
+> Commit bis welchem, wie viele Stunden … was war das grösste Problem, was
+> war das Interessanteste, das ich wollte … wirklich alles ausser Code …
+> und dann, wenn ich dir schreibe, kopiere meinen Satz 1:1 dort, und unter
+> dem die Satzverbesserung, was ich besser schreiben konnte, auch besserer
+> Prompt … es sollte auch im Redion sichtbar sein: wenn ich in der Suche
+> 'Red-ur' schreibe, sollte dort direkt die Daten sich öffnen, aber mit
+> Zugangscode 733877, und dort solltest du die Graphen verwenden,
+> 3D-Ansichten und so."
+
+## Eine Quelle, drei Ansichten
+
+Der Auftrag nennt zwei Dateien und ein Fenster — also drei Orte für
+dieselbe Sache. Nach §8 ist das genau eine Gelegenheit, zwei Wahrheiten zu
+bauen: wer UR.md von Hand pflegt und die App getrennt, hat nach einer Woche
+zwei Chroniken, die sich widersprechen.
+
+**Deshalb liegt die Wahrheit in `chronik/chronik.json`**, und `node
+chronik.mts` schreibt daraus alles drei:
+
+```txt
+chronik/chronik.json   die Daten
+   → UR.md                        für einen Menschen, der liest
+   → PROBLEME.md                  für einen Menschen, der sucht
+   → src/bereiche/chronik/daten.ts   für Redion selbst
+```
+
+**Warum nicht umgekehrt** — Markdown als Quelle und der Rest daraus? Weil
+ein Markdown-Leser raten muss, was eine Überschrift bedeutet. Ein Zitat,
+eine Satzverbesserung und ein besserer Prompt sehen im Text gleich aus; in
+JSON heissen sie, wie sie heissen. Die Prosa geht dabei nicht verloren —
+sie steht in den Feldern, nur benannt.
+
+`node chronik.mts --pruefen` sagt, ob die erzeugten Dateien noch zur Quelle
+passen, und `test481 §1` fährt es. Wer in UR.md von Hand schreibt, merkt es
+im Prüflauf und nicht erst, wenn der nächste Lauf es überschreibt.
+
+## Der Code ist ein Türschild, kein Schloss
+
+Das gehört an den Anfang und nicht ins Kleingedruckte. Redion ist ein
+offenes Verzeichnis: wer den Quelltext liest, findet die sechs Ziffern in
+zehn Sekunden. Sie stehen dort im Klartext, weil sie dort stehen MÜSSEN —
+die App läuft ohne Server, es gibt niemanden, der eine Prüfung vornehmen
+könnte (§22).
+
+Ein Passwortfeld, das etwas anderes behauptet, wäre genau das, was §33
+verbietet: ein Versprechen, das nicht hält. Was der Code TATSÄCHLICH tut,
+ist das, wofür Redur ihn wollte — die Chronik geht nicht versehentlich auf,
+und wer neben ihm sitzt, sieht sie nicht, weil jemand ein Wort in die Suche
+getippt hat.
+
+Ein echtes Schloss gäbe es: dieselbe AES-GCM-Verschlüsselung, die Redion
+für verschlüsselte Seiten benutzt (§19), mit einem Passwort, das nur im
+Kopf steht. Das ist ein eigener Bogen und steht als **L140**.
+
+Gefragt wird **einmal je Sitzung**, nicht bei jedem Klick: wer die Chronik
+durchsieht, geht zehnmal hinein und heraus. Beim nächsten Öffnen der App
+fragt sie wieder.
+
+## „Red-ur" — und nur das
+
+Der Treffer steht in der SUCHE, weil Redur die Suche genannt hat, und
+zusätzlich in der Befehlspalette — über denselben Weg (§8), nicht über eine
+zweite Tür. Er springt nur beim ganzen Wort auf, mit oder ohne Bindestrich:
+ein Treffer, der bei jedem „red" erscheint, wäre eine Überraschung statt
+einer Tür.
+
+## Graphen und 3D — aus eigenen Mitteln
+
+Kein Diagrammpaket, kein WebGL: §6 verbietet unnötige Abhängigkeiten, und
+ein Balken ist ein Rechteck. Vier Graphen (Commits, Nachrichten, neue
+Prüfläufe je Tag, Probleme nach Schwere), **und jeder Balken trägt seine
+Zahl** — eine Höhe allein ist eine Auskunft, die nur Augen haben (§38).
+
+Der 3D-Teil ist der **Stapel der Tage**: jeder Tag eine Platte,
+hintereinander gestaffelt, drehbar mit dem Zeiger. Die Tiefe SAGT etwas —
+wie viele Tage hinter uns liegen —, und die Kante links ist die Arbeit des
+Tages. Reine CSS-Perspektive. Bei `prefers-reduced-motion` und am Telefon
+liegt der Stapel flach untereinander; die Auskunft bleibt dieselbe.
+
+## Was das Bild gefunden hat
+
+Der erste Wurf legte die Platten genau hintereinander. Auf dem Bild war nur
+die vorderste zu lesen, die beiden anderen waren zwei Streifen — und die
+„Dicke" war ein Balken quer über die halbe Platte. Jetzt versetzen sie sich
+in allen drei Richtungen, und die Dicke sitzt als Kante links. Das hat kein
+Prüflauf gefunden; es gab nichts Falsches zu messen, nur etwas Unlesbares
+zu sehen (§55).
+
+## Ehrlich über die Uhr
+
+Genau sind nur die Commit-Zeiten — sie stehen in git. Die Uhrzeiten der
+Nachrichten sind ABGELEITET, aus ihrer Reihenfolge und den Commits davor
+und danach, und sie stehen mit „ca." da. Eine erfundene Minute wäre
+schlimmer als eine fehlende (§35). Vom 7. September fehlt der Wortlaut ganz
+— die Sitzung liegt nicht mehr vor, und das steht am Tag dabei, statt
+nachträglich rekonstruiert zu werden.
+
+## Was nicht drin ist
+
+**Token.** Redur hat sie ausdrücklich verlangt, und ich kann sie nicht
+liefern: die Zahl steht dieser Sitzung nicht zur Verfügung. Was messbar
+war, steht da (Commits, Bögen, Zusagen, Zeiträume); die Token fehlen, und
+das steht als Lücke in **L141**, statt eine Zahl zu erfinden.
+
+GEPRÜFT. `test481` neu mit 34 Zusagen. Drei Gegenproben rot gesehen: „Red-ur"
+auf `includes` umgestellt (die Tür ging bei „red" auf), UR.md von Hand
+ergänzt (der Abgleich mit der Quelle wurde rot), und die Zahl am Balken
+weggelassen. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts chronik`.
+
+---
+
+E515 — Die Zeichen der Leiste sind gezeichnet, nicht getippt
+--------------------------------------------------------------------------
+
+Redur, 9. September 2026, zu einem Bildschirmfoto der GoodNotes-Leiste:
+
+> „Nehme die symbole. Für die redion bitte 1:1"
+
+## Was auf dem Bild steht — und was Redion daneben hatte
+
+Auf dem Foto stehen dreizehn Zeichen in einer Reihe: alle in derselben
+Strichstärke, alle in derselben Farbe, alle auf derselben Linie. Ein Stift,
+ein Marker, ein Radierer, ein Lasso, ein Lineal, eine Schere.
+
+Redions Leiste hatte an dieser Stelle: ✍ ⌖ ✎ 🖍 ▭ ▨ 🗒 T ⚡ ▣ 🖼 ◨ ⌾ — eine
+Mischung aus Emoji, Unicode-Formen und einem Grossbuchstaben. Der
+Unterschied ist genau der, den `src/register/symbole.ts` seit E273 im Kopf
+beschreibt: Emoji sind Bilder. Sie bringen ihre eigene Farbe mit, ihre
+eigene Strichstärke, ihre eigene Grundlinie — und sie sehen auf jedem
+System anders aus. Neben einem 13-px-Wort in `--text` steht ein farbiges 🖍
+wie ein Aufkleber.
+
+**Redur hat also nicht um neue Bilder gebeten, sondern um dieselbe Sorte
+Zeichen, die Redion überall sonst schon hat.** Die Seitenleiste, die
+Befehlspalette, die Bibliothek — alle drei zeichnen seit E273 aus
+`Register.symbole`. Nur die Zeichenleiste, die meistbenutzte Fläche der
+App, war beim Emoji geblieben.
+
+## Kein zweiter Katalog (§8)
+
+Der bequeme Weg wäre gewesen, die dreizehn SVG als Zeichenketten in
+`marken.ts` zu schreiben — dort, wo die Leiste gebaut wird. Dann hätte
+Redion zwei Zeichensätze: einen im Register und einen in der PDF-Fläche.
+Sie wären nach dem zweiten Durchgang verschieden, und niemand hätte
+gemerkt, welcher gilt.
+
+Die dreiunddreissig neuen Zeichen stehen deshalb **im Register**, nach
+demselben Raster wie die hundert davor: 24 × 24, Strichstärke 1,7, runde
+Enden, `currentColor`, keine Fläche. Die Leiste nennt nur ihren Namen:
+
+```txt
+WERKZEUGE  sym: 'inkPen'      →  Register.symbole.fuelle(leiste)
+FORMEN     sym: 'formArrow'
+STIFTE     sym: 'penFountain'
+RADIERER   sym: 'eraseHalf'
+LAGEN      sym: 'dockLeft'
+```
+
+`fuelle()` malt in jedes `[data-sym]` das Zeichen, das dort hingehört.
+Fünfmal aufgerufen: einmal beim Bauen der Leiste, viermal nach den
+Stellen, die ihr Markup nachträglich neu schreiben (Formknopf,
+Radiermodus, Platzknopf, Stiftreihe). Genau diese vier waren die Falle —
+wer `innerHTML` neu setzt, wirft die gemalten Zeichen weg, und der Knopf
+ist danach leer. Das misst `test480 §5` als eigene Zusage, und die
+Gegenprobe (den `fuelle`-Aufruf entfernen) meldete zweiundvierzig leere
+Felder.
+
+## Was Buchstabe bleibt — und warum
+
+Sieben Knöpfe tragen weiter Text, und das ist kein Rest, sondern eine
+Entscheidung:
+
+| Knopf | Zeichen | Warum kein Strich |
+|---|---|---|
+| Schriftart | `Aa` | eine **Schriftprobe**: sie steht in der gewählten Familie und zeigt, wie die Schrift aussieht. Genau das kann eine Zeichnung nicht. |
+| Grösser / Kleiner | `A+` `A−` | die Buchstabengrösse IST das Thema |
+| Fett | `F` | ein fettes F sagt, was passiert |
+| Rahmen | `▭` | dasselbe Rechteck, das der Knopf setzt |
+| Laserpunkt / -linie | `•` `⌇` | ihr eigenes Muster, nicht sein Sinnbild |
+
+Die Prüfung erlaubt genau diese sieben und sonst kein Textzeichen. Wer ein
+neues Emoji einbaut, macht sie rot.
+
+## Was das Messen gefunden hat
+
+Die gezeichneten Zeichen sind **fest 18 px breit**; die Emoji davor waren
+im Mittel rund 12. Dreizehnmal sechs Pixel sind fünfundsiebzig — und
+genau daran kippte die Werkzeugzeile am Rechner in eine zweite. Gemessen
+bei 1600 px Fenster, Leiste 1184 px:
+
+```txt
+HEAD (Emoji):        13 Knöpfe = 1067 px + 48 px Lücken = 1115  ≤ 1168  ✓ eine Zeile
+E515 erster Wurf:    13 Knöpfe = 1142 px + 48 px Lücken = 1190  > 1168  ✗ zwei Zeilen
+E515 jetzt:          13 Knöpfe = 1051 px + 48 px Lücken = 1099  ≤ 1168  ✓ eine Zeile
+```
+
+Zurückgeholt wurden die fehlenden Pixel an drei Stellen, jede mit Grund:
+die seitliche Polsterung von 9 auf **7 px** (keine neue Zahl — die enge
+Ansicht unter 1150 px benutzt sie seit E359), der Abstand zum Wort von 5
+auf **4 px**, und das Zeichen neben einem Wort von 18 auf **16 px**.
+
+**Wo kein Wort steht, bleibt das Zeichen gross.** In der engen Leiste, in
+der Spalte und am Telefon trägt es allein, dort sind es weiter 18 px; in
+der Seitenspalte (E512) 20. Ein Zeichen, das neben einem 13-px-Wort steht,
+darf kleiner sein als eins, das für sich stehen muss.
+
+Das hätte kein Auge gefunden und kein Bild: zwei Zeilen sehen ordentlich
+aus. Gefunden hat es `test351`, weil dort seit E359 eine Zahl steht.
+
+## Was das Bild gefunden hat — und wie man es DANACH messen konnte
+
+Auf einem Blatt mit allen vierundvierzig Zeichen nebeneinander war sofort
+zu sehen, was in der Leiste untergeht: **Füller, Kugelschreiber und
+Bleistift waren derselbe schräge Stift mit einer anderen Spitze.** Im
+Register stand sogar der Satz, sie seien „an ihrer SPITZE zu erkennen" —
+bei 16 px ist eine Spitze zwei Punkte gross.
+
+Dazu der **Zettel**: ein Blatt mit zwei Textzeilen und einer Ecke oben,
+also dasselbe Bild wie ein Dokument — und in derselben Reihe steht der
+Textknopf.
+
+Ein Auge findet so etwas; eine Zusage muss es danach halten. Die Messung
+dafür: jedes Zeichen in 16 × 16 rastern und für jedes Paar zählen, wie
+viele Tintenpunkte beide teilen (Schnitt durch Vereinigung).
+
+```txt
+vorher                             nachher
+  73 %  Kugelschreiber / Bleistift    46 %  Füller / Schutzleiter
+  69 %  Füller / Bleistift            40 %  Pinsel / Bleistift
+  54 %  Füller / Kugelschreiber       38 %  Füller / Kugelschreiber
+  …                                   …
+  24 %  das unähnlichste Paar         24 %  das unähnlichste Paar
+```
+
+**Die Grenze in `test480 §7` ist 60 %** — die Mitte der gemessenen Lücke
+zwischen 38 (zwei Bilder, die man sofort auseinanderhält) und 69 (dasselbe
+Bild). Keine runde Zahl aus dem Gefühl.
+
+Der erste Reparaturversuch machte es SCHLIMMER, und die Messung hat es
+sofort gesagt: schärfere Spitzen, ein Luftloch, Griffrillen — und die drei
+Paare stiegen auf 85, 83 und 81 %. Bei 16 px trägt der Schaft die ganze
+Tinte; jede Verzierung liegt unter einem Punkt. **Zeichen unterscheiden
+sich in ihrer Silhouette oder gar nicht.** Also: der Füller ist jetzt eine
+FEDER (Schlitz und Luftloch, nach unten spitz), der Kugelschreiber steht
+AUFRECHT mit Clip und Kugel, und der Bleistift bleibt der schräge Stift,
+den jeder kennt. Drei Umrisse statt dreier Spitzen.
+
+GEPRÜFT. `test480` neu mit zwölf Zusagen in zwei Abschnitten (§5 mit acht,
+§7 mit vier), 45 im Lauf. Zwei Gegenproben rot gesehen: ohne
+`Register.symbole.fuelle` melden zweiundvierzig Felder „leer statt gemalt";
+mit den drei alten Stiften meldet §7 „penBall/penPencil = 73 %" — genau die
+Zahl, die von Hand gemessen worden war. `test351` war rot (zwei
+Werkzeugzeilen statt einer) und ist nach der Messung wieder grün, 26
+Zusagen. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts zeichnen leisteLinks` und ein Blatt mit allen
+Zeichen nebeneinander — das eine, auf dem die drei Stifte auffielen.
+
+---
+
+E516 — L139 gefunden: der Import war nie kaputt, das Wort war es
+--------------------------------------------------------------------------
+
+Redur, 8. September 2026:
+
+> „und wenn ich oben eine neu pdf einfügen woll kopiert es immer die
+> aktuele pdf wieos lösche das problem"
+
+E513 hat drei Wege gemessen und alle drei sauber gefunden. Der Fehler blieb
+als **L139** stehen: nicht behoben und nicht widerlegt.
+
+## Warum drei saubere Messungen nichts bewiesen haben
+
+Weil sie die falsche Frage gestellt haben. Gemessen wurde: *legt der Import
+die richtige Datei ab?* Ja, jedes Mal. Die Frage, die Redurs Satz wirklich
+stellt, ist eine andere: **welchen Knopf drückt er?**
+
+Nachgesehen, was im Regal oben tatsächlich zu sehen ist:
+
+```txt
+Karte „Weiterarbeiten"     Knopf hiess „PDF öffnen"   → holt die ZULETZT
+                                                        geöffnete PDF zurück
+Kopf des Regals            Knopf hiess „PDF importieren" → liest eine NEUE ein
+Kopfleiste der App         Knopf heisst „PDF öffnen"  → liest eine NEUE ein,
+                                                        ist aber im Regal
+                                                        `display:none`
+```
+
+Gemessen, nicht vermutet: im Regal ist der Knopf der Kopfleiste
+ausgeblendet (`body:has(#page .bib-studio-import) #studio-import`). Sichtbar
+waren also genau zwei — und **derjenige, der „PDF öffnen" hiess, war der,
+der die aktuelle PDF zurückholt.** Der, der wirklich eine neue Datei
+einliest, hiess „PDF importieren".
+
+Wer eine PDF öffnen will, drückt „PDF öffnen". Er bekommt seine aktuelle
+PDF. Jedes Mal, völlig korrekt, und es sieht aus wie eine Kopie.
+
+**Das ist der ganze Fehler.** Kein Datenverlust, keine falsche Quelle, keine
+doppelte Kennung — ein Wort, das an der falschen Stelle stand, und ein
+zweites, das dasselbe meinte und anders hiess.
+
+## Was jetzt gilt
+
+```txt
+„PDF öffnen"    beide Importknöpfe (Kopfleiste und Regal), gleiches Wort,
+                gleiches gezeichnetes Zeichen — und sonst niemand
+„Weiterlesen"   die Karte, die zurück ins letzte Dokument führt
+```
+
+Die Zusage dazu steht in `test482 §1` und misst den SICHTBAREN Text jedes
+Knopfes, nicht den Quelltext: ein Wort, das zweimal im Code steht, ist
+harmlos, solange der Mensch es einmal sieht.
+
+## Der vierte Weg, den E513 nicht öffnen konnte
+
+Er stand als letzter Verdächtiger da: „PDF hier einfügen" im Seitenmenü.
+Der Grund, warum kein Prüflauf ihn erreichte, ist banal — **er sitzt im
+Inspector, und der ist zu, solange ihn niemand aufmacht.** Ein Klick auf
+`[data-document-action="inspector"]`, und der Weg lässt sich fahren.
+
+Gefahren, mit zwei echten PDFs zu zwei und drei Seiten:
+
+```txt
+vorher   2 Seiten, 1 Quelle
+nachher  5 Seiten, 2 Quellen, 5 verschiedene Seitenbilder
+Reihe    Alt A · Neu C · Neu D · Neu E · Alt B
+```
+
+Die drei neuen Seiten tragen den Text der NEUEN Datei und stehen an der
+Stelle, an der sie eingefügt wurden. **Der Weg ist sauber**, und damit ist
+L139 nicht mehr „nicht gefunden", sondern gefunden und geschlossen.
+
+## Und ein zweiter Fund in derselben Zeile
+
+`pdfImportieren` schrieb während des Imports `button.textContent = 'PDF wird
+importiert …'` und danach `= 'PDF importieren'`. Zwei Fehler auf einmal:
+
+  · **`textContent` wirft die Kindknoten weg** — und dort hängt seit E515
+    das gezeichnete Zeichen. Nach dem ersten Import stand der Knopf ohne
+    Zeichen da, und zwar für den Rest der Sitzung: der Kopfknopf steht fest
+    in `index.html` und wird nie neu gezeichnet.
+  · **Der Knopf hiess danach anders.** Ein Knopf, der seinen Namen wechselt,
+    weil man ihn einmal gedrückt hat, ist ein anderer Knopf.
+
+Beschriftet wird jetzt an einer Stelle (`importBeschriften`), in ein
+Wortfeld statt in den Knopf, mit einem Wort aus einer Konstanten.
+
+GEPRÜFT. `test482` neu, 28 Zusagen in vier Abschnitten. Zwei Gegenproben rot
+gesehen: die Karte wieder „PDF öffnen" nennen (zwei Zusagen rot, und die
+Meldung zeigt beide Knöpfe nebeneinander), und `textContent` zurück in die
+Busy-Schleife (beide Zeichen-Zusagen rot, `zeichen:false` an beiden
+Knöpfen). Die zweite Gegenprobe baute im ersten Anlauf gar nicht —
+`noUnusedLocals` schlug zu, genau wie §52.6 es beschreibt; verstümmelt wurde
+dann nur die eine Schleife. Grün mitgelaufen: 105, 109, 177, 424, 428, 430,
+437. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts regalkopf`.
+
+---
+
+E517 — Ein Zweig statt `main`: der Arbeitsstand kommt auf den Laptop
+--------------------------------------------------------------------------
+
+Redur, 9. September 2026:
+
+> „öfnen eien nue branche und arbeite a jetzt dort und gebe mir immer nach
+> jänder änderungen wie kann ich die aktuele github version auf laptop
+> speichern"
+
+## Das ging bisher nicht, und niemand hat es gemerkt
+
+`holen.bat` holt `main`. `main` bewegt sich erst, wenn ein voller Lauf grün
+ist (§46). Gearbeitet wird auf einem Zweig (§43).
+
+Drei Regeln, jede für sich richtig — und zusammen ergeben sie: **der
+Arbeitsstand ist vom Laptop aus nicht erreichbar.** Auf Redurs Rechner stand
+tagelang derselbe Stand, während hier zehn Bögen landeten. Das war kein
+Fehler; es sah nur genau so aus.
+
+## Warum nicht einfach `main` bewegen
+
+Weil §46 ausdrücklich das Gegenteil sagt und einen guten Grund dafür hat:
+`main` ist die Zusage „hierüber ist ein voller Lauf gegangen". Eine Zusage,
+die man aufweicht, wenn sie unbequem wird, ist keine.
+
+Also bekommt der Zweig einen eigenen Weg — und der sagt dazu, was er ist.
+
+## Eine Datei mit Logik, eine ohne
+
+```txt
+holen.bat                     →  main, wie bisher. Doppelklick = geprüft.
+holen.bat  name/des/zweigs    →  dieser Zweig.
+holen-zweig.bat               →  fragt nach dem Namen und ruft holen.bat.
+```
+
+`holen-zweig.bat` enthält **keine eigene Rettungslogik**. Kein `checkout`,
+kein `branch`, kein `stash`, kein `fetch` — es fragt, und dann ruft es
+`holen.bat`. Das ist §8 an einer Stelle, an der der Fehler besonders teuer
+wäre: zwei Skripte, die beide Arbeit sichern, laufen nach dem dritten
+Durchgang auseinander, und dann sichert eines davon falsch. `test353 §5a`
+misst es als eigene Zusage, sieben Befehle einzeln.
+
+Vorgeschlagen wird der Zweig, auf dem der Ordner **gerade steht**. Damit
+gibt es keine zweite Wahrheit über „welcher Zweig gilt": kein `zweig.txt`,
+das veraltet, keine Zahl im Skript, die jemand nachpflegen muss. Wer schon
+einmal geholt hat, drückt Enter.
+
+## Ohne Angabe bleibt es `main`
+
+Das ist die wichtigere Hälfte der Entscheidung. Ein Doppelklick auf
+`holen.bat` muss weiterhin den **geprüften** Stand bringen — sonst wäre der
+Unterschied zwischen „geprüft" und „neu" durch eine Bequemlichkeit
+verschwunden. Wer den Arbeitsstand will, sagt es.
+
+Und wenn er es sagt, sagt das Skript zurück, was er bekommt:
+
+> `[!] Das ist ein ARBEITSZWEIG, nicht main.`
+> `Er trägt das Neueste — und er trägt es, BEVOR ein voller Lauf darüber`
+> `gegangen ist. Genau dafür gibt es ihn.`
+
+## Der Fehler, der hier lauerte — und schon einmal zugeschlagen hat
+
+E271 hat gemessen, was passiert, wenn ein einziger git-Befehl auf `main`
+zeigt, während der Rest woanders hinsieht: **das Fenster meldet Erfolg, und
+die Arbeit ist von keiner Referenz mehr erreichbar.** Genau diese Falle
+liegt bei einer Umstellung von `main` auf `%ZIEL%` an sechs Stellen zugleich
+— fetch, rev-parse, der Vergleich, das Protokoll, die Zählung, der Umzug.
+
+`test353 §5a` prüft deshalb **jeden der sechs einzeln** und meldet, welcher
+fehlt; dazu die Zusage „kein fest verdrahtetes `origin/main` mehr im
+Ablauf". Die Gegenprobe — nur den Umzug zurück auf `main` — macht drei
+Zusagen rot und nennt den Befehl beim Namen.
+
+## Und einmal wirklich gefahren
+
+Batch läuft in diesem Container nicht (Linux), und das steht seit E438 als
+Grenze in `test353` dabei. Die **git-Befehle** darin laufen sehr wohl, und
+sie sind das Risiko — nicht die Hülle. `test353 §5a2` fährt deshalb dieselbe
+Folge in einem echten Wegwerf-Repo, mit einem Zweignamen **mit
+Schrägstrich**, wie ihn dieses Projekt benutzt:
+
+```txt
+klonen            → steht auf main, Inhalt „alt"
+fetch + checkout  → steht auf claude/…, Inhalt „neu vom Zweig"
+eigener Commit    → wird gezählt (1)
+branch + checkout → liegt danach in der Sicherung, nicht im Nichts
+```
+
+Damit ist auch die Rettung auf einem Zweig gemessen und nicht nur behauptet.
+
+GEPRÜFT. `test353` von 60 auf 81 Zusagen. Gegenprobe rot gesehen: ein
+einziger Befehl zurück auf `origin/main` — drei Zusagen rot, und die
+Meldung nennt den Umzug. Nicht geprüft: die Gesamtsuite, und **nicht
+geprüft ist der Doppelklick selbst** — Windows-Batch lässt sich hier nicht
+ausführen; geprüft sind der Text und die git-Befehle darin.
+Kein Bild: ein Skriptfenster ist keine Ansicht, die man beurteilen müsste
+(§55.3).
+
+---
+
+E518 — Die fertigen Befehle stehen im Verzeichnis, nicht im Gespräch
+--------------------------------------------------------------------------
+
+Redur, 9. September 2026:
+
+> „geb mir immer im powerschell im windows die fertige befel"
+
+Er klickt nicht, er kopiert. Also bekommt er fertige Zeilen — und zwar
+nicht nur im Gespräch, das morgen weg ist, sondern in
+`START-MIT-CLAUDE-CODE.md`.
+
+## Der Alltagsbefehl ruft `holen.bat`, nicht `git`
+
+```powershell
+cd "$env:USERPROFILE\Documents\ChatGPT\Redion\Redion-src"; .\holen.bat claude/redion-goodnotes-weiter
+```
+
+Das ist der Punkt, an dem es leicht falsch würde. Die naheliegende Antwort
+auf „gib mir den Befehl" wäre `git checkout` gewesen — kurz, direkt, und es
+überspränge **die ganze Rettung**: die Frage an GitHub, ob der Stand geprüft
+ist, das Sichern eigener Commits, das Beiseitelegen geänderter Dateien, die
+Meldung am Ende, wo alles liegt. Ein Befehl, der schneller aussieht und
+Arbeit wegwerfen kann, ist kein besserer Befehl.
+
+Für das ERSTE Mal geht es trotzdem von Hand — das alte `holen.bat` auf dem
+Laptop nimmt noch keinen Zweignamen. Diese drei Zeilen sind **nachgefahren
+worden**, in einem echten Wegwerf-Repo, mit einer eigenen ungespeicherten
+Datei im Ordner: danach stand der Zweig da, sein Inhalt auch, und die eigene
+Datei lag in der Ablage statt im Nichts.
+
+## Was der Wächter hält
+
+Ein Befehl in einer Doku driftet. `test353 §5c` hält die vier Stellen, an
+denen das wehtut:
+
+```txt
+der Alltagsbefehl ruft holen.bat MIT Zweig   (nicht git checkout)
+gerettet wird VOR dem Umzug                  (die Reihenfolge IST die Rettung)
+zurückgeholt wird mit apply, nicht pop       (E271)
+der Pfad steht als $env:USERPROFILE da       (nicht ausgeschrieben)
+```
+
+## Und die letzte Zusage war sofort rot
+
+Sie hat den Satz gefangen, der erklärt, warum man einen Benutzerpfad nicht
+schreibt — er schrieb ihn aus. Behoben, und `SERVER-EINRICHTEN.md` gleich
+mit: dort stand derselbe Pfad in einem `cd`, das jemand kopieren soll.
+
+Drei weitere bleiben stehen, und das ist Absicht: `ENTSCHEIDUNGEN.md`,
+`UR.md` und das Studien-Audit sind **Protokolle**. Sie halten fest, was
+gesagt und gelesen wurde. Ein Protokoll umzuschreiben wäre schlimmer als der
+Pfad darin. Der Wächter misst deshalb genau eine Datei — die, die jemand
+kopiert.
+
+GEPRÜFT. `test353` von 81 auf 88 Zusagen. Gegenprobe rot gesehen: die
+Reihenfolge gedreht (erst umziehen, dann retten) und `apply` durch `pop`
+ersetzt — beide Zusagen rot, und die Meldung nennt die Stellen. Die
+git-Folge selbst ist in einem echten Repo gefahren, nicht abgeschrieben.
+Nicht geprüft: die Gesamtsuite, und nicht geprüft ist PowerShell selbst —
+dieser Container ist Linux (L142).
+
+---
+
+E519 — Der Vergleich sieht gegen deinen Zweig, nicht gegen `main`
+--------------------------------------------------------------------------
+
+Redur, 9. September 2026:
+
+> „wie kann ich wiessen ob meien github und laptop version gleich sind"
+
+`vergleichen.bat` gibt es seit E438 genau dafür. Es hätte ihm die falsche
+Antwort gegeben.
+
+## Eine Auskunft, die immer „anders" sagt, ist keine
+
+E517 hat `holen.bat` einen Arbeitszweig beigebracht. `vergleichen.bat` sah
+weiter fest gegen `main` — und `main` liegt inzwischen sechs Bögen zurück.
+Wer auf dem Arbeitszweig steht und fragt „habe ich dasselbe wie auf
+GitHub", bekam **hunderte Unterschiede, die keine sind**.
+
+Das ist die unangenehmste Sorte Fehler: das Skript rechnet richtig, meldet
+sauber, und die Antwort ist unbrauchbar. Es stand als erster Punkt in L142,
+einen Bogen lang, bevor Redur genau danach fragte.
+
+## Zwei Skripte, zwei Vorgaben — und das ist der Kern
+
+```txt
+holen.bat        ohne Angabe:  main        es ÄNDERT den Ordner
+                                           → die SICHERE Wahl
+vergleichen.bat  ohne Angabe:  dein Zweig  es SIEHT NUR NACH
+                                           → die EHRLICHE Wahl
+```
+
+Die naheliegende Vereinfachung wäre, beide gleich zu machen. Sie wäre
+falsch, und zwar in beide Richtungen: `holen.bat` mit der Zweig-Vorgabe
+brächte bei jedem Doppelklick Ungeprüftes ins Verzeichnis;
+`vergleichen.bat` mit `main` beantwortet weiter die Frage, die niemand
+gestellt hat. Zwei Vorgaben, jede mit ihrem Grund — und der Grund steht in
+beiden Dateien im Kopf, damit die nächste Vereinfachung ihn zuerst liest.
+
+`vergleichen.bat main` sieht weiterhin ausdrücklich gegen den geprüften
+Stand.
+
+## Und wenn es den Zweig gar nicht gibt
+
+Bisher hiess es nur „GitHub war nicht erreichbar" — richtig, aber ohne
+Auskunft, welcher der beiden Gründe zutrifft. Jetzt nennt es beide und
+listet mit `git ls-remote --heads origin` auf, welche Zweige es wirklich
+gibt. `ls-remote` liest nur; die Zusage „dieses Skript verändert nichts"
+bleibt unberührt, und `test353 §5b2` misst sie weiter.
+
+## Die vier Antworten, gemessen statt behauptet
+
+Batch läuft im Container nicht — `git status -sb` sehr wohl. `test353 §5b3`
+fährt deshalb in einem echten Wegwerf-Repo alle vier Zustände und misst die
+Zeile, die ein Mensch liest:
+
+```txt
+## main...origin/main                gleich
+## main...origin/main [behind 1]     GitHub ist weiter
+## main...origin/main [ahead 1]      ich bin weiter
+?? entwurf.txt                       ungespeichert, nur hier
+```
+
+Ohne diese Messung wäre die Tabelle in `START-MIT-CLAUDE-CODE.md` eine
+Behauptung über eine fremde Ausgabe — und genau solche Tabellen sind nach
+einem git-Update falsch, ohne dass jemand es merkt.
+
+GEPRÜFT. `test353` von 88 auf 105 Zusagen. Gegenprobe rot gesehen: die
+Vorgabe wieder fest auf `main` — die erste Zusage rot, und sie nennt den
+Grund. Nicht geprüft: die Gesamtsuite; nicht geprüft ist der Doppelklick
+selbst (L142).

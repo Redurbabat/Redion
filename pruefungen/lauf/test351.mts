@@ -143,11 +143,25 @@ await werkzeug(pg, 'stift');
 let z = await leiste(pg);
 /* ELF, NICHT MEHR VIERZEHN (E375): Linie, Pfeil, Rechteck und Ellipse
    stehen jetzt unter einem Knopf „Form". Die Zusage dieses Punktes ist
-   dieselbe geblieben — alle auf EINER Höhe —, nur ist die Zeile kürzer. */
-gleich('Alle elf Werkzeuge auf EINER Höhe', z.werkzeugZeilen, 1);
-gleich('Und es sind wirklich elf', z.werkzeuge, 11);
+   dieselbe geblieben — alle auf EINER Höhe —, nur ist die Zeile kürzer.
+   SEIT E494 SIND ES ZWÖLF: die Elemente-Bibliothek kam dazu. Vor dem
+   Einbau nachgemessen, ob die Zeile sie trägt: bei 1360 px Fenster belegen
+   die Werkzeuge 437 px von 596, mit Wörtern bei 1600 px 919 von 1184 —
+   eine Zeile bleibt eine, und die Leiste rollt am Rechner nicht. */
+/* DREIZEHN SEIT E512: der Laserpointer ist dazugekommen (Redurs Wunsch —
+   es gab ihn nur im Vollbild, und dort findet ihn niemand). Er steht am
+   Ende der Reihe, weil er als einziger nichts hinterlässt. */
+gleich('Alle dreizehn Werkzeuge auf EINER Höhe', z.werkzeugZeilen, 1);
+gleich('Und es sind wirklich dreizehn', z.werkzeuge, 13);
 p('Das Zubehör steht unter den Werkzeugen', z.zubehoerUnterhalb && z.zubehoerSichtbar > 0, JSON.stringify(z));
-p('Die Leiste ist unter 100 px hoch (vorher fünf Zeilen, rund 220)', z.hoehe < 100, `${z.hoehe} px bei ${z.breite} px Breite`);
+/* DREI ZEILEN STATT ZWEI, und das ist Arithmetik. E359 mass zwei Zeilen
+   für vierzehn Zubehörknöpfe (E486 hat sie gezählt). Redur hat seither
+   zwei Reihen bestellt: zehn Adern (E509) und sechs Stifte (E512).
+   Sechs Stifte sind auch ohne Namen rund 160 px; bei 596 px Leistenbreite
+   ist die dritte Zeile keine Nachlässigkeit. Der Ausweg ist die Leiste an
+   der SEITE (E512): dort stehen die Gruppen untereinander und es ist
+   gleichgültig, wie viele es sind. Steht als L137 in LUECKEN. */
+p('Die Leiste bleibt bei höchstens drei Zeilen (vorher fünf, rund 220)', z.hoehe < 140, `${z.hoehe} px bei ${z.breite} px Breite`);
 p('Der Zeilenbruch ist da und wirkt (volle Breite, keine Höhe)', z.bruch.da && z.bruch.sichtbar && (z.bruch as any).breite > z.breite * 0.8, JSON.stringify(z.bruch));
 
 /* ======================================================================== */
@@ -156,17 +170,21 @@ console.log('\n2 · Nur das Zubehör des Werkzeugs — auch am Rechner');
    Stärke ist eine Klappe (`display:none`, bis die gewählte Stufe ein
    zweites Mal getippt wird) und zählt zu, wie der Trenner ohne Rechteck. */
 gleich('Stift: Stil, Formen, Farben, Breiten, Verlauf — kein Radiermodus, keine Auswahlknöpfe, kein Lineal',
-  [z.gruppen.stil > 0, z.gruppen.formen > 0, z.gruppen.farbe >= 6, z.gruppen.breite === 3, z.gruppen.verlauf === 2, z.gruppen.radierer, z.gruppen.auswahl, z.gruppen.lineal],
+  /* DREI IM VERLAUF SEIT E512: Zurück, Vor — und der Platz der Leiste.
+     Er steht bei ihnen, weil er zu JEDEM Werkzeug gehört. */
+  [z.gruppen.stil > 0, z.gruppen.formen > 0, z.gruppen.farbe >= 6, z.gruppen.breite === 3, z.gruppen.verlauf === 3, z.gruppen.radierer, z.gruppen.auswahl, z.gruppen.lineal],
   [true, true, true, true, true, 0, 0, 0]);
 await werkzeug(pg, 'radierer');
 z = await leiste(pg);
-gleich('Radierer: sein Modus und der Verlauf, sonst nichts', [z.gruppen.radierer, z.gruppen.verlauf, z.gruppen.farbe, z.gruppen.stil, z.gruppen.breite], [1, 2, 0, 0, 0]);
+gleich('Radierer: sein Modus und der Verlauf, sonst nichts', [z.gruppen.radierer, z.gruppen.verlauf, z.gruppen.farbe, z.gruppen.stil, z.gruppen.breite], [1, 3, 0, 0, 0]);
 await werkzeug(pg, 'select');
 z = await leiste(pg);
-/* ACHT IN DER GRUPPE „AUSWAHL": Löschen, Kopieren, Einsetzen; dazu seit
-   E466 Ausschneiden, nach vorn, nach hinten, Sperren — und seit E468 der
-   Verweis. */
-gleich('Auswahl: Löschen, Kopieren, Einsetzen, Ausschneiden, Vor, Hinten, Sperren, Verweis, Farben, Breiten', [z.gruppen.auswahl, z.gruppen.farbe >= 6, z.gruppen.breite, z.gruppen.stil], [8, true, 3, 0]);
+/* NEUN IN DER GRUPPE „AUSWAHL": Löschen, Kopieren, Einsetzen; dazu seit
+   E466 Ausschneiden, nach vorn, nach hinten, Sperren; seit E468 der
+   Verweis — und seit E494 „Als Element", der einzige Weg in die
+   Elemente-Bibliothek. Nachgemessen: der neunte Knopf ändert die Höhe der
+   Leiste nicht (120 px vorher wie nachher, bei 596 px und bei 1184 px). */
+gleich('Auswahl: Löschen, Kopieren, Einsetzen, Ausschneiden, Vor, Hinten, Sperren, Verweis, Als Element, Farben, Breiten', [z.gruppen.auswahl, z.gruppen.farbe >= 6, z.gruppen.breite, z.gruppen.stil], [9, true, 3, 0]);
 gleich('… und immer noch eine Werkzeugzeile', z.werkzeugZeilen, 1);
 await werkzeug(pg, 'line');
 z = await leiste(pg);
@@ -189,9 +207,9 @@ p('Volle Breite bei 1360 px Fenster: die Leiste hat rund 1070 px — noch keine 
 await pg.setViewportSize({ width: 1600, height: 950 });
 await pg.waitForTimeout(400);
 z = await leiste(pg);
-p('Bei 1600 px Fenster (Leiste über 1150 px) stehen die elf Wörter', z.woerter === 11 && z.breite > 1150, `${z.woerter} Wörter bei ${z.breite} px`);
+p('Bei 1600 px Fenster (Leiste über 1150 px) stehen die dreizehn Wörter', z.woerter === 13 && z.breite > 1150, `${z.woerter} Wörter bei ${z.breite} px`);
 gleich('… in einer Werkzeugzeile, das Zubehör darunter', [z.werkzeugZeilen, z.zubehoerUnterhalb], [1, true]);
-p('… und die Leiste bleibt unter 100 px', z.hoehe < 100, `${z.hoehe} px`);
+p('… und die Leiste bleibt bei höchstens drei Zeilen', z.hoehe < 140, `${z.hoehe} px`);
 await ktx.close();
 
 /* ======================================================================== */
@@ -212,7 +230,9 @@ let k = await klappe();
 gleich('Ein Knopf, zu, zeigt das Papier, das gilt (blanko); der feste Teil ist schmal', [k.knopf, k.offen, k.aria, k.vorschau, k.festBreite < 130], [true, false, 'false', 'blanko', true]);
 await pgP.click('.blatt-fest .blatt-papierknopf');
 k = await klappe();
-gleich('Tipp: die Klappe ist auf, fünf Vorlagen darin', [k.offen, k.aria, k.vorlagen], [true, 'true', 5]);
+/* Sieben seit E495 (Cornell und Notenlinien). Die Zusage dieses Punktes
+   ist die KLAPPE, nicht die Zahl — sie geht auf und trägt den Katalog. */
+gleich('Tipp: die Klappe ist auf, sieben Vorlagen darin', [k.offen, k.aria, k.vorlagen], [true, 'true', 7]);
 await pgP.click('.blatt-fest .blatt-papierwahl[data-papier="kariert"]');
 k = await klappe();
 gleich('Eine Vorlage gewählt: Papier umgestellt, Knopf zeigt sie, Klappe zu', [k.papier, k.vorschau, k.offen], ['kariert', 'kariert', false]);

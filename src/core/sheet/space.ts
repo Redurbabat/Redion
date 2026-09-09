@@ -56,13 +56,51 @@ const SheetSpace = (() => {
   const zuBlatt = (
     svg: SVGSVGElement | null,
     e: { clientX: number; clientY: number }
-  ): [number, number] | null => {
-    if (!svg || !svg.getScreenCTM) return null;
-    const matrix = svg.getScreenCTM();
-    if (!matrix) return null;
-    const punkt = new DOMPoint(e.clientX, e.clientY).matrixTransform(matrix.inverse());
-    if (!isFinite(punkt.x) || !isFinite(punkt.y)) return null;
-    return [rund(punkt.x), rund(punkt.y)];
+  ): [number, number] | null => umrechner(svg)(e);
+
+  /**
+   * DIE MATRIX EINMAL HOLEN, VIELE PUNKTE RECHNEN (E511).
+   *
+   * `getScreenCTM()` ist keine Abfrage, sondern eine ANFORDERUNG: der
+   * Browser muss dafür alles nachrechnen, was seit der letzten Zeichnung an
+   * Aufbau offen ist. Beim Zeichnen fällt das ins Gewicht, weil zwischen
+   * zwei Zeigermeldungen genau das passiert — der nasse Strich schreibt
+   * sein `d`, und die nächste Anfrage muss den Aufbau neu rechnen.
+   *
+   * GEMESSEN (§36), 400 Punkte auf einem Blatt mit 200 Marken, je vier
+   * Punkte ein Bild — also ein 240-Hz-Stift auf einem 60-Hz-Schirm:
+   *
+   *     der ganze Zeichenweg      52,9 ms
+   *     davon `getScreenCTM`      23,9 ms   =  45,2 %
+   *     Aufrufe je Punkt          2
+   *
+   * Ohne echte Bilder dazwischen misst dieselbe Messung 15 % — der Browser
+   * gibt dann eine gemerkte Matrix zurück, weil nichts schmutzig ist. Das
+   * ist die falsche Zahl, und sie stand hier fast im Text (§36: L103).
+   *
+   * Diese Tür gibt einen Rechner heraus, der die Matrix EINMAL holt und
+   * beliebig viele Punkte damit umrechnet. `zuBlatt` geht denselben Weg,
+   * damit es nicht zwei Umrechnungsformeln gibt (§8).
+   *
+   * ER DARF EIN EREIGNIS NICHT ÜBERLEBEN. Die Matrix beschreibt, wo das
+   * Blatt in diesem Augenblick auf dem Glas liegt. Wird gescrollt, gezoomt
+   * oder die Seite gedreht, gilt sie nicht mehr — und ein Strich, der
+   * daneben landet, ist kein Schönheitsfehler, sondern eine falsche Notiz
+   * (§51). Innerhalb EINES Zeigerereignisses kann nichts davon passieren:
+   * JavaScript läuft allein, und die gesammelten `getCoalescedEvents`
+   * gehören alle zu demselben Augenblick.
+   */
+  const umrechner = (
+    svg: SVGSVGElement | null
+  ): ((e: { clientX: number; clientY: number }) => [number, number] | null) => {
+    const matrix = svg && svg.getScreenCTM ? svg.getScreenCTM() : null;
+    if (!matrix) return () => null;
+    const invers = matrix.inverse();
+    return (e: { clientX: number; clientY: number }): [number, number] | null => {
+      const punkt = new DOMPoint(e.clientX, e.clientY).matrixTransform(invers);
+      if (!isFinite(punkt.x) || !isFinite(punkt.y)) return null;
+      return [rund(punkt.x), rund(punkt.y)];
+    };
   };
 
   /** Wie viele Blattseiten hoch ist dieses Blatt? Mindestens eine. */
@@ -121,7 +159,7 @@ const SheetSpace = (() => {
     return huelle;
   };
 
-  return { A4_BREITE, A4_HOEHE, RAND, RAUM_VERSION, rund, zuBlatt, seiten, gedrehtVon, masseVon, drehHuelle };
+  return { A4_BREITE, A4_HOEHE, RAND, RAUM_VERSION, rund, zuBlatt, umrechner, seiten, gedrehtVon, masseVon, drehHuelle };
 })();
 
 (window as any).SheetSpace = SheetSpace;

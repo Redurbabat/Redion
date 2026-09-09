@@ -43,12 +43,26 @@ const Blatt = (() => {
    * ========================================================================*/
   const MM = 2.8346457;                 /* ein Millimeter in Punkt (72/25,4) */
 
+  /* SIEBEN SEIT E495. Cornell und Notenlinien sind die zwei Papiere, die
+     GoodNotes' Vorlagenwähler hat und Redion nicht hatte — und sie sind
+     immer noch nur Darstellung: ein Feld am Block, Verläufe im Stilblatt.
+     Wer von Cornell auf blanko wechselt, verliert kein Wort und keinen
+     Strich.
+
+     WARUM KEIN ISOMETRISCHES PAPIER, obwohl GoodNotes es hat: seine Linien
+     laufen schräg, und ein schräger `repeating-linear-gradient` misst seinen
+     Abstand SENKRECHT zur Linie — in Prozent der Fläche heisst das, dass
+     sich der Abstand mit dem Seitenverhältnis ändert. Am Telefon wären es
+     andere Dreiecke als am Rechner (dieselbe Falle wie E100). Das ginge nur
+     mit einem gezeichneten Muster, und das ist ein eigener Bogen. */
   const PAPIERE = [
     { id: 'blanko',  name: 'Blanko' },
     { id: 'liniert', name: 'Liniert' },
     { id: 'kariert', name: 'Kariert' },
     { id: 'punkte',  name: 'Punktraster' },
     { id: 'mm',      name: 'Millimeterpapier' },
+    { id: 'cornell', name: 'Cornell-Notizen' },
+    { id: 'noten',   name: 'Notenlinien' },
   ] as const;
 
   type PapierArt = typeof PAPIERE[number]['id'];
@@ -59,11 +73,51 @@ const Blatt = (() => {
     return PAPIERE.some(x => x.id === wert) ? wert as PapierArt : 'blanko';
   };
 
-  /** Die Abstände als Prozentzahlen, damit CSS sie einsetzen kann. */
-  const masse = (breite: number, hoehe: number): Record<string, string> => {
+  /**
+   * Die Abstände als Prozentzahlen, damit CSS sie einsetzen kann.
+   *
+   * `seitenHoehe` ist die Höhe EINER Seite (A4), `hoehe` die des ganzen
+   * Blatts. Bei einem einseitigen Blatt sind beide gleich; bei einem
+   * dreiseitigen ist `hoehe` dreimal so gross. Den Unterschied brauchen die
+   * Papiere, deren Muster sich je SEITE wiederholt statt je Zeile —
+   * Cornell hat eine Kopf- und eine Fusszeile, und die gehören auf jede
+   * Seite, nicht alle 8,75 mm.
+   */
+  const masse = (breite: number, hoehe: number, seitenHoehe = hoehe): Record<string, string> => {
     const quer  = (mm: number) => (mm * MM / breite * 100) + '%';
     const hoch  = (mm: number) => (mm * MM / hoehe  * 100) + '%';
+    /* Die Höhe einer SEITE, als Anteil des Blattes — der Takt, in dem sich
+       die Seitenmuster wiederholen (und die Kachelhöhe im Stilblatt). */
+    const seite = (mm: number) => (mm * MM / hoehe * 100) + '%';
+    /* EIN MASS INNERHALB EINER KACHEL, nicht innerhalb des Blattes.
+       ═══ Das ist der Unterschied, den das Bild gefunden hat (§55). ═══
+       Prozentzahlen IN einem Verlauf beziehen sich auf die KACHEL
+       (`background-size`), nicht auf das Element. Die Notenlinien standen
+       zuerst in Prozent des Blattes: 3 mm sind dort rund 1 %, und 1 % einer
+       27-mm-Kachel ist ein Viertelmillimeter — alle fünf Linien fielen
+       aufeinander, und auf dem Papier stand eine Linie je System statt
+       fünf. Kein Prüflauf hätte das gemeldet; beide Fassungen zeichnen
+       Linien, nur die falsche zeichnet die falschen. */
+    const inKachel = (mm: number, kachelMm: number) => (mm / kachelMm * 100) + '%';
+    const inSeitenkachel = (mm: number) => (mm * MM / seitenHoehe * 100) + '%';
     return {
+      /* EINE SEITE, in Prozent des Blattes — der Takt der Seitenmuster. */
+      '--blatt-seite-hoch': (seitenHoehe / hoehe * 100) + '%',
+      /* CORNELL (A4, 210 × 297 mm): die Spalte für die Stichworte ist 50 mm
+         breit, der Kopf 30 mm hoch, die Zusammenfassung unten 50 mm. Die
+         Zahlen sind die des Originals von Walter Pauk, nicht geraten.
+         Die Spalte misst quer — dort IST die Kachel so breit wie das Blatt,
+         also ist `quer` richtig. Kopf und Fuss messen längs, und dort ist
+         die Kachel eine SEITE. */
+      '--blatt-cornell-spalte': quer(50),
+      '--blatt-cornell-kopf':   inSeitenkachel(30),
+      '--blatt-cornell-fuss':   inSeitenkachel(50),
+      /* NOTENLINIEN: fünf Linien im Abstand von 3 mm (12 mm Systemhöhe),
+         danach 15 mm Luft — ein Takt von 27 mm, also elf Systeme je A4.
+         Die Kachel IST der Takt; darum 3/27 und 12/27. */
+      '--blatt-noten-linie': inKachel(3, 27),
+      '--blatt-noten-satz':  inKachel(12, 27),
+      '--blatt-noten-takt':  seite(27),
       /* Schulheft-Lineatur: 8,75 mm. */
       '--blatt-zeile':       hoch(8.75),
       /* Karo: 5 mm, und quer wie hoch derselbe absolute Abstand. */
@@ -123,7 +177,7 @@ const Blatt = (() => {
        Blatt bei jeder Fensterbreite, ohne eine einzige gerechnete Zahl. */
     papier.style.setProperty('aspect-ratio', breite + ' / ' + hoehe);
     papier.dataset.papier = jetzt;
-    for (const [name, wert] of Object.entries(masse(breite, hoehe)))
+    for (const [name, wert] of Object.entries(masse(breite, hoehe, R.A4_HOEHE)))
       papier.style.setProperty(name, wert);
     /* Gedreht per Huelle (E467); ungedreht haengt das Papier wie immer
        unmittelbar in der Huelle. */

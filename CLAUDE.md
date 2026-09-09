@@ -170,8 +170,19 @@ fragen**, nicht anfangen und hinterher erklären.
 **Redion ist:**
 
 - Notizen-App · Datenbank-App · Wissens-App
-- eine lokale Notion-Alternative
-- offline nutzbar, optional wolkenfähig
+- **eine eigene App, keine Kopie.** Sie war einmal als Notion-Alternative
+  gedacht und ist über diese Beschreibung hinausgewachsen: das
+  Schreibstudio für PDFs, der Stift mit Druck, die Fachzeichen und der
+  Schutzleiter, die Lernwelt, die Prüfungsplanung, das `.redion`-Paket —
+  davon hat Notion nichts. Wo Redion von Notion gelernt hat, steht es im
+  Quelltext an der Stelle („wie in Notion"), und das bleibt so; es ist ein
+  Hinweis auf eine Lösung, keine Herkunftsangabe.
+- **mit Server UND ohne.** Beides ist ein vollwertiger Weg, nicht Normalfall
+  und Notfall: ohne Server ist Redion vollständig; mit Server kommt dazu,
+  was mehr als ein Gerät braucht (§22).
+- **der Nutzer entscheidet, wo seine Daten liegen** — nur auf dem Gerät, im
+  eigenen Ordner, in der eigenen Wolke, oder als `.redion` in der Hand. Die
+  Wahl trifft er, nicht die App und nicht wir (§24).
 - exportierbar, sicherbar, erweiterbar
 
 **Redion ist nicht:**
@@ -1972,7 +1983,7 @@ professionelle Architektur
 
 Aber Redion behält eigene Identität:
 
-Notion-artige App
+eine eigene App (§2), kein Nachbau
 local-first
 Datenbanken
 Blöcke

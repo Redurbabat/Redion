@@ -108,7 +108,8 @@ verlorene Arbeit.
 
 | | Richtung | Wofür |
 |---|---|---|
-| **`holen.bat`** | GitHub ⟶ dein Ordner | Claude hat woanders gearbeitet und nach GitHub geschoben. Damit holst du es. |
+| **`holen.bat`** | GitHub ⟶ dein Ordner | Claude hat woanders gearbeitet und nach GitHub geschoben. Damit holst du den **geprüften** Stand (`main`). |
+| **`holen-zweig.bat`** | GitHub ⟶ dein Ordner | Dasselbe, aber von einem **Arbeitszweig** — das Neueste, noch bevor ein voller Lauf darüber ging. |
 | **`hochladen.bat`** | dein Ordner ⟶ GitHub | Du hast hier etwas geändert und willst es hinbringen. |
 
 ### `holen.bat` — den Stand von GitHub holen
@@ -136,6 +137,112 @@ holt der Browser den neuen Dienst-Arbeiter, angezeigt wird dabei aber noch
 der alte Stand; beim zweiten Mal kommt alles aus dem neuen. Tabs schliessen
 musst du nicht — der Arbeiter übernimmt von selbst (`skipWaiting` und
 `clients.claim` in `src/dienst/sw.ts`).
+
+### Die fertigen PowerShell-Befehle (E518)
+
+Redur, 9. September: „geb mir immer im powerschell im windows die fertige
+befel". Also stehen sie hier, fertig zum Kopieren — und nicht nur im
+Gespräch, das morgen weg ist.
+
+**Der Alltag: den Arbeitsstand holen.** Ein Befehl, eine Zeile:
+
+```powershell
+cd "$env:USERPROFILE\Documents\ChatGPT\Redion\Redion-src"; .\holen.bat claude/redion-goodnotes-weiter
+```
+
+Das ruft `holen.bat` mit dem Zweignamen — also läuft die **ganze**
+Sicherungslogik mit: es fragt GitHub, ob geprüft ist, es rettet eigene
+Arbeit, bevor es etwas anfasst, und es sagt am Ende, wo alles liegt.
+Ein blosses `git checkout` täte das nicht.
+
+**Der geprüfte Stand** ist dieselbe Zeile ohne den Namen:
+
+```powershell
+cd "$env:USERPROFILE\Documents\ChatGPT\Redion\Redion-src"; .\holen.bat
+```
+
+**Nur nachsehen, ohne etwas anzufassen** — es vergleicht gegen den Zweig,
+auf dem dein Ordner steht:
+
+```powershell
+cd "$env:USERPROFILE\Documents\ChatGPT\Redion\Redion-src"; .\vergleichen.bat
+```
+
+Ausdrücklich gegen den geprüften Stand: `.\vergleichen.bat main`.
+
+**Ohne die Skripte**, nur mit git — die kürzeste Auskunft überhaupt:
+
+```powershell
+git fetch origin
+git status -sb
+```
+
+Die erste Zeile ist die Antwort:
+
+| Ausgabe | Bedeutung |
+|---|---|
+| `## zweig...origin/zweig` | **gleich** — nichts dahinter |
+| `… [behind 1]` | GitHub ist weiter, dir fehlt ein Schritt |
+| `… [ahead 1]` | du bist weiter, GitHub fehlt einer |
+| `?? datei.txt` darunter | ungespeichert, nur bei dir |
+
+**Beim allerersten Mal** — solange das alte `holen.bat` im Ordner liegt, das
+noch keinen Zweignamen annimmt, geht es einmal von Hand. Diese drei Zeilen
+sind nachgefahren worden, in einem echten Repo, mit einer eigenen
+ungespeicherten Datei im Ordner:
+
+```powershell
+cd "$env:USERPROFILE\Documents\ChatGPT\Redion\Redion-src"
+git fetch origin claude/redion-goodnotes-weiter
+git stash push -u -m "vor-holen"
+git checkout -B claude/redion-goodnotes-weiter origin/claude/redion-goodnotes-weiter
+```
+
+Die dritte Zeile ist die Rettung und keine Höflichkeit: sie legt beiseite,
+was im Ordner liegt und noch nirgends steht. Hattest du nichts geändert,
+sagt sie „No local changes to save" und tut nichts. Hattest du etwas, holst
+du es danach mit `git stash apply stash@{0}` zurück — **`apply`, nicht
+`pop`**: `apply` lässt die Ablage liegen, falls etwas schiefgeht.
+
+Danach: **Redion offen lassen und zweimal F5.**
+
+`$env:USERPROFILE` steht dort statt eines ausgeschriebenen Benutzerpfades,
+weil der Befehl dann auf jedem Rechner stimmt — auch auf einem zweiten. Ein
+Benutzername gehört ausserdem nicht in ein offenes Verzeichnis; `test353 §5c`
+lässt ihn hier nicht mehr durch.
+
+### `holen-zweig.bat` — den Arbeitsstand holen
+
+**Warum es das gibt** (E517): `main` bewegt sich erst, wenn ein voller Lauf
+grün ist (§46). Solange an etwas gearbeitet wird, liegt das Neue also auf
+einem **Zweig**, und `holen.bat` bringt es nicht her — es holt immer `main`.
+Auf dem Laptop stand deshalb tagelang derselbe Stand, und das sah aus wie
+ein Fehler, obwohl es die Regel war.
+
+Doppelklick. Es fragt nach dem Namen des Zweigs und schlägt den vor, auf
+dem dein Ordner gerade steht — wer schon einmal geholt hat, drückt also nur
+Enter. Den Namen sagt dir Claude nach jeder Änderung; du findest ihn auch
+in der Adresszeile von GitHub hinter `/tree/`.
+
+Danach macht es **genau dasselbe wie `holen.bat`** — es ruft es auf. Die
+ganze Rettungs- und Sicherungslogik steht nur dort, in einer einzigen Datei
+(§8). Zwei Dateien mit derselben Logik laufen nach dem dritten Durchgang
+auseinander, und dann weiss niemand mehr, welche gilt.
+
+**Der eine Unterschied:** ein Zweig ist ein Arbeitsstand. Das Skript sagt es
+auch so hin. Er trägt das Neueste, und er trägt es, bevor ein voller Lauf
+darüber gegangen ist — dafür gibt es ihn. Sieht dort etwas seltsam aus, ist
+das kein Weltuntergang, sondern der Grund, warum es diesen Zweig gibt: sag
+es weiter.
+
+Wer lieber tippt, statt zu klicken, kann es auch direkt:
+
+```txt
+holen.bat  claude/name-des-zweigs
+```
+
+Ohne Namen bleibt es `main`. Das ist Absicht: wer nur doppelklickt, soll den
+geprüften Stand bekommen, nicht den letzten.
 
 Sieht danach noch etwas seltsam aus, lade ein drittes Mal. Der Grund, ehrlich
 gesagt: nur wenn `VERSION` in `src/dienst/sw.ts` erhöht wurde, wird der alte
