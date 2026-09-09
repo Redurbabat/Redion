@@ -64,7 +64,17 @@ Schul Inhalt
 #  Was das NICHT heilt: `daten.js` liegt unter `quell/` und geht mit — die
 #  Chronik ist damit im Netz lesbar, und der Zugangscode ist ein Türschild,
 #  kein Schloss (L140). Wer das anders will, braucht L140, nicht diese Zeile.
-chronik/
+#
+#  DER SCHRÄGSTRICH VORNE IST KEINE ZIERDE (E524). Hier stand `chronik/`,
+#  und dieses Muster greift nach gitignore-Regeln auf JEDER Ebene — es nahm
+#  `quell/bereiche/chronik/` mit, und dort liegen die zwei Skripte, die
+#  `index.html` wirklich lädt und die im GRUNDSTOCK des Dienstes stehen.
+#  Auf der veröffentlichten Seite hätten beide ein blankes 404 bekommen:
+#  `worker.ts` reicht nur Adressen OHNE Punkt an die Startseite weiter, eine
+#  `.js` also nicht. Nachgemessen mit `git check-ignore -v` in einem leeren
+#  Verzeichnis — die Datei einmal als `.gitignore` kopiert, und die Antwort
+#  steht da. `/chronik/` meint die Wurzel und nur sie.
+/chronik/
 
 # --- Werkstatt, zweiter Teil: was der Browser nie lädt ---------------------
 #  Nachgesehen, nicht vermutet: weder `index.html` noch `sw.js` nennen

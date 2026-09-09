@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-503 Entscheidungen, E1 bis E523 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+504 Entscheidungen, E1 bis E524 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -567,6 +567,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E521** — Ein Zweig, ein Push, dann ein neuer Zweig — ein Zweig, der weiterwächst, verliert seinen Namen
 * **E522** — Der volle Lauf: die D1-Bindung stillgelegt, zwei Zusagen seit E465 rot — und eine Behauptung aus E520 zurückgenommen
 * **E523** — „Hello world": Redion war nie im Netz, und das Zeugnis auch nicht — ein gescheiterter Deploy ersetzt nichts
+* **E524** — Ein fehlender Schrägstrich, und die Chronik war im Netz tot — die Ausschlussliste fing zwei Skripte mit
 
 ---
 
@@ -42270,3 +42271,68 @@ GEMESSEN, nicht behauptet: Redur hat jede der genannten Adressen selbst
 aufgerufen. Von hier aus geht es nicht — der Ausgangsproxy dieser Sitzung
 lehnt die Verbindung mit 403 ab, nachgesehen unter `__agentproxy/status`.
 Kein Prüflauf: der Zustand liegt bei Cloudflare, nicht im Verzeichnis.
+
+---
+
+E524 — Ein fehlender Schrägstrich, und die Chronik war im Netz tot
+--------------------------------------------------------------------------
+
+Gefunden beim Gegenlesen der Bögen E515–E520, einen Tag nachdem E520
+landete — und E520 ist meiner.
+
+## Der Fehler
+
+E520 schrieb `chronik/` in `.assetsignore`, um die Quelle der Chronik von
+der veröffentlichten Seite fernzuhalten. Gut gemeint und falsch geschrieben:
+
+> Ein gitignore-Muster **ohne führenden Schrägstrich greift auf jeder
+> Ebene.**
+
+`chronik/` fasst deshalb nicht nur `chronik/` in der Wurzel, sondern auch
+`quell/bereiche/chronik/` — und dort liegen die zwei Skripte, die
+`index.html` mit `<script>` lädt und die im GRUNDSTOCK des Dienstes stehen.
+
+Auf der veröffentlichten Seite hätten beide ein **blankes 404** bekommen:
+`worker.ts` reicht nur Adressen OHNE Punkt an die Startseite weiter, eine
+`.js` also nicht. Der Chronik-Bereich wäre im Netz tot gewesen, und der
+Dienst hätte beim Installieren gemeldet, dass sich zwei Dateien nicht
+ablegen liessen.
+
+Gemessen mit git selbst, nicht überlegt:
+
+```txt
+chronik/    →  quell/bereiche/chronik/daten.js    ausgeschlossen  ✗
+            →  quell/bereiche/chronik/chronik.js  ausgeschlossen  ✗
+/chronik/   →  beide kommen durch                                 ✓
+            →  chronik/chronik.json               ausgeschlossen  ✓
+```
+
+## Warum es niemand gemerkt hätte
+
+Weil es **keinen Lärm macht.** Eine Ausschlussliste, die zu wenig fängt,
+stellt etwas ins Netz — das sieht man. Eine, die zu viel fängt, nimmt etwas
+weg, und die Seite ist einfach kaputt. Bei einem Bereich, den man selten
+öffnet, fällt das erst nach Wochen auf.
+
+`test270 §1` misst seit E270 die eine Richtung: was DRAUSSEN bleiben muss.
+Die andere Richtung stand nirgends.
+
+## Der Wächter misst mit git, nicht mit einem Nachbau
+
+`§1d` kopiert `.assetsignore` in ein leeres Verzeichnis als `.gitignore`,
+legt jede Datei an, die `index.html` und der GRUNDSTOCK nennen, und fragt
+`git check-ignore`. Das ist dieselbe Regelbibliothek, der Wrangler folgt.
+
+**Ein eigener Musterabgleich hätte genau den Fehler wiederholt, den er
+finden soll** — der erste Wurf von `§1b` kannte den Stern in der Mitte von
+`tsconfig*.json` nicht und meldete vier Fehlalarme. Wer prüft, ob ein
+Muster richtig gelesen wird, darf es nicht selbst lesen.
+
+Und beide Richtungen stehen jetzt nebeneinander, sonst tauscht man den
+einen Fehler gegen den anderen: die Quelle in der Wurzel bleibt draussen,
+die Skripte unter `quell/` kommen durch.
+
+GEPRÜFT. `test270` von 74 auf 77 Zusagen. Gegenprobe rot gesehen: `chronik/`
+ohne Schrägstrich wieder eingebaut — zwei Zusagen rot, und die Meldung nennt
+`quell/bereiche/chronik/daten.js` und `chronik.js` beim Namen. Nicht
+geprüft: die Gesamtsuite (sie lief heute, elf Läufe stehen noch rot).
