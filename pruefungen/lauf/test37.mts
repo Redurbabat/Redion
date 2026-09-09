@@ -73,8 +73,15 @@ import { chromium } from 'playwright';
     if (!mb) throw new Error('menueband ist nicht da — der Lauf misst sonst nichts.');
     const ro = o.getBoundingClientRect();
     return { sichtbar: getComputedStyle(o).display !== 'none',
-             untenBuendig: Math.round(ro.bottom) >= 926,
+             /* SEIT E526 IST SIE EINE KAPSEL und liegt nicht mehr bündig auf
+                der Kante: 9 px über der sicheren Fläche, 10 px links und
+                rechts. „Unten" heisst deshalb „im untersten Zoll", nicht
+                „auf Position 926". */
+             untenNah: 926 - Math.round(ro.bottom) <= 24,
              breite: Math.round(ro.width),
+             links: Math.round(ro.left),
+             radius: Math.round(parseFloat(getComputedStyle(o).borderTopLeftRadius)),
+             hoehe: Math.round(ro.height),
              knoepfe: [...o.querySelectorAll<HTMLElement>('button')].map(x => x.id),
              rechtsOben: [...mb.querySelectorAll<HTMLElement>('.mb-rechts > button')]
                .map(x => x.id).filter(Boolean),
@@ -82,8 +89,15 @@ import { chromium } from 'playwright';
              schwebendWeg: !document.getElementById('handy-unten') };
   }) as any;
   console.log('   Wegeleiste:', JSON.stringify(leiste));
-  ok('Die Wegeleiste steht unten auf dem Telefon', leiste.sichtbar && leiste.untenBuendig);
-  ok('Sie geht über die volle Breite', leiste.breite === 428);
+  ok('Die Wegeleiste steht unten auf dem Telefon', leiste.sichtbar && leiste.untenNah);
+  /* HIER STAND `breite === 428`, ALSO ÜBER DIE VOLLE BREITE — bis E526.
+     Redur wollte die Leiste rund wie bei Apple; eine Kapsel, die von Kante
+     zu Kante geht, ist keine. Sie schwebt jetzt mit 10 px Luft an beiden
+     Seiten, und ihr Radius ist die halbe Höhe — daran, und nur daran,
+     erkennt man eine Kapsel: bei 20 px wären es abgerundete Ecken. */
+  ok('Sie schwebt als Kapsel, mit Luft an beiden Seiten',
+     leiste.breite === 408 && leiste.links === 10);
+  ok('Ihr Radius ist die halbe Höhe', Math.abs(leiste.radius - leiste.hoehe / 2) <= 1);
   /* FÜNF, und die Reihenfolge steht ausgeschrieben und nicht als Zahl —
      sie ist der Punkt, nicht die Anzahl. */
   ok('Dokumente, Heute, Lernen, Termine, Mehr',

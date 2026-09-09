@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-505 Entscheidungen, E1 bis E525 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+507 Entscheidungen, E1 bis E527 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -569,6 +569,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E523** — „Hello world": Redion war nie im Netz, und das Zeugnis auch nicht — ein gescheiterter Deploy ersetzt nichts
 * **E524** — Ein fehlender Schrägstrich, und die Chronik war im Netz tot — die Ausschlussliste fing zwei Skripte mit
 * **E525** — Redurs Marke, aus einer Quelle gerechnet — achtzehn Symbole, eine `marke.png`, und ein Bild, das den Fehler fand
+* **E526** — Die Leiste ist eine Kapsel, und man wischt zwischen den Bereichen — drei Fehler, von denen keiner der gesuchte war
+* **E527** — Die Einzeldatei trägt ihr Reitersymbol selbst — ein Verweis ins Leere zeigte weiter das alte rote R
 
 ---
 
@@ -42447,6 +42449,36 @@ Die Lehre ist dieselbe wie beim Kastenfilter zwei Absätze weiter oben, nur
 von der anderen Seite: dort hat ein Bild einen Rechenfehler gefunden, hier
 hat ein Bild einen Messfehler gefunden. Beide Male war die Zahl plausibel.
 
+## Der Lichtsaum musste wieder weg
+
+Redur, mit einem Bild seines Startbildschirms: „Entferne die weiche rahmen
+ich will es nicht sehen."
+
+Das ist genau der Saum, den der zweite Schnitt zwei Absätze weiter oben
+ABSICHTLICH hineingenommen hat. In der Datei ist er schön; auf dem
+Startbildschirm ist er ein weisser Rahmen um eine schwarze Kachel, und das
+Auge liest ihn als Fehler. Beide Male hatte Redur recht, und das ist kein
+Widerspruch: das eine ist die Vorlage, das andere ist ein Symbol auf einem
+Gerät.
+
+Gemessen bei 512: der Saum reicht 26 Punkte nach innen und wird bis zu 228
+hell.
+
+**Nicht neu geschnitten.** Ein engerer Ausschnitt nähme ihn mit, würde die
+Marke aber wieder vergrössern und verschieben — der Fehler des ersten
+Anlaufs. Stattdessen verliert der äussere Ring nur seine FARBE und behält
+seine Deckung: der Rand wird schwarz, die Kante bleibt weich, die Marke
+bleibt, wo sie ist. Der hellste Randpunkt fällt damit von 228 auf 16, und
+16 ist der Boden, unter dem alles ohnehin echtes Schwarz wird.
+
+Der Abstand zur Kante kommt aus einer Distanzrechnung über die Deckung
+selbst — zwei Durchgänge über das Bild, vorwärts und rückwärts — und nicht
+aus dem Bildrand. Vom Bildrand aus gerechnet bliebe der Schein in den
+runden Ecken stehen, weil die Kachel dort weiter innen liegt.
+
+`test483 §6` misst den hellsten Punkt im äusseren Achtel und lässt ihn nicht
+über 24. Gegenprobe: den Griff überspringen, und es sind 242, 226, 216.
+
 ## Und die kleinen Grössen werden aufgehellt
 
 Redurs Marke ist dunkel. Bei 180 px ist das ihre Wirkung; bei 16 px im
@@ -42478,3 +42510,194 @@ in `index.html`, `icon-48` statt `icon-72` in der Stildatei, und das
 Hintergrundbild gestrichen. Dazu `test31` (PWA und Symbolmasse), `test204`,
 `test351` (der Studio-Kopf bleibt einzeilig) — alle grün. `npm run
 typecheck` sauber, `node bauen.mts` und `npm run stand` nachgezogen.
+
+---
+
+E526 — Die Leiste ist eine Kapsel, und man wischt zwischen den Bereichen
+--------------------------------------------------------------------------
+
+Redur, 9. September, mit einem Bild der Apple-TV-Leiste daneben:
+
+> „Könntets du die reduon unter teil wie erste bild machen … das ich zwischen
+>  bereichen mit maus so wenn ich draus von links nach rechst oder umketerk
+>  dort gehe … jetzt ist bei redion nur wenn man klick kann man wechseln und
+>  ich will nicht nur so haben sondern kannst du so rund machen"
+
+Zwei Wünsche. Der zweite hat drei Fehler ans Licht gebracht, und keiner davon
+war der, den ich gesucht habe.
+
+## 1 · Die Kapsel
+
+Die untere Leiste lag als Balken über die ganze Breite, mit einer Trennlinie
+nach oben. Jetzt schwebt sie: 10 px Luft links und rechts, 9 px über der
+sicheren Fläche, und der Inhalt läuft dahinter durch.
+
+**Der Radius ist die halbe Höhe, und das ist der ganze Unterschied.** In
+`studio.css` stand `border-radius: var(--radius-2xl)` — 20 px bei 60 px
+Höhe, also abgerundete Ecken. Eine Kapsel entsteht erst bei genau der halben
+Höhe: dann sind die Seiten Halbkreise. 60 / 2 = 30.
+
+Die Geometrie steht in `bausteine.css`, der Radius in `studio.css` — weil
+diese Datei später lädt und den anderen Wert überschrieben hätte. Der
+Schatten steht ebenfalls nur dort; zwei Schatten für dasselbe Ding wären
+einer, der gewinnt, und einer, den niemand findet (§39).
+
+`--hunten` meint jetzt 67 statt 59 px. Die Marke ist die Stelle, an der
+alles hängt, was über der Leiste schwebt — sechs Fundstellen, und sie ziehen
+von selbst nach.
+
+## 2 · Das Wischen
+
+`src/schale/aufbau/wischen.ts`, 200 Zeilen, und der Kern ist eine Zeile:
+
+> Die Geste sucht den nächsten Reiter und **drückt ihn**.
+
+Sie ruft keinen Bereich auf und kennt keinen Bildschirmnamen. Damit gilt für
+das Wischen automatisch alles, was für das Tippen gilt: dieselbe Schublade
+schliesst sich, dieselbe Pille wandert, dieselbe Markierung stimmt. Ein
+zweiter Weg mit eigener Navigationslogik wäre ein zweiter Katalog (§8).
+
+Was ein Wischen NICHT sein darf: ein Rollen (waagerecht rollende Elemente
+sperren), ein Strich (beim Zeichnen und im offenen Dokument), ein Zurück
+(die äusseren 24 px gehören dem Betriebssystem), ein Zoomen (zwei Finger),
+ein verrutschter Tipp (70 px Weg, deutlich waagerechter als senkrecht).
+Kein Umlauf: von „Mehr" nach links kommt nicht wieder „Dokumente".
+
+## 3 · Die drei Fehler
+
+**`offsetParent` ist bei `position:fixed` immer `null`.** Meine
+Sichtbarkeitsprüfung fragte genau das ab — und die Leiste IST fixiert. Die
+Geste hat nie ausgelöst, völlig lautlos: kein Fehler, keine Meldung, nur
+nichts.
+
+**Die Geste verwarf sich selbst.** `loslassen()` räumt die Geste weg und
+setzt dabei `gefangen` zurück. Die Zeile danach fragte `gefangen` ab. Vier
+Wischbewegungen liefen sauber durch, verschoben sogar die Fläche — und
+endeten alle auf demselben Reiter.
+
+**Der Browser zieht den Text mit.** Liegt eine Auswahl unter dem Zeiger — und
+die entsteht schon beim vorherigen Ziehen —, macht Chromium aus dem nächsten
+Ziehen ein Text-Ziehen: `dragstart` feuert, und danach kommt **kein
+`pointerup` mehr.** Gemessen mit einer Ereignisspur:
+
+```txt
+down · up · down · up · down · dragstart
+                                 ^ hier stirbt die Geste
+```
+
+Am Telefon fällt das kaum auf, mit der Maus bei jedem zweiten Wischen.
+`preventDefault` auf `dragstart`, aber nur solange eine Geste läuft — wer
+eine Datei ziehen will, soll das weiter können.
+
+Dazu ein vierter, den erst der Prüflauf fand: **nach dem Wischen feuert der
+Browser noch einen Klick** auf den gemeinsamen Vorfahren von Anfang und
+Ende. Im Mehr-Blatt nach links gewischt — die Geste tat richtig nichts (ganz
+rechts ist Schluss), und der Klick danach öffnete „Dokumente". Geschluckt
+wird ab 40 px Weg; ein Tipp, der um 15 px verrutscht, ist immer noch ein
+Tipp und soll wirken.
+
+## 4 · Und der Fund, der gar nicht zur Aufgabe gehörte
+
+Beim Prüfen fiel auf: **ein Klick auf „Lernen" liess „Heute" markiert.** Mit
+der Maus, ohne Geste, seit Langem.
+
+Der Grund stand in `lernwelt.ts`: alle **elf** Ansichten meldeten sich unter
+dem Titel „Lernen & Alltag" an, und `SCHAUPLATZ_NAMEN` in `schale.ts`
+übersetzt genau diesen Titel nach `heute`. Die Leiste hat nicht gelogen —
+sie hat wiedergegeben, was ihr gesagt wurde.
+
+Zwei Titel statt einem: „Heute" für die Tagesansicht, „Lernzentrum" für die
+übrigen zehn. Beide standen längst in `SCHAUPLATZ_NAMEN`.
+
+**Was damit noch nicht gelöst ist:** `wechseln()` schaltet die Ansicht
+INNERHALB der Welt um, ohne den Titel neu zu melden. Wer über „Heute"
+hereinkommt und drinnen auf „Lernweg" wechselt, sieht unten weiter „Heute".
+Das ist **L147** und ausdrücklich nicht Teil dieses Bogens.
+
+## Was es kostet
+
+Eine neue Datei im Grundstock des Dienstes (§28: `<script>` in `index.html`
+UND die Zeile im `GRUNDSTOCK` — beides eingetragen). Und eine Geste, die
+falsch auslösen KANN: wer über einer Karte waagerecht wischt, wechselt den
+Bereich. Dagegen stehen die fünf Sperren oben; wo eine fehlt, hilft
+`data-kein-wisch` am Element.
+
+## Geprüft
+
+`test484`, 31 Zusagen, sechs Gegenproben rot gesehen: Radius zurück auf das
+Token, `Wischen.starten()` nicht gerufen (6 Zusagen rot), Randsperre auf 0,
+das Text-Ziehen nicht abgefangen, der Titel zurück auf „Lernen & Alltag"
+(4 Zusagen rot).
+
+**Zwei Nachbarläufe waren rot, und beide hatten recht.**
+
+`test37` hielt die ALTE Entscheidung fest: „steht unten bündig" (`bottom >=
+926`) und „geht über die volle Breite" (`428`). Genau das gibt eine Kapsel
+auf. Die zwei Zusagen sind umgeschrieben, nicht weichgeklopft: „im
+untersten Zoll" statt „auf Position 926", und statt der vollen Breite jetzt
+408 px mit 10 px Luft — plus einer neuen Zusage auf den Radius, denn daran
+und nur daran erkennt man eine Kapsel.
+
+`test141` fand einen echten Rechenfehler: die Schublade endete bei 777, die
+Leiste beginnt bei 775. Zwei Punkte Überschneidung. `--hunten` stand auf
+9 + 58 = 67 — ich hatte die 1-px-Linie oben und unten vergessen. Es sind
+5 + 48 + 5 + 2 = 60, also 69. Zwei Punkte sieht niemand; eine Marke, die
+nicht stimmt, ist der Anfang von zehn.
+
+Und eine Zusage war zuerst **blind**: „Am Bildrand → nichts" wischte von
+x=10 um 120 nach links, also bis x=−110. Playwright klemmt die Maus am
+Bildrand ab, der wirkliche Weg war kürzer als 70, und die Zusage war aus dem
+falschen Grund grün — die Gegenprobe blieb ebenfalls grün. Nach rechts
+gewischt bleibt der Weg im Bild, und die Gegenprobe wird rot. Das ist §55.2
+zum dritten Mal in diesem Projekt.
+
+---
+
+E527 — Die Einzeldatei trägt ihr Reitersymbol selbst
+--------------------------------------------------------------------------
+
+Redur, 9. September, mit einem Bild seines Browserreiters:
+
+> „hier ganz oben link habe ich die r logo wieder lösche es"
+
+## Was dahintersteckte
+
+**Nachgesehen, bevor etwas geändert wurde:** die eingecheckte
+`oeffentlich/favicon.ico` ist bei 16 px die Marke, kein R — herausgeschnitten
+und angesehen. Im Verzeichnis gibt es das rote R seit E525 nirgends mehr.
+
+Der Reiter zeigte es trotzdem, und dafür gibt es zwei Gründe, die sich
+überlagern:
+
+1. **Eine alte Kopie auf dem Laptop.** Redur hatte den Zweig noch nicht
+   geholt — er fragte im selben Atemzug, warum in `Dokumente\Redgit\Redion`
+   nichts liege.
+2. **Und eine echte Lücke.** `index.html` verweist mit fünf `<link>` auf
+   `oeffentlich/icons/…`. Im Ordnerbetrieb liegen die Dateien daneben; die
+   **Einzeldatei hat keinen Ordner neben sich** (§29). Sie hatte damit gar
+   kein Zeichen — und was ein Reiter ohne Zeichen zeigt, entscheidet der
+   Browser: meist das zuletzt gemerkte für diese Adresse. Also weiter das
+   alte R, aus dem Zwischenspeicher, obwohl die Datei es nicht mehr enthält.
+
+Der zweite Grund ist der interessantere: er hätte auch nach jedem künftigen
+Markenwechsel wieder zugeschlagen, und niemand hätte ihn gesehen.
+
+## Was entschieden wurde
+
+`bauen.mts` setzt die Symbolbytes ein, statt sie zu verlinken — dieselbe
+Bauart wie bei den Stilblättern und den PDF-Bytes. Fehlt ein Symbol, bricht
+der Bau ab; ein stilles Weglassen wäre genau der Zustand, den das behebt.
+Kosten: 143 KB auf 9,4 MB.
+
+**Die sieben iPhone-Startbilder fliegen dagegen raus.**
+`apple-touch-startup-image` greift nur, wenn die Seite auf dem
+Startbildschirm liegt, und dorthin kommt eine Datei von der Platte nicht.
+Sie einzusetzen wären 1,3 MB, die dort nie gezeigt werden; sie stehen zu
+lassen wäre ein Verweis auf eine Datei, die daneben nicht liegt. Also weg.
+
+## Geprüft
+
+`test483` um zwei Zusagen erweitert: kein einziger `oeffentlich/icons/` mehr
+in der Einzeldatei, und ihr `<link rel="icon">` trägt eine Data-URL.
+Gegenprobe rot gesehen — das Einsetzen abgeschaltet, fünf Reste, beide
+Zusagen rot. 25/25 grün.

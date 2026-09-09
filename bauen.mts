@@ -115,6 +115,40 @@ html = html.replace(
       'data-src="' + datei + '">\n' + sicher + '\n</script>';
   });
 
+/* ==========================================================================
+ * DIE SYMBOLE IN DIE EINZELDATEI (E527)
+ * --------------------------------------------------------------------------
+ * `index.html` verweist mit fünf `<link>` auf `oeffentlich/icons/…`. Im
+ * Ordnerbetrieb liegen die Dateien daneben; die Einzeldatei hat keinen
+ * Ordner neben sich (§29). Sie hatte damit KEIN Zeichen im Browserreiter —
+ * und was ein Reiter ohne Zeichen zeigt, entscheidet der Browser: meist das
+ * zuletzt gemerkte für diese Adresse. Redur sah deshalb weiter das alte
+ * rote R, obwohl es das im Verzeichnis längst nicht mehr gibt.
+ *
+ * Dieselbe Bauart wie bei CSS und den PDF-Bytes darüber: die Bytes werden
+ * eingesetzt, nicht verlinkt. Kostet rund 190 KB auf 9,3 MB.
+ *
+ * WENN EIN SYMBOL FEHLT, BRICHT DER BAU AB. Ein stilles Weglassen wäre
+ * genau der Zustand, den dieser Abschnitt behebt.
+ * ========================================================================*/
+html = html.replace(
+  /<link rel="(icon|apple-touch-icon)"([^>]*?)href="(oeffentlich\/icons\/[^"]+)">/g,
+  (_m: string, art: string, mitte: string, datei: string) => {
+    const voll = pfad.join(wurzel, datei);
+    if (!fs.existsSync(voll)) throw new Error('bauen.mts: ' + datei + ' fehlt — ohne Symbol keine Einzeldatei.');
+    const b64 = fs.readFileSync(voll).toString('base64');
+    return '<link rel="' + art + '"' + mitte + 'href="data:image/png;base64,' + b64 + '">';
+  });
+
+/* DIE STARTBILDER FLIEGEN RAUS, statt eingesetzt zu werden.
+   `apple-touch-startup-image` greift NUR, wenn die Seite auf dem
+   Startbildschirm liegt — und dorthin kommt eine Datei von der Platte nicht.
+   Sieben Vollbilder in Gerätegrösse wären 1,3 MB auf 9,4 MB, für etwas, das
+   dort nie gezeigt wird. Ein Verweis auf eine Datei, die daneben nicht
+   liegt, ist eine Zusage, die niemand einlösen kann; also weg. */
+html = html.replace(
+  /[ \t]*<link rel="apple-touch-startup-image"[\s\S]*?>\s*\n/g, '');
+
 fs.writeFileSync(pfad.join(wurzel, 'redion-einzeldatei.html'), html);
 const kb = (fs.statSync(pfad.join(wurzel, 'redion-einzeldatei.html')).size / 1024).toFixed(0);
 console.log('redion-einzeldatei.html geschrieben — ' + kb + ' KB');

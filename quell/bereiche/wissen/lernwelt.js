@@ -3005,9 +3005,36 @@ const Lernwelt = (() => {
         document.addEventListener('keydown', taste);
         zeichnen();
     };
+    /**
+     * DER TITEL SAGT, WO MAN IST — und das ist keine Zierde (E526).
+     *
+     * Hier stand für ALLE elf Ansichten derselbe Titel „Lernen & Alltag".
+     * Die Schale rechnet den Schauplatz aus genau diesem Titel aus
+     * (`SCHAUPLATZ_NAMEN` in `schale.ts`), und „Lernen & Alltag" bedeutet
+     * dort `heute`. Also meldete das Lernzentrum sich als „Heute", und die
+     * untere Leiste markierte „Heute", obwohl man auf „Lernen" getippt
+     * hatte.
+     *
+     * GEMESSEN, nicht vermutet: ein Klick auf `#hl-lernen` liess `#hl-start`
+     * markiert — vor dem Wischen, mit der Maus, in der Bibliothek genauso.
+     * Der Fehler war älter als die Geste; das Wischen hat ihn nur sichtbar
+     * gemacht, weil man dabei zusieht, wohin man geht.
+     *
+     * Zwei Titel, beide in `SCHAUPLATZ_NAMEN` bereits eingetragen: „Heute"
+     * für die Tagesansicht, „Lernzentrum" für alle übrigen. Die zehn
+     * anderen Ansichten gehören unten alle unter „Lernen".
+     *
+     * WAS DAMIT NOCH NICHT GELÖST IST: `wechseln()` schaltet die Ansicht
+     * INNERHALB der Welt um, ohne `zeigeSonder` noch einmal zu rufen — der
+     * Titel bleibt dann der vom Öffnen. Wer über „Heute" hereinkommt und
+     * drinnen auf „Lernweg" wechselt, sieht unten weiter „Heute". Das steht
+     * als L147 und nicht hier: es zu beheben heisst, den Schauplatz beim
+     * Umschalten neu zu melden, und das ist ein eigener Bogen.
+     */
     const oeffnen = (ansicht = 'heute') => {
         const start = ansichtGueltig(ansicht) ? ansicht : 'heute';
-        App.zeigeSonder('Lernen & Alltag', (ziel) => render(ziel, start));
+        const titel = start === 'heute' ? 'Heute' : 'Lernzentrum';
+        App.zeigeSonder(titel, (ziel) => render(ziel, start));
     };
     const aktualisieren = () => {
         zustand.extern = null;
