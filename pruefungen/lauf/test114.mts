@@ -901,9 +901,22 @@ p('Es heisst „Neu erstellen"', blattNeu?.titel === 'Neu erstellen', blattNeu?.
    Scanner und Datei — ein Weg, der vorher fehlte (eine ZIP im Regal ging
    nirgends hin). Die Frage von oben, Wegweiser oder Liste, ist gestellt und
    beantwortet: sechs Gruppen, und jede Gruppe bleibt kurz. */
-p('Es führt zu zwanzig Sachen inklusive Scanner und ZIP, nicht zu einer',
-  (blattNeu?.wege.length ?? 0) === 20 && (blattNeu?.wege ?? []).includes('scan') &&
-  (blattNeu?.wege ?? []).includes('zip'),
+/* EINUNDZWANZIG SEIT E513: das Notizbuch (`heft`). Redur wollte hinter dem
+   „+" dieselben fünf Wege wie in GoodNotes; vier standen da, das Notizbuch
+   fehlte, obwohl Redion es seit E264 kann.
+
+   UND DIESE ZEILE WAR SEITDEM ROT — mein eigener Bogen hat die Zahl nicht
+   mitgehoben. Gesehen wurde es erst am 9. September beim vollen Lauf
+   (E522), zusammen mit zwei anderen derselben Art. Das ist genau der Grund,
+   warum §46 auf einem vollen Lauf besteht, bevor `main` sich bewegt: eine
+   harte Zahl meldet den Zuwachs zuverlässig — aber nur dem, der sie hört.
+
+   Die Frage von oben — Wegweiser oder Liste? — bleibt damit gestellt.
+   Einundzwanzig in sechs Gruppen ist die Grenze; der nächste Zuwachs
+   braucht eine Antwort, nicht nur eine neue Zahl. */
+p('Es führt zu einundzwanzig Sachen inklusive Scanner, ZIP und Notizbuch',
+  (blattNeu?.wege.length ?? 0) === 21 && (blattNeu?.wege ?? []).includes('scan') &&
+  (blattNeu?.wege ?? []).includes('zip') && (blattNeu?.wege ?? []).includes('heft'),
   (blattNeu?.wege ?? []).join(', '));
 p('Die neuen Wege von E236 sind alle dabei',
   ['pdf', 'umzug', 'journal', 'ordner', 'blatt', 'plan', 'diagramm', 'lernen']

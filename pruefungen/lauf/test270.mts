@@ -38,6 +38,8 @@ import http from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
+import { spawnSync } from 'node:child_process';
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 const PORT = 9048;
@@ -130,7 +132,10 @@ for (const drin of ['quell/', 'index.html', 'sw.js', 'oeffentlich/'])
    den gefundenen Dateinamen aufzählt, hält genau bis zur nächsten Datei. */
 console.log('\n1b · Persönliches bleibt draussen');
 {
-  const rausMuster = ['*.pdf', '*.redion', 'chronik/', 'quell/entwicklung/'];
+  /* `/chronik/` MIT SCHRÄGSTRICH VORNE (E524): ohne ihn griff das Muster auf
+     jeder Ebene und nahm `quell/bereiche/chronik/` mit — zwei Skripte, die
+     der Browser wirklich lädt. §1d misst genau diese Gegenrichtung. */
+  const rausMuster = ['*.pdf', '*.redion', '/chronik/', 'quell/entwicklung/'];
   for (const m of rausMuster)
     p('… schliesst ' + m + ' aus', zeilen.includes(m), zeilen.join(' · '));
 
@@ -147,8 +152,11 @@ console.log('\n1b · Persönliches bleibt draussen');
                        .replace(/\*/g, '.*') + '$');
   const faellt = (name: string, istOrdner: boolean): boolean =>
     zeilen.some(z => {
-      if (z.endsWith('/')) return istOrdner && name === z.slice(0, -1);
-      return alsMuster(z).test(name);
+      /* Ein führender Schrägstrich verankert an der Wurzel — für diese
+         Zählung, die nur die Wurzel ansieht, heisst das: abschneiden. */
+      const m = z.startsWith('/') ? z.slice(1) : z;
+      if (m.endsWith('/')) return istOrdner && name === m.slice(0, -1);
+      return alsMuster(m).test(name);
     });
   const geht = wurzel.filter(e => !faellt(e.name, e.isDirectory()))
     .map(e => e.name + (e.isDirectory() ? '/' : ''));
@@ -165,6 +173,63 @@ console.log('\n1b · Persönliches bleibt draussen');
   p('Die persönliche Datei liegt weiterhin im Verzeichnis (nichts gelöscht)',
     fs.existsSync(path.join(WURZEL, pdf)));
   p('… und ist von der Veröffentlichung ausgenommen', faellt(pdf, false));
+}
+
+/* ── §1d — WAS DER BROWSER LÄDT, DARF NIE AUSGESCHLOSSEN SEIN (E524) ──────
+   DER FEHLER, DEN ES GEFANGEN HÄTTE, war einen Bogen alt und stand live:
+   E520 schrieb `chronik/` in die Ausschlussliste, um die Quelle der Chronik
+   draussen zu halten. Ein gitignore-Muster ohne führenden Schrägstrich
+   greift aber auf JEDER Ebene — es nahm `quell/bereiche/chronik/` mit, und
+   dort liegen die zwei Skripte, die `index.html` mit `<script>` lädt.
+
+   Auf der veröffentlichten Seite hätten beide ein blankes 404 bekommen:
+   `worker.ts` reicht nur Adressen OHNE Punkt an die Startseite weiter.
+   Redion hätte also im Netz einen toten Bereich gehabt, und der Dienst
+   hätte seine Ablage nicht vollständig füllen können.
+
+   §1 misst, was DRAUSSEN bleiben muss. Hier steht die Gegenrichtung, und
+   sie ist die gefährlichere: was DRIN bleiben muss. Eine Ausschlussliste,
+   die zu viel fängt, macht keinen Lärm — die Seite ist einfach kaputt.
+
+   GEMESSEN MIT GIT SELBST, nicht mit einem nachgebauten Musterabgleich:
+   `.assetsignore` wird in ein leeres Verzeichnis als `.gitignore` kopiert
+   und `git check-ignore` gefragt. Das ist dieselbe Bibliothek, deren
+   Regeln Wrangler folgt — ein eigener Abgleich hätte genau den Fehler
+   wiederholt, den er finden soll (der erste Wurf von §1b kannte den Stern
+   in der Mitte nicht). */
+console.log('\n1d · Was der Browser lädt, bleibt drin');
+{
+  const html = lies('index.html');
+  const sw = lies('sw.js');
+  /* Alles, was die Startseite wirklich holt, und alles aus dem Grundstock. */
+  const ausHtml = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map(m => m[1] ?? '')
+    .filter(w => /^(quell|oeffentlich|lernpakete)\//.test(w) || w === 'sw.js');
+  const ausSw = [...sw.matchAll(/'((?:quell|oeffentlich|lernpakete)\/[^']+)'/g)]
+    .map(m => m[1] ?? '');
+  const gebraucht = [...new Set([...ausHtml, ...ausSw, 'index.html', 'sw.js'])];
+  p('Es ist eine ernstzunehmende Menge Dateien', gebraucht.length >= 50, String(gebraucht.length));
+
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'assets-'));
+  let ausgeschlossen: string[] = [];
+  try {
+    spawnSync('git', ['init', '-q', '.'], { cwd: tmp });
+    fs.writeFileSync(path.join(tmp, '.gitignore'), ignore);
+    for (const w of gebraucht) {
+      const ziel = path.join(tmp, w);
+      fs.mkdirSync(path.dirname(ziel), { recursive: true });
+      fs.writeFileSync(ziel, '');
+    }
+    const r = spawnSync('git', ['check-ignore', ...gebraucht], { cwd: tmp, encoding: 'utf8' });
+    ausgeschlossen = (r.stdout || '').split('\n').map((z: string) => z.trim()).filter(Boolean);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+  p('Keine einzige davon ist ausgeschlossen',
+    ausgeschlossen.length === 0, JSON.stringify(ausgeschlossen.slice(0, 8)));
+  /* UND DIE QUELLE DER CHRONIK BLEIBT DRAUSSEN — beides zugleich, sonst
+     hätte man den einen Fehler gegen den anderen getauscht. */
+  p('Die Chronik-Quelle in der Wurzel bleibt trotzdem draussen',
+    zeilen.includes('/chronik/'), zeilen.filter(z => z.includes('chronik')).join(' · '));
 }
 
 /* ── §1c — DER WORKER HEISST WIE BEI CLOUDFLARE (E520) ────────────────────

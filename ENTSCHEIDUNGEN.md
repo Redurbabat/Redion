@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-502 Entscheidungen, E1 bis E522 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+505 Entscheidungen, E1 bis E525 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -566,6 +566,9 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E520** — Der Worker heisst `red-ion`, und ein Zeugnis lag im Netz — die Namenswarnung verdeckte den echten Fehler
 * **E521** — Ein Zweig, ein Push, dann ein neuer Zweig — ein Zweig, der weiterwächst, verliert seinen Namen
 * **E522** — Der volle Lauf: die D1-Bindung stillgelegt, zwei Zusagen seit E465 rot — und eine Behauptung aus E520 zurückgenommen
+* **E523** — „Hello world": Redion war nie im Netz, und das Zeugnis auch nicht — ein gescheiterter Deploy ersetzt nichts
+* **E524** — Ein fehlender Schrägstrich, und die Chronik war im Netz tot — die Ausschlussliste fing zwei Skripte mit
+* **E525** — Redurs Marke, aus einer Quelle gerechnet — achtzehn Symbole, eine `marke.png`, und ein Bild, das den Fehler fand
 
 ---
 
@@ -42198,3 +42201,258 @@ GEPRÜFT. `test65` und `test86` wieder grün. Der volle Lauf war beim
 Schreiben dieses Eintrags noch nicht durch — was danach kommt, kommt als
 eigener Eintrag dazu. Der Trockenlauf des Deploys geht durch; **der Deploy
 selbst ist nicht geprüft**, er braucht Redurs Konto.
+
+---
+
+E523 — „Hello world": Redion war nie im Netz, und das Zeugnis auch nicht
+--------------------------------------------------------------------------
+
+Redur, 9. September 2026, mit einem Bildschirmfoto von
+`https://red-ion.redurbabat7.workers.dev/`:
+
+> „Es sieht so aus bei …" — und darauf, in Schreibmaschinenschrift auf
+> schwarzem Grund: **Hello world**
+
+Und auf die Frage, was unter den anderen Adressen steht:
+
+> „Es kommt überall hello world"
+
+## Was das ist
+
+Cloudflares **Standard-Worker**. Die Vorlage, die beim Anlegen eines
+Projekts entsteht:
+
+```js
+export default { async fetch() { return new Response('Hello world') } }
+```
+
+Sie sieht den Pfad gar nicht an — deshalb dieselbe Antwort auf jeder
+Adresse. Genau das hat Redur gemessen.
+
+## Warum sie noch läuft
+
+Beide Deploys sind am selben Punkt abgebrochen (L143): die D1-Datenbank
+gibt es nicht. Ein gescheiterter Deploy ersetzt die laufende Fassung nicht.
+Also läuft seit dem Anlegen des Projekts die Vorlage weiter, und Redion war
+**nie** dort.
+
+```txt
+09:03  Deploy → ✘ D1 → abgebrochen
+09:35  Deploy → ✘ D1 → abgebrochen
+       ⇒ die Worker-Fassung wurde nie ersetzt
+```
+
+## Und damit ist die Sorge aus E520 entkräftet
+
+E520 trug den Titel „und ein Zeugnis lag im Netz". **Es lag nicht im Netz.**
+Die Datei wurde in Cloudflares Dateispeicher hochgeladen — das steht so im
+Protokoll vom 09:03 —, aber ohne aktive Worker-Fassung zeigt niemand darauf.
+Hochgeladen und ausgeliefert sind zweierlei.
+
+Der Titel bleibt stehen; Protokolle schreibt man nicht um. Aber wer ihn
+ohne diesen Eintrag liest, zieht den falschen Schluss, und deshalb steht es
+hier — und in L145 an der Stelle, an der die Messung hingehört.
+
+**Die Sorge war trotzdem richtig.** Die Datei WAR hochgeladen, und beim
+ersten erfolgreichen Deploy wäre sie erreichbar gewesen, wenn die
+Ausschlussliste nicht wirkt. Dass sie es nicht wurde, lag an einem Fehler,
+nicht an einer Vorkehrung. Das ist kein Grund zur Beruhigung, sondern der
+Grund, warum die eine Prüfadresse jetzt in L145 steht.
+
+## Was daraus folgt, in dieser Reihenfolge
+
+1. **Die D1-Reparatur muss auf `main`.** Cloudflare baut von dort; auf
+   `main` steht die tote Bindung noch. Solange sie dort steht, bleibt
+   „Hello world" stehen, und alles andere ist müssig.
+2. **Nach dem ersten erfolgreichen Deploy: die eine Adresse aufrufen**
+   (L145). Sie entscheidet, ob `.assetsignore` wirkt.
+3. Erst danach ist L143 wirklich zu, und L145 auch.
+
+GEMESSEN, nicht behauptet: Redur hat jede der genannten Adressen selbst
+aufgerufen. Von hier aus geht es nicht — der Ausgangsproxy dieser Sitzung
+lehnt die Verbindung mit 403 ab, nachgesehen unter `__agentproxy/status`.
+Kein Prüflauf: der Zustand liegt bei Cloudflare, nicht im Verzeichnis.
+
+---
+
+E524 — Ein fehlender Schrägstrich, und die Chronik war im Netz tot
+--------------------------------------------------------------------------
+
+Gefunden beim Gegenlesen der Bögen E515–E520, einen Tag nachdem E520
+landete — und E520 ist meiner.
+
+## Der Fehler
+
+E520 schrieb `chronik/` in `.assetsignore`, um die Quelle der Chronik von
+der veröffentlichten Seite fernzuhalten. Gut gemeint und falsch geschrieben:
+
+> Ein gitignore-Muster **ohne führenden Schrägstrich greift auf jeder
+> Ebene.**
+
+`chronik/` fasst deshalb nicht nur `chronik/` in der Wurzel, sondern auch
+`quell/bereiche/chronik/` — und dort liegen die zwei Skripte, die
+`index.html` mit `<script>` lädt und die im GRUNDSTOCK des Dienstes stehen.
+
+Auf der veröffentlichten Seite hätten beide ein **blankes 404** bekommen:
+`worker.ts` reicht nur Adressen OHNE Punkt an die Startseite weiter, eine
+`.js` also nicht. Der Chronik-Bereich wäre im Netz tot gewesen, und der
+Dienst hätte beim Installieren gemeldet, dass sich zwei Dateien nicht
+ablegen liessen.
+
+Gemessen mit git selbst, nicht überlegt:
+
+```txt
+chronik/    →  quell/bereiche/chronik/daten.js    ausgeschlossen  ✗
+            →  quell/bereiche/chronik/chronik.js  ausgeschlossen  ✗
+/chronik/   →  beide kommen durch                                 ✓
+            →  chronik/chronik.json               ausgeschlossen  ✓
+```
+
+## Warum es niemand gemerkt hätte
+
+Weil es **keinen Lärm macht.** Eine Ausschlussliste, die zu wenig fängt,
+stellt etwas ins Netz — das sieht man. Eine, die zu viel fängt, nimmt etwas
+weg, und die Seite ist einfach kaputt. Bei einem Bereich, den man selten
+öffnet, fällt das erst nach Wochen auf.
+
+`test270 §1` misst seit E270 die eine Richtung: was DRAUSSEN bleiben muss.
+Die andere Richtung stand nirgends.
+
+## Der Wächter misst mit git, nicht mit einem Nachbau
+
+`§1d` kopiert `.assetsignore` in ein leeres Verzeichnis als `.gitignore`,
+legt jede Datei an, die `index.html` und der GRUNDSTOCK nennen, und fragt
+`git check-ignore`. Das ist dieselbe Regelbibliothek, der Wrangler folgt.
+
+**Ein eigener Musterabgleich hätte genau den Fehler wiederholt, den er
+finden soll** — der erste Wurf von `§1b` kannte den Stern in der Mitte von
+`tsconfig*.json` nicht und meldete vier Fehlalarme. Wer prüft, ob ein
+Muster richtig gelesen wird, darf es nicht selbst lesen.
+
+Und beide Richtungen stehen jetzt nebeneinander, sonst tauscht man den
+einen Fehler gegen den anderen: die Quelle in der Wurzel bleibt draussen,
+die Skripte unter `quell/` kommen durch.
+
+GEPRÜFT. `test270` von 74 auf 77 Zusagen. Gegenprobe rot gesehen: `chronik/`
+ohne Schrägstrich wieder eingebaut — zwei Zusagen rot, und die Meldung nennt
+`quell/bereiche/chronik/daten.js` und `chronik.js` beim Namen. Nicht
+geprüft: die Gesamtsuite (sie lief heute, elf Läufe stehen noch rot).
+
+---
+
+E525 — Redurs Marke, aus einer Quelle gerechnet
+--------------------------------------------------------------------------
+
+Redur, 9. September, mit einem Bildschirmfoto seines Startbildschirms:
+
+> „Wieso habe ich hier das immer nich die R logo"
+
+Und, nachdem ich dreimal nach der Datei gefragt hatte statt zu handeln:
+
+> „Alter änder die logo ich sage es dir mache es"
+
+## Was entschieden wurde
+
+Die Marke wird **aus einer einzigen Quelle gerechnet**:
+`oeffentlich/icons/marke.png`, 512 × 512, Redurs Bild. Daraus erzeugt
+`oeffentlich/icons/erzeugen.mts` alle vierundzwanzig Dateien — zwölf
+Symbole, zwei maskable, zwei Favicons, sieben Startbilder und die
+`favicon.ico`. Das rote R, das aus Rechtecken und einem Ring gezeichnet war,
+ist weg; das „R" im Kopf der App ebenfalls.
+
+## Warum, und was die Alternative war
+
+**Achtzehn Stellen wechselt niemand vollständig.** Das war der eigentliche
+Fund: `favicon.ico` hatte als EINZIGE Symboldatei gar keinen Erzeuger. Sie
+war von Hand gebaut, lag seit dem 1. September unverändert da und wäre beim
+Markenwechsel übriggeblieben — ein rotes R im Browserreiter, während überall
+sonst die neue Marke steht. Genau deshalb rechnet der Erzeuger sie jetzt
+mit, und `test483` vergleicht alle vierundzwanzig Dateien Byte für Byte
+gegen einen frischen Lauf in einem leeren Verzeichnis.
+
+**Die Alternative war, das Bild an jeder Stelle einzeln einzusetzen.** Sie
+ist schneller und hält genau bis zum nächsten Wechsel.
+
+**Und die Alternative zur Fotografie war eine gezeichnete Fassung.** Ich
+hatte sie schon: zwei goldene Pfeile im Kreis, als Vektor nachgebaut, weil
+Redurs Datei zunächst nicht im Behälter ankam. Sie war sauber und bei 16 px
+schärfer als jede Verkleinerung. Sie ist trotzdem draussen, sobald das
+echte Bild da war — eine Marke ist kein Vorschlag, den man nachzeichnet.
+
+## Was es kostet
+
+**Bytes.** Ein gezeichnetes R aus drei Farben packt sich auf nichts
+zusammen; eine Fotografie mit Korn nicht. icon-512 wog beim ersten Versuch
+480 KB gegen 3 KB vorher. Drei Griffe haben daraus 225 KB gemacht, jeder
+gemessen statt geraten:
+
+| Griff | icon-512 | Warum |
+|---|---|---|
+| vorher | 480 KB | Filter „keiner" für jede Zeile, volle 8 Bit |
+| Zeilenfilter je Zeile wählen | 420 KB | die Regel aus der PNG-Empfehlung |
+| Boden bei 16 | 380 KB | 3/4/6 neben 0/2/5 ist dasselbe Schwarz |
+| 64 statt 256 Stufen je Kanal | 225 KB | bei vierfacher Vergrösserung im Goldverlauf kein Streifen zu sehen |
+
+Alle Symbole zusammen wiegen jetzt 1,6 MB statt 60 KB. Das ist der Preis
+für eine Marke, die eine Fotografie ist, und er ist bewusst bezahlt.
+
+**Zehn Kilobyte in der Startnutzlast.** Die Marke im Kopf der App steht als
+Data-URL in `studio.css` — 8,7 KB gzip. Der Grund steht dort im Kommentar:
+`bauen.mts` setzt CSS als `<style>` in die Einzeldatei ein und schreibt
+relative Adressen nicht um (§29); ein `url(../../../oeffentlich/…)` ginge in
+`redion-einzeldatei.html` ins Leere, und zwar still, als leerer Kasten.
+
+Ein Versuch, das zu drücken, ist gescheitert und steht hier, damit ihn
+niemand wiederholt: ein eigenes Kopfbild in 76 px mit 16 statt 64 Stufen
+brachte 6,9 statt 8,7 KB. 1,8 KB sind keine Sonderdatei wert.
+
+**Die Decke von `test388` war schon vorher gerissen** — 2379 KB gegen 2300.
+Mit diesem Bogen sind es 2389. Das ist ehrlich schlechter und wird nicht
+schöngeredet; es gehört zu L146 und nicht hierher.
+
+## Der Fehler, den kein Prüflauf gefunden hat
+
+Der Kastenfilter im Erzeuger teilte falsch. Er mittelt über
+vormultipliziertes Alpha — richtig, sonst bekämen die runden Ecken einen
+dunklen Saum — und teilte danach durch `n / (a / 255)` statt durch
+`255 / a`. Der Faktor `n` zu viel.
+
+Bei 512 → 512 ist `n` gleich eins, und **icon-512 sah richtig aus.** Bei
+512 → 48 ist `n` über hundert: jedes verkleinerte Symbol kam weiss und
+ausgebrannt heraus. Kein Prüflauf konnte das melden — die Masse stimmten,
+der Alphakanal stimmte, die Datei war ein gültiges PNG.
+
+Gefunden hat es das Bild (§55). Das ist der zweite Fall in diesem Projekt,
+in dem eine Zahl richtig und das Bild falsch war.
+
+## Und die kleinen Grössen werden aufgehellt
+
+Redurs Marke ist dunkel. Bei 180 px ist das ihre Wirkung; bei 16 px im
+Browserreiter mittelt das Verkleinern jeden hellen Punkt mit fünfhundert
+dunklen, und übrig bleibt ein schwarzer Fleck. Bis 48 px hebt der Erzeuger
+deshalb die Mitteltöne mit Gamma 0,65 — am Bild verglichen gegen 1, 0,8 und
+0,5: ab 0,5 beginnt der Grund zu grauen, bei 0,8 ist noch zu wenig zu sehen.
+Das Schwarz bleibt schwarz, weil 0 hoch irgendetwas 0 bleibt.
+
+## Was noch dazukam
+
+* **PNG lesen.** Der Erzeuger konnte nur schreiben. Jetzt liest er auch —
+  Signatur, Blöcke, zlib, die fünf Zeilenfilter. Achtzig Zeilen statt einer
+  Abhängigkeit, und derselbe Grund wie beim Schreiben: `sharp` findet seine
+  Binärdatei nicht immer, `zlib` liegt in Node.
+* **Alphakanal.** Bis hierher schrieb der Erzeuger RGB und malte die runden
+  Ecken **weiss** — auf hellem Grund unsichtbar, auf dunklem ein weisser
+  Zipfel an jeder Ecke. Farbart 6 statt 2.
+* **`marke.png` geht nicht mit ins Netz.** Sie ist Werkzeug, keine
+  Auslieferung: keine Seite verweist auf sie, und sie ist mit 227 KB die
+  grösste Einzeldatei unter `oeffentlich/`. Eine Zeile in `.assetsignore`,
+  und `test483` hält sie fest.
+
+## Geprüft
+
+`test483`, 20 Zusagen, vier Gegenproben rot gesehen: ein Byte in
+`marke.png` ohne neuen Lauf (21 von 24 Dateien weichen ab), das „R" zurück
+in `index.html`, `icon-48` statt `icon-72` in der Stildatei, und das
+Hintergrundbild gestrichen. Dazu `test31` (PWA und Symbolmasse), `test204`,
+`test351` (der Studio-Kopf bleibt einzeilig) — alle grün. `npm run
+typecheck` sauber, `node bauen.mts` und `npm run stand` nachgezogen.

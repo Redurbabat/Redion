@@ -7123,6 +7123,83 @@ weniger. Ausgeschlossen wurden zwischen den beiden Läufen aber 83
   3. Im Cloudflare-Dashboard unter Workers → red-ion → Assets nachsehen,
      was wirklich dort liegt.
 
+## GEMESSEN AM 9. SEPTEMBER, 11:54 — der dringende Teil ist beantwortet
+
+Redur hat die Adresse aufgerufen. Unter
+`https://red-ion.redurbabat7.workers.dev/` steht **„Hello world"** in
+Schreibmaschinenschrift — Cloudflares Standard-Worker, die Vorlage, die
+beim Anlegen des Projekts entsteht.
+
+Und auf JEDER Adresse dasselbe: `/index.html`, die persönliche PDF, die
+Chronik — überall „Hello world". Das ist kein Zufall, sondern die Bauart
+dieser Vorlage: sie sieht den Pfad gar nicht an und antwortet immer gleich.
+
+**Damit ist die dringende Frage beantwortet: es ist NICHTS erreichbar.**
+Weder Redion noch die persönliche PDF. Beide Deploys sind am D1-Fehler
+abgebrochen (L143), es wurde nie eine Fassung aktiv, und ohne aktive Fassung
+zeigt niemand auf die hochgeladenen Dateien.
+
+Der Zustand aus E520 — „ein Zeugnis lag im Netz" — war also eine begründete
+Sorge und keine Tatsache. Die Datei war hochgeladen, aber nicht ausgeliefert.
+Das ist ein Unterschied, und er gehört hierher, damit niemand später den
+falschen Schluss zieht.
+
+## Was offen BLEIBT
+
+Die eigentliche Frage — **wirkt `.assetsignore`?** — ist nicht beantwortet,
+nur nicht mehr dringend. Sie wird es in dem Augenblick wieder, in dem der
+erste Deploy DURCHGEHT (L143). Dann gilt:
+
+```txt
+red-ion.redurbabat7.workers.dev/Redur_Babat_FZ_MOE_Lehrpersonen.pdf
+```
+
+  · **404 oder die Startseite** → die Ausschlussliste wirkt.
+  · **die PDF** → sie wirkt nicht, und dann ist es dringend.
+
+Diese eine Adresse ist die ganze Prüfung. Sie gehört in den ersten
+Durchgang nach dem ersten erfolgreichen Deploy, und sie steht deshalb hier
+und nicht in einem Prüflauf — kein Lauf im Container erreicht sie.
+
 Bis dahin gilt: **die Wirkung ist unbekannt**, und der Satz aus E520 („sie
 gehen nur nicht mehr mit ins Netz") ist nicht belegt. Er steht in E522
 richtiggestellt.
+
+---
+
+L146 · Die Startnutzlast steht über ihrer Decke — offen
+--------------------------------------------------------------------------
+
+`test388 §5` deckelt, was der Start überhaupt holt, auf **2300 KB gzip**.
+Gemessen am 9. September: **2389 KB über 225 Dateien.** Der Lauf ist damit
+rot, und zwar nicht seit heute.
+
+**Woher die Zahl kommt.** Die Decke wurde am 4. September auf 2300 gesetzt,
+als der Start 2081 KB holte — mit Absicht mit Luft. Diese Luft ist
+aufgebraucht:
+
+```txt
+ 4. September (E389)      2081 KB   Decke gesetzt: 2300
+ 9. September, vorher     2379 KB   79 KB über der Decke
+ 9. September, E525       2389 KB   +10 KB: die Marke im Kopf (8,7 KB)
+```
+
+**Die zehn Kilobyte aus E525 sind meine, und sie sind der kleinere Teil.**
+Die 79 davor sind über mehrere Bögen dazugekommen, ohne dass jemand
+hingesehen hat — genau das, wogegen die Decke gebaut wurde.
+
+**Was zu tun ist**, in dieser Reihenfolge:
+
+1. **Nachsehen, was seit dem 4. September dazugekommen ist.** Die 225
+   Dateien einzeln nach Grösse auflisten; die Decke ist eine Summe, und
+   Summen haben Posten. Ohne diese Liste ist jede Massnahme geraten.
+2. **Erst dann entscheiden**, ob etwas später geladen werden kann (wie
+   pdf.js in E389), ob etwas zusammengelegt gehört, oder ob die Decke mit
+   geschriebenem Grund steigt.
+3. **Nicht** die Decke anheben, weil der Lauf rot ist. Eine Decke, die
+   nachgibt, sobald sie greift, ist keine.
+
+Was hier NICHT hingehört: die 1,6 MB der Symbole aus E525. Der Start holt
+davon nur `favicon-16` und `favicon-32` (zusammen 3 KB); die grossen
+Symbole holt das Betriebssystem beim Installieren, nicht der Browser beim
+Öffnen.
