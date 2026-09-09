@@ -3995,8 +3995,16 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 /* `position:relative`, damit das weggeklemmte Wort (Audit F04) an SEINEM
    Knopf hängt und nicht am Seitenanfang — sichtbar ist es nie, aber ein
    Vorleseprogramm liest in Dokumentreihenfolge, und die soll stimmen. */
+/* SIEBEN STATT NEUN PIXEL SEITLICH (E515). GEMESSEN, nicht geschätzt: mit
+   Emoji brauchten die dreizehn Werkzeuge samt Wort 1067 px, mit den
+   gezeichneten Zeichen 1142 — die fest 18 px breite Zeichnung ist rund
+   6 px breiter als der Durchschnitt der Emoji davor, dreizehnmal. Bei
+   9 px Polsterung kippte die Werkzeugzeile dadurch in eine zweite
+   (1190 px nötig, 1168 vorhanden), und `test351` sah es.
+   Sieben ist keine neue Zahl: die enge Ansicht unter 1150 px benutzt sie
+   seit E359. */
 .blatt-werk button{position:relative;
-                   min-height:32px; padding:4px 9px; border-radius:6px;
+                   min-height:32px; padding:4px 7px; border-radius:6px;
                    font-size:13px; color:var(--text); background:none; cursor:pointer}
 /* 44 px TREFFFLÄCHE (§37, E406). HAUPTWEG: Die Zeichenleiste ist der Hauptweg beim Schreiben von Hand.
    Sie wächst nur nach oben und unten — waagerecht stehen die
@@ -4511,7 +4519,31 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
   background-size:8px 100%, 100% 8px, 2px 100%, 100% 2px}
 
-.blatt-werk .zeichen{margin-right:5px}
+.blatt-werk .zeichen{margin-right:4px}
+/* GEZEICHNETE ZEICHEN SITZEN AUF DER LINIE (E515). Ein `<svg>` ist ein
+   Inline-Element und stünde sonst auf der Grundlinie wie ein Buchstabe —
+   also drei Pixel zu tief. `inline-flex` setzt es mittig, und die feste
+   Breite hält alle dreizehn Knöpfe auf demselben Raster; vorher bestimmte
+   jedes Emoji seine eigene. */
+.blatt-werk .zeichen[data-sym]{display:inline-flex; align-items:center;
+                               justify-content:center; width:16px; height:16px}
+.blatt-werk .zeichen[data-sym] svg{display:block}
+/* WO KEIN WORT STEHT, TRÄGT DAS ZEICHEN ALLEIN — und darf grösser sein.
+   16 px neben einem Wort von 13 px ist reichlich; 16 px ALLEIN in einem
+   36-px-Knopf ist knapp. Die drei wortlosen Zustände (enge Leiste, Spalte,
+   Telefon) bekommen deshalb 18 px zurück, die Seitenspalte 20. */
+@media (min-width:761px){
+  @container (max-width:1150px){
+    .blatt-werk .zeichen[data-sym]{width:18px; height:18px}
+  }
+}
+.spalte .blatt-werk .zeichen[data-sym]{width:18px; height:18px}
+@media (max-width:760px){
+  .blatt-werk .zeichen[data-sym]{width:18px; height:18px}
+}
+.blatt-reihe[data-lage="links"] .blatt-werk .zeichen[data-sym],
+.blatt-reihe[data-lage="rechts"] .blatt-werk .zeichen[data-sym]{width:20px; height:20px;
+                                                                margin-right:0}
 /* Die Schrift-Knoepfe (E360): das Muster zeigt die Familie, das F ist fett. */
 .blatt-werk [data-act="schriftart"] .zeichen{font-size:15px}
 .blatt-werk [data-act="fett"] .zeichen{font-weight:800}

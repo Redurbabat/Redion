@@ -351,35 +351,50 @@ Die zehn Adern. Nicht wegen der Technik — zehn Farben und zwei Strichmuster �
 **Besserer Prompt:** „Weiter mit X" spart eine Rückfrage, wenn mehrere Dinge offen sind.
 
 
+**3 · ca. 04:50**
+
+> Nehme die symbole. Für die redion bitte 1:1
+
+**Gemeint:** Die Werkzeugzeichen aus dem mitgeschickten GoodNotes-Bild sollen Redions Zeichenleiste tragen — genau diese Sorte Zeichen, nicht ähnliche.
+
+**Besser geschrieben:** Nimm die Symbole aus dem Bild — dieselbe Strichstärke, dieselbe Farbe — und ersetze damit die Emoji in der Zeichenleiste.
+
+**Besserer Prompt:** „Ersetze in der Zeichenleiste jedes Emoji durch ein gezeichnetes Zeichen wie im Bild (gleiche Strichstärke, currentColor). Wo ein Buchstabe mehr sagt als ein Strich, sag mir welche und warum." — der zweite Satz spart die Rückfrage, was mit dem „Aa" der Schriftart passieren soll.
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
 |---|---|---|---|---|
 | E513 — Das Notizbuch fehlte im „Neu erstellen"; die kopierte PDF gemessen und NICHT gefunden | `2f059f1d` → `dc9bbcab` | 22:16 – 04:12 | ca. 1 h 56 min (der grösste Teil davon die Suche nach der PDF) | test265 um eine Zusage erweitert |
-| E514 — Die Chronik: PROBLEME.md, UR.md und die Ansicht in Redion | `dc9bbcab` → `(dieser Bogen)` | ab 04:12 | — | test481 |
+| E514 — Die Chronik: PROBLEME.md, UR.md und die Ansicht in Redion | `dc9bbcab` → `dd694ff7` | 04:12 – 04:47 | ca. 35 min | test481 |
+| E515 — Die Zeichen der Leiste: vierunddreissig gezeichnete statt Emoji, und fünfundsiebzig Pixel, die niemand sah | `dd694ff7` → `(dieser Bogen)` | ab 04:47 | — | test480 §5 neu (acht Zusagen); test351 war rot und ist wieder grün |
 
 #### Zahlen des Tages
 
-- **commits:** 2
-- **entscheidungen:** 2
+- **commits:** 3
+- **entscheidungen:** 3
 
 #### Das grösste Problem
 
-Die PDF, die angeblich die aktuelle kopiert — und die ich NICHT gefunden habe. Drei Wege gemessen, alle drei sauber. Das ist der unbefriedigendste Zustand von allen: nicht behoben und nicht widerlegt. Ich habe es als L139 aufgeschrieben, statt es als erledigt zu führen, und brauche von Redur genau eine Angabe: welcher Knopf, in welcher Ansicht.
+Nicht die Zeichen selbst, sondern was sie kosteten. Die gezeichneten Zeichen sind fest 18 px breit, die Emoji davor im Mittel rund 12 — dreizehnmal sechs Pixel sind fünfundsiebzig, und daran kippte die Werkzeugzeile am Rechner in eine zweite. Das Bild hätte es nie gemeldet: zwei Zeilen sehen ordentlich aus. Gefunden hat es test351, weil dort seit E359 eine Zahl steht statt eines Eindrucks. Daneben bleibt die PDF aus L139 offen — nicht behoben und nicht widerlegt.
 
 #### Das Interessanteste, das Redur wollte
 
-Dieses Buch hier. „Als ein zweites Gehirn" — nicht als Protokoll. Der Unterschied ist, dass ein Protokoll aufzählt, was passiert ist, und ein Gehirn sagt, WARUM so und nicht anders. Deshalb steht in UR.md die Begründung vor dem Ergebnis, und deshalb stehen die falschen Vermutungen genauso drin wie die richtigen Funde.
+„Nehme die symbole. Für die redion bitte 1:1" — vier Wörter, und der richtige Schluss daraus war nicht „male dreizehn neue Bilder", sondern „Redion hat diese Sorte Zeichen längst, nur die meistbenutzte Fläche der App war beim Emoji geblieben". Wer die Zeichen in der PDF-Fläche gezeichnet hätte, hätte einen zweiten Zeichensatz gebaut, der nach dem zweiten Durchgang anders aussieht als der erste.
 
 #### Massnahmen an den Daten
 
 | Zeit | Was | Warum | Risiko |
 |---|---|---|---|
 | 04:12 | `Notebook.createNotebook` nach aussen gegeben. | Damit „Neu erstellen" ein Notizbuch anlegen kann, ohne eine zweite Anlege-Maschine zu bauen. | keins — dieselbe Funktion, ein zweiter Aufrufer |
+| 05:10 | Vierunddreissig Zeichen in `Register.symbole` ergänzt; die Leiste nennt nur noch ihren Namen. | Ein zweiter Zeichensatz in der PDF-Fläche wäre nach dem zweiten Durchgang verschieden, und niemand hätte gemerkt, welcher gilt (§8). | keins an Daten — Oberfläche; die vier Stellen, die ihr Markup neu schreiben, mussten das Malen wiederholen |
+| 05:40 | Polsterung der Werkzeugknöpfe 9 → 7 px, Abstand zum Wort 5 → 4 px, Zeichen neben einem Wort 18 → 16 px. | Gemessen: mit Wort brauchten die dreizehn Werkzeuge 1190 px von 1168 vorhandenen. Danach 1099 — eine Zeile, 69 px Luft. Wo kein Wort steht, bleibt das Zeichen 18 px, in der Seitenspalte 20. | keins an Daten; die 44-px-Trefffläche hängt an der Höhe, nicht an der Polsterung (§37) |
+| 06:20 | Fueller, Kugelschreiber und Zettel neu gezeichnet — nicht an der Spitze, sondern am Umriss. | Gemessen: die drei Stifte teilten bis zu 73 % ihrer Tinte bei 16 px. Der erste Versuch mit schärferen Spitzen machte es schlimmer (85 %), weil bei dieser Grösse der Schaft die ganze Tinte trägt. Jetzt: Feder, aufrechter Kugelschreiber, schräger Bleistift — drei Umrisse. | keins an Daten — Oberfläche |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 13 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 15 Einträge.
 

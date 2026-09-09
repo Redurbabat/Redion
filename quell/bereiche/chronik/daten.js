@@ -346,6 +346,13 @@ const ChronikDaten = {
                     "gemeint": "Weitermachen.",
                     "besser": "Mach weiter.",
                     "besserePrompt": "„Weiter mit X\" spart eine Rückfrage, wenn mehrere Dinge offen sind."
+                },
+                {
+                    "zeit": "ca. 04:50",
+                    "wortlaut": "Nehme die symbole. Für die redion bitte 1:1",
+                    "gemeint": "Die Werkzeugzeichen aus dem mitgeschickten GoodNotes-Bild sollen Redions Zeichenleiste tragen — genau diese Sorte Zeichen, nicht ähnliche.",
+                    "besser": "Nimm die Symbole aus dem Bild — dieselbe Strichstärke, dieselbe Farbe — und ersetze damit die Emoji in der Zeichenleiste.",
+                    "besserePrompt": "„Ersetze in der Zeichenleiste jedes Emoji durch ein gezeichnetes Zeichen wie im Bild (gleiche Strichstärke, currentColor). Wo ein Buchstabe mehr sagt als ein Strich, sag mir welche und warum.\" — der zweite Satz spart die Rückfrage, was mit dem „Aa\" der Schriftart passieren soll."
                 }
             ],
             "arbeit": [
@@ -360,23 +367,49 @@ const ChronikDaten = {
                 {
                     "was": "E514 — Die Chronik: PROBLEME.md, UR.md und die Ansicht in Redion",
                     "vonCommit": "dc9bbcab",
+                    "bisCommit": "dd694ff7",
+                    "zeitraum": "04:12 – 04:47",
+                    "pruefungen": "test481",
+                    "dauer": "ca. 35 min"
+                },
+                {
+                    "was": "E515 — Die Zeichen der Leiste: vierunddreissig gezeichnete statt Emoji, und fünfundsiebzig Pixel, die niemand sah",
+                    "vonCommit": "dd694ff7",
                     "bisCommit": "(dieser Bogen)",
-                    "zeitraum": "ab 04:12",
-                    "pruefungen": "test481"
+                    "zeitraum": "ab 04:47",
+                    "pruefungen": "test480 §5 neu (acht Zusagen); test351 war rot und ist wieder grün"
                 }
             ],
             "zahlen": {
-                "commits": 2,
-                "entscheidungen": 2
+                "commits": 3,
+                "entscheidungen": 3
             },
-            "groesstesProblem": "Die PDF, die angeblich die aktuelle kopiert — und die ich NICHT gefunden habe. Drei Wege gemessen, alle drei sauber. Das ist der unbefriedigendste Zustand von allen: nicht behoben und nicht widerlegt. Ich habe es als L139 aufgeschrieben, statt es als erledigt zu führen, und brauche von Redur genau eine Angabe: welcher Knopf, in welcher Ansicht.",
-            "interessantesteAnfrage": "Dieses Buch hier. „Als ein zweites Gehirn\" — nicht als Protokoll. Der Unterschied ist, dass ein Protokoll aufzählt, was passiert ist, und ein Gehirn sagt, WARUM so und nicht anders. Deshalb steht in UR.md die Begründung vor dem Ergebnis, und deshalb stehen die falschen Vermutungen genauso drin wie die richtigen Funde.",
+            "groesstesProblem": "Nicht die Zeichen selbst, sondern was sie kosteten. Die gezeichneten Zeichen sind fest 18 px breit, die Emoji davor im Mittel rund 12 — dreizehnmal sechs Pixel sind fünfundsiebzig, und daran kippte die Werkzeugzeile am Rechner in eine zweite. Das Bild hätte es nie gemeldet: zwei Zeilen sehen ordentlich aus. Gefunden hat es test351, weil dort seit E359 eine Zahl steht statt eines Eindrucks. Daneben bleibt die PDF aus L139 offen — nicht behoben und nicht widerlegt.",
+            "interessantesteAnfrage": "„Nehme die symbole. Für die redion bitte 1:1\" — vier Wörter, und der richtige Schluss daraus war nicht „male dreizehn neue Bilder\", sondern „Redion hat diese Sorte Zeichen längst, nur die meistbenutzte Fläche der App war beim Emoji geblieben\". Wer die Zeichen in der PDF-Fläche gezeichnet hätte, hätte einen zweiten Zeichensatz gebaut, der nach dem zweiten Durchgang anders aussieht als der erste.",
             "massnahmen": [
                 {
                     "zeit": "04:12",
                     "was": "`Notebook.createNotebook` nach aussen gegeben.",
                     "warum": "Damit „Neu erstellen\" ein Notizbuch anlegen kann, ohne eine zweite Anlege-Maschine zu bauen.",
                     "risiko": "keins — dieselbe Funktion, ein zweiter Aufrufer"
+                },
+                {
+                    "zeit": "05:10",
+                    "was": "Vierunddreissig Zeichen in `Register.symbole` ergänzt; die Leiste nennt nur noch ihren Namen.",
+                    "warum": "Ein zweiter Zeichensatz in der PDF-Fläche wäre nach dem zweiten Durchgang verschieden, und niemand hätte gemerkt, welcher gilt (§8).",
+                    "risiko": "keins an Daten — Oberfläche; die vier Stellen, die ihr Markup neu schreiben, mussten das Malen wiederholen"
+                },
+                {
+                    "zeit": "05:40",
+                    "was": "Polsterung der Werkzeugknöpfe 9 → 7 px, Abstand zum Wort 5 → 4 px, Zeichen neben einem Wort 18 → 16 px.",
+                    "warum": "Gemessen: mit Wort brauchten die dreizehn Werkzeuge 1190 px von 1168 vorhandenen. Danach 1099 — eine Zeile, 69 px Luft. Wo kein Wort steht, bleibt das Zeichen 18 px, in der Seitenspalte 20.",
+                    "risiko": "keins an Daten; die 44-px-Trefffläche hängt an der Höhe, nicht an der Polsterung (§37)"
+                },
+                {
+                    "zeit": "06:20",
+                    "was": "Fueller, Kugelschreiber und Zettel neu gezeichnet — nicht an der Spitze, sondern am Umriss.",
+                    "warum": "Gemessen: die drei Stifte teilten bis zu 73 % ihrer Tinte bei 16 px. Der erste Versuch mit schärferen Spitzen machte es schlimmer (85 %), weil bei dieser Grösse der Schaft die ganze Tinte trägt. Jetzt: Feder, aufrechter Kugelschreiber, schräger Bleistift — drei Umrisse.",
+                    "risiko": "keins an Daten — Oberfläche"
                 }
             ]
         }
@@ -536,6 +569,31 @@ const ChronikDaten = {
             "offen": "Der vierte Weg — `page-add-pdf` im Seitenmenü des Dokuments — liess sich vom Prüflauf nicht öffnen. Dort wäre auch die plausibelste Ursache: dieser Weg fügt MIT ABSICHT in das offene Dokument ein.",
             "wasFehlt": "Eine Angabe von Redur: welcher Knopf, in welcher Ansicht. Ein Bild mit einem Pfeil würde reichen.",
             "stand": "Nicht behoben und nicht widerlegt. Steht als L139 — nicht gefunden ist etwas anderes als nicht vorhanden."
+        },
+        {
+            "nr": "P14",
+            "datum": "2026-09-09",
+            "titel": "Die Werkzeugzeile kippte in eine zweite — durch Zeichen, die schöner waren",
+            "schwere": "mittel",
+            "symptom": "Nach dem Einbau der gezeichneten Zeichen standen die dreizehn Werkzeuge am Rechner in zwei Zeilen statt einer. test351 meldete [2,true] statt [1,true].",
+            "falscheVermutung": "Der erste Gedanke war, die Zusage sei zu streng und gehöre gelockert — genau wie zwei Tage zuvor bei test348 und test438, wo aus „zwei Zeilen\" ehrlich „höchstens drei\" wurde. Das wäre hier falsch gewesen: dort war ein Knopf DAZUGEKOMMEN, hier war nur ein Zeichen breiter geworden.",
+            "wieGesucht": "Nachgemessen statt geschätzt, in einem Arbeitsbaum am alten Stand: bei 1600 px Fenster und 1184 px Leiste brauchten die dreizehn Knöpfe mit Emoji 1067 px, mit Zeichnung 1142. Der Unterschied sind rund 6 px je Knopf — die Zeichnung ist fest 18 px breit, ein Emoji war im Mittel 12.",
+            "ursache": "Nicht die Zeichen, sondern ihre feste Breite: dreizehnmal sechs Pixel.",
+            "behebung": "An drei Stellen zurückgeholt, jede mit Grund: Polsterung 9 → 7 px (die Zahl, die die enge Ansicht seit E359 benutzt), Abstand zum Wort 5 → 4, Zeichen neben einem Wort 18 → 16. Wo kein Wort steht, bleibt es gross.",
+            "lehre": "Ein Bild hätte das nie gemeldet — zwei Zeilen sehen ordentlich aus. Gefunden hat es eine Zahl, die seit E359 in einem Prüflauf steht. Deshalb sind Zusagen mit Zahlen mehr wert als Zusagen mit Eindrücken (§55.2)."
+        },
+        {
+            "nr": "P15",
+            "datum": "2026-09-09",
+            "titel": "Drei Stifte, ein Bild — und die Reparatur, die es schlimmer machte",
+            "schwere": "mittel",
+            "symptom": "Auf einem Blatt mit allen Zeichen nebeneinander sahen Füller, Kugelschreiber und Bleistift aus wie derselbe schräge Stift. In der Stiftreihe stehen sie direkt nebeneinander, und man wählt sie mit den Augen.",
+            "falscheVermutung": "„Jeder Stift ist an seiner Spitze zu erkennen.“ Der Satz stand als Kommentar im Register — beim Zeichnen geschrieben, in einer 44-px-Ansicht. In der Leiste sind es 16 px, und dort ist eine Spitze zwei Punkte gross. Der zweite Irrtum kam gleich danach: schärfere Spitzen, ein Luftloch und Griffrillen sollten helfen — gemessen stiegen die drei Paare von 73/69/54 % auf 85/83/81 %.",
+            "wieGesucht": "Jedes Zeichen in 16 × 16 gerastert und für jedes Paar gezählt, wie viele Tintenpunkte beide teilen (Schnitt durch Vereinigung). Das gibt eine Zahl, wo vorher ein Eindruck war.",
+            "ursache": "Bei 16 px trägt der SCHAFT die ganze Tinte. Jede Verzierung liegt unter einem Punkt und verschwindet, während der gemeinsame Umriss bleibt.",
+            "behebung": "Die Umrisse getrennt statt der Spitzen: der Füller ist eine Feder (Schlitz, Luftloch, nach unten spitz), der Kugelschreiber steht aufrecht mit Clip und Kugel, der Bleistift bleibt schräg. Danach kein Paar über 46 %.",
+            "stand": "Behoben. `test480 §7` hält die Grenze bei 60 %, und die Gegenprobe mit den drei alten Stiften meldet 73 %.",
+            "lehre": "Ein Bild findet, dass etwas gleich AUSSIEHT. Eine Messung sagt, ob eine Reparatur hilft — und diese hat den zweiten Irrtum in dreissig Sekunden gemeldet, statt ihn in die App zu lassen. Beides zusammen, nicht eins davon (§55)."
         }
     ]
 };

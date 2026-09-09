@@ -12032,8 +12032,16 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 /* `position:relative`, damit das weggeklemmte Wort (Audit F04) an SEINEM
    Knopf hängt und nicht am Seitenanfang — sichtbar ist es nie, aber ein
    Vorleseprogramm liest in Dokumentreihenfolge, und die soll stimmen. */
+/* SIEBEN STATT NEUN PIXEL SEITLICH (E515). GEMESSEN, nicht geschätzt: mit
+   Emoji brauchten die dreizehn Werkzeuge samt Wort 1067 px, mit den
+   gezeichneten Zeichen 1142 — die fest 18 px breite Zeichnung ist rund
+   6 px breiter als der Durchschnitt der Emoji davor, dreizehnmal. Bei
+   9 px Polsterung kippte die Werkzeugzeile dadurch in eine zweite
+   (1190 px nötig, 1168 vorhanden), und `test351` sah es.
+   Sieben ist keine neue Zahl: die enge Ansicht unter 1150 px benutzt sie
+   seit E359. */
 .blatt-werk button{position:relative;
-                   min-height:32px; padding:4px 9px; border-radius:6px;
+                   min-height:32px; padding:4px 7px; border-radius:6px;
                    font-size:13px; color:var(--text); background:none; cursor:pointer}
 /* 44 px TREFFFLÄCHE (§37, E406). HAUPTWEG: Die Zeichenleiste ist der Hauptweg beim Schreiben von Hand.
    Sie wächst nur nach oben und unten — waagerecht stehen die
@@ -12548,7 +12556,31 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
   background-size:8px 100%, 100% 8px, 2px 100%, 100% 2px}
 
-.blatt-werk .zeichen{margin-right:5px}
+.blatt-werk .zeichen{margin-right:4px}
+/* GEZEICHNETE ZEICHEN SITZEN AUF DER LINIE (E515). Ein `<svg>` ist ein
+   Inline-Element und stünde sonst auf der Grundlinie wie ein Buchstabe —
+   also drei Pixel zu tief. `inline-flex` setzt es mittig, und die feste
+   Breite hält alle dreizehn Knöpfe auf demselben Raster; vorher bestimmte
+   jedes Emoji seine eigene. */
+.blatt-werk .zeichen[data-sym]{display:inline-flex; align-items:center;
+                               justify-content:center; width:16px; height:16px}
+.blatt-werk .zeichen[data-sym] svg{display:block}
+/* WO KEIN WORT STEHT, TRÄGT DAS ZEICHEN ALLEIN — und darf grösser sein.
+   16 px neben einem Wort von 13 px ist reichlich; 16 px ALLEIN in einem
+   36-px-Knopf ist knapp. Die drei wortlosen Zustände (enge Leiste, Spalte,
+   Telefon) bekommen deshalb 18 px zurück, die Seitenspalte 20. */
+@media (min-width:761px){
+  @container (max-width:1150px){
+    .blatt-werk .zeichen[data-sym]{width:18px; height:18px}
+  }
+}
+.spalte .blatt-werk .zeichen[data-sym]{width:18px; height:18px}
+@media (max-width:760px){
+  .blatt-werk .zeichen[data-sym]{width:18px; height:18px}
+}
+.blatt-reihe[data-lage="links"] .blatt-werk .zeichen[data-sym],
+.blatt-reihe[data-lage="rechts"] .blatt-werk .zeichen[data-sym]{width:20px; height:20px;
+                                                                margin-right:0}
 /* Die Schrift-Knoepfe (E360): das Muster zeigt die Familie, das F ist fett. */
 .blatt-werk [data-act="schriftart"] .zeichen{font-size:15px}
 .blatt-werk [data-act="fett"] .zeichen{font-weight:800}
@@ -19468,7 +19500,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 740, inhalt: '6956d4e86183e77c', gebaut: '2026-09-09T04:40:02.422Z' };
+const Stand = { fassung: 753, inhalt: '83b6b50958e26de8', gebaut: '2026-09-09T05:30:54.842Z' };
 window.Stand = Stand;
 
 </script>
@@ -30678,6 +30710,141 @@ Register.symbole = (() => {
         inkEraser: '<path d="m14 3 7 7-10 11H6l-4-4zM8 11l8 8M11 21h10"/>',
         inkText: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M12 8v9M9 17h6"/>',
         inkShapes: '<path d="m7 3 5 8H2z"/><circle cx="17" cy="7" r="4"/><rect x="4" y="15" width="7" height="6" rx="1"/><circle cx="18" cy="18" r="3"/>',
+        /* ══ DIE WERKZEUGE DER ZEICHENLEISTE (E515) ═════════════════════════════
+         * Redur, 9. September, mit einem Ausschnitt der GoodNotes-Leiste:
+         * „nehme die Symbole für die Redion bitte 1:1."
+         *
+         * WAS „1:1" HIER HEISST, und was nicht. Nicht: fremde Bilddateien
+         * übernehmen — das wäre eine Kopie, und Redion ist keine (§2). Sondern:
+         * dieselben WERKZEUGE, in derselben Bildsprache, an derselben Stelle.
+         * Ein Lasso ist eine gestrichelte Schlinge, ein Radierer ein schräger
+         * Klotz, ein Lineal ein Balken mit Teilstrichen — das sind keine
+         * Erfindungen einer App, das ist die Werkstatt.
+         *
+         * SIE FOLGEN DEM RASTER DIESER DATEI: 24 × 24, Striche in
+         * `currentColor`, keine Fläche, runde Enden. Genau deshalb sehen sie
+         * nebeneinander wie eine Familie aus und nicht wie zwölf Aufkleber —
+         * was Emoji in dieser Leiste waren, und was der Kopf dieser Datei seit
+         * jeher beschreibt.
+         * ------------------------------------------------------------------- */
+        /* Der Füller: die Feder schräg im Bild, wie ein Stift in der Hand. */
+        inkPen: '<path d="m16.5 2.9 4.6 4.6-1.9 1.9-4.6-4.6z"/>' +
+            '<path d="m14.6 4.8 4.6 4.6-8.6 8.6-6.1 1.5 1.5-6.1z"/>' +
+            '<path d="m5.5 14.9 3.6 3.6"/>',
+        /* HIER STAND EIN ZWEITER PINSEL (E515). `inkBrush` war Strich für
+           Strich dasselbe Bild wie `penBrush` zwanzig Zeilen weiter unten —
+           derselbe Fehler wie die zweite Sonne oben, nur zehn Minuten alt statt
+           zwei Monate. Niemand benutzte ihn; er ist raus, bevor ihn jemand
+           benutzt. Wer einen Pinsel braucht, nimmt `penBrush`. */
+        /* Der Zettel: eine HAFTNOTIZ mit umgeschlagener Ecke unten rechts.
+           Der erste Wurf war ein Blatt MIT ZEILEN und einer Ecke oben — und
+           damit dasselbe Bild wie ein Dokument, direkt neben dem `inkText`
+           daneben in der Reihe. Ein Zettel hat keine Zeilen; das Erkennbare
+           an ihm ist die Ecke, die sich hochbiegt. */
+        inkNote: '<path d="M4.2 5.4a1.6 1.6 0 0 1 1.6-1.6h12.4a1.6 1.6 0 0 1 1.6 1.6v8.4L13.8 19.8H5.8a1.6 1.6 0 0 1-1.6-1.6z"/>' +
+            '<path d="M19.8 13.8h-4.4a1.6 1.6 0 0 0-1.6 1.6v4.4"/>',
+        /* Der Laserpointer: ein Griffel mit Funken an der Spitze. */
+        inkLaser: '<path d="m14.8 4.2 5 5-9.4 9.4-5-5z"/>' +
+            '<path d="m5.4 13.6-2.2 5.9 5.9-2.2"/>' +
+            '<path d="M18.4 2.6v2.4M21.4 5.6h-2.4M20.6 2.4l-1.4 1.4"/>',
+        /* Das Lineal: ein schräger Balken mit Teilstrichen. */
+        inkRuler: '<rect x="1.6" y="7.4" width="20.8" height="9.2" rx="1.8" ' +
+            'transform="rotate(-20 12 12)"/>' +
+            '<path d="m7.1 8.6 1.2 2.4M10.6 7.3l1.2 2.4M14.1 6.1l1.2 2.4M17.6 4.8l1.2 2.4"/>',
+        /* Das Abdeckband: ein Streifen, der etwas verdeckt. */
+        inkCover: '<rect x="2.6" y="9" width="18.8" height="6" rx="1.6"/>' +
+            '<path d="M5.4 5.6h13.2M5.4 18.4h13.2"/>',
+        /* Das Fachzeichen: ein Blitz im Rahmen — Redions eigenes Werkzeug,
+           das GoodNotes nicht hat. Es gehört trotzdem in dieselbe Familie. */
+        inkSymbol: '<rect x="3.2" y="3.2" width="17.6" height="17.6" rx="3"/>' +
+            '<path d="M13.2 6.8 8.6 13h3.4l-.8 4.6 4.6-6.2h-3.4z"/>',
+        /* Die Elemente: ein Stempel. */
+        inkStamp: '<path d="M8.4 10.4V7.2a3.6 3.6 0 0 1 7.2 0v3.2"/>' +
+            '<path d="M4.6 14.4h14.8l-.8-2.2a2 2 0 0 0-1.9-1.4H7.3a2 2 0 0 0-1.9 1.4z"/>' +
+            '<rect x="4.6" y="17.4" width="14.8" height="3.4" rx="1.4"/>',
+        /* ── DIE SECHS STIFTE (E515) ──────────────────────────────────────────
+           Sie standen als 🖋 🖊 🖌 ✏ ⏚ ⌁ in der Reihe — sechs Emoji aus vier
+           Familien, direkt neben dreizehn gezeichneten Werkzeugen. Der
+           Prüflauf hat es gefunden, nicht das Auge: `test480 §5` zählt, was an
+           Text übrig ist.
+    
+           „Jeder Stift ist an seiner SPITZE zu erkennen" — das stand hier, und
+           es stimmte nicht. NACHGEMESSEN, jedes Zeichen in 16 × 16 gerastert
+           und Punkt für Punkt verglichen: Kugelschreiber und Bleistift teilten
+           73 % ihrer Tinte, Füller und Bleistift 69 %. Drei von sechs waren
+           dasselbe Bild mit einer anderen Spitze — und die Spitze ist bei
+           16 px zwei Punkte gross.
+    
+           Deshalb unterscheiden sie sich jetzt am GANZEN Zeichen, nicht nur
+           unten: der Füller an seiner breiten Feder mit Schlitz und Luftloch,
+           der Kugelschreiber an seinem schlanken Schaft mit Griffrillen und
+           der Kugel als Punkt, der Bleistift an seinen zwei Querbändern —
+           Zwinge hinten, Holzkante vorn. `test480 §7` misst es und lässt kein
+           Paar über 60 % steigen. */
+        penFountain: '<path d="M12 20.8c-3.7-3.8-5.6-7.2-5.6-10.4A5.6 5.6 0 0 1 12 4.8' +
+            'a5.6 5.6 0 0 1 5.6 5.6c0 3.2-1.9 6.6-5.6 10.4z"/>' +
+            '<path d="M12 8.6v8.8"/><circle cx="12" cy="11" r="1.1"/>',
+        penBall: '<path d="M9.2 6.4a2.8 2.8 0 0 1 5.6 0v8.4H9.2Z"/>' +
+            '<path d="M9.2 14.8h5.6L12 19.2Z"/>' +
+            '<circle cx="12" cy="20.6" r="1.1"/>' +
+            '<path d="M14.8 6.6h1.6v5"/>',
+        penBrush: '<path d="M14.2 3.4 20.6 9.8"/>' +
+            '<path d="m17.4 6.6-7.2 7.2a3.2 3.2 0 0 0-.9 1.7l-.4 2.2 2.2-.4a3.2 3.2 0 0 0 1.7-.9z"/>' +
+            '<path d="M8.4 15.4c-1.5 1.5-1.1 3.6-3.6 4.6 1 .6 2.2.8 3.3.4 1.6-.5 2.5-2 2.1-3.5"/>',
+        penPencil: '<path d="M19 2.6 21.4 5 10.6 15.8 3.6 20.4 8.2 13.4Z"/>' +
+            '<path d="M17 4.6 19.4 7M8.2 13.4 10.6 15.8"/>',
+        /* Der Schutzleiter: das Erdungszeichen, wie im Schaltplan. */
+        penEarth: '<path d="M12 3.4v9.2"/><path d="M5.6 12.6h12.8M7.8 16.2h8.4M10 19.8h4"/>',
+        /* Der Leiterstift: die Adern eines Schaltplans, drei Striche und ein
+           Knoten — dasselbe Zeichen, das die Elektrotechnik für eine
+           mehradrige Leitung benutzt. */
+        penWire: '<path d="M3.4 8.2h17.2M3.4 12h17.2M3.4 15.8h17.2"/>' +
+            '<circle cx="16.4" cy="8.2" r="1.5"/><circle cx="12" cy="12" r="1.5"/>' +
+            '<circle cx="7.6" cy="15.8" r="1.5"/>',
+        /* ── DIE DREI RADIERARTEN (E515) ─────────────────────────────────────*/
+        eraseAll: '<circle cx="12" cy="12" r="7.4"/>',
+        eraseHalf: '<circle cx="12" cy="12" r="7.4"/><path d="M12 4.6v14.8"/>' +
+            '<path d="M12 4.6a7.4 7.4 0 0 1 0 14.8" fill="currentColor" stroke="none"/>',
+        eraseMarker: '<path d="m13 3.6 6.4 6.4-7.4 7.4-6.4-6.4z"/><path d="M5.2 12.4 3.4 19l6.6-1.8"/>',
+        /* ── WOHIN DIE LEISTE GEHT (E515) ────────────────────────────────────
+           Vier Pfeile in einen Rahmen: das Bild sagt, WO sie landet, nicht nur
+           in welche Richtung sie zeigt. */
+        dockTop: '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="2.6"/>' +
+            '<path d="M3.4 8.4h17.2" stroke-width="2.4"/>',
+        dockLeft: '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="2.6"/>' +
+            '<path d="M8.4 3.4v17.2" stroke-width="2.4"/>',
+        dockRight: '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="2.6"/>' +
+            '<path d="M15.6 3.4v17.2" stroke-width="2.4"/>',
+        dockBottom: '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="2.6"/>' +
+            '<path d="M3.4 15.6h17.2" stroke-width="2.4"/>',
+        /* Die sieben Formen des Formen-Werkzeugs. Sie stehen hier und nicht
+           als Textzeichen in der Leiste, weil der Formknopf ZEIGT, welche
+           Form gewählt ist — und ein „╱" neben zwölf gezeichneten Werkzeugen
+           sieht aus wie ein Fehler, nicht wie eine Linie. */
+        formLine: '<path d="M4.6 19.4 19.4 4.6"/>',
+        formArrow: '<path d="M4.6 19.4 19.4 4.6M13.4 4.6h6v6"/>',
+        formRect: '<rect x="3.6" y="5.6" width="16.8" height="12.8"/>',
+        formEllipse: '<ellipse cx="12" cy="12" rx="8.6" ry="6.6"/>',
+        formTriangle: '<path d="M12 4.4 20.6 19.6H3.4z"/>',
+        formRoundrect: '<rect x="3.6" y="5.6" width="16.8" height="12.8" rx="4.2"/>',
+        formCurve: '<path d="M3.4 17.6c4.4 0 5.2-11.2 9.4-11.2s4.4 11.2 7.8 11.2"/>',
+        /* Die Schere — Ausschneiden. Es gab sie im Register noch nicht. */
+        scissors: '<circle cx="6.4" cy="6.4" r="2.6"/><circle cx="6.4" cy="17.6" r="2.6"/>' +
+            '<path d="M8.6 8.2 20 19.4M20 4.6 8.6 15.8"/>',
+        /* Nach vorn und nach hinten: eine Platte über bzw. unter zweien. */
+        layerUp: '<rect x="7.4" y="3.2" width="9.2" height="9.2" rx="1.8"/>' +
+            '<path d="M4.4 11.4v7.4a2 2 0 0 0 2 2h7.4"/>',
+        layerDown: '<rect x="7.4" y="11.6" width="9.2" height="9.2" rx="1.8"/>' +
+            '<path d="M19.6 12.6V5.2a2 2 0 0 0-2-2h-7.4"/>',
+        /* Das Kritzeln, das löscht: ein dichtes Hin und Her. */
+        scribble: '<path d="M2.8 15.6c2.6-4.4 4.6 3 7-1.6s4.6 3 7-1.6 3.2 1.2 4.4-1.2"/>',
+        /* Der Kreis für die Formerkennung — eine gezogene Form, die einrastet. */
+        shapeSnap: '<circle cx="12" cy="12" r="7.4" stroke-dasharray="3.4 2.6"/>' +
+            '<path d="M12 4.6v14.8M4.6 12h14.8"/>',
+        /* Das Bild als Seite: ein Rahmen mit Berg und Sonne. */
+        inkImage: '<rect x="3.2" y="4.6" width="17.6" height="14.8" rx="2.6"/>' +
+            '<circle cx="8.6" cy="9.6" r="1.7"/>' +
+            '<path d="m4.4 17.4 4.8-4.6a1.6 1.6 0 0 1 2.2 0l3 2.9M14.6 14l1.6-1.5a1.6 1.6 0 0 1 2.2 0l1.4 1.3"/>',
         /* --- Werkzeuge der Seitenleiste --------------------------------------- */
         calendar: '<rect x="3.2" y="5" width="17.6" height="16" rx="2.6"/>' +
             '<path d="M3.2 10h17.6M8.2 3v4M15.8 3v4"/>',
@@ -53464,10 +53631,10 @@ const Marken = (() => {
        einer Reihe mit Werkzeugen und meinte etwas anderes als sie. Das
        steht in L133. */
     const RADIERER = [
-        { id: 'ganz', name: 'Ganz', zeichen: '●', titel: 'Radierer: ganze Marken', nur: '' },
-        { id: 'teil', name: 'Teil', zeichen: '½', titel: 'Radierer: nur den berührten Teil eines Strichs', nur: '' },
-        { id: 'stift', name: 'Stift', zeichen: '✎', titel: 'Radierer: nur Stiftstriche — Marker, Band und Formen bleiben', nur: 'stift' },
-        { id: 'marker', name: 'Marker', zeichen: '▰', titel: 'Radierer: nur Marker', nur: 'marker' },
+        { id: 'ganz', name: 'Ganz', zeichen: '●', sym: 'eraseAll', titel: 'Radierer: ganze Marken', nur: '' },
+        { id: 'teil', name: 'Teil', zeichen: '½', sym: 'eraseHalf', titel: 'Radierer: nur den berührten Teil eines Strichs', nur: '' },
+        { id: 'stift', name: 'Stift', zeichen: '✎', sym: 'penFountain', titel: 'Radierer: nur Stiftstriche — Marker, Band und Formen bleiben', nur: 'stift' },
+        { id: 'marker', name: 'Marker', zeichen: '▰', sym: 'eraseMarker', titel: 'Radierer: nur Marker', nur: 'marker' },
         /* `nur` NENNT DIE MARKENART, NICHT DEN MODUS (E489).
            Hier stand `nur: 'band'` — und das Abdeckband heisst als Marke
            `abdeck` (so setzt es `art: tool` beim Zeichnen, so liest es
@@ -53487,16 +53654,16 @@ const Marken = (() => {
        sind die alten (`line`, `arrow`, `rectangle`, `ellipse`): sie stehen so
        in jeder gespeicherten Marke, und daran wird nichts geändert (§53.3). */
     const FORMEN = [
-        { id: 'line', name: 'Linie', zeichen: '╱', titel: 'Gerade Linie' },
-        { id: 'arrow', name: 'Pfeil', zeichen: '→', titel: 'Pfeil' },
-        { id: 'rectangle', name: 'Rechteck', zeichen: '□', titel: 'Rechteck' },
-        { id: 'ellipse', name: 'Ellipse', zeichen: '○', titel: 'Ellipse' },
+        { id: 'line', name: 'Linie', zeichen: '╱', sym: 'formLine', titel: 'Gerade Linie' },
+        { id: 'arrow', name: 'Pfeil', zeichen: '→', sym: 'formArrow', titel: 'Pfeil' },
+        { id: 'rectangle', name: 'Rechteck', zeichen: '□', sym: 'formRect', titel: 'Rechteck' },
+        { id: 'ellipse', name: 'Ellipse', zeichen: '○', sym: 'formEllipse', titel: 'Ellipse' },
         /* ZWEI MEHR, WIE GOODNOTES (E465): das Dreieck und das Rechteck mit
            runden Ecken. Beide sind Zweipunkt-Formen wie die vier davor —
            der Zeichner unterscheidet sie nur im Ergebnis. Neue Kennungen,
            englisch wie die alten, weil sie so in der Marke stehen (§53.3). */
-        { id: 'triangle', name: 'Dreieck', zeichen: '△', titel: 'Dreieck' },
-        { id: 'roundrect', name: 'Rund', zeichen: '▢', titel: 'Rechteck mit runden Ecken' },
+        { id: 'triangle', name: 'Dreieck', zeichen: '△', sym: 'formTriangle', titel: 'Dreieck' },
+        { id: 'roundrect', name: 'Rund', zeichen: '▢', sym: 'formRoundrect', titel: 'Rechteck mit runden Ecken' },
         /* DIE KURVE (E483, L133). Sie ist die erste Form mit DREI Punkten:
            Anfang, Ende und der Griff dazwischen, der sie biegt. Gezogen wird
            sie wie eine Linie; danach steht am Rahmen ein zusaetzlicher Griff
@@ -53507,7 +53674,7 @@ const Marken = (() => {
            vorhandene Marke sich aendert (§53.3). `move`, `scale` und `rotate`
            fassen ohnehin ALLE Punkte an — die Kurve wandert, waechst und
            dreht sich damit von selbst richtig. */
-        { id: 'curve', name: 'Kurve', zeichen: '⌒', titel: 'Kurve — nach dem Ziehen biegt der Griff in der Mitte sie' }
+        { id: 'curve', name: 'Kurve', zeichen: '⌒', sym: 'formCurve', titel: 'Kurve — nach dem Ziehen biegt der Griff in der Mitte sie' }
     ];
     const FORM_VORGABE = 'line';
     const formArtLesen = () => {
@@ -53524,15 +53691,15 @@ const Marken = (() => {
        Breite dem Druck folgt: der Fueller massvoll, der Pinsel kraeftig.
        Alte Marken ohne `stil` bleiben, wie sie waren (§53.3). */
     const STIFTE = [
-        { id: 'fueller', name: 'Füller', zeichen: '🖋' },
-        { id: 'kugel', name: 'Kugelschreiber', zeichen: '🖊' },
-        { id: 'pinsel', name: 'Pinsel', zeichen: '🖌' },
+        { id: 'fueller', name: 'Füller', zeichen: '🖋', sym: 'penFountain' },
+        { id: 'kugel', name: 'Kugelschreiber', zeichen: '🖊', sym: 'penBall' },
+        { id: 'pinsel', name: 'Pinsel', zeichen: '🖌', sym: 'penBrush' },
         /* DER BLEISTIFT (E465), wie GoodNotes' Pencil: duenn, leicht
            durchscheinend, mit koerniger Kante — die Flaeche des Fuellers,
            nur schmaler und mit 72 % Deckung. Er steht am Ende der Reihe,
            damit der Wechsel Fueller → Kugel → Pinsel bleibt, wie test343 ihn
            kennt. */
-        { id: 'bleistift', name: 'Bleistift', zeichen: '✏' },
+        { id: 'bleistift', name: 'Bleistift', zeichen: '✏', sym: 'penPencil' },
         /* DER SCHUTZLEITER (E490, Redurs Wunsch vom 7. September). Kein
            gewöhnlicher Stift, sondern die Leitung, die im Schaltplan grün-gelb
            und strichpunktiert gezeichnet wird — Redion ist eine App für einen
@@ -53540,7 +53707,7 @@ const Marken = (() => {
     
            ER STEHT AM ENDE DER REIHE, wie der Bleistift aus demselben Grund:
            der Wechsel Füller → Kugel → Pinsel bleibt, wie `test343` ihn kennt. */
-        { id: 'schutzleiter', name: 'Schutzleiter', zeichen: '⏚' },
+        { id: 'schutzleiter', name: 'Schutzleiter', zeichen: '⏚', sym: 'penEarth' },
         /* DER LEITERSTIFT (E509, Redurs Wunsch vom 8. September). Er zeichnet
            nicht anders als der Kugelschreiber — er bringt eine andere
            FARBREIHE mit: die zehn Adern eines Schaltplans, jede mit ihrem
@@ -53552,7 +53719,7 @@ const Marken = (() => {
            Bleistift → Schutzleiter ist die, die `test343` kennt und die eine
            Hand sich gemerkt hat; ein neuer Stift in der Mitte hätte jeden
            zweiten Klick woandershin geführt. */
-        { id: 'leiter', name: 'Leiter', zeichen: '⌁' }
+        { id: 'leiter', name: 'Leiter', zeichen: '⌁', sym: 'penWire' }
     ];
     /* ══ DIE FARBEN DES SCHUTZLEITERS ═══════════════════════════════════════
        Grün-gelb ist keine Mischfarbe, sondern ZWEI Farben — deshalb wird der
@@ -53671,32 +53838,32 @@ const Marken = (() => {
        und wird beim Bauen eigens behandelt; die Formen selbst stehen in
        `FORMEN`. */
     const WERKZEUGE = [
-        { id: 'schreiben', zeichen: '✎', name: 'Schreiben', titel: 'Schreiben — die Zeichenschicht ist durchlässig' },
-        { id: 'select', zeichen: '⌖', name: 'Auswahl', titel: 'Marken auswählen, gemeinsam bewegen oder löschen' },
-        { id: 'stift', zeichen: '🖍', name: 'Stift', titel: 'Freihand mit geglätteter Linie' },
-        { id: 'marker', zeichen: '▰', name: 'Marker', titel: 'Transparenter Marker' },
-        { id: 'formen', zeichen: '□', name: 'Form', titel: 'Formen — welche, steht darunter' },
+        { id: 'schreiben', zeichen: '✎', sym: 'inkHand', name: 'Schreiben', titel: 'Schreiben — die Zeichenschicht ist durchlässig' },
+        { id: 'select', zeichen: '⌖', sym: 'inkLasso', name: 'Auswahl', titel: 'Marken auswählen, gemeinsam bewegen oder löschen' },
+        { id: 'stift', zeichen: '🖍', sym: 'inkPen', name: 'Stift', titel: 'Freihand mit geglätteter Linie' },
+        { id: 'marker', zeichen: '▰', sym: 'inkMarker', name: 'Marker', titel: 'Transparenter Marker' },
+        { id: 'formen', zeichen: '□', sym: 'inkShapes', name: 'Form', titel: 'Formen — welche, steht darunter' },
         /* „Abdecken", NICHT „Abdeckband" (Fund des breiten Laufs nach E496).
            Als die Werkzeugliste hierher zusammengezogen wurde, bekam dieser
            Knopf im Vorbeigehen einen neuen Namen — und stand danach anders da
            als im Menüband (`register/menueband.ts`), das weiter „Abdecken"
            sagte. Ein Werkzeug mit zwei Namen ist genau das, wovor §8 warnt.
            `test266 §1` hat es gehalten; nur hat den Lauf niemand gefahren. */
-        { id: 'abdeck', zeichen: '▬', name: 'Abdecken',
+        { id: 'abdeck', zeichen: '▬', sym: 'inkCover', name: 'Abdecken',
             titel: 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf' },
-        { id: 'zettel', zeichen: '🗒', name: 'Haftnotiz',
+        { id: 'zettel', zeichen: '🗒', sym: 'inkNote', name: 'Haftnotiz',
             titel: 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn' },
-        { id: 'text', zeichen: 'T', name: 'Text', titel: 'Textanmerkung' },
-        { id: 'zeichen', zeichen: '⚡', name: 'Fachzeichen', titel: 'Ein elektrotechnisches Symbol auf die Seite setzen' },
+        { id: 'text', zeichen: 'T', sym: 'inkText', name: 'Text', titel: 'Textanmerkung' },
+        { id: 'zeichen', zeichen: '⚡', sym: 'inkSymbol', name: 'Fachzeichen', titel: 'Ein elektrotechnisches Symbol auf die Seite setzen' },
         /* DIE ELEMENTE (E494): dieselbe Bewegung wie beim Fachzeichen — ein Tipp
            setzt etwas Fertiges —, nur kommt es nicht aus dem Register, sondern
            aus dem, was der Nutzer selbst gezeichnet und gesichert hat. */
-        { id: 'elemente', zeichen: '⭐', name: 'Elemente',
+        { id: 'elemente', zeichen: '⭐', sym: 'inkStamp', name: 'Elemente',
             titel: 'Ein gesichertes Element setzen — sichern über die Auswahl («Als Element»)' },
-        { id: 'bild', zeichen: '🖼', name: 'Bild',
+        { id: 'bild', zeichen: '🖼', sym: 'inkImage', name: 'Bild',
             titel: 'Ein Foto, ein GIF oder eine Seite aus einer PDF auf das Blatt legen — '
                 + 'danach verschieben, ziehen und drehen wie jede Marke' },
-        { id: 'radierer', zeichen: '⌫', name: 'Radieren',
+        { id: 'radierer', zeichen: '⌫', sym: 'inkEraser', name: 'Radieren',
             titel: 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker' },
         /* ══ DER LASERPOINTER (E512) ═══════════════════════════════════════════
            Redur, 8. September: „alter, wieso habe ich keinen Laserpointer?"
@@ -53708,7 +53875,7 @@ const Marken = (() => {
            ER SCHREIBT NICHTS. Kein Eintrag in `marks`, kein Schritt im
            Verlauf, nichts in der Sicherung — er ist ein Finger, kein Stift.
            Das ist die ganze Zusage dieses Werkzeugs, und `test480` hält sie. */
-        { id: 'laser', zeichen: '⦿', name: 'Laserpointer',
+        { id: 'laser', zeichen: '⦿', sym: 'inkLaser', name: 'Laserpointer',
             titel: 'Zeigen, nicht schreiben — der Strahl verblasst von selbst und wird nie gespeichert' }
     ];
     /* ZWEI ARTEN, WIE IN GOODNOTES: ein Punkt, der mitgeht, oder eine Linie,
@@ -53726,10 +53893,10 @@ const Marken = (() => {
        der Mitte, wie die schwebende Leiste in GoodNotes. Gemerkt wird der
        Platz in `meta`, also überlebt er das Schliessen. */
     const LAGEN = [
-        { id: 'oben', zeichen: '⤒', name: 'oben' },
-        { id: 'links', zeichen: '⇤', name: 'links' },
-        { id: 'rechts', zeichen: '⇥', name: 'rechts' },
-        { id: 'unten', zeichen: '⤓', name: 'unten in der Mitte' }
+        { id: 'oben', zeichen: '⤒', sym: 'dockTop', name: 'oben' },
+        { id: 'links', zeichen: '⇤', sym: 'dockLeft', name: 'links' },
+        { id: 'rechts', zeichen: '⇥', sym: 'dockRight', name: 'rechts' },
+        { id: 'unten', zeichen: '⤓', sym: 'dockBottom', name: 'unten in der Mitte' }
     ];
     const M_LAGE = 'zeichnen:leistenlage';
     const lageJetzt = () => {
@@ -57463,11 +57630,32 @@ const Marken = (() => {
     
            2. Welches Werkzeug GILT, stand nur in einer CSS-Klasse. Eine Klasse
               ist für ein Vorleseprogramm nicht da. `aria-pressed` sagt es. */
+        /* ══ GEZEICHNETE ZEICHEN STATT EMOJI (E515) ═══════════════════════════
+           Redur, 9. September, mit einem Ausschnitt der GoodNotes-Leiste:
+           „nehme die Symbole für die Redion bitte 1:1."
+    
+           Die Leiste trug ✎ ⌖ 🖍 ▰ □ ▬ 🗒 T ⚡ ⭐ 🖼 ⌫ ⦿ — dreizehn Zeichen aus
+           fünf verschiedenen Welten. `register/symbole.ts` beschreibt seit
+           jeher, warum das nicht geht: Emoji sind Bilder, keine Zeichen. Sie
+           tragen eigene Farbe und eigene Strichstärke, sie sehen auf jedem
+           System anders aus, und sie sitzen nicht auf einer Linie.
+    
+           Jetzt kommt jedes aus demselben Register wie der Rest der Schale:
+           24 × 24, Striche in der Farbe der Zeile, überall dieselbe Stärke.
+    
+           DAS EMOJI BLEIBT ALS RÜCKFALL. `artZeichen` braucht ein TEXTzeichen —
+           in der Sperrliste, im Inspector, in einer Meldung —, und dort ist ein
+           SVG keine Antwort. Deshalb trägt jedes Werkzeug beides (§8: EINE
+           Liste, zwei Ansichten davon). */
         const button = (tool) => {
             const w = WERKZEUGE.find(x => x.id === tool);
+            const sym = w.sym;
+            const bild = sym
+                ? `<span class="zeichen" data-sym="${sym}" aria-hidden="true"></span>`
+                : `<span class="zeichen" aria-hidden="true">${w.zeichen}</span>`;
             return `<button data-wz="${w.id}"${w.id === 'schreiben' ? ' class="on"' : ''} ` +
                 `aria-pressed="${w.id === 'schreiben' ? 'true' : 'false'}" title="${w.titel}">` +
-                `<span class="zeichen" aria-hidden="true">${w.zeichen}</span><span class="wort">${w.name}</span></button>`;
+                bild + `<span class="wort">${w.name}</span></button>`;
         };
         tools.innerHTML =
             button('schreiben') +
@@ -57483,9 +57671,14 @@ const Marken = (() => {
                    ihn wiedererkennt, ohne ihn zu öffnen. */
                 (() => {
                     const jetzt = FORMEN.find(f => f.id === formArt) || FORMEN[0];
+                    /* HIER BLEIBT DAS FORMZEICHEN (E515): der Knopf zeigt nicht „Formen",
+                       sondern WELCHE Form gerade gewählt ist — ein Dreieck, ein Pfeil,
+                       eine Kurve. Ein gemeinsames Werkzeugzeichen nähme genau die
+                       Auskunft weg, für die dieser Knopf da ist. */
                     return `<button data-wz="formen" data-form="${jetzt.id}" ` +
                         `title="${jetzt.titel} — die Form wählst du darunter">` +
-                        `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">Form</span></button>`;
+                        `<span class="zeichen" data-sym="${jetzt.sym || 'inkShapes'}" aria-hidden="true"></span>` +
+                        '<span class="wort">Form</span></button>';
                 })() +
                 button('abdeck') +
                 button('zettel') +
@@ -57514,15 +57707,16 @@ const Marken = (() => {
                 (() => {
                     const jetzt = RADIERER.find(r => r.id === (controls.radierModusVon ? controls.radierModusVon() : RADIER_VORGABE)) || RADIERER[0];
                     return `<button data-act="radiermodus" data-gruppe="radierer" data-modus="${jetzt.id}" title="${jetzt.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}">` +
-                        `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
+                        `<span class="zeichen" data-sym="${jetzt.sym}" aria-hidden="true"></span>` +
+                        `<span class="wort">${jetzt.name}</span></button>`;
                 })() +
                 /* JEDER KNOPF KENNT SEINE GRUPPE (E356): am Telefon zeigt die Leiste
                    nur die Gruppen des gewaehlten Werkzeugs — Farben und Breiten beim
                    Stift, den Modus beim Radierer, Kopieren und Loeschen bei der
                    Auswahl. Das CSS liest `data-gruppe` gegen `data-tool` der Leiste. */
                 '<span class="blatt-trenn" data-gruppe="verlauf"></span>' +
-                '<button data-act="undo" data-gruppe="verlauf" title="Rückgängig" disabled><span class="zeichen" aria-hidden="true">↶</span><span class="wort">Zurück</span></button>' +
-                '<button data-act="redo" data-gruppe="verlauf" title="Wiederholen" disabled><span class="zeichen" aria-hidden="true">↷</span><span class="wort">Vor</span></button>' +
+                '<button data-act="undo" data-gruppe="verlauf" title="Rückgängig" disabled><span class="zeichen" data-sym="undo" aria-hidden="true"></span><span class="wort">Zurück</span></button>' +
+                '<button data-act="redo" data-gruppe="verlauf" title="Wiederholen" disabled><span class="zeichen" data-sym="redo" aria-hidden="true"></span><span class="wort">Vor</span></button>' +
                 /* DER PLATZ DER LEISTE (E512) — bei „Zurück" und „Vor", weil beide
                    zu JEDEM Werkzeug gehören und darum immer stehen. */
                 (() => {
@@ -57531,44 +57725,44 @@ const Marken = (() => {
                     return `<button data-act="lage" data-gruppe="verlauf" data-lage="${jetzt.id}" ` +
                         `title="Leiste verschieben — jetzt ${jetzt.name}, als Nächstes ${naechst.name}" ` +
                         `aria-label="Leiste verschieben, jetzt ${jetzt.name}">` +
-                        `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span>` +
+                        `<span class="zeichen" data-sym="${jetzt.sym}" aria-hidden="true"></span>` +
                         `<span class="wort">Platz</span></button>`;
                 })() +
-                '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen" aria-hidden="true">🗑</span><span class="wort">Löschen</span></button>' +
+                '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen" data-sym="trash" aria-hidden="true"></span><span class="wort">Löschen</span></button>' +
                 /* KOPIEREN UND EINSETZEN (E353) — auch ohne Tastatur, am Telefon. */
-                '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen" aria-hidden="true">⧉</span><span class="wort">Kopieren</span></button>' +
-                '<button data-act="paste" data-gruppe="auswahl" title="Kopiertes einsetzen (Strg+V)" disabled><span class="zeichen" aria-hidden="true">📋</span><span class="wort">Einsetzen</span></button>' +
+                '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen" data-sym="copy" aria-hidden="true"></span><span class="wort">Kopieren</span></button>' +
+                '<button data-act="paste" data-gruppe="auswahl" title="Kopiertes einsetzen (Strg+V)" disabled><span class="zeichen" data-sym="clipboard" aria-hidden="true"></span><span class="wort">Einsetzen</span></button>' +
                 /* AUSWAHL WIE GOODNOTES (E466): Ausschneiden, nach vorn, nach hinten,
                    Sperren — alles an der Auswahl, alles ein Schritt im Verlauf. */
-                '<button data-act="cut" data-gruppe="auswahl" title="Auswahl ausschneiden (Strg+X)" disabled><span class="zeichen" aria-hidden="true">✂</span><span class="wort">Ausschneiden</span></button>' +
-                '<button data-act="vor" data-gruppe="auswahl" title="Auswahl nach vorn — über alles andere" disabled><span class="zeichen" aria-hidden="true">⤒</span><span class="wort">Nach vorn</span></button>' +
-                '<button data-act="hinten" data-gruppe="auswahl" title="Auswahl nach hinten — unter alles andere" disabled><span class="zeichen" aria-hidden="true">⤓</span><span class="wort">Nach hinten</span></button>' +
-                '<button data-act="sperren" data-gruppe="auswahl" aria-pressed="false" title="Auswahl sperren: nicht mehr schieben, ziehen, drehen, löschen oder radieren" disabled><span class="zeichen" aria-hidden="true">🔒</span><span class="wort">Sperren</span></button>' +
+                '<button data-act="cut" data-gruppe="auswahl" title="Auswahl ausschneiden (Strg+X)" disabled><span class="zeichen" data-sym="scissors" aria-hidden="true"></span><span class="wort">Ausschneiden</span></button>' +
+                '<button data-act="vor" data-gruppe="auswahl" title="Auswahl nach vorn — über alles andere" disabled><span class="zeichen" data-sym="layerUp" aria-hidden="true"></span><span class="wort">Nach vorn</span></button>' +
+                '<button data-act="hinten" data-gruppe="auswahl" title="Auswahl nach hinten — unter alles andere" disabled><span class="zeichen" data-sym="layerDown" aria-hidden="true"></span><span class="wort">Nach hinten</span></button>' +
+                '<button data-act="sperren" data-gruppe="auswahl" aria-pressed="false" title="Auswahl sperren: nicht mehr schieben, ziehen, drehen, löschen oder radieren" disabled><span class="zeichen" data-sym="lock" aria-hidden="true"></span><span class="wort">Sperren</span></button>' +
                 /* EIN VERWEIS (E468): der Auswahl eine Adresse oder eine Seite geben. */
-                '<button data-act="verweis" data-gruppe="auswahl" title="Der Auswahl einen Verweis geben: eine Adresse (https://…) oder eine Seite ([[Name]]) — im Lesemodus antippen" disabled><span class="zeichen" aria-hidden="true">🔗</span><span class="wort">Verweis</span></button>' +
+                '<button data-act="verweis" data-gruppe="auswahl" title="Der Auswahl einen Verweis geben: eine Adresse (https://…) oder eine Seite ([[Name]]) — im Lesemodus antippen" disabled><span class="zeichen" data-sym="link" aria-hidden="true"></span><span class="wort">Verweis</span></button>' +
                 /* ALS ELEMENT SICHERN (E494): der einzige Weg IN die Bibliothek. Er
                    steht bei der Auswahl, weil ein Element eine Auswahl ist. */
-                '<button data-act="element-sichern" data-gruppe="auswahl" title="Die Auswahl als Element sichern — danach mit dem Werkzeug «Elemente» auf jede Seite setzen" disabled><span class="zeichen" aria-hidden="true">⭐</span><span class="wort">Als Element</span></button>' +
+                '<button data-act="element-sichern" data-gruppe="auswahl" title="Die Auswahl als Element sichern — danach mit dem Werkzeug «Elemente» auf jede Seite setzen" disabled><span class="zeichen" data-sym="star" aria-hidden="true"></span><span class="wort">Als Element</span></button>' +
                 /* DAS ZUBEHÖR DER ELEMENTE: ein Knopf, der die Bibliothek öffnet und
                    sagt, welches Element der nächste Tipp setzt. */
-                '<button data-act="elemente" data-gruppe="elemente" title="Elemente-Bibliothek öffnen und wählen, was der nächste Tipp setzt"><span class="zeichen" aria-hidden="true">⭐</span><span class="wort">Elemente</span></button>' +
+                '<button data-act="elemente" data-gruppe="elemente" title="Elemente-Bibliothek öffnen und wählen, was der nächste Tipp setzt"><span class="zeichen" data-sym="star" aria-hidden="true"></span><span class="wort">Elemente</span></button>' +
                 /* Das Lineal ist ein SCHALTER neben den Werkzeugen: solange es
                    anliegt, rasten Linie und Pfeil auf 15°-Schritte (E267). */
                 '<button data-act="lineal" data-gruppe="lineal" aria-pressed="false" ' +
                 'title="Lineal: Linie und Pfeil rasten auf 15°-Schritte">' +
-                '<span class="zeichen" aria-hidden="true">📐</span><span class="wort">Lineal</span></button>' +
+                '<span class="zeichen" data-sym="inkRuler" aria-hidden="true"></span><span class="wort">Lineal</span></button>' +
                 /* FORMEN (E355): ein Schalter wie das Lineal — an, und ein gehaltener
                    Strich wird zur Linie, zum Kreis, zum Rechteck. */
                 `<button data-act="formen" data-gruppe="formen" aria-pressed="${controls.formenAn ? (controls.formenAn() ? 'true' : 'false') : 'true'}"` +
                 `${controls.formenAn && controls.formenAn() ? ' class="on"' : ''} ` +
                 'title="Formen erkennen: einen Kreis, ein Rechteck oder eine Linie ziehen und am Ende kurz halten">' +
-                '<span class="zeichen" aria-hidden="true">◯</span><span class="wort">Formen</span></button>' +
+                '<span class="zeichen" data-sym="shapeSnap" aria-hidden="true"></span><span class="wort">Formen</span></button>' +
                 /* KRITZELN LOESCHT (E466): ein Schalter wie „Formen" — an, und ein
                    dichtes Hin-und-her ueber einem Strich nimmt ihn weg. */
                 `<button data-act="kritzel" data-gruppe="formen" aria-pressed="${controls.kritzelAn ? (controls.kritzelAn() ? 'true' : 'false') : 'true'}"` +
                 `${controls.kritzelAn && controls.kritzelAn() ? ' class="on"' : ''} ` +
                 'title="Kritzeln löscht: dicht über einen Strich hin und her fahren, und er ist weg">' +
-                '<span class="zeichen" aria-hidden="true">〰</span><span class="wort">Kritzeln</span></button>' +
+                '<span class="zeichen" data-sym="scribble" aria-hidden="true"></span><span class="wort">Kritzeln</span></button>' +
                 /* DIE SCHRIFT (E360): Familie, Groesse, Fett, Rahmen — beim Text und
                    bei der Auswahl; wirkt auf Gewaehltes und auf den naechsten Text. */
                 (() => {
@@ -57612,7 +57806,7 @@ const Marken = (() => {
                         (st.id === jetzt ? ' class="on"' : '') +
                         ` aria-pressed="${st.id === jetzt ? 'true' : 'false'}"` +
                         ` title="${st.name}" aria-label="Stift ${st.name}">` +
-                        `<span class="zeichen" aria-hidden="true">${st.zeichen}</span>` +
+                        `<span class="zeichen" data-sym="${st.sym}" aria-hidden="true"></span>` +
                         `<span class="wort">${st.name}</span></button>`).join('');
                 })() +
                 /* DAS ZUBEHÖR ZUM FORMEN-WERKZEUG (E375). Es steht in derselben
@@ -57621,7 +57815,7 @@ const Marken = (() => {
                 '<span class="blatt-trenn" data-gruppe="form"></span>' +
                 FORMEN.map(f => `<button data-act="formart" data-gruppe="form" data-form="${f.id}"` +
                     (f.id === formArt ? ' class="on"' : '') + ` aria-pressed="${f.id === formArt ? 'true' : 'false'}"` +
-                    ` title="${f.titel}"><span class="zeichen" aria-hidden="true">${f.zeichen}</span>` +
+                    ` title="${f.titel}"><span class="zeichen" data-sym="${f.sym || 'inkShapes'}" aria-hidden="true"></span>` +
                     `<span class="wort">${f.name}</span></button>`).join('') +
                 /* ══ DIE ZWEI ARTEN DES LASERS (E512) ═══════════════════════════════
                    Wie in GoodNotes: ein Punkt oder eine Spur. Sie stehen in der
@@ -58342,16 +58536,28 @@ const Marken = (() => {
                     target.title = 'Leiste verschieben — jetzt ' + naechst.name + ', als Nächstes ' + dann.name;
                     target.setAttribute('aria-label', 'Leiste verschieben, jetzt ' + naechst.name);
                     const z = target.querySelector('.zeichen');
-                    if (z)
-                        z.textContent = naechst.zeichen;
+                    if (z) {
+                        z.dataset.sym = naechst.sym;
+                        z.textContent = '';
+                    }
+                    try {
+                        Register.symbole.fuelle(target);
+                    }
+                    catch { /* dann bleibt es leer */ }
                     /* Und alle anderen Leisten derselben Seite ziehen mit — es ist
                        EIN Platz, nicht einer je Blatt. */
                     document.querySelectorAll('.blatt-reihe').forEach(r => { r.dataset.lage = naechst.id; });
                     document.querySelectorAll('[data-act="lage"]').forEach(k => {
                         k.dataset.lage = naechst.id;
                         const zz = k.querySelector('.zeichen');
-                        if (zz)
-                            zz.textContent = naechst.zeichen;
+                        if (zz) {
+                            zz.dataset.sym = naechst.sym;
+                            zz.textContent = '';
+                        }
+                        try {
+                            Register.symbole.fuelle(k);
+                        }
+                        catch { /* dann bleibt es leer */ }
                     });
                     return;
                 }
@@ -58416,7 +58622,15 @@ const Marken = (() => {
                     if (kopf && f) {
                         kopf.dataset.form = wahl;
                         kopf.title = f.titel + ' — die Form wählst du darunter';
-                        kopf.innerHTML = `<span class="zeichen" aria-hidden="true">${f.zeichen}</span><span class="wort">Form</span>`;
+                        /* Auch beim Wechsel gezeichnet, nicht als Textzeichen (E515) —
+                           sonst stünde nach dem ersten Klick wieder ein „□" in einer
+                           Reihe von gezeichneten Werkzeugen. */
+                        kopf.innerHTML = `<span class="zeichen" data-sym="${f.sym || 'inkShapes'}" aria-hidden="true"></span>` +
+                            '<span class="wort">Form</span>';
+                        try {
+                            Register.symbole.fuelle(kopf);
+                        }
+                        catch { /* dann bleibt es leer */ }
                         tools.querySelectorAll('[data-wz]').forEach(node => node.classList.remove('on'));
                         kopf.classList.add('on');
                     }
@@ -58436,7 +58650,12 @@ const Marken = (() => {
                     controls.setzeRadierModus(naechster.id);
                     target.dataset.modus = naechster.id;
                     target.title = `${naechster.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}`;
-                    target.innerHTML = `<span class="zeichen" aria-hidden="true">${naechster.zeichen}</span><span class="wort">${naechster.name}</span>`;
+                    target.innerHTML = `<span class="zeichen" data-sym="${naechster.sym}" aria-hidden="true"></span>` +
+                        `<span class="wort">${naechster.name}</span>`;
+                    try {
+                        Register.symbole.fuelle(target);
+                    }
+                    catch { /* dann bleibt es leer */ }
                     /* Wer den Radierer einstellt, will radieren. */
                     if (Zeichenziel.werkzeugVon?.(controls) !== 'radierer') {
                         controls.setzeWerkzeug('radierer');
@@ -58530,6 +58749,13 @@ const Marken = (() => {
                 strichSetzen(Number(target.dataset.b));
             }
         });
+        /* DIE ZEICHEN MALEN (E515). `data-sym` ist eine Bestellung, kein Bild —
+           das Register füllt sie. Ohne das Register bleibt das Feld leer und
+           die Wörter tragen die Leiste; deshalb der Griff drumherum. */
+        try {
+            Register.symbole.fuelle(tools);
+        }
+        catch { /* dann ohne Zeichen */ }
         row.appendChild(tools);
         if (extra) {
             const fixed = document.createElement('div');
@@ -68489,6 +68715,13 @@ const ChronikDaten = {
                     "gemeint": "Weitermachen.",
                     "besser": "Mach weiter.",
                     "besserePrompt": "„Weiter mit X\" spart eine Rückfrage, wenn mehrere Dinge offen sind."
+                },
+                {
+                    "zeit": "ca. 04:50",
+                    "wortlaut": "Nehme die symbole. Für die redion bitte 1:1",
+                    "gemeint": "Die Werkzeugzeichen aus dem mitgeschickten GoodNotes-Bild sollen Redions Zeichenleiste tragen — genau diese Sorte Zeichen, nicht ähnliche.",
+                    "besser": "Nimm die Symbole aus dem Bild — dieselbe Strichstärke, dieselbe Farbe — und ersetze damit die Emoji in der Zeichenleiste.",
+                    "besserePrompt": "„Ersetze in der Zeichenleiste jedes Emoji durch ein gezeichnetes Zeichen wie im Bild (gleiche Strichstärke, currentColor). Wo ein Buchstabe mehr sagt als ein Strich, sag mir welche und warum.\" — der zweite Satz spart die Rückfrage, was mit dem „Aa\" der Schriftart passieren soll."
                 }
             ],
             "arbeit": [
@@ -68503,23 +68736,49 @@ const ChronikDaten = {
                 {
                     "was": "E514 — Die Chronik: PROBLEME.md, UR.md und die Ansicht in Redion",
                     "vonCommit": "dc9bbcab",
+                    "bisCommit": "dd694ff7",
+                    "zeitraum": "04:12 – 04:47",
+                    "pruefungen": "test481",
+                    "dauer": "ca. 35 min"
+                },
+                {
+                    "was": "E515 — Die Zeichen der Leiste: vierunddreissig gezeichnete statt Emoji, und fünfundsiebzig Pixel, die niemand sah",
+                    "vonCommit": "dd694ff7",
                     "bisCommit": "(dieser Bogen)",
-                    "zeitraum": "ab 04:12",
-                    "pruefungen": "test481"
+                    "zeitraum": "ab 04:47",
+                    "pruefungen": "test480 §5 neu (acht Zusagen); test351 war rot und ist wieder grün"
                 }
             ],
             "zahlen": {
-                "commits": 2,
-                "entscheidungen": 2
+                "commits": 3,
+                "entscheidungen": 3
             },
-            "groesstesProblem": "Die PDF, die angeblich die aktuelle kopiert — und die ich NICHT gefunden habe. Drei Wege gemessen, alle drei sauber. Das ist der unbefriedigendste Zustand von allen: nicht behoben und nicht widerlegt. Ich habe es als L139 aufgeschrieben, statt es als erledigt zu führen, und brauche von Redur genau eine Angabe: welcher Knopf, in welcher Ansicht.",
-            "interessantesteAnfrage": "Dieses Buch hier. „Als ein zweites Gehirn\" — nicht als Protokoll. Der Unterschied ist, dass ein Protokoll aufzählt, was passiert ist, und ein Gehirn sagt, WARUM so und nicht anders. Deshalb steht in UR.md die Begründung vor dem Ergebnis, und deshalb stehen die falschen Vermutungen genauso drin wie die richtigen Funde.",
+            "groesstesProblem": "Nicht die Zeichen selbst, sondern was sie kosteten. Die gezeichneten Zeichen sind fest 18 px breit, die Emoji davor im Mittel rund 12 — dreizehnmal sechs Pixel sind fünfundsiebzig, und daran kippte die Werkzeugzeile am Rechner in eine zweite. Das Bild hätte es nie gemeldet: zwei Zeilen sehen ordentlich aus. Gefunden hat es test351, weil dort seit E359 eine Zahl steht statt eines Eindrucks. Daneben bleibt die PDF aus L139 offen — nicht behoben und nicht widerlegt.",
+            "interessantesteAnfrage": "„Nehme die symbole. Für die redion bitte 1:1\" — vier Wörter, und der richtige Schluss daraus war nicht „male dreizehn neue Bilder\", sondern „Redion hat diese Sorte Zeichen längst, nur die meistbenutzte Fläche der App war beim Emoji geblieben\". Wer die Zeichen in der PDF-Fläche gezeichnet hätte, hätte einen zweiten Zeichensatz gebaut, der nach dem zweiten Durchgang anders aussieht als der erste.",
             "massnahmen": [
                 {
                     "zeit": "04:12",
                     "was": "`Notebook.createNotebook` nach aussen gegeben.",
                     "warum": "Damit „Neu erstellen\" ein Notizbuch anlegen kann, ohne eine zweite Anlege-Maschine zu bauen.",
                     "risiko": "keins — dieselbe Funktion, ein zweiter Aufrufer"
+                },
+                {
+                    "zeit": "05:10",
+                    "was": "Vierunddreissig Zeichen in `Register.symbole` ergänzt; die Leiste nennt nur noch ihren Namen.",
+                    "warum": "Ein zweiter Zeichensatz in der PDF-Fläche wäre nach dem zweiten Durchgang verschieden, und niemand hätte gemerkt, welcher gilt (§8).",
+                    "risiko": "keins an Daten — Oberfläche; die vier Stellen, die ihr Markup neu schreiben, mussten das Malen wiederholen"
+                },
+                {
+                    "zeit": "05:40",
+                    "was": "Polsterung der Werkzeugknöpfe 9 → 7 px, Abstand zum Wort 5 → 4 px, Zeichen neben einem Wort 18 → 16 px.",
+                    "warum": "Gemessen: mit Wort brauchten die dreizehn Werkzeuge 1190 px von 1168 vorhandenen. Danach 1099 — eine Zeile, 69 px Luft. Wo kein Wort steht, bleibt das Zeichen 18 px, in der Seitenspalte 20.",
+                    "risiko": "keins an Daten; die 44-px-Trefffläche hängt an der Höhe, nicht an der Polsterung (§37)"
+                },
+                {
+                    "zeit": "06:20",
+                    "was": "Fueller, Kugelschreiber und Zettel neu gezeichnet — nicht an der Spitze, sondern am Umriss.",
+                    "warum": "Gemessen: die drei Stifte teilten bis zu 73 % ihrer Tinte bei 16 px. Der erste Versuch mit schärferen Spitzen machte es schlimmer (85 %), weil bei dieser Grösse der Schaft die ganze Tinte trägt. Jetzt: Feder, aufrechter Kugelschreiber, schräger Bleistift — drei Umrisse.",
+                    "risiko": "keins an Daten — Oberfläche"
                 }
             ]
         }
@@ -68679,6 +68938,31 @@ const ChronikDaten = {
             "offen": "Der vierte Weg — `page-add-pdf` im Seitenmenü des Dokuments — liess sich vom Prüflauf nicht öffnen. Dort wäre auch die plausibelste Ursache: dieser Weg fügt MIT ABSICHT in das offene Dokument ein.",
             "wasFehlt": "Eine Angabe von Redur: welcher Knopf, in welcher Ansicht. Ein Bild mit einem Pfeil würde reichen.",
             "stand": "Nicht behoben und nicht widerlegt. Steht als L139 — nicht gefunden ist etwas anderes als nicht vorhanden."
+        },
+        {
+            "nr": "P14",
+            "datum": "2026-09-09",
+            "titel": "Die Werkzeugzeile kippte in eine zweite — durch Zeichen, die schöner waren",
+            "schwere": "mittel",
+            "symptom": "Nach dem Einbau der gezeichneten Zeichen standen die dreizehn Werkzeuge am Rechner in zwei Zeilen statt einer. test351 meldete [2,true] statt [1,true].",
+            "falscheVermutung": "Der erste Gedanke war, die Zusage sei zu streng und gehöre gelockert — genau wie zwei Tage zuvor bei test348 und test438, wo aus „zwei Zeilen\" ehrlich „höchstens drei\" wurde. Das wäre hier falsch gewesen: dort war ein Knopf DAZUGEKOMMEN, hier war nur ein Zeichen breiter geworden.",
+            "wieGesucht": "Nachgemessen statt geschätzt, in einem Arbeitsbaum am alten Stand: bei 1600 px Fenster und 1184 px Leiste brauchten die dreizehn Knöpfe mit Emoji 1067 px, mit Zeichnung 1142. Der Unterschied sind rund 6 px je Knopf — die Zeichnung ist fest 18 px breit, ein Emoji war im Mittel 12.",
+            "ursache": "Nicht die Zeichen, sondern ihre feste Breite: dreizehnmal sechs Pixel.",
+            "behebung": "An drei Stellen zurückgeholt, jede mit Grund: Polsterung 9 → 7 px (die Zahl, die die enge Ansicht seit E359 benutzt), Abstand zum Wort 5 → 4, Zeichen neben einem Wort 18 → 16. Wo kein Wort steht, bleibt es gross.",
+            "lehre": "Ein Bild hätte das nie gemeldet — zwei Zeilen sehen ordentlich aus. Gefunden hat es eine Zahl, die seit E359 in einem Prüflauf steht. Deshalb sind Zusagen mit Zahlen mehr wert als Zusagen mit Eindrücken (§55.2)."
+        },
+        {
+            "nr": "P15",
+            "datum": "2026-09-09",
+            "titel": "Drei Stifte, ein Bild — und die Reparatur, die es schlimmer machte",
+            "schwere": "mittel",
+            "symptom": "Auf einem Blatt mit allen Zeichen nebeneinander sahen Füller, Kugelschreiber und Bleistift aus wie derselbe schräge Stift. In der Stiftreihe stehen sie direkt nebeneinander, und man wählt sie mit den Augen.",
+            "falscheVermutung": "„Jeder Stift ist an seiner Spitze zu erkennen.“ Der Satz stand als Kommentar im Register — beim Zeichnen geschrieben, in einer 44-px-Ansicht. In der Leiste sind es 16 px, und dort ist eine Spitze zwei Punkte gross. Der zweite Irrtum kam gleich danach: schärfere Spitzen, ein Luftloch und Griffrillen sollten helfen — gemessen stiegen die drei Paare von 73/69/54 % auf 85/83/81 %.",
+            "wieGesucht": "Jedes Zeichen in 16 × 16 gerastert und für jedes Paar gezählt, wie viele Tintenpunkte beide teilen (Schnitt durch Vereinigung). Das gibt eine Zahl, wo vorher ein Eindruck war.",
+            "ursache": "Bei 16 px trägt der SCHAFT die ganze Tinte. Jede Verzierung liegt unter einem Punkt und verschwindet, während der gemeinsame Umriss bleibt.",
+            "behebung": "Die Umrisse getrennt statt der Spitzen: der Füller ist eine Feder (Schlitz, Luftloch, nach unten spitz), der Kugelschreiber steht aufrecht mit Clip und Kugel, der Bleistift bleibt schräg. Danach kein Paar über 46 %.",
+            "stand": "Behoben. `test480 §7` hält die Grenze bei 60 %, und die Gegenprobe mit den drei alten Stiften meldet 73 %.",
+            "lehre": "Ein Bild findet, dass etwas gleich AUSSIEHT. Eine Messung sagt, ob eine Reparatur hilft — und diese hat den zweiten Irrtum in dreissig Sekunden gemeldet, statt ihn in die App zu lassen. Beides zusammen, nicht eins davon (§55)."
         }
     ]
 };

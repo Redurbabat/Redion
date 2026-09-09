@@ -6860,6 +6860,19 @@ beides steht — und beides kostet Platz. Was daraus offen bleibt:
     sehr schmalen Seite verdeckt sie deren linken Rand. Sie danebenzustellen
     hiesse, das Blatt schmaler zu machen — das ist eine Abwägung, die
     Redur treffen soll, kein Fehler.
+  · **Die Wörter stehen erst ab 1150 px Leistenbreite, und der Rand ist
+    schmaler geworden** (E515). Gemessen bei 1600 px Fenster: die dreizehn
+    Werkzeuge mit Wort brauchen 1099 px von 1168 vorhandenen — 69 px Luft.
+    An der Schwelle selbst (1150 px Leiste) sind es 35. Das reicht heute;
+    ein vierzehntes Werkzeug mit einem langen Namen kippt die Zeile wieder.
+    Wer eins hinzufügt, misst vorher — `test351 §3` sagt es sonst hinterher.
+  · **Nur die sechs Stifte werden auf Ähnlichkeit gemessen** (E515,
+    `test480 §7`). Die dreizehn Werkzeuge, die vierzehn Zubehörzeichen und
+    die sieben Formen nicht — dort steht heute nichts zu dicht beieinander,
+    aber es gibt keine Zusage, die es hielte. Der Prüflauf misst pro Paar
+    in 16 × 16; ihn auf alle Zeichen des Registers auszuweiten wären über
+    tausend Paare statt fünfzehn und ein spürbar längerer Lauf. Wer ein
+    neues Zeichen anlegt, nimmt es in §7 auf oder sieht es sich an.
 
 L138 · Was am Laserpointer noch fehlt
 --------------------------------------------------------------------------

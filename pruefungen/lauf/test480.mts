@@ -249,8 +249,169 @@ console.log('\n§3 Die Leiste lässt sich verschieben');
   await s.close();
 }
 
+/* ═══ §5 Die Zeichen sind gezeichnet, nicht getippt (E515) ════════════════
+ * Redur, 9. September, mit einem Ausschnitt der GoodNotes-Leiste:
+ * „nehme die Symbole für die Redion bitte 1:1."
+ *
+ * Die Leiste trug ✎ ⌖ 🖍 ▰ □ ▬ 🗒 T ⚡ ⭐ 🖼 ⌫ ⦿ — dreizehn Zeichen aus fünf
+ * Welten. `register/symbole.ts` beschreibt seit jeher, warum das nicht geht:
+ * Emoji sind Bilder, keine Zeichen; sie tragen eigene Farbe und Stärke und
+ * sehen auf jedem System anders aus.
+ *
+ * WAS HIER GEMESSEN WIRD, ist nicht „sieht gut aus", sondern dreierlei:
+ * jedes Werkzeug hat ein Zeichen, das Zeichen ist WIRKLICH gemalt (ein
+ * leeres `data-sym` sieht aus wie nichts), und in der Leiste steht kein
+ * Emoji mehr.
+ * ------------------------------------------------------------------------ */
+console.log('\n§5 Gezeichnete Zeichen statt Emoji');
+{
+  const s = await mitBlatt();
+  await s.click('.blatt-werk [data-wz="stift"]');
+  await s.waitForTimeout(250);
+  const r = JSON.parse(await s.evaluate(`(() => {
+    const werk = document.querySelector('.blatt-werk');
+    const felder = [...werk.querySelectorAll('[data-sym]')];
+    /* EIN LEERES FELD IST EIN FEHLER, kein leeres Feld: das Register malt
+       nur, was es kennt, und lässt Unbekanntes stehen. */
+    const leer = felder.filter(f => !f.querySelector('svg')).map(f => f.dataset.sym);
+    /* KEINE FLÄCHE, NUR STRICHE — das Raster dieser Datei. */
+    const gefuellt = felder.filter(f => {
+      const p = f.querySelector('path, rect, circle, ellipse');
+      return p && p.getAttribute('fill') && p.getAttribute('fill') !== 'none';
+    }).length;
+    /* WAS AN TEXT ÜBRIG IST. Erlaubt sind genau drei Sorten: die
+       Schriftknöpfe (A+, A−, F, ▭ — Buchstaben sagen dort mehr als
+       Striche), die zwei Laserarten, die IHR MUSTER zeigen, und das „Aa".
+       Das „Aa" ist kein Emoji, sondern eine SCHRIFTPROBE: es steht in der
+       gerade gewählten Familie und zeigt damit genau das, was ein
+       gezeichnetes Zeichen nicht zeigen könnte — wie die Schrift aussieht.
+       Ein Strichzeichen an dieser Stelle wäre eine Verschlechterung. */
+    const erlaubt = new Set(['A+', 'A−', 'F', '▭', '•', '⌇', 'Aa']);
+    const text = [...werk.querySelectorAll('.zeichen:not([data-sym])')]
+      .map(z => (z.textContent || '').trim()).filter(t => t && !erlaubt.has(t));
+    return JSON.stringify({
+      zeichen: felder.length, leer, gefuellt, text,
+      /* Und jedes WERKZEUG hat eins. */
+      ohneSym: Marken.WERKZEUGE.filter(w => !w.sym).map(w => w.id),
+      unbekannt: Marken.WERKZEUGE.filter(w => w.sym && !Register.symbole.hat(w.sym)).map(w => w.id),
+      formenOhneSym: Marken.FORMEN.filter(f => !f.sym).map(f => f.id)
+    });
+  })()`) as string);
+  p('In der Leiste stehen gezeichnete Zeichen', r.zeichen >= 13, JSON.stringify(r.zeichen));
+  p('… und jedes ist wirklich gemalt', r.leer.length === 0, JSON.stringify(r.leer));
+  p('… nur Striche, keine Fläche', r.gefuellt === 0, String(r.gefuellt));
+  p('Jedes Werkzeug hat ein Zeichen, und das Register kennt es',
+    r.ohneSym.length === 0 && r.unbekannt.length === 0, JSON.stringify([r.ohneSym, r.unbekannt]));
+  p('Jede Form auch', r.formenOhneSym.length === 0, JSON.stringify(r.formenOhneSym));
+  p('Kein Emoji mehr in der Leiste — ausser wo ein Buchstabe mehr sagt',
+    r.text.length === 0, JSON.stringify(r.text));
+
+  /* DER FORMKNOPF BLEIBT DIE GEWÄHLTE FORM — auch nach dem Wechsel, und
+     auch dann gezeichnet. Der erste Wurf schrieb beim Wechsel wieder ein
+     Textzeichen hinein; das fällt erst nach dem ersten Klick auf. */
+  await s.click('.blatt-werk [data-wz="formen"]');
+  await s.waitForTimeout(200);
+  await s.click('.blatt-werk [data-act="formart"][data-form="triangle"]');
+  await s.waitForTimeout(250);
+  const nach = JSON.parse(await s.evaluate(`(() => {
+    const k = document.querySelector('.blatt-werk [data-wz="formen"]');
+    const z = k.querySelector('.zeichen');
+    return JSON.stringify({ form: k.dataset.form, sym: z ? z.dataset.sym : null,
+      gemalt: !!(z && z.querySelector('svg')) });
+  })()`) as string);
+  gleich('Nach dem Formwechsel trägt der Knopf das Dreieck', nach.sym, 'formTriangle');
+  p('… und es ist gezeichnet, nicht getippt', nach.gemalt, JSON.stringify(nach));
+  await s.close();
+}
+
+/* ══ §7 Sechs Stifte, sechs Bilder ═════════════════════════════════════════
+ *
+ * DAS BILD HAT ES GEFUNDEN, nicht der Prüflauf: auf dem Zeichenblatt sahen
+ * Füller, Kugelschreiber und Bleistift aus wie derselbe schräge Stift mit
+ * einer anderen Spitze. Der Kommentar im Register behauptete sogar, sie
+ * seien „an ihrer Spitze zu erkennen" — bei 16 px ist eine Spitze zwei
+ * Punkte gross.
+ *
+ * WIE MAN SO ETWAS MISST, statt es anzuschauen: jedes Zeichen wird in
+ * 16 × 16 gerastert, und für jedes Paar wird gezählt, wie viele Tintenpunkte
+ * beide teilen — Schnitt durch Vereinigung. Gemessen am Bestand vor dieser
+ * Reparatur: Kugelschreiber gegen Bleistift 73 %, Füller gegen Bleistift
+ * 69 %. Die Paare, die man SOFORT auseinanderhält, lagen bei 24 bis 38 %.
+ *
+ * DIE GRENZE IST DESHALB 60 % — mitten in der gemessenen Lücke zwischen
+ * „zwei Bilder" und „dasselbe Bild". Sie ist keine runde Zahl aus dem
+ * Gefühl, sondern die Mitte zwischen 38 und 69.
+ * ------------------------------------------------------------------------ */
+console.log('\n§7 Sechs Stifte, sechs Bilder');
+{
+  const s = await mitBlatt();
+  const GRENZE = 60;
+  const r = JSON.parse(await s.evaluate(`(async () => {
+    const namen = Marken.STIFTE.map(x => x.sym);
+    const raster = async (n) => {
+      const wrap = document.createElement('span');
+      wrap.dataset.sym = n; document.body.appendChild(wrap);
+      Register.symbole.fuelle(wrap.parentNode);
+      const svg = wrap.querySelector('svg');
+      if (!svg) { wrap.remove(); return null; }
+      const txt = new XMLSerializer().serializeToString(svg);
+      const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(txt)));
+      const img = new Image(); img.width = 16; img.height = 16;
+      await new Promise((f, x) => { img.onload = f; img.onerror = x; img.src = url; });
+      const c = document.createElement('canvas'); c.width = 16; c.height = 16;
+      const g = c.getContext('2d'); g.drawImage(img, 0, 0, 16, 16);
+      const d = g.getImageData(0, 0, 16, 16).data;
+      const bits = []; let tinte = 0;
+      for (let i = 0; i < 256; i++) { const an = d[i*4+3] > 40 ? 1 : 0; bits.push(an); tinte += an; }
+      wrap.remove();
+      return { bits, tinte };
+    };
+    const b = {};
+    for (const n of namen) b[n] = await raster(n);
+    const leer = namen.filter(n => !b[n] || b[n].tinte < 8);
+    const paare = [];
+    for (let i = 0; i < namen.length; i++) for (let j = i + 1; j < namen.length; j++) {
+      const a = b[namen[i]], c = b[namen[j]];
+      if (!a || !c) continue;
+      let schnitt = 0, vereint = 0;
+      for (let k = 0; k < 256; k++) {
+        if (a.bits[k] && c.bits[k]) schnitt++;
+        if (a.bits[k] || c.bits[k]) vereint++;
+      }
+      paare.push({ p: namen[i] + '/' + namen[j], gleich: Math.round(100 * schnitt / vereint) });
+    }
+    paare.sort((x, y) => y.gleich - x.gleich);
+    return JSON.stringify({ namen, leer, paare });
+  })()`) as string) as { namen: string[]; leer: string[];
+                         paare: Array<{ p: string; gleich: number }> };
+
+  gleich('Sechs Stifte, sechs verschiedene Namen', new Set(r.namen).size, 6);
+  p('… und jedes Zeichen hat wirklich Tinte auf dem Raster',
+    r.leer.length === 0, JSON.stringify(r.leer));
+  const schlimmstes = r.paare[0];
+  p(`Kein Paar teilt mehr als ${GRENZE} % seiner Tinte`,
+    !!schlimmstes && schlimmstes.gleich <= GRENZE,
+    schlimmstes ? `${schlimmstes.p} = ${schlimmstes.gleich} %` : 'kein Paar gemessen');
+  /* UND DER NAME DAZU, damit der nächste sieht, WELCHE zwei sich nähern —
+     eine Zahl allein sagt nicht, wo man hinsehen muss. */
+  console.log('      (das ähnlichste Paar: ' +
+    (schlimmstes ? schlimmstes.p + ' = ' + schlimmstes.gleich + ' %' : '—') + ')');
+
+  /* DER ZETTEL WAR EIN DOKUMENT. Er stand mit zwei Textzeilen und einer
+     Ecke oben da — dasselbe Bild wie ein Blatt, und in derselben Reihe
+     steht der Textknopf. Jetzt ist er eine Haftnotiz mit umgeschlagener
+     Ecke unten. */
+  const zettel = JSON.parse(await s.evaluate(`(() => {
+    const d = Register.symbole.alsSvg('inkNote');
+    return JSON.stringify({ zeilen: /M7\\.4 13h7/.test(d), da: !!d });
+  })()`) as string) as { zeilen: boolean; da: boolean };
+  p('Der Zettel trägt keine Textzeilen mehr — er ist kein Dokument',
+    !zettel.zeilen, JSON.stringify(zettel));
+  await s.close();
+}
+
 /* ═══ §4 Quellen ═══════════════════════════════════════════════════════════ */
-console.log('\n§4 Quellen');
+console.log('\n§6 Quellen');
 p('Die Stiftreihe steht EINMAL im Quelltext, aus dem Katalog gebaut',
   /STIFTE\.map\(st => `<button data-act="stilwahl"/.test(lies('src/bereiche/pdf/marken.ts')));
 p('Der Laser hat einen eigenen Katalog', /const LASER = \[/.test(lies('src/bereiche/pdf/marken.ts')));

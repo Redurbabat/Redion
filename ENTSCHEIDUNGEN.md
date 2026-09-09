@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-494 Entscheidungen, E1 bis E514 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+495 Entscheidungen, E1 bis E515 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -558,6 +558,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E512** — Die Leiste wie GoodNotes: Stiftreihe, Laserpointer, vier Plätze — und eine Fläche, die nicht mehr stirbt
 * **E513** — Das Notizbuch stand nicht im „Neu erstellen", obwohl es Redion seit E264 kann
 * **E514** — Die Chronik „Red-ur": eine Quelle, drei Ansichten — UR.md, PROBLEME.md und ein Fenster in Redion
+* **E515** — Die Zeichen der Leiste sind gezeichnet, nicht getippt — dreiunddreissig neue im Register, und fünfundsiebzig Pixel, die niemand sah
 
 ---
 
@@ -41464,3 +41465,151 @@ auf `includes` umgestellt (die Tür ging bei „red" auf), UR.md von Hand
 ergänzt (der Abgleich mit der Quelle wurde rot), und die Zahl am Balken
 weggelassen. Nicht geprüft: die Gesamtsuite.
 Bild: `node bilder.mts chronik`.
+
+---
+
+E515 — Die Zeichen der Leiste sind gezeichnet, nicht getippt
+--------------------------------------------------------------------------
+
+Redur, 9. September 2026, zu einem Bildschirmfoto der GoodNotes-Leiste:
+
+> „Nehme die symbole. Für die redion bitte 1:1"
+
+## Was auf dem Bild steht — und was Redion daneben hatte
+
+Auf dem Foto stehen dreizehn Zeichen in einer Reihe: alle in derselben
+Strichstärke, alle in derselben Farbe, alle auf derselben Linie. Ein Stift,
+ein Marker, ein Radierer, ein Lasso, ein Lineal, eine Schere.
+
+Redions Leiste hatte an dieser Stelle: ✍ ⌖ ✎ 🖍 ▭ ▨ 🗒 T ⚡ ▣ 🖼 ◨ ⌾ — eine
+Mischung aus Emoji, Unicode-Formen und einem Grossbuchstaben. Der
+Unterschied ist genau der, den `src/register/symbole.ts` seit E273 im Kopf
+beschreibt: Emoji sind Bilder. Sie bringen ihre eigene Farbe mit, ihre
+eigene Strichstärke, ihre eigene Grundlinie — und sie sehen auf jedem
+System anders aus. Neben einem 13-px-Wort in `--text` steht ein farbiges 🖍
+wie ein Aufkleber.
+
+**Redur hat also nicht um neue Bilder gebeten, sondern um dieselbe Sorte
+Zeichen, die Redion überall sonst schon hat.** Die Seitenleiste, die
+Befehlspalette, die Bibliothek — alle drei zeichnen seit E273 aus
+`Register.symbole`. Nur die Zeichenleiste, die meistbenutzte Fläche der
+App, war beim Emoji geblieben.
+
+## Kein zweiter Katalog (§8)
+
+Der bequeme Weg wäre gewesen, die dreizehn SVG als Zeichenketten in
+`marken.ts` zu schreiben — dort, wo die Leiste gebaut wird. Dann hätte
+Redion zwei Zeichensätze: einen im Register und einen in der PDF-Fläche.
+Sie wären nach dem zweiten Durchgang verschieden, und niemand hätte
+gemerkt, welcher gilt.
+
+Die dreiunddreissig neuen Zeichen stehen deshalb **im Register**, nach
+demselben Raster wie die hundert davor: 24 × 24, Strichstärke 1,7, runde
+Enden, `currentColor`, keine Fläche. Die Leiste nennt nur ihren Namen:
+
+```txt
+WERKZEUGE  sym: 'inkPen'      →  Register.symbole.fuelle(leiste)
+FORMEN     sym: 'formArrow'
+STIFTE     sym: 'penFountain'
+RADIERER   sym: 'eraseHalf'
+LAGEN      sym: 'dockLeft'
+```
+
+`fuelle()` malt in jedes `[data-sym]` das Zeichen, das dort hingehört.
+Fünfmal aufgerufen: einmal beim Bauen der Leiste, viermal nach den
+Stellen, die ihr Markup nachträglich neu schreiben (Formknopf,
+Radiermodus, Platzknopf, Stiftreihe). Genau diese vier waren die Falle —
+wer `innerHTML` neu setzt, wirft die gemalten Zeichen weg, und der Knopf
+ist danach leer. Das misst `test480 §5` als eigene Zusage, und die
+Gegenprobe (den `fuelle`-Aufruf entfernen) meldete zweiundvierzig leere
+Felder.
+
+## Was Buchstabe bleibt — und warum
+
+Sieben Knöpfe tragen weiter Text, und das ist kein Rest, sondern eine
+Entscheidung:
+
+| Knopf | Zeichen | Warum kein Strich |
+|---|---|---|
+| Schriftart | `Aa` | eine **Schriftprobe**: sie steht in der gewählten Familie und zeigt, wie die Schrift aussieht. Genau das kann eine Zeichnung nicht. |
+| Grösser / Kleiner | `A+` `A−` | die Buchstabengrösse IST das Thema |
+| Fett | `F` | ein fettes F sagt, was passiert |
+| Rahmen | `▭` | dasselbe Rechteck, das der Knopf setzt |
+| Laserpunkt / -linie | `•` `⌇` | ihr eigenes Muster, nicht sein Sinnbild |
+
+Die Prüfung erlaubt genau diese sieben und sonst kein Textzeichen. Wer ein
+neues Emoji einbaut, macht sie rot.
+
+## Was das Messen gefunden hat
+
+Die gezeichneten Zeichen sind **fest 18 px breit**; die Emoji davor waren
+im Mittel rund 12. Dreizehnmal sechs Pixel sind fünfundsiebzig — und
+genau daran kippte die Werkzeugzeile am Rechner in eine zweite. Gemessen
+bei 1600 px Fenster, Leiste 1184 px:
+
+```txt
+HEAD (Emoji):        13 Knöpfe = 1067 px + 48 px Lücken = 1115  ≤ 1168  ✓ eine Zeile
+E515 erster Wurf:    13 Knöpfe = 1142 px + 48 px Lücken = 1190  > 1168  ✗ zwei Zeilen
+E515 jetzt:          13 Knöpfe = 1051 px + 48 px Lücken = 1099  ≤ 1168  ✓ eine Zeile
+```
+
+Zurückgeholt wurden die fehlenden Pixel an drei Stellen, jede mit Grund:
+die seitliche Polsterung von 9 auf **7 px** (keine neue Zahl — die enge
+Ansicht unter 1150 px benutzt sie seit E359), der Abstand zum Wort von 5
+auf **4 px**, und das Zeichen neben einem Wort von 18 auf **16 px**.
+
+**Wo kein Wort steht, bleibt das Zeichen gross.** In der engen Leiste, in
+der Spalte und am Telefon trägt es allein, dort sind es weiter 18 px; in
+der Seitenspalte (E512) 20. Ein Zeichen, das neben einem 13-px-Wort steht,
+darf kleiner sein als eins, das für sich stehen muss.
+
+Das hätte kein Auge gefunden und kein Bild: zwei Zeilen sehen ordentlich
+aus. Gefunden hat es `test351`, weil dort seit E359 eine Zahl steht.
+
+## Was das Bild gefunden hat — und wie man es DANACH messen konnte
+
+Auf einem Blatt mit allen vierundvierzig Zeichen nebeneinander war sofort
+zu sehen, was in der Leiste untergeht: **Füller, Kugelschreiber und
+Bleistift waren derselbe schräge Stift mit einer anderen Spitze.** Im
+Register stand sogar der Satz, sie seien „an ihrer SPITZE zu erkennen" —
+bei 16 px ist eine Spitze zwei Punkte gross.
+
+Dazu der **Zettel**: ein Blatt mit zwei Textzeilen und einer Ecke oben,
+also dasselbe Bild wie ein Dokument — und in derselben Reihe steht der
+Textknopf.
+
+Ein Auge findet so etwas; eine Zusage muss es danach halten. Die Messung
+dafür: jedes Zeichen in 16 × 16 rastern und für jedes Paar zählen, wie
+viele Tintenpunkte beide teilen (Schnitt durch Vereinigung).
+
+```txt
+vorher                             nachher
+  73 %  Kugelschreiber / Bleistift    46 %  Füller / Schutzleiter
+  69 %  Füller / Bleistift            40 %  Pinsel / Bleistift
+  54 %  Füller / Kugelschreiber       38 %  Füller / Kugelschreiber
+  …                                   …
+  24 %  das unähnlichste Paar         24 %  das unähnlichste Paar
+```
+
+**Die Grenze in `test480 §7` ist 60 %** — die Mitte der gemessenen Lücke
+zwischen 38 (zwei Bilder, die man sofort auseinanderhält) und 69 (dasselbe
+Bild). Keine runde Zahl aus dem Gefühl.
+
+Der erste Reparaturversuch machte es SCHLIMMER, und die Messung hat es
+sofort gesagt: schärfere Spitzen, ein Luftloch, Griffrillen — und die drei
+Paare stiegen auf 85, 83 und 81 %. Bei 16 px trägt der Schaft die ganze
+Tinte; jede Verzierung liegt unter einem Punkt. **Zeichen unterscheiden
+sich in ihrer Silhouette oder gar nicht.** Also: der Füller ist jetzt eine
+FEDER (Schlitz und Luftloch, nach unten spitz), der Kugelschreiber steht
+AUFRECHT mit Clip und Kugel, und der Bleistift bleibt der schräge Stift,
+den jeder kennt. Drei Umrisse statt dreier Spitzen.
+
+GEPRÜFT. `test480` neu mit zwölf Zusagen in zwei Abschnitten (§5 mit acht,
+§7 mit vier), 45 im Lauf. Zwei Gegenproben rot gesehen: ohne
+`Register.symbole.fuelle` melden zweiundvierzig Felder „leer statt gemalt";
+mit den drei alten Stiften meldet §7 „penBall/penPencil = 73 %" — genau die
+Zahl, die von Hand gemessen worden war. `test351` war rot (zwei
+Werkzeugzeilen statt einer) und ist nach der Messung wieder grün, 26
+Zusagen. Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts zeichnen leisteLinks` und ein Blatt mit allen
+Zeichen nebeneinander — das eine, auf dem die drei Stifte auffielen.

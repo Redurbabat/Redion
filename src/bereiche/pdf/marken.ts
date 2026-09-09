@@ -29,10 +29,10 @@ const Marken = (() => {
      einer Reihe mit Werkzeugen und meinte etwas anderes als sie. Das
      steht in L133. */
   const RADIERER = [
-    { id: 'ganz', name: 'Ganz', zeichen: '●', titel: 'Radierer: ganze Marken', nur: '' },
-    { id: 'teil', name: 'Teil', zeichen: '½', titel: 'Radierer: nur den berührten Teil eines Strichs', nur: '' },
-    { id: 'stift', name: 'Stift', zeichen: '✎', titel: 'Radierer: nur Stiftstriche — Marker, Band und Formen bleiben', nur: 'stift' },
-    { id: 'marker', name: 'Marker', zeichen: '▰', titel: 'Radierer: nur Marker', nur: 'marker' },
+    { id: 'ganz', name: 'Ganz', zeichen: '●', sym: 'eraseAll', titel: 'Radierer: ganze Marken', nur: '' },
+    { id: 'teil', name: 'Teil', zeichen: '½', sym: 'eraseHalf', titel: 'Radierer: nur den berührten Teil eines Strichs', nur: '' },
+    { id: 'stift', name: 'Stift', zeichen: '✎', sym: 'penFountain', titel: 'Radierer: nur Stiftstriche — Marker, Band und Formen bleiben', nur: 'stift' },
+    { id: 'marker', name: 'Marker', zeichen: '▰', sym: 'eraseMarker', titel: 'Radierer: nur Marker', nur: 'marker' },
     /* `nur` NENNT DIE MARKENART, NICHT DEN MODUS (E489).
        Hier stand `nur: 'band'` — und das Abdeckband heisst als Marke
        `abdeck` (so setzt es `art: tool` beim Zeichnen, so liest es
@@ -54,16 +54,16 @@ const Marken = (() => {
      sind die alten (`line`, `arrow`, `rectangle`, `ellipse`): sie stehen so
      in jeder gespeicherten Marke, und daran wird nichts geändert (§53.3). */
   const FORMEN = [
-    { id: 'line', name: 'Linie', zeichen: '╱', titel: 'Gerade Linie' },
-    { id: 'arrow', name: 'Pfeil', zeichen: '→', titel: 'Pfeil' },
-    { id: 'rectangle', name: 'Rechteck', zeichen: '□', titel: 'Rechteck' },
-    { id: 'ellipse', name: 'Ellipse', zeichen: '○', titel: 'Ellipse' },
+    { id: 'line', name: 'Linie', zeichen: '╱', sym: 'formLine', titel: 'Gerade Linie' },
+    { id: 'arrow', name: 'Pfeil', zeichen: '→', sym: 'formArrow', titel: 'Pfeil' },
+    { id: 'rectangle', name: 'Rechteck', zeichen: '□', sym: 'formRect', titel: 'Rechteck' },
+    { id: 'ellipse', name: 'Ellipse', zeichen: '○', sym: 'formEllipse', titel: 'Ellipse' },
     /* ZWEI MEHR, WIE GOODNOTES (E465): das Dreieck und das Rechteck mit
        runden Ecken. Beide sind Zweipunkt-Formen wie die vier davor —
        der Zeichner unterscheidet sie nur im Ergebnis. Neue Kennungen,
        englisch wie die alten, weil sie so in der Marke stehen (§53.3). */
-    { id: 'triangle', name: 'Dreieck', zeichen: '△', titel: 'Dreieck' },
-    { id: 'roundrect', name: 'Rund', zeichen: '▢', titel: 'Rechteck mit runden Ecken' },
+    { id: 'triangle', name: 'Dreieck', zeichen: '△', sym: 'formTriangle', titel: 'Dreieck' },
+    { id: 'roundrect', name: 'Rund', zeichen: '▢', sym: 'formRoundrect', titel: 'Rechteck mit runden Ecken' },
     /* DIE KURVE (E483, L133). Sie ist die erste Form mit DREI Punkten:
        Anfang, Ende und der Griff dazwischen, der sie biegt. Gezogen wird
        sie wie eine Linie; danach steht am Rahmen ein zusaetzlicher Griff
@@ -74,7 +74,7 @@ const Marken = (() => {
        vorhandene Marke sich aendert (§53.3). `move`, `scale` und `rotate`
        fassen ohnehin ALLE Punkte an — die Kurve wandert, waechst und
        dreht sich damit von selbst richtig. */
-    { id: 'curve', name: 'Kurve', zeichen: '⌒', titel: 'Kurve — nach dem Ziehen biegt der Griff in der Mitte sie' }
+    { id: 'curve', name: 'Kurve', zeichen: '⌒', sym: 'formCurve', titel: 'Kurve — nach dem Ziehen biegt der Griff in der Mitte sie' }
   ] as const;
   const FORM_VORGABE = 'line';
   const formArtLesen = (): string => {
@@ -91,15 +91,15 @@ const Marken = (() => {
      Breite dem Druck folgt: der Fueller massvoll, der Pinsel kraeftig.
      Alte Marken ohne `stil` bleiben, wie sie waren (§53.3). */
   const STIFTE = [
-    { id: 'fueller', name: 'Füller', zeichen: '🖋' },
-    { id: 'kugel',   name: 'Kugelschreiber', zeichen: '🖊' },
-    { id: 'pinsel',  name: 'Pinsel', zeichen: '🖌' },
+    { id: 'fueller', name: 'Füller', zeichen: '🖋', sym: 'penFountain' },
+    { id: 'kugel',   name: 'Kugelschreiber', zeichen: '🖊', sym: 'penBall' },
+    { id: 'pinsel',  name: 'Pinsel', zeichen: '🖌', sym: 'penBrush' },
     /* DER BLEISTIFT (E465), wie GoodNotes' Pencil: duenn, leicht
        durchscheinend, mit koerniger Kante — die Flaeche des Fuellers,
        nur schmaler und mit 72 % Deckung. Er steht am Ende der Reihe,
        damit der Wechsel Fueller → Kugel → Pinsel bleibt, wie test343 ihn
        kennt. */
-    { id: 'bleistift', name: 'Bleistift', zeichen: '✏' },
+    { id: 'bleistift', name: 'Bleistift', zeichen: '✏', sym: 'penPencil' },
 
     /* DER SCHUTZLEITER (E490, Redurs Wunsch vom 7. September). Kein
        gewöhnlicher Stift, sondern die Leitung, die im Schaltplan grün-gelb
@@ -108,7 +108,7 @@ const Marken = (() => {
 
        ER STEHT AM ENDE DER REIHE, wie der Bleistift aus demselben Grund:
        der Wechsel Füller → Kugel → Pinsel bleibt, wie `test343` ihn kennt. */
-    { id: 'schutzleiter', name: 'Schutzleiter', zeichen: '⏚' },
+    { id: 'schutzleiter', name: 'Schutzleiter', zeichen: '⏚', sym: 'penEarth' },
     /* DER LEITERSTIFT (E509, Redurs Wunsch vom 8. September). Er zeichnet
        nicht anders als der Kugelschreiber — er bringt eine andere
        FARBREIHE mit: die zehn Adern eines Schaltplans, jede mit ihrem
@@ -120,7 +120,7 @@ const Marken = (() => {
        Bleistift → Schutzleiter ist die, die `test343` kennt und die eine
        Hand sich gemerkt hat; ein neuer Stift in der Mitte hätte jeden
        zweiten Klick woandershin geführt. */
-    { id: 'leiter', name: 'Leiter', zeichen: '⌁' }
+    { id: 'leiter', name: 'Leiter', zeichen: '⌁', sym: 'penWire' }
   ] as const;
 
   /* ══ DIE FARBEN DES SCHUTZLEITERS ═══════════════════════════════════════
@@ -245,32 +245,32 @@ const Marken = (() => {
      und wird beim Bauen eigens behandelt; die Formen selbst stehen in
      `FORMEN`. */
   const WERKZEUGE = [
-    { id: 'schreiben', zeichen: '✎', name: 'Schreiben', titel: 'Schreiben — die Zeichenschicht ist durchlässig' },
-    { id: 'select', zeichen: '⌖', name: 'Auswahl', titel: 'Marken auswählen, gemeinsam bewegen oder löschen' },
-    { id: 'stift', zeichen: '🖍', name: 'Stift', titel: 'Freihand mit geglätteter Linie' },
-    { id: 'marker', zeichen: '▰', name: 'Marker', titel: 'Transparenter Marker' },
-    { id: 'formen', zeichen: '□', name: 'Form', titel: 'Formen — welche, steht darunter' },
+    { id: 'schreiben', zeichen: '✎', sym: 'inkHand', name: 'Schreiben', titel: 'Schreiben — die Zeichenschicht ist durchlässig' },
+    { id: 'select', zeichen: '⌖', sym: 'inkLasso', name: 'Auswahl', titel: 'Marken auswählen, gemeinsam bewegen oder löschen' },
+    { id: 'stift', zeichen: '🖍', sym: 'inkPen', name: 'Stift', titel: 'Freihand mit geglätteter Linie' },
+    { id: 'marker', zeichen: '▰', sym: 'inkMarker', name: 'Marker', titel: 'Transparenter Marker' },
+    { id: 'formen', zeichen: '□', sym: 'inkShapes', name: 'Form', titel: 'Formen — welche, steht darunter' },
     /* „Abdecken", NICHT „Abdeckband" (Fund des breiten Laufs nach E496).
        Als die Werkzeugliste hierher zusammengezogen wurde, bekam dieser
        Knopf im Vorbeigehen einen neuen Namen — und stand danach anders da
        als im Menüband (`register/menueband.ts`), das weiter „Abdecken"
        sagte. Ein Werkzeug mit zwei Namen ist genau das, wovor §8 warnt.
        `test266 §1` hat es gehalten; nur hat den Lauf niemand gefahren. */
-    { id: 'abdeck', zeichen: '▬', name: 'Abdecken',
+    { id: 'abdeck', zeichen: '▬', sym: 'inkCover', name: 'Abdecken',
       titel: 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf' },
-    { id: 'zettel', zeichen: '🗒', name: 'Haftnotiz',
+    { id: 'zettel', zeichen: '🗒', sym: 'inkNote', name: 'Haftnotiz',
       titel: 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn' },
-    { id: 'text', zeichen: 'T', name: 'Text', titel: 'Textanmerkung' },
-    { id: 'zeichen', zeichen: '⚡', name: 'Fachzeichen', titel: 'Ein elektrotechnisches Symbol auf die Seite setzen' },
+    { id: 'text', zeichen: 'T', sym: 'inkText', name: 'Text', titel: 'Textanmerkung' },
+    { id: 'zeichen', zeichen: '⚡', sym: 'inkSymbol', name: 'Fachzeichen', titel: 'Ein elektrotechnisches Symbol auf die Seite setzen' },
     /* DIE ELEMENTE (E494): dieselbe Bewegung wie beim Fachzeichen — ein Tipp
        setzt etwas Fertiges —, nur kommt es nicht aus dem Register, sondern
        aus dem, was der Nutzer selbst gezeichnet und gesichert hat. */
-    { id: 'elemente', zeichen: '⭐', name: 'Elemente',
+    { id: 'elemente', zeichen: '⭐', sym: 'inkStamp', name: 'Elemente',
       titel: 'Ein gesichertes Element setzen — sichern über die Auswahl («Als Element»)' },
-    { id: 'bild', zeichen: '🖼', name: 'Bild',
+    { id: 'bild', zeichen: '🖼', sym: 'inkImage', name: 'Bild',
       titel: 'Ein Foto, ein GIF oder eine Seite aus einer PDF auf das Blatt legen — '
         + 'danach verschieben, ziehen und drehen wie jede Marke' },
-    { id: 'radierer', zeichen: '⌫', name: 'Radieren',
+    { id: 'radierer', zeichen: '⌫', sym: 'inkEraser', name: 'Radieren',
       titel: 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker' },
     /* ══ DER LASERPOINTER (E512) ═══════════════════════════════════════════
        Redur, 8. September: „alter, wieso habe ich keinen Laserpointer?"
@@ -282,7 +282,7 @@ const Marken = (() => {
        ER SCHREIBT NICHTS. Kein Eintrag in `marks`, kein Schritt im
        Verlauf, nichts in der Sicherung — er ist ein Finger, kein Stift.
        Das ist die ganze Zusage dieses Werkzeugs, und `test480` hält sie. */
-    { id: 'laser', zeichen: '⦿', name: 'Laserpointer',
+    { id: 'laser', zeichen: '⦿', sym: 'inkLaser', name: 'Laserpointer',
       titel: 'Zeigen, nicht schreiben — der Strahl verblasst von selbst und wird nie gespeichert' }
   ] as const;
 
@@ -301,10 +301,10 @@ const Marken = (() => {
      der Mitte, wie die schwebende Leiste in GoodNotes. Gemerkt wird der
      Platz in `meta`, also überlebt er das Schliessen. */
   const LAGEN = [
-    { id: 'oben',   zeichen: '⤒', name: 'oben' },
-    { id: 'links',  zeichen: '⇤', name: 'links' },
-    { id: 'rechts', zeichen: '⇥', name: 'rechts' },
-    { id: 'unten',  zeichen: '⤓', name: 'unten in der Mitte' }
+    { id: 'oben',   zeichen: '⤒', sym: 'dockTop', name: 'oben' },
+    { id: 'links',  zeichen: '⇤', sym: 'dockLeft', name: 'links' },
+    { id: 'rechts', zeichen: '⇥', sym: 'dockRight', name: 'rechts' },
+    { id: 'unten',  zeichen: '⤓', sym: 'dockBottom', name: 'unten in der Mitte' }
   ] as const;
   const M_LAGE = 'zeichnen:leistenlage';
   const lageJetzt = (): string => {
@@ -3695,11 +3695,32 @@ const Marken = (() => {
 
        2. Welches Werkzeug GILT, stand nur in einer CSS-Klasse. Eine Klasse
           ist für ein Vorleseprogramm nicht da. `aria-pressed` sagt es. */
+    /* ══ GEZEICHNETE ZEICHEN STATT EMOJI (E515) ═══════════════════════════
+       Redur, 9. September, mit einem Ausschnitt der GoodNotes-Leiste:
+       „nehme die Symbole für die Redion bitte 1:1."
+
+       Die Leiste trug ✎ ⌖ 🖍 ▰ □ ▬ 🗒 T ⚡ ⭐ 🖼 ⌫ ⦿ — dreizehn Zeichen aus
+       fünf verschiedenen Welten. `register/symbole.ts` beschreibt seit
+       jeher, warum das nicht geht: Emoji sind Bilder, keine Zeichen. Sie
+       tragen eigene Farbe und eigene Strichstärke, sie sehen auf jedem
+       System anders aus, und sie sitzen nicht auf einer Linie.
+
+       Jetzt kommt jedes aus demselben Register wie der Rest der Schale:
+       24 × 24, Striche in der Farbe der Zeile, überall dieselbe Stärke.
+
+       DAS EMOJI BLEIBT ALS RÜCKFALL. `artZeichen` braucht ein TEXTzeichen —
+       in der Sperrliste, im Inspector, in einer Meldung —, und dort ist ein
+       SVG keine Antwort. Deshalb trägt jedes Werkzeug beides (§8: EINE
+       Liste, zwei Ansichten davon). */
     const button = (tool: string) => {
       const w = WERKZEUGE.find(x => x.id === tool)!;
+      const sym = (w as any).sym as string | undefined;
+      const bild = sym
+        ? `<span class="zeichen" data-sym="${sym}" aria-hidden="true"></span>`
+        : `<span class="zeichen" aria-hidden="true">${w.zeichen}</span>`;
       return `<button data-wz="${w.id}"${w.id === 'schreiben' ? ' class="on"' : ''} ` +
         `aria-pressed="${w.id === 'schreiben' ? 'true' : 'false'}" title="${w.titel}">` +
-        `<span class="zeichen" aria-hidden="true">${w.zeichen}</span><span class="wort">${w.name}</span></button>`;
+        bild + `<span class="wort">${w.name}</span></button>`;
     };
     tools.innerHTML =
       button('schreiben') +
@@ -3715,9 +3736,14 @@ const Marken = (() => {
          ihn wiedererkennt, ohne ihn zu öffnen. */
       (() => {
         const jetzt = FORMEN.find(f => f.id === formArt) || FORMEN[0]!;
+        /* HIER BLEIBT DAS FORMZEICHEN (E515): der Knopf zeigt nicht „Formen",
+           sondern WELCHE Form gerade gewählt ist — ein Dreieck, ein Pfeil,
+           eine Kurve. Ein gemeinsames Werkzeugzeichen nähme genau die
+           Auskunft weg, für die dieser Knopf da ist. */
         return `<button data-wz="formen" data-form="${jetzt.id}" ` +
           `title="${jetzt.titel} — die Form wählst du darunter">` +
-          `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">Form</span></button>`;
+          `<span class="zeichen" data-sym="${(jetzt as any).sym || 'inkShapes'}" aria-hidden="true"></span>` +
+          '<span class="wort">Form</span></button>';
       })() +
       button('abdeck') +
       button('zettel') +
@@ -3746,15 +3772,16 @@ const Marken = (() => {
       (() => {
         const jetzt = RADIERER.find(r => r.id === (controls.radierModusVon ? controls.radierModusVon() : RADIER_VORGABE)) || RADIERER[0];
         return `<button data-act="radiermodus" data-gruppe="radierer" data-modus="${jetzt.id}" title="${jetzt.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}">` +
-          `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
+          `<span class="zeichen" data-sym="${(jetzt as any).sym}" aria-hidden="true"></span>` +
+          `<span class="wort">${jetzt.name}</span></button>`;
       })() +
       /* JEDER KNOPF KENNT SEINE GRUPPE (E356): am Telefon zeigt die Leiste
          nur die Gruppen des gewaehlten Werkzeugs — Farben und Breiten beim
          Stift, den Modus beim Radierer, Kopieren und Loeschen bei der
          Auswahl. Das CSS liest `data-gruppe` gegen `data-tool` der Leiste. */
       '<span class="blatt-trenn" data-gruppe="verlauf"></span>' +
-      '<button data-act="undo" data-gruppe="verlauf" title="Rückgängig" disabled><span class="zeichen" aria-hidden="true">↶</span><span class="wort">Zurück</span></button>' +
-      '<button data-act="redo" data-gruppe="verlauf" title="Wiederholen" disabled><span class="zeichen" aria-hidden="true">↷</span><span class="wort">Vor</span></button>' +
+      '<button data-act="undo" data-gruppe="verlauf" title="Rückgängig" disabled><span class="zeichen" data-sym="undo" aria-hidden="true"></span><span class="wort">Zurück</span></button>' +
+      '<button data-act="redo" data-gruppe="verlauf" title="Wiederholen" disabled><span class="zeichen" data-sym="redo" aria-hidden="true"></span><span class="wort">Vor</span></button>' +
       /* DER PLATZ DER LEISTE (E512) — bei „Zurück" und „Vor", weil beide
          zu JEDEM Werkzeug gehören und darum immer stehen. */
       (() => {
@@ -3763,44 +3790,44 @@ const Marken = (() => {
         return `<button data-act="lage" data-gruppe="verlauf" data-lage="${jetzt.id}" ` +
           `title="Leiste verschieben — jetzt ${jetzt.name}, als Nächstes ${naechst.name}" ` +
           `aria-label="Leiste verschieben, jetzt ${jetzt.name}">` +
-          `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span>` +
+          `<span class="zeichen" data-sym="${jetzt.sym}" aria-hidden="true"></span>` +
           `<span class="wort">Platz</span></button>`;
       })() +
-      '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen" aria-hidden="true">🗑</span><span class="wort">Löschen</span></button>' +
+      '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen" data-sym="trash" aria-hidden="true"></span><span class="wort">Löschen</span></button>' +
       /* KOPIEREN UND EINSETZEN (E353) — auch ohne Tastatur, am Telefon. */
-      '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen" aria-hidden="true">⧉</span><span class="wort">Kopieren</span></button>' +
-      '<button data-act="paste" data-gruppe="auswahl" title="Kopiertes einsetzen (Strg+V)" disabled><span class="zeichen" aria-hidden="true">📋</span><span class="wort">Einsetzen</span></button>' +
+      '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen" data-sym="copy" aria-hidden="true"></span><span class="wort">Kopieren</span></button>' +
+      '<button data-act="paste" data-gruppe="auswahl" title="Kopiertes einsetzen (Strg+V)" disabled><span class="zeichen" data-sym="clipboard" aria-hidden="true"></span><span class="wort">Einsetzen</span></button>' +
       /* AUSWAHL WIE GOODNOTES (E466): Ausschneiden, nach vorn, nach hinten,
          Sperren — alles an der Auswahl, alles ein Schritt im Verlauf. */
-      '<button data-act="cut" data-gruppe="auswahl" title="Auswahl ausschneiden (Strg+X)" disabled><span class="zeichen" aria-hidden="true">✂</span><span class="wort">Ausschneiden</span></button>' +
-      '<button data-act="vor" data-gruppe="auswahl" title="Auswahl nach vorn — über alles andere" disabled><span class="zeichen" aria-hidden="true">⤒</span><span class="wort">Nach vorn</span></button>' +
-      '<button data-act="hinten" data-gruppe="auswahl" title="Auswahl nach hinten — unter alles andere" disabled><span class="zeichen" aria-hidden="true">⤓</span><span class="wort">Nach hinten</span></button>' +
-      '<button data-act="sperren" data-gruppe="auswahl" aria-pressed="false" title="Auswahl sperren: nicht mehr schieben, ziehen, drehen, löschen oder radieren" disabled><span class="zeichen" aria-hidden="true">🔒</span><span class="wort">Sperren</span></button>' +
+      '<button data-act="cut" data-gruppe="auswahl" title="Auswahl ausschneiden (Strg+X)" disabled><span class="zeichen" data-sym="scissors" aria-hidden="true"></span><span class="wort">Ausschneiden</span></button>' +
+      '<button data-act="vor" data-gruppe="auswahl" title="Auswahl nach vorn — über alles andere" disabled><span class="zeichen" data-sym="layerUp" aria-hidden="true"></span><span class="wort">Nach vorn</span></button>' +
+      '<button data-act="hinten" data-gruppe="auswahl" title="Auswahl nach hinten — unter alles andere" disabled><span class="zeichen" data-sym="layerDown" aria-hidden="true"></span><span class="wort">Nach hinten</span></button>' +
+      '<button data-act="sperren" data-gruppe="auswahl" aria-pressed="false" title="Auswahl sperren: nicht mehr schieben, ziehen, drehen, löschen oder radieren" disabled><span class="zeichen" data-sym="lock" aria-hidden="true"></span><span class="wort">Sperren</span></button>' +
       /* EIN VERWEIS (E468): der Auswahl eine Adresse oder eine Seite geben. */
-      '<button data-act="verweis" data-gruppe="auswahl" title="Der Auswahl einen Verweis geben: eine Adresse (https://…) oder eine Seite ([[Name]]) — im Lesemodus antippen" disabled><span class="zeichen" aria-hidden="true">🔗</span><span class="wort">Verweis</span></button>' +
+      '<button data-act="verweis" data-gruppe="auswahl" title="Der Auswahl einen Verweis geben: eine Adresse (https://…) oder eine Seite ([[Name]]) — im Lesemodus antippen" disabled><span class="zeichen" data-sym="link" aria-hidden="true"></span><span class="wort">Verweis</span></button>' +
       /* ALS ELEMENT SICHERN (E494): der einzige Weg IN die Bibliothek. Er
          steht bei der Auswahl, weil ein Element eine Auswahl ist. */
-      '<button data-act="element-sichern" data-gruppe="auswahl" title="Die Auswahl als Element sichern — danach mit dem Werkzeug «Elemente» auf jede Seite setzen" disabled><span class="zeichen" aria-hidden="true">⭐</span><span class="wort">Als Element</span></button>' +
+      '<button data-act="element-sichern" data-gruppe="auswahl" title="Die Auswahl als Element sichern — danach mit dem Werkzeug «Elemente» auf jede Seite setzen" disabled><span class="zeichen" data-sym="star" aria-hidden="true"></span><span class="wort">Als Element</span></button>' +
       /* DAS ZUBEHÖR DER ELEMENTE: ein Knopf, der die Bibliothek öffnet und
          sagt, welches Element der nächste Tipp setzt. */
-      '<button data-act="elemente" data-gruppe="elemente" title="Elemente-Bibliothek öffnen und wählen, was der nächste Tipp setzt"><span class="zeichen" aria-hidden="true">⭐</span><span class="wort">Elemente</span></button>' +
+      '<button data-act="elemente" data-gruppe="elemente" title="Elemente-Bibliothek öffnen und wählen, was der nächste Tipp setzt"><span class="zeichen" data-sym="star" aria-hidden="true"></span><span class="wort">Elemente</span></button>' +
       /* Das Lineal ist ein SCHALTER neben den Werkzeugen: solange es
          anliegt, rasten Linie und Pfeil auf 15°-Schritte (E267). */
       '<button data-act="lineal" data-gruppe="lineal" aria-pressed="false" ' +
       'title="Lineal: Linie und Pfeil rasten auf 15°-Schritte">' +
-      '<span class="zeichen" aria-hidden="true">📐</span><span class="wort">Lineal</span></button>' +
+      '<span class="zeichen" data-sym="inkRuler" aria-hidden="true"></span><span class="wort">Lineal</span></button>' +
       /* FORMEN (E355): ein Schalter wie das Lineal — an, und ein gehaltener
          Strich wird zur Linie, zum Kreis, zum Rechteck. */
       `<button data-act="formen" data-gruppe="formen" aria-pressed="${controls.formenAn ? (controls.formenAn() ? 'true' : 'false') : 'true'}"` +
       `${controls.formenAn && controls.formenAn() ? ' class="on"' : ''} ` +
       'title="Formen erkennen: einen Kreis, ein Rechteck oder eine Linie ziehen und am Ende kurz halten">' +
-      '<span class="zeichen" aria-hidden="true">◯</span><span class="wort">Formen</span></button>' +
+      '<span class="zeichen" data-sym="shapeSnap" aria-hidden="true"></span><span class="wort">Formen</span></button>' +
       /* KRITZELN LOESCHT (E466): ein Schalter wie „Formen" — an, und ein
          dichtes Hin-und-her ueber einem Strich nimmt ihn weg. */
       `<button data-act="kritzel" data-gruppe="formen" aria-pressed="${controls.kritzelAn ? (controls.kritzelAn() ? 'true' : 'false') : 'true'}"` +
       `${controls.kritzelAn && controls.kritzelAn() ? ' class="on"' : ''} ` +
       'title="Kritzeln löscht: dicht über einen Strich hin und her fahren, und er ist weg">' +
-      '<span class="zeichen" aria-hidden="true">〰</span><span class="wort">Kritzeln</span></button>' +
+      '<span class="zeichen" data-sym="scribble" aria-hidden="true"></span><span class="wort">Kritzeln</span></button>' +
       /* DIE SCHRIFT (E360): Familie, Groesse, Fett, Rahmen — beim Text und
          bei der Auswahl; wirkt auf Gewaehltes und auf den naechsten Text. */
       (() => {
@@ -3844,7 +3871,7 @@ const Marken = (() => {
           (st.id === jetzt ? ' class="on"' : '') +
           ` aria-pressed="${st.id === jetzt ? 'true' : 'false'}"` +
           ` title="${st.name}" aria-label="Stift ${st.name}">` +
-          `<span class="zeichen" aria-hidden="true">${st.zeichen}</span>` +
+          `<span class="zeichen" data-sym="${(st as any).sym}" aria-hidden="true"></span>` +
           `<span class="wort">${st.name}</span></button>`).join('');
       })() +
       /* DAS ZUBEHÖR ZUM FORMEN-WERKZEUG (E375). Es steht in derselben
@@ -3853,7 +3880,7 @@ const Marken = (() => {
       '<span class="blatt-trenn" data-gruppe="form"></span>' +
       FORMEN.map(f => `<button data-act="formart" data-gruppe="form" data-form="${f.id}"` +
         (f.id === formArt ? ' class="on"' : '') + ` aria-pressed="${f.id === formArt ? 'true' : 'false'}"` +
-        ` title="${f.titel}"><span class="zeichen" aria-hidden="true">${f.zeichen}</span>` +
+        ` title="${f.titel}"><span class="zeichen" data-sym="${(f as any).sym || 'inkShapes'}" aria-hidden="true"></span>` +
         `<span class="wort">${f.name}</span></button>`).join('') +
       /* ══ DIE ZWEI ARTEN DES LASERS (E512) ═══════════════════════════════
          Wie in GoodNotes: ein Punkt oder eine Spur. Sie stehen in der
@@ -4474,15 +4501,17 @@ const Marken = (() => {
           target.dataset.lage = naechst.id;
           target.title = 'Leiste verschieben — jetzt ' + naechst.name + ', als Nächstes ' + dann.name;
           target.setAttribute('aria-label', 'Leiste verschieben, jetzt ' + naechst.name);
-          const z = target.querySelector('.zeichen');
-          if (z) z.textContent = naechst.zeichen;
+          const z = target.querySelector<HTMLElement>('.zeichen');
+          if (z) { z.dataset.sym = naechst.sym; z.textContent = ''; }
+          try { Register.symbole.fuelle(target); } catch { /* dann bleibt es leer */ }
           /* Und alle anderen Leisten derselben Seite ziehen mit — es ist
              EIN Platz, nicht einer je Blatt. */
           document.querySelectorAll<HTMLElement>('.blatt-reihe').forEach(r => { r.dataset.lage = naechst.id; });
           document.querySelectorAll<HTMLElement>('[data-act="lage"]').forEach(k => {
             k.dataset.lage = naechst.id;
-            const zz = k.querySelector('.zeichen');
-            if (zz) zz.textContent = naechst.zeichen;
+            const zz = k.querySelector<HTMLElement>('.zeichen');
+            if (zz) { zz.dataset.sym = naechst.sym; zz.textContent = ''; }
+            try { Register.symbole.fuelle(k); } catch { /* dann bleibt es leer */ }
           });
           return;
         }
@@ -4532,7 +4561,12 @@ const Marken = (() => {
           if (kopf && f) {
             kopf.dataset.form = wahl;
             kopf.title = f.titel + ' — die Form wählst du darunter';
-            kopf.innerHTML = `<span class="zeichen" aria-hidden="true">${f.zeichen}</span><span class="wort">Form</span>`;
+            /* Auch beim Wechsel gezeichnet, nicht als Textzeichen (E515) —
+               sonst stünde nach dem ersten Klick wieder ein „□" in einer
+               Reihe von gezeichneten Werkzeugen. */
+            kopf.innerHTML = `<span class="zeichen" data-sym="${(f as any).sym || 'inkShapes'}" aria-hidden="true"></span>` +
+              '<span class="wort">Form</span>';
+            try { Register.symbole.fuelle(kopf); } catch { /* dann bleibt es leer */ }
             tools.querySelectorAll('[data-wz]').forEach(node => node.classList.remove('on'));
             kopf.classList.add('on');
           }
@@ -4549,7 +4583,9 @@ const Marken = (() => {
           controls.setzeRadierModus(naechster.id);
           target.dataset.modus = naechster.id;
           target.title = `${naechster.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}`;
-          target.innerHTML = `<span class="zeichen" aria-hidden="true">${naechster.zeichen}</span><span class="wort">${naechster.name}</span>`;
+          target.innerHTML = `<span class="zeichen" data-sym="${(naechster as any).sym}" aria-hidden="true"></span>` +
+            `<span class="wort">${naechster.name}</span>`;
+          try { Register.symbole.fuelle(target); } catch { /* dann bleibt es leer */ }
           /* Wer den Radierer einstellt, will radieren. */
           if (Zeichenziel.werkzeugVon?.(controls) !== 'radierer') {
             controls.setzeWerkzeug('radierer');
@@ -4630,6 +4666,10 @@ const Marken = (() => {
         strichSetzen(Number(target.dataset.b));
       }
     });
+    /* DIE ZEICHEN MALEN (E515). `data-sym` ist eine Bestellung, kein Bild —
+       das Register füllt sie. Ohne das Register bleibt das Feld leer und
+       die Wörter tragen die Leiste; deshalb der Griff drumherum. */
+    try { Register.symbole.fuelle(tools); } catch { /* dann ohne Zeichen */ }
     row.appendChild(tools);
     if (extra) {
       const fixed = document.createElement('div');

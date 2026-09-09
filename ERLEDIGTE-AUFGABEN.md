@@ -4845,3 +4845,59 @@ Zugangscode ist ein Türschild, kein Schloss — er steht im Quelltext (L140).
 
 Das Bild hat wieder etwas gefunden: der erste Stapel legte die Platten
 genau hintereinander, und nur die vorderste war lesbar.
+
+**Die Zeichen der Leiste (E515, test480 §5).** Redur schickte ein Foto der
+GoodNotes-Leiste: „Nehme die symbole. Für die redion bitte 1:1".
+
+Auf dem Foto stehen dreizehn Zeichen in einer Reihe — gleiche Strichstärke,
+gleiche Farbe, gleiche Linie. Redion hatte an derselben Stelle eine Mischung
+aus Emoji, Unicode-Formen und einem Grossbuchstaben. Der Unterschied steht
+seit E273 im Register beschrieben: Emoji sind Bilder. Sie bringen ihre
+eigene Farbe mit, ihre eigene Strichstärke und ihre eigene Grundlinie, und
+sie sehen auf jedem System anders aus.
+
+Redur hat also nicht um neue Bilder gebeten, sondern um dieselbe Sorte
+Zeichen, die Redion überall sonst schon hat — nur die meistbenutzte Fläche
+der App war beim Emoji geblieben.
+
+Die dreiunddreissig neuen Zeichen stehen im Register, nicht in der
+PDF-Fläche: ein zweiter Zeichensatz wäre nach dem zweiten Durchgang
+verschieden, und niemand hätte gemerkt, welcher gilt. Die Leiste nennt nur
+den Namen, das Register malt. Die Falle waren die vier Stellen, die ihr
+Markup nachträglich neu schreiben — wer `innerHTML` neu setzt, wirft die
+gemalten Zeichen weg und hat danach einen leeren Knopf.
+
+Sieben Textzeichen bleiben, jedes mit Grund. Das wichtigste ist das `Aa`
+der Schriftart: es steht in der gewählten Familie und zeigt, wie die
+Schrift aussieht. Genau das kann eine Zeichnung nicht.
+
+Gefunden hat die Messung etwas, das kein Auge gesehen hätte: die
+gezeichneten Zeichen sind fest 18 px breit, die Emoji davor im Mittel rund
+12 — dreizehnmal sechs Pixel sind fünfundsiebzig, und daran kippte die
+Werkzeugzeile am Rechner in eine zweite. Zwei Zeilen sehen ordentlich aus;
+gefunden hat es `test351`, weil dort seit E359 eine Zahl steht. Zurückgeholt
+wurden die Pixel an drei Stellen — Polsterung, Abstand, Zeichengrösse —,
+und wo kein Wort steht, bleibt das Zeichen gross.
+
+Und dann hat das Bild etwas gefunden, das keine Zahl gemeldet hatte: auf
+einem Blatt mit allen Zeichen nebeneinander waren Füller, Kugelschreiber
+und Bleistift derselbe schräge Stift mit einer anderen Spitze. Im Register
+stand sogar der Satz, sie seien an ihrer Spitze zu erkennen — bei 16 px ist
+eine Spitze zwei Punkte gross.
+
+Nachgemessen (jedes Zeichen in 16 × 16 gerastert, Punkt für Punkt
+verglichen): Kugelschreiber und Bleistift teilten 73 % ihrer Tinte, Füller
+und Bleistift 69 %. Die Paare, die man sofort auseinanderhält, lagen bei 24
+bis 38 %.
+
+Der erste Reparaturversuch machte es schlimmer — schärfere Spitzen, ein
+Luftloch, Griffrillen —, und die Messung sagte es sofort: 85, 83, 81 %. Bei
+dieser Grösse trägt der Schaft die ganze Tinte, jede Verzierung liegt unter
+einem Punkt. Zeichen unterscheiden sich in ihrer Silhouette oder gar nicht.
+Jetzt ist der Füller eine Feder, der Kugelschreiber steht aufrecht mit Clip
+und Kugel, und der Bleistift bleibt der schräge Stift, den jeder kennt.
+Dasselbe beim Zettel: er war ein Blatt mit Textzeilen und ist jetzt eine
+Haftnotiz mit umgeschlagener Ecke.
+
+`test480 §7` hält es: kein Paar über 60 %, und die Grenze liegt in der
+gemessenen Lücke zwischen 38 und 69, nicht im Gefühl.

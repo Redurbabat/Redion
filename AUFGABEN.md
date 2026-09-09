@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — fünfundvierzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — sechsundvierzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -535,7 +535,26 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Uhrzeiten der Nachrichten sind abgeleitet (L139-Stil), die Token
     fehlen (L141), und der Code ist ein Türschild (L140). **Steht.**
 
-Der Auftrag heisst deshalb jetzt **fünfundvierzig Bögen**; die Überschrift
+  · **G46 — Die Zeichen der Leiste** (E515, test480 §5): Redur schickte
+    ein Foto der GoodNotes-Leiste — „Nehme die symbole. Für die redion
+    bitte 1:1". Die dreizehn Werkzeuge trugen Emoji: eigene Farbe, eigene
+    Strichstärke, eigene Grundlinie, auf jedem System anders. Jetzt sind
+    es dreiunddreissig neue Zeichen im Register (24 × 24, Strichstärke
+    1,7, `currentColor`), nach demselben Raster wie die hundert seit E273
+    — kein zweiter Zeichensatz in der PDF-Fläche (§8). Sieben Textzeichen
+    bleiben mit Grund, allen voran das `Aa` der Schriftart: es ist eine
+    Schriftprobe und zeigt, was keine Zeichnung zeigen kann. Nachgemessen
+    dabei: die festen 18 px sind rund 6 breiter als ein Emoji, dreizehnmal
+    fünfundsiebzig Pixel — die Werkzeugzeile kippte in eine zweite, und
+    `test351` hat es gefunden. Zurückgeholt an drei Stellen, jede mit
+    Grund. Und danach fand das BILD, was keine Zahl gemeldet hatte: Füller,
+    Kugelschreiber und Bleistift waren derselbe schräge Stift — gemessen
+    73 % gemeinsame Tinte bei 16 px. Der erste Versuch (schärfere Spitzen)
+    machte es schlimmer, 85 %; bei dieser Grösse trägt der Schaft alles.
+    Jetzt drei Umrisse statt dreier Spitzen, kein Paar über 46 %, und
+    `test480 §7` hält die Grenze bei 60. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **sechsundvierzig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
