@@ -61,10 +61,33 @@ binding = "ASSETS"
 #  Geheimnisse gehoeren weiterhin in Cloudflare Secrets.
 # ===========================================================================
 
-[[d1_databases]]
-binding = "DB"
-database_name = "redion"
-database_id = "2a4f6708-b7e7-43c5-9e18-17b33713dbb9"
+# ══ STILLGELEGT AM 9. SEPTEMBER 2026 (E522, L143) ═══════════════════════════
+#
+#  DIESE DATENBANK GIBT ES NICHT. Zweimal gemessen, an zwei Deploys:
+#
+#      ✘ [ERROR] D1 binding 'DB' references database
+#        '2a4f6708-b7e7-43c5-9e18-17b33713dbb9' which was not found.
+#
+#  Die Kennung steht seit E323 hier und gehoert zu keiner Datenbank in
+#  Redurs Konto. Solange sie so dasteht, scheitert JEDER Deploy - und dann
+#  ist gar nichts im Netz, auch nicht der Teil, der ohne Datenbank liefe.
+#
+#  Redion ist local-first; der Server ist freiwillig (Paragraph 22).
+#  Nachgesehen in server/cloudflare.ts: `if (!env || !env.DB)` ist ein
+#  eigener Zweig, und /api/stand antwortet auch dort. Ohne diese Bindung
+#  laeuft also alles ausser Konto, Abgleich und Rechte - und die laufen mit
+#  einer Kennung, die ins Leere zeigt, ohnehin nicht.
+#
+#  WIEDER ANSCHALTEN, wenn die Datenbank da ist:
+#      npx wrangler d1 list            gibt es sie schon?
+#      npx wrangler d1 create redion   sonst anlegen, gibt die Kennung aus
+#  Dann die vier Zeilen unten wieder freimachen und die neue Kennung
+#  eintragen. Sonst nichts.
+#
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "redion"
+# database_id = "HIER-DIE-ECHTE-KENNUNG-EINTRAGEN"
 
 # ===========================================================================
 #  R2 — die Ablage fuer Anhaenge (Bilder, PDFs, Videos)

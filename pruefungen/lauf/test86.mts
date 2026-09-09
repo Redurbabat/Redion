@@ -170,10 +170,21 @@ r = await seite.evaluate(() => ({
   mehrfach: Register.tasten.mehrfach().length,
   inGruppe: Register.tasten.inGruppe('Allgemein').length
 }));
-/* Dreizehn seit „Markdown einfügen" (L20). Diese Zeile hat den Zuwachs
-   gemeldet, bevor jemand die Übersicht aufgeschlagen hat — genau dafür
-   steht hier eine Zahl und kein `>= 1`. */
-p('Dreizehn Gruppen',         r.gruppen === 13, String(r.gruppen));
+/* VIERZEHN SEIT E465 („Blatt und PDF" — die Zeichenkürzel). Vorher
+   dreizehn seit „Markdown einfügen" (L20).
+
+   DIESE ZEILE HAT GETAN, WOFÜR SIE DA IST, und trotzdem hat sie niemand
+   gehört: sie ist seit E465 rot — der Bogen legte die vierzehnte Gruppe an
+   und hob die Zahl hier nicht mit. Gesehen wurde es erst am 9. September,
+   beim ersten vollen Lauf seit langem. Elf Bögen lagen dazwischen.
+
+   Das ist der Grund, warum §46 auf einem vollen Lauf besteht, bevor `main`
+   sich bewegt: eine einzelne rote Zusage in Lauf 61 von 431 fällt keinem
+   auf, der nur die Läufe seines eigenen Bogens fährt.
+
+   Und die Zahl bleibt eine Zahl statt `>= 1`. Genau deshalb hat sie den
+   Zuwachs überhaupt gemeldet. */
+p('Vierzehn Gruppen',         r.gruppen === 14, String(r.gruppen));
 p('Über hundert Kürzel',      Number(r.anzahl ?? -1) >= 120, String(r.anzahl));
 p('Suche findet',             r.suche >= 1, String(r.suche));
 p('Innerhalb einer Gruppe keine Taste doppelt', r.doppelte.length === 0,
