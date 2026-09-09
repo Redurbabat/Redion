@@ -7182,9 +7182,11 @@ aufgebraucht:
  4. September (E389)      2081 KB   Decke gesetzt: 2300
  9. September, vorher     2379 KB   79 KB über der Decke
  9. September, E525       2389 KB   +10 KB: die Marke im Kopf (8,7 KB)
+ 9. September, E526       2396 KB   +7 KB: wischen.js
 ```
 
-**Die zehn Kilobyte aus E525 sind meine, und sie sind der kleinere Teil.**
+**Die siebzehn Kilobyte aus E525 und E526 sind meine, und sie sind der
+kleinere Teil.**
 Die 79 davor sind über mehrere Bögen dazugekommen, ohne dass jemand
 hingesehen hat — genau das, wogegen die Decke gebaut wurde.
 

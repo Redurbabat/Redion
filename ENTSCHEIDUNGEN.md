@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-506 Entscheidungen, E1 bis E526 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+507 Entscheidungen, E1 bis E527 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -570,6 +570,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E524** — Ein fehlender Schrägstrich, und die Chronik war im Netz tot — die Ausschlussliste fing zwei Skripte mit
 * **E525** — Redurs Marke, aus einer Quelle gerechnet — achtzehn Symbole, eine `marke.png`, und ein Bild, das den Fehler fand
 * **E526** — Die Leiste ist eine Kapsel, und man wischt zwischen den Bereichen — drei Fehler, von denen keiner der gesuchte war
+* **E527** — Die Einzeldatei trägt ihr Reitersymbol selbst — ein Verweis ins Leere zeigte weiter das alte rote R
 
 ---
 
@@ -42649,3 +42650,54 @@ Bildrand ab, der wirkliche Weg war kürzer als 70, und die Zusage war aus dem
 falschen Grund grün — die Gegenprobe blieb ebenfalls grün. Nach rechts
 gewischt bleibt der Weg im Bild, und die Gegenprobe wird rot. Das ist §55.2
 zum dritten Mal in diesem Projekt.
+
+---
+
+E527 — Die Einzeldatei trägt ihr Reitersymbol selbst
+--------------------------------------------------------------------------
+
+Redur, 9. September, mit einem Bild seines Browserreiters:
+
+> „hier ganz oben link habe ich die r logo wieder lösche es"
+
+## Was dahintersteckte
+
+**Nachgesehen, bevor etwas geändert wurde:** die eingecheckte
+`oeffentlich/favicon.ico` ist bei 16 px die Marke, kein R — herausgeschnitten
+und angesehen. Im Verzeichnis gibt es das rote R seit E525 nirgends mehr.
+
+Der Reiter zeigte es trotzdem, und dafür gibt es zwei Gründe, die sich
+überlagern:
+
+1. **Eine alte Kopie auf dem Laptop.** Redur hatte den Zweig noch nicht
+   geholt — er fragte im selben Atemzug, warum in `Dokumente\Redgit\Redion`
+   nichts liege.
+2. **Und eine echte Lücke.** `index.html` verweist mit fünf `<link>` auf
+   `oeffentlich/icons/…`. Im Ordnerbetrieb liegen die Dateien daneben; die
+   **Einzeldatei hat keinen Ordner neben sich** (§29). Sie hatte damit gar
+   kein Zeichen — und was ein Reiter ohne Zeichen zeigt, entscheidet der
+   Browser: meist das zuletzt gemerkte für diese Adresse. Also weiter das
+   alte R, aus dem Zwischenspeicher, obwohl die Datei es nicht mehr enthält.
+
+Der zweite Grund ist der interessantere: er hätte auch nach jedem künftigen
+Markenwechsel wieder zugeschlagen, und niemand hätte ihn gesehen.
+
+## Was entschieden wurde
+
+`bauen.mts` setzt die Symbolbytes ein, statt sie zu verlinken — dieselbe
+Bauart wie bei den Stilblättern und den PDF-Bytes. Fehlt ein Symbol, bricht
+der Bau ab; ein stilles Weglassen wäre genau der Zustand, den das behebt.
+Kosten: 143 KB auf 9,4 MB.
+
+**Die sieben iPhone-Startbilder fliegen dagegen raus.**
+`apple-touch-startup-image` greift nur, wenn die Seite auf dem
+Startbildschirm liegt, und dorthin kommt eine Datei von der Platte nicht.
+Sie einzusetzen wären 1,3 MB, die dort nie gezeigt werden; sie stehen zu
+lassen wäre ein Verweis auf eine Datei, die daneben nicht liegt. Also weg.
+
+## Geprüft
+
+`test483` um zwei Zusagen erweitert: kein einziger `oeffentlich/icons/` mehr
+in der Einzeldatei, und ihr `<link rel="icon">` trägt eine Data-URL.
+Gegenprobe rot gesehen — das Einsetzen abgeschaltet, fünf Reste, beide
+Zusagen rot. 25/25 grün.

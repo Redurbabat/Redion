@@ -193,6 +193,16 @@ console.log('\n§5 Sichtbar');
     /\.studio-monogram\{[^}]*url\("data:image\/png;base64,/.test(einzeln));
   p('… und verweist dafür auf keine Datei daneben',
     !/\.studio-monogram\{[^}]*url\(["']?(?:\.|\/|oeffentlich)/.test(einzeln));
+  /* UND DAS GILT AUCH FÜR DEN BROWSERREITER (E527). Die Einzeldatei hat
+     keinen Ordner neben sich; ein `<link rel="icon" href="oeffentlich/…">`
+     ginge dort ins Leere, und was ein Reiter ohne Zeichen zeigt, entscheidet
+     der Browser — meist das zuletzt gemerkte. Redur sah deshalb weiter das
+     alte rote R. `bauen.mts` setzt die Bytes jetzt ein. */
+  p('Kein einziger Verweis mehr auf oeffentlich/icons/ in der Einzeldatei',
+    !einzeln.includes('oeffentlich/icons/'),
+    String((einzeln.match(/oeffentlich\/icons\//g) || []).length) + ' Reste');
+  p('Ihr Reitersymbol trägt seine Bytes selbst',
+    /<link rel="icon"[^>]*href="data:image\/png;base64,[A-Za-z0-9+/=]{200,}"/.test(einzeln));
 
   const browser = await chromium.launch();
   const fehler: string[] = [];
