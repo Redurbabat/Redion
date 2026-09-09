@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-502 Entscheidungen, E1 bis E522 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+503 Entscheidungen, E1 bis E523 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -566,6 +566,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E520** — Der Worker heisst `red-ion`, und ein Zeugnis lag im Netz — die Namenswarnung verdeckte den echten Fehler
 * **E521** — Ein Zweig, ein Push, dann ein neuer Zweig — ein Zweig, der weiterwächst, verliert seinen Namen
 * **E522** — Der volle Lauf: die D1-Bindung stillgelegt, zwei Zusagen seit E465 rot — und eine Behauptung aus E520 zurückgenommen
+* **E523** — „Hello world": Redion war nie im Netz, und das Zeugnis auch nicht — ein gescheiterter Deploy ersetzt nichts
 
 ---
 
@@ -42198,3 +42199,74 @@ GEPRÜFT. `test65` und `test86` wieder grün. Der volle Lauf war beim
 Schreiben dieses Eintrags noch nicht durch — was danach kommt, kommt als
 eigener Eintrag dazu. Der Trockenlauf des Deploys geht durch; **der Deploy
 selbst ist nicht geprüft**, er braucht Redurs Konto.
+
+---
+
+E523 — „Hello world": Redion war nie im Netz, und das Zeugnis auch nicht
+--------------------------------------------------------------------------
+
+Redur, 9. September 2026, mit einem Bildschirmfoto von
+`https://red-ion.redurbabat7.workers.dev/`:
+
+> „Es sieht so aus bei …" — und darauf, in Schreibmaschinenschrift auf
+> schwarzem Grund: **Hello world**
+
+Und auf die Frage, was unter den anderen Adressen steht:
+
+> „Es kommt überall hello world"
+
+## Was das ist
+
+Cloudflares **Standard-Worker**. Die Vorlage, die beim Anlegen eines
+Projekts entsteht:
+
+```js
+export default { async fetch() { return new Response('Hello world') } }
+```
+
+Sie sieht den Pfad gar nicht an — deshalb dieselbe Antwort auf jeder
+Adresse. Genau das hat Redur gemessen.
+
+## Warum sie noch läuft
+
+Beide Deploys sind am selben Punkt abgebrochen (L143): die D1-Datenbank
+gibt es nicht. Ein gescheiterter Deploy ersetzt die laufende Fassung nicht.
+Also läuft seit dem Anlegen des Projekts die Vorlage weiter, und Redion war
+**nie** dort.
+
+```txt
+09:03  Deploy → ✘ D1 → abgebrochen
+09:35  Deploy → ✘ D1 → abgebrochen
+       ⇒ die Worker-Fassung wurde nie ersetzt
+```
+
+## Und damit ist die Sorge aus E520 entkräftet
+
+E520 trug den Titel „und ein Zeugnis lag im Netz". **Es lag nicht im Netz.**
+Die Datei wurde in Cloudflares Dateispeicher hochgeladen — das steht so im
+Protokoll vom 09:03 —, aber ohne aktive Worker-Fassung zeigt niemand darauf.
+Hochgeladen und ausgeliefert sind zweierlei.
+
+Der Titel bleibt stehen; Protokolle schreibt man nicht um. Aber wer ihn
+ohne diesen Eintrag liest, zieht den falschen Schluss, und deshalb steht es
+hier — und in L145 an der Stelle, an der die Messung hingehört.
+
+**Die Sorge war trotzdem richtig.** Die Datei WAR hochgeladen, und beim
+ersten erfolgreichen Deploy wäre sie erreichbar gewesen, wenn die
+Ausschlussliste nicht wirkt. Dass sie es nicht wurde, lag an einem Fehler,
+nicht an einer Vorkehrung. Das ist kein Grund zur Beruhigung, sondern der
+Grund, warum die eine Prüfadresse jetzt in L145 steht.
+
+## Was daraus folgt, in dieser Reihenfolge
+
+1. **Die D1-Reparatur muss auf `main`.** Cloudflare baut von dort; auf
+   `main` steht die tote Bindung noch. Solange sie dort steht, bleibt
+   „Hello world" stehen, und alles andere ist müssig.
+2. **Nach dem ersten erfolgreichen Deploy: die eine Adresse aufrufen**
+   (L145). Sie entscheidet, ob `.assetsignore` wirkt.
+3. Erst danach ist L143 wirklich zu, und L145 auch.
+
+GEMESSEN, nicht behauptet: Redur hat jede der genannten Adressen selbst
+aufgerufen. Von hier aus geht es nicht — der Ausgangsproxy dieser Sitzung
+lehnt die Verbindung mit 403 ab, nachgesehen unter `__agentproxy/status`.
+Kein Prüflauf: der Zustand liegt bei Cloudflare, nicht im Verzeichnis.

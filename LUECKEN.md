@@ -7123,6 +7123,44 @@ weniger. Ausgeschlossen wurden zwischen den beiden Läufen aber 83
   3. Im Cloudflare-Dashboard unter Workers → red-ion → Assets nachsehen,
      was wirklich dort liegt.
 
+## GEMESSEN AM 9. SEPTEMBER, 11:54 — der dringende Teil ist beantwortet
+
+Redur hat die Adresse aufgerufen. Unter
+`https://red-ion.redurbabat7.workers.dev/` steht **„Hello world"** in
+Schreibmaschinenschrift — Cloudflares Standard-Worker, die Vorlage, die
+beim Anlegen des Projekts entsteht.
+
+Und auf JEDER Adresse dasselbe: `/index.html`, die persönliche PDF, die
+Chronik — überall „Hello world". Das ist kein Zufall, sondern die Bauart
+dieser Vorlage: sie sieht den Pfad gar nicht an und antwortet immer gleich.
+
+**Damit ist die dringende Frage beantwortet: es ist NICHTS erreichbar.**
+Weder Redion noch die persönliche PDF. Beide Deploys sind am D1-Fehler
+abgebrochen (L143), es wurde nie eine Fassung aktiv, und ohne aktive Fassung
+zeigt niemand auf die hochgeladenen Dateien.
+
+Der Zustand aus E520 — „ein Zeugnis lag im Netz" — war also eine begründete
+Sorge und keine Tatsache. Die Datei war hochgeladen, aber nicht ausgeliefert.
+Das ist ein Unterschied, und er gehört hierher, damit niemand später den
+falschen Schluss zieht.
+
+## Was offen BLEIBT
+
+Die eigentliche Frage — **wirkt `.assetsignore`?** — ist nicht beantwortet,
+nur nicht mehr dringend. Sie wird es in dem Augenblick wieder, in dem der
+erste Deploy DURCHGEHT (L143). Dann gilt:
+
+```txt
+red-ion.redurbabat7.workers.dev/Redur_Babat_FZ_MOE_Lehrpersonen.pdf
+```
+
+  · **404 oder die Startseite** → die Ausschlussliste wirkt.
+  · **die PDF** → sie wirkt nicht, und dann ist es dringend.
+
+Diese eine Adresse ist die ganze Prüfung. Sie gehört in den ersten
+Durchgang nach dem ersten erfolgreichen Deploy, und sie steht deshalb hier
+und nicht in einem Prüflauf — kein Lauf im Container erreicht sie.
+
 Bis dahin gilt: **die Wirkung ist unbekannt**, und der Satz aus E520 („sie
 gehen nur nicht mehr mit ins Netz") ist nicht belegt. Er steht in E522
 richtiggestellt.

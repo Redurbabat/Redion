@@ -5135,3 +5135,26 @@ seines eigenen Bogens fährt, sieht sie nie. Elf Bögen liegen dazwischen.
 Genau dafür besteht §46 auf einem vollen Lauf, bevor `main` sich bewegt.
 Und genau deshalb war es richtig, ihn zu fahren, statt den einen kleinen
 Commit durchzuwinken.
+
+**„Hello world" — Redion war nie im Netz (E523).** Redur schickte ein Bild
+von `red-ion.redurbabat7.workers.dev`: schwarzer Grund, oben links in
+Schreibmaschinenschrift „Hello world". Und auf Nachfrage: überall dasselbe.
+
+Das ist Cloudflares Standard-Worker, die Vorlage vom Anlegen des Projekts.
+Sie sieht den Pfad gar nicht an — deshalb dieselbe Antwort auf jeder
+Adresse. Beide Deploys waren am D1-Fehler abgebrochen, und ein gescheiterter
+Deploy ersetzt die laufende Fassung nicht. Redion war nie dort.
+
+Damit ist die Sorge aus E520 entkräftet: das Zeugnis lag NICHT im Netz. Die
+Datei war in Cloudflares Speicher hochgeladen, aber ohne aktive Fassung
+zeigt niemand darauf. Hochgeladen und ausgeliefert sind zweierlei.
+
+Richtig war die Sorge trotzdem. Die Datei war hochgeladen, und beim ersten
+erfolgreichen Deploy wäre sie erreichbar gewesen, falls die Ausschlussliste
+nicht wirkt — was bis heute niemand gemessen hat. Dass nichts passiert ist,
+lag an einem Fehler und nicht an einer Vorkehrung. Deshalb steht in L145
+jetzt genau eine Adresse, die nach dem ersten erfolgreichen Deploy
+aufgerufen gehört; sie entscheidet die Frage in fünf Sekunden.
+
+Gemessen hat es Redur selbst. Von hier aus geht es nicht: der Ausgangsproxy
+dieser Sitzung lehnt die Verbindung mit 403 ab.
