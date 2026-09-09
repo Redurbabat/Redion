@@ -384,6 +384,17 @@ Die zehn Adern. Nicht wegen der Technik — zehn Farben und zwei Strichmuster �
 **Besserer Prompt:** Zwei Sätze statt einem, weil es zwei Aufträge sind — der zweite ist eine Dauerregel, kein einmaliger Wunsch. Und ein Name für den Zweig hätte eine Entscheidung gespart: „nenn ihn X". Der zweite Teil hat übrigens einen echten Fehler aufgedeckt: es GING gar nicht, den Arbeitsstand zu holen.
 
 
+**6 · ca. 08:30**
+
+> geb mir mmer im powerschell im windows die fertige befel o
+
+**Gemeint:** Gib mir immer die fertigen PowerShell-Befehle für Windows — zum Kopieren, statt Anleitungen zum Klicken.
+
+**Besser geschrieben:** Gib mir die Befehle immer fertig für PowerShell unter Windows.
+
+**Besserer Prompt:** „Ich kopiere lieber Befehle, als zu klicken. Gib mir alles als fertige PowerShell-Zeile." — der Grund dazu spart die Rückfrage, ob die .bat-Dateien überhaupt noch gewollt sind. (Sie sind es: der Befehl ruft sie auf, weil in ihnen die Rettung steckt.)
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -392,12 +403,13 @@ Die zehn Adern. Nicht wegen der Technik — zehn Farben und zwei Strichmuster �
 | E514 — Die Chronik: PROBLEME.md, UR.md und die Ansicht in Redion | `dc9bbcab` → `dd694ff7` | 04:12 – 04:47 | ca. 35 min | test481 |
 | E515 — Die Zeichen der Leiste: vierunddreissig gezeichnete statt Emoji, und fünfundsiebzig Pixel, die niemand sah | `dd694ff7` → `a33cceb1` | 04:47 – 06:45 | ca. 1 h 58 min | test480 §5 neu (acht Zusagen); test351 war rot und ist wieder grün |
 | E516 — L139 gefunden: der Import war nie kaputt, das Wort war es | `a33cceb1` → `0f8f0a1c` | 06:45 – 07:35 | ca. 50 min | test482 neu, 28 Zusagen |
-| E517 — Ein Zweig statt main: der Arbeitsstand kommt auf den Laptop | `0f8f0a1c` → `(dieser Bogen)` | ab 07:35 | — | test353 von 60 auf 81 Zusagen |
+| E517 — Ein Zweig statt main: der Arbeitsstand kommt auf den Laptop | `0f8f0a1c` → `9812d8a8` | 07:35 – 08:25 | ca. 50 min | test353 von 60 auf 81 Zusagen |
+| E518 — Die fertigen PowerShell-Befehle stehen im Verzeichnis, nicht im Gespräch | `9812d8a8` → `(dieser Bogen)` | ab 08:25 | — | test353 von 81 auf 88 Zusagen |
 
 #### Zahlen des Tages
 
-- **commits:** 5
-- **entscheidungen:** 5
+- **commits:** 6
+- **entscheidungen:** 6
 
 #### Das grösste Problem
 
@@ -419,10 +431,12 @@ Die drei sauberen Messungen aus E513. Sie waren richtig gerechnet und haben trot
 | 07:20 | Der Importeur beschriftet den Knopf über ein Wortfeld statt über `textContent`. | `textContent` wirft die Kindknoten weg, und dort hängt seit E515 das gezeichnete Zeichen. Nach dem ersten Import stand der Knopf ohne Zeichen da — für den Rest der Sitzung, weil er fest in der Startseite steht. | keins an Daten — Oberfläche |
 | 07:45 | Neuer Zweig `claude/redion-goodnotes-weiter`, ab hier wird dort gearbeitet. | Redur hat darum gebeten. Der alte Zweig bleibt liegen, nichts wird umgeschrieben. | keins — der neue Zweig beginnt genau auf dem Stand des alten |
 | 08:05 | `holen.bat` nimmt einen Zweignamen; `holen-zweig.bat` fragt danach. | Der Arbeitsstand war vom Laptop aus nicht erreichbar: holen.bat holt main, main steht still bis zum grünen Gesamtlauf, gearbeitet wird auf einem Zweig. Ohne Angabe bleibt es main — wer doppelklickt, soll den geprüften Stand bekommen. | gering, aber genau die Stelle aus E271: ein vergessener origin/main meldet Erfolg und wirft Arbeit weg. Sechs Stellen einzeln geprüft, die Folge in einem echten Repo nachgefahren. |
+| 08:40 | Die fertigen PowerShell-Befehle in START-MIT-CLAUDE-CODE.md geschrieben, mit einem Wächter dafür. | Ein Befehl, der nur im Gespräch steht, ist morgen weg. Und der Alltagsbefehl ruft holen.bat statt git checkout: das kurze git checkout überspränge die ganze Rettung. | keins an Daten; die git-Folge wurde vorher in einem echten Repo gefahren, nicht abgeschrieben |
+| 08:55 | Benutzerpfad aus START-MIT-CLAUDE-CODE.md und SERVER-EINRICHTEN.md entfernt. | Ein ausgeschriebener Benutzerpfad stimmt auf keinem zweiten Rechner und gehört nicht in ein offenes Verzeichnis. Die drei in ENTSCHEIDUNGEN.md, UR.md und im Audit bleiben: das sind Protokolle. | keins |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 17 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 18 Einträge.
 

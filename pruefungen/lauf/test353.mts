@@ -271,6 +271,50 @@ console.log('\n5a2 · Dieselbe Befehlsfolge in einem echten Repo gefahren');
   }
 }
 
+/* ── 5c — DIE FERTIGEN BEFEHLE STEHEN IM REPOSITORY (E518) ────────────────
+   Redur, 9. September: „geb mir immer im powerschell im windows die fertige
+   befel."
+
+   Ein Befehl, der nur im Gespräch steht, ist morgen weg. Er steht deshalb in
+   START-MIT-CLAUDE-CODE.md — und damit kann er von der Wirklichkeit
+   abdriften. Diese Zusagen halten die vier Punkte, an denen ein Abdriften
+   WEHTUT:
+
+     · der Alltagsbefehl ruft `holen.bat` MIT einem Zweig — ein blosses
+       `git checkout` überspränge die ganze Rettung;
+     · gerettet wird VOR dem Umzug, nicht danach (die Reihenfolge IST die
+       Rettung);
+     · zurückgeholt wird mit `apply`, nicht mit `pop` (E271: `pop` wirft die
+       Ablage weg, wenn es schiefgeht);
+     · und der Pfad steht als `$env:USERPROFILE` da, nicht ausgeschrieben —
+       ein Benutzerpfad stimmt auf keinem zweiten Rechner und gehört ohnehin
+       nicht in ein offenes Verzeichnis.
+
+   GEPRÜFT WIRD NUR DIESE EINE DATEI. Im Verzeichnis stehen noch drei
+   Benutzerpfade, und die bleiben: `ENTSCHEIDUNGEN.md`, `UR.md` und das
+   Studien-Audit sind PROTOKOLLE — sie halten fest, was gesagt und gelesen
+   wurde. Ein Protokoll umzuschreiben wäre schlimmer als der Pfad darin. */
+console.log('\n5c · Die fertigen PowerShell-Befehle stehen im Repository');
+{
+  const anleitung = lies('START-MIT-CLAUDE-CODE.md');
+  p('Es gibt einen PowerShell-Abschnitt', /```powershell/.test(anleitung));
+  p('Der Alltagsbefehl ruft holen.bat mit einem Zweig',
+    /\.\\holen\.bat claude\/[a-z0-9-]+/.test(anleitung));
+  p('… und es steht auch der Weg ohne Zweig da, für den geprüften Stand',
+    /\.\\holen\.bat\s*\n/.test(anleitung));
+  /* DIE REIHENFOLGE. Ein `checkout -B` vor dem `stash` macht aus der Rettung
+     eine Meldung. */
+  const stash = anleitung.indexOf('git stash push -u');
+  const umzug = anleitung.indexOf('git checkout -B claude/');
+  p('Gerettet wird VOR dem Umzug', stash > 0 && umzug > stash, `${stash} / ${umzug}`);
+  p('Zurückgeholt wird mit apply, nicht mit pop',
+    /git stash apply/.test(anleitung) && !/git stash pop/.test(anleitung));
+  /* KEIN PERSÖNLICHER PFAD IM VERZEICHNIS. */
+  p('Der Pfad steht als $env:USERPROFILE da', /\$env:USERPROFILE/.test(anleitung));
+  p('… und nirgends als C:\\Users\\<name>',
+    !/C:\\Users\\[A-Za-z]/.test(anleitung), 'ein persönlicher Pfad steht darin');
+}
+
 /* ── 5b ───────────────────────────────────────────────────────────────── */
 console.log('\n5b · vergleichen.bat sieht nur nach und faesst nichts an');
 /* DIE DRITTE RICHTUNG (E438). Redur fragte, wie er seinen Stand mit GitHub

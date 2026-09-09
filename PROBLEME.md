@@ -31,6 +31,7 @@ sind der teuerste Teil und der lehrreichste.
 | P15 | 2026-09-09 | Drei Stifte, ein Bild — und die Reparatur, die es schlimmer machte | 🟠 mittel | — |
 | P16 | 2026-09-09 | „Eine neue PDF kopiert die aktuelle" — der Import war nie kaputt | hoch | — |
 | P17 | 2026-09-09 | Der Laptop bekam den Arbeitsstand gar nicht — drei richtige Regeln ergaben zusammen eine Sackgasse | 🟠 mittel | — |
+| P18 | 2026-09-09 | Der Wächter fing den Satz, der die Regel erklärt | 🟡 klein | — |
 
 ---
 
@@ -325,4 +326,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Stand.** Behoben. Gegenprobe rot gesehen: ein einziger Befehl zurück auf origin/main, drei Zusagen rot.
 
 **Die Lehre.** Wenn eine Frage nach dem Weg gestellt wird, erst nachsehen, ob es den Weg gibt. Die schnelle Antwort wäre hier ein Befehl gewesen, der das Falsche tut — und Redur hätte den alten Stand geholt und geglaubt, er sei der neue.
+
+
+---
+
+## P18 · Der Wächter fing den Satz, der die Regel erklärt
+
+*2026-09-09 · 🟡 klein*
+
+**Das Bild.** Die neue Zusage „nirgends ein ausgeschriebener Benutzerpfad" wurde beim ersten Lauf rot — an genau der Zeile, die erklärt, warum man keinen schreiben soll. Sie schrieb ihn aus.
+
+**Die falsche Vermutung.** Keine. Der Wächter war eine Minute alt und hat sofort etwas gefunden — das ist der Normalfall, wenn eine Zusage wirklich messen kann, statt nur zuzustimmen (§55.2).
+
+**Wie gesucht wurde.** Ein grep über das ganze Verzeichnis danach: fünf weitere Stellen.
+
+**Die Ursache.** Ein Beispiel im erklärenden Satz. Die häufigste Art, gegen die eigene Regel zu verstossen.
+
+**Der Stand.** Behoben. Der Wächter misst genau die eine Datei, die jemand kopiert.
+
+**Die Lehre.** Ein Wächter, der beim ersten Lauf grün ist, hat nichts bewiesen. Dieser war beim ersten Lauf rot, und zwar an einer Stelle, die niemand vermutet hätte.
 

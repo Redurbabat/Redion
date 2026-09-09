@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — achtundvierzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — neunundvierzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -577,7 +577,15 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Rettungslogik, die steht in einer Datei (§8). Sechs git-Stellen einzeln
     geprüft, die Folge in einem echten Repo nachgefahren. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **achtundvierzig Bögen**; die Überschrift
+  · **G49 — Die fertigen Befehle** (E518, test353 §5c): Redur klickt nicht,
+    er kopiert. Die PowerShell-Zeilen stehen jetzt in
+    `START-MIT-CLAUDE-CODE.md` statt nur im Gespräch — und der Alltagsbefehl
+    ruft `holen.bat`, nicht `git checkout`: das kürzere überspränge die
+    ganze Rettung. Vier Zusagen halten die Stellen, an denen ein Abdriften
+    wehtut; die letzte war beim ersten Lauf rot und hat den Satz gefangen,
+    der die Regel erklärt. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **neunundvierzig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

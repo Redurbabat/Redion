@@ -367,6 +367,13 @@ const ChronikDaten = {
      "gemeint": "Einen neuen Zweig anlegen, ab jetzt dort arbeiten — und nach jeder Änderung dazusagen, wie der aktuelle Stand von GitHub auf den Laptop kommt.",
      "besser": "Mach einen neuen Zweig und arbeite ab jetzt dort. Und sag mir nach jeder Änderung, wie ich den aktuellen Stand auf den Laptop hole.",
      "besserePrompt": "Zwei Sätze statt einem, weil es zwei Aufträge sind — der zweite ist eine Dauerregel, kein einmaliger Wunsch. Und ein Name für den Zweig hätte eine Entscheidung gespart: „nenn ihn X\". Der zweite Teil hat übrigens einen echten Fehler aufgedeckt: es GING gar nicht, den Arbeitsstand zu holen."
+    },
+    {
+     "zeit": "ca. 08:30",
+     "wortlaut": "geb mir mmer im powerschell im windows die fertige befel o",
+     "gemeint": "Gib mir immer die fertigen PowerShell-Befehle für Windows — zum Kopieren, statt Anleitungen zum Klicken.",
+     "besser": "Gib mir die Befehle immer fertig für PowerShell unter Windows.",
+     "besserePrompt": "„Ich kopiere lieber Befehle, als zu klicken. Gib mir alles als fertige PowerShell-Zeile.\" — der Grund dazu spart die Rückfrage, ob die .bat-Dateien überhaupt noch gewollt sind. (Sie sind es: der Befehl ruft sie auf, weil in ihnen die Rettung steckt.)"
     }
    ],
    "arbeit": [
@@ -405,14 +412,22 @@ const ChronikDaten = {
     {
      "was": "E517 — Ein Zweig statt main: der Arbeitsstand kommt auf den Laptop",
      "vonCommit": "0f8f0a1c",
+     "bisCommit": "9812d8a8",
+     "zeitraum": "07:35 – 08:25",
+     "pruefungen": "test353 von 60 auf 81 Zusagen",
+     "dauer": "ca. 50 min"
+    },
+    {
+     "was": "E518 — Die fertigen PowerShell-Befehle stehen im Verzeichnis, nicht im Gespräch",
+     "vonCommit": "9812d8a8",
      "bisCommit": "(dieser Bogen)",
-     "zeitraum": "ab 07:35",
-     "pruefungen": "test353 von 60 auf 81 Zusagen"
+     "zeitraum": "ab 08:25",
+     "pruefungen": "test353 von 81 auf 88 Zusagen"
     }
    ],
    "zahlen": {
-    "commits": 5,
-    "entscheidungen": 5
+    "commits": 6,
+    "entscheidungen": 6
    },
    "groesstesProblem": "Die drei sauberen Messungen aus E513. Sie waren richtig gerechnet und haben trotzdem nichts bewiesen, weil sie die falsche Frage gestellt haben: „legt der Import die richtige Datei ab?\" statt „welchen Knopf drückt er?\". Eine Messung, die die falsche Frage stellt, ist gefährlicher als gar keine — sie kommt grün zurück und man glaubt ihr.",
    "interessantesteAnfrage": "„Wieter mit L139\" — drei Wörter, und sie haben gereicht, weil die Frage schon in LUECKEN.md stand. Das ist der Nutzen dieser Datei, den man erst sieht, wenn man ihn braucht: eine Lücke, die aufgeschrieben ist, lässt sich mit einer Nummer wieder aufnehmen. Eine, die nur im Kopf stand, hätte die ganze Geschichte noch einmal gebraucht.",
@@ -464,6 +479,18 @@ const ChronikDaten = {
      "was": "`holen.bat` nimmt einen Zweignamen; `holen-zweig.bat` fragt danach.",
      "warum": "Der Arbeitsstand war vom Laptop aus nicht erreichbar: holen.bat holt main, main steht still bis zum grünen Gesamtlauf, gearbeitet wird auf einem Zweig. Ohne Angabe bleibt es main — wer doppelklickt, soll den geprüften Stand bekommen.",
      "risiko": "gering, aber genau die Stelle aus E271: ein vergessener origin/main meldet Erfolg und wirft Arbeit weg. Sechs Stellen einzeln geprüft, die Folge in einem echten Repo nachgefahren."
+    },
+    {
+     "zeit": "08:40",
+     "was": "Die fertigen PowerShell-Befehle in START-MIT-CLAUDE-CODE.md geschrieben, mit einem Wächter dafür.",
+     "warum": "Ein Befehl, der nur im Gespräch steht, ist morgen weg. Und der Alltagsbefehl ruft holen.bat statt git checkout: das kurze git checkout überspränge die ganze Rettung.",
+     "risiko": "keins an Daten; die git-Folge wurde vorher in einem echten Repo gefahren, nicht abgeschrieben"
+    },
+    {
+     "zeit": "08:55",
+     "was": "Benutzerpfad aus START-MIT-CLAUDE-CODE.md und SERVER-EINRICHTEN.md entfernt.",
+     "warum": "Ein ausgeschriebener Benutzerpfad stimmt auf keinem zweiten Rechner und gehört nicht in ein offenes Verzeichnis. Die drei in ENTSCHEIDUNGEN.md, UR.md und im Audit bleiben: das sind Protokolle.",
+     "risiko": "keins"
     }
    ]
   }
@@ -674,6 +701,19 @@ const ChronikDaten = {
    "behebung": "holen.bat nimmt einen Zweignamen, ohne Angabe bleibt es main. holen-zweig.bat fragt danach und hat KEINE eigene Rettungslogik. Sechs git-Stellen einzeln geprüft, die Folge in einem echten Wegwerf-Repo mit Schrägstrich-Zweignamen nachgefahren.",
    "stand": "Behoben. Gegenprobe rot gesehen: ein einziger Befehl zurück auf origin/main, drei Zusagen rot.",
    "lehre": "Wenn eine Frage nach dem Weg gestellt wird, erst nachsehen, ob es den Weg gibt. Die schnelle Antwort wäre hier ein Befehl gewesen, der das Falsche tut — und Redur hätte den alten Stand geholt und geglaubt, er sei der neue."
+  },
+  {
+   "nr": "P18",
+   "datum": "2026-09-09",
+   "titel": "Der Wächter fing den Satz, der die Regel erklärt",
+   "schwere": "klein",
+   "symptom": "Die neue Zusage „nirgends ein ausgeschriebener Benutzerpfad\" wurde beim ersten Lauf rot — an genau der Zeile, die erklärt, warum man keinen schreiben soll. Sie schrieb ihn aus.",
+   "falscheVermutung": "Keine. Der Wächter war eine Minute alt und hat sofort etwas gefunden — das ist der Normalfall, wenn eine Zusage wirklich messen kann, statt nur zuzustimmen (§55.2).",
+   "wieGesucht": "Ein grep über das ganze Verzeichnis danach: fünf weitere Stellen.",
+   "ursache": "Ein Beispiel im erklärenden Satz. Die häufigste Art, gegen die eigene Regel zu verstossen.",
+   "behebung": "Die Zeile umgeschrieben; SERVER-EINRICHTEN.md gleich mit, dort stand derselbe Pfad in einem cd zum Kopieren. Die drei in ENTSCHEIDUNGEN.md, UR.md und im Audit bleiben stehen — Protokolle schreibt man nicht um.",
+   "stand": "Behoben. Der Wächter misst genau die eine Datei, die jemand kopiert.",
+   "lehre": "Ein Wächter, der beim ersten Lauf grün ist, hat nichts bewiesen. Dieser war beim ersten Lauf rot, und zwar an einer Stelle, die niemand vermutet hätte."
   }
  ]
 } as const;

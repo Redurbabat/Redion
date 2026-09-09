@@ -4978,3 +4978,32 @@ git-Befehle darin aber schon — und sie sind das Risiko, nicht die Hülle.
 Dieselbe Folge in einem echten Wegwerf-Repo, mit einem Zweignamen mit
 Schrägstrich: klonen, holen, umziehen, ein eigener Commit, sichern. Danach
 liegt die eigene Arbeit in der Sicherung und nicht im Nichts.
+
+**Die fertigen Befehle (E518, test353 §5c).** Redur klickt nicht, er
+kopiert: „geb mir immer im powerschell im windows die fertige befel."
+
+Die naheliegende Antwort wäre `git checkout` gewesen — kurz und direkt. Sie
+wäre falsch gewesen: sie überspringt die ganze Rettung. Kein Fragen bei
+GitHub, ob der Stand geprüft ist; kein Sichern eigener Commits; kein
+Beiseitelegen geänderter Dateien; keine Meldung am Ende, wo alles liegt. Ein
+Befehl, der schneller aussieht und Arbeit wegwerfen kann, ist kein besserer
+Befehl. Der Alltagsbefehl ruft deshalb `holen.bat` mit dem Zweignamen.
+
+Für das erste Mal geht es trotzdem von Hand, weil das alte `holen.bat` auf
+dem Laptop noch keinen Zweignamen annimmt. Diese drei Zeilen wurden vorher
+in einem echten Wegwerf-Repo gefahren, mit einer eigenen ungespeicherten
+Datei im Ordner — danach stand der Zweig da, sein Inhalt auch, und die
+eigene Datei lag in der Ablage statt im Nichts.
+
+Die Befehle stehen jetzt in `START-MIT-CLAUDE-CODE.md` und nicht nur im
+Gespräch, das morgen weg ist. Ein Wächter hält die vier Stellen, an denen
+ein Abdriften wehtut: der Befehl ruft `holen.bat` mit Zweig, gerettet wird
+vor dem Umzug, zurückgeholt wird mit `apply` statt `pop`, und der Pfad steht
+als `$env:USERPROFILE` da.
+
+Die letzte Zusage war beim ersten Lauf rot — und zwar an der Zeile, die
+erklärt, warum man einen Benutzerpfad nicht ausschreibt. Sie schrieb ihn
+aus. Behoben, und `SERVER-EINRICHTEN.md` gleich mit; dort stand derselbe
+Pfad in einem `cd` zum Kopieren. Die drei in `ENTSCHEIDUNGEN.md`, `UR.md`
+und im Studien-Audit bleiben stehen: das sind Protokolle, und ein Protokoll
+schreibt man nicht um.

@@ -41,7 +41,7 @@ Alles Weitere steht ausführlich darunter. Wer es einfach abarbeiten will:
 Zeile eingeben. Der Ordner ist der, in dem `index.html` liegt:
 
 ```powershell
-cd C:\Users\redur\Documents\ChatGPT\Redion\Redion-src
+cd "$env:USERPROFILE\Documents\ChatGPT\Redion\Redion-src"
 
 npx wrangler login
 npx wrangler d1 create redion

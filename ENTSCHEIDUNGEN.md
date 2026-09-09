@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-497 Entscheidungen, E1 bis E517 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+498 Entscheidungen, E1 bis E518 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -561,6 +561,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E515** — Die Zeichen der Leiste sind gezeichnet, nicht getippt — dreiunddreissig neue im Register, und fünfundsiebzig Pixel, die niemand sah
 * **E516** — L139 gefunden: der Import war nie kaputt, das Wort war es — „PDF öffnen" holte die aktuelle PDF zurück
 * **E517** — Ein Zweig statt `main`: der Arbeitsstand kommt auf den Laptop, und `main` bleibt die Zusage „geprüft"
+* **E518** — Die fertigen PowerShell-Befehle stehen im Verzeichnis, nicht im Gespräch — und der Alltagsbefehl ruft `holen.bat`, nicht `git`
 
 ---
 
@@ -41814,3 +41815,66 @@ geprüft ist der Doppelklick selbst** — Windows-Batch lässt sich hier nicht
 ausführen; geprüft sind der Text und die git-Befehle darin.
 Kein Bild: ein Skriptfenster ist keine Ansicht, die man beurteilen müsste
 (§55.3).
+
+---
+
+E518 — Die fertigen Befehle stehen im Verzeichnis, nicht im Gespräch
+--------------------------------------------------------------------------
+
+Redur, 9. September 2026:
+
+> „geb mir immer im powerschell im windows die fertige befel"
+
+Er klickt nicht, er kopiert. Also bekommt er fertige Zeilen — und zwar
+nicht nur im Gespräch, das morgen weg ist, sondern in
+`START-MIT-CLAUDE-CODE.md`.
+
+## Der Alltagsbefehl ruft `holen.bat`, nicht `git`
+
+```powershell
+cd "$env:USERPROFILE\Documents\ChatGPT\Redion\Redion-src"; .\holen.bat claude/redion-goodnotes-weiter
+```
+
+Das ist der Punkt, an dem es leicht falsch würde. Die naheliegende Antwort
+auf „gib mir den Befehl" wäre `git checkout` gewesen — kurz, direkt, und es
+überspränge **die ganze Rettung**: die Frage an GitHub, ob der Stand geprüft
+ist, das Sichern eigener Commits, das Beiseitelegen geänderter Dateien, die
+Meldung am Ende, wo alles liegt. Ein Befehl, der schneller aussieht und
+Arbeit wegwerfen kann, ist kein besserer Befehl.
+
+Für das ERSTE Mal geht es trotzdem von Hand — das alte `holen.bat` auf dem
+Laptop nimmt noch keinen Zweignamen. Diese drei Zeilen sind **nachgefahren
+worden**, in einem echten Wegwerf-Repo, mit einer eigenen ungespeicherten
+Datei im Ordner: danach stand der Zweig da, sein Inhalt auch, und die eigene
+Datei lag in der Ablage statt im Nichts.
+
+## Was der Wächter hält
+
+Ein Befehl in einer Doku driftet. `test353 §5c` hält die vier Stellen, an
+denen das wehtut:
+
+```txt
+der Alltagsbefehl ruft holen.bat MIT Zweig   (nicht git checkout)
+gerettet wird VOR dem Umzug                  (die Reihenfolge IST die Rettung)
+zurückgeholt wird mit apply, nicht pop       (E271)
+der Pfad steht als $env:USERPROFILE da       (nicht ausgeschrieben)
+```
+
+## Und die letzte Zusage war sofort rot
+
+Sie hat den Satz gefangen, der erklärt, warum man einen Benutzerpfad nicht
+schreibt — er schrieb ihn aus. Behoben, und `SERVER-EINRICHTEN.md` gleich
+mit: dort stand derselbe Pfad in einem `cd`, das jemand kopieren soll.
+
+Drei weitere bleiben stehen, und das ist Absicht: `ENTSCHEIDUNGEN.md`,
+`UR.md` und das Studien-Audit sind **Protokolle**. Sie halten fest, was
+gesagt und gelesen wurde. Ein Protokoll umzuschreiben wäre schlimmer als der
+Pfad darin. Der Wächter misst deshalb genau eine Datei — die, die jemand
+kopiert.
+
+GEPRÜFT. `test353` von 81 auf 88 Zusagen. Gegenprobe rot gesehen: die
+Reihenfolge gedreht (erst umziehen, dann retten) und `apply` durch `pop`
+ersetzt — beide Zusagen rot, und die Meldung nennt die Stellen. Die
+git-Folge selbst ist in einem echten Repo gefahren, nicht abgeschrieben.
+Nicht geprüft: die Gesamtsuite, und nicht geprüft ist PowerShell selbst —
+dieser Container ist Linux (L142).
