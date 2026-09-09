@@ -33,13 +33,31 @@ REM
 REM  KEIN  setlocal EnableDelayedExpansion : damit verschwindet jedes
 REM  Ausrufezeichen aus den Meldungen, und die Warnzeilen heissen  [!] .
 REM
+REM  EIN ZWEIG STATT  main  (E517). Doppelklick holt weiterhin  main  - den
+REM  Stand, hinter dem ein gruener Gesamtlauf steht (Paragraph 46). Waehrend
+REM  an etwas gearbeitet wird, liegt das Neue aber auf einem ZWEIG, und  main
+REM  bewegt sich absichtlich nicht. Wer den Arbeitsstand will, nimmt
+REM  holen-zweig.bat  daneben - das fragt nach dem Namen und ruft diese Datei
+REM  mit ihm auf. Die ganze Sicherheitslogik steht deshalb weiterhin NUR hier
+REM  (Paragraph 8: kein zweiter Katalog).
+REM
+REM    holen.bat                     ==^>  main, wie bisher
+REM    holen.bat  name/des/zweigs    ==^>  dieser Zweig
+REM
 REM  Doppelklick genuegt. Das Fenster bleibt am Ende offen.
 REM ===========================================================================
 cd /d "%~dp0"
 
+REM --- Welcher Zweig? --------------------------------------------------------
+REM  Ohne Angabe:  main . Das ist Absicht und keine Bequemlichkeit - wer
+REM  doppelklickt, soll den geprueften Stand bekommen, nicht den letzten.
+set "ZIEL=%~1"
+if "%ZIEL%"=="" set "ZIEL=main"
+
 echo.
 echo   ============================================================
 echo    Redion holen        GitHub  ==^>  dieser Ordner
+echo    Zweig:  %ZIEL%
 echo   ============================================================
 echo.
 
@@ -67,6 +85,14 @@ if not exist ".git" (
 )
 
 echo   Ordner:  "%CD%"
+if not "%ZIEL%"=="main" (
+  echo.
+  echo   [!] Das ist ein ARBEITSZWEIG, nicht  main .
+  echo       Er traegt das Neueste - und er traegt es, BEVOR ein voller
+  echo       Lauf darueber gegangen ist. Genau dafuer gibt es ihn.
+  echo       Wenn etwas seltsam aussieht: das ist hier kein Weltuntergang,
+  echo       sondern der Grund, warum es diesen Zweig gibt. Sag es weiter.
+)
 echo.
 
 REM --- Steckt hier etwas Halbfertiges? ---------------------------------------
@@ -93,7 +119,7 @@ REM  fragen. Ohne Netz oder ohne Antwort: Warnung, kein Abbruch - holen darf
 REM  man immer, wissen muss man es. Bei Rot oder Laeuft-noch wird gefragt;
 REM  nach 30 Sekunden ohne Antwort ist die Antwort NEIN.
 set "LAUF="
-for /f "usebackq delims=" %%l in (`powershell -NoProfile -Command "try { $r = Invoke-RestMethod -Uri 'https://api.github.com/repos/Redurbabat/Redion/actions/runs?branch=main&per_page=1' -Headers @{ 'User-Agent' = 'redion-holen' } -TimeoutSec 15; $w = $r.workflow_runs[0]; if ($null -eq $w) { 'keiner - -' } else { $w.status + ' ' + $w.conclusion + ' ' + $w.head_sha } } catch { 'unbekannt - -' }" 2^>nul`) do set "LAUF=%%l"
+for /f "usebackq delims=" %%l in (`powershell -NoProfile -Command "try { $r = Invoke-RestMethod -Uri 'https://api.github.com/repos/Redurbabat/Redion/actions/runs?branch=%ZIEL%&per_page=1' -Headers @{ 'User-Agent' = 'redion-holen' } -TimeoutSec 15; $w = $r.workflow_runs[0]; if ($null -eq $w) { 'keiner - -' } else { $w.status + ' ' + $w.conclusion + ' ' + $w.head_sha } } catch { 'unbekannt - -' }" 2^>nul`) do set "LAUF=%%l"
 if "%LAUF%"=="" set "LAUF=unbekannt - -"
 set "LAUFSTATUS="
 set "LAUFERGEBNIS="
@@ -123,7 +149,7 @@ if "%LAUFSTATUS%"=="unbekannt" (
   goto lauf_geklaert
 )
 if "%LAUFSTATUS%"=="keiner" (
-  echo   [!] Auf GitHub gibt es noch keinen Pruefungslauf fuer  main .
+  echo   [!] Auf GitHub gibt es noch keinen Pruefungslauf fuer  %ZIEL% .
   goto lauf_geklaert
 )
 echo.
@@ -138,7 +164,7 @@ echo.
 
 REM --- Von GitHub holen ------------------------------------------------------
 echo   Frage GitHub ...
-git fetch origin main
+git fetch origin %ZIEL%
 if errorlevel 1 (
   echo.
   echo   [X] GitHub war nicht erreichbar.
@@ -152,10 +178,10 @@ if errorlevel 1 (
   goto ende
 )
 
-git rev-parse --verify --quiet origin/main >nul
+git rev-parse --verify --quiet origin/%ZIEL% >nul
 if errorlevel 1 (
   echo.
-  echo   [X] Auf GitHub gibt es keinen Zweig  main .
+  echo   [X] Auf GitHub gibt es keinen Zweig  %ZIEL% .
   echo       Dein Ordner ist unveraendert. Bitte sag Claude Bescheid.
   goto ende
 )
@@ -167,7 +193,7 @@ REM  anderen Zweig steht, muss trotzdem umziehen.
 set "HIER="
 set "DORT="
 for /f "delims=" %%a in ('git rev-parse HEAD 2^>nul')        do set "HIER=%%a"
-for /f "delims=" %%b in ('git rev-parse origin/main 2^>nul') do set "DORT=%%b"
+for /f "delims=" %%b in ('git rev-parse origin/%ZIEL% 2^>nul') do set "DORT=%%b"
 
 REM  Und der Zweigname muss auch stimmen, sonst bleibt er auf einem fremden
 REM  Zweig sitzen und glaubt, er sei auf main.
@@ -184,7 +210,7 @@ git diff --quiet 2>nul        || set "SCHMUTZ=1"
 git diff --cached --quiet 2>nul || set "SCHMUTZ=1"
 for /f "delims=" %%d in ('git ls-files -o --exclude-standard 2^>nul') do set "SCHMUTZ=1"
 
-if "%HIER%"=="%DORT%" if "%ZWEIG%"=="main" if not defined SCHMUTZ (
+if "%HIER%"=="%DORT%" if "%ZWEIG%"=="%ZIEL%" if not defined SCHMUTZ (
   echo   [OK] Dieser Ordner ist schon genau auf dem Stand von GitHub.
   goto ende
 )
@@ -193,7 +219,7 @@ REM --- Was kommt dazu? -------------------------------------------------------
 echo.
 echo   Das kommt von GitHub dazu ^(hoechstens die letzten 20 gezeigt^):
 echo.
-git --no-pager log --oneline --max-count=20 HEAD..origin/main
+git --no-pager log --oneline --max-count=20 HEAD..origin/%ZIEL%
 echo.
 
 REM --- ZUERST RETTEN, DANN ERST ANFASSEN -------------------------------------
@@ -201,7 +227,7 @@ set "GERETTET="
 
 REM  Eigene Commits auf dem GEOEFFNETEN Zweig.
 set "EIGENE=0"
-for /f "delims=" %%c in ('git rev-list --count origin/main..HEAD 2^>nul') do set "EIGENE=%%c"
+for /f "delims=" %%c in ('git rev-list --count origin/%ZIEL%..HEAD 2^>nul') do set "EIGENE=%%c"
 if not "%EIGENE%"=="0" (
   echo   [!] Auf dem geoeffneten Zweig liegen %EIGENE% eigene Aenderungen,
   echo       die auf GitHub fehlen. Sie werden vorher gesichert.
@@ -216,13 +242,13 @@ REM  UND DER OERTLICHE main SELBST. Gemessen: stand HEAD auf einem anderen
 REM  Zweig, waehrend main eigene Commits trug, war nach checkout -B davon
 REM  nichts mehr erreichbar - und der Bildschirm meldete Erfolg.
 set "MAINEIGEN=0"
-for /f "delims=" %%c in ('git rev-list --count origin/main..main 2^>nul') do set "MAINEIGEN=%%c"
+for /f "delims=" %%c in ('git rev-list --count origin/%ZIEL%..%ZIEL% 2^>nul') do set "MAINEIGEN=%%c"
 if not "%MAINEIGEN%"=="0" (
-  echo   [!] Auch der Zweig  main  hier traegt %MAINEIGEN% eigene Aenderungen.
-  git branch "sicherung/vor-holen-%STEMPEL%-main" main
+  echo   [!] Auch der Zweig  %ZIEL%  hier traegt %MAINEIGEN% eigene Aenderungen.
+  git branch "sicherung/vor-holen-%STEMPEL%-ort" "%ZIEL%"
   if errorlevel 1 goto sicherngeht_nicht
   set "GERETTET=1"
-  echo       Gesichert als:  sicherung/vor-holen-%STEMPEL%-main
+  echo       Gesichert als:  sicherung/vor-holen-%STEMPEL%-ort
   echo.
 )
 
@@ -249,7 +275,7 @@ if defined SCHMUTZ (
 
 REM --- Jetzt auf den Stand von GitHub bringen --------------------------------
 echo   Bringe den Ordner auf den Stand von GitHub ...
-git checkout -B main origin/main
+git checkout -B "%ZIEL%" "origin/%ZIEL%"
 if errorlevel 1 (
   echo.
   echo   [X] Das ging nicht. Nichts ist dabei verlorengegangen -
@@ -281,7 +307,7 @@ if defined GERETTET (
   echo    Was vorher hier lag, ist nicht weg. Es liegt hier:
   echo.
   if not "%EIGENE%"=="0"    echo      sicherung/vor-holen-%STEMPEL%
-  if not "%MAINEIGEN%"=="0" echo      sicherung/vor-holen-%STEMPEL%-main
+  if not "%MAINEIGEN%"=="0" echo      sicherung/vor-holen-%STEMPEL%-ort
   if defined SCHMUTZ (
     echo      und in Gits Ablage. Ansehen:
     echo        git stash show -p --include-untracked stash@{0}

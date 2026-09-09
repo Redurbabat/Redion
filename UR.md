@@ -373,6 +373,17 @@ Die zehn Adern. Nicht wegen der Technik — zehn Farben und zwei Strichmuster �
 **Besserer Prompt:** Hier war nichts zu verbessern: die Nummer war die ganze Auskunft. Genau das ist der Nutzen von LUECKEN.md — zwei Wörter reichen, weil die Frage schon aufgeschrieben ist. Was gefehlt hätte, wenn es die Nummer nicht gäbe: welcher Knopf, in welcher Ansicht.
 
 
+**5 · ca. 07:40**
+
+> öfnen eien nue branche und arbeite a jetzt dort und gebe mir immer nach jänder änderungen wie kann ich die aktuele github version auf laptop speichern
+
+**Gemeint:** Einen neuen Zweig anlegen, ab jetzt dort arbeiten — und nach jeder Änderung dazusagen, wie der aktuelle Stand von GitHub auf den Laptop kommt.
+
+**Besser geschrieben:** Mach einen neuen Zweig und arbeite ab jetzt dort. Und sag mir nach jeder Änderung, wie ich den aktuellen Stand auf den Laptop hole.
+
+**Besserer Prompt:** Zwei Sätze statt einem, weil es zwei Aufträge sind — der zweite ist eine Dauerregel, kein einmaliger Wunsch. Und ein Name für den Zweig hätte eine Entscheidung gespart: „nenn ihn X". Der zweite Teil hat übrigens einen echten Fehler aufgedeckt: es GING gar nicht, den Arbeitsstand zu holen.
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -380,12 +391,13 @@ Die zehn Adern. Nicht wegen der Technik — zehn Farben und zwei Strichmuster �
 | E513 — Das Notizbuch fehlte im „Neu erstellen"; die kopierte PDF gemessen und NICHT gefunden | `2f059f1d` → `dc9bbcab` | 22:16 – 04:12 | ca. 1 h 56 min (der grösste Teil davon die Suche nach der PDF) | test265 um eine Zusage erweitert |
 | E514 — Die Chronik: PROBLEME.md, UR.md und die Ansicht in Redion | `dc9bbcab` → `dd694ff7` | 04:12 – 04:47 | ca. 35 min | test481 |
 | E515 — Die Zeichen der Leiste: vierunddreissig gezeichnete statt Emoji, und fünfundsiebzig Pixel, die niemand sah | `dd694ff7` → `a33cceb1` | 04:47 – 06:45 | ca. 1 h 58 min | test480 §5 neu (acht Zusagen); test351 war rot und ist wieder grün |
-| E516 — L139 gefunden: der Import war nie kaputt, das Wort war es | `a33cceb1` → `(dieser Bogen)` | ab 06:45 | — | test482 neu, 28 Zusagen |
+| E516 — L139 gefunden: der Import war nie kaputt, das Wort war es | `a33cceb1` → `0f8f0a1c` | 06:45 – 07:35 | ca. 50 min | test482 neu, 28 Zusagen |
+| E517 — Ein Zweig statt main: der Arbeitsstand kommt auf den Laptop | `0f8f0a1c` → `(dieser Bogen)` | ab 07:35 | — | test353 von 60 auf 81 Zusagen |
 
 #### Zahlen des Tages
 
-- **commits:** 4
-- **entscheidungen:** 4
+- **commits:** 5
+- **entscheidungen:** 5
 
 #### Das grösste Problem
 
@@ -405,10 +417,12 @@ Die drei sauberen Messungen aus E513. Sie waren richtig gerechnet und haben trot
 | 06:20 | Fueller, Kugelschreiber und Zettel neu gezeichnet — nicht an der Spitze, sondern am Umriss. | Gemessen: die drei Stifte teilten bis zu 73 % ihrer Tinte bei 16 px. Der erste Versuch mit schärferen Spitzen machte es schlimmer (85 %), weil bei dieser Grösse der Schaft die ganze Tinte trägt. Jetzt: Feder, aufrechter Kugelschreiber, schräger Bleistift — drei Umrisse. | keins an Daten — Oberfläche |
 | 07:05 | Die Karte „Weiterarbeiten" heisst „Weiterlesen"; beide Importknöpfe heissen „PDF öffnen". | Sichtbar waren im Regal zwei Knöpfe: „PDF öffnen" holte die zuletzt geöffnete PDF zurück, „PDF importieren" las eine neue ein. Wer eine PDF öffnen will, drückt „PDF öffnen" — und bekommt seine aktuelle. | keins an Daten — nur Beschriftung; die Handlungen dahinter sind unverändert |
 | 07:20 | Der Importeur beschriftet den Knopf über ein Wortfeld statt über `textContent`. | `textContent` wirft die Kindknoten weg, und dort hängt seit E515 das gezeichnete Zeichen. Nach dem ersten Import stand der Knopf ohne Zeichen da — für den Rest der Sitzung, weil er fest in der Startseite steht. | keins an Daten — Oberfläche |
+| 07:45 | Neuer Zweig `claude/redion-goodnotes-weiter`, ab hier wird dort gearbeitet. | Redur hat darum gebeten. Der alte Zweig bleibt liegen, nichts wird umgeschrieben. | keins — der neue Zweig beginnt genau auf dem Stand des alten |
+| 08:05 | `holen.bat` nimmt einen Zweignamen; `holen-zweig.bat` fragt danach. | Der Arbeitsstand war vom Laptop aus nicht erreichbar: holen.bat holt main, main steht still bis zum grünen Gesamtlauf, gearbeitet wird auf einem Zweig. Ohne Angabe bleibt es main — wer doppelklickt, soll den geprüften Stand bekommen. | gering, aber genau die Stelle aus E271: ein vergessener origin/main meldet Erfolg und wirft Arbeit weg. Sechs Stellen einzeln geprüft, die Folge in einem echten Repo nachgefahren. |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 16 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 17 Einträge.
 

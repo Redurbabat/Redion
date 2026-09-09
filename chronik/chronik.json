@@ -352,6 +352,13 @@
           "gemeint": "Weiter mit der offenen Lücke L139 — der PDF, die angeblich die aktuelle kopiert.",
           "besser": "Weiter mit L139.",
           "besserePrompt": "Hier war nichts zu verbessern: die Nummer war die ganze Auskunft. Genau das ist der Nutzen von LUECKEN.md — zwei Wörter reichen, weil die Frage schon aufgeschrieben ist. Was gefehlt hätte, wenn es die Nummer nicht gäbe: welcher Knopf, in welcher Ansicht."
+        },
+        {
+          "zeit": "ca. 07:40",
+          "wortlaut": "öfnen eien nue branche und arbeite a jetzt dort und gebe mir immer nach jänder änderungen wie kann ich die aktuele github version auf laptop speichern",
+          "gemeint": "Einen neuen Zweig anlegen, ab jetzt dort arbeiten — und nach jeder Änderung dazusagen, wie der aktuelle Stand von GitHub auf den Laptop kommt.",
+          "besser": "Mach einen neuen Zweig und arbeite ab jetzt dort. Und sag mir nach jeder Änderung, wie ich den aktuellen Stand auf den Laptop hole.",
+          "besserePrompt": "Zwei Sätze statt einem, weil es zwei Aufträge sind — der zweite ist eine Dauerregel, kein einmaliger Wunsch. Und ein Name für den Zweig hätte eine Entscheidung gespart: „nenn ihn X\". Der zweite Teil hat übrigens einen echten Fehler aufgedeckt: es GING gar nicht, den Arbeitsstand zu holen."
         }
       ],
       "arbeit": [
@@ -382,14 +389,22 @@
         {
           "was": "E516 — L139 gefunden: der Import war nie kaputt, das Wort war es",
           "vonCommit": "a33cceb1",
+          "bisCommit": "0f8f0a1c",
+          "zeitraum": "06:45 – 07:35",
+          "pruefungen": "test482 neu, 28 Zusagen",
+          "dauer": "ca. 50 min"
+        },
+        {
+          "was": "E517 — Ein Zweig statt main: der Arbeitsstand kommt auf den Laptop",
+          "vonCommit": "0f8f0a1c",
           "bisCommit": "(dieser Bogen)",
-          "zeitraum": "ab 06:45",
-          "pruefungen": "test482 neu, 28 Zusagen"
+          "zeitraum": "ab 07:35",
+          "pruefungen": "test353 von 60 auf 81 Zusagen"
         }
       ],
       "zahlen": {
-        "commits": 4,
-        "entscheidungen": 4
+        "commits": 5,
+        "entscheidungen": 5
       },
       "groesstesProblem": "Die drei sauberen Messungen aus E513. Sie waren richtig gerechnet und haben trotzdem nichts bewiesen, weil sie die falsche Frage gestellt haben: „legt der Import die richtige Datei ab?\" statt „welchen Knopf drückt er?\". Eine Messung, die die falsche Frage stellt, ist gefährlicher als gar keine — sie kommt grün zurück und man glaubt ihr.",
       "interessantesteAnfrage": "„Wieter mit L139\" — drei Wörter, und sie haben gereicht, weil die Frage schon in LUECKEN.md stand. Das ist der Nutzen dieser Datei, den man erst sieht, wenn man ihn braucht: eine Lücke, die aufgeschrieben ist, lässt sich mit einer Nummer wieder aufnehmen. Eine, die nur im Kopf stand, hätte die ganze Geschichte noch einmal gebraucht.",
@@ -429,6 +444,18 @@
           "was": "Der Importeur beschriftet den Knopf über ein Wortfeld statt über `textContent`.",
           "warum": "`textContent` wirft die Kindknoten weg, und dort hängt seit E515 das gezeichnete Zeichen. Nach dem ersten Import stand der Knopf ohne Zeichen da — für den Rest der Sitzung, weil er fest in der Startseite steht.",
           "risiko": "keins an Daten — Oberfläche"
+        },
+        {
+          "zeit": "07:45",
+          "was": "Neuer Zweig `claude/redion-goodnotes-weiter`, ab hier wird dort gearbeitet.",
+          "warum": "Redur hat darum gebeten. Der alte Zweig bleibt liegen, nichts wird umgeschrieben.",
+          "risiko": "keins — der neue Zweig beginnt genau auf dem Stand des alten"
+        },
+        {
+          "zeit": "08:05",
+          "was": "`holen.bat` nimmt einen Zweignamen; `holen-zweig.bat` fragt danach.",
+          "warum": "Der Arbeitsstand war vom Laptop aus nicht erreichbar: holen.bat holt main, main steht still bis zum grünen Gesamtlauf, gearbeitet wird auf einem Zweig. Ohne Angabe bleibt es main — wer doppelklickt, soll den geprüften Stand bekommen.",
+          "risiko": "gering, aber genau die Stelle aus E271: ein vergessener origin/main meldet Erfolg und wirft Arbeit weg. Sechs Stellen einzeln geprüft, die Folge in einem echten Repo nachgefahren."
         }
       ]
     }
@@ -626,6 +653,19 @@
       "behebung": "Beide Importknöpfe heissen „PDF öffnen\" und tragen dasselbe Zeichen; die Karte heisst „Weiterlesen\". `test482 §1` misst den SICHTBAREN Text jedes Knopfes und lässt kein zweites „PDF öffnen\" zu.",
       "stand": "Geschlossen. Der vierte Weg ist gefahren und sauber: zwei Seiten vorher, fünf nachher, zwei Quellen, fünf verschiedene Seitenbilder, die neuen an der richtigen Stelle.",
       "lehre": "Wenn drei gute Messungen einen gemeldeten Fehler nicht finden, ist meist die FRAGE falsch, nicht der Melder. Redur hat genau beschrieben, was er sieht — „oben\", „einfügen\", „kopiert die aktuelle\". Die Antwort stand die ganze Zeit im Bild, nicht im Datenfluss."
+    },
+    {
+      "nr": "P17",
+      "datum": "2026-09-09",
+      "titel": "Der Laptop bekam den Arbeitsstand gar nicht — drei richtige Regeln ergaben zusammen eine Sackgasse",
+      "schwere": "mittel",
+      "symptom": "Redur fragte, wie er den aktuellen Stand auf den Laptop holt. Beim Nachsehen: es ging nicht. Sein Ordner zeigte tagelang denselben Stand, während hier zehn Bögen landeten.",
+      "falscheVermutung": "Dass die Frage nur nach dem BEFEHL fragt — „doppelklick holen.bat\" wäre die schnelle Antwort gewesen. Sie wäre falsch gewesen: holen.bat holt main, und main hatte den Arbeitsstand nicht.",
+      "wieGesucht": "Die drei Regeln nebeneinandergelegt: holen.bat holt main (E271), main bewegt sich erst bei grünem Gesamtlauf (§46), gearbeitet wird auf einem Zweig (§43). Jede für sich richtig; zusammen ist der Arbeitsstand unerreichbar.",
+      "ursache": "Keine kaputte Zeile — drei Regeln, die sich gegenseitig aussperren. Solche Fehler stehen in keiner Datei und lassen sich nur durch Nebeneinanderlegen finden.",
+      "behebung": "holen.bat nimmt einen Zweignamen, ohne Angabe bleibt es main. holen-zweig.bat fragt danach und hat KEINE eigene Rettungslogik. Sechs git-Stellen einzeln geprüft, die Folge in einem echten Wegwerf-Repo mit Schrägstrich-Zweignamen nachgefahren.",
+      "stand": "Behoben. Gegenprobe rot gesehen: ein einziger Befehl zurück auf origin/main, drei Zusagen rot.",
+      "lehre": "Wenn eine Frage nach dem Weg gestellt wird, erst nachsehen, ob es den Weg gibt. Die schnelle Antwort wäre hier ein Befehl gewesen, der das Falsche tut — und Redur hätte den alten Stand geholt und geglaubt, er sei der neue."
     }
   ]
 }

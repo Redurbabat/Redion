@@ -4940,3 +4940,41 @@ E515 — für den Rest der Sitzung, weil der Kopfknopf fest in der Startseite
 steht und nie neu gezeichnet wird. Dazu hiess der Knopf danach anders als
 vorher. Beschriftet wird jetzt an einer Stelle, in ein Wortfeld statt in den
 Knopf.
+
+**Der Arbeitsstand kommt auf den Laptop (E517, test353).** Redur wollte
+einen neuen Zweig und nach jeder Änderung wissen, wie er den aktuellen
+Stand auf den Laptop holt. Beim Nachsehen zeigte sich, dass das bis dahin
+gar nicht ging.
+
+Drei Regeln, jede für sich richtig: `holen.bat` holt `main`; `main` bewegt
+sich erst, wenn ein voller Lauf grün ist; gearbeitet wird auf einem Zweig.
+Zusammen ergeben sie, dass der Arbeitsstand vom Laptop aus nicht erreichbar
+ist. Auf Redurs Rechner stand tagelang derselbe Stand, während hier zehn
+Bögen landeten — kein Fehler, aber es sah genau so aus.
+
+`main` deshalb zu bewegen, wäre der falsche Ausweg: `main` ist die Zusage
+„hierüber ist ein voller Lauf gegangen", und eine Zusage, die man aufweicht,
+wenn sie unbequem wird, ist keine. Also bekommt der Zweig einen eigenen Weg,
+und der sagt dazu, was er ist.
+
+`holen.bat` nimmt jetzt einen Zweignamen; ohne Angabe bleibt es `main`. Das
+ist die wichtigere Hälfte: ein Doppelklick soll weiterhin den geprüften
+Stand bringen. Daneben steht `holen-zweig.bat`, das nach dem Namen fragt und
+den Zweig vorschlägt, auf dem der Ordner gerade steht. Es enthält keine
+eigene Rettungslogik — kein checkout, kein branch, kein stash, kein fetch.
+Es fragt, und dann ruft es `holen.bat`. Zwei Skripte, die beide Arbeit
+sichern, laufen nach dem dritten Durchgang auseinander, und dann sichert
+eines davon falsch.
+
+Die Falle bei so einer Umstellung ist bekannt: E271 hat gemessen, was
+passiert, wenn ein einziger git-Befehl noch auf `main` zeigt — das Fenster
+meldet Erfolg, und die Arbeit ist von keiner Referenz mehr erreichbar. Die
+Stellen sind sechs, und der Prüflauf misst jede einzeln und sagt, welche
+fehlt. Die Gegenprobe, nur den Umzug zurück auf `main`, macht drei Zusagen
+rot.
+
+Und einmal wirklich gefahren: Windows-Batch läuft im Container nicht, die
+git-Befehle darin aber schon — und sie sind das Risiko, nicht die Hülle.
+Dieselbe Folge in einem echten Wegwerf-Repo, mit einem Zweignamen mit
+Schrägstrich: klonen, holen, umziehen, ein eigener Commit, sichern. Danach
+liegt die eigene Arbeit in der Sicherung und nicht im Nichts.

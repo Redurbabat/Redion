@@ -108,7 +108,8 @@ verlorene Arbeit.
 
 | | Richtung | Wofür |
 |---|---|---|
-| **`holen.bat`** | GitHub ⟶ dein Ordner | Claude hat woanders gearbeitet und nach GitHub geschoben. Damit holst du es. |
+| **`holen.bat`** | GitHub ⟶ dein Ordner | Claude hat woanders gearbeitet und nach GitHub geschoben. Damit holst du den **geprüften** Stand (`main`). |
+| **`holen-zweig.bat`** | GitHub ⟶ dein Ordner | Dasselbe, aber von einem **Arbeitszweig** — das Neueste, noch bevor ein voller Lauf darüber ging. |
 | **`hochladen.bat`** | dein Ordner ⟶ GitHub | Du hast hier etwas geändert und willst es hinbringen. |
 
 ### `holen.bat` — den Stand von GitHub holen
@@ -136,6 +137,39 @@ holt der Browser den neuen Dienst-Arbeiter, angezeigt wird dabei aber noch
 der alte Stand; beim zweiten Mal kommt alles aus dem neuen. Tabs schliessen
 musst du nicht — der Arbeiter übernimmt von selbst (`skipWaiting` und
 `clients.claim` in `src/dienst/sw.ts`).
+
+### `holen-zweig.bat` — den Arbeitsstand holen
+
+**Warum es das gibt** (E517): `main` bewegt sich erst, wenn ein voller Lauf
+grün ist (§46). Solange an etwas gearbeitet wird, liegt das Neue also auf
+einem **Zweig**, und `holen.bat` bringt es nicht her — es holt immer `main`.
+Auf dem Laptop stand deshalb tagelang derselbe Stand, und das sah aus wie
+ein Fehler, obwohl es die Regel war.
+
+Doppelklick. Es fragt nach dem Namen des Zweigs und schlägt den vor, auf
+dem dein Ordner gerade steht — wer schon einmal geholt hat, drückt also nur
+Enter. Den Namen sagt dir Claude nach jeder Änderung; du findest ihn auch
+in der Adresszeile von GitHub hinter `/tree/`.
+
+Danach macht es **genau dasselbe wie `holen.bat`** — es ruft es auf. Die
+ganze Rettungs- und Sicherungslogik steht nur dort, in einer einzigen Datei
+(§8). Zwei Dateien mit derselben Logik laufen nach dem dritten Durchgang
+auseinander, und dann weiss niemand mehr, welche gilt.
+
+**Der eine Unterschied:** ein Zweig ist ein Arbeitsstand. Das Skript sagt es
+auch so hin. Er trägt das Neueste, und er trägt es, bevor ein voller Lauf
+darüber gegangen ist — dafür gibt es ihn. Sieht dort etwas seltsam aus, ist
+das kein Weltuntergang, sondern der Grund, warum es diesen Zweig gibt: sag
+es weiter.
+
+Wer lieber tippt, statt zu klicken, kann es auch direkt:
+
+```txt
+holen.bat  claude/name-des-zweigs
+```
+
+Ohne Namen bleibt es `main`. Das ist Absicht: wer nur doppelklickt, soll den
+geprüften Stand bekommen, nicht den letzten.
 
 Sieht danach noch etwas seltsam aus, lade ein drittes Mal. Der Grund, ehrlich
 gesagt: nur wenn `VERSION` in `src/dienst/sw.ts` erhöht wurde, wird der alte

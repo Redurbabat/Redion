@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-496 Entscheidungen, E1 bis E516 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+497 Entscheidungen, E1 bis E517 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -560,6 +560,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E514** — Die Chronik „Red-ur": eine Quelle, drei Ansichten — UR.md, PROBLEME.md und ein Fenster in Redion
 * **E515** — Die Zeichen der Leiste sind gezeichnet, nicht getippt — dreiunddreissig neue im Register, und fünfundsiebzig Pixel, die niemand sah
 * **E516** — L139 gefunden: der Import war nie kaputt, das Wort war es — „PDF öffnen" holte die aktuelle PDF zurück
+* **E517** — Ein Zweig statt `main`: der Arbeitsstand kommt auf den Laptop, und `main` bleibt die Zusage „geprüft"
 
 ---
 
@@ -41713,3 +41714,103 @@ Knöpfen). Die zweite Gegenprobe baute im ersten Anlauf gar nicht —
 dann nur die eine Schleife. Grün mitgelaufen: 105, 109, 177, 424, 428, 430,
 437. Nicht geprüft: die Gesamtsuite.
 Bild: `node bilder.mts regalkopf`.
+
+---
+
+E517 — Ein Zweig statt `main`: der Arbeitsstand kommt auf den Laptop
+--------------------------------------------------------------------------
+
+Redur, 9. September 2026:
+
+> „öfnen eien nue branche und arbeite a jetzt dort und gebe mir immer nach
+> jänder änderungen wie kann ich die aktuele github version auf laptop
+> speichern"
+
+## Das ging bisher nicht, und niemand hat es gemerkt
+
+`holen.bat` holt `main`. `main` bewegt sich erst, wenn ein voller Lauf grün
+ist (§46). Gearbeitet wird auf einem Zweig (§43).
+
+Drei Regeln, jede für sich richtig — und zusammen ergeben sie: **der
+Arbeitsstand ist vom Laptop aus nicht erreichbar.** Auf Redurs Rechner stand
+tagelang derselbe Stand, während hier zehn Bögen landeten. Das war kein
+Fehler; es sah nur genau so aus.
+
+## Warum nicht einfach `main` bewegen
+
+Weil §46 ausdrücklich das Gegenteil sagt und einen guten Grund dafür hat:
+`main` ist die Zusage „hierüber ist ein voller Lauf gegangen". Eine Zusage,
+die man aufweicht, wenn sie unbequem wird, ist keine.
+
+Also bekommt der Zweig einen eigenen Weg — und der sagt dazu, was er ist.
+
+## Eine Datei mit Logik, eine ohne
+
+```txt
+holen.bat                     →  main, wie bisher. Doppelklick = geprüft.
+holen.bat  name/des/zweigs    →  dieser Zweig.
+holen-zweig.bat               →  fragt nach dem Namen und ruft holen.bat.
+```
+
+`holen-zweig.bat` enthält **keine eigene Rettungslogik**. Kein `checkout`,
+kein `branch`, kein `stash`, kein `fetch` — es fragt, und dann ruft es
+`holen.bat`. Das ist §8 an einer Stelle, an der der Fehler besonders teuer
+wäre: zwei Skripte, die beide Arbeit sichern, laufen nach dem dritten
+Durchgang auseinander, und dann sichert eines davon falsch. `test353 §5a`
+misst es als eigene Zusage, sieben Befehle einzeln.
+
+Vorgeschlagen wird der Zweig, auf dem der Ordner **gerade steht**. Damit
+gibt es keine zweite Wahrheit über „welcher Zweig gilt": kein `zweig.txt`,
+das veraltet, keine Zahl im Skript, die jemand nachpflegen muss. Wer schon
+einmal geholt hat, drückt Enter.
+
+## Ohne Angabe bleibt es `main`
+
+Das ist die wichtigere Hälfte der Entscheidung. Ein Doppelklick auf
+`holen.bat` muss weiterhin den **geprüften** Stand bringen — sonst wäre der
+Unterschied zwischen „geprüft" und „neu" durch eine Bequemlichkeit
+verschwunden. Wer den Arbeitsstand will, sagt es.
+
+Und wenn er es sagt, sagt das Skript zurück, was er bekommt:
+
+> `[!] Das ist ein ARBEITSZWEIG, nicht main.`
+> `Er trägt das Neueste — und er trägt es, BEVOR ein voller Lauf darüber`
+> `gegangen ist. Genau dafür gibt es ihn.`
+
+## Der Fehler, der hier lauerte — und schon einmal zugeschlagen hat
+
+E271 hat gemessen, was passiert, wenn ein einziger git-Befehl auf `main`
+zeigt, während der Rest woanders hinsieht: **das Fenster meldet Erfolg, und
+die Arbeit ist von keiner Referenz mehr erreichbar.** Genau diese Falle
+liegt bei einer Umstellung von `main` auf `%ZIEL%` an sechs Stellen zugleich
+— fetch, rev-parse, der Vergleich, das Protokoll, die Zählung, der Umzug.
+
+`test353 §5a` prüft deshalb **jeden der sechs einzeln** und meldet, welcher
+fehlt; dazu die Zusage „kein fest verdrahtetes `origin/main` mehr im
+Ablauf". Die Gegenprobe — nur den Umzug zurück auf `main` — macht drei
+Zusagen rot und nennt den Befehl beim Namen.
+
+## Und einmal wirklich gefahren
+
+Batch läuft in diesem Container nicht (Linux), und das steht seit E438 als
+Grenze in `test353` dabei. Die **git-Befehle** darin laufen sehr wohl, und
+sie sind das Risiko — nicht die Hülle. `test353 §5a2` fährt deshalb dieselbe
+Folge in einem echten Wegwerf-Repo, mit einem Zweignamen **mit
+Schrägstrich**, wie ihn dieses Projekt benutzt:
+
+```txt
+klonen            → steht auf main, Inhalt „alt"
+fetch + checkout  → steht auf claude/…, Inhalt „neu vom Zweig"
+eigener Commit    → wird gezählt (1)
+branch + checkout → liegt danach in der Sicherung, nicht im Nichts
+```
+
+Damit ist auch die Rettung auf einem Zweig gemessen und nicht nur behauptet.
+
+GEPRÜFT. `test353` von 60 auf 81 Zusagen. Gegenprobe rot gesehen: ein
+einziger Befehl zurück auf `origin/main` — drei Zusagen rot, und die
+Meldung nennt den Umzug. Nicht geprüft: die Gesamtsuite, und **nicht
+geprüft ist der Doppelklick selbst** — Windows-Batch lässt sich hier nicht
+ausführen; geprüft sind der Text und die git-Befehle darin.
+Kein Bild: ein Skriptfenster ist keine Ansicht, die man beurteilen müsste
+(§55.3).

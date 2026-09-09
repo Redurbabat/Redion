@@ -6988,3 +6988,25 @@ Arbeit. Eine erfundene Tokenzahl wäre schlimmer als eine fehlende (§35).
 Möglich wäre es von aussen: wer die Sitzungsprotokolle hat, kann sie
 zählen und in `chronik/chronik.json` unter `zahlen.token` eintragen — das
 Feld wird von der Ansicht gelesen, sobald es da ist.
+
+L142 · Was am Weg auf den Laptop noch fehlt
+--------------------------------------------------------------------------
+
+E517 hat `holen.bat` einen Zweig beigebracht. Was daraus offen bleibt:
+
+  · **`vergleichen.bat` sieht weiterhin nur gegen `main`.** Wer auf einem
+    Arbeitszweig steht und wissen will, was sich unterscheidet, bekommt den
+    Vergleich gegen den geprüften Stand — richtig gerechnet, aber selten
+    die Frage, die er stellt. Dieselbe Umstellung wie bei `holen.bat`, und
+    dieselbe Falle: jeder git-Befehl einzeln, sonst meldet es Erfolg und
+    vergleicht das Falsche (E271).
+  · **`hochladen.bat` ebenso.** Es lädt auf den Zweig, auf dem der Ordner
+    steht — das ist heute schon richtig, aber es ist nirgends geprüft.
+  · **Der Doppelklick selbst ist nicht geprüft.** Windows-Batch lässt sich
+    im Container nicht ausführen; geprüft sind der Text der Datei und die
+    git-Befehle darin, einzeln nachgefahren. Diese Grenze steht seit E438
+    in `test353` und gilt weiter. Was sie nicht abdeckt: Anführungszeichen,
+    Klammern und Umlaute in der Batch-Hülle selbst.
+  · **Ein Zweig, den es auf GitHub nicht gibt**, führt zu „Auf GitHub gibt
+    es keinen Zweig X" — richtig, aber ohne Vorschlag, welche es gibt. Ein
+    `git ls-remote --heads` daneben wäre eine Zeile und eine Hilfe.

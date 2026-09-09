@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — siebenundvierzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — achtundvierzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -567,7 +567,17 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Karte „Weiterlesen". Der vierte Weg — „PDF hier einfügen" im Inspector,
     den kein Prüflauf öffnen konnte — ist gefahren und sauber. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **siebenundvierzig Bögen**; die Überschrift
+  · **G48 — Der Arbeitsstand auf dem Laptop** (E517, test353): Redur wollte
+    nach jeder Änderung wissen, wie er den aktuellen Stand holt — und es
+    ging nicht. `holen.bat` holt `main`, `main` steht still bis zum grünen
+    Gesamtlauf (§46), gearbeitet wird auf einem Zweig (§43). Drei richtige
+    Regeln, und zusammen war der Arbeitsstand vom Laptop aus unerreichbar.
+    Jetzt nimmt `holen.bat` einen Zweignamen (ohne Angabe weiterhin `main`,
+    das ist Absicht), und `holen-zweig.bat` fragt danach — ohne eigene
+    Rettungslogik, die steht in einer Datei (§8). Sechs git-Stellen einzeln
+    geprüft, die Folge in einem echten Repo nachgefahren. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **achtundvierzig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

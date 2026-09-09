@@ -30,6 +30,7 @@ sind der teuerste Teil und der lehrreichste.
 | P14 | 2026-09-09 | Die Werkzeugzeile kippte in eine zweite — durch Zeichen, die schöner waren | 🟠 mittel | — |
 | P15 | 2026-09-09 | Drei Stifte, ein Bild — und die Reparatur, die es schlimmer machte | 🟠 mittel | — |
 | P16 | 2026-09-09 | „Eine neue PDF kopiert die aktuelle" — der Import war nie kaputt | hoch | — |
+| P17 | 2026-09-09 | Der Laptop bekam den Arbeitsstand gar nicht — drei richtige Regeln ergaben zusammen eine Sackgasse | 🟠 mittel | — |
 
 ---
 
@@ -305,4 +306,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Stand.** Geschlossen. Der vierte Weg ist gefahren und sauber: zwei Seiten vorher, fünf nachher, zwei Quellen, fünf verschiedene Seitenbilder, die neuen an der richtigen Stelle.
 
 **Die Lehre.** Wenn drei gute Messungen einen gemeldeten Fehler nicht finden, ist meist die FRAGE falsch, nicht der Melder. Redur hat genau beschrieben, was er sieht — „oben", „einfügen", „kopiert die aktuelle". Die Antwort stand die ganze Zeit im Bild, nicht im Datenfluss.
+
+
+---
+
+## P17 · Der Laptop bekam den Arbeitsstand gar nicht — drei richtige Regeln ergaben zusammen eine Sackgasse
+
+*2026-09-09 · 🟠 mittel*
+
+**Das Bild.** Redur fragte, wie er den aktuellen Stand auf den Laptop holt. Beim Nachsehen: es ging nicht. Sein Ordner zeigte tagelang denselben Stand, während hier zehn Bögen landeten.
+
+**Die falsche Vermutung.** Dass die Frage nur nach dem BEFEHL fragt — „doppelklick holen.bat" wäre die schnelle Antwort gewesen. Sie wäre falsch gewesen: holen.bat holt main, und main hatte den Arbeitsstand nicht.
+
+**Wie gesucht wurde.** Die drei Regeln nebeneinandergelegt: holen.bat holt main (E271), main bewegt sich erst bei grünem Gesamtlauf (§46), gearbeitet wird auf einem Zweig (§43). Jede für sich richtig; zusammen ist der Arbeitsstand unerreichbar.
+
+**Die Ursache.** Keine kaputte Zeile — drei Regeln, die sich gegenseitig aussperren. Solche Fehler stehen in keiner Datei und lassen sich nur durch Nebeneinanderlegen finden.
+
+**Der Stand.** Behoben. Gegenprobe rot gesehen: ein einziger Befehl zurück auf origin/main, drei Zusagen rot.
+
+**Die Lehre.** Wenn eine Frage nach dem Weg gestellt wird, erst nachsehen, ob es den Weg gibt. Die schnelle Antwort wäre hier ein Befehl gewesen, der das Falsche tut — und Redur hätte den alten Stand geholt und geglaubt, er sei der neue.
 
