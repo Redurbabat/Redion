@@ -7164,3 +7164,42 @@ und nicht in einem Prüflauf — kein Lauf im Container erreicht sie.
 Bis dahin gilt: **die Wirkung ist unbekannt**, und der Satz aus E520 („sie
 gehen nur nicht mehr mit ins Netz") ist nicht belegt. Er steht in E522
 richtiggestellt.
+
+---
+
+L146 · Die Startnutzlast steht über ihrer Decke — offen
+--------------------------------------------------------------------------
+
+`test388 §5` deckelt, was der Start überhaupt holt, auf **2300 KB gzip**.
+Gemessen am 9. September: **2389 KB über 225 Dateien.** Der Lauf ist damit
+rot, und zwar nicht seit heute.
+
+**Woher die Zahl kommt.** Die Decke wurde am 4. September auf 2300 gesetzt,
+als der Start 2081 KB holte — mit Absicht mit Luft. Diese Luft ist
+aufgebraucht:
+
+```txt
+ 4. September (E389)      2081 KB   Decke gesetzt: 2300
+ 9. September, vorher     2379 KB   79 KB über der Decke
+ 9. September, E525       2389 KB   +10 KB: die Marke im Kopf (8,7 KB)
+```
+
+**Die zehn Kilobyte aus E525 sind meine, und sie sind der kleinere Teil.**
+Die 79 davor sind über mehrere Bögen dazugekommen, ohne dass jemand
+hingesehen hat — genau das, wogegen die Decke gebaut wurde.
+
+**Was zu tun ist**, in dieser Reihenfolge:
+
+1. **Nachsehen, was seit dem 4. September dazugekommen ist.** Die 225
+   Dateien einzeln nach Grösse auflisten; die Decke ist eine Summe, und
+   Summen haben Posten. Ohne diese Liste ist jede Massnahme geraten.
+2. **Erst dann entscheiden**, ob etwas später geladen werden kann (wie
+   pdf.js in E389), ob etwas zusammengelegt gehört, oder ob die Decke mit
+   geschriebenem Grund steigt.
+3. **Nicht** die Decke anheben, weil der Lauf rot ist. Eine Decke, die
+   nachgibt, sobald sie greift, ist keine.
+
+Was hier NICHT hingehört: die 1,6 MB der Symbole aus E525. Der Start holt
+davon nur `favicon-16` und `favicon-32` (zusammen 3 KB); die grossen
+Symbole holt das Betriebssystem beim Installieren, nicht der Browser beim
+Öffnen.

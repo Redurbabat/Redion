@@ -82,6 +82,12 @@ Schul Inhalt
 #  Komponenten aus dem Handoff — Vorlage, kein Programm.
 quell/entwicklung/
 
+#  UND DIE MARKE SELBST (E525). `oeffentlich/icons/marke.png` ist die Quelle,
+#  aus der `erzeugen.mts` die siebzehn Symbole und die .ico rechnet. Sie ist
+#  Werkzeugkasten, nicht Auslieferung: keine Seite verweist auf sie, und sie
+#  ist mit 227 KB die grösste Einzeldatei unter `oeffentlich/`.
+oeffentlich/icons/marke.png
+
 # --- Geheimnisse: gehören nie ins Netz und nie ins Repository (§42) --------
 .env
 .env.*

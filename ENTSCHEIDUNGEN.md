@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-504 Entscheidungen, E1 bis E524 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+505 Entscheidungen, E1 bis E525 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -568,6 +568,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E522** — Der volle Lauf: die D1-Bindung stillgelegt, zwei Zusagen seit E465 rot — und eine Behauptung aus E520 zurückgenommen
 * **E523** — „Hello world": Redion war nie im Netz, und das Zeugnis auch nicht — ein gescheiterter Deploy ersetzt nichts
 * **E524** — Ein fehlender Schrägstrich, und die Chronik war im Netz tot — die Ausschlussliste fing zwei Skripte mit
+* **E525** — Redurs Marke, aus einer Quelle gerechnet — achtzehn Symbole, eine `marke.png`, und ein Bild, das den Fehler fand
 
 ---
 
@@ -42336,3 +42337,122 @@ GEPRÜFT. `test270` von 74 auf 77 Zusagen. Gegenprobe rot gesehen: `chronik/`
 ohne Schrägstrich wieder eingebaut — zwei Zusagen rot, und die Meldung nennt
 `quell/bereiche/chronik/daten.js` und `chronik.js` beim Namen. Nicht
 geprüft: die Gesamtsuite (sie lief heute, elf Läufe stehen noch rot).
+
+---
+
+E525 — Redurs Marke, aus einer Quelle gerechnet
+--------------------------------------------------------------------------
+
+Redur, 9. September, mit einem Bildschirmfoto seines Startbildschirms:
+
+> „Wieso habe ich hier das immer nich die R logo"
+
+Und, nachdem ich dreimal nach der Datei gefragt hatte statt zu handeln:
+
+> „Alter änder die logo ich sage es dir mache es"
+
+## Was entschieden wurde
+
+Die Marke wird **aus einer einzigen Quelle gerechnet**:
+`oeffentlich/icons/marke.png`, 512 × 512, Redurs Bild. Daraus erzeugt
+`oeffentlich/icons/erzeugen.mts` alle vierundzwanzig Dateien — zwölf
+Symbole, zwei maskable, zwei Favicons, sieben Startbilder und die
+`favicon.ico`. Das rote R, das aus Rechtecken und einem Ring gezeichnet war,
+ist weg; das „R" im Kopf der App ebenfalls.
+
+## Warum, und was die Alternative war
+
+**Achtzehn Stellen wechselt niemand vollständig.** Das war der eigentliche
+Fund: `favicon.ico` hatte als EINZIGE Symboldatei gar keinen Erzeuger. Sie
+war von Hand gebaut, lag seit dem 1. September unverändert da und wäre beim
+Markenwechsel übriggeblieben — ein rotes R im Browserreiter, während überall
+sonst die neue Marke steht. Genau deshalb rechnet der Erzeuger sie jetzt
+mit, und `test483` vergleicht alle vierundzwanzig Dateien Byte für Byte
+gegen einen frischen Lauf in einem leeren Verzeichnis.
+
+**Die Alternative war, das Bild an jeder Stelle einzeln einzusetzen.** Sie
+ist schneller und hält genau bis zum nächsten Wechsel.
+
+**Und die Alternative zur Fotografie war eine gezeichnete Fassung.** Ich
+hatte sie schon: zwei goldene Pfeile im Kreis, als Vektor nachgebaut, weil
+Redurs Datei zunächst nicht im Behälter ankam. Sie war sauber und bei 16 px
+schärfer als jede Verkleinerung. Sie ist trotzdem draussen, sobald das
+echte Bild da war — eine Marke ist kein Vorschlag, den man nachzeichnet.
+
+## Was es kostet
+
+**Bytes.** Ein gezeichnetes R aus drei Farben packt sich auf nichts
+zusammen; eine Fotografie mit Korn nicht. icon-512 wog beim ersten Versuch
+480 KB gegen 3 KB vorher. Drei Griffe haben daraus 225 KB gemacht, jeder
+gemessen statt geraten:
+
+| Griff | icon-512 | Warum |
+|---|---|---|
+| vorher | 480 KB | Filter „keiner" für jede Zeile, volle 8 Bit |
+| Zeilenfilter je Zeile wählen | 420 KB | die Regel aus der PNG-Empfehlung |
+| Boden bei 16 | 380 KB | 3/4/6 neben 0/2/5 ist dasselbe Schwarz |
+| 64 statt 256 Stufen je Kanal | 225 KB | bei vierfacher Vergrösserung im Goldverlauf kein Streifen zu sehen |
+
+Alle Symbole zusammen wiegen jetzt 1,6 MB statt 60 KB. Das ist der Preis
+für eine Marke, die eine Fotografie ist, und er ist bewusst bezahlt.
+
+**Zehn Kilobyte in der Startnutzlast.** Die Marke im Kopf der App steht als
+Data-URL in `studio.css` — 8,7 KB gzip. Der Grund steht dort im Kommentar:
+`bauen.mts` setzt CSS als `<style>` in die Einzeldatei ein und schreibt
+relative Adressen nicht um (§29); ein `url(../../../oeffentlich/…)` ginge in
+`redion-einzeldatei.html` ins Leere, und zwar still, als leerer Kasten.
+
+Ein Versuch, das zu drücken, ist gescheitert und steht hier, damit ihn
+niemand wiederholt: ein eigenes Kopfbild in 76 px mit 16 statt 64 Stufen
+brachte 6,9 statt 8,7 KB. 1,8 KB sind keine Sonderdatei wert.
+
+**Die Decke von `test388` war schon vorher gerissen** — 2379 KB gegen 2300.
+Mit diesem Bogen sind es 2389. Das ist ehrlich schlechter und wird nicht
+schöngeredet; es gehört zu L146 und nicht hierher.
+
+## Der Fehler, den kein Prüflauf gefunden hat
+
+Der Kastenfilter im Erzeuger teilte falsch. Er mittelt über
+vormultipliziertes Alpha — richtig, sonst bekämen die runden Ecken einen
+dunklen Saum — und teilte danach durch `n / (a / 255)` statt durch
+`255 / a`. Der Faktor `n` zu viel.
+
+Bei 512 → 512 ist `n` gleich eins, und **icon-512 sah richtig aus.** Bei
+512 → 48 ist `n` über hundert: jedes verkleinerte Symbol kam weiss und
+ausgebrannt heraus. Kein Prüflauf konnte das melden — die Masse stimmten,
+der Alphakanal stimmte, die Datei war ein gültiges PNG.
+
+Gefunden hat es das Bild (§55). Das ist der zweite Fall in diesem Projekt,
+in dem eine Zahl richtig und das Bild falsch war.
+
+## Und die kleinen Grössen werden aufgehellt
+
+Redurs Marke ist dunkel. Bei 180 px ist das ihre Wirkung; bei 16 px im
+Browserreiter mittelt das Verkleinern jeden hellen Punkt mit fünfhundert
+dunklen, und übrig bleibt ein schwarzer Fleck. Bis 48 px hebt der Erzeuger
+deshalb die Mitteltöne mit Gamma 0,65 — am Bild verglichen gegen 1, 0,8 und
+0,5: ab 0,5 beginnt der Grund zu grauen, bei 0,8 ist noch zu wenig zu sehen.
+Das Schwarz bleibt schwarz, weil 0 hoch irgendetwas 0 bleibt.
+
+## Was noch dazukam
+
+* **PNG lesen.** Der Erzeuger konnte nur schreiben. Jetzt liest er auch —
+  Signatur, Blöcke, zlib, die fünf Zeilenfilter. Achtzig Zeilen statt einer
+  Abhängigkeit, und derselbe Grund wie beim Schreiben: `sharp` findet seine
+  Binärdatei nicht immer, `zlib` liegt in Node.
+* **Alphakanal.** Bis hierher schrieb der Erzeuger RGB und malte die runden
+  Ecken **weiss** — auf hellem Grund unsichtbar, auf dunklem ein weisser
+  Zipfel an jeder Ecke. Farbart 6 statt 2.
+* **`marke.png` geht nicht mit ins Netz.** Sie ist Werkzeug, keine
+  Auslieferung: keine Seite verweist auf sie, und sie ist mit 227 KB die
+  grösste Einzeldatei unter `oeffentlich/`. Eine Zeile in `.assetsignore`,
+  und `test483` hält sie fest.
+
+## Geprüft
+
+`test483`, 20 Zusagen, vier Gegenproben rot gesehen: ein Byte in
+`marke.png` ohne neuen Lauf (21 von 24 Dateien weichen ab), das „R" zurück
+in `index.html`, `icon-48` statt `icon-72` in der Stildatei, und das
+Hintergrundbild gestrichen. Dazu `test31` (PWA und Symbolmasse), `test204`,
+`test351` (der Studio-Kopf bleibt einzeilig) — alle grün. `npm run
+typecheck` sauber, `node bauen.mts` und `npm run stand` nachgezogen.

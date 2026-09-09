@@ -5158,3 +5158,52 @@ aufgerufen gehört; sie entscheidet die Frage in fünf Sekunden.
 
 Gemessen hat es Redur selbst. Von hier aus geht es nicht: der Ausgangsproxy
 dieser Sitzung lehnt die Verbindung mit 403 ab.
+
+---
+
+## Die Marke — aus achtzehn Stellen wird eine (E525)
+
+Redur, 9. September, mit einem Bild seines Startbildschirms: „Wieso habe
+ich hier das immer nich die R logo". Und, nachdem ich dreimal nach der
+Datei gefragt hatte statt zu handeln: „Alter änder die logo ich sage es dir
+mache es".
+
+**Gefunden.** Das rote R stand nicht an einer Stelle, sondern an achtzehn.
+Siebzehn davon rechnete `oeffentlich/icons/erzeugen.mts` — und die
+achtzehnte, `favicon.ico`, hatte **gar keinen Erzeuger**. Sie war von Hand
+gebaut, lag seit dem 1. September unverändert da, und wäre beim
+Markenwechsel als einzige übriggeblieben: ein rotes R im Browserreiter,
+während überall sonst die neue Marke steht. Sie rechnet der Erzeuger jetzt
+mit.
+
+**Gebaut.** Eine Quelle, `oeffentlich/icons/marke.png` in 512 × 512, und
+daraus vierundzwanzig Dateien. Der Erzeuger kann seither auch PNG **lesen**
+(Signatur, Blöcke, zlib, die fünf Zeilenfilter — achtzig Zeilen statt einer
+Abhängigkeit), schreibt einen **Alphakanal** statt weisser Ecken, wählt für
+jede Zeile den **Filter, der sie am kleinsten macht**, und hebt bis 48 px
+die Mitteltöne, damit die dunkle Marke im Reiter nicht zum schwarzen Fleck
+wird. In der App trägt der Studio-Kopf statt des „R" dieselbe Marke.
+
+**Der Fehler, den kein Prüflauf finden konnte.** Der Kastenfilter teilte
+falsch — der Faktor `n` zu viel beim Zurückrechnen aus dem
+vormultiplizierten Alpha. Bei 512 → 512 ist `n` gleich eins, also sah
+`icon-512` richtig aus; bei 512 → 48 kam jedes Symbol weiss und ausgebrannt
+heraus. Masse, Alphakanal und Dateiform stimmten alle. Gefunden hat es das
+Bild (§55).
+
+**Der Preis, gemessen statt geraten.** Eine Fotografie packt sich nicht wie
+ein gezeichnetes R: `icon-512` wog im ersten Versuch 480 KB gegen 3 KB
+vorher. Zeilenfilter, ein Boden im Schwarz und 64 statt 256 Stufen je Kanal
+haben daraus 225 KB gemacht — bei vierfacher Vergrösserung im Goldverlauf
+ist zwischen 8 und 6 Bit kein Streifen zu sehen. Alle Symbole zusammen
+1,6 MB statt 60 KB, bewusst bezahlt.
+
+**Geprüft.** `test483`, 20 Zusagen, vier Gegenproben rot gesehen — darunter
+ein einzelnes geändertes Byte in `marke.png` ohne neuen Lauf, das 21 von 24
+Dateien abweichen lässt. Dazu `test31`, `test204`, `test351` grün,
+`npm run typecheck` sauber, Einzeldatei und Dienststand nachgezogen.
+
+**Was dabei schlechter wurde, und das steht hier so.** Die Marke im Kopf
+kostet 8,7 KB in der Startnutzlast, und `test388` misst jetzt 2389 KB gegen
+eine Decke von 2300. Die Decke war schon vorher gerissen — 2379 vor diesem
+Bogen —, aber zehn Kilobyte davon sind meine. Das ist L146.
