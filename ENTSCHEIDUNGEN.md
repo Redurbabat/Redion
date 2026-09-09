@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-499 Entscheidungen, E1 bis E519 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+500 Entscheidungen, E1 bis E520 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -563,6 +563,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E517** — Ein Zweig statt `main`: der Arbeitsstand kommt auf den Laptop, und `main` bleibt die Zusage „geprüft"
 * **E518** — Die fertigen PowerShell-Befehle stehen im Verzeichnis, nicht im Gespräch — und der Alltagsbefehl ruft `holen.bat`, nicht `git`
 * **E519** — Der Vergleich sieht gegen deinen Zweig, nicht gegen `main` — zwei Skripte, zwei Vorgaben, jede mit ihrem Grund
+* **E520** — Der Worker heisst `red-ion`, und ein Zeugnis lag im Netz — die Namenswarnung verdeckte den echten Fehler
 
 ---
 
@@ -41951,3 +41952,108 @@ GEPRÜFT. `test353` von 88 auf 105 Zusagen. Gegenprobe rot gesehen: die
 Vorgabe wieder fest auf `main` — die erste Zusage rot, und sie nennt den
 Grund. Nicht geprüft: die Gesamtsuite; nicht geprüft ist der Doppelklick
 selbst (L142).
+
+---
+
+E520 — Der Worker heisst `red-ion`, und ein Zeugnis lag im Netz
+--------------------------------------------------------------------------
+
+Redur, 9. September 2026, mit dem Deploy-Protokoll von Cloudflare:
+
+> „könntest du die claudeflare […] von redion zur red-ion wechseln nur wo
+> workername ist"
+
+## Erst das, wonach er gefragt hat
+
+Cloudflare hat das Projekt beim Anlegen **`red-ion`** genannt;
+`wrangler.toml` sagte `redion`. Wrangler überschrieb den Namen bei jedem
+Bau und warnte:
+
+```txt
+▲ [WARNING] Failed to match Worker name. Your config file is using the
+   Worker name "redion", but the CI system expected "red-ion".
+```
+
+Es lief trotzdem. Genau das ist das Problem: **eine Warnung, die bei jedem
+Bau erscheint, liest nach der dritten Woche niemand mehr** — und dann
+übersieht man die Zeile daneben. Im selben Protokoll stand vier Zeilen
+tiefer der Fehler, an dem der Deploy wirklich scheiterte.
+
+Zwei Namen, die gleich aussehen und es nicht sind: `name` ist der **Worker**
+und heisst jetzt `red-ion`. `database_name` ist die **D1-Datenbank** und
+heisst weiter `redion` — sie umzubenennen wäre eine andere Datenbank.
+
+## Und dann das, wonach er nicht gefragt hat
+
+Im Upload-Protokoll stehen 290 Dateien. Zwischen ihnen:
+
+```txt
++ /Redur_Babat_FZ_MOE_Lehrpersonen.pdf
++ /Schul Inhalt
+```
+
+**Fünf Megabyte Zeugnis, unter einer Adresse, die jeder raten kann.** Das
+Repository ist privat; die veröffentlichte Seite ist es nicht. Dazwischen
+lag nur `.assetsignore` — und die wusste nichts davon.
+
+E270 hat diese Datei gebaut und dabei den richtigen Satz aufgeschrieben:
+„hier bleibt drin, was der Browser wirklich lädt". Die Regel war richtig,
+die Liste war unvollständig. Sie kannte die Werkstatt (`src/`,
+`pruefungen/`, `node_modules/`) und die Geheimnisse (`.env`) — aber nicht
+das Persönliche, weil damals nichts Persönliches dalag.
+
+Dazu zwei weitere, die niemand im Netz braucht:
+
+  · **`chronik/chronik.json`** — die Quelle von UR.md und PROBLEME.md, mit
+    Redurs Nachrichten im Wortlaut. Der Browser lädt sie nie; er liest
+    `quell/bereiche/chronik/daten.js` (E514).
+    **Was das nicht heilt:** `daten.js` liegt unter `quell/` und geht mit.
+    Die Chronik ist damit im Netz lesbar, und der Zugangscode ist ein
+    Türschild, kein Schloss. Das ist L140 und bleibt offen — diese Zeile
+    löst es nicht, und es wäre falsch, so zu tun.
+  · **`quell/entwicklung/ui-reserve/`** — die 50 Uiverse-Originale aus dem
+    Handoff. Nachgesehen, nicht vermutet: weder `index.html` noch `sw.js`
+    nennen sie auch nur einmal.
+
+**Gelöscht wurde nichts** (§43). Die Dateien liegen, wo sie lagen; sie
+gehen nur nicht mehr mit ins Netz. `test270 §1b` misst beides — dass die
+PDF noch da ist UND dass sie draussen bleibt. Eine Zusage, die auch nach
+dem Löschen grün bliebe, hielte das Falsche fest.
+
+## Die Zusage ist breiter als der Fund
+
+Nicht „diese eine PDF", sondern **keine PDF und keine `.redion` aus der
+Wurzel**. Eine Liste, die den gefundenen Dateinamen aufzählt, hält genau
+bis zur nächsten Datei.
+
+Und sie misst gegen die WIRKLICHKEIT statt gegen sich selbst: der Prüflauf
+liest, was tatsächlich in der Wurzel liegt, wendet die Ausschlüsse an und
+vergleicht mit einer Liste dessen, was gehen darf. Wer eine Datei
+danebenlegt, macht ihn rot — ohne dass jemand die Zusage anfassen muss.
+
+Der erste Wurf dieses Matchers kannte `*.pdf`, aber nicht `tsconfig*.json`
+mit dem Stern in der Mitte, und meldete vier längst ausgeschlossene Dateien
+als Leck. Ein Wächter mit falschem Alarm wird nach dem zweiten Mal
+ignoriert; jetzt wird das Muster zu einem Ausdruck. Er hat dabei einen
+echten Nachzügler gefunden: `.gitattributes` stand in keiner Liste.
+
+## Was den Deploy WIRKLICH gekippt hat
+
+Nicht der Name. Vier Zeilen tiefer:
+
+```txt
+✘ [ERROR] D1 binding 'DB' references database
+  '2a4f6708-b7e7-43c5-9e18-17b33713dbb9' which was not found.
+```
+
+Diese Kennung steht seit E323 in `wrangler.toml` und gehört zu keiner
+Datenbank in Redurs Konto. Das ist **L82 Punkt 1**, wörtlich: „geschrieben
+und geprüft ist alles; gegen einen echten Dienst lief es nie." Kein
+Prüflauf im Container kann das lösen — es braucht Redurs Konto. Es steht
+jetzt als **L143** mit den drei Wegen dorthin.
+
+GEPRÜFT. `test270` von 63 auf 74 Zusagen. Zwei Gegenproben rot gesehen: den
+PDF-Ausschluss entfernt (drei Zusagen rot, und eine nennt die Datei beim
+Namen) und den Worker wieder `redion` genannt. Nicht geprüft: die
+Gesamtsuite; **nicht geprüft ist der Deploy selbst** — er braucht Redurs
+Cloudflare-Konto (L82, L143).

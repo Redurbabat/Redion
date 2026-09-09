@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — fünfzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — einundfünfzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -594,7 +594,20 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Grund. Die vier Antworten von `git status -sb` sind in einem echten
     Repo gemessen statt behauptet. Schliesst L142 Punkt 1. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **fünfzig Bögen**; die Überschrift
+  · **G51 — red-ion und das Zeugnis im Netz** (E520, test270 §1b/§1c):
+    Redur bat um eine Kleinigkeit — den Worker-Namen von `redion` auf
+    `red-ion`. Beim Lesen des mitgeschickten Deploy-Protokolls standen
+    zwischen 290 hochgeladenen Dateien `Redur_Babat_FZ_MOE_Lehrpersonen.pdf`
+    und `Schul Inhalt`: fünf Megabyte Zeugnis unter einer ratbaren Adresse.
+    E270 hatte die Ausschlussliste gebaut und die richtige Regel dazu
+    geschrieben; die Liste kannte nur kein Persönliches, weil damals keines
+    dalag. Jetzt sind `*.pdf`, `*.redion`, `chronik/` und
+    `quell/entwicklung/` draussen — gelöscht wurde nichts (§43), und der
+    Prüflauf misst gegen den echten Ordnerinhalt statt gegen sich selbst.
+    Der Deploy scheitert weiterhin, aber an etwas anderem: **L143**.
+    **Steht.**
+
+Der Auftrag heisst deshalb jetzt **einundfünfzig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

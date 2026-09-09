@@ -5033,3 +5033,44 @@ gleicher Stand, GitHub weiter, ich weiter, ungespeichertes daneben — in
 einem echten Wegwerf-Repo gefahren. Ohne das wäre die Tabelle in der
 Anleitung eine Behauptung über eine fremde Ausgabe, und solche Tabellen sind
 nach einem git-Update falsch, ohne dass es jemand merkt.
+
+**Der Worker heisst red-ion — und ein Zeugnis lag im Netz (E520, test270).**
+Redur schickte das Cloudflare-Protokoll und bat um eine Kleinigkeit: den
+Worker-Namen von `redion` auf `red-ion` ändern, „nur wo Workername ist".
+
+Das war schnell getan. Interessanter war, warum die Warnung überhaupt
+störte: sie kam bei jedem Bau, und eine Warnung, die immer kommt, liest
+nach der dritten Woche niemand mehr. Genau das war passiert — vier Zeilen
+tiefer im selben Protokoll stand der Fehler, an dem der Deploy wirklich
+scheiterte, und der ist ein anderer.
+
+Beim Zeilenlesen des Upload-Protokolls fiel dann etwas auf, wonach niemand
+gefragt hatte: unter den 290 hochgeladenen Dateien standen
+`Redur_Babat_FZ_MOE_Lehrpersonen.pdf` und `Schul Inhalt`. Fünf Megabyte
+Zeugnis, unter einer Adresse, die jeder raten kann. Das Repository ist
+privat, die veröffentlichte Seite nicht.
+
+E270 hatte die Ausschlussliste gebaut und den richtigen Satz dazu
+geschrieben: hier bleibt drin, was der Browser wirklich lädt. Die Regel war
+richtig, die Liste unvollständig — sie kannte die Werkstatt und die
+Geheimnisse, aber nichts Persönliches, weil damals nichts Persönliches
+dalag. Dazu kamen die Chronik-Quelle und die 50 Uiverse-Originale, die
+weder `index.html` noch `sw.js` je nennen.
+
+Gelöscht wurde nichts. Die Dateien liegen, wo sie lagen; sie gehen nur
+nicht mehr mit. Der Prüflauf misst beides — dass die PDF noch da ist und
+dass sie draussen bleibt: eine Zusage, die auch nach dem Löschen grün
+bliebe, hielte das Falsche fest.
+
+Und sie misst gegen die Wirklichkeit statt gegen sich selbst: sie liest,
+was tatsächlich in der Wurzel liegt, wendet die Ausschlüsse an und
+vergleicht mit dem, was gehen darf. Wer eine Datei danebenlegt, macht sie
+rot. Der erste Wurf des Musterabgleichs kannte `*.pdf`, aber nicht
+`tsconfig*.json` mit dem Stern in der Mitte, und meldete vier längst
+ausgeschlossene Dateien als Leck — ein Wächter mit falschem Alarm wird nach
+dem zweiten Mal ignoriert. Beim Richtigstellen fand er einen echten
+Nachzügler: `.gitattributes` stand in keiner Liste.
+
+Was den Deploy wirklich gekippt hat, steht als L143: die D1-Kennung in
+`wrangler.toml` gehört zu keiner Datenbank in Redurs Konto. Das ist L82
+Punkt 1, und kein Prüflauf im Container kann es lösen.

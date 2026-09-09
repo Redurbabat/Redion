@@ -417,6 +417,17 @@ Die zehn Adern. Nicht wegen der Technik — zehn Farben und zwei Strichmuster �
 **Besserer Prompt:** Keine Verbesserung nötig — die Korrektur kam sofort und war eindeutig. Sie war nur nötig, weil das Projekt in der Nachricht davor zu spät stand.
 
 
+**9 · ca. 09:05**
+
+> red-ion  das ist die neu [Cloudflare-Deploy-Protokoll] könntest du die claudeflare akusatiere von redion zur red-ion wechseln nur wo workerpache ist
+
+**Gemeint:** Im Cloudflare-Deploy heisst der Worker red-ion, in wrangler.toml steht redion. Den Namen dort ändern — aber nur den Worker-Namen, nichts anderes.
+
+**Besser geschrieben:** Cloudflare nennt den Worker red-ion, wrangler.toml sagt redion. Ändere nur den Worker-Namen, nicht den Datenbanknamen.
+
+**Besserer Prompt:** Das „nur wo Workername ist" war die wichtigste Angabe im Satz und stand am Ende — sie hat verhindert, dass auch database_name geändert wurde, was eine andere Datenbank gewesen wäre. Solche Einschränkungen gehören nach vorn. Das mitgeschickte Protokoll war goldrichtig: darin stand der eigentliche Fehler, nach dem er gar nicht gefragt hatte.
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -427,12 +438,13 @@ Die zehn Adern. Nicht wegen der Technik — zehn Farben und zwei Strichmuster �
 | E516 — L139 gefunden: der Import war nie kaputt, das Wort war es | `a33cceb1` → `0f8f0a1c` | 06:45 – 07:35 | ca. 50 min | test482 neu, 28 Zusagen |
 | E517 — Ein Zweig statt main: der Arbeitsstand kommt auf den Laptop | `0f8f0a1c` → `9812d8a8` | 07:35 – 08:25 | ca. 50 min | test353 von 60 auf 81 Zusagen |
 | E518 — Die fertigen PowerShell-Befehle stehen im Verzeichnis, nicht im Gespräch | `9812d8a8` → `42cf96ba` | 08:25 – 09:05 | ca. 40 min | test353 von 81 auf 88 Zusagen |
-| E519 — Der Vergleich sieht gegen deinen Zweig, nicht gegen main | `42cf96ba` → `(dieser Bogen)` | ab 09:05 | — | test353 von 88 auf 105 Zusagen |
+| E519 — Der Vergleich sieht gegen deinen Zweig, nicht gegen main | `42cf96ba` → `9db488d0` | 09:05 – 09:40 | ca. 35 min | test353 von 88 auf 105 Zusagen |
+| E520 — Der Worker heisst red-ion, und ein Zeugnis lag im Netz | `9db488d0` → `(dieser Bogen)` | ab 09:40 | — | test270 von 63 auf 74 Zusagen |
 
 #### Zahlen des Tages
 
-- **commits:** 7
-- **entscheidungen:** 7
+- **commits:** 8
+- **entscheidungen:** 8
 
 #### Das grösste Problem
 
@@ -457,10 +469,12 @@ Die drei sauberen Messungen aus E513. Sie waren richtig gerechnet und haben trot
 | 08:40 | Die fertigen PowerShell-Befehle in START-MIT-CLAUDE-CODE.md geschrieben, mit einem Wächter dafür. | Ein Befehl, der nur im Gespräch steht, ist morgen weg. Und der Alltagsbefehl ruft holen.bat statt git checkout: das kurze git checkout überspränge die ganze Rettung. | keins an Daten; die git-Folge wurde vorher in einem echten Repo gefahren, nicht abgeschrieben |
 | 08:55 | Benutzerpfad aus START-MIT-CLAUDE-CODE.md und SERVER-EINRICHTEN.md entfernt. | Ein ausgeschriebener Benutzerpfad stimmt auf keinem zweiten Rechner und gehört nicht in ein offenes Verzeichnis. Die drei in ENTSCHEIDUNGEN.md, UR.md und im Audit bleiben: das sind Protokolle. | keins |
 | 09:30 | `vergleichen.bat` vergleicht gegen den Zweig, auf dem der Ordner steht. | Seit E517 kann ein Arbeitszweig geholt werden; der Vergleich sah weiter fest gegen main und meldete hunderte Unterschiede, die keine sind. Die Vorgabe ist absichtlich eine andere als bei holen.bat: das eine ändert den Ordner (sichere Wahl), das andere sieht nur nach (ehrliche Wahl). | keins — das Skript schreibt weiterhin nichts ausser fetch; sieben git-Stellen einzeln geprüft |
+| 09:50 | Worker-Name in wrangler.toml von redion auf red-ion; database_name bleibt redion. | Cloudflare hat das Projekt red-ion genannt und überschrieb den Namen bei jedem Bau mit einer Warnung. Eine Warnung, die immer kommt, verdeckt die daneben — genau das war passiert. | keins — Wrangler benutzte ohnehin red-ion; jetzt steht es auch so da |
+| 10:05 | Persönliche PDF, Schul Inhalt, chronik/, quell/entwicklung/ und .gitattributes in .assetsignore aufgenommen. | Sie standen im Upload-Protokoll und waren damit im Netz abrufbar. Fünf Megabyte Zeugnis unter einer ratbaren Adresse. | keins — GELÖSCHT WURDE NICHTS (§43); die Dateien liegen unverändert im Verzeichnis und gehen nur nicht mehr mit ins Netz |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 19 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 20 Einträge.
 

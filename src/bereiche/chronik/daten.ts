@@ -388,6 +388,13 @@ const ChronikDaten = {
      "gemeint": "Beide Fragen galten BABAT-RED, nicht Redion.",
      "besser": "Beides meinte ich für BABAT-RED.",
      "besserePrompt": "Keine Verbesserung nötig — die Korrektur kam sofort und war eindeutig. Sie war nur nötig, weil das Projekt in der Nachricht davor zu spät stand."
+    },
+    {
+     "zeit": "ca. 09:05",
+     "wortlaut": "red-ion  das ist die neu [Cloudflare-Deploy-Protokoll] könntest du die claudeflare akusatiere von redion zur red-ion wechseln nur wo workerpache ist",
+     "gemeint": "Im Cloudflare-Deploy heisst der Worker red-ion, in wrangler.toml steht redion. Den Namen dort ändern — aber nur den Worker-Namen, nichts anderes.",
+     "besser": "Cloudflare nennt den Worker red-ion, wrangler.toml sagt redion. Ändere nur den Worker-Namen, nicht den Datenbanknamen.",
+     "besserePrompt": "Das „nur wo Workername ist\" war die wichtigste Angabe im Satz und stand am Ende — sie hat verhindert, dass auch database_name geändert wurde, was eine andere Datenbank gewesen wäre. Solche Einschränkungen gehören nach vorn. Das mitgeschickte Protokoll war goldrichtig: darin stand der eigentliche Fehler, nach dem er gar nicht gefragt hatte."
     }
    ],
    "arbeit": [
@@ -442,14 +449,22 @@ const ChronikDaten = {
     {
      "was": "E519 — Der Vergleich sieht gegen deinen Zweig, nicht gegen main",
      "vonCommit": "42cf96ba",
+     "bisCommit": "9db488d0",
+     "zeitraum": "09:05 – 09:40",
+     "pruefungen": "test353 von 88 auf 105 Zusagen",
+     "dauer": "ca. 35 min"
+    },
+    {
+     "was": "E520 — Der Worker heisst red-ion, und ein Zeugnis lag im Netz",
+     "vonCommit": "9db488d0",
      "bisCommit": "(dieser Bogen)",
-     "zeitraum": "ab 09:05",
-     "pruefungen": "test353 von 88 auf 105 Zusagen"
+     "zeitraum": "ab 09:40",
+     "pruefungen": "test270 von 63 auf 74 Zusagen"
     }
    ],
    "zahlen": {
-    "commits": 7,
-    "entscheidungen": 7
+    "commits": 8,
+    "entscheidungen": 8
    },
    "groesstesProblem": "Die drei sauberen Messungen aus E513. Sie waren richtig gerechnet und haben trotzdem nichts bewiesen, weil sie die falsche Frage gestellt haben: „legt der Import die richtige Datei ab?\" statt „welchen Knopf drückt er?\". Eine Messung, die die falsche Frage stellt, ist gefährlicher als gar keine — sie kommt grün zurück und man glaubt ihr.",
    "interessantesteAnfrage": "„Wieter mit L139\" — drei Wörter, und sie haben gereicht, weil die Frage schon in LUECKEN.md stand. Das ist der Nutzen dieser Datei, den man erst sieht, wenn man ihn braucht: eine Lücke, die aufgeschrieben ist, lässt sich mit einer Nummer wieder aufnehmen. Eine, die nur im Kopf stand, hätte die ganze Geschichte noch einmal gebraucht.",
@@ -519,6 +534,18 @@ const ChronikDaten = {
      "was": "`vergleichen.bat` vergleicht gegen den Zweig, auf dem der Ordner steht.",
      "warum": "Seit E517 kann ein Arbeitszweig geholt werden; der Vergleich sah weiter fest gegen main und meldete hunderte Unterschiede, die keine sind. Die Vorgabe ist absichtlich eine andere als bei holen.bat: das eine ändert den Ordner (sichere Wahl), das andere sieht nur nach (ehrliche Wahl).",
      "risiko": "keins — das Skript schreibt weiterhin nichts ausser fetch; sieben git-Stellen einzeln geprüft"
+    },
+    {
+     "zeit": "09:50",
+     "was": "Worker-Name in wrangler.toml von redion auf red-ion; database_name bleibt redion.",
+     "warum": "Cloudflare hat das Projekt red-ion genannt und überschrieb den Namen bei jedem Bau mit einer Warnung. Eine Warnung, die immer kommt, verdeckt die daneben — genau das war passiert.",
+     "risiko": "keins — Wrangler benutzte ohnehin red-ion; jetzt steht es auch so da"
+    },
+    {
+     "zeit": "10:05",
+     "was": "Persönliche PDF, Schul Inhalt, chronik/, quell/entwicklung/ und .gitattributes in .assetsignore aufgenommen.",
+     "warum": "Sie standen im Upload-Protokoll und waren damit im Netz abrufbar. Fünf Megabyte Zeugnis unter einer ratbaren Adresse.",
+     "risiko": "keins — GELÖSCHT WURDE NICHTS (§43); die Dateien liegen unverändert im Verzeichnis und gehen nur nicht mehr mit ins Netz"
     }
    ]
   }
@@ -755,6 +782,19 @@ const ChronikDaten = {
    "behebung": "Vorgabe ist der Zweig, auf dem der Ordner steht; vergleichen.bat main sieht ausdrücklich gegen den geprüften Stand. Sieben git-Stellen einzeln geprüft, die vier Antworten von git status -sb in einem echten Repo gemessen.",
    "stand": "Behoben. L142 Punkt 1 geschlossen.",
    "lehre": "Eine Lücke, die man selbst aufschreibt, ist kein Ablagefach — sie ist eine Verabredung. Diese hier wurde nach einem einzigen Bogen fällig, und zwar durch die Frage, für die das kaputte Werkzeug gedacht war. Bevor man ein Werkzeug empfiehlt, sieht man nach, ob es die gestellte Frage beantwortet."
+  },
+  {
+   "nr": "P20",
+   "datum": "2026-09-09",
+   "titel": "Ein Zeugnis im Netz — gefunden in einem Protokoll, das wegen etwas anderem kam",
+   "schwere": "hoch",
+   "symptom": "Redur_Babat_FZ_MOE_Lehrpersonen.pdf (5 MB) und Schul Inhalt wurden bei jedem Cloudflare-Deploy mit veröffentlicht. Das Repository ist privat, die Seite nicht.",
+   "falscheVermutung": "Keine Vermutung — eine Auslassung, und zwar meine eigene von E270. Dort wurde .assetsignore gebaut, mit dem richtigen Satz „hier bleibt drin, was der Browser wirklich lädt\". Die Regel stimmte, die Liste war unvollständig: sie kannte Werkstatt und Geheimnisse, aber nichts Persönliches — weil damals nichts Persönliches dalag. Eine Liste altert; eine Regel nicht.",
+   "wieGesucht": "Gar nicht gesucht. Redur schickte das Protokoll wegen einer Namenswarnung; beim Zeilenlesen der 290 hochgeladenen Dateien standen die beiden mittendrin.",
+   "ursache": "Die Ausschlussliste zählte auf, statt zu prüfen. Und die Wurzel des Verzeichnisses ist zugleich das Veröffentlichungsverzeichnis — was dort landet, ist im Netz, sofern es niemand ausschliesst.",
+   "behebung": "Ausgeschlossen: die PDF namentlich, dazu *.pdf und *.redion als Regel, Schul Inhalt, chronik/, quell/entwicklung/, .gitattributes. Nichts gelöscht. Der Prüflauf misst jetzt gegen die WIRKLICHKEIT: er liest, was in der Wurzel liegt, wendet die Ausschlüsse an und vergleicht mit dem, was gehen darf.",
+   "stand": "Behoben. Gegenprobe rot gesehen, und sie nennt die Datei beim Namen.",
+   "lehre": "Ein Protokoll, das wegen einer Kleinigkeit kommt, ganz lesen. Die Warnung, nach der gefragt wurde, war harmlos; darunter lag der Fehler, an dem der Deploy scheiterte, und weiter oben lag ein Zeugnis im Netz. Und: eine Ausschlussliste, die Namen aufzählt, hält bis zur nächsten Datei — eine, die gegen den echten Ordnerinhalt prüft, hält weiter."
   }
  ]
 } as const;

@@ -29,7 +29,19 @@
 #      wrangler deploy
 # ===========================================================================
 
-name = "redion"
+# DER WORKER HEISST  red-ion , NICHT  redion  (E520).
+# Cloudflare hat das Projekt beim Anlegen  red-ion  genannt; hier stand
+# `redion`. Wrangler hat den Namen jedes Mal überschrieben und gewarnt:
+#     "Failed to match Worker name … Overriding using the CI provided
+#      Worker name."
+# Es lief trotzdem — aber eine Warnung, die bei jedem Bau kommt, liest nach
+# der dritten Woche niemand mehr, und dann übersieht man die daneben. Der
+# Name steht jetzt so da, wie er bei Cloudflare heisst.
+#
+# ACHTUNG, ZWEI VERSCHIEDENE NAMEN: der hier ist der WORKER.
+# `database_name` weiter unten ist die D1-Datenbank und heisst weiterhin
+# `redion` — sie umzubenennen wäre eine andere Datenbank.
+name = "red-ion"
 main = "worker.ts"
 compatibility_date = "2025-04-01"
 

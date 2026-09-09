@@ -85,6 +85,9 @@ const p = (n: string, b: unknown, extra = ''): void => {
   if (b) { ok++; console.log('  ✓ ' + n); }
   else { weg++; console.log('  ✗ ' + n + (extra ? ' — ' + extra : '')); }
 };
+const gleich = (n: string, ist: unknown, soll: unknown): void =>
+  p(n, JSON.stringify(ist) === JSON.stringify(soll),
+    `ist ${JSON.stringify(ist)}, soll ${JSON.stringify(soll)}`);
 const lies = (rel: string): string =>
   fs.existsSync(path.join(WURZEL, rel))
     ? fs.readFileSync(path.join(WURZEL, rel), 'utf8') : '';
@@ -110,6 +113,76 @@ for (const drin of ['quell/', 'index.html', 'sw.js', 'oeffentlich/'])
   p('… schliesst ' + drin + ' NICHT aus',
     !zeilen.some(z => drin.startsWith(z.replace(/\*+$/, '')) && z.length > 2),
     zeilen.join(' · '));
+
+/* ── §1b — PERSÖNLICHES BLEIBT DRAUSSEN (E520) ────────────────────────────
+   GEFUNDEN IM DEPLOY-LOG, das Redur am 9. September geschickt hat. Er kam
+   wegen einer Namenswarnung; im Upload standen zwischen 290 Zeilen diese:
+
+       + /Redur_Babat_FZ_MOE_Lehrpersonen.pdf
+       + /Schul Inhalt
+
+   Fünf Megabyte Zeugnis unter einer ratbaren Adresse. Das Verzeichnis ist
+   privat, die veröffentlichte Seite nicht — und dazwischen lag nur diese
+   Ausschlussliste, die es nicht wusste.
+
+   DIE ZUSAGE IST BEWUSST BREITER ALS DER FUND: nicht „diese eine PDF",
+   sondern KEINE PDF und KEINE Sicherung aus der Wurzel. Eine Zusage, die
+   den gefundenen Dateinamen aufzählt, hält genau bis zur nächsten Datei. */
+console.log('\n1b · Persönliches bleibt draussen');
+{
+  const rausMuster = ['*.pdf', '*.redion', 'chronik/', 'quell/entwicklung/'];
+  for (const m of rausMuster)
+    p('… schliesst ' + m + ' aus', zeilen.includes(m), zeilen.join(' · '));
+
+  /* UND JETZT GEGEN DIE WIRKLICHKEIT, nicht gegen die Liste: was liegt
+     tatsächlich in der Wurzel, das keiner der Ausschlüsse fasst? */
+  const wurzel = fs.readdirSync(WURZEL, { withFileTypes: true });
+  /* DER STERN STEHT NICHT NUR AM ANFANG. Der erste Wurf dieses Matchers
+     kannte `*.pdf` und `name*`, aber nicht `tsconfig*.json` — und meldete
+     vier tsconfig-Dateien als Leck, die längst ausgeschlossen waren. Ein
+     Wächter, der falschen Alarm gibt, wird nach dem zweiten Mal ignoriert;
+     also richtig: das Muster wird zu einem Ausdruck. */
+  const alsMuster = (z: string): RegExp =>
+    new RegExp('^' + z.replace(/[.+^${}()|[\]\\]/g, '\\$&')
+                       .replace(/\*/g, '.*') + '$');
+  const faellt = (name: string, istOrdner: boolean): boolean =>
+    zeilen.some(z => {
+      if (z.endsWith('/')) return istOrdner && name === z.slice(0, -1);
+      return alsMuster(z).test(name);
+    });
+  const geht = wurzel.filter(e => !faellt(e.name, e.isDirectory()))
+    .map(e => e.name + (e.isDirectory() ? '/' : ''));
+  /* Was gehen DARF — nachgesehen in index.html, nicht geraten. */
+  const erlaubt = new Set(['index.html', 'sw.js', 'quell/', 'oeffentlich/',
+    'lernpakete/', 'redion-einzeldatei.html', 'worker.ts']);
+  const zuviel = geht.filter(n => !erlaubt.has(n));
+  p('In der Wurzel geht nichts ins Netz, was dort nicht hingehört',
+    zuviel.length === 0, JSON.stringify(zuviel));
+  /* DIE PERSÖNLICHE DATEI IST NOCH DA — sie wurde nicht gelöscht (§43),
+     sie geht nur nicht mehr mit. Beides gehört gemessen: eine Zusage, die
+     auch nach dem Löschen grün bliebe, hielte das Falsche fest. */
+  const pdf = 'Redur_Babat_FZ_MOE_Lehrpersonen.pdf';
+  p('Die persönliche Datei liegt weiterhin im Verzeichnis (nichts gelöscht)',
+    fs.existsSync(path.join(WURZEL, pdf)));
+  p('… und ist von der Veröffentlichung ausgenommen', faellt(pdf, false));
+}
+
+/* ── §1c — DER WORKER HEISST WIE BEI CLOUDFLARE (E520) ────────────────────
+   Wrangler warnte bei jedem Bau: der Name hier war `redion`, Cloudflare
+   erwartete `red-ion`, und es überschrieb ihn. Es lief — aber eine Warnung,
+   die immer kommt, liest niemand mehr, und dann übersieht man die daneben.
+   Genau das ist im selben Log passiert: unter der Namenswarnung stand der
+   Fehler, an dem der Deploy wirklich scheiterte. */
+console.log('\n1c · Der Worker heisst wie bei Cloudflare');
+{
+  const toml = lies('wrangler.toml');
+  const name = /^name = "([^"]+)"/m.exec(toml)?.[1];
+  gleich('Der Worker heisst red-ion', name, 'red-ion');
+  /* UND DIE DATENBANK HEISST WEITER redion. Zwei verschiedene Dinge; sie
+     anzugleichen wäre eine andere Datenbank. */
+  const db = /database_name = "([^"]+)"/.exec(toml)?.[1];
+  gleich('Die D1-Datenbank heisst weiterhin redion', db, 'redion');
+}
 
 /* ==========================================================================
  * §2 — /api/stand nennt den Dateispeicher, in beiden Zweigen
