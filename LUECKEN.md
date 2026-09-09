@@ -6876,3 +6876,27 @@ L138 · Was am Laserpointer noch fehlt
     Stift gesehen wurde (die Finger-Sperre aus E354 greift vorher).
     Nachgemessen ist das nicht — es steht als Vermutung hier, und §36 sagt:
     erst messen, dann bauen.
+
+L139 · „Eine neue PDF kopiert die aktuelle" — nicht gefunden
+--------------------------------------------------------------------------
+
+Redur, 8. September: „wenn ich oben eine neue PDF einfügen will, kopiert es
+immer die aktuelle PDF."
+
+Drei Wege gemessen (E513), alle drei sauber:
+
+  · `ArchivImport.dateiAlsDokument` mit zwei verschiedenen PDFs — zwei
+    Dokumente, zwei Quellen, 2 gegen 4 Seiten, 600 gegen 420 pt.
+  · Der Kopfknopf „PDF öffnen" bei offener erster Akte.
+  · Das „+" → „PDF einlesen" bei offener erster Akte.
+
+Ungeprüft blieb der vierte: `page-add-pdf` im Seitenmenü des Dokuments
+(„PDF hier einfügen", E482). Der Knopf sitzt in einem Menü, das der
+Prüflauf nicht geöffnet bekam — er steht damit als EINZIGER Kandidat noch
+offen, und dort wäre auch die plausibelste Ursache: dieser Weg fügt mit
+Absicht IN das offene Dokument ein, und wer das nicht erwartet, sieht
+danach seine alte PDF mit etwas dahinter.
+
+Was fehlt, ist Redurs Antwort auf eine Frage: welcher Knopf, in welcher
+Ansicht. Bis dahin ist der Fehler weder behoben noch widerlegt — er ist
+nicht gefunden, und das ist etwas anderes als nicht vorhanden (§35).

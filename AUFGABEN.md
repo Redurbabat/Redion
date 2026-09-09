@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — dreiundvierzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — vierundvierzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -517,7 +517,16 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Werkzeug (es gab ihn nur im Vollbild) und vier Plätze für die Leiste.
     **Steht.**
 
-Der Auftrag heisst deshalb jetzt **dreiundvierzig Bögen**; die Überschrift
+  · **G44 — Das Notizbuch im Katalog** (E513, test265): Redur wollte
+    hinter dem „+" dieselben fünf Wege wie in GoodNotes. Vier standen da;
+    das Notizbuch fehlte, obwohl Redion es seit E264 kann — der Weg lag
+    nur im Regal „Notizhefte". Jetzt steht er im einen Katalog, über
+    dieselbe Anlege-Maschine (§8). Der zweite Teil derselben Nachricht —
+    „eine neue PDF kopiert die aktuelle" — liess sich auf drei gemessenen
+    Wegen NICHT nachstellen; die Frage nach der genauen Stelle steht als
+    **L139**. **Steht, mit offener Frage.**
+
+Der Auftrag heisst deshalb jetzt **vierundvierzig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

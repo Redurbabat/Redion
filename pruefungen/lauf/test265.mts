@@ -266,6 +266,20 @@ await seite.locator('.menu [data-w="alle"]').click();
 await seite.waitForTimeout(400);
 p('„Alle Wege …" führt in den EINEN Katalog der Schale (dort steht auch PDF einlesen)',
   await seite.evaluate(() => !!document.querySelector('.menu [data-neu="pdf"]')));
+/* ══ DIE FÜNF AUS GOODNOTES STEHEN ALLE DA (E513) ═══════════════════════════
+   Redur, 8. September, mit einem Bild des GoodNotes-Menüs: „wenn ich + klicke,
+   sollte mir sagen, was ich einfügen will — PDF oder Notizbuch, Text-
+   dokument, Whiteboard oder Schnellnotizen."
+
+   Vier davon standen längst hier. Das NOTIZBUCH nicht — obwohl es im Regal
+   „Notizhefte" seit E264 einen eigenen Knopf hat. Ein Weg, den man nur
+   findet, wenn man ihn schon kennt, ist keiner. */
+{
+  const da = await seite.evaluate(() => ['pdf', 'heft', 'seite', 'board', 'memo']
+    .filter(id => !!document.querySelector('.menu [data-neu="' + id + '"]')));
+  p('Alle fünf Wege aus Redurs Liste stehen im Katalog',
+    da.length === 5, JSON.stringify(da));
+}
 await seite.evaluate(() => {
   document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove());
 });

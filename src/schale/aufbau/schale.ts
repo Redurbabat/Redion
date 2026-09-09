@@ -2691,6 +2691,17 @@ const App = (() => {
       da: () => typeof Austausch !== 'undefined' && !!Austausch.dialog },
 
     /* --- Schreiben ---------------------------------------------------- */
+    /* DAS NOTIZBUCH FEHLTE (E513). Redur hat GoodNotes danebengehalten:
+       dort steht hinter dem „+" Notizbuch, Textdokument, Whiteboard,
+       Schnellnotiz. Alle vier gab es in Redion — nur das Notizbuch war von
+       hier aus nicht erreichbar, obwohl es im Regal „Notizhefte" seit E264
+       einen Knopf dafür gibt. Ein Weg, den man nur kennt, wenn man ihn
+       schon kennt, ist keiner.
+       Er steht ZUERST, weil er in GoodNotes zuerst steht und weil er das
+       ist, womit die meisten anfangen. */
+    { gruppe: 'Schreiben', id: 'heft', zeichen: '📓', name: 'Notizbuch',
+      sub: 'Ein Heft mit Papier — liniert, kariert, blanko',
+      da: () => typeof Notebook !== 'undefined' && !!(Notebook as any).createNotebook },
     { gruppe: 'Schreiben', id: 'seite', zeichen: '📄', name: 'Neue Seite',
       sub: 'Leere Seite anlegen' },
     { gruppe: 'Schreiben', id: 'memo', zeichen: '⚡', name: 'Schnellnotiz',
@@ -2821,6 +2832,7 @@ const App = (() => {
   const erstellenWeg = (was: string): void => {
     /* Wege, die kein Blatt Papier brauchen: sie öffnen etwas, das es
        schon gibt, oder einen Wähler. */
+    if (was === 'heft')         { (Notebook as any).createNotebook(); return; }
     if (was === 'seite')        { neueSeite(); return; }
     if (was === 'memo')         { Werkzeuge.schnellnotizen(); return; }
     if (was === 'datei')        { Werkzeuge.dateienLesen(); return; }

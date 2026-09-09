@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-492 Entscheidungen, E1 bis E512 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+493 Entscheidungen, E1 bis E513 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -556,6 +556,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E510** — Die Mitte einer Linie zählt auch: der Kritzel-Radierer misst Länge statt Ecken
 * **E511** — Die Tinte holt die Spitze ein, und vier Bewegungen, die etwas sagen
 * **E512** — Die Leiste wie GoodNotes: Stiftreihe, Laserpointer, vier Plätze — und eine Fläche, die nicht mehr stirbt
+* **E513** — Das Notizbuch stand nicht im „Neu erstellen", obwohl es Redion seit E264 kann
 
 ---
 
@@ -41283,3 +41284,60 @@ test343, test348, test351, test438, test461, test470, test477, test478 —
 sie kannten den Wechselknopf. Dazu test87, test105, test109, test266 —
 alle grün. Nicht geprüft: die Gesamtsuite.
 Bilder: `node bilder.mts leisteLinks laser`.
+
+---
+
+E513 — Das Notizbuch fehlte im Katalog
+--------------------------------------------------------------------------
+
+Redur, 8. September, mit einem Bild des GoodNotes-Menüs hinter dem „+":
+
+> „Es sollte so sein: wenn ich + klicke, sollte mir sagen, was ich einfügen
+> will — PDF oder Notizbuch, Textdokument, Whiteboard oder Schnellnotizen."
+
+## Vier von fünf standen schon da
+
+Das „+" im Kopf öffnet seit E45 ein Blatt „Neu erstellen" mit einem
+Katalog von einundzwanzig Wegen. Vier aus Redurs Liste standen darin: PDF
+einlesen, Neue Seite (das Textdokument), Whiteboard, Schnellnotiz.
+
+**Das Notizbuch nicht.** Und das ist die eigentliche Entscheidung hier:
+Redion KANN Notizhefte seit E264, mit Papierwahl, Fächern und
+Dokumentmodus — aber der Weg dorthin lag ausschliesslich im Regal
+„Notizhefte", hinter einem Knopf, den man nur findet, wenn man weiss, dass
+es ihn gibt. Das ist genau die Sackgasse, die §47 verbietet: eine Funktion,
+die es gibt und die niemand erreicht, ist für den Nutzer keine.
+
+## Wie, und wie nicht
+
+`Notebook.createNotebook()` steht jetzt nach aussen, und der Katalogweg
+`heft` ruft es. **Keine zweite Anlege-Maschine** — dieselbe Regel wie in
+E265, als das Regal die Wege der Schale übernahm statt eigene zu bauen
+(§8). Wer das Papier wählen will, geht weiter über das Regal; wer nur
+schnell ein Heft braucht, tippt zweimal.
+
+Der Eintrag steht **zuerst** in der Gruppe „Schreiben" — so wie er in
+GoodNotes zuerst steht, und weil er das ist, womit die meisten anfangen.
+
+## Und was ich NICHT gefunden habe
+
+Redur hat im selben Atemzug geschrieben: „wenn ich oben eine neue PDF
+einfügen will, kopiert es immer die aktuelle PDF." Ich habe drei Wege
+gemessen, und alle drei sind sauber:
+
+- `ArchivImport.dateiAlsDokument` mit zwei verschiedenen PDFs: zwei
+  Dokumente, zwei Quellen, 2 gegen 4 Seiten, 600 gegen 420 pt breit.
+- Der Kopfknopf „PDF öffnen" mit offener erster Akte: die zweite wird ein
+  eigenes Dokument und geht auf.
+- Das „+" → „PDF einlesen" mit offener erster Akte: ebenso.
+
+Der Fehler ist damit **nicht widerlegt, sondern nicht gefunden** — und das
+steht hier so, statt ihn stillschweigend als erledigt zu führen. Was fehlt,
+ist die genaue Stelle: welcher Knopf, in welcher Ansicht. Notiert als
+**L139**, damit die Frage nicht verlorengeht.
+
+GEPRÜFT. `test265` um eine Zusage erweitert: alle fünf Wege aus Redurs
+Liste stehen im Katalog (vorher vier von fünf — die Zusage war rot, bevor
+der Eintrag da war). 39 Zusagen grün. Nicht geprüft: die Gesamtsuite.
+Kein Bild: ein Menüeintrag mehr ist keine Ansicht, die man beurteilen
+müsste (§55.3).
