@@ -361,9 +361,18 @@ if (rollen) {
    Blattleiste darunter trägt die Stiftoptionen. Gezählt wird die
    Zeichenleiste — und die Blattleiste muss weiter rollen (unten).
    FÜNFZEHN SEIT E494: die Elemente-Bibliothek ist als zwölftes Werkzeug
-   dazugekommen. */
-gleich('Die fünfzehn Knöpfe der Zeichenleiste stehen da (zwölf Werkzeuge, ···, Zurück, Vor)',
-  rollen.zeichenleiste, 15);
+   dazugekommen.
+   SECHZEHN SEIT E512: der Laserpointer ist das dreizehnte. Redur hatte ihn
+   ausdrücklich verlangt („alter, wieso habe ich keinen Laserpointer") — es
+   gab ihn nur im Vollbild.
+
+   UND AUCH DIESE ZEILE WAR SEITDEM ROT. Sie ist die vierte ihrer Art, die
+   der volle Lauf am 9. September gefunden hat (E522, E523): eine harte
+   Zahl, die ihren Zuwachs zuverlässig meldet — an niemanden, weil niemand
+   den vollen Lauf fährt. E465, E512, E513, und hier E512 noch einmal.
+   Vier Bögen, vier ungehörte Meldungen. */
+gleich('Die sechzehn Knöpfe der Zeichenleiste stehen da (dreizehn Werkzeuge, ···, Zurück, Vor)',
+  rollen.zeichenleiste, 16);
   gleich('Und keines ist auf Breite null gesetzt', rollen.ohneBreite, 0);
   p('Sie nimmt mehr als ein Drittel der Fensterbreite',
     rollen.breit >= 290, `${rollen.breit} von 390 px`);
