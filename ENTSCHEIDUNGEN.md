@@ -42447,6 +42447,36 @@ Die Lehre ist dieselbe wie beim Kastenfilter zwei Absätze weiter oben, nur
 von der anderen Seite: dort hat ein Bild einen Rechenfehler gefunden, hier
 hat ein Bild einen Messfehler gefunden. Beide Male war die Zahl plausibel.
 
+## Der Lichtsaum musste wieder weg
+
+Redur, mit einem Bild seines Startbildschirms: „Entferne die weiche rahmen
+ich will es nicht sehen."
+
+Das ist genau der Saum, den der zweite Schnitt zwei Absätze weiter oben
+ABSICHTLICH hineingenommen hat. In der Datei ist er schön; auf dem
+Startbildschirm ist er ein weisser Rahmen um eine schwarze Kachel, und das
+Auge liest ihn als Fehler. Beide Male hatte Redur recht, und das ist kein
+Widerspruch: das eine ist die Vorlage, das andere ist ein Symbol auf einem
+Gerät.
+
+Gemessen bei 512: der Saum reicht 26 Punkte nach innen und wird bis zu 228
+hell.
+
+**Nicht neu geschnitten.** Ein engerer Ausschnitt nähme ihn mit, würde die
+Marke aber wieder vergrössern und verschieben — der Fehler des ersten
+Anlaufs. Stattdessen verliert der äussere Ring nur seine FARBE und behält
+seine Deckung: der Rand wird schwarz, die Kante bleibt weich, die Marke
+bleibt, wo sie ist. Der hellste Randpunkt fällt damit von 228 auf 16, und
+16 ist der Boden, unter dem alles ohnehin echtes Schwarz wird.
+
+Der Abstand zur Kante kommt aus einer Distanzrechnung über die Deckung
+selbst — zwei Durchgänge über das Bild, vorwärts und rückwärts — und nicht
+aus dem Bildrand. Vom Bildrand aus gerechnet bliebe der Schein in den
+runden Ecken stehen, weil die Kachel dort weiter innen liegt.
+
+`test483 §6` misst den hellsten Punkt im äusseren Achtel und lässt ihn nicht
+über 24. Gegenprobe: den Griff überspringen, und es sind 242, 226, 216.
+
 ## Und die kleinen Grössen werden aufgehellt
 
 Redurs Marke ist dunkel. Bei 180 px ist das ihre Wirkung; bei 16 px im

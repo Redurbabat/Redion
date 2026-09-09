@@ -22,6 +22,10 @@
  *   §4 DIE FORM DER DATEIEN: Masse, Alphakanal, und eine .ico, die wirklich
  *      eine .ico ist.
  *   §5 IM BROWSER SICHTBAR, und in der Einzeldatei auch (§29).
+ *   §6 KEIN LICHTSAUM AM RAND. Redurs Vorlage hat rundum einen weichen
+ *      Schein; auf dem Startbildschirm ist das ein weisser Rahmen um die
+ *      schwarze Kachel. Der Erzeuger nimmt ihm die Farbe — gemessen sinkt
+ *      der hellste Randpunkt von 228 auf 16.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  *   §1 → ein Byte in `marke.png` ändern, ohne den Erzeuger laufen zu lassen:
@@ -29,6 +33,7 @@
  *   §2 → das „R" in `index.html` zurücksetzen: eine Zusage.
  *   §3 → in `studio.css` `icon-48` statt `icon-72` einsetzen: eine Zusage.
  *   §5 → `background` in `.studio-monogram` streichen: zwei Zusagen.
+ *   §6 → `kanteBeruhigen` im Erzeuger überspringen: drei Zusagen.
  *
  *   node pruefungen/lauf/test483.mts
  * ==========================================================================*/
@@ -222,6 +227,38 @@ console.log('\n§5 Sichtbar');
   p(`Alle ${verlinkt.length} verlinkten Symbole liegen wirklich da`,
     fehlend.length === 0, fehlend.join(', '));
   p('Keine Seitenfehler', fehler.length === 0, fehler.slice(0, 2).join(' | '));
+  await browser.close();
+}
+
+/* ══ §6 KEIN LICHTSAUM ════════════════════════════════════════════════════ */
+console.log('\n§6 Der Rand ist dunkel, nicht hell');
+{
+  const browser = await chromium.launch();
+  const seite = await browser.newPage();
+  for (const datei of ['icon-512.png', 'icon-180.png', 'icon-96.png']) {
+    const hell = await seite.evaluate(async (q: string) => {
+      const b = new Image();
+      await new Promise(r => { b.onload = r; b.src = q; });
+      const n = b.naturalWidth;
+      const c = document.createElement('canvas'); c.width = n; c.height = n;
+      c.getContext('2d')!.drawImage(b, 0, 0);
+      const p = c.getContext('2d')!.getImageData(0, 0, n, n).data;
+      /* Der äussere Ring von 8 % der Kantenlänge. Dort liegt die Kachel und
+         sonst nichts — die Marke beginnt weiter innen. */
+      const ring = Math.round(n * 0.08);
+      let max = 0;
+      for (let y = 0; y < n; y++) for (let x = 0; x < n; x++)
+        if (x < ring || y < ring || x >= n - ring || y >= n - ring) {
+          const i = (y * n + x) * 4;
+          max = Math.max(max, (p[i]! + p[i + 1]! + p[i + 2]!) / 3);
+        }
+      return Math.round(max);
+    }, 'data:image/png;base64,' + roh('oeffentlich/icons/' + datei).toString('base64'));
+    /* 24 statt 16: der Boden im Erzeuger liegt bei 16, und eine Zusage, die
+       genau auf dem Boden steht, wird beim nächsten Feinschliff rot, ohne
+       dass etwas kaputt ist. Vor der Reparatur waren es 228. */
+    p(`${datei}: der Rand bleibt dunkel`, hell <= 24, `hellster Randpunkt ${hell}`);
+  }
   await browser.close();
 }
 

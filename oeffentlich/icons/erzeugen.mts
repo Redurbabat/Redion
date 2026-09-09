@@ -336,8 +336,69 @@ const ico = (bilder: Buffer[], groessen: number[]): Buffer => {
   return Buffer.concat([kopf, ...eintraege, ...bilder]);
 };
 
+/**
+ * DEN LICHTSAUM AM RAND LÖSCHEN (Redur, 9. September: „Entferne die weiche
+ * rahmen ich will es nicht sehen").
+ *
+ * Redurs Vorlage hat rundum einen weichen Schein — in der Datei schön, auf
+ * dem Startbildschirm ein weisser Rahmen um die schwarze Kachel. Gemessen
+ * bei 512: er reicht 26 Punkte nach innen und wird bis zu 228 hell.
+ *
+ * NICHT NEU SCHNEIDEN. Ein engerer Ausschnitt nähme den Saum mit, würde die
+ * Marke aber vergrössern und verschieben — genau der Fehler, den der erste
+ * Anlauf gemacht hat. Stattdessen verliert der äussere Ring nur seine FARBE
+ * und behält seine Deckung: der Rand wird schwarz, die Kante bleibt weich,
+ * die Marke bleibt, wo sie ist.
+ *
+ * Der Abstand zur Kante kommt aus einer Distanzrechnung über die Deckung
+ * selbst (zwei Durchgänge, wie beim Chamfer-Verfahren) und nicht aus dem
+ * Bildrand — sonst bliebe der Schein in den runden Ecken stehen, weil die
+ * Kachel dort weiter innen liegt.
+ */
+const RING = 0.065;              /* Anteil der Kantenlänge, gemessen: 26/512 */
+const kanteBeruhigen = (bild: Bild): Bild => {
+  const { breite, hoehe, punkte } = bild;
+  const weit = RING * Math.min(breite, hoehe);
+  const FERN = breite + hoehe;
+  const d = new Float32Array(breite * hoehe);
+  for (let i = 0; i < d.length; i++) d[i] = punkte[i * 4 + 3]! >= 250 ? FERN : 0;
+
+  /* Vorwärts: von oben links. Rückwärts: von unten rechts. */
+  const setze = (x: number, y: number, wert: number): void => {
+    const i = y * breite + x;
+    if (wert < d[i]!) d[i] = wert;
+  };
+  for (let y = 0; y < hoehe; y++) for (let x = 0; x < breite; x++) {
+    const i = y * breite + x;
+    if (d[i] === 0) continue;
+    if (x > 0) setze(x, y, d[i - 1]! + 1);
+    if (y > 0) setze(x, y, d[i - breite]! + 1);
+    if (x > 0 && y > 0) setze(x, y, d[i - breite - 1]! + 1.41421);
+    if (x < breite - 1 && y > 0) setze(x, y, d[i - breite + 1]! + 1.41421);
+  }
+  for (let y = hoehe - 1; y >= 0; y--) for (let x = breite - 1; x >= 0; x--) {
+    const i = y * breite + x;
+    if (d[i] === 0) continue;
+    if (x < breite - 1) setze(x, y, d[i + 1]! + 1);
+    if (y < hoehe - 1) setze(x, y, d[i + breite]! + 1);
+    if (x < breite - 1 && y < hoehe - 1) setze(x, y, d[i + breite + 1]! + 1.41421);
+    if (x > 0 && y < hoehe - 1) setze(x, y, d[i + breite - 1]! + 1.41421);
+  }
+
+  for (let i = 0; i < d.length; i++) {
+    const abstand = d[i]!;
+    if (abstand >= weit) continue;
+    /* Weich auslaufen statt hart abschneiden: ganz aussen voll schwarz, zur
+       Marke hin allmählich die eigene Farbe. Eine harte Kante wäre nur ein
+       anderer Rahmen. */
+    const k = abstand / weit;
+    for (let c = 0; c < 3; c++) punkte[i * 4 + c] = punkte[i * 4 + c]! * k * k;
+  }
+  return bild;
+};
+
 /* ========================================================================== */
-const QUELLE = lesePng(pfad.join(HIER, 'marke.png'));
+const QUELLE = kanteBeruhigen(lesePng(pfad.join(HIER, 'marke.png')));
 if (QUELLE.breite !== QUELLE.hoehe)
   throw new Error('marke.png ist nicht quadratisch: ' + QUELLE.breite + ' × ' + QUELLE.hoehe);
 
