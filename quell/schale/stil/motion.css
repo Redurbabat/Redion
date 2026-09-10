@@ -1,0 +1,293 @@
+/* Redurs Animationssammlung, in Redions Oberfläche eingeordnet.
+ * Zuordnung und bewusst ausgeschlossene globale Regeln:
+ * doku/ANIMATIONEN-ZUORDNUNG.md. Die bestehenden ru-funkel-Regeln bleiben.
+ */
+#ai {
+  --rmo-ease: cubic-bezier(.22, 1, .36, 1);
+  width: 420px;
+  flex-basis: 420px;
+  min-height: 0;
+}
+#ai.open { animation: rmo-panel-in .32s var(--rmo-ease); }
+#ai .ai-head { min-height: 58px; padding: 10px 18px; gap: 8px; }
+#ai .ai-head > b { flex: 1; font-size: 15px; letter-spacing: -.02em; }
+#ai .ai-head .icon-btn { min-width: 44px; min-height: 44px; border-radius: 50%; }
+#ai #chat { min-height: 80px; padding: 22px 18px; gap: 20px; overscroll-behavior: contain; }
+#ai .ai-foot { flex: 0 0 auto; padding: 0 14px 14px; border-top: 0; }
+#ai .ai-compose {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: var(--bg-card);
+  padding: 6px;
+  box-shadow: 0 4px 24px #0000000c, inset 0 1px 0 #ffffff05;
+  transition: border-color .22s, box-shadow .3s;
+}
+#ai .ai-compose:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent), 0 8px 28px #00000012;
+}
+#ai .ai-compose textarea {
+  display: block; width: 100%; min-height: 94px; max-height: 160px;
+  margin: 0; padding: 13px 12px 8px; border: 0; border-radius: 20px 20px 0 0;
+  outline: none; box-shadow: none; resize: none; background: transparent;
+  color: var(--text); font: inherit; font-size: 15px; line-height: 1.5;
+}
+#ai .ai-compose textarea::placeholder { color: var(--text-dim); opacity: 1; }
+#ai .ai-leiste { display: flex; align-items: center; gap: 2px; padding: 0; min-width: 0; }
+#ai .ai-leiste button {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; min-width: 44px; padding: 0 7px; border: 0;
+  border-radius: 22px; background: transparent; color: var(--text-dim);
+  transition: background .18s, color .18s, transform .18s;
+}
+#ai .ai-leiste button:hover { background: var(--bg-hover); color: var(--text); }
+#ai .ai-leiste button:active { transform: scale(.94); }
+#ai .ai-leiste .ai-luecke { flex: 1 1 0; min-width: 0; }
+#ai #ai-plus { flex: 0 0 44px; font-size: 26px; font-weight: 300; }
+#ai #ai-modus { flex: 0 0 auto; font-size: 12px; padding-inline: 6px; }
+#ai .ai-leiste .model-btn { flex: 0 1 145px; min-width: 66px; gap: 5px; font-size: 12px; }
+#ai .model-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#ai .model-btn .dot { flex: 0 0 5px; width: 5px; height: 5px; }
+#ai #ai-diktat { flex: 0 0 44px; }
+#ai #ai-diktat.an { background: #b62e3d; color: #fff; }
+#ai #ai-senden {
+  flex: 0 0 44px; font-size: 27px; font-weight: 400;
+  background: #2f6ed5; color: #fff; box-shadow: inset 0 1px 0 #ffffff30;
+}
+#ai #ai-senden:hover { background: #397de8; transform: translateY(-1px); }
+#ai #ai-senden:active { transform: scale(.92); }
+#ai :is(.ai-leiste button, .ai-tools summary, .ai-head button):focus-visible {
+  outline: 2px solid var(--accent-text); outline-offset: 2px;
+}
+#ai .ai-tools { margin: 0 0 8px; border-radius: 16px; }
+#ai .ai-tools > summary {
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 44px; padding: 0 10px; border-radius: 12px;
+  list-style: none; cursor: pointer; color: var(--text-dim); font-size: 12px;
+}
+#ai .ai-tools > summary::-webkit-details-marker { display: none; }
+#ai .ai-tools > summary:hover { color: var(--text); background: var(--bg-hover); }
+#ai .ai-tools > summary > span { transition: transform .22s; transform: rotate(180deg); }
+#ai .ai-tools[open] > summary > span { transform: none; }
+#ai .ai-tools-body {
+  max-height: min(36dvh, 330px); overflow: auto; overscroll-behavior: contain;
+  padding: 4px 8px 12px; scrollbar-width: thin;
+}
+#ai .ai-tools[open] .ai-tools-body { animation: rmo-reveal .24s var(--rmo-ease); }
+#ai .ai-tools h3 {
+  width: 100%; margin: 0 0 10px; color: var(--text-faint);
+  font-size: 11px; font-weight: 600; letter-spacing: .04em;
+}
+#ai .ai-context-group { margin-bottom: 18px; }
+#ai .ki-quellschalter { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; }
+#ai .ki-quellschalter button { min-height: 32px; border-radius: 10px; padding: 6px 9px; }
+#ai .ai-quick { display: grid; gap: 18px; overflow: visible; margin: 0; }
+#ai .ai-action-group { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 7px; padding: 4px; }
+#ai .ai-action-group h3 { margin-bottom: 0; }
+/* Nur die Umgebung neu ordnen: Originalmaße, Schatten und Glimmen der
+ * beiden Bau-Knöpfe nicht überschreiben. 32 px Nebenweg, weil aufklappbar. */
+#ai .ai-tools-settings { display: flex; flex-wrap: wrap; gap: 10px; padding: 18px 4px 2px; }
+#ai .ai-tools-settings button { min-height: 32px; padding: 5px 10px; font-size: 12px; }
+
+/* Kleine, abgeschlossene Bewegungen an vorhandenen Oberflächen. */
+@keyframes rmo-panel-in { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+@keyframes rmo-reveal { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+@keyframes rmo-orbit { to { transform: rotate(360deg); } }
+@keyframes rmo-shine { from { background-position: 170% 0; } to { background-position: -70% 0; } }
+@keyframes rmo-breathe { 50% { opacity: .55; transform: scale(.94); } }
+@keyframes rmo-molten { 50% { border-radius: 40% 60% 68% 32%; transform: rotate(180deg) scale(.88); } to { transform: rotate(360deg); } }
+
+/* 1 — Ordner: fünf Blätter fächern sich beim Anfassen auf. */
+.bib-deckel[data-art="ordner"] { perspective: 900px; }
+.bib-deckel[data-art="ordner"] .bib-deckel-blatt { transform-style: preserve-3d; transition: transform .45s cubic-bezier(.2,.8,.2,1); }
+body .bib-deckel[data-art="ordner"] .bib-deckel-blatt::before {
+  inset: 34% 4% 8%; z-index: 3; opacity: 1;
+  transform-origin: 50% 100%;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 85%, white), var(--accent));
+  box-shadow: inset 0 1px 0 #ffffff50, 0 6px 12px #0002;
+  transition: transform .5s cubic-bezier(.22,1,.36,1);
+}
+body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt::before { transform: rotateX(-32deg) translateZ(6px); }
+.rmo-folder-stack { position: absolute; inset: 24% 14% 20%; z-index: 2; pointer-events: none; }
+.rmo-folder-sheet {
+  position: absolute; inset: 0; border-radius: 5px;
+  background: linear-gradient(150deg, #f5f1fc, #cfc9e5);
+  border: 1px solid #ffffff70; box-shadow: 0 2px 6px #0002;
+  transform: translateY(calc(var(--rmo-index) * -3px));
+  transition: transform .5s cubic-bezier(.2,.8,.2,1); transition-delay: calc(var(--rmo-index) * 25ms);
+}
+.rmo-folder-sheet:nth-child(2) { background: linear-gradient(150deg, #fff2e0, #e9cdb3); }
+.rmo-folder-sheet:nth-child(3) { background: linear-gradient(150deg, #e5f0ff, #b5cce9); }
+.rmo-folder-sheet:nth-child(4) { background: linear-gradient(150deg, #e4f8f2, #b8dacf); }
+.rmo-folder-sheet:nth-child(5) { background: linear-gradient(150deg, #f6e8f2, #d8bfda); }
+.rmo-folder-sheet::after { content: ''; position: absolute; inset: 15px 12px; background: repeating-linear-gradient(transparent 0 8px, #50426322 8px 9px); }
+.bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .rmo-folder-sheet {
+  transform: translateY(calc(-12px - var(--rmo-index) * 5px)) rotate(calc((var(--rmo-index) - 2) * 7deg));
+}
+/* 2 — Drei Einstellungsregler, auf einem echten Einstellungsweg. */
+.rmo-sliders { display: inline-flex; flex-direction: column; justify-content: center; gap: 4px; width: 17px; margin-right: 5px; vertical-align: middle; }
+.rmo-sliders i { display: block; position: relative; width: 16px; height: 1px; background: currentColor; }
+.rmo-sliders i::after { content: ''; position: absolute; width: 4px; height: 4px; top: -1.5px; left: 3px; border-radius: 50%; background: currentColor; transition: transform .3s; }
+.rmo-sliders i:nth-child(2)::after { left: 9px; }
+#ai-quellen:is(:hover, :focus-visible) .rmo-sliders i::after { transform: translateX(4px); }
+#ai-quellen:is(:hover, :focus-visible) .rmo-sliders i:nth-child(2)::after { transform: translateX(-4px); }
+/* 3 + 10 — Lichtschlitz und kleiner Perspektivwechsel: echte Fach-/Statistikkarten. */
+.els-kachel, .stat-karte.lw-metrik {
+  position: relative; overflow: hidden;
+  transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s, border-color .25s;
+}
+.els-kachel::after, .stat-karte.lw-metrik::after {
+  content: ''; position: absolute; pointer-events: none; inset: 0; opacity: 0;
+  background: linear-gradient(115deg, transparent 25%, #ffffff18 45%, transparent 65%);
+  background-size: 250% 100%; transition: opacity .25s;
+}
+.els-kachel:is(:hover, :focus-visible), .stat-karte.lw-metrik:hover {
+  transform: perspective(1000px) rotateX(2deg) translateY(-3px);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: 0 12px 26px #00000018;
+}
+.els-kachel:is(:hover, :focus-visible)::after, .stat-karte.lw-metrik:hover::after { opacity: 1; animation: rmo-shine 1.2s ease both; }
+.stat-karte.lw-metrik strong { display: block; animation: rmo-reveal .45s ease both; }
+/* Die Ziffernrolle aus der Statistik-Vorlage, mit dem vorhandenen Wert
+ * als unveränderter Textquelle. Nur die dekorative Rolle bewegt sich. */
+.stat-karte.lw-metrik strong.rmo-number { position: relative; line-height: 1.2; letter-spacing: 0; white-space: pre; }
+.rmo-number-source { color: transparent; }
+.rmo-reels { position: absolute; inset: 0; display: flex; pointer-events: none; overflow: hidden; }
+.rmo-digit { display: inline-block; flex: 0 0 1ch; height: 1.2em; overflow: hidden; }
+.rmo-digit::before {
+  content: '0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9';
+  display: block; white-space: pre; line-height: 1.2em;
+  transform: translateY(calc(var(--rmo-digit) * -1.2em));
+  animation: rmo-digit-roll .7s cubic-bezier(.22,1,.36,1) both;
+  animation-delay: var(--rmo-delay);
+}
+.rmo-separator::before { content: attr(data-rmo-character); white-space: pre; }
+@keyframes rmo-digit-roll { from { transform: translateY(0); } }
+/* 4 — Der kreisende Farbverlauf liegt im Fokus der Eingabe, nicht auf den Bau-Knöpfen. */
+#ai .ai-compose::before {
+  content: ''; pointer-events: none; position: absolute; inset: -1px; border-radius: inherit;
+  padding: 1px; background: linear-gradient(115deg, #7c6ce855, #66bde655, #bc79df55, #7c6ce855);
+  background-size: 250% 100%; opacity: 0;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude; transition: opacity .2s;
+}
+#ai .ai-compose:focus-within::before { opacity: 1; animation: rmo-shine 5s linear 1; }
+/* 6 + 11 — Flüssiger Ring und Statuskapsel, nur bei tatsächlicher KI-Arbeit. */
+.ki-aktivitaet {
+  position: relative; width: fit-content; padding: 4px 10px; border-radius: 20px; border: 1px solid transparent;
+  background: linear-gradient(var(--bg-side), var(--bg-side)) padding-box,
+    conic-gradient(from 90deg, #8b78c533, #66b4c966, #c19ad355, #8b78c533) border-box;
+}
+.ki-aktivitaet:has(.rmo-liquid) > .ru-aktivitaet { display: none; }
+.rmo-liquid { display: inline-block; position: relative; width: 22px; height: 22px; flex: 0 0 22px; pointer-events: none; }
+.rmo-liquid::before, .rmo-liquid::after {
+  content: ''; position: absolute; inset: 2px; border: 2px solid transparent;
+  border-top-color: var(--accent-text); border-right-color: #df9d71;
+  border-radius: 32% 68% 50% 50%; animation: rmo-molten 2.6s linear infinite;
+}
+.rmo-liquid::after { inset: 5px; animation-direction: reverse; border-right-color: #7dbfcb; }
+/* 7 — Bestehender Schalter bleibt semantisch und farblich derselbe. */
+.schalter > i { transition: transform .3s cubic-bezier(.2,.9,.2,1), box-shadow .3s; }
+.schalter.an > i { box-shadow: inset 0 1px 2px #ffffff70, 0 2px 6px #0002; }
+/* 8 — Räumlicher Kartenfächer in der leeren Bibliothek, keine erfundenen Dateien. */
+.rmo-carousel { display: flex; justify-content: center; height: 58px; margin: 12px auto 20px; perspective: 500px; pointer-events: none; }
+.rmo-carousel i {
+  display: block; width: 40px; height: 54px; margin-inline: -7px; border: 1px solid var(--line-stark); border-radius: 7px;
+  background: linear-gradient(145deg, var(--bg-hover), var(--bg-card)); box-shadow: 0 8px 15px #0001;
+  transform: rotateY(calc((var(--rmo-index) - 1) * -30deg)) translateZ(calc((1 - var(--rmo-index)) * 4px));
+  transition: transform .5s;
+}
+.bib-leer:hover .rmo-carousel i { transform: rotateY(calc((var(--rmo-index) - 1) * 30deg)) translateY(-3px); }
+/* 9 — Tiefer Tastendruck auf vorhandenen Dialogaktionen. */
+.fbtns button.prim:not(.ru-funkel) {
+  box-shadow: inset 0 1px 0 #ffffff28, 0 3px 0 #0002; transition: transform .18s, box-shadow .18s;
+}
+.fbtns button.prim:not(.ru-funkel):active { transform: translateY(2px); box-shadow: inset 0 1px 3px #0002; }
+/* 12 — Holografischer Papierglanz am wirklichen PDF-Druck-/Exportstatus. */
+body .ru-drucker-blatt {
+  background-image: linear-gradient(115deg, transparent 25%, #b7eef330 43%, #d5b9f633 52%, transparent 68%);
+  background-size: 250% 100%;
+}
+body .ru-drucker:is([data-zustand="vorbereiten"], [data-zustand="rendern"]) .ru-drucker-blatt { animation: rmo-shine 3s ease-in-out infinite; }
+/* Ticket-Motive: perforierter Rand, irisierendes Papier und Zierstreifen.
+ * Zustand, Breite und Druckermechanik kommen weiterhin vom Druckauftrag. */
+body .ru-drucker.rmo-ticket {
+  border-radius: 14px 14px 4px 4px; padding-bottom: 5px;
+  box-shadow: 0 12px 40px #0003, inset 0 1px 0 #ffffff20;
+}
+.rmo-ticket-heading {
+  display: block; padding: 11px 14px; color: var(--text); font-size: 10px;
+  font-weight: 700; letter-spacing: .13em; text-transform: uppercase;
+  background: linear-gradient(110deg, #81c5ce14, transparent 45%, #cba3d91a);
+}
+body .rmo-ticket .ru-drucker-buehne {
+  border-block: 1px dashed var(--line-stark);
+  background: radial-gradient(ellipse at 50% 25%, #a69cdd20, transparent 65%), var(--bg-tief);
+}
+body .rmo-ticket .ru-drucker-status { padding: 11px 12px 15px; }
+.rmo-ticket::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 6px;
+  background: radial-gradient(circle at 4px 6px, var(--bg-tief) 3px, transparent 3.5px) 0 0 / 8px 6px repeat-x;
+  pointer-events: none;
+}
+.rmo-ticket .ru-drucker-blatt::after {
+  content: ''; position: absolute; left: 8px; right: 8px; bottom: 7px; height: 9px; opacity: 0;
+  background: repeating-linear-gradient(90deg, #302b41 0 1px, transparent 1px 3px, #302b41 3px 5px, transparent 5px 6px);
+}
+.rmo-ticket:is([data-zustand="rendern"], [data-zustand="speichern"], [data-zustand="fertig"]) .ru-drucker-blatt::after { opacity: .6; }
+.rmo-ticket .ru-drucker-tinte:nth-last-child(-n+2) { visibility: hidden; }
+/* 13 — Kleine Glaskugel als KI-Zeichen, ohne Verifizierungsbehauptung. */
+.rmo-orb {
+  position: relative; display: inline-block; flex: 0 0 25px; width: 25px; height: 25px;
+  margin-right: 4px; border-radius: 50%; overflow: hidden; pointer-events: none;
+  background: radial-gradient(circle at 30% 25%, #ffffffb0, transparent 38%),
+    radial-gradient(circle at 68% 75%, #a090dc, #7ab2c5 65%, #ccd1e9);
+  box-shadow: inset 0 0 0 1px #ffffff50, inset -3px -3px 7px #47337730;
+}
+.rmo-orb::after { content: ''; position: absolute; inset: 5px 1px; border: 1px solid #ffffff80; border-radius: 50%; transform: rotate(-35deg); }
+#ai .ai-head:hover .rmo-orb::after { animation: rmo-orbit 3s linear 1; }
+/* 14 — Filamentlicht zeigt ausschließlich den laufenden Schaltungsmodus. */
+.sp-start { transition: box-shadow .3s, background .3s; }
+.sp-start.an { box-shadow: inset 0 0 9px #ffc77422, 0 0 14px #e7a34024; }
+.sp-start.an::before {
+  content: ''; display: inline-block; width: 13px; height: 6px; margin-right: 5px;
+  border: 1px solid #ffc572; border-radius: 50%; box-shadow: 0 0 5px #ffc57290;
+}
+/* 15 — Mechanischer Dreierblock für die echten Eingabeaktionen. */
+#ai :is(#ai-plus, #ai-diktat, #ai-senden):active { box-shadow: inset 0 2px 5px #0003; }
+
+@media (max-width: 760px) {
+  #ai { width: 100%; flex-basis: auto; }
+  #ai .ai-foot { padding: 0 10px max(10px, env(safe-area-inset-bottom)); }
+  #ai .ai-head { padding-inline: 14px; }
+  #ai .ai-compose textarea { font-size: 16px; min-height: 86px; }
+  #ai .ai-tools-body { max-height: min(32dvh, 260px); }
+  #ai .ai-leiste .model-btn { flex-basis: 130px; }
+  #ai #ai-modus { font-size: 11px; padding-inline: 3px; }
+}
+@media (max-height: 600px) {
+  #ai .ai-compose textarea { min-height: 54px; max-height: 100px; }
+  #ai .ai-tools-body { max-height: 22dvh; }
+  #ai #chat { min-height: 32px; padding-block: 10px; }
+}
+@media (hover: none) {
+  .els-kachel:hover, .stat-karte.lw-metrik:hover { transform: none; }
+  body .bib-deckel[data-art="ordner"]:hover:not(:focus-visible) .bib-deckel-blatt::before { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #ai.open, #ai .ai-tools-body, #ai .ai-compose::before,
+  .rmo-orb::after, .rmo-liquid::before, .rmo-liquid::after, .ru-drucker-blatt,
+  .rmo-digit::before,
+  .els-kachel::after, .stat-karte.lw-metrik::after, .stat-karte.lw-metrik strong { animation: none !important; }
+  #ai .ai-compose, #ai .ai-leiste button, #ai .ai-tools > summary > span,
+  #ai .ai-compose::before, .rmo-folder-sheet, .rmo-carousel i, .rmo-sliders i::after,
+  .els-kachel, .stat-karte.lw-metrik, .schalter > i, .sp-start,
+  .fbtns button.prim { transition: none !important; }
+  body .bib-deckel[data-art="ordner"] .bib-deckel-blatt::before { transition: none !important; }
+  .els-kachel:is(:hover, :focus-visible), .stat-karte.lw-metrik:hover { transform: none; }
+}
+@media print {
+  .rmo-reels { display: none; }
+  .rmo-number-source { color: inherit; }
+}

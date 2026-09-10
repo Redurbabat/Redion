@@ -38,6 +38,20 @@ dann die Phasen, dann die Bögen.
 
 ## Aktueller Stand
 
+## E528 — KI-Eingabe und zugeordnete Animationen (10. September 2026)
+
+Große, abgerundete Eingabe mit Bedienleiste unten; aufklappbare Quellen und
+vier Werkzeuggruppen. Alle zwölf KI-Aktionen nutzen den vorhandenen
+Funkel-Effekt, die beiden Bau-Knöpfe bleiben unverändert. Neue, gekapselte
+Bewegungsmotive für Ordner, Fach- und Metrikkarten, KI-Status, Dialoge und
+PDF-Druckstatus. Die vollständige Zuordnung mit Grenzen der Übertragung
+steht in `doku/ANIMATIONEN-ZUORDNUNG.md`. Keine neue Anbieterintegration.
+
+Neue Browserprüfung `test492`, angepasste Erwartung in `test436`, Bilder
+in Hell/Dunkel sowie bei 360/390 px. Lokal auf `codex/redion-motion`;
+kein Push und keine Veröffentlichung. Die vollständigen Demo-Szenen aus
+der gelieferten CSS-Datei sind damit nicht alle eins zu eins nachgebaut.
+
 ## E419–E427 — Die dreizehn Ansichten, angesehen statt gelesen (5. September 2026)
 
 Neun Bögen an einem Abend, und sie hängen alle an derselben Arbeitsweise:

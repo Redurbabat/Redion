@@ -65,6 +65,7 @@
 <link rel="stylesheet" href="quell/schale/stil/arbeitswelt.css">
 <link rel="stylesheet" href="quell/schale/stil/lernwelt.css">
 <link rel="stylesheet" href="quell/schale/stil/notizhefte.css">
+<link rel="stylesheet" href="quell/schale/stil/motion.css">
 <link rel="stylesheet" href="quell/schale/stil/bausteine.css">
 <!-- DIE PREMIUM-SCHALE (E272). Sie steht ABSICHTLICH als letzte: sie ordnet,
      was die Blätter darüber gebaut haben, und muss deshalb gewinnen. Alles
@@ -406,17 +407,20 @@
      ====================================================================== -->
 <aside id="ai">
   <div class="ai-head">
-    <b><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.2 13.7 9l5.8 1.7-5.8 1.7L12 18.2l-1.7-5.8L4.5 10.7 10.3 9z"/><path d="M18.6 3v3.2M17 4.6h3.2"/></svg> KI</b>
-    <button class="model-btn" title="Modell wechseln">
-      <span class="dot"></span><span class="model-name">Suche …</span><span style="opacity:.5">▾</span>
-    </button>
+    <b>Redion KI</b>
     <button class="icon-btn" id="ai-verlauf" title="Unterhaltungen" aria-label="Unterhaltungen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 12a8.4 8.4 0 1 0 2.5-6"/><path d="M3.4 3.6v4.2h4.2"/><path d="M12 7.6V12l3 1.8"/></svg></button>
-    <button class="icon-btn" id="ai-clear" title="Neuer Chat"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="icon-btn" id="ai-clear" title="Neuer Chat" aria-label="Neuer Chat"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
   </div>
 
   <div id="chat"></div>
 
   <div class="ai-foot">
+    <details class="ai-tools" id="ai-tools">
+    <summary>Werkzeuge &amp; Kontext <span aria-hidden="true">⌃</span></summary>
+    <div class="ai-tools-body">
+    <section class="ai-context-group" aria-labelledby="ai-context-title">
+      <h3 id="ai-context-title">Quellen für deine Antwort</h3>
+    </section>
     <div class="ai-quick">
       <button data-p="Fasse diese Seite in fünf Stichpunkten zusammen.">Zusammenfassen</button>
       <button data-p="Leite aus dieser Seite konkrete Aufgaben ab. Jede Aufgabe als eigene Zeile, beginnend mit einem Verb.">Aufgaben</button>
@@ -431,16 +435,24 @@
       <button id="ai-seite" title="Die KI baut den Seitenaufbau"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.2h7.4L19 8.8v12a1.6 1.6 0 0 1-1.6 1.6H6a1.6 1.6 0 0 1-1.6-1.6V4.8" /><path d="M13.4 3.2v5.6H19"/><path d="M8 13h8M8 17h5"/></svg> Seite aufbauen</button>
       <button id="ai-log" title="Was die KI gebaut hat"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 12a8.4 8.4 0 1 0 2.5-6"/><path d="M3.4 3.6v4.2h4.2"/><path d="M12 7.6V12l3 1.8"/></svg> Protokoll</button>
     </div>
-    <textarea id="ai-input" rows="1" placeholder="Mach alles mit KI …"></textarea>
-    <!-- Zeile unter dem Eingabefeld, wie bei Notion -->
+    <div class="ai-tools-settings" aria-label="Weitere KI-Einstellungen"></div>
+    </div>
+    </details>
+    <div class="ai-compose">
+    <textarea id="ai-input" rows="2" placeholder="Frag etwas oder beschreibe deine Idee …" aria-label="Nachricht an die KI"></textarea>
+    <!-- Eingabeaktionen unten, nach Redurs Bildvorlage. -->
     <div class="ai-leiste">
-      <button id="ai-plus" title="Anhängen und erwähnen">＋</button>
+      <button id="ai-plus" title="Anhängen und erwähnen" aria-label="Anhängen und erwähnen">＋</button>
       <button id="ai-quellen" title="Quellen, Modus und Personalisierung"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.5 14.6a1.5 1.5 0 0 0 .3 1.7l.06.05a1.8 1.8 0 1 1-2.6 2.6l-.05-.06a1.5 1.5 0 0 0-1.7-.3 1.5 1.5 0 0 0-.9 1.37v.14a1.8 1.8 0 1 1-3.6 0v-.07a1.5 1.5 0 0 0-1-1.37 1.5 1.5 0 0 0-1.7.3l-.05.06a1.8 1.8 0 1 1-2.6-2.6l.06-.05a1.5 1.5 0 0 0 .3-1.7 1.5 1.5 0 0 0-1.37-.9H4.5a1.8 1.8 0 1 1 0-3.6h.07a1.5 1.5 0 0 0 1.37-1 1.5 1.5 0 0 0-.3-1.7l-.06-.05a1.8 1.8 0 1 1 2.6-2.6l.05.06a1.5 1.5 0 0 0 1.7.3h.07a1.5 1.5 0 0 0 .9-1.37V4.5a1.8 1.8 0 1 1 3.6 0v.07a1.5 1.5 0 0 0 .9 1.37 1.5 1.5 0 0 0 1.7-.3l.05-.06a1.8 1.8 0 1 1 2.6 2.6l-.06.05a1.5 1.5 0 0 0-.3 1.7v.07a1.5 1.5 0 0 0 1.37.9h.14a1.8 1.8 0 1 1 0 3.6h-.07a1.5 1.5 0 0 0-1.37.9z"/></svg></button>
       <button id="ai-faehig" title="Fähigkeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.4 3.2h2.1a1.9 1.9 0 0 1 1.9 1.9 1.4 1.4 0 0 0 2.8 0 1.9 1.9 0 0 1 1.9-1.9h1.5v4.2a1.4 1.4 0 0 0 0 2.8v4.2h-4.2a1.4 1.4 0 0 1-2.8 0H8.4v-4.2a1.4 1.4 0 0 0 0-2.8z"/></svg></button>
-      <span class="ai-luecke"></span>
       <button id="ai-modus" title="Standard darf ändern, Fragen nur antworten (Shift + Tab)">Standard</button>
-      <button id="ai-diktat" title="Diktieren"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.8" width="6" height="11.4" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"/><path d="M12 18v3.2M8.8 21.2h6.4"/></svg></button>
-      <button id="ai-senden" title="Senden">↑</button>
+      <span class="ai-luecke"></span>
+      <button class="model-btn" title="Modell wechseln" aria-label="KI-Modell wechseln">
+        <span class="dot" aria-hidden="true"></span><span class="model-name">Suche …</span><span aria-hidden="true">⌄</span>
+      </button>
+      <button id="ai-diktat" title="Diktieren" aria-label="Diktieren"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.8" width="6" height="11.4" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"/><path d="M12 18v3.2M8.8 21.2h6.4"/></svg></button>
+      <button id="ai-senden" title="Senden" aria-label="Nachricht senden">↑</button>
+    </div>
     </div>
   </div>
 </aside>
@@ -549,6 +561,7 @@
 <script src="quell/schale/bedienung/staffelei.js" defer></script>
 <script src="quell/schale/bedienung/geste.js" defer></script>
 <script src="quell/schale/bedienung/funkel.js" defer></script>
+<script src="quell/schale/bedienung/motion.js" defer></script>
 <script src="quell/schale/ueberlagerung/dialog.js" defer></script>
 <script src="quell/schale/ueberlagerung/fokus.js" defer></script>
 <script src="quell/schale/ueberlagerung/ui.js" defer></script>

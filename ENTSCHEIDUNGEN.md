@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-507 Entscheidungen, E1 bis E527 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+508 Entscheidungen, E1 bis E528 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -571,6 +571,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E525** — Redurs Marke, aus einer Quelle gerechnet — achtzehn Symbole, eine `marke.png`, und ein Bild, das den Fehler fand
 * **E526** — Die Leiste ist eine Kapsel, und man wischt zwischen den Bereichen — drei Fehler, von denen keiner der gesuchte war
 * **E527** — Die Einzeldatei trägt ihr Reitersymbol selbst — ein Verweis ins Leere zeigte weiter das alte rote R
+* **E528** — Die KI-Eingabe wird eine ruhige Fläche, die Werkzeuge werden geordnet und die vorhandenen Funkel-Knöpfe bleiben
 
 ---
 
@@ -42701,3 +42702,39 @@ lassen wäre ein Verweis auf eine Datei, die daneben nicht liegt. Also weg.
 in der Einzeldatei, und ihr `<link rel="icon">` trägt eine Data-URL.
 Gegenprobe rot gesehen — das Einsetzen abgeschaltet, fünf Reste, beide
 Zusagen rot. 25/25 grün.
+
+---
+
+E528 — KI-Eingabe und Animationen, ohne die guten Knöpfe neu zu gestalten
+--------------------------------------------------------------------------
+
+Redur möchte eine KI-Eingabe nach seiner ChatGPT-Bildvorlage. Die beiden
+Bau-Knöpfe waren ausdrücklich schon richtig; alle übrigen KI-Aktionen sollen
+denselben Effekt erhalten. Deshalb bleibt `Funkel` selbst unverändert.
+Vorhandene DOM-Knoten werden in vier Werkzeuggruppen verschoben, nicht
+durch neue, nur ähnlich aussehende Schaltflächen ersetzt. Quellen und
+Einstellungen sind in einer nativen, tastaturbedienbaren Aufklappfläche.
+
+Die Modellwahl wandert unter das Textfeld. Die wirklichen Modelle und Modi
+bleiben erhalten; die Bildvorlage erteilt keine Freigabe, andere Modelle
+oder neue Berechtigungsfunktionen vorzutäuschen. Quellen melden ihren
+Schaltzustand jetzt auch über `aria-pressed`; die Web-Rückfrage bleibt.
+
+Die beigefügte CSS-Sammlung besteht aus unabhängigen Demos. Sie wird nicht
+global importiert: wiederholte generische Selektoren, Schriftabrufe und
+Keyframe-Namen würden kollidieren. Die passenden Motive bekommen `rmo-*`;
+`rm-*` gehört bereits dem Arbeitsbereichsmenü. `motion.css` steht in der
+Bauteil-Stufe vor `bausteine.css`, nicht hinter den Studio-Schalen.
+Die genaue, auch die nicht vollständig übernommenen Demo-Teile benennende
+Zuordnung steht in `doku/ANIMATIONEN-ZUORDNUNG.md`.
+
+Neue Dekoration startet ausschließlich aus `src/start.ts`, ist unsichtbar
+für Vorleser und reagiert auf neu eingefügte Teilbäume. Keine Daten werden
+aus Dekoration abgeleitet, kein KI-Auftrag wird dafür gestartet. CSS und
+generiertes JavaScript gehören zum Offline-Grundstock und zur Einzeldatei.
+
+Suite 492 prüft die neue Anordnung mit echten Browserklicks, mobilen Größen,
+Quellen-Einwilligung und direkten Dateistarts. Suite 436 wurde gezielt von
+zwei auf zwölf Funkel-Aktionen aktualisiert. Die visuelle Prüfung erfolgt
+in Hell/Dunkel und auf schmalen Ansichten. Kein Anspruch auf einen vollen
+Gesamtlauf oder eine vollständige 1:1-Kopie sämtlicher CSS-Demos.

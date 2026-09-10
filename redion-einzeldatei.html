@@ -8028,6 +8028,240 @@ body.nh-zieht .nh-regal{ touch-action:none }
 
 </style>
 <style>
+/* ===== quell/schale/stil/motion.css ===== */
+/* Redurs Animationssammlung, in Redions Oberfläche eingeordnet.
+ * Zuordnung und bewusst ausgeschlossene globale Regeln:
+ * doku/ANIMATIONEN-ZUORDNUNG.md. Die bestehenden ru-funkel-Regeln bleiben.
+ */
+#ai {
+  --rmo-ease: cubic-bezier(.22, 1, .36, 1);
+  width: 420px;
+  flex-basis: 420px;
+  min-height: 0;
+}
+#ai.open { animation: rmo-panel-in .32s var(--rmo-ease); }
+#ai .ai-head { min-height: 58px; padding: 10px 18px; gap: 8px; }
+#ai .ai-head > b { flex: 1; font-size: 15px; letter-spacing: -.02em; }
+#ai .ai-head .icon-btn { min-width: 44px; min-height: 44px; border-radius: 50%; }
+#ai #chat { min-height: 80px; padding: 22px 18px; gap: 20px; overscroll-behavior: contain; }
+#ai .ai-foot { flex: 0 0 auto; padding: 0 14px 14px; border-top: 0; }
+#ai .ai-compose {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: var(--bg-card);
+  padding: 6px;
+  box-shadow: 0 4px 24px #0000000c, inset 0 1px 0 #ffffff05;
+  transition: border-color .22s, box-shadow .3s;
+}
+#ai .ai-compose:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent), 0 8px 28px #00000012;
+}
+#ai .ai-compose textarea {
+  display: block; width: 100%; min-height: 94px; max-height: 160px;
+  margin: 0; padding: 13px 12px 8px; border: 0; border-radius: 20px 20px 0 0;
+  outline: none; box-shadow: none; resize: none; background: transparent;
+  color: var(--text); font: inherit; font-size: 15px; line-height: 1.5;
+}
+#ai .ai-compose textarea::placeholder { color: var(--text-dim); opacity: 1; }
+#ai .ai-leiste { display: flex; align-items: center; gap: 2px; padding: 0; min-width: 0; }
+#ai .ai-leiste button {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; min-width: 44px; padding: 0 7px; border: 0;
+  border-radius: 22px; background: transparent; color: var(--text-dim);
+  transition: background .18s, color .18s, transform .18s;
+}
+#ai .ai-leiste button:hover { background: var(--bg-hover); color: var(--text); }
+#ai .ai-leiste button:active { transform: scale(.94); }
+#ai .ai-leiste .ai-luecke { flex: 1 1 0; min-width: 0; }
+#ai #ai-plus { flex: 0 0 44px; font-size: 26px; font-weight: 300; }
+#ai #ai-modus { flex: 0 0 auto; font-size: 12px; padding-inline: 6px; }
+#ai .ai-leiste .model-btn { flex: 0 1 145px; min-width: 66px; gap: 5px; font-size: 12px; }
+#ai .model-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#ai .model-btn .dot { flex: 0 0 5px; width: 5px; height: 5px; }
+#ai #ai-diktat { flex: 0 0 44px; }
+#ai #ai-diktat.an { background: #b62e3d; color: #fff; }
+#ai #ai-senden {
+  flex: 0 0 44px; font-size: 27px; font-weight: 400;
+  background: #2f6ed5; color: #fff; box-shadow: inset 0 1px 0 #ffffff30;
+}
+#ai #ai-senden:hover { background: #397de8; transform: translateY(-1px); }
+#ai #ai-senden:active { transform: scale(.92); }
+#ai :is(.ai-leiste button, .ai-tools summary, .ai-head button):focus-visible {
+  outline: 2px solid var(--accent-text); outline-offset: 2px;
+}
+#ai .ai-tools { margin: 0 0 8px; border-radius: 16px; }
+#ai .ai-tools > summary {
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 44px; padding: 0 10px; border-radius: 12px;
+  list-style: none; cursor: pointer; color: var(--text-dim); font-size: 12px;
+}
+#ai .ai-tools > summary::-webkit-details-marker { display: none; }
+#ai .ai-tools > summary:hover { color: var(--text); background: var(--bg-hover); }
+#ai .ai-tools > summary > span { transition: transform .22s; transform: rotate(180deg); }
+#ai .ai-tools[open] > summary > span { transform: none; }
+#ai .ai-tools-body {
+  max-height: min(36dvh, 330px); overflow: auto; overscroll-behavior: contain;
+  padding: 4px 8px 12px; scrollbar-width: thin;
+}
+#ai .ai-tools[open] .ai-tools-body { animation: rmo-reveal .24s var(--rmo-ease); }
+#ai .ai-tools h3 {
+  width: 100%; margin: 0 0 10px; color: var(--text-faint);
+  font-size: 11px; font-weight: 600; letter-spacing: .04em;
+}
+#ai .ai-context-group { margin-bottom: 18px; }
+#ai .ki-quellschalter { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; }
+#ai .ki-quellschalter button { min-height: 32px; border-radius: 10px; padding: 6px 9px; }
+#ai .ai-quick { display: grid; gap: 18px; overflow: visible; margin: 0; }
+#ai .ai-action-group { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 7px; padding: 4px; }
+#ai .ai-action-group h3 { margin-bottom: 0; }
+/* Nur die Umgebung neu ordnen: Originalmaße, Schatten und Glimmen der
+ * beiden Bau-Knöpfe nicht überschreiben. 32 px Nebenweg, weil aufklappbar. */
+#ai .ai-tools-settings { display: flex; flex-wrap: wrap; gap: 10px; padding: 18px 4px 2px; }
+#ai .ai-tools-settings button { min-height: 32px; padding: 5px 10px; font-size: 12px; }
+
+/* Kleine, abgeschlossene Bewegungen an vorhandenen Oberflächen. */
+@keyframes rmo-panel-in { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+@keyframes rmo-reveal { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+@keyframes rmo-orbit { to { transform: rotate(360deg); } }
+@keyframes rmo-shine { from { background-position: 170% 0; } to { background-position: -70% 0; } }
+@keyframes rmo-breathe { 50% { opacity: .55; transform: scale(.94); } }
+@keyframes rmo-molten { 50% { border-radius: 40% 60% 68% 32%; transform: rotate(180deg) scale(.88); } to { transform: rotate(360deg); } }
+
+/* 1 — Ordner: fünf Blätter fächern sich beim Anfassen auf. */
+.bib-deckel[data-art="ordner"] { perspective: 900px; }
+.bib-deckel[data-art="ordner"] .bib-deckel-blatt { transformo-style: preserve-3d; transition: transform .45s cubic-bezier(.2,.8,.2,1); }
+.rmo-folder-stack { position: absolute; inset: 18% 16% 12%; pointer-events: none; }
+.rmo-folder-sheet {
+  position: absolute; inset: 0; border-radius: 5px;
+  background: linear-gradient(150deg, color-mix(in srgb, var(--accent) 25%, var(--bg-card)), var(--bg-card));
+  border: 1px solid var(--line); box-shadow: 0 2px 6px #0002;
+  transform: translateY(calc(var(--rmo-index) * -3px));
+  transition: transform .5s cubic-bezier(.2,.8,.2,1); transition-delay: calc(var(--rmo-index) * 25ms);
+}
+.bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .rmo-folder-sheet {
+  transform: translateY(calc(-12px - var(--rmo-index) * 5px)) rotate(calc((var(--rmo-index) - 2) * 7deg));
+}
+/* 2 — Drei Einstellungsregler, auf einem echten Einstellungsweg. */
+.rmo-sliders { display: inline-flex; flex-direction: column; justify-content: center; gap: 4px; width: 17px; margin-right: 5px; vertical-align: middle; }
+.rmo-sliders i { display: block; position: relative; width: 16px; height: 1px; background: currentColor; }
+.rmo-sliders i::after { content: ''; position: absolute; width: 4px; height: 4px; top: -1.5px; left: 3px; border-radius: 50%; background: currentColor; transition: transform .3s; }
+.rmo-sliders i:nth-child(2)::after { left: 9px; }
+#ai-quellen:is(:hover, :focus-visible) .rmo-sliders i::after { transform: translateX(4px); }
+#ai-quellen:is(:hover, :focus-visible) .rmo-sliders i:nth-child(2)::after { transform: translateX(-4px); }
+/* 3 + 10 — Lichtschlitz und kleiner Perspektivwechsel: echte Fach-/Statistikkarten. */
+.els-kachel, .stat-karte.lw-metrik {
+  position: relative; overflow: hidden;
+  transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s, border-color .25s;
+}
+.els-kachel::after, .stat-karte.lw-metrik::after {
+  content: ''; position: absolute; pointer-events: none; inset: 0; opacity: 0;
+  background: linear-gradient(115deg, transparent 25%, #ffffff18 45%, transparent 65%);
+  background-size: 250% 100%; transition: opacity .25s;
+}
+.els-kachel:is(:hover, :focus-visible), .stat-karte.lw-metrik:hover {
+  transform: perspective(1000px) rotateX(2deg) translateY(-3px);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: 0 12px 26px #00000018;
+}
+.els-kachel:is(:hover, :focus-visible)::after, .stat-karte.lw-metrik:hover::after { opacity: 1; animation: rmo-shine 1.2s ease both; }
+.stat-karte.lw-metrik strong { display: block; animation: rmo-reveal .45s ease both; }
+/* 4 — Der kreisende Farbverlauf liegt im Fokus der Eingabe, nicht auf den Bau-Knöpfen. */
+#ai .ai-compose::before {
+  content: ''; pointer-events: none; position: absolute; inset: -1px; border-radius: inherit;
+  padding: 1px; background: linear-gradient(115deg, #7c6ce855, #66bde655, #bc79df55, #7c6ce855);
+  background-size: 250% 100%; opacity: 0;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude; transition: opacity .2s;
+}
+#ai .ai-compose:focus-within::before { opacity: 1; animation: rmo-shine 5s linear 1; }
+/* 6 + 11 — Flüssiger Ring und Statuskapsel, nur bei tatsächlicher KI-Arbeit. */
+.ki-aktivitaet {
+  position: relative; width: fit-content; padding: 4px 10px; border-radius: 20px; border: 1px solid transparent;
+  background: linear-gradient(var(--bg-side), var(--bg-side)) padding-box,
+    conic-gradient(from 90deg, #8b78c533, #66b4c966, #c19ad355, #8b78c533) border-box;
+}
+.ki-aktivitaet:has(.rmo-liquid) > .ru-aktivitaet { display: none; }
+.rmo-liquid { display: inline-block; position: relative; width: 22px; height: 22px; flex: 0 0 22px; pointer-events: none; }
+.rmo-liquid::before, .rmo-liquid::after {
+  content: ''; position: absolute; inset: 2px; border: 2px solid transparent;
+  border-top-color: var(--accent-text); border-right-color: #df9d71;
+  border-radius: 32% 68% 50% 50%; animation: rmo-molten 2.6s linear infinite;
+}
+.rmo-liquid::after { inset: 5px; animation-direction: reverse; border-right-color: #7dbfcb; }
+/* 7 — Bestehender Schalter bleibt semantisch und farblich derselbe. */
+.schalter > i { transition: transform .3s cubic-bezier(.2,.9,.2,1), box-shadow .3s; }
+.schalter.an > i { box-shadow: inset 0 1px 2px #ffffff70, 0 2px 6px #0002; }
+/* 8 — Räumlicher Kartenfächer in der leeren Bibliothek, keine erfundenen Dateien. */
+.rmo-carousel { display: flex; justify-content: center; height: 58px; margin: 12px auto 20px; perspective: 500px; pointer-events: none; }
+.rmo-carousel i {
+  display: block; width: 40px; height: 54px; margin-inline: -7px; border: 1px solid var(--line-stark); border-radius: 7px;
+  background: linear-gradient(145deg, var(--bg-hover), var(--bg-card)); box-shadow: 0 8px 15px #0001;
+  transform: rotateY(calc((var(--rmo-index) - 1) * -30deg)) translateZ(calc((1 - var(--rmo-index)) * 4px));
+  transition: transform .5s;
+}
+.bib-leer:hover .rmo-carousel i { transform: rotateY(calc((var(--rmo-index) - 1) * 30deg)) translateY(-3px); }
+/* 9 — Tiefer Tastendruck auf vorhandenen Dialogaktionen. */
+.fbtns button.prim:not(.ru-funkel) {
+  box-shadow: inset 0 1px 0 #ffffff28, 0 3px 0 #0002; transition: transform .18s, box-shadow .18s;
+}
+.fbtns button.prim:not(.ru-funkel):active { transform: translateY(2px); box-shadow: inset 0 1px 3px #0002; }
+/* 12 — Holografischer Papierglanz am wirklichen PDF-Druck-/Exportstatus. */
+body .ru-drucker-blatt {
+  background-image: linear-gradient(115deg, transparent 25%, #b7eef330 43%, #d5b9f633 52%, transparent 68%);
+  background-size: 250% 100%; animation: rmo-shine 3s ease-in-out infinite;
+}
+/* 13 — Kleine Glaskugel als KI-Zeichen, ohne Verifizierungsbehauptung. */
+.rmo-orb {
+  position: relative; display: inline-block; flex: 0 0 25px; width: 25px; height: 25px;
+  margin-right: 4px; border-radius: 50%; overflow: hidden; pointer-events: none;
+  background: radial-gradient(circle at 30% 25%, #ffffffb0, transparent 38%),
+    radial-gradient(circle at 68% 75%, #a090dc, #7ab2c5 65%, #ccd1e9);
+  box-shadow: inset 0 0 0 1px #ffffff50, inset -3px -3px 7px #47337730;
+}
+.rmo-orb::after { content: ''; position: absolute; inset: 5px 1px; border: 1px solid #ffffff80; border-radius: 50%; transform: rotate(-35deg); }
+#ai .ai-head:hover .rmo-orb::after { animation: rmo-orbit 3s linear 1; }
+/* 14 — Filamentlicht zeigt ausschließlich den laufenden Schaltungsmodus. */
+.sp-start { transition: box-shadow .3s, background .3s; }
+.sp-start.an { box-shadow: inset 0 0 9px #ffc77422, 0 0 14px #e7a34024; }
+.sp-start.an::before {
+  content: ''; display: inline-block; width: 13px; height: 6px; margin-right: 5px;
+  border: 1px solid #ffc572; border-radius: 50%; box-shadow: 0 0 5px #ffc57290;
+}
+/* 15 — Mechanischer Dreierblock für die echten Eingabeaktionen. */
+#ai :is(#ai-plus, #ai-diktat, #ai-senden):active { box-shadow: inset 0 2px 5px #0003; }
+
+@media (max-width: 760px) {
+  #ai { width: 100%; flex-basis: auto; }
+  #ai .ai-foot { padding: 0 10px max(10px, env(safe-area-inset-bottom)); }
+  #ai .ai-head { padding-inline: 14px; }
+  #ai .ai-compose textarea { font-size: 16px; min-height: 86px; }
+  #ai .ai-tools-body { max-height: min(32dvh, 260px); }
+  #ai .ai-leiste .model-btn { flex-basis: 130px; }
+  #ai #ai-modus { font-size: 11px; padding-inline: 3px; }
+}
+@media (max-height: 600px) {
+  #ai .ai-compose textarea { min-height: 54px; max-height: 100px; }
+  #ai .ai-tools-body { max-height: 22dvh; }
+  #ai #chat { min-height: 32px; padding-block: 10px; }
+}
+@media (hover: none) {
+  .els-kachel:hover, .stat-karte.lw-metrik:hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #ai.open, #ai .ai-tools-body, #ai .ai-compose::before,
+  .rmo-orb::after, .rmo-liquid::before, .rmo-liquid::after, .ru-drucker-blatt,
+  .els-kachel::after, .stat-karte.lw-metrik::after, .stat-karte.lw-metrik strong { animation: none !important; }
+  #ai .ai-compose, #ai .ai-leiste button, #ai .ai-tools > summary > span,
+  #ai .ai-compose::before, .rmo-folder-sheet, .rmo-carousel i, .rmo-sliders i::after,
+  .els-kachel, .stat-karte.lw-metrik, .schalter > i, .sp-start,
+  .fbtns button.prim { transition: none !important; }
+  .els-kachel:is(:hover, :focus-visible), .stat-karte.lw-metrik:hover { transform: none; }
+}
+
+</style>
+<style>
 /* ===== quell/schale/stil/bausteine.css ===== */
 /* ============================================================================
  * bausteine.css — was übrig bleibt
@@ -17918,17 +18152,20 @@ body[data-dokument="an"] .document-workspace[data-document-zeigen="an"] .documen
      ====================================================================== -->
 <aside id="ai">
   <div class="ai-head">
-    <b><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.2 13.7 9l5.8 1.7-5.8 1.7L12 18.2l-1.7-5.8L4.5 10.7 10.3 9z"/><path d="M18.6 3v3.2M17 4.6h3.2"/></svg> KI</b>
-    <button class="model-btn" title="Modell wechseln">
-      <span class="dot"></span><span class="model-name">Suche …</span><span style="opacity:.5">▾</span>
-    </button>
+    <b>Redion KI</b>
     <button class="icon-btn" id="ai-verlauf" title="Unterhaltungen" aria-label="Unterhaltungen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 12a8.4 8.4 0 1 0 2.5-6"/><path d="M3.4 3.6v4.2h4.2"/><path d="M12 7.6V12l3 1.8"/></svg></button>
-    <button class="icon-btn" id="ai-clear" title="Neuer Chat"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="icon-btn" id="ai-clear" title="Neuer Chat" aria-label="Neuer Chat"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
   </div>
 
   <div id="chat"></div>
 
   <div class="ai-foot">
+    <details class="ai-tools" id="ai-tools">
+    <summary>Werkzeuge &amp; Kontext <span aria-hidden="true">⌃</span></summary>
+    <div class="ai-tools-body">
+    <section class="ai-context-group" aria-labelledby="ai-context-title">
+      <h3 id="ai-context-title">Quellen für deine Antwort</h3>
+    </section>
     <div class="ai-quick">
       <button data-p="Fasse diese Seite in fünf Stichpunkten zusammen.">Zusammenfassen</button>
       <button data-p="Leite aus dieser Seite konkrete Aufgaben ab. Jede Aufgabe als eigene Zeile, beginnend mit einem Verb.">Aufgaben</button>
@@ -17943,16 +18180,24 @@ body[data-dokument="an"] .document-workspace[data-document-zeigen="an"] .documen
       <button id="ai-seite" title="Die KI baut den Seitenaufbau"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.2h7.4L19 8.8v12a1.6 1.6 0 0 1-1.6 1.6H6a1.6 1.6 0 0 1-1.6-1.6V4.8" /><path d="M13.4 3.2v5.6H19"/><path d="M8 13h8M8 17h5"/></svg> Seite aufbauen</button>
       <button id="ai-log" title="Was die KI gebaut hat"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 12a8.4 8.4 0 1 0 2.5-6"/><path d="M3.4 3.6v4.2h4.2"/><path d="M12 7.6V12l3 1.8"/></svg> Protokoll</button>
     </div>
-    <textarea id="ai-input" rows="1" placeholder="Mach alles mit KI …"></textarea>
-    <!-- Zeile unter dem Eingabefeld, wie bei Notion -->
+    <div class="ai-tools-settings" aria-label="Weitere KI-Einstellungen"></div>
+    </div>
+    </details>
+    <div class="ai-compose">
+    <textarea id="ai-input" rows="2" placeholder="Frag etwas oder beschreibe deine Idee …" aria-label="Nachricht an die KI"></textarea>
+    <!-- Eingabeaktionen unten, nach Redurs Bildvorlage. -->
     <div class="ai-leiste">
-      <button id="ai-plus" title="Anhängen und erwähnen">＋</button>
+      <button id="ai-plus" title="Anhängen und erwähnen" aria-label="Anhängen und erwähnen">＋</button>
       <button id="ai-quellen" title="Quellen, Modus und Personalisierung"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.5 14.6a1.5 1.5 0 0 0 .3 1.7l.06.05a1.8 1.8 0 1 1-2.6 2.6l-.05-.06a1.5 1.5 0 0 0-1.7-.3 1.5 1.5 0 0 0-.9 1.37v.14a1.8 1.8 0 1 1-3.6 0v-.07a1.5 1.5 0 0 0-1-1.37 1.5 1.5 0 0 0-1.7.3l-.05.06a1.8 1.8 0 1 1-2.6-2.6l.06-.05a1.5 1.5 0 0 0 .3-1.7 1.5 1.5 0 0 0-1.37-.9H4.5a1.8 1.8 0 1 1 0-3.6h.07a1.5 1.5 0 0 0 1.37-1 1.5 1.5 0 0 0-.3-1.7l-.06-.05a1.8 1.8 0 1 1 2.6-2.6l.05.06a1.5 1.5 0 0 0 1.7.3h.07a1.5 1.5 0 0 0 .9-1.37V4.5a1.8 1.8 0 1 1 3.6 0v.07a1.5 1.5 0 0 0 .9 1.37 1.5 1.5 0 0 0 1.7-.3l.05-.06a1.8 1.8 0 1 1 2.6 2.6l-.06.05a1.5 1.5 0 0 0-.3 1.7v.07a1.5 1.5 0 0 0 1.37.9h.14a1.8 1.8 0 1 1 0 3.6h-.07a1.5 1.5 0 0 0-1.37.9z"/></svg></button>
       <button id="ai-faehig" title="Fähigkeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.4 3.2h2.1a1.9 1.9 0 0 1 1.9 1.9 1.4 1.4 0 0 0 2.8 0 1.9 1.9 0 0 1 1.9-1.9h1.5v4.2a1.4 1.4 0 0 0 0 2.8v4.2h-4.2a1.4 1.4 0 0 1-2.8 0H8.4v-4.2a1.4 1.4 0 0 0 0-2.8z"/></svg></button>
-      <span class="ai-luecke"></span>
       <button id="ai-modus" title="Standard darf ändern, Fragen nur antworten (Shift + Tab)">Standard</button>
-      <button id="ai-diktat" title="Diktieren"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.8" width="6" height="11.4" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"/><path d="M12 18v3.2M8.8 21.2h6.4"/></svg></button>
-      <button id="ai-senden" title="Senden">↑</button>
+      <span class="ai-luecke"></span>
+      <button class="model-btn" title="Modell wechseln" aria-label="KI-Modell wechseln">
+        <span class="dot" aria-hidden="true"></span><span class="model-name">Suche …</span><span aria-hidden="true">⌄</span>
+      </button>
+      <button id="ai-diktat" title="Diktieren" aria-label="Diktieren"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.8" width="6" height="11.4" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"/><path d="M12 18v3.2M8.8 21.2h6.4"/></svg></button>
+      <button id="ai-senden" title="Senden" aria-label="Nachricht senden">↑</button>
+    </div>
     </div>
   </div>
 </aside>
@@ -19588,7 +19833,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 793, inhalt: 'db400c61ffcddacd', gebaut: '2026-09-09T19:13:22.673Z' };
+const Stand = { fassung: 797, inhalt: 'a6eb16afa926854e', gebaut: '2026-09-10T15:44:11.376Z' };
 window.Stand = Stand;
 
 </script>
@@ -43686,6 +43931,86 @@ const Funkel = (() => {
     return { anlegen, alle };
 })();
 window.Funkel = Funkel;
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/motion.js ===== */
+"use strict";
+/* Dekorative Ergänzungen aus Redurs Animationssammlung.
+ * Quelle: src/schale/bedienung/motion.ts. Daraus wird motion.js erzeugt;
+ * das JavaScript nicht von Hand bearbeiten, sondern npm run bauen:ts.
+ * Keine Anfragen, Timer, Datenänderungen oder neuen Klickhandlungen.
+ * Der einzige Start erfolgt in src/start.ts. Nur neu eingefügte Teilbäume
+ * werden betrachtet; ein WeakSet verhindert doppelte Dekoration.
+ */
+const RedionMotion = (() => {
+    const decorated = new WeakSet();
+    const selector = '.bib-deckel[data-art="ordner"], .bib-leer, .ki-aktivitaet, #ai-quellen, #ai .ai-head';
+    let observer = null;
+    const ornament = (name) => {
+        const element = document.createElement('span');
+        element.className = name;
+        element.setAttribute('aria-hidden', 'true');
+        return element;
+    };
+    const decorate = (element) => {
+        if (decorated.has(element))
+            return;
+        decorated.add(element);
+        if (element.matches('.bib-deckel')) {
+            const surface = element.querySelector('.bib-deckel-blatt');
+            if (!surface)
+                return;
+            const stack = ornament('rmo-folder-stack');
+            for (let index = 0; index < 5; index++) {
+                const sheet = ornament('rmo-folder-sheet');
+                sheet.style.setProperty('--rmo-index', String(index));
+                stack.append(sheet);
+            }
+            surface.prepend(stack);
+        }
+        else if (element.matches('.bib-leer')) {
+            const carousel = ornament('rmo-carousel');
+            for (let index = 0; index < 3; index++) {
+                const card = document.createElement('i');
+                card.style.setProperty('--rmo-index', String(index));
+                carousel.append(card);
+            }
+            element.prepend(carousel);
+        }
+        else if (element.matches('.ki-aktivitaet')) {
+            element.prepend(ornament('rmo-liquid'));
+        }
+        else if (element.id === 'ai-quellen') {
+            const sliders = ornament('rmo-sliders');
+            for (let index = 0; index < 3; index++)
+                sliders.append(document.createElement('i'));
+            element.prepend(sliders);
+        }
+        else {
+            element.prepend(ornament('rmo-orb'));
+        }
+    };
+    const scan = (root) => {
+        if (root instanceof Element && root.matches(selector))
+            decorate(root);
+        root.querySelectorAll(selector).forEach(decorate);
+    };
+    const start = () => {
+        if (observer)
+            return;
+        scan(document);
+        observer = new MutationObserver(records => {
+            for (const record of records)
+                for (const node of record.addedNodes) {
+                    if (node instanceof Element)
+                        scan(node);
+                }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+    };
+    return { start };
+})();
 
 </script>
 <script>
@@ -145352,6 +145677,9 @@ const KI = (() => {
             d.className = 'dot ' + (klasse || '');
         if (s)
             s.textContent = text;
+        const button = document.querySelector('#ai .model-btn');
+        button?.setAttribute('title', 'Modell wechseln: ' + text);
+        button?.setAttribute('aria-label', 'KI-Modell wechseln: ' + text);
     };
     const zeichneModellKnopf = () => {
         const b = document.querySelector('#ai .model-btn');
@@ -145594,7 +145922,7 @@ const KI = (() => {
         ];
         const d = document.createElement('div');
         d.className = 'ki-quellschalter';
-        d.innerHTML = NAMEN.map(([k, n]) => `<button data-qs="${k}" class="${k && q[k] ? 'an' : ''}">${n}</button>`).join('');
+        d.innerHTML = NAMEN.map(([k, n]) => `<button data-qs="${k}" aria-pressed="${!!(k && q[k])}" class="${k && q[k] ? 'an' : ''}">${n}</button>`).join('');
         d.addEventListener('click', e => {
             const b = elVon(e)?.closest('[data-qs]');
             if (!b)
@@ -145610,6 +145938,7 @@ const KI = (() => {
             }
             Kontext.quelleSetzen(qs, !jetzt);
             b.classList.toggle('an', !jetzt);
+            b.setAttribute('aria-pressed', String(!jetzt));
             UI.toast((!jetzt ? 'An: ' : 'Aus: ') + b.textContent);
         });
         return d;
@@ -145619,8 +145948,8 @@ const KI = (() => {
             return;
         if (!zustand.bereit) {
             melde(zustand.quelle === 'ollama'
-                ? 'Ollama ist nicht erreichbar. Oben rechts ein Modell wählen oder auf „Erneut nach Ollama suchen" klicken.'
-                : 'Es ist noch kein Modell geladen. Oben rechts eines auswählen.');
+                ? 'Ollama ist nicht erreichbar. Unten im Eingabefeld ein Modell wählen oder auf „Erneut nach Ollama suchen" klicken.'
+                : 'Es ist noch kein Modell geladen. Wähle unten im Eingabefeld ein Modell.');
             return;
         }
         schreibe('user', text);
@@ -146743,11 +147072,56 @@ const KI = (() => {
     const bindePanel = () => {
         const ta = document.getElementById('ai-input');
         const chat = document.getElementById('chat');
-        /* Die Quellen-Schalter kommen über das Eingabefeld — man soll sehen,
-           woraus die KI gerade schöpfen darf, bevor man tippt. */
-        const fuss = document.querySelector('.ai-foot');
+        /* Werkzeuge bleiben erreichbar, ohne die Eingabe zu verdrängen.
+           Nur bestehende Knoten verschieben: Kennungen und Klicks bleiben. */
+        const actions = document.querySelector('.ai-quick');
+        if (actions && !actions.querySelector('.ai-action-group')) {
+            const prompts = Array.from(actions.querySelectorAll('button[data-p]'));
+            const groups = [
+                { name: 'Erstellen', ids: ['ai-db', 'ai-seite'], prompts: [] },
+                { name: 'Text bearbeiten', ids: ['ai-schreiben'], prompts: [0, 2, 3] },
+                { name: 'Lernen & planen', ids: ['ai-wiki'], prompts: [1, 4] },
+                { name: 'Assistenten & Verlauf', ids: ['ai-agent', 'ai-meeting', 'ai-log'], prompts: [] }
+            ];
+            for (const group of groups) {
+                const section = document.createElement('section');
+                section.className = 'ai-action-group';
+                const heading = document.createElement('h3');
+                heading.textContent = group.name;
+                section.append(heading);
+                for (const id of group.ids) {
+                    const button = document.getElementById(id);
+                    if (button)
+                        section.append(button);
+                }
+                for (const index of group.prompts) {
+                    const button = prompts[index];
+                    if (button)
+                        section.append(button);
+                }
+                actions.append(section);
+            }
+            const settings = document.querySelector('.ai-tools-settings');
+            const settingsActions = [['ai-quellen', 'Quellen & Modus'], ['ai-faehig', 'Fähigkeiten']];
+            for (const [id, label] of settingsActions) {
+                const button = document.getElementById(id);
+                if (button && settings) {
+                    button.append(' ' + label);
+                    settings.append(button);
+                }
+            }
+        }
+        const tools = document.querySelector('#ai-tools');
+        tools?.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && tools.open && !document.querySelector('.menu')) {
+                event.stopPropagation();
+                tools.open = false;
+                tools.querySelector('summary')?.focus();
+            }
+        });
+        const fuss = document.querySelector('.ai-context-group');
         if (fuss && !fuss.querySelector('.ki-quellschalter')) {
-            fuss.insertBefore(quellenLeiste(), fuss.querySelector('.ai-quick'));
+            fuss.append(quellenLeiste());
         }
         if (!ta)
             return;
@@ -146903,12 +147277,10 @@ const KI = (() => {
         });
         document.getElementById('ai-faehig')?.addEventListener('click', (e) => faehigkeitenMenue(e.currentTarget));
         document.getElementById('ai-diktat')?.addEventListener('click', () => diktat(ta));
-        /* DIE ZWEI KNÖPFE, DIE ETWAS BAUEN, SEHEN AUCH SO AUS (E463). „Datenbank
-           bauen" und „Seite aufbauen" legen Strukturen an — die anderen in
-           der Reihe schreiben eine Antwort. Der dunkle Knopf mit dem
-           Buchstabenlauf ist Redurs Vorgabe für genau diese Sorte Zusage. */
+        /* Redur, 9. September: die beiden Bau-Knöpfe unverändert behalten;
+           alle übrigen Aktionen erhalten genau denselben bestehenden Effekt. */
         if (typeof Funkel !== 'undefined')
-            Funkel.alle(document, '#ai-db, #ai-seite');
+            Funkel.alle(document, '.ai-quick button, .ai-tools-settings button');
         document.getElementById('ai-db')?.addEventListener('click', async () => {
             const auftrag = await UI.frage('Was soll die Datenbank können?', 'Aufgaben mit Status, Priorität, Fälligkeit und Aufwand');
             if (auftrag)
@@ -156676,6 +157048,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (typeof Ereignisse !== 'undefined')
         Ereignisse.melde(ARTEN.appStartet);
     App.start();
+    RedionMotion.start();
     if (typeof Ereignisse !== 'undefined')
         Ereignisse.melde(ARTEN.appSteht);
 });

@@ -81,7 +81,7 @@ Präfix Anzahl  Hauptdatei
 ab        4  bausteine.css
 abo       5  einstellungen.css
 ag       11  bausteine.css
-ai       23  ki.css
+ai      130  motion.css
 an        6  bausteine.css
 arb      24  bausteine.css
 app      10  bausteine.css
@@ -101,6 +101,7 @@ bs       64  bausteine.css
 bst      44  premium.css
 cal       8  bausteine.css
 cb       15  bausteine.css
+chr      56  bausteine.css
 code      9  bausteine.css
 cw        6  bausteine.css
 da       12  bausteine.css
@@ -189,6 +190,7 @@ pv        8  bausteine.css
 rg       37  bausteine.css
 rgn      13  bausteine.css
 rm       16  bausteine.css
+rmo      40  motion.css
 rs        5  bausteine.css
 ru        9  bausteine.css
 rt       13  bausteine.css
@@ -199,7 +201,7 @@ sm       21  bausteine.css
 so        5  bausteine.css
 sp      121  bausteine.css
 stab     13  werkzeuge.css
-stat     12  werkzeuge.css
+stat     16  motion.css
 such     18  einstellungen.css
 sv        5  aufbau.css
 sy        7  bausteine.css
