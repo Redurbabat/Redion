@@ -25,6 +25,10 @@
  *   §4 WENIGER BEWEGUNG HEISST KEINE BEWEGUNG.
  *   §5 NICHTS DAVON IST BEDIENBAR: Schmuck nimmt keine Klicks und keine
  *      Vorleseaufmerksamkeit (§38).
+ *   §6 DER RING AN DER KENNZAHL zeichnet sich einmal und MISST NICHTS —
+ *      ein Ring auf 72 % behauptete eine Grösse, die Redion nicht hat (§33).
+ *   §7 DER BARCODE ENTSTEHT UNTER DEM DRUCKKOPF und ist nicht schon vor dem
+ *      Druck fertig. Ohne laufenden Auftrag wächst gar nichts.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  *   §1 → die zwei `ensure(`-Aufrufe wieder entfernen: der Zustand von vorher.
@@ -182,6 +186,89 @@ console.log('\n§4 Wer weniger Bewegung will, bekommt keine');
   gleich('Der Ring steht still', m.ring, 'none');
   gleich('Die Wendel auch', m.wendel, 'none');
   await k2.close();
+}
+
+/* ══ §6 + §7 RING UND BARCODE ════════════════════════════════════════════ */
+console.log('\n§6 Der Ring rahmt die Zahl und misst nichts');
+{
+  const kontext = await browser.newContext({ viewport: { width: 1180, height: 760 } });
+  const s3 = await kontext.newPage();
+  s3.on('pageerror', e => fehler.push(e.message));
+  await s3.goto(`http://localhost:${PORT}/index.html`);
+  await s3.waitForTimeout(2600);
+  await s3.evaluate(() => {
+    document.getElementById('rg-willkommen')?.remove();
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    const f = document.getElementById('scroll') || document.body;
+    /* DIE KARTE BRAUCHT IHRE ECHTE UMGEBUNG. Nackt in den Körper gesetzt
+       fällt sie schmaler aus als im Lernbereich, und der Ring landet dann
+       auf der Beschriftung — die Zusage unten war deshalb erst rot, ohne
+       dass am Bildschirm etwas falsch gewesen wäre. Dieselbe Hülle wie in
+       `lernwelt.ts`: eine Reihe mit Abstand, nicht ein einzelnes Kind. */
+    f.innerHTML =
+      '<div style="padding:26px;display:flex;gap:14px;align-items:flex-start">' +
+      '<article class="stat-karte lw-metrik"><strong>128</strong><span>Karten gelernt</span></article>' +
+      '<article class="stat-karte lw-metrik"><strong>7</strong><span>Tage in Folge</span></article>' +
+      '</div>' +
+      '<div class="ru-drucker" data-zustand="rendern" style="width:230px;position:relative">' +
+      '<div class="ru-drucker-buehne"><div class="ru-drucker-blattgruppe">' +
+      '<div class="ru-drucker-blatt" style="position:relative;height:74px"></div>' +
+      '</div></div></div>' +
+      '<div class="ru-drucker" id="ruhender" data-zustand="bereit" style="width:230px;position:relative">' +
+      '<div class="ru-drucker-buehne"><div class="ru-drucker-blattgruppe">' +
+      '<div class="ru-drucker-blatt" style="position:relative;height:74px"></div>' +
+      '</div></div></div>';
+    (window as any).RedionMotion?.decorate?.(document);
+  });
+  await s3.waitForTimeout(700);
+
+  const m = await s3.evaluate(() => {
+    const ring = document.querySelector('.stat-karte.lw-metrik > .rmo-ring') as HTMLElement | null;
+    const karte = document.querySelector('.stat-karte.lw-metrik')!.getBoundingClientRect();
+    /* `:not(.rmo-ring)` IST KEINE ZIERDE. `ensure()` setzt den Ring als
+       ERSTES Kind ein, und er ist selbst ein `span` — `> span` traf also
+       den Ring und mass ihn gegen sich selbst. Die Zusage war rot und hatte
+       damit auf die denkbar dümmste Weise recht. */
+    const text = document.querySelector('.stat-karte.lw-metrik > span:not(.rmo-ring)')!.getBoundingClientRect();
+    const r = ring?.getBoundingClientRect();
+    const ueberlappt = !!r && !(r.right < text.left || r.left > text.right ||
+                                r.bottom < text.top || r.top > text.bottom);
+    return {
+      da: !!ring,
+      zeichnet: ring ? getComputedStyle(ring).animationName : '-',
+      /* Ganz herum: eine halbe Umdrehung wäre eine Behauptung über eine Quote. */
+      anteil: ring ? getComputedStyle(ring).getPropertyValue('--rmo-anteil').trim() : '-',
+      ueberlappt,
+      masse: { ring: r && [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)],
+               text: [Math.round(text.left), Math.round(text.top), Math.round(text.right), Math.round(text.bottom)] },
+      imKasten: !!r && r.left >= karte.left && r.right <= karte.right &&
+                       r.top >= karte.top && r.bottom <= karte.bottom
+    };
+  });
+  p('Die Kennzahl bekommt einen Ring', m.da, JSON.stringify(m));
+  gleich('Er zeichnet sich einmal', m.zeichnet, 'rmo-ring-zeichnen');
+  gleich('… und zwar ganz herum — er misst nichts', m.anteil, '1');
+  p('Er liegt nicht auf der Beschriftung', m.ueberlappt === false, JSON.stringify(m.masse));
+  p('… und bleibt in seiner Karte', m.imKasten);
+
+  console.log('\n§7 Der Barcode entsteht erst beim Drucken');
+  const c = await s3.evaluate(() => {
+    const lese = (wahl: string) => {
+      const blatt = document.querySelector(wahl + ' .ru-drucker-blatt');
+      if (!blatt) return null;
+      const code = getComputedStyle(blatt, '::after');
+      const kopf = getComputedStyle(blatt, '::before');
+      return { code: code.animationName, schnitt: code.clipPath, kopf: kopf.animationName };
+    };
+    return { laeuft: lese('.ru-drucker[data-zustand="rendern"]'), ruht: lese('#ruhender') };
+  });
+  gleich('Während des Auftrags wächst er', c.laeuft?.code, 'rmo-code-wachsen');
+  gleich('Und der Druckkopf läuft mit', c.laeuft?.kopf, 'rmo-code-kopf');
+  p('Ohne Auftrag wächst nichts …', c.ruht?.code === 'none', JSON.stringify(c.ruht));
+  p('… und der Code ist dann auch nicht schon fertig da',
+     (c.ruht?.schnitt || '').includes('100%') || c.ruht?.schnitt === 'inset(0% 100% 0% 0%)',
+     JSON.stringify(c.ruht?.schnitt));
+  await kontext.close();
 }
 
 p('Keine Seitenfehler', fehler.length === 0, fehler.slice(0, 3).join(' | '));

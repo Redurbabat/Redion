@@ -1,7 +1,7 @@
 /* Redurs 15 Vorlagen: lokale Dekoration, keine gespeicherten Werte. */
 type MotionEffectId = 'folder' | 'sliders' | 'light' | 'gradient' | 'letters' |
   'liquid' | 'toggle' | 'carousel' | 'glass' | 'metric' | 'status' | 'ticket' |
-  'orb' | 'filament' | 'transport';
+  'orb' | 'filament' | 'transport' | 'ring';
 
 const RedionMotion = (() => {
   const metricSelector = '.stat-karte.lw-metrik > strong, .rmo-health-metric > strong';
@@ -20,7 +20,8 @@ const RedionMotion = (() => {
     { id: 'ticket', place: 'PDF-Druck und Export', selector: '.ru-drucker' },
     { id: 'orb', place: 'KI-Schaltfläche und Kopfzeile', selector: '#btn-ai, #ai .ai-head' },
     { id: 'filament', place: 'Strom im Elektro-Schaltplan', selector: '.sp-start' },
-    { id: 'transport', place: 'Zeitmesser Start/Pause/Beenden', selector: '.rmo-transport' }
+    { id: 'transport', place: 'Zeitmesser Start/Pause/Beenden', selector: '.rmo-transport' },
+    { id: 'ring', place: 'Kennzahlen im Lernbereich und in der Bestandsübersicht', selector: '.stat-karte.lw-metrik, .rmo-health-metric' }
   ];
   const selector = effects.map(effect => effect.selector).join(',');
   const watched = new WeakSet<Element>();
@@ -125,6 +126,9 @@ const RedionMotion = (() => {
         ring.append(karte);
       }
     });
+    /* Der gezeichnete Ring aus der Statistik-Vorlage (2030–2710). Er rahmt
+       die ECHTE Zahl und misst nichts — siehe den Grund in motion.css. */
+    if (ids.includes('ring')) ensure(element, 'rmo-ring');
     if (ids.includes('letters')) {
       /* Text teilen, aber Symbole, Beschriftung und Listener behalten. */
       for (const node of Array.from(element.childNodes)) {

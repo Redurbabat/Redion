@@ -8195,6 +8195,108 @@ body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt
 }
 .rmo-separator::before { content: attr(data-rmo-character); white-space: pre; }
 @keyframes rmo-digit-roll { from { transform: translateY(0); } }
+/* ══════════════════════════════════════════════════════════════════════
+ * 10b — DER GEZEICHNETE RING AN DER KENNZAHL (Vorlage 2030–2710, E531)
+ * ----------------------------------------------------------------------
+ * Die Statistikkarten der Vorlage haben ausser der Ziffernrolle (die seit
+ * dem Motion-Bogen steht) einen Ring, der sich selbst zeichnet, und einen
+ * zweiten, der einmal aufgeht und verblasst. Beides fehlte.
+ *
+ * ER MISST NICHTS, UND DAS IST ABSICHT. Ein Ring, der zu 72 % gefüllt ist,
+ * behauptet eine Grösse — und Redion hätte keine, aus der er sie nähme.
+ * §33 verbietet genau das: nichts versprechen, was nicht da ist. Dieser
+ * Ring zeichnet sich EINMAL GANZ und bleibt dann stehen; er rahmt die echte
+ * Zahl, statt eine erfundene zu zeigen. Wer je eine echte Quote hat, setzt
+ * `--rmo-anteil` und bekommt daraus einen Messring, ohne diese Regeln zu
+ * ändern.
+ *
+ * `@property` macht den Winkel animierbar — ein Verlaufswinkel ist sonst
+ * keine Zahl, die der Browser zwischen zwei Bildern teilen kann, und der
+ * Ring spränge von 0 auf voll.
+ * ══════════════════════════════════════════════════════════════════════ */
+@property --rmo-bogen { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+:is(.stat-karte.lw-metrik, .rmo-health-metric) { position: relative; }
+.rmo-ring {
+  --rmo-anteil: 1;
+  /* ZWEIMAL VERSCHOBEN, BEIDE MALE WEGEN EINES BILDES.
+     Erst sass er oben rechts — und lag mitten auf „Karten gelernt": ein
+     absolut gesetztes Element malt über den gewöhnlichen Inhalt daneben.
+     Dann `z-index: -1`, und er war ganz weg: die Karte bildet einen
+     eigenen Stapelzusammenhang, also landete er hinter ihrem Hintergrund.
+     Die Lösung ist keine Schichtung, sondern ein freier Platz — unten
+     rechts, wo unter der Zahl nichts steht. */
+  position: absolute; right: 12px; bottom: 12px;
+  width: 30px; height: 30px; border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(var(--accent) var(--rmo-bogen), transparent 0);
+  /* Nur der Reif, nicht die Scheibe. */
+  mask: radial-gradient(circle, transparent 10px, #000 10.5px);
+  -webkit-mask: radial-gradient(circle, transparent 10px, #000 10.5px);
+  opacity: .38;
+  animation: rmo-ring-zeichnen 1.1s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes rmo-ring-zeichnen {
+  from { --rmo-bogen: 0deg; }
+  to   { --rmo-bogen: calc(360deg * var(--rmo-anteil)); }
+}
+/* Der zweite Ring: geht beim Anfassen einmal auf und verblasst — die
+   Vorlage nennt ihn `ring`, und er ist das, was eine Zahl „bestätigt". */
+.rmo-ring::after {
+  content: ''; position: absolute; inset: -3px; border-radius: 50%;
+  border: 1px solid var(--accent); opacity: 0;
+}
+:is(.stat-karte.lw-metrik, .rmo-health-metric):is(:hover, :focus-within) .rmo-ring::after {
+  animation: rmo-ring-welle 1s ease-out 1;
+}
+@keyframes rmo-ring-welle {
+  0%   { transform: scale(1);   opacity: .9; filter: blur(0); }
+  100% { transform: scale(2.1); opacity: 0;  filter: blur(4px); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+ * 12b — DER BARCODE ENTSTEHT UNTER DEM DRUCKKOPF (Vorlage 2711–3469, E531)
+ * ----------------------------------------------------------------------
+ * Der Streifencode stand schon da — aber fertig, von der ersten Sekunde an,
+ * nur mit `opacity: .6` ein- und ausgeblendet. Ein Beleg, dessen Code schon
+ * da ist, bevor gedruckt wurde, erzählt die Sache rückwärts.
+ *
+ * Jetzt wächst er von links nach rechts, solange der Auftrag WIRKLICH läuft
+ * — der Zustand kommt vom Druckauftrag und nicht von einer Uhr. Ist der
+ * Auftrag fertig, steht der Code ganz da und bleibt stehen; bricht er ab,
+ * bleibt er unfertig, und das ist die richtige Auskunft.
+ *
+ * `clip-path` und nicht `width`: die Streifen sind ein sich wiederholender
+ * Verlauf, und eine wachsende Breite würde ihn stauchen statt ihn
+ * freizulegen. Man sähe Streifen, die enger zusammenrücken — das genaue
+ * Gegenteil von „hier wird gedruckt".
+ * ══════════════════════════════════════════════════════════════════════ */
+.rmo-ticket .ru-drucker-blatt::after { clip-path: inset(0 100% 0 0); }
+.rmo-ticket:is([data-zustand="rendern"], [data-zustand="speichern"]) .ru-drucker-blatt::after {
+  opacity: .6; animation: rmo-code-wachsen 2.2s linear both;
+}
+.rmo-ticket[data-zustand="fertig"] .ru-drucker-blatt::after {
+  opacity: .6; clip-path: inset(0 0 0 0);
+}
+@keyframes rmo-code-wachsen { to { clip-path: inset(0 0 0 0); } }
+/* Der Kopf selbst: ein schmaler Lichtstrich, der mitläuft. Er ist das
+   Einzige hier, das sich bewegt, wenn nichts gedruckt wird — nämlich nie. */
+.rmo-ticket .ru-drucker-blatt::before {
+  content: ''; position: absolute; left: 8px; bottom: 7px; width: 2px; height: 9px;
+  background: var(--accent); box-shadow: 0 0 6px var(--accent); opacity: 0;
+}
+.rmo-ticket:is([data-zustand="rendern"], [data-zustand="speichern"]) .ru-drucker-blatt::before {
+  opacity: 1; animation: rmo-code-kopf 2.2s linear both;
+}
+/* `left` UND NICHT `translateX`. Ein Prozentwert in `translateX` bezieht
+   sich auf die EIGENE Breite — und die ist zwei Punkte. Der Kopf lief
+   damit weit neben dem Papier her, am Bild deutlich zu sehen. `left` in
+   Prozent bezieht sich auf den Elternteil, also auf das Blatt. */
+@keyframes rmo-code-kopf {
+  from { left: 8px; opacity: 1; }
+  90%  { opacity: 1; }
+  to   { left: calc(100% - 10px); opacity: 0; }
+}
+
 /* 4 — Der kreisende Farbverlauf liegt im Fokus der Eingabe, nicht auf den Bau-Knöpfen. */
 #ai .ai-compose::before {
   content: ''; pointer-events: none; position: absolute; inset: -1px; border-radius: inherit;
@@ -8482,6 +8584,16 @@ body [data-rmo~="folder"]:active .bib-deckel-blatt::before { transform:rotateX(-
  * eigene Box lässt sich nicht skalieren, und `transform: scale(2)` bliebe
  * wirkungslos. `.ru-funkel-b` steht aus demselben Grund so in `bausteine.css`.
  */
+/* IM LEERLAUF BLEIBT ES STILL — und das ist kein Rückzieher (E531).
+   `test494` hält seit dem Motion-Bogen fest: keine Endlosschleife, solange
+   niemand etwas tut. Mit dem Original kamen zwei zurück: das Glimmen der
+   Buchstaben und das Flackern des Symbols, beide `infinite`. Redur hat
+   nach der UNSCHÄRFE gefragt, und die steckt im Platzen beim Anfassen —
+   nicht im Dauerglimmen. Also: ruhig im Leerlauf, Unschärfe beim
+   Anfassen. Beides zusammen, nicht eines gegen das andere. */
+body [data-rmo~="letters"] .ru-funkel-b { animation:none; color:inherit; }
+body #ai .ai-quick button[data-rmo~="letters"] > svg,
+body [data-rmo~="letters"] > svg { animation:none; }
 .rmo-letter { display:inline-block; }
 @keyframes rmo-letter-platzen {
   0%, 100% { filter:blur(0); }
@@ -8489,8 +8601,12 @@ body [data-rmo~="folder"]:active .bib-deckel-blatt::before { transform:rotateX(-
         filter:blur(10px) brightness(150%)
                drop-shadow(-36px 12px 12px hsl(var(--ru-funkel-ton, 210deg) 100% 70%)); }
 }
-body [data-rmo~="letters"]:is(:hover,:focus-visible,:active) .rmo-letter,
-[data-rmo-play="letters"] .rmo-letter {
+/* BEIDE BUCHSTABENSORTEN BEKOMMEN DIESELBE UNSCHÄRFE. `.ru-funkel-b` hat
+   sein eigenes Platzen in `bausteine.css`; diese Regel gewinnt dagegen und
+   nimmt ihm das angehängte `infinite`-Glimmen ab, das sonst beim Anfassen
+   mitliefe. Das Bild ist dasselbe, die Endlosschleife ist keine. */
+body [data-rmo~="letters"]:is(:hover,:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
+[data-rmo-play="letters"] :is(.rmo-letter,.ru-funkel-b) {
   animation:rmo-letter-platzen 1s ease-in-out 1; animation-delay:var(--rmo-delay,0ms); }
 
 /* Native Schalter: kurze Zustandsbewegung ersetzt die frühere Endlosschleife. */
@@ -20144,7 +20260,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 807, inhalt: '89a29cddbe589ebf', gebaut: '2026-09-12T15:48:42.435Z' };
+const Stand = { fassung: 811, inhalt: 'bc9a3b3c39df8fce', gebaut: '2026-09-12T16:33:41.687Z' };
 window.Stand = Stand;
 
 </script>
@@ -44266,7 +44382,8 @@ const RedionMotion = (() => {
         { id: 'ticket', place: 'PDF-Druck und Export', selector: '.ru-drucker' },
         { id: 'orb', place: 'KI-Schaltfläche und Kopfzeile', selector: '#btn-ai, #ai .ai-head' },
         { id: 'filament', place: 'Strom im Elektro-Schaltplan', selector: '.sp-start' },
-        { id: 'transport', place: 'Zeitmesser Start/Pause/Beenden', selector: '.rmo-transport' }
+        { id: 'transport', place: 'Zeitmesser Start/Pause/Beenden', selector: '.rmo-transport' },
+        { id: 'ring', place: 'Kennzahlen im Lernbereich und in der Bestandsübersicht', selector: '.stat-karte.lw-metrik, .rmo-health-metric' }
     ];
     const selector = effects.map(effect => effect.selector).join(',');
     const watched = new WeakSet();
@@ -44389,6 +44506,10 @@ const RedionMotion = (() => {
                     ring.append(karte);
                 }
             });
+        /* Der gezeichnete Ring aus der Statistik-Vorlage (2030–2710). Er rahmt
+           die ECHTE Zahl und misst nichts — siehe den Grund in motion.css. */
+        if (ids.includes('ring'))
+            ensure(element, 'rmo-ring');
         if (ids.includes('letters')) {
             /* Text teilen, aber Symbole, Beschriftung und Listener behalten. */
             for (const node of Array.from(element.childNodes)) {

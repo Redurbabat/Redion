@@ -131,9 +131,65 @@ verborgen und lässt Klicks durch.
 `ensure(`-Aufrufe wieder entfernt — null Glühfäden, null Ringe, acht Zusagen
 rot. Das ist genau der Zustand, den dieser Nachtrag beschreibt.
 
-**Was weiterhin offen ist** — und das steht hier, damit es niemand für
-erledigt hält: der Ticketautomat mit Barcode (2711–3469) hat Papier,
-Perforation und Zierstreifen, aber keinen laufenden Barcode und keine
-Wendekarte; die Statistikkarten (2030–2710) haben Glanz und Ziffernrolle,
-aber keinen gezeichneten Ring, kein Herz und keine Pfade. Beides ist ein
-eigener Bogen.
+### Und dieselbe Sitzung noch einmal, eine Stunde später (E531)
+
+Die zwei Sätze, die hier standen — „keinen laufenden Barcode", „keinen
+gezeichneten Ring" — sind eingelöst.
+
+**Der Barcode entsteht jetzt unter dem Druckkopf.** Er stand vorher fertig
+da und wurde nur ein- und ausgeblendet; ein Beleg, dessen Code schon vor dem
+Druck vollständig ist, erzählt die Sache rückwärts. Jetzt wächst er von links
+nach rechts, solange der Auftrag WIRKLICH läuft, und ein schmaler Lichtstrich
+läuft an seiner Kante mit. Bricht der Auftrag ab, bleibt der Code unfertig —
+das ist die richtige Auskunft.
+
+Zwei Dinge daran waren erst falsch und sind am Bild aufgefallen:
+`clip-path` statt `width`, weil eine wachsende Breite den sich
+wiederholenden Verlauf STAUCHT statt ihn freizulegen — man sähe Streifen,
+die enger zusammenrücken. Und `left` statt `translateX` für den Kopf: ein
+Prozentwert in `translateX` bezieht sich auf die eigene Breite, und die ist
+zwei Punkte — der Kopf lief weit neben dem Papier her.
+
+**Der Ring an der Kennzahl zeichnet sich einmal ganz und misst nichts.** Das
+ist keine Sparsamkeit, sondern §33: ein Ring auf 72 % behauptet eine Grösse,
+und Redion hätte keine, aus der er sie nähme. Er rahmt die echte Zahl. Wer je
+eine echte Quote hat, setzt `--rmo-anteil` und bekommt daraus einen Messring,
+ohne eine Regel zu ändern. Beim Anfassen geht ein zweiter Ring auf und
+verblasst — das ist der `ring` der Vorlage.
+
+Auch er ist zweimal umgezogen, und beide Male wegen eines Bildes: oben rechts
+lag er mitten auf „Karten gelernt" (ein absolut gesetztes Element malt über
+den Inhalt daneben), mit `z-index: -1` war er ganz verschwunden (die Karte
+bildet einen eigenen Stapelzusammenhang, also landete er hinter ihrem
+Hintergrund). Die Lösung war keine Schichtung, sondern ein freier Platz.
+
+`test495` hält jetzt 25 Zusagen. Dabei war eine Zusage aus dem dümmsten
+denkbaren Grund rot: `> span` traf den RING statt der Beschriftung, weil
+`ensure()` ihn als erstes Kind einsetzt und er selbst ein `span` ist — der
+Lauf mass den Ring gegen sich selbst.
+
+**Was jetzt noch offen ist:** die Wendekarte des Tickets (Vor- und Rückseite,
+2830–3455) und das Herz der Statistikkarte (2628–2648). Beides sind eigene
+Bewegungen mit eigenem Markup, keine Motive mehr.
+
+### Und eine Berichtigung an E528
+
+E528 hat Redurs Unschärfe an den KI-Knöpfen zurückgeholt — und dabei mehr
+zurückgeholt als er verlangt hatte. Das Original besteht aus drei Teilen:
+
+| Teil | Wann | Art |
+|---|---|---|
+| `ru-funkel-glimmen` | immer | `infinite` |
+| `ru-funkel-flackern` (Symbol) | immer | `infinite` |
+| `ru-funkel-platzen` | beim Anfassen | einmal |
+
+**Die Unschärfe steckt allein im dritten.** Die ersten beiden laufen ohne
+Unterlass, und `test494` hält seit dem Motion-Bogen ausdrücklich fest:
+„KI-Werkzeuge ohne Endlosschleifen im Leerlauf". Der Lauf wurde rot — und
+er hatte recht.
+
+Jetzt ist es getrennt: im Leerlauf still, beim Anfassen die volle
+Unschärfe. Nachgemessen am laufenden Knopf — `animationName` ist im
+Leerlauf `none` und beim Anfassen `rmo-letter-platzen` mit genau einer
+Wiederholung. Das ist beides, was verlangt war, und nicht eines auf Kosten
+des anderen.
