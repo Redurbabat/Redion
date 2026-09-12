@@ -84,6 +84,34 @@ binding = "ASSETS"
 #  Dann die vier Zeilen unten wieder freimachen und die neue Kennung
 #  eintragen. Sonst nichts.
 #
+#  AM 12. SEPTEMBER 2026 NACHGESEHEN — UND L143 STAND KOPF (E530).
+#  `npx wrangler d1 list` fand die Datenbank, und zwar mit GENAU der
+#  Kennung, die seit E323 hier stand:
+#
+#      uuid  2a4f6708-b7e7-43c5-9e18-17b33713dbb9
+#      name  redion       angelegt 2026-09-02      0 Tabellen
+#
+#  L143 behauptete, diese Kennung gehöre zu keiner Datenbank. Falsch. Sie
+#  gehört zu einer — nur in KONTO 90a488aa2d0abf7c254f797d5b1aa575
+#  (redbbt7@gmail.com), und der gescheiterte Deploy lief gegen 56cd8e4d….
+#  Nicht die Kennung war falsch, das Konto war ein anderes.
+#
+#  UND SIE BLEIBT TROTZDEM DRAUSSEN. Redur am 12. September: „es sollte
+#  nicht im konto redbbt7 sein". Eine Kennung aus dem falschen Konto hier
+#  einzutragen, hiesse denselben Deploy-Fehler noch einmal zu bauen — der
+#  Worker findet eine Datenbank nur in SEINEM Konto. Die Zeilen bleiben
+#  also aus, bis eine Kennung aus dem richtigen Konto da ist.
+#
+#  SO KOMMT SIE ZUSTANDE — im richtigen Konto angemeldet:
+#      npx wrangler logout
+#      npx wrangler login            (mit dem Konto, in dem red-ion lebt)
+#      npx wrangler whoami           Konto-Kennung notieren
+#      npx wrangler d1 list          gibt es sie dort schon?
+#      npx wrangler d1 create redion sonst anlegen
+#  Danach die vier Zeilen unten freimachen und die Kennung eintragen; das
+#  Schema kommt mit
+#      npx wrangler d1 execute redion --remote --file=server/schema.sql
+#
 # [[d1_databases]]
 # binding = "DB"
 # database_name = "redion"
@@ -108,6 +136,15 @@ binding = "ASSETS"
 #  beziehungsweise die Datei-API meldet, dass R2 fehlt.
 # ===========================================================================
 
+#  AM 12. SEPTEMBER: `npx wrangler r2 bucket create redion-dateien`
+#  antwortete „The bucket you tried to create already exists, and you own
+#  it". Der Eimer steht also — aber im SELBEN Konto wie die Datenbank oben,
+#  und das ist nicht das, in dem Redion leben soll. Ein Eimername ist im
+#  Gegensatz zur Datenbank-Kennung kontounabhängig geschrieben; ob er im
+#  richtigen Konto existiert, sagt erst
+#      npx wrangler r2 bucket list
+#  dort. Deshalb bleibt auch diese Bindung aus, bis das feststeht.
+#
 # [[r2_buckets]]
 # binding = "R2"
 # bucket_name = "redion-dateien"

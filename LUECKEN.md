@@ -7010,7 +7010,7 @@ E517 hat `holen.bat` einen Zweig beigebracht. Was daraus offen bleibt:
     es keinen Zweig X" — richtig, aber ohne Vorschlag, welche es gibt. Ein
     `git ls-remote --heads` daneben wäre eine Zeile und eine Hilfe.
 
-L143 · Die D1-Datenbank gibt es nicht — der Deploy scheitert daran
+L143 · Die D1-Datenbank liegt im falschen Konto — offen
 --------------------------------------------------------------------------
 
 Aus dem Cloudflare-Protokoll vom 9. September, der Zeile, an der es
@@ -7023,10 +7023,34 @@ wirklich abbrach:
   your configuration is correct. [code: 10181]
 ```
 
-Diese Kennung steht seit E323 in `wrangler.toml` und gehört zu keiner
-Datenbank in Redurs Konto (`56cd8e4d…`). Sie war nie eine echte — das ist
-**L82 Punkt 1** in einer Zeile: geschrieben und geprüft ist alles, gegen
-einen echten Dienst lief es nie.
+**BERICHTIGT AM 12. SEPTEMBER 2026 — DIESER ABSATZ WAR FALSCH.**
+
+Hier stand: „Diese Kennung steht seit E323 in `wrangler.toml` und gehört zu
+keiner Datenbank in Redurs Konto (`56cd8e4d…`). Sie war nie eine echte."
+
+Gemessen, statt weiter geschlossen zu werden. `npx wrangler d1 list`:
+
+```txt
+uuid  2a4f6708-b7e7-43c5-9e18-17b33713dbb9
+name  redion      angelegt 2026-09-02      0 Tabellen
+```
+
+**Die Kennung ist echt, und es ist genau dieselbe.** Die Datenbank liegt nur
+in einem ANDEREN Konto: `90a488aa2d0abf7c254f797d5b1aa575`
+(redbbt7@gmail.com), während der gescheiterte Deploy gegen `56cd8e4d…` lief.
+Ein Worker findet eine D1-Datenbank ausschliesslich in seinem eigenen Konto —
+die Fehlermeldung „which was not found" meinte also „nicht hier", nicht
+„nirgends".
+
+Die Lehre ist die aus E21, nur von der anderen Seite: Ich habe aus einer
+Fehlermeldung geschlossen, die Kennung sei erfunden, statt eine Zeile
+laufen zu lassen, die es beantwortet. Zwischen „der Worker findet sie
+nicht" und „es gibt sie nicht" liegt ein ganzes Konto.
+
+**Und die Datenbank bleibt trotzdem draussen.** Redur am 12. September: „es
+sollte nicht im konto redbbt7 sein". Sie im falschen Konto einzutragen,
+hiesse denselben Deploy-Fehler noch einmal zu bauen. Dasselbe gilt für den
+R2-Eimer `redion-dateien`, der ebenfalls dort und nicht hier steht.
 
 **Kein Prüflauf im Container kann das schliessen.** Es braucht Redurs
 Cloudflare-Konto. Drei Wege stehen offen, und die Wahl gehört ihm:
@@ -7280,3 +7304,29 @@ eingetragen; dann steigt die Decke mit geschriebenem Grund statt still.
 E526 selbst ist auf null: die zwei rohen `22px` der Kapsel sind durch
 `var(--radius-2xl)` ersetzt, und ihr Radius wird aus `--mobile-nav-height`
 gerechnet statt als Zahl wiederholt.
+
+---
+
+L149 · Die Bögen E532/E533 sind ohne eigene Prüfläufe gebaut — offen
+--------------------------------------------------------------------------
+
+Redur hat am 12. September 2026 entschieden: „baue es so schnell wie
+möglich alles ohne viel test machen" (E533). Gebaut und typgeprüft ist
+alles, die App startet, die Einzeldatei ist neu — aber **kein einziger
+Prüflauf hält die neuen Wirkungen**, und keine Gegenprobe war rot.
+
+Was nachzuholen ist, je Stelle ein Lauf nach dem Muster von `test495`:
+
+- E532: Glasknopf-Körper wirklich sichtbar (`getComputedStyle` des
+  `.fbtns button.prim` zeigt den `inset`-Schatten des Attributs, nicht
+  den der Klassenregel); `.pf-karte::after` hat `content`; Regler-Knauf
+  hat Rand und Schein; Funkel-Hover ist heller als Fokus.
+- E533, je Block: Markup vorhanden (`ensure`-Kinder), im Leerlauf
+  `animationName === 'none'` an jedem neuen Element (das ist der Wächter
+  aus `test494`, der hier erweitert gehört), bei Aktivität/Hover die
+  benannte Animation genau einmal bzw. endlich, `prefers-reduced-motion`
+  stellt alles still.
+- Bilder je Zustand (§55.3): aus/an, Ruhe/Hover, hell/dunkel — die zwei
+  Fehler, die in E525 und E531 nur das Bild fand, sind der Grund.
+
+Bis dahin gilt für E533 ausdrücklich: **eine Behauptung, kein Beleg.**

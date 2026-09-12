@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-508 Entscheidungen, E1 bis E528 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+513 Entscheidungen, E1 bis E533 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -572,6 +572,11 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E526** — Die Leiste ist eine Kapsel, und man wischt zwischen den Bereichen — drei Fehler, von denen keiner der gesuchte war
 * **E527** — Die Einzeldatei trägt ihr Reitersymbol selbst — ein Verweis ins Leere zeigte weiter das alte rote R
 * **E528** — Die KI-Eingabe wird eine ruhige Fläche, die Werkzeuge werden geordnet und die vorhandenen Funkel-Knöpfe bleiben
+* **E529** — Glühfaden und Kartenring: zwei Wirkungen, die nur in der Tabelle standen, bekommen ihr Element
+* **E530** — L143 stand kopf: die D1-Datenbank gibt es, nur im falschen Konto — und sie bleibt dort unbenutzt
+* **E531** — Der Barcode entsteht beim Drucken, der Ring rahmt die Kennzahl
+* **E532** — Vier Regeln, die geschrieben und nie gesehen wurden: Glasknopf, Pflegekarte, Regler-Knauf, Funkel-Abstufung
+* **E533** — Redur: alles bauen, so schnell wie möglich, ohne viel Prüfung — ein Bogen für alle offenen Vorlagenblöcke, die Prüfläufe folgen nach
 
 ---
 
@@ -42738,3 +42743,142 @@ Quellen-Einwilligung und direkten Dateistarts. Suite 436 wurde gezielt von
 zwei auf zwölf Funkel-Aktionen aktualisiert. Die visuelle Prüfung erfolgt
 in Hell/Dunkel und auf schmalen Ansichten. Kein Anspruch auf einen vollen
 Gesamtlauf oder eine vollständige 1:1-Kopie sämtlicher CSS-Demos.
+
+---
+
+E529 — Glühfaden und Kartenring: zwei Wirkungen, die nur in der Tabelle standen
+--------------------------------------------------------------------------
+
+Redur: „arbeite an redion selbständig weiter … du musst alles im redion
+einsetzen und dabei wirklich alles."
+
+Zwei Einträge der Wirkungstabelle in `motion.ts` waren leer — nicht
+vereinfacht übertragen, sondern gar nicht gebaut: `filament` war auf
+`.sp-start` angemeldet, ohne dass ein Markup entstand; die Ring-CSS für
+`carousel` zeigte auf `.rmo-carousel`, und dieses Element hat niemand
+erzeugt. Gefunden durch Abzählen der `ensure(`-Aufrufe, nicht durch
+Hinsehen: es fehlte ja nichts, was vorher da war.
+
+Der Glühfaden ist jetzt eine Lampe (Kolben, zwei Zuleitungen, Wendel), aus
+matt, an weissglühend — weiss, weil der eingeschaltete Knopf selbst
+bernsteinfarben ist und ein bernsteinfarbener Faden darauf unsichtbar war
+(am Bild geprüft). Der Kartenring stellt fünf Karten auf einen Kreis, Radius
+gerechnet (44 / (2·tan 36°) ≈ 30 px), 14° gekippt, sonst sieht man ihn von
+der Kante. Geprüft mit `test495`, Gegenprobe rot gesehen.
+
+---
+
+E530 — L143 stand kopf: die Datenbank gibt es, nur im falschen Konto
+--------------------------------------------------------------------------
+
+Ich hatte aus „which was not found" geschlossen, die `database_id` in
+`wrangler.toml` sei erfunden. `npx wrangler d1 list` in Redurs Sitzung
+zeigte das Gegenteil: `2a4f6708-…`, Name `redion`, angelegt am 2. September,
+null Tabellen — im Konto `redbbt7@gmail.com`. Ein Worker findet eine
+Datenbank nur im **eigenen** Konto; deshalb „not found".
+
+Redur, 12. September: „es sollte nicht im konto redbbt7 sein." Also bleiben
+`[[d1_databases]]` und `[[r2_buckets]]` auskommentiert, mit den gemessenen
+Tatsachen und den fünf Befehlen für das richtige Konto als Kommentar
+daneben. L143 ist berichtigt — als mein eigener Fehler, E21 von der anderen
+Seite: eine Fehlermeldung aus dem Gedächtnis gedeutet statt nachgesehen.
+
+---
+
+E531 — Der Barcode entsteht beim Drucken, der Ring rahmt die Kennzahl
+--------------------------------------------------------------------------
+
+Der Barcode auf dem Druckbeleg stand vorher fertig da und wurde nur ein-
+und ausgeblendet. Jetzt wächst er von links nach rechts, solange der
+Auftrag **wirklich** läuft (`data-zustand` vom Druckauftrag, nicht von einer
+Uhr); bricht der Auftrag ab, bleibt er unfertig — die richtige Auskunft.
+`clip-path` statt `width`, weil eine wachsende Breite den sich
+wiederholenden Verlauf staucht statt ihn freizulegen; `left` statt
+`translateX` für den Lichtstrich, weil ein Prozentwert in `translateX` sich
+auf die eigene 2-px-Breite bezieht. Beides hat das Bild gezeigt.
+
+Der gezeichnete Ring aus der Statistikvorlage rahmt die **echte** Zahl und
+misst nichts; er steht unten rechts, weil oben rechts die Beschriftung
+liegt und `z-index:-1` hinter dem Kartengrund verschwand (die Karte bildet
+einen eigenen Stapelkontext). `test495` auf 25 Zusagen erweitert; die
+Ring-Zusage mass zuerst den Ring gegen sich selbst (`> span` traf
+`.rmo-ring`, weil `ensure()` vorne einfügt) — `> span:not(.rmo-ring)`.
+
+---
+
+E532 — Vier Regeln, die geschrieben und nie gesehen wurden
+--------------------------------------------------------------------------
+
+Auf Redurs Frage „Hast du alle animationen erledigt?" habe ich nicht aus
+dem Gedächtnis geantwortet, sondern 13 Agenten jeden Vorlagenblock gegen
+den Code belegen lassen (Datei:Zeile je Wirkung, im Zweifel „Motiv" statt
+„gebaut"). Ergebnis: 191 Wirkungen, 42 gebaut, 51 nur als Motiv, 98 fehlen.
+Und zwei Funde, die mich selbst betreffen — ich hatte in E531 gesagt, es
+gebe keinen toten Stil mehr. Das galt für die `rmo-`**Klassen**, die ich
+gezählt hatte, nicht für die **Attributregeln**:
+
+- `[data-rmo~="glass"]` (ein Attribut, Stärke 0,1,0) verlor gegen
+  `.fbtns button.prim:not(.ru-funkel)` (0,3,1) in derselben Datei. Schatten
+  und Druckweg des Glasknopfs waren seit dem ersten Tag unsichtbar.
+- `.pf-karte` stand in `motion.ts` als Ziel des Lichteffekts und hatte in
+  `motion.css` keine einzige Regel. Das Attribut wurde geschrieben, nichts
+  passierte.
+
+Beides repariert, nicht umgangen: der Glasknopf gewinnt mit `body`-Vorsatz
+(die Klassenregel bleibt als Grundlage, solange das Skript noch nicht lief)
+und bekommt endlich den Körper aus Vorlagenblock 8 — Kuppel, Glanzplatte,
+Lichtsaum — als eigenes Element `.rmo-glass`, weil `::after` am Knopf schon
+dem kreisenden Rand des Verlaufseffekts gehört und ein Knopf beide tragen
+kann. Die Pflegekarte bekommt den Lichtschlitz, aber bewusst **nicht** das
+Anheben: sie ist eine Zeile in einer Liste mit Trennlinie.
+
+Dazu aus derselben Bestandsliste, weil klein und an echten Stellen: die
+Regler-Knäufe (Block 2) sitzen jetzt **auf** der Schiene — Rand im Ton des
+Knopfgrundes (`--bg-card` statt Weiss, Redion hat einen Hellmodus), Schein
+in `currentColor`, heller Ring um den Knopf nur im Zustand; und der
+Funkel-Knopf (Block 4) unterscheidet Hover von Fokus (der Zeiger zeigt, was
+gleich passiert, also ist er der hellere), färbt den Rand schon beim
+Zeigen, hebt das Symbol heraus und hat beim Drücken erstmals eine
+Innenkante — vorher war auf dem Telefon, wo es kein Hover gibt, beim
+Tippen gar nichts.
+
+**Nicht** gebaut, mit Grund: die „ruhigen Buchstaben beim Drücken" der
+Vorlage. Sie wirken dort, weil die Buchstaben ständig glimmen; E528 hat den
+Leerlauf still gemacht. Hier würde `animation:none` beim Drücken das
+Platzen mitten im Flug abbrechen — das ist nicht treuer, nur kaputter. Der
+scharfe Textschatten beim Drücken aus `bausteine.css` wirkt weiterhin.
+
+---
+
+E533 — Redur: alles bauen, so schnell wie möglich, ohne viel Prüfung
+--------------------------------------------------------------------------
+
+Redur, 12. September 2026, nach der Bestandstabelle aus E532: „baue es so
+schnell wie möglich alles ohne viel test machen."
+
+Das ist eine Entscheidung gegen §30 **[hart]** („Prüfungen sind Pflicht"),
+und sie steht Redur zu — genau dafür sagt die Marke: „Wenn es doch sein
+muss, entscheidet Redur, und die Entscheidung kommt in ENTSCHEIDUNGEN.md."
+Hier ist sie. Was sie **nicht** aufhebt: die Typprüfung, den Bau der
+Einzeldatei, den Dienststand und den Start der App — das sind keine
+Prüfläufe, das ist die Definition von „läuft" (§50). Was sie aufschiebt:
+eigene Prüfläufe je Wirkung, Gegenproben, Bilder je Zustand. Sie sind als
+L149 eingetragen und werden nachgeholt; ein Wächter, der nie rot war, ist
+eine Behauptung (§55.2), und diese Behauptung steht hier offen.
+
+Gebaut wurde in einem Zug, zehn Agenten parallel, ein Agent je
+Vorlagenblock, jeder auf die offene Liste aus E532 gesetzt. Damit zehn
+Schreiber nicht in dieselben zwei Dateien greifen, schrieb jeder ein
+**Fragment** (`Block NN`) und einen TS-Schnipsel; `motion.css` und
+`motion.ts` wurden danach in Blockreihenfolge zusammengeführt. Die
+Fragmente stehen hinten in `motion.css`, damit sie ältere Regeln gleicher
+Stärke überschreiben können — das ist Absicht, kein Zufall der Reihenfolge.
+
+Die Regeln, die alle Agenten bekamen, sind dieselben wie in jedem Bogen
+davor: keine Endlosschleife im Leerlauf (E528, `test494`), Bewegung nur bei
+Aktivität oder Berührung und dann endlich, `prefers-reduced-motion` je
+Fragment, nur vorhandene Farbmarken (§39), nichts löschen, 44 px auf den
+Hauptwegen (§37), kein `innerHTML`, Dekoration `aria-hidden`. Was ein Agent
+an seiner Stelle für unsinnig hielt — Demotext, Demobild, etwas, das die
+Bedienung stört — steht mit Grund in `doku/ANIMATIONEN-ZUORDNUNG.md`, nicht
+still weggelassen.

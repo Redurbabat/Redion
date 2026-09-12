@@ -86,3 +86,110 @@ Bildprüfungen liegen lokal in `bilder/ai-*.png` sowie `bilder/motion-*.png`.
 `node bilder.mts funkel rechner` öffnet für spätere Vergleiche die Werkzeugliste.
 Diese Prüfungen senden keinen Prompt und laden kein Modell. Sie ersetzen
 keinen vollständigen Gesamtlauf und keinen Test auf einem physischen iPhone.
+
+---
+
+## Nachtrag vom 12. September 2026 (E529)
+
+Redur: „arbeite an redion selbständig weiter … du musst alles im redion
+einsetzen und dabei wirklich alles."
+
+**Zwei Zeilen der Tabelle oben waren leer.** Nicht „vereinfacht übertragen",
+sondern gar nicht gebaut — und das fällt niemandem auf, weil ja nichts
+fehlt, was vorher da war:
+
+| Eintrag | Was dastand | Was wirklich da war |
+|---|---|---|
+| Filamentschalter, 4158–4790 | „Warmes Filamentlicht bei `.sp-start.an`" | ein 13 × 6 px grosses `::before` mit einem Rand |
+| 3D-Karussell, 1847–1909 | „Drei abstrakte Karten kippen räumlich" | Regeln für `.rmo-carousel` — **ein Element, das niemand erzeugt hat** |
+
+Gefunden durch Abzählen: `motion.ts` hat sechs `ensure(`-Aufrufe, und keiner
+gehörte zu `filament` oder `carousel`. Beide standen in der Wirkungstabelle,
+kamen aber nie im Bild an.
+
+**Jetzt gebaut, beide vollständig:**
+
+* **Der Glühfaden** ist eine Lampe: Glaskolben, zwei Zuleitungen, eine
+  Wendel dazwischen. Aus ist sie matt, an wird sie weissglühend und atmet.
+  Weiss und nicht bernstein, weil der eingeschaltete Knopf selbst
+  bernsteinfarben ist — am Bild geprüft, mit `#ffc572` war der Faden darauf
+  nicht zu finden. Es ist auch das Richtige: der Draht glüht heller als die
+  Fassung, die Zuleitungen bleiben dunkel.
+* **Der Kartenring** stellt fünf Karten auf einen Kreis statt in einen
+  Fächer, kippt ihn 14° nach vorn und dreht ihn in 22 Sekunden einmal herum.
+  Der Radius wird gerechnet und nicht hingeschrieben: bei fünf Karten à 44 px
+  müssen 44 / (2·tan 36°) ≈ 30 px heraus, sonst überlappen sie oder es klafft.
+  Ohne die Kippung sieht man den Ring genau von der Kante — dann sind es
+  zwei Karten nebeneinander, und das war der erste Versuch.
+
+Die Pausenmechanik von E-vorher trägt beides mit: ausserhalb des Bildes,
+im verborgenen Reiter, bei `body[data-bewegung="ruhig"]` und bei
+`prefers-reduced-motion` steht alles still. Beides ist vor Vorleseprogrammen
+verborgen und lässt Klicks durch.
+
+`pruefungen/lauf/test495.mts`, 16 Zusagen. Gegenprobe: die zwei
+`ensure(`-Aufrufe wieder entfernt — null Glühfäden, null Ringe, acht Zusagen
+rot. Das ist genau der Zustand, den dieser Nachtrag beschreibt.
+
+### Und dieselbe Sitzung noch einmal, eine Stunde später (E531)
+
+Die zwei Sätze, die hier standen — „keinen laufenden Barcode", „keinen
+gezeichneten Ring" — sind eingelöst.
+
+**Der Barcode entsteht jetzt unter dem Druckkopf.** Er stand vorher fertig
+da und wurde nur ein- und ausgeblendet; ein Beleg, dessen Code schon vor dem
+Druck vollständig ist, erzählt die Sache rückwärts. Jetzt wächst er von links
+nach rechts, solange der Auftrag WIRKLICH läuft, und ein schmaler Lichtstrich
+läuft an seiner Kante mit. Bricht der Auftrag ab, bleibt der Code unfertig —
+das ist die richtige Auskunft.
+
+Zwei Dinge daran waren erst falsch und sind am Bild aufgefallen:
+`clip-path` statt `width`, weil eine wachsende Breite den sich
+wiederholenden Verlauf STAUCHT statt ihn freizulegen — man sähe Streifen,
+die enger zusammenrücken. Und `left` statt `translateX` für den Kopf: ein
+Prozentwert in `translateX` bezieht sich auf die eigene Breite, und die ist
+zwei Punkte — der Kopf lief weit neben dem Papier her.
+
+**Der Ring an der Kennzahl zeichnet sich einmal ganz und misst nichts.** Das
+ist keine Sparsamkeit, sondern §33: ein Ring auf 72 % behauptet eine Grösse,
+und Redion hätte keine, aus der er sie nähme. Er rahmt die echte Zahl. Wer je
+eine echte Quote hat, setzt `--rmo-anteil` und bekommt daraus einen Messring,
+ohne eine Regel zu ändern. Beim Anfassen geht ein zweiter Ring auf und
+verblasst — das ist der `ring` der Vorlage.
+
+Auch er ist zweimal umgezogen, und beide Male wegen eines Bildes: oben rechts
+lag er mitten auf „Karten gelernt" (ein absolut gesetztes Element malt über
+den Inhalt daneben), mit `z-index: -1` war er ganz verschwunden (die Karte
+bildet einen eigenen Stapelzusammenhang, also landete er hinter ihrem
+Hintergrund). Die Lösung war keine Schichtung, sondern ein freier Platz.
+
+`test495` hält jetzt 25 Zusagen. Dabei war eine Zusage aus dem dümmsten
+denkbaren Grund rot: `> span` traf den RING statt der Beschriftung, weil
+`ensure()` ihn als erstes Kind einsetzt und er selbst ein `span` ist — der
+Lauf mass den Ring gegen sich selbst.
+
+**Was jetzt noch offen ist:** die Wendekarte des Tickets (Vor- und Rückseite,
+2830–3455) und das Herz der Statistikkarte (2628–2648). Beides sind eigene
+Bewegungen mit eigenem Markup, keine Motive mehr.
+
+### Und eine Berichtigung an E528
+
+E528 hat Redurs Unschärfe an den KI-Knöpfen zurückgeholt — und dabei mehr
+zurückgeholt als er verlangt hatte. Das Original besteht aus drei Teilen:
+
+| Teil | Wann | Art |
+|---|---|---|
+| `ru-funkel-glimmen` | immer | `infinite` |
+| `ru-funkel-flackern` (Symbol) | immer | `infinite` |
+| `ru-funkel-platzen` | beim Anfassen | einmal |
+
+**Die Unschärfe steckt allein im dritten.** Die ersten beiden laufen ohne
+Unterlass, und `test494` hält seit dem Motion-Bogen ausdrücklich fest:
+„KI-Werkzeuge ohne Endlosschleifen im Leerlauf". Der Lauf wurde rot — und
+er hatte recht.
+
+Jetzt ist es getrennt: im Leerlauf still, beim Anfassen die volle
+Unschärfe. Nachgemessen am laufenden Knopf — `animationName` ist im
+Leerlauf `none` und beim Anfassen `rmo-letter-platzen` mit genau einer
+Wiederholung. Das ist beides, was verlangt war, und nicht eines auf Kosten
+des anderen.

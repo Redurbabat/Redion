@@ -8160,8 +8160,24 @@ body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt
 /* 2 — Drei Einstellungsregler, auf einem echten Einstellungsweg. */
 .rmo-sliders { display: inline-flex; flex-direction: column; justify-content: center; gap: 4px; width: 17px; margin-right: 5px; vertical-align: middle; }
 .rmo-sliders i { display: block; position: relative; width: 16px; height: 1px; background: currentColor; }
-.rmo-sliders i::after { content: ''; position: absolute; width: 4px; height: 4px; top: -1.5px; left: 3px; border-radius: 50%; background: currentColor; transition: transform .3s; }
-.rmo-sliders i:nth-child(2)::after { left: 9px; }
+/* Der Knauf sitzt AUF der Schiene, nicht darin: der Rand in der Farbe des
+   Knopfgrundes schneidet die Schiene frei, wie das Weiss der Vorlage auf
+   ihrem violetten Knopf. `--bg-card` statt `#fff`, weil Redion einen
+   Hellmodus hat und Weiss dort verschwindet. */
+.rmo-sliders i::after { content: ''; position: absolute; width: 6px; height: 6px; top: -2.5px; left: 2px;
+  border-radius: 50%; background: currentColor; box-sizing: border-box;
+  border: 1.5px solid var(--rmo-knauf-grund, var(--bg-card));
+  box-shadow: 0 0 5px color-mix(in srgb, currentColor 60%, transparent);
+  transition: transform .3s, box-shadow .3s; }
+.rmo-sliders i:nth-child(2)::after { left: 8px; }
+/* Heller Ring rundum, sobald der Knopf angefasst wird — die Umrandung der
+   Vorlage, aber nur im Zustand: ein Dauerring an vier verschiedenen
+   Knöpfen wäre in Redion ein zweiter Fokusrahmen. */
+[data-rmo~="sliders"] { transition: box-shadow .22s; }
+[data-rmo~="sliders"]:is(:hover, :focus-visible, :active):not(:disabled) {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent); }
+[data-rmo~="sliders"]:is(:hover, :focus-visible, :active) .rmo-sliders i::after {
+  box-shadow: 0 0 7px color-mix(in srgb, currentColor 85%, transparent); }
 #ai-quellen:is(:hover, :focus-visible) .rmo-sliders i::after { transform: translateX(4px); }
 #ai-quellen:is(:hover, :focus-visible) .rmo-sliders i:nth-child(2)::after { transform: translateX(-4px); }
 /* 3 + 10 — Lichtschlitz und kleiner Perspektivwechsel: echte Fach-/Statistikkarten. */
@@ -8179,6 +8195,18 @@ body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt
   border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: 0 12px 26px #00000018;
 }
 .els-kachel:is(:hover, :focus-visible)::after, .stat-karte.lw-metrik:hover::after { opacity: 1; animation: rmo-shine 1.2s ease both; }
+/* `.pf-karte` stand seit dem ersten Tag in der Zielliste des Lichteffekts
+   (motion.ts) und hatte hier KEINE Regel: das Attribut wurde geschrieben,
+   sichtbar war nichts. Sie bekommt den Lichtschlitz, aber bewusst NICHT
+   das Anheben der Kacheln — sie ist eine Zeile in einer Liste mit
+   Trennlinie, und hebende Zeilen lassen die Liste zappeln. */
+.pf-karte { position: relative; overflow: hidden; }
+.pf-karte::after {
+  content: ''; position: absolute; pointer-events: none; inset: 0; opacity: 0;
+  background: linear-gradient(115deg, transparent 25%, #ffffff18 45%, transparent 65%);
+  background-size: 250% 100%; transition: opacity .25s;
+}
+.pf-karte:hover::after { opacity: 1; animation: rmo-shine 1.2s ease both; }
 .stat-karte.lw-metrik strong { display: block; animation: rmo-reveal .45s ease both; }
 /* Die Ziffernrolle aus der Statistik-Vorlage, mit dem vorhandenen Wert
  * als unveränderter Textquelle. Nur die dekorative Rolle bewegt sich. */
@@ -8195,6 +8223,108 @@ body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt
 }
 .rmo-separator::before { content: attr(data-rmo-character); white-space: pre; }
 @keyframes rmo-digit-roll { from { transform: translateY(0); } }
+/* ══════════════════════════════════════════════════════════════════════
+ * 10b — DER GEZEICHNETE RING AN DER KENNZAHL (Vorlage 2030–2710, E531)
+ * ----------------------------------------------------------------------
+ * Die Statistikkarten der Vorlage haben ausser der Ziffernrolle (die seit
+ * dem Motion-Bogen steht) einen Ring, der sich selbst zeichnet, und einen
+ * zweiten, der einmal aufgeht und verblasst. Beides fehlte.
+ *
+ * ER MISST NICHTS, UND DAS IST ABSICHT. Ein Ring, der zu 72 % gefüllt ist,
+ * behauptet eine Grösse — und Redion hätte keine, aus der er sie nähme.
+ * §33 verbietet genau das: nichts versprechen, was nicht da ist. Dieser
+ * Ring zeichnet sich EINMAL GANZ und bleibt dann stehen; er rahmt die echte
+ * Zahl, statt eine erfundene zu zeigen. Wer je eine echte Quote hat, setzt
+ * `--rmo-anteil` und bekommt daraus einen Messring, ohne diese Regeln zu
+ * ändern.
+ *
+ * `@property` macht den Winkel animierbar — ein Verlaufswinkel ist sonst
+ * keine Zahl, die der Browser zwischen zwei Bildern teilen kann, und der
+ * Ring spränge von 0 auf voll.
+ * ══════════════════════════════════════════════════════════════════════ */
+@property --rmo-bogen { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+:is(.stat-karte.lw-metrik, .rmo-health-metric) { position: relative; }
+.rmo-ring {
+  --rmo-anteil: 1;
+  /* ZWEIMAL VERSCHOBEN, BEIDE MALE WEGEN EINES BILDES.
+     Erst sass er oben rechts — und lag mitten auf „Karten gelernt": ein
+     absolut gesetztes Element malt über den gewöhnlichen Inhalt daneben.
+     Dann `z-index: -1`, und er war ganz weg: die Karte bildet einen
+     eigenen Stapelzusammenhang, also landete er hinter ihrem Hintergrund.
+     Die Lösung ist keine Schichtung, sondern ein freier Platz — unten
+     rechts, wo unter der Zahl nichts steht. */
+  position: absolute; right: 12px; bottom: 12px;
+  width: 30px; height: 30px; border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(var(--accent) var(--rmo-bogen), transparent 0);
+  /* Nur der Reif, nicht die Scheibe. */
+  mask: radial-gradient(circle, transparent 10px, #000 10.5px);
+  -webkit-mask: radial-gradient(circle, transparent 10px, #000 10.5px);
+  opacity: .38;
+  animation: rmo-ring-zeichnen 1.1s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes rmo-ring-zeichnen {
+  from { --rmo-bogen: 0deg; }
+  to   { --rmo-bogen: calc(360deg * var(--rmo-anteil)); }
+}
+/* Der zweite Ring: geht beim Anfassen einmal auf und verblasst — die
+   Vorlage nennt ihn `ring`, und er ist das, was eine Zahl „bestätigt". */
+.rmo-ring::after {
+  content: ''; position: absolute; inset: -3px; border-radius: 50%;
+  border: 1px solid var(--accent); opacity: 0;
+}
+:is(.stat-karte.lw-metrik, .rmo-health-metric):is(:hover, :focus-within) .rmo-ring::after {
+  animation: rmo-ring-welle 1s ease-out 1;
+}
+@keyframes rmo-ring-welle {
+  0%   { transform: scale(1);   opacity: .9; filter: blur(0); }
+  100% { transform: scale(2.1); opacity: 0;  filter: blur(4px); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+ * 12b — DER BARCODE ENTSTEHT UNTER DEM DRUCKKOPF (Vorlage 2711–3469, E531)
+ * ----------------------------------------------------------------------
+ * Der Streifencode stand schon da — aber fertig, von der ersten Sekunde an,
+ * nur mit `opacity: .6` ein- und ausgeblendet. Ein Beleg, dessen Code schon
+ * da ist, bevor gedruckt wurde, erzählt die Sache rückwärts.
+ *
+ * Jetzt wächst er von links nach rechts, solange der Auftrag WIRKLICH läuft
+ * — der Zustand kommt vom Druckauftrag und nicht von einer Uhr. Ist der
+ * Auftrag fertig, steht der Code ganz da und bleibt stehen; bricht er ab,
+ * bleibt er unfertig, und das ist die richtige Auskunft.
+ *
+ * `clip-path` und nicht `width`: die Streifen sind ein sich wiederholender
+ * Verlauf, und eine wachsende Breite würde ihn stauchen statt ihn
+ * freizulegen. Man sähe Streifen, die enger zusammenrücken — das genaue
+ * Gegenteil von „hier wird gedruckt".
+ * ══════════════════════════════════════════════════════════════════════ */
+.rmo-ticket .ru-drucker-blatt::after { clip-path: inset(0 100% 0 0); }
+.rmo-ticket:is([data-zustand="rendern"], [data-zustand="speichern"]) .ru-drucker-blatt::after {
+  opacity: .6; animation: rmo-code-wachsen 2.2s linear both;
+}
+.rmo-ticket[data-zustand="fertig"] .ru-drucker-blatt::after {
+  opacity: .6; clip-path: inset(0 0 0 0);
+}
+@keyframes rmo-code-wachsen { to { clip-path: inset(0 0 0 0); } }
+/* Der Kopf selbst: ein schmaler Lichtstrich, der mitläuft. Er ist das
+   Einzige hier, das sich bewegt, wenn nichts gedruckt wird — nämlich nie. */
+.rmo-ticket .ru-drucker-blatt::before {
+  content: ''; position: absolute; left: 8px; bottom: 7px; width: 2px; height: 9px;
+  background: var(--accent); box-shadow: 0 0 6px var(--accent); opacity: 0;
+}
+.rmo-ticket:is([data-zustand="rendern"], [data-zustand="speichern"]) .ru-drucker-blatt::before {
+  opacity: 1; animation: rmo-code-kopf 2.2s linear both;
+}
+/* `left` UND NICHT `translateX`. Ein Prozentwert in `translateX` bezieht
+   sich auf die EIGENE Breite — und die ist zwei Punkte. Der Kopf lief
+   damit weit neben dem Papier her, am Bild deutlich zu sehen. `left` in
+   Prozent bezieht sich auf den Elternteil, also auf das Blatt. */
+@keyframes rmo-code-kopf {
+  from { left: 8px; opacity: 1; }
+  90%  { opacity: 1; }
+  to   { left: calc(100% - 10px); opacity: 0; }
+}
+
 /* 4 — Der kreisende Farbverlauf liegt im Fokus der Eingabe, nicht auf den Bau-Knöpfen. */
 #ai .ai-compose::before {
   content: ''; pointer-events: none; position: absolute; inset: -1px; border-radius: inherit;
@@ -8221,15 +8351,65 @@ body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt
 /* 7 — Bestehender Schalter bleibt semantisch und farblich derselbe. */
 .schalter > i { transition: transform .3s cubic-bezier(.2,.9,.2,1), box-shadow .3s; }
 .schalter.an > i { box-shadow: inset 0 1px 2px #ffffff70, 0 2px 6px #0002; }
-/* 8 — Räumlicher Kartenfächer in der leeren Bibliothek, keine erfundenen Dateien. */
-.rmo-carousel { display: flex; justify-content: center; height: 58px; margin: 12px auto 20px; perspective: 500px; pointer-events: none; }
-.rmo-carousel i {
-  display: block; width: 40px; height: 54px; margin-inline: -7px; border: 1px solid var(--line-stark); border-radius: 7px;
-  background: linear-gradient(145deg, var(--bg-hover), var(--bg-card)); box-shadow: 0 8px 15px #0001;
-  transform: rotateY(calc((var(--rmo-index) - 1) * -30deg)) translateZ(calc((1 - var(--rmo-index)) * 4px));
-  transition: transform .5s;
+/* ══════════════════════════════════════════════════════════════════════
+ * 8 — DER KARTENRING IM LEEREN REGAL (Vorlage 1847–1919, fertig in E529)
+ * ----------------------------------------------------------------------
+ * Diese Regeln waren TOTER STIL: sie zeigten auf `.rmo-carousel`, und das
+ * Element hat niemand gebaut. Nachgesehen mit einer Suche nach `ensure(`
+ * in `motion.ts` — sechs Aufrufe, keiner für den Ring. Er stand in der
+ * Wirkungstabelle und kam nie im Bild an.
+ *
+ * Die Vorlage stellt die Karten auf einen KREIS statt in einen Fächer:
+ * jede um `360° / Anzahl × Index` gedreht und um den Radius nach vorn
+ * geschoben. Der Radius ist keine freie Zahl — bei fünf Karten à 44 px
+ * müssen 44 / (2·tan(36°)) ≈ 30 px heraus, sonst überlappen sie oder es
+ * klafft. Deshalb rechnet ihn der Stil und schreibt ihn nicht hin.
+ *
+ * ER DREHT SICH VON SELBST, LANGSAM. Das leere Regal ist der einzige Ort
+ * in Redion, an dem nichts zu tun ist — hier stört eine ruhige Bewegung
+ * niemanden, und sie sagt: „hier kämen deine Dokumente hin". Die
+ * Pausenmechanik unten hält sie an, sobald die Ansicht aus dem Bild ist,
+ * der Reiter wechselt oder jemand weniger Bewegung will.
+ * ══════════════════════════════════════════════════════════════════════ */
+.rmo-carousel {
+  --rmo-anzahl: 5;
+  --rmo-radius: 30px;
+  display: block; position: relative;
+  width: 44px; height: 60px; margin: 26px auto 34px;
+  transform-style: preserve-3d; perspective: 620px; pointer-events: none;
+  animation: rmo-ring-drehen 22s linear infinite;
 }
-.bib-leer:hover .rmo-carousel i { transform: rotateY(calc((var(--rmo-index) - 1) * 30deg)) translateY(-3px); }
+/* LEICHT NACH VORN GEKIPPT. Ohne das sieht man den Ring genau von der
+   Kante, und aus fünf Karten auf einem Kreis werden zwei Karten
+   nebeneinander — am Bild geprüft. Die Vorlage kippt aus demselben Grund
+   um 15°; hier sind es 14, weil die Karten kleiner sind. */
+.rmo-ring-karte {
+  position: absolute; inset: 0;
+  border: 1px solid color-mix(in srgb, var(--text) 22%, var(--line-stark));
+  border-radius: 7px;
+  /* NICHT `--bg-hover` AUF `--bg-card`. Am Bild geprüft: im Dunkelmodus
+     liegen beide nahe Schwarz, und die Karten verschwanden im Grund. Eine
+     Fläche, die sich aus der Schriftfarbe mischt, hebt sich in Hell wie
+     Dunkel gleich weit ab — und bleibt trotzdem Teil des Farbsatzes. */
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--text) 13%, var(--bg-card)),
+    color-mix(in srgb, var(--text) 4%, var(--bg-card)));
+  box-shadow: 0 8px 15px #0002;
+  transform: rotateY(calc(360deg / var(--rmo-anzahl) * var(--rmo-index)))
+             translateZ(var(--rmo-radius));
+  backface-visibility: hidden;
+}
+/* Zwei Striche je Karte: angedeutetes Papier, keine erfundene Datei. */
+.rmo-ring-karte::after {
+  content: ''; position: absolute; inset: 10px 7px auto; height: 2px; border-radius: 2px;
+  background: color-mix(in srgb, var(--text) 30%, transparent);
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--text) 30%, transparent);
+}
+@keyframes rmo-ring-drehen {
+  from { transform: rotateX(-14deg) rotateY(0); }
+  to   { transform: rotateX(-14deg) rotateY(-360deg); }
+}
+.bib-leer:hover .rmo-carousel { animation-duration: 9s; }
 /* 9 — Tiefer Tastendruck auf vorhandenen Dialogaktionen. */
 .fbtns button.prim:not(.ru-funkel) {
   box-shadow: inset 0 1px 0 #ffffff28, 0 3px 0 #0002; transition: transform .18s, box-shadow .18s;
@@ -8278,12 +8458,61 @@ body .rmo-ticket .ru-drucker-status { padding: 11px 12px 15px; }
 }
 .rmo-orb::after { content: ''; position: absolute; inset: 5px 1px; border: 1px solid #ffffff80; border-radius: 50%; transform: rotate(-35deg); }
 #ai .ai-head:hover .rmo-orb::after { animation: rmo-orbit 3s linear 1; }
-/* 14 — Filamentlicht zeigt ausschließlich den laufenden Schaltungsmodus. */
-.sp-start { transition: box-shadow .3s, background .3s; }
+/* ══════════════════════════════════════════════════════════════════════
+ * 14 — DER GLÜHFADEN AM SCHALTPLAN (Vorlage 4158–4795, fertig in E529)
+ * ----------------------------------------------------------------------
+ * Hier stand ein 13 × 6 px grosses `::before` mit einem Rand — die Idee
+ * eines Lichts, nicht das Licht. Die Vorlage zeigt eine Glühlampe im
+ * Glasgehäuse: zwei Drähte, eine Wendel dazwischen, und beim Einschalten
+ * läuft die Wendel von der Mitte nach aussen warm an.
+ *
+ * WARUM DREI ELEMENTE UND KEIN BILD. Ein Bild hätte eine feste Farbe; der
+ * Faden soll in Hell und Dunkel sitzen und die Schriftfarbe des Knopfes
+ * erben können. Drei Elemente kosten nichts und lassen sich einzeln
+ * zeitversetzt anlaufen — genau das macht aus einem Leuchten ein Anlaufen.
+ *
+ * NUR BEI `.an`. Der Schaltplan sagt mit diesem Knopf, ob Strom fliesst.
+ * Ein Faden, der auch im Aus glimmt, wäre eine falsche Auskunft — und §38
+ * verlangt ohnehin, dass der Zustand nicht nur an der Farbe hängt: die
+ * Beschriftung des Knopfes wechselt weiterhin mit.
+ * ══════════════════════════════════════════════════════════════════════ */
+.sp-start { position: relative; transition: box-shadow .3s, background .3s; }
+.rmo-filament {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 1px; width: 19px; height: 11px; margin-right: 6px;
+  vertical-align: -1px; pointer-events: none;
+  border-radius: 9px 9px 5px 5px;
+  /* Das Glas: ein Hauch Wölbung, im Aus fast unsichtbar. */
+  background: linear-gradient(160deg, #ffffff10, transparent 60%);
+  box-shadow: inset 0 0 0 1px currentColor;
+  opacity: .35; transition: opacity .35s, box-shadow .35s;
+}
+.rmo-filament-bein { display: block; width: 1px; height: 5px; background: currentColor; opacity: .6; }
+.rmo-filament-wendel {
+  display: block; width: 9px; height: 5px;
+  border: 1px solid currentColor; border-bottom: 0; border-radius: 5px 5px 0 0;
+  transition: border-color .35s, box-shadow .35s;
+}
 .sp-start.an { box-shadow: inset 0 0 9px #ffc77422, 0 0 14px #e7a34024; }
-.sp-start.an::before {
-  content: ''; display: inline-block; width: 13px; height: 6px; margin-right: 5px;
-  border: 1px solid #ffc572; border-radius: 50%; box-shadow: 0 0 5px #ffc57290;
+.sp-start.an .rmo-filament {
+  opacity: 1; box-shadow: inset 0 0 0 1px #ffc57280, 0 0 10px #e7a34035;
+}
+/* WEISSGLÜHEND, NICHT BERNSTEIN. Der eingeschaltete Knopf ist selbst
+   bernsteinfarben — ein warmgelber Schein darauf verschwindet spurlos.
+   Am Bild verglichen: mit #ffc572 war der Faden auf dem Knopf nicht zu
+   finden. Weiss ist hier auch das Richtige und nicht nur das Sichtbarere:
+   ein Draht unter Strom glüht heller als die Fassung um ihn herum, und
+   die Zuleitungen bleiben dunkel. */
+.sp-start.an .rmo-filament-wendel {
+  border-color: #fff;
+  box-shadow: 0 0 4px #fff, 0 0 11px #ffe6bd;
+  animation: rmo-gluehen 2.4s ease-in-out infinite;
+}
+.sp-start.an .rmo-filament-bein { opacity: .85; }
+/* Ein Glühfaden steht nicht still — er atmet, weil der Strom es tut. */
+@keyframes rmo-gluehen {
+  0%, 100% { box-shadow: 0 0 4px #fff, 0 0 11px #ffe6bd; }
+  50%      { box-shadow: 0 0 7px #fff, 0 0 18px #fff3dd; }
 }
 /* 15 — Mechanischer Dreierblock für die echten Eingabeaktionen. */
 #ai :is(#ai-plus, #ai-diktat, #ai-senden):active { box-shadow: inset 0 2px 5px #0003; }
@@ -8347,21 +8576,109 @@ body [data-rmo~="folder"]:active .bib-deckel-blatt::before { transform:rotateX(-
 [data-rmo~="gradient"]:not(:disabled):is(:hover,:focus-visible,:active)::after,
 [data-rmo-play="gradient"]::after { opacity:1; animation:rmo-gradient-turn 1.4s ease-out 1; }
 .rmo-word { white-space:pre-wrap; }
+/* DIE UNSCHÄRFE IST ZURÜCK (E528).
+ *
+ * Redur, 12. September, mit einem Bild der KI-Knöpfe:
+ *
+ *   „hier bei ai butons war vorher statt licht eine blur efcek und codex
+ *    hat das entfernt kannst du das wieder zürück bringen bite"
+ *
+ * Er hat recht, und man sieht es an genau drei Zeilen, die hier standen:
+ *
+ *   .ru-funkel-b { animation:none; color:inherit; }   ← das Glimmen aus
+ *   > svg        { animation:none; }                  ← das Flackern aus
+ *   :hover …     { animation:rmo-letter-glow … }      ← statt des Platzens
+ *
+ * `ru-funkel-platzen` in `bausteine.css` lässt die Buchstaben beim Anfassen
+ * mit `filter: blur(10px) brightness(150%)` AUFPLATZEN — das ist die
+ * Unschärfe, die er meint. `rmo-letter-glow` war ein Farbglimmen an ihrer
+ * Stelle: heller, aber flach. Der Originaleffekt ist nicht abgeschafft
+ * worden, weil er störte, sondern weil er beim Umbau im Weg lag.
+ *
+ * ZWEI SORTEN BUCHSTABEN, EIN EFFEKT. Die Knöpfe, die schon `.ru-funkel`
+ * sind, tragen `.ru-funkel-b` und bekommen ihr Platzen aus `bausteine.css`
+ * zurück — hier wird es nur nicht mehr abgeschaltet. Die übrigen zerlegt
+ * `motion.ts` in `.rmo-letter`.
+ *
+ * NACHGEZÄHLT, nicht angenommen: heute tragen alle VIERZEHN Knöpfe
+ * `.ru-funkel-b`, und `.rmo-letter` kommt null Mal vor — `motion.ts`
+ * zerlegt nur rohe Textknoten, und bei einem Funkel-Knopf sind die
+ * Buchstaben längst Elemente. Die Regel darunter ist also der ZWEITE Zweig
+ * desselben Moduls und heute unbenutzt. Sie steht trotzdem da: sobald ein
+ * Knopf ohne Funkel-Hülle in die Gruppe kommt, reagiert er sonst anders als
+ * sein Nachbar, und das fiele niemandem auf, bevor es jemand sieht.
+ *
+ * `display:inline-block` ist kein Stil, sondern Bedingung: eine Zeile ohne
+ * eigene Box lässt sich nicht skalieren, und `transform: scale(2)` bliebe
+ * wirkungslos. `.ru-funkel-b` steht aus demselben Grund so in `bausteine.css`.
+ */
+/* IM LEERLAUF BLEIBT ES STILL — und das ist kein Rückzieher (E531).
+   `test494` hält seit dem Motion-Bogen fest: keine Endlosschleife, solange
+   niemand etwas tut. Mit dem Original kamen zwei zurück: das Glimmen der
+   Buchstaben und das Flackern des Symbols, beide `infinite`. Redur hat
+   nach der UNSCHÄRFE gefragt, und die steckt im Platzen beim Anfassen —
+   nicht im Dauerglimmen. Also: ruhig im Leerlauf, Unschärfe beim
+   Anfassen. Beides zusammen, nicht eines gegen das andere. */
 body [data-rmo~="letters"] .ru-funkel-b { animation:none; color:inherit; }
-body #ai .ai-quick button[data-rmo~="letters"] > svg, body [data-rmo~="letters"] > svg { animation:none; }
-.rmo-letter { display:inline; }
-@keyframes rmo-letter-glow { 50% { color:var(--accent-text); text-shadow:0 0 8px var(--accent); } }
+body #ai .ai-quick button[data-rmo~="letters"] > svg,
+body [data-rmo~="letters"] > svg { animation:none; }
+.rmo-letter { display:inline-block; }
+@keyframes rmo-letter-platzen {
+  0%, 100% { filter:blur(0); }
+  50% { transform:scale(2);
+        filter:blur(10px) brightness(150%)
+               drop-shadow(-36px 12px 12px hsl(var(--ru-funkel-ton, 210deg) 100% 70%)); }
+}
+/* BEIDE BUCHSTABENSORTEN BEKOMMEN DIESELBE UNSCHÄRFE. `.ru-funkel-b` hat
+   sein eigenes Platzen in `bausteine.css`; diese Regel gewinnt dagegen und
+   nimmt ihm das angehängte `infinite`-Glimmen ab, das sonst beim Anfassen
+   mitliefe. Das Bild ist dasselbe, die Endlosschleife ist keine. */
 body [data-rmo~="letters"]:is(:hover,:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
 [data-rmo-play="letters"] :is(.rmo-letter,.ru-funkel-b) {
-  animation:rmo-letter-glow .65s ease-out 1; animation-delay:var(--rmo-delay,0ms); }
+  animation:rmo-letter-platzen 1s ease-in-out 1; animation-delay:var(--rmo-delay,0ms); }
 
 /* Native Schalter: kurze Zustandsbewegung ersetzt die frühere Endlosschleife. */
 body [data-rmo~="toggle"]::before { animation:none; }
 body [data-rmo~="toggle"][data-rmo-state="an"]::before { animation:rmo-orbit .65s ease-out 1; }
-[data-rmo~="glass"] { min-height:44px; border:1px solid color-mix(in srgb,var(--accent) 55%,var(--line));
+/* 8 — Der Glasknopf. Der `body`-Vorsatz ist kein Stilmittel, sondern die
+   Reparatur: ohne ihn verlor dieses Attribut gegen `.fbtns button.prim:
+   not(.ru-funkel)` neun Zeilen weiter oben (drei Klassen gegen ein
+   Attribut), und Schatten wie Druckweg waren seit dem ersten Tag
+   unsichtbar. Die Regel dort bleibt stehen — sie trägt die Knöpfe,
+   solange das Skript noch nicht gelaufen ist. */
+body [data-rmo~="glass"] { min-height:44px; border:1px solid color-mix(in srgb,var(--accent) 55%,var(--line));
   box-shadow:inset 0 1px 0 #ffffff70, inset 0 -6px 12px #0001, 0 3px 0 #0003;
   transition:transform .16s,box-shadow .16s; }
-[data-rmo~="glass"]:active:not(:disabled) { transform:translateY(3px); box-shadow:inset 0 2px 5px #0003; }
+body [data-rmo~="glass"]:active:not(:disabled) { transform:translateY(3px); box-shadow:inset 0 2px 5px #0003; }
+/* Der Glaskörper selbst: eine eigene Schicht über der Fläche, unter dem
+   Text. Sie fängt keine Zeiger und trägt keine Bedeutung. */
+.rmo-glass { position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden;
+  border-radius:inherit; }
+body [data-rmo~="glass"] > :not(.rmo-glass) { position:relative; z-index:1; }
+/* Kuppel: das Licht, das von oben in das Glas fällt. */
+.rmo-glass-kuppel { position:absolute; inset:-40% -20% auto; height:130%;
+  background:radial-gradient(60% 80% at 50% 0%, #ffffffaa, #ffffff30 45%, transparent 70%);
+  opacity:.55; transition:opacity .22s, transform .32s cubic-bezier(.22,1,.36,1); }
+/* Glanzplatte: die harte Kante, an der sich die Wölbung zeigt. */
+.rmo-glass-platte { position:absolute; left:6%; right:6%; top:3px; height:42%;
+  border-radius:inherit; border-bottom-left-radius:60% 80%; border-bottom-right-radius:60% 80%;
+  background:linear-gradient(180deg,#ffffff70,#ffffff10 70%,transparent);
+  opacity:.7; transition:opacity .22s, transform .32s cubic-bezier(.22,1,.36,1); }
+/* Saum: das Licht tritt unten wieder aus, im Ton der App. */
+.rmo-glass-saum { position:absolute; left:14%; right:14%; bottom:0; height:38%;
+  background:linear-gradient(0deg, color-mix(in srgb,var(--accent) 55%,transparent), transparent 80%);
+  filter:blur(5px); opacity:0; transition:opacity .26s; }
+body [data-rmo~="glass"]:is(:hover,:focus-visible):not(:disabled) .rmo-glass-kuppel {
+  opacity:.9; transform:translateY(6%); }
+body [data-rmo~="glass"]:is(:hover,:focus-visible):not(:disabled) .rmo-glass-platte {
+  opacity:1; transform:translateY(2px) scaleY(1.08); }
+body [data-rmo~="glass"]:is(:hover,:focus-visible):not(:disabled) .rmo-glass-saum { opacity:.5; }
+body [data-rmo~="glass"]:active:not(:disabled) .rmo-glass-kuppel { opacity:.35; transform:translateY(12%); }
+body [data-rmo~="glass"]:active:not(:disabled) .rmo-glass-saum { opacity:.8; }
+body [data-rmo~="glass"]:disabled .rmo-glass { opacity:.25; }
+/* Die Beschriftung weicht beim Drücken leicht zurück — das Glas drückt
+   sich vor den Text, nicht der Text durch das Glas. */
+body [data-rmo~="glass"]:active:not(:disabled) > :not(.rmo-glass) { opacity:.82; transition:opacity .12s; }
 
 .rmo-recent { margin:16px 0 24px; min-width:0; }
 .rmo-recent h2 { font-size:13px; color:var(--text-dim); margin:0 0 12px; }
@@ -16282,12 +16599,34 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   animation:ru-funkel-flackern 2s linear infinite; animation-delay:.5s
 }
 @keyframes ru-funkel-flackern{ 50%{ opacity:.3 } }
-.ru-funkel:hover::before, .ru-funkel:focus-visible::before{
+/* Fokus und Hover waren bis hier EINE Regel mit einem Wert. Die Vorlage
+   stuft ab: der Tastaturfokus zeigt, wo man steht, der Zeiger zeigt, was
+   gleich passiert — also ist Hover das hellere von beiden. */
+.ru-funkel:focus-visible::before{
   box-shadow:0 -8px 12px -6px #fff3 inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 20%) inset,
              1px 1px 1px #fff3, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001
 }
-.ru-funkel:hover::after, .ru-funkel:focus-visible::after{
+.ru-funkel:focus-visible::after{
   opacity:.6; mask-image:linear-gradient(0deg,#fff,transparent)
+}
+.ru-funkel:hover::before{
+  box-shadow:0 -8px 12px -6px #fffa inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 30%) inset,
+             1px 1px 1px #fff3, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001
+}
+.ru-funkel:hover::after{
+  opacity:1; mask-image:linear-gradient(0deg,#fff,transparent)
+}
+/* Der Rand leuchtet mit. Er stand bisher erst beim Drücken farbig da —
+   auf dem Telefon, wo es kein Hover gibt, war das die einzige Stufe. */
+.ru-funkel:hover, .ai-quick button.ru-funkel:hover, .lernwelt button.is-primary.ru-funkel:hover{
+  border-color:hsla(var(--ru-funkel-ton),100%,80%,.4)
+}
+/* Das Symbol kommt beim Zeigen heraus: weiss, mit farbigem Kranz und
+   einem Schatten nach unten. Das Flackern hört dabei auf — ohne neue
+   Endlosschleife, die E528 gerade erst abgeschaltet hat. */
+.ru-funkel:hover > svg, #ai .ai-quick button.ru-funkel:hover > svg{
+  stroke:#fff; animation:none;
+  filter:drop-shadow(0 0 4px hsl(var(--ru-funkel-ton) 100% 75%)) drop-shadow(0 2px 3px #0008)
 }
 /* Beim Anfassen platzen die Buchstaben einmal auf und glimmen dann schneller. */
 .ru-funkel:hover .ru-funkel-b, .ru-funkel:focus-visible .ru-funkel-b{
@@ -16304,6 +16643,12 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   background:hsl(var(--ru-funkel-ton) 50% 20% / .5)
 }
 .ru-funkel:active::after{ opacity:1; mask-image:linear-gradient(0deg,#fff,transparent); filter:brightness(200%) }
+/* Beim Drücken war bisher gar nichts an der Aussenkante: auf einem Gerät
+   ohne Zeiger blieb der Knopf beim Tippen unverändert. */
+.ru-funkel:active::before{
+  box-shadow:0 -8px 12px -6px #fffa inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 80%) inset,
+             1px 1px 1px #fff4, 2px 2px 2px #fff2, -1px -1px 1px #0002, -2px -2px 2px #0001
+}
 .ru-funkel:active .ru-funkel-b{ text-shadow:0 0 1px hsl(var(--ru-funkel-ton) 100% 90% / 90%); animation:none }
 
 /* ---- Das Rauschen als Cover (textur:nebel | sand | nacht) --------------- */
@@ -20006,7 +20351,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 801, inhalt: 'dead7902e2efce0d', gebaut: '2026-09-12T11:54:08.166Z' };
+const Stand = { fassung: 813, inhalt: '1f7e0fd56594a14f', gebaut: '2026-09-12T17:37:38.298Z' };
 window.Stand = Stand;
 
 </script>
@@ -44121,14 +44466,15 @@ const RedionMotion = (() => {
         { id: 'letters', place: 'KI-Werkzeuge und Befehle', selector: '.ru-funkel, .ai-action-group button' },
         { id: 'liquid', place: 'KI-, Agenten-, Import- und Exportaufträge', selector: '.ki-aktivitaet, .ru-zustand, .ru-zk, .ru-lader, .ru-drucker, [data-studio-import], .ag-motion-status' },
         { id: 'toggle', place: 'Einstellungen und Automationen', selector: '.schalter, .mschalter' },
-        { id: 'carousel', place: 'Zuletzt geöffnete Dokumente', selector: '.rmo-recent' },
+        { id: 'carousel', place: 'Zuletzt geöffnete Dokumente, leeres Regal', selector: '.rmo-recent, .bib-leer' },
         { id: 'glass', place: 'Primäre Dialogaktionen', selector: '.fbtns button.prim' },
         { id: 'metric', place: 'Lernfortschritt und Bestandsgesundheit', selector: metricSelector },
         { id: 'status', place: 'Synchronisierung, Sicherung, KI, Automationen', selector: '.ru-zustand, .ru-lader, .ki-aktivitaet, .ag-motion-status, .rmo-product-status' },
         { id: 'ticket', place: 'PDF-Druck und Export', selector: '.ru-drucker' },
         { id: 'orb', place: 'KI-Schaltfläche und Kopfzeile', selector: '#btn-ai, #ai .ai-head' },
         { id: 'filament', place: 'Strom im Elektro-Schaltplan', selector: '.sp-start' },
-        { id: 'transport', place: 'Zeitmesser Start/Pause/Beenden', selector: '.rmo-transport' }
+        { id: 'transport', place: 'Zeitmesser Start/Pause/Beenden', selector: '.rmo-transport' },
+        { id: 'ring', place: 'Kennzahlen im Lernbereich und in der Bestandsübersicht', selector: '.stat-karte.lw-metrik, .rmo-health-metric' }
     ];
     const selector = effects.map(effect => effect.selector).join(',');
     const watched = new WeakSet();
@@ -44221,6 +44567,55 @@ const RedionMotion = (() => {
                 element.classList.add('rmo-ticket');
             ensure(element, 'rmo-ticket-heading', heading => { heading.textContent = 'PDF-Ausgabe'; });
         }
+        /* ==================================================================
+         * DER GLÜHFADEN UND DER KARTENRING — beide standen bisher nur in der
+         * Tabelle (E529).
+         *
+         * `filament` und `carousel` waren als Wirkung angemeldet, aber NIEMAND
+         * hat je ihr Markup gebaut: der Glühfaden war ein 13 × 6 px grosses
+         * `::before`, und die Ring-CSS in `motion.css` hatte gar kein Element,
+         * auf das sie zeigen konnte — toter Stil. Nachgesehen mit einer Suche
+         * nach `ensure(` in dieser Datei: sechs Aufrufe, keiner für die beiden.
+         * ================================================================== */
+        if (ids.includes('filament'))
+            ensure(element, 'rmo-filament', glas => {
+                /* Zwei Drähte und eine Wendel dazwischen. Drei Elemente statt eines
+                   Bildes, damit der Faden die Schriftfarbe erben kann und in Hell
+                   wie Dunkel sitzt. */
+                glas.append(ornament('rmo-filament-bein'), ornament('rmo-filament-wendel'), ornament('rmo-filament-bein'));
+            });
+        if (ids.includes('carousel'))
+            ensure(element, 'rmo-carousel', ring => {
+                /* Fünf Karten auf einem Kreis. Die Zahl steht hier und nicht im Stil:
+                   der Winkel je Karte rechnet sich aus ihr, und eine sechste Karte
+                   wäre sonst eine stille Überlappung. */
+                const anzahl = 5;
+                ring.style.setProperty('--rmo-anzahl', String(anzahl));
+                for (let index = 0; index < anzahl; index++) {
+                    const karte = ornament('rmo-ring-karte');
+                    karte.style.setProperty('--rmo-index', String(index));
+                    ring.append(karte);
+                }
+            });
+        /* Der gezeichnete Ring aus der Statistik-Vorlage (2030–2710). Er rahmt
+           die ECHTE Zahl und misst nichts — siehe den Grund in motion.css. */
+        if (ids.includes('ring'))
+            ensure(element, 'rmo-ring');
+        /* ==================================================================
+           Der Glaskörper aus Vorlagenblock 8. Er hat nicht gefehlt, er war
+           ÜBERSTIMMT: `[data-rmo~="glass"]` (ein Attribut) verliert gegen
+           `.fbtns button.prim:not(.ru-funkel)` (drei Klassen) — geschrieben,
+           nie gesehen. Der Körper bekommt deshalb ein eigenes Element statt
+           weiterer Pseudo-Ebenen am Knopf: `::after` gehört dort schon dem
+           kreisenden Rand des Verlaufseffekts, und ein Knopf kann beide
+           Effekte tragen.
+           ================================================================== */
+        if (ids.includes('glass'))
+            ensure(element, 'rmo-glass', glas => {
+                /* Kuppel (Licht von oben), Platte (der harte Glanz darüber),
+                   Saum (das Licht, das unten wieder austritt). */
+                glas.append(ornament('rmo-glass-kuppel'), ornament('rmo-glass-platte'), ornament('rmo-glass-saum'));
+            });
         if (ids.includes('letters')) {
             /* Text teilen, aber Symbole, Beschriftung und Listener behalten. */
             for (const node of Array.from(element.childNodes)) {
