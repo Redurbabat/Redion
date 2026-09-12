@@ -330,7 +330,7 @@ const ChronikDaten = {
         {
             "datum": "2026-09-09",
             "wochentag": "Mittwoch",
-            "titel": "Das Notizbuch, die nicht gefundene PDF — und dieses Buch hier",
+            "titel": "Das Notizbuch, die nicht gefundene PDF, dieses Buch hier — und am Abend Redurs Marke",
             "wasIchWeiss": "Voller Wortlaut.",
             "nachrichten": [
                 {
@@ -402,6 +402,38 @@ const ChronikDaten = {
                     "gemeint": "Push das auf einen neuen Zweig — und ab jetzt immer: sobald ein Zweig gepusht ist, einen neuen anlegen.",
                     "besser": "Push das auf einen neuen Zweig. Und ab jetzt bitte immer so: wenn ein Zweig gepusht ist, leg für die nächste Arbeit einen neuen an.",
                     "besserePrompt": "Der zweite Satz ist eine DAUERREGEL, der erste eine einmalige Bitte — getrennt geschrieben sind sie beide klarer. Und ein Wort zum Grund hätte geholfen („damit ich weiss, was in welchem Zweig steht\"); so musste ich ihn selbst erschliessen, und der Grund entscheidet, wie die Zweige heissen sollen."
+                },
+                {
+                    "zeit": "ca. 17:10",
+                    "wortlaut": "[Bild: eine schwarz-goldene Marke] Das"
+                },
+                {
+                    "zeit": "ca. 17:55",
+                    "wortlaut": "Was ist das alter sieht es wie auf dem bild aus"
+                },
+                {
+                    "zeit": "ca. 18:10",
+                    "wortlaut": "[Bild: das Symbol auf dem Startbildschirm, mit weissem Saum] Entferne die weiche rahmen ich will es nicht sehen"
+                },
+                {
+                    "zeit": "ca. 18:30",
+                    "wortlaut": "Pusche deien arbeite auf eien neu brache."
+                },
+                {
+                    "zeit": "ca. 18:40",
+                    "wortlaut": "[Bilder: die Apple-TV-Leiste und die Leiste von Redion] Könntets du die reduon unter teil wie erste bild machen mit undere inhalten und so wie appes das ich zwischen bereichen mit maus so wenn ich draus von links nach rechst oder umketerk dort gehe das es wie appe mir , jetzt ist bei redion nur wenn man klick kann man wechseln und ich will nicht nur so haben sondern kannst du so rund machen"
+                },
+                {
+                    "zeit": "ca. 19:25",
+                    "wortlaut": "[Bild: der Browserreiter mit dem roten R] hier ganz oben link habe ich die r logo wieder lösche es"
+                },
+                {
+                    "zeit": "ca. 19:50",
+                    "wortlaut": "cd $HOME\\Dokumente\\Redgit\\Redion / .\\holen.bat claude/redion-e527-schaltung — wieso redgit redion es legen die date nicht hier"
+                },
+                {
+                    "zeit": "ca. 19:55",
+                    "wortlaut": "C:\\Users\\redur\\Documents\\ChatGPT\\Redion\\Redion-src"
                 }
             ],
             "arbeit": [
@@ -475,14 +507,62 @@ const ChronikDaten = {
                     "bisCommit": "(dieser Bogen)",
                     "zeitraum": "ab 10:15",
                     "pruefungen": "keiner — eine Arbeitsregel, kein Verhalten der App"
+                },
+                {
+                    "was": "E522 / E522b / E523b — Der volle Lauf: D1 stillgelegt, und drei veraltete Zahlen in Prüfläufen",
+                    "vonCommit": "741ae0b1",
+                    "bisCommit": "d935341e",
+                    "zeitraum": "09:44 – 10:11",
+                    "dauer": "ca. 27 min",
+                    "pruefungen": "test65, test86, test114, test210 — vier Zusagen derselben Art, alle seit einem früheren Bogen rot"
+                },
+                {
+                    "was": "E524 — Ein fehlender Schrägstrich, und die Chronik wäre im Netz tot gewesen",
+                    "vonCommit": "d935341e",
+                    "bisCommit": "3a5c6ad2",
+                    "zeitraum": "10:11 – 17:02",
+                    "dauer": "ca. 20 min Arbeit im Bogen (der Rest des Zeitraums ohne Sitzung)",
+                    "pruefungen": "der Ausschluss-Prüflauf aus E520, gegen den echten Ordnerinhalt"
+                },
+                {
+                    "was": "E525 — Redurs Marke, aus einer Quelle gerechnet: 24 Dateien statt 18 Stellen, favicon.ico eingeschlossen",
+                    "vonCommit": "3a5c6ad2",
+                    "bisCommit": "c0430422",
+                    "zeitraum": "17:02 – 17:54",
+                    "dauer": "ca. 52 min",
+                    "pruefungen": "test483, 25 Zusagen, Gegenprobe rot gesehen"
+                },
+                {
+                    "was": "E525 nachgezogen — der Lichtsaum am Rand ist weg, ohne neu zu schneiden",
+                    "vonCommit": "c0430422",
+                    "bisCommit": "ebd8e4f8",
+                    "zeitraum": "17:54 – 18:23",
+                    "dauer": "ca. 29 min",
+                    "pruefungen": "am Bild geprüft; die Randdeckung gemessen: 228 → 16"
+                },
+                {
+                    "was": "E526 — Die untere Leiste ist eine Kapsel, und man wischt zwischen den Bereichen",
+                    "vonCommit": "ebd8e4f8",
+                    "bisCommit": "6347ac43",
+                    "zeitraum": "18:23 – 19:16",
+                    "dauer": "ca. 53 min",
+                    "pruefungen": "test484 (31 Zusagen), test37 und test141 nachgezogen"
+                },
+                {
+                    "was": "E527 — Die Einzeldatei trägt ihr Reitersymbol selbst",
+                    "vonCommit": "6347ac43",
+                    "bisCommit": "fd418b84",
+                    "zeitraum": "19:16 – 19:43",
+                    "dauer": "ca. 27 min",
+                    "pruefungen": "test483 um zwei Zusagen erweitert, Gegenprobe rot gesehen"
                 }
             ],
             "zahlen": {
-                "commits": 9,
-                "entscheidungen": 9
+                "commits": 15,
+                "entscheidungen": 15
             },
-            "groesstesProblem": "Nicht ein Fehler, sondern eine Kette: Redur fragte nach dem Worker-Namen, und im mitgeschickten Protokoll lagen zwei Dinge, nach denen er nicht gefragt hatte — der echte Deploy-Fehler und ein Zeugnis, das im Netz lag. Das teuerste Muster des Tages war, dass mehrere Werkzeuge richtig rechneten und die falsche Frage beantworteten: vergleichen.bat gegen main, die drei Import-Messungen aus E513, die Ausschlussliste aus E270. Jedes war korrekt und keines war brauchbar.",
-            "interessantesteAnfrage": "„wenn eine branche gepuscht ist musst du immer eine neue erstellen, so ist besser\" — eine Arbeitsregel, die aus dem Gebrauch kommt, nicht aus einem Lehrbuch. Redur hat gemerkt, was ihm beim Holen fehlte: ein Zweigname, der sagt, was darin steht. Zwei Bögen zuvor hatte er das Holen bekommen; jetzt kam die Regel, die es erst brauchbar macht.",
+            "groesstesProblem": "Nicht ein Fehler, sondern eine Kette: Redur fragte nach dem Worker-Namen, und im mitgeschickten Protokoll lagen zwei Dinge, nach denen er nicht gefragt hatte — der echte Deploy-Fehler und ein Zeugnis, das im Netz lag. Das teuerste Muster des Tages war, dass mehrere Werkzeuge richtig rechneten und die falsche Frage beantworteten: vergleichen.bat gegen main, die drei Import-Messungen aus E513, die Ausschlussliste aus E270. Jedes war korrekt und keines war brauchbar.\n\nAM ABEND kam ein zweites dazu, und es war ein Fehler im Fehler: der Ausschnitt der neuen Marke. Der erste Schnitt lag am undurchsichtigen Kern statt an der Kachelkante und verzerrte die Marke ins Quadrat — Redur sah es sofort („sieht es wie auf dem bild aus\"). Der zweite Schnitt sass, nahm aber den weichen Saum mit, und auf dem Startbildschirm wurde daraus ein weisser Rahmen um eine schwarze Kachel. Beide Male hatte Redur recht, und beide Male hätte kein Prüflauf es finden können. Dazu ein Messfehler, den nur das Bild zeigte: der Verkleinerer teilte durch die falsche Zahl, und JEDES verkleinerte Symbol war weissgebrannt — nur das 512er, das gar nicht verkleinert wird, sah richtig aus.",
+            "interessantesteAnfrage": "„wenn eine branche gepuscht ist musst du immer eine neue erstellen, so ist besser\" — eine Arbeitsregel, die aus dem Gebrauch kommt, nicht aus einem Lehrbuch. Redur hat gemerkt, was ihm beim Holen fehlte: ein Zweigname, der sagt, was darin steht. Zwei Bögen zuvor hatte er das Holen bekommen; jetzt kam die Regel, die es erst brauchbar macht.\n\nAm Abend dann die Leiste: „kannst du so rund machen\" und „jetzt ist bei redion nur wenn man klick kann man wechseln\". Zwei Sätze, zwei Arbeiten — eine Kapsel und eine Wischgeste. Der Kern der Geste ist ein Satz: sie sucht den nächsten Reiter und DRÜCKT IHN. Damit gilt für den zweiten Bedienweg automatisch alles, was für den ersten gilt; eine eigene Navigationslogik daneben wäre ein zweiter Katalog gewesen (§8).",
             "massnahmen": [
                 {
                     "zeit": "04:12",
@@ -567,6 +647,226 @@ const ChronikDaten = {
                     "was": "Neuer Zweig `claude/redion-cloudflare-l143`; die Regel in CLAUDE.md §43 aufgenommen.",
                     "warum": "Redurs Regel. Der Grund dahinter: ein Zweig, auf den immer weiter geschoben wird, verliert seinen Namen — sechs Bögen lagen unter einem Namen, der nur den ersten beschreibt.",
                     "risiko": "keins — der alte Zweig bleibt unangetastet, der neue beginnt auf seinem Stand; nachgemessen mit einem leeren git diff"
+                },
+                {
+                    "zeit": "17:48",
+                    "was": "`oeffentlich/icons/marke.png` als einzige Quelle; `erzeugen.mts` rechnet daraus 24 Dateien, `favicon.ico` eingeschlossen.",
+                    "warum": "Das rote R stand an achtzehn Stellen, und die achtzehnte hatte gar keinen Erzeuger — die .ico war von Hand gebaut und wäre als einzige übriggeblieben.",
+                    "risiko": "keins an Daten — Oberfläche; der Erzeuger liest jetzt selbst PNG (Signatur, Blöcke, zlib, fünf Zeilenfilter) statt eine Abhängigkeit zu holen"
+                },
+                {
+                    "zeit": "18:23",
+                    "was": "Der äussere Ring der Marke verliert seine FARBE, behält seine Deckung.",
+                    "warum": "Redur: „Entferne die weiche rahmen\". Ein engerer Schnitt hätte den Saum mitgenommen, aber die Marke wieder vergrössert und verschoben — der Fehler des ersten Anlaufs.",
+                    "risiko": "keins — gemessen über eine Distanztransformation auf dem Alphakanal, Randdeckung 228 → 16"
+                },
+                {
+                    "zeit": "19:16",
+                    "was": "Neue Datei `quell/schale/aufbau/wischen.ts`; die untere Leiste schwebt als Kapsel.",
+                    "warum": "Redurs zwei Sätze zur Apple-TV-Leiste. Der Radius wird aus `--mobile-nav-height` gerechnet statt als Zahl wiederholt — bei 60 px Höhe wären 20 px nur abgerundete Ecken, keine Kapsel.",
+                    "risiko": "keins an Daten; die Geste ist gesperrt über waagerecht rollenden Dingen, beim Zeichnen und im Dokument, und §28 verlangte zwei Einträge: das <script> in index.html UND die Zeile im GRUNDSTOCK"
+                },
+                {
+                    "zeit": "19:43",
+                    "was": "`bauen.mts` setzt die Symbolbytes als Data-URL in die Einzeldatei ein und wirft, wenn eine Datei fehlt.",
+                    "warum": "Die Einzeldatei hat keinen Ordner neben sich (§29) und hatte damit gar kein Reitersymbol — was ein Reiter ohne Zeichen zeigt, entscheidet der Browser: meist das zuletzt gemerkte, also weiter das alte R aus dem Zwischenspeicher.",
+                    "risiko": "keins — die Einzeldatei wächst um die Symbolbytes; das Werfen bei fehlender Datei ist Absicht, ein stiller Verweis ins Leere war ja der Fehler"
+                }
+            ]
+        },
+        {
+            "datum": "2026-09-10",
+            "wochentag": "Donnerstag",
+            "titel": "Ein einziger Push von Redur — die Bewegungsschicht kommt von aussen",
+            "wasIchWeiss": "Nur die Commits. Von diesem Tag liegt mir kein Gespräch vor.",
+            "nachrichten": [],
+            "arbeit": [
+                {
+                    "was": "„Aktuelle Website-Version\" — Redur hat einen Stand von aussen eingespielt, in dem `src/schale/bedienung/motion.ts` (+105 Zeilen) und die Bewegungsschicht neu dazukamen",
+                    "vonCommit": "fd418b84",
+                    "bisCommit": "0ca95cda",
+                    "zeitraum": "18:14",
+                    "dauer": "unbekannt — ich war an diesem Tag nicht beteiligt",
+                    "pruefungen": "keine von mir gefahren"
+                }
+            ],
+            "zahlen": {
+                "commits": 1,
+                "entscheidungen": 0
+            },
+            "groesstesProblem": "Keines, das ich gesehen hätte. Der Tag steht hier, damit die Kette der Commits keine Lücke hat: 21 Dateien, 1460 neue Zeilen, und darin die Bewegungsschicht, auf der zwei Tage später E528 bis E535 aufsetzen. Wer später fragt, woher `motion.ts` kommt, findet es hier und nicht bei mir.",
+            "interessantesteAnfrage": "Keine — an diesem Tag kam keine Nachricht.",
+            "massnahmen": []
+        },
+        {
+            "datum": "2026-09-12",
+            "wochentag": "Samstag",
+            "titel": "Redurs CSS-Sammlung: fünf Bögen, eine Bestandsaufnahme mit dreizehn Agenten — und zwei eigene Fehler",
+            "wasIchWeiss": "Voller Wortlaut.",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 14:30",
+                    "wortlaut": "[angehängt: redion_animationen_code.css, 5396 Zeilen] schau mal die aktuele github status und die letzt branche die gemerk wurde und arbeite an redion selbständig weiter und folgende in anhang findes du eine css date die ist mehreren coden für die animationen, anischt, usw dort und du musss ales im redion einsetzen und dabei wirklich alles ich will das du es in passenden orten nutzst"
+                },
+                {
+                    "zeit": "ca. 15:20",
+                    "wortlaut": "[Bild der KI-Knöpfe] hier bei ai butons war vorher statt lich eine blur efcek und codex hat das entfernt kannst du das wieder zürück bringen bite"
+                },
+                {
+                    "zeit": "ca. 15:55",
+                    "wortlaut": "ich will redion so haben ohne admin zustimmung nimant kann die webseite rein kommen geht so was , und nicht mehr ohne konto oder wo was"
+                },
+                {
+                    "zeit": "ca. 16:00",
+                    "wortlaut": "eigenes tor auch jetzt aber zuerst mache die animationen fertig und dann das"
+                },
+                {
+                    "zeit": "ca. 16:05",
+                    "wortlaut": "ich will das meien pdf auf meien konto speichern wird egal auf welche gärer ich einloge könntets du das machen und ohne konnto sollte wir mehr die redion nicht nutzen."
+                },
+                {
+                    "zeit": "ca. 16:20",
+                    "wortlaut": "es sollte nichti im konto redbbt7 sein"
+                },
+                {
+                    "zeit": "ca. 16:40",
+                    "wortlaut": "mach weiter mit den animationen und pusche auf github wenn du fertig bist."
+                },
+                {
+                    "zeit": "ca. 17:10",
+                    "wortlaut": "Hast du alle animationen erledigt? Oder ist noch etwas offen"
+                },
+                {
+                    "zeit": "ca. 17:45",
+                    "wortlaut": "baue e s so schne wie möglich alles ohne viel test machen"
+                },
+                {
+                    "zeit": "ca. 20:25",
+                    "wortlaut": "Erneut versuchen"
+                },
+                {
+                    "zeit": "ca. 20:26",
+                    "wortlaut": "weiter schau mal dir die aktuele letzte branche an und arbeite weiter"
+                },
+                {
+                    "zeit": "ca. 20:27",
+                    "wortlaut": "3c7da426eded4acfbcd4387fb3fc9ba449d6e9cd es ist das"
+                },
+                {
+                    "zeit": "ca. 20:35",
+                    "wortlaut": "alter schreibst du noch etwas im UR.md oder"
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E528 — Die Unschärfe an den KI-Knöpfen ist zurück: drei Zeilen hatten den Originaleffekt überschrieben",
+                    "vonCommit": "66ca1e03",
+                    "bisCommit": "da61d47b",
+                    "zeitraum": "13:36 – 15:33",
+                    "dauer": "ca. 1 h 57 min",
+                    "pruefungen": "test494 — der Wächter gegen Endlosschleifen im Leerlauf war beim ersten Versuch zu Recht rot"
+                },
+                {
+                    "was": "E529 — Glühfaden und Kartenring: zwei Einträge der Wirkungstabelle hatten gar kein Element",
+                    "vonCommit": "da61d47b",
+                    "bisCommit": "2689320b",
+                    "zeitraum": "15:33 – 15:50",
+                    "dauer": "ca. 17 min",
+                    "pruefungen": "test495, 16 Zusagen, Gegenprobe rot gesehen (acht Zusagen)"
+                },
+                {
+                    "was": "E530 — L143 stand kopf: die D1-Datenbank gibt es, nur im falschen Konto",
+                    "vonCommit": "2689320b",
+                    "bisCommit": "5621ad66",
+                    "zeitraum": "15:50 – 16:06",
+                    "dauer": "ca. 16 min",
+                    "pruefungen": "keine — eine Berichtigung in LUECKEN.md, kein Code"
+                },
+                {
+                    "was": "E531 — Der Barcode entsteht beim Drucken, der Ring rahmt die Kennzahl",
+                    "vonCommit": "5621ad66",
+                    "bisCommit": "6ad7bf4f",
+                    "zeitraum": "16:06 – 16:34",
+                    "dauer": "ca. 28 min",
+                    "pruefungen": "test495 auf 25 Zusagen erweitert"
+                },
+                {
+                    "was": "Bestandsaufnahme: dreizehn Agenten belegen jeden Vorlagenblock einzeln gegen den Code",
+                    "vonCommit": "6ad7bf4f",
+                    "bisCommit": "6ad7bf4f",
+                    "zeitraum": "17:10 – 17:30",
+                    "dauer": "ca. 20 min",
+                    "pruefungen": "keine — eine Messung: 191 Wirkungen, 42 gebaut, 51 nur Motiv, 98 fehlen"
+                },
+                {
+                    "was": "E532 — Vier Regeln, die geschrieben und nie gesehen wurden: Glasknopf, Pflegekarte, Regler-Knauf, Funkel-Abstufung",
+                    "vonCommit": "6ad7bf4f",
+                    "bisCommit": "f1eca227",
+                    "zeitraum": "17:30 – 17:37",
+                    "dauer": "ca. 1 h 07 min",
+                    "pruefungen": "keiner — Redurs Entscheidung E533, als L149 eingetragen"
+                },
+                {
+                    "was": "E533 — Redurs Entscheidung: alles bauen, ohne viel Prüfung. Der erste Bauanlauf mit zehn Agenten starb geschlossen am Sitzungslimit",
+                    "vonCommit": "f1eca227",
+                    "bisCommit": "f1eca227",
+                    "zeitraum": "17:45 – 20:20",
+                    "dauer": "ca. 10 min bis zum Abbruch, danach Wartezeit",
+                    "pruefungen": "keine — es entstand kein Code"
+                },
+                {
+                    "was": "E534 — aus einer anderen Sitzung: Statistikherz, Ticket-Wendekarte, und der gemessene Beweis, dass mein Glasknopf-Fix nicht wirkte",
+                    "vonCommit": "ad4ccbc7",
+                    "bisCommit": "3c7da426",
+                    "zeitraum": "19:43 – 20:23",
+                    "dauer": "nicht von mir gefahren",
+                    "pruefungen": "test496, 148 Zusagen, zuerst rot gesehen"
+                },
+                {
+                    "was": "Zwei Berichtigungen: E533 beschrieb einen Bau, den es nicht gab; dazu der Nachtrag zu E532",
+                    "vonCommit": "3c7da426",
+                    "bisCommit": "a95de06f",
+                    "zeitraum": "20:23 – 20:29",
+                    "dauer": "ca. 6 min",
+                    "pruefungen": "keine — nur Dokumentation"
+                }
+            ],
+            "zahlen": {
+                "commits": 6,
+                "entscheidungen": 6
+            },
+            "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
+            "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
+            "massnahmen": [
+                {
+                    "zeit": "15:33",
+                    "was": "Drei Zeilen aus `motion.css` entfernt, die `ru-funkel-platzen` überschrieben.",
+                    "warum": "Redur: „hier bei ai butons war vorher statt licht eine blur efcek\". Der Originaleffekt war nicht abgeschafft worden, weil er störte, sondern weil er beim Umbau im Weg lag.",
+                    "risiko": "keins an Daten — Oberfläche; der Leerlauf bleibt still (E528), nur das Anfassen platzt"
+                },
+                {
+                    "zeit": "15:50",
+                    "was": "Zwei `ensure(`-Aufrufe in `motion.ts` für Glühfaden und Kartenring.",
+                    "warum": "Beide Effekte standen in der Wirkungstabelle und hatten kein Element — der Kartenring war reiner toter Stil. Gefunden durch Abzählen, nicht durch Hinsehen: es fehlte ja nichts, was vorher da war.",
+                    "risiko": "keins an Daten — Dekoration, vor Vorleseprogrammen verborgen, lässt Klicks durch"
+                },
+                {
+                    "zeit": "16:06",
+                    "was": "`[[d1_databases]]` und `[[r2_buckets]]` bleiben auskommentiert; die gemessenen Tatsachen stehen als Kommentar daneben.",
+                    "warum": "Redur: „es sollte nichti im konto redbbt7 sein\". Die Datenbank existiert, aber im falschen Konto — ein Worker findet eine Datenbank nur im EIGENEN.",
+                    "risiko": "keins — es wird nichts verbunden; die fünf Befehle für das richtige Konto stehen daneben, damit sie niemand neu erfinden muss"
+                },
+                {
+                    "zeit": "17:37",
+                    "was": "`.rmo-glass` als eigenes Element statt weiterer Pseudo-Ebenen am Knopf.",
+                    "warum": "`::after` gehört am Knopf schon dem kreisenden Rand des Verlaufseffekts, und ein Knopf kann beide Effekte tragen.",
+                    "risiko": "keins an Daten; der Selektor war zunächst FALSCH gerechnet und wirkte nicht — siehe E534"
+                },
+                {
+                    "zeit": "20:29",
+                    "was": "E533 und L149 berichtigt: der beschriebene Bau hat nicht stattgefunden.",
+                    "warum": "Der Absatz war beim Schreiben des Eintrags schon formuliert und nicht nachgezogen worden, nachdem alle zehn Agenten am Sitzungslimit starben. Aufgeschrieben, was geplant war, statt was geschah.",
+                    "risiko": "keins — nur Dokumentation; der falsche Absatz bleibt mit Nachtrag stehen, damit der Fehler auffindbar ist statt weggeputzt (§35)"
                 }
             ]
         }
@@ -816,6 +1116,34 @@ const ChronikDaten = {
             "behebung": "Ausgeschlossen: die PDF namentlich, dazu *.pdf und *.redion als Regel, Schul Inhalt, chronik/, quell/entwicklung/, .gitattributes. Nichts gelöscht. Der Prüflauf misst jetzt gegen die WIRKLICHKEIT: er liest, was in der Wurzel liegt, wendet die Ausschlüsse an und vergleicht mit dem, was gehen darf.",
             "stand": "Behoben. Gegenprobe rot gesehen, und sie nennt die Datei beim Namen.",
             "lehre": "Ein Protokoll, das wegen einer Kleinigkeit kommt, ganz lesen. Die Warnung, nach der gefragt wurde, war harmlos; darunter lag der Fehler, an dem der Deploy scheiterte, und weiter oben lag ein Zeugnis im Netz. Und: eine Ausschlussliste, die Namen aufzählt, hält bis zur nächsten Datei — eine, die gegen den echten Ordnerinhalt prüft, hält weiter."
+        },
+        {
+            "nr": "P21",
+            "datum": "2026-09-12",
+            "titel": "Zwei Regeln, die geschrieben waren und nie jemand gesehen hat",
+            "schwere": "mittel",
+            "symptom": "Der Glasknopf hatte keinen Schatten und keinen Druckweg; die Pflegekarte bekam ein `data-rmo=\"light\"` und zeigte nichts. Beides sah im Quelltext vollständig aus.",
+            "falscheVermutung": "Meine eigene aus E531: „es ist kein toter Stil mehr übrig\". Ich hatte die `rmo-`KLASSEN gezählt und daraus auf alles geschlossen. Attributregeln (`[data-rmo~=\"…\"]`) und die Zielliste in `motion.ts` waren nie geprüft.",
+            "wieGefunden": "Nicht durch Hinsehen — die Seite sah richtig aus. Dreizehn Agenten mussten jeden Vorlagenblock einzeln gegen den Code belegen, mit Datei und Zeile je Wirkung. Dabei fiel auf, dass zwei Regeln nirgends ankommen.",
+            "ursache": "Zweimal dieselbe Sorte: eine Regel zeigt ins Leere. Beim Glasknopf gewann neun Zeilen weiter oben in DERSELBEN Datei ein stärkerer Selektor (drei Klassen gegen ein Attribut). Bei der Pflegekarte stand das Ziel in der Wirkungstabelle, und die Regel dazu wurde nie geschrieben.",
+            "loesung": "Der Glasknopf bekam einen ausreichend spezifischen Selektor und endlich seinen Körper (Kuppel, Glanzplatte, Lichtsaum). Die Pflegekarte bekam den Lichtschlitz — bewusst ohne das Anheben der Kacheln, weil sie eine Zeile in einer Liste ist und hebende Zeilen die Liste zappeln lassen.",
+            "warumKeineUhr": "—",
+            "beweis": "`test496` (aus E534) hält den echten Schatten am Glasknopf und war vorher rot. Für die Pflegekarte steht der Nachweis noch aus, als Teil von L149.",
+            "entscheidung": "E532"
+        },
+        {
+            "nr": "P22",
+            "datum": "2026-09-12",
+            "titel": "Ein Eintrag beschrieb einen Bau, den es nicht gab",
+            "schwere": "mittel",
+            "symptom": "In ENTSCHEIDUNGEN.md stand unter E533: „Gebaut wurde in einem Zug, zehn Agenten parallel.\" Gebaut wurde nichts. In LUECKEN.md stand aus demselben Grund „gebaut und typgeprüft ist alles\".",
+            "falscheVermutung": "Keine Vermutung — eine Reihenfolge. Der Eintrag war geschrieben, WÄHREND die Agenten liefen, im Futur gedacht und im Perfekt formuliert. Danach starben alle zehn am selben Sitzungslimit (HTTP 429), acht ohne eine Zeile, und der Absatz wurde nicht nachgezogen.",
+            "wieGefunden": "Beim Wiederaufnehmen der Arbeit: der Zweig war leer, die Fragmente fehlten, und der Eintrag behauptete das Gegenteil.",
+            "ursache": "Dokumentation vor der Tatsache geschrieben. Derselbe Fehler wie E21, nur nicht im Code: aufgeschrieben, was erwartet wurde, statt nachgesehen, was geschah.",
+            "loesung": "Beide Stellen berichtigt, der falsche Absatz bleibt mit Nachtrag stehen (§35: eine bekannte Lücke ist besser als ein stiller Fehler). E533 ist seither die ENTSCHEIDUNG, E535 der Bau.",
+            "warumKeineUhr": "—",
+            "beweis": "Die Agentenprotokolle: zehn Abbrüche mit `rate_limit`, HTTP 429, und im Arbeitsordner genau zwei geschriebene Fragmente von zehn.",
+            "entscheidung": "E533"
         }
     ]
 };
