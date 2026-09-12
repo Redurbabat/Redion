@@ -20403,7 +20403,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 819, inhalt: '92712a57e7a0e9fc', gebaut: '2026-09-12T20:36:08.100Z' };
+const Stand = { fassung: 821, inhalt: '6025f0c0006d06f5', gebaut: '2026-09-12T20:56:02.166Z' };
 window.Stand = Stand;
 
 </script>
@@ -95138,7 +95138,13 @@ const Werkzeuge = (() => {
             c('Seite', 'Auf später zurückstellen', '', () => Plan.menue(document.getElementById('btn-page-menu') || document.body, p.id));
             c('Seite', 'Als Markdown speichern', '', () => App.markdownExport(p));
             c('Seite', 'Als HTML speichern', '', () => htmlExport(p));
-            c('Seite', 'Drucken / als PDF', 'Strg P', () => drucken(p));
+            /* KEIN „Strg P" hier. Der globale Tastengriff fängt Strg/Cmd + P ab
+               und öffnet die Suche (schale.ts, und so steht es auch in
+               `register/tasten.ts`). Die Beschriftung versprach also ein Kürzel,
+               das etwas anderes tut — wer es drückte, bekam die Suche und hielt
+               das Drucken für kaputt. Ohne Kürzel ist ehrlicher als mit einem
+               falschen; der Weg über diesen Eintrag bleibt derselbe. */
+            c('Seite', 'Drucken / als PDF', '', () => drucken(p));
             c('Seite', 'Link kopieren', '', () => { Ablage.kopiereJetzt(location.origin + location.pathname + '#' + p.id, 'Link kopiert'); });
             c('Seite', 'In den Papierkorb', '', () => { Store.trashBlock(p.id); App.zeichneBaum(); App.oeffne((Store.rootPages()[0] || {}).id); UI.toast('In den Papierkorb'); });
         }
@@ -144002,10 +144008,14 @@ const Zeitmesser = (() => {
             `<button class="rb" data-zm="t5">5 Min</button>` +
             `<button class="rb" data-zm="t25">25 Min</button>` +
             `</div>` +
+            /* `data-rmo-taste` ist rein für die Darstellung da (E535): der
+               mechanische Dreierblock braucht je Taste eine Rolle, und `data-zm`
+               taugt dafür nicht — dort heisst die Starttaste „stoppuhr" wie der
+               Knopf eine Reihe höher. Der Klick liest weiterhin nur `data-zm`. */
             `<div class="zm-reihe rmo-transport" role="group" aria-label="Zeit steuern" data-zustand="${s.laeuft ? (s.pausiert ? 'pausiert' : 'laeuft') : 'bereit'}">` +
-            `<button class="rb haupt" data-zm="stoppuhr" ${s.laeuft ? 'disabled' : ''}>Start</button>` +
-            `<button class="rb" data-zm="pause" ${s.laeuft ? '' : 'disabled'}>${s.pausiert ? 'Weiter' : 'Pause'}</button>` +
-            `<button class="rb" data-zm="stopp" ${s.laeuft ? '' : 'disabled'}>Beenden</button>` +
+            `<button class="rb haupt" data-rmo-taste="start" data-zm="stoppuhr" ${s.laeuft ? 'disabled' : ''}>Start</button>` +
+            `<button class="rb" data-rmo-taste="pause" data-zm="pause" ${s.laeuft ? '' : 'disabled'}>${s.pausiert ? 'Weiter' : 'Pause'}</button>` +
+            `<button class="rb" data-rmo-taste="stopp" data-zm="stopp" ${s.laeuft ? '' : 'disabled'}>Beenden</button>` +
             `</div>` +
             (liste ? `<div class="zm-sitzungen"><span>Zuletzt</span><ul>${liste}</ul></div>` : '');
     };
@@ -153749,8 +153759,23 @@ const App = (() => {
     /* Notion kennt genau zwei Stufen, nicht drei. */
     const BENACHRICHTIGUNG = { alle: 'Kommentare', erwaehnungen: 'Erwähnungen' };
     /** Eine Menüzeile mit echtem Schalter rechts — so macht es Notion. */
-    const schalterZeile = (a, icon, text, an) => `<button data-a="${a}" class="mit-schalter"><span class="mi">${icon}</span>${text}` +
+    const schalterZeile = (a, icon, text, an) => `<button data-a="${a}" class="mit-schalter" role="switch" aria-checked="${an ? 'true' : 'false'}">` +
+        `<span class="mi">${icon}</span>${text}` +
         `<span class="mschalter${an ? ' an' : ''}"><i></i></span></button>`;
+    /**
+     * Der Schalter kippt an zwei Stellen, und bis hierher kippte nur die
+     * FARBE: `.an` färbt die Pille ein, und mehr stand nirgends. Damit war
+     * der Zustand ausschliesslich über Farbe zu erkennen — genau das, was
+     * §38 verbietet, und ein Vorleseprogramm las eine Schaltfläche ohne
+     * jeden Zustand vor. Beide Stellen gehen deshalb durch diese Funktion:
+     * zwei Aufrufer, eine Wahrheit (§8).
+     */
+    const schalterKippen = (knopf, an) => {
+        if (!knopf)
+            return;
+        knopf.querySelector('.mschalter')?.classList.toggle('an', an);
+        knopf.setAttribute('aria-checked', an ? 'true' : 'false');
+    };
     /**
      * „Mit KI verwenden" — bei Notion macht dieser Eintrag aus der Seite
      * selbst etwas für die KI: eine Fähigkeit, eine dauerhafte Anweisung
@@ -154106,7 +154131,7 @@ const App = (() => {
                VOR dem Sammelzweig — der Schalter kippt trotzdem an Ort und Stelle,
                nur die Schreibarbeit macht `volleBreite`. */
             if (a === 'breit') {
-                b.querySelector('.mschalter')?.classList.toggle('an', volleBreite(p));
+                schalterKippen(b, volleBreite(p));
                 return;
             }
             /* Schalter bleiben im Menü stehen und kippen an Ort und Stelle */
@@ -154116,7 +154141,7 @@ const App = (() => {
                 const neu = a === 'pfad' ? !(p.pfad !== false) : !p[feld];
                 Store.updateBlock(p.id, { [feld]: neu });
                 p[feld] = neu;
-                b.querySelector('.mschalter')?.classList.toggle('an', neu);
+                schalterKippen(b, neu);
                 zeichneSeite();
                 return;
             }

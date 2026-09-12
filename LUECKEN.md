@@ -7348,3 +7348,46 @@ Pflegekarten-Lichtschlitz, Regler-Knauf und Funkel-Abstufungen haben hier
 noch keine eigenen Gegenproben; die pauschale E533-Bauzusage ist nicht
 durch diese vier Ergänzungen bewiesen. Auch ein vollständiger Gesamtlauf
 und physische Safari-/Chrome-Geräteprüfungen bleiben ausstehend.
+
+---
+
+L150 · §5 Regel 1 hat keinen Wächter — offen
+--------------------------------------------------------------------------
+
+CLAUDE.md §5 Regel 1 ist **[hart]**: „Bereiche importieren sich nicht
+gegenseitig." Darunter stand ein Satz, der nicht stimmte: „Der Wächter dafür
+ist `test87`."
+
+**Nachgemessen am 12. September 2026.** `test87` prüft rohe Steuerzeichen,
+den Abgleich der Rollen zwischen Oberfläche und Server, die A1/A2-Grenze
+(`seitenleiste.js`, `kopfleiste.js` und `inhaltsflaeche.js` rufen `App` nicht
+an), die Reihenfolge der Stilblätter, das Manifest, `esc`, das Schema, ein
+paar globale Namen, Base64, Umlaute und die beiden `.bat`. Ein Bereich, der
+einen anderen anfasst, kommt darin nicht vor.
+
+**Und die Regel beschreibt einen Mechanismus, den es hier nicht gibt.**
+Gezählt: `grep -rh "^import " src/bereiche --include=*.ts | wc -l` → **0**.
+Kein einziger Import in keinem Bereich. Geladen wird über 208 `<script>` in
+`index.html`, geredet wird über globale Namen. Das `import`-Beispiel in §5
+kann also gar nicht auftreten; brechen lässt sich die Regel heute nur so:
+
+```js
+// irgendwo in bereiche/editor/…
+Bibliothek.oeffneRegal(id)        // ein fremder Bereich über seinen globalen Namen
+```
+
+**Was zu tun ist:** ein Lauf, der die globalen Namen der Bereiche gegen
+einander prüft — für jeden Bereich die Namen sammeln, die er anbietet, und
+in seinen Dateien nach den Namen der anderen suchen. Das Muster dafür steht
+fertig in `test87` §3 (`nurCode()` entfernt Kommentare und Zeichenketten,
+damit die Prüfung das Programm liest und nicht die Prosa) — dort für `App`,
+hier für jeden Bereichsnamen.
+
+**Vorher messen, ob er rot werden kann** (§55.2): heute hält die Regel,
+gemessen über alle `src/bereiche/*/` — es gibt keinen Querverweis. Ein Lauf,
+der auf einem sauberen Bestand geschrieben wird, ist genau der Fall, in dem
+eine Prüfung für immer grün bleibt, weil sie das Falsche misst. Also zuerst
+einen Querverweis von Hand einsetzen, rot sehen, wieder herausnehmen.
+
+Bis dahin steht die Regel ohne Beweis da — und stand es, seit sie
+geschrieben wurde.

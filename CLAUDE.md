@@ -292,7 +292,22 @@ dieser Reihenfolge zu prüfen:
 2. **Gemeinsame Logik nach `kern/`** verschieben.
 3. **Über `register/`** bekannt machen.
 
-Der Wächter dafür ist `test87`.
+**Der Wächter dafür fehlt — nachgemessen am 12. September 2026.** Hier stand
+„Der Wächter dafür ist `test87`". Das stimmt nicht: `test87` prüft rohe
+Steuerzeichen, den Abgleich der Rollen zwischen Oberfläche und Server, die
+A1/A2-Grenze (die drei Zeichner rufen `App` nicht an), die Reihenfolge der
+Stilblätter, das Manifest, `esc`, das Schema und ein paar Namen. Ein Bereich,
+der einen anderen anfasst, kommt darin nicht vor.
+
+Dazu kommt: **es gibt in `src/bereiche/` keine einzige `import`-Zeile.**
+Gezählt, nicht geschätzt — alles wird über 208 `<script>` in `index.html`
+geladen und redet über globale Namen. Das `import`-Beispiel oben beschreibt
+also einen Weg, den dieses Projekt gar nicht benutzt; brechen lässt sich die
+Regel heute nur über einen globalen Namen (`Bibliothek.…` mitten im Editor).
+Genau das prüft niemand.
+
+Die Regel gilt unverändert. Was fehlt, ist ihr Beweis — eingetragen als
+**L150**.
 
 ### Regel 2 — Neuer Bereich = zwei Register-Einträge
 
@@ -907,7 +922,7 @@ Von 438 Läufen sind diese fünf die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
-| `test87` | die Architektur- und Sicherheitsgrenzen aus §5 und §19 |
+| `test87` | Steuerzeichen, Rollen Oberfläche↔Server, die A1/A2-Grenze, Stilblätter, Manifest, `esc` — **nicht** §5 Regel 1, siehe dort |
 | `test96` | der Fund, dass Anhänge bei der JSON-Sicherung fehlten oder leer wurden |
 | `test100` | `.redion` mit echten Bytes: sichern, löschen, zurückholen, vergleichen |
 | `test105` | dass jede `.ts` ihr gebautes `.js` hat und `tsconfig.bauen.json` vollständig ist |

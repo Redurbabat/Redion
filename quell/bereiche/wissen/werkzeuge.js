@@ -238,7 +238,13 @@ const Werkzeuge = (() => {
             c('Seite', 'Auf später zurückstellen', '', () => Plan.menue(document.getElementById('btn-page-menu') || document.body, p.id));
             c('Seite', 'Als Markdown speichern', '', () => App.markdownExport(p));
             c('Seite', 'Als HTML speichern', '', () => htmlExport(p));
-            c('Seite', 'Drucken / als PDF', 'Strg P', () => drucken(p));
+            /* KEIN „Strg P" hier. Der globale Tastengriff fängt Strg/Cmd + P ab
+               und öffnet die Suche (schale.ts, und so steht es auch in
+               `register/tasten.ts`). Die Beschriftung versprach also ein Kürzel,
+               das etwas anderes tut — wer es drückte, bekam die Suche und hielt
+               das Drucken für kaputt. Ohne Kürzel ist ehrlicher als mit einem
+               falschen; der Weg über diesen Eintrag bleibt derselbe. */
+            c('Seite', 'Drucken / als PDF', '', () => drucken(p));
             c('Seite', 'Link kopieren', '', () => { Ablage.kopiereJetzt(location.origin + location.pathname + '#' + p.id, 'Link kopiert'); });
             c('Seite', 'In den Papierkorb', '', () => { Store.trashBlock(p.id); App.zeichneBaum(); App.oeffne((Store.rootPages()[0] || {}).id); UI.toast('In den Papierkorb'); });
         }
