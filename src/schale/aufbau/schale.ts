@@ -228,8 +228,23 @@ const App = (() => {
 
   /** Eine Menüzeile mit echtem Schalter rechts — so macht es Notion. */
   const schalterZeile = (a: any, icon: any, text: string, an: any) =>
-    `<button data-a="${a}" class="mit-schalter"><span class="mi">${icon}</span>${text}` +
+    `<button data-a="${a}" class="mit-schalter" role="switch" aria-checked="${an ? 'true' : 'false'}">` +
+    `<span class="mi">${icon}</span>${text}` +
     `<span class="mschalter${an ? ' an' : ''}"><i></i></span></button>`;
+
+  /**
+   * Der Schalter kippt an zwei Stellen, und bis hierher kippte nur die
+   * FARBE: `.an` färbt die Pille ein, und mehr stand nirgends. Damit war
+   * der Zustand ausschliesslich über Farbe zu erkennen — genau das, was
+   * §38 verbietet, und ein Vorleseprogramm las eine Schaltfläche ohne
+   * jeden Zustand vor. Beide Stellen gehen deshalb durch diese Funktion:
+   * zwei Aufrufer, eine Wahrheit (§8).
+   */
+  const schalterKippen = (knopf: Element | null, an: boolean): void => {
+    if (!knopf) return;
+    knopf.querySelector('.mschalter')?.classList.toggle('an', an);
+    knopf.setAttribute('aria-checked', an ? 'true' : 'false');
+  };
 
   /**
    * „Mit KI verwenden" — bei Notion macht dieser Eintrag aus der Seite
@@ -581,7 +596,7 @@ const App = (() => {
          VOR dem Sammelzweig — der Schalter kippt trotzdem an Ort und Stelle,
          nur die Schreibarbeit macht `volleBreite`. */
       if (a === 'breit') {
-        b.querySelector('.mschalter')?.classList.toggle('an', volleBreite(p));
+        schalterKippen(b, volleBreite(p));
         return;
       }
 
@@ -592,7 +607,7 @@ const App = (() => {
         const neu = a === 'pfad' ? !(p.pfad !== false) : !p[feld];
         Store.updateBlock(p.id, { [feld]: neu });
         p[feld] = neu;
-        b.querySelector('.mschalter')?.classList.toggle('an', neu);
+        schalterKippen(b, neu);
         zeichneSeite();
         return;
       }
