@@ -609,16 +609,14 @@ body [data-rmo~="letters"]:is(:hover,:focus-visible,:active) :is(.rmo-letter,.ru
 /* Native Schalter: kurze Zustandsbewegung ersetzt die frühere Endlosschleife. */
 body [data-rmo~="toggle"]::before { animation:none; }
 body [data-rmo~="toggle"][data-rmo-state="an"]::before { animation:rmo-orbit .65s ease-out 1; }
-/* 8 — Der Glasknopf. Der `body`-Vorsatz ist kein Stilmittel, sondern die
-   Reparatur: ohne ihn verlor dieses Attribut gegen `.fbtns button.prim:
-   not(.ru-funkel)` neun Zeilen weiter oben (drei Klassen gegen ein
-   Attribut), und Schatten wie Druckweg waren seit dem ersten Tag
-   unsichtbar. Die Regel dort bleibt stehen — sie trägt die Knöpfe,
+/* 8 — Der Glasknopf. E534: Ein body-Vorsatz allein gewinnt nicht gegen
+   drei Klassen. Erst die bestehende Dialogkennung zusammen mit data-rmo
+   macht die Motion-Regel spezifischer. Die ältere Regel bleibt Grundlage,
    solange das Skript noch nicht gelaufen ist. */
-body [data-rmo~="glass"] { min-height:44px; border:1px solid color-mix(in srgb,var(--accent) 55%,var(--line));
+body .fbtns button.prim[data-rmo~="glass"] { min-height:44px; border:1px solid color-mix(in srgb,var(--accent) 55%,var(--line));
   box-shadow:inset 0 1px 0 #ffffff70, inset 0 -6px 12px #0001, 0 3px 0 #0003;
   transition:transform .16s,box-shadow .16s; }
-body [data-rmo~="glass"]:active:not(:disabled) { transform:translateY(3px); box-shadow:inset 0 2px 5px #0003; }
+body .fbtns button.prim[data-rmo~="glass"]:active:not(:disabled) { transform:translateY(3px); box-shadow:inset 0 2px 5px #0003; }
 /* Der Glaskörper selbst: eine eigene Schicht über der Fläche, unter dem
    Text. Sie fängt keine Zeiger und trägt keine Bedeutung. */
 .rmo-glass { position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden;
@@ -696,6 +694,60 @@ body [data-rmo~="glass"]:active:not(:disabled) > :not(.rmo-glass) { opacity:.82;
   box-shadow:inset 0 1px 0 #ffffff60,0 3px 0 #0003; transition:transform .15s,box-shadow .15s; }
 .rmo-transport button:active:not(:disabled) { transform:translateY(3px); box-shadow:inset 0 2px 4px #0003; }
 .rmo-transport button:disabled { opacity:.45; cursor:default; }
+
+/* E534: Herz und Wendekarte ergänzen bestehende Statistik-/Ticketfamilien.
+   Keine neuen Kennzahlen, keine zweite Live-Region und keine Leerlaufschleife. */
+body :is(.stat-karte.lw-metrik,.rmo-health-metric):has(> .rmo-heart) > strong { padding-inline-end:32px; }
+/* Lernkarten ordnen ihr Etikett per order:-1 oben ein. Dafür bleibt unter
+   dem Herz eine eigene Zeile frei; Gesundheitskarten haben das Etikett unten. */
+body .stat-karte.lw-metrik:has(> .rmo-heart) { padding-top:var(--touch-min,44px); }
+body :is(.stat-karte.lw-metrik,.rmo-health-metric):has(> .rmo-heart) > .rmo-ring { top:8px; right:8px; bottom:auto; }
+body .rmo-heart { position:absolute; inset:13px 13px auto auto; width:20px; height:20px;
+  color:var(--accent-text); pointer-events:none; font-size:20px; line-height:1;
+  text-align:center; transform-origin:center; opacity:.8; }
+.rmo-heart::before { content:'♥'; }
+@keyframes rmo-heart-beat {
+  0%,100% { transform:perspective(300px) scale(1) translateZ(0); }
+  5% { transform:perspective(300px) scale(.8) translateZ(0); }
+  20% { transform:perspective(300px) scale(1.2) translateZ(40px); }
+  40% { transform:perspective(300px) scale(1) translateZ(20px); }
+  50% { transform:perspective(300px) scale(1.2) translateZ(30px); }
+  70% { transform:perspective(300px) scale(.8) translateZ(20px); }
+}
+body :is(.stat-karte.lw-metrik,.rmo-health-metric):is(:hover,:focus-within,:active,[data-rmo-play="metric"]) > .rmo-heart {
+  animation:rmo-heart-beat .8s ease-out 1;
+}
+[data-rmo-play="metric"] { animation:none; }
+body .rmo-ticket { perspective:800px; }
+.rmo-ticket-turn { position:relative; display:block; height:175px; transform-style:preserve-3d;
+  transition:transform .6s cubic-bezier(.22,1,.36,1); }
+body .rmo-ticket-turn > :is(.ru-drucker-buehne,.rmo-ticket-back) {
+  position:absolute; inset:0; box-sizing:border-box; backface-visibility:hidden;
+}
+body .rmo-ticket-back { display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:12px; padding:18px; transform:rotateY(180deg); overflow-wrap:anywhere; text-align:center;
+  border-block:1px dashed var(--line-stark); color:var(--text);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 18%,var(--bg-card)),var(--bg-card)); }
+.rmo-ticket-mark { display:grid; place-items:center; width:40px; height:40px; border-radius:50%;
+  border:1px solid currentColor; color:var(--accent-text); font-size:23px; }
+.rmo-ticket-mark::before { content:'↗'; }
+.rmo-ticket[data-zustand="fertig"] .rmo-ticket-mark::before { content:'✓'; }
+.rmo-ticket[data-zustand="fehler"] .rmo-ticket-mark::before { content:'!'; }
+.rmo-ticket[data-zustand="fehler"] .rmo-ticket-mark { color:var(--gefahr); }
+.rmo-ticket:is([data-zustand="fertig"],[data-zustand="fehler"]) .rmo-ticket-turn { transform:rotateY(180deg); }
+.rmo-ticket-result { font-size:12px; line-height:1.5; }
+/* Ohne Bewegung wechselt nur die sichtbare Seite, ohne räumlichen Weg. */
+body[data-bewegung="ruhig"] .rmo-ticket-turn,
+body[data-bewegung="ruhig"] .rmo-ticket-back { transform:none !important; }
+body[data-bewegung="ruhig"] .rmo-ticket-back { visibility:hidden; }
+body[data-bewegung="ruhig"] .rmo-ticket:is([data-zustand="fertig"],[data-zustand="fehler"]) .rmo-ticket-back { visibility:visible; }
+body[data-bewegung="ruhig"] .rmo-ticket:is([data-zustand="fertig"],[data-zustand="fehler"]) .ru-drucker-buehne { visibility:hidden; }
+@media (prefers-reduced-motion:reduce) {
+  body .rmo-ticket-turn,body .rmo-ticket-back { transform:none !important; }
+  body .rmo-ticket-back { visibility:hidden; }
+  body .rmo-ticket:is([data-zustand="fertig"],[data-zustand="fehler"]) .rmo-ticket-back { visibility:visible; }
+  body .rmo-ticket:is([data-zustand="fertig"],[data-zustand="fehler"]) .ru-drucker-buehne { visibility:hidden; }
+}
 
 /* Offscreen und verborgene Tabs: auch Pseudoelemente pausieren. */
 [data-rmo-visible="false"], [data-rmo-visible="false"] *,

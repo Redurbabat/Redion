@@ -7330,3 +7330,13 @@ Was nachzuholen ist, je Stelle ein Lauf nach dem Muster von `test495`:
   Fehler, die in E525 und E531 nur das Bild fand, sind der Grund.
 
 Bis dahin gilt für E533 ausdrücklich: **eine Behauptung, kein Beleg.**
+
+**Teilnachweis E534 (auf ad4ccbc, 12. September):** `test496` hält nun
+den echten Glasknopf-Schatten, Statistikherz, kollisionsfreie Ringposition
+auf schmalen Karten und die zustandsgebundene Ticket-Wendekarte. Die
+fehlenden Elemente und die beiden CSS-Fehler wurden zuerst rot gesehen,
+danach 148 Zusagen grün. Damit ist L149 nur teilweise bearbeitet:
+Pflegekarten-Lichtschlitz, Regler-Knauf und Funkel-Abstufungen haben hier
+noch keine eigenen Gegenproben; die pauschale E533-Bauzusage ist nicht
+durch diese vier Ergänzungen bewiesen. Auch ein vollständiger Gesamtlauf
+und physische Safari-/Chrome-Geräteprüfungen bleiben ausstehend.

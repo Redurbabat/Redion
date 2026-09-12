@@ -193,3 +193,23 @@ Unschärfe. Nachgemessen am laufenden Knopf — `animationName` ist im
 Leerlauf `none` und beim Anfassen `rmo-letter-platzen` mit genau einer
 Wiederholung. Das ist beides, was verlangt war, und nicht eines auf Kosten
 des anderen.
+
+## Weiterarbeit auf ad4ccbc — E534, 12. September 2026
+
+Die oben zuletzt offenen Teile sind jetzt eingebaut:
+
+- **Statistikherz:** ein kurzer räumlicher Herzschlag bei Interaktion,
+  keine Dauerbewegung und keine erfundene Gesundheitskennzahl.
+- **Ticket-Wendekarte:** die bestehende Druckbühne ist die Vorderseite;
+  bei Abschluss oder Fehler erscheint die Rückseite mit dem tatsächlichen
+  Status. Der zugängliche Status bleibt außen unverändert sichtbar.
+- **Schmale Statistik:** Ring und Herz teilen sich einen Platz oberhalb
+  der Beschriftung. „Warnungen“ wird nicht mehr vom Ring übermalt.
+- **Glasknopf:** der geplante Schatten gewinnt jetzt tatsächlich gegen
+  die ältere `.fbtns button.prim:not(.ru-funkel)`-Regel.
+
+Der Katalog zählt die ursprünglichen **15 Vorlagenfamilien**. Ring, Herz
+und Ziffernrolle gehören gemeinsam zu `metric`; es wurde kein bestehender
+Effekt entfernt. `test496` prüft die Ergänzungen an echten Komponenten und
+war vor dem Einbau rot. Bilder: `bilder/motion-rest-*.png`, ausschließlich lokal.
+Übrige Prüflücken aus E532/E533 stehen weiterhin unter L149.

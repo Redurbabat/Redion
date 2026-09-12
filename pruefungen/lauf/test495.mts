@@ -225,11 +225,9 @@ console.log('\n§6 Der Ring rahmt die Zahl und misst nichts');
   const m = await s3.evaluate(() => {
     const ring = document.querySelector('.stat-karte.lw-metrik > .rmo-ring') as HTMLElement | null;
     const karte = document.querySelector('.stat-karte.lw-metrik')!.getBoundingClientRect();
-    /* `:not(.rmo-ring)` IST KEINE ZIERDE. `ensure()` setzt den Ring als
-       ERSTES Kind ein, und er ist selbst ein `span` — `> span` traf also
-       den Ring und mass ihn gegen sich selbst. Die Zusage war rot und hatte
-       damit auf die denkbar dümmste Weise recht. */
-    const text = document.querySelector('.stat-karte.lw-metrik > span:not(.rmo-ring)')!.getBoundingClientRect();
+    /* Nur die echte Beschriftung messen, nicht Ring oder Herz. Beide
+       Dekorationen sind aria-hidden und dürfen einander überlagern. */
+    const text = document.querySelector('.stat-karte.lw-metrik > span:not([aria-hidden="true"])')!.getBoundingClientRect();
     const r = ring?.getBoundingClientRect();
     const ueberlappt = !!r && !(r.right < text.left || r.left > text.right ||
                                 r.bottom < text.top || r.top > text.bottom);

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-513 Entscheidungen, E1 bis E533 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+514 Entscheidungen, E1 bis E534 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -577,6 +577,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E531** — Der Barcode entsteht beim Drucken, der Ring rahmt die Kennzahl
 * **E532** — Vier Regeln, die geschrieben und nie gesehen wurden: Glasknopf, Pflegekarte, Regler-Knauf, Funkel-Abstufung
 * **E533** — Redur: alles bauen, so schnell wie möglich, ohne viel Prüfung — ein Bogen für alle offenen Vorlagenblöcke, die Prüfläufe folgen nach
+* **E534** — Auf ad4ccbc weiterarbeiten: Ticket wenden, Statistikherz ergänzen und zwei Darstellungsfehler messen
 
 ---
 
@@ -42882,3 +42883,40 @@ Hauptwegen (§37), kein `innerHTML`, Dekoration `aria-hidden`. Was ein Agent
 an seiner Stelle für unsinnig hielt — Demotext, Demobild, etwas, das die
 Bedienung stört — steht mit Grund in `doku/ANIMATIONEN-ZUORDNUNG.md`, nicht
 still weggelassen.
+
+---
+
+E534 — Auf ad4ccbc weiterarbeiten: Herz, Wendekarte und gemessene Restfehler
+--------------------------------------------------------------------------
+
+Redur hat ausdrücklich den Commit `ad4ccbc782e2eb50a1e75ef56ed9a74a60451201`
+als Grundlage genannt. Er führt PR #74 zusammen; sein Dateibaum ist identisch
+mit `f1eca227`. Vorhandene Glühfäden, Kartenringe, Barcode, Statistikring und
+die wiederhergestellte Unschärfe bleiben erhalten. Kein Push.
+
+Die zwei am Ende der Animationszuordnung offenen Bewegungen sind ergänzt:
+Das dekorative Statistikherz schlägt bei Berührung, Fokus innerhalb der
+Karte oder `play(card, 'metric')` einmal. Die Druckkarte wendet ihre
+Bildbühne bei `fertig` und `fehler`; ihre Rückseite übernimmt den echten
+Statussatz. Der unveränderte Status bleibt außerhalb der Drehung und ist
+weiter die einzige vorgelesene Meldung. Das ist kein Nachweis, dass ein
+PDF tatsächlich gespeichert wurde: diesen Ausgang meldet der Browser nicht.
+
+Ring und Herz sind Teile der Statistikvorlage. Deshalb enthält der Katalog
+wieder die im freigegebenen Plan vereinbarten 15 Familien, nicht 16; der
+Ring selbst wurde nicht entfernt. Die Rollenfunktion verarbeitet weiterhin
+nur das Zahlenelement, niemals die ganze Statistikkarte.
+
+Zwei zusätzliche Fehler wurden sichtbar und anschließend rot gemessen:
+Der Ring lag auf schmalen Gesundheitskarten auf „Warnungen“. Er rahmt nun
+das Herz oberhalb der Beschriftung. Und der `body`-Vorsatz aus E532 allein
+gewann entgegen seiner Begründung nicht gegen drei Klassen. Der Glasknopf
+erhält nun einen ausreichend spezifischen, weiterhin gekapselten Selektor.
+
+`test496`: zunächst fehlten Herz und Wendeseiten in allen vier Größen
+(acht rote Zusagen). Die zwei Stilfehler wurden anschließend ebenfalls rot
+gesehen. Nach der Reparatur: 148 Zusagen grün, einschließlich 360/390/428/1280,
+Hell/Dunkel am Ticket, ruhiger Bewegung, unveränderter Zahlen, Idempotenz
+und Entfernen. E533 ist damit nicht pauschal verifiziert; L149 bleibt für
+seine übrigen Behauptungen offen. Ein vollständiger Gesamtlauf wird dadurch
+nicht behauptet.
