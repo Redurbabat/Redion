@@ -438,7 +438,17 @@ a.bl:hover{color:var(--text)}
   display:flex; gap:10px; align-items:center; background:var(--bg-side);
   border:1px solid var(--line); border-radius:22px; padding:6px 14px; font-size:13px;
 }
-.praesi-leiste button{padding:4px 10px; border-radius:14px; color:var(--text-dim)}
+/* 44 PX, NICHT 25 (§37). Hier stand `padding:4px 10px` bei 13 px Schrift —
+   rund 25 px hoch. Das sind die Knöpfe, mit denen am TELEFON geblättert und
+   beendet wird: Wischen gibt es im Vortrag nicht, und ein Tipp auf die
+   Folienhälften auch nicht. Damit war der einzige Weg durch eine
+   Präsentation ein Ziel, das §37 auf einem Hauptweg ausschliesst.
+   Die Leiste wächst dadurch; das ist der Preis und er ist richtig herum. */
+.praesi-leiste button{
+  min-width:var(--touch-min); min-height:var(--touch-min);
+  padding:4px 14px; border-radius:14px; color:var(--text-dim);
+  display:inline-flex; align-items:center; justify-content:center;
+}
 .praesi-leiste button:hover{background:var(--bg-hover); color:var(--text)}
 
 /* --- Statistik ------------------------------------------------------------------ */

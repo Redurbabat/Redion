@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-517 Entscheidungen, E1 bis E537 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+518 Entscheidungen, E1 bis E538 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -581,6 +581,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E535** — Sieben Vorlagenblöcke in einem Zug: Fragmente statt zehn Schreiber in einer Datei
 * **E536** — Die Unschärfe läuft wieder von links nach rechts — die Staffelung war auf 0 gefallen
 * **E537** — Die letzten drei Vorlagenblöcke: Ordnerkarte, Lichtkarte mit Kippschalter, flüssige Blase
+* **E538** — Office war die einzige Gruppe ohne Originalschutz — und der Vortrag am Telefon nicht bedienbar
 
 ---
 
@@ -43075,3 +43076,50 @@ und eines zu erfinden hiesse, eine Bedeutung zu behaupten.
 
 `test493` 44 grün, `test494` 153 grün, `test495` 26/26, `test496` 148 grün.
 Angesehen: `bilder/e537-lampe-*.png` in Hell und Dunkel.
+
+---
+
+E538 — Office war die einzige Gruppe ohne Originalschutz
+--------------------------------------------------------------------------
+
+Redur will Word und PowerPoint öffnen und bearbeiten, „aber wichtig die
+originale datei wird immer geschützt". Beim Nachsehen, was dafür da ist,
+kam heraus: **für Office war sie es nicht.**
+
+`Einlesen.datei` las die Bytes in einen Puffer, schrieb Blöcke und liess die
+Datei fallen — kein `Dateien.ablegen`, keine Kennung, kein Anhang. Nach dem
+Einlesen hielt Redion nur das Umwandlungsergebnis.
+
+Das wiegt doppelt, weil die Umwandlung **verlustbehaftet** ist:
+`docxLesen` liest ausschliesslich `word/document.xml` und davon nur die
+direkten Kinder von `w:body`. Bilder, Kopf- und Fusszeilen, Fuss- und
+Endnoten, Kommentare, Spalten, Textrahmen, Farben, Schriftgrade,
+Ausrichtung, Listenebenen — alles bleibt zurück. Wer die Datei danach von
+der Platte löschte, hatte sie verloren, und nirgends stand, dass etwas
+fehlt.
+
+Und es war eine **Ausnahme**, kein Versäumnis auf ganzer Linie: der PDF-Weg
+legt das Original zuerst ab (`bereiche/pdf/einlesen.ts:107`), der Anhang-Weg
+legt ab (`archiveImport.ts:204`). Nur `.docx`, `.xlsx`, `.ods` und `.epub`
+liefen daran vorbei.
+
+Jetzt gilt dieselbe Reihenfolge wie beim PDF: erst ablegen, dann umwandeln.
+Schlägt das Ablegen fehl, fliegt der Fehler nach oben und es hat noch nichts
+stattgefunden — dann übernimmt der gewöhnliche Anhang-Weg. Die Originaldatei
+hängt danach sichtbar an Stelle 0 der neuen Seite, und der Dateisatz zeigt
+auf DIESEN Block (E99: sonst überlebt er das Löschen des Anhangs). Der
+Hinweis nach dem Einlesen sagt es auch: „das Original liegt unverändert als
+Anhang dabei".
+
+**Dazu ein zweiter Fund derselben Vermessung.** `.praesi-leiste button` hatte
+`padding:4px 10px` bei 13 px Schrift — gemessen **28 × 32 px**. Das sind die
+Knöpfe, mit denen am Telefon geblättert und beendet wird: Wischen gibt es im
+Vortrag nicht, ein Tipp auf die Folienhälften auch nicht. §37 [hart] sagt
+44 px auf den Hauptwegen, ohne Ausnahme. Die Leiste wird dadurch grösser;
+das ist der Preis, und er ist herum richtig.
+
+`test497`: 16 Zusagen. Gegenprobe rot gesehen — ohne die zwei Reparaturen
+fallen 14 davon, und die Knöpfe messen 28 × 32.
+
+Der Plan für Word und PowerPoint steht als O1 bis O7 in `AUFGABEN.md`, mit
+dem, was die drei Vermessungen ergeben haben.

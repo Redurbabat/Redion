@@ -825,3 +825,60 @@ worden; die Karte mit jedem einzelnen Befund steht in
 
 Das Ziel bleibt offen, weil ein Ziel nie „erledigt" ist. Es steht deshalb
 hier und nicht dort.
+
+---
+
+## Word und PowerPoint öffnen und bearbeiten (O1 … O7)
+
+Redur, 12. September 2026: „ich will das redion auch die anderen datein auch
+öffnen kann z.B. word und powerpoint daten, und dort direkt wie die pdf
+bearbeiten kann … aber wichtig die originale datei wird immer geschützt."
+Und: „beides, drauf schreiben und text ändern … bei der powerpoint daten will
+ich es 1:1 wie powerpoint haben."
+
+Drei Vermessungen gegen den Code (12. September) haben ergeben, was da ist:
+
+| | Lesen | Schreiben |
+|---|---|---|
+| `.docx` | Umwandlung in Blöcke, verlustbehaftet | ja, minimal aber gültig |
+| `.xlsx` / `.ods` | Blatt wird Datenbank | ja |
+| `.pptx` | **gar nicht** | ja, Textliste auf leerem Grund |
+
+**Was überraschend gut dasteht:** Die Markenschicht (`bereiche/pdf/marken.ts`)
+hängt an KEINER PDF-Annahme — sie liest aus einem Block genau `marken` und
+`id`. Sie kann Textkästen mit Schrift und Rahmen, Bilder mit eigener Datei,
+Verschieben, Skalieren, Drehen, Sperren, 100 Schritte rückgängig und eine
+Elementbibliothek. Eine Folie als Block mit freier Objektliste ist genau
+diese Form. Die Folienliste zum Umsortieren gibt es auch schon: die
+Miniaturleiste des Dokumentmodus.
+
+**Was fehlt:** ein Rasterer für Office (pdf.js liest nur PDF), das Ersetzen
+eines einzelnen Eintrags in einer vorhandenen ZIP, und jede Grundlage dafür,
+Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
+
+### Die Bögen, in der Reihenfolge
+
+- **O1 · Das Original bleibt** — ERLEDIGT (E538). Office war die einzige
+  Gruppe ohne Originalschutz.
+- **O2 · Der ZIP-Teil lernt Durchreichen.** Der Leser gibt rohe, noch
+  gepackte Bytes heraus; der Schreiber nimmt `methode: 8` mit getrennten
+  Roh- und Packlängen entgegen. Erst damit lässt sich eine `.docx` öffnen,
+  EINEN Eintrag ersetzen und der Rest unverändert zurückschreiben. Ohne
+  diesen Bogen ist jede Rundreise ein Neuschreiben — gültig, aber ungepackt
+  und mit Datum 1980.
+- **O3 · `.pptx` lesen.** `ppt/presentation.xml` (Reihenfolge, Foliengrösse),
+  `slideN.xml` (`p:spTree` → Textkästen mit `a:xfrm`-Lage, `p:pic` → Bilder),
+  die `.rels` (Bildziele), `slideLayouts`/`slideMasters` für Geerbtes,
+  `theme1.xml` für Farben. Jede Folie wird ein Block mit `marken`.
+- **O4 · Folien bearbeiten.** Die Markenschicht wird der Folieneditor, die
+  Miniaturleiste die Folienliste. Hier entscheidet sich „1:1 wie PowerPoint".
+- **O5 · `.pptx` schreiben mit Rundreise.** Geänderte Folien zurück, der Rest
+  der Originaldatei unangetastet (braucht O2).
+- **O6 · `.docx` draufschreiben.** Braucht den Rasterer. Das ist der teuerste
+  Bogen und der einzige, für den es noch keinen Weg gibt.
+- **O7 · `.docx` Text ändern.** Rundreise auf `word/document.xml` (braucht O2).
+
+**Ehrlich dazu:** „1:1 wie PowerPoint" ist kein Bogen, sondern O3 bis O5 —
+und selbst danach fehlen Übergänge, Animationen und Platzhalter-Vererbung.
+Ungemessen ist ausserdem, ob PowerPoint die `.pptx`, die Redion heute
+schreibt, überhaupt öffnet (`LUECKEN.md:2708`).
