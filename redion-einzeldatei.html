@@ -8132,15 +8132,28 @@ body.nh-zieht .nh-regal{ touch-action:none }
 
 /* 1 — Ordner: fünf Blätter fächern sich beim Anfassen auf. */
 .bib-deckel[data-art="ordner"] { perspective: 900px; }
-.bib-deckel[data-art="ordner"] .bib-deckel-blatt { transformo-style: preserve-3d; transition: transform .45s cubic-bezier(.2,.8,.2,1); }
-.rmo-folder-stack { position: absolute; inset: 18% 16% 12%; pointer-events: none; }
+.bib-deckel[data-art="ordner"] .bib-deckel-blatt { transform-style: preserve-3d; transition: transform .45s cubic-bezier(.2,.8,.2,1); }
+body .bib-deckel[data-art="ordner"] .bib-deckel-blatt::before {
+  inset: 34% 4% 8%; z-index: 3; opacity: 1;
+  transform-origin: 50% 100%;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 85%, white), var(--accent));
+  box-shadow: inset 0 1px 0 #ffffff50, 0 6px 12px #0002;
+  transition: transform .5s cubic-bezier(.22,1,.36,1);
+}
+body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt::before { transform: rotateX(-32deg) translateZ(6px); }
+.rmo-folder-stack { position: absolute; inset: 24% 14% 20%; z-index: 2; pointer-events: none; }
 .rmo-folder-sheet {
   position: absolute; inset: 0; border-radius: 5px;
-  background: linear-gradient(150deg, color-mix(in srgb, var(--accent) 25%, var(--bg-card)), var(--bg-card));
-  border: 1px solid var(--line); box-shadow: 0 2px 6px #0002;
+  background: linear-gradient(150deg, #f5f1fc, #cfc9e5);
+  border: 1px solid #ffffff70; box-shadow: 0 2px 6px #0002;
   transform: translateY(calc(var(--rmo-index) * -3px));
   transition: transform .5s cubic-bezier(.2,.8,.2,1); transition-delay: calc(var(--rmo-index) * 25ms);
 }
+.rmo-folder-sheet:nth-child(2) { background: linear-gradient(150deg, #fff2e0, #e9cdb3); }
+.rmo-folder-sheet:nth-child(3) { background: linear-gradient(150deg, #e5f0ff, #b5cce9); }
+.rmo-folder-sheet:nth-child(4) { background: linear-gradient(150deg, #e4f8f2, #b8dacf); }
+.rmo-folder-sheet:nth-child(5) { background: linear-gradient(150deg, #f6e8f2, #d8bfda); }
+.rmo-folder-sheet::after { content: ''; position: absolute; inset: 15px 12px; background: repeating-linear-gradient(transparent 0 8px, #50426322 8px 9px); }
 .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .rmo-folder-sheet {
   transform: translateY(calc(-12px - var(--rmo-index) * 5px)) rotate(calc((var(--rmo-index) - 2) * 7deg));
 }
@@ -8167,6 +8180,21 @@ body.nh-zieht .nh-regal{ touch-action:none }
 }
 .els-kachel:is(:hover, :focus-visible)::after, .stat-karte.lw-metrik:hover::after { opacity: 1; animation: rmo-shine 1.2s ease both; }
 .stat-karte.lw-metrik strong { display: block; animation: rmo-reveal .45s ease both; }
+/* Die Ziffernrolle aus der Statistik-Vorlage, mit dem vorhandenen Wert
+ * als unveränderter Textquelle. Nur die dekorative Rolle bewegt sich. */
+.stat-karte.lw-metrik strong.rmo-number { position: relative; line-height: 1.2; letter-spacing: 0; white-space: pre; }
+.rmo-number-source { color: transparent; }
+.rmo-reels { position: absolute; inset: 0; display: flex; pointer-events: none; overflow: hidden; }
+.rmo-digit { display: inline-block; flex: 0 0 1ch; height: 1.2em; overflow: hidden; }
+.rmo-digit::before {
+  content: '0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9';
+  display: block; white-space: pre; line-height: 1.2em;
+  transform: translateY(calc(var(--rmo-digit) * -1.2em));
+  animation: rmo-digit-roll .7s cubic-bezier(.22,1,.36,1) both;
+  animation-delay: var(--rmo-delay);
+}
+.rmo-separator::before { content: attr(data-rmo-character); white-space: pre; }
+@keyframes rmo-digit-roll { from { transform: translateY(0); } }
 /* 4 — Der kreisende Farbverlauf liegt im Fokus der Eingabe, nicht auf den Bau-Knöpfen. */
 #ai .ai-compose::before {
   content: ''; pointer-events: none; position: absolute; inset: -1px; border-radius: inherit;
@@ -8210,8 +8238,36 @@ body.nh-zieht .nh-regal{ touch-action:none }
 /* 12 — Holografischer Papierglanz am wirklichen PDF-Druck-/Exportstatus. */
 body .ru-drucker-blatt {
   background-image: linear-gradient(115deg, transparent 25%, #b7eef330 43%, #d5b9f633 52%, transparent 68%);
-  background-size: 250% 100%; animation: rmo-shine 3s ease-in-out infinite;
+  background-size: 250% 100%;
 }
+body .ru-drucker:is([data-zustand="vorbereiten"], [data-zustand="rendern"]) .ru-drucker-blatt { animation: rmo-shine 3s ease-in-out infinite; }
+/* Ticket-Motive: perforierter Rand, irisierendes Papier und Zierstreifen.
+ * Zustand, Breite und Druckermechanik kommen weiterhin vom Druckauftrag. */
+body .ru-drucker.rmo-ticket {
+  border-radius: 14px 14px 4px 4px; padding-bottom: 5px;
+  box-shadow: 0 12px 40px #0003, inset 0 1px 0 #ffffff20;
+}
+.rmo-ticket-heading {
+  display: block; padding: 11px 14px; color: var(--text); font-size: 10px;
+  font-weight: 700; letter-spacing: .13em; text-transform: uppercase;
+  background: linear-gradient(110deg, #81c5ce14, transparent 45%, #cba3d91a);
+}
+body .rmo-ticket .ru-drucker-buehne {
+  border-block: 1px dashed var(--line-stark);
+  background: radial-gradient(ellipse at 50% 25%, #a69cdd20, transparent 65%), var(--bg-tief);
+}
+body .rmo-ticket .ru-drucker-status { padding: 11px 12px 15px; }
+.rmo-ticket::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 6px;
+  background: radial-gradient(circle at 4px 6px, var(--bg-tief) 3px, transparent 3.5px) 0 0 / 8px 6px repeat-x;
+  pointer-events: none;
+}
+.rmo-ticket .ru-drucker-blatt::after {
+  content: ''; position: absolute; left: 8px; right: 8px; bottom: 7px; height: 9px; opacity: 0;
+  background: repeating-linear-gradient(90deg, #302b41 0 1px, transparent 1px 3px, #302b41 3px 5px, transparent 5px 6px);
+}
+.rmo-ticket:is([data-zustand="rendern"], [data-zustand="speichern"], [data-zustand="fertig"]) .ru-drucker-blatt::after { opacity: .6; }
+.rmo-ticket .ru-drucker-tinte:nth-last-child(-n+2) { visibility: hidden; }
 /* 13 — Kleine Glaskugel als KI-Zeichen, ohne Verifizierungsbehauptung. */
 .rmo-orb {
   position: relative; display: inline-block; flex: 0 0 25px; width: 25px; height: 25px;
@@ -8248,16 +8304,133 @@ body .ru-drucker-blatt {
 }
 @media (hover: none) {
   .els-kachel:hover, .stat-karte.lw-metrik:hover { transform: none; }
+  body .bib-deckel[data-art="ordner"]:hover:not(:focus-visible) .bib-deckel-blatt::before { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   #ai.open, #ai .ai-tools-body, #ai .ai-compose::before,
   .rmo-orb::after, .rmo-liquid::before, .rmo-liquid::after, .ru-drucker-blatt,
+  .rmo-digit::before,
   .els-kachel::after, .stat-karte.lw-metrik::after, .stat-karte.lw-metrik strong { animation: none !important; }
   #ai .ai-compose, #ai .ai-leiste button, #ai .ai-tools > summary > span,
   #ai .ai-compose::before, .rmo-folder-sheet, .rmo-carousel i, .rmo-sliders i::after,
   .els-kachel, .stat-karte.lw-metrik, .schalter > i, .sp-start,
   .fbtns button.prim { transition: none !important; }
+  body .bib-deckel[data-art="ordner"] .bib-deckel-blatt::before { transition: none !important; }
   .els-kachel:is(:hover, :focus-visible), .stat-karte.lw-metrik:hover { transform: none; }
+}
+@media print {
+  .rmo-reels { display: none; }
+  .rmo-number-source { color: inherit; }
+}
+
+/* Vollständiger Katalog: keine globalen Demo-Regeln, keine neuen Schriften. */
+body .bib-deckel .rmo-folder-preview { position:absolute; inset:17% 12% auto; z-index:4; display:grid; gap:3px;
+  color:var(--text); font-size:10px; text-align:left; pointer-events:none; }
+.rmo-folder-preview > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  opacity:0; transform:translateY(5px); transition:opacity .25s, transform .3s;
+  background:var(--bg-card); border-radius:3px; padding:2px 4px; }
+.rmo-folder-preview > b { width:fit-content; padding:3px 5px; border-radius:6px; background:var(--bg-card); }
+[data-rmo~="folder"]:is(:hover,:focus-visible,:active) .rmo-folder-preview > span { opacity:1; transform:none; }
+body [data-rmo~="folder"]:active .bib-deckel-blatt::before { transform:rotateX(-32deg) translateZ(6px); }
+[data-rmo~="sliders"]:is(:hover,:focus-visible,:active) .rmo-sliders i::after { transform:translateX(4px); }
+[data-rmo~="sliders"]:is(:hover,:focus-visible,:active) .rmo-sliders i:nth-child(2)::after { transform:translateX(-4px); }
+[data-rmo~="sliders"] > :is(svg,[data-sym]), #btn-ai > [data-sym] { display:none; }
+
+/* Kreisender Rand: eine Umdrehung je Interaktion, niemals im Leerlauf. */
+[data-rmo~="gradient"], [data-rmo~="glass"] { position:relative; isolation:isolate; }
+[data-rmo~="gradient"]::after { content:''; position:absolute; inset:0; border-radius:inherit;
+  pointer-events:none; padding:2px; opacity:0;
+  background:conic-gradient(from var(--rmo-angle),var(--accent),transparent,var(--accent-text),var(--accent));
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); mask-composite:exclude; }
+@property --rmo-angle { syntax:'<angle>'; inherits:false; initial-value:0deg; }
+@keyframes rmo-gradient-turn { to { --rmo-angle:360deg; } }
+[data-rmo~="gradient"]:not(:disabled):is(:hover,:focus-visible,:active)::after,
+[data-rmo-play="gradient"]::after { opacity:1; animation:rmo-gradient-turn 1.4s ease-out 1; }
+.rmo-word { white-space:pre-wrap; }
+body [data-rmo~="letters"] .ru-funkel-b { animation:none; color:inherit; }
+body #ai .ai-quick button[data-rmo~="letters"] > svg, body [data-rmo~="letters"] > svg { animation:none; }
+.rmo-letter { display:inline; }
+@keyframes rmo-letter-glow { 50% { color:var(--accent-text); text-shadow:0 0 8px var(--accent); } }
+body [data-rmo~="letters"]:is(:hover,:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
+[data-rmo-play="letters"] :is(.rmo-letter,.ru-funkel-b) {
+  animation:rmo-letter-glow .65s ease-out 1; animation-delay:var(--rmo-delay,0ms); }
+
+/* Native Schalter: kurze Zustandsbewegung ersetzt die frühere Endlosschleife. */
+body [data-rmo~="toggle"]::before { animation:none; }
+body [data-rmo~="toggle"][data-rmo-state="an"]::before { animation:rmo-orbit .65s ease-out 1; }
+[data-rmo~="glass"] { min-height:44px; border:1px solid color-mix(in srgb,var(--accent) 55%,var(--line));
+  box-shadow:inset 0 1px 0 #ffffff70, inset 0 -6px 12px #0001, 0 3px 0 #0003;
+  transition:transform .16s,box-shadow .16s; }
+[data-rmo~="glass"]:active:not(:disabled) { transform:translateY(3px); box-shadow:inset 0 2px 5px #0003; }
+
+.rmo-recent { margin:16px 0 24px; min-width:0; }
+.rmo-recent h2 { font-size:13px; color:var(--text-dim); margin:0 0 12px; }
+.rmo-recent-track { display:flex; gap:12px; padding:10px 6px 18px; overflow-x:auto; perspective:900px;
+  scroll-snap-type:x mandatory; }
+.rmo-recent-card { flex:1 0 150px; min-width:0; max-width:320px; min-height:112px; padding:16px;
+  display:flex; flex-direction:column; align-items:flex-start; gap:8px; text-align:left;
+  color:var(--text); border:1px solid var(--line-stark); border-radius:14px;
+  background:linear-gradient(145deg,var(--bg-card),var(--bg-hover)); box-shadow:0 6px 12px #0001;
+  scroll-snap-align:center; transform:rotateY(calc((var(--rmo-index,1) - 1) * -6deg));
+  transition:transform .3s,box-shadow .3s; }
+.rmo-recent-card > * { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rmo-recent-card > :is(span,small) { font-size:11px; color:var(--text-dim); }
+.rmo-recent-card:is(:hover,:focus-visible,:active) { transform:rotateY(0deg) translateY(-4px); box-shadow:0 12px 20px #0002; }
+.rmo-recent-card:focus-visible, .rmo-transport button:focus-visible { outline:2px solid var(--accent-text); outline-offset:3px; }
+.rmo-health { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:18px; }
+.rmo-health-metric { padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--bg-card); }
+.rmo-health-metric > strong { display:block; font-size:24px; }
+.rmo-health-metric > span { font-size:12px; color:var(--text-dim); }
+.rmo-health-history { margin-bottom:20px; }
+.rmo-health-history h3 { font-size:13px; }
+.rmo-health-history p { font-size:12px; color:var(--text-dim); }
+.rmo-history { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:8px; }
+.rmo-history > div { display:grid; gap:6px; font-size:11px; text-align:center; }
+.rmo-history progress { width:100%; height:8px; accent-color:var(--accent); }
+.rmo-health-metric { transition:transform .3s; }
+.rmo-health-metric:hover { transform:perspective(900px) rotateX(2deg); }
+@keyframes rmo-confirm { 50% { opacity:.7; } }
+[data-rmo-play]:not([data-rmo-play="letters"]):not([data-rmo-play="gradient"]) { animation:rmo-confirm .3s ease-out 1; }
+.rmo-health-metric strong.rmo-number { position:relative; line-height:1.2; white-space:pre; }
+[data-rmo~="status"] { border:1px solid var(--line-stark); border-radius:18px; padding:4px 9px;
+  box-shadow:inset 0 1px 0 #ffffff20; background:var(--bg-card); }
+[data-rmo~="status"][data-rmo-state="laeuft"] { border-color:var(--accent); }
+[data-rmo~="status"][data-rmo-state="fehler"] { border-style:dashed; }
+
+/* Der Loader ist vorhanden, aber nur während echter Arbeit sichtbar. */
+[data-rmo~="liquid"] > .rmo-liquid { display:none; vertical-align:middle; }
+[data-rmo~="liquid"]:is([data-rmo-state="laeuft"],[data-rmo-state="arbeitet"],[data-rmo-state="vorbereiten"],[data-rmo-state="rendern"]) > .rmo-liquid { display:inline-block; }
+.ru-lader > .rmo-liquid { margin:4px auto; }
+.ru-drucker > .rmo-liquid { margin:4px 12px; }
+.ru-zustand:has(> .rmo-liquid) .ru-aktivitaet { display:none; }
+.rmo-liquid::before,.rmo-liquid::after { border-right-color:color-mix(in srgb,var(--accent) 50%,var(--text)); }
+.rmo-transport { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:3px; padding:6px;
+  border:1px solid var(--line-stark); border-radius:14px; background:var(--bg-hover); box-shadow:inset 0 2px 5px #0002; }
+.rmo-transport button { min-height:44px; min-width:0; padding:8px 5px; border-radius:8px;
+  box-shadow:inset 0 1px 0 #ffffff60,0 3px 0 #0003; transition:transform .15s,box-shadow .15s; }
+.rmo-transport button:active:not(:disabled) { transform:translateY(3px); box-shadow:inset 0 2px 4px #0003; }
+.rmo-transport button:disabled { opacity:.45; cursor:default; }
+
+/* Offscreen und verborgene Tabs: auch Pseudoelemente pausieren. */
+[data-rmo-visible="false"], [data-rmo-visible="false"] *,
+[data-rmo-visible="false"]::before, [data-rmo-visible="false"]::after,
+[data-rmo-visible="false"] *::before, [data-rmo-visible="false"] *::after,
+html[data-rmo-paused="true"] [data-rmo], html[data-rmo-paused="true"] [data-rmo] *,
+html[data-rmo-paused="true"] [data-rmo]::before, html[data-rmo-paused="true"] [data-rmo]::after,
+html[data-rmo-paused="true"] [data-rmo] *::before, html[data-rmo-paused="true"] [data-rmo] *::after { animation-play-state:paused !important; }
+body[data-bewegung="ruhig"] [data-rmo], body[data-bewegung="ruhig"] [data-rmo] *,
+body[data-bewegung="ruhig"] [data-rmo]::before, body[data-bewegung="ruhig"] [data-rmo]::after,
+body[data-bewegung="ruhig"] [data-rmo] *::before, body[data-bewegung="ruhig"] [data-rmo] *::after {
+  animation:none !important; transition:none !important; text-shadow:none !important; }
+body[data-bewegung="ruhig"] :is(.rmo-recent-card,.rmo-folder-sheet,.bib-deckel-blatt,.rmo-health-metric),
+body[data-bewegung="ruhig"] [data-rmo~="light"],body[data-bewegung="ruhig"] .bib-deckel-blatt::before { transform:none !important; }
+body[data-bewegung="ruhig"] .rmo-reels { display:none; }
+body[data-bewegung="ruhig"] .rmo-number-source { color:inherit; }
+@media (prefers-reduced-motion:reduce) {
+  [data-rmo], [data-rmo] *, [data-rmo]::before, [data-rmo]::after,
+  [data-rmo] *::before,[data-rmo] *::after { animation:none !important; transition:none !important; text-shadow:none !important; }
+  .rmo-recent-card,.rmo-folder-sheet,.bib-deckel-blatt,.rmo-health-metric,[data-rmo~="light"],body .bib-deckel-blatt::before { transform:none !important; }
+  .rmo-reels { display:none; } .rmo-number-source { color:inherit; }
 }
 
 </style>
@@ -19833,7 +20006,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 797, inhalt: 'a6eb16afa926854e', gebaut: '2026-09-10T15:44:11.376Z' };
+const Stand = { fassung: 801, inhalt: 'dead7902e2efce0d', gebaut: '2026-09-12T11:54:08.166Z' };
 window.Stand = Stand;
 
 </script>
@@ -43473,6 +43646,7 @@ const Lader = (() => {
     const bauen = (auftrag) => {
         const wurzel = el('div', 'ru-lader');
         wurzel.dataset['art'] = auftrag.art;
+        wurzel.dataset['zustand'] = 'laeuft';
         wurzel.setAttribute('role', 'status');
         let anteil = null;
         let spiegel = null;
@@ -43499,6 +43673,7 @@ const Lader = (() => {
         satz.textContent = auftrag.text ?? SAETZE[auftrag.art];
         const stellen = (wert) => {
             anteil = wert;
+            wurzel.dataset['zustand'] = wert !== null && wert >= 1 ? 'fertig' : 'laeuft';
             if (!spiegel)
                 return;
             const hoch = wert === null ? 0 : Math.max(0, Math.min(1, wert));
@@ -43936,80 +44111,186 @@ window.Funkel = Funkel;
 <script>
 /* ===== quell/schale/bedienung/motion.js ===== */
 "use strict";
-/* Dekorative Ergänzungen aus Redurs Animationssammlung.
- * Quelle: src/schale/bedienung/motion.ts. Daraus wird motion.js erzeugt;
- * das JavaScript nicht von Hand bearbeiten, sondern npm run bauen:ts.
- * Keine Anfragen, Timer, Datenänderungen oder neuen Klickhandlungen.
- * Der einzige Start erfolgt in src/start.ts. Nur neu eingefügte Teilbäume
- * werden betrachtet; ein WeakSet verhindert doppelte Dekoration.
- */
 const RedionMotion = (() => {
-    const decorated = new WeakSet();
-    const selector = '.bib-deckel[data-art="ordner"], .bib-leer, .ki-aktivitaet, #ai-quellen, #ai .ai-head';
+    const metricSelector = '.stat-karte.lw-metrik > strong, .rmo-health-metric > strong';
+    const effects = [
+        { id: 'folder', place: 'Bibliotheksordner', selector: '.bib-deckel[data-art="ordner"]' },
+        { id: 'sliders', place: 'Einstellungen, KI-Quellen, Datenbankfilter', selector: '#btn-settings, [data-k="einstellungen"], #ai-quellen, button[data-a="filter"]' },
+        { id: 'light', place: 'Elektro, Lernen, Bestandsübersicht', selector: '.els-kachel, .stat-karte.lw-metrik, .pf-karte' },
+        { id: 'gradient', place: 'PDF öffnen, Neue Seite, KI senden', selector: '[data-studio-import], #btn-neu-handy, #ai-senden, [data-rmo-new]' },
+        { id: 'letters', place: 'KI-Werkzeuge und Befehle', selector: '.ru-funkel, .ai-action-group button' },
+        { id: 'liquid', place: 'KI-, Agenten-, Import- und Exportaufträge', selector: '.ki-aktivitaet, .ru-zustand, .ru-zk, .ru-lader, .ru-drucker, [data-studio-import], .ag-motion-status' },
+        { id: 'toggle', place: 'Einstellungen und Automationen', selector: '.schalter, .mschalter' },
+        { id: 'carousel', place: 'Zuletzt geöffnete Dokumente', selector: '.rmo-recent' },
+        { id: 'glass', place: 'Primäre Dialogaktionen', selector: '.fbtns button.prim' },
+        { id: 'metric', place: 'Lernfortschritt und Bestandsgesundheit', selector: metricSelector },
+        { id: 'status', place: 'Synchronisierung, Sicherung, KI, Automationen', selector: '.ru-zustand, .ru-lader, .ki-aktivitaet, .ag-motion-status, .rmo-product-status' },
+        { id: 'ticket', place: 'PDF-Druck und Export', selector: '.ru-drucker' },
+        { id: 'orb', place: 'KI-Schaltfläche und Kopfzeile', selector: '#btn-ai, #ai .ai-head' },
+        { id: 'filament', place: 'Strom im Elektro-Schaltplan', selector: '.sp-start' },
+        { id: 'transport', place: 'Zeitmesser Start/Pause/Beenden', selector: '.rmo-transport' }
+    ];
+    const selector = effects.map(effect => effect.selector).join(',');
+    const watched = new WeakSet();
     let observer = null;
+    let visibility = null;
+    const set = (element, name, value) => {
+        if (element.getAttribute(name) !== value)
+            element.setAttribute(name, value);
+    };
     const ornament = (name) => {
         const element = document.createElement('span');
         element.className = name;
         element.setAttribute('aria-hidden', 'true');
         return element;
     };
-    const decorate = (element) => {
-        if (decorated.has(element))
+    const ensure = (element, name, build) => {
+        if (element.querySelector(':scope > .' + name))
             return;
-        decorated.add(element);
-        if (element.matches('.bib-deckel')) {
+        const node = ornament(name);
+        build?.(node);
+        element.prepend(node);
+    };
+    const prepareMetric = (element) => {
+        const value = element.textContent || '';
+        if (element.querySelector('.rmo-number-source')?.textContent === value)
+            return;
+        if (!/\d/.test(value) || !/^[\d.,’'%+\-−:/\s]+$/.test(value) || value.length > 18) {
+            if (element.classList.contains('rmo-number'))
+                element.classList.remove('rmo-number');
+            return;
+        }
+        const source = document.createElement('span');
+        source.className = 'rmo-number-source';
+        source.textContent = value;
+        const reels = ornament('rmo-reels');
+        for (const [index, character] of Array.from(value).entries()) {
+            const digit = document.createElement('span');
+            digit.className = /\d/.test(character) ? 'rmo-digit' : 'rmo-separator';
+            digit.dataset['rmoCharacter'] = character;
+            digit.style.setProperty('--rmo-digit', /\d/.test(character) ? character : '0');
+            digit.style.setProperty('--rmo-delay', Math.min(index * 30, 180) + 'ms');
+            reels.append(digit);
+        }
+        element.classList.add('rmo-number');
+        element.replaceChildren(source, reels);
+    };
+    const state = (element) => {
+        const source = element.getAttribute('data-zustand');
+        if (source)
+            return source;
+        if (element.matches('.ki-aktivitaet, [aria-busy="true"]'))
+            return 'laeuft';
+        if (element.matches('.schalter, .mschalter, .sp-start'))
+            return element.classList.contains('an') ? 'an' : 'aus';
+        return element.hasAttribute('disabled') ? 'inaktiv' : 'bereit';
+    };
+    const decorateElement = (element) => {
+        const ids = effects.filter(effect => element.matches(effect.selector)).map(effect => effect.id);
+        set(element, 'data-rmo', ids.join(' '));
+        set(element, 'data-rmo-state', state(element));
+        if (!watched.has(element)) {
+            watched.add(element);
+            set(element, 'data-rmo-visible', 'false');
+            visibility?.observe(element);
+        }
+        if (ids.includes('metric'))
+            prepareMetric(element);
+        if (ids.includes('folder')) {
             const surface = element.querySelector('.bib-deckel-blatt');
-            if (!surface)
-                return;
-            const stack = ornament('rmo-folder-stack');
-            for (let index = 0; index < 5; index++) {
-                const sheet = ornament('rmo-folder-sheet');
-                sheet.style.setProperty('--rmo-index', String(index));
-                stack.append(sheet);
+            if (surface)
+                ensure(surface, 'rmo-folder-stack', stack => {
+                    for (let index = 0; index < 5; index++) {
+                        const sheet = ornament('rmo-folder-sheet');
+                        sheet.style.setProperty('--rmo-index', String(index));
+                        stack.append(sheet);
+                    }
+                });
+        }
+        if (ids.includes('sliders'))
+            ensure(element, 'rmo-sliders', sliders => {
+                for (let index = 0; index < 3; index++)
+                    sliders.append(document.createElement('i'));
+            });
+        if (ids.includes('liquid'))
+            ensure(element, 'rmo-liquid');
+        if (ids.includes('orb'))
+            ensure(element, 'rmo-orb');
+        if (ids.includes('ticket')) {
+            if (!element.classList.contains('rmo-ticket'))
+                element.classList.add('rmo-ticket');
+            ensure(element, 'rmo-ticket-heading', heading => { heading.textContent = 'PDF-Ausgabe'; });
+        }
+        if (ids.includes('letters')) {
+            /* Text teilen, aber Symbole, Beschriftung und Listener behalten. */
+            for (const node of Array.from(element.childNodes)) {
+                if (node.nodeType !== Node.TEXT_NODE || !node.textContent?.trim())
+                    continue;
+                const fragment = document.createElement('span');
+                fragment.className = 'rmo-word';
+                Array.from(node.textContent).forEach((character, index) => {
+                    const letter = document.createElement('span');
+                    letter.className = 'rmo-letter';
+                    letter.textContent = character;
+                    letter.style.setProperty('--rmo-delay', Math.min(index * 25, 250) + 'ms');
+                    fragment.append(letter);
+                });
+                node.replaceWith(fragment);
             }
-            surface.prepend(stack);
-        }
-        else if (element.matches('.bib-leer')) {
-            const carousel = ornament('rmo-carousel');
-            for (let index = 0; index < 3; index++) {
-                const card = document.createElement('i');
-                card.style.setProperty('--rmo-index', String(index));
-                carousel.append(card);
-            }
-            element.prepend(carousel);
-        }
-        else if (element.matches('.ki-aktivitaet')) {
-            element.prepend(ornament('rmo-liquid'));
-        }
-        else if (element.id === 'ai-quellen') {
-            const sliders = ornament('rmo-sliders');
-            for (let index = 0; index < 3; index++)
-                sliders.append(document.createElement('i'));
-            element.prepend(sliders);
-        }
-        else {
-            element.prepend(ornament('rmo-orb'));
         }
     };
-    const scan = (root) => {
+    const decorate = (root = document) => {
         if (root instanceof Element && root.matches(selector))
-            decorate(root);
-        root.querySelectorAll(selector).forEach(decorate);
+            decorateElement(root);
+        root.querySelectorAll(selector).forEach(decorateElement);
+    };
+    /** Rückmeldung ohne Timer oder Änderung des Arbeitszustands. */
+    const play = (element, effect) => {
+        if (document.hidden || document.body.dataset.bewegung === 'ruhig' ||
+            matchMedia('(prefers-reduced-motion: reduce)').matches)
+            return;
+        if (effects.some(entry => entry.id === effect))
+            set(element, 'data-rmo-play', effect);
     };
     const start = () => {
         if (observer)
             return;
-        scan(document);
-        observer = new MutationObserver(records => {
-            for (const record of records)
-                for (const node of record.addedNodes) {
-                    if (node instanceof Element)
-                        scan(node);
-                }
+        visibility = new IntersectionObserver(entries => entries.forEach(entry => set(entry.target, 'data-rmo-visible', String(entry.isIntersecting))));
+        const pause = () => set(document.documentElement, 'data-rmo-paused', String(document.hidden));
+        document.addEventListener('visibilitychange', pause);
+        pause();
+        document.addEventListener('animationend', event => {
+            if (event.target instanceof Element)
+                event.target.closest('[data-rmo-play]')?.removeAttribute('data-rmo-play');
         });
-        observer.observe(document.body, { childList: true, subtree: true });
+        decorate();
+        observer = new MutationObserver(records => {
+            const roots = new Set();
+            for (const record of records) {
+                const target = record.target instanceof Element ? record.target : record.target.parentElement;
+                const metric = target?.closest(metricSelector);
+                if (metric)
+                    prepareMetric(metric);
+                if (target?.matches(selector))
+                    roots.add(target);
+                for (const node of record.addedNodes)
+                    if (node instanceof Element)
+                        roots.add(node);
+                for (const node of record.removedNodes)
+                    if (node instanceof Element && !node.isConnected) {
+                        for (const removed of [node, ...node.querySelectorAll('[data-rmo]')]) {
+                            visibility?.unobserve(removed);
+                            watched.delete(removed);
+                        }
+                    }
+            }
+            roots.forEach(root => { if (root.isConnected)
+                decorate(root); });
+        });
+        observer.observe(document.body, { childList: true, characterData: true, subtree: true,
+            attributes: true, attributeFilter: ['class', 'data-zustand', 'disabled', 'aria-busy'] });
     };
-    return { start };
+    return { start, decorate, play, catalog: () => effects.map(effect => ({ ...effect })) };
 })();
 
 </script>
@@ -92166,7 +92447,7 @@ const Datenbank = (() => {
                     ((a.sonst || []).length
                         ? ` · Sonst: ${a.sonst.map((d) => esc((AKTIONEN.find((x) => x[0] === d.art) || [])[1] || '')).join(', ')}`
                         : '') +
-                    `</span></div>` +
+                    `</span><span class="rmo-product-status" data-zustand="${a.an === false ? 'aus' : 'bereit'}">${a.an === false ? 'Pausiert' : 'Aktiv · wartet auf Auslöser'}</span></div>` +
                     `<button data-test="${i}" title="Probelauf: zeigt den Plan, ändert nichts">▶</button>` +
                     `<button data-verlauf="${i}" title="Laufverlauf">🕘` +
                     ((a.verlauf || []).length ? `<span class="ms">${a.verlauf.length}</span>` : '') +
@@ -110136,7 +110417,9 @@ const Agent = (() => {
                     ? window.Orb.setzen(laeuftEl, 'working', 64)
                     : null;
                 const wort = document.createElement('div');
-                wort.className = 'agent-laeuft-wort';
+                wort.className = 'agent-laeuft-wort ag-motion-status';
+                wort.dataset.zustand = 'laeuft';
+                wort.setAttribute('role', 'status');
                 wort.textContent = 'Der Agent denkt nach …';
                 laeuftEl.appendChild(wort);
                 b.disabled = true;
@@ -115020,12 +115303,35 @@ const Pflege = (() => {
         c.schema[d.relation].type !== 'relation'));
     const gesundheit = () => {
         const liste = befund();
+        const pages = Object.values(Store.cache.blocks).filter(p => p.alive && p.type === 'page');
+        const metrics = [[pages.length, 'Seiten'], [liste.filter(x => x.art === 'warnung').length, 'Warnungen'],
+            [liste.filter(x => x.art !== 'warnung').length, 'Hinweise']];
+        /* Letzte Bearbeitungszeit ist kein vollständiges Ereignisprotokoll.
+           Genau das steht deshalb auch an der Kurve. */
+        const days = Array.from({ length: 7 }, (_, index) => {
+            const day = new Date();
+            day.setHours(0, 0, 0, 0);
+            day.setDate(day.getDate() - 6 + index);
+            const next = new Date(day);
+            next.setDate(next.getDate() + 1);
+            return { day, count: pages.filter(p => {
+                    const edited = new Date(p.edited).getTime();
+                    return edited >= day.getTime() && edited < next.getTime();
+                }).length };
+        });
+        const maximum = Math.max(1, ...days.map(day => day.count));
         const o = document.createElement('div');
         o.className = 'overlay';
         o.innerHTML =
             '<div class="finder" style="width:min(760px,95vw)">' +
                 '<div class="fh">🩺 Gesundheit des Bestands<button class="icon-btn" data-a="zu">✕</button></div>' +
                 '<div class="res" id="pf-liste" style="max-height:66vh">' +
+                '<div class="rmo-health">' + metrics.map(([value, label]) => '<article class="rmo-health-metric"><strong>' + value + '</strong><span>' + label + '</span></article>').join('') + '</div>' +
+                '<section class="rmo-health-history"><h3>Letzte Bearbeitungen · 7 Tage</h3><p>Seiten nach ihrem letzten Bearbeitungstag, keine vollständige Änderungshistorie.</p>' +
+                '<div class="rmo-history">' + days.map(({ day, count }) => '<div><b>' + count + '</b>' +
+                '<progress max="' + maximum + '" value="' + count + '" aria-label="' +
+                day.toLocaleDateString('de-CH') + ': ' + count + ' Seiten"></progress><small>' +
+                day.toLocaleDateString('de-CH', { weekday: 'short' }) + '</small></div>').join('') + '</div></section>' +
                 (liste.length
                     ? liste.map((x, i) => `<div class="pf-karte pf-${x.art}">` +
                         `<div class="pf-titel">${x.art === 'warnung' ? '⚠' : 'ℹ'} ${esc(x.titel)}</div>` +
@@ -135673,6 +135979,22 @@ const Bibliothek = (() => {
             ' value="' + esc(zustand.suche) + '"></label>' +
             '</div>';
     };
+    /** Bis zu drei wirklich geöffnete Dokumente, keine dekorativen Dateiatrappen. */
+    const recentCarousel = () => {
+        if (zustand.ordner || zustand.suche || zustand.art !== 'alle' ||
+            !['ablage', 'kuerzlich'].includes(zustand.reiter))
+            return '';
+        const recent = alleSeiten().filter(p => p.zuletztGeoeffnet)
+            .sort((a, b) => zeitZahl(b.zuletztGeoeffnet) - zeitZahl(a.zuletztGeoeffnet)).slice(0, 3);
+        return '<section class="rmo-recent" aria-label="Zuletzt geöffnet"><h2>Zuletzt geöffnet</h2>' +
+            '<div class="rmo-recent-track">' + (recent.length ? recent.map((p, index) => '<button type="button" class="rmo-recent-card" data-rmo-open="' + esc(p.id) +
+            '" style="--rmo-index:' + index + '"><span>' + esc(artVon(p).name) + '</span><b>' +
+            esc(p.text || 'Ohne Titel') + '</b><small>' + esc(wannText(p.zuletztGeoeffnet)) +
+            '</small></button>').join('') :
+            '<button type="button" class="rmo-recent-card" data-rmo-new><span>Loslegen</span><b>Neue Seite</b></button>' +
+                '<button type="button" class="rmo-recent-card" data-rmo-import><span>Weiterarbeiten</span><b>PDF öffnen</b></button>') +
+            '</div></section>';
+    };
     /** Nur ein wirklich geöffnetes PDF anbieten; Importzeit ist kein Lesefortschritt. */
     const studioWeiter = () => {
         if (zustand.reiter !== 'ablage' || zustand.ordner || zustand.suche || zustand.art !== 'alle')
@@ -135717,7 +136039,7 @@ const Bibliothek = (() => {
     const importBeschriften = (wort) => {
         document.querySelectorAll('[data-studio-import]').forEach(knopf => {
             const feld = knopf.querySelector('.wort')
-                || knopf.querySelector('span:not([data-sym])');
+                || knopf.querySelector('span:not([data-sym]):not([aria-hidden="true"])');
             if (feld)
                 feld.textContent = wort || IMPORT_WORT;
             else
@@ -135803,6 +136125,11 @@ const Bibliothek = (() => {
     const MIT_TEXT = new Set(['seite', 'karten', 'db']);
     const deckelKarte = (p) => {
         const art = artVon(p);
+        const children = art.id === 'ordner' ? alleSeiten().filter(child => child.parentId === p.id && child.parentTable !== 'collection') : [];
+        const folderPreview = art.id === 'ordner' ? '<span class="rmo-folder-preview">' +
+            '<b>' + children.length + (children.length === 1 ? ' Unterseite' : ' Unterseiten') + '</b>' +
+            children.slice(0, 3).map(child => '<span>' + esc(child.text || 'Ohne Titel') + '</span>').join('') +
+            '</span>' : '';
         /* DAS ECHTE BILD GEHT VOR (L61, E313). Eine eingelesene PDF-Seite und
            ein Bildblock tragen ihre Datei bei sich; die zeigt der Deckel, statt
            eine weisse Fläche mit dem Wort „PDF" darauf. Erst wenn es keine
@@ -135823,7 +136150,7 @@ const Bibliothek = (() => {
             `title="${esc(p.text || 'Ohne Titel')}">` +
             `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}${tinte ? ' hat-tinte' : ''}">` +
             '<i class="bib-papier" aria-hidden="true"></i>' +
-            (bild || '') +
+            (bild || '') + folderPreview +
             /* Die Marke bleibt: sie sagt, WAS es ist, und das sagt ein Bild
                der ersten Seite nicht. Sie sitzt in der Ecke, nicht davor. */
             (art.id === 'pdf' ? '<i class="bib-deckel-marke">PDF</i>' : '') +
@@ -136007,7 +136334,8 @@ const Bibliothek = (() => {
                         pk.naechste === 0 ? ' · die nächste läuft heute ab'
                             : pk.naechste === 1 ? ' · die nächste läuft morgen ab'
                                 : ' · noch ' + pk.naechste + ' Tage für die nächste');
-        return '<details class="bib-pflege-details"><summary>' + esc(satz) +
+        return '<details class="bib-pflege-details"><summary><span class="rmo-product-status" data-zustand="' +
+            (st.stufe === 'gut' ? 'fertig' : 'wartet') + '">' + esc(satz) + '</span>' +
             '<span>Sicherung & Speicher</span></summary>' +
             '<section class="bib-abschnitt"><header><h2>Sicherung und Papierkorb</h2>' +
             '<p>alles auf diesem Gerät</p></header><div class="bib-pflege">' +
@@ -136201,7 +136529,7 @@ const Bibliothek = (() => {
                         '<div data-bib-baum></div>' +
                         '</details><div class="bib-ablage-inhalt">'
                     : '') +
-                studioNavigation() + studioWeiter() +
+                studioNavigation() + studioWeiter() + recentCarousel() +
                 artenZeile(vorhanden) +
                 (liste.length
                     ? '<div class="bib-gitter">' + liste.map(deckelKarte).join('') + '</div>'
@@ -136314,6 +136642,13 @@ const Bibliothek = (() => {
     };
     /** Was in beiden Formen gleich funktioniert: öffnen und umschalten. */
     const binde = (wrap) => {
+        wrap.querySelectorAll('[data-rmo-open]').forEach(button => button.addEventListener('click', () => {
+            const id = button.dataset.rmoOpen;
+            if (id && permitted('lesen', id))
+                App.oeffne(id);
+        }));
+        wrap.querySelector('[data-rmo-import]')?.addEventListener('click', pdfImportieren);
+        wrap.querySelector('[data-rmo-new]')?.addEventListener('click', () => document.getElementById('btn-neu-handy')?.click());
         wrap.querySelector('.bib-ablage-baum')?.addEventListener('toggle', event => {
             Store.setMeta('bibBaumSichtbar', event.currentTarget.open);
         });
@@ -142872,11 +143207,10 @@ const Zeitmesser = (() => {
             `<button class="rb" data-zm="t5">5 Min</button>` +
             `<button class="rb" data-zm="t25">25 Min</button>` +
             `</div>` +
-            `<div class="zm-reihe">` +
-            (s.laeuft
-                ? `<button class="rb" data-zm="pause">${s.pausiert ? 'Weiter' : 'Pause'}</button>` +
-                    `<button class="rb" data-zm="stopp">Beenden</button>`
-                : `<button class="rb haupt" data-zm="stoppuhr">Start</button>`) +
+            `<div class="zm-reihe rmo-transport" role="group" aria-label="Zeit steuern" data-zustand="${s.laeuft ? (s.pausiert ? 'pausiert' : 'laeuft') : 'bereit'}">` +
+            `<button class="rb haupt" data-zm="stoppuhr" ${s.laeuft ? 'disabled' : ''}>Start</button>` +
+            `<button class="rb" data-zm="pause" ${s.laeuft ? '' : 'disabled'}>${s.pausiert ? 'Weiter' : 'Pause'}</button>` +
+            `<button class="rb" data-zm="stopp" ${s.laeuft ? '' : 'disabled'}>Beenden</button>` +
             `</div>` +
             (liste ? `<div class="zm-sitzungen"><span>Zuletzt</span><ul>${liste}</ul></div>` : '');
     };
@@ -142884,7 +143218,26 @@ const Zeitmesser = (() => {
         const feld = document.querySelector('.zm-feld');
         if (!feld)
             return;
-        feld.innerHTML = feldHtml();
+        /* Beim Tick bleiben die Tasten samt Fokus erhalten. Nur ein echter
+           Zustandswechsel zeichnet die Steuerung neu. */
+        const next = document.createElement('div');
+        next.innerHTML = feldHtml();
+        const currentState = feld.querySelector('.rmo-transport')?.getAttribute('data-zustand');
+        const nextState = next.querySelector('.rmo-transport')?.getAttribute('data-zustand');
+        if (currentState === nextState) {
+            for (const selector of ['.zm-uhr', '.zm-wo']) {
+                const target = feld.querySelector(selector);
+                const text = next.querySelector(selector)?.textContent || '';
+                if (target && target.textContent !== text)
+                    target.textContent = text;
+            }
+            return;
+        }
+        const focused = feld.contains(document.activeElement)
+            ? document.activeElement.dataset.zm : undefined;
+        feld.replaceChildren(...Array.from(next.childNodes));
+        if (focused)
+            feld.querySelector(`.rmo-transport [data-zm="${focused}"]:not(:disabled)`)?.focus();
     };
     /** Das Feld öffnen oder schliessen. Die Uhr läuft unabhängig davon
      *  weiter — schliessen heisst „aus dem Blick", nicht „aus". */

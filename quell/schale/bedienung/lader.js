@@ -146,6 +146,7 @@ const Lader = (() => {
     const bauen = (auftrag) => {
         const wurzel = el('div', 'ru-lader');
         wurzel.dataset['art'] = auftrag.art;
+        wurzel.dataset['zustand'] = 'laeuft';
         wurzel.setAttribute('role', 'status');
         let anteil = null;
         let spiegel = null;
@@ -172,6 +173,7 @@ const Lader = (() => {
         satz.textContent = auftrag.text ?? SAETZE[auftrag.art];
         const stellen = (wert) => {
             anteil = wert;
+            wurzel.dataset['zustand'] = wert !== null && wert >= 1 ? 'fertig' : 'laeuft';
             if (!spiegel)
                 return;
             const hoch = wert === null ? 0 : Math.max(0, Math.min(1, wert));

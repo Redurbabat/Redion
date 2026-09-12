@@ -9482,7 +9482,7 @@ const Datenbank = (() => {
                     ((a.sonst || []).length
                         ? ` · Sonst: ${a.sonst.map((d) => esc((AKTIONEN.find((x) => x[0] === d.art) || [])[1] || '')).join(', ')}`
                         : '') +
-                    `</span></div>` +
+                    `</span><span class="rmo-product-status" data-zustand="${a.an === false ? 'aus' : 'bereit'}">${a.an === false ? 'Pausiert' : 'Aktiv · wartet auf Auslöser'}</span></div>` +
                     `<button data-test="${i}" title="Probelauf: zeigt den Plan, ändert nichts">▶</button>` +
                     `<button data-verlauf="${i}" title="Laufverlauf">🕘` +
                     ((a.verlauf || []).length ? `<span class="ms">${a.verlauf.length}</span>` : '') +
