@@ -270,6 +270,82 @@ p('Das Vorzeichen bleibt erhalten, weil es bei Gleichstrom eine Richtung ist',
   einphasig.werte.t2.U !== einphasig.werte.t2.Ubetrag
   || einphasig.werte.t2.U > 0);
 
+/* ==========================================================================
+ * §6 · Die Stromrichtung — und wann sie eine Lüge wäre
+ * --------------------------------------------------------------------------
+ * Die Knotenpotentialanalyse liefert vorzeichenbehaftete Ströme, die
+ * Richtung ist also fast umsonst zu haben. Genau das ist die Gefahr: bei
+ * Wechselstrom ist derselbe Pfeil falsch, weil der Strom fünfzigmal je
+ * Sekunde umkehrt. Diese Prüfung verlangt deshalb ZWEIERLEI — dass die
+ * Richtung bei Gleichstrom steht, und dass sie bei Wechselstrom NICHT als
+ * feste Richtung ausgegeben wird.
+ * ========================================================================*/
+console.log('\n6 · Stromrichtung');
+
+/* Gleichstrom: die Batterie treibt, die Richtung ist eine Tatsache. */
+const gleich = await rechne(`
+  const q = teil('batterie', 'G1');
+  const h = teil('lampe', 'E1', { R: 100 });
+  draht(q, '+', h, 'X1'); draht(h, 'X2', q, '−');
+`);
+p('Der Gleichstromkreis rechnet', gleich.ok, gleich.fehler);
+p('Bei Gleichstrom steht eine feste Richtung da',
+  gleich.werte.t2.richtung === 'vor' || gleich.werte.t2.richtung === 'rueck',
+  `ist "${gleich.werte.t2.richtung}"`);
+p('Sie nennt die beiden Klemmen, damit ein Pfeil weiss, wohin er zeigt',
+  gleich.werte.t2.vonKlemme === 'X1' && gleich.werte.t2.nachKlemme === 'X2');
+p('Und sagt es in einem Satz',
+  /fliesst von X[12] nach X[12]/.test(gleich.werte.t2.richtungstext),
+  gleich.werte.t2.richtungstext);
+p('Bei Gleichstrom gibt es keinen „Augenblick" — das Feld bleibt leer',
+  gleich.werte.t2.richtungJetzt === undefined);
+
+/* Das Umpolen muss die Richtung umdrehen. Ohne diese Zusage wäre „vor"
+   auch dann richtig, wenn es gar nicht gerechnet würde. */
+const umgepolt = await rechne(`
+  const q = teil('batterie', 'G1');
+  const h = teil('lampe', 'E1', { R: 100 });
+  draht(q, '−', h, 'X1'); draht(h, 'X2', q, '+');
+`);
+p('Umgepolt dreht sich die Richtung um',
+  umgepolt.werte.t2.richtung !== gleich.werte.t2.richtung,
+  `vorher "${gleich.werte.t2.richtung}", nachher "${umgepolt.werte.t2.richtung}"`);
+
+/* Ohne Strom gibt es keine Richtung — auch keine erfundene. */
+const dunkel = await rechne(`
+  const q = teil('batterie', 'G1');
+  const s = teil('ch-schema0', 'S1');
+  const h = teil('lampe', 'E1', { R: 100 });
+  draht(q, '+', s, '3'); draht(s, '4', h, 'X1'); draht(h, 'X2', q, '−');
+`);
+p('Fliesst nichts, ist die Richtung „keine"', dunkel.werte.t3.richtung === 'keine',
+  `ist "${dunkel.werte.t3.richtung}"`);
+p('Und der Satz behauptet keine Richtung',
+  !/fliesst von/.test(dunkel.werte.t3.richtungstext), dunkel.werte.t3.richtungstext);
+
+/* Und jetzt der Punkt, auf den es ankommt. */
+p('Bei Wechselstrom ist die Richtung NICHT fest, sondern „wechselnd"',
+  drei.werte.t3.richtung === 'wechselnd', `ist "${drei.werte.t3.richtung}"`);
+p('Der Satz sagt ausdrücklich, dass sie 50-mal je Sekunde umkehrt',
+  /50-mal je Sekunde/.test(drei.werte.t3.richtungstext),
+  drei.werte.t3.richtungstext);
+p('Und nennt den Pfeil beim Namen: Zählrichtung',
+  /Zählrichtung/.test(drei.werte.t3.richtungstext));
+p('Für den Bezugsaugenblick steht trotzdem eine Richtung da',
+  ['vor', 'rueck', 'quer'].includes(drei.werte.t3.richtungJetzt),
+  `ist "${drei.werte.t3.richtungJetzt}"`);
+p('Und der Satz nennt auch diesen Augenblick',
+  /Scheitels von L1/.test(drei.werte.t3.richtungstext));
+
+/* Die drei Stränge eines Drehstrommotors dürfen im selben Augenblick NICHT
+   alle dasselbe tun — sonst wäre es kein Drehfeld. Bei 0°, −120° und +120°
+   ist der Kosinus 1, −0,5 und −0,5: einer vor, zwei zurück. */
+const richtungen = ['U1–U2', 'V1–V2', 'W1–W2'].map(k => stern.teilwerte.t2[k].richtungJetzt);
+p('Im Augenblick des Scheitels fliesst es nicht in allen drei Strängen gleich',
+  new Set(richtungen).size > 1, richtungen.join(', '));
+p('Genau einer der drei Stränge führt vorwärts',
+  richtungen.filter((r: string) => r === 'vor').length === 1, richtungen.join(', '));
+
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
 
 console.log(`\n${ok} bestanden, ${weg} gescheitert`);

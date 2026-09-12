@@ -856,34 +856,73 @@ const Stromfluss = (() => {
             const p = Math.abs(ure * ire + uim * iim);
             const alt = werte[e.t.id];
             const strom = iBetrag;
+            const iWinkel = wechsel ? winkel(ire, iim) : 0;
+            /* Die Richtung.
+               -----------------------------------------------------------------
+               Bei Gleichstrom ist sie einfach: das Vorzeichen des Stroms, und es
+               kommt ohne Zusatzarbeit aus der Knotenpotentialanalyse.
+      
+               Bei Wechselstrom wäre genau dieselbe Auskunft eine LÜGE. Der Strom
+               kehrt seine Richtung fünfzigmal je Sekunde um; ein Pfeil, der
+               einfach dasteht, behauptet etwas, das ein Lernender glaubt, weil es
+               bei der Batterie stimmt. Deshalb heisst die Richtung hier
+               `wechselnd`, und was der Pfeil zeigt, ist die ZÄHLRICHTUNG — eine
+               Festlegung, keine Beobachtung.
+      
+               Für den einen Augenblick, auf den sich alle Winkel beziehen (den
+               Scheitel von L1), lässt sich trotzdem sagen, wohin es geht. Das ist
+               `richtungJetzt`, und dort ist `quer` ein echter Wert: steht der
+               Strom um 90° zur Bezugsphase, fliesst in DIESEM Augenblick nichts —
+               gleich danach schon. Bei Drehstrom kommt das an jedem Strang einmal
+               je Periode vor, ist also kein Randfall, den man wegrunden darf. */
+            let richtung;
+            let richtungJetzt;
+            let richtungstext;
+            const hin = `von ${e.von} nach ${e.nach}`;
+            const her = `von ${e.nach} nach ${e.von}`;
+            if (strom <= SCHWELLE) {
+                richtung = 'keine';
+                richtungstext = 'Es fliesst kein Strom.';
+            }
+            else if (!wechsel) {
+                richtung = ire > 0 ? 'vor' : 'rueck';
+                richtungstext = `Der Strom fliesst ${ire > 0 ? hin : her}.`;
+            }
+            else {
+                richtung = 'wechselnd';
+                const c = Math.cos(bogen(iWinkel));
+                richtungJetzt = Math.abs(c) < 0.02 ? 'quer' : (c > 0 ? 'vor' : 'rueck');
+                const augenblick = richtungJetzt === 'quer'
+                    ? 'steht er gerade still — er ist um 90° versetzt und kehrt eben um'
+                    : `fliesst er ${richtungJetzt === 'vor' ? hin : her}`;
+                richtungstext =
+                    'Wechselstrom: die Richtung kehrt sich 50-mal je Sekunde um. Der Pfeil '
+                        + `zeigt die Zählrichtung (${hin}). Im Augenblick des Scheitels von L1 `
+                        + `${augenblick}.`;
+            }
+            const mach = () => ({
+                teil: e.t.id, zeichen: e.t.zeichen, bmk: e.t.bmk || '',
+                U: wechsel ? uBetrag : ure, I: wechsel ? iBetrag : ire,
+                P: p, fliesst: strom > SCHWELLE,
+                Ubetrag: uBetrag, Ibetrag: iBetrag,
+                Uwinkel: wechsel ? winkel(ure, uim) : 0,
+                Iwinkel: iWinkel,
+                wechsel, vonKlemme: e.von, nachKlemme: e.nach,
+                richtung, richtungstext,
+                ...(richtungJetzt ? { richtungJetzt } : {})
+            });
             /* Ein Bauteil kann mehrere Pfade haben (Hauptschalter, Serienschalter).
                Gezeigt wird der grösste Strom — das ist der, der die Sicherung
                auslöst und nach dem gefragt wird. */
             if (!alt || strom > Math.abs(alt.I)) {
-                werte[e.t.id] = {
-                    teil: e.t.id, zeichen: e.t.zeichen, bmk: e.t.bmk || '',
-                    U: wechsel ? uBetrag : ure, I: wechsel ? iBetrag : ire,
-                    P: p, fliesst: strom > SCHWELLE,
-                    Ubetrag: uBetrag, Ibetrag: iBetrag,
-                    Uwinkel: wechsel ? winkel(ure, uim) : 0,
-                    Iwinkel: wechsel ? winkel(ire, iim) : 0,
-                    wechsel
-                };
+                werte[e.t.id] = mach();
             }
             else if (alt) {
                 alt.fliesst = alt.fliesst || strom > SCHWELLE;
             }
             if (e.v.glieder) {
                 const fach = teilwerte[e.t.id] || (teilwerte[e.t.id] = {});
-                fach[`${e.von}–${e.nach}`] = {
-                    teil: e.t.id, zeichen: e.t.zeichen, bmk: e.t.bmk || '',
-                    U: wechsel ? uBetrag : ure, I: wechsel ? iBetrag : ire,
-                    P: p, fliesst: strom > SCHWELLE,
-                    Ubetrag: uBetrag, Ibetrag: iBetrag,
-                    Uwinkel: wechsel ? winkel(ure, uim) : 0,
-                    Iwinkel: wechsel ? winkel(ire, iim) : 0,
-                    wechsel
-                };
+                fach[`${e.von}–${e.nach}`] = mach();
             }
             netzStrom[e.a] = Math.max(netzStrom[e.a], strom);
             netzStrom[e.b] = Math.max(netzStrom[e.b], strom);
