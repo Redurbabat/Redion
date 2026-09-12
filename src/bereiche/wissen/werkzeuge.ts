@@ -1691,10 +1691,10 @@ const Werkzeuge = (() => {
           /* PDF UND ALLES BINÄRE WERDEN DOKUMENTE (E350) — vorher wurde eine
              über „Alle Dateien" gewählte PDF zur Textseite mit Binärsalat. */
           const textig = /\.(html?|htm|csv|tsv|md|markdown|txt)$/i.test(name) || f.type.startsWith('text/');
-          if (!textig && !/\.(xlsx|xlsm|docx|epub)$/i.test(name) && typeof ArchivImport !== 'undefined') {
+          if (!textig && !/\.(xlsx|xlsm|docx|pptx|epub)$/i.test(name) && typeof ArchivImport !== 'undefined') {
             await ArchivImport.dateiAlsDokument(f, null); n++; continue;
           }
-          if (/\.(xlsx|xlsm|docx|epub)$/i.test(name)) {
+          if (/\.(xlsx|xlsm|docx|pptx|epub)$/i.test(name)) {
             const erg = await Einlesen.datei(f);
             if (erg) { UI.toast(f.name + ': ' + erg.hinweis); n++; continue; }
           }
@@ -2741,8 +2741,8 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
 
         if (f.type.startsWith('image/')) { await anhaengen(seite, f, 'image'); continue; }
 
-        /* Excel, Word und EPUB laufen über den eigenen ZIP-Leser */
-        if (/\.(xlsx|xlsm|docx|epub)$/i.test(name)) {
+        /* Excel, Word, PowerPoint und EPUB laufen über den eigenen ZIP-Leser */
+        if (/\.(xlsx|xlsm|docx|pptx|epub)$/i.test(name)) {
           try {
             const erg = await Einlesen.datei(f, seite);
             if (erg) { UI.toast(f.name + ': ' + erg.hinweis); continue; }

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-519 Entscheidungen, E1 bis E539 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+520 Entscheidungen, E1 bis E540 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -583,6 +583,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E537** — Die letzten drei Vorlagenblöcke: Ordnerkarte, Lichtkarte mit Kippschalter, flüssige Blase
 * **E538** — Office war die einzige Gruppe ohne Originalschutz — und der Vortrag am Telefon nicht bedienbar
 * **E539** — O2: Der ZIP-Teil lernt Durchreichen — die Grundlage jeder Rundreise durch eine Office-Datei
+* **E540** — O3: PowerPoint lesen — eine Folie ist ein Blatt, kein neuer Blocktyp
 
 ---
 
@@ -43187,3 +43188,48 @@ mit Methode 0 allein wäre die Suite wertlos, weil roh und gepackt dann
 dieselbe Zahl sind und jede Verwechslung unsichtbar bliebe.
 `test96`, `test100`, `test103` bleiben grün; der Schreiber trägt `.redion`,
 und da geht es um Daten (§51).
+
+---
+
+E540 — O3: PowerPoint lesen
+--------------------------------------------------------------------------
+
+`.pptx` liess sich bisher nicht öffnen; eine Präsentation lief in den Zweig
+„sonstige Datei" und wurde ein reiner Anhang (`LUECKEN.md`: „DOCX/PPTX-
+Import" stand als offen).
+
+**Eine Folie ist ein `blatt`-Block.** Kein neuer Blocktyp: das A4-Blatt trägt
+schon `blattBreite`/`blattHoehe` und die Zeichenschicht `Marken` (E103), und
+damit Textkästen mit Schrift und Rahmen, Bilder mit eigener Datei,
+Verschieben, Drehen, Sperren und hundert Schritte rückgängig. Ein eigener
+Folientyp wäre der zweite Katalog aus §8, und der zweite ist immer der
+schlechtere. Nebenbei erbt eine Folie damit sofort den Vortragsmodus und die
+Miniaturen.
+
+**Das Mass geht ohne Rundungsfehler auf.** PowerPoint rechnet in EMU,
+914400 je Zoll; Redions Marken in Blattpunkten, 72 je Zoll. Das sind genau
+12700 EMU je Punkt. Schriftgrade stehen in Hundertstelpunkten.
+
+**Die Reihenfolge kommt aus `sldIdLst`, nicht aus den Dateinamen.**
+`slide10.xml` steht in der Zeichensortierung vor `slide2.xml`, und eine
+Präsentation, deren Folien in falscher Ordnung erscheinen, ist schlimmer als
+eine, die gar nicht aufgeht.
+
+### Und wieder ein Fund an der eigenen Prüfung
+
+Die erste Fassung von `test499` benannte nur die zweite Folie `slide10.xml`
+und hielt das für eine Falle. Sie war keine: `[slide1, slide10, slide2]`
+sortiert sich zufällig genau so, wie `sldIdLst` sie auflistet — die
+Gegenprobe „nach Dateinamen statt nach `sldIdLst`" blieb **grün**. Jetzt
+laufen die beiden Ordnungen wirklich auseinander (`sldIdLst`: slide2 →
+slide10 → slide1), und die Gegenprobe liefert `["Dritte","Zweite","Erste"]`.
+
+Das ist heute das zweite Mal (nach `test498`, wo die Packmethode nur im
+Verzeichnis geprüft wurde). Beide Male sah die Zusage richtig aus und mass
+das Falsche. §55.2 ist kein Ritual: *wer eine neue Prüfung schreibt, prüft
+zuerst, ob sie überhaupt rot werden KANN.*
+
+`test499`: 17 Zusagen, drei Gegenproben rot gesehen (Mass, Reihenfolge,
+Bilder). `test96`, `test100`, `test497`, `test498` bleiben grün.
+Was beim Lesen **nicht** ankommt — Geerbtes vom Master, Absatzebenen,
+Tabellen, Formen ohne Text, Drehung, Notizen — steht als **L151**.

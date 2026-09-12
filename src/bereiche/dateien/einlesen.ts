@@ -968,6 +968,179 @@ const Einlesen = (() => {
   };
 
   /* ========================================================================
+   * POWERPOINT (.pptx)
+   * ------------------------------------------------------------------------
+   * EINE FOLIE IST EIN `blatt`-BLOCK. Kein neuer Blocktyp: das A4-Blatt
+   * trägt bereits `blattBreite`/`blattHoehe` und die Zeichenschicht
+   * `Marken` (E103) — und damit Textkästen mit Schrift und Rahmen, Bilder
+   * mit eigener Datei, Verschieben, Drehen, Sperren und hundert Schritte
+   * rückgängig. Eine zweite Maschine für dieselbe Frage wäre der zweite
+   * Katalog aus §8, und der zweite ist immer der schlechtere.
+   *
+   * DAS MASS. PowerPoint rechnet in EMU (English Metric Units), 914400 je
+   * Zoll. Redions Marken rechnen in Blattpunkten, 72 je Zoll. Das sind
+   * genau 12700 EMU je Punkt — eine ganze Zahl, kein Rundungsfehler.
+   * Schriftgrade stehen in Hundertstelpunkten (`sz="2800"` = 28 pt).
+   *
+   * WAS HIER NICHT PASSIERT. Es wird nichts gerendert und nichts geraten:
+   * gelesen werden die Formen, die im Folien-XML wirklich stehen. Was eine
+   * Folie vom Layout oder vom Master ERBT — Hintergründe, Platzhaltertexte,
+   * Fusszeilen — steht dort nicht und kommt hier deshalb auch nicht an. Das
+   * ist als Lücke eingetragen, nicht stillschweigend weggelassen.
+   * ======================================================================*/
+
+  /** EMU → Blattpunkte. 914400 EMU je Zoll, 72 Punkte je Zoll. */
+  const emuZuPunkt = (wert: unknown): number =>
+    Math.round((Number(wert) || 0) / 12700 * 100) / 100;
+
+  /** Die Beziehungen einer Teildatei: r:id → Ziel, schon aufgelöst. */
+  const relsLesen = async (zip: any, teil: string): Promise<Record<string, string>> => {
+    const schraeg = teil.lastIndexOf('/');
+    const ordner = schraeg < 0 ? '' : teil.slice(0, schraeg);
+    const pfad = (ordner ? ordner + '/' : '') + '_rels/' +
+                 teil.slice(schraeg + 1) + '.rels';
+    const t = await zip.text(pfad);
+    const karte: Record<string, string> = {};
+    if (!t) return karte;
+    for (const r of xml(t).getElementsByTagName('Relationship')) {
+      const id = r.getAttribute('Id');
+      let ziel = r.getAttribute('Target') || '';
+      if (!id || !ziel) continue;
+      /* Ziele stehen relativ zur Teildatei. `../media/bild1.png` von
+         `ppt/slides/` aus ist `ppt/media/bild1.png`. Ohne das Auflösen
+         fände der Leser kein einziges Bild. */
+      if (!ziel.startsWith('/')) {
+        const teile = (ordner ? ordner.split('/') : []);
+        for (const stueck of ziel.split('/')) {
+          if (stueck === '..') teile.pop();
+          else if (stueck !== '.') teile.push(stueck);
+        }
+        ziel = teile.join('/');
+      } else ziel = ziel.slice(1);
+      karte[id] = ziel;
+    }
+    return karte;
+  };
+
+  /** Der Text einer Form: Absätze, Läufe, und der harte Umbruch `a:br`. */
+  const formText = (txBody: Element): string => {
+    const zeilen: string[] = [];
+    for (const absatz of txBody.getElementsByTagName('a:p')) {
+      let zeile = '';
+      for (const kind of absatz.children) {
+        if (kind.tagName === 'a:r') zeile += kind.getElementsByTagName('a:t')[0]?.textContent || '';
+        else if (kind.tagName === 'a:br') zeile += '\n';
+        else if (kind.tagName === 'a:fld') zeile += kind.getElementsByTagName('a:t')[0]?.textContent || '';
+      }
+      zeilen.push(zeile);
+    }
+    /* Leerzeilen am Ende weg — PowerPoint hängt gern einen leeren Absatz an,
+       und der macht aus einem Titel einen Kasten mit Loch darunter. */
+    while (zeilen.length && !zeilen[zeilen.length - 1]?.trim()) zeilen.pop();
+    return zeilen.join('\n');
+  };
+
+  /** Lage und Grösse einer Form, in Blattpunkten. `null`, wenn sie fehlen. */
+  const formLage = (form: Element): { x: number; y: number; w: number; h: number } | null => {
+    const xfrm = form.getElementsByTagName('a:xfrm')[0];
+    if (!xfrm) return null;
+    const off = xfrm.getElementsByTagName('a:off')[0];
+    const ext = xfrm.getElementsByTagName('a:ext')[0];
+    if (!off || !ext) return null;
+    return { x: emuZuPunkt(off.getAttribute('x')), y: emuZuPunkt(off.getAttribute('y')),
+             w: emuZuPunkt(ext.getAttribute('cx')), h: emuZuPunkt(ext.getAttribute('cy')) };
+  };
+
+  /**
+   * Eine `.pptx` lesen. Zurück kommen Folien mit ihren Objekten — noch ohne
+   * Kennungen und ohne abgelegte Bilder; das macht `datei()`, weil erst dort
+   * feststeht, an welchem Block eine Bilddatei hängt.
+   */
+  const pptxLesen = async (puffer: ArrayBuffer): Promise<any> => {
+    const zip = await zipLesen(puffer);
+    const praesT = await zip.text('ppt/presentation.xml');
+    if (!praesT) throw new Error('In dieser Datei steckt keine PowerPoint-Präsentation.');
+    const praes = xml(praesT);
+
+    /* Das Folienmass. Fehlt es, gilt 16:9 in der Vorgabe von PowerPoint —
+       12192000 × 6858000 EMU, also 960 × 540 pt. */
+    const sz = praes.getElementsByTagName('p:sldSz')[0];
+    const breite = emuZuPunkt(sz?.getAttribute('cx')) || 960;
+    const hoehe  = emuZuPunkt(sz?.getAttribute('cy')) || 540;
+
+    /* DIE REIHENFOLGE STEHT IN `sldIdLst`, NICHT IN DEN DATEINAMEN.
+       `slide10.xml` kommt in der Zeichensortierung vor `slide2.xml`, und
+       eine Präsentation, deren Folien in falscher Ordnung erscheinen, ist
+       schlimmer als eine, die gar nicht aufgeht. */
+    const praesRels = await relsLesen(zip, 'ppt/presentation.xml');
+    const pfade: string[] = [];
+    for (const eintrag of praes.getElementsByTagName('p:sldId')) {
+      const rid = eintrag.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id')
+               || eintrag.getAttribute('r:id') || '';
+      const ziel = praesRels[rid];
+      if (ziel) pfade.push(ziel);
+    }
+    if (!pfade.length) throw new Error('Diese Präsentation nennt keine Folien.');
+
+    const folien = [];
+    for (const pfad of pfade) {
+      const t = await zip.text(pfad);
+      if (!t) continue;
+      const doc = xml(t);
+      const rels = await relsLesen(zip, pfad);
+      const baum = doc.getElementsByTagName('p:spTree')[0];
+      const objekte: any[] = [];
+      let titel = '';
+
+      for (const form of (baum ? baum.children : [])) {
+        /* ── Textkasten ──────────────────────────────────────────────── */
+        if (form.tagName === 'p:sp') {
+          const txBody = form.getElementsByTagName('p:txBody')[0];
+          if (!txBody) continue;
+          const text = formText(txBody);
+          if (!text.trim()) continue;
+          const lage = formLage(form);
+          /* Der erste Lauf bestimmt Schriftgrad und Fett für den Kasten.
+             Redions Textmarke hat EINEN Grad je Kasten; ein Kasten mit
+             gemischten Graden käme also vereinfacht an. Das ist eine Lücke
+             und steht so in LUECKEN.md. */
+          const rPr = txBody.getElementsByTagName('a:rPr')[0];
+          const sz2 = Number(rPr?.getAttribute('sz'));
+          /* Ist es der Titel? PowerPoint sagt es über den Platzhaltertyp. */
+          const ph = form.getElementsByTagName('p:ph')[0];
+          const istTitel = /^(ctr)?[Tt]itle$/.test(ph?.getAttribute('type') || '');
+          if (istTitel && !titel) titel = text.split('\n')[0] || '';
+          objekte.push({ art: 'text', text,
+            x: lage ? lage.x : breite * 0.08, y: lage ? lage.y : hoehe * 0.1,
+            breiteBox: lage && lage.w > 0 ? lage.w : breite * 0.84,
+            fontSize: Number.isFinite(sz2) && sz2 > 0 ? Math.round(sz2 / 100) : (istTitel ? 40 : 20),
+            fett: rPr?.getAttribute('b') === '1' });
+          continue;
+        }
+
+        /* ── Bild ─────────────────────────────────────────────────────── */
+        if (form.tagName === 'p:pic') {
+          const blip = form.getElementsByTagName('a:blip')[0];
+          const rid = blip?.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed')
+                   || blip?.getAttribute('r:embed') || '';
+          const ziel = rels[rid];
+          if (!ziel) continue;
+          const bytes = await zip.holen(ziel);
+          if (!bytes) continue;
+          const lage = formLage(form);
+          objekte.push({ art: 'bild', name: ziel.slice(ziel.lastIndexOf('/') + 1),
+            bytes,
+            x: lage ? lage.x : breite * 0.2, y: lage ? lage.y : hoehe * 0.2,
+            w: lage && lage.w > 0 ? lage.w : breite * 0.4,
+            h: lage && lage.h > 0 ? lage.h : hoehe * 0.4 });
+        }
+      }
+      folien.push({ titel, objekte });
+    }
+    return { breite, hoehe, folien };
+  };
+
+  /* ========================================================================
    * EPUB
    * ======================================================================*/
   const epubLesen = async (puffer: ArrayBuffer): Promise<any> => {
@@ -1082,7 +1255,7 @@ const Einlesen = (() => {
     const name = f.name.toLowerCase();
     /* Nur für die Formate, die dieser Weg wirklich umwandelt. Alles andere
        fällt unten auf `null` und geht den Anhang-Weg, der ohnehin ablegt. */
-    const wandelbar = /\.(xlsx|xlsm|ods|docx|epub)$/.test(name);
+    const wandelbar = /\.(xlsx|xlsm|ods|docx|pptx|epub)$/.test(name);
     const quelle = wandelbar ? await originalSichern(f, elternId) : null;
     const puffer = await f.arrayBuffer();
 
@@ -1131,6 +1304,46 @@ const Einlesen = (() => {
          Kopfzeilen, Fussnoten und Spalten zurück (siehe docxLesen). Der
          Satz sagt deshalb auch, wo das Vollständige liegt. */
       return { seite, hinweis: bloecke.length + ' Absätze übernommen'
+        + (quelle ? ' · das Original liegt unverändert als Anhang dabei' : '') };
+    }
+
+    if (name.endsWith('.pptx')) {
+      const p = await pptxLesen(puffer);
+      const seite = Store.addPage(elternId, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📽️' });
+      if (quelle) await originalAnhaengen(seite.id, f, quelle);
+
+      /* Eine Folie = ein `blatt`-Block mit Folienmass. Die Objekte werden
+         Marken auf DERSELBEN Zeichenschicht, die auch PDF-Seite und
+         A4-Blatt benutzen — also sofort verschiebbar, drehbar und
+         rückgängig zu machen. */
+      let mitBild = 0;
+      for (const [nr, folie] of p.folien.entries()) {
+        const block = Store.addBlock(seite.id, 'blatt', {
+          text: folie.titel || ('Folie ' + (nr + 1)),
+          blattBreite: p.breite, blattHoehe: p.hoehe, papier: 'blanko' });
+        const marken: any[] = [];
+        for (const o of folie.objekte) {
+          const id = 'm' + Math.random().toString(36).slice(2, 10);
+          if (o.art === 'text') {
+            marken.push({ id, art: 'text', point: [o.x, o.y], breiteBox: o.breiteBox,
+              text: o.text, fontSize: o.fontSize, fett: !!o.fett });
+            continue;
+          }
+          /* Das Bild bekommt einen eigenen Dateisatz, der an DIESEM Block
+             hängt — dieselbe Ordnung wie beim PDF-Anhang (E99). */
+          try {
+            const satz = await Dateien.ablegen(new Blob([o.bytes]), { blockId: block.id, name: o.name });
+            if (satz?.id) {
+              marken.push({ id, art: 'bild', dateiId: String(satz.id),
+                pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
+              mitBild++;
+            }
+          } catch { /* ohne das Bild bleibt die Folie stehen */ }
+        }
+        if (marken.length) Store.updateBlock(block.id, { marken });
+      }
+      return { seite, hinweis: p.folien.length + ' Folien übernommen'
+        + (mitBild ? ', ' + mitBild + ' Bilder' : '')
         + (quelle ? ' · das Original liegt unverändert als Anhang dabei' : '') };
     }
 

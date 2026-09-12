@@ -7391,3 +7391,36 @@ einen Querverweis von Hand einsetzen, rot sehen, wieder herausnehmen.
 
 Bis dahin steht die Regel ohne Beweis da — und stand es, seit sie
 geschrieben wurde.
+
+---
+
+L151 · Was beim PowerPoint-Lesen NICHT ankommt — offen
+--------------------------------------------------------------------------
+
+E540 liest `.pptx`: Folien in der richtigen Ordnung, Textkästen mit Lage,
+Grösse, Schriftgrad und Fett, Bilder mit ihren Bytes. Das ist der erste
+Schritt, nicht der letzte. Was heute **nicht** ankommt, damit niemand es für
+verloren hält:
+
+- **Geerbtes vom Layout und vom Master.** Gelesen werden nur die Formen, die
+  im Folien-XML wirklich stehen. Hintergründe, Platzhaltertexte, Fusszeilen,
+  Foliennummern und das Farbthema stehen dort nicht. Eine Folie, die im
+  Original einen farbigen Grund hat, kommt weiss an.
+- **Ein Schriftgrad je Kasten.** Redions Textmarke hat genau einen; ein
+  PowerPoint-Kasten mit gemischten Graden oder Farben kommt vereinfacht an,
+  mit dem Grad des ersten Laufs.
+- **Absatzebenen und Aufzählungszeichen.** `a:pPr@lvl` und `a:buChar` werden
+  nicht gelesen; eine Gliederung kommt als flacher Text an.
+- **Tabellen (`a:tbl`) und Diagramme.** Beide werden übersprungen — sie haben
+  in der Markenschicht kein Gegenstück.
+- **Formen ohne Text** (Pfeile, Rechtecke, Linien aus `a:prstGeom`). Die
+  Markenschicht kennt sieben Formen; die Zuordnung fehlt noch.
+- **Drehung** (`a:xfrm@rot`) und Spiegelung (`flipH`/`flipV`). Die Marken
+  können drehen — gelesen wird es noch nicht.
+- **Notizen** (`ppt/notesSlides/`), Übergänge, Animationen.
+
+**Nicht gemessen:** ob eine von PowerPoint selbst gespeicherte Datei so
+gelesen wird wie die im Prüflauf gebaute. `test499` baut ihre `.pptx` mit
+Redions eigenem Schreiber — das prüft den Leser, nicht die Vielfalt echter
+Dateien. Eine Datei aus PowerPoint, eine aus LibreOffice und eine aus Google
+Slides wären drei verschiedene Prüfungen wert.

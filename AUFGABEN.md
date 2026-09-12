@@ -866,7 +866,7 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   EINEN Eintrag ersetzen und der Rest unverändert zurückschreiben. Ohne
   diesen Bogen ist jede Rundreise ein Neuschreiben — gültig, aber ungepackt
   und mit Datum 1980.
-- **O3 · `.pptx` lesen.** `ppt/presentation.xml` (Reihenfolge, Foliengrösse),
+- **O3 · `.pptx` lesen** — ERLEDIGT (E540), Grenzen in L151. `ppt/presentation.xml` (Reihenfolge, Foliengrösse),
   `slideN.xml` (`p:spTree` → Textkästen mit `a:xfrm`-Lage, `p:pic` → Bilder),
   die `.rels` (Bildziele), `slideLayouts`/`slideMasters` für Geerbtes,
   `theme1.xml` für Farben. Jede Folie wird ein Block mit `marken`.
