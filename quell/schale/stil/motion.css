@@ -592,19 +592,40 @@ body [data-rmo~="letters"] .ru-funkel-b { animation:none; color:inherit; }
 body #ai .ai-quick button[data-rmo~="letters"] > svg,
 body [data-rmo~="letters"] > svg { animation:none; }
 .rmo-letter { display:inline-block; }
-@keyframes rmo-letter-platzen {
+/* ======================================================================
+   REDUR, 12. SEPTEMBER: „die blur kommen von link bis nach rechts ohne so
+   bumm efeck oder licht, es war ganz wenig licht."
+
+   ER HAT RECHT, UND ES WAR EIN FEHLER, KEIN GESCHMACK. Die Staffelung
+   ging verloren: `--rmo-delay` setzt `motion.ts` NUR auf `.rmo-letter`
+   (dort, wo es den Text selbst zerlegt). Die KI-Knöpfe tragen aber
+   `.ru-funkel-b`, und deren Schrittzahl heisst `--ru-schritt`
+   (`funkel.ts`). Die Regel hier las nur `--rmo-delay`, fiel also für
+   JEDEN Buchstaben eines Funkel-Knopfes auf 0 ms zurück — alle dreizehn
+   zugleich statt einer nach dem anderen. Das ist der „bumm".
+
+   In Redurs Vorlage steht es ausgeschrieben: `.btn-letter:nth-child(1)`
+   bis `(13)` mit 0s, 0,08s, 0,16s … 0,96s. Ein Schritt von 80 ms, und die
+   Unschärfe wandert von links nach rechts durch das Wort.
+
+   UND SIE IST LEISE. Die Vorlage hat zwei Bewegungen, nicht eine:
+     letter-anim          text-shadow 0 0 3px #fff8  — „ganz wenig licht"
+     focused-letter-anim  scale(2), blur(10px), brightness(150%),
+                          drop-shadow(-36px 12px 12px …)  — das ist der Knall
+   Hier stand bisher nur die zweite. Jetzt steht die erste da, mit der
+   Unschärfe der zweiten in klein: kein Vergrössern, kein Aufhellen, kein
+   geworfener Farbschatten — eine weiche Welle und ein Hauch Licht.
+   ====================================================================== */
+@keyframes rmo-letter-wisch {
   0%, 100% { filter:blur(0); }
-  50% { transform:scale(2);
-        filter:blur(10px) brightness(150%)
-               drop-shadow(-36px 12px 12px hsl(var(--ru-funkel-ton, 210deg) 100% 70%)); }
+  50% { filter:blur(2.5px); color:#fff; text-shadow:0 0 3px #fff8; }
 }
-/* BEIDE BUCHSTABENSORTEN BEKOMMEN DIESELBE UNSCHÄRFE. `.ru-funkel-b` hat
-   sein eigenes Platzen in `bausteine.css`; diese Regel gewinnt dagegen und
-   nimmt ihm das angehängte `infinite`-Glimmen ab, das sonst beim Anfassen
-   mitliefe. Das Bild ist dasselbe, die Endlosschleife ist keine. */
 body [data-rmo~="letters"]:is(:hover,:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
 [data-rmo-play="letters"] :is(.rmo-letter,.ru-funkel-b) {
-  animation:rmo-letter-platzen 1s ease-in-out 1; animation-delay:var(--rmo-delay,0ms); }
+  animation:rmo-letter-wisch .55s ease-in-out 1;
+  /* Zwei Namen, weil zwei Buchstabensorten zwei Zähler haben. Fehlt beides,
+     bleibt 0 ms — dann ist es wieder ein Knall, und das fällt auf. */
+  animation-delay:var(--rmo-delay, calc(var(--ru-schritt, 0) * 80ms)); }
 
 /* Native Schalter: kurze Zustandsbewegung ersetzt die frühere Endlosschleife. */
 body [data-rmo~="toggle"]::before { animation:none; }
