@@ -227,7 +227,35 @@ const Einlesen = (() => {
             const b = await holen(name);
             return b ? new TextDecoder().decode(b) : null;
         };
-        return { namen: [...dateien.keys()], holen, text, eintrag };
+        /**
+         * DIE BYTES, WIE SIE IM ARCHIV STEHEN — ungepackt gelassen.
+         *
+         * `holen` entpackt immer. Für eine Rundreise ist das falsch: wer eine
+         * `.docx` öffnet, EINEN Eintrag ändert und den Rest zurückschreiben
+         * will, müsste sonst jeden fremden Eintrag entpacken und neu ablegen.
+         * Der Schreiber packt nicht (Methode 0), aus einer 40-KB-Vorlage würde
+         * damit eine 300-KB-Datei — gültig, aber ohne Not aufgebläht, und
+         * jedes eingebettete Bild läge unkomprimiert darin.
+         *
+         * Hier kommen die Bytes deshalb unberührt heraus, mit allem, was der
+         * Schreiber braucht, um sie wieder einzusetzen: Methode, Prüfsumme,
+         * Rohgrösse. Es wird NICHT nachgerechnet — die Bytes werden ja nicht
+         * gelesen, sondern weitergereicht; die Prüfsumme des Originals bleibt
+         * gültig, solange die Bytes gleich bleiben.
+         *
+         * Verschlüsselte Einträge kommen auch hier nicht heraus: sie ohne
+         * Schlüssel weiterzureichen ergäbe ein Archiv, das niemand öffnen kann.
+         */
+        const rohBytes = (name) => {
+            const e = dateien.get(name);
+            if (!e)
+                return null;
+            if (ZipDetails.istVerschluesselt(e.flags))
+                throw new Error('„' + name + '" ist verschlüsselt — Redion kann ihn nicht weiterreichen.');
+            return { methode: e.methode, roh: new Uint8Array(e.roh), crc: e.crc >>> 0,
+                groesse: e.groesse, gepackt: e.roh.length };
+        };
+        return { namen: [...dateien.keys()], holen, text, eintrag, rohBytes };
     };
     /**
      * Dasselbe für ein Archiv, das nicht in den Arbeitsspeicher passt.
@@ -355,7 +383,24 @@ const Einlesen = (() => {
             return e ? { methode: e.methode, groesse: Number(e.roh), gepackt: Number(e.gepackt), crc: e.crc >>> 0,
                 flags: e.flags, verschluesselt: ZipDetails.istVerschluesselt(e.flags) } : null;
         };
-        return { namen: [...dateien.keys()], alsBlob, holen, text, groesse, eintrag };
+        /**
+         * Dasselbe Durchreichen wie in `zipLesen`, nur als Blob — hier liegt das
+         * Archiv nicht im Speicher, und ein Video als `Uint8Array` wäre genau
+         * der Sturz, den dieser Leser vermeidet. Der Schreiber nimmt Blobs
+         * ohnehin entgegen, ohne sie ganz zu laden.
+         */
+        const rohBytes = async (name) => {
+            const e = dateien.get(name);
+            if (!e)
+                return null;
+            if (ZipDetails.istVerschluesselt(e.flags))
+                throw new Error('„' + name + '" ist verschlüsselt — Redion kann ihn nicht weiterreichen.');
+            const k = new DataView(await blob.slice(e.offset, e.offset + 30).arrayBuffer());
+            const start = e.offset + 30 + k.getUint16(26, true) + k.getUint16(28, true);
+            return { methode: e.methode, roh: blob.slice(start, start + e.gepackt), crc: e.crc >>> 0,
+                groesse: Number(e.roh), gepackt: Number(e.gepackt) };
+        };
+        return { namen: [...dateien.keys()], alsBlob, holen, text, groesse, eintrag, rohBytes };
     };
     const xml = (t) => new DOMParser().parseFromString(t, 'application/xml');
     /* ========================================================================

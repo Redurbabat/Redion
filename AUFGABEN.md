@@ -860,7 +860,7 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
 
 - **O1 · Das Original bleibt** — ERLEDIGT (E538). Office war die einzige
   Gruppe ohne Originalschutz.
-- **O2 · Der ZIP-Teil lernt Durchreichen.** Der Leser gibt rohe, noch
+- **O2 · Der ZIP-Teil lernt Durchreichen** — ERLEDIGT (E539). Der Leser gibt rohe, noch
   gepackte Bytes heraus; der Schreiber nimmt `methode: 8` mit getrennten
   Roh- und Packlängen entgegen. Erst damit lässt sich eine `.docx` öffnen,
   EINEN Eintrag ersetzen und der Rest unverändert zurückschreiben. Ohne

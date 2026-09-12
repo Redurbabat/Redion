@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-518 Entscheidungen, E1 bis E538 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+519 Entscheidungen, E1 bis E539 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -582,6 +582,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E536** — Die Unschärfe läuft wieder von links nach rechts — die Staffelung war auf 0 gefallen
 * **E537** — Die letzten drei Vorlagenblöcke: Ordnerkarte, Lichtkarte mit Kippschalter, flüssige Blase
 * **E538** — Office war die einzige Gruppe ohne Originalschutz — und der Vortrag am Telefon nicht bedienbar
+* **E539** — O2: Der ZIP-Teil lernt Durchreichen — die Grundlage jeder Rundreise durch eine Office-Datei
 
 ---
 
@@ -43123,3 +43124,66 @@ fallen 14 davon, und die Knöpfe messen 28 × 32.
 
 Der Plan für Word und PowerPoint steht als O1 bis O7 in `AUFGABEN.md`, mit
 dem, was die drei Vermessungen ergeben haben.
+
+---
+
+E539 — O2: Der ZIP-Teil lernt Durchreichen
+--------------------------------------------------------------------------
+
+`.docx` und `.pptx` sind ZIP-Pakete. „Einen Absatz ändern" heisst deshalb:
+**einen Eintrag ersetzen und alle anderen zurückschreiben, wie sie waren.**
+Das ging nicht, und zwar an zwei Stellen:
+
+- Der Leser entpackte immer. `holen`/`alsBlob` geben Klartext, `eintrag` nur
+  Zahlen — die rohen, noch gepackten Bytes kamen nie heraus. Dabei hielt
+  `zipLesen` sie längst im Speicher; sie wurden nur nicht herausgegeben.
+- Der Schreiber schrieb immer Methode 0. Ein fremder Deflate-Eintrag liess
+  sich nicht durchreichen: er hätte entpackt und ungepackt neu abgelegt
+  werden müssen. Aus einer 40-KB-Vorlage wäre eine 300-KB-Datei geworden,
+  mit jedem eingebetteten Bild unkomprimiert darin.
+
+Jetzt gibt `rohBytes(name)` die Bytes unberührt heraus — mit Methode,
+Prüfsumme und Rohgrösse —, und der Schreiber nimmt einen Eintrag mit `roh`
+entgegen und schreibt ihn Byte für Byte weiter.
+
+**Die Prüfsumme wird dabei nicht nachgerechnet, und das ist Absicht:**
+nachrechnen hiesse entpacken, und genau das soll unterbleiben. Der Leser
+gibt `roh` nur für unverschlüsselte Einträge heraus.
+
+**Die Flags des Originals reisen NICHT mit.** Bit 3 (die Grössen stehen erst
+hinter den Daten) würde sonst mitkommen, obwohl hier die echten Längen im
+Kopf stehen — ein Leser, der Bit 3 glaubt, suchte danach einen Datensatz,
+den es nicht gibt.
+
+### Die Zeile, die es still zerrissen hätte
+
+```txt
+versatz += kopf.length + laenge;     ← die ROHE Länge
+versatz += kopf.length + gepackt;    ← die Bytes, die wirklich geschrieben wurden
+```
+
+Bei Methode 0 sind beide gleich, und nichts fiele auf. Beim ersten
+durchgereichten Eintrag geht es auseinander, und ab da zeigt **jeder**
+folgende Verzeichnisversatz ins Leere. Die Gegenprobe dazu bricht nicht mit
+einer roten Zusage ab, sondern mit einem Absturz im `DataView` — das Archiv
+ist dann nicht falsch, sondern kaputt.
+
+Dieselbe Verwechslung lauert an vier weiteren Stellen: lokaler Kopf 18/22,
+Verzeichnis 20/24, das ZIP64-Zusatzfeld in beiden. Und die ZIP64-Entscheidung
+prüft jetzt **beide** Längen: ein gepackter Eintrag kann roh über der Grenze
+liegen und gepackt darunter.
+
+### Und ein Fund an der eigenen Prüfung
+
+Die erste Fassung von `test498` prüfte die Methode nur über `eintrag()` —
+und das liest aus dem **Verzeichnis**. Die Gegenprobe „Methode im lokalen
+Kopf fest auf 0" blieb deshalb grün: Redions eigener Leser sieht ins
+Verzeichnis und entpackt weiter richtig. Andere Entpacker tun das nicht;
+Word und der Windows-Explorer lesen den lokalen Kopf. Die Suite liest ihn
+jetzt selbst aus den Bytes — und erst damit wird die Gegenprobe rot.
+
+`test498`: 11 Zusagen, an einem Archiv mit wirklich gepackten Einträgen —
+mit Methode 0 allein wäre die Suite wertlos, weil roh und gepackt dann
+dieselbe Zahl sind und jede Verwechslung unsichtbar bliebe.
+`test96`, `test100`, `test103` bleiben grün; der Schreiber trägt `.redion`,
+und da geht es um Daten (§51).

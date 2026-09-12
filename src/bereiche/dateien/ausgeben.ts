@@ -146,21 +146,58 @@ const Austausch = (() => {
 
     for (const d of dateien) {
       const name = enc.encode(d.name);
-      const istBlob = typeof Blob !== 'undefined' && d.inhalt instanceof Blob;
-      const inhalt = istBlob ? d.inhalt
+
+      /* ══ DURCHGEREICHT ODER SELBST GESCHRIEBEN ══════════════════════════
+         Ein Eintrag mit `roh` kommt aus einer FREMDEN ZIP und wird Byte für
+         Byte übernommen — mit seiner Packmethode, seiner Prüfsumme und
+         seinen zwei Längen. Gebraucht wird das für die Rundreise: eine
+         `.docx` öffnen, EINEN Eintrag ersetzen, alles andere unangetastet
+         zurückschreiben.
+
+         Ohne diesen Weg müsste jeder fremde Eintrag entpackt und hier neu
+         abgelegt werden, und weil der Schreiber nicht packt (Methode 0),
+         würde aus einer 40-KB-Vorlage eine 300-KB-Datei — gültig, aber ohne
+         Not aufgebläht, mit jedem eingebetteten Bild unkomprimiert darin.
+
+         DIE PRÜFSUMME WIRD NICHT NACHGERECHNET, und das ist Absicht: die
+         Bytes werden nicht gelesen, sondern weitergereicht. Nachrechnen
+         hiesse entpacken, und genau das soll unterbleiben. Der Leser gibt
+         `roh` ausserdem nur für unverschlüsselte Einträge heraus.
+
+         NICHT ÜBERNOMMEN werden die Flags des Originals. Bit 3 (Grössen
+         stehen erst hinter den Daten) würde sonst mitreisen, obwohl hier
+         die echten Längen im Kopf stehen — ein Leser, der Bit 3 glaubt,
+         suchte danach einen Datensatz, den es nicht gibt. Geschrieben wird
+         deshalb wie sonst nur das UTF-8-Bit.
+         ═══════════════════════════════════════════════════════════════════ */
+      const durchgereicht = !!d.roh;
+      const istBlob = typeof Blob !== 'undefined' &&
+                      (durchgereicht ? d.roh : d.inhalt) instanceof Blob;
+      const inhalt = durchgereicht ? d.roh
+                   : istBlob ? d.inhalt
                    : typeof d.inhalt === 'string' ? enc.encode(d.inhalt)
                    : d.inhalt;
-      const laenge = istBlob ? inhalt.size : inhalt.length;
+      /* Zwei Längen, die nur beim Durchreichen auseinandergehen: `gepackt`
+         steht im Archiv, `laenge` ist die Grösse nach dem Entpacken. Bei
+         Methode 0 sind sie gleich, und alles Bisherige bleibt unverändert. */
+      const gepackt = istBlob ? inhalt.size : inhalt.length;
+      const laenge  = durchgereicht ? Number(d.groesse) : gepackt;
+      const methode = durchgereicht ? (d.methode | 0) : 0;
 
-      const summe = istBlob
-        ? await crc32Strom(inhalt, (a: any) => beiFortschritt && beiFortschritt(d.name, a))
-        : crc32(inhalt);
+      const summe = durchgereicht ? (d.crc >>> 0)
+                  : istBlob
+                    ? await crc32Strom(inhalt, (a: any) => beiFortschritt && beiFortschritt(d.name, a))
+                    : crc32(inhalt);
 
       /* Drei Entscheidungen, jede für sich. Eine grosse Datei zwingt den
          lokalen Kopf ins ZIP64; ein weit hinten liegender Eintrag nur den
          Verzeichniseintrag. Beides zusammen kommt vor, keines bedingt das
-         andere. */
-      const grosseDatei = laenge > grenzen.bytes;
+         andere.
+
+         GEPRÜFT WERDEN BEIDE LÄNGEN. Ein gepackter Eintrag kann roh über
+         der Grenze liegen und gepackt darunter — wer nur eine davon ansieht,
+         schreibt eine 32-Bit-Zahl in ein Feld, in das sie nicht passt. */
+      const grosseDatei = laenge > grenzen.bytes || gepackt > grenzen.bytes;
       const weitHinten  = versatz > grenzen.bytes;
       if (grosseDatei || weitHinten) braucht64 = true;
 
@@ -171,11 +208,15 @@ const Austausch = (() => {
       schreibe32(kopf, 0, 0x04034b50);
       schreibe16(kopf, 4, grosseDatei ? 45 : 20);  /* benötigte Fassung */
       schreibe16(kopf, 6, ZipDetails.UTF8_BIT);   /* Flags: Bit 11 — der Name ist UTF-8 (E363, L114 Punkt 5) */
-      schreibe16(kopf, 8, 0);          /* Methode: gespeichert */
+      schreibe16(kopf, 8, methode);    /* 0 = gespeichert, 8 = durchgereichter Deflate */
       schreibe16(kopf, 10, 0);         /* Uhrzeit           */
       schreibe16(kopf, 12, 0x21);      /* Datum: 1. Jan 1980 */
       schreibe32(kopf, 14, summe);
-      schreibe32(kopf, 18, grosseDatei ? ZIP_GRENZE : laenge);
+      /* 18 ist die GEPACKTE, 22 die ROHE Länge — bei Methode 0 dieselbe
+         Zahl, bei einem durchgereichten Eintrag nicht. Sie zu vertauschen
+         ergibt ein Archiv, das der Browser klaglos schreibt und kein
+         Entpacker liest. */
+      schreibe32(kopf, 18, grosseDatei ? ZIP_GRENZE : gepackt);
       schreibe32(kopf, 22, grosseDatei ? ZIP_GRENZE : laenge);
       schreibe16(kopf, 26, name.length);
       schreibe16(kopf, 28, lokalExtra);
@@ -185,7 +226,7 @@ const Austausch = (() => {
         schreibe16(kopf, e, 0x0001);   /* Kennung des ZIP64-Zusatzfelds */
         schreibe16(kopf, e + 2, 16);   /* zwei Zahlen zu acht Byte      */
         schreibe64(kopf, e + 4, laenge);       /* roh     */
-        schreibe64(kopf, e + 12, laenge);      /* gepackt */
+        schreibe64(kopf, e + 12, gepackt);     /* gepackt */
       }
       teile.push(kopf, inhalt);
 
@@ -195,7 +236,7 @@ const Austausch = (() => {
          steht, verschiebt alle folgenden. Abgelesen an `zipfile`, nicht
          geraten: dort steht dieselbe Kette von drei `if`. */
       const zusatz: number[] = [];
-      if (grosseDatei) { zusatz.push(laenge, laenge); }
+      if (grosseDatei) { zusatz.push(laenge, gepackt); }
       if (weitHinten)  { zusatz.push(versatz); }
       const vzExtra = zusatz.length ? 4 + 8 * zusatz.length : 0;
 
@@ -204,11 +245,11 @@ const Austausch = (() => {
       schreibe16(eintrag, 4, 20);
       schreibe16(eintrag, 6, (grosseDatei || weitHinten) ? 45 : 20);
       schreibe16(eintrag, 8, ZipDetails.UTF8_BIT);
-      schreibe16(eintrag, 10, 0);
+      schreibe16(eintrag, 10, methode);
       schreibe16(eintrag, 12, 0);
       schreibe16(eintrag, 14, 0x21);
       schreibe32(eintrag, 16, summe);
-      schreibe32(eintrag, 20, grosseDatei ? ZIP_GRENZE : laenge);
+      schreibe32(eintrag, 20, grosseDatei ? ZIP_GRENZE : gepackt);
       schreibe32(eintrag, 24, grosseDatei ? ZIP_GRENZE : laenge);
       schreibe16(eintrag, 28, name.length);
       schreibe16(eintrag, 30, vzExtra);
@@ -222,7 +263,13 @@ const Austausch = (() => {
       }
       verzeichnis.push(eintrag);
 
-      versatz += kopf.length + laenge;
+      /* UM DIE GEPACKTE LÄNGE, NICHT UM DIE ROHE. Geschrieben wurden die
+         Bytes, die im Archiv stehen — bei Methode 0 ist das dieselbe Zahl,
+         bei einem durchgereichten Deflate-Eintrag nicht. Mit `laenge` wäre
+         jeder Versatz NACH dem ersten gepackten Eintrag falsch, und zwar
+         genau um den Unterschied: das Verzeichnis zeigte ins Leere, und
+         kein Entpacker fände die Einträge wieder. */
+      versatz += kopf.length + gepackt;
     }
 
     const vzGroesse = verzeichnis.reduce((n, e) => n + e.length, 0);
