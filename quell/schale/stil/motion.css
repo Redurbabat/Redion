@@ -316,13 +316,52 @@ body [data-rmo~="folder"]:active .bib-deckel-blatt::before { transform:rotateX(-
 [data-rmo~="gradient"]:not(:disabled):is(:hover,:focus-visible,:active)::after,
 [data-rmo-play="gradient"]::after { opacity:1; animation:rmo-gradient-turn 1.4s ease-out 1; }
 .rmo-word { white-space:pre-wrap; }
-body [data-rmo~="letters"] .ru-funkel-b { animation:none; color:inherit; }
-body #ai .ai-quick button[data-rmo~="letters"] > svg, body [data-rmo~="letters"] > svg { animation:none; }
-.rmo-letter { display:inline; }
-@keyframes rmo-letter-glow { 50% { color:var(--accent-text); text-shadow:0 0 8px var(--accent); } }
-body [data-rmo~="letters"]:is(:hover,:focus-visible,:active) :is(.rmo-letter,.ru-funkel-b),
-[data-rmo-play="letters"] :is(.rmo-letter,.ru-funkel-b) {
-  animation:rmo-letter-glow .65s ease-out 1; animation-delay:var(--rmo-delay,0ms); }
+/* DIE UNSCHÄRFE IST ZURÜCK (E528).
+ *
+ * Redur, 12. September, mit einem Bild der KI-Knöpfe:
+ *
+ *   „hier bei ai butons war vorher statt licht eine blur efcek und codex
+ *    hat das entfernt kannst du das wieder zürück bringen bite"
+ *
+ * Er hat recht, und man sieht es an genau drei Zeilen, die hier standen:
+ *
+ *   .ru-funkel-b { animation:none; color:inherit; }   ← das Glimmen aus
+ *   > svg        { animation:none; }                  ← das Flackern aus
+ *   :hover …     { animation:rmo-letter-glow … }      ← statt des Platzens
+ *
+ * `ru-funkel-platzen` in `bausteine.css` lässt die Buchstaben beim Anfassen
+ * mit `filter: blur(10px) brightness(150%)` AUFPLATZEN — das ist die
+ * Unschärfe, die er meint. `rmo-letter-glow` war ein Farbglimmen an ihrer
+ * Stelle: heller, aber flach. Der Originaleffekt ist nicht abgeschafft
+ * worden, weil er störte, sondern weil er beim Umbau im Weg lag.
+ *
+ * ZWEI SORTEN BUCHSTABEN, EIN EFFEKT. Die Knöpfe, die schon `.ru-funkel`
+ * sind, tragen `.ru-funkel-b` und bekommen ihr Platzen aus `bausteine.css`
+ * zurück — hier wird es nur nicht mehr abgeschaltet. Die übrigen zerlegt
+ * `motion.ts` in `.rmo-letter`.
+ *
+ * NACHGEZÄHLT, nicht angenommen: heute tragen alle VIERZEHN Knöpfe
+ * `.ru-funkel-b`, und `.rmo-letter` kommt null Mal vor — `motion.ts`
+ * zerlegt nur rohe Textknoten, und bei einem Funkel-Knopf sind die
+ * Buchstaben längst Elemente. Die Regel darunter ist also der ZWEITE Zweig
+ * desselben Moduls und heute unbenutzt. Sie steht trotzdem da: sobald ein
+ * Knopf ohne Funkel-Hülle in die Gruppe kommt, reagiert er sonst anders als
+ * sein Nachbar, und das fiele niemandem auf, bevor es jemand sieht.
+ *
+ * `display:inline-block` ist kein Stil, sondern Bedingung: eine Zeile ohne
+ * eigene Box lässt sich nicht skalieren, und `transform: scale(2)` bliebe
+ * wirkungslos. `.ru-funkel-b` steht aus demselben Grund so in `bausteine.css`.
+ */
+.rmo-letter { display:inline-block; }
+@keyframes rmo-letter-platzen {
+  0%, 100% { filter:blur(0); }
+  50% { transform:scale(2);
+        filter:blur(10px) brightness(150%)
+               drop-shadow(-36px 12px 12px hsl(var(--ru-funkel-ton, 210deg) 100% 70%)); }
+}
+body [data-rmo~="letters"]:is(:hover,:focus-visible,:active) .rmo-letter,
+[data-rmo-play="letters"] .rmo-letter {
+  animation:rmo-letter-platzen 1s ease-in-out 1; animation-delay:var(--rmo-delay,0ms); }
 
 /* Native Schalter: kurze Zustandsbewegung ersetzt die frühere Endlosschleife. */
 body [data-rmo~="toggle"]::before { animation:none; }
