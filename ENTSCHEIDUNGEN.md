@@ -584,6 +584,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E538** — Office war die einzige Gruppe ohne Originalschutz — und der Vortrag am Telefon nicht bedienbar
 * **E539** — Drehstrom wird mit Zeigern gerechnet, nicht mit Wurzel drei
 * **E540** — Die Stromrichtung bei Wechselstrom heisst „wechselnd“, nicht „vor“
+* **E541** — Ein Anschlussfehler wird an der Rolle der Klemme gefunden, nicht am Strom
 
 ---
 
@@ -43259,3 +43260,80 @@ nicht nur Farbe (§38), und der Satz zur Zählrichtung muss mit.
 dieselbe feste Richtung wie dem Gleichstrom, fallen 7 davon, und der Satz
 lautet dann „Der Strom fliesst von X1 nach X2.“ Über 230 V gesagt ist das
 der Fehler, um den es geht.
+
+---
+
+## E541 · Ein Anschlussfehler wird an der Rolle der Klemme gefunden, nicht am Strom
+
+**Was wurde entschieden?** Die Simulation prüft den Anschluss getrennt von
+der Rechnung. Jedes Netz bekommt eine Leiterrolle — L1, L2, L3, N, PE —, und
+der Fehler zeigt sich daran, dass zwei Rollen zusammentreffen, die nicht
+zusammengehören. Jeder Fund trägt zwei Texte: `was` falsch ist und `warum`,
+also was in Wirklichkeit passieren würde.
+
+**Warum nicht am Strom?** Weil der gefährlichste Fehler keinen auffälligen
+Strom erzeugt.
+
+Sind Neutralleiter und Schutzleiter vertauscht, rechnet sich alles richtig.
+Die Lampe brennt, der Motor läuft, jeder Messwert stimmt — am Sternpunkt sind
+die beiden ja ohnehin verbunden (TN-S). Eine Prüfung, die auf Ströme schaut,
+kann diesen Fehler prinzipiell nicht finden. Er ist ein Zeichnungsfehler mit
+tödlicher Folge, und gefunden wird er nur dort, wo er entsteht: an der Klemme.
+
+Dass er trotzdem funktioniert, ist deshalb nicht die Entschuldigung für die
+Meldung, sondern ihr Inhalt. Der Fund sagt es wörtlich: *es funktioniert* —
+und genau darum merkt es niemand, bis der Schutzleiter irgendwo bricht und
+alle daran hängenden Gehäuse unter Spannung stehen.
+
+**Der Griff, mit dem sechs Fehler einer werden.** L und N zusammen ist ein
+Kurzschluss. L und PE ist Lebensgefahr. N und PE ist der Fehler, den niemand
+bemerkt. Zwei Aussenleiter sind 400 V statt 230 V. Das sind vier
+verschiedene Meldungen und **ein** Suchvorgang: zwei Rollen auf einem Netz.
+Danach wird nur noch gefragt, welche zwei es waren. Sechs der neun gesuchten
+Fälle fallen damit auf einmal.
+
+Die übrigen drei brauchen eigene Prüfungen: die fehlende Erdung eines Geräts
+der Schutzklasse I, das Schaltgerät im Neutralleiter (NIN 4.6.1.2.3.2) und
+der unterbrochene Rückweg.
+
+**Die Schwere steht als Wort da**, nicht als Farbe — §38 [hart]. `gefahr`,
+`fehler`, `hinweis`. Wer die Liste vorliest, muss dasselbe erfahren wie der,
+der sie ansieht.
+
+**Was war die Alternative?** Nur melden, dass etwas nicht geht. Verworfen,
+und zwar als das eigentliche Thema dieses Bogens: „Geht nicht" ist keine
+Auskunft, sondern eine Verweigerung. Der Lernwert steckt in dem Satz danach.
+`test499` prüft das ausdrücklich — jede Fehlerart muss ihre FOLGE benennen,
+und die Gegenprobe mit „Geht nicht." fällt daran durch.
+
+**Was kostet es — und die zwei Fehler, die es gekostet hat.** Eine Rolle darf
+nur setzen, wer den Leiter wirklich BESTIMMT. Beim ersten Anlauf durfte das
+zu viel:
+
+* Die Drehstromquelle markierte ihre Schutzleiterrolle an der **N-Klemme**
+  statt an der PE-Klemme. Folge: jede richtig angeschlossene Drehstromanlage
+  meldete „N und PE vertauscht", und der echte Kurzschluss L–N wurde als
+  L–PE gemeldet. Falsch, und zwar auf beiden Seiten gleichzeitig.
+* Der Motor erklärte seine **eigene** Erdungsklemme zum Schutzleiter. Damit
+  beantwortete sich die Frage „hängt dieses Gerät am Schutzleiter?" selbst
+  mit ja — auch wenn an der Klemme nichts dran war.
+
+Beide fand `test499`, und beide wären ohne §8 durchgegangen: ein Melder, der
+immer meldet, sieht von aussen aus wie ein wachsamer. Deshalb stehen dort
+vier richtig verdrahtete Anlagen, bei denen **nichts** kommen darf. Seither
+trennt der Code die beiden Begriffe: `leiter` führt einen Leiter (Quelle,
+Leitersymbol, Erdungszeichen), `schutzklemme` braucht einen.
+
+**Und eine Rolle wird nicht weitergereicht.** Hinter einem Schalter ist der
+Leiter ein geschalteter Aussenleiter und kein L1 mehr. Ihn weiter L1 zu
+nennen wäre der Anfang einer Kette falscher Meldungen — eine Rolle hat nur,
+wo sie angeschrieben ist.
+
+**Wo die Fachlichkeit herkommt:** aus Redurs Lehrunterlage der Schweizer
+Ausbildung. Daraus stammt die Norm-Stelle für den Schalter im Aussenleiter
+und die Kenngrössen des Netzes 3 × 400/230 V. Aus der Unterlage wurde nichts
+übernommen als die fachliche Regel selbst.
+
+`test499`: 39 Zusagen in acht Abschnitten. Gegenprobe rot gesehen — ohne die
+Rollenprüfung fallen 15 davon, und mit „Geht nicht." statt des Folgesatzes
+fällt zusätzlich die Zusage, die den Lernwert hält.

@@ -87,8 +87,6 @@ const Stromfluss = (() => {
     wert?: number;
     /** Nur bei Quellen: Phasenlage in Grad. 0 ist die Bezugsphase (L1). */
     phase?: number;
-    /** Welcher Leiter hier herauskommt — für die Fehlerprüfung (Bogen 3). */
-    leiter?: Leiterart;
   };
 
   /** Die fünf Leiter einer Schweizer Installation. */
@@ -115,10 +113,24 @@ const Stromfluss = (() => {
     phase?: number;
     /** Mehrteilige Bauteile: Drehstromquelle, Motorwicklungen, Klemmenbrett. */
     glieder?: Glied[];
-    /** Welcher Anschluss welchen Leiter führt. Nur die Fehlerprüfung liest es. */
+    /**
+     * Welcher Anschluss welchen Leiter FÜHRT — und damit festlegt, was an
+     * diesem Netz für ein Leiter ist. Das dürfen nur Bauteile sagen, die den
+     * Leiter wirklich bestimmen: die Quelle, die Leitersymbole, das
+     * Erdungszeichen.
+     *
+     * Ein Gerät gehört ausdrücklich NICHT dazu, auch wenn es eine
+     * PE-Klemme hat. Sonst erklärt der Motor seine eigene, an nichts
+     * angeschlossene Erdungsklemme zum Schutzleiter — und die Prüfung „hängt
+     * dieses Gerät am Schutzleiter?" beantwortet sich selbst mit ja. Genau
+     * das ist hier einmal passiert und von `test499 §5` gefunden worden.
+     */
     leiter?: Record<string, Leiterart>;
     /** Schutzklasse I heisst: das Gehäuse MUSS an den Schutzleiter. */
     schutzklasse?: 1 | 2;
+    /** Welche Klemme des GERÄTS der Schutzleiteranschluss ist. Sie führt den
+        Schutzleiter nicht, sie braucht ihn. Siehe `leiter` oben. */
+    schutzklemme?: string;
   };
 
   /* Die beiden Stellungslisten, die fast überall gebraucht werden. */
@@ -157,16 +169,16 @@ const Stromfluss = (() => {
     drehstromquelle: { art: 'mehrteilig', wert: 230, einheit: 'V',
       leiter: { L1: 'L1', L2: 'L2', L3: 'L3', N: 'N', PE: 'PE' },
       glieder: [
-        { art: 'quelle', von: 'L1', nach: 'N', wert: 230, phase: 0,    leiter: 'L1' },
-        { art: 'quelle', von: 'L2', nach: 'N', wert: 230, phase: -120, leiter: 'L2' },
-        { art: 'quelle', von: 'L3', nach: 'N', wert: 230, phase: -240, leiter: 'L3' },
-        { art: 'leiter', von: 'N', nach: 'PE', leiter: 'PE' }
+        { art: 'quelle', von: 'L1', nach: 'N', wert: 230, phase: 0 },
+        { art: 'quelle', von: 'L2', nach: 'N', wert: 230, phase: -120 },
+        { art: 'quelle', von: 'L3', nach: 'N', wert: 230, phase: -240 },
+        { art: 'leiter', von: 'N', nach: 'PE' }
       ],
       annahme: 'Drehstrom wird als Zeiger gerechnet: drei Quellen zu 230 V, um 120° versetzt. Zwischen zwei Aussenleitern ergeben sich daraus 400 V — gerechnet, nicht eingetragen.' },
     generator:       { art: 'quelle', von: '1', nach: '2', wert: 230, einheit: 'V' },
-    erde:            { art: 'bezug', von: 'E' },
+    erde:            { art: 'bezug', von: 'E', leiter: { E: 'PE' } },
     masse:           { art: 'bezug', von: 'M' },
-    schutzleiter:    { art: 'bezug', von: 'PE' },
+    schutzleiter:    { art: 'bezug', von: 'PE', leiter: { PE: 'PE' } },
 
     /* ---- Schalter: alles, was von Hand bewegt wird ---- */
     ausschalter:      { art: 'schalter', stellungen: AUF_ZU('1', '2') },
@@ -271,8 +283,7 @@ const Stromfluss = (() => {
       annahme: 'Der Motor ist mit drei Anschlüssen gezeichnet und wird deshalb als fertig in Stern geschaltet gerechnet — so, wie ein Motor mit dem Schild 3 × 400/230 V am 400-V-Netz betrieben wird. Wer die Brücken selbst setzen will, nimmt das Klemmenbrett. Die Wicklungen gelten als rein ohmsch: Blindanteil, Anlaufstrom und Schlupf fehlen.' },
 
     'motor-klemmenbrett': { art: 'mehrteilig', wert: 60, einheit: 'Ω',
-      schutzklasse: 1,
-      leiter: { PE: 'PE' },
+      schutzklasse: 1, schutzklemme: 'PE',
       glieder: [
         { art: 'widerstand', von: 'U1', nach: 'U2', wert: 60 },
         { art: 'widerstand', von: 'V1', nach: 'V2', wert: 60 },
@@ -685,12 +696,22 @@ const Stromfluss = (() => {
     leitungNetz: Record<string, number>;
     /** Der grösste Strom im Plan — Massstab für die Geschwindigkeit der Animation. */
     maxStrom: number;
+    /**
+     * Welche Netze ein Bauteil leitend verbindet — OHNE die Spannungsquellen.
+     * Die Fehlerprüfung fragt damit „kommt man von hier zum Neutralleiter?",
+     * und über eine Quelle käme man immer hin. Ein Amperemeter ist als 0-V-
+     * Quelle gebaut, zählt hier aber als Leitung — denn genau das ist es.
+     */
+    verbindungen: Array<[number, number]>;
+    /** Was am Anschluss falsch ist. Leer heisst: nichts gefunden. */
+    anschlussfehler: Anschlussfehler[];
   };
 
   const leer = (fehler: string, warnungen: string[] = []): Ergebnis => ({
     ok: false, fehler, spannung: [], spannungWinkel: [], wechsel: false,
     werte: {}, teilwerte: {}, stromNetze: [], netzStrom: [],
-    spulen: {}, annahmen: [], warnungen, durchgaenge: 0, leitungNetz: {}, maxStrom: 0
+    spulen: {}, annahmen: [], warnungen, durchgaenge: 0, leitungNetz: {}, maxStrom: 0,
+    verbindungen: [], anschlussfehler: []
   });
 
   /**
@@ -1113,7 +1134,11 @@ const Stromfluss = (() => {
       ok: true, fehler: '', spannung, spannungWinkel, wechsel,
       werte, teilwerte, stromNetze, netzStrom, spulen,
       annahmen: Array.from(annahmen), warnungen, durchgaenge: 1,
-      leitungNetz: netzInfo.leitungNetz, maxStrom
+      leitungNetz: netzInfo.leitungNetz, maxStrom,
+      verbindungen: eintraege
+        .filter(e => !(e.art === 'U' && e.wert !== 0))
+        .map(e => [e.a, e.b] as [number, number]),
+      anschlussfehler: []
     };
   };
 
@@ -1153,8 +1178,27 @@ const Stromfluss = (() => {
     if (vorher) folger.forEach(t => {
       if (t.bmk && vorher[t.bmk]) stand[t.id] = 1;
     });
+
+    /**
+     * Die Fehlerprüfung anhängen — und zwar AUCH, wenn die Rechnung
+     * gescheitert ist.
+     *
+     * Das ist der wichtigste Fall überhaupt. Ein Kurzschluss lässt die
+     * Matrix gar nicht erst lösen; die Rechnung bricht mit „die Quelle ist
+     * kurzgeschlossen" ab. Wer die Fehlerprüfung erst danach laufen liesse,
+     * bekäme genau dort keine Erklärung, wo sie gebraucht wird — nämlich
+     * beim Fehler, der wirklich passiert ist.
+     */
+    const mitFehlern = (e: Ergebnis): Ergebnis => {
+      e.anschlussfehler = anschlussfehler(plan, netzInfo, e);
+      /* Auch in die Warnungen, damit alles, was heute schon Warnungen
+         anzeigt, den Fund ohne Änderung mitbekommt. */
+      e.anschlussfehler.forEach(f => e.warnungen.push(`${f.was} ${f.warum}`));
+      return e;
+    };
+
     let erg = einDurchgang(plan, stand, netzInfo);
-    if (!erg.ok) return erg;
+    if (!erg.ok) return mitFehlern(erg);
 
     const gesehen = new Set<string>();
     let runde = 1;
@@ -1187,7 +1231,7 @@ const Stromfluss = (() => {
       gesehen.add(schluessel);
       stand = naechster;
       const neu = einDurchgang(plan, stand, netzInfo);
-      if (!neu.ok) return neu;
+      if (!neu.ok) return mitFehlern(neu);
       neu.warnungen = erg.warnungen.concat(neu.warnungen);
       erg = neu;
       runde++;
@@ -1250,11 +1294,278 @@ const Stromfluss = (() => {
       }
     });
 
-    return erg;
+    return mitFehlern(erg);
   };
 
   /* ------------------------------------------------------------------------
-   * 5. ZAHLEN, DIE MAN LESEN KANN
+   * 5. WAS FALSCH ANGESCHLOSSEN IST
+   * ------------------------------------------------------------------------
+   * Eine Simulation, die bei einem Fehler nur „geht nicht" sagt, hat den
+   * Unterricht verfehlt. Der Lernwert steckt nicht in der Meldung, sondern
+   * in dem Satz danach: WAS WÜRDE IN WIRKLICHKEIT PASSIEREN.
+   *
+   * Deshalb trägt jeder Fund hier zwei Texte. `was` sagt, was falsch ist —
+   * das könnte auch ein Farbwechsel. `warum` sagt, was die Folge wäre: dass
+   * der Schutzleiter Betriebsstrom führt, dass das Gehäuse einer Bohrmaschine
+   * unter 230 V steht, dass der Fehlerstromschutzschalter nicht mehr auslöst.
+   * Ohne diesen zweiten Satz lernt niemand etwas, und der erste ist dann nur
+   * eine rote Farbe mit Worten.
+   *
+   * Und deshalb steht die Schwere als WORT da (`gefahr`, `fehler`, `hinweis`)
+   * und nicht als Farbcode: §38 [hart] — keine Information nur über Farbe.
+   * Wer die Liste vorliest, muss dasselbe erfahren wie der, der sie ansieht.
+   *
+   * DER TRICK, MIT DEM DIE HALBE PRÜFUNG AUSKOMMT
+   *
+   * Sechs der neun gesuchten Fehler sind DERSELBE Fehler: zwei Leiter, die
+   * nicht zusammengehören, landen auf demselben Netz. L und N zusammen ist
+   * ein Kurzschluss, L und PE ist Lebensgefahr, N und PE ist der Fehler, den
+   * niemand bemerkt, zwei Aussenleiter sind 400 V statt 230 V. Also wird
+   * nicht sechsmal gesucht, sondern einmal — und danach gefragt, WELCHE zwei
+   * Rollen sich getroffen haben.
+   *
+   * WARUM N UND PE ÜBERHAUPT AUFFALLEN
+   *
+   * Am Sternpunkt der Quelle sind N und PE verbunden (TN-S). Elektrisch sind
+   * die beiden deshalb kaum zu unterscheiden, und eine vertauschte
+   * Verdrahtung RECHNET SICH RICHTIG: die Lampe brennt, nichts wird warm,
+   * kein Messgerät schlägt aus. Genau das macht den Fehler gefährlich, und
+   * genau deshalb kann die Rechnung ihn nicht finden. Gefunden wird er an
+   * der ROLLE der Klemmen, nicht am Strom — er ist ein Zeichnungsfehler mit
+   * tödlicher Folge, kein Rechenfehler.
+   * ----------------------------------------------------------------------*/
+
+  type Anschlussfehler = {
+    /** Kennung der Fehlerart, für Prüfläufe und Oberfläche. */
+    art: 'l-pe' | 'l-n' | 'l-l' | 'n-pe' | 'pe-fehlt' | 'n-offen' | 'schalter-in-n';
+    /** Wie schlimm — als Wort, nicht als Farbe (§38). */
+    schwere: 'gefahr' | 'fehler' | 'hinweis';
+    /** Welche Bauteile es betrifft. */
+    teile: string[];
+    /** Was falsch ist. */
+    was: string;
+    /** Was in Wirklichkeit passieren würde. Das ist der Lernwert. */
+    warum: string;
+    /** Die Regel dahinter, wo es eine gibt. */
+    norm?: string;
+  };
+
+  /** Wie ein Leiter im Satz heisst. */
+  const leiterName = (l: Leiterart): string =>
+    l === 'PE' ? 'Schutzleiter' : l === 'N' ? 'Neutralleiter' : `Aussenleiter ${l}`;
+
+  const istAussen = (l: Leiterart): boolean => l === 'L1' || l === 'L2' || l === 'L3';
+
+  /**
+   * Welche Leiterrolle hängt an welchem Netz?
+   *
+   * Die Rolle wird NICHT weitergereicht. Hinter einem Schalter ist der Leiter
+   * ein geschalteter Aussenleiter und kein L1 mehr — in der Schweiz heisst er
+   * dann korrespondierend oder geschaltet, und ihn weiter L1 zu nennen wäre
+   * der Anfang einer Kette falscher Meldungen. Eine Rolle hat nur, wo sie
+   * ANGESCHRIEBEN ist: an der Quelle, am Leitersymbol, am Erdungszeichen.
+   */
+  const leiterrollen = (plan: any, netzInfo: ReturnType<typeof netze>):
+                       Map<number, Set<Leiterart>> => {
+    const raus = new Map<number, Set<Leiterart>>();
+    const setze = (teilId: string, nr: string, rolle: Leiterart) => {
+      const netz = netzInfo.netzVon.get(`k:${teilId}:${nr}`);
+      if (typeof netz !== 'number') return;
+      const fach = raus.get(netz) || new Set<Leiterart>();
+      fach.add(rolle);
+      raus.set(netz, fach);
+    };
+    ((plan.teile || []) as any[]).forEach(t => {
+      const v = verhalten(t.zeichen);
+      if (!v) return;
+      if (v.leiter) Object.keys(v.leiter).forEach(nr => setze(t.id, nr, v.leiter![nr]!));
+    });
+    return raus;
+  };
+
+  /**
+   * Die Prüfung selbst.
+   *
+   * `stand` ist die Schalterstellung NACH dem Nachführen der Kontakte — ein
+   * offener Schliesser unterbricht den Neutralleiter genauso wie ein offener
+   * Schalter, und ob er offen ist, weiss man erst nach der Rechnung.
+   */
+  const anschlussfehler = (plan: any, netzInfo: ReturnType<typeof netze>,
+                           erg: Ergebnis): Anschlussfehler[] => {
+    const raus: Anschlussfehler[] = [];
+    const teile = (plan.teile || []) as any[];
+    const rollen = leiterrollen(plan, netzInfo);
+
+    const nameVon = (t: any): string => t.bmk || t.zeichen;
+    /** Wer hängt an diesem Netz? Für die Meldung, damit sie einen Ort hat. */
+    const teileAn = (netz: number): string[] => netzInfo.klemmen
+      .filter(k => !k.intern && netzInfo.netzVon.get(k.schluessel) === netz)
+      .map(k => k.teil);
+
+    /* ---- 1. Zwei Leiterrollen auf einem Netz --------------------------- */
+    rollen.forEach((satz, netz) => {
+      if (satz.size < 2) return;
+      const liste = Array.from(satz).sort();
+      const betroffen = teileAn(netz);
+      const hatPE = liste.includes('PE');
+      const hatN = liste.includes('N');
+      const aussen = liste.filter(istAussen);
+      const namen = liste.map(leiterName).join(' und ');
+
+      if (aussen.length && hatPE) {
+        raus.push({
+          art: 'l-pe', schwere: 'gefahr', teile: betroffen,
+          was: `${namen} liegen am selben Punkt — ein Aussenleiter ist auf den Schutzleiter verdrahtet.`,
+          warum: 'Der Schutzleiter führt dann volle Spannung, und mit ihm jedes '
+               + 'Gehäuse, das daran hängt: Waschmaschine, Herd, Bohrmaschine. '
+               + 'Wer eines davon anfasst, steht unter 230 V. Ein '
+               + 'Fehlerstromschutzschalter löst sofort aus, wenn einer da ist — '
+               + 'ist keiner da, merkt man es erst beim Anfassen.',
+          norm: 'Der Schutzleiter führt nie Betriebsspannung.'
+        });
+      } else if (aussen.length && hatN) {
+        raus.push({
+          art: 'l-n', schwere: 'gefahr', teile: betroffen,
+          was: `${namen} liegen am selben Punkt — Aussenleiter und Neutralleiter sind kurzgeschlossen.`,
+          warum: 'Ohne Verbraucher dazwischen begrenzt nur der Leitungswiderstand '
+               + 'den Strom; es fliessen einige hundert bis einige tausend Ampere. '
+               + 'Der Leitungsschutzschalter schaltet in Millisekunden ab. '
+               + 'Es knallt, der Kontakt kann verschweissen, und die Leitung wird '
+               + 'auf ihrer ganzen Länge heiss.'
+        });
+      } else if (aussen.length >= 2) {
+        raus.push({
+          art: 'l-l', schwere: 'gefahr', teile: betroffen,
+          was: `${namen} liegen am selben Punkt — zwei Aussenleiter sind zusammengeschaltet.`,
+          warum: 'Zwischen zwei Aussenleitern liegen 400 V, nicht 230 V. Der '
+               + 'Kurzschlussstrom ist entsprechend grösser als bei L gegen N, '
+               + 'und der Lichtbogen beim Abschalten ebenfalls. Sitzen die beiden '
+               + 'auf derselben Klemme eines Verbrauchers, bekommt er statt '
+               + 'Spannung gar keine — die Differenz ist dann null.'
+        });
+      } else if (hatN && hatPE) {
+        raus.push({
+          art: 'n-pe', schwere: 'gefahr', teile: betroffen,
+          was: 'Neutralleiter und Schutzleiter liegen am selben Punkt — sie sind vertauscht oder gebrückt.',
+          warum: 'Und jetzt kommt das Gefährliche: es FUNKTIONIERT. Die Lampe '
+               + 'brennt, der Motor läuft, kein Messgerät schlägt aus — am '
+               + 'Sternpunkt sind die beiden ja verbunden. Nur führt der '
+               + 'Schutzleiter jetzt den Betriebsstrom und ist nicht mehr '
+               + 'spannungsfrei. Bricht er irgendwo, stehen alle daran '
+               + 'angeschlossenen Gehäuse unter Spannung. Ein '
+               + 'Fehlerstromschutzschalter sieht die Unsymmetrie und löst aus — '
+               + 'oder er löst dauernd aus, und jemand baut ihn aus.',
+          norm: 'Im TN-S-System werden N und PE ab der Trennstelle nicht wieder verbunden.'
+        });
+      }
+    });
+
+    /* ---- 2. Schutzklasse I ohne Schutzleiter --------------------------- */
+    teile.forEach(t => {
+      const v = verhalten(t.zeichen);
+      if (!v || v.schutzklasse !== 1) return;
+      const peKlemme = v.schutzklemme;
+      if (!peKlemme) return;
+      const netz = netzInfo.netzVon.get(`k:${t.id}:${peKlemme}`);
+      const dran = typeof netz === 'number'
+        && (rollen.get(netz)?.has('PE') ?? false);
+      if (dran) return;
+      raus.push({
+        art: 'pe-fehlt', schwere: 'gefahr', teile: [t.id],
+        was: `${nameVon(t)} ist ein Gerät der Schutzklasse I, aber Klemme ${peKlemme} hängt an keinem Schutzleiter.`,
+        warum: 'Schutzklasse I heisst: die Isolation allein genügt nicht, das '
+             + 'Gehäuse ist aus Metall und MUSS geerdet sein. Ohne Schutzleiter '
+             + 'läuft das Gerät völlig normal — bis eine Wicklung durchschlägt. '
+             + 'Dann steht das Gehäuse unter Spannung, es fliesst kein '
+             + 'Fehlerstrom, und keine Schutzeinrichtung schaltet ab. Der '
+             + 'Fehler wird sichtbar, wenn ihn jemand anfasst.',
+        norm: 'NIN: Schutzklasse I braucht den Schutzleiter, nicht wahlweise.'
+      });
+    });
+
+    /* ---- 3. Schalt- oder Schutzgerät im Neutralleiter ------------------ */
+    teile.forEach(t => {
+      const v = verhalten(t.zeichen);
+      if (!v || v.art !== 'schalter') return;
+      const eigene = netzInfo.klemmen.filter(k => k.teil === t.id && !k.intern);
+      let amN = false, amL = false;
+      eigene.forEach(k => {
+        const netz = netzInfo.netzVon.get(k.schluessel);
+        if (typeof netz !== 'number') return;
+        const satz = rollen.get(netz);
+        if (!satz) return;
+        if (satz.has('N')) amN = true;
+        if (Array.from(satz).some(istAussen)) amL = true;
+      });
+      /* Ein Hauptschalter, der L UND N gemeinsam trennt, ist erlaubt — genau
+         das ist die Ausnahme in der Norm. Verboten ist der Schalter, der NUR
+         im Neutralleiter sitzt. */
+      if (!amN || amL) return;
+      raus.push({
+        art: 'schalter-in-n', schwere: 'fehler', teile: [t.id],
+        was: `${nameVon(t)} sitzt im Neutralleiter statt im Aussenleiter.`,
+        warum: 'Ausgeschaltet ist die Lampe dann zwar dunkel, aber der '
+             + 'Aussenleiter liegt weiterhin bis zur Fassung an. Wer die '
+             + 'Birne wechselt und dabei den Sockel berührt, bekommt einen '
+             + 'Schlag — obwohl der Schalter aus ist und alles danach aussieht, '
+             + 'als wäre es spannungsfrei.',
+        norm: 'NIN 4.6.1.2.3.2 — Schalter gehören in den Aussenleiter. Der '
+            + 'Neutralleiter darf nur geschaltet werden, wenn der zugehörige '
+            + 'Aussenleiter gleichzeitig mitgeschaltet wird.'
+      });
+    });
+
+    /* ---- 4. Der Neutralleiter ist unterbrochen ------------------------- */
+    /* Erreichbarkeit OHNE die Quellen: über eine Quelle käme man von jedem
+       Punkt zum Neutralleiter, und die Prüfung wäre immer grün. */
+    const hatN = Array.from(rollen.values()).some(x => x.has('N'));
+    if (hatN && erg.verbindungen.length) {
+      const v = verband();
+      erg.verbindungen.forEach(([a, b]) => v.eins(`n:${a}`, `n:${b}`));
+      const nWurzeln = new Set<string>();
+      rollen.forEach((satz, netz) => { if (satz.has('N')) nWurzeln.add(v.finde(`n:${netz}`)); });
+
+      teile.forEach(t => {
+        const vh = verhalten(t.zeichen);
+        if (!vh) return;
+        if (vh.art !== 'widerstand' && vh.art !== 'spule') return;
+        const eigene = netzInfo.klemmen.filter(k => k.teil === t.id && !k.intern);
+        const netze_ = eigene
+          .map(k => netzInfo.netzVon.get(k.schluessel))
+          .filter((x): x is number => typeof x === 'number');
+        if (!netze_.length) return;
+        /* Nur EINPHASIGE Verbraucher. Ein Drehstrommotor hängt an drei
+           Aussenleitern und braucht gar keinen Neutralleiter; ein Heizkörper
+           zwischen L1 und L2 auch nicht. Die ohne diese Bedingung zu melden
+           wäre die häufigste Falschmeldung überhaupt — und eine
+           Falschmeldung im Unterricht ist schlimmer als keine. */
+        const anAussen = netze_.filter(nz =>
+          Array.from(rollen.get(nz) || []).some(istAussen));
+        if (anAussen.length !== 1) return;
+        const zurueck = netze_.filter(nz => !anAussen.includes(nz));
+        if (!zurueck.length) return;
+        const kommtAn = zurueck.some(nz => nWurzeln.has(v.finde(`n:${nz}`)));
+        if (kommtAn) return;
+        raus.push({
+          art: 'n-offen', schwere: 'gefahr', teile: [t.id],
+          was: `${nameVon(t)} hängt am Aussenleiter, aber der Rückweg zum Neutralleiter ist offen.`,
+          warum: 'Es fliesst kein Strom, das Gerät bleibt also dunkel oder still — '
+               + 'und sieht damit aus wie ausgeschaltet. Es ist aber nicht '
+               + 'spannungsfrei: die volle Spannung steht bis zur Unterbrechung '
+               + 'an, und der ganze Leiter dahinter liegt über das Gerät am '
+               + 'Aussenleiter. Im Drehstromnetz ist ein unterbrochener '
+               + 'Neutralleiter noch schlimmer: die einphasigen Verbraucher '
+               + 'liegen dann in Reihe zwischen zwei Aussenleitern, und wer wenig '
+               + 'Leistung hat, bekommt weit mehr als seine 230 V.'
+        });
+      });
+    }
+
+    return raus;
+  };
+
+  /* ------------------------------------------------------------------------
+   * 6. ZAHLEN, DIE MAN LESEN KANN
    * ----------------------------------------------------------------------*/
 
   /** Eine Grösse mit Vorsatz — 0,0031 A wird zu „3.1 mA". */
@@ -1287,6 +1598,7 @@ const Stromfluss = (() => {
 
   return {
     VERHALTEN, verhalten, stellungenVon, netze, rechne, zeige, loese,
+    loeseKomplex, leiterrollen,
     /* für Prüfungen sichtbar gemacht */ klemmen, aufStrecke
   };
 })();

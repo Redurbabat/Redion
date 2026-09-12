@@ -336,14 +336,22 @@ Register.fachzeichen = (() => {
       w: 140, h: 90,
       pfad: ['M10,20 H130 V70 H10 Z',
              senkrecht(10, 0, 20), senkrecht(50, 0, 20), senkrecht(90, 0, 20),
-             senkrecht(50, 70, 90), senkrecht(90, 70, 90), senkrecht(130, 70, 90)],
+             senkrecht(50, 70, 90), senkrecht(90, 70, 90), senkrecht(130, 70, 90),
+             senkrecht(10, 70, 90)],
       kreise: [{ cx: 10, cy: 20, r: 3 }, { cx: 50, cy: 20, r: 3 }, { cx: 90, cy: 20, r: 3 },
-               { cx: 50, cy: 70, r: 3 }, { cx: 90, cy: 70, r: 3 }, { cx: 130, cy: 70, r: 3 }],
+               { cx: 50, cy: 70, r: 3 }, { cx: 90, cy: 70, r: 3 }, { cx: 130, cy: 70, r: 3 },
+               { cx: 10, cy: 70, r: 3 }],
       beschriftung: [{ x: 10, y: 34, t: 'U1' }, { x: 50, y: 34, t: 'V1' }, { x: 90, y: 34, t: 'W1' },
-                     { x: 50, y: 62, t: 'W2' }, { x: 90, y: 62, t: 'U2' }, { x: 130, y: 62, t: 'V2' }],
+                     { x: 50, y: 62, t: 'W2' }, { x: 90, y: 62, t: 'U2' }, { x: 130, y: 62, t: 'V2' },
+                     { x: 14, y: 62, t: 'PE' }],
+      /* Die siebte Klemme ist der Erdungsbolzen. Er gehört auf das Bild,
+         weil er auf dem Brett ist — und weil ein Klemmenbrett ohne ihn
+         zeichnen liesse, was man nicht anschliessen darf: einen Motor der
+         Schutzklasse I ohne Schutzleiter. */
       anschluesse: [{ nr: 'U1', x: 10, y: 0 }, { nr: 'V1', x: 50, y: 0 }, { nr: 'W1', x: 90, y: 0 },
-                    { nr: 'W2', x: 50, y: 90 }, { nr: 'U2', x: 90, y: 90 }, { nr: 'V2', x: 130, y: 90 }],
-      erklaerung: 'Die sechs Wicklungsenden des Drehstrommotors. Die Brücken machen daraus Stern (230 V am Strang) oder Dreieck (400 V am Strang).'
+                    { nr: 'W2', x: 50, y: 90 }, { nr: 'U2', x: 90, y: 90 }, { nr: 'V2', x: 130, y: 90 },
+                    { nr: 'PE', x: 10, y: 90 }],
+      erklaerung: 'Die sechs Wicklungsenden des Drehstrommotors und der Erdungsbolzen. Die Brücken machen daraus Stern (230 V am Strang) oder Dreieck (400 V am Strang).'
     },
     {
       id: 'motor-wechselstrom', name: 'Wechselstrommotor', gruppe: 'motoren', kennbuchstabe: 'M',

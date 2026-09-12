@@ -7454,3 +7454,41 @@ dabei zwingend:
   fünfzigmal je Sekunde die Richtung. Ein Pfeil ohne den Satz „Zählrichtung,
   im Augenblick des Scheitels von L1" behauptet etwas Falsches — und zwar
   etwas, das ein Lernender glaubt, weil es aussieht wie bei der Batterie.
+
+---
+
+L153 · Die Anschlussprüfung findet nur, was die Zeichnung hergibt — offen
+--------------------------------------------------------------------------
+
+Seit E541 meldet die Simulation neun Anschlussfehler mit ihrer Folge. Was sie
+NICHT kann, gehört genauso aufgeschrieben:
+
+* **Keine Leiterquerschnitte, keine Absicherung.** Ob der
+  Leitungsschutzschalter zum Querschnitt passt — die häufigste Prüffrage
+  überhaupt — kann sie nicht beurteilen. Ein Symbol trägt heute keinen
+  Querschnitt.
+* **Kein Fehlerstromschutzschalter als Bauteil.** Er kommt in den
+  Erklärtexten vor („ein FI löst aus"), ist aber nicht gezeichnet und wird
+  nicht gerechnet. Ein FI-Symbol mit echter Summenstrommessung wäre der
+  nächste sinnvolle Schritt — die Zeigerrechnung kann die Summe der Ströme
+  bereits bilden.
+* **Kein Schutzleiterbruch.** Ein fehlender Schutzleiter wird gefunden, ein
+  UNTERBROCHENER nicht: dafür müsste die Prüfung dieselbe Erreichbarkeits-
+  rechnung fahren wie beim Neutralleiter. Der Code dafür steht schon
+  (`verbindungen` im Ergebnis), die Prüfung fehlt.
+* **Schutzklasse steht nur am Klemmenbrett.** Alle anderen Verbraucher
+  — Lampe, Motor, Heizung — tragen keine Schutzklasse, also wird bei ihnen
+  auch kein fehlender Schutzleiter gemeldet. Das ist kein Denkfehler, sondern
+  fehlende Angabe: die Symbole haben gar keine PE-Klemme, an der man es
+  festmachen könnte.
+* **Der dreipolige Drehstrommotor wird beim offenen Neutralleiter übergangen.**
+  Absichtlich: ein Drehstrommotor braucht keinen Neutralleiter, und ihn zu
+  melden wäre die häufigste Falschmeldung. Damit fällt aber auch der Fall
+  weg, in dem ein Aussenleiter eines Motors wirklich ausfällt — der
+  Zweiphasenlauf, an dem Motoren verbrennen. Er bräuchte eine eigene
+  Prüfung.
+
+**Die Gefahr bei dieser Lücke ist nicht, dass etwas fehlt, sondern dass der
+Melder für vollständig gehalten wird.** Wer sieht, dass er den vertauschten
+Schutzleiter findet, nimmt an, er finde alles. Steht hier, damit es niemand
+annimmt.
