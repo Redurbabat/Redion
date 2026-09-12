@@ -116,7 +116,7 @@ const rechne = (bauen: string, stellung: Record<string, number> = {}): Promise<E
     return { ok: e.ok, fehler: e.fehler, werte: e.werte, teilwerte: e.teilwerte,
              warnungen: e.warnungen, annahmen: e.annahmen, maxStrom: e.maxStrom,
              spannung: e.spannung, spannungWinkel: e.spannungWinkel,
-             wechsel: e.wechsel };
+             wechsel: e.wechsel, komplex: e.komplex };
   }, [bauen, stellung] as [string, any]);
 
 const WURZEL3 = Math.sqrt(3);
@@ -264,11 +264,45 @@ const einphasig = await rechne(`
   draht(q, 'L', h1, 'X1'); draht(h1, 'X2', h2, 'X1'); draht(h2, 'X2', q, 'N');
 `);
 p('Die Reihenschaltung rechnet', einphasig.ok, einphasig.fehler);
-p('Sie wird NICHT als Zeiger gerechnet', einphasig.wechsel === false);
-pNah('Und liefert unverändert 115 V je Lampe', Math.abs(einphasig.werte.t2.U), 115, 'V');
-p('Das Vorzeichen bleibt erhalten, weil es bei Gleichstrom eine Richtung ist',
-  einphasig.werte.t2.U !== einphasig.werte.t2.Ubetrag
-  || einphasig.werte.t2.U > 0);
+p('Sie wird NICHT komplex gerechnet — der reelle Weg genügt',
+  einphasig.komplex === false);
+pNah('Und liefert unverändert 115 V je Lampe', einphasig.werte.t2.Ubetrag, 115, 'V');
+
+/* --------------------------------------------------------------------------
+ * Und hier die Unterscheidung, die zwei Bögen lang gefehlt hat.
+ *
+ * „Muss komplex gerechnet werden" und „ist Wechselstrom" sind NICHT dasselbe.
+ * Eine einphasige 230-V-Quelle hat die Phasenlage 0, wird also rein reell
+ * gerechnet — Wechselstrom ist sie trotzdem. Wer die beiden gleichsetzt,
+ * malt an den Lampenstromkreis einen festen Richtungspfeil, und das ist
+ * genau die Behauptung, die E540 verbietet.
+ *
+ * Gefunden hat diesen Fehler ein BILD, kein Prüflauf: die Zahlen stimmten
+ * alle, nur der Pfeil zeigte stur in eine Richtung. Deshalb steht er jetzt
+ * hier als Zusage.
+ * ------------------------------------------------------------------------ */
+p('Sie ist trotzdem Wechselstrom', einphasig.wechsel === true);
+p('Und ihre Richtung heisst „wechselnd", auch ohne Drehstrom',
+  einphasig.werte.t2.richtung === 'wechselnd',
+  `ist "${einphasig.werte.t2.richtung}"`);
+p('Der Messwert ist der Effektivwert und trägt deshalb kein Vorzeichen',
+  einphasig.werte.t2.U === einphasig.werte.t2.Ubetrag);
+p('Der Winkel unterscheidet die beiden Richtungen trotzdem: 0° oder 180°',
+  Math.abs(Math.abs(einphasig.werte.t1.Iwinkel - einphasig.werte.t2.Iwinkel) - 180) < 0.5
+  || Math.abs(einphasig.werte.t1.Iwinkel - einphasig.werte.t2.Iwinkel) < 0.5,
+  `${einphasig.werte.t1.Iwinkel}° gegen ${einphasig.werte.t2.Iwinkel}°`);
+
+/* Gleichstrom dagegen ist beides nicht — und behält sein Vorzeichen. */
+const batterie = await rechne(`
+  const q = teil('batterie', 'G1');
+  const h = teil('lampe', 'E1', { R: 100 });
+  draht(q, '+', h, 'X1'); draht(h, 'X2', q, '−');
+`);
+p('Die Batterie ist weder komplex noch Wechselstrom',
+  batterie.komplex === false && batterie.wechsel === false);
+p('Und ihr Messwert behält das Vorzeichen als Richtung',
+  batterie.werte.t2.U !== batterie.werte.t2.Ubetrag
+  || batterie.werte.t2.U > 0);
 
 /* ==========================================================================
  * §6 · Die Stromrichtung — und wann sie eine Lüge wäre
@@ -345,6 +379,79 @@ p('Im Augenblick des Scheitels fliesst es nicht in allen drei Strängen gleich',
   new Set(richtungen).size > 1, richtungen.join(', '));
 p('Genau einer der drei Stränge führt vorwärts',
   richtungen.filter((r: string) => r === 'vor').length === 1, richtungen.join(', '));
+
+/* ==========================================================================
+ * §7 · Und der Pfeil steht wirklich im Bild
+ * --------------------------------------------------------------------------
+ * Eine gerechnete Richtung, die niemand sieht, beantwortet keine Frage. Hier
+ * wird deshalb der fertige SVG geprüft — dasselbe Bild, das die Planfläche
+ * zeigt, nur ohne Browserfenster darum.
+ *
+ * Die entscheidende Zusage ist die letzte: der Unterschied zwischen
+ * Gleich- und Wechselstrom muss in der FORM stecken. Ein Pfeil gegen zwei.
+ * Wer die Farben nicht unterscheidet, muss ihn trotzdem sehen — §38 [hart].
+ * ========================================================================*/
+console.log('\n7 · Der Pfeil im Bild');
+
+const zeichne = (bauen: string, stellung: Record<string, number> = {}): Promise<string> =>
+  seite.evaluate(([quelle, st]: [string, any]) => {
+    const { plan, teil, draht } = (window as any).bau();
+    // eslint-disable-next-line no-new-func
+    new Function('plan', 'teil', 'draht', quelle)(plan, teil, draht);
+    const e = Stromfluss.rechne(plan, st);
+    return Schaltplan.alsSvg(plan, { strom: e.ok ? {
+      netzStrom: e.netzStrom, leitungNetz: e.leitungNetz,
+      werte: e.werte, maxStrom: e.maxStrom } : undefined });
+  }, [bauen, stellung] as [string, any]);
+
+const svgGleich = await zeichne(`
+  const q = teil('batterie', 'G1');
+  const h = teil('lampe', 'E1');
+  draht(q, '+', h, 'X1'); draht(h, 'X2', q, '−');
+`);
+p('Gleichstrom: ein Richtungspfeil steht im Bild',
+  svgGleich.includes('sp-richtung'));
+p('Gleichstrom: und zwar der EINFACHE', svgGleich.includes('M-12,0 H7'));
+p('Gleichstrom: nicht der doppelte', !svgGleich.includes('M-13,0 H13'));
+
+const svgWechsel = await zeichne(`
+  const q = teil('wechselspannung', 'G1');
+  const h = teil('lampe', 'E1');
+  draht(q, 'L', h, 'X1'); draht(h, 'X2', q, 'N');
+`);
+p('Wechselstrom: ein Richtungspfeil steht im Bild',
+  svgWechsel.includes('sp-richtung'));
+p('Wechselstrom: und zwar der DOPPELTE', svgWechsel.includes('M-13,0 H13'));
+p('Wechselstrom: nicht der einfache', !svgWechsel.includes('M-12,0 H7'));
+p('Wechselstrom: der Pfeil trägt den Satz zur Zählrichtung',
+  /Zählrichtung/.test(svgWechsel) && /50-mal je Sekunde/.test(svgWechsel));
+
+/* Die Form muss den Unterschied tragen, nicht die Farbe.
+   -------------------------------------------------------------------------
+   Hier stand zuerst ein Vergleich der ganzen BILDER — und der war wertlos:
+   die zwei Pläne enthalten ohnehin verschiedene Symbole (Batterie gegen
+   Wechselspannungsquelle), also unterscheiden sie sich immer. Die Zusage
+   konnte gar nicht rot werden, und §55.2 sagt, was das dann ist: keine
+   Zusage. Verglichen wird jetzt der PFEIL, und nur er. */
+const pfeilForm = (svg: string): string => {
+  const i = svg.indexOf('class="sp-richtung"');
+  if (i < 0) return '';
+  const m = /d="([^"]+)"/.exec(svg.slice(i));
+  return m ? m[1]! : '';
+};
+p('Der Unterschied steckt in der Form des Pfeils, nicht in der Farbe (§38)',
+  !!pfeilForm(svgGleich) && !!pfeilForm(svgWechsel)
+  && pfeilForm(svgGleich) !== pfeilForm(svgWechsel),
+  `„${pfeilForm(svgGleich)}" gegen „${pfeilForm(svgWechsel)}"`);
+
+const svgAus = await zeichne(`
+  const q = teil('wechselspannung', 'G1');
+  const s = teil('ch-schema0', 'S1');
+  const h = teil('lampe', 'E1');
+  draht(q, 'L', s, '3'); draht(s, '4', h, 'X1'); draht(h, 'X2', q, 'N');
+`, {});
+p('Fliesst nichts, wird auch kein Pfeil gemalt',
+  !svgAus.includes('sp-richtung'));
 
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
 

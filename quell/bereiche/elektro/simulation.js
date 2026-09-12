@@ -82,7 +82,7 @@ const Stromfluss = (() => {
         batterie: { art: 'quelle', von: '+', nach: '−', wert: 12, einheit: 'V' },
         gleichspannung: { art: 'quelle', von: '+', nach: '−', wert: 24, einheit: 'V' },
         wechselspannung: { art: 'quelle', von: 'L', nach: 'N', wert: 230, einheit: 'V',
-            leiter: { L: 'L1', N: 'N' },
+            wechselstrom: true, leiter: { L: 'L1', N: 'N' },
             annahme: 'Wechselspannung wird als Zeiger gerechnet: Betrag ist der Effektivwert, Winkel die Phasenlage. Für ohmsche Lasten ist das Ergebnis exakt.' },
         /* ---- Drehstrom: das Netz, an dem die Schweiz hängt ----
            3 × 400/230 V heisst: 230 V zwischen Aussenleiter und Neutralleiter,
@@ -99,7 +99,7 @@ const Stromfluss = (() => {
            Ungenauigkeit der Simulation, sondern der Grund, warum der Fehler
            gefährlich ist. Bogen 3 meldet ihn, die Rechnung kann es nicht. */
         drehstromquelle: { art: 'mehrteilig', wert: 230, einheit: 'V',
-            leiter: { L1: 'L1', L2: 'L2', L3: 'L3', N: 'N', PE: 'PE' },
+            wechselstrom: true, leiter: { L1: 'L1', L2: 'L2', L3: 'L3', N: 'N', PE: 'PE' },
             glieder: [
                 { art: 'quelle', von: 'L1', nach: 'N', wert: 230, phase: 0 },
                 { art: 'quelle', von: 'L2', nach: 'N', wert: 230, phase: -120 },
@@ -107,7 +107,8 @@ const Stromfluss = (() => {
                 { art: 'leiter', von: 'N', nach: 'PE' }
             ],
             annahme: 'Drehstrom wird als Zeiger gerechnet: drei Quellen zu 230 V, um 120° versetzt. Zwischen zwei Aussenleitern ergeben sich daraus 400 V — gerechnet, nicht eingetragen.' },
-        generator: { art: 'quelle', von: '1', nach: '2', wert: 230, einheit: 'V' },
+        generator: { art: 'quelle', von: '1', nach: '2', wert: 230, einheit: 'V',
+            wechselstrom: true },
         erde: { art: 'bezug', von: 'E', leiter: { E: 'PE' } },
         masse: { art: 'bezug', von: 'M' },
         schutzleiter: { art: 'bezug', von: 'PE', leiter: { PE: 'PE' } },
@@ -546,7 +547,7 @@ const Stromfluss = (() => {
     /** Grad in Bogenmass — die Phasenlagen stehen in Grad, weil sie so gelehrt werden. */
     const bogen = (grad) => grad * Math.PI / 180;
     const leer = (fehler, warnungen = []) => ({
-        ok: false, fehler, spannung: [], spannungWinkel: [], wechsel: false,
+        ok: false, fehler, spannung: [], spannungWinkel: [], wechsel: false, komplex: false,
         werte: {}, teilwerte: {}, stromNetze: [], netzStrom: [],
         spulen: {}, annahmen: [], warnungen, durchgaenge: 0, leitungNetz: {}, maxStrom: 0,
         verbindungen: [], anschlussfehler: []
@@ -784,13 +785,26 @@ const Stromfluss = (() => {
                 zim[q] = e.wert * Math.sin(bogen(e.phase));
             }
         });
-        /* Muss komplex gerechnet werden? Nur wenn eine Quelle wirklich versetzt
-           ist. Sonst bleibt der alte, reelle Weg — halb so grosse Matrix und
-           dieselben Zahlen wie bisher. */
-        const wechsel = eintraege.some(e => e.art === 'U' && (e.phase % 360) !== 0);
+        /* ZWEI FRAGEN, DIE NICHT DIESELBE SIND.
+           -------------------------------------------------------------------
+           `komplex` entscheidet den RECHENWEG: nur wenn eine Quelle wirklich
+           um einen Winkel versetzt ist, braucht es die doppelt grosse Matrix.
+           Eine einphasige Schaltung bleibt reell und liefert Zahl für Zahl
+           dieselben Werte wie vor dem Drehstrom.
+    
+           `wechsel` entscheidet die BEDEUTUNG: ob hier Wechselstrom fliesst.
+           Eine 230-V-Quelle ist Wechselstrom, auch wenn sie allein steht und
+           rein reell gerechnet wird — ihr Strom kehrt trotzdem fünfzigmal je
+           Sekunde um, und ein fester Richtungspfeil wäre eine Lüge (E540).
+           Die beiden gleichzusetzen war genau dieser Fehler. */
+        const komplex = eintraege.some(e => e.art === 'U' && (e.phase % 360) !== 0);
+        const wechsel = teile.some(t => {
+            const v = verhalten(t.zeichen);
+            return !!(v && v.wechselstrom);
+        });
         let xRe;
         let xIm;
-        if (wechsel) {
+        if (komplex) {
             const k = loeseKomplex(A, Aim, z, zim);
             xRe = k ? k.re : null;
             xIm = k ? k.im : [];
@@ -825,7 +839,9 @@ const Stromfluss = (() => {
             const re = U(i), im = Uj(i);
             /* Bei Gleichstrom ist der Realteil die Spannung, mit Vorzeichen. Bei
                Wechselstrom ist es der Effektivwert — das, was ein Messgerät
-               anzeigt —, und das Vorzeichen wandert in den Winkel. */
+               anzeigt —, und das Vorzeichen wandert in den Winkel. Im rein
+               reellen Wechselstromfall sind das 0° oder 180°, und damit steht die
+               Richtung auch dort noch im Winkel. */
             spannung.push(wechsel ? Math.hypot(re, im) : re);
             spannungWinkel.push(wechsel ? winkel(re, im) : 0);
         }
@@ -968,7 +984,7 @@ const Stromfluss = (() => {
                 maxStrom = netzStrom[i];
         }
         return {
-            ok: true, fehler: '', spannung, spannungWinkel, wechsel,
+            ok: true, fehler: '', spannung, spannungWinkel, wechsel, komplex,
             werte, teilwerte, stromNetze, netzStrom, spulen,
             annahmen: Array.from(annahmen), warnungen, durchgaenge: 1,
             leitungNetz: netzInfo.leitungNetz, maxStrom,

@@ -357,6 +357,9 @@ const Planflaeche = (() => {
         netzStrom: e.netzStrom, leitungNetz: e.leitungNetz,
         werte: e.werte, maxStrom: e.maxStrom
       };
+      /* `werte` bringt die Richtung schon mit — sie steht an jedem Messwert
+         (E540). Hier ist deshalb nichts weiterzureichen ausser dem, was
+         ohnehin durchgeht. */
       buehne.innerHTML = Schaltplan.alsSvg(z.plan, opt);
       buehne.classList.toggle('sp-laeuft', z.simulation);
       if (!z.simulation) return;

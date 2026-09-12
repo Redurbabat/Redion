@@ -585,6 +585,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E539** — Drehstrom wird mit Zeigern gerechnet, nicht mit Wurzel drei
 * **E540** — Die Stromrichtung bei Wechselstrom heisst „wechselnd“, nicht „vor“
 * **E541** — Ein Anschlussfehler wird an der Rolle der Klemme gefunden, nicht am Strom
+* **E542** — Ein Pfeil bei Gleichstrom, zwei bei Wechselstrom — und der Fehler, den erst das Bild fand
 
 ---
 
@@ -43337,3 +43338,78 @@ und die Kenngrössen des Netzes 3 × 400/230 V. Aus der Unterlage wurde nichts
 `test499`: 39 Zusagen in acht Abschnitten. Gegenprobe rot gesehen — ohne die
 Rollenprüfung fallen 15 davon, und mit „Geht nicht." statt des Folgesatzes
 fällt zusätzlich die Zusage, die den Lernwert hält.
+
+---
+
+## E542 · Ein Pfeil bei Gleichstrom, zwei bei Wechselstrom — und der Fehler, den erst das Bild fand
+
+**Was wurde entschieden?** Die Stromrichtung steht jetzt im Plan. Sie sitzt am
+BAUTEIL und nicht an der Leitung, und sie unterscheidet sich in der FORM:
+**ein Pfeil bei Gleichstrom, zwei bei Wechselstrom.**
+
+**Warum am Bauteil?** Weil gerechnet wird, was durch einen Zweig fliesst. Ein
+Netz kann aus fünf Leitungen bestehen, durch die ganz verschieden viel
+fliesst — ein Pfeil auf einer davon wäre geraten. Am Bauteil ist er gemessen.
+
+**Warum die Form und nicht die Farbe?** §38 [hart]. Wer Farben nicht
+unterscheidet, muss denselben Unterschied sehen. Ein einzelner Pfeil an 230 V
+wäre ausserdem die Behauptung, die E540 verbietet: dort kehrt der Strom
+fünfzigmal je Sekunde um. Der Doppelpfeil sagt genau das, und wer ihn
+antippt, bekommt den Satz zur Zählrichtung im Klartext.
+
+### Und jetzt der Teil, der wehtut
+
+**Das Bild hat einen echten Denkfehler gefunden, den zwei Bögen und
+93 grüne Zusagen nicht gesehen haben.**
+
+Seit E539 gab es ein Kennzeichen `wechsel`. Es hiess: *diese Schaltung muss
+komplex gerechnet werden.* Und es wurde zugleich benutzt für: *hier fliesst
+Wechselstrom.* Das sind zwei verschiedene Aussagen, und sie fallen genau dort
+auseinander, wo es am meisten auffällt:
+
+> Eine einphasige 230-V-Quelle hat die Phasenlage 0. Sie wird deshalb rein
+> reell gerechnet — und ist trotzdem Wechselstrom.
+
+Folge: **der Lampenstromkreis an 230 V bekam einen festen Richtungspfeil.**
+Also genau die Lüge, gegen die E540 geschrieben wurde, und zwar im
+allerhäufigsten Fall überhaupt. Bei Drehstrom stimmte alles; beim einfachsten
+Stromkreis des ganzen Lehrmittels stimmte es nicht.
+
+**Kein Prüflauf konnte das finden**, und das ist der lehrreiche Teil: die
+Zahlen waren alle richtig. Spannung, Strom, Leistung, Helligkeit — nichts
+daran war falsch. Falsch war eine BEDEUTUNG, und Bedeutungen stehen nicht in
+Zahlen. Gesehen hat es ein Bildschirmfoto von zwei Stromkreisen
+nebeneinander, auf dem beide Pfeile gleich aussahen, obwohl die Überschrift
+„zwei Pfeile, weil er umkehrt" lautete.
+
+Das ist §55.1 noch einmal, mit einem neuen Beispiel: es gibt Fehler, die
+keine Prüfung haben KANN, weil die Prüfung dieselbe falsche Annahme teilt
+wie der Code.
+
+**Die Reparatur:** zwei getrennte Begriffe. `komplex` entscheidet den
+Rechenweg, `wechsel` die Bedeutung. Ein Bauteil sagt jetzt selbst, ob es
+Wechselspannung liefert (`wechselstrom`). Und im rein reellen Wechselstromfall
+trägt der Winkel die Richtung weiter: 0° oder 180°, mehr braucht es dort
+nicht.
+
+**Zwei weitere Funde desselben Bildes:**
+
+* Der Pfeil lag MITTEN IM SYMBOL. Der Abstand war mit 14 Einheiten fest
+  eingetragen, und der Lampenkreis ist 60 breit. Jetzt rechnet er sich aus
+  der Grösse des Symbols quer zur Stromachse.
+* Die Doppelspitze sah am Bildschirm aus wie ein dicker einfacher Pfeil.
+  Die beiden Spitzen stehen jetzt mit Abstand auseinander.
+
+**Und ein Fund in der eigenen Prüfung.** Die Zusage „der Unterschied steckt
+in der Form" verglich zuerst die ganzen BILDER der beiden Stromkreise. Die
+enthalten ohnehin verschiedene Symbole, also unterschieden sie sich immer —
+die Zusage konnte nicht rot werden. §55.2 sagt, was das dann ist. Verglichen
+wird jetzt der Pfad des Pfeils, und nur er; unter der Gegenprobe zeigt sie
+beide Male dieselbe Zeichenkette und fällt.
+
+`test498 §7`: 10 Zusagen für das gezeichnete Bild, dazu sechs neue in §5 für
+die Trennung von `wechsel` und `komplex`. Gegenprobe rot gesehen, zweifach:
+koppelt man die beiden Begriffe wieder aneinander, meldet der 230-V-Kreis
+wieder „vor"; zeichnet man beide Pfeile gleich, fällt der Formvergleich.
+
+Damit ist **L152 geschlossen**.

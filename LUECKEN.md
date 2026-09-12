@@ -7428,7 +7428,7 @@ genannte Annahme ist besser als eine stille.
 
 ---
 
-L152 · Die Stromrichtung wird gerechnet, aber nicht gezeichnet — offen
+L152 · Die Stromrichtung wird gerechnet, aber nicht gezeichnet — GESCHLOSSEN (E542)
 --------------------------------------------------------------------------
 
 Die Knotenpotentialanalyse liefert **vorzeichenbehaftete** Ströme; seit
@@ -7454,6 +7454,17 @@ dabei zwingend:
   fünfzigmal je Sekunde die Richtung. Ein Pfeil ohne den Satz „Zählrichtung,
   im Augenblick des Scheitels von L1" behauptet etwas Falsches — und zwar
   etwas, das ein Lernender glaubt, weil es aussieht wie bei der Batterie.
+
+**GESCHLOSSEN am 12. September 2026 durch E542.** Der Pfeil steht im Plan,
+am Bauteil und nicht an der Leitung. Beide Bedingungen sind eingehalten: ein
+Pfeil bei Gleichstrom, ZWEI bei Wechselstrom — der Unterschied steckt in der
+Form —, und der Satz zur Zählrichtung hängt als Titel daran.
+
+Beim Bauen hat das Bild einen Fehler gefunden, den die Lücke nicht vorhergesehen
+hatte: der einphasige 230-V-Kreis bekam einen festen Pfeil, weil „muss komplex
+gerechnet werden" und „ist Wechselstrom" dasselbe Kennzeichen benutzten. Steht
+als Warnung in E542 — es gibt Fehler, die keine Prüfung haben kann, weil die
+Prüfung dieselbe falsche Annahme teilt wie der Code.
 
 ---
 
