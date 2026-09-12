@@ -7391,3 +7391,104 @@ einen Querverweis von Hand einsetzen, rot sehen, wieder herausnehmen.
 
 Bis dahin steht die Regel ohne Beweis da — und stand es, seit sie
 geschrieben wurde.
+
+---
+
+L151 · Was beim PowerPoint-Lesen NICHT ankommt — offen
+--------------------------------------------------------------------------
+
+E540 liest `.pptx`: Folien in der richtigen Ordnung, Textkästen mit Lage,
+Grösse, Schriftgrad und Fett, Bilder mit ihren Bytes. Das ist der erste
+Schritt, nicht der letzte. Was heute **nicht** ankommt, damit niemand es für
+verloren hält:
+
+- **Geerbtes vom Layout und vom Master.** Gelesen werden nur die Formen, die
+  im Folien-XML wirklich stehen. Hintergründe, Platzhaltertexte, Fusszeilen,
+  Foliennummern und das Farbthema stehen dort nicht. Eine Folie, die im
+  Original einen farbigen Grund hat, kommt weiss an.
+- **Ein Schriftgrad je Kasten.** Redions Textmarke hat genau einen; ein
+  PowerPoint-Kasten mit gemischten Graden oder Farben kommt vereinfacht an,
+  mit dem Grad des ersten Laufs.
+- **Absatzebenen und Aufzählungszeichen.** `a:pPr@lvl` und `a:buChar` werden
+  nicht gelesen; eine Gliederung kommt als flacher Text an.
+- **Tabellen (`a:tbl`) und Diagramme.** Beide werden übersprungen — sie haben
+  in der Markenschicht kein Gegenstück.
+- **Formen ohne Text** (Pfeile, Rechtecke, Linien aus `a:prstGeom`). Die
+  Markenschicht kennt sieben Formen; die Zuordnung fehlt noch.
+- **Drehung** (`a:xfrm@rot`) und Spiegelung (`flipH`/`flipV`). Die Marken
+  können drehen — gelesen wird es noch nicht.
+- **Notizen** (`ppt/notesSlides/`), Übergänge, Animationen.
+
+**GEMESSEN am 12. September**, an einer echten Datei von Redur
+(27 Folien, 36 Bilder, 11 Layouts, 4:3, beide Packmethoden gemischt). Sie
+liest sich in 385 ms ohne einen Browserfehler, die Bilder sitzen an ihrem
+Platz, und die gerenderte Folie entspricht dem Original. Vier Funde daraus
+stehen in E541.
+
+**Weiter nicht gemessen:** eine Datei aus LibreOffice Impress und eine aus
+Google Slides. Beide schreiben gültiges OOXML, aber anders — vor allem bei
+Platzhaltern und geerbten Schriftgraden. Je eine Prüfung wert.
+
+---
+
+L152 · Eine Präsentation aus Bildern bringt keinen Text mit — offen
+--------------------------------------------------------------------------
+
+An Redurs Lehrunterlage gemessen (12. September): 27 Folien, 237 Formen —
+und **vier** Textstücke je Folie, allesamt Kopf- und Fusszeile. Der ganze
+Lehrinhalt sind **Bilder**: Tabellen, Diagramme, Formeln, Kennlinien. Die
+zwölf Formen einer Folie sind leere Rechtecke.
+
+Der Leser arbeitet dabei richtig — es ist schlicht kein Text da. Aber die
+Folge ist ernst: eine so gebaute Präsentation lässt sich in Redion **nicht
+durchsuchen**, ihr Text ist nicht vorlesbar (§38), und „den Text ändern"
+geht an ihr nicht, weil es keinen gibt.
+
+**Was das hiesse:** Text in einem Folienbild sichtbar zu machen, ist OCR —
+und den Dienst hat Redion bereits (`bereiche/dateien/recognition.ts`, lokal
+und opt-in). Eine eingelesene Folie durch die Texterkennung zu schicken wäre
+der Weg; er ist nicht gebaut, und er kostet Rechenzeit je Folie.
+
+**Nicht als Fehler behandeln:** Eine Präsentation aus Bildern ist eine
+zulässige Präsentation. Was Redion tun muss, ist es zu SAGEN — nicht so zu
+tun, als sei die Folie leer.
+
+---
+
+L153 · Der Klick schaltet die Folie noch nicht weiter — offen
+--------------------------------------------------------------------------
+
+E542 liest die Abdeckungen einer PowerPoint-Übungsfolie ein und kennt auch
+die Nummer des Klicks, bei dem jede weichen soll (`schritt`, aus
+`p:timing`). Benutzt wird die Nummer noch nicht:
+
+- **Heute** wird jede Abdeckung einzeln angetippt (E266). Das ist gut zum
+  Lernen allein, aber nicht das, was Redur beschrieben hat: ein Klick, und
+  die Folie geht einen Schritt weiter — wie im Vortrag vor einer Klasse.
+- **Nötig wäre** ein Schrittzähler je Blatt und ein Griff, der beim nächsten
+  Klick alle Abdeckungen mit `schritt <= n` aufdeckt. Der Vortragsmodus
+  (`werkzeuge.ts`) blättert heute Folien; er müsste zuerst die Schritte
+  durchgehen und erst danach weiterblättern.
+- **Der Übergang fehlt ganz.** PowerPoint löst die Abdeckung mit `dissolve`
+  auf; in Redion verschwindet sie schlagartig. Ein weiches Ausblenden wäre
+  in der Bewegungsschicht (`motion.css`) eine Regel — aber nur beim
+  Aufdecken, nicht im Leerlauf (E528).
+
+**Nicht gebaut, weil es eine Entscheidung braucht:** ob der Schritt am Blatt
+gespeichert wird oder nur im Sichtbaren lebt. E266 ist da eindeutig für die
+Abdeckung selbst — „Lernen darf den Speicher nicht anfassen" —, und dieselbe
+Regel spricht dafür, auch den Schrittstand nicht zu speichern.
+
+**Und zwei Sachen an der Optik**, an Redurs Bild des Originals verglichen
+(12. September):
+
+- **Der Deckel ist flach, im Original ein Verlauf.** Gemessen: weiss →
+  `#FFCC00` in der Mitte → weiss, senkrecht (`a:lin ang="5400000"`). Redions
+  Abdeckband ist eine Fläche in EINER Farbe; seit E542 kommt wenigstens die
+  richtige Farbe aus dem kräftigsten Stopp statt aus einem Rückfall. Der
+  Verlauf selbst fehlt — Optik an einem Deckel, den man wegtippt.
+- **Die Navigationsknöpfe der Folie fehlen.** Unten rechts stehen im
+  Original drei blaue Pfeile (zurück, eine Folie zurück, weiter). Es sind
+  Formen ohne Text und ohne Animation, also weder Textkasten noch Abdeckung
+  — sie fallen durch beide Zweige. Für Redion sind sie ohnehin fremd: das
+  Blättern macht dort der Vortragsmodus.

@@ -64,7 +64,7 @@ const ArchivImport = (() => {
   const TEXT = /\.(md|markdown|txt)$/i;
   const HTML = /\.(html?|htm)$/i;
   const TABELLE = /\.(csv|tsv)$/i;
-  const OFFICE = /\.(xlsx|xlsm|ods|docx|epub)$/i;
+  const OFFICE = /\.(xlsx|xlsm|ods|docx|pptx|ppsx|pptm|ppsm|epub)$/i;
   /* HEIC zeigt kein Chromium und kein Firefox — bleibt eine Datei. */
   const BILD = /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i;
   /* Steuerzeichen (0–31, 127) als Zeichenklasse — über Codes gebaut, damit
@@ -79,6 +79,8 @@ const ArchivImport = (() => {
     csv: 'text/csv', tsv: 'text/tab-separated-values', html: 'text/html', htm: 'text/html',
     mp4: 'video/mp4', webm: 'video/webm', mp3: 'audio/mpeg', wav: 'audio/wav',
     zip: 'application/zip', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    ppsx: 'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
     xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     ods: 'application/vnd.oasis.opendocument.spreadsheet', epub: 'application/epub+zip'
   };

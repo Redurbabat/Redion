@@ -15,6 +15,12 @@
  *      bleiben zurück. Wer die Datei danach von der Platte löschte, hatte
  *      sie verloren — ohne dass irgendwo stand, dass etwas fehlt.
  *
+ *   §3 DER WÄHLER VERSCHWIEG POWERPOINT. `dateienLesen` behandelt seit E538
+ *      `.pptx|.ppsx|.pptm|.ppsm` — drei Zeilen unter einem `accept`, das
+ *      keine davon nennt. Im Dateifenster stand Redurs .ppsx damit grau;
+ *      lesbar war sie nur über „Alle Dateien". Der Weg war gebaut und
+ *      unerreichbar, und die zwei Menütexte darüber sagten es auch nicht.
+ *
  *   §2 DER VORTRAG WAR AM TELEFON NICHT BEDIENBAR. `.praesi-leiste button`
  *      hatte `padding:4px 10px` bei 13 px Schrift, also rund 25 px. Genau
  *      mit diesen Knöpfen wird am Telefon geblättert und beendet: Wischen
@@ -27,6 +33,9 @@
  *        Fach `dateien`. Beide Zusagen rot.
  *   §2 → `min-height:var(--touch-min)` in `werkzeuge.css` streichen: die
  *        gemessene Höhe fällt auf ~25 px zurück, die Zusage rot.
+ *   §3 → die vier PowerPoint-Endungen aus `inp.accept` in `werkzeuge.ts`
+ *        wieder streichen: der Wähler zeigt eine .ppsx grau, obwohl der
+ *        Zweig drei Zeilen tiefer sie liest. Vier Zusagen rot.
  *
  *   node pruefungen/lauf/test497.mts
  * ==========================================================================*/
@@ -182,6 +191,44 @@ console.log('\n§2 Die Knöpfe im Vortrag messen 44 px (§37)');
     p(`Knopf „${name}" ist mindestens 44 px hoch`, m.h >= 44, m.h + ' px');
     p(`Knopf „${name}" ist mindestens 44 px breit`, m.b >= 44, m.b + ' px');
   }
+
+  await kontext.close();
+}
+
+/* ══ §3 DER DATEIWÄHLER ZEIGT, WAS DER EINLESER KANN ═════════════════════ */
+console.log('\n§3 Der Wähler bietet an, was dahinter wirklich gelesen wird');
+{
+  const { kontext, seite } = await seiteAuf(1180);
+
+  /* Der Wähler wird nie in die Seite gehängt — er wird gebaut und geklickt.
+     Also wird er dort abgefangen, wo der Browser ihn öffnet, und sein
+     `accept` am echten Element gelesen, nicht am Quelltext. */
+  const waehler = seite.waitForEvent('filechooser');
+  await seite.evaluate(() => (window as any).Werkzeuge.dateienLesen());
+  const chooser = await waehler;
+  const accept = (await chooser.element().getAttribute('accept')) ?? '';
+  const mehrere = await chooser.element().getAttribute('multiple');
+
+  /* Jede Endung, die `dateienLesen` hinter dem Wähler behandelt, muss im
+     Wähler auch angeboten werden. Sonst steht die Datei grau da, und der
+     Weg dahinter läuft nie an. */
+  for (const endung of ['.docx', '.pptx', '.ppsx', '.pptm', '.ppsm',
+                        '.xlsx', '.ods', '.epub', '.pdf', '.csv', '.md', '.zip'])
+    p('Der Wähler bietet ' + endung + ' an', accept.includes(endung), accept);
+  p('Mehrere Dateien auf einmal sind erlaubt', mehrere !== null);
+
+  /* UND DER MENÜTEXT DARÜBER MUSS DASSELBE SAGEN. Ein Wähler, der PowerPoint
+     kann, hinter einem Text, der es verschweigt, wird nicht gefunden. */
+  await seite.evaluate(() => document.getElementById('btn-import')?.click());
+  await seite.waitForTimeout(200);
+  const text = await seite.evaluate(() => {
+    const m = document.querySelector('.menu');
+    const t = m ? (m.textContent || '') : '';
+    document.querySelectorAll<HTMLElement>('.menu, .menu-grund').forEach(x => x.remove());
+    return t;
+  });
+  p('Das Menü nennt PowerPoint', /PowerPoint/i.test(text), text.slice(0, 160));
+  p('Das Menü nennt PDF', /PDF/i.test(text), text.slice(0, 160));
 
   await kontext.close();
 }

@@ -860,13 +860,13 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
 
 - **O1 · Das Original bleibt** — ERLEDIGT (E538). Office war die einzige
   Gruppe ohne Originalschutz.
-- **O2 · Der ZIP-Teil lernt Durchreichen.** Der Leser gibt rohe, noch
+- **O2 · Der ZIP-Teil lernt Durchreichen** — ERLEDIGT (E539). Der Leser gibt rohe, noch
   gepackte Bytes heraus; der Schreiber nimmt `methode: 8` mit getrennten
   Roh- und Packlängen entgegen. Erst damit lässt sich eine `.docx` öffnen,
   EINEN Eintrag ersetzen und der Rest unverändert zurückschreiben. Ohne
   diesen Bogen ist jede Rundreise ein Neuschreiben — gültig, aber ungepackt
   und mit Datum 1980.
-- **O3 · `.pptx` lesen.** `ppt/presentation.xml` (Reihenfolge, Foliengrösse),
+- **O3 · `.pptx` lesen** — ERLEDIGT (E540), Grenzen in L151. `ppt/presentation.xml` (Reihenfolge, Foliengrösse),
   `slideN.xml` (`p:spTree` → Textkästen mit `a:xfrm`-Lage, `p:pic` → Bilder),
   die `.rels` (Bildziele), `slideLayouts`/`slideMasters` für Geerbtes,
   `theme1.xml` für Farben. Jede Folie wird ein Block mit `marken`.

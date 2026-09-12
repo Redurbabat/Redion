@@ -1842,7 +1842,12 @@ const Werkzeuge = (() => {
     const dateienLesen = () => {
         const inp = document.createElement('input');
         inp.type = 'file';
-        inp.accept = '.md,.markdown,.txt,.csv,.tsv,.html,.htm,.xlsx,.xlsm,.ods,.docx,.epub,.pdf,.zip,image/*';
+        /* DER WÄHLER MUSS ANBIETEN, WAS DER ZWEIG DARUNTER LIEST (E543). Die
+           vier PowerPoint-Endungen kamen mit E538 in den Einleser, nicht aber
+           hierher: im Dateifenster stand eine .ppsx grau, und der gebaute Weg
+           lief nie an. Wer eine Endung unten aufnimmt, nimmt sie hier mit auf. */
+        inp.accept = '.md,.markdown,.txt,.csv,.tsv,.html,.htm,.xlsx,.xlsm,.ods,' +
+            '.docx,.pptx,.ppsx,.pptm,.ppsm,.epub,.pdf,.zip,image/*';
         inp.multiple = true;
         inp.addEventListener('change', async () => {
             let n = 0;
@@ -1858,12 +1863,12 @@ const Werkzeuge = (() => {
                     /* PDF UND ALLES BINÄRE WERDEN DOKUMENTE (E350) — vorher wurde eine
                        über „Alle Dateien" gewählte PDF zur Textseite mit Binärsalat. */
                     const textig = /\.(html?|htm|csv|tsv|md|markdown|txt)$/i.test(name) || f.type.startsWith('text/');
-                    if (!textig && !/\.(xlsx|xlsm|docx|epub)$/i.test(name) && typeof ArchivImport !== 'undefined') {
+                    if (!textig && !/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name) && typeof ArchivImport !== 'undefined') {
                         await ArchivImport.dateiAlsDokument(f, null);
                         n++;
                         continue;
                     }
-                    if (/\.(xlsx|xlsm|docx|epub)$/i.test(name)) {
+                    if (/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name)) {
                         const erg = await Einlesen.datei(f);
                         if (erg) {
                             UI.toast(f.name + ': ' + erg.hinweis);
@@ -2973,8 +2978,8 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                     await anhaengen(seite, f, 'image');
                     continue;
                 }
-                /* Excel, Word und EPUB laufen über den eigenen ZIP-Leser */
-                if (/\.(xlsx|xlsm|docx|epub)$/i.test(name)) {
+                /* Excel, Word, PowerPoint und EPUB laufen über den eigenen ZIP-Leser */
+                if (/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name)) {
                     try {
                         const erg = await Einlesen.datei(f, seite);
                         if (erg) {

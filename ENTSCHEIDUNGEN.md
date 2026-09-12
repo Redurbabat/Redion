@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-518 Entscheidungen, E1 bis E538 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+523 Entscheidungen, E1 bis E543 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -582,6 +582,11 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E536** — Die Unschärfe läuft wieder von links nach rechts — die Staffelung war auf 0 gefallen
 * **E537** — Die letzten drei Vorlagenblöcke: Ordnerkarte, Lichtkarte mit Kippschalter, flüssige Blase
 * **E538** — Office war die einzige Gruppe ohne Originalschutz — und der Vortrag am Telefon nicht bedienbar
+* **E539** — O2: Der ZIP-Teil lernt Durchreichen — die Grundlage jeder Rundreise durch eine Office-Datei
+* **E540** — O3: PowerPoint lesen — eine Folie ist ein Blatt, kein neuer Blocktyp
+* **E541** — Vier Funde aus einer echten PowerPoint-Datei, die keine erfundene je gezeigt hätte
+* **E542** — Die Antworten waren alle offen: PowerPoints Ausblend-Animationen werden zu Redions Abdeckband
+* **E543** — Der Wähler verschwieg, was der Einleser längst kann: `accept`, Menütext und Zweig wandern zusammen
 
 ---
 
@@ -43123,3 +43128,274 @@ fallen 14 davon, und die Knöpfe messen 28 × 32.
 
 Der Plan für Word und PowerPoint steht als O1 bis O7 in `AUFGABEN.md`, mit
 dem, was die drei Vermessungen ergeben haben.
+
+---
+
+E539 — O2: Der ZIP-Teil lernt Durchreichen
+--------------------------------------------------------------------------
+
+`.docx` und `.pptx` sind ZIP-Pakete. „Einen Absatz ändern" heisst deshalb:
+**einen Eintrag ersetzen und alle anderen zurückschreiben, wie sie waren.**
+Das ging nicht, und zwar an zwei Stellen:
+
+- Der Leser entpackte immer. `holen`/`alsBlob` geben Klartext, `eintrag` nur
+  Zahlen — die rohen, noch gepackten Bytes kamen nie heraus. Dabei hielt
+  `zipLesen` sie längst im Speicher; sie wurden nur nicht herausgegeben.
+- Der Schreiber schrieb immer Methode 0. Ein fremder Deflate-Eintrag liess
+  sich nicht durchreichen: er hätte entpackt und ungepackt neu abgelegt
+  werden müssen. Aus einer 40-KB-Vorlage wäre eine 300-KB-Datei geworden,
+  mit jedem eingebetteten Bild unkomprimiert darin.
+
+Jetzt gibt `rohBytes(name)` die Bytes unberührt heraus — mit Methode,
+Prüfsumme und Rohgrösse —, und der Schreiber nimmt einen Eintrag mit `roh`
+entgegen und schreibt ihn Byte für Byte weiter.
+
+**Die Prüfsumme wird dabei nicht nachgerechnet, und das ist Absicht:**
+nachrechnen hiesse entpacken, und genau das soll unterbleiben. Der Leser
+gibt `roh` nur für unverschlüsselte Einträge heraus.
+
+**Die Flags des Originals reisen NICHT mit.** Bit 3 (die Grössen stehen erst
+hinter den Daten) würde sonst mitkommen, obwohl hier die echten Längen im
+Kopf stehen — ein Leser, der Bit 3 glaubt, suchte danach einen Datensatz,
+den es nicht gibt.
+
+### Die Zeile, die es still zerrissen hätte
+
+```txt
+versatz += kopf.length + laenge;     ← die ROHE Länge
+versatz += kopf.length + gepackt;    ← die Bytes, die wirklich geschrieben wurden
+```
+
+Bei Methode 0 sind beide gleich, und nichts fiele auf. Beim ersten
+durchgereichten Eintrag geht es auseinander, und ab da zeigt **jeder**
+folgende Verzeichnisversatz ins Leere. Die Gegenprobe dazu bricht nicht mit
+einer roten Zusage ab, sondern mit einem Absturz im `DataView` — das Archiv
+ist dann nicht falsch, sondern kaputt.
+
+Dieselbe Verwechslung lauert an vier weiteren Stellen: lokaler Kopf 18/22,
+Verzeichnis 20/24, das ZIP64-Zusatzfeld in beiden. Und die ZIP64-Entscheidung
+prüft jetzt **beide** Längen: ein gepackter Eintrag kann roh über der Grenze
+liegen und gepackt darunter.
+
+### Und ein Fund an der eigenen Prüfung
+
+Die erste Fassung von `test498` prüfte die Methode nur über `eintrag()` —
+und das liest aus dem **Verzeichnis**. Die Gegenprobe „Methode im lokalen
+Kopf fest auf 0" blieb deshalb grün: Redions eigener Leser sieht ins
+Verzeichnis und entpackt weiter richtig. Andere Entpacker tun das nicht;
+Word und der Windows-Explorer lesen den lokalen Kopf. Die Suite liest ihn
+jetzt selbst aus den Bytes — und erst damit wird die Gegenprobe rot.
+
+`test498`: 11 Zusagen, an einem Archiv mit wirklich gepackten Einträgen —
+mit Methode 0 allein wäre die Suite wertlos, weil roh und gepackt dann
+dieselbe Zahl sind und jede Verwechslung unsichtbar bliebe.
+`test96`, `test100`, `test103` bleiben grün; der Schreiber trägt `.redion`,
+und da geht es um Daten (§51).
+
+---
+
+E540 — O3: PowerPoint lesen
+--------------------------------------------------------------------------
+
+`.pptx` liess sich bisher nicht öffnen; eine Präsentation lief in den Zweig
+„sonstige Datei" und wurde ein reiner Anhang (`LUECKEN.md`: „DOCX/PPTX-
+Import" stand als offen).
+
+**Eine Folie ist ein `blatt`-Block.** Kein neuer Blocktyp: das A4-Blatt trägt
+schon `blattBreite`/`blattHoehe` und die Zeichenschicht `Marken` (E103), und
+damit Textkästen mit Schrift und Rahmen, Bilder mit eigener Datei,
+Verschieben, Drehen, Sperren und hundert Schritte rückgängig. Ein eigener
+Folientyp wäre der zweite Katalog aus §8, und der zweite ist immer der
+schlechtere. Nebenbei erbt eine Folie damit sofort den Vortragsmodus und die
+Miniaturen.
+
+**Das Mass geht ohne Rundungsfehler auf.** PowerPoint rechnet in EMU,
+914400 je Zoll; Redions Marken in Blattpunkten, 72 je Zoll. Das sind genau
+12700 EMU je Punkt. Schriftgrade stehen in Hundertstelpunkten.
+
+**Die Reihenfolge kommt aus `sldIdLst`, nicht aus den Dateinamen.**
+`slide10.xml` steht in der Zeichensortierung vor `slide2.xml`, und eine
+Präsentation, deren Folien in falscher Ordnung erscheinen, ist schlimmer als
+eine, die gar nicht aufgeht.
+
+### Und wieder ein Fund an der eigenen Prüfung
+
+Die erste Fassung von `test499` benannte nur die zweite Folie `slide10.xml`
+und hielt das für eine Falle. Sie war keine: `[slide1, slide10, slide2]`
+sortiert sich zufällig genau so, wie `sldIdLst` sie auflistet — die
+Gegenprobe „nach Dateinamen statt nach `sldIdLst`" blieb **grün**. Jetzt
+laufen die beiden Ordnungen wirklich auseinander (`sldIdLst`: slide2 →
+slide10 → slide1), und die Gegenprobe liefert `["Dritte","Zweite","Erste"]`.
+
+Das ist heute das zweite Mal (nach `test498`, wo die Packmethode nur im
+Verzeichnis geprüft wurde). Beide Male sah die Zusage richtig aus und mass
+das Falsche. §55.2 ist kein Ritual: *wer eine neue Prüfung schreibt, prüft
+zuerst, ob sie überhaupt rot werden KANN.*
+
+`test499`: 17 Zusagen, drei Gegenproben rot gesehen (Mass, Reihenfolge,
+Bilder). `test96`, `test100`, `test497`, `test498` bleiben grün.
+Was beim Lesen **nicht** ankommt — Geerbtes vom Master, Absatzebenen,
+Tabellen, Formen ohne Text, Drehung, Notizen — steht als **L151**.
+
+---
+
+E541 — Vier Funde aus einer echten PowerPoint-Datei
+--------------------------------------------------------------------------
+
+Redur hat eine seiner Lehrunterlagen geschickt: „du kannst das als vorlagen
+immer nutzen." 27 Folien, 36 Bilder, 11 Layouts, 4:3, beide Packmethoden
+gemischt — genau das, was `L151` als ungemessen festhielt.
+
+Der Leser aus E540 kam damit zurecht: 385 ms, kein Browserfehler, das
+Original als Anhang. Aber die Messung fand vier Dinge, die **keine selbst
+gebaute Prüfdatei je gezeigt hätte**:
+
+**1. `.ppsx` wurde gar nicht erkannt.** Die Datei ist eine
+Bildschirmpräsentation — dasselbe Paket, andere Endung. Sie lief stumm in
+den Anhang-Zweig. `.ppsx`, `.pptm` und `.ppsm` sind jetzt dabei; der Leser
+sieht ohnehin in die Datei und nicht auf den Namen.
+
+**2. Ein Logo lag 27-mal im Speicher.** 108 Bildvorkommen, aber nur 36
+verschiedene Bilder — `image1.png` kommt auf jeder Folie vor. Für jedes
+Vorkommen entstand ein eigener Dateisatz. Jetzt merkt sich der Einleser den
+Pfad im Paket: 108 Marken aus 36 Dateien, und der Lauf ist dabei von 662 auf
+385 ms gefallen.
+
+**3. Es gibt keinen einzigen `p:ph`-Platzhalter.** Die Titelerkennung über
+den Platzhaltertyp konnte in dieser Datei nie greifen — PowerPoint schreibt
+ihn nur, wenn die Form aus einem Layout stammt. Der Ersatz ist der Weg, den
+auch ein Mensch geht: von oben nach unten lesen. Aber der oberste Kasten
+allein genügt nicht, denn dort steht auf **jeder** Folie „Band 1 / Auflage
+2021" — eine Kopfzeile. Das liesse sich nicht erraten, wohl aber abzählen:
+was auf mehr als einem Drittel der Folien wortgleich wiederkehrt, ist eine
+Kopf- oder Fusszeile, und der erste Kandidat, der das nicht tut, ist der
+Titel.
+
+**4. Und der Befund, der am meisten erklärt:** diese Präsentation hat fast
+keinen Text. Folie 3 enthält **vier** `a:t`-Elemente, und das sind die
+Fusszeilen. Die zwölf Formen sind leere Rechtecke; der ganze Lehrinhalt —
+Messtabelle, Kennlinie, Batteriebild — besteht aus Bildern. Der Leser
+arbeitet richtig, es ist schlicht kein Text da. Was das für Suche, Vorlesen
+und „Text ändern" bedeutet, steht als **L152**.
+
+### Angesehen, nicht behauptet
+
+`bilder/ppsx-folie3.png`: Kopfbalken, Kapitelnummer, Übungstext, die
+Messtabelle mit roten und blauen Zahlen, das U/I-Diagramm mit Kennlinie und
+Messpunkten, das Batteriebild, die Beschriftungen, die Fusszeile — alles an
+seinem Platz. Der erste Versuch fotografierte den Willkommensdialog; das
+Bild zeigte es sofort.
+
+`test499` bleibt 17 grün. Die Prüfdatei dort bleibt gebaut, weil sie Fälle
+stellt, die eine echte Datei nicht hat (die Reihenfolgenfalle) — und die
+echte Datei stellt Fälle, die keine gebaute hat. Beides braucht es.
+
+---
+
+E542 — Die Antworten waren alle offen
+--------------------------------------------------------------------------
+
+Redur, nach dem ersten Bild seiner eingelesenen Lehrunterlage: „könnten wir
+das so mit Videoeffekt, wenn ich klicke, die Antwort zeigen — und dass es
+das Original 1:1 öffnet."
+
+**Gemessen, statt gefragt, was er meint.** In seiner Datei tragen zehn der
+27 Folien ein `p:timing` mit zusammen **22 Klickschritten**, und jeder davon
+ist `presetClass="exit"` mit `filter="dissolve"`. Das ist das Muster jeder
+Übungsfolie: die Antwort steht längst auf der Folie, ein deckendes Rechteck
+liegt darüber, und der Klick löst das Rechteck auf.
+
+**Und damit war der Import falsch, ohne dass man es sah.** E540 übersprang
+Formen ohne Text — Abdeckungen haben keinen. Die Folie kam deshalb mit
+**allen Antworten offen** heraus und sah dabei vollständig aus: auf
+`bilder/ppsx-folie3.png` ist die Kennlinie fertig gezeichnet, die Messreihe
+ausgefüllt. Ein Prüflauf hätte das nie gemeldet; das Bild allein auch nicht,
+solange niemand weiss, dass dort etwas verdeckt sein SOLLTE.
+
+**Redion hatte das Gegenstück schon.** Die Abdeck-Marke aus E266: „eine
+DECKENDE Fläche über dem, was man gleich abfragen will — Formel zudecken,
+selbst antworten, antippen, nachsehen." Und: „GESPEICHERT IST IMMER
+ZUGEDECKT: das Aufdecken lebt nur im Sichtbaren und schreibt nie in die
+Ablage — Lernen darf den Speicher nicht anfassen." Dieselbe Sache, aus einem
+anderen Anlass gebaut. Eine zweite dafür zu bauen wäre §8.
+
+Eine Form wird zur Abdeckung, wenn drei Dinge zusammenkommen: **kein Text,
+eine feste Füllfarbe, und ein Klick lässt sie verschwinden.** Zwei davon
+allein genügen nicht — ein farbiges Rechteck ohne Animation ist Gestaltung,
+und ein animierter Textkasten ist ein Textkasten.
+
+Die Nummer des Klicks reist als `schritt` mit, auch wenn heute noch jede
+Abdeckung für sich angetippt wird. Ohne sie wäre die Reihenfolge, in der die
+Folie gedacht war, verloren — und sie steht nur in der Quelldatei.
+
+Gemessen an Redurs Datei: **22 Antworten auf 10 Folien**, genau die 22
+Klickschritte. Angesehen in `bilder/ppsx-zugedeckt.png`: Messreihe und
+Diagramm gelb zugedeckt, die Aufgabe lesbar, die Antworten nicht.
+
+`test499` auf 22 Zusagen erweitert, mit einer Übungsfolie in der Prüfdatei.
+Gegenprobe rot gesehen: ohne den Abdeck-Zweig fallen vier Zusagen, und die
+Folie zeigt wieder alles.
+
+**Offen (L153):** ein Klick, der die ganze Folie einen Schritt weiterschaltet
+— heute wird jede Abdeckung einzeln angetippt. Und das Auflösen selbst ist
+ein Sprung, kein Übergang; `dissolve` ist nicht nachgebaut.
+
+---
+
+E543 — Der Wähler verschwieg, was der Einleser längst kann
+--------------------------------------------------------------------------
+
+Redur, nachdem die PowerPoint-Wege gebaut waren: „wie kann ich im Redion die
+Daten hochladen?"
+
+Eine Frage nach dem Weg, keine nach einer Funktion. Beim Nachsehen, welchen
+Weg die Antwort nennen soll, stand die Antwort im Weg selbst.
+
+**Der Weg war gebaut und nicht erreichbar.** `dateienLesen`
+(`bereiche/wissen/werkzeuge.ts`) ist der Hauptweg: der Knopf „Importieren" in
+der Seitenleiste, der Befehl „PDF oder Datei importieren", der Punkt „Datei"
+im Anlegen-Menü — drei Türen, ein Wähler. Sein Zweig behandelt seit E538
+`.pptx`, `.ppsx`, `.pptm` und `.ppsm`. Sein `accept` nannte keine davon:
+
+```txt
+vorher   … .ods,.docx,.epub,.pdf,.zip,image/*
+Zeile 17 darunter   /\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i
+```
+
+Im Dateifenster stand Redurs `.ppsx` damit **grau**. Erreichbar war sie nur
+über „Alle Dateien" — einen Umweg, den niemand geht, der nicht weiss, dass
+es dahinter etwas gibt. Der Weg war nicht kaputt, er war unsichtbar, und
+genau deshalb fand ihn keine Prüfung: jede prüfte den Zweig, keine den
+Wähler davor.
+
+**Und die zwei Texte darüber sagten es auch nicht.** Das Seitenleisten-Menü
+schrieb „Markdown, CSV, TSV, HTML, Excel, Word, EPUB", das Übernahme-Fenster
+„Markdown, Text, CSV, Word, Excel, OpenDocument, EPUB". Beide Listen sind
+älter als der PowerPoint-Weg und beide führten PDF nicht, obwohl der Wähler
+es seit E350 annimmt.
+
+**Entschieden:** Wer eine Endung in den Zweig aufnimmt, nimmt sie im selben
+Bogen in den Wähler und in den Text auf. Die drei Stellen sind jetzt gleich:
+
+```txt
+accept   .md,.markdown,.txt,.csv,.tsv,.html,.htm,.xlsx,.xlsm,.ods,
+         .docx,.pptx,.ppsx,.pptm,.ppsm,.epub,.pdf,.zip,image/*
+Menü     Markdown, CSV, HTML, Word, PowerPoint, Excel, EPUB, PDF
+Fenster  Markdown, Text, CSV, Word, PowerPoint, Excel, OpenDocument, EPUB
+```
+
+**Die Alternative** wäre gewesen, `accept` ganz wegzulassen — dann ist nie
+etwas grau. Sie ist verworfen: ein Wähler ohne Filter zeigt am Telefon die
+ganze Dateien-App, und die Liste ist genau der Ort, an dem ein Mensch liest,
+was die App kann.
+
+**Was es kostet:** eine Stelle mehr, die bei jeder neuen Endung mitwandern
+muss. `test497 §3` hält das fest — es liest das `accept` am echten Element,
+das der Browser öffnet (`page.on('filechooser')`), nicht am Quelltext, und
+prüft zwölf Endungen einzeln. Gegenprobe gemacht: die vier Endungen wieder
+herausgenommen, vier Zusagen rot; die zwei Menütexte zurückgedreht, zwei
+weitere. `test497` geht von 20 auf 31 grün, `test498` bleibt 11, `test499`
+bleibt 22.
+
+Bild: `bilder/menue-import.png` und `-handy.png` — am Telefon fällt „Ganzen
+Ordner einlesen" weg, weil Telefon-Browser keine Ordner wählen können.

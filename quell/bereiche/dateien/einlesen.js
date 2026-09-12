@@ -227,7 +227,35 @@ const Einlesen = (() => {
             const b = await holen(name);
             return b ? new TextDecoder().decode(b) : null;
         };
-        return { namen: [...dateien.keys()], holen, text, eintrag };
+        /**
+         * DIE BYTES, WIE SIE IM ARCHIV STEHEN — ungepackt gelassen.
+         *
+         * `holen` entpackt immer. Für eine Rundreise ist das falsch: wer eine
+         * `.docx` öffnet, EINEN Eintrag ändert und den Rest zurückschreiben
+         * will, müsste sonst jeden fremden Eintrag entpacken und neu ablegen.
+         * Der Schreiber packt nicht (Methode 0), aus einer 40-KB-Vorlage würde
+         * damit eine 300-KB-Datei — gültig, aber ohne Not aufgebläht, und
+         * jedes eingebettete Bild läge unkomprimiert darin.
+         *
+         * Hier kommen die Bytes deshalb unberührt heraus, mit allem, was der
+         * Schreiber braucht, um sie wieder einzusetzen: Methode, Prüfsumme,
+         * Rohgrösse. Es wird NICHT nachgerechnet — die Bytes werden ja nicht
+         * gelesen, sondern weitergereicht; die Prüfsumme des Originals bleibt
+         * gültig, solange die Bytes gleich bleiben.
+         *
+         * Verschlüsselte Einträge kommen auch hier nicht heraus: sie ohne
+         * Schlüssel weiterzureichen ergäbe ein Archiv, das niemand öffnen kann.
+         */
+        const rohBytes = (name) => {
+            const e = dateien.get(name);
+            if (!e)
+                return null;
+            if (ZipDetails.istVerschluesselt(e.flags))
+                throw new Error('„' + name + '" ist verschlüsselt — Redion kann ihn nicht weiterreichen.');
+            return { methode: e.methode, roh: new Uint8Array(e.roh), crc: e.crc >>> 0,
+                groesse: e.groesse, gepackt: e.roh.length };
+        };
+        return { namen: [...dateien.keys()], holen, text, eintrag, rohBytes };
     };
     /**
      * Dasselbe für ein Archiv, das nicht in den Arbeitsspeicher passt.
@@ -355,7 +383,24 @@ const Einlesen = (() => {
             return e ? { methode: e.methode, groesse: Number(e.roh), gepackt: Number(e.gepackt), crc: e.crc >>> 0,
                 flags: e.flags, verschluesselt: ZipDetails.istVerschluesselt(e.flags) } : null;
         };
-        return { namen: [...dateien.keys()], alsBlob, holen, text, groesse, eintrag };
+        /**
+         * Dasselbe Durchreichen wie in `zipLesen`, nur als Blob — hier liegt das
+         * Archiv nicht im Speicher, und ein Video als `Uint8Array` wäre genau
+         * der Sturz, den dieser Leser vermeidet. Der Schreiber nimmt Blobs
+         * ohnehin entgegen, ohne sie ganz zu laden.
+         */
+        const rohBytes = async (name) => {
+            const e = dateien.get(name);
+            if (!e)
+                return null;
+            if (ZipDetails.istVerschluesselt(e.flags))
+                throw new Error('„' + name + '" ist verschlüsselt — Redion kann ihn nicht weiterreichen.');
+            const k = new DataView(await blob.slice(e.offset, e.offset + 30).arrayBuffer());
+            const start = e.offset + 30 + k.getUint16(26, true) + k.getUint16(28, true);
+            return { methode: e.methode, roh: blob.slice(start, start + e.gepackt), crc: e.crc >>> 0,
+                groesse: Number(e.roh), gepackt: Number(e.gepackt) };
+        };
+        return { namen: [...dateien.keys()], alsBlob, holen, text, groesse, eintrag, rohBytes };
     };
     const xml = (t) => new DOMParser().parseFromString(t, 'application/xml');
     /* ========================================================================
@@ -937,6 +982,307 @@ const Einlesen = (() => {
         return bloecke;
     };
     /* ========================================================================
+     * POWERPOINT (.pptx)
+     * ------------------------------------------------------------------------
+     * EINE FOLIE IST EIN `blatt`-BLOCK. Kein neuer Blocktyp: das A4-Blatt
+     * trägt bereits `blattBreite`/`blattHoehe` und die Zeichenschicht
+     * `Marken` (E103) — und damit Textkästen mit Schrift und Rahmen, Bilder
+     * mit eigener Datei, Verschieben, Drehen, Sperren und hundert Schritte
+     * rückgängig. Eine zweite Maschine für dieselbe Frage wäre der zweite
+     * Katalog aus §8, und der zweite ist immer der schlechtere.
+     *
+     * DAS MASS. PowerPoint rechnet in EMU (English Metric Units), 914400 je
+     * Zoll. Redions Marken rechnen in Blattpunkten, 72 je Zoll. Das sind
+     * genau 12700 EMU je Punkt — eine ganze Zahl, kein Rundungsfehler.
+     * Schriftgrade stehen in Hundertstelpunkten (`sz="2800"` = 28 pt).
+     *
+     * WAS HIER NICHT PASSIERT. Es wird nichts gerendert und nichts geraten:
+     * gelesen werden die Formen, die im Folien-XML wirklich stehen. Was eine
+     * Folie vom Layout oder vom Master ERBT — Hintergründe, Platzhaltertexte,
+     * Fusszeilen — steht dort nicht und kommt hier deshalb auch nicht an. Das
+     * ist als Lücke eingetragen, nicht stillschweigend weggelassen.
+     * ======================================================================*/
+    /** EMU → Blattpunkte. 914400 EMU je Zoll, 72 Punkte je Zoll. */
+    const emuZuPunkt = (wert) => Math.round((Number(wert) || 0) / 12700 * 100) / 100;
+    /** Die Beziehungen einer Teildatei: r:id → Ziel, schon aufgelöst. */
+    const relsLesen = async (zip, teil) => {
+        const schraeg = teil.lastIndexOf('/');
+        const ordner = schraeg < 0 ? '' : teil.slice(0, schraeg);
+        const pfad = (ordner ? ordner + '/' : '') + '_rels/' +
+            teil.slice(schraeg + 1) + '.rels';
+        const t = await zip.text(pfad);
+        const karte = {};
+        if (!t)
+            return karte;
+        for (const r of xml(t).getElementsByTagName('Relationship')) {
+            const id = r.getAttribute('Id');
+            let ziel = r.getAttribute('Target') || '';
+            if (!id || !ziel)
+                continue;
+            /* Ziele stehen relativ zur Teildatei. `../media/bild1.png` von
+               `ppt/slides/` aus ist `ppt/media/bild1.png`. Ohne das Auflösen
+               fände der Leser kein einziges Bild. */
+            if (!ziel.startsWith('/')) {
+                const teile = (ordner ? ordner.split('/') : []);
+                for (const stueck of ziel.split('/')) {
+                    if (stueck === '..')
+                        teile.pop();
+                    else if (stueck !== '.')
+                        teile.push(stueck);
+                }
+                ziel = teile.join('/');
+            }
+            else
+                ziel = ziel.slice(1);
+            karte[id] = ziel;
+        }
+        return karte;
+    };
+    /** Der Text einer Form: Absätze, Läufe, und der harte Umbruch `a:br`. */
+    const formText = (txBody) => {
+        const zeilen = [];
+        for (const absatz of txBody.getElementsByTagName('a:p')) {
+            let zeile = '';
+            for (const kind of absatz.children) {
+                if (kind.tagName === 'a:r')
+                    zeile += kind.getElementsByTagName('a:t')[0]?.textContent || '';
+                else if (kind.tagName === 'a:br')
+                    zeile += '\n';
+                else if (kind.tagName === 'a:fld')
+                    zeile += kind.getElementsByTagName('a:t')[0]?.textContent || '';
+            }
+            zeilen.push(zeile);
+        }
+        /* Leerzeilen am Ende weg — PowerPoint hängt gern einen leeren Absatz an,
+           und der macht aus einem Titel einen Kasten mit Loch darunter. */
+        while (zeilen.length && !zeilen[zeilen.length - 1]?.trim())
+            zeilen.pop();
+        return zeilen.join('\n');
+    };
+    /** Lage und Grösse einer Form, in Blattpunkten. `null`, wenn sie fehlen. */
+    const formLage = (form) => {
+        const xfrm = form.getElementsByTagName('a:xfrm')[0];
+        if (!xfrm)
+            return null;
+        const off = xfrm.getElementsByTagName('a:off')[0];
+        const ext = xfrm.getElementsByTagName('a:ext')[0];
+        if (!off || !ext)
+            return null;
+        return { x: emuZuPunkt(off.getAttribute('x')), y: emuZuPunkt(off.getAttribute('y')),
+            w: emuZuPunkt(ext.getAttribute('cx')), h: emuZuPunkt(ext.getAttribute('cy')) };
+    };
+    /**
+     * DIE KLICKSCHRITTE EINER FOLIE — und was sie aufdecken.
+     *
+     * An Redurs Lehrunterlage gemessen: zehn der 27 Folien tragen `p:timing`,
+     * zusammen 22 Klickschritte, und ALLE Effekte sind `presetClass="exit"`
+     * mit `filter="dissolve"`. Das ist das Muster jeder Übungsfolie: die
+     * Antwort steht längst auf der Folie, ein deckendes Rechteck liegt
+     * darüber, und der Klick löst das Rechteck auf.
+     *
+     * Wer diese Rechtecke nicht mitliest, zeigt die Folie mit ALLEN ANTWORTEN
+     * OFFEN — und merkt es nicht, weil die Folie vollständig aussieht. Genau
+     * das ist in der ersten Fassung passiert (E541): Formen ohne Text wurden
+     * übersprungen, und die Abdeckungen haben keinen.
+     *
+     * Zurück kommt: Form-Kennung → Nummer des Klicks, bei dem sie verschwindet.
+     */
+    const klickschritte = (doc) => {
+        const karte = new Map();
+        const zeit = doc.getElementsByTagName('p:timing')[0];
+        if (!zeit)
+            return karte;
+        let schritt = 0;
+        /* Jeder `p:par` mit `nodeType="clickEffect"` ist EIN Klick. Verschachtelt
+           sind sie tief; gezählt wird in Dokumentordnung, und das ist die
+           Reihenfolge, in der auch PowerPoint sie abarbeitet. */
+        for (const knoten of zeit.getElementsByTagName('p:cTn')) {
+            if (knoten.getAttribute('nodeType') !== 'clickEffect')
+                continue;
+            schritt++;
+            for (const ziel of knoten.getElementsByTagName('p:spTgt')) {
+                const id = ziel.getAttribute('spid');
+                if (id && !karte.has(id))
+                    karte.set(id, schritt);
+            }
+        }
+        return karte;
+    };
+    /**
+     * Die Füllfarbe einer Form.
+     *
+     * ERST DER VERLAUF, DANN DIE FESTE FARBE. An Redurs Datei gemessen: die
+     * Abdeckungen sind KEINE einfarbigen Rechtecke, sondern ein Verlauf
+     * weiss → #FFCC00 in der Mitte → weiss, senkrecht (`a:lin ang="5400000"`).
+     * Die `a:solidFill`, die daneben steht, gehört der Umrisslinie.
+     *
+     * Der erste Versuch las nur `a:solidFill` und traf die richtige Farbe
+     * bloss durch den Rückfall — das ist kein Lesen, das ist Glück. Jetzt
+     * kommt die Farbe aus dem KRÄFTIGSTEN Stopp des Verlaufs, also dem, der
+     * nicht die Hintergrundfarbe ist.
+     *
+     * Der Verlauf selbst wird nicht nachgebaut: Redions Abdeckband ist eine
+     * Fläche in einer Farbe. Was dabei verlorengeht, ist Optik an einem
+     * Deckel, den man wegtippt — steht als Lücke in L153.
+     */
+    const formFarbe = (form) => {
+        const verlauf = form.getElementsByTagName('a:gradFill')[0];
+        if (verlauf) {
+            /* Der mittlere Stopp ist bei einem Deckel die Farbe; die äusseren
+               sind das Papier. Fällt die Wahl schwer, gewinnt der erste echte
+               RGB-Wert — ein `schemeClr` ist ohne Thema ohnehin nicht auflösbar. */
+            const stopps = [...verlauf.getElementsByTagName('a:gs')];
+            const mitte = stopps.find(g => g.getAttribute('pos') === '50000') || null;
+            const rgbMitte = mitte?.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+            if (rgbMitte)
+                return '#' + rgbMitte;
+            for (const g of stopps) {
+                const w = g.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+                if (w)
+                    return '#' + w;
+            }
+        }
+        const voll = form.getElementsByTagName('a:solidFill')[0];
+        const rgb = voll?.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+        return rgb ? '#' + rgb : '';
+    };
+    /**
+     * Eine `.pptx` lesen. Zurück kommen Folien mit ihren Objekten — noch ohne
+     * Kennungen und ohne abgelegte Bilder; das macht `datei()`, weil erst dort
+     * feststeht, an welchem Block eine Bilddatei hängt.
+     */
+    const pptxLesen = async (puffer) => {
+        const zip = await zipLesen(puffer);
+        const praesT = await zip.text('ppt/presentation.xml');
+        if (!praesT)
+            throw new Error('In dieser Datei steckt keine PowerPoint-Präsentation.');
+        const praes = xml(praesT);
+        /* Das Folienmass. Fehlt es, gilt 16:9 in der Vorgabe von PowerPoint —
+           12192000 × 6858000 EMU, also 960 × 540 pt. */
+        const sz = praes.getElementsByTagName('p:sldSz')[0];
+        const breite = emuZuPunkt(sz?.getAttribute('cx')) || 960;
+        const hoehe = emuZuPunkt(sz?.getAttribute('cy')) || 540;
+        /* DIE REIHENFOLGE STEHT IN `sldIdLst`, NICHT IN DEN DATEINAMEN.
+           `slide10.xml` kommt in der Zeichensortierung vor `slide2.xml`, und
+           eine Präsentation, deren Folien in falscher Ordnung erscheinen, ist
+           schlimmer als eine, die gar nicht aufgeht. */
+        const praesRels = await relsLesen(zip, 'ppt/presentation.xml');
+        const pfade = [];
+        for (const eintrag of praes.getElementsByTagName('p:sldId')) {
+            const rid = eintrag.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id')
+                || eintrag.getAttribute('r:id') || '';
+            const ziel = praesRels[rid];
+            if (ziel)
+                pfade.push(ziel);
+        }
+        if (!pfade.length)
+            throw new Error('Diese Präsentation nennt keine Folien.');
+        const folien = [];
+        for (const pfad of pfade) {
+            const t = await zip.text(pfad);
+            if (!t)
+                continue;
+            const doc = xml(t);
+            const rels = await relsLesen(zip, pfad);
+            const baum = doc.getElementsByTagName('p:spTree')[0];
+            const schritte = klickschritte(doc);
+            const objekte = [];
+            let titel = '';
+            for (const form of (baum ? baum.children : [])) {
+                /* ── Textkasten ──────────────────────────────────────────────── */
+                if (form.tagName === 'p:sp') {
+                    const txBody = form.getElementsByTagName('p:txBody')[0];
+                    const text = txBody ? formText(txBody) : '';
+                    const lage = formLage(form);
+                    /* ── EINE ABDECKUNG ──────────────────────────────────────────
+                       Kein Text, eine feste Füllung, und ein Klick lässt sie
+                       verschwinden: das ist ein Deckel über der Antwort. Redion hat
+                       dafür die Abdeck-Marke (E266) — zugedeckt gespeichert,
+                       antippen deckt auf, und der Speicher wird dabei nie
+                       angefasst. Dieselbe Sache, schon gebaut. */
+                    const sid = form.getElementsByTagName('p:cNvPr')[0]?.getAttribute('id') || '';
+                    const schritt = sid ? schritte.get(sid) : undefined;
+                    if (!text.trim() && schritt && lage && lage.w > 0 && lage.h > 0) {
+                        objekte.push({ art: 'abdeck', schritt, farbe: formFarbe(form) || '#ffcc00',
+                            x: lage.x, y: lage.y, w: lage.w, h: lage.h });
+                        continue;
+                    }
+                    if (!text.trim())
+                        continue;
+                    /* Der erste Lauf bestimmt Schriftgrad und Fett für den Kasten.
+                       Redions Textmarke hat EINEN Grad je Kasten; ein Kasten mit
+                       gemischten Graden käme also vereinfacht an. Das ist eine Lücke
+                       und steht so in LUECKEN.md. */
+                    const rPr = txBody?.getElementsByTagName('a:rPr')[0];
+                    const sz2 = Number(rPr?.getAttribute('sz'));
+                    /* Ist es der Titel? PowerPoint sagt es über den Platzhaltertyp. */
+                    const ph = form.getElementsByTagName('p:ph')[0];
+                    const istTitel = /^(ctr)?[Tt]itle$/.test(ph?.getAttribute('type') || '');
+                    if (istTitel && !titel)
+                        titel = text.split('\n')[0] || '';
+                    objekte.push({ art: 'text', text,
+                        x: lage ? lage.x : breite * 0.08, y: lage ? lage.y : hoehe * 0.1,
+                        breiteBox: lage && lage.w > 0 ? lage.w : breite * 0.84,
+                        fontSize: Number.isFinite(sz2) && sz2 > 0 ? Math.round(sz2 / 100) : (istTitel ? 40 : 20),
+                        fett: rPr?.getAttribute('b') === '1' });
+                    continue;
+                }
+                /* ── Bild ─────────────────────────────────────────────────────── */
+                if (form.tagName === 'p:pic') {
+                    const blip = form.getElementsByTagName('a:blip')[0];
+                    const rid = blip?.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed')
+                        || blip?.getAttribute('r:embed') || '';
+                    const ziel = rels[rid];
+                    if (!ziel)
+                        continue;
+                    const bytes = await zip.holen(ziel);
+                    if (!bytes)
+                        continue;
+                    const lage = formLage(form);
+                    /* `pfad` ist der Schlüssel zum Sparen: an einer echten Datei
+                       gemessen kam ein Logo 27-mal vor, einmal je Folie. Ohne ihn
+                       entstünden 27 Dateisätze mit denselben Bytes. */
+                    objekte.push({ art: 'bild', pfad: ziel, name: ziel.slice(ziel.lastIndexOf('/') + 1),
+                        bytes,
+                        x: lage ? lage.x : breite * 0.2, y: lage ? lage.y : hoehe * 0.2,
+                        w: lage && lage.w > 0 ? lage.w : breite * 0.4,
+                        h: lage && lage.h > 0 ? lage.h : hoehe * 0.4 });
+                }
+            }
+            /* KEIN PLATZHALTER, TROTZDEM EIN TITEL. An Redurs echter Datei
+               gemessen: 27 Folien, NULL `p:ph`-Elemente. Die Erkennung über den
+               Platzhaltertyp konnte dort nie greifen — PowerPoint schreibt ihn
+               nur, wenn die Form aus einem Layout stammt.
+               Also der Weg, den auch ein Mensch geht: von oben nach unten lesen.
+               Welcher der Kandidaten wirklich die Überschrift ist, entscheidet
+               sich aber erst, wenn ALLE Folien gelesen sind — siehe unten. */
+            const kandidaten = objekte
+                .filter(o => o.art === 'text' && String(o.text).trim())
+                .sort((a, b) => a.y - b.y)
+                .map(o => String(o.text).split('\n')[0].trim())
+                .filter(z => z && z.length <= 80);
+            folien.push({ titel, objekte, kandidaten });
+        }
+        /* ══ WELCHER KASTEN IST DIE ÜBERSCHRIFT? ═══════════════════════════
+           Der oberste allein genügt nicht. An Redurs Datei gemessen: dort
+           steht ganz oben auf JEDER der 27 Folien „Band 1 / Auflage 2021" —
+           eine Kopfzeile, keine Überschrift. Genau das liesse sich nicht
+           erraten, aber sehr wohl abzählen: was auf mehr als einem Drittel
+           der Folien wortgleich wiederkehrt, ist eine Kopf- oder Fusszeile.
+           Der erste Kandidat, der das NICHT tut, ist der Titel. */
+        const haeufig = new Map();
+        for (const f of folien)
+            for (const z of new Set(f.kandidaten))
+                haeufig.set(z, (haeufig.get(z) || 0) + 1);
+        const decke = Math.max(2, Math.ceil(folien.length / 3));
+        for (const f of folien) {
+            if (f.titel)
+                continue;
+            f.titel = f.kandidaten.find(z => (haeufig.get(z) || 0) < decke) || '';
+        }
+        return { breite, hoehe, folien };
+    };
+    /* ========================================================================
      * EPUB
      * ======================================================================*/
     const epubLesen = async (puffer) => {
@@ -1048,7 +1394,7 @@ const Einlesen = (() => {
         const name = f.name.toLowerCase();
         /* Nur für die Formate, die dieser Weg wirklich umwandelt. Alles andere
            fällt unten auf `null` und geht den Anhang-Weg, der ohnehin ablegt. */
-        const wandelbar = /\.(xlsx|xlsm|ods|docx|epub)$/.test(name);
+        const wandelbar = /\.(xlsx|xlsm|ods|docx|pptx|ppsx|pptm|ppsm|epub)$/.test(name);
         const quelle = wandelbar ? await originalSichern(f, elternId) : null;
         const puffer = await f.arrayBuffer();
         if (name.endsWith('.xlsx') || name.endsWith('.xlsm')) {
@@ -1105,6 +1451,75 @@ const Einlesen = (() => {
                Kopfzeilen, Fussnoten und Spalten zurück (siehe docxLesen). Der
                Satz sagt deshalb auch, wo das Vollständige liegt. */
             return { seite, hinweis: bloecke.length + ' Absätze übernommen'
+                    + (quelle ? ' · das Original liegt unverändert als Anhang dabei' : '') };
+        }
+        /* `.ppsx` ist dasselbe Paket wie `.pptx`, nur als Bildschirm-
+           präsentation gespeichert; `.pptm`/`.ppsm` dasselbe mit Makros. Alle
+           vier tragen `ppt/presentation.xml`, und der Leser sieht ohnehin in
+           die Datei statt auf den Namen. Gefunden an einer echten Datei von
+           Redur: `.ppsx` lief vorher stumm in den Anhang-Zweig. */
+        if (/\.(pptx|ppsx|pptm|ppsm)$/.test(name)) {
+            const p = await pptxLesen(puffer);
+            const seite = Store.addPage(elternId, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📽️' });
+            if (quelle)
+                await originalAnhaengen(seite.id, f, quelle);
+            /* Eine Folie = ein `blatt`-Block mit Folienmass. Die Objekte werden
+               Marken auf DERSELBEN Zeichenschicht, die auch PDF-Seite und
+               A4-Blatt benutzen — also sofort verschiebbar, drehbar und
+               rückgängig zu machen. */
+            let mitBild = 0, mitDeckel = 0;
+            /* Pfad im Paket → Kennung des abgelegten Satzes. Gemessen an einer
+               echten Präsentation: 108 Bildvorkommen, aber nur 36 verschiedene
+               Bilder. Ohne diese Karte lägen 108 Dateisätze im Speicher, davon
+               72 als reine Verdopplung (§9: keine Daten ohne Not vermehren). */
+            const schonAbgelegt = new Map();
+            for (const [nr, folie] of p.folien.entries()) {
+                const block = Store.addBlock(seite.id, 'blatt', {
+                    text: folie.titel || ('Folie ' + (nr + 1)),
+                    blattBreite: p.breite, blattHoehe: p.hoehe, papier: 'blanko'
+                });
+                const marken = [];
+                for (const o of folie.objekte) {
+                    const id = 'm' + Math.random().toString(36).slice(2, 10);
+                    if (o.art === 'text') {
+                        marken.push({ id, art: 'text', point: [o.x, o.y], breiteBox: o.breiteBox,
+                            text: o.text, fontSize: o.fontSize, fett: !!o.fett });
+                        continue;
+                    }
+                    if (o.art === 'abdeck') {
+                        /* `schritt` reist mit, auch wenn heute noch jede Abdeckung für
+                           sich angetippt wird. Ohne die Zahl wäre die Reihenfolge, in
+                           der die Folie gedacht war, verloren — und sie steht nur in
+                           der Quelldatei. */
+                        marken.push({ id, art: 'abdeck', farbe: o.farbe, schritt: o.schritt,
+                            pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
+                        continue;
+                    }
+                    /* Das Bild bekommt einen eigenen Dateisatz, der an DIESEM Block
+                       hängt — dieselbe Ordnung wie beim PDF-Anhang (E99). */
+                    try {
+                        let dateiId = schonAbgelegt.get(o.pfad) || '';
+                        if (!dateiId) {
+                            const satz = await Dateien.ablegen(new Blob([o.bytes]), { blockId: block.id, name: o.name });
+                            dateiId = String(satz?.id || '');
+                            if (dateiId)
+                                schonAbgelegt.set(o.pfad, dateiId);
+                        }
+                        if (dateiId) {
+                            marken.push({ id, art: 'bild', dateiId,
+                                pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
+                            mitBild++;
+                        }
+                    }
+                    catch { /* ohne das Bild bleibt die Folie stehen */ }
+                }
+                mitDeckel += marken.filter((m) => m.art === 'abdeck').length;
+                if (marken.length)
+                    Store.updateBlock(block.id, { marken });
+            }
+            return { seite, hinweis: p.folien.length + ' Folien übernommen'
+                    + (mitBild ? ', ' + mitBild + ' Bilder aus ' + schonAbgelegt.size + ' Dateien' : '')
+                    + (mitDeckel ? ', ' + mitDeckel + ' Antworten zugedeckt' : '')
                     + (quelle ? ' · das Original liegt unverändert als Anhang dabei' : '') };
         }
         if (name.endsWith('.epub')) {

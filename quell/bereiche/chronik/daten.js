@@ -701,7 +701,7 @@ const ChronikDaten = {
         {
             "datum": "2026-09-12",
             "wochentag": "Samstag",
-            "titel": "Redurs CSS-Sammlung: fünf Bögen, eine Bestandsaufnahme mit dreizehn Agenten — und zwei eigene Fehler",
+            "titel": "Redurs CSS-Sammlung, dann Office: fünf Bögen Animation, vier Bögen Word und PowerPoint — und zwei eigene Fehler",
             "wasIchWeiss": "Voller Wortlaut.",
             "nachrichten": [
                 {
@@ -755,6 +755,54 @@ const ChronikDaten = {
                 {
                     "zeit": "ca. 20:35",
                     "wortlaut": "alter schreibst du noch etwas im UR.md oder"
+                },
+                {
+                    "zeit": "ca. 20:40",
+                    "wortlaut": "[angehängt: loader_.css und redion_animationen_code.css] bie der ai butons war die bulur efeck nicht so es war so es die blur kommen von link bis nach rechts ohen so bumm efeck oder licht es war ganz wenig licht schau mal ob du die code hier findest"
+                },
+                {
+                    "zeit": "ca. 21:00",
+                    "wortlaut": "mach weiter mit den restlichen animationen und pusche"
+                },
+                {
+                    "zeit": "ca. 21:05",
+                    "wortlaut": "könntets du die redmme akustaieren weil es passt nicht zur aktuele stand"
+                },
+                {
+                    "zeit": "ca. 21:15",
+                    "wortlaut": "du muss jetzt mir eine promt gebe für die andere claude code das er nur an den elektro teil arbeitet und die Redur_Babat_FZ_MOE_Lehrpersonen.pdf anchaut und mir die simliation verbessert so wie echt 1:1 , dann ich will das er genau wie echte leben l1,l2,l3 , n usw alle leitung dort einfügen kann, dann die stromrichtungen, wenn etwas falscht angeschlossen wird mir die fehler zeigen, dann ich will das man so und er muss nur an dieser teil arbeiten und auf eine nue brache"
+                },
+                {
+                    "zeit": "ca. 21:30",
+                    "wortlaut": "ich will das redion auch die anderen datein auch öfnnen kann z.B. word und powerpoint daten , und dort direk wie die pdf bearbeiten kann und so die pdf , word, oder powerpoint daten auch direk bearbeiten kann aber wichtig die orginal date wird immer geschütze"
+                },
+                {
+                    "zeit": "ca. 21:35",
+                    "wortlaut": "beides, drauf schreiben und text ändern und so bei der powerpoint daten willl ich es 1:1 wie powerpoint haben die daten ändern so wie powerpoint eine präsentation erstellen, 1:1 wie powerpoint"
+                },
+                {
+                    "zeit": "ca. 22:00",
+                    "wortlaut": "mach du weiter mit den office teil o2"
+                },
+                {
+                    "zeit": "ca. 22:20",
+                    "wortlaut": "ja mach o3"
+                },
+                {
+                    "zeit": "ca. 22:48",
+                    "wortlaut": "[angehängt: Band_1_Kapitel_4_….ppsx] du kannst das als vorlagen immer nutzen"
+                },
+                {
+                    "zeit": "ca. 22:55",
+                    "wortlaut": "könntets wir so mit viedeo efeckt, wenn ich klicke die antwort zeig auch so haben das es die orginale 1:1 öfnnet"
+                },
+                {
+                    "zeit": "ca. 23:00",
+                    "wortlaut": "[Bildschirmfoto der Originalfolie] also im orginale daten ist es schonso"
+                },
+                {
+                    "zeit": "ca. 23:10",
+                    "wortlaut": "wie kann ich im redio die daten hochladen ?"
                 }
             ],
             "arbeit": [
@@ -829,11 +877,107 @@ const ChronikDaten = {
                     "zeitraum": "20:23 – 20:29",
                     "dauer": "ca. 6 min",
                     "pruefungen": "keine — nur Dokumentation"
+                },
+                {
+                    "was": "Die Chronik holt drei Tage nach — und trägt zwei eigene Fehler ein (P21, P22)",
+                    "vonCommit": "a95de06f",
+                    "bisCommit": "a358602e",
+                    "zeitraum": "20:29 – 20:36",
+                    "dauer": "ca. 7 min",
+                    "pruefungen": "keine — nur Chronik"
+                },
+                {
+                    "was": "Zwei Funde neben den Animationen: 34 px auf einem Hauptweg, und ein Schalter, der nur Farbe war (§37, §38)",
+                    "vonCommit": "a358602e",
+                    "bisCommit": "e2ccf85c",
+                    "zeitraum": "20:36 – 20:44",
+                    "dauer": "ca. 8 min",
+                    "pruefungen": "eigener Lauf, Gegenprobe rot gesehen"
+                },
+                {
+                    "was": "CLAUDE.md zählte 323 Prüfläufe — es sind 438; dazu §5 Regel 1 ohne Wächter (L150) und ein falsches „Strg P“",
+                    "vonCommit": "e2ccf85c",
+                    "bisCommit": "d4d4c792",
+                    "zeitraum": "20:44 – 20:56",
+                    "dauer": "ca. 12 min",
+                    "pruefungen": "keine — Zählung und Doku"
+                },
+                {
+                    "was": "E536 — Die Unschärfe läuft wieder von links nach rechts: --rmo-delay lag nur auf .rmo-letter, die KI-Knöpfe tragen .ru-funkel-b",
+                    "vonCommit": "d4d4c792",
+                    "bisCommit": "7d784413",
+                    "zeitraum": "20:56 – 21:05",
+                    "dauer": "ca. 9 min",
+                    "pruefungen": "gemessen im Hover, nicht in Ruhe — in Ruhe ist die Verzögerung immer 0"
+                },
+                {
+                    "was": "Die README stimmte an 48 Stellen nicht — geprüft, nicht überflogen",
+                    "vonCommit": "7d784413",
+                    "bisCommit": "be80624c",
+                    "zeitraum": "21:05 – 21:06",
+                    "dauer": "ca. 20 min",
+                    "pruefungen": "keine — jede Zusage gegen den Code nachgesehen"
+                },
+                {
+                    "was": "E535 und E537 — die zehn restlichen Vorlagenblöcke, als Fragmente gebaut und zusammengeführt",
+                    "vonCommit": "be80624c",
+                    "bisCommit": "1fe4b553",
+                    "zeitraum": "21:06 – 21:38",
+                    "dauer": "ca. 32 min",
+                    "pruefungen": "test495 auf den neuen Trommelbau umgeschrieben; das Bild fand die 595 px breite Lampe, die kein Lauf sah"
+                },
+                {
+                    "was": "E538 — O1: Office war die einzige Gruppe ohne Originalschutz; die eingelesene Datei hängt jetzt an Platz 0",
+                    "vonCommit": "1fe4b553",
+                    "bisCommit": "d1f8e955",
+                    "zeitraum": "21:38 – 21:52",
+                    "dauer": "ca. 14 min",
+                    "pruefungen": "test497 neu, 16 Zusagen, Gegenprobe rot gesehen"
+                },
+                {
+                    "was": "E539 — O2: der ZIP-Teil lernt Durchreichen; rohe Bytes werden nie neu gepackt",
+                    "vonCommit": "d1f8e955",
+                    "bisCommit": "be69acb8",
+                    "zeitraum": "21:52 – 22:18",
+                    "dauer": "ca. 26 min",
+                    "pruefungen": "test498 neu, 11 Zusagen — die erste Fassung blieb grün, weil sie nur das Verzeichnis las"
+                },
+                {
+                    "was": "E540 — O3: PowerPoint lesen, und eine Folie ist ein Blatt",
+                    "vonCommit": "be69acb8",
+                    "bisCommit": "28e0aa28",
+                    "zeitraum": "22:18 – 22:45",
+                    "dauer": "ca. 27 min",
+                    "pruefungen": "test499 neu, 17 Zusagen; die Reihenfolgenfalle sprang erst im zweiten Anlauf"
+                },
+                {
+                    "was": "E541 — vier Funde aus Redurs echter .ppsx: unbekannte Endung, 27-fach abgelegtes Logo, Kopfzeile als Titel, 662 ms",
+                    "vonCommit": "28e0aa28",
+                    "bisCommit": "f6ed8fb8",
+                    "zeitraum": "22:45 – 22:53",
+                    "dauer": "ca. 8 min",
+                    "pruefungen": "test499 auf 22 Zusagen"
+                },
+                {
+                    "was": "E542 — Die Antworten waren alle offen: PowerPoints Ausblend-Animationen werden zu Redions Abdeckband",
+                    "vonCommit": "f6ed8fb8",
+                    "bisCommit": "811db626",
+                    "zeitraum": "22:53 – 23:02",
+                    "dauer": "ca. 9 min",
+                    "pruefungen": "test499 bleibt 22; die Deckelfarbe wird seit 811db626 aus dem Verlauf gelesen statt geraten"
+                },
+                {
+                    "was": "E543 — Der Wähler verschwieg, was der Einleser längst kann: Redurs Frage nach dem Hochladen fand den unsichtbaren Weg",
+                    "vonCommit": "811db626",
+                    "bisCommit": "(dieser Bogen)",
+                    "zeitraum": "23:10 – 23:30",
+                    "dauer": "ca. 20 min",
+                    "pruefungen": "test497 §3 neu, von 20 auf 31 grün, sechs Zusagen zuerst rot gesehen"
                 }
             ],
             "zahlen": {
-                "commits": 6,
-                "entscheidungen": 6
+                "commits": 18,
+                "entscheidungen": 16
             },
             "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
             "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -867,6 +1011,18 @@ const ChronikDaten = {
                     "was": "E533 und L149 berichtigt: der beschriebene Bau hat nicht stattgefunden.",
                     "warum": "Der Absatz war beim Schreiben des Eintrags schon formuliert und nicht nachgezogen worden, nachdem alle zehn Agenten am Sitzungslimit starben. Aufgeschrieben, was geplant war, statt was geschah.",
                     "risiko": "keins — nur Dokumentation; der falsche Absatz bleibt mit Nachtrag stehen, damit der Fehler auffindbar ist statt weggeputzt (§35)"
+                },
+                {
+                    "zeit": "22:45",
+                    "was": "`pptxLesen` in `bereiche/dateien/einlesen.ts`: eine Folie wird ein `blatt`-Block mit Marken, Reihenfolge aus `p:sldIdLst`.",
+                    "warum": "Redur: „1:1 wie PowerPoint\". Der Weg über Text allein hätte jede Übungsfolie zerstört — die Antworten liegen unter Abdeckungen.",
+                    "risiko": "keins an Daten — das Original hängt seit E538 immer mit dran; die Umwandlung ist verlustbehaftet und sagt es im Hinweis"
+                },
+                {
+                    "zeit": "23:25",
+                    "was": "`accept` des Hauptwählers und die zwei Menütexte um PowerPoint und PDF ergänzt.",
+                    "warum": "Redur: „wie kann ich im Redion die Daten hochladen?\" — beim Nachsehen stand seine .ppsx im Dateifenster grau, obwohl der Zweig 17 Zeilen tiefer sie liest.",
+                    "risiko": "keins an Daten — ein Filter im Dateifenster; `test497 §3` hält die drei Stellen künftig zusammen"
                 }
             ]
         }
