@@ -4126,6 +4126,96 @@ html[data-theme="light"] .banner{color:#37352f}
   .schalter.an::before{animation:none}
 }
 
+/* ---- DIE GEFRÄSTE FASSUNG DES KIPPSCHALTERS (E537, Redurs Vorlage 500–1096)
+   -------------------------------------------------------------------------
+   Redurs Schalter ist ein Stück Metall mit einem Schlitz darin: ein
+   Chromring, eine Lichtkante unten, eine Schattenkante oben und ein grauer
+   Innenrand, alle vier als INNENSCHATTEN ineinander. Redion hatte an der
+   Stelle eine gewöhnliche Pille mit einer einzigen Kante — und die nur im
+   Studio-Thema (`studio.css:202`).
+
+   WAS SICH NICHT ÄNDERT, und das ist der wichtige Teil:
+   Breite, Höhe, Pillenform und die 44-px-Trefferfläche von oben bleiben
+   unangetastet (§37). Die Fassung wirkt rechteckiger, WEIL die Innenränder
+   die runde Aussenkante zu einem schmalen Fenster einschnüren — nicht,
+   weil der Radius kleiner geworden wäre. Nichts wird kleiner.
+
+   KEIN NEUES MARKUP, aus demselben Grund wie bei E462: der Schalter wird an
+   18 Stellen als Zeichenkette gebaut. Es bleibt bei Fläche, `::before`,
+   `::after` und dem Griff `i`.
+
+   Warum `button.schalter` und nicht `.schalter`: `studio.css` (Zeile 75 in
+   `index.html`) wird NACH dieser Datei (Zeile 62) geladen und setzt dort
+   `box-shadow` auf `.schalter`. Bei gleicher Stärke gewinnt die spätere
+   Datei; ein Elementname davor hebt die Regel darüber. Dasselbe gilt für
+   den Griff gegen `motion.css:322`.
+
+   Die Masse sind heruntergerechnet: Redurs Schalter ist 4.8 × 2 rem
+   (77 × 32 px), Redions ist 38 × 22 px. Die Spreizung 0.3 rem wird so zu
+   3 px, 0.8 rem zu 5 px — gleiche Anteile, nicht gleiche Zahlen. */
+button.schalter{
+  box-shadow:
+    inset 0 -5px 5px 3px #00000040,   /* die Tiefe der Fräsung            */
+    inset 0 0 1px 3px #dddddd,        /* der Chromring                    */
+    inset 0 -1px 1px 3px #ffffff,     /* die Lichtkante unten             */
+    inset 0 1px 2px 3px #00000066,    /* die Schattenkante oben           */
+    inset 0 0 1px 5px #aaaaaa;        /* der graue Innenrand              */
+}
+
+/* Der Schlitz leuchtet beim Einschalten WEISS auf, mit Schein.
+   Redion hatte hier Farbe statt Licht: `.schalter.an{background:var(--accent)}`
+   färbte die ganze Bahn ein, mehr nicht. Der Akzent bleibt als Grundton —
+   er ist die Farbe, an der man einen eingeschalteten Schalter in Redion
+   erkennt — und bekommt die leuchtende Bahn darüber gelegt: ein scharfer
+   weisser Balken und ein weicher Schein ringsum. Beides als Bildschicht der
+   Fläche, weil der Schalter kein freies Element mehr hat. */
+button.schalter.an{
+  background-color:var(--accent);
+  background-image:
+    linear-gradient(#fffc, #fffc),
+    radial-gradient(50% 150% at 50% 50%, #ffffff77, #ffffff00 72%);
+  background-size:24px 5px, 100% 100%;
+  background-position:center, center;
+  background-repeat:no-repeat;
+}
+/* Der kreisende Verlauf aus E462 bleibt — er mischt sich jetzt mit
+   `screen` ein, statt alles zu überdecken. Weiss bleibt unter `screen`
+   weiss: die leuchtende Bahn und die Kanten der Fassung überstehen den
+   Verlauf, der Akzent wird nur heller. Deshalb auch .4 statt .85 — bei
+   voller Deckung stände der weisse Griff auf hellem Violett, und das
+   waren gemessen 1,6:1 statt der 5,15:1, für die die Farbe gewählt
+   wurde (E199). */
+.schalter.an::before{opacity:.4; mix-blend-mode:screen}
+
+/* Der Griff glüht von innen. Redions Griff ist im An-Zustand ohnehin
+   weiss, das Glühen führt deshalb nach AUSSEN weiter — sonst wäre Weiss
+   auf Weiss gemalt und man sähe nichts. */
+button.schalter.an > i{
+  box-shadow:
+    inset 0 1px 12px #fff,
+    inset 0 -1px 1px #fffa,
+    0 0 5px 1px #ffffff80,
+    1px 2px 5px 1px #00000055;
+}
+
+/* Der Griff rückt beim Überfahren 0,2 rem vor, SOLANGE DER SCHALTER AUS
+   IST — die kleine Vorschau darauf, was ein Klick tut. 0.2 rem sind auf
+   Redurs 77-px-Schalter 3 px; auf 38 px bleiben es 3 px, weil der Griff
+   derselbe Daumenbreit ist und ein halber Pixel nichts vorführt.
+   `@media (hover:hover)`, weil ein Finger kein Überfahren kennt: am
+   Telefon bliebe die Vorschau nach dem Tippen stehen. */
+@media (hover:hover){
+  button.schalter:not(.an):hover > i{transform:translateX(3px)}
+}
+
+/* Weniger Bewegung: die Fassung, das Licht im Schlitz und das Glühen
+   bleiben — sie sind Bild, nicht Bewegung. Was geht, ist das Wandern
+   dorthin und das Vorrücken des Griffs beim Überfahren. */
+@media (prefers-reduced-motion: reduce){
+  button.schalter, button.schalter.an > i{transition:none}
+  button.schalter:not(.an):hover > i{transform:none}
+}
+
 .ez-plan{
   background:var(--bg-card); border-radius:9px; padding:16px 18px; margin:6px 0 18px;
 }
@@ -8821,6 +8911,2233 @@ body[data-bewegung="ruhig"] .rmo-number-source { color:inherit; }
   [data-rmo] *::before,[data-rmo] *::after { animation:none !important; transition:none !important; text-shadow:none !important; }
   .rmo-recent-card,.rmo-folder-sheet,.bib-deckel-blatt,.rmo-health-metric,[data-rmo~="light"],body .bib-deckel-blatt::before { transform:none !important; }
   .rmo-reels { display:none; } .rmo-number-source { color:inherit; }
+}
+
+/* ======================================================================
+   E535 — die offenen Wirkungen aus Redurs Vorlage, Block fuer Block.
+   Jeder Block steht als eigenes Fragment hier hinten: so kann eine
+   spaetere Regel eine aeltere gleicher Staerke ueberschreiben, ohne dass
+   zehn Schreiber in dieselbe Stelle der Datei greifen muessten.
+   ====================================================================== */
+
+/* ==== Block 06 — Verlaufsschalter (E535) ==== */
+/* Vom Vorlagenblock (1571–1846) war bisher NUR der Kippschalter da, den es
+   ohnehin schon gab. Die eigentliche Demo — zwei gemischte Verlaufsebenen,
+   der Mischmodi-Stapel, der weichgezeichnete Lichtbalken, die Textebene mit
+   AN/AUS-Kreuzblende, Hover- und Druckweg und die drehende Leuchtkugel —
+   fehlte vollständig.
+
+   Sie kommt hier an den KLEINEN Menü-Umschalter `.mschalter`
+   (`src/schale/aufbau/schale.ts:232`), nicht an den grossen `.schalter`:
+   der kleine ist die Stelle, an der Redion einen Zustand wirklich umlegt,
+   und er ist 30 × 17 px gross — alle Masse der Vorlage (180 × 68 px) sind
+   deshalb heruntergerechnet, nicht abgeschrieben.
+
+   Warum `body`-Vorsatz und `[data-rmo~="toggle"]`: `motion.css` wird in
+   `index.html:68` VOR `bausteine.css:69` geladen. Bei gleicher
+   Spezifität gewinnt dort also der Baustein. Erst `body … .mschalter` bzw.
+   die Attributkennung hebt die Regel darüber — dieselbe Lehre wie beim
+   Glasknopf (E534).
+
+   Nichts hiervon läuft im Leerlauf (E528): Ruhelage ist `animation:none`,
+   Bewegung gibt es beim Überfahren, beim Tastenfokus, beim Druck und
+   EINMAL beim Zustandswechsel. */
+
+/* ----------------------------------------------------------------------
+   1 — Die Bühne der Verlaufsebenen.
+
+   `isolation:isolate` ist hier kein Schmuck: ohne sie würden `screen` und
+   `overlay` gegen das ganze Menü dahinter mischen und die Zeile darunter
+   aufhellen. Mit ihr mischen die Ebenen nur untereinander.
+
+   `overflow:clip` statt `hidden`, damit der Lichtbalken 2 px überstehen
+   darf (Vorlage: `overflow-clip-margin:4px` auf einem 68 px hohen Rahmen —
+   bei 17 px Höhe wären 4 px die halbe Pille, 2 px sind derselbe Anteil).
+   Kein Scrollrahmen, kein Ausschnitt für Zeiger: `pointer-events:none`
+   überall, die Trefferfläche bleibt der Knopf. */
+body [data-rmo~="toggle"].mschalter > .rmo-verlauf {
+  --rmo-ton-a: #ffffff8c;                                    /* die helle Bahn */
+  --rmo-ton-b: color-mix(in srgb, var(--accent) 85%, #000);  /* die dunkle */
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  border-radius: 9px; isolation: isolate;
+  overflow: clip; overflow-clip-margin: 2px;
+  /* Der Gesamtfilter der Vorlage (`saturate(.65) brightness(1.8)`) sitzt
+     auf DIESER Schicht und nicht auf `.mschalter`: auf dem Schalter würde
+     er den weissen Griff überstrahlen und die Zustandsfarbe verfälschen. */
+  opacity: .5; filter: saturate(.75) brightness(1.35);
+  transition: opacity .18s;
+}
+/* Angeschaltet darf der Stapel deutlicher werden — die Akzentfläche
+   darunter trägt ihn. */
+body [data-rmo~="toggle"].mschalter[data-rmo-state="an"] > .rmo-verlauf { opacity: .68; }
+
+/* ----------------------------------------------------------------------
+   2 — Die zwei Verlaufsebenen. In der Vorlage entstehen die Farben ERST
+   durch die Überlagerung (`difference` + `color-dodge`), nicht durch
+   Farbwerte. Übernommen ist das Prinzip mit `screen` + `overlay`:
+   `difference` auf einer 17 px hohen Pille kippt bei jedem Themenwechsel
+   ins Negative und macht aus dem Akzent ein Giftgrün — geprüft an den
+   beiden Akzenten (#7c3aed hell, #6d4aff dunkel).
+
+   Die elf Farbstopps der radialen Ebene sind die der Vorlage, Ellipse und
+   Mittelpunkt (65 % / 180 %) ebenfalls. */
+body [data-rmo~="toggle"].mschalter .rmo-verlauf-a,
+body [data-rmo~="toggle"].mschalter .rmo-verlauf-b {
+  position: absolute; top: 50%; left: 50%;
+  width: 230%; aspect-ratio: 1; pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: none;                         /* Ruhelage: nichts dreht sich */
+}
+body [data-rmo~="toggle"].mschalter .rmo-verlauf-a {
+  mix-blend-mode: screen;
+  background: conic-gradient(from 210deg,
+    transparent 0deg, var(--rmo-ton-a) 60deg, transparent 120deg,
+    var(--rmo-ton-b) 200deg, transparent 260deg,
+    var(--rmo-ton-a) 330deg, transparent 360deg);
+}
+body [data-rmo~="toggle"].mschalter .rmo-verlauf-b {
+  mix-blend-mode: overlay;
+  background: radial-gradient(ellipse at 65% 180%,
+    var(--rmo-ton-a), var(--rmo-ton-b), var(--rmo-ton-a), var(--rmo-ton-b),
+    var(--rmo-ton-a), var(--rmo-ton-b), var(--rmo-ton-a), var(--rmo-ton-b),
+    var(--rmo-ton-a), var(--rmo-ton-b), var(--rmo-ton-a));
+}
+
+/* ----------------------------------------------------------------------
+   3 — Der weichgezeichnete Lichtbalken (`.light` der Vorlage: 80 % breit,
+   `blur(5px)`, `#fff5`). Er liegt im Ruhezustand still und sichtbar da;
+   geatmet wird nur beim Anfassen, und dann dreimal statt endlos. */
+body [data-rmo~="toggle"].mschalter .rmo-verlauf-licht {
+  position: absolute; left: 10%; top: 50%;
+  width: 80%; height: 7px; margin-top: -3.5px;
+  border-radius: 50px; background: #ffffff55;
+  filter: blur(1.6px);                     /* 5 px bei 180 px Breite = 1.6 px bei 30 px */
+  pointer-events: none; z-index: 1;
+  opacity: .38; animation: none;
+}
+
+/* ----------------------------------------------------------------------
+   4 — Die Textebene. Sie hat zwei Aufgaben: die AN/AUS-Kreuzblende der
+   Vorlage (`.toggle-on` / `.toggle-off`) und deren eingelassene Kante
+   (`inset`-Licht oben, `inset`-Schatten unten).
+
+   Die Wörter stehen dort, wo der Griff gerade NICHT ist: aus → Griff
+   links, Wort rechts; an → Griff rechts, Wort links. Sie sind Deko und
+   aria-hidden; den Zustand liest der Knopf selbst vor.
+
+   Kein `mix-blend-mode:multiply` wie in der Vorlage: bei 6,5 px Schrift
+   frisst Multiplizieren das Wort auf der Akzentfläche vollständig weg.
+   Der Glühschatten der Vorlage bleibt. */
+body [data-rmo~="toggle"].mschalter > .rmo-verlauf-text {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  border-radius: 9px;
+  box-shadow: inset 0 1px 0 #ffffff2e, inset 0 -1px 2px #00000026,
+              inset 0 0 4px 2px #0000001c;   /* die Innenvignette der Vorlage, klein gerechnet */
+  font-size: 6.5px; font-weight: 700; letter-spacing: .03em; line-height: 1;
+  font-family: inherit;
+}
+body [data-rmo~="toggle"].mschalter > .rmo-verlauf-text::before,
+body [data-rmo~="toggle"].mschalter > .rmo-verlauf-text::after {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  transition: opacity .22s; pointer-events: none;
+}
+body [data-rmo~="toggle"].mschalter > .rmo-verlauf-text::before {
+  content: "AN"; left: 4px; opacity: 0;
+  color: #ffffffe0; text-shadow: 0 0 3px #ffffff80;
+}
+body [data-rmo~="toggle"].mschalter > .rmo-verlauf-text::after {
+  content: "AUS"; right: 3px; opacity: 1; color: var(--text-dim);
+}
+body [data-rmo~="toggle"].mschalter[data-rmo-state="an"] > .rmo-verlauf-text::before { opacity: 1; }
+body [data-rmo~="toggle"].mschalter[data-rmo-state="an"] > .rmo-verlauf-text::after { opacity: 0; }
+
+/* ----------------------------------------------------------------------
+   5 — Die Leuchtkugel über dem Griff. Sie ersetzt den Griff NICHT: der
+   bestehende `.mschalter > i` bleibt unverändert stehen und trägt weiter
+   den Zustand; die Kugel legt nur Lichtpunkt, Aussenglühen und Tiefe
+   darüber (Vorlage `.toggle-knob`: `inset 0 0 7px`, `0 0 12px #fff`,
+   `0 5px 12px #0007` — das Aussenglühen fehlte in Redion ganz).
+
+   Sie folgt dem Griff mit derselben Zeit (`left .15s` in
+   `bausteine.css:1595`), damit beide als ein Stück laufen. */
+body [data-rmo~="toggle"].mschalter > .rmo-verlauf-kugel {
+  position: absolute; top: 2px; left: 2px; width: 13px; height: 13px;
+  z-index: 3; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #ffffffe6, #ffffff00 58%),
+              radial-gradient(circle at 72% 78%, #00000024, #00000000 62%);
+  box-shadow: inset 0 0 4px #ffffff59, 0 0 5px #ffffff7a, 0 2px 4px #00000059;
+  transition: left .15s, transform .15s;
+  animation: none;
+}
+body [data-rmo~="toggle"].mschalter[data-rmo-state="an"] > .rmo-verlauf-kugel {
+  left: 15px;                              /* wie `.mschalter.an i` */
+  transform: rotate(180deg);               /* Vorlage: der Lichtpunkt kippt mit */
+}
+/* EINMAL 360° beim Zustandswechsel. Zwei Namen für dieselbe Drehung, weil
+   eine Animation nur neu startet, wenn sich der NAME ändert — mit einem
+   Namen bliebe die Kugel beim zweiten Umlegen stehen. */
+body [data-rmo~="toggle"].mschalter[data-rmo-state="an"] > .rmo-verlauf-kugel {
+  animation: rmo-toggle-kugel-an .55s cubic-bezier(.2, .9, .2, 1) 1;
+}
+body [data-rmo~="toggle"].mschalter[data-rmo-state="aus"] > .rmo-verlauf-kugel {
+  animation: rmo-toggle-kugel-aus .55s cubic-bezier(.2, .9, .2, 1) 1;
+}
+@keyframes rmo-toggle-kugel-an  { from { transform: rotate(-180deg); } to { transform: rotate(180deg); } }
+@keyframes rmo-toggle-kugel-aus { from { transform: rotate(360deg);  } to { transform: rotate(0deg);   } }
+
+/* ----------------------------------------------------------------------
+   6 — Hover und Druck. Die Vorlage lässt beim Überfahren die Textebene auf
+   1.06 wachsen und beim Druck auf 0.95 schrumpfen; hier trägt der ganze
+   Schalter die Bewegung, weil er selbst nur 30 px breit ist.
+
+   Die Trefferfläche ändert sich dabei NICHT (§37): angefasst wird der
+   Menüknopf, `.mschalter` ist ein Kind darin, und `transform` nimmt keinen
+   Platz. Der Hintergrundübergang aus `bausteine.css:1593` bleibt in der
+   Kurzform stehen, sonst ginge er hier verloren. */
+body [data-rmo~="toggle"].mschalter {
+  /* Eigener Stapelraum: sonst stiegen Kugel (z-index 3) und Textebene
+     (z-index 2) in den Stapel des Menüs auf und lägen über fremden
+     Zeilen. Mit `isolation` bleiben beide im Schalter. */
+  isolation: isolate;
+  transition: background .15s, transform .18s cubic-bezier(.22, 1, .36, 1);
+}
+@media (hover: hover) {
+  body button:hover > [data-rmo~="toggle"].mschalter { transform: scale(1.06); }
+}
+body button:focus-visible > [data-rmo~="toggle"].mschalter { transform: scale(1.06); }
+body button:active > [data-rmo~="toggle"].mschalter { transform: scale(.95); }
+
+/* Bewegung im Stapel: nur beim Anfassen, und endlich. Zwei Ebenen laufen
+   gegenläufig — daher `reverse` auf der zweiten. */
+body button:is(:hover, :focus-visible, :active) > [data-rmo~="toggle"].mschalter .rmo-verlauf-a,
+body [data-rmo~="toggle"].mschalter[data-rmo-play="toggle"] .rmo-verlauf-a {
+  animation: rmo-toggle-kreisen 2.4s linear 2;
+}
+body button:is(:hover, :focus-visible, :active) > [data-rmo~="toggle"].mschalter .rmo-verlauf-b,
+body [data-rmo~="toggle"].mschalter[data-rmo-play="toggle"] .rmo-verlauf-b {
+  animation: rmo-toggle-kreisen 3.1s linear 2 reverse;
+}
+body button:is(:hover, :focus-visible, :active) > [data-rmo~="toggle"].mschalter .rmo-verlauf-licht,
+body [data-rmo~="toggle"].mschalter[data-rmo-play="toggle"] .rmo-verlauf-licht {
+  animation: rmo-toggle-puls 1.2s ease-in-out 3;
+}
+@media (hover: hover) {
+  body button:hover > [data-rmo~="toggle"].mschalter > .rmo-verlauf { opacity: .78; }
+}
+@keyframes rmo-toggle-kreisen {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+/* Die Vorlage atmet von 1 auf 0,1 und zurück (`@keyframes pulse`). */
+@keyframes rmo-toggle-puls { 0%, 100% { opacity: 1; } 50% { opacity: .1; } }
+
+/* ----------------------------------------------------------------------
+   7 — Weniger Bewegung: alles steht still, aber nichts verschwindet. Die
+   Kugel behält ihre Seite, die Wörter ihre Kreuzblende als harten
+   Wechsel — der Zustand bleibt also ablesbar. */
+@media (prefers-reduced-motion: reduce) {
+  body [data-rmo~="toggle"].mschalter .rmo-verlauf-a,
+  body [data-rmo~="toggle"].mschalter .rmo-verlauf-b,
+  body [data-rmo~="toggle"].mschalter .rmo-verlauf-licht,
+  body [data-rmo~="toggle"].mschalter > .rmo-verlauf-kugel {
+    animation: none !important;
+  }
+  body [data-rmo~="toggle"].mschalter,
+  body [data-rmo~="toggle"].mschalter > .rmo-verlauf,
+  body [data-rmo~="toggle"].mschalter > .rmo-verlauf-kugel,
+  body [data-rmo~="toggle"].mschalter > .rmo-verlauf-text::before,
+  body [data-rmo~="toggle"].mschalter > .rmo-verlauf-text::after {
+    transition: none !important;
+  }
+  body button:is(:hover, :focus-visible, :active) > [data-rmo~="toggle"].mschalter { transform: none; }
+  body [data-rmo~="toggle"].mschalter[data-rmo-state="an"] > .rmo-verlauf-kugel { transform: rotate(180deg); }
+}
+
+/* ==== Block 07 — 3D-Kartenring (E535) ==== */
+/* Der Ring aus E529 war Geometrie ohne Farbe: fünf gleich graue Kärtchen in
+   einem 44×60-Kästchen, die abgewandte Hälfte weggeblendet. Die Vorlage
+   (1847–1919) macht drei Dinge anders, und alle drei kommen hier nach:
+   eine BÜHNE, die beschneidet (.wrapper: 100 %, overflow:hidden), eine
+   TROMMEL, die sich darin dreht (.inner: preserve-3d), und je Karte eine
+   EIGENE Farbe mit radialer Vignette über einem Bild (.card + .img).
+
+   Warum eine eigene Trommel: `overflow:hidden` macht ein Element flach —
+   der Browser erzwingt dann `transform-style:flat`, und aus dem Ring wird
+   ein Stapel. Bühne und Drehung müssen deshalb zwei Elemente sein; der
+   TS-Schnipsel zieht die fünf Karten einmal in `.rmo-ring-trommel` um.
+   Dauerrotation bleibt, wo sie war: 22 s, am leeren Regal bei Hover 9 s. */
+body .rmo-carousel {
+  --rmo-radius: 72px; /* 5 Karten à 56 px: Sehne 2·72·sin36° ≈ 85 px, also Luft zwischen den Karten wie in der Vorlage */
+  width: 100%; height: 120px; margin: 4px 0 14px;
+  overflow: hidden; border-radius: 12px;
+  transform-style: flat; animation: none;
+  perspective: 620px; perspective-origin: 50% 42%;
+  /* Weiche Ränder statt harter Schnittkante — der Ring läuft aus dem Bild. */
+  mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+}
+.rmo-ring-trommel {
+  position: absolute; width: 56px; height: 80px;
+  top: calc(50% - 40px); left: calc(50% - 28px);
+  transform-style: preserve-3d; pointer-events: none;
+  /* Ruhelage leicht gedreht und gekippt: wenn die Animation aus ist (ruhig,
+     weniger Bewegung, Reiter verborgen), bleibt es ein Ring und wird nicht
+     zu zwei Karten nebeneinander — der Grund steht schon in motion.css. */
+  transform: rotateX(-14deg) rotateY(-24deg);
+  animation: rmo-ring-drehen 22s linear infinite;
+}
+.bib-leer:hover .rmo-carousel > .rmo-ring-trommel { animation-duration: 9s; }
+/* Jede Karte in einer eigenen Farbe (Vorlage: --color-card färbt Rand und
+   Fläche). Fünf Töne aus dem Index, mit dem Akzent gemischt, damit sie in
+   Hell wie Dunkel zum Farbsatz gehören statt wie Fremdkörper zu leuchten. */
+body .rmo-ring-karte {
+  --rmo-ton: hsl(calc(var(--rmo-index, 0) * 72deg) 68% 56%);
+  --rmo-karte: color-mix(in srgb, var(--rmo-ton) 74%, var(--accent));
+  --rmo-tinte: color-mix(in srgb, var(--rmo-karte) 45%, var(--text));
+  width: 56px; height: 80px;
+  top: calc(50% - 40px); right: auto; bottom: auto; left: calc(50% - 28px);
+  border: 2px solid var(--rmo-karte); border-radius: 9px; overflow: hidden;
+  /* Halb durchsichtig: die abgewandte Hälfte scheint durch — eine
+     geschlossene Trommel, kein Fächer aus zwei Karten. */
+  background: color-mix(in srgb, var(--bg-card) 62%, transparent);
+  box-shadow: 0 6px 12px #0002, inset 0 0 0 1px #ffffff20;
+  backface-visibility: visible;
+}
+/* Das Motiv je Karte — kein Bild aus dem Netz, eine kleine CSS-Zeichnung
+   in Tintenfarbe: Notiz, Tabelle, Bild, Liste, Diagramm. Das sind die
+   fünf Dinge, die in ein leeres Regal kämen. */
+body .rmo-ring-karte::before {
+  content: ''; position: absolute; inset: 8px 7px; opacity: .85;
+  background: repeating-linear-gradient(to bottom, transparent 0 7px, var(--rmo-tinte) 7px 9px);
+}
+body .rmo-ring-karte:nth-child(1)::before { /* Notiz: Titelbalken + Zeilen */
+  background:
+    linear-gradient(var(--rmo-tinte), var(--rmo-tinte)) 0 0 / 60% 3px no-repeat,
+    repeating-linear-gradient(to bottom, transparent 0 7px, var(--rmo-tinte) 7px 9px) 0 6px / 100% calc(100% - 6px) no-repeat;
+}
+body .rmo-ring-karte:nth-child(2)::before { /* Tabelle: Kopfzeile + Raster */
+  background:
+    linear-gradient(var(--rmo-tinte), var(--rmo-tinte)) 0 0 / 100% 5px no-repeat,
+    repeating-linear-gradient(to bottom, var(--rmo-tinte) 0 1px, transparent 1px 10px),
+    repeating-linear-gradient(to right, var(--rmo-tinte) 0 1px, transparent 1px 13px);
+}
+body .rmo-ring-karte:nth-child(3)::before { /* Bild: Sonne, Hügel, Rahmen */
+  border: 1px solid var(--rmo-tinte); border-radius: 2px;
+  background:
+    radial-gradient(circle at 70% 28%, var(--rmo-tinte) 0 4px, transparent 4.5px),
+    radial-gradient(ellipse 70% 45% at 30% 100%, var(--rmo-tinte) 0 99%, transparent 100%),
+    linear-gradient(to top, var(--rmo-tinte) 0 22%, transparent 22%);
+}
+body .rmo-ring-karte:nth-child(4)::before { /* Liste: Kästchen + Zeilen */
+  background:
+    repeating-linear-gradient(to bottom, var(--rmo-tinte) 0 5px, transparent 5px 11px) 0 0 / 5px 100% no-repeat,
+    repeating-linear-gradient(to bottom, transparent 0 1.5px, var(--rmo-tinte) 1.5px 3.5px, transparent 3.5px 11px) 9px 0 / calc(100% - 9px) 100% no-repeat;
+}
+body .rmo-ring-karte:nth-child(5)::before { /* Diagramm: vier Balken + Grundlinie */
+  background:
+    linear-gradient(var(--rmo-tinte), var(--rmo-tinte)) 0 100% / 7px 40% no-repeat,
+    linear-gradient(var(--rmo-tinte), var(--rmo-tinte)) 10px 100% / 7px 70% no-repeat,
+    linear-gradient(var(--rmo-tinte), var(--rmo-tinte)) 20px 100% / 7px 55% no-repeat,
+    linear-gradient(var(--rmo-tinte), var(--rmo-tinte)) 30px 100% / 7px 90% no-repeat,
+    linear-gradient(var(--rmo-tinte), var(--rmo-tinte)) 0 100% / 100% 1px no-repeat;
+}
+/* Die Vignette der Vorlage (.img: 0.2 innen → 0.6 bei 80 % → 0.9 aussen)
+   liegt ÜBER dem Motiv. Das alte ::after (zwei Papierstriche) wird hier
+   zur Vignette umgewidmet — deshalb inset, height und box-shadow neu. */
+body .rmo-ring-karte::after {
+  inset: 0; height: auto; border-radius: 0; box-shadow: none;
+  background: radial-gradient(circle,
+    color-mix(in srgb, var(--rmo-karte) 20%, transparent) 0%,
+    color-mix(in srgb, var(--rmo-karte) 60%, transparent) 80%,
+    color-mix(in srgb, var(--rmo-karte) 90%, transparent) 100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  /* `.rmo-carousel` steht in motion.css:507-517 nicht in der Liste (nur
+     `.rmo-carousel i`); hier nachgetragen. Die Trommel behält ihre
+     Ruhelage-Drehung: das ist Geometrie, keine Bewegung — `transform:none`
+     würde den Ring zu einem Stapel machen. */
+  body .rmo-carousel, .rmo-ring-trommel, body .rmo-ring-karte { animation: none !important; transition: none !important; }
+  body .rmo-carousel { transform: none; }
+}
+
+/* ==== Block 09 — Statistikkarten, Rest nach E534 (E535) ==== */
+/* ══════════════════════════════════════════════════════════════════════
+ * WAS HIER NOCH FEHLTE (Vorlage 2030–2710)
+ * ----------------------------------------------------------------------
+ * E534 hat die Ziffernrolle, den gezeichneten Ring und das schlagende Herz
+ * gebaut. Drei Dinge der Vorlage standen danach immer noch nur im Bild:
+ *
+ *   1. der konische Lichtkranz, der beim Anfassen EINMAL um die Karte läuft
+ *   2. die Diagrammlinien, die sich zeichnen und gestaffelt einfliegen
+ *   3. die Kippung nach der Zeigerzone samt farbwechselndem Glanzfleck
+ *
+ * Die Vorlage löst Punkt 3 mit fünfzehn unsichtbaren Hoverfeldern (.grid
+ * .area) und fünfzehn fertigen Regelsätzen. Redions Karten stehen in einem
+ * Raster, das schon Inhalt trägt — fünfzehn zusätzliche Felder davor wären
+ * fünfzehn Flächen, die Klicks schlucken. Der Zeiger rechnet es deshalb
+ * selbst aus (--rmo-x/--rmo-y in motion.ts), und der Stil macht daraus
+ * Winkel und Fleckmitte. Gleiche Wirkung, kein Element mehr im Weg.
+ * ══════════════════════════════════════════════════════════════════════ */
+
+/* Eigener Winkel, NICHT `--rmo-angle`: den dreht der Verlaufsrand der
+   Knöpfe (motion.css), und eine Karte kann beides tragen — ein gemeinsamer
+   Name hiesse, dass der Knopfrand den Kartenkranz mitdreht.
+   `inherits:true`, damit eine einzige Animation auf `.rmo-kranz` den
+   scharfen Rand (::before) UND den weichen Schein (Kindelement) führt. */
+@property --rmo-kranz { syntax: '<angle>'; inherits: true; initial-value: 45deg; }
+
+/* Der echte Inhalt gehört über die Deko. Absolut gesetzte Kinder malen
+   sonst über Zahl und Beschriftung — dieselbe Falle, an der der Ring schon
+   zweimal verschoben wurde. `position:relative` reicht: die Textknoten
+   stehen im Quelltext HINTER den Deko-Schichten und malen damit danach.
+   `:not([aria-hidden])` schützt die Deko-Spans selbst vor dieser Regel. */
+body :is(.stat-karte.lw-metrik, .rmo-health-metric) > :is(strong, small, span:not([aria-hidden])) {
+  position: relative;
+}
+
+/* --- 1. Der konische Lichtkranz --------------------------------------
+   Die Vorlage legt fünf Kegelverläufe übereinander (.glow, .glow-in1/2,
+   .glow-out1/2), verschieden unscharf, und dreht sie beim Anfassen in
+   1,5 s von 45° auf 410°. Hier sind es zwei Ebenen: der scharfe Rand und
+   ein weicher Schein. Fünf Ebenen mit blur(50px) auf jeder von vier
+   nebeneinanderstehenden Karten wären vier Dauer-Unschärfen im Bild —
+   Winkel, Dauer und Kurve der Vorlage bleiben.
+   `black 60%` der Vorlage ist hier `transparent`: die Vorlagenkarte ist
+   dunkel, Redion hat auch einen Hellmodus, in dem ein schwarzer Keil ein
+   Loch wäre. */
+body :is(.stat-karte.lw-metrik, .rmo-health-metric) > .rmo-kranz {
+  position: absolute; inset: 0; border-radius: inherit;
+  pointer-events: none; opacity: 0; transition: opacity .35s;
+}
+body :is(.stat-karte.lw-metrik, .rmo-health-metric) > .rmo-kranz::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px;
+  background: conic-gradient(from var(--rmo-kranz),
+    var(--accent) 0%, transparent 20%, var(--accent-warm) 50%, transparent 80%, var(--accent) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+/* Der Schein liegt im eigenen Element und nicht im ::before des Randes:
+   ein `filter` färbt auch alle Pseudoelemente darin ein, der scharfe Rand
+   wäre mitverwaschen. Die Radialmaske hält das Licht am Rand — eine
+   unscharfe Kegelscheibe über der ganzen Karte würde die Zahl trüben. */
+body :is(.stat-karte.lw-metrik, .rmo-health-metric) > .rmo-kranz > .rmo-kranz-schein {
+  position: absolute; inset: 2px; border-radius: inherit; display: block;
+  background: conic-gradient(from var(--rmo-kranz),
+    var(--accent) 0%, transparent 20%, var(--accent-warm) 50%, transparent 80%, var(--accent) 100%);
+  filter: blur(12px); opacity: .5;
+  -webkit-mask: radial-gradient(closest-side, transparent 40%, #000 95%);
+  mask: radial-gradient(closest-side, transparent 40%, #000 95%);
+}
+/* EINE Umdrehung beim Anfassen, nie im Leerlauf (E528). Dieselbe
+   Zustandsliste wie beim Herz, damit Zeiger, Tastatur und `play()`
+   dasselbe auslösen. */
+body :is(.stat-karte.lw-metrik, .rmo-health-metric):is(:hover, :focus-within, :active, [data-rmo-play="metric"]) > .rmo-kranz {
+  opacity: 1; animation: rmo-kranz-dreh 1.5s ease 1 both;
+}
+@keyframes rmo-kranz-dreh { from { --rmo-kranz: 45deg; } to { --rmo-kranz: 410deg; } }
+
+/* --- 2. Die Diagrammlinien -------------------------------------------
+   Die Vorlage zeichnet zwei Kurven (stroke-dasharray 0 510) und lässt fünf
+   Linien gestaffelt einfliegen — beides in einem 5-Sekunden-Dauerlauf, der
+   am Ende alles wieder wegfliegen lässt. Hier zeichnet sich beides EINMAL,
+   wenn die Karte zum ersten Mal im Bild steht (`data-rmo-visible` setzt der
+   IntersectionObserver in motion.ts). Das Wegfliegen bei 80 % bleibt weg:
+   es ist nur die Rückstellung für den nächsten Durchlauf, und ein nächster
+   Durchlauf wäre die verbotene Endlosschleife.
+   Grundzustand = fertig gezeichnet. Fällt die Animation weg (ruhige
+   Bewegung, reduzierte Bewegung), steht das Diagramm einfach da. */
+body :is(.stat-karte.lw-metrik, .rmo-health-metric) > .rmo-pfad {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 30px;
+  overflow: hidden; border-radius: inherit; pointer-events: none; opacity: .3;
+}
+.rmo-pfad > svg { display: block; width: 100%; height: 100%; }
+.rmo-pfad line {
+  stroke: var(--accent); stroke-width: 1; stroke-linecap: round;
+}
+.rmo-pfad path {
+  fill: none; stroke: var(--accent); stroke-width: 1.5;
+  stroke-linecap: round; stroke-linejoin: round;
+  /* 520 ist länger als jede der beiden Kurven — der Strich ist damit
+     durchgehend, und nur der Versatz macht ihn kurz. */
+  stroke-dasharray: 520; stroke-dashoffset: 0;
+}
+/* Der zweite Pfad liegt tiefer und blasser — die Vorlage nennt ihn `.path2`
+   und schiebt ihn um 5 px. Der Versatz steckt hier in den Pfaddaten selbst
+   und nicht in einem `transform`: die Regel für reduzierte Bewegung setzt
+   `transform:none`, und der Schattenpfad läge dann genau auf dem ersten. */
+.rmo-pfad path + path { opacity: .5; }
+[data-rmo-visible="true"] > .rmo-pfad path {
+  animation: rmo-pfad-zeichnen 1.4s ease both;
+  animation-delay: calc(var(--rmo-i, 0) * .18s);
+}
+[data-rmo-visible="true"] > .rmo-pfad line {
+  animation: rmo-pfad-einflug 1.25s ease both;
+  animation-delay: calc(var(--rmo-i, 0) * .05s);
+}
+@keyframes rmo-pfad-zeichnen { from { stroke-dashoffset: 520; } to { stroke-dashoffset: 0; } }
+/* Die Prozentmarken der Vorlage (7/12/17/25 % von 5 s) sind hier auf die
+   Einfluglänge umgerechnet: 0,35 s / 0,6 s / 0,85 s / 1,25 s — gleiche
+   Zeiten, ohne die vier Sekunden Warten davor.
+   Der Überschwung ist 10 statt 20 Benutzereinheiten hoch: der Streifen ist
+   30 px hoch, 20 px Ausschlag hiesse, die Linie verlässt ihn ganz. */
+@keyframes rmo-pfad-einflug {
+  0%        { opacity: 0; transform: translateY(0); }
+  28%       { transform: translateY(-10px); }
+  48%       { transform: translateY(5px); }
+  68%       { transform: translateY(-2.5px); }
+  100%      { opacity: 1; transform: translateY(0); }
+}
+
+/* --- 3. Kippung und Glanzfleck ---------------------------------------
+   NUR am Zeigergerät. Am Telefon gibt es keinen Zeiger, der eine Zone
+   bestimmen könnte; eine Karte, die sich beim Tippen kippt, verschiebt
+   ausserdem genau die Fläche, die getroffen werden soll (§37).
+   Die Grundform des Fleckes steht ausserhalb der Abfrage, damit er auf
+   jedem Gerät unsichtbar an derselben Stelle liegt — sichtbar wird er
+   erst drinnen. */
+body :is(.stat-karte.lw-metrik, .rmo-health-metric) > .rmo-glanz {
+  position: absolute; inset: 0; border-radius: inherit;
+  pointer-events: none; opacity: 0; transition: opacity .3s;
+}
+@media (hover: hover) {
+  /* Ohne color-mix bleibt der Fleck einfarbig statt farbwechselnd — die
+     erste Zeile ist der Rückfall, die zweite gewinnt, wo sie gilt. */
+  body :is(.stat-karte.lw-metrik, .rmo-health-metric) > .rmo-glanz {
+    background: radial-gradient(circle at calc(var(--rmo-x, 50) * 1%) calc(var(--rmo-y, 50) * 1%),
+      var(--accent) 0%, transparent 45%);
+    background: radial-gradient(circle at calc(var(--rmo-x, 50) * 1%) calc(var(--rmo-y, 50) * 1%),
+      color-mix(in srgb, var(--accent-warm) calc(var(--rmo-x, 50) * 1%), var(--accent)) 0%, transparent 45%);
+  }
+  body :is(.stat-karte.lw-metrik, .rmo-health-metric):is(:hover, :focus-within) > .rmo-glanz { opacity: .45; }
+  /* ÜBERSCHREIBT die feste Kippung aus motion.css (2° rotateX, egal wo der
+     Zeiger steht). `body`-Vorsatz und die spätere Stelle in der Datei
+     gewinnen gegen `.stat-karte.lw-metrik:hover` und gegen
+     `.rmo-health-metric:hover`.
+     Die Vorlage kippt ±15°; hier sind es ±6°. Eine Karte mit echtem Text
+     wird bei 15° an der abgewandten Kante unlesbar — die Vorlagenkarte
+     zeigt eine erfundene Zahl, Redions Karte den Lernstand. */
+  body :is(.stat-karte.lw-metrik, .rmo-health-metric):hover {
+    transform: perspective(1000px)
+      rotateX(calc((var(--rmo-y, 50) - 50) * .12deg))
+      rotateY(calc((50 - var(--rmo-x, 50)) * .12deg))
+      translateY(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body :is(.stat-karte.lw-metrik, .rmo-health-metric) > :is(.rmo-kranz, .rmo-glanz, .rmo-pfad),
+  body :is(.stat-karte.lw-metrik, .rmo-health-metric) > .rmo-kranz::before,
+  body :is(.stat-karte.lw-metrik, .rmo-health-metric) > .rmo-kranz > .rmo-kranz-schein,
+  body .rmo-pfad line, body .rmo-pfad path {
+    animation: none !important; transition: none !important; transform: none;
+  }
+  body :is(.stat-karte.lw-metrik, .rmo-health-metric):hover { transform: none; }
+}
+
+/* ==== Block 10 — Ticket, Rest nach E534 (E535) ==== */
+/* ══════════════════════════════════════════════════════════════════════
+ * DER REST DER TICKET-VORLAGE (Vorlage 2711–3469)
+ * ----------------------------------------------------------------------
+ * Schon gebaut und hier NICHT noch einmal: die Wendekarte vorn/hinten
+ * (`.rmo-ticket-turn`, `.rmo-ticket-back`, E534, motion.css:721–750) und
+ * der wachsende Barcode samt Abrisskante (E531, motion.css:253–295).
+ * Dazu kommen jetzt: Schweben, Farbrad, QR mit atmenden Ecken,
+ * Buchstabeneinflug, Würfel, Körnung, Anheben beim Anfassen.
+ *
+ * DREI BEWEGUNGEN, DREI KNOTEN — der wichtigste Punkt dieses Fragments.
+ * Die Wendekarte dreht sich über `transform: rotateY(180deg)`. Ein
+ * zweites `transform` am selben Knoten ERSETZT das erste, es addiert sich
+ * nicht dazu. Deshalb sitzt hier nichts auf `.rmo-ticket-turn`:
+ *
+ *     Drehen    `transform`   an der WENDEKARTE  (bleibt allein, E534)
+ *     Schweben  `translate`   an der BÜHNE       (der Grund unten)
+ *     Anheben   `transform`   an der KARTE       (nur beim Anfassen)
+ *
+ * So kommen sich die drei nie in die Quere, und keine von ihnen muss
+ * wissen, dass es die anderen gibt.
+ *
+ * WAS IM LEERLAUF LÄUFT: nichts (E528, test494, test496). Farbrad,
+ * QR-Ecken, Würfel und Schweben hängen an `data-zustand` „rendern" oder
+ * „speichern" — der Zustand kommt aus dem Druckauftrag (drucker.ts) und
+ * nicht aus einer Uhr. Steht die Karte auf „bereit", „fertig" oder
+ * „fehler", ist `animation` an keiner dieser Stellen gesetzt. Der
+ * Buchstabeneinflug läuft genau einmal je Sichtbarwerden, die Körnung gar
+ * nicht: sie ist ein Muster, keine Bewegung.
+ * ══════════════════════════════════════════════════════════════════════ */
+
+/* Die Deckschichten brauchen einen positionierten Bezug. Die schwebende
+   Karte ist bereits `fixed` und wird ausdrücklich ausgenommen — sonst
+   verlöre sie ihren Platz unten rechts. */
+body .rmo-ticket:not(.ru-drucker-schwebt) { position: relative; }
+
+/* ── Schweben ─────────────────────────────────────────────────────────
+   ES SCHWEBT DIE BÜHNE, NICHT DIE KARTE — und das ist kein Geschmack,
+   sondern ein gemessener Grund.
+   `test496:92` macht vom Ticket ein Bildschirmfoto, und zwar im Zustand
+   „rendern". Playwright wartet dafür, bis der Rahmen des Elements zwei
+   Bilder lang STILLSTEHT. Eine Karte, die dauernd wippt, steht nie still.
+   Nachgemessen in einer leeren Seite, mit demselben Aufruf:
+
+       Karte steht, Inneres bewegt sich   → Bild nach 123 ms
+       Karte wippt um 5 px                → Zeitüberschreitung nach 5 s
+
+   Die Karte selbst bleibt deshalb stehen. Es schwebt die Bildbühne darin:
+   sie ist im Rahmen absolut gesetzt (E534), verschiebt also nichts, und
+   der Rahmen der Karte ändert sich um keinen Punkt.
+
+   NICHT auf `.rmo-ticket-turn`: dort sitzt die Drehung. Zwar wäre
+   `translate` eine eigene Eigenschaft und würde `transform` nicht
+   überschreiben — aber die Wendekarte ist gerade erst gebaut, und ein
+   zweiter Schreiber auf demselben Knoten ist die Sorte Nachbarschaft, die
+   beim nächsten Mal jemand übersieht.
+
+   5 px, nicht die 15 px der Vorlage: dort schwebt ein 320-px-Ticket in
+   einer leeren Demo, hier eine 190-px-Statuskarte über echtem Inhalt. Und
+   nur nach OBEN: nach unten schöbe der Ausschlag die Bühne über den Satz. */
+@keyframes rmo-ticket-schweben {
+  0%, 100% { translate: 0 0; }
+  50%      { translate: 0 -5px; }
+}
+body .rmo-ticket:is([data-zustand="rendern"], [data-zustand="speichern"]) .ru-drucker-buehne {
+  animation: rmo-ticket-schweben 4s ease-in-out infinite;
+}
+
+/* ── Anheben beim Anfassen ─────────────────────────────────────────── */
+body .ru-drucker.rmo-ticket {
+  /* `isolate`, damit die beiden mischenden Schichten unten (Farbrad,
+     Körnung) sich auf die Karte beschränken und nicht mit dem Inhalt der
+     Seite darunter rechnen. Die schwebende Karte ist ohnehin ein eigener
+     Stapelbereich; die eingebaute wäre es ohne diese Zeile nicht. */
+  isolation: isolate;
+  transition: transform .32s cubic-bezier(.22, 1, .36, 1), box-shadow .32s ease;
+}
+/* 3 px nach oben, und nur wo es einen Zeiger gibt: am Telefon bliebe der
+   Hover nach dem Tippen hängen, und die Karte stünde dauerhaft zu hoch.
+   Das Anheben darf den Rahmen der Karte bewegen — es endet nach .32 s und
+   steht dann still; eine Dauerbewegung täte das nicht (siehe oben). */
+@media (hover: hover) {
+  body .ru-drucker.rmo-ticket:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 46px #0004, inset 0 1px 0 #ffffff2e;
+  }
+}
+
+/* ── Das Farbrad ──────────────────────────────────────────────────────
+   Ein Kegelverlauf, dessen Anfangswinkel wandert. `@property` macht den
+   Winkel überhaupt erst animierbar — ohne Registrierung ist er für den
+   Browser eine Zeichenkette und springt von 0 auf 360.
+
+   `screen` und nicht `soft-light`: die Bühne ist in beiden Farbschemata
+   fast schwarz (bausteine.css:7105), und `soft-light` bewegt über
+   Schwarz so gut wie nichts. `screen` hellt dort auf und läuft über den
+   hellen Flächen (Blatt, Gerät) von selbst ins Leere.
+
+   AUSMASKIERT ÜBER SCHRIFT: Überschrift und Satz bleiben ohne Farbschleier.
+   Eine Auskunft — „Seiten setzen …", „Nicht gedruckt" — muss lesbar
+   bleiben, auch wenn darüber ein Hologramm kreist (§38). */
+@property --rmo-holo { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+.rmo-ticket-holo {
+  position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  mix-blend-mode: screen; opacity: .34;
+  background: conic-gradient(from var(--rmo-holo),
+    color-mix(in srgb, var(--c-blue) 75%, transparent),
+    color-mix(in srgb, var(--c-purple) 70%, transparent),
+    color-mix(in srgb, var(--c-pink) 60%, transparent),
+    color-mix(in srgb, var(--accent) 70%, transparent),
+    color-mix(in srgb, var(--c-blue) 75%, transparent));
+  mask-image: linear-gradient(transparent 0 10%, #000 26%, #000 70%, transparent 86%);
+}
+@keyframes rmo-ticket-farbrad { to { --rmo-holo: 360deg; } }
+.rmo-ticket:is([data-zustand="rendern"], [data-zustand="speichern"]) .rmo-ticket-holo {
+  animation: rmo-ticket-farbrad 3s linear infinite;
+}
+
+/* ── Die Körnung ──────────────────────────────────────────────────────
+   Zwei Schachbrettmuster teilerfremder Grösse, voneinander abgezogen: das
+   ergibt ein unregelmässiges Flimmern statt eines sichtbaren Gitters. Sie
+   bewegt sich NIE — Körnung ist eine Oberfläche, keine Bewegung, und ein
+   wanderndes Rauschen wäre genau die Endlosschleife, die E528 verbietet.
+   Oben und unten weich ausmaskiert wie in der Vorlage (3440–3453). */
+.rmo-ticket-korn {
+  position: absolute; inset: 0; z-index: 6; pointer-events: none;
+  opacity: .06; mix-blend-mode: overlay;
+  background-image:
+    repeating-conic-gradient(#000 0 25%, #fff 0 50%),
+    repeating-conic-gradient(#fff 0 25%, #000 0 50%);
+  background-size: 2px 2px, 3px 3px;
+  background-blend-mode: difference;
+  mask-image: linear-gradient(transparent 5%, #000 30%, #000 70%, transparent 95%);
+}
+
+/* ── Der QR-Code ──────────────────────────────────────────────────────
+   DEKO, KEIN LESBARER CODE. Er zeigt auf nichts, weil es nichts gibt,
+   worauf er zeigen könnte: der Druckauftrag hat keine Adresse. Drei Ecken
+   aus `border` wie die Suchmarken eines echten Codes, dazwischen zwei
+   gekreuzte Raster mit unterschiedlichem Takt (5 px und 4 px) — das sieht
+   an den Kreuzungen dichter aus und liest sich als Modulfeld.
+
+   Feste Weiss-Töne statt Marken: die Bühne ist in Hell wie Dunkel
+   dieselbe dunkle Fläche, ein Markenton wäre dort mal sichtbar, mal
+   nicht. Genauso hält es das Blatt darüber (bausteine.css:7115). */
+.rmo-ticket-qr {
+  position: absolute; right: 9px; bottom: 9px; z-index: 4;
+  box-sizing: border-box; width: 34px; height: 34px; padding: 6px;
+  color: #ffffffd0; pointer-events: none;
+  background-image:
+    repeating-linear-gradient(90deg, #ffffff70 0 2px, transparent 2px 5px),
+    repeating-linear-gradient(180deg, #ffffff70 0 2px, transparent 2px 4px);
+  background-origin: content-box;
+  background-clip: content-box;
+}
+.rmo-ticket-ecke {
+  position: absolute; width: 9px; height: 9px;
+  border: 2px solid currentColor; transform-origin: center;
+}
+.rmo-ticket-ecke:nth-child(1) { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+.rmo-ticket-ecke:nth-child(2) { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+.rmo-ticket-ecke:nth-child(3) { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+/* Atmen nur während der Arbeit. Die elastische Kurve ist die der Vorlage
+   (--ease-elastic, Zeile 2831); die Deckkraft steht ausschliesslich in den
+   Bildern — so bleiben die Ecken sichtbar, wenn die Bewegung aus ist. */
+@keyframes rmo-ticket-atmen {
+  0%, 100% { transform: scale(1.05); opacity: .3; }
+  50%      { transform: scale(1.15); opacity: 1; }
+}
+.rmo-ticket:is([data-zustand="rendern"], [data-zustand="speichern"]) .rmo-ticket-ecke {
+  animation: rmo-ticket-atmen 3s cubic-bezier(.5, 2, .3, .8) infinite;
+}
+
+/* ── Der Würfel ───────────────────────────────────────────────────────
+   Sechs Flächen, kein Bild und kein SVG: so erbt der Draht seine Farbe
+   und bleibt bei jeder Grösse scharf. Er steht in der linken oberen Ecke
+   der Bühne — dort ist der einzige Fleck, den weder das Blatt (Mitte)
+   noch das Gerät (ab 39 px Höhe) belegt. `z-index: 0` hält ihn hinter dem
+   Blatt, wie es die Vorlage vorsieht.
+
+   Er dreht sich NUR in „rendern". „speichern" heisst: der Druckdialog des
+   Browsers ist offen und Redion wartet — da soll nichts mehr arbeiten
+   aussehen, was nicht arbeitet. */
+.rmo-ticket-wuerfel {
+  position: absolute; left: 12px; top: 14px; z-index: 0;
+  width: 26px; height: 26px; pointer-events: none;
+  /* KEINE `opacity` AN DIESER STELLE. Ein Wert unter 1 ist eine
+     gruppierende Eigenschaft: sie zwingt `transform-style` zurück auf
+     `flat`, und aus dem Würfel wird eine Raute — am Bild gesehen, nicht
+     im Code. `getComputedStyle` sagt dabei weiter „preserve-3d"; der
+     benutzte Wert ist ein anderer. Die Durchsicht steckt deshalb in den
+     Farben der Flächen. Dasselbe gilt für filter, mask und overflow. */
+  transform-style: preserve-3d;
+  transform: perspective(190px) rotateX(-24deg) rotateY(34deg);
+}
+.rmo-ticket-flaeche {
+  position: absolute; inset: 0;
+  border: 1px solid #ffffff40; background: #ffffff08;
+}
+.rmo-ticket-flaeche:nth-child(1) { transform: translateZ(13px); }
+.rmo-ticket-flaeche:nth-child(2) { transform: rotateY(180deg) translateZ(13px); }
+.rmo-ticket-flaeche:nth-child(3) { transform: rotateY(90deg) translateZ(13px); }
+.rmo-ticket-flaeche:nth-child(4) { transform: rotateY(-90deg) translateZ(13px); }
+.rmo-ticket-flaeche:nth-child(5) { transform: rotateX(90deg) translateZ(13px); }
+.rmo-ticket-flaeche:nth-child(6) { transform: rotateX(-90deg) translateZ(13px); }
+@keyframes rmo-ticket-wuerfel-dreh {
+  from { transform: perspective(190px) rotateX(-24deg) rotateY(0deg); }
+  to   { transform: perspective(190px) rotateX(-24deg) rotateY(360deg); }
+}
+.rmo-ticket[data-zustand="rendern"] .rmo-ticket-wuerfel {
+  animation: rmo-ticket-wuerfel-dreh 9s linear infinite;
+}
+
+/* ── Der Buchstabeneinflug ────────────────────────────────────────────
+   Jedes Zeichen der Kopfzeile fliegt einzeln von rechts ein, 20 ms
+   versetzt, nach 400 ms Vorlauf — die Werte der Vorlage (3255–3262).
+   Einmal, beim Sichtbarwerden: `data-rmo-visible` setzt motion.ts über
+   einen IntersectionObserver.
+
+   DIE DECKKRAFT STEHT NUR IN DEN BILDERN, nicht als eigene Regel. Stünde
+   `opacity: 0` daneben, wären die Buchstaben unsichtbar, sobald jemand
+   weniger Bewegung einstellt — dann greift `animation: none`, und die
+   Regel bliebe stehen. Mit `both` gilt das erste Bild während des
+   Vorlaufs und das letzte danach; ohne Animation gilt gar keines. */
+.rmo-ticket-wort { white-space: pre; }
+.rmo-ticket-letter { display: inline-block; }
+@keyframes rmo-ticket-einflug {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: none; }
+}
+.rmo-ticket[data-rmo-visible="true"] .rmo-ticket-letter {
+  animation: rmo-ticket-einflug .5s cubic-bezier(.5, 2, .3, .8) both
+             calc(var(--rmo-i, 0) * 20ms + 400ms);
+}
+
+/* ── Wer weniger Bewegung will ────────────────────────────────────────
+   Die Flächen des Würfels behalten ihre Drehung: sie ist seine FORM, kein
+   Weg. `transform: none` machte aus sechs Flächen ein flaches Quadrat —
+   weniger Bewegung, aber auch weniger Würfel. Angehalten wird, was sich
+   bewegt; stehen bleibt, was steht. */
+@media (prefers-reduced-motion: reduce) {
+  body .ru-drucker.rmo-ticket, body .rmo-ticket .ru-drucker-buehne,
+  .rmo-ticket-holo, .rmo-ticket-korn, .rmo-ticket-qr, .rmo-ticket-ecke,
+  .rmo-ticket-wuerfel, .rmo-ticket-flaeche, .rmo-ticket-letter {
+    animation: none !important; transition: none !important;
+  }
+  body .ru-drucker.rmo-ticket, body .rmo-ticket .ru-drucker-buehne { translate: none !important; }
+  body .ru-drucker.rmo-ticket { transform: none !important; }
+  .rmo-ticket-ecke, .rmo-ticket-letter { transform: none; }
+}
+
+/* ==== Block 11 — Glaskugel (E535) ==== */
+/* Vorlage 3470–4157: die Glaskugel als KI-Zeichen an #btn-ai und in der
+ * KI-Kopfzeile. Träger ist [data-rmo~="orb"]; die Kugel selbst lässt Zeiger
+ * durch (pointer-events:none in motion.css), also hängen alle Auslöser am
+ * Träger: :hover, :focus-visible, [data-rmo-play="orb"]. Im Leerlauf steht
+ * alles — die Wellen, der Kranz, die Bögen und das Atmen laufen nur beim
+ * Anfassen und ENDLICH (E528, test494).
+ *
+ * Der Laufzustand („Funke statt Glanzkante") kommt von drei Stellen:
+ * data-rmo-state="laeuft" am Träger, der Statuszeile .ki-aktivitaet im
+ * Panel (dienst.ts:1607, sie steht im Chat, nicht in der Kopfzeile — darum
+ * :has), und #btn-ai.on, sobald das Panel offen ist (schale.ts:2649).
+ */
+body .rmo-orb {
+  overflow: visible;                 /* Wellen und Kranz laufen über den Rand */
+  isolation: isolate;
+  z-index: 1;
+  transform-style: preserve-3d;
+  /* Fünf Schattenlagen der Vorlage (circle-1), auf 25 px verkleinert:
+     Innenring, schräger Innenschatten, Schlagschatten, weisses Gegenlicht
+     von oben links, Innenglast. */
+  box-shadow:
+    inset 0 0 0 1px #ffffff50,
+    inset 3px 2px 4px -2px color-mix(in srgb, var(--accent-text) 22%, transparent),
+    2px 2px 8px -1px color-mix(in srgb, var(--text) 28%, transparent),
+    -3px -3px 7px 0 #ffffff70,
+    inset 0 0 4px #ffffffcc;
+}
+/* Die Glanzkante (::after aus motion.css) bekommt einen Übergang, damit sie
+   beim Symbolwechsel nach oben wegkippen kann. */
+body .rmo-orb::after {
+  transition: transform .8s cubic-bezier(.7, -1, .3, 1.5), opacity .8s, filter .8s;
+}
+.rmo-orb > * { position: absolute; pointer-events: none; }
+
+/* Zwei weiche Farbpunkte im Innern — Vorlage: pink oben rechts, cyan unten
+   links, blur 30–40 px. Hier aus dem Akzent gemischt, damit sie in Hell und
+   Dunkel zur Marke passen. */
+.rmo-orb-punkte {
+  inset: 0; border-radius: 50%; z-index: 1; filter: blur(1.5px);
+  background:
+    radial-gradient(circle at 64% 32%, color-mix(in srgb, var(--accent) 55%, #ffffff) 0, transparent 30%),
+    radial-gradient(circle at 40% 82%, color-mix(in srgb, var(--accent-text) 45%, #ffffff) 0, transparent 26%);
+}
+
+/* Drei Wellenringe (Vorlage: zwei, endlos, 0,4 s versetzt). Sie laufen
+   einmal je Anfassen nach aussen, scale 1 → 1,6 wie in der Vorlage. */
+.rmo-orb-welle {
+  inset: 0; border-radius: 50%; z-index: 0; opacity: 0;
+  border: 1px solid #ffffff; filter: blur(1px);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 50%, transparent);
+  animation: none;
+}
+@keyframes rmo-orb-welle {
+  0%   { transform: scale(1);   opacity: 0; box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 90%, transparent); }
+  35%  { transform: scale(1.3); opacity: 1; }
+  70%, 100% { transform: scale(1.6); opacity: 0; box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 30%, transparent); }
+}
+
+/* Linienkranz: die SVG-Gruppe der Vorlage dreht 30 s und zittert im
+   Massstab (0,37–0,43). Hier ein gestrichelter Kreis, der beim Anfassen
+   EINMAL dreht und dabei ebenso zittert. */
+.rmo-orb-kranz {
+  inset: 4px; border-radius: 50%; z-index: 2; opacity: .55;
+  border: 1px dashed #ffffff90;
+  animation: none;
+}
+@keyframes rmo-orb-kranz {
+  0%   { rotate: 0deg;   scale: 1; }
+  15%  { scale: .9; }
+  36%  { scale: 1; }
+  50%  { scale: .93; }
+  65%  { scale: 1.05; }
+  80%  { scale: .95; }
+  100% { rotate: 360deg; scale: 1; }
+}
+
+/* Zwei Bögen (growPath/reducePath): zeichnen sich beim Anfassen in 0,3 s
+   und ziehen sich beim Loslassen in 0,5 s zurück — ein Übergang, kein
+   Loop. Halbkreis mit r = 8 misst ~25,1; die Strichlänge 26 deckt ihn. */
+.rmo-orb-pfade { inset: 3px; width: auto; height: auto; z-index: 3; overflow: visible; }
+.rmo-orb-pfade path {
+  fill: none; stroke: #ffffff; stroke-width: 1.2; stroke-linecap: round;
+  stroke-dasharray: 26; stroke-dashoffset: 26;
+  transition: stroke-dashoffset .5s ease;
+}
+
+/* Zweite, innere Kugel (circle-2: 123/224 ≈ 55 %) mit eigenem Kern und
+   eigener Glanzkante. */
+.rmo-orb-zwei {
+  width: 55%; height: 55%; left: 26%; top: 28%; border-radius: 50%; z-index: 4;
+  background: color-mix(in srgb, var(--bg-card) 65%, #ffffff);
+  box-shadow: inset 0 0 4px 1px #ffffffd0, 0 0 3px 2px #ffffffb0;
+  transform-style: preserve-3d;
+}
+.rmo-orb-zwei::before {            /* der Farbkern, dreht nur beim Anfassen */
+  content: ''; position: absolute; inset: 2px; border-radius: 50%; opacity: .8;
+  background: conic-gradient(from 0deg, var(--accent), #ffffff 35%, var(--accent-text) 70%, var(--accent));
+  filter: blur(1px);
+  animation: none;
+}
+.rmo-orb-zwei::after {             /* die Glanzkante */
+  content: ''; position: absolute; inset: 1px; border-radius: 50%;
+  border: 1px solid transparent; border-top-color: #ffffff;
+  transform: rotate(-30deg);
+  transition: transform .8s cubic-bezier(.7, -1, .3, 1.5), opacity .8s, filter .8s;
+}
+@keyframes rmo-orb-kern {
+  0%   { rotate: 0deg; }
+  20%  { rotate: 90deg; }
+  40%  { rotate: 180deg; scale: .95 1; }
+  60%, 100% { rotate: 360deg; }
+}
+@keyframes rmo-orb-farbe {         /* Vorlage: rot/grün/blau/magenta über 4 s */
+  20% { filter: blur(1px) hue-rotate(60deg); }
+  40% { filter: blur(1px) hue-rotate(150deg); }
+  60% { filter: blur(1px) hue-rotate(220deg); }
+  80% { filter: blur(1px) hue-rotate(300deg); }
+}
+
+/* Der Funke: das zweite Symbol der Vorlage (icon-2). Im Ruhezustand liegt
+   er unten, gekippt und unscharf; im Laufzustand kommt er herauf, und die
+   Glanzkanten kippen nach oben weg (rotateX 90°, blur 2 px, überschwingende
+   Kurve — alles Werte der Vorlage). */
+.rmo-orb-funke {
+  inset: 6px; z-index: 5; opacity: 0;
+  transform: translateY(8px) scale(.7) rotateX(90deg); filter: blur(2px);
+  background:
+    linear-gradient(#ffffff, #ffffff) center / 2px 100% no-repeat,
+    linear-gradient(#ffffff, #ffffff) center / 100% 2px no-repeat;
+  mask-image: linear-gradient(to bottom, #000 10%, #0003);
+  transition: transform .8s cubic-bezier(.7, -1, .3, 1.5), opacity .8s, filter .8s;
+}
+.rmo-orb-funke::before {
+  content: ''; position: absolute; inset: 20%; rotate: 45deg;
+  background:
+    linear-gradient(#ffffff, #ffffff) center / 1.5px 100% no-repeat,
+    linear-gradient(#ffffff, #ffffff) center / 100% 1.5px no-repeat;
+}
+
+/* Fusszeile: eine dezente Zeile unter der Kugel — nur in der Kopfzeile,
+   nie am 44-px-Knopf. Sie sagt „lokal" und NICHT „verifiziert"
+   (motion.css:420). Ohne transform, damit prefers-reduced-motion sie
+   nicht verschiebt. */
+.rmo-orb-fuss {
+  top: calc(100% + 7px); left: -8px; right: -8px; z-index: 5;
+  font-family: inherit; font-size: 8px; font-weight: 600; line-height: 1;
+  letter-spacing: .08em; text-align: center; white-space: nowrap;
+  color: var(--text-faint); opacity: .8;
+  animation: none;
+}
+.rmo-orb-fuss::before { content: 'lokal'; }
+#btn-ai .rmo-orb-fuss { display: none; }
+/* Sobald dienst.ts die Quelle am Panel vermerkt, verschwindet die Zeile bei
+   der Wolke von selbst — die Regel greift, wenn jemand das Attribut setzt. */
+#ai[data-ki-quelle="wolke"] .rmo-orb-fuss { display: none; }
+@keyframes rmo-orb-fuss {           /* Vorlage „labels": von oben, gedreht, unscharf */
+  0%   { translate: 0 -30px; rotate: -30deg; filter: blur(10px); opacity: 0; }
+  50%  { translate: 0 4px;   rotate: 0deg;   filter: blur(0); }
+  100% { translate: 0 0;     opacity: .8; }
+}
+
+/* Die Glaskarte hinter der Kugel — nur in der Kopfzeile. Sie steht im
+   Fluss VOR der Kugel und schiebt sich per negativem Rand unter sie:
+   37 − 39 + 8 (gap) = 6 px, also die Kugel mittig in der Karte. Kein
+   absolutes Setzen, weil die Kopfzeile am Telefon oben mehr Polster hat
+   (bausteine.css:364) und die Mitte dann verrutschte. */
+body #ai .ai-head .rmo-orb-karte {
+  position: relative; flex: 0 0 37px; width: 37px; height: 37px; margin-right: -39px;
+  z-index: 0; border-radius: 10px; overflow: hidden; pointer-events: none;
+  border: 1px solid #ffffff40;
+  background: color-mix(in srgb, var(--bg-card) 30%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 0 6px #ffffff50, 0 6px 14px -6px #00000040;
+  transition: background .5s linear;
+}
+body #ai .ai-head .rmo-orb-karte::before {   /* das umlaufende Lichtband */
+  content: ''; position: absolute; left: -50%; top: -100%; width: 200%; height: 300%;
+  background: linear-gradient(to right, transparent 0%, #ffffffb0 50%, transparent 100%);
+  opacity: 0; transition: opacity .4s;
+  animation: none;
+}
+@keyframes rmo-orb-band { to { rotate: 360deg; } }
+
+/* ---------- Anfassen: alles einmal, dann Ruhe ---------- */
+body [data-rmo~="orb"]:is(:hover, :focus-visible, [data-rmo-play="orb"]) .rmo-orb { animation: rmo-orb-atmen 2.1s ease-in-out 3; }
+body [data-rmo~="orb"]:is(:hover, :focus-visible, [data-rmo-play="orb"]) .rmo-orb-zwei { animation: rmo-orb-atmen-zwei 2.1s ease-in-out 3; }
+body [data-rmo~="orb"]:is(:hover, :focus-visible, [data-rmo-play="orb"]) .rmo-orb-zwei::before {
+  animation: rmo-orb-kern 2.5s linear 1, rmo-orb-farbe 4s linear 1;
+}
+body [data-rmo~="orb"]:is(:hover, :focus-visible, [data-rmo-play="orb"]) .rmo-orb-welle {
+  animation: rmo-orb-welle 1.5s linear 1; animation-delay: calc(var(--rmo-i, 0) * .4s);
+}
+body [data-rmo~="orb"]:is(:hover, :focus-visible, [data-rmo-play="orb"]) .rmo-orb-kranz { animation: rmo-orb-kranz 6s linear 1; }
+body [data-rmo~="orb"]:is(:hover, :focus-visible, [data-rmo-play="orb"]) .rmo-orb-pfade path {
+  stroke-dashoffset: 0; transition: stroke-dashoffset .3s ease .2s;
+}
+body [data-rmo~="orb"]:is(:hover, :focus-visible, [data-rmo-play="orb"]) .rmo-orb-pfade path + path { transition-delay: .35s; }
+body [data-rmo~="orb"]:is(:hover, :focus-visible, [data-rmo-play="orb"]) .rmo-orb-fuss { animation: rmo-orb-fuss .6s ease 1; }
+body #ai .ai-head:is(:hover, [data-rmo-play="orb"]) .rmo-orb-karte { background: transparent; }
+body #ai .ai-head:is(:hover, [data-rmo-play="orb"]) .rmo-orb-karte::before { opacity: .5; animation: rmo-orb-band 3s linear 1; }
+@keyframes rmo-orb-atmen {          /* circle1, ohne translateZ */
+  0%, 100% { scale: .97; }
+  15%, 45%, 85% { scale: 1; }
+  30%, 60% { scale: .98; }
+}
+@keyframes rmo-orb-atmen-zwei {     /* circle2, gegenläufig */
+  0%, 100% { scale: 1; }
+  15% { scale: 1.03; }
+  30% { scale: .98; }
+  45% { scale: 1.04; }
+  60% { scale: .97; }
+  85% { scale: 1.03; }
+}
+
+/* ---------- Laufzustand: Funke statt Glanzkante, Wellen aus ---------- */
+body :is(#ai .ai-head[data-rmo-state="laeuft"], #ai:has(.ki-aktivitaet) .ai-head, #btn-ai.on, [data-rmo~="orb"][aria-busy="true"]) .rmo-orb-funke {
+  opacity: 1; transform: none; filter: none;
+}
+body :is(#ai .ai-head[data-rmo-state="laeuft"], #ai:has(.ki-aktivitaet) .ai-head, #btn-ai.on, [data-rmo~="orb"][aria-busy="true"]) .rmo-orb::after {
+  transform: rotate(-35deg) translateY(-8px) rotateX(90deg); opacity: 0; filter: blur(2px);
+  animation: none;
+}
+body :is(#ai .ai-head[data-rmo-state="laeuft"], #ai:has(.ki-aktivitaet) .ai-head, #btn-ai.on, [data-rmo~="orb"][aria-busy="true"]) .rmo-orb-zwei::after {
+  transform: rotate(-30deg) translateY(-8px) rotateX(90deg); opacity: 0; filter: blur(2px);
+}
+/* Vorlage „checked": Wellen und Striche verschwinden, solange gearbeitet wird. */
+body :is(#ai .ai-head[data-rmo-state="laeuft"], #ai:has(.ki-aktivitaet) .ai-head, [data-rmo~="orb"][aria-busy="true"]) :is(.rmo-orb-welle, .rmo-orb-kranz) { animation: none; opacity: 0; }
+body :is(#ai .ai-head[data-rmo-state="laeuft"], #ai:has(.ki-aktivitaet) .ai-head, [data-rmo~="orb"][aria-busy="true"]) .rmo-orb-pfade path { stroke-dashoffset: 26; }
+
+/* ---------- Kippung nach dem Zeiger, nur mit echter Maus ---------- */
+/* --rmo-ox/--rmo-oy setzt motion.ts am Träger (−1 … 1); ±15° wie die
+   Vorlage bei perspective 800 px — auf 25 px entsprechend 90 px. */
+@media (hover: hover) {
+  body [data-rmo~="orb"] .rmo-orb {
+    transform: perspective(90px) rotateX(calc(var(--rmo-oy, 0) * -15deg)) rotateY(calc(var(--rmo-ox, 0) * 15deg));
+    transition: transform .4s ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rmo-orb, .rmo-orb::after, .rmo-orb-punkte, .rmo-orb-welle, .rmo-orb-kranz, .rmo-orb-pfade path,
+  .rmo-orb-zwei, .rmo-orb-zwei::before, .rmo-orb-zwei::after, .rmo-orb-funke, .rmo-orb-fuss,
+  body #ai .ai-head .rmo-orb-karte, body #ai .ai-head .rmo-orb-karte::before,
+  body [data-rmo~="orb"] .rmo-orb {
+    animation: none !important; transition: none !important; transform: none;
+  }
+  body [data-rmo~="orb"]:is(:hover, :focus-visible, [data-rmo-play="orb"]) .rmo-orb-pfade path { stroke-dashoffset: 0; }
+}
+
+/* ==== Block 12 — Filament-Hebelschalter (E535) ==== */
+/* Gebaut war die LAMPE, nicht der SCHALTER: ein Glaskolben mit zwei Drähten
+   und einer Wendel (motion.css 448–481) — und daneben nichts. Die Vorlage
+   (4158–4795) zeigt einen ZWEITEILIGEN Körper: links ein Metallgehäuse, das
+   beim Schalten mit Überschwingen fährt, rechts die Glasröhre, in der sich
+   der Faden Strich für Strich zeichnet. Von den fünf Dingen im Namen des
+   Blocks fehlten vier — sie kommen hier nach.
+
+   ZWEI GRENZEN DES ORTES, damit unten nichts wie ein Versehen aussieht:
+
+   · `.sp-start` ist ein 34-px-Knopf in der Werkzeugleiste des Schaltplans
+     (bausteine.css:5830), kein 78-px-Schalter auf leerer Bühne. Alle Masse
+     der Vorlage sind geteilt: Gehäuse 16 × 15 statt 80 × 78, Schein 22 px
+     statt 130 px. Die Trefferfläche wächst dabei nur — der Knopf ist
+     `width:auto; min-width:max-content` und wird durch das Gehäuse breiter,
+     nie schmaler (§37).
+   · Der Knopftext („▶ Strom" / „◼ Strom") ist ECHTER Text und sagt den
+     Zustand an (§38). Er wird nicht in Buchstaben zerlegt; der
+     Zeichenwechsel der Vorlage sitzt hier auf dem eingeprägten 0/I des
+     Gehäuses, wo er Deko sein darf.
+
+   KEINE SCHLEIFE IM LEERLAUF (E528, test494). Die Vorlage hat drei
+   Dauerläufer: Lichtnaht 1,8 s, Glasrand 1,4 s und das Glimmen. Hier läuft
+   der Glasrand EINMAL beim Einschalten, die Lichtnaht steht still und
+   wechselt nur die Farbe — und das Atmen des Fadens bleibt das eine, das es
+   schon gibt (`rmo-gluehen`, motion.css:475–481). Es wird unten nur
+   verzögert, damit es nach dem Zeichnen einsetzt, NICHT verdoppelt. */
+
+/* Der Knopf wird zur eigenen Bühne: ohne `isolation` fiele der Lichtkegel
+   mit `z-index:-1` hinter den Hintergrund der Leiste und wäre unsichtbar —
+   mit ihr liegt er über der Knopffläche und unter der Beschriftung, die
+   dadurch lesbar bleibt. Das Anheben beim Anfassen kommt aus der Vorlage
+   (schwebende Ruhelage); in einer Werkzeugleiste ist daraus 1 px geworden. */
+body .sp-start {
+  isolation: isolate;
+  transition: box-shadow .3s, background .3s, transform .45s cubic-bezier(.5, 2, .3, .8);
+}
+@media (hover: hover) {
+  body .sp-start:hover { transform: translateY(-1px); }
+}
+
+/* ── Das Gehäuse ──────────────────────────────────────────────────────────
+   Dreistufiger Metallverlauf, weisser Unschärfe-Glanz, Lichtkante oben.
+   `margin-right:-5px` hebt die 5-px-Lücke der Flex-Leiste auf: Gehäuse und
+   Glas gehören zu EINEM Körper und müssen sich berühren, sonst stehen zwei
+   Sinnbilder nebeneinander statt eines Schalters. Die Körnung liegt als
+   zwei Punktraster im Hintergrundstapel — eine eigene Ebene wäre ein
+   weiteres Element für 5 % Deckkraft. */
+body .sp-start > .rmo-hebel {
+  position: relative; flex: 0 0 auto; overflow: hidden;
+  width: 16px; height: 15px; margin-right: -5px;
+  border-radius: 5px 3px 3px 5px;
+  background:
+    radial-gradient(#ffffff0d .5px, transparent .6px) 0 0 / 3px 3px,
+    radial-gradient(#0000000d .5px, transparent .6px) 1px 2px / 5px 4px,
+    linear-gradient(to bottom, #2c2e31 0%, #31343e 20%, #212329 100%);
+  box-shadow:
+    inset 3px -6px 6px -5px #000,
+    inset 3px -7px 5px -6px #ffffff4d,
+    inset 0 1px 0 #ffffff26,
+    0 2px 5px -2px #0009;
+  pointer-events: none;
+}
+/* Der weisse Glanz der Vorlage (`.mask::before`, blur(12px)) — hier 4 px,
+   weil das Gehäuse ein Fünftel so gross ist. */
+body .sp-start > .rmo-hebel::before {
+  content: ''; position: absolute; left: 28%; top: 20%;
+  width: 100%; height: 32%; border-radius: inherit;
+  background: #fff; filter: blur(4px); opacity: .45;
+  transition: opacity .35s;
+}
+/* Die LICHTNAHT an der Fuge zwischen Gehäuse und Glas. In der Vorlage
+   wächst sie 1,8 s lang endlos — das wäre eine Schleife im Leerlauf. Sie
+   steht hier still und sagt denselben Satz über die Farbe: grau und matt im
+   Aus, weiss mit Schein im An. Beim Anfassen tritt sie zurück, wie in der
+   Vorlage (`:hover .line { opacity:0 }`). */
+body .sp-start > .rmo-hebel::after {
+  content: ''; position: absolute; top: 2px; bottom: 2px; right: 0; width: 1px;
+  border-radius: 1px; background: #8c8c8c; opacity: .5;
+  box-shadow: 0 0 4px 1px #ffdc9166;
+  transition: background .35s, box-shadow .35s, opacity .35s;
+}
+
+/* ── Der Hebelwurf ────────────────────────────────────────────────────────
+   Die namengebende Bewegung: in der Vorlage fährt das Gehäuse 40 px mit
+   `--ease-elastic-2` (0.5, -1, 0.3, 0.8). 40 px hat dieser Knopf nicht —
+   also fährt nicht das Gehäuse, sondern der Hebel darin, und behält die
+   Kurve mit dem Überschwingen. Aus 13° (aus) werden -32° (an): 45° Wurf,
+   im Bild eine deutliche Bewegung und trotzdem innerhalb der 16 px. */
+.rmo-hebel-arm {
+  position: absolute; left: 6px; bottom: 3px; margin-left: -1.5px;
+  width: 3px; height: 7px; border-radius: 2px; z-index: 2;
+  background: linear-gradient(to bottom, #dcdcdc, #8e8c8b 60%, #55555a);
+  box-shadow: 0 1px 2px #000a;
+  transform-origin: 50% 100%; transform: rotate(13deg);
+  transition: transform .35s cubic-bezier(.5, -1, .3, .8), box-shadow .35s;
+}
+/* Der Knauf oben — ein Hebel ohne Griff sieht aus wie ein Strich. */
+.rmo-hebel-arm::before {
+  content: ''; position: absolute; left: -.5px; top: -2px;
+  width: 4px; height: 4px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, #9a9a9a 55%, #45454a);
+}
+
+/* ── Das eingeprägte Zeichen ──────────────────────────────────────────────
+   Der Zeichenwechsel der Vorlage in klein: zwei Sätze übereinander, einer
+   blendet auf, einer weg. Reine Deko (`aria-hidden`), denn die Auskunft
+   steht im Knopftext. */
+.rmo-hebel-zeichen {
+  position: absolute; top: 1px; right: 1px; width: 7px; height: 6px;
+  font: 700 6px/6px ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-align: center; letter-spacing: 0;
+}
+.rmo-hebel-zeichen::before, .rmo-hebel-zeichen::after {
+  position: absolute; inset: 0; transition: opacity .3s, transform .3s;
+}
+.rmo-hebel-zeichen::before { content: 'I'; color: var(--sp-schein); opacity: 0; transform: translateY(3px); }
+.rmo-hebel-zeichen::after  { content: '0'; color: #ffffff66; opacity: 1; transform: translateY(0); }
+
+/* ── Der Schraubenkopf ────────────────────────────────────────────────────
+   6 px Kreis, Kreuzschlitz aus zwei Verläufen: ein Streifen waagerecht,
+   einer senkrecht. Kein Bild, keine Schrift — zwei Zeilen CSS. */
+.rmo-hebel-schraube {
+  position: absolute; right: 1px; bottom: 1px; z-index: 1;
+  width: 6px; height: 6px; border-radius: 50%;
+  background:
+    linear-gradient(to bottom, transparent 42%, #0000008c 42% 58%, transparent 58%),
+    linear-gradient(to right, transparent 42%, #0000008c 42% 58%, transparent 58%),
+    radial-gradient(circle at 35% 30%, #b9b7b6, #6d6b6a 60%, #3a3a3e);
+  box-shadow: inset 0 -1px 1px #0009, inset 0 1px 1px #ffffff40;
+}
+
+/* ── Das Glas ─────────────────────────────────────────────────────────────
+   Da war ein Umriss mit einem Hauch Verlauf. Ein Glas wird daraus erst
+   durch den Innenschattenstapel der Vorlage (`.glass`), die Glanzkante oben
+   (::before), das unscharfe Innenlicht unten (::after) und die dunkle Kante
+   links, die es vom Metall trennt. Die Umrisslinie `inset 0 0 0 1px
+   currentColor` aus motion.css bleibt im Stapel — sie trägt die Farbe des
+   Knopfes und damit Hell und Dunkel. */
+body .sp-start > .rmo-filament {
+  position: relative;
+  border-left: 1px solid #0000004d;
+  background: linear-gradient(to bottom, #ffffff26 0%, #ffffff33 50%, #00000080 100%);
+  box-shadow:
+    inset 0 0 7px -4px #fff,
+    inset 0 -4px 4px -3px #ffffff66,
+    inset 3px -6px 6px -4px #000,
+    inset 3px -4px 5px -5px #fff,
+    inset 0 0 0 1px currentColor;
+}
+body .sp-start > .rmo-filament::before {
+  content: ''; position: absolute; left: 0; top: 10%; right: 14%; height: 70%;
+  border-radius: 0 6px 0 0; pointer-events: none;
+  background: linear-gradient(to bottom, #ffffff80 0%, #ffffff00 60%);
+}
+body .sp-start > .rmo-filament::after {
+  content: ''; position: absolute; left: 0; bottom: 15%; right: 5%; height: 75%;
+  border-radius: 0 8px 8px 0; pointer-events: none;
+  box-shadow: inset -2px -4px 4px -4px #fffc; filter: blur(1px);
+}
+/* Reflexwischer, Randlicht und Körnung liegen ÜBER den Drähten. */
+.rmo-filament-wischer, .rmo-filament-rand, .rmo-filament-koernung {
+  position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+}
+/* Der WISCHER: ein um 30° gescherter Streifen, der einmal über das Glas
+   läuft. Das eigene `overflow:hidden` sitzt auf dieser Ebene und nicht auf
+   dem Glas — sonst würde der Kolben den Schein des Fadens abschneiden. */
+.rmo-filament-wischer { overflow: hidden; }
+.rmo-filament-wischer::before {
+  content: ''; position: absolute; inset: 0; width: 70%;
+  border-radius: 0 50% 50% 0;
+  background: linear-gradient(to right, #ffffff08 0%, #ffffff3d 100%);
+  transform: translateX(-115%) skewX(30deg);
+}
+/* Die KÖRNUNG im Glas. Die Vorlage gibt ihr 0,2 — auf 19 × 11 px wären die
+   verlangten 5 % schlicht nicht zu sehen, deshalb steht hier 0,16 (der
+   Grund geschrieben, nicht stillschweigend). Statisch, nie animiert. */
+.rmo-filament-koernung {
+  opacity: .16; mix-blend-mode: overlay;
+  background:
+    radial-gradient(#fff .5px, transparent .6px) 0 0 / 3px 3px,
+    radial-gradient(#000 .5px, transparent .6px) 1px 2px / 4px 5px;
+}
+/* Das LICHT AM GLASRAND: ein kreisender Verlauf, auf den Rand maskiert —
+   dasselbe Muster wie der Verlaufsrand in motion.css:539-542, nur mit
+   eigener Winkelmarke, damit sich zwei Umdrehungen nie ins Gehege kommen.
+   Es läuft EINMAL beim Einschalten und verlischt; im Leerlauf ist es aus. */
+@property --rmo-glasrand { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+.rmo-filament-rand {
+  inset: -1px; padding: 1px; opacity: 0;
+  background: conic-gradient(from var(--rmo-glasrand),
+    transparent 0 55%, var(--sp-schein) 72%, #fff 80%, transparent 92%);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+/* ── Der Lichtkegel ───────────────────────────────────────────────────────
+   Zwei Leuchten im Mischmodus `color-dodge` wie in der Vorlage (Keil nach
+   rechts + Kreis am Glas), mit ihrem verzögerten Aufblenden (1 s, 0,4 s
+   Verzögerung): die Lampe braucht einen Moment, bis sie ihre Umgebung
+   aufhellt. `z-index:-1` hält sie unter der Beschriftung — Dodge über
+   Buchstaben würde sie ausbleichen. */
+body .sp-start > .rmo-hebel-kegel {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+}
+.rmo-hebel-kegel::before, .rmo-hebel-kegel::after {
+  content: ''; position: absolute; top: 0; bottom: 0; margin: auto;
+  pointer-events: none; mix-blend-mode: color-dodge; opacity: 0;
+  transition: opacity 1s ease .4s;
+}
+.rmo-hebel-kegel::before {
+  left: 24%; width: 70%; height: 100%; border-radius: 0 50% 50% 0;
+  background: linear-gradient(to right, var(--sp-strom) 0%, transparent 100%);
+  filter: blur(9px);
+}
+.rmo-hebel-kegel::after {
+  left: 18%; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--sp-strom); filter: blur(6px);
+}
+
+/* ══ DER AN-ZUSTAND ═══════════════════════════════════════════════════════
+   `.an` UND `[data-rmo-state="an"]`: die Klasse setzt der Schaltplan beim
+   Neuaufbau, das Attribut setzt motion.ts danach. Beide zu nennen heisst,
+   dass der Wurf nicht ein Bild lang wartet. */
+/* SZENENLICHT. Die beiden vorhandenen Schatten aus motion.css:465 bleiben
+   Wort für Wort stehen; dahinter kommt der weiche Schein, der bisher
+   fehlte — eine brennende Lampe beleuchtet, was um sie herum liegt. */
+body .sp-start:is(.an, [data-rmo-state="an"]) {
+  box-shadow:
+    inset 0 0 9px #ffc77422,
+    0 0 14px #e7a34024,
+    0 0 26px 4px color-mix(in srgb, var(--sp-schein) 22%, transparent);
+}
+body .sp-start:is(.an, [data-rmo-state="an"]) > .rmo-hebel { box-shadow:
+    inset 3px -6px 6px -5px #000,
+    inset 3px -7px 5px -6px #ffffff4d,
+    inset 0 1px 0 #ffffff4d,
+    0 2px 5px -2px #0009; }
+body .sp-start:is(.an, [data-rmo-state="an"]) > .rmo-hebel::before { opacity: .6; }
+body .sp-start:is(.an, [data-rmo-state="an"]) > .rmo-hebel::after {
+  background: #fff; opacity: 1;
+  box-shadow: 1px 0 6px 1px var(--sp-schein);
+}
+body .sp-start:is(.an, [data-rmo-state="an"]) .rmo-hebel-arm {
+  transform: rotate(-32deg); box-shadow: 0 1px 3px #000c;
+}
+body .sp-start:is(.an, [data-rmo-state="an"]) .rmo-hebel-zeichen::before { opacity: 1; transform: translateY(0); }
+body .sp-start:is(.an, [data-rmo-state="an"]) .rmo-hebel-zeichen::after  { opacity: 0; transform: translateY(-3px); }
+body .sp-start:is(.an, [data-rmo-state="an"]) .rmo-hebel-kegel::before { opacity: .85; }
+body .sp-start:is(.an, [data-rmo-state="an"]) .rmo-hebel-kegel::after  { opacity: 1; }
+/* Das Glas hellt auf: der Stapel bleibt, die Umrisslinie wird warm und der
+   Kolben wirft einen Schein — die Zeile aus motion.css:466-468, ergänzt um
+   die Innenschatten, die jetzt darunter liegen. */
+body .sp-start:is(.an, [data-rmo-state="an"]) > .rmo-filament {
+  opacity: 1;
+  box-shadow:
+    inset 0 0 7px -3px #fff,
+    inset 0 -4px 4px -3px #ffffff80,
+    inset 3px -6px 6px -4px #000,
+    inset 3px -4px 5px -5px #fff,
+    inset 0 0 0 1px #ffc57280,
+    0 0 10px #e7a34035;
+}
+/* EINMAL Wischen und EINMAL am Rand entlang, wenn der Strom kommt. */
+body .sp-start:is(.an, [data-rmo-state="an"]) .rmo-filament-wischer::before {
+  animation: rmo-hebel-reflex .6s ease 1;
+}
+body .sp-start:is(.an, [data-rmo-state="an"]) .rmo-filament-rand {
+  animation: rmo-hebel-glasrand 1.4s ease 1;
+}
+/* DER FADEN ZEICHNET SICH. Die Vorlage lässt `stroke-dasharray` von
+   100 100 auf 100 0 laufen; die Wendel hier ist ein Rahmen und kein Pfad,
+   also wächst stattdessen ein `clip-path` von der Mitte nach aussen — das
+   ist dieselbe Aussage („es läuft von innen an") mit den Mitteln, die eine
+   Rahmenwendel hat.
+
+   Und hier steht der EINE Grund, warum diese Regel das Glimmen aus
+   motion.css:475-481 nennen muss: zwei `animation`-Angaben auf demselben
+   Element ersetzen einander. `rmo-gluehen` steht deshalb mit in der Zeile —
+   nicht doppelt, sondern um 0,7 s verzögert, damit der Faden erst fertig
+   gezeichnet ist und dann zu atmen anfängt. `backwards` hält ihn während
+   der Verzögerung zusammengezogen; ein `forwards` wäre falsch, es würde den
+   Schein dauerhaft beschneiden. */
+body .sp-start:is(.an, [data-rmo-state="an"]) .rmo-filament-wendel {
+  animation:
+    rmo-hebel-faden .6s ease .1s 1 backwards,
+    rmo-gluehen 2.4s ease-in-out .7s infinite;
+}
+@keyframes rmo-hebel-faden {
+  from { clip-path: inset(0 50% 0 50%); }
+  to   { clip-path: inset(0 0 0 0); }
+}
+@keyframes rmo-hebel-reflex {
+  from { transform: translateX(-115%) skewX(30deg); }
+  to   { transform: translateX(140%) skewX(30deg); }
+}
+@keyframes rmo-hebel-glasrand {
+  0%   { --rmo-glasrand: 0deg;   opacity: 0; }
+  15%  { opacity: 1; }
+  70%  { opacity: .8; }
+  100% { --rmo-glasrand: 360deg; opacity: 0; }
+}
+
+/* ── Beim Anfassen ────────────────────────────────────────────────────────
+   In der Vorlage löst der Zeiger den Wischer aus und nimmt die Lichtnaht
+   zurück. Beides endlich, beides nur mit Zeiger — am Telefon gibt es kein
+   Überfahren, und ein Wischer auf Verdacht wäre dort nur Bewegung. */
+@media (hover: hover) {
+  body .sp-start:is(:hover, :focus-visible) .rmo-filament-wischer::before {
+    animation: rmo-hebel-reflex .6s ease 1;
+  }
+  body .sp-start:hover > .rmo-hebel::after { opacity: .15; box-shadow: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Alles, was hier bewegt wurde, steht still — und zwar VOLLSTÄNDIG: die
+     Zeile mit dem Glimmen ist oben neu gesetzt worden und muss deshalb auch
+     hier neu genannt werden, sonst atmet der Faden weiter. */
+  body .sp-start,
+  body .sp-start > .rmo-hebel, body .sp-start > .rmo-hebel::before,
+  body .sp-start > .rmo-hebel::after, body .sp-start > .rmo-filament,
+  .rmo-hebel-arm, .rmo-hebel-zeichen::before, .rmo-hebel-zeichen::after,
+  .rmo-hebel-kegel::before, .rmo-hebel-kegel::after,
+  .rmo-filament-wischer::before, .rmo-filament-rand,
+  body .sp-start:is(.an, [data-rmo-state="an"]) .rmo-filament-wendel,
+  body .sp-start:is(.an, [data-rmo-state="an"]) .rmo-filament-wischer::before,
+  body .sp-start:is(.an, [data-rmo-state="an"]) .rmo-filament-rand {
+    animation: none !important; transition: none !important;
+  }
+  /* Das Anheben beim Anfassen fällt weg. Die Stellung des Hebels bleibt:
+     sie ist keine Bewegung, sondern die Auskunft, ob Strom fliesst — sie
+     wechselt nur ohne Weg dorthin. Und das Randlicht bleibt unsichtbar,
+     weil es ohne seinen Umlauf nur ein heller Fleck wäre. */
+  body .sp-start:hover { transform: none; }
+  .rmo-filament-rand { opacity: 0; }
+}
+
+/* ==== Block 13 — Mechanischer Dreierblock (E535) ==== */
+/* Vorlage 4796–5397: die drei Transporttasten des Zeitmessers
+ * (`src/bereiche/wissen/zeitmesser.ts`, Reihe `.zm-reihe.rmo-transport`).
+ * Von achtzehn Wirkungen war EINE gebaut — der eingelassene Druckweg.
+ * Hier kommen dazu: Lampe, Reflex, Wischmaske, Zeichen, Druckfleck,
+ * Anheben, Einrasten, Fuge, Rahmenreflex und Rauschen.
+ *
+ * ZWEI DINGE VORWEG, sonst liest sich der Rest wie Willkür:
+ *
+ * 1. `bausteine.css` wird NACH `motion.css` geladen (index.html:68/69).
+ *    `.zm-reihe{display:flex}` (6672) schlägt deshalb `.rmo-transport
+ *    {display:grid}` bei gleichem Gewicht, und `.zm-reihe .rb
+ *    {min-height:34px}` (6673, ZWEI Klassen) schlägt `.rmo-transport
+ *    button{min-height:44px}` (eine Klasse) sogar unabhängig von der
+ *    Reihenfolge. Die Tasten sind heute 34 px hoch — unter dem Hauptweg-Mass
+ *    aus §37. Jede Regel hier trägt darum `body` und dort, wo es nötig ist,
+ *    `button.rb`: nur so gewinnt sie gegen `.rb.haupt` (zwei Klassen,
+ *    grund.css:376) und gegen `.zm-reihe .rb`. Trefferflächen werden
+ *    dadurch grösser, nie kleiner.
+ *
+ * 2. KEINE Schleife im Leerlauf (E528, test494). Wischer, Drehung,
+ *    Zeichnen und Rahmenreflex laufen je EINMAL, ausgelöst durch einen
+ *    echten Zustandswechsel oder :hover. Nur die Lampe der laufenden Uhr
+ *    atmet dauerhaft — „läuft" IST der Aktivitätszustand, und 4 s Periode
+ *    ist das, was der Auftrag dafür zulässt.
+ */
+
+/* --- Die Wanne ----------------------------------------------------------
+ * Pillenform statt 14-px-Kasten (Vorlage: radius 100px), heller Oberrand,
+ * dunkle Unterkante. Die Vorlage hebt das ganze Gehäuse um 10 px und
+ * skaliert es; bei einem 280 px breiten Schwebefeld wäre das ein Sprung —
+ * hier sind es 2 px und ein tieferer Schlagschatten.
+ */
+body .rmo-transport {
+  --rmo-tr-elastic: cubic-bezier(.5, 2, .3, .8);
+  --rmo-tr-fuge: 0 0 #0000;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3px;
+  padding: 6px;
+  border: 1px solid var(--line-stark);
+  border-radius: 24px;
+  background: linear-gradient(180deg, var(--bg-card), var(--bg-hover));
+  box-shadow:
+    inset 0 2px 5px #0002,          /* der vorhandene Einsatz bleibt */
+    inset 0 1px 0 #ffffff30,        /* Rahmenreflex: helle Oberkante */
+    inset 0 -1px 0 #00000026,       /* dunkle Unterkante             */
+    0 1px 0 #ffffff14;
+  transition: transform .32s var(--rmo-tr-elastic), box-shadow .32s var(--ease);
+}
+
+/* --- Die Tastenkappen ---------------------------------------------------
+ * Die Doppelung im Selektor ist kein Versehen: `button.rb` gibt der Regel
+ * zwei Klassen und damit das Gewicht gegen `.rb.haupt` (Fläche und Schein
+ * der Haupttaste) und gegen `.zm-reihe .rb` (Höhe).
+ */
+body .rmo-transport button,
+body .rmo-transport button.rb {
+  position: relative;
+  isolation: isolate;                /* ohne eigenen Stapel bliebe die Kappe
+                                        (z-index:-1) hinter der Fläche */
+  min-height: 44px;                  /* §37, Hauptweg */
+  min-width: 0;
+  padding: 8px 5px;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 1px 0 #ffffff60,
+    0 3px 0 #0003,                   /* der Sockel, auf dem die Taste sitzt */
+    var(--rmo-tr-fuge);
+  transition:
+    transform .18s var(--rmo-tr-elastic),
+    box-shadow .18s var(--ease),
+    opacity .25s var(--ease);
+}
+/* Aussen rund, innen eckig: so liest sich der Dreierblock als EIN Gerät,
+   ohne dass eine Trefferfläche wandert. Die Starttaste bekommt die
+   ungleiche Ecke der Vorlage-Play-Taste (radius 100px 5px 100px 5px). */
+body .rmo-transport button:first-child { border-radius: 19px 6px 19px 6px; }
+body .rmo-transport button:last-child  { border-radius: 6px 19px 6px 19px; }
+
+/* Die Fuge: 1 px dunkel zwischen zwei Tasten, 1 px hell daneben. Sie liegt
+   in der 3-px-Lücke und wird als Variable geführt, damit jeder spätere
+   Schatten (Hover, Einrasten) sie weiterreicht, statt sie zu löschen. */
+body .rmo-transport button + button { --rmo-tr-fuge: -2px 0 0 #00000038, -3px 0 0 #ffffff1c; }
+
+/* --- Die Kappe: alle Lichtschichten einer Taste -------------------------
+ * Ein einziges Kind je Taste, absolut und ohne Zeigerfang. `z-index:-1`
+ * legt es zwischen Fläche und Beschriftung — die Schrift bleibt oben und
+ * ungetrübt lesbar (§55.1: ein halb verdeckter Text ist ein falscher Text).
+ */
+body .rmo-transport .rmo-tr-kappe {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  transition: box-shadow .3s var(--ease);
+}
+/* Reflex: der schräge helle Streifen oben auf jeder Taste. Statisch. */
+body .rmo-transport .rmo-tr-reflex {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 52%;
+  background: linear-gradient(116deg, #ffffff00 16%, #ffffff3d 44%, #ffffff12 60%, #ffffff00 76%);
+}
+/* Wischmaske: läuft EINMAL, wenn die Taste einrastet oder angefasst wird. */
+body .rmo-transport .rmo-tr-wisch {
+  position: absolute;
+  inset: -25% -60%;
+  background: linear-gradient(90deg, #ffffff00, #ffffff26 42%, #ffffff73 50%, #ffffff1a 62%, #ffffff00);
+  transform: translateX(-100%) skewX(-30deg);
+  opacity: 0;
+}
+/* Druckfleck: ein weicher radialer Lichtfleck genau dort, wo der Finger
+   aufsetzt. --rmo-px/--rmo-py setzt der Schnipsel bei pointerdown; ohne
+   Zeiger (Tastatur) sitzt er mittig. */
+body .rmo-transport .rmo-tr-fleck {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(26px circle at var(--rmo-px, 50%) var(--rmo-py, 50%), #ffffff66, #ffffff00 70%);
+  -webkit-mask-image: radial-gradient(120% 120% at 50% 50%, #000 52%, transparent);
+          mask-image: radial-gradient(120% 120% at 50% 50%, #000 52%, transparent);
+  transition: opacity .22s var(--ease);
+}
+body .rmo-transport button:active:not(:disabled) .rmo-tr-fleck { opacity: 1; transition-duration: .05s; }
+/* Der vorhandene Druckweg (motion.css:695) bleibt, wie er ist — er verlöre
+   nur die Fuge, weil er die ganze Schattenliste ersetzt. Hier steht sie
+   wieder mit drin, sonst springt die Trennlinie beim Drücken weg. */
+body .rmo-transport button:active:not(:disabled),
+body .rmo-transport button.rb:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: inset 0 2px 4px #0003, var(--rmo-tr-fuge);
+}
+
+/* --- Das Zeichen --------------------------------------------------------
+ * Dreieck, zwei Balken, Quadrat — als gezeichnete Linien, nicht als
+ * Schrift. Es sitzt in der oberen Ecke und NICHT in der Textzeile: bei
+ * 77 px Tastenbreite hätte „Beenden" neben einem Symbol keinen Platz mehr,
+ * und ein abgeschnittenes Wort ist schlimmer als ein kleines Zeichen.
+ */
+body .rmo-transport .rmo-tr-sym {
+  position: absolute;
+  top: 5px;
+  left: 7px;
+  width: 11px;
+  height: 11px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: .62;
+}
+body .rmo-transport .rmo-tr-sym path { stroke-dasharray: 34; stroke-dashoffset: 0; }
+/* Sich zeichnende Linien — einmal, beim ersten Sichtbarwerden. Ohne die
+   Animation stehen die Linien fertig da (dashoffset 0), damit „still"
+   niemals „leer" heisst. */
+body .rmo-transport[data-rmo-visible="true"] .rmo-tr-sym path {
+  animation: rmo-tr-zeichnen .7s var(--ease) 1;
+}
+@keyframes rmo-tr-zeichnen { from { stroke-dashoffset: 34; } }
+
+/* --- Die Lampe ----------------------------------------------------------
+ * Drei Zustände wie in der Vorlage, nur mit Redions Marken statt #51ffe2.
+ * Sie ist Beiwerk: was die Taste tut, steht als Wort darauf, und ob sie
+ * geht, sagt `disabled` — die Farbe trägt keine eigene Auskunft (§38).
+ */
+body [data-rmo~="transport"] .rmo-led {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text-faint) 50%, transparent);
+  box-shadow: inset 0 2px 1px -1px #ffffffb3, 0 0 0 1px #00000038;
+  transition: background .4s linear, box-shadow .4s linear;
+}
+/* Bereit: gedimmtes Grün an jeder Taste, die sich drücken lässt. */
+body [data-rmo~="transport"] button:not(:disabled) .rmo-led {
+  background: color-mix(in srgb, var(--erfolg) 62%, transparent);
+  box-shadow: inset 0 2px 1px -1px #ffffffb3, 0 0 0 1px #00000038,
+              0 0 4px 1px color-mix(in srgb, var(--erfolg) 28%, transparent);
+}
+/* Beenden ist rot, sobald es etwas zu beenden gibt. */
+body [data-rmo~="transport"] :is([data-rmo-taste="stopp"], [data-zm="stopp"]):not(:disabled) .rmo-led {
+  background: color-mix(in srgb, var(--gefahr) 62%, transparent);
+  box-shadow: inset 0 2px 1px -1px #ffffffb3, 0 0 0 1px #00000038,
+              0 0 4px 1px color-mix(in srgb, var(--gefahr) 28%, transparent);
+}
+/* Aktiv: die Uhr läuft. Das ist die EINZIGE Dauerbewegung des Blocks. */
+body [data-rmo~="transport"][data-rmo-state="laeuft"] :is([data-rmo-taste="start"], [data-zm="stoppuhr"]) .rmo-led {
+  background: var(--erfolg);
+  box-shadow: inset 0 2px 1px -1px #fff, 0 0 0 1px #00000038,
+              0 0 6px 1px color-mix(in srgb, var(--erfolg) 62%, transparent);
+  animation: rmo-tr-atem 4s ease-in-out infinite;
+}
+/* Angehalten: Bernstein, und zwar ohne Atem — angehalten ist keine Arbeit. */
+body [data-rmo~="transport"][data-rmo-state="pausiert"] :is([data-rmo-taste="start"], [data-zm="stoppuhr"]) .rmo-led {
+  background: var(--warnung);
+  box-shadow: inset 0 2px 1px -1px #fff, 0 0 0 1px #00000038,
+              0 0 6px 1px color-mix(in srgb, var(--warnung) 55%, transparent);
+}
+@keyframes rmo-tr-atem { 50% { opacity: .5; } }
+
+/* --- Einrasten ----------------------------------------------------------
+ * Die Starttaste bleibt gedrückt, solange die Uhr läuft oder angehalten
+ * ist — genau wie das `input:checked` der Vorlage. Sie ist dabei
+ * `disabled`, und `.rmo-transport button:disabled{opacity:.45}` würde sie
+ * fast unsichtbar machen. Hier steht .7: eingerastet heisst „im Dienst",
+ * nicht „weg". Dass sie nicht zu drücken ist, sagt die versenkte Form.
+ */
+body .rmo-transport:is([data-rmo-state="laeuft"], [data-rmo-state="pausiert"])
+  :is([data-rmo-taste="start"], [data-zm="stoppuhr"]) {
+  transform: translateY(2px);
+  opacity: .7;
+  box-shadow:
+    inset 0 2px 6px -1px #00000073,
+    inset 0 -1px 0 #ffffff2e,
+    0 1px 0 #0003,
+    var(--rmo-tr-fuge);
+}
+/* Das Glühen der Haupttaste: im Leerlauf im Akzentton, eingerastet in
+   Grün — die Vorlage schlägt an derselben Stelle von Blau auf Grün um. */
+body .rmo-transport :is([data-rmo-taste="start"], [data-zm="stoppuhr"]) .rmo-tr-kappe {
+  box-shadow: inset 0 0 12px 2px color-mix(in srgb, var(--accent) 26%, transparent),
+              inset 0 -8px 18px 6px #00000026;
+}
+body .rmo-transport :is([data-rmo-taste="start"], [data-zm="stoppuhr"]) .rmo-tr-sym {
+  opacity: .85;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--accent) 65%, transparent));
+}
+body .rmo-transport[data-rmo-state="laeuft"] :is([data-rmo-taste="start"], [data-zm="stoppuhr"]) .rmo-tr-kappe {
+  box-shadow: inset 0 0 14px 3px color-mix(in srgb, var(--erfolg) 32%, transparent),
+              inset 0 -8px 18px 6px #00000026;
+}
+body .rmo-transport[data-rmo-state="laeuft"] :is([data-rmo-taste="start"], [data-zm="stoppuhr"]) .rmo-tr-sym {
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--erfolg) 72%, transparent));
+}
+/* Wischmaske und Drehung beim Einrasten: das Feld wird bei jedem echten
+   Zustandswechsel neu gezeichnet (zeitmesser.ts:229), die Taste ist also
+   ein frischer Knoten — die Animation läuft dadurch genau einmal, beim
+   Start, und nie im Leerlauf. */
+body .rmo-transport[data-rmo-state="laeuft"]
+  :is([data-rmo-taste="start"], [data-zm="stoppuhr"]) .rmo-tr-wisch {
+  animation: rmo-tr-wisch .85s ease-out 1;
+}
+body .rmo-transport[data-rmo-state="laeuft"]
+  :is([data-rmo-taste="start"], [data-zm="stoppuhr"]) .rmo-tr-sym {
+  animation: rmo-tr-dreh .9s var(--rmo-tr-elastic) 1;
+}
+@keyframes rmo-tr-wisch {
+  from { transform: translateX(-100%) skewX(-30deg); opacity: .9; }
+  to   { transform: translateX(100%)  skewX(-30deg); opacity: 0; }
+}
+@keyframes rmo-tr-dreh { from { transform: rotate(-360deg); } }
+
+/* --- Rauschen und Rahmenreflex -----------------------------------------
+ * Beides liegt ÜBER den Tasten (Vorlage: .noise z-index 1, .frame-mask
+ * z-index 20) und lässt jeden Zeiger durch. Kein Bild, keine externe
+ * Datei: zwei gekreuzte Streifenraster ergeben bei 5 % dasselbe Korn und
+ * funktionieren offline und in der Einzeldatei (§29).
+ */
+body .rmo-transport > .rmo-tr-wanne {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+body .rmo-transport .rmo-tr-rauschen {
+  position: absolute;
+  inset: 0;
+  opacity: .05;
+  background-image:
+    repeating-linear-gradient(37deg, #0000 0 1px, #000 1px 2px),
+    repeating-linear-gradient(113deg, #0000 0 1px, #fff 1px 2px);
+  -webkit-mask-image: linear-gradient(transparent 4%, #000 26%, #000 74%, transparent 96%);
+          mask-image: linear-gradient(transparent 4%, #000 26%, #000 74%, transparent 96%);
+}
+body .rmo-transport .rmo-tr-glanz {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -42%;
+  width: 34%;
+  opacity: 0;
+  background: linear-gradient(90deg, #ffffff00, #ffffff2e, #ffffff00);
+  transform: skewX(-18deg);
+}
+@keyframes rmo-tr-glanz {
+  from { transform: translateX(0)    skewX(-18deg); opacity: .22; }
+  to   { transform: translateX(430%) skewX(-18deg); opacity: .22; }
+}
+
+/* --- Was nur ein Zeiger auslöst ----------------------------------------
+ * Am Telefon gibt es kein Überfahren; dort bliebe eine Hover-Wirkung
+ * entweder wirkungslos oder klebte nach dem Tippen fest (§37).
+ */
+@media (hover: hover) {
+  body .rmo-transport:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 2px 5px #0002,
+      inset 0 1px 0 #ffffff3d,
+      inset 0 -1px 0 #00000026,
+      0 10px 20px -7px #00000047;
+  }
+  /* Die Taste hebt sich, die Schattenfuge darunter öffnet sich mit. */
+  /* `:not(:active)` ist kein Zierat: ohne es gewinnt das Anheben gegen den
+     eingelassenen Druckweg, und die Taste führe beim Drücken nach OBEN. */
+  body .rmo-transport button:hover:not(:disabled):not(:active),
+  body .rmo-transport button.rb:hover:not(:disabled):not(:active) {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 1px 0 #ffffff73,
+      0 5px 0 #0003,
+      0 9px 12px -7px #00000059,
+      var(--rmo-tr-fuge);
+  }
+  body .rmo-transport button:hover:not(:disabled) .rmo-tr-wisch {
+    animation: rmo-tr-wisch .85s ease-out 1;
+  }
+  body .rmo-transport button:hover:not(:disabled) .rmo-tr-sym { opacity: .95; }
+  /* Beenden schlägt beim Überfahren auf helles Rot um (Vorlage: button-3). */
+  body [data-rmo~="transport"] :is([data-rmo-taste="stopp"], [data-zm="stopp"]):hover:not(:disabled) .rmo-led {
+    background: var(--gefahr);
+    box-shadow: inset 0 2px 1px -1px #fff, 0 0 0 1px #00000038,
+                0 0 6px 1px color-mix(in srgb, var(--gefahr) 60%, transparent);
+  }
+  /* Der Lichtstreif über den Rahmen, wenn der Zeiger den Block VERLÄSST.
+     Läuft einmal je Verlassen — und einmal beim Öffnen des Feldes, weil
+     „nicht überfahren" da schon gilt. Das ist die Vorlage, 1,1 s. */
+  body .rmo-transport:not(:hover) > .rmo-tr-wanne > .rmo-tr-glanz {
+    animation: rmo-tr-glanz 1.1s ease 1;
+  }
+}
+
+/* --- Ruhig und reduziert ------------------------------------------------
+ * Der Bewegungsschalter der App deckt `[data-rmo] *` bereits ab
+ * (motion.css:762); was er nicht abschaltet, ist das Anheben — das steht
+ * hier. Die eingerastete Versenkung bleibt in BEIDEN Fällen stehen: sie
+ * ist keine Bewegung, sondern die Form eines Zustands.
+ */
+body[data-bewegung="ruhig"] .rmo-transport:hover,
+body[data-bewegung="ruhig"] .rmo-transport button:hover:not(:disabled) { transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  body .rmo-transport, body .rmo-transport *,
+  body .rmo-transport::before, body .rmo-transport::after,
+  body .rmo-transport *::before, body .rmo-transport *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  body .rmo-transport:hover,
+  body .rmo-transport button:hover:not(:disabled),
+  body .rmo-transport button.rb:hover:not(:disabled) { transform: none; }
+  body .rmo-transport .rmo-tr-sym path { stroke-dashoffset: 0; }
+  body .rmo-transport .rmo-tr-glanz { opacity: 0; }
+}
+
+/* ======================================================================
+   E535 — die offenen Wirkungen aus Redurs Vorlage, Block fuer Block.
+   Jeder Block steht als eigenes Fragment hier hinten: so kann eine
+   spaetere Regel eine aeltere gleicher Staerke ueberschreiben, ohne dass
+   zehn Schreiber in dieselbe Stelle der Datei greifen muessten.
+   ====================================================================== */
+
+/* ==== Block 01 — 3D-Ordnerkarte (E535) ==== */
+/* DER GRÖSSTE TEIL DIESES BLOCKS STEHT NICHT HIER, sondern in
+   `bausteine.css` bei `.ru-fach*` — dort ist die Ordnerkarte zu Hause, sie
+   ist ein Baustein und keine Dekoration, die über ein `data-rmo` gehängt
+   wird. Der Auftritt der Zähler-Pille, die wachsende Suchzeile mit Lupe,
+   das Milchglas-Etikett, der Schlagschatten unter der Rückwand, das
+   Dateizeichen, der Zähler-Hover und der Hinweispfeil sind alle dort.
+
+   HIER STEHT NUR, was die ZWEITE Stelle derselben Vorlagenfamilie braucht:
+   der Blätterstapel `[data-rmo~="folder"]` am Regaldeckel. Ihm fehlten
+   dieselben zwei Kleinigkeiten wie der Karte — der Schlagschatten, der den
+   Stapel im Raum stehen lässt, und das Dateizeichen auf jedem Blatt, das
+   beim Überfahren aufhellt.
+
+   Warum der Schatten auf `.rmo-folder-stack` sitzt und nicht auf
+   `.bib-deckel-blatt`: ein `filter` erzeugt einen neuen Bezugsrahmen und
+   flacht 3D darunter ab, und genau dort dreht sich `::before` um
+   `rotateX(-32deg) translateZ(6px)` (motion.css:112). Der Stapel selbst
+   enthält kein 3D — dort kostet der Filter nichts.
+
+   Keine Bewegung im Leerlauf (E528): Der Schatten steht still, das Zeichen
+   blendet nur beim Überfahren und beim Tastenfokus auf, einmal und
+   endlich. */
+
+.rmo-folder-stack { filter: drop-shadow(0 10px 20px #00000030); }
+
+/* Ein Blatt mit umgeknickter Ecke, 9 × 11 px — gezeichnet aus Rand und
+   Ecke statt aus einem SVG, weil es hier fünfmal je Deckel vorkommt und
+   nichts trägt ausser sich selbst. Es sagt nichts, was nicht ohnehin
+   dasteht (die Vorschau daneben nennt die echten Namen), deshalb
+   `aria-hidden` im Markup und `pointer-events:none` hier: der ganze Deckel
+   ist die Trefferfläche und bleibt es (§37, §38). */
+.rmo-folder-icon {
+  position: absolute; top: 6px; right: 6px; width: 9px; height: 11px;
+  border: 1px solid #50426366; border-radius: 2px;
+  background: #ffffff80; opacity: .45; pointer-events: none;
+  transition: opacity var(--motion-fast) var(--ease);
+}
+.rmo-folder-icon::after {
+  content: ''; position: absolute; top: -1px; right: -1px; width: 4px; height: 4px;
+  border-left: 1px solid #50426366; border-bottom: 1px solid #50426366;
+  background: #ffffffcc; border-bottom-left-radius: 2px;
+}
+[data-rmo~="folder"]:is(:hover, :focus-visible, :active) .rmo-folder-icon { opacity: .95; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Das Zeichen bleibt, es blendet nur nicht mehr. Der Schatten ist keine
+     Bewegung und bleibt, wie er ist. */
+  .rmo-folder-icon { transition: none; }
+}
+
+/* NACHGEZOGEN NACH DEM ERSTEN BILD (§55.3). Die Masse der Vorlage sind
+   PROZENTE der Karte, und Redurs Karte ist 288 × 384 px. Die Elektro-
+   Fachkacheln sind aber breite ZEILEN — gemessen 930 × 80 px. Aus „64 %
+   Schlitz" wurde damit ein 595 px langer weisser Streifen quer durch die
+   Zeile, und aus der Abdunklung ein dunkler Kasten über der Beschriftung.
+   Kein Prüflauf konnte das sehen; das Bild schon.
+   Jede Breite ist deshalb gedeckelt: `min(Prozent, Pixel)`. Auf einer
+   schmalen Kachel gilt weiter der Prozentwert der Vorlage, auf einer
+   breiten Zeile bleibt die Lampe eine Lampe statt ein Balken. */
+/* ==== Block 03 — Lichtkarte und Kippschalter (E535) ==== */
+/* Aus dem Vorlagenblock (500–1096) war an dieser Stelle NICHTS gebaut: der
+   Bestand fand „kaum" und meinte damit den Schimmer, der über die Kachel
+   wandert — einen Reflex, den die Vorlage hier gar nicht hat. Schlitz,
+   Kegel, Abdunklung, Randlicht und das aufhellende Symbol hatten weder
+   Element noch Regel.
+
+   SIE KOMMEN AUF DIE ELEKTRO-FACHKACHEL `.els-kachel`, und nur dorthin.
+   `.stat-karte.lw-metrik` und `.pf-karte` tragen dieselbe Wirkungs-ID
+   (`motion.ts:11`), bekommen aber KEIN Lampenmarkup: die eine ist eine
+   Kennzahl, die andere eine Listenzeile mit Trennlinie. Eine Lampe darin
+   wäre ein Lichtkegel über einer Zahl — hübsch und ohne Bedeutung. Die
+   Auswahl trifft der TS-Schnipsel mit `element.matches('.els-kachel')`,
+   nicht diese Datei; die Regeln hier greifen zusätzlich nur, wo das Markup
+   wirklich liegt.
+
+   DIE MASSE SIND HERUNTERGERECHNET, NICHT ABGESCHRIEBEN. Redurs Karte ist
+   18 × 24 rem (288 × 384 px), eine Fachkachel ist rund 210 × 80 px. Alle
+   Höhen stehen deshalb in Prozent der Kachel, nicht in `rem`; die Unschärfen
+   sind im gleichen Verhältnis geteilt (1 rem auf 384 px ≈ 7 px auf 80 px).
+
+   AN-ZUSTAND ist `:hover`, `:focus-visible`, `:focus-within` und die
+   einmalige Wiedergabe `[data-rmo-play="light"]`. Im Leerlauf ist die Lampe
+   AUS und nichts läuft (E528): die Zustände sind Übergänge, die einzige
+   Kennbild-Animation ist das Zünden und läuft EINMAL.
+
+   Warum `body` davor: `motion.css` wird in `index.html:68` VOR
+   `bausteine.css:69` geladen. `.els-kachel:hover` dort hat dieselbe Stärke
+   wie `.els-kachel:is(:hover,…)` hier und gewinnt allein durch die
+   Reihenfolge — dieselbe Lehre wie bei E534 und E535. */
+
+/* ----------------------------------------------------------------------
+   1 — Die Bühne.
+
+   `.els-kachel` bringt `position:relative` und `overflow:hidden` schon mit
+   (motion.css, Abschnitt 3+10). Die Lampe liegt darin als eigene Schicht
+   auf z-Ebene 0 — und weil ein positioniertes Kind IMMER über dem
+   laufenden Text malt, bekommt der Inhalt der Kachel im Gegenzug Ebene 1.
+   Ohne diese zwei Zeilen läge der Lichtkegel ÜBER der Beschriftung. */
+body .els-kachel[data-rmo~="light"] > .rmo-lampe {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  perspective: 220px; transform-style: preserve-3d;
+  /* Im Leerlauf ist die Lampe nicht nur aus, sie tritt auch zurück: auf
+     210 px Breite kreuzt der Schlitz die Beschriftung, und ein satter
+     dunkler Strich quer durch eine Zeile liest sich als Durchstreichung.
+     Gedämpft bleibt er eine Fuge im Gehäuse. */
+  opacity: .38; transition: opacity .4s var(--ease, ease);
+}
+body .els-kachel[data-rmo~="light"] > :not(.rmo-lampe) { position: relative; z-index: 1; }
+
+/* ----------------------------------------------------------------------
+   2 — Der Lichtschlitz.
+
+   `rotateX(-76deg)` staucht die 9 px auf gut 2 px: was man sieht, ist eine
+   Kante, keine Fläche — genau das, was ein Schlitz in einem Gehäuse ist. */
+body .els-kachel[data-rmo~="light"] .rmo-lampe-schlitz {
+  position: absolute; left: 0; right: 0; top: 0; bottom: 0; margin: auto;
+  width: min(64%, 132px); height: 9px; border-radius: 2px;
+  background: #121212; box-shadow: 0 0 4px 0 #fff0;
+  transform: rotateX(-76deg);
+  transition: background .4s var(--ease, ease), box-shadow .4s var(--ease, ease);
+}
+
+/* ----------------------------------------------------------------------
+   3 — Der Lumen-Kegel aus drei Schichten.
+
+   `.min` ist die scharfe Zunge unmittelbar über dem Schlitz, `.mid` der
+   grosse weiche Körper, `.hi` die gegenläufig gekippte Haube. Erst die
+   drei zusammen sehen aus wie Licht; jede einzelne sieht aus wie ein
+   Verlauf. Der ganze Kegel blendet von 0 auf .5 auf. */
+body .els-kachel[data-rmo~="light"] .rmo-lampe-kegel {
+  position: absolute; inset: 0; margin: auto; pointer-events: none;
+  perspective: 220px; opacity: 0; transition: opacity .4s var(--ease, ease);
+}
+body .els-kachel[data-rmo~="light"] .rmo-lampe-kegel > * {
+  position: absolute; left: 0; right: 0; top: 0; margin: auto;
+  background: linear-gradient(#fff0, #fffa);
+}
+body .els-kachel[data-rmo~="light"] .rmo-lampe-min {
+  width: min(70%, 140px); height: 26%; bottom: 16%; transform: rotateX(-42deg); opacity: .4;
+}
+body .els-kachel[data-rmo~="light"] .rmo-lampe-mid {
+  width: min(74%, 150px); height: 62%; bottom: 40%; transform: rotateX(-42deg);
+  filter: blur(7px); opacity: .8; border-radius: 100% 100% 0 0;
+}
+body .els-kachel[data-rmo~="light"] .rmo-lampe-hi {
+  width: min(50%, 104px); height: 62%; bottom: 52%; transform: rotateX(22deg);
+  filter: blur(7px); opacity: .6; border-radius: 100% 100% 0 0;
+}
+
+/* ----------------------------------------------------------------------
+   4 — Die Abdunklung: zwei Schattenbögen und die zwei Kegelwände.
+
+   Sie ist der Grund, warum das Licht wie Licht wirkt. Ohne sie wird die
+   Kachel beim Einschalten nur heller; mit ihr wird sie UNTERHALB des
+   Kegels dunkler, und das Auge liest daraus eine Lampe. */
+body .els-kachel[data-rmo~="light"] .rmo-lampe-dunkel {
+  position: absolute; inset: 0; margin: auto; pointer-events: none;
+  perspective: 220px; opacity: .22; transition: opacity .4s var(--ease, ease);
+}
+body .els-kachel[data-rmo~="light"] .rmo-lampe-dunkel > * {
+  position: absolute; top: 0; margin: auto; border-radius: 0 0 100% 100%;
+  transition: opacity .4s var(--ease, ease);
+}
+body .els-kachel[data-rmo~="light"] .rmo-lampe-sl {
+  left: 0; right: 0; bottom: 0; top: 40%; width: min(64%, 132px); height: 46%;
+  background: linear-gradient(#000, #0000); filter: blur(2px);
+  opacity: .1; transform: rotateX(-22deg);
+}
+body .els-kachel[data-rmo~="light"] .rmo-lampe-ll {
+  left: 0; right: 0; bottom: 0; top: 48%; width: min(62%, 128px); height: 46%;
+  background: linear-gradient(#000a, #0000); filter: blur(6px);
+  opacity: .4; transform: rotateX(22deg);
+}
+/* Die schrägen Wände: `skewY` kippt die zwei schmalen Streifen so, dass
+   sie die Flanken des Kegels nachzeichnen. 64 % Gegenkante heisst: der
+   Streifen sitzt dort, wo der Schlitz endet. */
+body .els-kachel[data-rmo~="light"] .rmo-lampe-slt,
+body .els-kachel[data-rmo~="light"] .rmo-lampe-srt {
+  width: min(4%, 9px); height: 34%; top: 18%; bottom: 0;
+  background: linear-gradient(#0005, #0000); opacity: .6;
+}
+body .els-kachel[data-rmo~="light"] .rmo-lampe-slt { left: 0; right: 64%; transform: skewY(42deg); }
+body .els-kachel[data-rmo~="light"] .rmo-lampe-srt { right: 0; left: 64%; transform: skewY(-42deg); }
+
+/* ----------------------------------------------------------------------
+   5 — DER AN-ZUSTAND.
+
+   Vier Auslöser, eine Wirkung: Maus, Tastenfokus, Fokus im Inneren und die
+   einmalige Wiedergabe über `data-rmo-play`. Am Telefon gibt es kein
+   `:hover` — dort bleibt der Fokus der Weg, und die Kachel ist ein Knopf,
+   der ihn beim Antippen bekommt. */
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) > .rmo-lampe { opacity: 1; }
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .rmo-lampe-schlitz {
+  background: #fff; box-shadow: 0 0 4px 0 #fff;
+}
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .rmo-lampe-kegel { opacity: .5; }
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .rmo-lampe-dunkel { opacity: .8; }
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .rmo-lampe-sl { opacity: .2; }
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .rmo-lampe-ll { opacity: 1; }
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .rmo-lampe-slt,
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .rmo-lampe-srt { opacity: 1; }
+
+/* ----------------------------------------------------------------------
+   6 — Der Rand leuchtet, sobald die Lampe an ist.
+
+   Vier Schichten wie in der Vorlage, auf die Kachelgrösse gerechnet: helle
+   Lichtkante OBEN innen (#fffa), tiefer Innenschatten UNTEN, ein schmaler
+   Aussenschein nach oben, und der vorhandene Hover-Schatten der Kachel
+   bleibt als letzte Schicht erhalten — er wird ergänzt, nicht ersetzt. */
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) {
+  box-shadow:
+    inset 0 10px 2px -10px #fffa,
+    inset 0 -34px 26px -26px #000a,
+    0 -10px 3px -10px #fff6,
+    0 12px 26px #00000018;
+}
+
+/* ----------------------------------------------------------------------
+   7 — Das Symbol hellt auf und wirft seinen Schatten nach OBEN.
+
+   Nach oben, weil die Lichtquelle unter ihm liegt — das ist der ganze
+   Trick der Vorlage. 1.2 rem der grossen Karte sind auf der Kachel 8 px. */
+body .els-kachel[data-rmo~="light"] .els-zeichen {
+  filter: drop-shadow(0 -8px 2px #0000) brightness(1);
+  transition: filter .4s var(--ease, ease);
+}
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .els-zeichen {
+  filter: drop-shadow(0 -8px 2px #0003) brightness(1.64);
+}
+
+/* ----------------------------------------------------------------------
+   8 — Das Zünden: EINMAL, und es räumt hinter sich auf.
+
+   `play()` setzt `data-rmo-play` und nimmt es erst beim `animationend`
+   wieder weg (`motion.ts`). Eine Wirkung aus lauter Übergängen hätte das
+   Merkmal für immer stehen lassen — die Lampe wäre nach einem Antippen nie
+   wieder ausgegangen. Deshalb hat das Zünden eine echte, EINMALIGE
+   Kennbild-Folge: Anschlag, kurzes Zucken, ruhiges Brennen. */
+@keyframes rmo-lampe-zuend {
+  0%   { opacity: .12; }
+  14%  { opacity: .58; }
+  22%  { opacity: .18; }
+  100% { opacity: .5; }
+}
+body .els-kachel[data-rmo~="light"][data-rmo-play="light"] .rmo-lampe-kegel {
+  animation: rmo-lampe-zuend 1.3s var(--ease, ease) both;
+}
+
+/* ----------------------------------------------------------------------
+   9 — Hellmodus: dieselbe Lampe, leiser.
+
+   Schwarze Bögen auf #f7f7f5 sind kein Schatten mehr, sondern ein Fleck.
+   Der Kegel darf bleiben (weisses Licht auf hellem Grund ist schwach, aber
+   nicht falsch), die Abdunklung geht auf ein Drittel zurück. */
+html[data-theme="light"] body .els-kachel[data-rmo~="light"] .rmo-lampe-dunkel { opacity: .09; }
+html[data-theme="light"] body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .rmo-lampe-dunkel { opacity: .3; }
+
+/* ----------------------------------------------------------------------
+   10 — Weniger Bewegung: die Lampe bleibt, der Weg dorthin verschwindet.
+
+   Kein `display:none`. Wer weniger Bewegung eingestellt hat, will keine
+   Überblendung — er will trotzdem sehen, welche Kachel unter dem Zeiger
+   liegt. Also springt der Zustand, statt zu wandern. */
+@media (prefers-reduced-motion: reduce) {
+  body .els-kachel[data-rmo~="light"][data-rmo-play="light"] .rmo-lampe-kegel { animation: none; }
+  body .els-kachel[data-rmo~="light"] > .rmo-lampe,
+  body .els-kachel[data-rmo~="light"] .rmo-lampe-schlitz,
+  body .els-kachel[data-rmo~="light"] .rmo-lampe-kegel,
+  body .els-kachel[data-rmo~="light"] .rmo-lampe-dunkel,
+  body .els-kachel[data-rmo~="light"] .rmo-lampe-dunkel > *,
+  body .els-kachel[data-rmo~="light"] .els-zeichen { transition: none !important; }
+}
+
+/* ==== Block 05 — Flüssiger Polygonlader (E537) ==== */
+/* Die Blase `.rmo-liquid` gab es schon, aber sie war nicht das, was der
+   Block ist: zwei gegenläufige Ränder, die sich wiegen. Die zwei Wirkungen,
+   die die Vorlage (1420–1570) ausmachen, fehlten ganz —
+   der KONTRASTSPRUNG und die FARBDREHUNG.
+
+   Die klassische Gooey-Technik in drei Sätzen:
+   1. Die Klumpen bekommen `blur`. Aus Kanten werden Verläufe.
+   2. Das Elternelement bekommt `filter: contrast(15)`. Ein Verlauf mit
+      Mittelwerten wird dadurch wieder zu einer harten Kante — aber zu
+      EINER gemeinsamen um alle Klumpen herum. Zwei Klumpen, die sich
+      nähern, fliessen ineinander, statt sich zu überlappen.
+   3. Der Kontrast läuft 15 → 3 → 15 (Vorlage: @keyframes roundness).
+      Bei 3 weicht die erstarrte Masse auf, bei 15 wird sie wieder scharf.
+      Das ist das Atmen, das den Lader ausmacht.
+
+   WARUM EIN DUNKLER GRUND SEIN MUSS (der Punkt, an dem die Technik sonst
+   still nichts tut): `contrast()` rechnet nur an den Farbkanälen, nicht am
+   ALPHA. Über einem durchsichtigen Hintergrund bleibt die weiche
+   Blur-Kante als weiche Alpha-Kante stehen und nichts verschmilzt. Die
+   Masse braucht deshalb eine eigene deckende Fläche. Sie ist so dunkel
+   gewählt, dass sie über den ganzen Kontrastbereich (3 bis 15) schwarz
+   bleibt: bei contrast(3) fällt jeder Kanal unter 0.333 auf 0, bei
+   contrast(15) jeder unter 0.467. Der Grund liegt bei rund 0.1 — er kippt
+   also nie ins Helle und zappelt nicht mit.
+
+   UND DIE GRENZE, DIE NICHT ÜBERSCHRITTEN WIRD: `filter: contrast` steht
+   NUR auf `.rmo-liquid-masse`, und in der Masse liegen ausschliesslich
+   leere, dekorative Spans. Kein Text. Kontrast auf einem Element mit
+   Schrift würde die Schrift zerstören — die Statuszeile `.ki-aktivitaet`
+   und die Kapsel `.ru-zustand` bleiben deshalb ausserhalb, und selbst Rand
+   und Glanzpunkt der Blase sitzen als ::before/::after eine Ebene höher.
+
+   UND WANN DAS LÄUFT: nur im echten Laufzustand. Im Leerlauf ist die Blase
+   `display:none` (Zeile 706/707), und ein Element in `display:none`
+   animiert nicht. Trotzdem steht JEDE `animation` unten ausdrücklich hinter
+   derselben Zustandsliste — keine Endlosschleife im Leerlauf (E528,
+   `test494`). */
+
+/* ---- Die Blase: Lichthof und Farbdrehung ------------------------------ */
+body .rmo-liquid {
+  --rmo-blase: 22px;      /* eine Zahl, nicht drei: Breite, Höhe und Unschärfe hängen daran */
+  --rmo-takt: 2s;         /* Vorlage: --time-animation */
+  width: var(--rmo-blase); height: var(--rmo-blase); flex: 0 0 var(--rmo-blase);
+  border-radius: 50%;
+  /* Der farbige Lichthof (Vorlage: 0 0 25px + 0 20px 50px auf einer
+     100-px-Kugel; hier auf 22 px heruntergerechnet). Der zweite Schatten
+     liegt weit unten — die Kugel schwebt und leuchtet auf die Fläche
+     darunter, statt nur einen Rand zu haben. */
+  box-shadow:
+    0 0 9px -1px color-mix(in srgb, var(--accent-warm) 55%, transparent),
+    0 5px 14px -3px color-mix(in srgb, var(--accent) 55%, transparent);
+  /* filter bleibt hier LEER. Die Farbdrehung kommt weiter unten und nur im
+     Laufzustand — so ist „ruhig" und „weniger Bewegung" ohne Sonderregel
+     die Wahrheit: fällt die Animation weg, fällt auch das hue-rotate weg. */
+  filter: none;
+}
+/* Das Glasgefäss: eine Haarlinie oben hell, unten dunkel, dazu zwei innere
+   Lichtkanten. Liegt ÜBER der Masse (z-index), aber ausserhalb des
+   Kontrastfilters — sonst würde die 1-px-Linie mitbinarisiert und wäre
+   je nach Takt weg oder grell. */
+body .rmo-liquid::before {
+  inset: 0; border: 1px solid transparent; border-radius: 50%;
+  border-top-color: color-mix(in srgb, var(--accent-warm) 65%, #fff);
+  border-bottom-color: color-mix(in srgb, var(--accent) 55%, #000);
+  background: linear-gradient(180deg, #ffffff22, transparent 45%, #00000033);
+  box-shadow:
+    inset 0 4px 6px -3px color-mix(in srgb, var(--accent-warm) 60%, transparent),
+    inset 0 -4px 6px -3px color-mix(in srgb, var(--accent) 65%, transparent);
+  animation: none; z-index: 2;
+}
+/* Der Glanzpunkt oben links. Drei mal fünf Pixel, damit die Kugel eine
+   Lichtquelle hat und nicht flach wirkt. */
+body .rmo-liquid::after {
+  inset: auto auto 58% 22%; width: 5px; height: 3px;
+  border: 0; border-radius: 50%;
+  background: #ffffffb0; filter: blur(.5px);
+  animation: none; z-index: 3;
+}
+
+/* ---- Die Masse: der Kontrastsprung ------------------------------------ */
+.rmo-liquid-masse {
+  position: absolute; inset: 0; z-index: 1;
+  border-radius: 50%; overflow: hidden;
+  pointer-events: none;
+  /* Der deckende Grund, ohne den contrast() nichts verschmelzen kann.
+     Ein Hauch Akzent darin, damit die Kugel nicht tot-schwarz ist, wenn
+     kein Klumpen davor liegt. */
+  background: color-mix(in srgb, var(--accent) 20%, #000);
+  /* Ruhewert: gooey, aber ohne Takt. Die Animation unten überschreibt ihn
+     im Laufzustand — und wenn sie wegfällt (ruhig, weniger Bewegung,
+     Reiter verborgen), bleibt genau dieser Wert stehen. */
+  filter: contrast(13);
+}
+
+/* ---- Die sieben Klumpen ----------------------------------------------- */
+/* Jeder Klumpen ist eine Ebene über der ganzen Blase, aus der ein Polygon
+   ausgeschnitten ist — genau wie die sieben <polygon> im Klipppfad der
+   Vorlage. Das hat einen handfesten Grund: `transform-origin` in Prozent
+   rechnet gegen die EIGENE Box. Sind alle Boxen gleich gross wie die Blase,
+   sind „75% 25%" und „40% 40%" Punkte IN DER KUGEL — die Klumpen kreisen um
+   sieben verschiedene Punkte, statt sich je um sich selbst zu drehen. */
+.rmo-liquid-klumpen {
+  position: absolute; inset: 0; pointer-events: none;
+  /* Der senkrechte Verlauf der Vorlage (orange 30 % → rotbraun 70 %), hier
+     aus den vorhandenen Farbmarken. Der Verlauf ÜBERLEBT den Kontrast: die
+     Kennlinie rechnet je Kanal und bleibt monoton, aus zwei Tönen werden
+     zwei kräftigere. Genau das ist die Optik der Vorlage. */
+  background: linear-gradient(180deg, var(--accent-warm) 30%, var(--accent) 70%);
+  /* Die Unschärfe hängt an der Blasengrösse (Vorlage: 7 px auf 100 px).
+     Ohne sie gibt es nichts zu verschmelzen. */
+  filter: blur(calc(var(--rmo-blase) * .08));
+  rotate: 0deg;
+  /* Jeder Klumpen mit eigener Phase. `--rmo-i` setzt der TS-Schnipsel;
+     sieben Siebtel des Takts verteilen die Klumpen gleichmässig über den
+     Umlauf, statt sie im Gleichschritt marschieren zu lassen. */
+  animation-delay: calc(var(--rmo-i, 0) * var(--rmo-takt) / -7);
+}
+/* Sieben Drehpunkte, sieben Umrisse, und vier gegen drei Laufrichtungen.
+   Die Drehpunkte stehen so in der Vorlage (75% 25%, 50% 50%, 50% 60%,
+   40% 40% zweimal, 60% 40% zweimal); dass auch der erste kreist statt
+   still zu stehen, ist der Unterschied zu ihr. */
+.rmo-liquid-klumpen:nth-child(1) {
+  transform-origin: 75% 25%; animation-direction: reverse;
+  clip-path: polygon(46% 4%, 74% 18%, 66% 46%, 38% 38%);
+}
+.rmo-liquid-klumpen:nth-child(2) {
+  transform-origin: 50% 50%; animation-direction: reverse;
+  clip-path: polygon(58% 30%, 88% 44%, 74% 72%, 50% 58%);
+}
+.rmo-liquid-klumpen:nth-child(3) {
+  transform-origin: 50% 60%;
+  clip-path: polygon(26% 50%, 54% 44%, 60% 74%, 30% 82%);
+}
+.rmo-liquid-klumpen:nth-child(4) {
+  transform-origin: 40% 40%; animation-direction: reverse;
+  clip-path: polygon(10% 26%, 38% 16%, 44% 44%, 16% 52%);
+}
+.rmo-liquid-klumpen:nth-child(5) {
+  transform-origin: 40% 40%; animation-direction: reverse;
+  clip-path: polygon(40% 62%, 70% 58%, 78% 88%, 46% 92%);
+}
+.rmo-liquid-klumpen:nth-child(6) {
+  transform-origin: 60% 40%;
+  clip-path: polygon(52% 8%, 84% 6%, 92% 32%, 62% 34%);
+}
+.rmo-liquid-klumpen:nth-child(7) {
+  transform-origin: 60% 40%;
+  clip-path: polygon(6% 56%, 30% 46%, 40% 74%, 14% 84%);
+}
+
+/* ---- Bewegung: NUR im echten Laufzustand ------------------------------ */
+/* Dieselbe Zustandsliste wie Zeile 707, die die Blase überhaupt erst
+   sichtbar macht. Sie steht hier ein zweites Mal, weil `display:none`
+   zwar jede Animation anhält, aber niemand das beim Lesen sieht — und weil
+   eine spätere Regel, die die Blase in einem anderen Zustand zeigt, sonst
+   still eine Endlosschleife im Leerlauf mitbrächte (E528, `test494`). */
+[data-rmo~="liquid"]:is([data-rmo-state="laeuft"],[data-rmo-state="arbeitet"],
+[data-rmo-state="vorbereiten"],[data-rmo-state="rendern"]) > .rmo-liquid {
+  /* Die Farbdrehung über 6 s: 0 → -30 → -60 → -90 → -45 → 0 (Vorlage:
+     @keyframes colorize, dort calc(--time-animation * 3)). Sie steht auf
+     der Blase und nicht auf der Masse, damit sie den Lichthof mitdreht —
+     Kugel und Schein bleiben derselbe Ton. */
+  animation: rmo-liquid-farbdreh calc(var(--rmo-takt) * 3) ease-in-out infinite;
+}
+[data-rmo~="liquid"]:is([data-rmo-state="laeuft"],[data-rmo-state="arbeitet"],
+[data-rmo-state="vorbereiten"],[data-rmo-state="rendern"]) > .rmo-liquid > .rmo-liquid-masse {
+  animation: rmo-liquid-dicke calc(var(--rmo-takt) / 2) linear infinite;
+}
+[data-rmo~="liquid"]:is([data-rmo-state="laeuft"],[data-rmo-state="arbeitet"],
+[data-rmo-state="vorbereiten"],[data-rmo-state="rendern"]) > .rmo-liquid .rmo-liquid-klumpen {
+  animation-name: rmo-liquid-kreisen;
+  animation-duration: var(--rmo-takt);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* ---- Die drei Takte --------------------------------------------------- */
+/* Der Kontrastsprung, 1:1 aus der Vorlage (@keyframes roundness). Die
+   beiden Plateaus sind wichtig: die Masse steht kurz weich und steht kurz
+   scharf, statt ununterbrochen dazwischen zu pendeln. */
+@keyframes rmo-liquid-dicke {
+  0%   { filter: contrast(15); }
+  20%  { filter: contrast(3); }
+  40%  { filter: contrast(3); }
+  60%  { filter: contrast(15); }
+  100% { filter: contrast(15); }
+}
+/* Die Farbdrehung (@keyframes colorize). */
+@keyframes rmo-liquid-farbdreh {
+  0%, 100% { filter: hue-rotate(0deg); }
+  20%      { filter: hue-rotate(-30deg); }
+  40%      { filter: hue-rotate(-60deg); }
+  60%      { filter: hue-rotate(-90deg); }
+  80%      { filter: hue-rotate(-45deg); }
+}
+/* Der Umlauf. Bewusst die Einzeleigenschaft `rotate` und nicht `transform`:
+   so bleibt `transform` für einen späteren Versatz frei, und keine
+   Keyframe-Regel löscht still eine Grundstellung, die woanders steht. */
+@keyframes rmo-liquid-kreisen { to { rotate: 360deg; } }
+
+/* ---- Weniger Bewegung ------------------------------------------------- */
+/* Die Blanketts in Zeile 774–789 setzen hier ohnehin schon `animation:none`
+   für alles unter `[data-rmo]`. Diese Regeln sagen ausdrücklich, was das
+   für den Lader HEISST — und fangen den Fall ab, dass jemand später einer
+   der drei Animationen ein `!important` verpasst. */
+@media (prefers-reduced-motion: reduce) {
+  body .rmo-liquid,
+  body .rmo-liquid-masse,
+  body .rmo-liquid-klumpen { animation: none !important; }
+  /* Farbdrehung aus: kein hue-rotate, der Lader bleibt im Akzentton stehen.
+     Der Lichthof (box-shadow) bleibt — er bewegt sich nicht. */
+  body .rmo-liquid { filter: none !important; }
+  /* Klumpen stehen still: keine Drehung, aber die Masse bleibt eine Masse.
+     Ein fester Kontrast, damit man sieht, dass da etwas arbeitet — nur eben
+     ohne Takt. */
+  body .rmo-liquid-klumpen { rotate: 0deg !important; }
+  body .rmo-liquid-masse { filter: contrast(13) !important; }
 }
 
 </style>
@@ -16487,6 +18804,171 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 .ru-fach-name{flex:1 1 auto; min-width:0; margin:0; font-size:13px; font-weight:600; line-height:1.35; overflow-wrap:anywhere}
 .ru-fach-rest{margin:8px 0 0; font-size:11px; color:var(--text-dim); line-height:1.4}
 .ru-fach-gehen{margin-top:10px; width:100%; justify-content:center}
+/* ══ E537 — DER AUFTRITT (Vorlage vom 6. September, Zeilen 1–437) ══════════
+   Drei Teile der Karte standen bisher einfach schon da: die Zähler-Pille,
+   die Suchzeile und das Etikett auf dem Blatt. Die Vorlage lässt genau
+   diese drei AUFTRETEN, wenn der Ordner aufgeht — die Pille springt mit
+   einer Feder hoch, die Suchzeile wächst aus einem Knopf heraus, das
+   Etikett schwebt von rechts ein. Dazu kommen der Schlagschatten unter der
+   Rückwand, das Dateizeichen auf jedem Blatt und der Hinweispfeil.
+
+   ZWEI ABWEICHUNGEN VON DER VORLAGE, beide mit Grund an Ort und Stelle
+   (§39 Richtwert, §37 hart):
+
+   1. Pille und Suchzeile VERSCHWINDEN NICHT, wenn die Karte zu ist. Die
+      Vorlage kennt sie nur im offenen Zustand (`opacity:0` sonst). Hier
+      trägt die Pille die Anzahl und die Zeile die Suche — das sind die
+      einzigen zwei Auskünfte, die die zugeklappte Karte überhaupt gibt.
+      Der Auftritt ist deshalb eine ANIMATION beim Öffnen und kein
+      Erscheinen aus dem Nichts.
+   2. Die Suchzeile wächst beim Öffnen von 30 px auf ihre volle Breite und
+      bleibt dort. Die Vorlage hält 80 % und geht bei Fokus auf 90 %. Eine
+      Zeile, die im Ruhezustand schmaler ist als heute, wäre eine
+      VERKLEINERTE Trefferfläche, und die gibt es nicht (§37). Der Fokus
+      zeigt sich stattdessen in Farbe und einem Hauch Grösse.
+
+   Nichts hiervon läuft im Leerlauf (E528): jede Bewegung hier hat einen
+   Auslöser — Öffnen, Überfahren, Fokus — und ist endlich. Die einzige
+   Ausnahme ist der Hinweispfeil, und der wippt nur, SOLANGE DIE KARTE ZU
+   IST; das ist ein Zustand, kein Leerlauf, und er endet mit dem ersten
+   Klick. */
+
+/* ---- 1 · Die Zähler-Pille springt auf ---------------------------------- */
+/* Schatten und Innenlicht der Vorlage (`0 10px 20px rgba(0,0,0,.3)`,
+   `inset 0 1px 1px rgba(255,255,255,.2)`), heruntergerechnet: die Vorlage
+   setzt sie auf eine freistehende Pille über dem Ordner, hier sitzt sie in
+   der Kopfzeile einer Karte, die selbst schon einen Schatten wirft. */
+.ru-fach-zaehler{
+  border:1px solid transparent; cursor:help;
+  box-shadow:0 6px 14px #00000026, inset 0 1px 1px #ffffff3d;
+  transition:scale var(--motion-fast) var(--ease), translate var(--motion-fast) var(--ease),
+             background var(--motion-fast) var(--ease), border-color var(--motion-fast) var(--ease),
+             color var(--motion-fast) var(--ease)
+}
+@keyframes ru-fach-pille{
+  from{transform:scale(0) translateY(20px); opacity:0}
+  to{transform:scale(1) translateY(0); opacity:1}
+}
+/* Die 0,2 s Verzögerung der Vorlage sind der Grund, warum es überhaupt ein
+   Auftritt ist: die Klappe geht zuerst auf, DANN kommt die Zahl. `both`
+   hält die Pille währenddessen auf dem Anfangsbild — zwei Zehntel, nicht
+   länger. */
+.ru-fach[data-offen="ja"] .ru-fach-zaehler{
+  animation:ru-fach-pille .5s cubic-bezier(.34,1.56,.64,1) .2s both
+}
+/* Beim Überfahren: wächst, hebt sich, bekommt den Akzentrand. `scale` und
+   `translate` als EIGENE Eigenschaften, nicht als `transform` — sonst
+   löschen sie die Federkurve oben aus, statt sich mit ihr zu überlagern
+   (dieselbe Lehre wie beim Blatt-Hover weiter oben).
+   `cursor:help` ist an einem Element ohne Erklärung eine Lüge; den `title`
+   setzt `ordnerkarte.ts` beim Zeichnen und er sagt, was die Zahl zählt. */
+.ru-fach-zaehler:is(:hover,:focus-visible){
+  scale:1.1; translate:0 -4px;
+  background:var(--bg-card); border-color:var(--accent-text);
+  box-shadow:0 10px 20px #0000002e, inset 0 1px 1px #ffffff4d
+}
+/* Die Zahl bleibt im Akzent, das Wort daneben tritt zurück — so hebt sich
+   die ZAHL hervor und nicht die Pille. Die Vorlage färbt die Zahl von
+   Weiss auf Blau; hier ist ohnehin schon alles im Akzentton, also muss der
+   Unterschied woanders herkommen (§38: nicht Farbe allein — die Pille
+   wächst und hebt sich zusätzlich). */
+.ru-fach-zaehler:hover .ru-fach-zahl{color:var(--accent-text)}
+.ru-fach-zaehler:hover .ru-fach-wort{color:var(--text-dim)}
+
+/* ---- 2 · Die Suchzeile schwebt ein und wächst -------------------------- */
+.ru-fach-suche{
+  position:relative; gap:7px; overflow:hidden;
+  transition:background var(--motion-fast) var(--ease),
+             border-color var(--motion-fast) var(--ease),
+             scale var(--motion-fast) var(--ease)
+}
+@keyframes ru-fach-suchzeile{
+  from{width:30px; opacity:0; transform:translateY(-8px)}
+  55%{opacity:1}
+  to{width:100%; opacity:1; transform:translateY(0)}
+}
+.ru-fach[data-offen="ja"] .ru-fach-suche{
+  animation:ru-fach-suchzeile .5s cubic-bezier(.68,-.55,.265,1.55) both
+}
+/* Farbwechsel bei Fokus (Vorlage: Blau → Rot). Hier Akzent statt Rot: Rot
+   heisst in Redion „Gefahr" (--gefahr), und ein Suchfeld ist keine.
+   Der Fokusrahmen weiter oben bleibt, wo er ist (§38) — Farbe allein ist
+   kein Fokus. */
+.ru-fach-suche:focus-within{
+  background:var(--accent-schwach); border-color:var(--accent); scale:1.02
+}
+.ru-fach-lupe{
+  flex:none; width:13px; height:13px; display:block; color:var(--text-dim);
+  transition:color var(--motion-fast) var(--ease)
+}
+.ru-fach-suche:focus-within .ru-fach-lupe{color:var(--accent-text)}
+
+/* ---- 3 · Der Ordner steht im Raum -------------------------------------- */
+/* Der Schlagschatten der Vorlage. Er sitzt auf dem WIRT und nicht auf dem
+   Pfad: `drop-shadow` folgt der Silhouette des SVG — mit dem Reiter oben
+   links —, ein `box-shadow` würde ein Rechteck darunterlegen. */
+.ru-fach-ruecken{filter:drop-shadow(0 10px 20px #00000038)}
+
+/* ---- 4 · Das Etikett auf dem Blatt ------------------------------------- */
+/* Milchglas, Schatten und das Einschweben von rechts. Warum eine
+   `animation` und keine `transition`: die Blätter ENTSTEHEN beim Öffnen
+   neu (`replaceChildren`), es gibt also gar keinen Zustandswechsel, an dem
+   eine Überblendung ansetzen könnte. Die 0,22 s Verzögerung lassen die
+   Blätter zuerst ihren Platz finden. */
+.ru-fach-art{
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+  box-shadow:0 2px 4px #00000033; pointer-events:none;
+  animation:ru-fach-etikett .3s cubic-bezier(.34,1.56,.64,1) .22s both
+}
+@keyframes ru-fach-etikett{
+  from{opacity:0; transform:translateX(10px)}
+  to{opacity:1; transform:translateX(0)}
+}
+/* ---- 5 · Das Dateizeichen oben rechts ---------------------------------- */
+/* Reine Deko: die Art steht als WORT im Etikett daneben, das Zeichen sagt
+   nichts Zusätzliches (§38). Deshalb `aria-hidden` im Markup und hier
+   `pointer-events:none` — der ganze Knopf ist die Trefferfläche. */
+.ru-fach-zeichen{
+  position:absolute; top:8px; right:8px; width:14px; height:14px;
+  color:#ffffff66; pointer-events:none;
+  transition:color var(--motion-fast) var(--ease)
+}
+.ru-fach-blatt:is(:hover,:focus-visible) .ru-fach-zeichen{color:#ffffffe6}
+
+/* ---- 6 · Der Hinweispfeil ---------------------------------------------- */
+/* Er steht nur über einer Karte, die in DIESER Sitzung noch nie offen war
+   — gemerkt in einer Modulvariablen und nirgends sonst. Ein Hinweis ist
+   keine Nutzerdatei; er gehört nicht in IndexedDB, und er soll auch nicht
+   über Geräte hinweg gelten (§9, §24).
+   12° statt der 45° der Vorlage: die Karte ist 248 px breit, und ein um
+   45° gedrehtes Wort von rund 70 px steht mit seiner Ecke etwa 50 px
+   ausserhalb der rechten Kante — über dem Regal dahinter, nicht über der
+   Karte. */
+.ru-fach-hinweis{
+  position:absolute; top:-24px; right:2px; z-index:30;
+  display:flex; align-items:flex-end; gap:1px;
+  pointer-events:none; color:var(--accent-text);
+  transition:opacity var(--motion-normal) var(--ease), translate var(--motion-normal) var(--ease)
+}
+.ru-fach-hinweis-text{
+  font-size:10px; font-weight:800; letter-spacing:.4px; line-height:1;
+  text-decoration:underline; white-space:nowrap;
+  transform:rotate(-12deg); transform-origin:bottom right
+}
+.ru-fach-hinweis-pfeil{flex:none; width:20px; height:20px; display:block}
+@keyframes ru-fach-winke{
+  0%,100%{translate:0 0}
+  50%{translate:0 6px}
+}
+/* ZU: er wippt. AUF: er ist weg — und `ordnerkarte.ts` nimmt ihn danach
+   aus dem Baum, damit hier nichts weiterläuft, was niemand mehr sieht. */
+.ru-fach[data-offen="nein"] .ru-fach-hinweis{
+  animation:ru-fach-winke 2.5s ease-in-out infinite
+}
+.ru-fach[data-offen="ja"] .ru-fach-hinweis{
+  animation:none; opacity:0; translate:0 -10px
+}
+
 /* Die Lage, in der die Karte über dem Regal schwebt. */
 .ru-fach-lage{position:fixed; z-index:760; inset:auto}
 @media (max-width:760px){
@@ -16502,6 +18984,19 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   .ru-fach{--ru-fach-welle:0ms}
   .ru-fach-blatt[data-nr]{transition-delay:0s}
   .ru-fach[data-offen="ja"] .ru-fach-klappe{animation:none}
+  /* KEIN AUFTRITT (E537). Pille, Suchzeile und Etikett stehen sofort an
+     ihrem Platz — sie tragen Auskunft, und die darf eine abgestellte
+     Bewegung nicht verzögern. `animation:none` hebt auch den
+     Anfangszustand von `both` auf, es bleibt also nichts unsichtbar. */
+  .ru-fach[data-offen="ja"] :is(.ru-fach-zaehler,.ru-fach-suche){animation:none}
+  .ru-fach-art{animation:none}
+  .ru-fach-zaehler:is(:hover,:focus-visible){scale:none; translate:none}
+  .ru-fach-suche:focus-within{scale:none}
+  /* Der Hinweispfeil BLEIBT sichtbar, er wippt nur nicht mehr. Wer
+     Bewegung abstellt, will die Auskunft — und die Auskunft ist der
+     Pfeil, nicht das Wippen. */
+  .ru-fach[data-offen="nein"] .ru-fach-hinweis{animation:none}
+  .ru-fach[data-offen="ja"] .ru-fach-hinweis{translate:none}
 }
 
 /* Redion-Bedienung · Baumansicht */
@@ -20424,7 +22919,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 822, inhalt: '9fcd20308420ad45', gebaut: '2026-09-12T21:01:51.256Z' };
+const Stand = { fassung: 825, inhalt: 'a6851404961c7c04', gebaut: '2026-09-12T21:37:28.529Z' };
 window.Stand = Stand;
 
 </script>
@@ -43589,6 +46084,14 @@ const Ordnerkarte = (() => {
        Vorgabe zeichnet genau fünf. Der Rest steht als Zahl daneben und ist
        über die Suche erreichbar. */
     const FAECHER = 5;
+    /* DER HINWEISPFEIL WIRD NUR EINMAL JE SITZUNG GEZEIGT (E537). Gemerkt
+       wird das HIER und nirgends sonst: ein Hinweis ist keine Nutzerdatei.
+       In IndexedDB gehörte er nicht (§9), in `meta` wäre er ein Eintrag, den
+       ein Export mitschleppt und ein Import auf ein anderes Gerät trägt —
+       und dort hat derselbe Mensch die Karte vielleicht noch nie gesehen.
+       Eine Modulvariable vergisst ihn beim Neuladen, und genau das ist
+       richtig. */
+    let jeGeoeffnet = false;
     const el = (tag, klasse, eltern) => {
         const e = document.createElement(tag);
         e.className = klasse;
@@ -43615,11 +46118,65 @@ const Ordnerkarte = (() => {
         svg.append(pfad);
         return svg;
     };
+    /* Die kleinen Zeichen (Lupe, Dateiblatt, Hinweispfeil). ÜBER
+       `createElementNS` und `setAttribute`, nicht über `innerHTML`: ein
+       SVG-Schnipsel im Text ist genau der Weg, auf dem fremdes Markup in
+       eine Seite kommt (§19). Alle drei sind Schmuck — sie tragen
+       `aria-hidden`, und was sie zeigen, steht daneben als Wort (§38). */
+    const zeichen = (klasse, box, teile) => {
+        const ns = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('class', klasse);
+        svg.setAttribute('viewBox', box);
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('stroke-width', '1.7');
+        svg.setAttribute('stroke-linecap', 'round');
+        svg.setAttribute('stroke-linejoin', 'round');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('focusable', 'false');
+        for (const teil of teile) {
+            const knoten = document.createElementNS(ns, teil.tag);
+            for (const name of Object.keys(teil.attribute)) {
+                knoten.setAttribute(name, teil.attribute[name] ?? '');
+            }
+            svg.append(knoten);
+        }
+        return svg;
+    };
+    const lupe = () => zeichen('ru-fach-lupe', '0 0 16 16', [
+        { tag: 'circle', attribute: { cx: '7', cy: '7', r: '4.6' } },
+        { tag: 'path', attribute: { d: 'M10.5 10.5 14.2 14.2' } },
+    ]);
+    /* Ein Blatt mit umgeknickter Ecke — dasselbe Bild, das die Vorlage oben
+       rechts auf jede Datei setzt. */
+    const blattzeichen = () => zeichen('ru-fach-zeichen', '0 0 16 16', [
+        { tag: 'path', attribute: { d: 'M9.2 1.8H4.4a1.6 1.6 0 0 0-1.6 1.6v9.2a1.6 1.6 0 0 0 1.6 1.6h7.2a1.6 1.6 0 0 0 1.6-1.6V5.8Z' } },
+        { tag: 'path', attribute: { d: 'M9.2 1.8v4h4' } },
+    ]);
+    const hinweispfeil = () => zeichen('ru-fach-hinweis-pfeil', '0 0 24 24', [
+        { tag: 'path', attribute: { d: 'M19.5 3.5c1.3 7.6-2.2 13.4-8.4 15.8' } },
+        { tag: 'path', attribute: { d: 'M11.1 19.3 15.4 17' } },
+        { tag: 'path', attribute: { d: 'M11.1 19.3 13 14.8' } },
+    ]);
     const bauen = (auftrag) => {
         const karte = el('div', 'ru-fach');
         const tiefe = auftrag.tiefe && auftrag.tiefe.length ? auftrag.tiefe : auftrag.kinder;
         let offen = false;
         let suchwort = '';
+        /* ---- Der Hinweispfeil, höchstens einmal je Sitzung ----------------- *
+         * Er sagt, dass die Karte etwas kann, was man ihr nicht ansieht: dass
+         * sie aufgeht. Wer das einmal getan hat, weiss es — und ein Pfeil, der
+         * beim zwanzigsten Ordner immer noch wedelt, ist kein Hinweis mehr,
+         * sondern Lärm. */
+        let hinweis = null;
+        if (!jeGeoeffnet) {
+            hinweis = el('div', 'ru-fach-hinweis', karte);
+            hinweis.setAttribute('aria-hidden', 'true');
+            const ruf = el('span', 'ru-fach-hinweis-text', hinweis);
+            ruf.textContent = 'Aufklappen';
+            hinweis.append(hinweispfeil());
+        }
         /* ---- Zeile 1: Name und Zähler -------------------------------------- *
          * DER NAME STEHT OBEN UND NICHT UNTEN. Auf dem ersten Bild lag er unter
          * dem Ordner, die Suche darüber — und die aufgefächerten Blätter deckten
@@ -43639,6 +46196,9 @@ const Ordnerkarte = (() => {
         feld.className = 'ru-fach-suche';
         const sr = el('span', 'ru-fach-sr', feld);
         sr.textContent = 'In „' + auftrag.name + '" suchen, auch in den Unterordnern';
+        /* Die Lupe steht VOR dem Feld — sie ist das, was von der Suchzeile
+           übrig bleibt, während sie beim Öffnen aus 30 px herauswächst. */
+        feld.append(lupe());
         const eingabe = document.createElement('input');
         eingabe.type = 'search';
         eingabe.className = 'ru-fach-eingabe';
@@ -43683,6 +46243,7 @@ const Ordnerkarte = (() => {
             b.dataset['fachId'] = stueck.id;
             const glanz = el('i', 'ru-fach-glanz', b);
             glanz.setAttribute('aria-hidden', 'true');
+            b.append(blattzeichen());
             /* DIE ZEILE STEHT UNTEN. Vom Blatt darunter sieht man den unteren
                Streifen, nicht den oberen: das obere Blatt liegt weiter oben UND
                weiter vorn. Mit dem Namen am Kopf (so zeichnet die Vorgabe) war
@@ -43726,6 +46287,11 @@ const Ordnerkarte = (() => {
             wort.textContent = sucht
                 ? (liste.length === 1 ? 'Treffer' : 'Treffer') + ' von ' + tiefe.length
                 : (liste.length === 1 ? 'Sache' : 'Sachen');
+            /* `cursor:help` an der Pille verspricht eine Erklärung; hier ist sie.
+               Ohne diesen Satz wäre der Mauszeiger eine Behauptung (E537). */
+            zaehler.title = sucht
+                ? liste.length + ' von ' + tiefe.length + ' Sachen passen zu „' + suchwort.trim() + '"'
+                : 'So viele Sachen liegen in „' + auftrag.name + '"';
             karte.dataset['sucht'] = sucht ? 'ja' : 'nein';
             karte.dataset['leer'] = liste.length ? 'nein' : 'ja';
             const rest = liste.length - gezeigt.length;
@@ -43741,8 +46307,19 @@ const Ordnerkarte = (() => {
             griff.setAttribute('aria-label', offen
                 ? 'Ordner „' + auftrag.name + '" zuklappen'
                 : 'In den Ordner „' + auftrag.name + '" hineinsehen');
-            if (offen)
+            if (offen) {
                 zeichnen();
+                jeGeoeffnet = true;
+                /* Der Pfeil blendet per CSS aus und wird DANACH aus dem Baum
+                   genommen: ein Element, das niemand mehr sieht, soll auch nicht
+                   mehr wippen (E528). Die 400 ms sind die Blende plus etwas
+                   Luft. */
+                if (hinweis) {
+                    const weg = hinweis;
+                    hinweis = null;
+                    window.setTimeout(() => weg.remove(), 400);
+                }
+            }
         };
         griff.addEventListener('click', () => klappen());
         eingabe.addEventListener('input', () => { suchwort = eingabe.value; zeichnen(); });
@@ -44706,6 +47283,397 @@ const RedionMotion = (() => {
                    Saum (das Licht, das unten wieder austritt). */
                 glas.append(ornament('rmo-glass-kuppel'), ornament('rmo-glass-platte'), ornament('rmo-glass-saum'));
             });
+        /* ---- Block 06 (E535) ---- */
+        /* Block 6 — der Verlaufsschalter aus Redurs Vorlage, aber NUR am kleinen
+           Menü-Umschalter `.mschalter` (schale.ts:232). Der grosse `.schalter` in
+           den Einstellungen trägt dieselbe Wirkungs-ID und behält sein bisheriges
+           Bild (motion.css:610–611) — er bekommt hier bewusst kein Markup. */
+        if (ids.includes('toggle') && element.matches('.mschalter')) {
+            ensure(element, 'rmo-verlauf', schicht => {
+                /* Zwei gemischte Verlaufsebenen und der weichgezeichnete Lichtbalken.
+                   Sie liegen UNTER dem Griff, und `ensure` stellt voran — genau die
+                   richtige Reihenfolge. */
+                schicht.append(ornament('rmo-verlauf-a'), ornament('rmo-verlauf-b'), ornament('rmo-verlauf-licht'));
+            });
+            /* Beschriftung und Leuchtkugel gehören dagegen HINTER den bestehenden
+           Griff `.mschalter > i`: was vorn im Baum steht, malt der Browser
+           zuerst, und die Kugel ist ein ÜBERZUG des Griffs — vorangestellt wäre
+           sie unsichtbar. Deshalb angehängt statt `ensure`; doppelt wird dabei
+           nichts, weil beide Namen vorher geprüft werden. */
+            for (const name of ['rmo-verlauf-text', 'rmo-verlauf-kugel']) {
+                if (!element.querySelector(':scope > .' + name))
+                    element.append(ornament(name));
+            }
+        }
+        /* ---- Block 07 (E535) ---- */
+        if (ids.includes('carousel')) {
+            /* Block 7 — die Trommel unter der Bühne. `.rmo-carousel` wird zur
+           beschneidenden Bühne (overflow:hidden), und ein Element, das
+           beschneidet, wird vom Browser flach gemacht — der Ring braucht deshalb
+           ein eigenes drehendes Kind. Die fünf Karten aus dem ensure-Aufruf oben
+           ziehen EINMAL hinein; ein zweiter Durchlauf findet die Trommel und
+           lässt alles stehen. */
+            const stage = element.querySelector(':scope > .rmo-carousel');
+            if (stage && !stage.querySelector(':scope > .rmo-ring-trommel')) {
+                const drum = ornament('rmo-ring-trommel');
+                for (const card of Array.from(stage.querySelectorAll(':scope > .rmo-ring-karte')))
+                    drum.append(card);
+                stage.append(drum);
+            }
+        }
+        /* ---- Block 09 (E535) ---- */
+        /* ==================================================================
+         * BLOCK 9 — DER REST DER KENNZAHLKARTE (Vorlage 2030–2710, E535)
+         * Ziffernrolle, Ring und Herz stehen seit E534. Hier kommen die drei
+         * Schichten dazu, die nie ein Element hatten: der Lichtkranz, der
+         * Diagrammstreifen und der Glanzfleck. Alle drei hängen an der KARTE,
+         * nicht an der Zahl — die trägt schon Rolle und Ring.
+         * Die Kippung setzt nur zwei Zahlen am Element; Winkel und Fleckmitte
+         * rechnet der Stil daraus, und zwar nur unter (hover: hover).
+         * ================================================================== */
+        if (ids.includes('metric') && !element.matches(metricSelector) && element instanceof HTMLElement) {
+            const card = element;
+            /* Zwei Ebenen statt der fünf Kegelverläufe der Vorlage: der scharfe
+               Rand im ::before, der weiche Schein im Kind (ein `filter` würde
+               sonst beide verwaschen). */
+            ensure(card, 'rmo-kranz', halo => { halo.append(ornament('rmo-kranz-schein')); });
+            ensure(card, 'rmo-glanz');
+            ensure(card, 'rmo-pfad', field => {
+                const svgNs = 'http://www.w3.org/2000/svg';
+                const chart = document.createElementNS(svgNs, 'svg');
+                /* Der Streifen ist so breit wie die Karte und 30 px hoch; ohne
+                   Seitenverhältnis dehnt er sich mit. Damit die Striche dabei nicht
+                   mitgedehnt werden, hängt an jedem `vector-effect`. */
+                chart.setAttribute('viewBox', '0 0 100 30');
+                chart.setAttribute('preserveAspectRatio', 'none');
+                chart.setAttribute('aria-hidden', 'true');
+                chart.setAttribute('focusable', 'false');
+                [8, 13, 6, 17, 11].forEach((height, index) => {
+                    const bar = document.createElementNS(svgNs, 'line');
+                    const x = String(10 + index * 20);
+                    bar.setAttribute('x1', x);
+                    bar.setAttribute('y1', '28');
+                    bar.setAttribute('x2', x);
+                    bar.setAttribute('y2', String(28 - height));
+                    bar.setAttribute('vector-effect', 'non-scaling-stroke');
+                    /* Staffelung wie in der Vorlage: 0,05 s je Linie. */
+                    bar.style.setProperty('--rmo-i', String(index));
+                    chart.append(bar);
+                });
+                /* Zwei Kurven, die zweite fünf Einheiten tiefer — der Schattenpfad
+                   der Vorlage (.path2). Der Versatz steht in den Daten und nicht in
+                   einem `transform`, weil reduzierte Bewegung `transform:none`
+                   setzt und beide Kurven dann übereinanderlägen. */
+                ['M2 24 C 14 22, 20 9, 32 11 S 54 22, 66 15 S 86 4, 98 8',
+                    'M2 29 C 14 27, 20 14, 32 16 S 54 27, 66 20 S 86 9, 98 13'
+                ].forEach((d, index) => {
+                    const curve = document.createElementNS(svgNs, 'path');
+                    curve.setAttribute('d', d);
+                    curve.setAttribute('vector-effect', 'non-scaling-stroke');
+                    curve.style.setProperty('--rmo-i', String(index));
+                    chart.append(curve);
+                });
+                field.append(chart);
+            });
+            /* Die Vorlage teilt die Karte in fünfzehn unsichtbare Hoverfelder.
+               Fünfzehn Flächen über einer Karte, die schon Inhalt trägt, würden
+               Klicks schlucken — der Zeiger meldet seine Stelle deshalb selbst.
+               Einmal binden: `decorate` läuft bei jeder Änderung erneut. */
+            if (!card.hasAttribute('data-rmo-kippung') && matchMedia('(hover: hover)').matches) {
+                set(card, 'data-rmo-kippung', 'true');
+                card.addEventListener('pointermove', event => {
+                    const box = card.getBoundingClientRect();
+                    if (!box.width || !box.height)
+                        return;
+                    /* Zahl ohne Einheit. Erst der Stil macht daraus Prozent (Fleck)
+                       und Grad (Kippung); ein fertiges „37%" liesse sich nicht in
+                       einen Winkel rechnen. */
+                    card.style.setProperty('--rmo-x', String(Math.round((event.clientX - box.left) / box.width * 100)));
+                    card.style.setProperty('--rmo-y', String(Math.round((event.clientY - box.top) / box.height * 100)));
+                });
+                card.addEventListener('pointerleave', () => {
+                    card.style.removeProperty('--rmo-x');
+                    card.style.removeProperty('--rmo-y');
+                });
+            }
+        }
+        /* ---- Block 10 (E535) ---- */
+        /* ==================================================================
+         * BLOCK 10 — DER REST DES TICKETS (Vorlage 2711–3469, E535)
+         *
+         * Die Wendekarte steht schon oben (E534), der Barcode in E531. Hier
+         * kommen die Teile dazu, die eigenes Markup brauchen: Farbrad und
+         * Körnung über der ganzen Karte, Würfel und QR in der Bühne, und die
+         * Kopfzeile buchstabenweise.
+         *
+         * WO WAS HINGEHÖRT, und warum das nicht beliebig ist:
+         *
+         *   Karte  ← Farbrad, Körnung.  Sie liegen ÜBER allem und dürfen sich
+         *            nicht mitdrehen: in der Wendekarte läge sonst auf der
+         *            Rückseite ein spiegelverkehrtes Hologramm.
+         *   Bühne  ← Würfel, QR.  Sie gehören zur Vorderseite und sollen beim
+         *            Wenden mit ihr verschwinden — das erledigt das
+         *            `backface-visibility: hidden` der Bühne von selbst.
+         * ================================================================== */
+        if (ids.includes('ticket')) {
+            ensure(element, 'rmo-ticket-korn');
+            ensure(element, 'rmo-ticket-holo');
+            const buehne = element.querySelector('.ru-drucker-buehne');
+            if (buehne) {
+                ensure(buehne, 'rmo-ticket-wuerfel', wuerfel => {
+                    /* Sechs Flächen, kein Bild: die Lage jeder einzelnen steht im
+                       Stil, damit der Würfel seine Farbe erben kann. */
+                    for (let index = 0; index < 6; index++)
+                        wuerfel.append(ornament('rmo-ticket-flaeche'));
+                });
+                ensure(buehne, 'rmo-ticket-qr', code => {
+                    /* Drei Suchmarken wie bei einem echten Code — und trotzdem kein
+                       lesbarer: er zeigt auf nichts, weil ein Druckauftrag keine
+                       Adresse hat. Reine Zier, deshalb aria-hidden (ornament). */
+                    for (let index = 0; index < 3; index++)
+                        code.append(ornament('rmo-ticket-ecke'));
+                });
+            }
+            /* Die Kopfzeile in Zeichen teilen — derselbe Weg wie bei 'letters'
+               weiter unten, aber mit eigener Klasse: die Buchstabenregeln dort
+               hängen an `[data-rmo~="letters"]`, und das Ticket trägt das nicht.
+               Die Überschrift ist bereits aria-hidden, das Teilen ändert daran
+               nichts: für Vorlesegeräte bleibt sie unsichtbar, der echte Status
+               steht daneben in `.ru-drucker-status`.
+               Beim zweiten Dekorieren findet die Schleife keinen Textknoten mehr
+               (er ist dann ein Span) und tut nichts — test494 prüft genau das. */
+            const kopf = element.querySelector(':scope > .rmo-ticket-heading');
+            if (kopf)
+                for (const node of Array.from(kopf.childNodes)) {
+                    if (node.nodeType !== Node.TEXT_NODE || !node.textContent?.trim())
+                        continue;
+                    const wort = ornament('rmo-ticket-wort');
+                    Array.from(node.textContent).forEach((character, index) => {
+                        const letter = document.createElement('span');
+                        letter.className = 'rmo-ticket-letter';
+                        letter.textContent = character;
+                        letter.style.setProperty('--rmo-i', String(index));
+                        wort.append(letter);
+                    });
+                    node.replaceWith(wort);
+                }
+        }
+        /* ---- Block 11 (E535) ---- */
+        /* ==================================================================
+         * BLOCK 11 — DIE GLASKUGEL (Vorlage 3470–4157, E535)
+         * Die Kugel hatte kein einziges Kind. Hier kommen hinein: drei
+         * Wellenringe, die Farbpunkte, der Linienkranz, zwei Bögen als SVG, die
+         * zweite Kugel und der Funke. Glaskarte und Fusszeile nur in der
+         * Kopfzeile — am 44-px-Knopf #btn-ai wäre kein Platz dafür.
+         * Die Kippung setzt zwei Variablen am Träger; gelesen werden sie nur
+         * unter (hover: hover) — am Telefon bleibt die Kugel gerade.
+         * ================================================================== */
+        if (ids.includes('orb')) {
+            const orb = element.querySelector(':scope > .rmo-orb');
+            if (orb && !orb.querySelector(':scope > .rmo-orb-zwei')) {
+                const svgNs = 'http://www.w3.org/2000/svg';
+                const arcs = document.createElementNS(svgNs, 'svg');
+                arcs.setAttribute('class', 'rmo-orb-pfade');
+                arcs.setAttribute('viewBox', '0 0 24 24');
+                arcs.setAttribute('aria-hidden', 'true');
+                /* Zwei Halbkreise, r = 8: der obere und der untere Bogen. */
+                for (const d of ['M4 14a8 8 0 0 1 16 0', 'M20 10a8 8 0 0 1-16 0']) {
+                    const path = document.createElementNS(svgNs, 'path');
+                    path.setAttribute('d', d);
+                    arcs.append(path);
+                }
+                const waves = [0, 1, 2].map(index => {
+                    const wave = ornament('rmo-orb-welle');
+                    wave.style.setProperty('--rmo-i', String(index));
+                    return wave;
+                });
+                orb.append(...waves, ornament('rmo-orb-punkte'), ornament('rmo-orb-kranz'), arcs, ornament('rmo-orb-zwei'), ornament('rmo-orb-funke'));
+                if (element.matches('#ai .ai-head'))
+                    orb.append(ornament('rmo-orb-fuss'));
+            }
+            /* Die Karte steht als Geschwister VOR der Kugel (ensure fügt vorne
+               ein); der Stil schiebt sie per negativem Rand unter die Kugel. */
+            if (element.matches('#ai .ai-head'))
+                ensure(element, 'rmo-orb-karte');
+            if (element instanceof HTMLElement && !element.hasAttribute('data-rmo-orb-kippung') &&
+                matchMedia('(hover: hover)').matches) {
+                const carrier = element;
+                set(carrier, 'data-rmo-orb-kippung', 'true');
+                carrier.addEventListener('pointermove', event => {
+                    const rect = carrier.getBoundingClientRect();
+                    if (!rect.width || !rect.height)
+                        return;
+                    const x = Math.max(-1, Math.min(1, ((event.clientX - rect.left) / rect.width - .5) * 2));
+                    const y = Math.max(-1, Math.min(1, ((event.clientY - rect.top) / rect.height - .5) * 2));
+                    carrier.style.setProperty('--rmo-ox', x.toFixed(2));
+                    carrier.style.setProperty('--rmo-oy', y.toFixed(2));
+                });
+                carrier.addEventListener('pointerleave', () => {
+                    carrier.style.removeProperty('--rmo-ox');
+                    carrier.style.removeProperty('--rmo-oy');
+                });
+            }
+        }
+        /* ---- Block 12 (E535) ---- */
+        /* ==================================================================
+         * DER HEBELSCHALTER AM GLÜHFADEN (Vorlage 4158–4795, E535)
+         *
+         * Die Lampe stand seit E529 da, der SCHALTER nicht: ein Glaskolben
+         * hat nichts, was man werfen könnte. Die Vorlage zeigt einen
+         * zweiteiligen Körper — Metallgehäuse links, Glasröhre rechts —, und
+         * genau diese Reihenfolge entsteht hier von selbst: `ensure` setzt
+         * jedes Teil VORNE ein, das Glas ist oben schon eingesetzt, also
+         * landet das Gehäuse links davon.
+         *
+         * Der Aufruf für `rmo-filament` bleibt unangetastet. Die drei
+         * Schichten im Glas werden nachgereicht, nicht in ihn hineingebaut:
+         * wer ihn ersetzt, ersetzt auch den Grund, der dort steht.
+         * ================================================================== */
+        if (ids.includes('filament')) {
+            /* Fassung, geworfener Arm, eingeprägtes 0/I, Schraubenkopf. */
+            ensure(element, 'rmo-hebel', gehaeuse => {
+                gehaeuse.append(ornament('rmo-hebel-arm'), ornament('rmo-hebel-zeichen'), ornament('rmo-hebel-schraube'));
+            });
+            /* Der Lichtkegel blendet (color-dodge) über der Knopffläche. Er steht
+               nicht im Fluss und verschiebt deshalb weder Text noch Trefferfläche. */
+            ensure(element, 'rmo-hebel-kegel');
+            /* Reflexwischer, Randlicht und Körnung gehören INS Glas — sonst
+               wischt der Streifen über die Beschriftung statt über den Kolben. */
+            const glas = element.querySelector(':scope > .rmo-filament');
+            if (glas && !glas.querySelector(':scope > .rmo-filament-wischer')) {
+                glas.append(ornament('rmo-filament-wischer'), ornament('rmo-filament-rand'), ornament('rmo-filament-koernung'));
+            }
+        }
+        /* ---- Block 13 (E535) ---- */
+        /* ==================================================================
+         * BLOCK 13 — DER MECHANISCHE DREIERBLOCK (Vorlage 4796–5397, E535)
+         *
+         * Die drei Zeitmessertasten hatten kein einziges Kind: keine Lampe,
+         * kein Zeichen, keine Lichtschicht — die Vorlage lebt aber genau
+         * davon. Jede Taste bekommt darum EINE Kappe mit allen Schichten
+         * darin; das hält die Zahl der Knoten klein und die Reihenfolge
+         * stabil. Die Wanne (Rauschen und Randglanz) liegt über allem.
+         *
+         * Nichts davon ist bedienbar: alle Teile sind aria-hidden (ornament)
+         * und in `motion.css` ohne Zeigerfang. Die drei nativen Knöpfe und
+         * ihre 44-px-Flächen bleiben unverändert (§37, test494 zählt sie).
+         * ================================================================== */
+        if (ids.includes('transport')) {
+            const svgNs = 'http://www.w3.org/2000/svg';
+            /* Rauschen und Rahmenreflex gehören der Wanne, nicht der Taste. */
+            ensure(element, 'rmo-tr-wanne', wanne => {
+                wanne.append(ornament('rmo-tr-rauschen'), ornament('rmo-tr-glanz'));
+            });
+            /* „Weiter" ist ein Start, kein Halt — die Taste zeigt dann das
+               Dreieck. Der Zustand steht am Träger (zeitmesser.ts:202). */
+            const angehalten = element.getAttribute('data-zustand') === 'pausiert';
+            element.querySelectorAll(':scope > button').forEach(taste => {
+                /* `data-rmo-taste` ist der Haken für den Stil; `data-zm` ist der
+                   Befehl und hier nur die Rückfallebene. */
+                const rolle = taste.getAttribute('data-rmo-taste') || taste.getAttribute('data-zm') || '';
+                const figur = rolle === 'stopp' ? ['M9 9h6v6H9z']
+                    : rolle === 'pause' && !angehalten ? ['M10 8v8', 'M14 8v8']
+                        : ['M9.5 7.5 17 12l-7.5 4.5z'];
+                ensure(taste, 'rmo-tr-kappe', kappe => {
+                    const zeichen = document.createElementNS(svgNs, 'svg');
+                    zeichen.setAttribute('class', 'rmo-tr-sym');
+                    zeichen.setAttribute('viewBox', '0 0 24 24');
+                    zeichen.setAttribute('aria-hidden', 'true');
+                    for (const d of figur) {
+                        const linie = document.createElementNS(svgNs, 'path');
+                        linie.setAttribute('d', d);
+                        zeichen.append(linie);
+                    }
+                    kappe.append(ornament('rmo-tr-reflex'), ornament('rmo-tr-wisch'), ornament('rmo-tr-fleck'), zeichen, ornament('rmo-led'));
+                });
+            });
+            /* Der Lichtfleck sitzt dort, wo der Finger aufsetzt. Ohne Zeiger
+               (Tastatur) bleibt er mittig — der Stil hat dafür Vorgabewerte.
+               Die Marke verhindert einen zweiten Horcher, wenn dieselbe Reihe
+               noch einmal dekoriert wird; ein Zustandswechsel baut die Reihe
+               ohnehin neu auf und bringt einen frischen Knoten mit. */
+            if (!element.hasAttribute('data-rmo-tr-druck')) {
+                set(element, 'data-rmo-tr-druck', '1');
+                element.addEventListener('pointerdown', ereignis => {
+                    if (!(ereignis instanceof PointerEvent) || !(ereignis.target instanceof Element))
+                        return;
+                    const taste = ereignis.target.closest('button');
+                    if (!taste)
+                        return;
+                    const feld = taste.getBoundingClientRect();
+                    if (!feld.width || !feld.height)
+                        return;
+                    taste.style.setProperty('--rmo-px', Math.round((ereignis.clientX - feld.left) / feld.width * 100) + '%');
+                    taste.style.setProperty('--rmo-py', Math.round((ereignis.clientY - feld.top) / feld.height * 100) + '%');
+                });
+            }
+        }
+        /* ---- Block 01 (E535) ---- */
+        /* Block 1 — das Dateizeichen auf den Blättern des Regaldeckels. Der Stapel
+           selbst entsteht weiter oben in derselben `folder`-Abfrage; hier kommt nur
+           das Zeichen dazu, und zwar für JEDES bereits vorhandene Blatt — `ensure`
+           baut den Stapel nur einmal, die Blätter sind danach schon da.
+           Die Ordnerkarte `.ru-fach` braucht von hier gar nichts: sie baut ihre
+           Lupe, ihr Blattzeichen und ihren Hinweispfeil selbst
+           (`src/schale/bedienung/ordnerkarte.ts`, `createElementNS`, kein
+           `innerHTML`). */
+        if (ids.includes('folder')) {
+            for (const sheet of Array.from(element.querySelectorAll('.rmo-folder-sheet'))) {
+                if (!sheet.querySelector(':scope > .rmo-folder-icon'))
+                    sheet.append(ornament('rmo-folder-icon'));
+            }
+        }
+        /* ---- Block 03 (E535) ---- */
+        /* Block 3 — die Lampe aus Redurs Lichtkarte, und zwar NUR auf der
+           Elektro-Fachkachel. `.stat-karte.lw-metrik` und `.pf-karte` tragen
+           dieselbe Wirkungs-ID, sind aber eine Kennzahl und eine Listenzeile: ein
+           Lichtkegel über einer Zahl behauptet eine Bedeutung, die es nicht gibt.
+           Deshalb hier die zweite Frage nach `.els-kachel` — die ID allein reicht
+           als Bedingung nicht. */
+        if (ids.includes('light') && element.matches('.els-kachel')) {
+            ensure(element, 'rmo-lampe', lampe => {
+                /* Reihenfolge = Malreihenfolge: erst der Schlitz, dann das Licht
+                   darüber, dann die Abdunklung obenauf. Alle Teile kommen aus
+                   `ornament()` und tragen damit `aria-hidden` — ein Vorleseprogramm
+                   hört von der Lampe nichts, und das ist richtig so: sie sagt nichts,
+                   was der Knopf nicht schon sagt. */
+                const kegel = ornament('rmo-lampe-kegel');
+                kegel.append(ornament('rmo-lampe-min'), ornament('rmo-lampe-mid'), ornament('rmo-lampe-hi'));
+                const dunkel = ornament('rmo-lampe-dunkel');
+                dunkel.append(ornament('rmo-lampe-sl'), ornament('rmo-lampe-ll'), ornament('rmo-lampe-slt'), ornament('rmo-lampe-srt'));
+                lampe.append(ornament('rmo-lampe-schlitz'), kegel, dunkel);
+            });
+        }
+        /* ---- Block 05 (E535) ---- */
+        /* Block 5 — die sieben Klumpen. Kommt NACH der vorhandenen Zeile
+           `if (ids.includes('liquid')) ensure(element, 'rmo-liquid');`; die bleibt
+           unverändert, sie setzt die 22-px-Blase. Hier kommt nur ihr Inhalt dazu. */
+        if (ids.includes('liquid')) {
+            const lader = element.querySelector(':scope > .rmo-liquid');
+            /* `!lader.firstElementChild` ist die ganze Einmaligkeit: ein zweiter
+           Dekorationslauf findet die Masse und lässt alles stehen (test494,
+           „Wiederholte Dekoration bleibt einmalig"). */
+            if (lader && !lader.firstElementChild) {
+                /* Die Masse ist ein EIGENES Element und nicht die Blase selbst, und das
+                   ist keine Geschmacksfrage: auf ihr sitzt `filter: contrast(...)`, und
+                   ein Filter wirkt auf alles im Element — auch auf Glasrand und
+                   Glanzpunkt. Die beiden bleiben deshalb draussen, als ::before und
+                   ::after der Blase. In der Masse liegen nur leere Spans, nie Text;
+                   Kontrast auf Schrift zerstört sie. */
+                const masse = ornament('rmo-liquid-masse');
+                /* Sieben, wie die sieben <polygon> der Vorlage. Die Zahl steht hier und
+                   nicht im Stil, weil sie in die Phase eingeht: `--rmo-i` verteilt die
+                   Klumpen über den Umlauf (Siebtel des Takts), und ein achter Klumpen
+                   wäre sonst ein stiller Gleichläufer. Drehpunkt, Umriss und
+                   Laufrichtung je Klumpen stehen im Stil bei :nth-child. */
+                for (let index = 0; index < 7; index++) {
+                    const klumpen = ornament('rmo-liquid-klumpen');
+                    klumpen.style.setProperty('--rmo-i', String(index));
+                    masse.append(klumpen);
+                }
+                lader.append(masse);
+            }
+        }
         if (ids.includes('letters')) {
             /* Text teilen, aber Symbole, Beschriftung und Listener behalten. */
             for (const node of Array.from(element.childNodes)) {

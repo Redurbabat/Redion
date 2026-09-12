@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-516 Entscheidungen, E1 bis E536 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+517 Entscheidungen, E1 bis E537 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -580,6 +580,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E534** — Auf ad4ccbc weiterarbeiten: Ticket wenden, Statistikherz ergänzen und zwei Darstellungsfehler messen
 * **E535** — Sieben Vorlagenblöcke in einem Zug: Fragmente statt zehn Schreiber in einer Datei
 * **E536** — Die Unschärfe läuft wieder von links nach rechts — die Staffelung war auf 0 gefallen
+* **E537** — Die letzten drei Vorlagenblöcke: Ordnerkarte, Lichtkarte mit Kippschalter, flüssige Blase
 
 ---
 
@@ -43019,3 +43020,58 @@ Der Rückfall ist zweistufig und nennt seinen Grund im Kommentar:
 Die Staffelung ist **im Hover** gemessen. Die erste Messung lief im
 Ruhezustand und sagte fälschlich „keine Staffelung" — dort setzt
 `animation:none` sie ohnehin auf 0.
+
+---
+
+E537 — Die letzten drei Vorlagenblöcke
+--------------------------------------------------------------------------
+
+Damit sind alle zehn offenen Blöcke aus der Bestandsaufnahme (E532) gebaut.
+
+**Block 1, die Ordnerkarte.** Zähler-Pille mit Federauftritt, Suchzeile, die
+aus einem Knopf herauswächst, Lupensymbol, Datei-Etikett mit Milchglas und
+Einschweben, Schlagschatten unter der Rückwand, Dateizeichen auf jedem
+Blatt, und der Hinweispfeil, der wippt, solange die Karte zu ist. Er merkt
+sich sein erstes Öffnen in einer **Modulvariablen, nicht in IndexedDB** —
+ein Hinweis ist keine Nutzerdatei.
+Zwei Abweichungen mit geschriebenem Grund: die Pille verschwindet im
+zugeklappten Zustand nicht (sie trägt die Anzahl, die einzige Auskunft der
+geschlossenen Karte), und die Suchzeile bleibt im Ruhezustand voll breit —
+eine schmalere wäre eine verkleinerte Trefferfläche (§37).
+
+**Block 3, Lichtkarte und Kippschalter.** Lichtschlitz, dreischichtiger
+Lumen-Kegel, Abdunklung mit zwei Kegelwänden, Randbeleuchtung und
+aufhellendes Symbol auf den Elektro-Fachkacheln; am Schalter die gefräste
+Fassung, der weiss aufleuchtende Schlitz, der von innen glühende Griff und
+die Vorschau beim Zeigen.
+
+> **DAS BILD HAT EINEN FEHLER GEFUNDEN, DEN KEIN PRÜFLAUF SEHEN KONNTE.**
+> Die Masse der Vorlage sind Prozente einer 288 × 384 px grossen Karte. Die
+> Elektro-Fachkacheln sind breite **Zeilen** — gemessen 930 × 80 px. Aus
+> „64 % Schlitz" wurde ein 595 px langer weisser Streifen quer durch die
+> Zeile, aus der Abdunklung ein dunkler Kasten über der Beschriftung. Jede
+> Breite ist jetzt gedeckelt: `min(Prozent, Pixel)`. Auf einer schmalen
+> Kachel gilt weiter der Prozentwert, auf einer breiten Zeile bleibt die
+> Lampe eine Lampe. Das ist §55.3, wörtlich: ein Bild, wenn man etwas sehen
+> kann.
+
+**Block 5, die flüssige Blase.** Der Kontrastsprung der Vorlage
+(`contrast` 15 → 3 → 15 über geblurrte Kinder — die Gooey-Technik), die
+Farbdrehung über 6 s, der Lichthof und sieben gegenläufig kreisende Klumpen
+statt zwei wiegender Ränder.
+Der Agent hat dabei etwas gemessen, das leicht still danebengeht:
+`contrast()` rechnet **nur an den Farbkanälen, nicht am Alpha** — über
+Durchsichtigkeit verschmilzt nichts. Deshalb liegt unter den Klumpen ein
+deckender dunkler Grund, dunkel genug, um von `contrast(3)` bis
+`contrast(15)` schwarz zu bleiben und nicht mitzuzappeln. Und `contrast`
+steht ausschliesslich auf der 22-px-Blase, nie auf einem Element mit Text.
+
+**Offen und eingetragen:** die Kippung der ganzen Ordnerkarte bleibt weg —
+`bausteine.css` hält fest, warum es dort kein `preserve-3d` gibt (mit ihm
+malt der Browser nach der 3D-Lage statt nach `z-index`, die gekippte Klappe
+kam vor die Blätter, und drei von fünf waren unsichtbar). Eine Beschriftung
+über dem Schalter ist nicht gebaut: es gibt in Redion kein Element dafür,
+und eines zu erfinden hiesse, eine Bedeutung zu behaupten.
+
+`test493` 44 grün, `test494` 153 grün, `test495` 26/26, `test496` 148 grün.
+Angesehen: `bilder/e537-lampe-*.png` in Hell und Dunkel.

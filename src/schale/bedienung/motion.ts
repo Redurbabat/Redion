@@ -475,6 +475,73 @@ const RedionMotion = (() => {
         });
       }
     }
+    /* ---- Block 01 (E535) ---- */
+    /* Block 1 — das Dateizeichen auf den Blättern des Regaldeckels. Der Stapel
+       selbst entsteht weiter oben in derselben `folder`-Abfrage; hier kommt nur
+       das Zeichen dazu, und zwar für JEDES bereits vorhandene Blatt — `ensure`
+       baut den Stapel nur einmal, die Blätter sind danach schon da.
+       Die Ordnerkarte `.ru-fach` braucht von hier gar nichts: sie baut ihre
+       Lupe, ihr Blattzeichen und ihren Hinweispfeil selbst
+       (`src/schale/bedienung/ordnerkarte.ts`, `createElementNS`, kein
+       `innerHTML`). */
+    if (ids.includes('folder')) {
+      for (const sheet of Array.from(element.querySelectorAll('.rmo-folder-sheet'))) {
+    if (!sheet.querySelector(':scope > .rmo-folder-icon')) sheet.append(ornament('rmo-folder-icon'));
+      }
+    }
+    /* ---- Block 03 (E535) ---- */
+    /* Block 3 — die Lampe aus Redurs Lichtkarte, und zwar NUR auf der
+       Elektro-Fachkachel. `.stat-karte.lw-metrik` und `.pf-karte` tragen
+       dieselbe Wirkungs-ID, sind aber eine Kennzahl und eine Listenzeile: ein
+       Lichtkegel über einer Zahl behauptet eine Bedeutung, die es nicht gibt.
+       Deshalb hier die zweite Frage nach `.els-kachel` — die ID allein reicht
+       als Bedingung nicht. */
+    if (ids.includes('light') && element.matches('.els-kachel')) {
+      ensure(element, 'rmo-lampe', lampe => {
+    /* Reihenfolge = Malreihenfolge: erst der Schlitz, dann das Licht
+       darüber, dann die Abdunklung obenauf. Alle Teile kommen aus
+       `ornament()` und tragen damit `aria-hidden` — ein Vorleseprogramm
+       hört von der Lampe nichts, und das ist richtig so: sie sagt nichts,
+       was der Knopf nicht schon sagt. */
+    const kegel = ornament('rmo-lampe-kegel');
+    kegel.append(ornament('rmo-lampe-min'), ornament('rmo-lampe-mid'),
+                 ornament('rmo-lampe-hi'));
+    const dunkel = ornament('rmo-lampe-dunkel');
+    dunkel.append(ornament('rmo-lampe-sl'), ornament('rmo-lampe-ll'),
+                  ornament('rmo-lampe-slt'), ornament('rmo-lampe-srt'));
+    lampe.append(ornament('rmo-lampe-schlitz'), kegel, dunkel);
+      });
+    }
+    /* ---- Block 05 (E535) ---- */
+    /* Block 5 — die sieben Klumpen. Kommt NACH der vorhandenen Zeile
+       `if (ids.includes('liquid')) ensure(element, 'rmo-liquid');`; die bleibt
+       unverändert, sie setzt die 22-px-Blase. Hier kommt nur ihr Inhalt dazu. */
+    if (ids.includes('liquid')) {
+      const lader = element.querySelector(':scope > .rmo-liquid');
+      /* `!lader.firstElementChild` ist die ganze Einmaligkeit: ein zweiter
+     Dekorationslauf findet die Masse und lässt alles stehen (test494,
+     „Wiederholte Dekoration bleibt einmalig"). */
+      if (lader && !lader.firstElementChild) {
+    /* Die Masse ist ein EIGENES Element und nicht die Blase selbst, und das
+       ist keine Geschmacksfrage: auf ihr sitzt `filter: contrast(...)`, und
+       ein Filter wirkt auf alles im Element — auch auf Glasrand und
+       Glanzpunkt. Die beiden bleiben deshalb draussen, als ::before und
+       ::after der Blase. In der Masse liegen nur leere Spans, nie Text;
+       Kontrast auf Schrift zerstört sie. */
+    const masse = ornament('rmo-liquid-masse');
+    /* Sieben, wie die sieben <polygon> der Vorlage. Die Zahl steht hier und
+       nicht im Stil, weil sie in die Phase eingeht: `--rmo-i` verteilt die
+       Klumpen über den Umlauf (Siebtel des Takts), und ein achter Klumpen
+       wäre sonst ein stiller Gleichläufer. Drehpunkt, Umriss und
+       Laufrichtung je Klumpen stehen im Stil bei :nth-child. */
+    for (let index = 0; index < 7; index++) {
+      const klumpen = ornament('rmo-liquid-klumpen');
+      klumpen.style.setProperty('--rmo-i', String(index));
+      masse.append(klumpen);
+    }
+    lader.append(masse);
+      }
+    }
     if (ids.includes('letters')) {
       /* Text teilen, aber Symbole, Beschriftung und Listener behalten. */
       for (const node of Array.from(element.childNodes)) {

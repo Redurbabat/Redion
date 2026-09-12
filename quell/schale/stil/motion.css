@@ -2517,3 +2517,504 @@ body[data-bewegung="ruhig"] .rmo-transport button:hover:not(:disabled) { transfo
   body .rmo-transport .rmo-tr-sym path { stroke-dashoffset: 0; }
   body .rmo-transport .rmo-tr-glanz { opacity: 0; }
 }
+
+/* ======================================================================
+   E535 — die offenen Wirkungen aus Redurs Vorlage, Block fuer Block.
+   Jeder Block steht als eigenes Fragment hier hinten: so kann eine
+   spaetere Regel eine aeltere gleicher Staerke ueberschreiben, ohne dass
+   zehn Schreiber in dieselbe Stelle der Datei greifen muessten.
+   ====================================================================== */
+
+/* ==== Block 01 — 3D-Ordnerkarte (E535) ==== */
+/* DER GRÖSSTE TEIL DIESES BLOCKS STEHT NICHT HIER, sondern in
+   `bausteine.css` bei `.ru-fach*` — dort ist die Ordnerkarte zu Hause, sie
+   ist ein Baustein und keine Dekoration, die über ein `data-rmo` gehängt
+   wird. Der Auftritt der Zähler-Pille, die wachsende Suchzeile mit Lupe,
+   das Milchglas-Etikett, der Schlagschatten unter der Rückwand, das
+   Dateizeichen, der Zähler-Hover und der Hinweispfeil sind alle dort.
+
+   HIER STEHT NUR, was die ZWEITE Stelle derselben Vorlagenfamilie braucht:
+   der Blätterstapel `[data-rmo~="folder"]` am Regaldeckel. Ihm fehlten
+   dieselben zwei Kleinigkeiten wie der Karte — der Schlagschatten, der den
+   Stapel im Raum stehen lässt, und das Dateizeichen auf jedem Blatt, das
+   beim Überfahren aufhellt.
+
+   Warum der Schatten auf `.rmo-folder-stack` sitzt und nicht auf
+   `.bib-deckel-blatt`: ein `filter` erzeugt einen neuen Bezugsrahmen und
+   flacht 3D darunter ab, und genau dort dreht sich `::before` um
+   `rotateX(-32deg) translateZ(6px)` (motion.css:112). Der Stapel selbst
+   enthält kein 3D — dort kostet der Filter nichts.
+
+   Keine Bewegung im Leerlauf (E528): Der Schatten steht still, das Zeichen
+   blendet nur beim Überfahren und beim Tastenfokus auf, einmal und
+   endlich. */
+
+.rmo-folder-stack { filter: drop-shadow(0 10px 20px #00000030); }
+
+/* Ein Blatt mit umgeknickter Ecke, 9 × 11 px — gezeichnet aus Rand und
+   Ecke statt aus einem SVG, weil es hier fünfmal je Deckel vorkommt und
+   nichts trägt ausser sich selbst. Es sagt nichts, was nicht ohnehin
+   dasteht (die Vorschau daneben nennt die echten Namen), deshalb
+   `aria-hidden` im Markup und `pointer-events:none` hier: der ganze Deckel
+   ist die Trefferfläche und bleibt es (§37, §38). */
+.rmo-folder-icon {
+  position: absolute; top: 6px; right: 6px; width: 9px; height: 11px;
+  border: 1px solid #50426366; border-radius: 2px;
+  background: #ffffff80; opacity: .45; pointer-events: none;
+  transition: opacity var(--motion-fast) var(--ease);
+}
+.rmo-folder-icon::after {
+  content: ''; position: absolute; top: -1px; right: -1px; width: 4px; height: 4px;
+  border-left: 1px solid #50426366; border-bottom: 1px solid #50426366;
+  background: #ffffffcc; border-bottom-left-radius: 2px;
+}
+[data-rmo~="folder"]:is(:hover, :focus-visible, :active) .rmo-folder-icon { opacity: .95; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Das Zeichen bleibt, es blendet nur nicht mehr. Der Schatten ist keine
+     Bewegung und bleibt, wie er ist. */
+  .rmo-folder-icon { transition: none; }
+}
+
+/* NACHGEZOGEN NACH DEM ERSTEN BILD (§55.3). Die Masse der Vorlage sind
+   PROZENTE der Karte, und Redurs Karte ist 288 × 384 px. Die Elektro-
+   Fachkacheln sind aber breite ZEILEN — gemessen 930 × 80 px. Aus „64 %
+   Schlitz" wurde damit ein 595 px langer weisser Streifen quer durch die
+   Zeile, und aus der Abdunklung ein dunkler Kasten über der Beschriftung.
+   Kein Prüflauf konnte das sehen; das Bild schon.
+   Jede Breite ist deshalb gedeckelt: `min(Prozent, Pixel)`. Auf einer
+   schmalen Kachel gilt weiter der Prozentwert der Vorlage, auf einer
+   breiten Zeile bleibt die Lampe eine Lampe statt ein Balken. */
+/* ==== Block 03 — Lichtkarte und Kippschalter (E535) ==== */
+/* Aus dem Vorlagenblock (500–1096) war an dieser Stelle NICHTS gebaut: der
+   Bestand fand „kaum" und meinte damit den Schimmer, der über die Kachel
+   wandert — einen Reflex, den die Vorlage hier gar nicht hat. Schlitz,
+   Kegel, Abdunklung, Randlicht und das aufhellende Symbol hatten weder
+   Element noch Regel.
+
+   SIE KOMMEN AUF DIE ELEKTRO-FACHKACHEL `.els-kachel`, und nur dorthin.
+   `.stat-karte.lw-metrik` und `.pf-karte` tragen dieselbe Wirkungs-ID
+   (`motion.ts:11`), bekommen aber KEIN Lampenmarkup: die eine ist eine
+   Kennzahl, die andere eine Listenzeile mit Trennlinie. Eine Lampe darin
+   wäre ein Lichtkegel über einer Zahl — hübsch und ohne Bedeutung. Die
+   Auswahl trifft der TS-Schnipsel mit `element.matches('.els-kachel')`,
+   nicht diese Datei; die Regeln hier greifen zusätzlich nur, wo das Markup
+   wirklich liegt.
+
+   DIE MASSE SIND HERUNTERGERECHNET, NICHT ABGESCHRIEBEN. Redurs Karte ist
+   18 × 24 rem (288 × 384 px), eine Fachkachel ist rund 210 × 80 px. Alle
+   Höhen stehen deshalb in Prozent der Kachel, nicht in `rem`; die Unschärfen
+   sind im gleichen Verhältnis geteilt (1 rem auf 384 px ≈ 7 px auf 80 px).
+
+   AN-ZUSTAND ist `:hover`, `:focus-visible`, `:focus-within` und die
+   einmalige Wiedergabe `[data-rmo-play="light"]`. Im Leerlauf ist die Lampe
+   AUS und nichts läuft (E528): die Zustände sind Übergänge, die einzige
+   Kennbild-Animation ist das Zünden und läuft EINMAL.
+
+   Warum `body` davor: `motion.css` wird in `index.html:68` VOR
+   `bausteine.css:69` geladen. `.els-kachel:hover` dort hat dieselbe Stärke
+   wie `.els-kachel:is(:hover,…)` hier und gewinnt allein durch die
+   Reihenfolge — dieselbe Lehre wie bei E534 und E535. */
+
+/* ----------------------------------------------------------------------
+   1 — Die Bühne.
+
+   `.els-kachel` bringt `position:relative` und `overflow:hidden` schon mit
+   (motion.css, Abschnitt 3+10). Die Lampe liegt darin als eigene Schicht
+   auf z-Ebene 0 — und weil ein positioniertes Kind IMMER über dem
+   laufenden Text malt, bekommt der Inhalt der Kachel im Gegenzug Ebene 1.
+   Ohne diese zwei Zeilen läge der Lichtkegel ÜBER der Beschriftung. */
+body .els-kachel[data-rmo~="light"] > .rmo-lampe {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  perspective: 220px; transform-style: preserve-3d;
+  /* Im Leerlauf ist die Lampe nicht nur aus, sie tritt auch zurück: auf
+     210 px Breite kreuzt der Schlitz die Beschriftung, und ein satter
+     dunkler Strich quer durch eine Zeile liest sich als Durchstreichung.
+     Gedämpft bleibt er eine Fuge im Gehäuse. */
+  opacity: .38; transition: opacity .4s var(--ease, ease);
+}
+body .els-kachel[data-rmo~="light"] > :not(.rmo-lampe) { position: relative; z-index: 1; }
+
+/* ----------------------------------------------------------------------
+   2 — Der Lichtschlitz.
+
+   `rotateX(-76deg)` staucht die 9 px auf gut 2 px: was man sieht, ist eine
+   Kante, keine Fläche — genau das, was ein Schlitz in einem Gehäuse ist. */
+body .els-kachel[data-rmo~="light"] .rmo-lampe-schlitz {
+  position: absolute; left: 0; right: 0; top: 0; bottom: 0; margin: auto;
+  width: min(64%, 132px); height: 9px; border-radius: 2px;
+  background: #121212; box-shadow: 0 0 4px 0 #fff0;
+  transform: rotateX(-76deg);
+  transition: background .4s var(--ease, ease), box-shadow .4s var(--ease, ease);
+}
+
+/* ----------------------------------------------------------------------
+   3 — Der Lumen-Kegel aus drei Schichten.
+
+   `.min` ist die scharfe Zunge unmittelbar über dem Schlitz, `.mid` der
+   grosse weiche Körper, `.hi` die gegenläufig gekippte Haube. Erst die
+   drei zusammen sehen aus wie Licht; jede einzelne sieht aus wie ein
+   Verlauf. Der ganze Kegel blendet von 0 auf .5 auf. */
+body .els-kachel[data-rmo~="light"] .rmo-lampe-kegel {
+  position: absolute; inset: 0; margin: auto; pointer-events: none;
+  perspective: 220px; opacity: 0; transition: opacity .4s var(--ease, ease);
+}
+body .els-kachel[data-rmo~="light"] .rmo-lampe-kegel > * {
+  position: absolute; left: 0; right: 0; top: 0; margin: auto;
+  background: linear-gradient(#fff0, #fffa);
+}
+body .els-kachel[data-rmo~="light"] .rmo-lampe-min {
+  width: min(70%, 140px); height: 26%; bottom: 16%; transform: rotateX(-42deg); opacity: .4;
+}
+body .els-kachel[data-rmo~="light"] .rmo-lampe-mid {
+  width: min(74%, 150px); height: 62%; bottom: 40%; transform: rotateX(-42deg);
+  filter: blur(7px); opacity: .8; border-radius: 100% 100% 0 0;
+}
+body .els-kachel[data-rmo~="light"] .rmo-lampe-hi {
+  width: min(50%, 104px); height: 62%; bottom: 52%; transform: rotateX(22deg);
+  filter: blur(7px); opacity: .6; border-radius: 100% 100% 0 0;
+}
+
+/* ----------------------------------------------------------------------
+   4 — Die Abdunklung: zwei Schattenbögen und die zwei Kegelwände.
+
+   Sie ist der Grund, warum das Licht wie Licht wirkt. Ohne sie wird die
+   Kachel beim Einschalten nur heller; mit ihr wird sie UNTERHALB des
+   Kegels dunkler, und das Auge liest daraus eine Lampe. */
+body .els-kachel[data-rmo~="light"] .rmo-lampe-dunkel {
+  position: absolute; inset: 0; margin: auto; pointer-events: none;
+  perspective: 220px; opacity: .22; transition: opacity .4s var(--ease, ease);
+}
+body .els-kachel[data-rmo~="light"] .rmo-lampe-dunkel > * {
+  position: absolute; top: 0; margin: auto; border-radius: 0 0 100% 100%;
+  transition: opacity .4s var(--ease, ease);
+}
+body .els-kachel[data-rmo~="light"] .rmo-lampe-sl {
+  left: 0; right: 0; bottom: 0; top: 40%; width: min(64%, 132px); height: 46%;
+  background: linear-gradient(#000, #0000); filter: blur(2px);
+  opacity: .1; transform: rotateX(-22deg);
+}
+body .els-kachel[data-rmo~="light"] .rmo-lampe-ll {
+  left: 0; right: 0; bottom: 0; top: 48%; width: min(62%, 128px); height: 46%;
+  background: linear-gradient(#000a, #0000); filter: blur(6px);
+  opacity: .4; transform: rotateX(22deg);
+}
+/* Die schrägen Wände: `skewY` kippt die zwei schmalen Streifen so, dass
+   sie die Flanken des Kegels nachzeichnen. 64 % Gegenkante heisst: der
+   Streifen sitzt dort, wo der Schlitz endet. */
+body .els-kachel[data-rmo~="light"] .rmo-lampe-slt,
+body .els-kachel[data-rmo~="light"] .rmo-lampe-srt {
+  width: min(4%, 9px); height: 34%; top: 18%; bottom: 0;
+  background: linear-gradient(#0005, #0000); opacity: .6;
+}
+body .els-kachel[data-rmo~="light"] .rmo-lampe-slt { left: 0; right: 64%; transform: skewY(42deg); }
+body .els-kachel[data-rmo~="light"] .rmo-lampe-srt { right: 0; left: 64%; transform: skewY(-42deg); }
+
+/* ----------------------------------------------------------------------
+   5 — DER AN-ZUSTAND.
+
+   Vier Auslöser, eine Wirkung: Maus, Tastenfokus, Fokus im Inneren und die
+   einmalige Wiedergabe über `data-rmo-play`. Am Telefon gibt es kein
+   `:hover` — dort bleibt der Fokus der Weg, und die Kachel ist ein Knopf,
+   der ihn beim Antippen bekommt. */
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) > .rmo-lampe { opacity: 1; }
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .rmo-lampe-schlitz {
+  background: #fff; box-shadow: 0 0 4px 0 #fff;
+}
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .rmo-lampe-kegel { opacity: .5; }
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .rmo-lampe-dunkel { opacity: .8; }
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .rmo-lampe-sl { opacity: .2; }
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .rmo-lampe-ll { opacity: 1; }
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .rmo-lampe-slt,
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .rmo-lampe-srt { opacity: 1; }
+
+/* ----------------------------------------------------------------------
+   6 — Der Rand leuchtet, sobald die Lampe an ist.
+
+   Vier Schichten wie in der Vorlage, auf die Kachelgrösse gerechnet: helle
+   Lichtkante OBEN innen (#fffa), tiefer Innenschatten UNTEN, ein schmaler
+   Aussenschein nach oben, und der vorhandene Hover-Schatten der Kachel
+   bleibt als letzte Schicht erhalten — er wird ergänzt, nicht ersetzt. */
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) {
+  box-shadow:
+    inset 0 10px 2px -10px #fffa,
+    inset 0 -34px 26px -26px #000a,
+    0 -10px 3px -10px #fff6,
+    0 12px 26px #00000018;
+}
+
+/* ----------------------------------------------------------------------
+   7 — Das Symbol hellt auf und wirft seinen Schatten nach OBEN.
+
+   Nach oben, weil die Lichtquelle unter ihm liegt — das ist der ganze
+   Trick der Vorlage. 1.2 rem der grossen Karte sind auf der Kachel 8 px. */
+body .els-kachel[data-rmo~="light"] .els-zeichen {
+  filter: drop-shadow(0 -8px 2px #0000) brightness(1);
+  transition: filter .4s var(--ease, ease);
+}
+body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .els-zeichen {
+  filter: drop-shadow(0 -8px 2px #0003) brightness(1.64);
+}
+
+/* ----------------------------------------------------------------------
+   8 — Das Zünden: EINMAL, und es räumt hinter sich auf.
+
+   `play()` setzt `data-rmo-play` und nimmt es erst beim `animationend`
+   wieder weg (`motion.ts`). Eine Wirkung aus lauter Übergängen hätte das
+   Merkmal für immer stehen lassen — die Lampe wäre nach einem Antippen nie
+   wieder ausgegangen. Deshalb hat das Zünden eine echte, EINMALIGE
+   Kennbild-Folge: Anschlag, kurzes Zucken, ruhiges Brennen. */
+@keyframes rmo-lampe-zuend {
+  0%   { opacity: .12; }
+  14%  { opacity: .58; }
+  22%  { opacity: .18; }
+  100% { opacity: .5; }
+}
+body .els-kachel[data-rmo~="light"][data-rmo-play="light"] .rmo-lampe-kegel {
+  animation: rmo-lampe-zuend 1.3s var(--ease, ease) both;
+}
+
+/* ----------------------------------------------------------------------
+   9 — Hellmodus: dieselbe Lampe, leiser.
+
+   Schwarze Bögen auf #f7f7f5 sind kein Schatten mehr, sondern ein Fleck.
+   Der Kegel darf bleiben (weisses Licht auf hellem Grund ist schwach, aber
+   nicht falsch), die Abdunklung geht auf ein Drittel zurück. */
+html[data-theme="light"] body .els-kachel[data-rmo~="light"] .rmo-lampe-dunkel { opacity: .09; }
+html[data-theme="light"] body .els-kachel[data-rmo~="light"]:is(:hover, :focus-visible, :focus-within, [data-rmo-play="light"]) .rmo-lampe-dunkel { opacity: .3; }
+
+/* ----------------------------------------------------------------------
+   10 — Weniger Bewegung: die Lampe bleibt, der Weg dorthin verschwindet.
+
+   Kein `display:none`. Wer weniger Bewegung eingestellt hat, will keine
+   Überblendung — er will trotzdem sehen, welche Kachel unter dem Zeiger
+   liegt. Also springt der Zustand, statt zu wandern. */
+@media (prefers-reduced-motion: reduce) {
+  body .els-kachel[data-rmo~="light"][data-rmo-play="light"] .rmo-lampe-kegel { animation: none; }
+  body .els-kachel[data-rmo~="light"] > .rmo-lampe,
+  body .els-kachel[data-rmo~="light"] .rmo-lampe-schlitz,
+  body .els-kachel[data-rmo~="light"] .rmo-lampe-kegel,
+  body .els-kachel[data-rmo~="light"] .rmo-lampe-dunkel,
+  body .els-kachel[data-rmo~="light"] .rmo-lampe-dunkel > *,
+  body .els-kachel[data-rmo~="light"] .els-zeichen { transition: none !important; }
+}
+
+/* ==== Block 05 — Flüssiger Polygonlader (E537) ==== */
+/* Die Blase `.rmo-liquid` gab es schon, aber sie war nicht das, was der
+   Block ist: zwei gegenläufige Ränder, die sich wiegen. Die zwei Wirkungen,
+   die die Vorlage (1420–1570) ausmachen, fehlten ganz —
+   der KONTRASTSPRUNG und die FARBDREHUNG.
+
+   Die klassische Gooey-Technik in drei Sätzen:
+   1. Die Klumpen bekommen `blur`. Aus Kanten werden Verläufe.
+   2. Das Elternelement bekommt `filter: contrast(15)`. Ein Verlauf mit
+      Mittelwerten wird dadurch wieder zu einer harten Kante — aber zu
+      EINER gemeinsamen um alle Klumpen herum. Zwei Klumpen, die sich
+      nähern, fliessen ineinander, statt sich zu überlappen.
+   3. Der Kontrast läuft 15 → 3 → 15 (Vorlage: @keyframes roundness).
+      Bei 3 weicht die erstarrte Masse auf, bei 15 wird sie wieder scharf.
+      Das ist das Atmen, das den Lader ausmacht.
+
+   WARUM EIN DUNKLER GRUND SEIN MUSS (der Punkt, an dem die Technik sonst
+   still nichts tut): `contrast()` rechnet nur an den Farbkanälen, nicht am
+   ALPHA. Über einem durchsichtigen Hintergrund bleibt die weiche
+   Blur-Kante als weiche Alpha-Kante stehen und nichts verschmilzt. Die
+   Masse braucht deshalb eine eigene deckende Fläche. Sie ist so dunkel
+   gewählt, dass sie über den ganzen Kontrastbereich (3 bis 15) schwarz
+   bleibt: bei contrast(3) fällt jeder Kanal unter 0.333 auf 0, bei
+   contrast(15) jeder unter 0.467. Der Grund liegt bei rund 0.1 — er kippt
+   also nie ins Helle und zappelt nicht mit.
+
+   UND DIE GRENZE, DIE NICHT ÜBERSCHRITTEN WIRD: `filter: contrast` steht
+   NUR auf `.rmo-liquid-masse`, und in der Masse liegen ausschliesslich
+   leere, dekorative Spans. Kein Text. Kontrast auf einem Element mit
+   Schrift würde die Schrift zerstören — die Statuszeile `.ki-aktivitaet`
+   und die Kapsel `.ru-zustand` bleiben deshalb ausserhalb, und selbst Rand
+   und Glanzpunkt der Blase sitzen als ::before/::after eine Ebene höher.
+
+   UND WANN DAS LÄUFT: nur im echten Laufzustand. Im Leerlauf ist die Blase
+   `display:none` (Zeile 706/707), und ein Element in `display:none`
+   animiert nicht. Trotzdem steht JEDE `animation` unten ausdrücklich hinter
+   derselben Zustandsliste — keine Endlosschleife im Leerlauf (E528,
+   `test494`). */
+
+/* ---- Die Blase: Lichthof und Farbdrehung ------------------------------ */
+body .rmo-liquid {
+  --rmo-blase: 22px;      /* eine Zahl, nicht drei: Breite, Höhe und Unschärfe hängen daran */
+  --rmo-takt: 2s;         /* Vorlage: --time-animation */
+  width: var(--rmo-blase); height: var(--rmo-blase); flex: 0 0 var(--rmo-blase);
+  border-radius: 50%;
+  /* Der farbige Lichthof (Vorlage: 0 0 25px + 0 20px 50px auf einer
+     100-px-Kugel; hier auf 22 px heruntergerechnet). Der zweite Schatten
+     liegt weit unten — die Kugel schwebt und leuchtet auf die Fläche
+     darunter, statt nur einen Rand zu haben. */
+  box-shadow:
+    0 0 9px -1px color-mix(in srgb, var(--accent-warm) 55%, transparent),
+    0 5px 14px -3px color-mix(in srgb, var(--accent) 55%, transparent);
+  /* filter bleibt hier LEER. Die Farbdrehung kommt weiter unten und nur im
+     Laufzustand — so ist „ruhig" und „weniger Bewegung" ohne Sonderregel
+     die Wahrheit: fällt die Animation weg, fällt auch das hue-rotate weg. */
+  filter: none;
+}
+/* Das Glasgefäss: eine Haarlinie oben hell, unten dunkel, dazu zwei innere
+   Lichtkanten. Liegt ÜBER der Masse (z-index), aber ausserhalb des
+   Kontrastfilters — sonst würde die 1-px-Linie mitbinarisiert und wäre
+   je nach Takt weg oder grell. */
+body .rmo-liquid::before {
+  inset: 0; border: 1px solid transparent; border-radius: 50%;
+  border-top-color: color-mix(in srgb, var(--accent-warm) 65%, #fff);
+  border-bottom-color: color-mix(in srgb, var(--accent) 55%, #000);
+  background: linear-gradient(180deg, #ffffff22, transparent 45%, #00000033);
+  box-shadow:
+    inset 0 4px 6px -3px color-mix(in srgb, var(--accent-warm) 60%, transparent),
+    inset 0 -4px 6px -3px color-mix(in srgb, var(--accent) 65%, transparent);
+  animation: none; z-index: 2;
+}
+/* Der Glanzpunkt oben links. Drei mal fünf Pixel, damit die Kugel eine
+   Lichtquelle hat und nicht flach wirkt. */
+body .rmo-liquid::after {
+  inset: auto auto 58% 22%; width: 5px; height: 3px;
+  border: 0; border-radius: 50%;
+  background: #ffffffb0; filter: blur(.5px);
+  animation: none; z-index: 3;
+}
+
+/* ---- Die Masse: der Kontrastsprung ------------------------------------ */
+.rmo-liquid-masse {
+  position: absolute; inset: 0; z-index: 1;
+  border-radius: 50%; overflow: hidden;
+  pointer-events: none;
+  /* Der deckende Grund, ohne den contrast() nichts verschmelzen kann.
+     Ein Hauch Akzent darin, damit die Kugel nicht tot-schwarz ist, wenn
+     kein Klumpen davor liegt. */
+  background: color-mix(in srgb, var(--accent) 20%, #000);
+  /* Ruhewert: gooey, aber ohne Takt. Die Animation unten überschreibt ihn
+     im Laufzustand — und wenn sie wegfällt (ruhig, weniger Bewegung,
+     Reiter verborgen), bleibt genau dieser Wert stehen. */
+  filter: contrast(13);
+}
+
+/* ---- Die sieben Klumpen ----------------------------------------------- */
+/* Jeder Klumpen ist eine Ebene über der ganzen Blase, aus der ein Polygon
+   ausgeschnitten ist — genau wie die sieben <polygon> im Klipppfad der
+   Vorlage. Das hat einen handfesten Grund: `transform-origin` in Prozent
+   rechnet gegen die EIGENE Box. Sind alle Boxen gleich gross wie die Blase,
+   sind „75% 25%" und „40% 40%" Punkte IN DER KUGEL — die Klumpen kreisen um
+   sieben verschiedene Punkte, statt sich je um sich selbst zu drehen. */
+.rmo-liquid-klumpen {
+  position: absolute; inset: 0; pointer-events: none;
+  /* Der senkrechte Verlauf der Vorlage (orange 30 % → rotbraun 70 %), hier
+     aus den vorhandenen Farbmarken. Der Verlauf ÜBERLEBT den Kontrast: die
+     Kennlinie rechnet je Kanal und bleibt monoton, aus zwei Tönen werden
+     zwei kräftigere. Genau das ist die Optik der Vorlage. */
+  background: linear-gradient(180deg, var(--accent-warm) 30%, var(--accent) 70%);
+  /* Die Unschärfe hängt an der Blasengrösse (Vorlage: 7 px auf 100 px).
+     Ohne sie gibt es nichts zu verschmelzen. */
+  filter: blur(calc(var(--rmo-blase) * .08));
+  rotate: 0deg;
+  /* Jeder Klumpen mit eigener Phase. `--rmo-i` setzt der TS-Schnipsel;
+     sieben Siebtel des Takts verteilen die Klumpen gleichmässig über den
+     Umlauf, statt sie im Gleichschritt marschieren zu lassen. */
+  animation-delay: calc(var(--rmo-i, 0) * var(--rmo-takt) / -7);
+}
+/* Sieben Drehpunkte, sieben Umrisse, und vier gegen drei Laufrichtungen.
+   Die Drehpunkte stehen so in der Vorlage (75% 25%, 50% 50%, 50% 60%,
+   40% 40% zweimal, 60% 40% zweimal); dass auch der erste kreist statt
+   still zu stehen, ist der Unterschied zu ihr. */
+.rmo-liquid-klumpen:nth-child(1) {
+  transform-origin: 75% 25%; animation-direction: reverse;
+  clip-path: polygon(46% 4%, 74% 18%, 66% 46%, 38% 38%);
+}
+.rmo-liquid-klumpen:nth-child(2) {
+  transform-origin: 50% 50%; animation-direction: reverse;
+  clip-path: polygon(58% 30%, 88% 44%, 74% 72%, 50% 58%);
+}
+.rmo-liquid-klumpen:nth-child(3) {
+  transform-origin: 50% 60%;
+  clip-path: polygon(26% 50%, 54% 44%, 60% 74%, 30% 82%);
+}
+.rmo-liquid-klumpen:nth-child(4) {
+  transform-origin: 40% 40%; animation-direction: reverse;
+  clip-path: polygon(10% 26%, 38% 16%, 44% 44%, 16% 52%);
+}
+.rmo-liquid-klumpen:nth-child(5) {
+  transform-origin: 40% 40%; animation-direction: reverse;
+  clip-path: polygon(40% 62%, 70% 58%, 78% 88%, 46% 92%);
+}
+.rmo-liquid-klumpen:nth-child(6) {
+  transform-origin: 60% 40%;
+  clip-path: polygon(52% 8%, 84% 6%, 92% 32%, 62% 34%);
+}
+.rmo-liquid-klumpen:nth-child(7) {
+  transform-origin: 60% 40%;
+  clip-path: polygon(6% 56%, 30% 46%, 40% 74%, 14% 84%);
+}
+
+/* ---- Bewegung: NUR im echten Laufzustand ------------------------------ */
+/* Dieselbe Zustandsliste wie Zeile 707, die die Blase überhaupt erst
+   sichtbar macht. Sie steht hier ein zweites Mal, weil `display:none`
+   zwar jede Animation anhält, aber niemand das beim Lesen sieht — und weil
+   eine spätere Regel, die die Blase in einem anderen Zustand zeigt, sonst
+   still eine Endlosschleife im Leerlauf mitbrächte (E528, `test494`). */
+[data-rmo~="liquid"]:is([data-rmo-state="laeuft"],[data-rmo-state="arbeitet"],
+[data-rmo-state="vorbereiten"],[data-rmo-state="rendern"]) > .rmo-liquid {
+  /* Die Farbdrehung über 6 s: 0 → -30 → -60 → -90 → -45 → 0 (Vorlage:
+     @keyframes colorize, dort calc(--time-animation * 3)). Sie steht auf
+     der Blase und nicht auf der Masse, damit sie den Lichthof mitdreht —
+     Kugel und Schein bleiben derselbe Ton. */
+  animation: rmo-liquid-farbdreh calc(var(--rmo-takt) * 3) ease-in-out infinite;
+}
+[data-rmo~="liquid"]:is([data-rmo-state="laeuft"],[data-rmo-state="arbeitet"],
+[data-rmo-state="vorbereiten"],[data-rmo-state="rendern"]) > .rmo-liquid > .rmo-liquid-masse {
+  animation: rmo-liquid-dicke calc(var(--rmo-takt) / 2) linear infinite;
+}
+[data-rmo~="liquid"]:is([data-rmo-state="laeuft"],[data-rmo-state="arbeitet"],
+[data-rmo-state="vorbereiten"],[data-rmo-state="rendern"]) > .rmo-liquid .rmo-liquid-klumpen {
+  animation-name: rmo-liquid-kreisen;
+  animation-duration: var(--rmo-takt);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* ---- Die drei Takte --------------------------------------------------- */
+/* Der Kontrastsprung, 1:1 aus der Vorlage (@keyframes roundness). Die
+   beiden Plateaus sind wichtig: die Masse steht kurz weich und steht kurz
+   scharf, statt ununterbrochen dazwischen zu pendeln. */
+@keyframes rmo-liquid-dicke {
+  0%   { filter: contrast(15); }
+  20%  { filter: contrast(3); }
+  40%  { filter: contrast(3); }
+  60%  { filter: contrast(15); }
+  100% { filter: contrast(15); }
+}
+/* Die Farbdrehung (@keyframes colorize). */
+@keyframes rmo-liquid-farbdreh {
+  0%, 100% { filter: hue-rotate(0deg); }
+  20%      { filter: hue-rotate(-30deg); }
+  40%      { filter: hue-rotate(-60deg); }
+  60%      { filter: hue-rotate(-90deg); }
+  80%      { filter: hue-rotate(-45deg); }
+}
+/* Der Umlauf. Bewusst die Einzeleigenschaft `rotate` und nicht `transform`:
+   so bleibt `transform` für einen späteren Versatz frei, und keine
+   Keyframe-Regel löscht still eine Grundstellung, die woanders steht. */
+@keyframes rmo-liquid-kreisen { to { rotate: 360deg; } }
+
+/* ---- Weniger Bewegung ------------------------------------------------- */
+/* Die Blanketts in Zeile 774–789 setzen hier ohnehin schon `animation:none`
+   für alles unter `[data-rmo]`. Diese Regeln sagen ausdrücklich, was das
+   für den Lader HEISST — und fangen den Fall ab, dass jemand später einer
+   der drei Animationen ein `!important` verpasst. */
+@media (prefers-reduced-motion: reduce) {
+  body .rmo-liquid,
+  body .rmo-liquid-masse,
+  body .rmo-liquid-klumpen { animation: none !important; }
+  /* Farbdrehung aus: kein hue-rotate, der Lader bleibt im Akzentton stehen.
+     Der Lichthof (box-shadow) bleibt — er bewegt sich nicht. */
+  body .rmo-liquid { filter: none !important; }
+  /* Klumpen stehen still: keine Drehung, aber die Masse bleibt eine Masse.
+     Ein fester Kontrast, damit man sieht, dass da etwas arbeitet — nur eben
+     ohne Takt. */
+  body .rmo-liquid-klumpen { rotate: 0deg !important; }
+  body .rmo-liquid-masse { filter: contrast(13) !important; }
+}
