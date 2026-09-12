@@ -2416,7 +2416,7 @@ const Austausch = (() => {
     ['csv',      '📊', 'Jira, Monday, sonstige CSV', 'Irgendeine Tabelle — wird zur Datenbank', '.csv'],
     ['markdown', '📄', 'Einzelne Dateien',
      'Markdown, Text, CSV, Word, Excel, OpenDocument, EPUB',
-     '.md,.txt,.csv,.docx,.pptx,.xlsx,.ods,.epub']
+     '.md,.txt,.csv,.docx,.pptx,.ppsx,.xlsx,.ods,.epub']
   ];
 
   const dialog = () => {

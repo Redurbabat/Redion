@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-520 Entscheidungen, E1 bis E540 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+521 Entscheidungen, E1 bis E541 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -584,6 +584,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E538** — Office war die einzige Gruppe ohne Originalschutz — und der Vortrag am Telefon nicht bedienbar
 * **E539** — O2: Der ZIP-Teil lernt Durchreichen — die Grundlage jeder Rundreise durch eine Office-Datei
 * **E540** — O3: PowerPoint lesen — eine Folie ist ein Blatt, kein neuer Blocktyp
+* **E541** — Vier Funde aus einer echten PowerPoint-Datei, die keine erfundene je gezeigt hätte
 
 ---
 
@@ -43233,3 +43234,56 @@ zuerst, ob sie überhaupt rot werden KANN.*
 Bilder). `test96`, `test100`, `test497`, `test498` bleiben grün.
 Was beim Lesen **nicht** ankommt — Geerbtes vom Master, Absatzebenen,
 Tabellen, Formen ohne Text, Drehung, Notizen — steht als **L151**.
+
+---
+
+E541 — Vier Funde aus einer echten PowerPoint-Datei
+--------------------------------------------------------------------------
+
+Redur hat eine seiner Lehrunterlagen geschickt: „du kannst das als vorlagen
+immer nutzen." 27 Folien, 36 Bilder, 11 Layouts, 4:3, beide Packmethoden
+gemischt — genau das, was `L151` als ungemessen festhielt.
+
+Der Leser aus E540 kam damit zurecht: 385 ms, kein Browserfehler, das
+Original als Anhang. Aber die Messung fand vier Dinge, die **keine selbst
+gebaute Prüfdatei je gezeigt hätte**:
+
+**1. `.ppsx` wurde gar nicht erkannt.** Die Datei ist eine
+Bildschirmpräsentation — dasselbe Paket, andere Endung. Sie lief stumm in
+den Anhang-Zweig. `.ppsx`, `.pptm` und `.ppsm` sind jetzt dabei; der Leser
+sieht ohnehin in die Datei und nicht auf den Namen.
+
+**2. Ein Logo lag 27-mal im Speicher.** 108 Bildvorkommen, aber nur 36
+verschiedene Bilder — `image1.png` kommt auf jeder Folie vor. Für jedes
+Vorkommen entstand ein eigener Dateisatz. Jetzt merkt sich der Einleser den
+Pfad im Paket: 108 Marken aus 36 Dateien, und der Lauf ist dabei von 662 auf
+385 ms gefallen.
+
+**3. Es gibt keinen einzigen `p:ph`-Platzhalter.** Die Titelerkennung über
+den Platzhaltertyp konnte in dieser Datei nie greifen — PowerPoint schreibt
+ihn nur, wenn die Form aus einem Layout stammt. Der Ersatz ist der Weg, den
+auch ein Mensch geht: von oben nach unten lesen. Aber der oberste Kasten
+allein genügt nicht, denn dort steht auf **jeder** Folie „Band 1 / Auflage
+2021" — eine Kopfzeile. Das liesse sich nicht erraten, wohl aber abzählen:
+was auf mehr als einem Drittel der Folien wortgleich wiederkehrt, ist eine
+Kopf- oder Fusszeile, und der erste Kandidat, der das nicht tut, ist der
+Titel.
+
+**4. Und der Befund, der am meisten erklärt:** diese Präsentation hat fast
+keinen Text. Folie 3 enthält **vier** `a:t`-Elemente, und das sind die
+Fusszeilen. Die zwölf Formen sind leere Rechtecke; der ganze Lehrinhalt —
+Messtabelle, Kennlinie, Batteriebild — besteht aus Bildern. Der Leser
+arbeitet richtig, es ist schlicht kein Text da. Was das für Suche, Vorlesen
+und „Text ändern" bedeutet, steht als **L152**.
+
+### Angesehen, nicht behauptet
+
+`bilder/ppsx-folie3.png`: Kopfbalken, Kapitelnummer, Übungstext, die
+Messtabelle mit roten und blauen Zahlen, das U/I-Diagramm mit Kennlinie und
+Messpunkten, das Batteriebild, die Beschriftungen, die Fusszeile — alles an
+seinem Platz. Der erste Versuch fotografierte den Willkommensdialog; das
+Bild zeigte es sofort.
+
+`test499` bleibt 17 grün. Die Prüfdatei dort bleibt gebaut, weil sie Fälle
+stellt, die eine echte Datei nicht hat (die Reihenfolgenfalle) — und die
+echte Datei stellt Fälle, die keine gebaute hat. Beides braucht es.

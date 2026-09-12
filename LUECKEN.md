@@ -7419,8 +7419,36 @@ verloren hält:
   können drehen — gelesen wird es noch nicht.
 - **Notizen** (`ppt/notesSlides/`), Übergänge, Animationen.
 
-**Nicht gemessen:** ob eine von PowerPoint selbst gespeicherte Datei so
-gelesen wird wie die im Prüflauf gebaute. `test499` baut ihre `.pptx` mit
-Redions eigenem Schreiber — das prüft den Leser, nicht die Vielfalt echter
-Dateien. Eine Datei aus PowerPoint, eine aus LibreOffice und eine aus Google
-Slides wären drei verschiedene Prüfungen wert.
+**GEMESSEN am 12. September**, an einer echten Datei von Redur
+(27 Folien, 36 Bilder, 11 Layouts, 4:3, beide Packmethoden gemischt). Sie
+liest sich in 385 ms ohne einen Browserfehler, die Bilder sitzen an ihrem
+Platz, und die gerenderte Folie entspricht dem Original. Vier Funde daraus
+stehen in E541.
+
+**Weiter nicht gemessen:** eine Datei aus LibreOffice Impress und eine aus
+Google Slides. Beide schreiben gültiges OOXML, aber anders — vor allem bei
+Platzhaltern und geerbten Schriftgraden. Je eine Prüfung wert.
+
+---
+
+L152 · Eine Präsentation aus Bildern bringt keinen Text mit — offen
+--------------------------------------------------------------------------
+
+An Redurs Lehrunterlage gemessen (12. September): 27 Folien, 237 Formen —
+und **vier** Textstücke je Folie, allesamt Kopf- und Fusszeile. Der ganze
+Lehrinhalt sind **Bilder**: Tabellen, Diagramme, Formeln, Kennlinien. Die
+zwölf Formen einer Folie sind leere Rechtecke.
+
+Der Leser arbeitet dabei richtig — es ist schlicht kein Text da. Aber die
+Folge ist ernst: eine so gebaute Präsentation lässt sich in Redion **nicht
+durchsuchen**, ihr Text ist nicht vorlesbar (§38), und „den Text ändern"
+geht an ihr nicht, weil es keinen gibt.
+
+**Was das hiesse:** Text in einem Folienbild sichtbar zu machen, ist OCR —
+und den Dienst hat Redion bereits (`bereiche/dateien/recognition.ts`, lokal
+und opt-in). Eine eingelesene Folie durch die Texterkennung zu schicken wäre
+der Weg; er ist nicht gebaut, und er kostet Rechenzeit je Folie.
+
+**Nicht als Fehler behandeln:** Eine Präsentation aus Bildern ist eine
+zulässige Präsentation. Was Redion tun muss, ist es zu SAGEN — nicht so zu
+tun, als sei die Folie leer.

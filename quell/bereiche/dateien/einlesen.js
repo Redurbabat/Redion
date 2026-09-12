@@ -1152,14 +1152,46 @@ const Einlesen = (() => {
                     if (!bytes)
                         continue;
                     const lage = formLage(form);
-                    objekte.push({ art: 'bild', name: ziel.slice(ziel.lastIndexOf('/') + 1),
+                    /* `pfad` ist der Schlüssel zum Sparen: an einer echten Datei
+                       gemessen kam ein Logo 27-mal vor, einmal je Folie. Ohne ihn
+                       entstünden 27 Dateisätze mit denselben Bytes. */
+                    objekte.push({ art: 'bild', pfad: ziel, name: ziel.slice(ziel.lastIndexOf('/') + 1),
                         bytes,
                         x: lage ? lage.x : breite * 0.2, y: lage ? lage.y : hoehe * 0.2,
                         w: lage && lage.w > 0 ? lage.w : breite * 0.4,
                         h: lage && lage.h > 0 ? lage.h : hoehe * 0.4 });
                 }
             }
-            folien.push({ titel, objekte });
+            /* KEIN PLATZHALTER, TROTZDEM EIN TITEL. An Redurs echter Datei
+               gemessen: 27 Folien, NULL `p:ph`-Elemente. Die Erkennung über den
+               Platzhaltertyp konnte dort nie greifen — PowerPoint schreibt ihn
+               nur, wenn die Form aus einem Layout stammt.
+               Also der Weg, den auch ein Mensch geht: von oben nach unten lesen.
+               Welcher der Kandidaten wirklich die Überschrift ist, entscheidet
+               sich aber erst, wenn ALLE Folien gelesen sind — siehe unten. */
+            const kandidaten = objekte
+                .filter(o => o.art === 'text' && String(o.text).trim())
+                .sort((a, b) => a.y - b.y)
+                .map(o => String(o.text).split('\n')[0].trim())
+                .filter(z => z && z.length <= 80);
+            folien.push({ titel, objekte, kandidaten });
+        }
+        /* ══ WELCHER KASTEN IST DIE ÜBERSCHRIFT? ═══════════════════════════
+           Der oberste allein genügt nicht. An Redurs Datei gemessen: dort
+           steht ganz oben auf JEDER der 27 Folien „Band 1 / Auflage 2021" —
+           eine Kopfzeile, keine Überschrift. Genau das liesse sich nicht
+           erraten, aber sehr wohl abzählen: was auf mehr als einem Drittel
+           der Folien wortgleich wiederkehrt, ist eine Kopf- oder Fusszeile.
+           Der erste Kandidat, der das NICHT tut, ist der Titel. */
+        const haeufig = new Map();
+        for (const f of folien)
+            for (const z of new Set(f.kandidaten))
+                haeufig.set(z, (haeufig.get(z) || 0) + 1);
+        const decke = Math.max(2, Math.ceil(folien.length / 3));
+        for (const f of folien) {
+            if (f.titel)
+                continue;
+            f.titel = f.kandidaten.find(z => (haeufig.get(z) || 0) < decke) || '';
         }
         return { breite, hoehe, folien };
     };
@@ -1275,7 +1307,7 @@ const Einlesen = (() => {
         const name = f.name.toLowerCase();
         /* Nur für die Formate, die dieser Weg wirklich umwandelt. Alles andere
            fällt unten auf `null` und geht den Anhang-Weg, der ohnehin ablegt. */
-        const wandelbar = /\.(xlsx|xlsm|ods|docx|pptx|epub)$/.test(name);
+        const wandelbar = /\.(xlsx|xlsm|ods|docx|pptx|ppsx|pptm|ppsm|epub)$/.test(name);
         const quelle = wandelbar ? await originalSichern(f, elternId) : null;
         const puffer = await f.arrayBuffer();
         if (name.endsWith('.xlsx') || name.endsWith('.xlsm')) {
@@ -1334,7 +1366,12 @@ const Einlesen = (() => {
             return { seite, hinweis: bloecke.length + ' Absätze übernommen'
                     + (quelle ? ' · das Original liegt unverändert als Anhang dabei' : '') };
         }
-        if (name.endsWith('.pptx')) {
+        /* `.ppsx` ist dasselbe Paket wie `.pptx`, nur als Bildschirm-
+           präsentation gespeichert; `.pptm`/`.ppsm` dasselbe mit Makros. Alle
+           vier tragen `ppt/presentation.xml`, und der Leser sieht ohnehin in
+           die Datei statt auf den Namen. Gefunden an einer echten Datei von
+           Redur: `.ppsx` lief vorher stumm in den Anhang-Zweig. */
+        if (/\.(pptx|ppsx|pptm|ppsm)$/.test(name)) {
             const p = await pptxLesen(puffer);
             const seite = Store.addPage(elternId, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📽️' });
             if (quelle)
@@ -1344,6 +1381,11 @@ const Einlesen = (() => {
                A4-Blatt benutzen — also sofort verschiebbar, drehbar und
                rückgängig zu machen. */
             let mitBild = 0;
+            /* Pfad im Paket → Kennung des abgelegten Satzes. Gemessen an einer
+               echten Präsentation: 108 Bildvorkommen, aber nur 36 verschiedene
+               Bilder. Ohne diese Karte lägen 108 Dateisätze im Speicher, davon
+               72 als reine Verdopplung (§9: keine Daten ohne Not vermehren). */
+            const schonAbgelegt = new Map();
             for (const [nr, folie] of p.folien.entries()) {
                 const block = Store.addBlock(seite.id, 'blatt', {
                     text: folie.titel || ('Folie ' + (nr + 1)),
@@ -1360,9 +1402,15 @@ const Einlesen = (() => {
                     /* Das Bild bekommt einen eigenen Dateisatz, der an DIESEM Block
                        hängt — dieselbe Ordnung wie beim PDF-Anhang (E99). */
                     try {
-                        const satz = await Dateien.ablegen(new Blob([o.bytes]), { blockId: block.id, name: o.name });
-                        if (satz?.id) {
-                            marken.push({ id, art: 'bild', dateiId: String(satz.id),
+                        let dateiId = schonAbgelegt.get(o.pfad) || '';
+                        if (!dateiId) {
+                            const satz = await Dateien.ablegen(new Blob([o.bytes]), { blockId: block.id, name: o.name });
+                            dateiId = String(satz?.id || '');
+                            if (dateiId)
+                                schonAbgelegt.set(o.pfad, dateiId);
+                        }
+                        if (dateiId) {
+                            marken.push({ id, art: 'bild', dateiId,
                                 pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
                             mitBild++;
                         }
@@ -1373,7 +1421,7 @@ const Einlesen = (() => {
                     Store.updateBlock(block.id, { marken });
             }
             return { seite, hinweis: p.folien.length + ' Folien übernommen'
-                    + (mitBild ? ', ' + mitBild + ' Bilder' : '')
+                    + (mitBild ? ', ' + mitBild + ' Bilder aus ' + schonAbgelegt.size + ' Dateien' : '')
                     + (quelle ? ' · das Original liegt unverändert als Anhang dabei' : '') };
         }
         if (name.endsWith('.epub')) {
