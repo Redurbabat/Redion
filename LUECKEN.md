@@ -7503,3 +7503,57 @@ NICHT kann, gehört genauso aufgeschrieben:
 Melder für vollständig gehalten wird.** Wer sieht, dass er den vertauschten
 Schutzleiter findet, nimmt an, er finde alles. Steht hier, damit es niemand
 annimmt.
+
+---
+
+L154 · Die NIN-Ausgabe ist nicht belegt — offen
+--------------------------------------------------------------------------
+
+Die Fehlerprüfung der Simulation (E541) und zwei Karten des Drehstrompakets
+(E543) berufen sich auf **NIN 4.6.1.2.3.2**: Schalter gehören in den
+Aussenleiter. Die fachliche Regel ist richtig und in der Schweizer Ausbildung
+Allgemeingut.
+
+**Welche AUSGABE der Norm gilt, ist hier nirgends belegt.** Die Unterlage,
+aus der die Paragrafennummer stammt, nennt sie nicht.
+
+Der Paketprüfer in `electrical.ts` verlangt genau das — zu jeder normativen
+Karte eine `source.edition` — und hat die Installation deshalb abgelehnt. Die
+Regel ist gut: eine Paragrafennummer ohne Ausgabe kann niemand nachschlagen.
+
+**Gelöst wurde es durch Zurücknehmen, nicht durch Umgehen.** Die Karten
+tragen kein `norm`-Feld; die Nummer steht im Erklärtext als Fingerzeig.
+
+**Was zu tun wäre:** Die geltende NIN-Ausgabe belegen — aus der Norm selbst
+oder einer zitierfähigen Quelle, nicht aus dem Gedächtnis. Dann bekommen die
+beiden Karten `norm` und `source.edition`, und `test501 §4` hält weiterhin,
+dass keine Karte sich ohne Ausgabe auf eine Norm beruft.
+
+Dasselbe gilt für die Normhinweise in `simulation.ts` (`anschlussfehler`):
+sie sind Erklärtexte und keine zitierfähigen Belege, und sie sollten es auch
+nicht vorgeben zu sein.
+
+---
+
+L155 · test217 ist rot, und zwar nicht von dieser Arbeit — offen
+--------------------------------------------------------------------------
+
+`test217` (Suite 183, die Lernrunde am Telefon) steht bei **14 von 27**.
+Nachgemessen: derselbe Stand vor und nach den Bögen E539–E543 — geprüft, indem
+die Änderungen weggelegt (`git stash`) und der Lauf wiederholt wurde.
+
+Was er bemängelt, betrifft die **Lernzentrale**, nicht den klassischen
+Lernkarten-Dialog, der in E543 überarbeitet wurde:
+
+* Der Knopf heißt „Lernen starten →" und nicht „Tagesrunde starten".
+* Die Zahlenkacheln stehen nicht im ersten Bild (y = 1115 bei 844 Höhe).
+* Mehrere Kacheln findet der Lauf gar nicht (y = undefined).
+
+Das sieht danach aus, dass die Telefonansicht umgebaut wurde und der Lauf
+nicht nachgezogen — oder umgekehrt. **Wer von beiden recht hat, ist hier
+nicht entschieden**, und deshalb steht es als Lücke und nicht als Reparatur:
+eine Prüfung an den Code anzupassen, ohne zu wissen welcher der beiden dem
+Auftrag entspricht, macht aus einem sichtbaren Fehler einen unsichtbaren.
+
+§46 sagt „rot zuerst". Dieser Bogen hat das Rot nicht verursacht und auch
+nicht behoben; er nennt es.

@@ -309,7 +309,7 @@ p('Und ihr Messwert behält das Vorzeichen als Richtung',
  * --------------------------------------------------------------------------
  * Die Knotenpotentialanalyse liefert vorzeichenbehaftete Ströme, die
  * Richtung ist also fast umsonst zu haben. Genau das ist die Gefahr: bei
- * Wechselstrom ist derselbe Pfeil falsch, weil der Strom fünfzigmal je
+ * Wechselstrom ist derselbe Pfeil falsch, weil der Strom hundertmal je
  * Sekunde umkehrt. Diese Prüfung verlangt deshalb ZWEIERLEI — dass die
  * Richtung bei Gleichstrom steht, und dass sie bei Wechselstrom NICHT als
  * feste Richtung ausgegeben wird.
@@ -360,8 +360,13 @@ p('Und der Satz behauptet keine Richtung',
 /* Und jetzt der Punkt, auf den es ankommt. */
 p('Bei Wechselstrom ist die Richtung NICHT fest, sondern „wechselnd"',
   drei.werte.t3.richtung === 'wechselnd', `ist "${drei.werte.t3.richtung}"`);
-p('Der Satz sagt ausdrücklich, dass sie 50-mal je Sekunde umkehrt',
-  /50-mal je Sekunde/.test(drei.werte.t3.richtungstext),
+/* Die Zahl muss stimmen: 50 Hz sind 50 volle Perioden je Sekunde, und die
+   Richtung kehrt dabei HUNDERTMAL um — zweimal je Periode. „50-mal die
+   Richtung gewechselt" ist die geläufige Redensart und trotzdem falsch; in
+   einem Lehrmittel ist eine geläufige falsche Zahl die schlechteste Sorte. */
+p('Der Satz nennt die Umkehr richtig: hundertmal, nicht fünfzigmal',
+  /hundertmal/.test(drei.werte.t3.richtungstext)
+  && !/50-mal je Sekunde/.test(drei.werte.t3.richtungstext),
   drei.werte.t3.richtungstext);
 p('Und nennt den Pfeil beim Namen: Zählrichtung',
   /Zählrichtung/.test(drei.werte.t3.richtungstext));
@@ -424,7 +429,7 @@ p('Wechselstrom: ein Richtungspfeil steht im Bild',
 p('Wechselstrom: und zwar der DOPPELTE', svgWechsel.includes('M-13,0 H13'));
 p('Wechselstrom: nicht der einfache', !svgWechsel.includes('M-12,0 H7'));
 p('Wechselstrom: der Pfeil trägt den Satz zur Zählrichtung',
-  /Zählrichtung/.test(svgWechsel) && /50-mal je Sekunde/.test(svgWechsel));
+  /Zählrichtung/.test(svgWechsel) && /hundertmal/.test(svgWechsel));
 
 /* Die Form muss den Unterschied tragen, nicht die Farbe.
    -------------------------------------------------------------------------

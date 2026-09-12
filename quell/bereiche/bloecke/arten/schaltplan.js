@@ -603,7 +603,8 @@ const Schaltplan = (() => {
                GLEICHSTROM BEKOMMT EINEN PFEIL, WECHSELSTROM ZWEI. Das ist der
                ganze Unterschied, und er steckt in der FORM, nicht in der Farbe —
                §38 [hart]. Ein einzelner Pfeil an 230 V wäre eine Behauptung, die
-               nicht stimmt: dort kehrt der Strom fünfzigmal je Sekunde um. Der
+               nicht stimmt: dort kehrt der Strom hundertmal je Sekunde um (50 volle
+               Perioden, zwei Nulldurchgänge je Periode). Der
                Doppelpfeil sagt genau das, und der Text darunter sagt es in
                Worten, für den, der ihn antippt.
       

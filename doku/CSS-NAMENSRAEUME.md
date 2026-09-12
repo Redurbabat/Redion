@@ -157,7 +157,7 @@ leer      9  werkzeuge.css
 list      7  datenbanken.css
 lr        6  datenbanken.css
 lv        5  bausteine.css
-lern      6  werkzeuge.css
+lern     22  werkzeuge.css
 lw      657  lernwelt.css
 lz        6  werkzeuge.css
 mail      5  einstellungen.css

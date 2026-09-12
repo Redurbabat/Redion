@@ -586,6 +586,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E540** — Die Stromrichtung bei Wechselstrom heisst „wechselnd“, nicht „vor“
 * **E541** — Ein Anschlussfehler wird an der Rolle der Klemme gefunden, nicht am Strom
 * **E542** — Ein Pfeil bei Gleichstrom, zwei bei Wechselstrom — und der Fehler, den erst das Bild fand
+* **E543** — Lernkarten, die nachgerechnet werden — und eine Lernansicht, die keinen Stil hatte
 
 ---
 
@@ -43413,3 +43414,90 @@ koppelt man die beiden Begriffe wieder aneinander, meldet der 230-V-Kreis
 wieder „vor"; zeichnet man beide Pfeile gleich, fällt der Formvergleich.
 
 Damit ist **L152 geschlossen**.
+
+---
+
+## E543 · Lernkarten, die nachgerechnet werden — und eine Lernansicht, die keinen Stil hatte
+
+Zwei Dinge in einem Bogen, weil sie dieselbe Frage beantworten: **wie kommt
+der Stoff zum Lernenden?**
+
+### Teil 1 — Der Hauptknopf sah aus wie eine Bildunterschrift
+
+Der Auftrag lautete, die Lernkarten sehen nicht gut aus. Also erst hinsehen
+(§55), dann messen (§36). Gemessen am Hauptknopf der Lernansicht:
+
+    Fläche  rgba(0, 0, 0, 0)      Rand  0px      Radius  0px      Höhe  44 px
+
+Die Höhe stimmte. Sie stimmte die ganze Zeit — `learning.ts` setzt
+`minHeight: 44px` von Hand, und §37 misst die Höhe. Gefehlt hat das
+AUSSEHEN: das Panel heißt `finder lern`, und für `lern` gab es **keine
+einzige Stilregel**. Jeder andere Dialog in Redion bringt seine eigene mit
+(`.fd-knoepfe button.prim`, `.rg-knoepfe button.prim`); dieser nicht. Die
+globale Regel `.prim{min-height:44px}` gibt Grösse und kein Bild.
+
+**Eine Grösse ist keine Sichtbarkeit.** Das ist die Lehre, und sie ist neu
+gegenüber §55.1: dort ging es um Dinge, die man nur mit Augen SIEHT. Hier
+ging es um etwas, das jeder Prüflauf hätte messen können — nur hat keiner
+die richtige Eigenschaft gemessen.
+
+Dazu kam die Gliederung: acht Zahlen in zwei Reihen untereinander, ohne einen
+Hinweis, dass die obere „heute" meint und die untere „insgesamt". Jetzt
+tragen beide eine Überschrift, und die Hauptaktion steht dazwischen.
+
+Und der Fortschrittsbalken war der Browser-Standard und damit **blau** — die
+einzige blaue Fläche in einer violetten App.
+
+Die Regeln stehen in `werkzeuge.css` und nicht in `lernwelt.css`, weil der
+Präfix `lern` laut `doku/CSS-NAMENSRAEUME.md` dorthin gehört. Zwei Dateien
+mit demselben Präfix gewinnen abwechselnd (§39).
+
+### Teil 2 — Karten, die sich nicht selbst glauben
+
+Neu ist ein zweites eingebautes Lernpaket: **Drehstrom und die fünf Leiter**,
+22 Karten in sechs Themen.
+
+Es liegt bewusst NICHT im Grundlagenpaket. Dessen Manifest sagt „algebraische
+Definitionen ohne Normregeln"; diese Karten nennen eine Normstelle. Sie dort
+hineinzulegen würde eine Zusage stillschweigend brechen.
+
+**Das Besondere ist, wie die Antworten belegt sind.** Jede Zahl — 400 V
+zwischen zwei Aussenleitern, 230 V am Strang im Stern, die dreifache Leistung
+im Dreieck, der stromlose Neutralleiter bei gleichmässiger Last — wird von
+`test501` mit `Stromfluss` NEU GERECHNET und mit der Karte verglichen. Eine
+Karte, die der Rechnung widerspricht, macht den Lauf rot.
+
+Das schliesst die häufigste Art, wie Lernmaterial falsch wird: nicht durch
+einen groben Fehler, sondern dadurch, dass sich nebenan etwas ändert und
+niemand die Karten nachzieht.
+
+### Was der Paketprüfer mir verboten hat, und zu Recht
+
+Zwei Karten trugen `norm: 'NIN 4.6.1.2.3.2'`. Die Installation schlug fehl:
+
+> Normative Frage fehler-schalter-lage braucht eine belegte Ausgabe.
+
+Der Prüfer verlangt zu jeder normativen Karte die AUSGABE der Norm. Eine
+Paragrafennummer ohne Ausgabe kann niemand nachschlagen — eine gute Regel.
+Welche NIN-Ausgabe gilt, ist hier nicht belegt.
+
+Also wurde nicht die Regel umgangen, sondern die Behauptung zurückgenommen:
+das `norm`-Feld bleibt leer, die Paragrafennummer steht im Erklärtext als
+Fingerzeig. Eine erfundene Ausgabe wäre schlimmer als keine (**L154**).
+
+### Und ein Fachfehler in meinem eigenen Text
+
+Beim Schreiben der Karte „Wie oft kehrt der Strom bei 50 Hz um?" fiel auf,
+dass der Simulator selbst die geläufige falsche Antwort gab: „die Richtung
+kehrt sich 50-mal je Sekunde um". 50 Hz sind 50 volle PERIODEN je Sekunde,
+und in jeder geht der Strom zweimal durch null — **hundertmal**. Die
+Redensart ist verbreitet und trotzdem falsch, und in einem Lehrmittel ist
+eine verbreitete falsche Zahl die schlechteste Sorte. Berichtigt in
+`simulation.ts`, `schaltplan.ts` und `test498`.
+
+`test500`: 17 Zusagen für das Aussehen der Lernansicht. Gegenprobe rot
+gesehen — ohne den Stilblock meldet sie wieder `rgba(0, 0, 0, 0)`,
+Radius 0 und `appearance: auto`.
+`test501`: 37 Zusagen für das Lernpaket. Gegenprobe rot gesehen — stellt man
+die Aussenleiterkarte auf 460 V und die Neutralleiterkarte auf „doppelt so
+gross", widerspricht die Simulation beiden.

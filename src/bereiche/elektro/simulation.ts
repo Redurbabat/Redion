@@ -132,7 +132,8 @@ const Stromfluss = (() => {
      * Das ist etwas anderes als „muss komplex gerechnet werden". Eine
      * einphasige 230-V-Quelle hat die Phasenlage 0 und wird deshalb rein
      * reell gerechnet — Wechselstrom ist sie trotzdem, und ihr Strom kehrt
-     * fünfzigmal je Sekunde die Richtung um.
+     * hundertmal je Sekunde die Richtung um — 50 volle Perioden, zwei
+     * Umkehrpunkte je Periode.
      *
      * Die beiden zu verwechseln war ein echter Fehler und stand zwei
      * Bögen lang im Code: der Lampenstromkreis an 230 V bekam einen festen
@@ -972,7 +973,7 @@ const Stromfluss = (() => {
 
        `wechsel` entscheidet die BEDEUTUNG: ob hier Wechselstrom fliesst.
        Eine 230-V-Quelle ist Wechselstrom, auch wenn sie allein steht und
-       rein reell gerechnet wird — ihr Strom kehrt trotzdem fünfzigmal je
+       rein reell gerechnet wird — ihr Strom kehrt trotzdem hundertmal je
        Sekunde um, und ein fester Richtungspfeil wäre eine Lüge (E540).
        Die beiden gleichzusetzen war genau dieser Fehler. */
     const komplex = eintraege.some(e => e.art === 'U' && (e.phase % 360) !== 0);
@@ -1062,7 +1063,8 @@ const Stromfluss = (() => {
          kommt ohne Zusatzarbeit aus der Knotenpotentialanalyse.
 
          Bei Wechselstrom wäre genau dieselbe Auskunft eine LÜGE. Der Strom
-         kehrt seine Richtung fünfzigmal je Sekunde um; ein Pfeil, der
+         kehrt bei 50 Hz hundertmal je Sekunde seine Richtung um — 50 volle
+         Perioden, und in jeder geht er zweimal durch null. Ein Pfeil, der
          einfach dasteht, behauptet etwas, das ein Lernender glaubt, weil es
          bei der Batterie stimmt. Deshalb heisst die Richtung hier
          `wechselnd`, und was der Pfeil zeigt, ist die ZÄHLRICHTUNG — eine
@@ -1093,7 +1095,8 @@ const Stromfluss = (() => {
           ? 'steht er gerade still — er ist um 90° versetzt und kehrt eben um'
           : `fliesst er ${richtungJetzt === 'vor' ? hin : her}`;
         richtungstext =
-          'Wechselstrom: die Richtung kehrt sich 50-mal je Sekunde um. Der Pfeil '
+          'Wechselstrom bei 50 Hz: der Strom durchläuft 50 volle Perioden je '
+          + 'Sekunde und kehrt dabei hundertmal seine Richtung um. Der Pfeil '
           + `zeigt die Zählrichtung (${hin}). Im Augenblick des Scheitels von L1 `
           + `${augenblick}.`;
       }
