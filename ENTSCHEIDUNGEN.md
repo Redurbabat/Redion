@@ -583,6 +583,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E537** — Die letzten drei Vorlagenblöcke: Ordnerkarte, Lichtkarte mit Kippschalter, flüssige Blase
 * **E538** — Office war die einzige Gruppe ohne Originalschutz — und der Vortrag am Telefon nicht bedienbar
 * **E539** — Drehstrom wird mit Zeigern gerechnet, nicht mit Wurzel drei
+* **E540** — Die Stromrichtung bei Wechselstrom heisst „wechselnd“, nicht „vor“
 
 ---
 
@@ -43201,3 +43202,60 @@ Strangstrom" (0,87 A statt 0,43 A). Genau die beiden Zahlen, um die es geht.
 lagen mittig auf ihren Anschlussstichen und waren am Bildschirm nicht mehr zu
 lesen. Kein Prüflauf konnte das sehen — die Beschriftung war ja da. Sie steht
 jetzt neben dem Stich.
+
+---
+
+## E540 · Die Stromrichtung bei Wechselstrom heisst „wechselnd“, nicht „vor“
+
+**Was wurde entschieden?** Jeder Messwert trägt jetzt eine Richtung. Bei
+Gleichstrom ist sie `vor` oder `rueck` und nennt die beiden Klemmen dazu.
+Bei Wechselstrom ist sie `wechselnd` — und zwar ausdrücklich, nicht als
+Notbehelf.
+
+**Warum?** Weil die Richtung fast umsonst zu haben war, und genau das die
+Falle ist.
+
+Die Knotenpotentialanalyse liefert vorzeichenbehaftete Ströme. Das Vorzeichen
+einfach als Pfeil auf den Plan zu malen, kostet nichts und ist bei einer
+Batterie richtig. Bei 230 V ist derselbe Pfeil eine **Behauptung über die
+Wirklichkeit, die nicht stimmt**: der Strom kehrt fünfzigmal je Sekunde um.
+
+Das Tückische daran ist nicht, dass es falsch ist, sondern dass es *geglaubt
+wird*. Ein Lernender hat den Pfeil bei der Batterie gesehen und dort war er
+richtig. Sieht er ihn an der Lampe wieder, schliesst er auf dasselbe — und
+niemand hat ihm widersprochen. Eine Simulation, die das tut, bringt etwas
+Falsches bei und sieht dabei besonders anschaulich aus.
+
+**Was war die Alternative?**
+
+1. *Bei Wechselstrom gar keine Richtung zeigen.* Verworfen: dann fehlt
+   gerade dort etwas, wo der Unterricht stattfindet, und die Frage „in welche
+   Richtung fliesst es denn nun“ bleibt unbeantwortet.
+2. *Den Pfeil zeigen wie bei Gleichstrom.* Verworfen, siehe oben.
+3. *Der gewählte Weg:* die Richtung heisst `wechselnd`, der Pfeil zeigt die
+   **Zählrichtung** — eine Festlegung, keine Beobachtung —, und dazu steht,
+   wohin der Strom in EINEM bestimmten Augenblick fliesst: im Scheitel von
+   L1, dem Augenblick, auf den sich alle Winkel ohnehin beziehen.
+
+**Ein Wert, der überraschen wird, und warum er richtig ist.** Neben `vor` und
+`rueck` gibt es für diesen Augenblick `quer`. Steht der Strom um 90° zur
+Bezugsphase, fliesst in genau diesem Augenblick nichts — gleich danach
+wieder. Das sieht nach einem Randfall aus, den man wegrunden könnte. Es ist
+keiner: bei Drehstrom kommt es an jedem Strang einmal je Periode vor, und
+die Spannung zwischen L2 und L3 steht dauerhaft so. Wer `quer` zu `vor`
+rundet, malt an dieser Stelle einen Pfeil, wo nichts fliesst.
+
+**Was kostet es?** Der Aufrufer muss zwei Fälle behandeln statt einem. Das
+ist der Preis dafür, dass er den zweiten nicht vergessen kann — ein einzelnes
+Vorzeichen hätte ihn gar nicht erst auf die Frage gebracht.
+
+**Was NICHT entschieden wurde:** wie der Pfeil aussieht. Gezeichnet wird der
+Plan in der Blockschicht (`schaltplan.ts`, `planflaeche.ts`), und die lag
+ausserhalb dieses Auftrags. Die Richtung steht bereit, gezeichnet ist sie
+nicht — eingetragen als **L152**, mit den zwei Bedingungen, die dabei gelten:
+nicht nur Farbe (§38), und der Satz zur Zählrichtung muss mit.
+
+`test498 §6`: 15 Zusagen. Gegenprobe rot gesehen — gibt man dem Wechselstrom
+dieselbe feste Richtung wie dem Gleichstrom, fallen 7 davon, und der Satz
+lautet dann „Der Strom fliesst von X1 nach X2.“ Über 230 V gesagt ist das
+der Fehler, um den es geht.
