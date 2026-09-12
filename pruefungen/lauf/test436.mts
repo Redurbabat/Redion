@@ -292,6 +292,7 @@ console.log('\n§5 Der Funkel-Knopf');
   const s = await oeffne();
   const w = JSON.parse(await s.evaluate(`(async () => {
     App.kiPanel(true);
+    document.getElementById('ai-tools').open = true;
     /* Länger als die Blende des Knopfes (.4 s): einmal stand hier
        rgba(16, 16, 16, 0.96) — mitten im Übergang gemessen. (Keine
        Backticks in diesem Block: er ist selbst eine Vorlagenzeichenkette.) */
@@ -310,7 +311,7 @@ console.log('\n§5 Der Funkel-Knopf');
       zeichen: !!b.querySelector('svg'),
       dunkel: st.backgroundColor, rund: st.borderRadius,
       seite: document.getElementById('ai-seite').classList.contains('ru-funkel'),
-      nurZwei: document.querySelectorAll('.ai-quick button.ru-funkel').length,
+      actionCount: document.querySelectorAll('.ai-quick button.ru-funkel').length,
       getroffen, dialog
     });
   })()`) as string);
@@ -319,7 +320,7 @@ console.log('\n§5 Der Funkel-Knopf');
   p('… der Text ist noch derselbe', w.text === 'Datenbank bauen', w.text);
   p('… das Zeichen davor auch', w.zeichen);
   p('… und der Knopf ist dunkel', /^rgba?\(16, 16, 16(, 0\.9\d*)?\)$/.test(String(w.dunkel)), w.dunkel);
-  p('„Seite aufbauen" auch — und sonst keiner in der Reihe', w.seite && w.nurZwei === 2, String(w.nurZwei));
+  p('„Seite aufbauen" auch — jetzt alle zwölf KI-Aktionen', w.seite && w.actionCount === 12, String(w.actionCount));
   p('Ein Klick auf einen Buchstaben trifft den Knopf und öffnet die Frage', w.getroffen && w.dialog);
   await s.keyboard.press('Escape');
   await s.evaluate(`document.querySelectorAll('.overlay').forEach(o => o.remove())`);

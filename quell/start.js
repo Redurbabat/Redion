@@ -29,6 +29,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (typeof Ereignisse !== 'undefined')
         Ereignisse.melde(ARTEN.appStartet);
     App.start();
+    RedionMotion.start();
     if (typeof Ereignisse !== 'undefined')
         Ereignisse.melde(ARTEN.appSteht);
 });

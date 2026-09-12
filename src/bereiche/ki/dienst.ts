@@ -758,6 +758,9 @@ const KI = (() => {
     const s = document.querySelector('#ai .model-btn .model-name');
     if (d) d.className = 'dot ' + (klasse || '');
     if (s) s.textContent = text;
+    const button = document.querySelector('#ai .model-btn');
+    button?.setAttribute('title', 'Modell wechseln: ' + text);
+    button?.setAttribute('aria-label', 'KI-Modell wechseln: ' + text);
   };
 
   const zeichneModellKnopf = () => {
@@ -997,7 +1000,7 @@ const KI = (() => {
     const d = document.createElement('div');
     d.className = 'ki-quellschalter';
     d.innerHTML = NAMEN.map(([k, n]) =>
-      `<button data-qs="${k}" class="${k && q[k] ? 'an' : ''}">${n}</button>`).join('');
+      `<button data-qs="${k}" aria-pressed="${!!(k && q[k])}" class="${k && q[k] ? 'an' : ''}">${n}</button>`).join('');
     d.addEventListener('click', e => {
       const b = elVon(e)?.closest<HTMLElement>('[data-qs]');
       if (!b) return;
@@ -1010,6 +1013,7 @@ const KI = (() => {
       }
       Kontext.quelleSetzen(qs, !jetzt);
       b.classList.toggle('an', !jetzt);
+      b.setAttribute('aria-pressed', String(!jetzt));
       UI.toast((!jetzt ? 'An: ' : 'Aus: ') + b.textContent);
     });
     return d;
@@ -1020,8 +1024,8 @@ const KI = (() => {
 
     if (!zustand.bereit) {
       melde(zustand.quelle === 'ollama'
-        ? 'Ollama ist nicht erreichbar. Oben rechts ein Modell wählen oder auf „Erneut nach Ollama suchen" klicken.'
-        : 'Es ist noch kein Modell geladen. Oben rechts eines auswählen.');
+        ? 'Ollama ist nicht erreichbar. Unten im Eingabefeld ein Modell wählen oder auf „Erneut nach Ollama suchen" klicken.'
+        : 'Es ist noch kein Modell geladen. Wähle unten im Eingabefeld ein Modell.');
       return;
     }
 
@@ -2035,11 +2039,50 @@ const KI = (() => {
     const ta = document.getElementById('ai-input') as HTMLTextAreaElement | null;
     const chat = document.getElementById('chat');
 
-    /* Die Quellen-Schalter kommen über das Eingabefeld — man soll sehen,
-       woraus die KI gerade schöpfen darf, bevor man tippt. */
-    const fuss = document.querySelector('.ai-foot');
+    /* Werkzeuge bleiben erreichbar, ohne die Eingabe zu verdrängen.
+       Nur bestehende Knoten verschieben: Kennungen und Klicks bleiben. */
+    const actions = document.querySelector('.ai-quick');
+    if (actions && !actions.querySelector('.ai-action-group')) {
+      const prompts = Array.from(actions.querySelectorAll<HTMLButtonElement>('button[data-p]'));
+      const groups = [
+        { name: 'Erstellen', ids: ['ai-db', 'ai-seite'], prompts: [] },
+        { name: 'Text bearbeiten', ids: ['ai-schreiben'], prompts: [0, 2, 3] },
+        { name: 'Lernen & planen', ids: ['ai-wiki'], prompts: [1, 4] },
+        { name: 'Assistenten & Verlauf', ids: ['ai-agent', 'ai-meeting', 'ai-log'], prompts: [] }
+      ];
+      for (const group of groups) {
+        const section = document.createElement('section');
+        section.className = 'ai-action-group';
+        const heading = document.createElement('h3');
+        heading.textContent = group.name;
+        section.append(heading);
+        for (const id of group.ids) {
+          const button = document.getElementById(id);
+          if (button) section.append(button);
+        }
+        for (const index of group.prompts) {
+          const button = prompts[index];
+          if (button) section.append(button);
+        }
+        actions.append(section);
+      }
+      const settings = document.querySelector('.ai-tools-settings');
+      const settingsActions: Array<[string, string]> = [['ai-quellen', 'Quellen & Modus'], ['ai-faehig', 'Fähigkeiten']];
+      for (const [id, label] of settingsActions) {
+        const button = document.getElementById(id);
+        if (button && settings) { button.append(' ' + label); settings.append(button); }
+      }
+    }
+    const tools = document.querySelector<HTMLDetailsElement>('#ai-tools');
+    tools?.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && tools.open && !document.querySelector('.menu')) {
+        event.stopPropagation(); tools.open = false;
+        tools.querySelector('summary')?.focus();
+      }
+    });
+    const fuss = document.querySelector('.ai-context-group');
     if (fuss && !fuss.querySelector('.ki-quellschalter')) {
-      fuss.insertBefore(quellenLeiste(), fuss.querySelector('.ai-quick'));
+      fuss.append(quellenLeiste());
     }
 
     if (!ta) return;
@@ -2185,11 +2228,9 @@ const KI = (() => {
 
     document.getElementById('ai-diktat')?.addEventListener('click', () => diktat(ta));
 
-    /* DIE ZWEI KNÖPFE, DIE ETWAS BAUEN, SEHEN AUCH SO AUS (E463). „Datenbank
-       bauen" und „Seite aufbauen" legen Strukturen an — die anderen in
-       der Reihe schreiben eine Antwort. Der dunkle Knopf mit dem
-       Buchstabenlauf ist Redurs Vorgabe für genau diese Sorte Zusage. */
-    if (typeof Funkel !== 'undefined') Funkel.alle(document, '#ai-db, #ai-seite');
+    /* Redur, 9. September: die beiden Bau-Knöpfe unverändert behalten;
+       alle übrigen Aktionen erhalten genau denselben bestehenden Effekt. */
+    if (typeof Funkel !== 'undefined') Funkel.alle(document, '.ai-quick button, .ai-tools-settings button');
     document.getElementById('ai-db')?.addEventListener('click', async () => {
       const auftrag = await UI.frage('Was soll die Datenbank können?',
         'Aufgaben mit Status, Priorität, Fälligkeit und Aufwand');

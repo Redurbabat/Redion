@@ -2894,7 +2894,7 @@ ANSICHTEN['sterne'] = {
 };
 
 ANSICHTEN['funkel'] = {
-  titel: 'Die zwei Bau-Knöpfe im KI-Fenster glimmen (E463)',
+  titel: 'Die KI-Aktionen glimmen in Werkzeuggruppen (E528)',
   bauen: async () => {
     Store.setMeta('rundgangGesehen', true);
     document.querySelectorAll('.overlay').forEach(o => o.remove());
@@ -2907,6 +2907,8 @@ ANSICHTEN['funkel'] = {
     await new Promise(r => setTimeout(r, 400));
     App.kiPanel();
     await new Promise(r => setTimeout(r, 900));
+    const tools = document.querySelector<HTMLDetailsElement>('#ai-tools');
+    if (tools) tools.open = true;
   }
 };
 
