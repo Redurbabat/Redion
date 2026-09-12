@@ -42825,6 +42825,14 @@ gezählt hatte, nicht für die **Attributregeln**:
   `motion.css` keine einzige Regel. Das Attribut wurde geschrieben, nichts
   passierte.
 
+> **Nachtrag (E534):** Der `body`-Vorsatz allein **gewann nicht.**
+> `body [data-rmo~="glass"]` ist (0,1,1), `.fbtns button.prim:not(.ru-funkel)`
+> ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht.
+> Die Begründung im nächsten Absatz stimmt in der Diagnose und war in der
+> Rechnung falsch; E534 hat es rot gemessen und einen ausreichend
+> spezifischen Selektor gesetzt. Der Absatz bleibt stehen, damit der Fehler
+> auffindbar ist statt weggeputzt.
+
 Beides repariert, nicht umgangen: der Glasknopf gewinnt mit `body`-Vorsatz
 (die Klassenregel bleibt als Grundlage, solange das Skript noch nicht lief)
 und bekommt endlich den Körper aus Vorlagenblock 8 — Kuppel, Glanzplatte,
@@ -42867,13 +42875,25 @@ eigene Prüfläufe je Wirkung, Gegenproben, Bilder je Zustand. Sie sind als
 L149 eingetragen und werden nachgeholt; ein Wächter, der nie rot war, ist
 eine Behauptung (§55.2), und diese Behauptung steht hier offen.
 
-Gebaut wurde in einem Zug, zehn Agenten parallel, ein Agent je
-Vorlagenblock, jeder auf die offene Liste aus E532 gesetzt. Damit zehn
-Schreiber nicht in dieselben zwei Dateien greifen, schrieb jeder ein
-**Fragment** (`Block NN`) und einen TS-Schnipsel; `motion.css` und
-`motion.ts` wurden danach in Blockreihenfolge zusammengeführt. Die
-Fragmente stehen hinten in `motion.css`, damit sie ältere Regeln gleicher
-Stärke überschreiben können — das ist Absicht, kein Zufall der Reihenfolge.
+### Nachtrag: dieser Absatz stand hier falsch
+
+Hier stand, der Bau sei „in einem Zug, zehn Agenten parallel" geschehen.
+**Er ist es nicht.** Der erste Anlauf am 12. September brach nach wenigen
+Minuten ab: alle zehn Agenten liefen in dasselbe Sitzungslimit
+(`rate_limit`, HTTP 429), acht starben ohne eine Zeile, zwei schafften
+gerade noch ihr Fragment (Block 7 Kartenring, Block 11 Glaskugel).
+Zusammengeführt wurde nichts. Der Absatz war beim Schreiben des Eintrags
+schon formuliert und wurde nicht nachgezogen — derselbe Fehler wie E21, nur
+in der Dokumentation: aufgeschrieben, was geplant war, statt was geschah.
+
+**Was wirklich gilt:** E533 ist die *Entscheidung* (oben), nicht der Bau.
+Der Bau steht unter E535 und läuft in derselben Form, nur mit weniger
+Agenten gleichzeitig: ein Agent je Vorlagenblock, jeder schreibt ein
+**Fragment** (`Block NN`) und einen TS-Schnipsel, statt dass zehn Schreiber
+in dieselben zwei Dateien greifen; `motion.css` und `motion.ts` werden
+danach in Blockreihenfolge zusammengeführt. Die Fragmente stehen hinten in
+`motion.css`, damit sie ältere Regeln gleicher Stärke überschreiben können
+— das ist Absicht, kein Zufall der Reihenfolge.
 
 Die Regeln, die alle Agenten bekamen, sind dieselben wie in jedem Bogen
 davor: keine Endlosschleife im Leerlauf (E528, `test494`), Bewegung nur bei

@@ -7331,6 +7331,14 @@ Was nachzuholen ist, je Stelle ein Lauf nach dem Muster von `test495`:
 
 Bis dahin gilt für E533 ausdrücklich: **eine Behauptung, kein Beleg.**
 
+**Berichtigung vom 12. September, abends:** Dieser Eintrag sagte oben
+„gebaut und typgeprüft ist alles". Das stimmte für E532 und stimmte für
+E533 **nicht** — der erste Bauanlauf mit zehn gleichzeitigen Agenten starb
+geschlossen am Sitzungslimit (HTTP 429), acht ohne eine Zeile, zwei mit
+gerade noch geschriebenem Fragment. Gebaut wurde daran nichts, und der
+Satz war vorab geschrieben statt nachgezogen. Der zweite Anlauf läuft
+unter **E535**; was dort landet, braucht dieselben Nachweise wie oben.
+
 **Teilnachweis E534 (auf ad4ccbc, 12. September):** `test496` hält nun
 den echten Glasknopf-Schatten, Statistikherz, kollisionsfreie Ringposition
 auf schmalen Karten und die zustandsgebundene Ticket-Wendekarte. Die
