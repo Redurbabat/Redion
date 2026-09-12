@@ -253,12 +253,33 @@ const Pflege = (() => {
 
   const gesundheit = () => {
     const liste = befund();
+    const pages = Object.values<any>(Store.cache.blocks).filter(p => p.alive && p.type === 'page');
+    const metrics = [[pages.length, 'Seiten'], [liste.filter(x => x.art === 'warnung').length, 'Warnungen'],
+      [liste.filter(x => x.art !== 'warnung').length, 'Hinweise']];
+    /* Letzte Bearbeitungszeit ist kein vollständiges Ereignisprotokoll.
+       Genau das steht deshalb auch an der Kurve. */
+    const days = Array.from({ length: 7 }, (_, index) => {
+      const day = new Date(); day.setHours(0, 0, 0, 0); day.setDate(day.getDate() - 6 + index);
+      const next = new Date(day); next.setDate(next.getDate() + 1);
+      return { day, count: pages.filter(p => {
+        const edited = new Date(p.edited).getTime();
+        return edited >= day.getTime() && edited < next.getTime();
+      }).length };
+    });
+    const maximum = Math.max(1, ...days.map(day => day.count));
     const o = document.createElement('div');
     o.className = 'overlay';
     o.innerHTML =
       '<div class="finder" style="width:min(760px,95vw)">' +
         '<div class="fh">🩺 Gesundheit des Bestands<button class="icon-btn" data-a="zu">✕</button></div>' +
         '<div class="res" id="pf-liste" style="max-height:66vh">' +
+          '<div class="rmo-health">' + metrics.map(([value, label]) =>
+            '<article class="rmo-health-metric"><strong>' + value + '</strong><span>' + label + '</span></article>').join('') + '</div>' +
+          '<section class="rmo-health-history"><h3>Letzte Bearbeitungen · 7 Tage</h3><p>Seiten nach ihrem letzten Bearbeitungstag, keine vollständige Änderungshistorie.</p>' +
+          '<div class="rmo-history">' + days.map(({ day, count }) => '<div><b>' + count + '</b>' +
+            '<progress max="' + maximum + '" value="' + count + '" aria-label="' +
+            day.toLocaleDateString('de-CH') + ': ' + count + ' Seiten"></progress><small>' +
+            day.toLocaleDateString('de-CH', { weekday: 'short' }) + '</small></div>').join('') + '</div></section>' +
           (liste.length
             ? liste.map((x, i) =>
                 `<div class="pf-karte pf-${x.art}">` +

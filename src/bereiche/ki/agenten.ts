@@ -1222,7 +1222,9 @@ const Agent = (() => {
           ? (window as any).Orb.setzen(laeuftEl, 'working', 64) as { zustand(n: string): void; stopp(): void }
           : null;
         const wort = document.createElement('div');
-        wort.className = 'agent-laeuft-wort';
+        wort.className = 'agent-laeuft-wort ag-motion-status';
+        wort.dataset.zustand = 'laeuft';
+        wort.setAttribute('role', 'status');
         wort.textContent = 'Der Agent denkt nach …';
         laeuftEl.appendChild(wort);
         (b as HTMLButtonElement).disabled = true;

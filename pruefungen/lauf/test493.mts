@@ -29,9 +29,10 @@ try {
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(pathToFileURL(path.join(root, 'index.html')).href);
-    await page.waitForFunction('typeof Drucker !== "undefined" && !!document.querySelector("#page")');
+    await page.waitForFunction('typeof Drucker !== "undefined" && !!document.querySelector("#page")?.firstElementChild');
     const invalid = await page.evaluate(css => {
-      const clean = css.replace(/\/\*[\s\S]*?\*\//g, '');
+      /* @property enthält Deskriptoren, keine Element-Eigenschaften. */
+      const clean = css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/@property\s+[^{}]+\{[^{}]*\}/g, '');
       return Array.from(clean.matchAll(/(?:[;{])\s*([-\w]+)\s*:\s*([^;{}]+)(?=[;}])/g))
         .filter(([, property, value]) => !property!.startsWith('--') && !CSS.supports(property!, value!.trim().replace(/\s*!important$/, '')))
         .map(([, property, value]) => property + ': ' + value);
@@ -42,8 +43,10 @@ try {
       document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung').forEach(el => el.remove());
       const folder = Store.addPage(null, { text: 'Elektrotechnik' });
       Store.updateBlock(folder.id, { heftArt: 'fach' });
-      Store.addPage(folder.id, { text: 'Messprotokoll' });
-      for (const text of ['Spannung :: U', 'Strom :: I', 'Widerstand :: R']) Store.addBlock(folder.id, 'flashcard', { text });
+      const notes = Store.addPage(folder.id, { text: 'Messprotokoll' });
+      /* Karten liegen im Dokument: direkt im Fach klassifizieren sie den
+         Deckel absichtlich als Karteikartensatz, nicht als Ordner. */
+      for (const text of ['Spannung :: U', 'Strom :: I', 'Widerstand :: R']) Store.addBlock(notes.id, 'flashcard', { text });
       await Store.flush(); Store.setMeta('bibOrdner', ''); Bibliothek.oeffne();
     });
     const folder = page.locator('.bib-deckel[data-art="ordner"]').first();
@@ -61,7 +64,8 @@ try {
     await page.screenshot({ path: path.join(root, `bilder/motion-folder-v2-${width}.png`) });
     await page.evaluate(() => Produktwelten.lernen('lernen'));
     await page.locator('.lw-metrik strong').first().waitFor();
-    const metric = page.locator('.lw-metrik strong').filter({ hasText: /^\d+$/ }).first();
+    /* Die Identität darf nicht vom Wert abhängen, den diese Probe ändert. */
+    const metric = page.locator('.lw-metrik strong').first();
     check(`${width}: Echte Kennzahl trägt den Zifferneffekt`, await metric.locator('.rmo-reels').count() === 1);
     check(`${width}: Textwert bleibt unverändert im DOM`, await metric.evaluate(el =>
       /^\d+$/.test(el.textContent || '') && el.querySelector('.rmo-reels')?.getAttribute('aria-hidden') === 'true'));

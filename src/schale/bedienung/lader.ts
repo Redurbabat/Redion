@@ -168,6 +168,7 @@ const Lader = (() => {
   const bauen = (auftrag: LaderAuftrag): LaderGriff => {
     const wurzel = el('div', 'ru-lader');
     wurzel.dataset['art'] = auftrag.art;
+    wurzel.dataset['zustand'] = 'laeuft';
     wurzel.setAttribute('role', 'status');
     let anteil: number | null = null;
     let spiegel: SVGElement | null = null;
@@ -194,6 +195,7 @@ const Lader = (() => {
 
     const stellen = (wert: number | null): void => {
       anteil = wert;
+      wurzel.dataset['zustand'] = wert !== null && wert >= 1 ? 'fertig' : 'laeuft';
       if (!spiegel) return;
       const hoch = wert === null ? 0 : Math.max(0, Math.min(1, wert));
       /* Die Oberfläche steht bei `100 - 100·Anteil`; die Wellen sitzen

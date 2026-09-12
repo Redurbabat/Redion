@@ -731,6 +731,22 @@ const Bibliothek = (() => {
             ' value="' + esc(zustand.suche) + '"></label>' +
             '</div>';
     };
+    /** Bis zu drei wirklich geöffnete Dokumente, keine dekorativen Dateiatrappen. */
+    const recentCarousel = () => {
+        if (zustand.ordner || zustand.suche || zustand.art !== 'alle' ||
+            !['ablage', 'kuerzlich'].includes(zustand.reiter))
+            return '';
+        const recent = alleSeiten().filter(p => p.zuletztGeoeffnet)
+            .sort((a, b) => zeitZahl(b.zuletztGeoeffnet) - zeitZahl(a.zuletztGeoeffnet)).slice(0, 3);
+        return '<section class="rmo-recent" aria-label="Zuletzt geöffnet"><h2>Zuletzt geöffnet</h2>' +
+            '<div class="rmo-recent-track">' + (recent.length ? recent.map((p, index) => '<button type="button" class="rmo-recent-card" data-rmo-open="' + esc(p.id) +
+            '" style="--rmo-index:' + index + '"><span>' + esc(artVon(p).name) + '</span><b>' +
+            esc(p.text || 'Ohne Titel') + '</b><small>' + esc(wannText(p.zuletztGeoeffnet)) +
+            '</small></button>').join('') :
+            '<button type="button" class="rmo-recent-card" data-rmo-new><span>Loslegen</span><b>Neue Seite</b></button>' +
+                '<button type="button" class="rmo-recent-card" data-rmo-import><span>Weiterarbeiten</span><b>PDF öffnen</b></button>') +
+            '</div></section>';
+    };
     /** Nur ein wirklich geöffnetes PDF anbieten; Importzeit ist kein Lesefortschritt. */
     const studioWeiter = () => {
         if (zustand.reiter !== 'ablage' || zustand.ordner || zustand.suche || zustand.art !== 'alle')
@@ -775,7 +791,7 @@ const Bibliothek = (() => {
     const importBeschriften = (wort) => {
         document.querySelectorAll('[data-studio-import]').forEach(knopf => {
             const feld = knopf.querySelector('.wort')
-                || knopf.querySelector('span:not([data-sym])');
+                || knopf.querySelector('span:not([data-sym]):not([aria-hidden="true"])');
             if (feld)
                 feld.textContent = wort || IMPORT_WORT;
             else
@@ -861,6 +877,11 @@ const Bibliothek = (() => {
     const MIT_TEXT = new Set(['seite', 'karten', 'db']);
     const deckelKarte = (p) => {
         const art = artVon(p);
+        const children = art.id === 'ordner' ? alleSeiten().filter(child => child.parentId === p.id && child.parentTable !== 'collection') : [];
+        const folderPreview = art.id === 'ordner' ? '<span class="rmo-folder-preview">' +
+            '<b>' + children.length + (children.length === 1 ? ' Unterseite' : ' Unterseiten') + '</b>' +
+            children.slice(0, 3).map(child => '<span>' + esc(child.text || 'Ohne Titel') + '</span>').join('') +
+            '</span>' : '';
         /* DAS ECHTE BILD GEHT VOR (L61, E313). Eine eingelesene PDF-Seite und
            ein Bildblock tragen ihre Datei bei sich; die zeigt der Deckel, statt
            eine weisse Fläche mit dem Wort „PDF" darauf. Erst wenn es keine
@@ -881,7 +902,7 @@ const Bibliothek = (() => {
             `title="${esc(p.text || 'Ohne Titel')}">` +
             `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}${tinte ? ' hat-tinte' : ''}">` +
             '<i class="bib-papier" aria-hidden="true"></i>' +
-            (bild || '') +
+            (bild || '') + folderPreview +
             /* Die Marke bleibt: sie sagt, WAS es ist, und das sagt ein Bild
                der ersten Seite nicht. Sie sitzt in der Ecke, nicht davor. */
             (art.id === 'pdf' ? '<i class="bib-deckel-marke">PDF</i>' : '') +
@@ -1065,7 +1086,8 @@ const Bibliothek = (() => {
                         pk.naechste === 0 ? ' · die nächste läuft heute ab'
                             : pk.naechste === 1 ? ' · die nächste läuft morgen ab'
                                 : ' · noch ' + pk.naechste + ' Tage für die nächste');
-        return '<details class="bib-pflege-details"><summary>' + esc(satz) +
+        return '<details class="bib-pflege-details"><summary><span class="rmo-product-status" data-zustand="' +
+            (st.stufe === 'gut' ? 'fertig' : 'wartet') + '">' + esc(satz) + '</span>' +
             '<span>Sicherung & Speicher</span></summary>' +
             '<section class="bib-abschnitt"><header><h2>Sicherung und Papierkorb</h2>' +
             '<p>alles auf diesem Gerät</p></header><div class="bib-pflege">' +
@@ -1259,7 +1281,7 @@ const Bibliothek = (() => {
                         '<div data-bib-baum></div>' +
                         '</details><div class="bib-ablage-inhalt">'
                     : '') +
-                studioNavigation() + studioWeiter() +
+                studioNavigation() + studioWeiter() + recentCarousel() +
                 artenZeile(vorhanden) +
                 (liste.length
                     ? '<div class="bib-gitter">' + liste.map(deckelKarte).join('') + '</div>'
@@ -1372,6 +1394,13 @@ const Bibliothek = (() => {
     };
     /** Was in beiden Formen gleich funktioniert: öffnen und umschalten. */
     const binde = (wrap) => {
+        wrap.querySelectorAll('[data-rmo-open]').forEach(button => button.addEventListener('click', () => {
+            const id = button.dataset.rmoOpen;
+            if (id && permitted('lesen', id))
+                App.oeffne(id);
+        }));
+        wrap.querySelector('[data-rmo-import]')?.addEventListener('click', pdfImportieren);
+        wrap.querySelector('[data-rmo-new]')?.addEventListener('click', () => document.getElementById('btn-neu-handy')?.click());
         wrap.querySelector('.bib-ablage-baum')?.addEventListener('toggle', event => {
             Store.setMeta('bibBaumSichtbar', event.currentTarget.open);
         });

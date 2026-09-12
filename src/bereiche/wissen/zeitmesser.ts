@@ -199,11 +199,10 @@ const Zeitmesser = (() => {
       `<button class="rb" data-zm="t5">5 Min</button>` +
       `<button class="rb" data-zm="t25">25 Min</button>` +
       `</div>` +
-      `<div class="zm-reihe">` +
-      (s.laeuft
-        ? `<button class="rb" data-zm="pause">${s.pausiert ? 'Weiter' : 'Pause'}</button>` +
-          `<button class="rb" data-zm="stopp">Beenden</button>`
-        : `<button class="rb haupt" data-zm="stoppuhr">Start</button>`) +
+      `<div class="zm-reihe rmo-transport" role="group" aria-label="Zeit steuern" data-zustand="${s.laeuft ? (s.pausiert ? 'pausiert' : 'laeuft') : 'bereit'}">` +
+      `<button class="rb haupt" data-zm="stoppuhr" ${s.laeuft ? 'disabled' : ''}>Start</button>` +
+      `<button class="rb" data-zm="pause" ${s.laeuft ? '' : 'disabled'}>${s.pausiert ? 'Weiter' : 'Pause'}</button>` +
+      `<button class="rb" data-zm="stopp" ${s.laeuft ? '' : 'disabled'}>Beenden</button>` +
       `</div>` +
       (liste ? `<div class="zm-sitzungen"><span>Zuletzt</span><ul>${liste}</ul></div>` : '');
   };
@@ -211,7 +210,24 @@ const Zeitmesser = (() => {
   const zeichneStand = (): void => {
     const feld = document.querySelector<HTMLElement>('.zm-feld');
     if (!feld) return;
-    feld.innerHTML = feldHtml();
+    /* Beim Tick bleiben die Tasten samt Fokus erhalten. Nur ein echter
+       Zustandswechsel zeichnet die Steuerung neu. */
+    const next = document.createElement('div');
+    next.innerHTML = feldHtml();
+    const currentState = feld.querySelector('.rmo-transport')?.getAttribute('data-zustand');
+    const nextState = next.querySelector('.rmo-transport')?.getAttribute('data-zustand');
+    if (currentState === nextState) {
+      for (const selector of ['.zm-uhr', '.zm-wo']) {
+        const target = feld.querySelector(selector);
+        const text = next.querySelector(selector)?.textContent || '';
+        if (target && target.textContent !== text) target.textContent = text;
+      }
+      return;
+    }
+    const focused = feld.contains(document.activeElement)
+      ? (document.activeElement as HTMLElement).dataset.zm : undefined;
+    feld.replaceChildren(...Array.from(next.childNodes));
+    if (focused) feld.querySelector<HTMLButtonElement>(`.rmo-transport [data-zm="${focused}"]:not(:disabled)`)?.focus();
   };
 
   /** Das Feld öffnen oder schliessen. Die Uhr läuft unabhängig davon
