@@ -321,7 +321,7 @@ Die zehn Adern. Nicht wegen der Technik — zehn Farben und zwei Strichmuster �
 | 17:39 | Neues Feld `leiter` an Stiftmarken; neuer Merker `zeichnen:leiter`. | Ein Strich soll wissen, WELCHE Ader er ist — nicht nur, wie er aussieht. | keins — zusätzlich zum vorhandenen `stil` |
 | 22:16 | Neuer Merker `zeichnen:leistenlage` und `zeichnen:laser`. | Der Platz der Leiste und die Art des Lasers überleben das Schliessen. | keins |
 
-### 2026-09-09 · Mittwoch — Das Notizbuch, die nicht gefundene PDF — und dieses Buch hier
+### 2026-09-09 · Mittwoch — Das Notizbuch, die nicht gefundene PDF, dieses Buch hier — und am Abend Redurs Marke
 
 > Voller Wortlaut.
 
@@ -439,6 +439,94 @@ Die zehn Adern. Nicht wegen der Technik — zehn Farben und zwei Strichmuster �
 **Besserer Prompt:** Der zweite Satz ist eine DAUERREGEL, der erste eine einmalige Bitte — getrennt geschrieben sind sie beide klarer. Und ein Wort zum Grund hätte geholfen („damit ich weiss, was in welchem Zweig steht"); so musste ich ihn selbst erschliessen, und der Grund entscheidet, wie die Zweige heissen sollen.
 
 
+**11 · ca. 17:10**
+
+> [Bild: eine schwarz-goldene Marke] Das
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**12 · ca. 17:55**
+
+> Was ist das alter sieht es wie auf dem bild aus
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**13 · ca. 18:10**
+
+> [Bild: das Symbol auf dem Startbildschirm, mit weissem Saum] Entferne die weiche rahmen ich will es nicht sehen
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**14 · ca. 18:30**
+
+> Pusche deien arbeite auf eien neu brache.
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**15 · ca. 18:40**
+
+> [Bilder: die Apple-TV-Leiste und die Leiste von Redion] Könntets du die reduon unter teil wie erste bild machen mit undere inhalten und so wie appes das ich zwischen bereichen mit maus so wenn ich draus von links nach rechst oder umketerk dort gehe das es wie appe mir , jetzt ist bei redion nur wenn man klick kann man wechseln und ich will nicht nur so haben sondern kannst du so rund machen
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**16 · ca. 19:25**
+
+> [Bild: der Browserreiter mit dem roten R] hier ganz oben link habe ich die r logo wieder lösche es
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**17 · ca. 19:50**
+
+> cd $HOME\Dokumente\Redgit\Redion / .\holen.bat claude/redion-e527-schaltung — wieso redgit redion es legen die date nicht hier
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**18 · ca. 19:55**
+
+> C:\Users\redur\Documents\ChatGPT\Redion\Redion-src
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -452,19 +540,29 @@ Die zehn Adern. Nicht wegen der Technik — zehn Farben und zwei Strichmuster �
 | E519 — Der Vergleich sieht gegen deinen Zweig, nicht gegen main | `42cf96ba` → `9db488d0` | 09:05 – 09:40 | ca. 35 min | test353 von 88 auf 105 Zusagen |
 | E520 — Der Worker heisst red-ion, und ein Zeugnis lag im Netz | `9db488d0` → `db27ad64` | 09:40 – 10:15 | ca. 35 min | test270 von 63 auf 74 Zusagen |
 | E521 — Ein Zweig, ein Push, dann ein neuer Zweig | `db27ad64` → `(dieser Bogen)` | ab 10:15 | — | keiner — eine Arbeitsregel, kein Verhalten der App |
+| E522 / E522b / E523b — Der volle Lauf: D1 stillgelegt, und drei veraltete Zahlen in Prüfläufen | `741ae0b1` → `d935341e` | 09:44 – 10:11 | ca. 27 min | test65, test86, test114, test210 — vier Zusagen derselben Art, alle seit einem früheren Bogen rot |
+| E524 — Ein fehlender Schrägstrich, und die Chronik wäre im Netz tot gewesen | `d935341e` → `3a5c6ad2` | 10:11 – 17:02 | ca. 20 min Arbeit im Bogen (der Rest des Zeitraums ohne Sitzung) | der Ausschluss-Prüflauf aus E520, gegen den echten Ordnerinhalt |
+| E525 — Redurs Marke, aus einer Quelle gerechnet: 24 Dateien statt 18 Stellen, favicon.ico eingeschlossen | `3a5c6ad2` → `c0430422` | 17:02 – 17:54 | ca. 52 min | test483, 25 Zusagen, Gegenprobe rot gesehen |
+| E525 nachgezogen — der Lichtsaum am Rand ist weg, ohne neu zu schneiden | `c0430422` → `ebd8e4f8` | 17:54 – 18:23 | ca. 29 min | am Bild geprüft; die Randdeckung gemessen: 228 → 16 |
+| E526 — Die untere Leiste ist eine Kapsel, und man wischt zwischen den Bereichen | `ebd8e4f8` → `6347ac43` | 18:23 – 19:16 | ca. 53 min | test484 (31 Zusagen), test37 und test141 nachgezogen |
+| E527 — Die Einzeldatei trägt ihr Reitersymbol selbst | `6347ac43` → `fd418b84` | 19:16 – 19:43 | ca. 27 min | test483 um zwei Zusagen erweitert, Gegenprobe rot gesehen |
 
 #### Zahlen des Tages
 
-- **commits:** 9
-- **entscheidungen:** 9
+- **commits:** 15
+- **entscheidungen:** 15
 
 #### Das grösste Problem
 
 Nicht ein Fehler, sondern eine Kette: Redur fragte nach dem Worker-Namen, und im mitgeschickten Protokoll lagen zwei Dinge, nach denen er nicht gefragt hatte — der echte Deploy-Fehler und ein Zeugnis, das im Netz lag. Das teuerste Muster des Tages war, dass mehrere Werkzeuge richtig rechneten und die falsche Frage beantworteten: vergleichen.bat gegen main, die drei Import-Messungen aus E513, die Ausschlussliste aus E270. Jedes war korrekt und keines war brauchbar.
 
+AM ABEND kam ein zweites dazu, und es war ein Fehler im Fehler: der Ausschnitt der neuen Marke. Der erste Schnitt lag am undurchsichtigen Kern statt an der Kachelkante und verzerrte die Marke ins Quadrat — Redur sah es sofort („sieht es wie auf dem bild aus"). Der zweite Schnitt sass, nahm aber den weichen Saum mit, und auf dem Startbildschirm wurde daraus ein weisser Rahmen um eine schwarze Kachel. Beide Male hatte Redur recht, und beide Male hätte kein Prüflauf es finden können. Dazu ein Messfehler, den nur das Bild zeigte: der Verkleinerer teilte durch die falsche Zahl, und JEDES verkleinerte Symbol war weissgebrannt — nur das 512er, das gar nicht verkleinert wird, sah richtig aus.
+
 #### Das Interessanteste, das Redur wollte
 
 „wenn eine branche gepuscht ist musst du immer eine neue erstellen, so ist besser" — eine Arbeitsregel, die aus dem Gebrauch kommt, nicht aus einem Lehrbuch. Redur hat gemerkt, was ihm beim Holen fehlte: ein Zweigname, der sagt, was darin steht. Zwei Bögen zuvor hatte er das Holen bekommen; jetzt kam die Regel, die es erst brauchbar macht.
+
+Am Abend dann die Leiste: „kannst du so rund machen" und „jetzt ist bei redion nur wenn man klick kann man wechseln". Zwei Sätze, zwei Arbeiten — eine Kapsel und eine Wischgeste. Der Kern der Geste ist ein Satz: sie sucht den nächsten Reiter und DRÜCKT IHN. Damit gilt für den zweiten Bedienweg automatisch alles, was für den ersten gilt; eine eigene Navigationslogik daneben wäre ein zweiter Katalog gewesen (§8).
 
 #### Massnahmen an den Daten
 
@@ -484,10 +582,230 @@ Nicht ein Fehler, sondern eine Kette: Redur fragte nach dem Worker-Namen, und im
 | 09:50 | Worker-Name in wrangler.toml von redion auf red-ion; database_name bleibt redion. | Cloudflare hat das Projekt red-ion genannt und überschrieb den Namen bei jedem Bau mit einer Warnung. Eine Warnung, die immer kommt, verdeckt die daneben — genau das war passiert. | keins — Wrangler benutzte ohnehin red-ion; jetzt steht es auch so da |
 | 10:05 | Persönliche PDF, Schul Inhalt, chronik/, quell/entwicklung/ und .gitattributes in .assetsignore aufgenommen. | Sie standen im Upload-Protokoll und waren damit im Netz abrufbar. Fünf Megabyte Zeugnis unter einer ratbaren Adresse. | keins — GELÖSCHT WURDE NICHTS (§43); die Dateien liegen unverändert im Verzeichnis und gehen nur nicht mehr mit ins Netz |
 | 10:25 | Neuer Zweig `claude/redion-cloudflare-l143`; die Regel in CLAUDE.md §43 aufgenommen. | Redurs Regel. Der Grund dahinter: ein Zweig, auf den immer weiter geschoben wird, verliert seinen Namen — sechs Bögen lagen unter einem Namen, der nur den ersten beschreibt. | keins — der alte Zweig bleibt unangetastet, der neue beginnt auf seinem Stand; nachgemessen mit einem leeren git diff |
+| 17:48 | `oeffentlich/icons/marke.png` als einzige Quelle; `erzeugen.mts` rechnet daraus 24 Dateien, `favicon.ico` eingeschlossen. | Das rote R stand an achtzehn Stellen, und die achtzehnte hatte gar keinen Erzeuger — die .ico war von Hand gebaut und wäre als einzige übriggeblieben. | keins an Daten — Oberfläche; der Erzeuger liest jetzt selbst PNG (Signatur, Blöcke, zlib, fünf Zeilenfilter) statt eine Abhängigkeit zu holen |
+| 18:23 | Der äussere Ring der Marke verliert seine FARBE, behält seine Deckung. | Redur: „Entferne die weiche rahmen". Ein engerer Schnitt hätte den Saum mitgenommen, aber die Marke wieder vergrössert und verschoben — der Fehler des ersten Anlaufs. | keins — gemessen über eine Distanztransformation auf dem Alphakanal, Randdeckung 228 → 16 |
+| 19:16 | Neue Datei `quell/schale/aufbau/wischen.ts`; die untere Leiste schwebt als Kapsel. | Redurs zwei Sätze zur Apple-TV-Leiste. Der Radius wird aus `--mobile-nav-height` gerechnet statt als Zahl wiederholt — bei 60 px Höhe wären 20 px nur abgerundete Ecken, keine Kapsel. | keins an Daten; die Geste ist gesperrt über waagerecht rollenden Dingen, beim Zeichnen und im Dokument, und §28 verlangte zwei Einträge: das <script> in index.html UND die Zeile im GRUNDSTOCK |
+| 19:43 | `bauen.mts` setzt die Symbolbytes als Data-URL in die Einzeldatei ein und wirft, wenn eine Datei fehlt. | Die Einzeldatei hat keinen Ordner neben sich (§29) und hatte damit gar kein Reitersymbol — was ein Reiter ohne Zeichen zeigt, entscheidet der Browser: meist das zuletzt gemerkte, also weiter das alte R aus dem Zwischenspeicher. | keins — die Einzeldatei wächst um die Symbolbytes; das Werfen bei fehlender Datei ist Absicht, ein stiller Verweis ins Leere war ja der Fehler |
+
+### 2026-09-10 · Donnerstag — Ein einziger Push von Redur — die Bewegungsschicht kommt von aussen
+
+> Nur die Commits. Von diesem Tag liegt mir kein Gespräch vor.
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| „Aktuelle Website-Version" — Redur hat einen Stand von aussen eingespielt, in dem `src/schale/bedienung/motion.ts` (+105 Zeilen) und die Bewegungsschicht neu dazukamen | `fd418b84` → `0ca95cda` | 18:14 | unbekannt — ich war an diesem Tag nicht beteiligt | keine von mir gefahren |
+
+#### Zahlen des Tages
+
+- **commits:** 1
+- **entscheidungen:** 0
+
+#### Das grösste Problem
+
+Keines, das ich gesehen hätte. Der Tag steht hier, damit die Kette der Commits keine Lücke hat: 21 Dateien, 1460 neue Zeilen, und darin die Bewegungsschicht, auf der zwei Tage später E528 bis E535 aufsetzen. Wer später fragt, woher `motion.ts` kommt, findet es hier und nicht bei mir.
+
+#### Das Interessanteste, das Redur wollte
+
+Keine — an diesem Tag kam keine Nachricht.
+
+### 2026-09-12 · Samstag — Redurs CSS-Sammlung: fünf Bögen, eine Bestandsaufnahme mit dreizehn Agenten — und zwei eigene Fehler
+
+> Voller Wortlaut.
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · ca. 14:30**
+
+> [angehängt: redion_animationen_code.css, 5396 Zeilen] schau mal die aktuele github status und die letzt branche die gemerk wurde und arbeite an redion selbständig weiter und folgende in anhang findes du eine css date die ist mehreren coden für die animationen, anischt, usw dort und du musss ales im redion einsetzen und dabei wirklich alles ich will das du es in passenden orten nutzst
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**2 · ca. 15:20**
+
+> [Bild der KI-Knöpfe] hier bei ai butons war vorher statt lich eine blur efcek und codex hat das entfernt kannst du das wieder zürück bringen bite
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**3 · ca. 15:55**
+
+> ich will redion so haben ohne admin zustimmung nimant kann die webseite rein kommen geht so was , und nicht mehr ohne konto oder wo was
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**4 · ca. 16:00**
+
+> eigenes tor auch jetzt aber zuerst mache die animationen fertig und dann das
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**5 · ca. 16:05**
+
+> ich will das meien pdf auf meien konto speichern wird egal auf welche gärer ich einloge könntets du das machen und ohne konnto sollte wir mehr die redion nicht nutzen.
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**6 · ca. 16:20**
+
+> es sollte nichti im konto redbbt7 sein
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**7 · ca. 16:40**
+
+> mach weiter mit den animationen und pusche auf github wenn du fertig bist.
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**8 · ca. 17:10**
+
+> Hast du alle animationen erledigt? Oder ist noch etwas offen
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**9 · ca. 17:45**
+
+> baue e s so schne wie möglich alles ohne viel test machen
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**10 · ca. 20:25**
+
+> Erneut versuchen
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**11 · ca. 20:26**
+
+> weiter schau mal dir die aktuele letzte branche an und arbeite weiter
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**12 · ca. 20:27**
+
+> 3c7da426eded4acfbcd4387fb3fc9ba449d6e9cd es ist das
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**13 · ca. 20:35**
+
+> alter schreibst du noch etwas im UR.md oder
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E528 — Die Unschärfe an den KI-Knöpfen ist zurück: drei Zeilen hatten den Originaleffekt überschrieben | `66ca1e03` → `da61d47b` | 13:36 – 15:33 | ca. 1 h 57 min | test494 — der Wächter gegen Endlosschleifen im Leerlauf war beim ersten Versuch zu Recht rot |
+| E529 — Glühfaden und Kartenring: zwei Einträge der Wirkungstabelle hatten gar kein Element | `da61d47b` → `2689320b` | 15:33 – 15:50 | ca. 17 min | test495, 16 Zusagen, Gegenprobe rot gesehen (acht Zusagen) |
+| E530 — L143 stand kopf: die D1-Datenbank gibt es, nur im falschen Konto | `2689320b` → `5621ad66` | 15:50 – 16:06 | ca. 16 min | keine — eine Berichtigung in LUECKEN.md, kein Code |
+| E531 — Der Barcode entsteht beim Drucken, der Ring rahmt die Kennzahl | `5621ad66` → `6ad7bf4f` | 16:06 – 16:34 | ca. 28 min | test495 auf 25 Zusagen erweitert |
+| Bestandsaufnahme: dreizehn Agenten belegen jeden Vorlagenblock einzeln gegen den Code | `6ad7bf4f` → `6ad7bf4f` | 17:10 – 17:30 | ca. 20 min | keine — eine Messung: 191 Wirkungen, 42 gebaut, 51 nur Motiv, 98 fehlen |
+| E532 — Vier Regeln, die geschrieben und nie gesehen wurden: Glasknopf, Pflegekarte, Regler-Knauf, Funkel-Abstufung | `6ad7bf4f` → `f1eca227` | 17:30 – 17:37 | ca. 1 h 07 min | keiner — Redurs Entscheidung E533, als L149 eingetragen |
+| E533 — Redurs Entscheidung: alles bauen, ohne viel Prüfung. Der erste Bauanlauf mit zehn Agenten starb geschlossen am Sitzungslimit | `f1eca227` → `f1eca227` | 17:45 – 20:20 | ca. 10 min bis zum Abbruch, danach Wartezeit | keine — es entstand kein Code |
+| E534 — aus einer anderen Sitzung: Statistikherz, Ticket-Wendekarte, und der gemessene Beweis, dass mein Glasknopf-Fix nicht wirkte | `ad4ccbc7` → `3c7da426` | 19:43 – 20:23 | nicht von mir gefahren | test496, 148 Zusagen, zuerst rot gesehen |
+| Zwei Berichtigungen: E533 beschrieb einen Bau, den es nicht gab; dazu der Nachtrag zu E532 | `3c7da426` → `a95de06f` | 20:23 – 20:29 | ca. 6 min | keine — nur Dokumentation |
+
+#### Zahlen des Tages
+
+- **commits:** 6
+- **entscheidungen:** 6
+
+#### Das grösste Problem
+
+Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.
+
+Der erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~="glass"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.
+
+Der zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~="glass"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.
+
+#### Das Interessanteste, das Redur wollte
+
+„Hast du alle animationen erledigt? Oder ist noch etwas offen" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv" sagen statt „gebaut". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| 15:33 | Drei Zeilen aus `motion.css` entfernt, die `ru-funkel-platzen` überschrieben. | Redur: „hier bei ai butons war vorher statt licht eine blur efcek". Der Originaleffekt war nicht abgeschafft worden, weil er störte, sondern weil er beim Umbau im Weg lag. | keins an Daten — Oberfläche; der Leerlauf bleibt still (E528), nur das Anfassen platzt |
+| 15:50 | Zwei `ensure(`-Aufrufe in `motion.ts` für Glühfaden und Kartenring. | Beide Effekte standen in der Wirkungstabelle und hatten kein Element — der Kartenring war reiner toter Stil. Gefunden durch Abzählen, nicht durch Hinsehen: es fehlte ja nichts, was vorher da war. | keins an Daten — Dekoration, vor Vorleseprogrammen verborgen, lässt Klicks durch |
+| 16:06 | `[[d1_databases]]` und `[[r2_buckets]]` bleiben auskommentiert; die gemessenen Tatsachen stehen als Kommentar daneben. | Redur: „es sollte nichti im konto redbbt7 sein". Die Datenbank existiert, aber im falschen Konto — ein Worker findet eine Datenbank nur im EIGENEN. | keins — es wird nichts verbunden; die fünf Befehle für das richtige Konto stehen daneben, damit sie niemand neu erfinden muss |
+| 17:37 | `.rmo-glass` als eigenes Element statt weiterer Pseudo-Ebenen am Knopf. | `::after` gehört am Knopf schon dem kreisenden Rand des Verlaufseffekts, und ein Knopf kann beide Effekte tragen. | keins an Daten; der Selektor war zunächst FALSCH gerechnet und wirkte nicht — siehe E534 |
+| 20:29 | E533 und L149 berichtigt: der beschriebene Bau hat nicht stattgefunden. | Der Absatz war beim Schreiben des Eintrags schon formuliert und nicht nachgezogen worden, nachdem alle zehn Agenten am Sitzungslimit starben. Aufgeschrieben, was geplant war, statt was geschah. | keins — nur Dokumentation; der falsche Absatz bleibt mit Nachtrag stehen, damit der Fehler auffindbar ist statt weggeputzt (§35) |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 20 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 22 Einträge.
 

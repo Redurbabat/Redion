@@ -34,6 +34,8 @@ sind der teuerste Teil und der lehrreichste.
 | P18 | 2026-09-09 | Der Wächter fing den Satz, der die Regel erklärt | 🟡 klein | — |
 | P19 | 2026-09-09 | Ein Skript, das richtig rechnet und die falsche Frage beantwortet | 🟠 mittel | — |
 | P20 | 2026-09-09 | Ein Zeugnis im Netz — gefunden in einem Protokoll, das wegen etwas anderem kam | hoch | — |
+| P21 | 2026-09-12 | Zwei Regeln, die geschrieben waren und nie jemand gesehen hat | 🟠 mittel | E532 |
+| P22 | 2026-09-12 | Ein Eintrag beschrieb einen Bau, den es nicht gab | 🟠 mittel | E533 |
 
 ---
 
@@ -385,4 +387,46 @@ sind der teuerste Teil und der lehrreichste.
 **Der Stand.** Behoben. Gegenprobe rot gesehen, und sie nennt die Datei beim Namen.
 
 **Die Lehre.** Ein Protokoll, das wegen einer Kleinigkeit kommt, ganz lesen. Die Warnung, nach der gefragt wurde, war harmlos; darunter lag der Fehler, an dem der Deploy scheiterte, und weiter oben lag ein Zeugnis im Netz. Und: eine Ausschlussliste, die Namen aufzählt, hält bis zur nächsten Datei — eine, die gegen den echten Ordnerinhalt prüft, hält weiter.
+
+
+---
+
+## P21 · Zwei Regeln, die geschrieben waren und nie jemand gesehen hat
+
+*2026-09-12 · 🟠 mittel · E532*
+
+**Das Bild.** Der Glasknopf hatte keinen Schatten und keinen Druckweg; die Pflegekarte bekam ein `data-rmo="light"` und zeigte nichts. Beides sah im Quelltext vollständig aus.
+
+**Die falsche Vermutung.** Meine eigene aus E531: „es ist kein toter Stil mehr übrig". Ich hatte die `rmo-`KLASSEN gezählt und daraus auf alles geschlossen. Attributregeln (`[data-rmo~="…"]`) und die Zielliste in `motion.ts` waren nie geprüft.
+
+**Wie es gefunden wurde.** Nicht durch Hinsehen — die Seite sah richtig aus. Dreizehn Agenten mussten jeden Vorlagenblock einzeln gegen den Code belegen, mit Datei und Zeile je Wirkung. Dabei fiel auf, dass zwei Regeln nirgends ankommen.
+
+**Die Ursache.** Zweimal dieselbe Sorte: eine Regel zeigt ins Leere. Beim Glasknopf gewann neun Zeilen weiter oben in DERSELBEN Datei ein stärkerer Selektor (drei Klassen gegen ein Attribut). Bei der Pflegekarte stand das Ziel in der Wirkungstabelle, und die Regel dazu wurde nie geschrieben.
+
+**Die Lösung.** Der Glasknopf bekam einen ausreichend spezifischen Selektor und endlich seinen Körper (Kuppel, Glanzplatte, Lichtsaum). Die Pflegekarte bekam den Lichtschlitz — bewusst ohne das Anheben der Kacheln, weil sie eine Zeile in einer Liste ist und hebende Zeilen die Liste zappeln lassen.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** `test496` (aus E534) hält den echten Schatten am Glasknopf und war vorher rot. Für die Pflegekarte steht der Nachweis noch aus, als Teil von L149.
+
+
+---
+
+## P22 · Ein Eintrag beschrieb einen Bau, den es nicht gab
+
+*2026-09-12 · 🟠 mittel · E533*
+
+**Das Bild.** In ENTSCHEIDUNGEN.md stand unter E533: „Gebaut wurde in einem Zug, zehn Agenten parallel." Gebaut wurde nichts. In LUECKEN.md stand aus demselben Grund „gebaut und typgeprüft ist alles".
+
+**Die falsche Vermutung.** Keine Vermutung — eine Reihenfolge. Der Eintrag war geschrieben, WÄHREND die Agenten liefen, im Futur gedacht und im Perfekt formuliert. Danach starben alle zehn am selben Sitzungslimit (HTTP 429), acht ohne eine Zeile, und der Absatz wurde nicht nachgezogen.
+
+**Wie es gefunden wurde.** Beim Wiederaufnehmen der Arbeit: der Zweig war leer, die Fragmente fehlten, und der Eintrag behauptete das Gegenteil.
+
+**Die Ursache.** Dokumentation vor der Tatsache geschrieben. Derselbe Fehler wie E21, nur nicht im Code: aufgeschrieben, was erwartet wurde, statt nachgesehen, was geschah.
+
+**Die Lösung.** Beide Stellen berichtigt, der falsche Absatz bleibt mit Nachtrag stehen (§35: eine bekannte Lücke ist besser als ein stiller Fehler). E533 ist seither die ENTSCHEIDUNG, E535 der Bau.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Die Agentenprotokolle: zehn Abbrüche mit `rate_limit`, HTTP 429, und im Arbeitsordner genau zwei geschriebene Fragmente von zehn.
 
