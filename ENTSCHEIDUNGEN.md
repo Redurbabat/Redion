@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-521 Entscheidungen, E1 bis E541 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+522 Entscheidungen, E1 bis E542 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -585,6 +585,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E539** — O2: Der ZIP-Teil lernt Durchreichen — die Grundlage jeder Rundreise durch eine Office-Datei
 * **E540** — O3: PowerPoint lesen — eine Folie ist ein Blatt, kein neuer Blocktyp
 * **E541** — Vier Funde aus einer echten PowerPoint-Datei, die keine erfundene je gezeigt hätte
+* **E542** — Die Antworten waren alle offen: PowerPoints Ausblend-Animationen werden zu Redions Abdeckband
 
 ---
 
@@ -43287,3 +43288,53 @@ Bild zeigte es sofort.
 `test499` bleibt 17 grün. Die Prüfdatei dort bleibt gebaut, weil sie Fälle
 stellt, die eine echte Datei nicht hat (die Reihenfolgenfalle) — und die
 echte Datei stellt Fälle, die keine gebaute hat. Beides braucht es.
+
+---
+
+E542 — Die Antworten waren alle offen
+--------------------------------------------------------------------------
+
+Redur, nach dem ersten Bild seiner eingelesenen Lehrunterlage: „könnten wir
+das so mit Videoeffekt, wenn ich klicke, die Antwort zeigen — und dass es
+das Original 1:1 öffnet."
+
+**Gemessen, statt gefragt, was er meint.** In seiner Datei tragen zehn der
+27 Folien ein `p:timing` mit zusammen **22 Klickschritten**, und jeder davon
+ist `presetClass="exit"` mit `filter="dissolve"`. Das ist das Muster jeder
+Übungsfolie: die Antwort steht längst auf der Folie, ein deckendes Rechteck
+liegt darüber, und der Klick löst das Rechteck auf.
+
+**Und damit war der Import falsch, ohne dass man es sah.** E540 übersprang
+Formen ohne Text — Abdeckungen haben keinen. Die Folie kam deshalb mit
+**allen Antworten offen** heraus und sah dabei vollständig aus: auf
+`bilder/ppsx-folie3.png` ist die Kennlinie fertig gezeichnet, die Messreihe
+ausgefüllt. Ein Prüflauf hätte das nie gemeldet; das Bild allein auch nicht,
+solange niemand weiss, dass dort etwas verdeckt sein SOLLTE.
+
+**Redion hatte das Gegenstück schon.** Die Abdeck-Marke aus E266: „eine
+DECKENDE Fläche über dem, was man gleich abfragen will — Formel zudecken,
+selbst antworten, antippen, nachsehen." Und: „GESPEICHERT IST IMMER
+ZUGEDECKT: das Aufdecken lebt nur im Sichtbaren und schreibt nie in die
+Ablage — Lernen darf den Speicher nicht anfassen." Dieselbe Sache, aus einem
+anderen Anlass gebaut. Eine zweite dafür zu bauen wäre §8.
+
+Eine Form wird zur Abdeckung, wenn drei Dinge zusammenkommen: **kein Text,
+eine feste Füllfarbe, und ein Klick lässt sie verschwinden.** Zwei davon
+allein genügen nicht — ein farbiges Rechteck ohne Animation ist Gestaltung,
+und ein animierter Textkasten ist ein Textkasten.
+
+Die Nummer des Klicks reist als `schritt` mit, auch wenn heute noch jede
+Abdeckung für sich angetippt wird. Ohne sie wäre die Reihenfolge, in der die
+Folie gedacht war, verloren — und sie steht nur in der Quelldatei.
+
+Gemessen an Redurs Datei: **22 Antworten auf 10 Folien**, genau die 22
+Klickschritte. Angesehen in `bilder/ppsx-zugedeckt.png`: Messreihe und
+Diagramm gelb zugedeckt, die Aufgabe lesbar, die Antworten nicht.
+
+`test499` auf 22 Zusagen erweitert, mit einer Übungsfolie in der Prüfdatei.
+Gegenprobe rot gesehen: ohne den Abdeck-Zweig fallen vier Zusagen, und die
+Folie zeigt wieder alles.
+
+**Offen (L153):** ein Klick, der die ganze Folie einen Schritt weiterschaltet
+— heute wird jede Abdeckung einzeln angetippt. Und das Auflösen selbst ist
+ein Sprung, kein Übergang; `dissolve` ist nicht nachgebaut.

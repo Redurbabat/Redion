@@ -7452,3 +7452,29 @@ der Weg; er ist nicht gebaut, und er kostet Rechenzeit je Folie.
 **Nicht als Fehler behandeln:** Eine Präsentation aus Bildern ist eine
 zulässige Präsentation. Was Redion tun muss, ist es zu SAGEN — nicht so zu
 tun, als sei die Folie leer.
+
+---
+
+L153 · Der Klick schaltet die Folie noch nicht weiter — offen
+--------------------------------------------------------------------------
+
+E542 liest die Abdeckungen einer PowerPoint-Übungsfolie ein und kennt auch
+die Nummer des Klicks, bei dem jede weichen soll (`schritt`, aus
+`p:timing`). Benutzt wird die Nummer noch nicht:
+
+- **Heute** wird jede Abdeckung einzeln angetippt (E266). Das ist gut zum
+  Lernen allein, aber nicht das, was Redur beschrieben hat: ein Klick, und
+  die Folie geht einen Schritt weiter — wie im Vortrag vor einer Klasse.
+- **Nötig wäre** ein Schrittzähler je Blatt und ein Griff, der beim nächsten
+  Klick alle Abdeckungen mit `schritt <= n` aufdeckt. Der Vortragsmodus
+  (`werkzeuge.ts`) blättert heute Folien; er müsste zuerst die Schritte
+  durchgehen und erst danach weiterblättern.
+- **Der Übergang fehlt ganz.** PowerPoint löst die Abdeckung mit `dissolve`
+  auf; in Redion verschwindet sie schlagartig. Ein weiches Ausblenden wäre
+  in der Bewegungsschicht (`motion.css`) eine Regel — aber nur beim
+  Aufdecken, nicht im Leerlauf (E528).
+
+**Nicht gebaut, weil es eine Entscheidung braucht:** ob der Schritt am Blatt
+gespeichert wird oder nur im Sichtbaren lebt. E266 ist da eindeutig für die
+Abdeckung selbst — „Lernen darf den Speicher nicht anfassen" —, und dieselbe
+Regel spricht dafür, auch den Schrittstand nicht zu speichern.

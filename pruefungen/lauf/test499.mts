@@ -75,6 +75,31 @@ const e = await seite.evaluate(async () => {
   const R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
   /* EMU je Punkt: 12700. Ein Titel bei 1 Zoll / 0,5 Zoll, 8 Zoll breit. */
   const pt = (n: number) => Math.round(n * 12700);
+  /* Eine Übungsfolie, wie Redurs Lehrunterlagen sie bauen: die Antwort
+     steht auf der Folie, ein deckendes Rechteck liegt darüber, und ein
+     Klick lässt es verschwinden (`presetClass="exit"`). Wer das Rechteck
+     nicht mitliest, zeigt die Folie mit ALLEN ANTWORTEN OFFEN. */
+  const uebung = () =>
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"' +
+    ' xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"' +
+    ' xmlns:r="' + R + '"><p:cSld><p:spTree>' +
+      '<p:sp><p:nvSpPr><p:cNvPr id="9" name="Antwort"/></p:nvSpPr>' +
+        '<p:spPr><a:xfrm><a:off x="' + pt(100) + '" y="' + pt(200) + '"/>' +
+        '<a:ext cx="' + pt(300) + '" cy="' + pt(40) + '"/></a:xfrm></p:spPr>' +
+        '<p:txBody><a:p><a:r><a:rPr sz="2400"/><a:t>Die Antwort ist 42</a:t></a:r></a:p></p:txBody></p:sp>' +
+      /* Der Deckel: kein Text, feste Füllung, Ziel einer exit-Animation. */
+      '<p:sp><p:nvSpPr><p:cNvPr id="17" name="Deckel"/></p:nvSpPr>' +
+        '<p:spPr><a:xfrm><a:off x="' + pt(98) + '" y="' + pt(198) + '"/>' +
+        '<a:ext cx="' + pt(304) + '" cy="' + pt(44) + '"/></a:xfrm>' +
+        '<a:solidFill><a:srgbClr val="FFCC00"/></a:solidFill></p:spPr>' +
+        '<p:txBody><a:p/></p:txBody></p:sp>' +
+    '</p:spTree></p:cSld>' +
+    '<p:timing><p:tnLst><p:par><p:cTn nodeType="clickEffect">' +
+      '<p:childTnLst><p:animEffect filter="dissolve" transition="out">' +
+      '<p:cBhvr><p:tgtEl><p:spTgt spid="17"/></p:tgtEl></p:cBhvr>' +
+      '</p:animEffect></p:childTnLst></p:cTn></p:par></p:tnLst></p:timing></p:sld>';
+
   const folie = (titel: string, inhalt: string, mitBild: boolean) =>
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"' +
@@ -111,13 +136,14 @@ const e = await seite.evaluate(async () => {
     '<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"' +
     ' xmlns:r="' + R + '">' +
     '<p:sldIdLst><p:sldId id="256" r:id="rId1"/><p:sldId id="257" r:id="rId2"/>' +
-    '<p:sldId id="258" r:id="rId3"/></p:sldIdLst>' +
+    '<p:sldId id="258" r:id="rId3"/><p:sldId id="259" r:id="rId4"/></p:sldIdLst>' +
     '<p:sldSz cx="12192000" cy="6858000"/></p:presentation>';
   const praesRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
     '<Relationship Id="rId1" Type="' + R + '/slide" Target="slides/slide2.xml"/>' +
     '<Relationship Id="rId2" Type="' + R + '/slide" Target="slides/slide10.xml"/>' +
     '<Relationship Id="rId3" Type="' + R + '/slide" Target="slides/slide1.xml"/>' +
+    '<Relationship Id="rId4" Type="' + R + '/slide" Target="slides/slide99.xml"/>' +
     '</Relationships>';
   const bildRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
@@ -133,6 +159,7 @@ const e = await seite.evaluate(async () => {
     { name: 'ppt/slides/slide2.xml',  inhalt: folie('Erste Folie', 'Inhalt eins', false) },
     { name: 'ppt/slides/slide10.xml', inhalt: folie('Zweite Folie', 'Inhalt zwei', true) },
     { name: 'ppt/slides/slide1.xml',  inhalt: folie('Dritte Folie', 'Inhalt drei', false) },
+    { name: 'ppt/slides/slide99.xml', inhalt: uebung() },
     { name: 'ppt/slides/_rels/slide10.xml.rels', inhalt: bildRels },
     { name: 'ppt/media/bild1.png', inhalt: png }
   ]);
@@ -162,6 +189,15 @@ const e = await seite.evaluate(async () => {
     bildDa: !!bildMarke, bildPts: bildMarke?.pts,
     bildSatzBlock: bildSatz ? bildSatz.blockId === zwei.id : false,
     bildNurEinmal: marken.filter(m => m.art === 'bild').length,
+    /* Die Übungsfolie: Antwort da, Deckel darüber. */
+    deckel: (() => {
+      const u = blaetter[3];
+      const m = (u?.marken || []) as any[];
+      const d = m.find(x => x.art === 'abdeck');
+      return { anzahl: m.filter(x => x.art === 'abdeck').length,
+               schritt: d?.schritt, farbe: d?.farbe, pts: d?.pts,
+               antwortDa: m.some(x => x.art === 'text' && /42/.test(x.text || '')) };
+    })(),
     neueDateien: alle.length - vorher,
     anhangDa: !!anhang, anhangName: anhang?.text || ''
   };
@@ -179,9 +215,9 @@ p('Fett wird übernommen', e.titelFett);
 p('Der harte Umbruch `a:br` wird zur Zeile', e.umbruchDa);
 
 console.log('\n§2 Die Reihenfolge kommt aus sldIdLst, nicht aus den Dateinamen');
-p('Drei Folien', e.anzahl === 3, String(e.anzahl));
+p('Vier Folien', e.anzahl === 4, String(e.anzahl));
 p('… in der Ordnung der Präsentation, nicht in der der Dateinamen',
-  JSON.stringify(e.reihenfolge) === JSON.stringify(['Erste Folie', 'Zweite Folie', 'Dritte Folie']),
+  JSON.stringify(e.reihenfolge.slice(0, 3)) === JSON.stringify(['Erste Folie', 'Zweite Folie', 'Dritte Folie']),
   JSON.stringify(e.reihenfolge));
 
 console.log('\n§3 Bilder kommen mit');
@@ -190,6 +226,14 @@ p('… genau eine', e.bildNurEinmal === 1, String(e.bildNurEinmal));
 p('… an der Stelle aus dem XML (300/300 bis 460/420)',
   JSON.stringify(e.bildPts) === JSON.stringify([[300, 300], [460, 420]]), JSON.stringify(e.bildPts));
 p('Der Dateisatz hängt an DIESEM Blatt (E99)', e.bildSatzBlock);
+
+console.log('\n§5 Die Antwort bleibt zugedeckt, bis man sie aufdeckt');
+p('Der Deckel wird als Abdeck-Marke eingelesen', e.deckel.anzahl === 1, String(e.deckel.anzahl));
+p('… mit der Farbe aus der Datei', e.deckel.farbe === '#FFCC00', String(e.deckel.farbe));
+p('… und der Nummer des Klicks, bei dem er weicht', e.deckel.schritt === 1, String(e.deckel.schritt));
+p('… über der Antwort, nicht daneben',
+  JSON.stringify(e.deckel.pts) === JSON.stringify([[98, 198], [402, 242]]), JSON.stringify(e.deckel.pts));
+p('Die Antwort selbst ist da — nur verdeckt', e.deckel.antwortDa);
 
 console.log('\n§4 Das Original bleibt (E538)');
 p('Die .pptx liegt als Anhang dabei', e.anhangDa && e.anhangName === 'Vortrag.pptx', e.anhangName);

@@ -22929,7 +22929,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 845, inhalt: 'e5be3fbb229e557f', gebaut: '2026-09-12T22:50:41.388Z' };
+const Stand = { fassung: 846, inhalt: '923559ff17b68b16', gebaut: '2026-09-12T22:57:45.014Z' };
 window.Stand = Stand;
 
 </script>
@@ -107405,6 +107405,49 @@ const Einlesen = (() => {
             w: emuZuPunkt(ext.getAttribute('cx')), h: emuZuPunkt(ext.getAttribute('cy')) };
     };
     /**
+     * DIE KLICKSCHRITTE EINER FOLIE — und was sie aufdecken.
+     *
+     * An Redurs Lehrunterlage gemessen: zehn der 27 Folien tragen `p:timing`,
+     * zusammen 22 Klickschritte, und ALLE Effekte sind `presetClass="exit"`
+     * mit `filter="dissolve"`. Das ist das Muster jeder Übungsfolie: die
+     * Antwort steht längst auf der Folie, ein deckendes Rechteck liegt
+     * darüber, und der Klick löst das Rechteck auf.
+     *
+     * Wer diese Rechtecke nicht mitliest, zeigt die Folie mit ALLEN ANTWORTEN
+     * OFFEN — und merkt es nicht, weil die Folie vollständig aussieht. Genau
+     * das ist in der ersten Fassung passiert (E541): Formen ohne Text wurden
+     * übersprungen, und die Abdeckungen haben keinen.
+     *
+     * Zurück kommt: Form-Kennung → Nummer des Klicks, bei dem sie verschwindet.
+     */
+    const klickschritte = (doc) => {
+        const karte = new Map();
+        const zeit = doc.getElementsByTagName('p:timing')[0];
+        if (!zeit)
+            return karte;
+        let schritt = 0;
+        /* Jeder `p:par` mit `nodeType="clickEffect"` ist EIN Klick. Verschachtelt
+           sind sie tief; gezählt wird in Dokumentordnung, und das ist die
+           Reihenfolge, in der auch PowerPoint sie abarbeitet. */
+        for (const knoten of zeit.getElementsByTagName('p:cTn')) {
+            if (knoten.getAttribute('nodeType') !== 'clickEffect')
+                continue;
+            schritt++;
+            for (const ziel of knoten.getElementsByTagName('p:spTgt')) {
+                const id = ziel.getAttribute('spid');
+                if (id && !karte.has(id))
+                    karte.set(id, schritt);
+            }
+        }
+        return karte;
+    };
+    /** Die Füllfarbe einer Form, wenn sie eine feste ist. */
+    const formFarbe = (form) => {
+        const voll = form.getElementsByTagName('a:solidFill')[0];
+        const rgb = voll?.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+        return rgb ? '#' + rgb : '';
+    };
+    /**
      * Eine `.pptx` lesen. Zurück kommen Folien mit ihren Objekten — noch ohne
      * Kennungen und ohne abgelegte Bilder; das macht `datei()`, weil erst dort
      * feststeht, an welchem Block eine Bilddatei hängt.
@@ -107443,23 +107486,35 @@ const Einlesen = (() => {
             const doc = xml(t);
             const rels = await relsLesen(zip, pfad);
             const baum = doc.getElementsByTagName('p:spTree')[0];
+            const schritte = klickschritte(doc);
             const objekte = [];
             let titel = '';
             for (const form of (baum ? baum.children : [])) {
                 /* ── Textkasten ──────────────────────────────────────────────── */
                 if (form.tagName === 'p:sp') {
                     const txBody = form.getElementsByTagName('p:txBody')[0];
-                    if (!txBody)
+                    const text = txBody ? formText(txBody) : '';
+                    const lage = formLage(form);
+                    /* ── EINE ABDECKUNG ──────────────────────────────────────────
+                       Kein Text, eine feste Füllung, und ein Klick lässt sie
+                       verschwinden: das ist ein Deckel über der Antwort. Redion hat
+                       dafür die Abdeck-Marke (E266) — zugedeckt gespeichert,
+                       antippen deckt auf, und der Speicher wird dabei nie
+                       angefasst. Dieselbe Sache, schon gebaut. */
+                    const sid = form.getElementsByTagName('p:cNvPr')[0]?.getAttribute('id') || '';
+                    const schritt = sid ? schritte.get(sid) : undefined;
+                    if (!text.trim() && schritt && lage && lage.w > 0 && lage.h > 0) {
+                        objekte.push({ art: 'abdeck', schritt, farbe: formFarbe(form) || '#ffcc00',
+                            x: lage.x, y: lage.y, w: lage.w, h: lage.h });
                         continue;
-                    const text = formText(txBody);
+                    }
                     if (!text.trim())
                         continue;
-                    const lage = formLage(form);
                     /* Der erste Lauf bestimmt Schriftgrad und Fett für den Kasten.
                        Redions Textmarke hat EINEN Grad je Kasten; ein Kasten mit
                        gemischten Graden käme also vereinfacht an. Das ist eine Lücke
                        und steht so in LUECKEN.md. */
-                    const rPr = txBody.getElementsByTagName('a:rPr')[0];
+                    const rPr = txBody?.getElementsByTagName('a:rPr')[0];
                     const sz2 = Number(rPr?.getAttribute('sz'));
                     /* Ist es der Titel? PowerPoint sagt es über den Platzhaltertyp. */
                     const ph = form.getElementsByTagName('p:ph')[0];
@@ -107713,7 +107768,7 @@ const Einlesen = (() => {
                Marken auf DERSELBEN Zeichenschicht, die auch PDF-Seite und
                A4-Blatt benutzen — also sofort verschiebbar, drehbar und
                rückgängig zu machen. */
-            let mitBild = 0;
+            let mitBild = 0, mitDeckel = 0;
             /* Pfad im Paket → Kennung des abgelegten Satzes. Gemessen an einer
                echten Präsentation: 108 Bildvorkommen, aber nur 36 verschiedene
                Bilder. Ohne diese Karte lägen 108 Dateisätze im Speicher, davon
@@ -107730,6 +107785,15 @@ const Einlesen = (() => {
                     if (o.art === 'text') {
                         marken.push({ id, art: 'text', point: [o.x, o.y], breiteBox: o.breiteBox,
                             text: o.text, fontSize: o.fontSize, fett: !!o.fett });
+                        continue;
+                    }
+                    if (o.art === 'abdeck') {
+                        /* `schritt` reist mit, auch wenn heute noch jede Abdeckung für
+                           sich angetippt wird. Ohne die Zahl wäre die Reihenfolge, in
+                           der die Folie gedacht war, verloren — und sie steht nur in
+                           der Quelldatei. */
+                        marken.push({ id, art: 'abdeck', farbe: o.farbe, schritt: o.schritt,
+                            pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
                         continue;
                     }
                     /* Das Bild bekommt einen eigenen Dateisatz, der an DIESEM Block
@@ -107750,11 +107814,13 @@ const Einlesen = (() => {
                     }
                     catch { /* ohne das Bild bleibt die Folie stehen */ }
                 }
+                mitDeckel += marken.filter((m) => m.art === 'abdeck').length;
                 if (marken.length)
                     Store.updateBlock(block.id, { marken });
             }
             return { seite, hinweis: p.folien.length + ' Folien übernommen'
                     + (mitBild ? ', ' + mitBild + ' Bilder aus ' + schonAbgelegt.size + ' Dateien' : '')
+                    + (mitDeckel ? ', ' + mitDeckel + ' Antworten zugedeckt' : '')
                     + (quelle ? ' · das Original liegt unverändert als Anhang dabei' : '') };
         }
         if (name.endsWith('.epub')) {
