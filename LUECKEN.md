@@ -7304,3 +7304,29 @@ eingetragen; dann steigt die Decke mit geschriebenem Grund statt still.
 E526 selbst ist auf null: die zwei rohen `22px` der Kapsel sind durch
 `var(--radius-2xl)` ersetzt, und ihr Radius wird aus `--mobile-nav-height`
 gerechnet statt als Zahl wiederholt.
+
+---
+
+L149 · Die Bögen E532/E533 sind ohne eigene Prüfläufe gebaut — offen
+--------------------------------------------------------------------------
+
+Redur hat am 12. September 2026 entschieden: „baue es so schnell wie
+möglich alles ohne viel test machen" (E533). Gebaut und typgeprüft ist
+alles, die App startet, die Einzeldatei ist neu — aber **kein einziger
+Prüflauf hält die neuen Wirkungen**, und keine Gegenprobe war rot.
+
+Was nachzuholen ist, je Stelle ein Lauf nach dem Muster von `test495`:
+
+- E532: Glasknopf-Körper wirklich sichtbar (`getComputedStyle` des
+  `.fbtns button.prim` zeigt den `inset`-Schatten des Attributs, nicht
+  den der Klassenregel); `.pf-karte::after` hat `content`; Regler-Knauf
+  hat Rand und Schein; Funkel-Hover ist heller als Fokus.
+- E533, je Block: Markup vorhanden (`ensure`-Kinder), im Leerlauf
+  `animationName === 'none'` an jedem neuen Element (das ist der Wächter
+  aus `test494`, der hier erweitert gehört), bei Aktivität/Hover die
+  benannte Animation genau einmal bzw. endlich, `prefers-reduced-motion`
+  stellt alles still.
+- Bilder je Zustand (§55.3): aus/an, Ruhe/Hover, hell/dunkel — die zwei
+  Fehler, die in E525 und E531 nur das Bild fand, sind der Grund.
+
+Bis dahin gilt für E533 ausdrücklich: **eine Behauptung, kein Beleg.**

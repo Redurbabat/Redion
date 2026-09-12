@@ -129,6 +129,21 @@ const RedionMotion = (() => {
     /* Der gezeichnete Ring aus der Statistik-Vorlage (2030–2710). Er rahmt
        die ECHTE Zahl und misst nichts — siehe den Grund in motion.css. */
     if (ids.includes('ring')) ensure(element, 'rmo-ring');
+    /* ==================================================================
+       Der Glaskörper aus Vorlagenblock 8. Er hat nicht gefehlt, er war
+       ÜBERSTIMMT: `[data-rmo~="glass"]` (ein Attribut) verliert gegen
+       `.fbtns button.prim:not(.ru-funkel)` (drei Klassen) — geschrieben,
+       nie gesehen. Der Körper bekommt deshalb ein eigenes Element statt
+       weiterer Pseudo-Ebenen am Knopf: `::after` gehört dort schon dem
+       kreisenden Rand des Verlaufseffekts, und ein Knopf kann beide
+       Effekte tragen.
+       ================================================================== */
+    if (ids.includes('glass')) ensure(element, 'rmo-glass', glas => {
+      /* Kuppel (Licht von oben), Platte (der harte Glanz darüber),
+         Saum (das Licht, das unten wieder austritt). */
+      glas.append(ornament('rmo-glass-kuppel'), ornament('rmo-glass-platte'),
+                  ornament('rmo-glass-saum'));
+    });
     if (ids.includes('letters')) {
       /* Text teilen, aber Symbole, Beschriftung und Listener behalten. */
       for (const node of Array.from(element.childNodes)) {

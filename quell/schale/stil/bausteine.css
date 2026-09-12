@@ -7844,12 +7844,34 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   animation:ru-funkel-flackern 2s linear infinite; animation-delay:.5s
 }
 @keyframes ru-funkel-flackern{ 50%{ opacity:.3 } }
-.ru-funkel:hover::before, .ru-funkel:focus-visible::before{
+/* Fokus und Hover waren bis hier EINE Regel mit einem Wert. Die Vorlage
+   stuft ab: der Tastaturfokus zeigt, wo man steht, der Zeiger zeigt, was
+   gleich passiert — also ist Hover das hellere von beiden. */
+.ru-funkel:focus-visible::before{
   box-shadow:0 -8px 12px -6px #fff3 inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 20%) inset,
              1px 1px 1px #fff3, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001
 }
-.ru-funkel:hover::after, .ru-funkel:focus-visible::after{
+.ru-funkel:focus-visible::after{
   opacity:.6; mask-image:linear-gradient(0deg,#fff,transparent)
+}
+.ru-funkel:hover::before{
+  box-shadow:0 -8px 12px -6px #fffa inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 30%) inset,
+             1px 1px 1px #fff3, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001
+}
+.ru-funkel:hover::after{
+  opacity:1; mask-image:linear-gradient(0deg,#fff,transparent)
+}
+/* Der Rand leuchtet mit. Er stand bisher erst beim Drücken farbig da —
+   auf dem Telefon, wo es kein Hover gibt, war das die einzige Stufe. */
+.ru-funkel:hover, .ai-quick button.ru-funkel:hover, .lernwelt button.is-primary.ru-funkel:hover{
+  border-color:hsla(var(--ru-funkel-ton),100%,80%,.4)
+}
+/* Das Symbol kommt beim Zeigen heraus: weiss, mit farbigem Kranz und
+   einem Schatten nach unten. Das Flackern hört dabei auf — ohne neue
+   Endlosschleife, die E528 gerade erst abgeschaltet hat. */
+.ru-funkel:hover > svg, #ai .ai-quick button.ru-funkel:hover > svg{
+  stroke:#fff; animation:none;
+  filter:drop-shadow(0 0 4px hsl(var(--ru-funkel-ton) 100% 75%)) drop-shadow(0 2px 3px #0008)
 }
 /* Beim Anfassen platzen die Buchstaben einmal auf und glimmen dann schneller. */
 .ru-funkel:hover .ru-funkel-b, .ru-funkel:focus-visible .ru-funkel-b{
@@ -7866,6 +7888,12 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   background:hsl(var(--ru-funkel-ton) 50% 20% / .5)
 }
 .ru-funkel:active::after{ opacity:1; mask-image:linear-gradient(0deg,#fff,transparent); filter:brightness(200%) }
+/* Beim Drücken war bisher gar nichts an der Aussenkante: auf einem Gerät
+   ohne Zeiger blieb der Knopf beim Tippen unverändert. */
+.ru-funkel:active::before{
+  box-shadow:0 -8px 12px -6px #fffa inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 80%) inset,
+             1px 1px 1px #fff4, 2px 2px 2px #fff2, -1px -1px 1px #0002, -2px -2px 2px #0001
+}
 .ru-funkel:active .ru-funkel-b{ text-shadow:0 0 1px hsl(var(--ru-funkel-ton) 100% 90% / 90%); animation:none }
 
 /* ---- Das Rauschen als Cover (textur:nebel | sand | nacht) --------------- */

@@ -129,8 +129,24 @@ body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt
 /* 2 — Drei Einstellungsregler, auf einem echten Einstellungsweg. */
 .rmo-sliders { display: inline-flex; flex-direction: column; justify-content: center; gap: 4px; width: 17px; margin-right: 5px; vertical-align: middle; }
 .rmo-sliders i { display: block; position: relative; width: 16px; height: 1px; background: currentColor; }
-.rmo-sliders i::after { content: ''; position: absolute; width: 4px; height: 4px; top: -1.5px; left: 3px; border-radius: 50%; background: currentColor; transition: transform .3s; }
-.rmo-sliders i:nth-child(2)::after { left: 9px; }
+/* Der Knauf sitzt AUF der Schiene, nicht darin: der Rand in der Farbe des
+   Knopfgrundes schneidet die Schiene frei, wie das Weiss der Vorlage auf
+   ihrem violetten Knopf. `--bg-card` statt `#fff`, weil Redion einen
+   Hellmodus hat und Weiss dort verschwindet. */
+.rmo-sliders i::after { content: ''; position: absolute; width: 6px; height: 6px; top: -2.5px; left: 2px;
+  border-radius: 50%; background: currentColor; box-sizing: border-box;
+  border: 1.5px solid var(--rmo-knauf-grund, var(--bg-card));
+  box-shadow: 0 0 5px color-mix(in srgb, currentColor 60%, transparent);
+  transition: transform .3s, box-shadow .3s; }
+.rmo-sliders i:nth-child(2)::after { left: 8px; }
+/* Heller Ring rundum, sobald der Knopf angefasst wird — die Umrandung der
+   Vorlage, aber nur im Zustand: ein Dauerring an vier verschiedenen
+   Knöpfen wäre in Redion ein zweiter Fokusrahmen. */
+[data-rmo~="sliders"] { transition: box-shadow .22s; }
+[data-rmo~="sliders"]:is(:hover, :focus-visible, :active):not(:disabled) {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent); }
+[data-rmo~="sliders"]:is(:hover, :focus-visible, :active) .rmo-sliders i::after {
+  box-shadow: 0 0 7px color-mix(in srgb, currentColor 85%, transparent); }
 #ai-quellen:is(:hover, :focus-visible) .rmo-sliders i::after { transform: translateX(4px); }
 #ai-quellen:is(:hover, :focus-visible) .rmo-sliders i:nth-child(2)::after { transform: translateX(-4px); }
 /* 3 + 10 — Lichtschlitz und kleiner Perspektivwechsel: echte Fach-/Statistikkarten. */
@@ -148,6 +164,18 @@ body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt
   border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: 0 12px 26px #00000018;
 }
 .els-kachel:is(:hover, :focus-visible)::after, .stat-karte.lw-metrik:hover::after { opacity: 1; animation: rmo-shine 1.2s ease both; }
+/* `.pf-karte` stand seit dem ersten Tag in der Zielliste des Lichteffekts
+   (motion.ts) und hatte hier KEINE Regel: das Attribut wurde geschrieben,
+   sichtbar war nichts. Sie bekommt den Lichtschlitz, aber bewusst NICHT
+   das Anheben der Kacheln — sie ist eine Zeile in einer Liste mit
+   Trennlinie, und hebende Zeilen lassen die Liste zappeln. */
+.pf-karte { position: relative; overflow: hidden; }
+.pf-karte::after {
+  content: ''; position: absolute; pointer-events: none; inset: 0; opacity: 0;
+  background: linear-gradient(115deg, transparent 25%, #ffffff18 45%, transparent 65%);
+  background-size: 250% 100%; transition: opacity .25s;
+}
+.pf-karte:hover::after { opacity: 1; animation: rmo-shine 1.2s ease both; }
 .stat-karte.lw-metrik strong { display: block; animation: rmo-reveal .45s ease both; }
 /* Die Ziffernrolle aus der Statistik-Vorlage, mit dem vorhandenen Wert
  * als unveränderter Textquelle. Nur die dekorative Rolle bewegt sich. */
@@ -581,10 +609,45 @@ body [data-rmo~="letters"]:is(:hover,:focus-visible,:active) :is(.rmo-letter,.ru
 /* Native Schalter: kurze Zustandsbewegung ersetzt die frühere Endlosschleife. */
 body [data-rmo~="toggle"]::before { animation:none; }
 body [data-rmo~="toggle"][data-rmo-state="an"]::before { animation:rmo-orbit .65s ease-out 1; }
-[data-rmo~="glass"] { min-height:44px; border:1px solid color-mix(in srgb,var(--accent) 55%,var(--line));
+/* 8 — Der Glasknopf. Der `body`-Vorsatz ist kein Stilmittel, sondern die
+   Reparatur: ohne ihn verlor dieses Attribut gegen `.fbtns button.prim:
+   not(.ru-funkel)` neun Zeilen weiter oben (drei Klassen gegen ein
+   Attribut), und Schatten wie Druckweg waren seit dem ersten Tag
+   unsichtbar. Die Regel dort bleibt stehen — sie trägt die Knöpfe,
+   solange das Skript noch nicht gelaufen ist. */
+body [data-rmo~="glass"] { min-height:44px; border:1px solid color-mix(in srgb,var(--accent) 55%,var(--line));
   box-shadow:inset 0 1px 0 #ffffff70, inset 0 -6px 12px #0001, 0 3px 0 #0003;
   transition:transform .16s,box-shadow .16s; }
-[data-rmo~="glass"]:active:not(:disabled) { transform:translateY(3px); box-shadow:inset 0 2px 5px #0003; }
+body [data-rmo~="glass"]:active:not(:disabled) { transform:translateY(3px); box-shadow:inset 0 2px 5px #0003; }
+/* Der Glaskörper selbst: eine eigene Schicht über der Fläche, unter dem
+   Text. Sie fängt keine Zeiger und trägt keine Bedeutung. */
+.rmo-glass { position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden;
+  border-radius:inherit; }
+body [data-rmo~="glass"] > :not(.rmo-glass) { position:relative; z-index:1; }
+/* Kuppel: das Licht, das von oben in das Glas fällt. */
+.rmo-glass-kuppel { position:absolute; inset:-40% -20% auto; height:130%;
+  background:radial-gradient(60% 80% at 50% 0%, #ffffffaa, #ffffff30 45%, transparent 70%);
+  opacity:.55; transition:opacity .22s, transform .32s cubic-bezier(.22,1,.36,1); }
+/* Glanzplatte: die harte Kante, an der sich die Wölbung zeigt. */
+.rmo-glass-platte { position:absolute; left:6%; right:6%; top:3px; height:42%;
+  border-radius:inherit; border-bottom-left-radius:60% 80%; border-bottom-right-radius:60% 80%;
+  background:linear-gradient(180deg,#ffffff70,#ffffff10 70%,transparent);
+  opacity:.7; transition:opacity .22s, transform .32s cubic-bezier(.22,1,.36,1); }
+/* Saum: das Licht tritt unten wieder aus, im Ton der App. */
+.rmo-glass-saum { position:absolute; left:14%; right:14%; bottom:0; height:38%;
+  background:linear-gradient(0deg, color-mix(in srgb,var(--accent) 55%,transparent), transparent 80%);
+  filter:blur(5px); opacity:0; transition:opacity .26s; }
+body [data-rmo~="glass"]:is(:hover,:focus-visible):not(:disabled) .rmo-glass-kuppel {
+  opacity:.9; transform:translateY(6%); }
+body [data-rmo~="glass"]:is(:hover,:focus-visible):not(:disabled) .rmo-glass-platte {
+  opacity:1; transform:translateY(2px) scaleY(1.08); }
+body [data-rmo~="glass"]:is(:hover,:focus-visible):not(:disabled) .rmo-glass-saum { opacity:.5; }
+body [data-rmo~="glass"]:active:not(:disabled) .rmo-glass-kuppel { opacity:.35; transform:translateY(12%); }
+body [data-rmo~="glass"]:active:not(:disabled) .rmo-glass-saum { opacity:.8; }
+body [data-rmo~="glass"]:disabled .rmo-glass { opacity:.25; }
+/* Die Beschriftung weicht beim Drücken leicht zurück — das Glas drückt
+   sich vor den Text, nicht der Text durch das Glas. */
+body [data-rmo~="glass"]:active:not(:disabled) > :not(.rmo-glass) { opacity:.82; transition:opacity .12s; }
 
 .rmo-recent { margin:16px 0 24px; min-width:0; }
 .rmo-recent h2 { font-size:13px; color:var(--text-dim); margin:0 0 12px; }
