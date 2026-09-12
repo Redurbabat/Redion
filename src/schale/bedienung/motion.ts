@@ -1,7 +1,7 @@
 /* Redurs 15 Vorlagen: lokale Dekoration, keine gespeicherten Werte. */
 type MotionEffectId = 'folder' | 'sliders' | 'light' | 'gradient' | 'letters' |
   'liquid' | 'toggle' | 'carousel' | 'glass' | 'metric' | 'status' | 'ticket' |
-  'orb' | 'filament' | 'transport' | 'ring';
+  'orb' | 'filament' | 'transport';
 
 const RedionMotion = (() => {
   const metricSelector = '.stat-karte.lw-metrik > strong, .rmo-health-metric > strong';
@@ -15,13 +15,12 @@ const RedionMotion = (() => {
     { id: 'toggle', place: 'Einstellungen und Automationen', selector: '.schalter, .mschalter' },
     { id: 'carousel', place: 'Zuletzt geöffnete Dokumente, leeres Regal', selector: '.rmo-recent, .bib-leer' },
     { id: 'glass', place: 'Primäre Dialogaktionen', selector: '.fbtns button.prim' },
-    { id: 'metric', place: 'Lernfortschritt und Bestandsgesundheit', selector: metricSelector },
+    { id: 'metric', place: 'Lernfortschritt und Bestandsgesundheit: Zahl, Ring und Herz', selector: metricSelector + ', .stat-karte.lw-metrik, .rmo-health-metric' },
     { id: 'status', place: 'Synchronisierung, Sicherung, KI, Automationen', selector: '.ru-zustand, .ru-lader, .ki-aktivitaet, .ag-motion-status, .rmo-product-status' },
     { id: 'ticket', place: 'PDF-Druck und Export', selector: '.ru-drucker' },
     { id: 'orb', place: 'KI-Schaltfläche und Kopfzeile', selector: '#btn-ai, #ai .ai-head' },
     { id: 'filament', place: 'Strom im Elektro-Schaltplan', selector: '.sp-start' },
-    { id: 'transport', place: 'Zeitmesser Start/Pause/Beenden', selector: '.rmo-transport' },
-    { id: 'ring', place: 'Kennzahlen im Lernbereich und in der Bestandsübersicht', selector: '.stat-karte.lw-metrik, .rmo-health-metric' }
+    { id: 'transport', place: 'Zeitmesser Start/Pause/Beenden', selector: '.rmo-transport' }
   ];
   const selector = effects.map(effect => effect.selector).join(',');
   const watched = new WeakSet<Element>();
@@ -78,7 +77,7 @@ const RedionMotion = (() => {
       set(element, 'data-rmo-visible', 'false');
       visibility?.observe(element);
     }
-    if (ids.includes('metric')) prepareMetric(element);
+    if (ids.includes('metric') && element.matches(metricSelector)) prepareMetric(element);
     if (ids.includes('folder')) {
       const surface = element.querySelector('.bib-deckel-blatt');
       if (surface) ensure(surface, 'rmo-folder-stack', stack => {
@@ -96,6 +95,21 @@ const RedionMotion = (() => {
     if (ids.includes('ticket')) {
       if (!element.classList.contains('rmo-ticket')) element.classList.add('rmo-ticket');
       ensure(element, 'rmo-ticket-heading', heading => { heading.textContent = 'PDF-Ausgabe'; });
+      /* Nur die Bildbühne wenden. Der echte Status bleibt außerhalb und
+         wird während der Drehung unverändert vorgelesen. */
+      const stage = element.querySelector('.ru-drucker-buehne');
+      if (stage && !element.querySelector('.rmo-ticket-turn')) {
+        const turn = ornament('rmo-ticket-turn');
+        const back = ornament('rmo-ticket-back');
+        const mark = ornament('rmo-ticket-mark');
+        const result = ornament('rmo-ticket-result');
+        back.append(mark, result);
+        stage.replaceWith(turn);
+        turn.append(stage, back);
+      }
+      const result = element.querySelector('.rmo-ticket-result');
+      const label = element.querySelector('.ru-drucker-text')?.textContent || '';
+      if (result && result.textContent !== label) result.textContent = label;
     }
     /* ==================================================================
      * DER GLÜHFADEN UND DER KARTENRING — beide standen bisher nur in der
@@ -128,7 +142,10 @@ const RedionMotion = (() => {
     });
     /* Der gezeichnete Ring aus der Statistik-Vorlage (2030–2710). Er rahmt
        die ECHTE Zahl und misst nichts — siehe den Grund in motion.css. */
-    if (ids.includes('ring')) ensure(element, 'rmo-ring');
+    if (ids.includes('metric') && !element.matches(metricSelector)) {
+      ensure(element, 'rmo-ring');
+      ensure(element, 'rmo-heart');
+    }
     /* ==================================================================
        Der Glaskörper aus Vorlagenblock 8. Er hat nicht gefehlt, er war
        ÜBERSTIMMT: `[data-rmo~="glass"]` (ein Attribut) verliert gegen
@@ -187,6 +204,8 @@ const RedionMotion = (() => {
         const metric = target?.closest(metricSelector);
         if (metric) prepareMetric(metric);
         if (target?.matches(selector)) roots.add(target);
+        const ticket = target?.closest('.ru-drucker');
+        if (ticket) roots.add(ticket);
         for (const node of record.addedNodes) if (node instanceof Element) roots.add(node);
         for (const node of record.removedNodes) if (node instanceof Element && !node.isConnected) {
           for (const removed of [node, ...node.querySelectorAll('[data-rmo]')]) {

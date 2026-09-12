@@ -1,5 +1,17 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 12. September 2026 · E534 · Animationsreste auf ad4ccbc
+
+Ticket-Vorder-/Rückseite und Statistikherz ergänzt. Zahlen und Statussätze
+kommen weiterhin aus den echten Komponenten. Reduzierte Bewegung wechselt
+die Ticketansicht statisch. Ringüberlappung auf schmalen Gesundheitskarten
+und überstimmten Glasknopf-Schatten behoben. Statistik-Teile bleiben in
+einer der 15 Vorlagenfamilien zusammengefasst. `test496`: Gegenproben rot,
+anschließend 148 Zusagen grün. Kein vollständiger Gesamtlauf behauptet;
+restliche Prüflücken bleiben unter L149. Arbeit nur lokal, kein Push.
+
+---
+
 Was fertig ist. Aus `AUFGABEN.md` hierher gezogen am 3. September 2026, damit dort
 nur noch steht, was noch zu tun ist.
 

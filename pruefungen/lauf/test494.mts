@@ -1,4 +1,4 @@
-/* Suite 494 — alle 16 Motive an echten Produktwegen.
+/* Suite 494 — alle 15 Vorlagenfamilien an echten Produktwegen.
  * --gegenprobe entfernt ausschließlich im isolierten Browser die Transportbindung.
  * Derselbe Abdeckungstest muss dann rot werden. Kein Nutzerbestand, kein Netz. */
 import { chromium } from 'playwright';
@@ -47,12 +47,8 @@ try {
         document.documentElement.scrollWidth <= innerWidth + 1));
     };
     const catalog = await page.evaluate(() => RedionMotion.catalog());
-    /* SECHZEHN SEIT E531. Hier stand 15; dazugekommen ist `ring` — der
-       gezeichnete Ring an den Kennzahlen aus der Statistik-Vorlage
-       (2030–2710), der bis dahin fehlte. Die Zahl wird mitgezogen und nicht
-       gelockert: „mindestens 15" hätte diesen Lauf für jede künftige
-       Änderung blind gemacht, und genau dafür steht er hier. */
-    check('Katalog hat exakt 16 eindeutige Einträge', catalog.length === 16 && new Set(catalog.map((e: any) => e.id)).size === 16);
+    /* Ring und Herz gehören zur Statistik-Vorlage, nicht zu neuen Familien. */
+    check('Katalog hat exakt 15 eindeutige Einträge', catalog.length === 15 && new Set(catalog.map((e: any) => e.id)).size === 15);
     check('Jeder Eintrag benennt einen Produktort', catalog.every((e: any) => e.place && e.selector));
     await page.locator('.rmo-recent-card').first().waitFor();
     check('Drei echte zuletzt geöffnete Dokumente', await page.locator('[data-rmo-open]').count() === 3);
@@ -170,8 +166,8 @@ try {
     check('Keine Browserfehler', errors.length === 0);
     await context.close();
   }
-  const expected = ['folder','sliders','light','gradient','letters','liquid','toggle','carousel','glass','metric','status','ticket','orb','filament','transport','ring'];
-  check('Alle 16 Familien an Produktorten gesehen: ' + [...seen].sort().join(', '), expected.every(id => seen.has(id)));
+  const expected = ['folder','sliders','light','gradient','letters','liquid','toggle','carousel','glass','metric','status','ticket','orb','filament','transport'];
+  check('Alle 15 Familien an Produktorten gesehen: ' + [...seen].sort().join(', '), expected.every(id => seen.has(id)));
   console.log('Suite 494: ' + checks + ' grün.');
 } catch (error) {
   console.error('✗ Suite 494:', error); process.exitCode = 1;
