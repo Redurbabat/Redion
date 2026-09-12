@@ -4,16 +4,17 @@ Redion ist eine Notiz-, Datenbank- und Wissens-App, die direkt im Browser läuft
 
 Sie war einmal als Alternative zu Notion gedacht und ist darüber hinausgewachsen: das Schreibstudio für PDFs mit echtem Stift, Fachzeichen und Schutzleiter, die Lernwelt, die Prüfungsplanung, lokale KI, das vollständige `.redion`-Paket. Das gibt es dort nicht.
 
-**Redion läuft mit Server und ohne — beides vollständig.**
+**Redion läuft ohne Server. Das ist der Normalfall, nicht der Notfall.**
 
-Ohne Server ist nichts abgeschnitten: Seiten, Datenbanken, Formeln, PDFs, Zeichnen, Suche, KI und Sicherung arbeiten offline auf deinem Gerät. Mit Server kommt dazu, was mehr als ein Gerät braucht — Abgleich, Konto, Rechte, Teilen.
+Ohne Server ist nichts abgeschnitten: Seiten, Datenbanken, Formeln, PDFs, Zeichnen, Suche, KI und Sicherung arbeiten offline auf deinem Gerät. Ein Server soll dazu ermöglichen, was mehr als ein Gerät braucht — Abgleich, Konto, Rechte, Teilen. Er ist geschrieben und geprüft, aber noch nie betrieben worden; der Abschnitt „Server und Cloudflare" sagt, woran es steht.
 
 **Du entscheidest, wo deine Daten liegen:**
 
 1. Nur auf diesem Gerät (Vorgabe, ohne Konto)
 2. Zusätzlich in einem Ordner deiner Wahl, den Redion selbst sichert
-3. In deiner eigenen Wolke (Cloudflare, dein Konto, deine Datenbank)
-4. In deiner Hand — als `.redion`-Datei mit allem darin
+3. In deiner Hand — als `.redion`-Datei mit allem darin
+
+Ein vierter Weg ist vorgesehen und steht noch nicht offen: die eigene Wolke, Cloudflare, dein Konto, deine Datenbank. Der Code dafür ist da. Gelaufen ist er nie.
 
 Das wichtigste Prinzip:
 
@@ -45,6 +46,8 @@ Formeln
 
 Wissen und Notizen
 
+Die Chronik
+
 KI
 
 Dateien und Anhänge
@@ -63,7 +66,7 @@ Tests
 
 Entwicklung
 
-TypeScript-Ziel
+TypeScript
 
 Grenzen
 
@@ -90,14 +93,14 @@ Erwähnungen
 Automationen
 KI-Hilfe, lokal
 Sicherungen als `.json` und als vollständiges `.redion`-Paket
-Abgleich über die eigene Wolke
+Abgleich über die eigene Wolke — geschrieben und geprüft, noch nicht in Betrieb
 
 Redion ist local-first, und das heisst nicht „eingeschränkt":
 
 Die App ist ohne Server VOLLSTÄNDIG. Nichts ist abgeschnitten.
 Deine Daten liegen zuerst auf deinem Gerät.
-Mit Server kommt dazu, was mehr als ein Gerät braucht — Abgleich, Konto, Rechte, Teilen.
-Wo die Daten liegen, entscheidest du: Gerät, eigener Ordner, eigene Wolke, `.redion`-Datei.
+Ein Server soll dazu ermöglichen, was mehr als ein Gerät braucht — Abgleich, Konto, Rechte, Teilen. Er läuft noch nicht.
+Wo die Daten liegen, entscheidest du: Gerät, eigener Ordner, `.redion`-Datei.
 Export und Offline-Sicherung sind Pflicht.
 
 Redion soll nicht nur eine Web-App sein, sondern ein persönlicher Arbeitsbereich, den man mitnehmen, sichern und später auch auf mehreren Geräten verwenden kann.
@@ -111,7 +114,7 @@ Hauptziele
 local-first, und dabei vollständig
 offlinefähig
 ein Editor aus Blöcken
-Datenbanken mit zwölf Ansichten
+Datenbanken mit dreizehn Ansichten
 das Schreibstudio für PDFs
 vollständige Sicherung
 Anhänge sicher exportieren
@@ -135,24 +138,43 @@ dauerhafter Internetverbindung
 
 
 
-Die Oberfläche: fünf Wege, und alles andere hinter „Mehr"
+Die Oberfläche: die Kontextkante statt der Seitenleiste
 
-Redion zeigt links fünf Wege — Heute, Lernzentrum, Elektro, Bibliothek,
-Aufgaben — und darunter „Mehr". Ein Klick darauf (oder Strg + M) blendet
-alles Übrige wieder ein: Suchen, Befehle, Workspace, Posteingang, Neue
-Seite, Planen, Daten, Einrichten, Hilfe, Importieren, Papierkorb,
-Tastenkürzel und die eigenen Seiten. Nichts davon ist entfernt, es steht
-nur nicht ständig da.
+Am Rechner gibt es die Seitenleiste nicht mehr. An ihrer Stelle steht links
+die Kontextkante: 54 Pixel statt 240, und darin sechs bis zehn Knöpfe — die
+des Ortes, an dem man gerade steht, statt auf jeder Seite dieselben. Was
+darin steht, meldet jeder Bereich selbst an (`Register.kontext`); die Kante
+kennt keinen Bereich beim Namen. Strg + \ nimmt sie weg und holt sie
+zurück, Strg + M öffnet ihre Lade.
 
-Dasselbe oben: die Kopfzeile trägt Zurück, den Pfad, die Suche, KI,
-Favorit und ⋯ — Teilen, Kommentare, Versionsverlauf, Automationen und
-„Link kopieren" stehen im ⋯-Menü. Das Menüband erscheint, sobald eine
-Seite offen ist.
+Am Telefon gibt es die Kante nicht — 54 von 390 Pixeln wären ein Siebtel
+des Bildes. Dort bleibt die Seitenleiste, was sie immer war: die Schublade
+mit dem Seitenbaum. Es ist derselbe Baum, er wird beim Öffnen
+herübergeschoben und nicht kopiert.
 
-Wer die volle Leiste dauerhaft will: Einstellungen → Aussehen, oder
-`Ruhig.setzen(false)` in der Konsole. Die Wahl bleibt gespeichert.
+Oben trägt die Kopfzeile Zurück, Vorwärts, den Pfad, Teilen, KI und
+Favorit. Sechs davon rücken in der ruhigen Fassung unter ⋯ zusammen:
+Teilen, Kommentare, Versionsverlauf, Automationen, „Link kopieren" und
+„Seite sperren". Eine Suchbox steht dort nicht mehr; zur Suche führen das ⌕
+in der Reiterzeile, Strg + P und am Telefon das ⌕ in der Kopfzeile. Das
+Menüband erscheint, sobald eine Seite offen ist.
 
-Gemessen: vorher 52 anklickbare Dinge auf dem Startbild, jetzt 15.
+Wer die volle Leiste dauerhaft will: Einstellungen → Aussehen. Die Wahl
+bleibt gespeichert.
+
+Der Anlass war gemessen: 52 anklickbare Dinge auf dem Startbild, 67 mit
+offener Seite.
+
+
+Bewegung
+
+Über der Oberfläche liegt eine eigene Schicht für Bewegung —
+`quell/schale/stil/motion.css` und `src/schale/bedienung/motion.ts`. Sie ist
+Dekoration und sonst nichts: fünfzehn Vorlagen, die sich an vorhandene
+Knöpfe, Kacheln und Zustandsanzeigen hängen. Nichts davon wird gespeichert,
+nichts ändert Daten. Im Leerlauf steht sie still, und wer im System
+„weniger Bewegung" eingestellt hat, sieht sie gar nicht
+(`prefers-reduced-motion`).
 
 
 Schnellstart
@@ -238,8 +260,10 @@ Offlinebetrieb, Papierkorb, Sicherung, Wiederherstellung und optionalen Sync.
 
 Zwei Hauptwelten, ein Bestand
 
-Redion hat zwei Oberflächen auf denselben Daten. Umgeschaltet wird oben
-links; nichts wird dabei kopiert.
+Redion hat zwei Oberflächen auf denselben Daten. Nichts wird dabei kopiert.
+Einen eigenen Umschalter dafür gibt es nicht mehr: er tat genau das, was
+die Zeilen „Heute" und „Workspace" ohnehin tun. Wo man gerade ist, sagt die
+Markierung an der Zeile — dort, wo man hinklickt.
 
 **Lernen & Alltag** — Heute mit Tagesrunde und Prüfungs-Countdown,
 Lernzentrum, Lernpfad, Fehlertraining, Prüfungszentrale mit Simulation, und
@@ -325,13 +349,17 @@ Langzeitarchiv
 
 3. Lokal + optionaler Server
 
+Die ersten beiden Arten laufen heute. Diese dritte ist geschrieben und
+geprüft, aber noch nie gegen einen echten Dienst gelaufen — siehe „Server
+und Cloudflare".
+
 App bleibt lokal nutzbar
 Server ermöglicht Sync
 Rechte
 Freigaben
 öffentliche Seiten
 
-Geeignet für:
+Gedacht für:
 
 mehrere Geräte
 private Cloud
@@ -341,14 +369,13 @@ geteilte Arbeitsbereiche
 
 4. Cloudflare-Modus
 
-Geplant/optional:
+Ebenfalls geschrieben, ebenfalls noch nicht in Betrieb:
 
-Cloudflare Pages für App
 Cloudflare Workers für API
 Cloudflare D1 für Konten, Sync-Daten, Rechte
 Cloudflare R2 für Dateien und große Anhänge
 
-Geeignet für:
+Gedacht für:
 
 persönliche Cloud
 Sync zwischen Geräten
@@ -361,9 +388,11 @@ Am Telefon
 
 Seit August 2026 ist das Telefon die Hauptumgebung, nicht der Nebenschauplatz. Redion sieht dort anders aus als am Rechner — dieselben Daten, ein anderer Weg dorthin.
 
-Oben fünf Wege: der Arbeitsbereich, Start, Seiten, Termine und Mehr. Nur der gewählte trägt seinen Namen; so passen alle fünf auch auf 360 Pixel.
+Unten fünf Wege als Kapsel, dort wo der Daumen ist: Dokumente, Heute, Lernen, Termine und Mehr. Jeder trägt seinen Namen unter dem Zeichen — auf 390 Pixel sind das 78 je Weg, und deshalb sind es fünf und nicht sechs.
 
-Unten drei Knöpfe, die immer da sind: Suchen, KI fragen, Neue Seite. Der Stift fragt zuerst, was entstehen soll — Seite, Datenbank, Tabelle, Aufgabe, Karteikarte, Datei oder Vorlage.
+Zwischen den Bereichen lässt sich auch wischen: waagerecht über den Inhalt, und die Leiste geht einen Weg weiter. Die Geste sucht sich den nächsten Knopf und drückt ihn — damit gilt fürs Wischen alles, was fürs Tippen gilt, statt einer zweiten Logik daneben. Sie greift nicht, wo etwas waagerecht rollt, wo gezeichnet wird, wo zwei Finger zoomen oder wo der Finger ganz am Rand ansetzt; dort meint man den Browser.
+
+Suchen und KI stehen rechts in der Menüleiste, „Neu" ist der grosse Knopf im Regal und im Mehr-Blatt. Die drei schwebenden Knöpfe von früher — Suchen, KI fragen, Neue Seite — gibt es nicht mehr: zwei Leisten am unteren Rand sind eine zu viel.
 
 Menüs kommen als Blatt von unten, nicht als kleines Fenster in der Ecke. Was man antippen soll, ist mindestens 44 Pixel gross.
 
@@ -373,54 +402,74 @@ Als App installieren: In Safari den Teilen-Knopf, dann „Zum Home-Bildschirm". 
 
 Projektstruktur
 
-Aktuelle Struktur:
+Zwei Ordner sehen aus wie zwei Quellen und sind es nicht: `src/` ist die
+Quelle, `quell/` ist das, was daraus gebaut wird. Wer eine `.js` unter
+`quell/` bearbeitet, verliert die Änderung beim nächsten Bauen.
 
 Redion/
-├─ index.html
-├─ redion-einzeldatei.html
-├─ bauen.mts
+├─ index.html                  lädt die App
+├─ redion-einzeldatei.html     dieselbe App in einer Datei
+├─ sw.js                       das Dienst-Skript, erzeugt aus src/dienst/sw.ts
+├─ worker.ts                   der Einstiegspunkt bei Cloudflare
+├─ wrangler.toml               was Cloudflare beim Veröffentlichen tun soll
+├─ bauen.mts                   erzeugt redion-einzeldatei.html
+├─ chronik.mts                 erzeugt UR.md, PROBLEME.md und die Chronik-Ansicht
+├─ bilder.mts                  Bildschirmfotos aller Ansichten, Rechner und Telefon
+├─ dienststand.mts             hebt die Fassung des Dienst-Skripts
 ├─ package.json
-├─ package-lock.json
-├─ start.bat
-├─ oeffnen.bat
-├─ vergleichen.bat
-├─ sw.js
+├─ start.bat · oeffnen.bat · holen.bat · hochladen.bat
 │
-├─ quell/
-│  ├─ start.js
-│  ├─ kern/
+├─ src/                        DIE QUELLE — TypeScript
+│  ├─ start.ts                    der einzige Einstiegspunkt
+│  ├─ kern/                       gemeinsame Logik
+│  ├─ register/                   die zentralen Kataloge
+│  ├─ schale/                     Aufbau, Kontextkante, Dialoge, Stil
+│  ├─ bereiche/                   die fachlichen Bereiche
+│  ├─ core/                       Typen und geteilte Rechenkerne
+│  ├─ dienst/                     sw.ts
+│  ├─ entwicklung/
+│  └─ fremd/                      pdf.js
+│
+├─ quell/                      DIE AUSGABE — was der Browser lädt
+│  ├─ start.js                    erzeugt mit npm run bauen:ts,
+│  ├─ kern/                       mitversioniert, nicht von Hand ändern
 │  ├─ register/
 │  ├─ schale/
-│  └─ bereiche/
+│  ├─ bereiche/
+│  ├─ core/
+│  ├─ entwicklung/
+│  └─ fremd/
 │
 ├─ oeffentlich/
-│  ├─ icons/
-│  ├─ manifest/
-│  └─ favicon/
+│  ├─ icons/                   marke.png und alles, was daraus gerechnet wird
+│  ├─ manifest.webmanifest
+│  ├─ favicon.ico
+│  ├─ _headers
+│  ├─ robots.txt
+│  ├─ ai.txt
+│  └─ sitemap.xml
 │
-├─ server/
-│  ├─ Cloudflare-Worker
-│  ├─ D1/Datenbank
-│  ├─ Sync
-│  ├─ Rechte
-│  └─ Freigaben
-│
+├─ server/                     Worker, D1-Schema, Abgleich, Rechte, Freigaben
 ├─ functions/
 │  └─ api/
 │
-├─ doku/
-│  └─ Architektur und Entscheidungen
+├─ chronik/
+│  └─ chronik.json             die eine Quelle für UR.md und PROBLEME.md
 │
+├─ lernpakete/                 versionierte Lernpakete als JSON
+├─ skripte/                    die Werkzeuge, die sie erzeugen
 ├─ dienste/
-│  └─ ocr.mts        lokaler Erkennungsdienst, optional
+│  └─ ocr.mts                  lokaler Erkennungsdienst, optional
 │
+├─ doku/                       Architektur, .redion-Format, Migration
 ├─ pruefungen/
 │  ├─ alle.mts
-│  └─ lauf/
+│  ├─ js-bestand.json
+│  └─ lauf/                    438 Läufe
 │
-├─ AUFGABEN.md
-├─ LUECKEN.md
-├─ ENTSCHEIDUNGEN.md
+├─ AUFGABEN.md · ERLEDIGTE-AUFGABEN.md
+├─ LUECKEN.md · ENTSCHEIDUNGEN.md
+├─ UR.md · PROBLEME.md         erzeugt aus chronik/chronik.json
 ├─ CLOUDFLARE.md
 ├─ SERVER-EINRICHTEN.md
 ├─ START-MIT-CLAUDE-CODE.md
@@ -459,8 +508,8 @@ Funktionen über register/
 
 Ein neuer Bereich braucht grundsätzlich:
 
-quell/register/module.js
-quell/register/navigation.js
+src/register/module.ts
+src/register/navigation.ts
 
 Wenn mehr nötig ist, muss geprüft werden, ob der Bereich falsch geschnitten ist.
 
@@ -470,20 +519,20 @@ Wenn mehr nötig ist, muss geprüft werden, ob der Bereich falsch geschnitten is
 
 Neue Dinge werden als Objekte registriert:
 
-Blockart      → register/bloecke.js
-Ansicht       → register/ansichten.js
-Eigenschaft   → register/eigenschaften.js
-Formel        → register/formeln.js
-Befehl        → register/befehle.js
-Tastenkürzel  → register/tasten.js
-Vorlage       → register/vorlagen.js
-Verbindung    → register/verbindungen.js
+Blockart      → src/register/bloecke.ts
+Ansicht       → src/register/ansichten.ts
+Eigenschaft   → src/register/eigenschaften.ts
+Formel        → src/register/formeln.ts
+Befehl        → src/register/befehle.ts
+Tastenkürzel  → src/register/tasten.ts
+Vorlage       → src/register/vorlagen.ts
+Verbindung    → src/register/verbindungen.ts
 
 
 
 Wichtige Ordner
 
-quell/start.js
+src/start.ts
 
 Der einzige Einstiegspunkt.
 
@@ -496,7 +545,7 @@ Start-Ereignisse senden
 
 
 
-quell/kern/
+src/kern/
 
 Gemeinsamer Kern.
 
@@ -520,61 +569,73 @@ Der Kern kennt keine einzelnen Bereiche.
 
 
 
-quell/register/
+src/register/
 
-Zentrale Kataloge.
+Zentrale Kataloge — siebzehn Dateien.
 
 Enthält:
 
-module.js
-navigation.js
-bloecke.js
-eigenschaften.js
-ansichten.js
-formeln.js
-befehle.js
-tasten.js
-vorlagen.js
-verbindungen.js
+module.ts
+navigation.ts
+bloecke.ts
+eigenschaften.ts
+ansichten.ts
+formeln.ts
+befehle.ts
+tasten.ts
+vorlagen.ts
+verbindungen.ts
+context.ts          was in der Kontextkante steht
+einstellungen.ts
+elektroformeln.ts
+fachzeichen.ts
+menueband.ts
+symbole.ts
+textstile.ts
 
 
 
-quell/schale/
+src/schale/
 
 Globale Oberfläche.
 
 Enthält:
 
 App-Schale
-Seitenleiste
+Kontextkante
+Seitenleiste als Schublade am Telefon
 Kopfbereich
 Dialoge
 Overlays
 Routing
 Suche
+Bewegung
 Stile
 
 
 
-quell/bereiche/
+src/bereiche/
 
-Fachbereiche.
+Fachbereiche — achtzehn:
 
-Beispiele:
-
-editor
-datenbanken
-wissen
-ki
-verbinden
+bloecke
+chronik
 dateien
-vorlagen
-kommentare
-erwaehnungen
-seiten
-planen
+datenbanken
+editor
 einstellungen
+elektro
+erwaehnungen
 hilfe
+ki
+kommentare
+pdf
+planen
+seiten
+spreadsheet
+verbinden
+vorlagen
+wissen
 
 
 
@@ -623,31 +684,37 @@ Tastenkürzel
 
 Blöcke
 
-Redion enthält aktuell über 40 Blocktypen.
+Fünfzig Blockarten lassen sich einfügen. Die Liste steht an einer Stelle:
+`src/register/bloecke.ts`.
 
-Grundlegend
+Grundlegend (14)
 
 Text
 Überschrift 1
 Überschrift 2
 Überschrift 3
-Aufgabe
-Aufzählung
-Nummerierung
-Toggle
+Aufgabenliste
+Aufzählungsliste
+Nummerierte Liste
+Toggle-Liste
+Toggle-Überschrift 1
+Toggle-Überschrift 2
+Toggle-Überschrift 3
 Zitat
 Callout
 Trennlinie
 
-Datenbank
+Datenbank (7)
 
 Tabelle
 Board
 Liste
 Galerie
 Kalender
+Kalkulationstabelle — die rechnet, im Unterschied zur einfachen Tabelle
+Verknüpfte Ansicht
 
-Medien
+Medien (6)
 
 Bild
 Video
@@ -656,7 +723,7 @@ Datei
 Lesezeichen
 Einbetten
 
-Erweitert
+Erweitert (12)
 
 Code
 Formel
@@ -671,20 +738,26 @@ Synchronisierter Block
 Knopf
 HTML
 
-Wissen
+Wissen (6)
 
 Karteikarte
+A4-Blatt
 Whiteboard
+Schaltplan
 Diagramm
 Rückverweise
 
-KI
+KI (5)
 
-Text schreiben
-Zusammenfassen
-Aufgaben ableiten
-Übersetzen
-Verbessern
+KI: Text schreiben
+KI: Zusammenfassen
+KI: Aufgaben ableiten
+KI: Übersetzen
+KI: Text verbessern
+
+Dazu kommen im Slash-Menü Einträge, die nichts anlegen, sondern etwas tun:
+Umwandeln, Farbe, Duplizieren, Verschieben, Löschen, Erwähnung, Datum,
+Erinnerung, Emoji, Kommentar.
 
 
 
@@ -699,11 +772,22 @@ Beim Tippen können Kürzel automatisch umgewandelt werden:
 *        Aufzählung
 +        Aufzählung
 1.       Nummerierung
+1)       Nummerierung
+a.  a)   Nummerierung mit Buchstaben
+i.  i)   Nummerierung mit römischen Zahlen
+A.  A)   dieselben in Grossbuchstaben
+I.  I)   dieselben in Grossbuchstaben
 []       Aufgabe
 [ ]      Aufgabe
+[x]      Aufgabe, abgehakt
+[X]      Aufgabe, abgehakt
 ---      Trennlinie
->        Toggle oder Zitat
+***      Trennlinie
+___      Trennlinie
+>        Toggle
+"        Zitat
 ```       Codeblock
+```sprache Codeblock mit Sprache
 $$       Formel
 
 Inline:
@@ -712,14 +796,18 @@ Inline:
 *kursiv*
 __unterstrichen__
 ~~durchgestrichen~~
+~durchgestrichen~
 `code`
+[Text](Adresse)
 [[Seite]]
 #schlagwort
 ((Blockverweis))
-@heute
 @Person
 :emoji
 $a^2$
+
+Ein Datum kommt über `@`: die Taste öffnet das Menü, eingefügt wird
+`@JJJJ-MM-TT`, und die Anzeige macht daraus ein lesbares Datum.
 
 
 
@@ -761,7 +849,7 @@ Board
 Liste
 Galerie
 Kalender
-Zeitleiste — mit Abhängigkeitspfeilen und fünf Zoomstufen
+Zeitstrahl — mit Abhängigkeitspfeilen und fünf Zoomstufen
 Diagramm
 Feed
 Karte
@@ -769,8 +857,9 @@ Dashboard — Kennzahlen, auch aus anderen Datenbanken
 Pivot — Zeilen × Spalten × Werte
 Formular
 
-Die Liste steht an einer Stelle: `quell/register/ansichten.js`. Wer eine
+Die Liste steht an einer Stelle: `src/register/ansichten.ts`. Wer eine
 Ansicht hinzufügt, trägt sie dort ein — nicht an dreizehn Stellen verstreut.
+(`quell/register/ansichten.js` ist das Erzeugnis daraus.)
 
 
 Dashboard
@@ -820,7 +909,7 @@ Alles wird im Browser gelesen. Keine Datei geht an einen Server.
 
 Eigenschaftstypen
 
-Redion unterstützt viele Eigenschaftstypen:
+Fünfunddreissig Typen, eingetragen in `src/register/eigenschaften.ts`:
 
 Titel
 Text
@@ -831,18 +920,35 @@ Status
 Datum
 Person
 Kontrollkästchen
+Bewertung
+Fortschritt
 URL
 E-Mail
 Telefon
 Formel
 Erstellt am
 Zuletzt geändert
+Erstellt von
+Zuletzt bearbeitet von
+Ort
+Zeitspanne
+Prüfung
 Dateien
 Verknüpfung
 Rollup
 Laufende Nummer
 Knopf
 KI-Feld
+KI: Zusammenfassung
+KI: Übersetzung
+KI: Schlagwörter
+Google Drive Datei
+Figma Datei
+GitHub-Pull-Request
+Zendesk Ticket
+
+Die letzten vier hängen an einer eingerichteten Verbindung; ohne sie
+bleiben sie leer.
 
 
 
@@ -900,13 +1006,15 @@ concat() ist für Listen gedacht.
 
 Funktionsgruppen
 
-Logik
-Zahlen
 Text
-Listen
+Zahlen
 Datum
-Formatierung
-Vergleich
+Logik
+Listen
+Zeilen
+Fremde Datenbanken
+Personen
+Sonstiges
 
 Beispiele:
 
@@ -992,9 +1100,35 @@ Karteikarten können aus Blöcken entstehen.
 Ziel:
 
 Wissen langfristig wiederholen
-SM-2-artige Wiederholung
 fällige Karten anzeigen
 Lernfortschritt speichern
+
+Geplant wird mit einem von zwei Verfahren, zu wählen im Lernzentrum:
+SM-2, wie Anki es rechnet, oder FSRS 4.5. SM-2 ist die Vorgabe. Wer
+umstellt, behält seine Karten; die Startwerte für FSRS werden aus dem
+vorhandenen SM-2-Stand geschätzt.
+
+
+
+Die Chronik
+
+Die Chronik ist Redions Gedächtnis über sich selbst: was gebaut wurde, was
+schiefging, was daraus folgte. Sie steht an einer Stelle —
+`chronik/chronik.json` — und `node chronik.mts` schreibt daraus drei
+Ansichten:
+
+UR.md                          zum Lesen
+PROBLEME.md                    zum Suchen
+src/bereiche/chronik/daten.ts  die Ansicht in Redion selbst
+
+`node chronik.mts --pruefen` sagt nur, ob die drei aktuell sind, und ändert
+nichts.
+
+In der App öffnet sie sich über die Suche und fragt nach einem sechsstelligen
+Code. Der Code steht im Quelltext, im Klartext, und muss es: Redion läuft
+ohne Server, es gibt niemanden, der prüfen könnte. Er verhindert, dass die
+Chronik versehentlich aufgeht — vor jemandem, der den Quelltext liest,
+schützt er nicht. Das steht so auch in `LUECKEN.md` unter L140.
 
 
 
@@ -1019,11 +1153,20 @@ danach Browser-Cache
 
 
 
+Fremde Anbieter, wenn du es willst
+
+Wer keinen lokalen Weg nehmen will, kann einen Schlüssel hinterlegen. Der
+Katalog ist eingebaut: Groq, OpenRouter, Google Gemini, OpenAI, Anthropic
+und „Eigener Server" für jede Adresse, die wie OpenAI antwortet — auch
+LM Studio oder llama.cpp. Der Schlüssel bleibt in diesem Browser und geht
+nur an den Anbieter, den du gewählt hast. Voreingestellt ist nichts davon;
+ohne Schlüssel passiert nichts.
+
 KI-Grundsätze
 
 kein Text verlässt ungefragt den Rechner
-kein API-Schlüssel nötig
-keine Abrechnung
+ohne Schlüssel keine fremde KI, und lokal geht es ganz ohne
+keine Abrechnung durch Redion
 keine Cloud-KI als Pflicht
 KI muss optional bleiben
 
@@ -1056,9 +1199,17 @@ Ein A4-Blatt zum Schreiben und Malen
 
 `/blatt` legt ein leeres Blatt im A4-Format an. Darauf lässt sich beides:
 gewöhnlich tippen — es sind normale Blöcke im Satzspiegel — und mit einer
-gemeinsamen Ink-Schicht darüber arbeiten. Sie bietet Stift, transparenten
-Marker, Linie, Pfeil, Rechteck, Ellipse und sichere Textanmerkungen in fünf
-Farben und drei Strichbreiten.
+gemeinsamen Ink-Schicht darüber arbeiten. Sie bietet dreizehn Werkzeuge:
+Schreiben, Auswahl, Stift, Marker, Form, Abdecken, Haftnotiz, Text,
+Fachzeichen, Elemente, Bild, Radieren und einen Laserpointer. „Form" ist
+ein Knopf für sieben — Linie, Pfeil, Rechteck, Ellipse, Dreieck, Rechteck
+mit runden Ecken und Kurve.
+
+Der Laserpointer schreibt nichts: kein Eintrag, kein Schritt im Verlauf,
+nichts in der Sicherung. Er ist ein Finger, kein Stift.
+
+Fünf Farben und drei Strichbreiten stehen vorn; dazu kommen bis zu vier
+eigene Farben und ein Regler von 0,5 bis 12.
 
 Die Werkzeugleiste oben schaltet zwischen „Schreiben" und den Ink-Werkzeugen um. Beim
 Schreiben geht der Zeiger an der Zeichenschicht vorbei, beim Malen liegt sie
@@ -1081,12 +1232,14 @@ Schriftgrösse, Schriftart und Farbe je Block
 Über das Blockmenü (⋮⋮) lassen sich für jeden einzelnen Block einstellen:
 
     Farbe            Text- und Hintergrundfarbe, wie bisher
-    Schriftgrösse    von sehr klein bis sehr gross
-    Schriftart       Serifenlos, Serif, Schreibmaschine, Handschrift
+    Schriftgrösse    Normal, Klein, Gross, Sehr gross, Riesig
+    Schriftart       Standard, Serifen, Schreibmaschine, Handschrift, Schmal
 
 Das gilt je Block, nicht für die ganze Seite — eine Überschrift darf eine
-andere Schrift haben als der Absatz darunter. Für die ganze App gibt es das
-ebenfalls, in den Einstellungen.
+andere Schrift haben als der Absatz darunter. Die Schriftart lässt sich
+ausserdem für eine ganze Seite wählen, im Seitenmenü: Standard, Serife oder
+Mono. Für die ganze App steht in den Einstellungen nur die Schriftgrösse,
+dreistufig.
 
 Eine Grenze, die man kennen sollte: Markdown kann davon nichts tragen. Wer
 eine Seite über „Quelltext ansehen" bearbeitet und übernimmt, verliert
@@ -1114,10 +1267,11 @@ nur vorn, sodass Ablegen und Enter genügt.
 Das Original bleibt unverändert als Anhang liegen. Redion schreibt nie in
 das PDF zurück — die Anmerkungen liegen daneben in Redion.
 
-Weitergeben lässt sich das trotzdem: **Strg + P** druckt die Seite mit allem
-darauf — Seitenbild, Striche, Notizblätter — oder speichert sie über den
-Druckdialog als PDF. Die Striche gehen dabei als Vektoren hinaus und bleiben
-scharf.
+Weitergeben lässt sich das trotzdem: **„Drucken / als PDF"** im Menüband
+druckt die Seite mit allem darauf — Seitenbild, Striche, Notizblätter — oder
+speichert sie über den Druckdialog als PDF. Die Striche gehen dabei als
+Vektoren hinaus und bleiben scharf. (Strg + P ist in Redion die Suche, nicht
+der Druck.)
 
 Bei sehr langen Dokumenten hat das eine Grenze: die Seitenbilder müssen zum
 Drucken alle zugleich in den Speicher, und ab rund 40 MB hört Redion damit
@@ -1135,8 +1289,10 @@ hängen am Block, nicht am Bild.
 Der Text im PDF ist durchsuchbar: Redion nimmt ihn beim Hochladen einmal
 mit, und die Suche springt danach direkt zur Fundstelle — nicht bloss auf
 die Seite, sondern auf die Seite 63, wo das Wort steht. Eingescannte Blätter
-ohne Textebene sind davon ausgenommen; Text aus Bildern lesen kann Redion
-nicht.
+ohne Textebene sind davon ausgenommen. Text aus einem Bild lesen kann
+Redion über „Text erkennen (OCR)" — aber nur, wenn der lokale
+Erkennungsdienst eingerichtet ist (`node dienste/ocr.mts`, Anleitung in
+`doku/OCR-DIENST.md`). Ohne ihn bleibt ein Scan ein Bild.
 
 Jede Seite hat ausserdem neben ihrer Seitenzahl einen 🔗. Er kopiert einen
 Verweis auf genau diese Seite — eine Notiz kann so auf „Seite 14" zeigen und
@@ -1146,9 +1302,11 @@ Ein Dokument mit mehr als 30 Seiten fragt vorher nach. Ist die Datei mit
 einem Passwort geschützt, fragt Redion danach — das Passwort wird nur
 weitergereicht und nirgends gespeichert, auch nicht in der Sicherung.
 
-Dafür ist als einzige fremde Bibliothek pdf.js eingebaut (Apache-2.0,
-eingepackt in `quell/fremd/pdfjs/`). Sie läuft einmal je Dokument beim
-Einlesen — danach zeigt Redion die Seiten selbst.
+Dafür ist pdf.js eingebaut (Apache-2.0, eingepackt in
+`quell/fremd/pdfjs/`). Sie läuft einmal je Dokument beim Einlesen — danach
+zeigt Redion die Seiten selbst. Sie ist die einzige mitgelieferte fremde
+Bibliothek. Eine zweite kommt nur, wenn du sie anforderst: WebLLM lädt beim
+ersten Mal von `esm.run` nach und braucht dafür eine Internetverbindung.
 
 
 Wichtige Regeln:
@@ -1243,12 +1401,17 @@ dateien.json
 
 Enthält:
 
-Datei-IDs
-Dateinamen
-MIME-Typen
-Größen
-Zuordnungen
-Prüfsummen
+version
+saetze        Datei-IDs, Dateinamen, MIME-Typen, Größen, Zustand
+zuordnung     welcher Name im Archiv zu welcher Datei-ID gehört
+
+Die Zuordnung gibt es, weil zwei Bilder „foto.jpg" heissen dürfen, ein Name
+im Archiv aber nur einmal. Das zweite wird `foto-2.jpg`, und ohne diese
+Karte wüsste beim Einspielen niemand mehr, welcher Block welches Bild
+meint.
+
+Die Prüfsummen stehen nicht hier, sondern als CRC-32 in den ZIP-Einträgen —
+dort, wo jedes Entpackprogramm sie ohnehin liest.
 
 dateien/
 
@@ -1296,25 +1459,47 @@ Auch große Anhänge, zum Beispiel Videos, sollen sicher gesichert werden.
 
 
 
-Grenze über 4 GB
+Über 4 GB
 
-Normales ZIP ohne ZIP64 hat Grenzen.
+Ein ZIP der alten Bauart zählt in 32 Bit und hat dadurch drei Grenzen: eine
+einzelne Datei 4 GB, das ganze Archiv 4 GB, die Zahl der Einträge 65 535.
 
-Wenn eine Datei oder ein Paket zu groß ist, soll Redion:
-
-nicht still ein kaputtes Archiv erzeugen
-
-sondern klar sagen:
-
-Diese Datei ist größer als das aktuelle .redion-Format unterstützt.
+Redion schreibt deshalb ZIP64, sobald eine davon überschritten wird — und
+nur dann. Ein Archiv unterhalb der Grenzen bleibt ein gewöhnliches ZIP, das
+jedes Programm öffnet, und auch eine ältere Redion-Fassung liest es noch.
+Wer 5 GB Fotos hat, kann sichern. Ein stillschweigend kaputtes Archiv
+entsteht in keinem der beiden Fälle; `test103` hält das fest.
 
 
 
 Server und Cloudflare
 
-Redion funktioniert ohne Server.
+Redion funktioniert ohne Server. Der ganze Rest dieses Abschnitts
+beschreibt etwas, das es noch nicht gibt.
 
-Ein optionaler Server kann aber zusätzliche Funktionen ermöglichen:
+**Der Stand, in einem Satz: geschrieben und geprüft, nie betrieben.**
+
+Der Worker, das D1-Schema, der Abgleich, die Rechte, die Freigaben und die
+Weckrufe sind gebaut und stehen unter `server/` und in `worker.ts`.
+Prüfläufe gibt es dafür. Was es nicht gibt, ist ein Deploy, der durchgegangen
+wäre. Unter der Worker-Adresse steht bis heute Cloudflares „Hello world" —
+die Vorlage, die beim Anlegen eines Projekts entsteht. Es ist also nichts
+erreichbar: weder Redion noch sonst etwas.
+
+Woran es hängt: die D1-Datenbank `redion` und der R2-Eimer
+`redion-dateien` liegen in einem anderen Cloudflare-Konto als der Worker,
+und ein Worker findet beides nur in seinem eigenen. Deshalb sind
+`[[d1_databases]]` und `[[r2_buckets]]` in `wrangler.toml` auskommentiert —
+mit der falschen Kennung scheitert jeder Deploy, und dann ist gar nichts
+im Netz, auch nicht der Teil, der ohne Datenbank liefe. Das steht in
+`LUECKEN.md` unter L143 und ist dort offen.
+
+Was das für dich heisst: Redion lokal ist fertig und vollständig. Konto,
+Abgleich, Rechte und Teilen sind es nicht, solange niemand das aufsetzt.
+Wer es aufsetzen will, findet den Weg in `CLOUDFLARE.md` und
+`SERVER-EINRICHTEN.md`.
+
+Ein optionaler Server soll ermöglichen:
 
 Konten
 Login
@@ -1332,13 +1517,10 @@ MCP
 
 Cloudflare-Ziel
 
-Geplante/optionale Cloudflare-Struktur:
-
-Cloudflare Pages
-→ App ausliefern
+Die vorgesehene Struktur — geschrieben, nicht in Betrieb:
 
 Cloudflare Workers
-→ API, Auth, Sync, Rechte
+→ App ausliefern, API, Auth, Sync, Rechte
 
 Cloudflare D1
 → Konten, Sitzungen, Metadaten, Sync-Sätze, Rechte
@@ -1386,7 +1568,8 @@ Backups
 
 Konten und Sync
 
-Ein Konto soll optional sein.
+Ein Konto ist optional und braucht einen Server; der läuft noch nicht
+(siehe oben). Was hier steht, ist gebaut und geprüft, aber nicht erprobt.
 
 Redion soll diese Modi unterstützen:
 
@@ -1473,12 +1656,14 @@ keine Secrets im Repo
 
 Tests
 
-Redion nutzt echte Prüfungen gegen die echte App.
+Redion nutzt echte Prüfungen gegen die echte App. Es sind 438 Läufe unter
+`pruefungen/lauf/`.
 
 Befehle:
 
 npm install
 npx playwright install chromium
+npm run typecheck
 npm run pruefen
 
 Schnell:
@@ -1499,7 +1684,7 @@ Wichtige Prüfungen
 
 test87.mts
 
-prüft Architektur- und Sicherheitsgrenzen: dass kein Bereich einen anderen direkt einbindet, dass Nutzertext escaped wird, dass keine Formel fremden Code ausführt.
+prüft drei Dinge, die zwischen zwei Dateien stehen und die kein Browserlauf findet: dass keine Quelldatei rohe Steuerzeichen enthält (in der Einzeldatei reisst das den ganzen Skriptblock mit), dass die Rechteliste der Oberfläche wortgleich mit der des Servers ist, und dass die Zeichner der Schale nicht wieder `App.` sagen. Läuft ohne Browser, in Millisekunden.
 
 test100.mts
 
@@ -1543,6 +1728,9 @@ Scripts
 {
   "bauen": "node bauen.mts",
   "pruefen": "node pruefungen/alle.mts",
+  "typecheck": "tsc --noEmit",
+  "bauen:ts": "tsc -p tsconfig.bauen.json && node dienststand.mts && …",
+  "stand": "node dienststand.mts --pruefen",
   "server": "node server/pruefserver.ts 8790",
   "veroeffentlichen": "npx wrangler deploy"
 }
@@ -1550,14 +1738,31 @@ Scripts
 Lokaler Ablauf
 
 npm install
+npm run typecheck
+npm run bauen:ts
 npm run pruefen -- --schnell
 node bauen.mts
 
 
 
+Die Marke kommt aus einer Datei
+
+`oeffentlich/icons/marke.png` ist die Marke in 512 × 512. Alles andere wird
+daraus gerechnet:
+
+node oeffentlich/icons/erzeugen.mts
+
+Das schreibt die Symbole für Home-Bildschirm und Installation, die
+maskable-Fassungen für Android, die Startbilder fürs iPhone und
+`favicon.ico`. Wer die Marke wechselt, tauscht diese eine Datei und lässt
+den Befehl laufen — statt siebzehn Symbole einzeln nachzuziehen und das
+achtzehnte zu vergessen. Ohne fremde Bibliothek; `zlib` liegt in Node.
+
+
+
 Code-Stil
 
-Redion ist ein TypeScript-Projekt ohne Framework und ohne Bauzwang für die normale Nutzung. Die Migration ist seit August 2026 abgeschlossen: es gibt keine von Hand geschriebene JavaScript-Datei mehr. Was der Browser lädt, wird aus `src/**.ts` erzeugt (`npm run bauen:ts` schreibt nach `quell/`) und mitversioniert — deshalb startet die App weiterhin per Doppelklick auf `index.html`. Prüfläufe und Server laufen als `.mts` direkt unter Node. Der Weg dorthin steht in `doku/TYPESCRIPT-MIGRATION.md`, die Regel in `ENTSCHEIDUNGEN.md` E28.
+Redion ist ein TypeScript-Projekt ohne Framework und ohne Bauzwang für die normale Nutzung. Die Migration ist seit dem 3. September 2026 abgeschlossen: `pruefungen/js-bestand.json` führte jede von Hand geschriebene `.js` und `.mjs`, und die Liste ist leer. Was der Browser lädt, wird aus `src/**.ts` erzeugt — `npm run bauen:ts` schreibt nach `quell/`, hebt dabei die Fassung des Dienst-Skripts und legt `sw.js` in die Wurzel — und wird mitversioniert; deshalb startet die App weiterhin per Doppelklick auf `index.html`. Prüfläufe laufen als `.mts` direkt unter Node, der Server als `.ts`. Der Weg dorthin steht in `doku/TYPESCRIPT-MIGRATION.md`, die Regel in `ENTSCHEIDUNGEN.md` E28.
 
 Aktuelle Regeln:
 
@@ -1575,16 +1780,17 @@ Zwei Grenzen dazu: Feldnamen heißen so, wie sie in IndexedDB gespeichert sind (
 
 
 
-TypeScript-Ziel
-
-Redion soll langfristig vollständig auf TypeScript umgestellt werden.
-
-Ziel:
-
 TypeScript
+
+Redion ist vollständig auf TypeScript umgestellt. Die Umstellung lief in
+Phasen — erst die Typen, dann die kleinen Kernhelfer, dann das
+`.redion`-Paket, die IndexedDB-Schicht, die Register, Datenbanken und
+Formeln, zuletzt der Editor und der Server. Was dabei herauskam:
+
+TypeScript, streng eingestellt
 klare Typen
 modulare Struktur
-Build-System
+ein Bauschritt für die Entwicklung, keiner für die Nutzung
 Tests
 Cloudflare-kompatibel
 local-first
@@ -1593,47 +1799,22 @@ exportierbar
 
 
 
-TypeScript-Migration
-
-Nicht alles auf einmal.
-
-Phasen:
-
-1. TypeScript-Plan
-2. tsconfig
-3. zentrale Typen
-4. kleine Kernhelfer
-5. .redion/Backup-Code
-6. IndexedDB-Schicht
-7. Register
-8. Datenbanken/Formeln
-9. Editor
-10. Server/Cloudflare
-
-
-
-Neue TypeScript-Struktur
-
-Langfristig:
+Die Struktur
 
 src/
-├─ main.ts
-├─ app/
-├─ core/
-│  ├─ storage/
-│  ├─ blocks/
-│  ├─ databases/
-│  ├─ events/
-│  ├─ sync/
-│  ├─ security/
-│  ├─ settings/
-│  └─ utils/
-├─ registry/
-├─ areas/
-├─ styles/
-└─ tests/
+├─ start.ts
+├─ kern/          Ablage, Abgleich, Zugang, Sicherheit, Suche, Zustand
+├─ register/      die siebzehn Kataloge
+├─ schale/        Aufbau, Bedienung, Überlagerungen
+├─ bereiche/      die achtzehn Fachbereiche
+├─ core/          Typen und geteilte Rechenkerne
+├─ dienst/        sw.ts
+├─ entwicklung/
+└─ fremd/         pdf.js
 
-Während der Migration darf quell/ weiter existieren.
+`quell/` steht daneben, und zwar dauerhaft: es ist die Bau-Ausgabe, nicht
+ein Rest. Der Browser lädt von dort, und das ist der Grund, warum Redion
+ohne Installation startet.
 
 
 
@@ -1686,16 +1867,27 @@ Aktuelle oder wichtige Grenzen:
 Daten liegen lokal im Browserprofil
 anderer Browser = anderer Speicher
 gelöschte Websitedaten = Daten weg, wenn keine Sicherung existiert
-WebLLM braucht WebGPU
+WebLLM braucht WebGPU und lädt beim ersten Mal aus dem Netz
 Ollama muss lokal laufen
-Server/Cloud ist optional und nicht Pflicht
-große Dateien brauchen .redion/R2 statt JSON
+OCR braucht den lokalen Erkennungsdienst
+Server und Wolke laufen nicht — geschrieben, geprüft, nie in Betrieb
+große Dateien brauchen .redion statt JSON
 
 Über 4 GB geht seit August 2026: die Sicherung schreibt ZIP64, wenn eine Datei, das Archiv oder die Zahl der Einträge die alten Grenzen sprengt. Kleine Sicherungen bleiben dabei gewöhnliche ZIP-Dateien, die jedes Programm öffnet.
 
+Vier offene Punkte, die nicht verschwiegen gehören:
+
+**Die Wolke lief nie** (L143). Kein Deploy ist durchgegangen; unter der Worker-Adresse steht Cloudflares „Hello world". Datenbank und Eimer liegen im falschen Konto, und darum sind ihre Bindungen in `wrangler.toml` auskommentiert. Für die lokale Nutzung ändert das nichts, für Abgleich, Konto, Rechte und Teilen alles.
+
+**Ob `.assetsignore` wirkt, ist unbekannt** (L145). Die Datei soll `src/`, `pruefungen/` und Persönliches vom Hochladen ausnehmen. Geprüft wurde bisher nur ihr Inhalt, nie ihre Wirkung, und die Messung mit `wrangler deploy --dry-run` war nicht eindeutig. Geht der erste Deploy durch, muss als Erstes eine Adresse abgefragt werden: liefert sie die persönliche PDF, wirkt die Liste nicht.
+
+**Der Zugangscode der Chronik ist ein Türschild, kein Schloss** (L140). Die sechs Ziffern stehen im Quelltext, im Klartext. Sie verhindern, dass die Chronik versehentlich aufgeht — nicht, dass jemand sie liest, der den Quelltext hat.
+
+**Ein Prüflauf ist rot** (L146). `test388 §5` deckelt, was der Start an Daten holt, auf 2300 KB gzip. Gemessen wurden zuletzt 2389 bis 2396 KB. Die Decke bleibt stehen, bis nachgesehen ist, wo die Kilobyte herkommen — eine Decke, die nachgibt, sobald sie greift, ist keine.
+
 Zwei Grenzen, die zu kennen wichtiger ist als die technischen:
 
-Erinnerungen melden sich, solange Redion offen ist. Ist die App um acht Uhr geschlossen, wartet die Erinnerung bis zum nächsten Öffnen und sagt dann „Verpasst um 08:00". Ein Telefon zu wecken, ohne dass die Seite läuft, braucht Web Push und damit einen Server — das ist geplant und noch nicht gebaut.
+Erinnerungen melden sich, solange Redion offen ist. Ist die App um acht Uhr geschlossen, wartet die Erinnerung bis zum nächsten Öffnen und sagt dann „Verpasst um 08:00". Ein Telefon zu wecken, ohne dass die Seite läuft, braucht Web Push und damit einen Server. Web Push ist gebaut und geprüft — der Stoss trägt bewusst keinen Text, er sagt nur „wach auf", und das Dienst-Skript liest die Erinnerung dann lokal. Was fehlt, ist der Server, der stösst.
 
 Vorleseprogramme: Rollen, Namen, Zustände und der Weg der Tastatur sind gemessen und in Ordnung. Ein Durchlauf mit einem echten Vorleseprogramm (VoiceOver, NVDA) fehlt noch. Was gemessen ist, ist nicht dasselbe wie gehört.
 
@@ -1715,9 +1907,9 @@ Versionen stabil
 Multi-Tab sicherer
 Backup mit Anhängen
 .redion-Format
-Tests grün
+Tests grün — bis auf `test388 §5`, die Startnutzlast (L146)
 
-Etappe 2: TypeScript-Grundlage
+Etappe 2: TypeScript-Grundlage — erledigt
 
 tsconfig
 zentrale Typen
@@ -1725,14 +1917,14 @@ Build-System
 typecheck
 erste Kernmodule in TypeScript
 
-Etappe 3: Dateien und Backup
+Etappe 3: Dateien und Backup — erledigt
 
 .redion dokumentieren
 Import/Export härten
 große Dateien testen
 R2-Konzept vorbereiten
 
-Etappe 4: Cloudflare
+Etappe 4: Cloudflare — geschrieben, noch nicht in Betrieb
 
 Workers
 D1
@@ -1743,7 +1935,10 @@ Sync
 Rechte
 öffentliche Seiten
 
-Etappe 5: Vollständige TypeScript-Migration
+Der nächste Schritt ist kein Code, sondern ein Deploy, der durchgeht:
+Datenbank und Eimer müssen in dasselbe Konto wie der Worker (L143).
+
+Etappe 5: Vollständige TypeScript-Migration — erledigt
 
 Kern
 Register

@@ -995,9 +995,50 @@ const Einlesen = (() => {
     return collectionId;
   };
 
+  /**
+   * DAS ORIGINAL ZUERST — dieselbe Reihenfolge wie beim PDF
+   * (`bereiche/pdf/einlesen.ts:105`), und aus demselben Grund.
+   *
+   * WAS HIER VORHER FEHLTE: `datei()` las die Bytes in einen Puffer, schrieb
+   * Blöcke und liess die Datei fallen. Nach dem Einlesen hielt Redion nur
+   * das Umwandlungsergebnis; der einzige Weg zurück zur Word- oder
+   * Tabellendatei war die Platte des Nutzers. Und die Umwandlung ist
+   * verlustbehaftet — Bilder, Kopfzeilen, Fussnoten, Spalten, Schriftgrade
+   * bleiben zurück. Wer die Datei danach von der Platte löschte, hatte sie
+   * verloren, ohne dass irgendwo stand, dass etwas fehlt.
+   *
+   * Office war die EINZIGE Gruppe, die an diesem Weg vorbeilief: der PDF-Weg
+   * legt ab, der Anhang-Weg in `archiveImport.ts:204` legt ab, hier nicht.
+   *
+   * Schlägt das Ablegen fehl, fliegt der Fehler nach oben und es hat noch
+   * nichts stattgefunden — dann übernimmt der gewöhnliche Anhang-Weg.
+   */
+  const originalSichern = async (f: File, elternId?: string): Promise<any> =>
+    Dateien.ablegen(f, { blockId: elternId });
+
+  /**
+   * Der sichtbare Anhang auf die abgelegte Quelle, an Stelle 0 der neuen
+   * Seite — vor dem Umgewandelten, damit man ihn findet.
+   *
+   * Der Dateisatz zeigt danach auf DIESEN Block. Ohne das überlebte er das
+   * Löschen des Anhangs (E99, derselbe Fund wie beim PDF).
+   */
+  const originalAnhaengen = async (seiteId: string, f: File, quelle: any): Promise<void> => {
+    try {
+      const a = Store.addBlock(seiteId, 'file', {
+        text: f.name, dateiId: quelle.id, typ: f.type,
+        groesse: f.size, original: true }, 0);
+      await Store.dateiPut({ ...quelle, blockId: a.id });
+    } catch { /* ohne Anhang bleibt wenigstens das Umgewandelte */ }
+  };
+
   /** Eine Datei einlesen — erkennt das Format an der Endung. */
   const datei = async (f: File, elternId?: string): Promise<any> => {
     const name = f.name.toLowerCase();
+    /* Nur für die Formate, die dieser Weg wirklich umwandelt. Alles andere
+       fällt unten auf `null` und geht den Anhang-Weg, der ohnehin ablegt. */
+    const wandelbar = /\.(xlsx|xlsm|ods|docx|epub)$/.test(name);
+    const quelle = wandelbar ? await originalSichern(f, elternId) : null;
     const puffer = await f.arrayBuffer();
 
     if (name.endsWith('.xlsx') || name.endsWith('.xlsm')) {
@@ -1010,7 +1051,9 @@ const Einlesen = (() => {
         if (alsDatenbank(seite.id, b.name, b.zeilen)) n++;
         else Store.addBlock(seite.id, 'text', { text: '(Blatt „' + b.name + '" war leer)' });
       });
-      return { seite, hinweis: n + ' von ' + blaetter.length + ' Blättern als Datenbank angelegt' };
+      if (quelle) await originalAnhaengen(seite.id, f, quelle);
+      return { seite, hinweis: n + ' von ' + blaetter.length + ' Blättern als Datenbank angelegt'
+        + (quelle ? ' · das Original liegt als Anhang dabei' : '') };
     }
 
     /* Dieselbe Behandlung wie .xlsx: ein Blatt wird eine Datenbank. Wer eine
@@ -1026,7 +1069,9 @@ const Einlesen = (() => {
         if (alsDatenbank(seite.id, b.name, b.zeilen)) n++;
         else Store.addBlock(seite.id, 'text', { text: '(Blatt „' + b.name + '" war leer)' });
       });
-      return { seite, hinweis: n + ' von ' + blaetter.length + ' Blättern als Datenbank angelegt' };
+      if (quelle) await originalAnhaengen(seite.id, f, quelle);
+      return { seite, hinweis: n + ' von ' + blaetter.length + ' Blättern als Datenbank angelegt'
+        + (quelle ? ' · das Original liegt als Anhang dabei' : '') };
     }
 
     if (name.endsWith('.docx')) {
@@ -1036,7 +1081,12 @@ const Einlesen = (() => {
         if (b.typ === 'table') Store.addBlock(seite.id, 'table', { rows: b.rows, kopfZeile: true });
         else Store.addBlock(seite.id, b.typ, { text: b.text });
       });
-      return { seite, hinweis: bloecke.length + ' Absätze übernommen' };
+      if (quelle) await originalAnhaengen(seite.id, f, quelle);
+      /* „übernommen", nicht „eingelesen": die Umwandlung lässt Bilder,
+         Kopfzeilen, Fussnoten und Spalten zurück (siehe docxLesen). Der
+         Satz sagt deshalb auch, wo das Vollständige liegt. */
+      return { seite, hinweis: bloecke.length + ' Absätze übernommen'
+        + (quelle ? ' · das Original liegt unverändert als Anhang dabei' : '') };
     }
 
     if (name.endsWith('.epub')) {
@@ -1047,7 +1097,9 @@ const Einlesen = (() => {
         Werkzeuge.ausHtml(kap.id, k.html);
       });
       Store.updateBlock(seite.id, { aufgeklappt: true });
-      return { seite, hinweis: buch.kapitel.length + ' Kapitel als Unterseiten angelegt' };
+      if (quelle) await originalAnhaengen(seite.id, f, quelle);
+      return { seite, hinweis: buch.kapitel.length + ' Kapitel als Unterseiten angelegt'
+        + (quelle ? ' · das Original liegt als Anhang dabei' : '') };
     }
 
     return null;

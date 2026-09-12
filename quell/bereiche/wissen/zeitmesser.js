@@ -192,10 +192,14 @@ const Zeitmesser = (() => {
             `<button class="rb" data-zm="t5">5 Min</button>` +
             `<button class="rb" data-zm="t25">25 Min</button>` +
             `</div>` +
+            /* `data-rmo-taste` ist rein für die Darstellung da (E535): der
+               mechanische Dreierblock braucht je Taste eine Rolle, und `data-zm`
+               taugt dafür nicht — dort heisst die Starttaste „stoppuhr" wie der
+               Knopf eine Reihe höher. Der Klick liest weiterhin nur `data-zm`. */
             `<div class="zm-reihe rmo-transport" role="group" aria-label="Zeit steuern" data-zustand="${s.laeuft ? (s.pausiert ? 'pausiert' : 'laeuft') : 'bereit'}">` +
-            `<button class="rb haupt" data-zm="stoppuhr" ${s.laeuft ? 'disabled' : ''}>Start</button>` +
-            `<button class="rb" data-zm="pause" ${s.laeuft ? '' : 'disabled'}>${s.pausiert ? 'Weiter' : 'Pause'}</button>` +
-            `<button class="rb" data-zm="stopp" ${s.laeuft ? '' : 'disabled'}>Beenden</button>` +
+            `<button class="rb haupt" data-rmo-taste="start" data-zm="stoppuhr" ${s.laeuft ? 'disabled' : ''}>Start</button>` +
+            `<button class="rb" data-rmo-taste="pause" data-zm="pause" ${s.laeuft ? '' : 'disabled'}>${s.pausiert ? 'Weiter' : 'Pause'}</button>` +
+            `<button class="rb" data-rmo-taste="stopp" data-zm="stopp" ${s.laeuft ? '' : 'disabled'}>Beenden</button>` +
             `</div>` +
             (liste ? `<div class="zm-sitzungen"><span>Zuletzt</span><ul>${liste}</ul></div>` : '');
     };

@@ -166,6 +166,96 @@
   .schalter.an::before{animation:none}
 }
 
+/* ---- DIE GEFRÄSTE FASSUNG DES KIPPSCHALTERS (E537, Redurs Vorlage 500–1096)
+   -------------------------------------------------------------------------
+   Redurs Schalter ist ein Stück Metall mit einem Schlitz darin: ein
+   Chromring, eine Lichtkante unten, eine Schattenkante oben und ein grauer
+   Innenrand, alle vier als INNENSCHATTEN ineinander. Redion hatte an der
+   Stelle eine gewöhnliche Pille mit einer einzigen Kante — und die nur im
+   Studio-Thema (`studio.css:202`).
+
+   WAS SICH NICHT ÄNDERT, und das ist der wichtige Teil:
+   Breite, Höhe, Pillenform und die 44-px-Trefferfläche von oben bleiben
+   unangetastet (§37). Die Fassung wirkt rechteckiger, WEIL die Innenränder
+   die runde Aussenkante zu einem schmalen Fenster einschnüren — nicht,
+   weil der Radius kleiner geworden wäre. Nichts wird kleiner.
+
+   KEIN NEUES MARKUP, aus demselben Grund wie bei E462: der Schalter wird an
+   18 Stellen als Zeichenkette gebaut. Es bleibt bei Fläche, `::before`,
+   `::after` und dem Griff `i`.
+
+   Warum `button.schalter` und nicht `.schalter`: `studio.css` (Zeile 75 in
+   `index.html`) wird NACH dieser Datei (Zeile 62) geladen und setzt dort
+   `box-shadow` auf `.schalter`. Bei gleicher Stärke gewinnt die spätere
+   Datei; ein Elementname davor hebt die Regel darüber. Dasselbe gilt für
+   den Griff gegen `motion.css:322`.
+
+   Die Masse sind heruntergerechnet: Redurs Schalter ist 4.8 × 2 rem
+   (77 × 32 px), Redions ist 38 × 22 px. Die Spreizung 0.3 rem wird so zu
+   3 px, 0.8 rem zu 5 px — gleiche Anteile, nicht gleiche Zahlen. */
+button.schalter{
+  box-shadow:
+    inset 0 -5px 5px 3px #00000040,   /* die Tiefe der Fräsung            */
+    inset 0 0 1px 3px #dddddd,        /* der Chromring                    */
+    inset 0 -1px 1px 3px #ffffff,     /* die Lichtkante unten             */
+    inset 0 1px 2px 3px #00000066,    /* die Schattenkante oben           */
+    inset 0 0 1px 5px #aaaaaa;        /* der graue Innenrand              */
+}
+
+/* Der Schlitz leuchtet beim Einschalten WEISS auf, mit Schein.
+   Redion hatte hier Farbe statt Licht: `.schalter.an{background:var(--accent)}`
+   färbte die ganze Bahn ein, mehr nicht. Der Akzent bleibt als Grundton —
+   er ist die Farbe, an der man einen eingeschalteten Schalter in Redion
+   erkennt — und bekommt die leuchtende Bahn darüber gelegt: ein scharfer
+   weisser Balken und ein weicher Schein ringsum. Beides als Bildschicht der
+   Fläche, weil der Schalter kein freies Element mehr hat. */
+button.schalter.an{
+  background-color:var(--accent);
+  background-image:
+    linear-gradient(#fffc, #fffc),
+    radial-gradient(50% 150% at 50% 50%, #ffffff77, #ffffff00 72%);
+  background-size:24px 5px, 100% 100%;
+  background-position:center, center;
+  background-repeat:no-repeat;
+}
+/* Der kreisende Verlauf aus E462 bleibt — er mischt sich jetzt mit
+   `screen` ein, statt alles zu überdecken. Weiss bleibt unter `screen`
+   weiss: die leuchtende Bahn und die Kanten der Fassung überstehen den
+   Verlauf, der Akzent wird nur heller. Deshalb auch .4 statt .85 — bei
+   voller Deckung stände der weisse Griff auf hellem Violett, und das
+   waren gemessen 1,6:1 statt der 5,15:1, für die die Farbe gewählt
+   wurde (E199). */
+.schalter.an::before{opacity:.4; mix-blend-mode:screen}
+
+/* Der Griff glüht von innen. Redions Griff ist im An-Zustand ohnehin
+   weiss, das Glühen führt deshalb nach AUSSEN weiter — sonst wäre Weiss
+   auf Weiss gemalt und man sähe nichts. */
+button.schalter.an > i{
+  box-shadow:
+    inset 0 1px 12px #fff,
+    inset 0 -1px 1px #fffa,
+    0 0 5px 1px #ffffff80,
+    1px 2px 5px 1px #00000055;
+}
+
+/* Der Griff rückt beim Überfahren 0,2 rem vor, SOLANGE DER SCHALTER AUS
+   IST — die kleine Vorschau darauf, was ein Klick tut. 0.2 rem sind auf
+   Redurs 77-px-Schalter 3 px; auf 38 px bleiben es 3 px, weil der Griff
+   derselbe Daumenbreit ist und ein halber Pixel nichts vorführt.
+   `@media (hover:hover)`, weil ein Finger kein Überfahren kennt: am
+   Telefon bliebe die Vorschau nach dem Tippen stehen. */
+@media (hover:hover){
+  button.schalter:not(.an):hover > i{transform:translateX(3px)}
+}
+
+/* Weniger Bewegung: die Fassung, das Licht im Schlitz und das Glühen
+   bleiben — sie sind Bild, nicht Bewegung. Was geht, ist das Wandern
+   dorthin und das Vorrücken des Griffs beim Überfahren. */
+@media (prefers-reduced-motion: reduce){
+  button.schalter, button.schalter.an > i{transition:none}
+  button.schalter:not(.an):hover > i{transform:none}
+}
+
 .ez-plan{
   background:var(--bg-card); border-radius:9px; padding:16px 18px; margin:6px 0 18px;
 }

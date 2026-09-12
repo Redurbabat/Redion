@@ -44,6 +44,14 @@ const Ordnerkarte = (() => {
        Vorgabe zeichnet genau fünf. Der Rest steht als Zahl daneben und ist
        über die Suche erreichbar. */
     const FAECHER = 5;
+    /* DER HINWEISPFEIL WIRD NUR EINMAL JE SITZUNG GEZEIGT (E537). Gemerkt
+       wird das HIER und nirgends sonst: ein Hinweis ist keine Nutzerdatei.
+       In IndexedDB gehörte er nicht (§9), in `meta` wäre er ein Eintrag, den
+       ein Export mitschleppt und ein Import auf ein anderes Gerät trägt —
+       und dort hat derselbe Mensch die Karte vielleicht noch nie gesehen.
+       Eine Modulvariable vergisst ihn beim Neuladen, und genau das ist
+       richtig. */
+    let jeGeoeffnet = false;
     const el = (tag, klasse, eltern) => {
         const e = document.createElement(tag);
         e.className = klasse;
@@ -70,11 +78,65 @@ const Ordnerkarte = (() => {
         svg.append(pfad);
         return svg;
     };
+    /* Die kleinen Zeichen (Lupe, Dateiblatt, Hinweispfeil). ÜBER
+       `createElementNS` und `setAttribute`, nicht über `innerHTML`: ein
+       SVG-Schnipsel im Text ist genau der Weg, auf dem fremdes Markup in
+       eine Seite kommt (§19). Alle drei sind Schmuck — sie tragen
+       `aria-hidden`, und was sie zeigen, steht daneben als Wort (§38). */
+    const zeichen = (klasse, box, teile) => {
+        const ns = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('class', klasse);
+        svg.setAttribute('viewBox', box);
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('stroke-width', '1.7');
+        svg.setAttribute('stroke-linecap', 'round');
+        svg.setAttribute('stroke-linejoin', 'round');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('focusable', 'false');
+        for (const teil of teile) {
+            const knoten = document.createElementNS(ns, teil.tag);
+            for (const name of Object.keys(teil.attribute)) {
+                knoten.setAttribute(name, teil.attribute[name] ?? '');
+            }
+            svg.append(knoten);
+        }
+        return svg;
+    };
+    const lupe = () => zeichen('ru-fach-lupe', '0 0 16 16', [
+        { tag: 'circle', attribute: { cx: '7', cy: '7', r: '4.6' } },
+        { tag: 'path', attribute: { d: 'M10.5 10.5 14.2 14.2' } },
+    ]);
+    /* Ein Blatt mit umgeknickter Ecke — dasselbe Bild, das die Vorlage oben
+       rechts auf jede Datei setzt. */
+    const blattzeichen = () => zeichen('ru-fach-zeichen', '0 0 16 16', [
+        { tag: 'path', attribute: { d: 'M9.2 1.8H4.4a1.6 1.6 0 0 0-1.6 1.6v9.2a1.6 1.6 0 0 0 1.6 1.6h7.2a1.6 1.6 0 0 0 1.6-1.6V5.8Z' } },
+        { tag: 'path', attribute: { d: 'M9.2 1.8v4h4' } },
+    ]);
+    const hinweispfeil = () => zeichen('ru-fach-hinweis-pfeil', '0 0 24 24', [
+        { tag: 'path', attribute: { d: 'M19.5 3.5c1.3 7.6-2.2 13.4-8.4 15.8' } },
+        { tag: 'path', attribute: { d: 'M11.1 19.3 15.4 17' } },
+        { tag: 'path', attribute: { d: 'M11.1 19.3 13 14.8' } },
+    ]);
     const bauen = (auftrag) => {
         const karte = el('div', 'ru-fach');
         const tiefe = auftrag.tiefe && auftrag.tiefe.length ? auftrag.tiefe : auftrag.kinder;
         let offen = false;
         let suchwort = '';
+        /* ---- Der Hinweispfeil, höchstens einmal je Sitzung ----------------- *
+         * Er sagt, dass die Karte etwas kann, was man ihr nicht ansieht: dass
+         * sie aufgeht. Wer das einmal getan hat, weiss es — und ein Pfeil, der
+         * beim zwanzigsten Ordner immer noch wedelt, ist kein Hinweis mehr,
+         * sondern Lärm. */
+        let hinweis = null;
+        if (!jeGeoeffnet) {
+            hinweis = el('div', 'ru-fach-hinweis', karte);
+            hinweis.setAttribute('aria-hidden', 'true');
+            const ruf = el('span', 'ru-fach-hinweis-text', hinweis);
+            ruf.textContent = 'Aufklappen';
+            hinweis.append(hinweispfeil());
+        }
         /* ---- Zeile 1: Name und Zähler -------------------------------------- *
          * DER NAME STEHT OBEN UND NICHT UNTEN. Auf dem ersten Bild lag er unter
          * dem Ordner, die Suche darüber — und die aufgefächerten Blätter deckten
@@ -94,6 +156,9 @@ const Ordnerkarte = (() => {
         feld.className = 'ru-fach-suche';
         const sr = el('span', 'ru-fach-sr', feld);
         sr.textContent = 'In „' + auftrag.name + '" suchen, auch in den Unterordnern';
+        /* Die Lupe steht VOR dem Feld — sie ist das, was von der Suchzeile
+           übrig bleibt, während sie beim Öffnen aus 30 px herauswächst. */
+        feld.append(lupe());
         const eingabe = document.createElement('input');
         eingabe.type = 'search';
         eingabe.className = 'ru-fach-eingabe';
@@ -138,6 +203,7 @@ const Ordnerkarte = (() => {
             b.dataset['fachId'] = stueck.id;
             const glanz = el('i', 'ru-fach-glanz', b);
             glanz.setAttribute('aria-hidden', 'true');
+            b.append(blattzeichen());
             /* DIE ZEILE STEHT UNTEN. Vom Blatt darunter sieht man den unteren
                Streifen, nicht den oberen: das obere Blatt liegt weiter oben UND
                weiter vorn. Mit dem Namen am Kopf (so zeichnet die Vorgabe) war
@@ -181,6 +247,11 @@ const Ordnerkarte = (() => {
             wort.textContent = sucht
                 ? (liste.length === 1 ? 'Treffer' : 'Treffer') + ' von ' + tiefe.length
                 : (liste.length === 1 ? 'Sache' : 'Sachen');
+            /* `cursor:help` an der Pille verspricht eine Erklärung; hier ist sie.
+               Ohne diesen Satz wäre der Mauszeiger eine Behauptung (E537). */
+            zaehler.title = sucht
+                ? liste.length + ' von ' + tiefe.length + ' Sachen passen zu „' + suchwort.trim() + '"'
+                : 'So viele Sachen liegen in „' + auftrag.name + '"';
             karte.dataset['sucht'] = sucht ? 'ja' : 'nein';
             karte.dataset['leer'] = liste.length ? 'nein' : 'ja';
             const rest = liste.length - gezeigt.length;
@@ -196,8 +267,19 @@ const Ordnerkarte = (() => {
             griff.setAttribute('aria-label', offen
                 ? 'Ordner „' + auftrag.name + '" zuklappen'
                 : 'In den Ordner „' + auftrag.name + '" hineinsehen');
-            if (offen)
+            if (offen) {
                 zeichnen();
+                jeGeoeffnet = true;
+                /* Der Pfeil blendet per CSS aus und wird DANACH aus dem Baum
+                   genommen: ein Element, das niemand mehr sieht, soll auch nicht
+                   mehr wippen (E528). Die 400 ms sind die Blende plus etwas
+                   Luft. */
+                if (hinweis) {
+                    const weg = hinweis;
+                    hinweis = null;
+                    window.setTimeout(() => weg.remove(), 400);
+                }
+            }
         };
         griff.addEventListener('click', () => klappen());
         eingabe.addEventListener('input', () => { suchwort = eingabe.value; zeichnen(); });

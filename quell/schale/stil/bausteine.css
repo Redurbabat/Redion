@@ -7659,6 +7659,171 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 .ru-fach-name{flex:1 1 auto; min-width:0; margin:0; font-size:13px; font-weight:600; line-height:1.35; overflow-wrap:anywhere}
 .ru-fach-rest{margin:8px 0 0; font-size:11px; color:var(--text-dim); line-height:1.4}
 .ru-fach-gehen{margin-top:10px; width:100%; justify-content:center}
+/* ══ E537 — DER AUFTRITT (Vorlage vom 6. September, Zeilen 1–437) ══════════
+   Drei Teile der Karte standen bisher einfach schon da: die Zähler-Pille,
+   die Suchzeile und das Etikett auf dem Blatt. Die Vorlage lässt genau
+   diese drei AUFTRETEN, wenn der Ordner aufgeht — die Pille springt mit
+   einer Feder hoch, die Suchzeile wächst aus einem Knopf heraus, das
+   Etikett schwebt von rechts ein. Dazu kommen der Schlagschatten unter der
+   Rückwand, das Dateizeichen auf jedem Blatt und der Hinweispfeil.
+
+   ZWEI ABWEICHUNGEN VON DER VORLAGE, beide mit Grund an Ort und Stelle
+   (§39 Richtwert, §37 hart):
+
+   1. Pille und Suchzeile VERSCHWINDEN NICHT, wenn die Karte zu ist. Die
+      Vorlage kennt sie nur im offenen Zustand (`opacity:0` sonst). Hier
+      trägt die Pille die Anzahl und die Zeile die Suche — das sind die
+      einzigen zwei Auskünfte, die die zugeklappte Karte überhaupt gibt.
+      Der Auftritt ist deshalb eine ANIMATION beim Öffnen und kein
+      Erscheinen aus dem Nichts.
+   2. Die Suchzeile wächst beim Öffnen von 30 px auf ihre volle Breite und
+      bleibt dort. Die Vorlage hält 80 % und geht bei Fokus auf 90 %. Eine
+      Zeile, die im Ruhezustand schmaler ist als heute, wäre eine
+      VERKLEINERTE Trefferfläche, und die gibt es nicht (§37). Der Fokus
+      zeigt sich stattdessen in Farbe und einem Hauch Grösse.
+
+   Nichts hiervon läuft im Leerlauf (E528): jede Bewegung hier hat einen
+   Auslöser — Öffnen, Überfahren, Fokus — und ist endlich. Die einzige
+   Ausnahme ist der Hinweispfeil, und der wippt nur, SOLANGE DIE KARTE ZU
+   IST; das ist ein Zustand, kein Leerlauf, und er endet mit dem ersten
+   Klick. */
+
+/* ---- 1 · Die Zähler-Pille springt auf ---------------------------------- */
+/* Schatten und Innenlicht der Vorlage (`0 10px 20px rgba(0,0,0,.3)`,
+   `inset 0 1px 1px rgba(255,255,255,.2)`), heruntergerechnet: die Vorlage
+   setzt sie auf eine freistehende Pille über dem Ordner, hier sitzt sie in
+   der Kopfzeile einer Karte, die selbst schon einen Schatten wirft. */
+.ru-fach-zaehler{
+  border:1px solid transparent; cursor:help;
+  box-shadow:0 6px 14px #00000026, inset 0 1px 1px #ffffff3d;
+  transition:scale var(--motion-fast) var(--ease), translate var(--motion-fast) var(--ease),
+             background var(--motion-fast) var(--ease), border-color var(--motion-fast) var(--ease),
+             color var(--motion-fast) var(--ease)
+}
+@keyframes ru-fach-pille{
+  from{transform:scale(0) translateY(20px); opacity:0}
+  to{transform:scale(1) translateY(0); opacity:1}
+}
+/* Die 0,2 s Verzögerung der Vorlage sind der Grund, warum es überhaupt ein
+   Auftritt ist: die Klappe geht zuerst auf, DANN kommt die Zahl. `both`
+   hält die Pille währenddessen auf dem Anfangsbild — zwei Zehntel, nicht
+   länger. */
+.ru-fach[data-offen="ja"] .ru-fach-zaehler{
+  animation:ru-fach-pille .5s cubic-bezier(.34,1.56,.64,1) .2s both
+}
+/* Beim Überfahren: wächst, hebt sich, bekommt den Akzentrand. `scale` und
+   `translate` als EIGENE Eigenschaften, nicht als `transform` — sonst
+   löschen sie die Federkurve oben aus, statt sich mit ihr zu überlagern
+   (dieselbe Lehre wie beim Blatt-Hover weiter oben).
+   `cursor:help` ist an einem Element ohne Erklärung eine Lüge; den `title`
+   setzt `ordnerkarte.ts` beim Zeichnen und er sagt, was die Zahl zählt. */
+.ru-fach-zaehler:is(:hover,:focus-visible){
+  scale:1.1; translate:0 -4px;
+  background:var(--bg-card); border-color:var(--accent-text);
+  box-shadow:0 10px 20px #0000002e, inset 0 1px 1px #ffffff4d
+}
+/* Die Zahl bleibt im Akzent, das Wort daneben tritt zurück — so hebt sich
+   die ZAHL hervor und nicht die Pille. Die Vorlage färbt die Zahl von
+   Weiss auf Blau; hier ist ohnehin schon alles im Akzentton, also muss der
+   Unterschied woanders herkommen (§38: nicht Farbe allein — die Pille
+   wächst und hebt sich zusätzlich). */
+.ru-fach-zaehler:hover .ru-fach-zahl{color:var(--accent-text)}
+.ru-fach-zaehler:hover .ru-fach-wort{color:var(--text-dim)}
+
+/* ---- 2 · Die Suchzeile schwebt ein und wächst -------------------------- */
+.ru-fach-suche{
+  position:relative; gap:7px; overflow:hidden;
+  transition:background var(--motion-fast) var(--ease),
+             border-color var(--motion-fast) var(--ease),
+             scale var(--motion-fast) var(--ease)
+}
+@keyframes ru-fach-suchzeile{
+  from{width:30px; opacity:0; transform:translateY(-8px)}
+  55%{opacity:1}
+  to{width:100%; opacity:1; transform:translateY(0)}
+}
+.ru-fach[data-offen="ja"] .ru-fach-suche{
+  animation:ru-fach-suchzeile .5s cubic-bezier(.68,-.55,.265,1.55) both
+}
+/* Farbwechsel bei Fokus (Vorlage: Blau → Rot). Hier Akzent statt Rot: Rot
+   heisst in Redion „Gefahr" (--gefahr), und ein Suchfeld ist keine.
+   Der Fokusrahmen weiter oben bleibt, wo er ist (§38) — Farbe allein ist
+   kein Fokus. */
+.ru-fach-suche:focus-within{
+  background:var(--accent-schwach); border-color:var(--accent); scale:1.02
+}
+.ru-fach-lupe{
+  flex:none; width:13px; height:13px; display:block; color:var(--text-dim);
+  transition:color var(--motion-fast) var(--ease)
+}
+.ru-fach-suche:focus-within .ru-fach-lupe{color:var(--accent-text)}
+
+/* ---- 3 · Der Ordner steht im Raum -------------------------------------- */
+/* Der Schlagschatten der Vorlage. Er sitzt auf dem WIRT und nicht auf dem
+   Pfad: `drop-shadow` folgt der Silhouette des SVG — mit dem Reiter oben
+   links —, ein `box-shadow` würde ein Rechteck darunterlegen. */
+.ru-fach-ruecken{filter:drop-shadow(0 10px 20px #00000038)}
+
+/* ---- 4 · Das Etikett auf dem Blatt ------------------------------------- */
+/* Milchglas, Schatten und das Einschweben von rechts. Warum eine
+   `animation` und keine `transition`: die Blätter ENTSTEHEN beim Öffnen
+   neu (`replaceChildren`), es gibt also gar keinen Zustandswechsel, an dem
+   eine Überblendung ansetzen könnte. Die 0,22 s Verzögerung lassen die
+   Blätter zuerst ihren Platz finden. */
+.ru-fach-art{
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+  box-shadow:0 2px 4px #00000033; pointer-events:none;
+  animation:ru-fach-etikett .3s cubic-bezier(.34,1.56,.64,1) .22s both
+}
+@keyframes ru-fach-etikett{
+  from{opacity:0; transform:translateX(10px)}
+  to{opacity:1; transform:translateX(0)}
+}
+/* ---- 5 · Das Dateizeichen oben rechts ---------------------------------- */
+/* Reine Deko: die Art steht als WORT im Etikett daneben, das Zeichen sagt
+   nichts Zusätzliches (§38). Deshalb `aria-hidden` im Markup und hier
+   `pointer-events:none` — der ganze Knopf ist die Trefferfläche. */
+.ru-fach-zeichen{
+  position:absolute; top:8px; right:8px; width:14px; height:14px;
+  color:#ffffff66; pointer-events:none;
+  transition:color var(--motion-fast) var(--ease)
+}
+.ru-fach-blatt:is(:hover,:focus-visible) .ru-fach-zeichen{color:#ffffffe6}
+
+/* ---- 6 · Der Hinweispfeil ---------------------------------------------- */
+/* Er steht nur über einer Karte, die in DIESER Sitzung noch nie offen war
+   — gemerkt in einer Modulvariablen und nirgends sonst. Ein Hinweis ist
+   keine Nutzerdatei; er gehört nicht in IndexedDB, und er soll auch nicht
+   über Geräte hinweg gelten (§9, §24).
+   12° statt der 45° der Vorlage: die Karte ist 248 px breit, und ein um
+   45° gedrehtes Wort von rund 70 px steht mit seiner Ecke etwa 50 px
+   ausserhalb der rechten Kante — über dem Regal dahinter, nicht über der
+   Karte. */
+.ru-fach-hinweis{
+  position:absolute; top:-24px; right:2px; z-index:30;
+  display:flex; align-items:flex-end; gap:1px;
+  pointer-events:none; color:var(--accent-text);
+  transition:opacity var(--motion-normal) var(--ease), translate var(--motion-normal) var(--ease)
+}
+.ru-fach-hinweis-text{
+  font-size:10px; font-weight:800; letter-spacing:.4px; line-height:1;
+  text-decoration:underline; white-space:nowrap;
+  transform:rotate(-12deg); transform-origin:bottom right
+}
+.ru-fach-hinweis-pfeil{flex:none; width:20px; height:20px; display:block}
+@keyframes ru-fach-winke{
+  0%,100%{translate:0 0}
+  50%{translate:0 6px}
+}
+/* ZU: er wippt. AUF: er ist weg — und `ordnerkarte.ts` nimmt ihn danach
+   aus dem Baum, damit hier nichts weiterläuft, was niemand mehr sieht. */
+.ru-fach[data-offen="nein"] .ru-fach-hinweis{
+  animation:ru-fach-winke 2.5s ease-in-out infinite
+}
+.ru-fach[data-offen="ja"] .ru-fach-hinweis{
+  animation:none; opacity:0; translate:0 -10px
+}
+
 /* Die Lage, in der die Karte über dem Regal schwebt. */
 .ru-fach-lage{position:fixed; z-index:760; inset:auto}
 @media (max-width:760px){
@@ -7674,6 +7839,19 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   .ru-fach{--ru-fach-welle:0ms}
   .ru-fach-blatt[data-nr]{transition-delay:0s}
   .ru-fach[data-offen="ja"] .ru-fach-klappe{animation:none}
+  /* KEIN AUFTRITT (E537). Pille, Suchzeile und Etikett stehen sofort an
+     ihrem Platz — sie tragen Auskunft, und die darf eine abgestellte
+     Bewegung nicht verzögern. `animation:none` hebt auch den
+     Anfangszustand von `both` auf, es bleibt also nichts unsichtbar. */
+  .ru-fach[data-offen="ja"] :is(.ru-fach-zaehler,.ru-fach-suche){animation:none}
+  .ru-fach-art{animation:none}
+  .ru-fach-zaehler:is(:hover,:focus-visible){scale:none; translate:none}
+  .ru-fach-suche:focus-within{scale:none}
+  /* Der Hinweispfeil BLEIBT sichtbar, er wippt nur nicht mehr. Wer
+     Bewegung abstellt, will die Auskunft — und die Auskunft ist der
+     Pfeil, nicht das Wippen. */
+  .ru-fach[data-offen="nein"] .ru-fach-hinweis{animation:none}
+  .ru-fach[data-offen="ja"] .ru-fach-hinweis{translate:none}
 }
 
 /* Redion-Bedienung · Baumansicht */

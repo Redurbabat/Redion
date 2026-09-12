@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-514 Entscheidungen, E1 bis E534 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+518 Entscheidungen, E1 bis E538 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -578,6 +578,10 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E532** — Vier Regeln, die geschrieben und nie gesehen wurden: Glasknopf, Pflegekarte, Regler-Knauf, Funkel-Abstufung
 * **E533** — Redur: alles bauen, so schnell wie möglich, ohne viel Prüfung — ein Bogen für alle offenen Vorlagenblöcke, die Prüfläufe folgen nach
 * **E534** — Auf ad4ccbc weiterarbeiten: Ticket wenden, Statistikherz ergänzen und zwei Darstellungsfehler messen
+* **E535** — Sieben Vorlagenblöcke in einem Zug: Fragmente statt zehn Schreiber in einer Datei
+* **E536** — Die Unschärfe läuft wieder von links nach rechts — die Staffelung war auf 0 gefallen
+* **E537** — Die letzten drei Vorlagenblöcke: Ordnerkarte, Lichtkarte mit Kippschalter, flüssige Blase
+* **E538** — Office war die einzige Gruppe ohne Originalschutz — und der Vortrag am Telefon nicht bedienbar
 
 ---
 
@@ -42940,3 +42944,182 @@ Hell/Dunkel am Ticket, ruhiger Bewegung, unveränderter Zahlen, Idempotenz
 und Entfernen. E533 ist damit nicht pauschal verifiziert; L149 bleibt für
 seine übrigen Behauptungen offen. Ein vollständiger Gesamtlauf wird dadurch
 nicht behauptet.
+
+---
+
+E535 — Sieben Vorlagenblöcke in einem Zug
+--------------------------------------------------------------------------
+
+Der Bau, den E533 beschrieb und der beim ersten Anlauf am Sitzungslimit
+starb. Diesmal in kleineren Wellen: ein Agent je Vorlagenblock, jeder auf
+die offene Liste aus E532 gesetzt, jeder schreibt ein **Fragment** und einen
+TS-Schnipsel statt in die zwei geteilten Dateien zu greifen. Zusammengeführt
+wird danach in Blockreihenfolge; die Fragmente stehen hinten in
+`motion.css`, damit sie ältere Regeln gleicher Stärke überschreiben können.
+
+Gelandet sind sieben: Verlaufsschalter (6), Kartenring (7), Statistikkarten
+(9), Ticket (10), Glaskugel (11), Filament-Hebel (12), Zeitmesser-Tasten
+(13). Offen bleiben drei — Ordnerkarte (1), Lichtkarte und Kippschalter (3),
+flüssiger Polygonlader (5).
+
+**Drei Zusagen in `test495` waren rot, und zwar zu Recht** — sie prüften den
+alten Aufbau. Sie sind auf die neue Entscheidung umgeschrieben, nicht
+gelockert: die Karten hängen jetzt in einer Trommel im Ring (weil
+`overflow:hidden` ein Element flach macht und aus dem Ring sonst ein Stapel
+würde), und der Glühfaden zeichnet sich beim Einschalten erst und glüht
+dann — zwei `animation`-Angaben auf einem Element ersetzen einander, also
+stehen beide in einer Zeile, und die Zusage prüft, dass das Glühen **dabei
+ist**, nicht dass es allein dasteht. Rot gesehen, umgeschrieben, 26/26 grün.
+
+Was die Agenten mit Grund **nicht** gebaut haben, steht in
+`doku/ANIMATIONEN-ZUORDNUNG.md` — darunter zwei Funde, die ein Bild und
+eine Messung gebracht haben: eine `opacity < 1` am Behälter zwingt
+`transform-style` auf `flat` (der Würfel war eine Raute, während
+`getComputedStyle` weiter „preserve-3d" meldete), und ein schwebendes
+Ticket lässt `test496` auflaufen, weil Playwright auf einen ruhigen
+Elementrahmen wartet — 123 ms mit stehender Karte gegen Zeitüberschreitung
+nach 5 s mit Wippen.
+
+Angesehen: `bilder/e535-kartenring.png` (fünf eigene Farben und Motive statt
+fünf gleicher grauer Kästchen) und `bilder/e535-kennzahl.png` (Lichtkranz,
+Herz, gezeichnete Kurve). `test494` 153 grün, `test496` 148 grün.
+
+---
+
+E536 — Die Unschärfe läuft wieder von links nach rechts
+--------------------------------------------------------------------------
+
+Redur, mit seiner Vorlage im Anhang: „bei der ai butons war die blur efeck
+nicht so, es war so: die blur kommen von links bis nach rechts, ohne so bumm
+efekt oder licht, es war ganz wenig licht."
+
+Er hat recht, und es war ein Fehler, kein Geschmack. `motion.ts` setzt
+`--rmo-delay` nur auf `.rmo-letter` — dort, wo es den Text selbst zerlegt.
+Die KI-Knöpfe tragen aber `.ru-funkel-b`, und deren Schrittzahl heisst
+`--ru-schritt`. Die Regel las nur den einen Namen und fiel für **jeden**
+Buchstaben auf 0 ms zurück:
+
+```txt
+vorher   0s | 0s | 0s | 0s | 0s | 0s | 0s | 0s
+jetzt    0s | 0.08s | 0.16s | 0.24s | 0.32s | 0.4s | 0.48s | 0.56s
+```
+
+Dreizehn Buchstaben zugleich statt einer nach dem anderen — das ist der
+„bumm". In der Vorlage steht es ausgeschrieben: `.btn-letter:nth-child(1)`
+bis `(13)` mit 0s, 0,08s … 0,96s.
+
+**Und sie ist leise.** Die Vorlage hat zwei Bewegungen, und hier stand nur
+die laute: `letter-anim` gibt `text-shadow: 0 0 3px #fff8` — „ganz wenig
+licht" —, `focused-letter-anim` gibt `scale(2)`, `blur(10px)`,
+`brightness(150%)` und einen geworfenen Farbschatten. Jetzt heisst sie
+`rmo-letter-wisch` und hat von der ersten das Licht und von der zweiten die
+Unschärfe in klein: `blur(2.5px)`, sonst nichts.
+
+Der Rückfall ist zweistufig und nennt seinen Grund im Kommentar:
+`var(--rmo-delay, calc(var(--ru-schritt, 0) * 80ms))`.
+
+Die Staffelung ist **im Hover** gemessen. Die erste Messung lief im
+Ruhezustand und sagte fälschlich „keine Staffelung" — dort setzt
+`animation:none` sie ohnehin auf 0.
+
+---
+
+E537 — Die letzten drei Vorlagenblöcke
+--------------------------------------------------------------------------
+
+Damit sind alle zehn offenen Blöcke aus der Bestandsaufnahme (E532) gebaut.
+
+**Block 1, die Ordnerkarte.** Zähler-Pille mit Federauftritt, Suchzeile, die
+aus einem Knopf herauswächst, Lupensymbol, Datei-Etikett mit Milchglas und
+Einschweben, Schlagschatten unter der Rückwand, Dateizeichen auf jedem
+Blatt, und der Hinweispfeil, der wippt, solange die Karte zu ist. Er merkt
+sich sein erstes Öffnen in einer **Modulvariablen, nicht in IndexedDB** —
+ein Hinweis ist keine Nutzerdatei.
+Zwei Abweichungen mit geschriebenem Grund: die Pille verschwindet im
+zugeklappten Zustand nicht (sie trägt die Anzahl, die einzige Auskunft der
+geschlossenen Karte), und die Suchzeile bleibt im Ruhezustand voll breit —
+eine schmalere wäre eine verkleinerte Trefferfläche (§37).
+
+**Block 3, Lichtkarte und Kippschalter.** Lichtschlitz, dreischichtiger
+Lumen-Kegel, Abdunklung mit zwei Kegelwänden, Randbeleuchtung und
+aufhellendes Symbol auf den Elektro-Fachkacheln; am Schalter die gefräste
+Fassung, der weiss aufleuchtende Schlitz, der von innen glühende Griff und
+die Vorschau beim Zeigen.
+
+> **DAS BILD HAT EINEN FEHLER GEFUNDEN, DEN KEIN PRÜFLAUF SEHEN KONNTE.**
+> Die Masse der Vorlage sind Prozente einer 288 × 384 px grossen Karte. Die
+> Elektro-Fachkacheln sind breite **Zeilen** — gemessen 930 × 80 px. Aus
+> „64 % Schlitz" wurde ein 595 px langer weisser Streifen quer durch die
+> Zeile, aus der Abdunklung ein dunkler Kasten über der Beschriftung. Jede
+> Breite ist jetzt gedeckelt: `min(Prozent, Pixel)`. Auf einer schmalen
+> Kachel gilt weiter der Prozentwert, auf einer breiten Zeile bleibt die
+> Lampe eine Lampe. Das ist §55.3, wörtlich: ein Bild, wenn man etwas sehen
+> kann.
+
+**Block 5, die flüssige Blase.** Der Kontrastsprung der Vorlage
+(`contrast` 15 → 3 → 15 über geblurrte Kinder — die Gooey-Technik), die
+Farbdrehung über 6 s, der Lichthof und sieben gegenläufig kreisende Klumpen
+statt zwei wiegender Ränder.
+Der Agent hat dabei etwas gemessen, das leicht still danebengeht:
+`contrast()` rechnet **nur an den Farbkanälen, nicht am Alpha** — über
+Durchsichtigkeit verschmilzt nichts. Deshalb liegt unter den Klumpen ein
+deckender dunkler Grund, dunkel genug, um von `contrast(3)` bis
+`contrast(15)` schwarz zu bleiben und nicht mitzuzappeln. Und `contrast`
+steht ausschliesslich auf der 22-px-Blase, nie auf einem Element mit Text.
+
+**Offen und eingetragen:** die Kippung der ganzen Ordnerkarte bleibt weg —
+`bausteine.css` hält fest, warum es dort kein `preserve-3d` gibt (mit ihm
+malt der Browser nach der 3D-Lage statt nach `z-index`, die gekippte Klappe
+kam vor die Blätter, und drei von fünf waren unsichtbar). Eine Beschriftung
+über dem Schalter ist nicht gebaut: es gibt in Redion kein Element dafür,
+und eines zu erfinden hiesse, eine Bedeutung zu behaupten.
+
+`test493` 44 grün, `test494` 153 grün, `test495` 26/26, `test496` 148 grün.
+Angesehen: `bilder/e537-lampe-*.png` in Hell und Dunkel.
+
+---
+
+E538 — Office war die einzige Gruppe ohne Originalschutz
+--------------------------------------------------------------------------
+
+Redur will Word und PowerPoint öffnen und bearbeiten, „aber wichtig die
+originale datei wird immer geschützt". Beim Nachsehen, was dafür da ist,
+kam heraus: **für Office war sie es nicht.**
+
+`Einlesen.datei` las die Bytes in einen Puffer, schrieb Blöcke und liess die
+Datei fallen — kein `Dateien.ablegen`, keine Kennung, kein Anhang. Nach dem
+Einlesen hielt Redion nur das Umwandlungsergebnis.
+
+Das wiegt doppelt, weil die Umwandlung **verlustbehaftet** ist:
+`docxLesen` liest ausschliesslich `word/document.xml` und davon nur die
+direkten Kinder von `w:body`. Bilder, Kopf- und Fusszeilen, Fuss- und
+Endnoten, Kommentare, Spalten, Textrahmen, Farben, Schriftgrade,
+Ausrichtung, Listenebenen — alles bleibt zurück. Wer die Datei danach von
+der Platte löschte, hatte sie verloren, und nirgends stand, dass etwas
+fehlt.
+
+Und es war eine **Ausnahme**, kein Versäumnis auf ganzer Linie: der PDF-Weg
+legt das Original zuerst ab (`bereiche/pdf/einlesen.ts:107`), der Anhang-Weg
+legt ab (`archiveImport.ts:204`). Nur `.docx`, `.xlsx`, `.ods` und `.epub`
+liefen daran vorbei.
+
+Jetzt gilt dieselbe Reihenfolge wie beim PDF: erst ablegen, dann umwandeln.
+Schlägt das Ablegen fehl, fliegt der Fehler nach oben und es hat noch nichts
+stattgefunden — dann übernimmt der gewöhnliche Anhang-Weg. Die Originaldatei
+hängt danach sichtbar an Stelle 0 der neuen Seite, und der Dateisatz zeigt
+auf DIESEN Block (E99: sonst überlebt er das Löschen des Anhangs). Der
+Hinweis nach dem Einlesen sagt es auch: „das Original liegt unverändert als
+Anhang dabei".
+
+**Dazu ein zweiter Fund derselben Vermessung.** `.praesi-leiste button` hatte
+`padding:4px 10px` bei 13 px Schrift — gemessen **28 × 32 px**. Das sind die
+Knöpfe, mit denen am Telefon geblättert und beendet wird: Wischen gibt es im
+Vortrag nicht, ein Tipp auf die Folienhälften auch nicht. §37 [hart] sagt
+44 px auf den Hauptwegen, ohne Ausnahme. Die Leiste wird dadurch grösser;
+das ist der Preis, und er ist herum richtig.
+
+`test497`: 16 Zusagen. Gegenprobe rot gesehen — ohne die zwei Reparaturen
+fallen 14 davon, und die Knöpfe messen 28 × 32.
+
+Der Plan für Word und PowerPoint steht als O1 bis O7 in `AUFGABEN.md`, mit
+dem, was die drei Vermessungen ergeben haben.
