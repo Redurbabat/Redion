@@ -108,13 +108,21 @@ console.log('\n§1 Glühfaden und Kartenring werden wirklich gebaut');
     wendel: document.querySelectorAll('.rmo-filament > .rmo-filament-wendel').length,
     beine: document.querySelectorAll('.rmo-filament > .rmo-filament-bein').length,
     ringe: document.querySelectorAll('.bib-leer > .rmo-carousel').length,
-    karten: document.querySelectorAll('.rmo-carousel > .rmo-ring-karte').length
+    /* E535: die Karten hängen nicht mehr direkt im Ring, sondern in einer
+       TROMMEL darin. Grund steht im Fragment: `overflow:hidden` macht ein
+       Element flach (der Browser erzwingt `transform-style:flat`), und aus
+       dem Ring würde ein Stapel. Bühne und Drehung müssen zwei Elemente
+       sein. Hier wird deshalb die Trommel gezählt — nicht die Zusage
+       gelockert, sondern auf den neuen Aufbau umgeschrieben. */
+    trommeln: document.querySelectorAll('.rmo-carousel > .rmo-ring-trommel').length,
+    karten: document.querySelectorAll('.rmo-ring-trommel > .rmo-ring-karte').length
   }));
   gleich('Beide Schaltknöpfe bekommen einen Glühfaden', m.filamente, 2);
   gleich('Jeder Faden hat eine Wendel', m.wendel, 2);
   gleich('… und zwei Zuleitungen', m.beine, 4);
   gleich('Das leere Regal bekommt einen Ring', m.ringe, 1);
-  gleich('Mit fünf Karten', m.karten, 5);
+  gleich('Der Ring hat genau eine Trommel', m.trommeln, 1);
+  gleich('Mit fünf Karten darin', m.karten, 5);
 }
 
 /* ══ §2 NUR BEI STROM ════════════════════════════════════════════════════ */
@@ -131,8 +139,14 @@ console.log('\n§2 Der Faden glüht nur, wenn Strom fliesst');
   });
   p('Ausgeschaltet steht die Wendel still',
     m.aus?.name === 'none', JSON.stringify(m.aus));
+  /* E535: beim Einschalten ZEICHNET sich der Faden zuerst von der Mitte
+     nach aussen (`rmo-hebel-faden`, einmal) und glüht danach weiter. Zwei
+     `animation`-Angaben auf demselben Element ersetzen einander, deshalb
+     stehen beide in einer Zeile. Die Zusage prüft daher, dass das Glühen
+     DABEI IST — nicht, dass es allein dasteht. */
   p('Eingeschaltet glüht sie — und zwar sichtbar anders',
-    m.an?.name === 'rmo-gluehen' && m.an.schatten !== m.aus?.schatten,
+    !!m.an?.name.split(',').map(n => n.trim()).includes('rmo-gluehen')
+      && m.an.schatten !== m.aus?.schatten,
     JSON.stringify(m.an));
 }
 
@@ -140,7 +154,9 @@ console.log('\n§2 Der Faden glüht nur, wenn Strom fliesst');
 console.log('\n§3 Die Karten stehen im Kreis, und er dreht sich');
 {
   const m = await seite.evaluate(() => {
-    const ring = document.querySelector('.rmo-carousel') as HTMLElement | null;
+    /* Die Drehung sitzt seit E535 auf der Trommel, nicht auf der Bühne —
+       siehe den Grund oben in §1. */
+    const ring = document.querySelector('.rmo-carousel > .rmo-ring-trommel') as HTMLElement | null;
     const karten = [...document.querySelectorAll('.rmo-ring-karte')] as HTMLElement[];
     return {
       dreht: ring ? getComputedStyle(ring).animationName : '-',

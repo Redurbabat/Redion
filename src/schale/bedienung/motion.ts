@@ -161,6 +161,320 @@ const RedionMotion = (() => {
       glas.append(ornament('rmo-glass-kuppel'), ornament('rmo-glass-platte'),
                   ornament('rmo-glass-saum'));
     });
+    /* ---- Block 06 (E535) ---- */
+    /* Block 6 — der Verlaufsschalter aus Redurs Vorlage, aber NUR am kleinen
+       Menü-Umschalter `.mschalter` (schale.ts:232). Der grosse `.schalter` in
+       den Einstellungen trägt dieselbe Wirkungs-ID und behält sein bisheriges
+       Bild (motion.css:610–611) — er bekommt hier bewusst kein Markup. */
+    if (ids.includes('toggle') && element.matches('.mschalter')) {
+      ensure(element, 'rmo-verlauf', schicht => {
+    /* Zwei gemischte Verlaufsebenen und der weichgezeichnete Lichtbalken.
+       Sie liegen UNTER dem Griff, und `ensure` stellt voran — genau die
+       richtige Reihenfolge. */
+    schicht.append(ornament('rmo-verlauf-a'), ornament('rmo-verlauf-b'),
+                   ornament('rmo-verlauf-licht'));
+      });
+      /* Beschriftung und Leuchtkugel gehören dagegen HINTER den bestehenden
+     Griff `.mschalter > i`: was vorn im Baum steht, malt der Browser
+     zuerst, und die Kugel ist ein ÜBERZUG des Griffs — vorangestellt wäre
+     sie unsichtbar. Deshalb angehängt statt `ensure`; doppelt wird dabei
+     nichts, weil beide Namen vorher geprüft werden. */
+      for (const name of ['rmo-verlauf-text', 'rmo-verlauf-kugel']) {
+    if (!element.querySelector(':scope > .' + name)) element.append(ornament(name));
+      }
+    }
+    /* ---- Block 07 (E535) ---- */
+    if (ids.includes('carousel')) {
+      /* Block 7 — die Trommel unter der Bühne. `.rmo-carousel` wird zur
+     beschneidenden Bühne (overflow:hidden), und ein Element, das
+     beschneidet, wird vom Browser flach gemacht — der Ring braucht deshalb
+     ein eigenes drehendes Kind. Die fünf Karten aus dem ensure-Aufruf oben
+     ziehen EINMAL hinein; ein zweiter Durchlauf findet die Trommel und
+     lässt alles stehen. */
+      const stage = element.querySelector(':scope > .rmo-carousel');
+      if (stage && !stage.querySelector(':scope > .rmo-ring-trommel')) {
+    const drum = ornament('rmo-ring-trommel');
+    for (const card of Array.from(stage.querySelectorAll(':scope > .rmo-ring-karte'))) drum.append(card);
+    stage.append(drum);
+      }
+    }
+    /* ---- Block 09 (E535) ---- */
+    /* ==================================================================
+     * BLOCK 9 — DER REST DER KENNZAHLKARTE (Vorlage 2030–2710, E535)
+     * Ziffernrolle, Ring und Herz stehen seit E534. Hier kommen die drei
+     * Schichten dazu, die nie ein Element hatten: der Lichtkranz, der
+     * Diagrammstreifen und der Glanzfleck. Alle drei hängen an der KARTE,
+     * nicht an der Zahl — die trägt schon Rolle und Ring.
+     * Die Kippung setzt nur zwei Zahlen am Element; Winkel und Fleckmitte
+     * rechnet der Stil daraus, und zwar nur unter (hover: hover).
+     * ================================================================== */
+    if (ids.includes('metric') && !element.matches(metricSelector) && element instanceof HTMLElement) {
+      const card = element;
+      /* Zwei Ebenen statt der fünf Kegelverläufe der Vorlage: der scharfe
+         Rand im ::before, der weiche Schein im Kind (ein `filter` würde
+         sonst beide verwaschen). */
+      ensure(card, 'rmo-kranz', halo => { halo.append(ornament('rmo-kranz-schein')); });
+      ensure(card, 'rmo-glanz');
+      ensure(card, 'rmo-pfad', field => {
+        const svgNs = 'http://www.w3.org/2000/svg';
+        const chart = document.createElementNS(svgNs, 'svg');
+        /* Der Streifen ist so breit wie die Karte und 30 px hoch; ohne
+           Seitenverhältnis dehnt er sich mit. Damit die Striche dabei nicht
+           mitgedehnt werden, hängt an jedem `vector-effect`. */
+        chart.setAttribute('viewBox', '0 0 100 30');
+        chart.setAttribute('preserveAspectRatio', 'none');
+        chart.setAttribute('aria-hidden', 'true');
+        chart.setAttribute('focusable', 'false');
+        [8, 13, 6, 17, 11].forEach((height, index) => {
+          const bar = document.createElementNS(svgNs, 'line');
+          const x = String(10 + index * 20);
+          bar.setAttribute('x1', x); bar.setAttribute('y1', '28');
+          bar.setAttribute('x2', x); bar.setAttribute('y2', String(28 - height));
+          bar.setAttribute('vector-effect', 'non-scaling-stroke');
+          /* Staffelung wie in der Vorlage: 0,05 s je Linie. */
+          bar.style.setProperty('--rmo-i', String(index));
+          chart.append(bar);
+        });
+        /* Zwei Kurven, die zweite fünf Einheiten tiefer — der Schattenpfad
+           der Vorlage (.path2). Der Versatz steht in den Daten und nicht in
+           einem `transform`, weil reduzierte Bewegung `transform:none`
+           setzt und beide Kurven dann übereinanderlägen. */
+        ['M2 24 C 14 22, 20 9, 32 11 S 54 22, 66 15 S 86 4, 98 8',
+         'M2 29 C 14 27, 20 14, 32 16 S 54 27, 66 20 S 86 9, 98 13'
+        ].forEach((d, index) => {
+          const curve = document.createElementNS(svgNs, 'path');
+          curve.setAttribute('d', d);
+          curve.setAttribute('vector-effect', 'non-scaling-stroke');
+          curve.style.setProperty('--rmo-i', String(index));
+          chart.append(curve);
+        });
+        field.append(chart);
+      });
+      /* Die Vorlage teilt die Karte in fünfzehn unsichtbare Hoverfelder.
+         Fünfzehn Flächen über einer Karte, die schon Inhalt trägt, würden
+         Klicks schlucken — der Zeiger meldet seine Stelle deshalb selbst.
+         Einmal binden: `decorate` läuft bei jeder Änderung erneut. */
+      if (!card.hasAttribute('data-rmo-kippung') && matchMedia('(hover: hover)').matches) {
+        set(card, 'data-rmo-kippung', 'true');
+        card.addEventListener('pointermove', event => {
+          const box = card.getBoundingClientRect();
+          if (!box.width || !box.height) return;
+          /* Zahl ohne Einheit. Erst der Stil macht daraus Prozent (Fleck)
+             und Grad (Kippung); ein fertiges „37%" liesse sich nicht in
+             einen Winkel rechnen. */
+          card.style.setProperty('--rmo-x', String(Math.round((event.clientX - box.left) / box.width * 100)));
+          card.style.setProperty('--rmo-y', String(Math.round((event.clientY - box.top) / box.height * 100)));
+        });
+        card.addEventListener('pointerleave', () => {
+          card.style.removeProperty('--rmo-x');
+          card.style.removeProperty('--rmo-y');
+        });
+      }
+    }
+    /* ---- Block 10 (E535) ---- */
+    /* ==================================================================
+     * BLOCK 10 — DER REST DES TICKETS (Vorlage 2711–3469, E535)
+     *
+     * Die Wendekarte steht schon oben (E534), der Barcode in E531. Hier
+     * kommen die Teile dazu, die eigenes Markup brauchen: Farbrad und
+     * Körnung über der ganzen Karte, Würfel und QR in der Bühne, und die
+     * Kopfzeile buchstabenweise.
+     *
+     * WO WAS HINGEHÖRT, und warum das nicht beliebig ist:
+     *
+     *   Karte  ← Farbrad, Körnung.  Sie liegen ÜBER allem und dürfen sich
+     *            nicht mitdrehen: in der Wendekarte läge sonst auf der
+     *            Rückseite ein spiegelverkehrtes Hologramm.
+     *   Bühne  ← Würfel, QR.  Sie gehören zur Vorderseite und sollen beim
+     *            Wenden mit ihr verschwinden — das erledigt das
+     *            `backface-visibility: hidden` der Bühne von selbst.
+     * ================================================================== */
+    if (ids.includes('ticket')) {
+      ensure(element, 'rmo-ticket-korn');
+      ensure(element, 'rmo-ticket-holo');
+      const buehne = element.querySelector('.ru-drucker-buehne');
+      if (buehne) {
+        ensure(buehne, 'rmo-ticket-wuerfel', wuerfel => {
+          /* Sechs Flächen, kein Bild: die Lage jeder einzelnen steht im
+             Stil, damit der Würfel seine Farbe erben kann. */
+          for (let index = 0; index < 6; index++) wuerfel.append(ornament('rmo-ticket-flaeche'));
+        });
+        ensure(buehne, 'rmo-ticket-qr', code => {
+          /* Drei Suchmarken wie bei einem echten Code — und trotzdem kein
+             lesbarer: er zeigt auf nichts, weil ein Druckauftrag keine
+             Adresse hat. Reine Zier, deshalb aria-hidden (ornament). */
+          for (let index = 0; index < 3; index++) code.append(ornament('rmo-ticket-ecke'));
+        });
+      }
+      /* Die Kopfzeile in Zeichen teilen — derselbe Weg wie bei 'letters'
+         weiter unten, aber mit eigener Klasse: die Buchstabenregeln dort
+         hängen an `[data-rmo~="letters"]`, und das Ticket trägt das nicht.
+         Die Überschrift ist bereits aria-hidden, das Teilen ändert daran
+         nichts: für Vorlesegeräte bleibt sie unsichtbar, der echte Status
+         steht daneben in `.ru-drucker-status`.
+         Beim zweiten Dekorieren findet die Schleife keinen Textknoten mehr
+         (er ist dann ein Span) und tut nichts — test494 prüft genau das. */
+      const kopf = element.querySelector(':scope > .rmo-ticket-heading');
+      if (kopf) for (const node of Array.from(kopf.childNodes)) {
+        if (node.nodeType !== Node.TEXT_NODE || !node.textContent?.trim()) continue;
+        const wort = ornament('rmo-ticket-wort');
+        Array.from(node.textContent).forEach((character, index) => {
+          const letter = document.createElement('span');
+          letter.className = 'rmo-ticket-letter'; letter.textContent = character;
+          letter.style.setProperty('--rmo-i', String(index));
+          wort.append(letter);
+        });
+        node.replaceWith(wort);
+      }
+    }
+    /* ---- Block 11 (E535) ---- */
+    /* ==================================================================
+     * BLOCK 11 — DIE GLASKUGEL (Vorlage 3470–4157, E535)
+     * Die Kugel hatte kein einziges Kind. Hier kommen hinein: drei
+     * Wellenringe, die Farbpunkte, der Linienkranz, zwei Bögen als SVG, die
+     * zweite Kugel und der Funke. Glaskarte und Fusszeile nur in der
+     * Kopfzeile — am 44-px-Knopf #btn-ai wäre kein Platz dafür.
+     * Die Kippung setzt zwei Variablen am Träger; gelesen werden sie nur
+     * unter (hover: hover) — am Telefon bleibt die Kugel gerade.
+     * ================================================================== */
+    if (ids.includes('orb')) {
+      const orb = element.querySelector(':scope > .rmo-orb');
+      if (orb && !orb.querySelector(':scope > .rmo-orb-zwei')) {
+        const svgNs = 'http://www.w3.org/2000/svg';
+        const arcs = document.createElementNS(svgNs, 'svg');
+        arcs.setAttribute('class', 'rmo-orb-pfade');
+        arcs.setAttribute('viewBox', '0 0 24 24');
+        arcs.setAttribute('aria-hidden', 'true');
+        /* Zwei Halbkreise, r = 8: der obere und der untere Bogen. */
+        for (const d of ['M4 14a8 8 0 0 1 16 0', 'M20 10a8 8 0 0 1-16 0']) {
+          const path = document.createElementNS(svgNs, 'path');
+          path.setAttribute('d', d);
+          arcs.append(path);
+        }
+        const waves = [0, 1, 2].map(index => {
+          const wave = ornament('rmo-orb-welle');
+          wave.style.setProperty('--rmo-i', String(index));
+          return wave;
+        });
+        orb.append(...waves, ornament('rmo-orb-punkte'), ornament('rmo-orb-kranz'), arcs,
+                   ornament('rmo-orb-zwei'), ornament('rmo-orb-funke'));
+        if (element.matches('#ai .ai-head')) orb.append(ornament('rmo-orb-fuss'));
+      }
+      /* Die Karte steht als Geschwister VOR der Kugel (ensure fügt vorne
+         ein); der Stil schiebt sie per negativem Rand unter die Kugel. */
+      if (element.matches('#ai .ai-head')) ensure(element, 'rmo-orb-karte');
+      if (element instanceof HTMLElement && !element.hasAttribute('data-rmo-orb-kippung') &&
+          matchMedia('(hover: hover)').matches) {
+        const carrier = element;
+        set(carrier, 'data-rmo-orb-kippung', 'true');
+        carrier.addEventListener('pointermove', event => {
+          const rect = carrier.getBoundingClientRect();
+          if (!rect.width || !rect.height) return;
+          const x = Math.max(-1, Math.min(1, ((event.clientX - rect.left) / rect.width - .5) * 2));
+          const y = Math.max(-1, Math.min(1, ((event.clientY - rect.top) / rect.height - .5) * 2));
+          carrier.style.setProperty('--rmo-ox', x.toFixed(2));
+          carrier.style.setProperty('--rmo-oy', y.toFixed(2));
+        });
+        carrier.addEventListener('pointerleave', () => {
+          carrier.style.removeProperty('--rmo-ox');
+          carrier.style.removeProperty('--rmo-oy');
+        });
+      }
+    }
+    /* ---- Block 12 (E535) ---- */
+    /* ==================================================================
+     * DER HEBELSCHALTER AM GLÜHFADEN (Vorlage 4158–4795, E535)
+     *
+     * Die Lampe stand seit E529 da, der SCHALTER nicht: ein Glaskolben
+     * hat nichts, was man werfen könnte. Die Vorlage zeigt einen
+     * zweiteiligen Körper — Metallgehäuse links, Glasröhre rechts —, und
+     * genau diese Reihenfolge entsteht hier von selbst: `ensure` setzt
+     * jedes Teil VORNE ein, das Glas ist oben schon eingesetzt, also
+     * landet das Gehäuse links davon.
+     *
+     * Der Aufruf für `rmo-filament` bleibt unangetastet. Die drei
+     * Schichten im Glas werden nachgereicht, nicht in ihn hineingebaut:
+     * wer ihn ersetzt, ersetzt auch den Grund, der dort steht.
+     * ================================================================== */
+    if (ids.includes('filament')) {
+      /* Fassung, geworfener Arm, eingeprägtes 0/I, Schraubenkopf. */
+      ensure(element, 'rmo-hebel', gehaeuse => {
+        gehaeuse.append(ornament('rmo-hebel-arm'), ornament('rmo-hebel-zeichen'),
+                        ornament('rmo-hebel-schraube'));
+      });
+      /* Der Lichtkegel blendet (color-dodge) über der Knopffläche. Er steht
+         nicht im Fluss und verschiebt deshalb weder Text noch Trefferfläche. */
+      ensure(element, 'rmo-hebel-kegel');
+      /* Reflexwischer, Randlicht und Körnung gehören INS Glas — sonst
+         wischt der Streifen über die Beschriftung statt über den Kolben. */
+      const glas = element.querySelector(':scope > .rmo-filament');
+      if (glas && !glas.querySelector(':scope > .rmo-filament-wischer')) {
+        glas.append(ornament('rmo-filament-wischer'), ornament('rmo-filament-rand'),
+                    ornament('rmo-filament-koernung'));
+      }
+    }
+    /* ---- Block 13 (E535) ---- */
+    /* ==================================================================
+     * BLOCK 13 — DER MECHANISCHE DREIERBLOCK (Vorlage 4796–5397, E535)
+     *
+     * Die drei Zeitmessertasten hatten kein einziges Kind: keine Lampe,
+     * kein Zeichen, keine Lichtschicht — die Vorlage lebt aber genau
+     * davon. Jede Taste bekommt darum EINE Kappe mit allen Schichten
+     * darin; das hält die Zahl der Knoten klein und die Reihenfolge
+     * stabil. Die Wanne (Rauschen und Randglanz) liegt über allem.
+     *
+     * Nichts davon ist bedienbar: alle Teile sind aria-hidden (ornament)
+     * und in `motion.css` ohne Zeigerfang. Die drei nativen Knöpfe und
+     * ihre 44-px-Flächen bleiben unverändert (§37, test494 zählt sie).
+     * ================================================================== */
+    if (ids.includes('transport')) {
+      const svgNs = 'http://www.w3.org/2000/svg';
+      /* Rauschen und Rahmenreflex gehören der Wanne, nicht der Taste. */
+      ensure(element, 'rmo-tr-wanne', wanne => {
+        wanne.append(ornament('rmo-tr-rauschen'), ornament('rmo-tr-glanz'));
+      });
+      /* „Weiter" ist ein Start, kein Halt — die Taste zeigt dann das
+         Dreieck. Der Zustand steht am Träger (zeitmesser.ts:202). */
+      const angehalten = element.getAttribute('data-zustand') === 'pausiert';
+      element.querySelectorAll<HTMLButtonElement>(':scope > button').forEach(taste => {
+        /* `data-rmo-taste` ist der Haken für den Stil; `data-zm` ist der
+           Befehl und hier nur die Rückfallebene. */
+        const rolle = taste.getAttribute('data-rmo-taste') || taste.getAttribute('data-zm') || '';
+        const figur = rolle === 'stopp' ? ['M9 9h6v6H9z']
+          : rolle === 'pause' && !angehalten ? ['M10 8v8', 'M14 8v8']
+            : ['M9.5 7.5 17 12l-7.5 4.5z'];
+        ensure(taste, 'rmo-tr-kappe', kappe => {
+          const zeichen = document.createElementNS(svgNs, 'svg');
+          zeichen.setAttribute('class', 'rmo-tr-sym');
+          zeichen.setAttribute('viewBox', '0 0 24 24');
+          zeichen.setAttribute('aria-hidden', 'true');
+          for (const d of figur) {
+            const linie = document.createElementNS(svgNs, 'path');
+            linie.setAttribute('d', d);
+            zeichen.append(linie);
+          }
+          kappe.append(ornament('rmo-tr-reflex'), ornament('rmo-tr-wisch'),
+                       ornament('rmo-tr-fleck'), zeichen, ornament('rmo-led'));
+        });
+      });
+      /* Der Lichtfleck sitzt dort, wo der Finger aufsetzt. Ohne Zeiger
+         (Tastatur) bleibt er mittig — der Stil hat dafür Vorgabewerte.
+         Die Marke verhindert einen zweiten Horcher, wenn dieselbe Reihe
+         noch einmal dekoriert wird; ein Zustandswechsel baut die Reihe
+         ohnehin neu auf und bringt einen frischen Knoten mit. */
+      if (!element.hasAttribute('data-rmo-tr-druck')) {
+        set(element, 'data-rmo-tr-druck', '1');
+        element.addEventListener('pointerdown', ereignis => {
+          if (!(ereignis instanceof PointerEvent) || !(ereignis.target instanceof Element)) return;
+          const taste = ereignis.target.closest('button');
+          if (!taste) return;
+          const feld = taste.getBoundingClientRect();
+          if (!feld.width || !feld.height) return;
+          taste.style.setProperty('--rmo-px', Math.round((ereignis.clientX - feld.left) / feld.width * 100) + '%');
+          taste.style.setProperty('--rmo-py', Math.round((ereignis.clientY - feld.top) / feld.height * 100) + '%');
+        });
+      }
+    }
     if (ids.includes('letters')) {
       /* Text teilen, aber Symbole, Beschriftung und Listener behalten. */
       for (const node of Array.from(element.childNodes)) {

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-514 Entscheidungen, E1 bis E534 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+516 Entscheidungen, E1 bis E536 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -578,6 +578,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E532** — Vier Regeln, die geschrieben und nie gesehen wurden: Glasknopf, Pflegekarte, Regler-Knauf, Funkel-Abstufung
 * **E533** — Redur: alles bauen, so schnell wie möglich, ohne viel Prüfung — ein Bogen für alle offenen Vorlagenblöcke, die Prüfläufe folgen nach
 * **E534** — Auf ad4ccbc weiterarbeiten: Ticket wenden, Statistikherz ergänzen und zwei Darstellungsfehler messen
+* **E535** — Sieben Vorlagenblöcke in einem Zug: Fragmente statt zehn Schreiber in einer Datei
+* **E536** — Die Unschärfe läuft wieder von links nach rechts — die Staffelung war auf 0 gefallen
 
 ---
 
@@ -42940,3 +42942,80 @@ Hell/Dunkel am Ticket, ruhiger Bewegung, unveränderter Zahlen, Idempotenz
 und Entfernen. E533 ist damit nicht pauschal verifiziert; L149 bleibt für
 seine übrigen Behauptungen offen. Ein vollständiger Gesamtlauf wird dadurch
 nicht behauptet.
+
+---
+
+E535 — Sieben Vorlagenblöcke in einem Zug
+--------------------------------------------------------------------------
+
+Der Bau, den E533 beschrieb und der beim ersten Anlauf am Sitzungslimit
+starb. Diesmal in kleineren Wellen: ein Agent je Vorlagenblock, jeder auf
+die offene Liste aus E532 gesetzt, jeder schreibt ein **Fragment** und einen
+TS-Schnipsel statt in die zwei geteilten Dateien zu greifen. Zusammengeführt
+wird danach in Blockreihenfolge; die Fragmente stehen hinten in
+`motion.css`, damit sie ältere Regeln gleicher Stärke überschreiben können.
+
+Gelandet sind sieben: Verlaufsschalter (6), Kartenring (7), Statistikkarten
+(9), Ticket (10), Glaskugel (11), Filament-Hebel (12), Zeitmesser-Tasten
+(13). Offen bleiben drei — Ordnerkarte (1), Lichtkarte und Kippschalter (3),
+flüssiger Polygonlader (5).
+
+**Drei Zusagen in `test495` waren rot, und zwar zu Recht** — sie prüften den
+alten Aufbau. Sie sind auf die neue Entscheidung umgeschrieben, nicht
+gelockert: die Karten hängen jetzt in einer Trommel im Ring (weil
+`overflow:hidden` ein Element flach macht und aus dem Ring sonst ein Stapel
+würde), und der Glühfaden zeichnet sich beim Einschalten erst und glüht
+dann — zwei `animation`-Angaben auf einem Element ersetzen einander, also
+stehen beide in einer Zeile, und die Zusage prüft, dass das Glühen **dabei
+ist**, nicht dass es allein dasteht. Rot gesehen, umgeschrieben, 26/26 grün.
+
+Was die Agenten mit Grund **nicht** gebaut haben, steht in
+`doku/ANIMATIONEN-ZUORDNUNG.md` — darunter zwei Funde, die ein Bild und
+eine Messung gebracht haben: eine `opacity < 1` am Behälter zwingt
+`transform-style` auf `flat` (der Würfel war eine Raute, während
+`getComputedStyle` weiter „preserve-3d" meldete), und ein schwebendes
+Ticket lässt `test496` auflaufen, weil Playwright auf einen ruhigen
+Elementrahmen wartet — 123 ms mit stehender Karte gegen Zeitüberschreitung
+nach 5 s mit Wippen.
+
+Angesehen: `bilder/e535-kartenring.png` (fünf eigene Farben und Motive statt
+fünf gleicher grauer Kästchen) und `bilder/e535-kennzahl.png` (Lichtkranz,
+Herz, gezeichnete Kurve). `test494` 153 grün, `test496` 148 grün.
+
+---
+
+E536 — Die Unschärfe läuft wieder von links nach rechts
+--------------------------------------------------------------------------
+
+Redur, mit seiner Vorlage im Anhang: „bei der ai butons war die blur efeck
+nicht so, es war so: die blur kommen von links bis nach rechts, ohne so bumm
+efekt oder licht, es war ganz wenig licht."
+
+Er hat recht, und es war ein Fehler, kein Geschmack. `motion.ts` setzt
+`--rmo-delay` nur auf `.rmo-letter` — dort, wo es den Text selbst zerlegt.
+Die KI-Knöpfe tragen aber `.ru-funkel-b`, und deren Schrittzahl heisst
+`--ru-schritt`. Die Regel las nur den einen Namen und fiel für **jeden**
+Buchstaben auf 0 ms zurück:
+
+```txt
+vorher   0s | 0s | 0s | 0s | 0s | 0s | 0s | 0s
+jetzt    0s | 0.08s | 0.16s | 0.24s | 0.32s | 0.4s | 0.48s | 0.56s
+```
+
+Dreizehn Buchstaben zugleich statt einer nach dem anderen — das ist der
+„bumm". In der Vorlage steht es ausgeschrieben: `.btn-letter:nth-child(1)`
+bis `(13)` mit 0s, 0,08s … 0,96s.
+
+**Und sie ist leise.** Die Vorlage hat zwei Bewegungen, und hier stand nur
+die laute: `letter-anim` gibt `text-shadow: 0 0 3px #fff8` — „ganz wenig
+licht" —, `focused-letter-anim` gibt `scale(2)`, `blur(10px)`,
+`brightness(150%)` und einen geworfenen Farbschatten. Jetzt heisst sie
+`rmo-letter-wisch` und hat von der ersten das Licht und von der zweiten die
+Unschärfe in klein: `blur(2.5px)`, sonst nichts.
+
+Der Rückfall ist zweistufig und nennt seinen Grund im Kommentar:
+`var(--rmo-delay, calc(var(--ru-schritt, 0) * 80ms))`.
+
+Die Staffelung ist **im Hover** gemessen. Die erste Messung lief im
+Ruhezustand und sagte fälschlich „keine Staffelung" — dort setzt
+`animation:none` sie ohnehin auf 0.

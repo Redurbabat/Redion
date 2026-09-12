@@ -42,7 +42,7 @@ eins zu eins eingebaut wurde.**
 | Holografisches Ticket, 2830–3455 | Papier im PDF-Druck-/Exportstatus | Holografischer Lichtdurchlauf; vorhandener Papiereinzug und tatsächlicher Auftragszustand bleiben. |
 | Glaskugel, 3470–4142 | Zeichen neben „Redion KI“ | Frostige Farbkugel mit Ringbewegung beim Anfassen der Kopfzeile. Rein dekorativ, keine Verifizierungsanzeige. |
 | Filamentschalter, 4158–4790 | Schaltplan → Strom eingeschaltet | Warmes Filamentlicht ausschließlich bei `.sp-start.an`; die Simulation selbst wurde nicht geändert. |
-| Mechanischer Dreierblock, 4796–5396 | Anhängen, Diktieren, Senden | Gemeinsamer kurzer Druckeffekt und eingelassener Schatten; getrennte zugängliche Schaltflächen statt eines neuen Players. |
+| Mechanischer Dreierblock, 4796–5396 | Zeitmesser → Start, Pause, Beenden | Eine gemeinsame Wanne mit Fuge und Rahmenreflex, LED je Taste mit drei Zuständen, Wischmaske und einmalige Symboldrehung beim Start, einrastende Haupttaste. Getrennte zugängliche Schaltflächen statt eines neuen Players. |
 
 Nicht übernommen sind globale `body`-Resets, externe Schriftimporte,
 mehrfach gleichnamige Keyframes und sich gegenseitig überschreibende
@@ -213,3 +213,67 @@ und Ziffernrolle gehören gemeinsam zu `metric`; es wurde kein bestehender
 Effekt entfernt. `test496` prüft die Ergänzungen an echten Komponenten und
 war vor dem Einbau rot. Bilder: `bilder/motion-rest-*.png`, ausschließlich lokal.
 Übrige Prüflücken aus E532/E533 stehen weiterhin unter L149.
+
+---
+
+## Nachtrag vom 12. September 2026 (E535) — die zehn offenen Blöcke
+
+Sieben Vorlagenblöcke sind in diesem Bogen gebaut worden, jeder von einem
+eigenen Agenten, jeder als Fragment am Ende von `motion.css` plus einem
+Schnipsel in `motion.ts`. Was dabei **mit Grund nicht** übernommen wurde,
+steht hier — nicht still weggelassen (§35).
+
+**Block 6, Verlaufsschalter (`.mschalter`).** `mix-blend-mode: difference`
+und `color-dodge` der Vorlage sind durch `screen` + `overlay` ersetzt:
+`difference` kippt auf einer 17-px-Pille bei beiden Akzenten ins Negative
+und macht aus dem Akzent ein Giftgrün. `multiply` auf der Textebene frisst
+bei 6,5 px Schrift das Wort weg. Der 5-s-Dauerpuls ist eine Leerlaufschleife
+(E528) und sitzt jetzt endlich auf dem Lichtbalken beim Anfassen.
+**Offen und wichtig:** `schale.ts` erzeugte den Umschalter ohne
+`role="switch"`; das ist inzwischen behoben, aber nicht in diesem Fragment.
+
+**Block 7, Kartenring.** Die Karten hängen jetzt in einer **Trommel** im
+Ring, nicht direkt im Ring: `overflow:hidden` erzwingt
+`transform-style:flat`, und aus dem Ring würde ein Stapel. Bühne und
+Drehung müssen zwei Elemente sein.
+
+**Block 9, Statistikkarten.** Das Wegfliegen der Linien nach 80 % und der
+5-s-Dauerlauf sind nur die Rückstellung einer Endlosschleife. Die
+Tiefenstaffelung (`preserve-3d`, 140-px-Schlagschatten) endet an dem
+`overflow:hidden` der Karte und bräuchte einen Umbau der Kartenanatomie —
+die Kippung ist gebaut, aber flach. Eine runde Symbolfassung gibt es nicht:
+Die Karte hat kein Symbolelement, und den freien Platz oben rechts hat E534
+dem Herz gegeben; ein erfundenes Symbol behauptete eine Bedeutung.
+
+**Block 10, Ticket.** Das Schweben sitzt auf der **Bühne**, nicht auf der
+Karte. Gemessen: `test496` fotografiert das Ticket im Zustand „rendern",
+und Playwright wartet dabei auf einen zwei Bilder lang unveränderten
+Elementrahmen — 123 ms mit stehender Karte, Zeitüberschreitung nach 5 s mit
+5-px-Wippen. Abhilfe für einen späteren Bogen, eine Zeile: `test496:92` auf
+`screenshot({ …, animations: 'disabled' })`, dann darf die Bewegung an die
+Karte wandern.
+Beim Bauen gefunden: eine `opacity < 1` am Behälter zwingt
+`transform-style` auf `flat` — der Würfel war eine Raute, während
+`getComputedStyle` weiter „preserve-3d" meldete.
+
+**Block 11, Glaskugel.** Glaskarte und Fusszeile nur in der KI-Kopfzeile —
+am 44-px-Knopf `#btn-ai` wäre kein Platz dafür.
+
+**Block 12, Filament-Hebel.** Der buchstabenweise Zeichenwechsel der
+Knopfbeschriftung ist nicht gebaut: „▶ Strom"/„◼ Strom" trägt die
+Zustandsaussage (§38), und sie in Spans zu zerlegen machte die Auskunft zur
+Deko. Gebaut ist stattdessen der 0/I-Wechsel am Gehäuse. Die schwebende
+Ruhelage (−10 px, 70-px-Schlagschatten) fällt in einer 34-px-Werkzeugleiste
+aus der Zeile; gebaut ist 1 px Anheben beim Anfassen. Die Rauschebene über
+der ganzen Szene würde fremde Knöpfe überziehen und sitzt deshalb im Glas.
+
+**Block 13, Zeitmesser.** Die radiale Verschränkungsmaske zwischen den
+Tasten ist nicht gebaut: eine Maske beschneidet nur das **Bild**, nicht die
+Trefferprüfung — die scheinbar weggeschnittene Ecke bliebe klickbar und
+löste die falsche Handlung aus. Die eigene Breite der Mitteltaste (46 %)
+würde Trefferflächen verkleinern (§37). Das Verblassen des Play-Textes auf
+0,3 beim Überfahren nimmt der Taste ihren einzigen Namen, gerade während
+man darauf zeigt.
+
+**Noch offen, drei Blöcke:** 1 (Ordnerkarte), 3 (Lichtkarte und
+Kippschalter), 5 (flüssiger Polygonlader).
