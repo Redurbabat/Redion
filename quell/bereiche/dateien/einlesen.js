@@ -1108,8 +1108,40 @@ const Einlesen = (() => {
         }
         return karte;
     };
-    /** Die Füllfarbe einer Form, wenn sie eine feste ist. */
+    /**
+     * Die Füllfarbe einer Form.
+     *
+     * ERST DER VERLAUF, DANN DIE FESTE FARBE. An Redurs Datei gemessen: die
+     * Abdeckungen sind KEINE einfarbigen Rechtecke, sondern ein Verlauf
+     * weiss → #FFCC00 in der Mitte → weiss, senkrecht (`a:lin ang="5400000"`).
+     * Die `a:solidFill`, die daneben steht, gehört der Umrisslinie.
+     *
+     * Der erste Versuch las nur `a:solidFill` und traf die richtige Farbe
+     * bloss durch den Rückfall — das ist kein Lesen, das ist Glück. Jetzt
+     * kommt die Farbe aus dem KRÄFTIGSTEN Stopp des Verlaufs, also dem, der
+     * nicht die Hintergrundfarbe ist.
+     *
+     * Der Verlauf selbst wird nicht nachgebaut: Redions Abdeckband ist eine
+     * Fläche in einer Farbe. Was dabei verlorengeht, ist Optik an einem
+     * Deckel, den man wegtippt — steht als Lücke in L153.
+     */
     const formFarbe = (form) => {
+        const verlauf = form.getElementsByTagName('a:gradFill')[0];
+        if (verlauf) {
+            /* Der mittlere Stopp ist bei einem Deckel die Farbe; die äusseren
+               sind das Papier. Fällt die Wahl schwer, gewinnt der erste echte
+               RGB-Wert — ein `schemeClr` ist ohne Thema ohnehin nicht auflösbar. */
+            const stopps = [...verlauf.getElementsByTagName('a:gs')];
+            const mitte = stopps.find(g => g.getAttribute('pos') === '50000') || null;
+            const rgbMitte = mitte?.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+            if (rgbMitte)
+                return '#' + rgbMitte;
+            for (const g of stopps) {
+                const w = g.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+                if (w)
+                    return '#' + w;
+            }
+        }
         const voll = form.getElementsByTagName('a:solidFill')[0];
         const rgb = voll?.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
         return rgb ? '#' + rgb : '';

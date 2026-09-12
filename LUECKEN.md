@@ -7478,3 +7478,17 @@ die Nummer des Klicks, bei dem jede weichen soll (`schritt`, aus
 gespeichert wird oder nur im Sichtbaren lebt. E266 ist da eindeutig für die
 Abdeckung selbst — „Lernen darf den Speicher nicht anfassen" —, und dieselbe
 Regel spricht dafür, auch den Schrittstand nicht zu speichern.
+
+**Und zwei Sachen an der Optik**, an Redurs Bild des Originals verglichen
+(12. September):
+
+- **Der Deckel ist flach, im Original ein Verlauf.** Gemessen: weiss →
+  `#FFCC00` in der Mitte → weiss, senkrecht (`a:lin ang="5400000"`). Redions
+  Abdeckband ist eine Fläche in EINER Farbe; seit E542 kommt wenigstens die
+  richtige Farbe aus dem kräftigsten Stopp statt aus einem Rückfall. Der
+  Verlauf selbst fehlt — Optik an einem Deckel, den man wegtippt.
+- **Die Navigationsknöpfe der Folie fehlen.** Unten rechts stehen im
+  Original drei blaue Pfeile (zurück, eine Folie zurück, weiter). Es sind
+  Formen ohne Text und ohne Animation, also weder Textkasten noch Abdeckung
+  — sie fallen durch beide Zweige. Für Redion sind sie ohnehin fremd: das
+  Blättern macht dort der Vortragsmodus.
