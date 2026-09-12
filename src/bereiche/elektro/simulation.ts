@@ -73,10 +73,31 @@ const Stromfluss = (() => {
   /** Eine Schalterstellung: welche Klemmenpaare sie schliesst. */
   type Stellung = { name: string; zu: Array<[string, string]> };
 
+  /**
+   * Ein Glied eines mehrteiligen Bauteils. Eine Drehstromquelle ist drei
+   * Quellen, ein Drehstrommotor drei Wicklungen — ein Symbol, mehrere
+   * Elemente im Gleichungssystem. Ohne das müsste jede Wicklung ein eigenes
+   * Symbol werden, und das Klemmenbrett aus dem Unterricht liesse sich gar
+   * nicht zeichnen.
+   */
+  type Glied = {
+    art: 'quelle' | 'widerstand' | 'leiter';
+    von: string;
+    nach: string;
+    wert?: number;
+    /** Nur bei Quellen: Phasenlage in Grad. 0 ist die Bezugsphase (L1). */
+    phase?: number;
+    /** Welcher Leiter hier herauskommt — für die Fehlerprüfung (Bogen 3). */
+    leiter?: Leiterart;
+  };
+
+  /** Die fünf Leiter einer Schweizer Installation. */
+  type Leiterart = 'L1' | 'L2' | 'L3' | 'N' | 'PE';
+
   type Verhalten = {
     /** Wie das Bauteil in die Rechnung eingeht. */
     art: 'quelle' | 'widerstand' | 'schalter' | 'leiter' | 'offen'
-       | 'volt' | 'ampere' | 'diode' | 'spule' | 'bezug';
+       | 'volt' | 'ampere' | 'diode' | 'spule' | 'bezug' | 'mehrteilig';
     /** Klemmenpaar für die einfachen Arten. */
     von?: string;
     nach?: string;
@@ -89,6 +110,15 @@ const Stromfluss = (() => {
     folgtSpule?: 'schliesser' | 'oeffner';
     /** Ein Satz für die Lernende, warum das Bauteil so gerechnet wird. */
     annahme?: string;
+    /** Phasenlage einer Quelle in Grad. Fehlt sie, ist sie 0 — und dann
+        bleibt die ganze Rechnung reell, genau wie vor dem Drehstrom. */
+    phase?: number;
+    /** Mehrteilige Bauteile: Drehstromquelle, Motorwicklungen, Klemmenbrett. */
+    glieder?: Glied[];
+    /** Welcher Anschluss welchen Leiter führt. Nur die Fehlerprüfung liest es. */
+    leiter?: Record<string, Leiterart>;
+    /** Schutzklasse I heisst: das Gehäuse MUSS an den Schutzleiter. */
+    schutzklasse?: 1 | 2;
   };
 
   /* Die beiden Stellungslisten, die fast überall gebraucht werden. */
@@ -107,7 +137,32 @@ const Stromfluss = (() => {
     batterie:        { art: 'quelle', von: '+', nach: '−', wert: 12, einheit: 'V' },
     gleichspannung:  { art: 'quelle', von: '+', nach: '−', wert: 24, einheit: 'V' },
     wechselspannung: { art: 'quelle', von: 'L', nach: 'N', wert: 230, einheit: 'V',
-      annahme: 'Wechselspannung wird als Gleichspannung gleichen Effektivwerts gerechnet. Für ohmsche Lasten stimmt das Ergebnis.' },
+      leiter: { L: 'L1', N: 'N' },
+      annahme: 'Wechselspannung wird als Zeiger gerechnet: Betrag ist der Effektivwert, Winkel die Phasenlage. Für ohmsche Lasten ist das Ergebnis exakt.' },
+
+    /* ---- Drehstrom: das Netz, an dem die Schweiz hängt ----
+       3 × 400/230 V heisst: 230 V zwischen Aussenleiter und Neutralleiter,
+       400 V zwischen zwei Aussenleitern. Die 400 V werden hier NICHT
+       hingeschrieben — sie entstehen beim Rechnen aus drei Quellen, die um
+       120° gegeneinander versetzt sind. Wer sie als „230 mal Wurzel 3"
+       einträgt, bekommt zufällig dieselbe Zahl und hat den Grund verloren:
+       dass die Spannung zwischen L2 und L3 um 90° gegen die von L1 versetzt
+       ist, steht in keiner Wurzel drei.
+
+       Der Sternpunkt ist geerdet, und von ihm geht der Schutzleiter aus
+       (TN-S). Deshalb hängen N und PE hier zusammen — und genau deshalb
+       fällt beim Vertauschen der beiden elektrisch NICHTS auf. Das ist keine
+       Ungenauigkeit der Simulation, sondern der Grund, warum der Fehler
+       gefährlich ist. Bogen 3 meldet ihn, die Rechnung kann es nicht. */
+    drehstromquelle: { art: 'mehrteilig', wert: 230, einheit: 'V',
+      leiter: { L1: 'L1', L2: 'L2', L3: 'L3', N: 'N', PE: 'PE' },
+      glieder: [
+        { art: 'quelle', von: 'L1', nach: 'N', wert: 230, phase: 0,    leiter: 'L1' },
+        { art: 'quelle', von: 'L2', nach: 'N', wert: 230, phase: -120, leiter: 'L2' },
+        { art: 'quelle', von: 'L3', nach: 'N', wert: 230, phase: -240, leiter: 'L3' },
+        { art: 'leiter', von: 'N', nach: 'PE', leiter: 'PE' }
+      ],
+      annahme: 'Drehstrom wird als Zeiger gerechnet: drei Quellen zu 230 V, um 120° versetzt. Zwischen zwei Aussenleitern ergeben sich daraus 400 V — gerechnet, nicht eingetragen.' },
     generator:       { art: 'quelle', von: '1', nach: '2', wert: 230, einheit: 'V' },
     erde:            { art: 'bezug', von: 'E' },
     masse:           { art: 'bezug', von: 'M' },
@@ -195,6 +250,41 @@ const Stromfluss = (() => {
       annahme: 'Der Motor wird als reiner Wirkwiderstand gerechnet. Anlaufstrom und Blindanteil fehlen.' },
     'motor-gleichstrom':  { art: 'widerstand', von: 'A1', nach: 'A2', wert: 20, einheit: 'Ω',
       annahme: 'Ohne Gegenspannung gerechnet — der Wert gilt für den Stillstand, nicht für den Lauf.' },
+    /* ---- Der Drehstrommotor und sein Klemmenbrett ----
+       Die drei Wicklungsstränge liegen zwischen U1–U2, V1–V2 und W1–W2. Wie
+       sie verschaltet sind, machen die BRÜCKEN auf dem Klemmenbrett aus —
+       und genau das ist die Aufgabe, die im Unterricht gezeichnet wird.
+       Deshalb sind die Brücken hier Schalterstellungen und keine feste
+       Verdrahtung: wer „Stern" wählt, sieht 230 V am Strang, wer „Dreieck"
+       wählt, sieht 400 V — beides ausgerechnet, nicht angeschrieben.
+
+       Ohne Brücken ist der Motor nicht falsch angeschlossen, sondern gar
+       nicht angeschlossen. Das ist die Ruhelage, weil ein leeres
+       Klemmenbrett genau das ist, was auf dem Tisch liegt. */
+    'motor-drehstrom': { art: 'mehrteilig', wert: 60, einheit: 'Ω',
+      schutzklasse: 1,
+      glieder: [
+        { art: 'widerstand', von: 'U1', nach: 'sternpunkt', wert: 60 },
+        { art: 'widerstand', von: 'V1', nach: 'sternpunkt', wert: 60 },
+        { art: 'widerstand', von: 'W1', nach: 'sternpunkt', wert: 60 }
+      ],
+      annahme: 'Der Motor ist mit drei Anschlüssen gezeichnet und wird deshalb als fertig in Stern geschaltet gerechnet — so, wie ein Motor mit dem Schild 3 × 400/230 V am 400-V-Netz betrieben wird. Wer die Brücken selbst setzen will, nimmt das Klemmenbrett. Die Wicklungen gelten als rein ohmsch: Blindanteil, Anlaufstrom und Schlupf fehlen.' },
+
+    'motor-klemmenbrett': { art: 'mehrteilig', wert: 60, einheit: 'Ω',
+      schutzklasse: 1,
+      leiter: { PE: 'PE' },
+      glieder: [
+        { art: 'widerstand', von: 'U1', nach: 'U2', wert: 60 },
+        { art: 'widerstand', von: 'V1', nach: 'V2', wert: 60 },
+        { art: 'widerstand', von: 'W1', nach: 'W2', wert: 60 }
+      ],
+      stellungen: [
+        { name: 'ohne Brücken', zu: [] },
+        { name: 'Stern', zu: [['U2', 'V2'], ['V2', 'W2']] },
+        { name: 'Dreieck', zu: [['U1', 'W2'], ['V1', 'U2'], ['W1', 'V2']] }
+      ],
+      annahme: 'Die drei Wicklungen gelten als rein ohmsch. Das Verhältnis von Stern zu Dreieck stimmt trotzdem, weil es allein an der Spannung hängt und nicht an der Art der Last.' },
+
     'spule-induktivitaet': { art: 'leiter', von: '1', nach: '2',
       annahme: 'Bei Gleichstrom ist eine Spule eine Verbindung. Ihre Wirkung zeigt sich erst im Wechselstrom.' },
 
@@ -203,9 +293,11 @@ const Stromfluss = (() => {
     leitungsschutzschalter: { art: 'schalter', stellungen: ZU_AUF('1', '2') },
     klemme:                 { art: 'leiter', von: '1', nach: '2' },
     steckverbindung:        { art: 'leiter', von: '1', nach: '2' },
-    'leiter-l1':            { art: 'leiter', von: 'L1', nach: 'L1' },
-    'leiter-n':             { art: 'leiter', von: 'N', nach: 'N' },
-    'leiter-pe':            { art: 'leiter', von: 'PE', nach: 'PE' },
+    'leiter-l1':            { art: 'leiter', von: 'L1', nach: 'L1', leiter: { L1: 'L1' } },
+    'leiter-l2':            { art: 'leiter', von: 'L2', nach: 'L2', leiter: { L2: 'L2' } },
+    'leiter-l3':            { art: 'leiter', von: 'L3', nach: 'L3', leiter: { L3: 'L3' } },
+    'leiter-n':             { art: 'leiter', von: 'N', nach: 'N', leiter: { N: 'N' } },
+    'leiter-pe':            { art: 'leiter', von: 'PE', nach: 'PE', leiter: { PE: 'PE' } },
     'bp-minuterie':         { art: 'schalter', stellungen: AUF_ZU('1', '2') },
 
     /* ---- Was ihn sperrt ---- */
@@ -293,7 +385,9 @@ const Stromfluss = (() => {
     return false;
   };
 
-  type Klemme = { teil: string; nr: string; x: number; y: number; schluessel: string };
+  type Klemme = { teil: string; nr: string; x: number; y: number; schluessel: string;
+                  /** Ein innerer Knoten — er liegt nirgends und wird nie verdrahtet. */
+                  intern?: boolean };
 
   /**
    * Alle Klemmen des Plans mit ihrem Ort. Kommt aus `Schaltplan`, damit
@@ -307,6 +401,30 @@ const Stromfluss = (() => {
         ? Schaltplan.anschluesseVon(t) : [];
       liste.forEach((a: any) => raus.push({
         teil: t.id, nr: a.nr, x: a.x, y: a.y, schluessel: `k:${t.id}:${a.nr}`
+      }));
+
+      /* Innere Knoten.
+         --------------------------------------------------------------
+         Ein Drehstrommotor hat drei Anschlüsse und DREI Wicklungen. Wo die
+         sich treffen — im Sternpunkt — ist kein Anschluss: der liegt im
+         Motor und kommt nirgends heraus. Trotzdem ist er ein Netz, und ohne
+         ihn lässt sich der Motor überhaupt nicht rechnen.
+         Solche Knoten bekommen hier ihre eigene Netznummer und keinen Ort.
+         Der Ort ist bewusst NaN und nicht 0: bei 0 läge der Sternpunkt in
+         der linken oberen Ecke und würde sich mit jeder Leitung verbinden,
+         die zufällig dort vorbeikommt. Jeder Vergleich mit NaN ist falsch,
+         und genau das ist hier richtig. */
+      const v = verhalten(t.zeichen);
+      if (!v || !v.glieder) return;
+      const aussen = new Set<string>(liste.map((a: any) => String(a.nr)));
+      const innen = new Set<string>();
+      v.glieder.forEach(g => {
+        [g.von, g.nach].forEach(nr => {
+          if (!aussen.has(nr) && !innen.has(nr)) innen.add(nr);
+        });
+      });
+      innen.forEach(nr => raus.push({
+        teil: t.id, nr, x: NaN, y: NaN, schluessel: `k:${t.id}:${nr}`, intern: true
       }));
     });
     return raus;
@@ -439,6 +557,51 @@ const Stromfluss = (() => {
     return x;
   };
 
+  /**
+   * Dasselbe Gleichungssystem, nur mit komplexen Zahlen — für Drehstrom.
+   *
+   * WARUM ÜBERHAUPT KOMPLEX: Drei Quellen um 120° versetzt lassen sich mit
+   * reellen Zahlen nicht ehrlich rechnen. Man könnte 400 V zwischen zwei
+   * Aussenleitern einfach hinschreiben; dann stimmt die eine Zahl und alles
+   * andere nicht mehr — der Neutralleiterstrom bei ungleicher Last wäre die
+   * Summe der Strangströme statt ihrer ZEIGERSUMME, und bei drei gleichen
+   * Lasten käme der dreifache Strom heraus, wo in Wirklichkeit null fliesst.
+   * Genau das ist der Satz, den eine Lernende verstehen muss.
+   *
+   * WIE ES GEHT, OHNE EINEN ZWEITEN LÖSER: Ein komplexes System
+   * (Gr + jGi)·(xr + jxi) = (zr + jzi) ist dasselbe wie ein doppelt so
+   * grosses reelles:
+   *
+   *     [ Gr  −Gi ] [ xr ]   [ zr ]
+   *     [ Gi   Gr ] [ xi ] = [ zi ]
+   *
+   * Damit rechnet weiterhin `loese` — derselbe Gauss mit Spaltenpivot, der
+   * sich schon bewährt hat. Ein zweiter Löser daneben würde irgendwann
+   * anders rechnen als der erste, und niemand wüsste welcher stimmt.
+   */
+  const loeseKomplex = (Are: number[][], Aim: number[][],
+                        zre: number[], zim: number[]):
+                        { re: number[]; im: number[] } | null => {
+    const n = zre.length;
+    if (!n) return { re: [], im: [] };
+    const G: number[][] = [];
+    for (let i = 0; i < 2 * n; i++) G.push(new Array<number>(2 * n).fill(0));
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        G[i]![j] = Are[i]![j]!;
+        G[i]![j + n] = -Aim[i]![j]!;
+        G[i + n]![j] = Aim[i]![j]!;
+        G[i + n]![j + n] = Are[i]![j]!;
+      }
+    }
+    const x = loese(G, zre.concat(zim));
+    if (!x) return null;
+    return { re: x.slice(0, n), im: x.slice(n) };
+  };
+
+  /** Grad in Bogenmass — die Phasenlagen stehen in Grad, weil sie so gelehrt werden. */
+  const bogen = (grad: number): number => grad * Math.PI / 180;
+
   /* ------------------------------------------------------------------------
    * 4. DIE RECHNUNG
    * ----------------------------------------------------------------------*/
@@ -455,16 +618,34 @@ const Stromfluss = (() => {
     fliesst: boolean;
     /** Nur bei Verbrauchern: 0…1, wie hell im Verhältnis zur Nennleistung. */
     helligkeit?: number;
+    /** Effektivwert der Spannung in Volt — das, was ein Messgerät anzeigt. */
+    Ubetrag: number;
+    /** Effektivwert des Stroms in Ampere. */
+    Ibetrag: number;
+    /** Phasenlage der Spannung in Grad, 0 = Bezugsphase L1. */
+    Uwinkel: number;
+    /** Phasenlage des Stroms in Grad. */
+    Iwinkel: number;
+    /** Wird dieses Bauteil mit Wechselstrom gerechnet? Dann hat `I` kein
+        Vorzeichen im Sinn einer festen Richtung — siehe `richtung`. */
+    wechsel: boolean;
   };
 
   type Ergebnis = {
     ok: boolean;
     /** Was schiefging, in einem Satz für den Menschen. */
     fehler: string;
-    /** Spannung je Netz, Netznummer → Volt. */
+    /** Spannung je Netz, Netznummer → Volt. Bei Wechselstrom der Effektivwert. */
     spannung: number[];
+    /** Phasenlage je Netz in Grad. Bei Gleichstrom überall 0. */
+    spannungWinkel: number[];
+    /** Wurde als Wechselstrom (mit Zeigern) gerechnet? */
+    wechsel: boolean;
     /** Messwerte je Bauteil, nach Teil-Kennung. */
     werte: Record<string, Messwert>;
+    /** Messwerte der einzelnen Glieder mehrteiliger Bauteile:
+        Teil-Kennung → „Klemme–Klemme" → Messwert. */
+    teilwerte: Record<string, Record<string, Messwert>>;
     /** Netze, durch die Strom fliesst — für die Animation der Leitungen. */
     stromNetze: number[];
     /** Strom je Netz in Ampere, für die Geschwindigkeit der Animation. */
@@ -484,7 +665,8 @@ const Stromfluss = (() => {
   };
 
   const leer = (fehler: string, warnungen: string[] = []): Ergebnis => ({
-    ok: false, fehler, spannung: [], werte: {}, stromNetze: [], netzStrom: [],
+    ok: false, fehler, spannung: [], spannungWinkel: [], wechsel: false,
+    werte: {}, teilwerte: {}, stromNetze: [], netzStrom: [],
     spulen: {}, annahmen: [], warnungen, durchgaenge: 0, leitungNetz: {}, maxStrom: 0
   });
 
@@ -549,6 +731,15 @@ const Stromfluss = (() => {
           const n = netzFuer(t.id, v.nach);
           if (n >= 0) masse = n;
         }
+        /* Bei der Drehstromquelle ist es der Sternpunkt — er ist geerdet,
+           und darauf beziehen sich alle drei Strangspannungen. */
+        if (v && v.art === 'mehrteilig') {
+          (v.glieder || []).forEach(g => {
+            if (masse >= 0 || g.art !== 'quelle') return;
+            const n = netzFuer(t.id, g.nach);
+            if (n >= 0) masse = n;
+          });
+        }
       });
     }
     if (masse < 0) return leer('Der Plan hat keine Spannungsquelle. Ohne Quelle fliesst kein Strom.');
@@ -562,6 +753,12 @@ const Stromfluss = (() => {
     type Eintrag = {
       t: any; v: Verhalten; a: number; b: number;
       art: 'R' | 'U'; wert: number; quelleNr?: number;
+      /** Phasenlage in Grad. Nur Quellen haben eine; alles andere ist 0. */
+      phase: number;
+      /** Die beiden Klemmen, zwischen denen das Element liegt. Nur ein
+          mehrteiliges Bauteil braucht sie: bei einem Motor sind die drei
+          Stränge sonst nicht auseinanderzuhalten. */
+      von: string; nach: string;
     };
     const eintraege: Eintrag[] = [];
     const annahmen = new Set<string>();
@@ -573,7 +770,8 @@ const Stromfluss = (() => {
       if (!v) return;
       if (v.annahme) annahmen.add(v.annahme);
 
-      const paar = (von: string, nach: string, art: 'R' | 'U', wert: number) => {
+      const paar = (von: string, nach: string, art: 'R' | 'U', wert: number,
+                    phase = 0) => {
         const a = netzFuer(t.id, von), b = netzFuer(t.id, nach);
         if (a < 0 || b < 0) return;
         if (a === b) {
@@ -586,13 +784,31 @@ const Stromfluss = (() => {
             `${t.bmk || t.zeichen}: beide Anschlüsse hängen am selben Netz — die Quelle ist kurzgeschlossen.`);
           return;
         }
-        eintraege.push({ t, v, a, b, art, wert });
+        eintraege.push({ t, v, a, b, art, wert, phase, von, nach });
       };
 
       switch (v.art) {
         case 'quelle':
-          paar(v.von!, v.nach!, 'U', spannungVon(t, v));
+          paar(v.von!, v.nach!, 'U', spannungVon(t, v), v.phase ?? 0);
           break;
+
+        /* Ein Symbol, mehrere Elemente: Drehstromquelle, Motorwicklungen.
+           Die Brücken des Klemmenbretts kommen aus der Stellungsliste und
+           laufen durch dieselbe Mechanik wie jeder andere Schalter. */
+        case 'mehrteilig': {
+          (v.glieder || []).forEach(g => {
+            if (g.art === 'quelle') paar(g.von, g.nach, 'U', g.wert ?? 230, g.phase ?? 0);
+            else if (g.art === 'widerstand') paar(g.von, g.nach, 'R', g.wert ?? 1000);
+            else paar(g.von, g.nach, 'R', KONTAKT);
+          });
+          const liste = v.stellungen || [];
+          if (liste.length) {
+            const idx = Math.max(0, Math.min(liste.length - 1, stellung[t.id] ?? 0));
+            const st = liste[idx];
+            if (st) st.zu.forEach(([von, nach]) => paar(von, nach, 'R', KONTAKT));
+          }
+          break;
+        }
         case 'widerstand':
         case 'spule':
           paar(v.von!, v.nach!, 'R', widerstandVon(t, v));
@@ -639,6 +855,18 @@ const Stromfluss = (() => {
     for (let i = 0; i < gr; i++) A.push(new Array<number>(gr).fill(0));
     const z = new Array<number>(gr).fill(0);
 
+    /* Der Imaginärteil der Matrix. Er ist heute überall null, weil alle
+       Bauteile rein ohmsch gerechnet werden — eine Spule ist eine
+       Verbindung, ein Kondensator eine Unterbrechung (siehe Kopf der Datei).
+       Die Phasenlage kommt allein aus den QUELLEN, und das ist für ohmsche
+       Lasten die vollständige Wahrheit, nicht eine Näherung.
+       Er steht trotzdem hier: sobald ein Blindwiderstand dazukommt, wird er
+       gefüllt, und der Löser rechnet ohne weitere Änderung richtig weiter.
+       (Als Lücke eingetragen — heute fehlt jeder Blindanteil.) */
+    const Aim: number[][] = [];
+    for (let i = 0; i < gr; i++) Aim.push(new Array<number>(gr).fill(0));
+    const zim = new Array<number>(gr).fill(0);
+
     /* Ein winziger Leitwert von jedem Netz nach Masse — 1 TΩ, also nichts.
        Ohne ihn ist jede Schaltung mit einem freischwebenden Netz unlösbar,
        und freischwebende Netze sind nicht die Ausnahme, sondern der Normalfall:
@@ -665,11 +893,30 @@ const Stromfluss = (() => {
         const q = n + e.quelleNr!;
         if (ra >= 0) { A[ra]![q] = A[ra]![q]! + 1; A[q]![ra] = A[q]![ra]! + 1; }
         if (rb >= 0) { A[rb]![q] = A[rb]![q]! - 1; A[q]![rb] = A[q]![rb]! - 1; }
-        z[q] = e.wert;
+        /* Die Quelle als Zeiger. Bei Phase 0 ist der Kosinus genau 1 und der
+           Sinus genau 0 — eine einphasige Schaltung rechnet damit Zahl für
+           Zahl so wie vor dem Drehstrom. */
+        z[q] = e.wert * Math.cos(bogen(e.phase));
+        zim[q] = e.wert * Math.sin(bogen(e.phase));
       }
     });
 
-    const x = loese(A, z);
+    /* Muss komplex gerechnet werden? Nur wenn eine Quelle wirklich versetzt
+       ist. Sonst bleibt der alte, reelle Weg — halb so grosse Matrix und
+       dieselben Zahlen wie bisher. */
+    const wechsel = eintraege.some(e => e.art === 'U' && (e.phase % 360) !== 0);
+
+    let xRe: number[] | null;
+    let xIm: number[];
+    if (wechsel) {
+      const k = loeseKomplex(A, Aim, z, zim);
+      xRe = k ? k.re : null;
+      xIm = k ? k.im : [];
+    } else {
+      xRe = loese(A, z);
+      xIm = new Array<number>(gr).fill(0);
+    }
+    const x = xRe;
     if (!x) return leer(
       'Die Schaltung hat keine eindeutige Lösung. Das passiert, wenn zwei ideale ' +
       'Quellen parallel liegen oder zwei Amperemeter denselben Zweig messen — ' +
@@ -679,28 +926,84 @@ const Stromfluss = (() => {
       const r = zeile[netz];
       return (typeof r === 'number' && r >= 0) ? x[r]! : 0;
     };
+    const Uj = (netz: number): number => {
+      const r = zeile[netz];
+      return (typeof r === 'number' && r >= 0) ? (xIm[r] ?? 0) : 0;
+    };
+
+    /* Winkel in Grad, auf −180…180 gebracht. Eine Phasenlage von 240° ist
+       dieselbe wie −120°, und die zweite ist die, die im Heft steht. */
+    const winkel = (re: number, im: number): number => {
+      if (Math.abs(re) < 1e-12 && Math.abs(im) < 1e-12) return 0;
+      return Math.atan2(im, re) * 180 / Math.PI;
+    };
 
     const spannung: number[] = [];
-    for (let i = 0; i < anzahl; i++) spannung.push(U(i));
+    const spannungWinkel: number[] = [];
+    for (let i = 0; i < anzahl; i++) {
+      const re = U(i), im = Uj(i);
+      /* Bei Gleichstrom ist der Realteil die Spannung, mit Vorzeichen. Bei
+         Wechselstrom ist es der Effektivwert — das, was ein Messgerät
+         anzeigt —, und das Vorzeichen wandert in den Winkel. */
+      spannung.push(wechsel ? Math.hypot(re, im) : re);
+      spannungWinkel.push(wechsel ? winkel(re, im) : 0);
+    }
 
     const werte: Record<string, Messwert> = {};
+    /* Die einzelnen Glieder eines mehrteiligen Bauteils.
+       -----------------------------------------------------------------
+       `werte` hält je Bauteil EINEN Messwert, nämlich den mit dem grössten
+       Strom. Bei einem Drehstrommotor ist das nutzlos: dort liegen drei
+       Wicklungen und zwei bis drei Brücken unter demselben Symbol, und die
+       Brücke mit ihrem Milliohm würde als „Spannung am Motor: 0,004 V"
+       durchgehen. Die Strangspannung — die Zahl, um die es im Unterricht
+       geht — wäre nirgends ablesbar.
+       Deshalb steht hier jedes Glied einzeln, nach seinen Klemmen benannt:
+       `U1–U2` ist der erste Strang. */
+    const teilwerte: Record<string, Record<string, Messwert>> = {};
     const netzStrom = new Array<number>(anzahl).fill(0);
 
     eintraege.forEach(e => {
-      const u = U(e.a) - U(e.b);
-      const i = e.art === 'R' ? u / e.wert : x[n + e.quelleNr!]!;
+      const ure = U(e.a) - U(e.b);
+      const uim = Uj(e.a) - Uj(e.b);
+      const ire = e.art === 'R' ? ure / e.wert : x[n + e.quelleNr!]!;
+      const iim = e.art === 'R' ? uim / e.wert : (xIm[n + e.quelleNr!] ?? 0);
+      const uBetrag = Math.hypot(ure, uim);
+      const iBetrag = Math.hypot(ire, iim);
+      /* Wirkleistung als Zeigerprodukt: P = Re(U · I*). Bei Gleichstrom ist
+         das genau U·I wie bisher; bei Wechselstrom ist es die Leistung, die
+         wirklich in Wärme geht, und nicht das Produkt zweier Effektivwerte
+         (das wäre die Scheinleistung und bei Blindanteil zu gross). */
+      const p = Math.abs(ure * ire + uim * iim);
       const alt = werte[e.t.id];
-      const strom = Math.abs(i);
+      const strom = iBetrag;
       /* Ein Bauteil kann mehrere Pfade haben (Hauptschalter, Serienschalter).
          Gezeigt wird der grösste Strom — das ist der, der die Sicherung
          auslöst und nach dem gefragt wird. */
       if (!alt || strom > Math.abs(alt.I)) {
         werte[e.t.id] = {
           teil: e.t.id, zeichen: e.t.zeichen, bmk: e.t.bmk || '',
-          U: u, I: i, P: Math.abs(u * i), fliesst: strom > SCHWELLE
+          U: wechsel ? uBetrag : ure, I: wechsel ? iBetrag : ire,
+          P: p, fliesst: strom > SCHWELLE,
+          Ubetrag: uBetrag, Ibetrag: iBetrag,
+          Uwinkel: wechsel ? winkel(ure, uim) : 0,
+          Iwinkel: wechsel ? winkel(ire, iim) : 0,
+          wechsel
         };
       } else if (alt) {
         alt.fliesst = alt.fliesst || strom > SCHWELLE;
+      }
+      if (e.v.glieder) {
+        const fach = teilwerte[e.t.id] || (teilwerte[e.t.id] = {});
+        fach[`${e.von}–${e.nach}`] = {
+          teil: e.t.id, zeichen: e.t.zeichen, bmk: e.t.bmk || '',
+          U: wechsel ? uBetrag : ure, I: wechsel ? iBetrag : ire,
+          P: p, fliesst: strom > SCHWELLE,
+          Ubetrag: uBetrag, Ibetrag: iBetrag,
+          Uwinkel: wechsel ? winkel(ure, uim) : 0,
+          Iwinkel: wechsel ? winkel(ire, iim) : 0,
+          wechsel
+        };
       }
       netzStrom[e.a] = Math.max(netzStrom[e.a]!, strom);
       netzStrom[e.b] = Math.max(netzStrom[e.b]!, strom);
@@ -744,7 +1047,8 @@ const Stromfluss = (() => {
     }
 
     return {
-      ok: true, fehler: '', spannung, werte, stromNetze, netzStrom, spulen,
+      ok: true, fehler: '', spannung, spannungWinkel, wechsel,
+      werte, teilwerte, stromNetze, netzStrom, spulen,
       annahmen: Array.from(annahmen), warnungen, durchgaenge: 1,
       leitungNetz: netzInfo.leitungNetz, maxStrom
     };
@@ -848,7 +1152,7 @@ const Stromfluss = (() => {
       if (!v) return;
       if (t.zeichen === 'verbindungspunkt' || t.zeichen === 'abzweigdose'
         || t.zeichen === 'bp-abzweigdose') return;          /* die SOLLEN das */
-      const eigene = netzInfo.klemmen.filter(k => k.teil === t.id);
+      const eigene = netzInfo.klemmen.filter(k => k.teil === t.id && !k.intern);
       for (let i = 0; i < eigene.length; i++) {
         for (let j = i + 1; j < eigene.length; j++) {
           const a = eigene[i]!, b = eigene[j]!;
@@ -871,6 +1175,7 @@ const Stromfluss = (() => {
     const belegt = new Set<number>();
     (plan.leitungen || []).forEach(() => { /* zählt unten über die Netze */ });
     netzInfo.klemmen.forEach(k => {
+      if (k.intern) return;   /* ein Sternpunkt gehört an keine Leitung */
       const netz = netzInfo.netzVon.get(k.schluessel);
       if (typeof netz !== 'number') return;
       const wieViele = netzInfo.klemmen.filter(

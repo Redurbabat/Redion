@@ -7391,3 +7391,66 @@ einen Querverweis von Hand einsetzen, rot sehen, wieder herausnehmen.
 
 Bis dahin steht die Regel ohne Beweis da — und stand es, seit sie
 geschrieben wurde.
+
+---
+
+L151 · Die Simulation kennt keine Blindwiderstände — offen
+--------------------------------------------------------------------------
+
+Seit E539 rechnet die Simulation mit Zeigern: jede Spannung und jeder Strom
+hat einen Betrag und einen Winkel. Die Winkel kommen aber **allein aus den
+Quellen**. Kein Bauteil erzeugt einen eigenen.
+
+Das heisst konkret:
+
+* Eine Spule ist weiterhin eine Verbindung, ein Kondensator eine
+  Unterbrechung. Beide sind in Wirklichkeit frequenzabhängig.
+* Ein Motor ist ein Wirkwiderstand. Der Leistungsfaktor cos φ, den jedes
+  Typenschild nennt, kommt in der Rechnung nicht vor.
+* Scheinleistung, Blindleistung und die Kompensation mit Kondensatoren sind
+  deshalb nicht rechenbar.
+
+**Für rein ohmsche Lasten ist das keine Näherung, sondern vollständig.** Alle
+Zahlen in `test498` — Strangspannung, Neutralleiterstrom, das Verhältnis von
+Stern zu Dreieck — sind exakt. Die Lücke betrifft ausschliesslich Lasten mit
+Blindanteil.
+
+**Was zu tun wäre:** Die Matrix für den Imaginärteil (`Aim` in
+`einDurchgang`) steht bereits da und ist überall null. Wer Blindanteile
+nachrüstet, füllt sie mit den Suszeptanzen und muss am Löser **nichts**
+ändern — `loeseKomplex` rechnet sie schon richtig. Dazu gehört eine
+Netzfrequenz (50 Hz) als Grösse der Rechnung, die es heute nicht gibt, und
+eine Entscheidung, was bei gemischt Gleich- und Wechselquellen gilt.
+
+Bis dahin sagt jedes betroffene Bauteil es selbst: die `annahme` am Motor,
+an der Spule und am Kondensator nennt den fehlenden Anteil im Klartext. Eine
+genannte Annahme ist besser als eine stille.
+
+---
+
+L152 · Die Stromrichtung wird gerechnet, aber nicht gezeichnet — offen
+--------------------------------------------------------------------------
+
+Die Knotenpotentialanalyse liefert **vorzeichenbehaftete** Ströme; seit
+Bogen 2 steht die Richtung als `richtung` an jedem Messwert und ist bei
+Wechselstrom ausdrücklich als Zählrichtung benannt, nicht als Tatsache.
+
+**Gezeichnet wird sie nicht.** Der Plan wird in
+`src/bereiche/bloecke/arten/schaltplan.ts` und
+`src/bereiche/bloecke/arten/planflaeche.ts` gemalt, und die liegen
+ausserhalb von `src/bereiche/elektro/`. Diese Arbeit hatte den Auftrag,
+ausschliesslich am Elektro-Teil zu arbeiten; ein Pfeil an der Leitung wäre
+ein Eingriff in die Blockschicht gewesen.
+
+**Was zu tun wäre:** `planflaeche.ts` liest das Ergebnis ohnehin schon
+(`z.ergebnis = Stromfluss.rechne(...)`) und zeichnet die Leitungen nach
+`leitungNetz`. Ein Richtungspfeil braucht von dort aus nur noch
+`werte[teil].richtung` und die Lage der beiden Klemmen. Zwei Dinge sind
+dabei zwingend:
+
+* **Nicht nur Farbe** (§38). Ein Pfeil ist eine Form und trägt die Auskunft
+  auch ohne Farbe; eine rot/grün gefärbte Leitung tut es nicht.
+* **Bei Wechselstrom muss die Beschriftung mitkommen.** Der Strom wechselt
+  fünfzigmal je Sekunde die Richtung. Ein Pfeil ohne den Satz „Zählrichtung,
+  im Augenblick des Scheitels von L1" behauptet etwas Falsches — und zwar
+  etwas, das ein Lernender glaubt, weil es aussieht wie bei der Batterie.

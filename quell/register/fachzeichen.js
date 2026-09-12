@@ -290,7 +290,29 @@ Register.fachzeichen = (() => {
             pfad: [senkrecht(10, 0, 16), senkrecht(30, 0, 10), senkrecht(50, 0, 16)],
             beschriftung: [{ x: 30, y: 32, t: 'M', gross: true }, { x: 30, y: 48, t: '3 ~' }],
             anschluesse: [{ nr: 'U1', x: 10, y: 0 }, { nr: 'V1', x: 30, y: 0 }, { nr: 'W1', x: 50, y: 0 }],
-            erklaerung: 'Der übliche Antrieb im Betrieb: drei Wicklungen, Drehfeld, kein Anlaufhelfer nötig.'
+            erklaerung: 'Der übliche Antrieb im Betrieb: drei Wicklungen, Drehfeld, kein Anlaufhelfer nötig. Mit drei Anschlüssen gezeichnet heisst: die Brücken sitzen schon.'
+        },
+        {
+            /* Das Klemmenbrett ist im Unterricht ein eigenes Zeichen und nicht nur
+               eine Innenansicht des Motors: gezeichnet wird, wo die BRÜCKEN sitzen.
+               Erst sie entscheiden, ob am Strang 230 V oder 400 V liegen — und das
+               ist die Aufgabe, nicht der Motor. Deshalb sechs Klemmen in zwei
+               Reihen, so wie sie auf dem Brett wirklich liegen: oben U1 V1 W1,
+               unten W2 U2 V2. Die untere Reihe ist gegen die obere versetzt, und
+               das ist kein Schönheitsfehler — genau dadurch wird die Dreieckbrücke
+               zu drei geraden Stegen statt zu drei gekreuzten Drähten. */
+            id: 'motor-klemmenbrett', name: 'Klemmenbrett Motor', gruppe: 'motoren', kennbuchstabe: 'M',
+            w: 140, h: 90,
+            pfad: ['M10,20 H130 V70 H10 Z',
+                senkrecht(10, 0, 20), senkrecht(50, 0, 20), senkrecht(90, 0, 20),
+                senkrecht(50, 70, 90), senkrecht(90, 70, 90), senkrecht(130, 70, 90)],
+            kreise: [{ cx: 10, cy: 20, r: 3 }, { cx: 50, cy: 20, r: 3 }, { cx: 90, cy: 20, r: 3 },
+                { cx: 50, cy: 70, r: 3 }, { cx: 90, cy: 70, r: 3 }, { cx: 130, cy: 70, r: 3 }],
+            beschriftung: [{ x: 10, y: 34, t: 'U1' }, { x: 50, y: 34, t: 'V1' }, { x: 90, y: 34, t: 'W1' },
+                { x: 50, y: 62, t: 'W2' }, { x: 90, y: 62, t: 'U2' }, { x: 130, y: 62, t: 'V2' }],
+            anschluesse: [{ nr: 'U1', x: 10, y: 0 }, { nr: 'V1', x: 50, y: 0 }, { nr: 'W1', x: 90, y: 0 },
+                { nr: 'W2', x: 50, y: 90 }, { nr: 'U2', x: 90, y: 90 }, { nr: 'V2', x: 130, y: 90 }],
+            erklaerung: 'Die sechs Wicklungsenden des Drehstrommotors. Die Brücken machen daraus Stern (230 V am Strang) oder Dreieck (400 V am Strang).'
         },
         {
             id: 'motor-wechselstrom', name: 'Wechselstrommotor', gruppe: 'motoren', kennbuchstabe: 'M',
@@ -444,6 +466,31 @@ Register.fachzeichen = (() => {
                 'M16,30 a7,7 0 0,1 14,0 a7,7 0 0,0 14,0'],
             anschluesse: [{ nr: 'L', x: 30, y: 0 }, { nr: 'N', x: 30, y: 60 }],
             erklaerung: 'Liefert eine Spannung, die ihre Richtung regelmässig wechselt.'
+        },
+        {
+            /* Das Netz, an dem die Schweiz hängt: 3 × 400/230 V. Fünf Klemmen,
+               weil eine Installation fünf Leiter hat — und weil der häufigste
+               Anfängerfehler darin besteht, N und PE für dasselbe zu halten. Sie
+               SIND am Sternpunkt verbunden, und trotzdem darf man sie nicht
+               tauschen; mit nur vier Klemmen liesse sich das gar nicht zeigen. */
+            id: 'drehstromquelle', name: 'Drehstromquelle 3 × 400/230 V', gruppe: 'quellen', kennbuchstabe: 'G',
+            w: 160, h: 80,
+            kreise: [{ cx: 70, cy: 30, r: 24 }],
+            pfad: ['M56,30 a7,7 0 0,1 14,0 a7,7 0 0,0 14,0',
+                senkrecht(10, 54, 80), senkrecht(40, 54, 80), senkrecht(70, 54, 80),
+                senkrecht(100, 54, 80), senkrecht(130, 54, 80),
+                waagrecht(54, 10, 130)],
+            /* Die Leiternamen stehen NEBEN ihrem Stich, nicht darauf. Mittig
+               gesetzt lagen sie auf der Linie und waren am Bildschirm nicht mehr
+               zu lesen — gefunden auf dem Bild, nicht im Prüflauf. */
+            beschriftung: [{ x: 70, y: 16, t: '3 ~' },
+                { x: 20, y: 72, t: 'L1' }, { x: 50, y: 72, t: 'L2' },
+                { x: 80, y: 72, t: 'L3' }, { x: 110, y: 72, t: 'N' },
+                { x: 140, y: 72, t: 'PE' }],
+            anschluesse: [{ nr: 'L1', x: 10, y: 80 }, { nr: 'L2', x: 40, y: 80 },
+                { nr: 'L3', x: 70, y: 80 }, { nr: 'N', x: 100, y: 80 },
+                { nr: 'PE', x: 130, y: 80 }],
+            erklaerung: 'Drei Aussenleiter, je 230 V gegen den Neutralleiter und um 120° versetzt. Zwischen zwei Aussenleitern ergeben sich daraus 400 V.'
         },
         {
             id: 'erde', name: 'Erde', gruppe: 'quellen', kennbuchstabe: 'E',
@@ -756,6 +803,22 @@ Register.fachzeichen = (() => {
             beschriftung: [{ x: 30, y: 12, t: 'L1' }],
             anschluesse: [{ nr: 'L1', x: 0, y: 20 }, { nr: 'L1', x: 60, y: 20 }],
             erklaerung: 'Erster Aussenleiter des Drehstromnetzes.'
+        },
+        {
+            id: 'leiter-l2', name: 'Aussenleiter L2', gruppe: 'leitungen', kennbuchstabe: 'L2',
+            w: 60, h: 30,
+            pfad: [waagrecht(20, 0, 60)],
+            beschriftung: [{ x: 30, y: 12, t: 'L2' }],
+            anschluesse: [{ nr: 'L2', x: 0, y: 20 }, { nr: 'L2', x: 60, y: 20 }],
+            erklaerung: 'Zweiter Aussenleiter, um 120° gegen L1 versetzt.'
+        },
+        {
+            id: 'leiter-l3', name: 'Aussenleiter L3', gruppe: 'leitungen', kennbuchstabe: 'L3',
+            w: 60, h: 30,
+            pfad: [waagrecht(20, 0, 60)],
+            beschriftung: [{ x: 30, y: 12, t: 'L3' }],
+            anschluesse: [{ nr: 'L3', x: 0, y: 20 }, { nr: 'L3', x: 60, y: 20 }],
+            erklaerung: 'Dritter Aussenleiter, um weitere 120° versetzt.'
         },
         {
             id: 'leiter-n', name: 'Neutralleiter N', gruppe: 'leitungen', kennbuchstabe: 'N',

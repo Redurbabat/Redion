@@ -582,6 +582,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E536** — Die Unschärfe läuft wieder von links nach rechts — die Staffelung war auf 0 gefallen
 * **E537** — Die letzten drei Vorlagenblöcke: Ordnerkarte, Lichtkarte mit Kippschalter, flüssige Blase
 * **E538** — Office war die einzige Gruppe ohne Originalschutz — und der Vortrag am Telefon nicht bedienbar
+* **E539** — Drehstrom wird mit Zeigern gerechnet, nicht mit Wurzel drei
 
 ---
 
@@ -43123,3 +43124,80 @@ fallen 14 davon, und die Knöpfe messen 28 × 32.
 
 Der Plan für Word und PowerPoint steht als O1 bis O7 in `AUFGABEN.md`, mit
 dem, was die drei Vermessungen ergeben haben.
+
+---
+
+## E539 · Drehstrom wird mit Zeigern gerechnet, nicht mit Wurzel drei
+
+**Was wurde entschieden?** Die Simulation rechnet ein Drehstromnetz als drei
+Spannungsquellen zu 230 V, die um 120° gegeneinander versetzt sind. Dafür
+wird das Gleichungssystem komplex: jede Grösse hat einen Betrag und einen
+Winkel. Die Aussenleiterspannung von 400 V steht nirgends im Quelltext — sie
+kommt aus der Rechnung.
+
+**Warum?** Weil die Alternative aussieht, als würde sie stimmen.
+
+Man kann 400 V als „230 mal Wurzel 3" hinschreiben und die drei Aussenleiter
+als drei gewöhnliche 230-V-Quellen behandeln. Die eine Zahl stimmt dann. Alles
+andere nicht mehr, und zwar unauffällig:
+
+* Der Strom im Neutralleiter wäre die Summe der BETRÄGE statt der Zeigersumme.
+  Bei zwei gleichen Lampen an L1 und L2 käme 0,87 A heraus statt 0,43 A.
+  Beide Zahlen sind plausibel; niemand sieht der falschen an, dass sie falsch
+  ist.
+* Bei drei gleichen Lampen käme der dreifache Strom heraus, wo in
+  Wirklichkeit **nichts** fliesst. Genau dieser Satz ist der Grund, warum ein
+  Vierleiterzähler anders aussieht als drei Zweileiterzähler, und er ist im
+  Unterricht nicht nebensächlich, sondern die Sache selbst.
+* Die Spannung zwischen L2 und L3 ist gegenüber der von L1 um 90° gedreht.
+  Aus einer Wurzel drei folgt kein einziger Winkel.
+
+Der Unterschied zwischen Stern und Dreieck ist derselbe Fall: 230 V am Strang
+gegen 400 V am Strang, und daraus die dreifache Leistung. Wer die Spannung
+einträgt statt sie zu rechnen, trägt am Klemmenbrett zwei Zahlen ein und hat
+nichts erklärt.
+
+**Was war die Alternative?** Drei Möglichkeiten standen zur Wahl:
+
+1. *Die Vereinfachung* — 400 V fest eintragen. Verworfen, siehe oben.
+2. *Ein zweiter, komplexer Löser neben dem reellen.* Verworfen: zwei Löser
+   für dieselbe Aufgabe laufen irgendwann auseinander, und dann weiss niemand
+   mehr, welcher recht hat.
+3. *Der gewählte Weg.* Ein komplexes System lässt sich als doppelt so grosses
+   reelles schreiben — Realteil und Imaginärteil als zwei Blöcke. Damit rechnet
+   weiterhin `loese`, derselbe Gauss mit Spaltenpivot wie bisher.
+
+**Was kostet es?** Zwei Dinge, beide klein:
+
+* Die Matrix ist bei Wechselstrom doppelt so gross, der Gauss also achtmal so
+  teuer. Bei Plänen mit einigen Dutzend Netzen ist das nicht messbar.
+* Es gibt jetzt zwei Wege durch die Rechnung. Damit das keine zwei Wahrheiten
+  werden, wird der komplexe Weg **nur** betreten, wenn wirklich eine Quelle
+  versetzt ist. Eine einphasige Schaltung rechnet Zahl für Zahl wie vorher —
+  `test498 §5` hält genau das fest, und `test239` hätte es sonst gemerkt.
+
+**Was dabei NICHT entschieden wurde:** Blindwiderstände. Eine Spule ist
+weiterhin eine Verbindung, ein Kondensator eine Unterbrechung, ein Motor ein
+Wirkwiderstand. Die Phasenlage kommt allein aus den Quellen — für ohmsche
+Lasten ist das die vollständige Wahrheit und keine Näherung. Die Matrix für
+den Imaginärteil steht schon da und ist überall null; wer Blindanteile
+nachrüstet, füllt sie und muss am Löser nichts ändern. Als Lücke eingetragen
+(L151).
+
+**Und ein Nebenbefund, der hierher gehört:** N und PE sind an der Quelle
+verbunden — der Sternpunkt ist geerdet, und von ihm geht der Schutzleiter aus
+(TN-S). Wer die beiden vertauscht, bekommt deshalb elektrisch **dasselbe
+Ergebnis**. Das ist keine Ungenauigkeit der Simulation, sondern der Grund,
+warum der Fehler gefährlich ist: er fällt beim Einschalten nicht auf. Eine
+Rechnung kann ihn nicht finden. Er gehört in die Fehlerprüfung, und dort ist
+er auch hingekommen.
+
+`test498`: 39 Zusagen. Gegenprobe rot gesehen — mit allen drei Quellen in
+Phase fallen 19 davon, darunter „Bei symmetrischer Last ist der Neutralleiter
+stromlos" (1,3 A statt 0 A) und „Im Neutralleiter fliesst nur EIN
+Strangstrom" (0,87 A statt 0,43 A). Genau die beiden Zahlen, um die es geht.
+
+**Ein Bild hat auch etwas gefunden** (§55.3): die Leiternamen L1 L2 L3 N PE
+lagen mittig auf ihren Anschlussstichen und waren am Bildschirm nicht mehr zu
+lesen. Kein Prüflauf konnte das sehen — die Beschriftung war ja da. Sie steht
+jetzt neben dem Stich.
