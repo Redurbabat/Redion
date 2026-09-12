@@ -1842,7 +1842,12 @@ const Werkzeuge = (() => {
     const dateienLesen = () => {
         const inp = document.createElement('input');
         inp.type = 'file';
-        inp.accept = '.md,.markdown,.txt,.csv,.tsv,.html,.htm,.xlsx,.xlsm,.ods,.docx,.epub,.pdf,.zip,image/*';
+        /* DER WÄHLER MUSS ANBIETEN, WAS DER ZWEIG DARUNTER LIEST (E543). Die
+           vier PowerPoint-Endungen kamen mit E538 in den Einleser, nicht aber
+           hierher: im Dateifenster stand eine .ppsx grau, und der gebaute Weg
+           lief nie an. Wer eine Endung unten aufnimmt, nimmt sie hier mit auf. */
+        inp.accept = '.md,.markdown,.txt,.csv,.tsv,.html,.htm,.xlsx,.xlsm,.ods,' +
+            '.docx,.pptx,.ppsx,.pptm,.ppsm,.epub,.pdf,.zip,image/*';
         inp.multiple = true;
         inp.addEventListener('change', async () => {
             let n = 0;

@@ -4439,7 +4439,7 @@ const App = (() => {
             const telefon = window.matchMedia('(max-width: 760px)').matches;
             const m = UI.menu('<div class="grp">Was soll hereinkommen?</div>' +
                 '<button data-i="dateien"><span class="mi">📄</span>Dateien wählen' +
-                '<span class="sub">Markdown, CSV, TSV, HTML, Excel, Word, EPUB</span></button>' +
+                '<span class="sub">Markdown, CSV, HTML, Word, PowerPoint, Excel, EPUB, PDF</span></button>' +
                 (telefon ? '' :
                     '<button data-i="ordner"><span class="mi">📁</span>Ganzen Ordner einlesen</button>') +
                 '<hr><button data-i="werkzeug"><span class="mi">⭱</span>Aus einem anderen Werkzeug' +

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-522 Entscheidungen, E1 bis E542 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+523 Entscheidungen, E1 bis E543 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -586,6 +586,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E540** — O3: PowerPoint lesen — eine Folie ist ein Blatt, kein neuer Blocktyp
 * **E541** — Vier Funde aus einer echten PowerPoint-Datei, die keine erfundene je gezeigt hätte
 * **E542** — Die Antworten waren alle offen: PowerPoints Ausblend-Animationen werden zu Redions Abdeckband
+* **E543** — Der Wähler verschwieg, was der Einleser längst kann: `accept`, Menütext und Zweig wandern zusammen
 
 ---
 
@@ -43338,3 +43339,63 @@ Folie zeigt wieder alles.
 **Offen (L153):** ein Klick, der die ganze Folie einen Schritt weiterschaltet
 — heute wird jede Abdeckung einzeln angetippt. Und das Auflösen selbst ist
 ein Sprung, kein Übergang; `dissolve` ist nicht nachgebaut.
+
+---
+
+E543 — Der Wähler verschwieg, was der Einleser längst kann
+--------------------------------------------------------------------------
+
+Redur, nachdem die PowerPoint-Wege gebaut waren: „wie kann ich im Redion die
+Daten hochladen?"
+
+Eine Frage nach dem Weg, keine nach einer Funktion. Beim Nachsehen, welchen
+Weg die Antwort nennen soll, stand die Antwort im Weg selbst.
+
+**Der Weg war gebaut und nicht erreichbar.** `dateienLesen`
+(`bereiche/wissen/werkzeuge.ts`) ist der Hauptweg: der Knopf „Importieren" in
+der Seitenleiste, der Befehl „PDF oder Datei importieren", der Punkt „Datei"
+im Anlegen-Menü — drei Türen, ein Wähler. Sein Zweig behandelt seit E538
+`.pptx`, `.ppsx`, `.pptm` und `.ppsm`. Sein `accept` nannte keine davon:
+
+```txt
+vorher   … .ods,.docx,.epub,.pdf,.zip,image/*
+Zeile 17 darunter   /\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i
+```
+
+Im Dateifenster stand Redurs `.ppsx` damit **grau**. Erreichbar war sie nur
+über „Alle Dateien" — einen Umweg, den niemand geht, der nicht weiss, dass
+es dahinter etwas gibt. Der Weg war nicht kaputt, er war unsichtbar, und
+genau deshalb fand ihn keine Prüfung: jede prüfte den Zweig, keine den
+Wähler davor.
+
+**Und die zwei Texte darüber sagten es auch nicht.** Das Seitenleisten-Menü
+schrieb „Markdown, CSV, TSV, HTML, Excel, Word, EPUB", das Übernahme-Fenster
+„Markdown, Text, CSV, Word, Excel, OpenDocument, EPUB". Beide Listen sind
+älter als der PowerPoint-Weg und beide führten PDF nicht, obwohl der Wähler
+es seit E350 annimmt.
+
+**Entschieden:** Wer eine Endung in den Zweig aufnimmt, nimmt sie im selben
+Bogen in den Wähler und in den Text auf. Die drei Stellen sind jetzt gleich:
+
+```txt
+accept   .md,.markdown,.txt,.csv,.tsv,.html,.htm,.xlsx,.xlsm,.ods,
+         .docx,.pptx,.ppsx,.pptm,.ppsm,.epub,.pdf,.zip,image/*
+Menü     Markdown, CSV, HTML, Word, PowerPoint, Excel, EPUB, PDF
+Fenster  Markdown, Text, CSV, Word, PowerPoint, Excel, OpenDocument, EPUB
+```
+
+**Die Alternative** wäre gewesen, `accept` ganz wegzulassen — dann ist nie
+etwas grau. Sie ist verworfen: ein Wähler ohne Filter zeigt am Telefon die
+ganze Dateien-App, und die Liste ist genau der Ort, an dem ein Mensch liest,
+was die App kann.
+
+**Was es kostet:** eine Stelle mehr, die bei jeder neuen Endung mitwandern
+muss. `test497 §3` hält das fest — es liest das `accept` am echten Element,
+das der Browser öffnet (`page.on('filechooser')`), nicht am Quelltext, und
+prüft zwölf Endungen einzeln. Gegenprobe gemacht: die vier Endungen wieder
+herausgenommen, vier Zusagen rot; die zwei Menütexte zurückgedreht, zwei
+weitere. `test497` geht von 20 auf 31 grün, `test498` bleibt 11, `test499`
+bleibt 22.
+
+Bild: `bilder/menue-import.png` und `-handy.png` — am Telefon fällt „Ganzen
+Ordner einlesen" weg, weil Telefon-Browser keine Ordner wählen können.

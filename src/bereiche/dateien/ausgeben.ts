@@ -2415,7 +2415,7 @@ const Austausch = (() => {
     ['apple',    '📒', 'Apple Notes',   'Der Ordner mit den HTML-Dateien — Unterordner bleiben Unterordner', 'ordner'],
     ['csv',      '📊', 'Jira, Monday, sonstige CSV', 'Irgendeine Tabelle — wird zur Datenbank', '.csv'],
     ['markdown', '📄', 'Einzelne Dateien',
-     'Markdown, Text, CSV, Word, Excel, OpenDocument, EPUB',
+     'Markdown, Text, CSV, Word, PowerPoint, Excel, OpenDocument, EPUB',
      '.md,.txt,.csv,.docx,.pptx,.ppsx,.xlsx,.ods,.epub']
   ];
 
