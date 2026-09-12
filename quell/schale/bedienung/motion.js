@@ -9,7 +9,7 @@ const RedionMotion = (() => {
         { id: 'letters', place: 'KI-Werkzeuge und Befehle', selector: '.ru-funkel, .ai-action-group button' },
         { id: 'liquid', place: 'KI-, Agenten-, Import- und Exportaufträge', selector: '.ki-aktivitaet, .ru-zustand, .ru-zk, .ru-lader, .ru-drucker, [data-studio-import], .ag-motion-status' },
         { id: 'toggle', place: 'Einstellungen und Automationen', selector: '.schalter, .mschalter' },
-        { id: 'carousel', place: 'Zuletzt geöffnete Dokumente', selector: '.rmo-recent' },
+        { id: 'carousel', place: 'Zuletzt geöffnete Dokumente, leeres Regal', selector: '.rmo-recent, .bib-leer' },
         { id: 'glass', place: 'Primäre Dialogaktionen', selector: '.fbtns button.prim' },
         { id: 'metric', place: 'Lernfortschritt und Bestandsgesundheit', selector: metricSelector },
         { id: 'status', place: 'Synchronisierung, Sicherung, KI, Automationen', selector: '.ru-zustand, .ru-lader, .ki-aktivitaet, .ag-motion-status, .rmo-product-status' },
@@ -109,6 +109,36 @@ const RedionMotion = (() => {
                 element.classList.add('rmo-ticket');
             ensure(element, 'rmo-ticket-heading', heading => { heading.textContent = 'PDF-Ausgabe'; });
         }
+        /* ==================================================================
+         * DER GLÜHFADEN UND DER KARTENRING — beide standen bisher nur in der
+         * Tabelle (E529).
+         *
+         * `filament` und `carousel` waren als Wirkung angemeldet, aber NIEMAND
+         * hat je ihr Markup gebaut: der Glühfaden war ein 13 × 6 px grosses
+         * `::before`, und die Ring-CSS in `motion.css` hatte gar kein Element,
+         * auf das sie zeigen konnte — toter Stil. Nachgesehen mit einer Suche
+         * nach `ensure(` in dieser Datei: sechs Aufrufe, keiner für die beiden.
+         * ================================================================== */
+        if (ids.includes('filament'))
+            ensure(element, 'rmo-filament', glas => {
+                /* Zwei Drähte und eine Wendel dazwischen. Drei Elemente statt eines
+                   Bildes, damit der Faden die Schriftfarbe erben kann und in Hell
+                   wie Dunkel sitzt. */
+                glas.append(ornament('rmo-filament-bein'), ornament('rmo-filament-wendel'), ornament('rmo-filament-bein'));
+            });
+        if (ids.includes('carousel'))
+            ensure(element, 'rmo-carousel', ring => {
+                /* Fünf Karten auf einem Kreis. Die Zahl steht hier und nicht im Stil:
+                   der Winkel je Karte rechnet sich aus ihr, und eine sechste Karte
+                   wäre sonst eine stille Überlappung. */
+                const anzahl = 5;
+                ring.style.setProperty('--rmo-anzahl', String(anzahl));
+                for (let index = 0; index < anzahl; index++) {
+                    const karte = ornament('rmo-ring-karte');
+                    karte.style.setProperty('--rmo-index', String(index));
+                    ring.append(karte);
+                }
+            });
         if (ids.includes('letters')) {
             /* Text teilen, aber Symbole, Beschriftung und Listener behalten. */
             for (const node of Array.from(element.childNodes)) {
