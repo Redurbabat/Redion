@@ -7455,40 +7455,41 @@ tun, als sei die Folie leer.
 
 ---
 
-L153 · Der Klick schaltet die Folie noch nicht weiter — offen
+L153 · Der Klick schaltet die Folie weiter — GESCHLOSSEN bis auf zwei Sachen
 --------------------------------------------------------------------------
 
-E542 liest die Abdeckungen einer PowerPoint-Übungsfolie ein und kennt auch
-die Nummer des Klicks, bei dem jede weichen soll (`schritt`, aus
-`p:timing`). Benutzt wird die Nummer noch nicht:
+**Geschlossen am 12. September 2026 mit E544** (`test500`, 45 Zusagen, vier
+Gegenproben gefahren). Was hier stand und jetzt gebaut ist:
 
-- **Heute** wird jede Abdeckung einzeln angetippt (E266). Das ist gut zum
-  Lernen allein, aber nicht das, was Redur beschrieben hat: ein Klick, und
-  die Folie geht einen Schritt weiter — wie im Vortrag vor einer Klasse.
-- **Nötig wäre** ein Schrittzähler je Blatt und ein Griff, der beim nächsten
-  Klick alle Abdeckungen mit `schritt <= n` aufdeckt. Der Vortragsmodus
-  (`werkzeuge.ts`) blättert heute Folien; er müsste zuerst die Schritte
-  durchgehen und erst danach weiterblättern.
-- **Der Übergang fehlt ganz.** PowerPoint löst die Abdeckung mit `dissolve`
-  auf; in Redion verschwindet sie schlagartig. Ein weiches Ausblenden wäre
-  in der Bewegungsschicht (`motion.css`) eine Regel — aber nur beim
-  Aufdecken, nicht im Leerlauf (E528).
+- **Der Schrittzähler.** Ein Klick irgendwo auf die Folie deckt alle
+  Abdeckungen mit `schritt <= n` auf; erst wenn keine mehr aussteht, kommt
+  die nächste Folie. Zurück landet auf der vollen Folie, wie in PowerPoint.
+- **Der Übergang.** Der Deckel löst sich auf, statt zu verschwinden — ein
+  `transition`, kein `@keyframes`, im Leerlauf bewegt sich nichts (E528).
+- **Die Entscheidung, die hier offen stand:** Der Schrittstand wird NICHT
+  gespeichert. E266 sagt „Lernen darf den Speicher nicht anfassen", und das
+  ist dieselbe Frage.
 
-**Nicht gebaut, weil es eine Entscheidung braucht:** ob der Schritt am Blatt
-gespeichert wird oder nur im Sichtbaren lebt. E266 ist da eindeutig für die
-Abdeckung selbst — „Lernen darf den Speicher nicht anfassen" —, und dieselbe
-Regel spricht dafür, auch den Schrittstand nicht zu speichern.
+**Und ein Fehler, den diese Lücke nicht kannte, war der grössere.** Bevor
+ein Schrittzähler zählen kann, muss es Folien geben. Eine eingelesene
+PowerPoint-Datei war EINE Folie mit 27 Blättern übereinander — gemessen, und
+auf `bilder/l153-vorher.png` zu sehen. `EIGENE_FOLIE` im Kern gibt jedem
+Blatt und jeder PDF-Seite eine eigene Folie. Dazu füllt ein Blatt jetzt die
+Leinwand statt acht Prozent davon; die Regel dafür brauchte drei Anläufe,
+zwei davon sahen an genau einer Bildschirmgrösse richtig aus (E544).
 
-**Und zwei Sachen an der Optik**, an Redurs Bild des Originals verglichen
-(12. September):
+**Was offen bleibt — beides Optik, beides klein:**
 
 - **Der Deckel ist flach, im Original ein Verlauf.** Gemessen: weiss →
   `#FFCC00` in der Mitte → weiss, senkrecht (`a:lin ang="5400000"`). Redions
   Abdeckband ist eine Fläche in EINER Farbe; seit E542 kommt wenigstens die
   richtige Farbe aus dem kräftigsten Stopp statt aus einem Rückfall. Der
-  Verlauf selbst fehlt — Optik an einem Deckel, den man wegtippt.
-- **Die Navigationsknöpfe der Folie fehlen.** Unten rechts stehen im
+  Verlauf selbst fehlt. Er ginge: ein Feld `verlauf` an der Marke und ein
+  `<linearGradient>` im selben `<svg>` — es sind zwei Zeichner (die
+  Live-Schicht und `markenAlsSvg`), und beide bräuchten ein `<defs>`. Nicht
+  gebaut, weil es Optik an einem Deckel ist, den man wegtippt.
+- **Die Navigationspfeile der Folie fehlen.** Unten rechts stehen im
   Original drei blaue Pfeile (zurück, eine Folie zurück, weiter). Es sind
   Formen ohne Text und ohne Animation, also weder Textkasten noch Abdeckung
   — sie fallen durch beide Zweige. Für Redion sind sie ohnehin fremd: das
-  Blättern macht dort der Vortragsmodus.
+  Blättern macht dort der Vortragsmodus, und seit E544 macht es der Klick.

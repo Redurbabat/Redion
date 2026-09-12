@@ -3018,3 +3018,32 @@ body .rmo-liquid::after {
   body .rmo-liquid-klumpen { rotate: 0deg !important; }
   body .rmo-liquid-masse { filter: contrast(13) !important; }
 }
+
+/* ============================================================================
+ * DAS AUFLÖSEN DER ABDECKUNG IM VORTRAG (E544, L153)
+ * ----------------------------------------------------------------------------
+ * PowerPoint blendet den Deckel über der Antwort mit `dissolve` aus — in
+ * Redurs Datei tragen alle 22 Klickschritte genau diesen Filter. In Redion
+ * verschwand er bis hierher schlagartig, und ein Sprung mitten im Vortrag
+ * sieht aus wie ein Fehler, nicht wie eine Antwort.
+ *
+ * Es ist ein ÜBERGANG, keine Animation: er läuft nur, wenn `data-auf`
+ * gesetzt wird, und im Leerlauf bewegt sich nichts (E528). Deshalb hier eine
+ * `transition` und kein `@keyframes` — `getAnimations()` bleibt leer, und
+ * `test500 §3` misst genau das.
+ *
+ * Die Deckkraft selbst steht in `werkzeuge.css` bei `.praesi`: ohne diese
+ * Zeilen hier deckt sie trotzdem auf, nur eben hart. Eine Bewegungsregel
+ * darf nie die Voraussetzung für eine Funktion sein.
+ * ==========================================================================*/
+.praesi [data-ink-art="abdeck"]{
+  transition: fill-opacity .5s cubic-bezier(.22, 1, .36, 1);
+}
+
+/* KEINE EIGENE SPERRE FÜR `prefers-reduced-motion` — und das ist Absicht.
+   `grund.css` setzt unter diesem Schirm `transition-duration:.001ms
+   !important` für ALLES (E340). Eine zweite Sperre hier könnte gar nichts
+   mehr bewirken; sie sähe nur so aus. Genau dieser Fehler ist E340 schon
+   einmal passiert — dieselbe Regel stand zweimal, mit zwei Werten, und die
+   spätere gewann. Gemessen: unter `reducedMotion:'reduce'` liegt die Dauer
+   dieses Übergangs bei 1e-06 s, also aus. `test500 §3b` misst es. */

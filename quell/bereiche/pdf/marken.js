@@ -758,6 +758,14 @@ const Marken = (() => {
                 height: box.height, rx: 4, fill: color, 'pointer-events': 'all' });
             element.setAttribute('data-sid', idOf(mark));
             element.setAttribute('data-ink-art', art);
+            /* DIE SCHRITTNUMMER REIST MIT AN DEN KNOTEN (E544). Sie steht seit
+               E542 an der Marke — aus PowerPoints `p:timing` — und sagt, bei
+               welchem Klick dieser Deckel weichen soll. Der Vortrag liest sie
+               hier am Knoten ab, statt die Marken ein zweites Mal zu durchsuchen.
+               Ein Deckel OHNE Nummer bekommt auch kein Attribut: der wird von
+               Hand angetippt, und der Schrittzähler fasst ihn nie an (E266). */
+            if (Number(mark.schritt) > 0)
+                element.setAttribute('data-schritt', String(Number(mark.schritt)));
             return element;
         }
         else if (art === 'zettel' && points.length >= 2) {

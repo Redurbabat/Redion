@@ -1204,6 +1204,63 @@ const Werkzeuge = (() => {
         o.className = 'praesi';
         document.body.appendChild(o);
         let i = 0;
+        /* ---- DER SCHRITTZÄHLER (E544, L153) ---------------------------------
+         * PowerPoint blättert nicht bei jedem Klick weiter. Zuerst gehen die
+         * SCHRITTE der Folie durch — jede Abdeckung trägt die Nummer des Klicks,
+         * bei dem sie weichen soll (`schritt`, gelesen aus `p:timing`, E542) —
+         * und erst wenn keiner mehr aussteht, kommt die nächste Folie.
+         *
+         * NUR LAUFZEIT. Der Stand wird nie gespeichert: nach dem Beenden ist
+         * wieder alles zu. Das ist dieselbe Regel wie beim Abdeckband selbst
+         * („Lernen darf den Speicher nicht anfassen", E266), und sie ist hier
+         * dieselbe Antwort auf dieselbe Frage — nicht eine zweite Meinung.
+         */
+        let schritt = 0;
+        /** Alle Abdeckungen dieser Folie — auch die in Spalten. */
+        const deckelDerFolie = (f) => {
+            const raus = [];
+            const nimm = (b, tiefe) => {
+                if (!b || tiefe > 6)
+                    return;
+                if (Array.isArray(b.marken))
+                    for (const m of b.marken)
+                        if (m && m.art === 'abdeck')
+                            raus.push(m);
+                if (b.type === 'columns' || b.type === 'columns3' || b.type === 'spalte')
+                    for (const k of Store.childrenOf(b.id) || [])
+                        nimm(k, tiefe + 1);
+            };
+            for (const e of f?.bloecke || [])
+                nimm(e.b, 0);
+            return raus;
+        };
+        /** Wie viele Klicks diese Folie hat, bevor die nächste kommt. */
+        const schritteDerFolie = (f) => deckelDerFolie(f)
+            .reduce((m, d) => Math.max(m, Number(d.schritt) || 0), 0);
+        /* Angewandt wird am KNOTEN, nicht durch Neuzeichnen: ein Schritt soll
+           die Folie nicht neu aufbauen — sonst flackert jedes Bild, und eine von
+           Hand aufgedeckte Abdeckung fiele wieder zu. */
+        const deckelAnwenden = () => {
+            o.querySelectorAll('[data-ink-art="abdeck"][data-schritt]')
+                .forEach(knoten => {
+                const s = Number(knoten.getAttribute('data-schritt')) || 0;
+                if (s <= schritt)
+                    knoten.setAttribute('data-auf', '1');
+                else
+                    knoten.removeAttribute('data-auf');
+            });
+        };
+        /* Der Stand gehört in die Leiste, nicht nur in den Kopf des Vortragenden:
+           wer nicht sieht, dass noch zwei Schritte kommen, blättert zu früh. */
+        const zaehlerText = () => {
+            const max = schritteDerFolie(folien[i]);
+            return `${i + 1} / ${folien.length}` + (max ? ` · Schritt ${schritt}/${max}` : '');
+        };
+        const zaehlerAuffrischen = () => {
+            const feld = o.querySelector('.praesi-leiste span');
+            if (feld)
+                feld.textContent = zaehlerText();
+        };
         const zeichne = () => {
             const f = folien[i];
             /* Eine Seite ohne einen einzigen Block ergibt keine Folie. Vorher wäre
@@ -1222,11 +1279,18 @@ const Werkzeuge = (() => {
                     f.bloecke.map(({ b, tiefe }) => folieBlock(b, tiefe)).join('') +
                     '</div>' +
                     `<div class="praesi-leiste">` +
+                    /* Die beiden Marken heissen seit jeher `vor` und `zurueck`, und sie
+                       heissen verkehrt herum: `vor` trägt „‹" und geht zurück. Die
+                       WIRKUNG stimmt — umbenannt wird hier trotzdem nicht, weil die
+                       Namen in Prüfläufen stehen und ein Namenstausch mitten in einem
+                       anderen Bogen genau die Sorte stiller Änderung ist, die später
+                       niemand mehr zuordnet. */
                     `<button data-a="vor">‹</button>` +
-                    `<span>${i + 1} / ${folien.length}</span>` +
+                    `<span>${zaehlerText()}</span>` +
                     `<button data-a="zurueck">›</button>` +
                     `<button data-a="zu">Beenden (Esc)</button>` +
                     `</div>`;
+            deckelAnwenden();
         };
         const folieBlock = (b, tiefe) => {
             const ein = ` style="margin-left:${tiefe * 26}px"`;
@@ -1288,8 +1352,15 @@ const Werkzeuge = (() => {
                    beim Blatt daneben. Sonst regiert `.praesi img{max-height:52vh}`
                    die Höhe, und zwei gleich grosse A4-Seiten stehen unterschiedlich
                    hoch nebeneinander (gemessen: 442 gegen 541 px, §55). */
+                /* `--seitenmass` trägt DIESELBEN zwei Zahlen noch einmal, als Bruch
+                   zum Weiterrechnen. `aspect-ratio` allein reicht nicht: wer im
+                   Vortrag die Breite auf `100%` setzt, bekommt die Höhe an
+                   `max-height` gekappt, OHNE dass die Breite mitgeht — gemessen bei
+                   1920 × 1080: Verhältnis 1,965 statt 1,778. Mit dem Bruch rechnet
+                   `werkzeuge.css` die Breite aus der erlaubten Höhe aus, und dann
+                   stimmt es in beide Richtungen. */
                 return '<figure class="folie-blatt" ' +
-                    `style="aspect-ratio:${bw} / ${bh}">` +
+                    `style="aspect-ratio:${bw} / ${bh}; --seitenmass:${bw} / ${bh}">` +
                     (adr ? `<img src="${esc(adr)}" alt="Seite ${esc(b.nr || '')}">`
                         : `<div class="fehlt">Seite ${esc(b.nr || '')} — kein Bild</div>`) +
                     markenAlsSvg(b, bw, bh) + '</figure>';
@@ -1298,14 +1369,37 @@ const Werkzeuge = (() => {
                 const bw = Number(b.blattBreite) || 595.28;
                 const bh = Number(b.blattHoehe) || 841.89;
                 return '<figure class="folie-blatt papier" ' +
-                    `style="aspect-ratio:${bw} / ${bh}">` +
+                    `style="aspect-ratio:${bw} / ${bh}; --seitenmass:${bw} / ${bh}">` +
                     '<div class="blatt-text">' +
                     Store.childrenOf(b.id).map((k) => folieBlock(k, 0)).join('') +
                     '</div>' + markenAlsSvg(b, bw, bh) + '</figure>';
             }
             return b.text ? `<p${ein}>${Blocks.inline(b.text)}</p>` : '';
         };
-        const weiter = (n) => { i = Math.max(0, Math.min(folien.length - 1, i + n)); zeichne(); };
+        /* Auf eine bestimmte Folie springen. `aufVoll` heisst: dort ist schon
+           alles aufgedeckt — so kommt man von hinten zurück, wie in PowerPoint.
+           Wer zurückgeht, will sehen, was er gerade gezeigt hat, und nicht
+           dieselben drei Klicks noch einmal machen. */
+        const springe = (n, aufVoll = false) => {
+            i = Math.max(0, Math.min(folien.length - 1, n));
+            schritt = aufVoll ? schritteDerFolie(folien[i]) : 0;
+            zeichne();
+        };
+        const weiter = (n) => {
+            if (n > 0 && schritt < schritteDerFolie(folien[i])) {
+                schritt++;
+                deckelAnwenden();
+                zaehlerAuffrischen();
+                return;
+            }
+            if (n < 0 && schritt > 0) {
+                schritt--;
+                deckelAnwenden();
+                zaehlerAuffrischen();
+                return;
+            }
+            springe(i + n, n < 0);
+        };
         const tasten = (e) => {
             if (e.key === 'Escape') {
                 schliessen();
@@ -1319,10 +1413,13 @@ const Werkzeuge = (() => {
                 e.preventDefault();
                 weiter(-1);
             }
+            /* Home und End springen über ALLES hinweg — sie dürfen nicht in den
+               Schritten hängen bleiben, sonst kommt man aus einer Folie mit zehn
+               Abdeckungen nicht mehr heraus. */
             if (e.key === 'Home')
-                weiter(-999);
+                springe(0);
             if (e.key === 'End')
-                weiter(999);
+                springe(folien.length - 1, true);
         };
         const schliessen = () => {
             o.remove();
@@ -1337,6 +1434,22 @@ const Werkzeuge = (() => {
                 return weiter(-1);
             if (elVon(e)?.closest('[data-a="zurueck"]'))
                 return weiter(1);
+            /* Die Leiste ist Bedienung, keine Folie — ein Klick daneben darf nicht
+               weiterschalten, sonst springt man beim Zielen auf „Beenden". */
+            if (elVon(e)?.closest('.praesi-leiste'))
+                return;
+            /* EIN TIPP AUF DIE ABDECKUNG DECKT GENAU DIESE AUF (E266), statt
+               weiterzuschalten. Das ist der Weg für eine von Hand gesetzte
+               Abdeckung ohne Schrittnummer — und für den Vortragenden, der eine
+               Antwort ausser der Reihe zeigen will. Aufdecken ist hier
+               einseitig: auf der Leinwand wieder zuzudecken hilft niemandem. */
+            const deckel = elVon(e)?.closest?.('[data-ink-art="abdeck"]');
+            if (deckel) {
+                deckel.setAttribute('data-auf', '1');
+                return;
+            }
+            /* Und sonst: Redurs Satz — „wenn ich klicke, die Antwort zeigen". */
+            weiter(1);
         });
         document.addEventListener('keydown', tasten);
         zeichne();

@@ -894,6 +894,17 @@ Keine — an diesem Tag kam keine Nachricht.
 **Besserer Prompt:** 
 
 
+**26 · ca. 23:35**
+
+> mach weiter mit den folien klick
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -919,11 +930,12 @@ Keine — an diesem Tag kam keine Nachricht.
 | E541 — vier Funde aus Redurs echter .ppsx: unbekannte Endung, 27-fach abgelegtes Logo, Kopfzeile als Titel, 662 ms | `28e0aa28` → `f6ed8fb8` | 22:45 – 22:53 | ca. 8 min | test499 auf 22 Zusagen |
 | E542 — Die Antworten waren alle offen: PowerPoints Ausblend-Animationen werden zu Redions Abdeckband | `f6ed8fb8` → `811db626` | 22:53 – 23:02 | ca. 9 min | test499 bleibt 22; die Deckelfarbe wird seit 811db626 aus dem Verlauf gelesen statt geraten |
 | E543 — Der Wähler verschwieg, was der Einleser längst kann: Redurs Frage nach dem Hochladen fand den unsichtbaren Weg | `811db626` → `(dieser Bogen)` | 23:10 – 23:30 | ca. 20 min | test497 §3 neu, von 20 auf 31 grün, sechs Zusagen zuerst rot gesehen |
+| E544 — Ein Blatt füllt eine Folie, und der Klick schaltet sie weiter (L153 geschlossen) | `(nach E543)` → `(dieser Bogen)` | 23:35 – 00:40 | ca. 65 min | test500 neu, 45 Zusagen, vier Gegenproben gefahren; test183/191/293/266/499 grün |
 
 #### Zahlen des Tages
 
-- **commits:** 18
-- **entscheidungen:** 16
+- **commits:** 19
+- **entscheidungen:** 17
 
 #### Das grösste Problem
 
@@ -948,6 +960,7 @@ Der zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glaskno
 | 20:29 | E533 und L149 berichtigt: der beschriebene Bau hat nicht stattgefunden. | Der Absatz war beim Schreiben des Eintrags schon formuliert und nicht nachgezogen worden, nachdem alle zehn Agenten am Sitzungslimit starben. Aufgeschrieben, was geplant war, statt was geschah. | keins — nur Dokumentation; der falsche Absatz bleibt mit Nachtrag stehen, damit der Fehler auffindbar ist statt weggeputzt (§35) |
 | 22:45 | `pptxLesen` in `bereiche/dateien/einlesen.ts`: eine Folie wird ein `blatt`-Block mit Marken, Reihenfolge aus `p:sldIdLst`. | Redur: „1:1 wie PowerPoint". Der Weg über Text allein hätte jede Übungsfolie zerstört — die Antworten liegen unter Abdeckungen. | keins an Daten — das Original hängt seit E538 immer mit dran; die Umwandlung ist verlustbehaftet und sagt es im Hinweis |
 | 23:25 | `accept` des Hauptwählers und die zwei Menütexte um PowerPoint und PDF ergänzt. | Redur: „wie kann ich im Redion die Daten hochladen?" — beim Nachsehen stand seine .ppsx im Dateifenster grau, obwohl der Zweig 17 Zeilen tiefer sie liest. | keins an Daten — ein Filter im Dateifenster; `test497 §3` hält die drei Stellen künftig zusammen |
+| 00:10 | `EIGENE_FOLIE` im Kern, Schrittzähler im Vortrag, weiches Auflösen, und ein Blatt füllt die Leinwand. | Redur: „mach weiter mit den folien klick." Davor lag ein grösserer Fehler: eine eingelesene Präsentation war EINE Folie mit allen Blättern übereinander — gemessen, und nur auf dem Bild zu sehen. | keins an Daten — der Schrittstand wird nie gespeichert (E266); `Folien.teilen` ist gemeinsame Regel, deshalb fünf Nachbarläufe mitgefahren |
 
 ---
 

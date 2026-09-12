@@ -451,6 +451,42 @@ a.bl:hover{color:var(--text)}
 }
 .praesi-leiste button:hover{background:var(--bg-hover); color:var(--text)}
 
+/* DAS ABDECKBAND IM VORTRAG (E544, L153). Im eigenen Heft bleibt ein
+   aufgedecktes Band als gestrichelter Schatten stehen — man soll sehen, DASS
+   dort eines liegt, und ein zweiter Tipp schliesst es wieder (§38, siehe
+   `bausteine.css`). Auf der Leinwand ist das falsch: dort ist die Antwort
+   jetzt die Antwort, und ein Kasten darum lenkt nur ab. Also ganz weg.
+   Das weiche Auflösen dazu steht in `motion.css` — Bewegung gehört dorthin. */
+/* EIN BLATT ALLEIN AUF DER FOLIE FÜLLT DIE FOLIE (E544).
+   `.folie-blatt{max-width:min(100%,45vh)}` in `bausteine.css` ist für den
+   Fall gebaut, für den es geschrieben wurde (E109): zwei A4-Seiten
+   NEBENEINANDER in Spalten, hochkant, da ist die Höhe der knappe Wert.
+   Eine eingelesene PowerPoint-Folie ist das Gegenteil — 16:9, allein, und
+   sie IST die Folie. Mit derselben Regel stand sie auf 370 × 208 px in
+   einem 1280er Fenster: acht Prozent der Leinwand, der Rest schwarz.
+   Gesehen auf `bilder/l153-1-zu.png`; kein Prüflauf konnte das melden, weil
+   nichts fehlte (§55.1).
+   Nur bei `:only-child` — in Spalten bleibt die Regel von E109 unberührt,
+   und `test183` misst dort weiter zwei gleich hohe Blätter. */
+.praesi .folie:has(> .folie-blatt:only-child){max-width:none; display:flex; justify-content:center}
+/* DIE BREITE WIRD GERECHNET, DIE HÖHE FOLGT. Zwei Entwürfe davor waren
+   falsch, und beide sahen an EINER Bildschirmgrösse richtig aus:
+     · `height:76vh` — am Telefon stand die 16:9-Folie dann hochkant und der
+       Text waagrecht gequetscht, weil `max-width` die Breite nahm und
+       `preserveAspectRatio="none"` am Marken-SVG alles mitzieht.
+     · `width:100%` + `max-height` — bei 1920 × 1080 kappte `max-height` die
+       Höhe, ohne die Breite mitzunehmen: Verhältnis 1,965 statt 1,778.
+   `aspect-ratio` leitet nur die EINE Achse ab, die man offen lässt; beim
+   Zuschneiden an einer Schranke geht es nicht mit. Also die Breite selbst
+   rechnen, aus dem Seitenmass, das `folieBlock` mitgibt. Gemessen bei
+   320, 390, 1280 und 1920 px: überall 1,778 und ganz im Bild. */
+.praesi .folie > .folie-blatt:only-child{
+  width:min(100%, calc(76vh * (var(--seitenmass, 1 / 1)))); height:auto; max-width:100%;
+}
+
+.praesi [data-ink-art="abdeck"]{cursor:pointer}
+.praesi [data-ink-art="abdeck"][data-auf="1"]{fill-opacity:0; pointer-events:none}
+
 /* --- Statistik ------------------------------------------------------------------ */
 .stat-gitter{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line)}
 .stat-k{background:var(--bg-side); padding:18px 14px; text-align:center}

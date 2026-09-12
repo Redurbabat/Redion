@@ -803,6 +803,10 @@ const ChronikDaten = {
     {
      "zeit": "ca. 23:10",
      "wortlaut": "wie kann ich im redio die daten hochladen ?"
+    },
+    {
+     "zeit": "ca. 23:35",
+     "wortlaut": "mach weiter mit den folien klick"
     }
    ],
    "arbeit": [
@@ -973,11 +977,19 @@ const ChronikDaten = {
      "zeitraum": "23:10 – 23:30",
      "dauer": "ca. 20 min",
      "pruefungen": "test497 §3 neu, von 20 auf 31 grün, sechs Zusagen zuerst rot gesehen"
+    },
+    {
+     "was": "E544 — Ein Blatt füllt eine Folie, und der Klick schaltet sie weiter (L153 geschlossen)",
+     "vonCommit": "(nach E543)",
+     "bisCommit": "(dieser Bogen)",
+     "zeitraum": "23:35 – 00:40",
+     "dauer": "ca. 65 min",
+     "pruefungen": "test500 neu, 45 Zusagen, vier Gegenproben gefahren; test183/191/293/266/499 grün"
     }
    ],
    "zahlen": {
-    "commits": 18,
-    "entscheidungen": 16
+    "commits": 19,
+    "entscheidungen": 17
    },
    "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
    "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -1023,6 +1035,12 @@ const ChronikDaten = {
      "was": "`accept` des Hauptwählers und die zwei Menütexte um PowerPoint und PDF ergänzt.",
      "warum": "Redur: „wie kann ich im Redion die Daten hochladen?\" — beim Nachsehen stand seine .ppsx im Dateifenster grau, obwohl der Zweig 17 Zeilen tiefer sie liest.",
      "risiko": "keins an Daten — ein Filter im Dateifenster; `test497 §3` hält die drei Stellen künftig zusammen"
+    },
+    {
+     "zeit": "00:10",
+     "was": "`EIGENE_FOLIE` im Kern, Schrittzähler im Vortrag, weiches Auflösen, und ein Blatt füllt die Leinwand.",
+     "warum": "Redur: „mach weiter mit den folien klick.\" Davor lag ein grösserer Fehler: eine eingelesene Präsentation war EINE Folie mit allen Blättern übereinander — gemessen, und nur auf dem Bild zu sehen.",
+     "risiko": "keins an Daten — der Schrittstand wird nie gespeichert (E266); `Folien.teilen` ist gemeinsame Regel, deshalb fünf Nachbarläufe mitgefahren"
     }
    ]
   }

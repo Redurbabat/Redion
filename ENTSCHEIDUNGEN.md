@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-523 Entscheidungen, E1 bis E543 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+524 Entscheidungen, E1 bis E544 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -587,6 +587,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E541** — Vier Funde aus einer echten PowerPoint-Datei, die keine erfundene je gezeigt hätte
 * **E542** — Die Antworten waren alle offen: PowerPoints Ausblend-Animationen werden zu Redions Abdeckband
 * **E543** — Der Wähler verschwieg, was der Einleser längst kann: `accept`, Menütext und Zweig wandern zusammen
+* **E544** — Ein Blatt füllt eine Folie, und der Klick schaltet sie weiter: `EIGENE_FOLIE`, Schrittzähler, weiches Auflösen, Vollbild
 
 ---
 
@@ -43399,3 +43400,125 @@ bleibt 22.
 
 Bild: `bilder/menue-import.png` und `-handy.png` — am Telefon fällt „Ganzen
 Ordner einlesen" weg, weil Telefon-Browser keine Ordner wählen können.
+
+---
+
+E544 — Ein Blatt füllt eine Folie, und der Klick schaltet sie weiter
+--------------------------------------------------------------------------
+
+Redur: „mach weiter mit den Folien-Klick." Gemeint war L153: ein Klick soll
+die Folie einen Schritt weiterschalten, statt jede Abdeckung einzeln
+anzutippen.
+
+**Davor lag ein Fehler, den L153 nicht kannte.** Bevor ein Schrittzähler
+Sinn ergibt, muss es Folien geben, die er zählen kann. Die gab es nicht.
+
+`Folien.teilen` beginnt eine neue Folie bei Trennlinie, Überschrift 1 und
+Überschrift 2 (E297). Der `.pptx`-Einleser legt pro PowerPoint-Folie EINEN
+`blatt`-Block als direktes Kind der Seite — ohne Trenner dazwischen. Gemessen
+an drei Folien:
+
+```txt
+Folien.teilen  ->  1 Folie, 3 Einträge
+Vortrag        ->  „1 / 1", drei Blätter übereinander,
+                   das dritte halb ausserhalb des Bildes
+```
+
+Redurs Datei hat 27 Folien. Der ganze Vortrag war eine endlose Spalte.
+**Gesehen auf `bilder/l153-vorher.png`, nicht im Code** — im Quelltext fehlte
+nichts, es stand nur alles am falschen Ort (§55.1).
+
+**Entschieden — vier Stücke:**
+
+**1. `EIGENE_FOLIE = ['blatt', 'pdfseite']` im Kern.** Ein Blatt und eine
+PDF-Seite sind eine ganze Seite Papier; zwei davon teilen sich nie eine
+Folie. Die Regel steht dort, wo die übrige Teilungsregel steht — nicht im
+Vortrag abgeschrieben, denn zwei Teilungen, die auseinanderlaufen, sind
+schlimmer als eine (E297).
+
+Nur auf der obersten Ebene (`tiefe === 0`). In Spalten gehören Blatt und
+PDF-Seite ausdrücklich NEBENeinander — der Fall aus `test183`, und dort ist
+es richtig so. Dazu zwei Kleinigkeiten, die beim Messen auffielen: zwischen
+zwei Blättern entstand eine leere Folie (aus drei wurden fünf, jede zweite
+schwarz), und am Ende stand immer eine leere. Beide fallen jetzt weg — eine
+Seite ohne alles ergibt aber weiterhin genau eine Folie, sonst liefe der
+Vortrag an `folien[0] === undefined`.
+
+**2. Der Schrittzähler im Vortrag.** Jede Abdeckung trägt seit E542 die
+Nummer des Klicks, bei dem sie weichen soll (`schritt`, aus `p:timing`).
+Benutzt wurde sie nie. Jetzt: ein Klick — irgendwo auf die Folie, nicht nur
+auf einen Knopf — deckt alle Abdeckungen mit `schritt <= n` auf; erst wenn
+keine mehr aussteht, kommt die nächste Folie. Zurück landet auf der VOLLEN
+Folie, wie in PowerPoint: wer zurückgeht, will sehen, was er gerade gezeigt
+hat.
+
+Drei Dinge bleiben ausdrücklich, wie sie waren:
+
+- **Eine Abdeckung OHNE Nummer fasst der Schrittzähler nie an.** Die ist von
+  Hand gesetzt (E266) und wird einzeln angetippt — auch im Vortrag, wo ein
+  Tipp auf den Deckel genau diesen aufdeckt, statt weiterzuschalten.
+- **Nichts wird gespeichert.** Der Schrittstand lebt nur im Sichtbaren; nach
+  dem Beenden ist wieder alles zu. Dieselbe Regel wie beim Abdeckband selbst
+  („Lernen darf den Speicher nicht anfassen", E266) — dieselbe Antwort auf
+  dieselbe Frage, nicht eine zweite Meinung. L153 hatte diese Entscheidung
+  ausdrücklich offen gelassen; hier ist sie.
+- **`Home` und `End` springen über alles hinweg.** Sonst käme man aus einer
+  Folie mit zehn Abdeckungen nicht mehr heraus.
+
+**3. Das weiche Auflösen.** PowerPoint blendet den Deckel mit `dissolve`
+aus; in Redurs Datei tragen alle 22 Klickschritte genau diesen Filter. Es ist
+ein `transition` und kein `@keyframes`: im Leerlauf bewegt sich nichts
+(E528), `getAnimations()` bleibt leer, und `test500 §3` misst das.
+
+Auf der Leinwand verschwindet der Deckel GANZ. Im eigenen Heft bleibt er als
+gestrichelter Schatten stehen — dort soll man sehen, dass ein Band liegt, und
+ein zweiter Tipp schliesst es (§38). Vor einer Klasse ist das falsch: die
+Antwort ist dann die Antwort.
+
+Eine eigene `prefers-reduced-motion`-Sperre wurde geschrieben und wieder
+entfernt: `grund.css` setzt unter diesem Schirm `transition-duration:.001ms
+!important` für alles (E340). Die zweite Sperre hätte nichts bewirkt — sie
+hätte nur so ausgesehen, und genau dieser Fehler ist E340 schon einmal
+passiert.
+
+**4. Die Folie füllt die Leinwand.** `.folie-blatt{max-width:min(100%,45vh)}`
+ist für zwei A4-Seiten NEBENeinander gebaut (E109). Eine 16:9-Folie allein
+stand damit auf 370 × 208 px in einem 1280er Fenster — acht Prozent.
+
+Dieses Stück brauchte **drei Anläufe, und zwei davon sahen an genau einer
+Bildschirmgrösse richtig aus**:
+
+```txt
+height:76vh              Rechner gut — Telefon: 16:9-Folie hochkant,
+                         Text waagrecht gequetscht
+width:100% + max-height  Telefon gut — 1920×1080: Verhältnis 1,965 statt 1,778
+width:min(100%, 76vh*v)  320 / 390 / 1280 / 1920 px: überall 1,778
+```
+
+Der Grund: `aspect-ratio` leitet nur die EINE Achse ab, die man offen lässt;
+beim Zuschneiden an `max-height` geht es nicht mit. Also trägt `folieBlock`
+das Seitenmass als zweite Marke `--seitenmass` mit, und das CSS rechnet die
+Breite aus der erlaubten Höhe. Die Verzerrung selbst kam von
+`preserveAspectRatio="none"` am Marken-SVG — das zieht bei einem falschen
+Kasten alles mit.
+
+**Die Alternative** zu Stück 1 wäre gewesen, im Einleser einen `divider`
+zwischen die Blätter zu setzen. Verworfen: das schreibt 26 Trennlinien in
+Redurs Daten, die er nie gewollt hat, und es gälte nur für PowerPoint —
+eine eingelesene PDF hätte dasselbe Problem weiter.
+
+**Was es kostet:** `Folien.teilen` ist gemeinsame Regel; die Änderung wirkt
+auch auf den `.pptx`-EXPORT (`alsZeilen`) und auf jede Seite mit einer
+PDF-Seite darauf. Nachgesehen und gefahren: `test183` (Blatt und PDF-Seite in
+Spalten), `test191` (alte Spaltenform), `test293` (die Regel selbst und der
+Export), `test266` (der eine Zeichner), `test499` (der `.pptx`-Einleser) —
+alle grün.
+
+`test500` ist neu: 45 Zusagen, vier Gegenproben wirklich gefahren, die Zahlen
+stehen gemessen im Kopf der Datei. Bilder: `bilder/l153-vorher.png` und
+`l153-1-zu` bis `l153-4-folie2`, dazu `l153-handy*`.
+
+**Offen und in L153 stehen geblieben:** der Verlauf am Deckel (im Original
+weiss → `#FFCC00` → weiss) und die drei blauen Navigationspfeile. Beides
+Optik an etwas, das man wegtippt — und die Pfeile macht in Redion der
+Vortragsmodus.
