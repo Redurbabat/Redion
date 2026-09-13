@@ -36,6 +36,7 @@ sind der teuerste Teil und der lehrreichste.
 | P20 | 2026-09-09 | Ein Zeugnis im Netz — gefunden in einem Protokoll, das wegen etwas anderem kam | hoch | — |
 | P21 | 2026-09-12 | Zwei Regeln, die geschrieben waren und nie jemand gesehen hat | 🟠 mittel | E532 |
 | P22 | 2026-09-12 | Ein Eintrag beschrieb einen Bau, den es nicht gab | 🟠 mittel | E533 |
+| P23 | 2026-09-13 | Eine harte Zahl hat gemeldet — und was sie meldete, war nicht die Zahl | 🟡 klein | E549 |
 
 ---
 
@@ -429,4 +430,27 @@ sind der teuerste Teil und der lehrreichste.
 **Warum keine Uhr.** —
 
 **Der Beweis.** Die Agentenprotokolle: zehn Abbrüche mit `rate_limit`, HTTP 429, und im Arbeitsordner genau zwei geschriebene Fragmente von zehn.
+
+
+---
+
+## P23 · Eine harte Zahl hat gemeldet — und was sie meldete, war nicht die Zahl
+
+*2026-09-13 · 🟡 klein · E549*
+
+**Das Bild.** `test114` wurde rot: „Es führt zu einundzwanzig Sachen" — es waren zweiundzwanzig geworden, weil dieser Bogen „Präsentation" ins Anlegen-Menü gestellt hat.
+
+**Die falsche Vermutung.** Die naheliegende Behebung: die 21 auf 22 heben, fertig. Genau das stand im Prüflauf verboten — die Zeile trug seit E236 den Satz mit, der nächste Zuwachs brauche „eine Antwort, nicht nur eine neue Zahl".
+
+**Wie es gefunden wurde.** Im Stapel-Lauf nach dem Bogen, 1 von 13 Läufen rot. Nicht durch Hinsehen: das Blatt sieht mit 22 Wegen genauso aus wie mit 21 — man sieht ja beide Male nur den Anfang.
+
+**Die Ursache.** Kein Fehler im Code, sondern eine überschrittene Grenze. Gemessen bei 428 × 926: 22 Wege in 6 Überschriften, Liste 757 px hoch, Inhalt 1787 px, ohne Rollen sichtbar 10 von 22. Das Blatt war als WEGWEISER gebaut — es sollte dem, der nicht weiss, dass Redion Karteikarten kann, alles zeigen. Es zeigt noch ein Drittel.
+
+**Die Lösung.** Die Zahl gehoben UND die Antwort gegeben: L154 in `LUECKEN.md` mit den drei möglichen Ordnungen und ihren Kosten (zusammenklappbare Gruppen, Suchfeld, zwei Ebenen). Keinen Weg weggenommen — jeder ist eine echte Funktion (§47). Dazu zwei neue Zusagen in `test114`, die für eine rollende Liste gelten: dass sie wirklich rollt (1787 in 757) und dass ihr letzter Eintrag unten ankommt (64 px, ganz sichtbar).
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Beide neuen Zusagen rot gesehen (§50): einmal das Rollen im Messen weggenommen — „ganz sichtbar: false"; einmal die Roll-Schwelle auf +2000 gesetzt — „1787 px Inhalt in 757 px", damit klar ist, dass die Zeile die Messung liest und kein festes `true`. Beide Male 154 ok / 1 offen; behoben 155 grün.
+
+**Die Lehre.** Eine harte Zahl in einem Prüflauf ist kein Ärgernis, sondern der einzige Melder, den eine wachsende Liste hat — und sie meldet nicht immer das, wonach sie aussieht. Hier meldete sie nicht „die Zahl stimmt nicht", sondern „das Blatt ist etwas anderes geworden". Dieselbe Zeile war ein Jahr davor schon einmal still rot (E513 → E522), weil niemand sie hörte; diesmal war der Preis nur ein Absatz statt eines vollen Laufs.
 

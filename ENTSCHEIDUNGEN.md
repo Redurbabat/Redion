@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-528 Entscheidungen, E1 bis E548 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+529 Entscheidungen, E1 bis E549 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -592,6 +592,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E546** — Eine Folie zu zeigen darf sie nicht ändern: 27 Folien öffnen legte 27 Blöcke an; und die Präsentation geht jetzt als Foliensatz auf
 * **E547** — Die Folienliste zeigt Folien: Mass vom Block, Marken statt Bleistift, Name statt 27-mal „A4-Blatt"
 * **E548** — „Präsentation" ist ein Weg: Eintrag im Anlegen-Menü, acht PowerPoint-Layouts, ein Wähler, der sie zeigt
+* **E549** — Reiter „Präsentation" im Band, Folien-Menü in der Dokumentleiste — das ganze Band dort war gemessen schlechter
 
 ---
 
@@ -43883,3 +43884,138 @@ und der Grund gehört in diese Entscheidung, weil er §55.2 in Reinform ist:
 schon" über nichts. Jede trägt jetzt ihre Mindestzahl daneben.
 
 Bilder: `bilder/pp-waehler.png`, `bilder/pp-waehler-handy.png`.
+
+---
+
+E549 — Das Menüband bekommt einen Reiter für Folien, das Folien-Menü aber eine eigene Leiste
+--------------------------------------------------------------------------
+
+Redur: „oben mit Menü." Beim Nachsehen war die Lage wieder eine andere als
+erwartet, und zwar in beide Richtungen.
+
+**Redion HAT ein Menüband.** `register/menueband.ts` (1156 Zeilen Katalog)
+und `schale/aufbau/menueband.ts` (1371 Zeilen Zeichner), mit Reitern Start ·
+Einfügen · Zeichnen · Verlauf · Überprüfen · Ansicht · Hilfe. Gebaut, weil
+Redur es schon einmal wollte.
+
+**Es ist nur zweimal aus gutem Grund unsichtbar:**
+
+```txt
+studio.css      Am Rechner ist es eine LADE hinter #studio-tools. Der
+                Studio-Kopf zeigt Werkzeuge, Suche, KI und Konto schon;
+                ein zweiter Kopf wäre doppelt (6. September).
+pdf-studio.css  Im Dokumentmodus verschwindet alles Gerüst, auch
+                #menueband — dort regiert die Dokumentleiste.
+```
+
+**Und es hatte nichts für Folien.** Kein „Neue Folie", kein „Präsentieren",
+in keinem der sieben Reiter.
+
+### 1. Der Reiter „Präsentation"
+
+Im Register, mit seinen Knöpfen als LIEFERANT aus `bereiche/vorlagen/folien.ts`
+— nicht als Aufzählung in der Registerdatei. Das ist derselbe Grund wie beim
+Reiter „Einfügen": der Katalog gehört dem Bereich, der die Sache kann.
+
+`reiter()` blendet ihn von selbst aus, wenn kein Foliensatz offen ist: jeder
+Eintrag trägt `zeigen()`, und ein Reiter ohne sichtbaren Eintrag kommt gar
+nicht erst in die Liste. Nachgesehen, nicht gehofft.
+
+**Kein einziger Knopf tut etwas Neues** — das ist die Regel, die ganz oben in
+`register/menueband.ts` steht: ein Band ist eine ZWEITE ANSICHT auf das, was
+Redion kann, keine zweite Fassung davon.
+
+### 2. Was ein Foliensatz ist: quer
+
+`istFoliensatz` fragte bis hierher nur „Dokumentmodus und irgendein Blatt".
+Ein Notizheft ist von aussen dasselbe. Der Unterschied, den man messen kann,
+ist das Papier: eine Folie ist breiter als hoch (PowerPoints Vorgabe ist
+16:9, Redions eingelesene Folien auch), ein A4-Heft ist 595 auf 842.
+
+Was das nicht trifft: eine hochkant gebaute Präsentation. Selten — und die
+Verwechslung in die andere Richtung wäre teurer: ein Folienmenü über jedem
+Notizheft.
+
+### 3. Und der erste Versuch war falsch — gemessen, nicht geahnt
+
+Das Naheliegende war, `#menueband` im Dokumentmodus für Foliensätze wieder
+einzublenden. Gebaut, gemessen, zurückgenommen:
+
+```txt
+#menueband im Foliensatz:  x 0, y 48, 1440 × 852 px, Klasse „ist-zu"
+der Inhalt darunter:       x 0, y 48, 1440 × 852 px
+```
+
+Deckungsgleich. Im Bild stand oben rechts eine zugeklappte Ecke „Werkzeuge ⌄"
+QUER über der Dokumentleiste. Genau die zwei Köpfe übereinander, vor denen
+die Zeile in `pdf-studio.css` steht — und die Zeile hat recht.
+
+**Also sitzt das Folien-Menü IN der Dokumentleiste**, als Knopf „📽️ Folie"
+neben „Details" und „Präsentieren". Er liest denselben Katalog:
+`Register.menueband.inReiter('praesentation')`. Eine Liste, zwei Ansichten
+(§8) — wer dem Bereich einen Knopf hinzufügt, hat ihn an beiden Orten.
+
+Das Menü zeigt: **Folien** (Neue Folie, Folienliste) · **Vortrag**
+(Präsentieren) · **Ausgeben** (Als PowerPoint, Als PDF, Drucken).
+
+### Zwei Fehler auf dem Weg, beide nur im Bild zu sehen
+
+- **Die Gruppenüberschriften waren leer.** Das Feld in `inReiter()` heisst
+  `gruppe`, nicht `name`. Im Menü standen drei graue Streifen von 12 px ohne
+  Text — und der Prüflauf blieb grün, weil er das REGISTER las statt das
+  Menü. Die Zusage misst jetzt den gezeichneten Text (§55.2).
+- **Die Namen brachen auf drei Zeilen um.** Der Hinweis stand als `.sub`
+  daneben und nahm den Platz: „Neue / Folie", gemessen 56 px statt 35. Er
+  steht jetzt am `title` und im `aria-label` — für Zeiger und
+  Vorleseprogramm dasselbe, im Menü kein Umbruch (§38).
+
+**Was offen bleibt:** ein echtes Menüband mit Reitern ÜBER der Folie, wie in
+PowerPoint. Dafür müsste die Dokumentleiste dem Band Platz machen, statt es
+zu verdrängen — ein Layoutbogen, kein Katalogbogen. Steht unter O4.
+
+`test505` neu, 26 Zusagen, vier Gegenproben gefahren (25/1, 14/12, 23/3,
+24/2 — gemessen). Die vierte ist die wichtige: sie prüft nicht, ob etwas DA
+ist, sondern ob es WEGBLEIBT, wo es nicht hingehört.
+
+Bild: `bilder/mb-folienmenue.png`.
+
+### Der dritte Fehler stand nicht im Bild, sondern in einer Zahl
+
+`test114` zählt die Wege hinter dem „+" **hart** — und trug seit E236 eine
+Frage mit: „Wegweiser oder Liste?" Bei einundzwanzig stand dort, der nächste
+Zuwachs brauche eine Antwort, nicht nur eine neue Zahl.
+
+Dieser Bogen hat den zweiundzwanzigsten gebracht (die Präsentation steht in
+„Zeichnen", eine siebte Überschrift kam nicht dazu). Die Zeile wurde rot,
+und die Antwort ist gemessen, bei 428 × 926, das Blatt offen, vor dem
+Rollen:
+
+```txt
+22 Wege in 6 Überschriften
+Liste 757 px hoch, Inhalt 1787 px      →  sie rollt
+ohne zu rollen sichtbar:  10 von 22
+gerollt: der letzte Weg liegt ganz darin, 64 px hoch
+```
+
+**Zehn von zweiundzwanzig — also „Liste".** Ein Wegweiser zeigt, was es
+gibt; dieses Blatt zeigt noch ein Drittel davon. Das ist keine Kleinigkeit:
+gebaut wurde es für den, der NICHT weiss, dass Redion Karteikarten kann, und
+genau der rollt nicht.
+
+**Was daraus nicht folgt: einen Weg wegnehmen.** Jeder ist eine echte
+Funktion (§47). Die Lösung ist eine Ordnung, die mit Zuwachs umgehen kann —
+zusammenklappbare Gruppen, ein Suchfeld oder zwei Ebenen. Keine davon ist
+entschieden; die drei stehen mit ihren Kosten als **L154** in `LUECKEN.md`.
+
+Bis dahin hält `test114` zwei Zusagen, die für eine rollende Liste gelten:
+dass sie wirklich rollt und dass ihr letzter Eintrag unten ankommt. Beide
+Gegenproben gefahren, beide rot geworden (154 ok / 1 offen, je) — die eine
+ohne das Rollen im Messen, die andere mit der Roll-Schwelle auf +2000, damit
+klar ist, dass die Zeile die Messung liest und kein festes `true`.
+`test114` steht damit bei 155 grün statt 152 grün und 1 offen.
+
+**Die Lehre, und sie ist älter als dieser Bogen:** eine harte Zahl in einem
+Prüflauf ist kein Ärgernis, sondern der einzige Melder, den eine wachsende
+Liste hat. Sie war schon einmal still rot (E513 → E522), weil niemand sie
+hörte. Diesmal hat sie gemeldet — und was sie meldete, war nicht „die Zahl
+stimmt nicht", sondern „das Blatt ist etwas anderes geworden".

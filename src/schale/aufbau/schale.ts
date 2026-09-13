@@ -959,6 +959,7 @@ const App = (() => {
        so faellt sie auch bei jedem fruehen Ausstieg zurueck (Sonderansicht,
        leere Seite, Sperrbildschirm). */
     delete document.body.dataset['dokument'];
+    delete document.body.dataset['foliensatz'];
     kiAmDokumentAnpassen(false);
 
     if (sonder) {
@@ -1005,6 +1006,17 @@ const App = (() => {
       wrap.className = 'wide document-page';
       wrap.innerHTML = '';
       document.body.dataset['dokument'] = 'an';
+      /* EIN FOLIENSATZ BEKOMMT SEIN MENÜBAND (E549). Redur: „oben mit Menü."
+         `pdf-studio.css` räumt im Dokumentmodus alles Gerüst weg, auch
+         `#menueband` — richtig für eine PDF und für ein Notizheft, wo die
+         Dokumentleiste alles trägt. Eine Präsentation ist der eine Fall, für
+         den PowerPoints Muster gilt: Reiter oben, Folien links.
+         Die Marke steht hier und nicht im Stilblatt, weil nur hier bekannt
+         ist, WELCHES Dokument offen ist. Das Stilblatt liest sie nur. */
+      const folien = typeof Folienvorlagen !== 'undefined' &&
+                     Folienvorlagen.istFoliensatz(p.id);
+      if (folien) document.body.dataset['foliensatz'] = 'an';
+      else delete document.body.dataset['foliensatz'];
       kiAmDokumentAnpassen(true);
       DocumentMode.render(wrap, p);
     } else {

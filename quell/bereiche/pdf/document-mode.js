@@ -638,6 +638,82 @@ const DocumentMode = (() => {
         return source.blockId === documentBlock.id ||
             (!source.blockId && source.pageId === page.id);
     });
+    /* Sicheres HTML für das Folien-Menü (§19). Es ersetzt WIRKLICH — der
+       Fehler, der beim Lesen richtig aussieht, ist hier keiner. Der Name
+       einer Marke oder eines Layouts kommt aus den Daten. */
+    const escapeHtml = (wert) => String(wert ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    /**
+     * Ist DIESE Seite ein Foliensatz? (E549)
+     *
+     * Gefragt wird `Folienvorlagen` — dort steht die Regel (quer statt
+     * hochkant, und warum), und eine zweite Fassung hier liefe ihr davon.
+     * Fehlt das Modul (Einzeldatei, halb geladenes Fenster), ist die Antwort
+     * „nein": dann gibt es auch keinen Katalog zu zeigen.
+     */
+    const istFoliensatz = (page) => {
+        try {
+            return typeof Folienvorlagen !== 'undefined' &&
+                Folienvorlagen.istFoliensatz(page?.id);
+        }
+        catch {
+            return false;
+        }
+    };
+    /**
+     * Das Folien-Menü aus dem Bandkatalog bauen und zeigen (E549).
+     *
+     * Kein eigener Katalog: `Register.menueband.inReiter('praesentation')`
+     * gibt die Gruppen, wie sie auch im Band stünden — samt `zeigen()`, also
+     * ohne das, was hier gar nicht ginge.
+     */
+    const folienMenue = (knopf) => {
+        const gruppen = (() => {
+            try {
+                return Register?.menueband?.inReiter?.('praesentation') || [];
+            }
+            catch {
+                return [];
+            }
+        })();
+        const eintraege = gruppen.flatMap((g) => g.eintraege || []);
+        if (!eintraege.length) {
+            UI.toast('Für diese Folien gibt es gerade nichts');
+            return;
+        }
+        const kasten = knopf.getBoundingClientRect();
+        /* `gruppe`, NICHT `name` — so heisst das Feld in `inReiter()`
+           (nachgesehen, nicht erinnert, E21). Der erste Entwurf schrieb
+           `g.name`, und die Überschriften waren LEER: drei graue Streifen von
+           12 px Höhe ohne Text. Gemerkt hat es das Bild, nicht der Prüflauf —
+           der las das Register statt des Menüs und blieb grün (§55.2).
+           DER HINWEIS STEHT AM `title`, NICHT IM MENÜ. Als `.sub` daneben
+           drückte er die Namen auf drei Zeilen („Neue / Folie", gemessen 56 px
+           statt 35). Für Zeiger und Vorleseprogramm reicht `title` (§38), und
+           die Liste bleibt lesbar. */
+        const html = gruppen.map((g) => '<div class="grp">' + escapeHtml(String(g.gruppe || '')) + '</div>' +
+            (g.eintraege || []).map((e) => `<button data-fm="${escapeHtml(String(e.id))}"` +
+                (e.hinweis ? ` title="${escapeHtml(String(e.hinweis))}"` +
+                    ` aria-label="${escapeHtml(String(e.name) + ' — ' + String(e.hinweis))}"` : '') +
+                '>' + escapeHtml(String(e.name)) + '</button>').join('')).join('<hr>');
+        const menue = UI.menu(html, kasten.left, kasten.bottom + 4);
+        knopf.setAttribute('aria-expanded', 'true');
+        menue.addEventListener('click', (ev) => {
+            const ziel = ev.target?.closest('[data-fm]');
+            if (!ziel)
+                return;
+            menue.remove();
+            knopf.setAttribute('aria-expanded', 'false');
+            const eintrag = eintraege.find((e) => String(e.id) === ziel.dataset['fm']);
+            try {
+                eintrag?.tun?.();
+            }
+            catch {
+                UI.toast('Das ging gerade nicht');
+            }
+        });
+    };
     /** Die Masse eines Dokumentblocks — PDF-Seite wie Blatt, in Punkten. */
     const masseVon = (block) => ({
         bw: Number(block?.bw) || Number(block?.blattBreite) || SheetSpace.A4_BREITE,
@@ -1550,7 +1626,21 @@ const DocumentMode = (() => {
         zeigenWort.className = 'dz-wort';
         zeigenWort.textContent = ' Präsentieren';
         zeigenKnopf.append(zeigenWort);
-        topActions.append(findButton, viewButton, inspectorButton, zeigenKnopf, topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'), topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
+        /* DAS FOLIEN-MENÜ (E549). Redur: „oben mit Menü, links Seiten."
+           Es steht HIER und nicht im `#menueband`: das ist am Rechner eine
+           zugeklappte Lade, und im Dokumentmodus legte es sich beim Versuch als
+           Ecke „Werkzeuge ⌄" über genau diese Leiste (gemessen 1440 × 852 px,
+           deckungsgleich mit dem Inhalt). Zwei Köpfe übereinander sind
+           schlechter als einer — das steht seit dem 6. September so im
+           Stilblatt, und es stimmt.
+           Der KATALOG ist trotzdem derselbe: gelesen wird `Register.menueband`,
+           Reiter `praesentation`, also genau die Liste, die im Band unter
+           diesem Reiter steht. Eine Liste, zwei Ansichten (§8). */
+        const folienKnopf = topButton('folienmenue', '📽️ Folie', 'Neue Folie, Präsentieren, als PowerPoint sichern');
+        folienKnopf.setAttribute('aria-haspopup', 'menu');
+        folienKnopf.setAttribute('aria-expanded', 'false');
+        folienKnopf.hidden = !istFoliensatz(page);
+        topActions.append(findButton, viewButton, inspectorButton, folienKnopf, zeigenKnopf, topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'), topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
         top.append(topActions);
         const commandbar = document.createElement('div');
         commandbar.className = 'document-commandbar';
@@ -3785,6 +3875,10 @@ const DocumentMode = (() => {
                 menueSchliessen();
             if (!action)
                 return;
+            if (action === 'folienmenue') {
+                folienMenue(tatKnopf);
+                return;
+            }
             if (action === 'ink-options') {
                 const open = workspace.dataset.inkOptions !== 'open';
                 workspace.dataset.inkOptions = open ? 'open' : 'closed';

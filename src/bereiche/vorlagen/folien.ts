@@ -318,12 +318,93 @@ const Folienvorlagen = (() => {
     return folie;
   };
 
-  /** Ist DIESE Seite ein Foliensatz? Für `zeigen()` am Befehl. */
+  /**
+   * Ist DIESE Seite ein Foliensatz? Für `zeigen()` am Befehl und am Band.
+   *
+   * QUER, NICHT NUR „Blatt im Dokumentmodus" (E549). Ein Notizheft ist
+   * dasselbe von aussen — Dokumentmodus, Blatt-Blöcke — und es ist keine
+   * Präsentation. Der Unterschied, den man messen kann, ist das Papier:
+   * eine Folie ist breiter als hoch, ein Heft hochkant. PowerPoints Vorgabe
+   * ist 16:9, Redions eingelesene Folien auch (E540); ein A4-Heft ist 595
+   * auf 842.
+   *
+   * Was das NICHT trifft: eine hochkant gebaute Präsentation. Die gibt es in
+   * PowerPoint, sie ist aber selten, und die Verwechslung in die andere
+   * Richtung wäre teurer — ein Menüband über jedem Notizheft.
+   */
   const istFoliensatz = (seiteId: string): boolean => {
     const seite = seiteId ? Store.getBlock(seiteId) : null;
     if (!seite || !seite.dokumentModus) return false;
-    return (Store.childrenOf(seiteId) || []).some((b: any) => b.type === 'blatt');
+    return (Store.childrenOf(seiteId) || []).some((b: any) =>
+      b && b.type === 'blatt' &&
+      Number(b.blattBreite) > Number(b.blattHoehe));
   };
+
+  /** Der offene Foliensatz, oder ''. */
+  const offenerSatz = (): string => {
+    const id = typeof App !== 'undefined' ? String(App.aktuelleSeite() || '') : '';
+    return id && istFoliensatz(id) ? id : '';
+  };
+
+  /* ==========================================================================
+   * DER REITER IM MENÜBAND (E549)
+   * --------------------------------------------------------------------------
+   * Redur: „oben mit Menü". Das Band gibt es seit langem — was fehlte, war
+   * ein Reiter für Folien.
+   *
+   * KEIN EINZIGER KNOPF TUT HIER ETWAS NEUES. Das ist die wichtigste Regel
+   * des Menübands (`register/menueband.ts`, ganz oben): ein Band ist eine
+   * ZWEITE ANSICHT auf das, was Redion kann, keine zweite Fassung davon. Wo
+   * hier eine eigene Rechnung stünde, liefe sie irgendwann von der ersten
+   * weg, und zwar still.
+   *
+   * `zeigen()` an jedem Eintrag hält den ganzen Reiter aus dem Band heraus,
+   * wenn kein Foliensatz offen ist — `reiter()` zeigt nur, was belegt ist.
+   * ========================================================================*/
+  const bandEintraege = (): any[] => {
+    const satz = offenerSatz();
+    if (!satz) return [];
+    const da = (griff: () => unknown): boolean => {
+      try { return typeof griff() === 'function'; } catch { return false; }
+    };
+    const eintrag = (o: any) => ({ reiter: 'praesentation', ...o,
+      zeigen: () => !!offenerSatz() && (o.wenn ? o.wenn() : true) });
+
+    return [
+      eintrag({ gruppe: 'Folien', id: 'pv-neu', name: 'Neue Folie', zeichen: 'plus',
+        gross: true, hinweis: 'Eine Folie anhängen — mit Layout zur Wahl',
+        tun: () => { void folieMitWahl(); } }),
+      eintrag({ gruppe: 'Folien', id: 'pv-liste', name: 'Folienliste', zeichen: 'page',
+        hinweis: 'Die Folien links zeigen oder verbergen',
+        wenn: () => typeof DocumentMode !== 'undefined',
+        tun: () => {
+          /* Derselbe Knopf, den die Dokumentleiste trägt — gedrückt, nicht
+             nachgebaut (§8). Ohne ihn gäbe es zwei Wege zu einer Liste. */
+          const knopf = [...document.querySelectorAll<HTMLElement>('button, a')]
+            .find(b => /^▤\s*Seiten$/.test((b.textContent || '').trim()));
+          if (knopf) knopf.click(); else UI.toast('Die Folienliste ist hier nicht da');
+        } }),
+      eintrag({ gruppe: 'Vortrag', id: 'pv-zeigen', name: 'Präsentieren', zeichen: 'play',
+        gross: true, hinweis: 'Vollbild — ein Klick deckt die nächste Antwort auf',
+        wenn: () => da(() => Werkzeuge.praesentation),
+        tun: () => { void Werkzeuge.praesentation(Store.getBlock(offenerSatz())); } }),
+      eintrag({ gruppe: 'Ausgeben', id: 'pv-pptx', name: 'Als PowerPoint', zeichen: 'download',
+        hinweis: 'Die Folien als .pptx-Datei sichern',
+        wenn: () => da(() => Austausch.alsPowerPoint),
+        tun: () => { void Austausch.alsPowerPoint(Store.getBlock(offenerSatz())); } }),
+      eintrag({ gruppe: 'Ausgeben', id: 'pv-pdf', name: 'Als PDF', zeichen: 'page',
+        hinweis: 'Die Folien als PDF sichern',
+        wenn: () => typeof DocumentMode !== 'undefined' && da(() => DocumentMode.alsPdf),
+        tun: () => { void DocumentMode.alsPdf(Store.getBlock(offenerSatz())); } }),
+      eintrag({ gruppe: 'Ausgeben', id: 'pv-drucken', name: 'Drucken', zeichen: 'printer',
+        hinweis: 'Die Folien drucken',
+        wenn: () => da(() => Werkzeuge.drucken),
+        tun: () => { void Werkzeuge.drucken(Store.getBlock(offenerSatz())); } }),
+    ];
+  };
+
+  if (typeof Register !== 'undefined' && Register.menueband?.meldeLieferant)
+    Register.menueband.meldeLieferant(bandEintraege);
 
   /* Der Befehl gehört ins Befehlsregister, nicht in eine Liste hier (§8
      Regel 3). `zeigen()` hält ihn aus der Palette heraus, wo er nichts
@@ -343,7 +424,7 @@ const Folienvorlagen = (() => {
 
   return { alle, eines, marken, vorschau, waehle,
            neueFolie, neuePraesentation, anlegenMitWahl, folieMitWahl,
-           istFoliensatz, BREITE, HOEHE };
+           istFoliensatz, offenerSatz, bandEintraege, BREITE, HOEHE };
 })();
 
 (window as any).Folienvorlagen = Folienvorlagen;

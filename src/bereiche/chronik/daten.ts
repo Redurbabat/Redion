@@ -819,6 +819,10 @@ const ChronikDaten = {
     {
      "zeit": "ca. 04:50",
      "wortlaut": "Könntest du so eine powerpoint modus im menü einfügen wenn ich das klicke sollte 1:1 wie powerpoint sein oben mit menü, link seiten so das ich präsentaioton erstellen könnne, füge dort auch fertigen vorlagen"
+    },
+    {
+     "zeit": "ca. 06:20",
+     "wortlaut": "mach weiter mit den menüband"
     }
    ],
    "arbeit": [
@@ -1029,11 +1033,19 @@ const ChronikDaten = {
      "zeitraum": "04:50 – 06:10",
      "dauer": "ca. 80 min",
      "pruefungen": "test504 neu, 27 Zusagen, vier Gegenproben gefahren"
+    },
+    {
+     "was": "E549 — Reiter „Präsentation\" im Menüband, Folien-Menü in der Dokumentleiste; das ganze Band dort war gemessen schlechter",
+     "vonCommit": "(nach E548)",
+     "bisCommit": "(dieser Bogen)",
+     "zeitraum": "06:20 – 08:10",
+     "dauer": "ca. 110 min",
+     "pruefungen": "test505 neu, 26 Zusagen, vier Gegenproben gefahren (25/1, 14/12, 23/3, 24/2); test114 von 152+1 auf 155 grün, zwei neue Zusagen, beide Gegenproben rot gesehen"
     }
    ],
    "zahlen": {
-    "commits": 23,
-    "entscheidungen": 21
+    "commits": 24,
+    "entscheidungen": 22
    },
    "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
    "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -1109,6 +1121,18 @@ const ChronikDaten = {
      "was": "`bereiche/vorlagen/folien.ts` mit acht Layouts, ein Weg im Anlegen-Katalog, zwei Befehle im Register.",
      "warum": "Redurs Wunsch nach einem PowerPoint-Modus. Die ANSICHT gab es längst (E546/E547) — was fehlte, war der Weg hinein und das, womit man anfängt.",
      "risiko": "keins an Daten — ein Layout ist eine Markenliste, keine zweite Dokumentform. Der Wähler legt bei Abbruch GAR NICHTS an."
+    },
+    {
+     "zeit": "07:20",
+     "was": "Ein Reiter „Präsentation\" in `register/menueband.ts`, beliefert von `Folienvorlagen.bandEintraege`; dazu ein Knopf „📽️ Folie\" in der Dokumentleiste, der dasselbe Verzeichnis als Menü öffnet.",
+     "warum": "Redur: „mach weiter mit den menüband\". Das Band im Dokumentmodus einzublenden war der naheliegende Weg und nachweislich der schlechtere — eine zusammengeklappte Ecke „Werkzeuge ⌄\" lag bei 1440 × 852 deckungsgleich über der Dokumentleiste. Also EIN Katalog, zwei Orte (§8).",
+     "risiko": "keins an Daten — Oberfläche. Jeder Eintrag bringt sein `zeigen()` mit: ohne Foliensatz ist der Reiter ganz weg, und `istFoliensatz` verlangt ein QUERES Blatt, damit ein Notizbuch ihn nie bekommt."
+    },
+    {
+     "zeit": "08:05",
+     "was": "`test114` auf zweiundzwanzig Wege gehoben — und um zwei Zusagen erweitert, die für eine ROLLENDE Liste gelten.",
+     "warum": "Die harte Zahl im Prüflauf trug seit E236 eine Frage mit: „Wegweiser oder Liste?\" Der zweiundzwanzigste Weg hat sie beantwortet, gemessen bei 428 × 926: 10 von 22 ohne Rollen sichtbar, 1787 px Inhalt in 757 px Liste. Also Liste. Wegnehmen wäre eine Funktion weniger (§47), deshalb steht die Antwort als L154 offen.",
+     "risiko": "keins — ein Prüflauf. Beide neuen Zusagen sind rot gesehen worden (154 ok / 1 offen, je)."
     }
    ]
   }
@@ -1386,6 +1410,21 @@ const ChronikDaten = {
    "warumKeineUhr": "—",
    "beweis": "Die Agentenprotokolle: zehn Abbrüche mit `rate_limit`, HTTP 429, und im Arbeitsordner genau zwei geschriebene Fragmente von zehn.",
    "entscheidung": "E533"
+  },
+  {
+   "nr": "P23",
+   "datum": "2026-09-13",
+   "titel": "Eine harte Zahl hat gemeldet — und was sie meldete, war nicht die Zahl",
+   "schwere": "klein",
+   "symptom": "`test114` wurde rot: „Es führt zu einundzwanzig Sachen\" — es waren zweiundzwanzig geworden, weil dieser Bogen „Präsentation\" ins Anlegen-Menü gestellt hat.",
+   "falscheVermutung": "Die naheliegende Behebung: die 21 auf 22 heben, fertig. Genau das stand im Prüflauf verboten — die Zeile trug seit E236 den Satz mit, der nächste Zuwachs brauche „eine Antwort, nicht nur eine neue Zahl\".",
+   "wieGefunden": "Im Stapel-Lauf nach dem Bogen, 1 von 13 Läufen rot. Nicht durch Hinsehen: das Blatt sieht mit 22 Wegen genauso aus wie mit 21 — man sieht ja beide Male nur den Anfang.",
+   "ursache": "Kein Fehler im Code, sondern eine überschrittene Grenze. Gemessen bei 428 × 926: 22 Wege in 6 Überschriften, Liste 757 px hoch, Inhalt 1787 px, ohne Rollen sichtbar 10 von 22. Das Blatt war als WEGWEISER gebaut — es sollte dem, der nicht weiss, dass Redion Karteikarten kann, alles zeigen. Es zeigt noch ein Drittel.",
+   "loesung": "Die Zahl gehoben UND die Antwort gegeben: L154 in `LUECKEN.md` mit den drei möglichen Ordnungen und ihren Kosten (zusammenklappbare Gruppen, Suchfeld, zwei Ebenen). Keinen Weg weggenommen — jeder ist eine echte Funktion (§47). Dazu zwei neue Zusagen in `test114`, die für eine rollende Liste gelten: dass sie wirklich rollt (1787 in 757) und dass ihr letzter Eintrag unten ankommt (64 px, ganz sichtbar).",
+   "warumKeineUhr": "—",
+   "beweis": "Beide neuen Zusagen rot gesehen (§50): einmal das Rollen im Messen weggenommen — „ganz sichtbar: false\"; einmal die Roll-Schwelle auf +2000 gesetzt — „1787 px Inhalt in 757 px\", damit klar ist, dass die Zeile die Messung liest und kein festes `true`. Beide Male 154 ok / 1 offen; behoben 155 grün.",
+   "lehre": "Eine harte Zahl in einem Prüflauf ist kein Ärgernis, sondern der einzige Melder, den eine wachsende Liste hat — und sie meldet nicht immer das, wonach sie aussieht. Hier meldete sie nicht „die Zahl stimmt nicht\", sondern „das Blatt ist etwas anderes geworden\". Dieselbe Zeile war ein Jahr davor schon einmal still rot (E513 → E522), weil niemand sie hörte; diesmal war der Preis nur ein Absatz statt eines vollen Laufs.",
+   "entscheidung": "E549"
   }
  ]
 } as const;

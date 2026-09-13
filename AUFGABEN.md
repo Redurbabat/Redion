@@ -894,14 +894,39 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   Beschriftung, Leer. Der Befehl „Neue Folie" hängt eine an, mit denselben
   Layouts und den Massen der vorhandenen Folien.
 
+  Und seit E549 steht der KATALOG: `Register.menueband` hat einen Reiter
+  „Präsentation", den `Folienvorlagen.bandEintraege` beliefert, und jeder
+  Eintrag bringt sein eigenes `zeigen()` mit — ohne Foliensatz ist der
+  ganze Reiter weg. Im Dokumentmodus öffnet ein Knopf „📽️ Folie" in der
+  Dokumentleiste dasselbe Verzeichnis als Menü: Folien (Neue Folie,
+  Folienliste) · Vortrag (Präsentieren) · Ausgeben (Als PowerPoint, Als
+  PDF, Drucken).
+
+  **Warum der Reiter nicht schon sichtbar ist**, gemessen statt gemeint:
+  `#menueband` im Dokumentmodus einzublenden war nachweislich schlechter —
+  eine zusammengeklappte Ecke „Werkzeuge ⌄" legte sich bei 1440 × 852
+  deckungsgleich über die Dokumentleiste. Das Verzeichnis steht also
+  bereit, die LEISTE dafür fehlt noch; das ist ein Layout-Bogen, kein
+  Katalog-Bogen.
+
   **Offen bleibt am Folieneditor:**
   - EINE Folie stehend im Bild statt durchrollend. Der Dokumentmodus rollt
     durch — für das Schreiben richtig, für das Bauen einer Präsentation
     nicht.
-  - Ein Menüband mit Reitern (Start · Einfügen · Entwurf · Übergänge). Heute
-    ist es EINE Werkzeugleiste. Das ist der Rest von „1:1 wie PowerPoint".
+  - Die Leiste mit Reitern ÜBER der Folie (Start · Einfügen · Entwurf ·
+    Übergänge). Der Reiter und seine Einträge sind seit E549 da; was fehlt,
+    ist der Platz, an dem sie stehen, ohne die Dokumentleiste zu
+    überdecken. Das ist der Rest von „1:1 wie PowerPoint".
   - Die Handgriffe im Folienmenü heissen noch „Seite", nicht „Folie" — die
     Griffe selbst gibt es seit G3.
+
+  **Und ein Nebenfund, der nicht zum Folieneditor gehört** (L154): der
+  zweiundzwanzigste Weg hinter dem „+" hat das Blatt „Neu erstellen" über
+  seine Grenze gebracht. Gemessen bei 428 × 926: 10 von 22 Wegen sind ohne
+  Rollen zu sehen, der Inhalt ist 1787 px hoch in einer 757 px hohen Liste.
+  Damit ist es eine Liste und kein Wegweiser mehr. Wegnehmen ist keine
+  Lösung (§47); `test114` hält seit E549 wenigstens fest, dass der letzte
+  Eintrag unten wirklich ankommt.
 - **O5 · `.pptx` schreiben mit Rundreise.** Geänderte Folien zurück, der Rest
   der Originaldatei unangetastet (braucht O2).
 - **O6 · `.docx` draufschreiben.** Braucht den Rasterer. Das ist der teuerste

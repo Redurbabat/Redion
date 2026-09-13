@@ -938,6 +938,17 @@ Keine — an diesem Tag kam keine Nachricht.
 **Besserer Prompt:** 
 
 
+**30 · ca. 06:20**
+
+> mach weiter mit den menüband
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -968,11 +979,12 @@ Keine — an diesem Tag kam keine Nachricht.
 | E546 — O4 zur Hälfte: das Zeigen einer Folie ändert sie nicht mehr, und die Präsentation geht als Foliensatz auf | `(nach E545)` → `(dieser Bogen)` | 02:10 – 03:20 | ca. 70 min | test502 neu, 17 Zusagen, drei Gegenproben gefahren; test191 nachgezogen |
 | E547 — Die Folienliste zeigt Folien: Mass vom Block, Marken statt Bleistift, Name statt „A4-Blatt“ | `(nach E546)` → `(dieser Bogen)` | 03:30 – 04:40 | ca. 70 min | test503 neu, 18 Zusagen, vier Gegenproben gefahren |
 | E548 — „Präsentation" ist ein Weg: Eintrag im Anlegen-Menü, acht PowerPoint-Layouts, ein Wähler, der sie zeigt | `(nach E547)` → `(dieser Bogen)` | 04:50 – 06:10 | ca. 80 min | test504 neu, 27 Zusagen, vier Gegenproben gefahren |
+| E549 — Reiter „Präsentation" im Menüband, Folien-Menü in der Dokumentleiste; das ganze Band dort war gemessen schlechter | `(nach E548)` → `(dieser Bogen)` | 06:20 – 08:10 | ca. 110 min | test505 neu, 26 Zusagen, vier Gegenproben gefahren (25/1, 14/12, 23/3, 24/2); test114 von 152+1 auf 155 grün, zwei neue Zusagen, beide Gegenproben rot gesehen |
 
 #### Zahlen des Tages
 
-- **commits:** 23
-- **entscheidungen:** 21
+- **commits:** 24
+- **entscheidungen:** 22
 
 #### Das grösste Problem
 
@@ -1002,10 +1014,12 @@ Der zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glaskno
 | 02:50 | `Blatt.zeichne` legt keine Zeile mehr an, wenn das Blatt Marken trägt; der .pptx-Einleser setzt `dokumentModus`. | Gemessen: 27 Folien öffnen legte 27 leere Textblöcke an, und ihr Platzhalter lag auf dem Folientitel. Und der Dokumentmodus konnte Blatt-Blöcke längst — es fehlte nur die Flagge. | §9: ein Zeichner, der in den Speicher schreibt, ist die gefährlichere Hälfte des Fundes. E118 bleibt für das leere Blatt unverändert, test502 misst beide Richtungen. |
 | 04:10 | `thumbnail()` nimmt das Seitenverhältnis vom Block und zeichnet die Marken; `sourceLabel` gibt den Folientitel. | Die Seitenliste war da (G3) und half nicht: 27 hochkant gequetschte, leere, gleich benannte Kästchen. Alle drei Fehler waren nur im Bild zu sehen. | keins an Daten. Die Abdeckung deckt auch in der Miniatur, weil es derselbe Zeichner ist — gemessen: 69×6 px, rgb(255,204,0). |
 | 05:40 | `bereiche/vorlagen/folien.ts` mit acht Layouts, ein Weg im Anlegen-Katalog, zwei Befehle im Register. | Redurs Wunsch nach einem PowerPoint-Modus. Die ANSICHT gab es längst (E546/E547) — was fehlte, war der Weg hinein und das, womit man anfängt. | keins an Daten — ein Layout ist eine Markenliste, keine zweite Dokumentform. Der Wähler legt bei Abbruch GAR NICHTS an. |
+| 07:20 | Ein Reiter „Präsentation" in `register/menueband.ts`, beliefert von `Folienvorlagen.bandEintraege`; dazu ein Knopf „📽️ Folie" in der Dokumentleiste, der dasselbe Verzeichnis als Menü öffnet. | Redur: „mach weiter mit den menüband". Das Band im Dokumentmodus einzublenden war der naheliegende Weg und nachweislich der schlechtere — eine zusammengeklappte Ecke „Werkzeuge ⌄" lag bei 1440 × 852 deckungsgleich über der Dokumentleiste. Also EIN Katalog, zwei Orte (§8). | keins an Daten — Oberfläche. Jeder Eintrag bringt sein `zeigen()` mit: ohne Foliensatz ist der Reiter ganz weg, und `istFoliensatz` verlangt ein QUERES Blatt, damit ein Notizbuch ihn nie bekommt. |
+| 08:05 | `test114` auf zweiundzwanzig Wege gehoben — und um zwei Zusagen erweitert, die für eine ROLLENDE Liste gelten. | Die harte Zahl im Prüflauf trug seit E236 eine Frage mit: „Wegweiser oder Liste?" Der zweiundzwanzigste Weg hat sie beantwortet, gemessen bei 428 × 926: 10 von 22 ohne Rollen sichtbar, 1787 px Inhalt in 757 px Liste. Also Liste. Wegnehmen wäre eine Funktion weniger (§47), deshalb steht die Antwort als L154 offen. | keins — ein Prüflauf. Beide neuen Zusagen sind rot gesehen worden (154 ok / 1 offen, je). |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 22 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 23 Einträge.
 

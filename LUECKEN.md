@@ -7495,3 +7495,51 @@ mit einem Leerzeichen darin machte ihn schwarz, gefunden nur auf dem Bild.
   Formen ohne Text und ohne Animation, also weder Textkasten noch Abdeckung
   — sie fallen durch beide Zweige. Für Redion sind sie ohnehin fremd: das
   Blättern macht dort der Vortragsmodus, und seit E544 macht es der Klick.
+
+---
+
+L154 · Das Blatt „Neu erstellen" ist eine Liste geworden — offen
+--------------------------------------------------------------------------
+
+Hinter dem „+" liegt seit E45 ein Blatt, das FRAGT, was entstehen soll,
+statt sofort eine leere Seite anzulegen. Der Gedanke war ein **Wegweiser**:
+es zeigt alles, was Redion kann, auch dem, der nicht weiss, dass es
+Karteikarten gibt.
+
+`test114` trägt diese Frage seit E236 mit: „Wegweiser oder Liste?" Bei
+einundzwanzig Wegen stand dort, der nächste Zuwachs brauche eine Antwort,
+nicht nur eine neue Zahl. E549 hat den zweiundzwanzigsten gebracht (die
+Präsentation) — hier ist die Antwort, gemessen bei 428 × 926, das Blatt
+offen, bevor gerollt wird:
+
+```txt
+22 Wege in 6 Überschriften
+Liste 757 px hoch, Inhalt 1787 px          →  sie rollt
+ohne zu rollen sichtbar:  10 von 22
+nach dem Rollen ans Ende: der letzte Weg liegt ganz darin, 64 px hoch
+```
+
+**Zehn von zweiundzwanzig.** Damit ist die Frage beantwortet, und zwar mit
+„Liste". Ein Wegweiser zeigt, was es gibt; dieses Blatt zeigt noch ein
+Drittel davon, und die anderen zwei Drittel findet nur, wer rollt — also
+genau der nicht, für den das Blatt gebaut wurde.
+
+**Was hier NICHT die Lösung ist:** einen Weg wegnehmen. Jeder davon ist eine
+echte Funktion, und die verschwindet nicht, weil eine Liste lang wird (§47).
+Eine kürzere Liste wäre kein besserer Wegweiser, sondern ein kleineres
+Redion.
+
+**Was die Lösung wäre** (offen, keine davon ist entschieden):
+
+- **Zusammenklappbare Gruppen.** Sechs Überschriften, zugeklappt, sind sechs
+  Zeilen — alles auf einem Bild. Kostet einen Tipp pro Weg.
+- **Ein Suchfeld oben.** Wer „Kartei" tippt, ist da. Hilft aber nur dem, der
+  den Namen schon kennt — und das ist nicht der, für den das Blatt da ist.
+- **Zwei Ebenen:** die sechs Gruppen als Kacheln, dahinter die Wege. Am
+  nächsten an dem, was das Blatt sein wollte; der grösste Umbau.
+
+**Was bis dahin gilt und geprüft ist:** `test114` hält seit E549 zwei
+Zusagen, die für eine rollende Liste gelten — dass sie wirklich rollt und
+dass ihr letzter Eintrag unten ankommt (64 px, ganz sichtbar). Beide
+Gegenproben gefahren, beide rot geworden. Das macht aus der Liste keinen
+Wegweiser; es hält nur fest, dass niemand unten abgeschnitten wird.

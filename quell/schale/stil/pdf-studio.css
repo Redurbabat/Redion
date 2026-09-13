@@ -82,6 +82,16 @@
 /* Full-window PDF desk, using the real shell tabs and annotation controllers. */
 body[data-dokument="an"] #main{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important}
 body[data-dokument="an"] :is(#studio-bar,#kante,#studio-divider,#topbar,#menueband,#handy-oben,#sidebar){display:none!important}
+/* UND DAS MENÜBAND BLEIBT AUCH BEI EINER PRÄSENTATION WEG (E549).
+   Redur wollte „oben mit Menü", und der Versuch, dafür `#menueband` hier
+   wieder einzublenden, wurde GEMESSEN und wieder zurückgenommen: das Band
+   ist am Rechner eine zugeklappte Lade (`studio.css`), und im
+   Dokumentmodus legte es sich als Ecke „Werkzeuge ⌄" über die
+   Dokumentleiste — 1440 × 852 px, deckungsgleich mit dem Inhalt darunter.
+   Genau die zwei Köpfe übereinander, vor denen die Zeile oben steht.
+   Das Folien-Menü sitzt deshalb IN der Dokumentleiste, und es liest
+   denselben Katalog wie der Reiter im Band (`Register.menueband`,
+   Reiter `praesentation`) — eine Liste, zwei Ansichten (§8). */
 body[data-dokument="an"] #reiterleiste{grid-column:1!important;grid-row:1!important;background:var(--pdf-chrome);color:var(--pdf-on-chrome);border:0;min-height:48px;padding:4px 12px 0;position:relative;inset:auto;flex-wrap:nowrap}
 body[data-dokument="an"] #reiterleiste .rt-tab{min-width:150px;max-width:240px;min-height:var(--touch-min);color:var(--pdf-on-chrome);background:transparent;border:0;border-radius:12px 12px 0 0;box-shadow:none}
 body[data-dokument="an"] #reiterleiste .rt-tab.an{background:var(--pdf-tools);font-weight:650}
