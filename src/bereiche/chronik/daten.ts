@@ -827,6 +827,10 @@ const ChronikDaten = {
     {
      "zeit": "ca. 10:30",
      "wortlaut": "weiter ohne pause"
+    },
+    {
+     "zeit": "ca. 12:20",
+     "wortlaut": "weiter mache gleich wie powerpoint"
     }
    ],
    "arbeit": [
@@ -1061,11 +1065,19 @@ const ChronikDaten = {
      "zeitraum": "10:30 – 12:10",
      "dauer": "ca. 100 min",
      "pruefungen": "test507 neu, 34 Zusagen, vier Gegenproben gefahren (24/10, 30/4, 30/4, 32/2)"
+    },
+    {
+     "was": "E552 — „Zeichnen\" wird ein Reiter (die echte Leiste zieht um), und ein Blatt heisst im Foliensatz „Folie\"",
+     "vonCommit": "(nach E551)",
+     "bisCommit": "(dieser Bogen)",
+     "zeitraum": "12:20 – 14:20",
+     "dauer": "ca. 120 min",
+     "pruefungen": "test508 neu, 40 Zusagen, fünf Gegenproben gefahren (Abbruch, 35/3, 36/2, 38/2, 37/3)"
     }
    ],
    "zahlen": {
-    "commits": 26,
-    "entscheidungen": 24
+    "commits": 27,
+    "entscheidungen": 25
    },
    "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
    "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -1165,6 +1177,12 @@ const ChronikDaten = {
      "was": "`gemerkterLauf` gibt fuer einen quer liegenden Foliensatz von Haus aus „Einzelseite\", fuer alles andere weiter „Rolle\". Dazu `justify-content:safe center` fuer die stehende Folie und ein Umzug des Knopfes „📽️ Folie\" in die Ansichtsklappe des Telefons.",
      "warum": "Redur hat zu zwei Dingen zwei Sachen gesagt, die einander nicht widersprechen: „die PDF Seiten … komplet wie one note\" (E299) und „1:1 wie PowerPoint\" (E548/E549). Die Einzelseite gab es seit E398 schon — geaendert wurde nur die Vorgabe, und nur fuer Folien.",
      "risiko": "keins an Daten — Ansicht. Der Schalter bleibt der staerkere: `meta` gewinnt gegen die Vorgabe, in beide Richtungen geprueft ueber einen echten Druck und ein Neuladen."
+    },
+    {
+     "zeit": "13:30",
+     "was": "Die Zeichenleiste zieht als Reiter „Zeichnen\" ins Folienband um — dasselbe Element, nicht nachgebaut. Dazu `wortEins`/`wortViele`: im Foliensatz heisst ein Blatt „Folie\".",
+     "warum": "Redur: „weiter mache gleich wie powerpoint\" — die Antwort auf die Frage aus E551. PowerPoint hat einen Reiter „Zeichnen\" und keine zweite Dauerleiste, und es sagt nirgends „Seite\".",
+     "risiko": "Eines, und es ist gemessen: die Leiste ist jetzt ein KIND des Bandes. Wer das Band entfernt, nimmt sie mit — dann hätte ein Fenster unter 900 px keine Zeichenwerkzeuge mehr (§47, weggenommene Funktion durch Unfall). `folienbandNachziehen` bringt sie deshalb zuerst zurück und entfernt dann das Band. Die Daten heissen weiter `blatt` (§53.3)."
     }
    ]
   }
@@ -1502,6 +1520,36 @@ const ChronikDaten = {
    "beweis": "Gegenprobe gefahren: den Knopf oben stehen lassen — 32 gruen, 2 rot, „70 px — vorher 70\". Die Zahl reproduziert sich auf den Pixel.",
    "lehre": "Eine gruene Zusage beweist nur das, was sie ansieht. `test285` prueft die Kopfleiste seit E296 sorgfaeltig — an einem PDF. Ein neuer Knopf, der nur bei EINER Dokumentart erscheint, ist damit unbeobachtet, und dass die Suite gruen bleibt, heisst nichts. Wer eine Bedingung einfuehrt (`hidden = !istFoliensatz(page)`), fuehrt einen zweiten Fall ein, den niemand misst.",
    "entscheidung": "E551"
+  },
+  {
+   "nr": "P27",
+   "datum": "2026-09-13",
+   "titel": "Eine Gegenprobe blieb gruen — weil die Zusage den gefaehrlichen Weg gar nicht ging",
+   "schwere": "mittel",
+   "symptom": "Gegenprobe G4 von `test508`: die Zeichenleiste beim Verkleinern des Fensters NICHT in Sicherheit bringen, also den Fall bauen, in dem sie beim Entfernen des Bandes mitgerissen wird. Ergebnis: 40 gruen, 0 rot. Die Zusage meldete nichts.",
+   "falscheVermutung": "Kurz die naheliegende: „dann ist der Fehler wohl gar nicht moeglich\". Er war moeglich — nur wurde er nicht ausgeloest.",
+   "wieGefunden": "Durch die Gegenprobe selbst. Sie ist genau dafuer da: erst wenn eine Zusage nachweislich rot werden KANN, ist ihr Gruen etwas wert (§55.2, §50).",
+   "ursache": "§4 rief nach `setViewportSize(800)` ein `oeffne(deck)` — und baute damit das ganze Studio frisch auf. Die Leiste entstand dabei neu, ganz gleich, ob der Griff beim Schrumpfen sie gerettet haette. Der gefaehrliche Weg (das Band entfernen, WAEHREND die Leiste darin haengt) wurde nie gegangen.",
+   "loesung": "Nur noch das Fenster ziehen, sonst nichts — genau das, was ein Mensch tut. Danach meldet die Gegenprobe „0 Knoepfe\": die Leiste waere wirklich weg gewesen.",
+   "warumKeineUhr": "—",
+   "beweis": "Vorher 40 gruen mit angewandter Gegenprobe; nachher 38 gruen, 2 rot, mit der Meldung „0\" fuer die Zahl der Knoepfe. Dieselbe Gegenprobe, dieselbe Zeile — nur der Weg dorthin war vorher der falsche.",
+   "lehre": "Eine Zusage prueft nicht, was sie behauptet, sondern was sie TUT. Ein bequemer Zwischenschritt im Aufbau — hier ein Neuoeffnen — kann genau den Zustand wegraeumen, den die Zeile halten soll. Dritte Mal in dieser Sitzung: `every()` auf leerer Liste, das Register statt der Oberflaeche, und jetzt der Neuaufbau vor der Messung.",
+   "entscheidung": "E552"
+  },
+  {
+   "nr": "P28",
+   "datum": "2026-09-13",
+   "titel": "Ein Lauf, der allein gruen ist und im Stapel rot — zweimal hintereinander",
+   "schwere": "klein",
+   "symptom": "`test424` meldete im Stapel „PDF page position survives reload\" als rot. Allein gefahren: 50 von 50 gruen. Und beim zweiten Stapel wieder rot.",
+   "falscheVermutung": "Die bequeme: „Flake\". §46 laesst sie nicht gelten, und zu Recht — zweimal dasselbe unter denselben Bedingungen ist kein Zufall, sondern eine Bedingung.",
+   "wieGefunden": "Im Regressionsstapel nach E552. Danach einzeln nachgefahren, um auszuschliessen, dass der Bogen selbst es gebrochen hat: er war es nicht (er aendert Woerter und den Ort der Zeichenleiste; der Lauf misst eine gemerkte PDF-Seite).",
+   "ursache": "Der Lauf wartet nach dem Neuladen auf `.document-workspace` — und liest dann sofort `.document-stage[data-aktiv]`. Die BUEHNE bekommt ihr `data-aktiv` aber erst, wenn die gemerkte Seite wieder gefunden ist. Unter Last (mehrere Laeufe parallel) kommt das Messen dem Zeichnen zuvor. Dieselbe Sorte Fehler stand vier Zeilen darueber schon einmal und ist dort mit `Store.flush()` repariert worden (E440) — nur eben fuer die andere Haelfte.",
+   "loesung": "Auf die Buehne warten, statt sie zu erraten: `waitFor` auf `.document-stage[data-aktiv]`, dann `waitForFunction` auf die Seitennummer, beides mit 15 s Grenze. Die Zusage selbst bleibt unveraendert.",
+   "warumKeineUhr": "—",
+   "beweis": "Vorher: zwei Stapel hintereinander rot, einzeln 50/50 gruen. Nachher: derselbe Stapel gruen. Laeuft die Grenze ab, meldet die Zeile wie vorher rot — entschaerft ist nichts.",
+   "lehre": "„Allein gruen, im Stapel rot\" ist eine Aussage ueber den Lauf, nicht ueber die App. Und die bequeme Antwort darauf — einmal nachfahren und weitergehen — ist genau die, die §46 verbietet. Einen Lauf zu entschaerfen, statt ihn robust zu machen, waere §47 mit anderen Mitteln.",
+   "entscheidung": "E552"
   }
  ]
 } as const;

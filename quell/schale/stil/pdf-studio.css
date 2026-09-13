@@ -412,3 +412,21 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
   .document-studio .document-topbar [data-document-action="folienmenue"]{display:none}
   .document-commandbar .document-folien-klappe:not([hidden]){display:inline-flex}
 }
+
+/* ══ DIE ZEICHENLEISTE IM BAND (E552) ══════════════════════════════════════
+   Redur: „weiter mache gleich wie powerpoint". Dort ist Zeichnen ein REITER,
+   keine zweite Dauerleiste. Es ist dieselbe Leiste wie vorher, nur an einem
+   anderen Platz — deshalb steht hier auch fast nichts: ihr Aussehen regeln
+   die `.document-drawingbar`-Zeilen weiter oben, unverändert.
+
+   `[hidden]` REICHT HIER NICHT, UND DAS IST DIE GANZE ZEILE UNTEN.
+   Die Regel des Browsers für `[hidden]` ist `display:none` — aber sie
+   verliert gegen jede eigene `display`-Angabe, und `.document-drawingbar`
+   setzt `display:flex`. Ohne die Zeile stünde die Zeichenleiste unter JEDEM
+   Reiter, auch unter „Präsentation". Der Fehler sieht im Quelltext richtig
+   aus: `hidden` steht ja da. */
+.folienband .document-drawingbar[hidden]{display:none}
+.folienband .document-drawingbar{border-bottom:none}
+/* Ohne Band-Inhalt braucht die Fläche keinen Platz — sonst bliebe unter der
+   Zeichenleiste ein leerer Streifen von 76 px stehen. */
+.folienband .folienband-flaeche[hidden]{display:none}

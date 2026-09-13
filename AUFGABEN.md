@@ -935,18 +935,33 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   öffnet und der Knopf dort versteckt ist. Er steht jetzt in der
   Ansichtsklappe; Titel 114 px.
 
+  **Und seit E552 ist es „gleich wie PowerPoint"** — Redurs Antwort auf die
+  Frage oben. „Zeichnen" ist ein REITER geworden, keine zweite Dauerleiste.
+  Dabei zieht die ECHTE Leiste um (dasselbe Element, sechzehn Knöpfe) statt
+  nachgebaut zu werden: die dreissig Registereinträge des Reiters `zeichnen`
+  bedienen die Seitenfläche, nicht die Dokumentschicht — vierzehn geprüft,
+  keiner wirkte, und `an()` gab bei allen vierzehn `true`. Im Band stünden
+  also vierzehn gleichzeitig gewählte Knöpfe, die nichts tun.
+
+  Gemessen bei 1440 × 852: die Fläche wächst von 588 auf **646 px** (662
+  unter „Zeichnen"), ohne dass ein Knopf verschwunden wäre. „✎ Annotieren"
+  holt den Reiter nach vorn, damit niemand den Stift sucht.
+
+  **Und die Griffe heissen jetzt „Folie".** Das Wort kommt aus EINEM Ort
+  (`wortEins`/`wortViele`), nicht aus zwanzig. Gemessen: keine der
+  siebzehn sichtbaren Beschriftungen eines Foliensatzes sagt noch „Seite",
+  im Notizheft sagt keine „Folie". Die DATEN heissen weiter `blatt` —
+  übersetzt wird, was ein Mensch liest (§53.3, Grenze 1).
+
   **Offen bleibt am Folieneditor:**
-  - Die Zeichenleiste als Reiter „Zeichnen" im Band, so wie PowerPoint es
-    macht. Das nähme aber eine dauerhaft sichtbare Leiste weg und
-    versteckte sie hinter einem Klick — **das ist Redurs Entscheidung, nicht
-    meine**. Gefragt am 13. September, Antwort steht aus. Bis dahin stehen
-    beide da, und das Band kostet 110 px.
   - Am Rechner rollt die stehende Folie noch um 111 px — genau die 110, die
-    unten für die schwebende Stiftleiste freibleiben. Älter als dieser
-    Bogen; sie anzutasten hiesse, toten Rollweg gegen verdeckten Inhalt zu
+    unten für die schwebende Stiftleiste freibleiben. Älter als diese
+    Bögen; sie anzutasten hiesse, toten Rollweg gegen verdeckten Inhalt zu
     tauschen.
-  - Die Handgriffe im Folienmenü heissen noch „Seite", nicht „Folie" — die
-    Griffe selbst gibt es seit G3.
+  - Übergänge und Animationen. Redion liest sie beim `.pptx`-Import nicht
+    und schreibt sie nicht. Das ist der grösste Rest von „1:1".
+  - Der Folienmaster (Platzhalter-Vererbung). Acht Layouts gibt es seit
+    E548; ein Master, der sie alle trägt, fehlt.
 
   **Und ein Nebenfund, der nicht zum Folieneditor gehört** (L154): der
   zweiundzwanzigste Weg hinter dem „+" hat das Blatt „Neu erstellen" über
