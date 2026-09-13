@@ -1053,7 +1053,7 @@ const Einlesen = (() => {
      * (L151). Ein Absatz ist aber die Einheit, die ein Mensch als „Zeile mit
      * eigenem Aussehen" sieht, und die ist jetzt erreichbar.
      */
-    const absaetzeLesen = (txBody) => {
+    const absaetzeLesen = (txBody, thema = {}) => {
         const raus = [];
         for (const absatz of txBody.getElementsByTagName('a:p')) {
             let text = '';
@@ -1073,7 +1073,8 @@ const Einlesen = (() => {
             const sz = Number(rPr?.getAttribute('sz'));
             /* Die Farbe des Textes steht im LAUF, nicht in `p:spPr` — dort wäre
                es die Füllung der Form. `formFarbe` darf hier also nicht helfen. */
-            const rgb = rPr?.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val') || '';
+            const fuellung = rPr ? [...rPr.children].find(k => k.tagName === 'a:solidFill') : undefined;
+            const rgb = farbeAus(fuellung, thema).replace('#', '');
             /* `buNone` schlägt jedes geerbte Zeichen; `buAutoNum` bekommt einen
                Punkt, weil die echte Nummer erst aus der Absatzfolge käme — und
                eine falsche Nummer wäre schlimmer als ein neutrales Zeichen. */
@@ -1168,7 +1169,7 @@ const Einlesen = (() => {
      * wäre ein `fill="url(#…)"` ins Leere ein UNSICHTBARER Deckel — und ein
      * unsichtbarer Deckel ist eine offene Antwort.
      */
-    const formFarbe = (form) => {
+    const formFarbe = (form, thema = {}) => {
         const verlauf = form.getElementsByTagName('a:gradFill')[0];
         if (verlauf) {
             /* Der mittlere Stopp ist bei einem Deckel die Farbe; die äusseren
@@ -1176,18 +1177,137 @@ const Einlesen = (() => {
                RGB-Wert — ein `schemeClr` ist ohne Thema ohnehin nicht auflösbar. */
             const stopps = [...verlauf.getElementsByTagName('a:gs')];
             const mitte = stopps.find(g => g.getAttribute('pos') === '50000') || null;
-            const rgbMitte = mitte?.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+            const rgbMitte = farbeAus(mitte, thema);
             if (rgbMitte)
-                return '#' + rgbMitte;
+                return rgbMitte;
             for (const g of stopps) {
-                const w = g.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+                const w = farbeAus(g, thema);
                 if (w)
-                    return '#' + w;
+                    return w;
             }
         }
         const voll = form.getElementsByTagName('a:solidFill')[0];
-        const rgb = voll?.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
-        return rgb ? '#' + rgb : '';
+        return farbeAus(voll, thema);
+    };
+    /** Ein `a:srgbClr` / `a:sysClr` / `a:schemeClr` zu `#rrggbb`. */
+    const farbeAus = (eltern, thema) => {
+        if (!eltern)
+            return '';
+        /* Die direkten Kinder, nicht der ganze Teilbaum: unter einer Füllung
+           kann eine Linie mit eigener Farbe liegen (§E545 hat das schon einmal
+           gekostet). */
+        const knoten = [...eltern.children].find(k => k.tagName === 'a:srgbClr' || k.tagName === 'a:sysClr' || k.tagName === 'a:schemeClr');
+        if (!knoten)
+            return '';
+        let roh = '';
+        if (knoten.tagName === 'a:srgbClr')
+            roh = knoten.getAttribute('val') || '';
+        else if (knoten.tagName === 'a:sysClr')
+            roh = knoten.getAttribute('lastClr') || '';
+        else {
+            const name = knoten.getAttribute('val') || '';
+            /* `phClr` ist die Farbe des Platzhalters, der diese Vorlage BENUTZT —
+               sie steht nirgends und lässt sich hier nicht auflösen. */
+            if (name === 'phClr')
+                return '';
+            roh = (thema[name] || '').replace('#', '');
+        }
+        if (!/^[0-9a-fA-F]{6}$/.test(roh))
+            return '';
+        return abwandeln('#' + roh, knoten);
+    };
+    /** `lumMod`, `lumOff`, `tint`, `shade` auf eine fertige Farbe anwenden. */
+    const abwandeln = (farbe, knoten) => {
+        const wert = (tag) => {
+            const k = [...knoten.children].find(x => x.tagName === tag);
+            if (!k)
+                return null;
+            const v = Number(k.getAttribute('val'));
+            return Number.isFinite(v) ? v / 100000 : null;
+        };
+        let [r, g, b] = [0, 1, 2].map(n => parseInt(farbe.slice(1 + n * 2, 3 + n * 2), 16) / 255);
+        /* `tint` mischt gegen Weiss, `shade` gegen Schwarz — beide linear auf
+           dem Kanal, so steht es in ECMA-376 §20.1.2.3.34 und .30. */
+        const tint = wert('a:tint');
+        if (tint !== null) {
+            r = r * tint + (1 - tint);
+            g = g * tint + (1 - tint);
+            b = b * tint + (1 - tint);
+        }
+        const shade = wert('a:shade');
+        if (shade !== null) {
+            r *= shade;
+            g *= shade;
+            b *= shade;
+        }
+        /* `lumMod`/`lumOff` arbeiten auf der HELLIGKEIT, nicht auf dem Kanal.
+           Deshalb der Umweg über HSL — auf den Kanälen gerechnet würde aus
+           einem kräftigen Blau ein blasses Grau statt eines hellen Blaus. */
+        const lumMod = wert('a:lumMod');
+        const lumOff = wert('a:lumOff');
+        if (lumMod !== null || lumOff !== null) {
+            const hoch = Math.max(r, g, b), tief = Math.min(r, g, b);
+            let l = (hoch + tief) / 2;
+            const d = hoch - tief;
+            const sat = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+            let h = 0;
+            if (d !== 0) {
+                if (hoch === r)
+                    h = ((g - b) / d) % 6;
+                else if (hoch === g)
+                    h = (b - r) / d + 2;
+                else
+                    h = (r - g) / d + 4;
+                h *= 60;
+                if (h < 0)
+                    h += 360;
+            }
+            l = Math.min(1, Math.max(0, l * (lumMod ?? 1) + (lumOff ?? 0)));
+            const c = (1 - Math.abs(2 * l - 1)) * sat;
+            const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+            const m = l - c / 2;
+            const feld = [
+                [c, x, 0], [x, c, 0], [0, c, x], [0, x, c], [x, 0, c], [c, 0, x]
+            ];
+            const teil = feld[Math.min(5, Math.floor(h / 60))];
+            r = teil[0] + m;
+            g = teil[1] + m;
+            b = teil[2] + m;
+        }
+        const zwei = (v) => Math.min(255, Math.max(0, Math.round(v * 255))).toString(16).padStart(2, '0');
+        return '#' + zwei(r) + zwei(g) + zwei(b);
+    };
+    /**
+     * Die Farbzuordnung des Masters und das Thema zu einer Karte verrechnen.
+     *
+     * Heraus kommt eine flache Karte von JEDEM Namen, der in einer Folie
+     * stehen darf (`bg1`, `tx2`, `accent3`, `hlink`, …) auf `#rrggbb`. Die
+     * Themennamen selbst (`lt1`, `dk2`) stehen zusätzlich darin, weil ein
+     * Layout sie auch unmittelbar nennen darf.
+     */
+    const themaLesen = (themaDoc, masterDoc) => {
+        const karte = {};
+        if (!themaDoc)
+            return karte;
+        const schema = themaDoc.getElementsByTagName('a:clrScheme')[0];
+        if (!schema)
+            return karte;
+        for (const eintrag of schema.children) {
+            const name = eintrag.tagName.replace(/^a:/, '');
+            const wert = farbeAus(eintrag, {});
+            if (wert)
+                karte[name] = wert;
+        }
+        /* Und jetzt die Stufe, die man vergisst: die Zuordnung des Masters. */
+        const zuordnung = masterDoc?.getElementsByTagName('p:clrMap')[0];
+        if (zuordnung) {
+            for (const attribut of zuordnung.attributes) {
+                const ziel = karte[attribut.value];
+                if (ziel)
+                    karte[attribut.name] = ziel;
+            }
+        }
+        return karte;
     };
     /**
      * Der Schlüssel eines Platzhalters.
@@ -1237,7 +1357,7 @@ const Einlesen = (() => {
      * schlimmer als gar keine: sie macht den Text unlesbar, und man sieht
      * nicht, woher sie kommt.
      */
-    const hintergrund = (doc) => {
+    const hintergrund = (doc, thema = {}) => {
         if (!doc)
             return '';
         const bg = doc.getElementsByTagName('p:bg')[0];
@@ -1247,8 +1367,7 @@ const Einlesen = (() => {
            auch ein `a:srgbClr` in einer Linie oder einem Effekt darunter mit —
            deshalb der Weg über die volle Füllung. */
         const voll = bg.getElementsByTagName('a:solidFill')[0];
-        const rgb = voll?.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
-        return rgb ? '#' + rgb : '';
+        return farbeAus(voll, thema);
     };
     /**
      * Welche Tinte auf diesem Grund lesbar ist — '' heisst „die gewohnte".
@@ -1277,7 +1396,7 @@ const Einlesen = (() => {
         const gegenSchwarz = (helligkeit + 0.05) / (schwarz + 0.05);
         return gegenSchwarz < 4.5 ? '#ffffff' : '';
     };
-    const formVerlauf = (form) => {
+    const formVerlauf = (form, thema = {}) => {
         const spPr = form.getElementsByTagName('p:spPr')[0];
         if (!spPr)
             return null;
@@ -1288,9 +1407,11 @@ const Einlesen = (() => {
             return null;
         const stopps = [];
         for (const g of [...verlauf.getElementsByTagName('a:gs')]) {
-            const rgb = g.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+            const rgb = farbeAus(g, thema);
+            /* Seit E559 ist eine Themenfarbe auflösbar. Leer bleibt nur noch, was
+               wirklich niemand kennt — ein Bild als Füllung oder `phClr`. */
             if (!rgb)
-                continue; /* eine Themenfarbe — dann lieber gar nichts */
+                continue;
             const roh = String(g.getAttribute('pos') ?? '');
             /* `pos` steht in Tausendstel Prozent (0…100000); die neuere
                Schreibweise `50%` gibt es auch. Beides auf 0…1 bringen. */
@@ -1298,7 +1419,7 @@ const Einlesen = (() => {
                 : Number(roh) / 100000;
             if (!Number.isFinite(anteil))
                 continue;
-            stopps.push({ pos: Math.min(1, Math.max(0, anteil)), farbe: '#' + rgb });
+            stopps.push({ pos: Math.min(1, Math.max(0, anteil)), farbe: rgb });
         }
         /* Weniger als zwei Stopps sind kein Verlauf. Und wenn EINER der Stopps
            eine Themenfarbe war, fehlt er — dann ist der Verlauf unvollständig
@@ -1369,17 +1490,31 @@ const Einlesen = (() => {
                 .find(([, z]) => /slideLayouts\//.test(String(z)))?.[1] || '';
             const layoutDoc = await holeXml(String(layoutPfad));
             let masterDoc = null;
+            let masterPfad = '';
             if (layoutPfad) {
                 const lRels = await relsLesen(zip, String(layoutPfad));
-                const masterPfad = Object.entries(lRels)
-                    .find(([, z]) => /slideMasters\//.test(String(z)))?.[1] || '';
-                masterDoc = await holeXml(String(masterPfad));
+                masterPfad = String(Object.entries(lRels)
+                    .find(([, z]) => /slideMasters\//.test(String(z)))?.[1] || '');
+                masterDoc = await holeXml(masterPfad);
             }
+            /* DAS THEMA HÄNGT AM MASTER, NICHT AN DER FOLIE (E559). Auch hier
+               über die `.rels` und nicht über den Namen: ein Master darf
+               `theme3.xml` benutzen. Die Farbzuordnung (`p:clrMap`) steht dagegen
+               IM Master selbst — sie kommt also aus `masterDoc`. */
+            let themaDoc = null;
+            if (masterPfad) {
+                const mRels = await relsLesen(zip, masterPfad);
+                const themaPfad = Object.entries(mRels)
+                    .find(([, z]) => /theme\//.test(String(z)))?.[1] || '';
+                themaDoc = await holeXml(String(themaPfad));
+            }
+            const thema = themaLesen(themaDoc, masterDoc);
             /* Layout gewinnt gegen Master — deshalb wird der Master ZUERST
                eingetragen und vom Layout überschrieben. */
             const vorgaben = new Map([...vorgabenLesen(masterDoc), ...vorgabenLesen(layoutDoc)]);
             /* Und die Folie gewinnt gegen beide. */
-            const grundfarbe = hintergrund(doc) || hintergrund(layoutDoc) || hintergrund(masterDoc);
+            const grundfarbe = hintergrund(doc, thema) || hintergrund(layoutDoc, thema)
+                || hintergrund(masterDoc, thema);
             /* DIE TINTE MUSS AUF DEM GRUND LESBAR BLEIBEN (E558).
                Eine Textmarke ohne eigene Farbe zeichnet `#111111` — das war
                richtig, solange jedes Blatt weiss war. Mit einem geerbten dunklen
@@ -1462,8 +1597,8 @@ const Einlesen = (() => {
                         const sid = form.getElementsByTagName('p:cNvPr')[0]?.getAttribute('id') || '';
                         const schritt = sid ? schritte.get(sid) : undefined;
                         if (!text.trim() && schritt && lage && lage.w > 0 && lage.h > 0) {
-                            objekte.push({ art: 'abdeck', schritt, farbe: formFarbe(form) || '#ffcc00',
-                                verlauf: formVerlauf(form),
+                            objekte.push({ art: 'abdeck', schritt, farbe: formFarbe(form, thema) || '#ffcc00',
+                                verlauf: formVerlauf(form, thema),
                                 x: lage.x, y: lage.y, w: lage.w, h: lage.h });
                             continue;
                         }
@@ -1485,7 +1620,7 @@ const Einlesen = (() => {
                         /* Ist es der Titel? PowerPoint sagt es über den Platzhaltertyp. */
                         const ph = eigenePh;
                         const istTitel = /^(ctr)?[Tt]itle$/.test(ph?.getAttribute('type') || '');
-                        const absaetze = txBody ? absaetzeLesen(txBody) : [];
+                        const absaetze = txBody ? absaetzeLesen(txBody, thema) : [];
                         if (istTitel && !titel)
                             titel = absaetze[0]?.text.split('\n')[0] || '';
                         /* DER GRAD KOMMT AUS DEM LAYOUT, WENN DIE FOLIE KEINEN NENNT

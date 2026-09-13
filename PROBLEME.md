@@ -49,6 +49,7 @@ sind der teuerste Teil und der lehrreichste.
 | P33 | 2026-09-13 | Dieselbe Feldliste hat dasselbe zum zweiten Mal vergessen | 🟡 klein | E557 |
 | P34 | 2026-09-13 | Ein Stichwort in der Lueckenliste, das kleiner klang als es war | 🟠 mittel | E558 |
 | P35 | 2026-09-13 | Eine Verbesserung, die ihren eigenen Schaden mitbrachte | 🟠 mittel | E558 |
+| P36 | 2026-09-13 | Die Pruefung hatte unrecht und der Code recht | 🟡 klein | E559 |
 
 ---
 
@@ -741,4 +742,27 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** test513 §5, vier Zusagen an drei Gruenden plus Weiss. Die Gegenprobe ohne Kippen: 15 gruen, 2 rot. Und ein Bild (`bilder/pptx-tinte.png`), auf dem kein Absatz eine eigene Farbe nennt.
 
 **Die Lehre.** Eine neue Faehigkeit ist nie nur eine Zugabe — sie hebt eine stille Voraussetzung auf, unter der der Rest gebaut wurde. Hier war es „das Blatt ist weiss". Die Frage vor jedem Commit ist deshalb nicht „funktioniert das Neue?", sondern „welche Annahme des Alten habe ich gerade gekippt?". Keine Pruefung dieses Bogens haette danach gesucht; das eigene Diff zu lesen schon.
+
+
+---
+
+## P36 · Die Pruefung hatte unrecht und der Code recht
+
+*2026-09-13 · 🟡 klein · E559*
+
+**Das Bild.** `test514 §4` meldete beim ersten Lauf: „`phClr` wird NICHT geraten — ist '#ffffff', soll ''". Eine Farbe, von der ich gerade geschrieben hatte, dass sie nicht auflösbar ist, kam als Weiss an.
+
+**Die falsche Vermutung.** Dass mein `farbeAus` `phClr` doch irgendwo aufloest — etwa ueber einen Rueckfall im Thema.
+
+**Wie es gefunden wurde.** Nachgesehen statt nachgebessert. `farbeAus` gab tatsaechlich '' zurueck. Das Weiss kam ZWANZIG Zeilen spaeter: die Lesbarkeitsregel aus E558 gibt einem Absatz ohne Farbe auf dunklem Grund ausdruecklich Weiss — und der Grund dieser Prueffolie war Schwarz.
+
+**Die Ursache.** Meine Zusage hat zwei verschiedene Dinge fuer dasselbe gehalten: „die Farbe wurde nicht aufgeloest" und „die Marke hat keine Farbe". Seit E558 sind das nicht mehr dieselbe Aussage.
+
+**Die Lösung.** `phClr` wird jetzt auf HELLEM Grund gemessen, wo die Tinte nicht kippt. Daneben steht der Kommentar, warum — sonst macht der naechste dieselbe Verwechslung in die andere Richtung und schwaecht die Zusage, um sie gruen zu bekommen.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Die Gegenprobe G4 (phClr auf irgendwas aufloesen) ist auf dem hellen Grund rot: 12 gruen, 1 rot. Die Zusage kann also weiterhin rot werden — sie misst nur nicht mehr das Falsche.
+
+**Die Lehre.** Wenn eine neue Pruefung rot ist, ist die Pruefung genauso verdaechtig wie der Code — und bei einer Zusage, die ich GERADE geschrieben habe, sogar mehr. Der Reflex „den Code anpassen, bis es gruen ist" haette hier eine richtige Regel kaputtgemacht. Der zweite Reflex — „die Zusage abschwaechen" — waere genauso falsch gewesen. Richtig war, den Messplatz zu wechseln, damit die Zusage wieder GENAU das misst, was sie behauptet.
 

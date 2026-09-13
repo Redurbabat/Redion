@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-538 Entscheidungen, E1 bis E558 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+539 Entscheidungen, E1 bis E559 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -602,6 +602,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E556** — Auch im Laserpointer-Vortrag deckt ein Tipp die Antwort auf — der Deckel liegt unter der Zeigefläche, nicht neben ihr
 * **E557** — Ein Absatz hat sein eigenes Format: Grad, Gewicht, Farbe, Ebene und Aufzählungszeichen je Absatz — aufgeteilt nur, wenn es etwas bringt
 * **E558** — Eine Folie erbt von ihrem Layout und dessen Master: Lage, Grad und Hintergrund kommen von dort, wenn die Folie selbst nichts sagt
+* **E559** — Das Farbthema wird gelesen: `schemeClr` über `p:clrMap` und `theme1.xml` aufgelöst, samt `lumMod`/`lumOff`/`tint`/`shade`
 
 ---
 
@@ -45004,3 +45005,110 @@ Zwei Bilder:
 **Was weiter offen bleibt** (L151): Ausrichtung (`a:pPr@algn`), gemischte
 Läufe innerhalb eines Absatzes, Drehung, Tabellen als Tabellenblock, und die
 Themenfarben selbst — dafür müsste `theme1.xml` gelesen werden.
+
+
+E559 — Das Farbthema wird gelesen
+--------------------------------------------------------------------------
+
+E558 hat Layout und Master erschlossen und dabei **eine** Quelle ausdrücklich
+liegen gelassen: `theme1.xml`. Der Grund war richtig — eine geratene Farbe
+ist schlimmer als keine (§11). Die Folge war es nicht: **PowerPoint schreibt
+Farben fast nie als `srgbClr`.** Jede Vorlage von der Stange benutzt
+`schemeClr`, und die kamen allesamt als „keine Farbe" an.
+
+### Was das hiess, in Zahlen
+
+An sechs Stellen im Leser stand dieselbe Notlösung — Textfarbe je Absatz,
+Füllung einer Form, zwei Stellen im Verlauf, Hintergrund, Verlaufsstopp:
+
+```txt
+const rgb = …getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+```
+
+Ein `<a:schemeClr val="accent1"/>` fiel durch jede einzelne. Eine Folie mit
+blauem Grund und weisser Schrift kam weiss mit schwarzer Schrift an, und ein
+Verlauf gar nicht — `formVerlauf` gibt bewusst `null` zurück, sobald EIN
+Stopp fehlt.
+
+### Der Weg ist zweistufig, und die erste Stufe vergisst man
+
+`<a:schemeClr val="bg1"/>` steht **nicht** im Thema. `bg1` gehört der
+Folienwelt und wird erst über die Farbzuordnung des Masters zu einem Namen
+der Themenwelt:
+
+```txt
+<p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" …>
+<a:clrScheme><a:lt1><a:sysClr val="window" lastClr="FFFFFF"/></a:lt1>
+
+    bg1  →  clrMap.bg1 = "lt1"  →  clrScheme.lt1  →  #FFFFFF
+```
+
+Wer die Stufe auslässt, findet `bg1` im Thema gar nicht — oder, schlimmer,
+rät „bg1 heisst hell" und bekommt bei einem dunklen Thema genau die
+verkehrte Farbe. `test514` §2 baut deshalb eine Zuordnung, die **absichtlich
+vertauscht** ist (`bg1="dk1"`, `tx1="lt1"`), und misst beide Richtungen.
+
+Dazu zwei Kleinigkeiten, an denen ein Leser sonst scheitert: `dk1` und `lt1`
+stehen in echten Dateien als `a:sysClr`, und der Wert steckt dort in
+`lastClr`, nicht in `val`. Und das Thema hängt an den `.rels` des **Masters**
+— ein Master darf `theme7.xml` benutzen; der Prüflauf nennt sie genau so.
+
+### Die Abwandlungen — und warum die Zahlen nicht meine sind
+
+Eine Themenfarbe steht selten pur da:
+
+```xml
+<a:schemeClr val="accent1"><a:lumMod val="75000"/><a:lumOff val="40000"/></a:schemeClr>
+```
+
+Ohne diese Rechnung käme jede Abstufung einer Folie in derselben Grundfarbe
+an — eine Tabelle mit fünf Schattierungen wäre eine einfarbige Fläche.
+Gerechnet wird über HSL, nicht über die Kanäle: auf den Kanälen gerechnet
+würde aus kräftigem Blau ein blasses Grau statt eines hellen Blaus.
+
+Geprüft wird das **nicht gegen meine eigene Rechnung**, sondern gegen die
+veröffentlichten Felder aus PowerPoints eigener Farbauswahl zum Office-Thema:
+
+```txt
+accent1 #4472C4   „Dunkler 25 %"   lumMod 75000                → #2F5597  ✓
+accent1 #4472C4   „Heller 40 %"    lumMod 60000 + lumOff 40000 → #8FAADC  ✓
+accent1 #4472C4   „Dunkler 50 %"   lumMod 50000                → #203864  ✓
+```
+
+Alle drei stimmen auf das Byte. Das ist der Punkt: eine Prüfung, die den
+Code gegen sich selbst hält, hält nichts (§55.2).
+
+`tint` und `shade` rechnet Redion linear auf dem Kanal. Das entspricht dem,
+was auch andere Leser tun, ist aber — anders als oben — **nicht gegen eine
+PowerPoint-Ausgabe nachgemessen**; es steht so in L151.
+
+### Was weiterhin leer bleibt
+
+`phClr` — die Farbe des Platzhalters, der eine Vorlage *benutzt*. Sie steht
+nirgends in der Datei und ist nicht auflösbar; sie bleibt leer. Ebenso
+`alpha`, `satMod` und `hueMod`.
+
+### Und ein Fund, den erst die Prüfung sichtbar gemacht hat
+
+`test514` §4 war in der ersten Fassung rot: `phClr` kam als `#ffffff` an.
+Der Code hatte recht und die Zusage unrecht — die Farbe war nicht geraten,
+sondern die **Lesbarkeitsregel aus E558** hatte danach gegriffen: ein Absatz
+ohne Farbe bekommt auf dunklem Grund ausdrücklich Weiss, und der Grund
+dieser Prüffolie war Schwarz. Gemessen wird `phClr` seither auf **hellem**
+Grund, wo die Tinte nicht kippt. Der Kommentar an der Stelle sagt, warum.
+
+### Was `test514` hält
+
+13 Zusagen, vier Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  `schemeClr` nicht auflösen     5 grün,  8 rot  (jede Farbe leer)
+G2  `p:clrMap` überspringen       11 grün,  2 rot  (Grund fehlt, beide Wege)
+G3  `lumMod`/`lumOff` nicht rechnen 9 grün,  4 rot  (dreimal dieselbe Farbe)
+G4  `phClr` auf irgendwas auflösen 12 grün,  1 rot
+```
+
+Bild: `bilder/pptx-thema.png` — eine Folie, auf der **keine einzige Farbe**
+als `srgbClr` im XML steht: Grund, Schrift, drei Abstufungen von `accent1`,
+zwei weitere Akzente und die Verweisfarbe. Vorher wäre das schwarzer Text
+auf Weiss gewesen.

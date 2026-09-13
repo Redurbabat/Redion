@@ -7473,11 +7473,20 @@ verloren hält:
 - **Drehung** (`a:xfrm@rot`) und Spiegelung (`flipH`/`flipV`). Die Marken
   können drehen — gelesen wird es noch nicht.
 - **Notizen** (`ppt/notesSlides/`), Übergänge, Animationen.
-- **Das Farbthema** (`ppt/theme/theme1.xml`). Solange es ungelesen bleibt,
-  bleibt jede `schemeClr` liegen — im Hintergrund (E558), in Verläufen
-  (E545) und in Textfarben (E557). Das ist die nächste grosse Stelle, und
-  sie ist eine eigene: das Thema liefert zwölf Namen, und drei davon
-  (`lt1`/`dk1`/`phClr`) hängen noch vom Ort ab, an dem sie stehen.
+- ~~**Das Farbthema** (`ppt/theme/theme1.xml`).~~ **GESCHLOSSEN mit E559**:
+  `schemeClr` wird über `p:clrMap` (die Stufe, die man vergisst) und
+  `a:clrScheme` aufgelöst, `sysClr` über `lastClr`, dazu `lumMod`, `lumOff`,
+  `tint` und `shade`. Nachgemessen an PowerPoints eigenen Feldern: „Dunkler
+  25 %", „Heller 40 %" und „Dunkler 50 %" von `accent1` stimmen auf das Byte.
+  **Offen bleiben davon drei Kleinigkeiten:**
+  - `phClr` — die Farbe des Platzhalters, der eine Vorlage benutzt. Sie steht
+    nirgends in der Datei und ist nicht auflösbar; sie bleibt leer.
+  - `alpha` (Durchsichtigkeit), `satMod` und `hueMod` werden nicht gerechnet.
+    Für `alpha` hat die Markenschicht ohnehin kein Gegenstück.
+  - `tint`/`shade` rechnet Redion linear auf dem Kanal. Das ist die
+    verbreitete Auslegung, aber — anders als `lumMod`/`lumOff` — **nicht
+    gegen eine PowerPoint-Ausgabe nachgemessen**. Wer eine Datei hat, in der
+    eine Tönung sichtbar danebenliegt, hat den Beleg, der hier fehlt.
 
 **GEMESSEN am 12. September**, an einer echten Datei von Redur
 (27 Folien, 36 Bilder, 11 Layouts, 4:3, beide Packmethoden gemischt). Sie
