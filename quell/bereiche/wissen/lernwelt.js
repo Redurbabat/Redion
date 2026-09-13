@@ -1221,6 +1221,27 @@ const Lernwelt = (() => {
             : 'keine geplant';
         /* Eine klare Startfolge: Dokument öffnen, Lernrunde, dann der Tagesplan.
            Auswertungen bleiben vollständig über native Details erreichbar. */
+        /* DIE VIER ZAHLEN GEHÖREN AUF DIE OBERFLÄCHE, NICHT IN EINEN AUFKLAPPER
+           (E544).
+           ---------------------------------------------------------------------
+           §31 des Auftrags beschreibt diese Ansicht als Bild, und darin stehen
+           „fällig / neu / Fehler / nächste Prüfung" ÜBER dem Startknopf. E151 hat
+           das am 25. August 2026 hergestellt.
+    
+           Irgendwann danach sind sie in `<details class="lw-insights">` gewandert
+           — zugeklappt, am Telefon gemessen auf y = 2336. Für diesen Umzug gibt
+           es keinen Eintrag in ENTSCHEIDUNGEN.md; er ist also nicht entschieden
+           worden, sondern passiert. Damit galt weiter, was E151 festgehalten hat,
+           und die Zahlen kommen zurück nach oben.
+    
+           Der Aufklapper bleibt, was er ist — er trägt weiterhin Prüfungskarte,
+           Themen und Routine. Nur die vier Zahlen stehen wieder davor. */
+        const heuteZahlen = '<section class="lw-metrics" aria-label="Heute auf einen Blick">' +
+            kennzahl(String(queue.errors.length + queue.due.length), 'fällig', 'heute zu wiederholen') +
+            kennzahl(String(queue.newCards.length), 'neu', 'höchstens 20 pro Runde') +
+            kennzahl(String(fehlerListe().filter(item => !item.stabil).length), 'Fehler', 'gezielt wiederholen') +
+            (naechstePruefung ? kennzahl(pruefungText, 'nächste Prüfung', naechstePruefung.titel || '')
+                : kennzahl('–', 'nächste Prüfung', 'keine geplant')) + '</section>';
         return '<div class="lw-today">' +
             '<section class="lw-hero lw-hero-compact"><div><p>' +
             esc(new Date().toLocaleDateString('de-CH', { weekday: 'long', day: 'numeric', month: 'long' })) +
@@ -1228,6 +1249,13 @@ const Lernwelt = (() => {
             '.</h2></div><div class="lw-goal"><button type="button" data-lw-action="goal" aria-label="Tagesziel ändern">' +
             '<span>' + stats.reviewedToday + ' / ' + ziel + '</span><small>Lernziel heute</small></button>' +
             '<progress max="100" value="' + zielProzent + '" aria-label="Tagesfortschritt"></progress></div></section>' +
+            /* Die Zahlen stehen im BAUM hinter der Begrüssung und am Telefon per
+               `order` davor. Genau so hat E151 es gelöst, und aus gutem Grund: die
+               Vorlesereihenfolge bleibt für alle dieselbe, und am Rechner — wo
+               nichts unter einer Falz liegt — begrüsst die Ansicht zuerst.
+               Beim ersten Anlauf standen sie auch am Rechner ganz oben; §4 dieses
+               Laufs hat das sofort gemeldet. */
+            heuteZahlen +
             dokumentEinstieg() +
             '<section class="lw-next-step" aria-label="Dein nächster Lernschritt">' +
             zeichenSpan('cards', 'lw-next-icon') + '<div><p>Ein guter nächster Schritt</p><h2>' +
@@ -1260,12 +1288,8 @@ const Lernwelt = (() => {
             '<details class="lw-insights" data-lw-details="today-insights"><summary><span>' +
             zeichenSpan('chart') + '<span>Lernübersicht &amp; Fortschritt<small>Prüfungen, Themen, Projekte und deine Lernroutine</small></span>' +
             '</span><span class="lw-details-chevron" aria-hidden="true">⌄</span></summary><div class="lw-insights-body">' +
-            '<section class="lw-metrics" aria-label="Heute auf einen Blick">' +
-            kennzahl(String(queue.errors.length + queue.due.length), 'fällig', 'heute zu wiederholen') +
-            kennzahl(String(queue.newCards.length), 'neu', 'höchstens 20 pro Runde') +
-            kennzahl(String(fehlerListe().filter(item => !item.stabil).length), 'Fehler', 'gezielt wiederholen') +
-            (naechstePruefung ? kennzahl(pruefungText, 'nächste Prüfung', naechstePruefung.titel || '')
-                : kennzahl('–', 'nächste Prüfung', 'keine geplant')) + '</section>' +
+            /* Die vier Zahlen standen hier und stehen jetzt oben — siehe E544
+               am Anfang dieser Funktion. */
             '<section class="lw-exam-card"><header><p>Nächste Prüfung</p>' +
             '<span class="lw-card-icon" data-sym="clipboard" aria-hidden="true"></span></header>' +
             (naechstePruefung

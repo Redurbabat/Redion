@@ -7535,7 +7535,7 @@ nicht vorgeben zu sein.
 
 ---
 
-L155 · test217 ist rot, und zwar nicht von dieser Arbeit — offen
+L155 · test217 ist rot, und zwar nicht von dieser Arbeit — GESCHLOSSEN (E544)
 --------------------------------------------------------------------------
 
 `test217` (Suite 183, die Lernrunde am Telefon) steht bei **14 von 27**.
@@ -7557,3 +7557,11 @@ Auftrag entspricht, macht aus einem sichtbaren Fehler einen unsichtbaren.
 
 §46 sagt „rot zuerst". Dieser Bogen hat das Rot nicht verursacht und auch
 nicht behoben; er nennt es.
+
+**GESCHLOSSEN am 13. September 2026 durch E544 — 27/27.** Aufgeklärt hat sich
+die Frage „wer hat recht" in drei getrennte Fälle: die Reihenfolge war ein
+echter Rückfall (E151s Stilregeln zeigten nach einem Umbau ins Leere), der
+Knopfname und ein Klassenname im Lauf waren veraltet (die Vorlage §31 belegt
+es), und die vier Zahlen im Aufklapper waren eine undokumentierte Abweichung
+von §31. Dazu ein dritter Fund: der Lauf las wegen einer Animationsschicht
+den falschen Span.

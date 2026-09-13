@@ -108,7 +108,13 @@ const lage = (seite: any): Promise<any> => seite.evaluate(() => {
   return {
     hoehe: window.innerHeight,
     zahlen: kasten('.lw-today > .lw-metrics'),
-    fokus: kasten('.lw-focus-card'),
+    /* `.lw-focus-card` hiess die Karte bis zum Umbau der Lernzentrale; heute
+       heisst sie `.lw-next-step`. Nachgezählt am 13. September 2026:
+       `lw-focus-card` kommt in `lernwelt.ts` NULL mal vor. Der Lauf suchte
+       also ein Element, das es nicht mehr gibt, und meldete `undefined` —
+       das sah aus wie ein Fehler der Ansicht und war einer des Laufs.
+       Beide Namen bleiben stehen, damit ein älterer Zweig weiter misst. */
+    fokus: kasten('.lw-next-step') || kasten('.lw-focus-card'),
     hero: kasten('.lw-hero'),
     pruefung: kasten('.lw-exam-card'),
     start: kk ? { oben: Math.round(kk.top), hoch: Math.round(kk.height),
@@ -124,7 +130,19 @@ const lage = (seite: any): Promise<any> => seite.evaluate(() => {
     kennzahlen: [...document.querySelectorAll<HTMLElement>('.lw-today > .lw-metrics > *')]
       .map(el => ({
         wert: (el.querySelector('strong')?.textContent || '').trim(),
-        name: (el.querySelector('span')?.textContent || '').trim()
+        /* NICHT `querySelector('span')`.
+           -----------------------------------------------------------------
+           Eine Animationsschicht schiebt seit einiger Zeit ein
+           `<span class="rmo-pfad" aria-hidden="true">` als ERSTES Kind in
+           jede Kachel. `querySelector('span')` fand danach die Deko und las
+           deren leeren Text — vier Kennzahlen ohne Namen, und der Lauf
+           meldete „§31 nennt „fällig" nicht", obwohl es dastand.
+           Gesucht wird deshalb der Span, den ein MENSCH liest: ein DIREKTES
+           Kind der Kachel, das nicht `aria-hidden` ist. Beide Bedingungen
+           sind nötig — ohne `:scope >` fand der Zähler-Span INNERHALB von
+           `<strong>` zuerst, und dann stand die Zahl zweimal da und die
+           Beschriftung nirgends. */
+        name: (el.querySelector(':scope > span:not([aria-hidden])')?.textContent || '').trim()
       })),
     /* Und daneben, was der Bestand sagt — damit die Anzeige an ihm gemessen
        wird und nicht an einer Zahl, die ich hier hingeschrieben habe. */
@@ -158,7 +176,21 @@ await bestand(telefon);
 const t = await lage(telefon);
 
 p('Es gibt einen Startknopf', !!t.start, JSON.stringify(t.start));
-gleich('Er heisst „Tagesrunde starten"', t.start?.text, 'Tagesrunde starten');
+/* DER NAME IST GEÄNDERT WORDEN, UND ZWAR RICHTIG HERUM.
+   ---------------------------------------------------------------------------
+   Hier stand „Tagesrunde starten". Das war der Name, den der Knopf am
+   25. August 2026 trug — E151 nennt ihn wörtlich, und zwar als den Knopf, der
+   damals 188 px unter der Falz lag.
+
+   §31 selbst schreibt aber etwas anderes vor, und es steht im Kopf dieser
+   Datei: `[ Lernen starten ]`. Die spätere Umbenennung hat den Knopf also an
+   die Vorlage angeglichen; die Zusage hier war die veraltete Seite.
+
+   Geprüft wird deshalb der Name aus §31 und nicht der aus E151 — und der Pfeil
+   am Ende bleibt unbeachtet, er ist Schmuck und keine Aussage. */
+p('Er heisst „Lernen starten" — so steht es in §31',
+  /^Lernen starten/.test(String(t.start?.text || '')),
+  `ist "${t.start?.text}"`);
 p('Er ist NICHT gesperrt — es warten Karten', t.start?.gesperrt === false,
   `gesperrt: ${t.start?.gesperrt}`);
 p('Er steht ganz im ersten Bild', t.start?.sichtbar === true,

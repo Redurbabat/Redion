@@ -30,7 +30,7 @@ declare const Store: any; declare const App: any;
 declare const Schaltplan: any; declare const Stromfluss: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
-const PORT = 8974;
+const PORT = 8960;
 
 const TYP: Record<string, string> = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',

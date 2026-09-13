@@ -30,7 +30,7 @@ import path from 'node:path';
 declare const Store: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
-const PORT = 8975;
+const PORT = 8958;
 
 const TYP: Record<string, string> = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',

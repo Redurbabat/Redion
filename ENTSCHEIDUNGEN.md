@@ -587,6 +587,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E541** — Ein Anschlussfehler wird an der Rolle der Klemme gefunden, nicht am Strom
 * **E542** — Ein Pfeil bei Gleichstrom, zwei bei Wechselstrom — und der Fehler, den erst das Bild fand
 * **E543** — Lernkarten, die nachgerechnet werden — und eine Lernansicht, die keinen Stil hatte
+* **E544** — E151 war noch da und wirkte nicht mehr: tote Stilregeln nach einem Umbau
 
 ---
 
@@ -43501,3 +43502,102 @@ Radius 0 und `appearance: auto`.
 `test501`: 37 Zusagen für das Lernpaket. Gegenprobe rot gesehen — stellt man
 die Aussenleiterkarte auf 460 V und die Neutralleiterkarte auf „doppelt so
 gross", widerspricht die Simulation beiden.
+
+---
+
+## E544 · E151 war noch da und wirkte nicht mehr: tote Stilregeln nach einem Umbau
+
+`test217` stand bei **14 von 27**. Nachgemessen war das kein neuer Schaden,
+sondern ein alter: derselbe Stand vor und nach den Bögen E539–E543.
+
+### Der Befund
+
+E151 hatte am 25. August 2026 dafür gesorgt, dass am Telefon zuerst die
+Lernrunde kommt und erst danach die Begrüssung. Die Regeln dafür standen
+unverändert in `lernwelt.css`:
+
+```css
+.lernwelt .lw-today>.lw-metrics{order:1}
+.lernwelt .lw-today>.lw-primary-grid{order:2}
+.lernwelt .lw-today>.lw-setup{order:3}
+.lernwelt .lw-today>.lw-hero{order:4}
+```
+
+**Von diesen vier griff nur noch die letzte.** Nicht weil jemand sie geändert
+hätte, sondern weil das HTML darunter umgebaut wurde: `lw-primary-grid` und
+`lw-setup` kommen in `lernwelt.ts` nicht mehr vor (nachgezählt: null Treffer),
+und `lw-metrics` war kein direktes Kind mehr — es steckte in einem
+zugeklappten `<details class="lw-insights">`.
+
+Gemessen auf 390 × 844:
+
+```txt
+.lw-hero        y =  119    sichtbar
+.lw-desk        y =  280    619 px hoch
+Startknopf      y = 1115    271 px UNTER der Falz
+die vier Zahlen y = 2336    in einem zugeklappten Aufklapper
+```
+
+Das ist derselbe Fehler wie vor E151, nur 83 px schlimmer.
+
+**Eine tote Stilregel ist gefährlicher als eine fehlende.** Sie sieht im
+Quelltext aus, als sei die Sache erledigt — und wer den Kommentar darüber
+liest, glaubt es auch. Nur der Prüflauf hat widersprochen, und weil er noch
+aus anderen Gründen rot war, ging der Punkt darin unter.
+
+### Wer recht hatte — dreimal verschieden
+
+Der Lauf war rot und der Code umgebaut. Das heißt nicht automatisch, dass
+einer von beiden schuld ist; es waren drei getrennte Fälle:
+
+**1. Die Reihenfolge — der Code war abgedriftet.** Die Regeln zeigten ins
+Leere. Repariert, indem `.lw-next-step` (der neue Name der Handlungskarte)
+und die Kennzahlen wieder eine Reihenfolge bekommen. Die drei alten
+Selektoren bleiben stehen (§43): sie schaden nicht, und falls die alte
+Auszeichnung je zurückkommt, greifen sie sofort wieder.
+
+**2. Der Name des Knopfes — der LAUF war veraltet.** Er verlangte
+„Tagesrunde starten". Die App sagt „Lernen starten →". §31 des Auftrags,
+zitiert im Kopf desselben Prüflaufs, schreibt aber `[ Lernen starten ]` vor.
+Die spätere Umbenennung hat den Knopf also an die VORLAGE angeglichen; die
+Zusage war die veraltete Seite. Dasselbe bei `.lw-focus-card`, das heute
+`.lw-next-step` heißt. Beides berichtigt — mit der Vorlage als Beleg, nicht
+weil der Code es so macht.
+
+**3. Die vier Zahlen im Aufklapper — eine undokumentierte Abweichung.** §31
+zeigt sie ÜBER dem Knopf, E151 hat das hergestellt. Irgendwann sind sie in
+`<details class="lw-insights">` gewandert. **Für diesen Umzug gibt es keinen
+Eintrag in ENTSCHEIDUNGEN.md** — er ist nicht entschieden worden, sondern
+passiert. Also gilt weiter, was entschieden war: die Zahlen stehen wieder auf
+der Oberfläche, der Aufklapper behält Prüfungskarte, Themen und Routine.
+
+### Und ein Fund, der nichts mit alldem zu tun hat
+
+Der Lauf las die Beschriftung der Kennzahlen mit `el.querySelector('span')`.
+Inzwischen schiebt eine Animationsschicht ein
+`<span class="rmo-pfad" aria-hidden="true">` als ERSTES Kind in jede Kachel,
+und sie verpackt die Ziffern noch einmal in einen Span. Der Lauf las also
+erst leere Deko, dann die Zahl — und meldete, §31 nenne „fällig" nicht,
+obwohl es dastand.
+
+Gesucht wird jetzt der Span, den ein MENSCH liest: ein **direktes** Kind, das
+**nicht** `aria-hidden` ist. Beide Bedingungen sind nötig, und beide sagen
+inhaltlich das Richtige.
+
+### Der Preis
+
+Ein erster Anlauf setzte die Zahlen auch am RECHNER ganz nach oben. §4 des
+Laufs hat das sofort gemeldet — er misst ausdrücklich die Gegenrichtung:
+am Rechner darf die Reihenfolge nicht gedreht sein. Jetzt steht es wieder wie
+bei E151: im Baum hinter der Begrüssung, am Telefon per `order` davor. Eine
+Vorlesereihenfolge für alle, zwei Stapelungen.
+
+`test217`: von **14/27 auf 27/27**. Gegenprobe zweifach rot gesehen — ohne die
+neue Reihenfolge steht der Knopf wieder bei y = 1373, und ohne die Zahlen auf
+der Oberfläche fallen neun Zusagen.
+
+**Dazu ein Wächter, der gefehlt hat.** Vier neue Prüfläufe (498–501) hatten
+sich die Ports von test215, test217, test218 und test219 genommen. Einzeln
+laufen alle grün; erst im vollen Lauf wäre es aufgefallen, Stunden später, an
+einer Stelle ohne Zusammenhang zur Ursache. `test87` prüft jetzt, dass kein
+Prüflauf sich einen Port mit einem anderen teilt — Gegenprobe rot gesehen.

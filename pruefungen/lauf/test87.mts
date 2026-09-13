@@ -876,5 +876,38 @@ p('… und der Textfilter lässt echte Bildschirmtexte stehen',
   holenText.includes('GitHub') && holenText.length > 400,
   'sonst wäre die stash-Regel trivial erfüllt');
 
+/* ==========================================================================
+ * KEIN PORT ZWEIMAL
+ * --------------------------------------------------------------------------
+ * Jeder Prüflauf mit Browser stellt einen eigenen kleinen Webserver hin.
+ * Nehmen zwei denselben Port, scheitert der zweite mit EADDRINUSE — aber
+ * NUR, wenn sie sich überschneiden. Einzeln laufen beide grün, und die
+ * Sache fällt erst im vollen Lauf auf, Stunden später, an einer Stelle, die
+ * mit der Ursache nichts zu tun hat.
+ *
+ * Genau das ist am 13. September 2026 passiert: vier neue Läufe (498–501)
+ * nahmen die Ports von test215, test217, test218 und test219. Gefunden
+ * wurde es beim Nachsehen, nicht durch einen Lauf — deshalb steht die
+ * Prüfung jetzt hier.
+ * ========================================================================*/
+const laeufe = _liste(_dazu(WURZEL, 'pruefungen/lauf'))
+  .filter(x => /^test\d+\.mts$/.test(x));
+const portVon = new Map<number, string[]>();
+laeufe.forEach(name => {
+  let text = '';
+  try { text = _lies(_dazu(WURZEL, 'pruefungen/lauf', name), 'utf8'); } catch { return; }
+  const treffer = /const PORT = (\d+)/.exec(text);
+  if (!treffer) return;
+  const port = Number(treffer[1]);
+  portVon.set(port, (portVon.get(port) || []).concat(name));
+});
+const portDoppelt: Array<[number, string[]]> = [];
+portVon.forEach((wer, port) => { if (wer.length > 1) portDoppelt.push([port, wer]); });
+p('Kein Prüflauf teilt sich einen Port mit einem anderen', !portDoppelt.length,
+  portDoppelt.map(([port, wer]) => `${port}: ${wer.join(' + ')}`).join(' · '));
+/* Gegenprobe: die Regel muss überhaupt anschlagen können (§55.2). */
+p('Die Regel kann rot werden: sie hat wirklich Ports gefunden',
+  portVon.size > 20, `${portVon.size} Ports in ${laeufe.length} Läufen`);
+
 console.log(`\n  Suite 52 — Quelltext: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

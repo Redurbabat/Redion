@@ -1156,8 +1156,33 @@
      gleichzeitig zu sehen. Nur am Telefon wird sie gedreht, und zwar mit
      `order`, nicht mit einer zweiten Baumstruktur: derselbe Inhalt, dieselbe
      Reihenfolge für ein Vorleseprogramm, nur anders gestapelt. */
+  /* NACHGEZOGEN AM 13. SEPTEMBER 2026 (E544).
+     -------------------------------------------------------------------
+     Die Regeln darunter standen seit E151 hier und haben IRGENDWANN
+     AUFGEHÖRT ZU WIRKEN — nicht weil jemand sie geändert hat, sondern
+     weil das HTML darunter umgebaut wurde. `lw-primary-grid` und
+     `lw-setup` kommen in `lernwelt.ts` nicht mehr vor (nachgezählt: null
+     Treffer), und `lw-metrics` ist kein direktes Kind mehr, sondern
+     steckt in einem zugeklappten `<details>`.
+
+     Damit griff von fünf Regeln nur noch eine, und die Reihenfolge am
+     Telefon war wieder die von vor E151. Gemessen auf 390 × 844:
+
+         .lw-hero        y =  119   sichtbar
+         .lw-desk        y =  280   619 px hoch
+         Startknopf      y = 1115   271 px UNTER der Falz
+
+     Das ist derselbe Fehler wie damals, nur 83 px schlimmer.
+
+     Eine tote Regel ist gefährlicher als eine fehlende: sie sieht im
+     Quelltext aus, als sei die Sache erledigt. Die alten drei bleiben
+     trotzdem stehen (§43) — sie schaden nicht, und falls die Kennzahlen
+     je wieder direktes Kind werden, greifen sie sofort wieder. */
   .lernwelt .lw-today>*{order:5}
+  /* Die Zahlen zuerst, dann die Handlung — so steht es in §31 und so hatte
+     es E151 gesetzt. */
   .lernwelt .lw-today>.lw-metrics{order:1}
+  .lernwelt .lw-today>.lw-next-step{order:2}
   .lernwelt .lw-today>.lw-primary-grid{order:2}
   .lernwelt .lw-today>.lw-setup{order:3}
   .lernwelt .lw-today>.lw-hero{order:4}
