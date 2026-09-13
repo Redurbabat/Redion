@@ -1091,7 +1091,7 @@ const Einlesen = (() => {
                 fett: rPr?.getAttribute('b') === '1',
                 farbe: rgb ? '#' + rgb : '',
                 lvl: Math.max(0, Math.min(8, Number(pPr?.getAttribute('lvl')) || 0)),
-                zeichen });
+                zeichen, ausricht: absatzAusricht(pPr) });
         }
         /* Leerzeilen am Ende weg — PowerPoint hängt gern einen leeren Absatz an,
            und der macht aus einem Titel einen Kasten mit Loch darunter. */
@@ -1101,6 +1101,35 @@ const Einlesen = (() => {
     };
     /** Der ganze Text eines Kastens, für Titelsuche und Leerprüfung. */
     const formText = (txBody) => absaetzeLesen(txBody).map(a => a.text).join('\n');
+    /**
+     * Die Ausrichtung eines Absatzes — `a:pPr@algn` (E560).
+     *
+     * Heisst `absatzAusricht` und nicht `ausrichtung`: sechshundert Zeilen
+     * weiter oben gibt es schon ein `ausrichtung`, und das ist ein Element aus
+     * einer Excel-Stilvorlage. Zwei Namen für zwei Sachen.
+     *
+     * PowerPoint kennt fünf Werte, Redions Textmarke drei. Die Zuordnung ist
+     * deshalb keine Tabelle, sondern eine Entscheidung:
+     *
+     *     l     → links     (und das ist auch der Fall ohne Angabe)
+     *     ctr   → mitte
+     *     r     → rechts
+     *     just  → links     Blocksatz. Er BRAUCHT gestreckte Wortabstände,
+     *     dist  → links     und die hat die Markenschicht nicht. Links ist
+     *                       die Kante, die der Blocksatz mit sich teilt —
+     *                       zentriert wäre an jeder Zeile falsch.
+     *
+     * Gibt '' zurück, wo nichts steht: dann bekommt die Marke gar kein Feld,
+     * und eine alte Marke ohne das Feld verhält sich weiter wie bisher.
+     */
+    const absatzAusricht = (pPr) => {
+        const algn = pPr?.getAttribute('algn') || '';
+        if (algn === 'ctr')
+            return 'mitte';
+        if (algn === 'r')
+            return 'rechts';
+        return '';
+    };
     /** Lage und Grösse einer Form, in Blattpunkten. `null`, wenn sie fehlen. */
     const formLage = (form) => {
         const xfrm = form.getElementsByTagName('a:xfrm')[0];
@@ -1659,7 +1688,11 @@ const Einlesen = (() => {
                            liefe bei jedem umbrechenden Absatz in den nächsten hinein. */
                         const gleichFormat = absaetze.length > 0 && absaetze.every(a => a.sz === absaetze[0].sz && a.fett === absaetze[0].fett
                             && a.farbe === absaetze[0].farbe && a.lvl === absaetze[0].lvl
-                            && !a.zeichen === !absaetze[0].zeichen);
+                            && !a.zeichen === !absaetze[0].zeichen
+                            /* Die Ausrichtung gehört dazu (E560): ein zentrierter Titel über
+                               einem linksbündigen Absatz ist genau der Fall, in dem EINE
+                               Marke die falsche Antwort ist. */
+                            && a.ausricht === absaetze[0].ausricht);
                         if (absaetze.length <= 1 || gleichFormat) {
                             const a = absaetze[0];
                             objekte.push({ art: 'text',
@@ -1667,7 +1700,8 @@ const Einlesen = (() => {
                                 x: kx + a.lvl * Math.max(10, (a.sz || grund) * 0.9), y: ky,
                                 breiteBox: Math.max(20, kb - a.lvl * Math.max(10, (a.sz || grund) * 0.9)),
                                 fontSize: a.sz || grund, fett: a.fett,
-                                ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}) });
+                                ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}),
+                                ...(a.ausricht ? { ausricht: a.ausricht } : {}) });
                             continue;
                         }
                         let y = ky;
@@ -1684,7 +1718,8 @@ const Einlesen = (() => {
                                 x: kx + einzug, y,
                                 breiteBox: Math.max(20, kb - einzug),
                                 fontSize: a.sz || grund, fett: a.fett,
-                                ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}) };
+                                ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}),
+                                ...(a.ausricht ? { ausricht: a.ausricht } : {}) };
                             objekte.push(marke);
                             /* Der Zeichner rechnet die Höhe, nicht ich. Fehlt er (halb
                                geladenes Fenster), bleibt die einfache Schätzung — dann
@@ -1974,22 +2009,30 @@ const Einlesen = (() => {
                 for (const o of folie.objekte) {
                     const id = 'm' + Math.random().toString(36).slice(2, 10);
                     if (o.art === 'text') {
-                        /* `farbe` nur, wenn es eine gibt (E557) — die Marke fällt sonst
-                           auf `FARBEN[0]` zurück, und das ist richtig so.
+                        /* ══ DIE FELDLISTE IST UMGEDREHT (E560) ══════════════════════
+                           Hier stand eine Liste, die AUFZÄHLT, was mitreisen darf. Sie
+                           hat dreimal dasselbe vergessen, und jedes Mal erst der
+                           Prüflauf es gefunden:
             
-                           HIER WAR DER FEHLER BEIM ERSTEN LAUF, und er ist derselbe wie
-                           bei `verlauf` in E545, vier Zeilen tiefer: das Lesen war
-                           fertig, die Farbe stand im Absatz — und diese Zeile baute die
-                           Marke aus einer FESTEN Feldliste zusammen und liess sie
-                           liegen. Grad und Fett kamen an, die Farbe nicht; der Prüflauf
-                           zeigte „ist '', soll '#CC0000'".
+                               E545  `verlauf`   fehlte
+                               E557  `farbe`     fehlte    („ist '', soll '#CC0000'")
+                               E560  `ausricht`  fehlte    („ist '', soll 'mitte'")
             
-                           Eine Feldliste, die aufzählt, vergisst beim nächsten Feld
-                           wieder. Sie bleibt trotzdem: ein blindes Durchreichen des
-                           ganzen Objekts nähme `x`/`y`/`w`/`h` mit in die Ablage. */
-                        marken.push({ id, art: 'text', point: [o.x, o.y], breiteBox: o.breiteBox,
-                            text: o.text, fontSize: o.fontSize, fett: !!o.fett,
-                            ...(o.farbe ? { farbe: o.farbe } : {}) });
+                           Der Kommentar, der hier stand, sagte selbst voraus, dass sie
+                           „beim nächsten Feld wieder vergisst" — und begründete ihr
+                           Bleiben damit, dass ein blindes Durchreichen `x`/`y`/`w`/`h`
+                           mit in die Ablage nähme. Das stimmt. Es ist nur kein Grund
+                           für eine Erlaubnisliste, sondern einer für eine VERBOTSLISTE:
+            
+                           Was nicht in die Ablage darf, ist eine kurze, bekannte,
+                           abgeschlossene Menge — die Masse, aus denen `point` und
+                           `breiteBox` schon gerechnet sind. Was mitreisen soll, ist es
+                           nicht: jedes neue Feld eines Absatzes gehört dazu.
+            
+                           Seither reist alles mit AUSSER diesen vieren. Ein viertes
+                           vergessenes Feld kann es nicht mehr geben. */
+                        const { x: _x, y: _y, w: _w, h: _h, art: _art, ...rest } = o;
+                        marken.push({ id, art: 'text', point: [o.x, o.y], ...rest, fett: !!o.fett });
                         continue;
                     }
                     if (o.art === 'abdeck') {

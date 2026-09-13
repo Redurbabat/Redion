@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-539 Entscheidungen, E1 bis E559 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+540 Entscheidungen, E1 bis E560 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -603,6 +603,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E557** — Ein Absatz hat sein eigenes Format: Grad, Gewicht, Farbe, Ebene und Aufzählungszeichen je Absatz — aufgeteilt nur, wenn es etwas bringt
 * **E558** — Eine Folie erbt von ihrem Layout und dessen Master: Lage, Grad und Hintergrund kommen von dort, wenn die Folie selbst nichts sagt
 * **E559** — Das Farbthema wird gelesen: `schemeClr` über `p:clrMap` und `theme1.xml` aufgelöst, samt `lumMod`/`lumOff`/`tint`/`shade`
+* **E560** — Ausrichtung: `a:pPr@algn` wird gelesen, gezeichnet und bekommt einen eigenen Knopf — und die Feldliste beim Bauen der Marke wird umgedreht
 
 ---
 
@@ -45134,3 +45135,100 @@ Bild: `bilder/pptx-thema.png` — eine Folie, auf der **keine einzige Farbe**
 als `srgbClr` im XML steht: Grund, Schrift, drei Abstufungen von `accent1`,
 zwei weitere Akzente und die Verweisfarbe. Vorher wäre das schwarzer Text
 auf Weiss gewesen.
+
+
+E560 — Ausrichtung, und eine Feldliste, die umgedreht gehört
+--------------------------------------------------------------------------
+
+`LUECKEN.md` führte diesen Punkt seit E540 mit einem Satz, der stimmte und
+zu klein war:
+
+> „**Ausrichtung** (`a:pPr@algn`). Die Textmarke hat kein Feld dafür; alles
+> kommt linksbündig an."
+
+Das Fehlende war nicht nur eine Importlücke. Solange die Textmarke kein Feld
+für die Ausrichtung hatte, konnte auch **Redion selbst** keinen Text
+zentrieren — in einem Programm, dessen Bildblöcke seit Langem `links`,
+`mitte` und `rechts` kennen. Eine fehlende Eigenschaft ist nie nur eine
+Importlücke, und deshalb gehört der Knopf in denselben Bogen, nicht in einen
+späteren.
+
+### Drei Stellen, eine Eigenschaft
+
+```txt
+einlesen.ts    `a:pPr@algn`  →  Marke `ausricht`
+geometry.ts    `textLayout` gibt die Ausrichtung mit heraus
+marken.ts      SVG-Anker und `x` je Zeile — und der Knopf in der Leiste
+```
+
+Die drei Namen sind die des Hauses (`bild-rahmen aus-links`), keine neuen.
+
+### Warum `just` links wird und nicht mitte
+
+PowerPoint kennt fünf Werte, Redion drei. Blocksatz (`just`) und `dist`
+brauchen gestreckte Wortabstände; die hat die Markenschicht nicht. Links ist
+die Kante, die der Blocksatz mit ihr **teilt** — zentriert wäre an jeder
+einzelnen Zeile falsch. Eine Näherung in die richtige Richtung ist besser
+als eine in die falsche.
+
+### Der Fall, der sonst durchrutscht
+
+Ein umbrechender Absatz hat mehrere `tspan`. Bekommt nur der erste das neue
+`x`, laufen die Zeilen auseinander: die erste sitzt zentriert, die zweite
+wieder links. Die Gegenprobe zeigt es als `[216, 42]`. `test515` misst
+deshalb **alle** Zeilen eines Kastens, nicht die erste.
+
+### Und der Fund, der grösser ist als der Bogen
+
+Beim ersten Lauf kam die Ausrichtung nicht an — **zum dritten Mal an
+derselben Stelle.** `marken.push` baute die Textmarke aus einer Liste, die
+AUFZÄHLT, was mitreisen darf:
+
+```txt
+E545   `verlauf`   fehlte
+E557   `farbe`     fehlte     („ist '', soll '#CC0000'")
+E560   `ausricht`  fehlte     („ist '', soll 'mitte'")
+```
+
+Der Kommentar an der Stelle sagte selbst voraus, dass sie „beim nächsten
+Feld wieder vergisst", und begründete ihr Bleiben damit, dass ein blindes
+Durchreichen `x`/`y`/`w`/`h` mit in die Ablage nähme. Das stimmt — es ist
+nur kein Grund für eine Erlaubnisliste, sondern einer für eine
+**Verbotsliste**:
+
+```ts
+const { x: _x, y: _y, w: _w, h: _h, art: _art, ...rest } = o as any;
+marken.push({ id, art: 'text', point: [o.x, o.y], ...rest, fett: !!o.fett });
+```
+
+Was nicht in die Ablage darf, ist eine kurze, bekannte, abgeschlossene Menge
+— die Masse, aus denen `point` und `breiteBox` schon gerechnet sind. Was
+mitreisen soll, ist es nicht. Ein viertes vergessenes Feld kann es damit
+nicht mehr geben.
+
+### Der Knopf steht hinter `···`, und das wurde gemessen
+
+Im Dokumentstudio liegt die ganze Schriftgruppe hinter dem Optionen-Schalter
+— `fett` und `rahmen` seit E552 genauso. Nachgemessen statt angenommen:
+vorher ist der Knopf `display:none` und 0 × 0, nach `···` **61 × 44 px**,
+sichtbar und ganz im Bild. Die 44 sind §37.
+
+`test515` §5 fragt deshalb nicht, ob der Knopf im DOM steht, sondern ob man
+ihn zu sehen bekommt. Ein Knopf im DOM, den niemand sieht, ist keine
+Funktion — genau der Fall aus §55.1.
+
+### Was `test515` hält
+
+25 Zusagen, fünf Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  `algn` nicht lesen            12 grün, 10 rot  (§1, §2, §3 zusammen)
+G2  Anker ja, `x` nicht           19 grün,  3 rot
+G3  nur die erste Zeile bewegen   21 grün,  1 rot  ([216, 42])
+G4  `just` auf `mitte` abbilden   20 grün,  2 rot
+G5  den Knopf weglassen           18 grün,  7 rot
+```
+
+Bild: `bilder/pptx-ausrichtung.png` — zentrierte Überschrift, linksbündiger,
+zentrierter und rechtsbündiger Absatz, und ein zentrierter Absatz über zwei
+Zeilen, der in **beiden** zentriert steht.

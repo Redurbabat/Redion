@@ -381,8 +381,15 @@ const Marken = (() => {
     { id: 'schmal',   name: 'Schmal', stapel: "'Arial Narrow', 'Roboto Condensed', 'Helvetica Neue', sans-serif" }
   ] as const;
   const SCHRIFT_STUFEN: readonly number[] = [11, 13, 16, 20, 26, 34];
-  type Schrift = { familie: string; groesse: number; fett: boolean; rahmen: boolean };
-  const SCHRIFT_VORGABE: Schrift = { familie: 'standard', groesse: 16, fett: false, rahmen: false };
+  type Schrift = { familie: string; groesse: number; fett: boolean; rahmen: boolean;
+                   ausricht: string };
+  const SCHRIFT_VORGABE: Schrift = { familie: 'standard', groesse: 16, fett: false,
+                                     rahmen: false, ausricht: 'links' };
+  /* Die drei Namen sind die des Hauses (`bild-rahmen aus-links`), nicht neue. */
+  const AUSRICHTUNGEN = [
+    { id: 'links',  zeichen: '⭰', name: 'Links' },
+    { id: 'mitte',  zeichen: '⭤', name: 'Mitte' },
+    { id: 'rechts', zeichen: '⭲', name: 'Rechts' }] as const;
   const schriftStapel = (id: unknown): string =>
     (SCHRIFTEN.find(x => x.id === String(id)) || SCHRIFTEN[0]).stapel;
   const schriftLesen = (): Schrift => {
@@ -391,7 +398,8 @@ const Marken = (() => {
     return {
       familie: SCHRIFTEN.some(x => x.id === s.familie) ? String(s.familie) : SCHRIFT_VORGABE.familie,
       groesse: SCHRIFT_STUFEN.includes(Number(s.groesse)) ? Number(s.groesse) : SCHRIFT_VORGABE.groesse,
-      fett: !!s.fett, rahmen: !!s.rahmen };
+      fett: !!s.fett, rahmen: !!s.rahmen,
+      ausricht: AUSRICHTUNGEN.some(x => x.id === s.ausricht) ? String(s.ausricht) : 'links' };
   };
   const naechsteStufe = (jetzt: number, richtung: number): number => {
     if (richtung > 0) return SCHRIFT_STUFEN.find(v => v > jetzt) ?? SCHRIFT_STUFEN[SCHRIFT_STUFEN.length - 1]!;
@@ -793,12 +801,22 @@ const Marken = (() => {
               class: 'blatt-textrahmen' })
           : svg('rect', { x: layout.x, y: layout.y, width: layout.width, height: layout.height,
               fill: 'transparent', stroke: 'none' }));
+        /* DIE AUSRICHTUNG (E560): SVG kann sie selbst, wenn man ihm den
+           richtigen Anker gibt — `middle` misst von der Mitte, `end` vom
+           Ende. Jede Zeile bekommt dasselbe `x`, sonst laufen die Zeilen
+           eines umbrechenden Absatzes auseinander. */
+        const anker = layout.ausricht === 'mitte' ? 'middle'
+                    : layout.ausricht === 'rechts' ? 'end' : 'start';
+        const zeilenX = layout.ausricht === 'mitte' ? layout.x + layout.width / 2
+                      : layout.ausricht === 'rechts' ? layout.x + layout.width - layout.pad
+                      : layout.x + layout.pad;
         const textKnoten = svg('text', {
-          x: layout.x + layout.pad, y: layout.y + layout.pad + layout.fontSize * 0.85, fill: color,
+          x: zeilenX, y: layout.y + layout.pad + layout.fontSize * 0.85, fill: color,
           'font-size': layout.fontSize, 'font-family': schriftStapel(layout.family),
-          'font-weight': layout.bold ? 700 : 400 });
+          'font-weight': layout.bold ? 700 : 400,
+          ...(anker === 'start' ? {} : { 'text-anchor': anker }) });
         layout.lines.forEach((zeile, index) => {
-          const stueck = svg('tspan', { x: layout.x + layout.pad, dy: index === 0 ? 0 : layout.zeile });
+          const stueck = svg('tspan', { x: zeilenX, dy: index === 0 ? 0 : layout.zeile });
           stueck.textContent = zeile || ' ';
           textKnoten.appendChild(stueck);
         });
@@ -2578,7 +2596,9 @@ const Marken = (() => {
         const y = Math.round(Math.max(0, Math.min(point[1] ?? 0, hoehe - 40)) * 100) / 100;
         const breiteBox = Math.max(120, Math.min(Math.round(breite * 0.4), Math.round(breite - x - 8)));
         marks.push({ id: frischeId(), art: 'text', point: [x, y], text: answer, farbe: color,
-          fontSize: schrift.groesse, breiteBox, schrift: schrift.familie, fett: schrift.fett, rahmen: schrift.rahmen });
+          fontSize: schrift.groesse, breiteBox, schrift: schrift.familie, fett: schrift.fett,
+          rahmen: schrift.rahmen,
+          ...(schrift.ausricht !== 'links' ? { ausricht: schrift.ausricht } : {}) });
       }
       redraw(); commit(before);
     };
@@ -3265,7 +3285,10 @@ const Marken = (() => {
         groesse: schritt ? naechsteStufe(schrift.groesse, schritt)
           : (aenderung.groesse !== undefined ? Math.max(8, Number(aenderung.groesse) || schrift.groesse) : schrift.groesse),
         fett: aenderung.fett !== undefined ? !!aenderung.fett : schrift.fett,
-        rahmen: aenderung.rahmen !== undefined ? !!aenderung.rahmen : schrift.rahmen };
+        rahmen: aenderung.rahmen !== undefined ? !!aenderung.rahmen : schrift.rahmen,
+        ausricht: aenderung.ausricht !== undefined
+          && AUSRICHTUNGEN.some(x => x.id === aenderung.ausricht)
+          ? String(aenderung.ausricht) : schrift.ausricht };
       if (typeof Store !== 'undefined') Store.setMeta('zeichnen:schrift', schrift);
       if (!selection.size) return;
       const before = snapshot();
@@ -3279,6 +3302,7 @@ const Marken = (() => {
         if (aenderung.familie !== undefined) neu.schrift = schrift.familie;
         if (aenderung.fett !== undefined) neu.fett = schrift.fett;
         if (aenderung.rahmen !== undefined) neu.rahmen = schrift.rahmen;
+        if (aenderung.ausricht !== undefined) neu.ausricht = schrift.ausricht;
         marks[i] = neu;
         updateNode(nodeFor(idOf(neu)), neu);
         geaendert = true;
@@ -3949,7 +3973,15 @@ const Marken = (() => {
           `<button data-act="fett" data-gruppe="schrift" aria-pressed="${s.fett ? 'true' : 'false'}"${s.fett ? ' class="on"' : ''} title="Fett">` +
           '<span class="zeichen" aria-hidden="true">F</span><span class="wort">Fett</span></button>' +
           `<button data-act="rahmen" data-gruppe="schrift" aria-pressed="${s.rahmen ? 'true' : 'false'}"${s.rahmen ? ' class="on"' : ''} title="Rahmen um den Text">` +
-          '<span class="zeichen" aria-hidden="true">▭</span><span class="wort">Rahmen</span></button>';
+          '<span class="zeichen" aria-hidden="true">▭</span><span class="wort">Rahmen</span></button>' +
+          /* DIE AUSRICHTUNG (E560): EIN Knopf, der weiterschaltet — wie die
+             Schriftart daneben. Drei Knöpfe nebeneinander wären am Telefon
+             die drei, die die Leiste aus dem Bild schieben (§37). */
+          (() => { const a2 = AUSRICHTUNGEN.find(x => x.id === s.ausricht) || AUSRICHTUNGEN[0];
+            return `<button data-act="ausricht" data-gruppe="schrift" data-ausricht="${a2.id}" ` +
+              `title="Ausrichtung: ${a2.name} — antippen wechselt: ${AUSRICHTUNGEN.map(x => x.name).join(' → ')}">` +
+              `<span class="zeichen" aria-hidden="true">${a2.zeichen}</span>` +
+              `<span class="wort">${a2.name}</span></button>`; })();
       })() +
       /* ══ DIE STIFTREIHE (E512) ═══════════════════════════════════════════
          Redur, 8. September, mit vier Bildern aus GoodNotes: „die
@@ -4718,6 +4750,17 @@ const Marken = (() => {
           controls.setzeSchrift({ schritt: target.dataset.act === 'groesser' ? 1 : -1 });
           const groesser = tools.querySelector<HTMLButtonElement>('[data-act="groesser"]');
           if (groesser && controls.schriftVon) groesser.title = `Schrift grösser (jetzt ${controls.schriftVon().groesse} px)`;
+          return;
+        }
+        if (target.dataset.act === 'ausricht' && controls.setzeSchrift) {
+          const jetzt = AUSRICHTUNGEN.findIndex(x => x.id === target.dataset.ausricht);
+          const naechste = AUSRICHTUNGEN[(jetzt + 1) % AUSRICHTUNGEN.length]!;
+          controls.setzeSchrift({ ausricht: naechste.id });
+          target.dataset.ausricht = naechste.id;
+          target.title = `Ausrichtung: ${naechste.name} — antippen wechselt: ` +
+            AUSRICHTUNGEN.map(x => x.name).join(' → ');
+          target.innerHTML = `<span class="zeichen" aria-hidden="true">${naechste.zeichen}</span>` +
+            `<span class="wort">${naechste.name}</span>`;
           return;
         }
         if ((target.dataset.act === 'fett' || target.dataset.act === 'rahmen') && controls.setzeSchrift) {

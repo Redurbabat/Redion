@@ -7460,8 +7460,13 @@ verloren hält:
   `a:buChar` kommt als Zeichen davor, `a:buNone` unterdrückt es. `buAutoNum`
   bekommt ein neutrales „·" — die echte Nummer käme erst aus der Absatzfolge,
   und eine falsche Nummer wäre schlimmer als ein neutrales Zeichen.
-- **Ausrichtung** (`a:pPr@algn`). Die Textmarke hat kein Feld dafür; alles
-  kommt linksbündig an. Das ist die nächste Stelle, an der es auffällt.
+- ~~**Ausrichtung** (`a:pPr@algn`).~~ **GESCHLOSSEN mit E560**: `ctr` und `r`
+  werden gelesen, gezeichnet (SVG-Anker, jede Zeile eines umbrechenden
+  Absatzes) und sind über einen eigenen Knopf in der Zeichenleiste auch von
+  Hand setzbar — die Lücke war nie nur eine Importlücke. **Offen bleibt der
+  Blocksatz**: `just` und `dist` kommen linksbündig an, weil die
+  Markenschicht keine gestreckten Wortabstände kann. Links ist die Kante,
+  die der Blocksatz mit ihr teilt; zentriert wäre an jeder Zeile falsch.
 - **Tabellen (`a:tbl`) und Diagramme.** Beide werden übersprungen — sie haben
   in der Markenschicht kein Gegenstück. **Seit E555 werden sie wenigstens
   GENANNT**: der Hinweis nach dem Einlesen sagt „NICHT übernommen:

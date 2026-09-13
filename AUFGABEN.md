@@ -872,9 +872,10 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   `theme1.xml` für Farben. Jede Folie wird ein Block mit `marken`.
   Nachgezogen seit: Gruppen rekursiv (E555), Format je Absatz (E557),
   Lage, Grad und Hintergrund geerbt über Layout und Master (E558),
-  **das Farbthema aufgelöst (E559)**. Was jetzt noch fehlt, steht in L151
-  und ist kleiner als das Erledigte: Ausrichtung, gemischte Läufe innerhalb
-  eines Absatzes, Drehung, Tabellen als Tabellenblock.
+  das Farbthema aufgelöst (E559), **die Ausrichtung gelesen UND bedienbar
+  gemacht (E560)**. Was jetzt noch fehlt, steht in L151 und ist kleiner als
+  das Erledigte: gemischte Läufe innerhalb eines Absatzes, Drehung,
+  Tabellen als Tabellenblock, Blocksatz.
 - **O4 · Folien bearbeiten** — ZUR HÄLFTE (E546). Zwei Sachen sind erledigt:
   - Das ZEIGEN einer Folie ändert sie nicht mehr. `Blatt.zeichne` legte für
     jedes Blatt ohne Textkinder eine leere Zeile AN — bei 27 eingelesenen

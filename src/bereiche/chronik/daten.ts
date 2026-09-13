@@ -1745,6 +1745,36 @@ const ChronikDaten = {
    "beweis": "512, 513 und 514 zusammen gruen. Und die drei roten Zusagen sind die Gegenprobe selbst: sie sind gefahren worden, nicht gebaut.",
    "lehre": "Die Versuchung war, die PRUEFUNG zu lockern, weil der Unterschied „egal\" aussah. Er war es fuer das Zeichnen — aber nicht fuer die Frage, ob der Leser Daten unveraendert durchreicht. Eine Zusage, die zufaellig streng ist, faengt genau die Aenderungen, die man nicht vorhatte; sie zu lockern haette dieses Netz zerschnitten. Und: meine eigene neue Suite konnte den Fund nicht machen, weil sie selbst klein vergleicht. Die alten Laeufe sind nicht Ballast, sie sind das Gedaechtnis.",
    "entscheidung": "E559"
+  },
+  {
+   "nr": "P38",
+   "datum": "2026-09-13",
+   "titel": "Dieselbe Feldliste, das dritte Mal — und diesmal umgedreht",
+   "schwere": "mittel",
+   "symptom": "`test515 §1` meldete beim ersten Lauf „ist '', soll 'mitte'\". Die Ausrichtung wurde gelesen, stand im Absatz, und kam trotzdem nicht an der Marke an.",
+   "falscheVermutung": "Keine — ich wusste sofort, wo es liegt. Das war der eigentliche Befund.",
+   "wieGefunden": "Der Kommentar an der Stelle sagte es selbst: „Eine Feldliste, die aufzaehlt, vergisst beim naechsten Feld wieder.\" Er stand da, seit E557 dasselbe passiert war, und davor hatte E545 dasselbe erlebt.",
+   "ursache": "`marken.push` baute die Textmarke aus einer ERLAUBNISLISTE: id, art, point, breiteBox, text, fontSize, fett, farbe. Jedes neue Feld eines Absatzes faellt durch, bis jemand es eintraegt.",
+   "loesung": "Die Liste umgedreht. Was NICHT in die Ablage darf, ist kurz, bekannt und abgeschlossen — `x`/`y`/`w`/`h`/`art`, die Masse, aus denen `point` und `breiteBox` schon gerechnet sind. Alles andere reist ueber Rest-Destrukturierung mit.",
+   "warumKeineUhr": "—",
+   "beweis": "test515 §1 und §3 gruen, ohne dass `ausricht` irgendwo aufgezaehlt wird. Die frueheren Faelle (`verlauf`, `farbe`) reisen unveraendert weiter mit; 512, 513 und 514 bleiben gruen.",
+   "lehre": "Ein Kommentar, der eine Schwaeche BESCHREIBT, behebt sie nicht — er macht sie nur erwartbar. Zweimal habe ich hier die Zeile ergaenzt und den Hinweis daneben geschrieben; beim dritten Mal war klar, dass der Hinweis das Problem ist, nicht die Loesung. Die Frage ist nie „welches Feld fehlt\", sondern „ist die Liste auf der richtigen Seite\": Erlaubnislisten muessen wachsen, Verbotslisten nicht. Wo die verbotene Menge kurz und abgeschlossen ist, gehoert die Liste dorthin.",
+   "entscheidung": "E560"
+  },
+  {
+   "nr": "P39",
+   "datum": "2026-09-13",
+   "titel": "Ein Knopf im DOM ist noch keine Funktion",
+   "schwere": "klein",
+   "symptom": "`test515 §5` war gruen: der Knopf steht in der Leiste, schaltet links → mitte → rechts → links. Auf dem Bild der fertigen Folie war er nirgends zu sehen.",
+   "falscheVermutung": "Erst: die Schriftgruppe erscheine nur beim Text-Werkzeug, ich haette den Knopf in die falsche Gruppe gehaengt. Dann: meine Messsonde sei falsch (sie WAR falsch — auf einer leeren Seite gibt es gar keine Zeichenleiste).",
+   "wieGefunden": "Auf dem richtigen Weg nachgemessen: der Knopf ist da, aber 0 x 0 und `display:none`. Und `fett` daneben genauso — eine Funktion, die es seit E360 gibt. Damit war klar, dass es nicht an meiner Zeile liegt. Die Ursache stand in `pdf-studio.css`: im Dokumentstudio liegt die ganze Schriftgruppe hinter dem Schalter `···` (E552), weil die schwebende Leiste unten nicht Platz fuer alles hat.",
+   "ursache": "Keine — das ist Absicht. Der Fehler lag in der PRUEFUNG: sie fragte, ob der Knopf im DOM steht, und das ist nicht dieselbe Frage wie „bekommt man ihn zu sehen\".",
+   "loesung": "§5 oeffnet jetzt `···` und misst wirklich: vorher 0 x 0 und `display:none`, nachher 61 x 44, sichtbar, ganz im Bild — und die 44 px sind §37 gleich mitgeprueft.",
+   "warumKeineUhr": "—",
+   "beweis": "Die Gegenprobe G5 (Knopf weglassen) ging von 4 auf 7 rote Zusagen, seit §5 die Sichtbarkeit misst statt der Anwesenheit.",
+   "lehre": "§55.1 sagt „oeffne die Seite wirklich\", und der Grund ist genau dieser: eine Zusage kann gruen sein, weil sie die bequeme Frage stellt. `querySelector` findet auch, was niemand sieht. Was zaehlt, ist eine gemessene Box — Breite, Hoehe, computed display, und ob sie im Bild liegt. Und das Bild hat die Frage ueberhaupt erst gestellt.",
+   "entscheidung": "E560"
   }
  ]
 } as const;

@@ -23229,7 +23229,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 976, inhalt: '7cc6838a306a0a57', gebaut: '2026-09-13T17:57:18.026Z' };
+const Stand = { fassung: 989, inhalt: '7da385e50aab1f5b', gebaut: '2026-09-13T18:22:42.623Z' };
 window.Stand = Stand;
 
 </script>
@@ -24437,8 +24437,14 @@ const InkGeometry = (() => {
         const family = String(mark.schrift || 'standard');
         const bold = !!mark.fett;
         const lines = textLines(String(mark.text || ''), width - pad * 2, fontSize, family, bold);
+        /* DIE AUSRICHTUNG GEHOERT ZUM KASTEN, NICHT ZUM ZEICHNER (E560).
+           Sie steht hier, weil sie die Zeilen und die Breite braucht — und weil
+           der Auswahlkasten dieselbe Rechnung sehen muss wie das SVG. Die drei
+           Namen sind die des Hauses (`bild-rahmen aus-links`), nicht neue. */
+        const roh = String(mark.ausricht || 'links');
+        const ausricht = (roh === 'mitte' || roh === 'rechts') ? roh : 'links';
         return { x: point[0], y: point[1], width, height: pad * 2 + lines.length * fontSize * TEXT_ZEILE,
-            pad, zeile: fontSize * TEXT_ZEILE, fontSize, family, bold, lines };
+            pad, zeile: fontSize * TEXT_ZEILE, fontSize, family, bold, lines, ausricht };
     };
     /** Die Linienzuege — sie drehen ihre Punkte; alles andere hat einen Kasten. */
     const LINIEN = new Set(['stift', 'marker', 'line', 'arrow']);
@@ -58488,7 +58494,14 @@ const Marken = (() => {
         { id: 'schmal', name: 'Schmal', stapel: "'Arial Narrow', 'Roboto Condensed', 'Helvetica Neue', sans-serif" }
     ];
     const SCHRIFT_STUFEN = [11, 13, 16, 20, 26, 34];
-    const SCHRIFT_VORGABE = { familie: 'standard', groesse: 16, fett: false, rahmen: false };
+    const SCHRIFT_VORGABE = { familie: 'standard', groesse: 16, fett: false,
+        rahmen: false, ausricht: 'links' };
+    /* Die drei Namen sind die des Hauses (`bild-rahmen aus-links`), nicht neue. */
+    const AUSRICHTUNGEN = [
+        { id: 'links', zeichen: '⭰', name: 'Links' },
+        { id: 'mitte', zeichen: '⭤', name: 'Mitte' },
+        { id: 'rechts', zeichen: '⭲', name: 'Rechts' }
+    ];
     const schriftStapel = (id) => (SCHRIFTEN.find(x => x.id === String(id)) || SCHRIFTEN[0]).stapel;
     const schriftLesen = () => {
         const roh = typeof Store !== 'undefined' ? Store.getMeta('zeichnen:schrift') : null;
@@ -58496,7 +58509,8 @@ const Marken = (() => {
         return {
             familie: SCHRIFTEN.some(x => x.id === s.familie) ? String(s.familie) : SCHRIFT_VORGABE.familie,
             groesse: SCHRIFT_STUFEN.includes(Number(s.groesse)) ? Number(s.groesse) : SCHRIFT_VORGABE.groesse,
-            fett: !!s.fett, rahmen: !!s.rahmen
+            fett: !!s.fett, rahmen: !!s.rahmen,
+            ausricht: AUSRICHTUNGEN.some(x => x.id === s.ausricht) ? String(s.ausricht) : 'links'
         };
     };
     const naechsteStufe = (jetzt, richtung) => {
@@ -58894,13 +58908,23 @@ const Marken = (() => {
                         class: 'blatt-textrahmen' })
                     : svg('rect', { x: layout.x, y: layout.y, width: layout.width, height: layout.height,
                         fill: 'transparent', stroke: 'none' }));
+                /* DIE AUSRICHTUNG (E560): SVG kann sie selbst, wenn man ihm den
+                   richtigen Anker gibt — `middle` misst von der Mitte, `end` vom
+                   Ende. Jede Zeile bekommt dasselbe `x`, sonst laufen die Zeilen
+                   eines umbrechenden Absatzes auseinander. */
+                const anker = layout.ausricht === 'mitte' ? 'middle'
+                    : layout.ausricht === 'rechts' ? 'end' : 'start';
+                const zeilenX = layout.ausricht === 'mitte' ? layout.x + layout.width / 2
+                    : layout.ausricht === 'rechts' ? layout.x + layout.width - layout.pad
+                        : layout.x + layout.pad;
                 const textKnoten = svg('text', {
-                    x: layout.x + layout.pad, y: layout.y + layout.pad + layout.fontSize * 0.85, fill: color,
+                    x: zeilenX, y: layout.y + layout.pad + layout.fontSize * 0.85, fill: color,
                     'font-size': layout.fontSize, 'font-family': schriftStapel(layout.family),
-                    'font-weight': layout.bold ? 700 : 400
+                    'font-weight': layout.bold ? 700 : 400,
+                    ...(anker === 'start' ? {} : { 'text-anchor': anker })
                 });
                 layout.lines.forEach((zeile, index) => {
-                    const stueck = svg('tspan', { x: layout.x + layout.pad, dy: index === 0 ? 0 : layout.zeile });
+                    const stueck = svg('tspan', { x: zeilenX, dy: index === 0 ? 0 : layout.zeile });
                     stueck.textContent = zeile || ' ';
                     textKnoten.appendChild(stueck);
                 });
@@ -60901,7 +60925,9 @@ const Marken = (() => {
                 const y = Math.round(Math.max(0, Math.min(point[1] ?? 0, hoehe - 40)) * 100) / 100;
                 const breiteBox = Math.max(120, Math.min(Math.round(breite * 0.4), Math.round(breite - x - 8)));
                 marks.push({ id: frischeId(), art: 'text', point: [x, y], text: answer, farbe: color,
-                    fontSize: schrift.groesse, breiteBox, schrift: schrift.familie, fett: schrift.fett, rahmen: schrift.rahmen });
+                    fontSize: schrift.groesse, breiteBox, schrift: schrift.familie, fett: schrift.fett,
+                    rahmen: schrift.rahmen,
+                    ...(schrift.ausricht !== 'links' ? { ausricht: schrift.ausricht } : {}) });
             }
             redraw();
             commit(before);
@@ -61728,7 +61754,10 @@ const Marken = (() => {
                 groesse: schritt ? naechsteStufe(schrift.groesse, schritt)
                     : (aenderung.groesse !== undefined ? Math.max(8, Number(aenderung.groesse) || schrift.groesse) : schrift.groesse),
                 fett: aenderung.fett !== undefined ? !!aenderung.fett : schrift.fett,
-                rahmen: aenderung.rahmen !== undefined ? !!aenderung.rahmen : schrift.rahmen
+                rahmen: aenderung.rahmen !== undefined ? !!aenderung.rahmen : schrift.rahmen,
+                ausricht: aenderung.ausricht !== undefined
+                    && AUSRICHTUNGEN.some(x => x.id === aenderung.ausricht)
+                    ? String(aenderung.ausricht) : schrift.ausricht
             };
             if (typeof Store !== 'undefined')
                 Store.setMeta('zeichnen:schrift', schrift);
@@ -61751,6 +61780,8 @@ const Marken = (() => {
                     neu.fett = schrift.fett;
                 if (aenderung.rahmen !== undefined)
                     neu.rahmen = schrift.rahmen;
+                if (aenderung.ausricht !== undefined)
+                    neu.ausricht = schrift.ausricht;
                 marks[i] = neu;
                 updateNode(nodeFor(idOf(neu)), neu);
                 geaendert = true;
@@ -62400,7 +62431,17 @@ const Marken = (() => {
                         `<button data-act="fett" data-gruppe="schrift" aria-pressed="${s.fett ? 'true' : 'false'}"${s.fett ? ' class="on"' : ''} title="Fett">` +
                         '<span class="zeichen" aria-hidden="true">F</span><span class="wort">Fett</span></button>' +
                         `<button data-act="rahmen" data-gruppe="schrift" aria-pressed="${s.rahmen ? 'true' : 'false'}"${s.rahmen ? ' class="on"' : ''} title="Rahmen um den Text">` +
-                        '<span class="zeichen" aria-hidden="true">▭</span><span class="wort">Rahmen</span></button>';
+                        '<span class="zeichen" aria-hidden="true">▭</span><span class="wort">Rahmen</span></button>' +
+                        /* DIE AUSRICHTUNG (E560): EIN Knopf, der weiterschaltet — wie die
+                           Schriftart daneben. Drei Knöpfe nebeneinander wären am Telefon
+                           die drei, die die Leiste aus dem Bild schieben (§37). */
+                        (() => {
+                            const a2 = AUSRICHTUNGEN.find(x => x.id === s.ausricht) || AUSRICHTUNGEN[0];
+                            return `<button data-act="ausricht" data-gruppe="schrift" data-ausricht="${a2.id}" ` +
+                                `title="Ausrichtung: ${a2.name} — antippen wechselt: ${AUSRICHTUNGEN.map(x => x.name).join(' → ')}">` +
+                                `<span class="zeichen" aria-hidden="true">${a2.zeichen}</span>` +
+                                `<span class="wort">${a2.name}</span></button>`;
+                        })();
                 })() +
                 /* ══ DIE STIFTREIHE (E512) ═══════════════════════════════════════════
                    Redur, 8. September, mit vier Bildern aus GoodNotes: „die
@@ -63311,6 +63352,17 @@ const Marken = (() => {
                     const groesser = tools.querySelector('[data-act="groesser"]');
                     if (groesser && controls.schriftVon)
                         groesser.title = `Schrift grösser (jetzt ${controls.schriftVon().groesse} px)`;
+                    return;
+                }
+                if (target.dataset.act === 'ausricht' && controls.setzeSchrift) {
+                    const jetzt = AUSRICHTUNGEN.findIndex(x => x.id === target.dataset.ausricht);
+                    const naechste = AUSRICHTUNGEN[(jetzt + 1) % AUSRICHTUNGEN.length];
+                    controls.setzeSchrift({ ausricht: naechste.id });
+                    target.dataset.ausricht = naechste.id;
+                    target.title = `Ausrichtung: ${naechste.name} — antippen wechselt: ` +
+                        AUSRICHTUNGEN.map(x => x.name).join(' → ');
+                    target.innerHTML = `<span class="zeichen" aria-hidden="true">${naechste.zeichen}</span>` +
+                        `<span class="wort">${naechste.name}</span>`;
                     return;
                 }
                 if ((target.dataset.act === 'fett' || target.dataset.act === 'rahmen') && controls.setzeSchrift) {
@@ -74760,6 +74812,36 @@ const ChronikDaten = {
             "beweis": "512, 513 und 514 zusammen gruen. Und die drei roten Zusagen sind die Gegenprobe selbst: sie sind gefahren worden, nicht gebaut.",
             "lehre": "Die Versuchung war, die PRUEFUNG zu lockern, weil der Unterschied „egal\" aussah. Er war es fuer das Zeichnen — aber nicht fuer die Frage, ob der Leser Daten unveraendert durchreicht. Eine Zusage, die zufaellig streng ist, faengt genau die Aenderungen, die man nicht vorhatte; sie zu lockern haette dieses Netz zerschnitten. Und: meine eigene neue Suite konnte den Fund nicht machen, weil sie selbst klein vergleicht. Die alten Laeufe sind nicht Ballast, sie sind das Gedaechtnis.",
             "entscheidung": "E559"
+        },
+        {
+            "nr": "P38",
+            "datum": "2026-09-13",
+            "titel": "Dieselbe Feldliste, das dritte Mal — und diesmal umgedreht",
+            "schwere": "mittel",
+            "symptom": "`test515 §1` meldete beim ersten Lauf „ist '', soll 'mitte'\". Die Ausrichtung wurde gelesen, stand im Absatz, und kam trotzdem nicht an der Marke an.",
+            "falscheVermutung": "Keine — ich wusste sofort, wo es liegt. Das war der eigentliche Befund.",
+            "wieGefunden": "Der Kommentar an der Stelle sagte es selbst: „Eine Feldliste, die aufzaehlt, vergisst beim naechsten Feld wieder.\" Er stand da, seit E557 dasselbe passiert war, und davor hatte E545 dasselbe erlebt.",
+            "ursache": "`marken.push` baute die Textmarke aus einer ERLAUBNISLISTE: id, art, point, breiteBox, text, fontSize, fett, farbe. Jedes neue Feld eines Absatzes faellt durch, bis jemand es eintraegt.",
+            "loesung": "Die Liste umgedreht. Was NICHT in die Ablage darf, ist kurz, bekannt und abgeschlossen — `x`/`y`/`w`/`h`/`art`, die Masse, aus denen `point` und `breiteBox` schon gerechnet sind. Alles andere reist ueber Rest-Destrukturierung mit.",
+            "warumKeineUhr": "—",
+            "beweis": "test515 §1 und §3 gruen, ohne dass `ausricht` irgendwo aufgezaehlt wird. Die frueheren Faelle (`verlauf`, `farbe`) reisen unveraendert weiter mit; 512, 513 und 514 bleiben gruen.",
+            "lehre": "Ein Kommentar, der eine Schwaeche BESCHREIBT, behebt sie nicht — er macht sie nur erwartbar. Zweimal habe ich hier die Zeile ergaenzt und den Hinweis daneben geschrieben; beim dritten Mal war klar, dass der Hinweis das Problem ist, nicht die Loesung. Die Frage ist nie „welches Feld fehlt\", sondern „ist die Liste auf der richtigen Seite\": Erlaubnislisten muessen wachsen, Verbotslisten nicht. Wo die verbotene Menge kurz und abgeschlossen ist, gehoert die Liste dorthin.",
+            "entscheidung": "E560"
+        },
+        {
+            "nr": "P39",
+            "datum": "2026-09-13",
+            "titel": "Ein Knopf im DOM ist noch keine Funktion",
+            "schwere": "klein",
+            "symptom": "`test515 §5` war gruen: der Knopf steht in der Leiste, schaltet links → mitte → rechts → links. Auf dem Bild der fertigen Folie war er nirgends zu sehen.",
+            "falscheVermutung": "Erst: die Schriftgruppe erscheine nur beim Text-Werkzeug, ich haette den Knopf in die falsche Gruppe gehaengt. Dann: meine Messsonde sei falsch (sie WAR falsch — auf einer leeren Seite gibt es gar keine Zeichenleiste).",
+            "wieGefunden": "Auf dem richtigen Weg nachgemessen: der Knopf ist da, aber 0 x 0 und `display:none`. Und `fett` daneben genauso — eine Funktion, die es seit E360 gibt. Damit war klar, dass es nicht an meiner Zeile liegt. Die Ursache stand in `pdf-studio.css`: im Dokumentstudio liegt die ganze Schriftgruppe hinter dem Schalter `···` (E552), weil die schwebende Leiste unten nicht Platz fuer alles hat.",
+            "ursache": "Keine — das ist Absicht. Der Fehler lag in der PRUEFUNG: sie fragte, ob der Knopf im DOM steht, und das ist nicht dieselbe Frage wie „bekommt man ihn zu sehen\".",
+            "loesung": "§5 oeffnet jetzt `···` und misst wirklich: vorher 0 x 0 und `display:none`, nachher 61 x 44, sichtbar, ganz im Bild — und die 44 px sind §37 gleich mitgeprueft.",
+            "warumKeineUhr": "—",
+            "beweis": "Die Gegenprobe G5 (Knopf weglassen) ging von 4 auf 7 rote Zusagen, seit §5 die Sichtbarkeit misst statt der Anwesenheit.",
+            "lehre": "§55.1 sagt „oeffne die Seite wirklich\", und der Grund ist genau dieser: eine Zusage kann gruen sein, weil sie die bequeme Frage stellt. `querySelector` findet auch, was niemand sieht. Was zaehlt, ist eine gemessene Box — Breite, Hoehe, computed display, und ob sie im Bild liegt. Und das Bild hat die Frage ueberhaupt erst gestellt.",
+            "entscheidung": "E560"
         }
     ]
 };
@@ -109246,7 +109328,7 @@ const Einlesen = (() => {
                 fett: rPr?.getAttribute('b') === '1',
                 farbe: rgb ? '#' + rgb : '',
                 lvl: Math.max(0, Math.min(8, Number(pPr?.getAttribute('lvl')) || 0)),
-                zeichen });
+                zeichen, ausricht: absatzAusricht(pPr) });
         }
         /* Leerzeilen am Ende weg — PowerPoint hängt gern einen leeren Absatz an,
            und der macht aus einem Titel einen Kasten mit Loch darunter. */
@@ -109256,6 +109338,35 @@ const Einlesen = (() => {
     };
     /** Der ganze Text eines Kastens, für Titelsuche und Leerprüfung. */
     const formText = (txBody) => absaetzeLesen(txBody).map(a => a.text).join('\n');
+    /**
+     * Die Ausrichtung eines Absatzes — `a:pPr@algn` (E560).
+     *
+     * Heisst `absatzAusricht` und nicht `ausrichtung`: sechshundert Zeilen
+     * weiter oben gibt es schon ein `ausrichtung`, und das ist ein Element aus
+     * einer Excel-Stilvorlage. Zwei Namen für zwei Sachen.
+     *
+     * PowerPoint kennt fünf Werte, Redions Textmarke drei. Die Zuordnung ist
+     * deshalb keine Tabelle, sondern eine Entscheidung:
+     *
+     *     l     → links     (und das ist auch der Fall ohne Angabe)
+     *     ctr   → mitte
+     *     r     → rechts
+     *     just  → links     Blocksatz. Er BRAUCHT gestreckte Wortabstände,
+     *     dist  → links     und die hat die Markenschicht nicht. Links ist
+     *                       die Kante, die der Blocksatz mit sich teilt —
+     *                       zentriert wäre an jeder Zeile falsch.
+     *
+     * Gibt '' zurück, wo nichts steht: dann bekommt die Marke gar kein Feld,
+     * und eine alte Marke ohne das Feld verhält sich weiter wie bisher.
+     */
+    const absatzAusricht = (pPr) => {
+        const algn = pPr?.getAttribute('algn') || '';
+        if (algn === 'ctr')
+            return 'mitte';
+        if (algn === 'r')
+            return 'rechts';
+        return '';
+    };
     /** Lage und Grösse einer Form, in Blattpunkten. `null`, wenn sie fehlen. */
     const formLage = (form) => {
         const xfrm = form.getElementsByTagName('a:xfrm')[0];
@@ -109814,7 +109925,11 @@ const Einlesen = (() => {
                            liefe bei jedem umbrechenden Absatz in den nächsten hinein. */
                         const gleichFormat = absaetze.length > 0 && absaetze.every(a => a.sz === absaetze[0].sz && a.fett === absaetze[0].fett
                             && a.farbe === absaetze[0].farbe && a.lvl === absaetze[0].lvl
-                            && !a.zeichen === !absaetze[0].zeichen);
+                            && !a.zeichen === !absaetze[0].zeichen
+                            /* Die Ausrichtung gehört dazu (E560): ein zentrierter Titel über
+                               einem linksbündigen Absatz ist genau der Fall, in dem EINE
+                               Marke die falsche Antwort ist. */
+                            && a.ausricht === absaetze[0].ausricht);
                         if (absaetze.length <= 1 || gleichFormat) {
                             const a = absaetze[0];
                             objekte.push({ art: 'text',
@@ -109822,7 +109937,8 @@ const Einlesen = (() => {
                                 x: kx + a.lvl * Math.max(10, (a.sz || grund) * 0.9), y: ky,
                                 breiteBox: Math.max(20, kb - a.lvl * Math.max(10, (a.sz || grund) * 0.9)),
                                 fontSize: a.sz || grund, fett: a.fett,
-                                ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}) });
+                                ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}),
+                                ...(a.ausricht ? { ausricht: a.ausricht } : {}) });
                             continue;
                         }
                         let y = ky;
@@ -109839,7 +109955,8 @@ const Einlesen = (() => {
                                 x: kx + einzug, y,
                                 breiteBox: Math.max(20, kb - einzug),
                                 fontSize: a.sz || grund, fett: a.fett,
-                                ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}) };
+                                ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}),
+                                ...(a.ausricht ? { ausricht: a.ausricht } : {}) };
                             objekte.push(marke);
                             /* Der Zeichner rechnet die Höhe, nicht ich. Fehlt er (halb
                                geladenes Fenster), bleibt die einfache Schätzung — dann
@@ -110129,22 +110246,30 @@ const Einlesen = (() => {
                 for (const o of folie.objekte) {
                     const id = 'm' + Math.random().toString(36).slice(2, 10);
                     if (o.art === 'text') {
-                        /* `farbe` nur, wenn es eine gibt (E557) — die Marke fällt sonst
-                           auf `FARBEN[0]` zurück, und das ist richtig so.
+                        /* ══ DIE FELDLISTE IST UMGEDREHT (E560) ══════════════════════
+                           Hier stand eine Liste, die AUFZÄHLT, was mitreisen darf. Sie
+                           hat dreimal dasselbe vergessen, und jedes Mal erst der
+                           Prüflauf es gefunden:
             
-                           HIER WAR DER FEHLER BEIM ERSTEN LAUF, und er ist derselbe wie
-                           bei `verlauf` in E545, vier Zeilen tiefer: das Lesen war
-                           fertig, die Farbe stand im Absatz — und diese Zeile baute die
-                           Marke aus einer FESTEN Feldliste zusammen und liess sie
-                           liegen. Grad und Fett kamen an, die Farbe nicht; der Prüflauf
-                           zeigte „ist '', soll '#CC0000'".
+                               E545  `verlauf`   fehlte
+                               E557  `farbe`     fehlte    („ist '', soll '#CC0000'")
+                               E560  `ausricht`  fehlte    („ist '', soll 'mitte'")
             
-                           Eine Feldliste, die aufzählt, vergisst beim nächsten Feld
-                           wieder. Sie bleibt trotzdem: ein blindes Durchreichen des
-                           ganzen Objekts nähme `x`/`y`/`w`/`h` mit in die Ablage. */
-                        marken.push({ id, art: 'text', point: [o.x, o.y], breiteBox: o.breiteBox,
-                            text: o.text, fontSize: o.fontSize, fett: !!o.fett,
-                            ...(o.farbe ? { farbe: o.farbe } : {}) });
+                           Der Kommentar, der hier stand, sagte selbst voraus, dass sie
+                           „beim nächsten Feld wieder vergisst" — und begründete ihr
+                           Bleiben damit, dass ein blindes Durchreichen `x`/`y`/`w`/`h`
+                           mit in die Ablage nähme. Das stimmt. Es ist nur kein Grund
+                           für eine Erlaubnisliste, sondern einer für eine VERBOTSLISTE:
+            
+                           Was nicht in die Ablage darf, ist eine kurze, bekannte,
+                           abgeschlossene Menge — die Masse, aus denen `point` und
+                           `breiteBox` schon gerechnet sind. Was mitreisen soll, ist es
+                           nicht: jedes neue Feld eines Absatzes gehört dazu.
+            
+                           Seither reist alles mit AUSSER diesen vieren. Ein viertes
+                           vergessenes Feld kann es nicht mehr geben. */
+                        const { x: _x, y: _y, w: _w, h: _h, art: _art, ...rest } = o;
+                        marken.push({ id, art: 'text', point: [o.x, o.y], ...rest, fett: !!o.fett });
                         continue;
                     }
                     if (o.art === 'abdeck') {

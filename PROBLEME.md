@@ -51,6 +51,8 @@ sind der teuerste Teil und der lehrreichste.
 | P35 | 2026-09-13 | Eine Verbesserung, die ihren eigenen Schaden mitbrachte | 🟠 mittel | E558 |
 | P36 | 2026-09-13 | Die Pruefung hatte unrecht und der Code recht | 🟡 klein | E559 |
 | P37 | 2026-09-13 | Zwei alte Laeufe haben eine Aenderung gemeldet, die ich gar nicht vorhatte | 🟡 klein | E559 |
+| P38 | 2026-09-13 | Dieselbe Feldliste, das dritte Mal — und diesmal umgedreht | 🟠 mittel | E560 |
+| P39 | 2026-09-13 | Ein Knopf im DOM ist noch keine Funktion | 🟡 klein | E560 |
 
 ---
 
@@ -789,4 +791,50 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** 512, 513 und 514 zusammen gruen. Und die drei roten Zusagen sind die Gegenprobe selbst: sie sind gefahren worden, nicht gebaut.
 
 **Die Lehre.** Die Versuchung war, die PRUEFUNG zu lockern, weil der Unterschied „egal" aussah. Er war es fuer das Zeichnen — aber nicht fuer die Frage, ob der Leser Daten unveraendert durchreicht. Eine Zusage, die zufaellig streng ist, faengt genau die Aenderungen, die man nicht vorhatte; sie zu lockern haette dieses Netz zerschnitten. Und: meine eigene neue Suite konnte den Fund nicht machen, weil sie selbst klein vergleicht. Die alten Laeufe sind nicht Ballast, sie sind das Gedaechtnis.
+
+
+---
+
+## P38 · Dieselbe Feldliste, das dritte Mal — und diesmal umgedreht
+
+*2026-09-13 · 🟠 mittel · E560*
+
+**Das Bild.** `test515 §1` meldete beim ersten Lauf „ist '', soll 'mitte'". Die Ausrichtung wurde gelesen, stand im Absatz, und kam trotzdem nicht an der Marke an.
+
+**Die falsche Vermutung.** Keine — ich wusste sofort, wo es liegt. Das war der eigentliche Befund.
+
+**Wie es gefunden wurde.** Der Kommentar an der Stelle sagte es selbst: „Eine Feldliste, die aufzaehlt, vergisst beim naechsten Feld wieder." Er stand da, seit E557 dasselbe passiert war, und davor hatte E545 dasselbe erlebt.
+
+**Die Ursache.** `marken.push` baute die Textmarke aus einer ERLAUBNISLISTE: id, art, point, breiteBox, text, fontSize, fett, farbe. Jedes neue Feld eines Absatzes faellt durch, bis jemand es eintraegt.
+
+**Die Lösung.** Die Liste umgedreht. Was NICHT in die Ablage darf, ist kurz, bekannt und abgeschlossen — `x`/`y`/`w`/`h`/`art`, die Masse, aus denen `point` und `breiteBox` schon gerechnet sind. Alles andere reist ueber Rest-Destrukturierung mit.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** test515 §1 und §3 gruen, ohne dass `ausricht` irgendwo aufgezaehlt wird. Die frueheren Faelle (`verlauf`, `farbe`) reisen unveraendert weiter mit; 512, 513 und 514 bleiben gruen.
+
+**Die Lehre.** Ein Kommentar, der eine Schwaeche BESCHREIBT, behebt sie nicht — er macht sie nur erwartbar. Zweimal habe ich hier die Zeile ergaenzt und den Hinweis daneben geschrieben; beim dritten Mal war klar, dass der Hinweis das Problem ist, nicht die Loesung. Die Frage ist nie „welches Feld fehlt", sondern „ist die Liste auf der richtigen Seite": Erlaubnislisten muessen wachsen, Verbotslisten nicht. Wo die verbotene Menge kurz und abgeschlossen ist, gehoert die Liste dorthin.
+
+
+---
+
+## P39 · Ein Knopf im DOM ist noch keine Funktion
+
+*2026-09-13 · 🟡 klein · E560*
+
+**Das Bild.** `test515 §5` war gruen: der Knopf steht in der Leiste, schaltet links → mitte → rechts → links. Auf dem Bild der fertigen Folie war er nirgends zu sehen.
+
+**Die falsche Vermutung.** Erst: die Schriftgruppe erscheine nur beim Text-Werkzeug, ich haette den Knopf in die falsche Gruppe gehaengt. Dann: meine Messsonde sei falsch (sie WAR falsch — auf einer leeren Seite gibt es gar keine Zeichenleiste).
+
+**Wie es gefunden wurde.** Auf dem richtigen Weg nachgemessen: der Knopf ist da, aber 0 x 0 und `display:none`. Und `fett` daneben genauso — eine Funktion, die es seit E360 gibt. Damit war klar, dass es nicht an meiner Zeile liegt. Die Ursache stand in `pdf-studio.css`: im Dokumentstudio liegt die ganze Schriftgruppe hinter dem Schalter `···` (E552), weil die schwebende Leiste unten nicht Platz fuer alles hat.
+
+**Die Ursache.** Keine — das ist Absicht. Der Fehler lag in der PRUEFUNG: sie fragte, ob der Knopf im DOM steht, und das ist nicht dieselbe Frage wie „bekommt man ihn zu sehen".
+
+**Die Lösung.** §5 oeffnet jetzt `···` und misst wirklich: vorher 0 x 0 und `display:none`, nachher 61 x 44, sichtbar, ganz im Bild — und die 44 px sind §37 gleich mitgeprueft.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Die Gegenprobe G5 (Knopf weglassen) ging von 4 auf 7 rote Zusagen, seit §5 die Sichtbarkeit misst statt der Anwesenheit.
+
+**Die Lehre.** §55.1 sagt „oeffne die Seite wirklich", und der Grund ist genau dieser: eine Zusage kann gruen sein, weil sie die bequeme Frage stellt. `querySelector` findet auch, was niemand sieht. Was zaehlt, ist eine gemessene Box — Breite, Hoehe, computed display, und ob sie im Bild liegt. Und das Bild hat die Frage ueberhaupt erst gestellt.
 

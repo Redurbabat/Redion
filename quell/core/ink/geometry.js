@@ -303,8 +303,14 @@ const InkGeometry = (() => {
         const family = String(mark.schrift || 'standard');
         const bold = !!mark.fett;
         const lines = textLines(String(mark.text || ''), width - pad * 2, fontSize, family, bold);
+        /* DIE AUSRICHTUNG GEHOERT ZUM KASTEN, NICHT ZUM ZEICHNER (E560).
+           Sie steht hier, weil sie die Zeilen und die Breite braucht — und weil
+           der Auswahlkasten dieselbe Rechnung sehen muss wie das SVG. Die drei
+           Namen sind die des Hauses (`bild-rahmen aus-links`), nicht neue. */
+        const roh = String(mark.ausricht || 'links');
+        const ausricht = (roh === 'mitte' || roh === 'rechts') ? roh : 'links';
         return { x: point[0], y: point[1], width, height: pad * 2 + lines.length * fontSize * TEXT_ZEILE,
-            pad, zeile: fontSize * TEXT_ZEILE, fontSize, family, bold, lines };
+            pad, zeile: fontSize * TEXT_ZEILE, fontSize, family, bold, lines, ausricht };
     };
     /** Die Linienzuege — sie drehen ihre Punkte; alles andere hat einen Kasten. */
     const LINIEN = new Set(['stift', 'marker', 'line', 'arrow']);
