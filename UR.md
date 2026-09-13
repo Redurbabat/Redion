@@ -905,6 +905,17 @@ Keine — an diesem Tag kam keine Nachricht.
 **Besserer Prompt:** 
 
 
+**27 · ca. 01:15**
+
+> Weiter ohne pause
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -932,11 +943,12 @@ Keine — an diesem Tag kam keine Nachricht.
 | E543 — Der Wähler verschwieg, was der Einleser längst kann: Redurs Frage nach dem Hochladen fand den unsichtbaren Weg | `811db626` → `(dieser Bogen)` | 23:10 – 23:30 | ca. 20 min | test497 §3 neu, von 20 auf 31 grün, sechs Zusagen zuerst rot gesehen |
 | E544 — Ein Blatt füllt eine Folie, und der Klick schaltet sie weiter (L153 geschlossen) | `(nach E543)` → `(dieser Bogen)` | 23:35 – 00:40 | ca. 65 min | test500 neu, 45 Zusagen, vier Gegenproben gefahren; test183/191/293/266/499 grün |
 | E545 — Der Deckel bekommt seinen Verlauf, und ein Markenfeld bekommt seinen ersten Wächter | `(nach E544)` → `(dieser Bogen)` | 00:40 – 02:10 | ca. 90 min | test501 neu, 29 Zusagen, fünf Gegenproben gefahren; test266/499/500/145/183 grün |
+| E546 — O4 zur Hälfte: das Zeigen einer Folie ändert sie nicht mehr, und die Präsentation geht als Foliensatz auf | `(nach E545)` → `(dieser Bogen)` | 02:10 – 03:20 | ca. 70 min | test502 neu, 17 Zusagen, drei Gegenproben gefahren; test191 nachgezogen |
 
 #### Zahlen des Tages
 
-- **commits:** 20
-- **entscheidungen:** 18
+- **commits:** 21
+- **entscheidungen:** 19
 
 #### Das grösste Problem
 
@@ -963,6 +975,7 @@ Der zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glaskno
 | 23:25 | `accept` des Hauptwählers und die zwei Menütexte um PowerPoint und PDF ergänzt. | Redur: „wie kann ich im Redion die Daten hochladen?" — beim Nachsehen stand seine .ppsx im Dateifenster grau, obwohl der Zweig 17 Zeilen tiefer sie liest. | keins an Daten — ein Filter im Dateifenster; `test497 §3` hält die drei Stellen künftig zusammen |
 | 00:10 | `EIGENE_FOLIE` im Kern, Schrittzähler im Vortrag, weiches Auflösen, und ein Blatt füllt die Leinwand. | Redur: „mach weiter mit den folien klick." Davor lag ein grösserer Fehler: eine eingelesene Präsentation war EINE Folie mit allen Blättern übereinander — gemessen, und nur auf dem Bild zu sehen. | keins an Daten — der Schrittstand wird nie gespeichert (E266); `Folien.teilen` ist gemeinsame Regel, deshalb fünf Nachbarläufe mitgefahren |
 | 01:40 | `formVerlauf` liest den Verlauf aus `p:spPr`, `verlaufDefs` legt EIN `<defs>` ans Blatt, die Füllung nennt immer auch die feste Farbe. | Redur: „1:1 wie das Original". Sieben Leser haben vorher den Bestand vermessen — der naheliegende Bau mit einer Gruppe um die Marke hätte vier Stellen gebrochen, drei davon still. | §51: ohne Rückfallfarbe wäre ein Deckel bei fehlender Vorlage UNSICHTBAR, also eine offene Antwort. Deshalb steht sie immer daneben — am Browser gemessen, nicht angenommen. |
+| 02:50 | `Blatt.zeichne` legt keine Zeile mehr an, wenn das Blatt Marken trägt; der .pptx-Einleser setzt `dokumentModus`. | Gemessen: 27 Folien öffnen legte 27 leere Textblöcke an, und ihr Platzhalter lag auf dem Folientitel. Und der Dokumentmodus konnte Blatt-Blöcke längst — es fehlte nur die Flagge. | §9: ein Zeichner, der in den Speicher schreibt, ist die gefährlichere Hälfte des Fundes. E118 bleibt für das leere Blatt unverändert, test502 misst beide Richtungen. |
 
 ---
 

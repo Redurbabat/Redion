@@ -262,7 +262,19 @@ const Blatt = (() => {
     /* `Blocks` liegt NICHT auf `window` — bei `module: none` teilen sich alle
        Dateien einen Namensraum, und der Editor hängt sich nirgends an. */
     const kinder = Store.childrenOf(block.id);
-    if (!kinder.length) {
+    /* EIN BLATT MIT MARKEN IST NICHT LEER (E546). Die Bedingung darunter
+       stand hier ohne diesen Teil, und sie war zu weit gefasst: eine
+       eingelesene PowerPoint-Folie hat KEINE Textkinder — ihr Text liegt als
+       Marken. Gemessen an einer Datei mit 27 Folien: vor dem Öffnen 0
+       Kindblöcke, nach dem Öffnen 27, alle `text` mit "". Siebenundzwanzig
+       Blöcke, die niemand angelegt hat, nur vom Hinsehen — und sie landen im
+       Versionsverlauf, in der Sicherung, im Abgleich und in der Suche.
+       Sichtbar waren sie auch: ihr Platzhalter lag quer über dem Folientitel
+       (gemessen auf 501,462 gegen 502,457 — `bilder/o4-ist-editor.png`).
+       Ein Blatt mit Marken trägt schon bearbeitbare Elemente; ein Textkasten
+       ist in PowerPoint auch keine Absatzzeile. */
+    const hatMarken = Array.isArray((block as any).marken) && (block as any).marken.length > 0;
+    if (!kinder.length && !hatMarken) {
       /* EINE ZEILE MUSS DA SEIN (E118). Ohne sie ist das Papier eine Fläche
          ohne einziges bearbeitbares Element — man kann darauf malen und
          sonst nichts. Gemessen an einem Blatt aus dem Slash-Menü:
@@ -271,7 +283,8 @@ const Blatt = (() => {
          (`PdfEinlesen.alsSeiten` tut es, `test174` tut es). Nur der Weg,
          den ein Mensch geht — `/blatt` tippen —, tat es nicht: `umwandeln`
          kennt keine Anfangskinder.
-         Die Spalte daneben löst dasselbe seit E102 genau so. */
+         Die Spalte daneben löst dasselbe seit E102 genau so.
+         DAS GILT UNVERÄNDERT für das leere Blatt; `test192 §2a` misst es. */
       const leer = Store.addBlock(block.id, 'text', { text: '' });
       inhalt.appendChild(Blocks.render(leer, 0));
     } else {

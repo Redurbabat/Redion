@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-525 Entscheidungen, E1 bis E545 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+526 Entscheidungen, E1 bis E546 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -589,6 +589,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E543** — Der Wähler verschwieg, was der Einleser längst kann: `accept`, Menütext und Zweig wandern zusammen
 * **E544** — Ein Blatt füllt eine Folie, und der Klick schaltet sie weiter: `EIGENE_FOLIE`, Schrittzähler, weiches Auflösen, Vollbild
 * **E545** — Der Deckel bekommt seinen Verlauf: ein `<defs>` fürs Blatt statt einer Gruppe, Rückfallfarbe, gesäuberte Kennung — und der fehlende Wächter für Markenfelder
+* **E546** — Eine Folie zu zeigen darf sie nicht ändern: 27 Folien öffnen legte 27 Blöcke an; und die Präsentation geht jetzt als Foliensatz auf
 
 ---
 
@@ -43633,3 +43634,88 @@ Zahlen stehen gemessen im Kopf der Datei. `test266`, `test499`, `test500`,
 **Offen bleibt in L153 nur noch:** die drei blauen Navigationspfeile der
 Originalfolie. Sie sind Formen ohne Text und ohne Animation und fallen durch
 beide Zweige — und in Redion macht das Blättern seit E544 der Klick.
+
+---
+
+E546 — Eine Folie zu ZEIGEN darf sie nicht ändern, und sie geht als Foliensatz auf
+--------------------------------------------------------------------------
+
+O4 aus `AUFGABEN.md`: „Die Markenschicht wird der Folieneditor." Der erste
+Blick auf eine eingelesene Präsentation im Editor
+(`bilder/o4-ist-editor.png`) zeigte quer über der Titelfolie den Satz „Tippe
+etwas, oder drücke / für Befehle". Der Platzhalter war das kleinere Übel.
+
+### 1. Das Zeichnen schrieb in den Speicher
+
+`Blatt.zeichne` legt für ein Blatt ohne Textkinder eine leere Zeile an — mit
+`Store.addBlock`, also als echten Block in `blocks`. Das ist E118, und für
+ein leeres Blatt Papier ist es richtig: ohne die Zeile kann man darauf nur
+malen, und genau das war der Fehler, den E118 behoben hat.
+
+Eine eingelesene PowerPoint-Folie hat keine Textkinder — ihr Text liegt als
+Marken. Gemessen an einer Seite mit 27 Folien:
+
+```txt
+vor dem Öffnen    0 Kindblöcke
+nach dem Öffnen  27 Kindblöcke, alle `text` mit ""
+```
+
+**Siebenundzwanzig Blöcke, die niemand angelegt hat, nur vom Hinsehen.** Sie
+landen im Versionsverlauf, in der Sicherung, im Abgleich und in der Suche.
+Und sie sind es, die den Platzhalter auf die Folie legen: gemessen sass er
+auf (501, 462), die Titelmarke auf (502, 457).
+
+**Entschieden:** Ein Blatt MIT Marken ist nicht leer. Es trägt schon
+bearbeitbare Elemente — genau die, die der Textmarken-Knopf anlegt, und in
+PowerPoint ist ein Textkasten auch keine Absatzzeile. Die Bedingung heisst
+jetzt `!kinder.length && !hatMarken`.
+
+E118 bleibt für das leere Blatt unverändert. `test502` misst **beide**
+Richtungen: die Marken-Bedingung entfernen macht zwei Zusagen rot, die Zeile
+ganz weglassen die zwei anderen.
+
+`test191` prüfte den Quelltext per Regex auf `if (!kinder.length)` und wurde
+davon rot. Die Regex ist nachgezogen, nicht entschärft: sie verlangt jetzt
+die vollständige Bedingung. Eine Prüfung auf den Wortlaut des Quelltextes ist
+spröde — aber sie sagt, WO die Sache steht, und das ist hier ihr Wert.
+
+### 2. Und die Präsentation ging als Stapel Blätter auf
+
+Der Dokumentmodus kann Blatt-Blöcke längst: eigene Werkzeugleiste für das
+ganze Dokument, Seitenliste, „Präsentieren", „Drucken", „Seiteneditor"
+(`documentsIn` in `document-mode.ts` nimmt `pdfseite` UND `blatt`). Er sprang
+nur nicht an — `active()` verlangt die Flagge `dokumentModus` am Seitenblock,
+und der `.pptx`-Einleser setzte sie nie.
+
+Ohne sie stand die eingelesene Präsentation als Stapel Blätter
+untereinander, **jedes mit eigener Werkzeugleiste**. Gemessen nach der
+Reparatur: drei Leisten im DOM, davon **eine sichtbar**.
+
+Das ist derselbe Fund wie E397 (Audit F10): „ein Weg, der das Ding anlegt,
+aber nicht öffnet." Der PDF-Weg setzt die Flagge seit jeher, der
+Notizheft-Weg auch. Eine Zeile, und der halbe Folieneditor stand da — das
+ist der Grund, warum §45 mit „bestehenden Code lesen" anfängt.
+
+Die Bedingung des PDF-Wegs („nur beim ERSTEN Mal", damit eine verlassene
+Ansicht nicht zurückkommt) ist hier von selbst erfüllt: die Seite ist frisch.
+
+### Was NICHT gebaut wurde, und das steht so auch im Prüflauf
+
+**Eine Folie allein im Bild.** Der Dokumentmodus rollt durch — das ist seine
+Bauart, und fürs Schreiben ist sie richtig. „Eine Folie, dann die nächste"
+macht der Vortragsmodus (E544). Ein Folieneditor mit stehender Folie und
+Miniaturstreifen daneben wäre ein eigener Bogen; er bleibt unter O4 in
+`AUFGABEN.md` stehen.
+
+Das gehört hierher, weil die Versuchung gross war, „1:1 wie PowerPoint" zu
+schreiben, nachdem das Bild plötzlich viel besser aussah. Gebaut ist: die
+Präsentation geht als Dokument auf. Nicht gebaut ist der Folieneditor.
+
+**Was es kostet:** Wer auf einer eingelesenen Folie einen gewöhnlichen
+Textblock haben will, bekommt ihn nicht mehr von selbst — er nimmt den
+Textmarken-Knopf, wie in PowerPoint. Sobald eine Folie keine Marken mehr hat,
+legt das Blatt seine Zeile wieder an.
+
+`test502` neu, 17 Zusagen, drei Gegenproben gefahren (8/2, 8/2, 12/5 —
+gemessen). `test191` nachgezogen und grün. Bild:
+`bilder/o4-dokumentmodus.png` gegen `bilder/o4-ist-editor.png`.

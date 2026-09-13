@@ -870,8 +870,22 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   `slideN.xml` (`p:spTree` → Textkästen mit `a:xfrm`-Lage, `p:pic` → Bilder),
   die `.rels` (Bildziele), `slideLayouts`/`slideMasters` für Geerbtes,
   `theme1.xml` für Farben. Jede Folie wird ein Block mit `marken`.
-- **O4 · Folien bearbeiten.** Die Markenschicht wird der Folieneditor, die
-  Miniaturleiste die Folienliste. Hier entscheidet sich „1:1 wie PowerPoint".
+- **O4 · Folien bearbeiten** — ZUR HÄLFTE (E546). Zwei Sachen sind erledigt:
+  - Das ZEIGEN einer Folie ändert sie nicht mehr. `Blatt.zeichne` legte für
+    jedes Blatt ohne Textkinder eine leere Zeile AN — bei 27 eingelesenen
+    Folien also 27 Blöcke, nur vom Hinsehen, und ihr Platzhalter lag quer
+    über dem Folientitel.
+  - Die eingelesene Präsentation geht als FOLIENSATZ auf, nicht als Stapel
+    Blätter: eine Werkzeugleiste für das ganze Dokument statt einer je
+    Folie, Seitenliste, „Präsentieren", „Drucken". Der Dokumentmodus konnte
+    das längst — es fehlte die Flagge `dokumentModus` am Seitenblock. Eine
+    Zeile (derselbe Fund wie E397).
+
+  **Offen bleibt der Folieneditor selbst:** EINE Folie stehend im Bild, ein
+  Miniaturstreifen daneben, Folie hinzufügen / duplizieren / löschen /
+  verschieben als Folien-Handgriffe. Der Dokumentmodus rollt heute durch —
+  für das Schreiben richtig, für das Bauen einer Präsentation nicht. Hier
+  entscheidet sich „1:1 wie PowerPoint".
 - **O5 · `.pptx` schreiben mit Rundreise.** Geänderte Folien zurück, der Rest
   der Originaldatei unangetastet (braucht O2).
 - **O6 · `.docx` draufschreiben.** Braucht den Rasterer. Das ist der teuerste

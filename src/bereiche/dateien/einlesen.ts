@@ -1490,6 +1490,19 @@ const Einlesen = (() => {
       const p = await pptxLesen(puffer);
       const seite = Store.addPage(elternId, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📽️' });
       if (quelle) await originalAnhaengen(seite.id, f, quelle);
+      /* UND GLEICH ALS FOLIENSATZ AUFSCHLAGEN (E546). Derselbe Fund wie E397:
+         „ein Weg, der das Ding anlegt, aber nicht öffnet." Der Dokumentmodus
+         kann Blatt-Blöcke längst — Miniaturleiste, eine Folie gross, die
+         Werkzeuge daneben (`document-mode.ts`, `documentsIn` nimmt
+         `pdfseite` UND `blatt`). Er sprang hier nur nicht an, weil
+         `active()` die Flagge am Seitenblock verlangt und niemand sie setzte.
+         Ohne sie stand die eingelesene Präsentation als Stapel Blätter
+         untereinander, jedes mit eigener Werkzeugleiste.
+         Die Seite ist frisch, also ist die Flagge immer `undefined` — die
+         Bedingung des PDF-Wegs („nur beim ERSTEN Mal", `pdf/einlesen.ts`)
+         ist hier von selbst erfüllt, und wer den Modus später verlässt,
+         bleibt draussen. */
+      Store.updateBlock(seite.id, { dokumentModus: true });
 
       /* Eine Folie = ein `blatt`-Block mit Folienmass. Die Objekte werden
          Marken auf DERSELBEN Zeichenschicht, die auch PDF-Seite und

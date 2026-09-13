@@ -264,8 +264,15 @@ const bl = ohneK(fs.readFileSync(path.join(WURZEL, 'src/bereiche/bloecke/arten/b
 const wz = ohneK(fs.readFileSync(path.join(WURZEL, 'src/bereiche/wissen/werkzeuge.ts'), 'utf8'));
 const sc = ohneK(fs.readFileSync(path.join(WURZEL, 'src/schale/aufbau/schale.ts'), 'utf8'));
 
-p('Das Blatt legt eine Zeile nach, wenn keine da ist',
-  /if \(!kinder\.length\)/.test(bl) && /addBlock\(block\.id, 'text'/.test(bl));
+/* SEIT E546 MIT ZWEITER BEDINGUNG. Die Zusage ist dieselbe geblieben — ein
+   leeres Blatt bekommt seine Zeile —, nur gilt sie jetzt ausdrücklich NICHT
+   für ein Blatt mit Marken: eine eingelesene PowerPoint-Folie hat keine
+   Textkinder, und das Zeichnen legte ihr eine leere Zeile an, die niemand
+   wollte (27 Folien = 27 Blöcke, gemessen). `test502` misst beide
+   Richtungen am laufenden Bild; hier steht nur, dass die Stelle im
+   Quelltext noch die ist, die es tut. */
+p('Das Blatt legt eine Zeile nach, wenn keine da ist — und nur ohne Marken (E546)',
+  /if \(!kinder\.length && !hatMarken\)/.test(bl) && /addBlock\(block\.id, 'text'/.test(bl));
 p('Die Folie fragt, ob das Kind eine Hülle ist',
   /sp\.type === 'spalte'/.test(wz));
 p('Die Vorschau steigt hinab',
