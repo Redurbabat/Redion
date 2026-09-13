@@ -2369,8 +2369,16 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             .join('');
         if (!teile)
             return '';
+        /* DIE VERLAUF-VORLAGEN GEHÖREN MIT INS SVG (E545). Ein `<linearGradient>`
+           lebt in `<defs>` und wird per `fill="url(#…)"` gerufen; diese Kette
+           hier baut das SVG aus dem `outerHTML` der EINZELNEN Markenknoten, und
+           ein `<defs>` ist kein Markenknoten — ohne diese Zeile fiele es
+           ersatzlos heraus. Der Deckel bliebe trotzdem gedeckt (SVGs Rückfall
+           auf die feste Farbe), aber flach. */
+        const defs = typeof Marken.verlaufDefs === 'function'
+            ? (Marken.verlaufDefs(marken)?.outerHTML || '') : '';
         return `<svg class="marken" viewBox="0 0 ${breite + Math.max(0, rand)} ${hoehe}" ` +
-            `preserveAspectRatio="none">${teile}</svg>`;
+            `preserveAspectRatio="none">${defs}${teile}</svg>`;
     };
     const DRUCK_STIL = '.blatt-druck{position:relative; width:100%; margin:0 0 8mm; ' +
         'break-inside:avoid; page-break-inside:avoid}' +

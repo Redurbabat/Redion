@@ -221,7 +221,11 @@ const DocumentMode = (() => {
           return Marken.zeichneMarke(m)?.outerHTML || '';
         } catch { return ''; }
       }).join('');
-      const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + bw + ' ' + bh + '" width="' + W + '" height="' + H + '">' + innen + '</svg>';
+      /* Die Verlauf-Vorlagen der Abdeckbänder zuerst (E545) — sonst fällt
+         der Deckel im Seitenbild auf seine feste Farbe zurück. */
+      const defs = typeof Marken.verlaufDefs === 'function'
+        ? (Marken.verlaufDefs(marken)?.outerHTML || '') : '';
+      const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + bw + ' ' + bh + '" width="' + W + '" height="' + H + '">' + defs + innen + '</svg>';
       const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
       try { stift.drawImage(await bildLaden(url), 0, 0, W, H); }
       catch { /* eine Marke, die das SVG-Bild verweigert, laesst den Rest stehen */ }

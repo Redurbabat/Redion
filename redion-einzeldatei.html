@@ -22994,7 +22994,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 856, inhalt: 'd5df3af45567b799', gebaut: '2026-09-12T23:43:52.537Z' };
+const Stand = { fassung: 869, inhalt: 'ac9d68b8df045cc2', gebaut: '2026-09-13T05:47:33.755Z' };
 window.Stand = Stand;
 
 </script>
@@ -58446,6 +58446,77 @@ const Marken = (() => {
     /** Zwei Nachkommastellen — fuer `transform`-Werte, die sonst als
      *  0.30000000000000004 im Baum stehen. */
     const rund2 = (wert) => Math.round(wert * 100) / 100;
+    /* ---- DER VERLAUF AM ABDECKBAND (E545) ---------------------------------
+     * PowerPoint füllt den Deckel über einer Antwort nicht einfarbig: in
+     * Redurs Datei ist es weiss → `#FFCC00` in der Mitte → weiss, senkrecht.
+     * Redion las davon bisher eine Farbe (E542) und malte eine Fläche.
+     *
+     * EIN <defs> FÜR DAS GANZE BLATT, nicht eines je Marke. Der Grund ist
+     * nicht Sparsamkeit, sondern Haltbarkeit: `redraw` sammelt `[data-sid]`
+     * und schiebt die Knoten mit `insertBefore` in die Reihenfolge der
+     * Marken, `updateNode` ersetzt einen Knoten durch einen frischen, und der
+     * Radierer nimmt `nodeFor(id)?.remove()`. Läge die Vorlage in einer
+     * eigenen Gruppe um das Rechteck, risse der erste dieser drei Griffe sie
+     * ab — der Deckel zeigte dann ins Leere, und das sieht niemand, weil
+     * nichts abstürzt. Gemessen wurde das nicht, es wurde nachgelesen; die
+     * drei Stellen stehen oben im Quelltext.
+     * -------------------------------------------------------------------- */
+    /**
+     * Die Kennung der Verlauf-Vorlage — GESÄUBERT, nicht durchgereicht.
+     *
+     * Gefunden auf dem Bild, nicht im Code (§55.1): ein Deckel wurde SCHWARZ.
+     * Eine Markenkennung ist Text aus den Daten und darf alles enthalten; mit
+     * einem Leerzeichen oder Umlaut darin ist `url(#…)` kein gültiger Verweis
+     * mehr, und dann greift nicht etwa der Rückfall daneben, sondern der
+     * ANFANGSWERT von `fill` — Schwarz. Gedeckt bleibt die Antwort dabei, das
+     * ist das Gute daran; richtig aussehen tut es nicht.
+     *
+     * Redions eigene Kennungen sind harmlos (`m` + Zufall, oder eine UUID).
+     * Eine eingelesene oder eingespielte Marke bringt ihre eigene mit.
+     */
+    const verlaufId = (mark) => 'rv-' + String(idOf(mark) || '').replace(/[^A-Za-z0-9_-]/g, '_');
+    const verlaufVon = (mark) => {
+        const v = mark?.verlauf;
+        if (!v || !Array.isArray(v.stopps) || v.stopps.length < 2)
+            return null;
+        const stopps = v.stopps
+            .filter((s) => s && typeof s.farbe === 'string' && Number.isFinite(Number(s.pos)))
+            .map((s) => ({ pos: Math.min(1, Math.max(0, Number(s.pos))), farbe: String(s.farbe) }));
+        return stopps.length >= 2 ? { stopps, winkel: Number(v.winkel) || 0 } : null;
+    };
+    /**
+     * Die Verlauf-Vorlagen einer Markenliste als EIN `<defs>` — oder `null`.
+     *
+     * Wer Marken in ein eigenes `<svg>` schreibt (Vortrag, Druck, Seitenbild,
+     * Ausschnitt für die Erkennung), hängt das hier VOR die Marken. Wer es
+     * vergisst, bekommt keinen Fehler: der Deckel fällt auf seine feste Farbe
+     * zurück (siehe `zeichneMarkeRoh`, Zweig `abdeck`).
+     */
+    const verlaufDefs = (liste) => {
+        const mit = (Array.isArray(liste) ? liste : [])
+            .filter(m => m && m.art === 'abdeck' && verlaufVon(m));
+        if (!mit.length)
+            return null;
+        const defs = svg('defs', { 'data-ink-defs': '1' });
+        for (const mark of mit) {
+            const v = verlaufVon(mark);
+            /* OOXML zählt in 60000steln Grad, 0 = nach rechts, im Uhrzeigersinn.
+               5400000 sind 90°, also von oben nach unten — der Normalfall bei
+               einem Abdeckband. Die Achse geht durch die Mitte des Kastens,
+               deshalb 0.5 ± Hälfte der Richtung. */
+            const bogen = ((Number(v.winkel) || 0) / 60000) * Math.PI / 180;
+            const dx = Math.cos(bogen) / 2, dy = Math.sin(bogen) / 2;
+            const g = svg('linearGradient', {
+                id: verlaufId(mark), gradientUnits: 'objectBoundingBox',
+                x1: (0.5 - dx).toFixed(4), y1: (0.5 - dy).toFixed(4),
+                x2: (0.5 + dx).toFixed(4), y2: (0.5 + dy).toFixed(4)
+            });
+            for (const stopp of v.stopps)
+                g.appendChild(svg('stop', { offset: stopp.pos.toFixed(4), 'stop-color': stopp.farbe }));
+            defs.appendChild(g);
+        }
+        return defs;
+    };
     /** Bildschirm, Druck und Praesentation rufen denselben Zeichner auf. */
     /* DIE DREHUNG (E466) liegt als `transform` am fertigen Knoten — ein
        Zweig fuer alle Bauarten, weil jede Bauart ihren eigenen Rueckweg
@@ -58630,8 +58701,21 @@ const Marken = (() => {
                Ablage — Lernen darf den Speicher nicht anfassen. Druck und
                Folien rufen denselben Zeichner und zeigen darum zu. */
             const box = InkGeometry.rectangle(points[0], points[1]);
+            /* DER VERLAUF, WENN ES EINEN GIBT (E545) — und IMMER mit der festen
+               Farbe dahinter. `fill="url(#…) #ffcc00"` ist SVGs eigener Rückfall:
+               fehlt die Vorlage, malt der Browser die Farbe. Gemessen, nicht
+               angenommen (`bilder/paint-rueckfall.png`): ein `url()` OHNE Rückfall
+               malt gar nichts — und ein unsichtbarer Deckel ist eine offene
+               Antwort. Genau deshalb steht die Farbe hier und nicht nur dort.
+               Der Knoten bleibt ein <rect> und bleibt DIREKTES Kind der Fläche:
+               `redraw`, `updateNode` und der Radierer greifen `[data-sid]` und
+               verschieben es — in einer eigenen Gruppe mit eigenem <defs> würde
+               genau das die Vorlage abreissen. Die Vorlagen liegen deshalb in
+               EINEM <defs> am Blatt, siehe `verlaufDefs`. */
             element = svg('rect', { x: box.x, y: box.y, width: box.width,
-                height: box.height, rx: 4, fill: color, 'pointer-events': 'all' });
+                height: box.height, rx: 4,
+                fill: verlaufVon(mark) ? `url(#${verlaufId(mark)}) ${color}` : color,
+                'pointer-events': 'all' });
             element.setAttribute('data-sid', idOf(mark));
             element.setAttribute('data-ink-art', art);
             /* DIE SCHRITTNUMMER REIST MIT AN DEN KNOTEN (E544). Sie steht seit
@@ -59142,6 +59226,16 @@ const Marken = (() => {
            Knoten aber noch der verschobene, und nur ein ehrlicher Eintrag
            laesst `redraw` das sehen (gefunden von test350 §3). */
         const merke = (mark) => { gezeichnet.set(idOf(mark), mark); };
+        /* Die Verlauf-Vorlagen der Abdeckbänder (E545). Sie liegen als EIN
+           `<defs>` ganz vorn in der Fläche und tragen kein `data-sid` — damit
+           fasst `redraw` sie nicht an, das sammelt nur Markenknoten. Aufgefrischt
+           wird beim Zeichnen, weil eine Marke dazukommen oder weggehen kann. */
+        const defsAuffrischen = () => {
+            flaeche.querySelector('[data-ink-defs]')?.remove();
+            const defs = verlaufDefs(marks);
+            if (defs)
+                flaeche.insertBefore(defs, flaeche.firstChild);
+        };
         marks.forEach(mark => {
             const node = zeichneMarke(mark);
             if (node) {
@@ -59149,6 +59243,7 @@ const Marken = (() => {
                 merke(mark);
             }
         });
+        defsAuffrischen();
         /* Welche Abdeckbänder GERADE aufgedeckt sind — nur Laufzeit, nie
            Ablage: nach Neuladen oder Neuzeichnen von aussen ist wieder alles
            zu, und genau das ist die ehrliche Vorgabe beim Lernen (E266). */
@@ -59307,6 +59402,7 @@ const Marken = (() => {
                 node.remove();
                 gezeichnet.delete(id);
             } });
+            defsAuffrischen();
             abdeckAnwenden();
             renderSelection();
         };
@@ -63117,7 +63213,7 @@ const Marken = (() => {
     };
     if (typeof document !== 'undefined')
         document.addEventListener('keydown', kuerzel);
-    return { schicht, leiste, zeichneMarke, annotierbar, alsAnnotation,
+    return { schicht, leiste, zeichneMarke, verlaufDefs, annotierbar, alsAnnotation,
         FARBEN, BREITEN, STIFTE, LEITER, LASER, FORMEN, WERKZEUGE, artWort, artZeichen,
         druckFaktor, RADIERER, TASTEN,
         /* DIE FARBSÄTZE NACH AUSSEN (E486). Nicht, damit jemand anders eine
@@ -73636,11 +73732,19 @@ const ChronikDaten = {
                     "zeitraum": "23:35 – 00:40",
                     "dauer": "ca. 65 min",
                     "pruefungen": "test500 neu, 45 Zusagen, vier Gegenproben gefahren; test183/191/293/266/499 grün"
+                },
+                {
+                    "was": "E545 — Der Deckel bekommt seinen Verlauf, und ein Markenfeld bekommt seinen ersten Wächter",
+                    "vonCommit": "(nach E544)",
+                    "bisCommit": "(dieser Bogen)",
+                    "zeitraum": "00:40 – 02:10",
+                    "dauer": "ca. 90 min",
+                    "pruefungen": "test501 neu, 29 Zusagen, fünf Gegenproben gefahren; test266/499/500/145/183 grün"
                 }
             ],
             "zahlen": {
-                "commits": 19,
-                "entscheidungen": 17
+                "commits": 20,
+                "entscheidungen": 18
             },
             "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
             "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -73692,6 +73796,12 @@ const ChronikDaten = {
                     "was": "`EIGENE_FOLIE` im Kern, Schrittzähler im Vortrag, weiches Auflösen, und ein Blatt füllt die Leinwand.",
                     "warum": "Redur: „mach weiter mit den folien klick.\" Davor lag ein grösserer Fehler: eine eingelesene Präsentation war EINE Folie mit allen Blättern übereinander — gemessen, und nur auf dem Bild zu sehen.",
                     "risiko": "keins an Daten — der Schrittstand wird nie gespeichert (E266); `Folien.teilen` ist gemeinsame Regel, deshalb fünf Nachbarläufe mitgefahren"
+                },
+                {
+                    "zeit": "01:40",
+                    "was": "`formVerlauf` liest den Verlauf aus `p:spPr`, `verlaufDefs` legt EIN `<defs>` ans Blatt, die Füllung nennt immer auch die feste Farbe.",
+                    "warum": "Redur: „1:1 wie das Original\". Sieben Leser haben vorher den Bestand vermessen — der naheliegende Bau mit einer Gruppe um die Marke hätte vier Stellen gebrochen, drei davon still.",
+                    "risiko": "§51: ohne Rückfallfarbe wäre ein Deckel bei fehlender Vorlage UNSICHTBAR, also eine offene Antwort. Deshalb steht sie immer daneben — am Browser gemessen, nicht angenommen."
                 }
             ]
         }
@@ -74787,7 +74897,11 @@ const DocumentMode = (() => {
                     return '';
                 }
             }).join('');
-            const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + bw + ' ' + bh + '" width="' + W + '" height="' + H + '">' + innen + '</svg>';
+            /* Die Verlauf-Vorlagen der Abdeckbänder zuerst (E545) — sonst fällt
+               der Deckel im Seitenbild auf seine feste Farbe zurück. */
+            const defs = typeof Marken.verlaufDefs === 'function'
+                ? (Marken.verlaufDefs(marken)?.outerHTML || '') : '';
+            const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + bw + ' ' + bh + '" width="' + W + '" height="' + H + '">' + defs + innen + '</svg>';
             const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
             try {
                 stift.drawImage(await bildLaden(url), 0, 0, W, H);
@@ -100564,8 +100678,16 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             .join('');
         if (!teile)
             return '';
+        /* DIE VERLAUF-VORLAGEN GEHÖREN MIT INS SVG (E545). Ein `<linearGradient>`
+           lebt in `<defs>` und wird per `fill="url(#…)"` gerufen; diese Kette
+           hier baut das SVG aus dem `outerHTML` der EINZELNEN Markenknoten, und
+           ein `<defs>` ist kein Markenknoten — ohne diese Zeile fiele es
+           ersatzlos heraus. Der Deckel bliebe trotzdem gedeckt (SVGs Rückfall
+           auf die feste Farbe), aber flach. */
+        const defs = typeof Marken.verlaufDefs === 'function'
+            ? (Marken.verlaufDefs(marken)?.outerHTML || '') : '';
         return `<svg class="marken" viewBox="0 0 ${breite + Math.max(0, rand)} ${hoehe}" ` +
-            `preserveAspectRatio="none">${teile}</svg>`;
+            `preserveAspectRatio="none">${defs}${teile}</svg>`;
     };
     const DRUCK_STIL = '.blatt-druck{position:relative; width:100%; margin:0 0 8mm; ' +
         'break-inside:avoid; page-break-inside:avoid}' +
@@ -107868,9 +107990,11 @@ const Einlesen = (() => {
      * kommt die Farbe aus dem KRÄFTIGSTEN Stopp des Verlaufs, also dem, der
      * nicht die Hintergrundfarbe ist.
      *
-     * Der Verlauf selbst wird nicht nachgebaut: Redions Abdeckband ist eine
-     * Fläche in einer Farbe. Was dabei verlorengeht, ist Optik an einem
-     * Deckel, den man wegtippt — steht als Lücke in L153.
+     * Sie bleibt als RÜCKFALL stehen, auch seit `formVerlauf` daneben den
+     * ganzen Verlauf liest (E545): eine Abdeckung trägt IMMER eine feste
+     * Farbe, und das SVG malt sie, wenn die Verlaufsvorlage fehlt. Ohne sie
+     * wäre ein `fill="url(#…)"` ins Leere ein UNSICHTBARER Deckel — und ein
+     * unsichtbarer Deckel ist eine offene Antwort.
      */
     const formFarbe = (form) => {
         const verlauf = form.getElementsByTagName('a:gradFill')[0];
@@ -107892,6 +108016,63 @@ const Einlesen = (() => {
         const voll = form.getElementsByTagName('a:solidFill')[0];
         const rgb = voll?.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
         return rgb ? '#' + rgb : '';
+    };
+    /**
+     * Der VERLAUF einer Form, wenn sie einen hat (E545).
+     *
+     * Gemessen an Redurs Datei: die Abdeckungen sind weiss → `#FFCC00` in der
+     * Mitte → weiss, senkrecht. `formFarbe` gab davon EINE Farbe zurück, und
+     * der Deckel war eine gelbe Fläche, wo im Original ein Band mit weichen
+     * Rändern liegt.
+     *
+     * NUR AUS `p:spPr`, anders als `formFarbe`. Die alte Funktion sucht über
+     * den ganzen Teilbaum — und im selben Teilbaum liegt `a:ln`, die
+     * Umrisslinie, mit eigener Füllung. Für die Farbe ging das bisher gut;
+     * für den Verlauf wäre es ein Glücksspiel, und der Kommentar oben sagt
+     * selbst, dass die Füllung daneben der Linie gehört.
+     *
+     * Was NICHT gelesen wird und deshalb `null` ergibt: `a:schemeClr` und
+     * Verwandte (ohne `theme1.xml` nicht auflösbar), `a:path` (radiale
+     * Verläufe). Dann bleibt es bei der festen Farbe — eine gelbe Fläche ist
+     * eine ehrliche Näherung, eine falsche Farbe wäre es nicht.
+     */
+    const formVerlauf = (form) => {
+        const spPr = form.getElementsByTagName('p:spPr')[0];
+        if (!spPr)
+            return null;
+        /* `[0]` über spPr statt über die Form: ein `a:gradFill` unter `a:ln`
+           wäre die Linie, nicht die Füllung. Deshalb die direkten Kinder. */
+        const verlauf = [...spPr.children].find(k => k.tagName === 'a:gradFill');
+        if (!verlauf)
+            return null;
+        const stopps = [];
+        for (const g of [...verlauf.getElementsByTagName('a:gs')]) {
+            const rgb = g.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+            if (!rgb)
+                continue; /* eine Themenfarbe — dann lieber gar nichts */
+            const roh = String(g.getAttribute('pos') ?? '');
+            /* `pos` steht in Tausendstel Prozent (0…100000); die neuere
+               Schreibweise `50%` gibt es auch. Beides auf 0…1 bringen. */
+            const anteil = roh.endsWith('%') ? Number(roh.slice(0, -1)) / 100
+                : Number(roh) / 100000;
+            if (!Number.isFinite(anteil))
+                continue;
+            stopps.push({ pos: Math.min(1, Math.max(0, anteil)), farbe: '#' + rgb });
+        }
+        /* Weniger als zwei Stopps sind kein Verlauf. Und wenn EINER der Stopps
+           eine Themenfarbe war, fehlt er — dann ist der Verlauf unvollständig
+           und die feste Farbe die ehrlichere Antwort. */
+        if (stopps.length < 2 || stopps.length !== verlauf.getElementsByTagName('a:gs').length)
+            return null;
+        stopps.sort((a, b) => a.pos - b.pos);
+        /* Der Winkel steht in 60000steln Grad, 0 = nach rechts, im
+           Uhrzeigersinn. 5400000 sind 90°, also von oben nach unten. Ohne
+           `a:lin` ist es kein linearer Verlauf, den wir nachbauen können. */
+        const lin = [...verlauf.children].find(k => k.tagName === 'a:lin');
+        if (!lin)
+            return null;
+        const winkel = Number(lin.getAttribute('ang')) || 0;
+        return { stopps, winkel };
     };
     /**
      * Eine `.pptx` lesen. Zurück kommen Folien mit ihren Objekten — noch ohne
@@ -107951,6 +108132,7 @@ const Einlesen = (() => {
                     const schritt = sid ? schritte.get(sid) : undefined;
                     if (!text.trim() && schritt && lage && lage.w > 0 && lage.h > 0) {
                         objekte.push({ art: 'abdeck', schritt, farbe: formFarbe(form) || '#ffcc00',
+                            verlauf: formVerlauf(form),
                             x: lage.x, y: lage.y, w: lage.w, h: lage.h });
                         continue;
                     }
@@ -108238,7 +108420,11 @@ const Einlesen = (() => {
                            sich angetippt wird. Ohne die Zahl wäre die Reihenfolge, in
                            der die Folie gedacht war, verloren — und sie steht nur in
                            der Quelldatei. */
+                        /* `verlauf` nur, wenn es einen gibt — ein `undefined` im Objekt
+                           überlebt `JSON.stringify` ohnehin nicht, und ein `null` an
+                           jeder von Hand gezogenen Abdeckung wäre nur Ballast. */
                         marken.push({ id, art: 'abdeck', farbe: o.farbe, schritt: o.schritt,
+                            ...(o.verlauf ? { verlauf: o.verlauf } : {}),
                             pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
                         continue;
                     }
@@ -134134,6 +134320,11 @@ const Recognition = (() => {
         background.setAttribute('height', String(region.height));
         background.setAttribute('fill', '#fff');
         svg.appendChild(background);
+        /* Auch hier die Verlauf-Vorlagen (E545): ein Abdeckband MUSS im
+           Ausschnitt decken, sonst läse die Erkennung die Antwort mit. */
+        const defs = typeof Marken.verlaufDefs === 'function' ? Marken.verlaufDefs(marks) : null;
+        if (defs)
+            svg.appendChild(defs);
         const bounds = { x: region.x, y: region.y, width: region.width, height: region.height };
         marks.forEach((mark) => {
             if (!InkGeometry.intersects(InkGeometry.bounds(mark), bounds))

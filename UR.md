@@ -931,11 +931,12 @@ Keine — an diesem Tag kam keine Nachricht.
 | E542 — Die Antworten waren alle offen: PowerPoints Ausblend-Animationen werden zu Redions Abdeckband | `f6ed8fb8` → `811db626` | 22:53 – 23:02 | ca. 9 min | test499 bleibt 22; die Deckelfarbe wird seit 811db626 aus dem Verlauf gelesen statt geraten |
 | E543 — Der Wähler verschwieg, was der Einleser längst kann: Redurs Frage nach dem Hochladen fand den unsichtbaren Weg | `811db626` → `(dieser Bogen)` | 23:10 – 23:30 | ca. 20 min | test497 §3 neu, von 20 auf 31 grün, sechs Zusagen zuerst rot gesehen |
 | E544 — Ein Blatt füllt eine Folie, und der Klick schaltet sie weiter (L153 geschlossen) | `(nach E543)` → `(dieser Bogen)` | 23:35 – 00:40 | ca. 65 min | test500 neu, 45 Zusagen, vier Gegenproben gefahren; test183/191/293/266/499 grün |
+| E545 — Der Deckel bekommt seinen Verlauf, und ein Markenfeld bekommt seinen ersten Wächter | `(nach E544)` → `(dieser Bogen)` | 00:40 – 02:10 | ca. 90 min | test501 neu, 29 Zusagen, fünf Gegenproben gefahren; test266/499/500/145/183 grün |
 
 #### Zahlen des Tages
 
-- **commits:** 19
-- **entscheidungen:** 17
+- **commits:** 20
+- **entscheidungen:** 18
 
 #### Das grösste Problem
 
@@ -961,6 +962,7 @@ Der zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glaskno
 | 22:45 | `pptxLesen` in `bereiche/dateien/einlesen.ts`: eine Folie wird ein `blatt`-Block mit Marken, Reihenfolge aus `p:sldIdLst`. | Redur: „1:1 wie PowerPoint". Der Weg über Text allein hätte jede Übungsfolie zerstört — die Antworten liegen unter Abdeckungen. | keins an Daten — das Original hängt seit E538 immer mit dran; die Umwandlung ist verlustbehaftet und sagt es im Hinweis |
 | 23:25 | `accept` des Hauptwählers und die zwei Menütexte um PowerPoint und PDF ergänzt. | Redur: „wie kann ich im Redion die Daten hochladen?" — beim Nachsehen stand seine .ppsx im Dateifenster grau, obwohl der Zweig 17 Zeilen tiefer sie liest. | keins an Daten — ein Filter im Dateifenster; `test497 §3` hält die drei Stellen künftig zusammen |
 | 00:10 | `EIGENE_FOLIE` im Kern, Schrittzähler im Vortrag, weiches Auflösen, und ein Blatt füllt die Leinwand. | Redur: „mach weiter mit den folien klick." Davor lag ein grösserer Fehler: eine eingelesene Präsentation war EINE Folie mit allen Blättern übereinander — gemessen, und nur auf dem Bild zu sehen. | keins an Daten — der Schrittstand wird nie gespeichert (E266); `Folien.teilen` ist gemeinsame Regel, deshalb fünf Nachbarläufe mitgefahren |
+| 01:40 | `formVerlauf` liest den Verlauf aus `p:spPr`, `verlaufDefs` legt EIN `<defs>` ans Blatt, die Füllung nennt immer auch die feste Farbe. | Redur: „1:1 wie das Original". Sieben Leser haben vorher den Bestand vermessen — der naheliegende Bau mit einer Gruppe um die Marke hätte vier Stellen gebrochen, drei davon still. | §51: ohne Rückfallfarbe wäre ein Deckel bei fehlender Vorlage UNSICHTBAR, also eine offene Antwort. Deshalb steht sie immer daneben — am Browser gemessen, nicht angenommen. |
 
 ---
 

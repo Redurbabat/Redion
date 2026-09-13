@@ -7455,7 +7455,7 @@ tun, als sei die Folie leer.
 
 ---
 
-L153 · Der Klick schaltet die Folie weiter — GESCHLOSSEN bis auf zwei Sachen
+L153 · Der Klick schaltet die Folie weiter — GESCHLOSSEN bis auf die Pfeile
 --------------------------------------------------------------------------
 
 **Geschlossen am 12. September 2026 mit E544** (`test500`, 45 Zusagen, vier
@@ -7478,16 +7478,18 @@ Blatt und jeder PDF-Seite eine eigene Folie. Dazu füllt ein Blatt jetzt die
 Leinwand statt acht Prozent davon; die Regel dafür brauchte drei Anläufe,
 zwei davon sahen an genau einer Bildschirmgrösse richtig aus (E544).
 
-**Was offen bleibt — beides Optik, beides klein:**
+**Und der Verlauf am Deckel: GESCHLOSSEN am 13. September mit E545**
+(`test501`, 29 Zusagen, fünf Gegenproben gefahren). Er liegt als Feld
+`verlauf` an der Marke und als EIN `<defs>` am Blatt — keine Gruppe um die
+Marke, die hätte vier Stellen gebrochen, drei davon still. Es waren am Ende
+nicht zwei Zeichner, sondern vier. Dazu zwei Funde, die hier nicht standen:
+der Deckel wäre bei fehlender Vorlage UNSICHTBAR geworden — also eine offene
+Antwort, und damit genau der Schaden, den ein Abdeckband verhindern soll;
+dagegen steht jetzt immer die feste Farbe daneben. Und eine Markenkennung
+mit einem Leerzeichen darin machte ihn schwarz, gefunden nur auf dem Bild.
 
-- **Der Deckel ist flach, im Original ein Verlauf.** Gemessen: weiss →
-  `#FFCC00` in der Mitte → weiss, senkrecht (`a:lin ang="5400000"`). Redions
-  Abdeckband ist eine Fläche in EINER Farbe; seit E542 kommt wenigstens die
-  richtige Farbe aus dem kräftigsten Stopp statt aus einem Rückfall. Der
-  Verlauf selbst fehlt. Er ginge: ein Feld `verlauf` an der Marke und ein
-  `<linearGradient>` im selben `<svg>` — es sind zwei Zeichner (die
-  Live-Schicht und `markenAlsSvg`), und beide bräuchten ein `<defs>`. Nicht
-  gebaut, weil es Optik an einem Deckel ist, den man wegtippt.
+**Was offen bleibt — eine einzige Sache, und die ist Redion fremd:**
+
 - **Die Navigationspfeile der Folie fehlen.** Unten rechts stehen im
   Original drei blaue Pfeile (zurück, eine Folie zurück, weiter). Es sind
   Formen ohne Text und ohne Animation, also weder Textkasten noch Abdeckung

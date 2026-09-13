@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-524 Entscheidungen, E1 bis E544 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+525 Entscheidungen, E1 bis E545 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -588,6 +588,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E542** — Die Antworten waren alle offen: PowerPoints Ausblend-Animationen werden zu Redions Abdeckband
 * **E543** — Der Wähler verschwieg, was der Einleser längst kann: `accept`, Menütext und Zweig wandern zusammen
 * **E544** — Ein Blatt füllt eine Folie, und der Klick schaltet sie weiter: `EIGENE_FOLIE`, Schrittzähler, weiches Auflösen, Vollbild
+* **E545** — Der Deckel bekommt seinen Verlauf: ein `<defs>` fürs Blatt statt einer Gruppe, Rückfallfarbe, gesäuberte Kennung — und der fehlende Wächter für Markenfelder
 
 ---
 
@@ -43522,3 +43523,113 @@ stehen gemessen im Kopf der Datei. Bilder: `bilder/l153-vorher.png` und
 weiss → `#FFCC00` → weiss) und die drei blauen Navigationspfeile. Beides
 Optik an etwas, das man wegtippt — und die Pfeile macht in Redion der
 Vortragsmodus.
+
+---
+
+E545 — Der Deckel bekommt seinen Verlauf, und ein Markenfeld bekommt einen Wächter
+--------------------------------------------------------------------------
+
+Der Rest von L153, und Redurs Satz dazu: „das es die orginale 1:1 öfnnet."
+
+**Was fehlte.** `formFarbe` liest seit E542 `a:gradFill`, gibt davon aber
+EINE Farbe zurück — den kräftigsten Stopp. In Redurs Datei ist der Deckel
+über der Antwort weiss → `#FFCC00` in der Mitte → weiss, senkrecht
+(`a:lin ang="5400000"`). Redion malte eine gelbe Fläche mit harten Kanten.
+
+**Entschieden — und der Weg dahin war der eigentliche Inhalt dieses Bogens.**
+
+### 1. Kein `<g>` um die Marke
+
+Der naheliegende Bau ist `<g><defs><linearGradient/></defs><rect/></g>`.
+Er wurde NICHT gebaut, und zwar nachdem sieben Leser den Bestand vermessen
+haben. Er hätte vier Stellen gebrochen, **drei davon still**:
+
+```txt
+redraw()      sammelt [data-sid] und schiebt den Knoten mit insertBefore
+              in die Reihenfolge der Marken — reisst das <rect> aus seiner
+              Gruppe; das <defs> bleibt verwaist zurück
+              (und ist die Abdeckung die erste Marke, wirft insertBefore
+              NotFoundError und redraw stirbt mitten im Durchgang)
+updateNode()  ersetzt den Knoten durch einen frischen — und verschachtelt
+              die Gruppe bei JEDEM Ziehschritt eine Ebene tiefer
+Radierer      nodeFor(id)?.remove() nimmt nur das <rect>; die Gruppe bleibt
+              auf dem Blatt und wird nie eingesammelt
+test266       prüft ausdrücklich `tagName === 'rect'` — der wäre zu Recht rot
+```
+
+Also: **ein `<defs>` für das ganze Blatt**, der Knoten bleibt ein `<rect>`
+und bleibt direktes Kind der Fläche. `verlaufDefs(liste)` baut es; die
+Live-Schicht frischt es beim Zeichnen und in `redraw` auf, und die drei
+anderen Zeichenwege (Vortrag/Druck über `markenAlsSvg`, das Seitenbild in
+`document-mode`, der Ausschnitt für die Erkennung) hängen es vor ihre Marken.
+
+### 2. Der Deckel darf nie unsichtbar werden
+
+Gemessen an einem echten Browser (`bilder/paint-rueckfall.png`):
+
+```txt
+fill="url(#fehlt) #ffcc00"   ->  malt #ffcc00      (SVGs eigener Rückfall)
+fill="url(#fehlt)"           ->  malt GAR NICHTS
+```
+
+Das zweite wäre der schlimmste Fehler, den dieser Bogen haben könnte: ein
+unsichtbarer Deckel ist eine offene Antwort — genau der Schaden, den das
+Abdeckband verhindern soll (§51). Deshalb steht die feste Farbe IMMER
+daneben, und `formFarbe` bleibt genau dafür stehen.
+
+### 3. Und die Kennung muss eine Kennung sein — gefunden auf dem Bild
+
+Der erste Durchgang malte die Deckel **schwarz**. Nicht gelb, nicht
+durchsichtig: schwarz. Der Grund war keine Logik, sondern ein Name — die
+Beispielmarke hiess `d1Aufgabe 1 — Übersetzungsverhältnis`, und mit einem
+Leerzeichen darin ist `url(#…)` kein gültiger Verweis mehr. Dann greift
+nicht der Rückfall daneben, sondern der ANFANGSWERT von `fill`.
+
+Eine Markenkennung ist Text aus den Daten und darf so heissen. `verlaufId`
+säubert sie deshalb. Kein Prüflauf hätte das gemeldet — es stürzt nichts ab,
+und gedeckt ist die Antwort auch (§55.1).
+
+### 4. `formVerlauf` liest nur aus `p:spPr`
+
+`formFarbe` sucht über den ganzen Teilbaum der Form — und darin liegt `a:ln`,
+die Umrisslinie, mit eigener Füllung. Der Kommentar an `formFarbe` sagt das
+selbst. Für die Farbe ging es gut; für einen Verlauf wäre es Glück.
+`test501 §1` stellt die Falle: die Linie trägt einen zweiten Verlauf in
+`#112233`/`#445566`, und der darf nicht ankommen.
+
+Nicht gelesen und deshalb `null`: `a:schemeClr` und Verwandte (ohne
+`theme1.xml` nicht auflösbar) und `a:path` (radiale Verläufe). Dann bleibt es
+bei der festen Farbe. Ein unvollständiger Verlauf wäre schlechter als eine
+ehrliche Fläche.
+
+### 5. Der Wächter, der fehlte
+
+Beim Vermessen kam ein Befund heraus, der nichts mit dem Verlauf zu tun hat
+und wichtiger ist als er: **es gab keinen Prüflauf dafür, dass ein Feld an
+einer Marke eine Sicherung übersteht.** `test145` hält ein unbekanntes
+BLOCKfeld gegen `Formen.heile`; `test100` hält die Bytes der Anhänge. Den
+Weg `Marke → Block → IndexedDB → .json → zurück` prüfte für Markenfelder
+niemand.
+
+Nachgelesen ist die Eigenschaft wahr: Marken werden nirgends feldweise
+abgeschrieben, `Formen.heile` fasst `marken` nicht an, und Abgleich,
+Versionen und Duplizieren tragen alles als Ganzes mit. Aber wahr und
+unbewacht ist kein Zustand, in dem man ein neues Feld einführt — die nächste
+„Aufräum"-Änderung in `exportAll` nähme es still mit. `test501 §4` legt eine
+Marke mit `schritt`, `verlauf` UND einem frei erfundenen Feld an, exportiert,
+spielt mit „Ersetzen" ein und vergleicht Feld für Feld. Gegenprobe: eine
+Feldliste in `exportAll` — fünf Zusagen rot.
+
+**Was es kostet:** ein zweites Feld an der Abdeck-Marke und vier Zeichenwege,
+die das `<defs>` mitnehmen müssen. Wer einen fünften baut und es vergisst,
+bekommt keinen Fehler — der Deckel fällt auf seine feste Farbe zurück und
+sieht flach aus. Das ist der Preis für die Sicherheit aus Punkt 2, und er ist
+der richtige: lieber flach als offen.
+
+`test501` ist neu, 29 Zusagen, **fünf Gegenproben wirklich gefahren**; die
+Zahlen stehen gemessen im Kopf der Datei. `test266`, `test499`, `test500`,
+`test501`, `test145`, `test183` grün. Bild: `bilder/verlauf-1-zu.png`.
+
+**Offen bleibt in L153 nur noch:** die drei blauen Navigationspfeile der
+Originalfolie. Sie sind Formen ohne Text und ohne Animation und fallen durch
+beide Zweige — und in Redion macht das Blättern seit E544 der Klick.
