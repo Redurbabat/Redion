@@ -231,6 +231,14 @@ const Stromfluss = (() => {
                 { name: 'Dreieck', zu: [['U1', 'W2'], ['V1', 'U2'], ['W1', 'V2']] }
             ],
             annahme: 'Die drei Wicklungen gelten als rein ohmsch. Das Verhältnis von Stern zu Dreieck stimmt trotzdem, weil es allein an der Spannung hängt und nicht an der Art der Last.' },
+        /* ---- Der Übertrager ----
+           `wert` ist die ÜBERSETZUNG, nicht ein Widerstand: 230 zu 12 sind
+           19,17. Der Klingeltrafo aus dem Lehrmittel ist genau dieser Fall.
+           Am Bauteil lässt sie sich über `werte.ue` ändern — ein Messwandler
+           ist dasselbe Bauteil mit einer anderen Zahl. */
+        transformator: { art: 'uebertrager', von: '1U', nach: '1V',
+            von2: '2U', nach2: '2V', wert: 230 / 12, einheit: '',
+            annahme: 'Der Übertrager wird als ideal gerechnet: keine Verluste, kein Streufluss, kein Leerlaufstrom. Spannung wird im Verhältnis geteilt, Strom im selben Verhältnis vervielfacht, die Leistung geht unverändert hindurch. Für einen Netztrafo stimmt das auf wenige Prozent.' },
         'spule-induktivitaet': { art: 'leiter', von: '1', nach: '2',
             annahme: 'Bei Gleichstrom ist eine Spule eine Verbindung. Ihre Wirkung zeigt sich erst im Wechselstrom.' },
         /* ---- Schutzgeräte ----
@@ -525,6 +533,29 @@ const Stromfluss = (() => {
      * Teil hat keine eindeutige Lösung, und das ist eine Aussage über die
      * Zeichnung, die die Lernende hören will.
      * ----------------------------------------------------------------------*/
+    /**
+     * Ab wann ein Pivot als „null" gilt — und warum diese Zahl nicht beliebig ist.
+     *
+     * Sie muss zwischen ZWEI gemessenen Grössen liegen:
+     *
+     *   ~1e-16   das Rundungsrauschen einer wirklich singulären Matrix.
+     *            Zwei ideale Quellen parallel ergeben zwei gleiche Zeilen;
+     *            nach der Elimination bleibt dort exakt oder fast exakt null.
+     *   ~1e-12   der Leitwert GMIN, mit dem jedes Netz am Bezug hängt. Ein
+     *            freischwebender Schaltungsteil wird NUR davon gehalten, und
+     *            sein Pivot ist entsprechend klein — aber die Lösung ist
+     *            trotzdem eindeutig.
+     *
+     * Hier stand `1e-12`, also genau GMIN. Damit war jede Schaltung mit einem
+     * freischwebenden Teil „nicht eindeutig lösbar" — gemessen am ersten
+     * Transformator: Pivot 9,99998e-13, knapp darunter, und der Übertrager
+     * liess sich gar nicht rechnen. Der echte singuläre Fall lag dagegen bei
+     * exakt null. Zwischen beiden ist reichlich Platz; 1e-14 sitzt hundertfach
+     * über dem Rauschen und hundertfach unter GMIN.
+     *
+     * Wer GMIN ändert, muss diese Zahl mitändern. Sie gehören zusammen.
+     */
+    const PIVOT_MIN = 1e-14;
     const loese = (A, z) => {
         const n = z.length;
         if (!n)
@@ -540,7 +571,7 @@ const Stromfluss = (() => {
                     best = r;
                 }
             }
-            if (betrag < 1e-12)
+            if (betrag < PIVOT_MIN)
                 return null;
             if (best !== s) {
                 const h = M[s];
@@ -722,6 +753,23 @@ const Stromfluss = (() => {
                 }
                 eintraege.push({ t, v, a, b, art, wert, phase, von, nach });
             };
+            /** Vier Klemmen — bisher braucht das nur der Übertrager. */
+            const vier = (v1, v2, s1, s2, ue) => {
+                const a = netzFuer(t.id, v1), b = netzFuer(t.id, v2);
+                const c = netzFuer(t.id, s1), d = netzFuer(t.id, s2);
+                if (a < 0 || b < 0 || c < 0 || d < 0)
+                    return;
+                if (a === b || c === d) {
+                    /* Eine kurzgeschlossene Wicklung. Beim Übertrager ist das kein
+                       harmloser Kreis wie bei einem Widerstand: ist die Sekundärseite
+                       gebrückt, zwingt die Bedingung U1 = ü·U2 auch die Primärseite
+                       auf null, und dann liegt die Quelle am Kurzschluss. */
+                    kurzschluss.push(`${t.bmk || t.zeichen}: eine Wicklung ist kurzgeschlossen — beide Enden liegen am selben Netz.`);
+                    return;
+                }
+                eintraege.push({ t, v, a, b, c, d, art: 'T', wert: ue, phase: 0,
+                    von: v1, nach: v2 });
+            };
             switch (v.art) {
                 case 'quelle':
                     paar(v.von, v.nach, 'U', spannungVon(t, v), v.phase ?? 0);
@@ -761,6 +809,15 @@ const Stromfluss = (() => {
                 case 'volt':
                     paar(v.von, v.nach, 'R', 1e7);
                     break;
+                case 'uebertrager': {
+                    /* Die Übersetzung darf am Bauteil stehen — ein Klingeltrafo und
+                       ein Messwandler sind dasselbe Bauteil mit anderen Zahlen. */
+                    const eigen = t && t.werte && typeof t.werte.ue === 'number' ? t.werte.ue : NaN;
+                    const ue = (Number.isFinite(eigen) && eigen > 0) ? eigen
+                        : (typeof v.wert === 'number' && v.wert > 0 ? v.wert : 1);
+                    vier(v.von, v.nach, v.von2, v.nach2, ue);
+                    break;
+                }
                 case 'diode': {
                     /* Ohne Zeitverlauf lässt sich eine Diode nur schätzen: sie wird als
                        Widerstand in Durchlassrichtung gerechnet und in Sperrrichtung
@@ -785,7 +842,11 @@ const Stromfluss = (() => {
             return leer(kurzschluss[0], kurzschluss);
         /* Spannungsquellen durchnummerieren — jede bekommt eine Unbekannte. */
         let m = 0;
-        eintraege.forEach(e => { if (e.art === 'U')
+        /* Auch der Übertrager bekommt eine Unbekannte: seinen Primärstrom. Er
+           lässt sich nicht aus den Spannungen ableiten, weil ein idealer
+           Übertrager keinen Widerstand hat — genau wie bei einer Spannungsquelle
+           ist der Strom die gesuchte Grösse und nicht die gegebene. */
+        eintraege.forEach(e => { if (e.art === 'U' || e.art === 'T')
             e.quelleNr = m++; });
         const gr = n + m;
         if (!gr)
@@ -815,9 +876,16 @@ const Stromfluss = (() => {
            ist nicht falsch, sondern nur eine Festlegung. Am Ergebnis einer
            angeschlossenen Schaltung ändert der Wert nichts — er ist zwölf
            Grössenordnungen kleiner als der kleinste Verbraucher.
-           (Denselben Weg geht SPICE, und aus demselben Grund.) */
+           (Denselben Weg geht SPICE, und aus demselben Grund.)
+    
+           ER HÄNGT MIT `PIVOT_MIN` ZUSAMMEN: ein Schaltungsteil, der NUR über
+           diesen Leitwert am Bezug hängt — die Sekundärseite eines Übertragers
+           zum Beispiel —, hat einen Pivot in der Grössenordnung von GMIN. Die
+           Schwelle, ab der eine Matrix als singulär gilt, muss deshalb deutlich
+           darunter liegen. Wer den einen Wert ändert, ändert den anderen mit. */
+        const GMIN = 1e-12;
         for (let r = 0; r < n; r++)
-            A[r][r] = A[r][r] + 1e-12;
+            A[r][r] = A[r][r] + GMIN;
         eintraege.forEach(e => {
             const ra = zeile[e.a], rb = zeile[e.b];
             if (e.art === 'R') {
@@ -830,6 +898,52 @@ const Stromfluss = (() => {
                     A[ra][rb] = A[ra][rb] - g;
                     A[rb][ra] = A[rb][ra] - g;
                 }
+            }
+            else if (e.art === 'T') {
+                /* DER IDEALE ÜBERTRAGER.
+                   -----------------------------------------------------------------
+                   Er hat keinen Widerstand, keinen Streufluss und keine Verluste;
+                   er hält nur zwei Verhältnisse ein:
+        
+                       U1 = ü · U2          die Spannung wird geteilt
+                       I2 = ü · I1          der Strom wird im selben Mass grösser
+        
+                   Beides zusammen heisst: U1·I1 = U2·I2, die Leistung geht
+                   unverändert hindurch. Genau das ist die Aussage, um die es im
+                   Unterricht geht, und sie gilt für einen guten Netztrafo auf ein
+                   paar Prozent genau.
+        
+                   In der Matrix braucht er EINE Unbekannte, seinen Primärstrom, und
+                   eine Zeile für die Spannungsbedingung. Die Sekundärseite bekommt
+                   denselben Strom mit dem Faktor ü und umgekehrtem Vorzeichen —
+                   was auf der einen Seite hineingeht, kommt auf der anderen heraus.
+                   Die Zeile ist symmetrisch zur Spalte, deshalb steht dasselbe
+                   zweimal da. */
+                const rc = typeof e.c === 'number' ? zeile[e.c] : -1;
+                const rd = typeof e.d === 'number' ? zeile[e.d] : -1;
+                const q = n + e.quelleNr;
+                const ue = e.wert;
+                /* Primärseite: der Strom fliesst von a nach b hinein. */
+                if (ra >= 0) {
+                    A[ra][q] = A[ra][q] + 1;
+                    A[q][ra] = A[q][ra] + 1;
+                }
+                if (rb >= 0) {
+                    A[rb][q] = A[rb][q] - 1;
+                    A[q][rb] = A[q][rb] - 1;
+                }
+                /* Sekundärseite: derselbe Strom, ü-fach, und aus c heraus. */
+                if (rc >= 0) {
+                    A[rc][q] = A[rc][q] - ue;
+                    A[q][rc] = A[q][rc] - ue;
+                }
+                if (rd >= 0) {
+                    A[rd][q] = A[rd][q] + ue;
+                    A[q][rd] = A[q][rd] + ue;
+                }
+                /* Die Bedingung selbst steht in z: U1 − ü·U2 = 0. */
+                z[q] = 0;
+                zim[q] = 0;
             }
             else {
                 const q = n + e.quelleNr;
@@ -926,6 +1040,29 @@ const Stromfluss = (() => {
             const uim = Uj(e.a) - Uj(e.b);
             const ire = e.art === 'R' ? ure / e.wert : x[n + e.quelleNr];
             const iim = e.art === 'R' ? uim / e.wert : (xIm[n + e.quelleNr] ?? 0);
+            /* Der Übertrager hat ZWEI Seiten und damit zwei Messwerte. Der
+               Haupteintrag zeigt die Primärseite; die Sekundärseite kommt als
+               Teilwert dazu, weil dort die interessante Zahl steht — was hinten
+               herauskommt, ist die Frage jeder Trafo-Aufgabe. */
+            if (e.art === 'T' && typeof e.c === 'number' && typeof e.d === 'number') {
+                const s2re = U(e.c) - U(e.d), s2im = Uj(e.c) - Uj(e.d);
+                const i2re = -ire * e.wert, i2im = -iim * e.wert;
+                const fach2 = teilwerte[e.t.id] || (teilwerte[e.t.id] = {});
+                const b2 = Math.hypot(s2re, s2im), j2 = Math.hypot(i2re, i2im);
+                fach2[`${e.v.von2}–${e.v.nach2}`] = {
+                    teil: e.t.id, zeichen: e.t.zeichen, bmk: e.t.bmk || '',
+                    U: wechsel ? b2 : s2re, I: wechsel ? j2 : i2re,
+                    P: Math.abs(s2re * i2re + s2im * i2im), fliesst: j2 > SCHWELLE,
+                    Ubetrag: b2, Ibetrag: j2,
+                    Uwinkel: wechsel ? winkel(s2re, s2im) : 0,
+                    Iwinkel: wechsel ? winkel(i2re, i2im) : 0,
+                    Ire: i2re, Iim: i2im, wechsel,
+                    vonKlemme: e.v.von2 || '', nachKlemme: e.v.nach2 || '',
+                    richtung: j2 <= SCHWELLE ? 'keine' : (wechsel ? 'wechselnd' : (i2re > 0 ? 'vor' : 'rueck')),
+                    richtungstext: j2 <= SCHWELLE ? 'Es fliesst kein Strom.'
+                        : 'Der Strom der Sekundärseite. Er ist um die Übersetzung grösser als der primäre.'
+                };
+            }
             const uBetrag = Math.hypot(ure, uim);
             const iBetrag = Math.hypot(ire, iim);
             /* Wirkleistung als Zeigerprodukt: P = Re(U · I*). Bei Gleichstrom ist

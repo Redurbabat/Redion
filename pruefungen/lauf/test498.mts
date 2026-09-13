@@ -458,6 +458,119 @@ const svgAus = await zeichne(`
 p('Fliesst nichts, wird auch kein Pfeil gemalt',
   !svgAus.includes('sp-richtung'));
 
+/* ==========================================================================
+ * §8 · Der Transformator — Spannung geteilt, Strom vervielfacht
+ * --------------------------------------------------------------------------
+ * Ein idealer Übertrager hält zwei Verhältnisse ein, und das dritte folgt
+ * daraus zwingend:
+ *
+ *     U1 = ü · U2        die Spannung wird geteilt
+ *     I2 = ü · I1        der Strom wird im selben Mass grösser
+ *     U1·I1 = U2·I2      also geht die Leistung unverändert hindurch
+ *
+ * Die dritte Zeile ist die Prüfung, auf die es ankommt. Sie steht nirgends
+ * im Code — sie muss sich ERGEBEN. Wer nur die Spannung teilt und den Strom
+ * vergisst, bekommt einen Transformator, der Leistung erfindet, und das
+ * fällt an der Spannung allein nicht auf.
+ * ========================================================================*/
+console.log('\n8 · Der Transformator');
+
+/* Ein Klingeltransformator: 230 V auf 12 V, daran eine 12-V-Klingel. */
+const trafo = await rechne(`
+  const q = teil('wechselspannung', 'G1');
+  const T = teil('transformator', 'T1');
+  const h = teil('klingel', 'E1', { R: 24 });
+  draht(q, 'L', T, '1U'); draht(T, '1V', q, 'N');
+  draht(T, '2U', h, 'X1'); draht(h, 'X2', T, '2V');
+`);
+p('Der Transformator rechnet', trafo.ok, trafo.fehler);
+pNah('Primär liegen 230 V an', trafo.werte.t2.Ubetrag, 230, 'V');
+const sek = trafo.teilwerte.t2['2U–2V'];
+p('Es gibt einen Messwert für die Sekundärseite', !!sek);
+pNah('Sekundär kommen 12 V heraus', sek.Ubetrag, 12, 'V');
+pNah('Durch die Klingel fliessen 12 V / 24 Ω', sek.Ibetrag, 12 / 24, 'A');
+/* Und der Primärstrom ist um die Übersetzung KLEINER. */
+pNah('Primär fliesst nur der ü-te Teil davon',
+  trafo.werte.t2.Ibetrag, (12 / 24) / (230 / 12), 'A');
+
+/* DIE ZUSAGE, DIE DEN GANZEN ÜBERTRAGER TRÄGT — und ein Fallstrick darin.
+   -------------------------------------------------------------------------
+   Hier stand zuerst: Primärleistung gegen Sekundärleistung, beide aus den
+   Messwerten des Übertragers. Das sah zwingend aus und war ein ZIRKELSCHLUSS:
+   der sekundäre Strom wird als „primärer mal Übersetzung" abgeleitet, also
+   stimmt U1·I1 = U2·I2 auch dann, wenn der Übertrager in der MATRIX falsch
+   steht. Die Gegenprobe hat es bewiesen — mit einem Stempel, der den Strom
+   gar nicht übersetzt, blieb die Zusage grün, während die Klingel 9,58 A
+   statt 0,5 A bekam.
+
+   Verglichen wird deshalb gegen die LAST. Ihre Leistung rechnet sich aus den
+   Knotenspannungen und ihrem eigenen Widerstand — sie weiss nichts vom
+   Übertrager und kann seinen Fehler nicht mittragen. */
+const pPrim = trafo.werte.t2.Ubetrag * trafo.werte.t2.Ibetrag;
+const pLast = trafo.werte.t3.P;
+pNah('Die Leistung geht unverändert hindurch — gemessen an der LAST',
+  pPrim, pLast, 'W', 0.002);
+p('Sie ist auch nicht null — sonst wäre die Zusage geschenkt',
+  pLast > 5, `${pLast.toFixed(2)} W`);
+/* Und die abgeleitete Sekundärseite muss zur Last passen, sonst behauptet
+   der Übertrager etwas anderes als der Kreis, an dem er hängt. */
+pNah('Der abgeleitete Sekundärstrom stimmt mit dem der Last überein',
+  sek.Ibetrag, trafo.werte.t3.Ibetrag, 'A', 0.002);
+
+/* Eine andere Übersetzung muss andere Zahlen geben — sonst wäre `ue`
+   gar nicht gelesen worden. */
+const trafo2 = await rechne(`
+  const q = teil('wechselspannung', 'G1');
+  const T = teil('transformator', 'T1', { ue: 10 });
+  const h = teil('klingel', 'E1', { R: 24 });
+  draht(q, 'L', T, '1U'); draht(T, '1V', q, 'N');
+  draht(T, '2U', h, 'X1'); draht(h, 'X2', T, '2V');
+`);
+pNah('Mit Übersetzung 10 kommen 23 V heraus',
+  trafo2.teilwerte.t2['2U–2V'].Ubetrag, 23, 'V');
+
+/* Leerlauf: ohne Last fliesst nichts, und die Spannung steht trotzdem an.
+   Ein idealer Übertrager hat keinen Leerlaufstrom — das ist eine Annahme,
+   und sie steht am Bauteil. */
+const leerlauf = await rechne(`
+  const q = teil('wechselspannung', 'G1');
+  const T = teil('transformator', 'T1');
+  const v = teil('voltmeter', 'P1');
+  draht(q, 'L', T, '1U'); draht(T, '1V', q, 'N');
+  draht(T, '2U', v, '+'); draht(v, '−', T, '2V');
+`);
+p('Im Leerlauf rechnet er auch', leerlauf.ok, leerlauf.fehler);
+pNah('Das Voltmeter zeigt die 12 V', leerlauf.werte.t3.Ubetrag, 12, 'V', 0.02);
+p('Und primär fliesst so gut wie nichts', leerlauf.werte.t2.Ibetrag < 1e-3,
+  `${leerlauf.werte.t2.Ibetrag.toExponential(2)} A`);
+/* --------------------------------------------------------------------------
+ * UND DIE GEGENRICHTUNG — sie gehört zwingend hierher.
+ *
+ * Damit der Übertrager rechnen konnte, musste die Schwelle gelockert werden,
+ * ab der eine Matrix als singulär gilt: sie stand auf genau dem Wert von
+ * GMIN, und eine freischwebende Sekundärseite hängt NUR an GMIN.
+ *
+ * Eine gelockerte Schwelle darf aber nicht dazu führen, dass eine wirklich
+ * unlösbare Schaltung stillschweigend irgendwelche Zahlen liefert. Gemessen:
+ * der echte singuläre Fall hat den Pivot exakt null, der Übertrager rund
+ * 1e-12 — dazwischen liegen die neue Schwelle und reichlich Platz.
+ * ------------------------------------------------------------------------ */
+const zweiQuellen = await rechne(`
+  const q1 = teil('wechselspannung', 'G1');
+  const q2 = teil('wechselspannung', 'G2');
+  const h  = teil('lampe', 'E1');
+  draht(q1, 'L', q2, 'L'); draht(q1, 'N', q2, 'N');
+  draht(q1, 'L', h, 'X1'); draht(h, 'X2', q1, 'N');
+`);
+p('Zwei ideale Quellen parallel bleiben unlösbar — auch mit der neuen Schwelle',
+  zweiQuellen.ok === false, `ok=${zweiQuellen.ok}`);
+p('Und die Meldung sagt auch warum',
+  /eindeutige/.test(String(zweiQuellen.fehler)), zweiQuellen.fehler);
+
+p('Der Übertrager nennt seine Annahme',
+  (trafo.annahmen || []).some((a: string) => /ideal|Verluste/.test(a)),
+  (trafo.annahmen || []).join(' | ').slice(0, 90));
+
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
 
 console.log(`\n${ok} bestanden, ${weg} gescheitert`);

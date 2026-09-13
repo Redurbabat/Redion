@@ -7578,15 +7578,19 @@ gehören in eine andere Darstellungsart.
 
 **Ehrlich offen sind sechs:**
 
-`transformator` · `optokoppler` · `triac` · `transistor-npn` ·
-`transistor-pnp` · `thyristor`
+~~`transformator`~~ (gebaut, E546) · `optokoppler` · `triac` ·
+`transistor-npn` · `transistor-pnp` · `thyristor`
+
+**Der Transformator ist seit E546 gebaut** — als idealer Übertrager mit
+U1 = ü·U2 und I2 = ü·I1. Damit sind Klingeltransformator und Messwandler
+rechenbar. Offen bleiben die fünf Halbleiter.
 
 Sie brauchen etwas, das diese Rechnung nicht hat:
 
-* Der **Transformator** braucht gekoppelte Wicklungen. Mit einer idealen
-  Übersetzung liesse er sich als gesteuerte Quelle bauen — das ist die
-  kleinste ehrliche Fassung und wäre für die Messwandler-Aufgaben des
-  Lehrmittels genug.
+* Der **Transformator** ist genau so gebaut worden: als ideale Übersetzung
+  mit einer zusätzlichen Unbekannten für den Primärstrom (E546). Was ihm
+  fehlt, sind Verluste, Streufluss und Leerlaufstrom — für einen Netztrafo
+  wenige Prozent, und die Annahme steht am Bauteil.
 * **Thyristor, Triac, Transistoren, Optokoppler** sind nichtlinear und
   zustandsbehaftet. Die Diode wird heute über einen zweiten Durchgang
   nachgeführt (sperrt/leitet); für einen Thyristor käme ein Zündzustand dazu,

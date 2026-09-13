@@ -589,6 +589,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E543** — Lernkarten, die nachgerechnet werden — und eine Lernansicht, die keinen Stil hatte
 * **E544** — E151 war noch da und wirkte nicht mehr: tote Stilregeln nach einem Umbau
 * **E545** — Der FI misst wirklich — und 13 stumme Zeichen bekommen Verhalten
+* **E546** — Der ideale Übertrager — und die Schwelle, die zufällig GMIN war
 
 ---
 
@@ -43697,3 +43698,82 @@ der Lauf hatte recht, die Verdrahtung war falsch), und der erste
 „Fehlerstrom"-Kreis war in Wahrheit ein umgangener Neutralleiter. Beide
 stehen jetzt als Kommentar in der Datei, weil sie genau die Unterscheidung
 zeigen, um die es geht.
+
+---
+
+## E546 · Der ideale Übertrager — und die Schwelle, die zufällig GMIN war
+
+**Was wurde entschieden?** Der Transformator wird als IDEALER Übertrager
+gerechnet: keine Verluste, kein Streufluss, kein Leerlaufstrom. Er hält zwei
+Verhältnisse ein, und das dritte folgt daraus zwingend:
+
+```txt
+U1 = ü · U2        die Spannung wird geteilt
+I2 = ü · I1        der Strom wird im selben Mass grösser
+U1·I1 = U2·I2      also geht die Leistung unverändert hindurch
+```
+
+**Warum diese Fassung?** Weil sie die kleinste ist, die im Unterricht
+trägt. Die Trafo-Aufgaben des Lehrmittels — Klingeltransformator 230 auf 12 V,
+Messwandler — fragen nach genau diesen drei Zeilen. Verluste und Streufluss
+wären für einen Netztrafo wenige Prozent und brauchten Angaben, die auf
+keinem Symbol stehen.
+
+In der Matrix bekommt er EINE Unbekannte (seinen Primärstrom) und eine Zeile
+für die Spannungsbedingung; die Sekundärseite trägt denselben Strom mit dem
+Faktor ü und umgekehrtem Vorzeichen. Das ist derselbe Griff wie bei einer
+Spannungsquelle, nur über vier Klemmen statt zwei.
+
+### Die Schwelle war zufällig GMIN, und das hat den Übertrager verhindert
+
+Der erste Übertrager rechnete gar nicht: *„Die Schaltung hat keine eindeutige
+Lösung."* Das klang nach einem Fehler im Stempel und war keiner.
+
+Gemessen — nicht vermutet — mit einer Sonde im Gauss:
+
+```txt
+Übertrager, freischwebende Sekundärseite    kleinster Pivot  9,99998e-13
+zwei ideale Quellen parallel (echt singulär)  kleinster Pivot  exakt 0
+```
+
+Die Schwelle stand auf `1e-12`. Das ist **genau der Wert von GMIN**, dem
+winzigen Leitwert, mit dem jedes Netz am Bezug hängt. Ein freischwebender
+Schaltungsteil wird NUR von GMIN gehalten — sein Pivot liegt damit
+zwangsläufig in dieser Grössenordnung, und die Prüfung erklärte ihn für
+unlösbar. Dabei ist seine Lösung völlig eindeutig.
+
+Zwischen dem Rundungsrauschen einer wirklich singulären Matrix (~1e-16) und
+GMIN (1e-12) liegen vier Grössenordnungen. `PIVOT_MIN` sitzt jetzt auf `1e-14`
+— hundertfach über dem Rauschen, hundertfach unter GMIN. Beide Werte sind
+benannt und tragen den Hinweis, dass sie zusammengehören: wer den einen
+ändert, ändert den anderen mit.
+
+**Dass die Zahl dieselbe war, war keine Absicht, sondern ein Zufall** — und
+solange nichts freischwebte, fiel er nicht auf. `test498 §8` hält jetzt beide
+Richtungen fest: der Übertrager rechnet, und zwei ideale Quellen parallel
+bleiben unlösbar.
+
+### Und ein Zirkelschluss in der eigenen Prüfung
+
+Die Zusage „die Leistung geht unverändert hindurch" verglich zuerst
+Primär- gegen Sekundärleistung — beide aus den Messwerten des Übertragers.
+Das sah zwingend aus und war wertlos: der sekundäre Strom wird als „primärer
+mal Übersetzung" ABGELEITET, also stimmt U1·I1 = U2·I2 auch dann, wenn der
+Übertrager in der Matrix falsch steht.
+
+Die Gegenprobe hat es bewiesen. Mit einem Stempel, der die Spannung
+übersetzt und den Strom nicht, blieb die Leistungszusage **grün**, während
+die Klingel 9,58 A statt 0,5 A bekam.
+
+Verglichen wird jetzt gegen die LAST. Ihre Leistung rechnet sich aus den
+Knotenspannungen und ihrem eigenen Widerstand; sie weiss nichts vom
+Übertrager und kann seinen Fehler nicht mittragen. Damit fällt die Zusage in
+der Gegenprobe von 115 W auf 6 W.
+
+Das ist §55.2 in einer Form, die dort noch nicht steht: **eine Prüfung, deren
+beide Seiten aus derselben Annahme stammen, kann nicht rot werden — auch wenn
+sie zwei verschiedene Zahlen vergleicht.**
+
+`test498 §8`: 16 Zusagen, zusammen 84. Gegenprobe rot gesehen.
+Damit ist der Transformator aus **L156** abgehakt; die fünf Halbleiter
+bleiben offen.
