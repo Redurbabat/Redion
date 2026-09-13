@@ -248,9 +248,16 @@ Register.fachzeichen = (() => {
                 senkrecht(10, 60, 70), senkrecht(30, 60, 70), senkrecht(50, 60, 70),
                 'M12,44 a18,18 0 0,1 36,0'],
             beschriftung: [{ x: 30, y: 30, t: 'I∆n' }],
+            /* ZWEIMAL „N" GING NICHT.
+               Auf dem echten Gerät sind Eingang und Ausgang des Neutralleiters
+               beide mit N beschriftet, und genau so stand es hier. In der
+               Netzliste heisst eine Klemme aber `k:teil:nr` — zwei Klemmen mit
+               demselben `nr` sind damit DASSELBE Netz, und der Neutralleiter war
+               im FI dauerhaft durchverbunden. Er konnte gar nicht abschalten.
+               Der Ausgang heisst deshalb `N2`. */
             anschluesse: [{ nr: '1', x: 10, y: 0 }, { nr: '3', x: 30, y: 0 }, { nr: 'N', x: 50, y: 0 },
-                { nr: '2', x: 10, y: 70 }, { nr: '4', x: 30, y: 70 }, { nr: 'N', x: 50, y: 70 }],
-            erklaerung: 'Vergleicht hin- und rückfliessenden Strom und schaltet bei Differenz ab.'
+                { nr: '2', x: 10, y: 70 }, { nr: '4', x: 30, y: 70 }, { nr: 'N2', x: 50, y: 70 }],
+            erklaerung: 'Vergleicht hin- und rückfliessenden Strom und schaltet bei Differenz ab. Oben N, unten N2 — auf dem Gerät steht beide Male N.'
         },
         {
             id: 'motorschutzschalter', name: 'Motorschutzschalter', gruppe: 'schutz', kennbuchstabe: 'Q',
@@ -741,23 +748,31 @@ Register.fachzeichen = (() => {
         {
             id: 'steckdose', name: 'Steckdose', gruppe: 'stecker', kennbuchstabe: 'X',
             w: 60, h: 40,
-            pfad: [senkrecht(30, 0, 12), 'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52)],
-            anschluesse: [{ nr: 'L', x: 30, y: 0 }],
+            /* Eine Steckdose mit EINER Klemme lässt sich nicht anschliessen — der
+               Strom müsste irgendwo zurück. Sie hatte trotzdem nur `L`. */
+            pfad: [senkrecht(20, 0, 12), senkrecht(40, 0, 12),
+                'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52)],
+            anschluesse: [{ nr: 'L', x: 20, y: 0 }, { nr: 'N', x: 40, y: 0 }],
             erklaerung: 'Anschlussstelle für Geräte. Im Installationsplan der Halbkreis.'
         },
         {
             id: 'steckdose-schuko', name: 'Steckdose mit Schutzkontakt', gruppe: 'stecker', kennbuchstabe: 'X',
             w: 60, h: 40,
-            pfad: [senkrecht(30, 0, 12), 'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52),
-                senkrecht(30, 12, 20)],
-            anschluesse: [{ nr: 'L', x: 30, y: 0 }],
-            erklaerung: 'Wie die Steckdose, mit zusätzlichem Schutzleiterkontakt.'
+            /* Der Schutzkontakt steht im Namen und fehlte als Klemme. Damit war
+               die eine Steckdose, an der sich der Schutzleiter zeigen lässt,
+               genau die, an der man ihn nicht anschliessen konnte. */
+            pfad: [senkrecht(10, 0, 12), senkrecht(30, 0, 12), senkrecht(50, 0, 12),
+                'M8,30 a22,22 0 0,1 44,0 Z', waagrecht(30, 8, 52),
+                waagrecht(20, 24, 36)],
+            anschluesse: [{ nr: 'L', x: 10, y: 0 }, { nr: 'N', x: 30, y: 0 },
+                { nr: 'PE', x: 50, y: 0 }],
+            erklaerung: 'Wie die Steckdose, mit zusätzlichem Schutzleiterkontakt. Schutzklasse-I-Geräte brauchen ihn.'
         },
         {
             id: 'stecker', name: 'Stecker', gruppe: 'stecker', kennbuchstabe: 'X',
             w: 40, h: 50,
-            pfad: [senkrecht(20, 0, 16), 'M20,16 L34,32 L6,32 Z'],
-            anschluesse: [{ nr: '1', x: 20, y: 0 }],
+            pfad: [senkrecht(10, 0, 16), senkrecht(30, 0, 16), 'M20,16 L34,32 L6,32 Z'],
+            anschluesse: [{ nr: 'L', x: 10, y: 0 }, { nr: 'N', x: 30, y: 0 }],
             erklaerung: 'Das Gegenstück zur Steckdose.'
         },
         {

@@ -307,6 +307,88 @@ p('Drei Lampen auf drei Aussenleitern: kein Fund',
 p('Und sie brennen alle drei', richtig4.werte.t2.fliesst
   && richtig4.werte.t3.fliesst && richtig4.werte.t4.fliesst);
 
+/* ==========================================================================
+ * §9 · Der Fehlerstrom-Schutzschalter misst wirklich
+ * --------------------------------------------------------------------------
+ * Der FI ist das einzige Schutzgerät, das diese Simulation nicht nur zeichnet,
+ * sondern rechnet. Er vergleicht, was hinfliesst, mit dem, was zurückkommt —
+ * und diese Summe kann eine Knotenpotentialanalyse bilden.
+ *
+ * DIE ENTSCHEIDENDE ZUSAGE IST DIE ERSTE. Eine gesunde Drehstromanlage hat
+ * drei grosse Strangströme, deren ZEIGERSUMME null ist. Wer im FI Beträge
+ * addiert, misst dort einen Fehlerstrom von über einem Ampere und lässt den
+ * Schalter in einer völlig fehlerfreien Anlage auslösen. Das ist derselbe
+ * Fehler wie beim Neutralleiter, nur an einer Stelle, wo er als Sicherheits-
+ * funktion daherkommt.
+ * ========================================================================*/
+console.log('\n9 · Der Fehlerstrom-Schutzschalter');
+
+/* Gesund: L und N laufen beide durch den FI, die Last hängt dahinter. */
+const fiGesund = await rechne(`
+  const q  = teil('wechselspannung', 'G1');
+  const fi = teil('fi-schutzschalter', 'F1');
+  const h  = teil('lampe', 'E1');
+  draht(q, 'L', fi, '1');  draht(fi, '2', h, 'X1');
+  draht(h, 'X2', fi, 'N2'); draht(fi, 'N', q, 'N');
+`, { t2: 0 });
+p('Die gesunde Schaltung rechnet', fiGesund.ok, fiGesund.fehler);
+p('Und die Lampe brennt', fiGesund.werte.t3?.fliesst === true);
+p('Der FI löst NICHT aus — was hinfliesst, kommt zurück',
+  !fund(fiGesund, 'fi-loest-aus'), arten(fiGesund));
+
+/* DER ECHTE FEHLERFALL: alles richtig verdrahtet — und daneben ein
+   Isolationsfehler, der Strom über den SCHUTZLEITER abfliessen lässt. Genau
+   das ist der Fall, für den es den FI gibt: ein durchgescheuertes Kabel, ein
+   feuchtes Gehäuse, eine Hand.
+   (Der erste Anlauf legte hier den Rückweg am FI vorbei. Das ist etwas
+   anderes — ein Verdrahtungsfehler — und der Lauf hat es zu Recht als
+   solchen gemeldet, nicht als Fehlerstrom.) */
+const fiFehler = await rechne(`
+  const q  = teil('drehstromquelle', 'G1');
+  const fi = teil('fi-schutzschalter', 'F1');
+  const h  = teil('lampe', 'E1');
+  const iso = teil('widerstand', 'R1', { R: 1000 });
+  draht(q, 'L1', fi, '1');  draht(fi, '2', h, 'X1');
+  draht(h, 'X2', fi, 'N2'); draht(fi, 'N', q, 'N');
+  draht(h, 'X1', iso, '1'); draht(iso, '2', q, 'PE');
+`, { t2: 0 });
+pFund('FI', fiFehler, 'fi-loest-aus', 'gefahr', /30 mA|Menschen|Schutzleiter/);
+p('Und er nennt die fehlende Strommenge',
+  /\d/.test(fund(fiFehler, 'fi-loest-aus')?.was || ''),
+  fund(fiFehler, 'fi-loest-aus')?.was);
+
+/* DIE PRÜFUNG, DIE DEN ZEIGERFEHLER FÄNGT: zwei Lasten an L1 und L2, beide
+   Aussenleiter und der Neutralleiter durch den FI. Jeder der drei Pole führt
+   Strom — 0,43 A, 0,43 A und 0,43 A zurück —, und die ZEIGERSUMME ist null.
+   Wer Beträge addiert, bekommt 1,3 A und lässt den Schalter in einer
+   fehlerfreien Anlage auslösen.
+   (Der erste Anlauf hatte hier eine dritte Lampe an L3, die am FI VORBEI
+   gespeist wurde. Das ist ein echter Fehlerstrom, und der Lauf hat ihn zu
+   Recht gemeldet — die Prüfung war falsch verdrahtet, nicht die Rechnung.) */
+const fiDrehstrom = await rechne(`
+  const q  = teil('drehstromquelle', 'G1');
+  const fi = teil('fi-schutzschalter', 'F1');
+  const h1 = teil('lampe', 'E1');
+  const h2 = teil('lampe', 'E2');
+  draht(q, 'L1', fi, '1'); draht(q, 'L2', fi, '3'); draht(q, 'N', fi, 'N');
+  draht(fi, '2', h1, 'X1'); draht(fi, '4', h2, 'X1');
+  draht(h1, 'X2', fi, 'N2'); draht(h2, 'X2', fi, 'N2');
+`, { t2: 0 });
+p('Die Drehstromanlage rechnet', fiDrehstrom.ok, fiDrehstrom.fehler);
+p('Der FI löst bei gesunder Drehstromlast NICHT aus',
+  !fund(fiDrehstrom, 'fi-loest-aus'),
+  'gemeldet: ' + arten(fiDrehstrom) + ' — bei Betragssumme wären es über 1 A');
+
+/* Und der häufige Verdrahtungsfehler: nur ein Leiter durch den FI. */
+const fiHalb = await rechne(`
+  const q  = teil('wechselspannung', 'G1');
+  const fi = teil('fi-schutzschalter', 'F1');
+  const h  = teil('lampe', 'E1');
+  draht(q, 'L', fi, '1'); draht(fi, '2', h, 'X1'); draht(h, 'X2', q, 'N');
+`, { t2: 0 });
+pFund('Halbe Messung', fiHalb, 'fi-halbe-messung', 'fehler',
+  /Beide Leiter|Betriebsstrom/);
+
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
 
 console.log(`\n${ok} bestanden, ${weg} gescheitert`);

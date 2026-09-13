@@ -248,6 +248,15 @@ const Stromfluss = (() => {
     ] },
 
     /* ---- Kontakte: die schaltet nicht die Hand, sondern eine Spule ---- */
+    /* Der Wechsler ist ein Kontakt mit drei Klemmen: 11 ist gemeinsam, 12
+       liegt in Ruhe an, 14 nach dem Anziehen. Er wird als Schliesser
+       geführt, weil die Schleife nur „an" und „aus" kennt — die Ruhelage
+       ist damit Stellung 0 und die angezogene Stellung 1, genau wie bei
+       jedem anderen Kontakt. */
+    wechsler:            { art: 'schalter', folgtSpule: 'schliesser', stellungen: [
+      { name: 'Ruhe (11–12)', zu: [['11', '12']] },
+      { name: 'angezogen (11–14)', zu: [['11', '14']] }
+    ] },
     schliesser:          { art: 'schalter', stellungen: AUF_ZU('3', '4'), folgtSpule: 'schliesser' },
     oeffner:             { art: 'schalter', stellungen: ZU_AUF('1', '2'), folgtSpule: 'oeffner' },
     'schuetz-schliesser': { art: 'schalter', stellungen: AUF_ZU('13', '14'), folgtSpule: 'schliesser' },
@@ -315,9 +324,39 @@ const Stromfluss = (() => {
     'spule-induktivitaet': { art: 'leiter', von: '1', nach: '2',
       annahme: 'Bei Gleichstrom ist eine Spule eine Verbindung. Ihre Wirkung zeigt sich erst im Wechselstrom.' },
 
-    /* ---- Was den Strom durchlässt ---- */
+    /* ---- Schutzgeräte ----
+       Sie sind alle Schalter: im Betrieb geschlossen, im Fehlerfall offen.
+       Was sie AUSLÖST, kann diese Simulation nicht rechnen — dafür bräuchte
+       es Zeit (die Auslösekennlinie eines Leitungsschutzschalters ist eine
+       Kurve über Sekunden) oder Wärme (das Bimetall eines Thermorelais).
+       Sie stehen trotzdem hier und nicht als Unterbrechung: ein Plan mit
+       einem Motorschutzschalter darin muss rechnen, sonst ist der halbe
+       Motorenteil des Lehrmittels nicht zeichenbar. */
     sicherung:              { art: 'schalter', stellungen: ZU_AUF('1', '2') },
     leitungsschutzschalter: { art: 'schalter', stellungen: ZU_AUF('1', '2') },
+    motorschutzschalter:    { art: 'schalter', stellungen: [
+      { name: 'ein', zu: [['1', '2'], ['3', '4'], ['5', '6']] },
+      { name: 'ausgelöst', zu: [] }
+    ], annahme: 'Der Motorschutzschalter trennt alle drei Aussenleiter zugleich. Wann er auslöst, wird nicht gerechnet — dafür bräuchte es Zeit und Wärme.' },
+    thermorelais:           { art: 'schalter', stellungen: [
+      { name: 'ein', zu: [['1', '2'], ['3', '4'], ['5', '6']] },
+      { name: 'ausgelöst', zu: [] }
+    ], annahme: 'Das Bimetall wird nicht gerechnet. Die Stellung „ausgelöst" lässt sich von Hand wählen, um den Fall zu zeigen.' },
+
+    /* Der Fehlerstrom-Schutzschalter. Er ist als SCHALTER gebaut wie die
+       anderen — sein Besonderes steht nicht hier, sondern in der
+       Fehlerprüfung: dort wird die Summe der Ströme durch seine Pole
+       gebildet, und die ist der Fehlerstrom (E545). Das kann die Rechnung
+       wirklich, und deshalb ist er der einzige Schutz, der hier nicht nur
+       gezeichnet, sondern gemessen wird. */
+    'fi-schutzschalter':    { art: 'schalter', stellungen: [
+      { name: 'ein', zu: [['1', '2'], ['3', '4'], ['N', 'N2']] },
+      { name: 'ausgelöst', zu: [] }
+    ], schutzklemme: 'N',
+      annahme: 'Die Auslösung wird nicht selbst geschaltet — der Fehlerstrom wird aber gerechnet und gemeldet.' },
+
+    ueberspannungsableiter: { art: 'offen', von: '1', nach: 'PE',
+      annahme: 'Im Betrieb sperrt er. Er leitet erst bei einer Überspannung, und die kommt in dieser Rechnung nicht vor.' },
     klemme:                 { art: 'leiter', von: '1', nach: '2' },
     steckverbindung:        { art: 'leiter', von: '1', nach: '2' },
     'leiter-l1':            { art: 'leiter', von: 'L1', nach: 'L1', leiter: { L1: 'L1' } },
@@ -326,6 +365,35 @@ const Stromfluss = (() => {
     'leiter-n':             { art: 'leiter', von: 'N', nach: 'N', leiter: { N: 'N' } },
     'leiter-pe':            { art: 'leiter', von: 'PE', nach: 'PE', leiter: { PE: 'PE' } },
     'bp-minuterie':         { art: 'schalter', stellungen: AUF_ZU('1', '2') },
+
+    /* ---- Steckvorrichtungen ----
+       Eine Steckdose ohne Gerät ist eine Unterbrechung, und mit Gerät ist
+       sie das Gerät. Welches, weiss der Plan nicht — deshalb `offen` mit
+       einer genannten Annahme, statt einen Verbraucher zu erfinden. */
+    steckdose:          { art: 'offen', von: 'L', nach: 'N',
+      annahme: 'Was in der Steckdose steckt, wird nicht mitgerechnet. Ohne Gerät ist sie eine Unterbrechung.' },
+    'steckdose-schuko': { art: 'offen', von: 'L', nach: 'N',
+      leiter: { }, schutzklemme: 'PE',
+      annahme: 'Was in der Steckdose steckt, wird nicht mitgerechnet. Der Schutzkontakt wird geprüft, nicht gerechnet.' },
+    stecker:            { art: 'offen', von: 'L', nach: 'N',
+      annahme: 'Der Stecker allein führt nichts. Was daran hängt, steht nicht im Plan.' },
+
+    /* ---- Widerstände, die auf etwas reagieren ----
+       Alle vier ändern ihren Wert mit einer Grösse, die dieser Rechnung
+       fehlt: Temperatur, Licht, Spannung. Gerechnet wird deshalb ihr
+       Grundwert, und die Annahme sagt es. Als Unterbrechung wären sie
+       falscher — ein NTC in einer Reihenschaltung leitet ja. */
+    ptc: { art: 'widerstand', von: '1', nach: '2', wert: 100, einheit: 'Ω',
+      annahme: 'Der Kaltleiter wird mit seinem kalten Wert gerechnet. Die Temperatur kommt in dieser Rechnung nicht vor.' },
+    ntc: { art: 'widerstand', von: '1', nach: '2', wert: 10000, einheit: 'Ω',
+      annahme: 'Der Heissleiter wird mit seinem kalten Wert gerechnet. Die Temperatur kommt in dieser Rechnung nicht vor.' },
+    vdr: { art: 'widerstand', von: '1', nach: '2', wert: 1e6, einheit: 'Ω',
+      annahme: 'Der Varistor wird hochohmig gerechnet. Er leitet erst bei Überspannung, und die kommt hier nicht vor.' },
+    ldr: { art: 'widerstand', von: '1', nach: '2', wert: 10000, einheit: 'Ω',
+      annahme: 'Der Fotowiderstand wird mit einem mittleren Wert gerechnet. Die Helligkeit kommt in dieser Rechnung nicht vor.' },
+
+    frequenzmesser: { art: 'volt', von: '1', nach: '2',
+      annahme: 'Er wird wie ein Voltmeter hochohmig gerechnet. Die Frequenz selbst ist in dieser Rechnung fest — 50 Hz.' },
 
     /* ---- Was ihn sperrt ---- */
     kondensator: { art: 'offen', von: '1', nach: '2',
@@ -653,6 +721,19 @@ const Stromfluss = (() => {
     Uwinkel: number;
     /** Phasenlage des Stroms in Grad. */
     Iwinkel: number;
+    /**
+     * Der Strom als Zeiger, Real- und Imaginärteil, in Ampere.
+     *
+     * Warum zusätzlich zu Betrag und Winkel: Ströme lassen sich nur so
+     * ADDIEREN. Der Fehlerstrom im FI ist die Summe der Ströme durch seine
+     * Pole, und Beträge zu addieren gäbe dort dieselbe falsche Antwort wie
+     * beim Neutralleiter (E539) — nämlich immer zu viel.
+     * Aus Betrag und Winkel liesse sich das zwar zurückrechnen, aber nur
+     * bei Wechselstrom: bei Gleichstrom steht der Winkel fest auf 0, und
+     * das Vorzeichen wäre verloren.
+     */
+    Ire: number;
+    Iim: number;
     /** Wird dieses Bauteil mit Wechselstrom gerechnet? Dann hat `I` kein
         Vorzeichen im Sinn einer festen Richtung — siehe `richtung`. */
     wechsel: boolean;
@@ -1107,7 +1188,7 @@ const Stromfluss = (() => {
         P: p, fliesst: strom > SCHWELLE,
         Ubetrag: uBetrag, Ibetrag: iBetrag,
         Uwinkel: wechsel ? winkel(ure, uim) : 0,
-        Iwinkel: iWinkel,
+        Iwinkel: iWinkel, Ire: ire, Iim: iim,
         wechsel, vonKlemme: e.von, nachKlemme: e.nach,
         richtung, richtungstext,
         ...(richtungJetzt ? { richtungJetzt } : {})
@@ -1121,10 +1202,12 @@ const Stromfluss = (() => {
       } else if (alt) {
         alt.fliesst = alt.fliesst || strom > SCHWELLE;
       }
-      if (e.v.glieder) {
-        const fach = teilwerte[e.t.id] || (teilwerte[e.t.id] = {});
-        fach[`${e.von}–${e.nach}`] = mach();
-      }
+      /* Die Teilwerte gab es zuerst nur für mehrteilige Bauteile (das
+         Klemmenbrett). Sie werden jetzt für JEDES Bauteil geführt, weil ein
+         Schalter genauso mehrere Pole hat — und beim FI ist der Strom durch
+         jeden einzelnen Pol die ganze Frage. */
+      const fach = teilwerte[e.t.id] || (teilwerte[e.t.id] = {});
+      fach[`${e.von}–${e.nach}`] = mach();
       netzStrom[e.a] = Math.max(netzStrom[e.a]!, strom);
       netzStrom[e.b] = Math.max(netzStrom[e.b]!, strom);
     });
@@ -1373,7 +1456,8 @@ const Stromfluss = (() => {
 
   type Anschlussfehler = {
     /** Kennung der Fehlerart, für Prüfläufe und Oberfläche. */
-    art: 'l-pe' | 'l-n' | 'l-l' | 'n-pe' | 'pe-fehlt' | 'n-offen' | 'schalter-in-n';
+    art: 'l-pe' | 'l-n' | 'l-l' | 'n-pe' | 'pe-fehlt' | 'n-offen' | 'schalter-in-n'
+       | 'fi-loest-aus' | 'fi-halbe-messung';
     /** Wie schlimm — als Wort, nicht als Farbe (§38). */
     schwere: 'gefahr' | 'fehler' | 'hinweis';
     /** Welche Bauteile es betrifft. */
@@ -1551,7 +1635,71 @@ const Stromfluss = (() => {
       });
     });
 
-    /* ---- 4. Der Neutralleiter ist unterbrochen ------------------------- */
+    /* ---- 4. Der Fehlerstrom-Schutzschalter misst wirklich --------------
+       Der FI vergleicht, was hinfliesst, mit dem, was zurückkommt. Fehlt
+       etwas, geht es einen anderen Weg — über den Schutzleiter oder über
+       einen Menschen. Genau diese Summe kann die Rechnung bilden, und
+       deshalb ist der FI das einzige Schutzgerät hier, das nicht nur
+       gezeichnet, sondern GEMESSEN wird.
+
+       Summiert werden ZEIGER und nicht Beträge. Das ist derselbe Punkt wie
+       beim Neutralleiter (E539): drei Aussenleiterströme haben zusammen den
+       Betrag null, obwohl jeder einzelne gross ist. Wer Beträge addiert,
+       bekommt einen Fehlerstrom von mehreren Ampere in einer völlig
+       gesunden Drehstromanlage. */
+    const FI_SCHWELLE = 0.03;   /* 30 mA — der Nennfehlerstrom für Personenschutz */
+    teile.forEach(t => {
+      const v = verhalten(t.zeichen);
+      if (!v || t.zeichen !== 'fi-schutzschalter') return;
+      const fach = erg.teilwerte[t.id];
+      if (!fach) return;
+      const pole = Object.keys(fach);
+      let re = 0, im = 0;
+      pole.forEach(k => { const w = fach[k]!; re += w.Ire; im += w.Iim; });
+      const fehlstrom = Math.hypot(re, im);
+      if (fehlstrom <= FI_SCHWELLE) return;
+
+      /* ER LÖST AUS. Aber WARUM — das ist die Frage, die es zu beantworten
+         gilt, und sie hat zwei ganz verschiedene Antworten.
+
+         Führt der Neutralleiter-Pol keinen Strom, während die Aussenleiter
+         welchen führen, dann ist der Rückweg gar nicht durch den Schalter
+         gelegt. Der „Fehlerstrom" ist dann der volle Betriebsstrom, es gibt
+         gar keinen Fehler, und der Schalter fliegt beim Einschalten raus.
+         Das ist ein Verdrahtungsfehler und der häufigste beim FI überhaupt
+         — ihn als „Fehlerstrom" zu melden wäre richtig und nutzlos. */
+      const nPol = fach['N–N2'];
+      const aussenFuehrt = pole.some(k => k !== 'N–N2'
+        && Math.hypot(fach[k]!.Ire, fach[k]!.Iim) > SCHWELLE);
+      if (aussenFuehrt && nPol
+          && Math.hypot(nPol.Ire, nPol.Iim) <= SCHWELLE) {
+        raus.push({
+          art: 'fi-halbe-messung', schwere: 'fehler', teile: [t.id],
+          was: `${nameVon(t)}: der Neutralleiter läuft nicht durch den Schutzschalter.`,
+          warum: 'Ein Fehlerstromschutzschalter vergleicht Hin- und Rückstrom. '
+               + 'Sieht er nur den Aussenleiter, ist die Differenz immer der '
+               + 'ganze Betriebsstrom — er löst beim Einschalten aus, und zwar '
+               + 'ohne dass irgendetwas defekt wäre. Wer dann den Fehler beim '
+               + 'Gerät sucht, sucht am falschen Ort. Beide Leiter müssen durch '
+               + 'ihn hindurch.'
+        });
+        return;
+      }
+
+      raus.push({
+        art: 'fi-loest-aus', schwere: 'gefahr', teile: [t.id],
+        was: `${nameVon(t)} löst aus: es fehlen ${zeige(fehlstrom, 'A')} — `
+           + `so viel fliesst am Neutralleiter vorbei.`,
+        warum: 'Was hinfliesst, kommt nicht zurück. Der Strom nimmt einen '
+             + 'anderen Weg: über den Schutzleiter, über ein feuchtes Gehäuse '
+             + 'oder über einen Menschen. Ab etwa 30 mA wird es für den '
+             + 'Menschen gefährlich, und genau darauf ist der Schalter '
+             + 'eingestellt. Dass er auslöst, ist hier die gute Nachricht — '
+             + 'die schlechte ist, dass es einen Fehlerstrom gibt.'
+      });
+    });
+
+    /* ---- 5. Der Neutralleiter ist unterbrochen ------------------------- */
     /* Erreichbarkeit OHNE die Quellen: über eine Quelle käme man von jedem
        Punkt zum Neutralleiter, und die Prüfung wäre immer grün. */
     const hatN = Array.from(rollen.values()).some(x => x.has('N'));

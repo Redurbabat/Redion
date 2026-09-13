@@ -588,6 +588,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E542** — Ein Pfeil bei Gleichstrom, zwei bei Wechselstrom — und der Fehler, den erst das Bild fand
 * **E543** — Lernkarten, die nachgerechnet werden — und eine Lernansicht, die keinen Stil hatte
 * **E544** — E151 war noch da und wirkte nicht mehr: tote Stilregeln nach einem Umbau
+* **E545** — Der FI misst wirklich — und 13 stumme Zeichen bekommen Verhalten
 
 ---
 
@@ -43601,3 +43602,98 @@ sich die Ports von test215, test217, test218 und test219 genommen. Einzeln
 laufen alle grün; erst im vollen Lauf wäre es aufgefallen, Stunden später, an
 einer Stelle ohne Zusammenhang zur Ursache. `test87` prüft jetzt, dass kein
 Prüflauf sich einen Port mit einem anderen teilt — Gegenprobe rot gesehen.
+
+---
+
+## E545 · Der FI misst wirklich — und 13 stumme Zeichen bekommen Verhalten
+
+**Zuerst gemessen, dann gebaut** (§36). Von 110 Fachzeichen hatten **39 kein
+elektrisches Verhalten**: sie liessen sich malen, und die Rechnung behandelte
+sie als Unterbrechung. Darunter der Motorschutzschalter, das Thermorelais,
+der Wechsler, alle Steckvorrichtungen — und der Fehlerstrom-Schutzschalter.
+
+Nach diesem Bogen sind es **26**, und die verbleibenden zerfallen sauber:
+
+| Gruppe | Anzahl | Warum ohne Verhalten |
+|---|---|---|
+| Halbleiter und Transformator | 6 | brauchen nichtlineare oder gekoppelte Modelle |
+| Knotenpunkte | 3 | werden in `netze()` eigens behandelt — richtig so |
+| Betätigungsarten (`ch-druck`, …) | 5 | sind keine Geräte, sondern Bauformen |
+| Bauplan-Zeichen (`bp-*`) | 12 | eine andere Darstellungsart, kein Stromlauf |
+
+Ehrlich offen ist also **nur die erste Zeile**.
+
+### Der FI ist das einzige Schutzgerät, das gerechnet wird
+
+Sicherung, Leitungsschutzschalter, Motorschutzschalter, Thermorelais — alle
+sind Schalter: im Betrieb zu, im Fehlerfall offen. Was sie AUSLÖST, kann diese
+Simulation nicht rechnen; dafür bräuchte es Zeit (eine Auslösekennlinie ist
+eine Kurve über Sekunden) oder Wärme (ein Bimetall).
+
+**Beim FI ist das anders, und das ist der Grund für diesen Bogen.** Er
+vergleicht, was hinfliesst, mit dem, was zurückkommt — und genau diese Summe
+kann eine Knotenpotentialanalyse bilden. Er ist damit das einzige Schutzgerät,
+das hier nicht nur gezeichnet, sondern gemessen wird.
+
+### Summiert werden Zeiger, und das ist kein Detail
+
+Dies ist E539 an einer Stelle, wo der Fehler als Sicherheitsfunktion
+daherkommt. Drei Aussenleiterströme haben zusammen den Betrag null, obwohl
+jeder einzelne gross ist. Wer im FI Beträge addiert, misst in einer völlig
+gesunden Drehstromanlage über ein Ampere Fehlerstrom.
+
+Das ist nicht nur falsch, sondern auf besonders üble Weise falsch: **ein
+Schutzschalter, der ständig fliegt, wird überbrückt.** Die Gegenprobe zeigt
+es — mit Betragssumme löst er im einphasigen wie im dreiphasigen gesunden
+Kreis aus.
+
+### Er sagt nicht nur DASS, sondern WARUM
+
+Ein FI, der auslöst, hat zwei ganz verschiedene Ursachen, und sie zu
+unterscheiden ist der eigentliche Lernwert:
+
+* **Isolationsfehler** — Strom fliesst über den Schutzleiter ab. Das ist der
+  Fall, für den es den FI gibt. Gemeldet als `fi-loest-aus`, mit der Menge.
+* **Der Neutralleiter läuft am Schalter vorbei** — dann ist die Differenz
+  immer der ganze Betriebsstrom, er fliegt beim Einschalten, und es ist gar
+  nichts defekt. Der häufigste Verdrahtungsfehler beim FI überhaupt. Gemeldet
+  als `fi-halbe-messung`, weil „Fehlerstrom" hier richtig und nutzlos wäre:
+  wer danach den Fehler beim Gerät sucht, sucht am falschen Ort.
+
+Unterschieden wird an der Frage, ob der Neutralleiter-Pol überhaupt Strom
+führt, während die Aussenleiter es tun.
+
+### Zwei Dinge, die vorher gar nicht gingen
+
+**Der FI hatte zwei Klemmen namens `N`.** Auf dem echten Gerät sind Eingang
+und Ausgang des Neutralleiters beide mit N beschriftet, und so stand es im
+Register. In der Netzliste heisst eine Klemme aber `k:teil:nr` — zwei Klemmen
+mit demselben `nr` sind damit DASSELBE Netz. Der Neutralleiter war im FI
+dauerhaft durchverbunden; er konnte gar nicht abschalten. Der Ausgang heisst
+jetzt `N2`.
+
+**Die Steckdose hatte eine einzige Klemme.** `L`, sonst nichts — der Strom
+hätte nirgends zurückgekonnt. Und die „Steckdose mit Schutzkontakt" trug den
+Schutzkontakt im Namen und nicht als Klemme: ausgerechnet das Zeichen, an dem
+sich der Schutzleiter zeigen lässt, war das eine, an dem man ihn nicht
+anschliessen konnte. Jetzt L/N beziehungsweise L/N/PE.
+
+### Und was NICHT gebaut wurde
+
+Die Steinmetzschaltung (Drehstrommotor am Einphasennetz) steht im Lehrmittel
+und ist hier **nicht** baubar: sie lebt vom Kondensator als Phasenschieber,
+und Blindwiderstände fehlen (L151). Sie zu zeichnen wäre möglich, sie zu
+rechnen nicht — und ein Kondensator, der als Unterbrechung gerechnet wird,
+macht aus der Schaltung stillschweigend einen Motor mit zwei Strängen. Lieber
+nicht vorhanden als falsch.
+
+`test499 §9`: 12 neue Zusagen, zusammen 51. Gegenprobe rot gesehen — mit
+Betragssumme fallen die beiden Zusagen „löst NICHT aus", einphasig und
+dreiphasig.
+
+**Zwei Fehler in der Prüfung selbst**, beide von ihr gefunden: der erste
+Drehstrom-Testkreis speiste eine Lampe am FI vorbei (ein echter Fehlerstrom —
+der Lauf hatte recht, die Verdrahtung war falsch), und der erste
+„Fehlerstrom"-Kreis war in Wahrheit ein umgangener Neutralleiter. Beide
+stehen jetzt als Kommentar in der Datei, weil sie genau die Unterscheidung
+zeigen, um die es geht.

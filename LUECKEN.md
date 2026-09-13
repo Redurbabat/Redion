@@ -7565,3 +7565,39 @@ Knopfname und ein Klassenname im Lauf waren veraltet (die Vorlage §31 belegt
 es), und die vier Zahlen im Aufklapper waren eine undokumentierte Abweichung
 von §31. Dazu ein dritter Fund: der Lauf las wegen einer Animationsschicht
 den falschen Span.
+
+---
+
+L156 · Sechs Zeichen haben kein Modell — offen
+--------------------------------------------------------------------------
+
+Nachgezählt am 13. September 2026 (E545): von 110 Fachzeichen haben **26 kein
+elektrisches Verhalten**. Zwanzig davon zu Recht — Knotenpunkte werden in
+`netze()` eigens behandelt, Betätigungsarten sind keine Geräte, Bauplan-Zeichen
+gehören in eine andere Darstellungsart.
+
+**Ehrlich offen sind sechs:**
+
+`transformator` · `optokoppler` · `triac` · `transistor-npn` ·
+`transistor-pnp` · `thyristor`
+
+Sie brauchen etwas, das diese Rechnung nicht hat:
+
+* Der **Transformator** braucht gekoppelte Wicklungen. Mit einer idealen
+  Übersetzung liesse er sich als gesteuerte Quelle bauen — das ist die
+  kleinste ehrliche Fassung und wäre für die Messwandler-Aufgaben des
+  Lehrmittels genug.
+* **Thyristor, Triac, Transistoren, Optokoppler** sind nichtlinear und
+  zustandsbehaftet. Die Diode wird heute über einen zweiten Durchgang
+  nachgeführt (sperrt/leitet); für einen Thyristor käme ein Zündzustand dazu,
+  der über die Zeit erhalten bleibt.
+
+Bis dahin werden sie als Unterbrechung gerechnet — sichtbar, aber ohne
+Wirkung. Das ist die Vorgabe für ein Symbol ohne Verhalten und richtig so; es
+steht hier, damit niemand es für ein Modell hält.
+
+**Dazu eine Schaltung, die deshalb fehlt:** die Steinmetzschaltung
+(Drehstrommotor am Einphasennetz) braucht den Kondensator als Phasenschieber
+und damit Blindwiderstände (L151). Sie ist im Lehrmittel enthalten und hier
+bewusst nicht gebaut — ein Kondensator, der als Unterbrechung gerechnet wird,
+macht daraus stillschweigend einen Motor mit zwei Strängen.
