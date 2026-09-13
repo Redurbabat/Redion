@@ -33,6 +33,7 @@
  *   G2 → die Weiche auf JEDES Dokument gehen lassen:          17 grün,  4 rot  (auch das Notizheft bekam den Folienvortrag)
  *   G3 → im Folienvortrag den Deckel-Zweig ausschalten:       18 grün,  3 rot  („ist ‚2 / 2‘, soll ‚1 / 2‘“ — Redurs Satz, wörtlich)
  *   G4 → den Zierstrich wieder als Abdeckmarke bauen:         14 grün,  7 rot  (SIEBEN Zierdeckel in acht Layouts)
+ *   G5 → den Deckel-Griff im Laserpointer-Vortrag weg (E556): 25 grün,  2 rot  („ist ‚Seite 2/2‘, soll ‚Seite 1/2‘“ — derselbe Satz, diesmal im Heft)
  *
  *   node pruefungen/lauf/test509.mts
  * ==========================================================================*/
@@ -274,6 +275,71 @@ console.log('\n§5 Der Zierstrich eines Layouts ist eine Linie, keine Antwort');
   gleich('KEIN Layout trägt eine Abdeckmarke', m.deckel, 0);
   p('… aber es gibt Zierstriche, und die sind Linien', m.linien >= 1,
     String(m.linien) + ' Linien, Arten: ' + JSON.stringify(m.arten));
+}
+
+/* ══ §6 UND DIE ZWEI FÄLLE, DIE DIE WEICHE OFFEN LÄSST (E556) ════════════
+ * §4 hält fest, dass Heft und PDF den Laserpointer behalten — richtig, das
+ * ist E493s Sinn. Aber damit bleiben ZWEI Fälle, in denen eine Abdeckung
+ * unerreichbar war:
+ *
+ *   · eine HOCHKANTE Folie — `istFoliensatz` verlangt quer, und das ist
+ *     richtig so (sonst bekäme jedes Notizheft den Folienvortrag)
+ *   · eine Abdeckung auf einer PDF-Seite oder im Heft — eine Übungsaufgabe
+ *     im eigenen Skript ist genau der Fall, für den E266 sie gebaut hat
+ *
+ * Gemessen: `elementsFromPoint` an der Deckelmitte gibt
+ * [div.document-zeigen-flaeche, rect[abdeck], svg.blatt-marken, …] — der
+ * Deckel liegt als ZWEITER darunter. `event.target` sieht ihn nie.
+ * ═══════════════════════════════════════════════════════════════════════ */
+console.log('\n§6 Auch im Laserpointer-Vortrag deckt ein Tipp die Antwort auf');
+{
+  /* Ein Heft mit einer Abdeckung — der Fall aus E266, nicht aus PowerPoint. */
+  const heftId = await seite.evaluate(() => {
+    const h = Store.addPage(null, { text: 'Übungsblatt', icon: '📓' });
+    const b1 = Store.addBlock(h.id, 'blatt', { text: '', blattBreite: 595, blattHoehe: 842 });
+    Store.addBlock(h.id, 'blatt', { text: '', blattBreite: 595, blattHoehe: 842 });
+    Store.updateBlock(b1.id, { marken: [
+      { id: 'uebung-1', art: 'abdeck', farbe: '#ffcc00', pts: [[80, 300], [500, 420]] }] });
+    Store.updateBlock(h.id, { dokumentModus: true });
+    return h.id;
+  });
+  await oeffne(heftId);
+  await vortragStarten();
+  const vor = await seite.evaluate(() => {
+    const d = document.querySelector<SVGElement>('.document-stage[data-aktiv] [data-ink-art="abdeck"]');
+    const r = d?.getBoundingClientRect();
+    const x = r ? Math.round(r.left + r.width / 2) : 0, y = r ? Math.round(r.top + r.height / 2) : 0;
+    const stapel = x ? document.elementsFromPoint(x, y).map(e => e.tagName).slice(0, 3) : [];
+    return { x, y, stapel,
+      obenauf: x ? (document.elementFromPoint(x, y)?.className || '') : '',
+      zeigen: document.querySelector('.document-workspace')
+        ?.getAttribute('data-document-zeigen') || '—',
+      auf: d?.getAttribute('data-auf') ?? null,
+      stand: (document.querySelector('.document-position')?.textContent || '').trim() };
+  }) as any;
+  gleich('Das Heft ist im Laserpointer-Vortrag', vor.zeigen, 'an');
+  p('Die Zeigefläche liegt obenauf — das war der Grund', /zeigen-flaeche/.test(String(vor.obenauf)),
+    String(vor.obenauf));
+  p('… und der Deckel liegt darunter im Stapel', vor.stapel.length >= 2,
+    JSON.stringify(vor.stapel));
+
+  await seite.mouse.click(vor.x, vor.y);
+  await seite.waitForTimeout(800);
+  const nach = await seite.evaluate(() => ({
+    auf: document.querySelector('.document-stage[data-aktiv] [data-ink-art="abdeck"]')
+           ?.getAttribute('data-auf') ?? '(keiner)',
+    stand: (document.querySelector('.document-position')?.textContent || '').trim() }));
+  gleich('Ein Tipp darauf deckt auf', nach.auf, '1');
+  gleich('… und blättert NICHT', nach.stand, vor.stand);
+
+  /* Und daneben blättert es weiter — sonst wäre der Vortrag kaputt. */
+  await seite.mouse.click(vor.x + 400, vor.y);
+  await seite.waitForTimeout(800);
+  const daneben = await seite.evaluate(() =>
+    (document.querySelector('.document-position')?.textContent || '').trim());
+  p('Ein Tipp daneben blättert weiter', daneben !== vor.stand,
+    vor.stand + ' → ' + daneben);
+  await raus();
 }
 
 gleich('Die Seite meldet keinen Fehler', fehler.length, 0);

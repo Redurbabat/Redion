@@ -1247,68 +1247,126 @@ const Einlesen = (() => {
             const schritte = klickschritte(doc);
             const objekte = [];
             let titel = '';
-            for (const form of (baum ? baum.children : [])) {
-                /* ── Textkasten ──────────────────────────────────────────────── */
-                if (form.tagName === 'p:sp') {
-                    const txBody = form.getElementsByTagName('p:txBody')[0];
-                    const text = txBody ? formText(txBody) : '';
-                    const lage = formLage(form);
-                    /* ── EINE ABDECKUNG ──────────────────────────────────────────
-                       Kein Text, eine feste Füllung, und ein Klick lässt sie
-                       verschwinden: das ist ein Deckel über der Antwort. Redion hat
-                       dafür die Abdeck-Marke (E266) — zugedeckt gespeichert,
-                       antippen deckt auf, und der Speicher wird dabei nie
-                       angefasst. Dieselbe Sache, schon gebaut. */
-                    const sid = form.getElementsByTagName('p:cNvPr')[0]?.getAttribute('id') || '';
-                    const schritt = sid ? schritte.get(sid) : undefined;
-                    if (!text.trim() && schritt && lage && lage.w > 0 && lage.h > 0) {
-                        objekte.push({ art: 'abdeck', schritt, farbe: formFarbe(form) || '#ffcc00',
-                            verlauf: formVerlauf(form),
-                            x: lage.x, y: lage.y, w: lage.w, h: lage.h });
+            const abbilden = (l, ab) => {
+                if (!l || !ab)
+                    return l;
+                return { x: ab.dx + l.x * ab.sx, y: ab.dy + l.y * ab.sy,
+                    w: l.w * ab.sx, h: l.h * ab.sy };
+            };
+            /** Was weggelassen werden musste — je Art gezählt, für den Hinweis. */
+            const weggelassen = new Map();
+            const merkeWeg = (was) => void weggelassen.set(was, (weggelassen.get(was) || 0) + 1);
+            const formenLesen = async (formen, ab, tiefe) => {
+                for (const form of formen) {
+                    /* ── Gruppe: hineingehen, statt sie zu übersehen (E555) ───────── */
+                    if (form.tagName === 'p:grpSp') {
+                        if (tiefe >= 8) {
+                            merkeWeg('tief verschachtelte Gruppen');
+                            continue;
+                        }
+                        const gp = form.getElementsByTagName('a:grpSpPr')[0];
+                        const xf = gp?.getElementsByTagName('a:xfrm')[0];
+                        const off = xf?.getElementsByTagName('a:off')[0];
+                        const ext = xf?.getElementsByTagName('a:ext')[0];
+                        const cOff = xf?.getElementsByTagName('a:chOff')[0];
+                        const cExt = xf?.getElementsByTagName('a:chExt')[0];
+                        let innen = ab;
+                        if (off && ext && cOff && cExt) {
+                            const ox = emuZuPunkt(off.getAttribute('x')), oy = emuZuPunkt(off.getAttribute('y'));
+                            const cx = emuZuPunkt(ext.getAttribute('cx')), cy = emuZuPunkt(ext.getAttribute('cy'));
+                            const kx = emuZuPunkt(cOff.getAttribute('x')), ky = emuZuPunkt(cOff.getAttribute('y'));
+                            const kcx = emuZuPunkt(cExt.getAttribute('cx')), kcy = emuZuPunkt(cExt.getAttribute('cy'));
+                            /* Null als Nenner heisst „keine Angabe" und nicht „unendlich". */
+                            const sx = kcx > 0 ? cx / kcx : 1, sy = kcy > 0 ? cy / kcy : 1;
+                            const eigen = { dx: ox - kx * sx, dy: oy - ky * sy, sx, sy };
+                            innen = ab
+                                ? { dx: ab.dx + eigen.dx * ab.sx, dy: ab.dy + eigen.dy * ab.sy,
+                                    sx: eigen.sx * ab.sx, sy: eigen.sy * ab.sy }
+                                : eigen;
+                        }
+                        await formenLesen(form.children, innen, tiefe + 1);
                         continue;
                     }
-                    if (!text.trim())
+                    /* ── Tabelle und Diagramm: noch nicht, aber NICHT still (E555) ── */
+                    if (form.tagName === 'p:graphicFrame') {
+                        merkeWeg(form.getElementsByTagName('a:tbl').length ? 'Tabellen' : 'Diagramme');
                         continue;
-                    /* Der erste Lauf bestimmt Schriftgrad und Fett für den Kasten.
-                       Redions Textmarke hat EINEN Grad je Kasten; ein Kasten mit
-                       gemischten Graden käme also vereinfacht an. Das ist eine Lücke
-                       und steht so in LUECKEN.md. */
-                    const rPr = txBody?.getElementsByTagName('a:rPr')[0];
-                    const sz2 = Number(rPr?.getAttribute('sz'));
-                    /* Ist es der Titel? PowerPoint sagt es über den Platzhaltertyp. */
-                    const ph = form.getElementsByTagName('p:ph')[0];
-                    const istTitel = /^(ctr)?[Tt]itle$/.test(ph?.getAttribute('type') || '');
-                    if (istTitel && !titel)
-                        titel = text.split('\n')[0] || '';
-                    objekte.push({ art: 'text', text,
-                        x: lage ? lage.x : breite * 0.08, y: lage ? lage.y : hoehe * 0.1,
-                        breiteBox: lage && lage.w > 0 ? lage.w : breite * 0.84,
-                        fontSize: Number.isFinite(sz2) && sz2 > 0 ? Math.round(sz2 / 100) : (istTitel ? 40 : 20),
-                        fett: rPr?.getAttribute('b') === '1' });
-                    continue;
+                    }
+                    /* ── Textkasten ──────────────────────────────────────────────── */
+                    if (form.tagName === 'p:sp') {
+                        const txBody = form.getElementsByTagName('p:txBody')[0];
+                        const text = txBody ? formText(txBody) : '';
+                        /* DURCH DIE ABBILDUNG DER GRUPPE (E555). Ausserhalb einer Gruppe
+                           ist `ab` null und `abbilden` gibt die Lage unverändert zurück —
+                           dieselbe Zeile trägt beide Fälle. */
+                        const lage = abbilden(formLage(form), ab);
+                        /* ── EINE ABDECKUNG ──────────────────────────────────────────
+                           Kein Text, eine feste Füllung, und ein Klick lässt sie
+                           verschwinden: das ist ein Deckel über der Antwort. Redion hat
+                           dafür die Abdeck-Marke (E266) — zugedeckt gespeichert,
+                           antippen deckt auf, und der Speicher wird dabei nie
+                           angefasst. Dieselbe Sache, schon gebaut. */
+                        const sid = form.getElementsByTagName('p:cNvPr')[0]?.getAttribute('id') || '';
+                        const schritt = sid ? schritte.get(sid) : undefined;
+                        if (!text.trim() && schritt && lage && lage.w > 0 && lage.h > 0) {
+                            objekte.push({ art: 'abdeck', schritt, farbe: formFarbe(form) || '#ffcc00',
+                                verlauf: formVerlauf(form),
+                                x: lage.x, y: lage.y, w: lage.w, h: lage.h });
+                            continue;
+                        }
+                        if (!text.trim()) {
+                            /* EINE FORM OHNE TEXT UND OHNE KLICK. Sie kommt nicht an —
+                               Redion hat für eine gefüllte PowerPoint-Form keine Marke, die
+                               ihre Füllung UND ihren Umriss trüge. Aber sie verschwindet
+                               nicht mehr schweigend (E555): gezählt wird sie nur, wenn sie
+                               überhaupt eine Fläche hat, sonst zählte jeder unsichtbare
+                               Platzhalter mit. */
+                            if (lage && lage.w > 0 && lage.h > 0)
+                                merkeWeg('gefüllte Formen');
+                            continue;
+                        }
+                        /* Der erste Lauf bestimmt Schriftgrad und Fett für den Kasten.
+                           Redions Textmarke hat EINEN Grad je Kasten; ein Kasten mit
+                           gemischten Graden käme also vereinfacht an. Das ist eine Lücke
+                           und steht so in LUECKEN.md. */
+                        const rPr = txBody?.getElementsByTagName('a:rPr')[0];
+                        const sz2 = Number(rPr?.getAttribute('sz'));
+                        /* Ist es der Titel? PowerPoint sagt es über den Platzhaltertyp. */
+                        const ph = form.getElementsByTagName('p:ph')[0];
+                        const istTitel = /^(ctr)?[Tt]itle$/.test(ph?.getAttribute('type') || '');
+                        if (istTitel && !titel)
+                            titel = text.split('\n')[0] || '';
+                        objekte.push({ art: 'text', text,
+                            x: lage ? lage.x : breite * 0.08, y: lage ? lage.y : hoehe * 0.1,
+                            breiteBox: lage && lage.w > 0 ? lage.w : breite * 0.84,
+                            fontSize: Number.isFinite(sz2) && sz2 > 0 ? Math.round(sz2 / 100) : (istTitel ? 40 : 20),
+                            fett: rPr?.getAttribute('b') === '1' });
+                        continue;
+                    }
+                    /* ── Bild ─────────────────────────────────────────────────────── */
+                    if (form.tagName === 'p:pic') {
+                        const blip = form.getElementsByTagName('a:blip')[0];
+                        const rid = blip?.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed')
+                            || blip?.getAttribute('r:embed') || '';
+                        const ziel = rels[rid];
+                        if (!ziel)
+                            continue;
+                        const bytes = await zip.holen(ziel);
+                        if (!bytes)
+                            continue;
+                        const lage = abbilden(formLage(form), ab);
+                        /* `pfad` ist der Schlüssel zum Sparen: an einer echten Datei
+                           gemessen kam ein Logo 27-mal vor, einmal je Folie. Ohne ihn
+                           entstünden 27 Dateisätze mit denselben Bytes. */
+                        objekte.push({ art: 'bild', pfad: ziel, name: ziel.slice(ziel.lastIndexOf('/') + 1),
+                            bytes,
+                            x: lage ? lage.x : breite * 0.2, y: lage ? lage.y : hoehe * 0.2,
+                            w: lage && lage.w > 0 ? lage.w : breite * 0.4,
+                            h: lage && lage.h > 0 ? lage.h : hoehe * 0.4 });
+                    }
                 }
-                /* ── Bild ─────────────────────────────────────────────────────── */
-                if (form.tagName === 'p:pic') {
-                    const blip = form.getElementsByTagName('a:blip')[0];
-                    const rid = blip?.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed')
-                        || blip?.getAttribute('r:embed') || '';
-                    const ziel = rels[rid];
-                    if (!ziel)
-                        continue;
-                    const bytes = await zip.holen(ziel);
-                    if (!bytes)
-                        continue;
-                    const lage = formLage(form);
-                    /* `pfad` ist der Schlüssel zum Sparen: an einer echten Datei
-                       gemessen kam ein Logo 27-mal vor, einmal je Folie. Ohne ihn
-                       entstünden 27 Dateisätze mit denselben Bytes. */
-                    objekte.push({ art: 'bild', pfad: ziel, name: ziel.slice(ziel.lastIndexOf('/') + 1),
-                        bytes,
-                        x: lage ? lage.x : breite * 0.2, y: lage ? lage.y : hoehe * 0.2,
-                        w: lage && lage.w > 0 ? lage.w : breite * 0.4,
-                        h: lage && lage.h > 0 ? lage.h : hoehe * 0.4 });
-                }
-            }
+            };
+            await formenLesen(baum ? baum.children : [], null, 0);
             /* KEIN PLATZHALTER, TROTZDEM EIN TITEL. An Redurs echter Datei
                gemessen: 27 Folien, NULL `p:ph`-Elemente. Die Erkennung über den
                Platzhaltertyp konnte dort nie greifen — PowerPoint schreibt ihn
@@ -1321,7 +1379,8 @@ const Einlesen = (() => {
                 .sort((a, b) => a.y - b.y)
                 .map(o => String(o.text).split('\n')[0].trim())
                 .filter(z => z && z.length <= 80);
-            folien.push({ titel, objekte, kandidaten });
+            folien.push({ titel, objekte, kandidaten,
+                weg: [...weggelassen.entries()] });
         }
         /* ══ WELCHER KASTEN IST DIE ÜBERSCHRIFT? ═══════════════════════════
            Der oberste allein genügt nicht. An Redurs Datei gemessen: dort
@@ -1594,9 +1653,28 @@ const Einlesen = (() => {
                 if (marken.length)
                     Store.updateBlock(block.id, { marken });
             }
+            /* ══ WAS NICHT ANKAM, STEHT IM HINWEIS (E555) ══════════════════════
+               Hier stand nur, was ANKAM: „27 Folien übernommen, 12 Bilder,
+               8 Antworten zugedeckt". Das ist die gefährliche Hälfte einer
+               Auskunft — §11 sagt es für die Sicherung („eine Sicherung, die nicht
+               sagt, was sie auslässt, ist die gefährlichste Sorte"), und für einen
+               Import gilt es genauso: die Folie SIEHT vollständig aus.
+      
+               Gezählt wird über alle Folien zusammen und je Art, in der
+               Reihenfolge, in der es auffällt. Keine Zahl heisst: es fehlt
+               nichts — dann steht auch nichts da. */
+            const fehltGesamt = new Map();
+            for (const f of p.folien)
+                for (const [was, n] of (f.weg || []))
+                    fehltGesamt.set(was, (fehltGesamt.get(was) || 0) + Number(n));
+            const fehltText = [...fehltGesamt.entries()]
+                .sort((a, b) => b[1] - a[1])
+                .map(([was, n]) => n + ' ' + was)
+                .join(', ');
             return { seite, hinweis: p.folien.length + ' Folien übernommen'
                     + (mitBild ? ', ' + mitBild + ' Bilder aus ' + schonAbgelegt.size + ' Dateien' : '')
                     + (mitDeckel ? ', ' + mitDeckel + ' Antworten zugedeckt' : '')
+                    + (fehltText ? ' · NICHT übernommen: ' + fehltText : '')
                     + (quelle ? ' · das Original liegt unverändert als Anhang dabei' : '') };
         }
         if (name.endsWith('.epub')) {

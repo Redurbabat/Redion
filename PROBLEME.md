@@ -45,6 +45,7 @@ sind der teuerste Teil und der lehrreichste.
 | P29 | 2026-09-13 | Zwei Knoepfe hiessen „Praesentieren" und taten Verschiedenes | 🟠 mittel | E553 |
 | P30 | 2026-09-13 | Ein Zierstrich war als „zugedeckte Antwort" gebaut — sieben Stueck | 🟠 mittel | E553 |
 | P31 | 2026-09-13 | Die naheliegende Farbreparatur haette den Barrierefreiheitsfall zerstoert | gross | E554 |
+| P32 | 2026-09-13 | Der Pruefllauf hat meine Rechnung korrigiert, nicht den Code | 🟡 klein | E555 |
 
 ---
 
@@ -645,4 +646,27 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Gegenprobe G3 baut den verworfenen Vorschlag und misst: nacht 3,07 · wald 2,26 · sand 3,87 · rose 3,15 · kontrast 1,43 — gegen heute 9,30:1. Die gemessenen Zahlen sind dieselben, die die Gegenrede vorher gerechnet hatte.
 
 **Die Lehre.** Der Satz „ist in beiden Themen nachgerechnet" klang wie ein Beleg und war eine Verwechslung. Ein Beleg fuer zwei Faelle ist kein Beleg fuer acht. Und: eine Gegenrede, die den Vorschlag selbst nachrechnet statt ihn zu lesen, ist den Aufwand wert — dieser eine Fund haette §38 an der empfindlichsten Stelle gebrochen, und kein Waechter haette es gemeldet, weil es bis heute keinen gibt.
+
+
+---
+
+## P32 · Der Pruefllauf hat meine Rechnung korrigiert, nicht den Code
+
+*2026-09-13 · 🟡 klein · E555*
+
+**Das Bild.** `test511 §2` meldete beim ersten Lauf: „{x:216} — erwartet (360, 144)". Ich hatte die erwartete Lage eines gruppierten Kindes von Hand ausgerechnet.
+
+**Die falsche Vermutung.** Meine erste Regung: die Kindabbildung sei falsch. Sie war richtig.
+
+**Wie es gefunden wurde.** Nachgerechnet, statt am Code zu drehen. 914400 EMU sind 72 pt. Die INNENbreite der Gruppe war 144 pt, die AUSSENbreite 288. Das Kind sass also auf der halben INNENbreite, und 72 + 72·2 = 216 — nicht 360.
+
+**Die Ursache.** Ich hatte 914400 EMU fuer die halbe Aussenbreite gehalten. Ein Kopfrechenfehler in der ZUSAGE, nicht im Code.
+
+**Die Lösung.** Die erwartete Zahl berichtigt und die ganze Rechnung als Tabelle in den Pruefllauf geschrieben — mit allen vier Zwischenwerten, damit der naechste sie nicht wieder im Kopf macht.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Die Gegenprobe ohne Abbildung setzt die Kinder auf (0,0) und (72,36) — genau die Innenkoordinaten. Mit Abbildung (72,72) und (216,144). Beide Zahlenpaare stehen jetzt im Kopf des Laufs.
+
+**Die Lehre.** §45/E21 („nachsehen, nicht erinnern") gilt auch fuer Arithmetik. Eine erwartete Zahl, die aus dem Kopf kommt, ist genauso eine Behauptung wie eine erinnerte Schnittstelle — und wenn sie falsch ist, zeigt der rote Lauf auf den Code statt auf einen selbst. Rettung war, die Rechnung aufzuschreiben statt sie nachzubessern.
 

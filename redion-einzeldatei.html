@@ -23229,7 +23229,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 947, inhalt: 'e03a313560bec700', gebaut: '2026-09-13T16:11:31.329Z' };
+const Stand = { fassung: 950, inhalt: '3533f1ab2d6540dd', gebaut: '2026-09-13T16:38:25.944Z' };
 window.Stand = Stand;
 
 </script>
@@ -74097,11 +74097,19 @@ const ChronikDaten = {
                     "zeitraum": "16:10 – 18:00",
                     "dauer": "ca. 110 min",
                     "pruefungen": "test510 neu, 18 Zusagen — VOR der Reparatur rot (10/8), danach gruen; drei Gegenproben (13/5, 17/1, 16/2)"
+                },
+                {
+                    "was": "E555/E556 — Gruppen im pptx werden mitgelesen, der Hinweis sagt was fehlt, und ein Tipp deckt auch im Laserpointer-Vortrag auf",
+                    "vonCommit": "(nach E554)",
+                    "bisCommit": "(dieser Bogen)",
+                    "zeitraum": "18:00 – 19:40",
+                    "dauer": "ca. 100 min",
+                    "pruefungen": "test511 neu, 16 Zusagen, drei Gegenproben (7/9, 13/3, 13/3); test509 auf 27 Zusagen mit fuenfter Gegenprobe (25/2)"
                 }
             ],
             "zahlen": {
-                "commits": 29,
-                "entscheidungen": 27
+                "commits": 30,
+                "entscheidungen": 29
             },
             "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
             "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -74219,6 +74227,12 @@ const ChronikDaten = {
                     "was": "`pdf-studio.css:7`: die fuenf Farbnamen (--pdf-chrome, --pdf-tools, --pdf-on-chrome, --pdf-desk, --pdf-dock) aus festen Hexwerten in Ableitungen echter Tokens. Dazu vierzehn rohe Einzelwerte und der gewaehlte Stift als Umriss statt als Farbpaar.",
                     "warum": "Redur: „es sollte wie die redion farben sein wenn ich die fraben aendere sollte das auch sich aendern\". Gemessen ueber alle acht Schemata: fuenf von acht Flaechen waren byte-gleich, auch unter „Starker Kontrast\" mit --bg #000000.",
                     "risiko": "Zwei, beide gemessen und abgedeckt. (1) --pdf-desk NICHT auf --bg-tief: das hat nur zwei Werte fuer acht Schemata. (2) Der gewaehlte Stift NICHT auf --accent/--auf-accent: das faellt in fuenf von acht unter 4,5:1, in „Starker Kontrast\" auf 1,43:1. Dazu ein Rand am Papier, damit die weisse Folie auf hellem Schreibtisch nicht verschwindet — acht Bilder angesehen."
+                },
+                {
+                    "zeit": "19:00",
+                    "was": "`einlesen.ts`: die Formenschleife liest `p:grpSp` rekursiv, bildet `a:chOff`/`a:chExt` ab und bremst bei acht Ebenen; `p:graphicFrame` und gefuellte Formen ohne Text werden gezaehlt statt still fallen gelassen, und der Hinweis nennt sie. `document-mode.ts`: ein Tipp im Laserpointer-Vortrag sucht den Deckel ueber `elementsFromPoint` statt ueber `event.target`.",
+                    "warum": "Redur: „verbesser fuer die pptx oefnnen\". Gemessen an einer eigens gebauten Datei: ein gruppierter Deckel kam gar nicht an — DIE ANTWORT STAND OFFEN —, und der Hinweis sagte „1 Folien uebernommen\".",
+                    "risiko": "keins an Daten; es kommt MEHR an als vorher. Der einzige Weg, auf dem etwas verschwinden koennte, waere eine falsche Kindabbildung — deshalb baut test511 eine Gruppe mit Faktor zwei und rechnet die zwei Kinderlagen nach."
                 }
             ]
         }
@@ -74631,6 +74645,21 @@ const ChronikDaten = {
             "beweis": "Gegenprobe G3 baut den verworfenen Vorschlag und misst: nacht 3,07 · wald 2,26 · sand 3,87 · rose 3,15 · kontrast 1,43 — gegen heute 9,30:1. Die gemessenen Zahlen sind dieselben, die die Gegenrede vorher gerechnet hatte.",
             "lehre": "Der Satz „ist in beiden Themen nachgerechnet\" klang wie ein Beleg und war eine Verwechslung. Ein Beleg fuer zwei Faelle ist kein Beleg fuer acht. Und: eine Gegenrede, die den Vorschlag selbst nachrechnet statt ihn zu lesen, ist den Aufwand wert — dieser eine Fund haette §38 an der empfindlichsten Stelle gebrochen, und kein Waechter haette es gemeldet, weil es bis heute keinen gibt.",
             "entscheidung": "E554"
+        },
+        {
+            "nr": "P32",
+            "datum": "2026-09-13",
+            "titel": "Der Pruefllauf hat meine Rechnung korrigiert, nicht den Code",
+            "schwere": "klein",
+            "symptom": "`test511 §2` meldete beim ersten Lauf: „{x:216} — erwartet (360, 144)\". Ich hatte die erwartete Lage eines gruppierten Kindes von Hand ausgerechnet.",
+            "falscheVermutung": "Meine erste Regung: die Kindabbildung sei falsch. Sie war richtig.",
+            "wieGefunden": "Nachgerechnet, statt am Code zu drehen. 914400 EMU sind 72 pt. Die INNENbreite der Gruppe war 144 pt, die AUSSENbreite 288. Das Kind sass also auf der halben INNENbreite, und 72 + 72·2 = 216 — nicht 360.",
+            "ursache": "Ich hatte 914400 EMU fuer die halbe Aussenbreite gehalten. Ein Kopfrechenfehler in der ZUSAGE, nicht im Code.",
+            "loesung": "Die erwartete Zahl berichtigt und die ganze Rechnung als Tabelle in den Pruefllauf geschrieben — mit allen vier Zwischenwerten, damit der naechste sie nicht wieder im Kopf macht.",
+            "warumKeineUhr": "—",
+            "beweis": "Die Gegenprobe ohne Abbildung setzt die Kinder auf (0,0) und (72,36) — genau die Innenkoordinaten. Mit Abbildung (72,72) und (216,144). Beide Zahlenpaare stehen jetzt im Kopf des Laufs.",
+            "lehre": "§45/E21 („nachsehen, nicht erinnern\") gilt auch fuer Arithmetik. Eine erwartete Zahl, die aus dem Kopf kommt, ist genauso eine Behauptung wie eine erinnerte Schnittstelle — und wenn sie falsch ist, zeigt der rote Lauf auf den Code statt auf einen selbst. Rettung war, die Rechnung aufzuschreiben statt sie nachzubessern.",
+            "entscheidung": "E555"
         }
     ]
 };
@@ -78219,6 +78248,37 @@ const DocumentMode = (() => {
                 const r = flaeche.getBoundingClientRect();
                 if (Math.hypot(event.clientX - tippVon[0], event.clientY - tippVon[1]) > 8)
                     return;
+                /* ══ EIN TIPP AUF EINE ABDECKUNG DECKT SIE AUF (E556) ══════════════
+                   E553 hat den Foliensatz auf den Folienvortrag umgelenkt, wo das
+                   längst so ist. Zwei Fälle bleiben aber HIER:
+        
+                     · eine HOCHKANTE Folie — `istFoliensatz` verlangt quer, und das
+                       ist richtig so (sonst bekäme jedes Notizheft den Folienvortrag)
+                     · eine Abdeckung auf einer PDF-Seite oder im Heft — eine
+                       Übungsaufgabe im eigenen Skript ist genau der Fall, für den
+                       E266 die Abdeckung gebaut hat
+        
+                   In beiden schluckt `.document-zeigen-flaeche` den Zeiger
+                   (`inset:0`, `z-index:40`) und der Tipp blättert. Gemessen an einem
+                   Heft: `elementsFromPoint` gibt
+                   [div.document-zeigen-flaeche, rect[abdeck], svg.blatt-marken, …] —
+                   der Deckel liegt als ZWEITER darunter und ist nur über den Stapel
+                   zu erreichen, nicht über `event.target`.
+        
+                   DIE ZEIGEFLÄCHE BLEIBT, WIE SIE IST. Sie `pointer-events:none` zu
+                   geben wäre der naheliegende Weg und der falsche: dann liefe der
+                   Laserpointer nicht mehr, und ein Klick ins Papier fiele an die
+                   Zeichenschicht, die im Vortrag gar nicht zeichnen soll.
+        
+                   AUFDECKEN IST EINSEITIG, wie im Folienvortrag: auf der Leinwand
+                   wieder zuzudecken hilft niemandem. */
+                const deckel = document.elementsFromPoint(event.clientX, event.clientY)
+                    .map(el => el.closest?.('[data-ink-art="abdeck"]'))
+                    .find(Boolean);
+                if (deckel && !deckel.hasAttribute('data-auf')) {
+                    deckel.setAttribute('data-auf', '1');
+                    return;
+                }
                 springe(state.index + (event.clientX - r.left < r.width / 3 ? -1 : 1), false);
             });
             if (typeof App !== 'undefined' && App.vollbild) {
@@ -109242,68 +109302,126 @@ const Einlesen = (() => {
             const schritte = klickschritte(doc);
             const objekte = [];
             let titel = '';
-            for (const form of (baum ? baum.children : [])) {
-                /* ── Textkasten ──────────────────────────────────────────────── */
-                if (form.tagName === 'p:sp') {
-                    const txBody = form.getElementsByTagName('p:txBody')[0];
-                    const text = txBody ? formText(txBody) : '';
-                    const lage = formLage(form);
-                    /* ── EINE ABDECKUNG ──────────────────────────────────────────
-                       Kein Text, eine feste Füllung, und ein Klick lässt sie
-                       verschwinden: das ist ein Deckel über der Antwort. Redion hat
-                       dafür die Abdeck-Marke (E266) — zugedeckt gespeichert,
-                       antippen deckt auf, und der Speicher wird dabei nie
-                       angefasst. Dieselbe Sache, schon gebaut. */
-                    const sid = form.getElementsByTagName('p:cNvPr')[0]?.getAttribute('id') || '';
-                    const schritt = sid ? schritte.get(sid) : undefined;
-                    if (!text.trim() && schritt && lage && lage.w > 0 && lage.h > 0) {
-                        objekte.push({ art: 'abdeck', schritt, farbe: formFarbe(form) || '#ffcc00',
-                            verlauf: formVerlauf(form),
-                            x: lage.x, y: lage.y, w: lage.w, h: lage.h });
+            const abbilden = (l, ab) => {
+                if (!l || !ab)
+                    return l;
+                return { x: ab.dx + l.x * ab.sx, y: ab.dy + l.y * ab.sy,
+                    w: l.w * ab.sx, h: l.h * ab.sy };
+            };
+            /** Was weggelassen werden musste — je Art gezählt, für den Hinweis. */
+            const weggelassen = new Map();
+            const merkeWeg = (was) => void weggelassen.set(was, (weggelassen.get(was) || 0) + 1);
+            const formenLesen = async (formen, ab, tiefe) => {
+                for (const form of formen) {
+                    /* ── Gruppe: hineingehen, statt sie zu übersehen (E555) ───────── */
+                    if (form.tagName === 'p:grpSp') {
+                        if (tiefe >= 8) {
+                            merkeWeg('tief verschachtelte Gruppen');
+                            continue;
+                        }
+                        const gp = form.getElementsByTagName('a:grpSpPr')[0];
+                        const xf = gp?.getElementsByTagName('a:xfrm')[0];
+                        const off = xf?.getElementsByTagName('a:off')[0];
+                        const ext = xf?.getElementsByTagName('a:ext')[0];
+                        const cOff = xf?.getElementsByTagName('a:chOff')[0];
+                        const cExt = xf?.getElementsByTagName('a:chExt')[0];
+                        let innen = ab;
+                        if (off && ext && cOff && cExt) {
+                            const ox = emuZuPunkt(off.getAttribute('x')), oy = emuZuPunkt(off.getAttribute('y'));
+                            const cx = emuZuPunkt(ext.getAttribute('cx')), cy = emuZuPunkt(ext.getAttribute('cy'));
+                            const kx = emuZuPunkt(cOff.getAttribute('x')), ky = emuZuPunkt(cOff.getAttribute('y'));
+                            const kcx = emuZuPunkt(cExt.getAttribute('cx')), kcy = emuZuPunkt(cExt.getAttribute('cy'));
+                            /* Null als Nenner heisst „keine Angabe" und nicht „unendlich". */
+                            const sx = kcx > 0 ? cx / kcx : 1, sy = kcy > 0 ? cy / kcy : 1;
+                            const eigen = { dx: ox - kx * sx, dy: oy - ky * sy, sx, sy };
+                            innen = ab
+                                ? { dx: ab.dx + eigen.dx * ab.sx, dy: ab.dy + eigen.dy * ab.sy,
+                                    sx: eigen.sx * ab.sx, sy: eigen.sy * ab.sy }
+                                : eigen;
+                        }
+                        await formenLesen(form.children, innen, tiefe + 1);
                         continue;
                     }
-                    if (!text.trim())
+                    /* ── Tabelle und Diagramm: noch nicht, aber NICHT still (E555) ── */
+                    if (form.tagName === 'p:graphicFrame') {
+                        merkeWeg(form.getElementsByTagName('a:tbl').length ? 'Tabellen' : 'Diagramme');
                         continue;
-                    /* Der erste Lauf bestimmt Schriftgrad und Fett für den Kasten.
-                       Redions Textmarke hat EINEN Grad je Kasten; ein Kasten mit
-                       gemischten Graden käme also vereinfacht an. Das ist eine Lücke
-                       und steht so in LUECKEN.md. */
-                    const rPr = txBody?.getElementsByTagName('a:rPr')[0];
-                    const sz2 = Number(rPr?.getAttribute('sz'));
-                    /* Ist es der Titel? PowerPoint sagt es über den Platzhaltertyp. */
-                    const ph = form.getElementsByTagName('p:ph')[0];
-                    const istTitel = /^(ctr)?[Tt]itle$/.test(ph?.getAttribute('type') || '');
-                    if (istTitel && !titel)
-                        titel = text.split('\n')[0] || '';
-                    objekte.push({ art: 'text', text,
-                        x: lage ? lage.x : breite * 0.08, y: lage ? lage.y : hoehe * 0.1,
-                        breiteBox: lage && lage.w > 0 ? lage.w : breite * 0.84,
-                        fontSize: Number.isFinite(sz2) && sz2 > 0 ? Math.round(sz2 / 100) : (istTitel ? 40 : 20),
-                        fett: rPr?.getAttribute('b') === '1' });
-                    continue;
+                    }
+                    /* ── Textkasten ──────────────────────────────────────────────── */
+                    if (form.tagName === 'p:sp') {
+                        const txBody = form.getElementsByTagName('p:txBody')[0];
+                        const text = txBody ? formText(txBody) : '';
+                        /* DURCH DIE ABBILDUNG DER GRUPPE (E555). Ausserhalb einer Gruppe
+                           ist `ab` null und `abbilden` gibt die Lage unverändert zurück —
+                           dieselbe Zeile trägt beide Fälle. */
+                        const lage = abbilden(formLage(form), ab);
+                        /* ── EINE ABDECKUNG ──────────────────────────────────────────
+                           Kein Text, eine feste Füllung, und ein Klick lässt sie
+                           verschwinden: das ist ein Deckel über der Antwort. Redion hat
+                           dafür die Abdeck-Marke (E266) — zugedeckt gespeichert,
+                           antippen deckt auf, und der Speicher wird dabei nie
+                           angefasst. Dieselbe Sache, schon gebaut. */
+                        const sid = form.getElementsByTagName('p:cNvPr')[0]?.getAttribute('id') || '';
+                        const schritt = sid ? schritte.get(sid) : undefined;
+                        if (!text.trim() && schritt && lage && lage.w > 0 && lage.h > 0) {
+                            objekte.push({ art: 'abdeck', schritt, farbe: formFarbe(form) || '#ffcc00',
+                                verlauf: formVerlauf(form),
+                                x: lage.x, y: lage.y, w: lage.w, h: lage.h });
+                            continue;
+                        }
+                        if (!text.trim()) {
+                            /* EINE FORM OHNE TEXT UND OHNE KLICK. Sie kommt nicht an —
+                               Redion hat für eine gefüllte PowerPoint-Form keine Marke, die
+                               ihre Füllung UND ihren Umriss trüge. Aber sie verschwindet
+                               nicht mehr schweigend (E555): gezählt wird sie nur, wenn sie
+                               überhaupt eine Fläche hat, sonst zählte jeder unsichtbare
+                               Platzhalter mit. */
+                            if (lage && lage.w > 0 && lage.h > 0)
+                                merkeWeg('gefüllte Formen');
+                            continue;
+                        }
+                        /* Der erste Lauf bestimmt Schriftgrad und Fett für den Kasten.
+                           Redions Textmarke hat EINEN Grad je Kasten; ein Kasten mit
+                           gemischten Graden käme also vereinfacht an. Das ist eine Lücke
+                           und steht so in LUECKEN.md. */
+                        const rPr = txBody?.getElementsByTagName('a:rPr')[0];
+                        const sz2 = Number(rPr?.getAttribute('sz'));
+                        /* Ist es der Titel? PowerPoint sagt es über den Platzhaltertyp. */
+                        const ph = form.getElementsByTagName('p:ph')[0];
+                        const istTitel = /^(ctr)?[Tt]itle$/.test(ph?.getAttribute('type') || '');
+                        if (istTitel && !titel)
+                            titel = text.split('\n')[0] || '';
+                        objekte.push({ art: 'text', text,
+                            x: lage ? lage.x : breite * 0.08, y: lage ? lage.y : hoehe * 0.1,
+                            breiteBox: lage && lage.w > 0 ? lage.w : breite * 0.84,
+                            fontSize: Number.isFinite(sz2) && sz2 > 0 ? Math.round(sz2 / 100) : (istTitel ? 40 : 20),
+                            fett: rPr?.getAttribute('b') === '1' });
+                        continue;
+                    }
+                    /* ── Bild ─────────────────────────────────────────────────────── */
+                    if (form.tagName === 'p:pic') {
+                        const blip = form.getElementsByTagName('a:blip')[0];
+                        const rid = blip?.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed')
+                            || blip?.getAttribute('r:embed') || '';
+                        const ziel = rels[rid];
+                        if (!ziel)
+                            continue;
+                        const bytes = await zip.holen(ziel);
+                        if (!bytes)
+                            continue;
+                        const lage = abbilden(formLage(form), ab);
+                        /* `pfad` ist der Schlüssel zum Sparen: an einer echten Datei
+                           gemessen kam ein Logo 27-mal vor, einmal je Folie. Ohne ihn
+                           entstünden 27 Dateisätze mit denselben Bytes. */
+                        objekte.push({ art: 'bild', pfad: ziel, name: ziel.slice(ziel.lastIndexOf('/') + 1),
+                            bytes,
+                            x: lage ? lage.x : breite * 0.2, y: lage ? lage.y : hoehe * 0.2,
+                            w: lage && lage.w > 0 ? lage.w : breite * 0.4,
+                            h: lage && lage.h > 0 ? lage.h : hoehe * 0.4 });
+                    }
                 }
-                /* ── Bild ─────────────────────────────────────────────────────── */
-                if (form.tagName === 'p:pic') {
-                    const blip = form.getElementsByTagName('a:blip')[0];
-                    const rid = blip?.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed')
-                        || blip?.getAttribute('r:embed') || '';
-                    const ziel = rels[rid];
-                    if (!ziel)
-                        continue;
-                    const bytes = await zip.holen(ziel);
-                    if (!bytes)
-                        continue;
-                    const lage = formLage(form);
-                    /* `pfad` ist der Schlüssel zum Sparen: an einer echten Datei
-                       gemessen kam ein Logo 27-mal vor, einmal je Folie. Ohne ihn
-                       entstünden 27 Dateisätze mit denselben Bytes. */
-                    objekte.push({ art: 'bild', pfad: ziel, name: ziel.slice(ziel.lastIndexOf('/') + 1),
-                        bytes,
-                        x: lage ? lage.x : breite * 0.2, y: lage ? lage.y : hoehe * 0.2,
-                        w: lage && lage.w > 0 ? lage.w : breite * 0.4,
-                        h: lage && lage.h > 0 ? lage.h : hoehe * 0.4 });
-                }
-            }
+            };
+            await formenLesen(baum ? baum.children : [], null, 0);
             /* KEIN PLATZHALTER, TROTZDEM EIN TITEL. An Redurs echter Datei
                gemessen: 27 Folien, NULL `p:ph`-Elemente. Die Erkennung über den
                Platzhaltertyp konnte dort nie greifen — PowerPoint schreibt ihn
@@ -109316,7 +109434,8 @@ const Einlesen = (() => {
                 .sort((a, b) => a.y - b.y)
                 .map(o => String(o.text).split('\n')[0].trim())
                 .filter(z => z && z.length <= 80);
-            folien.push({ titel, objekte, kandidaten });
+            folien.push({ titel, objekte, kandidaten,
+                weg: [...weggelassen.entries()] });
         }
         /* ══ WELCHER KASTEN IST DIE ÜBERSCHRIFT? ═══════════════════════════
            Der oberste allein genügt nicht. An Redurs Datei gemessen: dort
@@ -109589,9 +109708,28 @@ const Einlesen = (() => {
                 if (marken.length)
                     Store.updateBlock(block.id, { marken });
             }
+            /* ══ WAS NICHT ANKAM, STEHT IM HINWEIS (E555) ══════════════════════
+               Hier stand nur, was ANKAM: „27 Folien übernommen, 12 Bilder,
+               8 Antworten zugedeckt". Das ist die gefährliche Hälfte einer
+               Auskunft — §11 sagt es für die Sicherung („eine Sicherung, die nicht
+               sagt, was sie auslässt, ist die gefährlichste Sorte"), und für einen
+               Import gilt es genauso: die Folie SIEHT vollständig aus.
+      
+               Gezählt wird über alle Folien zusammen und je Art, in der
+               Reihenfolge, in der es auffällt. Keine Zahl heisst: es fehlt
+               nichts — dann steht auch nichts da. */
+            const fehltGesamt = new Map();
+            for (const f of p.folien)
+                for (const [was, n] of (f.weg || []))
+                    fehltGesamt.set(was, (fehltGesamt.get(was) || 0) + Number(n));
+            const fehltText = [...fehltGesamt.entries()]
+                .sort((a, b) => b[1] - a[1])
+                .map(([was, n]) => n + ' ' + was)
+                .join(', ');
             return { seite, hinweis: p.folien.length + ' Folien übernommen'
                     + (mitBild ? ', ' + mitBild + ' Bilder aus ' + schonAbgelegt.size + ' Dateien' : '')
                     + (mitDeckel ? ', ' + mitDeckel + ' Antworten zugedeckt' : '')
+                    + (fehltText ? ' · NICHT übernommen: ' + fehltText : '')
                     + (quelle ? ' · das Original liegt unverändert als Anhang dabei' : '') };
         }
         if (name.endsWith('.epub')) {
