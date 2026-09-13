@@ -590,6 +590,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E544** — E151 war noch da und wirkte nicht mehr: tote Stilregeln nach einem Umbau
 * **E545** — Der FI misst wirklich — und 13 stumme Zeichen bekommen Verhalten
 * **E546** — Der ideale Übertrager — und die Schwelle, die zufällig GMIN war
+* **E547** — Mehrteilige Bauteile hatten gar keine Messwerte am Plan
 
 ---
 
@@ -43777,3 +43778,56 @@ sie zwei verschiedene Zahlen vergleicht.**
 `test498 §8`: 16 Zusagen, zusammen 84. Gegenprobe rot gesehen.
 Damit ist der Transformator aus **L156** abgehakt; die fünf Halbleiter
 bleiben offen.
+
+---
+
+## E547 · Mehrteilige Bauteile hatten gar keine Messwerte am Plan
+
+Beim Rendern einer Übersicht des Elektro-Teils fiel auf: am Klemmenbrett, an
+der Drehstromquelle und am Übertrager stand **keine einzige Zahl**. Die
+Beschriftung am Symbol kannte `volt`, `ampere`, `quelle`, `widerstand` und
+`spule` — die drei neuen Arten nicht. Gerechnet wurde alles korrekt; es war
+nur nirgends abzulesen.
+
+Gefunden auf einem Bild. Kein Prüflauf hatte je nach diesen Zahlen gesucht.
+
+### Welches Glied zeigt ein mehrteiliges Bauteil?
+
+`werte` hält je Bauteil den Eintrag mit dem grössten STROM. Nachgemessen am
+Klemmenbrett in Stern:
+
+```txt
+U1–U2   230 V      3.833312 A   881.642 W
+V1–V2   230 V      3.833312 A   881.657 W
+W1–W2   230 V      3.833312 A   881.642 W
+U2–V2     0.0038 V 3.833312 A     0.015 W   (Brücke)
+V2–W2     0.0038 V 3.833312 A     0.015 W   (Brücke)
+```
+
+**Alle fünf führen denselben Strom.** Das muss so sein — sie liegen in Reihe.
+Der Unterschied steht in der siebten Stelle, und damit entscheidet
+Rundungsrauschen, welches Glied „den grössten Strom" hat. Heute gewinnt eine
+Wicklung; beim nächsten Plan kann es eine Brücke sein, und dann stünde
+0,004 V am Motor — die Aussage „hier liegt nichts an".
+
+Nach der LEISTUNG liegen dieselben fünf **fünf Grössenordnungen** auseinander:
+881 W gegen 0,015 W. Das ist kein knapperes Rennen, sondern gar keines.
+Deshalb wird danach ausgewählt — nicht weil der Strom die falsche Zahl wäre,
+sondern weil er an dieser Stelle nicht unterscheidet.
+
+*(Im ersten Anlauf stand als Begründung im Kommentar, der Haupt-Messwert sei
+„oft eine Brücke". Das war nicht gemessen, sondern plausibel — und die
+Gegenprobe hat es widerlegt: die Zusage blieb grün. Der Kommentar nennt jetzt
+die Messung.)*
+
+### Der Übertrager wird nicht summiert
+
+Dazu steht die Summe über alle Glieder, denn nach der Gesamtleistung des
+Motors wird in jeder Aufgabe gefragt. Beim Übertrager ist das falsch: seine
+zwei Seiten sind nicht zwei Verbraucher, sondern derselbe Leistungsfluss
+einmal hinein und einmal hinaus. Summiert stand am Klingeltrafo **12 W**,
+während die Klingel daneben 6 W zeigte. Auch das vom Bild.
+
+`test498`: 91 Zusagen. Gegenprobe rot gesehen — ohne die neue Zeile steht am
+Klemmenbrett wieder keine Zahl, und mit Summierung zeigt der Trafo wieder
+das Doppelte.

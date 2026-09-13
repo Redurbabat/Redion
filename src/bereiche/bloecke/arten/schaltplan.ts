@@ -455,6 +455,11 @@ const Schaltplan = (() => {
                             richtung?: 'vor' | 'rueck' | 'keine' | 'wechselnd';
                             richtungstext?: string;
                             vonKlemme?: string; nachKlemme?: string }>;
+    /** Die einzelnen Glieder mehrteiliger Bauteile. Ohne sie steht an einem
+        Klemmenbrett keine Zahl: `werte` hält dort den Eintrag mit dem
+        grössten STROM, und das ist oft eine Brücke mit ihrem Milliohm. */
+    teilwerte?: Record<string, Record<string, { U: number; I: number; P: number;
+                                                fliesst: boolean }>>;
     maxStrom: number;
   };
 
@@ -644,12 +649,62 @@ const Schaltplan = (() => {
       let anzeige = '';
       if (w && opt.messwerte !== false && opt.strom) {
         const art = vh ? vh.art : '';
+        /* MEHRTEILIGE BAUTEILE BRAUCHEN EINEN ANDEREN GRIFF.
+           -----------------------------------------------------------------
+           An einem Klemmenbrett, einer Drehstromquelle und einem Übertrager
+           stand bisher GAR KEINE Zahl — die Liste unten kannte ihre Art
+           nicht. Das war der Fehler, und er fiel auf einem Bild auf.
+
+           WELCHES GLIED ABER? `werte` hält je Bauteil den Eintrag mit dem
+           grössten STROM, und am Klemmenbrett in Stern ist das nachgemessen:
+
+               U1–U2   230 V    3.833312 A   881.642 W
+               V1–V2   230 V    3.833312 A   881.657 W
+               W1–W2   230 V    3.833312 A   881.642 W
+               U2–V2   0.0038 V 3.833312 A     0.015 W   (Brücke)
+               V2–W2   0.0038 V 3.833312 A     0.015 W   (Brücke)
+
+           Alle fünf führen DENSELBEN Strom — der Unterschied steht in der
+           siebten Stelle. Welches Glied „den grössten Strom" hat, entscheidet
+           damit das Rundungsrauschen, und beim nächsten Plan kann es die
+           Brücke sein. Die zeigt dann 0,004 V und behauptet, am Motor liege
+           nichts an.
+
+           Nach der LEISTUNG liegen dieselben fünf fünf Grössenordnungen
+           auseinander: 881 W gegen 0,015 W. Das ist kein knapperes Rennen,
+           sondern gar keines. Deshalb wird danach ausgewählt — nicht weil
+           der Strom die falsche Zahl wäre, sondern weil er hier nicht
+           unterscheidet.
+
+           Dazu die Summe über alle Glieder, denn nach der Gesamtleistung des
+           Motors wird in jeder Aufgabe gefragt.
+
+           BEIM ÜBERTRAGER WIRD NICHT SUMMIERT. Dort sind die beiden Seiten
+           nicht zwei Verbraucher, sondern derselbe Leistungsfluss einmal
+           hinein und einmal hinaus. Summiert stand am Klingeltrafo „12 W",
+           während die Klingel daneben 6 W zeigte — auch das vom Bild. */
+        const glieder = opt.strom.teilwerte?.[t.id];
+        let stark = w;
+        let summeP = 0;
+        if (glieder) {
+          Object.keys(glieder).forEach(k => {
+            const g = glieder[k]!;
+            summeP += g.P;
+            if (g.P > stark.P) stark = g as typeof w;
+          });
+        }
+        /* Der Übertrager zeigt die durchgehende Leistung, nicht die Summe
+           seiner zwei Seiten. */
+        if (art === 'uebertrager') summeP = Math.max(w.P, stark.P);
         const zeilen = art === 'volt' ? [zeigeZahl(Math.abs(w.U), 'V')]
           : art === 'ampere' ? [zeigeZahl(Math.abs(w.I), 'A')]
           : art === 'quelle' ? [zeigeZahl(Math.abs(w.U), 'V'), zeigeZahl(Math.abs(w.I), 'A')]
           : (art === 'widerstand' || art === 'spule')
             ? [zeigeZahl(Math.abs(w.U), 'V'), zeigeZahl(Math.abs(w.I), 'A'),
                zeigeZahl(w.P, 'W')]
+          : (art === 'mehrteilig' || art === 'uebertrager')
+            ? [zeigeZahl(Math.abs(stark.U), 'V'), zeigeZahl(Math.abs(stark.I), 'A'),
+               zeigeZahl(summeP, 'W')]
           : [];
         anzeige = zeilen.map((s, i) =>
           `<text class="sp-messwert" x="${mass.w / 2}" y="${mass.h + 14 + i * 12}" ` +

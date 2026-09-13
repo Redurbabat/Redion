@@ -355,7 +355,7 @@ const Planflaeche = (() => {
          sollen dasselbe Bild geben. */
       if (e && e.ok) opt.strom = {
         netzStrom: e.netzStrom, leitungNetz: e.leitungNetz,
-        werte: e.werte, maxStrom: e.maxStrom
+        werte: e.werte, teilwerte: e.teilwerte, maxStrom: e.maxStrom
       };
       /* `werte` bringt die Richtung schon mit — sie steht an jedem Messwert
          (E540). Hier ist deshalb nichts weiterzureichen ausser dem, was

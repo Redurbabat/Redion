@@ -449,6 +449,69 @@ p('Der Unterschied steckt in der Form des Pfeils, nicht in der Farbe (§38)',
   && pfeilForm(svgGleich) !== pfeilForm(svgWechsel),
   `„${pfeilForm(svgGleich)}" gegen „${pfeilForm(svgWechsel)}"`);
 
+/* --------------------------------------------------------------------------
+ * DIE MESSWERTE AN MEHRTEILIGEN BAUTEILEN
+ *
+ * An einem Klemmenbrett, einer Drehstromquelle und einem Übertrager stand
+ * GAR KEINE Zahl: die Beschriftung kannte diese Arten nicht. Gefunden auf
+ * einem Bild, nicht in einem Prüflauf.
+ *
+ * WELCHES Glied gezeigt wird, ist die zweite Frage. Nachgemessen führen am
+ * Klemmenbrett in Stern alle fünf Glieder — drei Wicklungen und zwei Brücken
+ * — GENAU DENSELBEN Strom; der Unterschied steht in der siebten Stelle.
+ * „Das Glied mit dem grössten Strom" entscheidet dort also das Rundungs-
+ * rauschen. Nach der Leistung liegen dieselben fünf fünf Grössenordnungen
+ * auseinander (881 W gegen 0,015 W). Danach wird ausgewählt.
+ * ------------------------------------------------------------------------ */
+const zeichneMess = (bauen: string, stellung: Record<string, number> = {}): Promise<string> =>
+  seite.evaluate(([quelle, st]: [string, any]) => {
+    const { plan, teil, draht } = (window as any).bau();
+    // eslint-disable-next-line no-new-func
+    new Function('plan', 'teil', 'draht', quelle)(plan, teil, draht);
+    const e = Stromfluss.rechne(plan, st);
+    return Schaltplan.alsSvg(plan, { messwerte: true, strom: e.ok ? {
+      netzStrom: e.netzStrom, leitungNetz: e.leitungNetz, werte: e.werte,
+      teilwerte: e.teilwerte, maxStrom: e.maxStrom } : undefined });
+  }, [bauen, stellung] as [string, any]);
+
+const svgMotor = await zeichneMess(`
+  const q = teil('drehstromquelle', 'G1');
+  const m = teil('motor-klemmenbrett', 'M1');
+  draht(q, 'L1', m, 'U1'); draht(q, 'L2', m, 'V1'); draht(q, 'L3', m, 'W1');
+  draht(q, 'PE', m, 'PE');
+`, { t2: 1 });
+p('Am Klemmenbrett steht überhaupt eine Zahl',
+  /sp-messwert/.test(svgMotor));
+p('Und zwar die STRANGSPANNUNG',
+  svgMotor.includes('>230 V<'),
+  'gefunden: ' + (svgMotor.match(/>[^<]*V</g) || []).join(' ').slice(0, 90));
+p('Der Strangstrom steht auch da', svgMotor.includes('>3.83 A<'),
+  (svgMotor.match(/>[^<]*A</g) || []).join(' ').slice(0, 60));
+p('Und die Leistung ist die SUMME der drei Stränge',
+  svgMotor.includes('>2.64 kW<'),
+  (svgMotor.match(/>[^<]*W</g) || []).join(' ').slice(0, 60));
+/* Eine Brücke hat 0,0038 V. Stünde SIE am Symbol, wäre die Aussage „am
+   Motor liegt nichts an" — und nach dem Strom allein könnte sie gewinnen. */
+p('Und ausdrücklich nicht die Millivolt einer Brücke',
+  !/>0(\.0+)? ?V</.test(svgMotor) && !/>[0-9.]+ mV</.test(svgMotor),
+  (svgMotor.match(/>[^<]*V</g) || []).join(' ').slice(0, 90));
+
+/* Beim Übertrager wird NICHT summiert: seine zwei Seiten sind derselbe
+   Leistungsfluss, einmal hinein und einmal hinaus. */
+const svgTrafo = await zeichneMess(`
+  const q = teil('wechselspannung', 'G1');
+  const T = teil('transformator', 'T1');
+  const h = teil('klingel', 'E1', { R: 24 });
+  draht(q, 'L', T, '1U'); draht(T, '1V', q, 'N');
+  draht(T, '2U', h, 'X1'); draht(h, 'X2', T, '2V');
+`);
+p('Am Übertrager steht die durchgehende Leistung — 6 W',
+  svgTrafo.includes('>6 W<'),
+  (svgTrafo.match(/>[^<]*W</g) || []).join(' '));
+p('Und ausdrücklich nicht die doppelte Summe beider Seiten',
+  !svgTrafo.includes('>12 W<'),
+  (svgTrafo.match(/>[^<]*W</g) || []).join(' '));
+
 const svgAus = await zeichne(`
   const q = teil('wechselspannung', 'G1');
   const s = teil('ch-schema0', 'S1');
