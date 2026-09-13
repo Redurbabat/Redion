@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-533 Entscheidungen, E1 bis E553 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+534 Entscheidungen, E1 bis E554 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -597,6 +597,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E551** — Eine Folie steht, ein Skript rollt: die Vorgabe hängt am Dokument; `safe center` statt `center`; „📽️ Folie“ verlässt die Telefonleiste
 * **E552** — Gleich wie PowerPoint: „Zeichnen“ wird ein Reiter (die echte Leiste zieht um, kein Nachbau), und ein Blatt heisst im Foliensatz „Folie“
 * **E553** — Der gelbe Deckel deckt auf: es gab zwei Vorträge, der Knopf startete den falschen — und ein Zierstrich war als „Antwort“ gebaut
+* **E554** — Das Dokumentstudio trägt Redions Farben: fünf feste Hexwerte werden abgeleitet, der gewählte Stift wird ein Umriss — und E464 ist an dieser Stelle umgedreht
 
 ---
 
@@ -44518,3 +44519,148 @@ nicht).
 `test509` neu, 21 Zusagen, vier Gegenproben gefahren (Abbruch, 17/4, 18/3,
 14/7 — gemessen). Die dritte meldet Redurs Satz wörtlich: „ist ‚2 / 2‘, soll
 ‚1 / 2‘". `test503` und `test502` je 18 grün.
+
+---
+
+E554 — Das Dokumentstudio trägt Redions Farben — und dreht damit E464 um
+--------------------------------------------------------------------------
+
+Redur: **„das hier gefelt mir nich die farben, usw es sollte wie die redion
+farben sein wenn ich die fraben ändere sollte das auch sich ändern"**.
+
+### Was gemessen wurde, bevor etwas gebaut wurde
+
+Alle **acht** Schemata durchgefahren (standard, hell, nacht, wald, sand,
+papier, kontrast, rose), bei 1440 × 852, Präsentation im Dokumentmodus,
+Reiter „Zeichnen" gewählt:
+
+```txt
+ÄNDERT SICH  (3 von 8 Stellen)
+  .folienband                   rgb(26,26,26)    → rgb(251,251,250)
+  .folienband-reiter-knopf      rgb(167,167,167) → rgb(102,101,95)
+  …[aria-selected=true]         rgb(109,74,255)  → rgb(124,58,237)
+
+ÄNDERT SICH NICHT  (5 von 8) — in ALLEN ACHT byte-gleich
+  .document-drawingbar          rgb(48,77,120)      ← Redurs dunkles Blau
+  …button[aria-pressed=true]    rgb(216,228,241) auf rgb(25,56,89)
+  #reiterleiste                 rgb(34,55,92)
+  .document-topbar              rgb(48,77,120)
+  .document-center              rgb(36,35,35)
+```
+
+Der Grund stand in `pdf-studio.css:7`: `--pdf-chrome`, `--pdf-tools`,
+`--pdf-on-chrome`, `--pdf-desk` und `--pdf-dock` waren feste Hexwerte auf
+blankem `:root`, ohne Hell/Dunkel-Variante. `Aussehen.setzen()` schreibt nur
+`--bg*`, `--line*`, `--text` und `--accent` an `documentElement` — es konnte
+diese fünf Namen gar nicht erreichen. Selbst „Starker Kontrast" mit
+`--bg #000000` liess sie unberührt.
+
+### Warum das eine festgehaltene Entscheidung umdreht
+
+Die blaue Palette ist **Redurs eigener Entwurf** aus dem Zweig
+`codex/pdf-schreibstudio`. **E464** hat sie beim Zusammenführen ausdrücklich
+stehen lassen: „dieselben Pixel, ein anderer Name. Sonst nichts an seinem
+Stil." Das war richtig — es war seine Gestaltung.
+
+Er hat sie jetzt selbst zurückgenommen. Deshalb steht hier ein eigener
+Eintrag und nicht nur eine Änderung (§34): E464 gilt weiter für alles andere,
+was aus jenem Zweig kam; an dieser einen Stelle ist es umgedreht, und der
+Auftraggeber ist derselbe.
+
+### Die Zuordnung — und zwei Stellen, an denen das Naheliegende falsch war
+
+```txt
+--pdf-chrome     → var(--bg-side)
+--pdf-tools      → var(--bg-card)
+--pdf-on-chrome  → var(--text)
+--pdf-desk       → color-mix(in srgb, var(--bg) 90%, black)
+--pdf-dock       → var(--bg-card)
+--pdf-paper-max  → bleibt 980px (ein Lesemass, keine Farbe; test285:223
+                   rechnet damit)
+```
+
+**`--pdf-desk` ist NICHT `var(--bg-tief)`**, obwohl der Name genau passt und
+sein Kommentar wörtlich „darunter: Blätter, Überlagerungen" sagt. Gemessen
+hat `--bg-tief` nur **zwei** Werte für acht Schemata (`#0f1012` dunkel,
+`#f4f4f2` hell) — unter „Sand" stünde ein neutrales Grau in einem warmen
+Schema. Die Gegenprobe zeigt es: mit `--bg-tief` sind es „2 von 8".
+
+**Der gewählte Stift ist ein UMRISS geworden, kein Farbpaar.** Hier stand
+`background:#d8e4f1; color:#193859`, und zwanzig Zeilen tiefer stand für
+denselben Zustand ein zweites Blaupaar (`#425e7a`/`#93b3d1`/`#fff`).
+
+Der naheliegende Ersatz wäre `background:var(--accent); color:var(--auf-accent)`
+gewesen — und er wäre **durchgefallen**. `--auf-accent`, `--accent-text` und
+`--accent-schwach` folgen den acht Schemata nämlich NICHT; nur `--accent` tut
+es (`aussehen.ts:112`). Gerechnet und dann gemessen, beides dieselben Zahlen:
+
+```txt
+                    Kontrast mit --accent/--auf-accent
+  standard  5,15    nacht     3,07      ← unter 4,5
+  hell      5,70    wald      2,26      ← unter 4,5
+  papier    7,46    sand      3,87      ← unter 4,5
+                    rose      3,15      ← unter 4,5
+                    kontrast  1,43      ← von heute 9,30:1
+```
+
+Ausgerechnet „Starker Kontrast", das Schema für Menschen, die darauf
+angewiesen sind. §38, hart gebrochen, und **keine Zusage hätte es gemeldet**.
+
+Der Umriss braucht dagegen gar keine eigene Kontrastrechnung:
+`background:var(--bg-hover); color:var(--text); box-shadow:inset 0 0 0 2px
+var(--accent)`. `--text` auf `--bg-hover` ist das Paar, das die App überall
+benutzt und das je Thema nachgerechnet ist; der Akzent liegt als Rahmen
+daneben und trägt keine Schrift. §38 ist dabei doppelt erfüllt: die Wahl ist
+nicht nur an der Farbe zu erkennen, sondern auch am Rahmen.
+
+Dazu vierzehn weitere rohe Werte (`#ffffff18`, `#ffffff30`, `#0005`,
+`#c1c7d1` …) auf ihre Tokens. **Nicht angefasst** sind der Vortragsmodus und
+der Laserpointer (Zeilen 242, 261, 283, 292, 293): dort ist die feste Farbe
+der Sinn der Sache und steht mit geschriebenem Grund da, wie §39 es verlangt.
+
+### Und das Bild, in allen acht
+
+Das Risiko war benannt und nicht gemessen: weisses Papier auf fast weissem
+Schreibtisch. Unter „Hell" und „Papier" liegt der Schreibtisch bei
+`srgb 0.9` und das Papier bei `rgb(255,255,255)` — zehn Prozent Abstand.
+`.blatt-papier` hatte keinen Rand. Es hat jetzt einen (`1px solid
+var(--line)`), und die acht Bilder sind angesehen, nicht nur gerechnet.
+
+`test510` neu, 18 Zusagen. **Sie war vor der Reparatur rot** — 10 grün,
+8 rot, mit „1 von 8" bei jeder Fläche; grün war nur das Folienband, weil es
+seit E550 mit echten Tokens gebaut ist. Drei Gegenproben danach gefahren
+(13/5, 17/1, 16/2 — gemessen), und die dritte bringt die Zahlen von oben
+wörtlich zurück.
+
+Gebaut ist die Suite so, dass eine halbe Reparatur sie nicht grün macht:
+nicht „standard ≠ hell", sondern **mindestens sechs verschiedene Werte in
+acht Schemata**, für jede der sechs Flächen und für die Schrift darauf.
+
+Bilder: `bilder/farben-hell.png`, `bilder/farben-sand.png`,
+`bilder/farben-kontrast.png` (und fünf weitere, je Schema eines).
+
+### Zwei rote Läufe im Stapel, und keiner gehört diesem Bogen
+
+**`test362 §7`** (die Marken-Decke, L148) meldet 260/86/59/168/15/14 gegen
+eingetragene 246/77/56/153/14/12. Nachgezählt über jeden der fünf
+Folienbögen E549–E553, nur `quell/schale/stil/`: **keine einzige hinzugefügte
+Zeile enthält einen der sechs gezählten Werte** — das Folienband benutzt
+`var(--touch-min)`, `var(--space-*)`, `var(--radius-*)`. Und dieser Bogen
+nimmt rohe Werte weg statt welche hinzuzufügen.
+
+Beim Nachsehen fiel etwas auf, das in L148 fehlte: **die Decke war schon bei
+ihrem letzten Schreiben nicht synchron.** An jenem Commit (E509/E510) standen
+252/81/58/160/14/18 in den Dateien, eingetragen wurden 246/77/56/153/14/12 —
+bei `56` sechs zu tief. Die Zahlen sind nie gegen die Wirklichkeit gemessen
+worden. L148 trägt das jetzt.
+
+Die Decke einfach hochzusetzen wäre genau das, was sie verhindern soll; sie
+darf nur schrumpfen. Also bleibt sie rot und die Lücke offen — mit einer
+Zahl mehr darin als vorher.
+
+**`test424`** war im Stapel von vierzehn wieder rot und allein grün (50/50),
+nachdem er im Stapel von elf durchgelaufen war. Die Grenze aus E552 war an
+der Last gemessen, die gerade da war: dreissig Sekunden statt fünfzehn, und
+die Zeile sagt jetzt, WAS sie gelesen hat und ob die Zeit ablief — bei
+Zeitablauf stand vorher dieselbe nichtssagende Meldung da wie bei einem
+falschen Wert.

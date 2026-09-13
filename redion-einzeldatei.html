@@ -20736,7 +20736,38 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
    codex/pdf-schreibstudio schrieb 44px, 28px, 22px, 16px aus — test362 §7
    lässt das Verzeichnis roher Wiederholungen nur schrumpfen. Trefferflächen
    sind hier `var(--touch-min)`, Schriftgrössen und Rundungen rem. */
-:root{--pdf-chrome:#22375c;--pdf-tools:#304d78;--pdf-on-chrome:#f3f6ff;--pdf-desk:#242323;--pdf-dock:#292827;--pdf-paper-max:980px}
+/* ══ DIE FÜNF FARBEN DES STUDIOS SIND ABGELEITET (E554) ════════════════════
+   Redur: „es sollte wie die redion farben sein wenn ich die fraben ändere
+   sollte das auch sich ändern".
+
+   HIER STANDEN FÜNF FESTE HEXWERTE auf blankem `:root` — #22375c, #304d78,
+   #f3f6ff, #242323, #292827 —, Redurs eigener Entwurf aus dem Zweig
+   `codex/pdf-schreibstudio`, den E464 beim Zusammenführen ausdrücklich
+   unangetastet gelassen hat („dieselben Pixel, ein anderer Name. Sonst
+   nichts an seinem Stil"). Er hat sie jetzt selbst zurückgenommen; E554
+   sagt, warum, und dreht E464 an dieser Stelle um.
+
+   `Aussehen.setzen()` schreibt NUR `--bg*`, `--line*`, `--text` und
+   `--accent` an `documentElement` — diese fünf Namen konnte es gar nicht
+   erreichen. Gemessen über alle acht Schemata (standard, hell, nacht, wald,
+   sand, papier, kontrast, rose): fünf von acht gemessenen Flächen waren
+   byte-gleich, auch unter „Starker Kontrast" mit `--bg #000`.
+
+   WARUM `--pdf-desk` NICHT `var(--bg-tief)` IST, obwohl der Name passt:
+   `--bg-tief` steht nur in `dunkel.css`/`hell.css` und hat damit ZWEI Werte
+   für acht Schemata — unter „Sand" stünde ein neutrales Grau in einem warmen
+   Schema. `color-mix` mit `--bg` folgt allen achten und macht den
+   Schreibtisch in jedem Schema eine Spur tiefer als den Grund. */
+:root{
+  --pdf-chrome:var(--bg-side);
+  --pdf-tools:var(--bg-card);
+  --pdf-on-chrome:var(--text);
+  --pdf-desk:color-mix(in srgb, var(--bg) 90%, black);
+  --pdf-dock:var(--bg-card);
+  /* KEINE FARBE, sondern ein Lesemass — und `test285.mts:223` rechnet damit.
+     Es bleibt, wie es ist. */
+  --pdf-paper-max:980px;
+}
 .document-studio{border-color:var(--line);border-radius:var(--radius-xl);box-shadow:none;position:relative}
 .document-view-button{display:none}
 .document-studio .document-topbar{padding:8px 12px;gap:12px;min-height:52px;background:var(--bg-card);flex-shrink:0}
@@ -20753,7 +20784,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .document-commandbar button{min-height:var(--touch-min);padding:6px 12px;border-radius:var(--radius-md);font-size:12px;white-space:nowrap}
 .document-commandbar button:hover{background:var(--bg-hover)}
 .document-mode-switch{display:flex;padding:3px;border-radius:var(--radius-lg);background:var(--bg-input);border:1px solid var(--line)}
-.document-mode-switch button[aria-pressed="true"]{background:var(--bg-card);color:var(--accent-text);box-shadow:var(--studio-highlight),0 1px 4px #00000015;font-weight:600}
+.document-mode-switch button[aria-pressed="true"]{background:var(--bg-card);color:var(--accent-text);box-shadow:var(--studio-highlight),var(--shadow-1);font-weight:600}
 .document-position{font-size:12px;font-variant-numeric:tabular-nums;min-width:82px;text-align:center;margin:0}
 .document-zoom-group input{width:100px;accent-color:var(--accent)}
 .document-zoom-label{font-variant-numeric:tabular-nums}
@@ -20776,7 +20807,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .document-studio .document-inspector{padding:16px;background:var(--bg-side)}
 .document-studio .document-inspector button{border-radius:var(--radius-lg);font-size:12px;min-height:var(--touch-min)}
 .document-studio .document-section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin:24px 0 10px}
-.document-studio .blatt-werk{border:1px solid var(--studio-line);border-radius:var(--radius-xl);background:var(--studio-glass);box-shadow:var(--studio-highlight),0 5px 15px #00000010;margin:0 auto 14px;padding:6px;max-width:100%}
+.document-studio .blatt-werk{border:1px solid var(--studio-line);border-radius:var(--radius-xl);background:var(--studio-glass);box-shadow:var(--studio-highlight),var(--shadow-1);margin:0 auto 14px;padding:6px;max-width:100%}
 .document-studio[data-document-tools="closed"] .blatt-reihe{display:none}
 .document-studio[data-document-tools="closed"] .blatt-papier{cursor:default}
 @supports(backdrop-filter:blur(8px)){.document-studio .blatt-werk{backdrop-filter:blur(8px)}}
@@ -20833,44 +20864,65 @@ body[data-dokument="an"] #page.document-page{padding:0!important;margin:0!import
 body[data-dokument="an"] .document-studio{border:0;border-radius:0;min-height:0;box-shadow:none;background:var(--pdf-desk)}
 body[data-dokument="an"] .document-studio .document-topbar{background:var(--pdf-tools);color:var(--pdf-on-chrome);border:0;min-height:48px;padding:2px 12px}
 body[data-dokument="an"] .document-studio .document-topbar :is(button,.document-title){color:var(--pdf-on-chrome)}
-body[data-dokument="an"] .document-studio .document-topbar button:hover{background:#ffffff18}
-.document-studio .document-drawingbar{display:flex;align-items:center;justify-content:center;gap:8px;flex:none;min-height:58px;padding:5px 12px;background:var(--pdf-tools);color:var(--pdf-on-chrome);border-bottom:1px solid #ffffff18;overflow-x:auto}
+body[data-dokument="an"] .document-studio .document-topbar button:hover{background:var(--bg-hover)}
+.document-studio .document-drawingbar{display:flex;align-items:center;justify-content:center;gap:8px;flex:none;min-height:58px;padding:5px 12px;background:var(--pdf-tools);color:var(--pdf-on-chrome);border-bottom:1px solid var(--line);overflow-x:auto}
 .document-drawingbar button{display:grid;place-items:center;width:var(--touch-min);min-width:var(--touch-min);height:var(--touch-min);border-radius:12px;color:inherit;background:transparent;border:1px solid transparent;cursor:pointer;transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
 .document-drawingbar svg{width:25px;height:25px}
-.document-drawingbar button:hover{background:#ffffff18}
-.document-drawingbar button[aria-pressed="true"],.document-drawingbar button[aria-expanded="true"]{background:#d8e4f1;color:#193859;box-shadow:inset 0 1px 0 #fff8}
+.document-drawingbar button:hover{background:var(--bg-hover)}
+/* ══ „GEWÄHLT" IST EIN UMRISS, KEIN FARBPAAR (E554) ════════════════════════
+   Hier stand `background:#d8e4f1;color:#193859` — ein eigenes Blaupaar, und
+   zwanzig Zeilen tiefer stand für DENSELBEN Zustand ein zweites
+   (`#425e7a`/`#93b3d1`/`#fff`). Zwei Blautöne für eine Sache.
+
+   DER NAHELIEGENDE ERSATZ WÄRE FALSCH GEWESEN, und das ist gemessen:
+   `background:var(--accent); color:var(--auf-accent)` fällt in FÜNF von acht
+   Schemata unter 4,5:1 — gerechnet nacht 3,07 · sand 3,87 · rose 3,15 ·
+   wald 2,26 · kontrast 1,43. Ausgerechnet „Starker Kontrast" ginge von
+   9,30:1 auf 1,43:1, also §38 hart gebrochen. Der Grund: `--auf-accent`,
+   `--accent-text` und `--accent-schwach` folgen den acht Schemata NICHT,
+   nur `--accent` tut es (`aussehen.ts:112`).
+
+   Der Umriss braucht deshalb gar keine eigene Kontrastrechnung: `--text` auf
+   `--bg-hover` ist das Paar, das die App überall benutzt und das je Thema
+   nachgerechnet ist; der Akzent liegt als Rahmen daneben und trägt keine
+   Schrift. §38 ist dabei zweifach erfüllt — die Wahl ist nicht NUR an der
+   Farbe zu erkennen, sondern auch am Rahmen, und `aria-pressed` sagt sie
+   ohnehin. */
+.document-drawingbar button[aria-pressed="true"],.document-drawingbar button[aria-expanded="true"]{background:var(--bg-hover);color:var(--text);box-shadow:inset 0 0 0 2px var(--accent)}
 .document-drawingbar button:active:not(:disabled){transform:scale(var(--press-scale))}
 /* ZURÜCK UND VOR GANZ LINKS (E490). Der Trennstrich wandert mit auf die
    andere Seite. `margin-right:auto` hier und `margin-left:auto` am „···"
    halten die Werkzeuge dazwischen in der Mitte — ohne einen zweiten Kasten
    im Baum, den die Tastatur mitzählen müsste. */
-.document-ink-history{display:flex;gap:0;border-right:1px solid #ffffff30;padding-right:12px;margin-right:auto}
+.document-ink-history{display:flex;gap:0;border-right:1px solid var(--line);padding-right:12px;margin-right:auto}
 .document-drawingbar [data-document-action="ink-options"]{margin-left:auto}
 .document-ink-history button{font-size:1.75rem}
 /* ZURÜCK UND VOR SIND NICHT DURCHSICHTIG (test393 §3, E396): abgeschaltet
    werden sie blass, nicht durchscheinend — sonst blitzen beim Rollen die
    Werkzeuge darunter durch. */
 .document-ink-history button{opacity:1;background:var(--pdf-tools)}
-.document-ink-history button:disabled{color:#ffffff66;cursor:default}
+.document-ink-history button:disabled{color:var(--text-faint);cursor:default}
 .document-studio .document-view-button{display:block}
 .document-studio .document-commandbar{display:none;position:absolute;top:50px;right:12px;left:auto;z-index:98;flex-wrap:wrap;max-width:calc(100% - 24px);border:1px solid var(--line);border-radius:var(--radius-xl);box-shadow:var(--studio-elevation)}
 .document-studio[data-document-view="open"] .document-commandbar{display:flex}
 body[data-dokument="an"] .document-studio .document-center{background:var(--pdf-desk);padding:18px 18px 110px;scroll-padding-bottom:110px;overscroll-behavior:contain}
-.document-studio .document-source-master{max-width:var(--doc-blatt,var(--pdf-paper-max));width:100%;margin:0 auto 6px;background:#ffffff0b;border:1px solid #ffffff28;color:#e9e9eb;border-radius:8px;min-height:40px}
-.document-source-master .do-wort{color:#c1c7d1}
-.document-copy-label{max-width:var(--doc-blatt,var(--pdf-paper-max));margin:0 auto 14px;font-size:11px;letter-spacing:.3px;color:#bdc1c9}
-body[data-dokument="an"] .document-studio .blatt-papier{border-radius:0;box-shadow:0 2px 12px #0005}
+.document-studio .document-source-master{max-width:var(--doc-blatt,var(--pdf-paper-max));width:100%;margin:0 auto 6px;background:var(--bg-hover);border:1px solid var(--line);color:var(--text);border-radius:8px;min-height:40px}
+.document-source-master .do-wort{color:var(--text-dim)}
+.document-copy-label{max-width:var(--doc-blatt,var(--pdf-paper-max));margin:0 auto 14px;font-size:11px;letter-spacing:.3px;color:var(--text-dim)}
+body[data-dokument="an"] .document-studio .blatt-papier{border-radius:0;box-shadow:var(--shadow-2);border:1px solid var(--line)}
 body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe{position:fixed;top:auto;bottom:max(14px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:80;width:max-content;max-width:calc(100vw - 32px);background:transparent;border:0;box-shadow:none}
-body[data-dokument="an"] .document-studio .blatt-werk{display:flex;flex:0 1 auto;width:max-content;flex-wrap:nowrap;align-items:center;gap:6px;max-width:100%;margin:0;padding:8px 12px;border-radius:1.375rem;background:var(--pdf-dock);color:#f5f5f5;border:1px solid #ffffff25;box-shadow:0 10px 30px #0005;overflow-x:auto;backdrop-filter:none}
+body[data-dokument="an"] .document-studio .blatt-werk{display:flex;flex:0 1 auto;width:max-content;flex-wrap:nowrap;align-items:center;gap:6px;max-width:100%;margin:0;padding:8px 12px;border-radius:1.375rem;background:var(--pdf-dock);color:var(--text);border:1px solid var(--line);box-shadow:var(--shadow-3);overflow-x:auto;backdrop-filter:none}
 .document-studio:not([data-ink-options="open"]) .blatt-fest{display:none}
 .document-studio :is(.blatt-reihe,.blatt-werk){container-type:normal}
-.document-studio[data-ink-options="open"] .blatt-fest{background:var(--pdf-dock);color:#eee;box-shadow:none;border:1px solid #ffffff25;border-radius:var(--radius-xl);padding:8px}
+.document-studio[data-ink-options="open"] .blatt-fest{background:var(--pdf-dock);color:var(--text);box-shadow:none;border:1px solid var(--line);border-radius:var(--radius-xl);padding:8px}
 body[data-dokument="an"] .document-studio .blatt-werk button{color:inherit;min-height:var(--touch-min);flex-shrink:0}
 body[data-dokument="an"] .document-studio .blatt-werk :is(.blatt-farbe,.blatt-farbe-neu){width:var(--touch-min);min-width:var(--touch-min);height:var(--touch-min);min-height:var(--touch-min);border-radius:50%;padding:6px!important;background-clip:content-box;border:1px solid transparent}
-body[data-dokument="an"] .document-studio .blatt-werk .blatt-farbe.on{border-color:#e5e9f2;outline:none;box-shadow:none}
+body[data-dokument="an"] .document-studio .blatt-werk .blatt-farbe.on{border-color:var(--text);outline:none;box-shadow:none}
 body[data-dokument="an"] .document-studio .blatt-werk .blatt-strich{min-width:var(--touch-min)}
 body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display:none}
-body[data-dokument="an"] .document-studio .blatt-werk .on:not(.blatt-farbe){background:#425e7a;border-color:#93b3d1;color:#fff}
+/* DIESELBE REGEL WIE OBEN (E554) — der Zustand „gewählt" wird einmal
+   gesagt, nicht zweimal in zwei Blautönen. */
+body[data-dokument="an"] .document-studio .blatt-werk .on:not(.blatt-farbe){background:var(--bg-hover);border-color:var(--accent);color:var(--text);box-shadow:inset 0 0 0 2px var(--accent)}
 .document-studio:not([data-ink-options="open"]) .blatt-werk>:is([data-wz],.blatt-trenn,[data-gruppe="verlauf"],[data-gruppe="auswahl"],[data-gruppe="lineal"],[data-gruppe="formen"],[data-gruppe="schrift"],[data-gruppe="form"]){display:none!important}
 .document-studio:not([data-ink-options="open"]) .blatt-werk[data-tool="schreiben"]{display:none}
 .document-studio[data-ink-options="open"] .blatt-werk{max-height:240px;flex-wrap:wrap!important;overflow:auto;width:min(850px,calc(100vw - 32px))}
@@ -23177,7 +23229,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 946, inhalt: 'a4194f061afde866', gebaut: '2026-09-13T15:58:40.052Z' };
+const Stand = { fassung: 947, inhalt: 'e03a313560bec700', gebaut: '2026-09-13T16:11:31.329Z' };
 window.Stand = Stand;
 
 </script>
@@ -74037,11 +74089,19 @@ const ChronikDaten = {
                     "zeitraum": "14:30 – 16:10",
                     "dauer": "ca. 100 min",
                     "pruefungen": "test509 neu, 21 Zusagen, vier Gegenproben gefahren (Abbruch, 17/4, 18/3, 14/7)"
+                },
+                {
+                    "was": "E554 — Das Dokumentstudio traegt Redions Farben: fuenf feste Hexwerte werden abgeleitet, der gewaehlte Stift wird ein Umriss",
+                    "vonCommit": "(nach E553)",
+                    "bisCommit": "(dieser Bogen)",
+                    "zeitraum": "16:10 – 18:00",
+                    "dauer": "ca. 110 min",
+                    "pruefungen": "test510 neu, 18 Zusagen — VOR der Reparatur rot (10/8), danach gruen; drei Gegenproben (13/5, 17/1, 16/2)"
                 }
             ],
             "zahlen": {
-                "commits": 28,
-                "entscheidungen": 26
+                "commits": 29,
+                "entscheidungen": 27
             },
             "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
             "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -74153,6 +74213,12 @@ const ChronikDaten = {
                     "was": "Der Knopf „▶ Präsentieren\" startet bei einem Foliensatz `Werkzeuge.praesentation` statt `zeigenAn`. Und `linie()` in `vorlagen/folien.ts` baut den Zierstrich als `art:'line'` statt als `art:'abdeck'`.",
                     "warum": "Redur: „wenn ich die gelbe antworten klicke geht es weiter und zeigt mir nicht die antwort\". Gemessen: der Dokumentvortrag legt eine Fläche über alles (inset:0, z-index:40), die jeden Zeiger schluckt — ein Tipp schaltete von „Folie 1/2\" auf „Folie 2/2\", der Deckel blieb zu.",
                     "risiko": "keins an Daten. PDF und Heft behalten den Laserpointer (§47, test509 §4 misst es). Der Zierstrich sieht gleich aus, verspricht aber nichts mehr."
+                },
+                {
+                    "zeit": "17:10",
+                    "was": "`pdf-studio.css:7`: die fuenf Farbnamen (--pdf-chrome, --pdf-tools, --pdf-on-chrome, --pdf-desk, --pdf-dock) aus festen Hexwerten in Ableitungen echter Tokens. Dazu vierzehn rohe Einzelwerte und der gewaehlte Stift als Umriss statt als Farbpaar.",
+                    "warum": "Redur: „es sollte wie die redion farben sein wenn ich die fraben aendere sollte das auch sich aendern\". Gemessen ueber alle acht Schemata: fuenf von acht Flaechen waren byte-gleich, auch unter „Starker Kontrast\" mit --bg #000000.",
+                    "risiko": "Zwei, beide gemessen und abgedeckt. (1) --pdf-desk NICHT auf --bg-tief: das hat nur zwei Werte fuer acht Schemata. (2) Der gewaehlte Stift NICHT auf --accent/--auf-accent: das faellt in fuenf von acht unter 4,5:1, in „Starker Kontrast\" auf 1,43:1. Dazu ein Rand am Papier, damit die weisse Folie auf hellem Schreibtisch nicht verschwindet — acht Bilder angesehen."
                 }
             ]
         }
@@ -74550,6 +74616,21 @@ const ChronikDaten = {
             "beweis": "Gegenprobe G4 (den Zierstrich wieder als Abdeckmarke bauen): 14 gruen, 7 rot, und die Zeile nennt die Zahl — SIEBEN Zierdeckel in acht Layouts.",
             "lehre": "Eine Markenart ist kein Zeichenwerkzeug, sondern eine BEDEUTUNG. Wer sie nimmt, weil sie zufaellig so aussieht, wie er es braucht, erbt alles, was sie sonst noch verspricht. Dieselbe Sorte Fehler wie ein uebersetzter Feldname (§53.3): die Form stimmt, die Aussage nicht.",
             "entscheidung": "E553"
+        },
+        {
+            "nr": "P31",
+            "datum": "2026-09-13",
+            "titel": "Die naheliegende Farbreparatur haette den Barrierefreiheitsfall zerstoert",
+            "schwere": "gross",
+            "symptom": "Kein Symptom — der Fehler ist nie gebaut worden. Die erste Untersuchung schlug fuer den gewaehlten Stift `background:var(--accent); color:var(--auf-accent)` vor und schrieb dazu, --auf-accent sei „genau dafuer da ... und in beiden Themen nachgerechnet\".",
+            "falscheVermutung": "Genau die: dass ein Token, das in dunkel.css UND hell.css definiert ist, auch den acht SCHEMATA folgt. Es folgt ihnen nicht.",
+            "wieGefunden": "Durch die Gegenrede. Ein zweiter Agent hat die Behauptung nicht geglaubt, sondern die acht Schemata einzeln abgelesen und den Kontrast gerechnet. `aussehen.ts:112` setzt pro Schema NUR --accent; --auf-accent, --accent-text und --accent-schwach kommen unveraendert aus dunkel.css/hell.css.",
+            "ursache": "Zwei Begriffe, die gleich aussehen und es nicht sind: THEMA (hell/dunkel, zwei Stueck) und SCHEMA (acht Stueck). Ein Token kann „in beiden Themen nachgerechnet\" sein und trotzdem in sechs von acht Schemata falsch stehen.",
+            "loesung": "Der gewaehlte Stift wird ein UMRISS: background:var(--bg-hover); color:var(--text); box-shadow:inset 0 0 0 2px var(--accent). Das Paar --text/--bg-hover ist je Thema nachgerechnet, der Akzent traegt keine Schrift — es braucht gar keine eigene Kontrastrechnung je Schema.",
+            "warumKeineUhr": "—",
+            "beweis": "Gegenprobe G3 baut den verworfenen Vorschlag und misst: nacht 3,07 · wald 2,26 · sand 3,87 · rose 3,15 · kontrast 1,43 — gegen heute 9,30:1. Die gemessenen Zahlen sind dieselben, die die Gegenrede vorher gerechnet hatte.",
+            "lehre": "Der Satz „ist in beiden Themen nachgerechnet\" klang wie ein Beleg und war eine Verwechslung. Ein Beleg fuer zwei Faelle ist kein Beleg fuer acht. Und: eine Gegenrede, die den Vorschlag selbst nachrechnet statt ihn zu lesen, ist den Aufwand wert — dieser eine Fund haette §38 an der empfindlichsten Stelle gebrochen, und kein Waechter haette es gemeldet, weil es bis heute keinen gibt.",
+            "entscheidung": "E554"
         }
     ]
 };
