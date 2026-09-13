@@ -4325,6 +4325,41 @@ const DocumentMode = (() => {
                Zustand, und der Vergleich `!!mark.gesperrt` fiele irgendwann
                auseinander (§17: Datenmodell stabil halten). */
             if (action === 'praesentieren') {
+                /* ══ EIN FOLIENSATZ BEKOMMT DEN FOLIENVORTRAG (E553) ═══════════════
+                   Redur: „wenn ich die gelbe antworten klicke geht es weiter und
+                   zeigt mir nicht die antwort".
+        
+                   GEMESSEN, und sein Satz stimmt aufs Wort. Es gibt ZWEI Vorträge:
+        
+                     · `Werkzeuge.praesentation` — der Folienvortrag (E266, E544).
+                       Ein Tipp auf eine Abdeckung deckt sie auf, der Schrittzähler
+                       zählt. Gemessen: Treffer am Deckel, danach `data-auf="1"`,
+                       Füllung 0, Folie bleibt 1/2. RICHTIG.
+                     · `zeigenAn` — der Dokumentvortrag (E493) mit Laserpointer, für
+                       ein PDF an der Wand. Er legt `.document-zeigen-flaeche` über
+                       alles (`inset:0`, `z-index:40`), und die schluckt jeden
+                       Zeiger. Gemessen: an der Stelle des Deckels liegt
+                       `DIV.document-zeigen-flaeche`, nicht das `rect`; ein Tipp
+                       rechts davon schaltet von „Folie 1/2" auf „Folie 2/2", und
+                       der Deckel bleibt zu.
+        
+                   Der Knopf in der Dokumentleiste startete IMMER den zweiten — auch
+                   bei einem Foliensatz, wo er falsch ist. Das Band startete längst
+                   den ersten (`pv-zeigen` in `vorlagen/folien.ts`). Zwei Knöpfe mit
+                   demselben Namen, zwei verschiedene Sachen: genau der Fehler, den
+                   ein Nutzer nicht auseinanderhalten KANN.
+        
+                   Der Laserpointer bleibt, wo er hingehört: beim PDF und beim Heft.
+                   Fehlt `Werkzeuge` (Einzeldatei, halb geladenes Fenster), bleibt es
+                   beim Dokumentvortrag — besser als gar keiner. */
+                if (istFoliensatz(page) && typeof Werkzeuge !== 'undefined'
+                    && typeof Werkzeuge.praesentation === 'function') {
+                    try {
+                        void Werkzeuge.praesentation(page);
+                        return;
+                    }
+                    catch { /* dann doch der Dokumentvortrag */ }
+                }
                 void zeigenAn();
                 return;
             }

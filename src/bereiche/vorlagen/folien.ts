@@ -75,15 +75,37 @@ const Folienvorlagen = (() => {
     ...(opt.farbe ? { farbe: opt.farbe } : {}),
   });
 
-  /** Eine waagrechte Linie — als flache Abdeckmarke in Akzentfarbe. */
+  /**
+   * Eine waagrechte Linie — als LINIE, nicht als Abdeckmarke (E553).
+   *
+   * HIER STAND `art: 'abdeck'`, „als flache Abdeckmarke in Akzentfarbe", und
+   * das war mein Kurzschluss aus E548: eine Abdeckmarke ist gefüllt, eine
+   * `rectangle` nicht, also nahm ich die gefüllte. Die Folge habe ich nicht
+   * zu Ende gedacht.
+   *
+   * `abdeck` heisst nicht „gefüllter Kasten". Es heisst **eine zugedeckte
+   * Antwort** (E266), und im Vortrag ist das ein Versprechen: anklickbar,
+   * `cursor:pointer`, und beim Tipp verschwindet die Füllung. Der blaue
+   * Zierstrich unter jeder Überschrift war damit eine Antwort, die es nie
+   * gab — gemessen: er steht als ERSTER Deckel im Baum, also war er der,
+   * den jede Suche zuerst fand, und ein Klick darauf löschte ihn einfach.
+   *
+   * Eine `line` mit Strichstärke tut dasselbe fürs Auge und behauptet
+   * nichts. Die Dicke geht als `breite` an die Marke — so heisst das Feld
+   * (nachgesehen in `marken.ts`, `strokeWidth`), und die Punkte sind Anfang
+   * und Ende der MITTELLINIE, nicht zwei Ecken eines Kastens.
+   */
   const linie = (b: number, h: number, opt: {
     x: number; y: number; breite: number; dicke?: number; farbe?: string;
-  }): Marke => ({
-    id: kennung(), art: 'abdeck', farbe: opt.farbe || '#2f6fed',
-    pts: [[Math.round(opt.x * b), Math.round(opt.y * h)],
-          [Math.round((opt.x + opt.breite) * b),
-           Math.round((opt.y + (opt.dicke ?? 0.012)) * h)]],
-  });
+  }): Marke => {
+    const dick = Math.max(1, Math.round((opt.dicke ?? 0.012) * h));
+    const y = Math.round((opt.y + (opt.dicke ?? 0.012) / 2) * h);
+    return {
+      id: kennung(), art: 'line', farbe: opt.farbe || '#2f6fed', breite: dick,
+      pts: [[Math.round(opt.x * b), y],
+            [Math.round((opt.x + opt.breite) * b), y]],
+    };
+  };
 
   /* ==========================================================================
    * DIE LAYOUTS

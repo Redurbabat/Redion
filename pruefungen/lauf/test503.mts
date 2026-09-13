@@ -117,9 +117,16 @@ const listeAuf = async (seiteId: string) => {
   await seite.evaluate(() => {
     document.querySelectorAll<HTMLElement>('#rg-willkommen, .overlay').forEach(o => o.remove());
   });
+  /* NACH DER TAT GEFRAGT, NICHT NACH DEM WORT (E553).
+     Hier stand `/^▤\s*Seiten$/` — und seit E552 heisst der Knopf im
+     Foliensatz „▤ Folien". Die Zeile war damit rot, obwohl der Knopf
+     unverändert dasteht und dasselbe tut. Dieselbe Stelle wie in
+     `test505`, gefunden im breiteren Stapel eine Entscheidung später:
+     eine Zusage, die am WORTLAUT hängt, bricht bei jeder Umbenennung —
+     und zwar erst dann, wenn jemand genau diesen Lauf mitfährt. */
   const geklickt = await seite.evaluate(() => {
-    const knopf = [...document.querySelectorAll<HTMLElement>('button, a')]
-      .find(b => /^▤\s*Seiten$/.test((b.textContent || '').trim()));
+    const knopf = document.querySelector<HTMLElement>(
+      '[data-document-action="thumbnails"]');
     if (!knopf) return false;
     knopf.click(); return true;
   });

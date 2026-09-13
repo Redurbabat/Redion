@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-532 Entscheidungen, E1 bis E552 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+533 Entscheidungen, E1 bis E553 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -596,6 +596,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E550** — Das Folienband: Reiter ÜBER der Folie; `start` und `einfuegen` bleiben draussen, weil 79 von 83 ihrer Knöpfe dort nichts tun
 * **E551** — Eine Folie steht, ein Skript rollt: die Vorgabe hängt am Dokument; `safe center` statt `center`; „📽️ Folie“ verlässt die Telefonleiste
 * **E552** — Gleich wie PowerPoint: „Zeichnen“ wird ein Reiter (die echte Leiste zieht um, kein Nachbau), und ein Blatt heisst im Foliensatz „Folie“
+* **E553** — Der gelbe Deckel deckt auf: es gab zwei Vorträge, der Knopf startete den falschen — und ein Zierstrich war als „Antwort“ gebaut
 
 ---
 
@@ -44427,3 +44428,93 @@ anderen Mitteln.
 `test508` neu, 40 Zusagen, fünf Gegenproben gefahren (Abbruch, 35/3, 36/2,
 38/2, 37/3 — gemessen). `test506` 53 grün, `test505` 27 grün.
 Bild: `bilder/pp-reiter-zeichnen.png`.
+
+---
+
+E553 — Der gelbe Deckel deckt auf: es gab zwei Vorträge, und der Knopf startete den falschen
+--------------------------------------------------------------------------
+
+Redur, wörtlich: **„wenn ich die gelbe antworten klicke geht es weiter und
+zeigt mir nicht die antwort"**.
+
+Sein Satz stimmt aufs Wort, und die Ursache ist nicht der Deckel.
+
+### Zwei Vorträge, beide „Präsentieren"
+
+```txt
+Werkzeuge.praesentation   der FOLIENvortrag (E266, E544)
+                          Ein Tipp auf eine Abdeckung deckt sie auf.
+                          Gemessen: Treffer am Deckel, danach data-auf="1",
+                          Füllung 0, Folie bleibt 1/2.            RICHTIG
+
+zeigenAn                  der DOKUMENTvortrag (E493), Laserpointer,
+                          gebaut für ein PDF an der Wand.
+                          Er legt `.document-zeigen-flaeche` über alles
+                          (inset:0, z-index:40) — und die schluckt jeden
+                          Zeiger.
+```
+
+Gemessen im zweiten: an der Stelle des Deckels liegt
+`DIV.document-zeigen-flaeche`, nicht das `rect`. Ein Tipp rechts davon
+schaltet von **„Folie 1/2" auf „Folie 2/2"**, und der Deckel bleibt zu. Das
+ist Redurs Satz, reproduziert.
+
+**Das Band startete längst den richtigen** (`pv-zeigen` in
+`vorlagen/folien.ts` ruft `Werkzeuge.praesentation`). Der Knopf in der
+Dokumentleiste startete **immer** den zweiten — auch bei einem Foliensatz.
+Zwei Knöpfe mit demselben Namen, zwei verschiedene Sachen: genau der Fehler,
+den ein Nutzer nicht auseinanderhalten KANN. Er hat den genommen, der
+dasteht.
+
+Jetzt entscheidet das Dokument. Ein Foliensatz bekommt den Folienvortrag;
+PDF und Heft behalten den Laserpointer — der ist dort der Sinn der Sache, und
+ihn zu nehmen wäre eine weggenommene Funktion (§47). `test509 §4` misst das.
+
+### Der zweite Fund, und er kam aus einer Zahl, die nicht passte
+
+Die Zusage legte einen Deckel von 540 × 160 Punkten an; gezeichnet wurde er
+als **207 × 7 px**. Nachgemessen war das gar nicht ihrer — es war der blaue
+**Zierstrich unter der Überschrift** des Layouts, und er stand als ERSTER im
+Baum.
+
+`folien.ts` baute ihn als `art:'abdeck'` — „als flache Abdeckmarke in
+Akzentfarbe", mein eigener Kurzschluss aus E548: eine Abdeckmarke ist
+gefüllt, eine `rectangle` nicht, also nahm ich die gefüllte.
+
+**`abdeck` heisst aber nicht „gefüllter Kasten". Es heisst *eine zugedeckte
+Antwort*** (E266) — anklickbar, `cursor:pointer`, und beim Tipp verschwindet
+die Füllung. Jede Folie trug damit eine Antwort, die es nie gab; ein Klick
+darauf löschte den Strich. Die Gegenprobe zählt, wie weit das reichte:
+**sieben** Zierdeckel in acht Layouts.
+
+Eine `line` mit Strichstärke tut dasselbe fürs Auge und behauptet nichts.
+
+**Die Lehre, und sie ist grösser als dieser Bogen:** eine Markenart ist kein
+Zeichenwerkzeug, sondern eine BEDEUTUNG. Wer sie nimmt, weil sie zufällig so
+aussieht, wie er es braucht, erbt alles, was sie sonst noch verspricht — hier
+die Anklickbarkeit, den Zeiger, das Verschwinden und den Schrittzähler. Das
+ist dieselbe Sorte Fehler wie ein Feldname, der übersetzt wird (§53.3): die
+Form stimmt, die Aussage nicht.
+
+### Und dieselbe Umbenennung noch zweimal
+
+`test503` war seit E552 rot und ist es erst hier aufgefallen — E552s Stapel
+enthielt ihn nicht. Er sucht einen Knopf mit dem Wortlaut `^▤\s*Seiten$`,
+und der heisst im Foliensatz seit E552 „▤ Folien". Dieselbe Stelle, die bei
+`test505` schon einmal berichtigt wurde.
+
+Beim Nachsehen, wo das noch steht, fand sich `test502` mit derselben Zeile —
+**noch grün**, weil ihn niemand mit einem Foliensatz gefahren hatte. Er ist
+jetzt mit berichtigt, vor dem roten Lauf.
+
+Alle drei fragen jetzt nach der **Tat** (`[data-document-action="thumbnails"]`)
+statt nach dem Wort. Eine Zusage, die am Wortlaut hängt, bricht bei jeder
+Umbenennung — und zwar erst dann, wenn jemand genau diesen Lauf mitfährt. Das
+ist die dritte Zusage dieser Sitzung, die richtig aussah und den Fall nicht
+sehen konnte; die anderen zwei waren `test285` (misst ein PDF, sah den
+Foliensatz nie) und `test508 §4` (baute neu auf und ging den gefährlichen Weg
+nicht).
+
+`test509` neu, 21 Zusagen, vier Gegenproben gefahren (Abbruch, 17/4, 18/3,
+14/7 — gemessen). Die dritte meldet Redurs Satz wörtlich: „ist ‚2 / 2‘, soll
+‚1 / 2‘". `test503` und `test502` je 18 grün.
