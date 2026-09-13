@@ -7605,3 +7605,116 @@ steht hier, damit niemand es für ein Modell hält.
 und damit Blindwiderstände (L151). Sie ist im Lehrmittel enthalten und hier
 bewusst nicht gebaut — ein Kondensator, der als Unterbrechung gerechnet wird,
 macht daraus stillschweigend einen Motor mit zwei Strängen.
+
+---
+
+L157 · GEÄNDERTE KLEMMENNAMEN an vier bestehenden Zeichen — offen, dringend
+--------------------------------------------------------------------------
+
+**Das ist die Lücke, die vor dem Zusammenführen entschieden werden muss.**
+
+CLAUDE.md §9 sagt „Kennungen nicht unnötig ändern", §17 „Blöcke behalten
+stabile Kennungen". Die Bögen E545 und E547 haben an **vier Zeichen, die es
+schon gab**, Klemmen umbenannt oder verschoben. Nachgezählt im Diff gegen
+`main`:
+
+| Zeichen | vorher | nachher | Risiko |
+|---|---|---|---|
+| `stecker` | `1` bei x=20 | `L` bei x=10, `N` bei x=30 | **hoch** |
+| `fi-schutzschalter` | zweimal `N` | `N` oben, `N2` unten | **hoch** |
+| `steckdose` | `L` bei x=30 | `L` bei x=20, `N` bei x=40 | mittel |
+| `steckdose-schuko` | `L` bei x=30 | `L` bei x=10, `N`, `PE` | mittel |
+
+### Warum das gefährlich ist
+
+Eine Leitung speichert ihre Bindung als `vonTeil` + `vonNr` und zusätzlich
+ihre Punkte. `netze()` nimmt zuerst die Bindung, dann den Ort.
+
+* **`stecker`:** die Kennung `1` gibt es nicht mehr. Eine gespeicherte
+  Leitung mit `vonNr: '1'` bindet damit an eine Klemme, die nicht existiert.
+  Über den Ort geht es auch nicht: der alte Anschluss lag bei x=20, die neuen
+  liegen bei x=10 und x=30 — beide **10 px** entfernt, und `NAH` ist 6. Die
+  Leitung fällt ab. Der Plan sieht unverändert aus und rechnet anders.
+* **`fi-schutzschalter`:** hier ist es schlimmer, weil es NICHT auffällt.
+  Eine alte Leitung am unteren N trägt `vonNr: 'N'` — das bindet jetzt an den
+  OBEREN Anschluss. Über den Ort bindet dieselbe Leitung zusätzlich an `N2`
+  unten. Ergebnis: oben und unten sind verbunden, der Neutralleiter-Pol des
+  FI ist überbrückt, und der Schalter misst dauerhaft falsch. Kein Fehler,
+  keine Meldung, nur ein falsches Ergebnis.
+
+### Was zu entscheiden ist
+
+Drei Wege, und die Wahl gehört Redur:
+
+1. **So lassen.** Vertretbar, wenn es noch keine gespeicherten Pläne mit
+   `stecker` oder `fi-schutzschalter` gibt. Das ist NICHT nachgesehen worden
+   — es liesse sich über die Blöcke im Bestand zählen.
+2. **Alte Kennungen als Zweitnamen führen.** `anschluesseVon` könnte je
+   Zeichen eine Liste „früher hiess das so" mitbringen, und `netze()` würde
+   beim Binden darauf zurückfallen. Das ist der sauberste Weg und hält alte
+   Pläne am Leben.
+3. **Eine Migration.** Beim Laden eines Plans die alten `vonNr` umschreiben.
+   Mehr Aufwand, und sie muss idempotent sein (§10).
+
+**Bis dahin gilt: wer alte Pläne mit Stecker oder FI hat, sollte sie nach dem
+Zusammenführen ansehen.** Die Lücke steht hier, damit das nicht übersehen
+wird.
+
+---
+
+L158 · Was der Elektro-Bogen offen lässt — die Übersicht
+--------------------------------------------------------------------------
+
+Zehn Bögen (E539–E547) auf dem Zweig `claude/redion-elektro-simulation`.
+Was **nicht** fertig ist, an einer Stelle gesammelt:
+
+### Nicht geprüft
+
+* **Die Gesamtsuite ist nie gelaufen.** Geprüft wurden rund **20 von 440**
+  Suiten, alle grün: test498, 499, 500, 501, 239, 238, 240, 211, 87, 105,
+  109, 202, 203, 204, 206, 208, 213, 215, 217, 220, 270. Nach §46 bewegt sich
+  `main` erst nach einem vollen grünen Lauf. **Das steht aus.**
+* **Kein Bild vom Elektro-Teil in der echten App.** Die Bilder wurden über
+  `Schaltplan.alsSvg` gerendert, nicht über die Planfläche im laufenden
+  Programm. Was dort beim Antippen passiert, ist nicht angesehen worden.
+* **Nichts am Telefon angesehen.** §37 ist im Elektro-Teil ungeprüft
+  geblieben; gemessen wurde nur die Lernansicht (test500 §4).
+
+### Fachlich offen
+
+* **L151** Blindwiderstände fehlen — kein cos φ, keine Blindleistung, keine
+  Kompensation. Deshalb ist die **Steinmetzschaltung** nicht gebaut.
+* **L153** Schutzklasse I greift an genau **einem** Zeichen (Klemmenbrett).
+  Lampe, Heizung, Wechselstrommotor haben keine PE-Klemme, an der es sich
+  festmachen liesse. Der bestehende `motor-drehstrom` wurde bewusst nicht
+  angefasst, weil er in einer Lehrskizze steckt.
+* **L154** Die **NIN-Ausgabe ist nicht belegt.** Zwei Lernkarten tragen
+  deshalb kein `norm`-Feld; die Paragrafennummer steht nur im Erklärtext.
+* **L156** Fünf Halbleiter ohne Modell: `optokoppler`, `triac`,
+  `transistor-npn`, `transistor-pnp`, `thyristor`.
+* **Kein Stromwandler als eigenes Zeichen.** Mit dem Übertrager (E546) wäre
+  er nur noch eine andere Übersetzung — die Messschaltungen des Lehrmittels
+  sind damit weiterhin unvollständig.
+
+### Ausserhalb des ursprünglichen Auftrags gearbeitet
+
+Der Auftrag lautete „ausschliesslich `src/bereiche/elektro/`". Angefasst
+wurden zusätzlich:
+
+* `src/register/fachzeichen.ts` — §8 verlangt neue Zeichen im Register.
+  Ohne das hätte die Drehstromquelle keine Klemmen.
+* `src/bereiche/bloecke/arten/schaltplan.ts` und `planflaeche.ts` — der
+  Richtungspfeil und die Messwerte, nach ausdrücklicher Freigabe.
+* `src/bereiche/wissen/` und `quell/schale/stil/werkzeuge.css` — Lernkarten
+  und Lernansicht, auf Bitte hin.
+* `quell/schale/stil/lernwelt.css`, `src/bereiche/wissen/lernwelt.ts`,
+  `pruefungen/lauf/test217.mts`, `test87.mts` — die Reparatur von test217.
+
+### Eine Schwäche, die geblieben ist
+
+`werte[teil]` hält je Bauteil das Glied mit dem grössten STROM. An einem
+Klemmenbrett führen alle Glieder denselben Strom (sie liegen in Reihe), und
+welches gewinnt, entscheidet damit Rundungsrauschen. Für die ANZEIGE ist das
+seit E547 behoben (dort entscheidet die Leistung), aber **jeder andere
+Aufrufer von `werte` bekommt weiterhin den vom Rauschen bestimmten
+Eintrag.** Heute fällt es nicht auf; sauber ist es nicht.
