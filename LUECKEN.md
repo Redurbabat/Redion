@@ -7437,11 +7437,20 @@ verloren hält:
   im Folien-XML wirklich stehen. Hintergründe, Platzhaltertexte, Fusszeilen,
   Foliennummern und das Farbthema stehen dort nicht. Eine Folie, die im
   Original einen farbigen Grund hat, kommt weiss an.
-- **Ein Schriftgrad je Kasten.** Redions Textmarke hat genau einen; ein
-  PowerPoint-Kasten mit gemischten Graden oder Farben kommt vereinfacht an,
-  mit dem Grad des ersten Laufs.
-- **Absatzebenen und Aufzählungszeichen.** `a:pPr@lvl` und `a:buChar` werden
-  nicht gelesen; eine Gliederung kommt als flacher Text an.
+- ~~**Ein Schriftgrad je Kasten.**~~ **GESCHLOSSEN mit E557** für den Fall,
+  der zählt: je ABSATZ werden Grad, Gewicht und Farbe gelesen, und wo sie
+  auseinandergehen, entsteht eine Marke je Absatz. Gemessen vorher:
+  „klein"(12) + „GROSS"(36, fett, blau) kam als eine Marke in 12 pt schwarz
+  an. **Offen bleibt der Fall darin**: gemischte Läufe INNERHALB eines
+  Absatzes — Redions Textmarke hat genau einen Grad, und das ist die echte
+  Grenze.
+- ~~**Absatzebenen und Aufzählungszeichen.**~~ **GESCHLOSSEN mit E557**:
+  `a:pPr@lvl` rückt ein (und verschmälert den Kasten entsprechend),
+  `a:buChar` kommt als Zeichen davor, `a:buNone` unterdrückt es. `buAutoNum`
+  bekommt ein neutrales „·" — die echte Nummer käme erst aus der Absatzfolge,
+  und eine falsche Nummer wäre schlimmer als ein neutrales Zeichen.
+- **Ausrichtung** (`a:pPr@algn`). Die Textmarke hat kein Feld dafür; alles
+  kommt linksbündig an. Das ist die nächste Stelle, an der es auffällt.
 - **Tabellen (`a:tbl`) und Diagramme.** Beide werden übersprungen — sie haben
   in der Markenschicht kein Gegenstück. **Seit E555 werden sie wenigstens
   GENANNT**: der Hinweis nach dem Einlesen sagt „NICHT übernommen:

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-536 Entscheidungen, E1 bis E556 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+537 Entscheidungen, E1 bis E557 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -600,6 +600,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E554** — Das Dokumentstudio trägt Redions Farben: fünf feste Hexwerte werden abgeleitet, der gewählte Stift wird ein Umriss — und E464 ist an dieser Stelle umgedreht
 * **E555** — Eine Gruppe ist kein Loch: `p:grpSp` wird mitgelesen (samt Kindkoordinaten), und der Hinweis sagt, was NICHT ankam
 * **E556** — Auch im Laserpointer-Vortrag deckt ein Tipp die Antwort auf — der Deckel liegt unter der Zeigefläche, nicht neben ihr
+* **E557** — Ein Absatz hat sein eigenes Format: Grad, Gewicht, Farbe, Ebene und Aufzählungszeichen je Absatz — aufgeteilt nur, wenn es etwas bringt
 
 ---
 
@@ -44781,3 +44782,84 @@ zuzudecken hilft niemandem.
 `test509` steht damit bei 27 Zusagen; die fünfte Gegenprobe (den Griff wieder
 herausnehmen) meldet **„ist ‚Seite 2/2‘, soll ‚Seite 1/2‘"** — Redurs Satz,
 diesmal im Heft.
+
+---
+
+E557 — Ein Absatz hat sein eigenes Format, nicht das des Kastens
+--------------------------------------------------------------------------
+
+Redur: „verbesser für die pptx öfnnen". E555 hat den Datenverlust behoben;
+dies ist der Punkt, den man beim Öffnen als **erstes sieht**.
+
+### Was gemessen wurde
+
+Der Leser nahm `txBody.getElementsByTagName('a:rPr')[0]` — den ersten Lauf
+der ersten Zeile — für den **ganzen** Kasten:
+
+```txt
+„klein"(12 pt) + „GROSS"(36 pt, fett, blau)
+    →  EINE Marke „klein GROSS", fontSize 12, fett false, ohne Farbe
+Titel mit srgbClr CC0000
+    →  Marke ohne `farbe`, zeichnet schwarz
+drei Absätze auf lvl 0/1/2 mit buChar
+    →  EINE Marke, flacher Block, keine Einrückung, keine Zeichen
+```
+
+### Die Regel: aufteilen nur, wenn es etwas bringt
+
+Absätze, die sich in **nichts** unterscheiden, bleiben EINE Marke mit `\n`
+dazwischen — genau wie bisher. Das ist der häufige Fall, und dort ist eine
+Marke die bessere: wer den Textkasten im Editor schiebt, schiebt den Kasten
+und nicht eine Zeile.
+
+Aufgeteilt wird erst, wenn **Grad, Gewicht, Farbe oder Ebene** auseinander-
+gehen. Dann ist eine Marke schlicht falsch — sie hat genau einen Grad, und
+der des ersten Absatzes gälte für alle.
+
+*Innerhalb* eines Absatzes bleibt es beim ersten Lauf. Das ist eine Lücke und
+steht so in L151; ein Absatz ist aber die Einheit, die ein Mensch als „Zeile
+mit eigenem Aussehen" sieht, und die ist jetzt erreichbar.
+
+### Die Höhen kommen vom Zeichner, nicht aus einer Schätzung
+
+`InkGeometry.textLayout` ist dieselbe Rechnung, die das Blatt später benutzt
+— samt Umbruch an `breiteBox`. Eine eigene Schätzung („Grad mal 1,25") wäre
+die Höhe EINER Zeile; ein umbrechender Absatz bekäme zu wenig Platz und der
+nächste liefe hinein.
+
+Der Prüflauf misst genau das mit einem absichtlich viel zu langen Absatz. Die
+Gegenprobe mit der Schätzung meldet **„18 pt Abstand"** statt über 40 — die
+zwei Absätze überlappen.
+
+### Und der Fehler, der genau der von E545 war
+
+Das Lesen war fertig, die Farbe stand im Absatz — und die Marke kam trotzdem
+schwarz an. Der Grund lag zwanzig Zeilen weiter unten: `marken.push` baut die
+Textmarke aus einer **festen Feldliste** zusammen, und `farbe` stand nicht
+darin. Grad und Fett kamen an, die Farbe nicht.
+
+Dasselbe war E545 mit `verlauf` passiert, an derselben Stelle, vier Zeilen
+tiefer. Die Feldliste bleibt trotzdem: ein blindes Durchreichen des ganzen
+Objekts nähme `x`/`y`/`w`/`h` mit in die Ablage. Sie ist jetzt nur mit dem
+Hinweis versehen, dass sie beim nächsten Feld wieder vergisst.
+
+`test512` neu, 24 Zusagen, vier Gegenproben gefahren:
+
+```txt
+G1  erster a:rPr des Kastens   15 grün,  9 rot
+    {"text":"klein\nGROSS","sz":12,"fett":false,"farbe":""} — wörtlich der
+    alte Zustand
+G2  nie aufteilen              6 rot, dann Abbruch (bei einer statt drei
+    Marken greift §3 ins Leere)
+G3  Höhe schätzen              23 grün,  1 rot  („18 pt Abstand")
+G4  immer aufteilen            22 grün,  2 rot  (drei gleiche Absätze
+    werden drei Marken)
+```
+
+Bild: `bilder/pptx-absaetze.png` — roter Titel 36 pt fett, blaue
+Zwischenüberschrift 24 pt, drei Aufzählungspunkte 20 pt, ein eingerückter
+Unterpunkt 15 pt. Vorher wäre das ein Block in 36 pt Schwarz gewesen.
+
+**Was weiter offen bleibt** (L151): Ausrichtung (`a:pPr@algn` — die Textmarke
+hat kein Feld dafür), gemischte Läufe innerhalb eines Absatzes, Drehung,
+Tabellen als Tabellenblock, Layout und Master.

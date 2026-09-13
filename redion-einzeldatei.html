@@ -23229,7 +23229,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 950, inhalt: '3533f1ab2d6540dd', gebaut: '2026-09-13T16:38:25.944Z' };
+const Stand = { fassung: 956, inhalt: 'a7eb24eaa6abb275', gebaut: '2026-09-13T17:02:06.578Z' };
 window.Stand = Stand;
 
 </script>
@@ -74105,11 +74105,19 @@ const ChronikDaten = {
                     "zeitraum": "18:00 – 19:40",
                     "dauer": "ca. 100 min",
                     "pruefungen": "test511 neu, 16 Zusagen, drei Gegenproben (7/9, 13/3, 13/3); test509 auf 27 Zusagen mit fuenfter Gegenprobe (25/2)"
+                },
+                {
+                    "was": "E557 — Ein Absatz hat sein eigenes Format: Grad, Gewicht, Farbe, Ebene und Aufzaehlungszeichen je Absatz",
+                    "vonCommit": "(nach E556)",
+                    "bisCommit": "(dieser Bogen)",
+                    "zeitraum": "19:40 – 21:10",
+                    "dauer": "ca. 90 min",
+                    "pruefungen": "test512 neu, 24 Zusagen, vier Gegenproben (15/9, Abbruch, 23/1, 22/2)"
                 }
             ],
             "zahlen": {
-                "commits": 30,
-                "entscheidungen": 29
+                "commits": 31,
+                "entscheidungen": 30
             },
             "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
             "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -74233,6 +74241,12 @@ const ChronikDaten = {
                     "was": "`einlesen.ts`: die Formenschleife liest `p:grpSp` rekursiv, bildet `a:chOff`/`a:chExt` ab und bremst bei acht Ebenen; `p:graphicFrame` und gefuellte Formen ohne Text werden gezaehlt statt still fallen gelassen, und der Hinweis nennt sie. `document-mode.ts`: ein Tipp im Laserpointer-Vortrag sucht den Deckel ueber `elementsFromPoint` statt ueber `event.target`.",
                     "warum": "Redur: „verbesser fuer die pptx oefnnen\". Gemessen an einer eigens gebauten Datei: ein gruppierter Deckel kam gar nicht an — DIE ANTWORT STAND OFFEN —, und der Hinweis sagte „1 Folien uebernommen\".",
                     "risiko": "keins an Daten; es kommt MEHR an als vorher. Der einzige Weg, auf dem etwas verschwinden koennte, waere eine falsche Kindabbildung — deshalb baut test511 eine Gruppe mit Faktor zwei und rechnet die zwei Kinderlagen nach."
+                },
+                {
+                    "zeit": "20:30",
+                    "was": "`absaetzeLesen` gibt je `a:p` Grad, Gewicht, Farbe, Ebene und Aufzaehlungszeichen; wo sie auseinandergehen, entsteht eine Textmarke je Absatz, gestapelt mit den Hoehen aus `InkGeometry.textLayout`.",
+                    "warum": "Redur: „verbesser fuer die pptx oefnnen\". Gemessen: „klein\"(12 pt) + „GROSS\"(36 pt, fett, blau) kam als EINE Marke in 12 pt schwarz an; ein roter Titel kam schwarz; drei Gliederungsebenen kamen flach.",
+                    "risiko": "keins an Daten. Absaetze mit gleichem Format bleiben EINE Marke — sonst haette der Editor statt eines Kastens lauter Zeilen. Die Hoehen kommen vom Zeichner selbst, nicht aus einer Schaetzung; die Gegenprobe mit Schaetzung misst 18 pt Abstand statt ueber 40, also Ueberlappung."
                 }
             ]
         }
@@ -74660,6 +74674,21 @@ const ChronikDaten = {
             "beweis": "Die Gegenprobe ohne Abbildung setzt die Kinder auf (0,0) und (72,36) — genau die Innenkoordinaten. Mit Abbildung (72,72) und (216,144). Beide Zahlenpaare stehen jetzt im Kopf des Laufs.",
             "lehre": "§45/E21 („nachsehen, nicht erinnern\") gilt auch fuer Arithmetik. Eine erwartete Zahl, die aus dem Kopf kommt, ist genauso eine Behauptung wie eine erinnerte Schnittstelle — und wenn sie falsch ist, zeigt der rote Lauf auf den Code statt auf einen selbst. Rettung war, die Rechnung aufzuschreiben statt sie nachzubessern.",
             "entscheidung": "E555"
+        },
+        {
+            "nr": "P33",
+            "datum": "2026-09-13",
+            "titel": "Dieselbe Feldliste hat dasselbe zum zweiten Mal vergessen",
+            "schwere": "klein",
+            "symptom": "Die Farbe eines Absatzes wurde gelesen und kam trotzdem nicht an: „ist '', soll '#CC0000'\". Grad und Fett desselben Absatzes kamen an.",
+            "falscheVermutung": "Das Lesen sei schuld — `getElementsByTagName('a:srgbClr')` finde den Wert im `a:rPr` nicht. Es fand ihn.",
+            "wieGefunden": "Durch den Widerspruch: wenn Grad und Fett ankommen, ist `rPr` gefunden. Also lag es hinter dem Lesen.",
+            "ursache": "`marken.push` baut die Textmarke aus einer FESTEN Feldliste zusammen — `id, art, point, breiteBox, text, fontSize, fett`. `farbe` stand nicht darin und fiel weg.",
+            "loesung": "`...(o.farbe ? { farbe: o.farbe } : {})`, genau wie E545 es vier Zeilen tiefer fuer `verlauf` tun musste.",
+            "warumKeineUhr": "—",
+            "beweis": "test512 §2 meldete den Fehler und ist nach der Zeile gruen.",
+            "lehre": "Eine Feldliste, die aufzaehlt, vergisst beim naechsten Feld wieder — und sie hat es an DIESER Stelle jetzt zweimal getan (E545 mit `verlauf`, E557 mit `farbe`). Sie bleibt trotzdem, denn ein blindes Durchreichen des ganzen Objekts naehme `x`/`y`/`w`/`h` mit in die Ablage. Was sich aendern laesst, ist der Hinweis daneben: die Zeile sagt jetzt, dass sie vergisst.",
+            "entscheidung": "E557"
         }
     ]
 };
@@ -109093,27 +109122,68 @@ const Einlesen = (() => {
         }
         return karte;
     };
-    /** Der Text einer Form: Absätze, Läufe, und der harte Umbruch `a:br`. */
-    const formText = (txBody) => {
-        const zeilen = [];
+    /**
+     * DER ERSTE LAUF EINES ABSATZES BESTIMMT SEIN FORMAT — nicht der erste
+     * Lauf des ganzen KASTENS (E557).
+     *
+     * Hier stand `txBody.getElementsByTagName('a:rPr')[0]`, also der erste
+     * Lauf der ersten Zeile, für alles. Gemessen an einer eigens gebauten
+     * Datei: „klein"(12 pt) + „GROSS"(36 pt, fett, blau) kam als EINE Marke
+     * „klein GROSS" in 12 pt normal an; ein roter Titel (`srgbClr CC0000`)
+     * kam schwarz; drei Aufzählungsebenen kamen als flacher Block.
+     *
+     * INNERHALB eines Absatzes bleibt es beim ersten Lauf — Redions Textmarke
+     * hat genau einen Grad, und das ist eine Lücke, keine Nachlässigkeit
+     * (L151). Ein Absatz ist aber die Einheit, die ein Mensch als „Zeile mit
+     * eigenem Aussehen" sieht, und die ist jetzt erreichbar.
+     */
+    const absaetzeLesen = (txBody) => {
+        const raus = [];
         for (const absatz of txBody.getElementsByTagName('a:p')) {
-            let zeile = '';
+            let text = '';
             for (const kind of absatz.children) {
                 if (kind.tagName === 'a:r')
-                    zeile += kind.getElementsByTagName('a:t')[0]?.textContent || '';
+                    text += kind.getElementsByTagName('a:t')[0]?.textContent || '';
                 else if (kind.tagName === 'a:br')
-                    zeile += '\n';
+                    text += '\n';
                 else if (kind.tagName === 'a:fld')
-                    zeile += kind.getElementsByTagName('a:t')[0]?.textContent || '';
+                    text += kind.getElementsByTagName('a:t')[0]?.textContent || '';
             }
-            zeilen.push(zeile);
+            const pPr = [...absatz.children].find(k => k.tagName === 'a:pPr');
+            /* Der erste ECHTE Lauf, nicht der erste `a:rPr` überhaupt: `a:pPr`
+               trägt ein `a:defRPr`, und das ist nicht das Format des Textes. */
+            const lauf = [...absatz.children].find(k => k.tagName === 'a:r');
+            const rPr = lauf?.getElementsByTagName('a:rPr')[0];
+            const sz = Number(rPr?.getAttribute('sz'));
+            /* Die Farbe des Textes steht im LAUF, nicht in `p:spPr` — dort wäre
+               es die Füllung der Form. `formFarbe` darf hier also nicht helfen. */
+            const rgb = rPr?.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val') || '';
+            /* `buNone` schlägt jedes geerbte Zeichen; `buAutoNum` bekommt einen
+               Punkt, weil die echte Nummer erst aus der Absatzfolge käme — und
+               eine falsche Nummer wäre schlimmer als ein neutrales Zeichen. */
+            let zeichen = '';
+            if (pPr && !pPr.getElementsByTagName('a:buNone')[0]) {
+                const buChar = pPr.getElementsByTagName('a:buChar')[0]?.getAttribute('char');
+                if (buChar)
+                    zeichen = buChar;
+                else if (pPr.getElementsByTagName('a:buAutoNum')[0])
+                    zeichen = '·';
+            }
+            raus.push({ text,
+                sz: Number.isFinite(sz) && sz > 0 ? Math.round(sz / 100) : 0,
+                fett: rPr?.getAttribute('b') === '1',
+                farbe: rgb ? '#' + rgb : '',
+                lvl: Math.max(0, Math.min(8, Number(pPr?.getAttribute('lvl')) || 0)),
+                zeichen });
         }
         /* Leerzeilen am Ende weg — PowerPoint hängt gern einen leeren Absatz an,
            und der macht aus einem Titel einen Kasten mit Loch darunter. */
-        while (zeilen.length && !zeilen[zeilen.length - 1]?.trim())
-            zeilen.pop();
-        return zeilen.join('\n');
+        while (raus.length && !raus[raus.length - 1]?.text.trim())
+            raus.pop();
+        return raus;
     };
+    /** Der ganze Text eines Kastens, für Titelsuche und Leerprüfung. */
+    const formText = (txBody) => absaetzeLesen(txBody).map(a => a.text).join('\n');
     /** Lage und Grösse einer Form, in Blattpunkten. `null`, wenn sie fehlen. */
     const formLage = (form) => {
         const xfrm = form.getElementsByTagName('a:xfrm')[0];
@@ -109384,18 +109454,71 @@ const Einlesen = (() => {
                            Redions Textmarke hat EINEN Grad je Kasten; ein Kasten mit
                            gemischten Graden käme also vereinfacht an. Das ist eine Lücke
                            und steht so in LUECKEN.md. */
-                        const rPr = txBody?.getElementsByTagName('a:rPr')[0];
-                        const sz2 = Number(rPr?.getAttribute('sz'));
                         /* Ist es der Titel? PowerPoint sagt es über den Platzhaltertyp. */
                         const ph = form.getElementsByTagName('p:ph')[0];
                         const istTitel = /^(ctr)?[Tt]itle$/.test(ph?.getAttribute('type') || '');
+                        const absaetze = txBody ? absaetzeLesen(txBody) : [];
                         if (istTitel && !titel)
-                            titel = text.split('\n')[0] || '';
-                        objekte.push({ art: 'text', text,
-                            x: lage ? lage.x : breite * 0.08, y: lage ? lage.y : hoehe * 0.1,
-                            breiteBox: lage && lage.w > 0 ? lage.w : breite * 0.84,
-                            fontSize: Number.isFinite(sz2) && sz2 > 0 ? Math.round(sz2 / 100) : (istTitel ? 40 : 20),
-                            fett: rPr?.getAttribute('b') === '1' });
+                            titel = absaetze[0]?.text.split('\n')[0] || '';
+                        const grund = istTitel ? 40 : 20;
+                        const kx = lage ? lage.x : breite * 0.08;
+                        const ky = lage ? lage.y : hoehe * 0.1;
+                        const kb = lage && lage.w > 0 ? lage.w : breite * 0.84;
+                        /* ══ EINE MARKE JE ABSATZ — ABER NUR, WENN ES ETWAS BRINGT (E557)
+                           Absätze, die sich in NICHTS unterscheiden, bleiben EINE Marke
+                           mit `\n` dazwischen: genau wie bisher. Das ist der häufige Fall,
+                           und für ihn ist eine Marke die bessere — wer den Textkasten im
+                           Editor schiebt, schiebt dann den Kasten und nicht eine Zeile.
+              
+                           Aufgeteilt wird erst, wenn Grad, Gewicht, Farbe oder Ebene
+                           auseinandergehen. Dann ist eine Marke schlicht falsch: sie hat
+                           genau einen Grad, und der des ersten Absatzes gälte für alle.
+              
+                           DIE HÖHEN KOMMEN VOM ZEICHNER SELBST. `InkGeometry.textLayout`
+                           ist dieselbe Rechnung, die das Blatt später benutzt — samt
+                           Umbruch an `breiteBox`. Eine eigene Schätzung („Grad mal 1,25")
+                           liefe bei jedem umbrechenden Absatz in den nächsten hinein. */
+                        const gleichFormat = absaetze.length > 0 && absaetze.every(a => a.sz === absaetze[0].sz && a.fett === absaetze[0].fett
+                            && a.farbe === absaetze[0].farbe && a.lvl === absaetze[0].lvl
+                            && !a.zeichen === !absaetze[0].zeichen);
+                        if (absaetze.length <= 1 || gleichFormat) {
+                            const a = absaetze[0];
+                            objekte.push({ art: 'text',
+                                text: absaetze.map(z => (z.zeichen ? z.zeichen + ' ' : '') + z.text).join('\n'),
+                                x: kx + a.lvl * Math.max(10, (a.sz || grund) * 0.9), y: ky,
+                                breiteBox: Math.max(20, kb - a.lvl * Math.max(10, (a.sz || grund) * 0.9)),
+                                fontSize: a.sz || grund, fett: a.fett,
+                                ...(a.farbe ? { farbe: a.farbe } : {}) });
+                            continue;
+                        }
+                        let y = ky;
+                        for (const a of absaetze) {
+                            if (!a.text.trim()) {
+                                /* Ein leerer Absatz in der Mitte ist eine Leerzeile, keine
+                                   Marke — er bekommt seine Höhe und sonst nichts. */
+                                y += (a.sz || grund) * 1.25;
+                                continue;
+                            }
+                            const einzug = a.lvl * Math.max(10, (a.sz || grund) * 0.9);
+                            const marke = { art: 'text',
+                                text: (a.zeichen ? a.zeichen + ' ' : '') + a.text,
+                                x: kx + einzug, y,
+                                breiteBox: Math.max(20, kb - einzug),
+                                fontSize: a.sz || grund, fett: a.fett,
+                                ...(a.farbe ? { farbe: a.farbe } : {}) };
+                            objekte.push(marke);
+                            /* Der Zeichner rechnet die Höhe, nicht ich. Fehlt er (halb
+                               geladenes Fenster), bleibt die einfache Schätzung — dann
+                               stehen die Absätze vielleicht eng, aber sie sind da. */
+                            let h = (a.sz || grund) * 1.25;
+                            try {
+                                const l = InkGeometry.textLayout({ ...marke, point: [marke.x, y] });
+                                if (l && l.height > 0)
+                                    h = l.height;
+                            }
+                            catch { /* dann die Schätzung */ }
+                            y += h;
+                        }
                         continue;
                     }
                     /* ── Bild ─────────────────────────────────────────────────────── */
@@ -109669,8 +109792,22 @@ const Einlesen = (() => {
                 for (const o of folie.objekte) {
                     const id = 'm' + Math.random().toString(36).slice(2, 10);
                     if (o.art === 'text') {
+                        /* `farbe` nur, wenn es eine gibt (E557) — die Marke fällt sonst
+                           auf `FARBEN[0]` zurück, und das ist richtig so.
+            
+                           HIER WAR DER FEHLER BEIM ERSTEN LAUF, und er ist derselbe wie
+                           bei `verlauf` in E545, vier Zeilen tiefer: das Lesen war
+                           fertig, die Farbe stand im Absatz — und diese Zeile baute die
+                           Marke aus einer FESTEN Feldliste zusammen und liess sie
+                           liegen. Grad und Fett kamen an, die Farbe nicht; der Prüflauf
+                           zeigte „ist '', soll '#CC0000'".
+            
+                           Eine Feldliste, die aufzählt, vergisst beim nächsten Feld
+                           wieder. Sie bleibt trotzdem: ein blindes Durchreichen des
+                           ganzen Objekts nähme `x`/`y`/`w`/`h` mit in die Ablage. */
                         marken.push({ id, art: 'text', point: [o.x, o.y], breiteBox: o.breiteBox,
-                            text: o.text, fontSize: o.fontSize, fett: !!o.fett });
+                            text: o.text, fontSize: o.fontSize, fett: !!o.fett,
+                            ...(o.farbe ? { farbe: o.farbe } : {}) });
                         continue;
                     }
                     if (o.art === 'abdeck') {

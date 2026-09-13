@@ -1101,11 +1101,19 @@ const ChronikDaten = {
                     "zeitraum": "18:00 – 19:40",
                     "dauer": "ca. 100 min",
                     "pruefungen": "test511 neu, 16 Zusagen, drei Gegenproben (7/9, 13/3, 13/3); test509 auf 27 Zusagen mit fuenfter Gegenprobe (25/2)"
+                },
+                {
+                    "was": "E557 — Ein Absatz hat sein eigenes Format: Grad, Gewicht, Farbe, Ebene und Aufzaehlungszeichen je Absatz",
+                    "vonCommit": "(nach E556)",
+                    "bisCommit": "(dieser Bogen)",
+                    "zeitraum": "19:40 – 21:10",
+                    "dauer": "ca. 90 min",
+                    "pruefungen": "test512 neu, 24 Zusagen, vier Gegenproben (15/9, Abbruch, 23/1, 22/2)"
                 }
             ],
             "zahlen": {
-                "commits": 30,
-                "entscheidungen": 29
+                "commits": 31,
+                "entscheidungen": 30
             },
             "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
             "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -1229,6 +1237,12 @@ const ChronikDaten = {
                     "was": "`einlesen.ts`: die Formenschleife liest `p:grpSp` rekursiv, bildet `a:chOff`/`a:chExt` ab und bremst bei acht Ebenen; `p:graphicFrame` und gefuellte Formen ohne Text werden gezaehlt statt still fallen gelassen, und der Hinweis nennt sie. `document-mode.ts`: ein Tipp im Laserpointer-Vortrag sucht den Deckel ueber `elementsFromPoint` statt ueber `event.target`.",
                     "warum": "Redur: „verbesser fuer die pptx oefnnen\". Gemessen an einer eigens gebauten Datei: ein gruppierter Deckel kam gar nicht an — DIE ANTWORT STAND OFFEN —, und der Hinweis sagte „1 Folien uebernommen\".",
                     "risiko": "keins an Daten; es kommt MEHR an als vorher. Der einzige Weg, auf dem etwas verschwinden koennte, waere eine falsche Kindabbildung — deshalb baut test511 eine Gruppe mit Faktor zwei und rechnet die zwei Kinderlagen nach."
+                },
+                {
+                    "zeit": "20:30",
+                    "was": "`absaetzeLesen` gibt je `a:p` Grad, Gewicht, Farbe, Ebene und Aufzaehlungszeichen; wo sie auseinandergehen, entsteht eine Textmarke je Absatz, gestapelt mit den Hoehen aus `InkGeometry.textLayout`.",
+                    "warum": "Redur: „verbesser fuer die pptx oefnnen\". Gemessen: „klein\"(12 pt) + „GROSS\"(36 pt, fett, blau) kam als EINE Marke in 12 pt schwarz an; ein roter Titel kam schwarz; drei Gliederungsebenen kamen flach.",
+                    "risiko": "keins an Daten. Absaetze mit gleichem Format bleiben EINE Marke — sonst haette der Editor statt eines Kastens lauter Zeilen. Die Hoehen kommen vom Zeichner selbst, nicht aus einer Schaetzung; die Gegenprobe mit Schaetzung misst 18 pt Abstand statt ueber 40, also Ueberlappung."
                 }
             ]
         }
@@ -1656,6 +1670,21 @@ const ChronikDaten = {
             "beweis": "Die Gegenprobe ohne Abbildung setzt die Kinder auf (0,0) und (72,36) — genau die Innenkoordinaten. Mit Abbildung (72,72) und (216,144). Beide Zahlenpaare stehen jetzt im Kopf des Laufs.",
             "lehre": "§45/E21 („nachsehen, nicht erinnern\") gilt auch fuer Arithmetik. Eine erwartete Zahl, die aus dem Kopf kommt, ist genauso eine Behauptung wie eine erinnerte Schnittstelle — und wenn sie falsch ist, zeigt der rote Lauf auf den Code statt auf einen selbst. Rettung war, die Rechnung aufzuschreiben statt sie nachzubessern.",
             "entscheidung": "E555"
+        },
+        {
+            "nr": "P33",
+            "datum": "2026-09-13",
+            "titel": "Dieselbe Feldliste hat dasselbe zum zweiten Mal vergessen",
+            "schwere": "klein",
+            "symptom": "Die Farbe eines Absatzes wurde gelesen und kam trotzdem nicht an: „ist '', soll '#CC0000'\". Grad und Fett desselben Absatzes kamen an.",
+            "falscheVermutung": "Das Lesen sei schuld — `getElementsByTagName('a:srgbClr')` finde den Wert im `a:rPr` nicht. Es fand ihn.",
+            "wieGefunden": "Durch den Widerspruch: wenn Grad und Fett ankommen, ist `rPr` gefunden. Also lag es hinter dem Lesen.",
+            "ursache": "`marken.push` baut die Textmarke aus einer FESTEN Feldliste zusammen — `id, art, point, breiteBox, text, fontSize, fett`. `farbe` stand nicht darin und fiel weg.",
+            "loesung": "`...(o.farbe ? { farbe: o.farbe } : {})`, genau wie E545 es vier Zeilen tiefer fuer `verlauf` tun musste.",
+            "warumKeineUhr": "—",
+            "beweis": "test512 §2 meldete den Fehler und ist nach der Zeile gruen.",
+            "lehre": "Eine Feldliste, die aufzaehlt, vergisst beim naechsten Feld wieder — und sie hat es an DIESER Stelle jetzt zweimal getan (E545 mit `verlauf`, E557 mit `farbe`). Sie bleibt trotzdem, denn ein blindes Durchreichen des ganzen Objekts naehme `x`/`y`/`w`/`h` mit in die Ablage. Was sich aendern laesst, ist der Hinweis daneben: die Zeile sagt jetzt, dass sie vergisst.",
+            "entscheidung": "E557"
         }
     ]
 };

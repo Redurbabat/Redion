@@ -46,6 +46,7 @@ sind der teuerste Teil und der lehrreichste.
 | P30 | 2026-09-13 | Ein Zierstrich war als „zugedeckte Antwort" gebaut — sieben Stueck | 🟠 mittel | E553 |
 | P31 | 2026-09-13 | Die naheliegende Farbreparatur haette den Barrierefreiheitsfall zerstoert | gross | E554 |
 | P32 | 2026-09-13 | Der Pruefllauf hat meine Rechnung korrigiert, nicht den Code | 🟡 klein | E555 |
+| P33 | 2026-09-13 | Dieselbe Feldliste hat dasselbe zum zweiten Mal vergessen | 🟡 klein | E557 |
 
 ---
 
@@ -669,4 +670,27 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Die Gegenprobe ohne Abbildung setzt die Kinder auf (0,0) und (72,36) — genau die Innenkoordinaten. Mit Abbildung (72,72) und (216,144). Beide Zahlenpaare stehen jetzt im Kopf des Laufs.
 
 **Die Lehre.** §45/E21 („nachsehen, nicht erinnern") gilt auch fuer Arithmetik. Eine erwartete Zahl, die aus dem Kopf kommt, ist genauso eine Behauptung wie eine erinnerte Schnittstelle — und wenn sie falsch ist, zeigt der rote Lauf auf den Code statt auf einen selbst. Rettung war, die Rechnung aufzuschreiben statt sie nachzubessern.
+
+
+---
+
+## P33 · Dieselbe Feldliste hat dasselbe zum zweiten Mal vergessen
+
+*2026-09-13 · 🟡 klein · E557*
+
+**Das Bild.** Die Farbe eines Absatzes wurde gelesen und kam trotzdem nicht an: „ist '', soll '#CC0000'". Grad und Fett desselben Absatzes kamen an.
+
+**Die falsche Vermutung.** Das Lesen sei schuld — `getElementsByTagName('a:srgbClr')` finde den Wert im `a:rPr` nicht. Es fand ihn.
+
+**Wie es gefunden wurde.** Durch den Widerspruch: wenn Grad und Fett ankommen, ist `rPr` gefunden. Also lag es hinter dem Lesen.
+
+**Die Ursache.** `marken.push` baut die Textmarke aus einer FESTEN Feldliste zusammen — `id, art, point, breiteBox, text, fontSize, fett`. `farbe` stand nicht darin und fiel weg.
+
+**Die Lösung.** `...(o.farbe ? { farbe: o.farbe } : {})`, genau wie E545 es vier Zeilen tiefer fuer `verlauf` tun musste.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** test512 §2 meldete den Fehler und ist nach der Zeile gruen.
+
+**Die Lehre.** Eine Feldliste, die aufzaehlt, vergisst beim naechsten Feld wieder — und sie hat es an DIESER Stelle jetzt zweimal getan (E545 mit `verlauf`, E557 mit `farbe`). Sie bleibt trotzdem, denn ein blindes Durchreichen des ganzen Objekts naehme `x`/`y`/`w`/`h` mit in die Ablage. Was sich aendern laesst, ist der Hinweis daneben: die Zeile sagt jetzt, dass sie vergisst.
 
