@@ -55,6 +55,7 @@ sind der teuerste Teil und der lehrreichste.
 | P39 | 2026-09-13 | Ein Knopf im DOM ist noch keine Funktion | 🟡 klein | E560 |
 | P40 | 2026-09-13 | Alle Zusagen gruen, und das Bild zeigte zwei Fehler | 🟠 mittel | E561 |
 | P41 | 2026-09-13 | Gemessen — am falschen Knoten | 🟡 klein | E561 |
+| P42 | 2026-09-13 | Die Zusage wurde gruen, weil die Liste leer war | 🟠 mittel | E562 |
 
 ---
 
@@ -885,4 +886,27 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Danach 25 gruen, und die Gegenprobe G5 wird rot mit echten Zahlen (beide Stuecke auf x = 40) statt mit Nullen.
 
 **Die Lehre.** Eine Messung, die Null zurueckgibt, ist nicht dasselbe wie eine Messung, die Null MISST. Bei Geometrie im Browser heisst Null fast immer „ich war nicht da" — und wer das fuer ein Ergebnis haelt, baut seine Zusage auf einem Knoten, den niemand sieht. Vor dem Messen gehoert die Frage: ist das ueberhaupt der Knoten, den ich meine, und ist er gezeichnet?
+
+
+---
+
+## P42 · Die Zusage wurde gruen, weil die Liste leer war
+
+*2026-09-13 · 🟠 mittel · E562*
+
+**Das Bild.** `test517 §3` meldete „KEINE Zeile ist breiter als ihr Kasten" — gruen. Daneben stand „Es wurden Zeilen gefunden — 0".
+
+**Die falsche Vermutung.** Keine. Der Widerspruch stand in derselben Ausgabe, zwei Zeilen untereinander.
+
+**Wie es gefunden wurde.** Durch die zweite Zusage, die ich daneben gesetzt hatte: „mindestens vier Zeilen fuellen ihren Kasten zur Haelfte". Sie wurde rot und hat die erste entlarvt.
+
+**Die Ursache.** Zwei aufeinanderfolgende: (1) Der `blatt`-Block war von Hand mit `Store.addBlock` gesetzt und hing an keiner Seite — es gab gar kein Papier. (2) Nachdem das behoben war, suchte die Probe mit `find(svg => breite > 10)` und traf ein Symbol von 25 px mit null Texten statt `svg.blatt-marken`.
+
+**Die Lösung.** Das Blatt entsteht jetzt auf dem echten Weg ueber `Einlesen.datei`, und der Knoten wird beim Namen genannt: `svg.blatt-marken`.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Danach 14 gruen, und die Gegenprobe G1 (wieder schaetzen) nennt zwei Uebertreter von 21 Zeilen: a2 164,2 in 160, a6 202,2 in 200.
+
+**Die Lehre.** Eine Zusage ueber ALLE Elemente einer Liste ist auf der leeren Liste immer wahr. `filter(...).length === 0` sieht streng aus und prueft nichts, solange niemand fragt, ob ueberhaupt etwas darin war. Jede Allaussage braucht deshalb eine Zusage daneben, die sagt: und es waren genug, und sie waren nicht alle winzig. Genau die hat hier zweimal hintereinander den Fehler gefunden.
 

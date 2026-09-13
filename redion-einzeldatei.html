@@ -23229,7 +23229,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1011, inhalt: '1e00e8070e70bd1a', gebaut: '2026-09-13T18:58:11.323Z' };
+const Stand = { fassung: 1017, inhalt: 'cd0a6d9cd1b9439f', gebaut: '2026-09-13T19:12:44.485Z' };
 window.Stand = Stand;
 
 </script>
@@ -24374,6 +24374,26 @@ const InkGeometry = (() => {
      * Schaetzung je Schriftart (in em); sie muss nicht stimmen, sie muss
      * ueberall dieselbe sein. Gebrochen wird an Leerzeichen, ein zu langes
      * Wort an der Breite. */
+    /* ══════════════════════════════════════════════════════════════════════
+     * DIE SCHRIFTEN STEHEN HIER, NICHT IM ZEICHNER (E562)
+     * ────────────────────────────────────────────────────────────────────────
+     * Bis hierher lag die Liste in `marken.ts` und die Breitentabelle hier —
+     * zwei Orte für dieselbe Sache. Wer exakt messen will, braucht beide:
+     * `canvas.measureText` will den Schriftstapel, und der stand da drüben.
+     *
+     * Ein zweiter Katalog wäre der Fehler gewesen, vor dem §8 warnt: er läuft
+     * mit dem ersten auseinander, und niemand sieht, welcher gilt. Also zieht
+     * die Liste hierher — an den Ort, der die Masse kennt —, und `marken.ts`
+     * nimmt sie von hier.
+     * ==================================================================== */
+    const SCHRIFTEN = [
+        { id: 'standard', name: 'Standard', stapel: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" },
+        { id: 'serif', name: 'Serifen', stapel: "Georgia, 'Times New Roman', serif" },
+        { id: 'mono', name: 'Schreibmaschine', stapel: 'ui-monospace, Menlo, Consolas, monospace' },
+        { id: 'hand', name: 'Handschrift', stapel: "'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive" },
+        { id: 'schmal', name: 'Schmal', stapel: "'Arial Narrow', 'Roboto Condensed', 'Helvetica Neue', sans-serif" }
+    ];
+    const schriftStapel = (id) => (SCHRIFTEN.find(x => x.id === String(id)) || SCHRIFTEN[0]).stapel;
     const CHAR_EM = { standard: 0.55, serif: 0.52, mono: 0.6, hand: 0.58, schmal: 0.45 };
     const TEXT_ZEILE = 1.25;
     const charWidth = (ch, family, bold) => {
@@ -24406,9 +24426,88 @@ const InkGeometry = (() => {
            in einem Bogen über PowerPoint-Läufe. */
         return base * f * (bold ? 1.06 : 1);
     };
+    /* ══════════════════════════════════════════════════════════════════════
+     * EXAKT MESSEN, WO ES GEHT — SCHÄTZEN, WO ES MUSS (E562, L155)
+     * ────────────────────────────────────────────────────────────────────────
+     * Die Tabelle oben ist nachweislich zu niedrig. Am 13. September gemessen:
+     *
+     *     „ mittendrin, der über mehrere"   echt 15,02 em   geschätzt 13,09
+     *     ganze Zeile bei 18 pt             echt 688 pt     geschätzt 611 pt
+     *                                       Kasten: 636 pt
+     *
+     * Eine Zeile, die den Kasten füllt, läuft dadurch um rund ein Achtel
+     * darüber hinaus — sichtbar, und keine Prüfung hatte es je bemerkt.
+     *
+     * EINE BESSERE KONSTANTE WÄRE DIE FALSCHE ANTWORT. Die Abweichung
+     * schwankt zwischen 0,99 und 1,15 je nach Text; ein einziger Faktor
+     * verschöbe den Fehler nur. Der Browser weiss es genau — `measureText`
+     * fragt dieselbe Schrift, die nachher zeichnet.
+     *
+     * IN NODE GIBT ES KEIN CANVAS, und die Prüfläufe für Geometrie sollen
+     * dort weiter rechnen können. Also bleibt die Tabelle als Rückfall, und
+     * `gemessenAn()` sagt, welcher Weg gerade gilt.
+     *
+     * GEMESSEN WIRD BEI 100 px UND GETEILT. Ein Cache-Eintrag bedient damit
+     * jede Schriftgrösse statt einer.
+     *
+     * UND DER CACHE WIRD EINMAL GELEERT, wenn die Schriften fertig geladen
+     * sind: die ersten Messungen treffen sonst die Rückfallschrift des
+     * Browsers, und eine falsche Zahl, die gemerkt wird, ist schlimmer als
+     * eine, die jedes Mal neu danebenliegt.
+     * ==================================================================== */
+    let messBrett;
+    const messCache = new Map();
+    const CACHE_GRENZE = 20000;
+    const brett = () => {
+        if (messBrett !== undefined)
+            return messBrett;
+        try {
+            messBrett = typeof document !== 'undefined' && typeof document.createElement === 'function'
+                ? document.createElement('canvas').getContext('2d')
+                : null;
+            if (messBrett && typeof document !== 'undefined' && document.fonts?.ready) {
+                document.fonts.ready.then(() => messCache.clear()).catch(() => { });
+            }
+        }
+        catch {
+            messBrett = null;
+        }
+        return messBrett;
+    };
+    /** Die Breite in em, exakt gemessen — oder `null`, wenn hier nicht messbar. */
+    const emGemessen = (text, family, bold) => {
+        if (!text)
+            return 0;
+        const c = brett();
+        if (!c)
+            return null;
+        const schluessel = family + '|' + (bold ? 'b' : 'n') + '|' + text;
+        const da = messCache.get(schluessel);
+        if (da !== undefined)
+            return da;
+        try {
+            c.font = (bold ? '700 ' : '400 ') + '100px ' + schriftStapel(family);
+            const em = c.measureText(text).width / 100;
+            if (!Number.isFinite(em))
+                return null;
+            if (messCache.size >= CACHE_GRENZE)
+                messCache.clear();
+            messCache.set(schluessel, em);
+            return em;
+        }
+        catch {
+            return null;
+        }
+    };
+    /** `'gemessen'` oder `'geschaetzt'` — damit ein Prüflauf weiss, was gilt. */
+    const gemessenAn = () => brett() ? 'gemessen' : 'geschaetzt';
     const textWidth = (text, fontSize, family = 'standard', bold = false) => {
+        const roh = String(text ?? '');
+        const em = emGemessen(roh, family, bold);
+        if (em !== null)
+            return em * fontSize;
         let w = 0;
-        for (const ch of String(text ?? ''))
+        for (const ch of roh)
             w += charWidth(ch, family, bold);
         return w * fontSize;
     };
@@ -25085,7 +25184,7 @@ const InkGeometry = (() => {
     };
     return { points, simplify, simplifyIndices, densify, outline, outlinePunkte, path, rectangle, bounds, move, intersects,
         distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale, rotate,
-        textWidth, textLines, textLayout, LINIEN,
+        textWidth, textLines, textLayout, LINIEN, SCHRIFTEN, schriftStapel, gemessenAn,
         /* Seit E474: der aufrechte Kasten der Marke OHNE ihre Drehung, ihre
            vier wirklichen Ecken, ihr Winkel und die eine Drehformel. */
         boundsLokal: boundsRoh, ecken, drehung, drehePunkte, overlapConvex, kastenEcken };
@@ -58611,13 +58710,10 @@ const Marken = (() => {
        wie am Block (E101, Register.textstile), hier als Stapel fuer SVG —
        Attribute kennen keine CSS-Variablen, und der Druck liest sie roh.
        Die Stufen sind die Leiter, auf der A− und A+ gehen. */
-    const SCHRIFTEN = [
-        { id: 'standard', name: 'Standard', stapel: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" },
-        { id: 'serif', name: 'Serifen', stapel: "Georgia, 'Times New Roman', serif" },
-        { id: 'mono', name: 'Schreibmaschine', stapel: 'ui-monospace, Menlo, Consolas, monospace' },
-        { id: 'hand', name: 'Handschrift', stapel: "'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive" },
-        { id: 'schmal', name: 'Schmal', stapel: "'Arial Narrow', 'Roboto Condensed', 'Helvetica Neue', sans-serif" }
-    ];
+    /* DIE LISTE STEHT SEIT E562 IN `geometry.ts` — dort, wo die Breiten
+       gemessen werden. Hier bleibt nur der Verweis: ein zweiter Katalog läuft
+       mit dem ersten auseinander (§8). */
+    const SCHRIFTEN = InkGeometry.SCHRIFTEN;
     const SCHRIFT_STUFEN = [11, 13, 16, 20, 26, 34];
     const SCHRIFT_VORGABE = { familie: 'standard', groesse: 16, fett: false,
         rahmen: false, ausricht: 'links' };
@@ -58627,7 +58723,7 @@ const Marken = (() => {
         { id: 'mitte', zeichen: '⭤', name: 'Mitte' },
         { id: 'rechts', zeichen: '⭲', name: 'Rechts' }
     ];
-    const schriftStapel = (id) => (SCHRIFTEN.find(x => x.id === String(id)) || SCHRIFTEN[0]).stapel;
+    const schriftStapel = (id) => InkGeometry.schriftStapel(id);
     const schriftLesen = () => {
         const roh = typeof Store !== 'undefined' ? Store.getMeta('zeichnen:schrift') : null;
         const s = roh && typeof roh === 'object' ? roh : {};
@@ -75036,6 +75132,21 @@ const ChronikDaten = {
             "beweis": "Danach 25 gruen, und die Gegenprobe G5 wird rot mit echten Zahlen (beide Stuecke auf x = 40) statt mit Nullen.",
             "lehre": "Eine Messung, die Null zurueckgibt, ist nicht dasselbe wie eine Messung, die Null MISST. Bei Geometrie im Browser heisst Null fast immer „ich war nicht da\" — und wer das fuer ein Ergebnis haelt, baut seine Zusage auf einem Knoten, den niemand sieht. Vor dem Messen gehoert die Frage: ist das ueberhaupt der Knoten, den ich meine, und ist er gezeichnet?",
             "entscheidung": "E561"
+        },
+        {
+            "nr": "P42",
+            "datum": "2026-09-13",
+            "titel": "Die Zusage wurde gruen, weil die Liste leer war",
+            "schwere": "mittel",
+            "symptom": "`test517 §3` meldete „KEINE Zeile ist breiter als ihr Kasten\" — gruen. Daneben stand „Es wurden Zeilen gefunden — 0\".",
+            "falscheVermutung": "Keine. Der Widerspruch stand in derselben Ausgabe, zwei Zeilen untereinander.",
+            "wieGefunden": "Durch die zweite Zusage, die ich daneben gesetzt hatte: „mindestens vier Zeilen fuellen ihren Kasten zur Haelfte\". Sie wurde rot und hat die erste entlarvt.",
+            "ursache": "Zwei aufeinanderfolgende: (1) Der `blatt`-Block war von Hand mit `Store.addBlock` gesetzt und hing an keiner Seite — es gab gar kein Papier. (2) Nachdem das behoben war, suchte die Probe mit `find(svg => breite > 10)` und traf ein Symbol von 25 px mit null Texten statt `svg.blatt-marken`.",
+            "loesung": "Das Blatt entsteht jetzt auf dem echten Weg ueber `Einlesen.datei`, und der Knoten wird beim Namen genannt: `svg.blatt-marken`.",
+            "warumKeineUhr": "—",
+            "beweis": "Danach 14 gruen, und die Gegenprobe G1 (wieder schaetzen) nennt zwei Uebertreter von 21 Zeilen: a2 164,2 in 160, a6 202,2 in 200.",
+            "lehre": "Eine Zusage ueber ALLE Elemente einer Liste ist auf der leeren Liste immer wahr. `filter(...).length === 0` sieht streng aus und prueft nichts, solange niemand fragt, ob ueberhaupt etwas darin war. Jede Allaussage braucht deshalb eine Zusage daneben, die sagt: und es waren genug, und sie waren nicht alle winzig. Genau die hat hier zweimal hintereinander den Fehler gefunden.",
+            "entscheidung": "E562"
         }
     ]
 };

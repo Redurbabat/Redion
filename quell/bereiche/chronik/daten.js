@@ -1805,6 +1805,21 @@ const ChronikDaten = {
             "beweis": "Danach 25 gruen, und die Gegenprobe G5 wird rot mit echten Zahlen (beide Stuecke auf x = 40) statt mit Nullen.",
             "lehre": "Eine Messung, die Null zurueckgibt, ist nicht dasselbe wie eine Messung, die Null MISST. Bei Geometrie im Browser heisst Null fast immer „ich war nicht da\" — und wer das fuer ein Ergebnis haelt, baut seine Zusage auf einem Knoten, den niemand sieht. Vor dem Messen gehoert die Frage: ist das ueberhaupt der Knoten, den ich meine, und ist er gezeichnet?",
             "entscheidung": "E561"
+        },
+        {
+            "nr": "P42",
+            "datum": "2026-09-13",
+            "titel": "Die Zusage wurde gruen, weil die Liste leer war",
+            "schwere": "mittel",
+            "symptom": "`test517 §3` meldete „KEINE Zeile ist breiter als ihr Kasten\" — gruen. Daneben stand „Es wurden Zeilen gefunden — 0\".",
+            "falscheVermutung": "Keine. Der Widerspruch stand in derselben Ausgabe, zwei Zeilen untereinander.",
+            "wieGefunden": "Durch die zweite Zusage, die ich daneben gesetzt hatte: „mindestens vier Zeilen fuellen ihren Kasten zur Haelfte\". Sie wurde rot und hat die erste entlarvt.",
+            "ursache": "Zwei aufeinanderfolgende: (1) Der `blatt`-Block war von Hand mit `Store.addBlock` gesetzt und hing an keiner Seite — es gab gar kein Papier. (2) Nachdem das behoben war, suchte die Probe mit `find(svg => breite > 10)` und traf ein Symbol von 25 px mit null Texten statt `svg.blatt-marken`.",
+            "loesung": "Das Blatt entsteht jetzt auf dem echten Weg ueber `Einlesen.datei`, und der Knoten wird beim Namen genannt: `svg.blatt-marken`.",
+            "warumKeineUhr": "—",
+            "beweis": "Danach 14 gruen, und die Gegenprobe G1 (wieder schaetzen) nennt zwei Uebertreter von 21 Zeilen: a2 164,2 in 160, a6 202,2 in 200.",
+            "lehre": "Eine Zusage ueber ALLE Elemente einer Liste ist auf der leeren Liste immer wahr. `filter(...).length === 0` sieht streng aus und prueft nichts, solange niemand fragt, ob ueberhaupt etwas darin war. Jede Allaussage braucht deshalb eine Zusage daneben, die sagt: und es waren genug, und sie waren nicht alle winzig. Genau die hat hier zweimal hintereinander den Fehler gefunden.",
+            "entscheidung": "E562"
         }
     ]
 };

@@ -234,6 +234,28 @@ const InkGeometry = (() => {
    * Schaetzung je Schriftart (in em); sie muss nicht stimmen, sie muss
    * ueberall dieselbe sein. Gebrochen wird an Leerzeichen, ein zu langes
    * Wort an der Breite. */
+  /* ══════════════════════════════════════════════════════════════════════
+   * DIE SCHRIFTEN STEHEN HIER, NICHT IM ZEICHNER (E562)
+   * ────────────────────────────────────────────────────────────────────────
+   * Bis hierher lag die Liste in `marken.ts` und die Breitentabelle hier —
+   * zwei Orte für dieselbe Sache. Wer exakt messen will, braucht beide:
+   * `canvas.measureText` will den Schriftstapel, und der stand da drüben.
+   *
+   * Ein zweiter Katalog wäre der Fehler gewesen, vor dem §8 warnt: er läuft
+   * mit dem ersten auseinander, und niemand sieht, welcher gilt. Also zieht
+   * die Liste hierher — an den Ort, der die Masse kennt —, und `marken.ts`
+   * nimmt sie von hier.
+   * ==================================================================== */
+  const SCHRIFTEN = [
+    { id: 'standard', name: 'Standard', stapel: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" },
+    { id: 'serif',    name: 'Serifen', stapel: "Georgia, 'Times New Roman', serif" },
+    { id: 'mono',     name: 'Schreibmaschine', stapel: 'ui-monospace, Menlo, Consolas, monospace' },
+    { id: 'hand',     name: 'Handschrift', stapel: "'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive" },
+    { id: 'schmal',   name: 'Schmal', stapel: "'Arial Narrow', 'Roboto Condensed', 'Helvetica Neue', sans-serif" }
+  ] as const;
+  const schriftStapel = (id: unknown): string =>
+    (SCHRIFTEN.find(x => x.id === String(id)) || SCHRIFTEN[0]).stapel;
+
   const CHAR_EM: Record<string, number> = { standard: 0.55, serif: 0.52, mono: 0.6, hand: 0.58, schmal: 0.45 };
   const TEXT_ZEILE = 1.25;
   const charWidth = (ch: string, family: string, bold: boolean): number => {
@@ -263,9 +285,76 @@ const InkGeometry = (() => {
        in einem Bogen über PowerPoint-Läufe. */
     return base * f * (bold ? 1.06 : 1);
   };
+  /* ══════════════════════════════════════════════════════════════════════
+   * EXAKT MESSEN, WO ES GEHT — SCHÄTZEN, WO ES MUSS (E562, L155)
+   * ────────────────────────────────────────────────────────────────────────
+   * Die Tabelle oben ist nachweislich zu niedrig. Am 13. September gemessen:
+   *
+   *     „ mittendrin, der über mehrere"   echt 15,02 em   geschätzt 13,09
+   *     ganze Zeile bei 18 pt             echt 688 pt     geschätzt 611 pt
+   *                                       Kasten: 636 pt
+   *
+   * Eine Zeile, die den Kasten füllt, läuft dadurch um rund ein Achtel
+   * darüber hinaus — sichtbar, und keine Prüfung hatte es je bemerkt.
+   *
+   * EINE BESSERE KONSTANTE WÄRE DIE FALSCHE ANTWORT. Die Abweichung
+   * schwankt zwischen 0,99 und 1,15 je nach Text; ein einziger Faktor
+   * verschöbe den Fehler nur. Der Browser weiss es genau — `measureText`
+   * fragt dieselbe Schrift, die nachher zeichnet.
+   *
+   * IN NODE GIBT ES KEIN CANVAS, und die Prüfläufe für Geometrie sollen
+   * dort weiter rechnen können. Also bleibt die Tabelle als Rückfall, und
+   * `gemessenAn()` sagt, welcher Weg gerade gilt.
+   *
+   * GEMESSEN WIRD BEI 100 px UND GETEILT. Ein Cache-Eintrag bedient damit
+   * jede Schriftgrösse statt einer.
+   *
+   * UND DER CACHE WIRD EINMAL GELEERT, wenn die Schriften fertig geladen
+   * sind: die ersten Messungen treffen sonst die Rückfallschrift des
+   * Browsers, und eine falsche Zahl, die gemerkt wird, ist schlimmer als
+   * eine, die jedes Mal neu danebenliegt.
+   * ==================================================================== */
+  let messBrett: CanvasRenderingContext2D | null | undefined;
+  const messCache = new Map<string, number>();
+  const CACHE_GRENZE = 20000;
+  const brett = (): CanvasRenderingContext2D | null => {
+    if (messBrett !== undefined) return messBrett;
+    try {
+      messBrett = typeof document !== 'undefined' && typeof document.createElement === 'function'
+        ? document.createElement('canvas').getContext('2d')
+        : null;
+      if (messBrett && typeof document !== 'undefined' && (document as any).fonts?.ready) {
+        (document as any).fonts.ready.then(() => messCache.clear()).catch(() => { /* egal */ });
+      }
+    } catch { messBrett = null; }
+    return messBrett;
+  };
+  /** Die Breite in em, exakt gemessen — oder `null`, wenn hier nicht messbar. */
+  const emGemessen = (text: string, family: string, bold: boolean): number | null => {
+    if (!text) return 0;
+    const c = brett();
+    if (!c) return null;
+    const schluessel = family + '|' + (bold ? 'b' : 'n') + '|' + text;
+    const da = messCache.get(schluessel);
+    if (da !== undefined) return da;
+    try {
+      c.font = (bold ? '700 ' : '400 ') + '100px ' + schriftStapel(family);
+      const em = c.measureText(text).width / 100;
+      if (!Number.isFinite(em)) return null;
+      if (messCache.size >= CACHE_GRENZE) messCache.clear();
+      messCache.set(schluessel, em);
+      return em;
+    } catch { return null; }
+  };
+  /** `'gemessen'` oder `'geschaetzt'` — damit ein Prüflauf weiss, was gilt. */
+  const gemessenAn = (): string => brett() ? 'gemessen' : 'geschaetzt';
+
   const textWidth = (text: string, fontSize: number, family = 'standard', bold = false): number => {
+    const roh = String(text ?? '');
+    const em = emGemessen(roh, family, bold);
+    if (em !== null) return em * fontSize;
     let w = 0;
-    for (const ch of String(text ?? '')) w += charWidth(ch, family, bold);
+    for (const ch of roh) w += charWidth(ch, family, bold);
     return w * fontSize;
   };
   const textLines = (text: string, width: number, fontSize: number, family = 'standard', bold = false): string[] => {
@@ -905,7 +994,7 @@ const InkGeometry = (() => {
 
   return { points, simplify, simplifyIndices, densify, outline, outlinePunkte, path, rectangle, bounds, move, intersects,
     distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale, rotate,
-    textWidth, textLines, textLayout, LINIEN,
+    textWidth, textLines, textLayout, LINIEN, SCHRIFTEN, schriftStapel, gemessenAn,
     /* Seit E474: der aufrechte Kasten der Marke OHNE ihre Drehung, ihre
        vier wirklichen Ecken, ihr Winkel und die eine Drehformel. */
     boundsLokal: boundsRoh, ecken, drehung, drehePunkte, overlapConvex, kastenEcken };

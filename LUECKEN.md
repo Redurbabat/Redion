@@ -7655,7 +7655,7 @@ Gegenproben gefahren, beide rot geworden. Das macht aus der Liste keinen
 Wegweiser; es hält nur fest, dass niemand unten abgeschnitten wird.
 
 
-L155 · Die Breitenschätzung für Text liegt bis zu 15 % zu niedrig — offen
+L155 · Die Breitenschätzung für Text lag zu niedrig — GESCHLOSSEN mit E562
 --------------------------------------------------------------------------
 
 `InkGeometry.textWidth` rechnet die Breite eines Textes aus einer Tabelle
@@ -7685,23 +7685,23 @@ Es ist also **nicht nur der Fett-Faktor**, sondern das Modell insgesamt, und
 die Abweichung schwankt zwischen 0,99 und 1,15. Eine Zeile, die den Kasten
 ausfüllt, läuft dadurch um rund ein Achtel darüber hinaus.
 
-### Warum hier nichts geändert wurde
+### GESCHLOSSEN mit E562 — und zwar auf dem zweiten Weg
 
-Die Zahl steuert den Umbruch jeder Textmarke, auch jeder alten Notiz. Sie zu
-verschieben heisst, dass vorhandene Seiten anders umbrechen — und das ist
-eine eigene Arbeit mit eigener Prüfung, kein Nebenschritt in einem Bogen
-über PowerPoint-Läufe (§45: eine Änderung, ein klares Ziel).
+Bei E561 blieb das hier bewusst liegen: die Zahl steuert den Umbruch jeder
+Textmarke, auch jeder alten Notiz, und das ist eine eigene Arbeit mit
+eigener Prüfung (§45). E562 ist diese Arbeit.
 
-Die Richtung wäre die sichere: eine grössere Schätzung bricht FRÜHER um,
-Text kann also nicht mehr aus dem Kasten laufen, sondern höchstens eine
-Zeile eher umbrechen.
+**Keine bessere Konstante.** Die Abweichung schwankt je nach Text zwischen
+0,99 und 1,15; ein einziger Faktor verschöbe den Fehler nur. Stattdessen
+wird im Browser **exakt gemessen** (`canvas.measureText`, bei 100 px
+gemessen und geteilt, gemerkt je Text und Format). Die Tabelle bleibt der
+Rückfall für Node, wo es kein Canvas gibt; `InkGeometry.gemessenAn()` sagt,
+welcher Weg gerade gilt.
 
-### Der Weg, der besser wäre als eine bessere Konstante
-
-Im Browser lässt sich die Breite **exakt** messen (`canvas.measureText`,
-einmal je Schrift und Grad gemerkt). Die Tabelle bliebe als Rückfall für
-Node, wo es kein Canvas gibt. Dann stimmt der Umbruch dort, wo er zu sehen
-ist, und bleibt berechenbar, wo geprüft wird.
+Geprüft wird nicht eine Zahl, sondern der Satz, den der alte Weg gebrochen
+hat: **keine gezeichnete Zeile darf breiter sein als ihr Kasten**
+(`test517` §3, gemessen mit `getComputedTextLength` am echten SVG). Die
+Gegenprobe mit der alten Schätzung nennt zwei Übertreter von 21 Zeilen.
 
 **Was seit E561 NICHT mehr davon abhängt:** die Stelle, an der ein Stück
 eines gemischten Absatzes gezeichnet wird. Die kommt jetzt von SVG selbst —

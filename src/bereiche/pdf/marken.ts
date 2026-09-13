@@ -373,13 +373,11 @@ const Marken = (() => {
      wie am Block (E101, Register.textstile), hier als Stapel fuer SVG —
      Attribute kennen keine CSS-Variablen, und der Druck liest sie roh.
      Die Stufen sind die Leiter, auf der A− und A+ gehen. */
-  const SCHRIFTEN = [
-    { id: 'standard', name: 'Standard', stapel: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" },
-    { id: 'serif',    name: 'Serifen', stapel: "Georgia, 'Times New Roman', serif" },
-    { id: 'mono',     name: 'Schreibmaschine', stapel: 'ui-monospace, Menlo, Consolas, monospace' },
-    { id: 'hand',     name: 'Handschrift', stapel: "'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive" },
-    { id: 'schmal',   name: 'Schmal', stapel: "'Arial Narrow', 'Roboto Condensed', 'Helvetica Neue', sans-serif" }
-  ] as const;
+  /* DIE LISTE STEHT SEIT E562 IN `geometry.ts` — dort, wo die Breiten
+     gemessen werden. Hier bleibt nur der Verweis: ein zweiter Katalog läuft
+     mit dem ersten auseinander (§8). */
+  const SCHRIFTEN = InkGeometry.SCHRIFTEN as ReadonlyArray<
+    { id: string; name: string; stapel: string }>;
   const SCHRIFT_STUFEN: readonly number[] = [11, 13, 16, 20, 26, 34];
   type Schrift = { familie: string; groesse: number; fett: boolean; rahmen: boolean;
                    ausricht: string };
@@ -390,8 +388,7 @@ const Marken = (() => {
     { id: 'links',  zeichen: '⭰', name: 'Links' },
     { id: 'mitte',  zeichen: '⭤', name: 'Mitte' },
     { id: 'rechts', zeichen: '⭲', name: 'Rechts' }] as const;
-  const schriftStapel = (id: unknown): string =>
-    (SCHRIFTEN.find(x => x.id === String(id)) || SCHRIFTEN[0]).stapel;
+  const schriftStapel = (id: unknown): string => InkGeometry.schriftStapel(id);
   const schriftLesen = (): Schrift => {
     const roh = typeof Store !== 'undefined' ? Store.getMeta('zeichnen:schrift') : null;
     const s = roh && typeof roh === 'object' ? roh as Record<string, unknown> : {};
@@ -3998,7 +3995,7 @@ const Marken = (() => {
          bei der Auswahl; wirkt auf Gewaehltes und auf den naechsten Text. */
       (() => {
         const s = (controls.schriftVon ? controls.schriftVon() : SCHRIFT_VORGABE) as Schrift;
-        const fam = SCHRIFTEN.find(x => x.id === s.familie) || SCHRIFTEN[0];
+        const fam = SCHRIFTEN.find(x => x.id === s.familie) || SCHRIFTEN[0]!;
         return `<button data-act="schriftart" data-gruppe="schrift" data-schrift="${fam.id}" ` +
           `title="Schriftart: ${fam.name} — antippen wechselt: ${SCHRIFTEN.map(x => x.name).join(' → ')}">` +
           `<span class="zeichen" aria-hidden="true" style="font-family:${fam.stapel}">Aa</span><span class="wort">${fam.name}</span></button>` +

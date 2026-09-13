@@ -875,9 +875,9 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   das Farbthema aufgelöst (E559), die Ausrichtung gelesen UND bedienbar
   gemacht (E560), **gemischte Läufe innerhalb eines Absatzes (E561)**.
   Was jetzt noch fehlt, steht in L151 und ist kleiner als das Erledigte:
-  Drehung, Tabellen als Tabellenblock, Blocksatz. Dazu neu in L155: die
-  Breitenschätzung für Text liegt bis zu 15 % zu niedrig — gefunden bei
-  E561, aber eine eigene Arbeit, weil sie JEDE Textmarke betrifft.
+  Drehung, Tabellen als Tabellenblock, Blocksatz. L155 (die zu niedrige
+  Breitenschätzung, gefunden bei E561) ist mit **E562** geschlossen: im
+  Browser wird jetzt exakt gemessen, in Node bleibt die Tabelle.
 - **O4 · Folien bearbeiten** — ZUR HÄLFTE (E546). Zwei Sachen sind erledigt:
   - Das ZEIGEN einer Folie ändert sie nicht mehr. `Blatt.zeichne` legte für
     jedes Blatt ohne Textkinder eine leere Zeile AN — bei 27 eingelesenen

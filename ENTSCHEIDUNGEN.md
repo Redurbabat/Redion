@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-541 Entscheidungen, E1 bis E561 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+542 Entscheidungen, E1 bis E562 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -605,6 +605,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E559** — Das Farbthema wird gelesen: `schemeClr` über `p:clrMap` und `theme1.xml` aufgelöst, samt `lumMod`/`lumOff`/`tint`/`shade`
 * **E560** — Ausrichtung: `a:pPr@algn` wird gelesen, gezeichnet und bekommt einen eigenen Knopf — und die Feldliste beim Bauen der Marke wird umgedreht
 * **E561** — Mehrere Formate in einem Absatz: die Textmarke trägt `laeufe`, und SVG setzt die Stücke — nicht `textWidth`
+* **E562** — Textbreite wird im Browser exakt gemessen statt geschätzt; die Tabelle bleibt der Rückfall für Node
 
 ---
 
@@ -45334,3 +45335,98 @@ Zwei Dinge hat `test516` selbst gelernt und stehen als Kommentar darin:
 Bild: `bilder/pptx-laeufe.png` — „klein GROSS" in zwei Graden, drei Farben
 in einer Zeile, ein hervorgehobenes Wort mitten in einem umbrechenden Satz,
 und ein zentrierter Absatz mit gemischtem Format.
+
+
+E562 — Textbreite exakt messen statt schätzen
+--------------------------------------------------------------------------
+
+Der Bogen zu L155, gefunden bei E561 durch ein Bild und dort bewusst
+liegengelassen, weil er jede Textmarke betrifft und nicht nur PowerPoint.
+
+### Was falsch war
+
+`InkGeometry.textWidth` rechnete die Breite aus einer Tabelle von
+Buchstabenbreiten: ein Grundwert je Familie, mal Faktoren für schmale
+Zeichen, breite und Grossbuchstaben, mal 1,06 für fett. Daraus entsteht der
+Zeilenumbruch **jeder** Textmarke.
+
+```txt
+Text                              echt      geschätzt   Verhältnis
+„Ein Satz mit "                    6,31 em     6,00        1,05
+„einem hervorgehobenen Wort" fett 16,88 em    14,89        1,13
+„ mittendrin, der über mehrere"   15,02 em    13,09        1,15
+„GROSS" fett                       3,84 em     3,88        0,99
+```
+
+### Warum keine bessere Konstante
+
+Die Abweichung schwankt je nach Text zwischen 0,99 und 1,15. Ein einziger
+Faktor verschöbe den Fehler nur — er machte aus „zu schmal" ein „mal zu
+schmal, mal zu breit". Der Browser weiss es dagegen genau:
+`canvas.measureText` fragt dieselbe Schrift, die nachher zeichnet.
+
+### Wie es jetzt läuft
+
+```txt
+Browser   canvas.measureText, bei 100 px gemessen und geteilt
+          → ein Cache-Eintrag bedient jede Schriftgrösse
+Node      die Tabelle wie bisher — dort gibt es kein Canvas
+```
+
+`gemessenAn()` sagt, welcher Weg gerade gilt, damit ein Prüflauf es wissen
+kann statt es anzunehmen.
+
+Und der Cache wird **einmal geleert**, wenn `document.fonts.ready` erfüllt
+ist: die ersten Messungen treffen sonst die Rückfallschrift des Browsers,
+und eine falsche Zahl, die gemerkt wird, ist schlimmer als eine, die jedes
+Mal neu danebenliegt.
+
+### Ein Katalog, nicht zwei
+
+Zum Messen braucht man den Schriftstapel, und der stand in `marken.ts`,
+während die Breiten hier gerechnet wurden. Die Liste ist deshalb nach
+`geometry.ts` gezogen — an den Ort, der die Masse kennt —, und `marken.ts`
+nimmt sie von dort. Eine Kopie wäre der Fehler, vor dem §8 warnt: sie läuft
+mit dem Original auseinander, und niemand sieht, welche gilt.
+
+### Die Zusage, auf die es ankommt
+
+`test517` §3 prüft keine Zahl, sondern einen Satz über **alle** Zeilen:
+
+> Keine gezeichnete Zeile darf breiter sein als ihr Kasten.
+
+Gemessen mit `getComputedTextLength` am echten SVG, über sechs Marken mit
+verschiedenen Texten, Kästen, Graden, Familien und einem gemischten Absatz.
+Die Gegenprobe G1 — wieder schätzen — nennt die Übertreter beim Namen:
+
+```txt
+a2  „brechen härter"        164,2 breit in einem Kasten von 160
+a6  „Einwortzeileohnejede"  202,2 breit in einem Kasten von 200
+```
+
+Das ist der Satz, den der alte Weg gebrochen hat. Nicht „13,09 gegen
+15,02", sondern „Text steht ausserhalb seines Kastens".
+
+### Und zweimal hat die Suite sich selbst belogen
+
+* Der erste Aufbau setzte den `blatt`-Block von Hand — er hing an keiner
+  Seite, die Probe fand **0 Zeilen**, und „keine Zeile ist zu breit" wurde
+  auf der leeren Liste grün. Gefangen hat es die zweite Zusage daneben:
+  „mindestens vier Zeilen füllen ihren Kasten zur Hälfte". Ohne die wäre
+  der ganze §3 eine Behauptung gewesen.
+* Und der Knoten wurde mit `find(svg => breite > 10)` gesucht — der erste
+  Treffer war ein Symbol von 25 px mit null Texten. Gesucht ist
+  `svg.blatt-marken`, und die heisst so.
+
+### Was `test517` hält
+
+14 Zusagen, drei Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  wieder schätzen               12 grün, 2 rot  (zwei Zeilen ausserhalb)
+G2  Familie beim Messen egal      12 grün, 2 rot  (alle fünf liefern 242)
+G3  Cache-Schlüssel ohne Format   11 grün, 3 rot  (Fett = Normal)
+```
+
+Bild: `bilder/pptx-laeufe.png` — dieselbe Folie wie bei E561, jetzt bricht
+die dritte Zeile nach „über" um und bleibt im Kasten.
