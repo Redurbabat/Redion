@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-543 Entscheidungen, E1 bis E563 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+544 Entscheidungen, E1 bis E564 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -607,6 +607,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E561** — Mehrere Formate in einem Absatz: die Textmarke trägt `laeufe`, und SVG setzt die Stücke — nicht `textWidth`
 * **E562** — Textbreite wird im Browser exakt gemessen statt geschätzt; die Tabelle bleibt der Rückfall für Node
 * **E563** — Drehung: `a:xfrm@rot` kommt an — für Text, Bild und Abdeckung. Sie erbt NICHT vom Layout
+* **E564** — Kein fremder PowerPoint-Zeichner. Redion liest `.pptx` selbst; wer es exakt sehen will, nimmt den PDF-Weg
 
 ---
 
@@ -45509,3 +45510,64 @@ stünden.
 
 Bild: `bilder/pptx-drehung.png` — sieben Kästen von 0° bis 270°, darunter
 ein negativer Winkel und einer auf dem Kopf.
+
+
+E564 — Kein fremder PowerPoint-Zeichner
+--------------------------------------------------------------------------
+
+Redur, 13. September 2026, auf die Frage nach fremdem Code: **„Nein, nehmen
+wir nicht."**
+
+Der Eintrag steht hier, damit die Frage nicht in einem halben Jahr noch
+einmal von vorn beginnt — mit den Gründen, nicht nur mit dem Nein.
+
+### Was zur Wahl stand
+
+`pptxviewjs` (npm, MIT, keine Abhängigkeiten, 817 KB gepackt, 4,12 MB
+entpackt, zeichnet Folien auf HTML5-Canvas). Nach dem Muster von pdf.js
+eingebettet: Bytes in `quell/fremd/`, Lader in TypeScript daneben, Herkunft
+und Prüfsumme in `pruefungen/fremd-bestand.json`.
+
+**Dafür sprach:** es zeichnet die Folie, statt sie nachzubauen. Damit wären
+auf einen Schlag weg: Tabellen, gefüllte Formen mit Umriss, Diagramme,
+SmartArt, WordArt, Schatten, Blocksatz, Spiegelung.
+
+### Warum nicht
+
+**1. Es gibt kein öffentliches Quellverzeichnis.** Nur ein fertiges Paket.
+Bei pdf.js lässt sich jede Zeile nachlesen — Mozilla, fünfzehn Jahre, in
+jedem Firefox. Hier bliebe ein minifizierter Klumpen von 4 MB, und der ist
+nicht prüfbar, egal wie lange man hinsieht. In einem Programm, dessen erste
+Regel „Daten gehören dem Nutzer" ist, wiegt das schwer.
+
+**2. Es löst das Falsche.** Canvas heisst Bild. Kein durchsuchbarer Text,
+kein Textkasten zum Anfassen, und für die Rundreise zurück nach `.pptx`
+(O5) bringt es gar nichts. Es wäre eine zweite Ansicht NEBEN der
+Arbeitskopie — und damit zwei Programme, die sagen „so sieht diese Datei
+aus", und die sich irgendwo widersprechen.
+
+**3. Die Lücke war kleiner geworden.** Als der Vorschlag fiel, fehlten
+Layout, Master, Farbthema, Ausrichtung, gemischte Formate und Drehung. Nach
+E558 bis E563 sind das alles erledigte Punkte. Für den Rest 4 MB fremden,
+unlesbaren Code aufzunehmen, ist ein schlechtes Geschäft.
+
+### Was stattdessen gilt
+
+```txt
+Exakt ansehen   →  in PowerPoint „Als PDF speichern", in Redion öffnen.
+                   Das ist pdf.js, steckt längst drin, ist pixelgenau —
+                   samt Zeichnen, Suchen und Drucken.
+Bearbeiten      →  die `.pptx` mit Redions eigenem Leser.
+```
+
+Also eine Datei zum Ansehen und eine zum Arbeiten — genau die Trennung, die
+die Kopfzeile mit „Original · Arbeitskopie" ohnehin schon macht.
+
+### Was die Entscheidung umstossen würde
+
+**Eine echte Datei von Redur, bei der er sieht, dass Redion sie falsch
+zeigt.** Dann wird an SEINER Datei gemessen statt an gebauten Prüfstücken,
+und wenn der Abstand gross ist, gilt das Bedenken oben weniger als das,
+was er auf dem Bildschirm sieht.
+
+Bis dahin: weiter am eigenen Leser. Als Nächstes die Tabellen.

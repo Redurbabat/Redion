@@ -7474,7 +7474,10 @@ verloren hält:
 - **Tabellen (`a:tbl`) und Diagramme.** Beide werden übersprungen — sie haben
   in der Markenschicht kein Gegenstück. **Seit E555 werden sie wenigstens
   GENANNT**: der Hinweis nach dem Einlesen sagt „NICHT übernommen:
-  1 Tabellen".
+  1 Tabellen". Ein fremder Zeichner hätte beides auf einen Schlag gelöst;
+  Redur hat ihn am 13. September abgelehnt (**E564**), und die Gründe stehen
+  dort. Der Weg ist damit: selbst lesen, und wer es exakt sehen will, nimmt
+  den PDF-Weg.
 - **Formen ohne Text** (Pfeile, Rechtecke, Linien aus `a:prstGeom`). Die
   Markenschicht kennt sieben Formen; die Zuordnung fehlt noch. Auch sie
   stehen seit E555 im Hinweis — aber nur, wenn sie eine Fläche haben; ein
