@@ -42,6 +42,8 @@ sind der teuerste Teil und der lehrreichste.
 | P26 | 2026-09-13 | Ein Knopf nahm dem Titel 44 Pixel — und die Zusage dagegen konnte den Fall nicht sehen | 🟠 mittel | E551 |
 | P27 | 2026-09-13 | Eine Gegenprobe blieb gruen — weil die Zusage den gefaehrlichen Weg gar nicht ging | 🟠 mittel | E552 |
 | P28 | 2026-09-13 | Ein Lauf, der allein gruen ist und im Stapel rot — zweimal hintereinander | 🟡 klein | E552 |
+| P29 | 2026-09-13 | Zwei Knoepfe hiessen „Praesentieren" und taten Verschiedenes | 🟠 mittel | E553 |
+| P30 | 2026-09-13 | Ein Zierstrich war als „zugedeckte Antwort" gebaut — sieben Stueck | 🟠 mittel | E553 |
 
 ---
 
@@ -573,4 +575,50 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Vorher: zwei Stapel hintereinander rot, einzeln 50/50 gruen. Nachher: derselbe Stapel gruen. Laeuft die Grenze ab, meldet die Zeile wie vorher rot — entschaerft ist nichts.
 
 **Die Lehre.** „Allein gruen, im Stapel rot" ist eine Aussage ueber den Lauf, nicht ueber die App. Und die bequeme Antwort darauf — einmal nachfahren und weitergehen — ist genau die, die §46 verbietet. Einen Lauf zu entschaerfen, statt ihn robust zu machen, waere §47 mit anderen Mitteln.
+
+
+---
+
+## P29 · Zwei Knoepfe hiessen „Praesentieren" und taten Verschiedenes
+
+*2026-09-13 · 🟠 mittel · E553*
+
+**Das Bild.** Redur: „wenn ich die gelbe antworten klicke geht es weiter und zeigt mir nicht die antwort". Gemessen: „Folie 1/2" -> Klick -> „Folie 2/2", der Deckel blieb zu.
+
+**Die falsche Vermutung.** Meine erste: der Deckel sei nicht anklickbar (pointer-events, fehlendes data-ink-art, elVon liefert kein Element). Alle drei nachgesehen — alle drei in Ordnung. Der Deckel war nie das Problem.
+
+**Wie es gefunden wurde.** Durch Messen beider Wege nebeneinander. Weg A (`Werkzeuge.praesentation`, den das Band startet): Treffer am Deckel, data-auf=1, Folie bleibt. Weg B (der Knopf in der Dokumentleiste): an der Stelle des Deckels liegt `DIV.document-zeigen-flaeche`.
+
+**Die Ursache.** Es gibt ZWEI Vortragsmodi. `Werkzeuge.praesentation` ist der Folienvortrag mit Abdeckungen (E266/E544); `zeigenAn` ist der Dokumentvortrag mit Laserpointer (E493), gebaut fuer ein PDF an der Wand. Der legt eine Flaeche ueber alles (inset:0, z-index:40), die jeden Zeiger schluckt und einen Tipp als „blaettern" liest. Der Knopf in der Dokumentleiste startete immer den zweiten — auch bei einem Foliensatz.
+
+**Die Lösung.** Das Dokument entscheidet: ein Foliensatz bekommt den Folienvortrag, PDF und Heft behalten den Laserpointer.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Gegenprobe G3 (den Deckel-Zweig im Folienvortrag ausschalten) meldet woertlich „ist ‚2 / 2‘, soll ‚1 / 2‘" — 18 gruen, 3 rot. G2 (die Weiche auf jedes Dokument gehen lassen) nimmt dem Heft den Laserpointer: 17 gruen, 4 rot.
+
+**Die Lehre.** Zwei Knoepfe mit demselben Namen, die Verschiedenes tun, sind kein Bedienfehler des Nutzers. Er hat den genommen, der dasteht — und er stand im Dokument, also erwartete er den Dokumentvortrag nicht, sondern den Vortrag SEINER Folien. Wo zwei Wege dasselbe Wort tragen, muss der Zustand entscheiden, nicht der Zufall der Platzierung.
+
+
+---
+
+## P30 · Ein Zierstrich war als „zugedeckte Antwort" gebaut — sieben Stueck
+
+*2026-09-13 · 🟠 mittel · E553*
+
+**Das Bild.** Eine Zusage legte einen Deckel von 540 x 160 Punkten an; gezeichnet wurde er als 207 x 7 px. Die Zahl passte um den Faktor acht nicht.
+
+**Die falsche Vermutung.** Der Massstab sei falsch — viewBox gegen blattBreite/blattHoehe, `preserveAspectRatio="none"` zieht das Marken-SVG mit. Nachgemessen: viewBox 0 0 960 540, --seitenmass 960/540, alles stimmig. Der Massstab war nie das Problem.
+
+**Wie es gefunden wurde.** Beim Nachrechnen der nicht passenden Zahl. Die Zusage hatte den ERSTEN `[data-ink-art="abdeck"]` im Baum genommen — und das war nicht ihrer, sondern der blaue Zierstrich unter der Ueberschrift des Layouts (173 x 6 Punkte).
+
+**Die Ursache.** `linie()` in `vorlagen/folien.ts` baute die waagrechte Zierlinie als `art:'abdeck'` — „als flache Abdeckmarke in Akzentfarbe", mein eigener Kurzschluss aus E548: eine Abdeckmarke ist gefuellt, eine `rectangle` nicht, also nahm ich die gefuellte. `abdeck` heisst aber nicht „gefuellter Kasten", sondern EINE ZUGEDECKTE ANTWORT (E266): anklickbar, cursor:pointer, und beim Tipp verschwindet die Fuellung.
+
+**Die Lösung.** `art:'line'` mit Strichstaerke (`breite`). Sieht gleich aus, verspricht nichts.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Gegenprobe G4 (den Zierstrich wieder als Abdeckmarke bauen): 14 gruen, 7 rot, und die Zeile nennt die Zahl — SIEBEN Zierdeckel in acht Layouts.
+
+**Die Lehre.** Eine Markenart ist kein Zeichenwerkzeug, sondern eine BEDEUTUNG. Wer sie nimmt, weil sie zufaellig so aussieht, wie er es braucht, erbt alles, was sie sonst noch verspricht. Dieselbe Sorte Fehler wie ein uebersetzter Feldname (§53.3): die Form stimmt, die Aussage nicht.
 

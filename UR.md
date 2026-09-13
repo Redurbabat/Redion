@@ -971,6 +971,17 @@ Keine — an diesem Tag kam keine Nachricht.
 **Besserer Prompt:** 
 
 
+**33 · ca. 14:30**
+
+> [Bildschirmfoto des Folienbands] das hier gefelt mir nich die farben, usw es sollte wie die redion farben sein wenn ich die fraben ändere sollte das auch sich ändern und verbesser für die pptx öfnnen und wenn ich die gelbe antworten klicke geht es weiter und zeigt mir nicht die antwort
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -1005,11 +1016,12 @@ Keine — an diesem Tag kam keine Nachricht.
 | E550 — Das Folienband: Reiter ÜBER der Folie; `start` und `einfuegen` bleiben draussen, weil 79 von 83 ihrer Knöpfe dort nichts tun | `(nach E549)` → `(dieser Bogen)` | 08:20 – 10:20 | ca. 120 min | test506 neu, 51 Zusagen, sechs Gegenproben gefahren (42/2, 42/1, 41/2, 41/2, 49/2, 47/4) |
 | E551 — Eine Folie steht, ein Skript rollt: die Vorgabe haengt am Dokument, nicht an einer Regel fuer alle | `(nach E550)` → `(dieser Bogen)` | 10:30 – 12:10 | ca. 100 min | test507 neu, 34 Zusagen, vier Gegenproben gefahren (24/10, 30/4, 30/4, 32/2) |
 | E552 — „Zeichnen" wird ein Reiter (die echte Leiste zieht um), und ein Blatt heisst im Foliensatz „Folie" | `(nach E551)` → `(dieser Bogen)` | 12:20 – 14:20 | ca. 120 min | test508 neu, 40 Zusagen, fünf Gegenproben gefahren (Abbruch, 35/3, 36/2, 38/2, 37/3) |
+| E553 — Der gelbe Deckel deckt auf: der Knopf startete den falschen Vortrag, und ein Zierstrich war als „Antwort" gebaut | `(nach E552)` → `(dieser Bogen)` | 14:30 – 16:10 | ca. 100 min | test509 neu, 21 Zusagen, vier Gegenproben gefahren (Abbruch, 17/4, 18/3, 14/7) |
 
 #### Zahlen des Tages
 
-- **commits:** 27
-- **entscheidungen:** 25
+- **commits:** 28
+- **entscheidungen:** 26
 
 #### Das grösste Problem
 
@@ -1044,10 +1056,11 @@ Der zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glaskno
 | 09:40 | Eine Reiterzeile mit Band zwischen Kopf- und Zeichenleiste des Dokumentstudios, nur bei quer liegendem Foliensatz und erst ab 900 px Fensterbreite. | Redur: „oben mit menü … 1:1 wie powerpoint". E549 hatte den Katalog, nicht den Ort. Welche Reiter hineinkommen, ist nicht gewählt, sondern gemessen: alle 151 Einträge einzeln aufgerufen, bei `start` taten 14 von 14 nichts, bei `einfuegen` 65 von 69 — sie brauchen eine Schreibmarke, die es im Dokumentmodus nicht gibt. | keins an Daten — Oberfläche. Die Folie bleibt 980 × 551 bei 1440 × 852; das Band hat die Luft darunter genommen, nicht die Folie. Gezeichnet wird mit `Menueband.knopf`/`gruppeZeichnen`, also kein zweiter Zeichner (§8). |
 | 11:20 | `gemerkterLauf` gibt fuer einen quer liegenden Foliensatz von Haus aus „Einzelseite", fuer alles andere weiter „Rolle". Dazu `justify-content:safe center` fuer die stehende Folie und ein Umzug des Knopfes „📽️ Folie" in die Ansichtsklappe des Telefons. | Redur hat zu zwei Dingen zwei Sachen gesagt, die einander nicht widersprechen: „die PDF Seiten … komplet wie one note" (E299) und „1:1 wie PowerPoint" (E548/E549). Die Einzelseite gab es seit E398 schon — geaendert wurde nur die Vorgabe, und nur fuer Folien. | keins an Daten — Ansicht. Der Schalter bleibt der staerkere: `meta` gewinnt gegen die Vorgabe, in beide Richtungen geprueft ueber einen echten Druck und ein Neuladen. |
 | 13:30 | Die Zeichenleiste zieht als Reiter „Zeichnen" ins Folienband um — dasselbe Element, nicht nachgebaut. Dazu `wortEins`/`wortViele`: im Foliensatz heisst ein Blatt „Folie". | Redur: „weiter mache gleich wie powerpoint" — die Antwort auf die Frage aus E551. PowerPoint hat einen Reiter „Zeichnen" und keine zweite Dauerleiste, und es sagt nirgends „Seite". | Eines, und es ist gemessen: die Leiste ist jetzt ein KIND des Bandes. Wer das Band entfernt, nimmt sie mit — dann hätte ein Fenster unter 900 px keine Zeichenwerkzeuge mehr (§47, weggenommene Funktion durch Unfall). `folienbandNachziehen` bringt sie deshalb zuerst zurück und entfernt dann das Band. Die Daten heissen weiter `blatt` (§53.3). |
+| 15:20 | Der Knopf „▶ Präsentieren" startet bei einem Foliensatz `Werkzeuge.praesentation` statt `zeigenAn`. Und `linie()` in `vorlagen/folien.ts` baut den Zierstrich als `art:'line'` statt als `art:'abdeck'`. | Redur: „wenn ich die gelbe antworten klicke geht es weiter und zeigt mir nicht die antwort". Gemessen: der Dokumentvortrag legt eine Fläche über alles (inset:0, z-index:40), die jeden Zeiger schluckt — ein Tipp schaltete von „Folie 1/2" auf „Folie 2/2", der Deckel blieb zu. | keins an Daten. PDF und Heft behalten den Laserpointer (§47, test509 §4 misst es). Der Zierstrich sieht gleich aus, verspricht aber nichts mehr. |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 28 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 30 Einträge.
 

@@ -831,6 +831,10 @@ const ChronikDaten = {
                 {
                     "zeit": "ca. 12:20",
                     "wortlaut": "weiter mache gleich wie powerpoint"
+                },
+                {
+                    "zeit": "ca. 14:30",
+                    "wortlaut": "[Bildschirmfoto des Folienbands] das hier gefelt mir nich die farben, usw es sollte wie die redion farben sein wenn ich die fraben ändere sollte das auch sich ändern und verbesser für die pptx öfnnen und wenn ich die gelbe antworten klicke geht es weiter und zeigt mir nicht die antwort"
                 }
             ],
             "arbeit": [
@@ -1073,11 +1077,19 @@ const ChronikDaten = {
                     "zeitraum": "12:20 – 14:20",
                     "dauer": "ca. 120 min",
                     "pruefungen": "test508 neu, 40 Zusagen, fünf Gegenproben gefahren (Abbruch, 35/3, 36/2, 38/2, 37/3)"
+                },
+                {
+                    "was": "E553 — Der gelbe Deckel deckt auf: der Knopf startete den falschen Vortrag, und ein Zierstrich war als „Antwort\" gebaut",
+                    "vonCommit": "(nach E552)",
+                    "bisCommit": "(dieser Bogen)",
+                    "zeitraum": "14:30 – 16:10",
+                    "dauer": "ca. 100 min",
+                    "pruefungen": "test509 neu, 21 Zusagen, vier Gegenproben gefahren (Abbruch, 17/4, 18/3, 14/7)"
                 }
             ],
             "zahlen": {
-                "commits": 27,
-                "entscheidungen": 25
+                "commits": 28,
+                "entscheidungen": 26
             },
             "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
             "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -1183,6 +1195,12 @@ const ChronikDaten = {
                     "was": "Die Zeichenleiste zieht als Reiter „Zeichnen\" ins Folienband um — dasselbe Element, nicht nachgebaut. Dazu `wortEins`/`wortViele`: im Foliensatz heisst ein Blatt „Folie\".",
                     "warum": "Redur: „weiter mache gleich wie powerpoint\" — die Antwort auf die Frage aus E551. PowerPoint hat einen Reiter „Zeichnen\" und keine zweite Dauerleiste, und es sagt nirgends „Seite\".",
                     "risiko": "Eines, und es ist gemessen: die Leiste ist jetzt ein KIND des Bandes. Wer das Band entfernt, nimmt sie mit — dann hätte ein Fenster unter 900 px keine Zeichenwerkzeuge mehr (§47, weggenommene Funktion durch Unfall). `folienbandNachziehen` bringt sie deshalb zuerst zurück und entfernt dann das Band. Die Daten heissen weiter `blatt` (§53.3)."
+                },
+                {
+                    "zeit": "15:20",
+                    "was": "Der Knopf „▶ Präsentieren\" startet bei einem Foliensatz `Werkzeuge.praesentation` statt `zeigenAn`. Und `linie()` in `vorlagen/folien.ts` baut den Zierstrich als `art:'line'` statt als `art:'abdeck'`.",
+                    "warum": "Redur: „wenn ich die gelbe antworten klicke geht es weiter und zeigt mir nicht die antwort\". Gemessen: der Dokumentvortrag legt eine Fläche über alles (inset:0, z-index:40), die jeden Zeiger schluckt — ein Tipp schaltete von „Folie 1/2\" auf „Folie 2/2\", der Deckel blieb zu.",
+                    "risiko": "keins an Daten. PDF und Heft behalten den Laserpointer (§47, test509 §4 misst es). Der Zierstrich sieht gleich aus, verspricht aber nichts mehr."
                 }
             ]
         }
@@ -1550,6 +1568,36 @@ const ChronikDaten = {
             "beweis": "Vorher: zwei Stapel hintereinander rot, einzeln 50/50 gruen. Nachher: derselbe Stapel gruen. Laeuft die Grenze ab, meldet die Zeile wie vorher rot — entschaerft ist nichts.",
             "lehre": "„Allein gruen, im Stapel rot\" ist eine Aussage ueber den Lauf, nicht ueber die App. Und die bequeme Antwort darauf — einmal nachfahren und weitergehen — ist genau die, die §46 verbietet. Einen Lauf zu entschaerfen, statt ihn robust zu machen, waere §47 mit anderen Mitteln.",
             "entscheidung": "E552"
+        },
+        {
+            "nr": "P29",
+            "datum": "2026-09-13",
+            "titel": "Zwei Knoepfe hiessen „Praesentieren\" und taten Verschiedenes",
+            "schwere": "mittel",
+            "symptom": "Redur: „wenn ich die gelbe antworten klicke geht es weiter und zeigt mir nicht die antwort\". Gemessen: „Folie 1/2\" -> Klick -> „Folie 2/2\", der Deckel blieb zu.",
+            "falscheVermutung": "Meine erste: der Deckel sei nicht anklickbar (pointer-events, fehlendes data-ink-art, elVon liefert kein Element). Alle drei nachgesehen — alle drei in Ordnung. Der Deckel war nie das Problem.",
+            "wieGefunden": "Durch Messen beider Wege nebeneinander. Weg A (`Werkzeuge.praesentation`, den das Band startet): Treffer am Deckel, data-auf=1, Folie bleibt. Weg B (der Knopf in der Dokumentleiste): an der Stelle des Deckels liegt `DIV.document-zeigen-flaeche`.",
+            "ursache": "Es gibt ZWEI Vortragsmodi. `Werkzeuge.praesentation` ist der Folienvortrag mit Abdeckungen (E266/E544); `zeigenAn` ist der Dokumentvortrag mit Laserpointer (E493), gebaut fuer ein PDF an der Wand. Der legt eine Flaeche ueber alles (inset:0, z-index:40), die jeden Zeiger schluckt und einen Tipp als „blaettern\" liest. Der Knopf in der Dokumentleiste startete immer den zweiten — auch bei einem Foliensatz.",
+            "loesung": "Das Dokument entscheidet: ein Foliensatz bekommt den Folienvortrag, PDF und Heft behalten den Laserpointer.",
+            "warumKeineUhr": "—",
+            "beweis": "Gegenprobe G3 (den Deckel-Zweig im Folienvortrag ausschalten) meldet woertlich „ist ‚2 / 2‘, soll ‚1 / 2‘\" — 18 gruen, 3 rot. G2 (die Weiche auf jedes Dokument gehen lassen) nimmt dem Heft den Laserpointer: 17 gruen, 4 rot.",
+            "lehre": "Zwei Knoepfe mit demselben Namen, die Verschiedenes tun, sind kein Bedienfehler des Nutzers. Er hat den genommen, der dasteht — und er stand im Dokument, also erwartete er den Dokumentvortrag nicht, sondern den Vortrag SEINER Folien. Wo zwei Wege dasselbe Wort tragen, muss der Zustand entscheiden, nicht der Zufall der Platzierung.",
+            "entscheidung": "E553"
+        },
+        {
+            "nr": "P30",
+            "datum": "2026-09-13",
+            "titel": "Ein Zierstrich war als „zugedeckte Antwort\" gebaut — sieben Stueck",
+            "schwere": "mittel",
+            "symptom": "Eine Zusage legte einen Deckel von 540 x 160 Punkten an; gezeichnet wurde er als 207 x 7 px. Die Zahl passte um den Faktor acht nicht.",
+            "falscheVermutung": "Der Massstab sei falsch — viewBox gegen blattBreite/blattHoehe, `preserveAspectRatio=\"none\"` zieht das Marken-SVG mit. Nachgemessen: viewBox 0 0 960 540, --seitenmass 960/540, alles stimmig. Der Massstab war nie das Problem.",
+            "wieGefunden": "Beim Nachrechnen der nicht passenden Zahl. Die Zusage hatte den ERSTEN `[data-ink-art=\"abdeck\"]` im Baum genommen — und das war nicht ihrer, sondern der blaue Zierstrich unter der Ueberschrift des Layouts (173 x 6 Punkte).",
+            "ursache": "`linie()` in `vorlagen/folien.ts` baute die waagrechte Zierlinie als `art:'abdeck'` — „als flache Abdeckmarke in Akzentfarbe\", mein eigener Kurzschluss aus E548: eine Abdeckmarke ist gefuellt, eine `rectangle` nicht, also nahm ich die gefuellte. `abdeck` heisst aber nicht „gefuellter Kasten\", sondern EINE ZUGEDECKTE ANTWORT (E266): anklickbar, cursor:pointer, und beim Tipp verschwindet die Fuellung.",
+            "loesung": "`art:'line'` mit Strichstaerke (`breite`). Sieht gleich aus, verspricht nichts.",
+            "warumKeineUhr": "—",
+            "beweis": "Gegenprobe G4 (den Zierstrich wieder als Abdeckmarke bauen): 14 gruen, 7 rot, und die Zeile nennt die Zahl — SIEBEN Zierdeckel in acht Layouts.",
+            "lehre": "Eine Markenart ist kein Zeichenwerkzeug, sondern eine BEDEUTUNG. Wer sie nimmt, weil sie zufaellig so aussieht, wie er es braucht, erbt alles, was sie sonst noch verspricht. Dieselbe Sorte Fehler wie ein uebersetzter Feldname (§53.3): die Form stimmt, die Aussage nicht.",
+            "entscheidung": "E553"
         }
     ]
 };

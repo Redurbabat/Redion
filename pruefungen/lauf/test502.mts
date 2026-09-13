@@ -267,7 +267,15 @@ console.log('\n§2 Eine eingelesene .pptx geht als Foliensatz auf');
     const blatt = document.querySelector('.blatt-papier')?.getBoundingClientRect();
     return {
       leistenAlle, leistenSichtbar,
-      seitenliste: knopftexte.some(t => /^▤\s*Seiten$/.test(t)),
+      /* NACH DER TAT GEFRAGT, NICHT NACH DEM WORT (E553).
+         Hier stand `/^▤\s*Seiten$/`. Seit E552 heisst der Knopf im
+         Foliensatz „▤ Folien" — die Zeile wäre beim nächsten Stapel rot
+         geworden, obwohl der Knopf unverändert dasteht. Dieselbe Stelle
+         wie in test503 und test505; hier VOR dem roten Lauf berichtigt,
+         weil sie beim Nachsehen mitauffiel. */
+      seitenliste: !!document.querySelector('[data-document-action="thumbnails"]'),
+      seitenWort: (document.querySelector('[data-document-action="thumbnails"]')
+        ?.textContent || '').trim(),
       vortragen:   knopftexte.some(t => /Präsentieren/.test(t)),
       drucken:     knopftexte.some(t => /^Drucken$/.test(t)),
       folienmass:  blatt ? +(blatt.width / blatt.height).toFixed(2) : 0,
@@ -276,7 +284,9 @@ console.log('\n§2 Eine eingelesene .pptx geht als Foliensatz auf');
 
   p('Nur EINE Werkzeugleiste ist sichtbar, nicht je Folie eine',
     bild.leistenSichtbar === 1, bild.leistenSichtbar + ' von ' + bild.leistenAlle);
-  p('Die Folienliste ist erreichbar („▤ Seiten")', bild.seitenliste);
+  p('Die Folienliste ist erreichbar', bild.seitenliste);
+  p('… und heisst im Foliensatz „Folien" (E552)', /Folien/.test(bild.seitenWort),
+    bild.seitenWort);
   p('„Präsentieren" steht bereit', bild.vortragen);
   p('Und „Drucken" auch', bild.drucken);
   p('Die Folie behält ihr 16:9', Math.abs(bild.folienmass - 16 / 9) < 0.05,
