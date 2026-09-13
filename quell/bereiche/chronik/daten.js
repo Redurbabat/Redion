@@ -1775,6 +1775,36 @@ const ChronikDaten = {
             "beweis": "Die Gegenprobe G5 (Knopf weglassen) ging von 4 auf 7 rote Zusagen, seit §5 die Sichtbarkeit misst statt der Anwesenheit.",
             "lehre": "§55.1 sagt „oeffne die Seite wirklich\", und der Grund ist genau dieser: eine Zusage kann gruen sein, weil sie die bequeme Frage stellt. `querySelector` findet auch, was niemand sieht. Was zaehlt, ist eine gemessene Box — Breite, Hoehe, computed display, und ob sie im Bild liegt. Und das Bild hat die Frage ueberhaupt erst gestellt.",
             "entscheidung": "E560"
+        },
+        {
+            "nr": "P40",
+            "datum": "2026-09-13",
+            "titel": "Alle Zusagen gruen, und das Bild zeigte zwei Fehler",
+            "schwere": "mittel",
+            "symptom": "`test516` stand auf 23 gruen. Auf dem Bild stand „kleinGROSS\" ohne Zwischenraum, und in der dritten Zeile lief „Wort\" mitten in „mittendrin\" hinein.",
+            "falscheVermutung": "Dass der Satz fertig sei, weil die Zahlen stimmten. Die Marken trugen ihre Laeufe, die Grade waren richtig, die Hoehe war richtig — alles, was ich zu pruefen gedacht hatte, war gruen.",
+            "wieGefunden": "§55.3 — ein Bild, wenn man etwas sehen kann. Ohne das Bild waere beides gefahren.",
+            "ursache": "Zwei verschiedene: (1) XML verschluckt den Zwischenraum am Ende eines `tspan`, wenn `xml:space=\"preserve\"` fehlt. (2) Ich hatte jedem Stueck ein ABSOLUTES `x` aus `InkGeometry.textWidth` gegeben — und `textWidth` ist eine Schaetzung aus Buchstabenbreiten, die um bis zu 15 % danebenliegt.",
+            "loesung": "Nur das ERSTE Stueck einer Zeile bekommt ein `x`; die uebrigen fliessen, und SVG setzt sie mit den echten Massen. Die Schaetzung entscheidet weiterhin, WO umgebrochen wird — sie schreibt nur keine Stelle mehr ins Bild. Dazu `xml:space=\"preserve\"`. Und `Stueck` traegt seither weder `x` noch `breite`: ein Feld, das aussieht wie eine Messung und eine Schaetzung ist, ist eine Falle.",
+            "warumKeineUhr": "—",
+            "beweis": "Gegenprobe G5 (jedem Stueck ein gerechnetes x) setzt beide Stuecke auf x = 40, also uebereinander: 22 gruen, 3 rot. §5 misst seither `getStartPositionOfChar`, nicht das Attribut.",
+            "lehre": "Eine Zusage prueft, was ich zu pruefen GEDACHT habe. Sie kann nicht pruefen, was mir nicht eingefallen ist — und genau dort sitzen die Fehler, die ein Mensch sofort sieht. Der Zwischenraum und die Ueberlappung waren beide unsichtbar fuer jede Zahl, die ich abgefragt habe, und beide sofort sichtbar auf dem Bild. Das ist kein Argument gegen Pruefungen, sondern fuer die Reihenfolge: erst hinsehen, dann die Zusage danach bauen.",
+            "entscheidung": "E561"
+        },
+        {
+            "nr": "P41",
+            "datum": "2026-09-13",
+            "titel": "Gemessen — am falschen Knoten",
+            "schwere": "klein",
+            "symptom": "`getStartPositionOfChar` und `getBBox` gaben beide 0 zurueck. Kein Fehler, keine Ausnahme — nur Nullen.",
+            "falscheVermutung": "Nacheinander: der Knoten sei noch nicht gelayoutet (Zeit); er liege unterhalb des Fensters (scrollIntoView); `getBBox` sei der bessere Weg. Alle drei falsch.",
+            "wieGefunden": "Statt weiter zu raten eine Diagnosezeile eingebaut, die ALLE passenden Knoten auflistet — mit der Groesse ihrer `<svg>`. Ergebnis: es gibt ZWEI, der erste misst 0 x 0, der zweite 978 x 549.",
+            "ursache": "Der erste Treffer ist die Vorschau in der Folienliste. Ihr SVG ist nicht gezeichnet, und in einem nicht gezeichneten SVG liefert jede Geometriefrage Null — ohne dass etwas kaputt waere. Mein `find` nahm einfach den ersten.",
+            "loesung": "Erst filtern, dann nehmen: der Knoten, dessen `<svg>` breiter als 10 px ist. Der Kommentar daneben sagt, warum — sonst schreibt der Naechste wieder `find`.",
+            "warumKeineUhr": "—",
+            "beweis": "Danach 25 gruen, und die Gegenprobe G5 wird rot mit echten Zahlen (beide Stuecke auf x = 40) statt mit Nullen.",
+            "lehre": "Eine Messung, die Null zurueckgibt, ist nicht dasselbe wie eine Messung, die Null MISST. Bei Geometrie im Browser heisst Null fast immer „ich war nicht da\" — und wer das fuer ein Ergebnis haelt, baut seine Zusage auf einem Knoten, den niemand sieht. Vor dem Messen gehoert die Frage: ist das ueberhaupt der Knoten, den ich meine, und ist er gezeichnet?",
+            "entscheidung": "E561"
         }
     ]
 };

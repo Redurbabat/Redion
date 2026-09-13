@@ -53,6 +53,8 @@ sind der teuerste Teil und der lehrreichste.
 | P37 | 2026-09-13 | Zwei alte Laeufe haben eine Aenderung gemeldet, die ich gar nicht vorhatte | 🟡 klein | E559 |
 | P38 | 2026-09-13 | Dieselbe Feldliste, das dritte Mal — und diesmal umgedreht | 🟠 mittel | E560 |
 | P39 | 2026-09-13 | Ein Knopf im DOM ist noch keine Funktion | 🟡 klein | E560 |
+| P40 | 2026-09-13 | Alle Zusagen gruen, und das Bild zeigte zwei Fehler | 🟠 mittel | E561 |
+| P41 | 2026-09-13 | Gemessen — am falschen Knoten | 🟡 klein | E561 |
 
 ---
 
@@ -837,4 +839,50 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Die Gegenprobe G5 (Knopf weglassen) ging von 4 auf 7 rote Zusagen, seit §5 die Sichtbarkeit misst statt der Anwesenheit.
 
 **Die Lehre.** §55.1 sagt „oeffne die Seite wirklich", und der Grund ist genau dieser: eine Zusage kann gruen sein, weil sie die bequeme Frage stellt. `querySelector` findet auch, was niemand sieht. Was zaehlt, ist eine gemessene Box — Breite, Hoehe, computed display, und ob sie im Bild liegt. Und das Bild hat die Frage ueberhaupt erst gestellt.
+
+
+---
+
+## P40 · Alle Zusagen gruen, und das Bild zeigte zwei Fehler
+
+*2026-09-13 · 🟠 mittel · E561*
+
+**Das Bild.** `test516` stand auf 23 gruen. Auf dem Bild stand „kleinGROSS" ohne Zwischenraum, und in der dritten Zeile lief „Wort" mitten in „mittendrin" hinein.
+
+**Die falsche Vermutung.** Dass der Satz fertig sei, weil die Zahlen stimmten. Die Marken trugen ihre Laeufe, die Grade waren richtig, die Hoehe war richtig — alles, was ich zu pruefen gedacht hatte, war gruen.
+
+**Wie es gefunden wurde.** §55.3 — ein Bild, wenn man etwas sehen kann. Ohne das Bild waere beides gefahren.
+
+**Die Ursache.** Zwei verschiedene: (1) XML verschluckt den Zwischenraum am Ende eines `tspan`, wenn `xml:space="preserve"` fehlt. (2) Ich hatte jedem Stueck ein ABSOLUTES `x` aus `InkGeometry.textWidth` gegeben — und `textWidth` ist eine Schaetzung aus Buchstabenbreiten, die um bis zu 15 % danebenliegt.
+
+**Die Lösung.** Nur das ERSTE Stueck einer Zeile bekommt ein `x`; die uebrigen fliessen, und SVG setzt sie mit den echten Massen. Die Schaetzung entscheidet weiterhin, WO umgebrochen wird — sie schreibt nur keine Stelle mehr ins Bild. Dazu `xml:space="preserve"`. Und `Stueck` traegt seither weder `x` noch `breite`: ein Feld, das aussieht wie eine Messung und eine Schaetzung ist, ist eine Falle.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Gegenprobe G5 (jedem Stueck ein gerechnetes x) setzt beide Stuecke auf x = 40, also uebereinander: 22 gruen, 3 rot. §5 misst seither `getStartPositionOfChar`, nicht das Attribut.
+
+**Die Lehre.** Eine Zusage prueft, was ich zu pruefen GEDACHT habe. Sie kann nicht pruefen, was mir nicht eingefallen ist — und genau dort sitzen die Fehler, die ein Mensch sofort sieht. Der Zwischenraum und die Ueberlappung waren beide unsichtbar fuer jede Zahl, die ich abgefragt habe, und beide sofort sichtbar auf dem Bild. Das ist kein Argument gegen Pruefungen, sondern fuer die Reihenfolge: erst hinsehen, dann die Zusage danach bauen.
+
+
+---
+
+## P41 · Gemessen — am falschen Knoten
+
+*2026-09-13 · 🟡 klein · E561*
+
+**Das Bild.** `getStartPositionOfChar` und `getBBox` gaben beide 0 zurueck. Kein Fehler, keine Ausnahme — nur Nullen.
+
+**Die falsche Vermutung.** Nacheinander: der Knoten sei noch nicht gelayoutet (Zeit); er liege unterhalb des Fensters (scrollIntoView); `getBBox` sei der bessere Weg. Alle drei falsch.
+
+**Wie es gefunden wurde.** Statt weiter zu raten eine Diagnosezeile eingebaut, die ALLE passenden Knoten auflistet — mit der Groesse ihrer `<svg>`. Ergebnis: es gibt ZWEI, der erste misst 0 x 0, der zweite 978 x 549.
+
+**Die Ursache.** Der erste Treffer ist die Vorschau in der Folienliste. Ihr SVG ist nicht gezeichnet, und in einem nicht gezeichneten SVG liefert jede Geometriefrage Null — ohne dass etwas kaputt waere. Mein `find` nahm einfach den ersten.
+
+**Die Lösung.** Erst filtern, dann nehmen: der Knoten, dessen `<svg>` breiter als 10 px ist. Der Kommentar daneben sagt, warum — sonst schreibt der Naechste wieder `find`.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Danach 25 gruen, und die Gegenprobe G5 wird rot mit echten Zahlen (beide Stuecke auf x = 40) statt mit Nullen.
+
+**Die Lehre.** Eine Messung, die Null zurueckgibt, ist nicht dasselbe wie eine Messung, die Null MISST. Bei Geometrie im Browser heisst Null fast immer „ich war nicht da" — und wer das fuer ein Ergebnis haelt, baut seine Zusage auf einem Knoten, den niemand sieht. Vor dem Messen gehoert die Frage: ist das ueberhaupt der Knoten, den ich meine, und ist er gezeichnet?
 

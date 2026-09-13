@@ -23229,7 +23229,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 989, inhalt: '7da385e50aab1f5b', gebaut: '2026-09-13T18:22:42.623Z' };
+const Stand = { fassung: 1011, inhalt: '1e00e8070e70bd1a', gebaut: '2026-09-13T18:58:11.323Z' };
 window.Stand = Stand;
 
 </script>
@@ -24387,6 +24387,23 @@ const InkGeometry = (() => {
             else if ((ch >= 'A' && ch <= 'Z') || 'ÄÖÜ'.includes(ch))
                 f = 1.25;
         }
+        /* DIESE SCHÄTZUNG IST NACHWEISLICH ZU NIEDRIG — siehe L155.
+           Am 13. September 2026 mit `canvas.measureText` gegen denselben
+           Schriftstapel nachgemessen, in em:
+    
+               „Ein Satz mit "                 echt 6,31   geschätzt 6,00   1,05
+               „einem hervorgehobenen Wort" f  echt 16,88  geschätzt 14,89  1,13
+               „ mittendrin, der über mehrere" echt 15,02  geschätzt 13,09  1,15
+               „GROSS" fett                    echt 3,84   geschätzt 3,88   0,99
+    
+           Es ist also NICHT nur der Fett-Faktor, sondern das ganze Modell, und
+           die Abweichung schwankt zwischen 0,99 und 1,15. Eine Zeile, die den
+           Kasten füllt, läuft dadurch um rund ein Achtel darüber hinaus.
+    
+           HIER WIRD NICHTS GEÄNDERT, und das ist Absicht: die Zahl steuert den
+           Umbruch JEDER Textmarke, auch jeder alten Notiz. Sie zu verschieben
+           ist eine eigene Arbeit mit eigener Prüfung (L155), kein Nebenschritt
+           in einem Bogen über PowerPoint-Läufe. */
         return base * f * (bold ? 1.06 : 1);
     };
     const textWidth = (text, fontSize, family = 'standard', bold = false) => {
@@ -24426,6 +24443,100 @@ const InkGeometry = (() => {
         }
         return lines;
     };
+    /**
+     * DER SATZ EINES ABSATZES MIT MEHREREN FORMATEN (E561).
+     *
+     * Bis hierher hatte eine Textmarke GENAU EIN Format. „klein GROSS" kam
+     * darum vollständig im Format des ersten Laufs an — der Grad des zweiten
+     * war weg, und zwar lautlos.
+     *
+     * ─── DER ALTE WEG BLEIBT UNBERÜHRT ─────────────────────────────────────
+     * Diese Rechnung läuft NUR, wenn die Marke `laeufe` trägt. Jede Marke
+     * ohne das Feld — also jede, die je geschrieben wurde — geht weiter durch
+     * `textLines` wie zuvor. Das ist keine Vorsicht, das ist die einzige Art,
+     * eine Satzänderung ohne Rückwärtsrisiko einzuführen (§9).
+     *
+     * ─── DIE WÖRTER SIND DIE EINHEIT, NICHT DIE LÄUFE ──────────────────────
+     * Umgebrochen wird zwischen Wörtern, quer über Laufgrenzen hinweg: in
+     * „klein GROSS" darf der Umbruch vor „GROSS" liegen, aber „GROSS" selbst
+     * bleibt zusammen. Deshalb wird zuerst in Wörter und Zwischenräume
+     * zerlegt, mit dem Format am Stück — und erst danach gepackt.
+     *
+     * ─── DIE ZEILENHÖHE IST DIE DES GRÖSSTEN STÜCKS ────────────────────────
+     * Eine Zeile mit 12 pt und 36 pt ist 36 pt hoch, nicht 12. Sonst liefe
+     * die nächste Zeile in die grosse Schrift hinein.
+     */
+    const laufSatz = (laeufe, max, family, grundGrad, grundFett) => {
+        const teile = [];
+        for (const lauf of laeufe) {
+            const fontSize = Math.max(8, finite(lauf?.sz) || grundGrad);
+            const bold = lauf?.fett === undefined ? grundFett : !!lauf.fett;
+            const farbe = String(lauf?.farbe || '');
+            for (const stueck of String(lauf?.text ?? '').split(/(\s+)/)) {
+                if (!stueck)
+                    continue;
+                /* Ein Zeilenumbruch im Text ist ein eigener Teil — er bricht hart. */
+                if (/\n/.test(stueck)) {
+                    const vor = stueck.split('\n');
+                    vor.forEach((rest, i) => {
+                        if (i > 0)
+                            teile.push({ text: '\n', leer: true, fontSize, bold, farbe });
+                        if (rest)
+                            teile.push({ text: rest, leer: true, fontSize, bold, farbe });
+                    });
+                    continue;
+                }
+                teile.push({ text: stueck, leer: /^\s+$/.test(stueck), fontSize, bold, farbe });
+            }
+        }
+        const zeilen = [];
+        let lauf = [];
+        const abschliessen = () => {
+            /* Zwischenräume am Zeilenende zählen nicht mit — sonst steht eine
+               zentrierte Zeile um ein Leerzeichen zu weit links. */
+            while (lauf.length && lauf[lauf.length - 1].leer)
+                lauf.pop();
+            const stuecke = [];
+            let hoehe = 0;
+            for (const t of lauf) {
+                const letztes = stuecke[stuecke.length - 1];
+                /* Gleiches Format nebeneinander wird EIN Stück — weniger `tspan`,
+                   und das Kerning stimmt innerhalb eines Wortes wieder. */
+                if (letztes && letztes.fontSize === t.fontSize && letztes.bold === t.bold
+                    && letztes.farbe === t.farbe)
+                    letztes.text += t.text;
+                else
+                    stuecke.push({ text: t.text, fontSize: t.fontSize,
+                        bold: t.bold, farbe: t.farbe });
+                if (t.fontSize > hoehe)
+                    hoehe = t.fontSize;
+            }
+            if (!hoehe)
+                hoehe = grundGrad;
+            zeilen.push({ stuecke, hoehe: hoehe * TEXT_ZEILE, basis: hoehe * 0.85 });
+            lauf = [];
+        };
+        let breiteJetzt = 0;
+        for (const t of teile) {
+            if (t.text === '\n') {
+                abschliessen();
+                breiteJetzt = 0;
+                continue;
+            }
+            const breite = textWidth(t.text, t.fontSize, family, t.bold);
+            /* Ein Zwischenraum am Zeilenanfang wird geschluckt, nicht umgebrochen. */
+            if (t.leer && !lauf.length)
+                continue;
+            if (lauf.length && breiteJetzt + breite > max && !t.leer) {
+                abschliessen();
+                breiteJetzt = 0;
+            }
+            lauf.push(t);
+            breiteJetzt += breite;
+        }
+        abschliessen();
+        return zeilen;
+    };
     /** Kasten, Zeilen und Masse eines Textkastens — oder null fuer eine alte, einzeilige Textmarke. */
     const textLayout = (mark) => {
         const width = finite(mark?.breiteBox);
@@ -24436,15 +24547,29 @@ const InkGeometry = (() => {
         const pad = Math.round(fontSize * 0.35);
         const family = String(mark.schrift || 'standard');
         const bold = !!mark.fett;
-        const lines = textLines(String(mark.text || ''), width - pad * 2, fontSize, family, bold);
+        const max = width - pad * 2;
+        /* MEHRERE FORMATE IN EINEM ABSATZ (E561) — nur wenn die Marke sie hat.
+           Ohne `laeufe` läuft alles darunter wie seit E360. */
+        const laeufe = Array.isArray(mark.laeufe) ? mark.laeufe : null;
+        const zeilen = laeufe && laeufe.length ? laufSatz(laeufe, max, family, fontSize, bold) : null;
+        const lines = zeilen
+            ? zeilen.map(z => z.stuecke.map(st => st.text).join(''))
+            : textLines(String(mark.text || ''), max, fontSize, family, bold);
         /* DIE AUSRICHTUNG GEHOERT ZUM KASTEN, NICHT ZUM ZEICHNER (E560).
            Sie steht hier, weil sie die Zeilen und die Breite braucht — und weil
            der Auswahlkasten dieselbe Rechnung sehen muss wie das SVG. Die drei
            Namen sind die des Hauses (`bild-rahmen aus-links`), nicht neue. */
         const roh = String(mark.ausricht || 'links');
         const ausricht = (roh === 'mitte' || roh === 'rechts') ? roh : 'links';
-        return { x: point[0], y: point[1], width, height: pad * 2 + lines.length * fontSize * TEXT_ZEILE,
-            pad, zeile: fontSize * TEXT_ZEILE, fontSize, family, bold, lines, ausricht };
+        /* Die Höhe ist die Summe der Zeilenhöhen, sobald die Zeilen verschieden
+           hoch sein können — sonst läuft der Kasten unter einer 36-pt-Zeile zu
+           kurz aus, und die Marke darunter liegt darin. */
+        const hoehe = zeilen
+            ? pad * 2 + zeilen.reduce((summe, z) => summe + z.hoehe, 0)
+            : pad * 2 + lines.length * fontSize * TEXT_ZEILE;
+        return { x: point[0], y: point[1], width, height: hoehe,
+            pad, zeile: fontSize * TEXT_ZEILE, fontSize, family, bold, lines, ausricht,
+            ...(zeilen ? { zeilen } : {}) };
     };
     /** Die Linienzuege — sie drehen ihre Punkte; alles andere hat einen Kasten. */
     const LINIEN = new Set(['stift', 'marker', 'line', 'arrow']);
@@ -58923,11 +59048,50 @@ const Marken = (() => {
                     'font-weight': layout.bold ? 700 : 400,
                     ...(anker === 'start' ? {} : { 'text-anchor': anker })
                 });
-                layout.lines.forEach((zeile, index) => {
-                    const stueck = svg('tspan', { x: zeilenX, dy: index === 0 ? 0 : layout.zeile });
-                    stueck.textContent = zeile || ' ';
-                    textKnoten.appendChild(stueck);
-                });
+                if (layout.zeilen) {
+                    /* ══ MEHRERE FORMATE IN EINEM ABSATZ (E561) ═══════════════════════
+                       NUR DAS ERSTE STÜCK EINER ZEILE BEKOMMT EIN `x`. Die übrigen
+                       fliessen dahinter — SVG setzt sie selbst, mit den ECHTEN
+                       Schriftmassen des Browsers.
+          
+                       DIE ERSTE FASSUNG GAB JEDEM STÜCK EIN ABSOLUTES `x`, gerechnet
+                       aus `textWidth`. Das Bild hat sie widerlegt, und keine einzige
+                       Zusage hatte es gesehen: `textWidth` ist eine SCHÄTZUNG aus
+                       Buchstabenbreiten (`geometry.ts:240`) — gut genug, um zu
+                       entscheiden, WO umgebrochen wird, und zu ungenau, um zu sagen,
+                       wo ein Stück ANFÄNGT. Bei „einem hervorgehobenen Wort" in fett
+                       lief das nächste Stück mitten hinein.
+          
+                       Gerechnet wird die Schätzung weiterhin — für den Umbruch. Sie
+                       steht nur nicht mehr im Bild.
+          
+                       `xml:space="preserve"`: ohne das verschluckt XML den Zwischen-
+                       raum am Ende eines Laufs, und aus „klein GROSS" wird
+                       „kleinGROSS". Auch das stand auf dem Bild und in keiner Zusage. */
+                    textKnoten.setAttribute('xml:space', 'preserve');
+                    let oben = layout.y + layout.pad;
+                    for (const zeile of layout.zeilen) {
+                        zeile.stuecke.forEach((st, i) => {
+                            const teil = svg('tspan', {
+                                /* Ein `x` beginnt in SVG einen neuen Textabschnitt, und
+                                   `text-anchor` gilt je Abschnitt — die Zeile richtet sich
+                                   also an ihrem eigenen Anfang aus, mit echten Massen. */
+                                ...(i === 0 ? { x: zeilenX, y: oben + zeile.basis } : {}),
+                                'font-size': st.fontSize, 'font-weight': st.bold ? 700 : 400,
+                                ...(st.farbe ? { fill: st.farbe } : {})
+                            });
+                            teil.textContent = st.text || ' ';
+                            textKnoten.appendChild(teil);
+                        });
+                        oben += zeile.hoehe;
+                    }
+                }
+                else
+                    layout.lines.forEach((zeile, index) => {
+                        const stueck = svg('tspan', { x: zeilenX, dy: index === 0 ? 0 : layout.zeile });
+                        stueck.textContent = zeile || ' ';
+                        textKnoten.appendChild(stueck);
+                    });
                 gruppe.appendChild(textKnoten);
                 gruppe.setAttribute('data-sid', idOf(mark));
                 gruppe.setAttribute('data-ink-art', art);
@@ -74842,6 +75006,36 @@ const ChronikDaten = {
             "beweis": "Die Gegenprobe G5 (Knopf weglassen) ging von 4 auf 7 rote Zusagen, seit §5 die Sichtbarkeit misst statt der Anwesenheit.",
             "lehre": "§55.1 sagt „oeffne die Seite wirklich\", und der Grund ist genau dieser: eine Zusage kann gruen sein, weil sie die bequeme Frage stellt. `querySelector` findet auch, was niemand sieht. Was zaehlt, ist eine gemessene Box — Breite, Hoehe, computed display, und ob sie im Bild liegt. Und das Bild hat die Frage ueberhaupt erst gestellt.",
             "entscheidung": "E560"
+        },
+        {
+            "nr": "P40",
+            "datum": "2026-09-13",
+            "titel": "Alle Zusagen gruen, und das Bild zeigte zwei Fehler",
+            "schwere": "mittel",
+            "symptom": "`test516` stand auf 23 gruen. Auf dem Bild stand „kleinGROSS\" ohne Zwischenraum, und in der dritten Zeile lief „Wort\" mitten in „mittendrin\" hinein.",
+            "falscheVermutung": "Dass der Satz fertig sei, weil die Zahlen stimmten. Die Marken trugen ihre Laeufe, die Grade waren richtig, die Hoehe war richtig — alles, was ich zu pruefen gedacht hatte, war gruen.",
+            "wieGefunden": "§55.3 — ein Bild, wenn man etwas sehen kann. Ohne das Bild waere beides gefahren.",
+            "ursache": "Zwei verschiedene: (1) XML verschluckt den Zwischenraum am Ende eines `tspan`, wenn `xml:space=\"preserve\"` fehlt. (2) Ich hatte jedem Stueck ein ABSOLUTES `x` aus `InkGeometry.textWidth` gegeben — und `textWidth` ist eine Schaetzung aus Buchstabenbreiten, die um bis zu 15 % danebenliegt.",
+            "loesung": "Nur das ERSTE Stueck einer Zeile bekommt ein `x`; die uebrigen fliessen, und SVG setzt sie mit den echten Massen. Die Schaetzung entscheidet weiterhin, WO umgebrochen wird — sie schreibt nur keine Stelle mehr ins Bild. Dazu `xml:space=\"preserve\"`. Und `Stueck` traegt seither weder `x` noch `breite`: ein Feld, das aussieht wie eine Messung und eine Schaetzung ist, ist eine Falle.",
+            "warumKeineUhr": "—",
+            "beweis": "Gegenprobe G5 (jedem Stueck ein gerechnetes x) setzt beide Stuecke auf x = 40, also uebereinander: 22 gruen, 3 rot. §5 misst seither `getStartPositionOfChar`, nicht das Attribut.",
+            "lehre": "Eine Zusage prueft, was ich zu pruefen GEDACHT habe. Sie kann nicht pruefen, was mir nicht eingefallen ist — und genau dort sitzen die Fehler, die ein Mensch sofort sieht. Der Zwischenraum und die Ueberlappung waren beide unsichtbar fuer jede Zahl, die ich abgefragt habe, und beide sofort sichtbar auf dem Bild. Das ist kein Argument gegen Pruefungen, sondern fuer die Reihenfolge: erst hinsehen, dann die Zusage danach bauen.",
+            "entscheidung": "E561"
+        },
+        {
+            "nr": "P41",
+            "datum": "2026-09-13",
+            "titel": "Gemessen — am falschen Knoten",
+            "schwere": "klein",
+            "symptom": "`getStartPositionOfChar` und `getBBox` gaben beide 0 zurueck. Kein Fehler, keine Ausnahme — nur Nullen.",
+            "falscheVermutung": "Nacheinander: der Knoten sei noch nicht gelayoutet (Zeit); er liege unterhalb des Fensters (scrollIntoView); `getBBox` sei der bessere Weg. Alle drei falsch.",
+            "wieGefunden": "Statt weiter zu raten eine Diagnosezeile eingebaut, die ALLE passenden Knoten auflistet — mit der Groesse ihrer `<svg>`. Ergebnis: es gibt ZWEI, der erste misst 0 x 0, der zweite 978 x 549.",
+            "ursache": "Der erste Treffer ist die Vorschau in der Folienliste. Ihr SVG ist nicht gezeichnet, und in einem nicht gezeichneten SVG liefert jede Geometriefrage Null — ohne dass etwas kaputt waere. Mein `find` nahm einfach den ersten.",
+            "loesung": "Erst filtern, dann nehmen: der Knoten, dessen `<svg>` breiter als 10 px ist. Der Kommentar daneben sagt, warum — sonst schreibt der Naechste wieder `find`.",
+            "warumKeineUhr": "—",
+            "beweis": "Danach 25 gruen, und die Gegenprobe G5 wird rot mit echten Zahlen (beide Stuecke auf x = 40) statt mit Nullen.",
+            "lehre": "Eine Messung, die Null zurueckgibt, ist nicht dasselbe wie eine Messung, die Null MISST. Bei Geometrie im Browser heisst Null fast immer „ich war nicht da\" — und wer das fuer ein Ergebnis haelt, baut seine Zusage auf einem Knoten, den niemand sieht. Vor dem Messen gehoert die Frage: ist das ueberhaupt der Knoten, den ich meine, und ist er gezeichnet?",
+            "entscheidung": "E561"
         }
     ]
 };
@@ -109293,14 +109487,37 @@ const Einlesen = (() => {
     const absaetzeLesen = (txBody, thema = {}) => {
         const raus = [];
         for (const absatz of txBody.getElementsByTagName('a:p')) {
+            /* ══ JEDER LAUF MIT SEINEM EIGENEN FORMAT (E561) ════════════════════
+               Bis hierher nahm diese Schleife nur den TEXT jedes Laufs und das
+               FORMAT des ersten. „klein GROSS" kam damit vollständig in 12 pt an,
+               und der Grad des zweiten Laufs war lautlos weg.
+      
+               Ein `a:br` ist ein harter Umbruch und wird ein eigener Lauf mit
+               `\n` — so bleibt er in der Reihenfolge stehen, statt am Ende zu
+               landen. Ein `a:fld` (Foliennummer, Datum) trägt sein Format wie
+               ein Lauf und wird auch so gelesen. */
             let text = '';
+            const laeufe = [];
+            const laufAnhaengen = (stueck, eigen) => {
+                if (!stueck)
+                    return;
+                const g = Number(eigen?.getAttribute('sz'));
+                const f = eigen ? [...eigen.children].find(k => k.tagName === 'a:solidFill') : undefined;
+                const c = farbeAus(f, thema);
+                laeufe.push({ text: stueck,
+                    sz: Number.isFinite(g) && g > 0 ? Math.round(g / 100) : 0,
+                    fett: eigen?.getAttribute('b') === '1', farbe: c });
+            };
             for (const kind of absatz.children) {
-                if (kind.tagName === 'a:r')
-                    text += kind.getElementsByTagName('a:t')[0]?.textContent || '';
-                else if (kind.tagName === 'a:br')
+                if (kind.tagName === 'a:r' || kind.tagName === 'a:fld') {
+                    const stueck = kind.getElementsByTagName('a:t')[0]?.textContent || '';
+                    text += stueck;
+                    laufAnhaengen(stueck, kind.getElementsByTagName('a:rPr')[0]);
+                }
+                else if (kind.tagName === 'a:br') {
                     text += '\n';
-                else if (kind.tagName === 'a:fld')
-                    text += kind.getElementsByTagName('a:t')[0]?.textContent || '';
+                    laufAnhaengen('\n', kind.getElementsByTagName('a:rPr')[0]);
+                }
             }
             const pPr = [...absatz.children].find(k => k.tagName === 'a:pPr');
             /* Der erste ECHTE Lauf, nicht der erste `a:rPr` überhaupt: `a:pPr`
@@ -109328,7 +109545,7 @@ const Einlesen = (() => {
                 fett: rPr?.getAttribute('b') === '1',
                 farbe: rgb ? '#' + rgb : '',
                 lvl: Math.max(0, Math.min(8, Number(pPr?.getAttribute('lvl')) || 0)),
-                zeichen, ausricht: absatzAusricht(pPr) });
+                zeichen, ausricht: absatzAusricht(pPr), laeufe });
         }
         /* Leerzeilen am Ende weg — PowerPoint hängt gern einen leeren Absatz an,
            und der macht aus einem Titel einen Kasten mit Loch darunter. */
@@ -109923,6 +110140,29 @@ const Einlesen = (() => {
                            ist dieselbe Rechnung, die das Blatt später benutzt — samt
                            Umbruch an `breiteBox`. Eine eigene Schätzung („Grad mal 1,25")
                            liefe bei jedem umbrechenden Absatz in den nächsten hinein. */
+                        /* ══ LÄUFE NUR, WENN SIE ETWAS BRINGEN (E561) ══════════════════
+                           Dieselbe Regel wie bei den Absätzen in E557: ein Absatz, dessen
+                           Läufe alle dasselbe Format haben — also der Normalfall —, trägt
+                           KEIN `laeufe`. Er bleibt genau die Marke, die er vorher war,
+                           und geht im Zeichner den alten Weg.
+              
+                           Der Grund ist nicht Sparsamkeit, sondern Rückwärtsrisiko: der
+                           neue Satz läuft nur dort, wo er gebraucht wird. Wo er nicht
+                           gebraucht wird, kann er auch nichts kaputt machen (§9). */
+                        const laeufeNoetig = (laeufe) => {
+                            const echte = laeufe.filter(l => l.text && l.text !== '\n');
+                            if (echte.length < 2)
+                                return false;
+                            const erste = echte[0];
+                            return echte.some(l => l.sz !== erste.sz || l.fett !== erste.fett
+                                || l.farbe !== erste.farbe);
+                        };
+                        /* Der Einzug und das Aufzählungszeichen gehören VOR den ersten
+                           Lauf — sonst stünde das Zeichen im Format des Kastens und der
+                           Text daneben in seinem eigenen. */
+                        const mitZeichen = (a) => a.zeichen
+                            ? [{ text: a.zeichen + ' ', sz: a.sz, fett: a.fett, farbe: a.farbe }, ...a.laeufe]
+                            : a.laeufe;
                         const gleichFormat = absaetze.length > 0 && absaetze.every(a => a.sz === absaetze[0].sz && a.fett === absaetze[0].fett
                             && a.farbe === absaetze[0].farbe && a.lvl === absaetze[0].lvl
                             && !a.zeichen === !absaetze[0].zeichen
@@ -109938,7 +110178,19 @@ const Einlesen = (() => {
                                 breiteBox: Math.max(20, kb - a.lvl * Math.max(10, (a.sz || grund) * 0.9)),
                                 fontSize: a.sz || grund, fett: a.fett,
                                 ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}),
-                                ...(a.ausricht ? { ausricht: a.ausricht } : {}) });
+                                ...(a.ausricht ? { ausricht: a.ausricht } : {}),
+                                /* Bei mehreren gleich formatierten Absätzen werden ihre Läufe
+                                   mit `\n` dazwischen zu einer Kette — genau die Reihenfolge,
+                                   die der Text oben auch hat. */
+                                ...(() => {
+                                    const kette = [];
+                                    absaetze.forEach((z, i) => {
+                                        if (i > 0)
+                                            kette.push({ text: '\n', sz: z.sz, fett: z.fett, farbe: z.farbe });
+                                        kette.push(...mitZeichen(z));
+                                    });
+                                    return laeufeNoetig(kette) ? { laeufe: kette } : {};
+                                })() });
                             continue;
                         }
                         let y = ky;
@@ -109956,7 +110208,8 @@ const Einlesen = (() => {
                                 breiteBox: Math.max(20, kb - einzug),
                                 fontSize: a.sz || grund, fett: a.fett,
                                 ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}),
-                                ...(a.ausricht ? { ausricht: a.ausricht } : {}) };
+                                ...(a.ausricht ? { ausricht: a.ausricht } : {}),
+                                ...(laeufeNoetig(mitZeichen(a)) ? { laeufe: mitZeichen(a) } : {}) };
                             objekte.push(marke);
                             /* Der Zeichner rechnet die Höhe, nicht ich. Fehlt er (halb
                                geladenes Fenster), bleibt die einfache Schätzung — dann

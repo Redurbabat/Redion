@@ -815,7 +815,43 @@ const Marken = (() => {
           'font-size': layout.fontSize, 'font-family': schriftStapel(layout.family),
           'font-weight': layout.bold ? 700 : 400,
           ...(anker === 'start' ? {} : { 'text-anchor': anker }) });
-        layout.lines.forEach((zeile, index) => {
+        if (layout.zeilen) {
+          /* ══ MEHRERE FORMATE IN EINEM ABSATZ (E561) ═══════════════════════
+             NUR DAS ERSTE STÜCK EINER ZEILE BEKOMMT EIN `x`. Die übrigen
+             fliessen dahinter — SVG setzt sie selbst, mit den ECHTEN
+             Schriftmassen des Browsers.
+
+             DIE ERSTE FASSUNG GAB JEDEM STÜCK EIN ABSOLUTES `x`, gerechnet
+             aus `textWidth`. Das Bild hat sie widerlegt, und keine einzige
+             Zusage hatte es gesehen: `textWidth` ist eine SCHÄTZUNG aus
+             Buchstabenbreiten (`geometry.ts:240`) — gut genug, um zu
+             entscheiden, WO umgebrochen wird, und zu ungenau, um zu sagen,
+             wo ein Stück ANFÄNGT. Bei „einem hervorgehobenen Wort" in fett
+             lief das nächste Stück mitten hinein.
+
+             Gerechnet wird die Schätzung weiterhin — für den Umbruch. Sie
+             steht nur nicht mehr im Bild.
+
+             `xml:space="preserve"`: ohne das verschluckt XML den Zwischen-
+             raum am Ende eines Laufs, und aus „klein GROSS" wird
+             „kleinGROSS". Auch das stand auf dem Bild und in keiner Zusage. */
+          textKnoten.setAttribute('xml:space', 'preserve');
+          let oben = layout.y + layout.pad;
+          for (const zeile of layout.zeilen) {
+            zeile.stuecke.forEach((st, i) => {
+              const teil = svg('tspan', {
+                /* Ein `x` beginnt in SVG einen neuen Textabschnitt, und
+                   `text-anchor` gilt je Abschnitt — die Zeile richtet sich
+                   also an ihrem eigenen Anfang aus, mit echten Massen. */
+                ...(i === 0 ? { x: zeilenX, y: oben + zeile.basis } : {}),
+                'font-size': st.fontSize, 'font-weight': st.bold ? 700 : 400,
+                ...(st.farbe ? { fill: st.farbe } : {}) });
+              teil.textContent = st.text || ' ';
+              textKnoten.appendChild(teil);
+            });
+            oben += zeile.hoehe;
+          }
+        } else layout.lines.forEach((zeile, index) => {
           const stueck = svg('tspan', { x: zeilenX, dy: index === 0 ? 0 : layout.zeile });
           stueck.textContent = zeile || ' ';
           textKnoten.appendChild(stueck);

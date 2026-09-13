@@ -1056,14 +1056,37 @@ const Einlesen = (() => {
     const absaetzeLesen = (txBody, thema = {}) => {
         const raus = [];
         for (const absatz of txBody.getElementsByTagName('a:p')) {
+            /* ══ JEDER LAUF MIT SEINEM EIGENEN FORMAT (E561) ════════════════════
+               Bis hierher nahm diese Schleife nur den TEXT jedes Laufs und das
+               FORMAT des ersten. „klein GROSS" kam damit vollständig in 12 pt an,
+               und der Grad des zweiten Laufs war lautlos weg.
+      
+               Ein `a:br` ist ein harter Umbruch und wird ein eigener Lauf mit
+               `\n` — so bleibt er in der Reihenfolge stehen, statt am Ende zu
+               landen. Ein `a:fld` (Foliennummer, Datum) trägt sein Format wie
+               ein Lauf und wird auch so gelesen. */
             let text = '';
+            const laeufe = [];
+            const laufAnhaengen = (stueck, eigen) => {
+                if (!stueck)
+                    return;
+                const g = Number(eigen?.getAttribute('sz'));
+                const f = eigen ? [...eigen.children].find(k => k.tagName === 'a:solidFill') : undefined;
+                const c = farbeAus(f, thema);
+                laeufe.push({ text: stueck,
+                    sz: Number.isFinite(g) && g > 0 ? Math.round(g / 100) : 0,
+                    fett: eigen?.getAttribute('b') === '1', farbe: c });
+            };
             for (const kind of absatz.children) {
-                if (kind.tagName === 'a:r')
-                    text += kind.getElementsByTagName('a:t')[0]?.textContent || '';
-                else if (kind.tagName === 'a:br')
+                if (kind.tagName === 'a:r' || kind.tagName === 'a:fld') {
+                    const stueck = kind.getElementsByTagName('a:t')[0]?.textContent || '';
+                    text += stueck;
+                    laufAnhaengen(stueck, kind.getElementsByTagName('a:rPr')[0]);
+                }
+                else if (kind.tagName === 'a:br') {
                     text += '\n';
-                else if (kind.tagName === 'a:fld')
-                    text += kind.getElementsByTagName('a:t')[0]?.textContent || '';
+                    laufAnhaengen('\n', kind.getElementsByTagName('a:rPr')[0]);
+                }
             }
             const pPr = [...absatz.children].find(k => k.tagName === 'a:pPr');
             /* Der erste ECHTE Lauf, nicht der erste `a:rPr` überhaupt: `a:pPr`
@@ -1091,7 +1114,7 @@ const Einlesen = (() => {
                 fett: rPr?.getAttribute('b') === '1',
                 farbe: rgb ? '#' + rgb : '',
                 lvl: Math.max(0, Math.min(8, Number(pPr?.getAttribute('lvl')) || 0)),
-                zeichen, ausricht: absatzAusricht(pPr) });
+                zeichen, ausricht: absatzAusricht(pPr), laeufe });
         }
         /* Leerzeilen am Ende weg — PowerPoint hängt gern einen leeren Absatz an,
            und der macht aus einem Titel einen Kasten mit Loch darunter. */
@@ -1686,6 +1709,29 @@ const Einlesen = (() => {
                            ist dieselbe Rechnung, die das Blatt später benutzt — samt
                            Umbruch an `breiteBox`. Eine eigene Schätzung („Grad mal 1,25")
                            liefe bei jedem umbrechenden Absatz in den nächsten hinein. */
+                        /* ══ LÄUFE NUR, WENN SIE ETWAS BRINGEN (E561) ══════════════════
+                           Dieselbe Regel wie bei den Absätzen in E557: ein Absatz, dessen
+                           Läufe alle dasselbe Format haben — also der Normalfall —, trägt
+                           KEIN `laeufe`. Er bleibt genau die Marke, die er vorher war,
+                           und geht im Zeichner den alten Weg.
+              
+                           Der Grund ist nicht Sparsamkeit, sondern Rückwärtsrisiko: der
+                           neue Satz läuft nur dort, wo er gebraucht wird. Wo er nicht
+                           gebraucht wird, kann er auch nichts kaputt machen (§9). */
+                        const laeufeNoetig = (laeufe) => {
+                            const echte = laeufe.filter(l => l.text && l.text !== '\n');
+                            if (echte.length < 2)
+                                return false;
+                            const erste = echte[0];
+                            return echte.some(l => l.sz !== erste.sz || l.fett !== erste.fett
+                                || l.farbe !== erste.farbe);
+                        };
+                        /* Der Einzug und das Aufzählungszeichen gehören VOR den ersten
+                           Lauf — sonst stünde das Zeichen im Format des Kastens und der
+                           Text daneben in seinem eigenen. */
+                        const mitZeichen = (a) => a.zeichen
+                            ? [{ text: a.zeichen + ' ', sz: a.sz, fett: a.fett, farbe: a.farbe }, ...a.laeufe]
+                            : a.laeufe;
                         const gleichFormat = absaetze.length > 0 && absaetze.every(a => a.sz === absaetze[0].sz && a.fett === absaetze[0].fett
                             && a.farbe === absaetze[0].farbe && a.lvl === absaetze[0].lvl
                             && !a.zeichen === !absaetze[0].zeichen
@@ -1701,7 +1747,19 @@ const Einlesen = (() => {
                                 breiteBox: Math.max(20, kb - a.lvl * Math.max(10, (a.sz || grund) * 0.9)),
                                 fontSize: a.sz || grund, fett: a.fett,
                                 ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}),
-                                ...(a.ausricht ? { ausricht: a.ausricht } : {}) });
+                                ...(a.ausricht ? { ausricht: a.ausricht } : {}),
+                                /* Bei mehreren gleich formatierten Absätzen werden ihre Läufe
+                                   mit `\n` dazwischen zu einer Kette — genau die Reihenfolge,
+                                   die der Text oben auch hat. */
+                                ...(() => {
+                                    const kette = [];
+                                    absaetze.forEach((z, i) => {
+                                        if (i > 0)
+                                            kette.push({ text: '\n', sz: z.sz, fett: z.fett, farbe: z.farbe });
+                                        kette.push(...mitZeichen(z));
+                                    });
+                                    return laeufeNoetig(kette) ? { laeufe: kette } : {};
+                                })() });
                             continue;
                         }
                         let y = ky;
@@ -1719,7 +1777,8 @@ const Einlesen = (() => {
                                 breiteBox: Math.max(20, kb - einzug),
                                 fontSize: a.sz || grund, fett: a.fett,
                                 ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}),
-                                ...(a.ausricht ? { ausricht: a.ausricht } : {}) };
+                                ...(a.ausricht ? { ausricht: a.ausricht } : {}),
+                                ...(laeufeNoetig(mitZeichen(a)) ? { laeufe: mitZeichen(a) } : {}) };
                             objekte.push(marke);
                             /* Der Zeichner rechnet die Höhe, nicht ich. Fehlt er (halb
                                geladenes Fenster), bleibt die einfache Schätzung — dann

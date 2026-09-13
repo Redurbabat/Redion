@@ -7452,9 +7452,13 @@ verloren hält:
   der zählt: je ABSATZ werden Grad, Gewicht und Farbe gelesen, und wo sie
   auseinandergehen, entsteht eine Marke je Absatz. Gemessen vorher:
   „klein"(12) + „GROSS"(36, fett, blau) kam als eine Marke in 12 pt schwarz
-  an. **Offen bleibt der Fall darin**: gemischte Läufe INNERHALB eines
-  Absatzes — Redions Textmarke hat genau einen Grad, und das ist die echte
-  Grenze.
+  an. ~~**Offen bleibt der Fall darin**: gemischte Läufe INNERHALB eines
+  Absatzes.~~ **GESCHLOSSEN mit E561**: die Textmarke trägt jetzt optional
+  `laeufe` — mehrere Formate in einem Absatz, jedes mit eigenem Grad,
+  Gewicht und eigener Farbe. Die Stücke werden von SVG selbst gesetzt, nicht
+  gerechnet (siehe L155). Eine Marke OHNE das Feld geht unverändert den
+  alten Weg, und ein Absatz, dessen Läufe alle dasselbe Format haben,
+  bekommt gar keins — der Normalfall bleibt damit wörtlich der alte.
 - ~~**Absatzebenen und Aufzählungszeichen.**~~ **GESCHLOSSEN mit E557**:
   `a:pPr@lvl` rückt ein (und verschmälert den Kasten entsprechend),
   `a:buChar` kommt als Zeichen davor, `a:buNone` unterdrückt es. `buAutoNum`
@@ -7649,3 +7653,58 @@ Zusagen, die für eine rollende Liste gelten — dass sie wirklich rollt und
 dass ihr letzter Eintrag unten ankommt (64 px, ganz sichtbar). Beide
 Gegenproben gefahren, beide rot geworden. Das macht aus der Liste keinen
 Wegweiser; es hält nur fest, dass niemand unten abgeschnitten wird.
+
+
+L155 · Die Breitenschätzung für Text liegt bis zu 15 % zu niedrig — offen
+--------------------------------------------------------------------------
+
+`InkGeometry.textWidth` rechnet die Breite eines Textes aus einer Tabelle
+von Buchstabenbreiten (`geometry.ts:237`): ein Grundwert je Schriftfamilie,
+mal einem Faktor für schmale Zeichen (`.,:;ijlt`), breite (`mwMW`) und
+Grossbuchstaben, mal 1,06 für fett. Daraus entsteht der Zeilenumbruch
+**jeder** Textmarke in Redion.
+
+**Gefunden am 13. September 2026 — durch ein Bild, nicht durch eine
+Prüfung.** Eine Folie mit gemischten Formaten (E561) zeigte eine Zeile, die
+über den Blattrand hinauslief, obwohl die Schätzung sagte, sie passe.
+
+### Nachgemessen mit `canvas.measureText`, gegen denselben Schriftstapel
+
+```txt
+Text                              echt      geschätzt   Verhältnis
+„Ein Satz mit "                    6,31 em     6,00        1,05
+„einem hervorgehobenen Wort" fett 16,88 em    14,89        1,13
+„ mittendrin, der über mehrere"   15,02 em    13,09        1,15
+„Zeilen läuft und dabei sein …"   21,00 em    19,22        1,09
+„GROSS" fett                       3,84 em     3,88        0,99
+
+ganze Zeile bei 18 pt:  echt 688 pt · geschätzt 611 pt · Kasten 636 pt
+```
+
+Es ist also **nicht nur der Fett-Faktor**, sondern das Modell insgesamt, und
+die Abweichung schwankt zwischen 0,99 und 1,15. Eine Zeile, die den Kasten
+ausfüllt, läuft dadurch um rund ein Achtel darüber hinaus.
+
+### Warum hier nichts geändert wurde
+
+Die Zahl steuert den Umbruch jeder Textmarke, auch jeder alten Notiz. Sie zu
+verschieben heisst, dass vorhandene Seiten anders umbrechen — und das ist
+eine eigene Arbeit mit eigener Prüfung, kein Nebenschritt in einem Bogen
+über PowerPoint-Läufe (§45: eine Änderung, ein klares Ziel).
+
+Die Richtung wäre die sichere: eine grössere Schätzung bricht FRÜHER um,
+Text kann also nicht mehr aus dem Kasten laufen, sondern höchstens eine
+Zeile eher umbrechen.
+
+### Der Weg, der besser wäre als eine bessere Konstante
+
+Im Browser lässt sich die Breite **exakt** messen (`canvas.measureText`,
+einmal je Schrift und Grad gemerkt). Die Tabelle bliebe als Rückfall für
+Node, wo es kein Canvas gibt. Dann stimmt der Umbruch dort, wo er zu sehen
+ist, und bleibt berechenbar, wo geprüft wird.
+
+**Was seit E561 NICHT mehr davon abhängt:** die Stelle, an der ein Stück
+eines gemischten Absatzes gezeichnet wird. Die kommt jetzt von SVG selbst —
+nur das erste Stück einer Zeile bekommt ein `x`, die übrigen fliessen. Die
+Schätzung entscheidet weiterhin, WO umgebrochen wird, aber sie schreibt
+keine Stelle mehr ins Bild.

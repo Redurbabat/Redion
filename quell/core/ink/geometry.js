@@ -253,6 +253,23 @@ const InkGeometry = (() => {
             else if ((ch >= 'A' && ch <= 'Z') || 'ÄÖÜ'.includes(ch))
                 f = 1.25;
         }
+        /* DIESE SCHÄTZUNG IST NACHWEISLICH ZU NIEDRIG — siehe L155.
+           Am 13. September 2026 mit `canvas.measureText` gegen denselben
+           Schriftstapel nachgemessen, in em:
+    
+               „Ein Satz mit "                 echt 6,31   geschätzt 6,00   1,05
+               „einem hervorgehobenen Wort" f  echt 16,88  geschätzt 14,89  1,13
+               „ mittendrin, der über mehrere" echt 15,02  geschätzt 13,09  1,15
+               „GROSS" fett                    echt 3,84   geschätzt 3,88   0,99
+    
+           Es ist also NICHT nur der Fett-Faktor, sondern das ganze Modell, und
+           die Abweichung schwankt zwischen 0,99 und 1,15. Eine Zeile, die den
+           Kasten füllt, läuft dadurch um rund ein Achtel darüber hinaus.
+    
+           HIER WIRD NICHTS GEÄNDERT, und das ist Absicht: die Zahl steuert den
+           Umbruch JEDER Textmarke, auch jeder alten Notiz. Sie zu verschieben
+           ist eine eigene Arbeit mit eigener Prüfung (L155), kein Nebenschritt
+           in einem Bogen über PowerPoint-Läufe. */
         return base * f * (bold ? 1.06 : 1);
     };
     const textWidth = (text, fontSize, family = 'standard', bold = false) => {
@@ -292,6 +309,100 @@ const InkGeometry = (() => {
         }
         return lines;
     };
+    /**
+     * DER SATZ EINES ABSATZES MIT MEHREREN FORMATEN (E561).
+     *
+     * Bis hierher hatte eine Textmarke GENAU EIN Format. „klein GROSS" kam
+     * darum vollständig im Format des ersten Laufs an — der Grad des zweiten
+     * war weg, und zwar lautlos.
+     *
+     * ─── DER ALTE WEG BLEIBT UNBERÜHRT ─────────────────────────────────────
+     * Diese Rechnung läuft NUR, wenn die Marke `laeufe` trägt. Jede Marke
+     * ohne das Feld — also jede, die je geschrieben wurde — geht weiter durch
+     * `textLines` wie zuvor. Das ist keine Vorsicht, das ist die einzige Art,
+     * eine Satzänderung ohne Rückwärtsrisiko einzuführen (§9).
+     *
+     * ─── DIE WÖRTER SIND DIE EINHEIT, NICHT DIE LÄUFE ──────────────────────
+     * Umgebrochen wird zwischen Wörtern, quer über Laufgrenzen hinweg: in
+     * „klein GROSS" darf der Umbruch vor „GROSS" liegen, aber „GROSS" selbst
+     * bleibt zusammen. Deshalb wird zuerst in Wörter und Zwischenräume
+     * zerlegt, mit dem Format am Stück — und erst danach gepackt.
+     *
+     * ─── DIE ZEILENHÖHE IST DIE DES GRÖSSTEN STÜCKS ────────────────────────
+     * Eine Zeile mit 12 pt und 36 pt ist 36 pt hoch, nicht 12. Sonst liefe
+     * die nächste Zeile in die grosse Schrift hinein.
+     */
+    const laufSatz = (laeufe, max, family, grundGrad, grundFett) => {
+        const teile = [];
+        for (const lauf of laeufe) {
+            const fontSize = Math.max(8, finite(lauf?.sz) || grundGrad);
+            const bold = lauf?.fett === undefined ? grundFett : !!lauf.fett;
+            const farbe = String(lauf?.farbe || '');
+            for (const stueck of String(lauf?.text ?? '').split(/(\s+)/)) {
+                if (!stueck)
+                    continue;
+                /* Ein Zeilenumbruch im Text ist ein eigener Teil — er bricht hart. */
+                if (/\n/.test(stueck)) {
+                    const vor = stueck.split('\n');
+                    vor.forEach((rest, i) => {
+                        if (i > 0)
+                            teile.push({ text: '\n', leer: true, fontSize, bold, farbe });
+                        if (rest)
+                            teile.push({ text: rest, leer: true, fontSize, bold, farbe });
+                    });
+                    continue;
+                }
+                teile.push({ text: stueck, leer: /^\s+$/.test(stueck), fontSize, bold, farbe });
+            }
+        }
+        const zeilen = [];
+        let lauf = [];
+        const abschliessen = () => {
+            /* Zwischenräume am Zeilenende zählen nicht mit — sonst steht eine
+               zentrierte Zeile um ein Leerzeichen zu weit links. */
+            while (lauf.length && lauf[lauf.length - 1].leer)
+                lauf.pop();
+            const stuecke = [];
+            let hoehe = 0;
+            for (const t of lauf) {
+                const letztes = stuecke[stuecke.length - 1];
+                /* Gleiches Format nebeneinander wird EIN Stück — weniger `tspan`,
+                   und das Kerning stimmt innerhalb eines Wortes wieder. */
+                if (letztes && letztes.fontSize === t.fontSize && letztes.bold === t.bold
+                    && letztes.farbe === t.farbe)
+                    letztes.text += t.text;
+                else
+                    stuecke.push({ text: t.text, fontSize: t.fontSize,
+                        bold: t.bold, farbe: t.farbe });
+                if (t.fontSize > hoehe)
+                    hoehe = t.fontSize;
+            }
+            if (!hoehe)
+                hoehe = grundGrad;
+            zeilen.push({ stuecke, hoehe: hoehe * TEXT_ZEILE, basis: hoehe * 0.85 });
+            lauf = [];
+        };
+        let breiteJetzt = 0;
+        for (const t of teile) {
+            if (t.text === '\n') {
+                abschliessen();
+                breiteJetzt = 0;
+                continue;
+            }
+            const breite = textWidth(t.text, t.fontSize, family, t.bold);
+            /* Ein Zwischenraum am Zeilenanfang wird geschluckt, nicht umgebrochen. */
+            if (t.leer && !lauf.length)
+                continue;
+            if (lauf.length && breiteJetzt + breite > max && !t.leer) {
+                abschliessen();
+                breiteJetzt = 0;
+            }
+            lauf.push(t);
+            breiteJetzt += breite;
+        }
+        abschliessen();
+        return zeilen;
+    };
     /** Kasten, Zeilen und Masse eines Textkastens — oder null fuer eine alte, einzeilige Textmarke. */
     const textLayout = (mark) => {
         const width = finite(mark?.breiteBox);
@@ -302,15 +413,29 @@ const InkGeometry = (() => {
         const pad = Math.round(fontSize * 0.35);
         const family = String(mark.schrift || 'standard');
         const bold = !!mark.fett;
-        const lines = textLines(String(mark.text || ''), width - pad * 2, fontSize, family, bold);
+        const max = width - pad * 2;
+        /* MEHRERE FORMATE IN EINEM ABSATZ (E561) — nur wenn die Marke sie hat.
+           Ohne `laeufe` läuft alles darunter wie seit E360. */
+        const laeufe = Array.isArray(mark.laeufe) ? mark.laeufe : null;
+        const zeilen = laeufe && laeufe.length ? laufSatz(laeufe, max, family, fontSize, bold) : null;
+        const lines = zeilen
+            ? zeilen.map(z => z.stuecke.map(st => st.text).join(''))
+            : textLines(String(mark.text || ''), max, fontSize, family, bold);
         /* DIE AUSRICHTUNG GEHOERT ZUM KASTEN, NICHT ZUM ZEICHNER (E560).
            Sie steht hier, weil sie die Zeilen und die Breite braucht — und weil
            der Auswahlkasten dieselbe Rechnung sehen muss wie das SVG. Die drei
            Namen sind die des Hauses (`bild-rahmen aus-links`), nicht neue. */
         const roh = String(mark.ausricht || 'links');
         const ausricht = (roh === 'mitte' || roh === 'rechts') ? roh : 'links';
-        return { x: point[0], y: point[1], width, height: pad * 2 + lines.length * fontSize * TEXT_ZEILE,
-            pad, zeile: fontSize * TEXT_ZEILE, fontSize, family, bold, lines, ausricht };
+        /* Die Höhe ist die Summe der Zeilenhöhen, sobald die Zeilen verschieden
+           hoch sein können — sonst läuft der Kasten unter einer 36-pt-Zeile zu
+           kurz aus, und die Marke darunter liegt darin. */
+        const hoehe = zeilen
+            ? pad * 2 + zeilen.reduce((summe, z) => summe + z.hoehe, 0)
+            : pad * 2 + lines.length * fontSize * TEXT_ZEILE;
+        return { x: point[0], y: point[1], width, height: hoehe,
+            pad, zeile: fontSize * TEXT_ZEILE, fontSize, family, bold, lines, ausricht,
+            ...(zeilen ? { zeilen } : {}) };
     };
     /** Die Linienzuege — sie drehen ihre Punkte; alles andere hat einen Kasten. */
     const LINIEN = new Set(['stift', 'marker', 'line', 'arrow']);

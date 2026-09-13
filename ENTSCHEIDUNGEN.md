@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-540 Entscheidungen, E1 bis E560 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+541 Entscheidungen, E1 bis E561 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -604,6 +604,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E558** — Eine Folie erbt von ihrem Layout und dessen Master: Lage, Grad und Hintergrund kommen von dort, wenn die Folie selbst nichts sagt
 * **E559** — Das Farbthema wird gelesen: `schemeClr` über `p:clrMap` und `theme1.xml` aufgelöst, samt `lumMod`/`lumOff`/`tint`/`shade`
 * **E560** — Ausrichtung: `a:pPr@algn` wird gelesen, gezeichnet und bekommt einen eigenen Knopf — und die Feldliste beim Bauen der Marke wird umgedreht
+* **E561** — Mehrere Formate in einem Absatz: die Textmarke trägt `laeufe`, und SVG setzt die Stücke — nicht `textWidth`
 
 ---
 
@@ -45232,3 +45233,104 @@ G5  den Knopf weglassen           18 grün,  7 rot
 Bild: `bilder/pptx-ausrichtung.png` — zentrierte Überschrift, linksbündiger,
 zentrierter und rechtsbündiger Absatz, und ein zentrierter Absatz über zwei
 Zeilen, der in **beiden** zentriert steht.
+
+
+E561 — Mehrere Formate in einem Absatz
+--------------------------------------------------------------------------
+
+E557 hat das Format je ABSATZ gelesen und dabei selbst festgehalten, was
+offen bleibt: „Innerhalb eines Absatzes bleibt es beim ersten Lauf." Das war
+der letzte Punkt aus L151, bei dem beim Öffnen einer `.pptx` sichtbar etwas
+verlorenging:
+
+```xml
+<a:r><a:rPr sz="1200"/><a:t>klein </a:t></a:r>
+<a:r><a:rPr sz="3600" b="1"/><a:t>GROSS</a:t></a:r>
+```
+
+```txt
+VORHER   {"text":"klein GROSS","fontSize":12,"fett":false,"hoehe":23}
+NACHHER  zwei Stücke in einer Zeile, 12 pt und 36 pt fett, Kasten 53 pt hoch
+```
+
+Die erste Zeile ist keine Beschreibung, sondern die gemessene Ausgabe der
+Gegenprobe G1 — der alte Zustand, wörtlich.
+
+### Der alte Weg bleibt unberührt, und das ist der Kern
+
+Der neue Satz läuft **nur**, wenn die Marke `laeufe` trägt. Jede Marke ohne
+das Feld — also jede, die je geschrieben wurde — geht weiter durch
+`textLines` wie seit E360. Und ein Absatz, dessen Läufe alle dasselbe Format
+haben, bekommt gar kein `laeufe`: der Normalfall bleibt damit wörtlich der
+alte Fall.
+
+Das ist keine Vorsicht, sondern die einzige Art, eine Satzänderung ohne
+Rückwärtsrisiko einzuführen (§9, §51). `test516` §4 misst es an einer von
+Hand gebauten Marke, nicht an einer eingelesenen.
+
+### Die Zeilenhöhe ist die des grössten Stücks
+
+Eine Zeile mit 12 pt und 36 pt ist 36 pt hoch. Mit dem Grundgrad gerechnet
+wären es 23 statt 53, und die nächste Marke läge in der grossen Schrift.
+Die Gegenprobe G2 zeigt genau diese zwei Zahlen.
+
+### Und der Fund, den nur das Bild machen konnte
+
+Die erste Fassung gab **jedem Stück ein absolutes `x`**, gerechnet aus
+`InkGeometry.textWidth`. Alle Zusagen waren grün. Das Bild zeigte zwei
+Fehler, die keine davon gesehen hatte:
+
+```txt
+„klein GROSS"  →  „kleinGROSS"     der Zwischenraum verschluckt
+„…hervorgehobenen Wort mittendrin" →  „Wort" lief in „mitt…" hinein
+```
+
+Das erste war XML: ohne `xml:space="preserve"` fällt der Zwischenraum am
+Ende eines Laufs weg. Das zweite war grundsätzlicher — **`textWidth` ist
+eine Schätzung**, und sie liegt um bis zu 15 % daneben (nachgemessen,
+siehe L155). Sie ist gut genug, um zu entscheiden, WO umgebrochen wird, und
+zu ungenau, um zu sagen, wo ein Stück ANFÄNGT.
+
+Jetzt trägt nur das **erste** Stück einer Zeile ein `x`; die übrigen
+fliessen, und SVG setzt sie mit den echten Massen des Browsers. Ein `x`
+beginnt in SVG einen neuen Textabschnitt, und `text-anchor` gilt je
+Abschnitt — die Ausrichtung aus E560 funktioniert dadurch unverändert
+weiter, mit echten Massen statt geschätzten.
+
+`Stueck` trägt seither weder `x` noch `breite`. Beide liessen sich rechnen,
+und genau das wäre die Falle: ein Feld, das aussieht wie eine Messung und
+eine Schätzung ist.
+
+### Was daraus NICHT geworden ist
+
+Die Messung ergab, dass auch der Fett-Faktor falsch ist (1,06 gegen
+gemessene 1,13) — und dass normaler Text um bis zu 15 % zu schmal
+geschätzt wird. Ich habe die Konstante kurz auf 1,13 gesetzt und
+**zurückgenommen**: sie steuert den Umbruch jeder Textmarke, auch jeder
+alten Notiz. Das ist eine eigene Arbeit mit eigener Prüfung (L155), kein
+Nebenschritt in einem Bogen über PowerPoint-Läufe (§45).
+
+### Was `test516` hält
+
+25 Zusagen, fünf Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  nur den ersten Lauf lesen      9 grün, 16 rot  (der alte Zustand)
+G2  Zeilenhöhe vom Grundgrad      23 grün,  2 rot  (23 pt statt 53)
+G3  `laeufe` immer anhängen       24 grün,  1 rot
+G4  Stücke ohne `font-size`       23 grün,  2 rot
+G5  jedem Stück ein gerechnetes x 22 grün,  3 rot  (beide auf x = 40)
+```
+
+Zwei Dinge hat `test516` selbst gelernt und stehen als Kommentar darin:
+
+* Die Zusage stürzte unter G1 ab statt rot zu werden (`gemalt[1]` war
+  `undefined`) — ein Absturz verschluckt die Zahl, auf die es ankommt.
+* Und sie mass am **falschen Knoten**: es gibt zwei `<svg text>` mit
+  demselben Anfang, und der erste ist die Vorschau in der Folienliste, deren
+  `<svg>` 0 × 0 misst. `getStartPositionOfChar` gibt dort lauter Nullen
+  zurück, ohne dass etwas kaputt wäre.
+
+Bild: `bilder/pptx-laeufe.png` — „klein GROSS" in zwei Graden, drei Farben
+in einer Zeile, ein hervorgehobenes Wort mitten in einem umbrechenden Satz,
+und ein zentrierter Absatz mit gemischtem Format.
