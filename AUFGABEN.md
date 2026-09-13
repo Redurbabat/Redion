@@ -919,14 +919,32 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   Ansicht · Verlauf · Überprüfen · Hilfe. Unter 900 px Fensterbreite gibt
   es kein Band — dort führt der Knopf „📽️ Folie" ins Menü.
 
+  **Und seit E551 STEHT die Folie** statt durchzurollen — die Einzelseite
+  gab es seit E398 als Schalter, geändert wurde nur die VORGABE, und nur
+  für den quer liegenden Foliensatz. Das folgt beiden Ansagen Redurs:
+  „die PDF Seiten … komplet wie one note" (E299) gilt weiter für PDF und
+  Heft, „1:1 wie PowerPoint" für Folien. Der Schalter bleibt der stärkere,
+  in beide Richtungen geprüft.
+
+  Dazu zwei Funde, beide gemessen: am Telefon stand die Folie oben mit
+  **476 px leerer Fläche darunter** (28 % der Höhe genutzt) — sie steht
+  jetzt mittig, mit `safe center`, weil einfaches `center` ihren Anfang
+  unerreichbar macht (gemessen −28, −204, −464 px). Und „📽️ Folie" aus
+  E549 kostete dem Titel am Telefon 44 px: **70 statt der 100, die
+  `test285` verlangt**. Gemeldet hat es niemand, weil `test285` ein PDF
+  öffnet und der Knopf dort versteckt ist. Er steht jetzt in der
+  Ansichtsklappe; Titel 114 px.
+
   **Offen bleibt am Folieneditor:**
-  - EINE Folie stehend im Bild statt durchrollend. Der Dokumentmodus rollt
-    durch — für das Schreiben richtig, für das Bauen einer Präsentation
-    nicht. Das ist jetzt der grösste Rest von „1:1 wie PowerPoint".
   - Die Zeichenleiste als Reiter „Zeichnen" im Band, so wie PowerPoint es
     macht. Das nähme aber eine dauerhaft sichtbare Leiste weg und
     versteckte sie hinter einem Klick — **das ist Redurs Entscheidung, nicht
-    meine**. Bis dahin stehen beide da, und das Band kostet 110 px.
+    meine**. Gefragt am 13. September, Antwort steht aus. Bis dahin stehen
+    beide da, und das Band kostet 110 px.
+  - Am Rechner rollt die stehende Folie noch um 111 px — genau die 110, die
+    unten für die schwebende Stiftleiste freibleiben. Älter als dieser
+    Bogen; sie anzutasten hiesse, toten Rollweg gegen verdeckten Inhalt zu
+    tauschen.
   - Die Handgriffe im Folienmenü heissen noch „Seite", nicht „Folie" — die
     Griffe selbst gibt es seit G3.
 

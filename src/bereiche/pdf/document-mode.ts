@@ -87,8 +87,41 @@ const DocumentMode = (() => {
      erzeugen. Und je Dokument, aus demselben Grund wie beim Zoom: ein
      gescanntes Buch liest sich anders als ein handbeschriebenes Heft. */
   const LAUF_MERKER = 'dokLauf:';
-  const gemerkterLauf = (pageId: string): boolean =>
-    Store.getMeta(LAUF_MERKER + pageId) === 'einzel';
+  /**
+   * Rollt dieses Dokument, oder steht eine Seite? (E551)
+   *
+   * DIE VORGABE HÄNGT AM DOKUMENT, UND ZWAR AUS EINEM GRUND, DER IN REDURS
+   * EIGENEN WORTEN STEHT — in zweien, die einander nicht widersprechen,
+   * sondern von zwei verschiedenen Dingen reden:
+   *
+   *   PDF und Heft (E299):  „die PDF SEITEN sollte wie goodnotes sich ganz
+   *                          oeffnen komplet wie one note so"
+   *   Folien (E548/E549):   „1:1 wie powerpoint"
+   *
+   * Ein Skript liest man durch, man blättert es nicht — dabei bleibt es, und
+   * `bausteine.css` sagt an seiner Stelle dasselbe. Eine PRÄSENTATION aber
+   * rollt in PowerPoint nirgends: dort steht eine Folie, und die Liste
+   * links wechselt sie. Die Rolle ist genau das, was einen Foliensatz nicht
+   * wie PowerPoint aussehen lässt.
+   *
+   * Also: ein quer liegender Foliensatz steht von Haus aus, alles andere
+   * rollt von Haus aus. Das ist keine Entscheidung GEGEN E299, sondern beide
+   * Ansagen dort, wo sie gemeint waren.
+   *
+   * UND DER SCHALTER BLEIBT DER STÄRKERE. Wer bei einem Foliensatz einmal
+   * „▤ Fortlaufend zeigen" gedrückt hat, bekommt beim nächsten Öffnen die
+   * Rolle — `meta` gewinnt gegen die Vorgabe, sonst wäre der Schalter eine
+   * Attrappe.
+   */
+  const gemerkterLauf = (pageId: string): boolean => {
+    const gemerkt = Store.getMeta(LAUF_MERKER + pageId);
+    if (gemerkt === 'einzel') return true;
+    if (gemerkt === 'rolle') return false;
+    try {
+      return typeof Folienvorlagen !== 'undefined' &&
+             Folienvorlagen.istFoliensatz(pageId) === true;
+    } catch { return false; }
+  };
   const laufMerken = (pageId: string, einzeln: boolean): void => {
     const wert = einzeln ? 'einzel' : 'rolle';
     if (Store.getMeta(LAUF_MERKER + pageId) === wert) return;
@@ -1783,7 +1816,29 @@ const DocumentMode = (() => {
     const zeigenKlappe = topButton('praesentieren', '▶ Präsentieren',
       'Vollbild ohne Leisten — blättern mit Tipp oder Pfeiltasten');
     zeigenKlappe.className = 'document-zeigen-klappe';
-    commandbar.append(modes, pagination, zoomGroup, findKlappe, zeigenKlappe);
+    /* UND SEIT E551 AUCH DAS FOLIEN-MENÜ — aus genau demselben Grund, mit
+       genau derselben Zahl. E549 hat „📽️ Folie" oben in die Leiste gestellt
+       und die Telefonbreite nicht nachgemessen. Gemessen wurde sie jetzt:
+       bei 390 px blieben dem Titel eines Foliensatzes **70 px** — dieselben
+       siebzig, die vier Absätze weiter oben schon einmal zu wenig waren, und
+       `test285` verlangt hundert.
+
+       Warum es niemand gemeldet hat: `test285` öffnet ein PDF, und bei einem
+       PDF ist der Knopf ohnehin versteckt. Die Zusage war also da und
+       konnte den Fall gar nicht sehen. `test507` misst ihn jetzt an einem
+       Foliensatz.
+
+       Auf dem Bild war es ausserdem der einzige Knopf der Leiste, der am
+       Telefon sein WORT zeigte — alle anderen tragen dort nur ihr Zeichen
+       (`font-size:0` plus `::before`). Er sah aus wie ein Fremdkörper, und
+       das war er auch. */
+    const folienKlappe = topButton('folienmenue', '📽️ Folie',
+      'Folien: neue Folie, Liste, präsentieren, ausgeben');
+    folienKlappe.className = 'document-folien-klappe';
+    folienKlappe.setAttribute('aria-haspopup', 'menu');
+    folienKlappe.hidden = !istFoliensatz(page);
+    commandbar.append(modes, pagination, zoomGroup, findKlappe, zeigenKlappe,
+                      folienKlappe);
 
     // One document-wide tool strip. Each action delegates to the existing page
     // controller; the original controls, undo stacks and mark objects stay intact.
