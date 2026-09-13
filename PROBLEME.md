@@ -44,6 +44,7 @@ sind der teuerste Teil und der lehrreichste.
 | P28 | 2026-09-13 | Ein Lauf, der allein gruen ist und im Stapel rot — zweimal hintereinander | 🟡 klein | E552 |
 | P29 | 2026-09-13 | Zwei Knoepfe hiessen „Praesentieren" und taten Verschiedenes | 🟠 mittel | E553 |
 | P30 | 2026-09-13 | Ein Zierstrich war als „zugedeckte Antwort" gebaut — sieben Stueck | 🟠 mittel | E553 |
+| P31 | 2026-09-13 | Die naheliegende Farbreparatur haette den Barrierefreiheitsfall zerstoert | gross | E554 |
 
 ---
 
@@ -621,4 +622,27 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Gegenprobe G4 (den Zierstrich wieder als Abdeckmarke bauen): 14 gruen, 7 rot, und die Zeile nennt die Zahl — SIEBEN Zierdeckel in acht Layouts.
 
 **Die Lehre.** Eine Markenart ist kein Zeichenwerkzeug, sondern eine BEDEUTUNG. Wer sie nimmt, weil sie zufaellig so aussieht, wie er es braucht, erbt alles, was sie sonst noch verspricht. Dieselbe Sorte Fehler wie ein uebersetzter Feldname (§53.3): die Form stimmt, die Aussage nicht.
+
+
+---
+
+## P31 · Die naheliegende Farbreparatur haette den Barrierefreiheitsfall zerstoert
+
+*2026-09-13 · gross · E554*
+
+**Das Bild.** Kein Symptom — der Fehler ist nie gebaut worden. Die erste Untersuchung schlug fuer den gewaehlten Stift `background:var(--accent); color:var(--auf-accent)` vor und schrieb dazu, --auf-accent sei „genau dafuer da ... und in beiden Themen nachgerechnet".
+
+**Die falsche Vermutung.** Genau die: dass ein Token, das in dunkel.css UND hell.css definiert ist, auch den acht SCHEMATA folgt. Es folgt ihnen nicht.
+
+**Wie es gefunden wurde.** Durch die Gegenrede. Ein zweiter Agent hat die Behauptung nicht geglaubt, sondern die acht Schemata einzeln abgelesen und den Kontrast gerechnet. `aussehen.ts:112` setzt pro Schema NUR --accent; --auf-accent, --accent-text und --accent-schwach kommen unveraendert aus dunkel.css/hell.css.
+
+**Die Ursache.** Zwei Begriffe, die gleich aussehen und es nicht sind: THEMA (hell/dunkel, zwei Stueck) und SCHEMA (acht Stueck). Ein Token kann „in beiden Themen nachgerechnet" sein und trotzdem in sechs von acht Schemata falsch stehen.
+
+**Die Lösung.** Der gewaehlte Stift wird ein UMRISS: background:var(--bg-hover); color:var(--text); box-shadow:inset 0 0 0 2px var(--accent). Das Paar --text/--bg-hover ist je Thema nachgerechnet, der Akzent traegt keine Schrift — es braucht gar keine eigene Kontrastrechnung je Schema.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Gegenprobe G3 baut den verworfenen Vorschlag und misst: nacht 3,07 · wald 2,26 · sand 3,87 · rose 3,15 · kontrast 1,43 — gegen heute 9,30:1. Die gemessenen Zahlen sind dieselben, die die Gegenrede vorher gerechnet hatte.
+
+**Die Lehre.** Der Satz „ist in beiden Themen nachgerechnet" klang wie ein Beleg und war eine Verwechslung. Ein Beleg fuer zwei Faelle ist kein Beleg fuer acht. Und: eine Gegenrede, die den Vorschlag selbst nachrechnet statt ihn zu lesen, ist den Aufwand wert — dieser eine Fund haette §38 an der empfindlichsten Stelle gebrochen, und kein Waechter haette es gemeldet, weil es bis heute keinen gibt.
 

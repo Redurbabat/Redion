@@ -1017,11 +1017,12 @@ Keine — an diesem Tag kam keine Nachricht.
 | E551 — Eine Folie steht, ein Skript rollt: die Vorgabe haengt am Dokument, nicht an einer Regel fuer alle | `(nach E550)` → `(dieser Bogen)` | 10:30 – 12:10 | ca. 100 min | test507 neu, 34 Zusagen, vier Gegenproben gefahren (24/10, 30/4, 30/4, 32/2) |
 | E552 — „Zeichnen" wird ein Reiter (die echte Leiste zieht um), und ein Blatt heisst im Foliensatz „Folie" | `(nach E551)` → `(dieser Bogen)` | 12:20 – 14:20 | ca. 120 min | test508 neu, 40 Zusagen, fünf Gegenproben gefahren (Abbruch, 35/3, 36/2, 38/2, 37/3) |
 | E553 — Der gelbe Deckel deckt auf: der Knopf startete den falschen Vortrag, und ein Zierstrich war als „Antwort" gebaut | `(nach E552)` → `(dieser Bogen)` | 14:30 – 16:10 | ca. 100 min | test509 neu, 21 Zusagen, vier Gegenproben gefahren (Abbruch, 17/4, 18/3, 14/7) |
+| E554 — Das Dokumentstudio traegt Redions Farben: fuenf feste Hexwerte werden abgeleitet, der gewaehlte Stift wird ein Umriss | `(nach E553)` → `(dieser Bogen)` | 16:10 – 18:00 | ca. 110 min | test510 neu, 18 Zusagen — VOR der Reparatur rot (10/8), danach gruen; drei Gegenproben (13/5, 17/1, 16/2) |
 
 #### Zahlen des Tages
 
-- **commits:** 28
-- **entscheidungen:** 26
+- **commits:** 29
+- **entscheidungen:** 27
 
 #### Das grösste Problem
 
@@ -1057,10 +1058,11 @@ Der zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glaskno
 | 11:20 | `gemerkterLauf` gibt fuer einen quer liegenden Foliensatz von Haus aus „Einzelseite", fuer alles andere weiter „Rolle". Dazu `justify-content:safe center` fuer die stehende Folie und ein Umzug des Knopfes „📽️ Folie" in die Ansichtsklappe des Telefons. | Redur hat zu zwei Dingen zwei Sachen gesagt, die einander nicht widersprechen: „die PDF Seiten … komplet wie one note" (E299) und „1:1 wie PowerPoint" (E548/E549). Die Einzelseite gab es seit E398 schon — geaendert wurde nur die Vorgabe, und nur fuer Folien. | keins an Daten — Ansicht. Der Schalter bleibt der staerkere: `meta` gewinnt gegen die Vorgabe, in beide Richtungen geprueft ueber einen echten Druck und ein Neuladen. |
 | 13:30 | Die Zeichenleiste zieht als Reiter „Zeichnen" ins Folienband um — dasselbe Element, nicht nachgebaut. Dazu `wortEins`/`wortViele`: im Foliensatz heisst ein Blatt „Folie". | Redur: „weiter mache gleich wie powerpoint" — die Antwort auf die Frage aus E551. PowerPoint hat einen Reiter „Zeichnen" und keine zweite Dauerleiste, und es sagt nirgends „Seite". | Eines, und es ist gemessen: die Leiste ist jetzt ein KIND des Bandes. Wer das Band entfernt, nimmt sie mit — dann hätte ein Fenster unter 900 px keine Zeichenwerkzeuge mehr (§47, weggenommene Funktion durch Unfall). `folienbandNachziehen` bringt sie deshalb zuerst zurück und entfernt dann das Band. Die Daten heissen weiter `blatt` (§53.3). |
 | 15:20 | Der Knopf „▶ Präsentieren" startet bei einem Foliensatz `Werkzeuge.praesentation` statt `zeigenAn`. Und `linie()` in `vorlagen/folien.ts` baut den Zierstrich als `art:'line'` statt als `art:'abdeck'`. | Redur: „wenn ich die gelbe antworten klicke geht es weiter und zeigt mir nicht die antwort". Gemessen: der Dokumentvortrag legt eine Fläche über alles (inset:0, z-index:40), die jeden Zeiger schluckt — ein Tipp schaltete von „Folie 1/2" auf „Folie 2/2", der Deckel blieb zu. | keins an Daten. PDF und Heft behalten den Laserpointer (§47, test509 §4 misst es). Der Zierstrich sieht gleich aus, verspricht aber nichts mehr. |
+| 17:10 | `pdf-studio.css:7`: die fuenf Farbnamen (--pdf-chrome, --pdf-tools, --pdf-on-chrome, --pdf-desk, --pdf-dock) aus festen Hexwerten in Ableitungen echter Tokens. Dazu vierzehn rohe Einzelwerte und der gewaehlte Stift als Umriss statt als Farbpaar. | Redur: „es sollte wie die redion farben sein wenn ich die fraben aendere sollte das auch sich aendern". Gemessen ueber alle acht Schemata: fuenf von acht Flaechen waren byte-gleich, auch unter „Starker Kontrast" mit --bg #000000. | Zwei, beide gemessen und abgedeckt. (1) --pdf-desk NICHT auf --bg-tief: das hat nur zwei Werte fuer acht Schemata. (2) Der gewaehlte Stift NICHT auf --accent/--auf-accent: das faellt in fuenf von acht unter 4,5:1, in „Starker Kontrast" auf 1,43:1. Dazu ein Rand am Papier, damit die weisse Folie auf hellem Schreibtisch nicht verschwindet — acht Bilder angesehen. |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 30 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 31 Einträge.
 

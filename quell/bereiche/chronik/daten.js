@@ -1085,11 +1085,19 @@ const ChronikDaten = {
                     "zeitraum": "14:30 – 16:10",
                     "dauer": "ca. 100 min",
                     "pruefungen": "test509 neu, 21 Zusagen, vier Gegenproben gefahren (Abbruch, 17/4, 18/3, 14/7)"
+                },
+                {
+                    "was": "E554 — Das Dokumentstudio traegt Redions Farben: fuenf feste Hexwerte werden abgeleitet, der gewaehlte Stift wird ein Umriss",
+                    "vonCommit": "(nach E553)",
+                    "bisCommit": "(dieser Bogen)",
+                    "zeitraum": "16:10 – 18:00",
+                    "dauer": "ca. 110 min",
+                    "pruefungen": "test510 neu, 18 Zusagen — VOR der Reparatur rot (10/8), danach gruen; drei Gegenproben (13/5, 17/1, 16/2)"
                 }
             ],
             "zahlen": {
-                "commits": 28,
-                "entscheidungen": 26
+                "commits": 29,
+                "entscheidungen": 27
             },
             "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
             "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -1201,6 +1209,12 @@ const ChronikDaten = {
                     "was": "Der Knopf „▶ Präsentieren\" startet bei einem Foliensatz `Werkzeuge.praesentation` statt `zeigenAn`. Und `linie()` in `vorlagen/folien.ts` baut den Zierstrich als `art:'line'` statt als `art:'abdeck'`.",
                     "warum": "Redur: „wenn ich die gelbe antworten klicke geht es weiter und zeigt mir nicht die antwort\". Gemessen: der Dokumentvortrag legt eine Fläche über alles (inset:0, z-index:40), die jeden Zeiger schluckt — ein Tipp schaltete von „Folie 1/2\" auf „Folie 2/2\", der Deckel blieb zu.",
                     "risiko": "keins an Daten. PDF und Heft behalten den Laserpointer (§47, test509 §4 misst es). Der Zierstrich sieht gleich aus, verspricht aber nichts mehr."
+                },
+                {
+                    "zeit": "17:10",
+                    "was": "`pdf-studio.css:7`: die fuenf Farbnamen (--pdf-chrome, --pdf-tools, --pdf-on-chrome, --pdf-desk, --pdf-dock) aus festen Hexwerten in Ableitungen echter Tokens. Dazu vierzehn rohe Einzelwerte und der gewaehlte Stift als Umriss statt als Farbpaar.",
+                    "warum": "Redur: „es sollte wie die redion farben sein wenn ich die fraben aendere sollte das auch sich aendern\". Gemessen ueber alle acht Schemata: fuenf von acht Flaechen waren byte-gleich, auch unter „Starker Kontrast\" mit --bg #000000.",
+                    "risiko": "Zwei, beide gemessen und abgedeckt. (1) --pdf-desk NICHT auf --bg-tief: das hat nur zwei Werte fuer acht Schemata. (2) Der gewaehlte Stift NICHT auf --accent/--auf-accent: das faellt in fuenf von acht unter 4,5:1, in „Starker Kontrast\" auf 1,43:1. Dazu ein Rand am Papier, damit die weisse Folie auf hellem Schreibtisch nicht verschwindet — acht Bilder angesehen."
                 }
             ]
         }
@@ -1598,6 +1612,21 @@ const ChronikDaten = {
             "beweis": "Gegenprobe G4 (den Zierstrich wieder als Abdeckmarke bauen): 14 gruen, 7 rot, und die Zeile nennt die Zahl — SIEBEN Zierdeckel in acht Layouts.",
             "lehre": "Eine Markenart ist kein Zeichenwerkzeug, sondern eine BEDEUTUNG. Wer sie nimmt, weil sie zufaellig so aussieht, wie er es braucht, erbt alles, was sie sonst noch verspricht. Dieselbe Sorte Fehler wie ein uebersetzter Feldname (§53.3): die Form stimmt, die Aussage nicht.",
             "entscheidung": "E553"
+        },
+        {
+            "nr": "P31",
+            "datum": "2026-09-13",
+            "titel": "Die naheliegende Farbreparatur haette den Barrierefreiheitsfall zerstoert",
+            "schwere": "gross",
+            "symptom": "Kein Symptom — der Fehler ist nie gebaut worden. Die erste Untersuchung schlug fuer den gewaehlten Stift `background:var(--accent); color:var(--auf-accent)` vor und schrieb dazu, --auf-accent sei „genau dafuer da ... und in beiden Themen nachgerechnet\".",
+            "falscheVermutung": "Genau die: dass ein Token, das in dunkel.css UND hell.css definiert ist, auch den acht SCHEMATA folgt. Es folgt ihnen nicht.",
+            "wieGefunden": "Durch die Gegenrede. Ein zweiter Agent hat die Behauptung nicht geglaubt, sondern die acht Schemata einzeln abgelesen und den Kontrast gerechnet. `aussehen.ts:112` setzt pro Schema NUR --accent; --auf-accent, --accent-text und --accent-schwach kommen unveraendert aus dunkel.css/hell.css.",
+            "ursache": "Zwei Begriffe, die gleich aussehen und es nicht sind: THEMA (hell/dunkel, zwei Stueck) und SCHEMA (acht Stueck). Ein Token kann „in beiden Themen nachgerechnet\" sein und trotzdem in sechs von acht Schemata falsch stehen.",
+            "loesung": "Der gewaehlte Stift wird ein UMRISS: background:var(--bg-hover); color:var(--text); box-shadow:inset 0 0 0 2px var(--accent). Das Paar --text/--bg-hover ist je Thema nachgerechnet, der Akzent traegt keine Schrift — es braucht gar keine eigene Kontrastrechnung je Schema.",
+            "warumKeineUhr": "—",
+            "beweis": "Gegenprobe G3 baut den verworfenen Vorschlag und misst: nacht 3,07 · wald 2,26 · sand 3,87 · rose 3,15 · kontrast 1,43 — gegen heute 9,30:1. Die gemessenen Zahlen sind dieselben, die die Gegenrede vorher gerechnet hatte.",
+            "lehre": "Der Satz „ist in beiden Themen nachgerechnet\" klang wie ein Beleg und war eine Verwechslung. Ein Beleg fuer zwei Faelle ist kein Beleg fuer acht. Und: eine Gegenrede, die den Vorschlag selbst nachrechnet statt ihn zu lesen, ist den Aufwand wert — dieser eine Fund haette §38 an der empfindlichsten Stelle gebrochen, und kein Waechter haette es gemeldet, weil es bis heute keinen gibt.",
+            "entscheidung": "E554"
         }
     ]
 };

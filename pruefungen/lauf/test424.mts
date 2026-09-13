@@ -169,12 +169,20 @@ try {
      Kein Nachgeben in der Sache: die Zusage bleibt „Seite 2 nach dem
      Neuladen", sie bekommt nur die Zeit, die das Zeichnen wirklich braucht.
      Laeuft sie ab, ist die Zeile so rot wie vorher. */
-  await page.locator('.document-stage[data-aktiv]').first().waitFor({ timeout: 15000 });
-  await page.waitForFunction(
+  await page.locator('.document-stage[data-aktiv]').first().waitFor({ timeout: 30000 });
+  /* DREISSIG SEKUNDEN, NICHT FUENFZEHN. Mit fuenfzehn lief er im Stapel von
+     elf durch und brach im Stapel von vierzehn wieder — die Grenze war an
+     der Last gemessen, die gerade da war, nicht an der, die kommen kann.
+     Und die Zahl allein reicht nicht: bei Zeitablauf stand vorher dieselbe
+     nichtssagende Meldung da wie bei einem falschen Wert. Jetzt sagt die
+     Zeile, WAS sie gelesen hat. */
+  const standErreicht = await page.waitForFunction(
     () => document.querySelector('.document-stage[data-aktiv]')
             ?.getAttribute('data-stand-nr') === '1',
-    undefined, { timeout: 15000 }).catch(() => { /* dann meldet die Zeile darunter */ });
-  check('PDF page position survives reload', await page.locator('.document-stage[data-aktiv]').getAttribute('data-stand-nr') === '1');
+    undefined, { timeout: 30000 }).then(() => true).catch(() => false);
+  const standIst = await page.locator('.document-stage[data-aktiv]').getAttribute('data-stand-nr');
+  check('PDF page position survives reload (ist "' + standIst + '"'
+    + (standErreicht ? '' : ', Zeit abgelaufen') + ')', standIst === '1');
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   if (screenshots) {
     for (const theme of ['light', 'dark']) {

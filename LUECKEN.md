@@ -7305,6 +7305,37 @@ E526 selbst ist auf null: die zwei rohen `22px` der Kapsel sind durch
 `var(--radius-2xl)` ersetzt, und ihr Radius wird aus `--mobile-nav-height`
 gerechnet statt als Zahl wiederholt.
 
+### Nachgemessen am 13. September (E554) — der Abstand ist gewachsen, und er war von Anfang an da
+
+```txt
+Wert |  Decke |  jetzt |  Abstand
+  16 |    246 |    260 |   +14
+  22 |     77 |     86 |    +9
+  28 |     56 |     59 |    +3
+  44 |    153 |    168 |   +15
+  46 |     14 |     15 |    +1
+  56 |     12 |     14 |    +2
+```
+
+**Und der Befund, der hier vorher fehlte:** die Decke war schon bei ihrem
+letzten Schreiben nicht synchron. Der Commit, der `marken-decke.json` zuletzt
+angefasst hat, ist E509/E510 — und an genau jenem Commit nachgezählt standen
+in den Stildateien **252 / 81 / 58 / 160 / 14 / 18**, nicht die eingetragenen
+246 / 77 / 56 / 153 / 14 / 12. Die Zahlen wurden also nie gegen die Wirklichkeit
+gemessen, sondern von woanders übernommen. Bei `56` stand die Decke damals
+sogar SECHS zu tief.
+
+Das ändert, was zu tun ist: es sind nicht „zehn Stellen seit dem letzten
+Stand", sondern zwei getrennte Sachen — die Stellen, die seit E509 wirklich
+dazugekommen sind, und ein Anfangsfehler in der Decke selbst.
+
+**Die fünf Folienbögen E549 bis E553 tragen null dazu bei.** Nachgezählt über
+jeden der fünf Commits, nur `quell/schale/stil/`: keine einzige hinzugefügte
+Zeile enthält einen der sechs gezählten Werte. Das neue Folienband benutzt
+`var(--touch-min)`, `var(--space-*)` und `var(--radius-*)`. Es ist also weiter
+nicht dieser Arbeit anzulasten — aber jetzt steht die Zahl dafür da, statt
+nur die Behauptung.
+
 ---
 
 L149 · Die Bögen E532/E533 sind ohne eigene Prüfläufe gebaut — offen
