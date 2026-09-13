@@ -902,21 +902,31 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   Folienliste) · Vortrag (Präsentieren) · Ausgeben (Als PowerPoint, Als
   PDF, Drucken).
 
-  **Warum der Reiter nicht schon sichtbar ist**, gemessen statt gemeint:
-  `#menueband` im Dokumentmodus einzublenden war nachweislich schlechter —
-  eine zusammengeklappte Ecke „Werkzeuge ⌄" legte sich bei 1440 × 852
-  deckungsgleich über die Dokumentleiste. Das Verzeichnis steht also
-  bereit, die LEISTE dafür fehlt noch; das ist ein Layout-Bogen, kein
-  Katalog-Bogen.
+  **Und seit E550 steht die LEISTE** — der Layout-Bogen, den E549 als offen
+  vermerkt hat. Eine Reiterzeile mit einem Band darunter, zwischen
+  Kopfleiste und Zeichenleiste, also über der Folie wie in PowerPoint.
+  Sie fliesst in der Spalte mit, statt sich darüberzulegen; das war der
+  ganze Unterschied zum ersten Versuch. Gemessen bei 1440 × 852: Band
+  110 px, Fläche von 698 auf 588 px — und die Folie bleibt 980 × 551,
+  also unverändert. Das Band hat die Luft genommen, nicht die Folie.
+
+  **Fünf Reiter, und zwei bleiben draussen — gemessen, nicht gewählt:**
+  alle 151 Einträge des Bandkatalogs wurden bei offenem Foliensatz einzeln
+  aufgerufen. Bei `start` taten 14 von 14 nichts, bei `einfuegen` 65 von 69
+  — sie brauchen eine Schreibmarke, die es im Dokumentmodus nicht gibt.
+  `zeichnen` bleibt draussen, weil seine dreissig Knöpfe als Zeichenleiste
+  schon dauerhaft zwei Zeilen tiefer stehen (§8). Übrig: Präsentation ·
+  Ansicht · Verlauf · Überprüfen · Hilfe. Unter 900 px Fensterbreite gibt
+  es kein Band — dort führt der Knopf „📽️ Folie" ins Menü.
 
   **Offen bleibt am Folieneditor:**
   - EINE Folie stehend im Bild statt durchrollend. Der Dokumentmodus rollt
     durch — für das Schreiben richtig, für das Bauen einer Präsentation
-    nicht.
-  - Die Leiste mit Reitern ÜBER der Folie (Start · Einfügen · Entwurf ·
-    Übergänge). Der Reiter und seine Einträge sind seit E549 da; was fehlt,
-    ist der Platz, an dem sie stehen, ohne die Dokumentleiste zu
-    überdecken. Das ist der Rest von „1:1 wie PowerPoint".
+    nicht. Das ist jetzt der grösste Rest von „1:1 wie PowerPoint".
+  - Die Zeichenleiste als Reiter „Zeichnen" im Band, so wie PowerPoint es
+    macht. Das nähme aber eine dauerhaft sichtbare Leiste weg und
+    versteckte sie hinter einem Klick — **das ist Redurs Entscheidung, nicht
+    meine**. Bis dahin stehen beide da, und das Band kostet 110 px.
   - Die Handgriffe im Folienmenü heissen noch „Seite", nicht „Folie" — die
     Griffe selbst gibt es seit G3.
 

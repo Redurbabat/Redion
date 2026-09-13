@@ -37,6 +37,8 @@ sind der teuerste Teil und der lehrreichste.
 | P21 | 2026-09-12 | Zwei Regeln, die geschrieben waren und nie jemand gesehen hat | 🟠 mittel | E532 |
 | P22 | 2026-09-12 | Ein Eintrag beschrieb einen Bau, den es nicht gab | 🟠 mittel | E533 |
 | P23 | 2026-09-13 | Eine harte Zahl hat gemeldet — und was sie meldete, war nicht die Zahl | 🟡 klein | E549 |
+| P24 | 2026-09-13 | Ein Menüband ohne ein einziges Zeichen — und jede Prüfung wäre grün geblieben | 🟡 klein | E550 |
+| P25 | 2026-09-13 | Das Band fragte die Fensterbreite einmal — und behielt die Antwort | 🟡 klein | E550 |
 
 ---
 
@@ -453,4 +455,50 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Beide neuen Zusagen rot gesehen (§50): einmal das Rollen im Messen weggenommen — „ganz sichtbar: false"; einmal die Roll-Schwelle auf +2000 gesetzt — „1787 px Inhalt in 757 px", damit klar ist, dass die Zeile die Messung liest und kein festes `true`. Beide Male 154 ok / 1 offen; behoben 155 grün.
 
 **Die Lehre.** Eine harte Zahl in einem Prüflauf ist kein Ärgernis, sondern der einzige Melder, den eine wachsende Liste hat — und sie meldet nicht immer das, wonach sie aussieht. Hier meldete sie nicht „die Zahl stimmt nicht", sondern „das Blatt ist etwas anderes geworden". Dieselbe Zeile war ein Jahr davor schon einmal still rot (E513 → E522), weil niemand sie hörte; diesmal war der Preis nur ein Absatz statt eines vollen Laufs.
+
+
+---
+
+## P24 · Ein Menüband ohne ein einziges Zeichen — und jede Prüfung wäre grün geblieben
+
+*2026-09-13 · 🟡 klein · E550*
+
+**Das Bild.** Auf dem ersten Bild des Folienbands stand die ganze Reihe als nackter Text da: „Neue Folie   Folienliste   Präsentieren   Als PowerPoint   Als PDF   Drucken". Kein Symbol, keine Kachel, nur Wörter nebeneinander.
+
+**Die falsche Vermutung.** Die naheliegende: die Einträge tragen keine Zeichen. Nachgesehen tragen sie welche — `plus`, `page`, `play`, `download`, `printer`, alle gültige Namen aus dem Symbolregister.
+
+**Wie es gefunden wurde.** Nur durch das Bild (§55.3). Gemessen war zu dem Zeitpunkt alles richtig: 6 Knöpfe, richtige Namen, richtige Gruppen, jeder mit `title` und `aria-label`, jeder tat beim Klick das Richtige.
+
+**Die Ursache.** `Menueband.knopf` hängt für einen Symbolnamen nur ein LEERES `<span data-sym="plus">` ein. Gemalt wird es später von `Register.symbole.fuelle(wurzel)` — im globalen Band steht dieser Aufruf an drei Stellen, im neuen Folienband an keiner.
+
+**Die Lösung.** Ein `Register.symbole.fuelle(flaeche)` nach jedem Füllen der Bandfläche, mit `try` darum: fehlt das Register, bleibt der Name stehen — schlechter, aber nicht kaputt.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Die Zusage sucht nicht `data-sym` — der Kasten kann leer sein —, sondern das GEMALTE: ein `<svg>` darin, ein Textzeichen oder eine Farbprobe. Gegenprobe gefahren (den Aufruf wieder herausgenommen): 42 grün, 1 rot, „38 Knöpfe ohne gemaltes Zeichen".
+
+**Die Lehre.** Ein Knopf kann vollständig sein und trotzdem falsch aussehen. Alles, was ein zusammengesetzter Prüflauf fragen konnte — da? richtig benannt? tut es etwas? spricht es mit einem Vorleseprogramm? —, war mit Ja zu beantworten. Was fehlte, war das, was man SIEHT. Genau dafür steht §55.3 in der CLAUDE.md, und genau deshalb reicht dort keine Messung.
+
+
+---
+
+## P25 · Das Band fragte die Fensterbreite einmal — und behielt die Antwort
+
+*2026-09-13 · 🟡 klein · E550*
+
+**Das Bild.** Ein Fenster von 1440 auf 800 gezogen: das Folienband blieb stehen, obwohl es dort nicht hingehört. Umgekehrt aufgezogen: es kam nie.
+
+**Die falsche Vermutung.** Keine — der Fehler war nie sichtbar. Er wurde beim LESEN des eigenen Diffs gefunden, mit der Frage „was würde hier schiefgehen".
+
+**Wie es gefunden wurde.** Weder gemessen noch auf einem Bild. Beim Durchgehen der eigenen Änderung fiel `innerWidth < BAND_AB` auf: eine Zahl, die beim Zeichnen EINMAL gefragt wird, in einem Studio, das bei `resize` nicht neu zeichnet.
+
+**Die Ursache.** `folienbandBauen` liest `innerWidth` beim Aufbau. Das Dokumentstudio hat einen `resize`-Griff (`beiGroesse`), der aber nur Höhen nachrechnet — richtig so, denn ein Neuzeichnen bei jeder Fensterbewegung wäre bei achtzig Seiten teuer. Das Band war dort nur nicht eingetragen.
+
+**Die Lösung.** `folienbandNachziehen()` in `beiGroesse`: es vergleicht, ob ein Band da sein SOLL und ob eines da IST, und hängt nur beim Unterschied ein oder aus.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Zwei Gegenproben, beide gefahren: die Funktion nichts tun lassen (49 grün, 2 rot — das Band blieb bei 800 px stehen), und sie nur AUSHÄNGEN lassen (47 grün, 4 rot — es kam beim Aufziehen nicht zurück). Die zweite war nötig, weil sonst nur die naheliegende Richtung geprüft gewesen wäre.
+
+**Die Lehre.** Zwei Sachen. Erstens: das eigene Diff noch einmal mit der Frage lesen, was daran schiefgehen könnte — dieser Fehler stand in keiner Messung und auf keinem Bild. Zweitens: die erste Form der Gegenprobe (den AUFRUF entfernen) liess den Zweig wegen `noUnusedLocals` gar nicht mehr bauen. Eine Gegenprobe, die nicht baut, ist keine — CLAUDE.md §52.6 beschreibt genau diesen Fall, und ich bin trotzdem hineingelaufen.
 

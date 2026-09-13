@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-529 Entscheidungen, E1 bis E549 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+530 Entscheidungen, E1 bis E550 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -593,6 +593,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E547** — Die Folienliste zeigt Folien: Mass vom Block, Marken statt Bleistift, Name statt 27-mal „A4-Blatt"
 * **E548** — „Präsentation" ist ein Weg: Eintrag im Anlegen-Menü, acht PowerPoint-Layouts, ein Wähler, der sie zeigt
 * **E549** — Reiter „Präsentation" im Band, Folien-Menü in der Dokumentleiste — das ganze Band dort war gemessen schlechter
+* **E550** — Das Folienband: Reiter ÜBER der Folie; `start` und `einfuegen` bleiben draussen, weil 79 von 83 ihrer Knöpfe dort nichts tun
 
 ---
 
@@ -44019,3 +44020,145 @@ Prüflauf ist kein Ärgernis, sondern der einzige Melder, den eine wachsende
 Liste hat. Sie war schon einmal still rot (E513 → E522), weil niemand sie
 hörte. Diesmal hat sie gemeldet — und was sie meldete, war nicht „die Zahl
 stimmt nicht", sondern „das Blatt ist etwas anderes geworden".
+
+---
+
+E550 — Das Folienband: Reiter ÜBER der Folie, und die zwei Reiter, die draussen bleiben
+--------------------------------------------------------------------------
+
+Redur: „mach weiter mit den menüband" — und davor: „oben mit menü … 1:1 wie
+powerpoint".
+
+E549 hat den **Katalog** gebaut: einen Reiter „Präsentation" im Bandregister
+und ein Menü in der Dokumentleiste. Was fehlte, war der **Ort** — eine
+Reiterzeile mit einem Band darunter, über der Folie, wie sie jedes
+Textprogramm über dem Blatt hat. E549 hat das selbst als offen vermerkt:
+„ein Layoutbogen, kein Katalogbogen".
+
+### Warum nicht doch `#menueband` dort einblenden
+
+Weil es gemessen worden ist und schlechter war (E549): am Rechner ist das
+globale Band eine zugeklappte **Lade** hinter `#studio-tools`, und im
+Dokumentmodus legte sich seine Ecke „Werkzeuge ⌄" bei 1440 × 852
+deckungsgleich über die Dokumentleiste. Zwei Köpfe übereinander.
+
+Das Folienband fliesst dagegen **in der Spalte** des Studios mit. Es
+überdeckt nichts, es nimmt Platz — und genau das ist der Unterschied.
+Gemessen bei 1440 × 852:
+
+```txt
+vorher                       nachher
+Kopfleiste       48 px       Kopfleiste       48 px
+                             Folienband      110 px   (34 Reiter + 76 Band)
+Zeichenleiste    58 px       Zeichenleiste    58 px
+Fläche          698 px       Fläche          588 px
+Folie      980 × 551         Folie      980 × 551     ← unverändert
+```
+
+Die Folie ist nicht kleiner geworden. Sie stand vorher mit Luft darunter, und
+das Band hat die Luft genommen, nicht die Folie. Bei 1280 × 800 dasselbe
+(980 × 551), bei 900 × 800 noch 854 × 480 — beide 16:9 auf drei Stellen.
+
+### Welche Reiter — und die Gründe sind gemessen, nicht gewählt
+
+Alle **151** Einträge des Bandkatalogs sind bei offenem Foliensatz **einzeln
+aufgerufen** worden, und nachgesehen wurde, ob danach ein Block, ein Menü
+oder ein Fehler da war:
+
+```txt
+start          14 Knöpfe  ·  14 ohne Wirkung
+einfuegen      69 Knöpfe  ·  65 ohne Wirkung
+ansicht        10 Knöpfe  ·   8 „ohne Wirkung" — darunter Vollbild und
+                              Drucken, die die Messung nur nicht SIEHT
+verlauf         9 Knöpfe  ·   6 (Rückgängig auf leerem Stapel tut zu Recht
+                              nichts)
+ueberpruefen    6 Knöpfe  ·   1
+hilfe           6 Knöpfe  ·   3
+```
+
+Abgestürzt ist keiner; die Seite meldete **null** Fehler. Draussen bleiben
+deshalb genau die zwei, bei denen es eindeutig ist: **`start` und
+`einfuegen`**. Ihre Knöpfe brauchen eine Schreibmarke in einem Textblock, und
+im Dokumentmodus gibt es keine. 79 von 83 Knöpfen ohne Wirkung wären kein
+Menüband, sondern eine Enttäuschungsmaschine — derselbe Grund, aus dem
+`zeigen()` im Register überhaupt existiert.
+
+**`zeichnen` bleibt aus einem anderen Grund draussen:** seine dreissig Knöpfe
+stehen als Zeichenleiste schon dauerhaft zwei Zeilen tiefer. Dieselbe Sache
+an zwei sichtbaren Stellen gleichzeitig ist genau das, was §8 verbietet — und
+die Gegenprobe hat nebenbei gezeigt, was sonst passiert wäre: mit `einfuegen`
+im Band ragten **52 Knöpfe** aus der Fläche heraus.
+
+Es bleiben fünf: **Präsentation · Ansicht · Verlauf · Überprüfen · Hilfe**.
+
+### Kein zweiter Zeichner
+
+`menueband.ts` reicht seit diesem Bogen `knopf` und `gruppeZeichnen` hinaus.
+Das Folienband ist eine **zweite Stelle**, an der dieselben Registereinträge
+als Knöpfe erscheinen — kein zweiter Katalog und kein zweiter Zeichner.
+Nachgebaut hätte man sonst vier Sachen, die man je einzeln vergisst: die
+Farb- und Strichprobe, das `an()` für den gewählten Knopf, den Satz für
+Vorleseprogramme und das Kürzel im Tooltip.
+
+Was **nicht** hinausgeht: `bandFuellen`. Es hängt das „•••" an, und dessen
+Überlaufrechnung kennt nur das eine, globale Band. Ein zweites Band mit einem
+„•••", das nie etwas anzeigt, wäre ein toter Knopf.
+
+### Und der Fehler, den nur das Bild gefunden hat
+
+Auf dem ersten Bild stand die ganze Reihe als **nackter Text** da: „Neue
+Folie   Folienliste   Präsentieren   Als PowerPoint   Als PDF   Drucken",
+ohne ein einziges Zeichen.
+
+`Menueband.knopf` hängt für einen Symbolnamen nur ein leeres
+`<span data-sym="plus">` ein — gemalt wird es von
+`Register.symbole.fuelle(wurzel)`, und das war vergessen. Im globalen Band
+steht dieser Aufruf an **drei** Stellen; hier fehlte er an der einen.
+
+Kein zusammengesetzter Prüflauf hätte das gemeldet: die Knöpfe waren alle da,
+hiessen richtig, hatten ihren Satz für Vorleseprogramme und taten das
+Richtige. Nur aussehen taten sie wie eine Textzeile. **§55.1 in Reinform** —
+und der Grund, warum §55.3 ein Bild verlangt, wenn es etwas zu sehen gibt.
+
+Die Zusage dagegen sucht nicht `data-sym` (der Kasten kann leer sein),
+sondern das **Gemalte**: ein `<svg>` darin, ein Textzeichen oder eine Probe.
+
+### Am Telefon bleibt es beim Knopf
+
+Unter **900 px** Fensterbreite gibt es kein Band; dort führt weiter der Knopf
+„📽️ Folie" aus E549 ins Menü. Das ist keine Bequemlichkeit: bei 390 px sind
+Kopf- und Zeichenleiste schon 101 px, und die Folie selbst ist dort 344 × 194.
+Ein Band von 110 px nähme ihr mehr als die Hälfte. PowerPoint zeigt am
+Telefon aus demselben Grund keines.
+
+Die Schwelle ist auf den Pixel geprüft: bei 899 px kein Band, bei 900 px
+eines.
+
+### Und ein Fehler, den das Lesen des eigenen Bogens gefunden hat
+
+`innerWidth` wird beim Zeichnen **einmal** gefragt. Das Studio zeichnet bei
+`resize` nicht neu — es rechnet nur Höhen nach (`beiGroesse`), und das ist
+richtig so. Also: wer ein Fenster von 1440 auf 800 zog, behielt ein Band, das
+dort nicht hingehört; wer umgekehrt aufzog, bekam nie eines.
+
+Gefunden nicht beim Messen und nicht auf dem Bild, sondern beim Lesen des
+eigenen Diffs mit der Frage „was würde hier schiefgehen". Das Band hängt sich
+jetzt in `beiGroesse` selbst ein und aus — und die Zusage prüft beide
+Richtungen, weil nur eine davon die naheliegende ist.
+
+### Was offen bleibt
+
+- **Eine Folie stehend im Bild** statt durchrollend. Der Dokumentmodus rollt
+  durch; für das Schreiben ist das richtig, für das Bauen einer Präsentation
+  nicht. Steht weiter unter O4.
+- **Die Zeichenleiste als Reiter „Zeichnen"** — so macht es PowerPoint. Das
+  nähme aber eine dauerhaft sichtbare Leiste weg und versteckte sie hinter
+  einem Klick. Eine Funktion wegzunehmen ist Redurs Entscheidung, nicht
+  meine; bis dahin stehen beide da, und das Band kostet 110 px.
+- Die Handgriffe im Folienmenü heissen noch „Seite", nicht „Folie".
+
+`test506` neu, 51 Zusagen, sechs Gegenproben gefahren (42/2, 42/1, 41/2,
+41/2, 49/2, 47/4 — alle gemessen). Eine davon hatte zuerst die falsche
+Form: den Aufruf herausgenommen, worauf der Zweig wegen `noUnusedLocals`
+gar nicht mehr baute — CLAUDE.md §52.6 beschreibt genau diesen Fall, und
+eine Gegenprobe, die nicht baut, ist keine. Bilder: `bilder/fb-praesentation.png`, `bilder/fb-ansicht.png`.

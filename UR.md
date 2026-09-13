@@ -980,11 +980,12 @@ Keine — an diesem Tag kam keine Nachricht.
 | E547 — Die Folienliste zeigt Folien: Mass vom Block, Marken statt Bleistift, Name statt „A4-Blatt“ | `(nach E546)` → `(dieser Bogen)` | 03:30 – 04:40 | ca. 70 min | test503 neu, 18 Zusagen, vier Gegenproben gefahren |
 | E548 — „Präsentation" ist ein Weg: Eintrag im Anlegen-Menü, acht PowerPoint-Layouts, ein Wähler, der sie zeigt | `(nach E547)` → `(dieser Bogen)` | 04:50 – 06:10 | ca. 80 min | test504 neu, 27 Zusagen, vier Gegenproben gefahren |
 | E549 — Reiter „Präsentation" im Menüband, Folien-Menü in der Dokumentleiste; das ganze Band dort war gemessen schlechter | `(nach E548)` → `(dieser Bogen)` | 06:20 – 08:10 | ca. 110 min | test505 neu, 26 Zusagen, vier Gegenproben gefahren (25/1, 14/12, 23/3, 24/2); test114 von 152+1 auf 155 grün, zwei neue Zusagen, beide Gegenproben rot gesehen |
+| E550 — Das Folienband: Reiter ÜBER der Folie; `start` und `einfuegen` bleiben draussen, weil 79 von 83 ihrer Knöpfe dort nichts tun | `(nach E549)` → `(dieser Bogen)` | 08:20 – 10:20 | ca. 120 min | test506 neu, 51 Zusagen, sechs Gegenproben gefahren (42/2, 42/1, 41/2, 41/2, 49/2, 47/4) |
 
 #### Zahlen des Tages
 
-- **commits:** 24
-- **entscheidungen:** 22
+- **commits:** 25
+- **entscheidungen:** 23
 
 #### Das grösste Problem
 
@@ -1016,10 +1017,11 @@ Der zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glaskno
 | 05:40 | `bereiche/vorlagen/folien.ts` mit acht Layouts, ein Weg im Anlegen-Katalog, zwei Befehle im Register. | Redurs Wunsch nach einem PowerPoint-Modus. Die ANSICHT gab es längst (E546/E547) — was fehlte, war der Weg hinein und das, womit man anfängt. | keins an Daten — ein Layout ist eine Markenliste, keine zweite Dokumentform. Der Wähler legt bei Abbruch GAR NICHTS an. |
 | 07:20 | Ein Reiter „Präsentation" in `register/menueband.ts`, beliefert von `Folienvorlagen.bandEintraege`; dazu ein Knopf „📽️ Folie" in der Dokumentleiste, der dasselbe Verzeichnis als Menü öffnet. | Redur: „mach weiter mit den menüband". Das Band im Dokumentmodus einzublenden war der naheliegende Weg und nachweislich der schlechtere — eine zusammengeklappte Ecke „Werkzeuge ⌄" lag bei 1440 × 852 deckungsgleich über der Dokumentleiste. Also EIN Katalog, zwei Orte (§8). | keins an Daten — Oberfläche. Jeder Eintrag bringt sein `zeigen()` mit: ohne Foliensatz ist der Reiter ganz weg, und `istFoliensatz` verlangt ein QUERES Blatt, damit ein Notizbuch ihn nie bekommt. |
 | 08:05 | `test114` auf zweiundzwanzig Wege gehoben — und um zwei Zusagen erweitert, die für eine ROLLENDE Liste gelten. | Die harte Zahl im Prüflauf trug seit E236 eine Frage mit: „Wegweiser oder Liste?" Der zweiundzwanzigste Weg hat sie beantwortet, gemessen bei 428 × 926: 10 von 22 ohne Rollen sichtbar, 1787 px Inhalt in 757 px Liste. Also Liste. Wegnehmen wäre eine Funktion weniger (§47), deshalb steht die Antwort als L154 offen. | keins — ein Prüflauf. Beide neuen Zusagen sind rot gesehen worden (154 ok / 1 offen, je). |
+| 09:40 | Eine Reiterzeile mit Band zwischen Kopf- und Zeichenleiste des Dokumentstudios, nur bei quer liegendem Foliensatz und erst ab 900 px Fensterbreite. | Redur: „oben mit menü … 1:1 wie powerpoint". E549 hatte den Katalog, nicht den Ort. Welche Reiter hineinkommen, ist nicht gewählt, sondern gemessen: alle 151 Einträge einzeln aufgerufen, bei `start` taten 14 von 14 nichts, bei `einfuegen` 65 von 69 — sie brauchen eine Schreibmarke, die es im Dokumentmodus nicht gibt. | keins an Daten — Oberfläche. Die Folie bleibt 980 × 551 bei 1440 × 852; das Band hat die Luft darunter genommen, nicht die Folie. Gezeichnet wird mit `Menueband.knopf`/`gruppeZeichnen`, also kein zweiter Zeichner (§8). |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 23 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 25 Einträge.
 

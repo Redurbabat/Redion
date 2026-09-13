@@ -1439,6 +1439,20 @@ const Menueband = (() => {
         setzeMeta(merkeZu(), true);
         zeichne();
     };
-    return { start, zeichne, zeige, aufklappen, schliessen, WURZEL };
+    /* `knopf` UND `gruppeZeichnen` GEHEN NACH DRAUSSEN (E550).
+       Das Folienband im Dokumentmodus ist eine ZWEITE STELLE, an der dieselben
+       Registereinträge als Knöpfe erscheinen — nicht ein zweiter Katalog und
+       auch kein zweiter Zeichner. Beides wäre §8: „keine doppelten Kataloge",
+       und ein zweiter Zeichner liefe genauso auseinander wie ein zweiter
+       Katalog, nur langsamer und stiller (die Probe, das `an()`, der Satz für
+       Vorleseprogramme, das Kürzel im Tooltip — vier Sachen, die man beim
+       Nachbauen je einzeln vergisst).
+  
+       Was NICHT hinausgeht: `bandFuellen`. Es hängt das „•••" an, und dessen
+       Überlaufrechnung kennt nur das eine, globale Band. Ein zweites Band mit
+       einem „•••", das nie etwas anzeigt, wäre ein toter Knopf. Das Folienband
+       baut seine Gruppen deshalb selbst zusammen — aus diesen zwei Bausteinen. */
+    return { start, zeichne, zeige, aufklappen, schliessen, WURZEL,
+        knopf, gruppeZeichnen };
 })();
 window.Menueband = Menueband;

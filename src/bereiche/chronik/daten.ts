@@ -1041,11 +1041,19 @@ const ChronikDaten = {
      "zeitraum": "06:20 – 08:10",
      "dauer": "ca. 110 min",
      "pruefungen": "test505 neu, 26 Zusagen, vier Gegenproben gefahren (25/1, 14/12, 23/3, 24/2); test114 von 152+1 auf 155 grün, zwei neue Zusagen, beide Gegenproben rot gesehen"
+    },
+    {
+     "was": "E550 — Das Folienband: Reiter ÜBER der Folie; `start` und `einfuegen` bleiben draussen, weil 79 von 83 ihrer Knöpfe dort nichts tun",
+     "vonCommit": "(nach E549)",
+     "bisCommit": "(dieser Bogen)",
+     "zeitraum": "08:20 – 10:20",
+     "dauer": "ca. 120 min",
+     "pruefungen": "test506 neu, 51 Zusagen, sechs Gegenproben gefahren (42/2, 42/1, 41/2, 41/2, 49/2, 47/4)"
     }
    ],
    "zahlen": {
-    "commits": 24,
-    "entscheidungen": 22
+    "commits": 25,
+    "entscheidungen": 23
    },
    "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
    "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -1133,6 +1141,12 @@ const ChronikDaten = {
      "was": "`test114` auf zweiundzwanzig Wege gehoben — und um zwei Zusagen erweitert, die für eine ROLLENDE Liste gelten.",
      "warum": "Die harte Zahl im Prüflauf trug seit E236 eine Frage mit: „Wegweiser oder Liste?\" Der zweiundzwanzigste Weg hat sie beantwortet, gemessen bei 428 × 926: 10 von 22 ohne Rollen sichtbar, 1787 px Inhalt in 757 px Liste. Also Liste. Wegnehmen wäre eine Funktion weniger (§47), deshalb steht die Antwort als L154 offen.",
      "risiko": "keins — ein Prüflauf. Beide neuen Zusagen sind rot gesehen worden (154 ok / 1 offen, je)."
+    },
+    {
+     "zeit": "09:40",
+     "was": "Eine Reiterzeile mit Band zwischen Kopf- und Zeichenleiste des Dokumentstudios, nur bei quer liegendem Foliensatz und erst ab 900 px Fensterbreite.",
+     "warum": "Redur: „oben mit menü … 1:1 wie powerpoint\". E549 hatte den Katalog, nicht den Ort. Welche Reiter hineinkommen, ist nicht gewählt, sondern gemessen: alle 151 Einträge einzeln aufgerufen, bei `start` taten 14 von 14 nichts, bei `einfuegen` 65 von 69 — sie brauchen eine Schreibmarke, die es im Dokumentmodus nicht gibt.",
+     "risiko": "keins an Daten — Oberfläche. Die Folie bleibt 980 × 551 bei 1440 × 852; das Band hat die Luft darunter genommen, nicht die Folie. Gezeichnet wird mit `Menueband.knopf`/`gruppeZeichnen`, also kein zweiter Zeichner (§8)."
     }
    ]
   }
@@ -1425,6 +1439,36 @@ const ChronikDaten = {
    "beweis": "Beide neuen Zusagen rot gesehen (§50): einmal das Rollen im Messen weggenommen — „ganz sichtbar: false\"; einmal die Roll-Schwelle auf +2000 gesetzt — „1787 px Inhalt in 757 px\", damit klar ist, dass die Zeile die Messung liest und kein festes `true`. Beide Male 154 ok / 1 offen; behoben 155 grün.",
    "lehre": "Eine harte Zahl in einem Prüflauf ist kein Ärgernis, sondern der einzige Melder, den eine wachsende Liste hat — und sie meldet nicht immer das, wonach sie aussieht. Hier meldete sie nicht „die Zahl stimmt nicht\", sondern „das Blatt ist etwas anderes geworden\". Dieselbe Zeile war ein Jahr davor schon einmal still rot (E513 → E522), weil niemand sie hörte; diesmal war der Preis nur ein Absatz statt eines vollen Laufs.",
    "entscheidung": "E549"
+  },
+  {
+   "nr": "P24",
+   "datum": "2026-09-13",
+   "titel": "Ein Menüband ohne ein einziges Zeichen — und jede Prüfung wäre grün geblieben",
+   "schwere": "klein",
+   "symptom": "Auf dem ersten Bild des Folienbands stand die ganze Reihe als nackter Text da: „Neue Folie   Folienliste   Präsentieren   Als PowerPoint   Als PDF   Drucken\". Kein Symbol, keine Kachel, nur Wörter nebeneinander.",
+   "falscheVermutung": "Die naheliegende: die Einträge tragen keine Zeichen. Nachgesehen tragen sie welche — `plus`, `page`, `play`, `download`, `printer`, alle gültige Namen aus dem Symbolregister.",
+   "wieGefunden": "Nur durch das Bild (§55.3). Gemessen war zu dem Zeitpunkt alles richtig: 6 Knöpfe, richtige Namen, richtige Gruppen, jeder mit `title` und `aria-label`, jeder tat beim Klick das Richtige.",
+   "ursache": "`Menueband.knopf` hängt für einen Symbolnamen nur ein LEERES `<span data-sym=\"plus\">` ein. Gemalt wird es später von `Register.symbole.fuelle(wurzel)` — im globalen Band steht dieser Aufruf an drei Stellen, im neuen Folienband an keiner.",
+   "loesung": "Ein `Register.symbole.fuelle(flaeche)` nach jedem Füllen der Bandfläche, mit `try` darum: fehlt das Register, bleibt der Name stehen — schlechter, aber nicht kaputt.",
+   "warumKeineUhr": "—",
+   "beweis": "Die Zusage sucht nicht `data-sym` — der Kasten kann leer sein —, sondern das GEMALTE: ein `<svg>` darin, ein Textzeichen oder eine Farbprobe. Gegenprobe gefahren (den Aufruf wieder herausgenommen): 42 grün, 1 rot, „38 Knöpfe ohne gemaltes Zeichen\".",
+   "lehre": "Ein Knopf kann vollständig sein und trotzdem falsch aussehen. Alles, was ein zusammengesetzter Prüflauf fragen konnte — da? richtig benannt? tut es etwas? spricht es mit einem Vorleseprogramm? —, war mit Ja zu beantworten. Was fehlte, war das, was man SIEHT. Genau dafür steht §55.3 in der CLAUDE.md, und genau deshalb reicht dort keine Messung.",
+   "entscheidung": "E550"
+  },
+  {
+   "nr": "P25",
+   "datum": "2026-09-13",
+   "titel": "Das Band fragte die Fensterbreite einmal — und behielt die Antwort",
+   "schwere": "klein",
+   "symptom": "Ein Fenster von 1440 auf 800 gezogen: das Folienband blieb stehen, obwohl es dort nicht hingehört. Umgekehrt aufgezogen: es kam nie.",
+   "falscheVermutung": "Keine — der Fehler war nie sichtbar. Er wurde beim LESEN des eigenen Diffs gefunden, mit der Frage „was würde hier schiefgehen\".",
+   "wieGefunden": "Weder gemessen noch auf einem Bild. Beim Durchgehen der eigenen Änderung fiel `innerWidth < BAND_AB` auf: eine Zahl, die beim Zeichnen EINMAL gefragt wird, in einem Studio, das bei `resize` nicht neu zeichnet.",
+   "ursache": "`folienbandBauen` liest `innerWidth` beim Aufbau. Das Dokumentstudio hat einen `resize`-Griff (`beiGroesse`), der aber nur Höhen nachrechnet — richtig so, denn ein Neuzeichnen bei jeder Fensterbewegung wäre bei achtzig Seiten teuer. Das Band war dort nur nicht eingetragen.",
+   "loesung": "`folienbandNachziehen()` in `beiGroesse`: es vergleicht, ob ein Band da sein SOLL und ob eines da IST, und hängt nur beim Unterschied ein oder aus.",
+   "warumKeineUhr": "—",
+   "beweis": "Zwei Gegenproben, beide gefahren: die Funktion nichts tun lassen (49 grün, 2 rot — das Band blieb bei 800 px stehen), und sie nur AUSHÄNGEN lassen (47 grün, 4 rot — es kam beim Aufziehen nicht zurück). Die zweite war nötig, weil sonst nur die naheliegende Richtung geprüft gewesen wäre.",
+   "lehre": "Zwei Sachen. Erstens: das eigene Diff noch einmal mit der Frage lesen, was daran schiefgehen könnte — dieser Fehler stand in keiner Messung und auf keinem Bild. Zweitens: die erste Form der Gegenprobe (den AUFRUF entfernen) liess den Zweig wegen `noUnusedLocals` gar nicht mehr bauen. Eine Gegenprobe, die nicht baut, ist keine — CLAUDE.md §52.6 beschreibt genau diesen Fall, und ich bin trotzdem hineingelaufen.",
+   "entscheidung": "E550"
   }
  ]
 } as const;

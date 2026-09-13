@@ -677,6 +677,178 @@ const DocumentMode = (() => {
     });
   };
 
+  /* ══════════════════════════════════════════════════════════════════════
+   * DAS FOLIENBAND — Reiter ÜBER der Folie (E550)
+   * ----------------------------------------------------------------------
+   * Redur: „oben mit menü … 1:1 wie powerpoint". E549 hat den KATALOG
+   * gebaut (ein Reiter „Präsentation" im Band, ein Menü in der
+   * Dokumentleiste); was fehlte, war der ORT — eine Reiterzeile mit einem
+   * Band darunter, wie sie jedes Textprogramm über dem Blatt hat.
+   *
+   * WARUM NICHT EINFACH `#menueband` DORT ZEIGEN. Weil es gemessen
+   * schlechter war (E549): am Rechner ist das globale Band eine zugeklappte
+   * LADE hinter `#studio-tools`, und im Dokumentmodus legte sich seine Ecke
+   * „Werkzeuge ⌄" bei 1440 × 852 deckungsgleich über die Dokumentleiste.
+   * Zwei Köpfe übereinander. Das Folienband fliesst dagegen IN der Spalte
+   * mit — es überdeckt nichts, es nimmt Platz.
+   *
+   * WELCHE REITER — UND DIE GRÜNDE SIND GEMESSEN, NICHT GEWÄHLT
+   *
+   * Alle 151 Einträge des Bandkatalogs sind bei offenem Foliensatz
+   * aufgerufen worden, jeder einzeln, und nachgesehen wurde, ob danach ein
+   * Block, ein Menü oder ein Fehler da war:
+   *
+   *     start        14 Knöpfe  ·  14 tun nichts   (Absatz und Schrift
+   *                                                 brauchen eine
+   *                                                 Schreibmarke; im
+   *                                                 Dokumentmodus gibt es
+   *                                                 keine)
+   *     einfuegen    69 Knöpfe  ·  65 tun nichts
+   *     ansicht      10 Knöpfe  ·   2 tun etwas sichtbar, der Rest sind
+   *                                 Vollbild/Drucken — die Messung SIEHT
+   *                                 sie nur nicht
+   *     verlauf       9 Knöpfe  ·   3 sichtbar (Rückgängig auf leerem
+   *                                 Stapel tut zu Recht nichts)
+   *     ueberpruefen  6 Knöpfe  ·   5 sichtbar
+   *     hilfe         6 Knöpfe  ·   3 sichtbar
+   *
+   * Abgestürzt ist keiner, und die Seite meldete null Fehler. Draussen
+   * bleiben deshalb genau die zwei, bei denen es eindeutig ist: `start` und
+   * `einfuegen`. 79 von 83 Knöpfen ohne Wirkung wäre kein Menüband, sondern
+   * eine Enttäuschungsmaschine (derselbe Grund wie `zeigen()` im Register).
+   *
+   * UND `zeichnen` BLEIBT AUCH DRAUSSEN, aus einem anderen Grund: seine
+   * dreissig Knöpfe stehen als Zeichenleiste schon dauerhaft zwei Zeilen
+   * tiefer. Dieselbe Sache an zwei sichtbaren Stellen gleichzeitig ist
+   * genau das, was §8 verbietet — und die dreissig hätten die Reihe
+   * ohnehin gesprengt.
+   *
+   * WAS DAS BAND NICHT SELBST ZEICHNET: die Knöpfe. Die kommen aus
+   * `Menueband.knopf` und `Menueband.gruppeZeichnen` (dort seit E550
+   * hinausgereicht). Ein zweiter Zeichner hätte die Probe, das `an()`, den
+   * Satz für Vorleseprogramme und das Kürzel im Tooltip nachbauen müssen —
+   * vier Sachen, die man je einzeln vergisst.
+   * ══════════════════════════════════════════════════════════════════════ */
+
+  /** Die Reiter, die das Folienband zeigt — in dieser Reihenfolge. */
+  const FOLIENBAND_REITER = ['praesentation', 'ansicht', 'verlauf',
+                             'ueberpruefen', 'hilfe'];
+
+  /**
+   * Ab dieser Fensterbreite bekommt ein Foliensatz das Band.
+   *
+   * Darunter bleibt es beim Knopf „📽️ Folie" aus E549. Das ist keine
+   * Bequemlichkeit: bei 390 px sind Kopfleiste (48) und Zeichenleiste (53)
+   * schon 101 px, und die Folie selbst ist dort nur 194 px hoch. Ein Band
+   * von rund 110 px nähme ihr mehr als die Hälfte — PowerPoint zeigt am
+   * Telefon aus demselben Grund keines.
+   */
+  const BAND_AB = 900;
+
+  /** Welcher Reiter zuletzt offen war — je Seite gemerkt. */
+  const bandReiterVon = (pageId: string): string => {
+    const gemerkt = String(Store.getMeta('folienbandReiter:' + pageId, '') || '');
+    return FOLIENBAND_REITER.includes(gemerkt) ? gemerkt : FOLIENBAND_REITER[0]!;
+  };
+
+  /**
+   * Das Folienband bauen — Reiterzeile und Band darunter.
+   *
+   * Gibt `null`, wenn es hier keines geben soll: kein Foliensatz, zu
+   * schmales Fenster, oder kein Reiter mit Inhalt. Der Aufrufer hängt dann
+   * nichts ein, statt eine leere Leiste zu zeigen.
+   */
+  const folienbandBauen = (page: any): HTMLElement | null => {
+    if (!istFoliensatz(page)) return null;
+    if (innerWidth < BAND_AB) return null;
+
+    const inReiter = (id: string): any[] => {
+      try { return Register?.menueband?.inReiter?.(id) || []; }
+      catch { return []; }
+    };
+    /* Nur Reiter, die WIRKLICH etwas zeigen. `zeigen()` im Register kann
+       einen ganz leergeräumt haben — in der Einzeldatei etwa. */
+    const offen = FOLIENBAND_REITER
+      .map(id => ({ id, gruppen: inReiter(id) }))
+      .filter(r => r.gruppen.some((g: any) => (g.eintraege || []).length));
+    if (!offen.length) return null;
+
+    const namen: Record<string, string> = {};
+    try {
+      for (const r of (Register?.menueband?.REITER || [])) namen[String(r.id)] = String(r.name);
+    } catch { /* dann stehen die Kennungen da, und das ist immer noch lesbar */ }
+
+    const band = document.createElement('div');
+    band.className = 'folienband';
+
+    const reiterzeile = document.createElement('div');
+    reiterzeile.className = 'folienband-reiter';
+    reiterzeile.setAttribute('role', 'tablist');
+    reiterzeile.setAttribute('aria-label', 'Folienband');
+
+    const flaeche = document.createElement('div');
+    flaeche.className = 'folienband-flaeche';
+    flaeche.setAttribute('role', 'tabpanel');
+
+    let aktiv = bandReiterVon(String(page?.id || ''));
+    if (!offen.some(r => r.id === aktiv)) aktiv = offen[0]!.id;
+
+    const flaecheFuellen = (): void => {
+      flaeche.replaceChildren();
+      const gruppen = (offen.find(r => r.id === aktiv)?.gruppen || [])
+        .filter((g: any) => (g.eintraege || []).length);
+      gruppen.forEach((g: any, i: number) => {
+        if (i) {
+          const strich = document.createElement('div');
+          strich.className = 'folienband-trenner';
+          strich.setAttribute('aria-hidden', 'true');
+          flaeche.appendChild(strich);
+        }
+        /* DERSELBE ZEICHNER WIE IM GLOBALEN BAND (§8). Fehlt er — halb
+           geladenes Fenster —, bleibt die Fläche leer statt falsch. */
+        try { flaeche.appendChild(Menueband.gruppeZeichnen(g)); }
+        catch { /* dann eben nicht */ }
+      });
+      /* DIE ZEICHEN MÜSSEN GEFÜLLT WERDEN, SONST SIND SIE NICHT DA.
+         `Menueband.knopf` hängt für einen Symbolnamen nur ein leeres
+         `<span data-sym="plus">` ein — gemalt wird es von
+         `Register.symbole.fuelle(wurzel)`. Im globalen Band passiert das
+         an drei Stellen nach jedem Neuzeichnen; hier wäre es beinahe
+         vergessen worden, und auf dem ersten Bild stand die ganze Reihe
+         als nackter Text da („Neue Folie   Folienliste   Präsentieren"),
+         ohne ein einziges Zeichen. Kein Prüflauf hätte das gemeldet: die
+         Knöpfe waren alle da, hiessen richtig und taten das Richtige. */
+      if (Register?.symbole?.fuelle) {
+        try { Register.symbole.fuelle(flaeche); }
+        catch { /* ohne Zeichen bleibt der Name — schlechter, aber nicht kaputt */ }
+      }
+      flaeche.setAttribute('aria-label', namen[aktiv] || aktiv);
+    };
+
+    offen.forEach(r => {
+      const t = document.createElement('button');
+      t.type = 'button';
+      t.className = 'folienband-reiter-knopf';
+      t.dataset['fbReiter'] = r.id;
+      t.setAttribute('role', 'tab');
+      t.textContent = namen[r.id] || r.id;
+      t.setAttribute('aria-selected', String(r.id === aktiv));
+      t.addEventListener('click', () => {
+        aktiv = r.id;
+        try { Store.setMeta('folienbandReiter:' + String(page?.id || ''), aktiv); }
+        catch { /* das Merken ist Bequemlichkeit, kein Auftrag */ }
+        reiterzeile.querySelectorAll<HTMLElement>('[data-fb-reiter]').forEach(x =>
+          x.setAttribute('aria-selected', String(x.dataset['fbReiter'] === aktiv)));
+        flaecheFuellen();
+      });
+      reiterzeile.appendChild(t);
+    });
+
+    flaecheFuellen();
+    band.append(reiterzeile, flaeche);
+    return band;
+  };
+
   /** Die Masse eines Dokumentblocks — PDF-Seite wie Blatt, in Punkten. */
   const masseVon = (block: any): { bw: number; bh: number } => ({
     bw: Number(block?.bw) || Number(block?.blattBreite) || SheetSpace.A4_BREITE,
@@ -2081,7 +2253,32 @@ const DocumentMode = (() => {
       topButton('find-next', '›', 'Nächster Treffer'),
       topButton('find-close', '✕', 'Suche schließen'),
       findListe);
-    workspace.append(top, findbar, drawingbar, commandbar, body);
+    /* DAS FOLIENBAND STEHT ZWISCHEN KOPFLEISTE UND SUCHE (E550) — also
+       ÜBER der Zeichenleiste, so wie ein Menüband über dem Blatt steht.
+       Es kommt nur bei einem Foliensatz und nur ab 900 px; sonst ist es
+       `null` und `append` bekommt nichts (siehe `folienbandBauen`). */
+    let folienband = folienbandBauen(page);
+    workspace.append(top, ...(folienband ? [folienband] : []),
+                     findbar, drawingbar, commandbar, body);
+
+    /**
+     * Das Band kommt und geht mit der Fensterbreite.
+     *
+     * GEFUNDEN BEIM LESEN DES EIGENEN BOGENS, nicht beim Messen: `innerWidth`
+     * wird EINMAL beim Zeichnen gefragt. Wer ein Fenster von 1440 auf 800
+     * zieht, behielt ein Band, das dort nicht hingehört; wer umgekehrt
+     * aufzieht, bekam nie eines. Das Studio zeichnet bei `resize` nicht neu
+     * — es rechnet nur Höhen nach (`beiGroesse`), und das ist richtig so.
+     * Also hängt sich das Band dort selbst ein und aus.
+     */
+    const folienbandNachziehen = (): void => {
+      const soll = istFoliensatz(page) && innerWidth >= BAND_AB;
+      const ist = !!folienband && folienband.isConnected;
+      if (soll === ist) return;
+      if (!soll) { folienband?.remove(); folienband = null; return; }
+      folienband = folienbandBauen(page);
+      if (folienband) top.after(folienband);
+    };
     wrap.appendChild(workspace);
     /* ══ DAS EIGENE FORMELHEFT, NEBEN DEM FACHZEICHEN (E503) ═══════════════
        Redur: „wo — wenn beim Elektro, wo die Elektrosymbol ist — beim
@@ -2295,6 +2492,7 @@ const DocumentMode = (() => {
 
     const beiGroesse = (): void => {
       if (!workspace.isConnected) { window.removeEventListener('resize', beiGroesse); return; }
+      folienbandNachziehen();
       hoeheSetzen(); passen(); aktivMarkieren(); nachziehen();
     };
     window.addEventListener('resize', beiGroesse, { passive: true });
