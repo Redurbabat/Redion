@@ -927,6 +927,17 @@ Keine — an diesem Tag kam keine Nachricht.
 **Besserer Prompt:** 
 
 
+**29 · ca. 04:50**
+
+> Könntest du so eine powerpoint modus im menü einfügen wenn ich das klicke sollte 1:1 wie powerpoint sein oben mit menü, link seiten so das ich präsentaioton erstellen könnne, füge dort auch fertigen vorlagen
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -956,11 +967,12 @@ Keine — an diesem Tag kam keine Nachricht.
 | E545 — Der Deckel bekommt seinen Verlauf, und ein Markenfeld bekommt seinen ersten Wächter | `(nach E544)` → `(dieser Bogen)` | 00:40 – 02:10 | ca. 90 min | test501 neu, 29 Zusagen, fünf Gegenproben gefahren; test266/499/500/145/183 grün |
 | E546 — O4 zur Hälfte: das Zeigen einer Folie ändert sie nicht mehr, und die Präsentation geht als Foliensatz auf | `(nach E545)` → `(dieser Bogen)` | 02:10 – 03:20 | ca. 70 min | test502 neu, 17 Zusagen, drei Gegenproben gefahren; test191 nachgezogen |
 | E547 — Die Folienliste zeigt Folien: Mass vom Block, Marken statt Bleistift, Name statt „A4-Blatt“ | `(nach E546)` → `(dieser Bogen)` | 03:30 – 04:40 | ca. 70 min | test503 neu, 18 Zusagen, vier Gegenproben gefahren |
+| E548 — „Präsentation" ist ein Weg: Eintrag im Anlegen-Menü, acht PowerPoint-Layouts, ein Wähler, der sie zeigt | `(nach E547)` → `(dieser Bogen)` | 04:50 – 06:10 | ca. 80 min | test504 neu, 27 Zusagen, vier Gegenproben gefahren |
 
 #### Zahlen des Tages
 
-- **commits:** 22
-- **entscheidungen:** 20
+- **commits:** 23
+- **entscheidungen:** 21
 
 #### Das grösste Problem
 
@@ -989,6 +1001,7 @@ Der zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glaskno
 | 01:40 | `formVerlauf` liest den Verlauf aus `p:spPr`, `verlaufDefs` legt EIN `<defs>` ans Blatt, die Füllung nennt immer auch die feste Farbe. | Redur: „1:1 wie das Original". Sieben Leser haben vorher den Bestand vermessen — der naheliegende Bau mit einer Gruppe um die Marke hätte vier Stellen gebrochen, drei davon still. | §51: ohne Rückfallfarbe wäre ein Deckel bei fehlender Vorlage UNSICHTBAR, also eine offene Antwort. Deshalb steht sie immer daneben — am Browser gemessen, nicht angenommen. |
 | 02:50 | `Blatt.zeichne` legt keine Zeile mehr an, wenn das Blatt Marken trägt; der .pptx-Einleser setzt `dokumentModus`. | Gemessen: 27 Folien öffnen legte 27 leere Textblöcke an, und ihr Platzhalter lag auf dem Folientitel. Und der Dokumentmodus konnte Blatt-Blöcke längst — es fehlte nur die Flagge. | §9: ein Zeichner, der in den Speicher schreibt, ist die gefährlichere Hälfte des Fundes. E118 bleibt für das leere Blatt unverändert, test502 misst beide Richtungen. |
 | 04:10 | `thumbnail()` nimmt das Seitenverhältnis vom Block und zeichnet die Marken; `sourceLabel` gibt den Folientitel. | Die Seitenliste war da (G3) und half nicht: 27 hochkant gequetschte, leere, gleich benannte Kästchen. Alle drei Fehler waren nur im Bild zu sehen. | keins an Daten. Die Abdeckung deckt auch in der Miniatur, weil es derselbe Zeichner ist — gemessen: 69×6 px, rgb(255,204,0). |
+| 05:40 | `bereiche/vorlagen/folien.ts` mit acht Layouts, ein Weg im Anlegen-Katalog, zwei Befehle im Register. | Redurs Wunsch nach einem PowerPoint-Modus. Die ANSICHT gab es längst (E546/E547) — was fehlte, war der Weg hinein und das, womit man anfängt. | keins an Daten — ein Layout ist eine Markenliste, keine zweite Dokumentform. Der Wähler legt bei Abbruch GAR NICHTS an. |
 
 ---
 

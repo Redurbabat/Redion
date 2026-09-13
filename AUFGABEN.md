@@ -887,11 +887,21 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   die Abdeckung auch dort —, und jede trägt ihre Nummer und ihren Titel
   statt 27-mal „A4-Blatt".
 
-  **Offen bleibt am Folieneditor:** EINE Folie stehend im Bild statt
-  durchrollend, und Handgriffe, die nach Folien klingen („Neue Folie" statt
-  „Neue Seite"). Die Griffe selbst gibt es seit G3. Der Dokumentmodus rollt
-  heute durch — für das Schreiben richtig, für das Bauen einer Präsentation
-  nicht. Hier entscheidet sich der Rest von „1:1 wie PowerPoint".
+  Und seit E548 gibt es den WEG hinein: „Präsentation" steht im
+  Anlegen-Menü, legt eine 16:9-Seite im Dokumentmodus an und fragt vorher
+  nach einem Layout. Acht davon — Titelfolie, Titel und Inhalt, Zwei
+  Inhalte, Vergleich, Abschnittsüberschrift, Nur Titel, Bild mit
+  Beschriftung, Leer. Der Befehl „Neue Folie" hängt eine an, mit denselben
+  Layouts und den Massen der vorhandenen Folien.
+
+  **Offen bleibt am Folieneditor:**
+  - EINE Folie stehend im Bild statt durchrollend. Der Dokumentmodus rollt
+    durch — für das Schreiben richtig, für das Bauen einer Präsentation
+    nicht.
+  - Ein Menüband mit Reitern (Start · Einfügen · Entwurf · Übergänge). Heute
+    ist es EINE Werkzeugleiste. Das ist der Rest von „1:1 wie PowerPoint".
+  - Die Handgriffe im Folienmenü heissen noch „Seite", nicht „Folie" — die
+    Griffe selbst gibt es seit G3.
 - **O5 · `.pptx` schreiben mit Rundreise.** Geänderte Folien zurück, der Rest
   der Originaldatei unangetastet (braucht O2).
 - **O6 · `.docx` draufschreiben.** Braucht den Rasterer. Das ist der teuerste

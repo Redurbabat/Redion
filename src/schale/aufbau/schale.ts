@@ -2767,6 +2767,16 @@ const App = (() => {
        Sache laufen auseinander (§8). */
     { gruppe: 'Zeichnen', id: 'blatt', zeichen: '📐', name: 'Blatt',
       sub: 'Mit der Hand schreiben — A4, liniert, kariert, Punktraster' },
+    /* DIE PRÄSENTATION IST EIN EIGENER WEG (E548). Redur: „könntest du so
+       eine PowerPoint-Modus im Menü einfügen … so dass ich Präsentation
+       erstellen könnte." Die ANSICHT gab es längst — der Dokumentmodus hat
+       die Leiste oben und die Folienliste links (E546, E547). Was fehlte,
+       war der Weg hinein: wer eine Präsentation wollte, legte eine Seite
+       an, setzte ein Blatt hinein, stellte dessen Masse von Hand auf 16:9
+       und suchte den Dokumentmodus selbst. */
+    { gruppe: 'Zeichnen', id: 'praesentation', zeichen: '📽️', name: 'Präsentation',
+      sub: 'Folien in 16:9 — mit fertigen Vorlagen',
+      da: () => typeof Folienvorlagen !== 'undefined' && !!Folienvorlagen.anlegenMitWahl },
     { gruppe: 'Zeichnen', id: 'plan', zeichen: '⚡', name: 'Schaltplan',
       sub: 'Mit Fachzeichen und Stromsimulation' },
 
@@ -2913,6 +2923,14 @@ const App = (() => {
                        .filter((k: any) => k && k.alive !== false).length === 0;
         if (leer) { Store.updateBlock(ziel.id, { alive: false }); zeichneBaum(); }
       });
+      return;
+    }
+    if (was === 'praesentation') {
+      /* Der Wähler legt selbst an und öffnet selbst — und wenn jemand
+         abbricht, entsteht GAR NICHTS. Der PDF-Weg zwei Zweige weiter oben
+         muss dafür eine leere Seite in den Papierkorb schieben; hier ist
+         die Reihenfolge herum, also gibt es den Fall nicht (§47). */
+      void Folienvorlagen.anlegenMitWahl();
       return;
     }
     if (was === 'lernen')       { Produktwelten.lernen('lernen'); return; }

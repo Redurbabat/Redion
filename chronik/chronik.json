@@ -807,6 +807,10 @@
         {
           "zeit": "ca. 03:30",
           "wortlaut": "Weiter mit den folieneditor"
+        },
+        {
+          "zeit": "ca. 04:50",
+          "wortlaut": "Könntest du so eine powerpoint modus im menü einfügen wenn ich das klicke sollte 1:1 wie powerpoint sein oben mit menü, link seiten so das ich präsentaioton erstellen könnne, füge dort auch fertigen vorlagen"
         }
       ],
       "arbeit": [
@@ -1009,11 +1013,19 @@
           "zeitraum": "03:30 – 04:40",
           "dauer": "ca. 70 min",
           "pruefungen": "test503 neu, 18 Zusagen, vier Gegenproben gefahren"
+        },
+        {
+          "was": "E548 — „Präsentation\" ist ein Weg: Eintrag im Anlegen-Menü, acht PowerPoint-Layouts, ein Wähler, der sie zeigt",
+          "vonCommit": "(nach E547)",
+          "bisCommit": "(dieser Bogen)",
+          "zeitraum": "04:50 – 06:10",
+          "dauer": "ca. 80 min",
+          "pruefungen": "test504 neu, 27 Zusagen, vier Gegenproben gefahren"
         }
       ],
       "zahlen": {
-        "commits": 22,
-        "entscheidungen": 20
+        "commits": 23,
+        "entscheidungen": 21
       },
       "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
       "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -1083,6 +1095,12 @@
           "was": "`thumbnail()` nimmt das Seitenverhältnis vom Block und zeichnet die Marken; `sourceLabel` gibt den Folientitel.",
           "warum": "Die Seitenliste war da (G3) und half nicht: 27 hochkant gequetschte, leere, gleich benannte Kästchen. Alle drei Fehler waren nur im Bild zu sehen.",
           "risiko": "keins an Daten. Die Abdeckung deckt auch in der Miniatur, weil es derselbe Zeichner ist — gemessen: 69×6 px, rgb(255,204,0)."
+        },
+        {
+          "zeit": "05:40",
+          "was": "`bereiche/vorlagen/folien.ts` mit acht Layouts, ein Weg im Anlegen-Katalog, zwei Befehle im Register.",
+          "warum": "Redurs Wunsch nach einem PowerPoint-Modus. Die ANSICHT gab es längst (E546/E547) — was fehlte, war der Weg hinein und das, womit man anfängt.",
+          "risiko": "keins an Daten — ein Layout ist eine Markenliste, keine zweite Dokumentform. Der Wähler legt bei Abbruch GAR NICHTS an."
         }
       ]
     }

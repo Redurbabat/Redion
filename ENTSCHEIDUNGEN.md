@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-527 Entscheidungen, E1 bis E547 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+528 Entscheidungen, E1 bis E548 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -591,6 +591,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E545** — Der Deckel bekommt seinen Verlauf: ein `<defs>` fürs Blatt statt einer Gruppe, Rückfallfarbe, gesäuberte Kennung — und der fehlende Wächter für Markenfelder
 * **E546** — Eine Folie zu zeigen darf sie nicht ändern: 27 Folien öffnen legte 27 Blöcke an; und die Präsentation geht jetzt als Foliensatz auf
 * **E547** — Die Folienliste zeigt Folien: Mass vom Block, Marken statt Bleistift, Name statt 27-mal „A4-Blatt"
+* **E548** — „Präsentation" ist ein Weg: Eintrag im Anlegen-Menü, acht PowerPoint-Layouts, ein Wähler, der sie zeigt
 
 ---
 
@@ -43795,3 +43796,90 @@ Bilder: `bilder/fe-seitenliste.png` und `bilder/fe-miniatur-nah.png`.
 **Offen bleibt unter O4:** eine Folie STEHEND im Bild statt durchrollend,
 und Folien-Handgriffe, die nach Folien klingen („Neue Folie" statt „Neue
 Seite"). Die Griffe selbst gibt es seit G3.
+
+---
+
+E548 — „Präsentation" ist ein Weg, und sie hat fertige Layouts
+--------------------------------------------------------------------------
+
+Redur, 13. September 2026: „könntest du so eine PowerPoint-Modus im Menü
+einfügen, wenn ich das klicke sollte 1:1 wie PowerPoint sein, oben mit Menü,
+links Seiten, so dass ich Präsentation erstellen könne, füge dort auch
+fertige Vorlagen."
+
+**Zuerst nachgesehen, was davon schon da war** — und das war mehr, als der
+Satz vermuten lässt:
+
+```txt
+da     Die Ansicht. Leiste oben, Folienliste links (E546), und die Liste
+       zeigt seit E547 wirklich Folien. „Präsentieren" und „Drucken" daneben.
+da     Die Handgriffe. Einfügen, Duplizieren, Löschen, Verschieben — G3.
+FEHLT  Der WEG hinein. Im Anlegen-Menü standen dreizehn Wege, keiner davon
+       legte eine Präsentation an. Wer eine wollte: Seite anlegen, Blatt
+       hineinsetzen, dessen Masse von Hand auf 16:9 stellen, den
+       Dokumentmodus selbst finden.
+FEHLT  Die Vorlagen. Eine neue Folie war immer weisses Papier.
+```
+
+**Entschieden — drei Sachen:**
+
+### 1. „Präsentation" steht im Anlegen-Katalog
+
+Ein Eintrag in `ERSTELLEN` (Gruppe „Zeichnen", neben Blatt und Whiteboard),
+und ein Zweig in `erstellenWeg`. Der Zweig ruft den Wähler; der legt an und
+öffnet. **Bricht jemand ab, entsteht gar nichts** — anders als beim PDF-Weg
+zwei Zweige weiter oben, der erst eine Seite anlegt und sie danach wieder in
+den Papierkorb schieben muss. Hier ist die Reihenfolge herum, also gibt es
+den Fall nicht (§47).
+
+### 2. Acht Layouts, und keine zwei gleich
+
+`bereiche/vorlagen/folien.ts`. Es sind die, die PowerPoint selbst anbietet,
+mit denselben deutschen Namen — wer von dort kommt, sucht nicht:
+
+```txt
+Titelfolie · Titel und Inhalt · Zwei Inhalte · Vergleich
+Abschnittsüberschrift · Nur Titel · Bild mit Beschriftung · Leer
+```
+
+Ein Layout ist **keine zweite Dokumentform**, sondern eine Liste von Marken
+— dieselben, die der `.pptx`-Einleser anlegt (E540) und die die
+Zeichenschicht seit E100 bearbeitet. Wer eine Vorlage nimmt, bekommt nichts
+Besonderes: eine gewöhnliche Folie, auf der schon etwas steht. Titel
+anklicken, Text ersetzen, fertig.
+
+**Die Masse sind Anteile, keine Pixel.** `text(b, h, {x: .07, …})` rechnet
+gegen die übergebene Foliengrösse. Bei einer 4:3-Folie läge sonst alles im
+linken Drittel — dieselbe Falle wie E100 und wie die drei Anläufe aus E544.
+`test504` misst, dass keine Marke über die Folie hinausragt.
+
+**Warum NICHT in `Register.vorlagen`:** dort stehen Vorlagen, die ganze
+Arbeitsbereiche bauen („Fitness-OS", zehn Datenbanken mit Ansichten). Ein
+Folienlayout legt keine Seite an, es füllt eine. Beides in eine Liste zu
+werfen hiesse, in der Galerie „Titelfolie" neben „Fitness-OS" zu zeigen. §8
+verbietet zwei Kataloge für DASSELBE; dies sind zwei für ZWEIERLEI. Der
+**Befehl** „Neue Folie" steht dagegen im Befehlsregister, wo er hingehört
+(§8 Regel 3), mit `zeigen()` — er erscheint nur, wenn wirklich ein
+Foliensatz offen ist.
+
+### 3. Der Wähler zeigt die Layouts, statt sie aufzuzählen
+
+Jede Karte trägt eine echte kleine Folie, gezeichnet von
+`Marken.zeichneMarke` — derselben Stelle wie Folie, Miniatur, Vortrag und
+Druck (§8, E547). Acht gleiche Zeichen wären keine Wahl, sondern eine Liste
+von Namen. Am Telefon wird daraus eine Spalte, und die Vorschauen bleiben
+lesbar (`bilder/pp-waehler-handy.png`).
+
+**Was es NICHT ist, und das steht auch im Prüflauf (§35):** „1:1 wie
+PowerPoint" ist es nicht. Es gibt kein Menüband mit Reitern (Start ·
+Einfügen · Entwurf · Übergänge), und die Folie rollt durch statt zu stehen.
+Beides bleibt unter O4 in `AUFGABEN.md` offen. Gebaut ist der Weg hinein und
+das, womit man anfängt.
+
+`test504` neu, 27 Zusagen, vier Gegenproben gefahren (24/3, 20/7, 25/2,
+26/1 — gemessen). Eine davon fing beim ersten Versuch nur zwei statt sieben,
+und der Grund gehört in diese Entscheidung, weil er §55.2 in Reinform ist:
+**`every()` auf einer leeren Liste ist wahr.** Sechs Zusagen sagten „passt
+schon" über nichts. Jede trägt jetzt ihre Mindestzahl daneben.
+
+Bilder: `bilder/pp-waehler.png`, `bilder/pp-waehler-handy.png`.

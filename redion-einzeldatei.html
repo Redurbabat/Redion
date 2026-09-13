@@ -4812,6 +4812,37 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 /* Die Staffelei über den Schema-Karten (E462) */
 .au-staffelei{display:flex; justify-content:center; margin:4px 0 18px}
 
+/* ============================================================================
+ * DER FOLIENVORLAGEN-WÄHLER (E548)
+ * ----------------------------------------------------------------------------
+ * Redur: „füge dort auch fertige Vorlagen." Die Karte zeigt das Layout
+ * WIRKLICH — gezeichnet von `Marken.zeichneMarke`, derselben Stelle wie
+ * Folie, Miniatur, Vortrag und Druck (§8). Ein Wähler mit acht gleichen
+ * Zeichen wäre keine Wahl, sondern eine Liste von Namen.
+ *
+ * Der Rahmen trägt 16:9 und weissen Grund: die Vorschau soll aussehen wie
+ * die Folie, die daraus wird, nicht wie ein Symbol.
+ * ==========================================================================*/
+.fv-gitter{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:12px; padding:16px; max-height:min(64vh, 620px); overflow:auto;
+}
+.fv-karte{
+  text-align:left; border:1px solid var(--line); border-radius:10px; padding:10px;
+  display:flex; flex-direction:column; gap:6px; background:var(--bg-card);
+  min-height:var(--touch-min);
+}
+.fv-karte:hover{background:var(--bg-hover); border-color:var(--accent-text)}
+.fv-karte:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.fv-rahmen{
+  display:block; width:100%; aspect-ratio:16 / 9; border:1px solid var(--line);
+  border-radius:6px; overflow:hidden; background:#fff; color:#111;
+}
+.fv-bild{display:block; width:100%; height:100%}
+.fv-leer{display:grid; place-items:center; width:100%; height:100%; font-size:26px}
+.fv-karte b{font-size:14px}
+.fv-text{font-size:12px; color:var(--text-dim); line-height:1.45}
+
 </style>
 <style>
 /* ===== quell/schale/stil/tabelle.css ===== */
@@ -23002,7 +23033,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 885, inhalt: '86d59c49c4b18a6e', gebaut: '2026-09-13T09:09:44.530Z' };
+const Stand = { fassung: 895, inhalt: '1282578c6fd9a0c7', gebaut: '2026-09-13T09:26:15.964Z' };
 window.Stand = Stand;
 
 </script>
@@ -73583,6 +73614,10 @@ const ChronikDaten = {
                 {
                     "zeit": "ca. 03:30",
                     "wortlaut": "Weiter mit den folieneditor"
+                },
+                {
+                    "zeit": "ca. 04:50",
+                    "wortlaut": "Könntest du so eine powerpoint modus im menü einfügen wenn ich das klicke sollte 1:1 wie powerpoint sein oben mit menü, link seiten so das ich präsentaioton erstellen könnne, füge dort auch fertigen vorlagen"
                 }
             ],
             "arbeit": [
@@ -73785,11 +73820,19 @@ const ChronikDaten = {
                     "zeitraum": "03:30 – 04:40",
                     "dauer": "ca. 70 min",
                     "pruefungen": "test503 neu, 18 Zusagen, vier Gegenproben gefahren"
+                },
+                {
+                    "was": "E548 — „Präsentation\" ist ein Weg: Eintrag im Anlegen-Menü, acht PowerPoint-Layouts, ein Wähler, der sie zeigt",
+                    "vonCommit": "(nach E547)",
+                    "bisCommit": "(dieser Bogen)",
+                    "zeitraum": "04:50 – 06:10",
+                    "dauer": "ca. 80 min",
+                    "pruefungen": "test504 neu, 27 Zusagen, vier Gegenproben gefahren"
                 }
             ],
             "zahlen": {
-                "commits": 22,
-                "entscheidungen": 20
+                "commits": 23,
+                "entscheidungen": 21
             },
             "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
             "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -73859,6 +73902,12 @@ const ChronikDaten = {
                     "was": "`thumbnail()` nimmt das Seitenverhältnis vom Block und zeichnet die Marken; `sourceLabel` gibt den Folientitel.",
                     "warum": "Die Seitenliste war da (G3) und half nicht: 27 hochkant gequetschte, leere, gleich benannte Kästchen. Alle drei Fehler waren nur im Bild zu sehen.",
                     "risiko": "keins an Daten. Die Abdeckung deckt auch in der Miniatur, weil es derselbe Zeichner ist — gemessen: 69×6 px, rgb(255,204,0)."
+                },
+                {
+                    "zeit": "05:40",
+                    "was": "`bereiche/vorlagen/folien.ts` mit acht Layouts, ein Weg im Anlegen-Katalog, zwei Befehle im Register.",
+                    "warum": "Redurs Wunsch nach einem PowerPoint-Modus. Die ANSICHT gab es längst (E546/E547) — was fehlte, war der Weg hinein und das, womit man anfängt.",
+                    "risiko": "keins an Daten — ein Layout ist eine Markenliste, keine zweite Dokumentform. Der Wähler legt bei Abbruch GAR NICHTS an."
                 }
             ]
         }
@@ -119174,6 +119223,350 @@ window.Galerie = Galerie;
 
 </script>
 <script>
+/* ===== quell/bereiche/vorlagen/folien.js ===== */
+"use strict";
+/* ============================================================================
+ * bereiche/vorlagen/folien.ts — fertige Folienlayouts
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/bereiche/vorlagen/folien.ts`. `npm run bauen:ts`
+ * schreibt daraus `quell/bereiche/vorlagen/folien.js`.
+ * ----------------------------------------------------------------------------
+ * Redur, 13. September 2026: „füge dort auch fertige Vorlagen."
+ *
+ * Ein Layout ist hier KEIN Bild und keine zweite Dokumentform, sondern eine
+ * Liste von Marken auf einer 16:9-Folie — dieselben Marken, die der
+ * `.pptx`-Einleser anlegt (E540) und die die Zeichenschicht seit E100
+ * bearbeitet. Wer eine Vorlage nimmt, bekommt also nichts Besonderes,
+ * sondern eine gewöhnliche Folie, auf der schon etwas steht: Titel
+ * anklicken, Text ersetzen, fertig.
+ *
+ * WARUM NICHT IN `Register.vorlagen`. Dort stehen Vorlagen, die ganze
+ * ARBEITSBEREICHE bauen — „Fitness-OS", „Redaktionsplan", zehn Datenbanken
+ * mit Ansichten und Beispielzeilen. Ein Folienlayout ist etwas anderes: es
+ * legt keine Seite an, es füllt eine. Beides in eine Liste zu werfen hiesse,
+ * in der Galerie „Titelfolie" neben „Fitness-OS" zu zeigen — zwei Dinge
+ * unter einem Namen, und §8 verbietet genau das aus dem umgekehrten Grund
+ * (keine zwei Kataloge für DASSELBE; dies sind zwei Kataloge für ZWEIERLEI).
+ * Der BEFEHL „Neue Folie" steht dagegen im Befehlsregister, wo er hingehört.
+ *
+ * DIE MASSE SIND FOLIENPUNKTE, KEINE BILDSCHIRMPUNKTE. Dieselbe Regel wie
+ * E100: eine Folie folgt der Fensterbreite, und eine Marke bei x = 60 liegt
+ * auf jedem Schirm an derselben Stelle des Papiers. Gerechnet wird gegen die
+ * ÜBERGEBENE Foliengrösse, nicht gegen 960 × 540 — sonst läge bei einer
+ * 4:3-Folie alles im linken Drittel.
+ * ==========================================================================*/
+const Folienvorlagen = (() => {
+    /** PowerPoints Standardmass für 16:9, in Punkten (9144000 × 5143500 EMU). */
+    const BREITE = 960;
+    const HOEHE = 540;
+    /* Eigen, nicht geliehen: jede Datei hat ihr `esc` (CLAUDE.md §19, und so
+       steht es auch in `vorlagen/daten.ts`). Es ersetzt wirklich — der Fehler
+       aus §19, der beim Lesen richtig aussieht, ist hier keiner. */
+    const esc = (s) => String(s ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    /* Kennungen müssen je Folie eindeutig sein; zwei Marken mit derselben
+       Kennung wären für `redraw` dieselbe (marken.ts). Ein Zähler reicht —
+       er läuft nur innerhalb dieses Fensters und landet nie in einer Datei,
+       in der eine fremde Kennung stünde. */
+    let zaehler = 0;
+    const kennung = () => 'fv' + (++zaehler).toString(36) +
+        Math.random().toString(36).slice(2, 8);
+    /** Ein Textkasten in Anteilen der Folie — so stimmt jedes Seitenmass. */
+    const text = (b, h, opt) => ({
+        id: kennung(), art: 'text',
+        point: [Math.round(opt.x * b), Math.round(opt.y * h)],
+        breiteBox: Math.round(opt.breite * b),
+        text: opt.inhalt,
+        fontSize: Math.round(opt.grad * h),
+        fett: !!opt.fett,
+        ...(opt.farbe ? { farbe: opt.farbe } : {}),
+    });
+    /** Eine waagrechte Linie — als flache Abdeckmarke in Akzentfarbe. */
+    const linie = (b, h, opt) => ({
+        id: kennung(), art: 'abdeck', farbe: opt.farbe || '#2f6fed',
+        pts: [[Math.round(opt.x * b), Math.round(opt.y * h)],
+            [Math.round((opt.x + opt.breite) * b),
+                Math.round((opt.y + (opt.dicke ?? 0.012)) * h)]],
+    });
+    /* ==========================================================================
+     * DIE LAYOUTS
+     * --------------------------------------------------------------------------
+     * Es sind die, die PowerPoint selbst anbietet, in derselben Reihenfolge und
+     * mit denselben deutschen Namen. Wer von dort kommt, sucht nicht.
+     * ========================================================================*/
+    const LISTE = [
+        {
+            id: 'titel', name: 'Titelfolie', zeichen: '🎬',
+            text: 'Grosser Titel in der Mitte, Untertitel darunter',
+            bauen: (b, h) => [
+                text(b, h, { x: .10, y: .34, breite: .80, inhalt: 'Titel der Präsentation',
+                    grad: .085, fett: true }),
+                linie(b, h, { x: .10, y: .50, breite: .26 }),
+                text(b, h, { x: .10, y: .55, breite: .80, inhalt: 'Untertitel oder Name', grad: .042 }),
+            ],
+        },
+        {
+            id: 'titelInhalt', name: 'Titel und Inhalt', zeichen: '📝',
+            text: 'Der Normalfall — Überschrift oben, Text darunter',
+            bauen: (b, h) => [
+                text(b, h, { x: .07, y: .08, breite: .86, inhalt: 'Überschrift', grad: .066, fett: true }),
+                linie(b, h, { x: .07, y: .20, breite: .18 }),
+                text(b, h, { x: .07, y: .27, breite: .86, grad: .040,
+                    inhalt: '• Erster Punkt\n• Zweiter Punkt\n• Dritter Punkt' }),
+            ],
+        },
+        {
+            id: 'zweiInhalte', name: 'Zwei Inhalte', zeichen: '🀫',
+            text: 'Überschrift und zwei Spalten nebeneinander',
+            bauen: (b, h) => [
+                text(b, h, { x: .07, y: .08, breite: .86, inhalt: 'Überschrift', grad: .066, fett: true }),
+                linie(b, h, { x: .07, y: .20, breite: .18 }),
+                text(b, h, { x: .07, y: .28, breite: .40, grad: .038,
+                    inhalt: '• Links\n• Zweiter Punkt' }),
+                text(b, h, { x: .53, y: .28, breite: .40, grad: .038,
+                    inhalt: '• Rechts\n• Zweiter Punkt' }),
+            ],
+        },
+        {
+            id: 'vergleich', name: 'Vergleich', zeichen: '⚖',
+            text: 'Zwei Spalten, jede mit eigener Zwischenüberschrift',
+            bauen: (b, h) => [
+                text(b, h, { x: .07, y: .07, breite: .86, inhalt: 'Vergleich', grad: .062, fett: true }),
+                text(b, h, { x: .07, y: .24, breite: .40, inhalt: 'Vorher', grad: .044, fett: true }),
+                text(b, h, { x: .53, y: .24, breite: .40, inhalt: 'Nachher', grad: .044, fett: true }),
+                linie(b, h, { x: .07, y: .33, breite: .40, dicke: .008 }),
+                linie(b, h, { x: .53, y: .33, breite: .40, dicke: .008 }),
+                text(b, h, { x: .07, y: .38, breite: .40, grad: .036, inhalt: '• Punkt\n• Punkt' }),
+                text(b, h, { x: .53, y: .38, breite: .40, grad: .036, inhalt: '• Punkt\n• Punkt' }),
+            ],
+        },
+        {
+            id: 'abschnitt', name: 'Abschnittsüberschrift', zeichen: '🔖',
+            text: 'Trennt ein Kapitel ab — grosse Zahl, grosser Name',
+            bauen: (b, h) => [
+                text(b, h, { x: .09, y: .28, breite: .20, inhalt: '01', grad: .150, fett: true,
+                    farbe: '#2f6fed' }),
+                text(b, h, { x: .09, y: .52, breite: .80, inhalt: 'Abschnitt', grad: .072, fett: true }),
+                linie(b, h, { x: .09, y: .68, breite: .30 }),
+            ],
+        },
+        {
+            id: 'nurTitel', name: 'Nur Titel', zeichen: '🏷',
+            text: 'Eine Überschrift, der Rest bleibt frei zum Zeichnen',
+            bauen: (b, h) => [
+                text(b, h, { x: .07, y: .08, breite: .86, inhalt: 'Überschrift', grad: .066, fett: true }),
+                linie(b, h, { x: .07, y: .20, breite: .18 }),
+            ],
+        },
+        {
+            id: 'bildText', name: 'Bild mit Beschriftung', zeichen: '🖼',
+            text: 'Platz fürs Bild links, Erklärung rechts',
+            bauen: (b, h) => [
+                text(b, h, { x: .07, y: .07, breite: .86, inhalt: 'Überschrift', grad: .058, fett: true }),
+                /* Der Platzhalter ist ein RAHMEN, keine Fläche: er soll sagen „hier
+                   kommt ein Bild hin" und nicht selbst wie eines aussehen. */
+                { id: kennung(), art: 'text', rahmen: true,
+                    point: [Math.round(.07 * b), Math.round(.26 * h)],
+                    breiteBox: Math.round(.44 * b),
+                    text: '\n   Bild hierher ziehen\n', fontSize: Math.round(.038 * h) },
+                text(b, h, { x: .55, y: .26, breite: .38, grad: .036,
+                    inhalt: 'Was auf dem Bild zu sehen ist\nund warum es hier steht.' }),
+            ],
+        },
+        {
+            id: 'leer', name: 'Leer', zeichen: '⬜',
+            text: 'Weisse Folie — für alles, was kein Layout braucht',
+            bauen: () => [],
+        },
+    ];
+    const alle = () => LISTE.map(v => ({ ...v }));
+    const eines = (id) => LISTE.find(v => v.id === id) || null;
+    /** Die Marken eines Layouts für eine Folie dieser Grösse. */
+    const marken = (id, breite = BREITE, hoehe = HOEHE) => {
+        const v = eines(id);
+        if (!v)
+            return [];
+        try {
+            return v.bauen(Math.max(1, breite), Math.max(1, hoehe));
+        }
+        catch {
+            return [];
+        }
+    };
+    /* ==========================================================================
+     * DIE WEGE
+     * ========================================================================*/
+    /** Eine Folie an einen Foliensatz anhängen. */
+    const neueFolie = (seiteId, layoutId = 'titelInhalt', breite = BREITE, hoehe = HOEHE) => {
+        if (!seiteId)
+            return null;
+        const v = eines(layoutId);
+        const block = Store.addBlock(seiteId, 'blatt', {
+            text: v ? v.name : 'Folie', blattBreite: breite, blattHoehe: hoehe, papier: 'blanko'
+        });
+        const liste = marken(layoutId, breite, hoehe);
+        if (liste.length)
+            Store.updateBlock(block.id, { marken: liste });
+        return Store.getBlock(block.id);
+    };
+    /**
+     * Eine neue Präsentation — Seite, erste Folie, Dokumentmodus.
+     *
+     * `dokumentModus` ist dieselbe Flagge wie beim `.pptx`-Einleser (E546):
+     * ohne sie stünde die Folie als Blatt in einem Texteditor, und der Weg
+     * hätte das Ding angelegt, aber nicht geöffnet (E397).
+     */
+    const neuePraesentation = (layoutId = 'titel', titel = '') => {
+        const seite = Store.addPage(null, { text: titel || 'Neue Präsentation', icon: '📽️' });
+        neueFolie(seite.id, layoutId);
+        Store.updateBlock(seite.id, { dokumentModus: true });
+        return Store.getBlock(seite.id);
+    };
+    /* ==========================================================================
+     * DER WÄHLER
+     * --------------------------------------------------------------------------
+     * Eine Karte je Layout, mit einer echten kleinen Vorschau statt eines
+     * Zeichens: gezeichnet wird sie von `Marken.zeichneMarke` — derselben
+     * Stelle wie Folie, Miniatur, Vortrag und Druck (§8, E547). Ein Layout,
+     * das man nicht sieht, wählt niemand zweimal.
+     * ========================================================================*/
+    const vorschau = (layoutId) => {
+        const liste = marken(layoutId, BREITE, HOEHE);
+        if (!liste.length || typeof Marken === 'undefined')
+            return '';
+        let innen = '';
+        try {
+            const defs = typeof Marken.verlaufDefs === 'function' ? Marken.verlaufDefs(liste) : null;
+            if (defs)
+                innen += defs.outerHTML;
+            for (const m of liste) {
+                const knoten = Marken.zeichneMarke(m);
+                if (knoten)
+                    innen += knoten.outerHTML;
+            }
+        }
+        catch {
+            return '';
+        }
+        return innen
+            ? `<svg class="fv-bild" viewBox="0 0 ${BREITE} ${HOEHE}" preserveAspectRatio="none" ` +
+                `aria-hidden="true">${innen}</svg>`
+            : '';
+    };
+    /**
+     * Den Wähler zeigen und das gewählte Layout zurückgeben.
+     *
+     * Aufgelöst wird mit `null`, wenn jemand abbricht — dann entsteht auch
+     * keine Seite. Ein abgebrochener Wähler, der trotzdem etwas anlegt, ist
+     * der Fehler, gegen den §47 „kein Weg, der ins Leere führt" steht.
+     */
+    const waehle = (kopf = 'Layout wählen') => new Promise(fertig => {
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        o.innerHTML =
+            '<div class="finder" style="width:min(820px,95vw)">' +
+                '<div class="fh">📽️ ' + esc(kopf) +
+                '<button class="icon-btn" data-a="zu" aria-label="Schliessen">✕</button></div>' +
+                '<div class="fv-gitter">' +
+                LISTE.map(v => `<button class="fv-karte" data-v="${esc(v.id)}">` +
+                    `<span class="fv-rahmen">${vorschau(v.id) ||
+                        `<span class="fv-leer">${esc(v.zeichen)}</span>`}</span>` +
+                    `<b>${esc(v.name)}</b><span class="fv-text">${esc(v.text)}</span>` +
+                    '</button>').join('') +
+                '</div>' +
+                '</div>';
+        document.body.appendChild(o);
+        let beantwortet = false;
+        const schliesse = (wahl) => {
+            if (beantwortet)
+                return;
+            beantwortet = true;
+            o.remove();
+            fertig(wahl);
+        };
+        o.addEventListener('click', e => {
+            const ziel = e.target;
+            if (ziel === o || ziel?.closest('[data-a="zu"]')) {
+                schliesse(null);
+                return;
+            }
+            const karte = ziel?.closest('[data-v]');
+            if (karte)
+                schliesse(karte.dataset['v'] || null);
+        });
+        /* Escape schliesst — der gemeinsame Griff aus E302 nimmt `.overlay`
+           von selbst; hier steht nur, was DANN geschehen soll (§38). */
+        const taste = (e) => {
+            if (e.key !== 'Escape')
+                return;
+            document.removeEventListener('keydown', taste, true);
+            schliesse(null);
+        };
+        document.addEventListener('keydown', taste, true);
+        o.querySelector('.fv-karte')?.focus();
+    });
+    /** „Neue Präsentation" mit Wähler — der Weg aus dem Anlegen-Menü. */
+    const anlegenMitWahl = async () => {
+        const wahl = await waehle('Womit soll die erste Folie anfangen?');
+        if (!wahl)
+            return null;
+        const seite = neuePraesentation(wahl);
+        if (typeof App !== 'undefined') {
+            App.zeichneBaum?.();
+            App.oeffne?.(seite.id);
+        }
+        return seite;
+    };
+    /** „Neue Folie" mit Wähler — der Befehl aus der Palette. */
+    const folieMitWahl = async (seiteId) => {
+        const ziel = seiteId || (typeof App !== 'undefined' ? App.aktuelleSeite() : '');
+        if (!ziel) {
+            UI.toast('Erst eine Präsentation öffnen');
+            return null;
+        }
+        const wahl = await waehle('Layout der neuen Folie');
+        if (!wahl)
+            return null;
+        /* Die neue Folie bekommt die Masse der VORHANDENEN — eine 4:3-Folie
+           mitten in einem 16:9-Satz wäre ein Sprung im Vortrag. */
+        const vorhanden = (Store.childrenOf(ziel) || []).find((b) => b.type === 'blatt');
+        const folie = neueFolie(ziel, wahl, Number(vorhanden?.blattBreite) || BREITE, Number(vorhanden?.blattHoehe) || HOEHE);
+        if (typeof App !== 'undefined')
+            App.zeichneSeite?.();
+        return folie;
+    };
+    /** Ist DIESE Seite ein Foliensatz? Für `zeigen()` am Befehl. */
+    const istFoliensatz = (seiteId) => {
+        const seite = seiteId ? Store.getBlock(seiteId) : null;
+        if (!seite || !seite.dokumentModus)
+            return false;
+        return (Store.childrenOf(seiteId) || []).some((b) => b.type === 'blatt');
+    };
+    /* Der Befehl gehört ins Befehlsregister, nicht in eine Liste hier (§8
+       Regel 3). `zeigen()` hält ihn aus der Palette heraus, wo er nichts
+       täte — ein Befehl, der dasteht und dann sagt, dass er hier nicht geht,
+       ist die häufigste Enttäuschung überhaupt (register/befehle.ts). */
+    if (typeof Register !== 'undefined' && Register.befehle) {
+        Register.befehle.melde({
+            titel: 'Neue Folie', gruppe: 'Anlegen',
+            zeigen: () => typeof App !== 'undefined' && istFoliensatz(App.aktuelleSeite()),
+            tun: () => { void folieMitWahl(); },
+        });
+        Register.befehle.melde({
+            titel: 'Neue Präsentation', gruppe: 'Anlegen',
+            tun: () => { void anlegenMitWahl(); },
+        });
+    }
+    return { alle, eines, marken, vorschau, waehle,
+        neueFolie, neuePraesentation, anlegenMitWahl, folieMitWahl,
+        istFoliensatz, BREITE, HOEHE };
+})();
+window.Folienvorlagen = Folienvorlagen;
+
+</script>
+<script>
 /* ===== quell/bereiche/hilfe/stand.js ===== */
 "use strict";
 /* ============================================================================
@@ -160702,6 +161095,16 @@ const App = (() => {
            Sache laufen auseinander (§8). */
         { gruppe: 'Zeichnen', id: 'blatt', zeichen: '📐', name: 'Blatt',
             sub: 'Mit der Hand schreiben — A4, liniert, kariert, Punktraster' },
+        /* DIE PRÄSENTATION IST EIN EIGENER WEG (E548). Redur: „könntest du so
+           eine PowerPoint-Modus im Menü einfügen … so dass ich Präsentation
+           erstellen könnte." Die ANSICHT gab es längst — der Dokumentmodus hat
+           die Leiste oben und die Folienliste links (E546, E547). Was fehlte,
+           war der Weg hinein: wer eine Präsentation wollte, legte eine Seite
+           an, setzte ein Blatt hinein, stellte dessen Masse von Hand auf 16:9
+           und suchte den Dokumentmodus selbst. */
+        { gruppe: 'Zeichnen', id: 'praesentation', zeichen: '📽️', name: 'Präsentation',
+            sub: 'Folien in 16:9 — mit fertigen Vorlagen',
+            da: () => typeof Folienvorlagen !== 'undefined' && !!Folienvorlagen.anlegenMitWahl },
         { gruppe: 'Zeichnen', id: 'plan', zeichen: '⚡', name: 'Schaltplan',
             sub: 'Mit Fachzeichen und Stromsimulation' },
         /* --- Ordnen und rechnen ------------------------------------------- */
@@ -160877,6 +161280,14 @@ const App = (() => {
                     zeichneBaum();
                 }
             });
+            return;
+        }
+        if (was === 'praesentation') {
+            /* Der Wähler legt selbst an und öffnet selbst — und wenn jemand
+               abbricht, entsteht GAR NICHTS. Der PDF-Weg zwei Zweige weiter oben
+               muss dafür eine leere Seite in den Papierkorb schieben; hier ist
+               die Reihenfolge herum, also gibt es den Fall nicht (§47). */
+            void Folienvorlagen.anlegenMitWahl();
             return;
         }
         if (was === 'lernen') {
