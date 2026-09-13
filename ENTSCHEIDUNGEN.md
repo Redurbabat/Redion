@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-523 Entscheidungen, E1 bis E543 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+530 Entscheidungen, E1 bis E550 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -587,6 +587,13 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E541** — Vier Funde aus einer echten PowerPoint-Datei, die keine erfundene je gezeigt hätte
 * **E542** — Die Antworten waren alle offen: PowerPoints Ausblend-Animationen werden zu Redions Abdeckband
 * **E543** — Der Wähler verschwieg, was der Einleser längst kann: `accept`, Menütext und Zweig wandern zusammen
+* **E544** — Ein Blatt füllt eine Folie, und der Klick schaltet sie weiter: `EIGENE_FOLIE`, Schrittzähler, weiches Auflösen, Vollbild
+* **E545** — Der Deckel bekommt seinen Verlauf: ein `<defs>` fürs Blatt statt einer Gruppe, Rückfallfarbe, gesäuberte Kennung — und der fehlende Wächter für Markenfelder
+* **E546** — Eine Folie zu zeigen darf sie nicht ändern: 27 Folien öffnen legte 27 Blöcke an; und die Präsentation geht jetzt als Foliensatz auf
+* **E547** — Die Folienliste zeigt Folien: Mass vom Block, Marken statt Bleistift, Name statt 27-mal „A4-Blatt"
+* **E548** — „Präsentation" ist ein Weg: Eintrag im Anlegen-Menü, acht PowerPoint-Layouts, ein Wähler, der sie zeigt
+* **E549** — Reiter „Präsentation" im Band, Folien-Menü in der Dokumentleiste — das ganze Band dort war gemessen schlechter
+* **E550** — Das Folienband: Reiter ÜBER der Folie; `start` und `einfuegen` bleiben draussen, weil 79 von 83 ihrer Knöpfe dort nichts tun
 
 ---
 
@@ -43399,3 +43406,759 @@ bleibt 22.
 
 Bild: `bilder/menue-import.png` und `-handy.png` — am Telefon fällt „Ganzen
 Ordner einlesen" weg, weil Telefon-Browser keine Ordner wählen können.
+
+---
+
+E544 — Ein Blatt füllt eine Folie, und der Klick schaltet sie weiter
+--------------------------------------------------------------------------
+
+Redur: „mach weiter mit den Folien-Klick." Gemeint war L153: ein Klick soll
+die Folie einen Schritt weiterschalten, statt jede Abdeckung einzeln
+anzutippen.
+
+**Davor lag ein Fehler, den L153 nicht kannte.** Bevor ein Schrittzähler
+Sinn ergibt, muss es Folien geben, die er zählen kann. Die gab es nicht.
+
+`Folien.teilen` beginnt eine neue Folie bei Trennlinie, Überschrift 1 und
+Überschrift 2 (E297). Der `.pptx`-Einleser legt pro PowerPoint-Folie EINEN
+`blatt`-Block als direktes Kind der Seite — ohne Trenner dazwischen. Gemessen
+an drei Folien:
+
+```txt
+Folien.teilen  ->  1 Folie, 3 Einträge
+Vortrag        ->  „1 / 1", drei Blätter übereinander,
+                   das dritte halb ausserhalb des Bildes
+```
+
+Redurs Datei hat 27 Folien. Der ganze Vortrag war eine endlose Spalte.
+**Gesehen auf `bilder/l153-vorher.png`, nicht im Code** — im Quelltext fehlte
+nichts, es stand nur alles am falschen Ort (§55.1).
+
+**Entschieden — vier Stücke:**
+
+**1. `EIGENE_FOLIE = ['blatt', 'pdfseite']` im Kern.** Ein Blatt und eine
+PDF-Seite sind eine ganze Seite Papier; zwei davon teilen sich nie eine
+Folie. Die Regel steht dort, wo die übrige Teilungsregel steht — nicht im
+Vortrag abgeschrieben, denn zwei Teilungen, die auseinanderlaufen, sind
+schlimmer als eine (E297).
+
+Nur auf der obersten Ebene (`tiefe === 0`). In Spalten gehören Blatt und
+PDF-Seite ausdrücklich NEBENeinander — der Fall aus `test183`, und dort ist
+es richtig so. Dazu zwei Kleinigkeiten, die beim Messen auffielen: zwischen
+zwei Blättern entstand eine leere Folie (aus drei wurden fünf, jede zweite
+schwarz), und am Ende stand immer eine leere. Beide fallen jetzt weg — eine
+Seite ohne alles ergibt aber weiterhin genau eine Folie, sonst liefe der
+Vortrag an `folien[0] === undefined`.
+
+**2. Der Schrittzähler im Vortrag.** Jede Abdeckung trägt seit E542 die
+Nummer des Klicks, bei dem sie weichen soll (`schritt`, aus `p:timing`).
+Benutzt wurde sie nie. Jetzt: ein Klick — irgendwo auf die Folie, nicht nur
+auf einen Knopf — deckt alle Abdeckungen mit `schritt <= n` auf; erst wenn
+keine mehr aussteht, kommt die nächste Folie. Zurück landet auf der VOLLEN
+Folie, wie in PowerPoint: wer zurückgeht, will sehen, was er gerade gezeigt
+hat.
+
+Drei Dinge bleiben ausdrücklich, wie sie waren:
+
+- **Eine Abdeckung OHNE Nummer fasst der Schrittzähler nie an.** Die ist von
+  Hand gesetzt (E266) und wird einzeln angetippt — auch im Vortrag, wo ein
+  Tipp auf den Deckel genau diesen aufdeckt, statt weiterzuschalten.
+- **Nichts wird gespeichert.** Der Schrittstand lebt nur im Sichtbaren; nach
+  dem Beenden ist wieder alles zu. Dieselbe Regel wie beim Abdeckband selbst
+  („Lernen darf den Speicher nicht anfassen", E266) — dieselbe Antwort auf
+  dieselbe Frage, nicht eine zweite Meinung. L153 hatte diese Entscheidung
+  ausdrücklich offen gelassen; hier ist sie.
+- **`Home` und `End` springen über alles hinweg.** Sonst käme man aus einer
+  Folie mit zehn Abdeckungen nicht mehr heraus.
+
+**3. Das weiche Auflösen.** PowerPoint blendet den Deckel mit `dissolve`
+aus; in Redurs Datei tragen alle 22 Klickschritte genau diesen Filter. Es ist
+ein `transition` und kein `@keyframes`: im Leerlauf bewegt sich nichts
+(E528), `getAnimations()` bleibt leer, und `test500 §3` misst das.
+
+Auf der Leinwand verschwindet der Deckel GANZ. Im eigenen Heft bleibt er als
+gestrichelter Schatten stehen — dort soll man sehen, dass ein Band liegt, und
+ein zweiter Tipp schliesst es (§38). Vor einer Klasse ist das falsch: die
+Antwort ist dann die Antwort.
+
+Eine eigene `prefers-reduced-motion`-Sperre wurde geschrieben und wieder
+entfernt: `grund.css` setzt unter diesem Schirm `transition-duration:.001ms
+!important` für alles (E340). Die zweite Sperre hätte nichts bewirkt — sie
+hätte nur so ausgesehen, und genau dieser Fehler ist E340 schon einmal
+passiert.
+
+**4. Die Folie füllt die Leinwand.** `.folie-blatt{max-width:min(100%,45vh)}`
+ist für zwei A4-Seiten NEBENeinander gebaut (E109). Eine 16:9-Folie allein
+stand damit auf 370 × 208 px in einem 1280er Fenster — acht Prozent.
+
+Dieses Stück brauchte **drei Anläufe, und zwei davon sahen an genau einer
+Bildschirmgrösse richtig aus**:
+
+```txt
+height:76vh              Rechner gut — Telefon: 16:9-Folie hochkant,
+                         Text waagrecht gequetscht
+width:100% + max-height  Telefon gut — 1920×1080: Verhältnis 1,965 statt 1,778
+width:min(100%, 76vh*v)  320 / 390 / 1280 / 1920 px: überall 1,778
+```
+
+Der Grund: `aspect-ratio` leitet nur die EINE Achse ab, die man offen lässt;
+beim Zuschneiden an `max-height` geht es nicht mit. Also trägt `folieBlock`
+das Seitenmass als zweite Marke `--seitenmass` mit, und das CSS rechnet die
+Breite aus der erlaubten Höhe. Die Verzerrung selbst kam von
+`preserveAspectRatio="none"` am Marken-SVG — das zieht bei einem falschen
+Kasten alles mit.
+
+**Die Alternative** zu Stück 1 wäre gewesen, im Einleser einen `divider`
+zwischen die Blätter zu setzen. Verworfen: das schreibt 26 Trennlinien in
+Redurs Daten, die er nie gewollt hat, und es gälte nur für PowerPoint —
+eine eingelesene PDF hätte dasselbe Problem weiter.
+
+**Was es kostet:** `Folien.teilen` ist gemeinsame Regel; die Änderung wirkt
+auch auf den `.pptx`-EXPORT (`alsZeilen`) und auf jede Seite mit einer
+PDF-Seite darauf. Nachgesehen und gefahren: `test183` (Blatt und PDF-Seite in
+Spalten), `test191` (alte Spaltenform), `test293` (die Regel selbst und der
+Export), `test266` (der eine Zeichner), `test499` (der `.pptx`-Einleser) —
+alle grün.
+
+`test500` ist neu: 45 Zusagen, vier Gegenproben wirklich gefahren, die Zahlen
+stehen gemessen im Kopf der Datei. Bilder: `bilder/l153-vorher.png` und
+`l153-1-zu` bis `l153-4-folie2`, dazu `l153-handy*`.
+
+**Offen und in L153 stehen geblieben:** der Verlauf am Deckel (im Original
+weiss → `#FFCC00` → weiss) und die drei blauen Navigationspfeile. Beides
+Optik an etwas, das man wegtippt — und die Pfeile macht in Redion der
+Vortragsmodus.
+
+---
+
+E545 — Der Deckel bekommt seinen Verlauf, und ein Markenfeld bekommt einen Wächter
+--------------------------------------------------------------------------
+
+Der Rest von L153, und Redurs Satz dazu: „das es die orginale 1:1 öfnnet."
+
+**Was fehlte.** `formFarbe` liest seit E542 `a:gradFill`, gibt davon aber
+EINE Farbe zurück — den kräftigsten Stopp. In Redurs Datei ist der Deckel
+über der Antwort weiss → `#FFCC00` in der Mitte → weiss, senkrecht
+(`a:lin ang="5400000"`). Redion malte eine gelbe Fläche mit harten Kanten.
+
+**Entschieden — und der Weg dahin war der eigentliche Inhalt dieses Bogens.**
+
+### 1. Kein `<g>` um die Marke
+
+Der naheliegende Bau ist `<g><defs><linearGradient/></defs><rect/></g>`.
+Er wurde NICHT gebaut, und zwar nachdem sieben Leser den Bestand vermessen
+haben. Er hätte vier Stellen gebrochen, **drei davon still**:
+
+```txt
+redraw()      sammelt [data-sid] und schiebt den Knoten mit insertBefore
+              in die Reihenfolge der Marken — reisst das <rect> aus seiner
+              Gruppe; das <defs> bleibt verwaist zurück
+              (und ist die Abdeckung die erste Marke, wirft insertBefore
+              NotFoundError und redraw stirbt mitten im Durchgang)
+updateNode()  ersetzt den Knoten durch einen frischen — und verschachtelt
+              die Gruppe bei JEDEM Ziehschritt eine Ebene tiefer
+Radierer      nodeFor(id)?.remove() nimmt nur das <rect>; die Gruppe bleibt
+              auf dem Blatt und wird nie eingesammelt
+test266       prüft ausdrücklich `tagName === 'rect'` — der wäre zu Recht rot
+```
+
+Also: **ein `<defs>` für das ganze Blatt**, der Knoten bleibt ein `<rect>`
+und bleibt direktes Kind der Fläche. `verlaufDefs(liste)` baut es; die
+Live-Schicht frischt es beim Zeichnen und in `redraw` auf, und die drei
+anderen Zeichenwege (Vortrag/Druck über `markenAlsSvg`, das Seitenbild in
+`document-mode`, der Ausschnitt für die Erkennung) hängen es vor ihre Marken.
+
+### 2. Der Deckel darf nie unsichtbar werden
+
+Gemessen an einem echten Browser (`bilder/paint-rueckfall.png`):
+
+```txt
+fill="url(#fehlt) #ffcc00"   ->  malt #ffcc00      (SVGs eigener Rückfall)
+fill="url(#fehlt)"           ->  malt GAR NICHTS
+```
+
+Das zweite wäre der schlimmste Fehler, den dieser Bogen haben könnte: ein
+unsichtbarer Deckel ist eine offene Antwort — genau der Schaden, den das
+Abdeckband verhindern soll (§51). Deshalb steht die feste Farbe IMMER
+daneben, und `formFarbe` bleibt genau dafür stehen.
+
+### 3. Und die Kennung muss eine Kennung sein — gefunden auf dem Bild
+
+Der erste Durchgang malte die Deckel **schwarz**. Nicht gelb, nicht
+durchsichtig: schwarz. Der Grund war keine Logik, sondern ein Name — die
+Beispielmarke hiess `d1Aufgabe 1 — Übersetzungsverhältnis`, und mit einem
+Leerzeichen darin ist `url(#…)` kein gültiger Verweis mehr. Dann greift
+nicht der Rückfall daneben, sondern der ANFANGSWERT von `fill`.
+
+Eine Markenkennung ist Text aus den Daten und darf so heissen. `verlaufId`
+säubert sie deshalb. Kein Prüflauf hätte das gemeldet — es stürzt nichts ab,
+und gedeckt ist die Antwort auch (§55.1).
+
+### 4. `formVerlauf` liest nur aus `p:spPr`
+
+`formFarbe` sucht über den ganzen Teilbaum der Form — und darin liegt `a:ln`,
+die Umrisslinie, mit eigener Füllung. Der Kommentar an `formFarbe` sagt das
+selbst. Für die Farbe ging es gut; für einen Verlauf wäre es Glück.
+`test501 §1` stellt die Falle: die Linie trägt einen zweiten Verlauf in
+`#112233`/`#445566`, und der darf nicht ankommen.
+
+Nicht gelesen und deshalb `null`: `a:schemeClr` und Verwandte (ohne
+`theme1.xml` nicht auflösbar) und `a:path` (radiale Verläufe). Dann bleibt es
+bei der festen Farbe. Ein unvollständiger Verlauf wäre schlechter als eine
+ehrliche Fläche.
+
+### 5. Der Wächter, der fehlte
+
+Beim Vermessen kam ein Befund heraus, der nichts mit dem Verlauf zu tun hat
+und wichtiger ist als er: **es gab keinen Prüflauf dafür, dass ein Feld an
+einer Marke eine Sicherung übersteht.** `test145` hält ein unbekanntes
+BLOCKfeld gegen `Formen.heile`; `test100` hält die Bytes der Anhänge. Den
+Weg `Marke → Block → IndexedDB → .json → zurück` prüfte für Markenfelder
+niemand.
+
+Nachgelesen ist die Eigenschaft wahr: Marken werden nirgends feldweise
+abgeschrieben, `Formen.heile` fasst `marken` nicht an, und Abgleich,
+Versionen und Duplizieren tragen alles als Ganzes mit. Aber wahr und
+unbewacht ist kein Zustand, in dem man ein neues Feld einführt — die nächste
+„Aufräum"-Änderung in `exportAll` nähme es still mit. `test501 §4` legt eine
+Marke mit `schritt`, `verlauf` UND einem frei erfundenen Feld an, exportiert,
+spielt mit „Ersetzen" ein und vergleicht Feld für Feld. Gegenprobe: eine
+Feldliste in `exportAll` — fünf Zusagen rot.
+
+**Was es kostet:** ein zweites Feld an der Abdeck-Marke und vier Zeichenwege,
+die das `<defs>` mitnehmen müssen. Wer einen fünften baut und es vergisst,
+bekommt keinen Fehler — der Deckel fällt auf seine feste Farbe zurück und
+sieht flach aus. Das ist der Preis für die Sicherheit aus Punkt 2, und er ist
+der richtige: lieber flach als offen.
+
+`test501` ist neu, 29 Zusagen, **fünf Gegenproben wirklich gefahren**; die
+Zahlen stehen gemessen im Kopf der Datei. `test266`, `test499`, `test500`,
+`test501`, `test145`, `test183` grün. Bild: `bilder/verlauf-1-zu.png`.
+
+**Offen bleibt in L153 nur noch:** die drei blauen Navigationspfeile der
+Originalfolie. Sie sind Formen ohne Text und ohne Animation und fallen durch
+beide Zweige — und in Redion macht das Blättern seit E544 der Klick.
+
+---
+
+E546 — Eine Folie zu ZEIGEN darf sie nicht ändern, und sie geht als Foliensatz auf
+--------------------------------------------------------------------------
+
+O4 aus `AUFGABEN.md`: „Die Markenschicht wird der Folieneditor." Der erste
+Blick auf eine eingelesene Präsentation im Editor
+(`bilder/o4-ist-editor.png`) zeigte quer über der Titelfolie den Satz „Tippe
+etwas, oder drücke / für Befehle". Der Platzhalter war das kleinere Übel.
+
+### 1. Das Zeichnen schrieb in den Speicher
+
+`Blatt.zeichne` legt für ein Blatt ohne Textkinder eine leere Zeile an — mit
+`Store.addBlock`, also als echten Block in `blocks`. Das ist E118, und für
+ein leeres Blatt Papier ist es richtig: ohne die Zeile kann man darauf nur
+malen, und genau das war der Fehler, den E118 behoben hat.
+
+Eine eingelesene PowerPoint-Folie hat keine Textkinder — ihr Text liegt als
+Marken. Gemessen an einer Seite mit 27 Folien:
+
+```txt
+vor dem Öffnen    0 Kindblöcke
+nach dem Öffnen  27 Kindblöcke, alle `text` mit ""
+```
+
+**Siebenundzwanzig Blöcke, die niemand angelegt hat, nur vom Hinsehen.** Sie
+landen im Versionsverlauf, in der Sicherung, im Abgleich und in der Suche.
+Und sie sind es, die den Platzhalter auf die Folie legen: gemessen sass er
+auf (501, 462), die Titelmarke auf (502, 457).
+
+**Entschieden:** Ein Blatt MIT Marken ist nicht leer. Es trägt schon
+bearbeitbare Elemente — genau die, die der Textmarken-Knopf anlegt, und in
+PowerPoint ist ein Textkasten auch keine Absatzzeile. Die Bedingung heisst
+jetzt `!kinder.length && !hatMarken`.
+
+E118 bleibt für das leere Blatt unverändert. `test502` misst **beide**
+Richtungen: die Marken-Bedingung entfernen macht zwei Zusagen rot, die Zeile
+ganz weglassen die zwei anderen.
+
+`test191` prüfte den Quelltext per Regex auf `if (!kinder.length)` und wurde
+davon rot. Die Regex ist nachgezogen, nicht entschärft: sie verlangt jetzt
+die vollständige Bedingung. Eine Prüfung auf den Wortlaut des Quelltextes ist
+spröde — aber sie sagt, WO die Sache steht, und das ist hier ihr Wert.
+
+### 2. Und die Präsentation ging als Stapel Blätter auf
+
+Der Dokumentmodus kann Blatt-Blöcke längst: eigene Werkzeugleiste für das
+ganze Dokument, Seitenliste, „Präsentieren", „Drucken", „Seiteneditor"
+(`documentsIn` in `document-mode.ts` nimmt `pdfseite` UND `blatt`). Er sprang
+nur nicht an — `active()` verlangt die Flagge `dokumentModus` am Seitenblock,
+und der `.pptx`-Einleser setzte sie nie.
+
+Ohne sie stand die eingelesene Präsentation als Stapel Blätter
+untereinander, **jedes mit eigener Werkzeugleiste**. Gemessen nach der
+Reparatur: drei Leisten im DOM, davon **eine sichtbar**.
+
+Das ist derselbe Fund wie E397 (Audit F10): „ein Weg, der das Ding anlegt,
+aber nicht öffnet." Der PDF-Weg setzt die Flagge seit jeher, der
+Notizheft-Weg auch. Eine Zeile, und der halbe Folieneditor stand da — das
+ist der Grund, warum §45 mit „bestehenden Code lesen" anfängt.
+
+Die Bedingung des PDF-Wegs („nur beim ERSTEN Mal", damit eine verlassene
+Ansicht nicht zurückkommt) ist hier von selbst erfüllt: die Seite ist frisch.
+
+### Was NICHT gebaut wurde, und das steht so auch im Prüflauf
+
+**Eine Folie allein im Bild.** Der Dokumentmodus rollt durch — das ist seine
+Bauart, und fürs Schreiben ist sie richtig. „Eine Folie, dann die nächste"
+macht der Vortragsmodus (E544). Ein Folieneditor mit stehender Folie und
+Miniaturstreifen daneben wäre ein eigener Bogen; er bleibt unter O4 in
+`AUFGABEN.md` stehen.
+
+Das gehört hierher, weil die Versuchung gross war, „1:1 wie PowerPoint" zu
+schreiben, nachdem das Bild plötzlich viel besser aussah. Gebaut ist: die
+Präsentation geht als Dokument auf. Nicht gebaut ist der Folieneditor.
+
+**Was es kostet:** Wer auf einer eingelesenen Folie einen gewöhnlichen
+Textblock haben will, bekommt ihn nicht mehr von selbst — er nimmt den
+Textmarken-Knopf, wie in PowerPoint. Sobald eine Folie keine Marken mehr hat,
+legt das Blatt seine Zeile wieder an.
+
+`test502` neu, 17 Zusagen, drei Gegenproben gefahren (8/2, 8/2, 12/5 —
+gemessen). `test191` nachgezogen und grün. Bild:
+`bilder/o4-dokumentmodus.png` gegen `bilder/o4-ist-editor.png`.
+
+---
+
+E547 — Die Folienliste zeigt Folien
+--------------------------------------------------------------------------
+
+O4, zweiter Teil. E546 hat die eingelesene Präsentation als Dokument
+aufgehen lassen — damit war die Seitenliste da, die G3 gebaut hat, samt Menü
+je Seite, Einfügen, Löschen, Verschieben. **Die Liste war da und half nicht.**
+
+Drei Fehler, alle in `thumbnail()` und `sourceLabel()`, und alle erst im Bild
+(`bilder/fe-seitenliste.png`):
+
+```txt
+1. hochkant   .document-thumbnail-preview trägt aspect-ratio:210/297, fest
+              verdrahtet. Gemessen: Miniatur 0,71 — die Folie daneben 1,78.
+2. leer       Alles ausser einer PDF-Seite mit Bild bekam einen Bleistift.
+              27 Folien = 27 gleiche leere Kästchen.
+3. namenlos   `sourceLabel` gab für jedes `blatt` „A4-Blatt" zurück. Auch im
+              `aria-label`: 27-mal „A4-Blatt öffnen".
+```
+
+Der dritte ist der, der am meisten kostet, und er ist der unscheinbarste: mit
+fünf gleichen Namen kann man noch zählen, mit siebenundzwanzig nicht mehr.
+Für ein Vorleseprogramm war die Liste von Anfang an unbenutzbar (§38).
+
+**Entschieden — drei kleine Sachen, alle an der Stelle, wo sie hingehören:**
+
+1. **Das Mass kommt vom Block.** `preview.style.aspectRatio` aus
+   `bw`/`bh` bzw. `blattBreite`/`blattHoehe`. Die Vorgabe im Stilblatt bleibt
+   für alles ohne eigene Masse — ein A4-Blatt ist danach gemessen weiter
+   hochkant (0,71).
+
+2. **Die Miniatur zeigt die Folie.** `markenVorschau` baut ein kleines SVG
+   aus DENSELBEN Knoten, die `Marken.zeichneMarke` für Vortrag, Druck und
+   Seitenbild liefert (§8) — kein zweiter Zeichner. Das ist nicht nur
+   sparsam, es ist der Grund, warum **die Abdeckung auch hier deckt**:
+   `zeichneMarke` gibt sie zugedeckt heraus (E266). Gemessen an einer echten
+   Miniatur: das Band misst 69 × 6 px und ist `rgb(255, 204, 0)` — die
+   Antwort darunter steht auch in der Seitenliste nicht offen.
+   Gibt es nichts zu zeichnen, bleibt der Bleistift.
+
+   **Bildmarken nur, wenn ihre Adresse schon bekannt ist.** Sonst löste eine
+   Liste mit 27 Folien 27 Dateilesungen aus, nur um Daumennagel zu füllen —
+   dieselbe Vorsicht, die die PDF-Vorschaubilder eine Funktion tiefer schon
+   üben.
+
+3. **Der Name sagt, welche Folie es ist.** Ein Blatt mit eigenem Text trägt
+   seinen Namen selbst; der `.pptx`-Einleser setzt ihn aus dem Folientitel
+   (E540). Ein leeres Blatt aus dem Slash-Menü hat keinen und bleibt
+   „A4-Blatt". Die laufende Nummer steht davor — bei 27 Folien zählt niemand
+   Kästchen ab.
+
+**Die Alternative** zu Punkt 2 wäre gewesen, ein Bild der Folie zu rendern
+und zu speichern, wie es die PDF-Seiten tun. Verworfen: das wäre ein zweiter
+Speicher für etwas, das aus den Marken jederzeit entsteht, und er liefe mit
+jeder Änderung an der Folie auseinander (§8: keine doppelten Kataloge).
+
+**Was es kostet:** Die Liste zeichnet jetzt bei jedem Aufklappen alle Marken
+aller Folien. Für Redurs 27 Folien mit je zehn Marken sind das 270 kleine
+SVG-Knoten — spürbar wäre erst ein Vielfaches davon, und der Ausweg stünde
+bereit (dieselbe Sichtbarkeitsprüfung wie bei den PDF-Vorschaubildern). Das
+ist eine Vermutung, keine Messung, und steht deshalb hier und nicht als
+Zahl.
+
+`test503` neu, 18 Zusagen, vier Gegenproben gefahren (17/1, 13/5, 15/3,
+17/1 — gemessen). Eine davon fing beim ersten Versuch nur zwei Zusagen
+statt vier: die Prüfung verglich den Namen auf Gleichheit, und mit der
+Nummer davor heisst er „1 · A4-Blatt". Jetzt prüft sie auf „enthält".
+
+Bilder: `bilder/fe-seitenliste.png` und `bilder/fe-miniatur-nah.png`.
+
+**Offen bleibt unter O4:** eine Folie STEHEND im Bild statt durchrollend,
+und Folien-Handgriffe, die nach Folien klingen („Neue Folie" statt „Neue
+Seite"). Die Griffe selbst gibt es seit G3.
+
+---
+
+E548 — „Präsentation" ist ein Weg, und sie hat fertige Layouts
+--------------------------------------------------------------------------
+
+Redur, 13. September 2026: „könntest du so eine PowerPoint-Modus im Menü
+einfügen, wenn ich das klicke sollte 1:1 wie PowerPoint sein, oben mit Menü,
+links Seiten, so dass ich Präsentation erstellen könne, füge dort auch
+fertige Vorlagen."
+
+**Zuerst nachgesehen, was davon schon da war** — und das war mehr, als der
+Satz vermuten lässt:
+
+```txt
+da     Die Ansicht. Leiste oben, Folienliste links (E546), und die Liste
+       zeigt seit E547 wirklich Folien. „Präsentieren" und „Drucken" daneben.
+da     Die Handgriffe. Einfügen, Duplizieren, Löschen, Verschieben — G3.
+FEHLT  Der WEG hinein. Im Anlegen-Menü standen dreizehn Wege, keiner davon
+       legte eine Präsentation an. Wer eine wollte: Seite anlegen, Blatt
+       hineinsetzen, dessen Masse von Hand auf 16:9 stellen, den
+       Dokumentmodus selbst finden.
+FEHLT  Die Vorlagen. Eine neue Folie war immer weisses Papier.
+```
+
+**Entschieden — drei Sachen:**
+
+### 1. „Präsentation" steht im Anlegen-Katalog
+
+Ein Eintrag in `ERSTELLEN` (Gruppe „Zeichnen", neben Blatt und Whiteboard),
+und ein Zweig in `erstellenWeg`. Der Zweig ruft den Wähler; der legt an und
+öffnet. **Bricht jemand ab, entsteht gar nichts** — anders als beim PDF-Weg
+zwei Zweige weiter oben, der erst eine Seite anlegt und sie danach wieder in
+den Papierkorb schieben muss. Hier ist die Reihenfolge herum, also gibt es
+den Fall nicht (§47).
+
+### 2. Acht Layouts, und keine zwei gleich
+
+`bereiche/vorlagen/folien.ts`. Es sind die, die PowerPoint selbst anbietet,
+mit denselben deutschen Namen — wer von dort kommt, sucht nicht:
+
+```txt
+Titelfolie · Titel und Inhalt · Zwei Inhalte · Vergleich
+Abschnittsüberschrift · Nur Titel · Bild mit Beschriftung · Leer
+```
+
+Ein Layout ist **keine zweite Dokumentform**, sondern eine Liste von Marken
+— dieselben, die der `.pptx`-Einleser anlegt (E540) und die die
+Zeichenschicht seit E100 bearbeitet. Wer eine Vorlage nimmt, bekommt nichts
+Besonderes: eine gewöhnliche Folie, auf der schon etwas steht. Titel
+anklicken, Text ersetzen, fertig.
+
+**Die Masse sind Anteile, keine Pixel.** `text(b, h, {x: .07, …})` rechnet
+gegen die übergebene Foliengrösse. Bei einer 4:3-Folie läge sonst alles im
+linken Drittel — dieselbe Falle wie E100 und wie die drei Anläufe aus E544.
+`test504` misst, dass keine Marke über die Folie hinausragt.
+
+**Warum NICHT in `Register.vorlagen`:** dort stehen Vorlagen, die ganze
+Arbeitsbereiche bauen („Fitness-OS", zehn Datenbanken mit Ansichten). Ein
+Folienlayout legt keine Seite an, es füllt eine. Beides in eine Liste zu
+werfen hiesse, in der Galerie „Titelfolie" neben „Fitness-OS" zu zeigen. §8
+verbietet zwei Kataloge für DASSELBE; dies sind zwei für ZWEIERLEI. Der
+**Befehl** „Neue Folie" steht dagegen im Befehlsregister, wo er hingehört
+(§8 Regel 3), mit `zeigen()` — er erscheint nur, wenn wirklich ein
+Foliensatz offen ist.
+
+### 3. Der Wähler zeigt die Layouts, statt sie aufzuzählen
+
+Jede Karte trägt eine echte kleine Folie, gezeichnet von
+`Marken.zeichneMarke` — derselben Stelle wie Folie, Miniatur, Vortrag und
+Druck (§8, E547). Acht gleiche Zeichen wären keine Wahl, sondern eine Liste
+von Namen. Am Telefon wird daraus eine Spalte, und die Vorschauen bleiben
+lesbar (`bilder/pp-waehler-handy.png`).
+
+**Was es NICHT ist, und das steht auch im Prüflauf (§35):** „1:1 wie
+PowerPoint" ist es nicht. Es gibt kein Menüband mit Reitern (Start ·
+Einfügen · Entwurf · Übergänge), und die Folie rollt durch statt zu stehen.
+Beides bleibt unter O4 in `AUFGABEN.md` offen. Gebaut ist der Weg hinein und
+das, womit man anfängt.
+
+`test504` neu, 27 Zusagen, vier Gegenproben gefahren (24/3, 20/7, 25/2,
+26/1 — gemessen). Eine davon fing beim ersten Versuch nur zwei statt sieben,
+und der Grund gehört in diese Entscheidung, weil er §55.2 in Reinform ist:
+**`every()` auf einer leeren Liste ist wahr.** Sechs Zusagen sagten „passt
+schon" über nichts. Jede trägt jetzt ihre Mindestzahl daneben.
+
+Bilder: `bilder/pp-waehler.png`, `bilder/pp-waehler-handy.png`.
+
+---
+
+E549 — Das Menüband bekommt einen Reiter für Folien, das Folien-Menü aber eine eigene Leiste
+--------------------------------------------------------------------------
+
+Redur: „oben mit Menü." Beim Nachsehen war die Lage wieder eine andere als
+erwartet, und zwar in beide Richtungen.
+
+**Redion HAT ein Menüband.** `register/menueband.ts` (1156 Zeilen Katalog)
+und `schale/aufbau/menueband.ts` (1371 Zeilen Zeichner), mit Reitern Start ·
+Einfügen · Zeichnen · Verlauf · Überprüfen · Ansicht · Hilfe. Gebaut, weil
+Redur es schon einmal wollte.
+
+**Es ist nur zweimal aus gutem Grund unsichtbar:**
+
+```txt
+studio.css      Am Rechner ist es eine LADE hinter #studio-tools. Der
+                Studio-Kopf zeigt Werkzeuge, Suche, KI und Konto schon;
+                ein zweiter Kopf wäre doppelt (6. September).
+pdf-studio.css  Im Dokumentmodus verschwindet alles Gerüst, auch
+                #menueband — dort regiert die Dokumentleiste.
+```
+
+**Und es hatte nichts für Folien.** Kein „Neue Folie", kein „Präsentieren",
+in keinem der sieben Reiter.
+
+### 1. Der Reiter „Präsentation"
+
+Im Register, mit seinen Knöpfen als LIEFERANT aus `bereiche/vorlagen/folien.ts`
+— nicht als Aufzählung in der Registerdatei. Das ist derselbe Grund wie beim
+Reiter „Einfügen": der Katalog gehört dem Bereich, der die Sache kann.
+
+`reiter()` blendet ihn von selbst aus, wenn kein Foliensatz offen ist: jeder
+Eintrag trägt `zeigen()`, und ein Reiter ohne sichtbaren Eintrag kommt gar
+nicht erst in die Liste. Nachgesehen, nicht gehofft.
+
+**Kein einziger Knopf tut etwas Neues** — das ist die Regel, die ganz oben in
+`register/menueband.ts` steht: ein Band ist eine ZWEITE ANSICHT auf das, was
+Redion kann, keine zweite Fassung davon.
+
+### 2. Was ein Foliensatz ist: quer
+
+`istFoliensatz` fragte bis hierher nur „Dokumentmodus und irgendein Blatt".
+Ein Notizheft ist von aussen dasselbe. Der Unterschied, den man messen kann,
+ist das Papier: eine Folie ist breiter als hoch (PowerPoints Vorgabe ist
+16:9, Redions eingelesene Folien auch), ein A4-Heft ist 595 auf 842.
+
+Was das nicht trifft: eine hochkant gebaute Präsentation. Selten — und die
+Verwechslung in die andere Richtung wäre teurer: ein Folienmenü über jedem
+Notizheft.
+
+### 3. Und der erste Versuch war falsch — gemessen, nicht geahnt
+
+Das Naheliegende war, `#menueband` im Dokumentmodus für Foliensätze wieder
+einzublenden. Gebaut, gemessen, zurückgenommen:
+
+```txt
+#menueband im Foliensatz:  x 0, y 48, 1440 × 852 px, Klasse „ist-zu"
+der Inhalt darunter:       x 0, y 48, 1440 × 852 px
+```
+
+Deckungsgleich. Im Bild stand oben rechts eine zugeklappte Ecke „Werkzeuge ⌄"
+QUER über der Dokumentleiste. Genau die zwei Köpfe übereinander, vor denen
+die Zeile in `pdf-studio.css` steht — und die Zeile hat recht.
+
+**Also sitzt das Folien-Menü IN der Dokumentleiste**, als Knopf „📽️ Folie"
+neben „Details" und „Präsentieren". Er liest denselben Katalog:
+`Register.menueband.inReiter('praesentation')`. Eine Liste, zwei Ansichten
+(§8) — wer dem Bereich einen Knopf hinzufügt, hat ihn an beiden Orten.
+
+Das Menü zeigt: **Folien** (Neue Folie, Folienliste) · **Vortrag**
+(Präsentieren) · **Ausgeben** (Als PowerPoint, Als PDF, Drucken).
+
+### Zwei Fehler auf dem Weg, beide nur im Bild zu sehen
+
+- **Die Gruppenüberschriften waren leer.** Das Feld in `inReiter()` heisst
+  `gruppe`, nicht `name`. Im Menü standen drei graue Streifen von 12 px ohne
+  Text — und der Prüflauf blieb grün, weil er das REGISTER las statt das
+  Menü. Die Zusage misst jetzt den gezeichneten Text (§55.2).
+- **Die Namen brachen auf drei Zeilen um.** Der Hinweis stand als `.sub`
+  daneben und nahm den Platz: „Neue / Folie", gemessen 56 px statt 35. Er
+  steht jetzt am `title` und im `aria-label` — für Zeiger und
+  Vorleseprogramm dasselbe, im Menü kein Umbruch (§38).
+
+**Was offen bleibt:** ein echtes Menüband mit Reitern ÜBER der Folie, wie in
+PowerPoint. Dafür müsste die Dokumentleiste dem Band Platz machen, statt es
+zu verdrängen — ein Layoutbogen, kein Katalogbogen. Steht unter O4.
+
+`test505` neu, 26 Zusagen, vier Gegenproben gefahren (25/1, 14/12, 23/3,
+24/2 — gemessen). Die vierte ist die wichtige: sie prüft nicht, ob etwas DA
+ist, sondern ob es WEGBLEIBT, wo es nicht hingehört.
+
+Bild: `bilder/mb-folienmenue.png`.
+
+### Der dritte Fehler stand nicht im Bild, sondern in einer Zahl
+
+`test114` zählt die Wege hinter dem „+" **hart** — und trug seit E236 eine
+Frage mit: „Wegweiser oder Liste?" Bei einundzwanzig stand dort, der nächste
+Zuwachs brauche eine Antwort, nicht nur eine neue Zahl.
+
+Dieser Bogen hat den zweiundzwanzigsten gebracht (die Präsentation steht in
+„Zeichnen", eine siebte Überschrift kam nicht dazu). Die Zeile wurde rot,
+und die Antwort ist gemessen, bei 428 × 926, das Blatt offen, vor dem
+Rollen:
+
+```txt
+22 Wege in 6 Überschriften
+Liste 757 px hoch, Inhalt 1787 px      →  sie rollt
+ohne zu rollen sichtbar:  10 von 22
+gerollt: der letzte Weg liegt ganz darin, 64 px hoch
+```
+
+**Zehn von zweiundzwanzig — also „Liste".** Ein Wegweiser zeigt, was es
+gibt; dieses Blatt zeigt noch ein Drittel davon. Das ist keine Kleinigkeit:
+gebaut wurde es für den, der NICHT weiss, dass Redion Karteikarten kann, und
+genau der rollt nicht.
+
+**Was daraus nicht folgt: einen Weg wegnehmen.** Jeder ist eine echte
+Funktion (§47). Die Lösung ist eine Ordnung, die mit Zuwachs umgehen kann —
+zusammenklappbare Gruppen, ein Suchfeld oder zwei Ebenen. Keine davon ist
+entschieden; die drei stehen mit ihren Kosten als **L154** in `LUECKEN.md`.
+
+Bis dahin hält `test114` zwei Zusagen, die für eine rollende Liste gelten:
+dass sie wirklich rollt und dass ihr letzter Eintrag unten ankommt. Beide
+Gegenproben gefahren, beide rot geworden (154 ok / 1 offen, je) — die eine
+ohne das Rollen im Messen, die andere mit der Roll-Schwelle auf +2000, damit
+klar ist, dass die Zeile die Messung liest und kein festes `true`.
+`test114` steht damit bei 155 grün statt 152 grün und 1 offen.
+
+**Die Lehre, und sie ist älter als dieser Bogen:** eine harte Zahl in einem
+Prüflauf ist kein Ärgernis, sondern der einzige Melder, den eine wachsende
+Liste hat. Sie war schon einmal still rot (E513 → E522), weil niemand sie
+hörte. Diesmal hat sie gemeldet — und was sie meldete, war nicht „die Zahl
+stimmt nicht", sondern „das Blatt ist etwas anderes geworden".
+
+---
+
+E550 — Das Folienband: Reiter ÜBER der Folie, und die zwei Reiter, die draussen bleiben
+--------------------------------------------------------------------------
+
+Redur: „mach weiter mit den menüband" — und davor: „oben mit menü … 1:1 wie
+powerpoint".
+
+E549 hat den **Katalog** gebaut: einen Reiter „Präsentation" im Bandregister
+und ein Menü in der Dokumentleiste. Was fehlte, war der **Ort** — eine
+Reiterzeile mit einem Band darunter, über der Folie, wie sie jedes
+Textprogramm über dem Blatt hat. E549 hat das selbst als offen vermerkt:
+„ein Layoutbogen, kein Katalogbogen".
+
+### Warum nicht doch `#menueband` dort einblenden
+
+Weil es gemessen worden ist und schlechter war (E549): am Rechner ist das
+globale Band eine zugeklappte **Lade** hinter `#studio-tools`, und im
+Dokumentmodus legte sich seine Ecke „Werkzeuge ⌄" bei 1440 × 852
+deckungsgleich über die Dokumentleiste. Zwei Köpfe übereinander.
+
+Das Folienband fliesst dagegen **in der Spalte** des Studios mit. Es
+überdeckt nichts, es nimmt Platz — und genau das ist der Unterschied.
+Gemessen bei 1440 × 852:
+
+```txt
+vorher                       nachher
+Kopfleiste       48 px       Kopfleiste       48 px
+                             Folienband      110 px   (34 Reiter + 76 Band)
+Zeichenleiste    58 px       Zeichenleiste    58 px
+Fläche          698 px       Fläche          588 px
+Folie      980 × 551         Folie      980 × 551     ← unverändert
+```
+
+Die Folie ist nicht kleiner geworden. Sie stand vorher mit Luft darunter, und
+das Band hat die Luft genommen, nicht die Folie. Bei 1280 × 800 dasselbe
+(980 × 551), bei 900 × 800 noch 854 × 480 — beide 16:9 auf drei Stellen.
+
+### Welche Reiter — und die Gründe sind gemessen, nicht gewählt
+
+Alle **151** Einträge des Bandkatalogs sind bei offenem Foliensatz **einzeln
+aufgerufen** worden, und nachgesehen wurde, ob danach ein Block, ein Menü
+oder ein Fehler da war:
+
+```txt
+start          14 Knöpfe  ·  14 ohne Wirkung
+einfuegen      69 Knöpfe  ·  65 ohne Wirkung
+ansicht        10 Knöpfe  ·   8 „ohne Wirkung" — darunter Vollbild und
+                              Drucken, die die Messung nur nicht SIEHT
+verlauf         9 Knöpfe  ·   6 (Rückgängig auf leerem Stapel tut zu Recht
+                              nichts)
+ueberpruefen    6 Knöpfe  ·   1
+hilfe           6 Knöpfe  ·   3
+```
+
+Abgestürzt ist keiner; die Seite meldete **null** Fehler. Draussen bleiben
+deshalb genau die zwei, bei denen es eindeutig ist: **`start` und
+`einfuegen`**. Ihre Knöpfe brauchen eine Schreibmarke in einem Textblock, und
+im Dokumentmodus gibt es keine. 79 von 83 Knöpfen ohne Wirkung wären kein
+Menüband, sondern eine Enttäuschungsmaschine — derselbe Grund, aus dem
+`zeigen()` im Register überhaupt existiert.
+
+**`zeichnen` bleibt aus einem anderen Grund draussen:** seine dreissig Knöpfe
+stehen als Zeichenleiste schon dauerhaft zwei Zeilen tiefer. Dieselbe Sache
+an zwei sichtbaren Stellen gleichzeitig ist genau das, was §8 verbietet — und
+die Gegenprobe hat nebenbei gezeigt, was sonst passiert wäre: mit `einfuegen`
+im Band ragten **52 Knöpfe** aus der Fläche heraus.
+
+Es bleiben fünf: **Präsentation · Ansicht · Verlauf · Überprüfen · Hilfe**.
+
+### Kein zweiter Zeichner
+
+`menueband.ts` reicht seit diesem Bogen `knopf` und `gruppeZeichnen` hinaus.
+Das Folienband ist eine **zweite Stelle**, an der dieselben Registereinträge
+als Knöpfe erscheinen — kein zweiter Katalog und kein zweiter Zeichner.
+Nachgebaut hätte man sonst vier Sachen, die man je einzeln vergisst: die
+Farb- und Strichprobe, das `an()` für den gewählten Knopf, den Satz für
+Vorleseprogramme und das Kürzel im Tooltip.
+
+Was **nicht** hinausgeht: `bandFuellen`. Es hängt das „•••" an, und dessen
+Überlaufrechnung kennt nur das eine, globale Band. Ein zweites Band mit einem
+„•••", das nie etwas anzeigt, wäre ein toter Knopf.
+
+### Und der Fehler, den nur das Bild gefunden hat
+
+Auf dem ersten Bild stand die ganze Reihe als **nackter Text** da: „Neue
+Folie   Folienliste   Präsentieren   Als PowerPoint   Als PDF   Drucken",
+ohne ein einziges Zeichen.
+
+`Menueband.knopf` hängt für einen Symbolnamen nur ein leeres
+`<span data-sym="plus">` ein — gemalt wird es von
+`Register.symbole.fuelle(wurzel)`, und das war vergessen. Im globalen Band
+steht dieser Aufruf an **drei** Stellen; hier fehlte er an der einen.
+
+Kein zusammengesetzter Prüflauf hätte das gemeldet: die Knöpfe waren alle da,
+hiessen richtig, hatten ihren Satz für Vorleseprogramme und taten das
+Richtige. Nur aussehen taten sie wie eine Textzeile. **§55.1 in Reinform** —
+und der Grund, warum §55.3 ein Bild verlangt, wenn es etwas zu sehen gibt.
+
+Die Zusage dagegen sucht nicht `data-sym` (der Kasten kann leer sein),
+sondern das **Gemalte**: ein `<svg>` darin, ein Textzeichen oder eine Probe.
+
+### Am Telefon bleibt es beim Knopf
+
+Unter **900 px** Fensterbreite gibt es kein Band; dort führt weiter der Knopf
+„📽️ Folie" aus E549 ins Menü. Das ist keine Bequemlichkeit: bei 390 px sind
+Kopf- und Zeichenleiste schon 101 px, und die Folie selbst ist dort 344 × 194.
+Ein Band von 110 px nähme ihr mehr als die Hälfte. PowerPoint zeigt am
+Telefon aus demselben Grund keines.
+
+Die Schwelle ist auf den Pixel geprüft: bei 899 px kein Band, bei 900 px
+eines.
+
+### Und ein Fehler, den das Lesen des eigenen Bogens gefunden hat
+
+`innerWidth` wird beim Zeichnen **einmal** gefragt. Das Studio zeichnet bei
+`resize` nicht neu — es rechnet nur Höhen nach (`beiGroesse`), und das ist
+richtig so. Also: wer ein Fenster von 1440 auf 800 zog, behielt ein Band, das
+dort nicht hingehört; wer umgekehrt aufzog, bekam nie eines.
+
+Gefunden nicht beim Messen und nicht auf dem Bild, sondern beim Lesen des
+eigenen Diffs mit der Frage „was würde hier schiefgehen". Das Band hängt sich
+jetzt in `beiGroesse` selbst ein und aus — und die Zusage prüft beide
+Richtungen, weil nur eine davon die naheliegende ist.
+
+### Was offen bleibt
+
+- **Eine Folie stehend im Bild** statt durchrollend. Der Dokumentmodus rollt
+  durch; für das Schreiben ist das richtig, für das Bauen einer Präsentation
+  nicht. Steht weiter unter O4.
+- **Die Zeichenleiste als Reiter „Zeichnen"** — so macht es PowerPoint. Das
+  nähme aber eine dauerhaft sichtbare Leiste weg und versteckte sie hinter
+  einem Klick. Eine Funktion wegzunehmen ist Redurs Entscheidung, nicht
+  meine; bis dahin stehen beide da, und das Band kostet 110 px.
+- Die Handgriffe im Folienmenü heissen noch „Seite", nicht „Folie".
+
+`test506` neu, 51 Zusagen, sechs Gegenproben gefahren (42/2, 42/1, 41/2,
+41/2, 49/2, 47/4 — alle gemessen). Eine davon hatte zuerst die falsche
+Form: den Aufruf herausgenommen, worauf der Zweig wegen `noUnusedLocals`
+gar nicht mehr baute — CLAUDE.md §52.6 beschreibt genau diesen Fall, und
+eine Gegenprobe, die nicht baut, ist keine. Bilder: `bilder/fb-praesentation.png`, `bilder/fb-ansicht.png`.

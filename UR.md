@@ -894,6 +894,61 @@ Keine — an diesem Tag kam keine Nachricht.
 **Besserer Prompt:** 
 
 
+**26 · ca. 23:35**
+
+> mach weiter mit den folien klick
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**27 · ca. 01:15**
+
+> Weiter ohne pause
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**28 · ca. 03:30**
+
+> Weiter mit den folieneditor
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**29 · ca. 04:50**
+
+> Könntest du so eine powerpoint modus im menü einfügen wenn ich das klicke sollte 1:1 wie powerpoint sein oben mit menü, link seiten so das ich präsentaioton erstellen könnne, füge dort auch fertigen vorlagen
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**30 · ca. 06:20**
+
+> mach weiter mit den menüband
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -919,11 +974,18 @@ Keine — an diesem Tag kam keine Nachricht.
 | E541 — vier Funde aus Redurs echter .ppsx: unbekannte Endung, 27-fach abgelegtes Logo, Kopfzeile als Titel, 662 ms | `28e0aa28` → `f6ed8fb8` | 22:45 – 22:53 | ca. 8 min | test499 auf 22 Zusagen |
 | E542 — Die Antworten waren alle offen: PowerPoints Ausblend-Animationen werden zu Redions Abdeckband | `f6ed8fb8` → `811db626` | 22:53 – 23:02 | ca. 9 min | test499 bleibt 22; die Deckelfarbe wird seit 811db626 aus dem Verlauf gelesen statt geraten |
 | E543 — Der Wähler verschwieg, was der Einleser längst kann: Redurs Frage nach dem Hochladen fand den unsichtbaren Weg | `811db626` → `(dieser Bogen)` | 23:10 – 23:30 | ca. 20 min | test497 §3 neu, von 20 auf 31 grün, sechs Zusagen zuerst rot gesehen |
+| E544 — Ein Blatt füllt eine Folie, und der Klick schaltet sie weiter (L153 geschlossen) | `(nach E543)` → `(dieser Bogen)` | 23:35 – 00:40 | ca. 65 min | test500 neu, 45 Zusagen, vier Gegenproben gefahren; test183/191/293/266/499 grün |
+| E545 — Der Deckel bekommt seinen Verlauf, und ein Markenfeld bekommt seinen ersten Wächter | `(nach E544)` → `(dieser Bogen)` | 00:40 – 02:10 | ca. 90 min | test501 neu, 29 Zusagen, fünf Gegenproben gefahren; test266/499/500/145/183 grün |
+| E546 — O4 zur Hälfte: das Zeigen einer Folie ändert sie nicht mehr, und die Präsentation geht als Foliensatz auf | `(nach E545)` → `(dieser Bogen)` | 02:10 – 03:20 | ca. 70 min | test502 neu, 17 Zusagen, drei Gegenproben gefahren; test191 nachgezogen |
+| E547 — Die Folienliste zeigt Folien: Mass vom Block, Marken statt Bleistift, Name statt „A4-Blatt“ | `(nach E546)` → `(dieser Bogen)` | 03:30 – 04:40 | ca. 70 min | test503 neu, 18 Zusagen, vier Gegenproben gefahren |
+| E548 — „Präsentation" ist ein Weg: Eintrag im Anlegen-Menü, acht PowerPoint-Layouts, ein Wähler, der sie zeigt | `(nach E547)` → `(dieser Bogen)` | 04:50 – 06:10 | ca. 80 min | test504 neu, 27 Zusagen, vier Gegenproben gefahren |
+| E549 — Reiter „Präsentation" im Menüband, Folien-Menü in der Dokumentleiste; das ganze Band dort war gemessen schlechter | `(nach E548)` → `(dieser Bogen)` | 06:20 – 08:10 | ca. 110 min | test505 neu, 26 Zusagen, vier Gegenproben gefahren (25/1, 14/12, 23/3, 24/2); test114 von 152+1 auf 155 grün, zwei neue Zusagen, beide Gegenproben rot gesehen |
+| E550 — Das Folienband: Reiter ÜBER der Folie; `start` und `einfuegen` bleiben draussen, weil 79 von 83 ihrer Knöpfe dort nichts tun | `(nach E549)` → `(dieser Bogen)` | 08:20 – 10:20 | ca. 120 min | test506 neu, 51 Zusagen, sechs Gegenproben gefahren (42/2, 42/1, 41/2, 41/2, 49/2, 47/4) |
 
 #### Zahlen des Tages
 
-- **commits:** 18
-- **entscheidungen:** 16
+- **commits:** 25
+- **entscheidungen:** 23
 
 #### Das grösste Problem
 
@@ -948,10 +1010,18 @@ Der zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glaskno
 | 20:29 | E533 und L149 berichtigt: der beschriebene Bau hat nicht stattgefunden. | Der Absatz war beim Schreiben des Eintrags schon formuliert und nicht nachgezogen worden, nachdem alle zehn Agenten am Sitzungslimit starben. Aufgeschrieben, was geplant war, statt was geschah. | keins — nur Dokumentation; der falsche Absatz bleibt mit Nachtrag stehen, damit der Fehler auffindbar ist statt weggeputzt (§35) |
 | 22:45 | `pptxLesen` in `bereiche/dateien/einlesen.ts`: eine Folie wird ein `blatt`-Block mit Marken, Reihenfolge aus `p:sldIdLst`. | Redur: „1:1 wie PowerPoint". Der Weg über Text allein hätte jede Übungsfolie zerstört — die Antworten liegen unter Abdeckungen. | keins an Daten — das Original hängt seit E538 immer mit dran; die Umwandlung ist verlustbehaftet und sagt es im Hinweis |
 | 23:25 | `accept` des Hauptwählers und die zwei Menütexte um PowerPoint und PDF ergänzt. | Redur: „wie kann ich im Redion die Daten hochladen?" — beim Nachsehen stand seine .ppsx im Dateifenster grau, obwohl der Zweig 17 Zeilen tiefer sie liest. | keins an Daten — ein Filter im Dateifenster; `test497 §3` hält die drei Stellen künftig zusammen |
+| 00:10 | `EIGENE_FOLIE` im Kern, Schrittzähler im Vortrag, weiches Auflösen, und ein Blatt füllt die Leinwand. | Redur: „mach weiter mit den folien klick." Davor lag ein grösserer Fehler: eine eingelesene Präsentation war EINE Folie mit allen Blättern übereinander — gemessen, und nur auf dem Bild zu sehen. | keins an Daten — der Schrittstand wird nie gespeichert (E266); `Folien.teilen` ist gemeinsame Regel, deshalb fünf Nachbarläufe mitgefahren |
+| 01:40 | `formVerlauf` liest den Verlauf aus `p:spPr`, `verlaufDefs` legt EIN `<defs>` ans Blatt, die Füllung nennt immer auch die feste Farbe. | Redur: „1:1 wie das Original". Sieben Leser haben vorher den Bestand vermessen — der naheliegende Bau mit einer Gruppe um die Marke hätte vier Stellen gebrochen, drei davon still. | §51: ohne Rückfallfarbe wäre ein Deckel bei fehlender Vorlage UNSICHTBAR, also eine offene Antwort. Deshalb steht sie immer daneben — am Browser gemessen, nicht angenommen. |
+| 02:50 | `Blatt.zeichne` legt keine Zeile mehr an, wenn das Blatt Marken trägt; der .pptx-Einleser setzt `dokumentModus`. | Gemessen: 27 Folien öffnen legte 27 leere Textblöcke an, und ihr Platzhalter lag auf dem Folientitel. Und der Dokumentmodus konnte Blatt-Blöcke längst — es fehlte nur die Flagge. | §9: ein Zeichner, der in den Speicher schreibt, ist die gefährlichere Hälfte des Fundes. E118 bleibt für das leere Blatt unverändert, test502 misst beide Richtungen. |
+| 04:10 | `thumbnail()` nimmt das Seitenverhältnis vom Block und zeichnet die Marken; `sourceLabel` gibt den Folientitel. | Die Seitenliste war da (G3) und half nicht: 27 hochkant gequetschte, leere, gleich benannte Kästchen. Alle drei Fehler waren nur im Bild zu sehen. | keins an Daten. Die Abdeckung deckt auch in der Miniatur, weil es derselbe Zeichner ist — gemessen: 69×6 px, rgb(255,204,0). |
+| 05:40 | `bereiche/vorlagen/folien.ts` mit acht Layouts, ein Weg im Anlegen-Katalog, zwei Befehle im Register. | Redurs Wunsch nach einem PowerPoint-Modus. Die ANSICHT gab es längst (E546/E547) — was fehlte, war der Weg hinein und das, womit man anfängt. | keins an Daten — ein Layout ist eine Markenliste, keine zweite Dokumentform. Der Wähler legt bei Abbruch GAR NICHTS an. |
+| 07:20 | Ein Reiter „Präsentation" in `register/menueband.ts`, beliefert von `Folienvorlagen.bandEintraege`; dazu ein Knopf „📽️ Folie" in der Dokumentleiste, der dasselbe Verzeichnis als Menü öffnet. | Redur: „mach weiter mit den menüband". Das Band im Dokumentmodus einzublenden war der naheliegende Weg und nachweislich der schlechtere — eine zusammengeklappte Ecke „Werkzeuge ⌄" lag bei 1440 × 852 deckungsgleich über der Dokumentleiste. Also EIN Katalog, zwei Orte (§8). | keins an Daten — Oberfläche. Jeder Eintrag bringt sein `zeigen()` mit: ohne Foliensatz ist der Reiter ganz weg, und `istFoliensatz` verlangt ein QUERES Blatt, damit ein Notizbuch ihn nie bekommt. |
+| 08:05 | `test114` auf zweiundzwanzig Wege gehoben — und um zwei Zusagen erweitert, die für eine ROLLENDE Liste gelten. | Die harte Zahl im Prüflauf trug seit E236 eine Frage mit: „Wegweiser oder Liste?" Der zweiundzwanzigste Weg hat sie beantwortet, gemessen bei 428 × 926: 10 von 22 ohne Rollen sichtbar, 1787 px Inhalt in 757 px Liste. Also Liste. Wegnehmen wäre eine Funktion weniger (§47), deshalb steht die Antwort als L154 offen. | keins — ein Prüflauf. Beide neuen Zusagen sind rot gesehen worden (154 ok / 1 offen, je). |
+| 09:40 | Eine Reiterzeile mit Band zwischen Kopf- und Zeichenleiste des Dokumentstudios, nur bei quer liegendem Foliensatz und erst ab 900 px Fensterbreite. | Redur: „oben mit menü … 1:1 wie powerpoint". E549 hatte den Katalog, nicht den Ort. Welche Reiter hineinkommen, ist nicht gewählt, sondern gemessen: alle 151 Einträge einzeln aufgerufen, bei `start` taten 14 von 14 nichts, bei `einfuegen` 65 von 69 — sie brauchen eine Schreibmarke, die es im Dokumentmodus nicht gibt. | keins an Daten — Oberfläche. Die Folie bleibt 980 × 551 bei 1440 × 852; das Band hat die Luft darunter genommen, nicht die Folie. Gezeichnet wird mit `Menueband.knopf`/`gruppeZeichnen`, also kein zweiter Zeichner (§8). |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 22 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 25 Einträge.
 

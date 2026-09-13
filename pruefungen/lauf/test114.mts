@@ -879,11 +879,33 @@ const blattNeu = await seite.evaluate(() => {
     amBoden: Math.round(r.bottom) >= innerHeight - 1,
     seitenVorher: Store.rootPages().length,
     gruppen: [...m.querySelectorAll<HTMLElement>('.grp')].map(g => (g.textContent || '').trim()),
-    listen: m.querySelectorAll('.menu-liste').length
+    listen: m.querySelectorAll('.menu-liste').length,
+    /* SEIT E549 wird auch gemessen, was eine ROLLENDE Liste ausmacht: dass
+       sie wirklich rollt und dass ihr letzter Eintrag unten ankommt. Das
+       Rollen passiert hier im Messen selbst — `scrollTop` ans Ende, dann
+       nachsehen. Vorher sind 10 von 22 Wegen zu sehen; ohne das Rollen
+       wäre die Prüfung darunter also rot. */
+    ...(() => {
+      const liste = m.querySelector<HTMLElement>('.menu-liste');
+      const letzt = kn[kn.length - 1];
+      if (!liste || !letzt) return { rollt: false, rollHoehe: 0, listenHoehe: 0,
+                                     letzterGanzSichtbar: false, letzterHoehe: 0 };
+      const rollHoehe = liste.scrollHeight, listenHoehe = Math.round(liste.clientHeight);
+      liste.scrollTop = liste.scrollHeight;
+      const lr = liste.getBoundingClientRect(), r = letzt.getBoundingClientRect();
+      return {
+        rollt: rollHoehe > liste.clientHeight + 2,
+        rollHoehe, listenHoehe,
+        letzterGanzSichtbar: r.top >= lr.top - 1 && r.bottom <= lr.bottom + 1,
+        letzterHoehe: Math.round(r.height)
+      };
+    })()
   };
 }) as { titel: string; wege: string[]; grund: boolean; zuFlach: string[];
         ohneSatz: number; amBoden: boolean; seitenVorher: number;
-        gruppen: string[]; listen: number } | null;
+        gruppen: string[]; listen: number; rollt: boolean; rollHoehe: number;
+        listenHoehe: number; letzterGanzSichtbar: boolean;
+        letzterHoehe: number } | null;
 
 p('Der Stift öffnet ein Blatt', !!blattNeu, 'er legte vorher sofort eine Seite an');
 p('Es heisst „Neu erstellen"', blattNeu?.titel === 'Neu erstellen', blattNeu?.titel);
@@ -914,10 +936,53 @@ p('Es heisst „Neu erstellen"', blattNeu?.titel === 'Neu erstellen', blattNeu?.
    Die Frage von oben — Wegweiser oder Liste? — bleibt damit gestellt.
    Einundzwanzig in sechs Gruppen ist die Grenze; der nächste Zuwachs
    braucht eine Antwort, nicht nur eine neue Zahl. */
-p('Es führt zu einundzwanzig Sachen inklusive Scanner, ZIP und Notizbuch',
-  (blattNeu?.wege.length ?? 0) === 21 && (blattNeu?.wege ?? []).includes('scan') &&
-  (blattNeu?.wege ?? []).includes('zip') && (blattNeu?.wege ?? []).includes('heft'),
+/* ZWEIUNDZWANZIG SEIT E549: die Präsentation (`praesentation`). Sie steht
+   in „Zeichnen" neben Whiteboard und Blatt — eine siebte Überschrift kam
+   NICHT dazu, und der Eintrag zeigt sich nur, wenn `Folienvorlagen` geladen
+   ist (`da:` in `ERSTELLEN`).
+
+   UND HIER IST DIE ANTWORT, die die Zeile darüber verlangt hat. Sie ist
+   gemessen, nicht gemeint — 428 × 926, das Blatt offen, bevor gerollt wird:
+
+       22 Wege · 6 Überschriften
+       Liste  757 px hoch,  Inhalt 1787 px  →  sie rollt
+       OHNE zu rollen sichtbar:  10 von 22
+       nach dem Rollen ans Ende: der letzte Weg (Besprechung aufnehmen)
+                                 liegt ganz in der Liste, 64 px hoch
+
+   Zehn von zweiundzwanzig. Damit ist die Frage beantwortet, und zwar mit
+   „Liste": zwei Drittel der Wege sieht nur, wer rollt. Ein Wegweiser zeigt,
+   was es gibt; dieses Blatt zeigt noch ein Drittel davon.
+
+   Was daraus NICHT folgt: einen Weg wegnehmen. Jeder davon ist eine echte
+   Funktion, und die verschwindet nicht, weil die Liste lang wird (§47,
+   „nichts löschen ohne Rückfrage"). Was daraus folgt, steht als L154 in
+   `LUECKEN.md`: das Blatt braucht eine Ordnung, die mit Zuwachs umgehen
+   kann — zusammenklappbare Gruppen oder ein Suchfeld —, keine kürzere
+   Liste.
+
+   Bis dahin halten die zwei Zeilen darunter das fest, was jetzt zählt: eine
+   Liste, die rollt, ist nur dann in Ordnung, wenn ihr letzter Eintrag auch
+   WIRKLICH erreichbar ist.
+
+   Zwei Gegenproben, beide gefahren, beide rot geworden (§50):
+     · das Rollen im Messen weggenommen   →  154 ok, 1 offen
+       („letzter 64 px, ganz sichtbar: false" — 10 von 22 sind es eben nicht)
+     · die Roll-Schwelle auf +2000 gesetzt →  154 ok, 1 offen
+       („1787 px Inhalt in 757 px" — die Zeile liest die Messung, kein
+        festes `true`) */
+p('Es führt zu zweiundzwanzig Sachen inklusive Scanner, ZIP, Notizbuch und Präsentation',
+  (blattNeu?.wege.length ?? 0) === 22 && (blattNeu?.wege ?? []).includes('scan') &&
+  (blattNeu?.wege ?? []).includes('zip') && (blattNeu?.wege ?? []).includes('heft') &&
+  (blattNeu?.wege ?? []).includes('praesentation'),
   (blattNeu?.wege ?? []).join(', '));
+p('Die Liste rollt, weil sie länger ist als das Blatt',
+  blattNeu?.rollt === true,
+  String(blattNeu?.rollHoehe) + ' px Inhalt in ' + String(blattNeu?.listenHoehe) + ' px');
+p('… und gerollt ist der letzte Weg ganz zu sehen, nicht halb',
+  blattNeu?.letzterGanzSichtbar === true && (blattNeu?.letzterHoehe ?? 0) >= 44,
+  'letzter ' + String(blattNeu?.letzterHoehe) + ' px, ganz sichtbar: ' +
+  String(blattNeu?.letzterGanzSichtbar));
 p('Die neuen Wege von E236 sind alle dabei',
   ['pdf', 'umzug', 'journal', 'ordner', 'blatt', 'plan', 'diagramm', 'lernen']
     .every(w => (blattNeu?.wege ?? []).includes(w)),

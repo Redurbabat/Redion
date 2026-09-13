@@ -124,6 +124,15 @@ Register.menueband = (() => {
     { id: 'start',       name: 'Start',      zeichen: 'pencil' },
     { id: 'einfuegen',   name: 'Einfügen',   zeichen: 'plus' },
     { id: 'zeichnen',    name: 'Zeichnen',   zeichen: 'page' },
+    /* DER REITER FÜR FOLIEN (E549). Er steht hier, seine KNÖPFE stehen aber
+       nicht in dieser Datei: `bereiche/vorlagen/folien.ts` meldet sie als
+       Lieferant an. Das ist derselbe Grund wie beim Reiter „Einfügen" oben —
+       der Katalog gehört dem Bereich, der die Sache kann, und ein zweiter
+       hier liefe irgendwann davon weg.
+       `reiter()` blendet ihn von selbst aus, wenn kein Foliensatz offen ist:
+       jeder Eintrag trägt `zeigen()`, und ein Reiter ohne sichtbaren Eintrag
+       kommt gar nicht erst in die Liste. */
+    { id: 'praesentation', name: 'Präsentation', zeichen: 'play' },
     { id: 'verlauf',     name: 'Verlauf',    zeichen: 'history' },
     { id: 'ueberpruefen', name: 'Überprüfen', zeichen: 'search' },
     { id: 'ansicht',     name: 'Ansicht',    zeichen: 'sun' },

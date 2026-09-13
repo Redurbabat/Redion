@@ -299,6 +299,10 @@ const Recognition = (() => {
     background.setAttribute('x', String(region.x)); background.setAttribute('y', String(region.y));
     background.setAttribute('width', String(region.width)); background.setAttribute('height', String(region.height));
     background.setAttribute('fill', '#fff'); svg.appendChild(background);
+    /* Auch hier die Verlauf-Vorlagen (E545): ein Abdeckband MUSS im
+       Ausschnitt decken, sonst läse die Erkennung die Antwort mit. */
+    const defs = typeof Marken.verlaufDefs === 'function' ? Marken.verlaufDefs(marks) : null;
+    if (defs) svg.appendChild(defs);
     const bounds = { x: region.x, y: region.y, width: region.width, height: region.height };
     marks.forEach((mark: any) => {
       if (!InkGeometry.intersects(InkGeometry.bounds(mark), bounds)) return;

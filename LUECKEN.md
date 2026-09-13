@@ -7455,40 +7455,91 @@ tun, als sei die Folie leer.
 
 ---
 
-L153 · Der Klick schaltet die Folie noch nicht weiter — offen
+L153 · Der Klick schaltet die Folie weiter — GESCHLOSSEN bis auf die Pfeile
 --------------------------------------------------------------------------
 
-E542 liest die Abdeckungen einer PowerPoint-Übungsfolie ein und kennt auch
-die Nummer des Klicks, bei dem jede weichen soll (`schritt`, aus
-`p:timing`). Benutzt wird die Nummer noch nicht:
+**Geschlossen am 12. September 2026 mit E544** (`test500`, 45 Zusagen, vier
+Gegenproben gefahren). Was hier stand und jetzt gebaut ist:
 
-- **Heute** wird jede Abdeckung einzeln angetippt (E266). Das ist gut zum
-  Lernen allein, aber nicht das, was Redur beschrieben hat: ein Klick, und
-  die Folie geht einen Schritt weiter — wie im Vortrag vor einer Klasse.
-- **Nötig wäre** ein Schrittzähler je Blatt und ein Griff, der beim nächsten
-  Klick alle Abdeckungen mit `schritt <= n` aufdeckt. Der Vortragsmodus
-  (`werkzeuge.ts`) blättert heute Folien; er müsste zuerst die Schritte
-  durchgehen und erst danach weiterblättern.
-- **Der Übergang fehlt ganz.** PowerPoint löst die Abdeckung mit `dissolve`
-  auf; in Redion verschwindet sie schlagartig. Ein weiches Ausblenden wäre
-  in der Bewegungsschicht (`motion.css`) eine Regel — aber nur beim
-  Aufdecken, nicht im Leerlauf (E528).
+- **Der Schrittzähler.** Ein Klick irgendwo auf die Folie deckt alle
+  Abdeckungen mit `schritt <= n` auf; erst wenn keine mehr aussteht, kommt
+  die nächste Folie. Zurück landet auf der vollen Folie, wie in PowerPoint.
+- **Der Übergang.** Der Deckel löst sich auf, statt zu verschwinden — ein
+  `transition`, kein `@keyframes`, im Leerlauf bewegt sich nichts (E528).
+- **Die Entscheidung, die hier offen stand:** Der Schrittstand wird NICHT
+  gespeichert. E266 sagt „Lernen darf den Speicher nicht anfassen", und das
+  ist dieselbe Frage.
 
-**Nicht gebaut, weil es eine Entscheidung braucht:** ob der Schritt am Blatt
-gespeichert wird oder nur im Sichtbaren lebt. E266 ist da eindeutig für die
-Abdeckung selbst — „Lernen darf den Speicher nicht anfassen" —, und dieselbe
-Regel spricht dafür, auch den Schrittstand nicht zu speichern.
+**Und ein Fehler, den diese Lücke nicht kannte, war der grössere.** Bevor
+ein Schrittzähler zählen kann, muss es Folien geben. Eine eingelesene
+PowerPoint-Datei war EINE Folie mit 27 Blättern übereinander — gemessen, und
+auf `bilder/l153-vorher.png` zu sehen. `EIGENE_FOLIE` im Kern gibt jedem
+Blatt und jeder PDF-Seite eine eigene Folie. Dazu füllt ein Blatt jetzt die
+Leinwand statt acht Prozent davon; die Regel dafür brauchte drei Anläufe,
+zwei davon sahen an genau einer Bildschirmgrösse richtig aus (E544).
 
-**Und zwei Sachen an der Optik**, an Redurs Bild des Originals verglichen
-(12. September):
+**Und der Verlauf am Deckel: GESCHLOSSEN am 13. September mit E545**
+(`test501`, 29 Zusagen, fünf Gegenproben gefahren). Er liegt als Feld
+`verlauf` an der Marke und als EIN `<defs>` am Blatt — keine Gruppe um die
+Marke, die hätte vier Stellen gebrochen, drei davon still. Es waren am Ende
+nicht zwei Zeichner, sondern vier. Dazu zwei Funde, die hier nicht standen:
+der Deckel wäre bei fehlender Vorlage UNSICHTBAR geworden — also eine offene
+Antwort, und damit genau der Schaden, den ein Abdeckband verhindern soll;
+dagegen steht jetzt immer die feste Farbe daneben. Und eine Markenkennung
+mit einem Leerzeichen darin machte ihn schwarz, gefunden nur auf dem Bild.
 
-- **Der Deckel ist flach, im Original ein Verlauf.** Gemessen: weiss →
-  `#FFCC00` in der Mitte → weiss, senkrecht (`a:lin ang="5400000"`). Redions
-  Abdeckband ist eine Fläche in EINER Farbe; seit E542 kommt wenigstens die
-  richtige Farbe aus dem kräftigsten Stopp statt aus einem Rückfall. Der
-  Verlauf selbst fehlt — Optik an einem Deckel, den man wegtippt.
-- **Die Navigationsknöpfe der Folie fehlen.** Unten rechts stehen im
+**Was offen bleibt — eine einzige Sache, und die ist Redion fremd:**
+
+- **Die Navigationspfeile der Folie fehlen.** Unten rechts stehen im
   Original drei blaue Pfeile (zurück, eine Folie zurück, weiter). Es sind
   Formen ohne Text und ohne Animation, also weder Textkasten noch Abdeckung
   — sie fallen durch beide Zweige. Für Redion sind sie ohnehin fremd: das
-  Blättern macht dort der Vortragsmodus.
+  Blättern macht dort der Vortragsmodus, und seit E544 macht es der Klick.
+
+---
+
+L154 · Das Blatt „Neu erstellen" ist eine Liste geworden — offen
+--------------------------------------------------------------------------
+
+Hinter dem „+" liegt seit E45 ein Blatt, das FRAGT, was entstehen soll,
+statt sofort eine leere Seite anzulegen. Der Gedanke war ein **Wegweiser**:
+es zeigt alles, was Redion kann, auch dem, der nicht weiss, dass es
+Karteikarten gibt.
+
+`test114` trägt diese Frage seit E236 mit: „Wegweiser oder Liste?" Bei
+einundzwanzig Wegen stand dort, der nächste Zuwachs brauche eine Antwort,
+nicht nur eine neue Zahl. E549 hat den zweiundzwanzigsten gebracht (die
+Präsentation) — hier ist die Antwort, gemessen bei 428 × 926, das Blatt
+offen, bevor gerollt wird:
+
+```txt
+22 Wege in 6 Überschriften
+Liste 757 px hoch, Inhalt 1787 px          →  sie rollt
+ohne zu rollen sichtbar:  10 von 22
+nach dem Rollen ans Ende: der letzte Weg liegt ganz darin, 64 px hoch
+```
+
+**Zehn von zweiundzwanzig.** Damit ist die Frage beantwortet, und zwar mit
+„Liste". Ein Wegweiser zeigt, was es gibt; dieses Blatt zeigt noch ein
+Drittel davon, und die anderen zwei Drittel findet nur, wer rollt — also
+genau der nicht, für den das Blatt gebaut wurde.
+
+**Was hier NICHT die Lösung ist:** einen Weg wegnehmen. Jeder davon ist eine
+echte Funktion, und die verschwindet nicht, weil eine Liste lang wird (§47).
+Eine kürzere Liste wäre kein besserer Wegweiser, sondern ein kleineres
+Redion.
+
+**Was die Lösung wäre** (offen, keine davon ist entschieden):
+
+- **Zusammenklappbare Gruppen.** Sechs Überschriften, zugeklappt, sind sechs
+  Zeilen — alles auf einem Bild. Kostet einen Tipp pro Weg.
+- **Ein Suchfeld oben.** Wer „Kartei" tippt, ist da. Hilft aber nur dem, der
+  den Namen schon kennt — und das ist nicht der, für den das Blatt da ist.
+- **Zwei Ebenen:** die sechs Gruppen als Kacheln, dahinter die Wege. Am
+  nächsten an dem, was das Blatt sein wollte; der grösste Umbau.
+
+**Was bis dahin gilt und geprüft ist:** `test114` hält seit E549 zwei
+Zusagen, die für eine rollende Liste gelten — dass sie wirklich rollt und
+dass ihr letzter Eintrag unten ankommt (64 px, ganz sichtbar). Beide
+Gegenproben gefahren, beide rot geworden. Das macht aus der Liste keinen
+Wegweiser; es hält nur fest, dass niemand unten abgeschnitten wird.

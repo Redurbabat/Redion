@@ -803,6 +803,26 @@ const ChronikDaten = {
     {
      "zeit": "ca. 23:10",
      "wortlaut": "wie kann ich im redio die daten hochladen ?"
+    },
+    {
+     "zeit": "ca. 23:35",
+     "wortlaut": "mach weiter mit den folien klick"
+    },
+    {
+     "zeit": "ca. 01:15",
+     "wortlaut": "Weiter ohne pause"
+    },
+    {
+     "zeit": "ca. 03:30",
+     "wortlaut": "Weiter mit den folieneditor"
+    },
+    {
+     "zeit": "ca. 04:50",
+     "wortlaut": "Könntest du so eine powerpoint modus im menü einfügen wenn ich das klicke sollte 1:1 wie powerpoint sein oben mit menü, link seiten so das ich präsentaioton erstellen könnne, füge dort auch fertigen vorlagen"
+    },
+    {
+     "zeit": "ca. 06:20",
+     "wortlaut": "mach weiter mit den menüband"
     }
    ],
    "arbeit": [
@@ -973,11 +993,67 @@ const ChronikDaten = {
      "zeitraum": "23:10 – 23:30",
      "dauer": "ca. 20 min",
      "pruefungen": "test497 §3 neu, von 20 auf 31 grün, sechs Zusagen zuerst rot gesehen"
+    },
+    {
+     "was": "E544 — Ein Blatt füllt eine Folie, und der Klick schaltet sie weiter (L153 geschlossen)",
+     "vonCommit": "(nach E543)",
+     "bisCommit": "(dieser Bogen)",
+     "zeitraum": "23:35 – 00:40",
+     "dauer": "ca. 65 min",
+     "pruefungen": "test500 neu, 45 Zusagen, vier Gegenproben gefahren; test183/191/293/266/499 grün"
+    },
+    {
+     "was": "E545 — Der Deckel bekommt seinen Verlauf, und ein Markenfeld bekommt seinen ersten Wächter",
+     "vonCommit": "(nach E544)",
+     "bisCommit": "(dieser Bogen)",
+     "zeitraum": "00:40 – 02:10",
+     "dauer": "ca. 90 min",
+     "pruefungen": "test501 neu, 29 Zusagen, fünf Gegenproben gefahren; test266/499/500/145/183 grün"
+    },
+    {
+     "was": "E546 — O4 zur Hälfte: das Zeigen einer Folie ändert sie nicht mehr, und die Präsentation geht als Foliensatz auf",
+     "vonCommit": "(nach E545)",
+     "bisCommit": "(dieser Bogen)",
+     "zeitraum": "02:10 – 03:20",
+     "dauer": "ca. 70 min",
+     "pruefungen": "test502 neu, 17 Zusagen, drei Gegenproben gefahren; test191 nachgezogen"
+    },
+    {
+     "was": "E547 — Die Folienliste zeigt Folien: Mass vom Block, Marken statt Bleistift, Name statt „A4-Blatt“",
+     "vonCommit": "(nach E546)",
+     "bisCommit": "(dieser Bogen)",
+     "zeitraum": "03:30 – 04:40",
+     "dauer": "ca. 70 min",
+     "pruefungen": "test503 neu, 18 Zusagen, vier Gegenproben gefahren"
+    },
+    {
+     "was": "E548 — „Präsentation\" ist ein Weg: Eintrag im Anlegen-Menü, acht PowerPoint-Layouts, ein Wähler, der sie zeigt",
+     "vonCommit": "(nach E547)",
+     "bisCommit": "(dieser Bogen)",
+     "zeitraum": "04:50 – 06:10",
+     "dauer": "ca. 80 min",
+     "pruefungen": "test504 neu, 27 Zusagen, vier Gegenproben gefahren"
+    },
+    {
+     "was": "E549 — Reiter „Präsentation\" im Menüband, Folien-Menü in der Dokumentleiste; das ganze Band dort war gemessen schlechter",
+     "vonCommit": "(nach E548)",
+     "bisCommit": "(dieser Bogen)",
+     "zeitraum": "06:20 – 08:10",
+     "dauer": "ca. 110 min",
+     "pruefungen": "test505 neu, 26 Zusagen, vier Gegenproben gefahren (25/1, 14/12, 23/3, 24/2); test114 von 152+1 auf 155 grün, zwei neue Zusagen, beide Gegenproben rot gesehen"
+    },
+    {
+     "was": "E550 — Das Folienband: Reiter ÜBER der Folie; `start` und `einfuegen` bleiben draussen, weil 79 von 83 ihrer Knöpfe dort nichts tun",
+     "vonCommit": "(nach E549)",
+     "bisCommit": "(dieser Bogen)",
+     "zeitraum": "08:20 – 10:20",
+     "dauer": "ca. 120 min",
+     "pruefungen": "test506 neu, 51 Zusagen, sechs Gegenproben gefahren (42/2, 42/1, 41/2, 41/2, 49/2, 47/4)"
     }
    ],
    "zahlen": {
-    "commits": 18,
-    "entscheidungen": 16
+    "commits": 25,
+    "entscheidungen": 23
    },
    "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
    "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -1023,6 +1099,54 @@ const ChronikDaten = {
      "was": "`accept` des Hauptwählers und die zwei Menütexte um PowerPoint und PDF ergänzt.",
      "warum": "Redur: „wie kann ich im Redion die Daten hochladen?\" — beim Nachsehen stand seine .ppsx im Dateifenster grau, obwohl der Zweig 17 Zeilen tiefer sie liest.",
      "risiko": "keins an Daten — ein Filter im Dateifenster; `test497 §3` hält die drei Stellen künftig zusammen"
+    },
+    {
+     "zeit": "00:10",
+     "was": "`EIGENE_FOLIE` im Kern, Schrittzähler im Vortrag, weiches Auflösen, und ein Blatt füllt die Leinwand.",
+     "warum": "Redur: „mach weiter mit den folien klick.\" Davor lag ein grösserer Fehler: eine eingelesene Präsentation war EINE Folie mit allen Blättern übereinander — gemessen, und nur auf dem Bild zu sehen.",
+     "risiko": "keins an Daten — der Schrittstand wird nie gespeichert (E266); `Folien.teilen` ist gemeinsame Regel, deshalb fünf Nachbarläufe mitgefahren"
+    },
+    {
+     "zeit": "01:40",
+     "was": "`formVerlauf` liest den Verlauf aus `p:spPr`, `verlaufDefs` legt EIN `<defs>` ans Blatt, die Füllung nennt immer auch die feste Farbe.",
+     "warum": "Redur: „1:1 wie das Original\". Sieben Leser haben vorher den Bestand vermessen — der naheliegende Bau mit einer Gruppe um die Marke hätte vier Stellen gebrochen, drei davon still.",
+     "risiko": "§51: ohne Rückfallfarbe wäre ein Deckel bei fehlender Vorlage UNSICHTBAR, also eine offene Antwort. Deshalb steht sie immer daneben — am Browser gemessen, nicht angenommen."
+    },
+    {
+     "zeit": "02:50",
+     "was": "`Blatt.zeichne` legt keine Zeile mehr an, wenn das Blatt Marken trägt; der .pptx-Einleser setzt `dokumentModus`.",
+     "warum": "Gemessen: 27 Folien öffnen legte 27 leere Textblöcke an, und ihr Platzhalter lag auf dem Folientitel. Und der Dokumentmodus konnte Blatt-Blöcke längst — es fehlte nur die Flagge.",
+     "risiko": "§9: ein Zeichner, der in den Speicher schreibt, ist die gefährlichere Hälfte des Fundes. E118 bleibt für das leere Blatt unverändert, test502 misst beide Richtungen."
+    },
+    {
+     "zeit": "04:10",
+     "was": "`thumbnail()` nimmt das Seitenverhältnis vom Block und zeichnet die Marken; `sourceLabel` gibt den Folientitel.",
+     "warum": "Die Seitenliste war da (G3) und half nicht: 27 hochkant gequetschte, leere, gleich benannte Kästchen. Alle drei Fehler waren nur im Bild zu sehen.",
+     "risiko": "keins an Daten. Die Abdeckung deckt auch in der Miniatur, weil es derselbe Zeichner ist — gemessen: 69×6 px, rgb(255,204,0)."
+    },
+    {
+     "zeit": "05:40",
+     "was": "`bereiche/vorlagen/folien.ts` mit acht Layouts, ein Weg im Anlegen-Katalog, zwei Befehle im Register.",
+     "warum": "Redurs Wunsch nach einem PowerPoint-Modus. Die ANSICHT gab es längst (E546/E547) — was fehlte, war der Weg hinein und das, womit man anfängt.",
+     "risiko": "keins an Daten — ein Layout ist eine Markenliste, keine zweite Dokumentform. Der Wähler legt bei Abbruch GAR NICHTS an."
+    },
+    {
+     "zeit": "07:20",
+     "was": "Ein Reiter „Präsentation\" in `register/menueband.ts`, beliefert von `Folienvorlagen.bandEintraege`; dazu ein Knopf „📽️ Folie\" in der Dokumentleiste, der dasselbe Verzeichnis als Menü öffnet.",
+     "warum": "Redur: „mach weiter mit den menüband\". Das Band im Dokumentmodus einzublenden war der naheliegende Weg und nachweislich der schlechtere — eine zusammengeklappte Ecke „Werkzeuge ⌄\" lag bei 1440 × 852 deckungsgleich über der Dokumentleiste. Also EIN Katalog, zwei Orte (§8).",
+     "risiko": "keins an Daten — Oberfläche. Jeder Eintrag bringt sein `zeigen()` mit: ohne Foliensatz ist der Reiter ganz weg, und `istFoliensatz` verlangt ein QUERES Blatt, damit ein Notizbuch ihn nie bekommt."
+    },
+    {
+     "zeit": "08:05",
+     "was": "`test114` auf zweiundzwanzig Wege gehoben — und um zwei Zusagen erweitert, die für eine ROLLENDE Liste gelten.",
+     "warum": "Die harte Zahl im Prüflauf trug seit E236 eine Frage mit: „Wegweiser oder Liste?\" Der zweiundzwanzigste Weg hat sie beantwortet, gemessen bei 428 × 926: 10 von 22 ohne Rollen sichtbar, 1787 px Inhalt in 757 px Liste. Also Liste. Wegnehmen wäre eine Funktion weniger (§47), deshalb steht die Antwort als L154 offen.",
+     "risiko": "keins — ein Prüflauf. Beide neuen Zusagen sind rot gesehen worden (154 ok / 1 offen, je)."
+    },
+    {
+     "zeit": "09:40",
+     "was": "Eine Reiterzeile mit Band zwischen Kopf- und Zeichenleiste des Dokumentstudios, nur bei quer liegendem Foliensatz und erst ab 900 px Fensterbreite.",
+     "warum": "Redur: „oben mit menü … 1:1 wie powerpoint\". E549 hatte den Katalog, nicht den Ort. Welche Reiter hineinkommen, ist nicht gewählt, sondern gemessen: alle 151 Einträge einzeln aufgerufen, bei `start` taten 14 von 14 nichts, bei `einfuegen` 65 von 69 — sie brauchen eine Schreibmarke, die es im Dokumentmodus nicht gibt.",
+     "risiko": "keins an Daten — Oberfläche. Die Folie bleibt 980 × 551 bei 1440 × 852; das Band hat die Luft darunter genommen, nicht die Folie. Gezeichnet wird mit `Menueband.knopf`/`gruppeZeichnen`, also kein zweiter Zeichner (§8)."
     }
    ]
   }
@@ -1300,6 +1424,51 @@ const ChronikDaten = {
    "warumKeineUhr": "—",
    "beweis": "Die Agentenprotokolle: zehn Abbrüche mit `rate_limit`, HTTP 429, und im Arbeitsordner genau zwei geschriebene Fragmente von zehn.",
    "entscheidung": "E533"
+  },
+  {
+   "nr": "P23",
+   "datum": "2026-09-13",
+   "titel": "Eine harte Zahl hat gemeldet — und was sie meldete, war nicht die Zahl",
+   "schwere": "klein",
+   "symptom": "`test114` wurde rot: „Es führt zu einundzwanzig Sachen\" — es waren zweiundzwanzig geworden, weil dieser Bogen „Präsentation\" ins Anlegen-Menü gestellt hat.",
+   "falscheVermutung": "Die naheliegende Behebung: die 21 auf 22 heben, fertig. Genau das stand im Prüflauf verboten — die Zeile trug seit E236 den Satz mit, der nächste Zuwachs brauche „eine Antwort, nicht nur eine neue Zahl\".",
+   "wieGefunden": "Im Stapel-Lauf nach dem Bogen, 1 von 13 Läufen rot. Nicht durch Hinsehen: das Blatt sieht mit 22 Wegen genauso aus wie mit 21 — man sieht ja beide Male nur den Anfang.",
+   "ursache": "Kein Fehler im Code, sondern eine überschrittene Grenze. Gemessen bei 428 × 926: 22 Wege in 6 Überschriften, Liste 757 px hoch, Inhalt 1787 px, ohne Rollen sichtbar 10 von 22. Das Blatt war als WEGWEISER gebaut — es sollte dem, der nicht weiss, dass Redion Karteikarten kann, alles zeigen. Es zeigt noch ein Drittel.",
+   "loesung": "Die Zahl gehoben UND die Antwort gegeben: L154 in `LUECKEN.md` mit den drei möglichen Ordnungen und ihren Kosten (zusammenklappbare Gruppen, Suchfeld, zwei Ebenen). Keinen Weg weggenommen — jeder ist eine echte Funktion (§47). Dazu zwei neue Zusagen in `test114`, die für eine rollende Liste gelten: dass sie wirklich rollt (1787 in 757) und dass ihr letzter Eintrag unten ankommt (64 px, ganz sichtbar).",
+   "warumKeineUhr": "—",
+   "beweis": "Beide neuen Zusagen rot gesehen (§50): einmal das Rollen im Messen weggenommen — „ganz sichtbar: false\"; einmal die Roll-Schwelle auf +2000 gesetzt — „1787 px Inhalt in 757 px\", damit klar ist, dass die Zeile die Messung liest und kein festes `true`. Beide Male 154 ok / 1 offen; behoben 155 grün.",
+   "lehre": "Eine harte Zahl in einem Prüflauf ist kein Ärgernis, sondern der einzige Melder, den eine wachsende Liste hat — und sie meldet nicht immer das, wonach sie aussieht. Hier meldete sie nicht „die Zahl stimmt nicht\", sondern „das Blatt ist etwas anderes geworden\". Dieselbe Zeile war ein Jahr davor schon einmal still rot (E513 → E522), weil niemand sie hörte; diesmal war der Preis nur ein Absatz statt eines vollen Laufs.",
+   "entscheidung": "E549"
+  },
+  {
+   "nr": "P24",
+   "datum": "2026-09-13",
+   "titel": "Ein Menüband ohne ein einziges Zeichen — und jede Prüfung wäre grün geblieben",
+   "schwere": "klein",
+   "symptom": "Auf dem ersten Bild des Folienbands stand die ganze Reihe als nackter Text da: „Neue Folie   Folienliste   Präsentieren   Als PowerPoint   Als PDF   Drucken\". Kein Symbol, keine Kachel, nur Wörter nebeneinander.",
+   "falscheVermutung": "Die naheliegende: die Einträge tragen keine Zeichen. Nachgesehen tragen sie welche — `plus`, `page`, `play`, `download`, `printer`, alle gültige Namen aus dem Symbolregister.",
+   "wieGefunden": "Nur durch das Bild (§55.3). Gemessen war zu dem Zeitpunkt alles richtig: 6 Knöpfe, richtige Namen, richtige Gruppen, jeder mit `title` und `aria-label`, jeder tat beim Klick das Richtige.",
+   "ursache": "`Menueband.knopf` hängt für einen Symbolnamen nur ein LEERES `<span data-sym=\"plus\">` ein. Gemalt wird es später von `Register.symbole.fuelle(wurzel)` — im globalen Band steht dieser Aufruf an drei Stellen, im neuen Folienband an keiner.",
+   "loesung": "Ein `Register.symbole.fuelle(flaeche)` nach jedem Füllen der Bandfläche, mit `try` darum: fehlt das Register, bleibt der Name stehen — schlechter, aber nicht kaputt.",
+   "warumKeineUhr": "—",
+   "beweis": "Die Zusage sucht nicht `data-sym` — der Kasten kann leer sein —, sondern das GEMALTE: ein `<svg>` darin, ein Textzeichen oder eine Farbprobe. Gegenprobe gefahren (den Aufruf wieder herausgenommen): 42 grün, 1 rot, „38 Knöpfe ohne gemaltes Zeichen\".",
+   "lehre": "Ein Knopf kann vollständig sein und trotzdem falsch aussehen. Alles, was ein zusammengesetzter Prüflauf fragen konnte — da? richtig benannt? tut es etwas? spricht es mit einem Vorleseprogramm? —, war mit Ja zu beantworten. Was fehlte, war das, was man SIEHT. Genau dafür steht §55.3 in der CLAUDE.md, und genau deshalb reicht dort keine Messung.",
+   "entscheidung": "E550"
+  },
+  {
+   "nr": "P25",
+   "datum": "2026-09-13",
+   "titel": "Das Band fragte die Fensterbreite einmal — und behielt die Antwort",
+   "schwere": "klein",
+   "symptom": "Ein Fenster von 1440 auf 800 gezogen: das Folienband blieb stehen, obwohl es dort nicht hingehört. Umgekehrt aufgezogen: es kam nie.",
+   "falscheVermutung": "Keine — der Fehler war nie sichtbar. Er wurde beim LESEN des eigenen Diffs gefunden, mit der Frage „was würde hier schiefgehen\".",
+   "wieGefunden": "Weder gemessen noch auf einem Bild. Beim Durchgehen der eigenen Änderung fiel `innerWidth < BAND_AB` auf: eine Zahl, die beim Zeichnen EINMAL gefragt wird, in einem Studio, das bei `resize` nicht neu zeichnet.",
+   "ursache": "`folienbandBauen` liest `innerWidth` beim Aufbau. Das Dokumentstudio hat einen `resize`-Griff (`beiGroesse`), der aber nur Höhen nachrechnet — richtig so, denn ein Neuzeichnen bei jeder Fensterbewegung wäre bei achtzig Seiten teuer. Das Band war dort nur nicht eingetragen.",
+   "loesung": "`folienbandNachziehen()` in `beiGroesse`: es vergleicht, ob ein Band da sein SOLL und ob eines da IST, und hängt nur beim Unterschied ein oder aus.",
+   "warumKeineUhr": "—",
+   "beweis": "Zwei Gegenproben, beide gefahren: die Funktion nichts tun lassen (49 grün, 2 rot — das Band blieb bei 800 px stehen), und sie nur AUSHÄNGEN lassen (47 grün, 4 rot — es kam beim Aufziehen nicht zurück). Die zweite war nötig, weil sonst nur die naheliegende Richtung geprüft gewesen wäre.",
+   "lehre": "Zwei Sachen. Erstens: das eigene Diff noch einmal mit der Frage lesen, was daran schiefgehen könnte — dieser Fehler stand in keiner Messung und auf keinem Bild. Zweitens: die erste Form der Gegenprobe (den AUFRUF entfernen) liess den Zweig wegen `noUnusedLocals` gar nicht mehr bauen. Eine Gegenprobe, die nicht baut, ist keine — CLAUDE.md §52.6 beschreibt genau diesen Fall, und ich bin trotzdem hineingelaufen.",
+   "entscheidung": "E550"
   }
  ]
 } as const;

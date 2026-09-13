@@ -1121,9 +1121,11 @@ const Einlesen = (() => {
      * kommt die Farbe aus dem KRÄFTIGSTEN Stopp des Verlaufs, also dem, der
      * nicht die Hintergrundfarbe ist.
      *
-     * Der Verlauf selbst wird nicht nachgebaut: Redions Abdeckband ist eine
-     * Fläche in einer Farbe. Was dabei verlorengeht, ist Optik an einem
-     * Deckel, den man wegtippt — steht als Lücke in L153.
+     * Sie bleibt als RÜCKFALL stehen, auch seit `formVerlauf` daneben den
+     * ganzen Verlauf liest (E545): eine Abdeckung trägt IMMER eine feste
+     * Farbe, und das SVG malt sie, wenn die Verlaufsvorlage fehlt. Ohne sie
+     * wäre ein `fill="url(#…)"` ins Leere ein UNSICHTBARER Deckel — und ein
+     * unsichtbarer Deckel ist eine offene Antwort.
      */
     const formFarbe = (form) => {
         const verlauf = form.getElementsByTagName('a:gradFill')[0];
@@ -1145,6 +1147,63 @@ const Einlesen = (() => {
         const voll = form.getElementsByTagName('a:solidFill')[0];
         const rgb = voll?.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
         return rgb ? '#' + rgb : '';
+    };
+    /**
+     * Der VERLAUF einer Form, wenn sie einen hat (E545).
+     *
+     * Gemessen an Redurs Datei: die Abdeckungen sind weiss → `#FFCC00` in der
+     * Mitte → weiss, senkrecht. `formFarbe` gab davon EINE Farbe zurück, und
+     * der Deckel war eine gelbe Fläche, wo im Original ein Band mit weichen
+     * Rändern liegt.
+     *
+     * NUR AUS `p:spPr`, anders als `formFarbe`. Die alte Funktion sucht über
+     * den ganzen Teilbaum — und im selben Teilbaum liegt `a:ln`, die
+     * Umrisslinie, mit eigener Füllung. Für die Farbe ging das bisher gut;
+     * für den Verlauf wäre es ein Glücksspiel, und der Kommentar oben sagt
+     * selbst, dass die Füllung daneben der Linie gehört.
+     *
+     * Was NICHT gelesen wird und deshalb `null` ergibt: `a:schemeClr` und
+     * Verwandte (ohne `theme1.xml` nicht auflösbar), `a:path` (radiale
+     * Verläufe). Dann bleibt es bei der festen Farbe — eine gelbe Fläche ist
+     * eine ehrliche Näherung, eine falsche Farbe wäre es nicht.
+     */
+    const formVerlauf = (form) => {
+        const spPr = form.getElementsByTagName('p:spPr')[0];
+        if (!spPr)
+            return null;
+        /* `[0]` über spPr statt über die Form: ein `a:gradFill` unter `a:ln`
+           wäre die Linie, nicht die Füllung. Deshalb die direkten Kinder. */
+        const verlauf = [...spPr.children].find(k => k.tagName === 'a:gradFill');
+        if (!verlauf)
+            return null;
+        const stopps = [];
+        for (const g of [...verlauf.getElementsByTagName('a:gs')]) {
+            const rgb = g.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+            if (!rgb)
+                continue; /* eine Themenfarbe — dann lieber gar nichts */
+            const roh = String(g.getAttribute('pos') ?? '');
+            /* `pos` steht in Tausendstel Prozent (0…100000); die neuere
+               Schreibweise `50%` gibt es auch. Beides auf 0…1 bringen. */
+            const anteil = roh.endsWith('%') ? Number(roh.slice(0, -1)) / 100
+                : Number(roh) / 100000;
+            if (!Number.isFinite(anteil))
+                continue;
+            stopps.push({ pos: Math.min(1, Math.max(0, anteil)), farbe: '#' + rgb });
+        }
+        /* Weniger als zwei Stopps sind kein Verlauf. Und wenn EINER der Stopps
+           eine Themenfarbe war, fehlt er — dann ist der Verlauf unvollständig
+           und die feste Farbe die ehrlichere Antwort. */
+        if (stopps.length < 2 || stopps.length !== verlauf.getElementsByTagName('a:gs').length)
+            return null;
+        stopps.sort((a, b) => a.pos - b.pos);
+        /* Der Winkel steht in 60000steln Grad, 0 = nach rechts, im
+           Uhrzeigersinn. 5400000 sind 90°, also von oben nach unten. Ohne
+           `a:lin` ist es kein linearer Verlauf, den wir nachbauen können. */
+        const lin = [...verlauf.children].find(k => k.tagName === 'a:lin');
+        if (!lin)
+            return null;
+        const winkel = Number(lin.getAttribute('ang')) || 0;
+        return { stopps, winkel };
     };
     /**
      * Eine `.pptx` lesen. Zurück kommen Folien mit ihren Objekten — noch ohne
@@ -1204,6 +1263,7 @@ const Einlesen = (() => {
                     const schritt = sid ? schritte.get(sid) : undefined;
                     if (!text.trim() && schritt && lage && lage.w > 0 && lage.h > 0) {
                         objekte.push({ art: 'abdeck', schritt, farbe: formFarbe(form) || '#ffcc00',
+                            verlauf: formVerlauf(form),
                             x: lage.x, y: lage.y, w: lage.w, h: lage.h });
                         continue;
                     }
@@ -1463,6 +1523,19 @@ const Einlesen = (() => {
             const seite = Store.addPage(elternId, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📽️' });
             if (quelle)
                 await originalAnhaengen(seite.id, f, quelle);
+            /* UND GLEICH ALS FOLIENSATZ AUFSCHLAGEN (E546). Derselbe Fund wie E397:
+               „ein Weg, der das Ding anlegt, aber nicht öffnet." Der Dokumentmodus
+               kann Blatt-Blöcke längst — Miniaturleiste, eine Folie gross, die
+               Werkzeuge daneben (`document-mode.ts`, `documentsIn` nimmt
+               `pdfseite` UND `blatt`). Er sprang hier nur nicht an, weil
+               `active()` die Flagge am Seitenblock verlangt und niemand sie setzte.
+               Ohne sie stand die eingelesene Präsentation als Stapel Blätter
+               untereinander, jedes mit eigener Werkzeugleiste.
+               Die Seite ist frisch, also ist die Flagge immer `undefined` — die
+               Bedingung des PDF-Wegs („nur beim ERSTEN Mal", `pdf/einlesen.ts`)
+               ist hier von selbst erfüllt, und wer den Modus später verlässt,
+               bleibt draussen. */
+            Store.updateBlock(seite.id, { dokumentModus: true });
             /* Eine Folie = ein `blatt`-Block mit Folienmass. Die Objekte werden
                Marken auf DERSELBEN Zeichenschicht, die auch PDF-Seite und
                A4-Blatt benutzen — also sofort verschiebbar, drehbar und
@@ -1491,7 +1564,11 @@ const Einlesen = (() => {
                            sich angetippt wird. Ohne die Zahl wäre die Reihenfolge, in
                            der die Folie gedacht war, verloren — und sie steht nur in
                            der Quelldatei. */
+                        /* `verlauf` nur, wenn es einen gibt — ein `undefined` im Objekt
+                           überlebt `JSON.stringify` ohnehin nicht, und ein `null` an
+                           jeder von Hand gezogenen Abdeckung wäre nur Ballast. */
                         marken.push({ id, art: 'abdeck', farbe: o.farbe, schritt: o.schritt,
+                            ...(o.verlauf ? { verlauf: o.verlauf } : {}),
                             pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
                         continue;
                     }

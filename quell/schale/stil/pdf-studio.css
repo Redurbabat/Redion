@@ -82,6 +82,16 @@
 /* Full-window PDF desk, using the real shell tabs and annotation controllers. */
 body[data-dokument="an"] #main{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important}
 body[data-dokument="an"] :is(#studio-bar,#kante,#studio-divider,#topbar,#menueband,#handy-oben,#sidebar){display:none!important}
+/* UND DAS MENÜBAND BLEIBT AUCH BEI EINER PRÄSENTATION WEG (E549).
+   Redur wollte „oben mit Menü", und der Versuch, dafür `#menueband` hier
+   wieder einzublenden, wurde GEMESSEN und wieder zurückgenommen: das Band
+   ist am Rechner eine zugeklappte Lade (`studio.css`), und im
+   Dokumentmodus legte es sich als Ecke „Werkzeuge ⌄" über die
+   Dokumentleiste — 1440 × 852 px, deckungsgleich mit dem Inhalt darunter.
+   Genau die zwei Köpfe übereinander, vor denen die Zeile oben steht.
+   Das Folien-Menü sitzt deshalb IN der Dokumentleiste, und es liest
+   denselben Katalog wie der Reiter im Band (`Register.menueband`,
+   Reiter `praesentation`) — eine Liste, zwei Ansichten (§8). */
 body[data-dokument="an"] #reiterleiste{grid-column:1!important;grid-row:1!important;background:var(--pdf-chrome);color:var(--pdf-on-chrome);border:0;min-height:48px;padding:4px 12px 0;position:relative;inset:auto;flex-wrap:nowrap}
 body[data-dokument="an"] #reiterleiste .rt-tab{min-width:150px;max-width:240px;min-height:var(--touch-min);color:var(--pdf-on-chrome);background:transparent;border:0;border-radius:12px 12px 0 0;box-shadow:none}
 body[data-dokument="an"] #reiterleiste .rt-tab.an{background:var(--pdf-tools);font-weight:650}
@@ -285,4 +295,58 @@ body[data-dokument="an"] .document-workspace[data-document-zeigen="an"] .documen
 .document-laser.an{opacity:1; transition:opacity 60ms var(--ease)}
 @media (prefers-reduced-motion: reduce){
   .document-laser, .document-laser.an{transition:none}
+}
+
+/* ══ DAS FOLIENBAND — Reiter über der Folie (E550) ══════════════════════════
+   Es fliesst IN der Spalte des Studios mit, es überdeckt nichts. Genau das
+   war der Fund von E549: das globale `#menueband` dort einzublenden legte
+   seine zugeklappte Ecke „Werkzeuge ⌄" bei 1440 × 852 deckungsgleich über
+   die Dokumentleiste.
+
+   DIE KNÖPFE SIND DIE DES MENÜBANDS (`.mb-knopf`, `.mb-gruppe`, gezeichnet
+   von `Menueband.gruppeZeichnen`) — hier steht nur, wo sie stehen. Ein
+   eigener Knopfstil wäre der Anfang zweier Menübänder, die auseinanderlaufen.
+
+   Die Reiterzeile ist bewusst nicht `.mb-reiter`: die klebt an der
+   Studio-Kopfleiste und hält Platz für einen Klapp-Knopf frei, den es hier
+   nicht gibt (`scroll-padding-inline-end:150px` liesse sonst rechts eine
+   Lücke von 150 px stehen). Die Masse sind dieselben — 34 px hoch, 13,5 px
+   Schrift, 2 px Strich unter dem gewählten Reiter. */
+.folienband{flex:none; background:var(--bg-side); border-bottom:1px solid var(--line)}
+
+.folienband-reiter{display:flex; align-items:stretch; gap:var(--space-1);
+  padding:0 var(--space-4); min-height:34px;
+  overflow-x:auto; overflow-y:hidden; scrollbar-width:none;
+  border-bottom:1px solid var(--line-soft)}
+.folienband-reiter::-webkit-scrollbar{display:none}
+
+.folienband-reiter-knopf{display:inline-flex; align-items:center;
+  padding:0 var(--space-4); min-height:34px; white-space:nowrap;
+  border:none; background:none; cursor:pointer;
+  font-size:13.5px; color:var(--text-dim);
+  border-bottom:2px solid transparent;
+  transition:color .12s var(--ease), border-color .12s var(--ease)}
+.folienband-reiter-knopf:hover{color:var(--text)}
+/* §38: der gewählte Reiter ist nicht NUR am Strich zu erkennen — er trägt
+   `aria-selected`, steht in voller Textfarbe und ist fetter. */
+.folienband-reiter-knopf[aria-selected="true"]{color:var(--text);
+  border-bottom-color:var(--accent); font-weight:600}
+.folienband-reiter-knopf:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+
+.folienband-flaeche{display:flex; align-items:flex-start;
+  gap:var(--space-3) var(--space-1);
+  padding:var(--space-3) var(--space-4) var(--space-2);
+  overflow-x:auto; overflow-y:hidden; scrollbar-width:thin}
+
+/* Wie `.mb-trenner`: kein eigener Rand, der Abstand kommt vom `gap`. Der
+   Strich reicht so hoch wie die Knopfreihe und nicht bis unter die
+   Gruppenüberschrift — er trennt Knöpfe, keine Beschriftungen. */
+.folienband-trenner{flex:0 0 1px; margin:0; align-self:flex-start; height:60px;
+  background:var(--line-soft)}
+
+/* §37: am Finger 44. Das Band selbst kommt erst ab 900 px Fensterbreite
+   (`BAND_AB` in document-mode.ts), ein Tablet quer erreicht diese Zeile
+   aber — und dort ist der Reiter ein Fingerziel. */
+@media (pointer:coarse){
+  .folienband-reiter, .folienband-reiter-knopf{min-height:var(--touch-min)}
 }

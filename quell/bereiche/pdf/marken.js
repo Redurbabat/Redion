@@ -570,6 +570,77 @@ const Marken = (() => {
     /** Zwei Nachkommastellen — fuer `transform`-Werte, die sonst als
      *  0.30000000000000004 im Baum stehen. */
     const rund2 = (wert) => Math.round(wert * 100) / 100;
+    /* ---- DER VERLAUF AM ABDECKBAND (E545) ---------------------------------
+     * PowerPoint füllt den Deckel über einer Antwort nicht einfarbig: in
+     * Redurs Datei ist es weiss → `#FFCC00` in der Mitte → weiss, senkrecht.
+     * Redion las davon bisher eine Farbe (E542) und malte eine Fläche.
+     *
+     * EIN <defs> FÜR DAS GANZE BLATT, nicht eines je Marke. Der Grund ist
+     * nicht Sparsamkeit, sondern Haltbarkeit: `redraw` sammelt `[data-sid]`
+     * und schiebt die Knoten mit `insertBefore` in die Reihenfolge der
+     * Marken, `updateNode` ersetzt einen Knoten durch einen frischen, und der
+     * Radierer nimmt `nodeFor(id)?.remove()`. Läge die Vorlage in einer
+     * eigenen Gruppe um das Rechteck, risse der erste dieser drei Griffe sie
+     * ab — der Deckel zeigte dann ins Leere, und das sieht niemand, weil
+     * nichts abstürzt. Gemessen wurde das nicht, es wurde nachgelesen; die
+     * drei Stellen stehen oben im Quelltext.
+     * -------------------------------------------------------------------- */
+    /**
+     * Die Kennung der Verlauf-Vorlage — GESÄUBERT, nicht durchgereicht.
+     *
+     * Gefunden auf dem Bild, nicht im Code (§55.1): ein Deckel wurde SCHWARZ.
+     * Eine Markenkennung ist Text aus den Daten und darf alles enthalten; mit
+     * einem Leerzeichen oder Umlaut darin ist `url(#…)` kein gültiger Verweis
+     * mehr, und dann greift nicht etwa der Rückfall daneben, sondern der
+     * ANFANGSWERT von `fill` — Schwarz. Gedeckt bleibt die Antwort dabei, das
+     * ist das Gute daran; richtig aussehen tut es nicht.
+     *
+     * Redions eigene Kennungen sind harmlos (`m` + Zufall, oder eine UUID).
+     * Eine eingelesene oder eingespielte Marke bringt ihre eigene mit.
+     */
+    const verlaufId = (mark) => 'rv-' + String(idOf(mark) || '').replace(/[^A-Za-z0-9_-]/g, '_');
+    const verlaufVon = (mark) => {
+        const v = mark?.verlauf;
+        if (!v || !Array.isArray(v.stopps) || v.stopps.length < 2)
+            return null;
+        const stopps = v.stopps
+            .filter((s) => s && typeof s.farbe === 'string' && Number.isFinite(Number(s.pos)))
+            .map((s) => ({ pos: Math.min(1, Math.max(0, Number(s.pos))), farbe: String(s.farbe) }));
+        return stopps.length >= 2 ? { stopps, winkel: Number(v.winkel) || 0 } : null;
+    };
+    /**
+     * Die Verlauf-Vorlagen einer Markenliste als EIN `<defs>` — oder `null`.
+     *
+     * Wer Marken in ein eigenes `<svg>` schreibt (Vortrag, Druck, Seitenbild,
+     * Ausschnitt für die Erkennung), hängt das hier VOR die Marken. Wer es
+     * vergisst, bekommt keinen Fehler: der Deckel fällt auf seine feste Farbe
+     * zurück (siehe `zeichneMarkeRoh`, Zweig `abdeck`).
+     */
+    const verlaufDefs = (liste) => {
+        const mit = (Array.isArray(liste) ? liste : [])
+            .filter(m => m && m.art === 'abdeck' && verlaufVon(m));
+        if (!mit.length)
+            return null;
+        const defs = svg('defs', { 'data-ink-defs': '1' });
+        for (const mark of mit) {
+            const v = verlaufVon(mark);
+            /* OOXML zählt in 60000steln Grad, 0 = nach rechts, im Uhrzeigersinn.
+               5400000 sind 90°, also von oben nach unten — der Normalfall bei
+               einem Abdeckband. Die Achse geht durch die Mitte des Kastens,
+               deshalb 0.5 ± Hälfte der Richtung. */
+            const bogen = ((Number(v.winkel) || 0) / 60000) * Math.PI / 180;
+            const dx = Math.cos(bogen) / 2, dy = Math.sin(bogen) / 2;
+            const g = svg('linearGradient', {
+                id: verlaufId(mark), gradientUnits: 'objectBoundingBox',
+                x1: (0.5 - dx).toFixed(4), y1: (0.5 - dy).toFixed(4),
+                x2: (0.5 + dx).toFixed(4), y2: (0.5 + dy).toFixed(4)
+            });
+            for (const stopp of v.stopps)
+                g.appendChild(svg('stop', { offset: stopp.pos.toFixed(4), 'stop-color': stopp.farbe }));
+            defs.appendChild(g);
+        }
+        return defs;
+    };
     /** Bildschirm, Druck und Praesentation rufen denselben Zeichner auf. */
     /* DIE DREHUNG (E466) liegt als `transform` am fertigen Knoten — ein
        Zweig fuer alle Bauarten, weil jede Bauart ihren eigenen Rueckweg
@@ -754,10 +825,31 @@ const Marken = (() => {
                Ablage — Lernen darf den Speicher nicht anfassen. Druck und
                Folien rufen denselben Zeichner und zeigen darum zu. */
             const box = InkGeometry.rectangle(points[0], points[1]);
+            /* DER VERLAUF, WENN ES EINEN GIBT (E545) — und IMMER mit der festen
+               Farbe dahinter. `fill="url(#…) #ffcc00"` ist SVGs eigener Rückfall:
+               fehlt die Vorlage, malt der Browser die Farbe. Gemessen, nicht
+               angenommen (`bilder/paint-rueckfall.png`): ein `url()` OHNE Rückfall
+               malt gar nichts — und ein unsichtbarer Deckel ist eine offene
+               Antwort. Genau deshalb steht die Farbe hier und nicht nur dort.
+               Der Knoten bleibt ein <rect> und bleibt DIREKTES Kind der Fläche:
+               `redraw`, `updateNode` und der Radierer greifen `[data-sid]` und
+               verschieben es — in einer eigenen Gruppe mit eigenem <defs> würde
+               genau das die Vorlage abreissen. Die Vorlagen liegen deshalb in
+               EINEM <defs> am Blatt, siehe `verlaufDefs`. */
             element = svg('rect', { x: box.x, y: box.y, width: box.width,
-                height: box.height, rx: 4, fill: color, 'pointer-events': 'all' });
+                height: box.height, rx: 4,
+                fill: verlaufVon(mark) ? `url(#${verlaufId(mark)}) ${color}` : color,
+                'pointer-events': 'all' });
             element.setAttribute('data-sid', idOf(mark));
             element.setAttribute('data-ink-art', art);
+            /* DIE SCHRITTNUMMER REIST MIT AN DEN KNOTEN (E544). Sie steht seit
+               E542 an der Marke — aus PowerPoints `p:timing` — und sagt, bei
+               welchem Klick dieser Deckel weichen soll. Der Vortrag liest sie
+               hier am Knoten ab, statt die Marken ein zweites Mal zu durchsuchen.
+               Ein Deckel OHNE Nummer bekommt auch kein Attribut: der wird von
+               Hand angetippt, und der Schrittzähler fasst ihn nie an (E266). */
+            if (Number(mark.schritt) > 0)
+                element.setAttribute('data-schritt', String(Number(mark.schritt)));
             return element;
         }
         else if (art === 'zettel' && points.length >= 2) {
@@ -1258,6 +1350,16 @@ const Marken = (() => {
            Knoten aber noch der verschobene, und nur ein ehrlicher Eintrag
            laesst `redraw` das sehen (gefunden von test350 §3). */
         const merke = (mark) => { gezeichnet.set(idOf(mark), mark); };
+        /* Die Verlauf-Vorlagen der Abdeckbänder (E545). Sie liegen als EIN
+           `<defs>` ganz vorn in der Fläche und tragen kein `data-sid` — damit
+           fasst `redraw` sie nicht an, das sammelt nur Markenknoten. Aufgefrischt
+           wird beim Zeichnen, weil eine Marke dazukommen oder weggehen kann. */
+        const defsAuffrischen = () => {
+            flaeche.querySelector('[data-ink-defs]')?.remove();
+            const defs = verlaufDefs(marks);
+            if (defs)
+                flaeche.insertBefore(defs, flaeche.firstChild);
+        };
         marks.forEach(mark => {
             const node = zeichneMarke(mark);
             if (node) {
@@ -1265,6 +1367,7 @@ const Marken = (() => {
                 merke(mark);
             }
         });
+        defsAuffrischen();
         /* Welche Abdeckbänder GERADE aufgedeckt sind — nur Laufzeit, nie
            Ablage: nach Neuladen oder Neuzeichnen von aussen ist wieder alles
            zu, und genau das ist die ehrliche Vorgabe beim Lernen (E266). */
@@ -1423,6 +1526,7 @@ const Marken = (() => {
                 node.remove();
                 gezeichnet.delete(id);
             } });
+            defsAuffrischen();
             abdeckAnwenden();
             renderSelection();
         };
@@ -5233,7 +5337,7 @@ const Marken = (() => {
     };
     if (typeof document !== 'undefined')
         document.addEventListener('keydown', kuerzel);
-    return { schicht, leiste, zeichneMarke, annotierbar, alsAnnotation,
+    return { schicht, leiste, zeichneMarke, verlaufDefs, annotierbar, alsAnnotation,
         FARBEN, BREITEN, STIFTE, LEITER, LASER, FORMEN, WERKZEUGE, artWort, artZeichen,
         druckFaktor, RADIERER, TASTEN,
         /* DIE FARBSÄTZE NACH AUSSEN (E486). Nicht, damit jemand anders eine

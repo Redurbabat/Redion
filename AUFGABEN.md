@@ -870,8 +870,73 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   `slideN.xml` (`p:spTree` → Textkästen mit `a:xfrm`-Lage, `p:pic` → Bilder),
   die `.rels` (Bildziele), `slideLayouts`/`slideMasters` für Geerbtes,
   `theme1.xml` für Farben. Jede Folie wird ein Block mit `marken`.
-- **O4 · Folien bearbeiten.** Die Markenschicht wird der Folieneditor, die
-  Miniaturleiste die Folienliste. Hier entscheidet sich „1:1 wie PowerPoint".
+- **O4 · Folien bearbeiten** — ZUR HÄLFTE (E546). Zwei Sachen sind erledigt:
+  - Das ZEIGEN einer Folie ändert sie nicht mehr. `Blatt.zeichne` legte für
+    jedes Blatt ohne Textkinder eine leere Zeile AN — bei 27 eingelesenen
+    Folien also 27 Blöcke, nur vom Hinsehen, und ihr Platzhalter lag quer
+    über dem Folientitel.
+  - Die eingelesene Präsentation geht als FOLIENSATZ auf, nicht als Stapel
+    Blätter: eine Werkzeugleiste für das ganze Dokument statt einer je
+    Folie, Seitenliste, „Präsentieren", „Drucken". Der Dokumentmodus konnte
+    das längst — es fehlte die Flagge `dokumentModus` am Seitenblock. Eine
+    Zeile (derselbe Fund wie E397).
+
+  Und die Folienliste zeigt seit E547 wirklich Folien: das Seitenverhältnis
+  kommt vom Block (16:9 statt fest verdrahtetem A4), in der Miniatur steht
+  die Folie statt eines Bleistifts — mit demselben Zeichner, deshalb deckt
+  die Abdeckung auch dort —, und jede trägt ihre Nummer und ihren Titel
+  statt 27-mal „A4-Blatt".
+
+  Und seit E548 gibt es den WEG hinein: „Präsentation" steht im
+  Anlegen-Menü, legt eine 16:9-Seite im Dokumentmodus an und fragt vorher
+  nach einem Layout. Acht davon — Titelfolie, Titel und Inhalt, Zwei
+  Inhalte, Vergleich, Abschnittsüberschrift, Nur Titel, Bild mit
+  Beschriftung, Leer. Der Befehl „Neue Folie" hängt eine an, mit denselben
+  Layouts und den Massen der vorhandenen Folien.
+
+  Und seit E549 steht der KATALOG: `Register.menueband` hat einen Reiter
+  „Präsentation", den `Folienvorlagen.bandEintraege` beliefert, und jeder
+  Eintrag bringt sein eigenes `zeigen()` mit — ohne Foliensatz ist der
+  ganze Reiter weg. Im Dokumentmodus öffnet ein Knopf „📽️ Folie" in der
+  Dokumentleiste dasselbe Verzeichnis als Menü: Folien (Neue Folie,
+  Folienliste) · Vortrag (Präsentieren) · Ausgeben (Als PowerPoint, Als
+  PDF, Drucken).
+
+  **Und seit E550 steht die LEISTE** — der Layout-Bogen, den E549 als offen
+  vermerkt hat. Eine Reiterzeile mit einem Band darunter, zwischen
+  Kopfleiste und Zeichenleiste, also über der Folie wie in PowerPoint.
+  Sie fliesst in der Spalte mit, statt sich darüberzulegen; das war der
+  ganze Unterschied zum ersten Versuch. Gemessen bei 1440 × 852: Band
+  110 px, Fläche von 698 auf 588 px — und die Folie bleibt 980 × 551,
+  also unverändert. Das Band hat die Luft genommen, nicht die Folie.
+
+  **Fünf Reiter, und zwei bleiben draussen — gemessen, nicht gewählt:**
+  alle 151 Einträge des Bandkatalogs wurden bei offenem Foliensatz einzeln
+  aufgerufen. Bei `start` taten 14 von 14 nichts, bei `einfuegen` 65 von 69
+  — sie brauchen eine Schreibmarke, die es im Dokumentmodus nicht gibt.
+  `zeichnen` bleibt draussen, weil seine dreissig Knöpfe als Zeichenleiste
+  schon dauerhaft zwei Zeilen tiefer stehen (§8). Übrig: Präsentation ·
+  Ansicht · Verlauf · Überprüfen · Hilfe. Unter 900 px Fensterbreite gibt
+  es kein Band — dort führt der Knopf „📽️ Folie" ins Menü.
+
+  **Offen bleibt am Folieneditor:**
+  - EINE Folie stehend im Bild statt durchrollend. Der Dokumentmodus rollt
+    durch — für das Schreiben richtig, für das Bauen einer Präsentation
+    nicht. Das ist jetzt der grösste Rest von „1:1 wie PowerPoint".
+  - Die Zeichenleiste als Reiter „Zeichnen" im Band, so wie PowerPoint es
+    macht. Das nähme aber eine dauerhaft sichtbare Leiste weg und
+    versteckte sie hinter einem Klick — **das ist Redurs Entscheidung, nicht
+    meine**. Bis dahin stehen beide da, und das Band kostet 110 px.
+  - Die Handgriffe im Folienmenü heissen noch „Seite", nicht „Folie" — die
+    Griffe selbst gibt es seit G3.
+
+  **Und ein Nebenfund, der nicht zum Folieneditor gehört** (L154): der
+  zweiundzwanzigste Weg hinter dem „+" hat das Blatt „Neu erstellen" über
+  seine Grenze gebracht. Gemessen bei 428 × 926: 10 von 22 Wegen sind ohne
+  Rollen zu sehen, der Inhalt ist 1787 px hoch in einer 757 px hohen Liste.
+  Damit ist es eine Liste und kein Wegweiser mehr. Wegnehmen ist keine
+  Lösung (§47); `test114` hält seit E549 wenigstens fest, dass der letzte
+  Eintrag unten wirklich ankommt.
 - **O5 · `.pptx` schreiben mit Rundreise.** Geänderte Folien zurück, der Rest
   der Originaldatei unangetastet (braucht O2).
 - **O6 · `.docx` draufschreiben.** Braucht den Rasterer. Das ist der teuerste

@@ -805,3 +805,34 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 }
 /* Die Staffelei über den Schema-Karten (E462) */
 .au-staffelei{display:flex; justify-content:center; margin:4px 0 18px}
+
+/* ============================================================================
+ * DER FOLIENVORLAGEN-WÄHLER (E548)
+ * ----------------------------------------------------------------------------
+ * Redur: „füge dort auch fertige Vorlagen." Die Karte zeigt das Layout
+ * WIRKLICH — gezeichnet von `Marken.zeichneMarke`, derselben Stelle wie
+ * Folie, Miniatur, Vortrag und Druck (§8). Ein Wähler mit acht gleichen
+ * Zeichen wäre keine Wahl, sondern eine Liste von Namen.
+ *
+ * Der Rahmen trägt 16:9 und weissen Grund: die Vorschau soll aussehen wie
+ * die Folie, die daraus wird, nicht wie ein Symbol.
+ * ==========================================================================*/
+.fv-gitter{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:12px; padding:16px; max-height:min(64vh, 620px); overflow:auto;
+}
+.fv-karte{
+  text-align:left; border:1px solid var(--line); border-radius:10px; padding:10px;
+  display:flex; flex-direction:column; gap:6px; background:var(--bg-card);
+  min-height:var(--touch-min);
+}
+.fv-karte:hover{background:var(--bg-hover); border-color:var(--accent-text)}
+.fv-karte:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.fv-rahmen{
+  display:block; width:100%; aspect-ratio:16 / 9; border:1px solid var(--line);
+  border-radius:6px; overflow:hidden; background:#fff; color:#111;
+}
+.fv-bild{display:block; width:100%; height:100%}
+.fv-leer{display:grid; place-items:center; width:100%; height:100%; font-size:26px}
+.fv-karte b{font-size:14px}
+.fv-text{font-size:12px; color:var(--text-dim); line-height:1.45}

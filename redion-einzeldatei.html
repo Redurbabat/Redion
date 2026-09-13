@@ -2930,6 +2930,42 @@ a.bl:hover{color:var(--text)}
 }
 .praesi-leiste button:hover{background:var(--bg-hover); color:var(--text)}
 
+/* DAS ABDECKBAND IM VORTRAG (E544, L153). Im eigenen Heft bleibt ein
+   aufgedecktes Band als gestrichelter Schatten stehen — man soll sehen, DASS
+   dort eines liegt, und ein zweiter Tipp schliesst es wieder (§38, siehe
+   `bausteine.css`). Auf der Leinwand ist das falsch: dort ist die Antwort
+   jetzt die Antwort, und ein Kasten darum lenkt nur ab. Also ganz weg.
+   Das weiche Auflösen dazu steht in `motion.css` — Bewegung gehört dorthin. */
+/* EIN BLATT ALLEIN AUF DER FOLIE FÜLLT DIE FOLIE (E544).
+   `.folie-blatt{max-width:min(100%,45vh)}` in `bausteine.css` ist für den
+   Fall gebaut, für den es geschrieben wurde (E109): zwei A4-Seiten
+   NEBENEINANDER in Spalten, hochkant, da ist die Höhe der knappe Wert.
+   Eine eingelesene PowerPoint-Folie ist das Gegenteil — 16:9, allein, und
+   sie IST die Folie. Mit derselben Regel stand sie auf 370 × 208 px in
+   einem 1280er Fenster: acht Prozent der Leinwand, der Rest schwarz.
+   Gesehen auf `bilder/l153-1-zu.png`; kein Prüflauf konnte das melden, weil
+   nichts fehlte (§55.1).
+   Nur bei `:only-child` — in Spalten bleibt die Regel von E109 unberührt,
+   und `test183` misst dort weiter zwei gleich hohe Blätter. */
+.praesi .folie:has(> .folie-blatt:only-child){max-width:none; display:flex; justify-content:center}
+/* DIE BREITE WIRD GERECHNET, DIE HÖHE FOLGT. Zwei Entwürfe davor waren
+   falsch, und beide sahen an EINER Bildschirmgrösse richtig aus:
+     · `height:76vh` — am Telefon stand die 16:9-Folie dann hochkant und der
+       Text waagrecht gequetscht, weil `max-width` die Breite nahm und
+       `preserveAspectRatio="none"` am Marken-SVG alles mitzieht.
+     · `width:100%` + `max-height` — bei 1920 × 1080 kappte `max-height` die
+       Höhe, ohne die Breite mitzunehmen: Verhältnis 1,965 statt 1,778.
+   `aspect-ratio` leitet nur die EINE Achse ab, die man offen lässt; beim
+   Zuschneiden an einer Schranke geht es nicht mit. Also die Breite selbst
+   rechnen, aus dem Seitenmass, das `folieBlock` mitgibt. Gemessen bei
+   320, 390, 1280 und 1920 px: überall 1,778 und ganz im Bild. */
+.praesi .folie > .folie-blatt:only-child{
+  width:min(100%, calc(76vh * (var(--seitenmass, 1 / 1)))); height:auto; max-width:100%;
+}
+
+.praesi [data-ink-art="abdeck"]{cursor:pointer}
+.praesi [data-ink-art="abdeck"][data-auf="1"]{fill-opacity:0; pointer-events:none}
+
 /* --- Statistik ------------------------------------------------------------------ */
 .stat-gitter{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line)}
 .stat-k{background:var(--bg-side); padding:18px 14px; text-align:center}
@@ -4775,6 +4811,37 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 }
 /* Die Staffelei über den Schema-Karten (E462) */
 .au-staffelei{display:flex; justify-content:center; margin:4px 0 18px}
+
+/* ============================================================================
+ * DER FOLIENVORLAGEN-WÄHLER (E548)
+ * ----------------------------------------------------------------------------
+ * Redur: „füge dort auch fertige Vorlagen." Die Karte zeigt das Layout
+ * WIRKLICH — gezeichnet von `Marken.zeichneMarke`, derselben Stelle wie
+ * Folie, Miniatur, Vortrag und Druck (§8). Ein Wähler mit acht gleichen
+ * Zeichen wäre keine Wahl, sondern eine Liste von Namen.
+ *
+ * Der Rahmen trägt 16:9 und weissen Grund: die Vorschau soll aussehen wie
+ * die Folie, die daraus wird, nicht wie ein Symbol.
+ * ==========================================================================*/
+.fv-gitter{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:12px; padding:16px; max-height:min(64vh, 620px); overflow:auto;
+}
+.fv-karte{
+  text-align:left; border:1px solid var(--line); border-radius:10px; padding:10px;
+  display:flex; flex-direction:column; gap:6px; background:var(--bg-card);
+  min-height:var(--touch-min);
+}
+.fv-karte:hover{background:var(--bg-hover); border-color:var(--accent-text)}
+.fv-karte:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.fv-rahmen{
+  display:block; width:100%; aspect-ratio:16 / 9; border:1px solid var(--line);
+  border-radius:6px; overflow:hidden; background:#fff; color:#111;
+}
+.fv-bild{display:block; width:100%; height:100%}
+.fv-leer{display:grid; place-items:center; width:100%; height:100%; font-size:26px}
+.fv-karte b{font-size:14px}
+.fv-text{font-size:12px; color:var(--text-dim); line-height:1.45}
 
 </style>
 <style>
@@ -11150,6 +11217,35 @@ body .rmo-liquid::after {
   body .rmo-liquid-masse { filter: contrast(13) !important; }
 }
 
+/* ============================================================================
+ * DAS AUFLÖSEN DER ABDECKUNG IM VORTRAG (E544, L153)
+ * ----------------------------------------------------------------------------
+ * PowerPoint blendet den Deckel über der Antwort mit `dissolve` aus — in
+ * Redurs Datei tragen alle 22 Klickschritte genau diesen Filter. In Redion
+ * verschwand er bis hierher schlagartig, und ein Sprung mitten im Vortrag
+ * sieht aus wie ein Fehler, nicht wie eine Antwort.
+ *
+ * Es ist ein ÜBERGANG, keine Animation: er läuft nur, wenn `data-auf`
+ * gesetzt wird, und im Leerlauf bewegt sich nichts (E528). Deshalb hier eine
+ * `transition` und kein `@keyframes` — `getAnimations()` bleibt leer, und
+ * `test500 §3` misst genau das.
+ *
+ * Die Deckkraft selbst steht in `werkzeuge.css` bei `.praesi`: ohne diese
+ * Zeilen hier deckt sie trotzdem auf, nur eben hart. Eine Bewegungsregel
+ * darf nie die Voraussetzung für eine Funktion sein.
+ * ==========================================================================*/
+.praesi [data-ink-art="abdeck"]{
+  transition: fill-opacity .5s cubic-bezier(.22, 1, .36, 1);
+}
+
+/* KEINE EIGENE SPERRE FÜR `prefers-reduced-motion` — und das ist Absicht.
+   `grund.css` setzt unter diesem Schirm `transition-duration:.001ms
+   !important` für ALLES (E340). Eine zweite Sperre hier könnte gar nichts
+   mehr bewirken; sie sähe nur so aus. Genau dieser Fehler ist E340 schon
+   einmal passiert — dieselbe Regel stand zweimal, mit zwei Werten, und die
+   spätere gewann. Gemessen: unter `reducedMotion:'reduce'` liegt die Dauer
+   dieses Übergangs bei 1e-06 s, also aus. `test500 §3b` misst es. */
+
 </style>
 <style>
 /* ===== quell/schale/stil/bausteine.css ===== */
@@ -16384,6 +16480,14 @@ body[data-dokument="an"] #handy-oben{display:none}
 .document-thumbnail-preview{display:flex; width:100%; aspect-ratio:210/297; align-items:center;
   justify-content:center; overflow:hidden; background:#fff; border:1px solid #cfd1d4;border-radius:4px}
 .document-thumbnail-preview img{width:100%;height:100%;object-fit:contain}
+/* DIE MARKEN IN DER MINIATUR (E547). Dieselben Knoten wie auf der grossen
+   Folie, nur klein — gezeichnet von `Marken.zeichneMarke`, nicht von einem
+   zweiten Zeichner (§8). Sie füllen den Kasten ganz; sein Seitenverhältnis
+   kommt seit E547 vom Block selbst, also stimmt die Verzerrung nicht nur
+   zufällig. Der Kasten ist ein Bild, kein Bedienelement: kein Zeiger, kein
+   Treffer — der Klick gehört dem Knopf darum. */
+.document-thumbnail-marken{width:100%; height:100%; display:block;
+  background:#fff; color:#111; pointer-events:none}
 .document-thumbnail-blank{color:#444;font-size:28px}.document-thumbnail-label{font-size:12px}
 /* E299 · `position:relative` ist hier KEIN Beiwerk: die Rolle rechnet mit
    `offsetTop`, und der zaehlt zum naechsten positionierten Vorfahren. Ohne
@@ -20710,6 +20814,16 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 /* Full-window PDF desk, using the real shell tabs and annotation controllers. */
 body[data-dokument="an"] #main{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important}
 body[data-dokument="an"] :is(#studio-bar,#kante,#studio-divider,#topbar,#menueband,#handy-oben,#sidebar){display:none!important}
+/* UND DAS MENÜBAND BLEIBT AUCH BEI EINER PRÄSENTATION WEG (E549).
+   Redur wollte „oben mit Menü", und der Versuch, dafür `#menueband` hier
+   wieder einzublenden, wurde GEMESSEN und wieder zurückgenommen: das Band
+   ist am Rechner eine zugeklappte Lade (`studio.css`), und im
+   Dokumentmodus legte es sich als Ecke „Werkzeuge ⌄" über die
+   Dokumentleiste — 1440 × 852 px, deckungsgleich mit dem Inhalt darunter.
+   Genau die zwei Köpfe übereinander, vor denen die Zeile oben steht.
+   Das Folien-Menü sitzt deshalb IN der Dokumentleiste, und es liest
+   denselben Katalog wie der Reiter im Band (`Register.menueband`,
+   Reiter `praesentation`) — eine Liste, zwei Ansichten (§8). */
 body[data-dokument="an"] #reiterleiste{grid-column:1!important;grid-row:1!important;background:var(--pdf-chrome);color:var(--pdf-on-chrome);border:0;min-height:48px;padding:4px 12px 0;position:relative;inset:auto;flex-wrap:nowrap}
 body[data-dokument="an"] #reiterleiste .rt-tab{min-width:150px;max-width:240px;min-height:var(--touch-min);color:var(--pdf-on-chrome);background:transparent;border:0;border-radius:12px 12px 0 0;box-shadow:none}
 body[data-dokument="an"] #reiterleiste .rt-tab.an{background:var(--pdf-tools);font-weight:650}
@@ -20913,6 +21027,60 @@ body[data-dokument="an"] .document-workspace[data-document-zeigen="an"] .documen
 .document-laser.an{opacity:1; transition:opacity 60ms var(--ease)}
 @media (prefers-reduced-motion: reduce){
   .document-laser, .document-laser.an{transition:none}
+}
+
+/* ══ DAS FOLIENBAND — Reiter über der Folie (E550) ══════════════════════════
+   Es fliesst IN der Spalte des Studios mit, es überdeckt nichts. Genau das
+   war der Fund von E549: das globale `#menueband` dort einzublenden legte
+   seine zugeklappte Ecke „Werkzeuge ⌄" bei 1440 × 852 deckungsgleich über
+   die Dokumentleiste.
+
+   DIE KNÖPFE SIND DIE DES MENÜBANDS (`.mb-knopf`, `.mb-gruppe`, gezeichnet
+   von `Menueband.gruppeZeichnen`) — hier steht nur, wo sie stehen. Ein
+   eigener Knopfstil wäre der Anfang zweier Menübänder, die auseinanderlaufen.
+
+   Die Reiterzeile ist bewusst nicht `.mb-reiter`: die klebt an der
+   Studio-Kopfleiste und hält Platz für einen Klapp-Knopf frei, den es hier
+   nicht gibt (`scroll-padding-inline-end:150px` liesse sonst rechts eine
+   Lücke von 150 px stehen). Die Masse sind dieselben — 34 px hoch, 13,5 px
+   Schrift, 2 px Strich unter dem gewählten Reiter. */
+.folienband{flex:none; background:var(--bg-side); border-bottom:1px solid var(--line)}
+
+.folienband-reiter{display:flex; align-items:stretch; gap:var(--space-1);
+  padding:0 var(--space-4); min-height:34px;
+  overflow-x:auto; overflow-y:hidden; scrollbar-width:none;
+  border-bottom:1px solid var(--line-soft)}
+.folienband-reiter::-webkit-scrollbar{display:none}
+
+.folienband-reiter-knopf{display:inline-flex; align-items:center;
+  padding:0 var(--space-4); min-height:34px; white-space:nowrap;
+  border:none; background:none; cursor:pointer;
+  font-size:13.5px; color:var(--text-dim);
+  border-bottom:2px solid transparent;
+  transition:color .12s var(--ease), border-color .12s var(--ease)}
+.folienband-reiter-knopf:hover{color:var(--text)}
+/* §38: der gewählte Reiter ist nicht NUR am Strich zu erkennen — er trägt
+   `aria-selected`, steht in voller Textfarbe und ist fetter. */
+.folienband-reiter-knopf[aria-selected="true"]{color:var(--text);
+  border-bottom-color:var(--accent); font-weight:600}
+.folienband-reiter-knopf:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+
+.folienband-flaeche{display:flex; align-items:flex-start;
+  gap:var(--space-3) var(--space-1);
+  padding:var(--space-3) var(--space-4) var(--space-2);
+  overflow-x:auto; overflow-y:hidden; scrollbar-width:thin}
+
+/* Wie `.mb-trenner`: kein eigener Rand, der Abstand kommt vom `gap`. Der
+   Strich reicht so hoch wie die Knopfreihe und nicht bis unter die
+   Gruppenüberschrift — er trennt Knöpfe, keine Beschriftungen. */
+.folienband-trenner{flex:0 0 1px; margin:0; align-self:flex-start; height:60px;
+  background:var(--line-soft)}
+
+/* §37: am Finger 44. Das Band selbst kommt erst ab 900 px Fensterbreite
+   (`BAND_AB` in document-mode.ts), ein Tablet quer erreicht diese Zeile
+   aber — und dort ist der Reiter ein Fingerziel. */
+@media (pointer:coarse){
+  .folienband-reiter, .folienband-reiter-knopf{min-height:var(--touch-min)}
 }
 
 </style>
@@ -22929,7 +23097,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 849, inhalt: '6ff30b75d95541d2', gebaut: '2026-09-12T23:10:53.184Z' };
+const Stand = { fassung: 917, inhalt: '64d8ab405381c2c0', gebaut: '2026-09-13T10:34:44.216Z' };
 window.Stand = Stand;
 
 </script>
@@ -31774,6 +31942,24 @@ const Folien = (() => {
     const TRENNT = ['divider', 'h1', 'h2'];
     /** Diese zeichnen ihren Inhalt selbst; wer hier absteigt, hat ihn zweimal. */
     const EIGENE_KINDER = ['columns', 'columns3', 'blatt'];
+    /**
+     * Diese füllen eine Folie ALLEIN — zwei davon teilen sie sich nie (E544).
+     *
+     * Ein Blatt und eine PDF-Seite sind eine ganze Seite Papier. Zwei davon
+     * untereinander auf einer Folie ergibt eine Spalte, die unten aus dem Bild
+     * läuft, und keine Präsentation.
+     *
+     * Gefunden am .pptx-Einleser: der legt pro PowerPoint-Folie EINEN
+     * `blatt`-Block als direktes Kind der Seite, ohne Trenner dazwischen.
+     * Gemessen an drei Folien gab `teilen` **eine** zurück; Redurs echte Datei
+     * hat 27. Der ganze Vortrag war eine endlose Spalte, und niemand hätte es
+     * im Code gesehen — nur auf dem Bild (`bilder/l153-vorher.png`, §55).
+     *
+     * NUR AUF DER OBERSTEN EBENE. In Spalten gehören ein Blatt und eine
+     * PDF-Seite ausdrücklich NEBENeinander auf dieselbe Folie — der Fall aus
+     * `test183`, und dort ist es genau richtig so.
+     */
+    const EIGENE_FOLIE = ['blatt', 'pdfseite'];
     /** Und diese tragen ihre Kinder als eingerückte Zeilen. */
     const MIT_KINDERN = ['bullet', 'number', 'todo', 'toggle'];
     /**
@@ -31811,6 +31997,27 @@ const Folien = (() => {
                         eintraege: [] };
                     continue;
                 }
+                if (tiefe === 0 && EIGENE_FOLIE.includes(b.type)) {
+                    /* Was bis hierher gesammelt wurde, ist fertig — ausser es ist die
+                       leere Auftaktfolie, die es gar nicht geben soll. */
+                    const leerAmAnfang = !aktuell.eintraege.length && !raus.length &&
+                        aktuell.titel === String(wurzel.text || '');
+                    /* UND NICHTS LEERES DAZWISCHEN. Nach dem ersten Blatt ist `aktuell`
+                       titellos und leer; ohne diese Prüfung stünde zwischen je zwei
+                       Folien eine schwarze. Gemessen: aus drei Blättern wurden fünf
+                       Folien, jede zweite leer. Ein Titel ohne Inhalt bleibt dagegen —
+                       eine Überschrift vor einem Blatt ist eine Zwischenfolie und
+                       gewollt. */
+                    const leer = !aktuell.eintraege.length && !aktuell.titel;
+                    if (!leerAmAnfang && !leer)
+                        raus.push(aktuell);
+                    /* OHNE TITEL: das Blatt trägt seine Überschrift selbst, als Marke
+                       oder als Text darauf. Ein `<h1>` darüber schriebe sie ein
+                       zweites Mal hin und nähme dem Blatt die halbe Höhe. */
+                    raus.push({ titel: '', eintraege: [{ block: b, tiefe }] });
+                    aktuell = { titel: '', eintraege: [] };
+                    continue;
+                }
                 aktuell.eintraege.push({ block: b, tiefe });
                 if (EIGENE_KINDER.includes(b.type))
                     continue;
@@ -31819,7 +32026,17 @@ const Folien = (() => {
             }
         };
         sammle(wurzel.id, 0);
-        raus.push(aktuell);
+        /* Eine LEERE Folie am Ende ist nie gewollt. Sie entsteht, sobald eine
+           Seite mit einem Trenner oder einem Blatt aufhört — bei einer
+           eingelesenen Präsentation also IMMER, und der Vortrag endete auf einem
+           schwarzen Bild. Die letzte Folie kommt nur mit, wenn etwas darauf steht. */
+        if (aktuell.eintraege.length || aktuell.titel)
+            raus.push(aktuell);
+        /* Aber eine Seite ohne alles ergibt weiterhin genau eine Folie: der
+           Vortrag liest `folien[0]` und zeigt darauf „Nichts zu zeigen". Ohne
+           diese Zeile liefe er an `undefined`. */
+        if (!raus.length)
+            raus.push(aktuell);
         return raus;
     };
     /** Auszeichnung weg — PowerPoint bekommt Text, keine Sterne. */
@@ -31913,7 +32130,7 @@ const Folien = (() => {
         folie.eintraege.forEach(eins);
         return raus;
     };
-    return { teilen, alsZeilen, ohneMarkierung, TRENNT, EIGENE_KINDER, MIT_KINDERN };
+    return { teilen, alsZeilen, ohneMarkierung, TRENNT, EIGENE_KINDER, EIGENE_FOLIE, MIT_KINDERN };
 })();
 window.Folien = Folien;
 
@@ -35778,6 +35995,15 @@ Register.menueband = (() => {
         { id: 'start', name: 'Start', zeichen: 'pencil' },
         { id: 'einfuegen', name: 'Einfügen', zeichen: 'plus' },
         { id: 'zeichnen', name: 'Zeichnen', zeichen: 'page' },
+        /* DER REITER FÜR FOLIEN (E549). Er steht hier, seine KNÖPFE stehen aber
+           nicht in dieser Datei: `bereiche/vorlagen/folien.ts` meldet sie als
+           Lieferant an. Das ist derselbe Grund wie beim Reiter „Einfügen" oben —
+           der Katalog gehört dem Bereich, der die Sache kann, und ein zweiter
+           hier liefe irgendwann davon weg.
+           `reiter()` blendet ihn von selbst aus, wenn kein Foliensatz offen ist:
+           jeder Eintrag trägt `zeigen()`, und ein Reiter ohne sichtbaren Eintrag
+           kommt gar nicht erst in die Liste. */
+        { id: 'praesentation', name: 'Präsentation', zeichen: 'play' },
         { id: 'verlauf', name: 'Verlauf', zeichen: 'history' },
         { id: 'ueberpruefen', name: 'Überprüfen', zeichen: 'search' },
         { id: 'ansicht', name: 'Ansicht', zeichen: 'sun' },
@@ -58332,6 +58558,77 @@ const Marken = (() => {
     /** Zwei Nachkommastellen — fuer `transform`-Werte, die sonst als
      *  0.30000000000000004 im Baum stehen. */
     const rund2 = (wert) => Math.round(wert * 100) / 100;
+    /* ---- DER VERLAUF AM ABDECKBAND (E545) ---------------------------------
+     * PowerPoint füllt den Deckel über einer Antwort nicht einfarbig: in
+     * Redurs Datei ist es weiss → `#FFCC00` in der Mitte → weiss, senkrecht.
+     * Redion las davon bisher eine Farbe (E542) und malte eine Fläche.
+     *
+     * EIN <defs> FÜR DAS GANZE BLATT, nicht eines je Marke. Der Grund ist
+     * nicht Sparsamkeit, sondern Haltbarkeit: `redraw` sammelt `[data-sid]`
+     * und schiebt die Knoten mit `insertBefore` in die Reihenfolge der
+     * Marken, `updateNode` ersetzt einen Knoten durch einen frischen, und der
+     * Radierer nimmt `nodeFor(id)?.remove()`. Läge die Vorlage in einer
+     * eigenen Gruppe um das Rechteck, risse der erste dieser drei Griffe sie
+     * ab — der Deckel zeigte dann ins Leere, und das sieht niemand, weil
+     * nichts abstürzt. Gemessen wurde das nicht, es wurde nachgelesen; die
+     * drei Stellen stehen oben im Quelltext.
+     * -------------------------------------------------------------------- */
+    /**
+     * Die Kennung der Verlauf-Vorlage — GESÄUBERT, nicht durchgereicht.
+     *
+     * Gefunden auf dem Bild, nicht im Code (§55.1): ein Deckel wurde SCHWARZ.
+     * Eine Markenkennung ist Text aus den Daten und darf alles enthalten; mit
+     * einem Leerzeichen oder Umlaut darin ist `url(#…)` kein gültiger Verweis
+     * mehr, und dann greift nicht etwa der Rückfall daneben, sondern der
+     * ANFANGSWERT von `fill` — Schwarz. Gedeckt bleibt die Antwort dabei, das
+     * ist das Gute daran; richtig aussehen tut es nicht.
+     *
+     * Redions eigene Kennungen sind harmlos (`m` + Zufall, oder eine UUID).
+     * Eine eingelesene oder eingespielte Marke bringt ihre eigene mit.
+     */
+    const verlaufId = (mark) => 'rv-' + String(idOf(mark) || '').replace(/[^A-Za-z0-9_-]/g, '_');
+    const verlaufVon = (mark) => {
+        const v = mark?.verlauf;
+        if (!v || !Array.isArray(v.stopps) || v.stopps.length < 2)
+            return null;
+        const stopps = v.stopps
+            .filter((s) => s && typeof s.farbe === 'string' && Number.isFinite(Number(s.pos)))
+            .map((s) => ({ pos: Math.min(1, Math.max(0, Number(s.pos))), farbe: String(s.farbe) }));
+        return stopps.length >= 2 ? { stopps, winkel: Number(v.winkel) || 0 } : null;
+    };
+    /**
+     * Die Verlauf-Vorlagen einer Markenliste als EIN `<defs>` — oder `null`.
+     *
+     * Wer Marken in ein eigenes `<svg>` schreibt (Vortrag, Druck, Seitenbild,
+     * Ausschnitt für die Erkennung), hängt das hier VOR die Marken. Wer es
+     * vergisst, bekommt keinen Fehler: der Deckel fällt auf seine feste Farbe
+     * zurück (siehe `zeichneMarkeRoh`, Zweig `abdeck`).
+     */
+    const verlaufDefs = (liste) => {
+        const mit = (Array.isArray(liste) ? liste : [])
+            .filter(m => m && m.art === 'abdeck' && verlaufVon(m));
+        if (!mit.length)
+            return null;
+        const defs = svg('defs', { 'data-ink-defs': '1' });
+        for (const mark of mit) {
+            const v = verlaufVon(mark);
+            /* OOXML zählt in 60000steln Grad, 0 = nach rechts, im Uhrzeigersinn.
+               5400000 sind 90°, also von oben nach unten — der Normalfall bei
+               einem Abdeckband. Die Achse geht durch die Mitte des Kastens,
+               deshalb 0.5 ± Hälfte der Richtung. */
+            const bogen = ((Number(v.winkel) || 0) / 60000) * Math.PI / 180;
+            const dx = Math.cos(bogen) / 2, dy = Math.sin(bogen) / 2;
+            const g = svg('linearGradient', {
+                id: verlaufId(mark), gradientUnits: 'objectBoundingBox',
+                x1: (0.5 - dx).toFixed(4), y1: (0.5 - dy).toFixed(4),
+                x2: (0.5 + dx).toFixed(4), y2: (0.5 + dy).toFixed(4)
+            });
+            for (const stopp of v.stopps)
+                g.appendChild(svg('stop', { offset: stopp.pos.toFixed(4), 'stop-color': stopp.farbe }));
+            defs.appendChild(g);
+        }
+        return defs;
+    };
     /** Bildschirm, Druck und Praesentation rufen denselben Zeichner auf. */
     /* DIE DREHUNG (E466) liegt als `transform` am fertigen Knoten — ein
        Zweig fuer alle Bauarten, weil jede Bauart ihren eigenen Rueckweg
@@ -58516,10 +58813,31 @@ const Marken = (() => {
                Ablage — Lernen darf den Speicher nicht anfassen. Druck und
                Folien rufen denselben Zeichner und zeigen darum zu. */
             const box = InkGeometry.rectangle(points[0], points[1]);
+            /* DER VERLAUF, WENN ES EINEN GIBT (E545) — und IMMER mit der festen
+               Farbe dahinter. `fill="url(#…) #ffcc00"` ist SVGs eigener Rückfall:
+               fehlt die Vorlage, malt der Browser die Farbe. Gemessen, nicht
+               angenommen (`bilder/paint-rueckfall.png`): ein `url()` OHNE Rückfall
+               malt gar nichts — und ein unsichtbarer Deckel ist eine offene
+               Antwort. Genau deshalb steht die Farbe hier und nicht nur dort.
+               Der Knoten bleibt ein <rect> und bleibt DIREKTES Kind der Fläche:
+               `redraw`, `updateNode` und der Radierer greifen `[data-sid]` und
+               verschieben es — in einer eigenen Gruppe mit eigenem <defs> würde
+               genau das die Vorlage abreissen. Die Vorlagen liegen deshalb in
+               EINEM <defs> am Blatt, siehe `verlaufDefs`. */
             element = svg('rect', { x: box.x, y: box.y, width: box.width,
-                height: box.height, rx: 4, fill: color, 'pointer-events': 'all' });
+                height: box.height, rx: 4,
+                fill: verlaufVon(mark) ? `url(#${verlaufId(mark)}) ${color}` : color,
+                'pointer-events': 'all' });
             element.setAttribute('data-sid', idOf(mark));
             element.setAttribute('data-ink-art', art);
+            /* DIE SCHRITTNUMMER REIST MIT AN DEN KNOTEN (E544). Sie steht seit
+               E542 an der Marke — aus PowerPoints `p:timing` — und sagt, bei
+               welchem Klick dieser Deckel weichen soll. Der Vortrag liest sie
+               hier am Knoten ab, statt die Marken ein zweites Mal zu durchsuchen.
+               Ein Deckel OHNE Nummer bekommt auch kein Attribut: der wird von
+               Hand angetippt, und der Schrittzähler fasst ihn nie an (E266). */
+            if (Number(mark.schritt) > 0)
+                element.setAttribute('data-schritt', String(Number(mark.schritt)));
             return element;
         }
         else if (art === 'zettel' && points.length >= 2) {
@@ -59020,6 +59338,16 @@ const Marken = (() => {
            Knoten aber noch der verschobene, und nur ein ehrlicher Eintrag
            laesst `redraw` das sehen (gefunden von test350 §3). */
         const merke = (mark) => { gezeichnet.set(idOf(mark), mark); };
+        /* Die Verlauf-Vorlagen der Abdeckbänder (E545). Sie liegen als EIN
+           `<defs>` ganz vorn in der Fläche und tragen kein `data-sid` — damit
+           fasst `redraw` sie nicht an, das sammelt nur Markenknoten. Aufgefrischt
+           wird beim Zeichnen, weil eine Marke dazukommen oder weggehen kann. */
+        const defsAuffrischen = () => {
+            flaeche.querySelector('[data-ink-defs]')?.remove();
+            const defs = verlaufDefs(marks);
+            if (defs)
+                flaeche.insertBefore(defs, flaeche.firstChild);
+        };
         marks.forEach(mark => {
             const node = zeichneMarke(mark);
             if (node) {
@@ -59027,6 +59355,7 @@ const Marken = (() => {
                 merke(mark);
             }
         });
+        defsAuffrischen();
         /* Welche Abdeckbänder GERADE aufgedeckt sind — nur Laufzeit, nie
            Ablage: nach Neuladen oder Neuzeichnen von aussen ist wieder alles
            zu, und genau das ist die ehrliche Vorgabe beim Lernen (E266). */
@@ -59185,6 +59514,7 @@ const Marken = (() => {
                 node.remove();
                 gezeichnet.delete(id);
             } });
+            defsAuffrischen();
             abdeckAnwenden();
             renderSelection();
         };
@@ -62995,7 +63325,7 @@ const Marken = (() => {
     };
     if (typeof document !== 'undefined')
         document.addEventListener('keydown', kuerzel);
-    return { schicht, leiste, zeichneMarke, annotierbar, alsAnnotation,
+    return { schicht, leiste, zeichneMarke, verlaufDefs, annotierbar, alsAnnotation,
         FARBEN, BREITEN, STIFTE, LEITER, LASER, FORMEN, WERKZEUGE, artWort, artZeichen,
         druckFaktor, RADIERER, TASTEN,
         /* DIE FARBSÄTZE NACH AUSSEN (E486). Nicht, damit jemand anders eine
@@ -64921,7 +65251,19 @@ const Blatt = (() => {
         /* `Blocks` liegt NICHT auf `window` — bei `module: none` teilen sich alle
            Dateien einen Namensraum, und der Editor hängt sich nirgends an. */
         const kinder = Store.childrenOf(block.id);
-        if (!kinder.length) {
+        /* EIN BLATT MIT MARKEN IST NICHT LEER (E546). Die Bedingung darunter
+           stand hier ohne diesen Teil, und sie war zu weit gefasst: eine
+           eingelesene PowerPoint-Folie hat KEINE Textkinder — ihr Text liegt als
+           Marken. Gemessen an einer Datei mit 27 Folien: vor dem Öffnen 0
+           Kindblöcke, nach dem Öffnen 27, alle `text` mit "". Siebenundzwanzig
+           Blöcke, die niemand angelegt hat, nur vom Hinsehen — und sie landen im
+           Versionsverlauf, in der Sicherung, im Abgleich und in der Suche.
+           Sichtbar waren sie auch: ihr Platzhalter lag quer über dem Folientitel
+           (gemessen auf 501,462 gegen 502,457 — `bilder/o4-ist-editor.png`).
+           Ein Blatt mit Marken trägt schon bearbeitbare Elemente; ein Textkasten
+           ist in PowerPoint auch keine Absatzzeile. */
+        const hatMarken = Array.isArray(block.marken) && block.marken.length > 0;
+        if (!kinder.length && !hatMarken) {
             /* EINE ZEILE MUSS DA SEIN (E118). Ohne sie ist das Papier eine Fläche
                ohne einziges bearbeitbares Element — man kann darauf malen und
                sonst nichts. Gemessen an einem Blatt aus dem Slash-Menü:
@@ -64930,7 +65272,8 @@ const Blatt = (() => {
                (`PdfEinlesen.alsSeiten` tut es, `test174` tut es). Nur der Weg,
                den ein Mensch geht — `/blatt` tippen —, tat es nicht: `umwandeln`
                kennt keine Anfangskinder.
-               Die Spalte daneben löst dasselbe seit E102 genau so. */
+               Die Spalte daneben löst dasselbe seit E102 genau so.
+               DAS GILT UNVERÄNDERT für das leere Blatt; `test192 §2a` misst es. */
             const leer = Store.addBlock(block.id, 'text', { text: '' });
             inhalt.appendChild(Blocks.render(leer, 0));
         }
@@ -73332,6 +73675,26 @@ const ChronikDaten = {
                 {
                     "zeit": "ca. 23:10",
                     "wortlaut": "wie kann ich im redio die daten hochladen ?"
+                },
+                {
+                    "zeit": "ca. 23:35",
+                    "wortlaut": "mach weiter mit den folien klick"
+                },
+                {
+                    "zeit": "ca. 01:15",
+                    "wortlaut": "Weiter ohne pause"
+                },
+                {
+                    "zeit": "ca. 03:30",
+                    "wortlaut": "Weiter mit den folieneditor"
+                },
+                {
+                    "zeit": "ca. 04:50",
+                    "wortlaut": "Könntest du so eine powerpoint modus im menü einfügen wenn ich das klicke sollte 1:1 wie powerpoint sein oben mit menü, link seiten so das ich präsentaioton erstellen könnne, füge dort auch fertigen vorlagen"
+                },
+                {
+                    "zeit": "ca. 06:20",
+                    "wortlaut": "mach weiter mit den menüband"
                 }
             ],
             "arbeit": [
@@ -73502,11 +73865,67 @@ const ChronikDaten = {
                     "zeitraum": "23:10 – 23:30",
                     "dauer": "ca. 20 min",
                     "pruefungen": "test497 §3 neu, von 20 auf 31 grün, sechs Zusagen zuerst rot gesehen"
+                },
+                {
+                    "was": "E544 — Ein Blatt füllt eine Folie, und der Klick schaltet sie weiter (L153 geschlossen)",
+                    "vonCommit": "(nach E543)",
+                    "bisCommit": "(dieser Bogen)",
+                    "zeitraum": "23:35 – 00:40",
+                    "dauer": "ca. 65 min",
+                    "pruefungen": "test500 neu, 45 Zusagen, vier Gegenproben gefahren; test183/191/293/266/499 grün"
+                },
+                {
+                    "was": "E545 — Der Deckel bekommt seinen Verlauf, und ein Markenfeld bekommt seinen ersten Wächter",
+                    "vonCommit": "(nach E544)",
+                    "bisCommit": "(dieser Bogen)",
+                    "zeitraum": "00:40 – 02:10",
+                    "dauer": "ca. 90 min",
+                    "pruefungen": "test501 neu, 29 Zusagen, fünf Gegenproben gefahren; test266/499/500/145/183 grün"
+                },
+                {
+                    "was": "E546 — O4 zur Hälfte: das Zeigen einer Folie ändert sie nicht mehr, und die Präsentation geht als Foliensatz auf",
+                    "vonCommit": "(nach E545)",
+                    "bisCommit": "(dieser Bogen)",
+                    "zeitraum": "02:10 – 03:20",
+                    "dauer": "ca. 70 min",
+                    "pruefungen": "test502 neu, 17 Zusagen, drei Gegenproben gefahren; test191 nachgezogen"
+                },
+                {
+                    "was": "E547 — Die Folienliste zeigt Folien: Mass vom Block, Marken statt Bleistift, Name statt „A4-Blatt“",
+                    "vonCommit": "(nach E546)",
+                    "bisCommit": "(dieser Bogen)",
+                    "zeitraum": "03:30 – 04:40",
+                    "dauer": "ca. 70 min",
+                    "pruefungen": "test503 neu, 18 Zusagen, vier Gegenproben gefahren"
+                },
+                {
+                    "was": "E548 — „Präsentation\" ist ein Weg: Eintrag im Anlegen-Menü, acht PowerPoint-Layouts, ein Wähler, der sie zeigt",
+                    "vonCommit": "(nach E547)",
+                    "bisCommit": "(dieser Bogen)",
+                    "zeitraum": "04:50 – 06:10",
+                    "dauer": "ca. 80 min",
+                    "pruefungen": "test504 neu, 27 Zusagen, vier Gegenproben gefahren"
+                },
+                {
+                    "was": "E549 — Reiter „Präsentation\" im Menüband, Folien-Menü in der Dokumentleiste; das ganze Band dort war gemessen schlechter",
+                    "vonCommit": "(nach E548)",
+                    "bisCommit": "(dieser Bogen)",
+                    "zeitraum": "06:20 – 08:10",
+                    "dauer": "ca. 110 min",
+                    "pruefungen": "test505 neu, 26 Zusagen, vier Gegenproben gefahren (25/1, 14/12, 23/3, 24/2); test114 von 152+1 auf 155 grün, zwei neue Zusagen, beide Gegenproben rot gesehen"
+                },
+                {
+                    "was": "E550 — Das Folienband: Reiter ÜBER der Folie; `start` und `einfuegen` bleiben draussen, weil 79 von 83 ihrer Knöpfe dort nichts tun",
+                    "vonCommit": "(nach E549)",
+                    "bisCommit": "(dieser Bogen)",
+                    "zeitraum": "08:20 – 10:20",
+                    "dauer": "ca. 120 min",
+                    "pruefungen": "test506 neu, 51 Zusagen, sechs Gegenproben gefahren (42/2, 42/1, 41/2, 41/2, 49/2, 47/4)"
                 }
             ],
             "zahlen": {
-                "commits": 18,
-                "entscheidungen": 16
+                "commits": 25,
+                "entscheidungen": 23
             },
             "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
             "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -73552,6 +73971,54 @@ const ChronikDaten = {
                     "was": "`accept` des Hauptwählers und die zwei Menütexte um PowerPoint und PDF ergänzt.",
                     "warum": "Redur: „wie kann ich im Redion die Daten hochladen?\" — beim Nachsehen stand seine .ppsx im Dateifenster grau, obwohl der Zweig 17 Zeilen tiefer sie liest.",
                     "risiko": "keins an Daten — ein Filter im Dateifenster; `test497 §3` hält die drei Stellen künftig zusammen"
+                },
+                {
+                    "zeit": "00:10",
+                    "was": "`EIGENE_FOLIE` im Kern, Schrittzähler im Vortrag, weiches Auflösen, und ein Blatt füllt die Leinwand.",
+                    "warum": "Redur: „mach weiter mit den folien klick.\" Davor lag ein grösserer Fehler: eine eingelesene Präsentation war EINE Folie mit allen Blättern übereinander — gemessen, und nur auf dem Bild zu sehen.",
+                    "risiko": "keins an Daten — der Schrittstand wird nie gespeichert (E266); `Folien.teilen` ist gemeinsame Regel, deshalb fünf Nachbarläufe mitgefahren"
+                },
+                {
+                    "zeit": "01:40",
+                    "was": "`formVerlauf` liest den Verlauf aus `p:spPr`, `verlaufDefs` legt EIN `<defs>` ans Blatt, die Füllung nennt immer auch die feste Farbe.",
+                    "warum": "Redur: „1:1 wie das Original\". Sieben Leser haben vorher den Bestand vermessen — der naheliegende Bau mit einer Gruppe um die Marke hätte vier Stellen gebrochen, drei davon still.",
+                    "risiko": "§51: ohne Rückfallfarbe wäre ein Deckel bei fehlender Vorlage UNSICHTBAR, also eine offene Antwort. Deshalb steht sie immer daneben — am Browser gemessen, nicht angenommen."
+                },
+                {
+                    "zeit": "02:50",
+                    "was": "`Blatt.zeichne` legt keine Zeile mehr an, wenn das Blatt Marken trägt; der .pptx-Einleser setzt `dokumentModus`.",
+                    "warum": "Gemessen: 27 Folien öffnen legte 27 leere Textblöcke an, und ihr Platzhalter lag auf dem Folientitel. Und der Dokumentmodus konnte Blatt-Blöcke längst — es fehlte nur die Flagge.",
+                    "risiko": "§9: ein Zeichner, der in den Speicher schreibt, ist die gefährlichere Hälfte des Fundes. E118 bleibt für das leere Blatt unverändert, test502 misst beide Richtungen."
+                },
+                {
+                    "zeit": "04:10",
+                    "was": "`thumbnail()` nimmt das Seitenverhältnis vom Block und zeichnet die Marken; `sourceLabel` gibt den Folientitel.",
+                    "warum": "Die Seitenliste war da (G3) und half nicht: 27 hochkant gequetschte, leere, gleich benannte Kästchen. Alle drei Fehler waren nur im Bild zu sehen.",
+                    "risiko": "keins an Daten. Die Abdeckung deckt auch in der Miniatur, weil es derselbe Zeichner ist — gemessen: 69×6 px, rgb(255,204,0)."
+                },
+                {
+                    "zeit": "05:40",
+                    "was": "`bereiche/vorlagen/folien.ts` mit acht Layouts, ein Weg im Anlegen-Katalog, zwei Befehle im Register.",
+                    "warum": "Redurs Wunsch nach einem PowerPoint-Modus. Die ANSICHT gab es längst (E546/E547) — was fehlte, war der Weg hinein und das, womit man anfängt.",
+                    "risiko": "keins an Daten — ein Layout ist eine Markenliste, keine zweite Dokumentform. Der Wähler legt bei Abbruch GAR NICHTS an."
+                },
+                {
+                    "zeit": "07:20",
+                    "was": "Ein Reiter „Präsentation\" in `register/menueband.ts`, beliefert von `Folienvorlagen.bandEintraege`; dazu ein Knopf „📽️ Folie\" in der Dokumentleiste, der dasselbe Verzeichnis als Menü öffnet.",
+                    "warum": "Redur: „mach weiter mit den menüband\". Das Band im Dokumentmodus einzublenden war der naheliegende Weg und nachweislich der schlechtere — eine zusammengeklappte Ecke „Werkzeuge ⌄\" lag bei 1440 × 852 deckungsgleich über der Dokumentleiste. Also EIN Katalog, zwei Orte (§8).",
+                    "risiko": "keins an Daten — Oberfläche. Jeder Eintrag bringt sein `zeigen()` mit: ohne Foliensatz ist der Reiter ganz weg, und `istFoliensatz` verlangt ein QUERES Blatt, damit ein Notizbuch ihn nie bekommt."
+                },
+                {
+                    "zeit": "08:05",
+                    "was": "`test114` auf zweiundzwanzig Wege gehoben — und um zwei Zusagen erweitert, die für eine ROLLENDE Liste gelten.",
+                    "warum": "Die harte Zahl im Prüflauf trug seit E236 eine Frage mit: „Wegweiser oder Liste?\" Der zweiundzwanzigste Weg hat sie beantwortet, gemessen bei 428 × 926: 10 von 22 ohne Rollen sichtbar, 1787 px Inhalt in 757 px Liste. Also Liste. Wegnehmen wäre eine Funktion weniger (§47), deshalb steht die Antwort als L154 offen.",
+                    "risiko": "keins — ein Prüflauf. Beide neuen Zusagen sind rot gesehen worden (154 ok / 1 offen, je)."
+                },
+                {
+                    "zeit": "09:40",
+                    "was": "Eine Reiterzeile mit Band zwischen Kopf- und Zeichenleiste des Dokumentstudios, nur bei quer liegendem Foliensatz und erst ab 900 px Fensterbreite.",
+                    "warum": "Redur: „oben mit menü … 1:1 wie powerpoint\". E549 hatte den Katalog, nicht den Ort. Welche Reiter hineinkommen, ist nicht gewählt, sondern gemessen: alle 151 Einträge einzeln aufgerufen, bei `start` taten 14 von 14 nichts, bei `einfuegen` 65 von 69 — sie brauchen eine Schreibmarke, die es im Dokumentmodus nicht gibt.",
+                    "risiko": "keins an Daten — Oberfläche. Die Folie bleibt 980 × 551 bei 1440 × 852; das Band hat die Luft darunter genommen, nicht die Folie. Gezeichnet wird mit `Menueband.knopf`/`gruppeZeichnen`, also kein zweiter Zeichner (§8)."
                 }
             ]
         }
@@ -73829,6 +74296,51 @@ const ChronikDaten = {
             "warumKeineUhr": "—",
             "beweis": "Die Agentenprotokolle: zehn Abbrüche mit `rate_limit`, HTTP 429, und im Arbeitsordner genau zwei geschriebene Fragmente von zehn.",
             "entscheidung": "E533"
+        },
+        {
+            "nr": "P23",
+            "datum": "2026-09-13",
+            "titel": "Eine harte Zahl hat gemeldet — und was sie meldete, war nicht die Zahl",
+            "schwere": "klein",
+            "symptom": "`test114` wurde rot: „Es führt zu einundzwanzig Sachen\" — es waren zweiundzwanzig geworden, weil dieser Bogen „Präsentation\" ins Anlegen-Menü gestellt hat.",
+            "falscheVermutung": "Die naheliegende Behebung: die 21 auf 22 heben, fertig. Genau das stand im Prüflauf verboten — die Zeile trug seit E236 den Satz mit, der nächste Zuwachs brauche „eine Antwort, nicht nur eine neue Zahl\".",
+            "wieGefunden": "Im Stapel-Lauf nach dem Bogen, 1 von 13 Läufen rot. Nicht durch Hinsehen: das Blatt sieht mit 22 Wegen genauso aus wie mit 21 — man sieht ja beide Male nur den Anfang.",
+            "ursache": "Kein Fehler im Code, sondern eine überschrittene Grenze. Gemessen bei 428 × 926: 22 Wege in 6 Überschriften, Liste 757 px hoch, Inhalt 1787 px, ohne Rollen sichtbar 10 von 22. Das Blatt war als WEGWEISER gebaut — es sollte dem, der nicht weiss, dass Redion Karteikarten kann, alles zeigen. Es zeigt noch ein Drittel.",
+            "loesung": "Die Zahl gehoben UND die Antwort gegeben: L154 in `LUECKEN.md` mit den drei möglichen Ordnungen und ihren Kosten (zusammenklappbare Gruppen, Suchfeld, zwei Ebenen). Keinen Weg weggenommen — jeder ist eine echte Funktion (§47). Dazu zwei neue Zusagen in `test114`, die für eine rollende Liste gelten: dass sie wirklich rollt (1787 in 757) und dass ihr letzter Eintrag unten ankommt (64 px, ganz sichtbar).",
+            "warumKeineUhr": "—",
+            "beweis": "Beide neuen Zusagen rot gesehen (§50): einmal das Rollen im Messen weggenommen — „ganz sichtbar: false\"; einmal die Roll-Schwelle auf +2000 gesetzt — „1787 px Inhalt in 757 px\", damit klar ist, dass die Zeile die Messung liest und kein festes `true`. Beide Male 154 ok / 1 offen; behoben 155 grün.",
+            "lehre": "Eine harte Zahl in einem Prüflauf ist kein Ärgernis, sondern der einzige Melder, den eine wachsende Liste hat — und sie meldet nicht immer das, wonach sie aussieht. Hier meldete sie nicht „die Zahl stimmt nicht\", sondern „das Blatt ist etwas anderes geworden\". Dieselbe Zeile war ein Jahr davor schon einmal still rot (E513 → E522), weil niemand sie hörte; diesmal war der Preis nur ein Absatz statt eines vollen Laufs.",
+            "entscheidung": "E549"
+        },
+        {
+            "nr": "P24",
+            "datum": "2026-09-13",
+            "titel": "Ein Menüband ohne ein einziges Zeichen — und jede Prüfung wäre grün geblieben",
+            "schwere": "klein",
+            "symptom": "Auf dem ersten Bild des Folienbands stand die ganze Reihe als nackter Text da: „Neue Folie   Folienliste   Präsentieren   Als PowerPoint   Als PDF   Drucken\". Kein Symbol, keine Kachel, nur Wörter nebeneinander.",
+            "falscheVermutung": "Die naheliegende: die Einträge tragen keine Zeichen. Nachgesehen tragen sie welche — `plus`, `page`, `play`, `download`, `printer`, alle gültige Namen aus dem Symbolregister.",
+            "wieGefunden": "Nur durch das Bild (§55.3). Gemessen war zu dem Zeitpunkt alles richtig: 6 Knöpfe, richtige Namen, richtige Gruppen, jeder mit `title` und `aria-label`, jeder tat beim Klick das Richtige.",
+            "ursache": "`Menueband.knopf` hängt für einen Symbolnamen nur ein LEERES `<span data-sym=\"plus\">` ein. Gemalt wird es später von `Register.symbole.fuelle(wurzel)` — im globalen Band steht dieser Aufruf an drei Stellen, im neuen Folienband an keiner.",
+            "loesung": "Ein `Register.symbole.fuelle(flaeche)` nach jedem Füllen der Bandfläche, mit `try` darum: fehlt das Register, bleibt der Name stehen — schlechter, aber nicht kaputt.",
+            "warumKeineUhr": "—",
+            "beweis": "Die Zusage sucht nicht `data-sym` — der Kasten kann leer sein —, sondern das GEMALTE: ein `<svg>` darin, ein Textzeichen oder eine Farbprobe. Gegenprobe gefahren (den Aufruf wieder herausgenommen): 42 grün, 1 rot, „38 Knöpfe ohne gemaltes Zeichen\".",
+            "lehre": "Ein Knopf kann vollständig sein und trotzdem falsch aussehen. Alles, was ein zusammengesetzter Prüflauf fragen konnte — da? richtig benannt? tut es etwas? spricht es mit einem Vorleseprogramm? —, war mit Ja zu beantworten. Was fehlte, war das, was man SIEHT. Genau dafür steht §55.3 in der CLAUDE.md, und genau deshalb reicht dort keine Messung.",
+            "entscheidung": "E550"
+        },
+        {
+            "nr": "P25",
+            "datum": "2026-09-13",
+            "titel": "Das Band fragte die Fensterbreite einmal — und behielt die Antwort",
+            "schwere": "klein",
+            "symptom": "Ein Fenster von 1440 auf 800 gezogen: das Folienband blieb stehen, obwohl es dort nicht hingehört. Umgekehrt aufgezogen: es kam nie.",
+            "falscheVermutung": "Keine — der Fehler war nie sichtbar. Er wurde beim LESEN des eigenen Diffs gefunden, mit der Frage „was würde hier schiefgehen\".",
+            "wieGefunden": "Weder gemessen noch auf einem Bild. Beim Durchgehen der eigenen Änderung fiel `innerWidth < BAND_AB` auf: eine Zahl, die beim Zeichnen EINMAL gefragt wird, in einem Studio, das bei `resize` nicht neu zeichnet.",
+            "ursache": "`folienbandBauen` liest `innerWidth` beim Aufbau. Das Dokumentstudio hat einen `resize`-Griff (`beiGroesse`), der aber nur Höhen nachrechnet — richtig so, denn ein Neuzeichnen bei jeder Fensterbewegung wäre bei achtzig Seiten teuer. Das Band war dort nur nicht eingetragen.",
+            "loesung": "`folienbandNachziehen()` in `beiGroesse`: es vergleicht, ob ein Band da sein SOLL und ob eines da IST, und hängt nur beim Unterschied ein oder aus.",
+            "warumKeineUhr": "—",
+            "beweis": "Zwei Gegenproben, beide gefahren: die Funktion nichts tun lassen (49 grün, 2 rot — das Band blieb bei 800 px stehen), und sie nur AUSHÄNGEN lassen (47 grün, 4 rot — es kam beim Aufziehen nicht zurück). Die zweite war nötig, weil sonst nur die naheliegende Richtung geprüft gewesen wäre.",
+            "lehre": "Zwei Sachen. Erstens: das eigene Diff noch einmal mit der Frage lesen, was daran schiefgehen könnte — dieser Fehler stand in keiner Messung und auf keinem Bild. Zweitens: die erste Form der Gegenprobe (den AUFRUF entfernen) liess den Zweig wegen `noUnusedLocals` gar nicht mehr bauen. Eine Gegenprobe, die nicht baut, ist keine — CLAUDE.md §52.6 beschreibt genau diesen Fall, und ich bin trotzdem hineingelaufen.",
+            "entscheidung": "E550"
         }
     ]
 };
@@ -74647,7 +75159,11 @@ const DocumentMode = (() => {
                     return '';
                 }
             }).join('');
-            const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + bw + ' ' + bh + '" width="' + W + '" height="' + H + '">' + innen + '</svg>';
+            /* Die Verlauf-Vorlagen der Abdeckbänder zuerst (E545) — sonst fällt
+               der Deckel im Seitenbild auf seine feste Farbe zurück. */
+            const defs = typeof Marken.verlaufDefs === 'function'
+                ? (Marken.verlaufDefs(marken)?.outerHTML || '') : '';
+            const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + bw + ' ' + bh + '" width="' + W + '" height="' + H + '">' + defs + innen + '</svg>';
             const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
             try {
                 stift.drawImage(await bildLaden(url), 0, 0, W, H);
@@ -75033,11 +75549,26 @@ const DocumentMode = (() => {
         Store.updateBlock(page.id, { dokumentModus: next ?? !page.dokumentModus });
         App.zeichneSeite();
     };
-    const sourceLabel = (documentBlock) => documentBlock.type === 'pdfseite'
-        ? (documentBlock.herkunft === 'bild'
-            ? 'Bild' + (documentBlock.bildName ? ' · ' + String(documentBlock.bildName).slice(0, 40) : '')
-            : 'PDF · Seite ' + (Number(documentBlock.nr) || 1))
-        : 'A4-Blatt';
+    /**
+     * Wie die Seite heisst — und bei einer Folie: WELCHE (E547).
+     *
+     * Hier stand für jedes `blatt` der eine Satz „A4-Blatt". Bei einer
+     * eingelesenen Präsentation heissen damit 27 Einträge gleich, im
+     * `aria-label` ebenso („A4-Blatt öffnen", 27-mal). Für einen Menschen am
+     * Bildschirm unbrauchbar, für ein Vorleseprogramm schlimmer (§38).
+     *
+     * Ein Blatt mit eigenem Text trägt seinen Namen selbst — der
+     * `.pptx`-Einleser setzt ihn aus dem Folientitel (E540). Ein leeres Blatt
+     * aus dem Slash-Menü hat keinen und bleibt „A4-Blatt", wie es war.
+     */
+    const sourceLabel = (documentBlock) => {
+        if (documentBlock.type === 'pdfseite')
+            return documentBlock.herkunft === 'bild'
+                ? 'Bild' + (documentBlock.bildName ? ' · ' + String(documentBlock.bildName).slice(0, 40) : '')
+                : 'PDF · Seite ' + (Number(documentBlock.nr) || 1);
+        const eigen = String(documentBlock.text || '').trim();
+        return eigen ? eigen.slice(0, 60) : 'A4-Blatt';
+    };
     const linkedObjects = (page, documentBlock) => Object.values(Store.cache.blocks).filter(block => {
         if (!block?.alive || !block.sourceRef)
             return false;
@@ -75045,6 +75576,304 @@ const DocumentMode = (() => {
         return source.blockId === documentBlock.id ||
             (!source.blockId && source.pageId === page.id);
     });
+    /* Sicheres HTML für das Folien-Menü (§19). Es ersetzt WIRKLICH — der
+       Fehler, der beim Lesen richtig aussieht, ist hier keiner. Der Name
+       einer Marke oder eines Layouts kommt aus den Daten. */
+    const escapeHtml = (wert) => String(wert ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    /**
+     * Ist DIESE Seite ein Foliensatz? (E549)
+     *
+     * Gefragt wird `Folienvorlagen` — dort steht die Regel (quer statt
+     * hochkant, und warum), und eine zweite Fassung hier liefe ihr davon.
+     * Fehlt das Modul (Einzeldatei, halb geladenes Fenster), ist die Antwort
+     * „nein": dann gibt es auch keinen Katalog zu zeigen.
+     */
+    const istFoliensatz = (page) => {
+        try {
+            return typeof Folienvorlagen !== 'undefined' &&
+                Folienvorlagen.istFoliensatz(page?.id);
+        }
+        catch {
+            return false;
+        }
+    };
+    /**
+     * Das Folien-Menü aus dem Bandkatalog bauen und zeigen (E549).
+     *
+     * Kein eigener Katalog: `Register.menueband.inReiter('praesentation')`
+     * gibt die Gruppen, wie sie auch im Band stünden — samt `zeigen()`, also
+     * ohne das, was hier gar nicht ginge.
+     */
+    const folienMenue = (knopf) => {
+        const gruppen = (() => {
+            try {
+                return Register?.menueband?.inReiter?.('praesentation') || [];
+            }
+            catch {
+                return [];
+            }
+        })();
+        const eintraege = gruppen.flatMap((g) => g.eintraege || []);
+        if (!eintraege.length) {
+            UI.toast('Für diese Folien gibt es gerade nichts');
+            return;
+        }
+        const kasten = knopf.getBoundingClientRect();
+        /* `gruppe`, NICHT `name` — so heisst das Feld in `inReiter()`
+           (nachgesehen, nicht erinnert, E21). Der erste Entwurf schrieb
+           `g.name`, und die Überschriften waren LEER: drei graue Streifen von
+           12 px Höhe ohne Text. Gemerkt hat es das Bild, nicht der Prüflauf —
+           der las das Register statt des Menüs und blieb grün (§55.2).
+           DER HINWEIS STEHT AM `title`, NICHT IM MENÜ. Als `.sub` daneben
+           drückte er die Namen auf drei Zeilen („Neue / Folie", gemessen 56 px
+           statt 35). Für Zeiger und Vorleseprogramm reicht `title` (§38), und
+           die Liste bleibt lesbar. */
+        const html = gruppen.map((g) => '<div class="grp">' + escapeHtml(String(g.gruppe || '')) + '</div>' +
+            (g.eintraege || []).map((e) => `<button data-fm="${escapeHtml(String(e.id))}"` +
+                (e.hinweis ? ` title="${escapeHtml(String(e.hinweis))}"` +
+                    ` aria-label="${escapeHtml(String(e.name) + ' — ' + String(e.hinweis))}"` : '') +
+                '>' + escapeHtml(String(e.name)) + '</button>').join('')).join('<hr>');
+        const menue = UI.menu(html, kasten.left, kasten.bottom + 4);
+        knopf.setAttribute('aria-expanded', 'true');
+        menue.addEventListener('click', (ev) => {
+            const ziel = ev.target?.closest('[data-fm]');
+            if (!ziel)
+                return;
+            menue.remove();
+            knopf.setAttribute('aria-expanded', 'false');
+            const eintrag = eintraege.find((e) => String(e.id) === ziel.dataset['fm']);
+            try {
+                eintrag?.tun?.();
+            }
+            catch {
+                UI.toast('Das ging gerade nicht');
+            }
+        });
+    };
+    /* ══════════════════════════════════════════════════════════════════════
+     * DAS FOLIENBAND — Reiter ÜBER der Folie (E550)
+     * ----------------------------------------------------------------------
+     * Redur: „oben mit menü … 1:1 wie powerpoint". E549 hat den KATALOG
+     * gebaut (ein Reiter „Präsentation" im Band, ein Menü in der
+     * Dokumentleiste); was fehlte, war der ORT — eine Reiterzeile mit einem
+     * Band darunter, wie sie jedes Textprogramm über dem Blatt hat.
+     *
+     * WARUM NICHT EINFACH `#menueband` DORT ZEIGEN. Weil es gemessen
+     * schlechter war (E549): am Rechner ist das globale Band eine zugeklappte
+     * LADE hinter `#studio-tools`, und im Dokumentmodus legte sich seine Ecke
+     * „Werkzeuge ⌄" bei 1440 × 852 deckungsgleich über die Dokumentleiste.
+     * Zwei Köpfe übereinander. Das Folienband fliesst dagegen IN der Spalte
+     * mit — es überdeckt nichts, es nimmt Platz.
+     *
+     * WELCHE REITER — UND DIE GRÜNDE SIND GEMESSEN, NICHT GEWÄHLT
+     *
+     * Alle 151 Einträge des Bandkatalogs sind bei offenem Foliensatz
+     * aufgerufen worden, jeder einzeln, und nachgesehen wurde, ob danach ein
+     * Block, ein Menü oder ein Fehler da war:
+     *
+     *     start        14 Knöpfe  ·  14 tun nichts   (Absatz und Schrift
+     *                                                 brauchen eine
+     *                                                 Schreibmarke; im
+     *                                                 Dokumentmodus gibt es
+     *                                                 keine)
+     *     einfuegen    69 Knöpfe  ·  65 tun nichts
+     *     ansicht      10 Knöpfe  ·   2 tun etwas sichtbar, der Rest sind
+     *                                 Vollbild/Drucken — die Messung SIEHT
+     *                                 sie nur nicht
+     *     verlauf       9 Knöpfe  ·   3 sichtbar (Rückgängig auf leerem
+     *                                 Stapel tut zu Recht nichts)
+     *     ueberpruefen  6 Knöpfe  ·   5 sichtbar
+     *     hilfe         6 Knöpfe  ·   3 sichtbar
+     *
+     * Abgestürzt ist keiner, und die Seite meldete null Fehler. Draussen
+     * bleiben deshalb genau die zwei, bei denen es eindeutig ist: `start` und
+     * `einfuegen`. 79 von 83 Knöpfen ohne Wirkung wäre kein Menüband, sondern
+     * eine Enttäuschungsmaschine (derselbe Grund wie `zeigen()` im Register).
+     *
+     * UND `zeichnen` BLEIBT AUCH DRAUSSEN, aus einem anderen Grund: seine
+     * dreissig Knöpfe stehen als Zeichenleiste schon dauerhaft zwei Zeilen
+     * tiefer. Dieselbe Sache an zwei sichtbaren Stellen gleichzeitig ist
+     * genau das, was §8 verbietet — und die dreissig hätten die Reihe
+     * ohnehin gesprengt.
+     *
+     * WAS DAS BAND NICHT SELBST ZEICHNET: die Knöpfe. Die kommen aus
+     * `Menueband.knopf` und `Menueband.gruppeZeichnen` (dort seit E550
+     * hinausgereicht). Ein zweiter Zeichner hätte die Probe, das `an()`, den
+     * Satz für Vorleseprogramme und das Kürzel im Tooltip nachbauen müssen —
+     * vier Sachen, die man je einzeln vergisst.
+     * ══════════════════════════════════════════════════════════════════════ */
+    /** Die Reiter, die das Folienband zeigt — in dieser Reihenfolge. */
+    const FOLIENBAND_REITER = ['praesentation', 'ansicht', 'verlauf',
+        'ueberpruefen', 'hilfe'];
+    /**
+     * Ab dieser Fensterbreite bekommt ein Foliensatz das Band.
+     *
+     * Darunter bleibt es beim Knopf „📽️ Folie" aus E549. Das ist keine
+     * Bequemlichkeit: bei 390 px sind Kopfleiste (48) und Zeichenleiste (53)
+     * schon 101 px, und die Folie selbst ist dort nur 194 px hoch. Ein Band
+     * von rund 110 px nähme ihr mehr als die Hälfte — PowerPoint zeigt am
+     * Telefon aus demselben Grund keines.
+     */
+    const BAND_AB = 900;
+    /** Welcher Reiter zuletzt offen war — je Seite gemerkt. */
+    const bandReiterVon = (pageId) => {
+        const gemerkt = String(Store.getMeta('folienbandReiter:' + pageId, '') || '');
+        return FOLIENBAND_REITER.includes(gemerkt) ? gemerkt : FOLIENBAND_REITER[0];
+    };
+    /**
+     * Das Folienband bauen — Reiterzeile und Band darunter.
+     *
+     * Gibt `null`, wenn es hier keines geben soll: kein Foliensatz, zu
+     * schmales Fenster, oder kein Reiter mit Inhalt. Der Aufrufer hängt dann
+     * nichts ein, statt eine leere Leiste zu zeigen.
+     */
+    const folienbandBauen = (page) => {
+        if (!istFoliensatz(page))
+            return null;
+        if (innerWidth < BAND_AB)
+            return null;
+        const inReiter = (id) => {
+            try {
+                return Register?.menueband?.inReiter?.(id) || [];
+            }
+            catch {
+                return [];
+            }
+        };
+        /* Nur Reiter, die WIRKLICH etwas zeigen. `zeigen()` im Register kann
+           einen ganz leergeräumt haben — in der Einzeldatei etwa. */
+        const offen = FOLIENBAND_REITER
+            .map(id => ({ id, gruppen: inReiter(id) }))
+            .filter(r => r.gruppen.some((g) => (g.eintraege || []).length));
+        if (!offen.length)
+            return null;
+        const namen = {};
+        try {
+            for (const r of (Register?.menueband?.REITER || []))
+                namen[String(r.id)] = String(r.name);
+        }
+        catch { /* dann stehen die Kennungen da, und das ist immer noch lesbar */ }
+        const band = document.createElement('div');
+        band.className = 'folienband';
+        const reiterzeile = document.createElement('div');
+        reiterzeile.className = 'folienband-reiter';
+        reiterzeile.setAttribute('role', 'tablist');
+        reiterzeile.setAttribute('aria-label', 'Folienband');
+        const flaeche = document.createElement('div');
+        flaeche.className = 'folienband-flaeche';
+        flaeche.setAttribute('role', 'tabpanel');
+        let aktiv = bandReiterVon(String(page?.id || ''));
+        if (!offen.some(r => r.id === aktiv))
+            aktiv = offen[0].id;
+        const flaecheFuellen = () => {
+            flaeche.replaceChildren();
+            const gruppen = (offen.find(r => r.id === aktiv)?.gruppen || [])
+                .filter((g) => (g.eintraege || []).length);
+            gruppen.forEach((g, i) => {
+                if (i) {
+                    const strich = document.createElement('div');
+                    strich.className = 'folienband-trenner';
+                    strich.setAttribute('aria-hidden', 'true');
+                    flaeche.appendChild(strich);
+                }
+                /* DERSELBE ZEICHNER WIE IM GLOBALEN BAND (§8). Fehlt er — halb
+                   geladenes Fenster —, bleibt die Fläche leer statt falsch. */
+                try {
+                    flaeche.appendChild(Menueband.gruppeZeichnen(g));
+                }
+                catch { /* dann eben nicht */ }
+            });
+            /* DIE ZEICHEN MÜSSEN GEFÜLLT WERDEN, SONST SIND SIE NICHT DA.
+               `Menueband.knopf` hängt für einen Symbolnamen nur ein leeres
+               `<span data-sym="plus">` ein — gemalt wird es von
+               `Register.symbole.fuelle(wurzel)`. Im globalen Band passiert das
+               an drei Stellen nach jedem Neuzeichnen; hier wäre es beinahe
+               vergessen worden, und auf dem ersten Bild stand die ganze Reihe
+               als nackter Text da („Neue Folie   Folienliste   Präsentieren"),
+               ohne ein einziges Zeichen. Kein Prüflauf hätte das gemeldet: die
+               Knöpfe waren alle da, hiessen richtig und taten das Richtige. */
+            if (Register?.symbole?.fuelle) {
+                try {
+                    Register.symbole.fuelle(flaeche);
+                }
+                catch { /* ohne Zeichen bleibt der Name — schlechter, aber nicht kaputt */ }
+            }
+            flaeche.setAttribute('aria-label', namen[aktiv] || aktiv);
+        };
+        offen.forEach(r => {
+            const t = document.createElement('button');
+            t.type = 'button';
+            t.className = 'folienband-reiter-knopf';
+            t.dataset['fbReiter'] = r.id;
+            t.setAttribute('role', 'tab');
+            t.textContent = namen[r.id] || r.id;
+            t.setAttribute('aria-selected', String(r.id === aktiv));
+            t.addEventListener('click', () => {
+                aktiv = r.id;
+                try {
+                    Store.setMeta('folienbandReiter:' + String(page?.id || ''), aktiv);
+                }
+                catch { /* das Merken ist Bequemlichkeit, kein Auftrag */ }
+                reiterzeile.querySelectorAll('[data-fb-reiter]').forEach(x => x.setAttribute('aria-selected', String(x.dataset['fbReiter'] === aktiv)));
+                flaecheFuellen();
+            });
+            reiterzeile.appendChild(t);
+        });
+        flaecheFuellen();
+        band.append(reiterzeile, flaeche);
+        return band;
+    };
+    /** Die Masse eines Dokumentblocks — PDF-Seite wie Blatt, in Punkten. */
+    const masseVon = (block) => ({
+        bw: Number(block?.bw) || Number(block?.blattBreite) || SheetSpace.A4_BREITE,
+        bh: Number(block?.bh) || Number(block?.blattHoehe) || SheetSpace.A4_HOEHE,
+    });
+    /**
+     * Die Marken eines Blocks als kleines SVG für die Miniatur (E547).
+     *
+     * `null`, wenn es nichts zu zeichnen gibt — dann bleibt der Bleistift.
+     *
+     * DIE ABDECKUNG DECKT AUCH HIER. Das ist kein Beiwerk: `zeichneMarke`
+     * gibt sie zugedeckt heraus, und genau darum darf diese Vorschau derselbe
+     * Zeichner sein und kein zweiter (E266, §8). Eine Seitenliste, in der die
+     * Antworten offen stehen, wäre schlimmer als gar keine Vorschau.
+     *
+     * BILDMARKEN werden mitgezeichnet, aber nur, wenn ihre Adresse SCHON
+     * bekannt ist. Sonst löste eine Liste mit 27 Folien 27 Dateilesungen aus,
+     * nur um Daumennagel-Bilder zu füllen — dieselbe Vorsicht wie bei den
+     * PDF-Vorschaubildern eine Funktion weiter unten.
+     */
+    const markenVorschau = (block, mass) => {
+        const marken = Array.isArray(block?.marken) ? block.marken : [];
+        if (!marken.length || typeof Marken === 'undefined')
+            return null;
+        const bekannt = (m) => m?.art !== 'bild' ||
+            (typeof Dateien !== 'undefined' && !!Dateien.adresseBekannt?.(m.dateiId));
+        const raum = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        raum.setAttribute('class', 'document-thumbnail-marken');
+        raum.setAttribute('viewBox', '0 0 ' + mass.bw + ' ' + mass.bh);
+        raum.setAttribute('preserveAspectRatio', 'none');
+        raum.setAttribute('aria-hidden', 'true');
+        const defs = typeof Marken.verlaufDefs === 'function' ? Marken.verlaufDefs(marken) : null;
+        if (defs)
+            raum.appendChild(defs);
+        let gezeichnet = 0;
+        for (const marke of marken) {
+            if (!bekannt(marke))
+                continue;
+            try {
+                const knoten = Marken.zeichneMarke(marke);
+                if (knoten) {
+                    raum.appendChild(knoten);
+                    gezeichnet++;
+                }
+            }
+            catch { /* eine Marke, die sich weigert, lässt den Rest stehen */ }
+        }
+        return gezeichnet ? raum : null;
+    };
     /**
      * EINE MINIATUR — seit E480 in einer ZEILE mit ihrem Menüknopf.
      *
@@ -75067,6 +75896,14 @@ const DocumentMode = (() => {
         button.setAttribute('aria-current', selected ? 'page' : 'false');
         const preview = document.createElement('span');
         preview.className = 'document-thumbnail-preview';
+        /* DAS MASS KOMMT VOM BLOCK, NICHT AUS DEM STILBLATT (E547).
+           `.document-thumbnail-preview` trägt `aspect-ratio:210/297` — A4
+           hochkant, fest verdrahtet. Eine 16:9-Folie stand darin hochkant und
+           gequetscht: gemessen 0,71 statt 1,78. Die Vorgabe im Stilblatt bleibt
+           für alles ohne eigene Masse. */
+        const mass = masseVon(documentBlock);
+        if (mass.bw > 0 && mass.bh > 0)
+            preview.style.aspectRatio = mass.bw + ' / ' + mass.bh;
         if (documentBlock.type === 'pdfseite' && documentBlock.bildDateiId && typeof Dateien !== 'undefined') {
             const image = document.createElement('img');
             image.alt = '';
@@ -75078,14 +75915,27 @@ const DocumentMode = (() => {
             preview.appendChild(image);
         }
         else {
-            const blank = document.createElement('span');
-            blank.className = 'document-thumbnail-blank';
-            blank.textContent = documentBlock.type === 'blatt' ? '✎' : documentBlock.herkunft === 'bild' ? '🖼' : 'PDF';
-            preview.appendChild(blank);
+            /* DIE MINIATUR ZEIGT DIE FOLIE (E547). Hier stand für alles, was
+               keine PDF-Seite mit Bild ist, ein Bleistift — bei 27 Folien also 27
+               gleiche leere Kästchen, in denen niemand etwas findet. Die Marken
+               liegen bereit, und `Marken.zeichneMarke` zeichnet sie längst für
+               Vortrag, Druck und Seitenbild; hier ist es dieselbe Stelle, nur
+               klein (§8). Bleibt nichts zu zeichnen, bleibt auch der Bleistift. */
+            const gemalt = markenVorschau(documentBlock, mass);
+            if (gemalt)
+                preview.appendChild(gemalt);
+            else {
+                const blank = document.createElement('span');
+                blank.className = 'document-thumbnail-blank';
+                blank.textContent = documentBlock.type === 'blatt' ? '✎' : documentBlock.herkunft === 'bild' ? '🖼' : 'PDF';
+                preview.appendChild(blank);
+            }
         }
         const label = document.createElement('span');
         label.className = 'document-thumbnail-label';
-        label.textContent = sourceLabel(documentBlock);
+        /* DIE NUMMER GEHÖRT DAZU. Bei 27 Folien zählt niemand die Kästchen ab,
+           und der Name allein sagt nicht, die wievielte es ist. */
+        label.textContent = (index + 1) + ' · ' + sourceLabel(documentBlock);
         /* Lesezeichen und Drehung (E467): das Zeichen an der Ecke, die Drehung
            am Bild — das Vorschaubild ist das ungedrehte Raster. */
         const g = SheetSpace.gedrehtVon(documentBlock);
@@ -75887,7 +76737,21 @@ const DocumentMode = (() => {
         zeigenWort.className = 'dz-wort';
         zeigenWort.textContent = ' Präsentieren';
         zeigenKnopf.append(zeigenWort);
-        topActions.append(findButton, viewButton, inspectorButton, zeigenKnopf, topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'), topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
+        /* DAS FOLIEN-MENÜ (E549). Redur: „oben mit Menü, links Seiten."
+           Es steht HIER und nicht im `#menueband`: das ist am Rechner eine
+           zugeklappte Lade, und im Dokumentmodus legte es sich beim Versuch als
+           Ecke „Werkzeuge ⌄" über genau diese Leiste (gemessen 1440 × 852 px,
+           deckungsgleich mit dem Inhalt). Zwei Köpfe übereinander sind
+           schlechter als einer — das steht seit dem 6. September so im
+           Stilblatt, und es stimmt.
+           Der KATALOG ist trotzdem derselbe: gelesen wird `Register.menueband`,
+           Reiter `praesentation`, also genau die Liste, die im Band unter
+           diesem Reiter steht. Eine Liste, zwei Ansichten (§8). */
+        const folienKnopf = topButton('folienmenue', '📽️ Folie', 'Neue Folie, Präsentieren, als PowerPoint sichern');
+        folienKnopf.setAttribute('aria-haspopup', 'menu');
+        folienKnopf.setAttribute('aria-expanded', 'false');
+        folienKnopf.hidden = !istFoliensatz(page);
+        topActions.append(findButton, viewButton, inspectorButton, folienKnopf, zeigenKnopf, topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'), topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
         top.append(topActions);
         const commandbar = document.createElement('div');
         commandbar.className = 'document-commandbar';
@@ -76423,7 +77287,36 @@ const DocumentMode = (() => {
         findListe.className = 'document-find-liste';
         findListe.hidden = true;
         findbar.append(findFeld, findZahl, findAlleKnopf, topButton('find-previous', '‹', 'Voriger Treffer'), topButton('find-next', '›', 'Nächster Treffer'), topButton('find-close', '✕', 'Suche schließen'), findListe);
-        workspace.append(top, findbar, drawingbar, commandbar, body);
+        /* DAS FOLIENBAND STEHT ZWISCHEN KOPFLEISTE UND SUCHE (E550) — also
+           ÜBER der Zeichenleiste, so wie ein Menüband über dem Blatt steht.
+           Es kommt nur bei einem Foliensatz und nur ab 900 px; sonst ist es
+           `null` und `append` bekommt nichts (siehe `folienbandBauen`). */
+        let folienband = folienbandBauen(page);
+        workspace.append(top, ...(folienband ? [folienband] : []), findbar, drawingbar, commandbar, body);
+        /**
+         * Das Band kommt und geht mit der Fensterbreite.
+         *
+         * GEFUNDEN BEIM LESEN DES EIGENEN BOGENS, nicht beim Messen: `innerWidth`
+         * wird EINMAL beim Zeichnen gefragt. Wer ein Fenster von 1440 auf 800
+         * zieht, behielt ein Band, das dort nicht hingehört; wer umgekehrt
+         * aufzieht, bekam nie eines. Das Studio zeichnet bei `resize` nicht neu
+         * — es rechnet nur Höhen nach (`beiGroesse`), und das ist richtig so.
+         * Also hängt sich das Band dort selbst ein und aus.
+         */
+        const folienbandNachziehen = () => {
+            const soll = istFoliensatz(page) && innerWidth >= BAND_AB;
+            const ist = !!folienband && folienband.isConnected;
+            if (soll === ist)
+                return;
+            if (!soll) {
+                folienband?.remove();
+                folienband = null;
+                return;
+            }
+            folienband = folienbandBauen(page);
+            if (folienband)
+                top.after(folienband);
+        };
         wrap.appendChild(workspace);
         /* ══ DAS EIGENE FORMELHEFT, NEBEN DEM FACHZEICHEN (E503) ═══════════════
            Redur: „wo — wenn beim Elektro, wo die Elektrosymbol ist — beim
@@ -76652,6 +77545,7 @@ const DocumentMode = (() => {
                 window.removeEventListener('resize', beiGroesse);
                 return;
             }
+            folienbandNachziehen();
             hoeheSetzen();
             passen();
             aktivMarkieren();
@@ -78122,6 +79016,10 @@ const DocumentMode = (() => {
                 menueSchliessen();
             if (!action)
                 return;
+            if (action === 'folienmenue') {
+                folienMenue(tatKnopf);
+                return;
+            }
             if (action === 'ink-options') {
                 const open = workspace.dataset.inkOptions !== 'open';
                 workspace.dataset.inkOptions = open ? 'open' : 'closed';
@@ -99259,6 +100157,63 @@ const Werkzeuge = (() => {
         o.className = 'praesi';
         document.body.appendChild(o);
         let i = 0;
+        /* ---- DER SCHRITTZÄHLER (E544, L153) ---------------------------------
+         * PowerPoint blättert nicht bei jedem Klick weiter. Zuerst gehen die
+         * SCHRITTE der Folie durch — jede Abdeckung trägt die Nummer des Klicks,
+         * bei dem sie weichen soll (`schritt`, gelesen aus `p:timing`, E542) —
+         * und erst wenn keiner mehr aussteht, kommt die nächste Folie.
+         *
+         * NUR LAUFZEIT. Der Stand wird nie gespeichert: nach dem Beenden ist
+         * wieder alles zu. Das ist dieselbe Regel wie beim Abdeckband selbst
+         * („Lernen darf den Speicher nicht anfassen", E266), und sie ist hier
+         * dieselbe Antwort auf dieselbe Frage — nicht eine zweite Meinung.
+         */
+        let schritt = 0;
+        /** Alle Abdeckungen dieser Folie — auch die in Spalten. */
+        const deckelDerFolie = (f) => {
+            const raus = [];
+            const nimm = (b, tiefe) => {
+                if (!b || tiefe > 6)
+                    return;
+                if (Array.isArray(b.marken))
+                    for (const m of b.marken)
+                        if (m && m.art === 'abdeck')
+                            raus.push(m);
+                if (b.type === 'columns' || b.type === 'columns3' || b.type === 'spalte')
+                    for (const k of Store.childrenOf(b.id) || [])
+                        nimm(k, tiefe + 1);
+            };
+            for (const e of f?.bloecke || [])
+                nimm(e.b, 0);
+            return raus;
+        };
+        /** Wie viele Klicks diese Folie hat, bevor die nächste kommt. */
+        const schritteDerFolie = (f) => deckelDerFolie(f)
+            .reduce((m, d) => Math.max(m, Number(d.schritt) || 0), 0);
+        /* Angewandt wird am KNOTEN, nicht durch Neuzeichnen: ein Schritt soll
+           die Folie nicht neu aufbauen — sonst flackert jedes Bild, und eine von
+           Hand aufgedeckte Abdeckung fiele wieder zu. */
+        const deckelAnwenden = () => {
+            o.querySelectorAll('[data-ink-art="abdeck"][data-schritt]')
+                .forEach(knoten => {
+                const s = Number(knoten.getAttribute('data-schritt')) || 0;
+                if (s <= schritt)
+                    knoten.setAttribute('data-auf', '1');
+                else
+                    knoten.removeAttribute('data-auf');
+            });
+        };
+        /* Der Stand gehört in die Leiste, nicht nur in den Kopf des Vortragenden:
+           wer nicht sieht, dass noch zwei Schritte kommen, blättert zu früh. */
+        const zaehlerText = () => {
+            const max = schritteDerFolie(folien[i]);
+            return `${i + 1} / ${folien.length}` + (max ? ` · Schritt ${schritt}/${max}` : '');
+        };
+        const zaehlerAuffrischen = () => {
+            const feld = o.querySelector('.praesi-leiste span');
+            if (feld)
+                feld.textContent = zaehlerText();
+        };
         const zeichne = () => {
             const f = folien[i];
             /* Eine Seite ohne einen einzigen Block ergibt keine Folie. Vorher wäre
@@ -99277,11 +100232,18 @@ const Werkzeuge = (() => {
                     f.bloecke.map(({ b, tiefe }) => folieBlock(b, tiefe)).join('') +
                     '</div>' +
                     `<div class="praesi-leiste">` +
+                    /* Die beiden Marken heissen seit jeher `vor` und `zurueck`, und sie
+                       heissen verkehrt herum: `vor` trägt „‹" und geht zurück. Die
+                       WIRKUNG stimmt — umbenannt wird hier trotzdem nicht, weil die
+                       Namen in Prüfläufen stehen und ein Namenstausch mitten in einem
+                       anderen Bogen genau die Sorte stiller Änderung ist, die später
+                       niemand mehr zuordnet. */
                     `<button data-a="vor">‹</button>` +
-                    `<span>${i + 1} / ${folien.length}</span>` +
+                    `<span>${zaehlerText()}</span>` +
                     `<button data-a="zurueck">›</button>` +
                     `<button data-a="zu">Beenden (Esc)</button>` +
                     `</div>`;
+            deckelAnwenden();
         };
         const folieBlock = (b, tiefe) => {
             const ein = ` style="margin-left:${tiefe * 26}px"`;
@@ -99343,8 +100305,15 @@ const Werkzeuge = (() => {
                    beim Blatt daneben. Sonst regiert `.praesi img{max-height:52vh}`
                    die Höhe, und zwei gleich grosse A4-Seiten stehen unterschiedlich
                    hoch nebeneinander (gemessen: 442 gegen 541 px, §55). */
+                /* `--seitenmass` trägt DIESELBEN zwei Zahlen noch einmal, als Bruch
+                   zum Weiterrechnen. `aspect-ratio` allein reicht nicht: wer im
+                   Vortrag die Breite auf `100%` setzt, bekommt die Höhe an
+                   `max-height` gekappt, OHNE dass die Breite mitgeht — gemessen bei
+                   1920 × 1080: Verhältnis 1,965 statt 1,778. Mit dem Bruch rechnet
+                   `werkzeuge.css` die Breite aus der erlaubten Höhe aus, und dann
+                   stimmt es in beide Richtungen. */
                 return '<figure class="folie-blatt" ' +
-                    `style="aspect-ratio:${bw} / ${bh}">` +
+                    `style="aspect-ratio:${bw} / ${bh}; --seitenmass:${bw} / ${bh}">` +
                     (adr ? `<img src="${esc(adr)}" alt="Seite ${esc(b.nr || '')}">`
                         : `<div class="fehlt">Seite ${esc(b.nr || '')} — kein Bild</div>`) +
                     markenAlsSvg(b, bw, bh) + '</figure>';
@@ -99353,14 +100322,37 @@ const Werkzeuge = (() => {
                 const bw = Number(b.blattBreite) || 595.28;
                 const bh = Number(b.blattHoehe) || 841.89;
                 return '<figure class="folie-blatt papier" ' +
-                    `style="aspect-ratio:${bw} / ${bh}">` +
+                    `style="aspect-ratio:${bw} / ${bh}; --seitenmass:${bw} / ${bh}">` +
                     '<div class="blatt-text">' +
                     Store.childrenOf(b.id).map((k) => folieBlock(k, 0)).join('') +
                     '</div>' + markenAlsSvg(b, bw, bh) + '</figure>';
             }
             return b.text ? `<p${ein}>${Blocks.inline(b.text)}</p>` : '';
         };
-        const weiter = (n) => { i = Math.max(0, Math.min(folien.length - 1, i + n)); zeichne(); };
+        /* Auf eine bestimmte Folie springen. `aufVoll` heisst: dort ist schon
+           alles aufgedeckt — so kommt man von hinten zurück, wie in PowerPoint.
+           Wer zurückgeht, will sehen, was er gerade gezeigt hat, und nicht
+           dieselben drei Klicks noch einmal machen. */
+        const springe = (n, aufVoll = false) => {
+            i = Math.max(0, Math.min(folien.length - 1, n));
+            schritt = aufVoll ? schritteDerFolie(folien[i]) : 0;
+            zeichne();
+        };
+        const weiter = (n) => {
+            if (n > 0 && schritt < schritteDerFolie(folien[i])) {
+                schritt++;
+                deckelAnwenden();
+                zaehlerAuffrischen();
+                return;
+            }
+            if (n < 0 && schritt > 0) {
+                schritt--;
+                deckelAnwenden();
+                zaehlerAuffrischen();
+                return;
+            }
+            springe(i + n, n < 0);
+        };
         const tasten = (e) => {
             if (e.key === 'Escape') {
                 schliessen();
@@ -99374,10 +100366,13 @@ const Werkzeuge = (() => {
                 e.preventDefault();
                 weiter(-1);
             }
+            /* Home und End springen über ALLES hinweg — sie dürfen nicht in den
+               Schritten hängen bleiben, sonst kommt man aus einer Folie mit zehn
+               Abdeckungen nicht mehr heraus. */
             if (e.key === 'Home')
-                weiter(-999);
+                springe(0);
             if (e.key === 'End')
-                weiter(999);
+                springe(folien.length - 1, true);
         };
         const schliessen = () => {
             o.remove();
@@ -99392,6 +100387,22 @@ const Werkzeuge = (() => {
                 return weiter(-1);
             if (elVon(e)?.closest('[data-a="zurueck"]'))
                 return weiter(1);
+            /* Die Leiste ist Bedienung, keine Folie — ein Klick daneben darf nicht
+               weiterschalten, sonst springt man beim Zielen auf „Beenden". */
+            if (elVon(e)?.closest('.praesi-leiste'))
+                return;
+            /* EIN TIPP AUF DIE ABDECKUNG DECKT GENAU DIESE AUF (E266), statt
+               weiterzuschalten. Das ist der Weg für eine von Hand gesetzte
+               Abdeckung ohne Schrittnummer — und für den Vortragenden, der eine
+               Antwort ausser der Reihe zeigen will. Aufdecken ist hier
+               einseitig: auf der Leinwand wieder zuzudecken hilft niemandem. */
+            const deckel = elVon(e)?.closest?.('[data-ink-art="abdeck"]');
+            if (deckel) {
+                deckel.setAttribute('data-auf', '1');
+                return;
+            }
+            /* Und sonst: Redurs Satz — „wenn ich klicke, die Antwort zeigen". */
+            weiter(1);
         });
         document.addEventListener('keydown', tasten);
         zeichne();
@@ -100311,8 +101322,16 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             .join('');
         if (!teile)
             return '';
+        /* DIE VERLAUF-VORLAGEN GEHÖREN MIT INS SVG (E545). Ein `<linearGradient>`
+           lebt in `<defs>` und wird per `fill="url(#…)"` gerufen; diese Kette
+           hier baut das SVG aus dem `outerHTML` der EINZELNEN Markenknoten, und
+           ein `<defs>` ist kein Markenknoten — ohne diese Zeile fiele es
+           ersatzlos heraus. Der Deckel bliebe trotzdem gedeckt (SVGs Rückfall
+           auf die feste Farbe), aber flach. */
+        const defs = typeof Marken.verlaufDefs === 'function'
+            ? (Marken.verlaufDefs(marken)?.outerHTML || '') : '';
         return `<svg class="marken" viewBox="0 0 ${breite + Math.max(0, rand)} ${hoehe}" ` +
-            `preserveAspectRatio="none">${teile}</svg>`;
+            `preserveAspectRatio="none">${defs}${teile}</svg>`;
     };
     const DRUCK_STIL = '.blatt-druck{position:relative; width:100%; margin:0 0 8mm; ' +
         'break-inside:avoid; page-break-inside:avoid}' +
@@ -107615,9 +108634,11 @@ const Einlesen = (() => {
      * kommt die Farbe aus dem KRÄFTIGSTEN Stopp des Verlaufs, also dem, der
      * nicht die Hintergrundfarbe ist.
      *
-     * Der Verlauf selbst wird nicht nachgebaut: Redions Abdeckband ist eine
-     * Fläche in einer Farbe. Was dabei verlorengeht, ist Optik an einem
-     * Deckel, den man wegtippt — steht als Lücke in L153.
+     * Sie bleibt als RÜCKFALL stehen, auch seit `formVerlauf` daneben den
+     * ganzen Verlauf liest (E545): eine Abdeckung trägt IMMER eine feste
+     * Farbe, und das SVG malt sie, wenn die Verlaufsvorlage fehlt. Ohne sie
+     * wäre ein `fill="url(#…)"` ins Leere ein UNSICHTBARER Deckel — und ein
+     * unsichtbarer Deckel ist eine offene Antwort.
      */
     const formFarbe = (form) => {
         const verlauf = form.getElementsByTagName('a:gradFill')[0];
@@ -107639,6 +108660,63 @@ const Einlesen = (() => {
         const voll = form.getElementsByTagName('a:solidFill')[0];
         const rgb = voll?.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
         return rgb ? '#' + rgb : '';
+    };
+    /**
+     * Der VERLAUF einer Form, wenn sie einen hat (E545).
+     *
+     * Gemessen an Redurs Datei: die Abdeckungen sind weiss → `#FFCC00` in der
+     * Mitte → weiss, senkrecht. `formFarbe` gab davon EINE Farbe zurück, und
+     * der Deckel war eine gelbe Fläche, wo im Original ein Band mit weichen
+     * Rändern liegt.
+     *
+     * NUR AUS `p:spPr`, anders als `formFarbe`. Die alte Funktion sucht über
+     * den ganzen Teilbaum — und im selben Teilbaum liegt `a:ln`, die
+     * Umrisslinie, mit eigener Füllung. Für die Farbe ging das bisher gut;
+     * für den Verlauf wäre es ein Glücksspiel, und der Kommentar oben sagt
+     * selbst, dass die Füllung daneben der Linie gehört.
+     *
+     * Was NICHT gelesen wird und deshalb `null` ergibt: `a:schemeClr` und
+     * Verwandte (ohne `theme1.xml` nicht auflösbar), `a:path` (radiale
+     * Verläufe). Dann bleibt es bei der festen Farbe — eine gelbe Fläche ist
+     * eine ehrliche Näherung, eine falsche Farbe wäre es nicht.
+     */
+    const formVerlauf = (form) => {
+        const spPr = form.getElementsByTagName('p:spPr')[0];
+        if (!spPr)
+            return null;
+        /* `[0]` über spPr statt über die Form: ein `a:gradFill` unter `a:ln`
+           wäre die Linie, nicht die Füllung. Deshalb die direkten Kinder. */
+        const verlauf = [...spPr.children].find(k => k.tagName === 'a:gradFill');
+        if (!verlauf)
+            return null;
+        const stopps = [];
+        for (const g of [...verlauf.getElementsByTagName('a:gs')]) {
+            const rgb = g.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+            if (!rgb)
+                continue; /* eine Themenfarbe — dann lieber gar nichts */
+            const roh = String(g.getAttribute('pos') ?? '');
+            /* `pos` steht in Tausendstel Prozent (0…100000); die neuere
+               Schreibweise `50%` gibt es auch. Beides auf 0…1 bringen. */
+            const anteil = roh.endsWith('%') ? Number(roh.slice(0, -1)) / 100
+                : Number(roh) / 100000;
+            if (!Number.isFinite(anteil))
+                continue;
+            stopps.push({ pos: Math.min(1, Math.max(0, anteil)), farbe: '#' + rgb });
+        }
+        /* Weniger als zwei Stopps sind kein Verlauf. Und wenn EINER der Stopps
+           eine Themenfarbe war, fehlt er — dann ist der Verlauf unvollständig
+           und die feste Farbe die ehrlichere Antwort. */
+        if (stopps.length < 2 || stopps.length !== verlauf.getElementsByTagName('a:gs').length)
+            return null;
+        stopps.sort((a, b) => a.pos - b.pos);
+        /* Der Winkel steht in 60000steln Grad, 0 = nach rechts, im
+           Uhrzeigersinn. 5400000 sind 90°, also von oben nach unten. Ohne
+           `a:lin` ist es kein linearer Verlauf, den wir nachbauen können. */
+        const lin = [...verlauf.children].find(k => k.tagName === 'a:lin');
+        if (!lin)
+            return null;
+        const winkel = Number(lin.getAttribute('ang')) || 0;
+        return { stopps, winkel };
     };
     /**
      * Eine `.pptx` lesen. Zurück kommen Folien mit ihren Objekten — noch ohne
@@ -107698,6 +108776,7 @@ const Einlesen = (() => {
                     const schritt = sid ? schritte.get(sid) : undefined;
                     if (!text.trim() && schritt && lage && lage.w > 0 && lage.h > 0) {
                         objekte.push({ art: 'abdeck', schritt, farbe: formFarbe(form) || '#ffcc00',
+                            verlauf: formVerlauf(form),
                             x: lage.x, y: lage.y, w: lage.w, h: lage.h });
                         continue;
                     }
@@ -107957,6 +109036,19 @@ const Einlesen = (() => {
             const seite = Store.addPage(elternId, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📽️' });
             if (quelle)
                 await originalAnhaengen(seite.id, f, quelle);
+            /* UND GLEICH ALS FOLIENSATZ AUFSCHLAGEN (E546). Derselbe Fund wie E397:
+               „ein Weg, der das Ding anlegt, aber nicht öffnet." Der Dokumentmodus
+               kann Blatt-Blöcke längst — Miniaturleiste, eine Folie gross, die
+               Werkzeuge daneben (`document-mode.ts`, `documentsIn` nimmt
+               `pdfseite` UND `blatt`). Er sprang hier nur nicht an, weil
+               `active()` die Flagge am Seitenblock verlangt und niemand sie setzte.
+               Ohne sie stand die eingelesene Präsentation als Stapel Blätter
+               untereinander, jedes mit eigener Werkzeugleiste.
+               Die Seite ist frisch, also ist die Flagge immer `undefined` — die
+               Bedingung des PDF-Wegs („nur beim ERSTEN Mal", `pdf/einlesen.ts`)
+               ist hier von selbst erfüllt, und wer den Modus später verlässt,
+               bleibt draussen. */
+            Store.updateBlock(seite.id, { dokumentModus: true });
             /* Eine Folie = ein `blatt`-Block mit Folienmass. Die Objekte werden
                Marken auf DERSELBEN Zeichenschicht, die auch PDF-Seite und
                A4-Blatt benutzen — also sofort verschiebbar, drehbar und
@@ -107985,7 +109077,11 @@ const Einlesen = (() => {
                            sich angetippt wird. Ohne die Zahl wäre die Reihenfolge, in
                            der die Folie gedacht war, verloren — und sie steht nur in
                            der Quelldatei. */
+                        /* `verlauf` nur, wenn es einen gibt — ein `undefined` im Objekt
+                           überlebt `JSON.stringify` ohnehin nicht, und ein `null` an
+                           jeder von Hand gezogenen Abdeckung wäre nur Ballast. */
                         marken.push({ id, art: 'abdeck', farbe: o.farbe, schritt: o.schritt,
+                            ...(o.verlauf ? { verlauf: o.verlauf } : {}),
                             pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
                         continue;
                     }
@@ -118577,6 +119673,435 @@ const Galerie = (() => {
     return { oeffne, bauen, VORLAGEN, ausbildung, habitTracker, fitnessOS, musik, analyse };
 })();
 window.Galerie = Galerie;
+
+</script>
+<script>
+/* ===== quell/bereiche/vorlagen/folien.js ===== */
+"use strict";
+/* ============================================================================
+ * bereiche/vorlagen/folien.ts — fertige Folienlayouts
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/bereiche/vorlagen/folien.ts`. `npm run bauen:ts`
+ * schreibt daraus `quell/bereiche/vorlagen/folien.js`.
+ * ----------------------------------------------------------------------------
+ * Redur, 13. September 2026: „füge dort auch fertige Vorlagen."
+ *
+ * Ein Layout ist hier KEIN Bild und keine zweite Dokumentform, sondern eine
+ * Liste von Marken auf einer 16:9-Folie — dieselben Marken, die der
+ * `.pptx`-Einleser anlegt (E540) und die die Zeichenschicht seit E100
+ * bearbeitet. Wer eine Vorlage nimmt, bekommt also nichts Besonderes,
+ * sondern eine gewöhnliche Folie, auf der schon etwas steht: Titel
+ * anklicken, Text ersetzen, fertig.
+ *
+ * WARUM NICHT IN `Register.vorlagen`. Dort stehen Vorlagen, die ganze
+ * ARBEITSBEREICHE bauen — „Fitness-OS", „Redaktionsplan", zehn Datenbanken
+ * mit Ansichten und Beispielzeilen. Ein Folienlayout ist etwas anderes: es
+ * legt keine Seite an, es füllt eine. Beides in eine Liste zu werfen hiesse,
+ * in der Galerie „Titelfolie" neben „Fitness-OS" zu zeigen — zwei Dinge
+ * unter einem Namen, und §8 verbietet genau das aus dem umgekehrten Grund
+ * (keine zwei Kataloge für DASSELBE; dies sind zwei Kataloge für ZWEIERLEI).
+ * Der BEFEHL „Neue Folie" steht dagegen im Befehlsregister, wo er hingehört.
+ *
+ * DIE MASSE SIND FOLIENPUNKTE, KEINE BILDSCHIRMPUNKTE. Dieselbe Regel wie
+ * E100: eine Folie folgt der Fensterbreite, und eine Marke bei x = 60 liegt
+ * auf jedem Schirm an derselben Stelle des Papiers. Gerechnet wird gegen die
+ * ÜBERGEBENE Foliengrösse, nicht gegen 960 × 540 — sonst läge bei einer
+ * 4:3-Folie alles im linken Drittel.
+ * ==========================================================================*/
+const Folienvorlagen = (() => {
+    /** PowerPoints Standardmass für 16:9, in Punkten (9144000 × 5143500 EMU). */
+    const BREITE = 960;
+    const HOEHE = 540;
+    /* Eigen, nicht geliehen: jede Datei hat ihr `esc` (CLAUDE.md §19, und so
+       steht es auch in `vorlagen/daten.ts`). Es ersetzt wirklich — der Fehler
+       aus §19, der beim Lesen richtig aussieht, ist hier keiner. */
+    const esc = (s) => String(s ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    /* Kennungen müssen je Folie eindeutig sein; zwei Marken mit derselben
+       Kennung wären für `redraw` dieselbe (marken.ts). Ein Zähler reicht —
+       er läuft nur innerhalb dieses Fensters und landet nie in einer Datei,
+       in der eine fremde Kennung stünde. */
+    let zaehler = 0;
+    const kennung = () => 'fv' + (++zaehler).toString(36) +
+        Math.random().toString(36).slice(2, 8);
+    /** Ein Textkasten in Anteilen der Folie — so stimmt jedes Seitenmass. */
+    const text = (b, h, opt) => ({
+        id: kennung(), art: 'text',
+        point: [Math.round(opt.x * b), Math.round(opt.y * h)],
+        breiteBox: Math.round(opt.breite * b),
+        text: opt.inhalt,
+        fontSize: Math.round(opt.grad * h),
+        fett: !!opt.fett,
+        ...(opt.farbe ? { farbe: opt.farbe } : {}),
+    });
+    /** Eine waagrechte Linie — als flache Abdeckmarke in Akzentfarbe. */
+    const linie = (b, h, opt) => ({
+        id: kennung(), art: 'abdeck', farbe: opt.farbe || '#2f6fed',
+        pts: [[Math.round(opt.x * b), Math.round(opt.y * h)],
+            [Math.round((opt.x + opt.breite) * b),
+                Math.round((opt.y + (opt.dicke ?? 0.012)) * h)]],
+    });
+    /* ==========================================================================
+     * DIE LAYOUTS
+     * --------------------------------------------------------------------------
+     * Es sind die, die PowerPoint selbst anbietet, in derselben Reihenfolge und
+     * mit denselben deutschen Namen. Wer von dort kommt, sucht nicht.
+     * ========================================================================*/
+    const LISTE = [
+        {
+            id: 'titel', name: 'Titelfolie', zeichen: '🎬',
+            text: 'Grosser Titel in der Mitte, Untertitel darunter',
+            bauen: (b, h) => [
+                text(b, h, { x: .10, y: .34, breite: .80, inhalt: 'Titel der Präsentation',
+                    grad: .085, fett: true }),
+                linie(b, h, { x: .10, y: .50, breite: .26 }),
+                text(b, h, { x: .10, y: .55, breite: .80, inhalt: 'Untertitel oder Name', grad: .042 }),
+            ],
+        },
+        {
+            id: 'titelInhalt', name: 'Titel und Inhalt', zeichen: '📝',
+            text: 'Der Normalfall — Überschrift oben, Text darunter',
+            bauen: (b, h) => [
+                text(b, h, { x: .07, y: .08, breite: .86, inhalt: 'Überschrift', grad: .066, fett: true }),
+                linie(b, h, { x: .07, y: .20, breite: .18 }),
+                text(b, h, { x: .07, y: .27, breite: .86, grad: .040,
+                    inhalt: '• Erster Punkt\n• Zweiter Punkt\n• Dritter Punkt' }),
+            ],
+        },
+        {
+            id: 'zweiInhalte', name: 'Zwei Inhalte', zeichen: '🀫',
+            text: 'Überschrift und zwei Spalten nebeneinander',
+            bauen: (b, h) => [
+                text(b, h, { x: .07, y: .08, breite: .86, inhalt: 'Überschrift', grad: .066, fett: true }),
+                linie(b, h, { x: .07, y: .20, breite: .18 }),
+                text(b, h, { x: .07, y: .28, breite: .40, grad: .038,
+                    inhalt: '• Links\n• Zweiter Punkt' }),
+                text(b, h, { x: .53, y: .28, breite: .40, grad: .038,
+                    inhalt: '• Rechts\n• Zweiter Punkt' }),
+            ],
+        },
+        {
+            id: 'vergleich', name: 'Vergleich', zeichen: '⚖',
+            text: 'Zwei Spalten, jede mit eigener Zwischenüberschrift',
+            bauen: (b, h) => [
+                text(b, h, { x: .07, y: .07, breite: .86, inhalt: 'Vergleich', grad: .062, fett: true }),
+                text(b, h, { x: .07, y: .24, breite: .40, inhalt: 'Vorher', grad: .044, fett: true }),
+                text(b, h, { x: .53, y: .24, breite: .40, inhalt: 'Nachher', grad: .044, fett: true }),
+                linie(b, h, { x: .07, y: .33, breite: .40, dicke: .008 }),
+                linie(b, h, { x: .53, y: .33, breite: .40, dicke: .008 }),
+                text(b, h, { x: .07, y: .38, breite: .40, grad: .036, inhalt: '• Punkt\n• Punkt' }),
+                text(b, h, { x: .53, y: .38, breite: .40, grad: .036, inhalt: '• Punkt\n• Punkt' }),
+            ],
+        },
+        {
+            id: 'abschnitt', name: 'Abschnittsüberschrift', zeichen: '🔖',
+            text: 'Trennt ein Kapitel ab — grosse Zahl, grosser Name',
+            bauen: (b, h) => [
+                text(b, h, { x: .09, y: .28, breite: .20, inhalt: '01', grad: .150, fett: true,
+                    farbe: '#2f6fed' }),
+                text(b, h, { x: .09, y: .52, breite: .80, inhalt: 'Abschnitt', grad: .072, fett: true }),
+                linie(b, h, { x: .09, y: .68, breite: .30 }),
+            ],
+        },
+        {
+            id: 'nurTitel', name: 'Nur Titel', zeichen: '🏷',
+            text: 'Eine Überschrift, der Rest bleibt frei zum Zeichnen',
+            bauen: (b, h) => [
+                text(b, h, { x: .07, y: .08, breite: .86, inhalt: 'Überschrift', grad: .066, fett: true }),
+                linie(b, h, { x: .07, y: .20, breite: .18 }),
+            ],
+        },
+        {
+            id: 'bildText', name: 'Bild mit Beschriftung', zeichen: '🖼',
+            text: 'Platz fürs Bild links, Erklärung rechts',
+            bauen: (b, h) => [
+                text(b, h, { x: .07, y: .07, breite: .86, inhalt: 'Überschrift', grad: .058, fett: true }),
+                /* Der Platzhalter ist ein RAHMEN, keine Fläche: er soll sagen „hier
+                   kommt ein Bild hin" und nicht selbst wie eines aussehen. */
+                { id: kennung(), art: 'text', rahmen: true,
+                    point: [Math.round(.07 * b), Math.round(.26 * h)],
+                    breiteBox: Math.round(.44 * b),
+                    text: '\n   Bild hierher ziehen\n', fontSize: Math.round(.038 * h) },
+                text(b, h, { x: .55, y: .26, breite: .38, grad: .036,
+                    inhalt: 'Was auf dem Bild zu sehen ist\nund warum es hier steht.' }),
+            ],
+        },
+        {
+            id: 'leer', name: 'Leer', zeichen: '⬜',
+            text: 'Weisse Folie — für alles, was kein Layout braucht',
+            bauen: () => [],
+        },
+    ];
+    const alle = () => LISTE.map(v => ({ ...v }));
+    const eines = (id) => LISTE.find(v => v.id === id) || null;
+    /** Die Marken eines Layouts für eine Folie dieser Grösse. */
+    const marken = (id, breite = BREITE, hoehe = HOEHE) => {
+        const v = eines(id);
+        if (!v)
+            return [];
+        try {
+            return v.bauen(Math.max(1, breite), Math.max(1, hoehe));
+        }
+        catch {
+            return [];
+        }
+    };
+    /* ==========================================================================
+     * DIE WEGE
+     * ========================================================================*/
+    /** Eine Folie an einen Foliensatz anhängen. */
+    const neueFolie = (seiteId, layoutId = 'titelInhalt', breite = BREITE, hoehe = HOEHE) => {
+        if (!seiteId)
+            return null;
+        const v = eines(layoutId);
+        const block = Store.addBlock(seiteId, 'blatt', {
+            text: v ? v.name : 'Folie', blattBreite: breite, blattHoehe: hoehe, papier: 'blanko'
+        });
+        const liste = marken(layoutId, breite, hoehe);
+        if (liste.length)
+            Store.updateBlock(block.id, { marken: liste });
+        return Store.getBlock(block.id);
+    };
+    /**
+     * Eine neue Präsentation — Seite, erste Folie, Dokumentmodus.
+     *
+     * `dokumentModus` ist dieselbe Flagge wie beim `.pptx`-Einleser (E546):
+     * ohne sie stünde die Folie als Blatt in einem Texteditor, und der Weg
+     * hätte das Ding angelegt, aber nicht geöffnet (E397).
+     */
+    const neuePraesentation = (layoutId = 'titel', titel = '') => {
+        const seite = Store.addPage(null, { text: titel || 'Neue Präsentation', icon: '📽️' });
+        neueFolie(seite.id, layoutId);
+        Store.updateBlock(seite.id, { dokumentModus: true });
+        return Store.getBlock(seite.id);
+    };
+    /* ==========================================================================
+     * DER WÄHLER
+     * --------------------------------------------------------------------------
+     * Eine Karte je Layout, mit einer echten kleinen Vorschau statt eines
+     * Zeichens: gezeichnet wird sie von `Marken.zeichneMarke` — derselben
+     * Stelle wie Folie, Miniatur, Vortrag und Druck (§8, E547). Ein Layout,
+     * das man nicht sieht, wählt niemand zweimal.
+     * ========================================================================*/
+    const vorschau = (layoutId) => {
+        const liste = marken(layoutId, BREITE, HOEHE);
+        if (!liste.length || typeof Marken === 'undefined')
+            return '';
+        let innen = '';
+        try {
+            const defs = typeof Marken.verlaufDefs === 'function' ? Marken.verlaufDefs(liste) : null;
+            if (defs)
+                innen += defs.outerHTML;
+            for (const m of liste) {
+                const knoten = Marken.zeichneMarke(m);
+                if (knoten)
+                    innen += knoten.outerHTML;
+            }
+        }
+        catch {
+            return '';
+        }
+        return innen
+            ? `<svg class="fv-bild" viewBox="0 0 ${BREITE} ${HOEHE}" preserveAspectRatio="none" ` +
+                `aria-hidden="true">${innen}</svg>`
+            : '';
+    };
+    /**
+     * Den Wähler zeigen und das gewählte Layout zurückgeben.
+     *
+     * Aufgelöst wird mit `null`, wenn jemand abbricht — dann entsteht auch
+     * keine Seite. Ein abgebrochener Wähler, der trotzdem etwas anlegt, ist
+     * der Fehler, gegen den §47 „kein Weg, der ins Leere führt" steht.
+     */
+    const waehle = (kopf = 'Layout wählen') => new Promise(fertig => {
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        o.innerHTML =
+            '<div class="finder" style="width:min(820px,95vw)">' +
+                '<div class="fh">📽️ ' + esc(kopf) +
+                '<button class="icon-btn" data-a="zu" aria-label="Schliessen">✕</button></div>' +
+                '<div class="fv-gitter">' +
+                LISTE.map(v => `<button class="fv-karte" data-v="${esc(v.id)}">` +
+                    `<span class="fv-rahmen">${vorschau(v.id) ||
+                        `<span class="fv-leer">${esc(v.zeichen)}</span>`}</span>` +
+                    `<b>${esc(v.name)}</b><span class="fv-text">${esc(v.text)}</span>` +
+                    '</button>').join('') +
+                '</div>' +
+                '</div>';
+        document.body.appendChild(o);
+        let beantwortet = false;
+        const schliesse = (wahl) => {
+            if (beantwortet)
+                return;
+            beantwortet = true;
+            o.remove();
+            fertig(wahl);
+        };
+        o.addEventListener('click', e => {
+            const ziel = e.target;
+            if (ziel === o || ziel?.closest('[data-a="zu"]')) {
+                schliesse(null);
+                return;
+            }
+            const karte = ziel?.closest('[data-v]');
+            if (karte)
+                schliesse(karte.dataset['v'] || null);
+        });
+        /* Escape schliesst — der gemeinsame Griff aus E302 nimmt `.overlay`
+           von selbst; hier steht nur, was DANN geschehen soll (§38). */
+        const taste = (e) => {
+            if (e.key !== 'Escape')
+                return;
+            document.removeEventListener('keydown', taste, true);
+            schliesse(null);
+        };
+        document.addEventListener('keydown', taste, true);
+        o.querySelector('.fv-karte')?.focus();
+    });
+    /** „Neue Präsentation" mit Wähler — der Weg aus dem Anlegen-Menü. */
+    const anlegenMitWahl = async () => {
+        const wahl = await waehle('Womit soll die erste Folie anfangen?');
+        if (!wahl)
+            return null;
+        const seite = neuePraesentation(wahl);
+        if (typeof App !== 'undefined') {
+            App.zeichneBaum?.();
+            App.oeffne?.(seite.id);
+        }
+        return seite;
+    };
+    /** „Neue Folie" mit Wähler — der Befehl aus der Palette. */
+    const folieMitWahl = async (seiteId) => {
+        const ziel = seiteId || (typeof App !== 'undefined' ? App.aktuelleSeite() : '');
+        if (!ziel) {
+            UI.toast('Erst eine Präsentation öffnen');
+            return null;
+        }
+        const wahl = await waehle('Layout der neuen Folie');
+        if (!wahl)
+            return null;
+        /* Die neue Folie bekommt die Masse der VORHANDENEN — eine 4:3-Folie
+           mitten in einem 16:9-Satz wäre ein Sprung im Vortrag. */
+        const vorhanden = (Store.childrenOf(ziel) || []).find((b) => b.type === 'blatt');
+        const folie = neueFolie(ziel, wahl, Number(vorhanden?.blattBreite) || BREITE, Number(vorhanden?.blattHoehe) || HOEHE);
+        if (typeof App !== 'undefined')
+            App.zeichneSeite?.();
+        return folie;
+    };
+    /**
+     * Ist DIESE Seite ein Foliensatz? Für `zeigen()` am Befehl und am Band.
+     *
+     * QUER, NICHT NUR „Blatt im Dokumentmodus" (E549). Ein Notizheft ist
+     * dasselbe von aussen — Dokumentmodus, Blatt-Blöcke — und es ist keine
+     * Präsentation. Der Unterschied, den man messen kann, ist das Papier:
+     * eine Folie ist breiter als hoch, ein Heft hochkant. PowerPoints Vorgabe
+     * ist 16:9, Redions eingelesene Folien auch (E540); ein A4-Heft ist 595
+     * auf 842.
+     *
+     * Was das NICHT trifft: eine hochkant gebaute Präsentation. Die gibt es in
+     * PowerPoint, sie ist aber selten, und die Verwechslung in die andere
+     * Richtung wäre teurer — ein Menüband über jedem Notizheft.
+     */
+    const istFoliensatz = (seiteId) => {
+        const seite = seiteId ? Store.getBlock(seiteId) : null;
+        if (!seite || !seite.dokumentModus)
+            return false;
+        return (Store.childrenOf(seiteId) || []).some((b) => b && b.type === 'blatt' &&
+            Number(b.blattBreite) > Number(b.blattHoehe));
+    };
+    /** Der offene Foliensatz, oder ''. */
+    const offenerSatz = () => {
+        const id = typeof App !== 'undefined' ? String(App.aktuelleSeite() || '') : '';
+        return id && istFoliensatz(id) ? id : '';
+    };
+    /* ==========================================================================
+     * DER REITER IM MENÜBAND (E549)
+     * --------------------------------------------------------------------------
+     * Redur: „oben mit Menü". Das Band gibt es seit langem — was fehlte, war
+     * ein Reiter für Folien.
+     *
+     * KEIN EINZIGER KNOPF TUT HIER ETWAS NEUES. Das ist die wichtigste Regel
+     * des Menübands (`register/menueband.ts`, ganz oben): ein Band ist eine
+     * ZWEITE ANSICHT auf das, was Redion kann, keine zweite Fassung davon. Wo
+     * hier eine eigene Rechnung stünde, liefe sie irgendwann von der ersten
+     * weg, und zwar still.
+     *
+     * `zeigen()` an jedem Eintrag hält den ganzen Reiter aus dem Band heraus,
+     * wenn kein Foliensatz offen ist — `reiter()` zeigt nur, was belegt ist.
+     * ========================================================================*/
+    const bandEintraege = () => {
+        const satz = offenerSatz();
+        if (!satz)
+            return [];
+        const da = (griff) => {
+            try {
+                return typeof griff() === 'function';
+            }
+            catch {
+                return false;
+            }
+        };
+        const eintrag = (o) => ({ reiter: 'praesentation', ...o,
+            zeigen: () => !!offenerSatz() && (o.wenn ? o.wenn() : true) });
+        return [
+            eintrag({ gruppe: 'Folien', id: 'pv-neu', name: 'Neue Folie', zeichen: 'plus',
+                gross: true, hinweis: 'Eine Folie anhängen — mit Layout zur Wahl',
+                tun: () => { void folieMitWahl(); } }),
+            eintrag({ gruppe: 'Folien', id: 'pv-liste', name: 'Folienliste', zeichen: 'page',
+                hinweis: 'Die Folien links zeigen oder verbergen',
+                wenn: () => typeof DocumentMode !== 'undefined',
+                tun: () => {
+                    /* Derselbe Knopf, den die Dokumentleiste trägt — gedrückt, nicht
+                       nachgebaut (§8). Ohne ihn gäbe es zwei Wege zu einer Liste. */
+                    const knopf = [...document.querySelectorAll('button, a')]
+                        .find(b => /^▤\s*Seiten$/.test((b.textContent || '').trim()));
+                    if (knopf)
+                        knopf.click();
+                    else
+                        UI.toast('Die Folienliste ist hier nicht da');
+                } }),
+            eintrag({ gruppe: 'Vortrag', id: 'pv-zeigen', name: 'Präsentieren', zeichen: 'play',
+                gross: true, hinweis: 'Vollbild — ein Klick deckt die nächste Antwort auf',
+                wenn: () => da(() => Werkzeuge.praesentation),
+                tun: () => { void Werkzeuge.praesentation(Store.getBlock(offenerSatz())); } }),
+            eintrag({ gruppe: 'Ausgeben', id: 'pv-pptx', name: 'Als PowerPoint', zeichen: 'download',
+                hinweis: 'Die Folien als .pptx-Datei sichern',
+                wenn: () => da(() => Austausch.alsPowerPoint),
+                tun: () => { void Austausch.alsPowerPoint(Store.getBlock(offenerSatz())); } }),
+            eintrag({ gruppe: 'Ausgeben', id: 'pv-pdf', name: 'Als PDF', zeichen: 'page',
+                hinweis: 'Die Folien als PDF sichern',
+                wenn: () => typeof DocumentMode !== 'undefined' && da(() => DocumentMode.alsPdf),
+                tun: () => { void DocumentMode.alsPdf(Store.getBlock(offenerSatz())); } }),
+            eintrag({ gruppe: 'Ausgeben', id: 'pv-drucken', name: 'Drucken', zeichen: 'printer',
+                hinweis: 'Die Folien drucken',
+                wenn: () => da(() => Werkzeuge.drucken),
+                tun: () => { void Werkzeuge.drucken(Store.getBlock(offenerSatz())); } }),
+        ];
+    };
+    if (typeof Register !== 'undefined' && Register.menueband?.meldeLieferant)
+        Register.menueband.meldeLieferant(bandEintraege);
+    /* Der Befehl gehört ins Befehlsregister, nicht in eine Liste hier (§8
+       Regel 3). `zeigen()` hält ihn aus der Palette heraus, wo er nichts
+       täte — ein Befehl, der dasteht und dann sagt, dass er hier nicht geht,
+       ist die häufigste Enttäuschung überhaupt (register/befehle.ts). */
+    if (typeof Register !== 'undefined' && Register.befehle) {
+        Register.befehle.melde({
+            titel: 'Neue Folie', gruppe: 'Anlegen',
+            zeigen: () => typeof App !== 'undefined' && istFoliensatz(App.aktuelleSeite()),
+            tun: () => { void folieMitWahl(); },
+        });
+        Register.befehle.melde({
+            titel: 'Neue Präsentation', gruppe: 'Anlegen',
+            tun: () => { void anlegenMitWahl(); },
+        });
+    }
+    return { alle, eines, marken, vorschau, waehle,
+        neueFolie, neuePraesentation, anlegenMitWahl, folieMitWahl,
+        istFoliensatz, offenerSatz, bandEintraege, BREITE, HOEHE };
+})();
+window.Folienvorlagen = Folienvorlagen;
 
 </script>
 <script>
@@ -133881,6 +135406,11 @@ const Recognition = (() => {
         background.setAttribute('height', String(region.height));
         background.setAttribute('fill', '#fff');
         svg.appendChild(background);
+        /* Auch hier die Verlauf-Vorlagen (E545): ein Abdeckband MUSS im
+           Ausschnitt decken, sonst läse die Erkennung die Antwort mit. */
+        const defs = typeof Marken.verlaufDefs === 'function' ? Marken.verlaufDefs(marks) : null;
+        if (defs)
+            svg.appendChild(defs);
         const bounds = { x: region.x, y: region.y, width: region.width, height: region.height };
         marks.forEach((mark) => {
             if (!InkGeometry.intersects(InkGeometry.bounds(mark), bounds))
@@ -155355,7 +156885,21 @@ const Menueband = (() => {
         setzeMeta(merkeZu(), true);
         zeichne();
     };
-    return { start, zeichne, zeige, aufklappen, schliessen, WURZEL };
+    /* `knopf` UND `gruppeZeichnen` GEHEN NACH DRAUSSEN (E550).
+       Das Folienband im Dokumentmodus ist eine ZWEITE STELLE, an der dieselben
+       Registereinträge als Knöpfe erscheinen — nicht ein zweiter Katalog und
+       auch kein zweiter Zeichner. Beides wäre §8: „keine doppelten Kataloge",
+       und ein zweiter Zeichner liefe genauso auseinander wie ein zweiter
+       Katalog, nur langsamer und stiller (die Probe, das `an()`, der Satz für
+       Vorleseprogramme, das Kürzel im Tooltip — vier Sachen, die man beim
+       Nachbauen je einzeln vergisst).
+  
+       Was NICHT hinausgeht: `bandFuellen`. Es hängt das „•••" an, und dessen
+       Überlaufrechnung kennt nur das eine, globale Band. Ein zweites Band mit
+       einem „•••", das nie etwas anzeigt, wäre ein toter Knopf. Das Folienband
+       baut seine Gruppen deshalb selbst zusammen — aus diesen zwei Bausteinen. */
+    return { start, zeichne, zeige, aufklappen, schliessen, WURZEL,
+        knopf, gruppeZeichnen };
 })();
 window.Menueband = Menueband;
 
@@ -158236,6 +159780,7 @@ const App = (() => {
            so faellt sie auch bei jedem fruehen Ausstieg zurueck (Sonderansicht,
            leere Seite, Sperrbildschirm). */
         delete document.body.dataset['dokument'];
+        delete document.body.dataset['foliensatz'];
         kiAmDokumentAnpassen(false);
         if (sonder) {
             wrap.className = 'wide';
@@ -158279,6 +159824,19 @@ const App = (() => {
             wrap.className = 'wide document-page';
             wrap.innerHTML = '';
             document.body.dataset['dokument'] = 'an';
+            /* EIN FOLIENSATZ BEKOMMT SEIN MENÜBAND (E549). Redur: „oben mit Menü."
+               `pdf-studio.css` räumt im Dokumentmodus alles Gerüst weg, auch
+               `#menueband` — richtig für eine PDF und für ein Notizheft, wo die
+               Dokumentleiste alles trägt. Eine Präsentation ist der eine Fall, für
+               den PowerPoints Muster gilt: Reiter oben, Folien links.
+               Die Marke steht hier und nicht im Stilblatt, weil nur hier bekannt
+               ist, WELCHES Dokument offen ist. Das Stilblatt liest sie nur. */
+            const folien = typeof Folienvorlagen !== 'undefined' &&
+                Folienvorlagen.istFoliensatz(p.id);
+            if (folien)
+                document.body.dataset['foliensatz'] = 'an';
+            else
+                delete document.body.dataset['foliensatz'];
             kiAmDokumentAnpassen(true);
             DocumentMode.render(wrap, p);
         }
@@ -160103,6 +161661,16 @@ const App = (() => {
            Sache laufen auseinander (§8). */
         { gruppe: 'Zeichnen', id: 'blatt', zeichen: '📐', name: 'Blatt',
             sub: 'Mit der Hand schreiben — A4, liniert, kariert, Punktraster' },
+        /* DIE PRÄSENTATION IST EIN EIGENER WEG (E548). Redur: „könntest du so
+           eine PowerPoint-Modus im Menü einfügen … so dass ich Präsentation
+           erstellen könnte." Die ANSICHT gab es längst — der Dokumentmodus hat
+           die Leiste oben und die Folienliste links (E546, E547). Was fehlte,
+           war der Weg hinein: wer eine Präsentation wollte, legte eine Seite
+           an, setzte ein Blatt hinein, stellte dessen Masse von Hand auf 16:9
+           und suchte den Dokumentmodus selbst. */
+        { gruppe: 'Zeichnen', id: 'praesentation', zeichen: '📽️', name: 'Präsentation',
+            sub: 'Folien in 16:9 — mit fertigen Vorlagen',
+            da: () => typeof Folienvorlagen !== 'undefined' && !!Folienvorlagen.anlegenMitWahl },
         { gruppe: 'Zeichnen', id: 'plan', zeichen: '⚡', name: 'Schaltplan',
             sub: 'Mit Fachzeichen und Stromsimulation' },
         /* --- Ordnen und rechnen ------------------------------------------- */
@@ -160278,6 +161846,14 @@ const App = (() => {
                     zeichneBaum();
                 }
             });
+            return;
+        }
+        if (was === 'praesentation') {
+            /* Der Wähler legt selbst an und öffnet selbst — und wenn jemand
+               abbricht, entsteht GAR NICHTS. Der PDF-Weg zwei Zweige weiter oben
+               muss dafür eine leere Seite in den Papierkorb schieben; hier ist
+               die Reihenfolge herum, also gibt es den Fall nicht (§47). */
+            void Folienvorlagen.anlegenMitWahl();
             return;
         }
         if (was === 'lernen') {
