@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-531 Entscheidungen, E1 bis E551 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+532 Entscheidungen, E1 bis E552 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -595,6 +595,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E549** — Reiter „Präsentation" im Band, Folien-Menü in der Dokumentleiste — das ganze Band dort war gemessen schlechter
 * **E550** — Das Folienband: Reiter ÜBER der Folie; `start` und `einfuegen` bleiben draussen, weil 79 von 83 ihrer Knöpfe dort nichts tun
 * **E551** — Eine Folie steht, ein Skript rollt: die Vorgabe hängt am Dokument; `safe center` statt `center`; „📽️ Folie“ verlässt die Telefonleiste
+* **E552** — Gleich wie PowerPoint: „Zeichnen“ wird ein Reiter (die echte Leiste zieht um, kein Nachbau), und ein Blatt heisst im Foliensatz „Folie“
 
 ---
 
@@ -44283,3 +44284,146 @@ Abkürzung.
 `test507` neu, 34 Zusagen, vier Gegenproben gefahren (24/10, 30/4, 30/4,
 32/2 — alle gemessen). Bilder: `bilder/folie-steht-rechner.png`,
 `bilder/folie-steht-handy.png`.
+
+---
+
+E552 — Gleich wie PowerPoint: „Zeichnen" ist ein Reiter, und ein Blatt heisst „Folie"
+--------------------------------------------------------------------------
+
+Redur, auf die Frage aus E551, ob die Zeichenleiste zum Reiter werden soll:
+**„weiter mache gleich wie powerpoint"**.
+
+PowerPoint hat einen Reiter „Zeichnen" und keine zweite Dauerleiste. Und es
+sagt nirgends „Seite". Beides steht jetzt so.
+
+### Warum die Leiste UMZIEHT und nicht nachgebaut wird
+
+Der naheliegende Weg wäre gewesen, den Reiter `zeichnen` des Bandkatalogs zu
+nehmen — er hat dreissig Einträge und heisst richtig. Vierzehn davon wurden
+bei offenem Foliensatz einzeln aufgerufen:
+
+```txt
+kein einziger änderte das gewählte Werkzeug des Dokuments
+`an()` gab bei ALLEN vierzehn `true` zurück
+```
+
+Im Band stünden also **vierzehn gleichzeitig gewählte Knöpfe**, und keiner
+täte etwas. Diese Einträge bedienen die Seitenfläche, nicht die
+Dokumentschicht. Ein Werkzeugkasten, in dem alles markiert ist, sagt nichts —
+E212 hat genau das einmal repariert.
+
+Also zieht die **echte** Zeichenleiste um: dasselbe Element, dieselben
+sechzehn Knöpfe, dieselben Griffe, nur an einem anderen Platz. Ein Nachbau
+hätte `applyPen`, `inkSync`, den Verlauf und die Stiftoptionen mitkopieren
+müssen, und eine Kopie davon wäre still auseinandergelaufen (§8).
+
+### Was das an Platz bringt, gemessen bei 1440 × 852
+
+```txt
+vorher                        nachher
+Kopfleiste      48 px         Kopfleiste      48 px
+Folienband     110 px         Folienband     110 px   (94 unter „Zeichnen")
+Zeichenleiste   58 px         —
+Fläche         588 px         Fläche         646 px   (662 unter „Zeichnen")
+```
+
+Die Folie hat also 58 bis 74 px mehr Luft, ohne dass ein Knopf verschwunden
+wäre.
+
+### Und damit niemand den Stift sucht
+
+„✎ Annotieren" holt den Reiter „Zeichnen" nach vorn. Das ist der Preis dafür,
+dass die Leiste nicht mehr immer dasteht: annotieren zu drücken und keinen
+Stift zu bekommen wäre schlechter als die alte Dauerleiste. PowerPoint macht
+dasselbe, wenn man in den Freihandmodus geht.
+
+### Die Gefahr, und sie ist keine Kleinigkeit
+
+Die Leiste ist jetzt ein **Kind des Bandes**. Wer das Band entfernt, nimmt
+sie mit — und dann hätte ein Fenster unter 900 px gar keine Zeichenwerkzeuge
+mehr. Das wäre eine weggenommene Funktion durch Unfall (§47).
+
+`folienbandNachziehen` bringt sie deshalb **zuerst** an ihren alten Platz und
+entfernt **dann** das Band. Und `[hidden]` allein reicht nicht: die
+Browserregel dafür ist `display:none`, aber sie verliert gegen
+`.document-drawingbar{display:flex}`. Ohne die eine Zeile im Stilblatt stünde
+die Zeichenleiste unter **jedem** Reiter. Der Fehler sieht im Quelltext
+richtig aus — `hidden` steht ja da.
+
+### Das Wort
+
+„Seite 3 von 7" in einer Präsentation ist die Sprache eines anderen
+Programms. Im Foliensatz heisst jetzt alles „Folie": der Stand unten, der
+Randstreifen, seine Überschrift, die Inspector-Zeile und die dreizehn Griffe
+darunter. Gemessen: **keine** der siebzehn sichtbaren Beschriftungen sagt
+noch „Seite"; im Notizheft sagt umgekehrt keine „Folie".
+
+Genau **ein** Hinweis nennt beides, und der ist richtig so: „Die **Seiten**
+einer weiteren PDF hinter dieser **Folie** einfügen." Eine PDF hat Seiten.
+
+**Das Wort kommt aus einem Ort** (`wortEins` / `wortViele`) und nicht aus
+zwanzig. Die Alternative wäre gewesen, an jeder der gut zwanzig Stellen
+`istFoliensatz(page) ? … : …` zu schreiben — und die einundzwanzigste
+vergisst dann jemand. Derselbe Grund, aus dem §8 keine zweiten Kataloge will,
+nur eine Nummer kleiner.
+
+**Die Daten heissen weiter `blatt`.** Übersetzt wird, was ein Mensch liest,
+nicht was gespeichert ist (§53.3, Grenze 1): ein Blocktyp `folie` wäre eine
+Datenmigration und machte jede vorhandene Sicherung unlesbar. `test508 §5`
+misst auch das.
+
+### Und eine Zusage, die keine war
+
+Die Gegenprobe G4 — die Leiste beim Schrumpfen nicht retten — blieb beim
+ersten Lauf **grün**. §4 rief nach dem Verkleinern `oeffne(deck)` und baute
+damit alles frisch auf; der gefährliche Weg (das Band entfernen, *während*
+die Leiste darin hängt) wurde gar nicht gegangen. Die Zusage sah aus wie eine
+und war keine.
+
+Jetzt wird nur noch das Fenster gezogen, sonst nichts — genau das, was ein
+Mensch tut. Danach meldet die Gegenprobe „0 Knöpfe". Das ist §55.2 in
+Reinform, und es ist in dieser Sitzung das dritte Mal: eine Prüfung muss
+zuerst rot werden können, bevor ihr Grün etwas wert ist.
+
+### Zwei ältere Zusagen mussten nachziehen — und das ist der Punkt
+
+`test506` (aus E550) sagte drei Sachen zu, die dieser Bogen absichtlich
+geändert hat, und wurde zu Recht rot:
+
+- „… und ÜBER der Zeichenleiste" — es gibt keine eigene Leiste mehr, über
+  der etwas stehen könnte. Gefragt wird jetzt, was gemeint war: dass die
+  Leiste **zum Band gehört**.
+- „„Zeichnen" ist NICHT dabei (steht als Zeichenleiste schon da, §8)" — der
+  Grund war gut, und E552 hat den Widerspruch nur andersherum aufgelöst:
+  nicht der Reiter weicht, sondern die Dauerleiste. §8 gilt unverändert, es
+  ist weiterhin **eine**.
+- „„zeichnen": mindestens zwei Knöpfe" — sein Inhalt sind keine `.mb-knopf`,
+  sondern die echte Leiste. Gezählt werden jetzt deren Knöpfe.
+
+`test505` (aus E549) suchte einen Knopf mit dem Wortlaut `^▤\s*Seiten$`.
+Seit im Foliensatz „▤ Folien" dransteht, war die Zeile rot — obwohl der
+Knopf unverändert da ist und dasselbe tut. Gefragt wird jetzt nach der
+**Tat** (`[data-document-action="thumbnails"]`) statt nach dem Wort, und eine
+zweite Zeile hält fest, dass dort „Folien" steht. Eine Zusage, die am
+Wortlaut hängt, bricht bei jeder Umbenennung.
+
+`test424` war im Stapel ebenfalls rot und allein grün (50/50) — zweimal
+hintereinander, also kein Zufall, sondern ein Lauf, der unter Last bricht.
+Sein eigener Kopf nennt die Ursache, und sie ist vier Zeilen darüber schon
+einmal repariert worden (E440): unter Last kommt das Messen dem Zeichnen
+zuvor.
+
+Der zweite Teil war offen geblieben. `waitFor` wartete auf den Arbeitsraum,
+nicht auf die **Bühne** — und die bekommt ihr `data-aktiv` erst, wenn die
+gemerkte Seite wieder gefunden ist. Die Zeile las also manchmal, bevor es
+etwas zu lesen gab.
+
+**Nachgegeben wurde in der Sache nichts:** die Zusage bleibt „Seite 2 nach
+dem Neuladen". Sie bekommt nur die Zeit, die das Zeichnen wirklich braucht;
+läuft die ab, ist sie so rot wie vorher. Einen Lauf zu entschärfen, statt ihn
+robust zu machen, wäre §47 („Prüfläufe löschen, weil sie stören") mit
+anderen Mitteln.
+
+`test508` neu, 40 Zusagen, fünf Gegenproben gefahren (Abbruch, 35/3, 36/2,
+38/2, 37/3 — gemessen). `test506` 53 grün, `test505` 27 grün.
+Bild: `bilder/pp-reiter-zeichnen.png`.

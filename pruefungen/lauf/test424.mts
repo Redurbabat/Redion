@@ -160,6 +160,20 @@ try {
   await page.reload();
   await page.locator('.document-workspace').waitFor();
   check('Reading preference is persisted per document', await page.locator('.document-workspace').getAttribute('data-document-tools') === 'closed');
+  /* WARTEN STATT SOFORT LESEN (13. September).
+     Dieser Lauf war im Stapel wiederholt rot und allein grün — dieselbe
+     Ursache, die vier Zeilen weiter oben schon einmal repariert wurde
+     (E440): unter Last kommt das Messen dem Zeichnen zuvor. `waitFor` oben
+     wartet auf den Arbeitsraum, nicht auf die BUEHNE; die bekommt ihr
+     `data-aktiv` erst, wenn die gemerkte Seite wieder gefunden ist.
+     Kein Nachgeben in der Sache: die Zusage bleibt „Seite 2 nach dem
+     Neuladen", sie bekommt nur die Zeit, die das Zeichnen wirklich braucht.
+     Laeuft sie ab, ist die Zeile so rot wie vorher. */
+  await page.locator('.document-stage[data-aktiv]').first().waitFor({ timeout: 15000 });
+  await page.waitForFunction(
+    () => document.querySelector('.document-stage[data-aktiv]')
+            ?.getAttribute('data-stand-nr') === '1',
+    undefined, { timeout: 15000 }).catch(() => { /* dann meldet die Zeile darunter */ });
   check('PDF page position survives reload', await page.locator('.document-stage[data-aktiv]').getAttribute('data-stand-nr') === '1');
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   if (screenshots) {

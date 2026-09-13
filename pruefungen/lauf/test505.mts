@@ -197,8 +197,15 @@ console.log('\n§3 Oben das Folien-Menü, links die Folien — Redurs Satz, geme
       hatMenue: knopf?.getAttribute('aria-haspopup') === 'menu',
       /* 44 px auf einem Hauptweg (§37). */
       hoehe: k ? Math.round(k.height) : 0,
-      seitenKnopf: [...document.querySelectorAll('button, a')]
-        .some(b => /^▤\s*Seiten$/.test((b.textContent || '').trim())),
+      /* NACH DER TAT GEFRAGT, NICHT NACH DEM WORT (E552).
+         Hier stand `/^▤\s*Seiten$/` — und seit im Foliensatz „▤ Folien"
+         dransteht, war die Zeile rot, obwohl der Knopf unverändert da ist
+         und dasselbe tut. Eine Zusage, die am WORTLAUT hängt, bricht bei
+         jeder Umbenennung; die Aktion ist das, was gemeint war. */
+      seitenKnopf: !!document.querySelector<HTMLElement>(
+        '[data-document-action="thumbnails"]'),
+      seitenWort: (document.querySelector<HTMLElement>(
+        '[data-document-action="thumbnails"]')?.textContent || '').trim(),
     };
   });
 
@@ -207,6 +214,8 @@ console.log('\n§3 Oben das Folien-Menü, links die Folien — Redurs Satz, geme
   p('… über der Folie, nicht daneben', m.ueberDemInhalt);
   p('… und sagt an, dass ein Menü kommt (§38)', m.hatMenue);
   p('Die Folienliste bleibt erreichbar', m.seitenKnopf);
+  p('… und heisst im Foliensatz „Folien", nicht „Seiten" (E552)',
+    /Folien/.test(m.seitenWort), m.seitenWort);
 
   /* Und das Menü muss wirklich aufgehen und die Einträge tragen. */
   await seite.evaluate(() => {

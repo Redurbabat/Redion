@@ -168,7 +168,17 @@ const gross = await aufbauen(1440, 852);
   });
   p('Das Band ist da', m.da);
   p('Es steht UNTER der Kopfleiste', m.unterKopf);
-  p('… und ÜBER der Zeichenleiste', m.ueberZeichen);
+  /* SEIT E552 IST DIE ZEICHENLEISTE IM BAND (Reiter „Zeichnen"), es gibt
+     also keine eigene Leiste mehr, über der etwas stehen könnte. Die Zeile
+     hiess hier „… und ÜBER der Zeichenleiste" und war zu Recht rot. Gefragt
+     wird jetzt das, was gemeint war: das Band steht über dem INHALT, und
+     die Leiste gehört zu ihm statt daneben. */
+  p('Die Zeichenleiste gehört zum Band (E552)',
+    await gross.seite.evaluate(() => {
+      const b = document.querySelector('.folienband');
+      const l = document.querySelector('.document-drawingbar');
+      return !!b && !!l && b.contains(l);
+    }));
   p('… und ÜBER der Folie', m.ueberFolie);
   p('Es überdeckt die Kopfleiste NICHT (der Fund von E549)', !m.deckt);
   p('Es ist zwischen 80 und 150 px hoch', m.hoehe >= 80 && m.hoehe <= 150,
@@ -206,8 +216,17 @@ console.log('\n§2 Fünf Reiter, und „Start"/„Einfügen" sind nicht dabei');
     !m.ids.includes('start'), JSON.stringify(m.ids));
   p('„Einfügen" ist NICHT dabei (65 von 69 tun hier nichts)',
     !m.ids.includes('einfuegen'), JSON.stringify(m.ids));
-  p('„Zeichnen" ist NICHT dabei (steht als Zeichenleiste schon da, §8)',
-    !m.ids.includes('zeichnen'), JSON.stringify(m.ids));
+  /* HIER STAND DAS GEGENTEIL, und der Grund war gut: die dreissig Knöpfe des
+     Registerreiters `zeichnen` standen als Zeichenleiste schon dauerhaft
+     zwei Zeilen tiefer, und dieselbe Sache an zwei sichtbaren Stellen ist
+     genau das, was §8 verbietet.
+
+     E552 hat den Widerspruch anders aufgelöst, auf Redurs Wort hin („weiter
+     mache gleich wie powerpoint"): nicht der Reiter weicht, sondern die
+     Dauerleiste. Es gibt sie nicht mehr — die LEISTE SELBST ist der Inhalt
+     des Reiters. §8 gilt unverändert; es ist weiterhin nur eine. */
+  p('„Zeichnen" ist dabei — als Reiter, nicht als zweite Leiste (E552)',
+    m.ids.includes('zeichnen'), JSON.stringify(m.ids));
   p('Jeder Reiter ist mindestens 30 px hoch', m.zuFlach.length === 0,
     JSON.stringify(m.zuFlach));
   p('Die Namen sind Wörter, keine Kennungen',
@@ -248,6 +267,19 @@ console.log('\n§3 Gruppen mit Überschriften, Knöpfe mit Zeichen (der Fund des
       };
     });
     geprueft++;
+    /* „Zeichnen" hat keine `.mb-knopf` — sein Inhalt ist die echte
+       Zeichenleiste (E552). Gezählt wird dort deren Knöpfe. */
+    if (r === 'zeichnen') {
+      const leiste = await gross.seite.evaluate(() => {
+        const l = document.querySelector('.folienband .document-drawingbar');
+        const rect = l?.getBoundingClientRect();
+        return { knoepfe: l ? l.querySelectorAll('button').length : 0,
+                 sichtbar: (rect?.height ?? 0) > 0 };
+      });
+      p('„zeichnen": die Zeichenleiste steht darunter', leiste.sichtbar);
+      p('… mit ihren Knöpfen', leiste.knoepfe >= 14, String(leiste.knoepfe));
+      continue;
+    }
     p(`„${r}": mindestens zwei Knöpfe`, m.knoepfe >= 2, String(m.knoepfe));
     ohneZeichen += m.ohneZeichen; leereUeberschrift += m.leer;
     ausserhalb += m.raus; ohneSatz += m.ohneSatz;

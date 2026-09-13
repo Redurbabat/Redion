@@ -701,6 +701,25 @@ const DocumentMode = (() => {
         }
     };
     /**
+     * Wie heisst hier EIN Blatt — „Folie" oder „Seite"? (E552)
+     *
+     * Redur: „weiter mache gleich wie powerpoint". In PowerPoint heisst nichts
+     * „Seite": nicht die Liste links, nicht der Stand unten, nicht „Neue
+     * Folie", nicht „Folie duplizieren". Das Wort ist kein Schmuck — wer in
+     * einer Präsentation „Seite 3 von 7" liest, liest die Sprache eines
+     * anderen Programms.
+     *
+     * EIN ORT FÜR DAS WORT, nicht zwanzig. Die Alternative wäre, an jeder der
+     * gut zwanzig Stellen `istFoliensatz(page) ? … : …` zu schreiben — und die
+     * einundzwanzigste vergisst dann jemand. Das ist derselbe Grund, aus dem
+     * §8 keine zweiten Kataloge will, nur eine Nummer kleiner.
+     *
+     * DIE DATEN HEISSEN WEITER `seite` UND `pdfseite`. Übersetzt wird, was ein
+     * Mensch liest — nicht, was gespeichert ist (§53.3, Grenze 1).
+     */
+    const wortEins = (page) => istFoliensatz(page) ? 'Folie' : 'Seite';
+    const wortViele = (page) => istFoliensatz(page) ? 'Folien' : 'Seiten';
+    /**
      * Das Folien-Menü aus dem Bandkatalog bauen und zeigen (E549).
      *
      * Kein eigener Katalog: `Register.menueband.inReiter('praesentation')`
@@ -806,8 +825,30 @@ const DocumentMode = (() => {
      * vier Sachen, die man je einzeln vergisst.
      * ══════════════════════════════════════════════════════════════════════ */
     /** Die Reiter, die das Folienband zeigt — in dieser Reihenfolge. */
-    const FOLIENBAND_REITER = ['praesentation', 'ansicht', 'verlauf',
+    const FOLIENBAND_REITER = ['praesentation', 'zeichnen', 'ansicht', 'verlauf',
         'ueberpruefen', 'hilfe'];
+    /**
+     * „Zeichnen" ist ein Reiter wie in PowerPoint — aber sein Inhalt kommt
+     * NICHT aus dem Register (E552).
+     *
+     * Redur: „weiter mache gleich wie powerpoint". PowerPoint hat einen
+     * Reiter „Zeichnen"; Redion hatte eine Zeichenleiste, die immer dastand.
+     * Beides zusammen wären zwei Leisten für dieselbe Sache.
+     *
+     * WARUM NICHT DIE REGISTEREINTRÄGE. Der Reiter `zeichnen` im Bandkatalog
+     * hat dreissig Einträge, und alle vierzehn geprüften bedienen die
+     * SEITENfläche, nicht die Dokumentschicht. Gemessen bei offenem
+     * Foliensatz: kein einziger änderte das gewählte Werkzeug des Dokuments,
+     * und `an()` gab bei ALLEN vierzehn `true` zurück — im Band stünden also
+     * vierzehn gleichzeitig gewählte Knöpfe. Ein Werkzeugkasten, in dem
+     * alles markiert ist, sagt nichts (E212 hat genau das einmal repariert).
+     *
+     * Also zieht die ECHTE Zeichenleiste um: dasselbe Element, dieselben
+     * Knöpfe, dieselben Griffe — nur an einem anderen Platz. Ein Nachbau
+     * hätte `applyPen`, `inkSync`, den Verlauf und die Stiftoptionen
+     * mitkopieren müssen, und eine Kopie davon wäre still auseinandergelaufen.
+     */
+    const ZEICHEN_REITER = 'zeichnen';
     /**
      * Ab dieser Fensterbreite bekommt ein Foliensatz das Band.
      *
@@ -830,7 +871,7 @@ const DocumentMode = (() => {
      * schmales Fenster, oder kein Reiter mit Inhalt. Der Aufrufer hängt dann
      * nichts ein, statt eine leere Leiste zu zeigen.
      */
-    const folienbandBauen = (page) => {
+    const folienbandBauen = (page, zeichenleiste) => {
         if (!istFoliensatz(page))
             return null;
         if (innerWidth < BAND_AB)
@@ -846,8 +887,13 @@ const DocumentMode = (() => {
         /* Nur Reiter, die WIRKLICH etwas zeigen. `zeigen()` im Register kann
            einen ganz leergeräumt haben — in der Einzeldatei etwa. */
         const offen = FOLIENBAND_REITER
-            .map(id => ({ id, gruppen: inReiter(id) }))
-            .filter(r => r.gruppen.some((g) => (g.eintraege || []).length));
+            .map(id => ({ id, gruppen: id === ZEICHEN_REITER ? [] : inReiter(id) }))
+            /* „Zeichnen" hängt an der LEISTE, nicht am Register — siehe oben.
+               Gibt es sie nicht (gesperrte Seite, kein Recht), fehlt der Reiter,
+               statt leer dazustehen. */
+            .filter(r => r.id === ZEICHEN_REITER
+            ? !!zeichenleiste
+            : r.gruppen.some((g) => (g.eintraege || []).length));
         if (!offen.length)
             return null;
         const namen = {};
@@ -869,7 +915,18 @@ const DocumentMode = (() => {
         if (!offen.some(r => r.id === aktiv))
             aktiv = offen[0].id;
         const flaecheFuellen = () => {
+            /* BEIM REITER „ZEICHNEN" TRITT DIE LEISTE AN DIE STELLE DES BANDES.
+               Sie bleibt IMMER ein Kind des Bandes und wird nur `hidden` — ein
+               Aus- und Einhängen würde bei jedem Reiterwechsel ihre Griffe und
+               ihren Verlaufszustand durch den Baum schieben. */
+            if (zeichenleiste) {
+                zeichenleiste.hidden = aktiv !== ZEICHEN_REITER;
+                zeichenleiste.setAttribute('aria-label', aktiv === ZEICHEN_REITER ? 'Zeichnen' : 'PDF bearbeiten');
+            }
+            flaeche.hidden = aktiv === ZEICHEN_REITER && !!zeichenleiste;
             flaeche.replaceChildren();
+            if (flaeche.hidden)
+                return;
             const gruppen = (offen.find(r => r.id === aktiv)?.gruppen || [])
                 .filter((g) => (g.eintraege || []).length);
             gruppen.forEach((g, i) => {
@@ -922,8 +979,26 @@ const DocumentMode = (() => {
             });
             reiterzeile.appendChild(t);
         });
-        flaecheFuellen();
         band.append(reiterzeile, flaeche);
+        if (zeichenleiste)
+            band.appendChild(zeichenleiste);
+        flaecheFuellen();
+        /* VON AUSSEN UMSCHALTBAR (E552): „✎ Annotieren" holt den Reiter
+           „Zeichnen" nach vorn. Das ist der Preis dafür, dass die Leiste nicht
+           mehr immer dasteht — wer annotieren will, soll den Stift sehen, ohne
+           ihn erst zu suchen. PowerPoint macht dasselbe, wenn man in den
+           Freihandmodus geht. */
+        band.reiterWaehlen = (id) => {
+            if (!offen.some(r => r.id === id) || aktiv === id)
+                return;
+            aktiv = id;
+            try {
+                Store.setMeta('folienbandReiter:' + String(page?.id || ''), aktiv);
+            }
+            catch { /* das Merken ist Bequemlichkeit, kein Auftrag */ }
+            reiterzeile.querySelectorAll('[data-fb-reiter]').forEach(x => x.setAttribute('aria-selected', String(x.dataset['fbReiter'] === aktiv)));
+            flaecheFuellen();
+        };
         return band;
     };
     /** Die Masse eines Dokumentblocks — PDF-Seite wie Blatt, in Punkten. */
@@ -1321,7 +1396,10 @@ const DocumentMode = (() => {
         seite.className = 'document-inspector-seite';
         const seiteTitel = document.createElement('h3');
         seiteTitel.className = 'document-section-title';
-        seiteTitel.textContent = 'Seite ' + (seitenIndex + 1) + ' von ' + seiten.length +
+        /* DAS WORT KOMMT AUS EINER HAND (E552) — „Folie" im Foliensatz, „Seite"
+           sonst. Die Griffe darunter sind dieselben; nur ihr Wort wechselt. */
+        const eins = wortEins(page), viele = wortViele(page);
+        seiteTitel.textContent = eins + ' ' + (seitenIndex + 1) + ' von ' + seiten.length +
             (SheetSpace.gedrehtVon(documentBlock) ? ' · ' + SheetSpace.gedrehtVon(documentBlock) + '°' : '') +
             (documentBlock.lesezeichen ? ' · 🔖' : '');
         const knoepfe = document.createElement('div');
@@ -1346,13 +1424,13 @@ const DocumentMode = (() => {
             }
             return knopf;
         };
-        knoepfe.append(seitenKnopf('page-add', '＋', 'Seite danach', 'Eine leere Seite hinter dieser einfügen — mit dem Papier aus der Auswahl darunter'), seitenKnopf('page-duplicate', '⧉', 'Duplizieren', 'Diese Seite mit allem darauf verdoppeln'), seitenKnopf('page-rotate', '⟳', 'Drehen', 'Diese Seite um 90° im Uhrzeigersinn drehen'), seitenKnopf('page-up', '↑', 'Nach oben', 'Diese Seite eine Stelle nach vorn'), seitenKnopf('page-down', '↓', 'Nach unten', 'Diese Seite eine Stelle nach hinten'), seitenKnopf('page-bookmark', '🔖', 'Lesezeichen', documentBlock.lesezeichen ? 'Lesezeichen entfernen' : 'Diese Seite mit einem Lesezeichen merken', !!documentBlock.lesezeichen), seitenKnopf('page-delete', '🗑', 'Löschen', 'Diese Seite in den Papierkorb legen — von dort kommt sie zurück'), 
+        knoepfe.append(seitenKnopf('page-add', '＋', eins + ' danach', 'Eine leere ' + eins + ' hinter dieser einfügen — mit dem Papier aus der Auswahl darunter'), seitenKnopf('page-duplicate', '⧉', 'Duplizieren', 'Diese ' + eins + ' mit allem darauf verdoppeln'), seitenKnopf('page-rotate', '⟳', 'Drehen', 'Diese ' + eins + ' um 90° im Uhrzeigersinn drehen'), seitenKnopf('page-up', '↑', 'Nach oben', 'Diese ' + eins + ' eine Stelle nach vorn'), seitenKnopf('page-down', '↓', 'Nach unten', 'Diese ' + eins + ' eine Stelle nach hinten'), seitenKnopf('page-bookmark', '🔖', 'Lesezeichen', documentBlock.lesezeichen ? 'Lesezeichen entfernen' : 'Diese ' + eins + ' mit einem Lesezeichen merken', !!documentBlock.lesezeichen), seitenKnopf('page-delete', '🗑', 'Löschen', 'Diese ' + eins + ' in den Papierkorb legen — von dort kommt sie zurück'), 
         /* E469: Bilder und weitere PDF-Seiten hinter diese Seite; die Seite als Bild sichern. */
-        seitenKnopf('page-add-image', '🖼', 'Bild als Seite', 'Ein Foto, einen Scan oder eine Grafik als neue Seite hinter dieser einfügen'), seitenKnopf('page-add-camera', '📷', 'Foto aufnehmen', 'Mit der Kamera eine neue Seite hinter dieser aufnehmen — am Rechner ohne Kamera öffnet sich der Dateiwähler'), seitenKnopf('page-add-pdf', '📕', 'PDF hier einfügen', 'Die Seiten einer weiteren PDF hinter dieser Seite einfügen'), seitenKnopf('page-export-image', '⬇', 'Als Bild sichern', 'Diese Seite mit allem darauf als PNG speichern'), 
+        seitenKnopf('page-add-image', '🖼', 'Bild als ' + eins, 'Ein Foto, einen Scan oder eine Grafik als neue ' + eins + ' hinter dieser einfügen'), seitenKnopf('page-add-camera', '📷', 'Foto aufnehmen', 'Mit der Kamera eine neue ' + eins + ' hinter dieser aufnehmen — am Rechner ohne Kamera öffnet sich der Dateiwähler'), seitenKnopf('page-add-pdf', '📕', 'PDF hier einfügen', 'Die Seiten einer weiteren PDF hinter dieser ' + eins + ' einfügen'), seitenKnopf('page-export-image', '⬇', 'Als Bild sichern', 'Diese ' + eins + ' mit allem darauf als PNG speichern'), 
         /* E496: dieselbe Seite in ein anderes Dokument — kopieren oder verschieben. */
-        seitenKnopf('page-to-doc', '↗', 'In anderes Dokument', 'Diese Seite mit allem darauf in ein anderes Dokument kopieren oder verschieben'), 
+        seitenKnopf('page-to-doc', '↗', 'In anderes Dokument', 'Diese ' + eins + ' mit allem darauf in ein anderes Dokument kopieren oder verschieben'), 
         /* E499: ein mehrseitiges Blatt (E118) in einzelne Seiten zerlegen. */
-        seitenKnopf('page-split', '⌸', 'In Seiten zerlegen', 'Dieses mehrseitige Blatt in einzelne A4-Seiten zerlegen — danach greifen Drehen, Löschen und Verschieben je Seite'));
+        seitenKnopf('page-split', '⌸', 'In ' + viele + ' zerlegen', 'Dieses mehrseitige Blatt in einzelne A4-' + viele + ' zerlegen — danach greifen Drehen, Löschen und Verschieben je ' + eins));
         /* DER GRIFF STEHT NUR BEI EINEM MEHRSEITIGEN BLATT (E499). Bei allem
            anderen — einer PDF-Seite, einem einseitigen Blatt — gäbe es nichts
            zu zerlegen; ein Knopf, der dann eine Absage gibt, wäre ein Knopf zu
@@ -1366,7 +1444,7 @@ const DocumentMode = (() => {
                 knopf.disabled = true;
                 knopf.setAttribute('aria-disabled', 'true');
                 knopf.title = documentBlock?.type === 'blatt'
-                    ? 'Dieses Blatt ist schon eine einzelne Seite.'
+                    ? 'Dieses Blatt ist schon eine einzelne ' + wortEins(page) + '.'
                     : 'Nur ein mehrseitiges Blatt lässt sich zerlegen.';
             }
         }
@@ -1750,7 +1828,7 @@ const DocumentMode = (() => {
         zurueckWort.className = 'dz-wort';
         zurueckWort.textContent = 'Dokumente';
         zurueck.append(zurueckWort);
-        const thumbnailButton = topButton('thumbnails', '▤ Seiten', 'Seitenübersicht öffnen');
+        const thumbnailButton = topButton('thumbnails', '▤ ' + wortViele(page), wortViele(page) + 'übersicht öffnen');
         thumbnailButton.setAttribute('aria-expanded', String(state.thumbnailsOpen));
         const inspectorButton = topButton('inspector', 'Details', 'Notizen und Verknüpfungen öffnen');
         inspectorButton.setAttribute('aria-expanded', String(state.inspectorOpen));
@@ -1767,7 +1845,7 @@ const DocumentMode = (() => {
            `renderInspector` und heisst dort beim Namen statt nur `⇥`. */
         const position = document.createElement('span');
         position.className = 'document-position';
-        position.textContent = 'Seite ' + (state.index + 1) + '/' + documents.length;
+        position.textContent = wortEins(page) + ' ' + (state.index + 1) + '/' + documents.length;
         position.setAttribute('aria-live', 'polite');
         position.setAttribute('aria-atomic', 'true');
         const previousButton = topButton('previous', '‹', 'Vorherige Seite');
@@ -1790,7 +1868,7 @@ const DocumentMode = (() => {
         zoomLabel.textContent = state.zoom + ' %';
         const zoomGroup = document.createElement('div');
         zoomGroup.className = 'document-zoom-group';
-        zoomGroup.append(zoom, zoomLabel, topButton('fit', 'Anpassen', 'Seite an die verfügbare Breite anpassen'));
+        zoomGroup.append(zoom, zoomLabel, topButton('fit', 'Anpassen', wortEins(page) + ' an die verfügbare Breite anpassen'));
         /* DER TITEL STEHT JETZT HIER (E296). Der grosse Seitenkopf faellt im
            Dokumentmodus weg; ohne diese Zeile hiesse das offene Dokument
            nirgends mehr beim Namen. `textContent`, nicht `innerHTML` — der Titel
@@ -1973,13 +2051,13 @@ const DocumentMode = (() => {
         const thumbnails = document.createElement('aside');
         thumbnails.className = 'document-thumbnails' + (state.thumbnailsOpen ? ' is-open' : '');
         thumbnails.id = 'document-thumbnails-' + page.id;
-        thumbnails.setAttribute('aria-label', 'Seitenübersicht');
+        thumbnails.setAttribute('aria-label', wortViele(page) + 'übersicht');
         thumbnailButton.setAttribute('aria-controls', thumbnails.id);
         const thumbHeader = document.createElement('div');
         thumbHeader.className = 'document-panel-header';
         const thumbTitle = document.createElement('strong');
-        thumbTitle.textContent = 'Seiten';
-        const thumbClose = topButton('thumbnails-close', '✕', 'Seitenübersicht schließen');
+        thumbTitle.textContent = wortViele(page);
+        const thumbClose = topButton('thumbnails-close', '✕', wortViele(page) + 'übersicht schließen');
         thumbHeader.append(thumbTitle, thumbClose);
         thumbnails.appendChild(thumbHeader);
         documents.forEach((block, index) => thumbnails.appendChild(thumbnail(block, index, index === state.index)));
@@ -2412,8 +2490,14 @@ const DocumentMode = (() => {
            ÜBER der Zeichenleiste, so wie ein Menüband über dem Blatt steht.
            Es kommt nur bei einem Foliensatz und nur ab 900 px; sonst ist es
            `null` und `append` bekommt nichts (siehe `folienbandBauen`). */
-        let folienband = folienbandBauen(page);
-        workspace.append(top, ...(folienband ? [folienband] : []), findbar, drawingbar, commandbar, body);
+        /* DIE ZEICHENLEISTE WOHNT IM BAND, WENN ES EINES GIBT (E552).
+           Gibt es keines — ein PDF, ein Heft, oder ein Fenster unter 900 px —,
+           steht sie wie bisher als eigene Leiste zwischen Suche und Inhalt.
+           Es ist in beiden Fällen DASSELBE Element; `applyPen`, `inkSync` und
+           die Stiftoptionen finden es über `.document-drawingbar`, egal wo es
+           hängt. */
+        let folienband = folienbandBauen(page, drawingbar);
+        workspace.append(top, ...(folienband ? [folienband] : []), findbar, ...(folienband ? [] : [drawingbar]), commandbar, body);
         /**
          * Das Band kommt und geht mit der Fensterbreite.
          *
@@ -2430,11 +2514,19 @@ const DocumentMode = (() => {
             if (soll === ist)
                 return;
             if (!soll) {
+                /* DIE LEISTE ZUERST IN SICHERHEIT BRINGEN. Sie ist ein KIND des
+                   Bandes; das Band einfach zu entfernen nähme sie mit, und dann
+                   gäbe es am schmalen Fenster gar keine Zeichenwerkzeuge mehr —
+                   genau der Datenweg, den §47 „nichts wegnehmen" meint, nur als
+                   Unfall. Erst zurück an ihren alten Platz, dann das Band weg. */
+                drawingbar.hidden = false;
+                drawingbar.setAttribute('aria-label', 'PDF bearbeiten');
+                findbar.after(drawingbar);
                 folienband?.remove();
                 folienband = null;
                 return;
             }
-            folienband = folienbandBauen(page);
+            folienband = folienbandBauen(page, drawingbar);
             if (folienband)
                 top.after(folienband);
         };
@@ -2760,7 +2852,7 @@ const DocumentMode = (() => {
                 state.index = sichtbar;
                 seiteMerken(page.id, sichtbar);
                 aktivMarkieren(); /* F03 */
-                position.textContent = 'Seite ' + (sichtbar + 1) + '/' + documents.length;
+                position.textContent = wortEins(page) + ' ' + (sichtbar + 1) + '/' + documents.length;
                 thumbnails.querySelectorAll('.document-thumbnail.is-selected')
                     .forEach(el => el.classList.remove('is-selected'));
                 thumbnails.querySelector('[data-document-index="' + sichtbar + '"]')
@@ -2958,7 +3050,7 @@ const DocumentMode = (() => {
                 else
                     center.scrollTop = stand.offsetTop;
             }
-            position.textContent = 'Seite ' + (nr + 1) + '/' + documents.length;
+            position.textContent = wortEins(page) + ' ' + (nr + 1) + '/' + documents.length;
             thumbnails.querySelectorAll('.document-thumbnail.is-selected')
                 .forEach(el => el.classList.remove('is-selected'));
             thumbnails.querySelector('[data-document-index="' + nr + '"]')
@@ -3279,7 +3371,7 @@ const DocumentMode = (() => {
                aus dem Papierkorb faellt. Bis die Kopie da ist, zeigt die neue
                Seite das alte Bild; danach ihr eigenes. */
             seitenbildKopieren(block, neu.id);
-            UI.toast('Seite verdoppelt');
+            UI.toast(wortEins(page) + ' verdoppelt');
             neuMit(neu.id);
         };
         /**
@@ -3435,7 +3527,7 @@ const DocumentMode = (() => {
                     return;
                 }
                 seitenbildKopieren(block, neu.id);
-                UI.toast('Seite nach „' + String(zielSeite.text || 'Ohne Titel') + '" kopiert');
+                UI.toast(wortEins(page) + ' nach „' + String(zielSeite.text || 'Ohne Titel') + '" kopiert');
                 return;
             }
             const stelle = stelleVon(block);
@@ -3446,7 +3538,7 @@ const DocumentMode = (() => {
             Store.updateBlock(ziel.id, { content: [...(ziel.content || []), block.id] });
             Store.updateBlock(block.id, { parentId: ziel.id, parentTable: 'block' });
             Store.updateBlock(stelle.eltern.id, { content: (stelle.eltern.content || []).filter((id) => id !== block.id) });
-            UI.toast('Seite nach „' + String(zielSeite.text || 'Ohne Titel') + '" verschoben');
+            UI.toast(wortEins(page) + ' nach „' + String(zielSeite.text || 'Ohne Titel') + '" verschoben');
             const rest = documentsIn(page);
             neuMit(rest[Math.min(rest.length - 1, Math.max(0, stelle.index))]?.id || null);
         };
@@ -3479,8 +3571,8 @@ const DocumentMode = (() => {
             const anzahl = zerlegbar(block);
             if (anzahl < 2) {
                 UI.toast(block?.type === 'blatt'
-                    ? 'Dieses Blatt ist schon eine einzelne Seite.'
-                    : 'Nur ein mehrseitiges Blatt lässt sich in Seiten zerlegen.');
+                    ? 'Dieses Blatt ist schon eine einzelne ' + wortEins(page) + '.'
+                    : 'Nur ein mehrseitiges Blatt lässt sich in ' + wortViele(page) + ' zerlegen.');
                 return;
             }
             const stelle = stelleVon(block);
@@ -3554,7 +3646,7 @@ const DocumentMode = (() => {
             }
             const i = liste.findIndex(x => x.id === block.id);
             Store.trashBlock(block.id);
-            UI.toast('Seite im Papierkorb — von dort kommt sie zurück');
+            UI.toast(wortEins(page) + ' im Papierkorb — von dort kommt sie zurück');
             const naechste = liste[Math.min(liste.length - 1, i + 1 < liste.length ? i + 1 : i - 1)];
             neuMit(naechste && naechste.id !== block.id ? naechste.id : null);
         };
@@ -3638,7 +3730,7 @@ const DocumentMode = (() => {
                 Store.updateBlock(block.id, { parentId: zielEltern.id, parentTable: 'block' });
                 Store.updateBlock(stelle.eltern.id, { content: (stelle.eltern.content || []).filter((id) => id !== block.id) });
             }
-            UI.toast('Seite verschoben');
+            UI.toast(wortEins(page) + ' verschoben');
             neuMit(block.id);
             return true;
         };
@@ -3691,7 +3783,7 @@ const DocumentMode = (() => {
                 k.append(z, t);
                 kasten.appendChild(k);
             };
-            eintrag('page-add', '＋', 'Seite danach');
+            eintrag('page-add', '＋', wortEins(page) + ' danach');
             eintrag('page-add-camera', '📷', 'Foto aufnehmen');
             eintrag('page-duplicate', '⧉', 'Duplizieren');
             eintrag('page-rotate', '⟳', 'Drehen');
@@ -3885,7 +3977,7 @@ const DocumentMode = (() => {
             const block = wen || jetzt();
             const g = (SheetSpace.gedrehtVon(block) + 90) % 360;
             Store.updateBlock(block.id, { gedreht: g || 0 });
-            UI.toast(g ? 'Seite um ' + g + '° gedreht' : 'Seite wieder aufrecht');
+            UI.toast(g ? wortEins(page) + ' um ' + g + '° gedreht' : wortEins(page) + ' wieder aufrecht');
             neuMit(block.id);
         };
         const lesezeichenWechseln = (wen) => {
@@ -4217,7 +4309,7 @@ const DocumentMode = (() => {
                     }
                     const nr = documentsIn(page).findIndex(b => b.id === block.id) + 1;
                     herunterladen(blob, String(page.text || 'Seite').replace(/[\\/:*?"<>|]+/g, ' ').trim() + ' – Seite ' + nr + '.png');
-                    UI.toast('Seite ' + nr + ' als PNG gesichert');
+                    UI.toast(wortEins(page) + ' ' + nr + ' als PNG gesichert');
                 });
                 return;
             }
@@ -4395,8 +4487,14 @@ const DocumentMode = (() => {
             if (action === 'read')
                 toolsSetzen(false);
             if (action === 'annotate' && !page.gesperrt &&
-                (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page.id)))
+                (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page.id))) {
                 toolsSetzen(true);
+                /* UND DER REITER „ZEICHNEN" KOMMT NACH VORN (E552). Seit die
+                   Zeichenleiste im Band wohnt, ist sie unter einem anderen Reiter
+                   nicht zu sehen — „Annotieren" zu drücken und keinen Stift zu
+                   bekommen wäre schlimmer als die alte Dauerleiste. */
+                folienband?.reiterWaehlen?.('zeichnen');
+            }
             if (action === 'fit') {
                 zoomSetzen(100);
                 center.scrollLeft = 0;
