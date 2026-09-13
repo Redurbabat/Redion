@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-534 Entscheidungen, E1 bis E554 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+536 Entscheidungen, E1 bis E556 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -598,6 +598,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E552** — Gleich wie PowerPoint: „Zeichnen“ wird ein Reiter (die echte Leiste zieht um, kein Nachbau), und ein Blatt heisst im Foliensatz „Folie“
 * **E553** — Der gelbe Deckel deckt auf: es gab zwei Vorträge, der Knopf startete den falschen — und ein Zierstrich war als „Antwort“ gebaut
 * **E554** — Das Dokumentstudio trägt Redions Farben: fünf feste Hexwerte werden abgeleitet, der gewählte Stift wird ein Umriss — und E464 ist an dieser Stelle umgedreht
+* **E555** — Eine Gruppe ist kein Loch: `p:grpSp` wird mitgelesen (samt Kindkoordinaten), und der Hinweis sagt, was NICHT ankam
+* **E556** — Auch im Laserpointer-Vortrag deckt ein Tipp die Antwort auf — der Deckel liegt unter der Zeigefläche, nicht neben ihr
 
 ---
 
@@ -44664,3 +44666,118 @@ der Last gemessen, die gerade da war: dreissig Sekunden statt fünfzehn, und
 die Zeile sagt jetzt, WAS sie gelesen hat und ob die Zeit ablief — bei
 Zeitablauf stand vorher dieselbe nichtssagende Meldung da wie bei einem
 falschen Wert.
+
+---
+
+E555 — Eine Gruppe ist kein Loch: was in ihr liegt, kommt an — und was nicht ankommt, steht im Hinweis
+--------------------------------------------------------------------------
+
+Redur: **„verbesser für die pptx öfnnen"**.
+
+Untersucht wurde der ganze Leser. Der schwerste Fund hat Datenverlust-Rang
+(§46 Nr. 3) und kommt deshalb vor den hübscheren.
+
+### Was gemessen wurde, an einer eigens gebauten .pptx
+
+```txt
+gruppierter Deckel (p:grpSp mit p:sp darin)
+    →  Marken = [{art:'text', text:'Die Antwort ist 42'}]
+    →  DIE ABDECKUNG FEHLT. DIE ANTWORT STEHT OFFEN.
+Gruppe mit Text und Bild        →  0 Marken
+Tabelle (p:graphicFrame/a:tbl)  →  0 Marken
+und der Hinweis sagte:  „1 Folien übernommen"
+                        Kein Wort davon, dass etwas fehlt.
+```
+
+Der Grund: die Schleife lief über `baum.children` und kannte genau zwei
+Marken, `p:sp` und `p:pic`. Ein `p:grpSp` fällt durch beide Siebe — mit
+allem, was darin liegt.
+
+**Das ist derselbe Fehler wie E541, eine Verschachtelung tiefer.** Dort waren
+es Formen ohne Text, die übersprungen wurden — und Abdeckungen haben keinen.
+Die Folie sah beide Male vollständig aus.
+
+### Die Kindkoordinaten, und warum sie nicht wegzulassen sind
+
+Eine Gruppe darf ihren Inhalt verschieben **und** skalieren: `a:off`/`a:ext`
+ist der Kasten aussen, `a:chOff`/`a:chExt` das System innen. Sind beide
+gleich — der Normalfall —, ändert die Abbildung nichts; sonst wandert alles.
+
+```txt
+x' = off.x + (x − chOff.x) · (ext.cx / chExt.cx)
+```
+
+Der Prüflauf baut deshalb ausdrücklich eine Gruppe, bei der sie NICHT gleich
+sind: Aussenmass doppelt so gross wie das Innenmass. Die Gegenprobe ohne
+Abbildung setzt die Kinder auf (0, 0) und (72, 36) — genau dahin, wo die
+Innenwelt sie hat.
+
+**Und hier hat der Prüflauf mich korrigiert, nicht den Code.** Mein erwarteter
+Wert war (360, 144), gemeldet wurden 216. Nachgerechnet hatte der Code recht:
+914400 EMU sind 72 pt, also die halbe INNENbreite, nicht die halbe
+Aussenbreite — 72 + 72·2 = 216. §45/E21 gilt auch fürs Kopfrechnen.
+
+### Die zweite Hälfte: sagen, was fehlt
+
+§11 sagt es für die Sicherung: „eine Sicherung, die nicht sagt, was sie
+auslässt, ist die gefährlichste Sorte". Für einen Import gilt es genauso —
+die Folie sieht vollständig aus.
+
+Der Hinweis zählt jetzt auch das Weggelassene, je Art und über alle Folien:
+
+```txt
+3 Folien übernommen, 1 Antworten zugedeckt
+  · NICHT übernommen: 1 Tabellen, 1 gefüllte Formen
+  · das Original liegt unverändert als Anhang dabei
+```
+
+Was **nicht** gezählt wird: eine Form ohne Text UND ohne Fläche. Sonst zählte
+jeder unsichtbare Platzhalter mit, und eine Zahl, die immer dasteht, liest
+niemand mehr.
+
+`test511` neu, 16 Zusagen, drei Gegenproben gefahren (7/9, 13/3, 13/3 —
+gemessen). Die erste lässt Folie 1 ganz ohne Marken zurück; die dritte bringt
+den alten, schweigenden Hinweis wörtlich wieder.
+
+**Was noch offen ist** (untersucht und gemessen, aber nicht in diesem Bogen):
+Format je Absatz statt je Kasten — ein Kasten mit „klein"(12 pt) und
+„GROSS"(36 pt, fett, blau) kommt heute als EINE Marke in 12 pt an; dazu
+Farbe, Ausrichtung, Aufzählungsebenen und Drehung. Und die Tabellen selbst.
+Steht in `LUECKEN.md` unter L151.
+
+---
+
+E556 — Auch im Laserpointer-Vortrag deckt ein Tipp die Antwort auf
+--------------------------------------------------------------------------
+
+E553 hat den Foliensatz auf den Folienvortrag umgelenkt, wo ein Tipp auf eine
+Abdeckung sie längst aufdeckt. Die Weiche lässt aber **zwei Fälle** offen,
+und beide sind echt:
+
+- **eine hochkante Folie** — `istFoliensatz` verlangt quer, und das ist
+  richtig so; sonst bekäme jedes Notizheft den Folienvortrag.
+- **eine Abdeckung auf einer PDF-Seite oder im Heft** — eine Übungsaufgabe im
+  eigenen Skript ist genau der Fall, für den E266 die Abdeckung gebaut hat.
+
+In beiden schluckt `.document-zeigen-flaeche` den Zeiger (`inset:0`,
+`z-index:40`), und der Tipp blättert. Gemessen an einem Heft:
+
+```txt
+elementsFromPoint(Deckelmitte)
+  = [div.document-zeigen-flaeche, rect[abdeck], svg.blatt-marken, …]
+```
+
+Der Deckel liegt als **zweiter** darunter. `event.target` sieht ihn nie — der
+Stapel schon.
+
+**Die Zeigefläche bleibt, wie sie ist.** Ihr `pointer-events:none` zu geben
+wäre der naheliegende Weg und der falsche: dann liefe der Laserpointer nicht
+mehr, und ein Klick ins Papier fiele an die Zeichenschicht, die im Vortrag
+gar nicht zeichnen soll.
+
+Aufdecken ist einseitig, wie im Folienvortrag: auf der Leinwand wieder
+zuzudecken hilft niemandem.
+
+`test509` steht damit bei 27 Zusagen; die fünfte Gegenprobe (den Griff wieder
+herausnehmen) meldet **„ist ‚Seite 2/2‘, soll ‚Seite 1/2‘"** — Redurs Satz,
+diesmal im Heft.

@@ -2991,6 +2991,37 @@ const DocumentMode = (() => {
                 const r = flaeche.getBoundingClientRect();
                 if (Math.hypot(event.clientX - tippVon[0], event.clientY - tippVon[1]) > 8)
                     return;
+                /* ══ EIN TIPP AUF EINE ABDECKUNG DECKT SIE AUF (E556) ══════════════
+                   E553 hat den Foliensatz auf den Folienvortrag umgelenkt, wo das
+                   längst so ist. Zwei Fälle bleiben aber HIER:
+        
+                     · eine HOCHKANTE Folie — `istFoliensatz` verlangt quer, und das
+                       ist richtig so (sonst bekäme jedes Notizheft den Folienvortrag)
+                     · eine Abdeckung auf einer PDF-Seite oder im Heft — eine
+                       Übungsaufgabe im eigenen Skript ist genau der Fall, für den
+                       E266 die Abdeckung gebaut hat
+        
+                   In beiden schluckt `.document-zeigen-flaeche` den Zeiger
+                   (`inset:0`, `z-index:40`) und der Tipp blättert. Gemessen an einem
+                   Heft: `elementsFromPoint` gibt
+                   [div.document-zeigen-flaeche, rect[abdeck], svg.blatt-marken, …] —
+                   der Deckel liegt als ZWEITER darunter und ist nur über den Stapel
+                   zu erreichen, nicht über `event.target`.
+        
+                   DIE ZEIGEFLÄCHE BLEIBT, WIE SIE IST. Sie `pointer-events:none` zu
+                   geben wäre der naheliegende Weg und der falsche: dann liefe der
+                   Laserpointer nicht mehr, und ein Klick ins Papier fiele an die
+                   Zeichenschicht, die im Vortrag gar nicht zeichnen soll.
+        
+                   AUFDECKEN IST EINSEITIG, wie im Folienvortrag: auf der Leinwand
+                   wieder zuzudecken hilft niemandem. */
+                const deckel = document.elementsFromPoint(event.clientX, event.clientY)
+                    .map(el => el.closest?.('[data-ink-art="abdeck"]'))
+                    .find(Boolean);
+                if (deckel && !deckel.hasAttribute('data-auf')) {
+                    deckel.setAttribute('data-auf', '1');
+                    return;
+                }
                 springe(state.index + (event.clientX - r.left < r.width / 3 ? -1 : 1), false);
             });
             if (typeof App !== 'undefined' && App.vollbild) {

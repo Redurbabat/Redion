@@ -1221,12 +1221,86 @@ const Einlesen = (() => {
       const objekte: any[] = [];
       let titel = '';
 
-      for (const form of (baum ? baum.children : [])) {
+      /* ══ DIE FORMEN EINER FOLIE — AUCH DIE IN GRUPPEN (E555) ═══════════
+         Hier stand eine einfache Schleife über `baum.children`, und sie
+         kannte genau zwei Marken: `p:sp` und `p:pic`. Eine GRUPPE
+         (`p:grpSp`) fällt durch beide Siebe — mit allem, was darin liegt.
+
+         GEMESSEN an einer eigens gebauten .pptx:
+           · gruppierter Deckel  →  DIE ANTWORT STAND OFFEN
+           · Gruppe mit Text und Bild  →  0 Marken
+           · und der Hinweis sagte „1 Folien übernommen", kein Wort davon,
+             dass etwas fehlt
+
+         Das erste ist der Grund, warum dieser Bogen vor den hübscheren
+         kommt. Eine Übungsfolie, deren Abdeckung verschwindet, ist keine
+         Übungsfolie mehr — und sie SIEHT vollständig aus. Genau derselbe
+         Fehler wie E541, nur eine Verschachtelung tiefer.
+
+         DIE KINDKOORDINATEN. Eine Gruppe darf ihren Inhalt verschieben und
+         skalieren: `a:off`/`a:ext` ist der Kasten AUSSEN, `a:chOff`/`a:chExt`
+         das Koordinatensystem INNEN. Solange beide gleich sind — der
+         Normalfall —, ändert die Abbildung nichts; sonst wandert sonst
+         alles. Formel: x' = off.x + (x − chOff.x) · (ext.cx / chExt.cx).
+
+         DIE TIEFENBREMSE ist kein Zierrat: Gruppen dürfen Gruppen
+         enthalten, und eine kaputte Datei mit einem Ring darin würde sonst
+         bis zum Speicherende laufen. Acht Ebenen sind mehr, als PowerPoint
+         selbst zulässt. */
+      type Abbildung = { dx: number; dy: number; sx: number; sy: number } | null;
+      const abbilden = (l: { x: number; y: number; w: number; h: number } | null,
+                        ab: Abbildung) => {
+        if (!l || !ab) return l;
+        return { x: ab.dx + l.x * ab.sx, y: ab.dy + l.y * ab.sy,
+                 w: l.w * ab.sx, h: l.h * ab.sy };
+      };
+      /** Was weggelassen werden musste — je Art gezählt, für den Hinweis. */
+      const weggelassen = new Map<string, number>();
+      const merkeWeg = (was: string): void =>
+        void weggelassen.set(was, (weggelassen.get(was) || 0) + 1);
+
+      const formenLesen = async (formen: Iterable<Element>, ab: Abbildung,
+                                 tiefe: number): Promise<void> => {
+      for (const form of formen) {
+        /* ── Gruppe: hineingehen, statt sie zu übersehen (E555) ───────── */
+        if (form.tagName === 'p:grpSp') {
+          if (tiefe >= 8) { merkeWeg('tief verschachtelte Gruppen'); continue; }
+          const gp = form.getElementsByTagName('a:grpSpPr')[0];
+          const xf = gp?.getElementsByTagName('a:xfrm')[0];
+          const off = xf?.getElementsByTagName('a:off')[0];
+          const ext = xf?.getElementsByTagName('a:ext')[0];
+          const cOff = xf?.getElementsByTagName('a:chOff')[0];
+          const cExt = xf?.getElementsByTagName('a:chExt')[0];
+          let innen: Abbildung = ab;
+          if (off && ext && cOff && cExt) {
+            const ox = emuZuPunkt(off.getAttribute('x')), oy = emuZuPunkt(off.getAttribute('y'));
+            const cx = emuZuPunkt(ext.getAttribute('cx')), cy = emuZuPunkt(ext.getAttribute('cy'));
+            const kx = emuZuPunkt(cOff.getAttribute('x')), ky = emuZuPunkt(cOff.getAttribute('y'));
+            const kcx = emuZuPunkt(cExt.getAttribute('cx')), kcy = emuZuPunkt(cExt.getAttribute('cy'));
+            /* Null als Nenner heisst „keine Angabe" und nicht „unendlich". */
+            const sx = kcx > 0 ? cx / kcx : 1, sy = kcy > 0 ? cy / kcy : 1;
+            const eigen = { dx: ox - kx * sx, dy: oy - ky * sy, sx, sy };
+            innen = ab
+              ? { dx: ab.dx + eigen.dx * ab.sx, dy: ab.dy + eigen.dy * ab.sy,
+                  sx: eigen.sx * ab.sx, sy: eigen.sy * ab.sy }
+              : eigen;
+          }
+          await formenLesen(form.children, innen, tiefe + 1);
+          continue;
+        }
+        /* ── Tabelle und Diagramm: noch nicht, aber NICHT still (E555) ── */
+        if (form.tagName === 'p:graphicFrame') {
+          merkeWeg(form.getElementsByTagName('a:tbl').length ? 'Tabellen' : 'Diagramme');
+          continue;
+        }
         /* ── Textkasten ──────────────────────────────────────────────── */
         if (form.tagName === 'p:sp') {
           const txBody = form.getElementsByTagName('p:txBody')[0];
           const text = txBody ? formText(txBody) : '';
-          const lage = formLage(form);
+          /* DURCH DIE ABBILDUNG DER GRUPPE (E555). Ausserhalb einer Gruppe
+             ist `ab` null und `abbilden` gibt die Lage unverändert zurück —
+             dieselbe Zeile trägt beide Fälle. */
+          const lage = abbilden(formLage(form), ab);
 
           /* ── EINE ABDECKUNG ──────────────────────────────────────────
              Kein Text, eine feste Füllung, und ein Klick lässt sie
@@ -1242,7 +1316,16 @@ const Einlesen = (() => {
               x: lage.x, y: lage.y, w: lage.w, h: lage.h });
             continue;
           }
-          if (!text.trim()) continue;
+          if (!text.trim()) {
+            /* EINE FORM OHNE TEXT UND OHNE KLICK. Sie kommt nicht an —
+               Redion hat für eine gefüllte PowerPoint-Form keine Marke, die
+               ihre Füllung UND ihren Umriss trüge. Aber sie verschwindet
+               nicht mehr schweigend (E555): gezählt wird sie nur, wenn sie
+               überhaupt eine Fläche hat, sonst zählte jeder unsichtbare
+               Platzhalter mit. */
+            if (lage && lage.w > 0 && lage.h > 0) merkeWeg('gefüllte Formen');
+            continue;
+          }
           /* Der erste Lauf bestimmt Schriftgrad und Fett für den Kasten.
              Redions Textmarke hat EINEN Grad je Kasten; ein Kasten mit
              gemischten Graden käme also vereinfacht an. Das ist eine Lücke
@@ -1270,7 +1353,7 @@ const Einlesen = (() => {
           if (!ziel) continue;
           const bytes = await zip.holen(ziel);
           if (!bytes) continue;
-          const lage = formLage(form);
+          const lage = abbilden(formLage(form), ab);
           /* `pfad` ist der Schlüssel zum Sparen: an einer echten Datei
              gemessen kam ein Logo 27-mal vor, einmal je Folie. Ohne ihn
              entstünden 27 Dateisätze mit denselben Bytes. */
@@ -1281,6 +1364,8 @@ const Einlesen = (() => {
             h: lage && lage.h > 0 ? lage.h : hoehe * 0.4 });
         }
       }
+      };
+      await formenLesen(baum ? baum.children : [], null, 0);
       /* KEIN PLATZHALTER, TROTZDEM EIN TITEL. An Redurs echter Datei
          gemessen: 27 Folien, NULL `p:ph`-Elemente. Die Erkennung über den
          Platzhaltertyp konnte dort nie greifen — PowerPoint schreibt ihn
@@ -1293,7 +1378,8 @@ const Einlesen = (() => {
         .sort((a, b) => a.y - b.y)
         .map(o => String(o.text).split('\n')[0]!.trim())
         .filter(z => z && z.length <= 80);
-      folien.push({ titel, objekte, kandidaten });
+      folien.push({ titel, objekte, kandidaten,
+                    weg: [...weggelassen.entries()] });
     }
     /* ══ WELCHER KASTEN IST DIE ÜBERSCHRIFT? ═══════════════════════════
        Der oberste allein genügt nicht. An Redurs Datei gemessen: dort
@@ -1558,9 +1644,28 @@ const Einlesen = (() => {
         mitDeckel += marken.filter((m: any) => m.art === 'abdeck').length;
         if (marken.length) Store.updateBlock(block.id, { marken });
       }
+      /* ══ WAS NICHT ANKAM, STEHT IM HINWEIS (E555) ══════════════════════
+         Hier stand nur, was ANKAM: „27 Folien übernommen, 12 Bilder,
+         8 Antworten zugedeckt". Das ist die gefährliche Hälfte einer
+         Auskunft — §11 sagt es für die Sicherung („eine Sicherung, die nicht
+         sagt, was sie auslässt, ist die gefährlichste Sorte"), und für einen
+         Import gilt es genauso: die Folie SIEHT vollständig aus.
+
+         Gezählt wird über alle Folien zusammen und je Art, in der
+         Reihenfolge, in der es auffällt. Keine Zahl heisst: es fehlt
+         nichts — dann steht auch nichts da. */
+      const fehltGesamt = new Map<string, number>();
+      for (const f of p.folien)
+        for (const [was, n] of ((f as any).weg || []))
+          fehltGesamt.set(was, (fehltGesamt.get(was) || 0) + Number(n));
+      const fehltText = [...fehltGesamt.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([was, n]) => n + ' ' + was)
+        .join(', ');
       return { seite, hinweis: p.folien.length + ' Folien übernommen'
         + (mitBild ? ', ' + mitBild + ' Bilder aus ' + schonAbgelegt.size + ' Dateien' : '')
         + (mitDeckel ? ', ' + mitDeckel + ' Antworten zugedeckt' : '')
+        + (fehltText ? ' · NICHT übernommen: ' + fehltText : '')
         + (quelle ? ' · das Original liegt unverändert als Anhang dabei' : '') };
     }
 

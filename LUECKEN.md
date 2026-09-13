@@ -7443,9 +7443,13 @@ verloren hält:
 - **Absatzebenen und Aufzählungszeichen.** `a:pPr@lvl` und `a:buChar` werden
   nicht gelesen; eine Gliederung kommt als flacher Text an.
 - **Tabellen (`a:tbl`) und Diagramme.** Beide werden übersprungen — sie haben
-  in der Markenschicht kein Gegenstück.
+  in der Markenschicht kein Gegenstück. **Seit E555 werden sie wenigstens
+  GENANNT**: der Hinweis nach dem Einlesen sagt „NICHT übernommen:
+  1 Tabellen".
 - **Formen ohne Text** (Pfeile, Rechtecke, Linien aus `a:prstGeom`). Die
-  Markenschicht kennt sieben Formen; die Zuordnung fehlt noch.
+  Markenschicht kennt sieben Formen; die Zuordnung fehlt noch. Auch sie
+  stehen seit E555 im Hinweis — aber nur, wenn sie eine Fläche haben; ein
+  unsichtbarer Platzhalter zählt nicht mit.
 - **Drehung** (`a:xfrm@rot`) und Spiegelung (`flipH`/`flipV`). Die Marken
   können drehen — gelesen wird es noch nicht.
 - **Notizen** (`ppt/notesSlides/`), Übergänge, Animationen.
@@ -7455,6 +7459,38 @@ verloren hält:
 liest sich in 385 ms ohne einen Browserfehler, die Bilder sitzen an ihrem
 Platz, und die gerenderte Folie entspricht dem Original. Vier Funde daraus
 stehen in E541.
+
+### Einer der Punkte oben war schlimmer als „fehlt" — GESCHLOSSEN mit E555
+
+**Gruppen (`p:grpSp`) standen hier gar nicht**, und sie waren der einzige
+Punkt mit Datenverlust-Rang. Die Schleife lief über `baum.children` und
+kannte `p:sp` und `p:pic`; eine Gruppe fiel durch beide Siebe, mit allem
+darin. An einer eigens gebauten Datei gemessen:
+
+```txt
+gruppierter Deckel   →  DIE ANTWORT STAND OFFEN
+Gruppe mit Text+Bild →  0 Marken
+Hinweis              →  „1 Folien übernommen", kein Wort davon
+```
+
+Derselbe Fehler wie E541, eine Verschachtelung tiefer. Seit E555 wird
+rekursiv gelesen, samt der Abbildung von `a:chOff`/`a:chExt` (eine Gruppe
+darf ihren Inhalt skalieren) und einer Tiefenbremse bei acht Ebenen.
+`test511` hält es, drei Gegenproben gefahren.
+
+### Und die Reihenfolge für den Rest, nach Nutzen (untersucht, nicht geraten)
+
+1. **Format je Absatz statt je Kasten.** Heute nimmt der Leser
+   `txBody.getElementsByTagName('a:rPr')[0]` — den ersten Lauf der ersten
+   Zeile — für den GANZEN Kasten. Gemessen: „klein"(12 pt) + „GROSS"(36 pt,
+   fett, kursiv, unterstrichen, blau) kommt als EINE Marke „klein GROSS" in
+   12 pt normal an. Ein roter Titel (`srgbClr CC0000`) kommt schwarz. Drei
+   Aufzählungsebenen kommen als ein flacher Block. Rund 60 Zeilen, kein neues
+   Markenfeld — die Textmarke kann `farbe`, `fontSize`, `fett` und
+   `breiteBox` längst.
+2. **Tabellen** als Tabellenblock statt als Hinweiszeile.
+3. **Layout und Master** — der grösste Brocken, weil er ein zweites
+   Auflösungssystem braucht.
 
 **Weiter nicht gemessen:** eine Datei aus LibreOffice Impress und eine aus
 Google Slides. Beide schreiben gültiges OOXML, aber anders — vor allem bei
