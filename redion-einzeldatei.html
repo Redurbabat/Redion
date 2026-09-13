@@ -23229,7 +23229,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1017, inhalt: 'cd0a6d9cd1b9439f', gebaut: '2026-09-13T19:12:44.485Z' };
+const Stand = { fassung: 1024, inhalt: 'f981a7cd85091844', gebaut: '2026-09-13T19:27:34.762Z' };
 window.Stand = Stand;
 
 </script>
@@ -75147,6 +75147,21 @@ const ChronikDaten = {
             "beweis": "Danach 14 gruen, und die Gegenprobe G1 (wieder schaetzen) nennt zwei Uebertreter von 21 Zeilen: a2 164,2 in 160, a6 202,2 in 200.",
             "lehre": "Eine Zusage ueber ALLE Elemente einer Liste ist auf der leeren Liste immer wahr. `filter(...).length === 0` sieht streng aus und prueft nichts, solange niemand fragt, ob ueberhaupt etwas darin war. Jede Allaussage braucht deshalb eine Zusage daneben, die sagt: und es waren genug, und sie waren nicht alle winzig. Genau die hat hier zweimal hintereinander den Fehler gefunden.",
             "entscheidung": "E562"
+        },
+        {
+            "nr": "P43",
+            "datum": "2026-09-13",
+            "titel": "Die Zusage zeigte auf den Code, und schuld war mein Pruefstueck",
+            "schwere": "klein",
+            "symptom": "`test518 §2` meldete „Die Abdeckung ist da — ['text','text','text','text','bild']\". Der Deckel kam gar nicht an, obwohl das Bild danebenstand und sich richtig drehte.",
+            "falscheVermutung": "Dass meine Drehungszeile fuer die Abdeckung nicht greift — sie steht in einem anderen Zweig als der Text, also lag der Verdacht nahe.",
+            "wieGefunden": "Nachgesehen, wie der Leser eine Abdeckung ueberhaupt ERKENNT: ueber `klickschritte`, und dort zaehlt nur ein `p:cTn` mit `nodeType=\"clickEffect\"`. Mein `p:timing` hatte die Verschachtelung nach Gefuehl und dieses Attribut gar nicht.",
+            "ursache": "Das Pruefstueck war falsch, nicht der Code. Ohne `clickEffect` gibt es keinen Klickschritt, ohne Klickschritt keine Abdeckung — die Form fiel korrekt als „gefuellte Form ohne Text\" durch.",
+            "loesung": "Das `p:timing` nach der gelesenen Regel gebaut statt nach Gefuehl, mit einem Kommentar daneben, woher die Form kommt.",
+            "warumKeineUhr": "—",
+            "beweis": "17 gruen. Und die Gegenproben G1/G2 werden mit 9 roten Zusagen rot — die Abdeckung ist jetzt eine davon.",
+            "lehre": "§45/E21 („nachsehen, nicht erinnern\") gilt auch fuer die PRUEFDATEI. Ein Pruefstueck, das ich aus dem Kopf baue, ist genauso eine Behauptung wie eine erinnerte Schnittstelle — nur faellt es staerker auf die Fuesse, weil die rote Zusage dann auf den Code zeigt, der recht hat. Beim dritten solchen Fall in dieser Sitzung (P32, P41, P43) ist das Muster deutlich: bevor ich einem roten Lauf glaube, pruefe ich, ob MEINE Seite der Messung stimmt.",
+            "entscheidung": "E563"
         }
     ]
 };
@@ -109695,6 +109710,30 @@ const Einlesen = (() => {
             return 'rechts';
         return '';
     };
+    /**
+     * Die DREHUNG einer Form, in Grad im Uhrzeigersinn (E563).
+     *
+     * `a:xfrm@rot` steht in 60000steln Grad: 5400000 sind 90°. Die Richtung
+     * ist dieselbe wie bei SVGs `rotate` und bei Redions `dreh` — es muss
+     * also nichts gespiegelt werden, nur geteilt.
+     *
+     * AUF 0…360 GEBRACHT, und 0 heisst „keine". PowerPoint schreibt auch
+     * negative Werte und solche über 360; eine Marke mit `dreh: -90` wäre
+     * gültig, aber `dreh: 270` ist dieselbe Drehung und liest sich besser.
+     *
+     * NUR AUS DEM EIGENEN `a:xfrm`. `getElementsByTagName` fände auch das
+     * `a:xfrm` eines Kindes in einer Gruppe — und dessen Drehung gehört dem
+     * Kind, nicht der Gruppe. Deshalb derselbe Weg wie `formLage`: das erste,
+     * und das ist in einem `p:sp` das eigene.
+     */
+    const formDrehung = (form) => {
+        const xfrm = form.getElementsByTagName('a:xfrm')[0];
+        const roh = Number(xfrm?.getAttribute('rot'));
+        if (!Number.isFinite(roh) || roh === 0)
+            return 0;
+        const grad = Math.round((roh / 60000) * 100) / 100;
+        return ((grad % 360) + 360) % 360;
+    };
     /** Lage und Grösse einer Form, in Blattpunkten. `null`, wenn sie fehlen. */
     const formLage = (form) => {
         const xfrm = form.getElementsByTagName('a:xfrm')[0];
@@ -110195,6 +110234,12 @@ const Einlesen = (() => {
                         const eigenePh = form.getElementsByTagName('p:ph')[0];
                         const geerbt = eigenePh ? vorgaben.get(phSchluessel(eigenePh)) : undefined;
                         const lage = abbilden(formLage(form) || geerbt?.lage || null, ab);
+                        /* Die Drehung erbt NICHT (E563). Ein Layout gibt vor, wo ein
+                           Platzhalter steht und wie gross er ist; dass er schief steht,
+                           ist eine Entscheidung der einzelnen Folie. PowerPoint hält es
+                           genauso: `rot` steht im `a:xfrm` der Form, und ein geerbter
+                           Platzhalter hat gar keins. */
+                        const dreh = formDrehung(form);
                         /* ── EINE ABDECKUNG ──────────────────────────────────────────
                            Kein Text, eine feste Füllung, und ein Klick lässt sie
                            verschwinden: das ist ein Deckel über der Antwort. Redion hat
@@ -110206,7 +110251,7 @@ const Einlesen = (() => {
                         if (!text.trim() && schritt && lage && lage.w > 0 && lage.h > 0) {
                             objekte.push({ art: 'abdeck', schritt, farbe: formFarbe(form, thema) || '#ffcc00',
                                 verlauf: formVerlauf(form, thema),
-                                x: lage.x, y: lage.y, w: lage.w, h: lage.h });
+                                x: lage.x, y: lage.y, w: lage.w, h: lage.h, ...(dreh ? { dreh } : {}) });
                             continue;
                         }
                         if (!text.trim()) {
@@ -110290,6 +110335,7 @@ const Einlesen = (() => {
                                 fontSize: a.sz || grund, fett: a.fett,
                                 ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}),
                                 ...(a.ausricht ? { ausricht: a.ausricht } : {}),
+                                ...(dreh ? { dreh } : {}),
                                 /* Bei mehreren gleich formatierten Absätzen werden ihre Läufe
                                    mit `\n` dazwischen zu einer Kette — genau die Reihenfolge,
                                    die der Text oben auch hat. */
@@ -110320,7 +110366,8 @@ const Einlesen = (() => {
                                 fontSize: a.sz || grund, fett: a.fett,
                                 ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}),
                                 ...(a.ausricht ? { ausricht: a.ausricht } : {}),
-                                ...(laeufeNoetig(mitZeichen(a)) ? { laeufe: mitZeichen(a) } : {}) };
+                                ...(laeufeNoetig(mitZeichen(a)) ? { laeufe: mitZeichen(a) } : {}),
+                                ...(dreh ? { dreh } : {}) };
                             objekte.push(marke);
                             /* Der Zeichner rechnet die Höhe, nicht ich. Fehlt er (halb
                                geladenes Fenster), bleibt die einfache Schätzung — dann
@@ -110355,7 +110402,8 @@ const Einlesen = (() => {
                             bytes,
                             x: lage ? lage.x : breite * 0.2, y: lage ? lage.y : hoehe * 0.2,
                             w: lage && lage.w > 0 ? lage.w : breite * 0.4,
-                            h: lage && lage.h > 0 ? lage.h : hoehe * 0.4 });
+                            h: lage && lage.h > 0 ? lage.h : hoehe * 0.4,
+                            ...(formDrehung(form) ? { dreh: formDrehung(form) } : {}) });
                     }
                 }
             };
@@ -110644,8 +110692,14 @@ const Einlesen = (() => {
                         /* `verlauf` nur, wenn es einen gibt — ein `undefined` im Objekt
                            überlebt `JSON.stringify` ohnehin nicht, und ein `null` an
                            jeder von Hand gezogenen Abdeckung wäre nur Ballast. */
+                        /* HIER BLEIBT DIE ERLAUBNISLISTE, anders als beim Text (E560).
+                           Ein Abdeck- und ein Bildobjekt tragen `bytes`, `pfad` und
+                           `name` — ein Durchreichen legte die ganzen Bilddaten in den
+                           Block. Die verbotene Menge ist hier also NICHT kurz und
+                           abgeschlossen, und damit gilt die Umkehrung nicht. */
                         marken.push({ id, art: 'abdeck', farbe: o.farbe, schritt: o.schritt,
                             ...(o.verlauf ? { verlauf: o.verlauf } : {}),
+                            ...(o.dreh ? { dreh: o.dreh } : {}),
                             pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
                         continue;
                     }
@@ -110661,6 +110715,7 @@ const Einlesen = (() => {
                         }
                         if (dateiId) {
                             marken.push({ id, art: 'bild', dateiId,
+                                ...(o.dreh ? { dreh: o.dreh } : {}),
                                 pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
                             mitBild++;
                         }

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-542 Entscheidungen, E1 bis E562 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+543 Entscheidungen, E1 bis E563 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -606,6 +606,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E560** — Ausrichtung: `a:pPr@algn` wird gelesen, gezeichnet und bekommt einen eigenen Knopf — und die Feldliste beim Bauen der Marke wird umgedreht
 * **E561** — Mehrere Formate in einem Absatz: die Textmarke trägt `laeufe`, und SVG setzt die Stücke — nicht `textWidth`
 * **E562** — Textbreite wird im Browser exakt gemessen statt geschätzt; die Tabelle bleibt der Rückfall für Node
+* **E563** — Drehung: `a:xfrm@rot` kommt an — für Text, Bild und Abdeckung. Sie erbt NICHT vom Layout
 
 ---
 
@@ -45430,3 +45431,81 @@ G3  Cache-Schlüssel ohne Format   11 grün, 3 rot  (Fett = Normal)
 
 Bild: `bilder/pptx-laeufe.png` — dieselbe Folie wie bei E561, jetzt bricht
 die dritte Zeile nach „über" um und bleibt im Kasten.
+
+
+E563 — Drehung
+--------------------------------------------------------------------------
+
+`LUECKEN.md` beschrieb die Lage seit E540 genau: „Die Marken KÖNNEN drehen —
+gelesen wird es noch nicht." Dasselbe Muster wie bei `--paper` (E558) und
+der Ausrichtung (E560): die Fähigkeit war da und nicht angeschlossen. Es kam
+eine Funktion und sechs Einsetzstellen dazu, kein neuer Weg.
+
+### Die Einheit
+
+```txt
+ 5400000 / 60000 =  90°
+ 2700000 / 60000 =  45°
+-5400000 / 60000 = -90°  →  270°
+```
+
+`a:xfrm@rot` steht in 60000steln Grad, im Uhrzeigersinn — dieselbe Richtung
+wie SVGs `rotate` und wie Redions `dreh`. Es muss also nichts gespiegelt
+werden, nur geteilt.
+
+Auf 0…360 gebracht, und 0 heisst „keine": PowerPoint schreibt auch negative
+Werte. `dreh: -90` wäre gültig, aber `dreh: 270` ist dieselbe Drehung und
+liest sich besser.
+
+### Sie erbt nicht
+
+Ein Layout gibt vor, WO ein Platzhalter steht und wie gross er ist. Dass er
+schief steht, ist eine Entscheidung der einzelnen Folie — PowerPoint hält es
+genauso: `rot` steht im `a:xfrm` der Form, und ein geerbter Platzhalter hat
+gar keins.
+
+`test518` §3 baut deshalb ein Layout mit einem um 45° gedrehten Platzhalter
+und misst, dass die Folie ihn **gerade** bekommt. Die Gegenprobe, die ihn
+erben lässt, ist rot.
+
+### Wo die Erlaubnisliste stehen bleibt
+
+Beim Text reist `dreh` über die Umkehrung aus E560 mit. Bei **Abdeckung und
+Bild** nicht: ihre Objekte tragen `bytes`, `pfad` und `name`, und ein
+Durchreichen legte die ganzen Bilddaten in den Block. Die verbotene Menge
+ist dort also nicht kurz und abgeschlossen, und damit gilt die Umkehrung
+nicht. Beide bekommen `dreh` ausdrücklich, mit einem Kommentar daneben,
+warum es hier anders ist als nebenan.
+
+### Der Drehpunkt
+
+Die Mitte des Kastens, nicht seine Ecke. `marken.ts` setzt
+`rotate(grad cx cy)` aus `InkGeometry.bounds`, und OOXML dreht ebenfalls um
+die Mitte — die zwei passen ohne Umrechnung zusammen. `test518` §4 misst es
+am gezeichneten Knoten: für einen Kasten bei (72, 90) muss der Drehpunkt
+rechts und unterhalb davon liegen.
+
+### Was `test518` hält
+
+17 Zusagen, vier Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  `rot` nicht lesen          8 grün, 9 rot  (nichts dreht sich mehr)
+G2  Teilen durch 60000 weg     8 grün, 9 rot  (5400000 statt 90)
+G3  negative nicht normieren  15 grün, 2 rot  (−90 statt 270)
+G4  die Drehung erben lassen  16 grün, 1 rot
+```
+
+Und ein Fund, der das Prüfstück betraf und nicht den Code: mein `p:timing`
+hatte kein `nodeType="clickEffect"`, und der Leser fand deshalb keine
+Abdeckung. Die Zusage zeigte auf den Code, der recht hatte. §45/E21 gilt
+auch für Prüfdateien — nachsehen, nicht nachbauen.
+
+**Was weiterhin offen bleibt:** `flipH`/`flipV` (die Marke hat kein
+allgemeines Spiegeln) und die Drehung einer GRUPPE. Für die zweite müsste
+`abbilden` die Kindpositionen mitdrehen; nur den Winkel durchzureichen wäre
+schlimmer als nichts, weil die Kinder dann an falscher Stelle schief
+stünden.
+
+Bild: `bilder/pptx-drehung.png` — sieben Kästen von 0° bis 270°, darunter
+ein negativer Winkel und einer auf dem Kopf.

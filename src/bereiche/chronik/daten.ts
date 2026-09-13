@@ -1820,6 +1820,21 @@ const ChronikDaten = {
    "beweis": "Danach 14 gruen, und die Gegenprobe G1 (wieder schaetzen) nennt zwei Uebertreter von 21 Zeilen: a2 164,2 in 160, a6 202,2 in 200.",
    "lehre": "Eine Zusage ueber ALLE Elemente einer Liste ist auf der leeren Liste immer wahr. `filter(...).length === 0` sieht streng aus und prueft nichts, solange niemand fragt, ob ueberhaupt etwas darin war. Jede Allaussage braucht deshalb eine Zusage daneben, die sagt: und es waren genug, und sie waren nicht alle winzig. Genau die hat hier zweimal hintereinander den Fehler gefunden.",
    "entscheidung": "E562"
+  },
+  {
+   "nr": "P43",
+   "datum": "2026-09-13",
+   "titel": "Die Zusage zeigte auf den Code, und schuld war mein Pruefstueck",
+   "schwere": "klein",
+   "symptom": "`test518 §2` meldete „Die Abdeckung ist da — ['text','text','text','text','bild']\". Der Deckel kam gar nicht an, obwohl das Bild danebenstand und sich richtig drehte.",
+   "falscheVermutung": "Dass meine Drehungszeile fuer die Abdeckung nicht greift — sie steht in einem anderen Zweig als der Text, also lag der Verdacht nahe.",
+   "wieGefunden": "Nachgesehen, wie der Leser eine Abdeckung ueberhaupt ERKENNT: ueber `klickschritte`, und dort zaehlt nur ein `p:cTn` mit `nodeType=\"clickEffect\"`. Mein `p:timing` hatte die Verschachtelung nach Gefuehl und dieses Attribut gar nicht.",
+   "ursache": "Das Pruefstueck war falsch, nicht der Code. Ohne `clickEffect` gibt es keinen Klickschritt, ohne Klickschritt keine Abdeckung — die Form fiel korrekt als „gefuellte Form ohne Text\" durch.",
+   "loesung": "Das `p:timing` nach der gelesenen Regel gebaut statt nach Gefuehl, mit einem Kommentar daneben, woher die Form kommt.",
+   "warumKeineUhr": "—",
+   "beweis": "17 gruen. Und die Gegenproben G1/G2 werden mit 9 roten Zusagen rot — die Abdeckung ist jetzt eine davon.",
+   "lehre": "§45/E21 („nachsehen, nicht erinnern\") gilt auch fuer die PRUEFDATEI. Ein Pruefstueck, das ich aus dem Kopf baue, ist genauso eine Behauptung wie eine erinnerte Schnittstelle — nur faellt es staerker auf die Fuesse, weil die rote Zusage dann auf den Code zeigt, der recht hat. Beim dritten solchen Fall in dieser Sitzung (P32, P41, P43) ist das Muster deutlich: bevor ich einem roten Lauf glaube, pruefe ich, ob MEINE Seite der Messung stimmt.",
+   "entscheidung": "E563"
   }
  ]
 } as const;

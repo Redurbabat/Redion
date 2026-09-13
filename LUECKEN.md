@@ -7479,8 +7479,14 @@ verloren hält:
   Markenschicht kennt sieben Formen; die Zuordnung fehlt noch. Auch sie
   stehen seit E555 im Hinweis — aber nur, wenn sie eine Fläche haben; ein
   unsichtbarer Platzhalter zählt nicht mit.
-- **Drehung** (`a:xfrm@rot`) und Spiegelung (`flipH`/`flipV`). Die Marken
-  können drehen — gelesen wird es noch nicht.
+- ~~**Drehung** (`a:xfrm@rot`).~~ **GESCHLOSSEN mit E563**: gelesen für
+  Text, Bild und Abdeckung, in 60000steln Grad, auf 0…360 gebracht, gedreht
+  um die Mitte des Kastens. Sie erbt bewusst NICHT vom Layout — dass eine
+  Form schief steht, ist eine Entscheidung der einzelnen Folie.
+  **Offen bleiben**: Spiegelung (`flipH`/`flipV` — die Marke hat kein
+  allgemeines Spiegeln) und die Drehung einer GRUPPE. Für die zweite müsste
+  `abbilden` die Kindpositionen mitdrehen; nur den Winkel durchzureichen
+  wäre schlimmer als nichts.
 - **Notizen** (`ppt/notesSlides/`), Übergänge, Animationen.
 - ~~**Das Farbthema** (`ppt/theme/theme1.xml`).~~ **GESCHLOSSEN mit E559**:
   `schemeClr` wird über `p:clrMap` (die Stufe, die man vergisst) und

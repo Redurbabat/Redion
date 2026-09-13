@@ -1147,6 +1147,30 @@ const Einlesen = (() => {
     return '';
   };
 
+  /**
+   * Die DREHUNG einer Form, in Grad im Uhrzeigersinn (E563).
+   *
+   * `a:xfrm@rot` steht in 60000steln Grad: 5400000 sind 90°. Die Richtung
+   * ist dieselbe wie bei SVGs `rotate` und bei Redions `dreh` — es muss
+   * also nichts gespiegelt werden, nur geteilt.
+   *
+   * AUF 0…360 GEBRACHT, und 0 heisst „keine". PowerPoint schreibt auch
+   * negative Werte und solche über 360; eine Marke mit `dreh: -90` wäre
+   * gültig, aber `dreh: 270` ist dieselbe Drehung und liest sich besser.
+   *
+   * NUR AUS DEM EIGENEN `a:xfrm`. `getElementsByTagName` fände auch das
+   * `a:xfrm` eines Kindes in einer Gruppe — und dessen Drehung gehört dem
+   * Kind, nicht der Gruppe. Deshalb derselbe Weg wie `formLage`: das erste,
+   * und das ist in einem `p:sp` das eigene.
+   */
+  const formDrehung = (form: Element): number => {
+    const xfrm = form.getElementsByTagName('a:xfrm')[0];
+    const roh = Number(xfrm?.getAttribute('rot'));
+    if (!Number.isFinite(roh) || roh === 0) return 0;
+    const grad = Math.round((roh / 60000) * 100) / 100;
+    return ((grad % 360) + 360) % 360;
+  };
+
   /** Lage und Grösse einer Form, in Blattpunkten. `null`, wenn sie fehlen. */
   const formLage = (form: Element): { x: number; y: number; w: number; h: number } | null => {
     const xfrm = form.getElementsByTagName('a:xfrm')[0];
@@ -1726,6 +1750,12 @@ const Einlesen = (() => {
           const eigenePh = form.getElementsByTagName('p:ph')[0];
           const geerbt = eigenePh ? vorgaben.get(phSchluessel(eigenePh)) : undefined;
           const lage = abbilden(formLage(form) || geerbt?.lage || null, ab);
+          /* Die Drehung erbt NICHT (E563). Ein Layout gibt vor, wo ein
+             Platzhalter steht und wie gross er ist; dass er schief steht,
+             ist eine Entscheidung der einzelnen Folie. PowerPoint hält es
+             genauso: `rot` steht im `a:xfrm` der Form, und ein geerbter
+             Platzhalter hat gar keins. */
+          const dreh = formDrehung(form);
 
           /* ── EINE ABDECKUNG ──────────────────────────────────────────
              Kein Text, eine feste Füllung, und ein Klick lässt sie
@@ -1738,7 +1768,7 @@ const Einlesen = (() => {
           if (!text.trim() && schritt && lage && lage.w > 0 && lage.h > 0) {
             objekte.push({ art: 'abdeck', schritt, farbe: formFarbe(form, thema) || '#ffcc00',
               verlauf: formVerlauf(form, thema),
-              x: lage.x, y: lage.y, w: lage.w, h: lage.h });
+              x: lage.x, y: lage.y, w: lage.w, h: lage.h, ...(dreh ? { dreh } : {}) });
             continue;
           }
           if (!text.trim()) {
@@ -1823,6 +1853,7 @@ const Einlesen = (() => {
               fontSize: a.sz || grund, fett: a.fett,
               ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}),
               ...(a.ausricht ? { ausricht: a.ausricht } : {}),
+              ...(dreh ? { dreh } : {}),
               /* Bei mehreren gleich formatierten Absätzen werden ihre Läufe
                  mit `\n` dazwischen zu einer Kette — genau die Reihenfolge,
                  die der Text oben auch hat. */
@@ -1853,7 +1884,8 @@ const Einlesen = (() => {
               fontSize: a.sz || grund, fett: a.fett,
               ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}),
               ...(a.ausricht ? { ausricht: a.ausricht } : {}),
-              ...(laeufeNoetig(mitZeichen(a)) ? { laeufe: mitZeichen(a) } : {}) };
+              ...(laeufeNoetig(mitZeichen(a)) ? { laeufe: mitZeichen(a) } : {}),
+              ...(dreh ? { dreh } : {}) };
             objekte.push(marke);
             /* Der Zeichner rechnet die Höhe, nicht ich. Fehlt er (halb
                geladenes Fenster), bleibt die einfache Schätzung — dann
@@ -1885,7 +1917,8 @@ const Einlesen = (() => {
             bytes,
             x: lage ? lage.x : breite * 0.2, y: lage ? lage.y : hoehe * 0.2,
             w: lage && lage.w > 0 ? lage.w : breite * 0.4,
-            h: lage && lage.h > 0 ? lage.h : hoehe * 0.4 });
+            h: lage && lage.h > 0 ? lage.h : hoehe * 0.4,
+            ...(formDrehung(form) ? { dreh: formDrehung(form) } : {}) });
         }
       }
       };
@@ -2169,8 +2202,14 @@ const Einlesen = (() => {
             /* `verlauf` nur, wenn es einen gibt — ein `undefined` im Objekt
                überlebt `JSON.stringify` ohnehin nicht, und ein `null` an
                jeder von Hand gezogenen Abdeckung wäre nur Ballast. */
+            /* HIER BLEIBT DIE ERLAUBNISLISTE, anders als beim Text (E560).
+               Ein Abdeck- und ein Bildobjekt tragen `bytes`, `pfad` und
+               `name` — ein Durchreichen legte die ganzen Bilddaten in den
+               Block. Die verbotene Menge ist hier also NICHT kurz und
+               abgeschlossen, und damit gilt die Umkehrung nicht. */
             marken.push({ id, art: 'abdeck', farbe: o.farbe, schritt: o.schritt,
               ...(o.verlauf ? { verlauf: o.verlauf } : {}),
+              ...(o.dreh ? { dreh: o.dreh } : {}),
               pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
             continue;
           }
@@ -2185,6 +2224,7 @@ const Einlesen = (() => {
             }
             if (dateiId) {
               marken.push({ id, art: 'bild', dateiId,
+                ...(o.dreh ? { dreh: o.dreh } : {}),
                 pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
               mitBild++;
             }
