@@ -45097,6 +45097,26 @@ ohne Farbe bekommt auf dunklem Grund ausdrücklich Weiss, und der Grund
 dieser Prüffolie war Schwarz. Gemessen wird `phClr` seither auf **hellem**
 Grund, wo die Tinte nicht kippt. Der Kommentar an der Stelle sagt, warum.
 
+### Und ein zweiter Fund, den zwei ältere Läufe geliefert haben
+
+Die erste Fassung von `abwandeln` rechnete **immer** — auch dort, wo gar
+keine Abwandlung stand. Herausgekommen ist dann immer klein geschriebenes
+Hex, und `test512` und `test513` wurden davon rot:
+
+```txt
+✗ Der Titel ist rot                  — ist "#cc0000",  soll "#CC0000"
+✗ Die Folie hat die Farbe des Masters — ist "#102a43", soll "#102A43"
+```
+
+Gezeichnet hätte das dasselbe; Hex ist in CSS gleichgültig gegen Gross und
+Klein. Geändert war es trotzdem, und zwar an einer Stelle, an der niemand
+eine Änderung wollte. **Was unverändert aus der Datei kommt, geht unverändert
+weiter** — gerechnet wird nur, wo wirklich `lumMod`, `lumOff`, `tint` oder
+`shade` steht.
+
+Das ist auch der Grund, warum die beiden alten Läufe hier zählen: sie haben
+etwas gehalten, das keine Zusage von `test514` gesucht hätte.
+
 ### Was `test514` hält
 
 13 Zusagen, vier Gegenproben **gefahren** (§55.2):
@@ -45106,6 +45126,8 @@ G1  `schemeClr` nicht auflösen     5 grün,  8 rot  (jede Farbe leer)
 G2  `p:clrMap` überspringen       11 grün,  2 rot  (Grund fehlt, beide Wege)
 G3  `lumMod`/`lumOff` nicht rechnen 9 grün,  4 rot  (dreimal dieselbe Farbe)
 G4  `phClr` auf irgendwas auflösen 12 grün,  1 rot
+G5  jede Farbe neu schreiben       test512/513: 3 rot (siehe oben — keine
+                                   gebaute Gegenprobe, eine gefahrene)
 ```
 
 Bild: `bilder/pptx-thema.png` — eine Folie, auf der **keine einzige Farbe**

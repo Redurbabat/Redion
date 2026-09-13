@@ -41,6 +41,13 @@
  *   G2 → `p:clrMap` überspringen:                        2 rot (der Grund fehlt in beiden Richtungen)
  *   G3 → `lumMod`/`lumOff` nicht rechnen:                4 rot (dreimal dieselbe Grundfarbe)
  *   G4 → `phClr` auch auflösen (auf irgendwas):          1 rot
+ *   G5 → jede Farbe neu schreiben statt durchreichen:   test512/513: 3 rot
+ *
+ * G5 ist keine gebaute Gegenprobe, sondern eine gefahrene: die erste
+ * Fassung rechnete IMMER und gab darum immer klein geschriebenes Hex
+ * heraus. `test512` und `test513` wurden davon rot — „ist '#cc0000',
+ * soll '#CC0000'". Gezeichnet hätte es dasselbe; geändert war es
+ * trotzdem. Was unverändert aus der Datei kommt, geht unverändert weiter.
  *
  *   node pruefungen/lauf/test514.mts
  * ==========================================================================*/

@@ -1216,8 +1216,21 @@ const Einlesen = (() => {
             return '';
         return abwandeln('#' + roh, knoten);
     };
-    /** `lumMod`, `lumOff`, `tint`, `shade` auf eine fertige Farbe anwenden. */
+    /**
+     * `lumMod`, `lumOff`, `tint`, `shade` auf eine fertige Farbe anwenden.
+     *
+     * OHNE ABWANDLUNG KOMMT DIE FARBE UNVERÄNDERT ZURÜCK — Byte für Byte, mit
+     * der Schreibweise aus der Datei. Die erste Fassung rechnete immer und gab
+     * darum immer klein geschriebenes Hex heraus; `test512` und `test513`
+     * wurden davon rot („ist '#cc0000', soll '#CC0000'"). Gezeichnet hätte es
+     * dasselbe — Hex ist in CSS gleichgültig gegen Gross und Klein —, aber
+     * eine Änderung, die niemand wollte, ist eine Änderung zu viel: was
+     * unverändert aus der Datei kommt, geht unverändert weiter.
+     */
     const abwandeln = (farbe, knoten) => {
+        const WANDLER = ['a:lumMod', 'a:lumOff', 'a:tint', 'a:shade'];
+        if (![...knoten.children].some(k => WANDLER.includes(k.tagName)))
+            return farbe;
         const wert = (tag) => {
             const k = [...knoten.children].find(x => x.tagName === tag);
             if (!k)

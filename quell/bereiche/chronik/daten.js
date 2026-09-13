@@ -1730,6 +1730,21 @@ const ChronikDaten = {
             "beweis": "Die Gegenprobe G4 (phClr auf irgendwas aufloesen) ist auf dem hellen Grund rot: 12 gruen, 1 rot. Die Zusage kann also weiterhin rot werden — sie misst nur nicht mehr das Falsche.",
             "lehre": "Wenn eine neue Pruefung rot ist, ist die Pruefung genauso verdaechtig wie der Code — und bei einer Zusage, die ich GERADE geschrieben habe, sogar mehr. Der Reflex „den Code anpassen, bis es gruen ist\" haette hier eine richtige Regel kaputtgemacht. Der zweite Reflex — „die Zusage abschwaechen\" — waere genauso falsch gewesen. Richtig war, den Messplatz zu wechseln, damit die Zusage wieder GENAU das misst, was sie behauptet.",
             "entscheidung": "E559"
+        },
+        {
+            "nr": "P37",
+            "datum": "2026-09-13",
+            "titel": "Zwei alte Laeufe haben eine Aenderung gemeldet, die ich gar nicht vorhatte",
+            "schwere": "klein",
+            "symptom": "Nach E559 waren `test512` und `test513` rot: „ist '#cc0000', soll '#CC0000'\" und „ist '#102a43', soll '#102A43'\". Dieselben Farben, dieselben Werte — nur klein geschrieben.",
+            "falscheVermutung": "Mein erster Gedanke war, die Zusagen seien zu streng: Hex ist in CSS gleichgueltig gegen Gross und Klein, gezeichnet haette es dasselbe. Also die Pruefungen auf `toLowerCase` umstellen und weiter.",
+            "wieGefunden": "Der Batch nach dem Commit. Die neue Suite 514 war gruen — sie vergleicht selbst klein geschrieben und konnte es gar nicht sehen.",
+            "ursache": "`abwandeln` rechnete IMMER, auch wo gar kein `lumMod`/`tint` stand. Das Ergebnis lief dann durch `toString(16)` und kam klein geschrieben heraus. Eine Farbe, die unveraendert aus der Datei kommt, wurde also trotzdem umgeschrieben.",
+            "loesung": "Eine Zeile: steht keine Abwandlung im Knoten, kommt die Farbe unveraendert zurueck. Gerechnet wird nur, wo wirklich gerechnet werden muss.",
+            "warumKeineUhr": "—",
+            "beweis": "512, 513 und 514 zusammen gruen. Und die drei roten Zusagen sind die Gegenprobe selbst: sie sind gefahren worden, nicht gebaut.",
+            "lehre": "Die Versuchung war, die PRUEFUNG zu lockern, weil der Unterschied „egal\" aussah. Er war es fuer das Zeichnen — aber nicht fuer die Frage, ob der Leser Daten unveraendert durchreicht. Eine Zusage, die zufaellig streng ist, faengt genau die Aenderungen, die man nicht vorhatte; sie zu lockern haette dieses Netz zerschnitten. Und: meine eigene neue Suite konnte den Fund nicht machen, weil sie selbst klein vergleicht. Die alten Laeufe sind nicht Ballast, sie sind das Gedaechtnis.",
+            "entscheidung": "E559"
         }
     ]
 };
