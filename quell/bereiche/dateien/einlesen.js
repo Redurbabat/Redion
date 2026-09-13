@@ -1190,24 +1190,93 @@ const Einlesen = (() => {
         return rgb ? '#' + rgb : '';
     };
     /**
-     * Der VERLAUF einer Form, wenn sie einen hat (E545).
+     * Der Schlüssel eines Platzhalters.
      *
-     * Gemessen an Redurs Datei: die Abdeckungen sind weiss → `#FFCC00` in der
-     * Mitte → weiss, senkrecht. `formFarbe` gab davon EINE Farbe zurück, und
-     * der Deckel war eine gelbe Fläche, wo im Original ein Band mit weichen
-     * Rändern liegt.
-     *
-     * NUR AUS `p:spPr`, anders als `formFarbe`. Die alte Funktion sucht über
-     * den ganzen Teilbaum — und im selben Teilbaum liegt `a:ln`, die
-     * Umrisslinie, mit eigener Füllung. Für die Farbe ging das bisher gut;
-     * für den Verlauf wäre es ein Glücksspiel, und der Kommentar oben sagt
-     * selbst, dass die Füllung daneben der Linie gehört.
-     *
-     * Was NICHT gelesen wird und deshalb `null` ergibt: `a:schemeClr` und
-     * Verwandte (ohne `theme1.xml` nicht auflösbar), `a:path` (radiale
-     * Verläufe). Dann bleibt es bei der festen Farbe — eine gelbe Fläche ist
-     * eine ehrliche Näherung, eine falsche Farbe wäre es nicht.
+     * PowerPoint unterscheidet sie über `type` UND `idx`, und beide können
+     * fehlen. Ein fehlender `type` heisst „body", ein fehlender `idx` heisst
+     * „0" — das steht so im Format, und ohne diese zwei Vorgaben fände ein
+     * Titel seinen Platzhalter im Layout nicht wieder.
      */
+    const phSchluessel = (ph) => {
+        if (!ph)
+            return '';
+        const typ = ph.getAttribute('type') || 'body';
+        const idx = ph.getAttribute('idx') || '0';
+        /* `ctrTitle` und `title` sind für die Vererbung dasselbe: beide sind
+           DER Titel der Folie, und ein Layout schreibt mal das eine, mal das
+           andere. Ohne diese Zeile erbt eine zentrierte Titelfolie nichts. */
+        const gleich = typ === 'ctrTitle' ? 'title' : typ;
+        return gleich + '#' + idx;
+    };
+    /** Alle Platzhalter eines Layout- oder Master-XML, nach Schlüssel. */
+    const vorgabenLesen = (doc) => {
+        const karte = new Map();
+        if (!doc)
+            return karte;
+        const baum = doc.getElementsByTagName('p:spTree')[0];
+        for (const form of (baum ? baum.children : [])) {
+            if (form.tagName !== 'p:sp')
+                continue;
+            const ph = form.getElementsByTagName('p:ph')[0];
+            if (!ph)
+                continue;
+            const sz = Number(form.getElementsByTagName('a:defRPr')[0]?.getAttribute('sz'));
+            karte.set(phSchluessel(ph), {
+                lage: formLage(form),
+                sz: Number.isFinite(sz) && sz > 0 ? Math.round(sz / 100) : 0,
+            });
+        }
+        return karte;
+    };
+    /**
+     * Die Hintergrundfarbe eines Folien-, Layout- oder Master-XML.
+     *
+     * NUR EINE VOLLE FARBE. Ein Verlauf, ein Bild oder eine Themenfarbe
+     * (`schemeClr` — ohne `theme1.xml` gar nicht auflösbar) geben leer zurück,
+     * und dann bleibt das Blatt weiss. Eine falsche Hintergrundfarbe wäre
+     * schlimmer als gar keine: sie macht den Text unlesbar, und man sieht
+     * nicht, woher sie kommt.
+     */
+    const hintergrund = (doc) => {
+        if (!doc)
+            return '';
+        const bg = doc.getElementsByTagName('p:bg')[0];
+        if (!bg)
+            return '';
+        /* `p:bgPr > a:solidFill > a:srgbClr`. Über `getElementsByTagName` geht
+           auch ein `a:srgbClr` in einer Linie oder einem Effekt darunter mit —
+           deshalb der Weg über die volle Füllung. */
+        const voll = bg.getElementsByTagName('a:solidFill')[0];
+        const rgb = voll?.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+        return rgb ? '#' + rgb : '';
+    };
+    /**
+     * Welche Tinte auf diesem Grund lesbar ist — '' heisst „die gewohnte".
+     *
+     * Gerechnet wird der Kontrast nach WCAG, nicht nach Gefühl: die relative
+     * Helligkeit beider Farben, und daraus (hell + 0,05) / (dunkel + 0,05).
+     * Erst wenn Schwarz unter 4,5:1 fällt, wird auf Weiss gewechselt. Ein
+     * Grund wie `#f8f8f5` ändert damit gar nichts.
+     */
+    const tinteFuer = (grund) => {
+        const treffer = /^#([0-9a-fA-F]{6})$/.exec(grund);
+        if (!treffer)
+            return '';
+        const roh = treffer[1];
+        const kanal = (i) => {
+            const v = parseInt(roh.slice(i * 2, i * 2 + 2), 16) / 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        };
+        const helligkeit = 0.2126 * kanal(0) + 0.7152 * kanal(1) + 0.0722 * kanal(2);
+        /* `#111111` — die Farbe, die eine Textmarke ohne eigene Farbe bekommt —
+           hat die relative Helligkeit 0,005605. NACHGERECHNET, nicht geschätzt:
+           meine erste Zahl hier war 0,005182 und damit falsch (P32 zum zweiten
+           Mal). Die Schwelle liegt dadurch bei L < 0,2002, und das ist eine
+           messbare Kante: `#767676` kippt (4,16:1), `#888888` nicht (5,33:1). */
+        const schwarz = 0.005605;
+        const gegenSchwarz = (helligkeit + 0.05) / (schwarz + 0.05);
+        return gegenSchwarz < 4.5 ? '#ffffff' : '';
+    };
     const formVerlauf = (form) => {
         const spPr = form.getElementsByTagName('p:spPr')[0];
         if (!spPr)
@@ -1284,6 +1353,42 @@ const Einlesen = (() => {
                 continue;
             const doc = xml(t);
             const rels = await relsLesen(zip, pfad);
+            /* ── DIE ERBKETTE: Folie → Layout → Master (E558) ────────────────── */
+            const holeXml = async (ziel) => {
+                if (!ziel)
+                    return null;
+                try {
+                    const t = await zip.text(ziel);
+                    return t ? xml(t) : null;
+                }
+                catch {
+                    return null;
+                }
+            };
+            const layoutPfad = Object.entries(rels)
+                .find(([, z]) => /slideLayouts\//.test(String(z)))?.[1] || '';
+            const layoutDoc = await holeXml(String(layoutPfad));
+            let masterDoc = null;
+            if (layoutPfad) {
+                const lRels = await relsLesen(zip, String(layoutPfad));
+                const masterPfad = Object.entries(lRels)
+                    .find(([, z]) => /slideMasters\//.test(String(z)))?.[1] || '';
+                masterDoc = await holeXml(String(masterPfad));
+            }
+            /* Layout gewinnt gegen Master — deshalb wird der Master ZUERST
+               eingetragen und vom Layout überschrieben. */
+            const vorgaben = new Map([...vorgabenLesen(masterDoc), ...vorgabenLesen(layoutDoc)]);
+            /* Und die Folie gewinnt gegen beide. */
+            const grundfarbe = hintergrund(doc) || hintergrund(layoutDoc) || hintergrund(masterDoc);
+            /* DIE TINTE MUSS AUF DEM GRUND LESBAR BLEIBEN (E558).
+               Eine Textmarke ohne eigene Farbe zeichnet `#111111` — das war
+               richtig, solange jedes Blatt weiss war. Mit einem geerbten dunklen
+               Grund wäre es schwarz auf dunkelblau, also unsichtbar. PowerPoint
+               hat dafür die Themenfarbe; die haben wir nicht. Was wir haben, ist
+               der Kontrast, und der entscheidet: nur wenn Schwarz die Schwelle
+               von 4,5:1 REISST (§38), bekommt der Absatz ausdrücklich Weiss.
+               Ein Absatz mit eigener Farbe behält sie in jedem Fall. */
+            const standardTinte = tinteFuer(grundfarbe);
             const baum = doc.getElementsByTagName('p:spTree')[0];
             const schritte = klickschritte(doc);
             const objekte = [];
@@ -1340,7 +1445,14 @@ const Einlesen = (() => {
                         /* DURCH DIE ABBILDUNG DER GRUPPE (E555). Ausserhalb einer Gruppe
                            ist `ab` null und `abbilden` gibt die Lage unverändert zurück —
                            dieselbe Zeile trägt beide Fälle. */
-                        const lage = abbilden(formLage(form), ab);
+                        /* UND WENN DIE FOLIE KEINE LAGE ANGIBT, ERBT SIE SIE (E558).
+                           PowerPoint schreibt `a:xfrm` nur, wenn die Folie den Platzhalter
+                           VERSCHOBEN hat. Ohne die Vererbung landete der Text auf einer
+                           geratenen Stelle — `breite * 0.08`, `hoehe * 0.1` —, und das
+                           sieht man sofort. */
+                        const eigenePh = form.getElementsByTagName('p:ph')[0];
+                        const geerbt = eigenePh ? vorgaben.get(phSchluessel(eigenePh)) : undefined;
+                        const lage = abbilden(formLage(form) || geerbt?.lage || null, ab);
                         /* ── EINE ABDECKUNG ──────────────────────────────────────────
                            Kein Text, eine feste Füllung, und ein Klick lässt sie
                            verschwinden: das ist ein Deckel über der Antwort. Redion hat
@@ -1371,12 +1483,15 @@ const Einlesen = (() => {
                            gemischten Graden käme also vereinfacht an. Das ist eine Lücke
                            und steht so in LUECKEN.md. */
                         /* Ist es der Titel? PowerPoint sagt es über den Platzhaltertyp. */
-                        const ph = form.getElementsByTagName('p:ph')[0];
+                        const ph = eigenePh;
                         const istTitel = /^(ctr)?[Tt]itle$/.test(ph?.getAttribute('type') || '');
                         const absaetze = txBody ? absaetzeLesen(txBody) : [];
                         if (istTitel && !titel)
                             titel = absaetze[0]?.text.split('\n')[0] || '';
-                        const grund = istTitel ? 40 : 20;
+                        /* DER GRAD KOMMT AUS DEM LAYOUT, WENN DIE FOLIE KEINEN NENNT
+                           (E558). Die feste 40/20 bleibt als letzter Rückfall — sie ist
+                           geraten und war bis hierher die einzige Antwort. */
+                        const grund = geerbt?.sz || (istTitel ? 40 : 20);
                         const kx = lage ? lage.x : breite * 0.08;
                         const ky = lage ? lage.y : hoehe * 0.1;
                         const kb = lage && lage.w > 0 ? lage.w : breite * 0.84;
@@ -1404,7 +1519,7 @@ const Einlesen = (() => {
                                 x: kx + a.lvl * Math.max(10, (a.sz || grund) * 0.9), y: ky,
                                 breiteBox: Math.max(20, kb - a.lvl * Math.max(10, (a.sz || grund) * 0.9)),
                                 fontSize: a.sz || grund, fett: a.fett,
-                                ...(a.farbe ? { farbe: a.farbe } : {}) });
+                                ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}) });
                             continue;
                         }
                         let y = ky;
@@ -1421,7 +1536,7 @@ const Einlesen = (() => {
                                 x: kx + einzug, y,
                                 breiteBox: Math.max(20, kb - einzug),
                                 fontSize: a.sz || grund, fett: a.fett,
-                                ...(a.farbe ? { farbe: a.farbe } : {}) };
+                                ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}) };
                             objekte.push(marke);
                             /* Der Zeichner rechnet die Höhe, nicht ich. Fehlt er (halb
                                geladenes Fenster), bleibt die einfache Schätzung — dann
@@ -1473,7 +1588,7 @@ const Einlesen = (() => {
                 .sort((a, b) => a.y - b.y)
                 .map(o => String(o.text).split('\n')[0].trim())
                 .filter(z => z && z.length <= 80);
-            folien.push({ titel, objekte, kandidaten,
+            folien.push({ titel, objekte, kandidaten, grundfarbe,
                 weg: [...weggelassen.entries()] });
         }
         /* ══ WELCHER KASTEN IST DIE ÜBERSCHRIFT? ═══════════════════════════
@@ -1702,7 +1817,10 @@ const Einlesen = (() => {
             for (const [nr, folie] of p.folien.entries()) {
                 const block = Store.addBlock(seite.id, 'blatt', {
                     text: folie.titel || ('Folie ' + (nr + 1)),
-                    blattBreite: p.breite, blattHoehe: p.hoehe, papier: 'blanko'
+                    blattBreite: p.breite, blattHoehe: p.hoehe, papier: 'blanko',
+                    /* Nur wenn es eine gibt — ein leeres Feld an jedem Blatt wäre
+                       Ballast, und `blatt.ts` fällt ohne es auf Weiss zurück (E558). */
+                    ...(folie.grundfarbe ? { grundfarbe: folie.grundfarbe } : {})
                 });
                 const marken = [];
                 for (const o of folie.objekte) {

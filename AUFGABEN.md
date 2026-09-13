@@ -870,6 +870,9 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   `slideN.xml` (`p:spTree` → Textkästen mit `a:xfrm`-Lage, `p:pic` → Bilder),
   die `.rels` (Bildziele), `slideLayouts`/`slideMasters` für Geerbtes,
   `theme1.xml` für Farben. Jede Folie wird ein Block mit `marken`.
+  Nachgezogen seit: Gruppen rekursiv (E555), Format je Absatz (E557),
+  **Lage, Grad und Hintergrund geerbt über Layout und Master (E558)**.
+  Offen davon bleibt allein `theme1.xml` — siehe den letzten Punkt in L151.
 - **O4 · Folien bearbeiten** — ZUR HÄLFTE (E546). Zwei Sachen sind erledigt:
   - Das ZEIGEN einer Folie ändert sie nicht mehr. `Blatt.zeichne` legte für
     jedes Blatt ohne Textkinder eine leere Zeile AN — bei 27 eingelesenen

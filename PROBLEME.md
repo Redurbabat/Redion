@@ -47,6 +47,8 @@ sind der teuerste Teil und der lehrreichste.
 | P31 | 2026-09-13 | Die naheliegende Farbreparatur haette den Barrierefreiheitsfall zerstoert | gross | E554 |
 | P32 | 2026-09-13 | Der Pruefllauf hat meine Rechnung korrigiert, nicht den Code | 🟡 klein | E555 |
 | P33 | 2026-09-13 | Dieselbe Feldliste hat dasselbe zum zweiten Mal vergessen | 🟡 klein | E557 |
+| P34 | 2026-09-13 | Ein Stichwort in der Lueckenliste, das kleiner klang als es war | 🟠 mittel | E558 |
+| P35 | 2026-09-13 | Eine Verbesserung, die ihren eigenen Schaden mitbrachte | 🟠 mittel | E558 |
 
 ---
 
@@ -693,4 +695,50 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** test512 §2 meldete den Fehler und ist nach der Zeile gruen.
 
 **Die Lehre.** Eine Feldliste, die aufzaehlt, vergisst beim naechsten Feld wieder — und sie hat es an DIESER Stelle jetzt zweimal getan (E545 mit `verlauf`, E557 mit `farbe`). Sie bleibt trotzdem, denn ein blindes Durchreichen des ganzen Objekts naehme `x`/`y`/`w`/`h` mit in die Ablage. Was sich aendern laesst, ist der Hinweis daneben: die Zeile sagt jetzt, dass sie vergisst.
+
+
+---
+
+## P34 · Ein Stichwort in der Lueckenliste, das kleiner klang als es war
+
+*2026-09-13 · 🟠 mittel · E558*
+
+**Das Bild.** Redur: „ich will das die orginale pptx so wie es sich oeffnen". Eine Folie, in die in PowerPoint nur getippt wurde, kam mit geratener Lage, 40 pt und weissem Grund an — also fast jede Folie einer Vorlage.
+
+**Die falsche Vermutung.** Der Punkt stand in L151 als „Geerbtes vom Layout und vom Master", einer von acht Aufzaehlungspunkten, und sein Satz endete mit „kommt weiss an". Das klang nach Kosmetik. Ich haette ihn beinahe hinter Ausrichtung und Drehung eingereiht.
+
+**Wie es gefunden wurde.** Ein grep, bevor ich etwas annahm: `grep -n "slideLayout\|slideMaster\|notesSlide" src/bereiche/dateien/einlesen.ts` gab NICHTS zurueck. Nicht „unvollstaendig" — gar nichts.
+
+**Die Ursache.** PowerPoint schreibt in das Folien-XML nur, was die Folie SELBST aendert. Die fehlende Erbkette nahm deshalb nicht nur den Hintergrund, sondern auch Lage und Schriftgrad JEDES Platzhalters — und ein Platzhalter ohne eigene Angaben ist der Normalfall, nicht der Sonderfall.
+
+**Die Lösung.** Die zweistufige Kette Folie → Layout → Master ueber `.rels` (nicht ueber Dateinamen) und eine Karte der Platzhalter, in der der Master zuerst steht und das Layout ihn ueberschreibt. Der Hintergrund brauchte dabei keine neue Leitung: `--paper` gab es im Stil schon, es hatte nur nie jemand gesetzt.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Die Gegenprobe, die die Kette nicht anwendet, faellt auf genau den alten Zustand zurueck: Titel bei (58,41) in 40 pt statt (36,18) in 44, Hintergrund "". 8 gruen, 5 rot.
+
+**Die Lehre.** Ein Punkt in der Lueckenliste wird danach eingeschaetzt, WIE ER FORMULIERT IST, nicht danach, was er kostet. „Kommt weiss an" beschrieb den sichtbarsten, aber kleinsten Teil derselben fehlenden Leitung. Wer eine Luecke abarbeitet, misst zuerst nach, was sie WIRKLICH umfasst — ein grep vor der Schaetzung hat hier eine Kosmetikaufgabe als die groesste Einzelursache entlarvt.
+
+
+---
+
+## P35 · Eine Verbesserung, die ihren eigenen Schaden mitbrachte
+
+*2026-09-13 · 🟠 mittel · E558*
+
+**Das Bild.** Keins. Alle 17 Zusagen von test513 waren gruen, das Bild sah richtig aus, und der Fehler waere erst bei einer echten Datei von Redur aufgetaucht — als spurlos verschwundener Text.
+
+**Die falsche Vermutung.** Dass ein farbiger Hintergrund eine reine Zugabe ist. Er ist es nicht: er aendert die Bedingung, unter der ALLES andere auf dem Blatt gezeichnet wird.
+
+**Wie es gefunden wurde.** Beim Lesen des eigenen Diffs vor dem Commit, gegen den Strich: „was macht das mit dem, was schon da ist?" Dann nachgesehen statt vermutet — `marken.ts:11` gibt einer Textmarke ohne eigene Farbe `#111111`.
+
+**Die Ursache.** Bis E558 war jedes Blatt weiss. Die feste schwarze Tinte war deshalb nie eine Annahme, sondern eine Tatsache — und sie wurde durch dieselbe Zeile zur Annahme, die den Hintergrund einfuehrte. Eine Folie mit dunklem Master und Text ohne eigene Farbe (weil sie im Original aus dem Thema kaeme) waere schwarz auf dunkelblau gewesen.
+
+**Die Lösung.** Nicht raten, sondern rechnen: WCAG-Kontrast der Grundfarbe gegen `#111111`. Unter 4,5:1 bekommt ein Absatz OHNE eigene Farbe ausdruecklich Weiss; ein Absatz MIT eigener Farbe behaelt sie immer. Gemessene Kante: #767676 kippt (4,16), #888888 nicht (5,33).
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** test513 §5, vier Zusagen an drei Gruenden plus Weiss. Die Gegenprobe ohne Kippen: 15 gruen, 2 rot. Und ein Bild (`bilder/pptx-tinte.png`), auf dem kein Absatz eine eigene Farbe nennt.
+
+**Die Lehre.** Eine neue Faehigkeit ist nie nur eine Zugabe — sie hebt eine stille Voraussetzung auf, unter der der Rest gebaut wurde. Hier war es „das Blatt ist weiss". Die Frage vor jedem Commit ist deshalb nicht „funktioniert das Neue?", sondern „welche Annahme des Alten habe ich gerade gekippt?". Keine Pruefung dieses Bogens haette danach gesucht; das eigene Diff zu lesen schon.
 

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-537 Entscheidungen, E1 bis E557 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+538 Entscheidungen, E1 bis E558 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -601,6 +601,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E555** — Eine Gruppe ist kein Loch: `p:grpSp` wird mitgelesen (samt Kindkoordinaten), und der Hinweis sagt, was NICHT ankam
 * **E556** — Auch im Laserpointer-Vortrag deckt ein Tipp die Antwort auf — der Deckel liegt unter der Zeigefläche, nicht neben ihr
 * **E557** — Ein Absatz hat sein eigenes Format: Grad, Gewicht, Farbe, Ebene und Aufzählungszeichen je Absatz — aufgeteilt nur, wenn es etwas bringt
+* **E558** — Eine Folie erbt von ihrem Layout und dessen Master: Lage, Grad und Hintergrund kommen von dort, wenn die Folie selbst nichts sagt
 
 ---
 
@@ -44863,3 +44864,143 @@ Unterpunkt 15 pt. Vorher wäre das ein Block in 36 pt Schwarz gewesen.
 **Was weiter offen bleibt** (L151): Ausrichtung (`a:pPr@algn` — die Textmarke
 hat kein Feld dafür), gemischte Läufe innerhalb eines Absatzes, Drehung,
 Tabellen als Tabellenblock, Layout und Master.
+
+
+E558 — Eine Folie erbt von Layout und Master
+--------------------------------------------------------------------------
+
+Redur: „ich will das die orginale pptx so wie es sich öfnnen ohne etwas
+löschen oder etwas". E555 hat den Datenverlust behoben, E557 das Aussehen
+des Textes. Dies hier ist der Grund, warum eine Folie trotzdem noch falsch
+aussehen konnte — und er stand nicht einmal in `LUECKEN.md`.
+
+### Was gemessen wurde
+
+```txt
+grep -n "slideLayout\|slideMaster\|notesSlide" src/bereiche/dateien/einlesen.ts
+    → nichts
+```
+
+Layout und Master wurden **überhaupt nicht gelesen**. Das ist nicht eine
+Feinheit unter vielen: PowerPoint schreibt in das Folien-XML nur, was die
+Folie SELBST ändert. Wer in eine Vorlage tippt, erzeugt eine Folie, die
+ausser dem Platzhaltertyp und dem Text nichts enthält:
+
+```xml
+<p:sp><p:nvSpPr>…<p:nvPr><p:ph type="ctrTitle" idx="0"/></p:nvPr></p:nvSpPr>
+  <p:spPr/>                                   <!-- keine Lage -->
+  <p:txBody>…<a:rPr/><a:t>Titel</a:t>…</p:txBody></p:sp>
+```
+
+Der Leser fand darin keine Lage, keinen Grad, keine Hintergrundfarbe — und
+setzte deshalb seine eigenen: eine geratene Stelle aus einem Zähler und
+40 pt für einen Titel, 20 pt sonst. Weiss blieb das Blatt immer.
+
+### Die Kette ist zweistufig und läuft über `.rels`
+
+```txt
+Folie  →  ihr Layout  →  dessen Master
+```
+
+Verbunden wird über `r:id` in `slideN.xml.rels`, **nicht über Dateinamen**:
+`slide1.xml` darf `slideLayout9.xml` benutzen und das `slideMaster3.xml`.
+Der Prüflauf baut deshalb ausdrücklich eine Datei, in der die Nummern nicht
+zusammenpassen — wer rät, findet dort nichts.
+
+Jede Stufe gewinnt gegen die darüber. Im Code heisst das: der Master wird
+zuerst in die Karte geschrieben, das Layout überschreibt ihn, und die Folie
+gewinnt gegen beide.
+
+```ts
+const vorgaben = new Map([...vorgabenLesen(masterDoc), ...vorgabenLesen(layoutDoc)]);
+const grundfarbe = hintergrund(doc) || hintergrund(layoutDoc) || hintergrund(masterDoc);
+```
+
+### Der Schlüssel eines Platzhalters — und warum `ctrTitle` dazugehört
+
+Ein Platzhalter wird über `type` UND `idx` wiedererkannt, und **beide dürfen
+fehlen**: ein fehlender `type` heisst „body", ein fehlender `idx` heisst „0".
+Ohne diese zwei Vorgaben fände ein Titel seinen Platzhalter im Layout nicht.
+
+Dazu kommt eine Gleichsetzung, die im Format nicht steht, aber in jeder
+Datei vorkommt: `ctrTitle` (der zentrierte Titel einer Titelfolie) und
+`title` sind für die Vererbung dasselbe. Ein Layout schreibt mal das eine,
+die Folie mal das andere. Die Gegenprobe ohne diese Zeile zeigt genau das:
+der Titel erbt nichts mehr.
+
+### Was bewusst NICHT geerbt wird: die Themenfarbe
+
+`<a:schemeClr val="bg2"/>` bleibt liegen. Ohne `theme1.xml` ist der Name
+gar nicht auflösbar, und eine falsche Hintergrundfarbe ist schlimmer als
+keine: sie macht den Text unlesbar, und man sieht nicht, woher sie kommt
+(§11 — lieber nichts als falsch). Die Gegenprobe, die den Namen einfach
+durchreicht, liefert die Zeichenkette `"#bg2"` — keine Farbe, sondern ein
+Wort mit einem Doppelkreuz davor.
+
+Deshalb ist die Prüfung im Blatt zweifach: der Leser gibt nur `srgbClr`
+heraus, und `blatt.ts` lässt nur ein echtes Hex durch, bevor es in
+`--paper` landet (§19).
+
+### Der Hintergrund brauchte keine neue Leitung
+
+`--paper` gab es schon: `.blatt-papier{background:var(--paper,#fff)}` steht
+seit langem im Stil — nur hat **nie jemand die Eigenschaft gesetzt**. Das
+ist derselbe Fund wie bei `state.einzeln` und beim Annahme-Verzeichnis: die
+Fähigkeit war da und nicht angeschlossen. Es kam eine Zeile dazu, kein Weg.
+
+### Der Preis des Hintergrunds — gefunden beim Lesen des eigenen Diffs
+
+Ein farbiger Grund hat eine Folge, die keine Prüfung dieses Bogens gesucht
+hätte und die ich nur gesehen habe, weil ich die eigene Änderung noch einmal
+gegen den Strich gelesen habe: **eine Textmarke ohne eigene Farbe zeichnet
+`#111111`** (`marken.ts:11`). Das war richtig, solange jedes Blatt weiss war.
+Mit einem geerbten dunklen Grund ist es schwarz auf dunkelblau — der Text
+wäre weg, und zwar erst nach dem Einlesen und ohne jede Fehlermeldung.
+
+PowerPoint löst das über die Themenfarbe. Die haben wir nicht (siehe oben).
+Was wir haben, ist der **Kontrast**, und der ist keine Geschmacksfrage:
+
+```txt
+Grund      gegen #111111    Folge
+#102A43       1,29 : 1      Tinte kippt auf Weiss
+#767676       4,16 : 1      kippt (knapp unter der Schwelle)
+#888888       5,33 : 1      bleibt schwarz
+#ffffff      18,88 : 1      bleibt schwarz
+```
+
+Gerechnet wird die relative Helligkeit nach WCAG, die Schwelle ist 4,5:1
+(§38). Ein Absatz, der eine eigene Farbe MITBRINGT, behält sie in jedem Fall
+— gekippt wird nur, was sonst gar keine hätte.
+
+Und die Zahl, die das entscheidet, hat mich zum zweiten Mal erwischt: ich
+hatte die Helligkeit von `#111111` mit 0,005182 angesetzt. Nachgerechnet
+sind es 0,005605. Dieselbe Sorte Kopfrechenfehler wie in P32 — deshalb steht
+die Rechnung jetzt im Code, nicht nur ihr Ergebnis.
+
+### Was `test513` hält
+
+17 Zusagen, fünf Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  die Erbkette nicht anwenden      8 grün, 5 rot
+    Titel {"x":58,"y":41,"sz":40} statt (36, 18) in 44 — wörtlich der alte
+    Zustand, und der Hintergrund ist ""
+G2  nur das Layout, nicht der Master  12 grün, 1 rot  (der Hintergrund fehlt)
+G3  `ctrTitle` nicht auf `title`      11 grün, 2 rot  (der Titel erbt nichts)
+G4  Themenfarben durchreichen         12 grün, 1 rot  (liefert "#bg2")
+G5  die Tinte nicht kippen lassen     15 grün, 2 rot  (schwarz bleibt schwarz)
+```
+
+Zwei Bilder:
+
+* `bilder/pptx-layout-master.png` — eine Folie, die selbst nichts angibt:
+  dunkelblauer Grund aus dem Master, weisser Titel an der Stelle des Layouts
+  in 44 pt, hellblauer Fliesstext in 18 pt. Vorher: schwarzer Text auf Weiss,
+  beide an einer geratenen Stelle.
+* `bilder/pptx-tinte.png` — dieselbe Folie, aber KEIN Absatz nennt eine
+  eigene Farbe. Beide stehen weiss da. Ohne die Kontrastregel wären sie
+  `#111111` auf `#102A43`.
+
+**Was weiter offen bleibt** (L151): Ausrichtung (`a:pPr@algn`), gemischte
+Läufe innerhalb eines Absatzes, Drehung, Tabellen als Tabellenblock, und die
+Themenfarben selbst — dafür müsste `theme1.xml` gelesen werden.

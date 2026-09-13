@@ -7433,10 +7433,21 @@ Grösse, Schriftgrad und Fett, Bilder mit ihren Bytes. Das ist der erste
 Schritt, nicht der letzte. Was heute **nicht** ankommt, damit niemand es für
 verloren hält:
 
-- **Geerbtes vom Layout und vom Master.** Gelesen werden nur die Formen, die
-  im Folien-XML wirklich stehen. Hintergründe, Platzhaltertexte, Fusszeilen,
-  Foliennummern und das Farbthema stehen dort nicht. Eine Folie, die im
-  Original einen farbigen Grund hat, kommt weiss an.
+- ~~**Geerbtes vom Layout und vom Master.**~~ **GESCHLOSSEN mit E558** für
+  die drei Dinge, die man sieht: Lage, Schriftgrad und Hintergrundfarbe
+  werden über `Folie → Layout → Master` geerbt, verbunden über `.rels` und
+  nicht über Dateinamen. Vorher stand `slideLayout` und `slideMaster` kein
+  einziges Mal im Leser — eine Folie, die selbst nichts angibt (also jede,
+  in die nur getippt wurde), bekam eine geratene Stelle und 40 pt. **Offen
+  bleiben darin**: Fusszeilen und Foliennummern aus dem Master (sie sind
+  Platzhalter OHNE Text, und ihr Inhalt käme erst aus `p:hf`) sowie das
+  Farbthema — eine `schemeClr` bleibt bewusst liegen, weil sie ohne
+  `theme1.xml` nicht auflösbar ist und eine falsche Hintergrundfarbe
+  schlimmer wäre als keine. **Und der Preis davon steht gleich mit dabei**:
+  ein Absatz ohne eigene Farbe bekommt auf einem dunklen geerbten Grund
+  ausdrücklich Weiss — gerechnet über den WCAG-Kontrast gegen `#111111`,
+  Schwelle 4,5:1 (§38). Das ist keine Themenfarbe, sondern nur die
+  Untergrenze der Lesbarkeit; die echte Farbe käme erst aus `theme1.xml`.
 - ~~**Ein Schriftgrad je Kasten.**~~ **GESCHLOSSEN mit E557** für den Fall,
   der zählt: je ABSATZ werden Grad, Gewicht und Farbe gelesen, und wo sie
   auseinandergehen, entsteht eine Marke je Absatz. Gemessen vorher:
@@ -7462,6 +7473,11 @@ verloren hält:
 - **Drehung** (`a:xfrm@rot`) und Spiegelung (`flipH`/`flipV`). Die Marken
   können drehen — gelesen wird es noch nicht.
 - **Notizen** (`ppt/notesSlides/`), Übergänge, Animationen.
+- **Das Farbthema** (`ppt/theme/theme1.xml`). Solange es ungelesen bleibt,
+  bleibt jede `schemeClr` liegen — im Hintergrund (E558), in Verläufen
+  (E545) und in Textfarben (E557). Das ist die nächste grosse Stelle, und
+  sie ist eine eigene: das Thema liefert zwölf Namen, und drei davon
+  (`lt1`/`dk1`/`phClr`) hängen noch vom Ort ab, an dem sie stehen.
 
 **GEMESSEN am 12. September**, an einer echten Datei von Redur
 (27 Folien, 36 Bilder, 11 Layouts, 4:3, beide Packmethoden gemischt). Sie
