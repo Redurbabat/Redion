@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-526 Entscheidungen, E1 bis E546 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+527 Entscheidungen, E1 bis E547 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -590,6 +590,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E544** — Ein Blatt füllt eine Folie, und der Klick schaltet sie weiter: `EIGENE_FOLIE`, Schrittzähler, weiches Auflösen, Vollbild
 * **E545** — Der Deckel bekommt seinen Verlauf: ein `<defs>` fürs Blatt statt einer Gruppe, Rückfallfarbe, gesäuberte Kennung — und der fehlende Wächter für Markenfelder
 * **E546** — Eine Folie zu zeigen darf sie nicht ändern: 27 Folien öffnen legte 27 Blöcke an; und die Präsentation geht jetzt als Foliensatz auf
+* **E547** — Die Folienliste zeigt Folien: Mass vom Block, Marken statt Bleistift, Name statt 27-mal „A4-Blatt"
 
 ---
 
@@ -43719,3 +43720,78 @@ legt das Blatt seine Zeile wieder an.
 `test502` neu, 17 Zusagen, drei Gegenproben gefahren (8/2, 8/2, 12/5 —
 gemessen). `test191` nachgezogen und grün. Bild:
 `bilder/o4-dokumentmodus.png` gegen `bilder/o4-ist-editor.png`.
+
+---
+
+E547 — Die Folienliste zeigt Folien
+--------------------------------------------------------------------------
+
+O4, zweiter Teil. E546 hat die eingelesene Präsentation als Dokument
+aufgehen lassen — damit war die Seitenliste da, die G3 gebaut hat, samt Menü
+je Seite, Einfügen, Löschen, Verschieben. **Die Liste war da und half nicht.**
+
+Drei Fehler, alle in `thumbnail()` und `sourceLabel()`, und alle erst im Bild
+(`bilder/fe-seitenliste.png`):
+
+```txt
+1. hochkant   .document-thumbnail-preview trägt aspect-ratio:210/297, fest
+              verdrahtet. Gemessen: Miniatur 0,71 — die Folie daneben 1,78.
+2. leer       Alles ausser einer PDF-Seite mit Bild bekam einen Bleistift.
+              27 Folien = 27 gleiche leere Kästchen.
+3. namenlos   `sourceLabel` gab für jedes `blatt` „A4-Blatt" zurück. Auch im
+              `aria-label`: 27-mal „A4-Blatt öffnen".
+```
+
+Der dritte ist der, der am meisten kostet, und er ist der unscheinbarste: mit
+fünf gleichen Namen kann man noch zählen, mit siebenundzwanzig nicht mehr.
+Für ein Vorleseprogramm war die Liste von Anfang an unbenutzbar (§38).
+
+**Entschieden — drei kleine Sachen, alle an der Stelle, wo sie hingehören:**
+
+1. **Das Mass kommt vom Block.** `preview.style.aspectRatio` aus
+   `bw`/`bh` bzw. `blattBreite`/`blattHoehe`. Die Vorgabe im Stilblatt bleibt
+   für alles ohne eigene Masse — ein A4-Blatt ist danach gemessen weiter
+   hochkant (0,71).
+
+2. **Die Miniatur zeigt die Folie.** `markenVorschau` baut ein kleines SVG
+   aus DENSELBEN Knoten, die `Marken.zeichneMarke` für Vortrag, Druck und
+   Seitenbild liefert (§8) — kein zweiter Zeichner. Das ist nicht nur
+   sparsam, es ist der Grund, warum **die Abdeckung auch hier deckt**:
+   `zeichneMarke` gibt sie zugedeckt heraus (E266). Gemessen an einer echten
+   Miniatur: das Band misst 69 × 6 px und ist `rgb(255, 204, 0)` — die
+   Antwort darunter steht auch in der Seitenliste nicht offen.
+   Gibt es nichts zu zeichnen, bleibt der Bleistift.
+
+   **Bildmarken nur, wenn ihre Adresse schon bekannt ist.** Sonst löste eine
+   Liste mit 27 Folien 27 Dateilesungen aus, nur um Daumennagel zu füllen —
+   dieselbe Vorsicht, die die PDF-Vorschaubilder eine Funktion tiefer schon
+   üben.
+
+3. **Der Name sagt, welche Folie es ist.** Ein Blatt mit eigenem Text trägt
+   seinen Namen selbst; der `.pptx`-Einleser setzt ihn aus dem Folientitel
+   (E540). Ein leeres Blatt aus dem Slash-Menü hat keinen und bleibt
+   „A4-Blatt". Die laufende Nummer steht davor — bei 27 Folien zählt niemand
+   Kästchen ab.
+
+**Die Alternative** zu Punkt 2 wäre gewesen, ein Bild der Folie zu rendern
+und zu speichern, wie es die PDF-Seiten tun. Verworfen: das wäre ein zweiter
+Speicher für etwas, das aus den Marken jederzeit entsteht, und er liefe mit
+jeder Änderung an der Folie auseinander (§8: keine doppelten Kataloge).
+
+**Was es kostet:** Die Liste zeichnet jetzt bei jedem Aufklappen alle Marken
+aller Folien. Für Redurs 27 Folien mit je zehn Marken sind das 270 kleine
+SVG-Knoten — spürbar wäre erst ein Vielfaches davon, und der Ausweg stünde
+bereit (dieselbe Sichtbarkeitsprüfung wie bei den PDF-Vorschaubildern). Das
+ist eine Vermutung, keine Messung, und steht deshalb hier und nicht als
+Zahl.
+
+`test503` neu, 18 Zusagen, vier Gegenproben gefahren (17/1, 13/5, 15/3,
+17/1 — gemessen). Eine davon fing beim ersten Versuch nur zwei Zusagen
+statt vier: die Prüfung verglich den Namen auf Gleichheit, und mit der
+Nummer davor heisst er „1 · A4-Blatt". Jetzt prüft sie auf „enthält".
+
+Bilder: `bilder/fe-seitenliste.png` und `bilder/fe-miniatur-nah.png`.
+
+**Offen bleibt unter O4:** eine Folie STEHEND im Bild statt durchrollend,
+und Folien-Handgriffe, die nach Folien klingen („Neue Folie" statt „Neue
+Seite"). Die Griffe selbst gibt es seit G3.

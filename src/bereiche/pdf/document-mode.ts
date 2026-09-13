@@ -584,12 +584,26 @@ const DocumentMode = (() => {
     App.zeichneSeite();
   };
 
-  const sourceLabel = (documentBlock: any): string =>
-    documentBlock.type === 'pdfseite'
-      ? (documentBlock.herkunft === 'bild'
-          ? 'Bild' + (documentBlock.bildName ? ' · ' + String(documentBlock.bildName).slice(0, 40) : '')
-          : 'PDF · Seite ' + (Number(documentBlock.nr) || 1))
-      : 'A4-Blatt';
+  /**
+   * Wie die Seite heisst — und bei einer Folie: WELCHE (E547).
+   *
+   * Hier stand für jedes `blatt` der eine Satz „A4-Blatt". Bei einer
+   * eingelesenen Präsentation heissen damit 27 Einträge gleich, im
+   * `aria-label` ebenso („A4-Blatt öffnen", 27-mal). Für einen Menschen am
+   * Bildschirm unbrauchbar, für ein Vorleseprogramm schlimmer (§38).
+   *
+   * Ein Blatt mit eigenem Text trägt seinen Namen selbst — der
+   * `.pptx`-Einleser setzt ihn aus dem Folientitel (E540). Ein leeres Blatt
+   * aus dem Slash-Menü hat keinen und bleibt „A4-Blatt", wie es war.
+   */
+  const sourceLabel = (documentBlock: any): string => {
+    if (documentBlock.type === 'pdfseite')
+      return documentBlock.herkunft === 'bild'
+        ? 'Bild' + (documentBlock.bildName ? ' · ' + String(documentBlock.bildName).slice(0, 40) : '')
+        : 'PDF · Seite ' + (Number(documentBlock.nr) || 1);
+    const eigen = String(documentBlock.text || '').trim();
+    return eigen ? eigen.slice(0, 60) : 'A4-Blatt';
+  };
 
   const linkedObjects = (page: any, documentBlock: any): any[] =>
     Object.values<any>(Store.cache.blocks).filter(block => {
@@ -598,6 +612,50 @@ const DocumentMode = (() => {
       return source.blockId === documentBlock.id ||
         (!source.blockId && source.pageId === page.id);
     });
+
+  /** Die Masse eines Dokumentblocks — PDF-Seite wie Blatt, in Punkten. */
+  const masseVon = (block: any): { bw: number; bh: number } => ({
+    bw: Number(block?.bw) || Number(block?.blattBreite) || SheetSpace.A4_BREITE,
+    bh: Number(block?.bh) || Number(block?.blattHoehe) || SheetSpace.A4_HOEHE,
+  });
+
+  /**
+   * Die Marken eines Blocks als kleines SVG für die Miniatur (E547).
+   *
+   * `null`, wenn es nichts zu zeichnen gibt — dann bleibt der Bleistift.
+   *
+   * DIE ABDECKUNG DECKT AUCH HIER. Das ist kein Beiwerk: `zeichneMarke`
+   * gibt sie zugedeckt heraus, und genau darum darf diese Vorschau derselbe
+   * Zeichner sein und kein zweiter (E266, §8). Eine Seitenliste, in der die
+   * Antworten offen stehen, wäre schlimmer als gar keine Vorschau.
+   *
+   * BILDMARKEN werden mitgezeichnet, aber nur, wenn ihre Adresse SCHON
+   * bekannt ist. Sonst löste eine Liste mit 27 Folien 27 Dateilesungen aus,
+   * nur um Daumennagel-Bilder zu füllen — dieselbe Vorsicht wie bei den
+   * PDF-Vorschaubildern eine Funktion weiter unten.
+   */
+  const markenVorschau = (block: any, mass: { bw: number; bh: number }): SVGElement | null => {
+    const marken = Array.isArray(block?.marken) ? block.marken : [];
+    if (!marken.length || typeof Marken === 'undefined') return null;
+    const bekannt = (m: any): boolean => m?.art !== 'bild' ||
+      (typeof Dateien !== 'undefined' && !!Dateien.adresseBekannt?.(m.dateiId));
+    const raum = document.createElementNS('http://www.w3.org/2000/svg', 'svg') as SVGElement;
+    raum.setAttribute('class', 'document-thumbnail-marken');
+    raum.setAttribute('viewBox', '0 0 ' + mass.bw + ' ' + mass.bh);
+    raum.setAttribute('preserveAspectRatio', 'none');
+    raum.setAttribute('aria-hidden', 'true');
+    const defs = typeof Marken.verlaufDefs === 'function' ? Marken.verlaufDefs(marken) : null;
+    if (defs) raum.appendChild(defs);
+    let gezeichnet = 0;
+    for (const marke of marken) {
+      if (!bekannt(marke)) continue;
+      try {
+        const knoten = Marken.zeichneMarke(marke);
+        if (knoten) { raum.appendChild(knoten); gezeichnet++; }
+      } catch { /* eine Marke, die sich weigert, lässt den Rest stehen */ }
+    }
+    return gezeichnet ? raum : null;
+  };
 
   /**
    * EINE MINIATUR — seit E480 in einer ZEILE mit ihrem Menüknopf.
@@ -622,6 +680,13 @@ const DocumentMode = (() => {
 
     const preview = document.createElement('span');
     preview.className = 'document-thumbnail-preview';
+    /* DAS MASS KOMMT VOM BLOCK, NICHT AUS DEM STILBLATT (E547).
+       `.document-thumbnail-preview` trägt `aspect-ratio:210/297` — A4
+       hochkant, fest verdrahtet. Eine 16:9-Folie stand darin hochkant und
+       gequetscht: gemessen 0,71 statt 1,78. Die Vorgabe im Stilblatt bleibt
+       für alles ohne eigene Masse. */
+    const mass = masseVon(documentBlock);
+    if (mass.bw > 0 && mass.bh > 0) preview.style.aspectRatio = mass.bw + ' / ' + mass.bh;
     if (documentBlock.type === 'pdfseite' && documentBlock.bildDateiId && typeof Dateien !== 'undefined') {
       const image = document.createElement('img');
       image.alt = '';
@@ -632,14 +697,26 @@ const DocumentMode = (() => {
       image.dataset.documentThumbnailFile = documentBlock.bildDateiId;
       preview.appendChild(image);
     } else {
-      const blank = document.createElement('span');
-      blank.className = 'document-thumbnail-blank';
-      blank.textContent = documentBlock.type === 'blatt' ? '✎' : documentBlock.herkunft === 'bild' ? '🖼' : 'PDF';
-      preview.appendChild(blank);
+      /* DIE MINIATUR ZEIGT DIE FOLIE (E547). Hier stand für alles, was
+         keine PDF-Seite mit Bild ist, ein Bleistift — bei 27 Folien also 27
+         gleiche leere Kästchen, in denen niemand etwas findet. Die Marken
+         liegen bereit, und `Marken.zeichneMarke` zeichnet sie längst für
+         Vortrag, Druck und Seitenbild; hier ist es dieselbe Stelle, nur
+         klein (§8). Bleibt nichts zu zeichnen, bleibt auch der Bleistift. */
+      const gemalt = markenVorschau(documentBlock, mass);
+      if (gemalt) preview.appendChild(gemalt);
+      else {
+        const blank = document.createElement('span');
+        blank.className = 'document-thumbnail-blank';
+        blank.textContent = documentBlock.type === 'blatt' ? '✎' : documentBlock.herkunft === 'bild' ? '🖼' : 'PDF';
+        preview.appendChild(blank);
+      }
     }
     const label = document.createElement('span');
     label.className = 'document-thumbnail-label';
-    label.textContent = sourceLabel(documentBlock);
+    /* DIE NUMMER GEHÖRT DAZU. Bei 27 Folien zählt niemand die Kästchen ab,
+       und der Name allein sagt nicht, die wievielte es ist. */
+    label.textContent = (index + 1) + ' · ' + sourceLabel(documentBlock);
     /* Lesezeichen und Drehung (E467): das Zeichen an der Ecke, die Drehung
        am Bild — das Vorschaubild ist das ungedrehte Raster. */
     const g = SheetSpace.gedrehtVon(documentBlock);

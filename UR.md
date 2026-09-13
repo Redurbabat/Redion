@@ -916,6 +916,17 @@ Keine — an diesem Tag kam keine Nachricht.
 **Besserer Prompt:** 
 
 
+**28 · ca. 03:30**
+
+> Weiter mit den folieneditor
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -944,11 +955,12 @@ Keine — an diesem Tag kam keine Nachricht.
 | E544 — Ein Blatt füllt eine Folie, und der Klick schaltet sie weiter (L153 geschlossen) | `(nach E543)` → `(dieser Bogen)` | 23:35 – 00:40 | ca. 65 min | test500 neu, 45 Zusagen, vier Gegenproben gefahren; test183/191/293/266/499 grün |
 | E545 — Der Deckel bekommt seinen Verlauf, und ein Markenfeld bekommt seinen ersten Wächter | `(nach E544)` → `(dieser Bogen)` | 00:40 – 02:10 | ca. 90 min | test501 neu, 29 Zusagen, fünf Gegenproben gefahren; test266/499/500/145/183 grün |
 | E546 — O4 zur Hälfte: das Zeigen einer Folie ändert sie nicht mehr, und die Präsentation geht als Foliensatz auf | `(nach E545)` → `(dieser Bogen)` | 02:10 – 03:20 | ca. 70 min | test502 neu, 17 Zusagen, drei Gegenproben gefahren; test191 nachgezogen |
+| E547 — Die Folienliste zeigt Folien: Mass vom Block, Marken statt Bleistift, Name statt „A4-Blatt“ | `(nach E546)` → `(dieser Bogen)` | 03:30 – 04:40 | ca. 70 min | test503 neu, 18 Zusagen, vier Gegenproben gefahren |
 
 #### Zahlen des Tages
 
-- **commits:** 21
-- **entscheidungen:** 19
+- **commits:** 22
+- **entscheidungen:** 20
 
 #### Das grösste Problem
 
@@ -976,6 +988,7 @@ Der zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glaskno
 | 00:10 | `EIGENE_FOLIE` im Kern, Schrittzähler im Vortrag, weiches Auflösen, und ein Blatt füllt die Leinwand. | Redur: „mach weiter mit den folien klick." Davor lag ein grösserer Fehler: eine eingelesene Präsentation war EINE Folie mit allen Blättern übereinander — gemessen, und nur auf dem Bild zu sehen. | keins an Daten — der Schrittstand wird nie gespeichert (E266); `Folien.teilen` ist gemeinsame Regel, deshalb fünf Nachbarläufe mitgefahren |
 | 01:40 | `formVerlauf` liest den Verlauf aus `p:spPr`, `verlaufDefs` legt EIN `<defs>` ans Blatt, die Füllung nennt immer auch die feste Farbe. | Redur: „1:1 wie das Original". Sieben Leser haben vorher den Bestand vermessen — der naheliegende Bau mit einer Gruppe um die Marke hätte vier Stellen gebrochen, drei davon still. | §51: ohne Rückfallfarbe wäre ein Deckel bei fehlender Vorlage UNSICHTBAR, also eine offene Antwort. Deshalb steht sie immer daneben — am Browser gemessen, nicht angenommen. |
 | 02:50 | `Blatt.zeichne` legt keine Zeile mehr an, wenn das Blatt Marken trägt; der .pptx-Einleser setzt `dokumentModus`. | Gemessen: 27 Folien öffnen legte 27 leere Textblöcke an, und ihr Platzhalter lag auf dem Folientitel. Und der Dokumentmodus konnte Blatt-Blöcke längst — es fehlte nur die Flagge. | §9: ein Zeichner, der in den Speicher schreibt, ist die gefährlichere Hälfte des Fundes. E118 bleibt für das leere Blatt unverändert, test502 misst beide Richtungen. |
+| 04:10 | `thumbnail()` nimmt das Seitenverhältnis vom Block und zeichnet die Marken; `sourceLabel` gibt den Folientitel. | Die Seitenliste war da (G3) und half nicht: 27 hochkant gequetschte, leere, gleich benannte Kästchen. Alle drei Fehler waren nur im Bild zu sehen. | keins an Daten. Die Abdeckung deckt auch in der Miniatur, weil es derselbe Zeichner ist — gemessen: 69×6 px, rgb(255,204,0). |
 
 ---
 

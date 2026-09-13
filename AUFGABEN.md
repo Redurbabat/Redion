@@ -881,11 +881,17 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
     das längst — es fehlte die Flagge `dokumentModus` am Seitenblock. Eine
     Zeile (derselbe Fund wie E397).
 
-  **Offen bleibt der Folieneditor selbst:** EINE Folie stehend im Bild, ein
-  Miniaturstreifen daneben, Folie hinzufügen / duplizieren / löschen /
-  verschieben als Folien-Handgriffe. Der Dokumentmodus rollt heute durch —
-  für das Schreiben richtig, für das Bauen einer Präsentation nicht. Hier
-  entscheidet sich „1:1 wie PowerPoint".
+  Und die Folienliste zeigt seit E547 wirklich Folien: das Seitenverhältnis
+  kommt vom Block (16:9 statt fest verdrahtetem A4), in der Miniatur steht
+  die Folie statt eines Bleistifts — mit demselben Zeichner, deshalb deckt
+  die Abdeckung auch dort —, und jede trägt ihre Nummer und ihren Titel
+  statt 27-mal „A4-Blatt".
+
+  **Offen bleibt am Folieneditor:** EINE Folie stehend im Bild statt
+  durchrollend, und Handgriffe, die nach Folien klingen („Neue Folie" statt
+  „Neue Seite"). Die Griffe selbst gibt es seit G3. Der Dokumentmodus rollt
+  heute durch — für das Schreiben richtig, für das Bauen einer Präsentation
+  nicht. Hier entscheidet sich der Rest von „1:1 wie PowerPoint".
 - **O5 · `.pptx` schreiben mit Rundreise.** Geänderte Folien zurück, der Rest
   der Originaldatei unangetastet (braucht O2).
 - **O6 · `.docx` draufschreiben.** Braucht den Rasterer. Das ist der teuerste
