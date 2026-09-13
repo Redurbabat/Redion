@@ -39,6 +39,7 @@ sind der teuerste Teil und der lehrreichste.
 | P23 | 2026-09-13 | Eine harte Zahl hat gemeldet — und was sie meldete, war nicht die Zahl | 🟡 klein | E549 |
 | P24 | 2026-09-13 | Ein Menüband ohne ein einziges Zeichen — und jede Prüfung wäre grün geblieben | 🟡 klein | E550 |
 | P25 | 2026-09-13 | Das Band fragte die Fensterbreite einmal — und behielt die Antwort | 🟡 klein | E550 |
+| P26 | 2026-09-13 | Ein Knopf nahm dem Titel 44 Pixel — und die Zusage dagegen konnte den Fall nicht sehen | 🟠 mittel | E551 |
 
 ---
 
@@ -501,4 +502,27 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Zwei Gegenproben, beide gefahren: die Funktion nichts tun lassen (49 grün, 2 rot — das Band blieb bei 800 px stehen), und sie nur AUSHÄNGEN lassen (47 grün, 4 rot — es kam beim Aufziehen nicht zurück). Die zweite war nötig, weil sonst nur die naheliegende Richtung geprüft gewesen wäre.
 
 **Die Lehre.** Zwei Sachen. Erstens: das eigene Diff noch einmal mit der Frage lesen, was daran schiefgehen könnte — dieser Fehler stand in keiner Messung und auf keinem Bild. Zweitens: die erste Form der Gegenprobe (den AUFRUF entfernen) liess den Zweig wegen `noUnusedLocals` gar nicht mehr bauen. Eine Gegenprobe, die nicht baut, ist keine — CLAUDE.md §52.6 beschreibt genau diesen Fall, und ich bin trotzdem hineingelaufen.
+
+
+---
+
+## P26 · Ein Knopf nahm dem Titel 44 Pixel — und die Zusage dagegen konnte den Fall nicht sehen
+
+*2026-09-13 · 🟠 mittel · E551*
+
+**Das Bild.** Am Telefon zeigte „📽️ Folie" als einziger Knopf der Dokumentleiste sein WORT (alle anderen nur ihr Zeichen), und das Wort brach im 44-px-Kasten um. Dem Titel eines Foliensatzes blieben 70 px: „Neue Pr…".
+
+**Die falsche Vermutung.** Beim Bauen von E549 gar keine — die Telefonbreite wurde schlicht nicht nachgemessen. Die Bilder dieses Bogens waren Rechnerbilder.
+
+**Wie es gefunden wurde.** Auf dem Bild eines ANDEREN Bogens. Beim Nachsehen, ob die stehende Folie am Telefon mittig sitzt, fiel der umgebrochene Knopf im Kopf auf.
+
+**Die Ursache.** Zwei Schichten. Oben: `test285` verlangt fuer den Titel ueber 100 px und haelt das seit E296 — aber er oeffnet ein PDF, und bei einem PDF ist der Folien-Knopf ohnehin versteckt. Die Zusage war da und konnte den Fall nicht sehen. Darunter: derselbe Fehler war 2026 schon einmal gemacht worden. Neben `print` steht in `pdf-studio.css` seit E493 die Zahl 70 als Kommentar — genau diese siebzig.
+
+**Die Lösung.** Der Knopf zieht am Telefon in die Ansichtsklappe, denselben Weg, den E468 fuer die Suche und E493 fuer „Praesentieren" gegangen sind. Titel danach 114 px. `test507 §4` misst es jetzt an einem FOLIENSATZ, also dort, wo `test285` nicht hinsieht.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Gegenprobe gefahren: den Knopf oben stehen lassen — 32 gruen, 2 rot, „70 px — vorher 70". Die Zahl reproduziert sich auf den Pixel.
+
+**Die Lehre.** Eine gruene Zusage beweist nur das, was sie ansieht. `test285` prueft die Kopfleiste seit E296 sorgfaeltig — an einem PDF. Ein neuer Knopf, der nur bei EINER Dokumentart erscheint, ist damit unbeobachtet, und dass die Suite gruen bleibt, heisst nichts. Wer eine Bedingung einfuehrt (`hidden = !istFoliensatz(page)`), fuehrt einen zweiten Fall ein, den niemand misst.
 

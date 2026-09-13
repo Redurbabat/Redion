@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-530 Entscheidungen, E1 bis E550 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+531 Entscheidungen, E1 bis E551 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -594,6 +594,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E548** — „Präsentation" ist ein Weg: Eintrag im Anlegen-Menü, acht PowerPoint-Layouts, ein Wähler, der sie zeigt
 * **E549** — Reiter „Präsentation" im Band, Folien-Menü in der Dokumentleiste — das ganze Band dort war gemessen schlechter
 * **E550** — Das Folienband: Reiter ÜBER der Folie; `start` und `einfuegen` bleiben draussen, weil 79 von 83 ihrer Knöpfe dort nichts tun
+* **E551** — Eine Folie steht, ein Skript rollt: die Vorgabe hängt am Dokument; `safe center` statt `center`; „📽️ Folie“ verlässt die Telefonleiste
 
 ---
 
@@ -44162,3 +44163,123 @@ Richtungen, weil nur eine davon die naheliegende ist.
 Form: den Aufruf herausgenommen, worauf der Zweig wegen `noUnusedLocals`
 gar nicht mehr baute — CLAUDE.md §52.6 beschreibt genau diesen Fall, und
 eine Gegenprobe, die nicht baut, ist keine. Bilder: `bilder/fb-praesentation.png`, `bilder/fb-ansicht.png`.
+
+---
+
+E551 — Eine Folie steht, ein Skript rollt — und beides steht in Redurs eigenen Worten
+--------------------------------------------------------------------------
+
+Redur hat zu zwei verschiedenen Dingen zwei verschiedene Sachen gesagt, und
+sie widersprechen einander nicht:
+
+```txt
+PDF und Heft (E299):  „die PDF SEITEN sollte wie goodnotes sich ganz
+                       oeffnen komplet wie one note so"
+Folien (E548/E549):   „1:1 wie powerpoint"
+```
+
+Ein Skript liest man durch, man blättert es nicht — dabei bleibt es. Eine
+Präsentation rollt in PowerPoint dagegen nirgends: dort **steht** eine Folie,
+und die Liste wechselt sie. Die Rolle ist genau das, was einen Foliensatz
+nicht wie PowerPoint aussehen lässt.
+
+### Und wieder war es schon da
+
+Die Einzelseite gibt es seit **E398** — als Schalter im Inspector
+(„▢ Einzelseite zeigen"), mit der Rolle als Vorgabe. `bausteine.css` sagt an
+der Stelle sogar ausdrücklich: „die Vorgabe bleibt die Rolle, überall … eine
+Vorgabe dagegen wäre eine Entscheidung gegen ihn."
+
+Das stimmte, solange es nur PDFs und Hefte gab. Ein Foliensatz ist das dritte
+Ding, und für das hat er etwas anderes gesagt. Geändert wird deshalb nur die
+**Vorgabe**, und nur für den quer liegenden Foliensatz. Das ist keine
+Entscheidung gegen E299, sondern beide Ansagen dort, wo sie gemeint waren.
+
+**Der Schalter bleibt der stärkere.** Wer bei einem Foliensatz einmal
+„▤ Fortlaufend zeigen" drückt, bekommt beim nächsten Öffnen die Rolle —
+`meta` gewinnt gegen die Vorgabe, sonst wäre der Schalter eine Attrappe.
+Beide Richtungen sind geprüft, jeweils über einen echten Druck und ein
+Neuladen.
+
+### Was gemessen wurde, bevor etwas gebaut wurde
+
+Stehende Folie, wie sie vorher aussah:
+
+```txt
+Rechner 1440 × 852   Folie 980 × 551 in 1440 × 588  ·  94 % der Höhe
+Telefon  390 × 844   Folie 344 × 194 in  390 × 689  ·  28 % der Höhe
+                     und 476 px LEERE FLÄCHE darunter
+```
+
+Am Rechner war nichts zu tun. Am Telefon stand die Folie oben und darunter
+ein halber Bildschirm Nichts — und breiter kann sie dort nicht werden
+(344 von 390 px sind schon 88 %). Also gehört sie in die **Mitte**, dasselbe,
+was PowerPoint am Telefon tut. Danach: 203 px über ihr, 293 px darunter. Die
+beiden sind nicht gleich, weil unten 110 px für die schwebende Stiftleiste
+freibleiben, und das ist richtig so.
+
+### `safe center` — und das ist kein Detail
+
+Mittiges Ausrichten in einem rollenden Kasten schiebt den Inhalt nach **oben**
+heraus, sobald er höher ist als der Kasten. Dorthin rollt kein Rollbalken.
+Gemessen, Abstand der Folienoberkante zur Oberkante der Fläche:
+
+```txt
+                                  safe center      center
+1440 × 852  (normal)                + 28 px       − 28 px
+1440 × 500  (kurzes Fenster)        + 28 px       −204 px
+1440 × 420, Zoom 180 %              + 28 px       −464 px
+```
+
+Minus heisst: der Anfang der Folie ist nicht erreichbar. Und die **erste**
+Zeile ist die wichtige — es trifft schon den gewöhnlichen Fall, weil die
+110 px für die Stiftleiste den Inhalt höher machen als die Fläche. Dieselben
+110 px sind auch der Grund, warum am Rechner gar nicht zentriert wird: `safe`
+fällt dort auf `start` zurück, und das ist richtig, weil die Folie dort
+ohnehin 94 % der Höhe nutzt.
+
+### Und ein Fund aus E549, den erst das Bild gezeigt hat
+
+„📽️ Folie" stand oben in der Kopfleiste. Am Telefon war er **der einzige
+Knopf dort, der sein Wort zeigte** — alle anderen tragen nur ihr Zeichen
+(`font-size:0` plus `::before`). Er sah aus wie ein Fremdkörper, und er
+kostete: dem Titel eines Foliensatzes blieben bei 390 px **70 px**.
+
+`test285` verlangt hundert, mit der Begründung aus E296 — darunter steht dort
+„N." statt eines Namens. Genau diese Zahl, siebzig, steht seit **E493** als
+Kommentar neben „Präsentieren", das aus demselben Grund aus der Kopfleiste
+gewichen ist.
+
+**Warum es niemand gemeldet hat:** `test285` öffnet ein PDF, und bei einem
+PDF ist der Knopf ohnehin versteckt. Die Zusage war da und konnte den Fall
+nicht sehen. Der Knopf steht jetzt am Telefon in der Ansichtsklappe —
+derselbe Weg, den E468 für die Suche und E493 für „Präsentieren" gegangen
+sind. Titel danach: **114 px**.
+
+### Was diese Suite über sich selbst gelernt hat
+
+§2 stand zuerst vier Zeilen rot, und die Zeilen hatten recht: der erste
+Entwurf schrieb `dokLauf:` von aussen ins `meta` und erwartete eine Wirkung.
+`stateFor` legt den Zustand je Dokument aber **einmal** an und liest den
+Merker danach nicht wieder — kein Fehler, sondern der Grund, warum das
+Umschalten im Bild sofort wirkt.
+
+Geprüft wird deshalb der Weg des Menschen: den Schalter drücken, die Seite
+neu laden, nachsehen. Eine Zusage, die eine Abkürzung nimmt, prüft die
+Abkürzung.
+
+### Was offen bleibt
+
+- Die Zeichenleiste als Reiter „Zeichnen" im Band, wie PowerPoint es macht.
+  Das nähme eine dauerhaft sichtbare Leiste weg — **Redurs Entscheidung,
+  nicht meine.** Gefragt, Antwort steht aus.
+- Die Handgriffe im Folienmenü heissen noch „Seite", nicht „Folie".
+- Am Rechner rollt die stehende Folie noch um 111 px — genau die 110 px, die
+  unten für die Stiftleiste freibleiben. Das ist Vorsorge gegen das
+  Überdecken von Inhalt (die Leiste schwebt über dem unteren Rand) und älter
+  als dieser Bogen; sie anzutasten hiesse, toten Rollweg gegen verdeckten
+  Inhalt zu tauschen.
+
+`test507` neu, 34 Zusagen, vier Gegenproben gefahren (24/10, 30/4, 30/4,
+32/2 — alle gemessen). Bilder: `bilder/folie-steht-rechner.png`,
+`bilder/folie-steht-handy.png`.

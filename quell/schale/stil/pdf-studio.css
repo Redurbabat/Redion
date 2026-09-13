@@ -350,3 +350,65 @@ body[data-dokument="an"] .document-workspace[data-document-zeigen="an"] .documen
 @media (pointer:coarse){
   .folienband-reiter, .folienband-reiter-knopf{min-height:var(--touch-min)}
 }
+
+/* ══ EINE FOLIE STEHT MITTIG IN DER FLÄCHE (E551) ═══════════════════════════
+   Gemessen mit stehender Folie (`ist-einzeln`), bevor diese Regel da war:
+
+       Rechner 1440 × 852   Folie 980 × 551 in 1440 × 588   ·  94 % der Höhe
+       Telefon  390 × 844   Folie 344 × 194 in  390 × 689   ·  28 % der Höhe
+                            und 476 px LEERE FLÄCHE darunter
+
+   Am Rechner ist nichts zu tun — 94 % sind voll. Am Telefon stand die Folie
+   oben und darunter ein halber Bildschirm Nichts. Breiter kann sie dort
+   nicht werden (344 von 390 px sind schon 88 %), also gehört sie in die
+   MITTE: dasselbe, was PowerPoint am Telefon tut.
+
+   `safe center` UND NICHT `center` — und das ist keine Vorsicht, sondern
+   gemessen. Mittiges Ausrichten in einem rollenden Kasten schiebt den
+   Inhalt nach OBEN aus dem Kasten heraus, sobald er höher ist als dieser,
+   und dorthin rollt kein Rollbalken. Gemessen, Abstand der Folienoberkante
+   zur Oberkante der Fläche:
+
+                                     safe center      center
+       1440 × 852  (normal)             + 28 px       − 28 px
+       1440 × 500  (kurzes Fenster)     + 28 px       −204 px
+       1440 × 420, Zoom 180 %           + 28 px       −464 px
+
+   Minus heisst: der Anfang der Folie ist nicht erreichbar. Und die erste
+   Zeile ist die wichtige — es trifft schon den GEWÖHNLICHEN Fall, weil die
+   110 px, die unten für die schwebende Stiftleiste freibleiben, den Inhalt
+   höher machen als die Fläche.
+
+   Dieselben 110 px sind auch der Grund, warum am Rechner gar nicht
+   zentriert wird: `safe` fällt dort auf `start` zurück. Das ist richtig so
+   — die Folie nutzt dort ohnehin 94 % der Höhe. Zentriert wird, wo es
+   nötig war: am Telefon.
+
+   NUR BEIM FOLIENSATZ. Die Einzelseite eines PDFs bleibt, wie sie war —
+   das ist E299s Gebiet, und dort hat Redur die Rolle bestellt. */
+body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln{
+  display:flex; flex-direction:column; justify-content:safe center;
+}
+/* Der Abstand nach unten ist in der stehenden Folie kein Schnitt zur
+   nächsten, sondern nur noch Luft — und die verteilt jetzt `safe center`. */
+body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
+  .document-stage[data-aktiv]{ margin-block:0 }
+
+/* ══ „📽️ FOLIE" WANDERT AM TELEFON IN DIE ANSICHTSKLAPPE (E551) ════════════
+   Derselbe Weg, den E468 für die Suche und E493 für „Präsentieren" gegangen
+   sind — und aus demselben, nachgemessenen Grund.
+
+   Gemessen bei 390 px mit offenem Foliensatz, VOR dieser Regel: dem Titel
+   blieben **70 px**. `test285` verlangt hundert, und zwar mit der
+   Begründung aus E296: darunter steht dort „N." statt eines Namens.
+
+   Warum die Zusage es nicht meldete: `test285` öffnet ein PDF, und bei
+   einem PDF ist der Knopf ohnehin versteckt. Der Fall war unbeobachtet.
+
+   Auf dem Bild war er ausserdem der einzige Knopf der Leiste, der am
+   Telefon sein WORT zeigte. Alle anderen tragen dort nur ihr Zeichen. */
+.document-commandbar .document-folien-klappe{display:none}
+@media (max-width:760px){
+  .document-studio .document-topbar [data-document-action="folienmenue"]{display:none}
+  .document-commandbar .document-folien-klappe:not([hidden]){display:inline-flex}
+}

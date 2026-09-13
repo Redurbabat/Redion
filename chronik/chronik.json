@@ -815,6 +815,10 @@
         {
           "zeit": "ca. 06:20",
           "wortlaut": "mach weiter mit den menüband"
+        },
+        {
+          "zeit": "ca. 10:30",
+          "wortlaut": "weiter ohne pause"
         }
       ],
       "arbeit": [
@@ -1041,11 +1045,19 @@
           "zeitraum": "08:20 – 10:20",
           "dauer": "ca. 120 min",
           "pruefungen": "test506 neu, 51 Zusagen, sechs Gegenproben gefahren (42/2, 42/1, 41/2, 41/2, 49/2, 47/4)"
+        },
+        {
+          "was": "E551 — Eine Folie steht, ein Skript rollt: die Vorgabe haengt am Dokument, nicht an einer Regel fuer alle",
+          "vonCommit": "(nach E550)",
+          "bisCommit": "(dieser Bogen)",
+          "zeitraum": "10:30 – 12:10",
+          "dauer": "ca. 100 min",
+          "pruefungen": "test507 neu, 34 Zusagen, vier Gegenproben gefahren (24/10, 30/4, 30/4, 32/2)"
         }
       ],
       "zahlen": {
-        "commits": 25,
-        "entscheidungen": 23
+        "commits": 26,
+        "entscheidungen": 24
       },
       "groesstesProblem": "Zwei Fehler, und beide betrafen etwas, das ich vorher BEHAUPTET hatte.\n\nDer erste: In E531 hatte ich gesagt, es gebe keinen toten Stil mehr. Das galt für die `rmo-`KLASSEN, die ich gezählt hatte, und nicht für die ATTRIBUTREGELN — `[data-rmo~=\"glass\"]` verlor gegen `.fbtns button.prim:not(.ru-funkel)` in derselben Datei, und `.pf-karte` stand als Ziel des Lichteffekts da, ohne dass irgendwo eine Regel dafür existierte. Beide gefunden, weil dreizehn Agenten Block für Block gegen den Code belegen mussten statt aus dem Gedächtnis zu antworten.\n\nDer zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glasknopf mit einem `body`-Vorsatz gewinnen lassen wollen. `body [data-rmo~=\"glass\"]` ist (0,1,1), die Klassenregel ist (0,3,1) — ein Element und ein Attribut schlagen drei Klassen nicht. Die Diagnose stimmte, die Rechnung nicht, und ich habe es nicht nachgemessen. Eine andere Sitzung hat es rot gemessen (E534) und repariert. Das ist §55.2 von der peinlichen Seite: ein Wächter, der nie rot war, ist eine Behauptung — und hier war nicht einmal ein Wächter da.",
       "interessantesteAnfrage": "„Hast du alle animationen erledigt? Oder ist noch etwas offen\" — die Frage, auf die eine Liste aus dem Gedächtnis das Naheliegende gewesen wäre. Stattdessen: dreizehn Agenten, einer je Vorlagenblock, jeder musste jede einzelne Wirkung mit Datei und Zeile belegen und im Zweifel „Motiv\" sagen statt „gebaut\". Das Ergebnis war unbequem und brauchbar: von 191 Wirkungen sind 42 gebaut, 51 stehen nur still da, 98 fehlen. Eine ehrliche 22-Prozent-Antwort ist mehr wert als ein „ja, fast alles\" — und sie hat die zwei toten Regeln oben überhaupt erst sichtbar gemacht.",
@@ -1139,6 +1151,12 @@
           "was": "Eine Reiterzeile mit Band zwischen Kopf- und Zeichenleiste des Dokumentstudios, nur bei quer liegendem Foliensatz und erst ab 900 px Fensterbreite.",
           "warum": "Redur: „oben mit menü … 1:1 wie powerpoint\". E549 hatte den Katalog, nicht den Ort. Welche Reiter hineinkommen, ist nicht gewählt, sondern gemessen: alle 151 Einträge einzeln aufgerufen, bei `start` taten 14 von 14 nichts, bei `einfuegen` 65 von 69 — sie brauchen eine Schreibmarke, die es im Dokumentmodus nicht gibt.",
           "risiko": "keins an Daten — Oberfläche. Die Folie bleibt 980 × 551 bei 1440 × 852; das Band hat die Luft darunter genommen, nicht die Folie. Gezeichnet wird mit `Menueband.knopf`/`gruppeZeichnen`, also kein zweiter Zeichner (§8)."
+        },
+        {
+          "zeit": "11:20",
+          "was": "`gemerkterLauf` gibt fuer einen quer liegenden Foliensatz von Haus aus „Einzelseite\", fuer alles andere weiter „Rolle\". Dazu `justify-content:safe center` fuer die stehende Folie und ein Umzug des Knopfes „📽️ Folie\" in die Ansichtsklappe des Telefons.",
+          "warum": "Redur hat zu zwei Dingen zwei Sachen gesagt, die einander nicht widersprechen: „die PDF Seiten … komplet wie one note\" (E299) und „1:1 wie PowerPoint\" (E548/E549). Die Einzelseite gab es seit E398 schon — geaendert wurde nur die Vorgabe, und nur fuer Folien.",
+          "risiko": "keins an Daten — Ansicht. Der Schalter bleibt der staerkere: `meta` gewinnt gegen die Vorgabe, in beide Richtungen geprueft ueber einen echten Druck und ein Neuladen."
         }
       ]
     }
@@ -1461,6 +1479,21 @@
       "beweis": "Zwei Gegenproben, beide gefahren: die Funktion nichts tun lassen (49 grün, 2 rot — das Band blieb bei 800 px stehen), und sie nur AUSHÄNGEN lassen (47 grün, 4 rot — es kam beim Aufziehen nicht zurück). Die zweite war nötig, weil sonst nur die naheliegende Richtung geprüft gewesen wäre.",
       "lehre": "Zwei Sachen. Erstens: das eigene Diff noch einmal mit der Frage lesen, was daran schiefgehen könnte — dieser Fehler stand in keiner Messung und auf keinem Bild. Zweitens: die erste Form der Gegenprobe (den AUFRUF entfernen) liess den Zweig wegen `noUnusedLocals` gar nicht mehr bauen. Eine Gegenprobe, die nicht baut, ist keine — CLAUDE.md §52.6 beschreibt genau diesen Fall, und ich bin trotzdem hineingelaufen.",
       "entscheidung": "E550"
+    },
+    {
+      "nr": "P26",
+      "datum": "2026-09-13",
+      "titel": "Ein Knopf nahm dem Titel 44 Pixel — und die Zusage dagegen konnte den Fall nicht sehen",
+      "schwere": "mittel",
+      "symptom": "Am Telefon zeigte „📽️ Folie\" als einziger Knopf der Dokumentleiste sein WORT (alle anderen nur ihr Zeichen), und das Wort brach im 44-px-Kasten um. Dem Titel eines Foliensatzes blieben 70 px: „Neue Pr…\".",
+      "falscheVermutung": "Beim Bauen von E549 gar keine — die Telefonbreite wurde schlicht nicht nachgemessen. Die Bilder dieses Bogens waren Rechnerbilder.",
+      "wieGefunden": "Auf dem Bild eines ANDEREN Bogens. Beim Nachsehen, ob die stehende Folie am Telefon mittig sitzt, fiel der umgebrochene Knopf im Kopf auf.",
+      "ursache": "Zwei Schichten. Oben: `test285` verlangt fuer den Titel ueber 100 px und haelt das seit E296 — aber er oeffnet ein PDF, und bei einem PDF ist der Folien-Knopf ohnehin versteckt. Die Zusage war da und konnte den Fall nicht sehen. Darunter: derselbe Fehler war 2026 schon einmal gemacht worden. Neben `print` steht in `pdf-studio.css` seit E493 die Zahl 70 als Kommentar — genau diese siebzig.",
+      "loesung": "Der Knopf zieht am Telefon in die Ansichtsklappe, denselben Weg, den E468 fuer die Suche und E493 fuer „Praesentieren\" gegangen sind. Titel danach 114 px. `test507 §4` misst es jetzt an einem FOLIENSATZ, also dort, wo `test285` nicht hinsieht.",
+      "warumKeineUhr": "—",
+      "beweis": "Gegenprobe gefahren: den Knopf oben stehen lassen — 32 gruen, 2 rot, „70 px — vorher 70\". Die Zahl reproduziert sich auf den Pixel.",
+      "lehre": "Eine gruene Zusage beweist nur das, was sie ansieht. `test285` prueft die Kopfleiste seit E296 sorgfaeltig — an einem PDF. Ein neuer Knopf, der nur bei EINER Dokumentart erscheint, ist damit unbeobachtet, und dass die Suite gruen bleibt, heisst nichts. Wer eine Bedingung einfuehrt (`hidden = !istFoliensatz(page)`), fuehrt einen zweiten Fall ein, den niemand misst.",
+      "entscheidung": "E551"
     }
   ]
 }

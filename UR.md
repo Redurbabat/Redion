@@ -949,6 +949,17 @@ Keine — an diesem Tag kam keine Nachricht.
 **Besserer Prompt:** 
 
 
+**31 · ca. 10:30**
+
+> weiter ohne pause
+
+**Gemeint:** 
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -981,11 +992,12 @@ Keine — an diesem Tag kam keine Nachricht.
 | E548 — „Präsentation" ist ein Weg: Eintrag im Anlegen-Menü, acht PowerPoint-Layouts, ein Wähler, der sie zeigt | `(nach E547)` → `(dieser Bogen)` | 04:50 – 06:10 | ca. 80 min | test504 neu, 27 Zusagen, vier Gegenproben gefahren |
 | E549 — Reiter „Präsentation" im Menüband, Folien-Menü in der Dokumentleiste; das ganze Band dort war gemessen schlechter | `(nach E548)` → `(dieser Bogen)` | 06:20 – 08:10 | ca. 110 min | test505 neu, 26 Zusagen, vier Gegenproben gefahren (25/1, 14/12, 23/3, 24/2); test114 von 152+1 auf 155 grün, zwei neue Zusagen, beide Gegenproben rot gesehen |
 | E550 — Das Folienband: Reiter ÜBER der Folie; `start` und `einfuegen` bleiben draussen, weil 79 von 83 ihrer Knöpfe dort nichts tun | `(nach E549)` → `(dieser Bogen)` | 08:20 – 10:20 | ca. 120 min | test506 neu, 51 Zusagen, sechs Gegenproben gefahren (42/2, 42/1, 41/2, 41/2, 49/2, 47/4) |
+| E551 — Eine Folie steht, ein Skript rollt: die Vorgabe haengt am Dokument, nicht an einer Regel fuer alle | `(nach E550)` → `(dieser Bogen)` | 10:30 – 12:10 | ca. 100 min | test507 neu, 34 Zusagen, vier Gegenproben gefahren (24/10, 30/4, 30/4, 32/2) |
 
 #### Zahlen des Tages
 
-- **commits:** 25
-- **entscheidungen:** 23
+- **commits:** 26
+- **entscheidungen:** 24
 
 #### Das grösste Problem
 
@@ -1018,10 +1030,11 @@ Der zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glaskno
 | 07:20 | Ein Reiter „Präsentation" in `register/menueband.ts`, beliefert von `Folienvorlagen.bandEintraege`; dazu ein Knopf „📽️ Folie" in der Dokumentleiste, der dasselbe Verzeichnis als Menü öffnet. | Redur: „mach weiter mit den menüband". Das Band im Dokumentmodus einzublenden war der naheliegende Weg und nachweislich der schlechtere — eine zusammengeklappte Ecke „Werkzeuge ⌄" lag bei 1440 × 852 deckungsgleich über der Dokumentleiste. Also EIN Katalog, zwei Orte (§8). | keins an Daten — Oberfläche. Jeder Eintrag bringt sein `zeigen()` mit: ohne Foliensatz ist der Reiter ganz weg, und `istFoliensatz` verlangt ein QUERES Blatt, damit ein Notizbuch ihn nie bekommt. |
 | 08:05 | `test114` auf zweiundzwanzig Wege gehoben — und um zwei Zusagen erweitert, die für eine ROLLENDE Liste gelten. | Die harte Zahl im Prüflauf trug seit E236 eine Frage mit: „Wegweiser oder Liste?" Der zweiundzwanzigste Weg hat sie beantwortet, gemessen bei 428 × 926: 10 von 22 ohne Rollen sichtbar, 1787 px Inhalt in 757 px Liste. Also Liste. Wegnehmen wäre eine Funktion weniger (§47), deshalb steht die Antwort als L154 offen. | keins — ein Prüflauf. Beide neuen Zusagen sind rot gesehen worden (154 ok / 1 offen, je). |
 | 09:40 | Eine Reiterzeile mit Band zwischen Kopf- und Zeichenleiste des Dokumentstudios, nur bei quer liegendem Foliensatz und erst ab 900 px Fensterbreite. | Redur: „oben mit menü … 1:1 wie powerpoint". E549 hatte den Katalog, nicht den Ort. Welche Reiter hineinkommen, ist nicht gewählt, sondern gemessen: alle 151 Einträge einzeln aufgerufen, bei `start` taten 14 von 14 nichts, bei `einfuegen` 65 von 69 — sie brauchen eine Schreibmarke, die es im Dokumentmodus nicht gibt. | keins an Daten — Oberfläche. Die Folie bleibt 980 × 551 bei 1440 × 852; das Band hat die Luft darunter genommen, nicht die Folie. Gezeichnet wird mit `Menueband.knopf`/`gruppeZeichnen`, also kein zweiter Zeichner (§8). |
+| 11:20 | `gemerkterLauf` gibt fuer einen quer liegenden Foliensatz von Haus aus „Einzelseite", fuer alles andere weiter „Rolle". Dazu `justify-content:safe center` fuer die stehende Folie und ein Umzug des Knopfes „📽️ Folie" in die Ansichtsklappe des Telefons. | Redur hat zu zwei Dingen zwei Sachen gesagt, die einander nicht widersprechen: „die PDF Seiten … komplet wie one note" (E299) und „1:1 wie PowerPoint" (E548/E549). Die Einzelseite gab es seit E398 schon — geaendert wurde nur die Vorgabe, und nur fuer Folien. | keins an Daten — Ansicht. Der Schalter bleibt der staerkere: `meta` gewinnt gegen die Vorgabe, in beide Richtungen geprueft ueber einen echten Druck und ein Neuladen. |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 25 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 26 Einträge.
 
