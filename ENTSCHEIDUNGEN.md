@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-545 Entscheidungen, E1 bis E565 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+546 Entscheidungen, E1 bis E566 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -609,6 +609,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E563** — Drehung: `a:xfrm@rot` kommt an — für Text, Bild und Abdeckung. Sie erbt NICHT vom Layout
 * **E564** — Kein fremder PowerPoint-Zeichner. Redion liest `.pptx` selbst; wer es exakt sehen will, nimmt den PDF-Weg
 * **E565** — Tabellen kommen als Gitter auf die Folie, nicht als Tabellenblock — und geschlossene Marken bekommen eine Füllung
+* **E566** — Gefüllte Formen und die Textfarbe aus dem Layout — gefunden an Redurs echter Datei, nicht an einer Liste
 
 ---
 
@@ -45667,3 +45668,85 @@ Zellränder mit eigener Farbe und Stärke (`a:lnL`/`a:lnR`/…), und `vMerge`
 über mehrere Zeilen zeichnet die verbundene Zelle nur so hoch, wie `rowSpan`
 sagt — steht `rowSpan` nicht dort, sondern nur `vMerge` am Nachbarn, bleibt
 sie einzeilig.
+
+
+E566 — Gefüllte Formen und die geerbte Textfarbe
+--------------------------------------------------------------------------
+
+**Dieser Eintrag stammt nicht aus einer Liste, sondern aus vier Bildern.**
+Redur hat am 14. September zwei Folien seiner echten Datei neben Redions
+Fassung gestellt — das, worum ich nach E565 gebeten hatte. Der Unterschied
+war nicht fein:
+
+```txt
+Folie 1   Original: dunkelblauer Kasten, weisser Titel darauf
+          Redion:   KEIN Kasten, schwarzer Titel im Nichts
+Folie 2   Original: roter Balken · rotes „PERSON" · blaues „Wer ist Nidal?"
+                    · rotes „Basel · Familie · Arbeit" · graues „4 Kinder"
+          Redion:   kein Balken, und ALLE VIER Texte schwarz
+```
+
+Zehn Bögen an gebauten Prüfstücken hatten beides nicht gefunden. Vier Bilder
+aus der Wirklichkeit hatten es in einer Minute.
+
+### 1. Gefüllte Formen ohne Text
+
+`LUECKEN.md` sagte es voraus: „Redion hat für eine gefüllte PowerPoint-Form
+keine Marke, die ihre Füllung UND ihren Umriss trüge." Seit **E565** hat es
+eine — die Füllung an der geschlossenen Marke, gebaut für Tabellenzellen. Es
+fehlte nur noch der Leser: `a:prstGeom` wurde nirgends gelesen.
+
+Ein schöner Zusammenhang: der Bogen über Tabellen hat den Weg gelegt, den
+dieser hier benutzt.
+
+**Was NICHT geraten wird:** PowerPoint kennt über hundert Formen, Redion
+fünf geschlossene und zwei offene. Abgebildet wird, was wirklich passt; alles
+andere wird gezählt statt geraten. Ein Stern als Rechteck wäre schlimmer als
+ein Stern, der fehlt und im Hinweis steht.
+
+**Und ein Kasten hat meist keinen Rand.** Ein Strich in der Vorgabefarbe
+machte ihn um zweieinhalb Punkt grösser und legte einen grauen Saum darum,
+den im Original niemand sieht. `a:ln` entscheidet: kein `a:ln` oder ein
+`a:noFill` darin heisst randlos.
+
+### 2. Die Textfarbe erbte nicht
+
+Sie stand nicht im Lauf, sondern im `a:defRPr` des Platzhalters im Layout —
+und `vorgabenLesen` holte von genau diesem Element seit E558 **nur `sz`**.
+Vier verschiedene Farben kamen deshalb alle vier als Schwarz an.
+
+Die Reihenfolge ist jetzt: der Lauf gewinnt, dann die Vorgabe aus dem
+Layout, dann die Lesbarkeitsregel aus E558. Was in der Folie steht, schlägt
+was im Layout steht, und beides schlägt eine Notlösung.
+
+### Ein totes Feld, das wieder herausgeflogen ist
+
+`a:latin@typeface` steht im selben Element, und ich habe es beim Bauen
+mitgelesen. Dann wieder entfernt: Redions Marke kennt fünf Schriftfamilien,
+die Datei nennt einen Namen, und die Zuordnung ist eine eigene Entscheidung
+mit eigener Prüfung. **Ein Feld, das gelesen und nie benutzt wird, ist
+schlimmer als keins — es sieht aus, als wäre es erledigt.** Der Punkt steht
+offen in L151; im Bild ist er weiter sichtbar (Original mit Serifen, Redion
+ohne).
+
+### Was `test520` hält
+
+25 Zusagen, fünf Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  gefüllte Formen überspringen   9 grün, 16 rot
+G2  Farbe nicht aus `a:defRPr`    20 grün,  5 rot  (alle vier schwarz)
+G3  unbekannte Formen raten       21 grün,  4 rot  (der Stern als Rechteck)
+G4  immer einen Rand zeichnen     24 grün,  1 rot
+G5  die Form nach dem Text        24 grün,  1 rot  (Flächen über dem Text)
+```
+
+Bilder: `bilder/pptx-formen.png` (dunkler Kasten, weisser Titel darauf) und
+`bilder/pptx-person.png` (roter Balken, drei verschiedene Textfarben).
+
+### Und die Lehre, die mehr wert ist als der Bogen
+
+Zehn Bögen lang habe ich Prüfstücke gebaut und daran gemessen. Sie waren
+richtig und sie haben gehalten — aber sie prüfen, was mir EINGEFALLEN ist.
+Was in Redurs Dateien wirklich steht, stand in keinem davon. Die Bitte um
+eine echte Datei war der nützlichste Satz dieser ganzen Reihe.

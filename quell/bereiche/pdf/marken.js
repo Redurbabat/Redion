@@ -1067,10 +1067,18 @@ const Marken = (() => {
                denn er kommt aus einer Datei und geht in einen Stil (§19). */
             const fuellung = String(mark.fuellung || '');
             element.setAttribute('fill', /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(fuellung) ? fuellung : 'none');
+            /* UND EINE FORM DARF AUCH GAR KEINEN RAND HABEN (E566).
+               Ein farbiger Kasten hinter einem Titel hat im Original keinen — ein
+               Strich in der Vorgabefarbe machte ihn um zweieinhalb Punkt grösser
+               und legte einen grauen Saum darum, den niemand gezeichnet hat. */
             element.setAttribute('stroke', color);
             element.setAttribute('stroke-width', String(width));
             element.setAttribute('stroke-linecap', 'round');
             element.setAttribute('stroke-linejoin', 'round');
+            if (mark.randlos) {
+                element.setAttribute('stroke', 'none');
+                element.setAttribute('stroke-width', '0');
+            }
             if (art === 'marker') {
                 element.setAttribute('opacity', '0.32');
                 element.setAttribute('style', 'mix-blend-mode:multiply');

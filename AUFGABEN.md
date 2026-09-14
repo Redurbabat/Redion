@@ -875,7 +875,11 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   das Farbthema aufgelöst (E559), die Ausrichtung gelesen UND bedienbar
   gemacht (E560), **gemischte Läufe innerhalb eines Absatzes (E561)**.
   Was jetzt noch fehlt, steht in L151 und ist kleiner als das Erledigte:
-  Blocksatz, Spiegelung, die Drehung einer GRUPPE, Diagramme, Zellränder.
+  Blocksatz, Spiegelung, die Drehung einer GRUPPE, Diagramme, Zellränder,
+  die Schriftart (`a:latin`) und alle Formen ausser den fünf, die Redion
+  kennt. **Gemessen an Redurs echter Datei am 14. September**: gefüllte
+  Formen und die geerbte Textfarbe fehlten — beides mit E566 geschlossen,
+  beides von keinem der zehn vorherigen Prüfstücke gefunden.
   L155 (die zu niedrige Breitenschätzung, gefunden bei E561) ist mit
   **E562** geschlossen, die Drehung mit **E563**, die Tabellen mit **E565** —
   als Gitter auf der Folie, nicht als Tabellenblock (der Grund steht dort).

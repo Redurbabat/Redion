@@ -1239,6 +1239,59 @@ const Einlesen = (() => {
   };
 
   /**
+   * WELCHE FORM ES IST — `a:prstGeom@prst` (E566).
+   *
+   * PowerPoint kennt weit über hundert Formen, Redions Markenschicht fünf
+   * geschlossene und zwei offene. Abgebildet wird nur, was WIRKLICH passt;
+   * alles andere gibt '' zurück und wird gezählt statt geraten. Ein Stern
+   * als Rechteck wäre schlimmer als ein Stern, der fehlt und genannt wird.
+   *
+   * Ein Kasten ohne `a:prstGeom` ist in PowerPoint ein Rechteck — so steht
+   * es im Format, und so schreibt es auch jeder Textrahmen.
+   */
+  const FORMEN: Record<string, string> = {
+    rect: 'rectangle', roundRect: 'roundrect', round1Rect: 'roundrect',
+    round2SameRect: 'roundrect', round2DiagRect: 'roundrect', snip1Rect: 'rectangle',
+    ellipse: 'ellipse', triangle: 'triangle', rtTriangle: 'triangle',
+    line: 'line', straightConnector1: 'line',
+  };
+  const formGeometrie = (form: Element): string => {
+    const spPr = form.getElementsByTagName('p:spPr')[0];
+    if (!spPr) return '';
+    const geom = [...spPr.children].find(k => k.tagName === 'a:prstGeom');
+    if (!geom) return 'rectangle';
+    return FORMEN[geom.getAttribute('prst') || ''] || '';
+  };
+
+  /**
+   * DER UMRISS einer Form — `a:ln` (E566).
+   *
+   * `null` heisst „kein Strich". Das ist der häufige Fall und der wichtige:
+   * ein farbiger Kasten hinter einem Titel hat KEINEN Rand, und ein Rand in
+   * der Vorgabefarbe würde ihn um zweieinhalb Punkt vergrössern und mit
+   * einem grauen Saum umgeben, den im Original niemand sieht.
+   *
+   * Auch ein fehlendes `a:ln` heisst hier „kein Strich". Genau genommen käme
+   * die Vorgabe dann aus `p:style > a:lnRef` und dem Thema — aber zwischen
+   * „nichts zeichnen" und „etwas Geratenes zeichnen" ist nichts das
+   * ehrlichere.
+   */
+  const formRand = (form: Element, thema: Thema): { farbe: string; breite: number } | null => {
+    const spPr = form.getElementsByTagName('p:spPr')[0];
+    const ln = spPr ? [...spPr.children].find(k => k.tagName === 'a:ln') : undefined;
+    if (!ln) return null;
+    if ([...ln.children].some(k => k.tagName === 'a:noFill')) return null;
+    const voll = [...ln.children].find(k => k.tagName === 'a:solidFill');
+    const farbe = farbeAus(voll, thema);
+    if (!farbe) return null;
+    /* `w` steht in EMU; 12700 EMU sind ein Punkt. */
+    const roh = Number(ln.getAttribute('w'));
+    const breite = Number.isFinite(roh) && roh > 0
+      ? Math.max(0.5, Math.round((roh / 12700) * 10) / 10) : 1;
+    return { farbe, breite };
+  };
+
+  /**
    * Die DREHUNG einer Form, in Grad im Uhrzeigersinn (E563).
    *
    * `a:xfrm@rot` steht in 60000steln Grad: 5400000 sind 90°. Die Richtung
@@ -1544,7 +1597,7 @@ const Einlesen = (() => {
 
   /** Ein Platzhalter aus Layout oder Master: sein Schlüssel und was er vorgibt. */
   type Vorgabe = { lage: { x: number; y: number; w: number; h: number } | null;
-                   sz: number };
+                   sz: number; farbe: string };
 
   /**
    * Der Schlüssel eines Platzhalters.
@@ -1566,7 +1619,7 @@ const Einlesen = (() => {
   };
 
   /** Alle Platzhalter eines Layout- oder Master-XML, nach Schlüssel. */
-  const vorgabenLesen = (doc: Document | null): Map<string, Vorgabe> => {
+  const vorgabenLesen = (doc: Document | null, thema: Thema = {}): Map<string, Vorgabe> => {
     const karte = new Map<string, Vorgabe>();
     if (!doc) return karte;
     const baum = doc.getElementsByTagName('p:spTree')[0];
@@ -1574,10 +1627,25 @@ const Einlesen = (() => {
       if (form.tagName !== 'p:sp') continue;
       const ph = form.getElementsByTagName('p:ph')[0];
       if (!ph) continue;
-      const sz = Number(form.getElementsByTagName('a:defRPr')[0]?.getAttribute('sz'));
+      /* AUS `a:defRPr` KOMMT MEHR ALS DER GRAD (E566).
+         Gemessen an Redurs Datei: der Titel steht dort weiss auf einem
+         dunkelblauen Kasten, und die Farbe steht NICHT im Lauf, sondern hier
+         in der Vorgabe des Platzhalters. Bis hierher wurde von diesem
+         Element nur `sz` gelesen — der Titel kam darum schwarz an, und auf
+         Folie 2 kamen vier verschiedene Farben allesamt als Schwarz. */
+      const defRPr = form.getElementsByTagName('a:defRPr')[0];
+      const sz = Number(defRPr?.getAttribute('sz'));
+      const voll = defRPr ? [...defRPr.children].find(k => k.tagName === 'a:solidFill') : undefined;
       karte.set(phSchluessel(ph), {
         lage: formLage(form),
         sz: Number.isFinite(sz) && sz > 0 ? Math.round(sz / 100) : 0,
+        farbe: farbeAus(voll, thema),
+        /* `a:latin@typeface` steht hier auch — wird aber NICHT gelesen.
+           Redions Marke kennt fünf Schriftfamilien, die Datei nennt einen
+           Namen; die Zuordnung ist eine eigene Entscheidung mit eigener
+           Prüfung und steht als offener Punkt in L151. Ein Feld, das
+           gelesen und nie benutzt wird, wäre schlimmer als keins: es sieht
+           aus, als wäre es erledigt. */
       });
     }
     return karte;
@@ -1735,7 +1803,7 @@ const Einlesen = (() => {
       const thema = themaLesen(themaDoc, masterDoc);
       /* Layout gewinnt gegen Master — deshalb wird der Master ZUERST
          eingetragen und vom Layout überschrieben. */
-      const vorgaben = new Map([...vorgabenLesen(masterDoc), ...vorgabenLesen(layoutDoc)]);
+      const vorgaben = new Map([...vorgabenLesen(masterDoc, thema), ...vorgabenLesen(layoutDoc, thema)]);
       /* Und die Folie gewinnt gegen beide. */
       const grundfarbe = hintergrund(doc, thema) || hintergrund(layoutDoc, thema)
         || hintergrund(masterDoc, thema);
@@ -1878,16 +1946,31 @@ const Einlesen = (() => {
               x: lage.x, y: lage.y, w: lage.w, h: lage.h, ...(dreh ? { dreh } : {}) });
             continue;
           }
-          if (!text.trim()) {
-            /* EINE FORM OHNE TEXT UND OHNE KLICK. Sie kommt nicht an —
-               Redion hat für eine gefüllte PowerPoint-Form keine Marke, die
-               ihre Füllung UND ihren Umriss trüge. Aber sie verschwindet
-               nicht mehr schweigend (E555): gezählt wird sie nur, wenn sie
-               überhaupt eine Fläche hat, sonst zählte jeder unsichtbare
-               Platzhalter mit. */
-            if (lage && lage.w > 0 && lage.h > 0) merkeWeg('gefüllte Formen');
-            continue;
+          /* ══ DIE FORM SELBST (E566) ═══════════════════════════════════
+             Gemessen an Redurs echter Datei: der dunkelblaue Kasten hinter
+             dem Titel und der rote Balken über „PERSON" fehlten BEIDE. Ohne
+             sie steht der Titel im Nichts — das ist kein Schönheitsfehler,
+             sondern eine andere Folie.
+
+             Die Form wird VOR dem Text eingetragen, damit der Text darauf
+             liegt und nicht darunter. */
+          const fuellung = formFarbe(form, thema);
+          const geo = formGeometrie(form);
+          const rand = formRand(form, thema);
+          if (lage && lage.w > 0 && lage.h > 0 && geo && (fuellung || rand)) {
+            objekte.push({ art: geo, x: lage.x, y: lage.y, w: lage.w, h: lage.h,
+              ...(fuellung ? { fuellung } : {}),
+              ...(rand ? { farbe: rand.farbe, breite: rand.breite } : { randlos: true }),
+              ...(dreh ? { dreh } : {}) });
+          } else if (!text.trim() && lage && lage.w > 0 && lage.h > 0) {
+            /* Was übrig bleibt, verschwindet nicht schweigend (E555): eine
+               Form, deren Umriss Redion nicht kennt — ein Stern, ein Pfeil,
+               eine Sprechblase. Gezählt wird sie nur, wenn sie überhaupt
+               eine Fläche hat, sonst zählte jeder unsichtbare Platzhalter
+               mit. */
+            merkeWeg('Formen');
           }
+          if (!text.trim()) continue;
           /* Der erste Lauf bestimmt Schriftgrad und Fett für den Kasten.
              Redions Textmarke hat EINEN Grad je Kasten; ein Kasten mit
              gemischten Graden käme also vereinfacht an. Das ist eine Lücke
@@ -1901,6 +1984,11 @@ const Einlesen = (() => {
              (E558). Die feste 40/20 bleibt als letzter Rückfall — sie ist
              geraten und war bis hierher die einzige Antwort. */
           const grund = geerbt?.sz || (istTitel ? 40 : 20);
+          /* UND DIE FARBE EBENSO (E566). Der Lauf gewinnt, dann die Vorgabe
+             aus dem Layout, dann die Lesbarkeitsregel aus E558. Genau diese
+             Reihenfolge: was in der Folie steht, schlägt was im Layout
+             steht, und beides schlägt eine Notlösung. */
+          const grundfarbeText = geerbt?.farbe || standardTinte;
           const kx = lage ? lage.x : breite * 0.08;
           const ky = lage ? lage.y : hoehe * 0.1;
           const kb = lage && lage.w > 0 ? lage.w : breite * 0.84;
@@ -1958,7 +2046,7 @@ const Einlesen = (() => {
               x: kx + a.lvl * Math.max(10, (a.sz || grund) * 0.9), y: ky,
               breiteBox: Math.max(20, kb - a.lvl * Math.max(10, (a.sz || grund) * 0.9)),
               fontSize: a.sz || grund, fett: a.fett,
-              ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}),
+              ...((a.farbe || grundfarbeText) ? { farbe: a.farbe || grundfarbeText } : {}),
               ...(a.ausricht ? { ausricht: a.ausricht } : {}),
               ...(dreh ? { dreh } : {}),
               /* Bei mehreren gleich formatierten Absätzen werden ihre Läufe
@@ -1989,7 +2077,7 @@ const Einlesen = (() => {
               x: kx + einzug, y,
               breiteBox: Math.max(20, kb - einzug),
               fontSize: a.sz || grund, fett: a.fett,
-              ...((a.farbe || standardTinte) ? { farbe: a.farbe || standardTinte } : {}),
+              ...((a.farbe || grundfarbeText) ? { farbe: a.farbe || grundfarbeText } : {}),
               ...(a.ausricht ? { ausricht: a.ausricht } : {}),
               ...(laeufeNoetig(mitZeichen(a)) ? { laeufe: mitZeichen(a) } : {}),
               ...(dreh ? { dreh } : {}) };
@@ -2320,7 +2408,8 @@ const Einlesen = (() => {
               pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
             continue;
           }
-          if (o.art === 'rectangle') {
+          if (o.art === 'rectangle' || o.art === 'roundrect' || o.art === 'ellipse'
+              || o.art === 'triangle' || o.art === 'line') {
             /* EINE TABELLENZELLE (E565).
                Dieser Zweig muss VOR dem Bildzweig stehen. Die Schleife hat
                keinen Auffangfall: was weder Text noch Abdeckung ist, gilt
@@ -2331,8 +2420,11 @@ const Einlesen = (() => {
 
                Wie bei Abdeckung und Bild bleibt hier die Erlaubnisliste —
                nur sind es weniger Felder. */
-            marken.push({ id, art: 'rectangle', farbe: o.farbe,
+            marken.push({ id, art: o.art, farbe: o.farbe || '#9aa3ad',
               ...(o.fuellung ? { fuellung: o.fuellung } : {}),
+              ...(o.breite ? { breite: o.breite } : {}),
+              ...(o.randlos ? { randlos: true } : {}),
+              ...(o.dreh ? { dreh: o.dreh } : {}),
               pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
             continue;
           }

@@ -58,6 +58,7 @@ sind der teuerste Teil und der lehrreichste.
 | P42 | 2026-09-13 | Die Zusage wurde gruen, weil die Liste leer war | 🟠 mittel | E562 |
 | P43 | 2026-09-13 | Die Zusage zeigte auf den Code, und schuld war mein Pruefstueck | 🟡 klein | E563 |
 | P44 | 2026-09-14 | Zehn Tabellenzellen wurden zu zehn leeren Anhaengen | 🟠 mittel | E565 |
+| P45 | 2026-09-14 | Zehn Boegen Pruefstuecke, und vier Bilder haben mehr gefunden | gross | E566 |
 
 ---
 
@@ -957,4 +958,27 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** test519 §4 misst es: der Hinweis darf keine Bilder nennen, und es darf keine Bildmarke geben. Die Gegenprobe G5 setzt den Zweig hinter den Bildzweig und liefert wieder „10 Bilder aus 1 Dateien".
 
 **Die Lehre.** Zwei Dinge. Erstens: eine Schleife OHNE Auffangfall ist ein stiller Trichter — alles Unbekannte laeuft in den letzten Zweig, und der war hier ausgerechnet der, der Dateien anlegt. Zweitens, und das zaehlt mehr: ich habe das Bild gemacht, BEVOR ich die Zusagen geschrieben habe (P40), und nur deshalb ist es aufgefallen. Haette ich zuerst die Zusagen gebaut, haette ich sie nach dem gebaut, was ich zu pruefen gedacht habe — und „legt diese Aenderung heimlich Anhaenge an" waere nicht darunter gewesen.
+
+
+---
+
+## P45 · Zehn Boegen Pruefstuecke, und vier Bilder haben mehr gefunden
+
+*2026-09-14 · gross · E566*
+
+**Das Bild.** Redur hat zwei Folien seiner echten Datei neben Redions Fassung gestellt. Auf Folie 1 fehlte der dunkelblaue Kasten hinter dem Titel, auf Folie 2 der rote Balken — und ALLE VIER Textfarben kamen als Schwarz an.
+
+**Die falsche Vermutung.** Dass die grossen Posten nach E565 durch seien. Ich hatte gerade geschrieben: „die Liste der grossen Posten ist leer" und „was uebrig ist, ist alles klein".
+
+**Wie es gefunden wurde.** Gar nicht von mir. Ich hatte nach E565 um eine echte Datei gebeten, weil bei jedem Bogen das Messen an Wirklichem mehr gefunden hatte als meine Pruefstuecke. Vier Bilder spaeter standen zwei Posten da, die keiner meiner zehn Boegen beruehrt hatte.
+
+**Die Ursache.** Zwei: (1) `a:prstGeom` wurde nirgends gelesen — gefuellte Formen ohne Text fielen durch. (2) Die Textfarbe stand im `a:defRPr` des Platzhalters im Layout, und `vorgabenLesen` holte von genau diesem Element seit E558 nur `sz`.
+
+**Die Lösung.** Formen ueber `a:prstGeom` auf die fuenf Marken abbilden, die Redion hat, mit Fuellung (seit E565 moeglich), Umriss aus `a:ln` und Drehung. Und `a:defRPr` auch nach der Farbe fragen. Was Redion nicht kennt, wird gezaehlt statt geraten.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** test520, 25 Zusagen, fuenf Gegenproben. G1 (Formen ueberspringen) ist 16 rot, G2 (Farbe nicht erben) 5 rot — und die zweite meldet genau das Symptom: alle vier Texte fallen auf Schwarz.
+
+**Die Lehre.** Meine Pruefstuecke pruefen, was mir EINGEFALLEN ist. Sie waren richtig, sie haben gehalten, sie sind rot geworden, wenn sie sollten — und sie konnten trotzdem zehn Boegen lang nicht sehen, was in einer wirklichen Datei steht. Der nuetzlichste Satz dieser ganzen Reihe war die Bitte um eine echte Datei. Wenn ich das naechste Mal denke „die grossen Posten sind durch", ist genau das der Moment, an dem ich danach fragen muss — nicht der Moment, an dem ich weiterbaue.
 

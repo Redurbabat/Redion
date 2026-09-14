@@ -7484,10 +7484,24 @@ verloren hält:
   Redur hat ihn am 13. September abgelehnt (**E564**), und die Gründe stehen
   dort. Der Weg ist damit: selbst lesen, und wer es exakt sehen will, nimmt
   den PDF-Weg.
-- **Formen ohne Text** (Pfeile, Rechtecke, Linien aus `a:prstGeom`). Die
-  Markenschicht kennt sieben Formen; die Zuordnung fehlt noch. Auch sie
-  stehen seit E555 im Hinweis — aber nur, wenn sie eine Fläche haben; ein
-  unsichtbarer Platzhalter zählt nicht mit.
+- ~~**Formen ohne Text** (Pfeile, Rechtecke, Linien aus `a:prstGeom`).~~
+  **GESCHLOSSEN mit E566** für die Formen, die Redion kennt: `rect`,
+  `roundRect`, `ellipse`, `triangle` und `line` kommen mit Füllung, Umriss
+  (`a:ln`) und Drehung an — und liegen UNTER dem Text. **Gefunden an Redurs
+  echter Datei**, nicht an einem Prüfstück: der dunkelblaue Kasten hinter
+  einem Titel und ein roter Balken fehlten beide, und ohne sie steht der
+  Titel im Nichts.
+  **Offen bleibt alles andere**: über hundert PowerPoint-Formen haben in der
+  Markenschicht kein Gegenstück. Sie werden gezählt und genannt („NICHT
+  übernommen: 1 Formen") statt geraten — ein Stern als Rechteck wäre
+  schlimmer als ein Stern, der fehlt.
+- **Die Schriftart** (`a:latin@typeface`). Gemessen an Redurs Datei: das
+  Original steht in einer Serifenschrift, Redion zeigt serifenlos. Die Marke
+  kennt fünf Familien (`standard`, `serif`, `mono`, `hand`, `schmal`), die
+  Datei nennt einen Namen — die Zuordnung ist eine eigene Entscheidung mit
+  eigener Prüfung. Bei E566 wurde das Feld kurz mitgelesen und wieder
+  entfernt: ein Feld, das gelesen und nie benutzt wird, sieht aus, als wäre
+  es erledigt.
 - ~~**Drehung** (`a:xfrm@rot`).~~ **GESCHLOSSEN mit E563**: gelesen für
   Text, Bild und Abdeckung, in 60000steln Grad, auf 0…360 gebracht, gedreht
   um die Mitte des Kastens. Sie erbt bewusst NICHT vom Layout — dass eine
