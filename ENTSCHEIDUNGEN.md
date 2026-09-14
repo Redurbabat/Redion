@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-548 Entscheidungen, E1 bis E568 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+549 Entscheidungen, E1 bis E569 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -612,6 +612,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E566** — Gefüllte Formen und die Textfarbe aus dem Layout — gefunden an Redurs echter Datei, nicht an einer Liste
 * **E567** — Die Schriftart: `a:latin` und `+mj-lt`/`+mn-lt` gegen `theme1.xml` — eine Näherung, die nur in eine Richtung irrt
 * **E568** — Die Stiftleiste: eine laute Fläche statt sechs; drei Zustände, drei Gestalten; die Farbtupfer sind wieder Tupfer
+* **E569** — Die Kurve war eine Sackgasse: sie fehlte in allen Gruppenregeln; der Wächter prüft jetzt den Katalog statt ein Beispiel daraus
 
 ---
 
@@ -46031,3 +46032,58 @@ Kataloge für dieselbe Zusage (§8). Die Kopie ist weg; was diese Suite
 wirklich zusagt, steht jetzt da: der Weg zu allen Farben steht **bei** den
 Farben, in derselben Reihe. Damit sind zwei alte rote Zusagen mit
 erledigt.
+
+
+E569 — Die Kurve war eine Sackgasse
+--------------------------------------------------------------------------
+
+Gefunden am 14. September 2026, beim Zusammenschreiben des
+Werkzeug-Inventars für Redur — nicht von einer Prüfung.
+
+Die Gruppenregeln in `bausteine.css` nennen jedes Werkzeug beim Namen und
+sagen, welches Zubehör dazu erscheint. Für die Formen standen dort **sechs**
+Kennungen: `line`, `arrow`, `rectangle`, `ellipse`, `triangle`, `roundrect`.
+Die siebte — `curve`, seit E483 — stand in keiner einzigen.
+
+**Gemessen, was das heisst:**
+
+```txt
+Form „Linie" gewählt   sichtbare Gruppen: verlauf · lineal · form · farbe · breite
+Form „Kurve" gewählt   sichtbare Gruppen: verlauf
+                       Formknöpfe: 0    Farbtupfer: 0
+```
+
+Wer die Kurve wählte, verlor damit in einem Zug: die Farbwahl, die
+Strichbreite — und die Formknöpfe selbst, also **den Weg zurück zu jeder
+anderen Form**. Die Leiste war leer bis auf „Zurück", „Vor" und den Platz.
+
+### Warum drei Wochen lang niemand darauf gestossen ist
+
+`test351 §2` prüft die Formengruppe — an `line`. Dort stimmt alles. Die
+Kurve ist die einzige Dreipunkt-Form und damit der einzige Wert der Liste,
+den kein Prüflauf je eingestellt hat. Eine Zusage, die an einem Beispiel
+gemessen wird, gilt für ein Beispiel.
+
+### Die Reparatur, und was sie nicht bekommt
+
+Drei Zeilen: `curve` steht jetzt bei `form`, `farbe` und `breite`.
+
+**Das Lineal bekommt sie nicht.** Es rastet auf 15°-Schritte (E267), und
+eine gebogene Linie hat keinen Winkel, den man rasten könnte. Linie und
+Pfeil behalten es, die geschlossenen Formen hatten es nie.
+
+### Der Wächter prüft nicht die Kurve, sondern den Katalog
+
+`test522 §8` geht **jede** Form aus `Marken.FORMEN` durch, wählt sie und
+misst, ob Formwahl, Farbe und Breite stehen bleiben. Eine achte Form fällt
+damit am Tag ihres Einbaus auf statt drei Wochen später.
+
+Gegenprobe gefahren (§55.2): die Kurve wieder ohne Gruppen → 1 rot, und die
+Meldung nennt die Schuldige beim Namen (`[["curve",["verlauf"]]]`).
+
+### Die Lehre
+
+Eine Liste im Code und eine Liste im Stilblatt, die dieselben Kennungen
+führen müssen, laufen auseinander — lautlos, weil CSS für einen unbekannten
+Wert nicht meckert, sondern nichts tut. Wo das vorkommt, prüft der Wächter
+**gegen den Katalog**, nicht gegen ein Beispiel daraus.

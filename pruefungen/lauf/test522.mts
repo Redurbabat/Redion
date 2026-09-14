@@ -28,6 +28,7 @@
  *       und steht unmittelbar rechts der Stiftreihe (E512).
  *   6 · Das Werkzeug ist breiter als sein Zubehör.
  *   7 · §37 am Telefon: nichts unter 44 px.
+ *   8 · Keine Form ist eine Sackgasse — jede behält Formwahl, Farbe, Breite.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  * Zurückgedreht und nachgesehen, nicht behauptet:
@@ -250,6 +251,42 @@ p('Die Tupfer sind auch dort rund und tragen ihre Farbe innen',
   JSON.stringify([tupferH.length, tupferH[0]?.radius, tupferH[0]?.clip]));
 gleich('Und genau eine volle Akzentfläche', z.teile.filter(t => t.voll).length, 1);
 await handy.context().close();
+
+/* ======================================================================== */
+console.log('\n8 · Keine Form ist eine Sackgasse (E569)');
+/* GEFUNDEN BEIM INVENTAR, NICHT VON EINER PRÜFUNG: `data-tool="curve"`
+   stand in keiner einzigen Gruppenregel. Wer die Kurve wählte, sah nur noch
+   „Zurück/Vor/Platz" — keine Formknöpfe, also keinen Weg zurück, keine
+   Farbe, keine Breite. Seit E483, also seit es die Kurve gibt.
+
+   WARUM ES NIEMAND MELDETE: `test351 §2` prüft die Formen an `line`, und
+   dort stimmte alles. Die Kurve ist die einzige Dreipunkt-Form — der eine
+   Wert, den niemand gegengeprüft hat.
+
+   DESHALB PRÜFT DIESER PUNKT ALLE. Nicht „die Kurve auch", sondern jede
+   Form aus dem Katalog, gegen den Katalog. Eine achte Form fällt damit
+   am Tag ihres Einbaus auf und nicht drei Wochen später. */
+const pgF = await aufbauen(1280);
+const formen: string[] = await pgF.evaluate(() => (Marken as any).FORMEN.map((f: any) => f.id));
+p('Der Katalog hält mindestens sieben Formen', formen.length >= 7, JSON.stringify(formen));
+const sackgassen: Array<[string, string[]]> = [];
+for (const form of formen) {
+  const sicht = await pgF.evaluate(async (id: string) => {
+    const w = document.querySelector<HTMLElement>('.blatt-werk')!;
+    w.querySelector<HTMLElement>('[data-wz="formen"]')?.click();
+    await new Promise(r => setTimeout(r, 160));
+    w.querySelector<HTMLElement>(`[data-act="formart"][data-form="${id}"]`)?.click();
+    await new Promise(r => setTimeout(r, 160));
+    return [...w.querySelectorAll<HTMLElement>('[data-gruppe]')]
+      .filter(e => e.getClientRects().length > 0)
+      .map(e => e.dataset.gruppe || '')
+      .filter((v, i, a) => a.indexOf(v) === i);
+  }, form);
+  if (!['form', 'farbe', 'breite'].every(g => sicht.includes(g))) sackgassen.push([form, sicht]);
+}
+gleich('Jede Form behält Formwahl, Farbe und Breite — keine ist eine Sackgasse',
+  sackgassen, []);
+await pgF.context().close();
 
 gleich('Die Seite meldet keinen Fehler', fehler.length, 0);
 if (fehler.length) console.log('   ' + fehler.slice(0, 5).join('\n   '));

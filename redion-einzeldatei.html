@@ -16083,6 +16083,20 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk[data-tool="ellipse"] > [data-gruppe="form"],
 .blatt-werk[data-tool="triangle"] > [data-gruppe="form"],
 .blatt-werk[data-tool="roundrect"] > [data-gruppe="form"],
+/* ══ DIE KURVE FEHLTE IN ALLEN DREI LISTEN (E569) ═════════════════════════
+   GEMESSEN am 14. September beim Zusammenschreiben des Werkzeug-Inventars:
+   `data-tool="curve"` stand in KEINER Gruppenregel. Wer die Kurve wählte,
+   sah als Zubehör nur noch „Zurück/Vor/Platz" — keine Formknöpfe, also
+   keinen Weg zurück zu Linie oder Rechteck, keine Farbe, keine Breite.
+   Eine Sackgasse, seit die Kurve mit E483 dazukam.
+   Warum es niemand meldete: `test351 §2` prüft die Formen an `line`, und
+   dort stimmte alles. Die Kurve ist die einzige Dreipunkt-Form und damit
+   der einzige Wert, den niemand gegengeprüft hat.
+   DAS LINEAL BEKOMMT SIE NICHT: es rastet auf 15°-Schritte, und eine
+   gebogene Linie hat keinen Winkel, den man rasten könnte (E267). */
+.blatt-werk[data-tool="curve"] > [data-gruppe="form"],
+.blatt-werk[data-tool="curve"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="curve"] > [data-gruppe="breite"],
 .blatt-werk[data-tool="line"] > [data-gruppe="lineal"],
 .blatt-werk[data-tool="line"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="line"] > [data-gruppe="breite"],
@@ -23461,7 +23475,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1057, inhalt: 'e615955a4042ce8e', gebaut: '2026-09-14T17:57:59.178Z' };
+const Stand = { fassung: 1058, inhalt: 'd662c5ee4b277b2a', gebaut: '2026-09-14T18:43:31.043Z' };
 window.Stand = Stand;
 
 </script>
