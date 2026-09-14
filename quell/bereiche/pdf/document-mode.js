@@ -1997,17 +1997,9 @@ const DocumentMode = (() => {
         drawingbar.className = 'document-drawingbar';
         drawingbar.setAttribute('role', 'toolbar');
         drawingbar.setAttribute('aria-label', 'PDF bearbeiten');
-        const drawingTools = [
-            ['schreiben', 'inkHand', 'Hand / Verschieben'], ['select', 'inkLasso', 'Lasso / Auswahl'],
-            ['stift', 'pencil', 'Stift'], ['marker', 'inkMarker', 'Marker'],
-            ['radierer', 'inkEraser', 'Radierer'], ['text', 'inkText', 'Text'],
-            ['formen', 'inkShapes', 'Formen'], ['zettel', 'comment', 'Haftnotiz'],
-            ['bild', 'image', 'Bild'], ['zeichen', 'bolt', 'Fachzeichen'], ['abdeck', 'eye', 'Abdecken'],
-            /* DIE ELEMENTE (E494): im Studio steht das Werkzeug mit in der Leiste,
-               weil das Studio der Ort ist, an dem gestempelt wird — ein Häkchen
-               auf zwanzig Seiten, eine Unterschrift, ein Kastenrahmen. */
-            ['elemente', 'star', 'Elemente']
-        ];
+        /* E572: derselbe Katalog wie auf dem Blatt. Die alte Abschrift hatte
+           den Laser vergessen und verwendete andere Symbole für dieselbe Tat. */
+        const drawingTools = Marken.WERKZEUGE.map(tool => [tool.id, tool.sym, tool.name]);
         drawingTools.forEach(([tool, icon, label]) => {
             const button = document.createElement('button');
             button.type = 'button';
@@ -2020,7 +2012,11 @@ const DocumentMode = (() => {
             button.appendChild(glyph);
             drawingbar.appendChild(button);
         });
-        const moreTools = topButton('ink-options', '···', 'Alle Stiftoptionen und Bearbeitungsaktionen');
+        const rulerButton = topButton('ink-ruler', '', 'Lineal ein- oder ausblenden');
+        rulerButton.innerHTML = '<span data-sym="inkRuler" aria-hidden="true"></span>';
+        rulerButton.setAttribute('aria-pressed', 'false');
+        drawingbar.append(rulerButton);
+        const moreTools = topButton('ink-options', '···', 'Weitere Zeichenoptionen und Leiste einrichten');
         moreTools.setAttribute('aria-expanded', 'false');
         drawingbar.appendChild(moreTools);
         /* ZURÜCK UND VOR STEHEN LINKS (E490, Redurs Bild vom 7. September).
@@ -2038,7 +2034,8 @@ const DocumentMode = (() => {
         history.setAttribute('role', 'group');
         history.setAttribute('aria-label', 'Zeichenverlauf');
         history.append(topButton('ink-undo', '↶', 'Letzten Zeichenstrich rückgängig machen'), topButton('ink-redo', '↷', 'Zeichenstrich wiederholen'));
-        drawingbar.prepend(history);
+        /* E572: die feste Verlaufskapsel liegt über dem Papier, nicht im
+           rollenden Werkzeugband — wie in Redurs neuer Referenz. */
         /* WELCHE SPALTEN ES GIBT, STEHT AM KASTEN (E296). Vorher war das Raster
            fest — 190 px links, 280 px rechts, bei jeder Fensterbreite ueber
            1100 px. Auf 1440 px blieben der Seite damit rund 900, obwohl beide
@@ -2445,7 +2442,34 @@ const DocumentMode = (() => {
         inspector.setAttribute('aria-label', 'Dokumentdetails und verknüpfte Inhalte');
         inspectorButton.setAttribute('aria-controls', inspector.id);
         renderInspector(inspector, page, current);
-        body.append(thumbnails, center, inspector);
+        /* ══ DIE VERLAUFSKAPSEL LIEGT IM PAPIERBEREICH (E573) ═════════════════
+           E572 hängte sie als viertes Kind in `.document-body`. Das ist am
+           Rechner ein Raster mit drei Spalten (0 / Papier / 0) — ohne eigene
+           Spaltenangabe landete sie in der dritten, 0 px breiten, und stand
+           gemessen bei x = 1440 in einem 1440-px-Fenster. Am TELEFON ist
+           `.document-body` gar kein Raster, sondern `display:block`: dort stand
+           sie als letzter Block UNTER dem Papier, gemessen bei top = 812 in
+           einem 800 px hohen Fenster. Beides heisst dasselbe: Rückgängig war
+           nicht erreichbar, und das ist §46 Priorität 1.
+    
+           Jetzt liegt sie IN `.document-center`, also in der Spalte, in der das
+           Papier steht, und klebt dort oben links (`position:sticky`). Das
+           braucht kein Raster und keine Sonderregel je Bildschirmbreite — es
+           ist derselbe Kasten, in dem auch das Papier rollt. */
+        /* ══ DIE VERLAUFSKAPSEL BLEIBT EIN KIND DES KÖRPERS (E573) ════════════
+           Sie IN die Papierspalte zu hängen (`center.prepend`) sah nach dem
+           kürzeren Weg aus und war der falsche: gemessen baute das Studio danach
+           gar nicht mehr auf — `.document-workspace` wurde nie sichtbar, und
+           `test437` lief in seine Zeitgrenze. `.document-center` ist der
+           Rollkasten, dessen erste Kinder (Original, Beschriftung, Bühnen) von
+           Messung, Rollstand und ResizeObserver gelesen werden; ein schwebendes
+           Element davor gehört dort nicht hinein.
+    
+           Sie bleibt also Kind von `.document-body` — und bekommt IM STILBLATT
+           ihren Platz: am Rechner als Rasterfeld in derselben Zelle wie das
+           Papier (Rasterfelder in einer Zelle überlagern sich), am Telefon, wo
+           `.document-body` gar kein Raster ist, absolut oben links. */
+        body.append(thumbnails, center, inspector, history);
         /* ══ DIE SUCHLEISTE (E468) ══════════════════════════════════════════════
            Ein Feld, die Zahl, vor und zurueck, zu. Enter springt zum naechsten
            Treffer, Umschalt+Enter zum vorigen, Escape schliesst (E302). Die
@@ -2589,6 +2613,17 @@ const DocumentMode = (() => {
                 return;
             }
             const source = inkToolbar();
+            source?.dispatchEvent(new Event('ink-studio-ready'));
+            // Die benutzereigene Reihenfolge gilt auch oben (§8/E570).
+            source?.querySelectorAll(':scope > [data-wz]').forEach(real => {
+                const button = drawingbar.querySelector(`[data-document-tool="${real.dataset.wz}"]`);
+                if (button)
+                    drawingbar.insertBefore(button, rulerButton);
+            });
+            const realRuler = source?.querySelector('[data-act="lineal"]');
+            rulerButton.disabled = !canAnnotate || !realRuler;
+            rulerButton.setAttribute('aria-pressed', realRuler?.getAttribute('aria-pressed') || 'false');
+            workspace.dataset.inkTool = source?.dataset.tool || 'schreiben';
             drawingbar.querySelectorAll('[data-document-tool]').forEach(button => {
                 const real = source?.querySelector('[data-wz="' + button.dataset.documentTool + '"]');
                 button.disabled = !canAnnotate || !real || real.disabled;
@@ -4181,6 +4216,11 @@ const DocumentMode = (() => {
                 }
                 toolsSetzen(true);
                 inkToolbar()?.querySelector('[data-wz="' + tool + '"]')?.click();
+                // Eine Auswahlklappe zeigt Möglichkeiten, ohne einen Strich abzulegen.
+                if (tool === 'laser' || tool === 'elemente')
+                    inkToolbar()?.dispatchEvent(new CustomEvent('ink-panel', {
+                        detail: { kind: tool, anchor: element?.closest('[data-document-tool]') }
+                    }));
                 inkSync();
                 return;
             }
@@ -4260,6 +4300,12 @@ const DocumentMode = (() => {
                 menueSchliessen();
             if (!action)
                 return;
+            if (action === 'ink-ruler' && canAnnotate) {
+                toolsSetzen(true);
+                inkToolbar()?.querySelector('[data-act="lineal"]')?.click();
+                inkSync();
+                return;
+            }
             if (action === 'folienmenue') {
                 folienMenue(tatKnopf);
                 return;

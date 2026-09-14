@@ -7,5 +7,5 @@
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1065, inhalt: '5bfe6b1d6269fbf4', gebaut: '2026-09-14T20:06:18.759Z' };
+const Stand = { fassung: 1071, inhalt: 'a31b6ab053c91934', gebaut: '2026-09-14T22:45:52.755Z' };
 window.Stand = Stand;

@@ -4611,6 +4611,40 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                 border:1px solid var(--line); border-left:0;
                 border-radius:0 0 8px 0;
                 box-shadow:0 2px 10px rgba(0,0,0,.18)}
+/* ══ DAS SICHTBARE LINEAL (E572, gestaltet mit E573) ═══════════════════════
+   Ohne diese Regeln war das Lineal ein SCHWARZER BALKEN: ein `<rect>` ohne
+   `fill` ist in SVG schwarz gefüllt, und das Glas lag damit deckend über dem
+   Papier. Gemessen, nicht vermutet — es stand so in der laufenden App.
+
+   WARUM HIER LITERALE FARBEN UND KEINE TOKEN (§39): das Lineal liegt auf dem
+   PAPIER, und dessen Farbe bestimmt der Nutzer (`--paper`, E558) — von Weiss
+   über Sand bis zu einem dunklen Blatt. Ein Themenwert wie `--line` folgt
+   dagegen der App-Oberfläche und stünde auf einem dunklen Blatt falsch. Ein
+   halbdurchsichtiges Schiefergrau nimmt beide Enden mit, weil es die Farbe
+   darunter durchlässt statt sie zu ersetzen. Das ist dieselbe Überlegung wie
+   bei der Haarkante der Farbtupfer (E568), nur andersherum begründet. */
+.blatt-ruler{ font-family:ui-sans-serif, system-ui, sans-serif }
+.blatt-ruler-glass{
+  fill:rgba(96,116,148,.14); stroke:rgba(58,76,104,.42); stroke-width:1
+}
+.blatt-ruler-ticks{ fill:none; stroke:rgba(38,52,74,.62); stroke-width:1 }
+.blatt-ruler text{ fill:rgba(30,42,62,.78); user-select:none }
+/* Der Griff ist das einzige Stück, das einen Zeiger annimmt — er darf das
+   auch zeigen: etwas kräftiger als das Glas, mit drei Rillen wie ein
+   Schieber. */
+.blatt-ruler-grip{ cursor:grab }
+.blatt-ruler-grip:active{ cursor:grabbing }
+.blatt-ruler-grip rect{ fill:rgba(58,76,104,.20); stroke:rgba(38,52,74,.45); stroke-width:1 }
+.blatt-ruler-grip:hover rect{ fill:rgba(58,76,104,.30) }
+.blatt-ruler-grip-lines{ fill:none; stroke:rgba(24,34,52,.7); stroke-width:2; stroke-linecap:round }
+.blatt-ruler-rotate{ cursor:pointer }
+.blatt-ruler-rotate circle{ fill:rgba(58,76,104,.20); stroke:rgba(38,52,74,.45); stroke-width:1 }
+.blatt-ruler-rotate:hover circle{ fill:rgba(58,76,104,.32) }
+.blatt-ruler-rotate text{ font-size:20px; fill:rgba(24,34,52,.85) }
+/* Der Fokus muss sichtbar sein (§38) — auch auf einem SVG-Knoten. */
+.blatt-ruler-grip:focus-visible rect,
+.blatt-ruler-rotate:focus-visible circle{ stroke:var(--accent); stroke-width:2.5 }
+
 .blatt-marken{position:absolute; inset:0; width:100%; height:100%; z-index:2;
               color:#111; touch-action:none}
 /* AM TELEFON WIRD GEROLLT, NICHT GESTAPELT — und das ist ein Fund vom Bild,

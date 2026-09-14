@@ -1740,6 +1740,12 @@ const Marken = (() => {
       defsAuffrischen();
       abdeckAnwenden();
       renderSelection();
+      /* DAS LINEAL ÜBERLEBT DAS NEUZEICHNEN (E573). Die Zeile ganz oben in
+         dieser Funktion räumt JEDES `[data-ink-ui]` aus der Fläche — das
+         Lineal trägt dieses Kennzeichen, und niemand hängte es zurück.
+         Gemessen war nach einem einzigen „Zurück" kein Lineal mehr da,
+         während der Schalter weiter „an" meldete. */
+      ruler.remount();
     };
     const restore = (next: any[]): void => {
       /* Flach, aus demselben Grund wie `snapshot` (E378): die Marken werden

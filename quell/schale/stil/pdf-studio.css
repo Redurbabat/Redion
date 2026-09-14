@@ -162,7 +162,30 @@ body[data-dokument="an"] .document-studio .document-topbar button:hover{backgrou
    andere Seite. `margin-right:auto` hier und `margin-left:auto` am „···"
    halten die Werkzeuge dazwischen in der Mitte — ohne einen zweiten Kasten
    im Baum, den die Tastatur mitzählen müsste. */
-.document-ink-history{display:flex;gap:0;border-right:1px solid var(--line);padding-right:12px;margin-right:auto}
+/* ══ DIE VERLAUFSKAPSEL HAT EINEN PLATZ (E573) ═════════════════════════════
+   Mit E572 wanderte sie aus dem Werkzeugband in `.document-body` — und
+   `.document-body` ist ein Raster mit `grid-template-columns:0 minmax(0,1fr) 0`.
+   Ohne eigene Spaltenangabe landete sie automatisch in der DRITTEN Spalte,
+   und die ist 0 px breit. Gemessen bei 1440 px Fensterbreite: die Kapsel
+   stand bei x = 1440, also ausserhalb des Bildes; bei 390 px unterhalb.
+   `test393` fiel auf 6 von 19, `test461` auf 29 von 34 — und Rückgängig war
+   im Studio an KEINER Stelle erreichbar (§46 Priorität 1).
+
+   Jetzt liegt sie in der Papierspalte und schwebt links oben darüber, wie
+   in Redurs Referenz. Die alten Bandregeln (Rechtsrand, `margin-right:auto`)
+   galten für eine Kapsel IN einer Zeile und sind hier weg. */
+.document-ink-history{
+  grid-column:2; grid-row:1; align-self:start; justify-self:start;
+  z-index:6; width:max-content; margin:12px 0 0 12px;
+  display:flex; gap:2px; padding:4px;
+  border:1px solid var(--line); border-radius:var(--radius-xl);
+  background:var(--pdf-tools); box-shadow:var(--shadow-2)
+}
+.document-body{position:relative}
+/* DER NEGATIVE UNTERRAND ist kein Trick, sondern die Aussage: die Kapsel
+   SCHWEBT über dem Papier und schiebt es nicht nach unten. Ohne ihn
+   begänne das Blatt 48 px tiefer, bei jedem Dokument, für immer. */
+.document-ink-history button{min-width:var(--touch-min); min-height:var(--touch-min)}
 .document-drawingbar [data-document-action="ink-options"]{margin-left:auto}
 .document-ink-history button{font-size:1.75rem}
 /* ZURÜCK UND VOR SIND NICHT DURCHSICHTIG (test393 §3, E396): abgeschaltet
@@ -196,7 +219,33 @@ body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display
    überall, und das Werkzeug behält als einziges die volle Fläche.
    Die zwei Zeilen darüber (Tupfer, Ring) sind der Grund, warum hier noch
    etwas steht: das Studio braucht seine 44 px auch am Rechner. */
-.document-studio:not([data-ink-options="open"]) .blatt-werk>:is([data-wz],.blatt-trenn,[data-gruppe="verlauf"],[data-gruppe="auswahl"],[data-gruppe="lineal"],[data-gruppe="formen"],[data-gruppe="schrift"],[data-gruppe="form"]){display:none!important}
+/* ══ DAS DOCK IST WIEDER KONTEXTBEZOGEN (E573) ═════════════════════════════
+   Hier stand eine Liste von acht Dingen, die im geschlossenen Zustand
+   ALLE weg waren. Gemessen an der laufenden App war das kein Kontextfilter,
+   sondern ein Schalter zwischen „fast nichts" und „alles auf einmal":
+
+     bei data-tool="line"     0 von 7 Formknöpfen sichtbar
+     bei data-tool="text"     0 von 7 Schriftknöpfen sichtbar
+     bei data-tool="select"   0 von 10 Auswahlknöpfen sichtbar
+     geschlossen              62 von 86 Kindern der Leiste unbedingt weg
+
+   Wer im Studio eine Form oder eine Schriftgrösse wollte, musste erst „···"
+   öffnen — und bekam dann 84 Bedienelemente gleichzeitig, samt einer
+   zweiten vollständigen Werkzeugreihe. Genau das zeigen Redurs Bilder 4
+   und 6 NICHT: dort steht unter dem gewählten Werkzeug sein Zubehör, und
+   sonst nichts.
+
+   WELCHE GRUPPE ZU WELCHEM WERKZEUG GEHÖRT, STEHT SCHON IN `bausteine.css`
+   (E356) und wird seit E570 sogar vom Nutzer geordnet. Das Studio muss das
+   nicht zweitens entscheiden — es muss nur wegnehmen, was hier doppelt
+   wäre. Und das sind genau drei Dinge:
+
+     [data-wz]        die Werkzeuge — sie stehen oben im Band
+     .blatt-trenn     Trenner — im kompakten Dock nur Striche im Weg
+     [data-gruppe=verlauf]  Zurück, Vor, Platz, Einrichten — „Zurück" und
+                      „Vor" stehen in der Kapsel über dem Papier, die zwei
+                      übrigen unter „···". */
+.document-studio:not([data-ink-options="open"]) .blatt-werk>:is([data-wz],.blatt-trenn,[data-gruppe="verlauf"]){display:none!important}
 .document-studio:not([data-ink-options="open"]) .blatt-werk[data-tool="schreiben"]{display:none}
 .document-studio[data-ink-options="open"] .blatt-werk{max-height:240px;flex-wrap:wrap!important;overflow:auto;width:min(850px,calc(100vw - 32px))}
 /* Die Klappe der freien Staerke (E465 Nachtrag) bleibt auch hier zu, bis die gewaehlte Stufe ein zweites Mal getippt wird — `.auf` zeigt sie dann in der Zeile. */
@@ -228,7 +277,13 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
      beim Rollen nach LINKS hinaus, und dafür braucht es `left:0`. Gemessen
      bei 390 px: ganz nach rechts gerollt standen beide ausserhalb der
      Leiste, und `test393 §2` sah es. */
-  .document-ink-history{position:sticky;left:0;z-index:1;padding-right:12px;margin-right:auto;background:var(--pdf-tools)}
+    /* AM TELEFON IST `.document-body` KEIN RASTER, sondern `display:block`
+     (bausteine.css) — `grid-column` und `grid-row` sind dort wirkungslos,
+     und die Kapsel stand als letzter Block UNTER dem Papier: gemessen
+     top = 812 in einem 800 px hohen Fenster, also ausserhalb des Bildes.
+     Absolut über der linken oberen Ecke des Körpers steht sie dort, wo sie
+     hingehört, ohne ein Raster zu brauchen. */
+  .document-ink-history{position:absolute; top:8px; left:8px; margin:0; padding:3px}
   .document-studio .document-commandbar{left:8px;right:8px}
   body[data-dokument="an"] .document-studio .document-center{padding:10px 8px 100px}
   .document-source-master .do-name{font-size:11px}.document-source-master .do-wort{font-size:10px}

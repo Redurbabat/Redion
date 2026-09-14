@@ -81,20 +81,34 @@ const mitBlatt = async (w: number, h: number, handy = true): Promise<Page> => {
 };
 
 /** Stehen die zwei im Bild? Und wie sehen sie aus? */
-/* SEIT E464 STEHEN DIE ZWEI IN DER ZEICHENLEISTE des Schreibtischs
-   (`.document-drawingbar`, `data-document-action="ink-undo|ink-redo"`);
-   die Blattleiste darunter trägt nur noch die Stiftoptionen. Gemessen wird
-   dort, wo sie sind — die Frage bleibt dieselbe: im Bild, ohne zu wischen. */
+/* SEIT E464 STANDEN DIE ZWEI IN DER ZEICHENLEISTE des Schreibtischs
+   (`.document-drawingbar`); SEIT E572 stehen sie in der schwebenden Kapsel
+   `.document-ink-history` über dem Papier — so zeigt es Redurs Referenz,
+   und die Kapsel rollt nicht mit dem Werkzeugband mit.
+
+   DIE ZUSAGE BLEIBT WÖRTLICH DIESELBE: im Bild, ohne zu wischen. Geändert
+   ist nur, WO gesucht und WOGEGEN gemessen wird — und das zweite ist die
+   ehrlichere Frage: „im Bild" heisst im FENSTER, nicht im Kasten der Leiste.
+   Ein Knopf, der brav innerhalb seiner Leiste sitzt, während die Leiste
+   neben dem Bildschirm steht, war nach der alten Rechnung „drin". Genau das
+   ist mit E572 passiert: gemessen stand die Kapsel bei x = 1440 in einem
+   1440 px breiten Fenster, und die alte Rechnung hätte es nie gemeldet.
+   Die neue meldet es. */
 const LAGE = `(() => {
   const l = document.querySelector('.document-drawingbar') || document.querySelector('.blatt-werk');
   const lr = l.getBoundingClientRect();
+  const wurzel = document.querySelector('.document-studio') || document;
   const eins = (a) => {
-    const b = l.querySelector('[data-document-action="ink-' + a + '"]') || l.querySelector('[data-act="' + a + '"]');
+    const b = wurzel.querySelector('[data-document-action="ink-' + a + '"]') || l.querySelector('[data-act="' + a + '"]');
     if (!b) return null;
     const r = b.getBoundingClientRect();
     const cs = getComputedStyle(b);
-    return { drin: r.right <= lr.right + 1 && r.left >= lr.left - 1,
+    return { drin: r.right <= window.innerWidth + 1 && r.left >= -1
+                   && r.bottom <= window.innerHeight + 1 && r.top >= -1
+                   && r.width > 1 && r.height > 1,
              links: Math.round(r.left), rechts: Math.round(r.right),
+             oben: Math.round(r.top), unten: Math.round(r.bottom),
+             breit: Math.round(r.width), hoch: Math.round(r.height), fenster: window.innerHeight,
              klebt: cs.position === 'sticky',
              deckt: cs.opacity === '1' && cs.backgroundColor !== 'rgba(0, 0, 0, 0)',
              aus: b.disabled };
@@ -107,7 +121,8 @@ const LAGE = `(() => {
                                      return r.height < 44 || r.width < 44; })
                       .map(b => (b.dataset.act || b.dataset.wz || '?')) };
 })()`;
-type Knopf = { drin: boolean; links: number; rechts: number; klebt: boolean;
+type Knopf = { drin: boolean; links: number; rechts: number; oben: number; unten: number;
+               breit: number; hoch: number; fenster: number; klebt: boolean;
                deckt: boolean; aus: boolean } | null;
 type Lage = { undo: Knopf; redo: Knopf; roll: number; max: number; zuKlein: string[] };
 
@@ -120,7 +135,7 @@ for (const [w, h] of [[360, 800], [390, 844], [428, 926]] as const) {
   const l = await s.evaluate(LAGE) as Lage;
   p(`${w}×${h}: die Leiste rollt überhaupt`, l.max > 0, `${l.max} px Rollweg`);
   p(`${w}×${h}: „Zurück" im Bild`, !!l.undo && l.undo.drin,
-    l.undo ? `${l.undo.links}…${l.undo.rechts}` : 'fehlt');
+    l.undo ? JSON.stringify(l.undo) : 'fehlt');
   p(`${w}×${h}: „Vor" im Bild`, !!l.redo && l.redo.drin,
     l.redo ? `${l.redo.links}…${l.redo.rechts}` : 'fehlt');
   await s.close();
@@ -139,8 +154,15 @@ console.log('\n2 · Auch ganz links und ganz rechts im Rollweg');
   const links = await s.evaluate(LAGE) as Lage;
   gleich('Ganz links: beide im Bild',
          [links.undo?.drin, links.redo?.drin], [true, true]);
-  p('… und sie stossen aneinander, ohne Spalt',
-    !!links.undo && !!links.redo && links.redo.links - links.undo.rechts === 0,
+  /* SIE STEHEN NEBENEINANDER. Bis E572 mussten sie sich BERÜHREN, weil sie
+     im rollenden Band klebten und ein Spalt die Werkzeuge hätte durchblitzen
+     lassen (E396). In der eigenen Kapsel gibt es nichts mehr, was durchrollt;
+     dort ist ein paar Pixel Luft richtig. Geprüft wird deshalb, was die
+     Zusage wirklich meint: sie gehören zusammen, also liegen sie dicht
+     beieinander und in dieser Reihenfolge. */
+  p('… und sie liegen dicht beieinander, Zurück vor Vor',
+    !!links.undo && !!links.redo
+    && links.redo.links >= links.undo.rechts - 1 && links.redo.links - links.undo.rechts <= 8,
     links.undo && links.redo ? `${links.undo.rechts} → ${links.redo.links}` : 'fehlt');
 
   await s.evaluate(`(() => { const l = document.querySelector('.document-drawingbar') || document.querySelector('.blatt-werk');

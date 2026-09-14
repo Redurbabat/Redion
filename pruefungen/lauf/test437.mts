@@ -54,8 +54,15 @@ try{
   check('Genau zwei kanonische PDF-Seiten',await page.locator('.document-stage').count()===2);
   check('Stift ist direkt bereit',await page.locator('.document-stage[data-aktiv] .blatt-marken').getAttribute('data-tool')==='stift');
   /* ZWÖLF SEIT E494 — die Elemente-Bibliothek steht im Studio mit in der
-     Zeichenleiste. Vorher elf (E465 ff.). */
-  check('Zwölf echte Zeichenwerkzeuge',await page.locator('[data-document-tool] svg').count()===12);
+     Zeichenleiste. Vorher elf (E465 ff.). DREIZEHN SEIT E572: die obere
+     Leiste schreibt den Katalog nicht mehr ab, sondern liest `Marken.WERKZEUGE`
+     (dort stehen seit E512 dreizehn, siehe test365) — und damit ist auch der
+     Laserpointer oben, der in der Abschrift fehlte.
+     WARUM DAS HIER WEHTAT: dieser Lauf prüft mit `assert`, nicht mit einem
+     Zähler. Die falsche Zahl liess ihn an Prüfung 8 STERBEN, und alles
+     danach — Stiftpunkt, Originalbytes, Ausgabe — lief nie mehr. Eine Zahl
+     ohne Nachzug kostet hier nicht eine Zusage, sondern den halben Lauf. */
+  check('Dreizehn echte Zeichenwerkzeuge',await page.locator('[data-document-tool] svg').count()===13);
   const identity=await page.evaluate<any>(`(() => {const p=Store.getBlock(App.aktuelleSeite());const b=DocumentMode.documentsIn(p)[0];return {page:p.id,block:b.id,source:b.quelleId,image:b.bildDateiId};})()`);
   const originalBytes=await page.evaluate<number[]>(`Dateien.alsBlob(${JSON.stringify(identity.source)}).then(b=>b.arrayBuffer()).then(b=>Array.from(new Uint8Array(b)))`);
   const ink=page.locator('.document-stage[data-aktiv] .blatt-marken');

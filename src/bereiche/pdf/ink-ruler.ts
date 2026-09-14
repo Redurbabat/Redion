@@ -10,9 +10,31 @@ const InkRuler = (() => {
     group.setAttribute('role', 'group');
     group.setAttribute('aria-label', 'Lineal: ziehen zum Verschieben. Pfeiltasten verschieben, Umschalt und Pfeiltasten drehen.');
     group.setAttribute('tabindex', '0');
+    /* ══ DAS LINEAL IST FÜR ZEIGER DURCHLÄSSIG (E573) ══════════════════════
+       Der Zwischenstand hängte das ganze `<g>` in die Zeichenfläche und rief
+       in seinem `pointerdown` als ERSTE Zeile `stopPropagation()` — vor jeder
+       Prüfung, wem der Zeiger gilt. Zwei Dinge gingen dabei kaputt, beide
+       gemessen:
+
+         · `test267 §6` wurde rot: „frei 50.2°, gerastet 50.2°". Der Zug
+           erreichte die Zeichenmaschine nie, also entstand die zweite Linie
+           gar nicht, und die Prüfung fand wieder die erste.
+         · Die Kantenführung selbst war unerreichbar. Sie beginnt innerhalb
+           von 14 Einheiten um eine Kante — also AUF dem Glas. Was das Glas
+           schluckt, kann nie geführt werden.
+
+       Jetzt trägt das `<g>` `pointer-events="none"` als Präsentationsattribut
+       (nicht nur im Stilblatt: ein Lineal, das ohne CSS die ganze Seite
+       blockiert, ist die schlimmere Störung). Einen Zeiger nehmen nur der
+       Griff in der Mitte und der Drehknopf an — und die rufen
+       `stopPropagation()` erst, wenn der Zug ihnen wirklich gilt. */
+    group.setAttribute('pointer-events', 'none');
     let active = false, x = width / 2, y = Math.min(height * .4, width * .65), angle = 0;
     let edge: number | null = null;
-    const half = width * .65, depth = 64;
+    /* NEUNZIG PROZENT DER BLATTBREITE, NICHT HUNDERTDREISSIG. `width * .65`
+       ergab ein Band von 1,3 Blattbreiten — es stand links und rechts über
+       das Papier hinaus und war damit auch nicht mehr zu greifen. */
+    const half = width * .45, depth = 64;
     const make = (tag: string, attrs: Record<string, string | number>) => {
       const node = document.createElementNS(ns, tag);
       Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, String(value)));
@@ -36,41 +58,74 @@ const InkRuler = (() => {
       caption.textContent = `cm · ${angle}° · ziehen / drehen`;
     };
     const rotate = make('g', { role: 'button', tabindex: '0', 'aria-label': 'Lineal um 15 Grad drehen', class: 'blatt-ruler-rotate' });
-    const turn = document.createElementNS(ns, 'circle'); turn.setAttribute('cx', String(Math.min(half - 30, width * .33))); turn.setAttribute('cy', '36'); turn.setAttribute('r', '22'); rotate.append(turn);
-    const arrow = document.createElementNS(ns, 'text'); arrow.setAttribute('x', turn.getAttribute('cx')!); arrow.setAttribute('y', '41'); arrow.setAttribute('text-anchor', 'middle'); arrow.textContent = '↻'; rotate.append(arrow);
+    rotate.setAttribute('pointer-events', 'auto');
+    /* DIE GRIFFE HÄNGEN UNTER DEM GLAS, NICHT DARIN (E573, nachgemessen).
+       Erster Versuch: ein Griffstreifen in der Mitte des Glases. `test267 §6`
+       blieb rot — der Prüfzug beginnt bei 55 % der Blattbreite und 40 % der
+       Höhe, und das ist genau dort. Ein Griff IM Glas nimmt immer irgendeinem
+       Zug den Anfang weg, und welchem, hängt vom Zufall ab.
+       Unter dem Glas nimmt er keinem etwas: die zwei Führungsbänder liegen
+       um die Kanten (v um 0 und um `depth`), das Glas dazwischen bleibt frei,
+       und wer den Griff trifft, wollte ihn treffen. */
+    const griffY = depth + 12;
+    const turn = document.createElementNS(ns, 'circle'); turn.setAttribute('cx', String(Math.min(half - 30, width * .33))); turn.setAttribute('cy', String(griffY + 16)); turn.setAttribute('r', '20'); rotate.append(turn);
+    const arrow = document.createElementNS(ns, 'text'); arrow.setAttribute('x', turn.getAttribute('cx')!); arrow.setAttribute('y', String(griffY + 22)); arrow.setAttribute('text-anchor', 'middle'); arrow.textContent = '↻'; rotate.append(arrow);
     rotate.addEventListener('click', event => { event.stopPropagation(); angle = (angle + 15) % 180; render(); });
     rotate.addEventListener('keydown', event => { const key = (event as KeyboardEvent).key; if (key === 'Enter' || key === ' ') { event.preventDefault(); event.stopPropagation(); angle = (angle + 15) % 180; render(); } });
+
+    /* ══ DER GRIFF (E573) ═══════════════════════════════════════════════════
+       Ein echtes Lineal fasst man überall an. Hier absichtlich nicht: was das
+       ganze Band annimmt, kann nicht mehr überzeichnet werden — daran ist der
+       Zwischenstand gescheitert. Der Griff ist deshalb ein Streifen in der
+       MITTE, breit genug für eine Hand und schmal genug, dass links und
+       rechts von ihm gezeichnet wird. Er sitzt am Ankerpunkt: solange der
+       auf dem Blatt geklemmt ist, ist auch der Griff erreichbar. */
+    const grip = make('g', { class: 'blatt-ruler-grip', role: 'button', tabindex: '0',
+      'aria-label': 'Lineal verschieben. Pfeiltasten verschieben, Umschalt und Pfeiltasten drehen.' });
+    grip.setAttribute('pointer-events', 'auto');
+    const gripBody = document.createElementNS(ns, 'rect');
+    for (const [key, value] of Object.entries({ x: -56, y: griffY, width: 112, height: 32, rx: 9 })) gripBody.setAttribute(key, String(value));
+    grip.append(gripBody);
+    const gripLines = document.createElementNS(ns, 'path');
+    gripLines.setAttribute('class', 'blatt-ruler-grip-lines');
+    gripLines.setAttribute('d', `M-16 ${griffY + 9}v14M0 ${griffY + 9}v14M16 ${griffY + 9}v14`);
+    grip.append(gripLines);
+
     const local = (event: PointerEvent): [number, number] | null => {
       const matrix = surface.getScreenCTM(); if (!matrix) return null;
       const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
       return [point.x, point.y];
     };
     let drag: { id: number; x: number; y: number; start: [number, number] } | null = null;
-    group.addEventListener('pointerdown', event => {
+    /* `stopPropagation()` steht NACH der Entscheidung, nicht davor: nur ein
+       Zug, der wirklich dem Griff gilt, wird der Zeichenmaschine entzogen. */
+    grip.addEventListener('pointerdown', event => {
       const e = event as PointerEvent;
-      event.stopPropagation();
-      if (e.button !== 0 || (e.target as Element).closest('.blatt-ruler-rotate')) return;
+      if (e.button !== 0) return;
       const point = local(e); if (!point) return;
-      event.preventDefault(); group.focus();
-      drag = { id: e.pointerId, x, y, start: point }; group.setPointerCapture(e.pointerId);
+      event.stopPropagation(); event.preventDefault(); grip.focus();
+      drag = { id: e.pointerId, x, y, start: point }; grip.setPointerCapture(e.pointerId);
     });
-    group.addEventListener('pointermove', event => {
-      event.stopPropagation(); const e = event as PointerEvent;
+    grip.addEventListener('pointermove', event => {
+      const e = event as PointerEvent;
       if (!drag || drag.id !== e.pointerId) return;
+      event.stopPropagation();
       const point = local(e); if (!point) return;
       x = Math.max(0, Math.min(width, drag.x + point[0] - drag.start[0]));
-      y = Math.max(0, Math.min(height - depth, drag.y + point[1] - drag.start[1])); render();
+      y = Math.max(0, Math.min(height - depth - 46, drag.y + point[1] - drag.start[1])); render();
     });
-    for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) group.addEventListener(name, event => { event.stopPropagation(); drag = null; });
-    group.addEventListener('click', event => event.stopPropagation());
-    group.addEventListener('keydown', event => {
+    for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+      grip.addEventListener(name, event => { if (drag) event.stopPropagation(); drag = null; });
+    }
+    grip.addEventListener('click', event => event.stopPropagation());
+    grip.addEventListener('keydown', event => {
       const e = event as KeyboardEvent;
       if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
       event.preventDefault(); event.stopPropagation();
       const sign = e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 1;
       if (e.shiftKey) angle = (angle + sign * 15 + 360) % 360;
       else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') x = Math.max(0, Math.min(width, x + sign * 5));
-      else y = Math.max(0, Math.min(height - depth, y + sign * 5));
+      else y = Math.max(0, Math.min(height - depth - 46, y + sign * 5));
       render();
     });
     const coordinates = (point: number[]) => {
@@ -84,6 +139,16 @@ const InkRuler = (() => {
     };
     return {
       setActive(value: boolean) { active = value; edge = null; if (active) { surface.append(group); render(); } else group.remove(); },
+      /* ══ NACH EINEM NEUZEICHNEN WIEDER ANHÄNGEN (E573) ═══════════════════
+         `redraw()` in `marken.ts` räumt jedes `[data-ink-ui]` aus der Fläche —
+         und niemand hängte das Lineal zurück. Gemessen: nach einem einzigen
+         „Zurück" null Lineale in der Fläche, `linealAn()` weiterhin `true`.
+         Der Schalter stand an, das Werkzeug war weg.
+         Anders als `setActive` vergisst dieser Weg die Kante NICHT: er kann
+         mitten in einem geführten Zug laufen, und dann wäre ein Rücksetzen
+         auf `edge = null` genau der Sprung, den niemand versteht. */
+      remount() { if (active && group.parentNode !== surface) { surface.append(group); render(); } },
+      active: () => active,
       begin(point: number[], allowed: boolean) {
         edge = null;
         if (active && allowed) { const [u, v] = coordinates(point); if (Math.abs(u!) < half + 12) { if (Math.abs(v!) < 14) edge = 0; else if (Math.abs(v! - depth) < 14) edge = depth; } }

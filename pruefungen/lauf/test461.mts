@@ -282,11 +282,27 @@ console.log('\n§5 Zurücknehmen links, wie bei GoodNotes');
       barLinks: Math.round(bar.getBoundingClientRect().left),
       barRechts: Math.round(bar.getBoundingClientRect().right) });
   })()`) as string);
-  gleich('Die Verlaufsgruppe ist das erste Kind der Leiste', lage.erstes, 'document-ink-history');
+  /* ══ DIE KAPSEL IST AUS DEM BAND AUSGEZOGEN (E572/E573) ═══════════════════
+     Hier stand: „Die Verlaufsgruppe ist das erste Kind der Leiste". Das war
+     die Anordnung aus E490 — Zurück und Vor ganz links IM Werkzeugband.
+     Redurs neue Referenz (E572, Bild 1) zeigt sie stattdessen als kleine
+     SCHWEBENDE Kapsel über dem Papier, und genau dorthin sind sie gezogen.
+
+     DIE ZUSAGE DAHINTER BLEIBT UND WIRD SOGAR SCHÄRFER: sie stehen links,
+     vor dem ersten Werkzeug, und sie sind ERREICHBAR. Das zweite ist der
+     Punkt, an dem dieser Umzug beinahe gescheitert wäre — die Kapsel landete
+     erst ausserhalb des Fensters (x = 1440 bei 1440 px) und dann unter dem
+     Papier (top = 812 bei 800 px). Gemessen wird deshalb jetzt gegen das
+     FENSTER, nicht gegen den Kasten der Leiste, den sie verlassen hat.
+     `test393 §1` hält dieselbe Sache an drei Telefonbreiten. */
+  p('Die Verlaufskapsel steht als eigener Kasten da, nicht im Werkzeugband',
+    lage.erstes !== 'document-ink-history' && lage.zurueck >= 0 && lage.vor >= 0,
+    JSON.stringify(lage));
   p('Zurück steht links vom Stift', lage.zurueck < lage.stift, JSON.stringify(lage));
   p('Vor steht rechts von Zurück und links vom Stift',
     lage.vor > lage.zurueck && lage.vor < lage.stift, JSON.stringify(lage));
-  p('… und beide ganz am linken Rand', lage.zurueck - lage.barLinks < 40, JSON.stringify(lage));
+  p('… und beide im Bild, nah am linken Rand',
+    lage.zurueck >= 0 && lage.zurueck < 120 && lage.vor < 160, JSON.stringify(lage));
   p('„···" bleibt ganz rechts', lage.barRechts - lage.mehr < 90, JSON.stringify(lage));
   await s.close();
 }
@@ -299,10 +315,17 @@ console.log('\n§6 Quellen');
   p('Der Ruhepunkt wird beim Absetzen weggeräumt', /delete mark\.ruhePunkt/.test(q));
   p('Der Schutzleiter hat seine zwei Farben', /PE_GRUEN/.test(q) && /PE_GELB/.test(q) && /PE_MUSTER/.test(q));
   p('… und überlebt das Geradeziehen', /mark\.stil !== 'schutzleiter'/.test(q));
-  p('Zurück und Vor werden vorangestellt',
-    /drawingbar\.prepend\(history\)/.test(lies('src/bereiche/pdf/document-mode.ts')));
-  p('Das Stilblatt hält die Mitte mit zwei `auto`-Rändern',
-    /\.document-ink-history\{[^}]*margin-right:auto/.test(lies('quell/schale/stil/pdf-studio.css')));
+  /* Die zwei Quellenzusagen hielten den ALTEN Weg fest: `prepend` ins Band
+     und zwei `auto`-Ränder, die das Band um die Kapsel herum mittig hielten.
+     Beides gibt es nicht mehr (E573). Was jetzt geprüft wird, ist der neue
+     Weg — und zwar so, dass er nicht zufällig stimmt: die Kapsel hängt am
+     Dokumentkörper, und das Stilblatt gibt ihr dort eine Lage. */
+  p('Die Kapsel hängt am Dokumentkörper, nicht im Werkzeugband',
+    /body\.append\(thumbnails, center, inspector, history\)/.test(lies('src/bereiche/pdf/document-mode.ts'))
+    && !/drawingbar\.prepend\(history\)/.test(lies('src/bereiche/pdf/document-mode.ts')));
+  p('Das Stilblatt gibt ihr eine Lage über dem Papier — am Rechner im Raster, am Telefon absolut',
+    /\.document-ink-history\{[^}]*grid-column:2/.test(lies('quell/schale/stil/pdf-studio.css'))
+    && /\.document-ink-history\{position:absolute/.test(lies('quell/schale/stil/pdf-studio.css')));
   p('Das erzeugte JS trägt es', /schutzleiter/.test(lies('quell/bereiche/pdf/marken.js')));
   gleich('Keine Seitenfehler', fehler, []);
 }
