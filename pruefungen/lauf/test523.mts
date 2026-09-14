@@ -32,12 +32,19 @@
  *     G2  den Abgleich weglassen (Liste roh nehmen)   11 grün, 15 rot
  *     G3  die Pfeile auf 32 px setzen                 25 grün,  1 rot
  *     G4  nur die Zahlen setzen, nicht umhängen       17 grün,  9 rot
+ *     G5  den Klickabfänger weglassen                  39 grün,  1 rot
+ *     G6  den Zug im Band weglassen                    37 grün,  3 rot
+ *     G7  die Pfeiltasten im Modus weglassen           39 grün,  1 rot
+ *     G8  das Band nicht zeigen                        24 grün, 16 rot
  *
  *   G2 ist die lauteste, und das ist richtig so: ohne Abgleich trägt die
  *   Leiste, was in `meta` steht — auch eine erfundene Kennung, auch eine
  *   Dublette, und die elf Werkzeuge, die in der gemerkten Liste fehlen,
  *   fehlen dann auch in der Leiste. Fünfzehn Zusagen fallen gleichzeitig,
  *   weil ab da nichts mehr stimmt.
+ *
+ * §9 misst den Modus aus E571: im Band selbst schieben, mit der Maus und
+ * mit den Pfeiltasten — und dass dabei nichts gezeichnet wird.
  *
  *   node pruefungen/lauf/test523.mts
  * ==========================================================================*/
@@ -123,12 +130,19 @@ const domFolge = (pg: Page) => pg.evaluate(() => {
   };
 });
 
+/* ZWEI TIPPE STATT EINEM (E571). „Einrichten" schaltet seit E571 den Modus
+   im Band ein; die Liste steht darin als „Als Liste". Der Weg dorthin ist
+   damit einen Tipp länger, und diese Suite geht ihn wie ein Mensch. */
 const feldAuf = async (pg: Page): Promise<void> => {
   await pg.evaluate(() => document.querySelector<HTMLElement>('.blatt-werk [data-act="einrichten"]')?.click());
+  await pg.waitForTimeout(250);
+  await pg.evaluate(() => document.querySelector<HTMLElement>('.blatt-ordnen-band [data-ob="liste"]')?.click());
   await pg.waitForTimeout(350);
 };
 const feldZu = async (pg: Page): Promise<void> => {
   await pg.evaluate(() => document.querySelector<HTMLElement>('.blatt-ordnen-fertig')?.click());
+  await pg.waitForTimeout(200);
+  await pg.evaluate(() => document.querySelector<HTMLElement>('.blatt-ordnen-band [data-ob="fertig"]')?.click());
   await pg.waitForTimeout(250);
 };
 
@@ -336,6 +350,127 @@ const handyMasse = await handy.evaluate(() => {
 });
 gleich('Und §37 gilt weiter: nichts unter 44 px', handyMasse, []);
 await handy.context().close();
+
+/* ======================================================================== */
+console.log('\n9 · Im Band selbst schieben (E571)');
+/* Redur, 14. September: „kannst du so machen, dass ich direkt im Website
+   ordnen kann — die Position mit der Maus schieben." Die Liste aus E570
+   bleibt als Weg für die Tastatur und für das Zubehör, das gerade nicht
+   zu sehen ist; hier wird an Ort und Stelle gezogen. */
+const pg9 = await aufbauen(1280);
+const vorher9 = await domFolge(pg9);
+await pg9.evaluate(() => document.querySelector<HTMLElement>('.blatt-werk [data-act="einrichten"]')?.click());
+await pg9.waitForTimeout(350);
+const modus = await pg9.evaluate(() => {
+  const w = document.querySelector<HTMLElement>('.blatt-werk');
+  const b = document.querySelector<HTMLElement>('.blatt-ordnen-band');
+  const r = b?.getBoundingClientRect();
+  return {
+    an: w?.dataset.ordnen || '',
+    feldAuf: !!document.querySelector('.blatt-ordnen-feld'),
+    knoepfe: b ? [...b.querySelectorAll('button')].map(k => (k.textContent || '').trim()) : [],
+    kleinster: b ? Math.min(...[...b.querySelectorAll('button')]
+      .map(k => Math.round(k.getBoundingClientRect().height))) : 0,
+    sichtbar: !!r && r.width > 0 && r.height > 0
+  };
+});
+gleich('Der Knopf schaltet den Modus ein — und öffnet NICHT die Liste',
+  [modus.an, modus.feldAuf], ['an', false]);
+gleich('Das Band steht da: Als Liste · Zurücksetzen · Fertig',
+  [modus.knoepfe, modus.sichtbar], [['Als Liste', 'Zurücksetzen', 'Fertig'], true]);
+p('… und jeder seiner Knöpfe ist ein Fingerziel (§37)', modus.kleinster >= 44, String(modus.kleinster));
+
+/* DER ZUG MIT DER MAUS — das, worum es geht. Das letzte Werkzeug an die
+   erste Stelle. */
+const mitte = (wahl: string) => pg9.evaluate((w: string) => {
+  const k = document.querySelector<HTMLElement>(w);
+  if (!k) return null;
+  const r = k.getBoundingClientRect();
+  return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+}, wahl);
+{
+  const letzte = vorher9.werkzeuge[vorher9.werkzeuge.length - 1]!;
+  const von = await mitte(`.blatt-werk [data-wz="${letzte}"]`);
+  const nach = await mitte(`.blatt-werk [data-wz="${vorher9.werkzeuge[0]}"]`);
+  if (von && nach) {
+    await pg9.mouse.move(von.x, von.y);
+    await pg9.mouse.down();
+    await pg9.mouse.move((von.x + nach.x) / 2, nach.y, { steps: 6 });
+    await pg9.mouse.move(nach.x, nach.y, { steps: 6 });
+    await pg9.mouse.up();
+    await pg9.waitForTimeout(250);
+  }
+  const nachZug = await domFolge(pg9);
+  gleich('Ein Zug mit der Maus setzt das Werkzeug an die neue Stelle',
+    nachZug.werkzeuge[0], letzte);
+  gleich('… und keines ist dabei verlorengegangen',
+    [...nachZug.werkzeuge].sort(), [...vorher9.werkzeuge].sort());
+  gleich('… und es steht in `meta`',
+    await pg9.evaluate(() => (Store.getMeta('zeichnen:ordnung') as any)?.werkzeuge?.[0]), letzte);
+}
+
+/* EIN ZUG AUF EIN ZUBEHÖRTEIL SCHIEBT DIE GANZE GRUPPE. Sechs Stifte
+   einzeln zu schieben wäre keine Bedienung, sondern eine Geduldsprobe. */
+{
+  const vorherG = (await domFolge(pg9)).gruppen;
+  const von = await mitte('.blatt-werk .blatt-strich');
+  const nach = await mitte('.blatt-werk [data-act="stilwahl"]');
+  if (von && nach) {
+    await pg9.mouse.move(von.x, von.y);
+    await pg9.mouse.down();
+    await pg9.mouse.move(nach.x, nach.y, { steps: 8 });
+    await pg9.mouse.up();
+    await pg9.waitForTimeout(250);
+  }
+  const nachG = (await domFolge(pg9)).gruppen;
+  gleich('Ein Zug auf eine Breite schiebt die GANZE Gruppe vor die Stifte',
+    nachG.indexOf('breite') < nachG.indexOf('stil'), true);
+  gleich('… und es sind immer noch zwölf Gruppen', nachG.length, vorherG.length);
+}
+
+/* IM MODUS ZEICHNET NICHTS. Ein Klick greift, er wechselt kein Werkzeug —
+   sonst hätte ein Zug auf den Radierer beim Loslassen radiert. */
+{
+  const vorherTool = await pg9.evaluate(() => document.querySelector<HTMLElement>('.blatt-werk')?.dataset.tool);
+  await pg9.evaluate(() => document.querySelector<HTMLElement>('.blatt-werk [data-wz="radierer"]')?.click());
+  await pg9.waitForTimeout(200);
+  gleich('Ein Klick im Modus wechselt das Werkzeug nicht',
+    await pg9.evaluate(() => document.querySelector<HTMLElement>('.blatt-werk')?.dataset.tool), vorherTool);
+}
+
+/* UND DIE PFEILTASTEN TUN DASSELBE — für jeden, der nicht ziehen kann (§38). */
+{
+  const vorherT = (await domFolge(pg9)).werkzeuge;
+  await pg9.evaluate(() => document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.focus());
+  await pg9.keyboard.press('ArrowLeft');
+  await pg9.waitForTimeout(200);
+  const nachT = (await domFolge(pg9)).werkzeuge;
+  gleich('Pfeil links rückt das Werkzeug eine Stelle nach vorn',
+    nachT.indexOf('stift'), Math.max(0, vorherT.indexOf('stift') - 1));
+  p('… und der Fokus bleibt an ihm',
+    await pg9.evaluate(() => (document.activeElement as HTMLElement)?.dataset?.wz === 'stift'),
+    await pg9.evaluate(() => String((document.activeElement as HTMLElement)?.dataset?.wz)));
+}
+
+/* «Fertig» beendet, und Escape auch. */
+await pg9.evaluate(() => document.querySelector<HTMLElement>('.blatt-ordnen-band [data-ob="fertig"]')?.click());
+await pg9.waitForTimeout(250);
+gleich('«Fertig» beendet den Modus und nimmt das Band weg',
+  await pg9.evaluate(() => [document.querySelector<HTMLElement>('.blatt-werk')?.dataset.ordnen || '(aus)',
+                            !!document.querySelector('.blatt-ordnen-band')]), ['(aus)', false]);
+await pg9.evaluate(() => document.querySelector<HTMLElement>('.blatt-werk [data-act="einrichten"]')?.click());
+await pg9.waitForTimeout(250);
+await pg9.evaluate(() => document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.focus());
+await pg9.keyboard.press('Escape');
+await pg9.waitForTimeout(250);
+gleich('Escape ebenso',
+  await pg9.evaluate(() => document.querySelector<HTMLElement>('.blatt-werk')?.dataset.ordnen || '(aus)'), '(aus)');
+/* Und danach zeichnet die Leiste wieder. */
+await pg9.evaluate(() => document.querySelector<HTMLElement>('.blatt-werk [data-wz="marker"]')?.click());
+await pg9.waitForTimeout(200);
+gleich('Nach dem Modus wechselt ein Klick wieder das Werkzeug',
+  await pg9.evaluate(() => document.querySelector<HTMLElement>('.blatt-werk')?.dataset.tool), 'marker');
+await pg9.context().close();
 
 gleich('Die Seite meldet keinen Fehler', fehler.length, 0);
 if (fehler.length) console.log('   ' + fehler.slice(0, 5).join('\n   '));

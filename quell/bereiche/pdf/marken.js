@@ -4900,6 +4900,193 @@ const Marken = (() => {
                 .observe(tools, { attributes: true, attributeFilter: ['data-tool'] });
         }
         catch { /* ohne Beobachter bleibt die Vorgabe stehen */ }
+        /* ══ IM BAND SELBST SCHIEBEN (E571) ═══════════════════════════════════
+           Redur, 14. September: „kannst du so machen, dass ich direkt im
+           Website ordnen kann — die Position mit der Maus schieben."
+    
+           E570 hat dafür eine Liste gebaut, und die Liste bleibt: sie ist der
+           Weg für die Tastatur, und sie zeigt auch das Zubehör, das gerade
+           nicht zu sehen ist (jedes Werkzeug zeigt nur seine eigenen Gruppen).
+           Was hier dazukommt, ist das, was Redur gemeint hat: den Knopf
+           anfassen und dorthin ziehen, wo er stehen soll — an Ort und Stelle,
+           mit dem Ergebnis unter dem Finger.
+    
+           WAS SICH IM MODUS ÄNDERT
+             · Ein Klick zeichnet nicht mehr, er greift. Der Klickabfänger
+               weiter unten läuft im EINFANG (`capture`), also VOR dem
+               gewöhnlichen — sonst hätte ein Zug auf den Radierer beim
+               Loslassen das Werkzeug gewechselt.
+             · Ein Zug auf ein Werkzeug schiebt das Werkzeug; ein Zug auf
+               irgendeinen Zubehörknopf schiebt seine GANZE Gruppe. Sechs
+               Stifte einzeln zu schieben wäre keine Bedienung, sondern eine
+               Geduldsprobe — und die Reihenfolge innerhalb einer Gruppe ist
+               keine Frage, die jemand hat.
+             · Die Pfeiltasten tun dasselbe wie der Zug, für jeden, der nicht
+               ziehen kann (§38). Escape beendet.
+    
+           VERSCHOBEN WIRD AUF EINE STELLE, NICHT GETAUSCHT. Ein Tausch lässt
+           den Nachbarn springen und die Reihe unter dem Finger flackern; „an
+           diese Stelle setzen" ist die Bewegung, die man meint. */
+        let ordnenAn = false;
+        let zug = null;
+        /** Was unter dem Zeiger liegt — als Werkzeug oder als Gruppe. */
+        const teilUnter = (x, y) => {
+            const knoten = document.elementFromPoint(x, y);
+            const el = knoten instanceof Element
+                ? knoten.closest('[data-wz],[data-gruppe]') : null;
+            if (!el || !tools.contains(el))
+                return null;
+            if (el.dataset.wz)
+                return { art: 'werkzeuge', id: el.dataset.wz };
+            if (el.dataset.gruppe)
+                return { art: 'gruppen', id: el.dataset.gruppe };
+            return null;
+        };
+        /** `id` an die Stelle von `zielId` setzen und überall anwenden. */
+        const setzeAn = (art, id, zielId) => {
+            const o = ordnungLesen();
+            const liste = o[art];
+            const von = liste.indexOf(id), nach = liste.indexOf(zielId);
+            if (von < 0 || nach < 0 || von === nach)
+                return false;
+            liste.splice(von, 1);
+            liste.splice(nach, 0, id);
+            ordnungMerken(o);
+            document.querySelectorAll('.blatt-werk').forEach(ordnungAnwenden);
+            return true;
+        };
+        /** Um eine Stelle rücken — der Weg der Pfeiltasten. */
+        const rueckeUm = (el, schritt) => {
+            const art = el.dataset.wz ? 'werkzeuge' : 'gruppen';
+            const id = String(el.dataset.wz || el.dataset.gruppe || '');
+            const liste = ordnungLesen()[art];
+            const i = liste.indexOf(id);
+            const ziel = liste[i + schritt];
+            if (!ziel || !setzeAn(art, id, ziel))
+                return;
+            /* Der Fokus bleibt am geschobenen Knopf — sonst wäre die zweite
+               Pfeiltaste ins Leere gedrückt. */
+            tools.querySelector(art === 'werkzeuge' ? `:scope > [data-wz="${id}"]` : `:scope > [data-gruppe="${id}"]`)?.focus();
+        };
+        const bandZeigen = (an) => {
+            const reihe = tools.closest('.blatt-reihe');
+            if (!reihe)
+                return;
+            reihe.querySelector('.blatt-ordnen-band')?.remove();
+            if (!an)
+                return;
+            const band = document.createElement('div');
+            band.className = 'blatt-ordnen-band';
+            const wort = document.createElement('span');
+            wort.textContent = 'Ziehen zum Ordnen';
+            const liste = document.createElement('button');
+            liste.type = 'button';
+            liste.dataset.ob = 'liste';
+            liste.textContent = 'Als Liste';
+            liste.title = 'Alles ordnen — auch das Zubehör, das gerade nicht zu sehen ist';
+            const zurueck = document.createElement('button');
+            zurueck.type = 'button';
+            zurueck.dataset.ob = 'zurueck';
+            zurueck.textContent = 'Zurücksetzen';
+            const fertig = document.createElement('button');
+            fertig.type = 'button';
+            fertig.dataset.ob = 'fertig';
+            fertig.textContent = 'Fertig';
+            fertig.className = 'ist-fertig';
+            band.append(wort, liste, zurueck, fertig);
+            reihe.appendChild(band);
+            fertig.focus();
+        };
+        const ordnenSetzen = (an) => {
+            ordnenAn = an;
+            if (an)
+                tools.dataset.ordnen = 'an';
+            else
+                delete tools.dataset.ordnen;
+            bandZeigen(an);
+            if (!an && zug) {
+                zug = null;
+                tools.querySelectorAll('.zieht').forEach(z => z.classList.remove('zieht'));
+            }
+        };
+        /* Der Klickabfänger im Einfang: im Modus greift ein Klick, er zeichnet
+           nicht. Die Knöpfe des Bandes sind davon ausgenommen — sie liegen
+           ausserhalb von `tools`. */
+        tools.addEventListener('click', event => {
+            if (!ordnenAn)
+                return;
+            event.preventDefault();
+            event.stopPropagation();
+        }, true);
+        tools.addEventListener('pointerdown', event => {
+            if (!ordnenAn)
+                return;
+            const el = event.target?.closest('[data-wz],[data-gruppe]');
+            if (!el || !tools.contains(el))
+                return;
+            event.preventDefault();
+            zug = el.dataset.wz
+                ? { art: 'werkzeuge', id: String(el.dataset.wz) }
+                : { art: 'gruppen', id: String(el.dataset.gruppe) };
+            el.classList.add('zieht');
+            const beiZug = (e) => {
+                if (!zug)
+                    return;
+                const ziel = teilUnter(e.clientX, e.clientY);
+                if (!ziel || ziel.art !== zug.art || ziel.id === zug.id)
+                    return;
+                setzeAn(zug.art, zug.id, ziel.id);
+            };
+            const ende = () => {
+                zug = null;
+                tools.querySelectorAll('.zieht').forEach(z => z.classList.remove('zieht'));
+                window.removeEventListener('pointermove', beiZug);
+                window.removeEventListener('pointerup', ende);
+                window.removeEventListener('pointercancel', ende);
+            };
+            window.addEventListener('pointermove', beiZug);
+            window.addEventListener('pointerup', ende);
+            window.addEventListener('pointercancel', ende);
+        }, true);
+        tools.addEventListener('keydown', event => {
+            if (!ordnenAn)
+                return;
+            if (event.key === 'Escape') {
+                ordnenSetzen(false);
+                return;
+            }
+            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')
+                return;
+            const el = event.target?.closest('[data-wz],[data-gruppe]');
+            if (!el || !tools.contains(el))
+                return;
+            event.preventDefault();
+            rueckeUm(el, event.key === 'ArrowRight' ? 1 : -1);
+        }, true);
+        /* Die Knöpfe des Bandes. Sie liegen an der Reihe, nicht an `tools` —
+           deshalb ein eigener Zuhörer, und deshalb fängt der Abfänger sie nicht. */
+        const reiheFuerBand = row;
+        reiheFuerBand.addEventListener('click', event => {
+            const knopf = event.target?.closest('[data-ob]');
+            if (!knopf)
+                return;
+            event.preventDefault();
+            event.stopPropagation();
+            const was = String(knopf.dataset.ob || '');
+            if (was === 'fertig') {
+                ordnenSetzen(false);
+                return;
+            }
+            if (was === 'liste') {
+                void leisteEinrichten();
+                return;
+            }
+            if (was === 'zurueck') {
+                ordnungVergessen();
+                document.querySelectorAll('.blatt-werk').forEach(ordnungAnwenden);
+            }
+        });
+        controls.ordnenUmschalten = () => ordnenSetzen(!ordnenAn);
         /* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
            Bei 390 px ist die Leiste 310 px breit und ihr Inhalt 1059 — von 21
            Knöpfen stehen 15 draussen, alle rechts. Gerollt werden kann sie
@@ -5543,9 +5730,13 @@ const Marken = (() => {
                     return;
                 }
                 if (target.dataset.act === 'einrichten') {
-                    /* Das Feld schreibt selbst in `meta` und legt jede Änderung
-                       sofort auf jede Leiste der Seite — hier bleibt nichts zu tun. */
-                    void leisteEinrichten();
+                    /* DER KNOPF SCHALTET DEN MODUS EIN, er öffnet nicht mehr die
+                       Liste (E571). Redur wollte an Ort und Stelle schieben; die
+                       Liste steht im Band darunter als „Als Liste" und ist damit
+                       einen Tipp entfernt — für die Tastatur und für das Zubehör,
+                       das gerade nicht zu sehen ist. */
+                    if (controls.ordnenUmschalten)
+                        controls.ordnenUmschalten();
                     return;
                 }
                 if (target.dataset.act === 'lage') {

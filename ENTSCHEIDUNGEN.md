@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-550 Entscheidungen, E1 bis E570 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+551 Entscheidungen, E1 bis E571 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -614,6 +614,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E568** — Die Stiftleiste: eine laute Fläche statt sechs; drei Zustände, drei Gestalten; die Farbtupfer sind wieder Tupfer
 * **E569** — Die Kurve war eine Sackgasse: sie fehlte in allen Gruppenregeln; der Wächter prüft jetzt den Katalog statt ein Beispiel daraus
 * **E570** — Die Leiste selbst ordnen: zwei Listen in `meta`, ein Feld zum Ziehen und Rücken; gespeichert wird eine Reihenfolge, kein Katalog
+* **E571** — Im Band selbst schieben: «Einrichten» schaltet einen Modus, in dem jeder Knopf mit der Maus an seinen Platz gezogen wird; die Liste bleibt für die Tastatur
 
 ---
 
@@ -46260,3 +46261,84 @@ G2 ist die lauteste, und das ist richtig so: ohne Abgleich trägt die Leiste,
 was in `meta` steht — auch eine erfundene Kennung, auch eine Dublette, und
 die elf fehlenden Werkzeuge fehlen dann auch in der Leiste. Fünfzehn
 Zusagen fallen gleichzeitig, weil ab da nichts mehr stimmt.
+
+
+E571 — Im Band selbst schieben
+--------------------------------------------------------------------------
+
+Redur, 14. September 2026, unmittelbar nach E570:
+
+> „kannst du so machen das ich direk im website ordnen können, so alles mit
+> desing usw die position mit maus schiebn kanne alles"
+
+E570 hatte dafür eine **Liste** gebaut, mit drei geschriebenen Gründen: die
+Leiste rollt am Telefon, eine Gruppe ist mehrere Knöpfe, und ein Ziehen
+allein ist keine Bedienung (§38). Die Gründe stimmen weiterhin — aber sie
+beantworten eine andere Frage als die, die Redur gestellt hat. Er wollte
+den Knopf **anfassen und dorthin ziehen, wo er stehen soll**, an Ort und
+Stelle, mit dem Ergebnis unter der Hand.
+
+### Was entschieden wurde
+
+**Der Knopf «Einrichten» schaltet jetzt einen Modus im Band ein**, statt
+die Liste zu öffnen. Im Modus:
+
+```txt
+ziehen        ein Werkzeug anfassen  →  das Werkzeug wandert
+              ein Zubehörteil        →  seine GANZE Gruppe wandert
+Pfeiltasten   dasselbe, eine Stelle je Druck
+Klick         greift, zeichnet nicht
+Escape        beendet
+```
+
+Darüber steht ein Band mit **„Als Liste"**, **„Zurücksetzen"** und
+**„Fertig"**. Die Liste aus E570 ist damit einen Tipp entfernt und bleibt,
+wofür sie gebaut wurde: für die Tastatur, und für das Zubehör, das gerade
+nicht zu sehen ist — jedes Werkzeug zeigt ja nur seine eigenen Gruppen.
+
+### Die vier Entscheidungen im Kleinen
+
+**Ein Zug auf einen Zubehörknopf schiebt die Gruppe, nicht den Knopf.**
+Sechs Stifte einzeln zu schieben wäre keine Bedienung, sondern eine
+Geduldsprobe — und in welcher Folge die sechs Stifte untereinander stehen,
+ist keine Frage, die jemand hat.
+
+**Verschoben wird auf eine Stelle, nicht getauscht.** Ein Tausch lässt den
+Nachbarn springen und die Reihe unter dem Finger flackern; „an diese Stelle
+setzen" ist die Bewegung, die man meint.
+
+**Der Klickabfänger läuft im EINFANG** (`capture`), also vor dem
+gewöhnlichen Zuhörer. Sonst hätte ein Zug auf den Radierer beim Loslassen
+das Werkzeug gewechselt — man hätte geordnet und dabei radiert.
+
+**`touch-action:none` gilt nur im Modus.** Sonst wäre die Leiste am Telefon
+nicht mehr zu rollen. Im Modus ist ein Zug ein Zug und kein Rollen — genau
+die Unterscheidung, die ausserhalb des Modus nicht zu treffen ist, und
+damit der Grund, warum es die Liste aus E570 überhaupt gibt.
+
+### Was das Hinsehen korrigiert hat — in die andere Richtung
+
+Auf dem verkleinerten Bild sahen die gestrichelten Ränder **violett** aus,
+und ich war schon dabei, eine Farbe zu suchen, die es gar nicht gab.
+Nachgemessen: `rgb(233, 233, 231)`. Bei vierfacher Vergrösserung sind sie
+eindeutig grau.
+
+Das ist P49 von der anderen Seite: dort hat mich eine Auswertung getäuscht,
+hier ein verkleinertes Bild. **Beide Male war die Zahl am echten Knoten die
+Wahrheit.** Geblieben ist ein echter Befund — 233 auf Weiss ist fast
+nichts, und der gestrichelte Rand ist das Einzige, was sagt „dieser Knopf
+ist jetzt lose". Er heisst jetzt `--text-faint`.
+
+### Was `test523 §9` hält
+
+14 weitere Zusagen, vier Gegenproben **gefahren** (§55.2):
+
+```txt
+G5  den Klickabfänger weglassen       39 grün,  1 rot
+G6  den Zug im Band weglassen         37 grün,  3 rot
+G7  die Pfeiltasten im Modus weglassen 39 grün, 1 rot
+G8  das Band nicht zeigen             24 grün, 16 rot
+```
+
+G8 ist die lauteste, weil das Band auch der Weg zur Liste ist: ohne Band
+kommt keine der acht Zusagen aus E570 mehr an ihr Feld.

@@ -1054,6 +1054,15 @@ Kacheln (Linie · Pfeil · Rechteck · Kreis · Stern).
   „weglassen". Wenn er es will, braucht es einen Weg zurück (ein „Mehr"-Feld)
   und keine Lücke — und dann vorher seine ausdrückliche Zusage, weil dabei
   eine Funktion aus dem Bild verschwindet.
+- **W0b · Im Band selbst schieben** — ERLEDIGT (E571). Redurs Nachsatz zu
+  W0: „direkt im Website ordnen … die Position mit der Maus schieben."
+  «Einrichten» schaltet jetzt einen Modus im Band; die Liste aus W0 steht
+  darin als „Als Liste" und bleibt der Weg für die Tastatur und für das
+  Zubehör, das gerade nicht zu sehen ist.
+  **Offen daran:** der Modus ordnet die ZEICHENLEISTE. Ob Redur auch den
+  Rest der Oberfläche schieben können will — Seitenleiste, Spalten,
+  Kopfzeile —, ist nicht gesagt; das wäre ein eigener Bogen und ein sehr
+  viel grösserer.
 - **W1 · Die Zustands-Grammatik** — ERLEDIGT (E568). Eine laute Fläche statt
   sechs, runde Farbtupfer, sichtbare Gruppen, Rangfolge zwischen Werkzeug
   und Zubehör. Das ist die Grundlage: die Tafel erbt sie unverändert.

@@ -4477,6 +4477,61 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    Papier hinterlässt. */
 .blatt-strich i{display:block; width:18px; background:currentColor; border-radius:999px}
 
+/* ══ ORDNEN AN ORT UND STELLE (E571) ═══════════════════════════════════════
+   Im Modus ist jeder Knopf ein Ding, das man anfassen kann — und das muss
+   man sehen, bevor man es anfasst. Ein gestrichelter Rand sagt „lose";
+   `cursor:grab` sagt es noch einmal für die Maus. Der geschobene Knopf
+   bekommt den Akzentring und hebt sich einen Pixel ab; mehr wäre Zappeln.
+
+   `touch-action:none` NUR IM MODUS: sonst wäre die Leiste am Telefon nicht
+   mehr zu rollen. Im Modus ist ein Zug ein Zug und kein Rollen — das ist
+   genau die Unterscheidung, die ausserhalb des Modus nicht zu treffen wäre
+   (und der Grund, warum es E570 als Liste gibt). */
+.blatt-werk[data-ordnen="an"]{touch-action:none}
+.blatt-werk[data-ordnen="an"] > :is([data-wz],[data-gruppe]){
+  /* `--text-faint` UND NICHT `--line`: nachgemessen war die Linie
+     rgb(233,233,231) — auf der weissen Karte der Leiste ist das fast
+     nichts, und der gestrichelte Rand ist das einzige, was sagt „dieser
+     Knopf ist jetzt lose". Ein mittleres Grau trägt in beiden Themen. */
+  cursor:grab; outline:1px dashed var(--text-faint); outline-offset:-1px;
+  border-radius:8px
+}
+.blatt-werk[data-ordnen="an"] > .blatt-trenn{opacity:.3}
+.blatt-werk[data-ordnen="an"] > .zieht{
+  cursor:grabbing; outline:2px solid var(--accent); outline-offset:-1px;
+  transform:translateY(-1px)
+}
+/* Im Modus zeichnet nichts — auch das Blatt darunter nicht, solange die
+   Leiste die Zeiger hält. Das sagt der Klickabfänger in `marken.ts`; hier
+   steht nur, dass ein Knopf dabei nicht mehr wie ein Schalter aussieht. */
+.blatt-werk[data-ordnen="an"] > :is([data-wz],[data-gruppe]):hover{background:var(--bg-hover)}
+
+/* Das Band mit „Als Liste", „Zurücksetzen" und „Fertig". Es steht ÜBER der
+   Leiste und nicht darin: in der Leiste wäre es vier weitere Knöpfe, die
+   man aus Versehen verschiebt. Absolut gesetzt, damit es die Reihe nicht
+   umbricht — die trägt am Telefon schon einen Umbruch (E179). */
+.blatt-ordnen-band{
+  position:absolute; left:0; right:0; bottom:100%; margin-bottom:6px; z-index:3;
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  padding:7px 10px; border:1px solid var(--line); border-radius:10px;
+  background:var(--bg-card); box-shadow:var(--shadow-2)
+}
+.blatt-ordnen-band > span{flex:1 1 auto; font-size:13px; color:var(--text-dim)}
+.blatt-ordnen-band button{
+  min-height:var(--touch-min); padding:0 14px; border-radius:8px; cursor:pointer;
+  font-size:13.5px; font-weight:600; border:1px solid var(--line);
+  background:none; color:var(--text)
+}
+.blatt-ordnen-band button:hover{background:var(--bg-hover)}
+.blatt-ordnen-band button.ist-fertig{border:0; background:var(--accent); color:var(--auf-accent)}
+@media (max-width:760px){
+  .blatt-ordnen-band > span{flex-basis:100%}
+  .blatt-ordnen-band button{flex:1 1 auto}
+}
+@media (prefers-reduced-motion:reduce){
+  .blatt-werk[data-ordnen="an"] > .zieht{transform:none}
+}
+
 /* ══ DAS FELD „LEISTE EINRICHTEN" (E570) ═══════════════════════════════════
    Zwei Listen, jede Zeile zu greifen oder mit zwei Knöpfen zu rücken. Die
    Knöpfe sind nicht der Notausgang, sondern der Hauptweg — deshalb messen
