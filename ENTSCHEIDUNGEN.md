@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-554 Entscheidungen, E1 bis E574 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+555 Entscheidungen, E1 bis E575 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -618,6 +618,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E572** — Zeichenstudio nach sieben Goodnotes-Referenzen: vollständiger Plan, kontextbezogenes Dock, klare Icons, Dock-Bewegung, sichtbares Lineal und nachprüfbare Grenzen (in Umsetzung; L157)
 * **E573** — Das Lineal lässt den Zeiger durch, die Verlaufskapsel bekommt ihren Platz vom Stilblatt, und das Dock liest die Gruppenliste, statt sie zweitens zu entscheiden
 * **E574** — Das Lineal gehört auch dem Stift; die neun Haftnotizfarben bekommen eine eigene Gruppe und bleiben im Notizkontext
+* **E575** — Ein Feld, das aufgeht, muss auch wieder zugehen; ein Klick darf die Leiste nicht neu aufbauen; und eine Sortierbewegung ist keine Attributänderung
 
 ---
 
@@ -46629,3 +46630,109 @@ die kleinere Störung als vierzehn Tupfer in jedem Werkzeug.
 
 **Prüfläufe:** `test524` 24/24 (davon 18 neu, drei davon vorher rot
 gesehen), `test348` 26/26, `test351` grün.
+
+---
+
+## E575 — Was aufgeht, geht zu; was gleich bleibt, bleibt stehen
+
+**14. September 2026, `codex/zeichenstudio-menues-radierer`** (neuer Zweig
+nach E521, direkt auf dem Stand von E574). Drei Funde aus dem
+Risikoverzeichnis des Übergabeplans, alle drei an der laufenden App
+nachgemessen und vorher rot gesehen.
+
+### Ein Feld, das aufgeht, muss auch wieder zugehen
+
+`InkMenu` kannte genau EINEN Weg nach draussen: sich selbst. Gemessen bei
+1440 × 960: nach `App.oeffne()` einer gewöhnlichen Textseite stand das
+Laserfeld immer noch offen — **380 × 54 Pixel bei 520/159**, schwebend über
+fremdem Text, während `.document-workspace` längst weg war. Sein Anker war
+mit dem Studio aus dem Baum verschwunden, es gab also keinen Knopf mehr, der
+es je hätte schliessen können. Der `resize`-Horcher lief weiter, denn
+abgemeldet wird er nur im `toggle`-Ereignis, und das kommt nie, wenn niemand
+schliesst.
+
+Der Grund ist einfach und deshalb leicht zu übersehen: das Panel hängt an
+`document.body`, nicht am Studio. **Wer die Fläche darunter wegräumt, räumt
+das Panel nicht mit.**
+
+Die naheliegende Lösung wäre gewesen, an jeder Stelle, die das Studio
+abbaut, ein `InkMenu.closeAll()` einzufügen. Das ist genau die Sorte
+Lösung, die beim nächsten neuen Abbauweg wieder bricht — und dieses Projekt
+hat davon schon eine (`blatt-farbe-weg`, siehe E574). Entschieden ist
+deshalb: **das Feld beobachtet seinen Anker.** Verlässt der den Baum, geht
+es zu — ganz gleich, wer ihn weggeräumt hat und ob dieser Weg daran gedacht
+hat. `closeAll()` gibt es zusätzlich, für die, die es wissen.
+
+Der Preis: ein `MutationObserver` auf `document.body` mit `subtree`, solange
+ein Feld offen ist. Er läuft nur in dieser Zeit, und seine Rückmeldung ist
+eine einzige Frage (`anchor.isConnected`).
+
+Dazu zwei kleinere Entscheidungen am selben Ort:
+
+- **Escape gibt den Fokus zurück, ein Aussenklick nicht.** Wer mit Escape
+  oder „×" schliesst, will dort weitermachen, wo er war; wer daneben tippt,
+  wollte dorthin. Vorher entschied das die Frage „steht der Fokus auf
+  `body`?", und die trifft genau dann zu, wenn man auf etwas Unklickbares
+  getippt hat — also im Aussenklick-Fall.
+- **Ein Ersatzweg ohne die native Klappe.** Fehlt `showPopover`, baut
+  `InkMenu` dasselbe von Hand: fester Platz, eigener Escape, eigener
+  Aussenklick. Und er ist keine Zierde — `test524` nimmt `showPopover` aus
+  dem Prototyp und verlangt dasselbe noch einmal. Ein Rückfallweg, den nie
+  jemand betritt, ist eine Behauptung (§50).
+
+**Und die Felder haben endlich ein Aussehen.** `.blatt-popover` hatte bis
+hierher KEINE einzige Regel; die Kästen standen in den Vorgabestilen des
+Browsers da. Jetzt: Kopf mit Namen und 44-px-„×", Zeilen mit
+Trefferfläche, und der gewählte Eintrag sagt es zweimal — Fläche UND Haken
+(§38: keine Information nur über Farbe). Die zwei Laserarten zeigen, was
+sie tun: ein Punkt ist ein Punkt, eine Spur läuft aus.
+
+### Ein Klick darf die Leiste nicht neu aufbauen
+
+`inkSync()` hängte die Werkzeuge der oberen Leiste bei jedem Ruf
+bedingungslos um. `insertBefore` bewegt auch einen Knoten, der schon am
+richtigen Platz steht: erst raus, dann rein. Mit einem Beobachter auf
+`.document-drawingbar` gezählt:
+
+| Tat | Knotenbewegungen |
+|---|---|
+| ein Klick auf „Marker" | **156** |
+| ein Klick auf „Stift" | **156** |
+
+Dreizehn Knöpfe × zwei Bewegungen × sechs Rufe. Der Preis war nicht nur
+Rechenzeit: **nach dem Klick stand `document.activeElement` auf `BODY`** —
+der Knopf war unter dem Finger weggezogen worden. Für die Tastatur heisst
+das: eine Reihe, die man nicht mit Tab durchgehen kann, weil sie den Fokus
+bei jedem Schritt fallen lässt. Und jeder Übergang auf dem Knopf (E568)
+begann von vorn, mitten im Bild.
+
+Jetzt wird zuerst verglichen und nur bei Abweichung umgehängt. Gemessen
+danach: **0 Bewegungen**, Fokus bleibt auf dem angetippten Knopf.
+
+### Eine Sortierbewegung ist keine Attributänderung
+
+Derselbe Griff von der anderen Seite: der Beobachter horchte auf
+`disabled`, `aria-pressed` und `data-tool`. Eine Sortierbewegung (E570/E571)
+ist aber eine `childList`-Änderung — sie kam oben **nie** an. Gemessen: den
+letzten Knopf der unteren Leiste nach vorn gezogen, 600 ms gewartet, obere
+Reihenfolge Zeichen für Zeichen unverändert.
+
+Der einfache Weg — `childList` beim bestehenden Beobachter dazu — wäre
+falsch: der beobachtet `center` mit `subtree`, und dort hängt die
+Zeichenfläche. Jeder Strich hängt Pfade ein, `inkSync()` liefe also mitten
+im Zeichnen bei jedem Bild. Entschieden ist ein **zweiter** Beobachter, der
+nur auf die Leiste selbst horcht, ohne `subtree`; dort sind die Kinder genau
+die Knöpfe, um die es geht. Er wird nachgezogen, wenn die aktive Seite eine
+andere Leiste mitbringt.
+
+### Ein Fund nebenbei: die Messung las die falsche Leiste
+
+Ein Heft mit zwei Blättern hat ZWEI `.blatt-werk`. `document.querySelector`
+nimmt das erste, `inkSync()` aber das der AKTIVEN Seite. Solange beide
+gleich sind, fällt das nie auf. `test524` misst jetzt überall
+`.document-stage[data-aktiv] .blatt-werk` — und genau daran ist die letzte
+Zusicherung zuerst rot geblieben, obwohl der Code schon stimmte.
+
+**Prüfläufe:** `test524` 36/36 (vier davon vorher rot gesehen), `test177`,
+`test228`, `test267`, `test393`, `test437`, `test461`, `test515` grün.
+Die Gesamtsuite ist nicht als grün behauptet.

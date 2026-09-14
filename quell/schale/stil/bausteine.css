@@ -4645,6 +4645,76 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-ruler-grip:focus-visible rect,
 .blatt-ruler-rotate:focus-visible circle{ stroke:var(--accent); stroke-width:2.5 }
 
+
+/* ══ DIE WERKZEUGFELDER DES STUDIOS (E572, gestaltet in E575) ══════════════
+   `InkMenu` baut sie: ein Kopf mit Namen und „×", darunter der Inhalt. Bis
+   E575 hatte `.blatt-popover` KEINE einzige Regel — die Kästen standen in
+   den Vorgabestilen des Browsers da, mit dessen Rand, dessen Innenabstand
+   und dessen Schrift. Das fiel nicht auf, weil ein Popover immer sichtbar
+   ist; es sah nur nicht nach Redion aus.
+
+   `position:fixed` steht hier NICHT umsonst: das native Popover bekommt es
+   ohnehin vom Browser, der Ersatzweg (`.blatt-popover-ersatz`, für Browser
+   ohne die Klappe) aber nicht — und ohne ihn stünde das Feld irgendwo im
+   Textfluss am Ende der Seite. */
+.blatt-popover{
+  position:fixed; margin:0; padding:0; overflow:auto; overscroll-behavior:contain;
+  border:1px solid var(--line); border-radius:var(--radius-xl);
+  background:var(--bg-card); color:var(--text); box-shadow:var(--shadow-3)
+}
+.blatt-popover::backdrop{ background:transparent }
+/* Ohne die native Klappe gibt es keine oberste Ebene — dann muss die Zahl
+   es tun. Sie steht über allem, was das Studio aufbaut, und unter nichts. */
+.blatt-popover-ersatz{ z-index:9000 }
+.blatt-popover>header{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  position:sticky; top:0; z-index:1; background:var(--bg-card);
+  padding:8px 8px 8px 14px; border-bottom:1px solid var(--line)
+}
+.blatt-popover>header strong{ font-size:.95rem; font-weight:600 }
+/* 44 px, weil „schliessen" ein Hauptweg ist (§37) — auch am Rechner, wo der
+   Kasten mit dem Finger auf einem Tablet getroffen wird. */
+.blatt-popover>header button{
+  min-width:var(--touch-min); min-height:var(--touch-min);
+  display:flex; align-items:center; justify-content:center;
+  border:0; border-radius:10px; background:transparent; color:var(--text-dim);
+  font-size:1.35rem; line-height:1; cursor:pointer
+}
+.blatt-popover>header button:hover{ background:var(--bg-hover); color:var(--text) }
+.blatt-popover>header button:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+.blatt-popover-body{ display:flex; flex-direction:column; gap:6px; padding:10px 12px 12px }
+/* Die Zeilen im Feld: Radiermodi, Laserarten — alles, was `InkMenu` als
+   Knopfliste einhängt. Eine Zeile, kein Gitter: die Namen sind verschieden
+   lang, und nebeneinander stünden sie krumm. */
+.blatt-popover-body>button{
+  display:flex; align-items:center; gap:10px;
+  min-height:var(--touch-min); padding:0 12px; width:100%;
+  border:1px solid transparent; border-radius:12px;
+  background:transparent; color:var(--text); font:inherit; font-size:.95rem;
+  text-align:left; cursor:pointer
+}
+.blatt-popover-body>button:hover{ background:var(--bg-hover) }
+.blatt-popover-body>button:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+/* DER GEWÄHLTE SAGT ES ZWEIMAL (§38): mit der Fläche UND mit dem Haken.
+   „Keine Information nur über Farbe" ist hier kein Formsatz — die zwei
+   Laserarten unterscheiden sich sonst um nichts als ein Wort. */
+.blatt-popover-body>button[aria-pressed="true"]{
+  border-color:var(--accent);
+  background:color-mix(in srgb, var(--accent) 14%, transparent)
+}
+.blatt-popover-body>button[aria-pressed="true"]::after{
+  content:'✓'; margin-left:auto; color:var(--accent); font-size:1rem
+}
+/* Die zwei Laserarten zeigen, was sie tun (E512): ein Punkt ist ein Punkt,
+   eine Spur läuft aus. Das `<i>` ist leer — es trägt nur die Zeichnung. */
+.blatt-laser-options i{
+  flex:0 0 auto; width:34px; height:14px; border-radius:7px;
+  background:radial-gradient(circle at 50% 50%, #ff4d4d 0 5px, transparent 5px)
+}
+.blatt-laser-options [data-laser-option="linie"] i{
+  background:linear-gradient(90deg, rgba(255,77,77,0) 0%, rgba(255,77,77,.35) 45%, #ff4d4d 100%);
+  height:6px; margin-block:4px
+}
 .blatt-marken{position:absolute; inset:0; width:100%; height:100%; z-index:2;
               color:#111; touch-action:none}
 /* AM TELEFON WIRD GEROLLT, NICHT GESTAPELT — und das ist ein Fund vom Bild,

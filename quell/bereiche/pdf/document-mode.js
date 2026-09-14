@@ -2607,6 +2607,34 @@ const DocumentMode = (() => {
         if (typeof Register !== 'undefined')
             Register.symbole.fuelle(drawingbar);
         const inkToolbar = () => staende[state.index]?.querySelector('.blatt-werk') || null;
+        /* ══ EINE SORTIERBEWEGUNG IST KEINE ATTRIBUTÄNDERUNG (E575) ═════════════
+           Der Beobachter darüber horcht auf `disabled`, `aria-pressed` und
+           `data-tool` — und genau deshalb kam eine Sortierbewegung oben NIE an:
+           sie ist eine `childList`-Änderung. Gemessen: den letzten Knopf der
+           unteren Leiste nach vorn gezogen, 600 ms gewartet, obere Reihenfolge
+           Zeichen für Zeichen unverändert.
+           WARUM NICHT EINFACH `childList` OBEN DAZU: `center` enthält die
+           Zeichenfläche. Jeder Strich hängt dort Pfade ein, und `inkSync()`
+           liefe dann mitten im Zeichnen bei jedem Bild. Der zweite Beobachter
+           horcht deshalb nur auf die Leiste selbst, ohne `subtree` — dort sind
+           die Kinder genau die Knöpfe, um die es geht. Er wird umgehängt, wenn
+           die aktive Seite eine andere Leiste mitbringt. */
+        let beobachtet = null;
+        const ordnungObserver = new MutationObserver(() => {
+            if (!workspace.isConnected) {
+                ordnungObserver.disconnect();
+                return;
+            }
+            inkSync();
+        });
+        const ordnungBeobachten = () => {
+            const source = inkToolbar();
+            if (!source || source === beobachtet)
+                return;
+            ordnungObserver.disconnect();
+            ordnungObserver.observe(source, { childList: true });
+            beobachtet = source;
+        };
         const inkSync = () => {
             if (!workspace.isConnected) {
                 Zeichenziel.vergiss(inkSync);
@@ -2614,12 +2642,29 @@ const DocumentMode = (() => {
             }
             const source = inkToolbar();
             source?.dispatchEvent(new Event('ink-studio-ready'));
-            // Die benutzereigene Reihenfolge gilt auch oben (§8/E570).
-            source?.querySelectorAll(':scope > [data-wz]').forEach(real => {
-                const button = drawingbar.querySelector(`[data-document-tool="${real.dataset.wz}"]`);
-                if (button)
-                    drawingbar.insertBefore(button, rulerButton);
-            });
+            /* ══ NUR UMHÄNGEN, WENN SICH WIRKLICH ETWAS GEÄNDERT HAT (E575) ═══════
+               Hier stand dasselbe `insertBefore` ohne Bedingung. `insertBefore`
+               BEWEGT auch einen Knoten, der schon am richtigen Platz steht: erst
+               raus, dann rein. Gemessen mit einem Beobachter auf der oberen
+               Leiste ergab ein einziger Klick auf ein Werkzeug **156
+               Knotenbewegungen** — dreizehn Knöpfe mal zwei Bewegungen mal sechs
+               Rufe von `inkSync()`.
+               Der Preis war nicht nur Rechenzeit. Ein bewegter Knoten verliert
+               den Fokus: nach dem Klick stand `document.activeElement` auf
+               `BODY`, der Knopf war also unter dem Finger weggezogen worden. Und
+               jeder Übergang auf ihm (E568: der Wechsel der Auswahl) begann von
+               vorn, mitten im Bild.
+               Jetzt wird zuerst verglichen und nur bei Abweichung umgehängt. Die
+               benutzereigene Reihenfolge (§8/E570) gilt unverändert — sie kommt
+               nur ohne Neuaufbau an. */
+            const wunsch = Array.from(source?.querySelectorAll(':scope > [data-wz]') || [])
+                .map(real => drawingbar.querySelector(`[data-document-tool="${real.dataset.wz}"]`))
+                .filter((button) => !!button);
+            const jetzt = Array.from(drawingbar.querySelectorAll(':scope > [data-document-tool]'))
+                .filter(button => wunsch.includes(button));
+            if (wunsch.some((button, index) => button !== jetzt[index])) {
+                wunsch.forEach(button => drawingbar.insertBefore(button, rulerButton));
+            }
             const realRuler = source?.querySelector('[data-act="lineal"]');
             rulerButton.disabled = !canAnnotate || !realRuler;
             rulerButton.setAttribute('aria-pressed', realRuler?.getAttribute('aria-pressed') || 'false');
@@ -2635,6 +2680,8 @@ const DocumentMode = (() => {
                 if (button)
                     button.disabled = !canAnnotate || !real || real.disabled;
             }
+            /* Die Leiste der aktiven Seite ist nicht immer dieselbe — nachziehen. */
+            ordnungBeobachten();
         };
         Zeichenziel.horche(inkSync);
         // History state is published on the existing controls via disabled attrs.
