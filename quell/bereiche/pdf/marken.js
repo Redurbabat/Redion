@@ -1052,7 +1052,21 @@ const Marken = (() => {
         if (!element)
             return null;
         if (art !== 'text') {
-            element.setAttribute('fill', 'none');
+            /* ══ EINE FÜLLUNG, WENN DIE MARKE EINE MITBRINGT (E565) ═════════════
+               Geschlossene Formen waren bis hierher IMMER leer — „die Fläche
+               bleibt optisch leer" steht ein paar Zeilen tiefer, und für einen
+               von Hand gezogenen Rahmen ist das richtig.
+      
+               Eine eingelesene Tabellenzelle ist es nicht: PowerPoint gibt
+               Kopfzeilen gern eine dunkle Füllung und schreibt weiss hinein.
+               Ohne die Füllung stünde weisser Text auf weissem Grund — derselbe
+               Fall wie bei E558, nur eine Ebene tiefer.
+      
+               NUR WENN DAS FELD DA IST. Jede Marke ohne `fuellung` bleibt
+               wörtlich, was sie war; geprüft wird der Wert wie in `blatt.ts`,
+               denn er kommt aus einer Datei und geht in einen Stil (§19). */
+            const fuellung = String(mark.fuellung || '');
+            element.setAttribute('fill', /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(fuellung) ? fuellung : 'none');
             element.setAttribute('stroke', color);
             element.setAttribute('stroke-width', String(width));
             element.setAttribute('stroke-linecap', 'round');

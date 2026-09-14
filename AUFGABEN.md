@@ -875,9 +875,10 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   das Farbthema aufgelöst (E559), die Ausrichtung gelesen UND bedienbar
   gemacht (E560), **gemischte Läufe innerhalb eines Absatzes (E561)**.
   Was jetzt noch fehlt, steht in L151 und ist kleiner als das Erledigte:
-  Tabellen als Tabellenblock, Blocksatz, Spiegelung, die Drehung einer
-  GRUPPE. L155 (die zu niedrige Breitenschätzung, gefunden bei E561) ist mit
-  **E562** geschlossen, die Drehung mit **E563**.
+  Blocksatz, Spiegelung, die Drehung einer GRUPPE, Diagramme, Zellränder.
+  L155 (die zu niedrige Breitenschätzung, gefunden bei E561) ist mit
+  **E562** geschlossen, die Drehung mit **E563**, die Tabellen mit **E565** —
+  als Gitter auf der Folie, nicht als Tabellenblock (der Grund steht dort).
 - **O4 · Folien bearbeiten** — ZUR HÄLFTE (E546). Zwei Sachen sind erledigt:
   - Das ZEIGEN einer Folie ändert sie nicht mehr. `Blatt.zeichne` legte für
     jedes Blatt ohne Textkinder eine leere Zeile AN — bei 27 eingelesenen

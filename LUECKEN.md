@@ -7471,10 +7471,16 @@ verloren hält:
   Blocksatz**: `just` und `dist` kommen linksbündig an, weil die
   Markenschicht keine gestreckten Wortabstände kann. Links ist die Kante,
   die der Blocksatz mit ihr teilt; zentriert wäre an jeder Zeile falsch.
-- **Tabellen (`a:tbl`) und Diagramme.** Beide werden übersprungen — sie haben
-  in der Markenschicht kein Gegenstück. **Seit E555 werden sie wenigstens
-  GENANNT**: der Hinweis nach dem Einlesen sagt „NICHT übernommen:
-  1 Tabellen". Ein fremder Zeichner hätte beides auf einen Schlag gelöst;
+- ~~**Tabellen (`a:tbl`)**~~ **GESCHLOSSEN mit E565**: eine Tabelle kommt als
+  Gitter auf die Folie — ein Rechteck und ein Text je Zelle, mit Zellfüllung,
+  Textfarbe und `gridSpan`. Sie wird bewusst KEIN Tabellenblock: eine Folie
+  ist ein Blatt mit Marken, und die Tabelle herauszunehmen hiesse, die Folie
+  anders aussehen zu lassen als das Original.
+  **Offen bleiben davon**: Zellränder mit eigener Farbe und Stärke
+  (`a:lnL`/`a:lnR`/…) und `vMerge` über mehrere Zeilen, wenn kein `rowSpan`
+  dabeisteht.
+- **Diagramme.** Werden weiter übersprungen und genannt („NICHT übernommen:
+  1 Diagramme"). Ein fremder Zeichner hätte sie auf einen Schlag gelöst;
   Redur hat ihn am 13. September abgelehnt (**E564**), und die Gründe stehen
   dort. Der Weg ist damit: selbst lesen, und wer es exakt sehen will, nimmt
   den PDF-Weg.

@@ -1068,5 +1068,5 @@ Der zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glaskno
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 43 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 44 Einträge.
 

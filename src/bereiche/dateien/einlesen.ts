@@ -1148,6 +1148,97 @@ const Einlesen = (() => {
   };
 
   /**
+   * EINE TABELLE ALS MARKEN AUF DER FOLIE (E565).
+   *
+   * Redion hat einen Tabellenblock — aber eine Folie ist ein BLATT mit
+   * Marken, kein Editor. Die Tabelle zum Block zu machen hiesse, sie von
+   * der Folie zu nehmen und woanders hinzulegen; die Folie sähe dann anders
+   * aus als das Original, und genau das war der Sinn der letzten acht Bögen.
+   * Also bleibt sie, wo sie ist: als Gitter aus Rechtecken und einem Text je
+   * Zelle. Sie später als Datenbank HERAUSZUZIEHEN wäre eine eigene
+   * Handlung und eine eigene Entscheidung.
+   *
+   * ─── DIE MASSE STEHEN IM GITTER, NICHT AN DEN ZELLEN ─────────────────
+   *     <a:tblGrid><a:gridCol w="2743200"/>…   Spaltenbreiten in EMU
+   *     <a:tr h="370840">                      Zeilenhöhe in EMU
+   * Eine Zelle hat keine eigene Lage. Sie ergibt sich aus der Summe der
+   * Spalten links von ihr und der Zeilen über ihr — und deshalb muss die
+   * Schleife mitzählen statt zu fragen.
+   *
+   * ─── VERBUNDENE ZELLEN ──────────────────────────────────────────────
+   * `gridSpan` sagt, über wie viele Spalten eine Zelle geht; `hMerge` und
+   * `vMerge` markieren die VERSCHLUCKTEN Nachbarn. Die werden übersprungen —
+   * ein Rechteck darüber wäre ein Strich mitten durch die verbundene Zelle.
+   * `rowSpan` wird gelesen, damit die Zelle hoch genug wird.
+   */
+  const tabelleLesen = (frame: Element, thema: Thema, grund: string): any[] => {
+    const tbl = frame.getElementsByTagName('a:tbl')[0];
+    if (!tbl) return [];
+    /* EIN `p:graphicFrame` TRÄGT `p:xfrm`, NICHT `a:xfrm`. Derselbe Inhalt,
+       ein anderer Namensraum — `formLage` findet ihn deshalb nicht. */
+    const xfrm = frame.getElementsByTagName('p:xfrm')[0]
+              || frame.getElementsByTagName('a:xfrm')[0];
+    const off = xfrm?.getElementsByTagName('a:off')[0];
+    if (!off) return [];
+    const x0 = emuZuPunkt(off.getAttribute('x'));
+    const y0 = emuZuPunkt(off.getAttribute('y'));
+
+    const spalten = [...tbl.getElementsByTagName('a:gridCol')]
+      .map(c => emuZuPunkt(c.getAttribute('w')));
+    if (!spalten.length) return [];
+
+    const raus: any[] = [];
+    const zeilen = [...tbl.getElementsByTagName('a:tr')];
+    let y = y0;
+    for (let r = 0; r < zeilen.length; r++) {
+      const tr = zeilen[r]!;
+      const hoehe = emuZuPunkt(tr.getAttribute('h')) || 20;
+      let x = x0;
+      let c = 0;
+      for (const tc of [...tr.children].filter(k => k.tagName === 'a:tc')) {
+        const breite = spalten[c] ?? 0;
+        /* Eine verschluckte Zelle bekommt kein Rechteck — sonst liefe ein
+           Strich mitten durch die verbundene. Ihre Breite zählt trotzdem. */
+        if (tc.getAttribute('hMerge') === '1' || tc.getAttribute('vMerge') === '1') {
+          x += breite; c++; continue;
+        }
+        const spanne = Math.max(1, Number(tc.getAttribute('gridSpan')) || 1);
+        let voll = 0;
+        for (let i = 0; i < spanne; i++) voll += spalten[c + i] ?? 0;
+        const reihen = Math.max(1, Number(tc.getAttribute('rowSpan')) || 1);
+        let hoch = 0;
+        for (let i = 0; i < reihen; i++)
+          hoch += emuZuPunkt(zeilen[r + i]?.getAttribute('h')) || hoehe;
+
+        const tcPr = [...tc.children].find(k => k.tagName === 'a:tcPr');
+        const fuell = tcPr ? [...tcPr.children].find(k => k.tagName === 'a:solidFill') : undefined;
+        const fuellung = farbeAus(fuell, thema);
+
+        raus.push({ art: 'rectangle', x, y, w: voll, h: hoch,
+                    farbe: '#9aa3ad', ...(fuellung ? { fuellung } : {}) });
+
+        const txBody = tc.getElementsByTagName('a:txBody')[0];
+        const absaetze = txBody ? absaetzeLesen(txBody, thema) : [];
+        const text = absaetze.map(a => a.text).join('\n').trim();
+        if (text) {
+          const a0 = absaetze.find(a => a.text.trim()) || absaetze[0]!;
+          /* Der Rand der Zelle: PowerPoints Vorgabe sind 0,1 Zoll links und
+             rechts, 0,05 oben und unten — 7,2 bzw. 3,6 Punkt. */
+          raus.push({ art: 'text', text,
+                      x: x + 7.2, y: y + 3.6,
+                      breiteBox: Math.max(12, voll - 14.4),
+                      fontSize: a0.sz || 12, fett: a0.fett,
+                      ...((a0.farbe || grund) ? { farbe: a0.farbe || grund } : {}),
+                      ...(a0.ausricht ? { ausricht: a0.ausricht } : {}) });
+        }
+        x += voll; c += spanne;
+      }
+      y += hoehe;
+    }
+    return raus;
+  };
+
+  /**
    * Die DREHUNG einer Form, in Grad im Uhrzeigersinn (E563).
    *
    * `a:xfrm@rot` steht in 60000steln Grad: 5400000 sind 90°. Die Richtung
@@ -1730,9 +1821,25 @@ const Einlesen = (() => {
           await formenLesen(form.children, innen, tiefe + 1);
           continue;
         }
-        /* ── Tabelle und Diagramm: noch nicht, aber NICHT still (E555) ── */
+        /* ── Tabelle: als Gitter auf der Folie (E565). Diagramm: noch
+              nicht, aber NICHT still (E555). ────────────────────────────── */
         if (form.tagName === 'p:graphicFrame') {
-          merkeWeg(form.getElementsByTagName('a:tbl').length ? 'Tabellen' : 'Diagramme');
+          if (form.getElementsByTagName('a:tbl').length) {
+            const zellen = tabelleLesen(form, thema, standardTinte);
+            if (zellen.length) {
+              /* DIE ABBILDUNG DER GRUPPE GILT AUCH HIER. Eine Tabelle kann
+                 in einer Gruppe liegen; `abbilden` rechnet dann jede Zelle
+                 mit, statt dass die Tabelle als einzige danebenläge. */
+              for (const z of zellen) {
+                const l = abbilden({ x: z.x, y: z.y, w: z.w ?? z.breiteBox ?? 0, h: z.h ?? 0 }, ab);
+                if (!l) continue;
+                z.x = l.x; z.y = l.y;
+                if (z.w !== undefined) { z.w = l.w; z.h = l.h; }
+                else z.breiteBox = Math.max(12, l.w);
+                objekte.push(z);
+              }
+            } else merkeWeg('Tabellen');
+          } else merkeWeg('Diagramme');
           continue;
         }
         /* ── Textkasten ──────────────────────────────────────────────── */
@@ -2210,6 +2317,22 @@ const Einlesen = (() => {
             marken.push({ id, art: 'abdeck', farbe: o.farbe, schritt: o.schritt,
               ...(o.verlauf ? { verlauf: o.verlauf } : {}),
               ...(o.dreh ? { dreh: o.dreh } : {}),
+              pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
+            continue;
+          }
+          if (o.art === 'rectangle') {
+            /* EINE TABELLENZELLE (E565).
+               Dieser Zweig muss VOR dem Bildzweig stehen. Die Schleife hat
+               keinen Auffangfall: was weder Text noch Abdeckung ist, gilt
+               als Bild. Beim ersten Lauf sass die Prüfung versehentlich IM
+               Abdeckzweig — die Zellen fielen durch, landeten im Bildzweig
+               und legten zehn leere Anhänge an. Der Hinweis sagte dann
+               „10 Bilder aus 1 Dateien", und auf dem Blatt fehlte das Gitter.
+
+               Wie bei Abdeckung und Bild bleibt hier die Erlaubnisliste —
+               nur sind es weniger Felder. */
+            marken.push({ id, art: 'rectangle', farbe: o.farbe,
+              ...(o.fuellung ? { fuellung: o.fuellung } : {}),
               pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
             continue;
           }

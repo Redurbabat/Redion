@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-544 Entscheidungen, E1 bis E564 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+545 Entscheidungen, E1 bis E565 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -608,6 +608,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E562** — Textbreite wird im Browser exakt gemessen statt geschätzt; die Tabelle bleibt der Rückfall für Node
 * **E563** — Drehung: `a:xfrm@rot` kommt an — für Text, Bild und Abdeckung. Sie erbt NICHT vom Layout
 * **E564** — Kein fremder PowerPoint-Zeichner. Redion liest `.pptx` selbst; wer es exakt sehen will, nimmt den PDF-Weg
+* **E565** — Tabellen kommen als Gitter auf die Folie, nicht als Tabellenblock — und geschlossene Marken bekommen eine Füllung
 
 ---
 
@@ -45571,3 +45572,98 @@ und wenn der Abstand gross ist, gilt das Bedenken oben weniger als das,
 was er auf dem Bildschirm sieht.
 
 Bis dahin: weiter am eigenen Leser. Als Nächstes die Tabellen.
+
+
+E565 — Tabellen als Gitter auf der Folie
+--------------------------------------------------------------------------
+
+Der letzte grosse Posten aus L151. Eine Tabelle wurde übersprungen und nur
+GENANNT — „NICHT übernommen: 1 Tabellen" (E555).
+
+### Warum kein Tabellenblock
+
+Redion **hat** einen Tabellenblock, und die naheliegende Antwort wäre, eine
+PowerPoint-Tabelle zu einem zu machen. Sie ist falsch: eine Folie ist ein
+BLATT mit Marken, kein Editor. Die Tabelle zum Block zu machen hiesse, sie
+von der Folie zu nehmen und woanders hinzulegen — die Folie sähe dann anders
+aus als das Original, und genau das war der Sinn von E555 bis E563.
+
+Also bleibt sie, wo sie ist: ein Rechteck und ein Text je Zelle. Sie später
+als Datenbank **herauszuziehen** wäre eine eigene Handlung und eine eigene
+Entscheidung — aber nicht der Weg, auf dem die Datei hereinkommt.
+
+### Die Masse stehen im Gitter, nicht an den Zellen
+
+```txt
+<a:tblGrid><a:gridCol w="2286000"/>×3     je 180 pt
+<a:tr h="457200">                          je  36 pt
+<p:xfrm><a:off x="914400" y="1143000"/>  =  (72, 90) pt
+```
+
+Eine Zelle hat **keine eigene Lage**. Sie ergibt sich aus der Summe der
+Spalten links von ihr und der Zeilen über ihr — die Schleife muss also
+mitzählen statt zu fragen.
+
+Und ein `p:graphicFrame` trägt `p:xfrm`, nicht `a:xfrm`: derselbe Inhalt,
+ein anderer Namensraum. `formLage` findet ihn nicht.
+
+### Verbundene Zellen
+
+`gridSpan` sagt, über wie viele Spalten eine Zelle geht. `hMerge` und
+`vMerge` markieren die **verschluckten** Nachbarn — die bekommen kein
+Rechteck, sonst liefe ein Strich mitten durch die verbundene Zelle. Gemessen:
+zehn Rechtecke, nicht zwölf.
+
+### Eine Füllung für geschlossene Marken
+
+Geschlossene Formen waren bis hierher immer leer — „die Fläche bleibt
+optisch leer" steht im Zeichner, und für einen von Hand gezogenen Rahmen ist
+das richtig. Eine eingelesene Tabellenzelle ist es nicht: PowerPoint gibt
+Kopfzeilen gern eine dunkle Füllung und schreibt weiss hinein. **Ohne die
+Füllung stünde weisser Text auf weissem Grund** — derselbe Fall wie E558,
+eine Ebene tiefer.
+
+Also trägt eine Marke jetzt optional `fuellung`. Jede Marke ohne das Feld
+bleibt wörtlich, was sie war; der Wert wird wie in `blatt.ts` als Hex
+geprüft, bevor er in einen Stil geht (§19).
+
+### Der Fehler, den diese Suite festhält
+
+Die Schleife, die aus Objekten Marken baut, hat **keinen Auffangfall**: was
+weder Text noch Abdeckung ist, gilt als Bild. Beim ersten Lauf sass die
+Rechteckprüfung versehentlich IM Abdeckzweig. Die zehn Zellen fielen durch,
+landeten im Bildzweig und legten **zehn leere Anhänge** an:
+
+```txt
+„1 Folien übernommen, 10 Bilder aus 1 Dateien"
+```
+
+Auf dem Blatt fehlte das Gitter, und in der Ablage lagen zehn Dateien, die
+niemand wollte. Gefunden hat es nicht eine Zusage, sondern eine Probe, die
+ich VOR den Zusagen gefahren habe — das Bild zeigte kein Gitter, und die
+Frage „warum" führte zum Hinweis (P40: erst hinsehen, dann die Zusage bauen).
+
+`test519` §4 misst seither genau das, und die Gegenprobe G5 fährt es noch
+einmal.
+
+### Was `test519` hält
+
+26 Zusagen, fünf Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  Tabellen überspringen         6 grün, 20 rot
+G2  `gridSpan` ignorieren        23 grün,  3 rot  (540 → 180)
+G3  `hMerge` nicht überspringen  22 grün,  4 rot  (zwölf statt zehn)
+G4  die Füllung weglassen        24 grün,  2 rot
+G5  Rechteckzweig hinter Bild    24 grün,  2 rot  („10 Bilder aus 1 Dateien")
+```
+
+Bild: `bilder/pptx-tabelle.png` — dunkelblaue Kopfzeile mit weisser Schrift,
+eine gebänderte Zeile, und eine Zelle über alle drei Spalten mit eigener
+Füllung.
+
+**Was offen bleibt:** Diagramme (werden weiter genannt, nicht gezeichnet),
+Zellränder mit eigener Farbe und Stärke (`a:lnL`/`a:lnR`/…), und `vMerge`
+über mehrere Zeilen zeichnet die verbundene Zelle nur so hoch, wie `rowSpan`
+sagt — steht `rowSpan` nicht dort, sondern nur `vMerge` am Nachbarn, bleibt
+sie einzeilig.

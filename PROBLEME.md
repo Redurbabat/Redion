@@ -57,6 +57,7 @@ sind der teuerste Teil und der lehrreichste.
 | P41 | 2026-09-13 | Gemessen — am falschen Knoten | 🟡 klein | E561 |
 | P42 | 2026-09-13 | Die Zusage wurde gruen, weil die Liste leer war | 🟠 mittel | E562 |
 | P43 | 2026-09-13 | Die Zusage zeigte auf den Code, und schuld war mein Pruefstueck | 🟡 klein | E563 |
+| P44 | 2026-09-14 | Zehn Tabellenzellen wurden zu zehn leeren Anhaengen | 🟠 mittel | E565 |
 
 ---
 
@@ -933,4 +934,27 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** 17 gruen. Und die Gegenproben G1/G2 werden mit 9 roten Zusagen rot — die Abdeckung ist jetzt eine davon.
 
 **Die Lehre.** §45/E21 („nachsehen, nicht erinnern") gilt auch fuer die PRUEFDATEI. Ein Pruefstueck, das ich aus dem Kopf baue, ist genauso eine Behauptung wie eine erinnerte Schnittstelle — nur faellt es staerker auf die Fuesse, weil die rote Zusage dann auf den Code zeigt, der recht hat. Beim dritten solchen Fall in dieser Sitzung (P32, P41, P43) ist das Muster deutlich: bevor ich einem roten Lauf glaube, pruefe ich, ob MEINE Seite der Messung stimmt.
+
+
+---
+
+## P44 · Zehn Tabellenzellen wurden zu zehn leeren Anhaengen
+
+*2026-09-14 · 🟠 mittel · E565*
+
+**Das Bild.** Auf dem Bild stand der Tabellentext, aber kein Gitter und keine Fuellung. Der Hinweis sagte: „1 Folien uebernommen, 10 BILDER aus 1 Dateien".
+
+**Die falsche Vermutung.** Dass die Rechtecke gezeichnet, aber unsichtbar seien — Strichstaerke null oder Fuellung `none`. Ich habe zuerst `strokeWidth` nachgelesen; die Vorgabe ist 2,4, also waeren sie sichtbar gewesen.
+
+**Wie es gefunden wurde.** Statt weiter im Zeichner zu suchen, nachgemessen, WAS das Blatt ueberhaupt traegt. Die Antwort war eindeutig: `arten` enthielt „bild" zehnmal und „rectangle" null mal.
+
+**Die Ursache.** Mein neuer Zweig `if (o.art === 'rectangle')` war beim Einsetzen IM Abdeckzweig gelandet, nicht daneben. Damit lief er nie — und die Schleife hat keinen Auffangfall: was weder Text noch Abdeckung ist, gilt als Bild. Jede Zelle ging durch `Dateien.ablegen` und legte einen leeren Anhang an.
+
+**Die Lösung.** Den Zweig VOR den Bildzweig gesetzt, mit einem Kommentar, der sagt, dass die Schleife keinen Auffangfall hat — sonst passiert es dem Naechsten mit der naechsten Markenart wieder.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** test519 §4 misst es: der Hinweis darf keine Bilder nennen, und es darf keine Bildmarke geben. Die Gegenprobe G5 setzt den Zweig hinter den Bildzweig und liefert wieder „10 Bilder aus 1 Dateien".
+
+**Die Lehre.** Zwei Dinge. Erstens: eine Schleife OHNE Auffangfall ist ein stiller Trichter — alles Unbekannte laeuft in den letzten Zweig, und der war hier ausgerechnet der, der Dateien anlegt. Zweitens, und das zaehlt mehr: ich habe das Bild gemacht, BEVOR ich die Zusagen geschrieben habe (P40), und nur deshalb ist es aufgefallen. Haette ich zuerst die Zusagen gebaut, haette ich sie nach dem gebaut, was ich zu pruefen gedacht habe — und „legt diese Aenderung heimlich Anhaenge an" waere nicht darunter gewesen.
 
