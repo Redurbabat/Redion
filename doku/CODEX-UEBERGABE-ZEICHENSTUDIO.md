@@ -441,3 +441,62 @@ die Gestaltung im engeren Sinn und die Zoomgrenze aus Abschnitt 8.
 
 **Die Gesamtsuite ist NICHT als grün behauptet.** Sie wurde nicht vollständig
 gefahren; `test290` ist bekannt rot.
+
+---
+
+## 14. Umsetzungsstand, zweiter Bogen — Zweig `codex/zeichenstudio-menues-radierer`
+
+Nach E521 („ein Zweig, ein Push, dann ein neuer") beginnt hier ein frischer
+Zweig, genau auf dem Stand von E574. Der alte bleibt stehen, wo er steht.
+
+### Abschnitt 8 des Plans — die Risikoliste, abgearbeitet
+
+| Risiko aus Abschnitt 8 | Ergebnis |
+|---|---|
+| `InkMenu` ohne Fallback auf `showPopover`/`hidePopover` | ✅ Ersatzweg gebaut **und begangen**: `test524` nimmt `showPopover` aus dem Prototyp und verlangt dasselbe noch einmal |
+| Menüs müssen bei Seitenwechsel und Verlassen des Studios schliessen | ✅ Das Feld beobachtet seinen Anker. Gemessen vorher: 380 × 54 px offen über einer fremden Textseite |
+| Keine verwaisten Listener/Overlays | ✅ `resize`, `keydown`, `pointerdown` und der Beobachter werden in einem einzigen, idempotenten `ende()` abgeräumt |
+| Fokus-Rückgabe bei Escape versus Aussenklick | ✅ Escape und „×" geben zurück, ein Aussenklick nicht — vorher entschied das „steht der Fokus auf `body`?", und das trifft genau im Aussenklick-Fall zu |
+| `inkSync()` hängt Knöpfe um — Fokus und Animation prüfen | ✅ Gemessen 156 Bewegungen je Klick und `activeElement === BODY`; jetzt 0 und der Knopf behält den Fokus |
+| Quellenbeobachtung hört auf Attribute, nicht auf Sortierbewegungen | ✅ Zweiter Beobachter auf der Leiste selbst, ohne `subtree` — `center` mit `childList` hätte bei jedem Strich ausgelöst |
+| Radierergrösse bleibt nicht zwischen Seiten | ✅ `meta`-Schlüssel `zeichnen:radierergroesse`; sie ändert die Tintenbreite weiterhin nicht |
+| Haftnotizswatches im Stiftkontext / beim Leiterstift | ✅ in E574 geschlossen (eigene Gruppe `notizfarbe`) |
+| `data-ink-options="open"` sehr breite `!important`-Sichtbarkeit | ⚠ **offen**, mit Grund: vier Prüfläufe erreichen über diesen Weg Dinge, die sonst nirgends stehen. Was dort wirklich störte — die neuen kontextfremden Paletten — ist mit E574 weg |
+| `InkRuler` bei Zoom ausserhalb des Ausschnitts | ⚠ offen |
+| Sichtbares Lineal aus jeder Ausgabe ausschliessen | ⚠ offen (es trägt `data-ink-ui` und ist keine Marke; ein eigener Wächter fehlt) |
+
+### Abschnitt 7 B — was dieser Bogen davon erledigt hat
+
+- **B 3 (Radierer-Dock):** zu. Drei sichtbare Kreise in 44-px-Knöpfen statt
+  drei leerer 14-px-Felder, der Modus einmal statt zweimal, die Grösse
+  gemerkt. Der alte Rundlaufknopf bleibt im Baum und bleibt der Mechanismus —
+  er tritt nur dort zurück, wo sein Ersatz wirklich steht.
+- **B 6 (Popup-Stil):** zur Hälfte zu. `.blatt-popover` hatte **keine
+  einzige Regel**; jetzt Kopf mit Namen und 44-px-„×", Zeilen mit
+  Trefferfläche, Auswahlzustand mit Fläche UND Haken (§38), die zwei
+  Laserarten als Punkt und auslaufende Spur. Offen bleiben Galerie-Tabs und
+  das Drei-Spalten-Vorschauraster.
+
+**Offen aus 7 B:** B 2 (Stift-Dock im Detail), B 5 (Form-Dock), B 7
+(History-Stil — die Lage stimmt seit E573, die alten Toolbar-Styles hängen
+noch dran), B 8 (kleine Breite, Bildschirmtastatur), B 9 (siehe Tabelle).
+**Offen aus 7 C:** alles — Icons und Dock-Bewegung.
+
+### Bilder, die dabei angesehen wurden
+
+`bilder/dock-stift.png`, `dock-zettel.png`, `dock-radierer.png`,
+`dock-text.png`, `popover-laser-standard.png`, `popover-laser-hell.png`,
+`popover-radierer-standard.png`, `popover-radierer-hell.png`. Sie liegen
+nicht im Verzeichnis (§55.4) und werden mit `bilder.mts` oder den
+Messskripten neu erzeugt.
+
+### Prüfstand dieses Bogens
+
+`test524` 42/42 — davon elf Zusicherungen neu in diesem Bogen und acht
+vorher rot gesehen. Dazu grün: `test174`, `test177`, `test209`, `test228`,
+`test239`, `test263`, `test266`, `test267`, `test285`, `test343`, `test344`,
+`test349`, `test365`, `test367`, `test393`, `test437`, `test438`, `test439`,
+`test461`, `test464`, `test515`, `test522`, `test523`.
+`npm run typecheck` und `npm run bauen:ts` grün, Dienststand v1077.
+
+**Die Gesamtsuite ist NICHT als grün behauptet.**

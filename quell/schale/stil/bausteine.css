@@ -4715,6 +4715,62 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   background:linear-gradient(90deg, rgba(255,77,77,0) 0%, rgba(255,77,77,.35) 45%, #ff4d4d 100%);
   height:6px; margin-block:4px
 }
+
+/* ══ DER RADIERER IM STUDIO (E576) ════════════════════════════════════════
+   Hier stand NICHTS. Die drei Grössenknöpfe setzen `--eraser-preview` auf
+   16, 28 und 40 px und tragen ein leeres `<i>`, das die Vorschau zeichnen
+   soll — ohne Regel zeichnete es gar nichts. Gemessen waren die Knöpfe
+   14 × 44 px: hoch genug, aber ein Drittel zu schmal für §37, und man sah
+   auf keinem von ihnen, welche Grösse er meint.
+   Die Zahl im `<i>` ist die ANSICHT, nicht der Radius: 5, 14 und 28
+   Dokumenteinheiten wären auf dem Schirm zu klein zum Unterscheiden. Drei
+   Kreise, die sich deutlich unterscheiden, sagen dasselbe besser. */
+.blatt-eraser-size{
+  width:var(--touch-min); min-width:var(--touch-min);
+  height:var(--touch-min); min-height:var(--touch-min);
+  display:flex; align-items:center; justify-content:center;
+  padding:0; border:1px solid transparent; border-radius:12px;
+  background:transparent; cursor:pointer
+}
+.blatt-eraser-size i{
+  /* `flex:0 0 auto` IST DER GRUND, WARUM ES ÜBERHAUPT STIMMT: als
+     schrumpfbares Flex-Element wurde der grösste Kreis auf die Breite des
+     mittleren gestaucht, und beide massen 28 px. Ein Kreis, der seine
+     Grösse nicht behält, sagt nichts über die Grösse aus. */
+  flex:0 0 auto;
+  display:block; width:var(--eraser-preview,20px); height:var(--eraser-preview,20px);
+  border-radius:50%; border:2px solid currentColor; background:transparent; opacity:.8
+}
+.blatt-eraser-size:hover{ background:var(--bg-hover) }
+.blatt-eraser-size:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+/* Gewählt sagt es zweimal: der Rand UND der gefüllte Kreis (§38). */
+.blatt-eraser-size[aria-pressed="true"]{
+  border-color:var(--accent); background:color-mix(in srgb, var(--accent) 14%, transparent)
+}
+.blatt-eraser-size[aria-pressed="true"] i{ background:currentColor; opacity:1 }
+/* Das Feld, das den Modus beim Namen nennt. */
+.blatt-eraser-menu{
+  min-height:var(--touch-min); padding:0 10px;
+  border:1px solid var(--line); border-radius:12px;
+  background:transparent; color:inherit; font:inherit; font-size:.9rem; cursor:pointer
+}
+.blatt-eraser-menu:hover{ background:var(--bg-hover) }
+.blatt-eraser-menu:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+/* ══ DER ALTE RUNDLAUFKNOPF TRITT ZURÜCK, WO SEIN ERSATZ STEHT (E576) ══════
+   Gemessen standen beide nebeneinander: „Ganz" (65 px) und „Ganz ⌄"
+   (60 px) — dasselbe Wort zweimal, und der erste sagt nicht einmal, dass
+   er ein Rundlauf ist.
+   ER WIRD NICHT ENTFERNT. Er ist weiterhin der Mechanismus, den das Feld
+   bedient (es klickt ihn), und auf einer gewöhnlichen Seite ohne Studio
+   ist er der einzige Weg. `data-reference-ui="ready"` steht genau dort,
+   wo sein Ersatz wirklich gebaut wurde — nirgends sonst.
+   DIE ZWEITE `[data-tool]` IST KEIN SCHMUCK, SONDERN NACHGEMESSEN: die
+   Gruppenliste aus E356 (`.blatt-werk[data-tool="radierer"] >
+   [data-gruppe="radierer"]`) steht in dieser Datei WEITER UNTEN und hat
+   dieselbe Spezifität — bei Gleichstand gewinnt die spätere Zeile, und der
+   Rundlaufknopf stand trotz dieser Regel weiter da. Eine Attributangabe
+   mehr entscheidet es, ohne `!important`. */
+.blatt-werk[data-reference-ui="ready"][data-tool] > [data-act="radiermodus"]{ display:none }
 .blatt-marken{position:absolute; inset:0; width:100%; height:100%; z-index:2;
               color:#111; touch-action:none}
 /* AM TELEFON WIRD GEROLLT, NICHT GESTAPELT — und das ist ein Fund vom Bild,

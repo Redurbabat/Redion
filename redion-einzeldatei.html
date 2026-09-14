@@ -15862,6 +15862,166 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                 border:1px solid var(--line); border-left:0;
                 border-radius:0 0 8px 0;
                 box-shadow:0 2px 10px rgba(0,0,0,.18)}
+/* ══ DAS SICHTBARE LINEAL (E572, gestaltet mit E573) ═══════════════════════
+   Ohne diese Regeln war das Lineal ein SCHWARZER BALKEN: ein `<rect>` ohne
+   `fill` ist in SVG schwarz gefüllt, und das Glas lag damit deckend über dem
+   Papier. Gemessen, nicht vermutet — es stand so in der laufenden App.
+
+   WARUM HIER LITERALE FARBEN UND KEINE TOKEN (§39): das Lineal liegt auf dem
+   PAPIER, und dessen Farbe bestimmt der Nutzer (`--paper`, E558) — von Weiss
+   über Sand bis zu einem dunklen Blatt. Ein Themenwert wie `--line` folgt
+   dagegen der App-Oberfläche und stünde auf einem dunklen Blatt falsch. Ein
+   halbdurchsichtiges Schiefergrau nimmt beide Enden mit, weil es die Farbe
+   darunter durchlässt statt sie zu ersetzen. Das ist dieselbe Überlegung wie
+   bei der Haarkante der Farbtupfer (E568), nur andersherum begründet. */
+.blatt-ruler{ font-family:ui-sans-serif, system-ui, sans-serif }
+.blatt-ruler-glass{
+  fill:rgba(96,116,148,.14); stroke:rgba(58,76,104,.42); stroke-width:1
+}
+.blatt-ruler-ticks{ fill:none; stroke:rgba(38,52,74,.62); stroke-width:1 }
+.blatt-ruler text{ fill:rgba(30,42,62,.78); user-select:none }
+/* Der Griff ist das einzige Stück, das einen Zeiger annimmt — er darf das
+   auch zeigen: etwas kräftiger als das Glas, mit drei Rillen wie ein
+   Schieber. */
+.blatt-ruler-grip{ cursor:grab }
+.blatt-ruler-grip:active{ cursor:grabbing }
+.blatt-ruler-grip rect{ fill:rgba(58,76,104,.20); stroke:rgba(38,52,74,.45); stroke-width:1 }
+.blatt-ruler-grip:hover rect{ fill:rgba(58,76,104,.30) }
+.blatt-ruler-grip-lines{ fill:none; stroke:rgba(24,34,52,.7); stroke-width:2; stroke-linecap:round }
+.blatt-ruler-rotate{ cursor:pointer }
+.blatt-ruler-rotate circle{ fill:rgba(58,76,104,.20); stroke:rgba(38,52,74,.45); stroke-width:1 }
+.blatt-ruler-rotate:hover circle{ fill:rgba(58,76,104,.32) }
+.blatt-ruler-rotate text{ font-size:20px; fill:rgba(24,34,52,.85) }
+/* Der Fokus muss sichtbar sein (§38) — auch auf einem SVG-Knoten. */
+.blatt-ruler-grip:focus-visible rect,
+.blatt-ruler-rotate:focus-visible circle{ stroke:var(--accent); stroke-width:2.5 }
+
+
+/* ══ DIE WERKZEUGFELDER DES STUDIOS (E572, gestaltet in E575) ══════════════
+   `InkMenu` baut sie: ein Kopf mit Namen und „×", darunter der Inhalt. Bis
+   E575 hatte `.blatt-popover` KEINE einzige Regel — die Kästen standen in
+   den Vorgabestilen des Browsers da, mit dessen Rand, dessen Innenabstand
+   und dessen Schrift. Das fiel nicht auf, weil ein Popover immer sichtbar
+   ist; es sah nur nicht nach Redion aus.
+
+   `position:fixed` steht hier NICHT umsonst: das native Popover bekommt es
+   ohnehin vom Browser, der Ersatzweg (`.blatt-popover-ersatz`, für Browser
+   ohne die Klappe) aber nicht — und ohne ihn stünde das Feld irgendwo im
+   Textfluss am Ende der Seite. */
+.blatt-popover{
+  position:fixed; margin:0; padding:0; overflow:auto; overscroll-behavior:contain;
+  border:1px solid var(--line); border-radius:var(--radius-xl);
+  background:var(--bg-card); color:var(--text); box-shadow:var(--shadow-3)
+}
+.blatt-popover::backdrop{ background:transparent }
+/* Ohne die native Klappe gibt es keine oberste Ebene — dann muss die Zahl
+   es tun. Sie steht über allem, was das Studio aufbaut, und unter nichts. */
+.blatt-popover-ersatz{ z-index:9000 }
+.blatt-popover>header{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  position:sticky; top:0; z-index:1; background:var(--bg-card);
+  padding:8px 8px 8px 14px; border-bottom:1px solid var(--line)
+}
+.blatt-popover>header strong{ font-size:.95rem; font-weight:600 }
+/* 44 px, weil „schliessen" ein Hauptweg ist (§37) — auch am Rechner, wo der
+   Kasten mit dem Finger auf einem Tablet getroffen wird. */
+.blatt-popover>header button{
+  min-width:var(--touch-min); min-height:var(--touch-min);
+  display:flex; align-items:center; justify-content:center;
+  border:0; border-radius:10px; background:transparent; color:var(--text-dim);
+  font-size:1.35rem; line-height:1; cursor:pointer
+}
+.blatt-popover>header button:hover{ background:var(--bg-hover); color:var(--text) }
+.blatt-popover>header button:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+.blatt-popover-body{ display:flex; flex-direction:column; gap:6px; padding:10px 12px 12px }
+/* Die Zeilen im Feld: Radiermodi, Laserarten — alles, was `InkMenu` als
+   Knopfliste einhängt. Eine Zeile, kein Gitter: die Namen sind verschieden
+   lang, und nebeneinander stünden sie krumm. */
+.blatt-popover-body>button{
+  display:flex; align-items:center; gap:10px;
+  min-height:var(--touch-min); padding:0 12px; width:100%;
+  border:1px solid transparent; border-radius:12px;
+  background:transparent; color:var(--text); font:inherit; font-size:.95rem;
+  text-align:left; cursor:pointer
+}
+.blatt-popover-body>button:hover{ background:var(--bg-hover) }
+.blatt-popover-body>button:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+/* DER GEWÄHLTE SAGT ES ZWEIMAL (§38): mit der Fläche UND mit dem Haken.
+   „Keine Information nur über Farbe" ist hier kein Formsatz — die zwei
+   Laserarten unterscheiden sich sonst um nichts als ein Wort. */
+.blatt-popover-body>button[aria-pressed="true"]{
+  border-color:var(--accent);
+  background:color-mix(in srgb, var(--accent) 14%, transparent)
+}
+.blatt-popover-body>button[aria-pressed="true"]::after{
+  content:'✓'; margin-left:auto; color:var(--accent); font-size:1rem
+}
+/* Die zwei Laserarten zeigen, was sie tun (E512): ein Punkt ist ein Punkt,
+   eine Spur läuft aus. Das `<i>` ist leer — es trägt nur die Zeichnung. */
+.blatt-laser-options i{
+  flex:0 0 auto; width:34px; height:14px; border-radius:7px;
+  background:radial-gradient(circle at 50% 50%, #ff4d4d 0 5px, transparent 5px)
+}
+.blatt-laser-options [data-laser-option="linie"] i{
+  background:linear-gradient(90deg, rgba(255,77,77,0) 0%, rgba(255,77,77,.35) 45%, #ff4d4d 100%);
+  height:6px; margin-block:4px
+}
+
+/* ══ DER RADIERER IM STUDIO (E576) ════════════════════════════════════════
+   Hier stand NICHTS. Die drei Grössenknöpfe setzen `--eraser-preview` auf
+   16, 28 und 40 px und tragen ein leeres `<i>`, das die Vorschau zeichnen
+   soll — ohne Regel zeichnete es gar nichts. Gemessen waren die Knöpfe
+   14 × 44 px: hoch genug, aber ein Drittel zu schmal für §37, und man sah
+   auf keinem von ihnen, welche Grösse er meint.
+   Die Zahl im `<i>` ist die ANSICHT, nicht der Radius: 5, 14 und 28
+   Dokumenteinheiten wären auf dem Schirm zu klein zum Unterscheiden. Drei
+   Kreise, die sich deutlich unterscheiden, sagen dasselbe besser. */
+.blatt-eraser-size{
+  width:var(--touch-min); min-width:var(--touch-min);
+  height:var(--touch-min); min-height:var(--touch-min);
+  display:flex; align-items:center; justify-content:center;
+  padding:0; border:1px solid transparent; border-radius:12px;
+  background:transparent; cursor:pointer
+}
+.blatt-eraser-size i{
+  /* `flex:0 0 auto` IST DER GRUND, WARUM ES ÜBERHAUPT STIMMT: als
+     schrumpfbares Flex-Element wurde der grösste Kreis auf die Breite des
+     mittleren gestaucht, und beide massen 28 px. Ein Kreis, der seine
+     Grösse nicht behält, sagt nichts über die Grösse aus. */
+  flex:0 0 auto;
+  display:block; width:var(--eraser-preview,20px); height:var(--eraser-preview,20px);
+  border-radius:50%; border:2px solid currentColor; background:transparent; opacity:.8
+}
+.blatt-eraser-size:hover{ background:var(--bg-hover) }
+.blatt-eraser-size:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+/* Gewählt sagt es zweimal: der Rand UND der gefüllte Kreis (§38). */
+.blatt-eraser-size[aria-pressed="true"]{
+  border-color:var(--accent); background:color-mix(in srgb, var(--accent) 14%, transparent)
+}
+.blatt-eraser-size[aria-pressed="true"] i{ background:currentColor; opacity:1 }
+/* Das Feld, das den Modus beim Namen nennt. */
+.blatt-eraser-menu{
+  min-height:var(--touch-min); padding:0 10px;
+  border:1px solid var(--line); border-radius:12px;
+  background:transparent; color:inherit; font:inherit; font-size:.9rem; cursor:pointer
+}
+.blatt-eraser-menu:hover{ background:var(--bg-hover) }
+.blatt-eraser-menu:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+/* ══ DER ALTE RUNDLAUFKNOPF TRITT ZURÜCK, WO SEIN ERSATZ STEHT (E576) ══════
+   Gemessen standen beide nebeneinander: „Ganz" (65 px) und „Ganz ⌄"
+   (60 px) — dasselbe Wort zweimal, und der erste sagt nicht einmal, dass
+   er ein Rundlauf ist.
+   ER WIRD NICHT ENTFERNT. Er ist weiterhin der Mechanismus, den das Feld
+   bedient (es klickt ihn), und auf einer gewöhnlichen Seite ohne Studio
+   ist er der einzige Weg. `data-reference-ui="ready"` steht genau dort,
+   wo sein Ersatz wirklich gebaut wurde — nirgends sonst.
+   DIE ZWEITE `[data-tool]` IST KEIN SCHMUCK, SONDERN NACHGEMESSEN: die
+   Gruppenliste aus E356 (`.blatt-werk[data-tool="radierer"] >
+   [data-gruppe="radierer"]`) steht in dieser Datei WEITER UNTEN und hat
+   dieselbe Spezifität — bei Gleichstand gewinnt die spätere Zeile, und der
+   Rundlaufknopf stand trotz dieser Regel weiter da. Eine Attributangabe
+   mehr entscheidet es, ohne `!important`. */
+.blatt-werk[data-reference-ui="ready"][data-tool] > [data-act="radiermodus"]{ display:none }
 .blatt-marken{position:absolute; inset:0; width:100%; height:100%; z-index:2;
               color:#111; touch-action:none}
 /* AM TELEFON WIRD GEROLLT, NICHT GESTAPELT — und das ist ein Fund vom Bild,
@@ -16196,6 +16356,16 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk[data-tool="stift"] > [data-gruppe="formen"],
 .blatt-werk[data-tool="stift"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="stift"] > [data-gruppe="breite"],
+/* ══ DAS LINEAL GEHÖRT AUCH DEM STIFT (E574) ══════════════════════════════
+   ABGELESEN, NICHT ANGENOMMEN: `marken.ts` lässt die Kantenführung für
+   `['stift','marker','line','arrow']` zu. Der Zeichner führt den Stift also
+   längst am Lineal — nur der Schalter dafür stand nicht bei ihm. Hier
+   standen `marker`, `line` und `arrow`, und wer mit dem Stift ein Lineal
+   wollte, kam nur über die Taste „r" oder über „···" daran. Ein Weg, den
+   man kennen muss, ist am Telefon kein Weg (§37).
+   DIE KURVE BEKOMMT ES WEITERHIN NICHT — sie steht auch in `marken.ts`
+   nicht in der Liste, und eine gebogene Linie hat keine Kante (E569). */
+.blatt-werk[data-tool="stift"] > [data-gruppe="lineal"],
 .blatt-werk[data-tool="marker"] > [data-gruppe="lineal"],
 .blatt-werk[data-tool="marker"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="marker"] > [data-gruppe="breite"],
@@ -16238,7 +16408,15 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk[data-tool="roundrect"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="roundrect"] > [data-gruppe="breite"],
 .blatt-werk[data-tool="abdeck"] > [data-gruppe="farbe"],
-.blatt-werk[data-tool="zettel"] > [data-gruppe="farbe"],
+/* ══ DER ZETTEL HAT SEINE EIGENEN NEUN (E574, Plan 7 B 4) ═════════════════
+   Hier stand `[data-gruppe="farbe"]` — die fünf Tintenfarben. Die neun
+   Pastellfarben aus E572 trugen bis E574 DIESELBE Gruppe und standen
+   deshalb in jedem Werkzeug mit. Beides zusammen ergab beim Zettel
+   vierzehn Tupfer in zwei Reihenfolgen — „eine zweite ungeordnete
+   Palette", genau das, was der Plan hier ausschliesst.
+   Ein schwarzer Zettel ist kein Zettel; die Haftnotiz bekommt ihre
+   neun und sonst keine. */
+.blatt-werk[data-tool="zettel"] > [data-gruppe="notizfarbe"],
 .blatt-werk[data-tool="text"] > [data-gruppe="schrift"],
 .blatt-werk[data-tool="select"] > [data-gruppe="schrift"],
 .blatt-werk[data-tool="text"] > [data-gruppe="farbe"],
@@ -16247,6 +16425,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    Element bringt die Farben mit, in denen es gezeichnet wurde; eine
    Farbwahl daneben verspräche etwas, das der Stempel nicht tut. */
 .blatt-werk[data-tool="elemente"] > [data-gruppe="elemente"]{display:inline-flex}
+/* DAS „+" BLEIBT AUCH BEIM ZETTEL (E574). Es ist keine Palette, sondern die
+   Tür zu jeder Farbe (E486) — und eine Tür wegzunehmen, weil die Tapete
+   daneben gewechselt hat, wäre eine verlorene Funktion, keine Aufräumung.
+   Es trägt `data-gruppe="farbe"`, also braucht es hier seine eigene Zeile. */
+.blatt-werk[data-tool="zettel"] > .blatt-farbe-neu{display:inline-flex}
 /* ══ DIE TRENNER KOMMEN ZURÜCK — AM RECHNER (E568) ════════════════════════
    Hier stand genau diese Zeile ohne Einschränkung, und `[data-tool]` steht
    IMMER an der Leiste. Also war jeder Trenner immer aus, und das Zubehör
@@ -21261,7 +21444,30 @@ body[data-dokument="an"] .document-studio .document-topbar button:hover{backgrou
    andere Seite. `margin-right:auto` hier und `margin-left:auto` am „···"
    halten die Werkzeuge dazwischen in der Mitte — ohne einen zweiten Kasten
    im Baum, den die Tastatur mitzählen müsste. */
-.document-ink-history{display:flex;gap:0;border-right:1px solid var(--line);padding-right:12px;margin-right:auto}
+/* ══ DIE VERLAUFSKAPSEL HAT EINEN PLATZ (E573) ═════════════════════════════
+   Mit E572 wanderte sie aus dem Werkzeugband in `.document-body` — und
+   `.document-body` ist ein Raster mit `grid-template-columns:0 minmax(0,1fr) 0`.
+   Ohne eigene Spaltenangabe landete sie automatisch in der DRITTEN Spalte,
+   und die ist 0 px breit. Gemessen bei 1440 px Fensterbreite: die Kapsel
+   stand bei x = 1440, also ausserhalb des Bildes; bei 390 px unterhalb.
+   `test393` fiel auf 6 von 19, `test461` auf 29 von 34 — und Rückgängig war
+   im Studio an KEINER Stelle erreichbar (§46 Priorität 1).
+
+   Jetzt liegt sie in der Papierspalte und schwebt links oben darüber, wie
+   in Redurs Referenz. Die alten Bandregeln (Rechtsrand, `margin-right:auto`)
+   galten für eine Kapsel IN einer Zeile und sind hier weg. */
+.document-ink-history{
+  grid-column:2; grid-row:1; align-self:start; justify-self:start;
+  z-index:6; width:max-content; margin:12px 0 0 12px;
+  display:flex; gap:2px; padding:4px;
+  border:1px solid var(--line); border-radius:var(--radius-xl);
+  background:var(--pdf-tools); box-shadow:var(--shadow-2)
+}
+.document-body{position:relative}
+/* DER NEGATIVE UNTERRAND ist kein Trick, sondern die Aussage: die Kapsel
+   SCHWEBT über dem Papier und schiebt es nicht nach unten. Ohne ihn
+   begänne das Blatt 48 px tiefer, bei jedem Dokument, für immer. */
+.document-ink-history button{min-width:var(--touch-min); min-height:var(--touch-min)}
 .document-drawingbar [data-document-action="ink-options"]{margin-left:auto}
 .document-ink-history button{font-size:1.75rem}
 /* ZURÜCK UND VOR SIND NICHT DURCHSICHTIG (test393 §3, E396): abgeschaltet
@@ -21295,7 +21501,33 @@ body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display
    überall, und das Werkzeug behält als einziges die volle Fläche.
    Die zwei Zeilen darüber (Tupfer, Ring) sind der Grund, warum hier noch
    etwas steht: das Studio braucht seine 44 px auch am Rechner. */
-.document-studio:not([data-ink-options="open"]) .blatt-werk>:is([data-wz],.blatt-trenn,[data-gruppe="verlauf"],[data-gruppe="auswahl"],[data-gruppe="lineal"],[data-gruppe="formen"],[data-gruppe="schrift"],[data-gruppe="form"]){display:none!important}
+/* ══ DAS DOCK IST WIEDER KONTEXTBEZOGEN (E573) ═════════════════════════════
+   Hier stand eine Liste von acht Dingen, die im geschlossenen Zustand
+   ALLE weg waren. Gemessen an der laufenden App war das kein Kontextfilter,
+   sondern ein Schalter zwischen „fast nichts" und „alles auf einmal":
+
+     bei data-tool="line"     0 von 7 Formknöpfen sichtbar
+     bei data-tool="text"     0 von 7 Schriftknöpfen sichtbar
+     bei data-tool="select"   0 von 10 Auswahlknöpfen sichtbar
+     geschlossen              62 von 86 Kindern der Leiste unbedingt weg
+
+   Wer im Studio eine Form oder eine Schriftgrösse wollte, musste erst „···"
+   öffnen — und bekam dann 84 Bedienelemente gleichzeitig, samt einer
+   zweiten vollständigen Werkzeugreihe. Genau das zeigen Redurs Bilder 4
+   und 6 NICHT: dort steht unter dem gewählten Werkzeug sein Zubehör, und
+   sonst nichts.
+
+   WELCHE GRUPPE ZU WELCHEM WERKZEUG GEHÖRT, STEHT SCHON IN `bausteine.css`
+   (E356) und wird seit E570 sogar vom Nutzer geordnet. Das Studio muss das
+   nicht zweitens entscheiden — es muss nur wegnehmen, was hier doppelt
+   wäre. Und das sind genau drei Dinge:
+
+     [data-wz]        die Werkzeuge — sie stehen oben im Band
+     .blatt-trenn     Trenner — im kompakten Dock nur Striche im Weg
+     [data-gruppe=verlauf]  Zurück, Vor, Platz, Einrichten — „Zurück" und
+                      „Vor" stehen in der Kapsel über dem Papier, die zwei
+                      übrigen unter „···". */
+.document-studio:not([data-ink-options="open"]) .blatt-werk>:is([data-wz],.blatt-trenn,[data-gruppe="verlauf"]){display:none!important}
 .document-studio:not([data-ink-options="open"]) .blatt-werk[data-tool="schreiben"]{display:none}
 .document-studio[data-ink-options="open"] .blatt-werk{max-height:240px;flex-wrap:wrap!important;overflow:auto;width:min(850px,calc(100vw - 32px))}
 /* Die Klappe der freien Staerke (E465 Nachtrag) bleibt auch hier zu, bis die gewaehlte Stufe ein zweites Mal getippt wird — `.auf` zeigt sie dann in der Zeile. */
@@ -21327,7 +21559,13 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
      beim Rollen nach LINKS hinaus, und dafür braucht es `left:0`. Gemessen
      bei 390 px: ganz nach rechts gerollt standen beide ausserhalb der
      Leiste, und `test393 §2` sah es. */
-  .document-ink-history{position:sticky;left:0;z-index:1;padding-right:12px;margin-right:auto;background:var(--pdf-tools)}
+    /* AM TELEFON IST `.document-body` KEIN RASTER, sondern `display:block`
+     (bausteine.css) — `grid-column` und `grid-row` sind dort wirkungslos,
+     und die Kapsel stand als letzter Block UNTER dem Papier: gemessen
+     top = 812 in einem 800 px hohen Fenster, also ausserhalb des Bildes.
+     Absolut über der linken oberen Ecke des Körpers steht sie dort, wo sie
+     hingehört, ohne ein Raster zu brauchen. */
+  .document-ink-history{position:absolute; top:8px; left:8px; margin:0; padding:3px}
   .document-studio .document-commandbar{left:8px;right:8px}
   body[data-dokument="an"] .document-studio .document-center{padding:10px 8px 100px}
   .document-source-master .do-name{font-size:11px}.document-source-master .do-wort{font-size:10px}
@@ -23601,7 +23839,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1065, inhalt: '5bfe6b1d6269fbf4', gebaut: '2026-09-14T20:06:18.759Z' };
+const Stand = { fassung: 1077, inhalt: 'd2b7764369c0c8fa', gebaut: '2026-09-14T23:40:02.176Z' };
 window.Stand = Stand;
 
 </script>
@@ -58735,6 +58973,384 @@ window.PdfFremd = PdfFremd;
 
 </script>
 <script>
+/* ===== quell/bereiche/pdf/ink-menu.js ===== */
+"use strict";
+/* E572: kleine Werkzeugfelder im obersten Browser-Layer. Kein Dokumentinhalt.
+ * Die native Klappe übernimmt Escape und Aussenklick, auch im Vollbild.
+ *
+ * ══ E575: EIN FELD, DAS AUFGEHT, MUSS AUCH WIEDER ZUGEHEN ══════════════════
+ * Der erste Stand kannte nur EINEN Weg nach draussen: den Helfer selbst.
+ * Gemessen am 14. September, Fenster 1440 × 960: nach `App.oeffne()` einer
+ * gewöhnlichen Textseite stand das Laserfeld immer noch offen — 380 × 54
+ * Pixel bei 520/159, schwebend über fremdem Text, während
+ * `.document-workspace` längst weg war. Der `resize`-Horcher lief weiter,
+ * denn abgemeldet wird er nur im `toggle`-Ereignis, und das kommt nie, wenn
+ * niemand schliesst.
+ *
+ * Der Grund ist einfach und deshalb leicht zu übersehen: das Panel hängt an
+ * `document.body`, nicht am Studio. Wer die Fläche darunter wegräumt, räumt
+ * das Panel nicht mit.
+ *
+ * Drei Dinge halten es jetzt:
+ *   · Es beobachtet seinen ANKER. Verlässt der den Baum, geht das Feld zu —
+ *     ganz gleich, wer ihn weggeräumt hat und ob dieser Weg daran gedacht hat.
+ *   · `closeAll()` ist der ausdrückliche Weg für alle, die es wissen.
+ *   · Aufräumen ist idempotent. `hidePopover()` löst `toggle` aus, das
+ *     wieder aufräumen will — zweimal aufräumen darf nichts kosten.
+ */
+const InkMenu = (() => {
+    let offen = null;
+    /** Schliesst ein offenes Feld. `weg` heisst: die Umgebung ist fort. */
+    const closeAll = (grund = 'weg') => {
+        offen?.ende(grund);
+        /* Nachzügler aus früheren Fassungen oder aus einem Baum, der unter einem
+           Panel weggezogen wurde: sie tragen keine Rückmeldung mehr, also hart weg. */
+        document.querySelectorAll('.blatt-popover').forEach(node => {
+            try {
+                node.hidePopover?.();
+            }
+            catch { /* war nie offen */ }
+            node.remove();
+        });
+    };
+    const open = (anchor, title, build) => {
+        closeAll('weg');
+        const panel = document.createElement('div');
+        panel.className = 'blatt-popover';
+        panel.setAttribute('role', 'dialog');
+        panel.setAttribute('aria-label', title);
+        const heading = document.createElement('header');
+        const label = document.createElement('strong');
+        label.textContent = title;
+        const exit = document.createElement('button');
+        exit.type = 'button';
+        exit.textContent = '×';
+        exit.setAttribute('aria-label', title + ' schließen');
+        heading.append(label, exit);
+        panel.append(heading);
+        const body = document.createElement('div');
+        body.className = 'blatt-popover-body';
+        panel.append(body);
+        /* ══ DIE NATIVE KLAPPE, WENN ES SIE GIBT ════════════════════════════════
+           `popover` bringt die oberste Ebene, Escape und den Aussenklick mit —
+           auch im Vollbild, wo ein selbstgebauter Kasten schlicht unsichtbar
+           wäre. Wo es sie nicht gibt, baut der Zweig darunter dasselbe von Hand
+           nach; er ist nicht Zierde, sondern wird in `test524` wirklich
+           durchlaufen (die Prüfung nimmt `showPopover` weg). */
+        const nativ = typeof panel.showPopover === 'function' && typeof panel.hidePopover === 'function';
+        if (nativ)
+            panel.setAttribute('popover', 'auto');
+        else
+            panel.classList.add('blatt-popover-ersatz');
+        let fertig = false;
+        let grund = 'aussen';
+        const close = () => { grund = 'knopf'; ende('knopf'); };
+        exit.onclick = close;
+        build(body, close);
+        const position = () => {
+            const rect = anchor.getBoundingClientRect();
+            const width = Math.min(380, window.innerWidth - 24);
+            panel.style.width = width + 'px';
+            panel.style.left = Math.max(12, Math.min(window.innerWidth - width - 12, rect.left + rect.width / 2 - width / 2)) + 'px';
+            const above = rect.top > window.innerHeight / 2;
+            panel.style.top = above ? 'auto' : Math.max(12, Math.min(rect.bottom + 12, window.innerHeight - 150)) + 'px';
+            panel.style.bottom = above ? Math.max(12, window.innerHeight - rect.top + 12) + 'px' : 'auto';
+            panel.style.maxHeight = Math.max(100, (above ? rect.top : window.innerHeight - rect.bottom) - 24) + 'px';
+        };
+        /* Der Anker ist der Faden zum Studio. Reisst er, geht das Feld zu. */
+        const wache = new MutationObserver(() => { if (!anchor.isConnected)
+            ende('weg'); });
+        const draussen = (event) => {
+            if (!panel.contains(event.target) && event.target !== anchor)
+                ende('aussen');
+        };
+        const taste = (event) => {
+            if (event.key !== 'Escape')
+                return;
+            event.preventDefault();
+            ende('escape');
+        };
+        /* Auch bei der nativen Klappe brauchen wir die Taste — nicht zum
+           Schliessen (das kann sie selbst), sondern um den GRUND zu kennen. */
+        const merkeEscape = (event) => { if (event.key === 'Escape')
+            grund = 'escape'; };
+        function ende(warum) {
+            if (fertig)
+                return;
+            fertig = true;
+            grund = warum;
+            wache.disconnect();
+            window.removeEventListener('resize', position);
+            document.removeEventListener('keydown', taste, true);
+            document.removeEventListener('pointerdown', draussen, true);
+            panel.removeEventListener('keydown', merkeEscape);
+            if (nativ) {
+                try {
+                    panel.hidePopover();
+                }
+                catch { /* war schon zu */ }
+            }
+            panel.remove();
+            offen = null;
+            if (anchor.isConnected) {
+                anchor.setAttribute('aria-expanded', 'false');
+                /* ══ ESCAPE GIBT DEN FOKUS ZURÜCK, EIN AUSSENKLICK NICHT ════════════
+                   Wer mit Escape oder „×" schliesst, will dort weitermachen, wo er
+                   war. Wer daneben tippt, wollte DORTHIN — ihn zurückzuziehen wäre
+                   der Fokusdiebstahl, den der Plan ausschliesst. `weg` gibt gar
+                   nichts zurück: die Umgebung ist fort, da gibt es kein Zurück. */
+                if (warum === 'escape' || warum === 'knopf')
+                    anchor.focus({ preventScroll: true });
+            }
+        }
+        document.body.append(panel);
+        position();
+        anchor.setAttribute('aria-expanded', 'true');
+        offen = { ende };
+        if (nativ) {
+            panel.addEventListener('keydown', merkeEscape);
+            panel.addEventListener('toggle', event => {
+                if (event.newState !== 'closed')
+                    return;
+                ende(grund);
+            });
+        }
+        else {
+            document.addEventListener('keydown', taste, true);
+            /* Erst im nächsten Zug horchen: sonst schliesst der Klick, der das
+               Feld geöffnet hat, es gleich wieder. */
+            setTimeout(() => { if (!fertig)
+                document.addEventListener('pointerdown', draussen, true); }, 0);
+        }
+        window.addEventListener('resize', position);
+        wache.observe(document.body, { childList: true, subtree: true });
+        if (nativ)
+            panel.showPopover();
+        exit.focus({ preventScroll: true });
+    };
+    return { open, closeAll };
+})();
+
+</script>
+<script>
+/* ===== quell/bereiche/pdf/ink-ruler.js ===== */
+"use strict";
+/* E572: ein sichtbares Lineal im Dokumentraum (72 pt = 1 Zoll).
+ * Nur Bedienoberfläche: keine Marke, kein Verlauf, kein Export.
+ * Zeichnen nahe einer Kante bindet genau diesen Zug an die Kante.
+ */
+const InkRuler = (() => {
+    const create = (surface, width, height) => {
+        const ns = 'http://www.w3.org/2000/svg';
+        const group = document.createElementNS(ns, 'g');
+        group.classList.add('blatt-ruler');
+        group.dataset.inkUi = 'ruler';
+        group.setAttribute('role', 'group');
+        group.setAttribute('aria-label', 'Lineal: ziehen zum Verschieben. Pfeiltasten verschieben, Umschalt und Pfeiltasten drehen.');
+        group.setAttribute('tabindex', '0');
+        /* ══ DAS LINEAL IST FÜR ZEIGER DURCHLÄSSIG (E573) ══════════════════════
+           Der Zwischenstand hängte das ganze `<g>` in die Zeichenfläche und rief
+           in seinem `pointerdown` als ERSTE Zeile `stopPropagation()` — vor jeder
+           Prüfung, wem der Zeiger gilt. Zwei Dinge gingen dabei kaputt, beide
+           gemessen:
+    
+             · `test267 §6` wurde rot: „frei 50.2°, gerastet 50.2°". Der Zug
+               erreichte die Zeichenmaschine nie, also entstand die zweite Linie
+               gar nicht, und die Prüfung fand wieder die erste.
+             · Die Kantenführung selbst war unerreichbar. Sie beginnt innerhalb
+               von 14 Einheiten um eine Kante — also AUF dem Glas. Was das Glas
+               schluckt, kann nie geführt werden.
+    
+           Jetzt trägt das `<g>` `pointer-events="none"` als Präsentationsattribut
+           (nicht nur im Stilblatt: ein Lineal, das ohne CSS die ganze Seite
+           blockiert, ist die schlimmere Störung). Einen Zeiger nehmen nur der
+           Griff in der Mitte und der Drehknopf an — und die rufen
+           `stopPropagation()` erst, wenn der Zug ihnen wirklich gilt. */
+        group.setAttribute('pointer-events', 'none');
+        let active = false, x = width / 2, y = Math.min(height * .4, width * .65), angle = 0;
+        let edge = null;
+        /* NEUNZIG PROZENT DER BLATTBREITE, NICHT HUNDERTDREISSIG. `width * .65`
+           ergab ein Band von 1,3 Blattbreiten — es stand links und rechts über
+           das Papier hinaus und war damit auch nicht mehr zu greifen. */
+        const half = width * .45, depth = 64;
+        const make = (tag, attrs) => {
+            const node = document.createElementNS(ns, tag);
+            Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, String(value)));
+            group.append(node);
+            return node;
+        };
+        make('rect', { x: -half, y: 0, width: half * 2, height: depth, rx: 3, class: 'blatt-ruler-glass' });
+        const mm = 72 / 25.4;
+        let ticks = '';
+        for (let i = -Math.floor(half / mm); i <= half / mm; i++) {
+            const length = i % 10 === 0 ? 15 : i % 5 === 0 ? 10 : 6;
+            ticks += `M${i * mm} 0v${length}M${i * mm} ${depth}v${-length}`;
+            if (i % 10 === 0) {
+                const label = make('text', { x: i * mm, y: 26, 'text-anchor': 'middle', 'font-size': 9 });
+                label.textContent = String(Math.abs(i / 10));
+            }
+        }
+        make('path', { d: ticks, class: 'blatt-ruler-ticks' });
+        const caption = make('text', { x: 0, y: 44, 'text-anchor': 'middle', 'font-size': 8 });
+        const render = () => {
+            group.setAttribute('transform', `translate(${x} ${y}) rotate(${angle})`);
+            caption.textContent = `cm · ${angle}° · ziehen / drehen`;
+        };
+        const rotate = make('g', { role: 'button', tabindex: '0', 'aria-label': 'Lineal um 15 Grad drehen', class: 'blatt-ruler-rotate' });
+        rotate.setAttribute('pointer-events', 'auto');
+        /* DIE GRIFFE HÄNGEN UNTER DEM GLAS, NICHT DARIN (E573, nachgemessen).
+           Erster Versuch: ein Griffstreifen in der Mitte des Glases. `test267 §6`
+           blieb rot — der Prüfzug beginnt bei 55 % der Blattbreite und 40 % der
+           Höhe, und das ist genau dort. Ein Griff IM Glas nimmt immer irgendeinem
+           Zug den Anfang weg, und welchem, hängt vom Zufall ab.
+           Unter dem Glas nimmt er keinem etwas: die zwei Führungsbänder liegen
+           um die Kanten (v um 0 und um `depth`), das Glas dazwischen bleibt frei,
+           und wer den Griff trifft, wollte ihn treffen. */
+        const griffY = depth + 12;
+        const turn = document.createElementNS(ns, 'circle');
+        turn.setAttribute('cx', String(Math.min(half - 30, width * .33)));
+        turn.setAttribute('cy', String(griffY + 16));
+        turn.setAttribute('r', '20');
+        rotate.append(turn);
+        const arrow = document.createElementNS(ns, 'text');
+        arrow.setAttribute('x', turn.getAttribute('cx'));
+        arrow.setAttribute('y', String(griffY + 22));
+        arrow.setAttribute('text-anchor', 'middle');
+        arrow.textContent = '↻';
+        rotate.append(arrow);
+        rotate.addEventListener('click', event => { event.stopPropagation(); angle = (angle + 15) % 180; render(); });
+        rotate.addEventListener('keydown', event => { const key = event.key; if (key === 'Enter' || key === ' ') {
+            event.preventDefault();
+            event.stopPropagation();
+            angle = (angle + 15) % 180;
+            render();
+        } });
+        /* ══ DER GRIFF (E573) ═══════════════════════════════════════════════════
+           Ein echtes Lineal fasst man überall an. Hier absichtlich nicht: was das
+           ganze Band annimmt, kann nicht mehr überzeichnet werden — daran ist der
+           Zwischenstand gescheitert. Der Griff ist deshalb ein Streifen in der
+           MITTE, breit genug für eine Hand und schmal genug, dass links und
+           rechts von ihm gezeichnet wird. Er sitzt am Ankerpunkt: solange der
+           auf dem Blatt geklemmt ist, ist auch der Griff erreichbar. */
+        const grip = make('g', { class: 'blatt-ruler-grip', role: 'button', tabindex: '0',
+            'aria-label': 'Lineal verschieben. Pfeiltasten verschieben, Umschalt und Pfeiltasten drehen.' });
+        grip.setAttribute('pointer-events', 'auto');
+        const gripBody = document.createElementNS(ns, 'rect');
+        for (const [key, value] of Object.entries({ x: -56, y: griffY, width: 112, height: 32, rx: 9 }))
+            gripBody.setAttribute(key, String(value));
+        grip.append(gripBody);
+        const gripLines = document.createElementNS(ns, 'path');
+        gripLines.setAttribute('class', 'blatt-ruler-grip-lines');
+        gripLines.setAttribute('d', `M-16 ${griffY + 9}v14M0 ${griffY + 9}v14M16 ${griffY + 9}v14`);
+        grip.append(gripLines);
+        const local = (event) => {
+            const matrix = surface.getScreenCTM();
+            if (!matrix)
+                return null;
+            const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
+            return [point.x, point.y];
+        };
+        let drag = null;
+        /* `stopPropagation()` steht NACH der Entscheidung, nicht davor: nur ein
+           Zug, der wirklich dem Griff gilt, wird der Zeichenmaschine entzogen. */
+        grip.addEventListener('pointerdown', event => {
+            const e = event;
+            if (e.button !== 0)
+                return;
+            const point = local(e);
+            if (!point)
+                return;
+            event.stopPropagation();
+            event.preventDefault();
+            grip.focus();
+            drag = { id: e.pointerId, x, y, start: point };
+            grip.setPointerCapture(e.pointerId);
+        });
+        grip.addEventListener('pointermove', event => {
+            const e = event;
+            if (!drag || drag.id !== e.pointerId)
+                return;
+            event.stopPropagation();
+            const point = local(e);
+            if (!point)
+                return;
+            x = Math.max(0, Math.min(width, drag.x + point[0] - drag.start[0]));
+            y = Math.max(0, Math.min(height - depth - 46, drag.y + point[1] - drag.start[1]));
+            render();
+        });
+        for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+            grip.addEventListener(name, event => { if (drag)
+                event.stopPropagation(); drag = null; });
+        }
+        grip.addEventListener('click', event => event.stopPropagation());
+        grip.addEventListener('keydown', event => {
+            const e = event;
+            if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key))
+                return;
+            event.preventDefault();
+            event.stopPropagation();
+            const sign = e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 1;
+            if (e.shiftKey)
+                angle = (angle + sign * 15 + 360) % 360;
+            else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight')
+                x = Math.max(0, Math.min(width, x + sign * 5));
+            else
+                y = Math.max(0, Math.min(height - depth - 46, y + sign * 5));
+            render();
+        });
+        const coordinates = (point) => {
+            const a = angle * Math.PI / 180, dx = point[0] - x, dy = point[1] - y;
+            return [dx * Math.cos(a) + dy * Math.sin(a), -dx * Math.sin(a) + dy * Math.cos(a)];
+        };
+        const project = (point) => {
+            if (edge === null)
+                return [point[0], point[1]];
+            const u = coordinates(point)[0], a = angle * Math.PI / 180;
+            return [x + u * Math.cos(a) - edge * Math.sin(a), y + u * Math.sin(a) + edge * Math.cos(a)];
+        };
+        return {
+            setActive(value) { active = value; edge = null; if (active) {
+                surface.append(group);
+                render();
+            }
+            else
+                group.remove(); },
+            /* ══ NACH EINEM NEUZEICHNEN WIEDER ANHÄNGEN (E573) ═══════════════════
+               `redraw()` in `marken.ts` räumt jedes `[data-ink-ui]` aus der Fläche —
+               und niemand hängte das Lineal zurück. Gemessen: nach einem einzigen
+               „Zurück" null Lineale in der Fläche, `linealAn()` weiterhin `true`.
+               Der Schalter stand an, das Werkzeug war weg.
+               Anders als `setActive` vergisst dieser Weg die Kante NICHT: er kann
+               mitten in einem geführten Zug laufen, und dann wäre ein Rücksetzen
+               auf `edge = null` genau der Sprung, den niemand versteht. */
+            remount() { if (active && group.parentNode !== surface) {
+                surface.append(group);
+                render();
+            } },
+            active: () => active,
+            begin(point, allowed) {
+                edge = null;
+                if (active && allowed) {
+                    const [u, v] = coordinates(point);
+                    if (Math.abs(u) < half + 12) {
+                        if (Math.abs(v) < 14)
+                            edge = 0;
+                        else if (Math.abs(v - depth) < 14)
+                            edge = depth;
+                    }
+                }
+                return project(point);
+            },
+            project,
+            end() { edge = null; },
+            constrained: () => edge !== null
+        };
+    };
+    return { create };
+})();
+
+</script>
+<script>
 /* ===== quell/bereiche/pdf/marken.js ===== */
 "use strict";
 /* ============================================================================
@@ -58821,6 +59437,21 @@ const Marken = (() => {
     const radierModusLesen = () => {
         const wert = typeof Store !== 'undefined' ? String(Store.getMeta('zeichnen:radierer') || '') : '';
         return RADIERER.some(r => r.id === wert) ? wert : RADIER_VORGABE;
+    };
+    /* ══ DIE GRÖSSE DES RADIERERS WIRD GEMERKT (E576) ═══════════════════════
+       Sie stand als `controls.setEraserSize(5)` fest im Aufbau des Studios.
+       Gemessen: „groß" wählen, Seite wechseln, zurückkommen — wieder „klein".
+       Der Modus daneben (`zeichnen:radierer`) wird seit jeher gemerkt; die
+       Grösse war der einzige Schalter dieser Reihe ohne Gedächtnis, und das
+       fällt erst auf, wenn man dreimal am Tag dieselbe Wahl wiederholt.
+       DREI FESTE WERTE, kein Regler: sie sind die Kreise aus GoodNotes, und
+       sie sind auch die Prüfsteine — `setEraserSize` nimmt nur diese drei an,
+       damit ein alter oder verbogener Wert nicht als Radiergummi von einem
+       Meter Durchmesser ankommt. */
+    const RADIER_GROESSEN = [5, 14, 28];
+    const radierGroesseLesen = () => {
+        const wert = typeof Store !== 'undefined' ? Number(Store.getMeta('zeichnen:radierergroesse')) : NaN;
+        return RADIER_GROESSEN.includes(wert) ? wert : RADIER_GROESSEN[0];
     };
     /* DIE STIFTE (E351). `kugel` ist der Strich, den es seit E100 gibt — eine
        Breite je Strich. `fueller` und `pinsel` zeichnen eine Flaeche, deren
@@ -60374,6 +61005,10 @@ const Marken = (() => {
            die üblichen Winkel dazwischen, ohne zitternde Hand. Nur Laufzeit,
            Vorgabe aus. */
         let lineal = false;
+        const ruler = InkRuler.create(flaeche, breite, hoehe);
+        /* Unabhängig von der Stiftbreite: Radieren darf den nächsten Strich
+           nicht dicker machen. Alte Flächen behalten bis zur Wahl ihre Größe. */
+        let eraserSize = null;
         const rasten = (anfang, ende) => {
             const dx = ende[0] - anfang[0];
             const dy = ende[1] - anfang[1];
@@ -60517,6 +61152,12 @@ const Marken = (() => {
             defsAuffrischen();
             abdeckAnwenden();
             renderSelection();
+            /* DAS LINEAL ÜBERLEBT DAS NEUZEICHNEN (E573). Die Zeile ganz oben in
+               dieser Funktion räumt JEDES `[data-ink-ui]` aus der Fläche — das
+               Lineal trägt dieses Kennzeichen, und niemand hängte es zurück.
+               Gemessen war nach einem einzigen „Zurück" kein Lineal mehr da,
+               während der Schalter weiter „an" meldete. */
+            ruler.remount();
         };
         const restore = (next) => {
             /* Flach, aus demselben Grund wie `snapshot` (E378): die Marken werden
@@ -60837,7 +61478,7 @@ const Marken = (() => {
         };
         /* Der Radierer ist ein Kreis; seine Groesse haengt an der gewaehlten
            Strichstaerke — duenn, mittel, dick, wie beim Stift. */
-        const radierRadius = () => Math.max(5, width * 3);
+        const radierRadius = () => eraserSize ?? Math.max(5, width * 3);
         const frischeId = () => typeof Ids !== 'undefined' ? Ids.short(8) : 'm' + Math.random().toString(36).slice(2, 10);
         /* EIN RADIERSCHRITT (E352): alles, was der Kreis um `center` beruehrt.
            „ganz" nimmt die Marke, „marker" nur Marker, „teil" schneidet Stift
@@ -61063,7 +61704,8 @@ const Marken = (() => {
         const addSample = (event, um) => {
             if (!running)
                 return;
-            const roh = um ? um(event) : R.zuBlatt(flaeche, event);
+            const sample = um ? um(event) : R.zuBlatt(flaeche, event);
+            const roh = sample ? ruler.project(sample) : null;
             if (!roh)
                 return;
             /* DER DRUCK KOMMT AUS DEM ROHEN PUNKT (E376): der Ersatzdruck fuer
@@ -61157,7 +61799,7 @@ const Marken = (() => {
          * nicht — test366 haelt genau das fest.
          * -------------------------------------------------------------------- */
         const nassenSchwanz = (event, um) => {
-            if (!feder || !running)
+            if (!feder || !running || ruler.constrained())
                 return;
             const druck = running.pressure[running.pressure.length - 1] ?? 0.5;
             const halb = halbeBreite(running, druck);
@@ -61987,9 +62629,10 @@ const Marken = (() => {
                 (e.button === 5 || e.button === 2 || (e.buttons & 32) !== 0);
             if (e.button !== 0 && !stiftRadiert)
                 return;
-            const point = R.zuBlatt(flaeche, e);
-            if (!point)
+            const rawPoint = R.zuBlatt(flaeche, e);
+            if (!rawPoint)
                 return;
+            const point = ruler.begin(rawPoint, !stiftRadiert && ['stift', 'marker', 'line', 'arrow'].includes(tool));
             event.preventDefault();
             aktiverZeiger = e.pointerId;
             zeigerZuletzt = Date.now();
@@ -62359,7 +63002,7 @@ const Marken = (() => {
             if (!running)
                 return;
             /* Stift und Marker sind oben schon heraus (E511). */
-            running.pts[1] = lineal && (running.art === 'line' || running.art === 'arrow')
+            running.pts[1] = ruler.constrained() ? ruler.project(point) : lineal && (running.art === 'line' || running.art === 'arrow')
                 ? rasten(running.pts[0], point) : point;
             runningNode = updateNode(runningNode, running);
         });
@@ -62380,7 +63023,8 @@ const Marken = (() => {
             // pointerup may carry a final position that no pointermove delivered.
             // Keep the previous pressure: pen devices report zero pressure on lift.
             if (event.type === 'pointerup' && running && (running.art === 'stift' || running.art === 'marker')) {
-                const end = R.zuBlatt(flaeche, event);
+                const rawEnd = R.zuBlatt(flaeche, event);
+                const end = rawEnd ? ruler.project(rawEnd) : null;
                 if (end) {
                     const last = running.pts[running.pts.length - 1];
                     if (Math.hypot(end[0] - last[0], end[1] - last[1]) > 0.01) {
@@ -62654,7 +63298,7 @@ const Marken = (() => {
            oben braucht genau dieses Objekt, um sich beim Kern zu melden. Zwei
            verschiedene Objekte für dieselbe Fläche wären der sichere Weg zu
            einem Knopf, der auf nichts wirkt. */
-        const setzeLineal = (an) => { lineal = !!an; };
+        const setzeLineal = (an) => { lineal = !!an; ruler.setActive(lineal); };
         const linealAn = () => lineal;
         const setzeFormen = (an) => {
             formen = !!an;
@@ -62672,6 +63316,13 @@ const Marken = (() => {
             /* E494: die Elemente-Bibliothek — sichern aus der Auswahl, setzen per Tipp. */
             elementAusAuswahl,
             elementGewaehlt: () => letztesElement,
+            selectElement: (id) => { if (elementHolen(id)) {
+                letztesElement = id;
+                notifyState();
+            } },
+            setEraserSize: (radius) => { if ([5, 14, 28].includes(radius))
+                eraserSize = radius; },
+            eraserSize: () => radierRadius(),
             elementWaehlen: async () => {
                 const gewaehlt = await elementWaehlen();
                 if (gewaehlt) {
@@ -64185,7 +64836,12 @@ const Marken = (() => {
          */
         const leiterReihe = (an) => {
             tools.querySelectorAll('.blatt-farbe-leiter').forEach(node => node.remove());
-            tools.querySelectorAll('.blatt-farbe, .blatt-farbe-neu')
+            /* DIE HAFTNOTIZFARBEN GEHEN DIE ADERN NICHTS AN (E574). Sie tragen
+               `.blatt-farbe` und wären sonst mit weggenommen worden — im
+               Notizkontext stünde dann gar keine Farbe mehr, nur weil irgendwann
+               vorher der Leiterstift gewählt war. Ihre Sichtbarkeit entscheidet
+               allein die Gruppenregel. */
+            tools.querySelectorAll('.blatt-farbe:not(.blatt-note-color), .blatt-farbe-neu')
                 .forEach(node => node.classList.toggle('blatt-farbe-weg', an));
             if (!an)
                 return;
@@ -64735,6 +65391,173 @@ const Marken = (() => {
             fixed.innerHTML = extra;
             row.appendChild(fixed);
         }
+        /* E572: Das Dokumentstudio nutzt dieselben echten Knöpfe. Die normale
+           Blockleiste und ihre frei gespeicherte Ordnung bleiben unverändert. */
+        const noteColors = [
+            ['#ffb2bd', 'Rosa'], ['#ffd09e', 'Apricot'], ['#ffe780', 'Gelb'],
+            ['#b9efa0', 'Grün'], ['#a9e9e4', 'Türkis'], ['#c5dfff', 'Blau'],
+            ['#e7d4fb', 'Flieder'], ['#f6c8e8', 'Pink'], ['#e6e3dd', 'Grau']
+        ];
+        tools.addEventListener('ink-studio-ready', () => {
+            if (tools.dataset.referenceUi)
+                return;
+            tools.dataset.referenceUi = 'ready';
+            const cycle = tools.querySelector('[data-act="radiermodus"]');
+            const choose = document.createElement('button');
+            choose.dataset.gruppe = 'radierer';
+            choose.dataset.act = 'eraser-menu';
+            choose.className = 'blatt-eraser-menu';
+            choose.type = 'button';
+            choose.setAttribute('aria-haspopup', 'dialog');
+            const syncEraser = () => {
+                choose.textContent = (RADIERER.find(mode => mode.id === cycle.dataset.modus)?.name || 'Ganz') + ' ⌄';
+                choose.setAttribute('aria-label', 'Radiermodus wählen: ' + choose.textContent);
+            };
+            syncEraser();
+            cycle.after(choose);
+            new MutationObserver(syncEraser).observe(cycle, { attributes: true, attributeFilter: ['data-modus'] });
+            choose.addEventListener('click', () => InkMenu.open(choose, 'Radierer', (body, close) => {
+                for (const mode of RADIERER) {
+                    const option = document.createElement('button');
+                    option.type = 'button';
+                    option.textContent = mode.name;
+                    option.title = mode.titel;
+                    option.setAttribute('aria-pressed', String(mode.id === cycle.dataset.modus));
+                    option.addEventListener('click', () => {
+                        for (let i = 0; i < RADIERER.length && cycle.dataset.modus !== mode.id; i++)
+                            cycle.click();
+                        close();
+                    });
+                    body.append(option);
+                }
+            }));
+            const gemerkteGroesse = radierGroesseLesen();
+            for (const [index, radius] of RADIER_GROESSEN.entries()) {
+                const size = document.createElement('button');
+                size.type = 'button';
+                size.dataset.gruppe = 'radierer';
+                size.dataset.eraserSize = String(radius);
+                size.className = 'blatt-eraser-size';
+                size.setAttribute('aria-label', 'Radierer ' + ['klein', 'mittel', 'groß'][index]);
+                size.setAttribute('aria-pressed', String(radius === gemerkteGroesse));
+                /* 14, 22, 30 — NACHGEMESSEN, nicht geschätzt. Hier stand 16/28/40;
+                   bei 44 px Knopf blieb für den grössten kein Platz, und der Browser
+                   schrumpfte ihn als Flex-Element von 40 auf 28 — genau so breit wie
+                   der mittlere. Zwei gleich grosse Kreise sind keine zwei Grössen. */
+                size.style.setProperty('--eraser-preview', [14, 22, 30][index] + 'px');
+                size.innerHTML = '<i aria-hidden="true"></i>';
+                size.addEventListener('click', () => {
+                    controls.setEraserSize(radius);
+                    /* Gemerkt wird hier, nicht im Zeichner: der lebt je Blatt, die
+                       Wahl gilt für den Menschen. */
+                    if (typeof Store !== 'undefined')
+                        Store.setMeta('zeichnen:radierergroesse', radius);
+                    tools.querySelectorAll('[data-eraser-size]').forEach(node => node.setAttribute('aria-pressed', String(node === size)));
+                });
+                choose.before(size);
+            }
+            controls.setEraserSize(gemerkteGroesse);
+            for (const [color, name] of noteColors) {
+                const swatch = document.createElement('button');
+                swatch.type = 'button';
+                swatch.className = 'blatt-farbe blatt-note-color';
+                swatch.dataset.c = color;
+                /* ══ EINE EIGENE GRUPPE, NICHT DIE DER TINTE (E574) ═══════════════════
+                   Hier stand `'farbe'`. Gemessen war die Folge: die neun Pastelle
+                   standen in JEDEM Werkzeug — beim Stift, beim Marker, bei der
+                   Schrift —, also vierzehn Tupfer, von denen neun zu einem Werkzeug
+                   gehören, das gerade nicht gewählt ist. Und weil `leiterReihe()`
+                   die Adern ebenfalls vor das „+" hängt, `ink-studio-ready` die
+                   Pastelle aber DANACH erzeugt, kamen sie nach einem Neustart mit
+                   dem Leiterstift mitten in die Adernreihe: `blatt-farbe-weg` war
+                   schon verteilt, als es sie noch nicht gab.
+                   `notizfarbe` steht in der Gruppenliste (E356) nur beim Werkzeug
+                   `zettel`. Damit gilt die Regel an jeder Stelle gleich, ohne dass
+                   irgendwer nachträglich eine Klasse verteilen muss. */
+                swatch.dataset.gruppe = 'notizfarbe';
+                swatch.style.backgroundColor = color;
+                swatch.setAttribute('aria-label', 'Haftnotiz ' + name);
+                swatch.title = name;
+                tools.querySelector('.blatt-farbe-neu')?.before(swatch);
+            }
+            ordnungAnwenden(tools);
+        });
+        tools.addEventListener('ink-panel', event => {
+            const { kind, anchor } = event.detail;
+            if (kind === 'laser')
+                InkMenu.open(anchor, 'Laserpointer', (body, close) => {
+                    body.classList.add('blatt-laser-options');
+                    for (const mode of LASER) {
+                        const option = document.createElement('button');
+                        option.type = 'button';
+                        option.dataset.laserOption = mode.id;
+                        option.setAttribute('aria-pressed', String(mode.id === laserArt()));
+                        option.innerHTML = '<i aria-hidden="true"></i><span>' + mode.name + '</span>';
+                        option.onclick = () => { tools.querySelector(`[data-laser="${mode.id}"]`)?.click(); close(); };
+                        body.append(option);
+                    }
+                });
+            if (kind === 'elemente')
+                InkMenu.open(anchor, 'Elemente & Haftnotizen', (body, close) => {
+                    const tabs = document.createElement('div');
+                    tabs.className = 'blatt-gallery-tabs';
+                    const grid = document.createElement('div');
+                    grid.className = 'blatt-gallery-grid';
+                    for (const kind of ['Elemente', 'Haftnotizen']) {
+                        const tab = document.createElement('button');
+                        tab.type = 'button';
+                        tab.textContent = kind;
+                        const show = () => {
+                            tabs.querySelectorAll('button').forEach(node => node.setAttribute('aria-pressed', String(node === tab)));
+                            grid.replaceChildren();
+                            if (kind === 'Haftnotizen') {
+                                for (const [color, name] of noteColors) {
+                                    const card = document.createElement('button');
+                                    card.type = 'button';
+                                    card.className = 'blatt-note-preview';
+                                    card.style.setProperty('--note-color', color);
+                                    card.textContent = name;
+                                    card.onclick = () => {
+                                        tools.querySelector('[data-wz="zettel"]')?.click();
+                                        tools.querySelector(`.blatt-note-color[data-c="${color}"]`)?.click();
+                                        close();
+                                    };
+                                    grid.append(card);
+                                }
+                            }
+                            else {
+                                const all = elemente();
+                                if (!all.length) {
+                                    const empty = document.createElement('p');
+                                    empty.className = 'blatt-gallery-empty';
+                                    empty.textContent = 'Deine eigenen Sticker: mit dem Lasso etwas auswählen und „Als Element“ sichern. Oder eine Haftnotiz wählen und auf dem Papier aufziehen.';
+                                    grid.append(empty);
+                                }
+                                for (const item of all) {
+                                    const card = document.createElement('button');
+                                    card.type = 'button';
+                                    card.className = 'blatt-element-preview';
+                                    const name = document.createElement('span');
+                                    name.textContent = item.name;
+                                    card.append(elementBild(item), name);
+                                    card.onclick = () => { controls.selectElement(item.id); close(); };
+                                    grid.append(card);
+                                }
+                            }
+                        };
+                        tab.onclick = show;
+                        tabs.append(tab);
+                        if (kind === 'Elemente')
+                            show();
+                    }
+                    body.append(tabs, grid);
+                    const manage = document.createElement('button');
+                    manage.type = 'button';
+                    manage.textContent = 'Bibliothek verwalten …';
+                    manage.onclick = () => { close(); tools.querySelector('[data-act="elemente"]')?.click(); };
+                    body.append(manage);
+                });
+        });
         return row;
     };
     /* ---- TASTEN WIE GOODNOTES (E465) --------------------------------------
@@ -78884,17 +79707,9 @@ const DocumentMode = (() => {
         drawingbar.className = 'document-drawingbar';
         drawingbar.setAttribute('role', 'toolbar');
         drawingbar.setAttribute('aria-label', 'PDF bearbeiten');
-        const drawingTools = [
-            ['schreiben', 'inkHand', 'Hand / Verschieben'], ['select', 'inkLasso', 'Lasso / Auswahl'],
-            ['stift', 'pencil', 'Stift'], ['marker', 'inkMarker', 'Marker'],
-            ['radierer', 'inkEraser', 'Radierer'], ['text', 'inkText', 'Text'],
-            ['formen', 'inkShapes', 'Formen'], ['zettel', 'comment', 'Haftnotiz'],
-            ['bild', 'image', 'Bild'], ['zeichen', 'bolt', 'Fachzeichen'], ['abdeck', 'eye', 'Abdecken'],
-            /* DIE ELEMENTE (E494): im Studio steht das Werkzeug mit in der Leiste,
-               weil das Studio der Ort ist, an dem gestempelt wird — ein Häkchen
-               auf zwanzig Seiten, eine Unterschrift, ein Kastenrahmen. */
-            ['elemente', 'star', 'Elemente']
-        ];
+        /* E572: derselbe Katalog wie auf dem Blatt. Die alte Abschrift hatte
+           den Laser vergessen und verwendete andere Symbole für dieselbe Tat. */
+        const drawingTools = Marken.WERKZEUGE.map(tool => [tool.id, tool.sym, tool.name]);
         drawingTools.forEach(([tool, icon, label]) => {
             const button = document.createElement('button');
             button.type = 'button';
@@ -78907,7 +79722,11 @@ const DocumentMode = (() => {
             button.appendChild(glyph);
             drawingbar.appendChild(button);
         });
-        const moreTools = topButton('ink-options', '···', 'Alle Stiftoptionen und Bearbeitungsaktionen');
+        const rulerButton = topButton('ink-ruler', '', 'Lineal ein- oder ausblenden');
+        rulerButton.innerHTML = '<span data-sym="inkRuler" aria-hidden="true"></span>';
+        rulerButton.setAttribute('aria-pressed', 'false');
+        drawingbar.append(rulerButton);
+        const moreTools = topButton('ink-options', '···', 'Weitere Zeichenoptionen und Leiste einrichten');
         moreTools.setAttribute('aria-expanded', 'false');
         drawingbar.appendChild(moreTools);
         /* ZURÜCK UND VOR STEHEN LINKS (E490, Redurs Bild vom 7. September).
@@ -78925,7 +79744,8 @@ const DocumentMode = (() => {
         history.setAttribute('role', 'group');
         history.setAttribute('aria-label', 'Zeichenverlauf');
         history.append(topButton('ink-undo', '↶', 'Letzten Zeichenstrich rückgängig machen'), topButton('ink-redo', '↷', 'Zeichenstrich wiederholen'));
-        drawingbar.prepend(history);
+        /* E572: die feste Verlaufskapsel liegt über dem Papier, nicht im
+           rollenden Werkzeugband — wie in Redurs neuer Referenz. */
         /* WELCHE SPALTEN ES GIBT, STEHT AM KASTEN (E296). Vorher war das Raster
            fest — 190 px links, 280 px rechts, bei jeder Fensterbreite ueber
            1100 px. Auf 1440 px blieben der Seite damit rund 900, obwohl beide
@@ -79332,7 +80152,34 @@ const DocumentMode = (() => {
         inspector.setAttribute('aria-label', 'Dokumentdetails und verknüpfte Inhalte');
         inspectorButton.setAttribute('aria-controls', inspector.id);
         renderInspector(inspector, page, current);
-        body.append(thumbnails, center, inspector);
+        /* ══ DIE VERLAUFSKAPSEL LIEGT IM PAPIERBEREICH (E573) ═════════════════
+           E572 hängte sie als viertes Kind in `.document-body`. Das ist am
+           Rechner ein Raster mit drei Spalten (0 / Papier / 0) — ohne eigene
+           Spaltenangabe landete sie in der dritten, 0 px breiten, und stand
+           gemessen bei x = 1440 in einem 1440-px-Fenster. Am TELEFON ist
+           `.document-body` gar kein Raster, sondern `display:block`: dort stand
+           sie als letzter Block UNTER dem Papier, gemessen bei top = 812 in
+           einem 800 px hohen Fenster. Beides heisst dasselbe: Rückgängig war
+           nicht erreichbar, und das ist §46 Priorität 1.
+    
+           Jetzt liegt sie IN `.document-center`, also in der Spalte, in der das
+           Papier steht, und klebt dort oben links (`position:sticky`). Das
+           braucht kein Raster und keine Sonderregel je Bildschirmbreite — es
+           ist derselbe Kasten, in dem auch das Papier rollt. */
+        /* ══ DIE VERLAUFSKAPSEL BLEIBT EIN KIND DES KÖRPERS (E573) ════════════
+           Sie IN die Papierspalte zu hängen (`center.prepend`) sah nach dem
+           kürzeren Weg aus und war der falsche: gemessen baute das Studio danach
+           gar nicht mehr auf — `.document-workspace` wurde nie sichtbar, und
+           `test437` lief in seine Zeitgrenze. `.document-center` ist der
+           Rollkasten, dessen erste Kinder (Original, Beschriftung, Bühnen) von
+           Messung, Rollstand und ResizeObserver gelesen werden; ein schwebendes
+           Element davor gehört dort nicht hinein.
+    
+           Sie bleibt also Kind von `.document-body` — und bekommt IM STILBLATT
+           ihren Platz: am Rechner als Rasterfeld in derselben Zelle wie das
+           Papier (Rasterfelder in einer Zelle überlagern sich), am Telefon, wo
+           `.document-body` gar kein Raster ist, absolut oben links. */
+        body.append(thumbnails, center, inspector, history);
         /* ══ DIE SUCHLEISTE (E468) ══════════════════════════════════════════════
            Ein Feld, die Zahl, vor und zurueck, zu. Enter springt zum naechsten
            Treffer, Umschalt+Enter zum vorigen, Escape schliesst (E302). Die
@@ -79470,12 +80317,68 @@ const DocumentMode = (() => {
         if (typeof Register !== 'undefined')
             Register.symbole.fuelle(drawingbar);
         const inkToolbar = () => staende[state.index]?.querySelector('.blatt-werk') || null;
+        /* ══ EINE SORTIERBEWEGUNG IST KEINE ATTRIBUTÄNDERUNG (E575) ═════════════
+           Der Beobachter darüber horcht auf `disabled`, `aria-pressed` und
+           `data-tool` — und genau deshalb kam eine Sortierbewegung oben NIE an:
+           sie ist eine `childList`-Änderung. Gemessen: den letzten Knopf der
+           unteren Leiste nach vorn gezogen, 600 ms gewartet, obere Reihenfolge
+           Zeichen für Zeichen unverändert.
+           WARUM NICHT EINFACH `childList` OBEN DAZU: `center` enthält die
+           Zeichenfläche. Jeder Strich hängt dort Pfade ein, und `inkSync()`
+           liefe dann mitten im Zeichnen bei jedem Bild. Der zweite Beobachter
+           horcht deshalb nur auf die Leiste selbst, ohne `subtree` — dort sind
+           die Kinder genau die Knöpfe, um die es geht. Er wird umgehängt, wenn
+           die aktive Seite eine andere Leiste mitbringt. */
+        let beobachtet = null;
+        const ordnungObserver = new MutationObserver(() => {
+            if (!workspace.isConnected) {
+                ordnungObserver.disconnect();
+                return;
+            }
+            inkSync();
+        });
+        const ordnungBeobachten = () => {
+            const source = inkToolbar();
+            if (!source || source === beobachtet)
+                return;
+            ordnungObserver.disconnect();
+            ordnungObserver.observe(source, { childList: true });
+            beobachtet = source;
+        };
         const inkSync = () => {
             if (!workspace.isConnected) {
                 Zeichenziel.vergiss(inkSync);
                 return;
             }
             const source = inkToolbar();
+            source?.dispatchEvent(new Event('ink-studio-ready'));
+            /* ══ NUR UMHÄNGEN, WENN SICH WIRKLICH ETWAS GEÄNDERT HAT (E575) ═══════
+               Hier stand dasselbe `insertBefore` ohne Bedingung. `insertBefore`
+               BEWEGT auch einen Knoten, der schon am richtigen Platz steht: erst
+               raus, dann rein. Gemessen mit einem Beobachter auf der oberen
+               Leiste ergab ein einziger Klick auf ein Werkzeug **156
+               Knotenbewegungen** — dreizehn Knöpfe mal zwei Bewegungen mal sechs
+               Rufe von `inkSync()`.
+               Der Preis war nicht nur Rechenzeit. Ein bewegter Knoten verliert
+               den Fokus: nach dem Klick stand `document.activeElement` auf
+               `BODY`, der Knopf war also unter dem Finger weggezogen worden. Und
+               jeder Übergang auf ihm (E568: der Wechsel der Auswahl) begann von
+               vorn, mitten im Bild.
+               Jetzt wird zuerst verglichen und nur bei Abweichung umgehängt. Die
+               benutzereigene Reihenfolge (§8/E570) gilt unverändert — sie kommt
+               nur ohne Neuaufbau an. */
+            const wunsch = Array.from(source?.querySelectorAll(':scope > [data-wz]') || [])
+                .map(real => drawingbar.querySelector(`[data-document-tool="${real.dataset.wz}"]`))
+                .filter((button) => !!button);
+            const jetzt = Array.from(drawingbar.querySelectorAll(':scope > [data-document-tool]'))
+                .filter(button => wunsch.includes(button));
+            if (wunsch.some((button, index) => button !== jetzt[index])) {
+                wunsch.forEach(button => drawingbar.insertBefore(button, rulerButton));
+            }
+            const realRuler = source?.querySelector('[data-act="lineal"]');
+            rulerButton.disabled = !canAnnotate || !realRuler;
+            rulerButton.setAttribute('aria-pressed', realRuler?.getAttribute('aria-pressed') || 'false');
+            workspace.dataset.inkTool = source?.dataset.tool || 'schreiben';
             drawingbar.querySelectorAll('[data-document-tool]').forEach(button => {
                 const real = source?.querySelector('[data-wz="' + button.dataset.documentTool + '"]');
                 button.disabled = !canAnnotate || !real || real.disabled;
@@ -79487,6 +80390,8 @@ const DocumentMode = (() => {
                 if (button)
                     button.disabled = !canAnnotate || !real || real.disabled;
             }
+            /* Die Leiste der aktiven Seite ist nicht immer dieselbe — nachziehen. */
+            ordnungBeobachten();
         };
         Zeichenziel.horche(inkSync);
         // History state is published on the existing controls via disabled attrs.
@@ -81068,6 +81973,11 @@ const DocumentMode = (() => {
                 }
                 toolsSetzen(true);
                 inkToolbar()?.querySelector('[data-wz="' + tool + '"]')?.click();
+                // Eine Auswahlklappe zeigt Möglichkeiten, ohne einen Strich abzulegen.
+                if (tool === 'laser' || tool === 'elemente')
+                    inkToolbar()?.dispatchEvent(new CustomEvent('ink-panel', {
+                        detail: { kind: tool, anchor: element?.closest('[data-document-tool]') }
+                    }));
                 inkSync();
                 return;
             }
@@ -81147,6 +82057,12 @@ const DocumentMode = (() => {
                 menueSchliessen();
             if (!action)
                 return;
+            if (action === 'ink-ruler' && canAnnotate) {
+                toolsSetzen(true);
+                inkToolbar()?.querySelector('[data-act="lineal"]')?.click();
+                inkSync();
+                return;
+            }
             if (action === 'folienmenue') {
                 folienMenue(tatKnopf);
                 return;

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-555 Entscheidungen, E1 bis E575 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+556 Entscheidungen, E1 bis E576 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -619,6 +619,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E573** — Das Lineal lässt den Zeiger durch, die Verlaufskapsel bekommt ihren Platz vom Stilblatt, und das Dock liest die Gruppenliste, statt sie zweitens zu entscheiden
 * **E574** — Das Lineal gehört auch dem Stift; die neun Haftnotizfarben bekommen eine eigene Gruppe und bleiben im Notizkontext
 * **E575** — Ein Feld, das aufgeht, muss auch wieder zugehen; ein Klick darf die Leiste nicht neu aufbauen; und eine Sortierbewegung ist keine Attributänderung
+* **E576** — Der Radierer: drei sichtbare Kreise, der Modus einmal statt zweimal, und eine Grösse, die den Seitenwechsel überlebt
 
 ---
 
@@ -46736,3 +46737,64 @@ Zusicherung zuerst rot geblieben, obwohl der Code schon stimmte.
 **Prüfläufe:** `test524` 36/36 (vier davon vorher rot gesehen), `test177`,
 `test228`, `test267`, `test393`, `test437`, `test461`, `test515` grün.
 Die Gesamtsuite ist nicht als grün behauptet.
+
+---
+
+## E576 — Der Radierer: sichtbar, einfach, mit Gedächtnis
+
+**14. September 2026, derselbe Zweig.** Drei Dinge am Radierer-Dock, alle
+drei gemessen, bevor etwas geändert wurde (Fenster 1440 × 960):
+
+| Gemessen | Wert |
+|---|---|
+| die drei Grössenknöpfe | je **14 × 44 px**, ihr `<i>` **0 × 0** |
+| der Modus | „Ganz" 65 px **und** „Ganz ⌄" 60 px — dasselbe Wort zweimal |
+| nach einem Seitenwechsel | wieder „klein", obwohl „gross" gewählt war |
+
+### Unsichtbar: es fehlte das ganze Stilblatt
+
+`.blatt-eraser-size` und `.blatt-eraser-menu` hatten **keine einzige Regel**.
+Die Knöpfe setzen `--eraser-preview` und tragen ein leeres `<i>`, das die
+Vorschau zeichnen soll — ohne Regel zeichnet es nichts. Die 44-px-Zusage aus
+§37 galt nur in der Höhe; in der Breite waren es 14.
+
+Beim Bauen kam ein zweiter, feinerer Fund dazu: mit 16/28/40 px Vorschau
+blieb für den grössten Kreis in einem 44-px-Knopf kein Platz, und der
+Browser **staucht ein Flex-Element** — gemessen 16, 28, **28**. Zwei gleich
+grosse Kreise sind keine zwei Grössen. Jetzt 14/22/30 px und `flex:0 0 auto`.
+Gewählt sagt der Knopf zweimal: Rahmen UND gefüllter Kreis (§38).
+
+### Doppelt: der alte Rundlaufknopf blieb neben seinem Ersatz stehen
+
+Er wird **nicht entfernt** (§47). Er ist weiterhin der Mechanismus, den das
+neue Feld bedient — es klickt ihn —, und auf einer gewöhnlichen Seite ohne
+Studio ist er der einzige Weg. Er tritt nur dort zurück, wo sein Ersatz
+wirklich gebaut wurde: `data-reference-ui="ready"` steht genau da und
+nirgends sonst.
+
+Dass die Zeile zuerst wirkungslos blieb, ist selbst eine Notiz wert: die
+Gruppenliste aus E356 steht in derselben Datei **weiter unten** und hatte
+dieselbe Spezifität. Bei Gleichstand gewinnt die spätere Zeile. Eine
+Attributangabe mehr entscheidet es — ohne `!important`, das an dieser Stelle
+der Anfang vom Ende jeder Nachvollziehbarkeit wäre.
+
+### Vergesslich: die Grösse war der einzige Schalter ohne Gedächtnis
+
+`controls.setEraserSize(5)` stand fest im Aufbau des Studios. Der Modus
+daneben wird seit jeher in `meta` gemerkt (`zeichnen:radierer`); die Grösse
+war die Ausnahme, und das fällt erst auf, wenn man dieselbe Wahl dreimal am
+Tag wiederholt. Jetzt `zeichnen:radierergroesse`, gelesen beim Aufbau,
+geschrieben beim Klick.
+
+**Gemerkt wird beim Menschen, nicht beim Blatt.** Der Zeichner lebt je
+Blatt; die Wahl „ich radiere gern grob" gehört nicht dorthin.
+
+### Und eine Prüfung, die aus dem falschen Grund rot war
+
+Die Zusicherung verglich die drei Kreise in **Baumreihenfolge**. Die ist
+seit E570 die des Nutzers, nicht 5, 14, 28. Sie vergleicht jetzt nach Wert.
+Eine zweite Zeile derselben Prüfung konnte gar nicht rot werden
+(`Number(x || 28) === 28` ist auch ohne `x` wahr) und prüft jetzt den Ort,
+an dem die Wahl wirklich überlebt (§55.2).
+
+**Prüfläufe:** `test524` 42/42 (vier davon vorher rot gesehen).

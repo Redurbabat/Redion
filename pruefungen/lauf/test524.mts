@@ -326,6 +326,80 @@ try {
   check('… und zwar genau als dieselbe Reihenfolge',
     nachSortieren === await page.evaluate(`Array.from(document.querySelectorAll('.document-stage[data-aktiv] .blatt-werk > [data-wz]')).map(b => b.dataset.wz).join(',')`));
 
+  /* ══ §6 DER RADIERER: SICHTBAR, EINFACH, MIT GEDÄCHTNIS (E576) ════════════
+     GEMESSEN an der laufenden App, Fenster 1440 × 960:
+
+       die drei Größen        je 14 × 44 px, ihr <i> 0 × 0 — also nichts zu sehen
+       der Modus              „Ganz" 65 px UND „Ganz ⌄" 60 px — zweimal dasselbe Wort
+       nach einem Seitenwechsel   wieder „klein", obwohl „groß" gewählt war
+
+     Die 14 px sind kein Stilfehler, sondern ein fehlendes Stilblatt:
+     `.blatt-eraser-size` und `.blatt-eraser-menu` hatten KEINE einzige
+     Regel. Die Knöpfe setzen `--eraser-preview` auf 16, 28 und 40 px und
+     tragen ein leeres `<i>` — ohne Regel zeichnet das nichts, und die
+     44-px-Zusage aus §37 gilt in der Breite nicht mehr.
+
+     Der doppelte Modus ist der alte Rundlaufknopf, der neben seinem eigenen
+     Ersatz stehen blieb. Er wird nicht entfernt — er ist weiterhin der
+     Mechanismus, den das neue Feld bedient, und auf einer gewöhnlichen
+     Seite (ohne Studio) der einzige Weg. Er tritt nur dort zurück, wo sein
+     Ersatz wirklich steht. */
+  await werkzeug('radierer');
+  const radierer = async () => await page.evaluate(`(() => {
+    const werk = document.querySelector('.document-stage[data-aktiv] .blatt-werk');
+    const sicht = (e) => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e);
+      return r.width > 0 && r.height > 0 && s.display !== 'none' && s.visibility !== 'hidden'; };
+    const groessen = Array.from(werk.querySelectorAll('[data-eraser-size]')).map(e => {
+      const r = e.getBoundingClientRect();
+      const i = e.querySelector('i');
+      const ir = i ? i.getBoundingClientRect() : { width: 0, height: 0 };
+      return { px: e.dataset.eraserSize, breit: Math.round(r.width), hoch: Math.round(r.height),
+        kreis: Math.round(ir.width), gewaehlt: e.getAttribute('aria-pressed') === 'true' };
+    });
+    const cycle = werk.querySelector('[data-act="radiermodus"]');
+    const menu = werk.querySelector('[data-act="eraser-menu"]');
+    return { groessen, cycleSichtbar: !!cycle && sicht(cycle), cycleDa: !!cycle,
+      menuSichtbar: !!menu && sicht(menu) };
+  })()`) as { groessen: Array<{ px: string; breit: number; hoch: number; kreis: number; gewaehlt: boolean }>;
+              cycleSichtbar: boolean; cycleDa: boolean; menuSichtbar: boolean };
+
+  const r1 = await radierer();
+  check('Die drei Radierergrößen sind 44 px breit und hoch (§37)',
+    r1.groessen.length === 3 && r1.groessen.every(g => g.breit >= 44 && g.hoch >= 44));
+  /* EINE GRÖSSE, DIE MAN NICHT SIEHT, IST KEINE WAHL (§55.1). Die drei
+     Kreise müssen verschieden gross sein — sonst sagt das Bild nichts. */
+  /* NACH WERT VERGLEICHEN, NICHT NACH REIHENFOLGE. Die Knöpfe stehen in der
+     Reihenfolge, die der Nutzer gewählt hat (E570) — `querySelectorAll`
+     liefert sie in Baumfolge, und die ist nach `ordnungAnwenden()` eben
+     nicht mehr 5, 14, 28. Diese Zeile war deshalb zuerst aus dem falschen
+     Grund rot. */
+  const kreis = (px: string) => r1.groessen.find(g => g.px === px)?.kreis ?? 0;
+  check('… und jede zeigt ihren Kreis, klein < mittel < groß',
+    r1.groessen.every(g => g.kreis > 0) && kreis('5') < kreis('14') && kreis('14') < kreis('28'));
+  check('Der Radiermodus steht im Studio einmal da, nicht zweimal',
+    r1.menuSichtbar && r1.cycleDa && !r1.cycleSichtbar);
+
+  /* Das Gedächtnis: „groß" wählen, weggehen, wiederkommen. */
+  await page.locator('.document-stage[data-aktiv] [data-eraser-size="28"]').click();
+  await page.waitForTimeout(250);
+  check('Eine gewählte Größe ist sofort die gewählte',
+    (await radierer()).groessen.find(g => g.px === '28')?.gewaehlt === true);
+  await page.evaluate(id => App.oeffne(id), ids.fremd);
+  await page.waitForTimeout(700);
+  await page.evaluate(id => App.oeffne(id), ids.page);
+  await page.waitForSelector('.document-drawingbar');
+  await page.waitForTimeout(800);
+  await werkzeug('radierer');
+  const r2 = await radierer();
+  check('… und sie überlebt den Seitenwechsel',
+    r2.groessen.find(g => g.px === '28')?.gewaehlt === true);
+  /* DIESE ZEILE STAND HIER EINMAL ANDERS und konnte nie rot werden:
+     `Number(svg.dataset.eraser || 28) === 28` ist auch dann wahr, wenn das
+     Attribut gar nicht existiert (§55.2). Jetzt wird der Ort geprüft, an dem
+     die Wahl WIRKLICH überlebt — `meta`, derselbe Weg wie beim Modus. */
+  check('… weil sie in `meta` steht und nicht im Blatt',
+    await page.evaluate(`Store.getMeta('zeichnen:radierergroesse') === 28`));
+
   await werkzeug('stift');
   check('Keine Laufzeitfehler', errors.length === 0);
   mkdirSync(resolve(root, 'bilder'), { recursive: true });

@@ -84,6 +84,21 @@ const Marken = (() => {
         const wert = typeof Store !== 'undefined' ? String(Store.getMeta('zeichnen:radierer') || '') : '';
         return RADIERER.some(r => r.id === wert) ? wert : RADIER_VORGABE;
     };
+    /* ══ DIE GRÖSSE DES RADIERERS WIRD GEMERKT (E576) ═══════════════════════
+       Sie stand als `controls.setEraserSize(5)` fest im Aufbau des Studios.
+       Gemessen: „groß" wählen, Seite wechseln, zurückkommen — wieder „klein".
+       Der Modus daneben (`zeichnen:radierer`) wird seit jeher gemerkt; die
+       Grösse war der einzige Schalter dieser Reihe ohne Gedächtnis, und das
+       fällt erst auf, wenn man dreimal am Tag dieselbe Wahl wiederholt.
+       DREI FESTE WERTE, kein Regler: sie sind die Kreise aus GoodNotes, und
+       sie sind auch die Prüfsteine — `setEraserSize` nimmt nur diese drei an,
+       damit ein alter oder verbogener Wert nicht als Radiergummi von einem
+       Meter Durchmesser ankommt. */
+    const RADIER_GROESSEN = [5, 14, 28];
+    const radierGroesseLesen = () => {
+        const wert = typeof Store !== 'undefined' ? Number(Store.getMeta('zeichnen:radierergroesse')) : NaN;
+        return RADIER_GROESSEN.includes(wert) ? wert : RADIER_GROESSEN[0];
+    };
     /* DIE STIFTE (E351). `kugel` ist der Strich, den es seit E100 gibt — eine
        Breite je Strich. `fueller` und `pinsel` zeichnen eine Flaeche, deren
        Breite dem Druck folgt: der Fueller massvoll, der Pinsel kraeftig.
@@ -6062,23 +6077,32 @@ const Marken = (() => {
                     body.append(option);
                 }
             }));
-            for (const [index, radius] of [5, 14, 28].entries()) {
+            const gemerkteGroesse = radierGroesseLesen();
+            for (const [index, radius] of RADIER_GROESSEN.entries()) {
                 const size = document.createElement('button');
                 size.type = 'button';
                 size.dataset.gruppe = 'radierer';
                 size.dataset.eraserSize = String(radius);
                 size.className = 'blatt-eraser-size';
                 size.setAttribute('aria-label', 'Radierer ' + ['klein', 'mittel', 'groß'][index]);
-                size.setAttribute('aria-pressed', String(index === 0));
-                size.style.setProperty('--eraser-preview', [16, 28, 40][index] + 'px');
+                size.setAttribute('aria-pressed', String(radius === gemerkteGroesse));
+                /* 14, 22, 30 — NACHGEMESSEN, nicht geschätzt. Hier stand 16/28/40;
+                   bei 44 px Knopf blieb für den grössten kein Platz, und der Browser
+                   schrumpfte ihn als Flex-Element von 40 auf 28 — genau so breit wie
+                   der mittlere. Zwei gleich grosse Kreise sind keine zwei Grössen. */
+                size.style.setProperty('--eraser-preview', [14, 22, 30][index] + 'px');
                 size.innerHTML = '<i aria-hidden="true"></i>';
                 size.addEventListener('click', () => {
                     controls.setEraserSize(radius);
+                    /* Gemerkt wird hier, nicht im Zeichner: der lebt je Blatt, die
+                       Wahl gilt für den Menschen. */
+                    if (typeof Store !== 'undefined')
+                        Store.setMeta('zeichnen:radierergroesse', radius);
                     tools.querySelectorAll('[data-eraser-size]').forEach(node => node.setAttribute('aria-pressed', String(node === size)));
                 });
                 choose.before(size);
             }
-            controls.setEraserSize(5);
+            controls.setEraserSize(gemerkteGroesse);
             for (const [color, name] of noteColors) {
                 const swatch = document.createElement('button');
                 swatch.type = 'button';

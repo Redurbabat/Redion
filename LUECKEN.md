@@ -7875,3 +7875,34 @@ was seither wirklich geschlossen ist, mit Beleg — und was ausdrücklich nicht.
    gehört als eigene Lücke mit eigenem rot gesehenen Wächter repariert.
 7. **Ein voller grüner Lauf ist nicht behauptet.** `test290`
    (CSS-Namensräume) ist rot und älter als dieser Zweig.
+
+### Nachtrag, 14. September 2026, spät — Zweig `codex/zeichenstudio-menues-radierer`
+
+Die Liste darüber bleibt stehen. Vier ihrer sieben offenen Punkte sind
+seither zu; die Punkte 1, 5 (teilweise) und 6 sind es nicht.
+
+| Punkt von oben | jetzt | Beleg |
+|---|---|---|
+| 2 · `InkMenu` hat kein Ende | ✅ zu | Das Feld beobachtet seinen Anker; verlässt der den Baum, geht es zu. Dazu `closeAll()`, ein Ersatzweg ohne `showPopover` und die Fokusregel „Escape zurück, Aussenklick nicht". `test524` (E575) |
+| 3 · `inkSync()` hängt alles um | ✅ zu | Gemessen 156 → **0** Knotenbewegungen je Klick; der angetippte Knopf behält den Fokus. Ein zweiter Beobachter bringt Sortierbewegungen live nach oben. `test524` (E575) |
+| 4 · Radierergrössen | ✅ zu | Drei sichtbare Kreise (14/22/30 px) in 44-px-Knöpfen, der Modus einmal statt zweimal, die Wahl in `meta`. `test524` (E576) |
+| 5 · Stilblatt für die Bedienfelder | ◐ halb | `.blatt-popover` hatte KEINE Regel und hat jetzt Kopf, „×", Zeilen, Auswahlzustand mit Haken; Laserarten und Radiererkreise gestaltet. **Offen bleiben** Galerie-Tabs, Vorschauraster, Dock-Bewegung und die Icons (Plan 7 B 6 Rest, 7 C) |
+
+**Neu dazugekommen und offen:** nichts. Die zwei Funde, die beim Bauen
+auffielen, sind im selben Zug geschlossen: ein Flex-Element staucht den
+grössten Radiererkreis auf die Breite des mittleren (E576), und eine
+Zusicherung verglich die Kreise in Baumreihenfolge, die seit E570 dem
+Nutzer gehört.
+
+**Weiterhin offen und unverändert:** Punkt 1 („Alle Optionen" zeigt alles),
+Punkt 6 (Tastatur „P" zeichnet in einem gesperrten Dokument — älter als
+E572) und Punkt 7 (`test290` rot, kein voller Lauf behauptet).
+
+**Nachgemessen und dabei korrigiert:** Die Übergabe nannte „19 handgeschriebene
+Inline-SVGs in `index.html`, davon 15 bytegleiche Kopien des Registers". Gezählt
+sind es **19 SVG mit zusammen 35 Pfaden, von denen 27 wörtlich auch in
+`src/register/symbole.ts` stehen** — also echte Doppelpflege im Sinn von §8, aber
+in anderer Gestalt als beschrieben. Sie wird hier NICHT nebenbei geschlossen:
+ein Teil dieser Zeichen steht in der Startschale, die gezeichnet sein muss,
+bevor das Register überhaupt geladen ist. Das ist ein eigener Bogen mit eigenem
+Wächter, kein Anhängsel an die Gestaltung.
