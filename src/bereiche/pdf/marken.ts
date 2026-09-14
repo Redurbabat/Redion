@@ -1615,6 +1615,10 @@ const Marken = (() => {
        die üblichen Winkel dazwischen, ohne zitternde Hand. Nur Laufzeit,
        Vorgabe aus. */
     let lineal = false;
+    const ruler = InkRuler.create(flaeche, breite, hoehe);
+    /* Unabhängig von der Stiftbreite: Radieren darf den nächsten Strich
+       nicht dicker machen. Alte Flächen behalten bis zur Wahl ihre Größe. */
+    let eraserSize: number | null = null;
     const rasten = (anfang: number[], ende: number[]): number[] => {
       const dx = ende[0]! - anfang[0]!;
       const dy = ende[1]! - anfang[1]!;
@@ -2011,7 +2015,7 @@ const Marken = (() => {
 
     /* Der Radierer ist ein Kreis; seine Groesse haengt an der gewaehlten
        Strichstaerke — duenn, mittel, dick, wie beim Stift. */
-    const radierRadius = (): number => Math.max(5, width * 3);
+    const radierRadius = (): number => eraserSize ?? Math.max(5, width * 3);
     const frischeId = (): string =>
       typeof Ids !== 'undefined' ? Ids.short(8) : 'm' + Math.random().toString(36).slice(2, 10);
     /* EIN RADIERSCHRITT (E352): alles, was der Kreis um `center` beruehrt.
@@ -2205,7 +2209,8 @@ const Marken = (() => {
      *  (E511) — er holt die Bildschirmmatrix einmal statt je Punkt. */
     const addSample = (event: PointerEvent, um?: (e: PointerEvent) => [number, number] | null): void => {
       if (!running) return;
-      const roh = um ? um(event) : R.zuBlatt(flaeche, event);
+      const sample = um ? um(event) : R.zuBlatt(flaeche, event);
+      const roh = sample ? ruler.project(sample) : null;
       if (!roh) return;
       /* DER DRUCK KOMMT AUS DEM ROHEN PUNKT (E376): der Ersatzdruck fuer
          Maus und Finger rechnet aus der Geschwindigkeit, und geglaettete
@@ -2295,7 +2300,7 @@ const Marken = (() => {
      * nicht — test366 haelt genau das fest.
      * -------------------------------------------------------------------- */
     const nassenSchwanz = (event: PointerEvent, um?: (e: PointerEvent) => [number, number] | null): void => {
-      if (!feder || !running) return;
+      if (!feder || !running || ruler.constrained()) return;
       const druck = running.pressure[running.pressure.length - 1] ?? 0.5;
       const halb = halbeBreite(running, druck);
       let pts: number[][] = [];
@@ -3012,8 +3017,9 @@ const Marken = (() => {
       const stiftRadiert = e.pointerType === 'pen' &&
         (e.button === 5 || e.button === 2 || (e.buttons & 32) !== 0);
       if (e.button !== 0 && !stiftRadiert) return;
-      const point = R.zuBlatt(flaeche, e);
-      if (!point) return;
+      const rawPoint = R.zuBlatt(flaeche, e);
+      if (!rawPoint) return;
+      const point = ruler.begin(rawPoint, !stiftRadiert && ['stift', 'marker', 'line', 'arrow'].includes(tool));
       event.preventDefault();
       aktiverZeiger = e.pointerId;
       zeigerZuletzt = Date.now();
@@ -3319,7 +3325,7 @@ const Marken = (() => {
       }
       if (!running) return;
       /* Stift und Marker sind oben schon heraus (E511). */
-      running.pts[1] = lineal && (running.art === 'line' || running.art === 'arrow')
+      running.pts[1] = ruler.constrained() ? ruler.project(point) : lineal && (running.art === 'line' || running.art === 'arrow')
         ? rasten(running.pts[0], point) : point;
       runningNode = updateNode(runningNode, running);
     });
@@ -3332,7 +3338,8 @@ const Marken = (() => {
       // pointerup may carry a final position that no pointermove delivered.
       // Keep the previous pressure: pen devices report zero pressure on lift.
       if (event.type === 'pointerup' && running && (running.art === 'stift' || running.art === 'marker')) {
-        const end = R.zuBlatt(flaeche, event);
+        const rawEnd = R.zuBlatt(flaeche, event);
+        const end = rawEnd ? ruler.project(rawEnd) : null;
         if (end) {
           const last = running.pts[running.pts.length - 1];
           if (Math.hypot(end[0] - last[0], end[1] - last[1]) > 0.01) {
@@ -3550,7 +3557,7 @@ const Marken = (() => {
        oben braucht genau dieses Objekt, um sich beim Kern zu melden. Zwei
        verschiedene Objekte für dieselbe Fläche wären der sichere Weg zu
        einem Knopf, der auf nichts wirkt. */
-    const setzeLineal = (an: boolean): void => { lineal = !!an; };
+    const setzeLineal = (an: boolean): void => { lineal = !!an; ruler.setActive(lineal); };
     const linealAn = (): boolean => lineal;
     const setzeFormen = (an: boolean): void => {
       formen = !!an;
@@ -3568,6 +3575,9 @@ const Marken = (() => {
       /* E494: die Elemente-Bibliothek — sichern aus der Auswahl, setzen per Tipp. */
       elementAusAuswahl,
       elementGewaehlt: (): string => letztesElement,
+      selectElement: (id: string): void => { if (elementHolen(id)) { letztesElement = id; notifyState(); } },
+      setEraserSize: (radius: number): void => { if ([5, 14, 28].includes(radius)) eraserSize = radius; },
+      eraserSize: (): number => radierRadius(),
       elementWaehlen: async (): Promise<string> => {
         const gewaehlt = await elementWaehlen();
         if (gewaehlt) { letztesElement = gewaehlt; notifyState(); }
@@ -5484,6 +5494,109 @@ const Marken = (() => {
       const fixed = document.createElement('div');
       fixed.className = 'blatt-fest'; fixed.innerHTML = extra; row.appendChild(fixed);
     }
+    /* E572: Das Dokumentstudio nutzt dieselben echten Knöpfe. Die normale
+       Blockleiste und ihre frei gespeicherte Ordnung bleiben unverändert. */
+    const noteColors = [
+      ['#ffb2bd', 'Rosa'], ['#ffd09e', 'Apricot'], ['#ffe780', 'Gelb'],
+      ['#b9efa0', 'Grün'], ['#a9e9e4', 'Türkis'], ['#c5dfff', 'Blau'],
+      ['#e7d4fb', 'Flieder'], ['#f6c8e8', 'Pink'], ['#e6e3dd', 'Grau']
+    ];
+    tools.addEventListener('ink-studio-ready', () => {
+      if (tools.dataset.referenceUi) return;
+      tools.dataset.referenceUi = 'ready';
+      const cycle = tools.querySelector<HTMLButtonElement>('[data-act="radiermodus"]')!;
+      const choose = document.createElement('button');
+      choose.dataset.gruppe = 'radierer'; choose.dataset.act = 'eraser-menu';
+      choose.className = 'blatt-eraser-menu'; choose.type = 'button';
+      choose.setAttribute('aria-haspopup', 'dialog');
+      const syncEraser = () => {
+        choose.textContent = (RADIERER.find(mode => mode.id === cycle.dataset.modus)?.name || 'Ganz') + ' ⌄';
+        choose.setAttribute('aria-label', 'Radiermodus wählen: ' + choose.textContent);
+      };
+      syncEraser(); cycle.after(choose);
+      new MutationObserver(syncEraser).observe(cycle, { attributes: true, attributeFilter: ['data-modus'] });
+      choose.addEventListener('click', () => InkMenu.open(choose, 'Radierer', (body, close) => {
+        for (const mode of RADIERER) {
+          const option = document.createElement('button'); option.type = 'button';
+          option.textContent = mode.name; option.title = mode.titel;
+          option.setAttribute('aria-pressed', String(mode.id === cycle.dataset.modus));
+          option.addEventListener('click', () => {
+            for (let i = 0; i < RADIERER.length && cycle.dataset.modus !== mode.id; i++) cycle.click();
+            close();
+          }); body.append(option);
+        }
+      }));
+      for (const [index, radius] of [5, 14, 28].entries()) {
+        const size = document.createElement('button'); size.type = 'button';
+        size.dataset.gruppe = 'radierer'; size.dataset.eraserSize = String(radius);
+        size.className = 'blatt-eraser-size';
+        size.setAttribute('aria-label', 'Radierer ' + ['klein', 'mittel', 'groß'][index]);
+        size.setAttribute('aria-pressed', String(index === 0));
+        size.style.setProperty('--eraser-preview', [16, 28, 40][index] + 'px');
+        size.innerHTML = '<i aria-hidden="true"></i>';
+        size.addEventListener('click', () => {
+          controls.setEraserSize(radius);
+          tools.querySelectorAll<HTMLElement>('[data-eraser-size]').forEach(node => node.setAttribute('aria-pressed', String(node === size)));
+        }); choose.before(size);
+      }
+      controls.setEraserSize(5);
+      for (const [color, name] of noteColors) {
+        const swatch = document.createElement('button'); swatch.type = 'button';
+        swatch.className = 'blatt-farbe blatt-note-color'; swatch.dataset.c = color;
+        swatch.dataset.gruppe = 'farbe'; swatch.style.backgroundColor = color!;
+        swatch.setAttribute('aria-label', 'Haftnotiz ' + name); swatch.title = name!;
+        tools.querySelector('.blatt-farbe-neu')?.before(swatch);
+      }
+      ordnungAnwenden(tools);
+    });
+    tools.addEventListener('ink-panel', event => {
+      const { kind, anchor } = (event as CustomEvent<{ kind: string; anchor: HTMLElement }>).detail;
+      if (kind === 'laser') InkMenu.open(anchor, 'Laserpointer', (body, close) => {
+        body.classList.add('blatt-laser-options');
+        for (const mode of LASER) {
+          const option = document.createElement('button'); option.type = 'button';
+          option.dataset.laserOption = mode.id; option.setAttribute('aria-pressed', String(mode.id === laserArt()));
+          option.innerHTML = '<i aria-hidden="true"></i><span>' + mode.name + '</span>';
+          option.onclick = () => { tools.querySelector<HTMLButtonElement>(`[data-laser="${mode.id}"]`)?.click(); close(); };
+          body.append(option);
+        }
+      });
+      if (kind === 'elemente') InkMenu.open(anchor, 'Elemente & Haftnotizen', (body, close) => {
+        const tabs = document.createElement('div'); tabs.className = 'blatt-gallery-tabs';
+        const grid = document.createElement('div'); grid.className = 'blatt-gallery-grid';
+        for (const kind of ['Elemente', 'Haftnotizen']) {
+          const tab = document.createElement('button'); tab.type = 'button'; tab.textContent = kind;
+          const show = () => {
+            tabs.querySelectorAll('button').forEach(node => node.setAttribute('aria-pressed', String(node === tab)));
+            grid.replaceChildren();
+            if (kind === 'Haftnotizen') {
+              for (const [color, name] of noteColors) {
+                const card = document.createElement('button'); card.type = 'button'; card.className = 'blatt-note-preview';
+                card.style.setProperty('--note-color', color!); card.textContent = name!;
+                card.onclick = () => {
+                  tools.querySelector<HTMLButtonElement>('[data-wz="zettel"]')?.click();
+                  tools.querySelector<HTMLButtonElement>(`.blatt-note-color[data-c="${color}"]`)?.click(); close();
+                }; grid.append(card);
+              }
+            } else {
+              const all = elemente();
+              if (!all.length) { const empty = document.createElement('p'); empty.className = 'blatt-gallery-empty'; empty.textContent = 'Deine eigenen Sticker: mit dem Lasso etwas auswählen und „Als Element“ sichern. Oder eine Haftnotiz wählen und auf dem Papier aufziehen.'; grid.append(empty); }
+              for (const item of all) {
+                const card = document.createElement('button'); card.type = 'button'; card.className = 'blatt-element-preview';
+                const name = document.createElement('span'); name.textContent = item.name;
+                card.append(elementBild(item), name);
+                card.onclick = () => { controls.selectElement(item.id); close(); }; grid.append(card);
+              }
+            }
+          };
+          tab.onclick = show; tabs.append(tab); if (kind === 'Elemente') show();
+        }
+        body.append(tabs, grid);
+        const manage = document.createElement('button'); manage.type = 'button'; manage.textContent = 'Bibliothek verwalten …';
+        manage.onclick = () => { close(); tools.querySelector<HTMLButtonElement>('[data-act="elemente"]')?.click(); };
+        body.append(manage);
+      });
+    });
     return row;
   };
 

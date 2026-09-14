@@ -150,6 +150,8 @@ const GRUNDSTOCK = [
   './quell/bereiche/bloecke/arten/zeichenflaeche.js',
   './quell/fremd/pdfjs/daten.js',
   './quell/fremd/pdfjs/laden.js',
+  './quell/bereiche/pdf/ink-menu.js',
+  './quell/bereiche/pdf/ink-ruler.js',
   './quell/bereiche/pdf/marken.js',
   './quell/bereiche/pdf/leser.js',
   './quell/bereiche/pdf/seite.js',

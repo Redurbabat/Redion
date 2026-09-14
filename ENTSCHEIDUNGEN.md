@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-551 Entscheidungen, E1 bis E571 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+552 Entscheidungen, E1 bis E572 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -615,6 +615,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E569** — Die Kurve war eine Sackgasse: sie fehlte in allen Gruppenregeln; der Wächter prüft jetzt den Katalog statt ein Beispiel daraus
 * **E570** — Die Leiste selbst ordnen: zwei Listen in `meta`, ein Feld zum Ziehen und Rücken; gespeichert wird eine Reihenfolge, kein Katalog
 * **E571** — Im Band selbst schieben: «Einrichten» schaltet einen Modus, in dem jeder Knopf mit der Maus an seinen Platz gezogen wird; die Liste bleibt für die Tastatur
+* **E572** — Zeichenstudio nach sieben Goodnotes-Referenzen: vollständiger Plan, kontextbezogenes Dock, klare Icons, Dock-Bewegung, sichtbares Lineal und nachprüfbare Grenzen (in Umsetzung; L157)
 
 ---
 
@@ -46342,3 +46343,115 @@ G8  das Band nicht zeigen             24 grün, 16 rot
 
 G8 ist die lauteste, weil das Band auch der Weg zur Liste ist: ohne Band
 kommt keine der acht Zusagen aus E570 mehr an ihr Feld.
+
+---
+
+## E572 — Zeichenstudio: Referenzbilder, Dock-Bewegung und vollständiger Arbeitsplan
+
+**Auftrag vom 14. September 2026. Stand: in Umsetzung, noch kein Abschlussnachweis.**
+
+Redur möchte den Stift-/Zeichenteil wie in sieben Goodnotes-Bildern. Zusätzliche
+Redion-Funktionen sollen im gleichen Stil erhalten bleiben. Ergänzt wurden:
+„Macbook Dock Animationen … beim Wechseln“, bessere Icons und der ausdrückliche
+Wunsch, **den kompletten Plan** in Entscheidungen und Lücken festzuhalten.
+
+### Ausgangspunkt und Schutz der bisherigen Arbeit
+
+- `git fetch origin` wurde erfolgreich ausgeführt. Neuester abgerufener
+  Remote-Zweig **nach Commitdatum**: `origin/claude/redion-tafel-wort`,
+  `d4a53c8e` (E571). Ein Commitdatum ist kein belegter Push-Zeitpunkt.
+- Der lokale Stand war identisch und sauber. Neuer Arbeitszweig:
+  `codex/drawing-reference-toolbar`, direkt auf diesem Commit.
+- Kein Zurücksetzen, kein Löschen vorhandener Zweige, kein Wechsel auf eine
+  ältere `main`, kein Push, keine PR, keine Veröffentlichung.
+- Die KI-Oberfläche und die geschützten KI-Buttons sind nicht Teil dieses Umbaus.
+
+### Entscheidung: bestehende Zeichenmaschine, neue Anordnung
+
+Das Dokumentstudio für PDF und Notizhefte wird an den Bildern ausgerichtet.
+Die vorhandene `Marken`-Schicht zeichnet und speichert weiterhin. Obere
+Werkzeuge delegieren an dieselben echten Bedienelemente. Ihr Katalog und die
+persönliche Reihenfolge kommen aus dem Bestand, statt ein zweites Mal gepflegt
+zu werden. Die normale eingebettete Blockleiste bleibt benutzbar.
+
+Die Alternative wäre ein neuer Zeicheneditor gewesen. Das würde Druck,
+Auswahl, Speicher, PDF-Ausgabe und Rückgängig verdoppeln und gefährden. Der
+Preis dieser Entscheidung: die ältere Leiste wird nicht entfernt; ihre
+Zusatzfunktionen bleiben über die erweiterte Ansicht erreichbar.
+
+### Vollständiger Plan und Zuordnung zu den Bildern
+
+| Teil | Geplante Umsetzung | Abnahme |
+|---|---|---|
+| Bild 1: Stift | Dokumentreiter und obere Iconleiste; schwebendes Kontext-Dock unten; sechs vorhandene Stifte, Dicken und Farben; feste Rückgängig-/Wiederholen-Kapsel links über dem Papier | echte Striche, Wechsel, Rückgängig, kleine Breite, Screenshot |
+| Bild 2: Radierer | sichtbare Moduswahl statt bloßem Durchklicken; Ganz, Teil, nur Stift, nur Marker, nur Abdeckband bleiben; drei separate Radierergrößen mit Kreisvorschau | Modus und Größe wirken; Radieren ändert nicht die Stiftbreite; Undo stellt Marken wieder her |
+| Bild 3: Elemente | verankertes Auswahlfeld mit Vorschauen vorhandener eigener Elemente und Haftnotizfarben; weiterhin Bibliothek verwalten und „Als Element“ sichern | Element auswählen und setzen, Escape/Außenklick, leere Bibliothek erklärt den Weg |
+| Bild 4: Formen | vorhandene Linie, Pfeil, Rechteck, Ellipse, Dreieck, Rundrechteck und Kurve direkt im unteren Dock, dazu Farbe und Dicke | jede vorhandene Form bleibt erreichbar; nach der Kurve zurück zu einer anderen Form |
+| Bild 5: Haftnotizen | neun Pastellfarben als quadratische Muster im Dock und als Vorschaukarten | gewählte Farbe landet in der echten Haftnotiz; Inhalt bleibt editierbar |
+| Bild 6: Laser | oben direkt sichtbar; verankertes Feld mit Punkt und Linie und lesbarem Auswahlzustand | Zeigen erzeugt weder gespeicherte Marke noch Undo-Schritt; Spur verschwindet |
+| Bild 7: Lineal | sichtbar, transparent, verschiebbar und in 15°-Schritten drehbar; Skala in Dokumentmaßen; Zeichnen nahe einer Kante wird entlang dieser Kante geführt | verschieben/drehen ohne Marken; geführter Strich gerade; Lineal nicht gespeichert/exportiert |
+| Zusatz: Dock-Bewegung | dezente Vergrößerung unter der Maus, Nachbarreaktion und federnder Auswahlwechsel, feste Trefferflächen | keine Layoutsprünge/abgeschnittenen Icons; kein Hover-Zwang am Telefon; Reduced Motion |
+| Zusatz: Icons | klare SVG-Konturen aus dem gemeinsamen Register, erkennbare Stiftformen, einheitliche Größe und Strichstärke; keine Emoji-Mischung in der Hauptwerkzeugreihe | Screenshot bei Originalgröße, sichtbarer aktiver Zustand, zugängliche Namen |
+| Redion-Extras | Leiter mit zehn Adern, Schutzleiter, Marker, Fachzeichen, Abdecken, Schriftoptionen, Lasso/Auswahl, Sperren, Ebenen, Verweise, Elemente, eigene Farben/Farbsätze, Formenerkennung, Kritzellöschen, Leistenplätze und freie Reihenfolge bleiben | Katalogvergleich, bestehende Nachbarprüfungen, erweiterte Optionen und Sortiermodus |
+
+### Technischer Arbeitsplan in Ausführungsreihenfolge
+
+1. **Erledigt:** neuesten Remote-Stand prüfen, sicheren Arbeitszweig anlegen,
+   Zeichenquellen und Dokumentation lesen; bestehende Dokumentansicht rendern.
+2. **Erledigt:** neuen realen Browserlauf `test524.mts` vor der Reparatur
+   ausführen: **1 grün, 4 rot** (Laser oben fehlt, Formenwahl versteckt,
+   Lineal oben fehlt, separate Radierergrößen fehlen).
+3. **In Umsetzung:** gemeinsame obere Werkzeugliste, vollständiges Kontext-Dock,
+   Popover-Menüs, Pastellfarben und eigene Radierergrößen anbinden.
+4. **In Umsetzung:** sichtbares Lineal als reine Bedienebene; Kantenprojektion
+   für Freihand/Marker/Linie/Pfeil ohne Änderung bestehender Markendaten.
+5. **Geplant:** Dock-Animation und Icon-Überarbeitung; echte Themenfarben nutzen
+   (E554 bleibt), Hell/Dunkel, reduzierte Bewegung und Touch prüfen.
+6. **Geplant:** `typecheck`, TypeScript bauen, Dienststand und Einzeldatei neu
+   erzeugen; direktes `index.html` und Einzeldatei müssen weiterhin starten.
+7. **Geplant:** `test524` erweitern und grün bekommen; gezielte Nachbarprüfungen
+   für Zeichnen, Laser, Kurve, Reihenfolge und Build/CSS ausführen. Keine
+   Behauptung eines vollen Gesamtlaufs, solange dieser nicht ausgeführt wurde.
+8. **Geplant:** Screenshots bei Desktop- und Telefonbreite, Hell/Dunkel und
+   offenen Menüs ansehen, Layoutfehler beheben; Ergebnisbild im Gespräch zeigen.
+9. **Geplant:** diese Statusliste, L157 und `ERLEDIGTE-AUFGABEN.md` mit den
+   tatsächlich gemessenen Ergebnissen aktualisieren. Nicht erledigte Punkte
+   werden ausdrücklich als offen geführt, nicht als fertig verkauft.
+
+### Bewusste Grenzen und Risiken
+
+- Die Bilder sind Gestaltungsreferenzen, keine Spezifikation aller Goodnotes-
+  Funktionen. Keine Behauptung einer vollständigen Funktionskopie.
+- Keine Online-GIF-Suche, kein heimlicher Medienabruf, keine Mikrofonaufnahme
+  ohne eigenen funktionalen Auftrag. Ein nicht funktionierender GIF-/Mikrofon-
+  Knopf wird nicht als Attrappe ergänzt.
+- Raute, abgewinkelte Verbinder und gebogene Pfeile sind nicht durch die
+  vorhandenen sieben Formen abgedeckt. Neue Formtypen wären ein eigener
+  Geometrie-/Exportbogen; siehe L157. Bestehende Kurven bleiben erhalten.
+- „Macbook Dock“ beschreibt die Bewegung, nicht ein macOS-Programm. Es werden
+  keine Apple-Dateien/Icons kopiert und keine zusätzliche Laufzeitbibliothek geladen.
+- Linealskala: Dokumentmaße, keine Zusage physischer Zentimeter am Display.
+  Ein echtes Gerät mit Stiftdruck/Neigung ist durch einen Mauslauf nicht ersetzt.
+- Änderungen an der Eingabeführung bergen Strich-/Undo-Risiken: echte Marken
+  und Abbruchfälle prüfen. Keine Datenmigration, kein Online-/Kontozwang.
+- Popover-Fokus, kleine Höhen, Dock-Überlauf und reduzierte Bewegung sind
+  ausdrückliche Abnahmepunkte, keine stillen Annahmen.
+
+**Abschlussstand folgt nach Prüfung. Bis dahin sind Plan und Quellcode kein
+Beweis, dass die Funktion bereits zuverlässig ausgeliefert ist.**
+
+Auf Redurs anschließenden Wunsch nach einem vollständigen Plan für eine andere
+Codex-Aufgabe ist die übergabefertige Fassung in
+`doku/CODEX-UEBERGABE-ZEICHENSTUDIO.md` festgehalten. Sie nennt auch die bereits
+begonnenen Dateien, die noch fehlenden Styles/Animationen/Icons, konkrete
+Prüfstellen und die genauen Befehle. Der Auftrag wird als **unfertiger,
+gespeicherter Arbeitsstand** übergeben, nicht als fertig gebautes Produkt.
+
+Prüfstand der Übergabe: `npm run typecheck` und `git diff --check` beide
+Exit 0. Noch kein Build-/Funktionsabschluss; die Nacharbeiten stehen im Plan.
+
+**Nachtrag — GitHub-Übergabe auf Nutzerwunsch:** Redur hat anschließend den
+Push ausdrücklich beauftragt. Der begonnene Code samt vollständigem Plan
+wird als WIP auf `codex/drawing-reference-toolbar` gesichert. `main` bleibt
+unverändert; keine PR und keine Veröffentlichung. Der Push schließt weder
+die offenen Implementierungsschritte noch die fehlende Build-/Browserabnahme.

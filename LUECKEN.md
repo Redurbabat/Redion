@@ -7780,3 +7780,54 @@ Bauen — und die Regel dazu steht als Arbeitsschritt, nicht als Werkzeug:
 die Datei noch einmal zu lesen* (§55, P47).
 
 Eingetragen als offen, weil der Wächter fehlt — nicht der Befund.
+
+## L157 · Zeichenstudio nach Referenzbildern und bewegtes Dock — IN ARBEIT
+
+**14. September 2026 · E572 · `codex/drawing-reference-toolbar`.**
+Der vollständige Entscheidungs- und Ausführungsplan steht in E572. Diese
+Liste hält den Produktstatus fest; „geplant“ heißt ausdrücklich nicht fertig.
+
+| Punkt | Status zu Beginn | Geplante Schließung / Beleg |
+|---|---|---|
+| Neuester Zweig | ✅ geprüft | Remote nach Commitdatum: `claude/redion-tafel-wort`, `d4a53c8e`; neuer Arbeitszweig statt alter `main` |
+| Laser direkt oben | ✗ im Dokumentmodus vergessen | Werkzeugkatalog gemeinsam verwenden; `test524` bereits rot |
+| Formen direkt im Dock | ✗ ohne Alle-Optionen versteckt | alle sieben vorhandenen Formen sichtbar; `test524` bereits rot |
+| Radierer-Modusfeld und Größen | ◐ Modi vorhanden, nur Rundlauf; Größe an Strich gekoppelt | Auswahlfeld und drei unabhängige Größen; `test524` bereits rot |
+| Haftnotiz-Pastellpalette | ✗ normale Tintenfarben statt Notizpalette | neun klare Farben, echte gespeicherte Haftnotiz prüfen |
+| Elemente-Vorschaufeld | ◐ Bibliothek vorhanden, nicht wie Referenz angeordnet | verankertes Feld, eigene Elemente, Haftnotiz-Vorschauen, Verwaltungsweg erhalten |
+| Sichtbares Lineal | ✗ bisher nur unsichtbare Winkelrastung | verschieben, drehen, Kantenführung; `test524` für direkten Zugang rot |
+| Dock-Bewegung | ✗ noch nicht im gewünschten Stil | Hover-Vergrößerung, Nachbarn, federnder Wechsel; Reduced Motion und Touch |
+| Icons | ◐ kleine uneinheitliche Zeichen in der Dokumentleiste | gemeinsames SVG-Register, Konturen überarbeiten, Größen messen und Bilder ansehen |
+| Redion-Extras und eigene Reihenfolge | ✅ vorhanden, muss erhalten bleiben | Katalogvergleich und Nachbarprüfungen; keine still entfernten Bedienelemente |
+| Mobile/Fokus/Themen | ⚠ neue Anordnung noch ungeprüft | 390 px sowie niedrige Höhe; Fokus, Escape, Außenklick; Hell/Dunkel |
+| Build/Offline/Einzeldatei | ⚠ Quellcode in Änderung | Typecheck, Build, Dienststand, Einzeldatei und Startprüfung ausstehend |
+| Abschlussbilder und Regression | ⚠ ausstehend | reale Screenshots und gezielte grüne Läufe, Ergebnisse in E572 nachtragen |
+
+### Vollständiger Rest, der nicht durch bloße Gestaltung verschwindet
+
+1. **GIF-Katalog / Online-Suche:** nicht vorhanden und nicht eingeplant. Keine
+   Netzwerkabfragen oder funktionslosen GIF-Tabs als Tarnung einer fehlenden Funktion.
+2. **Zusätzliche Formtypen aus der Referenz:** Raute, Winkelverbinder und
+   gebogener Pfeil sind nicht gleichbedeutend mit Rechteck oder Kurve.
+   Sie bleiben offen; neue Typen benötigen Geometrie-, Auswahl- und Exporttests.
+3. **Echte Stifthardware:** Druck, Neigung, Handballenerkennung und
+   Hochfrequenz-Eingaben auf einem realen Gerät bleiben manuell zu prüfen.
+4. **Lineal:** Skala in Dokument-Zentimetern, nicht in physischen
+   Bildschirm-Zentimetern. Maus-/Tastaturbedienung wird gebaut; freie
+   Zwei-Finger-Drehung ist nicht Teil dieses Bogens.
+5. **Weitere Zeichenwelten:** Schwerpunkt ist die gemeinsame PDF-/Heft-
+   Zeichenschicht. Whiteboard-/Schaltplan-Editor sind eigene Oberflächen;
+   deren komplette Neuordnung ist hier nicht stillschweigend zugesagt.
+6. **Gesamttest:** gezielte Läufe sind geplant. Ein voller grüner Lauf und
+   Freigabe für `main`/Push sind dadurch nicht behauptet oder beauftragt.
+
+**Aktueller Nachweis:** der neue Browserlauf war vor der Umsetzung rot:
+1 grün, 4 rot. Abschlussstatus wird erst nach den tatsächlichen Prüfungen
+aktualisiert; offene Punkte bleiben sichtbar.
+
+**Übergabeplan:** `doku/CODEX-UEBERGABE-ZEICHENSTUDIO.md` enthält den vollständigen
+Auftrag für die nächste Codex-Aufgabe, die begonnenen Änderungen und alle
+ausstehenden Umsetzungsschritte. Die Übergabe selbst schließt keine Produktlücke.
+
+Typprüfung und `git diff --check` sind zum Übergabezeitpunkt grün. Build und
+neue Browser-/Gestaltungsabnahme sind weiterhin offen.

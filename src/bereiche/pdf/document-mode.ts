@@ -1925,17 +1925,9 @@ const DocumentMode = (() => {
     drawingbar.className = 'document-drawingbar';
     drawingbar.setAttribute('role', 'toolbar');
     drawingbar.setAttribute('aria-label', 'PDF bearbeiten');
-    const drawingTools = [
-      ['schreiben', 'inkHand', 'Hand / Verschieben'], ['select', 'inkLasso', 'Lasso / Auswahl'],
-      ['stift', 'pencil', 'Stift'], ['marker', 'inkMarker', 'Marker'],
-      ['radierer', 'inkEraser', 'Radierer'], ['text', 'inkText', 'Text'],
-      ['formen', 'inkShapes', 'Formen'], ['zettel', 'comment', 'Haftnotiz'],
-      ['bild', 'image', 'Bild'], ['zeichen', 'bolt', 'Fachzeichen'], ['abdeck', 'eye', 'Abdecken'],
-      /* DIE ELEMENTE (E494): im Studio steht das Werkzeug mit in der Leiste,
-         weil das Studio der Ort ist, an dem gestempelt wird — ein Häkchen
-         auf zwanzig Seiten, eine Unterschrift, ein Kastenrahmen. */
-      ['elemente', 'star', 'Elemente']
-    ];
+    /* E572: derselbe Katalog wie auf dem Blatt. Die alte Abschrift hatte
+       den Laser vergessen und verwendete andere Symbole für dieselbe Tat. */
+    const drawingTools = Marken.WERKZEUGE.map(tool => [tool.id, tool.sym, tool.name]);
     drawingTools.forEach(([tool, icon, label]) => {
       const button = document.createElement('button');
       button.type = 'button'; button.dataset.documentTool = tool!;
@@ -1944,7 +1936,10 @@ const DocumentMode = (() => {
       glyph.setAttribute('aria-hidden', 'true'); button.appendChild(glyph);
       drawingbar.appendChild(button);
     });
-    const moreTools = topButton('ink-options', '···', 'Alle Stiftoptionen und Bearbeitungsaktionen');
+    const rulerButton = topButton('ink-ruler', '', 'Lineal ein- oder ausblenden');
+    rulerButton.innerHTML = '<span data-sym="inkRuler" aria-hidden="true"></span>';
+    rulerButton.setAttribute('aria-pressed', 'false'); drawingbar.append(rulerButton);
+    const moreTools = topButton('ink-options', '···', 'Weitere Zeichenoptionen und Leiste einrichten');
     moreTools.setAttribute('aria-expanded', 'false');
     drawingbar.appendChild(moreTools);
     /* ZURÜCK UND VOR STEHEN LINKS (E490, Redurs Bild vom 7. September).
@@ -1961,7 +1956,8 @@ const DocumentMode = (() => {
     history.setAttribute('role', 'group'); history.setAttribute('aria-label', 'Zeichenverlauf');
     history.append(topButton('ink-undo', '↶', 'Letzten Zeichenstrich rückgängig machen'),
       topButton('ink-redo', '↷', 'Zeichenstrich wiederholen'));
-    drawingbar.prepend(history);
+    /* E572: die feste Verlaufskapsel liegt über dem Papier, nicht im
+       rollenden Werkzeugband — wie in Redurs neuer Referenz. */
 
     /* WELCHE SPALTEN ES GIBT, STEHT AM KASTEN (E296). Vorher war das Raster
        fest — 190 px links, 280 px rechts, bei jeder Fensterbreite ueber
@@ -2343,7 +2339,7 @@ const DocumentMode = (() => {
     inspector.setAttribute('aria-label', 'Dokumentdetails und verknüpfte Inhalte');
     inspectorButton.setAttribute('aria-controls', inspector.id);
     renderInspector(inspector, page, current);
-    body.append(thumbnails, center, inspector);
+    body.append(thumbnails, center, inspector, history);
     /* ══ DIE SUCHLEISTE (E468) ══════════════════════════════════════════════
        Ein Feld, die Zahl, vor und zurueck, zu. Enter springt zum naechsten
        Treffer, Umschalt+Enter zum vorigen, Escape schliesst (E302). Die
@@ -2486,6 +2482,16 @@ const DocumentMode = (() => {
     const inkSync = (): void => {
       if (!workspace.isConnected) { Zeichenziel.vergiss(inkSync); return; }
       const source = inkToolbar();
+      source?.dispatchEvent(new Event('ink-studio-ready'));
+      // Die benutzereigene Reihenfolge gilt auch oben (§8/E570).
+      source?.querySelectorAll<HTMLElement>(':scope > [data-wz]').forEach(real => {
+        const button = drawingbar.querySelector<HTMLButtonElement>(`[data-document-tool="${real.dataset.wz}"]`);
+        if (button) drawingbar.insertBefore(button, rulerButton);
+      });
+      const realRuler = source?.querySelector<HTMLButtonElement>('[data-act="lineal"]');
+      rulerButton.disabled = !canAnnotate || !realRuler;
+      rulerButton.setAttribute('aria-pressed', realRuler?.getAttribute('aria-pressed') || 'false');
+      workspace.dataset.inkTool = source?.dataset.tool || 'schreiben';
       drawingbar.querySelectorAll<HTMLButtonElement>('[data-document-tool]').forEach(button => {
         const real = source?.querySelector<HTMLButtonElement>('[data-wz="' + button.dataset.documentTool + '"]');
         button.disabled = !canAnnotate || !real || real.disabled;
@@ -3888,6 +3894,10 @@ const DocumentMode = (() => {
         if (tool !== 'bild') { penTool = tool; Store.setMeta('dokStift:' + page.id, tool); }
         toolsSetzen(true);
         inkToolbar()?.querySelector<HTMLButtonElement>('[data-wz="' + tool + '"]')?.click();
+        // Eine Auswahlklappe zeigt Möglichkeiten, ohne einen Strich abzulegen.
+        if (tool === 'laser' || tool === 'elemente') inkToolbar()?.dispatchEvent(new CustomEvent('ink-panel', {
+          detail: { kind: tool, anchor: element?.closest<HTMLElement>('[data-document-tool]') }
+        }));
         inkSync(); return;
       }
       /* Ein Klick in die Zeichenleiste schliesst die Ansichtsklappe nicht
@@ -3953,6 +3963,11 @@ const DocumentMode = (() => {
       const zielSeite = Number.isInteger(zielNr) ? documents[zielNr] : undefined;
       if (zielSeite) menueSchliessen();
       if (!action) return;
+      if (action === 'ink-ruler' && canAnnotate) {
+        toolsSetzen(true);
+        inkToolbar()?.querySelector<HTMLButtonElement>('[data-act="lineal"]')?.click();
+        inkSync(); return;
+      }
       if (action === 'folienmenue') { folienMenue(tatKnopf!); return; }
       if (action === 'ink-options') {
         const open = workspace.dataset.inkOptions !== 'open';
