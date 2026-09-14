@@ -4351,7 +4351,15 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 /* Der Trenner trägt den Abstand ZWISCHEN den Gruppen — innerhalb bleibt
    die Lücke bei 4 px. Ohne diesen Unterschied steht das Zubehör als eine
    Mauer aus vierzehn gleichen Knöpfen da (E568). */
-.blatt-trenn{width:1px; height:24px; background:var(--line); margin:0 7px}
+.blatt-trenn{width:1px; height:24px; background:var(--line); margin:0 5px}
+/* KEIN STRICH AM ANFANG EINER ZEILE (E570). Der erste Trenner des Zubehörs
+   stand links vom ersten Knopf und trennte dort nichts — er sah aus wie ein
+   Rest. Weg damit, und die fünfzehn Pixel, die er belegte, fehlten der
+   Zeile: mit ihnen und den zwei Pixeln je Farbtupfer passen Stifte, Farben
+   UND Breiten wieder in eine Zeile, statt dass die Breite allein eine Zeile
+   tiefer rutscht. Gemessen: 553 px endete die Zeile vorher, 530 danach,
+   und die dritte Breite braucht 36. */
+.blatt-werk[data-tool] > .blatt-zeilenbruch + span.blatt-trenn[data-gruppe]{display:none}
 
 /* ══ DIE FARBTUPFER SIND WIEDER TUPFER (E568) ═════════════════════════════
    NACHGEMESSEN, NICHT VERMUTET: hier stand `width:22px` und
@@ -4385,7 +4393,14 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk button.blatt-farbe{border:2px solid transparent}
 .blatt-werk button.blatt-farbe:not(.blatt-farbe-leiter),
 .blatt-werk button.blatt-farbe-neu{
-  width:32px; min-width:32px; height:32px; min-height:32px;
+  /* DREISSIG UND NICHT ZWEIUNDDREISSIG (E570). Zwei Pixel je Tupfer, sechs
+     Tupfer: zwölf Pixel — und genau die entscheiden, ob die drei Breiten
+     noch in dieselbe Zeile passen wie Stifte und Farben. Gemessen bei
+     1280 px Fenster: mit 32 brauchte die Zeile 570 px und hatte 568,
+     mit 30 sind es 558. „Womit ich zeichne" — Stift, Farbe, Breite —
+     bleibt damit beieinander, statt dass die Breite allein eine Zeile
+     tiefer rutscht. */
+  width:30px; min-width:30px; height:30px; min-height:30px;
   padding:4px !important; background-clip:content-box !important;
   border-radius:50%; border:2px solid transparent
 }
@@ -4461,6 +4476,61 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    ganzen Zeile. Ein voll gerundetes Ende ist das, was ein Stift auf
    Papier hinterlässt. */
 .blatt-strich i{display:block; width:18px; background:currentColor; border-radius:999px}
+
+/* ══ DAS FELD „LEISTE EINRICHTEN" (E570) ═══════════════════════════════════
+   Zwei Listen, jede Zeile zu greifen oder mit zwei Knöpfen zu rücken. Die
+   Knöpfe sind nicht der Notausgang, sondern der Hauptweg — deshalb messen
+   sie `--touch-min` (§37) und nicht die 32 px des Leistenzubehörs. */
+.blatt-ordnen-koerper{display:flex; flex-direction:column; gap:22px;
+                      padding:16px 18px 4px; max-height:min(62vh,540px); overflow-y:auto}
+.blatt-ordnen-block h3{margin:0 0 3px; font-size:14px; letter-spacing:.01em}
+.blatt-ordnen-block p{margin:0 0 10px; font-size:12.5px; color:var(--text-dim)}
+.blatt-ordnen-liste{list-style:none; margin:0; padding:0;
+                    display:flex; flex-direction:column; gap:5px}
+.blatt-ordnen-zeile{display:flex; align-items:center; gap:7px;
+                    padding:1px 4px 1px 9px; border:1px solid var(--line);
+                    border-radius:9px; background:var(--bg-card);
+                    cursor:grab; touch-action:none; user-select:none}
+/* DER GRIFF. Gezeichnet, nicht geschrieben: ein `content:"⠿"` wäre Text und
+   würde von einem Vorleseprogramm mitgelesen — sechs Brailleprunkte vor
+   jedem Werkzeugnamen. Zwei Punktspalten aus einem Verlauf sagen dasselbe
+   und heissen nichts (§38). Am Rechner sagt es ausserdem der Zeiger
+   (`cursor:grab`); auf einem Berührungsbildschirm gibt es keinen. */
+.blatt-ordnen-zeile::before{
+  content:""; flex:0 0 auto; width:9px; height:15px; opacity:.5;
+  color:var(--text-faint);
+  background-image:radial-gradient(currentColor 1.05px, transparent 1.15px);
+  background-size:4.5px 5px
+}
+/* Die zwei Pfeile gehören zusammen und stehen deshalb dicht beieinander —
+   mit der vollen Lücke dazwischen sahen sie aus wie zwei fremde Knöpfe. */
+.blatt-ordnen-pfeil + .blatt-ordnen-pfeil{margin-left:-5px}
+.blatt-ordnen-zeile:hover{background:var(--bg-hover)}
+/* Beim Ziehen liegt die Zeile oben auf und bleibt unter dem Finger sichtbar. */
+.blatt-ordnen-zeile.zieht{cursor:grabbing; border-color:var(--accent);
+                          box-shadow:inset 0 0 0 1px var(--accent)}
+.blatt-ordnen-nr{flex:0 0 auto; width:22px; font-style:normal; font-size:11.5px;
+                 font-weight:700; color:var(--text-faint); text-align:right;
+                 font-variant-numeric:tabular-nums}
+.blatt-ordnen-zeile b{flex:1 1 auto; min-width:0; font-size:14px; font-weight:600;
+                      overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.blatt-ordnen-pfeil{flex:0 0 auto; min-width:var(--touch-min); min-height:var(--touch-min);
+                    border:0; border-radius:8px; background:none; color:var(--text);
+                    font-size:16px; line-height:1; cursor:pointer}
+.blatt-ordnen-pfeil:hover:not(:disabled){background:var(--bg-hover)}
+.blatt-ordnen-pfeil:disabled{opacity:.28; cursor:default}
+.blatt-ordnen-sagt{margin:0; padding:0 18px; min-height:18px;
+                   font-size:12.5px; color:var(--text-dim)}
+.blatt-ordnen-fuss{display:flex; justify-content:space-between; align-items:center;
+                   gap:12px; padding:12px 18px 16px}
+.blatt-ordnen-zurueck,.blatt-ordnen-fertig{min-height:var(--touch-min); padding:0 18px;
+                   border-radius:9px; font-size:14px; font-weight:600; cursor:pointer}
+.blatt-ordnen-zurueck{border:1px solid var(--line); background:none; color:var(--text-dim)}
+.blatt-ordnen-zurueck:hover{background:var(--bg-hover); color:var(--text)}
+.blatt-ordnen-fertig{border:0; background:var(--accent); color:var(--auf-accent)}
+@media (prefers-reduced-motion:reduce){
+  .blatt-ordnen-zeile{transition:none}
+}
 
 .blatt-papier{position:relative; width:100%; background:var(--paper,#fff); color:#111;
               border:1px solid var(--line); border-radius:0 0 8px 8px;
@@ -4936,8 +5006,12 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    Ende einer rollenden Zeile zu schieben, wäre dort das Gegenteil einer
    Verbesserung. */
 @media (min-width:761px){
-  .blatt-werk > [data-gruppe="verlauf"]{order:1}
-  .spalte .blatt-werk > [data-gruppe="verlauf"]{order:0}
+  /* DIESELBE VARIABLE WIE AM TELEFON (E570). Hier stand `order:1` für den
+     Verlauf — die Entscheidung aus E568, dass „Zurück" und „Vor" ans Ende
+     gehören. Sie gilt unverändert, steht aber nicht mehr im Stilblatt,
+     sondern als letzter Eintrag im Gruppenkatalog. Damit kann Redur sie
+     ändern, ohne dass jemand eine CSS-Datei aufmacht. */
+  .blatt-werk > [data-gruppe]{order:var(--g-ordnung, 0)}
   /* Der Trenner der Gruppe steht jetzt MITTEN in der Zeile statt an ihrem
      Anfang und darf deshalb wieder sichtbar sein — ausser beim Werkzeug
      «Schreiben», das als einziges gar kein anderes Zubehör hat; dort wäre
@@ -5074,33 +5148,30 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
      gewaehlten — so liegen Farben und Breiten neben dem Stift, nicht drei
      Bildschirme weiter rechts. Die Reihenfolge im DOM bleibt (Tastatur,
      Vorleser, Rechner); nur die Anordnung am Telefon wandert. */
-  .blatt-werk > [data-wz="schreiben"]{order:10} .blatt-werk > [data-wz="select"]{order:20}
-  .blatt-werk > [data-wz="stift"]{order:30} .blatt-werk > [data-wz="marker"]{order:40}
-  .blatt-werk > [data-wz="line"]{order:50} .blatt-werk > [data-wz="arrow"]{order:60}
-  .blatt-werk > [data-wz="rectangle"]{order:70} .blatt-werk > [data-wz="ellipse"]{order:80}
-  .blatt-werk > [data-wz="abdeck"]{order:90} .blatt-werk > [data-wz="zettel"]{order:100}
-  .blatt-werk > [data-wz="text"]{order:110} .blatt-werk > [data-wz="zeichen"]{order:120}
-  .blatt-werk > [data-wz="bild"]{order:125} .blatt-werk > [data-wz="radierer"]{order:130}
-  .blatt-werk > [data-gruppe="verlauf"]{order:200}
-  .blatt-werk[data-tool="schreiben"]{--platz:10} .blatt-werk[data-tool="select"]{--platz:20}
-  .blatt-werk[data-tool="stift"]{--platz:30} .blatt-werk[data-tool="marker"]{--platz:40}
-  .blatt-werk[data-tool="line"]{--platz:50} .blatt-werk[data-tool="arrow"]{--platz:60}
-  .blatt-werk[data-tool="rectangle"]{--platz:70} .blatt-werk[data-tool="ellipse"]{--platz:80}
-  .blatt-werk[data-tool="triangle"]{--platz:70} .blatt-werk[data-tool="roundrect"]{--platz:70}
-  .blatt-werk[data-tool="abdeck"]{--platz:90} .blatt-werk[data-tool="zettel"]{--platz:100}
-  .blatt-werk[data-tool="text"]{--platz:110} .blatt-werk[data-tool="zeichen"]{--platz:120}
-  .blatt-werk[data-tool="bild"]{--platz:125} .blatt-werk[data-tool="radierer"]{--platz:130}
-  /* Innerhalb der Gruppen: erst der Stift-Stil, dann Farben, dann Breiten,
-     dann die Schalter — wie GoodNotes es aufklappt. */
-  .blatt-werk[data-tool] > [data-gruppe="stil"],
-  .blatt-werk[data-tool] > [data-gruppe="schrift"],
-  .blatt-werk[data-tool] > [data-gruppe="radierer"],
-  .blatt-werk[data-tool] > [data-gruppe="auswahl"]{order:calc(var(--platz, 0) + 1)}
-  .blatt-werk[data-tool] > [data-gruppe="farbe"]{order:calc(var(--platz, 0) + 2)}
-  .blatt-werk[data-tool] > [data-gruppe="breite"]{order:calc(var(--platz, 0) + 3)}
-  .blatt-werk[data-tool] > [data-gruppe="formen"]{order:calc(var(--platz, 0) + 4)}
-  .blatt-werk[data-tool] > [data-gruppe="lineal"]{order:calc(var(--platz, 0) + 5)}
-  .blatt-werk[data-tool] > [data-gruppe="verlauf"]{order:200}
+  /* ══ DREISSIG ZEILEN WURDEN ZWEI (E570) ════════════════════════════════
+     Hier standen die Plätze als feste Zahlen: eine Zeile je Werkzeug für
+     seinen `order`, noch eine je Werkzeug für `--platz`, und fünf für die
+     Gruppen. Sie standen in der Reihenfolge des Katalogs — und genau das
+     ist es, was Redur jetzt selbst bestimmt.
+
+     Die Zahlen kommen deshalb aus der gemerkten Ordnung (`marken.ts`,
+     `ordnungZahlen`): jedes Werkzeug trägt `--ordnung`, jede Gruppe
+     `--g-ordnung`, und die Leiste trägt `--platz` — den Platz des gerade
+     geführten Werkzeugs. Das Stilblatt liest nur noch.
+
+     ZWEI DINGE BLEIBEN FEST, und beide mit Grund:
+       · «Zurück» und «Vor» stehen am Telefon IMMER ganz rechts und kleben
+         dort (E396, `test393`). Sie sind die zwei Griffe, die man beim
+         Schreiben von Hand am häufigsten braucht; sie mitwandern zu lassen
+         hiesse, sie wegwischbar zu machen.
+       · Ohne gemerkte Ordnung gelten die Vorgaben aus den Variablen —
+         die Leiste steht dann wie eh und je. */
+  .blatt-werk > [data-wz]{order:var(--ordnung, 0)}
+  .blatt-werk[data-tool] > [data-gruppe]{order:calc(var(--platz, 0) + var(--g-ordnung, 1))}
+  /* 9999 UND NICHT 200: die Werkzeuge zählen seit E570 in Hunderterschritten,
+     und 200 wäre der Platz des zweiten Werkzeugs. „Ganz hinten" muss eine
+     Zahl sein, die kein Werkzeug je erreicht. */
+  .blatt-werk[data-tool] > [data-gruppe="verlauf"]{order:9999}
   /* Der Schatten zeigt, dass links davon noch etwas liegt — sonst sieht
      eine abgeschnittene Leiste aus wie eine vollständige (E103). */
   .blatt-fest{box-shadow:-10px 0 10px -7px rgba(0,0,0,.45); padding-left:8px}

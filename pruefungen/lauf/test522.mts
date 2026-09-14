@@ -203,12 +203,39 @@ p('… und keiner steht am Anfang einer Zeile', trenner.every(t => t.x > 2),
 
 /* ======================================================================== */
 console.log('\n5 · Der Umbruch fällt auf eine Gruppengrenze: die Palette bleibt ganz');
-const zeileVon = (t: { y: number }) => Math.round(t.y / 12) * 12;
+const zeilenMitten: number[] = [];
+/* ZEILEN NACH DER MITTE, NICHT NACH DER OBERKANTE (gefunden am 14. September).
+   Hier stand `Math.round(t.y / 12) * 12`. Das ging gut, solange alles in der
+   Leiste gleich hoch war — seit die Farbtupfer 30 px messen und die Knöpfe
+   32, liegt ihre Oberkante 1 px tiefer, und an der Rasterkante zerschnitt
+   das EINE Zeile in zwei. Die Messung meldete dann einen Umbruch, den es
+   nicht gab. Die Mitte mit Toleranz kann das nicht passieren. */
+const zeileVon = (t: { y: number; h: number }) => {
+  const m = t.y + t.h / 2;
+  const treffer = zeilenMitten.find(q => Math.abs(q - m) <= 9);
+  if (treffer !== undefined) return treffer;
+  zeilenMitten.push(m);
+  return m;
+};
+
 const palettenZeilen = new Set(tupfer.map(zeileVon));
 gleich('Alle Farbtupfer stehen auf EINER Zeile', palettenZeilen.size, 1);
 const stifte = z.teile.filter(t => t.act === 'stilwahl');
 gleich('Die sechs Stifte auch', new Set(stifte.map(zeileVon)).size, 1);
 gleich('Die drei Breiten auch', new Set(z.teile.filter(t => t.cls.includes('blatt-strich')).map(zeileVon)).size, 1);
+/* DIE ALLGEMEINE FASSUNG DERSELBEN ZUSAGE, und die stärkere: KEINE Gruppe
+   darf über zwei Zeilen reissen. Die drei Zeilen darüber prüfen drei
+   Gruppen beim Namen; diese hier prüft alle, die gerade zu sehen sind —
+   auch die, die es morgen gibt. Eine zerrissene Gruppe ist der Fehler, den
+   Redur auf dem ersten Bild gesehen hat (E568): die Palette stand zu dritt
+   oben und zu zweit unten und las sich als zwei Paletten. */
+{
+  const zerrissen = [...new Set(z.teile.map(t => t.gruppe).filter(Boolean))]
+    .map(g => [g, new Set(z.teile.filter(t => t.gruppe === g && !t.cls.includes('blatt-trenn'))
+      .map(zeileVon)).size] as [string, number])
+    .filter(([, n]) => n > 1);
+  gleich('Keine sichtbare Gruppe reisst über zwei Zeilen', zerrissen, []);
+}
 /* DAS IST DER PUNKT, DER VORHER ROT WAR: Schwarz, Rot und Blau standen in
    der Zeile der Stifte, Grün und Gelb eine Zeile tiefer.
    UND ER SAGT ZUGLEICH E512 NACH: Redur wollte die Stiftreihe „links unten,

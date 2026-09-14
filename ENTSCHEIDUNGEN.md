@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-549 Entscheidungen, E1 bis E569 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+550 Entscheidungen, E1 bis E570 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -613,6 +613,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E567** — Die Schriftart: `a:latin` und `+mj-lt`/`+mn-lt` gegen `theme1.xml` — eine Näherung, die nur in eine Richtung irrt
 * **E568** — Die Stiftleiste: eine laute Fläche statt sechs; drei Zustände, drei Gestalten; die Farbtupfer sind wieder Tupfer
 * **E569** — Die Kurve war eine Sackgasse: sie fehlte in allen Gruppenregeln; der Wächter prüft jetzt den Katalog statt ein Beispiel daraus
+* **E570** — Die Leiste selbst ordnen: zwei Listen in `meta`, ein Feld zum Ziehen und Rücken; gespeichert wird eine Reihenfolge, kein Katalog
 
 ---
 
@@ -46087,3 +46088,175 @@ Eine Liste im Code und eine Liste im Stilblatt, die dieselben Kennungen
 führen müssen, laufen auseinander — lautlos, weil CSS für einen unbekannten
 Wert nicht meckert, sondern nichts tut. Wo das vorkommt, prüft der Wächter
 **gegen den Katalog**, nicht gegen ein Beispiel daraus.
+
+
+E570 — Die Leiste selbst ordnen
+--------------------------------------------------------------------------
+
+Redur, 14. September 2026:
+
+> „Könntest du so machen, dass ich alles, was dort ist im Redion, direkt
+> selber ordnen kann? Geht das so was?"
+
+Ja — und der Griff dafür lag schon da. Die Leiste merkt sich seit jeher in
+`meta`, welchen Stift man führt (E351), welche Form (E375), welche Farbe
+(E351) und wo sie selbst steht (E512). Eine Reihenfolge ist derselbe Griff,
+nur mit einer Liste statt eines Wertes.
+
+### Was entschieden wurde
+
+**Zwei Listen in `meta`, eine für die Werkzeuge, eine für die Gruppen.**
+Ein Feld „Leiste einrichten" zeigt beide untereinander; jede Zeile lässt
+sich greifen und ziehen oder mit zwei Pfeilen rücken. Jede Bewegung wirkt
+sofort auf jede Leiste der Seite. „Zurücksetzen" holt die Vorgabe zurück.
+
+Weil es in `meta` liegt, **reist die eigene Ordnung in der Sicherung mit**
+(§9) und überlebt jeden Neustart.
+
+### Gespeichert wird eine Reihenfolge, kein Katalog
+
+Das ist der Kern, und er ist eine Datenregel, keine Gestaltungsfrage (§8).
+Was es GIBT, steht weiter in `WERKZEUGE` und dem neuen `GRUPPEN`; in `meta`
+liegt nur, in welcher Folge. Gelesen wird deshalb nie roh, sondern
+abgeglichen — in **beide** Richtungen:
+
+```txt
+Kennung in der Liste, die der Katalog nicht kennt   →  fällt weg
+Kennung im Katalog, die der Liste fehlt             →  kommt HINTEN dazu
+```
+
+Ohne die erste Regel risse eine Sicherung aus einer anderen Fassung eine
+leere Stelle in die Leiste. Ohne die zweite bliebe ein neu eingebautes
+Werkzeug unsichtbar, bis jemand zurücksetzt — und niemand wüsste, warum.
+`test523 §5` misst beides mit einer von Hand geschriebenen, absichtlich
+kaputten Liste (eine erfundene Kennung, eine Dublette, elf fehlende).
+
+### Die Knoten werden umgehängt, nicht neu gebaut
+
+`insertBefore` und `appendChild` auf ein Element, das schon im Baum steht,
+**verschieben** es — mit Zustand, Klassen und Zuhörern. Ein Neubau würde
+den geführten Stift, die gewählte Farbe und den offenen Stärkeregler
+wegwerfen.
+
+Und damit ist die DOM-Folge zugleich die sichtbare Folge. Das ist kein
+Beiwerk: Tabulatortaste und Vorleseprogramm gehen in Dokumentreihenfolge,
+und wenn die von der sichtbaren abweicht, führt die Tastatur woandershin
+als das Auge (§38). `test523 §7` misst es, indem es die Knöpfe nach ihrer
+x-Stelle sortiert und mit der DOM-Folge vergleicht.
+
+Am Telefon weicht es weiterhin ab — dort schiebt `order` die Gruppen hinter
+das gewählte Werkzeug (E356) —, und das ist dort mit geschriebenem Grund
+entschieden.
+
+### Warum ein Feld und keine Leiste-im-Ordnen-Modus
+
+Drei Gründe, und der dritte hat entschieden:
+
+1. Die Leiste **rollt** am Telefon. Ein Zug in einem waagerecht rollenden
+   Band könnte immer auch eine Rollbewegung sein; das ist mit dem Finger
+   nicht auseinanderzuhalten.
+2. Eine Gruppe ist **mehrere Knöpfe**. „Die Farben verschieben" heisst
+   sieben Knöpfe auf einmal — in der Leiste sähe man sieben Dinge und
+   meinte eines.
+3. **§38.** Ein Ziehen allein ist keine Bedienung: wer mit der Tastatur
+   arbeitet, kann nichts ziehen. Im Feld hat jede Zeile zwei Knöpfe, und
+   die sind nicht der Notausgang, sondern der Hauptweg (44 px, §37) — das
+   Ziehen kommt dazu.
+
+Der Griff links an jeder Zeile ist **gezeichnet, nicht geschrieben**: ein
+`content:"⠿"` wäre Text und würde mitgelesen — sechs Braillepunkte vor
+jedem Werkzeugnamen. Zwei Punktspalten aus einem Verlauf sagen dasselbe und
+heissen nichts.
+
+### Dreissig Zeilen Stilblatt wurden zwei
+
+Die Plätze standen als feste Zahlen im CSS: eine Zeile je Werkzeug für
+seinen `order`, noch eine je Werkzeug für `--platz`, fünf für die Gruppen —
+alle in der Reihenfolge des Katalogs. Genau das bestimmt jetzt Redur.
+
+```css
+.blatt-werk > [data-wz]{order:var(--ordnung, 0)}
+.blatt-werk[data-tool] > [data-gruppe]{order:calc(var(--platz,0) + var(--g-ordnung,1))}
+```
+
+Die Zahlen kommen aus der Ordnung. Zwei Dinge bleiben fest, beide mit
+Grund: „Zurück" und „Vor" kleben am Telefon weiter ganz rechts (E396,
+`test393`) — sie sind die zwei Griffe, die man beim Schreiben von Hand am
+häufigsten braucht —, und ohne gemerkte Ordnung gelten die Vorgaben, die
+Leiste steht dann wie eh und je.
+
+**Und E568 steht jetzt als Daten da**, nicht als CSS-Regel: dass der
+Verlauf ans Ende gehört, ist der letzte Eintrag im Gruppenkatalog. Redur
+kann es ändern, ohne dass jemand eine CSS-Datei aufmacht.
+
+### Sieben Stellen, ein Beobachter
+
+`tools.dataset.tool = …` steht an sieben Stellen in `marken.ts`. Am Telefon
+hängt daran, wo die Gruppen einsortiert werden. Statt sieben Stellen zu
+erweitern und bei der achten daneben zu liegen, hört ein
+`MutationObserver` auf genau dieses Attribut — eine Stelle, die sich nicht
+vergessen lässt.
+
+### Die Vorgabe-Reihenfolge ist nicht frei gewählt
+
+Sie ist die, die bis E570 als `+1` bis `+5` im Stilblatt stand und die
+`test348` seit E356 hält: erst die **Spielart** des Werkzeugs (Stifte,
+Formenwahl, Laserart, Radiermodus, Schrift, Auswahl, Elemente), dann
+**womit** es zeichnet (Farbe, Breite), dann die **Schalter** (Formen
+erkennen, Kritzeln, Lineal), zuletzt der **Verlauf**.
+
+Ein erster Entwurf stellte die Schalter nach vorn — so stand es auf dem
+Bild von E568. Am Telefon war Redurs Satz aus E512 damit gebrochen: „die
+Stiftreihe … sollte neben es, also links unten, wo die Farben dort sind."
+Zwischen dem Stiftknopf und der Stiftreihe standen plötzlich zwei
+Schalter, **gemessen 100 px**, und `test348` hat es gemeldet.
+
+Am Rechner hat derselbe Tausch die Zeile umgestellt, und dabei fiel die
+dritte Strichbreite allein eine Zeile tiefer — eine zerrissene Gruppe,
+genau der Fehler, den E568 bei der Palette repariert hat. Die
+einundzwanzig fehlenden Pixel kamen aus zwei Stellen, die ohnehin falsch
+waren:
+
+```txt
+der Trenner am ANFANG der Zubehörzeile   trennte nichts     15 px
+der Abstand der Trenner 7 → 5 px                             8 px
+```
+
+Dazu messen die Farbtupfer wieder 30 px statt 32 — die Zahl, die
+`.blatt-farbe` seit jeher nennt. Ergebnis:
+
+```txt
+Zeile 1   die dreizehn Werkzeuge
+──────────────────────────────────
+Zeile 2   die sechs Stifte │ die Palette │ die drei Breiten
+Zeile 3   Formen · Kritzeln │ Zurück · Vor · Platz · Einrichten
+```
+
+Damit steht in Zeile 2 alles, WOMIT man zeichnet, und in Zeile 3, was
+nebenher mitläuft. `test522` hält das jetzt in seiner allgemeinen Form:
+**keine sichtbare Gruppe darf über zwei Zeilen reissen** — nicht „die
+Palette" und „die Breiten" einzeln, sondern jede, auch die von morgen.
+
+### Was NICHT dazugehört
+
+**Ausblenden.** Redur hat „ordnen" gesagt, nicht „weglassen". Ein
+verstecktes Werkzeug wäre eine Funktion, die verschwindet, und dafür gilt
+seine eigene Regel: vorher fragen. Wenn er es will, ist es der nächste
+Bogen — dann aber mit einem Weg zurück (ein „Mehr"-Feld), nicht mit einem
+Loch.
+
+### Was `test523` hält
+
+26 Zusagen, vier Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  `ordnungAnwenden` beim Bauen weglassen      22 grün,  4 rot
+G2  den Abgleich weglassen (Liste roh nehmen)   11 grün, 15 rot
+G3  die Pfeile auf 32 px setzen                 25 grün,  1 rot
+G4  nur die Zahlen setzen, nicht umhängen       17 grün,  9 rot
+```
+
+G2 ist die lauteste, und das ist richtig so: ohne Abgleich trägt die Leiste,
+was in `meta` steht — auch eine erfundene Kennung, auch eine Dublette, und
+die elf fehlenden Werkzeuge fehlen dann auch in der Leiste. Fünfzehn
+Zusagen fallen gleichzeitig, weil ab da nichts mehr stimmt.

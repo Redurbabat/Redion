@@ -1044,6 +1044,16 @@ Kacheln (Linie · Pfeil · Rechteck · Kreis · Stern).
 
 ### Die Bögen, in der Reihenfolge
 
+- **W0 · Die Leiste selbst ordnen** — ERLEDIGT (E570). Kam als eigene Bitte
+  dazwischen („Könntest du so machen, dass ich alles, was dort ist im Redion,
+  direkt selber ordnen kann?") und gehört trotzdem hierher: die Tafel wird
+  dieselben zwei Listen zeigen. Zwei Reihenfolgen in `meta`, ein Feld zum
+  Ziehen und Rücken, „Zurücksetzen". Gespeichert wird eine Reihenfolge, kein
+  Katalog — Unbekanntes fällt beim Lesen weg, Fehlendes kommt hinten dazu.
+  **Offen geblieben ist das Ausblenden**: Redur hat „ordnen" gesagt, nicht
+  „weglassen". Wenn er es will, braucht es einen Weg zurück (ein „Mehr"-Feld)
+  und keine Lücke — und dann vorher seine ausdrückliche Zusage, weil dabei
+  eine Funktion aus dem Bild verschwindet.
 - **W1 · Die Zustands-Grammatik** — ERLEDIGT (E568). Eine laute Fläche statt
   sechs, runde Farbtupfer, sichtbare Gruppen, Rangfolge zwischen Werkzeug
   und Zubehör. Das ist die Grundlage: die Tafel erbt sie unverändert.

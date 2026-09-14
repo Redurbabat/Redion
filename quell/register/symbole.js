@@ -242,6 +242,10 @@ Register.symbole = (() => {
         alignLeft: '<path d="M3.6 5.6h16.8M3.6 10.4h10.6M3.6 15.2h16.8M3.6 20h10.6"/>',
         alignCenter: '<path d="M3.6 5.6h16.8M6.7 10.4h10.6M3.6 15.2h16.8M6.7 20h10.6"/>',
         alignRight: '<path d="M3.6 5.6h16.8M9.8 10.4h10.6M3.6 15.2h16.8M9.8 20h10.6"/>',
+        /* Die Leiste einrichten (E570): eine Liste mit einem Pfeil, der hoch
+           und runter zeigt — „hier wird die Reihenfolge geändert". */
+        ordnen: '<path d="M9.2 5.8h11.4M9.2 12h11.4M9.2 18.2h11.4"/>' +
+            '<path d="m3.2 8.6 2.2-2.6 2.2 2.6M5.4 6v12M3.2 15.4l2.2 2.6 2.2-2.6"/>',
         /* Das Kritzeln, das löscht: ein dichtes Hin und Her. */
         scribble: '<path d="M2.8 15.6c2.6-4.4 4.6 3 7-1.6s4.6 3 7-1.6 3.2 1.2 4.4-1.2"/>',
         /* Der Kreis für die Formerkennung — eine gezogene Form, die einrastet. */

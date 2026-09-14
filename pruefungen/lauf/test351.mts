@@ -179,12 +179,15 @@ console.log('\n2 · Nur das Zubehör des Werkzeugs — auch am Rechner');
    zweites Mal getippt wird) und zählt zu, wie der Trenner ohne Rechteck. */
 gleich('Stift: Stil, Formen, Farben, Breiten, Verlauf — kein Radiermodus, keine Auswahlknöpfe, kein Lineal',
   /* DREI IM VERLAUF SEIT E512: Zurück, Vor — und der Platz der Leiste.
-     Er steht bei ihnen, weil er zu JEDEM Werkzeug gehört. */
-  [z.gruppen.stil > 0, z.gruppen.formen > 0, z.gruppen.farbe >= 6, z.gruppen.breite === 3, z.gruppen.verlauf === 3, z.gruppen.radierer, z.gruppen.auswahl, z.gruppen.lineal],
+     VIER SEIT E570: dazu «Einrichten», das Feld für die eigene
+     Reihenfolge. Alle vier stehen hier, weil sie zu JEDEM Werkzeug
+     gehören und zu keinem — sie ändern nicht, was der Finger tut,
+     sondern die Leiste selbst. */
+  [z.gruppen.stil > 0, z.gruppen.formen > 0, z.gruppen.farbe >= 6, z.gruppen.breite === 3, z.gruppen.verlauf === 4, z.gruppen.radierer, z.gruppen.auswahl, z.gruppen.lineal],
   [true, true, true, true, true, 0, 0, 0]);
 await werkzeug(pg, 'radierer');
 z = await leiste(pg);
-gleich('Radierer: sein Modus und der Verlauf, sonst nichts', [z.gruppen.radierer, z.gruppen.verlauf, z.gruppen.farbe, z.gruppen.stil, z.gruppen.breite], [1, 3, 0, 0, 0]);
+gleich('Radierer: sein Modus und der Verlauf, sonst nichts', [z.gruppen.radierer, z.gruppen.verlauf, z.gruppen.farbe, z.gruppen.stil, z.gruppen.breite], [1, 4, 0, 0, 0]);
 await werkzeug(pg, 'select');
 z = await leiste(pg);
 /* NEUN IN DER GRUPPE „AUSWAHL": Löschen, Kopieren, Einsetzen; dazu seit

@@ -296,6 +296,177 @@ const Marken = (() => {
         { id: 'rechts', zeichen: '⇥', sym: 'dockRight', name: 'rechts' },
         { id: 'unten', zeichen: '⤓', sym: 'dockBottom', name: 'unten in der Mitte' }
     ];
+    /* ══ DIE GRUPPEN, EINMAL AUFGESCHRIEBEN (E570) ═══════════════════════════
+       Welche Gruppe zu welchem Werkzeug erscheint, steht seit E356 im
+       Stilblatt — das bleibt dort, denn es ist eine Sichtbarkeitsregel. Was
+       hier dazukommt, ist etwas anderes: der NAME einer Gruppe, damit ein
+       Mensch sie in einer Liste wiedererkennt, und die Reihenfolge, in der
+       sie stehen.
+  
+       `form` und `formen` heissen fast gleich und sind zweierlei — die eine
+       ist die Formenwahl, die andere sind zwei Schalter. In der Leiste fällt
+       das nicht auf, weil man Zeichen sieht; in einer Liste mit Wörtern
+       wäre es die erste Verwechslung. Deshalb tragen sie hier Namen, die
+       sich unterscheiden lassen.
+  
+       DIE REIHENFOLGE HIER IST DIE VORGABE, und sie ist NICHT frei gewählt:
+       sie ist die, die bis E570 als `+1` bis `+5` im Stilblatt stand und die
+       `test348` seit E356 hält — erst die Spielart (Stifte, Formen, Laser),
+       dann Farbe und Breite, dann die Schalter. Redurs Satz aus E512 hängt
+       daran: „die Stiftreihe … sollte neben es, also links unten, wo die
+       Farben dort sind." Steht etwas anderes zwischen dem Stift und den
+       Farben, ist dieser Satz gebrochen — am Telefon um 100 px, gemessen.
+  
+       DER VERLAUF STEHT AM ENDE, weil „Zurück" und „Vor" zu jedem Werkzeug
+       gehören und zu keinem (E568). Bis E570 war das eine Zeile `order:1` im
+       Stilblatt; jetzt ist es der letzte Katalogeintrag, und Redur kann ihn
+       verschieben, ohne dass jemand eine CSS-Datei aufmacht. */
+    const GRUPPEN = [
+        /* ERST DIE SPIELART DES WERKZEUGS … */
+        { id: 'stil', name: 'Stifte' },
+        { id: 'form', name: 'Formenwahl: Linie, Pfeil, Rechteck …' },
+        { id: 'laser', name: 'Laser: Punkt oder Spur' },
+        { id: 'radierer', name: 'Radierer: Ganz, Teil, Stift …' },
+        { id: 'schrift', name: 'Schrift' },
+        { id: 'auswahl', name: 'Auswahl: Kopieren, Löschen, Sperren …' },
+        { id: 'elemente', name: 'Elemente' },
+        /* … dann, WOMIT es zeichnet … */
+        { id: 'farbe', name: 'Farben' },
+        { id: 'breite', name: 'Strichbreite' },
+        /* … dann die Schalter, die nebenher mitlaufen … */
+        { id: 'formen', name: 'Schalter: Formen erkennen, Kritzeln löscht' },
+        { id: 'lineal', name: 'Lineal' },
+        /* … und ganz zuletzt, was zu jedem Werkzeug gehört (E568). */
+        { id: 'verlauf', name: 'Zurück, Vor, Platz, Einrichten' }
+    ];
+    /* ══ DIE EIGENE ORDNUNG (E570) ═══════════════════════════════════════════
+       Redur, 14. September: „Könntest du so machen, dass ich alles, was dort
+       ist im Redion, direkt selber ordnen kann?"
+  
+       ZWEI LISTEN IN `meta`, wie jede andere Zeichenvorliebe auch — Stift,
+       Farbe, Form und der Platz der Leiste liegen seit jeher dort. Damit
+       reist die Ordnung in der Sicherung mit (`meta` ist eines der elf
+       Fächer, §9) und überlebt den Neustart.
+  
+       GESPEICHERT WIRD EINE REIHENFOLGE, KEIN KATALOG (§8). Was es gibt,
+       steht weiter in `WERKZEUGE` und `GRUPPEN`; hier steht nur, in welcher
+       Folge. Deshalb ist das Lesen keine Übernahme, sondern ein Abgleich:
+  
+         · was in der gemerkten Liste steht und den Katalog NICHT kennt,
+           fällt weg — eine Kennung aus einer älteren Fassung darf keine
+           leere Stelle in der Leiste machen;
+         · was der Katalog kennt und die Liste NICHT, wird HINTEN angehängt —
+           ein neues Werkzeug erscheint damit von selbst, statt unsichtbar
+           zu bleiben, bis jemand zurücksetzt.
+  
+       Das ist der ganze Grund, warum hier eine Funktion steht und nicht ein
+       `Store.getMeta`. */
+    const M_ORDNUNG = 'zeichnen:ordnung';
+    const ordnungAbgleichen = (gemerkt, katalog) => {
+        const liste = Array.isArray(gemerkt) ? gemerkt.map(String) : [];
+        const rein = liste.filter((id, i) => katalog.includes(id) && liste.indexOf(id) === i);
+        for (const id of katalog)
+            if (!rein.includes(id))
+                rein.push(id);
+        return rein;
+    };
+    const ordnungLesen = () => {
+        const roh = typeof Store !== 'undefined' ? Store.getMeta(M_ORDNUNG) : null;
+        const o = roh && typeof roh === 'object' ? roh : {};
+        return {
+            werkzeuge: ordnungAbgleichen(o['werkzeuge'], WERKZEUGE.map(w => w.id)),
+            gruppen: ordnungAbgleichen(o['gruppen'], GRUPPEN.map(g => g.id))
+        };
+    };
+    const ordnungMerken = (o) => {
+        if (typeof Store === 'undefined')
+            return;
+        try {
+            Store.setMeta(M_ORDNUNG, { werkzeuge: o.werkzeuge, gruppen: o.gruppen });
+        }
+        catch { /* dann eben nur diese Sitzung */ }
+    };
+    const ordnungVergessen = () => {
+        if (typeof Store === 'undefined')
+            return;
+        try {
+            Store.setMeta(M_ORDNUNG, null);
+        }
+        catch { /* dann eben nur diese Sitzung */ }
+    };
+    /**
+     * Die gemerkte Ordnung auf eine gebaute Leiste legen.
+     *
+     * ES WERDEN KNOTEN VERSCHOBEN, NICHT NEU GEBAUT. `insertBefore` und
+     * `appendChild` auf ein Element, das schon im Baum steht, HÄNGEN es um —
+     * mit allem, was daran hängt: Zustand, Klassen, Zuhörer. Ein Neubau
+     * würde den geführten Stift, die gewählte Farbe und den offenen
+     * Stärkeregler wegwerfen.
+     *
+     * UND DIE DOM-FOLGE IST DIE SICHTBARE FOLGE. Das ist kein Beiwerk: ein
+     * Vorleseprogramm und die Tabulatortaste gehen in Dokumentreihenfolge,
+     * und wenn die von der sichtbaren abweicht, führt die Tastatur woandershin
+     * als das Auge (§38). Am Telefon weicht sie ab — dort schiebt `order` die
+     * Gruppen hinter das gewählte Werkzeug (E356) —, und das ist dort mit
+     * geschriebenem Grund entschieden. Hier nicht.
+     */
+    const ordnungAnwenden = (tools) => {
+        const o = ordnungLesen();
+        const bruch = tools.querySelector(':scope > .blatt-zeilenbruch');
+        if (!bruch)
+            return;
+        for (const id of o.werkzeuge) {
+            const knopf = tools.querySelector(`:scope > [data-wz="${id}"]`);
+            if (knopf)
+                tools.insertBefore(knopf, bruch);
+        }
+        for (const id of o.gruppen) {
+            tools.querySelectorAll(`:scope > [data-gruppe="${id}"]`)
+                .forEach(knoten => tools.appendChild(knoten));
+        }
+        ordnungZahlen(tools, o);
+        platzSetzen(tools);
+    };
+    /* DIE ZAHLEN FÜR DAS TELEFON. Dort steht die Leiste in EINER rollenden
+       Zeile, und die Gruppen sollen unmittelbar hinter dem gewählten Werkzeug
+       liegen (E356) — das geht nur über `order`, weil die DOM-Folge Werkzeuge
+       und Zubehör trennt. Bis E570 standen diese Zahlen als dreissig Zeilen
+       im Stilblatt, eine je Werkzeug. Jetzt kommen sie aus der Ordnung, und
+       das Stilblatt liest nur noch zwei Variablen. */
+    const ordnungZahlen = (tools, o) => {
+        /* HUNDERTERSCHRITTE, NICHT ZEHNER — und das ist gemessen, nicht
+           geschätzt. Das alte Stilblatt zählte die Werkzeuge in Zehnern und
+           setzte die fünf Gruppen dazwischen (`+1` bis `+5`); zwölf Gruppen
+           passen da nicht mehr hinein. Bei Zehnern bekam die Farbgruppe des
+           Stifts (Platz 30, zehnte Gruppe) die Zahl 40 — dieselbe wie das
+           NÄCHSTE Werkzeug —, und Farben und Breiten standen am Telefon
+           hinter dem Marker statt hinter dem Stift. `test356` hat es gemeldet.
+           Hundert lässt Platz für neunundneunzig Gruppen. */
+        o.werkzeuge.forEach((id, i) => {
+            tools.querySelector(`:scope > [data-wz="${id}"]`)
+                ?.style.setProperty('--ordnung', String((i + 1) * 100));
+        });
+        o.gruppen.forEach((id, i) => {
+            tools.querySelectorAll(`:scope > [data-gruppe="${id}"]`)
+                .forEach(k => k.style.setProperty('--g-ordnung', String(i + 1)));
+        });
+    };
+    /**
+     * Wo das gewählte Werkzeug in der Reihe steht — die Zahl, hinter der die
+     * Gruppen einsortiert werden.
+     *
+     * EINE FORM IST KEIN EIGENES WERKZEUG. `data-tool` trägt beim Formknopf
+     * `line`, `curve` und so fort; in der Werkzeugreihe steht aber `formen`.
+     * Ohne diese Umrechnung landete das Zubehör der Formen am Anfang der
+     * Leiste statt hinter ihrem Knopf.
+     */
+    const platzSetzen = (tools) => {
+        const o = ordnungLesen();
+        const jetzt = String(tools.dataset.tool || '');
+        const id = o.werkzeuge.includes(jetzt) ? jetzt : (istForm(jetzt) ? 'formen' : '');
+        const i = o.werkzeuge.indexOf(id);
+        tools.style.setProperty('--platz', String(i >= 0 ? (i + 1) * 100 : 0));
+    };
     const M_LAGE = 'zeichnen:leistenlage';
     const lageJetzt = () => {
         const id = typeof Store !== 'undefined' ? String(Store.getMeta(M_LAGE, 'oben')) : 'oben';
@@ -4157,6 +4328,222 @@ const Marken = (() => {
         document.body.appendChild(o);
         zu.focus();
     });
+    /**
+     * ══ DIE LEISTE EINRICHTEN (E570) ═══════════════════════════════════════
+     *
+     * Zwei Listen — die Werkzeuge und ihr Zubehör —, jede Zeile zu greifen
+     * und zu verschieben. Ein Feld und keine Leiste-im-Zeichnen-Modus, aus
+     * drei Gründen, und der dritte ist der, der entschieden hat:
+     *
+     *   1 · Die Leiste ROLLT am Telefon. Etwas in einem waagerecht rollenden
+     *       Band zu ziehen heisst, dass jeder Zug auch eine Rollbewegung
+     *       sein könnte; das ist auf einem Berührungsbildschirm nicht
+     *       auseinanderzuhalten.
+     *   2 · Eine Gruppe ist mehrere Knöpfe. „Die Farben verschieben" heisst
+     *       sieben Knöpfe auf einmal — in der Leiste sähe man sieben Dinge
+     *       und meinte eines.
+     *   3 · §38. Ein Ziehen allein ist keine Bedienung: wer mit der Tastatur
+     *       arbeitet, kann nichts ziehen. Hier hat jede Zeile zwei Knöpfe,
+     *       „hoch" und „runter", und die sind nicht der Notausgang, sondern
+     *       der Hauptweg — das Ziehen kommt dazu.
+     *
+     * WAS MAN ÄNDERT, SIEHT MAN SOFORT. Jede Bewegung legt die neue Ordnung
+     * augenblicklich auf jede Leiste der Seite. Ein Feld, das erst beim
+     * Schliessen wirkt, lässt einen raten, was man gerade getan hat.
+     */
+    const leisteEinrichten = () => new Promise(fertig => {
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        const finder = document.createElement('div');
+        finder.className = 'finder blatt-ordnen-feld';
+        finder.style.width = 'min(560px,94vw)';
+        const kopf = document.createElement('div');
+        kopf.className = 'fh';
+        kopf.textContent = 'Leiste einrichten';
+        const zu = document.createElement('button');
+        zu.className = 'icon-btn';
+        zu.dataset.a = 'zu';
+        zu.setAttribute('aria-label', 'Schliessen');
+        zu.textContent = '✕';
+        kopf.appendChild(zu);
+        finder.appendChild(kopf);
+        const koerper = document.createElement('div');
+        koerper.className = 'blatt-ordnen-koerper';
+        finder.appendChild(koerper);
+        const sagen = document.createElement('p');
+        sagen.className = 'blatt-ordnen-sagt';
+        sagen.setAttribute('aria-live', 'polite');
+        finder.appendChild(sagen);
+        const fuss = document.createElement('div');
+        fuss.className = 'blatt-ordnen-fuss';
+        const zurueck = document.createElement('button');
+        zurueck.className = 'blatt-ordnen-zurueck';
+        zurueck.type = 'button';
+        zurueck.textContent = 'Zurücksetzen';
+        zurueck.title = 'Die ursprüngliche Reihenfolge wiederherstellen';
+        const okay = document.createElement('button');
+        okay.className = 'blatt-ordnen-fertig';
+        okay.type = 'button';
+        okay.textContent = 'Fertig';
+        fuss.append(zurueck, okay);
+        finder.appendChild(fuss);
+        o.appendChild(finder);
+        let jetzt = ordnungLesen();
+        /** Die neue Ordnung merken und auf JEDE Leiste der Seite legen. */
+        const anwenden = () => {
+            ordnungMerken(jetzt);
+            document.querySelectorAll('.blatt-werk').forEach(ordnungAnwenden);
+        };
+        const namen = (art, id) => art === 'werkzeuge'
+            ? (WERKZEUGE.find(w => w.id === id)?.name || id)
+            : (GRUPPEN.find(g => g.id === id)?.name || id);
+        /** Eine Zeile um `schritt` Stellen verschieben. */
+        const ruecken = (art, id, schritt) => {
+            const liste = jetzt[art];
+            const i = liste.indexOf(id);
+            const ziel = i + schritt;
+            if (i < 0 || ziel < 0 || ziel >= liste.length)
+                return;
+            liste.splice(i, 1);
+            liste.splice(ziel, 0, id);
+            anwenden();
+            malen();
+            sagen.textContent = namen(art, id) + ' steht jetzt an Stelle ' + (ziel + 1)
+                + ' von ' + liste.length + '.';
+            /* DER FOKUS WANDERT MIT. Ohne das springt er beim Neuzeichnen an den
+               Anfang, und wer zweimal „runter" drücken will, muss sich neu
+               hinklicken — die Taste wäre unbrauchbar (§38). */
+            koerper.querySelector(`[data-art="${art}"][data-id="${id}"] [data-ruecken="${schritt > 0 ? 'runter' : 'hoch'}"]`)?.focus();
+        };
+        /* ── Ziehen (E570). Kein HTML5-Drag: das gibt es auf einem
+           Berührungsbildschirm nicht. Zeigerereignisse gibt es überall. */
+        let zieht = null;
+        const beiZug = (e) => {
+            if (!zieht)
+                return;
+            const unter = document.elementFromPoint(e.clientX, e.clientY);
+            const zeile = unter instanceof Element ? unter.closest('.blatt-ordnen-zeile') : null;
+            if (!zeile || zeile.dataset.art !== zieht.art)
+                return;
+            const ueber = String(zeile.dataset.id || '');
+            if (!ueber || ueber === zieht.id)
+                return;
+            const liste = jetzt[zieht.art];
+            const von = liste.indexOf(zieht.id);
+            const nach = liste.indexOf(ueber);
+            if (von < 0 || nach < 0)
+                return;
+            liste.splice(von, 1);
+            liste.splice(nach, 0, zieht.id);
+            anwenden();
+            malen();
+        };
+        const zugEnde = () => {
+            if (!zieht)
+                return;
+            sagen.textContent = namen(zieht.art, zieht.id) + ' abgelegt.';
+            zieht = null;
+            koerper.querySelectorAll('.blatt-ordnen-zeile.zieht').forEach(z => z.classList.remove('zieht'));
+            window.removeEventListener('pointermove', beiZug);
+            window.removeEventListener('pointerup', zugEnde);
+            window.removeEventListener('pointercancel', zugEnde);
+        };
+        const malen = () => {
+            koerper.textContent = '';
+            const bloecke = [
+                ['werkzeuge', 'Werkzeuge', 'Die Reihe oben in der Leiste.'],
+                ['gruppen', 'Zubehör', 'Was unter dem gewählten Werkzeug steht — je Gruppe, nicht je Knopf.']
+            ];
+            for (const [art, titel, hinweis] of bloecke) {
+                const block = document.createElement('section');
+                block.className = 'blatt-ordnen-block';
+                const h = document.createElement('h3');
+                h.textContent = titel;
+                const p = document.createElement('p');
+                p.textContent = hinweis;
+                block.append(h, p);
+                const liste = document.createElement('ul');
+                liste.className = 'blatt-ordnen-liste';
+                jetzt[art].forEach((id, i, alle) => {
+                    const zeile = document.createElement('li');
+                    zeile.className = 'blatt-ordnen-zeile';
+                    zeile.dataset.art = art;
+                    zeile.dataset.id = id;
+                    const nr = document.createElement('i');
+                    nr.className = 'blatt-ordnen-nr';
+                    nr.textContent = String(i + 1);
+                    const wort = document.createElement('b');
+                    wort.textContent = namen(art, id);
+                    const hoch = document.createElement('button');
+                    hoch.type = 'button';
+                    hoch.className = 'blatt-ordnen-pfeil';
+                    hoch.dataset.ruecken = 'hoch';
+                    hoch.textContent = '↑';
+                    hoch.disabled = i === 0;
+                    hoch.setAttribute('aria-label', namen(art, id) + ' nach vorn');
+                    const runter = document.createElement('button');
+                    runter.type = 'button';
+                    runter.className = 'blatt-ordnen-pfeil';
+                    runter.dataset.ruecken = 'runter';
+                    runter.textContent = '↓';
+                    runter.disabled = i === alle.length - 1;
+                    runter.setAttribute('aria-label', namen(art, id) + ' nach hinten');
+                    zeile.append(nr, wort, hoch, runter);
+                    liste.appendChild(zeile);
+                });
+                block.appendChild(liste);
+                koerper.appendChild(block);
+            }
+        };
+        malen();
+        koerper.addEventListener('pointerdown', e => {
+            const ziel = e.target instanceof Element ? e.target : null;
+            if (!ziel || ziel.closest('.blatt-ordnen-pfeil'))
+                return;
+            const zeile = ziel.closest('.blatt-ordnen-zeile');
+            if (!zeile)
+                return;
+            zieht = { art: zeile.dataset.art, id: String(zeile.dataset.id || '') };
+            zeile.classList.add('zieht');
+            window.addEventListener('pointermove', beiZug);
+            window.addEventListener('pointerup', zugEnde);
+            window.addEventListener('pointercancel', zugEnde);
+        });
+        koerper.addEventListener('click', e => {
+            const ziel = e.target instanceof Element ? e.target : null;
+            const pfeil = ziel?.closest('.blatt-ordnen-pfeil');
+            if (!pfeil)
+                return;
+            const zeile = pfeil.closest('.blatt-ordnen-zeile');
+            if (!zeile)
+                return;
+            ruecken(zeile.dataset.art, String(zeile.dataset.id || ''), pfeil.dataset.ruecken === 'runter' ? 1 : -1);
+        });
+        zurueck.addEventListener('click', () => {
+            ordnungVergessen();
+            jetzt = ordnungLesen();
+            document.querySelectorAll('.blatt-werk').forEach(ordnungAnwenden);
+            malen();
+            sagen.textContent = 'Die ursprüngliche Reihenfolge steht wieder.';
+        });
+        const schliessen = () => {
+            zugEnde();
+            o.remove();
+            document.removeEventListener('keydown', beiTaste);
+            fertig();
+        };
+        const beiTaste = (e) => { if (e.key === 'Escape')
+            schliessen(); };
+        okay.addEventListener('click', schliessen);
+        o.addEventListener('click', e => {
+            const ziel = e.target instanceof Element ? e.target : null;
+            if (!ziel || ziel === o || ziel.closest('[data-a="zu"]'))
+                schliessen();
+        });
+        document.addEventListener('keydown', beiTaste);
+        document.body.appendChild(o);
+        okay.focus();
+    });
     const leiste = (controls, extra = '') => {
         /* WELCHE FORM DER FORMEN-KNOPF FÜHRT (E375). Das ist Zustand der
            LEISTE, nicht der Fläche: die Fläche kennt nur `line` oder
@@ -4321,6 +4708,17 @@ const Marken = (() => {
                    Knöpfen. Der Strich trägt `data-gruppe` wie die Knöpfe dahinter —
                    er kommt und geht also mit ihnen. Am Telefon bleibt er aus. */
                 '<span class="blatt-trenn" data-gruppe="auswahl"></span>' +
+                /* ══ DIE LEISTE EINRICHTEN (E570) ═══════════════════════════════════
+                   Redur, 14. September: „Könntest du so machen, dass ich alles, was
+                   dort ist im Redion, direkt selber ordnen kann?"
+          
+                   DER KNOPF STEHT BEI „PLATZ", weil beide dasselbe betreffen: nicht
+                   das Zeichnen, sondern die Leiste selbst. Wer den einen sucht,
+                   findet den anderen. */
+                '<button data-act="einrichten" data-gruppe="verlauf" ' +
+                'title="Leiste einrichten — die Reihenfolge der Werkzeuge und ihres Zubehörs selbst bestimmen">' +
+                '<span class="zeichen" data-sym="ordnen" aria-hidden="true"></span>' +
+                '<span class="wort">Einrichten</span></button>' +
                 '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen" data-sym="trash" aria-hidden="true"></span><span class="wort">Löschen</span></button>' +
                 /* KOPIEREN UND EINSETZEN (E353) — auch ohne Tastatur, am Telefon. */
                 '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen" data-sym="copy" aria-hidden="true"></span><span class="wort">Kopieren</span></button>' +
@@ -4481,6 +4879,27 @@ const Marken = (() => {
                 '<label class="blatt-staerke" data-gruppe="breite" title="Strichstärke frei wählen">' +
                 '<input type="range" min="0.5" max="12" step="0.1" value="' + BREITEN[1] + '" aria-label="Strichstärke">' +
                 '<output aria-hidden="true">' + String(BREITEN[1]).replace('.', ',') + '</output></label>';
+        /* ══ DIE EIGENE ORDNUNG LEGT SICH DARÜBER (E570) ═══════════════════════
+           Die Zeilen oben bauen die Leiste in der Reihenfolge des Katalogs —
+           das bleibt so, denn der Katalog ist die Wahrheit darüber, WAS es
+           gibt. Wie es steht, ist eine zweite Frage, und sie wird hier
+           beantwortet: die Knoten werden umgehängt, keiner neu gebaut.
+    
+           DAS MUSS VOR DEM ERSTEN BILD GESCHEHEN, nicht nach dem ersten Klick.
+           Sonst steht die Leiste beim Öffnen in der Vorgabe und springt, sobald
+           man etwas anfasst — derselbe Fund wie bei der Adernreihe (E509). */
+        ordnungAnwenden(tools);
+        /* WELCHES WERKZEUG GEFÜHRT WIRD, ÄNDERT SICH AN SIEBEN STELLEN in
+           dieser Datei (`tools.dataset.tool = …`). Am Telefon hängt daran, wo
+           die Gruppen einsortiert werden — `--platz`. Statt sieben Stellen zu
+           erweitern und bei der achten daneben zu liegen, wird HIER zugehört:
+           ein Beobachter auf genau diesem Attribut. Eine Stelle, die nicht
+           vergessen werden kann. */
+        try {
+            new MutationObserver(() => platzSetzen(tools))
+                .observe(tools, { attributes: true, attributeFilter: ['data-tool'] });
+        }
+        catch { /* ohne Beobachter bleibt die Vorgabe stehen */ }
         /* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
            Bei 390 px ist die Leiste 310 px breit und ihr Inhalt 1059 — von 21
            Knöpfen stehen 15 draussen, alle rechts. Gerollt werden kann sie
@@ -5121,6 +5540,12 @@ const Marken = (() => {
                     controls.setzeKritzel(an);
                     target.setAttribute('aria-pressed', an ? 'true' : 'false');
                     target.classList.toggle('on', an);
+                    return;
+                }
+                if (target.dataset.act === 'einrichten') {
+                    /* Das Feld schreibt selbst in `meta` und legt jede Änderung
+                       sofort auf jede Leiste der Seite — hier bleibt nichts zu tun. */
+                    void leisteEinrichten();
                     return;
                 }
                 if (target.dataset.act === 'lage') {

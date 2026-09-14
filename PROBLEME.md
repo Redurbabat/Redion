@@ -62,6 +62,7 @@ sind der teuerste Teil und der lehrreichste.
 | P46 | 2026-09-14 | Zum vierten Mal war mein Pruefstueck schuld, nicht der Code | 🟡 klein | E567 |
 | P47 | 2026-09-14 | Drei Zeilen im Stilblatt standen da und galten nie | 🟠 mittel | E568 |
 | P48 | 2026-09-14 | Sieben Pixel Layout machten aus einem Glaetter einen kaputten Glaetter | 🟠 mittel | E568 |
+| P49 | 2026-09-14 | Mein Zeilenraster zerschnitt eine Zeile in zwei | 🟡 klein | E570 |
 
 ---
 
@@ -1053,4 +1054,27 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** 45 von 45 gruen, und die Debug-Zeile sagt wieder „ohne Glaetter 60 · mit 11" — der Unterschied, um den es geht, ist wieder da.
 
 **Die Lehre.** Eine Pruefung, die auf feste Bildschirmkoordinaten zeigt, misst drei Pixel vom Rand entfernt, ohne es zu sagen. Sie war nicht falsch und nicht flatterhaft — sie war SPROEDE, und der Bericht zeigte auf eine ganz andere Stelle als die Ursache. Wer eine Zahl in eine Pruefung schreibt, die aus dem Layout kommt, rechnet sie aus dem Layout aus. Und der Weg zur Ursache war beide Male derselbe wie bei P47: nicht lesen, sondern messen — erst die Haelfte wegnehmen (welche Datei?), dann die Zahl holen.
+
+
+---
+
+## P49 · Mein Zeilenraster zerschnitt eine Zeile in zwei
+
+*2026-09-14 · 🟡 klein · E570*
+
+**Das Bild.** Die Messung meldete „die drei Breiten stehen auf zwei Zeilen" — auf dem Bild standen sie nebeneinander.
+
+**Die falsche Vermutung.** Dass die Leiste wirklich umbricht, und ich habe angefangen, Pixel zu suchen.
+
+**Wie es gefunden wurde.** Die Rohzahlen angesehen statt der Auswertung: die Farbtupfer sind 30 px hoch, die Knoepfe 32. Ihre OBERKANTE liegt damit 1 px tiefer. Mein Raster war `Math.round(y / 12) * 12` — und genau an der Rasterkante fielen 54 und 55 in zwei verschiedene Faecher.
+
+**Die Ursache.** Das Raster, nicht das Layout. Eine Zeile mit zwei Elementhoehen hat keine gemeinsame Oberkante; sie hat eine gemeinsame MITTE.
+
+**Die Lösung.** Zeilen werden nach der senkrechten Mitte gebildet, mit 9 px Toleranz — in der Messprobe und in `test522`. Danach war der gemeldete Umbruch weg, und der ECHTE Umbruch (eine Breite allein eine Zeile tiefer) blieb sichtbar und liess sich reparieren.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** 31 gruen in test522, darunter die neue, staerkere Zusage: keine sichtbare Gruppe reisst ueber zwei Zeilen.
+
+**Die Lehre.** Zum vierten Mal in dieser Woche (P32, P41, P43, P46, P47) und zum ersten Mal nicht in einer Pruefdatei, sondern in der AUSWERTUNG: bevor ich einer Messung glaube, sehe ich mir an, wie sie zaehlt. Ein Raster, das eine Annahme enthaelt — hier: alle Elemente sind gleich hoch —, meldet den Bruch dieser Annahme als Befund ueber etwas ganz anderes. Und: dieselbe Messung hat danach einen ECHTEN Fehler gefunden. Ein kaputtes Messwerkzeug wegzuwerfen waere falsch gewesen; es zu reparieren war richtig.
 
