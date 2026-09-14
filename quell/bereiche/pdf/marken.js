@@ -5467,7 +5467,12 @@ const Marken = (() => {
          */
         const leiterReihe = (an) => {
             tools.querySelectorAll('.blatt-farbe-leiter').forEach(node => node.remove());
-            tools.querySelectorAll('.blatt-farbe, .blatt-farbe-neu')
+            /* DIE HAFTNOTIZFARBEN GEHEN DIE ADERN NICHTS AN (E574). Sie tragen
+               `.blatt-farbe` und wären sonst mit weggenommen worden — im
+               Notizkontext stünde dann gar keine Farbe mehr, nur weil irgendwann
+               vorher der Leiterstift gewählt war. Ihre Sichtbarkeit entscheidet
+               allein die Gruppenregel. */
+            tools.querySelectorAll('.blatt-farbe:not(.blatt-note-color), .blatt-farbe-neu')
                 .forEach(node => node.classList.toggle('blatt-farbe-weg', an));
             if (!an)
                 return;
@@ -6079,7 +6084,19 @@ const Marken = (() => {
                 swatch.type = 'button';
                 swatch.className = 'blatt-farbe blatt-note-color';
                 swatch.dataset.c = color;
-                swatch.dataset.gruppe = 'farbe';
+                /* ══ EINE EIGENE GRUPPE, NICHT DIE DER TINTE (E574) ═══════════════════
+                   Hier stand `'farbe'`. Gemessen war die Folge: die neun Pastelle
+                   standen in JEDEM Werkzeug — beim Stift, beim Marker, bei der
+                   Schrift —, also vierzehn Tupfer, von denen neun zu einem Werkzeug
+                   gehören, das gerade nicht gewählt ist. Und weil `leiterReihe()`
+                   die Adern ebenfalls vor das „+" hängt, `ink-studio-ready` die
+                   Pastelle aber DANACH erzeugt, kamen sie nach einem Neustart mit
+                   dem Leiterstift mitten in die Adernreihe: `blatt-farbe-weg` war
+                   schon verteilt, als es sie noch nicht gab.
+                   `notizfarbe` steht in der Gruppenliste (E356) nur beim Werkzeug
+                   `zettel`. Damit gilt die Regel an jeder Stelle gleich, ohne dass
+                   irgendwer nachträglich eine Klasse verteilen muss. */
+                swatch.dataset.gruppe = 'notizfarbe';
                 swatch.style.backgroundColor = color;
                 swatch.setAttribute('aria-label', 'Haftnotiz ' + name);
                 swatch.title = name;

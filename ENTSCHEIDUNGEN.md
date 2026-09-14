@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-552 Entscheidungen, E1 bis E572 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+554 Entscheidungen, E1 bis E574 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -616,6 +616,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E570** — Die Leiste selbst ordnen: zwei Listen in `meta`, ein Feld zum Ziehen und Rücken; gespeichert wird eine Reihenfolge, kein Katalog
 * **E571** — Im Band selbst schieben: «Einrichten» schaltet einen Modus, in dem jeder Knopf mit der Maus an seinen Platz gezogen wird; die Liste bleibt für die Tastatur
 * **E572** — Zeichenstudio nach sieben Goodnotes-Referenzen: vollständiger Plan, kontextbezogenes Dock, klare Icons, Dock-Bewegung, sichtbares Lineal und nachprüfbare Grenzen (in Umsetzung; L157)
+* **E573** — Das Lineal lässt den Zeiger durch, die Verlaufskapsel bekommt ihren Platz vom Stilblatt, und das Dock liest die Gruppenliste, statt sie zweitens zu entscheiden
+* **E574** — Das Lineal gehört auch dem Stift; die neun Haftnotizfarben bekommen eine eigene Gruppe und bleiben im Notizkontext
 
 ---
 
@@ -46455,3 +46457,175 @@ Push ausdrücklich beauftragt. Der begonnene Code samt vollständigem Plan
 wird als WIP auf `codex/drawing-reference-toolbar` gesichert. `main` bleibt
 unverändert; keine PR und keine Veröffentlichung. Der Push schließt weder
 die offenen Implementierungsschritte noch die fehlende Build-/Browserabnahme.
+
+---
+
+## E573 — Der Zeiger gehört dem Blatt, der Platz dem Stilblatt
+
+**14. September 2026, auf `codex/drawing-reference-toolbar`.** Vier gemessene
+Funde aus dem Übergabeplan (`doku/CODEX-UEBERGABE-ZEICHENSTUDIO.md`), und ein
+fünfter, der schlimmer war als alle vier zusammen.
+
+### Der fünfte zuerst: der gepushte Stand war unvollständig
+
+`index.html` lädt seit E572 `quell/bereiche/pdf/ink-menu.js` und
+`ink-ruler.js`. Beide lagen im Commit nicht. Auf diesem Rechner fiel das
+nicht auf — die Dateien lagen ja da, nur ungetrackt. Auf jedem anderen
+Rechner hätte die App zwei Skripte mit 404 geladen. **Was `index.html`
+lädt, muss im Verzeichnis stehen**; ein Zweig, der nur auf dem Rechner
+läuft, auf dem er entstand, ist kein gesicherter Stand.
+
+### Das Lineal ist für Zeiger durchlässig
+
+Der Zwischenstand rief im `pointerdown` des ganzen `<g>` als ERSTE Zeile
+`stopPropagation()` — vor jeder Prüfung, wem der Zeiger gilt. Gemessen:
+
+- `test267 §6` rot: „frei 50.2°, gerastet 50.2°". Der Zug erreichte die
+  Zeichenmaschine nie, also entstand die zweite Linie gar nicht, und die
+  Prüfung fand wieder die erste.
+- Die Kantenführung selbst war unerreichbar. Sie beginnt innerhalb von 14
+  Einheiten um eine Kante — also AUF dem Glas. Was das Glas schluckt, kann
+  nie geführt werden.
+
+Entschieden: das `<g>` trägt `pointer-events="none"` als
+Präsentationsattribut, nicht nur im Stilblatt. Ein Lineal, das ohne CSS die
+ganze Seite blockiert, ist die schlimmere Störung. Zeiger nehmen nur der
+Griff und der Drehknopf, und beide rufen `stopPropagation()` erst, wenn der
+Zug ihnen wirklich gilt.
+
+**Die Griffe hängen UNTER dem Glas.** Erster Versuch war ein Griffstreifen
+in der Mitte — `test267 §6` blieb rot, weil der Prüfzug bei 55 % Breite und
+40 % Höhe beginnt und das genau dort ist. Die Alternative „überall
+anfassen, wie ein echtes Lineal" ist genau die, an der der Zwischenstand
+gescheitert ist: was das ganze Band annimmt, kann niemand mehr
+überzeichnen. Der Preis: das Lineal fasst man nicht überall an, sondern an
+einem Griff.
+
+### Nach einem Neuzeichnen hängt sich das Lineal zurück
+
+`redraw()` räumt jedes `[data-ink-ui]` aus der Fläche, und niemand hängte
+das Lineal zurück. Gemessen: nach einem einzigen „Zurück" null Lineale in
+der Fläche, `linealAn()` weiterhin `true` — der Schalter stand an, das
+Werkzeug war weg. `remount()` hängt es wieder an und **vergisst die Kante
+dabei ausdrücklich nicht**: es kann mitten in einem geführten Zug laufen,
+und ein Rücksetzen auf `edge = null` wäre genau der Sprung, den niemand
+versteht.
+
+### Die Verlaufskapsel bekommt ihren Platz vom Stilblatt
+
+„Zurück" und „Vor" waren im Studio unerreichbar. Zwei Ursachen, beide
+gemessen: `pdf-studio.css` verbarg die Gruppe `verlauf` mit, und die Kapsel
+hatte keine Rasterspalte — x = 1440 am Rechner, `top = 812` in einem
+800-px-Fenster am Telefon, weil `.document-body` dort `display:block` ist.
+
+Die naheliegende Reparatur wäre `center.prepend(history)` gewesen. Sie ist
+**gemessen falsch**: `.document-workspace` wurde damit nie sichtbar, und
+`test437` lief nach 15 s aus. Entschieden ist deshalb der Weg über das
+Stilblatt — `grid-column:2` am Rechner, `position:absolute` am Telefon. Der
+Preis: die Lage steht an zwei Stellen im CSS statt an einer im Aufbau. Der
+Gewinn: die Kapsel hängt am Dokumentkörper, wo `redraw()` sie nicht trifft.
+
+### Das Dock liest die Gruppenliste, statt sie zweitens zu entscheiden
+
+`pdf-studio.css` versteckte im geschlossenen Zustand **acht** Dinge
+pauschal. Gemessen war das kein Kontextfilter, sondern ein Schalter
+zwischen „fast nichts" und „alles auf einmal":
+
+| Werkzeug | sichtbar davon | vorher |
+|---|---|---|
+| `line` | 0 von 7 Formknöpfen | — |
+| `text` | 0 von 7 Schriftknöpfen | — |
+| `select` | 0 von 10 Auswahlknöpfen | — |
+| geschlossen | 62 von 86 Kindern weg | — |
+
+Welche Gruppe zu welchem Werkzeug gehört, steht seit E356 in
+`bausteine.css` und wird seit E570 sogar vom Nutzer geordnet (§8: ein
+Katalog, nicht zwei). Das Studio entscheidet das nicht zweitens; es nimmt
+nur weg, was doppelt wäre: die Werkzeuge (sie stehen oben im Band), die
+Trenner (im kompakten Dock nur Striche im Weg) und die Verlaufsgruppe
+(„Zurück"/„Vor" stehen in der Kapsel). Aus acht wurden drei.
+
+**Was offen bleibt:** der geöffnete Zustand („···") zeigt weiterhin alles
+mit `!important`. Das ist zum Teil Absicht — `test177`, `test228`, `test437`
+und `test515` erreichen über diesen Weg Dinge, die sonst nirgends stehen —
+und zum Teil der Rest von Plan 7 B 9. Was dort wirklich stört, sind die
+NEUEN kontextfremden Paletten; die behandelt E574.
+
+**Prüfläufe:** `test267` 16/16, `test393` 19/19, `test437` 34/34,
+`test461` 34/34, `test105`/`test109` grün. Die Gesamtsuite ist damit nicht
+als grün behauptet — `test290` (CSS-Namensräume) ist rot und älter als
+dieser Zweig.
+
+---
+
+## E574 — Das Lineal gehört auch dem Stift, die Pastelle dem Zettel
+
+**14. September 2026, derselbe Zweig.** Zwei Gruppenzugehörigkeiten, beide
+an der laufenden App nachgemessen, beide vorher durch einen roten Wächter
+belegt.
+
+### Das Lineal gehört auch dem Stift
+
+Abgelesen in `marken.ts`, nicht angenommen: die Kantenführung des Lineals
+ist für `['stift','marker','line','arrow']` zugelassen. Der Zeichner führte
+den Stift also längst am Lineal — **nur der Schalter dafür stand nicht bei
+ihm.** In der Gruppenliste aus E356 hatte `lineal` `marker`, `line` und
+`arrow`, nicht `stift`. Wer mit dem Stift ein Lineal wollte, brauchte die
+Taste „r" oder den Umweg über „···". Ein Weg, den man kennen muss, ist am
+Telefon kein Weg (§37).
+
+Die Alternative wäre gewesen, die Führung für den Stift abzuschalten und
+damit die Liste stimmig zu machen. Das hätte eine Funktion weggenommen, um
+eine Regel zu retten — die falsche Richtung (§51).
+
+Die Kurve bekommt es weiterhin nicht: sie steht auch in `marken.ts` nicht
+in der Liste, und eine gebogene Linie hat keine Kante (E569).
+
+`test348` und `test351` haben den Wechsel gefangen — genau dafür gibt es
+sie. Beide tragen jetzt die neue Liste **mit dem geschriebenen Grund**,
+nicht mit einer stillen Zahl.
+
+### Die neun Haftnotizfarben bekommen eine eigene Gruppe
+
+Gemessen, bevor etwas geändert wurde: die Pastelle aus E572 bekamen bei
+ihrer Erzeugung `data-gruppe="farbe"` — dieselbe Gruppe wie die fünf
+Tintenfarben. Die Farbreihe las sich in JEDEM Werkzeug gleich:
+
+```txt
+t t t t t N N N N N N N N N +      (t = Tinte, N = Notiz, + = Farbwähler)
+```
+
+Vierzehn Tupfer, von denen neun zu einem Werkzeug gehören, das gerade nicht
+gewählt ist — beim Stift, beim Marker, bei der Schrift.
+
+Dazu ein zweiter Fund aus derselben Zeile: `leiterReihe()` hängt die zehn
+Adern vor das „+", `ink-studio-ready` erzeugt die Pastelle aber DANACH. Nach
+einem **Neustart mit dem Leiterstift** standen sie deshalb mitten in der
+Adernreihe: `blatt-farbe-weg` war längst verteilt, als es sie noch nicht
+gab. Eine Klasse, die nachträglich verteilt wird, hält nur, solange niemand
+die Reihenfolge ändert.
+
+Entschieden: eine eigene Gruppe `notizfarbe`, in der Liste aus E356 nur beim
+Werkzeug `zettel`. Damit gilt die Regel an jeder Stelle gleich — im Dock, in
+der Leiste einer Seite, am Telefon und nach jedem Neustart —, ohne dass
+irgendwer eine Klasse nachreichen muss. `leiterReihe()` fasst die Pastelle
+gar nicht mehr an (`:not(.blatt-note-color)`): die Adern ersetzen die
+Tinte, nicht das Notizpapier.
+
+Und der Zettel verliert dabei die Tintenfarben (Plan 7 B 4: „normale
+Tintenfarben hier nicht zusätzlich als zweite ungeordnete Palette zeigen").
+Ein schwarzer Zettel ist keiner. **Das „+" bleibt** — es ist keine Palette,
+sondern die Tür zu jeder Farbe (E486), und eine Tür wegzunehmen, weil die
+Tapete daneben gewechselt hat, wäre eine verlorene Funktion. Weil es
+`data-gruppe="farbe"` trägt, bekommt es eine eigene Zeile im Stilblatt.
+
+Gemessen danach: Dock beim Stift 941 px mit fünf Tintenfarben, Dock beim
+Zettel 520 px mit neun Pastellen und dem „+".
+
+**Der Preis:** wer im Notizkontext eine Pastellfarbe wählt und dann zum
+Stift wechselt, sieht keinen Tupfer mehr markiert — die gewählte Tinte ist
+dort nicht abgebildet. Dasselbe gilt seit E509 für die Adern, und es ist
+die kleinere Störung als vierzehn Tupfer in jedem Werkzeug.
+
+**Prüfläufe:** `test524` 24/24 (davon 18 neu, drei davon vorher rot
+gesehen), `test348` 26/26, `test351` grün.

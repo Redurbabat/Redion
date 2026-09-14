@@ -177,14 +177,20 @@ console.log('\n2 · Nur das Zubehör des Werkzeugs — auch am Rechner');
 /* DREI IN DER GRUPPE „BREITE" — auch seit E465: der Regler der freien
    Stärke ist eine Klappe (`display:none`, bis die gewählte Stufe ein
    zweites Mal getippt wird) und zählt zu, wie der Trenner ohne Rechteck. */
-gleich('Stift: Stil, Formen, Farben, Breiten, Verlauf — kein Radiermodus, keine Auswahlknöpfe, kein Lineal',
+/* ══ EIN LINEAL SEIT E574, VORHER KEINES ══════════════════════════════════
+   Die letzte Null dieser Zeile hiess „kein Lineal" und war richtig, solange
+   `lineal` in der Gruppenliste (E356) nur bei `marker`, `line` und `arrow`
+   stand. Abgelesen in `marken.ts` lässt die Kantenführung aber auch `stift`
+   zu: der Zeichner konnte am Lineal entlangfahren, der Stift hatte nur
+   keinen Schalter dafür. Jetzt hat er einen — einen, nicht mehr. */
+gleich('Stift: Stil, Formen, Farben, Breiten, Verlauf und EIN Lineal — kein Radiermodus, keine Auswahlknöpfe',
   /* DREI IM VERLAUF SEIT E512: Zurück, Vor — und der Platz der Leiste.
      VIER SEIT E570: dazu «Einrichten», das Feld für die eigene
      Reihenfolge. Alle vier stehen hier, weil sie zu JEDEM Werkzeug
      gehören und zu keinem — sie ändern nicht, was der Finger tut,
      sondern die Leiste selbst. */
   [z.gruppen.stil > 0, z.gruppen.formen > 0, z.gruppen.farbe >= 6, z.gruppen.breite === 3, z.gruppen.verlauf === 4, z.gruppen.radierer, z.gruppen.auswahl, z.gruppen.lineal],
-  [true, true, true, true, true, 0, 0, 0]);
+  [true, true, true, true, true, 0, 0, 1]);
 await werkzeug(pg, 'radierer');
 z = await leiste(pg);
 gleich('Radierer: sein Modus und der Verlauf, sonst nichts', [z.gruppen.radierer, z.gruppen.verlauf, z.gruppen.farbe, z.gruppen.stil, z.gruppen.breite], [1, 4, 0, 0, 0]);

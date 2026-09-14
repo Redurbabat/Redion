@@ -7831,3 +7831,47 @@ ausstehenden Umsetzungsschritte. Die Übergabe selbst schließt keine Produktlü
 
 Typprüfung und `git diff --check` sind zum Übergabezeitpunkt grün. Build und
 neue Browser-/Gestaltungsabnahme sind weiterhin offen.
+
+### Stand am 14. September 2026, abends — was davon gemessen zu ist
+
+Die Tabelle oben ist der Stand **zu Beginn** und bleibt stehen. Hier steht,
+was seither wirklich geschlossen ist, mit Beleg — und was ausdrücklich nicht.
+
+| Punkt | jetzt | Beleg |
+|---|---|---|
+| Der gepushte Zweig lud zwei fehlende Dateien | ✅ zu | `quell/bereiche/pdf/ink-menu.js` und `ink-ruler.js` sind eingecheckt; `index.html` und der `GRUNDSTOCK` nennen sie, Dienststand v1072 (E573) |
+| Lineal frisst jeden Zeiger | ✅ zu | `pointer-events="none"` am `<g>`, Griffe unter dem Glas; `test267` 16/16 (E573) |
+| Lineal verschwindet nach „Zurück" | ✅ zu | `remount()` nach jedem `redraw()`; die Kante bleibt dabei erhalten (E573) |
+| „Zurück"/„Vor" im Studio unerreichbar | ✅ zu | eigene Kapsel am Dokumentkörper, Lage aus dem Stilblatt; `test393` 19/19, `test461` 34/34 (E573) |
+| Formen, Schrift, Auswahl nur hinter „···" | ✅ zu | das Dock liest die Gruppenliste (E356) statt acht Dinge pauschal zu verstecken; `test524` misst es je Werkzeug (E573) |
+| Lineal beim Stift nicht schaltbar | ✅ zu | `lineal` steht jetzt auch bei `stift` — die Kantenführung liess ihn längst zu; `test348`, `test351`, `test524` (E574) |
+| Haftnotizfarben in jedem Werkzeug | ✅ zu | eigene Gruppe `notizfarbe`, nur beim Zettel; `leiterReihe()` fasst sie nicht mehr an; `test524` 24/24 (E574) |
+| Tintenfarben zusätzlich beim Zettel | ✅ zu | der Zettel hat seine neun und das „+", sonst nichts (E574, Plan 7 B 4) |
+| `test464` suchte eine Abschrift, die E572 abgeschafft hat | ✅ zu | prüft jetzt `Marken.WERKZEUGE.map(` statt `'elemente', 'star'`; 63/63 (E574) |
+
+**Ausdrücklich NICHT geschlossen** — jeder Punkt ist unverändert offen:
+
+1. **„Alle Optionen" zeigt weiterhin alles** (Plan 7 B 9). Der geschlossene
+   Zustand ist kontextbezogen, der geöffnete nicht. Vier Prüfläufe
+   (`test177`, `test228`, `test437`, `test515`) erreichen über diesen Weg
+   Dinge, die sonst nirgends stehen — ein einfaches Wegnehmen wäre ein
+   Funktionsverlust, kein Aufräumen.
+2. **`InkMenu` hat kein Ende.** Kein Weg ruft `hidePopover()` ausser dem
+   Helfer selbst; ein Menü überlebt Seitenwechsel, Neuaufbau und das
+   Verlassen des Studios. Gemessen schwebte es über einer fremden Textseite.
+3. **`inkSync()` hängt bei jedem Aufruf alle dreizehn Knöpfe um** — 78 bei
+   einem einzigen Klick. Der Fokus fällt dabei auf `BODY`, Übergänge brechen
+   ab, und der Beobachter hört nur auf Attribute, nicht auf `childList`:
+   eine Sortierbewegung kommt live gar nicht an.
+4. **Radierergrössen** sind 14 px breit und optisch leer (kein Stil für
+   `--eraser-preview`), der alte Rundlaufknopf steht doppelt neben dem neuen
+   Modusfeld, und die gewählte Grösse überlebt keinen Seitenwechsel.
+5. **Stilblatt, Dock-Bewegung und Icons** (Plan 7 B 6, 7 C) sind unberührt:
+   `.blatt-popover`, Moduswahl, `.blatt-laser-options`, Galerie-Tabs,
+   Vorschauraster; Vergrösserung nur unter `(hover:hover)`, federnder
+   Wechsel, `prefers-reduced-motion`.
+6. **Tastatur „P" zeichnet in einem GESPERRTEN Dokument** (`marken.ts`,
+   Tastenweg). Älter als E572 und nicht von diesem Bogen verursacht —
+   gehört als eigene Lücke mit eigenem rot gesehenen Wächter repariert.
+7. **Ein voller grüner Lauf ist nicht behauptet.** `test290`
+   (CSS-Namensräume) ist rot und älter als dieser Zweig.

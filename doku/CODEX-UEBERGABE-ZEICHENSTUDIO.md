@@ -327,3 +327,117 @@ pushen. Dafür wird dieser Zwischenstand als WIP auf
 Die Freigabe gilt für diesen Arbeitszweig, nicht für `main`, eine PR oder eine
 Veröffentlichung. Fehlender Build und offene Umsetzung bleiben offen; der
 Push ist eine Sicherung/Übergabe und kein Fertig- oder Funktionsnachweis.
+
+---
+
+## 13. Umsetzungsstand — 14. September 2026, abends
+
+Dieser Abschnitt ist der Fortschrittsbericht, den Abschnitt 11 verlangt. Er
+sagt, was **gemessen** zu ist, was noch offen ist, und an welcher Stelle der
+Plan sich beim Nachmessen als anders herausgestellt hat.
+
+### Vorbedingung, die im Plan fehlte: der Zweig war unvollständig
+
+`index.html` lädt seit E572 `quell/bereiche/pdf/ink-menu.js` und
+`ink-ruler.js`. Beide lagen im gepushten Commit `5d415d61` **nicht**. Auf
+diesem Rechner fiel das nicht auf — die Dateien lagen ungetrackt daneben —,
+auf jedem anderen hätte die App zwei Skripte mit 404 geladen. Das war der
+erste Handgriff, noch vor Abschnitt 7 A: `npm run bauen:ts`, beide
+Erzeugnisse eingecheckt, Dienststand v1071 → v1072.
+
+### Abschnitt 7 A — Zwischenstand stabilisieren: erledigt
+
+| Punkt | Ergebnis |
+|---|---|
+| A 1 Typprüfer | `npm run typecheck` grün, Exit 0 |
+| A 2 Risiken aus Abschnitt 8 prüfen, Test VOR Reparatur | vier Risiken bestätigt und geschlossen, jeder Wächter vorher rot gesehen |
+| A 3 TypeScript-Ausgaben erzeugen | `npm run bauen:ts` grün; `test105` und `test109` grün |
+
+Geschlossen wurden dabei, in der Reihenfolge von §46 (rot zuerst):
+
+1. **Das Lineal frass jeden Zeiger.** `test267 §6` war rot („frei 50.2°,
+   gerastet 50.2°"), und die Kantenführung war unerreichbar, weil sie auf dem
+   Glas beginnt. Jetzt ist das `<g>` durchlässig; Griff und Drehknopf hängen
+   **unter** dem Glas. Der erste Versuch — ein Griffstreifen in der Mitte —
+   blieb rot: der Prüfzug beginnt bei 55 % Breite und 40 % Höhe, also genau
+   dort. 16/16.
+2. **`test437` starb an Zusicherung 8.** „Zwölf echte Werkzeuge", es sind
+   dreizehn. Der Lauf prüft mit `assert`, nicht mit einem Zähler — rund 26
+   Zusicherungen liefen deshalb nie. 34/34.
+3. **„Zurück" und „Vor" waren im Studio unerreichbar.** Zwei Ursachen,
+   beide gemessen: das Stilblatt verbarg die Gruppe `verlauf` mit, und die
+   Kapsel hatte keine Rasterspalte (x = 1440 am Rechner, `top = 812` in einem
+   800-px-Fenster am Telefon). Der naheliegende Weg `center.prepend(history)`
+   ist **gemessen falsch** — `.document-workspace` wurde damit nie sichtbar
+   und `test437` lief nach 15 s aus. Gelöst im Stilblatt. 19/19 und 34/34.
+4. **Das Lineal verschwand nach jedem „Zurück".** `redraw()` räumt jedes
+   `[data-ink-ui]` aus der Fläche. `remount()` hängt es zurück und vergisst
+   die Kante dabei ausdrücklich nicht.
+
+### Abschnitt 7 B — die Oberfläche: B 1 und B 4 zu, der Rest offen
+
+**B 1 (Kontextdock) ist geschlossen**, und beim Nachmessen war es schlimmer
+als im Plan beschrieben: das Stilblatt versteckte nicht nur die Formengruppe,
+sondern acht Dinge pauschal — geschlossen 62 von 86 Kindern weg, bei
+`data-tool="line"` 0 von 7 Formknöpfen, bei `text` 0 von 7 Schriftknöpfen,
+bei `select` 0 von 10 Auswahlknöpfen. Welche Gruppe zu welchem Werkzeug
+gehört, steht seit E356 in `bausteine.css`; das Studio entscheidet es nicht
+zweitens, sondern nimmt nur weg, was doppelt wäre (Werkzeuge, Trenner,
+Verlauf). Gemessen danach:
+
+```txt
+stift     26/86 sichtbar    stil 6/7, formen 2/3, farbe 15/16, breite 3/5
+text      21/86             schrift 6/7, farbe 15/16
+select    33/86             auswahl 9/10, breite 3/5, farbe 15/16
+radierer   5/86             radierer 5/5, sonst nichts
+```
+
+Dabei fiel ein Fund auf, der nicht im Plan stand: **das Lineal gehört auch
+dem Stift.** `marken.ts` lässt die Kantenführung für
+`['stift','marker','line','arrow']` zu — der Zeichner führte den Stift also
+längst am Lineal, nur der Schalter stand nicht bei ihm (E574).
+
+**B 4 (Haftnotiz-Dock) ist geschlossen.** Die neun Pastelle trugen
+`data-gruppe="farbe"` und standen damit in JEDEM Werkzeug; die Farbreihe las
+sich überall `t t t t t N N N N N N N N N +`. Dazu der Reihenfolgefehler:
+`leiterReihe()` hängt die Adern vor das „+", `ink-studio-ready` erzeugt die
+Pastelle danach — nach einem Neustart mit dem Leiterstift standen sie mitten
+in der Adernreihe. Jetzt eine eigene Gruppe `notizfarbe`, nur beim Zettel;
+der Zettel hat seine neun und das „+", keine Tintenpalette daneben.
+Dock beim Stift 941 px, beim Zettel 520 px.
+
+**Offen bleiben B 2, B 3, B 5 bis B 9.** B 9 ausdrücklich: „Alle Optionen"
+zeigt weiterhin alles. Das ist zum Teil Absicht — `test177`, `test228`,
+`test437` und `test515` erreichen über diesen Weg Dinge, die sonst nirgends
+stehen; ein blosses Wegnehmen wäre ein Funktionsverlust. Was dort wirklich
+störte, waren die NEUEN kontextfremden Paletten, und die sind mit B 4 weg.
+
+### Abschnitt 7 C und 7 D
+
+7 C (Icons, Dock-Bewegung) ist unberührt. 7 D ist zur Hälfte zu: das Lineal
+reagiert nur an Griff und Drehknopf (D 1), ein Zug nahe der Kante kommt beim
+Zeichner an (D 1, D 3), Verschieben und Drehen erzeugen keine Marke (D 2),
+und der alte Winkelraster ausserhalb der Kante ist unverändert (D 4, `test267`).
+Das Glas hat seine Skala, Ziffern und den Drehgriff bekommen. Offen bleibt
+die Gestaltung im engeren Sinn und die Zoomgrenze aus Abschnitt 8.
+
+### Was dabei an fremden Wächtern auffiel
+
+- `test348` und `test351` haben die neue Lineal-Gruppe **gefangen** — genau
+  dafür gibt es sie. Beide tragen jetzt die neue Liste mit geschriebenem Grund.
+- `test464` war seit E572 rot, ohne dass am Produkt etwas fehlte: die Zeile
+  suchte `'elemente', 'star'` in `document-mode.ts` — einen Eintrag aus der
+  Abschrift, die E572 abgeschafft hat. Sie prüft jetzt `Marken.WERKZEUGE.map(`.
+- `test290` (CSS-Namensräume) ist rot und **älter als dieser Zweig**. Er wird
+  hier nicht mitrepariert, damit er nicht in einem fremden Bogen verschwindet.
+
+### Prüfstand dieses Abschnitts
+
+`test105`, `test109`, `test247`, `test267`, `test343`, `test345`, `test347`,
+`test348`, `test351`, `test352`, `test365`, `test393`, `test437`, `test446`,
+`test458`, `test461`, `test464`, `test470`, `test477`, `test478`, `test480`,
+`test522`, `test523`, `test524` — alle grün. `npm run typecheck` und
+`npm run bauen:ts` grün.
+
+**Die Gesamtsuite ist NICHT als grün behauptet.** Sie wurde nicht vollständig
+gefahren; `test290` ist bekannt rot.

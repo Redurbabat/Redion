@@ -4979,6 +4979,16 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk[data-tool="stift"] > [data-gruppe="formen"],
 .blatt-werk[data-tool="stift"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="stift"] > [data-gruppe="breite"],
+/* ══ DAS LINEAL GEHÖRT AUCH DEM STIFT (E574) ══════════════════════════════
+   ABGELESEN, NICHT ANGENOMMEN: `marken.ts` lässt die Kantenführung für
+   `['stift','marker','line','arrow']` zu. Der Zeichner führt den Stift also
+   längst am Lineal — nur der Schalter dafür stand nicht bei ihm. Hier
+   standen `marker`, `line` und `arrow`, und wer mit dem Stift ein Lineal
+   wollte, kam nur über die Taste „r" oder über „···" daran. Ein Weg, den
+   man kennen muss, ist am Telefon kein Weg (§37).
+   DIE KURVE BEKOMMT ES WEITERHIN NICHT — sie steht auch in `marken.ts`
+   nicht in der Liste, und eine gebogene Linie hat keine Kante (E569). */
+.blatt-werk[data-tool="stift"] > [data-gruppe="lineal"],
 .blatt-werk[data-tool="marker"] > [data-gruppe="lineal"],
 .blatt-werk[data-tool="marker"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="marker"] > [data-gruppe="breite"],
@@ -5021,7 +5031,15 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk[data-tool="roundrect"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="roundrect"] > [data-gruppe="breite"],
 .blatt-werk[data-tool="abdeck"] > [data-gruppe="farbe"],
-.blatt-werk[data-tool="zettel"] > [data-gruppe="farbe"],
+/* ══ DER ZETTEL HAT SEINE EIGENEN NEUN (E574, Plan 7 B 4) ═════════════════
+   Hier stand `[data-gruppe="farbe"]` — die fünf Tintenfarben. Die neun
+   Pastellfarben aus E572 trugen bis E574 DIESELBE Gruppe und standen
+   deshalb in jedem Werkzeug mit. Beides zusammen ergab beim Zettel
+   vierzehn Tupfer in zwei Reihenfolgen — „eine zweite ungeordnete
+   Palette", genau das, was der Plan hier ausschliesst.
+   Ein schwarzer Zettel ist kein Zettel; die Haftnotiz bekommt ihre
+   neun und sonst keine. */
+.blatt-werk[data-tool="zettel"] > [data-gruppe="notizfarbe"],
 .blatt-werk[data-tool="text"] > [data-gruppe="schrift"],
 .blatt-werk[data-tool="select"] > [data-gruppe="schrift"],
 .blatt-werk[data-tool="text"] > [data-gruppe="farbe"],
@@ -5030,6 +5048,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    Element bringt die Farben mit, in denen es gezeichnet wurde; eine
    Farbwahl daneben verspräche etwas, das der Stempel nicht tut. */
 .blatt-werk[data-tool="elemente"] > [data-gruppe="elemente"]{display:inline-flex}
+/* DAS „+" BLEIBT AUCH BEIM ZETTEL (E574). Es ist keine Palette, sondern die
+   Tür zu jeder Farbe (E486) — und eine Tür wegzunehmen, weil die Tapete
+   daneben gewechselt hat, wäre eine verlorene Funktion, keine Aufräumung.
+   Es trägt `data-gruppe="farbe"`, also braucht es hier seine eigene Zeile. */
+.blatt-werk[data-tool="zettel"] > .blatt-farbe-neu{display:inline-flex}
 /* ══ DIE TRENNER KOMMEN ZURÜCK — AM RECHNER (E568) ════════════════════════
    Hier stand genau diese Zeile ohne Einschränkung, und `[data-tool]` steht
    IMMER an der Leiste. Also war jeder Trenner immer aus, und das Zubehör

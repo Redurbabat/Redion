@@ -486,8 +486,21 @@ console.log('\n§7 Quellen');
     /type LibraryElement = /.test(q) && !/^\s*type Element = /m.test(q));
   p('Das erzeugte JS trägt es', /elementSichern/.test(lies('quell/bereiche/pdf/marken.js')));
   p('Das Stilblatt kennt die Kacheln', /\.elemente-kachel/.test(lies('quell/schale/stil/bausteine.css')));
-  p('Im Studio steht das Werkzeug mit in der Zeichenleiste',
-    /'elemente', 'star'/.test(lies('src/bereiche/pdf/document-mode.ts')));
+  /* ══ DIESE ZEILE SUCHTE EINE ABSCHRIFT, DIE ES NICHT MEHR GIBT (E574) ═════
+     Sie las `/'elemente', 'star'/` in `document-mode.ts` — einen Eintrag aus
+     der Liste, die die obere Leiste bis E572 von Hand nachführte. E572 hat
+     genau diese Abschrift abgeschafft (sie hatte den Laser vergessen und
+     benutzte andere Symbole für dieselbe Tat) und liest seither
+     `Marken.WERKZEUGE`. Die Zusicherung war damit rot, ohne dass am Produkt
+     etwas fehlte — der Elemente-Knopf steht oben, er kommt nur woanders her.
+     Jetzt prüft sie die Eigenschaft, die das Versprechen wirklich trägt:
+     EINE Quelle, und `elemente` steht darin. Rot wird sie, sobald jemand die
+     Leiste wieder von Hand füllt oder das Werkzeug aus dem Katalog nimmt. */
+  p('Die Zeichenleiste im Studio nimmt denselben Katalog, nicht eine Abschrift',
+    /Marken\.WERKZEUGE\.map\(/.test(lies('src/bereiche/pdf/document-mode.ts'))
+    && !/'elemente', 'star'/.test(lies('src/bereiche/pdf/document-mode.ts')));
+  p('… und `elemente` steht in diesem Katalog',
+    /\{ id: 'elemente',/.test(lies('src/bereiche/pdf/marken.ts')));
   gleich('Keine Seitenfehler', fehler, []);
 }
 
