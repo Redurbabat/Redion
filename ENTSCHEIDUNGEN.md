@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-546 Entscheidungen, E1 bis E566 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+547 Entscheidungen, E1 bis E567 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -610,6 +610,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E564** — Kein fremder PowerPoint-Zeichner. Redion liest `.pptx` selbst; wer es exakt sehen will, nimmt den PDF-Weg
 * **E565** — Tabellen kommen als Gitter auf die Folie, nicht als Tabellenblock — und geschlossene Marken bekommen eine Füllung
 * **E566** — Gefüllte Formen und die Textfarbe aus dem Layout — gefunden an Redurs echter Datei, nicht an einer Liste
+* **E567** — Die Schriftart: `a:latin` und `+mj-lt`/`+mn-lt` gegen `theme1.xml` — eine Näherung, die nur in eine Richtung irrt
 
 ---
 
@@ -45750,3 +45751,76 @@ Zehn Bögen lang habe ich Prüfstücke gebaut und daran gemessen. Sie waren
 richtig und sie haben gehalten — aber sie prüfen, was mir EINGEFALLEN ist.
 Was in Redurs Dateien wirklich steht, stand in keinem davon. Die Bitte um
 eine echte Datei war der nützlichste Satz dieser ganzen Reihe.
+
+
+E567 — Die Schriftart
+--------------------------------------------------------------------------
+
+Der zweite Fund aus Redurs Bildern. Nach den Farben (E566) war das der
+grösste verbliebene Unterschied — und er betrifft **jedes Wort auf jeder
+Folie**: sein Original steht durchgehend in einer Serifenschrift, Redion
+zeigte alles serifenlos.
+
+### Die Datei nennt einen Namen, die Marke kennt fünf Familien
+
+```txt
+standard · serif · mono · hand · schmal
+```
+
+Eine Zuordnung ist damit unvermeidlich eine **Näherung**. Sie ist bewusst so
+gebaut, dass sie nur in EINE Richtung irrt: was nicht erkannt wird, bleibt
+`standard` — also genau das, was heute schon passiert. **Schlechter als
+jetzt kann es damit nicht werden.**
+
+Die Liste nennt, was auf Schweizer Rechnern und in Office-Vorlagen wirklich
+vorkommt. Dazu vier Wörter, die für sich sprechen: „Serif", „Mono",
+„Condensed"/„Narrow", „Script"/„Hand". Deshalb wird auch „Noto Serif
+Display" erkannt, ohne in der Liste zu stehen.
+
+**Und keine Raterei darüber hinaus.** „Optima" ist serifenlos, „Rockwell"
+hat Serifen, und keins von beidem sagt es im Namen. Wer eine Schrift
+vermisst, trägt sie ein — eine Zeile, nachprüfbar.
+
+### Drei Wege, in dieser Reihenfolge
+
+```txt
+1. `a:rPr > a:latin@typeface`    im Lauf selbst
+2. dasselbe im `a:defRPr`        des Platzhalters im Layout
+3. `+mj-lt` / `+mn-lt`           das Schriftpaar aus `theme1.xml`
+```
+
+Der dritte ist **kein Sonderfall**: PowerPoint schreibt fast immer `+mn-lt`
+statt eines Namens. Ohne ihn bliebe fast jede Folie serifenlos.
+
+### Was innerhalb eines Absatzes nicht geht
+
+Die Marke hat EINE Schriftfamilie für alle ihre Stücke. Zwei Schriften in
+einer Zeile lassen sich also nicht ausdrücken. Zwischen ABSÄTZEN geht es —
+darum steht die Schrift in `gleichFormat` und **nicht** in `laeufeNoetig`:
+ein `laeufe` könnte den Unterschied gar nicht tragen, und es einzutragen
+sähe aus, als könnte es das.
+
+### Und dasselbe Muster zum vierten Mal
+
+Die erste Fassung des Prüfstücks lieferte `schrift: null`, und der Verdacht
+lag sofort beim neuen Code. Nachgemessen war das `+mj-lt` gar nicht in der
+Prüfdatei gelandet — mein Ersetzen hatte die Zeile nicht getroffen. Der Code
+hatte recht.
+
+Das ist P32, P41, P43 und jetzt P46: **bevor ich einem roten Lauf glaube,
+prüfe ich, ob meine Seite der Messung stimmt.** Vier Mal in zwei Tagen ist
+keine Panne mehr, sondern ein Arbeitsschritt, der fehlt.
+
+### Was `test521` hält
+
+16 Zusagen, vier Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  `a:latin` nicht lesen         4 grün, 12 rot  (alles serifenlos)
+G2  `+mj-lt` nicht auflösen      14 grün,  2 rot
+G3  Unbekanntes als `serif`      11 grün,  5 rot  (Arial würde Serifen)
+G4  Schrift aus `gleichFormat`   14 grün,  2 rot  (zwei Absätze, eine Marke)
+```
+
+Bild: `bilder/pptx-schrift.png` — dieselbe Folie wie bei E566, jetzt in
+Serifen wie das Original.

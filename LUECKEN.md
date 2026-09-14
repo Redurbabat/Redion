@@ -7495,13 +7495,17 @@ verloren hält:
   Markenschicht kein Gegenstück. Sie werden gezählt und genannt („NICHT
   übernommen: 1 Formen") statt geraten — ein Stern als Rechteck wäre
   schlimmer als ein Stern, der fehlt.
-- **Die Schriftart** (`a:latin@typeface`). Gemessen an Redurs Datei: das
-  Original steht in einer Serifenschrift, Redion zeigt serifenlos. Die Marke
-  kennt fünf Familien (`standard`, `serif`, `mono`, `hand`, `schmal`), die
-  Datei nennt einen Namen — die Zuordnung ist eine eigene Entscheidung mit
-  eigener Prüfung. Bei E566 wurde das Feld kurz mitgelesen und wieder
-  entfernt: ein Feld, das gelesen und nie benutzt wird, sieht aus, als wäre
-  es erledigt.
+- ~~**Die Schriftart** (`a:latin@typeface`).~~ **GESCHLOSSEN mit E567**:
+  gelesen aus dem Lauf, aus dem `a:defRPr` des Layouts und über
+  `+mj-lt`/`+mn-lt` aus dem Schriftpaar des Themas — der dritte Weg ist der
+  häufigste, PowerPoint schreibt fast immer so. Die Zuordnung auf Redions
+  fünf Familien ist eine Näherung, die nur in EINE Richtung irrt: was nicht
+  erkannt wird, bleibt `standard`, also der heutige Zustand.
+  **Offen bleiben zwei Dinge**: zwei Schriften in EINER Zeile (die Marke hat
+  eine Familie für alle ihre Stücke — zwischen Absätzen geht es), und jede
+  Schrift, die weder in der Liste steht noch ihren Charakter im Namen trägt
+  („Optima" ist serifenlos, „Rockwell" hat Serifen). Wer eine vermisst,
+  trägt sie in `SCHRIFT_SERIF` und die drei Nachbarlisten ein.
 - ~~**Drehung** (`a:xfrm@rot`).~~ **GESCHLOSSEN mit E563**: gelesen für
   Text, Bild und Abdeckung, in 60000steln Grad, auf 0…360 gebracht, gedreht
   um die Mitte des Kastens. Sie erbt bewusst NICHT vom Layout — dass eine

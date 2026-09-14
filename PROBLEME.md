@@ -59,6 +59,7 @@ sind der teuerste Teil und der lehrreichste.
 | P43 | 2026-09-13 | Die Zusage zeigte auf den Code, und schuld war mein Pruefstueck | 🟡 klein | E563 |
 | P44 | 2026-09-14 | Zehn Tabellenzellen wurden zu zehn leeren Anhaengen | 🟠 mittel | E565 |
 | P45 | 2026-09-14 | Zehn Boegen Pruefstuecke, und vier Bilder haben mehr gefunden | gross | E566 |
+| P46 | 2026-09-14 | Zum vierten Mal war mein Pruefstueck schuld, nicht der Code | 🟡 klein | E567 |
 
 ---
 
@@ -981,4 +982,27 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** test520, 25 Zusagen, fuenf Gegenproben. G1 (Formen ueberspringen) ist 16 rot, G2 (Farbe nicht erben) 5 rot — und die zweite meldet genau das Symptom: alle vier Texte fallen auf Schwarz.
 
 **Die Lehre.** Meine Pruefstuecke pruefen, was mir EINGEFALLEN ist. Sie waren richtig, sie haben gehalten, sie sind rot geworden, wenn sie sollten — und sie konnten trotzdem zehn Boegen lang nicht sehen, was in einer wirklichen Datei steht. Der nuetzlichste Satz dieser ganzen Reihe war die Bitte um eine echte Datei. Wenn ich das naechste Mal denke „die grossen Posten sind durch", ist genau das der Moment, an dem ich danach fragen muss — nicht der Moment, an dem ich weiterbaue.
+
+
+---
+
+## P46 · Zum vierten Mal war mein Pruefstueck schuld, nicht der Code
+
+*2026-09-14 · 🟡 klein · E567*
+
+**Das Bild.** Die Probe zeigte `schrift: null` fuer alle vier Texte. Die Farben derselben Vorgabe kamen an — also wurde das `a:defRPr` gelesen, nur die Schrift nicht.
+
+**Die falsche Vermutung.** Der neue Code. Ich habe die Reihenfolge von `themaDoc`, `paar` und `vorgabenLesen` nachgesehen; sie stimmte.
+
+**Wie es gefunden wurde.** `grep -c mj-lt` auf die Pruefdatei: null Treffer. Mein Ersetzen hatte die Zeile nicht getroffen, weil ich sie aus dem Kopf zitiert hatte statt sie vorher anzusehen.
+
+**Die Ursache.** Das Pruefstueck, nicht der Code. Ohne `+mj-lt` im `a:defRPr` gibt es nichts aufzuloesen — der Leser gab korrekt '' zurueck.
+
+**Die Lösung.** Die Zeile erst gelesen, dann ersetzt. Danach stimmte alles auf Anhieb.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** 16 gruen, und G1 (a:latin nicht lesen) ist 12 rot — die Zusagen koennen also wirklich rot werden.
+
+**Die Lehre.** P32, P41, P43 und jetzt P46. VIER MAL in zwei Tagen habe ich einem roten Lauf geglaubt, obwohl meine Seite der Messung falsch war — einmal die Arithmetik, einmal der gemessene Knoten, zweimal die Pruefdatei. Das ist keine Panne mehr, sondern ein fehlender Arbeitsschritt: bevor ich bei einem roten Lauf im Code suche, pruefe ich zuerst, ob das Pruefstueck ueberhaupt das enthaelt, was es pruefen soll. Ein `grep` auf die eigene Pruefdatei kostet zehn Sekunden.
 

@@ -1857,6 +1857,21 @@
       "beweis": "test520, 25 Zusagen, fuenf Gegenproben. G1 (Formen ueberspringen) ist 16 rot, G2 (Farbe nicht erben) 5 rot — und die zweite meldet genau das Symptom: alle vier Texte fallen auf Schwarz.",
       "lehre": "Meine Pruefstuecke pruefen, was mir EINGEFALLEN ist. Sie waren richtig, sie haben gehalten, sie sind rot geworden, wenn sie sollten — und sie konnten trotzdem zehn Boegen lang nicht sehen, was in einer wirklichen Datei steht. Der nuetzlichste Satz dieser ganzen Reihe war die Bitte um eine echte Datei. Wenn ich das naechste Mal denke „die grossen Posten sind durch\", ist genau das der Moment, an dem ich danach fragen muss — nicht der Moment, an dem ich weiterbaue.",
       "entscheidung": "E566"
+    },
+    {
+      "nr": "P46",
+      "datum": "2026-09-14",
+      "titel": "Zum vierten Mal war mein Pruefstueck schuld, nicht der Code",
+      "schwere": "klein",
+      "symptom": "Die Probe zeigte `schrift: null` fuer alle vier Texte. Die Farben derselben Vorgabe kamen an — also wurde das `a:defRPr` gelesen, nur die Schrift nicht.",
+      "falscheVermutung": "Der neue Code. Ich habe die Reihenfolge von `themaDoc`, `paar` und `vorgabenLesen` nachgesehen; sie stimmte.",
+      "wieGefunden": "`grep -c mj-lt` auf die Pruefdatei: null Treffer. Mein Ersetzen hatte die Zeile nicht getroffen, weil ich sie aus dem Kopf zitiert hatte statt sie vorher anzusehen.",
+      "ursache": "Das Pruefstueck, nicht der Code. Ohne `+mj-lt` im `a:defRPr` gibt es nichts aufzuloesen — der Leser gab korrekt '' zurueck.",
+      "loesung": "Die Zeile erst gelesen, dann ersetzt. Danach stimmte alles auf Anhieb.",
+      "warumKeineUhr": "—",
+      "beweis": "16 gruen, und G1 (a:latin nicht lesen) ist 12 rot — die Zusagen koennen also wirklich rot werden.",
+      "lehre": "P32, P41, P43 und jetzt P46. VIER MAL in zwei Tagen habe ich einem roten Lauf geglaubt, obwohl meine Seite der Messung falsch war — einmal die Arithmetik, einmal der gemessene Knoten, zweimal die Pruefdatei. Das ist keine Panne mehr, sondern ein fehlender Arbeitsschritt: bevor ich bei einem roten Lauf im Code suche, pruefe ich zuerst, ob das Pruefstueck ueberhaupt das enthaelt, was es pruefen soll. Ein `grep` auf die eigene Pruefdatei kostet zehn Sekunden.",
+      "entscheidung": "E567"
     }
   ]
 }

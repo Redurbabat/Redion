@@ -1031,9 +1031,10 @@ const Einlesen = (() => {
    * das Aufzählungszeichen oder leer.
    */
   /** Ein Lauf: ein Stück Text in EINEM Format (E561). */
-  type Lauf = { text: string; sz: number; fett: boolean; farbe: string };
+  type Lauf = { text: string; sz: number; fett: boolean; farbe: string; schrift: string };
   type Absatz = { text: string; sz: number; fett: boolean; farbe: string;
-                  lvl: number; zeichen: string; ausricht: string; laeufe: Lauf[] };
+                  lvl: number; zeichen: string; ausricht: string; laeufe: Lauf[];
+                  schrift: string };
 
   /**
    * DER ERSTE LAUF EINES ABSATZES BESTIMMT SEIN FORMAT — nicht der erste
@@ -1050,7 +1051,8 @@ const Einlesen = (() => {
    * (L151). Ein Absatz ist aber die Einheit, die ein Mensch als „Zeile mit
    * eigenem Aussehen" sieht, und die ist jetzt erreichbar.
    */
-  const absaetzeLesen = (txBody: Element, thema: Thema = {}): Absatz[] => {
+  const absaetzeLesen = (txBody: Element, thema: Thema = {},
+                         paar: Schriftpaar = { major: '', minor: '' }): Absatz[] => {
     const raus: Absatz[] = [];
     for (const absatz of txBody.getElementsByTagName('a:p')) {
       /* ══ JEDER LAUF MIT SEINEM EIGENEN FORMAT (E561) ════════════════════
@@ -1071,7 +1073,8 @@ const Einlesen = (() => {
         const c = farbeAus(f, thema);
         laeufe.push({ text: stueck,
           sz: Number.isFinite(g) && g > 0 ? Math.round(g / 100) : 0,
-          fett: eigen?.getAttribute('b') === '1', farbe: c });
+          fett: eigen?.getAttribute('b') === '1', farbe: c,
+          schrift: schriftFamilie(schriftName(eigen, paar)) });
       };
       for (const kind of absatz.children) {
         if (kind.tagName === 'a:r' || kind.tagName === 'a:fld') {
@@ -1107,7 +1110,8 @@ const Einlesen = (() => {
         fett: rPr?.getAttribute('b') === '1',
         farbe: rgb ? '#' + rgb : '',
         lvl: Math.max(0, Math.min(8, Number(pPr?.getAttribute('lvl')) || 0)),
-        zeichen, ausricht: absatzAusricht(pPr), laeufe });
+        zeichen, ausricht: absatzAusricht(pPr), laeufe,
+        schrift: schriftFamilie(schriftName(rPr, paar)) });
     }
     /* Leerzeilen am Ende weg — PowerPoint hängt gern einen leeren Absatz an,
        und der macht aus einem Titel einen Kasten mit Loch darunter. */
@@ -1236,6 +1240,94 @@ const Einlesen = (() => {
       y += hoehe;
     }
     return raus;
+  };
+
+  /* ══════════════════════════════════════════════════════════════════════
+   * DIE SCHRIFTART (E567)
+   * ────────────────────────────────────────────────────────────────────────
+   * Gemessen an Redurs echter Datei — beide Folien, jedes Stück Text: das
+   * Original steht durchgehend in einer SERIFENSCHRIFT, Redion zeigte alles
+   * serifenlos. Nach den Farben (E566) war das der grösste verbliebene
+   * Unterschied, und er betrifft jedes Wort auf jeder Folie.
+   *
+   * ─── DIE DATEI NENNT EINEN NAMEN, DIE MARKE KENNT FÜNF FAMILIEN ──────────
+   *     standard · serif · mono · hand · schmal
+   * Eine Zuordnung ist deshalb unvermeidlich eine NÄHERUNG. Sie ist hier
+   * bewusst so gebaut, dass sie in eine Richtung irrt: was nicht erkannt
+   * wird, bleibt `standard` — also genau das, was heute schon passiert.
+   * SCHLECHTER ALS JETZT KANN ES DAMIT NICHT WERDEN.
+   *
+   * ─── DREI WEGE, IN DIESER REIHENFOLGE ───────────────────────────────────
+   *     1. `a:rPr > a:latin@typeface`   im Lauf selbst
+   *     2. dasselbe im `a:defRPr` des Platzhalters im Layout
+   *     3. `+mj-lt` / `+mn-lt` → das Schriftpaar aus `theme1.xml`
+   * Der dritte ist kein Sonderfall: PowerPoint schreibt fast immer `+mn-lt`
+   * statt eines Namens, und ohne ihn bliebe fast jede Folie serifenlos.
+   * ==================================================================== */
+
+  /** Das Schriftpaar aus dem Thema: `a:majorFont` und `a:minorFont`. */
+  type Schriftpaar = { major: string; minor: string };
+  const schriftpaarLesen = (themaDoc: Document | null): Schriftpaar => {
+    const schema = themaDoc?.getElementsByTagName('a:fontScheme')[0];
+    const namen = (tag: string): string =>
+      schema?.getElementsByTagName(tag)[0]
+        ?.getElementsByTagName('a:latin')[0]?.getAttribute('typeface') || '';
+    return { major: namen('a:majorFont'), minor: namen('a:minorFont') };
+  };
+
+  /**
+   * Aus einem Schriftnamen eine von Redions fünf Familien machen.
+   *
+   * DIE LISTE IST KURZ UND EHRLICH. Sie nennt, was auf Schweizer Rechnern
+   * und in Office-Vorlagen wirklich vorkommt; alles andere fällt auf
+   * `standard`. Dazu drei Endungen, die für sich sprechen — „Serif",
+   * „Mono", „Condensed" stehen im Namen, wenn sie zutreffen.
+   *
+   * KEINE RATEREI ÜBER DAS HINAUS: „Optima" ist serifenlos, „Rockwell" hat
+   * Serifen, und keins von beidem sagt es im Namen. Wer eine Schrift
+   * vermisst, trägt sie hier ein — eine Zeile, nachprüfbar.
+   */
+  const SCHRIFT_SERIF = new Set([
+    'georgia', 'times new roman', 'times', 'garamond', 'eb garamond',
+    'adobe garamond pro', 'cambria', 'constantia', 'book antiqua', 'palatino',
+    'palatino linotype', 'bookman old style', 'century', 'century schoolbook',
+    'baskerville', 'libre baskerville', 'merriweather', 'playfair display',
+    'source serif pro', 'pt serif', 'noto serif', 'droid serif', 'lora',
+    'spectral', 'crimson text', 'minion pro', 'sabon', 'utopia', 'cardo',
+    'charter', 'charis sil', 'liberation serif', 'dejavu serif', 'freeserif',
+    'stix two text', 'literata', 'newsreader', 'domine', 'arvo', 'rockwell',
+  ]);
+  const SCHRIFT_MONO = new Set([
+    'consolas', 'courier new', 'courier', 'menlo', 'monaco', 'lucida console',
+    'andale mono', 'dejavu sans mono', 'liberation mono', 'source code pro',
+    'fira code', 'jetbrains mono', 'ibm plex mono', 'cascadia code', 'sf mono',
+  ]);
+  const SCHRIFT_HAND = new Set([
+    'comic sans ms', 'segoe print', 'segoe script', 'bradley hand',
+    'brush script mt', 'lucida handwriting', 'ink free', 'caveat',
+    'dancing script', 'pacifico', 'kalam', 'patrick hand',
+  ]);
+  const SCHRIFT_SCHMAL = new Set([
+    'arial narrow', 'roboto condensed', 'helvetica neue condensed',
+    'oswald', 'barlow condensed', 'fira sans condensed', 'pt sans narrow',
+    'archivo narrow', 'liberation sans narrow',
+  ]);
+  const schriftFamilie = (roh: string): string => {
+    const name = String(roh || '').trim().toLowerCase();
+    if (!name) return '';
+    if (SCHRIFT_MONO.has(name) || /\bmono\b/.test(name)) return 'mono';
+    if (SCHRIFT_HAND.has(name) || /\b(script|hand)\b/.test(name)) return 'hand';
+    if (SCHRIFT_SCHMAL.has(name) || /\b(condensed|narrow)\b/.test(name)) return 'schmal';
+    if (SCHRIFT_SERIF.has(name) || /\bserif\b/.test(name)) return 'serif';
+    return '';
+  };
+
+  /** Den Schriftnamen aus einem `a:rPr`/`a:defRPr` holen, `+mj-lt` aufgelöst. */
+  const schriftName = (pr: Element | undefined, paar: Schriftpaar): string => {
+    const roh = pr?.getElementsByTagName('a:latin')[0]?.getAttribute('typeface') || '';
+    if (roh === '+mj-lt') return paar.major;
+    if (roh === '+mn-lt') return paar.minor;
+    return roh;
   };
 
   /**
@@ -1597,7 +1689,7 @@ const Einlesen = (() => {
 
   /** Ein Platzhalter aus Layout oder Master: sein Schlüssel und was er vorgibt. */
   type Vorgabe = { lage: { x: number; y: number; w: number; h: number } | null;
-                   sz: number; farbe: string };
+                   sz: number; farbe: string; schrift: string };
 
   /**
    * Der Schlüssel eines Platzhalters.
@@ -1619,7 +1711,8 @@ const Einlesen = (() => {
   };
 
   /** Alle Platzhalter eines Layout- oder Master-XML, nach Schlüssel. */
-  const vorgabenLesen = (doc: Document | null, thema: Thema = {}): Map<string, Vorgabe> => {
+  const vorgabenLesen = (doc: Document | null, thema: Thema = {},
+                         paar: Schriftpaar = { major: '', minor: '' }): Map<string, Vorgabe> => {
     const karte = new Map<string, Vorgabe>();
     if (!doc) return karte;
     const baum = doc.getElementsByTagName('p:spTree')[0];
@@ -1640,12 +1733,10 @@ const Einlesen = (() => {
         lage: formLage(form),
         sz: Number.isFinite(sz) && sz > 0 ? Math.round(sz / 100) : 0,
         farbe: farbeAus(voll, thema),
-        /* `a:latin@typeface` steht hier auch — wird aber NICHT gelesen.
-           Redions Marke kennt fünf Schriftfamilien, die Datei nennt einen
-           Namen; die Zuordnung ist eine eigene Entscheidung mit eigener
-           Prüfung und steht als offener Punkt in L151. Ein Feld, das
-           gelesen und nie benutzt wird, wäre schlimmer als keins: es sieht
-           aus, als wäre es erledigt. */
+        /* SEIT E567 WIRD `a:latin` AUCH GELESEN — und benutzt. Bei E566
+           stand hier, dass das Feld absichtlich fehlt; das war richtig,
+           solange es niemand ausgewertet hätte. */
+        schrift: schriftFamilie(schriftName(defRPr, paar)),
       });
     }
     return karte;
@@ -1803,7 +1894,9 @@ const Einlesen = (() => {
       const thema = themaLesen(themaDoc, masterDoc);
       /* Layout gewinnt gegen Master — deshalb wird der Master ZUERST
          eingetragen und vom Layout überschrieben. */
-      const vorgaben = new Map([...vorgabenLesen(masterDoc, thema), ...vorgabenLesen(layoutDoc, thema)]);
+      const paar = schriftpaarLesen(themaDoc);
+      const vorgaben = new Map([...vorgabenLesen(masterDoc, thema, paar),
+                                ...vorgabenLesen(layoutDoc, thema, paar)]);
       /* Und die Folie gewinnt gegen beide. */
       const grundfarbe = hintergrund(doc, thema) || hintergrund(layoutDoc, thema)
         || hintergrund(masterDoc, thema);
@@ -1978,7 +2071,7 @@ const Einlesen = (() => {
           /* Ist es der Titel? PowerPoint sagt es über den Platzhaltertyp. */
           const ph = eigenePh;
           const istTitel = /^(ctr)?[Tt]itle$/.test(ph?.getAttribute('type') || '');
-          const absaetze = txBody ? absaetzeLesen(txBody, thema) : [];
+          const absaetze = txBody ? absaetzeLesen(txBody, thema, paar) : [];
           if (istTitel && !titel) titel = absaetze[0]?.text.split('\n')[0] || '';
           /* DER GRAD KOMMT AUS DEM LAYOUT, WENN DIE FOLIE KEINEN NENNT
              (E558). Die feste 40/20 bleibt als letzter Rückfall — sie ist
@@ -1989,6 +2082,9 @@ const Einlesen = (() => {
              Reihenfolge: was in der Folie steht, schlägt was im Layout
              steht, und beides schlägt eine Notlösung. */
           const grundfarbeText = geerbt?.farbe || standardTinte;
+          /* Und die Schrift ebenso (E567): Lauf, dann Layout, dann nichts —
+             und „nichts" heisst `standard`, also genau der heutige Zustand. */
+          const grundschrift = geerbt?.schrift || '';
           const kx = lage ? lage.x : breite * 0.08;
           const ky = lage ? lage.y : hoehe * 0.1;
           const kb = lage && lage.w > 0 ? lage.w : breite * 0.84;
@@ -2027,7 +2123,8 @@ const Einlesen = (() => {
              Lauf — sonst stünde das Zeichen im Format des Kastens und der
              Text daneben in seinem eigenen. */
           const mitZeichen = (a: Absatz): Lauf[] => a.zeichen
-            ? [{ text: a.zeichen + ' ', sz: a.sz, fett: a.fett, farbe: a.farbe }, ...a.laeufe]
+            ? [{ text: a.zeichen + ' ', sz: a.sz, fett: a.fett, farbe: a.farbe,
+                schrift: a.schrift }, ...a.laeufe]
             : a.laeufe;
 
           const gleichFormat = absaetze.length > 0 && absaetze.every(a =>
@@ -2037,7 +2134,12 @@ const Einlesen = (() => {
             /* Die Ausrichtung gehört dazu (E560): ein zentrierter Titel über
                einem linksbündigen Absatz ist genau der Fall, in dem EINE
                Marke die falsche Antwort ist. */
-            && a.ausricht === absaetze[0]!.ausricht);
+            && a.ausricht === absaetze[0]!.ausricht
+            /* Und die Schrift (E567). Sie steht bewusst NICHT in
+               `laeufeNoetig`: die Marke hat EINE Schriftfamilie für alle
+               ihre Stücke, ein `laeufe` könnte den Unterschied also gar
+               nicht ausdrücken. Zwischen ABSÄTZEN geht es — darum hier. */
+            && a.schrift === absaetze[0]!.schrift);
 
           if (absaetze.length <= 1 || gleichFormat) {
             const a = absaetze[0]!;
@@ -2048,6 +2150,7 @@ const Einlesen = (() => {
               fontSize: a.sz || grund, fett: a.fett,
               ...((a.farbe || grundfarbeText) ? { farbe: a.farbe || grundfarbeText } : {}),
               ...(a.ausricht ? { ausricht: a.ausricht } : {}),
+              ...((a.schrift || grundschrift) ? { schrift: a.schrift || grundschrift } : {}),
               ...(dreh ? { dreh } : {}),
               /* Bei mehreren gleich formatierten Absätzen werden ihre Läufe
                  mit `\n` dazwischen zu einer Kette — genau die Reihenfolge,
@@ -2055,7 +2158,8 @@ const Einlesen = (() => {
               ...(() => {
                 const kette: Lauf[] = [];
                 absaetze.forEach((z, i) => {
-                  if (i > 0) kette.push({ text: '\n', sz: z.sz, fett: z.fett, farbe: z.farbe });
+                  if (i > 0) kette.push({ text: '\n', sz: z.sz, fett: z.fett,
+                                          farbe: z.farbe, schrift: z.schrift });
                   kette.push(...mitZeichen(z));
                 });
                 return laeufeNoetig(kette) ? { laeufe: kette } : {};
@@ -2079,6 +2183,7 @@ const Einlesen = (() => {
               fontSize: a.sz || grund, fett: a.fett,
               ...((a.farbe || grundfarbeText) ? { farbe: a.farbe || grundfarbeText } : {}),
               ...(a.ausricht ? { ausricht: a.ausricht } : {}),
+              ...((a.schrift || grundschrift) ? { schrift: a.schrift || grundschrift } : {}),
               ...(laeufeNoetig(mitZeichen(a)) ? { laeufe: mitZeichen(a) } : {}),
               ...(dreh ? { dreh } : {}) };
             objekte.push(marke);
