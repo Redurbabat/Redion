@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-547 Entscheidungen, E1 bis E567 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+548 Entscheidungen, E1 bis E568 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -611,6 +611,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E565** — Tabellen kommen als Gitter auf die Folie, nicht als Tabellenblock — und geschlossene Marken bekommen eine Füllung
 * **E566** — Gefüllte Formen und die Textfarbe aus dem Layout — gefunden an Redurs echter Datei, nicht an einer Liste
 * **E567** — Die Schriftart: `a:latin` und `+mj-lt`/`+mn-lt` gegen `theme1.xml` — eine Näherung, die nur in eine Richtung irrt
+* **E568** — Die Stiftleiste: eine laute Fläche statt sechs; drei Zustände, drei Gestalten; die Farbtupfer sind wieder Tupfer
 
 ---
 
@@ -45824,3 +45825,209 @@ G4  Schrift aus `gleichFormat`   14 grün,  2 rot  (zwei Absätze, eine Marke)
 
 Bild: `bilder/pptx-schrift.png` — dieselbe Folie wie bei E566, jetzt in
 Serifen wie das Original.
+
+
+E568 — Die Stiftleiste: eine laute Fläche, nicht sechs
+--------------------------------------------------------------------------
+
+Redur, 14. September:
+
+> „die Stift wie es geordent ist gefällt mir nicht ubd es hat keien
+> Qualität also keine gutes gefühlt könntets du es verbessern"
+
+Ein Satz über ein **Gefühl** — und der lässt sich nicht aus dem Quelltext
+beantworten. Also zuerst ein Bild (§55.3) und danach die Leiste
+ausgemessen, Knopf für Knopf, bei 1280 px und bei 390 px.
+
+### Was die Messung ergab
+
+Werkzeug «Stift», Fenster 1280 px, Leiste 584 px breit:
+
+```txt
+33 sichtbare Bedienteile — ALLE exakt 36 × 32 px
+ 6 Flächen gleichzeitig in rgb(109,74,255):
+      das Werkzeug · «Formen» · «Kritzeln» · der geführte Stift
+      die gewählte Breite · der Ring um die Farbe
+ 0 sichtbare Trenner
+ 3 Zeilen, und die Farbreihe MITTEN durchgeschnitten:
+      Zeile 2 endet mit Schwarz, Rot, Blau
+      Zeile 3 beginnt mit Grün, Gelb
+```
+
+Drei der sechs Akzentflächen standen unmittelbar nebeneinander — «Formen»,
+«Kritzeln», der erste Stift — und sahen aus wie **ein** Block. Damit sagt
+die Leiste drei verschiedene Dinge mit einer Stimme: *das ist mein
+Werkzeug*, *das ist meine Wahl in dieser Gruppe*, *dieser Schalter liegt
+an*. Das Auge kann sie nicht auseinanderhalten, und genau das ist „kein
+gutes Gefühl".
+
+### Was entschieden wurde
+
+**Drei Zustände bekommen drei Gestalten, nicht drei Blautöne.**
+
+```txt
+1 · DAS WERKZEUG   volle Akzentfläche — die EINZIGE in der ganzen Leiste
+2 · DIE SPIELART   Schale mit Ring  — Stift, Breite, Form, Farbe
+3 · DER SCHALTER   getönt + Balken unten — Formen, Kritzeln, Lineal,
+                   Fett, Rahmen, Sperren
+```
+
+Die Fassung für die Spielart gab es **längst** — `pdf-studio.css` trägt sie
+seit E554, mit demselben Satz („der Zustand «gewählt» wird einmal gesagt,
+nicht zweimal in zwei Blautönen"). Sie galt nur im Studio; auf einer
+gewöhnlichen Seite blieb die laute Fassung stehen. Jetzt steht sie in
+`bausteine.css`, einmal für alle, und das Studio verweist nur noch darauf
+(§8: keine zwei Beschreibungen derselben Sache).
+
+Der **Balken** unter dem Schalter ist nicht Zierde, sondern §38: „Keine
+Information nur über Farbe." Ein getönter Grund allein wäre im
+Hochkontrast und für farbschwache Augen kein Unterschied.
+
+### Warum nicht alles ruhig, warum nicht alles laut
+
+Alles ruhig: das Werkzeug ist das eine, was man beim Blick auf die Leiste
+sucht. Es leise zu machen hiesse, diese Suche jedes Mal neu zu machen.
+
+Alles laut: siehe oben, sechs laute Flächen sind keine.
+
+### Vier weitere Funde, alle beim Hinsehen
+
+**1 · Die Farbtupfer waren nie Tupfer.** Im Stilblatt stand seit jeher
+`.blatt-farbe{width:22px; border-radius:50%}`. Beides war wirkungslos:
+
+```txt
+.blatt-farbe        wiegt (0,1,0)
+.blatt-werk button  wiegt (0,1,1)   ← gewinnt
+```
+
+Also galten `border-radius:6px` und `min-width:36px`. Auf dem Bildschirm
+stand keine Palette, sondern fünf 36 × 32 grosse Kacheln — und eine
+Kachelreihe sieht aus wie fünf Knöpfe. Der Fall aus §55.1, wörtlich: der
+Code liest sich richtig, das Bild zeigt etwas anderes.
+
+**2 · `background-clip` war auch wirkungslos** — und das im Studio seit
+E554. Jeder Tupfer trägt seine Farbe als `style="background:#d64545"` am
+Element, und `background` ist eine **Kurzschrift**: sie setzt alles
+zurück, was sie nicht nennt, `background-clip` eingeschlossen. Ein
+Element-Stil schlägt jedes Stilblatt. Ohne `!important` stand im Blatt
+`content-box` und galt `border-box`. Gefunden hat das `test522 §3`, nicht
+ich.
+
+**3 · Kein Trenner war je sichtbar.** `.blatt-werk[data-tool] > span
+.blatt-trenn[data-gruppe]{display:none}` — und `[data-tool]` steht immer.
+Die Regel galt also ausnahmslos, auch am Rechner, wo die Gruppen
+untereinander stehen und ein Strich trägt. Jetzt gilt sie nur noch am
+Telefon und in der Spalte, wo die Leiste rollt und ein Strich im Weg
+stünde. Fünf Gruppen haben ihren Strich dazubekommen (Auswahl, Lineal,
+Formen, Schrift, Stift); er trägt `data-gruppe` wie die Knöpfe dahinter
+und kommt und geht mit ihnen.
+
+**4 · Der dickste Strich sah aus wie ein Klotz.** `border-radius:3px` auf
+einem 16 × 10 px grossen Rechteck. Ein Stift hinterlässt ein rundes Ende;
+jetzt tut der Knopf es auch.
+
+### Der Umbruch fällt jetzt auf eine Gruppengrenze
+
+Zwanzig Zubehörteile brauchen bei 584 px zwei Zeilen — die Frage ist nicht
+**ob** es umbricht, sondern **wo**. Zwei Zahlen entscheiden es:
+
+```txt
+Zubehör zu 36 px + Lücken + Trenner   575 px    Leiste innen 568 px  → knapp daneben
+Zubehör zu 32 px + Lücken + Trenner   519 px                          → passt
+```
+
+Also ist das Zubehör 32 px breit und das Werkzeug bleibt 36 — was ohnehin
+richtig ist: die obere Zeile ist die, die man ständig anfasst, und sie darf
+die schwerere sein. Dazu wandert der **Verlauf** ans Ende (`order:1`, nur
+am Rechner): „Zurück", „Vor" und der Platz der Leiste gehören zu jedem
+Werkzeug und zu keinem, und in Redurs eigenen Vorbildern stehen sie ganz
+rechts. Ergebnis:
+
+```txt
+Zeile 1   die dreizehn Werkzeuge
+──────────────────────────────────  ← der Zeilenbruch ist jetzt eine Kante
+Zeile 2   Formen Kritzeln │ die sechs Stifte │ die Palette, ganz
+Zeile 3   die drei Breiten │ Zurück Vor Platz
+```
+
+**Ein erster Entwurf schob stattdessen die Farben hinter die Breite.** Die
+Palette blieb dabei auch ganz — aber sie stand dann eine Zeile UNTER den
+Stiften statt neben ihnen, und damit war E512 gebrochen: Redur hatte am
+8. September wörtlich verlangt, die Stiftreihe solle „neben es, also links
+unten, wo die Farben dort sind". `test480` misst genau diesen Satz und hat
+es gemeldet. Es hatte recht, und der Verlauf wanderte stattdessen.
+
+Am Telefon und in der Spalte bleibt alles wie in E356: eine rollende
+Zeile, Farben direkt hinter dem gewählten Werkzeug, 44 px für jedes Teil
+(§37). Eine Palette ans Ende einer rollenden Zeile zu schieben wäre dort
+das Gegenteil einer Verbesserung.
+
+### Die Alternative, die verworfen wurde
+
+Die Farbreihe in **einen** Knopf zu falten, der ein Farbfeld öffnet — so
+kämen alle Zubehörteile in eine Zeile, und die Leiste wäre zwei Zeilen
+hoch. Verworfen: das kostet für jede Farbe einen Tipp mehr, und Farbe
+wechselt man beim Schreiben von Hand dauernd. E486 hat dieselbe Frage
+schon einmal so entschieden („kein Tipp mehr für die fünf festen"), und
+der Grund gilt weiter.
+
+### Was es kostet
+
+Die Leiste ist 7 px höher (118 → 125), weil der Zeilenbruch jetzt einen
+Haarstrich trägt. Die Grenze aus `test351` liegt bei 140.
+
+Zwei bestehende Prüfläufe mussten nachgezogen werden, und zwar an ihrer
+**Messweise**, nicht an ihrer Zusage: `test351` und `test352` zählten
+`[data-gruppe="x"]` und bekamen den neuen Trenner mitgezählt. Gezählt wird
+jetzt `:not(.blatt-trenn)` — die Bedienteile, wie der Satz daneben es
+immer schon sagte. `test351` zählt die Striche zusätzlich eigens.
+
+### Was `test522` hält
+
+27 Zusagen, fünf Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  volle Akzentfläche wie vorher        21 grün, 7 rot
+G2  Kachel statt Tupfer                  22 grün, 6 rot
+G3  Trenner wieder überall aus           26 grün, 2 rot
+G4  `order:1` des Verlaufs weg           27 grün, 1 rot
+G5  Zubehör wieder 36 px breit           24 grün, 4 rot
+```
+
+G3 und G4 zeigen dabei etwas, das ich nicht erwartet hatte: die Palette
+hängt an **beidem**. Die Trenner machen die zweite Zeile so breit, dass die
+Breiten hinausfallen; der Verlauf am Ende macht den Platz frei, auf dem die
+Palette neben den Stiften steht. Nimmt man eines davon weg, rutschen die
+Farben wieder auseinander. Zwei Änderungen, die nichts miteinander zu tun
+zu haben scheinen, halten zusammen dieselbe Zusage.
+
+### Zwei fremde Prüfläufe, die dabei herausfielen
+
+**`test366`** meldete „der Glätter halbiert die Punkte nicht mehr" — und
+hatte unrecht. Die Probe zog zwei Striche an **fest gesetzten** Stellen,
+`kasten.y + 320` und `kasten.y + 440`. Gemessen: die Zeichenfläche begann
+bei y = 457, das Fenster ist 900 hoch, der zweite Zug lag also bei 897 —
+**drei Pixel** innerhalb des Bildes. Mit der 7 px höheren Leiste lag er bei
+904, ausserhalb, und es entstand gar kein Strich; `marken[letzte]` gab noch
+den ersten zurück, beide Zahlen waren gleich. Der Glätter hat die ganze
+Zeit geglättet. Die Stellen werden jetzt aus dem wirklich sichtbaren Platz
+gerechnet (P48).
+
+**`test480`** meldete seit E560 „Kein Emoji mehr in der Leiste" und zeigte
+auf `⭰`. Das war **mein** Rot aus dem vorigen Bogen, und ich hatte es
+übersehen: der Ausrichtungsknopf trug `⭰ ⭤ ⭲` als Textzeichen. Kein Emoji,
+und trotzdem genau das, was E515 aus der Leiste geworfen hat — Pfeile mit
+Balken, die auf keiner Grundlinie sitzen und auf jedem System anders breit
+sind. §55.1 hat denselben Befund schon einmal aufgeschrieben (`⟨ ≡ ⟩` sahen
+aus wie Klammern). Jetzt sind es drei gezeichnete Zeilenbilder aus
+`register/symbole.ts` — vier Zeilen, links bündig, mittig, rechts bündig —,
+und das Textzeichen bleibt als Rückfall im Datensatz.
+
+**`test458`** trug seit E486 eine zweite Fassung der Zeilenregel („das
+Zubehör steht in EINER Zeile", „die Leiste bleibt unter 100 px"). Beide
+waren seit E512 falsch und seit E512 rot — `test351` hatte die Grenze
+damals auf drei Zeilen und 140 px nachgezogen, diese Kopie nicht. Zwei
+Kataloge für dieselbe Zusage (§8). Die Kopie ist weg; was diese Suite
+wirklich zusagt, steht jetzt da: der Weg zu allen Farben steht **bei** den
+Farben, in derselben Reihe. Damit sind zwei alte rote Zusagen mit
+erledigt.

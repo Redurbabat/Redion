@@ -185,12 +185,17 @@ body[data-dokument="an"] .document-studio .blatt-werk{display:flex;flex:0 1 auto
 .document-studio[data-ink-options="open"] .blatt-fest{background:var(--pdf-dock);color:var(--text);box-shadow:none;border:1px solid var(--line);border-radius:var(--radius-xl);padding:8px}
 body[data-dokument="an"] .document-studio .blatt-werk button{color:inherit;min-height:var(--touch-min);flex-shrink:0}
 body[data-dokument="an"] .document-studio .blatt-werk :is(.blatt-farbe,.blatt-farbe-neu){width:var(--touch-min);min-width:var(--touch-min);height:var(--touch-min);min-height:var(--touch-min);border-radius:50%;padding:6px!important;background-clip:content-box;border:1px solid transparent}
-body[data-dokument="an"] .document-studio .blatt-werk .blatt-farbe.on{border-color:var(--text);outline:none;box-shadow:none}
+body[data-dokument="an"] .document-studio .blatt-werk .blatt-farbe.on{border-color:var(--accent);outline:none;box-shadow:none}
 body[data-dokument="an"] .document-studio .blatt-werk .blatt-strich{min-width:var(--touch-min)}
 body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display:none}
-/* DIESELBE REGEL WIE OBEN (E554) — der Zustand „gewählt" wird einmal
-   gesagt, nicht zweimal in zwei Blautönen. */
-body[data-dokument="an"] .document-studio .blatt-werk .on:not(.blatt-farbe){background:var(--bg-hover);border-color:var(--accent);color:var(--text);box-shadow:inset 0 0 0 2px var(--accent)}
+/* DIESE REGEL IST NACH `bausteine.css` GEWANDERT (E568). Sie stand hier
+   seit E554 — „der Zustand «gewählt» wird einmal gesagt, nicht zweimal in
+   zwei Blautönen" — und galt damit NUR im Studio; auf einer gewöhnlichen
+   Seite blieb die laute Fassung stehen, und dort standen beim Stift sechs
+   volle Akzentflächen gleichzeitig. Jetzt gilt die Schale mit Ring
+   überall, und das Werkzeug behält als einziges die volle Fläche.
+   Die zwei Zeilen darüber (Tupfer, Ring) sind der Grund, warum hier noch
+   etwas steht: das Studio braucht seine 44 px auch am Rechner. */
 .document-studio:not([data-ink-options="open"]) .blatt-werk>:is([data-wz],.blatt-trenn,[data-gruppe="verlauf"],[data-gruppe="auswahl"],[data-gruppe="lineal"],[data-gruppe="formen"],[data-gruppe="schrift"],[data-gruppe="form"]){display:none!important}
 .document-studio:not([data-ink-options="open"]) .blatt-werk[data-tool="schreiben"]{display:none}
 .document-studio[data-ink-options="open"] .blatt-werk{max-height:240px;flex-wrap:wrap!important;overflow:auto;width:min(850px,calc(100vw - 32px))}

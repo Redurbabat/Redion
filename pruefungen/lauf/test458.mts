@@ -222,20 +222,39 @@ console.log('\n§3 Der Knopf und der Weg dahinter');
   })()`) as string);
   p('Der Knopf steht in der Leiste', k.da, JSON.stringify(k));
   /* SO GROSS WIE SEINE NACHBARN — und die Zahl steht nicht hier.
-     Nachgemessen: die ganze Zeichenleiste misst am Rechner 36 × 32 und am
-     Telefon 44 × 44; §37 gilt dem Finger, und der ist am Telefon. Eine
-     feste Zahl an dieser Stelle wäre eine zweite Wahrheit neben dem CSS —
-     also wird gegen den Stiftknopf gemessen, und die 44 px am Telefon
-     stehen weiter unten. */
-  gleich('… so gross wie der Stiftknopf daneben', [k.breit, k.hoch], JSON.parse(await s.evaluate(`(() => {
-    const r = document.querySelector('.blatt-werk [data-wz="stift"]').getBoundingClientRect();
+     Eine feste Zahl an dieser Stelle wäre eine zweite Wahrheit neben dem
+     CSS; gemessen wird deshalb gegen den Nachbarn.
+     WER DER NACHBAR IST, HAT SICH MIT E568 GEÄNDERT. Bis dahin war die
+     ganze Leiste 36 × 32 — Werkzeug wie Zubehör —, und der Stiftknopf war
+     so gut wie jeder andere. Seit E568 ist das Werkzeug ABSICHTLICH grösser
+     als sein Zubehör (36 gegen 32), damit die Leiste eine Rangfolge hat.
+     Der Nachbar des „+" ist der Farbtupfer, nicht das Werkzeug — und genau
+     mit dem muss es eine Reihe bilden. */
+  gleich('… so gross wie der Farbtupfer daneben', [k.breit, k.hoch], JSON.parse(await s.evaluate(`(() => {
+    const r = document.querySelector('.blatt-werk .blatt-farbe').getBoundingClientRect();
     return JSON.stringify([Math.round(r.width), Math.round(r.height)]);
   })()`) as string));
   p('… in der Farbgruppe', k.gruppe === 'farbe', JSON.stringify(k));
   p('… und sein Name nennt beides (§38)',
     /Farbe/.test(String(k.name)) && /Farbsätze/.test(String(k.name)), JSON.stringify(k));
-  gleich('Das Zubehör steht in EINER Zeile', k.zubehoerZeilen, 1);
-  p('… und die Leiste bleibt unter 100 px (E359)', k.leisteHoch < 100, String(k.leisteHoch) + ' px');
+  /* ── WIE VIELE ZEILEN DIE LEISTE HAT, STEHT IN `test351` ────────────────
+     Hier stand „das Zubehör steht in EINER Zeile" und „die Leiste bleibt
+     unter 100 px". Beides war seit E512 falsch und seit E512 rot: die
+     sechs Stifte und die zehn Adern haben zwei weitere Reihen bestellt,
+     `test351` hat die Grenze damals auf drei Zeilen und 140 px
+     nachgezogen — diese Kopie hier nicht. Zwei Kataloge für dieselbe
+     Zusage (§8), und der zweite lief weg.
+     Die Zusage DIESER Suite ist eine andere und bleibt: der Weg zu allen
+     Farben steht BEI den Farben, in derselben Reihe — sonst sucht man ihn
+     woanders als die Tupfer, zu denen er gehört. */
+  gleich('Der „+"-Knopf steht in derselben Reihe wie die Farbtupfer', JSON.parse(await s.evaluate(`(() => {
+    const neu = document.querySelector('.blatt-werk .blatt-farbe-neu').getBoundingClientRect();
+    const tupfer = [...document.querySelectorAll('.blatt-werk .blatt-farbe')]
+      .map(e => e.getBoundingClientRect()).filter(r => r.width > 0);
+    return JSON.stringify(tupfer.every(r => Math.abs(r.top - neu.top) < 6));
+  })()`) as string), true);
+  p('… und die Leiste bleibt bei höchstens drei Zeilen (E512, test351)',
+    k.leisteHoch < 140, String(k.leisteHoch) + ' px');
 
   /* DER DIALOG. Er ist echt — also wird er echt geklickt. */
   await s.evaluate(() => {

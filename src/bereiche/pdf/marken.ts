@@ -384,10 +384,13 @@ const Marken = (() => {
   const SCHRIFT_VORGABE: Schrift = { familie: 'standard', groesse: 16, fett: false,
                                      rahmen: false, ausricht: 'links' };
   /* Die drei Namen sind die des Hauses (`bild-rahmen aus-links`), nicht neue. */
+  /* DAS `zeichen` BLEIBT ALS RÜCKFALL (wie bei den Werkzeugen, E515): eine
+     Meldung oder ein Eintrag im Inspector braucht ein TEXTzeichen, und dort
+     ist ein SVG keine Antwort. In der Leiste steht `sym` (E568). */
   const AUSRICHTUNGEN = [
-    { id: 'links',  zeichen: '⭰', name: 'Links' },
-    { id: 'mitte',  zeichen: '⭤', name: 'Mitte' },
-    { id: 'rechts', zeichen: '⭲', name: 'Rechts' }] as const;
+    { id: 'links',  zeichen: '⭰', sym: 'alignLeft',   name: 'Links' },
+    { id: 'mitte',  zeichen: '⭤', sym: 'alignCenter', name: 'Mitte' },
+    { id: 'rechts', zeichen: '⭲', sym: 'alignRight',  name: 'Rechts' }] as const;
   const schriftStapel = (id: unknown): string => InkGeometry.schriftStapel(id);
   const schriftLesen = (): Schrift => {
     const roh = typeof Store !== 'undefined' ? Store.getMeta('zeichnen:schrift') : null;
@@ -3979,6 +3982,11 @@ const Marken = (() => {
           `<span class="zeichen" data-sym="${jetzt.sym}" aria-hidden="true"></span>` +
           `<span class="wort">Platz</span></button>`;
       })() +
+      /* EIN STRICH VOR JEDER GRUPPE (E568): am Rechner steht das Zubehör
+         untereinander, und ohne Trenner ist es eine Mauer aus gleichen
+         Knöpfen. Der Strich trägt `data-gruppe` wie die Knöpfe dahinter —
+         er kommt und geht also mit ihnen. Am Telefon bleibt er aus. */
+      '<span class="blatt-trenn" data-gruppe="auswahl"></span>' +
       '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen" data-sym="trash" aria-hidden="true"></span><span class="wort">Löschen</span></button>' +
       /* KOPIEREN UND EINSETZEN (E353) — auch ohne Tastatur, am Telefon. */
       '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen" data-sym="copy" aria-hidden="true"></span><span class="wort">Kopieren</span></button>' +
@@ -3999,11 +4007,13 @@ const Marken = (() => {
       '<button data-act="elemente" data-gruppe="elemente" title="Elemente-Bibliothek öffnen und wählen, was der nächste Tipp setzt"><span class="zeichen" data-sym="star" aria-hidden="true"></span><span class="wort">Elemente</span></button>' +
       /* Das Lineal ist ein SCHALTER neben den Werkzeugen: solange es
          anliegt, rasten Linie und Pfeil auf 15°-Schritte (E267). */
+      '<span class="blatt-trenn" data-gruppe="lineal"></span>' +
       '<button data-act="lineal" data-gruppe="lineal" aria-pressed="false" ' +
       'title="Lineal: Linie und Pfeil rasten auf 15°-Schritte">' +
       '<span class="zeichen" data-sym="inkRuler" aria-hidden="true"></span><span class="wort">Lineal</span></button>' +
       /* FORMEN (E355): ein Schalter wie das Lineal — an, und ein gehaltener
          Strich wird zur Linie, zum Kreis, zum Rechteck. */
+      '<span class="blatt-trenn" data-gruppe="formen"></span>' +
       `<button data-act="formen" data-gruppe="formen" aria-pressed="${controls.formenAn ? (controls.formenAn() ? 'true' : 'false') : 'true'}"` +
       `${controls.formenAn && controls.formenAn() ? ' class="on"' : ''} ` +
       'title="Formen erkennen: einen Kreis, ein Rechteck oder eine Linie ziehen und am Ende kurz halten">' +
@@ -4016,6 +4026,7 @@ const Marken = (() => {
       '<span class="zeichen" data-sym="scribble" aria-hidden="true"></span><span class="wort">Kritzeln</span></button>' +
       /* DIE SCHRIFT (E360): Familie, Groesse, Fett, Rahmen — beim Text und
          bei der Auswahl; wirkt auf Gewaehltes und auf den naechsten Text. */
+      '<span class="blatt-trenn" data-gruppe="schrift"></span>' +
       (() => {
         const s = (controls.schriftVon ? controls.schriftVon() : SCHRIFT_VORGABE) as Schrift;
         const fam = SCHRIFTEN.find(x => x.id === s.familie) || SCHRIFTEN[0]!;
@@ -4036,7 +4047,7 @@ const Marken = (() => {
           (() => { const a2 = AUSRICHTUNGEN.find(x => x.id === s.ausricht) || AUSRICHTUNGEN[0];
             return `<button data-act="ausricht" data-gruppe="schrift" data-ausricht="${a2.id}" ` +
               `title="Ausrichtung: ${a2.name} — antippen wechselt: ${AUSRICHTUNGEN.map(x => x.name).join(' → ')}">` +
-              `<span class="zeichen" aria-hidden="true">${a2.zeichen}</span>` +
+              `<span class="zeichen" data-sym="${a2.sym}" aria-hidden="true"></span>` +
               `<span class="wort">${a2.name}</span></button>`; })();
       })() +
       /* ══ DIE STIFTREIHE (E512) ═══════════════════════════════════════════
@@ -4055,6 +4066,7 @@ const Marken = (() => {
          führt, geht weiter zum nächsten — dieselbe Bewegung wie vorher,
          nur ohne eigenen Knopf. Das steht bei den Tasten (`TASTEN`) und
          in `register/tasten.ts`. */
+      '<span class="blatt-trenn" data-gruppe="stil"></span>' +
       (() => {
         /* WELCHER STIFT SCHON BEIM BAUEN FÜHRT. Ohne das stünde die Reihe
            beim Öffnen ohne Markierung da, bis jemand etwas anfasst — der

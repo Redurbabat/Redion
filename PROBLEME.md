@@ -60,6 +60,8 @@ sind der teuerste Teil und der lehrreichste.
 | P44 | 2026-09-14 | Zehn Tabellenzellen wurden zu zehn leeren Anhaengen | 🟠 mittel | E565 |
 | P45 | 2026-09-14 | Zehn Boegen Pruefstuecke, und vier Bilder haben mehr gefunden | gross | E566 |
 | P46 | 2026-09-14 | Zum vierten Mal war mein Pruefstueck schuld, nicht der Code | 🟡 klein | E567 |
+| P47 | 2026-09-14 | Drei Zeilen im Stilblatt standen da und galten nie | 🟠 mittel | E568 |
+| P48 | 2026-09-14 | Sieben Pixel Layout machten aus einem Glaetter einen kaputten Glaetter | 🟠 mittel | E568 |
 
 ---
 
@@ -1005,4 +1007,50 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** 16 gruen, und G1 (a:latin nicht lesen) ist 12 rot — die Zusagen koennen also wirklich rot werden.
 
 **Die Lehre.** P32, P41, P43 und jetzt P46. VIER MAL in zwei Tagen habe ich einem roten Lauf geglaubt, obwohl meine Seite der Messung falsch war — einmal die Arithmetik, einmal der gemessene Knoten, zweimal die Pruefdatei. Das ist keine Panne mehr, sondern ein fehlender Arbeitsschritt: bevor ich bei einem roten Lauf im Code suche, pruefe ich zuerst, ob das Pruefstueck ueberhaupt das enthaelt, was es pruefen soll. Ein `grep` auf die eigene Pruefdatei kostet zehn Sekunden.
+
+
+---
+
+## P47 · Drei Zeilen im Stilblatt standen da und galten nie
+
+*2026-09-14 · 🟠 mittel · E568*
+
+**Das Bild.** Redur: die Stiftleiste hat „keine Qualitaet, kein gutes Gefuehl". Im Stilblatt stand seit jeher `.blatt-farbe{width:22px; border-radius:50%}` — auf dem Bildschirm standen fuenf 36 x 32 px grosse abgerundete Kacheln statt einer Farbpalette.
+
+**Die falsche Vermutung.** Dass die Tupfer irgendwo ueberschrieben werden und ich die Stelle suchen muss. Gesucht habe ich in `pdf-studio.css`, in `marken.css`, im Studio-Block — alles falsch.
+
+**Wie es gefunden wurde.** Die Wichtung ausgerechnet statt sie zu fuehlen: `.blatt-farbe` wiegt (0,1,0), `.blatt-werk button` wiegt (0,1,1). Die Knopfregel gewinnt, und mit ihr `border-radius:6px` und `min-width:36px`. Es gab gar keine zweite Stelle — die erste hat nie gegolten.
+
+**Die Ursache.** Eine CSS-Eigenschaft, die im Blatt steht und von einer staerkeren Regel im selben Blatt geschlagen wird. Das sieht man beim Lesen NICHT: beide Zeilen sind richtig geschrieben, beide stehen da, und die Datei sagt nirgends, welche gewinnt.
+
+**Die Lösung.** Die Regel auf (0,2,1) gehoben (`.blatt-werk button.blatt-farbe`). Und das Gleiche noch zweimal in derselben Leiste: `background-clip:content-box` wurde von der Kurzschrift `style="background:…"` am Element zurueckgesetzt (`!important` noetig), und `min-width` machte aus dem runden „+" ein Ei.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** 27 gruen in test522, Gegenprobe G2 (Kachel statt Tupfer) 5 rot. Und ein Bild: die Palette ist jetzt eine Reihe runder Punkte.
+
+**Die Lehre.** Ein Stilblatt ist kein Text, den man lesen kann — es ist ein Wettbewerb, den man MESSEN muss. Drei Eigenschaften standen hier monatelang da und galten nie; keine Pruefung hat es gemeldet, weil keine Pruefung `getComputedStyle` gefragt hat. Wer eine Gestaltungsfrage untersucht, misst zuerst die BERECHNETEN Werte am echten Knoten (`getComputedStyle`, `getBoundingClientRect`) und liest erst danach die Datei. Und: die zweite der drei war im Studio seit E554 ebenso tot — eine tote Regel wird kopiert wie jede andere.
+
+
+---
+
+## P48 · Sieben Pixel Layout machten aus einem Glaetter einen kaputten Glaetter
+
+*2026-09-14 · 🟠 mittel · E568*
+
+**Das Bild.** `test366` meldete: „Der Glaetter halbiert die Punkte eines zittrigen Zugs mindestens — ohne 60, mit 60". Also: der Glaetter glaettet nicht mehr. Geaendert hatte ich an der Zeichenlogik keine Zeile — nur an der Blattleiste.
+
+**Die falsche Vermutung.** Dass die Leiste den Glaetter-Schalter verschoben hat oder dass mein Umbau irgendwie die Stiftkette beruehrt. Ich habe angefangen, `InkStroke.glaetter` zu lesen.
+
+**Wie es gefunden wurde.** Erst den Verdacht eingegrenzt (HEAD-Stilblatt zurueckgelegt: gruen, mit meinem: rot — es ist das CSS), dann die Zahlen geholt statt zu raten: die Zeichenflaeche begann bei y = 457, das Fenster ist 900 hoch, und der zweite Pruefzug lag fest bei `y + 440` = 897. Mit der 7 px hoeheren Leiste: 904. Ausserhalb des Bildes.
+
+**Die Ursache.** Ein Mausklick ausserhalb des Sichtfensters kommt nicht an. Der zweite Zug entstand gar nicht, `marken[letzte]` gab noch den ersten zurueck, beide Zahlen waren gleich — und der Lauf beschrieb das als „glaettet nicht". Der Glaetter hat die ganze Zeit geglaettet.
+
+**Die Lösung.** Die zwei Zugstellen werden jetzt aus dem WIRKLICH sichtbaren Platz gerechnet (`min(Kastenhoehe, Fensterhoehe - Kastenoberkante) - 40`), nicht als feste Zahl gesetzt. Damit haelt die Probe auch die naechste Leiste aus.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** 45 von 45 gruen, und die Debug-Zeile sagt wieder „ohne Glaetter 60 · mit 11" — der Unterschied, um den es geht, ist wieder da.
+
+**Die Lehre.** Eine Pruefung, die auf feste Bildschirmkoordinaten zeigt, misst drei Pixel vom Rand entfernt, ohne es zu sagen. Sie war nicht falsch und nicht flatterhaft — sie war SPROEDE, und der Bericht zeigte auf eine ganz andere Stelle als die Ursache. Wer eine Zahl in eine Pruefung schreibt, die aus dem Layout kommt, rechnet sie aus dem Layout aus. Und der Weg zur Ursache war beide Male derselbe wie bei P47: nicht lesen, sondern messen — erst die Haelfte wegnehmen (welche Datei?), dann die Zahl holen.
 

@@ -230,6 +230,18 @@ Register.symbole = (() => {
             '<path d="M4.4 11.4v7.4a2 2 0 0 0 2 2h7.4"/>',
         layerDown: '<rect x="7.4" y="11.6" width="9.2" height="9.2" rx="1.8"/>' +
             '<path d="M19.6 12.6V5.2a2 2 0 0 0-2-2h-7.4"/>',
+        /* ── AUSRICHTUNG: DREI ZEILENBILDER (E568) ────────────────────────────
+           Hier standen `⭰ ⭤ ⭲` als Textzeichen im Knopf. Sie sind kein Emoji
+           und sahen trotzdem falsch aus: Pfeile mit Balken, die auf keiner
+           Grundlinie sitzen und auf jedem System anders breit sind — genau
+           das, was E515 aus der Leiste geworfen hat. `test480` hat sie seit
+           E560 gemeldet, und es hatte recht.
+           Jetzt sagen sie, was sie bedeuten: vier Zeilen, links bündig, in der
+           Mitte, rechts bündig. Dasselbe Bild kennt jeder aus jedem
+           Schreibprogramm. */
+        alignLeft: '<path d="M3.6 5.6h16.8M3.6 10.4h10.6M3.6 15.2h16.8M3.6 20h10.6"/>',
+        alignCenter: '<path d="M3.6 5.6h16.8M6.7 10.4h10.6M3.6 15.2h16.8M6.7 20h10.6"/>',
+        alignRight: '<path d="M3.6 5.6h16.8M9.8 10.4h10.6M3.6 15.2h16.8M9.8 20h10.6"/>',
         /* Das Kritzeln, das löscht: ein dichtes Hin und Her. */
         scribble: '<path d="M2.8 15.6c2.6-4.4 4.6 3 7-1.6s4.6 3 7-1.6 3.2 1.2 4.4-1.2"/>',
         /* Der Kreis für die Formerkennung — eine gezogene Form, die einrastet. */

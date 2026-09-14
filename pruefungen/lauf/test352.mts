@@ -178,7 +178,11 @@ p('… und kein Wort ging verloren oder kam doppelt',
 /* ── 2 ────────────────────────────────────────────────────────────────── */
 console.log('\n2 · Die Leiste: Schriftart, A−/A+, Fett, Rahmen — der nächste Text trägt es');
 const gruppe = await pg.evaluate(() =>
-  [...document.querySelectorAll<HTMLElement>('.blatt-werk [data-gruppe="schrift"]')]
+  /* OHNE DEN TRENNER (E568): seit die Gruppen am Rechner einen Strich
+     voreinander haben, trägt auch er `data-gruppe="schrift"` — er kommt
+     und geht mit der Gruppe, genau dafür ist er so gebaut. Gezählt
+     werden hier aber die BEDIENTEILE, und ein Strich ist keines. */
+  [...document.querySelectorAll<HTMLElement>('.blatt-werk [data-gruppe="schrift"]:not(.blatt-trenn)')]
     .map(k => ({ act: k.dataset['act'], sichtbar: getComputedStyle(k).display !== 'none' })));
 /* SECHS seit E560 — die Ausrichtung ist dazugekommen. Die Liste bleibt
    vollständig aufgezählt und nicht auf eine Anzahl verkürzt: sie soll rot

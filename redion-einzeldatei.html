@@ -15335,7 +15335,53 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    schlimmer statt besser. */
 .blatt-werk button::after{content:""; position:absolute; left:0; right:0; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .blatt-werk button:hover{background:var(--bg-hover)}
-.blatt-werk button.on{background:var(--accent); color:var(--auf-accent)}
+/* ══ DREI ZUSTÄNDE, DREI GESTALTEN (E568) ═════════════════════════════════
+   Redur, 14. September: „die Stift, wie es geordnet ist, gefällt mir nicht,
+   und es hat keine Qualität, also kein gutes Gefühl."
+
+   GEMESSEN, WORAN DAS LAG. In der Leiste standen beim Stift SECHS Flächen
+   in genau derselben Farbe `rgb(109,74,255)` gleichzeitig an:
+
+     das Werkzeug «Stift» · der Schalter «Formen» · der Schalter «Kritzeln»
+     der geführte Stift   · die gewählte Breite   · der Ring um die Farbe
+
+   Drei davon standen unmittelbar nebeneinander und sahen aus wie EIN
+   Block. Damit sagt die Leiste dreierlei mit einer Stimme, und das Auge
+   findet nichts mehr wieder: was ist mein Werkzeug, was ist eine Wahl
+   innerhalb einer Gruppe, und was ist ein Schalter, der einfach anliegt.
+
+   JETZT SIND ES DREI GESTALTEN, nicht drei Blautöne (dieselbe Lehre wie
+   E554, nur eine Ebene höher):
+
+     1 · DAS WERKZEUG   volle Fläche — die EINZIGE in der ganzen Leiste
+     2 · DIE SPIELART   Schale mit Ring — der Stift, die Breite, die Form
+     3 · DER SCHALTER   getönt, mit einem Balken unten — an oder aus
+
+   Warum nicht alles ruhig? Das Werkzeug ist das eine, was man beim Blick
+   auf die Leiste sucht. Es leise zu machen, hiesse, die Suche jedes Mal
+   neu zu machen. Warum nicht alles laut? Siehe oben — sechs laute Flächen
+   sind keine.
+
+   Der Balken unten beim Schalter ist nicht Zierde, sondern §38: „Keine
+   Information nur über Farbe." Ein getönter Grund allein wäre im
+   Hochkontrast und für farbschwache Augen kein Unterschied. */
+/* 2 · DIE SPIELART — steht zuerst, weil die zwei darunter sie überschreiben. */
+.blatt-werk button.on:not(.blatt-farbe){
+  background:var(--bg-hover); color:var(--text);
+  box-shadow:inset 0 0 0 2px var(--accent)
+}
+/* 1 · DAS WERKZEUG. */
+.blatt-werk button[data-wz].on{
+  background:var(--accent); color:var(--auf-accent); box-shadow:none
+}
+/* 3 · DER SCHALTER. `:is()` zählt so schwer wie sein schwerstes Glied —
+   ein Attributwähler —, also (0,3,1) und damit über der Spielart. */
+.blatt-werk button.on:is([data-act="formen"],[data-act="kritzel"],
+                          [data-act="lineal"],[data-act="fett"],
+                          [data-act="rahmen"],[data-act="sperren"]){
+  background:var(--accent-soft); color:var(--accent-text);
+  box-shadow:inset 0 -2px 0 0 var(--accent)
+}
 /* DIE STIFTREIHE (E512): sechs Knöpfe statt eines Wechslers. Ihr Wort
    bleibt weg, wo es eng ist — das Zeichen trägt, der Titel und das
    aria-label sagen den Namen (§38). */
@@ -15553,15 +15599,89 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-reihe[data-mehr="beides"] .blatt-fest{
   box-shadow:-14px 0 14px -8px rgba(0,0,0,.5)}
 
-.blatt-trenn{width:1px; height:20px; background:var(--line); margin:0 4px}
-.blatt-farbe{width:22px; height:22px; padding:0 !important; border-radius:50%;
-             border:2px solid transparent}
-.blatt-farbe.on{border-color:var(--accent-text); box-shadow:0 0 0 2px var(--bg-card) inset}
+/* Der Trenner trägt den Abstand ZWISCHEN den Gruppen — innerhalb bleibt
+   die Lücke bei 4 px. Ohne diesen Unterschied steht das Zubehör als eine
+   Mauer aus vierzehn gleichen Knöpfen da (E568). */
+.blatt-trenn{width:1px; height:24px; background:var(--line); margin:0 7px}
+
+/* ══ DIE FARBTUPFER SIND WIEDER TUPFER (E568) ═════════════════════════════
+   NACHGEMESSEN, NICHT VERMUTET: hier stand `width:22px` und
+   `border-radius:50%` — und beides war seit jeher wirkungslos.
+
+     `.blatt-farbe`        wiegt (0,1,0)
+     `.blatt-werk button`  wiegt (0,1,1)   ← gewinnt
+
+   Also galten `border-radius:6px` aus der Knopfregel und `min-width:36px`
+   aus der Behälterabfrage. Auf dem Bildschirm stand keine Farbreihe,
+   sondern fünf 36 × 32 grosse abgerundete Kacheln — und eine Kachelreihe
+   sieht aus wie fünf Knöpfe, nicht wie eine Palette. Genau der Fall aus
+   §55.1: der Code liest sich richtig, das Bild zeigt etwas anderes.
+
+   Das Studio hatte den Tupfer längst richtig (`pdf-studio.css`, dort mit
+   `var(--touch-min)` und `background-clip:content-box`). Die Form steht
+   jetzt HIER, einmal für alle — zwei Beschreibungen desselben Tupfers
+   wären die nächste, die auseinanderläuft (§8).
+
+   `background-clip:content-box` ist der Trick: die Fläche des Knopfes
+   bleibt gross genug zum Treffen, die FARBE sitzt nur im Inneren. Der
+   Ring der gewählten Farbe ist `--text` und nicht `--accent`: ein
+   violetter Ring um einen blauen Tupfer verschwindet, ein neutraler
+   nicht. */
+/* DER RAND GEHÖRT ALLEN TUPFERN — auch den zehn Adern des Leiterstiftes
+   (E509), die gleich darunter ihre eigene Breite bekommen. Er steht
+   deshalb EINE Regel weiter oben als die Form: `.blatt-farbe-leiter` ist
+   von der Form ausgenommen, vom Ring aber nicht. Ohne diese Zeile hätte
+   `border-color:var(--accent)` beim gewählten Leiter nichts zu färben —
+   eine Rahmenfarbe ohne Rahmenbreite ist unsichtbar. */
+.blatt-werk button.blatt-farbe{border:2px solid transparent}
+.blatt-werk button.blatt-farbe:not(.blatt-farbe-leiter),
+.blatt-werk button.blatt-farbe-neu{
+  width:32px; min-width:32px; height:32px; min-height:32px;
+  padding:4px !important; background-clip:content-box !important;
+  border-radius:50%; border:2px solid transparent
+}
+/* `!important` AM `background-clip`, UND ZWAR NOTGEDRUNGEN (E568, gefunden
+   von `test522 §3`, nicht vermutet): jeder Tupfer trägt seine Farbe als
+   `style="background:#d64545"` am Element — und `background` ist eine
+   KURZSCHRIFT. Sie setzt alles zurück, was sie nicht nennt, `background-clip`
+   eingeschlossen. Ein Element-Stil schlägt jedes Stilblatt; ohne
+   `!important` stand hier also `content-box` und galt `border-box`.
+   Dasselbe galt unbemerkt im Studio, seit es dort steht. */
+/* DER RING DER GEWÄHLTEN FARBE IST DERSELBE RING WIE ÜBERALL (E568):
+   `--accent`, wie beim geführten Stift und bei der gewählten Breite — eine
+   Farbe IST eine Spielart, und drei Gruppen mit drei verschiedenen
+   Markierungen wären wieder das, was hier repariert wird.
+   ER LIEGT NICHT AUF DEM TUPFER, SONDERN UM IHN: zwischen Ring und Farbe
+   stehen die 4 px Polsterung aus der Regel darüber, gefüllt mit dem Grund
+   der Leiste. Deshalb ist er auf Schwarz genauso zu sehen wie auf Gelb.
+   NACHGEMESSEN, WARUM NICHT `--text`: im Hellmodus ist `--text` fast
+   schwarz, und der erste Tupfer der Reihe IST schwarz. Auf dem Bild war
+   dort kein Ring, sondern ein etwas grösserer schwarzer Punkt. */
+.blatt-werk button.blatt-farbe.on{
+  border-color:var(--accent); box-shadow:none
+}
+/* JEDER TUPFER BEKOMMT EINE HAARKANTE (E568). GESEHEN, NICHT GERECHNET: im
+   Dunkelmodus steht der schwarze Tupfer auf einem fast schwarzen Grund und
+   ist einfach weg — im Hellmodus gilt dasselbe für Weiss, sobald jemand es
+   als eigene Farbe legt. Eine Kante von einem Pixel in halbdurchsichtigem
+   Grau sitzt auf JEDEM Grund richtig, weil sie beide Enden mitnimmt.
+   Warum ein `::before` und kein `border`: die Farbe sitzt im INNEREN
+   (`background-clip:content-box`), der Rand läge 4 px daneben und wäre ein
+   Ring um den Knopf statt eine Kante am Punkt. `::after` ist schon vergeben
+   — das ist die 44-px-Trefffläche aus §37. */
+.blatt-werk button.blatt-farbe:not(.blatt-farbe-leiter)::before{
+  content:""; position:absolute; inset:5px; border-radius:50%;
+  box-shadow:inset 0 0 0 1px rgba(127,127,127,.45); pointer-events:none
+}
 /* Der Weg zu einer eigenen Farbe (E351): ein Tupfer mit Plus, so gross wie
-   die Farbtupfer, damit die Reihe gleichmässig bleibt. */
-.blatt-farbe-neu{width:22px; height:22px; min-width:22px; padding:0 !important; border-radius:50%;
-                 border:1px dashed var(--text-faint); color:var(--text-dim); font-size:14px; line-height:1;
+   die Farbtupfer, damit die Reihe gleichmässig bleibt.
+   KEIN GESTRICHELTER RAND MEHR (E568): gestrichelt heisst überall sonst in
+   dieser App „hier fehlt noch etwas". Hier fehlt nichts — hier geht es
+   weiter. */
+.blatt-farbe-neu{color:var(--text-dim); font-size:15px; line-height:1;
                  display:inline-flex; align-items:center; justify-content:center}
+.blatt-werk button.blatt-farbe-neu{border-color:var(--line)}
+.blatt-werk button.blatt-farbe-neu:hover{border-color:var(--accent); color:var(--accent-text)}
 /* ══ DIE ADERNREIHE (E509) ═══════════════════════════════════════════════
    Beim Leiterstift stehen in der Farbreihe die zehn Adern eines
    Schaltplans. Sie sind etwas breiter als ein Farbtupfer, weil ihr Kürzel
@@ -15586,7 +15706,12 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-farbe-neu:hover{border-color:var(--accent-text); color:var(--text)}
 .blatt-farbe-eigen{border-color:var(--line)}
 .blatt-strich{display:flex; align-items:center; justify-content:center; width:30px}
-.blatt-strich i{display:block; width:16px; background:currentColor; border-radius:3px}
+/* RUNDE STÄBE, KEINE KLÖTZE (E568). Bei 3 px Rundung sah der dickste
+   Strich (10 px hoch, 16 breit) aus wie ein weisser Klotz und nicht wie
+   ein dicker Strich — auf dem Bild war er das auffälligste Ding der
+   ganzen Zeile. Ein voll gerundetes Ende ist das, was ein Stift auf
+   Papier hinterlässt. */
+.blatt-strich i{display:block; width:18px; background:currentColor; border-radius:999px}
 
 .blatt-papier{position:relative; width:100%; background:var(--paper,#fff); color:#111;
               border:1px solid var(--line); border-radius:0 0 8px 8px;
@@ -15983,15 +16108,81 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    Element bringt die Farben mit, in denen es gezeichnet wurde; eine
    Farbwahl daneben verspräche etwas, das der Stempel nicht tut. */
 .blatt-werk[data-tool="elemente"] > [data-gruppe="elemente"]{display:inline-flex}
-.blatt-werk[data-tool] > span.blatt-trenn[data-gruppe]{display:none}
+/* ══ DIE TRENNER KOMMEN ZURÜCK — AM RECHNER (E568) ════════════════════════
+   Hier stand genau diese Zeile ohne Einschränkung, und `[data-tool]` steht
+   IMMER an der Leiste. Also war jeder Trenner immer aus, und das Zubehör
+   stand als eine ununterbrochene Reihe von vierzehn Knöpfen da: Verlauf,
+   Schalter, sechs Stifte, Farben — alles im selben 4-px-Abstand, nichts
+   sagte, wo eine Gruppe aufhört.
+
+   Am Telefon und in der Spalte ROLLT die Leiste in einer Zeile; dort ist
+   ein Trenner nur ein Strich mehr im Weg, und er bleibt aus. Am Rechner
+   stehen die Gruppen untereinander sichtbar — dort trägt er.
+
+   Der Trenner der Gruppe «Verlauf» bleibt überall aus: er stünde am
+   ANFANG der zweiten Zeile, und ein Strich vor dem ersten Knopf trennt
+   nichts. */
+.spalte .blatt-werk[data-tool] > span.blatt-trenn[data-gruppe]{display:none}
+.blatt-werk[data-tool] > span.blatt-trenn[data-gruppe="verlauf"]{display:none}
 
 /* ── Am Rechner ZWEI Zeilen: oben die Werkzeuge, darunter ihr Zubehör (E359).
    Der Zeilenbruch ist ein leeres Element mit voller Breite hinter dem
    letzten Werkzeug — Flexbox kennt keinen Umbruch-Befehl. Am Telefon und in
    der Spalte rollt die Leiste in EINER Zeile (E140, E356); dort wäre das
    Element eine Lücke von Bildschirmbreite und ist deshalb weg. */
-.blatt-werk > .blatt-zeilenbruch{flex:1 0 100%; height:0; padding:0; margin:0}
+/* DER UMBRUCH IST ZUGLEICH DIE KANTE (E568). Er war ein leeres Element von
+   voller Breite und null Höhe — genau der Platz, an dem die Leiste ihre zwei
+   Bänder trennt, und er tat es unsichtbar. Ein Haarstrich sagt, was ohnehin
+   gilt: oben die Werkzeuge, darunter das Zubehör DIESES Werkzeugs.
+   Gemessen kostet er 7 px Höhe (118 → 125); die Grenze aus `test351` liegt
+   bei 140. */
+.blatt-werk > .blatt-zeilenbruch{flex:1 0 100%; height:0; padding:0;
+                                 margin:4px 0 2px; border-top:1px solid var(--line)}
 .spalte .blatt-werk > .blatt-zeilenbruch{display:none}
+/* ══ DER UMBRUCH FÄLLT AUF EINE GRUPPENGRENZE (E568) ══════════════════════
+   GEMESSEN bei 1280 px Fenster (die Leiste ist dann 584 px breit): das
+   Zubehör des Stiftes sind zwanzig Knöpfe und braucht zwei Zeilen. Die
+   Frage ist nicht OB es umbricht, sondern WO.
+
+   Vorher fiel der Umbruch mitten in die Farbreihe: Schwarz, Rot und Blau
+   standen in der zweiten Zeile, Grün und Gelb in der dritten. Eine
+   Palette, die in der Mitte durchgeschnitten ist, liest sich als zwei
+   Paletten — und das war der stärkste Eindruck von „unordentlich" auf dem
+   Bild.
+
+   Jetzt wandert der VERLAUF ans Ende — „Zurück", „Vor" und der Platz der
+   Leiste gehören zu jedem Werkzeug und zu keinem, und in Redurs eigenen
+   Vorbildern stehen sie ganz rechts. Damit fällt der Umbruch hinter die
+   Farbreihe, und die zweite Zeile ist genau das Werkzeug mit seinem Griff:
+
+       Formen · Kritzeln │ die sechs Stifte │ die Palette
+       ────────────────────────────────────────────────────
+       die drei Breiten │ Zurück · Vor · Platz
+
+   DAMIT BLEIBT AUCH E512 WÖRTLICH ERFÜLLT. Redur, 8. September: die
+   Stiftreihe „sollte neben es, also links unten, wo die Farben dort sind".
+   `test480` misst genau das — die Reihe steht unmittelbar LINKS VOR den
+   Farben, in derselben Zeile. Ein erster Entwurf schob stattdessen die
+   Farben hinter die Breite; die Palette blieb dabei zwar ganz, aber die
+   Stifte standen eine Zeile über ihr statt daneben, und `test480` hat es
+   gemeldet. Es hatte recht.
+
+   NUR AM RECHNER. Am Telefon und in der Spalte rollt EINE Zeile, und dort
+   gilt die Reihenfolge aus E356 weiter: erst der Stift, dann die Farben,
+   dann die Breiten — hinter dem gewählten Werkzeug. Eine Farbreihe ans
+   Ende einer rollenden Zeile zu schieben, wäre dort das Gegenteil einer
+   Verbesserung. */
+@media (min-width:761px){
+  .blatt-werk > [data-gruppe="verlauf"]{order:1}
+  .spalte .blatt-werk > [data-gruppe="verlauf"]{order:0}
+  /* Der Trenner der Gruppe steht jetzt MITTEN in der Zeile statt an ihrem
+     Anfang und darf deshalb wieder sichtbar sein — ausser beim Werkzeug
+     «Schreiben», das als einziges gar kein anderes Zubehör hat; dort wäre
+     er wieder der Strich vor dem ersten Knopf. */
+  .blatt-werk[data-tool] > span.blatt-trenn[data-gruppe="verlauf"]{display:inline-flex}
+  .blatt-werk[data-tool="schreiben"] > span.blatt-trenn[data-gruppe="verlauf"],
+  .spalte .blatt-werk[data-tool] > span.blatt-trenn[data-gruppe="verlauf"]{display:none}
+}
 /* Wörter nur, wenn die LEISTE breit genug ist — nicht das Fenster. Vierzehn
    Werkzeuge mit Wort brauchen rund 1130 px in einer Zeile; ohne Wort 556.
    Die Seite als Spalte gibt der Leiste rund 620 px, die volle Breite bei
@@ -16008,6 +16199,30 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
       white-space:nowrap; border:0}
     .blatt-werk .zeichen{margin:0; font-size:16px}
     .blatt-werk button{min-width:36px; padding:4px 7px}
+    /* ══ DAS WERKZEUG IST GRÖSSER ALS SEIN ZUBEHÖR (E568) ═════════════════
+       Vorher waren ALLE dreiunddreissig Bedienteile exakt 36 × 32 px — das
+       Werkzeug, das man ständig wechselt, genau so gross wie „Zurück".
+       Eine Leiste ohne Rangfolge zwingt das Auge, jedes Mal alles zu lesen.
+
+       Vier Pixel genügen: 36 für die Werkzeuge oben, 32 für das Zubehör
+       darunter. Es klingt nach nichts und ist auf dem Bild sofort zu
+       sehen, weil die obere Zeile dadurch die schwerere wird.
+
+       UND ES IST ZUGLEICH DIE ARITHMETIK DES UMBRUCHS. Gemessen bei
+       1280 px Fenster (Leiste 584, innen 568): vierzehn Zubehörteile zu
+       36 px plus Lücken und Trenner brauchen 575 px — sieben zu viel, und
+       die Breite fiel als einzelner Knopf in die dritte Zeile. Mit 32 sind
+       es 519, und der Umbruch fällt dorthin, wo er hingehört: vor die
+       Farbreihe.
+
+       NICHT AM TELEFON — dort gilt §37, 44 px für alles, und diese Regel
+       steht in einer Abfrage, die erst ab 761 px greift. Nicht in der
+       Spalte, die ihre 36 px seit E359 hat. */
+    /* OHNE DIE TUPFER: die sind quadratisch und rund, und ein `min-width`
+       von aussen macht aus dem Kreis ein Ei — gemessen 32 × 30 beim „+",
+       gefunden von `test522 §3`. */
+    .blatt-werk button[data-gruppe]:not(.blatt-farbe):not(.blatt-farbe-neu){min-width:32px; padding:4px 5px}
+    .spalte .blatt-werk button[data-gruppe]:not(.blatt-farbe):not(.blatt-farbe-neu){min-width:36px; padding:4px 7px}
   }
   @container (max-width:1400px){
     .blatt-fest .wort{position:absolute; width:1px; height:1px; padding:0;
@@ -16072,12 +16287,24 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     box-shadow:9px 0 0 0 var(--bg-card);
   }
   .blatt-werk[data-tool] > .blatt-trenn[data-gruppe="verlauf"]{ display:none }
+  /* … UND ALLE ANDEREN AUCH (E568): in einer rollenden Zeile ist ein
+     Trenner ein Strich im Weg, keine Auskunft. */
+  .blatt-werk[data-tool] > span.blatt-trenn[data-gruppe]{ display:none }
   .blatt-werk .wort{position:absolute; width:1px; height:1px; padding:0;
     margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
     white-space:nowrap; border:0}
   .blatt-werk .zeichen{margin:0; font-size:17px}
-  .blatt-farbe{width:30px; height:30px; min-width:30px}
-  .blatt-farbe-neu{width:30px; height:30px; min-width:30px}
+  /* 44 px AUF DEM HAUPTWEG (§37). Der Tupfer ist 44 × 44 GROSS und trägt
+     seine Farbe nur im Inneren (`background-clip:content-box`, E568) — so
+     ist die Trefffläche eine ganze Fingerkuppe und der Punkt bleibt ein
+     Punkt. Vorher waren es 44 × 44 grosse abgerundete KACHELN; die
+     Trefffläche stimmte, das Bild nicht. */
+  .blatt-werk button.blatt-farbe:not(.blatt-farbe-leiter),
+  .blatt-werk button.blatt-farbe-neu{
+    width:var(--touch-min); min-width:var(--touch-min);
+    height:var(--touch-min); min-height:var(--touch-min);
+    padding:7px !important
+  }
   .blatt-strich{min-width:38px}
   /* … UND SIE STEHEN DIREKT HINTER DEM WERKZEUG. Die Werkzeuge bekommen
      Plaetze in Zehnerschritten, die Gruppen den Platz gleich hinter dem
@@ -20917,12 +21144,17 @@ body[data-dokument="an"] .document-studio .blatt-werk{display:flex;flex:0 1 auto
 .document-studio[data-ink-options="open"] .blatt-fest{background:var(--pdf-dock);color:var(--text);box-shadow:none;border:1px solid var(--line);border-radius:var(--radius-xl);padding:8px}
 body[data-dokument="an"] .document-studio .blatt-werk button{color:inherit;min-height:var(--touch-min);flex-shrink:0}
 body[data-dokument="an"] .document-studio .blatt-werk :is(.blatt-farbe,.blatt-farbe-neu){width:var(--touch-min);min-width:var(--touch-min);height:var(--touch-min);min-height:var(--touch-min);border-radius:50%;padding:6px!important;background-clip:content-box;border:1px solid transparent}
-body[data-dokument="an"] .document-studio .blatt-werk .blatt-farbe.on{border-color:var(--text);outline:none;box-shadow:none}
+body[data-dokument="an"] .document-studio .blatt-werk .blatt-farbe.on{border-color:var(--accent);outline:none;box-shadow:none}
 body[data-dokument="an"] .document-studio .blatt-werk .blatt-strich{min-width:var(--touch-min)}
 body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display:none}
-/* DIESELBE REGEL WIE OBEN (E554) — der Zustand „gewählt" wird einmal
-   gesagt, nicht zweimal in zwei Blautönen. */
-body[data-dokument="an"] .document-studio .blatt-werk .on:not(.blatt-farbe){background:var(--bg-hover);border-color:var(--accent);color:var(--text);box-shadow:inset 0 0 0 2px var(--accent)}
+/* DIESE REGEL IST NACH `bausteine.css` GEWANDERT (E568). Sie stand hier
+   seit E554 — „der Zustand «gewählt» wird einmal gesagt, nicht zweimal in
+   zwei Blautönen" — und galt damit NUR im Studio; auf einer gewöhnlichen
+   Seite blieb die laute Fassung stehen, und dort standen beim Stift sechs
+   volle Akzentflächen gleichzeitig. Jetzt gilt die Schale mit Ring
+   überall, und das Werkzeug behält als einziges die volle Fläche.
+   Die zwei Zeilen darüber (Tupfer, Ring) sind der Grund, warum hier noch
+   etwas steht: das Studio braucht seine 44 px auch am Rechner. */
 .document-studio:not([data-ink-options="open"]) .blatt-werk>:is([data-wz],.blatt-trenn,[data-gruppe="verlauf"],[data-gruppe="auswahl"],[data-gruppe="lineal"],[data-gruppe="formen"],[data-gruppe="schrift"],[data-gruppe="form"]){display:none!important}
 .document-studio:not([data-ink-options="open"]) .blatt-werk[data-tool="schreiben"]{display:none}
 .document-studio[data-ink-options="open"] .blatt-werk{max-height:240px;flex-wrap:wrap!important;overflow:auto;width:min(850px,calc(100vw - 32px))}
@@ -23229,7 +23461,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1054, inhalt: '5a7cbb0a615eab2a', gebaut: '2026-09-14T10:23:27.868Z' };
+const Stand = { fassung: 1057, inhalt: 'e615955a4042ce8e', gebaut: '2026-09-14T17:57:59.178Z' };
 window.Stand = Stand;
 
 </script>
@@ -34844,6 +35076,18 @@ Register.symbole = (() => {
             '<path d="M4.4 11.4v7.4a2 2 0 0 0 2 2h7.4"/>',
         layerDown: '<rect x="7.4" y="11.6" width="9.2" height="9.2" rx="1.8"/>' +
             '<path d="M19.6 12.6V5.2a2 2 0 0 0-2-2h-7.4"/>',
+        /* ── AUSRICHTUNG: DREI ZEILENBILDER (E568) ────────────────────────────
+           Hier standen `⭰ ⭤ ⭲` als Textzeichen im Knopf. Sie sind kein Emoji
+           und sahen trotzdem falsch aus: Pfeile mit Balken, die auf keiner
+           Grundlinie sitzen und auf jedem System anders breit sind — genau
+           das, was E515 aus der Leiste geworfen hat. `test480` hat sie seit
+           E560 gemeldet, und es hatte recht.
+           Jetzt sagen sie, was sie bedeuten: vier Zeilen, links bündig, in der
+           Mitte, rechts bündig. Dasselbe Bild kennt jeder aus jedem
+           Schreibprogramm. */
+        alignLeft: '<path d="M3.6 5.6h16.8M3.6 10.4h10.6M3.6 15.2h16.8M3.6 20h10.6"/>',
+        alignCenter: '<path d="M3.6 5.6h16.8M6.7 10.4h10.6M3.6 15.2h16.8M6.7 20h10.6"/>',
+        alignRight: '<path d="M3.6 5.6h16.8M9.8 10.4h10.6M3.6 15.2h16.8M9.8 20h10.6"/>',
         /* Das Kritzeln, das löscht: ein dichtes Hin und Her. */
         scribble: '<path d="M2.8 15.6c2.6-4.4 4.6 3 7-1.6s4.6 3 7-1.6 3.2 1.2 4.4-1.2"/>',
         /* Der Kreis für die Formerkennung — eine gezogene Form, die einrastet. */
@@ -58718,10 +58962,13 @@ const Marken = (() => {
     const SCHRIFT_VORGABE = { familie: 'standard', groesse: 16, fett: false,
         rahmen: false, ausricht: 'links' };
     /* Die drei Namen sind die des Hauses (`bild-rahmen aus-links`), nicht neue. */
+    /* DAS `zeichen` BLEIBT ALS RÜCKFALL (wie bei den Werkzeugen, E515): eine
+       Meldung oder ein Eintrag im Inspector braucht ein TEXTzeichen, und dort
+       ist ein SVG keine Antwort. In der Leiste steht `sym` (E568). */
     const AUSRICHTUNGEN = [
-        { id: 'links', zeichen: '⭰', name: 'Links' },
-        { id: 'mitte', zeichen: '⭤', name: 'Mitte' },
-        { id: 'rechts', zeichen: '⭲', name: 'Rechts' }
+        { id: 'links', zeichen: '⭰', sym: 'alignLeft', name: 'Links' },
+        { id: 'mitte', zeichen: '⭤', sym: 'alignCenter', name: 'Mitte' },
+        { id: 'rechts', zeichen: '⭲', sym: 'alignRight', name: 'Rechts' }
     ];
     const schriftStapel = (id) => InkGeometry.schriftStapel(id);
     const schriftLesen = () => {
@@ -62663,6 +62910,11 @@ const Marken = (() => {
                         `<span class="zeichen" data-sym="${jetzt.sym}" aria-hidden="true"></span>` +
                         `<span class="wort">Platz</span></button>`;
                 })() +
+                /* EIN STRICH VOR JEDER GRUPPE (E568): am Rechner steht das Zubehör
+                   untereinander, und ohne Trenner ist es eine Mauer aus gleichen
+                   Knöpfen. Der Strich trägt `data-gruppe` wie die Knöpfe dahinter —
+                   er kommt und geht also mit ihnen. Am Telefon bleibt er aus. */
+                '<span class="blatt-trenn" data-gruppe="auswahl"></span>' +
                 '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen" data-sym="trash" aria-hidden="true"></span><span class="wort">Löschen</span></button>' +
                 /* KOPIEREN UND EINSETZEN (E353) — auch ohne Tastatur, am Telefon. */
                 '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen" data-sym="copy" aria-hidden="true"></span><span class="wort">Kopieren</span></button>' +
@@ -62683,11 +62935,13 @@ const Marken = (() => {
                 '<button data-act="elemente" data-gruppe="elemente" title="Elemente-Bibliothek öffnen und wählen, was der nächste Tipp setzt"><span class="zeichen" data-sym="star" aria-hidden="true"></span><span class="wort">Elemente</span></button>' +
                 /* Das Lineal ist ein SCHALTER neben den Werkzeugen: solange es
                    anliegt, rasten Linie und Pfeil auf 15°-Schritte (E267). */
+                '<span class="blatt-trenn" data-gruppe="lineal"></span>' +
                 '<button data-act="lineal" data-gruppe="lineal" aria-pressed="false" ' +
                 'title="Lineal: Linie und Pfeil rasten auf 15°-Schritte">' +
                 '<span class="zeichen" data-sym="inkRuler" aria-hidden="true"></span><span class="wort">Lineal</span></button>' +
                 /* FORMEN (E355): ein Schalter wie das Lineal — an, und ein gehaltener
                    Strich wird zur Linie, zum Kreis, zum Rechteck. */
+                '<span class="blatt-trenn" data-gruppe="formen"></span>' +
                 `<button data-act="formen" data-gruppe="formen" aria-pressed="${controls.formenAn ? (controls.formenAn() ? 'true' : 'false') : 'true'}"` +
                 `${controls.formenAn && controls.formenAn() ? ' class="on"' : ''} ` +
                 'title="Formen erkennen: einen Kreis, ein Rechteck oder eine Linie ziehen und am Ende kurz halten">' +
@@ -62700,6 +62954,7 @@ const Marken = (() => {
                 '<span class="zeichen" data-sym="scribble" aria-hidden="true"></span><span class="wort">Kritzeln</span></button>' +
                 /* DIE SCHRIFT (E360): Familie, Groesse, Fett, Rahmen — beim Text und
                    bei der Auswahl; wirkt auf Gewaehltes und auf den naechsten Text. */
+                '<span class="blatt-trenn" data-gruppe="schrift"></span>' +
                 (() => {
                     const s = (controls.schriftVon ? controls.schriftVon() : SCHRIFT_VORGABE);
                     const fam = SCHRIFTEN.find(x => x.id === s.familie) || SCHRIFTEN[0];
@@ -62721,7 +62976,7 @@ const Marken = (() => {
                             const a2 = AUSRICHTUNGEN.find(x => x.id === s.ausricht) || AUSRICHTUNGEN[0];
                             return `<button data-act="ausricht" data-gruppe="schrift" data-ausricht="${a2.id}" ` +
                                 `title="Ausrichtung: ${a2.name} — antippen wechselt: ${AUSRICHTUNGEN.map(x => x.name).join(' → ')}">` +
-                                `<span class="zeichen" aria-hidden="true">${a2.zeichen}</span>` +
+                                `<span class="zeichen" data-sym="${a2.sym}" aria-hidden="true"></span>` +
                                 `<span class="wort">${a2.name}</span></button>`;
                         })();
                 })() +
@@ -62741,6 +62996,7 @@ const Marken = (() => {
                    führt, geht weiter zum nächsten — dieselbe Bewegung wie vorher,
                    nur ohne eigenen Knopf. Das steht bei den Tasten (`TASTEN`) und
                    in `register/tasten.ts`. */
+                '<span class="blatt-trenn" data-gruppe="stil"></span>' +
                 (() => {
                     /* WELCHER STIFT SCHON BEIM BAUEN FÜHRT. Ohne das stünde die Reihe
                        beim Öffnen ohne Markierung da, bis jemand etwas anfasst — der
@@ -75229,6 +75485,36 @@ const ChronikDaten = {
             "beweis": "16 gruen, und G1 (a:latin nicht lesen) ist 12 rot — die Zusagen koennen also wirklich rot werden.",
             "lehre": "P32, P41, P43 und jetzt P46. VIER MAL in zwei Tagen habe ich einem roten Lauf geglaubt, obwohl meine Seite der Messung falsch war — einmal die Arithmetik, einmal der gemessene Knoten, zweimal die Pruefdatei. Das ist keine Panne mehr, sondern ein fehlender Arbeitsschritt: bevor ich bei einem roten Lauf im Code suche, pruefe ich zuerst, ob das Pruefstueck ueberhaupt das enthaelt, was es pruefen soll. Ein `grep` auf die eigene Pruefdatei kostet zehn Sekunden.",
             "entscheidung": "E567"
+        },
+        {
+            "nr": "P47",
+            "datum": "2026-09-14",
+            "titel": "Drei Zeilen im Stilblatt standen da und galten nie",
+            "schwere": "mittel",
+            "symptom": "Redur: die Stiftleiste hat „keine Qualitaet, kein gutes Gefuehl\". Im Stilblatt stand seit jeher `.blatt-farbe{width:22px; border-radius:50%}` — auf dem Bildschirm standen fuenf 36 x 32 px grosse abgerundete Kacheln statt einer Farbpalette.",
+            "falscheVermutung": "Dass die Tupfer irgendwo ueberschrieben werden und ich die Stelle suchen muss. Gesucht habe ich in `pdf-studio.css`, in `marken.css`, im Studio-Block — alles falsch.",
+            "wieGefunden": "Die Wichtung ausgerechnet statt sie zu fuehlen: `.blatt-farbe` wiegt (0,1,0), `.blatt-werk button` wiegt (0,1,1). Die Knopfregel gewinnt, und mit ihr `border-radius:6px` und `min-width:36px`. Es gab gar keine zweite Stelle — die erste hat nie gegolten.",
+            "ursache": "Eine CSS-Eigenschaft, die im Blatt steht und von einer staerkeren Regel im selben Blatt geschlagen wird. Das sieht man beim Lesen NICHT: beide Zeilen sind richtig geschrieben, beide stehen da, und die Datei sagt nirgends, welche gewinnt.",
+            "loesung": "Die Regel auf (0,2,1) gehoben (`.blatt-werk button.blatt-farbe`). Und das Gleiche noch zweimal in derselben Leiste: `background-clip:content-box` wurde von der Kurzschrift `style=\"background:…\"` am Element zurueckgesetzt (`!important` noetig), und `min-width` machte aus dem runden „+\" ein Ei.",
+            "warumKeineUhr": "—",
+            "beweis": "27 gruen in test522, Gegenprobe G2 (Kachel statt Tupfer) 5 rot. Und ein Bild: die Palette ist jetzt eine Reihe runder Punkte.",
+            "lehre": "Ein Stilblatt ist kein Text, den man lesen kann — es ist ein Wettbewerb, den man MESSEN muss. Drei Eigenschaften standen hier monatelang da und galten nie; keine Pruefung hat es gemeldet, weil keine Pruefung `getComputedStyle` gefragt hat. Wer eine Gestaltungsfrage untersucht, misst zuerst die BERECHNETEN Werte am echten Knoten (`getComputedStyle`, `getBoundingClientRect`) und liest erst danach die Datei. Und: die zweite der drei war im Studio seit E554 ebenso tot — eine tote Regel wird kopiert wie jede andere.",
+            "entscheidung": "E568"
+        },
+        {
+            "nr": "P48",
+            "datum": "2026-09-14",
+            "titel": "Sieben Pixel Layout machten aus einem Glaetter einen kaputten Glaetter",
+            "schwere": "mittel",
+            "symptom": "`test366` meldete: „Der Glaetter halbiert die Punkte eines zittrigen Zugs mindestens — ohne 60, mit 60\". Also: der Glaetter glaettet nicht mehr. Geaendert hatte ich an der Zeichenlogik keine Zeile — nur an der Blattleiste.",
+            "falscheVermutung": "Dass die Leiste den Glaetter-Schalter verschoben hat oder dass mein Umbau irgendwie die Stiftkette beruehrt. Ich habe angefangen, `InkStroke.glaetter` zu lesen.",
+            "wieGefunden": "Erst den Verdacht eingegrenzt (HEAD-Stilblatt zurueckgelegt: gruen, mit meinem: rot — es ist das CSS), dann die Zahlen geholt statt zu raten: die Zeichenflaeche begann bei y = 457, das Fenster ist 900 hoch, und der zweite Pruefzug lag fest bei `y + 440` = 897. Mit der 7 px hoeheren Leiste: 904. Ausserhalb des Bildes.",
+            "ursache": "Ein Mausklick ausserhalb des Sichtfensters kommt nicht an. Der zweite Zug entstand gar nicht, `marken[letzte]` gab noch den ersten zurueck, beide Zahlen waren gleich — und der Lauf beschrieb das als „glaettet nicht\". Der Glaetter hat die ganze Zeit geglaettet.",
+            "loesung": "Die zwei Zugstellen werden jetzt aus dem WIRKLICH sichtbaren Platz gerechnet (`min(Kastenhoehe, Fensterhoehe - Kastenoberkante) - 40`), nicht als feste Zahl gesetzt. Damit haelt die Probe auch die naechste Leiste aus.",
+            "warumKeineUhr": "—",
+            "beweis": "45 von 45 gruen, und die Debug-Zeile sagt wieder „ohne Glaetter 60 · mit 11\" — der Unterschied, um den es geht, ist wieder da.",
+            "lehre": "Eine Pruefung, die auf feste Bildschirmkoordinaten zeigt, misst drei Pixel vom Rand entfernt, ohne es zu sagen. Sie war nicht falsch und nicht flatterhaft — sie war SPROEDE, und der Bericht zeigte auf eine ganz andere Stelle als die Ursache. Wer eine Zahl in eine Pruefung schreibt, die aus dem Layout kommt, rechnet sie aus dem Layout aus. Und der Weg zur Ursache war beide Male derselbe wie bei P47: nicht lesen, sondern messen — erst die Haelfte wegnehmen (welche Datei?), dann die Zahl holen.",
+            "entscheidung": "E568"
         }
     ]
 };

@@ -127,7 +127,11 @@ console.log('\n§1 Das zwölfte Werkzeug');
   })()`) as string);
   p('„elemente" steht in `Marken.WERKZEUGE`', r.imKatalog);
   gleich('Es heisst „Elemente" und trägt den Stern', [r.wort, r.zeichen], ['Elemente', '⭐']);
-  gleich('Zwölf Werkzeuge, alle auf EINER Höhe', [r.werkzeuge, r.zeilen], [12, 1]);
+  /* ZWÖLF WAREN ES BEI E494, DREIZEHN SEIT E512 (der Laserpointer) —
+     nachgezogen am 14. September, rot seit E512. Die Zusage ist die
+     EINE Höhe: ein zwölfter Knopf kippte die Zeile nicht, ein
+     dreizehnter auch nicht. */
+  gleich('Dreizehn Werkzeuge, alle auf EINER Höhe', [r.werkzeuge, r.zeilen], [13, 1]);
   p('… und die Leiste rollt am Rechner nicht', !r.rollt);
   gleich('Der Zubehörknopf steht in der Gruppe „elemente"', [r.knopfDa, r.knopfGruppe], [true, 'elemente']);
 

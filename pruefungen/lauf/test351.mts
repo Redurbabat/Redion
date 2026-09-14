@@ -119,7 +119,13 @@ const leiste = (pg: Seite) => pg.evaluate(() => {
   const tops = new Set(werkzeuge.map(k => Math.round(k.getBoundingClientRect().top)));
   const zubehoer = [...w.querySelectorAll<HTMLElement>('[data-gruppe]')].filter(sichtbar);
   const werkzeugUnten = Math.max(...werkzeuge.map(k => k.getBoundingClientRect().bottom));
-  const gruppen = (name: string) => [...w.querySelectorAll<HTMLElement>(`[data-gruppe="${name}"]`)].filter(sichtbar).length;
+  /* DIE BEDIENTEILE EINER GRUPPE — OHNE IHREN TRENNER (E568). Seit die
+     Gruppen am Rechner einen Strich voreinander haben, trägt auch er
+     `data-gruppe`; er kommt und geht mit ihnen, genau dafür ist er so
+     gebaut. Gezählt wird hier aber, was man ANFASSEN kann. Der Strich
+     wird eine Zeile tiefer eigens gezählt. */
+  const gruppen = (name: string) => [...w.querySelectorAll<HTMLElement>(`[data-gruppe="${name}"]:not(.blatt-trenn)`)].filter(sichtbar).length;
+  const trenner = (name: string) => [...w.querySelectorAll<HTMLElement>(`.blatt-trenn[data-gruppe="${name}"]`)].filter(sichtbar).length;
   const bruch = w.querySelector<HTMLElement>('.blatt-zeilenbruch');
   return {
     werkzeugZeilen: tops.size,
@@ -131,6 +137,8 @@ const leiste = (pg: Seite) => pg.evaluate(() => {
     woerter: [...w.querySelectorAll<HTMLElement>('[data-wz] .wort')].filter(wortSichtbar).length,
     gruppen: { stil: gruppen('stil'), formen: gruppen('formen'), farbe: gruppen('farbe'), breite: gruppen('breite'),
       radierer: gruppen('radierer'), auswahl: gruppen('auswahl'), lineal: gruppen('lineal'), verlauf: gruppen('verlauf') },
+    trenner: { stil: trenner('stil'), formen: trenner('formen'), farbe: trenner('farbe'), breite: trenner('breite'),
+      auswahl: trenner('auswahl'), lineal: trenner('lineal'), verlauf: trenner('verlauf'), schrift: trenner('schrift') },
     bruch: bruch ? { da: true, sichtbar: getComputedStyle(bruch).display !== 'none', breite: Math.round(bruch.getBoundingClientRect().width) } : { da: false },
     rollt: w.scrollWidth > w.clientWidth + 2
   };

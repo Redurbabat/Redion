@@ -79,15 +79,21 @@ const blatt = async (breite: number, hoehe: number, handy = false) => {
 };
 
 /* ========================================================================= */
-console.log('\n1 · Zwölf statt vierzehn');
+console.log('\n1 · Ein Formknopf statt vier');
 
 const { s: pg, id: blattId } = await blatt(1360, 900);
 const werkzeuge = await pg.evaluate(() =>
   [...document.querySelectorAll<HTMLElement>('.blatt-werk [data-wz]')].map(k => k.dataset.wz));
 /* ELF WAREN ES NACH E375; SEIT E494 SIND ES ZWÖLF (die Elemente-
-   Bibliothek). Die Zusage dieses Punktes bleibt dieselbe: die vier alten
-   Form-Knöpfe sind weg, sie stehen unter einem. */
-gleich('Zwölf Werkzeuge', werkzeuge.length, 12);
+   Bibliothek) und SEIT E512 DREIZEHN (der Laserpointer). Die Zahl ist hier
+   nicht die Zusage — die Zusage ist: die vier alten Form-Knöpfe sind weg,
+   sie stehen unter EINEM. Die Zahl steht trotzdem da, damit ein
+   vierzehnter auffällt; nachgezogen am 14. September, rot seit E512. */
+gleich('Dreizehn Werkzeuge', werkzeuge.length, 13);
+p('… und die vier alten Form-Knöpfe sind keine eigenen mehr',
+  !werkzeuge.includes('line') && !werkzeuge.includes('arrow')
+  && !werkzeuge.includes('rectangle') && !werkzeuge.includes('ellipse')
+  && werkzeuge.includes('formen'), JSON.stringify(werkzeuge));
 gleich('Die vier alten Form-Knöpfe sind weg',
   ['line', 'arrow', 'rectangle', 'ellipse'].filter(w => werkzeuge.includes(w)), []);
 p('Und einer heisst „formen"', werkzeuge.includes('formen'), werkzeuge.join(' '));

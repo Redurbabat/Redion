@@ -993,3 +993,75 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
 und selbst danach fehlen Übergänge, Animationen und Platzhalter-Vererbung.
 Ungemessen ist ausserdem, ob PowerPoint die `.pptx`, die Redion heute
 schreibt, überhaupt öffnet (`LUECKEN.md:2708`).
+
+
+## Die Werkzeugtafel (W1 … W5)
+
+Redur, 14. September 2026, mit fünf Bildern eines fertigen Entwurfs:
+**„Siehe Bildern, so will ich es haben."** Und einen Satz später:
+**„Die untere Dock sollte bleiben."**
+
+Was auf den Bildern steht, in Redurs eigener Beschriftung:
+
+```txt
+1  Standardansicht          die Leiste schwebt oben, unten die Dock
+2  Stift gewählt            eine TAFEL unter dem Werkzeug: Strichvorschau,
+                            fünf benannte Stiftkacheln, Strichstärke- und
+                            Deckkraft-Schieber, darunter die Farbreihe
+3  Marker gewählt           dieselbe Tafel, andere Werte (4,0 mm, 60 %)
+4  Radierer gewählt         fünf benannte Kacheln (Ganz · Teil · Nur Stift ·
+                            Nur Marker · Nur Inhalte), Grösse-Schieber,
+                            Haken „Automatisch an Strich anpassen"
+5  Formwerkzeuge            benannte Kacheln statt nackter Zeichen
+6  Textwerkzeug             Schriftwahl, B I U, Ausrichtung, Farben
+7  Dock-Effekt              die Zeichen wachsen beim Überfahren
+8  Farb-Dock                dasselbe für die Farben, mit Namensfähnchen
+9  Lasso                    Kopieren · Ausschneiden · Löschen · Farbe · Mehr
+10 Ergebnis                 natürliches Schreiben
+```
+
+Und auf den vier iPad-Bildern dazu: **jedes Werkzeug trägt sein Wort unter
+dem Zeichen** (Stift · Marker · Radierer · Auswählen · Formen · Text ·
+Bild │ Rückgängig · Wiederholen), die Stiftkacheln zeigen **eine
+Strichprobe, einen Namen und eine Millimeterzahl** (Fein 0,3 mm · Mittel
+0,7 mm · Markant 1,2 mm · Marker), und die Formen stehen als benannte
+Kacheln (Linie · Pfeil · Rechteck · Kreis · Stern).
+
+### Die drei Grenzen, die dabei gelten
+
+1. **Nichts wird gelöscht.** Alles, was heute in der Leiste steht, muss
+   danach noch erreichbar sein — auch das, wofür auf Redurs Bildern kein
+   Platz war (Lineal, Kritzeln, Elemente, Laser, Verweis, Sperren, Als
+   Element, der Platz der Leiste, die Adernreihe des Leiterstiftes).
+2. **Die untere Dock bleibt** — Redurs ausdrücklicher Satz. Im Studio ist
+   das der schwebende Streifen am unteren Rand (`position:fixed`), und die
+   Tafel geht ÜBER ihm auf, nicht an seiner Stelle.
+3. **Ein Katalog, nicht zwei** (§8). Die Tafel zeigt DIESELBEN
+   `[data-gruppe]`-Elemente, die heute in der Leiste stehen — sie werden
+   umgehängt, nicht abgeschrieben. Eine zweite Liste von Stiften, Farben
+   und Breiten liefe von der ersten weg, und zwar genau dann, wenn jemand
+   eine Farbe hinzufügt.
+
+### Die Bögen, in der Reihenfolge
+
+- **W1 · Die Zustands-Grammatik** — ERLEDIGT (E568). Eine laute Fläche statt
+  sechs, runde Farbtupfer, sichtbare Gruppen, Rangfolge zwischen Werkzeug
+  und Zubehör. Das ist die Grundlage: die Tafel erbt sie unverändert.
+- **W2 · Die Tafel als Behälter.** Ein Element `.blatt-tafel` INNERHALB von
+  `.blatt-werk`, das alle `[data-gruppe]`-Knoten aufnimmt. Der Haken sitzt
+  im CSS: rund fünfzig Regeln lesen heute `.blatt-werk > [data-gruppe]`
+  (Kindwähler). Die müssen mit — und genau das ist der Bogen, nicht die
+  Gestaltung.
+- **W3 · Wort unter dem Zeichen.** Die Werkzeuge bekommen ihren Namen
+  darunter statt daneben. Heute steht er daneben und wird unter 1150 px
+  weggeklemmt; darunter braucht er keine Breite, sondern Höhe.
+- **W4 · Die Tafel bekommt Inhalt.** Strichvorschau, benannte Stiftkacheln
+  mit Millimetern, Deckkraft als eigener Schieber (heute gibt es sie nur
+  beim Marker, fest verdrahtet), der Radierer mit Grösse und Haken.
+- **W5 · Der Dock-Effekt.** Vergrössern beim Überfahren, mit
+  `prefers-reduced-motion` als Abschaltung (§38).
+
+Was **nicht** dazugehört und trotzdem auffällt: dass Redurs Entwurf die
+Leiste OBEN zeigt und Redion sie im Studio unten hat. Beides ist richtig —
+der Platz ist seit E512 wählbar (der Knopf „Platz"), und Redur hat gerade
+gesagt, dass unten bleiben soll.

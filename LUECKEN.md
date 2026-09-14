@@ -7741,3 +7741,42 @@ eines gemischten Absatzes gezeichnet wird. Die kommt jetzt von SVG selbst —
 nur das erste Stück einer Zeile bekommt ein `x`, die übrigen fliessen. Die
 Schätzung entscheidet weiterhin, WO umgebrochen wird, aber sie schreibt
 keine Stelle mehr ins Bild.
+
+
+L156 · Eine tote Regel im Stilblatt fällt niemandem auf — offen
+--------------------------------------------------------------------------
+
+**Gefunden am 14. September 2026** beim Umbau der Stiftleiste (E568).
+
+Drei Eigenschaften standen im Stilblatt, waren richtig geschrieben, und
+galten nie:
+
+```txt
+.blatt-farbe{width:22px}          geschlagen von min-width:36px
+.blatt-farbe{border-radius:50%}   geschlagen von .blatt-werk button{…:6px}
+background-clip:content-box       zurückgesetzt von style="background:…"
+```
+
+Die ersten zwei seit E351 (eingeführt am 8. September), die dritte im
+Studio seit E554. Auf dem Bildschirm standen dadurch Kacheln, wo Tupfer
+gemeint waren — und **niemand hat es gemeldet**, weil keine Prüfung je
+`getComputedStyle` an dieser Stelle gefragt hat und weil beim Lesen der
+Datei beide Zeilen richtig aussehen.
+
+**Was fehlt:** ein Wächter, der tote Stil-Regeln findet. Denkbar wäre er
+so: ein Prüflauf öffnet die App, geht eine Liste von Stellen durch, an
+denen eine Gestalt zugesagt ist (Tupfer rund, Knopf 44 px, Kante sichtbar),
+und vergleicht den BERECHNETEN Wert mit der Zusage. `test522` tut das jetzt
+für die Stiftleiste — für die anderen achtzig Bauteile der Schale tut es
+niemand.
+
+**Warum das nicht eben so geht:** die Zusage muss irgendwo stehen, sonst
+prüft der Lauf nur, dass der Browser rechnen kann. Eine zweite Liste neben
+dem Stilblatt wäre ein zweiter Katalog (§8) und liefe vom ersten weg. Der
+gangbare Weg ist deshalb vermutlich der schmalere: **die paar Stellen, an
+denen eine Gestalt wirklich etwas bedeutet**, bekommen ihren Wächter beim
+Bauen — und die Regel dazu steht als Arbeitsschritt, nicht als Werkzeug:
+*wer eine Gestaltung ändert, misst hinterher am echten Knoten nach, statt
+die Datei noch einmal zu lesen* (§55, P47).
+
+Eingetragen als offen, weil der Wächter fehlt — nicht der Befund.
