@@ -8083,6 +8083,12 @@ nicht als eigener Bogen — ein Umbau ohne Anlass ist auch nur ein Umbau.
 Werkzeugzeichen und ein Formzeichen dürfen sich ähneln — `inkShapes` ist ein
 Rechteck, und `formRect` ist eins. Sie stehen nie nebeneinander.
 
+**Nachtrag 15. September 2026 (E587):** dazugekommen ist `§7d`, und der
+zählt hier NICHT mit. Er rastert zwar auch auf 16 × 16, misst danach aber
+etwas ganz anderes — die Hauptachse der Tinte statt der Deckung. Eine
+gemeinsame Messung für die vier müsste also zwei Masse tragen, nicht eins.
+Das ist ein Grund mehr, sie erst anzufassen, wenn es einen Anlass gibt.
+
 ---
 
 ## L165 · Eine CSS-Zeile, die aussah wie eine Regel — GESCHLOSSEN am 15. September 2026

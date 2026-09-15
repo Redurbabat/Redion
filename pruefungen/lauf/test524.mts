@@ -876,6 +876,78 @@ try {
   check('Die Kapsel bläht kein Schriftzeichen mehr auf',
     !/\.document-ink-history button\{font-size/.test(stilC));
 
+  /* ══ §14 SCHMAL HEISST ROLLEN, NICHT WEGLASSEN (E587) ════════════════════
+     Plan 7 B 2, zweiter Satz: „Werkzeuge/Extras nicht still entfernen, wenn
+     der Bildschirm zu schmal ist."
+
+     GEMESSEN am 15. September 2026, das Stift-Dock bei vier Breiten:
+
+       Fenster   Dock     Rollinhalt   im Sichtfenster   Kinder da
+       ───────   ──────   ──────────   ───────────────   ─────────
+       1440 px   941 px      939 px         18 von 18       18
+       1024 px   941 px      939 px         18 von 18       18
+        768 px   736 px      939 px         15 von 18       18
+        390 px   358 px      918 px          7 von 18       18
+
+     Es wird also nichts weggelassen — es rollt. §9 misst, dass man das
+     SIEHT; dieser Abschnitt misst, dass es überhaupt noch DA ist, und dass
+     man auch wirklich hinkommt.
+
+     WARUM DAS EINE ZUSICHERUNG BRAUCHT, obwohl es heute stimmt: die
+     billigste Art, eine zu breite Leiste schmal zu machen, ist eine
+     Medienabfrage mit `display:none`. Sie sieht im Quelltext harmlos aus,
+     und am Rechner merkt sie niemand. Genau das ist bei den Pastellfarben
+     schon einmal andersherum passiert (E574): eine Gruppe, die überall
+     stand, weil niemand nachsah, wo sie stehen sollte.
+
+     DIE GEGENPROBE HAT BEIM ERSTEN MAL NICHTS GETAN, und das ist selbst ein
+     Fund: `.blatt-werk > [data-gruppe="stil"]{display:none}` in einer
+     Medienabfrage blieb wirkungslos, weil der Katalog aus E356 mit
+     `.blatt-werk[data-tool] > …` eine Stufe höher steht. Erst mit
+     derselben Stufe fiel die Zahl bei 390 px von 18 auf 12 — dieselbe
+     Falle wie in E585, nur andersherum. */
+  const dockBei = async (breite: number, hoehe: number) => {
+    await page.setViewportSize({ width: breite, height: hoehe });
+    await page.waitForTimeout(650);
+    return await page.evaluate(`(() => {
+      const w = document.querySelector('.document-stage[data-aktiv] .blatt-werk');
+      if (!w) return { da: 0, sichtbar: 0, roll: 0, fenster: 0, versteckt: [] };
+      const kinder = Array.from(w.children).filter(k => !k.classList.contains('blatt-trenn'));
+      const sicht = (e) => { const s = getComputedStyle(e);
+        return s.display !== 'none' && s.visibility !== 'hidden' && e.getClientRects().length > 0; };
+      /* Die Gruppenregel aus E356 blendet fremde Gruppen aus — das IST ihr
+         Zweck, und deshalb wird hier nicht „alle Kinder" gezählt, sondern
+         die Zahl der SICHTBAREN gegen sich selbst bei anderer Breite. */
+      return { da: kinder.length, sichtbar: kinder.filter(sicht).length,
+               roll: w.scrollWidth, fenster: w.clientWidth, tool: w.dataset.tool || '' };
+    })()`) as { da: number; sichtbar: number; roll: number; fenster: number; tool: string };
+  };
+  await werkzeug('stift');
+  const weit = await dockBei(1440, 960);
+  const eng = await dockBei(390, 844);
+  const mittel = await dockBei(768, 1024);
+  check(`Bei 1440 px stehen ${weit.sichtbar} Bedienteile im Dock`, weit.sichtbar >= 15);
+  check(`Bei 768 px stehen genauso viele (${mittel.sichtbar})`, mittel.sichtbar === weit.sichtbar);
+  check(`Bei 390 px auch (${eng.sichtbar})`, eng.sichtbar === weit.sichtbar);
+  check(`… und schmal heisst rollen: ${eng.roll} px Inhalt in ${eng.fenster} px Fenster`,
+    eng.roll > eng.fenster + 100 && mittel.roll > mittel.fenster);
+  /* UND MAN KOMMT AUCH HIN. Ein Knopf, der im Baum steht, aber nicht
+     erreichbar ist, wäre dasselbe wie einer, den es nicht gibt. */
+  const letzter = await page.evaluate(`(async () => {
+    const w = document.querySelector('.document-stage[data-aktiv] .blatt-werk');
+    const kn = Array.from(w.querySelectorAll('button')).filter(b => b.getClientRects().length);
+    const ziel = kn[kn.length - 1];
+    if (!ziel) return { ok: false, name: '—' };
+    ziel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    await new Promise(f => setTimeout(f, 250));
+    const r = ziel.getBoundingClientRect(), wr = w.getBoundingClientRect();
+    return { ok: r.left >= wr.left - 2 && r.right <= wr.right + 2,
+             name: ziel.dataset.act || ziel.dataset.wz || ziel.className.slice(0, 20) };
+  })()`) as { ok: boolean; name: string };
+  check(`Der letzte Knopf („${letzter.name}") ist durch Rollen erreichbar`, letzter.ok);
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await page.waitForTimeout(600);
+
   await werkzeug('stift');
   check('Keine Laufzeitfehler', errors.length === 0);
   mkdirSync(resolve(root, 'bilder'), { recursive: true });

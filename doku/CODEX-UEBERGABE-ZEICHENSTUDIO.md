@@ -697,3 +697,51 @@ sich genug unterscheiden (gemessen unter der Grenze, mit Augen ähnlich).
 `test510`.
 
 **Die Gesamtsuite ist NICHT als grün behauptet.**
+
+---
+
+## Nachtrag — Abschnitt 7 B 2 und der Rest von 7 C 2 (15. September 2026)
+
+### Der zweite Satz von B 2 war erfüllt
+
+„Werkzeuge/Extras nicht still entfernen, wenn der Bildschirm zu schmal ist."
+Gemessen bei vier Breiten stehen immer dieselben **18** Bedienteile im Dock;
+was nicht ins Sichtfenster passt, rollt (939 px Inhalt in 736 px bei 768,
+918 in 356 bei 390) und ist durch Rollen erreichbar. `test524 §14` hält es,
+in der Gegenprobe rot gesehen.
+
+### Der erste Satz war es nicht — und das Mass sagte, er sei es
+
+`test480 §7` misst seit E515 die **Tintendeckung**: `penBrush/penPencil`
+kam auf 40 %, weit unter der Grenze. Mit Augen bei 16 px waren die beiden
+trotzdem Zwillinge, weil das Auge bei dieser Grösse die **Richtung** liest
+und nicht die Bildpunkte — beide ein langer Strich von links unten nach
+rechts oben, Δ7°.
+
+`test480 §7d` misst jetzt zusätzlich die Hauptachse der Tinte und die
+Länglichkeit. Der Pinsel ist gespiegelt: 128° gegen 45°. Die Gegenprobe
+auf die sieben Formen findet mit demselben Mass kein Paar — eine
+Zusicherung, die überall anschlägt, sagt nichts (E587).
+
+### Was aus 7 C 2 offen bleibt
+
+`penFountain` liest sich bei 16 px eher wie eine Kartennadel als wie eine
+Federspitze. Gemessen ist er sauber getrennt (schlimmstes Paar 46 % mit
+`penEarth`, 90°/26 % — ein Klumpen, kein Strich), also ist die Zusage
+„sofort unterscheidbar" gehalten. Ob er auch „nach Füller aussieht", ist
+eine Frage an Redur und keine stille Änderung.
+
+### Offen aus 7 B
+
+Nur noch **B 8** (die Bildschirmtastatur; die kleine Breite ist mit E580 und
+E587 zu) und **B 9** („Alle Optionen" bleibt mit Grund vollständig).
+**7 C ist zu.**
+
+### Prüfstand dieses Bogens
+
+`test480` 60/60 (4 Zusicherungen neu, 2 rot gesehen), `test524` 100/100
+(5 neu, 1 in der Gegenprobe rot gesehen). Grün dazu: `test343`, `test344`,
+`test348`, `test349`, `test351`, `test365`, `test437`, `test438`, `test461`,
+`test510`, `test515`, `test522`, `test523`.
+
+**Die Gesamtsuite ist NICHT als grün behauptet.**

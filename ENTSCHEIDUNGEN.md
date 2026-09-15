@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-566 Entscheidungen, E1 bis E586 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+567 Entscheidungen, E1 bis E587 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -630,6 +630,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E584** — Ein Pfeil, der keine Linie ist, und ein rundes Rechteck, das rund aussieht: drei Zeichenpaare waren über 70 % gleich
 * **E585** — Drei von vier Grössenangaben im Stilblatt hatten keine Wirkung: bemasst war die Hülle, gross war das SVG darin
 * **E586** — Vier Knöpfe des Studios trugen Schriftzeichen statt gezeichneter; das Register hatte alle vier längst
+* **E587** — Pinsel und Bleistift lagen in derselben Richtung; ein zweites Mass misst jetzt die Hauptachse statt der Bildpunkte
 
 ---
 
@@ -47530,3 +47531,98 @@ keiner: er wird geglaubt.
 
 **Prüflauf:** `test524 §13`, zwölf Zusicherungen, elf rot gesehen.
 Angesehen: `bilder/kapsel-1440.png`, `bilder/topbar-1440.png`.
+
+---
+
+## E587 — Zwei Striche in derselben Richtung sind ein Bild
+
+**15. September 2026.** Plan 7 B 2: „Stift-Dock: sechs klar erkennbare
+Stifte, Strichstärken, Farben und Farbmenü. Werkzeuge/Extras nicht still
+entfernen, wenn der Bildschirm zu schmal ist." Plan 7 C 2: „Füller,
+Kugelschreiber, Pinsel und Bleistift müssen sofort unterscheidbar sein."
+
+### Der zweite Satz war erfüllt
+
+Gemessen, das Stift-Dock bei vier Breiten:
+
+| Fenster | Dock | Rollinhalt | im Sichtfenster | Kinder da |
+|---|---|---|---|---|
+| 1440 px | 941 px | 939 px | 18 von 18 | 18 |
+| 1024 px | 941 px | 939 px | 18 von 18 | 18 |
+| 768 px | 736 px | 939 px | 15 von 18 | **18** |
+| 390 px | 358 px | 918 px | 7 von 18 | **18** |
+
+Es wird nichts weggelassen — es rollt, und seit E580 sieht man auch, dass
+es rollt. Sechs Stifte, drei Strichstufen, fünf Farben, das Farbmenü und
+das Lineal stehen bei jeder Breite.
+
+### Der erste Satz war es nicht — und das Mass sagte, er sei es
+
+`test480 §7` misst seit E515, WELCHE Bildpunkte leuchten: Tinte gegen
+Tinte. Für `penBrush` und `penPencil` ergab das **40 %**, weit unter der
+Grenze von 60. Grün.
+
+Mit Augen bei 16 px sind die beiden trotzdem Zwillinge, und das ist kein
+Widerspruch. Das Auge liest bei dieser Grösse nicht die einzelnen Punkte,
+sondern die **Richtung** und die **Masse**. Beide Zeichen waren ein langer
+Strich von links unten nach rechts oben; dass am einen Haare und am anderen
+zwei Querbänder hängen, sind bei 16 px je zwei Pixel.
+
+**Das ist §55.2 in seiner zweiten Gestalt.** Dort ging es um eine Prüfung,
+die immer „passt schon" sagte, weil Flexbox den Überstand wegstauchte. Hier
+sagt eine Prüfung „passt schon", weil sie die richtige Frage an der
+falschen Eigenschaft stellt. Beide Male hilft nur das Hinsehen.
+
+### Das zweite Mass
+
+`test480 §7d` misst die **Hauptachse der Tinte** — die Kovarianz der
+Bildpunkte, mit ihrer Deckung gewichtet — und dazu die Länglichkeit:
+
+```txt
+penFountain    90°   26 %        penPencil      45°   78 %
+penBall        86°   52 %        penEarth       90°   30 %
+penBrush       52°   69 %        penWire        10°   38 %
+```
+
+Verdächtig ist ein Paar, wenn **beide länglich sind** (ab 45 %) und ihre
+Richtungen weniger als 20° auseinander liegen. Ein Klumpen hat keine
+Richtung, die man verwechseln könnte: `penFountain` und `penEarth` stehen
+beide auf 90° und sind trotzdem grundverschieden.
+
+**Und das Mass schreit nicht bei jedem Satz.** Auf die sieben Formen
+angewandt findet es kein einziges Paar — obwohl dort mit `formLine` (90 %)
+das längste Zeichen des ganzen Projekts steht. Diese Gegenprobe ist Teil
+des Prüflaufs, denn eine Zusicherung, die überall anschlägt, sagt nichts.
+
+### Was geändert wurde
+
+Der Pinsel ist gespiegelt: **128° statt 52°**, gegen die 45° des
+Bleistifts. Dreiundachtzig Grad Abstand, und bei 16 px sofort zu trennen.
+Die Tintendeckung bleibt unverändert bei 46 % als schlimmstem Paar.
+
+**Was probiert und verworfen wurde,** alles gemessen:
+
+| Fassung | Deckung | Richtung |
+|---|---|---|
+| heute (52°) | 46 % | `penBrush/penPencil` Δ7° |
+| senkrecht stehend (90°) | **55 %** | `penBall/penBrush` Δ4° |
+| steiler (58°) | 46 % | `penBrush/penPencil` Δ13° |
+| waagerecht liegend | 46 % | kein Paar |
+| **gespiegelt (128°)** | **46 %** | **kein Paar** |
+
+Waagerecht mass genauso sauber, legte den Pinsel aber als einziges Werkzeug
+hin, während alle anderen stehen — deshalb die Spiegelung.
+
+### Ein Fund aus der Gegenprobe
+
+Um `§14` (schmal heisst rollen) rot zu sehen, wurde eine Medienabfrage mit
+`display:none` eingesetzt. **Sie tat beim ersten Mal nichts:** der Katalog
+aus E356 steht mit `.blatt-werk[data-tool] > …` eine Spezifitätsstufe
+höher. Erst mit derselben Stufe fiel die Zahl bei 390 px von 18 auf 12.
+Dieselbe Falle wie in E585, nur andersherum — dort war eine echte Regel
+wirkungslos, hier eine gewollte.
+
+**Prüfläufe:** `test480 §7d` (vier Zusicherungen, zwei rot gesehen),
+`test524 §14` (fünf Zusicherungen, eine in der Gegenprobe rot gesehen).
+Angesehen: `bilder/stifte-lupe.png` (alle sechs bei 16, 24 und 48 px,
+beide Fassungen), `bilder/stiftdock-390.png`, `-768`, `-1024`, `-1440`.

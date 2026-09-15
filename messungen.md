@@ -1001,3 +1001,80 @@ selbst; gemessen steht `stroke` danach auf demselben Wert wie `color`.
 
 **Angesehen:** `bilder/kapsel-1440.png`, `bilder/kapsel-390.png`,
 `bilder/topbar-1440.png`.
+
+---
+
+## 25. Das Stift-Dock bei vier Breiten
+
+**Wann:** 15. September 2026 · **Womit:** eigenes Messskript, Studio
+geöffnet, Stiftwerkzeug geführt · **Warum:** Plan 7 B 2, zweiter Satz —
+„Werkzeuge/Extras nicht still entfernen, wenn der Bildschirm zu schmal ist".
+
+| Fenster | Dock | Rollinhalt | im Sichtfenster | Kinder sichtbar | Zeilen |
+|---|---|---|---|---|---|
+| 1440 × 960 | 941 × 62 | 939 px | 18 von 18 | 18 | 1 |
+| 1024 × 768 | 941 × 62 | 939 px | 18 von 18 | 18 | 1 |
+| 768 × 1024 | 736 × 62 | 939 px | 15 von 18 | 18 | 1 |
+| 390 × 844 | 358 × 62 | 918 px | 7 von 18 | 18 | 1 |
+
+Stiftknöpfe: sechs, überall sichtbar, 32 px breit am Rechner und 44 px am
+Telefon. Farben 6, Strichstufen 3, Farbmenü und Lineal bei jeder Breite da.
+**Nichts wird weggelassen — es rollt.**
+
+---
+
+## 26. Sechs Stifte: zwei Masse, zwei Antworten
+
+**Wann:** 15. September 2026 · **Warum:** Plan 7 C 2 — „Füller,
+Kugelschreiber, Pinsel und Bleistift müssen sofort unterscheidbar sein".
+
+**Mass eins — Tintendeckung** (die Methode aus `test480 §7`, alle 15 Paare):
+
+```txt
+46 %  penFountain/penEarth      34 %  penBrush/penWire
+40 %  penBrush/penPencil        33 %  penBall/penWire
+38 %  penFountain/penBall       27 %  penFountain/penBrush
+38 %  penEarth/penWire          25 %  penBrush/penEarth
+36 %  penBall/penBrush          24 %  penBall/penPencil
+36 %  penPencil/penWire         22 %  penFountain/penPencil
+35 %  penBall/penEarth          21 %  penPencil/penEarth
+34 %  penFountain/penWire
+```
+
+Kein Paar über 60 %. Nach diesem Mass ist alles in Ordnung.
+
+**Mass zwei — Hauptachse und Länglichkeit** (Kovarianz der Tinte auf 16 × 16,
+mit der Deckung gewichtet):
+
+```txt
+penFountain    90°   26 %        penPencil      45°   78 %
+penBall        86°   52 %        penEarth       90°   30 %
+penBrush       52°   69 %        penWire        10°   38 %
+```
+
+Ein Paar zählt, wenn beide ab 45 % länglich sind und weniger als 20°
+auseinander liegen: **penBrush/penPencil Δ7°** — und sonst nichts.
+
+**Gegenprobe auf die sieben Formen** (dasselbe Mass, derselbe Lauf):
+
+```txt
+formLine 45°/90 %   formArrow 0°/47 %   formRect 0°/21 %
+formEllipse 180°/18 %   formTriangle 90°/4 %
+formRoundrect 179°/17 %   formCurve 6°/29 %
+                                    → kein Paar
+```
+
+Obwohl dort mit `formLine` das längste Zeichen des Projekts steht.
+
+**Die Kandidaten für den Pinsel, beide Masse zugleich:**
+
+| Fassung | schlimmste Deckung | Richtungspaare | Pinsel |
+|---|---|---|---|
+| heute | 46 % | `penBrush/penPencil` Δ7° | 52°/69 % |
+| senkrecht | **55 %** | `penBall/penBrush` Δ4° | 90°/61 % |
+| steiler 58° | 46 % | `penBrush/penPencil` Δ13° | 58°/78 % |
+| waagerecht mit Zug | 46 % | kein Paar | 67°/27 % |
+| **gespiegelt** | **46 %** | **kein Paar** | **128°/69 %** |
+
+**Angesehen:** `bilder/stifte-lupe.png` — alle sechs bei 16, 24 und 48 px,
+heute und in beiden ernsthaften Fassungen.

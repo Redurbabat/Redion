@@ -585,6 +585,121 @@ console.log('\n§7c Sieben Formen, sieben Bilder');
 }
 
 
+/* ══ §7d Zwei Striche in derselben Richtung ════════════════════════════════
+ *
+ * WARUM ES §7 BIS §7c NICHT GENÜGT. Die drei messen, WELCHE Bildpunkte
+ * leuchten: Tinte gegen Tinte, Schnitt durch Vereinigung. Für `penBrush`
+ * und `penPencil` ergab das **40 %** — weit unter der Grenze, also grün.
+ *
+ * Mit Augen bei 16 px sind die beiden trotzdem Zwillinge, und das ist kein
+ * Widerspruch: das Auge liest bei dieser Grösse nicht die einzelnen Punkte,
+ * sondern die RICHTUNG und die MASSE. Beide Zeichen sind ein langer Strich
+ * von links unten nach rechts oben. Dass der eine Haare und der andere zwei
+ * Querbänder hat, verschwindet — die Querbänder sind bei 16 px zwei Pixel.
+ *
+ * Gemessen wird deshalb die Hauptachse der Tinte (Kovarianz der Punkte,
+ * mit der Deckung gewichtet) und die Länglichkeit dazu:
+ *
+ *     penFountain    90°   26 %      penPencil      45°   78 %
+ *     penBall        86°   52 %      penEarth       90°   30 %
+ *     penBrush       52°   69 %      penWire        10°   38 %
+ *
+ * Ein Paar ist verdächtig, wenn BEIDE länglich sind (ab 45 %) und ihre
+ * Richtungen weniger als 20° auseinander liegen. Kurze, runde Zeichen haben
+ * keine Richtung, die man verwechseln könnte — `penFountain` und `penEarth`
+ * stehen beide auf 90°, sind aber Klumpen, keine Striche.
+ *
+ * KANN DIESER ABSCHNITT ÜBERHAUPT ROT WERDEN? (§55.2) Er WAR rot:
+ * `penBrush/penPencil` mit Δ7°. Und er schreit nicht bei jedem Satz — auf
+ * die sieben Formen angewandt findet er kein einziges Paar, obwohl dort
+ * `formLine` mit 90 % das längste Zeichen des Projekts steht. Der
+ * Formen-Durchgang unten ist genau deshalb dabei: eine Zusicherung, die
+ * überall anschlägt, sagt nichts.
+ *
+ * Diese dreissig Zeilen sind KEINE Abschrift von §7 — sie messen etwas
+ * anderes. Dass §7, §7b und §7c untereinander dieselben tragen, steht als
+ * L164 in `LUECKEN.md`.
+ * ------------------------------------------------------------------------ */
+console.log('\n§7d Zwei Striche in derselben Richtung');
+{
+  const s = await mitBlatt();
+  const GRAD = 20, LANG = 45;
+  const richte = async (welche: 'STIFTE' | 'FORMEN') => JSON.parse(await s.evaluate(`(async () => {
+    const namen = Marken.${welche}.map(x => x.sym).filter(Boolean);
+    const messe = async (n) => {
+      const wrap = document.createElement('span');
+      wrap.dataset.sym = n; document.body.appendChild(wrap);
+      Register.symbole.fuelle(wrap.parentNode);
+      const svg = wrap.querySelector('svg');
+      if (!svg) { wrap.remove(); return null; }
+      const txt = new XMLSerializer().serializeToString(svg);
+      const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(txt)));
+      const img = new Image(); img.width = 16; img.height = 16;
+      await new Promise((f, x) => { img.onload = f; img.onerror = x; img.src = url; });
+      const c = document.createElement('canvas'); c.width = 16; c.height = 16;
+      const g = c.getContext('2d'); g.drawImage(img, 0, 0, 16, 16);
+      const d = g.getImageData(0, 0, 16, 16).data;
+      wrap.remove();
+      let m = 0, sx = 0, sy = 0; const px = [];
+      for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+        const a = d[(y*16+x)*4+3] / 255;
+        if (a > 0.15) { m += a; sx += a*x; sy += a*y; px.push([x, y, a]); }
+      }
+      if (m < 2) return null;
+      const mx = sx/m, my = sy/m;
+      let cxx = 0, cyy = 0, cxy = 0;
+      for (const q of px) { cxx += q[2]*(q[0]-mx)*(q[0]-mx); cyy += q[2]*(q[1]-my)*(q[1]-my);
+                            cxy += q[2]*(q[0]-mx)*(q[1]-my); }
+      cxx /= m; cyy /= m; cxy /= m;
+      const t = cxx + cyy, det = cxx*cyy - cxy*cxy;
+      const w = Math.sqrt(Math.max(0, t*t/4 - det));
+      const l1 = t/2 + w, l2 = t/2 - w;
+      /* Der Bildschirm zählt y nach unten — deshalb das Minus, damit „45°"
+         wirklich von links unten nach rechts oben heisst. */
+      let grad = -Math.atan2(2*cxy, cxx - cyy) * 90 / Math.PI;
+      if (grad < 0) grad += 180;
+      return { name: n, grad: Math.round(grad),
+               lang: Math.round(100 * (1 - Math.sqrt(Math.max(0,l2)/Math.max(1e-6,l1)))) };
+    };
+    const alle = [];
+    for (const n of namen) { const r = await messe(n); if (r) alle.push(r); }
+    const treffer = [];
+    for (let i = 0; i < alle.length; i++) for (let j = i + 1; j < alle.length; j++) {
+      const a = alle[i], b = alle[j];
+      let dw = Math.abs(a.grad - b.grad); if (dw > 90) dw = 180 - dw;
+      if (a.lang >= ${LANG} && b.lang >= ${LANG} && dw <= ${GRAD})
+        treffer.push(a.name + '/' + b.name + ' Δ' + dw + '°');
+    }
+    return JSON.stringify({ alle, treffer });
+  })()`) as string) as { alle: Array<{ name: string; grad: number; lang: number }>;
+                         treffer: string[] };
+
+  const stifte = await richte('STIFTE');
+  console.log('      ' + stifte.alle.map(x => `${x.name} ${x.grad}°/${x.lang}%`).join('  '));
+  p('Kein Stiftpaar liegt als langer Strich in derselben Richtung',
+    stifte.treffer.length === 0, stifte.treffer.join(', '));
+  /* NAMENTLICH, weil dieses Paar der Grund für den Abschnitt ist. */
+  const brush = stifte.alle.find(x => x.name === 'penBrush');
+  const pencil = stifte.alle.find(x => x.name === 'penPencil');
+  const abstand = (() => {
+    if (!brush || !pencil) return -1;
+    const dw = Math.abs(brush.grad - pencil.grad);
+    return dw > 90 ? 180 - dw : dw;
+  })();
+  p('Pinsel und Bleistift zeigen nicht mehr in dieselbe Richtung',
+    abstand > GRAD, `Δ${abstand}° (vorher 7°)`);
+  /* DIE GEGENPROBE, damit das Mass nicht überall anschlägt: dieselbe Rechnung
+     auf die sieben Formen, wo `formLine` mit 90 % das längste Zeichen des
+     Projekts ist — und trotzdem kein Paar herauskommt. */
+  const formen = await richte('FORMEN');
+  p('GEGENPROBE: bei den sieben Formen findet dasselbe Mass kein Paar',
+    formen.treffer.length === 0, formen.treffer.join(', '));
+  p('… und es hat dort wirklich etwas zu messen (formLine ist länglich)',
+    (formen.alle.find(x => x.name === 'formLine')?.lang ?? 0) >= 80);
+  await s.close();
+}
+
+
 /* ═══ §4 Quellen ═══════════════════════════════════════════════════════════ */
 console.log('\n§6 Quellen');
 p('Die Stiftreihe steht EINMAL im Quelltext, aus dem Katalog gebaut',

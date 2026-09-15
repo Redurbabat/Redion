@@ -212,9 +212,30 @@ Register.symbole = (() => {
              '<path d="M9.2 14.8h5.6L12 19.2Z"/>' +
              '<circle cx="12" cy="20.6" r="1.1"/>' +
              '<path d="M14.8 6.6h1.6v5"/>',
-    penBrush: '<path d="M14.2 3.4 20.6 9.8"/>' +
-              '<path d="m17.4 6.6-7.2 7.2a3.2 3.2 0 0 0-.9 1.7l-.4 2.2 2.2-.4a3.2 3.2 0 0 0 1.7-.9z"/>' +
-              '<path d="M8.4 15.4c-1.5 1.5-1.1 3.6-3.6 4.6 1 .6 2.2.8 3.3.4 1.6-.5 2.5-2 2.1-3.5"/>',
+    /* ══ DER PINSEL ZEIGT IN DIE ANDERE RICHTUNG (E587) ══════════════════
+       Er lag von links unten nach rechts oben — genau wie der Bleistift.
+       `test480 §7` mass die beiden mit 40 % Tintendeckung und liess sie
+       durch, und das war richtig gerechnet: die Haare und die zwei
+       Querbänder des Bleistifts leuchten wirklich an anderen Stellen.
+
+       Nur liest das Auge bei 16 px keine Stellen, sondern eine RICHTUNG.
+       Gemessen als Hauptachse der Tinte: Pinsel 52°, Bleistift 45° — sieben
+       Grad auseinander, beide lang (69 % und 78 %). Zwei Striche in
+       derselben Richtung sind bei dieser Grösse dasselbe Bild, gleichgültig
+       was an ihnen hängt.
+
+       Gespiegelt sind es 128° gegen 45°: dreiundachtzig Grad, und bei
+       16 px sofort zu trennen. Die Tintendeckung bleibt unverändert bei
+       46 % als schlimmstem Paar (`penFountain/penEarth`).
+
+       WAS SONST PROBIERT WURDE, alles gemessen: senkrecht stehend traf den
+       Kugelschreiber (Δ4°, und die Deckung stieg auf 55 %); steiler bei
+       58° blieb mit Δ13° unter der Grenze; waagerecht liegend mass sauber,
+       legte den Pinsel aber als einziges Werkzeug hin, während alle
+       anderen stehen. `test480 §7d` hält die Richtung fest. */
+    penBrush: '<path d="M9.8 3.4 3.4 9.8"/>' +
+              '<path d="m6.6 6.6 7.2 7.2a3.2 3.2 0 0 1 .9 1.7l.4 2.2-2.2-.4a3.2 3.2 0 0 1-1.7-.9z"/>' +
+              '<path d="M15.6 15.4c1.5 1.5 1.1 3.6 3.6 4.6-1 .6-2.2.8-3.3.4-1.6-.5-2.5-2-2.1-3.5"/>',
     penPencil: '<path d="M19 2.6 21.4 5 10.6 15.8 3.6 20.4 8.2 13.4Z"/>' +
                '<path d="M17 4.6 19.4 7M8.2 13.4 10.6 15.8"/>',
     /* Der Schutzleiter: das Erdungszeichen, wie im Schaltplan. */
