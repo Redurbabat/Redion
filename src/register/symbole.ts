@@ -324,6 +324,17 @@ Register.symbole = (() => {
               '<path d="m4.4 17.4 4.8-4.6a1.6 1.6 0 0 1 2.2 0l3 2.9M14.6 14l1.6-1.5a1.6 1.6 0 0 1 2.2 0l1.4 1.3"/>',
 
     /* --- Werkzeuge der Seitenleiste --------------------------------------- */
+    /* ══ DER KALENDER MIT TAGEN (E589) ═══════════════════════════════════
+       Er stand bis zum 15. September 2026 gezeichnet in `index.html`, am
+       Reiter „Termine" — die einzige der neunzehn Abschriften dort, für
+       die es im Register kein Gegenstück gab. `calendar` daneben hat
+       einunddreissig Verwender und trägt KEINE Tagespunkte; ihn zu ändern
+       wäre eine Änderung an einunddreissig Stellen für eine.
+       Also ein eigener Eintrag, und damit steht jede Zeichnung des
+       Projekts im Register (§8). */
+    calendarDays: '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/>' +
+                  '<path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/>' +
+                  '<path d="M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01"/>',
     calendar:  '<rect x="3.2" y="5" width="17.6" height="16" rx="2.6"/>' +
                '<path d="M3.2 10h17.6M8.2 3v4M15.8 3v4"/>',
     bolt:      '<path d="M13.2 2.5 4.5 13.4h6.2l-.9 8.1 8.7-10.9h-6.2z"/>',

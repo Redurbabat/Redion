@@ -188,8 +188,15 @@ body[data-small="1"] .b-text .ct{font-size:14px}
    ein SVG ist ein Ersatzelement und stünde sonst auf der Grundlinie, also
    zwei Punkte zu tief neben dem Text. */
 #ai .ai-quick button > svg,
+/* DIE ZEICHEN STEHEN SEIT E589 IN EINER HÜLLE (`<span data-sym>`), nicht
+   mehr roh im Knopf. Ein Kindwähler auf `svg` griffe danach ins Leere —
+   also beide Schreibweisen, damit auch ein Zeichen, das noch roh dasteht,
+   auf der Linie bleibt. */
 #ai .ai-leiste button > svg,
 #ai .ai-head b > svg,
-#ai .ai-head .icon-btn > svg{ vertical-align:-3px }
+#ai .ai-head .icon-btn > svg,
+#ai .ai-leiste button > [data-sym],
+#ai .ai-head b > [data-sym],
+#ai .ai-head .icon-btn > [data-sym]{ vertical-align:-3px }
 #ai .ai-head b{ display:inline-flex; align-items:center; gap:6px }
 #ai .ai-head b > svg{ vertical-align:0 }

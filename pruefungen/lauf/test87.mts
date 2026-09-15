@@ -876,5 +876,48 @@ p('… und der Textfilter lässt echte Bildschirmtexte stehen',
   holenText.includes('GitHub') && holenText.length > 400,
   'sonst wäre die stash-Regel trivial erfüllt');
 
+/* ══ NUR EIN KATALOG FÜR ZEICHEN (§8, E589) ═══════════════════════════════
+   §8: „Keine doppelten Kataloge einführen. Ein zweiter Katalog für dasselbe
+   läuft mit dem ersten auseinander, und niemand merkt, welcher gilt."
+
+   GEMESSEN am 15. September 2026 standen in `index.html` **19 gezeichnete
+   `<svg>` mit 35 Pfaden**, und 22 dieser Pfade standen WÖRTLICH auch in
+   `src/register/symbole.ts`. Wer dort ein Zeichen verbessert, lässt die
+   Abschrift in `index.html` alt stehen — und sieht es nie, weil beide
+   nebeneinander richtig aussehen.
+
+   E200 hat den Weg längst gebaut: `index.html` schreibt nur die STELLE
+   (`<span data-sym="search">`), und `schale.ts` füllt sie als Allererstes in
+   `start()`. Siebenunddreissig Stellen taten das schon; neunzehn nicht.
+
+   DIE ZUSICHERUNG GILT DEM GEZEICHNETEN ZEICHEN, nicht jedem `<svg>`. Ein
+   `<svg>` mit einem `<use>`, ein Platzhalter ohne Inhalt oder ein Bild mit
+   `xlink` wäre etwas anderes; was hier verboten ist, sind Pfade — `path`,
+   `rect`, `circle`, `ellipse`, `polygon`, `polyline`, `line`. */
+console.log('\n— Nur ein Katalog für Zeichen —');
+{
+  const html = _lies(_dazu(WURZEL, 'index.html'), 'utf8');
+  const zeichner = /<(path|rect|circle|ellipse|polygon|polyline|line)\b/g;
+  const gefunden = html.match(zeichner) || [];
+  p('index.html zeichnet kein einziges Zeichen selbst',
+    gefunden.length === 0, `${gefunden.length} Zeichenbefehle gefunden`);
+  /* GEGENPROBE, damit die Regel nicht trivial ist (§55.2): der Ausdruck muss
+     an einem erfundenen Schnipsel ANSCHLAGEN, und die Stellen mit
+     `data-sym` müssen es wirklich geben. */
+  p('Die Regel kann rot werden: ein erfundener Pfad schlägt an',
+    /<(path|rect|circle|ellipse|polygon|polyline|line)\b/.test('<svg><path d="M0 0"/></svg>'));
+  const stellen = (html.match(/data-sym="/g) || []).length;
+  p('… und die Stellen gibt es wirklich', stellen >= 40, `${stellen} mal data-sym`);
+  /* UND JEDER NAME, DER DORT STEHT, MUSS IM REGISTER SEIN. Eine leere
+     Stelle sieht aus wie ein fehlendes Zeichen und ist kein Fehler, den
+     jemand meldet — `fuelle` schreibt nur `console.warn`. */
+  const register = _lies(_dazu(WURZEL, 'src/register/symbole.ts'), 'utf8');
+  const namen = [...html.matchAll(/data-sym="([A-Za-z0-9]+)"/g)].map(m => m[1]);
+  const fehlen = [...new Set(namen)].filter(n =>
+    !new RegExp('^\\s{4}' + n + ':', 'm').test(register));
+  p('Jeder Zeichenname aus index.html steht im Register',
+    fehlen.length === 0, fehlen.join(', '));
+}
+
 console.log(`\n  Suite 52 — Quelltext: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

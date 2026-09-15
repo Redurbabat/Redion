@@ -1111,3 +1111,67 @@ Dem Papier bleiben zwischen oberer Leiste (bis 155) und Dock (ab 432)
 **277 px**.
 
 **Angesehen:** `bilder/studio-tastatur.png`.
+
+---
+
+## 28. Zwei Kataloge für Zeichen
+
+**Wann:** 15. September 2026 · **Womit:** Auszählung über `index.html` und
+`src/register/symbole.ts` · **Warum:** §8.
+
+```txt
+<svg> in index.html                  19
+Pfade darin (d="…")                  35, davon 30 verschieden
+davon wörtlich auch in symbole.ts    22
+Zeichenbefehle gesamt                48   (path/rect/circle/ellipse/…)
+Stellen mit data-sym                 37
+Registereinträge                    127
+```
+
+Wo die neunzehn standen: fünf in der Reiterleiste unten, zwei in der
+Textleiste am Telefon, zwei im Kopf des KI-Felds, sieben in der
+Werkzeugzeile des KI-Felds, drei in der Eingabezeile.
+
+**Wie viele auf einen Registereintrag passten:** 15 von 19 wörtlich.
+Die vier übrigen waren zweite Zeichnungen für dieselbe Sache:
+
+| Reiter | öffnet | Seitenleiste | Reiter |
+|---|---|---|---|
+| Dokumente | `Bibliothek.oeffne()` | `library` | zwei Felder |
+| Heute | `lernen('heute')` | `home` | Haus ohne Tür |
+| Mehr | Mehr-Blatt | `dots` | gefüllte Punkte |
+| Termine | — | (keine) | Kalender mit Tagen |
+
+`calendar` im Register hat **31** Verwender, `dots` 12, `library` 12,
+`learn` 8, `home` 1.
+
+**Nachher:**
+
+```txt
+<svg> in index.html                   0
+Zeichenbefehle                        0
+Stellen mit data-sym                 56   (in der laufenden App 85)
+davon leer geblieben                  0
+```
+
+**Angesehen:** `bilder/nav-vergleich.png` (alt gegen Register bei 19 und
+40 px), `bilder/nav-nachher.png`, `bilder/ki-nachher.png`.
+
+---
+
+## 29. Drei rote Läufe, die keiner von diesem Bogen sind
+
+**Wann:** 15. September 2026, beim Regressionslauf zu E589 · **Womit:** ein
+`git worktree` auf `b7d194e7` (dem Stand VOR der Änderung).
+
+| Lauf | vorher | nachher | also |
+|---|---|---|---|
+| `test34` | Zeitgrenze an `#ai-faehig` | dieselbe Zeitgrenze | nicht von hier |
+| `test37` | `❌ Nach dem Ändern zeigen wieder alle dasselbe · ist="Redion,🦊"` | derselbe Satz | nicht von hier |
+| `test362` | Decke 246/77/56/153/14/12, gezählt 266/83/63/168/15/14 | dieselben Zahlen | nicht von hier |
+
+`test362` zählt rohe Pixelzahlen in den Stilblättern gegen ein Verzeichnis
+(`pruefungen/marken-decke.json`), das zuletzt bei **E509/E510** nachgetragen
+wurde. Seither sind zwanzig rohe `16px` dazugekommen, ohne dass jemand die
+Zahl nachgezogen hat — dieselbe Bauform wie `js-bestand.json`, und dieselbe
+Nachlässigkeit wie bei der Prüflaufzahl in `CLAUDE.md` (§30).

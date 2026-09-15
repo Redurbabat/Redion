@@ -789,3 +789,46 @@ und die sind mit E574 weg.
 `test509`, `test510`, `test515`, `test522`, `test523`.
 
 **Die Gesamtsuite ist NICHT als grün behauptet.**
+
+---
+
+## Nachtrag — Abschnitt 7 C 1, der Rest (15. September 2026)
+
+„Einheitliches SVG-Register nutzen; keine zweite lose Icon-Sammlung neben
+ihm." E586 hat die vier Studioknöpfe geholt. Danach blieb der grössere Teil:
+
+```txt
+<svg> in index.html                  19
+Pfade darin                          35, davon 30 verschieden
+wörtlich auch in symbole.ts          22
+Stellen mit data-sym (vorher)        37
+```
+
+Fünfzehn der neunzehn passten wörtlich auf einen Registereintrag. Die vier
+übrigen waren **zweite Zeichnungen für dieselbe Sache** — der Reiter
+„Dokumente" zeigte zwei Felder, während die Seitenleiste für denselben Weg
+(`Bibliothek.oeffne()`) ein offenes Buch zeigt; dasselbe bei „Heute" und
+„Mehr". Nur „Termine" bekam einen eigenen Eintrag `calendarDays`, weil
+`calendar` einunddreissig andere Verwender hat (E589).
+
+Nachher: **0 Zeichenbefehle in `index.html`, 85 Stellen, keine leer.**
+`test87` hält es.
+
+### Drei rote Läufe, die nicht von hier kommen
+
+Mit einem `git worktree` auf dem Stand VOR der Änderung gegengeprüft:
+`test34` (Zeitgrenze an `#ai-faehig`), `test37` („Nach dem Ändern zeigen
+wieder alle dasselbe") und `test362` (das Verzeichnis der rohen Pixelzahlen
+steht auf dem Stand von E509/E510) waren **alle drei schon vorher rot**.
+Sie sind der nächste Bogen, nicht dieser (§46: „ein fertiger, grüner Bogen
+darf landen").
+
+### Prüfstand dieses Bogens
+
+`test87` (4 Zusicherungen neu, 2 rot gesehen), `test105`, `test109`,
+`test40`, `test54`, `test67`, `test114`, `test126`, `test128`, `test141`,
+`test156`, `test247`, `test264`, `test265`, `test274`, `test385`,
+`test387`, `test392`, `test431`, `test436`, `test480`, `test484`,
+`test492`, `test524` — alle grün.
+
+**Die Gesamtsuite ist NICHT als grün behauptet.**

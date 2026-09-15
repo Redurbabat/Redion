@@ -2468,9 +2468,16 @@ body[data-small="1"] .b-text .ct{font-size:14px}
    ein SVG ist ein Ersatzelement und stünde sonst auf der Grundlinie, also
    zwei Punkte zu tief neben dem Text. */
 #ai .ai-quick button > svg,
+/* DIE ZEICHEN STEHEN SEIT E589 IN EINER HÜLLE (`<span data-sym>`), nicht
+   mehr roh im Knopf. Ein Kindwähler auf `svg` griffe danach ins Leere —
+   also beide Schreibweisen, damit auch ein Zeichen, das noch roh dasteht,
+   auf der Linie bleibt. */
 #ai .ai-leiste button > svg,
 #ai .ai-head b > svg,
-#ai .ai-head .icon-btn > svg{ vertical-align:-3px }
+#ai .ai-head .icon-btn > svg,
+#ai .ai-leiste button > [data-sym],
+#ai .ai-head b > [data-sym],
+#ai .ai-head .icon-btn > [data-sym]{ vertical-align:-3px }
 #ai .ai-head b{ display:inline-flex; align-items:center; gap:6px }
 #ai .ai-head b > svg{ vertical-align:0 }
 
@@ -22292,11 +22299,11 @@ body[data-dokument="an"] .document-studio .blatt-werk{
        genommen: Vorleseprogramme sollen die fünf Reiter finden, nicht
        sechs Dinge. -->
   <i id="ho-pille" class="stumm" aria-hidden="true"></i>
-  <button id="hl-dok" role="tab" title="Dokumente"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="7" height="15" rx="1.6"/><rect x="13.5" y="4.5" width="7" height="9" rx="1.6"/><path d="M13.5 17h7"/></svg></span><b>Dokumente</b></button>
-  <button id="hl-start" role="tab" title="Heute"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg></span><b>Heute</b></button>
-  <button id="hl-lernen" role="tab" title="Lernen"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4 2.5 8.5 12 13l9.5-4.5z"/><path d="M6.5 10.8v4.4c0 .5 2.5 2.3 5.5 2.3s5.5-1.8 5.5-2.3v-4.4"/><path d="M21.5 8.5v5"/></svg></span><b>Lernen</b></button>
-  <button id="hl-bespr" role="tab" title="Termine"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/><path d="M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01"/></svg></span><b>Termine</b></button>
-  <button id="hl-mehr" role="tab" title="Mehr"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></span><b>Mehr</b><i class="hl-punkt" hidden></i></button>
+  <button id="hl-dok" role="tab" title="Dokumente"><span class="ho-z" data-sym="library" data-sym-groesse="19"></span><b>Dokumente</b></button>
+  <button id="hl-start" role="tab" title="Heute"><span class="ho-z" data-sym="home" data-sym-groesse="19"></span><b>Heute</b></button>
+  <button id="hl-lernen" role="tab" title="Lernen"><span class="ho-z" data-sym="learn" data-sym-groesse="19"></span><b>Lernen</b></button>
+  <button id="hl-bespr" role="tab" title="Termine"><span class="ho-z" data-sym="calendarDays" data-sym-groesse="19"></span><b>Termine</b></button>
+  <button id="hl-mehr" role="tab" title="Mehr"><span class="ho-z" data-sym="dots" data-sym-groesse="19"></span><b>Mehr</b><i class="hl-punkt" hidden></i></button>
 </nav>
 
 <!-- =========================================================================
@@ -22327,8 +22334,8 @@ body[data-dokument="an"] .document-studio .blatt-werk{
   <button data-t="kursiv" title="Kursiv"><i>I</i></button>
   <button data-t="unter"  title="Unterstrichen"><u>U</u></button>
   <button data-t="code"   title="Code">&lt;/&gt;</button>
-  <button data-t="link"   title="Link"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 13.7a4.2 4.2 0 0 0 6.1.35l2.6-2.6a4.2 4.2 0 0 0-5.94-5.94l-1.5 1.5"/><path d="M13.7 10.3a4.2 4.2 0 0 0-6.1-.35L5 12.55a4.2 4.2 0 0 0 5.94 5.94l1.5-1.5"/></svg></button>
-  <button data-t="todo"   title="Aufgabe"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.8" y="3.8" width="16.4" height="16.4" rx="3.2"/><path d="m8.2 12.2 2.6 2.6 5-5.4"/></svg></button>
+  <button data-t="link"   title="Link"><span data-sym="link" data-sym-groesse="17"></span></button>
+  <button data-t="todo"   title="Aufgabe"><span data-sym="boxChecked" data-sym-groesse="17"></span></button>
   <button data-t="raus"   title="Ausrücken">⇤</button>
   <button data-t="rein"   title="Einrücken">⇥</button>
   <button data-t="fertig" title="Tastatur schliessen">⌄</button>
@@ -22434,8 +22441,8 @@ body[data-dokument="an"] .document-studio .blatt-werk{
 <aside id="ai">
   <div class="ai-head">
     <b>Redion KI</b>
-    <button class="icon-btn" id="ai-verlauf" title="Unterhaltungen" aria-label="Unterhaltungen"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 12a8.4 8.4 0 1 0 2.5-6"/><path d="M3.4 3.6v4.2h4.2"/><path d="M12 7.6V12l3 1.8"/></svg></button>
-    <button class="icon-btn" id="ai-clear" title="Neuer Chat" aria-label="Neuer Chat"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="icon-btn" id="ai-verlauf" title="Unterhaltungen" aria-label="Unterhaltungen"><span data-sym="history" data-sym-groesse="16"></span></button>
+    <button class="icon-btn" id="ai-clear" title="Neuer Chat" aria-label="Neuer Chat"><span data-sym="plus" data-sym-groesse="16"></span></button>
   </div>
 
   <div id="chat"></div>
@@ -22453,13 +22460,13 @@ body[data-dokument="an"] .document-studio .blatt-werk{
       <button data-p="Formuliere den Text dieser Seite klarer, ohne den Sinn zu ändern.">Umschreiben</button>
       <button data-p="Übersetze diese Seite ins Englische.">Übersetzen</button>
       <button data-p="Mache aus dieser Seite Karteikarten. Je Zeile: Frage :: Antwort.">Karteikarten</button>
-      <button id="ai-schreiben" title="Schreiben und bearbeiten — 16 Befehle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 3.9a2.1 2.1 0 0 1 3 3L8.9 17.5l-4 1 1-4z"/><path d="M14.6 5.8l3 3"/></svg> Schreiben</button>
-      <button id="ai-agent" title="Mehrstufige Aufgaben"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.6" y="7.6" width="16.8" height="12.8" rx="3.2"/><path d="M12 3.2v4.4"/><circle cx="12" cy="2.6" r="1.2"/><path d="M8.6 12.6v1.6M15.4 12.6v1.6M9.4 17h5.2"/></svg> Agent</button>
-      <button id="ai-meeting" title="Aufnehmen, mitschreiben, auswerten"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.8" width="6" height="11.4" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"/><path d="M12 18v3.2M8.8 21.2h6.4"/></svg> Besprechung</button>
-      <button id="ai-wiki" title="Kostenlos, ohne Schlüssel"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.4 4.6A1.6 1.6 0 0 1 6 3h5.2v18H6a1.6 1.6 0 0 1-1.6-1.6z"/><path d="M12.8 3H18a1.6 1.6 0 0 1 1.6 1.6v14.8A1.6 1.6 0 0 1 18 21h-5.2z"/></svg> Nachschlagen</button>
-      <button id="ai-db" title="Die KI legt eine echte Datenbank an"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.8" rx="7.6" ry="2.9"/><path d="M4.4 5.8v12.4c0 1.6 3.4 2.9 7.6 2.9s7.6-1.3 7.6-2.9V5.8"/><path d="M4.4 12c0 1.6 3.4 2.9 7.6 2.9s7.6-1.3 7.6-2.9"/></svg> Datenbank bauen</button>
-      <button id="ai-seite" title="Die KI baut den Seitenaufbau"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.2h7.4L19 8.8v12a1.6 1.6 0 0 1-1.6 1.6H6a1.6 1.6 0 0 1-1.6-1.6V4.8" /><path d="M13.4 3.2v5.6H19"/><path d="M8 13h8M8 17h5"/></svg> Seite aufbauen</button>
-      <button id="ai-log" title="Was die KI gebaut hat"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 12a8.4 8.4 0 1 0 2.5-6"/><path d="M3.4 3.6v4.2h4.2"/><path d="M12 7.6V12l3 1.8"/></svg> Protokoll</button>
+      <button id="ai-schreiben" title="Schreiben und bearbeiten — 16 Befehle"><span data-sym="pencil" data-sym-groesse="15"></span> Schreiben</button>
+      <button id="ai-agent" title="Mehrstufige Aufgaben"><span data-sym="robot" data-sym-groesse="15"></span> Agent</button>
+      <button id="ai-meeting" title="Aufnehmen, mitschreiben, auswerten"><span data-sym="mic" data-sym-groesse="15"></span> Besprechung</button>
+      <button id="ai-wiki" title="Kostenlos, ohne Schlüssel"><span data-sym="book" data-sym-groesse="15"></span> Nachschlagen</button>
+      <button id="ai-db" title="Die KI legt eine echte Datenbank an"><span data-sym="database" data-sym-groesse="15"></span> Datenbank bauen</button>
+      <button id="ai-seite" title="Die KI baut den Seitenaufbau"><span data-sym="page" data-sym-groesse="15"></span> Seite aufbauen</button>
+      <button id="ai-log" title="Was die KI gebaut hat"><span data-sym="history" data-sym-groesse="15"></span> Protokoll</button>
     </div>
     <div class="ai-tools-settings" aria-label="Weitere KI-Einstellungen"></div>
     </div>
@@ -22469,14 +22476,14 @@ body[data-dokument="an"] .document-studio .blatt-werk{
     <!-- Eingabeaktionen unten, nach Redurs Bildvorlage. -->
     <div class="ai-leiste">
       <button id="ai-plus" title="Anhängen und erwähnen" aria-label="Anhängen und erwähnen">＋</button>
-      <button id="ai-quellen" title="Quellen, Modus und Personalisierung"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.5 14.6a1.5 1.5 0 0 0 .3 1.7l.06.05a1.8 1.8 0 1 1-2.6 2.6l-.05-.06a1.5 1.5 0 0 0-1.7-.3 1.5 1.5 0 0 0-.9 1.37v.14a1.8 1.8 0 1 1-3.6 0v-.07a1.5 1.5 0 0 0-1-1.37 1.5 1.5 0 0 0-1.7.3l-.05.06a1.8 1.8 0 1 1-2.6-2.6l.06-.05a1.5 1.5 0 0 0 .3-1.7 1.5 1.5 0 0 0-1.37-.9H4.5a1.8 1.8 0 1 1 0-3.6h.07a1.5 1.5 0 0 0 1.37-1 1.5 1.5 0 0 0-.3-1.7l-.06-.05a1.8 1.8 0 1 1 2.6-2.6l.05.06a1.5 1.5 0 0 0 1.7.3h.07a1.5 1.5 0 0 0 .9-1.37V4.5a1.8 1.8 0 1 1 3.6 0v.07a1.5 1.5 0 0 0 .9 1.37 1.5 1.5 0 0 0 1.7-.3l.05-.06a1.8 1.8 0 1 1 2.6 2.6l-.06.05a1.5 1.5 0 0 0-.3 1.7v.07a1.5 1.5 0 0 0 1.37.9h.14a1.8 1.8 0 1 1 0 3.6h-.07a1.5 1.5 0 0 0-1.37.9z"/></svg></button>
-      <button id="ai-faehig" title="Fähigkeiten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.4 3.2h2.1a1.9 1.9 0 0 1 1.9 1.9 1.4 1.4 0 0 0 2.8 0 1.9 1.9 0 0 1 1.9-1.9h1.5v4.2a1.4 1.4 0 0 0 0 2.8v4.2h-4.2a1.4 1.4 0 0 1-2.8 0H8.4v-4.2a1.4 1.4 0 0 0 0-2.8z"/></svg></button>
+      <button id="ai-quellen" title="Quellen, Modus und Personalisierung"><span data-sym="settings" data-sym-groesse="16"></span></button>
+      <button id="ai-faehig" title="Fähigkeiten"><span data-sym="puzzle" data-sym-groesse="16"></span></button>
       <button id="ai-modus" title="Standard darf ändern, Fragen nur antworten (Shift + Tab)">Standard</button>
       <span class="ai-luecke"></span>
       <button class="model-btn" title="Modell wechseln" aria-label="KI-Modell wechseln">
         <span class="dot" aria-hidden="true"></span><span class="model-name">Suche …</span><span aria-hidden="true">⌄</span>
       </button>
-      <button id="ai-diktat" title="Diktieren" aria-label="Diktieren"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.8" width="6" height="11.4" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"/><path d="M12 18v3.2M8.8 21.2h6.4"/></svg></button>
+      <button id="ai-diktat" title="Diktieren" aria-label="Diktieren"><span data-sym="mic" data-sym-groesse="16"></span></button>
       <button id="ai-senden" title="Senden" aria-label="Nachricht senden">↑</button>
     </div>
     </div>
@@ -24114,7 +24121,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1095, inhalt: 'a4a9eb52822b8b53', gebaut: '2026-09-15T13:46:11.141Z' };
+const Stand = { fassung: 1096, inhalt: 'a7def6918cc56c61', gebaut: '2026-09-15T13:51:54.397Z' };
 window.Stand = Stand;
 
 </script>
@@ -35812,6 +35819,17 @@ Register.symbole = (() => {
             '<circle cx="8.6" cy="9.6" r="1.7"/>' +
             '<path d="m4.4 17.4 4.8-4.6a1.6 1.6 0 0 1 2.2 0l3 2.9M14.6 14l1.6-1.5a1.6 1.6 0 0 1 2.2 0l1.4 1.3"/>',
         /* --- Werkzeuge der Seitenleiste --------------------------------------- */
+        /* ══ DER KALENDER MIT TAGEN (E589) ═══════════════════════════════════
+           Er stand bis zum 15. September 2026 gezeichnet in `index.html`, am
+           Reiter „Termine" — die einzige der neunzehn Abschriften dort, für
+           die es im Register kein Gegenstück gab. `calendar` daneben hat
+           einunddreissig Verwender und trägt KEINE Tagespunkte; ihn zu ändern
+           wäre eine Änderung an einunddreissig Stellen für eine.
+           Also ein eigener Eintrag, und damit steht jede Zeichnung des
+           Projekts im Register (§8). */
+        calendarDays: '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/>' +
+            '<path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/>' +
+            '<path d="M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01"/>',
         calendar: '<rect x="3.2" y="5" width="17.6" height="16" rx="2.6"/>' +
             '<path d="M3.2 10h17.6M8.2 3v4M15.8 3v4"/>',
         bolt: '<path d="M13.2 2.5 4.5 13.4h6.2l-.9 8.1 8.7-10.9h-6.2z"/>',

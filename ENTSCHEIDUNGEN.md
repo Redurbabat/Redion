@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-568 Entscheidungen, E1 bis E588 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+569 Entscheidungen, E1 bis E589 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -632,6 +632,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E586** — Vier Knöpfe des Studios trugen Schriftzeichen statt gezeichneter; das Register hatte alle vier längst
 * **E587** — Pinsel und Bleistift lagen in derselben Richtung; ein zweites Mass misst jetzt die Hauptachse statt der Bildpunkte
 * **E588** — Bei offener Bildschirmtastatur lagen Dock und Verlaufskapsel ganz dahinter; gemessen ohne echtes Gerät
+* **E589** — `index.html` zeichnete neunzehn Zeichen selbst, vier davon anders als die Seitenleiste für denselben Weg
 
 ---
 
@@ -47700,3 +47701,74 @@ Rechnung, die jede Schreib-App auf dem Telefon macht.
 
 **Prüflauf:** `test524 §15`, fünf Zusicherungen, zwei rot gesehen.
 Angesehen: `bilder/studio-tastatur.png`.
+
+---
+
+## E589 — Neunzehn Zeichnungen, die nicht im Register standen
+
+**15. September 2026.** §8: „Keine doppelten Kataloge einführen. Ein zweiter
+Katalog für dasselbe läuft mit dem ersten auseinander, und niemand merkt,
+welcher gilt."
+
+Gemessen standen in `index.html` **19 gezeichnete `<svg>` mit 35 Pfaden**,
+und **22 dieser Pfade standen wörtlich auch in `src/register/symbole.ts`**.
+Wer dort ein Zeichen verbessert, lässt die Abschrift alt stehen — und sieht
+es nie, weil beide nebeneinander richtig aussehen. Genau das ist mit
+`inkLaser` und `inkText` in E577 passiert, nur eine Datei weiter.
+
+E200 hatte den Weg längst gebaut: `index.html` schreibt nur die STELLE
+(`<span data-sym="search">`), und `schale.ts` füllt sie als Allererstes in
+`start()` — „ganz vorn, weil sonst zwischen Aufbau und Füllung ein Bild mit
+leeren Kästchen stünde". **Siebenunddreissig Stellen taten das schon;
+neunzehn nicht.**
+
+### Fünfzehn waren wörtlich dasselbe
+
+`link`, `boxChecked`, `history` (zweimal), `plus`, `pencil`, `robot`, `mic`
+(zweimal), `book`, `database`, `page`, `settings`, `puzzle`, `learn`. Für
+diese fünfzehn ist der Umzug beweisbar ohne Bildänderung: die Pfade waren
+Zeichen für Zeichen gleich.
+
+### Vier waren zweite Zeichnungen für dieselbe Sache
+
+Und die sind der eigentliche Fund — nicht die Abschrift, sondern die
+Uneinigkeit:
+
+| Reiter unten | öffnet | Seitenleiste zeigt | Reiter zeigte |
+|---|---|---|---|
+| Dokumente | `Bibliothek.oeffne()` | `library` (offenes Buch) | zwei Felder |
+| Heute | `Produktwelten.lernen('heute')` | `home` (Haus mit Tür) | Haus ohne Tür |
+| Mehr | das Mehr-Blatt | `dots` (drei Ringe) | drei gefüllte Punkte |
+
+Derselbe Ort, zwei Bilder — und niemand konnte es sehen, weil die beiden nie
+nebeneinander stehen. Die drei Reiter nehmen jetzt das Zeichen, das die
+Seitenleiste für denselben Weg schon benutzt.
+
+**Der vierte** ist „Termine": sein Kalender trägt Tagespunkte, der
+`calendar` des Registers nicht — und `calendar` hat **einunddreissig**
+Verwender. Ihn zu ändern wäre eine Änderung an einunddreissig Stellen für
+eine. Also ein eigener Eintrag `calendarDays`, wörtlich die Zeichnung, die
+vorher in `index.html` stand. Kein Bild ändert sich, und sie steht im
+Register.
+
+### Was dabei nicht kaputtgehen durfte
+
+`#ai .ai-leiste button > svg` ist ein **Kind**-Wähler. Nach dem Umzug sitzt
+das `<svg>` in einer Hülle und wäre ein Enkel — die Zeile hätte still
+aufgehört zu wirken (derselbe Fehler wie in E585). Beide Schreibweisen
+stehen jetzt da.
+
+Gemessen nach dem Umbau: **85 Stellen mit `data-sym`, null davon leer.**
+
+### Der Wächter
+
+`test87` prüft jetzt, dass `index.html` **kein einziges** `path`, `rect`,
+`circle`, `ellipse`, `polygon`, `polyline` oder `line` enthält, dass es die
+Stellen wirklich gibt, und dass jeder dort genannte Name im Register steht —
+denn eine leere Stelle sieht aus wie ein fehlendes Zeichen, und `fuelle`
+schreibt darüber nur ein `console.warn`.
+
+**Prüflauf:** `test87`, vier Zusicherungen, zwei rot gesehen (48
+Zeichenbefehle, 37 statt 40 Stellen). Angesehen: `bilder/nav-vergleich.png`
+(alt gegen neu bei 19 und 40 px), `bilder/nav-nachher.png`,
+`bilder/ki-nachher.png`.
