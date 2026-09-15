@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-582 Entscheidungen, E1 bis E603 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+583 Entscheidungen, E1 bis E604 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -644,8 +644,9 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E598** — Die Stilregel „textarea 16px !important" hat das Schreibfeld am Telefon umgerechnet; die Antwort ist nicht, sie auszunehmen
 * **E599** — Der Feinschliff am freien Text: die Leiste wirkt auf den Kasten, in den gerade getippt wird, und zwei Tipps auf leeres Papier heissen „hier schreiben"
 * **E601** — Das Auge sass auf dem Ordnerreiter, und der Deckel war ein Farbklotz — beides am Bild gemessen und nachgezogen (**zurückgenommen, siehe E602**)
-* **E602** — Nicht das Auge weicht, sondern der Reiter: E601 zurückgenommen, zwei Zeilen geblieben
-* **E603** — Die Ordnerkarte verwandelt sich nicht mehr unter der Maus: vier Wirkungen beim Darüberfahren zurückgenommen
+* **E602** — Nicht das Auge weicht, sondern der Reiter: E601 zurückgenommen, zwei Zeilen geblieben (**auch zurückgenommen, siehe E604**)
+* **E603** — Die Ordnerkarte verwandelt sich nicht mehr unter der Maus: vier Wirkungen beim Darüberfahren zurückgenommen (**zurückgenommen, siehe E604**)
+* **E604** — Redur hat die Geschichte der Kachel gesehen und sich entschieden: die main-Fassung, mit Bewegung und mit Auge
 
 ---
 
@@ -48704,6 +48705,11 @@ Darüberfahren, ganze Bibliothek, Telefon.
 
 ## E602 — Nicht das Auge weicht, sondern der Reiter
 
+> **ZURÜCKGENOMMEN AM 15. September 2026 — siehe E604.** Redur hat die
+> vier Stände der Kachel nebeneinander gesehen und die main-Fassung
+> gewählt: mit Bewegung, mit Auge, unverändert. Der Text bleibt als
+> Messung stehen; gebaut ist davon nichts mehr.
+
 **15. September 2026.** E601 hat einen echten Fund gehabt und die falsche
 Antwort darauf gegeben. Der Verlauf, weil er die Lehre trägt:
 
@@ -48761,6 +48767,11 @@ ist, kostet eine Frage weniger als zwei Rücknahmen.
 ---
 
 ## E603 — Die Ordnerkarte verwandelt sich nicht mehr unter der Maus
+
+> **ZURÜCKGENOMMEN AM 15. September 2026 — siehe E604.** Redur hat die
+> vier Stände der Kachel nebeneinander gesehen und die main-Fassung
+> gewählt: mit Bewegung, mit Auge, unverändert. Der Text bleibt als
+> Messung stehen; gebaut ist davon nichts mehr.
 
 **15. September 2026.** Redur, nachdem drei Anläufe an seiner Beschwerde
 vorbeigegangen waren:
@@ -48830,3 +48841,65 @@ Verstärkung genommen. Er war die eigentliche Aussage.
 neu), `test494` (153 Zusicherungen zur Bewegungsfamilie) und `test87` —
 grün. Bilder angesehen: Ruhezustand und Maus darüber sehen jetzt gleich aus,
 bis auf den Schatten.
+
+---
+
+## E604 — Die Kachel bleibt, wie sie in `main` steht
+
+**15. September 2026.** Nach drei Anläufen (E601, E602, E603) habe ich Redur
+die Geschichte der Ordnerkachel als Bilder nebeneinandergelegt:
+
+```txt
+ 5. September  E462        flacher Ordner, Reiter oben links, kein Auge
+ 6. September  E463        das Auge kommt — und sitzt von Anfang an auf dem Reiter
+10. September  „Website"   Deckel mit Tiefe, ein Blatt, das Auffächern
+12./13. Sept.  „Stand"     die Pille „7 Unterseiten" und die Namensstreifen
+```
+
+Seine Antwort:
+
+> „Ich will mit bewegung, mit augen, und die main version"
+
+### Was das heisst
+
+**E601, E602 und E603 sind alle drei zurückgenommen.** Die Ordnerkachel steht
+wieder Zeichen für Zeichen so da wie in `main`:
+
+```txt
+Reiter                left:4%             (E602 hatte max(27%, 52px))
+Blick-Knopf           z-index:2           (E602 hatte 4)
+Kippen beim Zeigen    wieder in Kraft     (E603 hatte es ausgebaut)
+Blätter fächern auf   wieder in Kraft     (E603 hatte es ausgebaut)
+Namensstreifen        wieder in Kraft     (E603 hatte es ausgebaut)
+Auge zwinkert         wieder in Kraft     (E603 hatte es ausgebaut)
+```
+
+Nachgeprüft wurde nicht nach Gefühl: jede der sechs Regeln steht im Lauf
+gegen `git show origin/main:` — sechsmal „gleich wie main". Auch
+`test493` kommt wieder aus `main`, samt seiner Zeile „Tastaturfokus öffnet
+die Ordnerklappe".
+
+### Was davon bleibt, und es ist das Wertvollste
+
+Die **Messungen**. Sie stehen in E601 bis E603 und in `messungen.md §41`,
+und sie sind richtig, auch wenn nichts davon gebaut ist:
+
+- Der Blick-Knopf (44 × 44 bei `left:4px`) und der Reiter (`left:4%`, 44 %
+  breit) liegen 40 px lang übereinander.
+- Beim Darüberfahren passieren vier Dinge auf einmal.
+- Die Zahl „7" steht zweimal auf derselben Kachel.
+
+Sollte das je wieder zur Sprache kommen, muss niemand neu messen.
+
+### Die Lehre
+
+Vier Bögen für eine Kachel, und der einzige, der getroffen hat, war der, in
+dem ich **gefragt** habe. Der Unterschied zwischen E601 und E604 ist nicht
+Können, sondern Reihenfolge: erst zeigen, was es gibt, dann bauen, was
+gewählt wurde.
+
+Und die zweite Hälfte davon: **die Geschichte zeigen ist billig.** Vier
+Bilder aus vier Commits kosten zwei Minuten mit `git worktree`; drei
+Rücknahmen kosten einen Abend. Wer vor einer Gestaltungsfrage steht, für die
+es einen früheren Stand gibt, legt die Stände nebeneinander, bevor er den
+ersten Strich macht (§55.3, um eine Zeile erweitert).

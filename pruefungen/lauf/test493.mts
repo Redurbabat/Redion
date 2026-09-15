@@ -60,32 +60,7 @@ try {
         papers: el.querySelectorAll('.rmo-folder-sheet').length };
     });
     check(`${width}: Ordner besitzt 3D-Tiefe und fünf Blätter`, folderStyle.depth === 'preserve-3d' && folderStyle.papers === 5, folderStyle);
-    /* ══ NACHGEZOGEN AM 15. SEPTEMBER 2026 (E603) ═══════════════════════════
-       Hier stand: „Tastaturfokus öffnet die Ordnerklappe". Das galt, solange
-       das Darüberfahren mit der Maus sie auch öffnete — die Zeile hielt die
-       PARITÄT zwischen Maus und Tastatur (§38).
-
-       Redur: „die animationen — wenn ich mit maus dort gehe, das zeigt mir
-       etwas anderes." Die Klappe öffnet jetzt für NIEMANDEN mehr beim
-       blossen Ansehen, weder mit der Maus noch mit dem Tabulator. Die
-       Parität ist damit gewahrt — nur andersherum, und genau das hält diese
-       Zeile jetzt fest.
-
-       Hineinsehen bleibt für beide da: der Blick-Knopf ist ein `<button>`
-       und mit dem Tabulator erreichbar, und „Blick hinein" steht im
-       ⌄-Menü (E459). Das prüft die Zeile darunter. */
-    check(`${width}: Der Fokus allein öffnet die Ordnerklappe NICHT mehr (E603)`,
-      folderStyle.flap === 'none', folderStyle);
-    const blickErreichbar = await page.evaluate(() => {
-      const knopf = document.querySelector<HTMLElement>('.bib-zelle .bib-blick');
-      if (!knopf) return null;
-      knopf.focus();
-      return { tag: knopf.tagName, fokus: document.activeElement === knopf,
-        label: knopf.getAttribute('aria-label') || '' };
-    });
-    check(`${width}: … und der Blick-Knopf bleibt mit der Tastatur erreichbar`,
-      !!blickErreichbar && blickErreichbar.tag === 'BUTTON' && blickErreichbar.fokus
-      && /Blick/.test(blickErreichbar.label), blickErreichbar);
+    check(`${width}: Tastaturfokus öffnet die Ordnerklappe`, folderStyle.flap !== 'none', folderStyle);
     await page.screenshot({ path: path.join(root, `bilder/motion-folder-v2-${width}.png`) });
     await page.evaluate(() => Produktwelten.lernen('lernen'));
     await page.locator('.lw-metrik strong').first().waitFor();

@@ -8357,32 +8357,7 @@ body .bib-deckel[data-art="ordner"] .bib-deckel-blatt::before {
   box-shadow: inset 0 1px 0 #ffffff50, 0 6px 12px #0002;
   transition: transform .5s cubic-bezier(.22,1,.36,1);
 }
-/* ══ DIE KARTE VERWANDELT SICH NICHT MEHR UNTER DER MAUS (E603) ══════════
-   REDUR, 15. September 2026: „die animationen — wenn ich mit maus dort
-   gehe, das zeigt mir etwas anderes."
-
-   Genau das tat sie. Beim blossen Darüberfahren passierten VIER Dinge auf
-   einmal: der Deckel kippte in die Tiefe, die fünf Blätter fächerten auf
-   und drehten sich, drei Namensstreifen legten sich darüber, und das Auge
-   zwinkerte und schielte zur Seite. Wer mit der Maus über das Regal fährt,
-   um irgendwo anders hinzukommen, löst das an jeder Kachel aus, die er
-   streift.
-
-   HINEINSEHEN IST EINE FRAGE, KEIN VERSEHEN. Wer wissen will, was im Fach
-   liegt, tippt auf das Auge oder wählt „Blick hinein" im ⌄-Menü (E459) —
-   dann kommt die Ordnerkarte, und die zeigt ALLES, nicht drei Namen. Der
-   Weg ist besser als der Zufall, und er war schon vorher da.
-
-   WAS BLEIBT: der Schatten des Deckels beim Darüberfahren
-   (`.bib-deckel:hover .bib-deckel-blatt`, `bausteine.css`) und das
-   Zusammendrücken beim Antippen. Das sagt „du bist hier" und „ich habe
-   deinen Klick" — es zeigt nichts anderes.
-
-   Zurückgenommen sind hier die vier Regeln, die verwandelten. Die Marken
-   selbst (`.rmo-folder-sheet`, `.rmo-folder-preview`) bleiben stehen, wie
-   sie sind — sie zeichnen den Ruhezustand. */
-/* ZURÜCKGENOMMEN (E603): der Deckel kippte beim Darüberfahren in die Tiefe.
-   body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt::before { transform: rotateX(-32deg) translateZ(6px); } */
+body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt::before { transform: rotateX(-32deg) translateZ(6px); }
 .rmo-folder-stack { position: absolute; inset: 24% 14% 20%; z-index: 2; pointer-events: none; }
 .rmo-folder-sheet {
   position: absolute; inset: 0; border-radius: 5px;
@@ -8396,10 +8371,9 @@ body .bib-deckel[data-art="ordner"] .bib-deckel-blatt::before {
 .rmo-folder-sheet:nth-child(4) { background: linear-gradient(150deg, #e4f8f2, #b8dacf); }
 .rmo-folder-sheet:nth-child(5) { background: linear-gradient(150deg, #f6e8f2, #d8bfda); }
 .rmo-folder-sheet::after { content: ''; position: absolute; inset: 15px 12px; background: repeating-linear-gradient(transparent 0 8px, #50426322 8px 9px); }
-/* ZURÜCKGENOMMEN (E603): die fünf Blätter fächerten beim Darüberfahren auf.
 .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .rmo-folder-sheet {
   transform: translateY(calc(-12px - var(--rmo-index) * 5px)) rotate(calc((var(--rmo-index) - 2) * 7deg));
-} */
+}
 /* 2 — Drei Einstellungsregler, auf einem echten Einstellungsweg. */
 .rmo-sliders { display: inline-flex; flex-direction: column; justify-content: center; gap: 4px; width: 17px; margin-right: 5px; vertical-align: middle; }
 .rmo-sliders i { display: block; position: relative; width: 16px; height: 1px; background: currentColor; }
@@ -8802,11 +8776,8 @@ body .bib-deckel .rmo-folder-preview { position:absolute; inset:17% 12% auto; z-
   opacity:0; transform:translateY(5px); transition:opacity .25s, transform .3s;
   background:var(--bg-card); border-radius:3px; padding:2px 4px; }
 .rmo-folder-preview > b { width:fit-content; padding:3px 5px; border-radius:6px; background:var(--bg-card); }
-/* ZURÜCKGENOMMEN (E603): drei Namensstreifen legten sich über die Blätter.
-   Die Namen stehen weiter in der Ordnerkarte, die das Auge öffnet (E459).
-[data-rmo~="folder"]:is(:hover,:focus-visible,:active) .rmo-folder-preview > span { opacity:1; transform:none; } */
-/* ZURÜCKGENOMMEN (E603): dasselbe Kippen beim Antippen.
-body [data-rmo~="folder"]:active .bib-deckel-blatt::before { transform:rotateX(-32deg) translateZ(6px); } */
+[data-rmo~="folder"]:is(:hover,:focus-visible,:active) .rmo-folder-preview > span { opacity:1; transform:none; }
+body [data-rmo~="folder"]:active .bib-deckel-blatt::before { transform:rotateX(-32deg) translateZ(6px); }
 [data-rmo~="sliders"]:is(:hover,:focus-visible,:active) .rmo-sliders i::after { transform:translateX(4px); }
 [data-rmo~="sliders"]:is(:hover,:focus-visible,:active) .rmo-sliders i:nth-child(2)::after { transform:translateX(-4px); }
 [data-rmo~="sliders"] > :is(svg,[data-sym]), #btn-ai > [data-sym] { display:none; }
@@ -12327,26 +12298,8 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   content:""; position:absolute; inset:16% 4% 8%;
   border-radius:4px 12px 12px 12px; background:var(--accent); opacity:.85
 }
-/* ══ DER REITER GEHT DEM AUGE AUS DEM WEG (E602) ═════════════════════════
-   REDUR, 15. September 2026: „du hast hier die augen wo links oben bei date
-   war" — und dann, als ich das Auge wegnehmen wollte: „nein die auge nicht
-   weg". Es bleibt also oben links und bleibt immer sichtbar; was weicht,
-   ist der Reiter.
-
-   GEMESSEN: der Blick-Knopf ist `left:4px top:4px` und 44 × 44 gross, deckt
-   also x 4…48 px ab. Auf einer 200-px-Kachel sind 48 px genau 24 %. Der
-   Reiter stand bei `left:4%` (8 px) und war 44 % breit — die beiden lagen
-   40 px lang übereinander, und das ist es, was auf dem Bild wie ein
-   Aufkleber auf dem Reiter aussah.
-
-   `max(27%, 52px)` und nicht bloss `27%`: der Knopf misst 44 PIXEL, nicht
-   44 Prozent. Auf der 158-px-Kachel des Telefons wären 27 % nur 43 px, und
-   die beiden lägen wieder aufeinander. Der Pixelwert deckelt das.
-
-   ALLES ANDERE AM DECKEL BLEIBT, WIE ES WAR — das ist Redurs Vorgabe
-   („so wie vorher wie es war"), und E601 ist deshalb zurückgenommen. */
 .bib-deckel[data-art="ordner"] .bib-deckel-blatt::after{
-  content:""; position:absolute; left:max(27%, 52px); top:8%; width:44%; height:13%;
+  content:""; position:absolute; left:4%; top:8%; width:44%; height:13%;
   border-radius:4px 8px 0 0; background:var(--accent); opacity:.85
 }
 
@@ -20128,11 +20081,8 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 
 /* ---- Das Auge am Ordnerdeckel (.bib-blick) ------------------------------ */
 .bib-zelle{ position:relative; display:block; min-width:0 }
-/* `z-index:4` statt 2 (E602): der Vorderdeckel des Ordners liegt auf 3
-   (`motion.css`) und schnitt dem Auge sonst die untere Kante ab. „Immer
-   sichtbar" heisst ganz sichtbar. */
 .bib-blick{
-  position:absolute; left:4px; top:4px; z-index:4;
+  position:absolute; left:4px; top:4px; z-index:2;
   width:var(--touch-min); height:var(--touch-min); padding:0; border:0;
   background:none; cursor:pointer; display:grid; place-items:center;
   border-radius:10px; color:var(--text)
@@ -20147,12 +20097,8 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   position:absolute; left:50%; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px;
   border-radius:50%; background:#2b2b2b; transition:transform .3s ease
 }
-/* ZURÜCKGENOMMEN (E603): das Auge schielte zur Seite und zwinkerte, sobald
-   die Maus es streifte. Redur: „wenn ich mit maus dort gehe, das zeigt mir
-   etwas anderes." Der Knopf zeigt jetzt nur noch seinen Grund — das sagt
-   „du bist hier" und sonst nichts.
 .bib-blick:hover .bib-blick-auge b, .bib-blick:focus-visible .bib-blick-auge b{ transform:translateX(-5px) }
-.bib-blick:hover .bib-blick-auge{ animation:bib-blick-zwinkern 1.2s ease } */
+.bib-blick:hover .bib-blick-auge{ animation:bib-blick-zwinkern 1.2s ease }
 @keyframes bib-blick-zwinkern{ 0%,100%{ transform:none } 12%{ transform:scaleY(.1) } 24%{ transform:none } }
 
 /* ---- Wenn das System um Ruhe bittet ------------------------------------- */
@@ -24243,7 +24189,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1128, inhalt: '882840f3341645e1', gebaut: '2026-09-15T20:36:59.473Z' };
+const Stand = { fassung: 1129, inhalt: '70506543bace825f', gebaut: '2026-09-15T20:47:15.675Z' };
 window.Stand = Stand;
 
 </script>
