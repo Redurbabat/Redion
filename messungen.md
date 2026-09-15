@@ -1078,3 +1078,36 @@ Obwohl dort mit `formLine` das längste Zeichen des Projekts steht.
 
 **Angesehen:** `bilder/stifte-lupe.png` — alle sechs bei 16, 24 und 48 px,
 heute und in beiden ernsthaften Fassungen.
+
+---
+
+## 27. Was die Bildschirmtastatur im Studio verdeckt
+
+**Wann:** 15. September 2026 · **Womit:** eigenes Messskript bei 390 × 844;
+simuliert wird genau das Signal, das die App selbst benutzt —
+`--visual-bottom`, `--visual-height`, `--vh` und `body.tastatur-offen` aus
+`kern/einstellung/app.ts` · **Warum:** Plan 7 B 8.
+
+Tastatur 336 px (iPhone hochkant), sichtbar also bis 508:
+
+| | oben–unten | verdeckt ohne | verdeckt mit |
+|---|---|---|---|
+| Dock (`.blatt-reihe`) | 768–830 | 0 px | **322 px** |
+| Zurück/Vor | 708–760 | 0 px | **252 px** |
+| obere Werkzeugleiste | 102–155 | 0 px | 0 px |
+| Suchzeile | 102–159 | 0 px | 0 px |
+
+Beide unteren Schwebenden lagen **ganz** dahinter.
+
+**Nachher** (E588), dieselbe Messung:
+
+```txt
+Dock     432–494   verdeckt 0      (war 768–830)
+Kapsel   372–424   verdeckt 0      (war 708–760)
+ohne Tastatur wieder 768–830 — auf den Pixel wie vorher
+```
+
+Dem Papier bleiben zwischen oberer Leiste (bis 155) und Dock (ab 432)
+**277 px**.
+
+**Angesehen:** `bilder/studio-tastatur.png`.

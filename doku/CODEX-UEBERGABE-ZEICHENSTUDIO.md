@@ -745,3 +745,47 @@ E587 zu) und **B 9** („Alle Optionen" bleibt mit Grund vollständig).
 `test510`, `test515`, `test522`, `test523`.
 
 **Die Gesamtsuite ist NICHT als grün behauptet.**
+
+---
+
+## Nachtrag — Abschnitt 7 B 8, Tastatur (15. September 2026)
+
+**Der Satz „braucht ein echtes Gerät" war falsch.** `kern/einstellung/app.ts`
+liest `visualViewport` und schreibt daraus `--visual-bottom`,
+`--visual-height`, `--vh` und `body.tastatur-offen`. Diese vier Signale sind
+alles, was ein Stilblatt von der Tastatur je erfährt — wer sie setzt, hat sie.
+
+Gemessen bei 390 × 844 mit 336 px Tastatur (sichtbar bis 508):
+
+```txt
+              vorher              nachher
+Dock          768–830, 322 verdeckt    432–494, 0 verdeckt
+Zurück/Vor    708–760, 252 verdeckt    372–424, 0 verdeckt
+obere Leiste  102–155,   0 verdeckt    unverändert
+Suchzeile     102–159,   0 verdeckt    unverändert
+```
+
+Beide unteren Schwebenden lagen **ganz** dahinter: wer in eine Haftnotiz
+oder ein Textfeld tippte, verlor die Stiftleiste und „Zurück" dazu. `bottom`
+stand auf dem Rand des LAYOUT-Ausschnitts, und der schrumpft nicht, wenn die
+Tastatur aufgeht — deshalb gibt es `visualViewport` überhaupt. `.overlay`,
+die Bottom Sheets, `.finder` und das Tabellenfeld rechneten seit je damit;
+das Studio war der eine Ort, der es nicht tat (E588).
+
+Ohne Tastatur bleibt alles auf den Pixel, wo es war — der Gegenfall steht
+ausdrücklich im Prüflauf.
+
+### Damit ist 7 B ganz zu, bis auf B 9
+
+B 9 („Alle Optionen") bleibt mit Grund vollständig: `test177`, `test228`,
+`test437` und `test515` erreichen über diesen Weg Dinge, die sonst nirgends
+stehen. Was dort wirklich störte, waren die neuen kontextfremden Paletten,
+und die sind mit E574 weg.
+
+### Prüfstand dieses Bogens
+
+`test524` 105/105 (5 Zusicherungen neu, 2 rot gesehen). Grün dazu:
+`test285`, `test437`, `test438`, `test461`, `test506`, `test507`, `test508`,
+`test509`, `test510`, `test515`, `test522`, `test523`.
+
+**Die Gesamtsuite ist NICHT als grün behauptet.**

@@ -948,6 +948,86 @@ try {
   await page.setViewportSize({ width: 1440, height: 960 });
   await page.waitForTimeout(600);
 
+  /* ══ §15 DIE TASTATUR SCHIEBT DAS DOCK NICHT WEG (E588) ══════════════════
+     Plan 7 B 8, zweiter Teil: „Kleine Höhe und Bildschirmtastatur
+     berücksichtigen."
+
+     WIE MAN DAS OHNE ECHTES GERÄT MISST: gar nicht anders als die App es
+     selbst tut. `kern/einstellung/app.ts` liest `window.visualViewport` und
+     schreibt daraus drei Werte an die Wurzel — `--visual-bottom`,
+     `--visual-height`, `--vh` — und setzt `body.tastatur-offen`, sobald
+     unten mehr als 80 px fehlen. Diese vier Signale sind ALLES, was das
+     Stilblatt von der Tastatur je erfährt. Wer sie setzt, hat die Tastatur
+     für jede Regel, die es gibt.
+
+     GEMESSEN am 15. September 2026, 390 × 844, Tastatur 336 px (iPhone
+     hochkant), sichtbar also bis 508:
+
+       ohne Tastatur   Dock 768–830   verdeckt   0 px
+                       Kapsel 708–760 verdeckt   0 px
+       mit Tastatur    Dock 768–830   verdeckt 322 px   ← ganz dahinter
+                       Kapsel 708–760 verdeckt 252 px   ← ganz dahinter
+
+     Die obere Leiste und die Suchzeile stehen weiter richtig — sie sind
+     oben. Wer aber auf dem Telefon in eine Haftnotiz oder ein Textfeld
+     tippt, verliert damit die ganze Stiftleiste UND „Zurück".
+
+     `.overlay` und die Bottom Sheets rechnen seit je mit `--visual-bottom`.
+     Das Studio war der eine Ort, der es nicht tat. */
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(650);
+  const tastatur = async (px: number) => {
+    await page.evaluate(`(() => {
+      const w = document.documentElement;
+      if (${px} > 0) {
+        w.style.setProperty('--visual-bottom', '${px}px');
+        w.style.setProperty('--visual-height', (window.innerHeight - ${px}) + 'px');
+        w.style.setProperty('--vh', ((window.innerHeight - ${px}) * 0.01) + 'px');
+        document.body.classList.add('tastatur-offen');
+      } else {
+        w.style.removeProperty('--visual-bottom');
+        w.style.removeProperty('--visual-height');
+        w.style.removeProperty('--vh');
+        document.body.classList.remove('tastatur-offen');
+      }
+    })()`);
+    await page.waitForTimeout(400);
+    return await page.evaluate(`(() => {
+      const unten = parseFloat(getComputedStyle(document.documentElement)
+        .getPropertyValue('--visual-bottom')) || 0;
+      const bis = window.innerHeight - unten;
+      const mess = (sel) => { const n = document.querySelector(sel);
+        if (!n || !n.getClientRects().length) return { da: false, verdeckt: 0, unten: 0 };
+        const r = n.getBoundingClientRect();
+        return { da: true, unten: Math.round(r.bottom),
+                 verdeckt: Math.max(0, Math.round(r.bottom - bis)) }; };
+      return { bis, dock: mess('.document-stage[data-aktiv] .blatt-reihe'),
+               kapsel: mess('.document-ink-history'),
+               oben: mess('.document-drawingbar') };
+    })()`) as { bis: number;
+                dock: { da: boolean; verdeckt: number; unten: number };
+                kapsel: { da: boolean; verdeckt: number; unten: number };
+                oben: { da: boolean; verdeckt: number; unten: number } };
+  };
+  const ohne = await tastatur(0);
+  check(`Ohne Tastatur steht das Dock am unteren Rand (${ohne.dock.unten} von ${ohne.bis})`,
+    ohne.dock.da && ohne.dock.verdeckt === 0 && ohne.dock.unten > ohne.bis - 60);
+  const mit = await tastatur(336);
+  check(`Mit Tastatur bleibt das Dock sichtbar (verdeckt ${mit.dock.verdeckt} px, war 322)`,
+    mit.dock.da && mit.dock.verdeckt === 0);
+  check(`… und „Zurück/Vor" auch (verdeckt ${mit.kapsel.verdeckt} px, war 252)`,
+    mit.kapsel.da && mit.kapsel.verdeckt === 0);
+  check('… und die obere Leiste stand ohnehin richtig',
+    mit.oben.da && mit.oben.verdeckt === 0);
+  /* DER GEGENFALL, damit nicht einfach immer angehoben wird: ohne Tastatur
+     muss das Dock wieder ganz unten stehen. Eine Leiste, die dauerhaft
+     336 px über dem Rand schwebt, wäre die schlechtere Hälfte des Tauschs. */
+  const wieder = await tastatur(0);
+  check(`Und nach dem Schliessen steht es wieder unten (${wieder.dock.unten})`,
+    Math.abs(wieder.dock.unten - ohne.dock.unten) <= 2);
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await page.waitForTimeout(600);
+
   await werkzeug('stift');
   check('Keine Laufzeitfehler', errors.length === 0);
   mkdirSync(resolve(root, 'bilder'), { recursive: true });

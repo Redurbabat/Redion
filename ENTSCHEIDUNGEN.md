@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-567 Entscheidungen, E1 bis E587 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+568 Entscheidungen, E1 bis E588 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -631,6 +631,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E585** — Drei von vier Grössenangaben im Stilblatt hatten keine Wirkung: bemasst war die Hülle, gross war das SVG darin
 * **E586** — Vier Knöpfe des Studios trugen Schriftzeichen statt gezeichneter; das Register hatte alle vier längst
 * **E587** — Pinsel und Bleistift lagen in derselben Richtung; ein zweites Mass misst jetzt die Hauptachse statt der Bildpunkte
+* **E588** — Bei offener Bildschirmtastatur lagen Dock und Verlaufskapsel ganz dahinter; gemessen ohne echtes Gerät
 
 ---
 
@@ -47626,3 +47627,76 @@ wirkungslos, hier eine gewollte.
 `test524 §14` (fünf Zusicherungen, eine in der Gegenprobe rot gesehen).
 Angesehen: `bilder/stifte-lupe.png` (alle sechs bei 16, 24 und 48 px,
 beide Fassungen), `bilder/stiftdock-390.png`, `-768`, `-1024`, `-1440`.
+
+---
+
+## E588 — Die Tastatur schiebt das Dock nicht weg
+
+**15. September 2026.** Plan 7 B 8, zweiter Teil: „Kleine Höhe und
+Bildschirmtastatur berücksichtigen."
+
+### Wie man das ohne echtes Gerät misst
+
+Gar nicht anders, als die App es selbst tut. `kern/einstellung/app.ts` liest
+`window.visualViewport` und schreibt daraus drei Werte an die Wurzel —
+`--visual-bottom`, `--visual-height`, `--vh` — und setzt
+`body.tastatur-offen`, sobald unten mehr als 80 px fehlen.
+
+**Diese vier Signale sind alles, was das Stilblatt von der Tastatur je
+erfährt.** Wer sie setzt, hat die Tastatur für jede Regel, die es gibt. Der
+Prüflauf setzt sie und misst; ein echtes Gerät hätte dieselben Zahlen
+geliefert.
+
+Damit ist der Satz „braucht ein echtes Gerät", der hier im Nachtrag zu E585
+stand, **falsch gewesen**. Er stimmt für den Finger, für die Trägheit des
+Rollens, für die Schriftglättung — nicht für die Frage, wo eine Leiste
+liegt.
+
+### Was gemessen wurde
+
+390 × 844, Tastatur 336 px (iPhone hochkant), sichtbar also bis 508:
+
+| | ohne Tastatur | mit Tastatur |
+|---|---|---|
+| Dock | 768–830, verdeckt 0 | 768–830, **verdeckt 322** |
+| Zurück/Vor | 708–760, verdeckt 0 | 708–760, **verdeckt 252** |
+| obere Leiste | 102–155, verdeckt 0 | 102–155, verdeckt 0 |
+| Suchzeile | 102–159, verdeckt 0 | 102–159, verdeckt 0 |
+
+Beide unteren Schwebenden lagen **ganz** hinter der Tastatur. Wer auf dem
+Telefon in eine Haftnotiz oder ein Textfeld tippt, verlor damit die ganze
+Stiftleiste und „Zurück" dazu.
+
+### Warum
+
+```css
+bottom: max(14px, env(safe-area-inset-bottom))
+```
+
+Das ist der untere Rand des **Layout**-Ausschnitts, und der schrumpft nicht,
+wenn die Tastatur aufgeht — das ist der Punkt, den `visualViewport`
+überhaupt erst nötig macht. `.overlay`, die Bottom Sheets, `.finder` und das
+Tabellenfeld rechnen seit je mit `--visual-bottom`. **Das Studio war der
+eine Ort, der es nicht tat.**
+
+### Die Änderung
+
+```css
+bottom: calc(var(--visual-bottom, 0px) + max(14px, env(safe-area-inset-bottom)))
+```
+
+und dieselbe Rechnung für die Verlaufskapsel am Telefon (`+ 84px`). Ohne
+Tastatur ist `--visual-bottom` gleich 0, und alles bleibt, wo es war —
+gemessen: 830 vorher, 830 nachher, und nach dem Schliessen wieder 830.
+
+**Der Gegenfall steht ausdrücklich im Prüflauf.** Eine Leiste, die dauerhaft
+336 px über dem Rand schwebt, wäre die schlechtere Hälfte des Tauschs.
+
+### Was bleibt
+
+Bei 844 px Höhe und 336 px Tastatur bleiben dem Papier 277 px zwischen
+oberer Leiste und Dock. Das ist knapp und richtig so: es ist dieselbe
+Rechnung, die jede Schreib-App auf dem Telefon macht.
+
+**Prüflauf:** `test524 §15`, fünf Zusicherungen, zwei rot gesehen.
+Angesehen: `bilder/studio-tastatur.png`.
