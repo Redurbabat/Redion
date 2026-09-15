@@ -2910,6 +2910,49 @@ a.bl:hover{color:var(--text)}
   flex-direction:column; align-items:center; justify-content:center; padding:6vh 8vw;
 }
 .praesi .folie{width:100%; max-width:1100px; font-size:22px; line-height:1.6}
+
+/* ══ FOLIENÜBERGÄNGE (E600) ═══════════════════════════════════════════════
+   PowerPoint kennt über vierzig; Redion kann sechs und sagt bei allem
+   anderen, was es wirklich war (`uebergangLesen` in `dateien/einlesen.ts`).
+   Hier stehen nur die sechs.
+
+   GESETZT WIRD IM TS, NICHT HIER: `werkzeuge.ts` schreibt beim Neuzeichnen
+   einer Folie `data-uebergang`, `data-uebergang-richtung` und `--ueb-dauer`
+   an `.folie`. Weil `zeichne()` die Folie jedes Mal NEU baut, startet die
+   Animation von selbst — es braucht keinen Neustart-Griff.
+
+   KEIN ÜBERGANG BEI EINEM SCHRITT INNERHALB DER FOLIE. Ein Klick, der eine
+   Abdeckung auflöst, zeichnet nicht neu (`deckelAnwenden`), und er soll
+   auch nichts bewegen. Dieselbe Trennung macht PowerPoint.
+
+   Die Richtung ist die des ANKOMMENDEN Blattes: `dir="l"` heisst in OOXML
+   „es wandert nach links", die neue Folie kommt also von RECHTS herein. */
+.praesi .folie[data-uebergang]{
+  animation-duration:var(--ueb-dauer,700ms);
+  animation-timing-function:cubic-bezier(.22,1,.36,1);
+  animation-fill-mode:both
+}
+.praesi .folie[data-uebergang-richtung="l"]{ --ueb-x:100%;  --ueb-y:0;     --ueb-c:0 0 0 100% }
+.praesi .folie[data-uebergang-richtung="r"]{ --ueb-x:-100%; --ueb-y:0;     --ueb-c:0 100% 0 0 }
+.praesi .folie[data-uebergang-richtung="u"]{ --ueb-x:0;     --ueb-y:100%;  --ueb-c:100% 0 0 0 }
+.praesi .folie[data-uebergang-richtung="d"]{ --ueb-x:0;     --ueb-y:-100%; --ueb-c:0 0 100% 0 }
+.praesi .folie[data-uebergang="blenden"]{ animation-name:ueb-blenden }
+@keyframes ueb-blenden{ from{ opacity:0 } }
+.praesi .folie[data-uebergang="zoom"]{ animation-name:ueb-zoom }
+@keyframes ueb-zoom{ from{ opacity:0; transform:scale(.82) } }
+/* `decken` und `schieben` sehen aus der Sicht der ANKOMMENDEN Folie gleich
+   aus — der Unterschied liegt bei der alten, und die ist schon weg. Das ist
+   eine Näherung, und sie steht als solche in L175. */
+.praesi .folie[data-uebergang="schieben"],
+.praesi .folie[data-uebergang="decken"]{ animation-name:ueb-schieben }
+@keyframes ueb-schieben{ from{ transform:translate(var(--ueb-x,100%),var(--ueb-y,0)) } }
+.praesi .folie[data-uebergang="wischen"]{ animation-name:ueb-wischen }
+@keyframes ueb-wischen{ from{ clip-path:inset(var(--ueb-c,0 0 0 100%)) } }
+@media (prefers-reduced-motion:reduce){
+  /* Das TS setzt die Marke dann gar nicht erst; diese Regel ist der Gürtel
+     zum Hosenträger — falls eine Folie sie doch trägt, bewegt sie sich nicht. */
+  .praesi .folie[data-uebergang]{ animation:none }
+}
 .praesi h1{font-size:52px; margin-bottom:26px; letter-spacing:-1px}
 .praesi h2{font-size:34px; margin:16px 0 10px}
 .praesi h3{font-size:26px; margin:12px 0 6px}
@@ -8307,25 +8350,15 @@ body.nh-zieht .nh-regal{ touch-action:none }
 /* 1 — Ordner: fünf Blätter fächern sich beim Anfassen auf. */
 .bib-deckel[data-art="ordner"] { perspective: 900px; }
 .bib-deckel[data-art="ordner"] .bib-deckel-blatt { transform-style: preserve-3d; transition: transform .45s cubic-bezier(.2,.8,.2,1); }
-/* ══ EIN ORDNER, KEIN KLOTZ (E601) ═══════════════════════════════════════
-   GEMESSEN an einem Bild des Deckels, 200 × 267 px: der Vorderdeckel lief
-   von 34 % bis 92 % der Höhe — 155 px einfarbige Fläche — und darüber lugten
-   von den fünf Blättern noch 10 % hervor. Was man sah, war ein Farbblock mit
-   einem Fähnchen oben links, und Redur hat genau das gesagt.
-
-   Ein Ordner wird zum Ordner durch das VERHÄLTNIS: der Deckel deckt gut die
-   untere Hälfte, die Blätter stehen sichtbar darüber hinaus, der Reiter ist
-   schmal. Die Zahlen unten sind an drei Kachelbreiten nachgesehen, nicht
-   geraten (102 px am Telefon, 200 px im Regal, 288 px in Redurs Vorlage). */
 body .bib-deckel[data-art="ordner"] .bib-deckel-blatt::before {
-  inset: 52% 7% 16%; z-index: 3; opacity: 1;
+  inset: 34% 4% 8%; z-index: 3; opacity: 1;
   transform-origin: 50% 100%;
   background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 85%, white), var(--accent));
   box-shadow: inset 0 1px 0 #ffffff50, 0 6px 12px #0002;
   transition: transform .5s cubic-bezier(.22,1,.36,1);
 }
 body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt::before { transform: rotateX(-32deg) translateZ(6px); }
-.rmo-folder-stack { position: absolute; inset: 22% 16% 38%; z-index: 2; pointer-events: none; }
+.rmo-folder-stack { position: absolute; inset: 24% 14% 20%; z-index: 2; pointer-events: none; }
 .rmo-folder-sheet {
   position: absolute; inset: 0; border-radius: 5px;
   background: linear-gradient(150deg, #f5f1fc, #cfc9e5);
@@ -8737,27 +8770,12 @@ body .rmo-ticket .ru-drucker-status { padding: 11px 12px 15px; }
 }
 
 /* Vollständiger Katalog: keine globalen Demo-Regeln, keine neuen Schriften. */
-/* UNTER DEN REITER, NICHT DARAUF (E601): bei `17 %` stand die schwarze
-   Pille „7 Unterseiten" halb auf dem Reiter und halb daneben. */
-body .bib-deckel .rmo-folder-preview { position:absolute; inset:30% 12% auto; z-index:5; display:grid; gap:3px;
+body .bib-deckel .rmo-folder-preview { position:absolute; inset:17% 12% auto; z-index:4; display:grid; gap:3px;
   color:var(--text); font-size:10px; text-align:left; pointer-events:none; }
-/* SO BREIT WIE DER NAME, NICHT SO BREIT WIE DIE KARTE (E601). Auf dem Bild
-   lagen drei schwarze Balken quer über den aufgefächerten Blättern und
-   deckten genau das zu, was die Vorschau zeigen soll. */
 .rmo-folder-preview > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  width:fit-content; max-width:100%;
   opacity:0; transform:translateY(5px); transition:opacity .25s, transform .3s;
   background:var(--bg-card); border-radius:3px; padding:2px 4px; }
-/* DIE ZAHL STAND ZWEIMAL DA (E601). „7 Unterseiten" schwebte als schwarze
-   Pille über dem Reiter, und zwei Zeilen tiefer stand „7 Sachen · gerade
-   eben" — dieselbe Auskunft, einmal als Aufkleber. Der Aufkleber gehört zur
-   VORSCHAU und erscheint mit ihr: beim Darüberfahren, zusammen mit den
-   Namen, die er beschriftet. Im Leerlauf steht die Zahl dort, wo sie
-   hingehört — in der Zeile unter dem Deckel. */
-.rmo-folder-preview > b { width:fit-content; padding:3px 5px; border-radius:6px;
-  background:var(--bg-card);
-  opacity:0; transition:opacity .25s var(--ease,ease); }
-[data-rmo~="folder"]:is(:hover,:focus-visible,:active) .rmo-folder-preview > b { opacity:1; }
+.rmo-folder-preview > b { width:fit-content; padding:3px 5px; border-radius:6px; background:var(--bg-card); }
 [data-rmo~="folder"]:is(:hover,:focus-visible,:active) .rmo-folder-preview > span { opacity:1; transform:none; }
 body [data-rmo~="folder"]:active .bib-deckel-blatt::before { transform:rotateX(-32deg) translateZ(6px); }
 [data-rmo~="sliders"]:is(:hover,:focus-visible,:active) .rmo-sliders i::after { transform:translateX(4px); }
@@ -12280,11 +12298,26 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   content:""; position:absolute; inset:16% 4% 8%;
   border-radius:4px 12px 12px 12px; background:var(--accent); opacity:.85
 }
-/* Der Reiter: schmaler und flacher als bisher (E601) — er soll ein Reiter
-   sein und nicht ein zweiter Deckel. Und er beginnt weiter unten, damit
-   oben links Platz für den Blick-Knopf bleibt. */
+/* ══ DER REITER GEHT DEM AUGE AUS DEM WEG (E602) ═════════════════════════
+   REDUR, 15. September 2026: „du hast hier die augen wo links oben bei date
+   war" — und dann, als ich das Auge wegnehmen wollte: „nein die auge nicht
+   weg". Es bleibt also oben links und bleibt immer sichtbar; was weicht,
+   ist der Reiter.
+
+   GEMESSEN: der Blick-Knopf ist `left:4px top:4px` und 44 × 44 gross, deckt
+   also x 4…48 px ab. Auf einer 200-px-Kachel sind 48 px genau 24 %. Der
+   Reiter stand bei `left:4%` (8 px) und war 44 % breit — die beiden lagen
+   40 px lang übereinander, und das ist es, was auf dem Bild wie ein
+   Aufkleber auf dem Reiter aussah.
+
+   `max(27%, 52px)` und nicht bloss `27%`: der Knopf misst 44 PIXEL, nicht
+   44 Prozent. Auf der 158-px-Kachel des Telefons wären 27 % nur 43 px, und
+   die beiden lägen wieder aufeinander. Der Pixelwert deckelt das.
+
+   ALLES ANDERE AM DECKEL BLEIBT, WIE ES WAR — das ist Redurs Vorgabe
+   („so wie vorher wie es war"), und E601 ist deshalb zurückgenommen. */
 .bib-deckel[data-art="ordner"] .bib-deckel-blatt::after{
-  content:""; position:absolute; left:7%; top:20%; width:34%; height:8%;
+  content:""; position:absolute; left:max(27%, 52px); top:8%; width:44%; height:13%;
   border-radius:4px 8px 0 0; background:var(--accent); opacity:.85
 }
 
@@ -20066,50 +20099,26 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 
 /* ---- Das Auge am Ordnerdeckel (.bib-blick) ------------------------------ */
 .bib-zelle{ position:relative; display:block; min-width:0 }
-/* ══ ES SITZT NICHT MEHR AUF DEM REITER (E601) ═══════════════════════════
-   REDUR, 15. September 2026, zu einem Bild des Ordnerdeckels: „du hast hier
-   die augen wo links oben bei date war". Er hat recht, und das Bild zeigt es
-   sofort: `left:4px; top:4px` ist genau die Ecke, in der der Ordnerreiter
-   sitzt (`.bib-deckel-blatt::after`, `left:4%; top:8%`). Ein weisser
-   Augapfel von 26 × 15 px klebte damit dauerhaft auf jedem Fach — und auf
-   einer Kachel mit Bild auf dessen Titel.
-
-   ZWEI ÄNDERUNGEN, UND BEIDE HABEN EINEN GRUND:
-
-   1. ES ERSCHEINT ERST BEIM DARÜBERFAHREN. Ein Weg, den es zweimal gibt
-      (das ⌄-Menü trägt „Blick hinein" seit E459), braucht keinen
-      dauerhaften Aufkleber. `:focus-within` hält ihn für die Tastatur
-      erreichbar (§38) — wer mit Tabulator auf den Deckel geht, sieht ihn.
-
-   2. AM TELEFON GIBT ES IHN NICHT. Dort gibt es kein Darüberfahren, und ein
-      dauerhaftes Auge auf einer 102-px-Kachel wäre wieder der Aufkleber.
-      Der Weg bleibt: das ⌄-Menü. Das ist der ausdrückliche Nebenweg nach
-      §37 — mit geschriebenem Grund, nicht stillschweigend.
-
-   Der Knopf bleibt 44 × 44 (§37 Hauptweg), auch wenn das Auge kleiner
-   gezeichnet ist: die Trefferfläche ist die Grösse, nicht das Bild. */
+/* `z-index:4` statt 2 (E602): der Vorderdeckel des Ordners liegt auf 3
+   (`motion.css`) und schnitt dem Auge sonst die untere Kante ab. „Immer
+   sichtbar" heisst ganz sichtbar. */
 .bib-blick{
   position:absolute; left:4px; top:4px; z-index:4;
   width:var(--touch-min); height:var(--touch-min); padding:0; border:0;
   background:none; cursor:pointer; display:grid; place-items:center;
-  border-radius:10px; color:var(--text);
-  opacity:0; transition:opacity var(--motion-fast,.16s) var(--ease,ease)
+  border-radius:10px; color:var(--text)
 }
-.bib-zelle:hover .bib-blick,
-.bib-zelle:focus-within .bib-blick,
-.bib-blick:focus-visible{ opacity:1 }
-@media (hover:none){ .bib-blick{ display:none } }
 .bib-blick:hover, .bib-blick:focus-visible{ background:rgba(0,0,0,.08) }
 .bib-blick-auge{
-  position:relative; display:block; width:20px; height:12px; box-sizing:border-box;
-  border-radius:50%; background:#fff; border:1.5px solid #2b2b2b;
+  position:relative; display:block; width:26px; height:15px; box-sizing:border-box;
+  border-radius:50%; background:#fff; border:2px solid #2b2b2b;
   box-shadow:0 1px 3px rgba(0,0,0,.25)
 }
 .bib-blick-auge b{
-  position:absolute; left:50%; top:50%; width:7px; height:7px; margin:-3.5px 0 0 -3.5px;
+  position:absolute; left:50%; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px;
   border-radius:50%; background:#2b2b2b; transition:transform .3s ease
 }
-.bib-blick:hover .bib-blick-auge b, .bib-blick:focus-visible .bib-blick-auge b{ transform:translateX(-4px) }
+.bib-blick:hover .bib-blick-auge b, .bib-blick:focus-visible .bib-blick-auge b{ transform:translateX(-5px) }
 .bib-blick:hover .bib-blick-auge{ animation:bib-blick-zwinkern 1.2s ease }
 @keyframes bib-blick-zwinkern{ 0%,100%{ transform:none } 12%{ transform:scaleY(.1) } 24%{ transform:none } }
 
@@ -24201,7 +24210,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1125, inhalt: '0a513f4055abaf4f', gebaut: '2026-09-15T20:12:11.811Z' };
+const Stand = { fassung: 1127, inhalt: '29dda8728c576ec5', gebaut: '2026-09-15T20:26:18.270Z' };
 window.Stand = Stand;
 
 </script>
@@ -104303,6 +104312,23 @@ const Werkzeuge = (() => {
                 nimm(e.b, 0);
             return raus;
         };
+        /**
+         * DER ÜBERGANG DIESER FOLIE (E600).
+         *
+         * Er steht am `blatt`-Block, den der `.pptx`-Weg angelegt hat — der
+         * erste Block der Folie, der einen nennt, gilt. Eine Folie, die aus
+         * mehreren Blöcken besteht (eine geteilte Textseite), hat keinen; dann
+         * bleibt es beim harten Schnitt, und das ist richtig: ein Übergang, den
+         * niemand bestellt hat, ist Bewegung ohne Grund (§39).
+         */
+        const uebergangDerFolie = (f) => {
+            for (const e of f?.bloecke || []) {
+                const u = e?.b?.uebergang;
+                if (u && typeof u === 'object' && u.art)
+                    return u;
+            }
+            return null;
+        };
         /** Wie viele Klicks diese Folie hat, bevor die nächste kommt. */
         const schritteDerFolie = (f) => deckelDerFolie(f)
             .reduce((m, d) => Math.max(m, Number(d.schritt) || 0), 0);
@@ -104359,6 +104385,25 @@ const Werkzeuge = (() => {
                     `<button data-a="zurueck">›</button>` +
                     `<button data-a="zu">Beenden (Esc)</button>` +
                     `</div>`;
+            /* ══ UND JETZT DER ÜBERGANG (E600) ══════════════════════════════════
+               `zeichne` baut die Folie jedes Mal neu — der Knoten ist also frisch,
+               und die Animation startet von selbst. Genau deshalb steht sie hier
+               und nicht an `weiter()`: ein Schritt INNERHALB der Folie zeichnet
+               nicht neu (`deckelAnwenden`), und er soll auch keinen Übergang
+               auslösen. Das ist dieselbe Trennung, die PowerPoint macht.
+      
+               `prefers-reduced-motion` wird geachtet (§39): wer Bewegung
+               abbestellt hat, bekommt den harten Schnitt — und sieht dieselben
+               Folien, nur ohne Weg dazwischen. */
+            const bild = o.querySelector('.folie');
+            const ueb = uebergangDerFolie(f);
+            if (bild && ueb && ueb.art !== 'keine'
+                && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                bild.style.setProperty('--ueb-dauer', Math.round(Math.max(150, Math.min(3000, Number(ueb.dauer) || 700))) + 'ms');
+                bild.dataset.uebergang = String(ueb.art);
+                if (ueb.richtung)
+                    bild.dataset.uebergangRichtung = String(ueb.richtung);
+            }
             deckelAnwenden();
         };
         const folieBlock = (b, tiefe) => {
@@ -113057,6 +113102,75 @@ const Einlesen = (() => {
         return { x: emuZuPunkt(off.getAttribute('x')), y: emuZuPunkt(off.getAttribute('y')),
             w: emuZuPunkt(ext.getAttribute('cx')), h: emuZuPunkt(ext.getAttribute('cy')) };
     };
+    /* ══ DER ÜBERGANG EINER FOLIE (E600) ═══════════════════════════════════
+       PowerPoint kennt über vierzig Übergänge, viele davon als 3D-Effekt, den
+       ein Browser ohne eigene Grafikschicht nicht nachbaut. Redion kennt SECHS
+       und sagt bei allem anderen, was es wirklich war.
+  
+       WARUM NICHT MEHR: ein Übergang, der „Prisma" heisst und wie ein Blenden
+       aussieht, ist eine Lüge im Bild. Ein Blenden, das im Hinweis „war
+       Prisma" sagt, ist die Wahrheit mit einer Näherung — und die Originaldatei
+       trägt den echten Effekt ohnehin unverändert weiter (E592). */
+    const UEBERGAENGE = {
+        cut: 'keine',
+        fade: 'blenden', dissolve: 'blenden', fadeThroughBlack: 'blenden',
+        push: 'schieben', pull: 'schieben',
+        cover: 'decken', uncover: 'decken',
+        wipe: 'wischen', strips: 'wischen', blinds: 'wischen', comb: 'wischen',
+        zoom: 'zoom', newsflash: 'zoom'
+    };
+    /* `pull` zieht die ALTE Folie weg, `push` schiebt die NEUE herein — aus der
+       Sicht der ankommenden Folie sind die Richtungen umgekehrt. */
+    const GEGENRICHTUNG = { l: 'r', r: 'l', u: 'd', d: 'u' };
+    const SPD_MS = { slow: 1000, med: 700, fast: 400 };
+    /**
+     * Den Übergang aus einer Folie lesen.
+     *
+     * MEHRERE `p:transition` SIND DER NORMALFALL, nicht die Ausnahme: neuere
+     * Effekte stehen in `mc:AlternateContent` — einmal als `mc:Choice` mit dem
+     * echten Effekt (`p14:prism`), einmal als `mc:Fallback` mit etwas, das
+     * jedes PowerPoint kann. Gelesen wird der ERSTE, der sich abbilden lässt;
+     * gibt es keinen, gilt der erste überhaupt, als „blenden" mit seinem
+     * echten Namen daneben.
+     */
+    const uebergangLesen = (doc) => {
+        const alle = Array.from(doc.getElementsByTagName('p:transition'));
+        if (!alle.length)
+            return null;
+        let erster = null;
+        for (const knoten of alle) {
+            /* Der Effekt ist das erste Kind, das kein Klang ist (`p:sndAc`). */
+            const effekt = Array.from(knoten.children)
+                .find(k => k.localName !== 'sndAc' && k.localName !== 'extLst');
+            if (!effekt)
+                continue;
+            const name = effekt.localName || '';
+            const spd = String(knoten.getAttribute('spd') || 'med');
+            const roh = Number(knoten.getAttribute('p14:dur')
+                || knoten.getAttributeNS('http://schemas.microsoft.com/office/powerpoint/2010/main', 'dur'));
+            /* Gedeckelt, damit eine Folie mit acht Sekunden Übergang keinen
+               Vortrag anhält, und nicht unter 150 ms, weil darunter ein Übergang
+               wie ein Flackern aussieht. */
+            const dauer = Math.round(Math.max(150, Math.min(3000, Number.isFinite(roh) && roh > 0 ? roh : (SPD_MS[spd] ?? 700))));
+            const dir = String(effekt.getAttribute('dir') || '');
+            const art = UEBERGAENGE[name];
+            const eintrag = { art: art || 'blenden', dauer, original: name };
+            if (dir && /^[lrud]$/.test(dir))
+                eintrag.richtung = (name === 'pull' || name === 'uncover')
+                    ? (GEGENRICHTUNG[dir] ?? dir) : dir;
+            if (!erster)
+                erster = eintrag;
+            /* WESSEN NAME STEHT DANN DA? Der des ERSTEN — also des Effekts, den
+               PowerPoint wirklich zeigen würde. Die abbildbare Fassung liefert
+               Art und Dauer, der erste liefert die Wahrheit über die Datei:
+               „blenden, war eigentlich prism". Ohne das stünde „fade" da, und die
+               Datei hätte etwas anderes gemeint. */
+            if (art)
+                return (erster && erster.original !== eintrag.original)
+                    ? { ...eintrag, statt: erster.original } : eintrag;
+        }
+        return erster;
+    };
     /**
      * DIE KLICKSCHRITTE EINER FOLIE — und was sie aufdecken.
      *
@@ -113838,6 +113952,7 @@ const Einlesen = (() => {
                 .map(o => String(o.text).split('\n')[0].trim())
                 .filter(z => z && z.length <= 80);
             folien.push({ titel, objekte, kandidaten, grundfarbe,
+                uebergang: uebergangLesen(doc),
                 weg: [...weggelassen.entries()] });
         }
         /* ══ WELCHER KASTEN IST DIE ÜBERSCHRIFT? ═══════════════════════════
@@ -114070,7 +114185,10 @@ const Einlesen = (() => {
                     blattBreite: p.breite, blattHoehe: p.hoehe, papier: 'blanko',
                     /* Nur wenn es eine gibt — ein leeres Feld an jedem Blatt wäre
                        Ballast, und `blatt.ts` fällt ohne es auf Weiss zurück (E558). */
-                    ...(folie.grundfarbe ? { grundfarbe: folie.grundfarbe } : {})
+                    ...(folie.grundfarbe ? { grundfarbe: folie.grundfarbe } : {}),
+                    /* Der Übergang beim Blättern im Vortrag (E600). Nur wenn die Folie
+                       einen nennt — ein leeres Feld an jedem Blatt wäre Ballast. */
+                    ...(folie.uebergang ? { uebergang: folie.uebergang } : {})
                 });
                 const marken = [];
                 for (const o of folie.objekte) {

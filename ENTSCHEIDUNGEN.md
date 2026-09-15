@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-580 Entscheidungen, E1 bis E601 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+581 Entscheidungen, E1 bis E602 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -643,7 +643,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E597** — Direkt auf dem Blatt schreiben statt in ein Fenster: ein Tipp legt das Schreibfeld dorthin, wo der Text stehen wird
 * **E598** — Die Stilregel „textarea 16px !important" hat das Schreibfeld am Telefon umgerechnet; die Antwort ist nicht, sie auszunehmen
 * **E599** — Der Feinschliff am freien Text: die Leiste wirkt auf den Kasten, in den gerade getippt wird, und zwei Tipps auf leeres Papier heissen „hier schreiben"
-* **E601** — Das Auge sass auf dem Ordnerreiter, und der Deckel war ein Farbklotz — beides am Bild gemessen und nachgezogen
+* **E601** — Das Auge sass auf dem Ordnerreiter, und der Deckel war ein Farbklotz — beides am Bild gemessen und nachgezogen (**zurückgenommen, siehe E602**)
+* **E602** — Nicht das Auge weicht, sondern der Reiter: E601 zurückgenommen, zwei Zeilen geblieben
 
 ---
 
@@ -48622,6 +48623,11 @@ der Marke DANACH (§55.2).
 
 ## E601 — Das Auge sass auf dem Reiter
 
+> **ZURÜCKGENOMMEN AM 15. September 2026 — siehe E602.** Der Fund stimmte,
+> die Antwort nicht: Redur wollte weder das Auge auf Abruf noch einen neu
+> gezeichneten Deckel. Was hier steht, bleibt als Messung stehen; gebaut
+> ist davon nur noch, dass der Reiter dem Auge ausweicht.
+
 **15. September 2026.** Redur, zu einem Bild des Ordnerdeckels:
 
 > „alter man du hast hier die augen wo links oben bei date war und du hast
@@ -48692,3 +48698,61 @@ falschen Stelle.
 Bewegungsfamilie, darunter „folder") und `test87` — alle grün. Und vier
 Bilder, weil das hier eine Sache für Augen ist (§55.3): Leerlauf,
 Darüberfahren, ganze Bibliothek, Telefon.
+
+---
+
+## E602 — Nicht das Auge weicht, sondern der Reiter
+
+**15. September 2026.** E601 hat einen echten Fund gehabt und die falsche
+Antwort darauf gegeben. Der Verlauf, weil er die Lehre trägt:
+
+```txt
+Redur   „du hast hier die augen wo links oben bei date war"
+Claude   baut E601: Auge nur beim Darüberfahren, Deckel neu gezeichnet
+Redur   „es sollte wie vorher sein — stoppe deine arbeit sofort"
+Claude   zeigt den Deckel von vor dem 6. September (ohne Auge)
+Redur   „nein die auge nicht weg"
+```
+
+Zweimal geraten, zweimal daneben. Erst die Frage mit zwei klaren Antworten
+hat es geklärt:
+
+> **Das Auge: oben links, immer sichtbar.**
+> **Der Deckel: so wie vorher, wie es war.**
+
+### Was daraus folgt
+
+**E601 ist zurückgenommen.** `bausteine.css` und `motion.css` stehen wieder
+auf dem Stand davor — Reitergrösse, Deckelmasse, die fünf Blätter, die
+Vorschau und das Auge selbst, alles unverändert. Zurückgenommen heisst hier
+wirklich zurückgenommen: die Dateien kommen aus dem Commit davor, nicht aus
+dem Gedächtnis.
+
+**Geblieben ist eine Zeile** — die, die Redurs ursprünglichen Satz
+beantwortet:
+
+```txt
+vorher    left:4%              der Reiter lag unter dem Auge
+nachher   left:max(27%, 52px)  er beginnt rechts davon
+```
+
+Gemessen: der Blick-Knopf ist 44 × 44 bei `left:4px`, deckt also x 4…48 px.
+Auf einer 200-px-Kachel sind das 24 %; der Reiter begann bei 4 % und war
+44 % breit, also lagen sie 40 px lang übereinander.
+
+`max(27%, 52px)` und nicht bloss `27%`, weil der Knopf 44 PIXEL misst und
+keine Prozente: auf der 158-px-Kachel des Telefons wären 27 % nur 43 px, und
+die beiden lägen wieder aufeinander.
+
+**Und eine zweite Zeile, weil „immer sichtbar" ganz sichtbar heisst:**
+`.bib-blick` steht auf `z-index:4` statt 2. Der Vorderdeckel des Ordners
+liegt auf 3 (`motion.css`) und schnitt dem Auge sonst die untere Kante ab.
+
+### Die Lehre, und sie ist nicht die über CSS
+
+Ein Fund ist keine Erlaubnis. Redur hat auf eine ÜBERLAGERUNG gezeigt — zwei
+Dinge in derselben Ecke. Was ich daraus gemacht habe, war ein neuer
+Deckel, ein neues Sichtbarkeitsverhalten und eine verschobene Zahl: vier
+Änderungen, von denen er eine wollte. Die kleinste Änderung, die den
+genannten Fehler behebt, ist die richtige — und wenn unklar ist, welche das
+ist, kostet eine Frage weniger als zwei Rücknahmen.
