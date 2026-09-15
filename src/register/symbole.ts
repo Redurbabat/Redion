@@ -108,7 +108,17 @@ Register.symbole = (() => {
     inkLasso: '<ellipse cx="12" cy="10" rx="9" ry="6" stroke-dasharray="3 3"/><path d="M7 14c-4 7 4 9 6 4"/>',
     inkMarker: '<path d="m13 3 7 7-8 8-7-7zM5 11l-2 7 3 3 6-3M3 21h7"/>',
     inkEraser: '<path d="m14 3 7 7-10 11H6l-4-4zM8 11l8 8M11 21h10"/>',
-    inkText: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M12 8v9M9 17h6"/>',
+    /* ══ DAS T OHNE RAHMEN (E577) ══════════════════════════════════════════
+       GEMESSEN mit der Methode aus `test480 §7` — jedes Zeichen in 16 × 16
+       gerastert, Schnitt durch Vereinigung: `inkText` gegen `inkImage`
+       **64 %**. Beide trugen denselben abgerundeten Rahmen, und der Rahmen
+       ist bei 16 px der grösste Teil der Tinte; was darin steht, sind
+       wenige Punkte. Die 60-%-Grenze aus E515 galt bis hierher nur für die
+       sechs Stifte — die dreizehn Werkzeuge hat niemand gegeneinander
+       gemessen.
+       Ein T braucht keinen Rahmen. Es IST der Buchstabe, und damit teilt es
+       mit einem Bild im Rahmen fast nichts mehr. */
+    inkText: '<path d="M3.8 7V4.4h16.4V7"/><path d="M12 4.4v15.2"/><path d="M8.4 19.6h7.2"/>',
     inkShapes: '<path d="m7 3 5 8H2z"/><circle cx="17" cy="7" r="4"/><rect x="4" y="15" width="7" height="6" rx="1"/><circle cx="18" cy="18" r="3"/>',
 
     /* ══ DIE WERKZEUGE DER ZEICHENLEISTE (E515) ═════════════════════════════
@@ -144,10 +154,23 @@ Register.symbole = (() => {
        an ihm ist die Ecke, die sich hochbiegt. */
     inkNote: '<path d="M4.2 5.4a1.6 1.6 0 0 1 1.6-1.6h12.4a1.6 1.6 0 0 1 1.6 1.6v8.4L13.8 19.8H5.8a1.6 1.6 0 0 1-1.6-1.6z"/>' +
              '<path d="M19.8 13.8h-4.4a1.6 1.6 0 0 0-1.6 1.6v4.4"/>',
-    /* Der Laserpointer: ein Griffel mit Funken an der Spitze. */
-    inkLaser: '<path d="m14.8 4.2 5 5-9.4 9.4-5-5z"/>' +
-              '<path d="m5.4 13.6-2.2 5.9 5.9-2.2"/>' +
-              '<path d="M18.4 2.6v2.4M21.4 5.6h-2.4M20.6 2.4l-1.4 1.4"/>',
+    /* ══ DER LASERPOINTER IST KEIN STIFT (E577) ═════════════════════════════
+       Hier stand „ein Griffel mit Funken an der Spitze" — und gemessen war
+       genau das das Problem: `inkPen` gegen `inkLaser` **69 %** derselben
+       Tinte (Methode aus `test480 §7`). Zwei Werkzeuge, die in derselben
+       Reihe nebeneinander stehen und zu 69 % dasselbe Bild sind, sind für
+       das Auge EIN Bild mit einem Fehler darin.
+       Der Laser ist auch gar kein Griffel: er hinterlässt nichts, er zeigt.
+       Ein leuchtender Punkt mit Strahlen sagt das in einem Blick — und er
+       teilt mit einem schrägen Stift fast keinen Punkt.
+       DER PUNKT IST EIN RING, KEINE FLÄCHE. Der erste Wurf hatte ihn
+       gefüllt (`fill="currentColor"`), und `test480 §5` wurde rot: die
+       Zeichen dieser Leiste sind reine Striche, alle dreizehn. Bei 16 px
+       schliesst sich ein Ring von 2,2 Einheiten ohnehin zu einem Punkt —
+       die Regel kostet hier also nichts und hält die Familie zusammen. */
+    inkLaser: '<circle cx="12" cy="12" r="2.2"/>' +
+              '<path d="M12 3.4v3M12 17.6v3M3.4 12h3M17.6 12h3"/>' +
+              '<path d="m5.9 5.9 2.1 2.1M16 16l2.1 2.1M18.1 5.9 16 8M8 16l-2.1 2.1"/>',
     /* Das Lineal: ein schräger Balken mit Teilstrichen. */
     inkRuler: '<rect x="1.6" y="7.4" width="20.8" height="9.2" rx="1.8" ' +
               'transform="rotate(-20 12 12)"/>' +

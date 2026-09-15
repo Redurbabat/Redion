@@ -7906,3 +7906,23 @@ in anderer Gestalt als beschrieben. Sie wird hier NICHT nebenbei geschlossen:
 ein Teil dieser Zeichen steht in der Startschale, die gezeichnet sein muss,
 bevor das Register überhaupt geladen ist. Das ist ein eigener Bogen mit eigenem
 Wächter, kein Anhängsel an die Gestaltung.
+
+### Nachtrag, 15. September 2026 — Zweig `codex/zeichenstudio-dock-bewegung`
+
+| Punkt | jetzt | Beleg |
+|---|---|---|
+| 5 · Stilblatt für die Bedienfelder | ✅ zu | Galerie-Reiter, Dreispaltenraster, Vorschaukarten für Elemente und Haftnotizen; damit ist Plan 7 B 6 vollständig (E577) |
+| Dock-Bewegung (Plan 7 C 3–6) | ✅ zu | Das ZEICHEN wächst (25 → 32,5 px), der Knopf bleibt 44 × 44; Nachbarn 28,3 px; nur unter `(hover:hover) and (pointer:fine)`; `prefers-reduced-motion` nimmt sie weg; der federnde Wechsel läuft einmal. `test524 §7` (E577) |
+| Icons (Plan 7 C 1–2) | ◐ halb | Die zwei schlimmsten Paare sind weg: `inkPen`/`inkLaser` 69 % → 24 %, `inkText`/`inkImage` 64 % → unter 43 %; schlimmstes Paar jetzt 52 %. `test480 §7b` misst alle dreizehn dauerhaft (E577). **Offen:** `penBrush` und `penPencil` sehen einander mit blossem Auge weiterhin ähnlich — gemessen unter der Grenze, und E515 hat ihre Gestalt bewusst gewählt |
+| Verlaufskapsel am Telefon | ✅ zu | Sie deckte 87 × 39 px der Schreibfläche ab, genau die erste Zeile; steht jetzt unten links über dem Dock (E577) |
+
+**Weiterhin offen, unverändert:** „Alle Optionen" zeigt alles (Plan 7 B 9);
+Tastatur „P" zeichnet in einem gesperrten Dokument; `test290` rot; Plan 7 B 2
+(Stift-Dock im Detail), 7 B 5 (Form-Dock), 7 B 7 (die alten Toolbar-Styles
+an der History), 7 B 8 (kleine Breite, Bildschirmtastatur, sichtbarer
+Hinweis auf weitere Werkzeuge beim Rollen).
+
+**Neu gesehen und offen:** Am Telefon rollt die untere Leiste waagrecht, und
+nichts sagt, dass rechts noch etwas steht (Plan 7 B 8). Gesehen auf
+`bilder/studio-telefon.png`, nicht gemessen — deshalb steht es hier und
+nicht als geschlossen.

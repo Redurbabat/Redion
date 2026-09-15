@@ -400,6 +400,112 @@ try {
   check('… weil sie in `meta` steht und nicht im Blatt',
     await page.evaluate(`Store.getMeta('zeichnen:radierergroesse') === 28`));
 
+  /* ══ §7 DIE DOCK-BEWEGUNG (E577) ══════════════════════════════════════════
+     Redurs Wunsch aus E572: „Macbook Dock Animationen … beim Wechseln."
+     Am Mac wächst das Zeichen unter dem Zeiger, die Nachbarn heben schwächer
+     mit, und die Leiste selbst steht still.
+
+     WAS HIER GEMESSEN WIRD, IST DER UNTERSCHIED ZWISCHEN BEIDEM: das Zeichen
+     wächst, die TREFFERFLÄCHE nicht. Genau daran hängen drei Punkte des Plans
+     — feste Trefferflächen (7 C 3), nichts wird am Rollcontainer abgeschnitten
+     (7 C 5), keine verschluckten Klicks (7 C 4). Eine Prüfung, die nur „es
+     bewegt sich" fragt, würde eine Bewegung durchlassen, die den Knopf selbst
+     aufbläst — und die wäre falsch. */
+  await werkzeug('stift');
+  const zeichen = (tool: string) => page.evaluate(`(() => {
+    const b = document.querySelector('.document-drawingbar [data-document-tool="${tool}"]');
+    if (!b) return null;
+    const svg = b.querySelector('svg');
+    const br = b.getBoundingClientRect(), sr = svg ? svg.getBoundingClientRect() : null;
+    return { knopf: Math.round(br.width) + 'x' + Math.round(br.height),
+      zeichen: sr ? Math.round(sr.width * 10) / 10 : 0 };
+  })()`) as Promise<{ knopf: string; zeichen: number } | null>;
+  /* Zwei Nachbarn aus der laufenden Leiste holen — ihre Reihenfolge gehört
+     seit E570 dem Nutzer, also wird sie gelesen und nicht angenommen. */
+  const paar = await page.evaluate(`(() => {
+    const bs = Array.from(document.querySelectorAll('.document-drawingbar [data-document-tool]'));
+    const i = bs.findIndex(b => !b.disabled && bs[bs.indexOf(b) + 1] && !bs[bs.indexOf(b) + 1].disabled);
+    return i < 0 ? null : [bs[i].dataset.documentTool, bs[i + 1].dataset.documentTool];
+  })()`) as [string, string] | null;
+  check('Zwei benutzbare Nachbarn in der oberen Leiste', !!paar);
+  if (paar) {
+    /* ERST DEN ZEIGER WEGNEHMEN. Diese zwei Zeilen sind kein Beiwerk: der
+       Klick auf ein Werkzeug lässt die Maus auf diesem Knopf STEHEN, und der
+       Nachbar daneben stand deshalb schon auf 28.3 px, als die „Ruhe"
+       gemessen wurde. Die Prüfung war dadurch rot, obwohl die Regel stimmte —
+       ein Messfehler, der wie ein Fehler im Produkt aussieht. */
+    await page.mouse.move(5, 5);
+    await page.waitForTimeout(320);
+    const ruheA = await zeichen(paar[0]);
+    const ruheB = await zeichen(paar[1]);
+    await page.locator(`.document-drawingbar [data-document-tool="${paar[0]}"]`).hover();
+    await page.waitForTimeout(350);
+    const hoverA = await zeichen(paar[0]);
+    const hoverB = await zeichen(paar[1]);
+    check('Unter dem Zeiger wächst das Zeichen deutlich',
+      !!ruheA && !!hoverA && hoverA.zeichen >= ruheA.zeichen * 1.2);
+    check('… der Nachbar hebt schwächer mit',
+      !!ruheB && !!hoverB && !!hoverA
+      && hoverB.zeichen > ruheB.zeichen && hoverB.zeichen < hoverA.zeichen);
+    /* DER PUNKT, AN DEM ES SONST FALSCH WÄRE. */
+    check('… und die Trefferfläche bleibt, wie sie war',
+      !!ruheA && !!hoverA && hoverA.knopf === ruheA.knopf && ruheA.knopf === '44x44');
+    await page.mouse.move(5, 5);
+    await page.waitForTimeout(300);
+    const zurueck = await zeichen(paar[0]);
+    check('… und geht wieder zurück, wenn der Zeiger fort ist',
+      !!zurueck && !!ruheA && Math.abs(zurueck.zeichen - ruheA.zeichen) < 0.6);
+  }
+
+  /* ══ §8 DIE VERLAUFSKAPSEL DECKT NICHT DIE ERSTE ZEILE ZU (E577) ══════════
+     DAS BILD HAT ES GEFUNDEN, nicht der Prüflauf — und dann hat die Messung
+     es beziffert:
+
+       1440 px   Kapsel bei 12/166, Papier bei 226/249   →  0 × 0 überdeckt
+        390 px   Kapsel bei  8/163, Papier bei  19/176   → 87 × 39 überdeckt
+
+     Am Rechner liegt sie im linken Rand, wo Platz ist — genau wie in Redurs
+     Bild 1. Am Telefon gibt es diesen Rand nicht: das Papier ist 342 von
+     390 px breit, und dieselbe Ecke ist dort die Ecke, in der die erste
+     Zeile anfängt. Gemessen lag die Kapsel ÜBER dem „Tippe etwas …".
+
+     DASS SIE AM TELEFON IRGENDWO ÜBER PAPIER LIEGT, ist nicht zu vermeiden;
+     bei 19 px Rand gibt es keine freie Fläche. Vermeidbar ist die STELLE:
+     unten links beginnt niemand zu schreiben, und der Daumen kommt dort
+     ohne Umgreifen hin. */
+  const kapsel = async (): Promise<{ ueberX: number; ueberY: number; oben: number; papierOben: number }> =>
+    await page.evaluate(`(() => {
+      const k = document.querySelector('.document-ink-history');
+      const p = document.querySelector('.document-stage[data-aktiv] .blatt-marken')
+        || document.querySelector('.document-stage[data-aktiv]');
+      if (!k || !p) return { ueberX: -1, ueberY: -1, oben: -1, papierOben: -1 };
+      const a = k.getBoundingClientRect(), b = p.getBoundingClientRect();
+      return {
+        ueberX: Math.round(Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left))),
+        ueberY: Math.round(Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top))),
+        oben: Math.round(a.top), papierOben: Math.round(b.top) };
+    })()`);
+
+  const amRechner = await kapsel();
+  check('Am Rechner liegt die Kapsel im Rand, nicht auf dem Papier',
+    amRechner.ueberX === 0 || amRechner.ueberY === 0);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(700);
+  const amTelefon = await kapsel();
+  /* DIE ZUSAGE IST NICHT „gar kein Papier", sondern „nicht die erste Zeile":
+     die Kapsel muss in der UNTEREN Hälfte des Papiers stehen. */
+  check('Am Telefon steht sie unten, nicht über der ersten Zeile',
+    amTelefon.oben > amTelefon.papierOben + 200);
+  check('… und sie ist überhaupt noch da und bedienbar',
+    await page.locator('[data-document-action="ink-undo"]').isVisible()
+    && await page.locator('[data-document-action="ink-undo"]').evaluate(e => {
+      const r = e.getBoundingClientRect();
+      return r.width >= 44 && r.height >= 44 && r.left >= 0 && r.right <= 390 && r.bottom <= 844;
+    }));
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await page.waitForTimeout(600);
+
   await werkzeug('stift');
   check('Keine Laufzeitfehler', errors.length === 0);
   mkdirSync(resolve(root, 'bilder'), { recursive: true });

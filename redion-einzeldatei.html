@@ -16022,6 +16022,54 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    Rundlaufknopf stand trotz dieser Regel weiter da. Eine Attributangabe
    mehr entscheidet es, ohne `!important`. */
 .blatt-werk[data-reference-ui="ready"][data-tool] > [data-act="radiermodus"]{ display:none }
+
+/* ══ DAS GALERIEFELD: ELEMENTE UND HAFTNOTIZEN (E577, Plan 7 B 6) ══════════
+   Zwei Reiter über einem Dreispaltenraster — Redurs Bild 3. Auch hier stand
+   bis eben KEINE Regel: die Reiter waren zwei nackte Knöpfe untereinander,
+   das Raster eine Spalte, und die Vorschaukarten hatten weder Grösse noch
+   Rand. Ein Feld, das man erst lesen muss, um es zu verstehen, ist kein
+   Feld zum Auswählen. */
+.blatt-gallery-tabs{
+  display:flex; gap:4px; padding:3px; border-radius:14px; background:var(--bg-hover)
+}
+.blatt-gallery-tabs button{
+  flex:1; min-height:var(--touch-min); border:0; border-radius:11px;
+  background:transparent; color:var(--text-dim); font:inherit; font-size:.9rem; cursor:pointer
+}
+.blatt-gallery-tabs button[aria-pressed="true"]{
+  background:var(--bg-card); color:var(--text); box-shadow:var(--shadow-1)
+}
+.blatt-gallery-tabs button:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+.blatt-gallery-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px }
+.blatt-gallery-empty{
+  grid-column:1/-1; margin:0; padding:8px 2px; color:var(--text-dim);
+  font-size:.86rem; line-height:1.45
+}
+/* DIE HAFTNOTIZKARTE TRÄGT IHRE EIGENE FARBE, und darauf muss der Name
+   lesbar sein. Deshalb steht hier ausnahmsweise eine feste dunkle Farbe
+   statt `--text`: die neun Pastelle sind in beiden Themen hell, ein heller
+   Text darauf wäre im Dunkelmodus unlesbar (§38, dieselbe Überlegung wie
+   beim Lineal auf farbigem Papier). */
+.blatt-note-preview{
+  display:flex; align-items:flex-end; min-height:74px; padding:8px;
+  border:1px solid var(--line); border-radius:12px;
+  background:var(--note-color,#ffe780); color:#242424;
+  font:inherit; font-size:.8rem; text-align:left; cursor:pointer
+}
+.blatt-note-preview:hover{ border-color:var(--accent) }
+.blatt-note-preview:focus-visible{ outline:2px solid var(--accent); outline-offset:2px }
+.blatt-element-preview{
+  display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+  gap:4px; min-height:74px; padding:6px;
+  border:1px solid var(--line); border-radius:12px; background:transparent;
+  color:var(--text); font:inherit; font-size:.76rem; cursor:pointer
+}
+.blatt-element-preview:hover{ background:var(--bg-hover); border-color:var(--accent) }
+.blatt-element-preview:focus-visible{ outline:2px solid var(--accent); outline-offset:2px }
+.blatt-element-preview > :is(svg,img,canvas){ width:100%; height:42px; object-fit:contain }
+.blatt-element-preview span{
+  max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap
+}
 .blatt-marken{position:absolute; inset:0; width:100%; height:100%; z-index:2;
               color:#111; touch-action:none}
 /* AM TELEFON WIRD GEROLLT, NICHT GESTAPELT — und das ist ein Fund vom Bild,
@@ -21565,7 +21613,21 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
      top = 812 in einem 800 px hohen Fenster, also ausserhalb des Bildes.
      Absolut über der linken oberen Ecke des Körpers steht sie dort, wo sie
      hingehört, ohne ein Raster zu brauchen. */
-  .document-ink-history{position:absolute; top:8px; left:8px; margin:0; padding:3px}
+  /* ══ AM TELEFON UNTEN LINKS, NICHT OBEN LINKS (E577) ═══════════════════
+     Hier stand `top:8px; left:8px`. GEMESSEN bei 390 × 844: die Kapsel
+     deckte 87 × 39 px der Schreibfläche ab — genau die Ecke, in der die
+     erste Zeile anfängt. Am Rechner ist dieselbe Stelle richtig, weil das
+     Papier dort erst bei 226 px beginnt und die Kapsel im Rand steht (0 × 0
+     überdeckt, Redurs Bild 1).
+     Am Telefon gibt es diesen Rand nicht: das Papier ist 342 von 390 px
+     breit. Dass die Kapsel dort ÜBER Papier liegt, ist nicht zu vermeiden —
+     die STELLE ist es. Unten links beginnt niemand zu schreiben, und der
+     Daumen kommt ohne Umgreifen hin.
+     `bottom` ist grosszügig gerechnet: darunter schwebt das Werkzeug-Dock,
+     und zwei Schwebende übereinander wären wieder eine Verdeckung. */
+  .document-ink-history{
+    position:absolute; top:auto; bottom:84px; left:8px; margin:0; padding:3px
+  }
   .document-studio .document-commandbar{left:8px;right:8px}
   body[data-dokument="an"] .document-studio .document-center{padding:10px 8px 100px}
   .document-source-master .do-name{font-size:11px}.document-source-master .do-wort{font-size:10px}
@@ -21824,6 +21886,69 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
 /* Ohne Band-Inhalt braucht die Fläche keinen Platz — sonst bliebe unter der
    Zeichenleiste ein leerer Streifen von 76 px stehen. */
 .folienband .folienband-flaeche[hidden]{display:none}
+
+/* ══ DIE DOCK-BEWEGUNG (E577, Redurs Wunsch aus E572) ══════════════════════
+   „Macbook Dock Animationen … beim Wechseln." Am Mac wächst das Zeichen
+   unter dem Zeiger, die Nachbarn heben schwächer mit, und die Leiste selbst
+   steht still.
+
+   WAS SICH BEWEGT, IST DAS ZEICHEN — NICHT DER KNOPF. Das ist die ganze
+   Entscheidung, und sie löst drei Punkte des Plans auf einmal:
+
+     · „Trefferflächen bleiben fest" (7 C 3): der Knopf misst weiterhin
+       44 × 44 px, im Layout UND für den Zeiger. Nur das SVG darin wächst.
+     · „Animationen dürfen am Scrollcontainer nicht abgeschnitten werden"
+       (7 C 5): beide Leisten rollen (`overflow-x:auto`), und was rollt,
+       schneidet auch oben und unten ab. Ein Knopf, der von 44 auf 51 px
+       wächst, steht in einer 48-px-Zeile über — das Zeichen wächst von
+       25 auf 32 px und bleibt mit elf Pixeln Luft darin.
+     · „Keine verschluckten Klicks beim Skalieren" (7 C 4): ein Zeichen
+       nimmt keine Zeiger an; der Knopf darunter tut es, unverändert gross.
+
+   `(hover:hover) and (pointer:fine)` — am Telefon gibt es kein Überfahren,
+   und ein Zeichen, das auf Berührung „hängen" bleibt, wäre dort ein Fehler
+   und kein Effekt (7 C 6). */
+@media (hover:hover) and (pointer:fine){
+  .document-drawingbar button svg,
+  .document-studio .blatt-werk > button svg{
+    transition:transform var(--motion-fast) var(--ease)
+  }
+  .document-drawingbar button:hover:not(:disabled) svg,
+  .document-studio .blatt-werk > button:hover:not(:disabled) svg{ transform:scale(1.3) }
+  /* Die zwei Nachbarn heben schwächer mit — das ist der Teil, an dem man ein
+     Dock erkennt. `:has(+ button:hover)` liest nach LINKS, der Nachbarwähler
+     nach rechts; zusammen sind es beide Seiten. */
+  .document-drawingbar button:hover + button svg,
+  .document-drawingbar button:has(+ button:hover) svg,
+  .document-studio .blatt-werk > button:hover + button svg,
+  .document-studio .blatt-werk > button:has(+ button:hover) svg{ transform:scale(1.13) }
+}
+/* Der federnde Wechsel auf die neue Auswahl: EINMAL, nicht in Schleife
+   (7 C 4). Er läuft, wenn `aria-pressed` auf `true` springt — und seit E575
+   springt es nur noch dann, weil `inkSync()` die Knöpfe nicht mehr bei jedem
+   Ruf neu einhängt. Vorher hätte dieselbe Regel bei jedem Sync neu gefedert. */
+@keyframes dock-feder{
+  0%{ transform:scale(.86) } 55%{ transform:scale(1.16) } 100%{ transform:scale(1) }
+}
+.document-drawingbar button[aria-pressed="true"] svg,
+.document-studio .blatt-werk > button[aria-pressed="true"] svg{
+  animation:dock-feder var(--motion-normal) var(--ease) 1
+}
+/* WER BEWEGUNG NICHT WILL, BEKOMMT AUCH KEINE VERGRÖSSERUNG (7 C 6).
+   `grund.css` setzt die Dauern auf .001ms — das macht die Bewegung sofort,
+   nicht abwesend. Die Vergrösserung selbst muss hier ausdrücklich weg. */
+@media (prefers-reduced-motion:reduce){
+  .document-drawingbar button:hover:not(:disabled) svg,
+  .document-drawingbar button:hover + button svg,
+  .document-drawingbar button:has(+ button:hover) svg,
+  .document-studio .blatt-werk > button:hover:not(:disabled) svg,
+  .document-studio .blatt-werk > button:hover + button svg,
+  .document-studio .blatt-werk > button:has(+ button:hover) svg{ transform:none }
+  .document-drawingbar button[aria-pressed="true"] svg,
+  .document-studio .blatt-werk > button[aria-pressed="true"] svg{ animation:none }
+}
+/* Im Druck bewegt sich ohnehin nichts — die Leisten sind dort schon aus
+   (Zeile mit `@media print` weiter oben). */
 
 </style>
 
@@ -23839,7 +23964,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1077, inhalt: 'd2b7764369c0c8fa', gebaut: '2026-09-14T23:40:02.176Z' };
+const Stand = { fassung: 1082, inhalt: 'a8be6f3bb1e657d0', gebaut: '2026-09-14T23:59:14.916Z' };
 window.Stand = Stand;
 
 </script>
@@ -35326,7 +35451,17 @@ Register.symbole = (() => {
         inkLasso: '<ellipse cx="12" cy="10" rx="9" ry="6" stroke-dasharray="3 3"/><path d="M7 14c-4 7 4 9 6 4"/>',
         inkMarker: '<path d="m13 3 7 7-8 8-7-7zM5 11l-2 7 3 3 6-3M3 21h7"/>',
         inkEraser: '<path d="m14 3 7 7-10 11H6l-4-4zM8 11l8 8M11 21h10"/>',
-        inkText: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M12 8v9M9 17h6"/>',
+        /* ══ DAS T OHNE RAHMEN (E577) ══════════════════════════════════════════
+           GEMESSEN mit der Methode aus `test480 §7` — jedes Zeichen in 16 × 16
+           gerastert, Schnitt durch Vereinigung: `inkText` gegen `inkImage`
+           **64 %**. Beide trugen denselben abgerundeten Rahmen, und der Rahmen
+           ist bei 16 px der grösste Teil der Tinte; was darin steht, sind
+           wenige Punkte. Die 60-%-Grenze aus E515 galt bis hierher nur für die
+           sechs Stifte — die dreizehn Werkzeuge hat niemand gegeneinander
+           gemessen.
+           Ein T braucht keinen Rahmen. Es IST der Buchstabe, und damit teilt es
+           mit einem Bild im Rahmen fast nichts mehr. */
+        inkText: '<path d="M3.8 7V4.4h16.4V7"/><path d="M12 4.4v15.2"/><path d="M8.4 19.6h7.2"/>',
         inkShapes: '<path d="m7 3 5 8H2z"/><circle cx="17" cy="7" r="4"/><rect x="4" y="15" width="7" height="6" rx="1"/><circle cx="18" cy="18" r="3"/>',
         /* ══ DIE WERKZEUGE DER ZEICHENLEISTE (E515) ═════════════════════════════
          * Redur, 9. September, mit einem Ausschnitt der GoodNotes-Leiste:
@@ -35361,10 +35496,23 @@ Register.symbole = (() => {
            an ihm ist die Ecke, die sich hochbiegt. */
         inkNote: '<path d="M4.2 5.4a1.6 1.6 0 0 1 1.6-1.6h12.4a1.6 1.6 0 0 1 1.6 1.6v8.4L13.8 19.8H5.8a1.6 1.6 0 0 1-1.6-1.6z"/>' +
             '<path d="M19.8 13.8h-4.4a1.6 1.6 0 0 0-1.6 1.6v4.4"/>',
-        /* Der Laserpointer: ein Griffel mit Funken an der Spitze. */
-        inkLaser: '<path d="m14.8 4.2 5 5-9.4 9.4-5-5z"/>' +
-            '<path d="m5.4 13.6-2.2 5.9 5.9-2.2"/>' +
-            '<path d="M18.4 2.6v2.4M21.4 5.6h-2.4M20.6 2.4l-1.4 1.4"/>',
+        /* ══ DER LASERPOINTER IST KEIN STIFT (E577) ═════════════════════════════
+           Hier stand „ein Griffel mit Funken an der Spitze" — und gemessen war
+           genau das das Problem: `inkPen` gegen `inkLaser` **69 %** derselben
+           Tinte (Methode aus `test480 §7`). Zwei Werkzeuge, die in derselben
+           Reihe nebeneinander stehen und zu 69 % dasselbe Bild sind, sind für
+           das Auge EIN Bild mit einem Fehler darin.
+           Der Laser ist auch gar kein Griffel: er hinterlässt nichts, er zeigt.
+           Ein leuchtender Punkt mit Strahlen sagt das in einem Blick — und er
+           teilt mit einem schrägen Stift fast keinen Punkt.
+           DER PUNKT IST EIN RING, KEINE FLÄCHE. Der erste Wurf hatte ihn
+           gefüllt (`fill="currentColor"`), und `test480 §5` wurde rot: die
+           Zeichen dieser Leiste sind reine Striche, alle dreizehn. Bei 16 px
+           schliesst sich ein Ring von 2,2 Einheiten ohnehin zu einem Punkt —
+           die Regel kostet hier also nichts und hält die Familie zusammen. */
+        inkLaser: '<circle cx="12" cy="12" r="2.2"/>' +
+            '<path d="M12 3.4v3M12 17.6v3M3.4 12h3M17.6 12h3"/>' +
+            '<path d="m5.9 5.9 2.1 2.1M16 16l2.1 2.1M18.1 5.9 16 8M8 16l-2.1 2.1"/>',
         /* Das Lineal: ein schräger Balken mit Teilstrichen. */
         inkRuler: '<rect x="1.6" y="7.4" width="20.8" height="9.2" rx="1.8" ' +
             'transform="rotate(-20 12 12)"/>' +

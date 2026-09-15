@@ -323,9 +323,25 @@ console.log('\n§6 Quellen');
   p('Die Kapsel hängt am Dokumentkörper, nicht im Werkzeugband',
     /body\.append\(thumbnails, center, inspector, history\)/.test(lies('src/bereiche/pdf/document-mode.ts'))
     && !/drawingbar\.prepend\(history\)/.test(lies('src/bereiche/pdf/document-mode.ts')));
+  /* ══ OHNE KOMMENTARE UND LEERRAUM LESEN (E577) ══════════════════════════
+     Diese Zeile suchte wörtlich `.document-ink-history{position:absolute`.
+     Sie wurde rot, als die Telefonregel einen Kommentar und Zeilenumbrüche
+     bekam — obwohl die Regel selbst unverändert galt. Eine Zusicherung, die
+     an der FORMATIERUNG hängt statt am Inhalt, meldet Fehler, die keine
+     sind, und lenkt vom nächsten echten ab. Jetzt wird das Stilblatt
+     entkommentiert und entleert gelesen. */
+  const stilOhneBeiwerk = lies('quell/schale/stil/pdf-studio.css')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, '');
   p('Das Stilblatt gibt ihr eine Lage über dem Papier — am Rechner im Raster, am Telefon absolut',
-    /\.document-ink-history\{[^}]*grid-column:2/.test(lies('quell/schale/stil/pdf-studio.css'))
-    && /\.document-ink-history\{position:absolute/.test(lies('quell/schale/stil/pdf-studio.css')));
+    /\.document-ink-history\{[^}]*grid-column:2/.test(stilOhneBeiwerk)
+    && /\.document-ink-history\{[^}]*position:absolute/.test(stilOhneBeiwerk));
+  /* UND AM TELEFON UNTEN, NICHT OBEN (E577). Gemessen deckte `top:8px` dort
+     87 × 39 px der Schreibfläche ab — die Ecke, in der die erste Zeile
+     anfängt. `test524 §8` misst es an der laufenden App; hier steht nur,
+     dass die Regel überhaupt so geschrieben ist. */
+  p('… und am Telefon steht sie unten, nicht oben',
+    /\.document-ink-history\{[^}]*position:absolute[^}]*bottom:/.test(stilOhneBeiwerk)
+    && !/\.document-ink-history\{[^}]*position:absolute[^}]*top:8px/.test(stilOhneBeiwerk));
   p('Das erzeugte JS trägt es', /schutzleiter/.test(lies('quell/bereiche/pdf/marken.js')));
   gleich('Keine Seitenfehler', fehler, []);
 }

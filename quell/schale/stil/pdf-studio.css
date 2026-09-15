@@ -283,7 +283,21 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
      top = 812 in einem 800 px hohen Fenster, also ausserhalb des Bildes.
      Absolut über der linken oberen Ecke des Körpers steht sie dort, wo sie
      hingehört, ohne ein Raster zu brauchen. */
-  .document-ink-history{position:absolute; top:8px; left:8px; margin:0; padding:3px}
+  /* ══ AM TELEFON UNTEN LINKS, NICHT OBEN LINKS (E577) ═══════════════════
+     Hier stand `top:8px; left:8px`. GEMESSEN bei 390 × 844: die Kapsel
+     deckte 87 × 39 px der Schreibfläche ab — genau die Ecke, in der die
+     erste Zeile anfängt. Am Rechner ist dieselbe Stelle richtig, weil das
+     Papier dort erst bei 226 px beginnt und die Kapsel im Rand steht (0 × 0
+     überdeckt, Redurs Bild 1).
+     Am Telefon gibt es diesen Rand nicht: das Papier ist 342 von 390 px
+     breit. Dass die Kapsel dort ÜBER Papier liegt, ist nicht zu vermeiden —
+     die STELLE ist es. Unten links beginnt niemand zu schreiben, und der
+     Daumen kommt ohne Umgreifen hin.
+     `bottom` ist grosszügig gerechnet: darunter schwebt das Werkzeug-Dock,
+     und zwei Schwebende übereinander wären wieder eine Verdeckung. */
+  .document-ink-history{
+    position:absolute; top:auto; bottom:84px; left:8px; margin:0; padding:3px
+  }
   .document-studio .document-commandbar{left:8px;right:8px}
   body[data-dokument="an"] .document-studio .document-center{padding:10px 8px 100px}
   .document-source-master .do-name{font-size:11px}.document-source-master .do-wort{font-size:10px}
@@ -542,3 +556,66 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
 /* Ohne Band-Inhalt braucht die Fläche keinen Platz — sonst bliebe unter der
    Zeichenleiste ein leerer Streifen von 76 px stehen. */
 .folienband .folienband-flaeche[hidden]{display:none}
+
+/* ══ DIE DOCK-BEWEGUNG (E577, Redurs Wunsch aus E572) ══════════════════════
+   „Macbook Dock Animationen … beim Wechseln." Am Mac wächst das Zeichen
+   unter dem Zeiger, die Nachbarn heben schwächer mit, und die Leiste selbst
+   steht still.
+
+   WAS SICH BEWEGT, IST DAS ZEICHEN — NICHT DER KNOPF. Das ist die ganze
+   Entscheidung, und sie löst drei Punkte des Plans auf einmal:
+
+     · „Trefferflächen bleiben fest" (7 C 3): der Knopf misst weiterhin
+       44 × 44 px, im Layout UND für den Zeiger. Nur das SVG darin wächst.
+     · „Animationen dürfen am Scrollcontainer nicht abgeschnitten werden"
+       (7 C 5): beide Leisten rollen (`overflow-x:auto`), und was rollt,
+       schneidet auch oben und unten ab. Ein Knopf, der von 44 auf 51 px
+       wächst, steht in einer 48-px-Zeile über — das Zeichen wächst von
+       25 auf 32 px und bleibt mit elf Pixeln Luft darin.
+     · „Keine verschluckten Klicks beim Skalieren" (7 C 4): ein Zeichen
+       nimmt keine Zeiger an; der Knopf darunter tut es, unverändert gross.
+
+   `(hover:hover) and (pointer:fine)` — am Telefon gibt es kein Überfahren,
+   und ein Zeichen, das auf Berührung „hängen" bleibt, wäre dort ein Fehler
+   und kein Effekt (7 C 6). */
+@media (hover:hover) and (pointer:fine){
+  .document-drawingbar button svg,
+  .document-studio .blatt-werk > button svg{
+    transition:transform var(--motion-fast) var(--ease)
+  }
+  .document-drawingbar button:hover:not(:disabled) svg,
+  .document-studio .blatt-werk > button:hover:not(:disabled) svg{ transform:scale(1.3) }
+  /* Die zwei Nachbarn heben schwächer mit — das ist der Teil, an dem man ein
+     Dock erkennt. `:has(+ button:hover)` liest nach LINKS, der Nachbarwähler
+     nach rechts; zusammen sind es beide Seiten. */
+  .document-drawingbar button:hover + button svg,
+  .document-drawingbar button:has(+ button:hover) svg,
+  .document-studio .blatt-werk > button:hover + button svg,
+  .document-studio .blatt-werk > button:has(+ button:hover) svg{ transform:scale(1.13) }
+}
+/* Der federnde Wechsel auf die neue Auswahl: EINMAL, nicht in Schleife
+   (7 C 4). Er läuft, wenn `aria-pressed` auf `true` springt — und seit E575
+   springt es nur noch dann, weil `inkSync()` die Knöpfe nicht mehr bei jedem
+   Ruf neu einhängt. Vorher hätte dieselbe Regel bei jedem Sync neu gefedert. */
+@keyframes dock-feder{
+  0%{ transform:scale(.86) } 55%{ transform:scale(1.16) } 100%{ transform:scale(1) }
+}
+.document-drawingbar button[aria-pressed="true"] svg,
+.document-studio .blatt-werk > button[aria-pressed="true"] svg{
+  animation:dock-feder var(--motion-normal) var(--ease) 1
+}
+/* WER BEWEGUNG NICHT WILL, BEKOMMT AUCH KEINE VERGRÖSSERUNG (7 C 6).
+   `grund.css` setzt die Dauern auf .001ms — das macht die Bewegung sofort,
+   nicht abwesend. Die Vergrösserung selbst muss hier ausdrücklich weg. */
+@media (prefers-reduced-motion:reduce){
+  .document-drawingbar button:hover:not(:disabled) svg,
+  .document-drawingbar button:hover + button svg,
+  .document-drawingbar button:has(+ button:hover) svg,
+  .document-studio .blatt-werk > button:hover:not(:disabled) svg,
+  .document-studio .blatt-werk > button:hover + button svg,
+  .document-studio .blatt-werk > button:has(+ button:hover) svg{ transform:none }
+  .document-drawingbar button[aria-pressed="true"] svg,
+  .document-studio .blatt-werk > button[aria-pressed="true"] svg{ animation:none }
+}
+/* Im Druck bewegt sich ohnehin nichts — die Leisten sind dort schon aus
+   (Zeile mit `@media print` weiter oben). */

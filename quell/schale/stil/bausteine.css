@@ -4771,6 +4771,54 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    Rundlaufknopf stand trotz dieser Regel weiter da. Eine Attributangabe
    mehr entscheidet es, ohne `!important`. */
 .blatt-werk[data-reference-ui="ready"][data-tool] > [data-act="radiermodus"]{ display:none }
+
+/* ══ DAS GALERIEFELD: ELEMENTE UND HAFTNOTIZEN (E577, Plan 7 B 6) ══════════
+   Zwei Reiter über einem Dreispaltenraster — Redurs Bild 3. Auch hier stand
+   bis eben KEINE Regel: die Reiter waren zwei nackte Knöpfe untereinander,
+   das Raster eine Spalte, und die Vorschaukarten hatten weder Grösse noch
+   Rand. Ein Feld, das man erst lesen muss, um es zu verstehen, ist kein
+   Feld zum Auswählen. */
+.blatt-gallery-tabs{
+  display:flex; gap:4px; padding:3px; border-radius:14px; background:var(--bg-hover)
+}
+.blatt-gallery-tabs button{
+  flex:1; min-height:var(--touch-min); border:0; border-radius:11px;
+  background:transparent; color:var(--text-dim); font:inherit; font-size:.9rem; cursor:pointer
+}
+.blatt-gallery-tabs button[aria-pressed="true"]{
+  background:var(--bg-card); color:var(--text); box-shadow:var(--shadow-1)
+}
+.blatt-gallery-tabs button:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+.blatt-gallery-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px }
+.blatt-gallery-empty{
+  grid-column:1/-1; margin:0; padding:8px 2px; color:var(--text-dim);
+  font-size:.86rem; line-height:1.45
+}
+/* DIE HAFTNOTIZKARTE TRÄGT IHRE EIGENE FARBE, und darauf muss der Name
+   lesbar sein. Deshalb steht hier ausnahmsweise eine feste dunkle Farbe
+   statt `--text`: die neun Pastelle sind in beiden Themen hell, ein heller
+   Text darauf wäre im Dunkelmodus unlesbar (§38, dieselbe Überlegung wie
+   beim Lineal auf farbigem Papier). */
+.blatt-note-preview{
+  display:flex; align-items:flex-end; min-height:74px; padding:8px;
+  border:1px solid var(--line); border-radius:12px;
+  background:var(--note-color,#ffe780); color:#242424;
+  font:inherit; font-size:.8rem; text-align:left; cursor:pointer
+}
+.blatt-note-preview:hover{ border-color:var(--accent) }
+.blatt-note-preview:focus-visible{ outline:2px solid var(--accent); outline-offset:2px }
+.blatt-element-preview{
+  display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+  gap:4px; min-height:74px; padding:6px;
+  border:1px solid var(--line); border-radius:12px; background:transparent;
+  color:var(--text); font:inherit; font-size:.76rem; cursor:pointer
+}
+.blatt-element-preview:hover{ background:var(--bg-hover); border-color:var(--accent) }
+.blatt-element-preview:focus-visible{ outline:2px solid var(--accent); outline-offset:2px }
+.blatt-element-preview > :is(svg,img,canvas){ width:100%; height:42px; object-fit:contain }
+.blatt-element-preview span{
+  max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap
+}
 .blatt-marken{position:absolute; inset:0; width:100%; height:100%; z-index:2;
               color:#111; touch-action:none}
 /* AM TELEFON WIRD GEROLLT, NICHT GESTAPELT — und das ist ein Fund vom Bild,

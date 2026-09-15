@@ -410,6 +410,90 @@ console.log('\n§7 Sechs Stifte, sechs Bilder');
   await s.close();
 }
 
+/* ══ §7b Dreizehn Werkzeuge, dreizehn Bilder ═══════════════════════════════
+ *
+ * DIESELBE METHODE WIE §7, AUF DIE ANDERE LISTE. §7 misst `Marken.STIFTE` —
+ * die sechs Stiftarten. Die dreizehn WERKZEUGE daneben hat bis zum
+ * 14. September 2026 niemand gegeneinander gemessen, und genau dort lagen
+ * die zwei schlimmsten Paare des ganzen Registers:
+ *
+ *     inkPen  / inkLaser   69 %      (ein Griffel neben einem Griffel)
+ *     inkText / inkImage   64 %      (zweimal derselbe abgerundete Rahmen)
+ *
+ * Beide über der Grenze, die E515 für die Stifte gezogen hat — und beide
+ * stehen in DERSELBEN Reihe unmittelbar nebeneinander, wo der Unterschied
+ * am meisten zählt. Nach E577: 52 % das schlimmste Paar.
+ *
+ * WARUM DER CODE HIER NOCH EINMAL STEHT statt geteilt zu werden: §7 ist ein
+ * laufender, grüner Wächter. Ihn zum Teilen umzubauen, um einen zweiten zu
+ * bekommen, hiesse zwei Dinge auf einmal zu tun — und wenn danach etwas rot
+ * ist, weiss niemand, welches davon (§45).
+ * ------------------------------------------------------------------------ */
+console.log('\n§7b Dreizehn Werkzeuge, dreizehn Bilder');
+{
+  const s = await mitBlatt();
+  const GRENZE = 60;
+  const r = JSON.parse(await s.evaluate(`(async () => {
+    const namen = Marken.WERKZEUGE.map(x => x.sym).filter(Boolean);
+    const raster = async (n) => {
+      const wrap = document.createElement('span');
+      wrap.dataset.sym = n; document.body.appendChild(wrap);
+      Register.symbole.fuelle(wrap.parentNode);
+      const svg = wrap.querySelector('svg');
+      if (!svg) { wrap.remove(); return null; }
+      const txt = new XMLSerializer().serializeToString(svg);
+      const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(txt)));
+      const img = new Image(); img.width = 16; img.height = 16;
+      await new Promise((f, x) => { img.onload = f; img.onerror = x; img.src = url; });
+      const c = document.createElement('canvas'); c.width = 16; c.height = 16;
+      const g = c.getContext('2d'); g.drawImage(img, 0, 0, 16, 16);
+      const d = g.getImageData(0, 0, 16, 16).data;
+      const bits = []; let tinte = 0;
+      for (let i = 0; i < 256; i++) { const an = d[i*4+3] > 40 ? 1 : 0; bits.push(an); tinte += an; }
+      wrap.remove();
+      return { bits, tinte };
+    };
+    const b = {};
+    for (const n of namen) b[n] = await raster(n);
+    const leer = namen.filter(n => !b[n] || b[n].tinte < 8);
+    const paare = [];
+    for (let i = 0; i < namen.length; i++) for (let j = i + 1; j < namen.length; j++) {
+      const a = b[namen[i]], c = b[namen[j]];
+      if (!a || !c) continue;
+      let schnitt = 0, vereint = 0;
+      for (let k = 0; k < 256; k++) {
+        if (a.bits[k] && c.bits[k]) schnitt++;
+        if (a.bits[k] || c.bits[k]) vereint++;
+      }
+      paare.push({ p: namen[i] + '/' + namen[j], gleich: Math.round(100 * schnitt / vereint) });
+    }
+    paare.sort((x, y) => y.gleich - x.gleich);
+    return JSON.stringify({ namen, leer, paare });
+  })()`) as string) as { namen: string[]; leer: string[];
+                         paare: Array<{ p: string; gleich: number }> };
+
+  gleich('Dreizehn Werkzeuge, dreizehn verschiedene Zeichen', new Set(r.namen).size, 13);
+  p('… und jedes hat wirklich Tinte auf dem Raster',
+    r.leer.length === 0, JSON.stringify(r.leer));
+  const schlimmstes = r.paare[0];
+  p(`Kein Paar teilt mehr als ${GRENZE} % seiner Tinte`,
+    !!schlimmstes && schlimmstes.gleich <= GRENZE,
+    schlimmstes ? `${schlimmstes.p} = ${schlimmstes.gleich} %` : 'kein Paar gemessen');
+  console.log('      (das ähnlichste Paar: ' +
+    (schlimmstes ? schlimmstes.p + ' = ' + schlimmstes.gleich + ' %' : '—') + ')');
+  /* DIE ZWEI NAMENTLICH, damit ein Rückschritt nicht als „irgendein Paar"
+     durchgeht: sie sind der Grund, warum es diesen Abschnitt gibt. */
+  const paarWert = (name: string) => r.paare.find(x => x.p === name)?.gleich ?? -1;
+  p('inkPen und inkLaser sind nicht mehr dasselbe Bild',
+    paarWert('inkPen/inkLaser') >= 0 && paarWert('inkPen/inkLaser') <= GRENZE,
+    `${paarWert('inkPen/inkLaser')} % (vorher 69)`);
+  p('inkText und inkImage auch nicht',
+    paarWert('inkText/inkImage') >= 0 && paarWert('inkText/inkImage') <= GRENZE,
+    `${paarWert('inkText/inkImage')} % (vorher 64)`);
+  await s.close();
+}
+
+
 /* ═══ §4 Quellen ═══════════════════════════════════════════════════════════ */
 console.log('\n§6 Quellen');
 p('Die Stiftreihe steht EINMAL im Quelltext, aus dem Katalog gebaut',

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-556 Entscheidungen, E1 bis E576 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+557 Entscheidungen, E1 bis E577 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -620,6 +620,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E574** — Das Lineal gehört auch dem Stift; die neun Haftnotizfarben bekommen eine eigene Gruppe und bleiben im Notizkontext
 * **E575** — Ein Feld, das aufgeht, muss auch wieder zugehen; ein Klick darf die Leiste nicht neu aufbauen; und eine Sortierbewegung ist keine Attributänderung
 * **E576** — Der Radierer: drei sichtbare Kreise, der Modus einmal statt zweimal, und eine Grösse, die den Seitenwechsel überlebt
+* **E577** — Die Dock-Bewegung bewegt das Zeichen, nicht den Knopf; das Galeriefeld bekommt sein Raster; und zwei Werkzeugzeichen waren dasselbe Bild
 
 ---
 
@@ -46798,3 +46799,121 @@ Eine zweite Zeile derselben Prüfung konnte gar nicht rot werden
 an dem die Wahl wirklich überlebt (§55.2).
 
 **Prüfläufe:** `test524` 42/42 (vier davon vorher rot gesehen).
+
+---
+
+## E577 — Was sich bewegt, ist das Zeichen. Und zwei Zeichen waren eines
+
+**14. September 2026, `codex/zeichenstudio-dock-bewegung`** (neuer Zweig nach
+E521). Redurs Wunsch aus E572 — „Macbook Dock Animationen … beim Wechseln",
+bessere Icons — und der Rest von Plan 7 B 6.
+
+### Die Dock-Bewegung bewegt das ZEICHEN, nicht den Knopf
+
+Am Mac wächst das Zeichen unter dem Zeiger, die Nachbarn heben schwächer
+mit, und die Leiste selbst steht still. Die naheliegende Umsetzung wäre
+`transform: scale()` auf dem KNOPF. Sie ist an drei Stellen des Plans
+gleichzeitig falsch:
+
+- **„Trefferflächen bleiben fest"** (7 C 3): ein skalierter Knopf nimmt
+  Zeiger an seinem vergrösserten Platz an — die Trefferfläche wandert mit.
+- **„Animationen dürfen am Scrollcontainer nicht abgeschnitten werden"**
+  (7 C 5): beide Leisten rollen (`overflow-x:auto`), und was rollt,
+  schneidet auch oben und unten ab. Ein Knopf, der von 44 auf 51 px wächst,
+  steht in einer 48-px-Zeile über.
+- **„Keine verschluckten Klicks beim Skalieren"** (7 C 4).
+
+Entschieden ist deshalb: **nur das SVG darin wächst**, von 25 auf 32,5 px.
+Der Knopf bleibt 44 × 44 — im Layout und für den Zeiger. Elf Pixel Luft
+bleiben, es schneidet nichts ab, und ein Zeichen nimmt ohnehin keine Zeiger
+an. Die zwei Nachbarn gehen auf 28,3 px; nach beiden Seiten, weil
+`:has(+ button:hover)` nach links liest und der Nachbarwähler nach rechts.
+
+`(hover:hover) and (pointer:fine)` — am Telefon gibt es kein Überfahren, und
+ein Zeichen, das nach einer Berührung vergrössert „hängen" bleibt, wäre dort
+ein Fehler (7 C 6). `prefers-reduced-motion` nimmt die Vergrösserung
+ausdrücklich weg: `grund.css` setzt nur die DAUERN auf .001ms, und das macht
+eine Bewegung sofort, nicht abwesend.
+
+Der federnde Wechsel läuft **einmal** (`animation … 1`), wenn `aria-pressed`
+auf `true` springt. Dass das überhaupt geht, ist ein Nachklang von E575:
+vorher hängte `inkSync()` die Knöpfe bei jedem Ruf neu ein, und dieselbe
+Regel hätte bei jedem Sync neu gefedert.
+
+### Das Galeriefeld bekommt sein Raster
+
+`.blatt-gallery-tabs`, `.blatt-gallery-grid`, `.blatt-note-preview`,
+`.blatt-element-preview` hatten **keine einzige Regel**: zwei nackte Knöpfe
+untereinander und eine einspaltige Liste. Jetzt zwei Reiter über einem
+Dreispaltenraster mit 74-px-Karten — Redurs Bild 3 und 5.
+
+Eine Ausnahme mit Grund: die Haftnotizkarte trägt ihre eigene Pastellfarbe,
+und der Name darauf steht in einem festen Dunkelgrau statt in `--text`. Die
+neun Pastelle sind in BEIDEN Themen hell; ein heller Text darauf wäre im
+Dunkelmodus unlesbar (§38, dieselbe Überlegung wie beim Lineal auf farbigem
+Papier, E558).
+
+### Zwei Werkzeugzeichen waren dasselbe Bild
+
+E515 hat die sechs STIFTE gegeneinander gemessen und bei 60 % gedeckelt
+(`test480 §7`). Die dreizehn WERKZEUGE daneben hat niemand gemessen — und
+genau dort lagen die zwei schlimmsten Paare des ganzen Registers:
+
+| Paar | vorher | nachher |
+|---|---|---|
+| `inkPen` / `inkLaser` | **69 %** | 24 % |
+| `inkText` / `inkImage` | **64 %** | unter 43 % |
+| schlimmstes Paar überhaupt | 69 % | **52 %** (`inkShapes`/`inkStamp`) |
+
+`inkLaser` war „ein Griffel mit Funken an der Spitze" — und stand in
+derselben Reihe unmittelbar neben `inkPen`. Ein Laser ist aber gar kein
+Griffel: er hinterlässt nichts, er zeigt. Jetzt ein leuchtender Punkt mit
+Strahlen. `inkText` und `inkImage` trugen beide denselben abgerundeten
+Rahmen, und der Rahmen ist bei 16 px der grösste Teil der Tinte. Ein T
+braucht keinen Rahmen.
+
+**Eine Regel des Bestands hat dabei korrigiert, was ich zuerst falsch
+machte:** der Laserpunkt war gefüllt, und `test480 §5` wurde rot — die
+Zeichen dieser Leiste sind reine Striche, alle dreizehn. Bei 16 px schliesst
+sich ein Ring von 2,2 Einheiten ohnehin zu einem Punkt; die Regel kostet
+hier nichts und hält die Familie zusammen.
+
+`test480 §7b` misst das jetzt dauerhaft, mit derselben Methode und derselben
+Grenze. **Er ist rot gewesen:** mit den alten zwei Zeichen zurückgedreht
+meldete er 69 % und 64 % — genau die Zahlen oben (§50).
+
+Nicht angefasst: `penBrush` und `penPencil` sehen einander mit blossem Auge
+immer noch ähnlich. Gemessen liegen sie unter der Grenze, und E515 hat ihre
+Gestalt bewusst so gewählt. Eine gemessene Entscheidung wird nicht durch
+einen Eindruck überstimmt — wohl aber notiert, damit sie jemand prüft, der
+den nächsten Bogen an den Stiften macht.
+
+### Und noch einmal hat das Bild etwas gefunden
+
+Auf dem Telefonbild lag die Verlaufskapsel über dem „Tippe etwas …".
+Nachgemessen:
+
+| Fenster | Kapsel | Papier | überdeckt |
+|---|---|---|---|
+| 1440 × 960 | 12/166 | 226/249 | **0 × 0** |
+| 390 × 844 | 8/163 | 19/176 | **87 × 39** |
+
+Am Rechner liegt sie im linken Rand, genau wie in Redurs Bild 1. Am Telefon
+gibt es diesen Rand nicht: das Papier ist 342 von 390 px breit, und dieselbe
+Ecke ist dort die Ecke, in der die erste Zeile anfängt.
+
+Dass sie am Telefon irgendwo über Papier liegt, ist bei 19 px Rand nicht zu
+vermeiden — die STELLE ist es. Sie steht jetzt unten links, dicht über dem
+schwebenden Dock: dort beginnt niemand zu schreiben, und der Daumen kommt
+ohne Umgreifen hin.
+
+Eine Zusicherung in `test461` wurde dabei rot, ohne dass etwas kaputt war:
+sie suchte wörtlich `.document-ink-history{position:absolute`, und die Regel
+hatte einen Kommentar und Zeilenumbrüche bekommen. Sie liest das Stilblatt
+jetzt ohne Kommentare und Leerraum. Eine Zusicherung, die an der
+Formatierung hängt statt am Inhalt, meldet Fehler, die keine sind — und
+lenkt vom nächsten echten ab.
+
+**Prüfläufe:** `test480` 50/50 (fünf Zusicherungen neu, drei davon rot
+gesehen), `test524` 50/50 (elf neu, vier rot gesehen), `test461` 35/35,
+`test393`, `test437`, `test522`, `test523` grün.

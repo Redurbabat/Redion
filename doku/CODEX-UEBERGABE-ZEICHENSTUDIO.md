@@ -500,3 +500,53 @@ vorher rot gesehen. Dazu grün: `test174`, `test177`, `test209`, `test228`,
 `npm run typecheck` und `npm run bauen:ts` grün, Dienststand v1077.
 
 **Die Gesamtsuite ist NICHT als grün behauptet.**
+
+---
+
+## 15. Umsetzungsstand, dritter Bogen — Zweig `codex/zeichenstudio-dock-bewegung`
+
+### Abschnitt 7 C — Icons und Dock-Bewegung
+
+**7 C 3 bis 7 C 6 (Bewegung) sind zu.** Die Entscheidung, die alles andere
+nach sich zieht: es bewegt sich das ZEICHEN, nicht der Knopf. Gemessen wächst
+das SVG von 25 auf 32,5 px, die zwei Nachbarn auf 28,3 px, und die
+Trefferfläche bleibt 44 × 44 — im Layout und für den Zeiger. Damit sind
+„feste Trefferflächen", „nichts wird am Rollcontainer abgeschnitten" und
+„keine verschluckten Klicks" nicht drei Regeln, die man einhalten muss,
+sondern eine Folge der Bauart.
+
+**7 C 1 bis 7 C 2 (Icons) sind halb zu.** `test480 §7` misst seit E515 die
+sechs Stifte gegeneinander und deckelt bei 60 %. Die dreizehn WERKZEUGE hat
+niemand gemessen — und dort lagen die zwei schlimmsten Paare des Registers:
+`inkPen`/`inkLaser` 69 %, `inkText`/`inkImage` 64 %. Beide sind neu
+gezeichnet; das schlimmste Paar liegt jetzt bei 52 %. `test480 §7b` hält es
+dauerhaft und ist rot gewesen.
+
+Offen bleibt der Eindruck, dass `penBrush` und `penPencil` einander ähneln.
+Gemessen liegen sie unter der Grenze, und E515 hat ihre Gestalt bewusst
+gewählt — eine gemessene Entscheidung wird nicht durch einen Eindruck
+überstimmt. Wer den nächsten Bogen an den Stiften macht, sieht sich das an.
+
+### Abschnitt 7 B 6 — jetzt vollständig
+
+Galerie-Reiter, Dreispaltenraster und die Vorschaukarten für Elemente und
+Haftnotizen sind gestaltet. Damit ist B 6 ganz zu; `bilder/popover-*.png`
+zeigen alle vier Felder in beiden Themen.
+
+### Was das Hinsehen zusätzlich gefunden hat
+
+Auf `bilder/studio-telefon.png` lag die Verlaufskapsel über der ersten
+Zeile. Nachgemessen: bei 390 × 844 deckte sie **87 × 39 px** der
+Schreibfläche ab, bei 1440 × 960 **0 × 0**. Sie steht am Telefon jetzt unten
+links über dem Dock. `test524 §8` misst beides.
+
+Und auf demselben Bild: die untere Leiste rollt waagrecht, ohne dass etwas
+sagt, dass rechts noch mehr steht (Plan 7 B 8). Das bleibt offen und steht
+in L157 — gesehen, nicht gemessen.
+
+### Prüfstand dieses Bogens
+
+`test524` 50/50, `test480` 50/50, `test461` 35/35, `test393`, `test437`,
+`test522`, `test523` grün. `npm run typecheck` und `npm run bauen:ts` grün.
+
+**Die Gesamtsuite ist NICHT als grün behauptet.**
