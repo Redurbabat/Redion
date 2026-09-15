@@ -24146,7 +24146,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1117, inhalt: '6df08bce14fca752', gebaut: '2026-09-15T19:37:51.566Z' };
+const Stand = { fassung: 1122, inhalt: '8b04db162b263e1d', gebaut: '2026-09-15T19:50:48.252Z' };
 window.Stand = Stand;
 
 </script>
@@ -62993,6 +62993,35 @@ const Marken = (() => {
             commit(offen.before);
         };
         /**
+         * Den Kasten umformen, IN DEN GERADE GESCHRIEBEN WIRD (E599).
+         *
+         * Ohne das tippt man einen Satz, drückt „A+ Grösser" oder Rot — und
+         * nichts passiert: die neue Grösse gilt erst dem NÄCHSTEN Kasten. Das
+         * ist genau die Stelle, an der „was ich sehe, ist was dasteht" bricht,
+         * und sie bricht mitten im Schreiben.
+         *
+         * Bei einem NEUEN Kasten wird der Entwurf umgeformt; bei einem
+         * vorhandenen die Marke selbst. Beides landet im selben Schritt des
+         * Verlaufs wie der Text — `before` steht seit dem Öffnen (§50: eine
+         * Änderung, ein Schritt zurück).
+         */
+        const schreiberUmformen = (felder) => {
+            if (!schreiber)
+                return false;
+            const platz = schreiber.ziel ? platzVon(schreiber.ziel) : -1;
+            if (platz >= 0) {
+                const alt = marks[platz];
+                /* Gesperrt heisst gesperrt — auch für die Leiste (E473). */
+                if (alt?.gesperrt)
+                    return false;
+                ersetze(platz, { ...alt, ...felder });
+            }
+            else
+                schreiber.entwurf = { ...schreiber.entwurf, ...felder };
+            schreiberLegen();
+            return true;
+        };
+        /**
          * Ein Schreibfeld an dieser Stelle öffnen — oder den Text, der schon
          * dort steht, an seiner Stelle weiterschreiben.
          */
@@ -63045,7 +63074,30 @@ const Marken = (() => {
             schreiber = { feld, ziel: vorhanden ? idOf(vorhanden) : '', before, entwurf, beobachter };
             schreiberLegen();
             feld.addEventListener('input', () => schreiberLegen());
-            feld.addEventListener('blur', () => schreiberSchliessen());
+            /* ══ EIN GRIFF AN DIE WERKZEUGLEISTE IST KEIN VERLASSEN (E599) ═══════
+               GEMESSEN: „A+ Grösser" antippen, während man schreibt, schloss den
+               Kasten — der Knopf nimmt den Fokus, `blur` kommt, und das Feld war
+               weg, bevor der Knopf überhaupt etwas tat. Damit war die ganze
+               Schriftleiste während des Schreibens unbenutzbar, und das fiel
+               niemandem auf, weil vorher ein Dialog dastand, der den Fokus selbst
+               hielt.
+      
+               `relatedTarget` sagt, WOHIN der Fokus geht. Geht er in eine Leiste,
+               die zu dieser Fläche gehört, wird nicht geschlossen, sondern der
+               Cursor zurückgeholt — nach dem Klick, damit der Knopf erst wirkt. */
+            const LEISTEN = '.blatt-werk, .document-drawingbar, .document-dock, .document-stage,'
+                + ' [data-act], [data-wz], [data-document-action], [data-document-tool]';
+            feld.addEventListener('blur', event => {
+                const ziel = event.relatedTarget;
+                if (ziel && typeof ziel.closest === 'function' && ziel.closest(LEISTEN)) {
+                    setTimeout(() => {
+                        if (schreiber && schreiber.feld === feld && feld.isConnected)
+                            feld.focus({ preventScroll: true });
+                    }, 0);
+                    return;
+                }
+                schreiberSchliessen();
+            });
             feld.addEventListener('keydown', event => {
                 /* ESCAPE BEENDET UND BEHÄLT. In OneNote verlässt Escape den Kasten;
                    es wirft ihn nicht weg. Und es darf nicht weiter nach oben laufen,
@@ -63268,8 +63320,23 @@ const Marken = (() => {
                gewählt hat und zweimal hineintippt, meint diese eine. */
             if (!id && selection.size === 1)
                 id = [...selection][0] || '';
-            if (!id)
+            /* ══ ZWEIMAL AUF DIE LEERE FLÄCHE HEISST: HIER SCHREIBEN (E599) ══════
+               Der letzte Schritt zu Redurs Satz. Mit der Auswahl in der Hand — und
+               das ist die Hand, in der man nach dem Zeichnen ist — musste man
+               bisher erst das Textwerkzeug holen, nur um einen Satz danebenzu-
+               schreiben. In OneNote genügt ein Tipp; hier sind es zwei, weil EIN
+               Tipp mit der Auswahl schon etwas bedeutet (er hebt die Auswahl auf
+               und zieht einen Rahmen). Zwei Tipps bedeuteten bisher nichts. */
+            if (!id) {
+                if (tool !== 'select')
+                    return;
+                const punkt = R.zuBlatt(flaeche, event);
+                if (!punkt)
+                    return;
+                event.preventDefault();
+                schreiberOeffnen(punkt, '');
                 return;
+            }
             const platz = platzVon(id);
             if (platz < 0 || marks[platz]?.art !== 'text')
                 return;
@@ -63924,6 +63991,9 @@ const Marken = (() => {
            um — und zeichnet danach rot weiter. Ein Schritt im Verlauf. */
         const setzeFarbe = (next) => {
             color = next;
+            /* Wer gerade schreibt, meint den Kasten unter seinem Zeiger (E599). */
+            if (schreiber && schreiberUmformen({ farbe: next }))
+                return;
             if (!selection.size)
                 return;
             const before = snapshot();
@@ -63987,6 +64057,25 @@ const Marken = (() => {
             };
             if (typeof Store !== 'undefined')
                 Store.setMeta('zeichnen:schrift', schrift);
+            /* ══ DAS OFFENE SCHREIBFELD ÄNDERT SICH MIT (E599) ══════════════════ */
+            if (schreiber) {
+                const marke = schreiberMarke();
+                const felder = {};
+                if (schritt)
+                    felder.fontSize = naechsteStufe(Math.max(8, Number(marke?.fontSize) || 18), schritt);
+                else if (aenderung.groesse !== undefined)
+                    felder.fontSize = schrift.groesse;
+                if (aenderung.familie !== undefined)
+                    felder.schrift = schrift.familie;
+                if (aenderung.fett !== undefined)
+                    felder.fett = schrift.fett;
+                if (aenderung.rahmen !== undefined)
+                    felder.rahmen = schrift.rahmen;
+                if (aenderung.ausricht !== undefined)
+                    felder.ausricht = schrift.ausricht;
+                if (Object.keys(felder).length && schreiberUmformen(felder))
+                    return;
+            }
             if (!selection.size)
                 return;
             const before = snapshot();

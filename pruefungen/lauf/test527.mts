@@ -22,6 +22,8 @@
  * §10 AM TELEFON bricht das Feld dort um, wo der fertige Text es tut.
  * §11 AUF EINER PDF-SEITE gilt dasselbe — Redur hat die PDF ausdrücklich genannt.
  * §12 GEHT DER REITER ZU, während das Feld offen ist, ist der Satz nicht weg (§51).
+ * §13 DIE SCHRIFTLEISTE wirkt auf den Kasten, in den gerade getippt wird (E599).
+ * §14 ZWEIMAL AUF LEERES PAPIER heisst: hier schreiben — auch mit der Auswahl (E599).
  *
  * ZWEI DINGE, DIE BEIM SCHREIBEN DIESES LAUFS GEMESSEN WURDEN:
  *
@@ -376,7 +378,91 @@ try {
     gerettet.some((m: any) => m.text === 'Noch nicht bestätigt'),
     JSON.stringify(gerettet.map((m: any) => m.text)));
 
-  console.log('\n13 · Und nichts ist dabei kaputtgegangen');
+  console.log('\n13 · Die Schriftleiste wirkt auf den Kasten, in den gerade getippt wird');
+  /* E599. Ohne das tippt man einen Satz, drückt „A+ Grösser" — und nichts
+     passiert: die neue Grösse gilt erst dem NÄCHSTEN Kasten. Genau die
+     Stelle, an der „was ich sehe, ist was dasteht" mitten im Schreiben
+     bricht. Geprüft wird beides: das Feld auf dem Schirm UND die Marke
+     danach; eine Zusicherung nur auf das Feld liesse offen, ob die Grösse
+     auch ankommt. */
+  /* DIE SCHRIFT AUSDRÜCKLICH AUF EINE MITTLERE STUFE. Die Stufen sind
+     11 · 13 · 16 · 20 · 26 · 34; auf 34 ist „Grösser" ein Knopf, der nichts
+     tut, und die Zusicherung wäre rot, ohne dass etwas kaputt wäre. §10 hat
+     sie auf 34 gestellt — gemessen, nicht vermutet: der Lauf meldete
+     „55,89 → 55,89" und `fontSize 34`. */
+  await page.evaluate(async id => {
+    Store.setMeta('zeichnen:schrift', { familie: 'standard', groesse: 16,
+      fett: false, rahmen: false, ausricht: 'links' });
+    await Store.flush();
+    App.oeffne(id);
+  }, pdfIds.skript);
+  await page.waitForSelector('.document-drawingbar');
+  await page.waitForTimeout(400);
+  await page.locator('[data-document-tool="text"]').click();
+  await page.waitForTimeout(250);
+  /* (60/60) ist frei: der Kasten aus §11 beginnt bei (100/200), der aus
+     §12 bei (380/420). Frei sein muss er bei JEDER Schriftgrösse — ein
+     34er Kasten ist 151 Einheiten hoch, und darauf ist dieser Lauf schon
+     einmal hereingefallen. */
+  await tippe(60, 60);
+  await page.keyboard.type('Wächst mit');
+  const vorher = await page.evaluate(() =>
+    parseFloat(getComputedStyle(document.querySelector('.blatt-schreiber')!).fontSize));
+  await page.locator('[data-act="groesser"]').first().click();
+  await page.waitForTimeout(250);
+  const nachher = await page.evaluate(({ hoehe }) => {
+    const feld = document.querySelector<HTMLTextAreaElement>('.blatt-schreiber');
+    if (!feld) return null;
+    const raum = document.querySelector('.blatt-marken')!.getBoundingClientRect();
+    return { px: parseFloat(getComputedStyle(feld).fontSize), wert: feld.value,
+      skala: raum.height / hoehe };
+  }, { hoehe: HOEHE });
+  pr('Das offene Feld wird sofort grösser', !!nachher && nachher.px > vorher,
+    vorher + ' → ' + (nachher?.px ?? '—'));
+  pr('… und der getippte Satz steht noch darin',
+    nachher?.wert === 'Wächst mit', JSON.stringify(nachher?.wert));
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  const gewachsen = await page.evaluate(id =>
+    JSON.parse(JSON.stringify(Store.getBlock(id)?.marken || [])), pdfIds.seite);
+  const neueMarke = gewachsen.find((m: any) => m.text === 'Wächst mit');
+  /* GEGEN DIE GEMESSENE GRÖSSE, nicht gegen 16: die Vorgabe wandert im Lauf
+     (§10 stellt sie auf 34). Eine feste Zahl wäre hier grün, ohne dass der
+     Knopf etwas getan hätte. */
+  pr('Und die fertige Marke trägt die neue Grösse, nicht die alte',
+    !!neueMarke && !!nachher && Math.abs(Number(neueMarke.fontSize) - nachher.px / (nachher.skala || 1)) < 1.5
+      && nachher.px > vorher,
+    JSON.stringify({ marke: neueMarke?.fontSize, feldPx: nachher?.px, vorher }));
+
+  console.log('\n14 · Zweimal auf die leere Fläche heisst: hier schreiben');
+  /* Der letzte Schritt zu Redurs Satz. Mit der Auswahl in der Hand musste
+     man bisher erst das Textwerkzeug holen, nur um einen Satz daneben zu
+     schreiben. EIN Tipp geht nicht — er bedeutet mit der Auswahl schon
+     etwas; zwei bedeuteten bisher nichts. */
+  await page.locator('[data-document-tool="select"]').click();
+  await page.waitForTimeout(250);
+  {
+    const kasten = await flaeche.boundingBox();
+    if (kasten) {
+      /* (350/380) liegt rechts vom Kasten aus §11 (100 + 238 = 338) und
+         über dem aus §12 (y 420) — frei bei jeder Schriftgrösse. */
+      await page.mouse.dblclick(kasten.x + (350 / BREITE) * kasten.width,
+                                kasten.y + (380 / HOEHE) * kasten.height);
+      await page.waitForTimeout(300);
+    }
+  }
+  pr('Zwei Tipps auf leeres Papier öffnen ein Schreibfeld, auch mit der Auswahl',
+    await page.locator('.blatt-schreiber').count() === 1);
+  await page.keyboard.type('Ohne Werkzeugwechsel');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  const ohneWechsel = await page.evaluate(id =>
+    JSON.parse(JSON.stringify(Store.getBlock(id)?.marken || [])), pdfIds.seite);
+  pr('Und der Satz steht danach auf der Seite',
+    ohneWechsel.some((m: any) => m.text === 'Ohne Werkzeugwechsel'),
+    JSON.stringify(ohneWechsel.map((m: any) => m.text)));
+
+  console.log('\n15 · Und nichts ist dabei kaputtgegangen');
   pr('Keine Seitenfehler', errors.length === 0, errors.slice(0, 3).join(' · '));
 } catch (fehler) {
   failed++;

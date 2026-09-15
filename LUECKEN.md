@@ -8346,3 +8346,37 @@ ist bisher nicht gemessen.
 Zeilen standen und danach drei — bei einer Zeile, die genau an der Grenze
 endet. `test527` §10 hält den Fall am Telefon fest; er prüft die beiden
 gegeneinander, nicht gegen eine Zahl.
+
+---
+
+## L174 · Die Auswahl-Werkzeugleiste ist breiter als das Fenster — 15. September 2026
+
+**Was fehlt:** Mit dem Auswahlwerkzeug zeigt die untere Leiste
+vierundzwanzig Knöpfe. Gemessen an der laufenden App:
+
+```txt
+Fenster      Werkzeug   sichtbare Knöpfe   davon ausserhalb   rollbar
+1280 × 900   stift      18                 0                  nein
+1280 × 900   text       12                 0                  nein
+1280 × 900   select     24                 10                 ja
+1440 × 960   select     24                  8                 ja
+ 390 × 844   select     24                 17                 ja
+ 390 × 844   stift      18                 11                 ja
+```
+
+Die Leiste rollt, die Knöpfe sind also erreichbar — aber nur, wenn man
+weiss, dass dort noch etwas ist. Am Rechner erwartet das niemand: bei
+Stift und Text passt alles, und genau deshalb sieht es bei der Auswahl
+nicht nach „weiterrollen" aus, sondern nach „das ist alles".
+
+**Warum es hier steht und nicht repariert ist:** Es ist kein Fehler dieses
+Bogens — die Leiste war vorher schon so, und E572/E574 haben ihren Inhalt
+je Werkzeug ausdrücklich so beschlossen (`test524` zählt ihn nach). Was
+fehlt, ist eine Antwort auf die Frage, was bei vierundzwanzig Knöpfen
+passieren soll: zweite Zeile, Überlaufmenü, oder weniger Knöpfe.
+
+**Am Telefon ist es Absicht** (§37: die Leiste rollt statt umzubrechen).
+Am Rechner ist es eine Überraschung.
+
+**Woran man merkt, dass es stört:** Wer „Sperren" oder „Verweis" sucht und
+sie nicht findet, obwohl sie da sind.

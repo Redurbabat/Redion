@@ -1579,3 +1579,40 @@ widerlegt hat (§12 des Laufs, die Lebenswache aus E115):
 Weg „auf eine andere Seite blättern"   ohne Wache GRÜN   — `blur` übernimmt
 Weg „pagehide" (der Reiter geht zu)    ohne Wache ROT    — nur die Wache hält ihn
 ```
+
+---
+
+## 40. Der Feinschliff am freien Text
+
+**15. September 2026 · E599**
+
+**Die Leiste während des Schreibens** — dieselbe Folge, dreimal gefahren:
+einen Kasten öffnen, „Wächst mit" tippen, „A+ Grösser" antippen.
+
+```txt
+                                  Feld danach      Marke danach
+vor E599                          geschlossen      16 (unverändert)
+mit der Fokus-Ausnahme allein     26,3 → 26,3 px   16 (unverändert)
+mit beidem                        26,3 → 34,2 px   20
+```
+
+**Die Werkzeugleiste je Werkzeug**, nebenbei gemessen und als **L174**
+eingetragen — sie gehört nicht zu diesem Bogen, aber eine Zahl, die man
+gesehen hat, schreibt man auf:
+
+```txt
+Fenster      Werkzeug   sichtbare Knöpfe   davon ausserhalb   rollbar
+1280 × 900   stift      18                 0                  nein
+1280 × 900   text       12                 0                  nein
+1280 × 900   select     24                 10                 ja
+1440 × 960   select     24                  8                 ja
+ 390 × 844   select     24                 17                 ja
+```
+
+**Gegenproben zu E599** (test527, jedes Stück einzeln zurückgedreht):
+
+```txt
+ohne die Ausnahme für die Leiste       Feld schliesst beim ersten Knopf   3 rot
+ohne `schreiberUmformen`               26,3 → 26,3 px · Marke 16          2 rot
+ohne den Doppeltipp auf leeres Papier  kein Feld, kein Satz               2 rot
+```

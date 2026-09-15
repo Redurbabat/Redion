@@ -839,7 +839,7 @@ gleichkommen soll. Gezählt an der laufenden App am 15. September 2026:
 | Feld | Messlatte | Was steht | Was fehlt |
 |---|---|---|---|
 | Zeichnen | GoodNotes | 13 Werkzeuge · 6 Stifte · 7 Formen · 5 Radierarten · Lineal · Zoomfenster · Formenerkennung · Lasso · 100 Schritte zurück | der Rest von L133 |
-| Freier Text | **OneNote** | ein Tipp aufs Blatt, und man schreibt direkt dort (E597) · auf Blättern UND auf PDF-Seiten · Doppeltipp öffnet einen vorhandenen Text | Auszeichnung IM Feld (L172) |
+| Freier Text | **OneNote** | ein Tipp aufs Blatt, und man schreibt direkt dort (E597) · auf Blättern UND auf PDF-Seiten · die Schriftleiste wirkt beim Tippen · zweimal auf leeres Papier genügt, auch mit der Auswahl (E599) | Auszeichnung IM Feld (L172) |
 | Text | **Word** | 78 Blockarten · `.docx` lesen · Rundreise ohne Verlust · geänderte Absätze kommen im Original an (E595) | **O6** · neue Blöcke kommen nicht mit (L170) |
 | Präsentation | PowerPoint | 8 Layouts · 173 Bandeinträge in 7 Reitern · Vortragsmodus · `.pptx` lesen · Rundreise schreiben | Übergänge, Animationen, Folienmaster |
 | Gedächtnis | Obsidian | Rückverweise · unverlinkte Erwähnungen · Wissensgraph · Schlagwörter · Suche über mehrere Dokumente · alles lokal | tägliche Notizen als eigener Weg |

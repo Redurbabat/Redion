@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-578 Entscheidungen, E1 bis E598 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+579 Entscheidungen, E1 bis E599 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -642,6 +642,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E596** — Ein Wächter hing 56 Commits zurück: der Originalschutz aus E538 stand ihm im Weg, nicht umgekehrt
 * **E597** — Direkt auf dem Blatt schreiben statt in ein Fenster: ein Tipp legt das Schreibfeld dorthin, wo der Text stehen wird
 * **E598** — Die Stilregel „textarea 16px !important" hat das Schreibfeld am Telefon umgerechnet; die Antwort ist nicht, sie auszunehmen
+* **E599** — Der Feinschliff am freien Text: die Leiste wirkt auf den Kasten, in den gerade getippt wird, und zwei Tipps auf leeres Papier heissen „hier schreiben"
 
 ---
 
@@ -48540,3 +48541,78 @@ ohne das inline-`important`   Feld 3 Zeilen · Blatt 4 · fontPx 16    ✗ ✗
 ohne die 16-px-Untergrenze    fontPx 9,21                            ✗
 mit beidem                    Feld und Blatt gleich · fontPx 19,6    ✓ ✓
 ```
+
+---
+
+## E599 — Der Feinschliff am freien Text
+
+**15. September 2026.** E597 hat das Schreibfeld gebaut. Beim Hinsehen
+fehlten drei Dinge, die es erst zu dem machen, was Redur gemeint hat.
+
+### 1. Die Leiste war während des Schreibens unbenutzbar
+
+**Gemessen:** „A+ Grösser" antippen, während man schreibt — und der Kasten
+war weg. Der Knopf nimmt den Fokus, `blur` kommt, das Feld schliesst sich,
+bevor der Knopf überhaupt etwas tut.
+
+Das fiel vorher niemandem auf, weil ein Dialog dastand, der den Fokus selbst
+hielt. Mit einem Feld auf dem Blatt ist es der Normalfall.
+
+**Entschieden:** `relatedTarget` sagt, WOHIN der Fokus geht. Geht er in eine
+Leiste, die zu dieser Fläche gehört (`.blatt-werk`, `.document-drawingbar`,
+`.document-dock`, `.document-stage`, oder ein Knopf mit `data-act`,
+`data-wz`, `data-document-action`, `data-document-tool`), wird nicht
+geschlossen, sondern der Cursor zurückgeholt — nach dem Klick, damit der
+Knopf erst wirkt.
+
+**Nicht entschieden:** der Leiste den Fokus zu verbieten
+(`preventDefault` auf ihrem `pointerdown`). Das hätte jeden Knopf dieser
+Leiste betroffen, auch die, die mit dem Schreiben nichts zu tun haben, und
+die Tastaturbedienung gleich mit (§38).
+
+### 2. Die Leiste wirkte nicht auf den Kasten, in den getippt wurde
+
+Auch nachdem sie erreichbar war: „Grösser" hob die Vorgabe für den NÄCHSTEN
+Kasten. Der, in den man gerade tippte, blieb, wie er war. Das ist genau die
+Stelle, an der „was ich sehe, ist was dasteht" bricht — und zwar mitten im
+Satz.
+
+**Jetzt** formt `setzeSchrift` und `setzeFarbe` den offenen Kasten um: bei
+einem neuen den Entwurf, bei einem vorhandenen die Marke. Beides landet im
+**selben Schritt des Verlaufs** wie der Text, weil `before` seit dem Öffnen
+steht — einmal „Zurück" nimmt Text und Format zusammen (§50).
+
+Eine gesperrte Marke bleibt auch hier gesperrt (E473).
+
+### 3. Zweimal auf leeres Papier heisst: hier schreiben
+
+Der letzte Schritt zu Redurs Satz. Mit der Auswahl in der Hand — und das ist
+die Hand, in der man nach dem Zeichnen ist — musste man erst das
+Textwerkzeug holen, nur um einen Satz danebenzuschreiben.
+
+**EIN Tipp geht nicht:** er bedeutet mit der Auswahl schon etwas (er hebt
+die Auswahl auf und zieht einen Rahmen). **Zwei bedeuteten bisher nichts**,
+und das macht sie frei. In OneNote genügt einer; dort gibt es aber auch kein
+Auswahlwerkzeug, das auf denselben Tipp wartet.
+
+Nur mit der Auswahl. Beim Stift wären zwei Tipps zwei Punkte, beim Radierer
+zwei Radierversuche — ein Feld mitten darin wäre das Gegenteil dessen, was
+gemeint war.
+
+### Geprüft, und jede Zusicherung einzeln gegengeprüft
+
+`test527` wächst auf **32 Zusicherungen**. Die drei neuen Stücke wurden
+einzeln zurückgedreht:
+
+```txt
+ohne die Ausnahme für die Leiste     das Feld schliesst beim ersten Knopf   ✗ ✗ ✗
+ohne `schreiberUmformen`             26,3 px → 26,3 px, Marke bleibt 16     ✗ ✗
+ohne den Doppeltipp auf leeres Papier kein Feld, kein Satz                  ✗ ✗
+```
+
+Und ein Fund über den Lauf selbst: die Zusicherung „die fertige Marke trägt
+die neue Grösse" stand zuerst gegen die feste Zahl 16. Sie war grün, ohne
+dass der Knopf etwas getan hätte — die Schriftgrösse wandert im Lauf, §10
+stellt sie auf 34, und dort ist „Grösser" ein Knopf ohne Wirkung (34 ist die
+oberste Stufe). Jetzt vergleicht sie das Feld VOR dem Klick mit dem Feld und
+der Marke DANACH (§55.2).
