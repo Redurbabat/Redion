@@ -21590,12 +21590,19 @@ body[data-dokument="an"] .document-studio .document-topbar button:hover{backgrou
   background:var(--pdf-tools); box-shadow:var(--shadow-2)
 }
 .document-body{position:relative}
-/* DER NEGATIVE UNTERRAND ist kein Trick, sondern die Aussage: die Kapsel
-   SCHWEBT über dem Papier und schiebt es nicht nach unten. Ohne ihn
-   begänne das Blatt 48 px tiefer, bei jedem Dokument, für immer. */
+/* DIE KAPSEL SCHWEBT über dem Papier und schiebt es nicht nach unten —
+   das besorgt seit E579 `position:absolute` oben, nicht mehr ein negativer
+   Unterrand. (Hier stand der Satz über den negativen Unterrand noch, als
+   es ihn längst nicht mehr gab; ein Kommentar, der lügt, ist schlimmer als
+   keiner.) */
 .document-ink-history button{min-width:var(--touch-min); min-height:var(--touch-min)}
 .document-drawingbar [data-document-action="ink-options"]{margin-left:auto}
-.document-ink-history button{font-size:1.75rem}
+/* ══ DIE KAPSEL TRÄGT GEZEICHNETE ZEICHEN (E586) ══════════════════════════
+   Hier stand `font-size:1.75rem`, und die Zeile hatte genau eine Aufgabe:
+   die Schriftzeichen „↶" und „↷" gross zu machen. Beide sind weg — die
+   Kapsel holt `undo` und `redo` aus dem Register, wie die dreizehn
+   Werkzeuge daneben. 25 px, dieselbe Zahl wie in der Werkzeugzeile. */
+.document-ink-history svg{width:25px; height:25px}
 /* ZURÜCK UND VOR SIND NICHT DURCHSICHTIG (test393 §3, E396): abgeschaltet
    werden sie blass, nicht durchscheinend — sonst blitzen beim Rollen die
    Werkzeuge darunter durch. */
@@ -24093,7 +24100,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1091, inhalt: 'e4d1fefb21495845', gebaut: '2026-09-15T10:08:16.791Z' };
+const Stand = { fassung: 1093, inhalt: 'b5d119e075f4486c', gebaut: '2026-09-15T10:26:25.950Z' };
 window.Stand = Stand;
 
 </script>
@@ -79852,13 +79859,27 @@ const DocumentMode = (() => {
         workspace.setAttribute('aria-label', 'Dokument: ' + (page.text || 'Ohne Titel'));
         const top = document.createElement('div');
         top.className = 'document-topbar';
-        const topButton = (action, text, label) => {
+        /* ══ EIN ZEICHEN AUS DEM REGISTER, KEIN SCHRIFTZEICHEN (E586) ═════════
+           `sym` ist der vierte, freiwillige Teil. Wer ihn angibt, bekommt statt
+           des Textes eine Hülle mit `data-sym`; `Register.symbole.fuelle` malt
+           sie später aus. Wer ihn weglässt, bekommt weiter seinen Text — und
+           das ist richtig so für „+" und „‹", die Zeichen im Wortsinn sind und
+           kein Bild.
+    
+           WARUM ÜBERHAUPT: das Register sagt es seit E272 selbst — „ein Pfeil,
+           der aus einer Schrift kommt, sieht auf jedem System anders aus und
+           trägt nicht die Farbe seiner Zeile". Daneben stehen dreizehn
+           gezeichnete Werkzeuge. */
+        const topButton = (action, text, label, sym) => {
             const button = document.createElement('button');
             button.type = 'button';
             button.dataset.documentAction = action;
             button.setAttribute('aria-label', label);
-            button.textContent = text;
             button.title = label;
+            if (sym)
+                button.innerHTML = `<span data-sym="${sym}" aria-hidden="true"></span>`;
+            else
+                button.textContent = text;
             return button;
         };
         /* DER WEG ZURUECK STEHT IM DOKUMENT (E384). Solange Menueband und
@@ -79941,12 +79962,12 @@ const DocumentMode = (() => {
         }
         const topActions = document.createElement('div');
         topActions.className = 'document-top-actions';
-        const viewButton = topButton('view', '☷', 'Ansicht, Lesemodus und Zoom');
+        const viewButton = topButton('view', '', 'Ansicht, Lesemodus und Zoom', 'eye');
         viewButton.className = 'document-view-button';
         viewButton.setAttribute('aria-expanded', 'false');
         /* SUCHEN IM DOKUMENT (E468): der Knopf steht bei den Kopfaktionen,
            wie GoodNotes' Lupe; die Leiste dazu klappt unter dem Kopf auf. */
-        const findButton = topButton('find', '🔍', 'Im Dokument suchen (Strg F)');
+        const findButton = topButton('find', '', 'Im Dokument suchen (Strg F)', 'search');
         findButton.className = 'document-find-button';
         findButton.setAttribute('aria-expanded', 'false');
         /* PRÄSENTIEREN (E493), GoodNotes' Presentation Mode: das Dokument
@@ -80082,7 +80103,7 @@ const DocumentMode = (() => {
         history.className = 'document-ink-history';
         history.setAttribute('role', 'group');
         history.setAttribute('aria-label', 'Zeichenverlauf');
-        history.append(topButton('ink-undo', '↶', 'Letzten Zeichenstrich rückgängig machen'), topButton('ink-redo', '↷', 'Zeichenstrich wiederholen'));
+        history.append(topButton('ink-undo', '', 'Letzten Zeichenstrich rückgängig machen', 'undo'), topButton('ink-redo', '', 'Zeichenstrich wiederholen', 'redo'));
         /* E572: die feste Verlaufskapsel liegt über dem Papier, nicht im
            rollenden Werkzeugband — wie in Redurs neuer Referenz. */
         /* WELCHE SPALTEN ES GIBT, STEHT AM KASTEN (E296). Vorher war das Raster
@@ -80515,9 +80536,11 @@ const DocumentMode = (() => {
            Element davor gehört dort nicht hinein.
     
            Sie bleibt also Kind von `.document-body` — und bekommt IM STILBLATT
-           ihren Platz: am Rechner als Rasterfeld in derselben Zelle wie das
-           Papier (Rasterfelder in einer Zelle überlagern sich), am Telefon, wo
-           `.document-body` gar kein Raster ist, absolut oben links. */
+           ihren Platz: seit E579 in JEDEM Raster `position:absolute` oben
+           links, am Rechner wie am Telefon. (Hier stand bis dahin „am Rechner
+           als Rasterfeld in derselben Zelle wie das Papier" — das stimmte für
+           eine Ansicht und schob in der anderen die Folienfläche um 54 px
+           nach unten, gefunden von `test508 §2`.) */
         body.append(thumbnails, center, inspector, history);
         /* ══ DIE SUCHLEISTE (E468) ══════════════════════════════════════════════
            Ein Feld, die Zahl, vor und zurueck, zu. Enter springt zum naechsten
@@ -80655,6 +80678,16 @@ const DocumentMode = (() => {
         }
         if (typeof Register !== 'undefined')
             Register.symbole.fuelle(drawingbar);
+        /* UND DIE ZWEI ANDEREN ORTE MIT GEZEICHNETEN ZEICHEN (E586): die
+           Kopfzeile (Suchen, Ansicht) und die Verlaufskapsel. `fuelle` sucht
+           nur `[data-sym]` — es fasst nichts an, was keins hat. */
+        if (typeof Register !== 'undefined') {
+            try {
+                Register.symbole.fuelle(top);
+                Register.symbole.fuelle(history);
+            }
+            catch { /* ohne Zeichen bleibt der Name im `aria-label` */ }
+        }
         const inkToolbar = () => staende[state.index]?.querySelector('.blatt-werk') || null;
         /* ══ EINE SORTIERBEWEGUNG IST KEINE ATTRIBUTÄNDERUNG (E575) ═════════════
            Der Beobachter darüber horcht auf `disabled`, `aria-pressed` und

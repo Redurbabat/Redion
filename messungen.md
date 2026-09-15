@@ -965,3 +965,39 @@ vorher):
 **Angesehen:** `bilder/dock-zeichen-18.png`, `-22`, `-24`, `-26` (Telefon),
 `bilder/dock1440-zeichen-*.png` (Rechner), `bilder/dock-form-handy.png`
 zweifach.
+
+---
+
+## 24. Wo im Studio ein Schriftzeichen statt eines Bildes stand
+
+**Wann:** 15. September 2026 · **Womit:** eigenes Messskript, alle
+sichtbaren `button` des Studios mit einem Zeichen statt eines Wortes ·
+**Warum:** Plan 7 B 7 („die alten Toolbar-Styles") und 7 C 1 („keine zweite
+lose Icon-Sammlung").
+
+```txt
+„↶"  ink-undo   28 px Schrift, kein SVG
+„↷"  ink-redo   28 px Schrift, kein SVG
+„🔍" find       12 px Schrift, kein SVG
+„☷"  view       12 px Schrift, kein SVG
+„+"  zweimal    13/14 px — bleibt Text
+„⋮⋮" Griff      14 px — bleibt Text
+                                        Knöpfe mit Text UND SVG: 0
+```
+
+**Die Verlaufskapsel, vorher und nachher:**
+
+| | vorher | nachher |
+|---|---|---|
+| Kapsel | 100 × 54 px (1440), 98 × 52 (390) | unverändert |
+| Knopf | 44 × 44 px | 44 × 44 px |
+| Inhalt | Text „↶", Schrift 28 px | SVG `undo`, 25 px |
+| Farbe abgeschaltet | `rgb(115,115,115)` | `rgb(115,115,115)`, Strich gleich |
+| Deckung abgeschaltet | 1 | 1 |
+
+Die Farbe und die Deckung sind die zwei Zahlen, die E396 verlangt — blass,
+nicht durchscheinend. Ein SVG mit `stroke="currentColor"` hält beides von
+selbst; gemessen steht `stroke` danach auf demselben Wert wie `color`.
+
+**Angesehen:** `bilder/kapsel-1440.png`, `bilder/kapsel-390.png`,
+`bilder/topbar-1440.png`.

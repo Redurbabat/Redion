@@ -653,3 +653,47 @@ so im Nachtrag von E577 und bleibt eine Frage an Redur, keine stille
 `test523`.
 
 **Die Gesamtsuite ist NICHT als grün behauptet.**
+
+---
+
+## Nachtrag — Abschnitt 7 B 7 und der Rest von 7 C 1 (15. September 2026)
+
+B 7 sagte: „History … hat aber noch die alten Toolbar-Styles." Der alte
+Stil war genau eine Zeile — `font-size:1.75rem` —, und sie stand nur da, um
+zwei **Schriftzeichen** gross zu machen: `↶` und `↷`.
+
+Gemessen trugen vier Knöpfe des Studios Schriftzeichen, während dreizehn
+Werkzeuge daneben gezeichnete SVGs tragen: `ink-undo`, `ink-redo`, `find`
+(`🔍`) und `view` (`☷`). Das Register hatte `undo`, `redo`, `search` und
+`eye` seit E272 bereit — sie wurden nur nie geholt (E586).
+
+`topButton()` nimmt jetzt einen freiwilligen Zeichennamen. `+`, `‹` und
+`⋮⋮` bleiben Text: sie sind Zeichen im Wortsinn und kein Bild.
+
+**Was dabei erhalten bleiben musste:** E396 verlangt, dass abgeschaltete
+Verlaufsknöpfe blass sind und nicht durchscheinend. Ein SVG mit
+`stroke="currentColor"` hält das von selbst; gemessen steht `stroke` danach
+auf demselben Wert wie `color`.
+
+**Zwei Kommentare, die gelogen haben**, stehen jetzt richtig da: der über
+den „negativen Unterrand" der Kapsel (den E579 abgeschafft hat) und der
+über ihr „Rasterfeld am Rechner" (seit E579 ist sie überall absolut).
+
+### Damit ist aus 7 B nur noch B 2, B 8 und B 9 offen
+
+B 2 (Stift-Dock im Detail), B 8 (kleine Breite ist mit E580 zur Hälfte zu,
+die Bildschirmtastatur braucht ein echtes Gerät), B 9 („Alle Optionen"
+bleibt mit Grund vollständig — `test177`, `test228`, `test437` und
+`test515` erreichen darüber Dinge, die sonst nirgends stehen).
+**7 C ist zu**, bis auf die Frage an Redur, ob `penBrush` und `penPencil`
+sich genug unterscheiden (gemessen unter der Grenze, mit Augen ähnlich).
+
+### Prüfstand dieses Bogens
+
+`test524` 95/95 (12 Zusicherungen neu, 11 rot gesehen). Grün dazu:
+`test202`, `test204`, `test210`, `test285`, `test295`, `test341`,
+`test385`, `test395`, `test424`, `test437`, `test438`, `test441`,
+`test461`, `test463`, `test506`, `test507`, `test508`, `test509`,
+`test510`.
+
+**Die Gesamtsuite ist NICHT als grün behauptet.**

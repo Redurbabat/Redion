@@ -201,12 +201,19 @@ body[data-dokument="an"] .document-studio .document-topbar button:hover{backgrou
   background:var(--pdf-tools); box-shadow:var(--shadow-2)
 }
 .document-body{position:relative}
-/* DER NEGATIVE UNTERRAND ist kein Trick, sondern die Aussage: die Kapsel
-   SCHWEBT über dem Papier und schiebt es nicht nach unten. Ohne ihn
-   begänne das Blatt 48 px tiefer, bei jedem Dokument, für immer. */
+/* DIE KAPSEL SCHWEBT über dem Papier und schiebt es nicht nach unten —
+   das besorgt seit E579 `position:absolute` oben, nicht mehr ein negativer
+   Unterrand. (Hier stand der Satz über den negativen Unterrand noch, als
+   es ihn längst nicht mehr gab; ein Kommentar, der lügt, ist schlimmer als
+   keiner.) */
 .document-ink-history button{min-width:var(--touch-min); min-height:var(--touch-min)}
 .document-drawingbar [data-document-action="ink-options"]{margin-left:auto}
-.document-ink-history button{font-size:1.75rem}
+/* ══ DIE KAPSEL TRÄGT GEZEICHNETE ZEICHEN (E586) ══════════════════════════
+   Hier stand `font-size:1.75rem`, und die Zeile hatte genau eine Aufgabe:
+   die Schriftzeichen „↶" und „↷" gross zu machen. Beide sind weg — die
+   Kapsel holt `undo` und `redo` aus dem Register, wie die dreizehn
+   Werkzeuge daneben. 25 px, dieselbe Zahl wie in der Werkzeugzeile. */
+.document-ink-history svg{width:25px; height:25px}
 /* ZURÜCK UND VOR SIND NICHT DURCHSICHTIG (test393 §3, E396): abgeschaltet
    werden sie blass, nicht durchscheinend — sonst blitzen beim Rollen die
    Werkzeuge darunter durch. */

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-565 Entscheidungen, E1 bis E585 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+566 Entscheidungen, E1 bis E586 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -629,6 +629,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E583** — Die Kopie in der oberen Studioleiste zeigt jetzt, was das Original auf dem Blatt zeigt — welche Form gewählt ist
 * **E584** — Ein Pfeil, der keine Linie ist, und ein rundes Rechteck, das rund aussieht: drei Zeichenpaare waren über 70 % gleich
 * **E585** — Drei von vier Grössenangaben im Stilblatt hatten keine Wirkung: bemasst war die Hülle, gross war das SVG darin
+* **E586** — Vier Knöpfe des Studios trugen Schriftzeichen statt gezeichneter; das Register hatte alle vier längst
 
 ---
 
@@ -47456,3 +47457,76 @@ keine Verkleinerung, sondern das Ende eines Überstands.
 
 **Prüflauf:** `test524 §12`, sieben Zusicherungen, fünf rot gesehen.
 Angesehen: `bilder/dock-form-handy.png` (390 px, zweifach), `dock-form.png`.
+
+---
+
+## E586 — Ein Pfeil aus einer Schrift ist kein Zeichen
+
+**15. September 2026.** Plan 7 B 7 sagte: „History … hat aber noch die alten
+Toolbar-Styles." Plan 7 C 1 sagt: „Einheitliches SVG-Register nutzen; keine
+zweite lose Icon-Sammlung neben ihm."
+
+Gemessen, alle sichtbaren Knöpfe des Studios, die ein Zeichen statt eines
+Wortes tragen:
+
+| Zeichen | Knopf | Schrift | gezeichnet? |
+|---|---|---|---|
+| `↶` | `ink-undo` | 28 px | nein |
+| `↷` | `ink-redo` | 28 px | nein |
+| `🔍` | `find` | 12 px | nein |
+| `☷` | `view` | 12 px | nein |
+| `+` | zwei Stück | 13/14 px | nein — **und das bleibt so** |
+| `⋮⋮` | Sortiergriff | 14 px | nein — **dito** |
+
+Vier Knöpfe trugen Schriftzeichen, während dreizehn Werkzeuge daneben
+gezeichnete SVGs tragen.
+
+### Das Register hatte die Zeichen längst
+
+`undo`, `redo`, `search` und `eye` liegen seit E272 in `symbole.ts` — und
+der Kommentar dort sagt genau, warum:
+
+> „Zurücknehmen" und „Wiederherstellen" gab es im Band bisher nur im Reiter
+> Zeichnen, und dort als TEXTZEICHEN ↶ ↷. Für die Seite ist das zu wenig:
+> ein Pfeil, der aus einer Schrift kommt, sieht auf jedem System anders aus
+> und trägt nicht die Farbe seiner Zeile. Also gezeichnet, wie alle anderen
+> hier.
+
+Derselbe Satz gilt für das Studio. Er war nur nie dort angewendet worden.
+
+### Was geändert wurde
+
+`topButton()` bekommt einen vierten, **freiwilligen** Teil: einen
+Zeichennamen. Wer ihn angibt, bekommt eine Hülle mit `data-sym`; wer ihn
+weglässt, bekommt weiter seinen Text. Das ist wichtig, denn `+`, `‹` und
+`⋮⋮` sind Zeichen im Wortsinn und kein Bild — sie sollen Text bleiben.
+
+Im Stilblatt fiel damit `.document-ink-history button{font-size:1.75rem}`
+weg. Diese Zeile hatte genau eine Aufgabe: ein Schriftzeichen gross zu
+machen. An ihre Stelle tritt `svg{width:25px}` — dieselbe Zahl wie in der
+Werkzeugzeile daneben.
+
+### Was dabei erhalten bleiben musste
+
+E396 (`test393 §3`): abgeschaltet sind „Zurück" und „Vor" **blass, nicht
+durchscheinend** — sonst blitzen beim Rollen die Werkzeuge darunter durch.
+Ein SVG mit `stroke="currentColor"` erbt die blasse Farbe von selbst;
+gemessen steht der Strich danach auf `rgb(115,115,115)`, derselbe Wert wie
+`color`. Ein Bild mit eigener Farbe hätte das nicht getan, und das wäre der
+stille Rückschritt gewesen.
+
+### Zwei Kommentare, die gelogen haben
+
+Beim Aufräumen fielen zwei Sätze auf, die von einem Zustand sprachen, den
+es nicht mehr gibt:
+
+- „DER NEGATIVE UNTERRAND ist kein Trick…" — den negativen Unterrand hat
+  E579 abgeschafft.
+- „am Rechner als Rasterfeld in derselben Zelle wie das Papier" — seit E579
+  ist die Kapsel in jedem Raster absolut.
+
+Beide stehen jetzt richtig da. Ein Kommentar, der lügt, ist schlimmer als
+keiner: er wird geglaubt.
+
+**Prüflauf:** `test524 §13`, zwölf Zusicherungen, elf rot gesehen.
+Angesehen: `bilder/kapsel-1440.png`, `bilder/topbar-1440.png`.

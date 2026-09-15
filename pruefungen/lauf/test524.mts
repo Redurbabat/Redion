@@ -802,6 +802,80 @@ try {
   check('Das Stilblatt gibt dem SVG die Grösse seiner Hülle',
     /\.blatt-werk \.zeichen\[data-sym\] svg\{[^}]*width:\s*100%/.test(stilB));
 
+  /* ══ §13 EIN PFEIL AUS EINER SCHRIFT IST KEIN ZEICHEN (E586) ═════════════
+     Plan 7 B 7: „History … hat aber noch die alten Toolbar-Styles."
+     Plan 7 C 1: „Einheitliches SVG-Register nutzen; keine zweite lose
+     Icon-Sammlung neben ihm."
+
+     GEMESSEN am 15. September 2026, alle sichtbaren Knöpfe des Studios mit
+     einem Zeichen statt eines Wortes:
+
+       „↶"  ink-undo   28 px Schrift, kein SVG
+       „↷"  ink-redo   28 px Schrift, kein SVG
+       „🔍" find       12 px Schrift, kein SVG
+       „☷"  view       12 px Schrift, kein SVG
+       „+"  zwei Stück · „⋮⋮" Griff — die bleiben Text, sie sind Zeichen
+                                      im Wortsinn und kein Bild
+
+     Vier Knöpfe trugen also Schriftzeichen, während alle dreizehn Werkzeuge
+     daneben gezeichnete SVGs tragen. Das Register sagt seit E272 selbst,
+     warum das zu wenig ist: „ein Pfeil, der aus einer Schrift kommt, sieht
+     auf jedem System anders aus und trägt nicht die Farbe seiner Zeile."
+     Und die Zeichen `undo`, `redo`, `search`, `eye` liegen dort seither
+     bereit — sie wurden nur nie geholt.
+
+     DER STIL DER KAPSEL kam von daher: `font-size:1.75rem` steht nur da,
+     um ein Textzeichen gross zu machen. Das ist der „alte Toolbar-Style"
+     aus B 7. */
+  const zeichenKnopf = async (sel: string): Promise<{ da: boolean; svg: boolean; text: string;
+                                                     sym: string; gr: number; knopf: number }> =>
+    await page.evaluate(`(() => {
+      const b = document.querySelector('${sel}');
+      if (!b) return { da: false, svg: false, text: '', sym: '', gr: 0, knopf: 0 };
+      const svg = b.querySelector('svg'), sp = b.querySelector('[data-sym]');
+      return { da: true, svg: !!svg, text: (b.textContent || '').trim(),
+               sym: sp ? (sp.getAttribute('data-sym') || '') : '',
+               gr: svg ? Math.round(svg.getBoundingClientRect().width) : 0,
+               knopf: Math.round(b.getBoundingClientRect().width) };
+    })()`) as { da: boolean; svg: boolean; text: string; sym: string; gr: number; knopf: number };
+
+  for (const [sel, sym, name] of [
+    ['.document-ink-history [data-document-action="ink-undo"]', 'undo', 'Zurück'],
+    ['.document-ink-history [data-document-action="ink-redo"]', 'redo', 'Vor'],
+    ['.document-topbar [data-document-action="find"]', 'search', 'Suchen'],
+    ['.document-topbar [data-document-action="view"]', 'eye', 'Ansicht']] as const) {
+    const k = await zeichenKnopf(sel);
+    check(`„${name}" trägt ein gezeichnetes Zeichen, kein Schriftzeichen`,
+      k.da && k.svg && k.text === '');
+    check(`… und zwar „${sym}" aus dem Register`, k.sym === sym);
+  }
+  /* DIE KAPSEL IST EINE FESTE 44-PX-FLÄCHE (§37) — dort gilt dieselbe
+     Grösse wie im Dock am Telefon (E585). */
+  const zurueck = await zeichenKnopf('.document-ink-history [data-document-action="ink-undo"]');
+  check(`In der Kapsel ist das Zeichen 24 bis 28 px (gemessen ${zurueck.gr} px in ${zurueck.knopf} px)`,
+    zurueck.gr >= 24 && zurueck.gr <= 28 && zurueck.knopf >= 44);
+  /* UND ABGESCHALTET BLEIBT ES BLASS, NICHT DURCHSICHTIG (E396, test393 §3):
+     sonst blitzen beim Rollen die Werkzeuge darunter durch. Ein SVG mit
+     `currentColor` erbt die blasse Farbe — ein Bild mit eigener Farbe
+     täte es nicht, und genau das wäre hier der stille Rückschritt. */
+  const blass = await page.evaluate(`(() => {
+    const b = document.querySelector('.document-ink-history [data-document-action="ink-undo"]');
+    if (!b) return { aus: false, deckung: '0', farbe: '', strich: '' };
+    const svg = b.querySelector('svg');
+    return { aus: b.disabled, deckung: getComputedStyle(b).opacity,
+             farbe: getComputedStyle(b).color,
+             strich: svg ? getComputedStyle(svg).stroke : '' };
+  })()`) as { aus: boolean; deckung: string; farbe: string; strich: string };
+  check('Abgeschaltet ist die Kapsel blass, nicht durchsichtig',
+    blass.aus && blass.deckung === '1');
+  check(`… und das Zeichen nimmt dieselbe blasse Farbe (${blass.strich})`,
+    blass.strich === blass.farbe && blass.strich !== '');
+  /* DIE QUELLE: kein `font-size` mehr, das nur ein Textzeichen gross macht. */
+  const stilC = lies('quell/schale/stil/pdf-studio.css')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
+  check('Die Kapsel bläht kein Schriftzeichen mehr auf',
+    !/\.document-ink-history button\{font-size/.test(stilC));
+
   await werkzeug('stift');
   check('Keine Laufzeitfehler', errors.length === 0);
   mkdirSync(resolve(root, 'bilder'), { recursive: true });

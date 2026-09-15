@@ -1729,11 +1729,25 @@ const DocumentMode = (() => {
 
     const top = document.createElement('div');
     top.className = 'document-topbar';
-    const topButton = (action: string, text: string, label: string): HTMLButtonElement => {
+    /* ══ EIN ZEICHEN AUS DEM REGISTER, KEIN SCHRIFTZEICHEN (E586) ═════════
+       `sym` ist der vierte, freiwillige Teil. Wer ihn angibt, bekommt statt
+       des Textes eine Hülle mit `data-sym`; `Register.symbole.fuelle` malt
+       sie später aus. Wer ihn weglässt, bekommt weiter seinen Text — und
+       das ist richtig so für „+" und „‹", die Zeichen im Wortsinn sind und
+       kein Bild.
+
+       WARUM ÜBERHAUPT: das Register sagt es seit E272 selbst — „ein Pfeil,
+       der aus einer Schrift kommt, sieht auf jedem System anders aus und
+       trägt nicht die Farbe seiner Zeile". Daneben stehen dreizehn
+       gezeichnete Werkzeuge. */
+    const topButton = (action: string, text: string, label: string,
+                       sym?: string): HTMLButtonElement => {
       const button = document.createElement('button');
       button.type = 'button'; button.dataset.documentAction = action;
-      button.setAttribute('aria-label', label); button.textContent = text;
+      button.setAttribute('aria-label', label);
       button.title = label;
+      if (sym) button.innerHTML = `<span data-sym="${sym}" aria-hidden="true"></span>`;
+      else button.textContent = text;
       return button;
     };
     /* DER WEG ZURUECK STEHT IM DOKUMENT (E384). Solange Menueband und
@@ -1815,12 +1829,12 @@ const DocumentMode = (() => {
 
     const topActions = document.createElement('div');
     topActions.className = 'document-top-actions';
-    const viewButton = topButton('view', '☷', 'Ansicht, Lesemodus und Zoom');
+    const viewButton = topButton('view', '', 'Ansicht, Lesemodus und Zoom', 'eye');
     viewButton.className = 'document-view-button';
     viewButton.setAttribute('aria-expanded', 'false');
     /* SUCHEN IM DOKUMENT (E468): der Knopf steht bei den Kopfaktionen,
        wie GoodNotes' Lupe; die Leiste dazu klappt unter dem Kopf auf. */
-    const findButton = topButton('find', '🔍', 'Im Dokument suchen (Strg F)');
+    const findButton = topButton('find', '', 'Im Dokument suchen (Strg F)', 'search');
     findButton.className = 'document-find-button';
     findButton.setAttribute('aria-expanded', 'false');
     /* PRÄSENTIEREN (E493), GoodNotes' Presentation Mode: das Dokument
@@ -1954,8 +1968,8 @@ const DocumentMode = (() => {
        Stilblatt, nicht ein zweiter Kasten hier. */
     const history = document.createElement('div'); history.className = 'document-ink-history';
     history.setAttribute('role', 'group'); history.setAttribute('aria-label', 'Zeichenverlauf');
-    history.append(topButton('ink-undo', '↶', 'Letzten Zeichenstrich rückgängig machen'),
-      topButton('ink-redo', '↷', 'Zeichenstrich wiederholen'));
+    history.append(topButton('ink-undo', '', 'Letzten Zeichenstrich rückgängig machen', 'undo'),
+      topButton('ink-redo', '', 'Zeichenstrich wiederholen', 'redo'));
     /* E572: die feste Verlaufskapsel liegt über dem Papier, nicht im
        rollenden Werkzeugband — wie in Redurs neuer Referenz. */
 
@@ -2363,9 +2377,11 @@ const DocumentMode = (() => {
        Element davor gehört dort nicht hinein.
 
        Sie bleibt also Kind von `.document-body` — und bekommt IM STILBLATT
-       ihren Platz: am Rechner als Rasterfeld in derselben Zelle wie das
-       Papier (Rasterfelder in einer Zelle überlagern sich), am Telefon, wo
-       `.document-body` gar kein Raster ist, absolut oben links. */
+       ihren Platz: seit E579 in JEDEM Raster `position:absolute` oben
+       links, am Rechner wie am Telefon. (Hier stand bis dahin „am Rechner
+       als Rasterfeld in derselben Zelle wie das Papier" — das stimmte für
+       eine Ansicht und schob in der anderen die Folienfläche um 54 px
+       nach unten, gefunden von `test508 §2`.) */
     body.append(thumbnails, center, inspector, history);
     /* ══ DIE SUCHLEISTE (E468) ══════════════════════════════════════════════
        Ein Feld, die Zahl, vor und zurueck, zu. Enter springt zum naechsten
@@ -2503,6 +2519,13 @@ const DocumentMode = (() => {
       heftSync();
     }
     if (typeof Register !== 'undefined') Register.symbole.fuelle(drawingbar);
+    /* UND DIE ZWEI ANDEREN ORTE MIT GEZEICHNETEN ZEICHEN (E586): die
+       Kopfzeile (Suchen, Ansicht) und die Verlaufskapsel. `fuelle` sucht
+       nur `[data-sym]` — es fasst nichts an, was keins hat. */
+    if (typeof Register !== 'undefined') {
+      try { Register.symbole.fuelle(top); Register.symbole.fuelle(history); }
+      catch { /* ohne Zeichen bleibt der Name im `aria-label` */ }
+    }
 
     const inkToolbar = (): HTMLElement | null =>
       staende[state.index]?.querySelector<HTMLElement>('.blatt-werk') || null;
