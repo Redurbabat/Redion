@@ -7995,3 +7995,24 @@ zuerst für einen Altbestand wie `test290`. Ein Arbeitsbaum auf den einzelnen
 Commits (§30) hat gezeigt, dass er bei E571 und E572 grün war und mit E573
 rot wurde. „Älter als mein Zweig" ist eine Vermutung, solange niemand die
 Commits durchgeht — und sie ist die bequeme Antwort.
+
+## L161 · Kein Hinweis auf das, was ausserhalb des Bildes steht — GESCHLOSSEN am 15. September 2026
+
+**Fund:** Am Telefon standen **390 px der oberen Leiste und 562 px des
+unteren Docks ausserhalb des Bildes** — mehr als darin, acht von sechzehn
+Werkzeugen oben und zwei Drittel im Dock — und nichts sagte es. Plan 7 B 8.
+
+**Beleg der Schliessung:** Rollschatten aus vier Hintergrundschichten, ohne
+eine Zeile JavaScript; er zeigt sich nur dort, wo es etwas zu rollen gibt.
+`test524 §9`, sechs Zusicherungen, davon zwei vorher rot gesehen.
+Entscheidung E580.
+
+**Und der Fund im Fund:** der erste Schatten war schwarz und im Dunkelmodus
+nachgemessen **8 von 255** Helligkeitsunterschied — unsichtbar. Der Wächter
+misst deshalb Pixel, nicht CSS-Text (§55.1), und war mit dem schwarzen
+Schatten genau im dunklen Thema rot.
+
+**Offen bleibt aus 7 B 8:** die Bildschirmtastatur. Was passiert, wenn sie
+aufgeht und die schwebende Leiste verdeckt, ist nicht gemessen — dafür
+braucht es ein echtes Gerät (L157 nennt echte Stifthardware aus demselben
+Grund).

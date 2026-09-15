@@ -689,3 +689,35 @@ d4a53c8e (E571)   Suite 508: 40 grün
 
 **„Älter als mein Zweig" ist eine Vermutung, solange niemand die Commits
 durchgeht** — und sie ist die bequeme Antwort, was sie verdächtig macht.
+
+---
+
+## 16. Wie viel am Telefon ausserhalb des Bildes steht
+
+**Methode:** `scrollWidth` gegen `clientWidth` der beiden Leisten, je Fenster.
+15. September 2026.
+
+| Fenster | obere Leiste | versteckt | unteres Dock | versteckt |
+|---|---|---|---|---|
+| 390 × 844 | 780 / 390 | **390 px** | 918 / 356 | **562 px** |
+| 820 × 1180 | 834 / 820 | 14 px | 939 / 786 | 153 px |
+| 1440 × 960 | 1440 / 1440 | 0 | 939 / 939 | 0 |
+
+Am Telefon steht mehr ausserhalb des Bildes als darin: acht von sechzehn
+Werkzeugen oben, im Dock zwei Drittel.
+
+## 17. Wie stark ein Rollschatten wirklich ist
+
+**Methode:** Bildschirmfoto der Leiste, Helligkeit (0–255) eines Pixels am
+rechten Rand, in der Mitte und am linken Rand, bei 390 px Fensterbreite.
+
+| Thema | Schatten `rgba(0,0,0,.30)` | Schatten aus `--text` |
+|---|---|---|
+| dunkel | Rand 24, Mitte 32 → **8** | Rand 96, Mitte 32 → **64** |
+| hell | Rand 181, Mitte 247 → 66 | Rand 189, Mitte 247 → 58 |
+| links (beide, am Anfang der Rolle) | kein Unterschied | kein Unterschied |
+
+**Acht von 255 ist nichts.** Ein schwarzer Schatten auf einer dunklen Leiste
+ist keiner — im Stilblatt sieht er richtig aus, auf dem Bild nicht (§55.1).
+Die Grenze im Wächter ist 25: sie liegt in der Mitte zwischen dem kaputten
+Wert (8) und den reparierten (58 und 64).

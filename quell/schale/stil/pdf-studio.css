@@ -638,3 +638,54 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
 }
 /* Im Druck bewegt sich ohnehin nichts — die Leisten sind dort schon aus
    (Zeile mit `@media print` weiter oben). */
+
+/* ══ DER ROLLSCHATTEN: WAS AUSSERHALB STEHT, SAGT SICH SELBST (E580) ═══════
+   GEMESSEN am 15. September 2026, `scrollWidth` gegen `clientWidth`:
+
+     390 px   oben 780/390 → 390 px versteckt · Dock 918/356 → 562 versteckt
+     820 px   oben 834/820 →  14 px versteckt · Dock 939/786 → 153 versteckt
+    1440 px   nichts versteckt
+
+   Am Telefon stand also MEHR ausserhalb des Bildes als darin: acht von
+   sechzehn Werkzeugen oben, im Dock zwei Drittel. Dass die Leisten rollen,
+   ist Absicht (E356/E359 — eine rollende Zeile statt drei, die das Papier
+   auffressen). Dass nichts es sagte, war keine; Plan 7 B 8 nennt es
+   „sichtbarer Hinweis auf weitere Werkzeuge".
+
+   VIER HINTERGRUNDSCHICHTEN UND KEINE ZEILE JAVASCRIPT. Zwei `scroll`-
+   Schichten sind die Schatten links und rechts; zwei `local`-Schichten sind
+   Deckel in der Farbe der Leiste, die mit dem Inhalt mitrollen und den
+   Schatten an seinem Ende zudecken. Ergebnis: der Schatten zeigt sich genau
+   dort, wo es etwas zu rollen gibt, und verschwindet an beiden Enden — von
+   selbst, ohne Horcher, der beim Neuaufbau hängenbleiben kann (E575 lässt
+   grüssen).
+
+   DIE VOLLE FARBE STEHT ALS LETZTE SCHICHT dabei: `background` ist eine
+   Kurzform und würde sie sonst wegnehmen. Deshalb je Leiste ihre eigene
+   Regel statt einer gemeinsamen — die Farben sind verschieden.
+
+   UND DER SCHATTEN IST NICHT SCHWARZ. Der erste Wurf nahm `var(--roll-schatten)`
+   und war im Dunkelmodus nachgemessen **8 von 255** Helligkeitsunterschied
+   zwischen Rand und Mitte — also nichts. Im Hellmodus waren es 66. Ein
+   schwarzer Schatten auf einer dunklen Leiste ist keiner.
+   `--text` ist im Dunkelmodus hell und im Hellmodus dunkel; mit `color-mix`
+   wird daraus in beiden Themen ein Rand, der sich abhebt. Im Dunkeln ist es
+   streng genommen kein Schatten mehr, sondern ein Schimmer — die Aufgabe ist
+   dieselbe: „hier geht es weiter". */
+:root{ --roll-schatten: color-mix(in srgb, var(--text) 34%, transparent); }
+.document-studio .document-drawingbar{
+  background:
+    linear-gradient(to right, var(--pdf-tools) 60%, transparent) left / 28px 100% no-repeat local,
+    linear-gradient(to left,  var(--pdf-tools) 60%, transparent) right / 28px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, var(--roll-schatten), transparent) left / 16px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, var(--roll-schatten), transparent) right / 16px 100% no-repeat scroll,
+    var(--pdf-tools)
+}
+body[data-dokument="an"] .document-studio .blatt-werk{
+  background:
+    linear-gradient(to right, var(--pdf-dock) 60%, transparent) left / 28px 100% no-repeat local,
+    linear-gradient(to left,  var(--pdf-dock) 60%, transparent) right / 28px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, var(--roll-schatten), transparent) left / 16px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, var(--roll-schatten), transparent) right / 16px 100% no-repeat scroll,
+    var(--pdf-dock)
+}

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-559 Entscheidungen, E1 bis E579 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+560 Entscheidungen, E1 bis E580 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -623,6 +623,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E577** — Die Dock-Bewegung bewegt das Zeichen, nicht den Knopf; das Galeriefeld bekommt sein Raster; und zwei Werkzeugzeichen waren dasselbe Bild
 * **E578** — Ein Dokument im Lesemodus nahm Striche an: die Taste war nur die kleinere von zwei Türen
 * **E579** — Die Verlaufskapsel nimmt nirgends Platz: ein Raster, das hier überlagert und dort schiebt, ist kein Platz
+* **E580** — Der Rollschatten: was ausserhalb des Bildes steht, sagt sich selbst — und ein schwarzer Schatten auf dunklem Grund ist keiner
 
 ---
 
@@ -47065,3 +47066,64 @@ Verschlechterung hält.
 
 **Prüfläufe:** `test508` 40/40 (wieder), `test461`, `test393`, `test437`,
 `test524`, `test386`, `test424`, `test471` grün.
+
+---
+
+## E580 — Was ausserhalb des Bildes steht, muss sich selbst melden
+
+**15. September 2026.** Plan 7 B 8: „sichtbarer Hinweis auf weitere
+Werkzeuge". Gemessen, wie viel am Telefon überhaupt fehlt —
+`scrollWidth` gegen `clientWidth`:
+
+| Fenster | obere Leiste | unteres Dock |
+|---|---|---|
+| 390 px | 780 / 390 → **390 px versteckt** | 918 / 356 → **562 px versteckt** |
+| 820 px | 834 / 820 → 14 px | 939 / 786 → 153 px |
+| 1440 px | nichts | nichts |
+
+Am Telefon stand also **mehr ausserhalb des Bildes als darin**: acht von
+sechzehn Werkzeugen oben, im Dock zwei Drittel. Dass die Leisten rollen, ist
+Absicht (E356/E359 — eine rollende Zeile statt drei, die das Papier
+auffressen). Dass nichts es sagte, war keine.
+
+### Vier Hintergrundschichten, keine Zeile JavaScript
+
+Zwei `scroll`-Schichten sind die Schatten links und rechts; zwei
+`local`-Schichten sind Deckel in der Farbe der Leiste, die mit dem Inhalt
+mitrollen und den Schatten an seinem Ende zudecken. Der Hinweis zeigt sich
+damit **genau dort, wo es etwas zu rollen gibt**, und verschwindet an beiden
+Enden — von selbst.
+
+Die Alternative wäre ein Scroll-Horcher gewesen, der eine Klasse setzt. Der
+kostet einen Horcher, der beim Neuaufbau hängenbleiben kann — E575 hat
+gerade zwei solche Fälle aufgeräumt, und der beste Horcher ist der, den es
+nicht gibt.
+
+### Und der Schatten ist nicht schwarz
+
+Der erste Wurf nahm `rgba(0,0,0,.30)`. **Nachgemessen in Pixeln**, Rand
+gegen Mitte der Leiste, Helligkeit von 255:
+
+| Thema | vorher | nachher |
+|---|---|---|
+| dunkel | **8** | **64** |
+| hell | 66 | 58 |
+
+Acht von 255 ist nichts. Ein schwarzer Schatten auf einer dunklen Leiste ist
+keiner — und das sieht man erst auf dem Bild, nicht im Stilblatt (§55.1).
+`--text` ist im Dunkelmodus hell und im Hellmodus dunkel; mit `color-mix`
+wird daraus in beiden Themen ein Rand, der sich abhebt. Im Dunkeln ist es
+streng genommen kein Schatten mehr, sondern ein Schimmer — die Aufgabe ist
+dieselbe.
+
+**Der Wächter misst deshalb Pixel, nicht CSS-Text.** `test524 §9` liest die
+Helligkeit am Rand und in der Mitte und verlangt 25 Unterschied; gemessen
+liegen die reparierten Werte bei 64 und 58, der kaputte bei 8 — 25 liegt in
+der Mitte der Lücke. **Er ist rot gewesen:** mit dem schwarzen Schatten
+zurückgedreht meldete er genau das dunkle Thema rot und das helle grün.
+
+Dazu prüft er, dass links **kein** Schatten steht, solange die Leiste am
+Anfang ist: ein Hinweis, der etwas verspricht, das es nicht gibt, ist
+schlimmer als keiner.
+
+**Prüfläufe:** `test524` 58/58.

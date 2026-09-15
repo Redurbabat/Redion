@@ -506,6 +506,97 @@ try {
   await page.setViewportSize({ width: 1440, height: 960 });
   await page.waitForTimeout(600);
 
+  /* ══ §9 WENN ETWAS AUSSERHALB DES BILDES STEHT, MUSS MAN ES SEHEN (E580) ══
+     GEMESSEN am 15. September 2026, je Fenster `scrollWidth` gegen
+     `clientWidth`:
+
+       390 px   oben 780/390 → 390 px versteckt · Dock 918/356 → 562 versteckt
+       820 px   oben 834/820 →  14 px versteckt · Dock 939/786 → 153 versteckt
+      1440 px   oben 1440/1440 nichts · Dock 939/939 nichts
+
+     Am Telefon steht also MEHR ausserhalb des Bildes als darin — acht von
+     sechzehn Werkzeugen oben, und im Dock zwei Drittel. Dass die Leiste
+     rollt, ist Absicht (E356/E359: eine rollende Zeile statt drei Zeilen,
+     die das Papier auffressen). Dass nichts es SAGT, ist keine.
+
+     Plan 7 B 8 nennt es „sichtbarer Hinweis auf weitere Werkzeuge".
+
+     WIE ES GEPRÜFT WIRD, OHNE PIXEL ZU RATEN: der Hinweis ist ein
+     Rollschatten aus vier Hintergrundschichten (zwei `local` als Deckel,
+     zwei `scroll` als Schatten). Er zeigt sich von selbst nur dort, wo es
+     etwas zu rollen gibt, und verschwindet an den Enden — ohne eine Zeile
+     JavaScript und ohne Horcher, der hängenbleiben kann. Geprüft wird,
+     dass die Schichten wirklich im berechneten Hintergrund stehen, und
+     daneben die Zahlen oben. */
+  await werkzeug('stift');
+  const rollen = async () => await page.evaluate(`(() => {
+    const mess = (sel) => {
+      const e = document.querySelector(sel);
+      if (!e) return null;
+      const bg = getComputedStyle(e).backgroundImage;
+      return { sichtbar: Math.round(e.clientWidth), inhalt: Math.round(e.scrollWidth),
+        versteckt: Math.max(0, Math.round(e.scrollWidth - e.clientWidth)),
+        schatten: (bg.match(/radial-gradient/g) || []).length,
+        deckel: (bg.match(/linear-gradient/g) || []).length };
+    };
+    return { oben: mess('.document-drawingbar'),
+      dock: mess('.document-stage[data-aktiv] .blatt-werk') };
+  })()`) as { oben: any; dock: any };
+
+  const amRechnerRollt = await rollen();
+  check('Am Rechner steht nichts ausserhalb des Bildes',
+    amRechnerRollt.oben.versteckt === 0 && amRechnerRollt.dock.versteckt === 0);
+  check('Beide Leisten tragen den Rollschatten — zwei Schatten, zwei Deckel',
+    amRechnerRollt.oben.schatten >= 2 && amRechnerRollt.oben.deckel >= 2
+    && amRechnerRollt.dock.schatten >= 2 && amRechnerRollt.dock.deckel >= 2);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(700);
+  const amTelefonRollt = await rollen();
+  check('Am Telefon rollt beides wirklich',
+    amTelefonRollt.oben.versteckt > 100 && amTelefonRollt.dock.versteckt > 100);
+  check('… und der Hinweis ist auch dort da',
+    amTelefonRollt.oben.schatten >= 2 && amTelefonRollt.dock.schatten >= 2);
+
+  /* ══ UND JETZT IN PIXELN, NICHT IN CSS-TEXT (§55.1) ═══════════════════════
+     Dass die Schichten im Hintergrund stehen, heisst noch nicht, dass man
+     sie SIEHT. Der erste Wurf nahm `rgba(0,0,0,.30)` und war im Dunkelmodus
+     nachgemessen **8 von 255** Helligkeitsunterschied zwischen Rand und
+     Mitte — ein schwarzer Schatten auf einer dunklen Leiste. Im Hellmodus
+     waren es 66. Genau die Sorte Fehler, die nur ein Blick auf das Bild
+     findet, und genau deshalb steht hier eine Messung und keine Zeichenkette.
+     Die Grenze ist 25: gemessen liegen die reparierten Werte bei 64 (dunkel)
+     und 58 (hell), der kaputte bei 8. 25 liegt in der Mitte der Lücke. */
+  const randKontrast = async (): Promise<{ rechts: number; mitte: number; links: number }> => {
+    const bar = page.locator('.document-drawingbar');
+    const box = (await bar.boundingBox())!;
+    const bild = await page.screenshot({ clip: { x: box.x, y: box.y, width: box.width, height: box.height } });
+    return await page.evaluate(async (daten: number[]) => {
+      const blob = new Blob([new Uint8Array(daten)], { type: 'image/png' });
+      const bmp = await createImageBitmap(blob);
+      const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height;
+      const g = c.getContext('2d')!; g.drawImage(bmp, 0, 0);
+      const y = Math.round(bmp.height / 2);
+      const lies = (x: number) => { const d = g.getImageData(x, y, 1, 1).data;
+        return Math.round(.299 * d[0]! + .587 * d[1]! + .114 * d[2]!); };
+      return { links: lies(1), mitte: lies(Math.round(bmp.width / 2)), rechts: lies(bmp.width - 2) };
+    }, Array.from(bild));
+  };
+  for (const thema of ['standard', 'hell']) {
+    await page.evaluate(th => (window as any).Aussehen?.setzen({ schema: th }), thema);
+    await page.waitForTimeout(400);
+    const k = await randKontrast();
+    check(`Der Hinweis ist im Thema „${thema}" wirklich zu sehen (≥ 25)`,
+      Math.abs(k.rechts - k.mitte) >= 25);
+    /* AM ANFANG DER ROLLE GIBT ES LINKS NICHTS ZU HOLEN — und dort darf auch
+       kein Schatten stehen, sonst verspricht er etwas, das nicht da ist. */
+    check(`… und links, wo nichts mehr kommt, steht keiner („${thema}")`,
+      Math.abs(k.links - k.mitte) < 12);
+  }
+  await page.evaluate(() => (window as any).Aussehen?.setzen({ schema: 'standard' }));
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await page.waitForTimeout(600);
+
   await werkzeug('stift');
   check('Keine Laufzeitfehler', errors.length === 0);
   mkdirSync(resolve(root, 'bilder'), { recursive: true });
