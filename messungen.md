@@ -1240,3 +1240,68 @@ genau einer Stelle definiert ist (`marken.css:44`, 44px).
 aufbau 5 · bausteine 69 · einstellungen 3 · ki 1 · lernwelt 6 · motion 8
 notizhefte 7 · premium 2 · produktwelten 2 · tabelle 1 · werkzeuge 10
 ```
+
+---
+
+## 31. Wo das Lineal beim Zoom landet
+
+**Wann:** 15. September 2026 · **Womit:** eigenes Messskript, Lineal an,
+Zoomregler auf vier Werte · **Warum:** Abschnitt 8 des Übergabeplans.
+
+„Sichtbarer Anteil" ist die Fläche des Lineals, die im Rollfenster
+(`.document-center`) liegt.
+
+**Vorher:**
+
+| Zoom | 1440 × 960 | Griff | 390 × 844 | Griff |
+|---|---|---|---|---|
+| 60 % | 100 % | ja | 100 % | ja |
+| 100 % | 100 % | ja | 100 % | ja |
+| 140 % | **1 %** | **nein** | 83 % | **nein** |
+| 180 % | **0 %** | **nein** | 63 % | **nein** |
+
+Die Kästen dazu, 1440 × 960:
+
+```txt
+140 %   Lineal  [ 99, 958, 1233, 258]   Fenster [0, 154, 1440, 806]
+180 %   Lineal  [107,1180, 1586, 332]   Blatt   [19, 183, 1762, 2493]
+```
+
+Das Lineal spannt 0,9 Blattbreiten; bei 180 % sind das 1586 px in einem
+1440 px breiten Fenster. Es kann also gar nicht ganz hineinpassen — der
+Griff muss es.
+
+**Nachher** (E591):
+
+```txt
+140 %   100 % sichtbar, Griff [1121, 664, 92]  → drin
+180 %    91 % sichtbar, Griff [1252, 690, 118] → drin
+```
+
+**Zwischenstand, der nicht genügte:** eine erste Fassung prüfte nur
+senkrecht. Danach lag das Glas bei 180 % zu 84 % im Bild — und der Griff
+bei x = 1422 immer noch daneben (Fenster 1440, Griff 118 breit).
+
+---
+
+## 32. Die Radierergrösse und die Tinte
+
+**Wann:** 15. September 2026.
+
+```txt
+Radierer an       meta null · markiert 5  · Strichknopf 2,4
+gross gewählt     meta 28   · markiert 28 · Strichknopf 2,4
+zurück zum Stift  meta 28   · markiert 28 · Strichknopf 2,4
+Seite 2           meta 28   · markiert 28 · Strichknopf 2,4
+```
+
+**Die Gegenprobe, und warum sie nötig war:** liess man `setEraserSize`
+zusätzlich `setzeStrich(radius / 10)` rufen, blieb die Zusicherung über den
+Strichknopf **grün** — die Markierung in der Leiste wird vom Klick auf die
+Strichknöpfe gesetzt, nicht vom Zeichner. Erst ein wirklich gezogener Strich
+zeigt es:
+
+```txt
+kaputter Stand   Strich vorher 0.5  → nachher 2.8   (rot)
+echter Stand     Strich vorher 2.4  → nachher 2.4   (grün)
+```

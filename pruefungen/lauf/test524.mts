@@ -1028,6 +1028,173 @@ try {
   await page.setViewportSize({ width: 1440, height: 960 });
   await page.waitForTimeout(600);
 
+  /* ══ §16 DAS LINEAL BLEIBT IM BILD (E591) ════════════════════════════════
+     Abschnitt 8 des Übergabeplans: „`InkRuler` begrenzt die Lage an den
+     Dokumentmaßen. Bei Zoom kann das Lineal außerhalb des sichtbaren
+     Ausschnitts stehen; sinnvollen Erstplatz prüfen."
+
+     GEMESSEN am 15. September 2026, Lineal an, dann gezoomt. „Sichtbarer
+     Anteil" ist die Fläche des Lineals, die im Rollfenster liegt:
+
+       1440 × 960    60 %  →  100 %   Griff erreichbar
+                    100 %  →  100 %   Griff erreichbar
+                    140 %  →    1 %   Griff NICHT erreichbar
+                    180 %  →    0 %   Griff NICHT erreichbar
+        390 × 844   140 %  →   83 %   Griff NICHT erreichbar
+                    180 %  →   63 %   Griff NICHT erreichbar
+
+     Die Ursache steht in `ink-ruler.ts`: `y = min(height * .4, width * .65)`
+     — vier Zehntel der BLATThöhe. Beim Zoom ist das Blatt höher als das
+     Fenster, der Blick steht oben, und vier Zehntel liegen darunter.
+
+     Ein Lineal, dessen Griff man nicht erreicht, ist kein Werkzeug. */
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await page.waitForTimeout(600);
+  await werkzeug('stift');
+  await page.locator('[data-document-action="ink-ruler"]').click();
+  await page.waitForTimeout(500);
+  const linealBei = async (prozent: number) => {
+    await page.evaluate(`(() => { const s = document.querySelector('[data-document-zoom]');
+      if (s) { s.value = '${prozent}'; s.dispatchEvent(new Event('input', { bubbles: true })); } })()`);
+    await page.waitForTimeout(650);
+    return await page.evaluate(`(() => {
+      const g = document.querySelector('.document-stage[data-aktiv] [data-ink-ui="ruler"]');
+      const mitte = document.querySelector('.document-center');
+      if (!g || !mitte) return { da: false, anteil: 0, griffDrin: false };
+      const r = g.getBoundingClientRect(), m = mitte.getBoundingClientRect();
+      const griff = g.querySelector('circle');
+      const gr = griff ? griff.getBoundingClientRect() : null;
+      const schnitt = Math.max(0, Math.min(r.right, m.right) - Math.max(r.left, m.left))
+                    * Math.max(0, Math.min(r.bottom, m.bottom) - Math.max(r.top, m.top));
+      return { da: true,
+               anteil: r.width * r.height > 0 ? Math.round(100 * schnitt / (r.width * r.height)) : 0,
+               griffDrin: !!gr && gr.left >= m.left && gr.right <= m.right
+                          && gr.top >= m.top && gr.bottom <= m.bottom };
+    })()`) as { da: boolean; anteil: number; griffDrin: boolean };
+  };
+  for (const z of [60, 100, 140, 180]) {
+    const l = await linealBei(z);
+    check(`Bei ${z} % Zoom liegt das Lineal im Bild (${l.anteil} %)`, l.da && l.anteil >= 60);
+    check(`… und sein Drehgriff ist erreichbar (${z} %)`, l.griffDrin);
+  }
+  await linealBei(100);
+  await page.locator('[data-document-action="ink-ruler"]').click();
+  await page.waitForTimeout(300);
+
+  /* ══ §17 DIE RADIERERGRÖSSE LÄSST DIE TINTE IN RUHE (E591) ═══════════════
+     Abschnitt 8 des Übergabeplans: „Neue Studio-Radierergröße wird zunächst
+     auf klein gesetzt. Prüfen, ob sie zwischen Seiten wie erwartet bleibt.
+     Sie darf die Tintenbreite nicht ändern."
+
+     ZWEI DRITTEL DAVON HÄLT SCHON §3 weiter oben: drei Grössen mit ihren
+     Kreisen, die Wahl gilt sofort, und sie überlebt den Wechsel auf ein
+     ANDERES Dokument. Hier steht nur, was dort nicht steht:
+
+       · die Tintenbreite bleibt, wo sie war — der Satz aus dem Plan, den
+         bisher niemand gemessen hat;
+       · und die Wahl überlebt auch den Wechsel auf die nächste SEITE
+         desselben Dokuments. Das ist nicht dasselbe: der Zeichner wird je
+         Blatt neu gebaut, die Wahl liegt in `meta` (E576).
+
+     Nachgemessen am 15. September 2026, und beides stimmte:
+
+       Radierer an      meta null · gewählt 5  · Strich 2,4
+       gross gewählt    meta 28   · gewählt 28 · Strich 2,4
+       zurück zum Stift meta 28   · gewählt 28 · Strich 2,4
+       Seite 2          meta 28   · gewählt 28 · Strich 2,4
+
+     Eine Zusage ohne Wächter ist eine Behauptung — deshalb steht sie jetzt
+     hier, obwohl sie grün ist. */
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await page.waitForTimeout(600);
+  const radierStand = async () => await page.evaluate(`(() => {
+    const w = document.querySelector('.document-stage[data-aktiv] .blatt-werk');
+    const gr = w ? Array.from(w.querySelectorAll('.blatt-eraser-size')) : [];
+    const strich = w ? Array.from(w.querySelectorAll('.blatt-strich')) : [];
+    const an = gr.find(b => b.getAttribute('aria-pressed') === 'true');
+    const dick = strich.find(b => b.classList.contains('on'));
+    return { anzahl: gr.length, gewaehlt: an ? an.getAttribute('data-eraser-size') : null,
+             markiert: gr.filter(b => b.getAttribute('aria-pressed') === 'true').length,
+             strich: dick ? dick.getAttribute('data-b') : null };
+  })()`) as { anzahl: number; gewaehlt: string | null; markiert: number; strich: string | null };
+  await werkzeug('radierer');
+  await page.waitForTimeout(400);
+  const rad0 = await radierStand();
+  check(`Genau eine der drei Grössen ist markiert (${rad0.gewaehlt})`,
+    rad0.anzahl === 3 && rad0.markiert === 1);
+  const tinteVorher = rad0.strich;
+  /* Auf die andere Grösse wechseln — welche, ist gleich; es geht um den
+     Wechsel selbst. */
+  const andere = rad0.gewaehlt === '28' ? '5' : '28';
+  await page.locator(`.document-stage[data-aktiv] [data-eraser-size="${andere}"]`).click();
+  await page.waitForTimeout(400);
+  const rad1 = await radierStand();
+  check(`Die Markierung wandert mit (${rad0.gewaehlt} → ${rad1.gewaehlt})`,
+    rad1.gewaehlt === andere && rad1.markiert === 1);
+  check(`… und die Markierung der Strichstärke bleibt stehen (${tinteVorher} → ${rad1.strich})`,
+    !!tinteVorher && rad1.strich === tinteVorher);
+  /* ══ UND JETZT DIE ECHTE TINTE, NICHT DER KNOPF ══════════════════════════
+     Die Zeile darüber las die Markierung in der Leiste — und die wird vom
+     Klick auf die Strichknöpfe gesetzt, nicht vom Zeichner. GEGENGEPROBT
+     am 15. September 2026: liess man `setEraserSize` zusätzlich
+     `setzeStrich(radius / 10)` rufen, blieb die Zusicherung GRÜN, während
+     jeder neue Strich 0,5 statt 2,4 breit wurde. Eine Zusicherung, die den
+     Fehler nicht sehen kann, ist keine (§55.2).
+     Gemessen wird deshalb ein wirklich gezogener Strich. */
+  await werkzeug('stift');
+  await page.waitForTimeout(300);
+  const zieheStrich = async (y: number): Promise<number | null> => {
+    const flaeche = page.locator('.document-stage[data-aktiv] .blatt-marken');
+    const box = await flaeche.boundingBox();
+    if (!box) return null;
+    await page.mouse.move(box.x + 60, box.y + y);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 180, box.y + y, { steps: 6 });
+    await page.mouse.up();
+    await page.waitForTimeout(450);
+    /* DEN BLOCK ÜBER DIE SEITE FINDEN, nicht über ein Attribut an der Bühne
+       — welches das wäre, weiss diese Datei nicht, und raten wäre genau der
+       Fehler aus E21. `App.aktuelleSeite()` sagt es. */
+    return await page.evaluate(`(() => {
+      const seite = App.aktuelleSeite && App.aktuelleSeite();
+      if (!seite) return null;
+      const blaetter = Store.childrenOf(seite).filter(k => k.type === 'blatt');
+      let letzte = null;
+      for (const bl of blaetter) {
+        const m = Array.isArray(bl.marken) ? bl.marken : [];
+        if (m.length) letzte = m[m.length - 1];
+      }
+      return letzte && Number.isFinite(Number(letzte.breite)) ? Number(letzte.breite) : null;
+    })()`) as number | null;
+  };
+  const breiteVorher = await zieheStrich(120);
+  await werkzeug('radierer');
+  await page.waitForTimeout(300);
+  await page.locator(`.document-stage[data-aktiv] [data-eraser-size="${rad0.gewaehlt}"]`).click();
+  await page.waitForTimeout(350);
+  await werkzeug('stift');
+  await page.waitForTimeout(300);
+  const breiteNachher = await zieheStrich(160);
+  check(`Ein gezogener Strich ist danach genauso breit (${breiteVorher} → ${breiteNachher})`,
+    breiteVorher !== null && breiteNachher !== null && breiteVorher === breiteNachher);
+  await werkzeug('radierer');
+  await page.waitForTimeout(300);
+  await page.locator(`.document-stage[data-aktiv] [data-eraser-size="${andere}"]`).click();
+  await page.waitForTimeout(300);
+  /* ÜBER DIE SEITE HINWEG, nicht über das Dokument: der Zeichner ist je
+     Blatt neu, die Wahl nicht. */
+  await page.evaluate(`(() => { const b = document.querySelector('[data-document-action="next"]');
+    if (b) b.click(); })()`);
+  await page.waitForTimeout(900);
+  await werkzeug('radierer');
+  await page.waitForTimeout(400);
+  const rad3 = await radierStand();
+  check(`Und auf der nächsten Seite führt weiter dieselbe (${rad3.gewaehlt})`,
+    rad3.gewaehlt === andere);
+  await page.evaluate(`(() => { const b = document.querySelector('[data-document-action="previous"]');
+    if (b) b.click(); })()`);
+  await page.waitForTimeout(800);
+
   await werkzeug('stift');
   check('Keine Laufzeitfehler', errors.length === 0);
   mkdirSync(resolve(root, 'bilder'), { recursive: true });

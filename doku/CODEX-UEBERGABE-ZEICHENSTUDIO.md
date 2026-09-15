@@ -832,3 +832,55 @@ darf landen").
 `test492`, `test524` — alle grün.
 
 **Die Gesamtsuite ist NICHT als grün behauptet.**
+
+---
+
+## Nachtrag — Abschnitt 8, die zwei letzten Punkte (15. September 2026)
+
+### „Bei Zoom kann das Lineal außerhalb des sichtbaren Ausschnitts stehen"
+
+Es stand dort. Gemessen, Lineal an, dann gezoomt:
+
+```txt
+Zoom    1440 × 960          390 × 844
+ 60 %   100 %, Griff ja     100 %, Griff ja
+100 %   100 %, Griff ja     100 %, Griff ja
+140 %     1 %, Griff NEIN    83 %, Griff NEIN
+180 %     0 %, Griff NEIN    63 %, Griff NEIN
+```
+
+`y = min(height * .4, width * .65)` sind vier Zehntel der BLATThöhe — beim
+Zoom liegt das unter dem Fensterrand. `sichtbareMitte()` rechnet jetzt den
+wirklich sichtbaren Ausschnitt in Blattmasse um, und ein `ResizeObserver`
+auf der Zeichenfläche ist die eine Stelle, die den Zoom nicht verpassen kann
+(E591). Gemessen wird dabei der **Drehgriff**, nicht die Mitte des Glases:
+bei 180 % lag das Glas zu vier Fünfteln im Bild und der Griff daneben.
+
+Nachher: 100 % bei 140 %, 91 % bei 180 %, Griff überall erreichbar.
+
+### „Sie darf die Tintenbreite nicht ändern"
+
+Sie tut es nicht — das war nachzumessen, nicht zu reparieren. Neu ist der
+Wächter, und er hat eine eigene Geschichte: die erste Fassung las die
+Markierung der Strichstärke in der Leiste und blieb **grün**, als
+`setEraserSize` absichtlich `setzeStrich(radius / 10)` bekam. Jetzt wird ein
+wirklich gezogener Strich gemessen (`0.5 → 2.8` gegen den kaputten Stand).
+
+### Damit ist Abschnitt 8 abgearbeitet
+
+Die elf Punkte sind zu: `InkRuler.end()` (Z1), `pointer-events` und
+Lesemodus (E578), Zoomlage (E591), `InkMenu`-Rückfall und Aufräumen (E575),
+Fokus bei Escape gegen Aussenklick (E575), `inkSync` (E575), die eigene
+Reihenfolge live (E575), die Haftnotizfarben (E574), die Radierergrösse
+(E576, E591), das Lineal im Druck (E581). Offen bleibt einzig die breite
+`!important`-Sichtbarkeit von `data-ink-options="open"` — und die ist
+absichtlich breit (B 9).
+
+### Prüfstand dieses Bogens
+
+`test524` 118/118 (13 Zusicherungen neu, 4 rot gesehen, 1 gegengeprobt).
+Grün dazu: `test87`, `test105`, `test109`, `test209`, `test239`, `test263`,
+`test266`, `test267`, `test348`, `test351`, `test393`, `test437`, `test461`,
+`test480`, `test522`, `test523`.
+
+**Die Gesamtsuite ist NICHT als grün behauptet.**

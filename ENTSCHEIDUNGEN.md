@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-570 Entscheidungen, E1 bis E590 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+571 Entscheidungen, E1 bis E591 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -634,6 +634,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E588** — Bei offener Bildschirmtastatur lagen Dock und Verlaufskapsel ganz dahinter; gemessen ohne echtes Gerät
 * **E589** — `index.html` zeichnete neunzehn Zeichen selbst, vier davon anders als die Seitenleiste für denselben Weg
 * **E590** — Drei rote Läufe angesehen: zweimal die Oberfläche von gestern, einmal ein Zugriff nach Platz statt nach Bedeutung
+* **E591** — Beim Zoom lag das Lineal ausserhalb des Bildes; und eine Zusicherung über die Tintenbreite konnte ihren Fehler nicht sehen
 
 ---
 
@@ -47884,3 +47885,78 @@ Seitenrand ist, dürfte die Marke nicht tragen.
 Zwei waren die Oberfläche von gestern, einer war ein echter Fehler — und der
 echte war der unauffälligste von den dreien. Genau deshalb steht in §46 „rot
 zuerst": man weiss vorher nicht, welcher es ist.
+
+---
+
+## E591 — Ein Lineal, dessen Griff man nicht erreicht, ist kein Werkzeug
+
+**15. September 2026.** Zwei offene Punkte aus Abschnitt 8 des
+Übergabeplans, beide nachgemessen.
+
+### Der Zoom schob das Lineal aus dem Bild
+
+> „`InkRuler` begrenzt die Lage an den Dokumentmaßen. Bei Zoom kann das
+> Lineal außerhalb des sichtbaren Ausschnitts stehen; sinnvollen Erstplatz
+> prüfen."
+
+Gemessen, Lineal an, dann gezoomt. „Sichtbarer Anteil" ist die Fläche des
+Lineals, die im Rollfenster liegt:
+
+| Zoom | 1440 × 960 | Griff erreichbar | 390 × 844 |
+|---|---|---|---|
+| 60 % | 100 % | ja | 100 % |
+| 100 % | 100 % | ja | 100 % |
+| 140 % | **1 %** | **nein** | 83 %, Griff nein |
+| 180 % | **0 %** | **nein** | 63 %, Griff nein |
+
+Die Ursache stand in einer Zeile: `y = Math.min(height * .4, width * .65)` —
+vier Zehntel der **Blatt**höhe. Solange das ganze Blatt ins Fenster passt,
+ist das die Mitte des Blicks. Beim Zoom ist das Blatt höher als das Fenster,
+der Blick steht oben, und vier Zehntel liegen darunter.
+
+**`sichtbareMitte()`** rechnet jetzt den Ausschnitt, den man wirklich sieht,
+in Blattmasse um: den Schnitt aus der Zeichenfläche und ihrem rollenden
+Vorfahren. Es fragt nichts über das Studio ab — es liest nur seine eigene
+Fläche —, und gilt damit auch für ein Blatt in der Seitenspalte.
+
+**Gemessen wird der Drehgriff, nicht die Mitte des Glases.** Beim ersten
+Wurf prüfte `insBild()` nur senkrecht; bei 180 % lag das Glas danach zu vier
+Fünfteln im Bild und der Griff trotzdem daneben. Der Griff ist der Teil, den
+man treffen muss, und er sitzt seitlich versetzt.
+
+**Verschoben wird nur, wenn es nötig ist**, und nie während eines Zuges: wer
+das Lineal irgendwohin gelegt hat, findet es dort wieder. Ein
+`ResizeObserver` auf der Fläche ist dabei die eine Stelle, die nicht
+vergessen werden kann — er muss nicht wissen, dass es einen Zoomregler gibt,
+und greift auch, wenn das Fenster schmaler wird.
+
+Nachher: 100 % bei 140 %, 91 % bei 180 %, Griff überall erreichbar.
+
+### Die Radierergrösse liess die Tinte in Ruhe — und niemand prüfte es
+
+> „Neue Studio-Radierergröße wird zunächst auf klein gesetzt. Prüfen, ob sie
+> zwischen Seiten wie erwartet bleibt. Sie darf die Tintenbreite nicht
+> ändern."
+
+Nachgemessen stimmte alles drei. Zwei Drittel hielt `test524 §3` schon; neu
+sind die zwei Sätze, die dort nicht stehen: die Tinte bleibt, und die Wahl
+überlebt auch den Wechsel auf die nächste **Seite** desselben Dokuments (der
+Zeichner wird je Blatt neu gebaut, die Wahl liegt in `meta`, E576).
+
+**Die erste Fassung der Zusicherung konnte den Fehler nicht sehen.** Sie las
+die Markierung der Strichstärke in der Leiste — und die wird vom Klick auf
+die Strichknöpfe gesetzt, nicht vom Zeichner. Gegengeprobt: liess man
+`setEraserSize` zusätzlich `setzeStrich(radius / 10)` rufen, blieb die Zeile
+**grün**, während jeder neue Strich 0,5 statt 2,4 breit wurde.
+
+Jetzt wird ein wirklich gezogener Strich gemessen: Breite davor, Grösse
+wechseln, Breite danach. Gegen den absichtlich kaputten Stand ergab das
+`0.5 → 2.8` — rot, wie es muss.
+
+**Das ist §55.2 zum dritten Mal in dieser Sitzung** (nach E585 und E587):
+eine Zusicherung, die richtig gemeint ist und die falsche Eigenschaft misst.
+Der einzige Schutz dagegen ist, sie einmal absichtlich zu brechen.
+
+**Prüflauf:** `test524 §16` (acht Zusicherungen, vier rot gesehen) und
+`§17` (fünf Zusicherungen, eine gegengeprobt). Angesehen:
+`bilder/lineal-zoom-140.png`, `lineal-zoom-180.png`.

@@ -137,8 +137,83 @@ const InkRuler = (() => {
       const u = coordinates(point)[0]!, a = angle * Math.PI / 180;
       return [x + u * Math.cos(a) - edge * Math.sin(a), y + u * Math.sin(a) + edge * Math.cos(a)];
     };
+    /* ══ DAS LINEAL GEHÖRT DORTHIN, WO MAN HINSIEHT (E591) ══════════════════
+       Die Anfangslage war `y = min(height * .4, width * .65)` — vier Zehntel
+       der BLATThöhe. Solange das ganze Blatt ins Fenster passt, ist das die
+       Mitte des Blicks. Beim Zoom ist es das nicht mehr:
+
+         1440 × 960, Lineal an, dann gezoomt — sichtbarer Anteil des Lineals
+            60 %  → 100 %      140 %  →   1 %     Griff unerreichbar
+           100 %  → 100 %      180 %  →   0 %     Griff unerreichbar
+
+       Ein Lineal, dessen Griff man nicht erreicht, ist kein Werkzeug.
+
+       `sichtbareMitte()` rechnet den Ausschnitt, den man WIRKLICH sieht, in
+       Blattmasse um: den Schnitt aus der Fläche und ihrem Rollkasten. Es
+       fragt dabei nichts über das Studio ab — es liest nur seine eigene
+       Fläche und deren rollenden Vorfahren, und funktioniert damit auch auf
+       einem Blatt in der Seitenspalte. */
+    const rollkasten = (): Element | null => {
+      let e: Element | null = surface.parentElement;
+      while (e && e !== document.documentElement) {
+        const st = getComputedStyle(e);
+        if (/(auto|scroll)/.test(st.overflowY + ' ' + st.overflowX)) return e;
+        e = e.parentElement;
+      }
+      return null;
+    };
+    const sichtbareMitte = (): [number, number] | null => {
+      const sr = surface.getBoundingClientRect();
+      if (!sr.width || !sr.height) return null;
+      const k = rollkasten()?.getBoundingClientRect();
+      const links  = Math.max(sr.left,   k ? k.left   : 0);
+      const rechts = Math.min(sr.right,  k ? k.right  : window.innerWidth);
+      const oben   = Math.max(sr.top,    k ? k.top    : 0);
+      const unten  = Math.min(sr.bottom, k ? k.bottom : window.innerHeight);
+      /* Weniger als eine Linealtiefe sichtbar heisst: es gibt keine
+         vernünftige Stelle, und dann bleibt die alte besser stehen. */
+      if (rechts - links < 80 || unten - oben < 80) return null;
+      return [((links + rechts) / 2 - sr.left) / sr.width * width,
+              ((oben + unten) / 2 - sr.top) / sr.height * height];
+    };
+    /* NUR WENN ES NÖTIG IST. Wer das Lineal an eine Stelle gelegt hat, soll
+       es dort wiederfinden — verschoben wird erst, wenn es aus dem Bild
+       gelaufen ist. Und NIE mitten in einem Zug: das wäre der Sprung, den
+       niemand versteht (derselbe Satz wie bei `remount`, E573). */
+    const insBild = (): void => {
+      if (drag) return;
+      const k = rollkasten()?.getBoundingClientRect();
+      const links  = k ? k.left   : 0;
+      const rechts = k ? k.right  : window.innerWidth;
+      const oben   = k ? k.top    : 0;
+      const unten  = k ? k.bottom : window.innerHeight;
+      /* GEMESSEN WIRD DER DREHGRIFF, nicht die Mitte des Glases. Er ist der
+         Teil, den man treffen muss, und er sitzt seitlich versetzt — bei
+         180 % lag das Glas zu vier Fünfteln im Bild und der Griff trotzdem
+         dreissig Pixel daneben. Eine Prüfung auf die Mitte hätte das für
+         gelöst gehalten. */
+      const gr = turn.getBoundingClientRect();
+      if (gr.width && gr.left >= links && gr.right <= rechts
+          && gr.top >= oben && gr.bottom <= unten) return;
+      const ziel = sichtbareMitte();
+      if (!ziel) return;
+      x = Math.max(0, Math.min(width, ziel[0]));
+      y = Math.max(0, Math.min(height - depth - 46, ziel[1] - depth / 2));
+      render();
+    };
+    /* EINE STELLE, DIE NICHT VERGESSEN WERDEN KANN: der Zoom ändert die
+       Grösse der Fläche, und genau daran hängt dieser Beobachter. Er muss
+       nicht wissen, dass es einen Zoomregler gibt — und er greift auch,
+       wenn das Fenster schmaler wird oder die Seitenspalte aufgeht. */
+    try {
+      new ResizeObserver(() => { if (active) insBild(); }).observe(surface);
+    } catch { /* ohne Beobachter bleibt die Anfangslage */ }
+
     return {
-      setActive(value: boolean) { active = value; edge = null; if (active) { surface.append(group); render(); } else group.remove(); },
+      setActive(value: boolean) { active = value; edge = null;
+        /* Erst zeichnen, dann messen: `insBild` liest den Griff aus dem
+           Baum, und vor dem ersten `render()` steht dort die alte Lage. */
+        if (active) { surface.append(group); render(); insBild(); } else group.remove(); },
       /* ══ NACH EINEM NEUZEICHNEN WIEDER ANHÄNGEN (E573) ═══════════════════
          `redraw()` in `marken.ts` räumt jedes `[data-ink-ui]` aus der Fläche —
          und niemand hängte das Lineal zurück. Gemessen: nach einem einzigen
