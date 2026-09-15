@@ -721,3 +721,67 @@ rechten Rand, in der Mitte und am linken Rand, bei 390 px Fensterbreite.
 ist keiner — im Stilblatt sieht er richtig aus, auf dem Bild nicht (§55.1).
 Die Grenze im Wächter ist 25: sie liegt in der Mitte zwischen dem kaputten
 Wert (8) und den reparierten (58 und 64).
+
+---
+
+## 18. Was im Druck auf dem Papier steht, das kein Strich ist
+
+**Frage:** Bleibt das sichtbare Lineal von jeder Ausgabe ausgeschlossen?
+
+**Methode:** Lineal einschalten, dann `page.emulateMedia({media:'print'})`
+und alle `[data-ink-ui]` der Zeichenfläche auf Sichtbarkeit prüfen. Fenster
+1440 × 960, 15. September 2026.
+
+| Weg | liest | Ergebnis |
+|---|---|---|
+| „Als Bild sichern" | baut aus `marken` neu | kann nichts leaken |
+| „Als PDF" | baut aus `marken` neu | kann nichts leaken |
+| **Druck** | das lebende DOM | **Lineal sichtbar** |
+
+| | vorhanden | sichtbar (vorher) | sichtbar (nachher) |
+|---|---|---|---|
+| am Bildschirm | 1 | 1 | 1 |
+| im Druck | 1 | **1** | **0** |
+
+Kein Stilblatt nannte `[data-ink-ui]` im Druck — dieselbe Lücke galt damit
+für die Laserspur und die Auswahlgriffe. Eine Zeile deckt alle drei ab,
+weil sie dem ATTRIBUT gilt und nicht einer Liste von Klassen (E581).
+
+---
+
+## 19. Zwei rote Wächter, und kein Fehler dahinter
+
+**Methode:** Arbeitsbaum (`git worktree`) auf den einzelnen Commits, je Lauf
+einmal gefahren — die Lehre aus Abschnitt 15.
+
+| Lauf | E571 | E572 | E573 | heute | Ursache |
+|---|---|---|---|---|---|
+| `test429` | rot | rot | rot | rot → **17/17** | mass `getComputedStyle().transform` an einem SVG-Präsentationsattribut |
+| `test476` | rot | rot | rot | rot → **26/26** | zielte mit der Maus auf eine noch laufende Animation |
+| `test508` | **grün** | **grün** | rot | 40/40 | echter Rückschritt aus E573 (Abschnitt 15) |
+
+### 19.1 `test429` — das Unmessbare
+
+```txt
+Attribut   transform="rotate(36 12 12)"     ← da, wie gebaut
+CSS        getComputedStyle(...).transform  → "none"
+```
+
+Erster Reparaturversuch: die Segmente dort messen, wo sie stehen — ergab
+**20 Rechtecke mit Ausdehnung 0**, weil die Ladezeichen der Probe an dieser
+Stelle verborgen sind. Gemessen wird jetzt an einer sichtbaren Kopie.
+
+### 19.2 `test476` — das bewegte Ziel
+
+| | gemessen |
+|---|---|
+| Rechteck vor dem Zielen | oben 453,8 |
+| nach dem Zeigen (kaputt) | oben 453,8, `translate: none` |
+| `elementFromPoint` am Zielpunkt | traf das Blatt |
+| `:hover` am Blatt | **false** |
+| Zielpunkt im zweiten Lauf | **226 px daneben** |
+| nach dem Warten auf Ruhe | oben **440,3**, `translate: 0px -10px` |
+
+Der Verzug der fünf Blätter: 0,152 s · 0,114 s · 0,076 s · 0,038 s · 0 s,
+dazu ein Übergang mit Überschwingen. Wer währenddessen misst, misst die
+Animation.

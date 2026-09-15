@@ -10,6 +10,8 @@ declare const Store: any;
 declare const App: any;
 declare const Marken: any;
 const root = resolve(import.meta.dirname, '../..');
+/** Eine Projektdatei als Text — für die eine Quellenzusage in §10. */
+const lies = (rel: string): string => readFileSync(resolve(root, rel), 'utf-8');
 const types: Record<string, string> = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.json': 'application/json' };
 const server = createServer((request, response) => {
   const file = resolve(root, '.' + (request.url?.split('?')[0] || '/index.html'));
@@ -596,6 +598,59 @@ try {
   await page.evaluate(() => (window as any).Aussehen?.setzen({ schema: 'standard' }));
   await page.setViewportSize({ width: 1440, height: 960 });
   await page.waitForTimeout(600);
+
+  /* ══ §10 WAS BEDIENUNG IST, GEHÖRT AUF KEIN PAPIER (E581) ═════════════════
+     Abschnitt 8 des Übergabeplans: „Ein sichtbar gemachtes SVG-Lineal muss
+     von jeder Ausgabe ausgeschlossen bleiben; nicht darauf vertrauen, dass
+     jedes Exportverfahren nur `marks` liest."
+
+     ZWEI DER DREI WEGE WAREN IN ORDNUNG, und zwar aus einem guten Grund:
+     „Als Bild sichern" und „Als PDF" bauen ein frisches SVG aus `marken`
+     (`Marken.zeichneMarke`) und sehen die lebende Fläche nie an. Ein Lineal
+     kann dort gar nicht hineingeraten.
+
+     DER DRITTE WEG IST DER DRUCK, und der rendert das DOM. Gemessen mit
+     echter Druckemulation, Lineal an:
+
+       am Bildschirm   1 × [data-ink-ui="ruler"], sichtbar
+       im Druck        1 × [data-ink-ui="ruler"], SICHTBAR   ← auf dem Papier
+
+     Kein Stilblatt nannte `[data-ink-ui]` im Druck. Dasselbe galt damit für
+     die Laserspur und die Auswahlgriffe: alles drei hätte mitgedruckt.
+     `data-ink-ui` trägt genau dafür seinen Namen — es ist die Marke für
+     „Bedienung, keine Marke". */
+  await werkzeug('stift');
+  await page.locator('[data-document-action="ink-ruler"]').click();
+  await page.waitForTimeout(400);
+  const inkUi = async () => await page.evaluate(`(() => {
+    const f = document.querySelector('.document-stage[data-aktiv] .blatt-marken');
+    const teile = Array.from(f ? f.querySelectorAll('[data-ink-ui]') : []);
+    return { da: teile.length, sichtbar: teile.filter(t => { const s = getComputedStyle(t);
+      return s.display !== 'none' && s.visibility !== 'hidden' && t.getClientRects().length > 0; }).length };
+  })()`) as { da: number; sichtbar: number };
+
+  const amSchirm = await inkUi();
+  check('Am Bildschirm ist das Lineal da und sichtbar', amSchirm.da >= 1 && amSchirm.sichtbar >= 1);
+  await page.emulateMedia({ media: 'print' });
+  await page.waitForTimeout(300);
+  const imDruck = await inkUi();
+  check('Im Druck steht nichts davon auf dem Papier',
+    imDruck.da >= 1 && imDruck.sichtbar === 0);
+  await page.emulateMedia({ media: 'screen' });
+  await page.waitForTimeout(300);
+  check('… und nach dem Druck ist es wieder da', (await inkUi()).sichtbar >= 1);
+  /* DIE REGEL GILT DEM ATTRIBUT, NICHT DER KLASSE — sonst müsste jede neue
+     Bedienschicht daran denken, und genau das vergisst irgendwann jemand. */
+  /* LEERRAUM AUF EIN ZEICHEN ZUSAMMENZIEHEN, NICHT WEGWERFEN: `@media print`
+     wird sonst zu `@mediaprint`, und die Zusage sucht etwas, das es nicht
+     geben kann. Beim ersten Wurf war sie genau deshalb rot, obwohl die Regel
+     schon dastand — derselbe Fehler wie in `test461` (E577). */
+  const stil = lies('quell/schale/stil/bausteine.css')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
+  check('Die Regel nennt `[data-ink-ui]`, nicht nur das Lineal',
+    /@media print\s*\{\s*\[data-ink-ui\]/.test(stil));
+  await page.locator('[data-document-action="ink-ruler"]').click();
+  await page.waitForTimeout(300);
 
   await werkzeug('stift');
   check('Keine Laufzeitfehler', errors.length === 0);

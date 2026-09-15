@@ -15896,6 +15896,29 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-ruler-grip:focus-visible rect,
 .blatt-ruler-rotate:focus-visible circle{ stroke:var(--accent); stroke-width:2.5 }
 
+/* ══ WAS BEDIENUNG IST, GEHÖRT AUF KEIN PAPIER (E581) ══════════════════════
+   Abschnitt 8 des Übergabeplans verlangt es für das Lineal: „muss von jeder
+   Ausgabe ausgeschlossen bleiben; nicht darauf vertrauen, dass jedes
+   Exportverfahren nur `marks` liest."
+
+   ZWEI DER DREI AUSGABEWEGE WAREN IN ORDNUNG, aus einem guten Grund: „Als
+   Bild sichern" und „Als PDF" bauen ein frisches SVG aus `marken`
+   (`Marken.zeichneMarke`) und sehen die lebende Fläche nie an. Dorthin kann
+   nichts geraten, was nicht als Marke gespeichert ist.
+
+   DER DRITTE WEG IST DER DRUCK, und der rendert das DOM. Gemessen mit
+   Druckemulation, Lineal an: `[data-ink-ui="ruler"]` war im Druck SICHTBAR.
+   Kein Stilblatt nannte `[data-ink-ui]`, und damit hätten auch die
+   Laserspur und die Auswahlgriffe mitgedruckt — eine Seite mit
+   Auswahlrechteck und acht Griffen darauf.
+
+   DIE REGEL GILT DEM ATTRIBUT, NICHT DER KLASSE. `data-ink-ui` heisst
+   „Bedienung, keine Marke"; wer die nächste Bedienschicht baut, trägt es
+   ohnehin ein (Lineal, Laser, Auswahl und Griffe tun es heute) und braucht
+   dann an den Druck nicht mehr zu denken. Eine Liste von Klassen hier wäre
+   genau die Liste, die irgendwann jemand zu ergänzen vergisst. */
+@media print{ [data-ink-ui]{ display:none!important } }
+
 
 /* ══ DIE WERKZEUGFELDER DES STUDIOS (E572, gestaltet in E575) ══════════════
    `InkMenu` baut sie: ein Kopf mit Namen und „×", darunter der Inhalt. Bis
@@ -24034,7 +24057,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1087, inhalt: 'ce98e8d632cafbfe', gebaut: '2026-09-15T05:00:52.063Z' };
+const Stand = { fassung: 1088, inhalt: '54c7e1d2debed128', gebaut: '2026-09-15T07:12:33.306Z' };
 window.Stand = Stand;
 
 </script>

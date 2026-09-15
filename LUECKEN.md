@@ -8016,3 +8016,39 @@ Schatten genau im dunklen Thema rot.
 aufgeht und die schwebende Leiste verdeckt, ist nicht gemessen — dafür
 braucht es ein echtes Gerät (L157 nennt echte Stifthardware aus demselben
 Grund).
+
+## L162 · Das sichtbare Lineal im Druck — GESCHLOSSEN am 15. September 2026
+
+**Fund:** Die letzte offene Zusage aus Abschnitt 8 des Übergabeplans. Zwei
+der drei Ausgabewege waren in Ordnung, weil sie aus `marken` neu bauen; der
+**Druck** rendert das DOM, und dort war `[data-ink-ui="ruler"]` sichtbar.
+Kein Stilblatt nannte `[data-ink-ui]` — dieselbe Lücke galt damit für die
+Laserspur und die Auswahlgriffe.
+
+**Beleg:** `test524 §10`, vier Zusicherungen, zwei vorher rot gesehen; sie
+prüft beide Richtungen (nach dem Druck ist das Lineal wieder da).
+Entscheidung E581. Eine Zeile deckt alle drei Schichten ab, weil sie dem
+ATTRIBUT gilt und nicht einer Liste von Klassen.
+
+---
+
+## L163 · Drei rote Läufe, und nur einer war ein Produktfehler — 15. September 2026
+
+An einem Tag gefunden und alle drei geschlossen:
+
+| Lauf | seit | Ursache | war es ein Produktfehler? |
+|---|---|---|---|
+| `test290` | E537 | Verzeichnis abgewandert, 45 falsche Zahlen | nein, Doku |
+| `test429` | ≥ E571 | mass `getComputedStyle().transform` an einem SVG-Attribut | **nein** |
+| `test476` | ≥ E571 | zielte mit der Maus auf eine laufende Animation | **nein** |
+| `test508` | E573 | Verlaufskapsel schob die Folienfläche | **ja — meiner** |
+
+**Die Lücke, die bleibt, ist keine Zeile Code:** ein Lauf, der lange rot
+ist, nimmt dem nächsten echten Fehler die Aufmerksamkeit. `test429` und
+`test476` haben monatelang ein rotes Kreuz gemacht, hinter dem nichts stand
+— und `test508` stand daneben und wurde deshalb für „auch so einer"
+gehalten. Er war es nicht.
+
+**Was daraus folgt, ohne neue Regel:** §46 sagt „rot zuerst", und das gilt
+auch, wenn das Rot alt aussieht. Wie alt es wirklich ist, sagt ein
+Arbeitsbaum auf den Commits in zwei Minuten (§30).

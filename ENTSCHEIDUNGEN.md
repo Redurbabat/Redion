@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-560 Entscheidungen, E1 bis E580 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+562 Entscheidungen, E1 bis E582 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -624,6 +624,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E578** — Ein Dokument im Lesemodus nahm Striche an: die Taste war nur die kleinere von zwei Türen
 * **E579** — Die Verlaufskapsel nimmt nirgends Platz: ein Raster, das hier überlagert und dort schiebt, ist kein Platz
 * **E580** — Der Rollschatten: was ausserhalb des Bildes steht, sagt sich selbst — und ein schwarzer Schatten auf dunklem Grund ist keiner
+* **E581** — Was Bedienung ist, gehört auf kein Papier: `[data-ink-ui]` ist im Druck aus, und die Regel gilt dem Attribut
+* **E582** — Zwei Wächter waren jahrelang rot, ohne dass etwas kaputt war: einer mass das Unmessbare, einer zielte auf eine Animation
 
 ---
 
@@ -47127,3 +47129,122 @@ Anfang ist: ein Hinweis, der etwas verspricht, das es nicht gibt, ist
 schlimmer als keiner.
 
 **Prüfläufe:** `test524` 58/58.
+
+---
+
+## E581 — Was Bedienung ist, gehört auf kein Papier
+
+**15. September 2026.** Die letzte offene Zusage aus Abschnitt 8 des
+Übergabeplans: „Ein sichtbar gemachtes SVG-Lineal muss von jeder Ausgabe
+ausgeschlossen bleiben; **nicht darauf vertrauen, dass jedes
+Exportverfahren nur `marks` liest**."
+
+### Zwei der drei Wege waren in Ordnung — und der Grund ist wichtig
+
+„Als Bild sichern" und „Als PDF" bauen ein **frisches SVG aus `marken`**
+(`Marken.zeichneMarke`) und sehen die lebende Fläche nie an. Dorthin kann
+nichts geraten, was nicht als Marke gespeichert ist — das Lineal so wenig
+wie der Laserstrahl. Das ist kein Zufall, sondern die Bauart, und sie ist
+der Grund, warum diese zwei Wege nichts kosteten.
+
+### Der dritte Weg ist der Druck, und der rendert das DOM
+
+Gemessen mit echter Druckemulation, Lineal an:
+
+| | `[data-ink-ui]` vorhanden | davon sichtbar |
+|---|---|---|
+| am Bildschirm | 1 (`ruler`) | 1 |
+| **im Druck** | 1 | **1** |
+
+Kein Stilblatt nannte `[data-ink-ui]` im Druck. Damit hätten auch die
+**Laserspur** und die **Auswahlgriffe** mitgedruckt — eine Seite mit
+Auswahlrechteck und acht Griffen darauf, in einem Ausdruck, den jemand
+weitergibt.
+
+### Entschieden: eine Zeile, und sie gilt dem Attribut
+
+```css
+@media print{ [data-ink-ui]{ display:none!important } }
+```
+
+`data-ink-ui` heisst „Bedienung, keine Marke". Lineal, Laser, Auswahl und
+Griffe tragen es heute; wer die nächste Bedienschicht baut, trägt es ohnehin
+ein und braucht dann an den Druck nicht mehr zu denken. **Eine Liste von
+Klassen wäre genau die Liste, die irgendwann jemand zu ergänzen vergisst** —
+derselbe Fehler wie bei `blatt-farbe-weg` in E574, nur an einer anderen
+Stelle.
+
+### Und ein Wiedersehen mit einem alten Fehler
+
+Die Quellenzusage suchte `@media print{[data-ink-ui]` in einem Stilblatt,
+aus dem sie vorher allen Leerraum entfernt hatte — wodurch aus `@media print`
+ein `@mediaprint` wurde. Sie war rot, obwohl die Regel schon dastand. Genau
+derselbe Griff hat in E577 `test461` rot gemacht. Leerraum wird jetzt auf
+EIN Zeichen zusammengezogen, nicht weggeworfen.
+
+**Prüfläufe:** `test524 §10` neu, vier Zusicherungen, **zwei vorher rot
+gesehen**; und sie prüft beide Richtungen — nach dem Druck ist das Lineal
+wieder da, sonst wäre „unsichtbar" auch am Bildschirm erfüllt.
+
+---
+
+## E582 — Zwei rote Wächter, und kein Fehler dahinter
+
+**15. September 2026.** Beim Abarbeiten der Regressionen nach E581 fielen
+zwei Läufe auf, die **seit mindestens E571 rot** waren — nachgemessen mit
+einem Arbeitsbaum auf den einzelnen Commits, nicht vermutet (die Lehre aus
+E579). In beiden Fällen war am Produkt nichts kaputt. Kaputt war die
+Messung.
+
+### `test429` mass etwas, das der Browser nicht beantwortet
+
+Die Zusicherung hiess „Zehn Segmente behalten ihre räumliche Verteilung" und
+las `getComputedStyle(rect).transform !== 'none'`. Nachgemessen:
+
+```txt
+Attribut   transform="rotate(36 12 12)"     ← da, wie gebaut
+CSS        getComputedStyle(...).transform  → "none"
+```
+
+Die zehn Segmente des Ladezeichens werden mit einem **SVG-Präsentations-
+attribut** verteilt, und das taucht in der berechneten CSS-`transform` nicht
+auf. Die Zusicherung **konnte nicht grün werden** — der Spiegelfall zu
+§55.2: eine Prüfung, die immer „kaputt" sagt, wird so wenig gelesen wie
+eine, die immer „passt schon" sagt. Am Ende schaltet jemand sie ab.
+
+Jetzt wird die Wirkung gemessen: liegen die Segmente an verschiedenen
+Stellen, bilden sie also einen Ring? Zwei Anläufe brauchte auch das —
+der erste las die Segmente dort, wo sie stehen, und bekam **zwanzig Stück
+mit Ausdehnung 0**, weil die Ladezeichen der Probe an dieser Stelle
+verborgen sind. Gemessen wird deshalb an einer Kopie, die für einen
+Augenblick sichtbar im Körper hängt. **Rot gesehen:** mit einem
+`transform:none` für die neutralen Rechtecke im Reduced-Motion-Block
+meldet sie „ein Stapel, kein Ring".
+
+### `test476` zielte auf eine Animation
+
+„Ein Blatt HEBT sich, wenn der Zeiger darauf liegt" — 453,8 → 453,8, also
+nichts. Die Regel dafür gibt es (`translate:0 -10px` beim Überfahren), und
+sie greift. Der Lauf las das Rechteck aber, **während die Blätter noch aus
+dem Fach fliegen** (Verzug bis 0,152 s plus Übergang mit Überschwingen),
+und setzte die Maus dorthin, wo das Blatt EINMAL war.
+
+Gemessen an der laufenden App: `elementFromPoint` traf das Blatt, `:hover`
+aber nicht — und in einem zweiten Lauf lag der Punkt 226 px daneben, weil
+die Karte selbst an einer anderen Stelle aufging. Jetzt wartet der Lauf,
+bis das Blatt zwei Messungen lang an derselben Stelle liegt. Danach:
+453,8 → 440,3 mit `translate: 0px -10px`.
+
+### Was beide gemeinsam haben
+
+Beide Zusicherungen waren **richtig gemeint und falsch gemessen**, und
+beide haben deshalb jahrelang ein rotes Kreuz gemacht, das niemand mehr
+angesehen hat. Das ist der eigentliche Schaden: ein Lauf, der immer rot
+ist, nimmt dem nächsten echten Fehler die Aufmerksamkeit.
+
+Zusammen mit `test290` (dessen Verzeichnis abgewandert war) sind das
+**drei rote Läufe an einem Tag, und kein einziger Produktfehler darunter.**
+Der Produktfehler des Tages kam von woanders: E578 hat ihn gefunden, weil
+jemand eine Frage gestellt hat, die kein Lauf stellte.
+
+**Prüfläufe:** `test429` 17/17 (war rot), `test476` 26/26 (war rot).
