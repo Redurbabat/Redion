@@ -2830,6 +2830,237 @@ const Marken = (() => {
        nie ueber den rechten Rand. Schrift, Groesse, Fett und Rahmen kommen
        aus der Leiste. Ein Tipp auf einen vorhandenen Text bearbeitet ihn;
        leer gemacht heisst weg. Alte einzeilige Marken bleiben einzeilig. */
+    /* ══ DIREKT AUF DEM BLATT SCHREIBEN (E597) ═══════════════════════════════
+       REDURS SATZ, 15. September 2026: „wenn ich irgendwo klicke, sollte ich
+       direkt Text schreiben können" — wie in OneNote.
+
+       GEMESSEN, WAS VORHER WAR: ein Tipp mit dem Textwerkzeug öffnete einen
+       MODALEN DIALOG. Das Getippte stand in dessen Feld, die Seite blieb
+       leer, und erst „Übernehmen" brachte es aufs Blatt. Für einen Satz, den
+       man beim Lesen einer PDF nebenher notiert, sind das drei Schritte zu
+       viel.
+
+       WAS JETZT PASSIERT: der Tipp legt ein Schreibfeld GENAU DORTHIN, wo
+       der Text stehen wird — mit seiner Schrift, seiner Grösse, seiner Farbe
+       und seiner Ausrichtung. Man tippt hinein, und was man sieht, ist, was
+       danach dasteht.
+
+       WARUM EIN <textarea> UND KEIN contenteditable: ein Textkasten hält
+       reinen Text (`mark.text`), keinen HTML-Baum. Ein `<textarea>` kann gar
+       nichts anderes liefern — es gibt keinen Weg, über das Einfügen aus der
+       Zwischenablage Auszeichnung oder Markup hereinzutragen (§19). Dazu
+       kommt, dass Cursor, Auswahl und die Bildschirmtastatur darin ohne
+       eigenen Code funktionieren.
+
+       WARUM IM ELTERNKNOTEN UND NICHT ALS <foreignObject>: die Fläche trägt
+       `preserveAspectRatio="none"` und wird über ihren Kasten GEZOGEN. Ein
+       Feld darin würde mitgezogen — waagrecht gestauchte Buchstaben, die mit
+       dem fertigen Text nichts zu tun haben. Der Elternknoten
+       (`.blatt-papier` oder `.blatt-flur`) steht auf `position:relative` und
+       deckt genau denselben Kasten; dort gerechnet stimmt die Stelle, und
+       die Schrift bleibt Schrift. */
+    type Schreiber = { feld: HTMLTextAreaElement; ziel: string; before: any[];
+                       entwurf: any; beobachter: ResizeObserver | null };
+    let schreiber: Schreiber | null = null;
+
+    /**
+     * Der Text, den eine Textmarke WIRKLICH zeigt.
+     *
+     * Bei einer Marke mit `laeufe` (E561) ist das nicht `mark.text`:
+     * `textLayout` setzt dann aus den Läufen, und `mark.text` kann ein
+     * alter Stand sein. Wer das verwechselt, zeigt im Schreibfeld etwas
+     * anderes an, als auf dem Blatt steht.
+     */
+    const textVon = (mark: any): string => {
+      const laeufe = Array.isArray(mark?.laeufe) ? mark.laeufe : null;
+      if (laeufe && laeufe.length) return laeufe.map((l: any) => String(l?.text ?? '')).join('');
+      return String(mark?.text || '');
+    };
+
+    /** Die Marke, die das Feld gerade zeigt — echt oder erst gedacht. */
+    const schreiberMarke = (): any => {
+      if (!schreiber) return null;
+      const platz = schreiber.ziel ? platzVon(schreiber.ziel) : -1;
+      return platz >= 0 ? marks[platz] : schreiber.entwurf;
+    };
+
+    /* Das Feld auf die Stelle legen, an der der Text stehen wird. Eigene
+       Funktion, weil dasselbe beim Öffnen, beim Tippen (der Kasten wächst)
+       und bei jeder Grössenänderung der Fläche nötig ist — dieselbe Lehre
+       wie beim Lineal (E591): eine Stelle, die nur beim Öffnen stimmt,
+       stimmt nach dem ersten Drehen des Telefons nicht mehr. */
+    const schreiberLegen = (): void => {
+      if (!schreiber) return;
+      const marke = schreiberMarke();
+      const layout = marke ? InkGeometry.textLayout(marke) : null;
+      const kasten = flaeche.getBoundingClientRect();
+      if (!layout || !kasten.width || !kasten.height) return;
+      /* ZWEI SKALEN, WEIL DIE FLÄCHE ZWEI HAT. Waagrecht steht die Stelle,
+         senkrecht die Schrift — bei einem Papier mit `aspect-ratio` sind
+         beide gleich, und am Telefon mit Rand (E301) sind sie es nicht. */
+      const sx = kasten.width / (breite + randBreit);
+      const sy = kasten.height / hoehe;
+      /* ══ DIE 16-PIXEL-GRENZE, GEFUNDEN AUF EINEM BILD (§55.1) ═════════════
+         Am Telefon stand im Feld „Ein Klick, und / ich schreibe / schon." —
+         DREI Zeilen —, und auf dem Blatt danach zwei. Gemessen war der Grund
+         eindeutig: gesetzt waren 9,23 px, gerechnet hat der Browser mit 16.
+
+           Telefon 390 × 844   im Feld fontPx 16   gesetzt fontPx 16 (Blattmass)
+                               Zeilen 3            Zeilen 2
+           Rechner 1280 × 900  im Feld fontPx 26,3 Zeilen 2 · gesetzt 2
+
+         `bausteine.css:312` schreibt unter 760 px `input, textarea, select{
+         font-size:16px !important }` — damit iOS beim Tippen nicht in die
+         Seite hineinzoomt. Die Regel ist richtig und bleibt; sie hat dieses
+         Projekt schon einmal Zeit gekostet (siehe `lernwelt.css:1113`).
+
+         DIE ANTWORT IST NICHT, SIE AUSZUNEHMEN. Ein Feld mit 9 px Schrift
+         lässt iOS beim Hineintippen in die Seite zoomen, und dann steht der
+         Nutzer vor einem verrutschten Blatt. Stattdessen wird das Feld in
+         SEINER Grösse gesetzt — nie unter 16 px — und als Ganzes verkleinert.
+         Der Umbruch fällt damit an derselben Stelle wie im Blattmass, und
+         der Browser sieht eine Schrift, bei der er nicht zoomt.
+
+         Das gilt nicht nur am Telefon: jede verkleinerte Fläche — ein
+         Zoomfenster, ein schmaler Bildschirm — hatte denselben Fehler. Er
+         fiel nur am Telefon auf, weil er dort gross genug war, um ihn zu
+         sehen. */
+      const feld = schreiber.feld;
+      const sollPx = layout.fontSize * sy;
+      const basisPx = Math.max(16, sollPx);
+      const zoom = sollPx / basisPx;
+      feld.style.left = (layout.x * sx).toFixed(2) + 'px';
+      feld.style.top = (layout.y * sy).toFixed(2) + 'px';
+      feld.style.width = ((layout.width * sx) / zoom).toFixed(2) + 'px';
+      feld.style.padding = ((layout.pad * sy) / zoom).toFixed(2) + 'px '
+        + ((layout.pad * sx) / zoom).toFixed(2) + 'px';
+      /* Inline und `important`, weil die Regel oben `important` ist — nur so
+         gewinnt die Stelle, die das Blattmass wirklich kennt. */
+      feld.style.setProperty('font-size', basisPx.toFixed(2) + 'px', 'important');
+      feld.style.lineHeight = ((layout.zeile * sy) / zoom).toFixed(2) + 'px';
+      feld.style.transformOrigin = 'top left';
+      feld.style.transform = zoom === 1 ? 'none' : 'scale(' + zoom.toFixed(4) + ')';
+      feld.style.fontFamily = schriftStapel(layout.family);
+      feld.style.fontWeight = layout.bold ? '700' : '400';
+      feld.style.textAlign = layout.ausricht === 'mitte' ? 'center'
+        : layout.ausricht === 'rechts' ? 'right' : 'left';
+      feld.style.color = String(marke.farbe || color);
+      /* Mitwachsen wie der Kasten, den er später zeichnet. */
+      feld.style.height = 'auto';
+      feld.style.height = Math.max(feld.scrollHeight, (layout.height * sy) / zoom).toFixed(2) + 'px';
+    };
+
+    /**
+     * Das Feld schliessen und übernehmen, was darin steht.
+     *
+     * IMMER ÜBERNEHMEN, NIE VERWERFEN. Wer irgendwohin tippt, während er
+     * schreibt, will weiterschreiben — nicht den Satz verlieren (§51).
+     * Verworfen wird nur, was leer ist, und dann gibt es nichts zu verlieren.
+     */
+    const schreiberSchliessen = (): void => {
+      const offen = schreiber;
+      if (!offen) return;
+      /* ZUERST ABMELDEN: `feld.remove()` löst `blur` aus, und das käme sonst
+         genau hier wieder herein. */
+      schreiber = null;
+      offen.beobachter?.disconnect();
+      const text = offen.feld.value;
+      const node = offen.ziel ? nodeFor(offen.ziel) : null;
+      node?.removeAttribute('data-schreibt');
+      offen.feld.remove();
+      const platz = offen.ziel ? platzVon(offen.ziel) : -1;
+      if (platz >= 0) {
+        const alt = marks[platz];
+        if (!text.trim()) marks.splice(platz, 1);
+        else if (String(alt.text || '') !== text) {
+          /* MEHRERE FORMATE IN EINEM ABSATZ (E561) fallen beim Ändern
+             zusammen: `laeufe` trägt die Auszeichnung je Stück, und ein
+             reines Textfeld kann nicht sagen, welches Stück der neue Satz
+             ist. Stehen zu lassen wäre schlimmer — `textLayout` zeigt dann
+             weiter den ALTEN Text, und die Änderung wäre unsichtbar
+             verschluckt. Also fallen sie, und der Kasten behält Grösse,
+             Fett und Farbe seines ersten Stücks. Steht als L172. */
+          const erstes = Array.isArray(alt.laeufe) ? alt.laeufe[0] : null;
+          const neu: any = { ...alt, text };
+          if (erstes) {
+            delete neu.laeufe;
+            if (erstes.fontSize) neu.fontSize = erstes.fontSize;
+            if (erstes.bold !== undefined) neu.fett = !!erstes.bold;
+            if (erstes.farbe) neu.farbe = erstes.farbe;
+          }
+          ersetze(platz, neu);
+        } else { redraw(); return; }
+      } else {
+        if (!text.trim()) { redraw(); return; }
+        marks.push({ ...offen.entwurf, text });
+      }
+      redraw();
+      commit(offen.before);
+    };
+
+    /**
+     * Ein Schreibfeld an dieser Stelle öffnen — oder den Text, der schon
+     * dort steht, an seiner Stelle weiterschreiben.
+     */
+    const schreiberOeffnen = (point: number[], targetId = ''): void => {
+      schreiberSchliessen();
+      const raum = flaeche.parentElement as HTMLElement | null;
+      /* Ohne Elternknoten gibt es keine Stelle, an die das Feld gehört —
+         dann bleibt der Dialog von früher der Weg. Er wird dafür behalten,
+         nicht aus Höflichkeit: ein Weg weniger wäre hier ein Weg gar keiner. */
+      if (!raum) { void editText(point, targetId); return; }
+      const platz = targetId ? platzVon(targetId) : -1;
+      const vorhanden = platz >= 0 && marks[platz]?.art === 'text' ? marks[platz] : null;
+      /* Eine gesperrte Marke bleibt, wie sie ist — auch ihr Text (E473). */
+      if (vorhanden?.gesperrt) { UI.toast('Diese Marke ist gesperrt — erst entsperren.'); return; }
+      const before = snapshot();
+      let entwurf: any = vorhanden;
+      if (!vorhanden) {
+        const x = Math.round(Math.max(0, Math.min(point[0] ?? 0, breite - 120)) * 100) / 100;
+        const y = Math.round(Math.max(0, Math.min(point[1] ?? 0, hoehe - 40)) * 100) / 100;
+        const breiteBox = Math.max(120, Math.min(Math.round(breite * 0.4), Math.round(breite - x - 8)));
+        entwurf = { id: frischeId(), art: 'text', point: [x, y], text: '', farbe: color,
+          fontSize: schrift.groesse, breiteBox, schrift: schrift.familie, fett: schrift.fett,
+          rahmen: schrift.rahmen,
+          ...(schrift.ausricht !== 'links' ? { ausricht: schrift.ausricht } : {}) };
+      }
+      const feld = document.createElement('textarea');
+      feld.className = 'blatt-schreiber';
+      feld.setAttribute('aria-label', vorhanden ? 'Text bearbeiten' : 'Text schreiben');
+      feld.spellcheck = false;
+      feld.value = vorhanden ? textVon(vorhanden) : '';
+      raum.appendChild(feld);
+      /* Die gezeichnete Marke tritt zurück, solange das Feld sie zeigt —
+         sonst stünde derselbe Satz zweimal übereinander. */
+      if (vorhanden) nodeFor(idOf(vorhanden))?.setAttribute('data-schreibt', '1');
+      let beobachter: ResizeObserver | null = null;
+      try {
+        beobachter = new ResizeObserver(() => schreiberLegen());
+        beobachter.observe(flaeche);
+      } catch { beobachter = null; }
+      schreiber = { feld, ziel: vorhanden ? idOf(vorhanden) : '', before, entwurf, beobachter };
+      schreiberLegen();
+      feld.addEventListener('input', () => schreiberLegen());
+      feld.addEventListener('blur', () => schreiberSchliessen());
+      feld.addEventListener('keydown', event => {
+        /* ESCAPE BEENDET UND BEHÄLT. In OneNote verlässt Escape den Kasten;
+           es wirft ihn nicht weg. Und es darf nicht weiter nach oben laufen,
+           sonst schliesst derselbe Tastendruck das ganze Studio (E302). */
+        if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); schreiberSchliessen(); return; }
+        /* Strg/Cmd + Enter beendet auch — derselbe Griff wie im Dialog von
+           früher, damit niemand ihn neu lernen muss. */
+        if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+          event.preventDefault(); schreiberSchliessen(); return;
+        }
+        /* Alles andere gehört dem Feld: ein `z` ist ein `z` und kein
+           „Zurück", ein `e` kein Radierer. */
+        event.stopPropagation();
+      });
+      feld.focus({ preventScroll: true });
+      /* Der Cursor ans Ende, damit Weiterschreiben wirklich weiter heisst. */
+      try { feld.setSelectionRange(feld.value.length, feld.value.length); } catch { /* optional */ }
+    };
+
     const editText = async (point: number[], targetId = ''): Promise<void> => {
       const current = targetId ? marks.find(mark => idOf(mark) === targetId && mark.art === 'text') : null;
       /* Eine gesperrte Marke bleibt, wie sie ist — auch ihr Text (E473).
@@ -2987,8 +3218,36 @@ const Marken = (() => {
       feld?.focus();
     });
 
+    /* ══ EIN DOPPELTIPP ÖFFNET EINEN TEXT (E597) ════════════════════════════
+       Der zweite Weg, den OneNote hat: etwas auswählen, zweimal hineintippen,
+       weiterschreiben. Ohne ihn müsste man für jeden Tippfehler erst das
+       Werkzeug wechseln. Gilt für jedes Werkzeug ausser Schreiben und
+       Radierer — beim Radierer wäre ein Doppeltipp zwei Radierversuche, und
+       ein Feld mitten darin wäre das Gegenteil dessen, was gemeint war. */
+    flaeche.addEventListener('dblclick', (event: MouseEvent) => {
+      if (tool === 'schreiben' || tool === 'radierer') return;
+      const ziel = (event.target as Element)?.closest?.('[data-sid]') as SVGElement | null;
+      let id = ziel?.getAttribute('data-sid') || '';
+      /* MIT DER AUSWAHL LIEGT DER RAHMEN OBEN. Gemessen: der erste Tipp
+         wählt die Marke und legt `[data-ink-ui="selection"]` darüber — der
+         zweite Tipp trifft dann den Rahmen und nicht mehr die Marke, und
+         `closest('[data-sid]')` kommt leer zurück. Wer genau eine Sache
+         gewählt hat und zweimal hineintippt, meint diese eine. */
+      if (!id && selection.size === 1) id = [...selection][0] || '';
+      if (!id) return;
+      const platz = platzVon(id);
+      if (platz < 0 || marks[platz]?.art !== 'text') return;
+      event.preventDefault();
+      schreiberOeffnen([0, 0], id);
+    });
+
     flaeche.addEventListener('pointerdown', (event: PointerEvent) => {
       const e = event;
+      /* EIN OFFENES SCHREIBFELD WIRD ZUERST ÜBERNOMMEN (E597).
+         Es hängt an `blur`, und `blur` kommt in Chromium NACH `pointerdown` —
+         ohne diese Zeile stünden für einen Wimpernschlag zwei Felder da, und
+         das zweite wäre schon offen, wenn das erste sich schliesst. */
+      if (schreiber) schreiberSchliessen();
       /* Wer hier zeichnet, meint DIESE Fläche — und zwar auch dann, wenn er
          gleich wieder abbricht. Das steht vor dem `return` unten, weil auch
          ein Griff im Modus „Schreiben" eine Berührung ist. */
@@ -3068,7 +3327,8 @@ const Marken = (() => {
         try { flaeche.setPointerCapture(event.pointerId); } catch { /* optional */ }
         return;
       }
-      if (tool === 'text') { void editText(point, targetId); return; }
+      /* DIREKT SCHREIBEN STATT EINEN DIALOG ÖFFNEN (E597). */
+      if (tool === 'text') { schreiberOeffnen(point, targetId); return; }
       /* Ein Tipp auf einen VORHANDENEN Zettel bearbeitet ihn; sonst wird
          gleich unten eine neue Fläche aufgezogen (der Zwei-Punkt-Weg). */
       if (tool === 'zettel' && targetId &&
@@ -3472,11 +3732,28 @@ const Marken = (() => {
         selection.clear(); renderSelection();
       }
     });
-    registerLayer({ flaeche, abschliessen: finish });
+    /* DIE LEBENSWACHE (E115) SCHLIESST AUCH DAS SCHREIBFELD (E597).
+       Ohne diese Zeile verlöre ein Satz, der noch im Feld steht, beim
+       Blättern auf die nächste Seite: die Fläche verschwindet, das Feld mit
+       ihr, und niemand hätte etwas gemerkt. Dasselbe gilt für `pagehide`
+       und für einen Wechsel des Browserreiters — beide hängen schon an
+       dieser Wache. Ein geschlossenes Feld ist unbequem; ein verlorener
+       Satz ist Datenverlust (§51). */
+    registerLayer({ flaeche, abschliessen: () => {
+      const offen = !!schreiber;
+      if (offen) schreiberSchliessen();
+      /* `finish` zuerst NICHT: es schliesst einen laufenden Strich, und ein
+         Strich und ein Schreibfeld können nicht gleichzeitig offen sein.
+         Beide zu rufen ist trotzdem richtig — die Wache soll alles
+         abschliessen, was offen ist, nicht das Erste, was sie findet. */
+      return finish() || offen;
+    } });
 
     flaeche.style.pointerEvents = 'none';
     flaeche.setAttribute('tabindex', '-1');
     const setzeWerkzeug = (next: string): void => {
+      /* Wer das Werkzeug wechselt, hat den Satz zu Ende geschrieben (E597). */
+      if (schreiber) schreiberSchliessen();
       finish(); tool = next;
       if (tool !== 'select') { selection.clear(); renderSelection(); }
       flaeche.style.pointerEvents = tool === 'schreiben' ? 'none' : 'auto';

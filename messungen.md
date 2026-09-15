@@ -1494,3 +1494,88 @@ den Stand, der ihn noch nicht hatte:
 d1f8e955~1   ✗ Das Original liegt als Anhang an Stelle 0   15 von 16
 heute        ✓                                             16 von 16
 ```
+
+---
+
+## 38. Was ein Tipp mit dem Textwerkzeug auslöste
+
+**15. September 2026 · E597**
+
+Vorher, an der laufenden App, Fenster 1440 × 960, ein Tipp auf ein leeres
+Blatt mit dem Textwerkzeug:
+
+```txt
+Überlagerungen           1
+Dialogtext               „Text · Übernehmen mit Strg + Enter · Übernehmen · Abbrechen"
+Textfelder auf der Seite 2   (beide im Dialog)
+aktives Element          TEXTAREA
+Marken auf dem Blatt     []
+nach „Hallo Redion"      steht in der TEXTAREA des Dialogs, nicht auf dem Blatt
+```
+
+Nachher, derselbe Tipp:
+
+```txt
+Überlagerungen           0
+Schreibfeld auf dem Blatt ja, mit Fokus, ohne Anklicken
+Stelle                   120 / 160 Blatteinheiten getippt → 120,0 / 160,2 gemessen
+Schriftgrösse im Feld    dieselbe, die die fertige Marke trägt
+nach „Freier Text…"      steht in der Marke, an der Stelle des Tipps
+```
+
+**Der Wächter vorher und nachher:**
+
+```txt
+test527 gegen den Stand vor E597    16 von 20 rot (damalige Fassung)
+test527 gegen den Stand nach E598   27 von 27 grün
+```
+
+Drei der vier grünen im ersten Lauf waren es aus dem falschen Grund: „Escape
+schliesst das Feld", „das neue Feld ist leer" und „kein Schreibfeld über
+einer gesperrten Marke" sind alle wahr, wenn es gar kein Feld gibt. Sie
+zählen für den neuen Zustand, nicht als Beleg (§55.2).
+
+---
+
+## 39. Der Umbruch im Schreibfeld gegen den Umbruch auf dem Blatt
+
+**15. September 2026 · E598 · gefunden auf einem Bild**
+
+Derselbe Satz, „Ein Klick, und ich schreibe schon.", Schriftgrösse 16,
+Kastenbreite 238 Blatteinheiten:
+
+```txt
+                     im Feld                       auf dem Blatt
+Rechner 1280×900     fontPx 26,3 · Zeilen 2        fontPx 16 · Zeilen 2   ✓
+Telefon  390×844     fontPx 16   · Zeilen 3        fontPx 16 · Zeilen 2   ✗
+                     gesetzt waren 9,23 px
+```
+
+Der Grund: `bausteine.css:312` setzt unter 760 px
+`input, textarea, select{ font-size:16px !important }`, damit iOS beim
+Tippen nicht in die Seite hineinzoomt.
+
+Nach der Reparatur (Feld in seiner Grösse, nie unter 16 px, als Ganzes
+verkleinert):
+
+```txt
+Telefon  390×844     fontPx 16 · Zeilen 2          fontPx 16 · Zeilen 2   ✓
+                     Zeilenhöhe 20 px · Innenbreite 226 px · scale 0,577
+```
+
+**Gegenproben** — `test527` §10, bei Schriftgrösse 34 statt der Vorgabe 16
+(bei 16 fallen Rechnung und Stilregel zufällig zusammen):
+
+```txt
+ohne das inline-„important"   Feld 3 Zeilen · Blatt 4 · fontPx 16    ✗ ✗
+ohne die 16-px-Untergrenze    fontPx 9,21                            ✗
+mit beidem                    Feld und Blatt gleich · fontPx 19,6    ✓ ✓
+```
+
+**Und eine dritte Gegenprobe**, die den ersten Entwurf einer Zusicherung
+widerlegt hat (§12 des Laufs, die Lebenswache aus E115):
+
+```txt
+Weg „auf eine andere Seite blättern"   ohne Wache GRÜN   — `blur` übernimmt
+Weg „pagehide" (der Reiter geht zu)    ohne Wache ROT    — nur die Wache hält ihn
+```

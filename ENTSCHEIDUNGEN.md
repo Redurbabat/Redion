@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-576 Entscheidungen, E1 bis E596 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+578 Entscheidungen, E1 bis E598 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -640,6 +640,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E594** — Redurs fünf Messlatten: GoodNotes, Word, PowerPoint, Obsidian, und über Notion hinaus — mit gezähltem Stand je Feld
 * **E595** — Eine eingelesene `.docx` geht unverändert wieder heraus, und geänderte Absätze kommen an ihrer Stelle im Original an
 * **E596** — Ein Wächter hing 56 Commits zurück: der Originalschutz aus E538 stand ihm im Weg, nicht umgekehrt
+* **E597** — Direkt auf dem Blatt schreiben statt in ein Fenster: ein Tipp legt das Schreibfeld dorthin, wo der Text stehen wird
+* **E598** — Die Stilregel „textarea 16px !important" hat das Schreibfeld am Telefon umgerechnet; die Antwort ist nicht, sie auszunehmen
 
 ---
 
@@ -48342,3 +48344,199 @@ Behauptung (§50, §55.2).
 Der Fund ist nicht `test252`. Der Fund ist, dass ein roter Lauf 56 Commits
 lang unbemerkt bleiben konnte, weil das Regressionsbündel jedes Bogens nur
 die Läufe kennt, die der Bogen anfasst. Eingetragen als **L171**.
+
+---
+
+## E597 — Direkt auf dem Blatt schreiben, wie in OneNote
+
+**15. September 2026.** Redurs Satz:
+
+> „bei redion fehlt freier Text einfügen bei der PDF oder überhaupt — es
+> sollte wie OneNote sein: wenn ich irgendwo klicke, sollte ich direkt Text
+> schreiben können."
+
+### Zuerst nachgesehen, was heute passiert
+
+Nicht geraten. Ein Tipp mit dem Textwerkzeug auf ein Blatt, und dann
+nachgemessen, was auf der Seite steht:
+
+```
+Überlagerungen        1
+Dialogtext            „Text · Übernehmen mit Strg + Enter · Übernehmen · Abbrechen"
+aktives Element       TEXTAREA (im Dialog)
+Marken auf dem Blatt  []
+Das Getippte steht in TEXTAREA, Wert „Hallo Redion"
+```
+
+Ein **modales Fenster**. Das Getippte stand darin, das Blatt blieb leer, und
+erst „Übernehmen" brachte den Satz an seine Stelle. Für einen Gedanken, den
+man beim Lesen einer PDF nebenher notiert, sind das drei Schritte zu viel —
+und für jemanden, der OneNote kennt, ist es schlicht das falsche Gefühl.
+
+### Was jetzt passiert
+
+Der Tipp legt ein **Schreibfeld genau dorthin, wo der Text stehen wird** —
+mit seiner Schrift, seiner Grösse, seiner Farbe, seiner Ausrichtung und
+seinem Umbruch. Man tippt hinein, und was man sieht, ist, was danach dasteht.
+
+- **Ein Tipp woanders** schliesst das eine Feld und öffnet gleich das
+  nächste. Der Satz geht dabei nicht verloren: geschlossen heisst
+  übernommen, nie verworfen (§51).
+- **Ein Tipp auf einen vorhandenen Text** schreibt ihn an seiner Stelle
+  weiter, statt ihn zu überschreiben.
+- **Ein Doppeltipp** öffnet ihn auch mit der Auswahl — man muss für einen
+  Tippfehler nicht erst das Werkzeug wechseln.
+- **Escape und Strg/Cmd + Enter** beenden und behalten. Escape wirft nichts
+  weg; in OneNote verlässt es den Kasten, es löscht ihn nicht.
+- **Ein leeres Feld** hinterlässt keine Marke.
+- **Eine gesperrte Marke** öffnet gar nicht (E473).
+
+### Drei Entscheidungen, die im Code stehen und hier begründet sind
+
+**Ein `<textarea>` und kein `contenteditable`.** Ein Textkasten hält reinen
+Text (`mark.text`), keinen HTML-Baum. Ein `<textarea>` kann gar nichts
+anderes liefern — es gibt keinen Weg, über das Einfügen aus der
+Zwischenablage Auszeichnung oder Markup hereinzutragen (§19). `test201` §4
+prüft genau das weiterhin, und zwar jetzt über den neuen Weg: der Satz
+`<img src=x onerror=1> Loesung` kommt wortgleich an und erzeugt kein fremdes
+Element.
+
+**Im Elternknoten und nicht als `<foreignObject>`.** Die Zeichenfläche trägt
+`preserveAspectRatio="none"` und wird über ihren Kasten GEZOGEN. Ein Feld
+darin würde mitgezogen — waagrecht gestauchte Buchstaben, die mit dem
+fertigen Text nichts zu tun haben. Der Elternknoten (`.blatt-papier` oder
+`.blatt-flur`) steht auf `position:relative` und deckt genau denselben
+Kasten; dort gerechnet stimmt die Stelle, und die Schrift bleibt Schrift.
+
+**Der Dialog bleibt als Rückfall.** Wo es keinen Elternknoten gibt, öffnet
+weiterhin das Fenster von früher. Nicht aus Höflichkeit: ein Weg weniger
+wäre hier ein Weg gar keiner.
+
+### Die eine Stelle, an der es still schiefgehen konnte
+
+`blur` kommt in Chromium **nach** `pointerdown`. Ohne Gegenmassnahme stünden
+für einen Wimpernschlag zwei Felder da, und das zweite wäre schon offen,
+wenn das erste sich schliesst. Deshalb schliesst der Zeigerabdruck ein
+offenes Feld als Allererstes, bevor er irgendetwas anderes tut.
+
+### Und die Stelle, an der ein Satz still verschwinden konnte
+
+Ein Feld, das noch offen ist, wenn die Zeichenfläche verschwindet, nähme den
+Satz mit. Beim Blättern fängt `blur` das ab — beim Schliessen des Reiters
+nicht. Die **Lebenswache aus E115** (sie schliesst einen laufenden Strich,
+bevor seine SVG weg ist, und hängt an `pagehide` und `visibilitychange`)
+schliesst deshalb jetzt auch das Schreibfeld.
+
+Das war eine Zusicherung, die beinahe aus dem falschen Grund grün gewesen
+wäre: ihr erster Entwurf blätterte auf eine andere Seite — und blieb grün,
+auch mit ausgebauter Wache, weil dort `blur` übernimmt. Gemessen, dann
+umgeschrieben auf `pagehide`. Dort ist sie ohne die Wache rot (§55.2).
+
+### Was es kostet
+
+Ein Kasten mit mehreren Formaten in einem Absatz (`laeufe`, E561 — so kommen
+Texte aus `.pptx`) fällt beim Ändern auf ein Format zusammen und behält
+Grösse, Fett und Farbe seines ersten Stücks. Stehen zu lassen wäre
+schlimmer: `textLayout` zeigt dann weiter den ALTEN Text, und die Änderung
+wäre unsichtbar verschluckt. Steht als **L172**.
+
+### Geprüft
+
+`pruefungen/lauf/test527.mts` (neu, 27 Zusicherungen) fährt den ganzen Weg
+mit Maus und Tastatur — auf einem Blatt, am Telefon und auf einer PDF-Seite,
+weil Redur die PDF ausdrücklich genannt hat. Gegen den Stand davor, in seiner
+damaligen Fassung mit zwanzig Zusicherungen: **16 rot**. Drei der
+vier grünen waren es aus dem falschen Grund — „Escape schliesst das Feld",
+„das neue Feld ist leer" und „kein Schreibfeld über einer gesperrten Marke"
+sind alle wahr, wenn es gar kein Feld gibt. Das steht im Kopf des Laufs,
+damit niemand sie für einen Beweis hält (§55.2).
+
+Nachgezogen wurden `test201` §4, `test352` (`textSetzen`) und `test368` §2a:
+alle drei fuhren den Dialog. Ihre Frage ist dieselbe geblieben, nur der Weg
+dorthin ist der eines Menschen.
+
+---
+
+## E598 — Die Stilregel, die das Schreibfeld umgerechnet hat
+
+**15. September 2026.** Gefunden auf einem Bild, nicht in einer Messung
+(§55.1) — und das ist der Punkt dieses Eintrags.
+
+Am Telefon stand im Schreibfeld:
+
+```
+Ein Klick, und
+ich schreibe
+schon.
+```
+
+und danach auf dem Blatt:
+
+```
+Ein Klick, und ich schreibe
+schon.
+```
+
+Drei Zeilen gegen zwei. Kein Prüflauf hatte etwas dazu zu sagen, weil keiner
+die zwei Umbrüche MITEINANDER verglich.
+
+### Gemessen
+
+```
+Rechner 1280 × 900   Feld fontPx 26,3   Zeilen 2     Blatt Zeilen 2
+Telefon  390 × 844   Feld fontPx 16     Zeilen 3     Blatt Zeilen 2
+                     gesetzt waren 9,23 px
+```
+
+`bausteine.css:312` schreibt unter 760 px:
+
+```css
+input, textarea, select{ font-size:16px !important; }
+```
+
+damit iOS beim Tippen in ein Feld nicht in die Seite hineinzoomt. Die Regel
+ist richtig. Sie hat dieses Projekt schon einmal Zeit gekostet — in
+`lernwelt.css:1113` steht dieselbe Lehre, dort mit einem Auswahlfeld, das
+49 px aus dem Bild ragte.
+
+### Was entschieden wurde
+
+**Nicht, die Regel auszunehmen.** Ein Feld mit 9 px Schrift lässt iOS beim
+Hineintippen zoomen, und dann steht der Nutzer vor einem verrutschten Blatt.
+
+Stattdessen wird das Feld in **seiner** Grösse gesetzt — nie unter 16 px —
+und als Ganzes verkleinert:
+
+```
+sollPx  = Schriftgrösse × Skala der Fläche      (was auf dem Schirm stehen soll)
+basisPx = max(16, sollPx)                       (was der Browser sehen soll)
+zoom    = sollPx / basisPx                      (1, wenn es ohnehin gross genug ist)
+
+font-size  : basisPx, inline und `important`
+Breite     : (Kastenbreite × Skala) / zoom
+transform  : scale(zoom), Ursprung links oben
+```
+
+Der Umbruch fällt damit an derselben Stelle wie im Blattmass, und der
+Browser sieht eine Schrift, bei der er nicht zoomt.
+
+**Inline und `important`**, weil die Stilregel `important` ist — nur so
+gewinnt die Stelle, die das Blattmass wirklich kennt. Bei Grösse 16 fällt
+beides zufällig zusammen; erst ab Grösse 20 sieht man, wer gewinnt.
+
+### Das gilt nicht nur am Telefon
+
+Jede verkleinerte Fläche — ein Zoomfenster, ein schmaler Bildschirm — hatte
+denselben Fehler. Er fiel nur am Telefon auf, weil er dort gross genug war,
+um ihn zu sehen.
+
+### Der Wächter war rot, und zwar zweimal verschieden
+
+`test527` §10 vergleicht die zwei Umbrüche miteinander, bei Schriftgrösse 34
+statt der Vorgabe 16 — sonst wäre er grün, egal wer gewinnt. Gegengeprüft:
+
+```
+ohne das inline-`important`   Feld 3 Zeilen · Blatt 4 · fontPx 16    ✗ ✗
+ohne die 16-px-Untergrenze    fontPx 9,21                            ✗
+mit beidem                    Feld und Blatt gleich · fontPx 19,6    ✓ ✓
+```

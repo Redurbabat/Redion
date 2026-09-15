@@ -126,13 +126,15 @@ const zug = (pg: Seite, punkte: Array<[number, number]>, ziel = '') =>
     await new Promise(f => setTimeout(f, 120));
   }, [punkte, ziel] as [Array<[number, number]>, string]);
 const werkzeug = (pg: Seite, wz: string) => pg.click(`.blatt-werk [data-wz="${wz}"]`);
-/** Mit dem Text-Werkzeug tippen, das mehrzeilige Feld füllen, übernehmen. */
+/** Mit dem Text-Werkzeug tippen, in das Schreibfeld auf dem Blatt tippen, fertig.
+ *  Seit E597 gibt es kein Fenster mehr dazwischen (Redurs OneNote-Satz):
+ *  der Tipp legt das Feld genau dorthin, wo der Text stehen wird. */
 const textSetzen = async (pg: Seite, x: number, y: number, text: string): Promise<void> => {
   await werkzeug(pg, 'text');
   await zug(pg, [[x, y]]);
-  await pg.waitForSelector('.overlay textarea#fq', { timeout: 5000 });
-  await pg.fill('.overlay textarea#fq', text);
-  await pg.click('.overlay [data-a="ok"]');
+  await pg.waitForSelector('.blatt-schreiber', { timeout: 5000 });
+  await pg.fill('.blatt-schreiber', text);
+  await pg.keyboard.press('Escape');
   await pg.waitForTimeout(250);
 };
 const knopfMass = (pg: Seite, wahl: string) => pg.evaluate((wahl: string) => {

@@ -8291,3 +8291,58 @@ da; was fehlt, ist der Weg dorthin innerhalb einer Sitzung.
 **Was es nicht heisst:** dass die Bündel weg sollen. Ein schnelles Bündel
 nach jedem Bogen findet den eigenen Fehler sofort — es findet nur nicht den
 fremden.
+
+---
+
+## L172 · Mehrere Formate in einem Kasten fallen beim Ändern zusammen — 15. September 2026
+
+**Was fehlt:** Ein Textkasten kann seit E561 mehrere Formate in einem Absatz
+tragen (`laeufe` — so kommen Texte aus einer `.pptx`: ein Wort fett, eines
+farbig, eines grösser). Wer ihn seit E597 auf dem Blatt weiterschreibt,
+bekommt einen Kasten mit EINEM Format zurück: dem des ersten Stücks.
+
+**Warum es so entschieden wurde:** Das Schreibfeld ist ein `<textarea>` und
+hält reinen Text. Es kann nicht sagen, welches Stück der neue Satz ist —
+jede Zuordnung wäre geraten, und ein falsch ausgezeichneter Text ist
+schlimmer als ein einfarbiger (§51, dieselbe Überlegung wie E593 und L168).
+
+Die Alternative wäre gewesen, `laeufe` stehen zu lassen. Sie ist schlechter:
+`textLayout` setzt dann weiter aus den ALTEN Läufen, und die Änderung wäre
+unsichtbar verschluckt — der Nutzer tippt, drückt Escape, und auf dem Blatt
+steht der alte Satz. Ein sichtbarer Verlust an Auszeichnung schlägt einen
+unsichtbaren Verlust an Text.
+
+**Was dagegen hilft, wenn es stört:** ein Schreibfeld, das Auszeichnung
+kann. Das heisst `contenteditable` statt `<textarea>` — und damit die ganze
+Frage, wie eingefügtes HTML gesäubert wird (§19), plus eine Abbildung
+zwischen dem DOM und `laeufe`. Das ist ein eigener Bogen, kein Nachtrag.
+
+**Woran man merkt, dass er gebraucht wird:** Wer eine eingelesene
+Präsentation in Redion redigiert statt sie nur zu lesen.
+
+---
+
+## L173 · Der Umbruch im SVG ist geschätzt, der im Feld gemessen — 15. September 2026
+
+**Was fehlt:** `InkGeometry.textLines` entscheidet, wo ein Textkasten
+umbricht, aus einer SCHÄTZUNG der Buchstabenbreiten
+(`src/core/ink/geometry.ts`, `textWidth`). Das Schreibfeld aus E597 bricht
+dagegen mit den ECHTEN Massen des Browsers um. Beide stimmen fast immer
+überein — aber „fast" ist keine Zusicherung.
+
+**Warum die Schätzung überhaupt da ist:** Ein SVG kann nicht selbst
+umbrechen; die Zeilen müssen gerechnet werden, bevor sie als `<tspan>`
+dastehen. E561 hat die Schätzung bereits einmal aus dem Bild verbannt — sie
+darf nicht mehr sagen, wo ein Stück ANFÄNGT, weil das sichtbar danebenlag.
+Wo umgebrochen wird, entscheidet sie weiter.
+
+**Was helfen würde:** Der Browser kann Text messen —
+`CanvasRenderingContext2D.measureText` oder ein `<canvas>` mit derselben
+Schrift. Das wäre genauer und kostet einen Messaufruf je Zeile. Ob das der
+Mühe wert ist, hängt davon ab, wie oft die zwei auseinanderlaufen — und das
+ist bisher nicht gemessen.
+
+**Woran man merkt, dass es stört:** Ein Kasten, in dem beim Schreiben zwei
+Zeilen standen und danach drei — bei einer Zeile, die genau an der Grenze
+endet. `test527` §10 hält den Fall am Telefon fest; er prüft die beiden
+gegeneinander, nicht gegen eine Zahl.
