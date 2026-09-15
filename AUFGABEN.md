@@ -983,8 +983,18 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   Damit ist es eine Liste und kein Wegweiser mehr. Wegnehmen ist keine
   Lösung (§47); `test114` hält seit E549 wenigstens fest, dass der letzte
   Eintrag unten wirklich ankommt.
-- **O5 · `.pptx` schreiben mit Rundreise.** Geänderte Folien zurück, der Rest
-  der Originaldatei unangetastet (braucht O2).
+- **O5 · `.pptx` schreiben mit Rundreise** — ZUR HÄLFTE (E592). Eine
+  eingelesene Präsentation geht jetzt **vollständig und unverändert** wieder
+  heraus: jeder Eintrag Byte für Byte, mit seiner Packmethode und seiner
+  Prüfsumme. Vorher überlebte nichts ausser der Endung — gemessen fehlten
+  Bild, Thema und `docProps`, und der Dateianhang selbst wurde zur ersten
+  Folie. Mit Pythons `zipfile` gegengeprüft: 6432 Bytes hinein, 6432 heraus,
+  kein Eintrag anders.
+  **Offen bleibt die andere Hälfte (O5b, L168):** ein in Redion geänderter
+  Folientext steht noch nicht in der Datei. Dafür muss beim EINLESEN eine
+  Rückspur von der Marke zu ihrem `<a:t>` angelegt werden — ein Zuordnen
+  nach Reihenfolge schriebe bei Gruppen, Tabellen und geerbten Platzhaltern
+  in die falsche Form (§51). Die Ausgabe sagt es, statt still zu sein.
 - **O6 · `.docx` draufschreiben.** Braucht den Rasterer. Das ist der teuerste
   Bogen und der einzige, für den es noch keinen Weg gibt.
 - **O7 · `.docx` Text ändern.** Rundreise auf `word/document.xml` (braucht O2).

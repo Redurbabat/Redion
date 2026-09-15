@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-571 Entscheidungen, E1 bis E591 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+572 Entscheidungen, E1 bis E592 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -635,6 +635,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E589** — `index.html` zeichnete neunzehn Zeichen selbst, vier davon anders als die Seitenleiste für denselben Weg
 * **E590** — Drei rote Läufe angesehen: zweimal die Oberfläche von gestern, einmal ein Zugriff nach Platz statt nach Bedeutung
 * **E591** — Beim Zoom lag das Lineal ausserhalb des Bildes; und eine Zusicherung über die Tintenbreite konnte ihren Fehler nicht sehen
+* **E592** — Eine eingelesene `.pptx` ging als frische Textdatei heraus und verlor alles; jetzt wird das Original durchgereicht
 
 ---
 
@@ -47960,3 +47961,82 @@ Der einzige Schutz dagegen ist, sie einmal absichtlich zu brechen.
 **Prüflauf:** `test524 §16` (acht Zusicherungen, vier rot gesehen) und
 `§17` (fünf Zusicherungen, eine gegengeprobt). Angesehen:
 `bilder/lineal-zoom-140.png`, `lineal-zoom-180.png`.
+
+---
+
+## E592 — Die Originaldatei geht unverändert wieder heraus (Bogen O5)
+
+**15. September 2026.** Redur, 12. September: „ich will das redion auch die
+anderen datein auch öffnen kann z.B. word und powerpoint daten … aber
+wichtig **die originale datei wird immer geschützt**."
+
+### Was gemessen wurde
+
+Eine fremde `.pptx` mit zwei Folien, einem Bild, einer gefüllten Form, einem
+eigenen Thema und `docProps` — eingelesen und wieder ausgegeben:
+
+| | Original | Export |
+|---|---|---|
+| Einträge | 16 | 15 |
+| `docProps/core.xml` (Titel, Autor) | da | **weg** |
+| `docProps/app.xml` | da | **weg** |
+| `ppt/media/image1.png` | da | **weg** |
+| Folien | 2 | **3** |
+| Text auf Folie 1 | „Erste Folie" | „[Datei: probe.pptx]" |
+| Füllfarbe `FFCC00` | da | **weg** |
+| Thema „Redur-Thema" | da | **überschrieben** |
+
+**Es überlebte nichts ausser der Endung** — und der Dateianhang selbst wurde
+zur ersten Folie. `alsPowerPoint` baute eine frische Datei aus Text. Für eine
+selbst geschriebene Präsentation ist das richtig; für eine eingelesene ist es
+Datenverlust, und der steht in §46 an Platz eins.
+
+### Zwei Wege, und die Herkunft entscheidet
+
+- **Eingelesene Präsentation** → die Originaldatei wird **durchgereicht**.
+  Jeder Eintrag geht Byte für Byte zurück, mit seiner Packmethode und seiner
+  Prüfsumme. Das Werkzeug dafür stand seit **E539** bereit und war nie
+  benutzt worden.
+- **Selbst geschriebene Präsentation** → der frische Weg von vorher,
+  unverändert.
+
+Nachher, mit einem **fremden** Leser gegengeprüft (Pythons `zipfile`, nicht
+Redions):
+
+```txt
+16 Einträge · testzip: keine Schäden
+fehlt: nichts · neu: nichts · inhaltlich anders: kein Eintrag
+6432 Bytes hinein, 6432 Bytes heraus
+Packmethoden: nur 8 — nichts wurde entpackt und neu abgelegt
+Folie 1: „Erste Folie" · 1 Bild · FFCC00 · Thema „Redur-Thema"
+```
+
+### Ein Fehler beim ersten Wurf, der die Ursache erklärt
+
+`rohBytes(name)` gibt **den ganzen Satz** zurück — Bytes, Methode,
+Prüfsumme, Rohgrösse —, nicht nur die Bytes. Im ersten Wurf stand das OBJEKT
+im Feld `roh`; der Schreiber hielt es für Inhalt, `inhalt.length` war
+`undefined`, und das Archiv kündigte fünfzehn Einträge an, von denen keiner
+an seiner Stelle lag. Der Leser sagte es sofort und deutlich — das ist der
+Satz, den E350 dort hingeschrieben hat.
+
+### Was dieser Bogen NICHT liefert, und warum
+
+**Ein in Redion geänderter Folientext steht noch nicht in der Datei.** Eine
+Marke trägt keine Rückspur zu ihrem `<a:t>`; ohne sie bliebe nur ein
+Zuordnen nach Reihenfolge. Bei Gruppen, Tabellen und geerbten Platzhaltern
+schriebe das Text in die **falsche** Form — und ein falscher Text ist
+schlimmer als ein fehlender (§51).
+
+Die Spur wird beim EINLESEN angelegt; das ist Bogen **O5b** (L168).
+
+**Und es wird gesagt, nicht verschwiegen** (§35): die Ausgabe zeigt einen
+Hinweis — „Die Originaldatei ist vollständig erhalten. In Redion geänderte
+Folieninhalte stehen noch nicht darin." Sichtbar als Meldung, nicht nur im
+Rückgabewert: wer speichert, sieht sonst eine Datei und glaubt, seine
+Änderung sei darin.
+
+**Prüflauf:** `test525` (neu), 17 Zusicherungen, elf davon rot gesehen.
+Er baut seine `.pptx` aus eigenem XML und packt sie mit dem Browser —
+nicht mit Redions Schreiber, sonst prüfte er, ob Redion sich selbst
+versteht, statt ob sie fremde Dateien schützt.

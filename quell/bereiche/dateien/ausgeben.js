@@ -2662,18 +2662,120 @@ const Austausch = (() => {
      * dem Schul-PC öffnen. Der Vortragsmodus reicht dafür nicht — er lebt in
      * Redion.
      */
+    /* ══ DIE ORIGINALDATEI EINER EINGELESENEN PRÄSENTATION (E592, Bogen O5) ═══
+       Redur, 12. September 2026: „aber wichtig die originale datei wird immer
+       geschützt."
+  
+       Seit E538 hängt die eingelesene `.pptx` als Anhang an Platz 0 der Seite.
+       Diese Zeilen holen sie zurück — Block, Dateisatz, Bytes —, damit die
+       Ausgabe sie durchreichen kann statt eine frische Datei zu bauen. */
+    const originalPaket = async (seite) => {
+        if (typeof Dateien === 'undefined' || !Dateien.alsBlob)
+            return null;
+        let kinder = [];
+        try {
+            kinder = Store.childrenOf(seite.id) || [];
+        }
+        catch {
+            return null;
+        }
+        const anhang = kinder.find((k) => k && k.type === 'file' && k.original
+            && /\.(pptx|ppsx|pptm|ppsm)$/i.test(String(k.text || '')));
+        if (!anhang || !anhang.dateiId)
+            return null;
+        try {
+            const blob = await Dateien.alsBlob(anhang.dateiId);
+            if (!blob)
+                return null;
+            const puffer = await blob.arrayBuffer();
+            const leser = await Einlesen.zipLesen(puffer);
+            /* Eine `.pptx` ohne `ppt/presentation.xml` ist keine — dann lieber den
+               frischen Weg als ein Paket, das PowerPoint nicht öffnet. */
+            if (!leser || !leser.namen?.includes('ppt/presentation.xml'))
+                return null;
+            return { leser, name: String(anhang.text || '') };
+        }
+        catch {
+            return null;
+        }
+    };
+    /**
+     * EINE SEITE ALS POWERPOINT (L69).
+     *
+     * Die Berufsschule verlangt oft eine Abgabe: eine Datei hochladen oder auf
+     * dem Schul-PC öffnen. Der Vortragsmodus reicht dafür nicht — er lebt in
+     * Redion.
+     *
+     * ZWEI WEGE, und welcher gilt, entscheidet die Herkunft:
+     *
+     *   · EINGELESENE Präsentation → die Originaldatei wird DURCHGEREICHT.
+     *     Jeder Eintrag geht Byte für Byte zurück, mit seiner Packmethode und
+     *     seiner Prüfsumme (E539). Bild, Thema, Layouts, Master, `docProps` —
+     *     alles bleibt.
+     *   · SELBST GESCHRIEBENE Präsentation → der frische Weg von unten.
+     *
+     * GEMESSEN am 15. September 2026, warum es diesen Weg braucht. Eine fremde
+     * Datei mit zwei Folien, einem Bild, einer gefüllten Form und eigenem
+     * Thema, eingelesen und wieder ausgegeben:
+     *
+     *     Original 16 Einträge     Export 15
+     *     docProps/core.xml        WEG        ppt/media/image1.png  WEG
+     *     2 Folien                 3          Füllfarbe FFCC00      WEG
+     *     „Erste Folie"            „[Datei: …pptx]"
+     *
+     * Es überlebte nichts ausser der Endung — und der Dateianhang selbst wurde
+     * zur ersten Folie. Für eine selbst geschriebene Präsentation ist der
+     * frische Weg richtig; für eine eingelesene ist er Datenverlust (§46).
+     */
     const alsPowerPoint = async (seite) => {
         if (!seite || !seite.id)
             throw new Error('Ohne Seite gibt es nichts zu zeigen.');
         if (typeof Folien === 'undefined')
             throw new Error('Der Folien-Kern ist nicht geladen.');
+        const dateiName = (seite.text || 'Vortrag').replace(/[\\/:*?"<>|]/g, '-') + '.pptx';
+        const paket = await originalPaket(seite);
+        if (paket) {
+            const teile = [];
+            for (const name of paket.leser.namen) {
+                /* `rohBytes` gibt den ganzen Satz zurück — Bytes, Methode,
+                   Prüfsumme, Rohgrösse —, nicht nur die Bytes. Beim ersten Wurf
+                   stand hier `roh: (await rohBytes(name))`, also das OBJEKT im Feld
+                   `roh`: der Schreiber hielt es für Inhalt, `inhalt.length` war
+                   `undefined`, und das Archiv kündigte fünfzehn Einträge an, von
+                   denen keiner an seiner Stelle lag. */
+                const teil = await paket.leser.rohBytes(name);
+                if (!teil)
+                    continue;
+                teile.push({ name, ...teil });
+            }
+            const blob = await zipSchreiben(teile);
+            laden(blob, dateiName);
+            const folien = paket.leser.namen
+                .filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n)).length;
+            /* EHRLICH SAGEN, WAS NOCH NICHT GEHT (§35): die Folien stehen so
+               darin, wie sie hereinkamen. Was in Redion daran geändert wurde,
+               trägt diese Datei noch nicht — dafür fehlt die Rückspur von der
+               Marke zu ihrem `<a:t>`, und die wird beim Einlesen angelegt
+               (Bogen O5b, L168). Ein stilles Weglassen wäre das Schlimmere. */
+            const hinweis = 'Die Originaldatei ist vollständig erhalten. In Redion '
+                + 'geänderte Folieninhalte stehen noch nicht darin.';
+            /* UND ZWAR SICHTBAR, nicht nur im Rückgabewert. Wer speichert, sieht
+               eine Datei und glaubt sonst, seine Änderung sei darin — das wäre
+               ein stiller Verlust, und still ist hier das Schlimmere (§35). */
+            try {
+                if (typeof UI !== 'undefined' && UI.toast)
+                    UI.toast(hinweis, 7000);
+            }
+            catch { /* ohne Meldung bleibt der Rückgabewert */ }
+            return { blob, folien, durchgereicht: true, hinweis };
+        }
         const roh = Folien.teilen(seite, (id) => Store.childrenOf(id));
         const folien = roh.map((f) => ({
             titel: f.titel, zeilen: Folien.alsZeilen(f, (id) => Store.childrenOf(id))
         }));
         const blob = await zipSchreiben(pptxTeile(folien));
-        laden(blob, (seite.text || 'Vortrag').replace(/[\\/:*?"<>|]/g, '-') + '.pptx');
-        return { blob, folien: folien.length };
+        laden(blob, dateiName);
+        return { blob, folien: folien.length, durchgereicht: false };
     };
     return { zipSchreiben, crc32, laden, alsWord, alsPowerPoint, pptxTeile, alsExcel,
         datenbankAlsExcel,

@@ -1305,3 +1305,45 @@ zeigt es:
 kaputter Stand   Strich vorher 0.5  → nachher 2.8   (rot)
 echter Stand     Strich vorher 2.4  → nachher 2.4   (grün)
 ```
+
+---
+
+## 33. Die Rundreise einer .pptx
+
+**Wann:** 15. September 2026 · **Womit:** eine fremde `.pptx`, mit Python
+gebaut (unabhängig von Redions Schreiber), eingelesen und wieder ausgegeben ·
+**Warum:** Bogen O5.
+
+**Vorher:**
+
+| | Original | Export |
+|---|---|---|
+| Einträge | 16 | 15 |
+| Bytes | 6432 | 13807 |
+| Folien | 2 | 3 |
+| `docProps/core.xml` | da | weg |
+| `docProps/app.xml` | da | weg |
+| `ppt/media/image1.png` | da | weg |
+| Text Folie 1 | „Erste Folie" | „probe" + „[Datei: probe.pptx]" |
+| Füllfarbe | `FFCC00` | keine |
+| Bilder auf Folie 1 | 1 | 0 |
+| Thema | „Redur-Thema" | überschrieben |
+
+Dreizehn der sechzehn gleichnamigen Einträge waren inhaltlich anders; drei
+fehlten ganz.
+
+**Nachher** (E592), mit Pythons `zipfile` gegengeprüft — nicht mit Redions
+Leser:
+
+```txt
+16 Einträge · testzip(): keine Schäden
+fehlt: nichts · neu: nichts · inhaltlich anders: kein Eintrag
+6432 Bytes hinein, 6432 Bytes heraus
+Packmethoden in der Ausgabe: nur 8
+Folie 1: Text ['Erste Folie'] · Bilder 1 · Farbe ['FFCC00']
+Thema: ['Redur-Thema'] · core.xml: ['Redurs Probevortrag']
+```
+
+**Was noch nicht geht** (L168): ein in Redion geänderter Titel steht nicht in
+der Datei — gemessen `['Erste Folie']` statt `['Geänderte Folie']`. Die
+Ausgabe sagt es.

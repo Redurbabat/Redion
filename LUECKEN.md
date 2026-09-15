@@ -8160,3 +8160,36 @@ den gemessenen Zahlen.
 wenn sie dieselbe Aufgabe hat." Ein Polster von 22 px, das kein Seitenrand
 ist, dürfte die Marke nicht tragen. Diese Zahlen einzeln anzusehen ist ein
 eigener Bogen, und er braucht Augen, nicht ein Skript.
+
+---
+
+## L168 · Geänderte Folien kommen noch nicht in die Datei — 15. September 2026
+
+**Was fehlt:** Eine eingelesene `.pptx` geht seit E592 vollständig und
+unverändert wieder heraus. Was in Redion an einer Folie geändert wurde,
+steht aber noch nicht darin — die Folien gehen so zurück, wie sie
+hereinkamen.
+
+**Warum es nicht einfach nachgereicht wurde:** Eine Marke trägt keine
+Rückspur zu ihrem `<a:t>`. Ohne diese Spur bliebe nur ein Zuordnen nach
+Reihenfolge — der nte Text in der Folie zum nten Text im Block. Das hält
+nicht: Gruppen (E555), Tabellen (E565) und über Layout und Master geerbte
+Platzhalter (E558) tragen alle Text bei, und nicht jeder davon steht als
+`<a:t>` in der Folie selbst. Ein Zuordnen nach Reihenfolge schriebe Text in
+die **falsche** Form, und ein falscher Text ist schlimmer als ein fehlender
+(§51).
+
+**Was zu tun ist — Bogen O5b:** die Spur beim EINLESEN anlegen. Jede
+Textmarke bekommt, woher sie kommt: Folie, Form, Absatz, Lauf. Damit ist das
+Zurückschreiben kein Raten mehr, sondern ein Nachschlagen. Das Feld ist
+additiv — vorhandene Marken ohne Spur werden weiterhin nicht
+zurückgeschrieben, und das ist der richtige Rückfall.
+
+**Was NICHT zu tun ist:** die ganze Folie neu erzeugen. Redion liest heute
+mehr aus einer `.pptx`, als es schreiben kann — Diagramme, Zellränder,
+Spiegelungen, Gruppendrehung (L151). Eine neu erzeugte Folie verlöre genau
+das, was E592 gerade gerettet hat.
+
+**Bis dahin steht es da, statt still zu sein:** die Ausgabe zeigt „Die
+Originaldatei ist vollständig erhalten. In Redion geänderte Folieninhalte
+stehen noch nicht darin." `test525` hält beide Hälften dieses Satzes fest.
