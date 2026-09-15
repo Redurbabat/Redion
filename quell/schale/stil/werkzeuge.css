@@ -424,6 +424,49 @@ a.bl:hover{color:var(--text)}
   flex-direction:column; align-items:center; justify-content:center; padding:6vh 8vw;
 }
 .praesi .folie{width:100%; max-width:1100px; font-size:22px; line-height:1.6}
+
+/* ══ FOLIENÜBERGÄNGE (E600) ═══════════════════════════════════════════════
+   PowerPoint kennt über vierzig; Redion kann sechs und sagt bei allem
+   anderen, was es wirklich war (`uebergangLesen` in `dateien/einlesen.ts`).
+   Hier stehen nur die sechs.
+
+   GESETZT WIRD IM TS, NICHT HIER: `werkzeuge.ts` schreibt beim Neuzeichnen
+   einer Folie `data-uebergang`, `data-uebergang-richtung` und `--ueb-dauer`
+   an `.folie`. Weil `zeichne()` die Folie jedes Mal NEU baut, startet die
+   Animation von selbst — es braucht keinen Neustart-Griff.
+
+   KEIN ÜBERGANG BEI EINEM SCHRITT INNERHALB DER FOLIE. Ein Klick, der eine
+   Abdeckung auflöst, zeichnet nicht neu (`deckelAnwenden`), und er soll
+   auch nichts bewegen. Dieselbe Trennung macht PowerPoint.
+
+   Die Richtung ist die des ANKOMMENDEN Blattes: `dir="l"` heisst in OOXML
+   „es wandert nach links", die neue Folie kommt also von RECHTS herein. */
+.praesi .folie[data-uebergang]{
+  animation-duration:var(--ueb-dauer,700ms);
+  animation-timing-function:cubic-bezier(.22,1,.36,1);
+  animation-fill-mode:both
+}
+.praesi .folie[data-uebergang-richtung="l"]{ --ueb-x:100%;  --ueb-y:0;     --ueb-c:0 0 0 100% }
+.praesi .folie[data-uebergang-richtung="r"]{ --ueb-x:-100%; --ueb-y:0;     --ueb-c:0 100% 0 0 }
+.praesi .folie[data-uebergang-richtung="u"]{ --ueb-x:0;     --ueb-y:100%;  --ueb-c:100% 0 0 0 }
+.praesi .folie[data-uebergang-richtung="d"]{ --ueb-x:0;     --ueb-y:-100%; --ueb-c:0 0 100% 0 }
+.praesi .folie[data-uebergang="blenden"]{ animation-name:ueb-blenden }
+@keyframes ueb-blenden{ from{ opacity:0 } }
+.praesi .folie[data-uebergang="zoom"]{ animation-name:ueb-zoom }
+@keyframes ueb-zoom{ from{ opacity:0; transform:scale(.82) } }
+/* `decken` und `schieben` sehen aus der Sicht der ANKOMMENDEN Folie gleich
+   aus — der Unterschied liegt bei der alten, und die ist schon weg. Das ist
+   eine Näherung, und sie steht als solche in L175. */
+.praesi .folie[data-uebergang="schieben"],
+.praesi .folie[data-uebergang="decken"]{ animation-name:ueb-schieben }
+@keyframes ueb-schieben{ from{ transform:translate(var(--ueb-x,100%),var(--ueb-y,0)) } }
+.praesi .folie[data-uebergang="wischen"]{ animation-name:ueb-wischen }
+@keyframes ueb-wischen{ from{ clip-path:inset(var(--ueb-c,0 0 0 100%)) } }
+@media (prefers-reduced-motion:reduce){
+  /* Das TS setzt die Marke dann gar nicht erst; diese Regel ist der Gürtel
+     zum Hosenträger — falls eine Folie sie doch trägt, bewegt sie sich nicht. */
+  .praesi .folie[data-uebergang]{ animation:none }
+}
 .praesi h1{font-size:52px; margin-bottom:26px; letter-spacing:-1px}
 .praesi h2{font-size:34px; margin:16px 0 10px}
 .praesi h3{font-size:26px; margin:12px 0 6px}

@@ -1234,6 +1234,23 @@ const Werkzeuge = (() => {
                 nimm(e.b, 0);
             return raus;
         };
+        /**
+         * DER ÜBERGANG DIESER FOLIE (E600).
+         *
+         * Er steht am `blatt`-Block, den der `.pptx`-Weg angelegt hat — der
+         * erste Block der Folie, der einen nennt, gilt. Eine Folie, die aus
+         * mehreren Blöcken besteht (eine geteilte Textseite), hat keinen; dann
+         * bleibt es beim harten Schnitt, und das ist richtig: ein Übergang, den
+         * niemand bestellt hat, ist Bewegung ohne Grund (§39).
+         */
+        const uebergangDerFolie = (f) => {
+            for (const e of f?.bloecke || []) {
+                const u = e?.b?.uebergang;
+                if (u && typeof u === 'object' && u.art)
+                    return u;
+            }
+            return null;
+        };
         /** Wie viele Klicks diese Folie hat, bevor die nächste kommt. */
         const schritteDerFolie = (f) => deckelDerFolie(f)
             .reduce((m, d) => Math.max(m, Number(d.schritt) || 0), 0);
@@ -1290,6 +1307,25 @@ const Werkzeuge = (() => {
                     `<button data-a="zurueck">›</button>` +
                     `<button data-a="zu">Beenden (Esc)</button>` +
                     `</div>`;
+            /* ══ UND JETZT DER ÜBERGANG (E600) ══════════════════════════════════
+               `zeichne` baut die Folie jedes Mal neu — der Knoten ist also frisch,
+               und die Animation startet von selbst. Genau deshalb steht sie hier
+               und nicht an `weiter()`: ein Schritt INNERHALB der Folie zeichnet
+               nicht neu (`deckelAnwenden`), und er soll auch keinen Übergang
+               auslösen. Das ist dieselbe Trennung, die PowerPoint macht.
+      
+               `prefers-reduced-motion` wird geachtet (§39): wer Bewegung
+               abbestellt hat, bekommt den harten Schnitt — und sieht dieselben
+               Folien, nur ohne Weg dazwischen. */
+            const bild = o.querySelector('.folie');
+            const ueb = uebergangDerFolie(f);
+            if (bild && ueb && ueb.art !== 'keine'
+                && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                bild.style.setProperty('--ueb-dauer', Math.round(Math.max(150, Math.min(3000, Number(ueb.dauer) || 700))) + 'ms');
+                bild.dataset.uebergang = String(ueb.art);
+                if (ueb.richtung)
+                    bild.dataset.uebergangRichtung = String(ueb.richtung);
+            }
             deckelAnwenden();
         };
         const folieBlock = (b, tiefe) => {

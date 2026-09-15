@@ -1438,6 +1438,74 @@ const Einlesen = (() => {
              w: emuZuPunkt(ext.getAttribute('cx')), h: emuZuPunkt(ext.getAttribute('cy')) };
   };
 
+  /* ══ DER ÜBERGANG EINER FOLIE (E600) ═══════════════════════════════════
+     PowerPoint kennt über vierzig Übergänge, viele davon als 3D-Effekt, den
+     ein Browser ohne eigene Grafikschicht nicht nachbaut. Redion kennt SECHS
+     und sagt bei allem anderen, was es wirklich war.
+
+     WARUM NICHT MEHR: ein Übergang, der „Prisma" heisst und wie ein Blenden
+     aussieht, ist eine Lüge im Bild. Ein Blenden, das im Hinweis „war
+     Prisma" sagt, ist die Wahrheit mit einer Näherung — und die Originaldatei
+     trägt den echten Effekt ohnehin unverändert weiter (E592). */
+  const UEBERGAENGE: Record<string, string> = {
+    cut: 'keine',
+    fade: 'blenden', dissolve: 'blenden', fadeThroughBlack: 'blenden',
+    push: 'schieben', pull: 'schieben',
+    cover: 'decken', uncover: 'decken',
+    wipe: 'wischen', strips: 'wischen', blinds: 'wischen', comb: 'wischen',
+    zoom: 'zoom', newsflash: 'zoom'
+  };
+  /* `pull` zieht die ALTE Folie weg, `push` schiebt die NEUE herein — aus der
+     Sicht der ankommenden Folie sind die Richtungen umgekehrt. */
+  const GEGENRICHTUNG: Record<string, string> = { l: 'r', r: 'l', u: 'd', d: 'u' };
+  const SPD_MS: Record<string, number> = { slow: 1000, med: 700, fast: 400 };
+
+  /**
+   * Den Übergang aus einer Folie lesen.
+   *
+   * MEHRERE `p:transition` SIND DER NORMALFALL, nicht die Ausnahme: neuere
+   * Effekte stehen in `mc:AlternateContent` — einmal als `mc:Choice` mit dem
+   * echten Effekt (`p14:prism`), einmal als `mc:Fallback` mit etwas, das
+   * jedes PowerPoint kann. Gelesen wird der ERSTE, der sich abbilden lässt;
+   * gibt es keinen, gilt der erste überhaupt, als „blenden" mit seinem
+   * echten Namen daneben.
+   */
+  const uebergangLesen = (doc: Document): any => {
+    const alle = Array.from(doc.getElementsByTagName('p:transition'));
+    if (!alle.length) return null;
+    let erster: any = null;
+    for (const knoten of alle) {
+      /* Der Effekt ist das erste Kind, das kein Klang ist (`p:sndAc`). */
+      const effekt = Array.from(knoten.children)
+        .find(k => k.localName !== 'sndAc' && k.localName !== 'extLst');
+      if (!effekt) continue;
+      const name = effekt.localName || '';
+      const spd = String(knoten.getAttribute('spd') || 'med');
+      const roh = Number(knoten.getAttribute('p14:dur')
+        || knoten.getAttributeNS('http://schemas.microsoft.com/office/powerpoint/2010/main', 'dur'));
+      /* Gedeckelt, damit eine Folie mit acht Sekunden Übergang keinen
+         Vortrag anhält, und nicht unter 150 ms, weil darunter ein Übergang
+         wie ein Flackern aussieht. */
+      const dauer = Math.round(Math.max(150, Math.min(3000,
+        Number.isFinite(roh) && roh > 0 ? roh : (SPD_MS[spd] ?? 700))));
+      const dir = String(effekt.getAttribute('dir') || '');
+      const art = UEBERGAENGE[name];
+      const eintrag: any = { art: art || 'blenden', dauer, original: name };
+      if (dir && /^[lrud]$/.test(dir))
+        eintrag.richtung = (name === 'pull' || name === 'uncover')
+          ? (GEGENRICHTUNG[dir] ?? dir) : dir;
+      if (!erster) erster = eintrag;
+      /* WESSEN NAME STEHT DANN DA? Der des ERSTEN — also des Effekts, den
+         PowerPoint wirklich zeigen würde. Die abbildbare Fassung liefert
+         Art und Dauer, der erste liefert die Wahrheit über die Datei:
+         „blenden, war eigentlich prism". Ohne das stünde „fade" da, und die
+         Datei hätte etwas anderes gemeint. */
+      if (art) return (erster && erster.original !== eintrag.original)
+        ? { ...eintrag, statt: erster.original } : eintrag;
+    }
+    return erster;
+  };
+
   /**
    * DIE KLICKSCHRITTE EINER FOLIE — und was sie aufdecken.
    *
@@ -2287,6 +2355,7 @@ const Einlesen = (() => {
         .map(o => String(o.text).split('\n')[0]!.trim())
         .filter(z => z && z.length <= 80);
       folien.push({ titel, objekte, kandidaten, grundfarbe,
+                    uebergang: uebergangLesen(doc),
                     weg: [...weggelassen.entries()] });
     }
     /* ══ WELCHER KASTEN IST DIE ÜBERSCHRIFT? ═══════════════════════════
@@ -2515,7 +2584,10 @@ const Einlesen = (() => {
           blattBreite: p.breite, blattHoehe: p.hoehe, papier: 'blanko',
           /* Nur wenn es eine gibt — ein leeres Feld an jedem Blatt wäre
              Ballast, und `blatt.ts` fällt ohne es auf Weiss zurück (E558). */
-          ...((folie as any).grundfarbe ? { grundfarbe: (folie as any).grundfarbe } : {}) });
+          ...((folie as any).grundfarbe ? { grundfarbe: (folie as any).grundfarbe } : {}),
+          /* Der Übergang beim Blättern im Vortrag (E600). Nur wenn die Folie
+             einen nennt — ein leeres Feld an jedem Blatt wäre Ballast. */
+          ...((folie as any).uebergang ? { uebergang: (folie as any).uebergang } : {}) });
         const marken: any[] = [];
         for (const o of folie.objekte) {
           const id = 'm' + Math.random().toString(36).slice(2, 10);
