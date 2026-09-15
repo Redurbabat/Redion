@@ -178,10 +178,18 @@ p('… und kein Wort ging verloren oder kam doppelt',
 /* ── 2 ────────────────────────────────────────────────────────────────── */
 console.log('\n2 · Die Leiste: Schriftart, A−/A+, Fett, Rahmen — der nächste Text trägt es');
 const gruppe = await pg.evaluate(() =>
-  [...document.querySelectorAll<HTMLElement>('.blatt-werk [data-gruppe="schrift"]')]
+  /* OHNE DEN TRENNER (E568): seit die Gruppen am Rechner einen Strich
+     voreinander haben, trägt auch er `data-gruppe="schrift"` — er kommt
+     und geht mit der Gruppe, genau dafür ist er so gebaut. Gezählt
+     werden hier aber die BEDIENTEILE, und ein Strich ist keines. */
+  [...document.querySelectorAll<HTMLElement>('.blatt-werk [data-gruppe="schrift"]:not(.blatt-trenn)')]
     .map(k => ({ act: k.dataset['act'], sichtbar: getComputedStyle(k).display !== 'none' })));
-gleich('Fünf Knöpfe der Gruppe „schrift", beim Text-Werkzeug alle sichtbar',
-  gruppe, [['schriftart', true], ['kleiner', true], ['groesser', true], ['fett', true], ['rahmen', true]]
+/* SECHS seit E560 — die Ausrichtung ist dazugekommen. Die Liste bleibt
+   vollständig aufgezählt und nicht auf eine Anzahl verkürzt: sie soll rot
+   werden, wenn ein Knopf verschwindet ODER einer unangekündigt dazukommt. */
+gleich('Sechs Knöpfe der Gruppe „schrift", beim Text-Werkzeug alle sichtbar',
+  gruppe, [['schriftart', true], ['kleiner', true], ['groesser', true], ['fett', true],
+           ['rahmen', true], ['ausricht', true]]
     .map(([act, sichtbar]) => ({ act, sichtbar })));
 await pg.click('.blatt-werk [data-act="schriftart"]');
 gleich('Schriftart antippen: Standard → Serifen', await pg.getAttribute('.blatt-werk [data-act="schriftart"]', 'data-schrift'), 'serif');
@@ -191,8 +199,10 @@ await pg.click('.blatt-werk [data-act="rahmen"]');
 gleich('Fett und Rahmen sind gedrückt', await pg.evaluate(() => [
   document.querySelector('.blatt-werk [data-act="fett"]')?.getAttribute('aria-pressed'),
   document.querySelector('.blatt-werk [data-act="rahmen"]')?.getAttribute('aria-pressed')]), ['true', 'true']);
+/* `ausricht` seit E560 — es wird mitgemerkt wie Familie, Grad, Fett und
+   Rahmen, und steht hier ausdrücklich statt still durchzurutschen. */
 gleich('… und gemerkt (zeichnen:schrift)', await pg.evaluate(() => Store.getMeta('zeichnen:schrift')),
-  { familie: 'serif', groesse: 20, fett: true, rahmen: true });
+  { familie: 'serif', groesse: 20, fett: true, rahmen: true, ausricht: 'links' });
 await textSetzen(pg, 60, 420, 'Merksatz');
 m = await textMarken(pg, blattId);
 const zweite = m.find(x => x.text === 'Merksatz')!;
@@ -208,12 +218,22 @@ console.log('\n3 · Mit Auswahl gilt es der Auswahl — ein Schritt im Verlauf')
 await werkzeug(pg, 'select');
 await zug(pg, [[80, 140]], `[data-sid="${erste.id}"]`);
 gleich('Der erste Text ist gewählt', (await auswahl(pg)).rahmen, 1);
-const zeilenVorher = (await textKnoten(pg, erste.id))?.tspans ?? 0;
+const vorher = await textKnoten(pg, erste.id);
+const zeilenVorher = vorher?.tspans ?? 0;
+const hoeheVorher = (await auswahl(pg)).hoehe;
 await pg.click('.blatt-werk [data-act="groesser"]');
 m = await textMarken(pg, blattId);
 gleich('A+ mit Auswahl: der erste Text geht von 16 auf 20 px', m.find(x => x.id === erste.id)?.fontSize, 20);
 k = await textKnoten(pg, erste.id);
-p('… und bricht in mehr Zeilen um', (k?.tspans ?? 0) > zeilenVorher, `${k?.tspans} nach ${zeilenVorher}`);
+/* HIER STAND „bricht in mehr Zeilen um", und das war ein Hilfsmass.
+   Seit E562 wird die Textbreite exakt gemessen statt geschätzt; dieser Satz
+   umbricht schon bei 16 px in fünf Zeilen und bei 20 px wieder in fünf.
+   Die Zeilenzahl SÄTTIGT — der Kasten wird trotzdem höher, und das ist die
+   Eigenschaft, um die es geht. Sie wird jetzt unmittelbar gemessen statt
+   über einen Stellvertreter, der bei einem anderen Text zufällig stimmt. */
+p('… und wird höher — der Kasten wächst mit dem Grad',
+  (await auswahl(pg)).hoehe > hoeheVorher,
+  `${(await auswahl(pg)).hoehe} nach ${hoeheVorher} (Zeilen: ${k?.tspans} nach ${zeilenVorher})`);
 p('… der Auswahlrahmen wächst mit', (await auswahl(pg)).hoehe > 0 && (await auswahl(pg)).hoehe >= (k?.tspans ?? 0) * 20 * 1.25,
   String((await auswahl(pg)).hoehe));
 await pg.click('.blatt-werk [data-act="undo"]');

@@ -111,7 +111,7 @@
 .ag-grenzstreifen.aus button.prim{background:var(--accent); color:var(--auf-accent); border-color:transparent}
 @media(max-width:760px){
   .ag-grenzstreifen{flex-wrap:wrap}
-  .ag-grenzstreifen button{min-height:44px; width:100%}
+  .ag-grenzstreifen button{min-height:var(--touch-min); width:100%}
 }
 .agent-karte b{font-size:13.5px; font-weight:500}
 .agent-karte span{font-size:11.5px; color:var(--text-faint); line-height:1.45}
@@ -486,12 +486,12 @@
   hsl(0 62% 46%), hsl(55 62% 46%), hsl(135 62% 40%))}
 @media(max-width:760px){
   .rg-neu{padding:12px 16px}
-  .rg-neu input, .rg-neu select, .rg-neu button{min-height:44px; font-size:16px}
+  .rg-neu input, .rg-neu select, .rg-neu button{min-height:var(--touch-min); font-size:16px}
   .rg-neu #rg-bereich{flex:1 1 100%}
   .rg-neu button{flex:1 1 100%}
   /* An- und Ausschalten und Löschen sind am Telefon Fingerziele, keine
      Zeichen am Zeilenende (CLAUDE.md §37). */
-  .rg-liste .fr-zeile button{min-height:44px; min-width:44px}
+  .rg-liste .fr-zeile button{min-height:var(--touch-min); min-width:var(--touch-min)}
   .rg-hinweis{padding:10px 16px 12px}
 }
 .fr-farben{display:flex; gap:5px; margin-top:5px}
@@ -770,7 +770,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-neu{
   grid-column:2; grid-row:1;
   display:flex; align-items:center; gap:7px;
-  min-height:44px; padding:0 19px 0 15px; border:0; border-radius:999px;
+  min-height:var(--touch-min); padding:0 19px 0 15px; border:0; border-radius:999px;
   background:var(--accent); color:var(--auf-accent);
   font-size:15px; font-weight:640; cursor:pointer; box-shadow:var(--shadow-2)
 }
@@ -778,7 +778,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-neu:hover{ background:var(--accent-hover,var(--accent)) }
 .bib-form-knopf{
   grid-column:3; grid-row:1;
-  display:grid; place-items:center; min-width:44px; min-height:44px;
+  display:grid; place-items:center; min-width:var(--touch-min); min-height:var(--touch-min);
   border:0; border-radius:13px; background:none; color:var(--text-dim);
   font-size:16px; cursor:pointer
 }
@@ -1999,11 +1999,11 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Die Knöpfe werden dabei gleich 44 px gross. Sie waren 22 × 23. */
   .b-code .code-werk{ top:8px; right:auto; left:12px; gap:6px }
   .b-code .code-werk button{
-    min-width:44px; min-height:44px; font-size:17px; border-radius:10px;
+    min-width:var(--touch-min); min-height:var(--touch-min); font-size:17px; border-radius:10px;
   }
   .b-code select{
     top:8px !important; right:12px !important;
-    min-height:44px; font-size:14px !important; padding:0 8px !important;
+    min-height:var(--touch-min); font-size:14px !important; padding:0 8px !important;
     border-radius:10px !important;
   }
   .b-code .ct{ padding-top:64px }
@@ -2138,7 +2138,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      nicht, er wird um neun Prozent kürzer. Dafür sind zwei Knöpfe, die man
      in JEDER Ansicht braucht, endlich 44 × 44 (§37). */
   #topbar .icon-btn,
-  #topbar .top-btn{ min-height:44px; min-width:44px; justify-content:center }
+  #topbar .top-btn{ min-height:var(--touch-min); min-width:var(--touch-min); justify-content:center }
 
   /* ======================================================================
    * DIE KRUMENZEILE UND DIE REITERZEILE WERDEN EINE (E235)
@@ -2235,7 +2235,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Messung, nicht das Hinsehen: sie sind klein und unauffällig, und genau
      deshalb trifft man sie nicht. Dort ist Platz. */
   .seitenleiste .icon-btn, aside .icon-btn, #side .icon-btn{
-    min-width:44px; min-height:44px;
+    min-width:var(--touch-min); min-height:var(--touch-min);
     flex-basis:auto;
     display:grid; place-items:center;
   }
@@ -2280,19 +2280,19 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   .side-section{ min-height:48px; }
   .side-section button,
   .row .act button{
-    min-width:44px; min-height:44px;
+    min-width:var(--touch-min); min-height:var(--touch-min);
     padding:0;
     display:grid; place-items:center;
   }
 
   /* Der Schreibknopf unten in der Seitenleiste sass bei 38 × 38 — knapp
      daneben, und knapp daneben trifft man nicht. */
-  #btn-new-bottom{ min-width:44px; min-height:44px; }
+  #btn-new-bottom{ min-width:var(--touch-min); min-height:var(--touch-min); }
 
   /* Das ✕ einer Einladung war 23 × 27. Ein Wegklicken-Knopf, den man nicht
      trifft, ist ärgerlicher als einer, den es nicht gibt: man tippt daneben
      und löst stattdessen aus, was danebensteht. */
-  #rg-einladung [data-a="nie"]{ min-width:44px; min-height:44px; }
+  #rg-einladung [data-a="nie"]{ min-width:var(--touch-min); min-height:var(--touch-min); }
 
   /* DIESELBE SACHE ÜBER DEM SEITENTITEL. `.pg-tools` steht auf `opacity:0`
      und erscheint, wenn die Maus über der Seite ist — Cover, Volle Breite,
@@ -2303,15 +2303,15 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Wer sie sucht, findet sie dort — das ist mehr wert als eine Zeile
      Platz. */
   .pg-tools{ opacity:1; }
-  .pg-tools button{ min-height:44px; padding:4px 10px; }
+  .pg-tools button{ min-height:var(--touch-min); padding:4px 10px; }
 
   /* Der Knopf für einen neuen Chat war 39 px hoch — fünf zu wenig. */
-  #btn-neuer-chat{ min-height:44px; }
+  #btn-neuer-chat{ min-height:var(--touch-min); }
 
   /* Die Reiter und Chips über einer Datenbank: Tabelle, Board, Filter,
      Sortieren, Eigenschaften. Sie waren 31 bis 33 px hoch. Nach ihnen
      greift man mitten in der Arbeit, oft mit einer Hand. */
-  .db-tab, .db-tools button, .db-tools .new{ min-height:44px; }
+  .db-tab, .db-tools button, .db-tools .new{ min-height:var(--touch-min); }
 
   /* Zwei, die der neue Prüflauf gefunden hat und nicht das Auge:
 
@@ -2322,8 +2322,8 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 
      `.sr` sind die Reiter oben in der Seitenleiste. 41 px breit — vier zu
      wenig, und vier zu wenig merkt man erst, wenn man dreimal danebentippt. */
-  .prim{ min-height:44px; }
-  .sr{ min-width:44px; }
+  .prim{ min-height:var(--touch-min); }
+  .sr{ min-width:var(--touch-min); }
 }
 
 /* Karten im Blatt — iOS-Art wie in Notions App */
@@ -2372,7 +2372,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
    stand als einziger Weg da und war der flachste Knopf der Ansicht.
    Ein leerer Zustand, den man nicht trifft, ist eine Sackgasse. */
 @media(max-width:760px){
-  .pe-link{ min-height:44px; padding:10px 18px; font-size:16px;
+  .pe-link{ min-height:var(--touch-min); padding:10px 18px; font-size:16px;
             border-radius:12px; background:var(--bg-hover) }
 }
 
@@ -2467,7 +2467,7 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
   /* 44, nicht 38: die Fingerregel (§37) galt für die Breite und wurde bei
      der Höhe vergessen — gemessen am 9. August, 44×38. */
   #tastenleiste button{
-    flex:0 0 auto; min-width:44px; height:44px; border-radius:9px;
+    flex:0 0 auto; min-width:var(--touch-min); height:44px; border-radius:9px;
     background:var(--bg-hover); border:1px solid var(--line);
     color:var(--text); font-size:15px;
   }
@@ -3039,9 +3039,9 @@ button[disabled]{opacity:.4; cursor:not-allowed}
   #reiterleiste{min-height:48px; padding:4px 6px 0; scrollbar-width:none;
                 -webkit-overflow-scrolling:touch; overscroll-behavior-inline:contain}
   #reiterleiste::-webkit-scrollbar{display:none}
-  .rt-tab{min-height:44px; font-size:14px; max-width:66vw; padding:5px 4px 5px 12px}
-  .rt-tab button{min-width:44px; min-height:40px; font-size:15px}
-  .rt-plus{min-width:44px; min-height:44px; font-size:18px; padding:0}
+  .rt-tab{min-height:var(--touch-min); font-size:14px; max-width:66vw; padding:5px 4px 5px 12px}
+  .rt-tab button{min-width:var(--touch-min); min-height:40px; font-size:15px}
+  .rt-plus{min-width:var(--touch-min); min-height:var(--touch-min); font-size:18px; padding:0}
   #main.geteilt{flex-direction:column}
   #teil{flex-basis:45% !important; border-left:0; border-top:1px solid var(--line)}
   .linkvorschau{display:none}
@@ -3254,8 +3254,8 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .pl-frist{min-width:82px}
 @media(max-width:640px){
   /* §37: Zahlenfelder und der Zurückstellen-Griff sind Griffe. */
-  .pl-budget input, .pl-dauer input{min-height:44px}
-  .pl-z .wr-spaeter{min-width:44px; min-height:44px}
+  .pl-budget input, .pl-dauer input{min-height:var(--touch-min)}
+  .pl-z .wr-spaeter{min-width:var(--touch-min); min-height:var(--touch-min)}
   /* Der Ort einer Aufgabe ist am Telefon das erste, was weichen darf. */
   .pl-z .wr-wo{display:none}
   /* AUF DEM BILD GEFUNDEN: in einer Zeile blieb vom Titel „Mathe…" übrig,
@@ -3295,8 +3295,8 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   #offline-streifen{left:10px; right:10px; transform:none;
                     font-size:13px; gap:6px; padding:2px 4px 2px 13px}
   #offline-streifen span{flex:1 1 auto; min-width:0}
-  #offline-streifen button{min-height:44px; padding:0 10px}
-  #offline-streifen button[data-a="zu"]{min-width:44px; padding:0}
+  #offline-streifen button{min-height:var(--touch-min); padding:0 10px}
+  #offline-streifen button[data-a="zu"]{min-width:var(--touch-min); padding:0}
 }
 
 /* Hineinschauen in Diagramme und Kreuztabellen */
@@ -3579,7 +3579,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   #rg-neu{left:8px; right:8px; bottom:74px; width:auto}
   /* Am Telefon darf er nicht die halbe Seite nehmen. */
   #rg-neu{max-height:min(46vh, 340px)}
-  .rgn-kopf button{min-width:44px; min-height:44px}
+  .rgn-kopf button{min-width:var(--touch-min); min-height:var(--touch-min)}
   .rgn-titel{font-size:14px}
   .rgn-text{font-size:13px}
 }
@@ -3609,7 +3609,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   /* Die Fingerregel (§37) galt auch hier nicht: die Aktionsknöpfe der
      Auswahl-Leiste massen ~30 px — gesehen auf dem E84-Bild, dieselbe
      Fehlerklasse wie bei der Formatleiste (E81). */
-  #auswahl-leiste button{ min-height:44px; min-width:44px } }
+  #auswahl-leiste button{ min-height:var(--touch-min); min-width:var(--touch-min) } }
 
 /* ── Untere Leiste am Telefon: die vier Bereiche ──────────────────────────
    Notion hat unten Start, Chats, Besprechungen und Posteingang — bei uns
@@ -3893,7 +3893,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .fk-satz{ font-size:13.5px; line-height:1.55; color:var(--text-dim) }
 .fk-knoepfe{ display:flex; gap:8px; margin-top:12px }
 .fk-knoepfe button{
-  min-height:44px; padding:0 14px; border-radius:10px;
+  min-height:var(--touch-min); padding:0 14px; border-radius:10px;
   border:1px solid var(--line); color:var(--text-dim); font-size:13.5px;
 }
 .fk-knoepfe button:active{ background:rgba(255,255,255,.08) }
@@ -4084,7 +4084,53 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    schlimmer statt besser. */
 .blatt-werk button::after{content:""; position:absolute; left:0; right:0; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .blatt-werk button:hover{background:var(--bg-hover)}
-.blatt-werk button.on{background:var(--accent); color:var(--auf-accent)}
+/* ══ DREI ZUSTÄNDE, DREI GESTALTEN (E568) ═════════════════════════════════
+   Redur, 14. September: „die Stift, wie es geordnet ist, gefällt mir nicht,
+   und es hat keine Qualität, also kein gutes Gefühl."
+
+   GEMESSEN, WORAN DAS LAG. In der Leiste standen beim Stift SECHS Flächen
+   in genau derselben Farbe `rgb(109,74,255)` gleichzeitig an:
+
+     das Werkzeug «Stift» · der Schalter «Formen» · der Schalter «Kritzeln»
+     der geführte Stift   · die gewählte Breite   · der Ring um die Farbe
+
+   Drei davon standen unmittelbar nebeneinander und sahen aus wie EIN
+   Block. Damit sagt die Leiste dreierlei mit einer Stimme, und das Auge
+   findet nichts mehr wieder: was ist mein Werkzeug, was ist eine Wahl
+   innerhalb einer Gruppe, und was ist ein Schalter, der einfach anliegt.
+
+   JETZT SIND ES DREI GESTALTEN, nicht drei Blautöne (dieselbe Lehre wie
+   E554, nur eine Ebene höher):
+
+     1 · DAS WERKZEUG   volle Fläche — die EINZIGE in der ganzen Leiste
+     2 · DIE SPIELART   Schale mit Ring — der Stift, die Breite, die Form
+     3 · DER SCHALTER   getönt, mit einem Balken unten — an oder aus
+
+   Warum nicht alles ruhig? Das Werkzeug ist das eine, was man beim Blick
+   auf die Leiste sucht. Es leise zu machen, hiesse, die Suche jedes Mal
+   neu zu machen. Warum nicht alles laut? Siehe oben — sechs laute Flächen
+   sind keine.
+
+   Der Balken unten beim Schalter ist nicht Zierde, sondern §38: „Keine
+   Information nur über Farbe." Ein getönter Grund allein wäre im
+   Hochkontrast und für farbschwache Augen kein Unterschied. */
+/* 2 · DIE SPIELART — steht zuerst, weil die zwei darunter sie überschreiben. */
+.blatt-werk button.on:not(.blatt-farbe){
+  background:var(--bg-hover); color:var(--text);
+  box-shadow:inset 0 0 0 2px var(--accent)
+}
+/* 1 · DAS WERKZEUG. */
+.blatt-werk button[data-wz].on{
+  background:var(--accent); color:var(--auf-accent); box-shadow:none
+}
+/* 3 · DER SCHALTER. `:is()` zählt so schwer wie sein schwerstes Glied —
+   ein Attributwähler —, also (0,3,1) und damit über der Spielart. */
+.blatt-werk button.on:is([data-act="formen"],[data-act="kritzel"],
+                          [data-act="lineal"],[data-act="fett"],
+                          [data-act="rahmen"],[data-act="sperren"]){
+  background:var(--accent-soft); color:var(--accent-text);
+  box-shadow:inset 0 -2px 0 0 var(--accent)
+}
 /* DIE STIFTREIHE (E512): sechs Knöpfe statt eines Wechslers. Ihr Wort
    bleibt weg, wo es eng ist — das Zeichen trägt, der Titel und das
    aria-label sagen den Namen (§38). */
@@ -4260,7 +4306,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 }
 .blatt-reihe[data-lage="links"] .blatt-werk > .blatt-farbe-leiter,
 .blatt-reihe[data-lage="rechts"] .blatt-werk > .blatt-farbe-leiter{
-  width:44px; min-width:44px
+  width:44px; min-width:var(--touch-min)
 }
 .blatt-reihe[data-lage="links"]{left:6px}
 .blatt-reihe[data-lage="rechts"]{right:6px}
@@ -4302,15 +4348,104 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-reihe[data-mehr="beides"] .blatt-fest{
   box-shadow:-14px 0 14px -8px rgba(0,0,0,.5)}
 
-.blatt-trenn{width:1px; height:20px; background:var(--line); margin:0 4px}
-.blatt-farbe{width:22px; height:22px; padding:0 !important; border-radius:50%;
-             border:2px solid transparent}
-.blatt-farbe.on{border-color:var(--accent-text); box-shadow:0 0 0 2px var(--bg-card) inset}
+/* Der Trenner trägt den Abstand ZWISCHEN den Gruppen — innerhalb bleibt
+   die Lücke bei 4 px. Ohne diesen Unterschied steht das Zubehör als eine
+   Mauer aus vierzehn gleichen Knöpfen da (E568). */
+.blatt-trenn{width:1px; height:24px; background:var(--line); margin:0 5px}
+/* KEIN STRICH AM ANFANG EINER ZEILE (E570). Der erste Trenner des Zubehörs
+   stand links vom ersten Knopf und trennte dort nichts — er sah aus wie ein
+   Rest. Weg damit, und die fünfzehn Pixel, die er belegte, fehlten der
+   Zeile: mit ihnen und den zwei Pixeln je Farbtupfer passen Stifte, Farben
+   UND Breiten wieder in eine Zeile, statt dass die Breite allein eine Zeile
+   tiefer rutscht. Gemessen: 553 px endete die Zeile vorher, 530 danach,
+   und die dritte Breite braucht 36. */
+.blatt-werk[data-tool] > .blatt-zeilenbruch + span.blatt-trenn[data-gruppe]{display:none}
+
+/* ══ DIE FARBTUPFER SIND WIEDER TUPFER (E568) ═════════════════════════════
+   NACHGEMESSEN, NICHT VERMUTET: hier stand `width:22px` und
+   `border-radius:50%` — und beides war seit jeher wirkungslos.
+
+     `.blatt-farbe`        wiegt (0,1,0)
+     `.blatt-werk button`  wiegt (0,1,1)   ← gewinnt
+
+   Also galten `border-radius:6px` aus der Knopfregel und `min-width:36px`
+   aus der Behälterabfrage. Auf dem Bildschirm stand keine Farbreihe,
+   sondern fünf 36 × 32 grosse abgerundete Kacheln — und eine Kachelreihe
+   sieht aus wie fünf Knöpfe, nicht wie eine Palette. Genau der Fall aus
+   §55.1: der Code liest sich richtig, das Bild zeigt etwas anderes.
+
+   Das Studio hatte den Tupfer längst richtig (`pdf-studio.css`, dort mit
+   `var(--touch-min)` und `background-clip:content-box`). Die Form steht
+   jetzt HIER, einmal für alle — zwei Beschreibungen desselben Tupfers
+   wären die nächste, die auseinanderläuft (§8).
+
+   `background-clip:content-box` ist der Trick: die Fläche des Knopfes
+   bleibt gross genug zum Treffen, die FARBE sitzt nur im Inneren. Der
+   Ring der gewählten Farbe ist `--text` und nicht `--accent`: ein
+   violetter Ring um einen blauen Tupfer verschwindet, ein neutraler
+   nicht. */
+/* DER RAND GEHÖRT ALLEN TUPFERN — auch den zehn Adern des Leiterstiftes
+   (E509), die gleich darunter ihre eigene Breite bekommen. Er steht
+   deshalb EINE Regel weiter oben als die Form: `.blatt-farbe-leiter` ist
+   von der Form ausgenommen, vom Ring aber nicht. Ohne diese Zeile hätte
+   `border-color:var(--accent)` beim gewählten Leiter nichts zu färben —
+   eine Rahmenfarbe ohne Rahmenbreite ist unsichtbar. */
+.blatt-werk button.blatt-farbe{border:2px solid transparent}
+.blatt-werk button.blatt-farbe:not(.blatt-farbe-leiter),
+.blatt-werk button.blatt-farbe-neu{
+  /* DREISSIG UND NICHT ZWEIUNDDREISSIG (E570). Zwei Pixel je Tupfer, sechs
+     Tupfer: zwölf Pixel — und genau die entscheiden, ob die drei Breiten
+     noch in dieselbe Zeile passen wie Stifte und Farben. Gemessen bei
+     1280 px Fenster: mit 32 brauchte die Zeile 570 px und hatte 568,
+     mit 30 sind es 558. „Womit ich zeichne" — Stift, Farbe, Breite —
+     bleibt damit beieinander, statt dass die Breite allein eine Zeile
+     tiefer rutscht. */
+  width:30px; min-width:30px; height:30px; min-height:30px;
+  padding:4px !important; background-clip:content-box !important;
+  border-radius:50%; border:2px solid transparent
+}
+/* `!important` AM `background-clip`, UND ZWAR NOTGEDRUNGEN (E568, gefunden
+   von `test522 §3`, nicht vermutet): jeder Tupfer trägt seine Farbe als
+   `style="background:#d64545"` am Element — und `background` ist eine
+   KURZSCHRIFT. Sie setzt alles zurück, was sie nicht nennt, `background-clip`
+   eingeschlossen. Ein Element-Stil schlägt jedes Stilblatt; ohne
+   `!important` stand hier also `content-box` und galt `border-box`.
+   Dasselbe galt unbemerkt im Studio, seit es dort steht. */
+/* DER RING DER GEWÄHLTEN FARBE IST DERSELBE RING WIE ÜBERALL (E568):
+   `--accent`, wie beim geführten Stift und bei der gewählten Breite — eine
+   Farbe IST eine Spielart, und drei Gruppen mit drei verschiedenen
+   Markierungen wären wieder das, was hier repariert wird.
+   ER LIEGT NICHT AUF DEM TUPFER, SONDERN UM IHN: zwischen Ring und Farbe
+   stehen die 4 px Polsterung aus der Regel darüber, gefüllt mit dem Grund
+   der Leiste. Deshalb ist er auf Schwarz genauso zu sehen wie auf Gelb.
+   NACHGEMESSEN, WARUM NICHT `--text`: im Hellmodus ist `--text` fast
+   schwarz, und der erste Tupfer der Reihe IST schwarz. Auf dem Bild war
+   dort kein Ring, sondern ein etwas grösserer schwarzer Punkt. */
+.blatt-werk button.blatt-farbe.on{
+  border-color:var(--accent); box-shadow:none
+}
+/* JEDER TUPFER BEKOMMT EINE HAARKANTE (E568). GESEHEN, NICHT GERECHNET: im
+   Dunkelmodus steht der schwarze Tupfer auf einem fast schwarzen Grund und
+   ist einfach weg — im Hellmodus gilt dasselbe für Weiss, sobald jemand es
+   als eigene Farbe legt. Eine Kante von einem Pixel in halbdurchsichtigem
+   Grau sitzt auf JEDEM Grund richtig, weil sie beide Enden mitnimmt.
+   Warum ein `::before` und kein `border`: die Farbe sitzt im INNEREN
+   (`background-clip:content-box`), der Rand läge 4 px daneben und wäre ein
+   Ring um den Knopf statt eine Kante am Punkt. `::after` ist schon vergeben
+   — das ist die 44-px-Trefffläche aus §37. */
+.blatt-werk button.blatt-farbe:not(.blatt-farbe-leiter)::before{
+  content:""; position:absolute; inset:5px; border-radius:50%;
+  box-shadow:inset 0 0 0 1px rgba(127,127,127,.45); pointer-events:none
+}
 /* Der Weg zu einer eigenen Farbe (E351): ein Tupfer mit Plus, so gross wie
-   die Farbtupfer, damit die Reihe gleichmässig bleibt. */
-.blatt-farbe-neu{width:22px; height:22px; min-width:22px; padding:0 !important; border-radius:50%;
-                 border:1px dashed var(--text-faint); color:var(--text-dim); font-size:14px; line-height:1;
+   die Farbtupfer, damit die Reihe gleichmässig bleibt.
+   KEIN GESTRICHELTER RAND MEHR (E568): gestrichelt heisst überall sonst in
+   dieser App „hier fehlt noch etwas". Hier fehlt nichts — hier geht es
+   weiter. */
+.blatt-farbe-neu{color:var(--text-dim); font-size:15px; line-height:1;
                  display:inline-flex; align-items:center; justify-content:center}
+.blatt-werk button.blatt-farbe-neu{border-color:var(--line)}
+.blatt-werk button.blatt-farbe-neu:hover{border-color:var(--accent); color:var(--accent-text)}
 /* ══ DIE ADERNREIHE (E509) ═══════════════════════════════════════════════
    Beim Leiterstift stehen in der Farbreihe die zehn Adern eines
    Schaltplans. Sie sind etwas breiter als ein Farbtupfer, weil ihr Kürzel
@@ -4335,7 +4470,122 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-farbe-neu:hover{border-color:var(--accent-text); color:var(--text)}
 .blatt-farbe-eigen{border-color:var(--line)}
 .blatt-strich{display:flex; align-items:center; justify-content:center; width:30px}
-.blatt-strich i{display:block; width:16px; background:currentColor; border-radius:3px}
+/* RUNDE STÄBE, KEINE KLÖTZE (E568). Bei 3 px Rundung sah der dickste
+   Strich (10 px hoch, 16 breit) aus wie ein weisser Klotz und nicht wie
+   ein dicker Strich — auf dem Bild war er das auffälligste Ding der
+   ganzen Zeile. Ein voll gerundetes Ende ist das, was ein Stift auf
+   Papier hinterlässt. */
+.blatt-strich i{display:block; width:18px; background:currentColor; border-radius:999px}
+
+/* ══ ORDNEN AN ORT UND STELLE (E571) ═══════════════════════════════════════
+   Im Modus ist jeder Knopf ein Ding, das man anfassen kann — und das muss
+   man sehen, bevor man es anfasst. Ein gestrichelter Rand sagt „lose";
+   `cursor:grab` sagt es noch einmal für die Maus. Der geschobene Knopf
+   bekommt den Akzentring und hebt sich einen Pixel ab; mehr wäre Zappeln.
+
+   `touch-action:none` NUR IM MODUS: sonst wäre die Leiste am Telefon nicht
+   mehr zu rollen. Im Modus ist ein Zug ein Zug und kein Rollen — das ist
+   genau die Unterscheidung, die ausserhalb des Modus nicht zu treffen wäre
+   (und der Grund, warum es E570 als Liste gibt). */
+.blatt-werk[data-ordnen="an"]{touch-action:none}
+.blatt-werk[data-ordnen="an"] > :is([data-wz],[data-gruppe]){
+  /* `--text-faint` UND NICHT `--line`: nachgemessen war die Linie
+     rgb(233,233,231) — auf der weissen Karte der Leiste ist das fast
+     nichts, und der gestrichelte Rand ist das einzige, was sagt „dieser
+     Knopf ist jetzt lose". Ein mittleres Grau trägt in beiden Themen. */
+  cursor:grab; outline:1px dashed var(--text-faint); outline-offset:-1px;
+  border-radius:8px
+}
+.blatt-werk[data-ordnen="an"] > .blatt-trenn{opacity:.3}
+.blatt-werk[data-ordnen="an"] > .zieht{
+  cursor:grabbing; outline:2px solid var(--accent); outline-offset:-1px;
+  transform:translateY(-1px)
+}
+/* Im Modus zeichnet nichts — auch das Blatt darunter nicht, solange die
+   Leiste die Zeiger hält. Das sagt der Klickabfänger in `marken.ts`; hier
+   steht nur, dass ein Knopf dabei nicht mehr wie ein Schalter aussieht. */
+.blatt-werk[data-ordnen="an"] > :is([data-wz],[data-gruppe]):hover{background:var(--bg-hover)}
+
+/* Das Band mit „Als Liste", „Zurücksetzen" und „Fertig". Es steht ÜBER der
+   Leiste und nicht darin: in der Leiste wäre es vier weitere Knöpfe, die
+   man aus Versehen verschiebt. Absolut gesetzt, damit es die Reihe nicht
+   umbricht — die trägt am Telefon schon einen Umbruch (E179). */
+.blatt-ordnen-band{
+  position:absolute; left:0; right:0; bottom:100%; margin-bottom:6px; z-index:3;
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  padding:7px 10px; border:1px solid var(--line); border-radius:10px;
+  background:var(--bg-card); box-shadow:var(--shadow-2)
+}
+.blatt-ordnen-band > span{flex:1 1 auto; font-size:13px; color:var(--text-dim)}
+.blatt-ordnen-band button{
+  min-height:var(--touch-min); padding:0 14px; border-radius:8px; cursor:pointer;
+  font-size:13.5px; font-weight:600; border:1px solid var(--line);
+  background:none; color:var(--text)
+}
+.blatt-ordnen-band button:hover{background:var(--bg-hover)}
+.blatt-ordnen-band button.ist-fertig{border:0; background:var(--accent); color:var(--auf-accent)}
+@media (max-width:760px){
+  .blatt-ordnen-band > span{flex-basis:100%}
+  .blatt-ordnen-band button{flex:1 1 auto}
+}
+@media (prefers-reduced-motion:reduce){
+  .blatt-werk[data-ordnen="an"] > .zieht{transform:none}
+}
+
+/* ══ DAS FELD „LEISTE EINRICHTEN" (E570) ═══════════════════════════════════
+   Zwei Listen, jede Zeile zu greifen oder mit zwei Knöpfen zu rücken. Die
+   Knöpfe sind nicht der Notausgang, sondern der Hauptweg — deshalb messen
+   sie `--touch-min` (§37) und nicht die 32 px des Leistenzubehörs. */
+.blatt-ordnen-koerper{display:flex; flex-direction:column; gap:22px;
+                      padding:16px 18px 4px; max-height:min(62vh,540px); overflow-y:auto}
+.blatt-ordnen-block h3{margin:0 0 3px; font-size:14px; letter-spacing:.01em}
+.blatt-ordnen-block p{margin:0 0 10px; font-size:12.5px; color:var(--text-dim)}
+.blatt-ordnen-liste{list-style:none; margin:0; padding:0;
+                    display:flex; flex-direction:column; gap:5px}
+.blatt-ordnen-zeile{display:flex; align-items:center; gap:7px;
+                    padding:1px 4px 1px 9px; border:1px solid var(--line);
+                    border-radius:9px; background:var(--bg-card);
+                    cursor:grab; touch-action:none; user-select:none}
+/* DER GRIFF. Gezeichnet, nicht geschrieben: ein `content:"⠿"` wäre Text und
+   würde von einem Vorleseprogramm mitgelesen — sechs Brailleprunkte vor
+   jedem Werkzeugnamen. Zwei Punktspalten aus einem Verlauf sagen dasselbe
+   und heissen nichts (§38). Am Rechner sagt es ausserdem der Zeiger
+   (`cursor:grab`); auf einem Berührungsbildschirm gibt es keinen. */
+.blatt-ordnen-zeile::before{
+  content:""; flex:0 0 auto; width:9px; height:15px; opacity:.5;
+  color:var(--text-faint);
+  background-image:radial-gradient(currentColor 1.05px, transparent 1.15px);
+  background-size:4.5px 5px
+}
+/* Die zwei Pfeile gehören zusammen und stehen deshalb dicht beieinander —
+   mit der vollen Lücke dazwischen sahen sie aus wie zwei fremde Knöpfe. */
+.blatt-ordnen-pfeil + .blatt-ordnen-pfeil{margin-left:-5px}
+.blatt-ordnen-zeile:hover{background:var(--bg-hover)}
+/* Beim Ziehen liegt die Zeile oben auf und bleibt unter dem Finger sichtbar. */
+.blatt-ordnen-zeile.zieht{cursor:grabbing; border-color:var(--accent);
+                          box-shadow:inset 0 0 0 1px var(--accent)}
+.blatt-ordnen-nr{flex:0 0 auto; width:22px; font-style:normal; font-size:11.5px;
+                 font-weight:700; color:var(--text-faint); text-align:right;
+                 font-variant-numeric:tabular-nums}
+.blatt-ordnen-zeile b{flex:1 1 auto; min-width:0; font-size:14px; font-weight:600;
+                      overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.blatt-ordnen-pfeil{flex:0 0 auto; min-width:var(--touch-min); min-height:var(--touch-min);
+                    border:0; border-radius:8px; background:none; color:var(--text);
+                    font-size:16px; line-height:1; cursor:pointer}
+.blatt-ordnen-pfeil:hover:not(:disabled){background:var(--bg-hover)}
+.blatt-ordnen-pfeil:disabled{opacity:.28; cursor:default}
+.blatt-ordnen-sagt{margin:0; padding:0 18px; min-height:18px;
+                   font-size:12.5px; color:var(--text-dim)}
+.blatt-ordnen-fuss{display:flex; justify-content:space-between; align-items:center;
+                   gap:12px; padding:12px 18px 16px}
+.blatt-ordnen-zurueck,.blatt-ordnen-fertig{min-height:var(--touch-min); padding:0 18px;
+                   border-radius:9px; font-size:14px; font-weight:600; cursor:pointer}
+.blatt-ordnen-zurueck{border:1px solid var(--line); background:none; color:var(--text-dim)}
+.blatt-ordnen-zurueck:hover{background:var(--bg-hover); color:var(--text)}
+.blatt-ordnen-fertig{border:0; background:var(--accent); color:var(--auf-accent)}
+@media (prefers-reduced-motion:reduce){
+  .blatt-ordnen-zeile{transition:none}
+}
 
 .blatt-papier{position:relative; width:100%; background:var(--paper,#fff); color:#111;
               border:1px solid var(--line); border-radius:0 0 8px 8px;
@@ -4361,6 +4611,237 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                 border:1px solid var(--line); border-left:0;
                 border-radius:0 0 8px 0;
                 box-shadow:0 2px 10px rgba(0,0,0,.18)}
+/* ══ DAS SICHTBARE LINEAL (E572, gestaltet mit E573) ═══════════════════════
+   Ohne diese Regeln war das Lineal ein SCHWARZER BALKEN: ein `<rect>` ohne
+   `fill` ist in SVG schwarz gefüllt, und das Glas lag damit deckend über dem
+   Papier. Gemessen, nicht vermutet — es stand so in der laufenden App.
+
+   WARUM HIER LITERALE FARBEN UND KEINE TOKEN (§39): das Lineal liegt auf dem
+   PAPIER, und dessen Farbe bestimmt der Nutzer (`--paper`, E558) — von Weiss
+   über Sand bis zu einem dunklen Blatt. Ein Themenwert wie `--line` folgt
+   dagegen der App-Oberfläche und stünde auf einem dunklen Blatt falsch. Ein
+   halbdurchsichtiges Schiefergrau nimmt beide Enden mit, weil es die Farbe
+   darunter durchlässt statt sie zu ersetzen. Das ist dieselbe Überlegung wie
+   bei der Haarkante der Farbtupfer (E568), nur andersherum begründet. */
+.blatt-ruler{ font-family:ui-sans-serif, system-ui, sans-serif }
+.blatt-ruler-glass{
+  fill:rgba(96,116,148,.14); stroke:rgba(58,76,104,.42); stroke-width:1
+}
+.blatt-ruler-ticks{ fill:none; stroke:rgba(38,52,74,.62); stroke-width:1 }
+.blatt-ruler text{ fill:rgba(30,42,62,.78); user-select:none }
+/* Der Griff ist das einzige Stück, das einen Zeiger annimmt — er darf das
+   auch zeigen: etwas kräftiger als das Glas, mit drei Rillen wie ein
+   Schieber. */
+.blatt-ruler-grip{ cursor:grab }
+.blatt-ruler-grip:active{ cursor:grabbing }
+.blatt-ruler-grip rect{ fill:rgba(58,76,104,.20); stroke:rgba(38,52,74,.45); stroke-width:1 }
+.blatt-ruler-grip:hover rect{ fill:rgba(58,76,104,.30) }
+.blatt-ruler-grip-lines{ fill:none; stroke:rgba(24,34,52,.7); stroke-width:2; stroke-linecap:round }
+.blatt-ruler-rotate{ cursor:pointer }
+.blatt-ruler-rotate circle{ fill:rgba(58,76,104,.20); stroke:rgba(38,52,74,.45); stroke-width:1 }
+.blatt-ruler-rotate:hover circle{ fill:rgba(58,76,104,.32) }
+.blatt-ruler-rotate text{ font-size:20px; fill:rgba(24,34,52,.85) }
+/* Der Fokus muss sichtbar sein (§38) — auch auf einem SVG-Knoten. */
+.blatt-ruler-grip:focus-visible rect,
+.blatt-ruler-rotate:focus-visible circle{ stroke:var(--accent); stroke-width:2.5 }
+
+/* ══ WAS BEDIENUNG IST, GEHÖRT AUF KEIN PAPIER (E581) ══════════════════════
+   Abschnitt 8 des Übergabeplans verlangt es für das Lineal: „muss von jeder
+   Ausgabe ausgeschlossen bleiben; nicht darauf vertrauen, dass jedes
+   Exportverfahren nur `marks` liest."
+
+   ZWEI DER DREI AUSGABEWEGE WAREN IN ORDNUNG, aus einem guten Grund: „Als
+   Bild sichern" und „Als PDF" bauen ein frisches SVG aus `marken`
+   (`Marken.zeichneMarke`) und sehen die lebende Fläche nie an. Dorthin kann
+   nichts geraten, was nicht als Marke gespeichert ist.
+
+   DER DRITTE WEG IST DER DRUCK, und der rendert das DOM. Gemessen mit
+   Druckemulation, Lineal an: `[data-ink-ui="ruler"]` war im Druck SICHTBAR.
+   Kein Stilblatt nannte `[data-ink-ui]`, und damit hätten auch die
+   Laserspur und die Auswahlgriffe mitgedruckt — eine Seite mit
+   Auswahlrechteck und acht Griffen darauf.
+
+   DIE REGEL GILT DEM ATTRIBUT, NICHT DER KLASSE. `data-ink-ui` heisst
+   „Bedienung, keine Marke"; wer die nächste Bedienschicht baut, trägt es
+   ohnehin ein (Lineal, Laser, Auswahl und Griffe tun es heute) und braucht
+   dann an den Druck nicht mehr zu denken. Eine Liste von Klassen hier wäre
+   genau die Liste, die irgendwann jemand zu ergänzen vergisst. */
+@media print{ [data-ink-ui]{ display:none!important } }
+
+
+/* ══ DIE WERKZEUGFELDER DES STUDIOS (E572, gestaltet in E575) ══════════════
+   `InkMenu` baut sie: ein Kopf mit Namen und „×", darunter der Inhalt. Bis
+   E575 hatte `.blatt-popover` KEINE einzige Regel — die Kästen standen in
+   den Vorgabestilen des Browsers da, mit dessen Rand, dessen Innenabstand
+   und dessen Schrift. Das fiel nicht auf, weil ein Popover immer sichtbar
+   ist; es sah nur nicht nach Redion aus.
+
+   `position:fixed` steht hier NICHT umsonst: das native Popover bekommt es
+   ohnehin vom Browser, der Ersatzweg (`.blatt-popover-ersatz`, für Browser
+   ohne die Klappe) aber nicht — und ohne ihn stünde das Feld irgendwo im
+   Textfluss am Ende der Seite. */
+.blatt-popover{
+  position:fixed; margin:0; padding:0; overflow:auto; overscroll-behavior:contain;
+  border:1px solid var(--line); border-radius:var(--radius-xl);
+  background:var(--bg-card); color:var(--text); box-shadow:var(--shadow-3)
+}
+.blatt-popover::backdrop{ background:transparent }
+/* Ohne die native Klappe gibt es keine oberste Ebene — dann muss die Zahl
+   es tun. Sie steht über allem, was das Studio aufbaut, und unter nichts. */
+.blatt-popover-ersatz{ z-index:9000 }
+.blatt-popover>header{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  position:sticky; top:0; z-index:1; background:var(--bg-card);
+  padding:8px 8px 8px 14px; border-bottom:1px solid var(--line)
+}
+.blatt-popover>header strong{ font-size:.95rem; font-weight:600 }
+/* 44 px, weil „schliessen" ein Hauptweg ist (§37) — auch am Rechner, wo der
+   Kasten mit dem Finger auf einem Tablet getroffen wird. */
+.blatt-popover>header button{
+  min-width:var(--touch-min); min-height:var(--touch-min);
+  display:flex; align-items:center; justify-content:center;
+  border:0; border-radius:10px; background:transparent; color:var(--text-dim);
+  font-size:1.35rem; line-height:1; cursor:pointer
+}
+.blatt-popover>header button:hover{ background:var(--bg-hover); color:var(--text) }
+.blatt-popover>header button:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+.blatt-popover-body{ display:flex; flex-direction:column; gap:6px; padding:10px 12px 12px }
+/* Die Zeilen im Feld: Radiermodi, Laserarten — alles, was `InkMenu` als
+   Knopfliste einhängt. Eine Zeile, kein Gitter: die Namen sind verschieden
+   lang, und nebeneinander stünden sie krumm. */
+.blatt-popover-body>button{
+  display:flex; align-items:center; gap:10px;
+  min-height:var(--touch-min); padding:0 12px; width:100%;
+  border:1px solid transparent; border-radius:12px;
+  background:transparent; color:var(--text); font:inherit; font-size:.95rem;
+  text-align:left; cursor:pointer
+}
+.blatt-popover-body>button:hover{ background:var(--bg-hover) }
+.blatt-popover-body>button:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+/* DER GEWÄHLTE SAGT ES ZWEIMAL (§38): mit der Fläche UND mit dem Haken.
+   „Keine Information nur über Farbe" ist hier kein Formsatz — die zwei
+   Laserarten unterscheiden sich sonst um nichts als ein Wort. */
+.blatt-popover-body>button[aria-pressed="true"]{
+  border-color:var(--accent);
+  background:color-mix(in srgb, var(--accent) 14%, transparent)
+}
+.blatt-popover-body>button[aria-pressed="true"]::after{
+  content:'✓'; margin-left:auto; color:var(--accent); font-size:1rem
+}
+/* Die zwei Laserarten zeigen, was sie tun (E512): ein Punkt ist ein Punkt,
+   eine Spur läuft aus. Das `<i>` ist leer — es trägt nur die Zeichnung. */
+.blatt-laser-options i{
+  flex:0 0 auto; width:34px; height:14px; border-radius:7px;
+  background:radial-gradient(circle at 50% 50%, #ff4d4d 0 5px, transparent 5px)
+}
+.blatt-laser-options [data-laser-option="linie"] i{
+  background:linear-gradient(90deg, rgba(255,77,77,0) 0%, rgba(255,77,77,.35) 45%, #ff4d4d 100%);
+  height:6px; margin-block:4px
+}
+
+/* ══ DER RADIERER IM STUDIO (E576) ════════════════════════════════════════
+   Hier stand NICHTS. Die drei Grössenknöpfe setzen `--eraser-preview` auf
+   16, 28 und 40 px und tragen ein leeres `<i>`, das die Vorschau zeichnen
+   soll — ohne Regel zeichnete es gar nichts. Gemessen waren die Knöpfe
+   14 × 44 px: hoch genug, aber ein Drittel zu schmal für §37, und man sah
+   auf keinem von ihnen, welche Grösse er meint.
+   Die Zahl im `<i>` ist die ANSICHT, nicht der Radius: 5, 14 und 28
+   Dokumenteinheiten wären auf dem Schirm zu klein zum Unterscheiden. Drei
+   Kreise, die sich deutlich unterscheiden, sagen dasselbe besser. */
+.blatt-eraser-size{
+  width:var(--touch-min); min-width:var(--touch-min);
+  height:var(--touch-min); min-height:var(--touch-min);
+  display:flex; align-items:center; justify-content:center;
+  padding:0; border:1px solid transparent; border-radius:12px;
+  background:transparent; cursor:pointer
+}
+.blatt-eraser-size i{
+  /* `flex:0 0 auto` IST DER GRUND, WARUM ES ÜBERHAUPT STIMMT: als
+     schrumpfbares Flex-Element wurde der grösste Kreis auf die Breite des
+     mittleren gestaucht, und beide massen 28 px. Ein Kreis, der seine
+     Grösse nicht behält, sagt nichts über die Grösse aus. */
+  flex:0 0 auto;
+  display:block; width:var(--eraser-preview,20px); height:var(--eraser-preview,20px);
+  border-radius:50%; border:2px solid currentColor; background:transparent; opacity:.8
+}
+.blatt-eraser-size:hover{ background:var(--bg-hover) }
+.blatt-eraser-size:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+/* Gewählt sagt es zweimal: der Rand UND der gefüllte Kreis (§38). */
+.blatt-eraser-size[aria-pressed="true"]{
+  border-color:var(--accent); background:color-mix(in srgb, var(--accent) 14%, transparent)
+}
+.blatt-eraser-size[aria-pressed="true"] i{ background:currentColor; opacity:1 }
+/* Das Feld, das den Modus beim Namen nennt. */
+.blatt-eraser-menu{
+  min-height:var(--touch-min); padding:0 10px;
+  border:1px solid var(--line); border-radius:12px;
+  background:transparent; color:inherit; font:inherit; font-size:.9rem; cursor:pointer
+}
+.blatt-eraser-menu:hover{ background:var(--bg-hover) }
+.blatt-eraser-menu:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+/* ══ DER ALTE RUNDLAUFKNOPF TRITT ZURÜCK, WO SEIN ERSATZ STEHT (E576) ══════
+   Gemessen standen beide nebeneinander: „Ganz" (65 px) und „Ganz ⌄"
+   (60 px) — dasselbe Wort zweimal, und der erste sagt nicht einmal, dass
+   er ein Rundlauf ist.
+   ER WIRD NICHT ENTFERNT. Er ist weiterhin der Mechanismus, den das Feld
+   bedient (es klickt ihn), und auf einer gewöhnlichen Seite ohne Studio
+   ist er der einzige Weg. `data-reference-ui="ready"` steht genau dort,
+   wo sein Ersatz wirklich gebaut wurde — nirgends sonst.
+   DIE ZWEITE `[data-tool]` IST KEIN SCHMUCK, SONDERN NACHGEMESSEN: die
+   Gruppenliste aus E356 (`.blatt-werk[data-tool="radierer"] >
+   [data-gruppe="radierer"]`) steht in dieser Datei WEITER UNTEN und hat
+   dieselbe Spezifität — bei Gleichstand gewinnt die spätere Zeile, und der
+   Rundlaufknopf stand trotz dieser Regel weiter da. Eine Attributangabe
+   mehr entscheidet es, ohne `!important`. */
+.blatt-werk[data-reference-ui="ready"][data-tool] > [data-act="radiermodus"]{ display:none }
+
+/* ══ DAS GALERIEFELD: ELEMENTE UND HAFTNOTIZEN (E577, Plan 7 B 6) ══════════
+   Zwei Reiter über einem Dreispaltenraster — Redurs Bild 3. Auch hier stand
+   bis eben KEINE Regel: die Reiter waren zwei nackte Knöpfe untereinander,
+   das Raster eine Spalte, und die Vorschaukarten hatten weder Grösse noch
+   Rand. Ein Feld, das man erst lesen muss, um es zu verstehen, ist kein
+   Feld zum Auswählen. */
+.blatt-gallery-tabs{
+  display:flex; gap:4px; padding:3px; border-radius:14px; background:var(--bg-hover)
+}
+.blatt-gallery-tabs button{
+  flex:1; min-height:var(--touch-min); border:0; border-radius:11px;
+  background:transparent; color:var(--text-dim); font:inherit; font-size:.9rem; cursor:pointer
+}
+.blatt-gallery-tabs button[aria-pressed="true"]{
+  background:var(--bg-card); color:var(--text); box-shadow:var(--shadow-1)
+}
+.blatt-gallery-tabs button:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+.blatt-gallery-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px }
+.blatt-gallery-empty{
+  grid-column:1/-1; margin:0; padding:8px 2px; color:var(--text-dim);
+  font-size:.86rem; line-height:1.45
+}
+/* DIE HAFTNOTIZKARTE TRÄGT IHRE EIGENE FARBE, und darauf muss der Name
+   lesbar sein. Deshalb steht hier ausnahmsweise eine feste dunkle Farbe
+   statt `--text`: die neun Pastelle sind in beiden Themen hell, ein heller
+   Text darauf wäre im Dunkelmodus unlesbar (§38, dieselbe Überlegung wie
+   beim Lineal auf farbigem Papier). */
+.blatt-note-preview{
+  display:flex; align-items:flex-end; min-height:74px; padding:8px;
+  border:1px solid var(--line); border-radius:12px;
+  background:var(--note-color,#ffe780); color:#242424;
+  font:inherit; font-size:.8rem; text-align:left; cursor:pointer
+}
+.blatt-note-preview:hover{ border-color:var(--accent) }
+.blatt-note-preview:focus-visible{ outline:2px solid var(--accent); outline-offset:2px }
+.blatt-element-preview{
+  display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+  gap:4px; min-height:74px; padding:6px;
+  border:1px solid var(--line); border-radius:12px; background:transparent;
+  color:var(--text); font:inherit; font-size:.76rem; cursor:pointer
+}
+.blatt-element-preview:hover{ background:var(--bg-hover); border-color:var(--accent) }
+.blatt-element-preview:focus-visible{ outline:2px solid var(--accent); outline-offset:2px }
+.blatt-element-preview > :is(svg,img,canvas){ width:100%; height:42px; object-fit:contain }
+.blatt-element-preview span{
+  max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap
+}
 .blatt-marken{position:absolute; inset:0; width:100%; height:100%; z-index:2;
               color:#111; touch-action:none}
 /* AM TELEFON WIRD GEROLLT, NICHT GESTAPELT — und das ist ein Fund vom Bild,
@@ -4599,22 +5080,58 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    jedes Emoji seine eigene. */
 .blatt-werk .zeichen[data-sym]{display:inline-flex; align-items:center;
                                justify-content:center; width:16px; height:16px}
-.blatt-werk .zeichen[data-sym] svg{display:block}
+/* ══ DAS ZEICHEN BEKOMMT SEINE GRÖSSE VON SEINER HÜLLE (E585) ═════════════
+   Hier stand nur `display:block`, und damit war jede Zahl darunter Zierde.
+   `Register.symbole.fuelle` schreibt `width="18" height="18"` als ATTRIBUT
+   in das `<svg>`; die Regeln darunter bemassen die HÜLLE, und ein SVG mit
+   eigener Breite kümmert sich nicht darum, wie breit sein Kasten ist.
+
+   GEMESSEN am 15. September 2026, vier Zustände, eine Zahl:
+
+     1440 unten          Hülle 16 px   SVG 18 px   ← stand 2 px über
+     1440 links/rechts   Hülle 20 px   SVG 18 px   ← die 20 tat nie etwas
+      390 unten          Hülle 18 px   SVG 18 px
+      390 links/rechts   Hülle 20 px   SVG 18 px   ← ebenso
+
+   Drei von vier Zahlen hatten keine Wirkung. Die obere Studioleiste macht
+   es seit je richtig (`.document-drawingbar svg{width:25px}`) — sie
+   bemasst das SVG selbst, und dort kommen gemessen auch 25 px an.
+
+   `width:100%` statt einer eigenen Zahl, damit die beiden nicht wieder
+   auseinanderlaufen: es gibt ab hier nur EINE Stelle, an der die Grösse
+   steht, und das ist die Hülle. */
+.blatt-werk .zeichen[data-sym] svg{display:block; width:100%; height:100%}
 /* WO KEIN WORT STEHT, TRÄGT DAS ZEICHEN ALLEIN — und darf grösser sein.
    16 px neben einem Wort von 13 px ist reichlich; 16 px ALLEIN in einem
-   36-px-Knopf ist knapp. Die drei wortlosen Zustände (enge Leiste, Spalte,
-   Telefon) bekommen deshalb 18 px zurück, die Seitenspalte 20. */
+   36-px-Knopf ist knapp. Die enge Rechnerleiste und die Spalte bekommen
+   deshalb 18 px zurück. */
 @media (min-width:761px){
   @container (max-width:1150px){
     .blatt-werk .zeichen[data-sym]{width:18px; height:18px}
   }
 }
 .spalte .blatt-werk .zeichen[data-sym]{width:18px; height:18px}
+/* ══ UND WO DIE FLÄCHE FEST 44 PX IST, SIND ES 24 (E585, Plan 7 C 2) ═══════
+   „Symbole im Dock ca. 24–28 px innerhalb fester 44-px-Trefferflächen."
+   Das sind genau zwei Zustände: das Telefon und die seitliche Leiste. Dort
+   ist der Knopf 44 × 44 beziehungsweise 48 × 44, das Wort ist weg, und das
+   Zeichen ist die einzige Auskunft.
+
+   NICHT AM RECHNER, und das ist gemessen, nicht gemutmasst: dort trägt der
+   Zubehörknopf 32 px Mindestbreite, weil bei 1280 px sonst die Breite als
+   einzelner Knopf in eine dritte Zeile fällt (E576). Ein 24-px-Zeichen
+   macht aus den 32 px vierzig und aus der Leiste 959 → 1013 px. Bei 1280
+   wäre das der Umbruch, den E576 gerade weggerechnet hat.
+
+   AM TELEFON KOSTET ES NICHTS: gemessen bei 390 px blieb die Rollbreite
+   bei 18, 22, 24 und 26 px unverändert 918 px — der Knopf ist dort ohnehin
+   44 px breit, das Zeichen wächst nur in den Platz hinein, der schon da
+   war. */
 @media (max-width:760px){
-  .blatt-werk .zeichen[data-sym]{width:18px; height:18px}
+  .blatt-werk .zeichen[data-sym]{width:24px; height:24px}
 }
 .blatt-reihe[data-lage="links"] .blatt-werk .zeichen[data-sym],
-.blatt-reihe[data-lage="rechts"] .blatt-werk .zeichen[data-sym]{width:20px; height:20px;
+.blatt-reihe[data-lage="rechts"] .blatt-werk .zeichen[data-sym]{width:24px; height:24px;
                                                                 margin-right:0}
 /* Die Schrift-Knoepfe (E360): das Muster zeigt die Familie, das F ist fett. */
 .blatt-werk [data-act="schriftart"] .zeichen{font-size:15px}
@@ -4695,6 +5212,16 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk[data-tool="stift"] > [data-gruppe="formen"],
 .blatt-werk[data-tool="stift"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="stift"] > [data-gruppe="breite"],
+/* ══ DAS LINEAL GEHÖRT AUCH DEM STIFT (E574) ══════════════════════════════
+   ABGELESEN, NICHT ANGENOMMEN: `marken.ts` lässt die Kantenführung für
+   `['stift','marker','line','arrow']` zu. Der Zeichner führt den Stift also
+   längst am Lineal — nur der Schalter dafür stand nicht bei ihm. Hier
+   standen `marker`, `line` und `arrow`, und wer mit dem Stift ein Lineal
+   wollte, kam nur über die Taste „r" oder über „···" daran. Ein Weg, den
+   man kennen muss, ist am Telefon kein Weg (§37).
+   DIE KURVE BEKOMMT ES WEITERHIN NICHT — sie steht auch in `marken.ts`
+   nicht in der Liste, und eine gebogene Linie hat keine Kante (E569). */
+.blatt-werk[data-tool="stift"] > [data-gruppe="lineal"],
 .blatt-werk[data-tool="marker"] > [data-gruppe="lineal"],
 .blatt-werk[data-tool="marker"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="marker"] > [data-gruppe="breite"],
@@ -4707,6 +5234,20 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk[data-tool="ellipse"] > [data-gruppe="form"],
 .blatt-werk[data-tool="triangle"] > [data-gruppe="form"],
 .blatt-werk[data-tool="roundrect"] > [data-gruppe="form"],
+/* ══ DIE KURVE FEHLTE IN ALLEN DREI LISTEN (E569) ═════════════════════════
+   GEMESSEN am 14. September beim Zusammenschreiben des Werkzeug-Inventars:
+   `data-tool="curve"` stand in KEINER Gruppenregel. Wer die Kurve wählte,
+   sah als Zubehör nur noch „Zurück/Vor/Platz" — keine Formknöpfe, also
+   keinen Weg zurück zu Linie oder Rechteck, keine Farbe, keine Breite.
+   Eine Sackgasse, seit die Kurve mit E483 dazukam.
+   Warum es niemand meldete: `test351 §2` prüft die Formen an `line`, und
+   dort stimmte alles. Die Kurve ist die einzige Dreipunkt-Form und damit
+   der einzige Wert, den niemand gegengeprüft hat.
+   DAS LINEAL BEKOMMT SIE NICHT: es rastet auf 15°-Schritte, und eine
+   gebogene Linie hat keinen Winkel, den man rasten könnte (E267). */
+.blatt-werk[data-tool="curve"] > [data-gruppe="form"],
+.blatt-werk[data-tool="curve"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="curve"] > [data-gruppe="breite"],
 .blatt-werk[data-tool="line"] > [data-gruppe="lineal"],
 .blatt-werk[data-tool="line"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="line"] > [data-gruppe="breite"],
@@ -4723,7 +5264,15 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk[data-tool="roundrect"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="roundrect"] > [data-gruppe="breite"],
 .blatt-werk[data-tool="abdeck"] > [data-gruppe="farbe"],
-.blatt-werk[data-tool="zettel"] > [data-gruppe="farbe"],
+/* ══ DER ZETTEL HAT SEINE EIGENEN NEUN (E574, Plan 7 B 4) ═════════════════
+   Hier stand `[data-gruppe="farbe"]` — die fünf Tintenfarben. Die neun
+   Pastellfarben aus E572 trugen bis E574 DIESELBE Gruppe und standen
+   deshalb in jedem Werkzeug mit. Beides zusammen ergab beim Zettel
+   vierzehn Tupfer in zwei Reihenfolgen — „eine zweite ungeordnete
+   Palette", genau das, was der Plan hier ausschliesst.
+   Ein schwarzer Zettel ist kein Zettel; die Haftnotiz bekommt ihre
+   neun und sonst keine. */
+.blatt-werk[data-tool="zettel"] > [data-gruppe="notizfarbe"],
 .blatt-werk[data-tool="text"] > [data-gruppe="schrift"],
 .blatt-werk[data-tool="select"] > [data-gruppe="schrift"],
 .blatt-werk[data-tool="text"] > [data-gruppe="farbe"],
@@ -4732,15 +5281,90 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    Element bringt die Farben mit, in denen es gezeichnet wurde; eine
    Farbwahl daneben verspräche etwas, das der Stempel nicht tut. */
 .blatt-werk[data-tool="elemente"] > [data-gruppe="elemente"]{display:inline-flex}
-.blatt-werk[data-tool] > span.blatt-trenn[data-gruppe]{display:none}
+/* DAS „+" BLEIBT AUCH BEIM ZETTEL (E574). Es ist keine Palette, sondern die
+   Tür zu jeder Farbe (E486) — und eine Tür wegzunehmen, weil die Tapete
+   daneben gewechselt hat, wäre eine verlorene Funktion, keine Aufräumung.
+   Es trägt `data-gruppe="farbe"`, also braucht es hier seine eigene Zeile. */
+.blatt-werk[data-tool="zettel"] > .blatt-farbe-neu{display:inline-flex}
+/* ══ DIE TRENNER KOMMEN ZURÜCK — AM RECHNER (E568) ════════════════════════
+   Hier stand genau diese Zeile ohne Einschränkung, und `[data-tool]` steht
+   IMMER an der Leiste. Also war jeder Trenner immer aus, und das Zubehör
+   stand als eine ununterbrochene Reihe von vierzehn Knöpfen da: Verlauf,
+   Schalter, sechs Stifte, Farben — alles im selben 4-px-Abstand, nichts
+   sagte, wo eine Gruppe aufhört.
+
+   Am Telefon und in der Spalte ROLLT die Leiste in einer Zeile; dort ist
+   ein Trenner nur ein Strich mehr im Weg, und er bleibt aus. Am Rechner
+   stehen die Gruppen untereinander sichtbar — dort trägt er.
+
+   Der Trenner der Gruppe «Verlauf» bleibt überall aus: er stünde am
+   ANFANG der zweiten Zeile, und ein Strich vor dem ersten Knopf trennt
+   nichts. */
+.spalte .blatt-werk[data-tool] > span.blatt-trenn[data-gruppe]{display:none}
+.blatt-werk[data-tool] > span.blatt-trenn[data-gruppe="verlauf"]{display:none}
 
 /* ── Am Rechner ZWEI Zeilen: oben die Werkzeuge, darunter ihr Zubehör (E359).
    Der Zeilenbruch ist ein leeres Element mit voller Breite hinter dem
    letzten Werkzeug — Flexbox kennt keinen Umbruch-Befehl. Am Telefon und in
    der Spalte rollt die Leiste in EINER Zeile (E140, E356); dort wäre das
    Element eine Lücke von Bildschirmbreite und ist deshalb weg. */
-.blatt-werk > .blatt-zeilenbruch{flex:1 0 100%; height:0; padding:0; margin:0}
+/* DER UMBRUCH IST ZUGLEICH DIE KANTE (E568). Er war ein leeres Element von
+   voller Breite und null Höhe — genau der Platz, an dem die Leiste ihre zwei
+   Bänder trennt, und er tat es unsichtbar. Ein Haarstrich sagt, was ohnehin
+   gilt: oben die Werkzeuge, darunter das Zubehör DIESES Werkzeugs.
+   Gemessen kostet er 7 px Höhe (118 → 125); die Grenze aus `test351` liegt
+   bei 140. */
+.blatt-werk > .blatt-zeilenbruch{flex:1 0 100%; height:0; padding:0;
+                                 margin:4px 0 2px; border-top:1px solid var(--line)}
 .spalte .blatt-werk > .blatt-zeilenbruch{display:none}
+/* ══ DER UMBRUCH FÄLLT AUF EINE GRUPPENGRENZE (E568) ══════════════════════
+   GEMESSEN bei 1280 px Fenster (die Leiste ist dann 584 px breit): das
+   Zubehör des Stiftes sind zwanzig Knöpfe und braucht zwei Zeilen. Die
+   Frage ist nicht OB es umbricht, sondern WO.
+
+   Vorher fiel der Umbruch mitten in die Farbreihe: Schwarz, Rot und Blau
+   standen in der zweiten Zeile, Grün und Gelb in der dritten. Eine
+   Palette, die in der Mitte durchgeschnitten ist, liest sich als zwei
+   Paletten — und das war der stärkste Eindruck von „unordentlich" auf dem
+   Bild.
+
+   Jetzt wandert der VERLAUF ans Ende — „Zurück", „Vor" und der Platz der
+   Leiste gehören zu jedem Werkzeug und zu keinem, und in Redurs eigenen
+   Vorbildern stehen sie ganz rechts. Damit fällt der Umbruch hinter die
+   Farbreihe, und die zweite Zeile ist genau das Werkzeug mit seinem Griff:
+
+       Formen · Kritzeln │ die sechs Stifte │ die Palette
+       ────────────────────────────────────────────────────
+       die drei Breiten │ Zurück · Vor · Platz
+
+   DAMIT BLEIBT AUCH E512 WÖRTLICH ERFÜLLT. Redur, 8. September: die
+   Stiftreihe „sollte neben es, also links unten, wo die Farben dort sind".
+   `test480` misst genau das — die Reihe steht unmittelbar LINKS VOR den
+   Farben, in derselben Zeile. Ein erster Entwurf schob stattdessen die
+   Farben hinter die Breite; die Palette blieb dabei zwar ganz, aber die
+   Stifte standen eine Zeile über ihr statt daneben, und `test480` hat es
+   gemeldet. Es hatte recht.
+
+   NUR AM RECHNER. Am Telefon und in der Spalte rollt EINE Zeile, und dort
+   gilt die Reihenfolge aus E356 weiter: erst der Stift, dann die Farben,
+   dann die Breiten — hinter dem gewählten Werkzeug. Eine Farbreihe ans
+   Ende einer rollenden Zeile zu schieben, wäre dort das Gegenteil einer
+   Verbesserung. */
+@media (min-width:761px){
+  /* DIESELBE VARIABLE WIE AM TELEFON (E570). Hier stand `order:1` für den
+     Verlauf — die Entscheidung aus E568, dass „Zurück" und „Vor" ans Ende
+     gehören. Sie gilt unverändert, steht aber nicht mehr im Stilblatt,
+     sondern als letzter Eintrag im Gruppenkatalog. Damit kann Redur sie
+     ändern, ohne dass jemand eine CSS-Datei aufmacht. */
+  .blatt-werk > [data-gruppe]{order:var(--g-ordnung, 0)}
+  /* Der Trenner der Gruppe steht jetzt MITTEN in der Zeile statt an ihrem
+     Anfang und darf deshalb wieder sichtbar sein — ausser beim Werkzeug
+     «Schreiben», das als einziges gar kein anderes Zubehör hat; dort wäre
+     er wieder der Strich vor dem ersten Knopf. */
+  .blatt-werk[data-tool] > span.blatt-trenn[data-gruppe="verlauf"]{display:inline-flex}
+  .blatt-werk[data-tool="schreiben"] > span.blatt-trenn[data-gruppe="verlauf"],
+  .spalte .blatt-werk[data-tool] > span.blatt-trenn[data-gruppe="verlauf"]{display:none}
+}
 /* Wörter nur, wenn die LEISTE breit genug ist — nicht das Fenster. Vierzehn
    Werkzeuge mit Wort brauchen rund 1130 px in einer Zeile; ohne Wort 556.
    Die Seite als Spalte gibt der Leiste rund 620 px, die volle Breite bei
@@ -4757,6 +5381,30 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
       white-space:nowrap; border:0}
     .blatt-werk .zeichen{margin:0; font-size:16px}
     .blatt-werk button{min-width:36px; padding:4px 7px}
+    /* ══ DAS WERKZEUG IST GRÖSSER ALS SEIN ZUBEHÖR (E568) ═════════════════
+       Vorher waren ALLE dreiunddreissig Bedienteile exakt 36 × 32 px — das
+       Werkzeug, das man ständig wechselt, genau so gross wie „Zurück".
+       Eine Leiste ohne Rangfolge zwingt das Auge, jedes Mal alles zu lesen.
+
+       Vier Pixel genügen: 36 für die Werkzeuge oben, 32 für das Zubehör
+       darunter. Es klingt nach nichts und ist auf dem Bild sofort zu
+       sehen, weil die obere Zeile dadurch die schwerere wird.
+
+       UND ES IST ZUGLEICH DIE ARITHMETIK DES UMBRUCHS. Gemessen bei
+       1280 px Fenster (Leiste 584, innen 568): vierzehn Zubehörteile zu
+       36 px plus Lücken und Trenner brauchen 575 px — sieben zu viel, und
+       die Breite fiel als einzelner Knopf in die dritte Zeile. Mit 32 sind
+       es 519, und der Umbruch fällt dorthin, wo er hingehört: vor die
+       Farbreihe.
+
+       NICHT AM TELEFON — dort gilt §37, 44 px für alles, und diese Regel
+       steht in einer Abfrage, die erst ab 761 px greift. Nicht in der
+       Spalte, die ihre 36 px seit E359 hat. */
+    /* OHNE DIE TUPFER: die sind quadratisch und rund, und ein `min-width`
+       von aussen macht aus dem Kreis ein Ei — gemessen 32 × 30 beim „+",
+       gefunden von `test522 §3`. */
+    .blatt-werk button[data-gruppe]:not(.blatt-farbe):not(.blatt-farbe-neu){min-width:32px; padding:4px 5px}
+    .spalte .blatt-werk button[data-gruppe]:not(.blatt-farbe):not(.blatt-farbe-neu){min-width:36px; padding:4px 7px}
   }
   @container (max-width:1400px){
     .blatt-fest .wort{position:absolute; width:1px; height:1px; padding:0;
@@ -4773,7 +5421,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .blatt-werk::-webkit-scrollbar{display:none}
   .blatt-werk > *{flex:0 0 auto}
   .blatt-werk > .blatt-zeilenbruch{display:none}
-  .blatt-werk button{min-height:44px; min-width:44px; padding:4px 8px}
+  .blatt-werk button{min-height:var(--touch-min); min-width:var(--touch-min); padding:4px 8px}
 
   /* ── ZURÜCK UND VOR ROLLEN NICHT MIT (E396, Audit F14) ──────────────────
      GEMESSEN AM 4. SEPTEMBER bei 390 × 844, im Dokumentmodus mit einem
@@ -4821,45 +5469,54 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     box-shadow:9px 0 0 0 var(--bg-card);
   }
   .blatt-werk[data-tool] > .blatt-trenn[data-gruppe="verlauf"]{ display:none }
+  /* … UND ALLE ANDEREN AUCH (E568): in einer rollenden Zeile ist ein
+     Trenner ein Strich im Weg, keine Auskunft. */
+  .blatt-werk[data-tool] > span.blatt-trenn[data-gruppe]{ display:none }
   .blatt-werk .wort{position:absolute; width:1px; height:1px; padding:0;
     margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
     white-space:nowrap; border:0}
   .blatt-werk .zeichen{margin:0; font-size:17px}
-  .blatt-farbe{width:30px; height:30px; min-width:30px}
-  .blatt-farbe-neu{width:30px; height:30px; min-width:30px}
+  /* 44 px AUF DEM HAUPTWEG (§37). Der Tupfer ist 44 × 44 GROSS und trägt
+     seine Farbe nur im Inneren (`background-clip:content-box`, E568) — so
+     ist die Trefffläche eine ganze Fingerkuppe und der Punkt bleibt ein
+     Punkt. Vorher waren es 44 × 44 grosse abgerundete KACHELN; die
+     Trefffläche stimmte, das Bild nicht. */
+  .blatt-werk button.blatt-farbe:not(.blatt-farbe-leiter),
+  .blatt-werk button.blatt-farbe-neu{
+    width:var(--touch-min); min-width:var(--touch-min);
+    height:var(--touch-min); min-height:var(--touch-min);
+    padding:7px !important
+  }
   .blatt-strich{min-width:38px}
   /* … UND SIE STEHEN DIREKT HINTER DEM WERKZEUG. Die Werkzeuge bekommen
      Plaetze in Zehnerschritten, die Gruppen den Platz gleich hinter dem
      gewaehlten — so liegen Farben und Breiten neben dem Stift, nicht drei
      Bildschirme weiter rechts. Die Reihenfolge im DOM bleibt (Tastatur,
      Vorleser, Rechner); nur die Anordnung am Telefon wandert. */
-  .blatt-werk > [data-wz="schreiben"]{order:10} .blatt-werk > [data-wz="select"]{order:20}
-  .blatt-werk > [data-wz="stift"]{order:30} .blatt-werk > [data-wz="marker"]{order:40}
-  .blatt-werk > [data-wz="line"]{order:50} .blatt-werk > [data-wz="arrow"]{order:60}
-  .blatt-werk > [data-wz="rectangle"]{order:70} .blatt-werk > [data-wz="ellipse"]{order:80}
-  .blatt-werk > [data-wz="abdeck"]{order:90} .blatt-werk > [data-wz="zettel"]{order:100}
-  .blatt-werk > [data-wz="text"]{order:110} .blatt-werk > [data-wz="zeichen"]{order:120}
-  .blatt-werk > [data-wz="bild"]{order:125} .blatt-werk > [data-wz="radierer"]{order:130}
-  .blatt-werk > [data-gruppe="verlauf"]{order:200}
-  .blatt-werk[data-tool="schreiben"]{--platz:10} .blatt-werk[data-tool="select"]{--platz:20}
-  .blatt-werk[data-tool="stift"]{--platz:30} .blatt-werk[data-tool="marker"]{--platz:40}
-  .blatt-werk[data-tool="line"]{--platz:50} .blatt-werk[data-tool="arrow"]{--platz:60}
-  .blatt-werk[data-tool="rectangle"]{--platz:70} .blatt-werk[data-tool="ellipse"]{--platz:80}
-  .blatt-werk[data-tool="triangle"]{--platz:70} .blatt-werk[data-tool="roundrect"]{--platz:70}
-  .blatt-werk[data-tool="abdeck"]{--platz:90} .blatt-werk[data-tool="zettel"]{--platz:100}
-  .blatt-werk[data-tool="text"]{--platz:110} .blatt-werk[data-tool="zeichen"]{--platz:120}
-  .blatt-werk[data-tool="bild"]{--platz:125} .blatt-werk[data-tool="radierer"]{--platz:130}
-  /* Innerhalb der Gruppen: erst der Stift-Stil, dann Farben, dann Breiten,
-     dann die Schalter — wie GoodNotes es aufklappt. */
-  .blatt-werk[data-tool] > [data-gruppe="stil"],
-  .blatt-werk[data-tool] > [data-gruppe="schrift"],
-  .blatt-werk[data-tool] > [data-gruppe="radierer"],
-  .blatt-werk[data-tool] > [data-gruppe="auswahl"]{order:calc(var(--platz, 0) + 1)}
-  .blatt-werk[data-tool] > [data-gruppe="farbe"]{order:calc(var(--platz, 0) + 2)}
-  .blatt-werk[data-tool] > [data-gruppe="breite"]{order:calc(var(--platz, 0) + 3)}
-  .blatt-werk[data-tool] > [data-gruppe="formen"]{order:calc(var(--platz, 0) + 4)}
-  .blatt-werk[data-tool] > [data-gruppe="lineal"]{order:calc(var(--platz, 0) + 5)}
-  .blatt-werk[data-tool] > [data-gruppe="verlauf"]{order:200}
+  /* ══ DREISSIG ZEILEN WURDEN ZWEI (E570) ════════════════════════════════
+     Hier standen die Plätze als feste Zahlen: eine Zeile je Werkzeug für
+     seinen `order`, noch eine je Werkzeug für `--platz`, und fünf für die
+     Gruppen. Sie standen in der Reihenfolge des Katalogs — und genau das
+     ist es, was Redur jetzt selbst bestimmt.
+
+     Die Zahlen kommen deshalb aus der gemerkten Ordnung (`marken.ts`,
+     `ordnungZahlen`): jedes Werkzeug trägt `--ordnung`, jede Gruppe
+     `--g-ordnung`, und die Leiste trägt `--platz` — den Platz des gerade
+     geführten Werkzeugs. Das Stilblatt liest nur noch.
+
+     ZWEI DINGE BLEIBEN FEST, und beide mit Grund:
+       · «Zurück» und «Vor» stehen am Telefon IMMER ganz rechts und kleben
+         dort (E396, `test393`). Sie sind die zwei Griffe, die man beim
+         Schreiben von Hand am häufigsten braucht; sie mitwandern zu lassen
+         hiesse, sie wegwischbar zu machen.
+       · Ohne gemerkte Ordnung gelten die Vorgaben aus den Variablen —
+         die Leiste steht dann wie eh und je. */
+  .blatt-werk > [data-wz]{order:var(--ordnung, 0)}
+  .blatt-werk[data-tool] > [data-gruppe]{order:calc(var(--platz, 0) + var(--g-ordnung, 1))}
+  /* 9999 UND NICHT 200: die Werkzeuge zählen seit E570 in Hunderterschritten,
+     und 200 wäre der Platz des zweiten Werkzeugs. „Ganz hinten" muss eine
+     Zahl sein, die kein Werkzeug je erreicht. */
+  .blatt-werk[data-tool] > [data-gruppe="verlauf"]{order:9999}
   /* Der Schatten zeigt, dass links davon noch etwas liegt — sonst sieht
      eine abgeschnittene Leiste aus wie eine vollständige (E103). */
   .blatt-fest{box-shadow:-10px 0 10px -7px rgba(0,0,0,.45); padding-left:8px}
@@ -4881,7 +5538,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
     white-space:nowrap; border:0}
   .blatt-fest .zeichen{margin:0; font-size:17px}
-  .blatt-fest button{min-height:44px; min-width:44px}
+  .blatt-fest button{min-height:var(--touch-min); min-width:var(--touch-min)}
 }
 
 /* ── Ausbildung / Schulbibliothek (E128/E129) ───────────────────────────── */
@@ -4990,7 +5647,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 @media(max-width:760px){
   .school-home{padding:8px 10px 38px}.school-hero{display:block;padding:17px}.school-hero h1{font-size:25px}
   .school-quick{margin-top:16px}.school-quick button,.school-folder,.school-card button,.school-empty button,
-  .electrical-actions button{min-height:44px}.school-grid{grid-template-columns:1fr}.school-folders{grid-template-columns:1fr 1fr}
+  .electrical-actions button{min-height:var(--touch-min)}.school-grid{grid-template-columns:1fr}.school-folders{grid-template-columns:1fr 1fr}
   /* `overflow:auto` stand hier, als der ganze Dialog rollte. Jetzt rollt der
      Bauch, und der Dialog behält seinen Rahmen (`.finder` hat hidden). */
   .electrical-field{grid-template-columns:1fr 96px 54px}.electrical-dialog{max-height:92dvh}
@@ -5114,7 +5771,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
           font-size:13px; cursor:pointer}
 .pdfs-neu:hover{background:#e8e8e8}
 .pdfs-neu:disabled{opacity:.6; cursor:default}
-@media (max-width:760px){ .pdfs-neu{min-height:44px; padding:10px 16px} }
+@media (max-width:760px){ .pdfs-neu{min-height:var(--touch-min); padding:10px 16px} }
 @media (max-width:760px){ .pdfs-nr{font-size:12px} }
 
 /* ── Dokumentmodus (E126) ─────────────────────────────────────────────────
@@ -5260,7 +5917,7 @@ body[data-dokument="an"] #handy-oben{display:none}
    45 px kostete sie am Telefon von 844. Deshalb faellt hier auch das
    `max-width` der Blattbreite weg — im Inspector gilt dessen Breite. */
 .document-original{display:flex; align-items:center; gap:10px; width:100%;
-  min-height:44px; margin:0 0 10px;
+  min-height:var(--touch-min); margin:0 0 10px;
   padding:8px 14px; border:1px solid var(--border); border-radius:10px;
   background:var(--bg-card); color:var(--text); text-align:left; cursor:pointer}
 /* E384 · DER RANDSTREIFEN-SCHALTER, jetzt hier statt in der Leiste. Er sagt
@@ -5583,7 +6240,7 @@ body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2
     overflow-x:auto; overscroll-behavior-inline:contain; scrollbar-width:thin; }
   .document-workspace{height:calc(100dvh - 62px);
     min-height:320px;border-inline:0;border-radius:0}
-  .document-topbar{min-height:52px;position:relative}.document-topbar button{min-width:44px;min-height:44px;padding:6px}
+  .document-topbar{min-height:52px;position:relative}.document-topbar button{min-width:var(--touch-min);min-height:var(--touch-min);padding:6px}
   .document-topbar button:last-child{font-size:0}.document-topbar button:last-child::after{content:'✕';font-size:18px}
   .document-topbar input[type=range]{display:none}.document-zoom-label{margin-left:auto;min-width:40px}
   .document-position{font-size:12px;white-space:nowrap;margin-right:auto}
@@ -5630,11 +6287,11 @@ body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2
     max-height:68dvh;padding:12px 14px calc(14px + env(safe-area-inset-bottom));
     border:1px solid var(--border);border-radius:16px 16px 0 0;box-shadow:0 -12px 30px rgba(0,0,0,.22)}
   .document-thumbnails.is-open{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-  .document-thumbnails .document-panel-header{grid-column:1/-1}.document-panel-header button{display:block;min-width:44px;min-height:44px}
+  .document-thumbnails .document-panel-header{grid-column:1/-1}.document-panel-header button{display:block;min-width:var(--touch-min);min-height:var(--touch-min)}
   .document-thumbnail{margin:0;padding:5px}.document-thumbnail-label{font-size:11px}
   .document-inspector{top:auto;left:0;right:0;bottom:0;width:auto;max-height:72dvh;
     padding:14px 14px calc(14px + env(safe-area-inset-bottom));border-radius:16px 16px 0 0}
-  .document-inspector button{min-height:44px}.document-inspector-heading button{min-width:44px}
+  .document-inspector button{min-height:var(--touch-min)}.document-inspector-heading button{min-width:var(--touch-min)}
 }
 
 /* --- Was wäre, wenn (L28, E176) ------------------------------------------
@@ -6196,11 +6853,11 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
      teil — der Stern kam auf 43x27, die Kapitelknöpfe auf 27 hoch. Ein Knopf,
      den man dreimal antippen muss, ist kein Knopf. */
   .fh-kopfknoepfe button{width:44px; height:44px}
-  .fh-pdffuss button{min-width:44px; height:44px}
+  .fh-pdffuss button{min-width:var(--touch-min); height:44px}
   .fh-nr{height:44px}
   .fh-kapitel{padding:8px 10px}
-  .fh-kapitel button{min-height:44px; padding:0 14px; font-size:12.5px}
-  .fh-favseiten button{min-width:44px; height:44px; border-radius:22px}
+  .fh-kapitel button{min-height:var(--touch-min); padding:0 14px; font-size:12.5px}
+  .fh-favseiten button{min-width:var(--touch-min); height:44px; border-radius:22px}
   /* Nebeneinander ist auf 390 px kein Nebeneinander mehr: die Skizze wird
      zu schmal zum Erkennen und die Formel zu schmal zum Lesen. Also
      untereinander — Skizze zuerst, weil man sie zuerst ansieht. */
@@ -6224,8 +6881,8 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
      Zelle im Tabellenblock).
 
      Die Höhe kommt jetzt aus der Polsterung, und die stört keine Leerzeichen. */
-  .bs-formel{min-height:44px; padding-top:11px; padding-bottom:11px}
-  .bs-treffer-zeile{min-height:44px}
+  .bs-formel{min-height:var(--touch-min); padding-top:11px; padding-bottom:11px}
+  .bs-treffer-zeile{min-height:var(--touch-min)}
   .bs-blatt{margin:6px; padding:10px 11px 14px}
   /* Der Stern wächst mit — und die Überschrift macht ihm Platz, statt sich
      von ihm überdecken zu lassen. */
@@ -6400,7 +7057,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
    beim Bild zur Tippaufgabe (§55); betroffen war es seit E189. */
 .ea-eingabe button{padding:9px 16px; border:1px solid var(--line);
   border-radius:9px; background:var(--bg); color:var(--text); cursor:pointer;
-  font-size:13px; min-height:44px}
+  font-size:13px; min-height:var(--touch-min)}
 .ea-eingabe button.prim{background:var(--accent); color:var(--auf-accent);
   border-color:var(--accent-text); font-weight:600}
 .ea-eingabe button:disabled{opacity:.45; cursor:default}
@@ -6591,7 +7248,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 @media (max-width: 640px){
   .sk-regler label{width:100%; justify-content:space-between}
   .sk-regler input[type=range]{width:60%}
-  .fd-knopf{min-height:44px}
+  .fd-knopf{min-height:var(--touch-min)}
 }
 
 /* Die Symbolauswahl über der PDF-Seite (E191). Sie zeigt dieselbe Palette
@@ -6610,7 +7267,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   letter-spacing:.06em}
 .mz-zuletzt button{display:flex; align-items:center; gap:8px; padding:6px 12px;
   border:1px solid var(--accent); border-radius:9px; background:var(--bg-card);
-  color:var(--text); cursor:pointer; min-height:44px; text-transform:none;
+  color:var(--text); cursor:pointer; min-height:var(--touch-min); text-transform:none;
   letter-spacing:0; font-size:12.5px}
 .mz-zuletzt button svg{width:30px; height:30px}
 .mz-zuletzt i{font-style:normal}
@@ -6716,7 +7373,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
      Akzentfarbe, in beiden Themen abgestimmt. Eine eigene Farbe hier wäre
      eine zweite Wahrheit über dasselbe (§39). */
   background:var(--accent-schwach); color:var(--text);
-  text-align:left; cursor:pointer; min-height:44px;
+  text-align:left; cursor:pointer; min-height:var(--touch-min);
   transition:background var(--motion-fast,.14s) var(--ease-standard,ease)
 }
 .els-dran:hover{ background:var(--bg-hover) }
@@ -6731,7 +7388,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 
 .els-weiter{ display:flex; flex-wrap:wrap; gap:8px }
 .els-seite{
-  display:flex; align-items:center; gap:8px; min-height:44px;
+  display:flex; align-items:center; gap:8px; min-height:var(--touch-min);
   padding:8px 14px 8px 10px; border:1px solid var(--line); border-radius:999px;
   background:var(--bg-card); color:var(--text); cursor:pointer; max-width:100%;
   transition:background var(--motion-fast,.14s) var(--ease-standard,ease)
@@ -6752,7 +7409,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   grid-template-columns:repeat(auto-fill, minmax(210px, 1fr))
 }
 .els-kachel{
-  display:flex; align-items:flex-start; gap:11px; min-height:44px;
+  display:flex; align-items:flex-start; gap:11px; min-height:var(--touch-min);
   padding:13px 14px; border:1px solid var(--line); border-radius:13px;
   background:var(--bg-card); color:var(--text); text-align:left; cursor:pointer;
   transition:background var(--motion-fast,.14s) var(--ease-standard,ease),
@@ -6876,8 +7533,8 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   /* Am Telefon volle Breite und 44 px für den Daumen (§37). */
   .arb-fenster{ justify-content:center; padding:56px 10px 0 }
   .arb-kasten{ width:100% }
-  .arb-stopp{ min-height:44px; padding:3px 14px }
-  .arb-zu{ min-width:44px; min-height:44px }
+  .arb-stopp{ min-height:var(--touch-min); padding:3px 14px }
+  .arb-zu{ min-width:var(--touch-min); min-height:var(--touch-min) }
 }
 
 /* ==========================================================================

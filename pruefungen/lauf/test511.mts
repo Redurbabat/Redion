@@ -28,7 +28,7 @@
  * §11 sagt es für die Sicherung: „eine Sicherung, die nicht sagt, was sie
  * auslässt, ist die gefährlichste Sorte". Für einen Import gilt es genauso.
  * Der Hinweis zählt jetzt auch das Weggelassene — Tabellen, Diagramme,
- * gefüllte Formen ohne Text, zu tief verschachtelte Gruppen.
+ * Formen mit unbekanntem Umriss, zu tief verschachtelte Gruppen.
  *
  * Was NICHT gezählt wird: eine Form ohne Text UND ohne Fläche. Sonst zählte
  * jeder unsichtbare Platzhalter mit, und eine Zahl, die immer dasteht, liest
@@ -270,7 +270,13 @@ console.log('\n§3 Der Hinweis sagt auch, was NICHT ankam (§11)');
   p('Er sagt, dass etwas NICHT übernommen wurde',
     /NICHT übernommen/.test(erg.hinweis), erg.hinweis);
   p('… und nennt die Tabelle', /Tabelle/.test(erg.hinweis), erg.hinweis);
-  p('… und die gefüllte Form', /gefüllte Form/.test(erg.hinweis), erg.hinweis);
+  /* „Formen" UND NICHT MEHR „gefüllte Formen" (E566). Bis dahin fiel jede
+     gefüllte Form ohne Text durch und wurde so gezählt. Seit E566 kommen
+     die fünf Umrisse an, die Redion kennt — gezählt wird nur noch, was
+     Redion NICHT kennt, und das ist nicht mehr nur „gefüllt". Der Lauf hat
+     die Umbenennung gemeldet, statt sie durchrutschen zu lassen. */
+  p('… und die Form, deren Umriss Redion nicht kennt',
+    /NICHT übernommen:[^·]*Formen/.test(erg.hinweis), erg.hinweis);
   gleich('Folie 3 bringt folgerichtig nichts mit', erg.f3, 0);
 }
 

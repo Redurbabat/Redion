@@ -49,6 +49,7 @@ umgeschrieben, aber nicht umnummeriert.
 | `ERLEDIGTE-AUFGABEN.md` | Was ist fertig, und was kam dabei heraus? |
 | `ENTSCHEIDUNGEN.md` | Warum wurde etwas so entschieden? (E1 … E369) |
 | `LUECKEN.md` | Was fehlt noch im Produkt? (L1 … L116) |
+| `messungen.md` | Was kam beim Nachmessen heraus? (Zahlen, vorher/nachher) |
 | `doku/ARCHITEKTUR.md` | Wie ist es aufgebaut? |
 | `doku/REDION-FORMAT.md` | Wie sieht eine `.redion`-Sicherung von innen aus? |
 | `doku/TYPESCRIPT-MIGRATION.md` | In welcher Reihenfolge wird migriert? |
@@ -859,7 +860,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 438 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 466 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -867,6 +868,11 @@ Läufe lang hat niemand sie nachgezogen. Sie wird nicht geschätzt, sie wird
 gezählt: `ls pruefungen/lauf/test*.mts | wc -l`. Die „~11 min" für den
 schnellen Lauf stammen aus derselben Zeit und sind deshalb entfernt statt
 hochgerechnet — eine erfundene Minute wäre schlimmer als eine fehlende.*
+
+*Am 15. September 2026 stand sie auf 438 und wurde wieder nachgezählt: 466.
+Achtundzwanzig Läufe Abstand, nach hundertfünfzehn beim letzten Mal. Der
+Abstand wird kürzer, die Lehre bleibt dieselbe — die Zahl steht mit ihrem
+Befehl auch in `messungen.md`, wo sie neben dem Datum ihrer Messung lebt.*
 
 ### Die Befehle
 
@@ -876,7 +882,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 438 Läufe
+npm run pruefen                      alle 466 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -918,7 +924,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 438 Läufen sind diese fünf die, die man beim Namen kennt:
+Von 466 Läufen sind diese fünf die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
@@ -950,6 +956,7 @@ sucht, wo etwas geprüft wird, sucht im Quelltext, nicht in dieser Liste.
 | `ERLEDIGTE-AUFGABEN.md` | was fertig ist, mit Fund, Bau und Prüfung |
 | `LUECKEN.md` | was im Produkt fehlt (§35) |
 | `ENTSCHEIDUNGEN.md` | warum etwas so ist (§34) |
+| `messungen.md` | was gemessen wurde: Zahl, Fenster, Datum, Methode (§36, §55.2) |
 | `CLOUDFLARE.md`, `SERVER-EINRICHTEN.md` | die Wolke einrichten |
 | `START-MIT-CLAUDE-CODE.md` | wie hier gearbeitet wird |
 | `doku/ARCHITEKTUR.md` | wie es aufgebaut ist |

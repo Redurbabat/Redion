@@ -389,7 +389,7 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
    neben der Studio-Marke war der Kreis ein zweites Logo. */
 @media(max-width:760px){
   /* §37: am Finger 44, auch hier. Die Leiste ist dort ohnehin 44 hoch. */
-  .mb-rechts-knopf{ min-width:44px; min-height:44px; font-size:15px }
+  .mb-rechts-knopf{ min-width:var(--touch-min); min-height:var(--touch-min); font-size:15px }
   .mb-rechts-knopf svg{ width:19px; height:19px }
 }
 
@@ -668,9 +668,9 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 @media(max-width:760px){
   /* 44 px Tippfläche, nicht 38. Das ist die Fingerregel und keine
      Mausregel — sie gilt auch, wenn dadurch die Zeile höher wird. */
-  .mb-reiter{ min-height:44px; padding:0 var(--space-2); scroll-padding-inline-end:200px }
-  .mb-reiter-knopf{ min-height:44px; padding:0 var(--space-3) }
-  .mb-klapp{ min-height:44px; width:44px }
+  .mb-reiter{ min-height:var(--touch-min); padding:0 var(--space-2); scroll-padding-inline-end:200px }
+  .mb-reiter-knopf{ min-height:var(--touch-min); padding:0 var(--space-3) }
+  .mb-klapp{ min-height:var(--touch-min); width:44px }
   /* DAS OFFENE BAND IST EIN MENÜ, KEIN STOCKWERK (E240).
      Es lag im Fluss und verdrängte den Inhalt: gemessen begann die Seite
      bei offenem Band erst bei 472 statt 101 — auf Redurs Fotos stand es

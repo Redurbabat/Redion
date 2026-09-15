@@ -342,13 +342,27 @@ if (kasten) {
       return (marken[marken.length - 1]?.pts || []).length as number;
     }, String(blattId));
   };
+  /* ── WO DIE ZWEI ZÜGE HINGEHEN, WIRD GERECHNET STATT GESETZT (E568) ──────
+     Hier standen 320 und 440 als feste Zahlen. Gemessen am 14. September:
+     die Zeichenfläche begann bei y = 457, das Fenster ist 900 hoch — der
+     zweite Zug landete also bei 897, DREI Pixel innerhalb des Bildes. Als
+     die Blattleiste um einen Haarstrich höher wurde (7 px), lag er bei 904,
+     ausserhalb, und es entstand gar kein Strich: `marken[letzte]` gab noch
+     den ersten zurück, beide Zahlen waren 60, und der Lauf meldete einen
+     Glätter, der nicht glättet. Er glättete die ganze Zeit.
+
+     Ein Mausklick ausserhalb des Bildes kommt nicht an. Also wird der Platz
+     ausgerechnet, der WIRKLICH sichtbar ist, und die zwei Züge liegen
+     darin — dann hält die Probe auch die nächste Leiste aus. */
+  const fensterHoehe = seite.viewportSize()?.height ?? 900;
+  const platz = Math.min(kasten.height, fensterHoehe - kasten.y) - 40;
   await seite.evaluate(() => {
     (globalThis as any).__echt = (globalThis as any).InkStroke.glaetter;
     (globalThis as any).InkStroke.glaetter = () => (q: number[]) => q;
   });
-  const ohne = await zittern(320);
+  const ohne = await zittern(Math.round(platz * 0.45));
   await seite.evaluate(() => { (globalThis as any).InkStroke.glaetter = (globalThis as any).__echt; });
-  const mit = await zittern(440);
+  const mit = await zittern(Math.round(platz * 0.85));
   console.log(`     Punkte im Block: ohne Glätter ${ohne} · mit ${mit}`);
   p('Der Glätter halbiert die Punkte eines zittrigen Zugs mindestens',
     ohne > 0 && mit > 0 && mit * 2 <= ohne, `ohne ${ohne}, mit ${mit}`);

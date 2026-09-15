@@ -1047,7 +1047,10 @@ const Einstellungen = (() => {
         const btn = document.querySelector('#btn-settings');
         if (!btn)
             return;
-        const name = btn.querySelectorAll('span')[1];
+        /* NACH BEDEUTUNG, NICHT NACH PLATZ (E590) — dieselbe Falle wie in
+           `schale.ts`: `span[1]` war der Name und ist seit der
+           Bewegungsschicht das Zeichen. */
+        const name = btn.querySelector('.ws-name');
         if (name)
             name.textContent = V('arbeitsName', 'Redion');
     };

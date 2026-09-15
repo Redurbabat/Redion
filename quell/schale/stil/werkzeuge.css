@@ -671,7 +671,7 @@ a.bl:hover{color:var(--text)}
 @media(max-width:760px){
   .auswahlleiste{max-width:calc(100vw - 16px); overflow-x:auto;
                  -webkit-overflow-scrolling:touch}
-  .auswahlleiste button{flex:0 0 auto; min-width:44px; min-height:44px}
+  .auswahlleiste button{flex:0 0 auto; min-width:var(--touch-min); min-height:var(--touch-min)}
   .auswahlleiste .tr{flex:0 0 auto}
 }
 
@@ -883,9 +883,9 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 @media(max-width:760px){
   .home-sich{flex-wrap:wrap; gap:10px}
   .home-sich .hs-text{flex:1 1 auto; min-width:60%}
-  .home-sich .hs-tun{flex:1 0 100%; min-height:44px; font-size:14px}
+  .home-sich .hs-tun{flex:1 0 100%; min-height:var(--touch-min); font-size:14px}
   .home-sich-gut{flex-wrap:nowrap}
-  .home-sich-gut .hs-still{min-height:44px; min-width:44px; display:flex;
+  .home-sich-gut .hs-still{min-height:var(--touch-min); min-width:var(--touch-min); display:flex;
     align-items:center; justify-content:center}
 }
 
@@ -1039,7 +1039,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   line-height:1.5; max-width:320px; margin:0 auto}
 .lz-knoepfe{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
   margin-top:18px}
-.lz-knoepfe button{min-height:44px; padding:0 20px; border-radius:999px;
+.lz-knoepfe button{min-height:var(--touch-min); padding:0 20px; border-radius:999px;
   border:1px solid var(--line); font-size:15px}
 .lz-knoepfe button.prim{border-color:var(--accent-text); color:var(--accent-text)}
 .lz-knoepfe button:hover{background:var(--bg-hover)}
@@ -1205,8 +1205,8 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   .wl-rechts{flex-direction:row; width:100%; justify-content:flex-start; margin-top:2px}
   .wl-tun{min-height:36px}
   /* §37: am Telefon gehört der Haken dem Daumen. */
-  .wl-hak{min-height:44px; min-width:44px}
-  .wl-zurueck button{min-height:44px}
+  .wl-hak{min-height:var(--touch-min); min-width:var(--touch-min)}
+  .wl-zurueck button{min-height:var(--touch-min)}
   .wl-quelle{min-height:32px}
 }
 
@@ -1215,7 +1215,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
    wie überall sonst in Redion, damit man nicht raten muss, was gerade gilt.
    44 px hoch, weil das auch am Telefon getroffen werden muss (§37). */
 .lern-verfahren{margin-top:16px}
-.lern-verfahren-knopf{min-height:44px; padding:8px 16px; border-radius:8px;
+.lern-verfahren-knopf{min-height:var(--touch-min); padding:8px 16px; border-radius:8px;
   border:1px solid var(--line); background:none; color:var(--text);
   font-size:13px; cursor:pointer}
 .lern-verfahren-knopf:hover{background:var(--bg-hover)}

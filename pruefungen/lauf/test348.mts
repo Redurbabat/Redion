@@ -138,7 +138,15 @@ gleich('Beim Schreiben: nur Werkzeuge und Verlauf', schreiben.gruppen, ['verlauf
 p('… Werkzeuge und Verlauf sind alle sichtbar', schreiben.werkzeugeSichtbar && schreiben.verlaufSichtbar);
 await werkzeug(pgH, 'stift');
 const stift = (await leiste(pgH))!;
-gleich('Beim Stift: Breite, Farbe, Formen, Stil, Verlauf', stift.gruppen, ['breite', 'farbe', 'formen', 'stil', 'verlauf']);
+/* ══ DAS LINEAL STEHT SEIT E574 BEIM STIFT ════════════════════════════════
+   Diese Zeile hat den Wechsel GEFANGEN — genau dafür gibt es sie. Sie stand
+   auf fünf Gruppen ohne `lineal`, und das war die Liste aus E356.
+   Warum die Liste sich geändert hat, steht abgelesen in `marken.ts`: die
+   Kantenführung des Lineals ist dort für `['stift','marker','line','arrow']`
+   zugelassen. Der Zeichner führte den Stift also längst am Lineal — nur der
+   SCHALTER dafür stand nicht bei ihm, und wer ihn wollte, brauchte die
+   Taste „r" oder den Umweg über „···". Am Telefon ist das kein Weg (§37). */
+gleich('Beim Stift: Breite, Farbe, Formen, Lineal, Stil, Verlauf', stift.gruppen, ['breite', 'farbe', 'formen', 'lineal', 'stil', 'verlauf']);
 gleich('… und die Leiste sagt „stift"', stift.tool, 'stift');
 await werkzeug(pgH, 'radierer');
 const radierer = (await leiste(pgH))!;
@@ -272,7 +280,7 @@ console.log('\n6 · Am Rechner gilt dieselbe Regel — in zwei Zeilen (E359)');
    Leiste — misst test351. Hier zählt nur: Werkzeuge immer, Zubehör nach
    Werkzeug. */
 const ERWARTET: Record<string, string[]> = {
-  schreiben: ['verlauf'], stift: ['breite', 'farbe', 'formen', 'stil', 'verlauf'], radierer: ['radierer', 'verlauf'] };
+  schreiben: ['verlauf'], stift: ['breite', 'farbe', 'formen', 'lineal', 'stil', 'verlauf'], radierer: ['radierer', 'verlauf'] };
 const { ktx: ktxR, pg: pgR } = await kontext(false);
 for (const wz of ['schreiben', 'stift', 'radierer']) {
   await werkzeug(pgR, wz);

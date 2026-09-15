@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-536 Entscheidungen, E1 bis E556 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+574 Entscheidungen, E1 bis E594 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -600,6 +600,44 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E554** — Das Dokumentstudio trägt Redions Farben: fünf feste Hexwerte werden abgeleitet, der gewählte Stift wird ein Umriss — und E464 ist an dieser Stelle umgedreht
 * **E555** — Eine Gruppe ist kein Loch: `p:grpSp` wird mitgelesen (samt Kindkoordinaten), und der Hinweis sagt, was NICHT ankam
 * **E556** — Auch im Laserpointer-Vortrag deckt ein Tipp die Antwort auf — der Deckel liegt unter der Zeigefläche, nicht neben ihr
+* **E557** — Ein Absatz hat sein eigenes Format: Grad, Gewicht, Farbe, Ebene und Aufzählungszeichen je Absatz — aufgeteilt nur, wenn es etwas bringt
+* **E558** — Eine Folie erbt von ihrem Layout und dessen Master: Lage, Grad und Hintergrund kommen von dort, wenn die Folie selbst nichts sagt
+* **E559** — Das Farbthema wird gelesen: `schemeClr` über `p:clrMap` und `theme1.xml` aufgelöst, samt `lumMod`/`lumOff`/`tint`/`shade`
+* **E560** — Ausrichtung: `a:pPr@algn` wird gelesen, gezeichnet und bekommt einen eigenen Knopf — und die Feldliste beim Bauen der Marke wird umgedreht
+* **E561** — Mehrere Formate in einem Absatz: die Textmarke trägt `laeufe`, und SVG setzt die Stücke — nicht `textWidth`
+* **E562** — Textbreite wird im Browser exakt gemessen statt geschätzt; die Tabelle bleibt der Rückfall für Node
+* **E563** — Drehung: `a:xfrm@rot` kommt an — für Text, Bild und Abdeckung. Sie erbt NICHT vom Layout
+* **E564** — Kein fremder PowerPoint-Zeichner. Redion liest `.pptx` selbst; wer es exakt sehen will, nimmt den PDF-Weg
+* **E565** — Tabellen kommen als Gitter auf die Folie, nicht als Tabellenblock — und geschlossene Marken bekommen eine Füllung
+* **E566** — Gefüllte Formen und die Textfarbe aus dem Layout — gefunden an Redurs echter Datei, nicht an einer Liste
+* **E567** — Die Schriftart: `a:latin` und `+mj-lt`/`+mn-lt` gegen `theme1.xml` — eine Näherung, die nur in eine Richtung irrt
+* **E568** — Die Stiftleiste: eine laute Fläche statt sechs; drei Zustände, drei Gestalten; die Farbtupfer sind wieder Tupfer
+* **E569** — Die Kurve war eine Sackgasse: sie fehlte in allen Gruppenregeln; der Wächter prüft jetzt den Katalog statt ein Beispiel daraus
+* **E570** — Die Leiste selbst ordnen: zwei Listen in `meta`, ein Feld zum Ziehen und Rücken; gespeichert wird eine Reihenfolge, kein Katalog
+* **E571** — Im Band selbst schieben: «Einrichten» schaltet einen Modus, in dem jeder Knopf mit der Maus an seinen Platz gezogen wird; die Liste bleibt für die Tastatur
+* **E572** — Zeichenstudio nach sieben Goodnotes-Referenzen: vollständiger Plan, kontextbezogenes Dock, klare Icons, Dock-Bewegung, sichtbares Lineal und nachprüfbare Grenzen (in Umsetzung; L157)
+* **E573** — Das Lineal lässt den Zeiger durch, die Verlaufskapsel bekommt ihren Platz vom Stilblatt, und das Dock liest die Gruppenliste, statt sie zweitens zu entscheiden
+* **E574** — Das Lineal gehört auch dem Stift; die neun Haftnotizfarben bekommen eine eigene Gruppe und bleiben im Notizkontext
+* **E575** — Ein Feld, das aufgeht, muss auch wieder zugehen; ein Klick darf die Leiste nicht neu aufbauen; und eine Sortierbewegung ist keine Attributänderung
+* **E576** — Der Radierer: drei sichtbare Kreise, der Modus einmal statt zweimal, und eine Grösse, die den Seitenwechsel überlebt
+* **E577** — Die Dock-Bewegung bewegt das Zeichen, nicht den Knopf; das Galeriefeld bekommt sein Raster; und zwei Werkzeugzeichen waren dasselbe Bild
+* **E578** — Ein Dokument im Lesemodus nahm Striche an: die Taste war nur die kleinere von zwei Türen
+* **E579** — Die Verlaufskapsel nimmt nirgends Platz: ein Raster, das hier überlagert und dort schiebt, ist kein Platz
+* **E580** — Der Rollschatten: was ausserhalb des Bildes steht, sagt sich selbst — und ein schwarzer Schatten auf dunklem Grund ist keiner
+* **E581** — Was Bedienung ist, gehört auf kein Papier: `[data-ink-ui]` ist im Druck aus, und die Regel gilt dem Attribut
+* **E582** — Zwei Wächter waren jahrelang rot, ohne dass etwas kaputt war: einer mass das Unmessbare, einer zielte auf eine Animation
+* **E583** — Die Kopie in der oberen Studioleiste zeigt jetzt, was das Original auf dem Blatt zeigt — welche Form gewählt ist
+* **E584** — Ein Pfeil, der keine Linie ist, und ein rundes Rechteck, das rund aussieht: drei Zeichenpaare waren über 70 % gleich
+* **E585** — Drei von vier Grössenangaben im Stilblatt hatten keine Wirkung: bemasst war die Hülle, gross war das SVG darin
+* **E586** — Vier Knöpfe des Studios trugen Schriftzeichen statt gezeichneter; das Register hatte alle vier längst
+* **E587** — Pinsel und Bleistift lagen in derselben Richtung; ein zweites Mass misst jetzt die Hauptachse statt der Bildpunkte
+* **E588** — Bei offener Bildschirmtastatur lagen Dock und Verlaufskapsel ganz dahinter; gemessen ohne echtes Gerät
+* **E589** — `index.html` zeichnete neunzehn Zeichen selbst, vier davon anders als die Seitenleiste für denselben Weg
+* **E590** — Drei rote Läufe angesehen: zweimal die Oberfläche von gestern, einmal ein Zugriff nach Platz statt nach Bedeutung
+* **E591** — Beim Zoom lag das Lineal ausserhalb des Bildes; und eine Zusicherung über die Tintenbreite konnte ihren Fehler nicht sehen
+* **E592** — Eine eingelesene `.pptx` ging als frische Textdatei heraus und verlor alles; jetzt wird das Original durchgereicht
+* **E593** — Jede eindeutige Textmarke merkt sich beim Einlesen ihre Stelle im XML; geänderter Text kommt damit in der Datei an
+* **E594** — Redurs fünf Messlatten: GoodNotes, Word, PowerPoint, Obsidian, und über Notion hinaus — mit gezähltem Stand je Feld
 
 ---
 
@@ -44781,3 +44819,3364 @@ zuzudecken hilft niemandem.
 `test509` steht damit bei 27 Zusagen; die fünfte Gegenprobe (den Griff wieder
 herausnehmen) meldet **„ist ‚Seite 2/2‘, soll ‚Seite 1/2‘"** — Redurs Satz,
 diesmal im Heft.
+
+---
+
+E557 — Ein Absatz hat sein eigenes Format, nicht das des Kastens
+--------------------------------------------------------------------------
+
+Redur: „verbesser für die pptx öfnnen". E555 hat den Datenverlust behoben;
+dies ist der Punkt, den man beim Öffnen als **erstes sieht**.
+
+### Was gemessen wurde
+
+Der Leser nahm `txBody.getElementsByTagName('a:rPr')[0]` — den ersten Lauf
+der ersten Zeile — für den **ganzen** Kasten:
+
+```txt
+„klein"(12 pt) + „GROSS"(36 pt, fett, blau)
+    →  EINE Marke „klein GROSS", fontSize 12, fett false, ohne Farbe
+Titel mit srgbClr CC0000
+    →  Marke ohne `farbe`, zeichnet schwarz
+drei Absätze auf lvl 0/1/2 mit buChar
+    →  EINE Marke, flacher Block, keine Einrückung, keine Zeichen
+```
+
+### Die Regel: aufteilen nur, wenn es etwas bringt
+
+Absätze, die sich in **nichts** unterscheiden, bleiben EINE Marke mit `\n`
+dazwischen — genau wie bisher. Das ist der häufige Fall, und dort ist eine
+Marke die bessere: wer den Textkasten im Editor schiebt, schiebt den Kasten
+und nicht eine Zeile.
+
+Aufgeteilt wird erst, wenn **Grad, Gewicht, Farbe oder Ebene** auseinander-
+gehen. Dann ist eine Marke schlicht falsch — sie hat genau einen Grad, und
+der des ersten Absatzes gälte für alle.
+
+*Innerhalb* eines Absatzes bleibt es beim ersten Lauf. Das ist eine Lücke und
+steht so in L151; ein Absatz ist aber die Einheit, die ein Mensch als „Zeile
+mit eigenem Aussehen" sieht, und die ist jetzt erreichbar.
+
+### Die Höhen kommen vom Zeichner, nicht aus einer Schätzung
+
+`InkGeometry.textLayout` ist dieselbe Rechnung, die das Blatt später benutzt
+— samt Umbruch an `breiteBox`. Eine eigene Schätzung („Grad mal 1,25") wäre
+die Höhe EINER Zeile; ein umbrechender Absatz bekäme zu wenig Platz und der
+nächste liefe hinein.
+
+Der Prüflauf misst genau das mit einem absichtlich viel zu langen Absatz. Die
+Gegenprobe mit der Schätzung meldet **„18 pt Abstand"** statt über 40 — die
+zwei Absätze überlappen.
+
+### Und der Fehler, der genau der von E545 war
+
+Das Lesen war fertig, die Farbe stand im Absatz — und die Marke kam trotzdem
+schwarz an. Der Grund lag zwanzig Zeilen weiter unten: `marken.push` baut die
+Textmarke aus einer **festen Feldliste** zusammen, und `farbe` stand nicht
+darin. Grad und Fett kamen an, die Farbe nicht.
+
+Dasselbe war E545 mit `verlauf` passiert, an derselben Stelle, vier Zeilen
+tiefer. Die Feldliste bleibt trotzdem: ein blindes Durchreichen des ganzen
+Objekts nähme `x`/`y`/`w`/`h` mit in die Ablage. Sie ist jetzt nur mit dem
+Hinweis versehen, dass sie beim nächsten Feld wieder vergisst.
+
+`test512` neu, 24 Zusagen, vier Gegenproben gefahren:
+
+```txt
+G1  erster a:rPr des Kastens   15 grün,  9 rot
+    {"text":"klein\nGROSS","sz":12,"fett":false,"farbe":""} — wörtlich der
+    alte Zustand
+G2  nie aufteilen              6 rot, dann Abbruch (bei einer statt drei
+    Marken greift §3 ins Leere)
+G3  Höhe schätzen              23 grün,  1 rot  („18 pt Abstand")
+G4  immer aufteilen            22 grün,  2 rot  (drei gleiche Absätze
+    werden drei Marken)
+```
+
+Bild: `bilder/pptx-absaetze.png` — roter Titel 36 pt fett, blaue
+Zwischenüberschrift 24 pt, drei Aufzählungspunkte 20 pt, ein eingerückter
+Unterpunkt 15 pt. Vorher wäre das ein Block in 36 pt Schwarz gewesen.
+
+**Was weiter offen bleibt** (L151): Ausrichtung (`a:pPr@algn` — die Textmarke
+hat kein Feld dafür), gemischte Läufe innerhalb eines Absatzes, Drehung,
+Tabellen als Tabellenblock, Layout und Master.
+
+
+E558 — Eine Folie erbt von Layout und Master
+--------------------------------------------------------------------------
+
+Redur: „ich will das die orginale pptx so wie es sich öfnnen ohne etwas
+löschen oder etwas". E555 hat den Datenverlust behoben, E557 das Aussehen
+des Textes. Dies hier ist der Grund, warum eine Folie trotzdem noch falsch
+aussehen konnte — und er stand nicht einmal in `LUECKEN.md`.
+
+### Was gemessen wurde
+
+```txt
+grep -n "slideLayout\|slideMaster\|notesSlide" src/bereiche/dateien/einlesen.ts
+    → nichts
+```
+
+Layout und Master wurden **überhaupt nicht gelesen**. Das ist nicht eine
+Feinheit unter vielen: PowerPoint schreibt in das Folien-XML nur, was die
+Folie SELBST ändert. Wer in eine Vorlage tippt, erzeugt eine Folie, die
+ausser dem Platzhaltertyp und dem Text nichts enthält:
+
+```xml
+<p:sp><p:nvSpPr>…<p:nvPr><p:ph type="ctrTitle" idx="0"/></p:nvPr></p:nvSpPr>
+  <p:spPr/>                                   <!-- keine Lage -->
+  <p:txBody>…<a:rPr/><a:t>Titel</a:t>…</p:txBody></p:sp>
+```
+
+Der Leser fand darin keine Lage, keinen Grad, keine Hintergrundfarbe — und
+setzte deshalb seine eigenen: eine geratene Stelle aus einem Zähler und
+40 pt für einen Titel, 20 pt sonst. Weiss blieb das Blatt immer.
+
+### Die Kette ist zweistufig und läuft über `.rels`
+
+```txt
+Folie  →  ihr Layout  →  dessen Master
+```
+
+Verbunden wird über `r:id` in `slideN.xml.rels`, **nicht über Dateinamen**:
+`slide1.xml` darf `slideLayout9.xml` benutzen und das `slideMaster3.xml`.
+Der Prüflauf baut deshalb ausdrücklich eine Datei, in der die Nummern nicht
+zusammenpassen — wer rät, findet dort nichts.
+
+Jede Stufe gewinnt gegen die darüber. Im Code heisst das: der Master wird
+zuerst in die Karte geschrieben, das Layout überschreibt ihn, und die Folie
+gewinnt gegen beide.
+
+```ts
+const vorgaben = new Map([...vorgabenLesen(masterDoc), ...vorgabenLesen(layoutDoc)]);
+const grundfarbe = hintergrund(doc) || hintergrund(layoutDoc) || hintergrund(masterDoc);
+```
+
+### Der Schlüssel eines Platzhalters — und warum `ctrTitle` dazugehört
+
+Ein Platzhalter wird über `type` UND `idx` wiedererkannt, und **beide dürfen
+fehlen**: ein fehlender `type` heisst „body", ein fehlender `idx` heisst „0".
+Ohne diese zwei Vorgaben fände ein Titel seinen Platzhalter im Layout nicht.
+
+Dazu kommt eine Gleichsetzung, die im Format nicht steht, aber in jeder
+Datei vorkommt: `ctrTitle` (der zentrierte Titel einer Titelfolie) und
+`title` sind für die Vererbung dasselbe. Ein Layout schreibt mal das eine,
+die Folie mal das andere. Die Gegenprobe ohne diese Zeile zeigt genau das:
+der Titel erbt nichts mehr.
+
+### Was bewusst NICHT geerbt wird: die Themenfarbe
+
+`<a:schemeClr val="bg2"/>` bleibt liegen. Ohne `theme1.xml` ist der Name
+gar nicht auflösbar, und eine falsche Hintergrundfarbe ist schlimmer als
+keine: sie macht den Text unlesbar, und man sieht nicht, woher sie kommt
+(§11 — lieber nichts als falsch). Die Gegenprobe, die den Namen einfach
+durchreicht, liefert die Zeichenkette `"#bg2"` — keine Farbe, sondern ein
+Wort mit einem Doppelkreuz davor.
+
+Deshalb ist die Prüfung im Blatt zweifach: der Leser gibt nur `srgbClr`
+heraus, und `blatt.ts` lässt nur ein echtes Hex durch, bevor es in
+`--paper` landet (§19).
+
+### Der Hintergrund brauchte keine neue Leitung
+
+`--paper` gab es schon: `.blatt-papier{background:var(--paper,#fff)}` steht
+seit langem im Stil — nur hat **nie jemand die Eigenschaft gesetzt**. Das
+ist derselbe Fund wie bei `state.einzeln` und beim Annahme-Verzeichnis: die
+Fähigkeit war da und nicht angeschlossen. Es kam eine Zeile dazu, kein Weg.
+
+### Der Preis des Hintergrunds — gefunden beim Lesen des eigenen Diffs
+
+Ein farbiger Grund hat eine Folge, die keine Prüfung dieses Bogens gesucht
+hätte und die ich nur gesehen habe, weil ich die eigene Änderung noch einmal
+gegen den Strich gelesen habe: **eine Textmarke ohne eigene Farbe zeichnet
+`#111111`** (`marken.ts:11`). Das war richtig, solange jedes Blatt weiss war.
+Mit einem geerbten dunklen Grund ist es schwarz auf dunkelblau — der Text
+wäre weg, und zwar erst nach dem Einlesen und ohne jede Fehlermeldung.
+
+PowerPoint löst das über die Themenfarbe. Die haben wir nicht (siehe oben).
+Was wir haben, ist der **Kontrast**, und der ist keine Geschmacksfrage:
+
+```txt
+Grund      gegen #111111    Folge
+#102A43       1,29 : 1      Tinte kippt auf Weiss
+#767676       4,16 : 1      kippt (knapp unter der Schwelle)
+#888888       5,33 : 1      bleibt schwarz
+#ffffff      18,88 : 1      bleibt schwarz
+```
+
+Gerechnet wird die relative Helligkeit nach WCAG, die Schwelle ist 4,5:1
+(§38). Ein Absatz, der eine eigene Farbe MITBRINGT, behält sie in jedem Fall
+— gekippt wird nur, was sonst gar keine hätte.
+
+Und die Zahl, die das entscheidet, hat mich zum zweiten Mal erwischt: ich
+hatte die Helligkeit von `#111111` mit 0,005182 angesetzt. Nachgerechnet
+sind es 0,005605. Dieselbe Sorte Kopfrechenfehler wie in P32 — deshalb steht
+die Rechnung jetzt im Code, nicht nur ihr Ergebnis.
+
+### Was `test513` hält
+
+17 Zusagen, fünf Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  die Erbkette nicht anwenden      8 grün, 5 rot
+    Titel {"x":58,"y":41,"sz":40} statt (36, 18) in 44 — wörtlich der alte
+    Zustand, und der Hintergrund ist ""
+G2  nur das Layout, nicht der Master  12 grün, 1 rot  (der Hintergrund fehlt)
+G3  `ctrTitle` nicht auf `title`      11 grün, 2 rot  (der Titel erbt nichts)
+G4  Themenfarben durchreichen         12 grün, 1 rot  (liefert "#bg2")
+G5  die Tinte nicht kippen lassen     15 grün, 2 rot  (schwarz bleibt schwarz)
+```
+
+Zwei Bilder:
+
+* `bilder/pptx-layout-master.png` — eine Folie, die selbst nichts angibt:
+  dunkelblauer Grund aus dem Master, weisser Titel an der Stelle des Layouts
+  in 44 pt, hellblauer Fliesstext in 18 pt. Vorher: schwarzer Text auf Weiss,
+  beide an einer geratenen Stelle.
+* `bilder/pptx-tinte.png` — dieselbe Folie, aber KEIN Absatz nennt eine
+  eigene Farbe. Beide stehen weiss da. Ohne die Kontrastregel wären sie
+  `#111111` auf `#102A43`.
+
+**Was weiter offen bleibt** (L151): Ausrichtung (`a:pPr@algn`), gemischte
+Läufe innerhalb eines Absatzes, Drehung, Tabellen als Tabellenblock, und die
+Themenfarben selbst — dafür müsste `theme1.xml` gelesen werden.
+
+
+E559 — Das Farbthema wird gelesen
+--------------------------------------------------------------------------
+
+E558 hat Layout und Master erschlossen und dabei **eine** Quelle ausdrücklich
+liegen gelassen: `theme1.xml`. Der Grund war richtig — eine geratene Farbe
+ist schlimmer als keine (§11). Die Folge war es nicht: **PowerPoint schreibt
+Farben fast nie als `srgbClr`.** Jede Vorlage von der Stange benutzt
+`schemeClr`, und die kamen allesamt als „keine Farbe" an.
+
+### Was das hiess, in Zahlen
+
+An sechs Stellen im Leser stand dieselbe Notlösung — Textfarbe je Absatz,
+Füllung einer Form, zwei Stellen im Verlauf, Hintergrund, Verlaufsstopp:
+
+```txt
+const rgb = …getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+```
+
+Ein `<a:schemeClr val="accent1"/>` fiel durch jede einzelne. Eine Folie mit
+blauem Grund und weisser Schrift kam weiss mit schwarzer Schrift an, und ein
+Verlauf gar nicht — `formVerlauf` gibt bewusst `null` zurück, sobald EIN
+Stopp fehlt.
+
+### Der Weg ist zweistufig, und die erste Stufe vergisst man
+
+`<a:schemeClr val="bg1"/>` steht **nicht** im Thema. `bg1` gehört der
+Folienwelt und wird erst über die Farbzuordnung des Masters zu einem Namen
+der Themenwelt:
+
+```txt
+<p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" …>
+<a:clrScheme><a:lt1><a:sysClr val="window" lastClr="FFFFFF"/></a:lt1>
+
+    bg1  →  clrMap.bg1 = "lt1"  →  clrScheme.lt1  →  #FFFFFF
+```
+
+Wer die Stufe auslässt, findet `bg1` im Thema gar nicht — oder, schlimmer,
+rät „bg1 heisst hell" und bekommt bei einem dunklen Thema genau die
+verkehrte Farbe. `test514` §2 baut deshalb eine Zuordnung, die **absichtlich
+vertauscht** ist (`bg1="dk1"`, `tx1="lt1"`), und misst beide Richtungen.
+
+Dazu zwei Kleinigkeiten, an denen ein Leser sonst scheitert: `dk1` und `lt1`
+stehen in echten Dateien als `a:sysClr`, und der Wert steckt dort in
+`lastClr`, nicht in `val`. Und das Thema hängt an den `.rels` des **Masters**
+— ein Master darf `theme7.xml` benutzen; der Prüflauf nennt sie genau so.
+
+### Die Abwandlungen — und warum die Zahlen nicht meine sind
+
+Eine Themenfarbe steht selten pur da:
+
+```xml
+<a:schemeClr val="accent1"><a:lumMod val="75000"/><a:lumOff val="40000"/></a:schemeClr>
+```
+
+Ohne diese Rechnung käme jede Abstufung einer Folie in derselben Grundfarbe
+an — eine Tabelle mit fünf Schattierungen wäre eine einfarbige Fläche.
+Gerechnet wird über HSL, nicht über die Kanäle: auf den Kanälen gerechnet
+würde aus kräftigem Blau ein blasses Grau statt eines hellen Blaus.
+
+Geprüft wird das **nicht gegen meine eigene Rechnung**, sondern gegen die
+veröffentlichten Felder aus PowerPoints eigener Farbauswahl zum Office-Thema:
+
+```txt
+accent1 #4472C4   „Dunkler 25 %"   lumMod 75000                → #2F5597  ✓
+accent1 #4472C4   „Heller 40 %"    lumMod 60000 + lumOff 40000 → #8FAADC  ✓
+accent1 #4472C4   „Dunkler 50 %"   lumMod 50000                → #203864  ✓
+```
+
+Alle drei stimmen auf das Byte. Das ist der Punkt: eine Prüfung, die den
+Code gegen sich selbst hält, hält nichts (§55.2).
+
+`tint` und `shade` rechnet Redion linear auf dem Kanal. Das entspricht dem,
+was auch andere Leser tun, ist aber — anders als oben — **nicht gegen eine
+PowerPoint-Ausgabe nachgemessen**; es steht so in L151.
+
+### Was weiterhin leer bleibt
+
+`phClr` — die Farbe des Platzhalters, der eine Vorlage *benutzt*. Sie steht
+nirgends in der Datei und ist nicht auflösbar; sie bleibt leer. Ebenso
+`alpha`, `satMod` und `hueMod`.
+
+### Und ein Fund, den erst die Prüfung sichtbar gemacht hat
+
+`test514` §4 war in der ersten Fassung rot: `phClr` kam als `#ffffff` an.
+Der Code hatte recht und die Zusage unrecht — die Farbe war nicht geraten,
+sondern die **Lesbarkeitsregel aus E558** hatte danach gegriffen: ein Absatz
+ohne Farbe bekommt auf dunklem Grund ausdrücklich Weiss, und der Grund
+dieser Prüffolie war Schwarz. Gemessen wird `phClr` seither auf **hellem**
+Grund, wo die Tinte nicht kippt. Der Kommentar an der Stelle sagt, warum.
+
+### Und ein zweiter Fund, den zwei ältere Läufe geliefert haben
+
+Die erste Fassung von `abwandeln` rechnete **immer** — auch dort, wo gar
+keine Abwandlung stand. Herausgekommen ist dann immer klein geschriebenes
+Hex, und `test512` und `test513` wurden davon rot:
+
+```txt
+✗ Der Titel ist rot                  — ist "#cc0000",  soll "#CC0000"
+✗ Die Folie hat die Farbe des Masters — ist "#102a43", soll "#102A43"
+```
+
+Gezeichnet hätte das dasselbe; Hex ist in CSS gleichgültig gegen Gross und
+Klein. Geändert war es trotzdem, und zwar an einer Stelle, an der niemand
+eine Änderung wollte. **Was unverändert aus der Datei kommt, geht unverändert
+weiter** — gerechnet wird nur, wo wirklich `lumMod`, `lumOff`, `tint` oder
+`shade` steht.
+
+Das ist auch der Grund, warum die beiden alten Läufe hier zählen: sie haben
+etwas gehalten, das keine Zusage von `test514` gesucht hätte.
+
+### Was `test514` hält
+
+13 Zusagen, vier Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  `schemeClr` nicht auflösen     5 grün,  8 rot  (jede Farbe leer)
+G2  `p:clrMap` überspringen       11 grün,  2 rot  (Grund fehlt, beide Wege)
+G3  `lumMod`/`lumOff` nicht rechnen 9 grün,  4 rot  (dreimal dieselbe Farbe)
+G4  `phClr` auf irgendwas auflösen 12 grün,  1 rot
+G5  jede Farbe neu schreiben       test512/513: 3 rot (siehe oben — keine
+                                   gebaute Gegenprobe, eine gefahrene)
+```
+
+Bild: `bilder/pptx-thema.png` — eine Folie, auf der **keine einzige Farbe**
+als `srgbClr` im XML steht: Grund, Schrift, drei Abstufungen von `accent1`,
+zwei weitere Akzente und die Verweisfarbe. Vorher wäre das schwarzer Text
+auf Weiss gewesen.
+
+
+E560 — Ausrichtung, und eine Feldliste, die umgedreht gehört
+--------------------------------------------------------------------------
+
+`LUECKEN.md` führte diesen Punkt seit E540 mit einem Satz, der stimmte und
+zu klein war:
+
+> „**Ausrichtung** (`a:pPr@algn`). Die Textmarke hat kein Feld dafür; alles
+> kommt linksbündig an."
+
+Das Fehlende war nicht nur eine Importlücke. Solange die Textmarke kein Feld
+für die Ausrichtung hatte, konnte auch **Redion selbst** keinen Text
+zentrieren — in einem Programm, dessen Bildblöcke seit Langem `links`,
+`mitte` und `rechts` kennen. Eine fehlende Eigenschaft ist nie nur eine
+Importlücke, und deshalb gehört der Knopf in denselben Bogen, nicht in einen
+späteren.
+
+### Drei Stellen, eine Eigenschaft
+
+```txt
+einlesen.ts    `a:pPr@algn`  →  Marke `ausricht`
+geometry.ts    `textLayout` gibt die Ausrichtung mit heraus
+marken.ts      SVG-Anker und `x` je Zeile — und der Knopf in der Leiste
+```
+
+Die drei Namen sind die des Hauses (`bild-rahmen aus-links`), keine neuen.
+
+### Warum `just` links wird und nicht mitte
+
+PowerPoint kennt fünf Werte, Redion drei. Blocksatz (`just`) und `dist`
+brauchen gestreckte Wortabstände; die hat die Markenschicht nicht. Links ist
+die Kante, die der Blocksatz mit ihr **teilt** — zentriert wäre an jeder
+einzelnen Zeile falsch. Eine Näherung in die richtige Richtung ist besser
+als eine in die falsche.
+
+### Der Fall, der sonst durchrutscht
+
+Ein umbrechender Absatz hat mehrere `tspan`. Bekommt nur der erste das neue
+`x`, laufen die Zeilen auseinander: die erste sitzt zentriert, die zweite
+wieder links. Die Gegenprobe zeigt es als `[216, 42]`. `test515` misst
+deshalb **alle** Zeilen eines Kastens, nicht die erste.
+
+### Und der Fund, der grösser ist als der Bogen
+
+Beim ersten Lauf kam die Ausrichtung nicht an — **zum dritten Mal an
+derselben Stelle.** `marken.push` baute die Textmarke aus einer Liste, die
+AUFZÄHLT, was mitreisen darf:
+
+```txt
+E545   `verlauf`   fehlte
+E557   `farbe`     fehlte     („ist '', soll '#CC0000'")
+E560   `ausricht`  fehlte     („ist '', soll 'mitte'")
+```
+
+Der Kommentar an der Stelle sagte selbst voraus, dass sie „beim nächsten
+Feld wieder vergisst", und begründete ihr Bleiben damit, dass ein blindes
+Durchreichen `x`/`y`/`w`/`h` mit in die Ablage nähme. Das stimmt — es ist
+nur kein Grund für eine Erlaubnisliste, sondern einer für eine
+**Verbotsliste**:
+
+```ts
+const { x: _x, y: _y, w: _w, h: _h, art: _art, ...rest } = o as any;
+marken.push({ id, art: 'text', point: [o.x, o.y], ...rest, fett: !!o.fett });
+```
+
+Was nicht in die Ablage darf, ist eine kurze, bekannte, abgeschlossene Menge
+— die Masse, aus denen `point` und `breiteBox` schon gerechnet sind. Was
+mitreisen soll, ist es nicht. Ein viertes vergessenes Feld kann es damit
+nicht mehr geben.
+
+### Der Knopf steht hinter `···`, und das wurde gemessen
+
+Im Dokumentstudio liegt die ganze Schriftgruppe hinter dem Optionen-Schalter
+— `fett` und `rahmen` seit E552 genauso. Nachgemessen statt angenommen:
+vorher ist der Knopf `display:none` und 0 × 0, nach `···` **61 × 44 px**,
+sichtbar und ganz im Bild. Die 44 sind §37.
+
+`test515` §5 fragt deshalb nicht, ob der Knopf im DOM steht, sondern ob man
+ihn zu sehen bekommt. Ein Knopf im DOM, den niemand sieht, ist keine
+Funktion — genau der Fall aus §55.1.
+
+### Was `test515` hält
+
+25 Zusagen, fünf Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  `algn` nicht lesen            12 grün, 10 rot  (§1, §2, §3 zusammen)
+G2  Anker ja, `x` nicht           19 grün,  3 rot
+G3  nur die erste Zeile bewegen   21 grün,  1 rot  ([216, 42])
+G4  `just` auf `mitte` abbilden   20 grün,  2 rot
+G5  den Knopf weglassen           18 grün,  7 rot
+```
+
+Bild: `bilder/pptx-ausrichtung.png` — zentrierte Überschrift, linksbündiger,
+zentrierter und rechtsbündiger Absatz, und ein zentrierter Absatz über zwei
+Zeilen, der in **beiden** zentriert steht.
+
+
+E561 — Mehrere Formate in einem Absatz
+--------------------------------------------------------------------------
+
+E557 hat das Format je ABSATZ gelesen und dabei selbst festgehalten, was
+offen bleibt: „Innerhalb eines Absatzes bleibt es beim ersten Lauf." Das war
+der letzte Punkt aus L151, bei dem beim Öffnen einer `.pptx` sichtbar etwas
+verlorenging:
+
+```xml
+<a:r><a:rPr sz="1200"/><a:t>klein </a:t></a:r>
+<a:r><a:rPr sz="3600" b="1"/><a:t>GROSS</a:t></a:r>
+```
+
+```txt
+VORHER   {"text":"klein GROSS","fontSize":12,"fett":false,"hoehe":23}
+NACHHER  zwei Stücke in einer Zeile, 12 pt und 36 pt fett, Kasten 53 pt hoch
+```
+
+Die erste Zeile ist keine Beschreibung, sondern die gemessene Ausgabe der
+Gegenprobe G1 — der alte Zustand, wörtlich.
+
+### Der alte Weg bleibt unberührt, und das ist der Kern
+
+Der neue Satz läuft **nur**, wenn die Marke `laeufe` trägt. Jede Marke ohne
+das Feld — also jede, die je geschrieben wurde — geht weiter durch
+`textLines` wie seit E360. Und ein Absatz, dessen Läufe alle dasselbe Format
+haben, bekommt gar kein `laeufe`: der Normalfall bleibt damit wörtlich der
+alte Fall.
+
+Das ist keine Vorsicht, sondern die einzige Art, eine Satzänderung ohne
+Rückwärtsrisiko einzuführen (§9, §51). `test516` §4 misst es an einer von
+Hand gebauten Marke, nicht an einer eingelesenen.
+
+### Die Zeilenhöhe ist die des grössten Stücks
+
+Eine Zeile mit 12 pt und 36 pt ist 36 pt hoch. Mit dem Grundgrad gerechnet
+wären es 23 statt 53, und die nächste Marke läge in der grossen Schrift.
+Die Gegenprobe G2 zeigt genau diese zwei Zahlen.
+
+### Und der Fund, den nur das Bild machen konnte
+
+Die erste Fassung gab **jedem Stück ein absolutes `x`**, gerechnet aus
+`InkGeometry.textWidth`. Alle Zusagen waren grün. Das Bild zeigte zwei
+Fehler, die keine davon gesehen hatte:
+
+```txt
+„klein GROSS"  →  „kleinGROSS"     der Zwischenraum verschluckt
+„…hervorgehobenen Wort mittendrin" →  „Wort" lief in „mitt…" hinein
+```
+
+Das erste war XML: ohne `xml:space="preserve"` fällt der Zwischenraum am
+Ende eines Laufs weg. Das zweite war grundsätzlicher — **`textWidth` ist
+eine Schätzung**, und sie liegt um bis zu 15 % daneben (nachgemessen,
+siehe L155). Sie ist gut genug, um zu entscheiden, WO umgebrochen wird, und
+zu ungenau, um zu sagen, wo ein Stück ANFÄNGT.
+
+Jetzt trägt nur das **erste** Stück einer Zeile ein `x`; die übrigen
+fliessen, und SVG setzt sie mit den echten Massen des Browsers. Ein `x`
+beginnt in SVG einen neuen Textabschnitt, und `text-anchor` gilt je
+Abschnitt — die Ausrichtung aus E560 funktioniert dadurch unverändert
+weiter, mit echten Massen statt geschätzten.
+
+`Stueck` trägt seither weder `x` noch `breite`. Beide liessen sich rechnen,
+und genau das wäre die Falle: ein Feld, das aussieht wie eine Messung und
+eine Schätzung ist.
+
+### Was daraus NICHT geworden ist
+
+Die Messung ergab, dass auch der Fett-Faktor falsch ist (1,06 gegen
+gemessene 1,13) — und dass normaler Text um bis zu 15 % zu schmal
+geschätzt wird. Ich habe die Konstante kurz auf 1,13 gesetzt und
+**zurückgenommen**: sie steuert den Umbruch jeder Textmarke, auch jeder
+alten Notiz. Das ist eine eigene Arbeit mit eigener Prüfung (L155), kein
+Nebenschritt in einem Bogen über PowerPoint-Läufe (§45).
+
+### Was `test516` hält
+
+25 Zusagen, fünf Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  nur den ersten Lauf lesen      9 grün, 16 rot  (der alte Zustand)
+G2  Zeilenhöhe vom Grundgrad      23 grün,  2 rot  (23 pt statt 53)
+G3  `laeufe` immer anhängen       24 grün,  1 rot
+G4  Stücke ohne `font-size`       23 grün,  2 rot
+G5  jedem Stück ein gerechnetes x 22 grün,  3 rot  (beide auf x = 40)
+```
+
+Zwei Dinge hat `test516` selbst gelernt und stehen als Kommentar darin:
+
+* Die Zusage stürzte unter G1 ab statt rot zu werden (`gemalt[1]` war
+  `undefined`) — ein Absturz verschluckt die Zahl, auf die es ankommt.
+* Und sie mass am **falschen Knoten**: es gibt zwei `<svg text>` mit
+  demselben Anfang, und der erste ist die Vorschau in der Folienliste, deren
+  `<svg>` 0 × 0 misst. `getStartPositionOfChar` gibt dort lauter Nullen
+  zurück, ohne dass etwas kaputt wäre.
+
+Bild: `bilder/pptx-laeufe.png` — „klein GROSS" in zwei Graden, drei Farben
+in einer Zeile, ein hervorgehobenes Wort mitten in einem umbrechenden Satz,
+und ein zentrierter Absatz mit gemischtem Format.
+
+
+E562 — Textbreite exakt messen statt schätzen
+--------------------------------------------------------------------------
+
+Der Bogen zu L155, gefunden bei E561 durch ein Bild und dort bewusst
+liegengelassen, weil er jede Textmarke betrifft und nicht nur PowerPoint.
+
+### Was falsch war
+
+`InkGeometry.textWidth` rechnete die Breite aus einer Tabelle von
+Buchstabenbreiten: ein Grundwert je Familie, mal Faktoren für schmale
+Zeichen, breite und Grossbuchstaben, mal 1,06 für fett. Daraus entsteht der
+Zeilenumbruch **jeder** Textmarke.
+
+```txt
+Text                              echt      geschätzt   Verhältnis
+„Ein Satz mit "                    6,31 em     6,00        1,05
+„einem hervorgehobenen Wort" fett 16,88 em    14,89        1,13
+„ mittendrin, der über mehrere"   15,02 em    13,09        1,15
+„GROSS" fett                       3,84 em     3,88        0,99
+```
+
+### Warum keine bessere Konstante
+
+Die Abweichung schwankt je nach Text zwischen 0,99 und 1,15. Ein einziger
+Faktor verschöbe den Fehler nur — er machte aus „zu schmal" ein „mal zu
+schmal, mal zu breit". Der Browser weiss es dagegen genau:
+`canvas.measureText` fragt dieselbe Schrift, die nachher zeichnet.
+
+### Wie es jetzt läuft
+
+```txt
+Browser   canvas.measureText, bei 100 px gemessen und geteilt
+          → ein Cache-Eintrag bedient jede Schriftgrösse
+Node      die Tabelle wie bisher — dort gibt es kein Canvas
+```
+
+`gemessenAn()` sagt, welcher Weg gerade gilt, damit ein Prüflauf es wissen
+kann statt es anzunehmen.
+
+Und der Cache wird **einmal geleert**, wenn `document.fonts.ready` erfüllt
+ist: die ersten Messungen treffen sonst die Rückfallschrift des Browsers,
+und eine falsche Zahl, die gemerkt wird, ist schlimmer als eine, die jedes
+Mal neu danebenliegt.
+
+### Ein Katalog, nicht zwei
+
+Zum Messen braucht man den Schriftstapel, und der stand in `marken.ts`,
+während die Breiten hier gerechnet wurden. Die Liste ist deshalb nach
+`geometry.ts` gezogen — an den Ort, der die Masse kennt —, und `marken.ts`
+nimmt sie von dort. Eine Kopie wäre der Fehler, vor dem §8 warnt: sie läuft
+mit dem Original auseinander, und niemand sieht, welche gilt.
+
+### Die Zusage, auf die es ankommt
+
+`test517` §3 prüft keine Zahl, sondern einen Satz über **alle** Zeilen:
+
+> Keine gezeichnete Zeile darf breiter sein als ihr Kasten.
+
+Gemessen mit `getComputedTextLength` am echten SVG, über sechs Marken mit
+verschiedenen Texten, Kästen, Graden, Familien und einem gemischten Absatz.
+Die Gegenprobe G1 — wieder schätzen — nennt die Übertreter beim Namen:
+
+```txt
+a2  „brechen härter"        164,2 breit in einem Kasten von 160
+a6  „Einwortzeileohnejede"  202,2 breit in einem Kasten von 200
+```
+
+Das ist der Satz, den der alte Weg gebrochen hat. Nicht „13,09 gegen
+15,02", sondern „Text steht ausserhalb seines Kastens".
+
+### Und zweimal hat die Suite sich selbst belogen
+
+* Der erste Aufbau setzte den `blatt`-Block von Hand — er hing an keiner
+  Seite, die Probe fand **0 Zeilen**, und „keine Zeile ist zu breit" wurde
+  auf der leeren Liste grün. Gefangen hat es die zweite Zusage daneben:
+  „mindestens vier Zeilen füllen ihren Kasten zur Hälfte". Ohne die wäre
+  der ganze §3 eine Behauptung gewesen.
+* Und der Knoten wurde mit `find(svg => breite > 10)` gesucht — der erste
+  Treffer war ein Symbol von 25 px mit null Texten. Gesucht ist
+  `svg.blatt-marken`, und die heisst so.
+
+### Was `test517` hält
+
+14 Zusagen, drei Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  wieder schätzen               12 grün, 2 rot  (zwei Zeilen ausserhalb)
+G2  Familie beim Messen egal      12 grün, 2 rot  (alle fünf liefern 242)
+G3  Cache-Schlüssel ohne Format   11 grün, 3 rot  (Fett = Normal)
+```
+
+Bild: `bilder/pptx-laeufe.png` — dieselbe Folie wie bei E561, jetzt bricht
+die dritte Zeile nach „über" um und bleibt im Kasten.
+
+
+E563 — Drehung
+--------------------------------------------------------------------------
+
+`LUECKEN.md` beschrieb die Lage seit E540 genau: „Die Marken KÖNNEN drehen —
+gelesen wird es noch nicht." Dasselbe Muster wie bei `--paper` (E558) und
+der Ausrichtung (E560): die Fähigkeit war da und nicht angeschlossen. Es kam
+eine Funktion und sechs Einsetzstellen dazu, kein neuer Weg.
+
+### Die Einheit
+
+```txt
+ 5400000 / 60000 =  90°
+ 2700000 / 60000 =  45°
+-5400000 / 60000 = -90°  →  270°
+```
+
+`a:xfrm@rot` steht in 60000steln Grad, im Uhrzeigersinn — dieselbe Richtung
+wie SVGs `rotate` und wie Redions `dreh`. Es muss also nichts gespiegelt
+werden, nur geteilt.
+
+Auf 0…360 gebracht, und 0 heisst „keine": PowerPoint schreibt auch negative
+Werte. `dreh: -90` wäre gültig, aber `dreh: 270` ist dieselbe Drehung und
+liest sich besser.
+
+### Sie erbt nicht
+
+Ein Layout gibt vor, WO ein Platzhalter steht und wie gross er ist. Dass er
+schief steht, ist eine Entscheidung der einzelnen Folie — PowerPoint hält es
+genauso: `rot` steht im `a:xfrm` der Form, und ein geerbter Platzhalter hat
+gar keins.
+
+`test518` §3 baut deshalb ein Layout mit einem um 45° gedrehten Platzhalter
+und misst, dass die Folie ihn **gerade** bekommt. Die Gegenprobe, die ihn
+erben lässt, ist rot.
+
+### Wo die Erlaubnisliste stehen bleibt
+
+Beim Text reist `dreh` über die Umkehrung aus E560 mit. Bei **Abdeckung und
+Bild** nicht: ihre Objekte tragen `bytes`, `pfad` und `name`, und ein
+Durchreichen legte die ganzen Bilddaten in den Block. Die verbotene Menge
+ist dort also nicht kurz und abgeschlossen, und damit gilt die Umkehrung
+nicht. Beide bekommen `dreh` ausdrücklich, mit einem Kommentar daneben,
+warum es hier anders ist als nebenan.
+
+### Der Drehpunkt
+
+Die Mitte des Kastens, nicht seine Ecke. `marken.ts` setzt
+`rotate(grad cx cy)` aus `InkGeometry.bounds`, und OOXML dreht ebenfalls um
+die Mitte — die zwei passen ohne Umrechnung zusammen. `test518` §4 misst es
+am gezeichneten Knoten: für einen Kasten bei (72, 90) muss der Drehpunkt
+rechts und unterhalb davon liegen.
+
+### Was `test518` hält
+
+17 Zusagen, vier Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  `rot` nicht lesen          8 grün, 9 rot  (nichts dreht sich mehr)
+G2  Teilen durch 60000 weg     8 grün, 9 rot  (5400000 statt 90)
+G3  negative nicht normieren  15 grün, 2 rot  (−90 statt 270)
+G4  die Drehung erben lassen  16 grün, 1 rot
+```
+
+Und ein Fund, der das Prüfstück betraf und nicht den Code: mein `p:timing`
+hatte kein `nodeType="clickEffect"`, und der Leser fand deshalb keine
+Abdeckung. Die Zusage zeigte auf den Code, der recht hatte. §45/E21 gilt
+auch für Prüfdateien — nachsehen, nicht nachbauen.
+
+**Was weiterhin offen bleibt:** `flipH`/`flipV` (die Marke hat kein
+allgemeines Spiegeln) und die Drehung einer GRUPPE. Für die zweite müsste
+`abbilden` die Kindpositionen mitdrehen; nur den Winkel durchzureichen wäre
+schlimmer als nichts, weil die Kinder dann an falscher Stelle schief
+stünden.
+
+Bild: `bilder/pptx-drehung.png` — sieben Kästen von 0° bis 270°, darunter
+ein negativer Winkel und einer auf dem Kopf.
+
+
+E564 — Kein fremder PowerPoint-Zeichner
+--------------------------------------------------------------------------
+
+Redur, 13. September 2026, auf die Frage nach fremdem Code: **„Nein, nehmen
+wir nicht."**
+
+Der Eintrag steht hier, damit die Frage nicht in einem halben Jahr noch
+einmal von vorn beginnt — mit den Gründen, nicht nur mit dem Nein.
+
+### Was zur Wahl stand
+
+`pptxviewjs` (npm, MIT, keine Abhängigkeiten, 817 KB gepackt, 4,12 MB
+entpackt, zeichnet Folien auf HTML5-Canvas). Nach dem Muster von pdf.js
+eingebettet: Bytes in `quell/fremd/`, Lader in TypeScript daneben, Herkunft
+und Prüfsumme in `pruefungen/fremd-bestand.json`.
+
+**Dafür sprach:** es zeichnet die Folie, statt sie nachzubauen. Damit wären
+auf einen Schlag weg: Tabellen, gefüllte Formen mit Umriss, Diagramme,
+SmartArt, WordArt, Schatten, Blocksatz, Spiegelung.
+
+### Warum nicht
+
+**1. Es gibt kein öffentliches Quellverzeichnis.** Nur ein fertiges Paket.
+Bei pdf.js lässt sich jede Zeile nachlesen — Mozilla, fünfzehn Jahre, in
+jedem Firefox. Hier bliebe ein minifizierter Klumpen von 4 MB, und der ist
+nicht prüfbar, egal wie lange man hinsieht. In einem Programm, dessen erste
+Regel „Daten gehören dem Nutzer" ist, wiegt das schwer.
+
+**2. Es löst das Falsche.** Canvas heisst Bild. Kein durchsuchbarer Text,
+kein Textkasten zum Anfassen, und für die Rundreise zurück nach `.pptx`
+(O5) bringt es gar nichts. Es wäre eine zweite Ansicht NEBEN der
+Arbeitskopie — und damit zwei Programme, die sagen „so sieht diese Datei
+aus", und die sich irgendwo widersprechen.
+
+**3. Die Lücke war kleiner geworden.** Als der Vorschlag fiel, fehlten
+Layout, Master, Farbthema, Ausrichtung, gemischte Formate und Drehung. Nach
+E558 bis E563 sind das alles erledigte Punkte. Für den Rest 4 MB fremden,
+unlesbaren Code aufzunehmen, ist ein schlechtes Geschäft.
+
+### Was stattdessen gilt
+
+```txt
+Exakt ansehen   →  in PowerPoint „Als PDF speichern", in Redion öffnen.
+                   Das ist pdf.js, steckt längst drin, ist pixelgenau —
+                   samt Zeichnen, Suchen und Drucken.
+Bearbeiten      →  die `.pptx` mit Redions eigenem Leser.
+```
+
+Also eine Datei zum Ansehen und eine zum Arbeiten — genau die Trennung, die
+die Kopfzeile mit „Original · Arbeitskopie" ohnehin schon macht.
+
+### Was die Entscheidung umstossen würde
+
+**Eine echte Datei von Redur, bei der er sieht, dass Redion sie falsch
+zeigt.** Dann wird an SEINER Datei gemessen statt an gebauten Prüfstücken,
+und wenn der Abstand gross ist, gilt das Bedenken oben weniger als das,
+was er auf dem Bildschirm sieht.
+
+Bis dahin: weiter am eigenen Leser. Als Nächstes die Tabellen.
+
+
+E565 — Tabellen als Gitter auf der Folie
+--------------------------------------------------------------------------
+
+Der letzte grosse Posten aus L151. Eine Tabelle wurde übersprungen und nur
+GENANNT — „NICHT übernommen: 1 Tabellen" (E555).
+
+### Warum kein Tabellenblock
+
+Redion **hat** einen Tabellenblock, und die naheliegende Antwort wäre, eine
+PowerPoint-Tabelle zu einem zu machen. Sie ist falsch: eine Folie ist ein
+BLATT mit Marken, kein Editor. Die Tabelle zum Block zu machen hiesse, sie
+von der Folie zu nehmen und woanders hinzulegen — die Folie sähe dann anders
+aus als das Original, und genau das war der Sinn von E555 bis E563.
+
+Also bleibt sie, wo sie ist: ein Rechteck und ein Text je Zelle. Sie später
+als Datenbank **herauszuziehen** wäre eine eigene Handlung und eine eigene
+Entscheidung — aber nicht der Weg, auf dem die Datei hereinkommt.
+
+### Die Masse stehen im Gitter, nicht an den Zellen
+
+```txt
+<a:tblGrid><a:gridCol w="2286000"/>×3     je 180 pt
+<a:tr h="457200">                          je  36 pt
+<p:xfrm><a:off x="914400" y="1143000"/>  =  (72, 90) pt
+```
+
+Eine Zelle hat **keine eigene Lage**. Sie ergibt sich aus der Summe der
+Spalten links von ihr und der Zeilen über ihr — die Schleife muss also
+mitzählen statt zu fragen.
+
+Und ein `p:graphicFrame` trägt `p:xfrm`, nicht `a:xfrm`: derselbe Inhalt,
+ein anderer Namensraum. `formLage` findet ihn nicht.
+
+### Verbundene Zellen
+
+`gridSpan` sagt, über wie viele Spalten eine Zelle geht. `hMerge` und
+`vMerge` markieren die **verschluckten** Nachbarn — die bekommen kein
+Rechteck, sonst liefe ein Strich mitten durch die verbundene Zelle. Gemessen:
+zehn Rechtecke, nicht zwölf.
+
+### Eine Füllung für geschlossene Marken
+
+Geschlossene Formen waren bis hierher immer leer — „die Fläche bleibt
+optisch leer" steht im Zeichner, und für einen von Hand gezogenen Rahmen ist
+das richtig. Eine eingelesene Tabellenzelle ist es nicht: PowerPoint gibt
+Kopfzeilen gern eine dunkle Füllung und schreibt weiss hinein. **Ohne die
+Füllung stünde weisser Text auf weissem Grund** — derselbe Fall wie E558,
+eine Ebene tiefer.
+
+Also trägt eine Marke jetzt optional `fuellung`. Jede Marke ohne das Feld
+bleibt wörtlich, was sie war; der Wert wird wie in `blatt.ts` als Hex
+geprüft, bevor er in einen Stil geht (§19).
+
+### Der Fehler, den diese Suite festhält
+
+Die Schleife, die aus Objekten Marken baut, hat **keinen Auffangfall**: was
+weder Text noch Abdeckung ist, gilt als Bild. Beim ersten Lauf sass die
+Rechteckprüfung versehentlich IM Abdeckzweig. Die zehn Zellen fielen durch,
+landeten im Bildzweig und legten **zehn leere Anhänge** an:
+
+```txt
+„1 Folien übernommen, 10 Bilder aus 1 Dateien"
+```
+
+Auf dem Blatt fehlte das Gitter, und in der Ablage lagen zehn Dateien, die
+niemand wollte. Gefunden hat es nicht eine Zusage, sondern eine Probe, die
+ich VOR den Zusagen gefahren habe — das Bild zeigte kein Gitter, und die
+Frage „warum" führte zum Hinweis (P40: erst hinsehen, dann die Zusage bauen).
+
+`test519` §4 misst seither genau das, und die Gegenprobe G5 fährt es noch
+einmal.
+
+### Was `test519` hält
+
+26 Zusagen, fünf Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  Tabellen überspringen         6 grün, 20 rot
+G2  `gridSpan` ignorieren        23 grün,  3 rot  (540 → 180)
+G3  `hMerge` nicht überspringen  22 grün,  4 rot  (zwölf statt zehn)
+G4  die Füllung weglassen        24 grün,  2 rot
+G5  Rechteckzweig hinter Bild    24 grün,  2 rot  („10 Bilder aus 1 Dateien")
+```
+
+Bild: `bilder/pptx-tabelle.png` — dunkelblaue Kopfzeile mit weisser Schrift,
+eine gebänderte Zeile, und eine Zelle über alle drei Spalten mit eigener
+Füllung.
+
+**Was offen bleibt:** Diagramme (werden weiter genannt, nicht gezeichnet),
+Zellränder mit eigener Farbe und Stärke (`a:lnL`/`a:lnR`/…), und `vMerge`
+über mehrere Zeilen zeichnet die verbundene Zelle nur so hoch, wie `rowSpan`
+sagt — steht `rowSpan` nicht dort, sondern nur `vMerge` am Nachbarn, bleibt
+sie einzeilig.
+
+
+E566 — Gefüllte Formen und die geerbte Textfarbe
+--------------------------------------------------------------------------
+
+**Dieser Eintrag stammt nicht aus einer Liste, sondern aus vier Bildern.**
+Redur hat am 14. September zwei Folien seiner echten Datei neben Redions
+Fassung gestellt — das, worum ich nach E565 gebeten hatte. Der Unterschied
+war nicht fein:
+
+```txt
+Folie 1   Original: dunkelblauer Kasten, weisser Titel darauf
+          Redion:   KEIN Kasten, schwarzer Titel im Nichts
+Folie 2   Original: roter Balken · rotes „PERSON" · blaues „Wer ist Nidal?"
+                    · rotes „Basel · Familie · Arbeit" · graues „4 Kinder"
+          Redion:   kein Balken, und ALLE VIER Texte schwarz
+```
+
+Zehn Bögen an gebauten Prüfstücken hatten beides nicht gefunden. Vier Bilder
+aus der Wirklichkeit hatten es in einer Minute.
+
+### 1. Gefüllte Formen ohne Text
+
+`LUECKEN.md` sagte es voraus: „Redion hat für eine gefüllte PowerPoint-Form
+keine Marke, die ihre Füllung UND ihren Umriss trüge." Seit **E565** hat es
+eine — die Füllung an der geschlossenen Marke, gebaut für Tabellenzellen. Es
+fehlte nur noch der Leser: `a:prstGeom` wurde nirgends gelesen.
+
+Ein schöner Zusammenhang: der Bogen über Tabellen hat den Weg gelegt, den
+dieser hier benutzt.
+
+**Was NICHT geraten wird:** PowerPoint kennt über hundert Formen, Redion
+fünf geschlossene und zwei offene. Abgebildet wird, was wirklich passt; alles
+andere wird gezählt statt geraten. Ein Stern als Rechteck wäre schlimmer als
+ein Stern, der fehlt und im Hinweis steht.
+
+**Und ein Kasten hat meist keinen Rand.** Ein Strich in der Vorgabefarbe
+machte ihn um zweieinhalb Punkt grösser und legte einen grauen Saum darum,
+den im Original niemand sieht. `a:ln` entscheidet: kein `a:ln` oder ein
+`a:noFill` darin heisst randlos.
+
+### 2. Die Textfarbe erbte nicht
+
+Sie stand nicht im Lauf, sondern im `a:defRPr` des Platzhalters im Layout —
+und `vorgabenLesen` holte von genau diesem Element seit E558 **nur `sz`**.
+Vier verschiedene Farben kamen deshalb alle vier als Schwarz an.
+
+Die Reihenfolge ist jetzt: der Lauf gewinnt, dann die Vorgabe aus dem
+Layout, dann die Lesbarkeitsregel aus E558. Was in der Folie steht, schlägt
+was im Layout steht, und beides schlägt eine Notlösung.
+
+### Ein totes Feld, das wieder herausgeflogen ist
+
+`a:latin@typeface` steht im selben Element, und ich habe es beim Bauen
+mitgelesen. Dann wieder entfernt: Redions Marke kennt fünf Schriftfamilien,
+die Datei nennt einen Namen, und die Zuordnung ist eine eigene Entscheidung
+mit eigener Prüfung. **Ein Feld, das gelesen und nie benutzt wird, ist
+schlimmer als keins — es sieht aus, als wäre es erledigt.** Der Punkt steht
+offen in L151; im Bild ist er weiter sichtbar (Original mit Serifen, Redion
+ohne).
+
+### Was `test520` hält
+
+25 Zusagen, fünf Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  gefüllte Formen überspringen   9 grün, 16 rot
+G2  Farbe nicht aus `a:defRPr`    20 grün,  5 rot  (alle vier schwarz)
+G3  unbekannte Formen raten       21 grün,  4 rot  (der Stern als Rechteck)
+G4  immer einen Rand zeichnen     24 grün,  1 rot
+G5  die Form nach dem Text        24 grün,  1 rot  (Flächen über dem Text)
+```
+
+Bilder: `bilder/pptx-formen.png` (dunkler Kasten, weisser Titel darauf) und
+`bilder/pptx-person.png` (roter Balken, drei verschiedene Textfarben).
+
+### Und die Lehre, die mehr wert ist als der Bogen
+
+Zehn Bögen lang habe ich Prüfstücke gebaut und daran gemessen. Sie waren
+richtig und sie haben gehalten — aber sie prüfen, was mir EINGEFALLEN ist.
+Was in Redurs Dateien wirklich steht, stand in keinem davon. Die Bitte um
+eine echte Datei war der nützlichste Satz dieser ganzen Reihe.
+
+
+E567 — Die Schriftart
+--------------------------------------------------------------------------
+
+Der zweite Fund aus Redurs Bildern. Nach den Farben (E566) war das der
+grösste verbliebene Unterschied — und er betrifft **jedes Wort auf jeder
+Folie**: sein Original steht durchgehend in einer Serifenschrift, Redion
+zeigte alles serifenlos.
+
+### Die Datei nennt einen Namen, die Marke kennt fünf Familien
+
+```txt
+standard · serif · mono · hand · schmal
+```
+
+Eine Zuordnung ist damit unvermeidlich eine **Näherung**. Sie ist bewusst so
+gebaut, dass sie nur in EINE Richtung irrt: was nicht erkannt wird, bleibt
+`standard` — also genau das, was heute schon passiert. **Schlechter als
+jetzt kann es damit nicht werden.**
+
+Die Liste nennt, was auf Schweizer Rechnern und in Office-Vorlagen wirklich
+vorkommt. Dazu vier Wörter, die für sich sprechen: „Serif", „Mono",
+„Condensed"/„Narrow", „Script"/„Hand". Deshalb wird auch „Noto Serif
+Display" erkannt, ohne in der Liste zu stehen.
+
+**Und keine Raterei darüber hinaus.** „Optima" ist serifenlos, „Rockwell"
+hat Serifen, und keins von beidem sagt es im Namen. Wer eine Schrift
+vermisst, trägt sie ein — eine Zeile, nachprüfbar.
+
+### Drei Wege, in dieser Reihenfolge
+
+```txt
+1. `a:rPr > a:latin@typeface`    im Lauf selbst
+2. dasselbe im `a:defRPr`        des Platzhalters im Layout
+3. `+mj-lt` / `+mn-lt`           das Schriftpaar aus `theme1.xml`
+```
+
+Der dritte ist **kein Sonderfall**: PowerPoint schreibt fast immer `+mn-lt`
+statt eines Namens. Ohne ihn bliebe fast jede Folie serifenlos.
+
+### Was innerhalb eines Absatzes nicht geht
+
+Die Marke hat EINE Schriftfamilie für alle ihre Stücke. Zwei Schriften in
+einer Zeile lassen sich also nicht ausdrücken. Zwischen ABSÄTZEN geht es —
+darum steht die Schrift in `gleichFormat` und **nicht** in `laeufeNoetig`:
+ein `laeufe` könnte den Unterschied gar nicht tragen, und es einzutragen
+sähe aus, als könnte es das.
+
+### Und dasselbe Muster zum vierten Mal
+
+Die erste Fassung des Prüfstücks lieferte `schrift: null`, und der Verdacht
+lag sofort beim neuen Code. Nachgemessen war das `+mj-lt` gar nicht in der
+Prüfdatei gelandet — mein Ersetzen hatte die Zeile nicht getroffen. Der Code
+hatte recht.
+
+Das ist P32, P41, P43 und jetzt P46: **bevor ich einem roten Lauf glaube,
+prüfe ich, ob meine Seite der Messung stimmt.** Vier Mal in zwei Tagen ist
+keine Panne mehr, sondern ein Arbeitsschritt, der fehlt.
+
+### Was `test521` hält
+
+16 Zusagen, vier Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  `a:latin` nicht lesen         4 grün, 12 rot  (alles serifenlos)
+G2  `+mj-lt` nicht auflösen      14 grün,  2 rot
+G3  Unbekanntes als `serif`      11 grün,  5 rot  (Arial würde Serifen)
+G4  Schrift aus `gleichFormat`   14 grün,  2 rot  (zwei Absätze, eine Marke)
+```
+
+Bild: `bilder/pptx-schrift.png` — dieselbe Folie wie bei E566, jetzt in
+Serifen wie das Original.
+
+
+E568 — Die Stiftleiste: eine laute Fläche, nicht sechs
+--------------------------------------------------------------------------
+
+Redur, 14. September:
+
+> „die Stift wie es geordent ist gefällt mir nicht ubd es hat keien
+> Qualität also keine gutes gefühlt könntets du es verbessern"
+
+Ein Satz über ein **Gefühl** — und der lässt sich nicht aus dem Quelltext
+beantworten. Also zuerst ein Bild (§55.3) und danach die Leiste
+ausgemessen, Knopf für Knopf, bei 1280 px und bei 390 px.
+
+### Was die Messung ergab
+
+Werkzeug «Stift», Fenster 1280 px, Leiste 584 px breit:
+
+```txt
+33 sichtbare Bedienteile — ALLE exakt 36 × 32 px
+ 6 Flächen gleichzeitig in rgb(109,74,255):
+      das Werkzeug · «Formen» · «Kritzeln» · der geführte Stift
+      die gewählte Breite · der Ring um die Farbe
+ 0 sichtbare Trenner
+ 3 Zeilen, und die Farbreihe MITTEN durchgeschnitten:
+      Zeile 2 endet mit Schwarz, Rot, Blau
+      Zeile 3 beginnt mit Grün, Gelb
+```
+
+Drei der sechs Akzentflächen standen unmittelbar nebeneinander — «Formen»,
+«Kritzeln», der erste Stift — und sahen aus wie **ein** Block. Damit sagt
+die Leiste drei verschiedene Dinge mit einer Stimme: *das ist mein
+Werkzeug*, *das ist meine Wahl in dieser Gruppe*, *dieser Schalter liegt
+an*. Das Auge kann sie nicht auseinanderhalten, und genau das ist „kein
+gutes Gefühl".
+
+### Was entschieden wurde
+
+**Drei Zustände bekommen drei Gestalten, nicht drei Blautöne.**
+
+```txt
+1 · DAS WERKZEUG   volle Akzentfläche — die EINZIGE in der ganzen Leiste
+2 · DIE SPIELART   Schale mit Ring  — Stift, Breite, Form, Farbe
+3 · DER SCHALTER   getönt + Balken unten — Formen, Kritzeln, Lineal,
+                   Fett, Rahmen, Sperren
+```
+
+Die Fassung für die Spielart gab es **längst** — `pdf-studio.css` trägt sie
+seit E554, mit demselben Satz („der Zustand «gewählt» wird einmal gesagt,
+nicht zweimal in zwei Blautönen"). Sie galt nur im Studio; auf einer
+gewöhnlichen Seite blieb die laute Fassung stehen. Jetzt steht sie in
+`bausteine.css`, einmal für alle, und das Studio verweist nur noch darauf
+(§8: keine zwei Beschreibungen derselben Sache).
+
+Der **Balken** unter dem Schalter ist nicht Zierde, sondern §38: „Keine
+Information nur über Farbe." Ein getönter Grund allein wäre im
+Hochkontrast und für farbschwache Augen kein Unterschied.
+
+### Warum nicht alles ruhig, warum nicht alles laut
+
+Alles ruhig: das Werkzeug ist das eine, was man beim Blick auf die Leiste
+sucht. Es leise zu machen hiesse, diese Suche jedes Mal neu zu machen.
+
+Alles laut: siehe oben, sechs laute Flächen sind keine.
+
+### Vier weitere Funde, alle beim Hinsehen
+
+**1 · Die Farbtupfer waren nie Tupfer.** Im Stilblatt stand seit jeher
+`.blatt-farbe{width:22px; border-radius:50%}`. Beides war wirkungslos:
+
+```txt
+.blatt-farbe        wiegt (0,1,0)
+.blatt-werk button  wiegt (0,1,1)   ← gewinnt
+```
+
+Also galten `border-radius:6px` und `min-width:36px`. Auf dem Bildschirm
+stand keine Palette, sondern fünf 36 × 32 grosse Kacheln — und eine
+Kachelreihe sieht aus wie fünf Knöpfe. Der Fall aus §55.1, wörtlich: der
+Code liest sich richtig, das Bild zeigt etwas anderes.
+
+**2 · `background-clip` war auch wirkungslos** — und das im Studio seit
+E554. Jeder Tupfer trägt seine Farbe als `style="background:#d64545"` am
+Element, und `background` ist eine **Kurzschrift**: sie setzt alles
+zurück, was sie nicht nennt, `background-clip` eingeschlossen. Ein
+Element-Stil schlägt jedes Stilblatt. Ohne `!important` stand im Blatt
+`content-box` und galt `border-box`. Gefunden hat das `test522 §3`, nicht
+ich.
+
+**3 · Kein Trenner war je sichtbar.** `.blatt-werk[data-tool] > span
+.blatt-trenn[data-gruppe]{display:none}` — und `[data-tool]` steht immer.
+Die Regel galt also ausnahmslos, auch am Rechner, wo die Gruppen
+untereinander stehen und ein Strich trägt. Jetzt gilt sie nur noch am
+Telefon und in der Spalte, wo die Leiste rollt und ein Strich im Weg
+stünde. Fünf Gruppen haben ihren Strich dazubekommen (Auswahl, Lineal,
+Formen, Schrift, Stift); er trägt `data-gruppe` wie die Knöpfe dahinter
+und kommt und geht mit ihnen.
+
+**4 · Der dickste Strich sah aus wie ein Klotz.** `border-radius:3px` auf
+einem 16 × 10 px grossen Rechteck. Ein Stift hinterlässt ein rundes Ende;
+jetzt tut der Knopf es auch.
+
+### Der Umbruch fällt jetzt auf eine Gruppengrenze
+
+Zwanzig Zubehörteile brauchen bei 584 px zwei Zeilen — die Frage ist nicht
+**ob** es umbricht, sondern **wo**. Zwei Zahlen entscheiden es:
+
+```txt
+Zubehör zu 36 px + Lücken + Trenner   575 px    Leiste innen 568 px  → knapp daneben
+Zubehör zu 32 px + Lücken + Trenner   519 px                          → passt
+```
+
+Also ist das Zubehör 32 px breit und das Werkzeug bleibt 36 — was ohnehin
+richtig ist: die obere Zeile ist die, die man ständig anfasst, und sie darf
+die schwerere sein. Dazu wandert der **Verlauf** ans Ende (`order:1`, nur
+am Rechner): „Zurück", „Vor" und der Platz der Leiste gehören zu jedem
+Werkzeug und zu keinem, und in Redurs eigenen Vorbildern stehen sie ganz
+rechts. Ergebnis:
+
+```txt
+Zeile 1   die dreizehn Werkzeuge
+──────────────────────────────────  ← der Zeilenbruch ist jetzt eine Kante
+Zeile 2   Formen Kritzeln │ die sechs Stifte │ die Palette, ganz
+Zeile 3   die drei Breiten │ Zurück Vor Platz
+```
+
+**Ein erster Entwurf schob stattdessen die Farben hinter die Breite.** Die
+Palette blieb dabei auch ganz — aber sie stand dann eine Zeile UNTER den
+Stiften statt neben ihnen, und damit war E512 gebrochen: Redur hatte am
+8. September wörtlich verlangt, die Stiftreihe solle „neben es, also links
+unten, wo die Farben dort sind". `test480` misst genau diesen Satz und hat
+es gemeldet. Es hatte recht, und der Verlauf wanderte stattdessen.
+
+Am Telefon und in der Spalte bleibt alles wie in E356: eine rollende
+Zeile, Farben direkt hinter dem gewählten Werkzeug, 44 px für jedes Teil
+(§37). Eine Palette ans Ende einer rollenden Zeile zu schieben wäre dort
+das Gegenteil einer Verbesserung.
+
+### Die Alternative, die verworfen wurde
+
+Die Farbreihe in **einen** Knopf zu falten, der ein Farbfeld öffnet — so
+kämen alle Zubehörteile in eine Zeile, und die Leiste wäre zwei Zeilen
+hoch. Verworfen: das kostet für jede Farbe einen Tipp mehr, und Farbe
+wechselt man beim Schreiben von Hand dauernd. E486 hat dieselbe Frage
+schon einmal so entschieden („kein Tipp mehr für die fünf festen"), und
+der Grund gilt weiter.
+
+### Was es kostet
+
+Die Leiste ist 7 px höher (118 → 125), weil der Zeilenbruch jetzt einen
+Haarstrich trägt. Die Grenze aus `test351` liegt bei 140.
+
+Zwei bestehende Prüfläufe mussten nachgezogen werden, und zwar an ihrer
+**Messweise**, nicht an ihrer Zusage: `test351` und `test352` zählten
+`[data-gruppe="x"]` und bekamen den neuen Trenner mitgezählt. Gezählt wird
+jetzt `:not(.blatt-trenn)` — die Bedienteile, wie der Satz daneben es
+immer schon sagte. `test351` zählt die Striche zusätzlich eigens.
+
+### Was `test522` hält
+
+27 Zusagen, fünf Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  volle Akzentfläche wie vorher        21 grün, 7 rot
+G2  Kachel statt Tupfer                  22 grün, 6 rot
+G3  Trenner wieder überall aus           26 grün, 2 rot
+G4  `order:1` des Verlaufs weg           27 grün, 1 rot
+G5  Zubehör wieder 36 px breit           24 grün, 4 rot
+```
+
+G3 und G4 zeigen dabei etwas, das ich nicht erwartet hatte: die Palette
+hängt an **beidem**. Die Trenner machen die zweite Zeile so breit, dass die
+Breiten hinausfallen; der Verlauf am Ende macht den Platz frei, auf dem die
+Palette neben den Stiften steht. Nimmt man eines davon weg, rutschen die
+Farben wieder auseinander. Zwei Änderungen, die nichts miteinander zu tun
+zu haben scheinen, halten zusammen dieselbe Zusage.
+
+### Zwei fremde Prüfläufe, die dabei herausfielen
+
+**`test366`** meldete „der Glätter halbiert die Punkte nicht mehr" — und
+hatte unrecht. Die Probe zog zwei Striche an **fest gesetzten** Stellen,
+`kasten.y + 320` und `kasten.y + 440`. Gemessen: die Zeichenfläche begann
+bei y = 457, das Fenster ist 900 hoch, der zweite Zug lag also bei 897 —
+**drei Pixel** innerhalb des Bildes. Mit der 7 px höheren Leiste lag er bei
+904, ausserhalb, und es entstand gar kein Strich; `marken[letzte]` gab noch
+den ersten zurück, beide Zahlen waren gleich. Der Glätter hat die ganze
+Zeit geglättet. Die Stellen werden jetzt aus dem wirklich sichtbaren Platz
+gerechnet (P48).
+
+**`test480`** meldete seit E560 „Kein Emoji mehr in der Leiste" und zeigte
+auf `⭰`. Das war **mein** Rot aus dem vorigen Bogen, und ich hatte es
+übersehen: der Ausrichtungsknopf trug `⭰ ⭤ ⭲` als Textzeichen. Kein Emoji,
+und trotzdem genau das, was E515 aus der Leiste geworfen hat — Pfeile mit
+Balken, die auf keiner Grundlinie sitzen und auf jedem System anders breit
+sind. §55.1 hat denselben Befund schon einmal aufgeschrieben (`⟨ ≡ ⟩` sahen
+aus wie Klammern). Jetzt sind es drei gezeichnete Zeilenbilder aus
+`register/symbole.ts` — vier Zeilen, links bündig, mittig, rechts bündig —,
+und das Textzeichen bleibt als Rückfall im Datensatz.
+
+**`test458`** trug seit E486 eine zweite Fassung der Zeilenregel („das
+Zubehör steht in EINER Zeile", „die Leiste bleibt unter 100 px"). Beide
+waren seit E512 falsch und seit E512 rot — `test351` hatte die Grenze
+damals auf drei Zeilen und 140 px nachgezogen, diese Kopie nicht. Zwei
+Kataloge für dieselbe Zusage (§8). Die Kopie ist weg; was diese Suite
+wirklich zusagt, steht jetzt da: der Weg zu allen Farben steht **bei** den
+Farben, in derselben Reihe. Damit sind zwei alte rote Zusagen mit
+erledigt.
+
+
+E569 — Die Kurve war eine Sackgasse
+--------------------------------------------------------------------------
+
+Gefunden am 14. September 2026, beim Zusammenschreiben des
+Werkzeug-Inventars für Redur — nicht von einer Prüfung.
+
+Die Gruppenregeln in `bausteine.css` nennen jedes Werkzeug beim Namen und
+sagen, welches Zubehör dazu erscheint. Für die Formen standen dort **sechs**
+Kennungen: `line`, `arrow`, `rectangle`, `ellipse`, `triangle`, `roundrect`.
+Die siebte — `curve`, seit E483 — stand in keiner einzigen.
+
+**Gemessen, was das heisst:**
+
+```txt
+Form „Linie" gewählt   sichtbare Gruppen: verlauf · lineal · form · farbe · breite
+Form „Kurve" gewählt   sichtbare Gruppen: verlauf
+                       Formknöpfe: 0    Farbtupfer: 0
+```
+
+Wer die Kurve wählte, verlor damit in einem Zug: die Farbwahl, die
+Strichbreite — und die Formknöpfe selbst, also **den Weg zurück zu jeder
+anderen Form**. Die Leiste war leer bis auf „Zurück", „Vor" und den Platz.
+
+### Warum drei Wochen lang niemand darauf gestossen ist
+
+`test351 §2` prüft die Formengruppe — an `line`. Dort stimmt alles. Die
+Kurve ist die einzige Dreipunkt-Form und damit der einzige Wert der Liste,
+den kein Prüflauf je eingestellt hat. Eine Zusage, die an einem Beispiel
+gemessen wird, gilt für ein Beispiel.
+
+### Die Reparatur, und was sie nicht bekommt
+
+Drei Zeilen: `curve` steht jetzt bei `form`, `farbe` und `breite`.
+
+**Das Lineal bekommt sie nicht.** Es rastet auf 15°-Schritte (E267), und
+eine gebogene Linie hat keinen Winkel, den man rasten könnte. Linie und
+Pfeil behalten es, die geschlossenen Formen hatten es nie.
+
+### Der Wächter prüft nicht die Kurve, sondern den Katalog
+
+`test522 §8` geht **jede** Form aus `Marken.FORMEN` durch, wählt sie und
+misst, ob Formwahl, Farbe und Breite stehen bleiben. Eine achte Form fällt
+damit am Tag ihres Einbaus auf statt drei Wochen später.
+
+Gegenprobe gefahren (§55.2): die Kurve wieder ohne Gruppen → 1 rot, und die
+Meldung nennt die Schuldige beim Namen (`[["curve",["verlauf"]]]`).
+
+### Die Lehre
+
+Eine Liste im Code und eine Liste im Stilblatt, die dieselben Kennungen
+führen müssen, laufen auseinander — lautlos, weil CSS für einen unbekannten
+Wert nicht meckert, sondern nichts tut. Wo das vorkommt, prüft der Wächter
+**gegen den Katalog**, nicht gegen ein Beispiel daraus.
+
+
+E570 — Die Leiste selbst ordnen
+--------------------------------------------------------------------------
+
+Redur, 14. September 2026:
+
+> „Könntest du so machen, dass ich alles, was dort ist im Redion, direkt
+> selber ordnen kann? Geht das so was?"
+
+Ja — und der Griff dafür lag schon da. Die Leiste merkt sich seit jeher in
+`meta`, welchen Stift man führt (E351), welche Form (E375), welche Farbe
+(E351) und wo sie selbst steht (E512). Eine Reihenfolge ist derselbe Griff,
+nur mit einer Liste statt eines Wertes.
+
+### Was entschieden wurde
+
+**Zwei Listen in `meta`, eine für die Werkzeuge, eine für die Gruppen.**
+Ein Feld „Leiste einrichten" zeigt beide untereinander; jede Zeile lässt
+sich greifen und ziehen oder mit zwei Pfeilen rücken. Jede Bewegung wirkt
+sofort auf jede Leiste der Seite. „Zurücksetzen" holt die Vorgabe zurück.
+
+Weil es in `meta` liegt, **reist die eigene Ordnung in der Sicherung mit**
+(§9) und überlebt jeden Neustart.
+
+### Gespeichert wird eine Reihenfolge, kein Katalog
+
+Das ist der Kern, und er ist eine Datenregel, keine Gestaltungsfrage (§8).
+Was es GIBT, steht weiter in `WERKZEUGE` und dem neuen `GRUPPEN`; in `meta`
+liegt nur, in welcher Folge. Gelesen wird deshalb nie roh, sondern
+abgeglichen — in **beide** Richtungen:
+
+```txt
+Kennung in der Liste, die der Katalog nicht kennt   →  fällt weg
+Kennung im Katalog, die der Liste fehlt             →  kommt HINTEN dazu
+```
+
+Ohne die erste Regel risse eine Sicherung aus einer anderen Fassung eine
+leere Stelle in die Leiste. Ohne die zweite bliebe ein neu eingebautes
+Werkzeug unsichtbar, bis jemand zurücksetzt — und niemand wüsste, warum.
+`test523 §5` misst beides mit einer von Hand geschriebenen, absichtlich
+kaputten Liste (eine erfundene Kennung, eine Dublette, elf fehlende).
+
+### Die Knoten werden umgehängt, nicht neu gebaut
+
+`insertBefore` und `appendChild` auf ein Element, das schon im Baum steht,
+**verschieben** es — mit Zustand, Klassen und Zuhörern. Ein Neubau würde
+den geführten Stift, die gewählte Farbe und den offenen Stärkeregler
+wegwerfen.
+
+Und damit ist die DOM-Folge zugleich die sichtbare Folge. Das ist kein
+Beiwerk: Tabulatortaste und Vorleseprogramm gehen in Dokumentreihenfolge,
+und wenn die von der sichtbaren abweicht, führt die Tastatur woandershin
+als das Auge (§38). `test523 §7` misst es, indem es die Knöpfe nach ihrer
+x-Stelle sortiert und mit der DOM-Folge vergleicht.
+
+Am Telefon weicht es weiterhin ab — dort schiebt `order` die Gruppen hinter
+das gewählte Werkzeug (E356) —, und das ist dort mit geschriebenem Grund
+entschieden.
+
+### Warum ein Feld und keine Leiste-im-Ordnen-Modus
+
+Drei Gründe, und der dritte hat entschieden:
+
+1. Die Leiste **rollt** am Telefon. Ein Zug in einem waagerecht rollenden
+   Band könnte immer auch eine Rollbewegung sein; das ist mit dem Finger
+   nicht auseinanderzuhalten.
+2. Eine Gruppe ist **mehrere Knöpfe**. „Die Farben verschieben" heisst
+   sieben Knöpfe auf einmal — in der Leiste sähe man sieben Dinge und
+   meinte eines.
+3. **§38.** Ein Ziehen allein ist keine Bedienung: wer mit der Tastatur
+   arbeitet, kann nichts ziehen. Im Feld hat jede Zeile zwei Knöpfe, und
+   die sind nicht der Notausgang, sondern der Hauptweg (44 px, §37) — das
+   Ziehen kommt dazu.
+
+Der Griff links an jeder Zeile ist **gezeichnet, nicht geschrieben**: ein
+`content:"⠿"` wäre Text und würde mitgelesen — sechs Braillepunkte vor
+jedem Werkzeugnamen. Zwei Punktspalten aus einem Verlauf sagen dasselbe und
+heissen nichts.
+
+### Dreissig Zeilen Stilblatt wurden zwei
+
+Die Plätze standen als feste Zahlen im CSS: eine Zeile je Werkzeug für
+seinen `order`, noch eine je Werkzeug für `--platz`, fünf für die Gruppen —
+alle in der Reihenfolge des Katalogs. Genau das bestimmt jetzt Redur.
+
+```css
+.blatt-werk > [data-wz]{order:var(--ordnung, 0)}
+.blatt-werk[data-tool] > [data-gruppe]{order:calc(var(--platz,0) + var(--g-ordnung,1))}
+```
+
+Die Zahlen kommen aus der Ordnung. Zwei Dinge bleiben fest, beide mit
+Grund: „Zurück" und „Vor" kleben am Telefon weiter ganz rechts (E396,
+`test393`) — sie sind die zwei Griffe, die man beim Schreiben von Hand am
+häufigsten braucht —, und ohne gemerkte Ordnung gelten die Vorgaben, die
+Leiste steht dann wie eh und je.
+
+**Und E568 steht jetzt als Daten da**, nicht als CSS-Regel: dass der
+Verlauf ans Ende gehört, ist der letzte Eintrag im Gruppenkatalog. Redur
+kann es ändern, ohne dass jemand eine CSS-Datei aufmacht.
+
+### Sieben Stellen, ein Beobachter
+
+`tools.dataset.tool = …` steht an sieben Stellen in `marken.ts`. Am Telefon
+hängt daran, wo die Gruppen einsortiert werden. Statt sieben Stellen zu
+erweitern und bei der achten daneben zu liegen, hört ein
+`MutationObserver` auf genau dieses Attribut — eine Stelle, die sich nicht
+vergessen lässt.
+
+### Die Vorgabe-Reihenfolge ist nicht frei gewählt
+
+Sie ist die, die bis E570 als `+1` bis `+5` im Stilblatt stand und die
+`test348` seit E356 hält: erst die **Spielart** des Werkzeugs (Stifte,
+Formenwahl, Laserart, Radiermodus, Schrift, Auswahl, Elemente), dann
+**womit** es zeichnet (Farbe, Breite), dann die **Schalter** (Formen
+erkennen, Kritzeln, Lineal), zuletzt der **Verlauf**.
+
+Ein erster Entwurf stellte die Schalter nach vorn — so stand es auf dem
+Bild von E568. Am Telefon war Redurs Satz aus E512 damit gebrochen: „die
+Stiftreihe … sollte neben es, also links unten, wo die Farben dort sind."
+Zwischen dem Stiftknopf und der Stiftreihe standen plötzlich zwei
+Schalter, **gemessen 100 px**, und `test348` hat es gemeldet.
+
+Am Rechner hat derselbe Tausch die Zeile umgestellt, und dabei fiel die
+dritte Strichbreite allein eine Zeile tiefer — eine zerrissene Gruppe,
+genau der Fehler, den E568 bei der Palette repariert hat. Die
+einundzwanzig fehlenden Pixel kamen aus zwei Stellen, die ohnehin falsch
+waren:
+
+```txt
+der Trenner am ANFANG der Zubehörzeile   trennte nichts     15 px
+der Abstand der Trenner 7 → 5 px                             8 px
+```
+
+Dazu messen die Farbtupfer wieder 30 px statt 32 — die Zahl, die
+`.blatt-farbe` seit jeher nennt. Ergebnis:
+
+```txt
+Zeile 1   die dreizehn Werkzeuge
+──────────────────────────────────
+Zeile 2   die sechs Stifte │ die Palette │ die drei Breiten
+Zeile 3   Formen · Kritzeln │ Zurück · Vor · Platz · Einrichten
+```
+
+Damit steht in Zeile 2 alles, WOMIT man zeichnet, und in Zeile 3, was
+nebenher mitläuft. `test522` hält das jetzt in seiner allgemeinen Form:
+**keine sichtbare Gruppe darf über zwei Zeilen reissen** — nicht „die
+Palette" und „die Breiten" einzeln, sondern jede, auch die von morgen.
+
+### Was NICHT dazugehört
+
+**Ausblenden.** Redur hat „ordnen" gesagt, nicht „weglassen". Ein
+verstecktes Werkzeug wäre eine Funktion, die verschwindet, und dafür gilt
+seine eigene Regel: vorher fragen. Wenn er es will, ist es der nächste
+Bogen — dann aber mit einem Weg zurück (ein „Mehr"-Feld), nicht mit einem
+Loch.
+
+### Was `test523` hält
+
+26 Zusagen, vier Gegenproben **gefahren** (§55.2):
+
+```txt
+G1  `ordnungAnwenden` beim Bauen weglassen      22 grün,  4 rot
+G2  den Abgleich weglassen (Liste roh nehmen)   11 grün, 15 rot
+G3  die Pfeile auf 32 px setzen                 25 grün,  1 rot
+G4  nur die Zahlen setzen, nicht umhängen       17 grün,  9 rot
+```
+
+G2 ist die lauteste, und das ist richtig so: ohne Abgleich trägt die Leiste,
+was in `meta` steht — auch eine erfundene Kennung, auch eine Dublette, und
+die elf fehlenden Werkzeuge fehlen dann auch in der Leiste. Fünfzehn
+Zusagen fallen gleichzeitig, weil ab da nichts mehr stimmt.
+
+
+E571 — Im Band selbst schieben
+--------------------------------------------------------------------------
+
+Redur, 14. September 2026, unmittelbar nach E570:
+
+> „kannst du so machen das ich direk im website ordnen können, so alles mit
+> desing usw die position mit maus schiebn kanne alles"
+
+E570 hatte dafür eine **Liste** gebaut, mit drei geschriebenen Gründen: die
+Leiste rollt am Telefon, eine Gruppe ist mehrere Knöpfe, und ein Ziehen
+allein ist keine Bedienung (§38). Die Gründe stimmen weiterhin — aber sie
+beantworten eine andere Frage als die, die Redur gestellt hat. Er wollte
+den Knopf **anfassen und dorthin ziehen, wo er stehen soll**, an Ort und
+Stelle, mit dem Ergebnis unter der Hand.
+
+### Was entschieden wurde
+
+**Der Knopf «Einrichten» schaltet jetzt einen Modus im Band ein**, statt
+die Liste zu öffnen. Im Modus:
+
+```txt
+ziehen        ein Werkzeug anfassen  →  das Werkzeug wandert
+              ein Zubehörteil        →  seine GANZE Gruppe wandert
+Pfeiltasten   dasselbe, eine Stelle je Druck
+Klick         greift, zeichnet nicht
+Escape        beendet
+```
+
+Darüber steht ein Band mit **„Als Liste"**, **„Zurücksetzen"** und
+**„Fertig"**. Die Liste aus E570 ist damit einen Tipp entfernt und bleibt,
+wofür sie gebaut wurde: für die Tastatur, und für das Zubehör, das gerade
+nicht zu sehen ist — jedes Werkzeug zeigt ja nur seine eigenen Gruppen.
+
+### Die vier Entscheidungen im Kleinen
+
+**Ein Zug auf einen Zubehörknopf schiebt die Gruppe, nicht den Knopf.**
+Sechs Stifte einzeln zu schieben wäre keine Bedienung, sondern eine
+Geduldsprobe — und in welcher Folge die sechs Stifte untereinander stehen,
+ist keine Frage, die jemand hat.
+
+**Verschoben wird auf eine Stelle, nicht getauscht.** Ein Tausch lässt den
+Nachbarn springen und die Reihe unter dem Finger flackern; „an diese Stelle
+setzen" ist die Bewegung, die man meint.
+
+**Der Klickabfänger läuft im EINFANG** (`capture`), also vor dem
+gewöhnlichen Zuhörer. Sonst hätte ein Zug auf den Radierer beim Loslassen
+das Werkzeug gewechselt — man hätte geordnet und dabei radiert.
+
+**`touch-action:none` gilt nur im Modus.** Sonst wäre die Leiste am Telefon
+nicht mehr zu rollen. Im Modus ist ein Zug ein Zug und kein Rollen — genau
+die Unterscheidung, die ausserhalb des Modus nicht zu treffen ist, und
+damit der Grund, warum es die Liste aus E570 überhaupt gibt.
+
+### Was das Hinsehen korrigiert hat — in die andere Richtung
+
+Auf dem verkleinerten Bild sahen die gestrichelten Ränder **violett** aus,
+und ich war schon dabei, eine Farbe zu suchen, die es gar nicht gab.
+Nachgemessen: `rgb(233, 233, 231)`. Bei vierfacher Vergrösserung sind sie
+eindeutig grau.
+
+Das ist P49 von der anderen Seite: dort hat mich eine Auswertung getäuscht,
+hier ein verkleinertes Bild. **Beide Male war die Zahl am echten Knoten die
+Wahrheit.** Geblieben ist ein echter Befund — 233 auf Weiss ist fast
+nichts, und der gestrichelte Rand ist das Einzige, was sagt „dieser Knopf
+ist jetzt lose". Er heisst jetzt `--text-faint`.
+
+### Was `test523 §9` hält
+
+14 weitere Zusagen, vier Gegenproben **gefahren** (§55.2):
+
+```txt
+G5  den Klickabfänger weglassen       39 grün,  1 rot
+G6  den Zug im Band weglassen         37 grün,  3 rot
+G7  die Pfeiltasten im Modus weglassen 39 grün, 1 rot
+G8  das Band nicht zeigen             24 grün, 16 rot
+```
+
+G8 ist die lauteste, weil das Band auch der Weg zur Liste ist: ohne Band
+kommt keine der acht Zusagen aus E570 mehr an ihr Feld.
+
+---
+
+## E572 — Zeichenstudio: Referenzbilder, Dock-Bewegung und vollständiger Arbeitsplan
+
+**Auftrag vom 14. September 2026. Stand: in Umsetzung, noch kein Abschlussnachweis.**
+
+Redur möchte den Stift-/Zeichenteil wie in sieben Goodnotes-Bildern. Zusätzliche
+Redion-Funktionen sollen im gleichen Stil erhalten bleiben. Ergänzt wurden:
+„Macbook Dock Animationen … beim Wechseln“, bessere Icons und der ausdrückliche
+Wunsch, **den kompletten Plan** in Entscheidungen und Lücken festzuhalten.
+
+### Ausgangspunkt und Schutz der bisherigen Arbeit
+
+- `git fetch origin` wurde erfolgreich ausgeführt. Neuester abgerufener
+  Remote-Zweig **nach Commitdatum**: `origin/claude/redion-tafel-wort`,
+  `d4a53c8e` (E571). Ein Commitdatum ist kein belegter Push-Zeitpunkt.
+- Der lokale Stand war identisch und sauber. Neuer Arbeitszweig:
+  `codex/drawing-reference-toolbar`, direkt auf diesem Commit.
+- Kein Zurücksetzen, kein Löschen vorhandener Zweige, kein Wechsel auf eine
+  ältere `main`, kein Push, keine PR, keine Veröffentlichung.
+- Die KI-Oberfläche und die geschützten KI-Buttons sind nicht Teil dieses Umbaus.
+
+### Entscheidung: bestehende Zeichenmaschine, neue Anordnung
+
+Das Dokumentstudio für PDF und Notizhefte wird an den Bildern ausgerichtet.
+Die vorhandene `Marken`-Schicht zeichnet und speichert weiterhin. Obere
+Werkzeuge delegieren an dieselben echten Bedienelemente. Ihr Katalog und die
+persönliche Reihenfolge kommen aus dem Bestand, statt ein zweites Mal gepflegt
+zu werden. Die normale eingebettete Blockleiste bleibt benutzbar.
+
+Die Alternative wäre ein neuer Zeicheneditor gewesen. Das würde Druck,
+Auswahl, Speicher, PDF-Ausgabe und Rückgängig verdoppeln und gefährden. Der
+Preis dieser Entscheidung: die ältere Leiste wird nicht entfernt; ihre
+Zusatzfunktionen bleiben über die erweiterte Ansicht erreichbar.
+
+### Vollständiger Plan und Zuordnung zu den Bildern
+
+| Teil | Geplante Umsetzung | Abnahme |
+|---|---|---|
+| Bild 1: Stift | Dokumentreiter und obere Iconleiste; schwebendes Kontext-Dock unten; sechs vorhandene Stifte, Dicken und Farben; feste Rückgängig-/Wiederholen-Kapsel links über dem Papier | echte Striche, Wechsel, Rückgängig, kleine Breite, Screenshot |
+| Bild 2: Radierer | sichtbare Moduswahl statt bloßem Durchklicken; Ganz, Teil, nur Stift, nur Marker, nur Abdeckband bleiben; drei separate Radierergrößen mit Kreisvorschau | Modus und Größe wirken; Radieren ändert nicht die Stiftbreite; Undo stellt Marken wieder her |
+| Bild 3: Elemente | verankertes Auswahlfeld mit Vorschauen vorhandener eigener Elemente und Haftnotizfarben; weiterhin Bibliothek verwalten und „Als Element“ sichern | Element auswählen und setzen, Escape/Außenklick, leere Bibliothek erklärt den Weg |
+| Bild 4: Formen | vorhandene Linie, Pfeil, Rechteck, Ellipse, Dreieck, Rundrechteck und Kurve direkt im unteren Dock, dazu Farbe und Dicke | jede vorhandene Form bleibt erreichbar; nach der Kurve zurück zu einer anderen Form |
+| Bild 5: Haftnotizen | neun Pastellfarben als quadratische Muster im Dock und als Vorschaukarten | gewählte Farbe landet in der echten Haftnotiz; Inhalt bleibt editierbar |
+| Bild 6: Laser | oben direkt sichtbar; verankertes Feld mit Punkt und Linie und lesbarem Auswahlzustand | Zeigen erzeugt weder gespeicherte Marke noch Undo-Schritt; Spur verschwindet |
+| Bild 7: Lineal | sichtbar, transparent, verschiebbar und in 15°-Schritten drehbar; Skala in Dokumentmaßen; Zeichnen nahe einer Kante wird entlang dieser Kante geführt | verschieben/drehen ohne Marken; geführter Strich gerade; Lineal nicht gespeichert/exportiert |
+| Zusatz: Dock-Bewegung | dezente Vergrößerung unter der Maus, Nachbarreaktion und federnder Auswahlwechsel, feste Trefferflächen | keine Layoutsprünge/abgeschnittenen Icons; kein Hover-Zwang am Telefon; Reduced Motion |
+| Zusatz: Icons | klare SVG-Konturen aus dem gemeinsamen Register, erkennbare Stiftformen, einheitliche Größe und Strichstärke; keine Emoji-Mischung in der Hauptwerkzeugreihe | Screenshot bei Originalgröße, sichtbarer aktiver Zustand, zugängliche Namen |
+| Redion-Extras | Leiter mit zehn Adern, Schutzleiter, Marker, Fachzeichen, Abdecken, Schriftoptionen, Lasso/Auswahl, Sperren, Ebenen, Verweise, Elemente, eigene Farben/Farbsätze, Formenerkennung, Kritzellöschen, Leistenplätze und freie Reihenfolge bleiben | Katalogvergleich, bestehende Nachbarprüfungen, erweiterte Optionen und Sortiermodus |
+
+### Technischer Arbeitsplan in Ausführungsreihenfolge
+
+1. **Erledigt:** neuesten Remote-Stand prüfen, sicheren Arbeitszweig anlegen,
+   Zeichenquellen und Dokumentation lesen; bestehende Dokumentansicht rendern.
+2. **Erledigt:** neuen realen Browserlauf `test524.mts` vor der Reparatur
+   ausführen: **1 grün, 4 rot** (Laser oben fehlt, Formenwahl versteckt,
+   Lineal oben fehlt, separate Radierergrößen fehlen).
+3. **In Umsetzung:** gemeinsame obere Werkzeugliste, vollständiges Kontext-Dock,
+   Popover-Menüs, Pastellfarben und eigene Radierergrößen anbinden.
+4. **In Umsetzung:** sichtbares Lineal als reine Bedienebene; Kantenprojektion
+   für Freihand/Marker/Linie/Pfeil ohne Änderung bestehender Markendaten.
+5. **Geplant:** Dock-Animation und Icon-Überarbeitung; echte Themenfarben nutzen
+   (E554 bleibt), Hell/Dunkel, reduzierte Bewegung und Touch prüfen.
+6. **Geplant:** `typecheck`, TypeScript bauen, Dienststand und Einzeldatei neu
+   erzeugen; direktes `index.html` und Einzeldatei müssen weiterhin starten.
+7. **Geplant:** `test524` erweitern und grün bekommen; gezielte Nachbarprüfungen
+   für Zeichnen, Laser, Kurve, Reihenfolge und Build/CSS ausführen. Keine
+   Behauptung eines vollen Gesamtlaufs, solange dieser nicht ausgeführt wurde.
+8. **Geplant:** Screenshots bei Desktop- und Telefonbreite, Hell/Dunkel und
+   offenen Menüs ansehen, Layoutfehler beheben; Ergebnisbild im Gespräch zeigen.
+9. **Geplant:** diese Statusliste, L157 und `ERLEDIGTE-AUFGABEN.md` mit den
+   tatsächlich gemessenen Ergebnissen aktualisieren. Nicht erledigte Punkte
+   werden ausdrücklich als offen geführt, nicht als fertig verkauft.
+
+### Bewusste Grenzen und Risiken
+
+- Die Bilder sind Gestaltungsreferenzen, keine Spezifikation aller Goodnotes-
+  Funktionen. Keine Behauptung einer vollständigen Funktionskopie.
+- Keine Online-GIF-Suche, kein heimlicher Medienabruf, keine Mikrofonaufnahme
+  ohne eigenen funktionalen Auftrag. Ein nicht funktionierender GIF-/Mikrofon-
+  Knopf wird nicht als Attrappe ergänzt.
+- Raute, abgewinkelte Verbinder und gebogene Pfeile sind nicht durch die
+  vorhandenen sieben Formen abgedeckt. Neue Formtypen wären ein eigener
+  Geometrie-/Exportbogen; siehe L157. Bestehende Kurven bleiben erhalten.
+- „Macbook Dock“ beschreibt die Bewegung, nicht ein macOS-Programm. Es werden
+  keine Apple-Dateien/Icons kopiert und keine zusätzliche Laufzeitbibliothek geladen.
+- Linealskala: Dokumentmaße, keine Zusage physischer Zentimeter am Display.
+  Ein echtes Gerät mit Stiftdruck/Neigung ist durch einen Mauslauf nicht ersetzt.
+- Änderungen an der Eingabeführung bergen Strich-/Undo-Risiken: echte Marken
+  und Abbruchfälle prüfen. Keine Datenmigration, kein Online-/Kontozwang.
+- Popover-Fokus, kleine Höhen, Dock-Überlauf und reduzierte Bewegung sind
+  ausdrückliche Abnahmepunkte, keine stillen Annahmen.
+
+**Abschlussstand folgt nach Prüfung. Bis dahin sind Plan und Quellcode kein
+Beweis, dass die Funktion bereits zuverlässig ausgeliefert ist.**
+
+Auf Redurs anschließenden Wunsch nach einem vollständigen Plan für eine andere
+Codex-Aufgabe ist die übergabefertige Fassung in
+`doku/CODEX-UEBERGABE-ZEICHENSTUDIO.md` festgehalten. Sie nennt auch die bereits
+begonnenen Dateien, die noch fehlenden Styles/Animationen/Icons, konkrete
+Prüfstellen und die genauen Befehle. Der Auftrag wird als **unfertiger,
+gespeicherter Arbeitsstand** übergeben, nicht als fertig gebautes Produkt.
+
+Prüfstand der Übergabe: `npm run typecheck` und `git diff --check` beide
+Exit 0. Noch kein Build-/Funktionsabschluss; die Nacharbeiten stehen im Plan.
+
+**Nachtrag — GitHub-Übergabe auf Nutzerwunsch:** Redur hat anschließend den
+Push ausdrücklich beauftragt. Der begonnene Code samt vollständigem Plan
+wird als WIP auf `codex/drawing-reference-toolbar` gesichert. `main` bleibt
+unverändert; keine PR und keine Veröffentlichung. Der Push schließt weder
+die offenen Implementierungsschritte noch die fehlende Build-/Browserabnahme.
+
+---
+
+## E573 — Der Zeiger gehört dem Blatt, der Platz dem Stilblatt
+
+**14. September 2026, auf `codex/drawing-reference-toolbar`.** Vier gemessene
+Funde aus dem Übergabeplan (`doku/CODEX-UEBERGABE-ZEICHENSTUDIO.md`), und ein
+fünfter, der schlimmer war als alle vier zusammen.
+
+### Der fünfte zuerst: der gepushte Stand war unvollständig
+
+`index.html` lädt seit E572 `quell/bereiche/pdf/ink-menu.js` und
+`ink-ruler.js`. Beide lagen im Commit nicht. Auf diesem Rechner fiel das
+nicht auf — die Dateien lagen ja da, nur ungetrackt. Auf jedem anderen
+Rechner hätte die App zwei Skripte mit 404 geladen. **Was `index.html`
+lädt, muss im Verzeichnis stehen**; ein Zweig, der nur auf dem Rechner
+läuft, auf dem er entstand, ist kein gesicherter Stand.
+
+### Das Lineal ist für Zeiger durchlässig
+
+Der Zwischenstand rief im `pointerdown` des ganzen `<g>` als ERSTE Zeile
+`stopPropagation()` — vor jeder Prüfung, wem der Zeiger gilt. Gemessen:
+
+- `test267 §6` rot: „frei 50.2°, gerastet 50.2°". Der Zug erreichte die
+  Zeichenmaschine nie, also entstand die zweite Linie gar nicht, und die
+  Prüfung fand wieder die erste.
+- Die Kantenführung selbst war unerreichbar. Sie beginnt innerhalb von 14
+  Einheiten um eine Kante — also AUF dem Glas. Was das Glas schluckt, kann
+  nie geführt werden.
+
+Entschieden: das `<g>` trägt `pointer-events="none"` als
+Präsentationsattribut, nicht nur im Stilblatt. Ein Lineal, das ohne CSS die
+ganze Seite blockiert, ist die schlimmere Störung. Zeiger nehmen nur der
+Griff und der Drehknopf, und beide rufen `stopPropagation()` erst, wenn der
+Zug ihnen wirklich gilt.
+
+**Die Griffe hängen UNTER dem Glas.** Erster Versuch war ein Griffstreifen
+in der Mitte — `test267 §6` blieb rot, weil der Prüfzug bei 55 % Breite und
+40 % Höhe beginnt und das genau dort ist. Die Alternative „überall
+anfassen, wie ein echtes Lineal" ist genau die, an der der Zwischenstand
+gescheitert ist: was das ganze Band annimmt, kann niemand mehr
+überzeichnen. Der Preis: das Lineal fasst man nicht überall an, sondern an
+einem Griff.
+
+### Nach einem Neuzeichnen hängt sich das Lineal zurück
+
+`redraw()` räumt jedes `[data-ink-ui]` aus der Fläche, und niemand hängte
+das Lineal zurück. Gemessen: nach einem einzigen „Zurück" null Lineale in
+der Fläche, `linealAn()` weiterhin `true` — der Schalter stand an, das
+Werkzeug war weg. `remount()` hängt es wieder an und **vergisst die Kante
+dabei ausdrücklich nicht**: es kann mitten in einem geführten Zug laufen,
+und ein Rücksetzen auf `edge = null` wäre genau der Sprung, den niemand
+versteht.
+
+### Die Verlaufskapsel bekommt ihren Platz vom Stilblatt
+
+„Zurück" und „Vor" waren im Studio unerreichbar. Zwei Ursachen, beide
+gemessen: `pdf-studio.css` verbarg die Gruppe `verlauf` mit, und die Kapsel
+hatte keine Rasterspalte — x = 1440 am Rechner, `top = 812` in einem
+800-px-Fenster am Telefon, weil `.document-body` dort `display:block` ist.
+
+Die naheliegende Reparatur wäre `center.prepend(history)` gewesen. Sie ist
+**gemessen falsch**: `.document-workspace` wurde damit nie sichtbar, und
+`test437` lief nach 15 s aus. Entschieden ist deshalb der Weg über das
+Stilblatt — `grid-column:2` am Rechner, `position:absolute` am Telefon. Der
+Preis: die Lage steht an zwei Stellen im CSS statt an einer im Aufbau. Der
+Gewinn: die Kapsel hängt am Dokumentkörper, wo `redraw()` sie nicht trifft.
+
+### Das Dock liest die Gruppenliste, statt sie zweitens zu entscheiden
+
+`pdf-studio.css` versteckte im geschlossenen Zustand **acht** Dinge
+pauschal. Gemessen war das kein Kontextfilter, sondern ein Schalter
+zwischen „fast nichts" und „alles auf einmal":
+
+| Werkzeug | sichtbar davon | vorher |
+|---|---|---|
+| `line` | 0 von 7 Formknöpfen | — |
+| `text` | 0 von 7 Schriftknöpfen | — |
+| `select` | 0 von 10 Auswahlknöpfen | — |
+| geschlossen | 62 von 86 Kindern weg | — |
+
+Welche Gruppe zu welchem Werkzeug gehört, steht seit E356 in
+`bausteine.css` und wird seit E570 sogar vom Nutzer geordnet (§8: ein
+Katalog, nicht zwei). Das Studio entscheidet das nicht zweitens; es nimmt
+nur weg, was doppelt wäre: die Werkzeuge (sie stehen oben im Band), die
+Trenner (im kompakten Dock nur Striche im Weg) und die Verlaufsgruppe
+(„Zurück"/„Vor" stehen in der Kapsel). Aus acht wurden drei.
+
+**Was offen bleibt:** der geöffnete Zustand („···") zeigt weiterhin alles
+mit `!important`. Das ist zum Teil Absicht — `test177`, `test228`, `test437`
+und `test515` erreichen über diesen Weg Dinge, die sonst nirgends stehen —
+und zum Teil der Rest von Plan 7 B 9. Was dort wirklich stört, sind die
+NEUEN kontextfremden Paletten; die behandelt E574.
+
+**Prüfläufe:** `test267` 16/16, `test393` 19/19, `test437` 34/34,
+`test461` 34/34, `test105`/`test109` grün. Die Gesamtsuite ist damit nicht
+als grün behauptet — `test290` (CSS-Namensräume) ist rot und älter als
+dieser Zweig.
+
+---
+
+## E574 — Das Lineal gehört auch dem Stift, die Pastelle dem Zettel
+
+**14. September 2026, derselbe Zweig.** Zwei Gruppenzugehörigkeiten, beide
+an der laufenden App nachgemessen, beide vorher durch einen roten Wächter
+belegt.
+
+### Das Lineal gehört auch dem Stift
+
+Abgelesen in `marken.ts`, nicht angenommen: die Kantenführung des Lineals
+ist für `['stift','marker','line','arrow']` zugelassen. Der Zeichner führte
+den Stift also längst am Lineal — **nur der Schalter dafür stand nicht bei
+ihm.** In der Gruppenliste aus E356 hatte `lineal` `marker`, `line` und
+`arrow`, nicht `stift`. Wer mit dem Stift ein Lineal wollte, brauchte die
+Taste „r" oder den Umweg über „···". Ein Weg, den man kennen muss, ist am
+Telefon kein Weg (§37).
+
+Die Alternative wäre gewesen, die Führung für den Stift abzuschalten und
+damit die Liste stimmig zu machen. Das hätte eine Funktion weggenommen, um
+eine Regel zu retten — die falsche Richtung (§51).
+
+Die Kurve bekommt es weiterhin nicht: sie steht auch in `marken.ts` nicht
+in der Liste, und eine gebogene Linie hat keine Kante (E569).
+
+`test348` und `test351` haben den Wechsel gefangen — genau dafür gibt es
+sie. Beide tragen jetzt die neue Liste **mit dem geschriebenen Grund**,
+nicht mit einer stillen Zahl.
+
+### Die neun Haftnotizfarben bekommen eine eigene Gruppe
+
+Gemessen, bevor etwas geändert wurde: die Pastelle aus E572 bekamen bei
+ihrer Erzeugung `data-gruppe="farbe"` — dieselbe Gruppe wie die fünf
+Tintenfarben. Die Farbreihe las sich in JEDEM Werkzeug gleich:
+
+```txt
+t t t t t N N N N N N N N N +      (t = Tinte, N = Notiz, + = Farbwähler)
+```
+
+Vierzehn Tupfer, von denen neun zu einem Werkzeug gehören, das gerade nicht
+gewählt ist — beim Stift, beim Marker, bei der Schrift.
+
+Dazu ein zweiter Fund aus derselben Zeile: `leiterReihe()` hängt die zehn
+Adern vor das „+", `ink-studio-ready` erzeugt die Pastelle aber DANACH. Nach
+einem **Neustart mit dem Leiterstift** standen sie deshalb mitten in der
+Adernreihe: `blatt-farbe-weg` war längst verteilt, als es sie noch nicht
+gab. Eine Klasse, die nachträglich verteilt wird, hält nur, solange niemand
+die Reihenfolge ändert.
+
+Entschieden: eine eigene Gruppe `notizfarbe`, in der Liste aus E356 nur beim
+Werkzeug `zettel`. Damit gilt die Regel an jeder Stelle gleich — im Dock, in
+der Leiste einer Seite, am Telefon und nach jedem Neustart —, ohne dass
+irgendwer eine Klasse nachreichen muss. `leiterReihe()` fasst die Pastelle
+gar nicht mehr an (`:not(.blatt-note-color)`): die Adern ersetzen die
+Tinte, nicht das Notizpapier.
+
+Und der Zettel verliert dabei die Tintenfarben (Plan 7 B 4: „normale
+Tintenfarben hier nicht zusätzlich als zweite ungeordnete Palette zeigen").
+Ein schwarzer Zettel ist keiner. **Das „+" bleibt** — es ist keine Palette,
+sondern die Tür zu jeder Farbe (E486), und eine Tür wegzunehmen, weil die
+Tapete daneben gewechselt hat, wäre eine verlorene Funktion. Weil es
+`data-gruppe="farbe"` trägt, bekommt es eine eigene Zeile im Stilblatt.
+
+Gemessen danach: Dock beim Stift 941 px mit fünf Tintenfarben, Dock beim
+Zettel 520 px mit neun Pastellen und dem „+".
+
+**Der Preis:** wer im Notizkontext eine Pastellfarbe wählt und dann zum
+Stift wechselt, sieht keinen Tupfer mehr markiert — die gewählte Tinte ist
+dort nicht abgebildet. Dasselbe gilt seit E509 für die Adern, und es ist
+die kleinere Störung als vierzehn Tupfer in jedem Werkzeug.
+
+**Prüfläufe:** `test524` 24/24 (davon 18 neu, drei davon vorher rot
+gesehen), `test348` 26/26, `test351` grün.
+
+---
+
+## E575 — Was aufgeht, geht zu; was gleich bleibt, bleibt stehen
+
+**14. September 2026, `codex/zeichenstudio-menues-radierer`** (neuer Zweig
+nach E521, direkt auf dem Stand von E574). Drei Funde aus dem
+Risikoverzeichnis des Übergabeplans, alle drei an der laufenden App
+nachgemessen und vorher rot gesehen.
+
+### Ein Feld, das aufgeht, muss auch wieder zugehen
+
+`InkMenu` kannte genau EINEN Weg nach draussen: sich selbst. Gemessen bei
+1440 × 960: nach `App.oeffne()` einer gewöhnlichen Textseite stand das
+Laserfeld immer noch offen — **380 × 54 Pixel bei 520/159**, schwebend über
+fremdem Text, während `.document-workspace` längst weg war. Sein Anker war
+mit dem Studio aus dem Baum verschwunden, es gab also keinen Knopf mehr, der
+es je hätte schliessen können. Der `resize`-Horcher lief weiter, denn
+abgemeldet wird er nur im `toggle`-Ereignis, und das kommt nie, wenn niemand
+schliesst.
+
+Der Grund ist einfach und deshalb leicht zu übersehen: das Panel hängt an
+`document.body`, nicht am Studio. **Wer die Fläche darunter wegräumt, räumt
+das Panel nicht mit.**
+
+Die naheliegende Lösung wäre gewesen, an jeder Stelle, die das Studio
+abbaut, ein `InkMenu.closeAll()` einzufügen. Das ist genau die Sorte
+Lösung, die beim nächsten neuen Abbauweg wieder bricht — und dieses Projekt
+hat davon schon eine (`blatt-farbe-weg`, siehe E574). Entschieden ist
+deshalb: **das Feld beobachtet seinen Anker.** Verlässt der den Baum, geht
+es zu — ganz gleich, wer ihn weggeräumt hat und ob dieser Weg daran gedacht
+hat. `closeAll()` gibt es zusätzlich, für die, die es wissen.
+
+Der Preis: ein `MutationObserver` auf `document.body` mit `subtree`, solange
+ein Feld offen ist. Er läuft nur in dieser Zeit, und seine Rückmeldung ist
+eine einzige Frage (`anchor.isConnected`).
+
+Dazu zwei kleinere Entscheidungen am selben Ort:
+
+- **Escape gibt den Fokus zurück, ein Aussenklick nicht.** Wer mit Escape
+  oder „×" schliesst, will dort weitermachen, wo er war; wer daneben tippt,
+  wollte dorthin. Vorher entschied das die Frage „steht der Fokus auf
+  `body`?", und die trifft genau dann zu, wenn man auf etwas Unklickbares
+  getippt hat — also im Aussenklick-Fall.
+- **Ein Ersatzweg ohne die native Klappe.** Fehlt `showPopover`, baut
+  `InkMenu` dasselbe von Hand: fester Platz, eigener Escape, eigener
+  Aussenklick. Und er ist keine Zierde — `test524` nimmt `showPopover` aus
+  dem Prototyp und verlangt dasselbe noch einmal. Ein Rückfallweg, den nie
+  jemand betritt, ist eine Behauptung (§50).
+
+**Und die Felder haben endlich ein Aussehen.** `.blatt-popover` hatte bis
+hierher KEINE einzige Regel; die Kästen standen in den Vorgabestilen des
+Browsers da. Jetzt: Kopf mit Namen und 44-px-„×", Zeilen mit
+Trefferfläche, und der gewählte Eintrag sagt es zweimal — Fläche UND Haken
+(§38: keine Information nur über Farbe). Die zwei Laserarten zeigen, was
+sie tun: ein Punkt ist ein Punkt, eine Spur läuft aus.
+
+### Ein Klick darf die Leiste nicht neu aufbauen
+
+`inkSync()` hängte die Werkzeuge der oberen Leiste bei jedem Ruf
+bedingungslos um. `insertBefore` bewegt auch einen Knoten, der schon am
+richtigen Platz steht: erst raus, dann rein. Mit einem Beobachter auf
+`.document-drawingbar` gezählt:
+
+| Tat | Knotenbewegungen |
+|---|---|
+| ein Klick auf „Marker" | **156** |
+| ein Klick auf „Stift" | **156** |
+
+Dreizehn Knöpfe × zwei Bewegungen × sechs Rufe. Der Preis war nicht nur
+Rechenzeit: **nach dem Klick stand `document.activeElement` auf `BODY`** —
+der Knopf war unter dem Finger weggezogen worden. Für die Tastatur heisst
+das: eine Reihe, die man nicht mit Tab durchgehen kann, weil sie den Fokus
+bei jedem Schritt fallen lässt. Und jeder Übergang auf dem Knopf (E568)
+begann von vorn, mitten im Bild.
+
+Jetzt wird zuerst verglichen und nur bei Abweichung umgehängt. Gemessen
+danach: **0 Bewegungen**, Fokus bleibt auf dem angetippten Knopf.
+
+### Eine Sortierbewegung ist keine Attributänderung
+
+Derselbe Griff von der anderen Seite: der Beobachter horchte auf
+`disabled`, `aria-pressed` und `data-tool`. Eine Sortierbewegung (E570/E571)
+ist aber eine `childList`-Änderung — sie kam oben **nie** an. Gemessen: den
+letzten Knopf der unteren Leiste nach vorn gezogen, 600 ms gewartet, obere
+Reihenfolge Zeichen für Zeichen unverändert.
+
+Der einfache Weg — `childList` beim bestehenden Beobachter dazu — wäre
+falsch: der beobachtet `center` mit `subtree`, und dort hängt die
+Zeichenfläche. Jeder Strich hängt Pfade ein, `inkSync()` liefe also mitten
+im Zeichnen bei jedem Bild. Entschieden ist ein **zweiter** Beobachter, der
+nur auf die Leiste selbst horcht, ohne `subtree`; dort sind die Kinder genau
+die Knöpfe, um die es geht. Er wird nachgezogen, wenn die aktive Seite eine
+andere Leiste mitbringt.
+
+### Ein Fund nebenbei: die Messung las die falsche Leiste
+
+Ein Heft mit zwei Blättern hat ZWEI `.blatt-werk`. `document.querySelector`
+nimmt das erste, `inkSync()` aber das der AKTIVEN Seite. Solange beide
+gleich sind, fällt das nie auf. `test524` misst jetzt überall
+`.document-stage[data-aktiv] .blatt-werk` — und genau daran ist die letzte
+Zusicherung zuerst rot geblieben, obwohl der Code schon stimmte.
+
+**Prüfläufe:** `test524` 36/36 (vier davon vorher rot gesehen), `test177`,
+`test228`, `test267`, `test393`, `test437`, `test461`, `test515` grün.
+Die Gesamtsuite ist nicht als grün behauptet.
+
+---
+
+## E576 — Der Radierer: sichtbar, einfach, mit Gedächtnis
+
+**14. September 2026, derselbe Zweig.** Drei Dinge am Radierer-Dock, alle
+drei gemessen, bevor etwas geändert wurde (Fenster 1440 × 960):
+
+| Gemessen | Wert |
+|---|---|
+| die drei Grössenknöpfe | je **14 × 44 px**, ihr `<i>` **0 × 0** |
+| der Modus | „Ganz" 65 px **und** „Ganz ⌄" 60 px — dasselbe Wort zweimal |
+| nach einem Seitenwechsel | wieder „klein", obwohl „gross" gewählt war |
+
+### Unsichtbar: es fehlte das ganze Stilblatt
+
+`.blatt-eraser-size` und `.blatt-eraser-menu` hatten **keine einzige Regel**.
+Die Knöpfe setzen `--eraser-preview` und tragen ein leeres `<i>`, das die
+Vorschau zeichnen soll — ohne Regel zeichnet es nichts. Die 44-px-Zusage aus
+§37 galt nur in der Höhe; in der Breite waren es 14.
+
+Beim Bauen kam ein zweiter, feinerer Fund dazu: mit 16/28/40 px Vorschau
+blieb für den grössten Kreis in einem 44-px-Knopf kein Platz, und der
+Browser **staucht ein Flex-Element** — gemessen 16, 28, **28**. Zwei gleich
+grosse Kreise sind keine zwei Grössen. Jetzt 14/22/30 px und `flex:0 0 auto`.
+Gewählt sagt der Knopf zweimal: Rahmen UND gefüllter Kreis (§38).
+
+### Doppelt: der alte Rundlaufknopf blieb neben seinem Ersatz stehen
+
+Er wird **nicht entfernt** (§47). Er ist weiterhin der Mechanismus, den das
+neue Feld bedient — es klickt ihn —, und auf einer gewöhnlichen Seite ohne
+Studio ist er der einzige Weg. Er tritt nur dort zurück, wo sein Ersatz
+wirklich gebaut wurde: `data-reference-ui="ready"` steht genau da und
+nirgends sonst.
+
+Dass die Zeile zuerst wirkungslos blieb, ist selbst eine Notiz wert: die
+Gruppenliste aus E356 steht in derselben Datei **weiter unten** und hatte
+dieselbe Spezifität. Bei Gleichstand gewinnt die spätere Zeile. Eine
+Attributangabe mehr entscheidet es — ohne `!important`, das an dieser Stelle
+der Anfang vom Ende jeder Nachvollziehbarkeit wäre.
+
+### Vergesslich: die Grösse war der einzige Schalter ohne Gedächtnis
+
+`controls.setEraserSize(5)` stand fest im Aufbau des Studios. Der Modus
+daneben wird seit jeher in `meta` gemerkt (`zeichnen:radierer`); die Grösse
+war die Ausnahme, und das fällt erst auf, wenn man dieselbe Wahl dreimal am
+Tag wiederholt. Jetzt `zeichnen:radierergroesse`, gelesen beim Aufbau,
+geschrieben beim Klick.
+
+**Gemerkt wird beim Menschen, nicht beim Blatt.** Der Zeichner lebt je
+Blatt; die Wahl „ich radiere gern grob" gehört nicht dorthin.
+
+### Und eine Prüfung, die aus dem falschen Grund rot war
+
+Die Zusicherung verglich die drei Kreise in **Baumreihenfolge**. Die ist
+seit E570 die des Nutzers, nicht 5, 14, 28. Sie vergleicht jetzt nach Wert.
+Eine zweite Zeile derselben Prüfung konnte gar nicht rot werden
+(`Number(x || 28) === 28` ist auch ohne `x` wahr) und prüft jetzt den Ort,
+an dem die Wahl wirklich überlebt (§55.2).
+
+**Prüfläufe:** `test524` 42/42 (vier davon vorher rot gesehen).
+
+---
+
+## E577 — Was sich bewegt, ist das Zeichen. Und zwei Zeichen waren eines
+
+**14. September 2026, `codex/zeichenstudio-dock-bewegung`** (neuer Zweig nach
+E521). Redurs Wunsch aus E572 — „Macbook Dock Animationen … beim Wechseln",
+bessere Icons — und der Rest von Plan 7 B 6.
+
+### Die Dock-Bewegung bewegt das ZEICHEN, nicht den Knopf
+
+Am Mac wächst das Zeichen unter dem Zeiger, die Nachbarn heben schwächer
+mit, und die Leiste selbst steht still. Die naheliegende Umsetzung wäre
+`transform: scale()` auf dem KNOPF. Sie ist an drei Stellen des Plans
+gleichzeitig falsch:
+
+- **„Trefferflächen bleiben fest"** (7 C 3): ein skalierter Knopf nimmt
+  Zeiger an seinem vergrösserten Platz an — die Trefferfläche wandert mit.
+- **„Animationen dürfen am Scrollcontainer nicht abgeschnitten werden"**
+  (7 C 5): beide Leisten rollen (`overflow-x:auto`), und was rollt,
+  schneidet auch oben und unten ab. Ein Knopf, der von 44 auf 51 px wächst,
+  steht in einer 48-px-Zeile über.
+- **„Keine verschluckten Klicks beim Skalieren"** (7 C 4).
+
+Entschieden ist deshalb: **nur das SVG darin wächst**, von 25 auf 32,5 px.
+Der Knopf bleibt 44 × 44 — im Layout und für den Zeiger. Elf Pixel Luft
+bleiben, es schneidet nichts ab, und ein Zeichen nimmt ohnehin keine Zeiger
+an. Die zwei Nachbarn gehen auf 28,3 px; nach beiden Seiten, weil
+`:has(+ button:hover)` nach links liest und der Nachbarwähler nach rechts.
+
+`(hover:hover) and (pointer:fine)` — am Telefon gibt es kein Überfahren, und
+ein Zeichen, das nach einer Berührung vergrössert „hängen" bleibt, wäre dort
+ein Fehler (7 C 6). `prefers-reduced-motion` nimmt die Vergrösserung
+ausdrücklich weg: `grund.css` setzt nur die DAUERN auf .001ms, und das macht
+eine Bewegung sofort, nicht abwesend.
+
+Der federnde Wechsel läuft **einmal** (`animation … 1`), wenn `aria-pressed`
+auf `true` springt. Dass das überhaupt geht, ist ein Nachklang von E575:
+vorher hängte `inkSync()` die Knöpfe bei jedem Ruf neu ein, und dieselbe
+Regel hätte bei jedem Sync neu gefedert.
+
+### Das Galeriefeld bekommt sein Raster
+
+`.blatt-gallery-tabs`, `.blatt-gallery-grid`, `.blatt-note-preview`,
+`.blatt-element-preview` hatten **keine einzige Regel**: zwei nackte Knöpfe
+untereinander und eine einspaltige Liste. Jetzt zwei Reiter über einem
+Dreispaltenraster mit 74-px-Karten — Redurs Bild 3 und 5.
+
+Eine Ausnahme mit Grund: die Haftnotizkarte trägt ihre eigene Pastellfarbe,
+und der Name darauf steht in einem festen Dunkelgrau statt in `--text`. Die
+neun Pastelle sind in BEIDEN Themen hell; ein heller Text darauf wäre im
+Dunkelmodus unlesbar (§38, dieselbe Überlegung wie beim Lineal auf farbigem
+Papier, E558).
+
+### Zwei Werkzeugzeichen waren dasselbe Bild
+
+E515 hat die sechs STIFTE gegeneinander gemessen und bei 60 % gedeckelt
+(`test480 §7`). Die dreizehn WERKZEUGE daneben hat niemand gemessen — und
+genau dort lagen die zwei schlimmsten Paare des ganzen Registers:
+
+| Paar | vorher | nachher |
+|---|---|---|
+| `inkPen` / `inkLaser` | **69 %** | 24 % |
+| `inkText` / `inkImage` | **64 %** | unter 43 % |
+| schlimmstes Paar überhaupt | 69 % | **52 %** (`inkShapes`/`inkStamp`) |
+
+`inkLaser` war „ein Griffel mit Funken an der Spitze" — und stand in
+derselben Reihe unmittelbar neben `inkPen`. Ein Laser ist aber gar kein
+Griffel: er hinterlässt nichts, er zeigt. Jetzt ein leuchtender Punkt mit
+Strahlen. `inkText` und `inkImage` trugen beide denselben abgerundeten
+Rahmen, und der Rahmen ist bei 16 px der grösste Teil der Tinte. Ein T
+braucht keinen Rahmen.
+
+**Eine Regel des Bestands hat dabei korrigiert, was ich zuerst falsch
+machte:** der Laserpunkt war gefüllt, und `test480 §5` wurde rot — die
+Zeichen dieser Leiste sind reine Striche, alle dreizehn. Bei 16 px schliesst
+sich ein Ring von 2,2 Einheiten ohnehin zu einem Punkt; die Regel kostet
+hier nichts und hält die Familie zusammen.
+
+`test480 §7b` misst das jetzt dauerhaft, mit derselben Methode und derselben
+Grenze. **Er ist rot gewesen:** mit den alten zwei Zeichen zurückgedreht
+meldete er 69 % und 64 % — genau die Zahlen oben (§50).
+
+Nicht angefasst: `penBrush` und `penPencil` sehen einander mit blossem Auge
+immer noch ähnlich. Gemessen liegen sie unter der Grenze, und E515 hat ihre
+Gestalt bewusst so gewählt. Eine gemessene Entscheidung wird nicht durch
+einen Eindruck überstimmt — wohl aber notiert, damit sie jemand prüft, der
+den nächsten Bogen an den Stiften macht.
+
+### Und noch einmal hat das Bild etwas gefunden
+
+Auf dem Telefonbild lag die Verlaufskapsel über dem „Tippe etwas …".
+Nachgemessen:
+
+| Fenster | Kapsel | Papier | überdeckt |
+|---|---|---|---|
+| 1440 × 960 | 12/166 | 226/249 | **0 × 0** |
+| 390 × 844 | 8/163 | 19/176 | **87 × 39** |
+
+Am Rechner liegt sie im linken Rand, genau wie in Redurs Bild 1. Am Telefon
+gibt es diesen Rand nicht: das Papier ist 342 von 390 px breit, und dieselbe
+Ecke ist dort die Ecke, in der die erste Zeile anfängt.
+
+Dass sie am Telefon irgendwo über Papier liegt, ist bei 19 px Rand nicht zu
+vermeiden — die STELLE ist es. Sie steht jetzt unten links, dicht über dem
+schwebenden Dock: dort beginnt niemand zu schreiben, und der Daumen kommt
+ohne Umgreifen hin.
+
+Eine Zusicherung in `test461` wurde dabei rot, ohne dass etwas kaputt war:
+sie suchte wörtlich `.document-ink-history{position:absolute`, und die Regel
+hatte einen Kommentar und Zeilenumbrüche bekommen. Sie liest das Stilblatt
+jetzt ohne Kommentare und Leerraum. Eine Zusicherung, die an der
+Formatierung hängt statt am Inhalt, meldet Fehler, die keine sind — und
+lenkt vom nächsten echten ab.
+
+**Prüfläufe:** `test480` 50/50 (fünf Zusicherungen neu, drei davon rot
+gesehen), `test524` 50/50 (elf neu, vier rot gesehen), `test461` 35/35,
+`test393`, `test437`, `test522`, `test523` grün.
+
+---
+
+## E578 — Lesen heisst lesen. Auch mit der Tastatur, auch mit der Maus
+
+**15. September 2026.** Ein Datenfund, älter als E572, gefunden beim
+Abarbeiten der offenen Punkte aus L157 — und beim Reparieren stellte sich
+heraus, dass er grösser war als gemeldet.
+
+### Was gemessen wurde
+
+Dokumentstudio, Fenster 1440 × 960, ein Heft mit einem leeren Blatt:
+
+| Schritt | Werkzeug | `pointer-events` | Marken |
+|---|---|---|---|
+| frisch geöffnet | `stift` | `auto` | 0 |
+| „Lesen" gewählt | `schreiben` | `none` | 0 ✓ richtig |
+| **Taste „P"** | `stift` | `auto` | — |
+| ein Zug danach | | | **0 → 1** ✗ |
+
+Der Lesemodus klappt die ganze Werkzeugleiste ein
+(`[data-document-tools="closed"]` → `.blatt-reihe{display:none}`). Der
+Tastengriff aus E465 suchte sich `.blatt-werk` aber mit `querySelector` und
+klickte darin einen Knopf, **den niemand sehen kann** — und der holte die
+Zeichenschicht zurück.
+
+### Die zweite Tür war grösser als die erste
+
+Nach der ersten Reparatur wurde nachgemessen statt geglaubt — und dabei fiel
+auf, dass die Taste nur der kleinere Weg war:
+
+| Im Lesemodus | gemessen |
+|---|---|
+| `[data-document-tool="marker"]` sichtbar | **ja** |
+| … `disabled` | **nein** |
+| … `aria-pressed` | `false` |
+| ein gewöhnlicher **Mausklick** darauf | Schicht auf `marker`, `pointer-events:auto` |
+| ein Zug danach | **0 → 1** |
+
+Die obere Reihe hat ihre eigene `disabled`-Rechnung, und `state.toolsOpen`
+kam darin nicht vor. Die Knöpfe sagten dabei sogar schon die Wahrheit: ihr
+`aria-pressed` ist im Lesemodus überall `false`. **Eine Reihe, die „nichts
+gewählt" meldet und trotzdem schreibt, ist der Widerspruch, der hier
+weggeht.**
+
+Wer nur die Tastatur repariert hätte, hätte die Maus offen gelassen — und
+das wäre die schlimmere Hälfte gewesen.
+
+### Entschieden
+
+1. **Die obere Reihe ist im Lesemodus aus.** `state.toolsOpen` kommt in die
+   `disabled`-Rechnung der Werkzeugknöpfe und des Linealknopfs. Damit gilt
+   dasselbe ohne weiteres Zutun für die **gesperrte Seite**
+   (`page.gesperrt`) und für **fehlende Rechte**
+   (`Konten.darf('bearbeiten', …)`) — beide schliessen dieselbe Reihe.
+2. **Eine Abkürzung darf nur drücken, was auch eine Hand drücken könnte.**
+   Der Tastengriff prüft `disabled` und `getClientRects()`, bevor er klickt,
+   und ruft `preventDefault()` nur, wenn wirklich etwas gedrückt wurde — wer
+   im Lesemodus „p" tippt, behält sein „p".
+   `getClientRects()` und nicht `offsetParent`: ein Knopf in einer fest
+   positionierten Leiste hat kein `offsetParent` und wäre fälschlich „weg".
+3. **Im Studio greift die Abkürzung nach oben.** Dort stehen die Werkzeuge
+   im Band und im unteren Dock mit Absicht nicht (E573) — ein Griff, der nur
+   den unteren Knopf kennt, täte im Studio gar nichts. Er nimmt den oberen,
+   wenn der untere nicht greifbar ist; beide enden an derselben
+   Zeichenmaschine.
+
+### Die Alternative, und warum sie nicht gewählt wurde
+
+Man könnte einen Klick auf ein Werkzeug im Lesemodus als „ich will jetzt
+doch schreiben" lesen und den Modus mitschalten. Das ist freundlicher — und
+für eine **gesperrte** Seite oder fehlende Rechte wäre es falsch, denn dort
+gibt es kein „doch". Eine Regel, die in der Hälfte der Fälle nicht gelten
+darf, ist keine. Der Weg zurück steht daneben und heisst „Annotieren".
+Als mögliche Verbesserung steht sie in `LUECKEN.md`; entscheiden kann sie
+nur Redur.
+
+### Was ausdrücklich NICHT mitrepariert wurde
+
+„Zurück" und „Vor" bleiben im Lesemodus bedienbar. Rückgängig ist kein
+Zeichnen, und der Lesemodus ist ein Ansichtsschalter, keine Rechtegrenze —
+wer seinen eigenen letzten Strich zurücknehmen will, soll das können, ohne
+erst den Modus zu wechseln. Bei einer **gesperrten** Seite greift ohnehin
+`canAnnotate` und schaltet auch sie ab.
+
+**Prüfläufe:** `test438 §4b` neu, elf Zusicherungen, **sieben davon vorher
+rot gesehen** — darunter die Marke, die wirklich entstand. Die Gegenprobe
+„Im Schreibmodus holt H den Marker wieder" steht mit darin, damit die
+Reparatur die Abkürzung nicht einfach abschalten kann.
+
+---
+
+## E579 — Ein Raster, das hier überlagert und dort schiebt, ist kein Platz
+
+**15. September 2026.** E573 gab der Verlaufskapsel eine Rasterzelle
+(`grid-column:2; grid-row:1`), damit sie sich im Studio über das Papier
+legt. Das tat sie dort auch. Im **Foliensatz** hat der Dokumentkörper aber
+ein anderes Raster — und dort bekam sie eine eigene Zeile und schob die
+Fläche nach unten.
+
+Gemessen bei 1440 × 852, Reiter „Ansicht":
+
+| Element | oben | hoch |
+|---|---|---|
+| `.document-body` | 206 | 646 |
+| Kapsel | 218 | 54 |
+| `.document-center` | **272** | **580** |
+
+272 ist genau 218 + 54: geschoben, nicht überlagert. Die Folienfläche war
+damit seit E573 um die Höhe der Kapsel kleiner — 580 statt über 600.
+
+### Wer es gefunden hat, und was ich dabei zuerst falsch gemacht habe
+
+`test508 §2` misst die Folienfläche gegen 600 px. Er wurde rot, und mein
+erster Schluss war **falsch**: ich hielt ihn für einen Altbestand wie
+`test290` und `test464`. Ein Arbeitsbaum auf den einzelnen Commits hat es
+entschieden (§30 — genau dafür steht `git worktree` dort):
+
+```txt
+d4a53c8e (E571)   40 grün
+5d415d61 (E572)   40 grün
+4ac55759 (E573)   39 grün, 1 rot     ← hier
+5aa8876f (E574)   39 grün, 1 rot
+```
+
+**Der Bogen war meiner.** „Älter als mein Zweig" ist eine Vermutung, solange
+niemand die Commits durchgeht — und sie ist bequem, was sie verdächtig
+macht.
+
+### Entschieden
+
+`position:absolute` statt Rasterzelle, in **jedem** Raster und bei jeder
+Breite. Das ist dieselbe Wahl, die der Telefonfall seit E573 trifft; sie
+gilt jetzt überall, und damit gibt es eine Regel statt zweier, die sich
+widersprechen können. `.document-body` ist ihr Bezug (`position:relative`,
+steht seit E573 daneben).
+
+Der Gewinn ist grösser als die 66 px im Foliensatz: **auch im Studio** hat
+das Papier die Höhe zurückbekommen, die die Kapselzeile gekostet hat.
+
+`test461` trug die alte Fassung als Quellenzusage (`grid-column:2`) und sagt
+jetzt die neue — mit der Begründung daneben, damit niemand sie für eine
+Verschlechterung hält.
+
+**Prüfläufe:** `test508` 40/40 (wieder), `test461`, `test393`, `test437`,
+`test524`, `test386`, `test424`, `test471` grün.
+
+---
+
+## E580 — Was ausserhalb des Bildes steht, muss sich selbst melden
+
+**15. September 2026.** Plan 7 B 8: „sichtbarer Hinweis auf weitere
+Werkzeuge". Gemessen, wie viel am Telefon überhaupt fehlt —
+`scrollWidth` gegen `clientWidth`:
+
+| Fenster | obere Leiste | unteres Dock |
+|---|---|---|
+| 390 px | 780 / 390 → **390 px versteckt** | 918 / 356 → **562 px versteckt** |
+| 820 px | 834 / 820 → 14 px | 939 / 786 → 153 px |
+| 1440 px | nichts | nichts |
+
+Am Telefon stand also **mehr ausserhalb des Bildes als darin**: acht von
+sechzehn Werkzeugen oben, im Dock zwei Drittel. Dass die Leisten rollen, ist
+Absicht (E356/E359 — eine rollende Zeile statt drei, die das Papier
+auffressen). Dass nichts es sagte, war keine.
+
+### Vier Hintergrundschichten, keine Zeile JavaScript
+
+Zwei `scroll`-Schichten sind die Schatten links und rechts; zwei
+`local`-Schichten sind Deckel in der Farbe der Leiste, die mit dem Inhalt
+mitrollen und den Schatten an seinem Ende zudecken. Der Hinweis zeigt sich
+damit **genau dort, wo es etwas zu rollen gibt**, und verschwindet an beiden
+Enden — von selbst.
+
+Die Alternative wäre ein Scroll-Horcher gewesen, der eine Klasse setzt. Der
+kostet einen Horcher, der beim Neuaufbau hängenbleiben kann — E575 hat
+gerade zwei solche Fälle aufgeräumt, und der beste Horcher ist der, den es
+nicht gibt.
+
+### Und der Schatten ist nicht schwarz
+
+Der erste Wurf nahm `rgba(0,0,0,.30)`. **Nachgemessen in Pixeln**, Rand
+gegen Mitte der Leiste, Helligkeit von 255:
+
+| Thema | vorher | nachher |
+|---|---|---|
+| dunkel | **8** | **64** |
+| hell | 66 | 58 |
+
+Acht von 255 ist nichts. Ein schwarzer Schatten auf einer dunklen Leiste ist
+keiner — und das sieht man erst auf dem Bild, nicht im Stilblatt (§55.1).
+`--text` ist im Dunkelmodus hell und im Hellmodus dunkel; mit `color-mix`
+wird daraus in beiden Themen ein Rand, der sich abhebt. Im Dunkeln ist es
+streng genommen kein Schatten mehr, sondern ein Schimmer — die Aufgabe ist
+dieselbe.
+
+**Der Wächter misst deshalb Pixel, nicht CSS-Text.** `test524 §9` liest die
+Helligkeit am Rand und in der Mitte und verlangt 25 Unterschied; gemessen
+liegen die reparierten Werte bei 64 und 58, der kaputte bei 8 — 25 liegt in
+der Mitte der Lücke. **Er ist rot gewesen:** mit dem schwarzen Schatten
+zurückgedreht meldete er genau das dunkle Thema rot und das helle grün.
+
+Dazu prüft er, dass links **kein** Schatten steht, solange die Leiste am
+Anfang ist: ein Hinweis, der etwas verspricht, das es nicht gibt, ist
+schlimmer als keiner.
+
+**Prüfläufe:** `test524` 58/58.
+
+---
+
+## E581 — Was Bedienung ist, gehört auf kein Papier
+
+**15. September 2026.** Die letzte offene Zusage aus Abschnitt 8 des
+Übergabeplans: „Ein sichtbar gemachtes SVG-Lineal muss von jeder Ausgabe
+ausgeschlossen bleiben; **nicht darauf vertrauen, dass jedes
+Exportverfahren nur `marks` liest**."
+
+### Zwei der drei Wege waren in Ordnung — und der Grund ist wichtig
+
+„Als Bild sichern" und „Als PDF" bauen ein **frisches SVG aus `marken`**
+(`Marken.zeichneMarke`) und sehen die lebende Fläche nie an. Dorthin kann
+nichts geraten, was nicht als Marke gespeichert ist — das Lineal so wenig
+wie der Laserstrahl. Das ist kein Zufall, sondern die Bauart, und sie ist
+der Grund, warum diese zwei Wege nichts kosteten.
+
+### Der dritte Weg ist der Druck, und der rendert das DOM
+
+Gemessen mit echter Druckemulation, Lineal an:
+
+| | `[data-ink-ui]` vorhanden | davon sichtbar |
+|---|---|---|
+| am Bildschirm | 1 (`ruler`) | 1 |
+| **im Druck** | 1 | **1** |
+
+Kein Stilblatt nannte `[data-ink-ui]` im Druck. Damit hätten auch die
+**Laserspur** und die **Auswahlgriffe** mitgedruckt — eine Seite mit
+Auswahlrechteck und acht Griffen darauf, in einem Ausdruck, den jemand
+weitergibt.
+
+### Entschieden: eine Zeile, und sie gilt dem Attribut
+
+```css
+@media print{ [data-ink-ui]{ display:none!important } }
+```
+
+`data-ink-ui` heisst „Bedienung, keine Marke". Lineal, Laser, Auswahl und
+Griffe tragen es heute; wer die nächste Bedienschicht baut, trägt es ohnehin
+ein und braucht dann an den Druck nicht mehr zu denken. **Eine Liste von
+Klassen wäre genau die Liste, die irgendwann jemand zu ergänzen vergisst** —
+derselbe Fehler wie bei `blatt-farbe-weg` in E574, nur an einer anderen
+Stelle.
+
+### Und ein Wiedersehen mit einem alten Fehler
+
+Die Quellenzusage suchte `@media print{[data-ink-ui]` in einem Stilblatt,
+aus dem sie vorher allen Leerraum entfernt hatte — wodurch aus `@media print`
+ein `@mediaprint` wurde. Sie war rot, obwohl die Regel schon dastand. Genau
+derselbe Griff hat in E577 `test461` rot gemacht. Leerraum wird jetzt auf
+EIN Zeichen zusammengezogen, nicht weggeworfen.
+
+**Prüfläufe:** `test524 §10` neu, vier Zusicherungen, **zwei vorher rot
+gesehen**; und sie prüft beide Richtungen — nach dem Druck ist das Lineal
+wieder da, sonst wäre „unsichtbar" auch am Bildschirm erfüllt.
+
+---
+
+## E582 — Zwei rote Wächter, und kein Fehler dahinter
+
+**15. September 2026.** Beim Abarbeiten der Regressionen nach E581 fielen
+zwei Läufe auf, die **seit mindestens E571 rot** waren — nachgemessen mit
+einem Arbeitsbaum auf den einzelnen Commits, nicht vermutet (die Lehre aus
+E579). In beiden Fällen war am Produkt nichts kaputt. Kaputt war die
+Messung.
+
+### `test429` mass etwas, das der Browser nicht beantwortet
+
+Die Zusicherung hiess „Zehn Segmente behalten ihre räumliche Verteilung" und
+las `getComputedStyle(rect).transform !== 'none'`. Nachgemessen:
+
+```txt
+Attribut   transform="rotate(36 12 12)"     ← da, wie gebaut
+CSS        getComputedStyle(...).transform  → "none"
+```
+
+Die zehn Segmente des Ladezeichens werden mit einem **SVG-Präsentations-
+attribut** verteilt, und das taucht in der berechneten CSS-`transform` nicht
+auf. Die Zusicherung **konnte nicht grün werden** — der Spiegelfall zu
+§55.2: eine Prüfung, die immer „kaputt" sagt, wird so wenig gelesen wie
+eine, die immer „passt schon" sagt. Am Ende schaltet jemand sie ab.
+
+Jetzt wird die Wirkung gemessen: liegen die Segmente an verschiedenen
+Stellen, bilden sie also einen Ring? Zwei Anläufe brauchte auch das —
+der erste las die Segmente dort, wo sie stehen, und bekam **zwanzig Stück
+mit Ausdehnung 0**, weil die Ladezeichen der Probe an dieser Stelle
+verborgen sind. Gemessen wird deshalb an einer Kopie, die für einen
+Augenblick sichtbar im Körper hängt. **Rot gesehen:** mit einem
+`transform:none` für die neutralen Rechtecke im Reduced-Motion-Block
+meldet sie „ein Stapel, kein Ring".
+
+### `test476` zielte auf eine Animation
+
+„Ein Blatt HEBT sich, wenn der Zeiger darauf liegt" — 453,8 → 453,8, also
+nichts. Die Regel dafür gibt es (`translate:0 -10px` beim Überfahren), und
+sie greift. Der Lauf las das Rechteck aber, **während die Blätter noch aus
+dem Fach fliegen** (Verzug bis 0,152 s plus Übergang mit Überschwingen),
+und setzte die Maus dorthin, wo das Blatt EINMAL war.
+
+Gemessen an der laufenden App: `elementFromPoint` traf das Blatt, `:hover`
+aber nicht — und in einem zweiten Lauf lag der Punkt 226 px daneben, weil
+die Karte selbst an einer anderen Stelle aufging. Jetzt wartet der Lauf,
+bis das Blatt zwei Messungen lang an derselben Stelle liegt. Danach:
+453,8 → 440,3 mit `translate: 0px -10px`.
+
+### Was beide gemeinsam haben
+
+Beide Zusicherungen waren **richtig gemeint und falsch gemessen**, und
+beide haben deshalb jahrelang ein rotes Kreuz gemacht, das niemand mehr
+angesehen hat. Das ist der eigentliche Schaden: ein Lauf, der immer rot
+ist, nimmt dem nächsten echten Fehler die Aufmerksamkeit.
+
+Zusammen mit `test290` (dessen Verzeichnis abgewandert war) sind das
+**drei rote Läufe an einem Tag, und kein einziger Produktfehler darunter.**
+Der Produktfehler des Tages kam von woanders: E578 hat ihn gefunden, weil
+jemand eine Frage gestellt hat, die kein Lauf stellte.
+
+**Prüfläufe:** `test429` 17/17 (war rot), `test476` 26/26 (war rot).
+
+---
+
+## E583 — Die Kopie zeigt, was das Original zeigt
+
+**15. September 2026.** Plan 7 B 5 verlangte: „Form-Dock: alle sieben
+vorhandenen Formen direkt; Farbe/Dicke dazu."
+
+**Nachgemessen war genau das schon da.** Mit `data-tool="line"` bei 1440 px:
+
+```txt
+form    7 von 8 sichtbar   (das achte ist der Trenner)
+farbe   6 von 7 sichtbar   (fünf Farben und das „+")
+breite  3 von 5 sichtbar   (die drei Stufen; die zwei anderen sind der
+                            Trenner und die Klappe für die freie Stärke,
+                            die sich erst auf den zweiten Tipp öffnet, E465)
+```
+
+Alle sieben Formknöpfe sind 44 px hoch, am Telefon 44 × 44 (§37). E569 hatte
+die Kurve in die Gruppenliste nachgetragen, E356 gibt der Gruppe ihren
+Kontext. Der Punkt war zu, bevor dieser Bogen begann.
+
+### Was stattdessen gefunden wurde
+
+E515 sagt über den Formenknopf ausdrücklich:
+
+> „der Knopf zeigt nicht ‚Formen', sondern WELCHE Form gerade gewählt ist —
+> ein Dreieck, ein Pfeil, eine Kurve. Ein gemeinsames Werkzeugzeichen nähme
+> genau die Auskunft weg, für die dieser Knopf da ist."
+
+Der Knopf auf dem Blatt hält das: `marken.ts` schreibt ihn beim Formwechsel
+selbst um. **Seine Kopie in der oberen Studioleiste hielt es nicht:**
+
+| im Dock gewählt | oben `data-sym` | oben `data-form` | oben Titel |
+|---|---|---|---|
+| Dreieck | `inkShapes` | — | „Form" |
+| Kurve | `inkShapes` | — | „Form" |
+| Ellipse | `inkShapes` | — | „Form" |
+
+Im Studio ist die obere Reihe die **einzige sichtbare** Werkzeugreihe (E573).
+Die Auskunft fehlte also genau dort, wo gezeichnet wird.
+
+### Warum allgemein und nicht als Sonderfall
+
+Die obere Reihe wird einmal aus `Marken.WERKZEUGE` gebaut und trägt seither
+dasselbe Zeichen. Für zwölf der dreizehn stimmt das — ein Stift bleibt ein
+Stift. Eine Zeile `if (id === 'formen')` wäre beim nächsten Knopf, der sich
+unterwegs umschreibt, wieder falsch, und niemand würde es merken.
+
+`zeichenSpiegeln()` in `inkSync` vergleicht deshalb, statt zu raten: wer sein
+Zeichen nie ändert, kommt dort nie vorbei. Gespiegelt werden `data-sym`,
+`data-form`, `title` und `aria-label` — das Wort mit dem Bild, weil ein
+Vorleser sonst weiter dreimal „Form" sagt (§38).
+
+**Und nur bei Abweichung**, aus dem Grund von E575: `Register.symbole.fuelle`
+schreibt ein frisches `<svg>` hinein, und `inkSync()` läuft bis zu sechsmal
+je Klick. Gemessen mit einem Beobachter auf dem Knopf: **7 Änderungen bei
+einem echten Formwechsel, 2 beim Klick auf dieselbe Form noch einmal** — und
+diese zwei sind das `aria-pressed`, das die Reihe ohnehin für alle dreizehn
+setzt.
+
+**Die Alternative** wäre gewesen, die obere Reihe beim Formwechsel neu zu
+bauen. Sie kostet den Fokus unter dem Finger und jeden laufenden Übergang —
+genau der Preis, den E575 gerade abgeschafft hat.
+
+**Prüflauf:** `test524 §11`, zwölf Zusicherungen, alle zwölf rot gesehen.
+
+---
+
+## E584 — Ein Pfeil, der keine Linie ist, und ein rundes Rechteck, das rund aussieht
+
+**15. September 2026.** Beim Ansehen des Form-Docks (E583) fiel auf, dass
+„Rechteck" und „Rund" nebeneinander fast dasselbe Bild sind. Gemessen mit
+der Methode aus `test480 §7` — jedes Zeichen auf 16 × 16 gerastert, Tinte
+gegen Tinte — ergab das drei Paare über der Grenze von 60 %, die E515 für
+die Stifte gezogen hat:
+
+```txt
+formRect     / formRoundrect    75 %
+formEllipse  / formRoundrect    72 %
+formLine     / formArrow        70 %
+```
+
+Alle drei stehen in **derselben Zeile nebeneinander**, und am Telefon tragen
+die Knöpfe kein Wort mehr (44 × 44 px, nur das Zeichen) — dort ist das
+Zeichen die einzige Auskunft.
+
+Der Grund war in beiden Fällen derselbe: das zweite Zeichen war das erste
+plus eine Kleinigkeit. `formRoundrect` war `formRect` mit `rx="4.2"`,
+`formArrow` war `formLine` plus ein Häkchen am Ende.
+
+### Was probiert und was gemessen wurde
+
+```txt
+Pfeil                                       schlimmstes Paar
+  heute (schräg mit Häkchen)                    70 %
+  grösserer Kopf                                65 %
+  Kopf als eigene Spitze                        69 %
+  waagerecht mit offener Spitze                 28 %   ✓
+
+Rundes Rechteck
+  heute (rx 4.2)                                75 % gegen das Rechteck
+  rx 5.4, gleiche Grösse                        75 % gegen die Ellipse
+  rx 6.4, gleiche Grösse                        81 % gegen die Ellipse
+  Stadion (rx 5.6)                              85 % gegen die Ellipse
+  etwas kleiner, rx 5.2                         73 % gegen die Ellipse
+  kleiner UND runder                            38 % / 29 %   ✓
+```
+
+„Nur runder" half nicht — das Zeichen lief dann der Ellipse ins Bild. Erst
+kleiner **und** runder trennt beides. Danach ist das ähnlichste Paar der
+ganzen Liste `formRect/formEllipse` mit **55 %**, und das sind zwei Formen,
+die zu Recht verschieden aussehen.
+
+**Was nicht geändert wurde:** die Linie bleibt die Schräge. Sie ist das
+Bild einer Linie, und der Pfeil ist der, der ausweichen muss.
+
+**Was verworfen wurde:** eine Fassung, die das runde Rechteck als zwei
+offene Eckbögen zeichnet — wie in Zeichenprogrammen die Eckrundung markiert
+wird. Sie misst noch besser (39 %), zeigt aber nicht mehr die Form, die man
+bekommt. Die anderen sechs Zeichen tun das alle.
+
+**Prüflauf:** `test480 §7c`, sieben Zeichen gegeneinander, vier Zusicherungen
+rot gesehen. Angesehen wurde es ausserdem: `bilder/formzeichen-vergleich.png`
+zeigt beide Sätze bei 18 und 26 px nebeneinander.
+
+---
+
+## E585 — Drei von vier Zahlen im Stilblatt waren Zierde
+
+**15. September 2026.** Plan 7 C 2 verlangt: „Symbole im Dock ca. 24–28 px
+innerhalb fester 44-px-Trefferflächen." Gemessen waren es 18 px — und zwar
+überall, gleichgültig, was das Stilblatt sagte.
+
+| Zustand | Hülle laut CSS | SVG-Attribut | SVG laut CSS |
+|---|---|---|---|
+| 1440 px, Leiste unten | 16 px | 18 | **18 px** |
+| 1440 px, Leiste links/rechts | 20 px | 18 | **18 px** |
+| 390 px, Leiste unten | 18 px | 18 | **18 px** |
+| 390 px, Leiste links/rechts | 20 px | 18 | **18 px** |
+
+### Warum
+
+`Register.symbole.fuelle` schreibt `width="18" height="18"` als **Attribut**
+in das erzeugte `<svg>`. Das Stilblatt bemasst aber die **Hülle**
+(`.blatt-werk .zeichen[data-sym]`), und ein SVG mit eigener Breite kümmert
+sich nicht darum, wie breit sein Kasten ist.
+
+Damit war jede Zahl ausser der 18 wirkungslos:
+
+- die **16** liess das Zeichen zwei Pixel über seine Hülle stehen;
+- die **20** für die seitliche Leiste hat nie etwas getan — seit sie
+  dasteht.
+
+Die obere Studioleiste macht es seit je richtig:
+`.document-drawingbar svg{width:25px}` bemasst das SVG selbst, und dort
+kommen gemessen auch 25 px an. Dieselbe Aufgabe, zwei Wege, ein Ergebnis
+mehr.
+
+**Das ist die Warnung aus §39 in neuer Gestalt** — dort ging es um Tokens,
+die zweimal erfunden und zweimal unsichtbar waren. Hier ist es eine
+CSS-Zeile, die aussieht wie eine Regel und keine ist. Sie ist nur mit einer
+Messung zu finden; beim Lesen sieht sie richtig aus (§55.1).
+
+### Die Reparatur
+
+```css
+.blatt-werk .zeichen[data-sym] svg{display:block; width:100%; height:100%}
+```
+
+`width:100%` und keine eigene Zahl — damit gibt es ab hier **eine** Stelle,
+an der die Grösse steht, und die beiden können nicht wieder auseinander
+laufen.
+
+### Und wo dann 24 px stehen
+
+Nur dort, wo die Fläche wirklich fest 44 px ist: **am Telefon und in der
+seitlichen Leiste.** Dort ist der Knopf 44 × 44 beziehungsweise 48 × 44, das
+Wort ist weg, und das Zeichen ist die einzige Auskunft.
+
+**Nicht am Rechner**, und das ist gemessen, nicht gemutmasst:
+
+```txt
+Zeichen   Dockbreite   Knöpfe
+18 px       959 px     34/44/71/79/81
+22 px       995 px     38/44/75/83/85
+24 px      1013 px     40/44/77/85/87
+26 px      1031 px     42/44/79/87/89
+```
+
+Der Zubehörknopf trägt am Rechner 32 px Mindestbreite, weil bei 1280 px
+sonst die Breite als einzelner Knopf in eine dritte Zeile fällt (E576). Ein
+24-px-Zeichen macht aus den 32 px vierzig und aus der Leiste 54 px mehr —
+bei 1280 px genau der Umbruch, den E576 weggerechnet hat.
+
+**Am Telefon kostet es nichts.** Gemessen bei 390 px blieb die Rollbreite
+bei 18, 22, 24 und 26 px unverändert **918 px**: der Knopf ist dort ohnehin
+44 px breit, das Zeichen wächst nur in den Platz hinein, der schon da war.
+
+**Die Nebenwirkung**, ausdrücklich: am Rechner wird das Zeichen von 18 auf
+16 px kleiner — auf die Zahl, die das Stilblatt seit E515 nennt. Das ist
+keine Verkleinerung, sondern das Ende eines Überstands.
+
+**Prüflauf:** `test524 §12`, sieben Zusicherungen, fünf rot gesehen.
+Angesehen: `bilder/dock-form-handy.png` (390 px, zweifach), `dock-form.png`.
+
+---
+
+## E586 — Ein Pfeil aus einer Schrift ist kein Zeichen
+
+**15. September 2026.** Plan 7 B 7 sagte: „History … hat aber noch die alten
+Toolbar-Styles." Plan 7 C 1 sagt: „Einheitliches SVG-Register nutzen; keine
+zweite lose Icon-Sammlung neben ihm."
+
+Gemessen, alle sichtbaren Knöpfe des Studios, die ein Zeichen statt eines
+Wortes tragen:
+
+| Zeichen | Knopf | Schrift | gezeichnet? |
+|---|---|---|---|
+| `↶` | `ink-undo` | 28 px | nein |
+| `↷` | `ink-redo` | 28 px | nein |
+| `🔍` | `find` | 12 px | nein |
+| `☷` | `view` | 12 px | nein |
+| `+` | zwei Stück | 13/14 px | nein — **und das bleibt so** |
+| `⋮⋮` | Sortiergriff | 14 px | nein — **dito** |
+
+Vier Knöpfe trugen Schriftzeichen, während dreizehn Werkzeuge daneben
+gezeichnete SVGs tragen.
+
+### Das Register hatte die Zeichen längst
+
+`undo`, `redo`, `search` und `eye` liegen seit E272 in `symbole.ts` — und
+der Kommentar dort sagt genau, warum:
+
+> „Zurücknehmen" und „Wiederherstellen" gab es im Band bisher nur im Reiter
+> Zeichnen, und dort als TEXTZEICHEN ↶ ↷. Für die Seite ist das zu wenig:
+> ein Pfeil, der aus einer Schrift kommt, sieht auf jedem System anders aus
+> und trägt nicht die Farbe seiner Zeile. Also gezeichnet, wie alle anderen
+> hier.
+
+Derselbe Satz gilt für das Studio. Er war nur nie dort angewendet worden.
+
+### Was geändert wurde
+
+`topButton()` bekommt einen vierten, **freiwilligen** Teil: einen
+Zeichennamen. Wer ihn angibt, bekommt eine Hülle mit `data-sym`; wer ihn
+weglässt, bekommt weiter seinen Text. Das ist wichtig, denn `+`, `‹` und
+`⋮⋮` sind Zeichen im Wortsinn und kein Bild — sie sollen Text bleiben.
+
+Im Stilblatt fiel damit `.document-ink-history button{font-size:1.75rem}`
+weg. Diese Zeile hatte genau eine Aufgabe: ein Schriftzeichen gross zu
+machen. An ihre Stelle tritt `svg{width:25px}` — dieselbe Zahl wie in der
+Werkzeugzeile daneben.
+
+### Was dabei erhalten bleiben musste
+
+E396 (`test393 §3`): abgeschaltet sind „Zurück" und „Vor" **blass, nicht
+durchscheinend** — sonst blitzen beim Rollen die Werkzeuge darunter durch.
+Ein SVG mit `stroke="currentColor"` erbt die blasse Farbe von selbst;
+gemessen steht der Strich danach auf `rgb(115,115,115)`, derselbe Wert wie
+`color`. Ein Bild mit eigener Farbe hätte das nicht getan, und das wäre der
+stille Rückschritt gewesen.
+
+### Zwei Kommentare, die gelogen haben
+
+Beim Aufräumen fielen zwei Sätze auf, die von einem Zustand sprachen, den
+es nicht mehr gibt:
+
+- „DER NEGATIVE UNTERRAND ist kein Trick…" — den negativen Unterrand hat
+  E579 abgeschafft.
+- „am Rechner als Rasterfeld in derselben Zelle wie das Papier" — seit E579
+  ist die Kapsel in jedem Raster absolut.
+
+Beide stehen jetzt richtig da. Ein Kommentar, der lügt, ist schlimmer als
+keiner: er wird geglaubt.
+
+**Prüflauf:** `test524 §13`, zwölf Zusicherungen, elf rot gesehen.
+Angesehen: `bilder/kapsel-1440.png`, `bilder/topbar-1440.png`.
+
+---
+
+## E587 — Zwei Striche in derselben Richtung sind ein Bild
+
+**15. September 2026.** Plan 7 B 2: „Stift-Dock: sechs klar erkennbare
+Stifte, Strichstärken, Farben und Farbmenü. Werkzeuge/Extras nicht still
+entfernen, wenn der Bildschirm zu schmal ist." Plan 7 C 2: „Füller,
+Kugelschreiber, Pinsel und Bleistift müssen sofort unterscheidbar sein."
+
+### Der zweite Satz war erfüllt
+
+Gemessen, das Stift-Dock bei vier Breiten:
+
+| Fenster | Dock | Rollinhalt | im Sichtfenster | Kinder da |
+|---|---|---|---|---|
+| 1440 px | 941 px | 939 px | 18 von 18 | 18 |
+| 1024 px | 941 px | 939 px | 18 von 18 | 18 |
+| 768 px | 736 px | 939 px | 15 von 18 | **18** |
+| 390 px | 358 px | 918 px | 7 von 18 | **18** |
+
+Es wird nichts weggelassen — es rollt, und seit E580 sieht man auch, dass
+es rollt. Sechs Stifte, drei Strichstufen, fünf Farben, das Farbmenü und
+das Lineal stehen bei jeder Breite.
+
+### Der erste Satz war es nicht — und das Mass sagte, er sei es
+
+`test480 §7` misst seit E515, WELCHE Bildpunkte leuchten: Tinte gegen
+Tinte. Für `penBrush` und `penPencil` ergab das **40 %**, weit unter der
+Grenze von 60. Grün.
+
+Mit Augen bei 16 px sind die beiden trotzdem Zwillinge, und das ist kein
+Widerspruch. Das Auge liest bei dieser Grösse nicht die einzelnen Punkte,
+sondern die **Richtung** und die **Masse**. Beide Zeichen waren ein langer
+Strich von links unten nach rechts oben; dass am einen Haare und am anderen
+zwei Querbänder hängen, sind bei 16 px je zwei Pixel.
+
+**Das ist §55.2 in seiner zweiten Gestalt.** Dort ging es um eine Prüfung,
+die immer „passt schon" sagte, weil Flexbox den Überstand wegstauchte. Hier
+sagt eine Prüfung „passt schon", weil sie die richtige Frage an der
+falschen Eigenschaft stellt. Beide Male hilft nur das Hinsehen.
+
+### Das zweite Mass
+
+`test480 §7d` misst die **Hauptachse der Tinte** — die Kovarianz der
+Bildpunkte, mit ihrer Deckung gewichtet — und dazu die Länglichkeit:
+
+```txt
+penFountain    90°   26 %        penPencil      45°   78 %
+penBall        86°   52 %        penEarth       90°   30 %
+penBrush       52°   69 %        penWire        10°   38 %
+```
+
+Verdächtig ist ein Paar, wenn **beide länglich sind** (ab 45 %) und ihre
+Richtungen weniger als 20° auseinander liegen. Ein Klumpen hat keine
+Richtung, die man verwechseln könnte: `penFountain` und `penEarth` stehen
+beide auf 90° und sind trotzdem grundverschieden.
+
+**Und das Mass schreit nicht bei jedem Satz.** Auf die sieben Formen
+angewandt findet es kein einziges Paar — obwohl dort mit `formLine` (90 %)
+das längste Zeichen des ganzen Projekts steht. Diese Gegenprobe ist Teil
+des Prüflaufs, denn eine Zusicherung, die überall anschlägt, sagt nichts.
+
+### Was geändert wurde
+
+Der Pinsel ist gespiegelt: **128° statt 52°**, gegen die 45° des
+Bleistifts. Dreiundachtzig Grad Abstand, und bei 16 px sofort zu trennen.
+Die Tintendeckung bleibt unverändert bei 46 % als schlimmstem Paar.
+
+**Was probiert und verworfen wurde,** alles gemessen:
+
+| Fassung | Deckung | Richtung |
+|---|---|---|
+| heute (52°) | 46 % | `penBrush/penPencil` Δ7° |
+| senkrecht stehend (90°) | **55 %** | `penBall/penBrush` Δ4° |
+| steiler (58°) | 46 % | `penBrush/penPencil` Δ13° |
+| waagerecht liegend | 46 % | kein Paar |
+| **gespiegelt (128°)** | **46 %** | **kein Paar** |
+
+Waagerecht mass genauso sauber, legte den Pinsel aber als einziges Werkzeug
+hin, während alle anderen stehen — deshalb die Spiegelung.
+
+### Ein Fund aus der Gegenprobe
+
+Um `§14` (schmal heisst rollen) rot zu sehen, wurde eine Medienabfrage mit
+`display:none` eingesetzt. **Sie tat beim ersten Mal nichts:** der Katalog
+aus E356 steht mit `.blatt-werk[data-tool] > …` eine Spezifitätsstufe
+höher. Erst mit derselben Stufe fiel die Zahl bei 390 px von 18 auf 12.
+Dieselbe Falle wie in E585, nur andersherum — dort war eine echte Regel
+wirkungslos, hier eine gewollte.
+
+**Prüfläufe:** `test480 §7d` (vier Zusicherungen, zwei rot gesehen),
+`test524 §14` (fünf Zusicherungen, eine in der Gegenprobe rot gesehen).
+Angesehen: `bilder/stifte-lupe.png` (alle sechs bei 16, 24 und 48 px,
+beide Fassungen), `bilder/stiftdock-390.png`, `-768`, `-1024`, `-1440`.
+
+---
+
+## E588 — Die Tastatur schiebt das Dock nicht weg
+
+**15. September 2026.** Plan 7 B 8, zweiter Teil: „Kleine Höhe und
+Bildschirmtastatur berücksichtigen."
+
+### Wie man das ohne echtes Gerät misst
+
+Gar nicht anders, als die App es selbst tut. `kern/einstellung/app.ts` liest
+`window.visualViewport` und schreibt daraus drei Werte an die Wurzel —
+`--visual-bottom`, `--visual-height`, `--vh` — und setzt
+`body.tastatur-offen`, sobald unten mehr als 80 px fehlen.
+
+**Diese vier Signale sind alles, was das Stilblatt von der Tastatur je
+erfährt.** Wer sie setzt, hat die Tastatur für jede Regel, die es gibt. Der
+Prüflauf setzt sie und misst; ein echtes Gerät hätte dieselben Zahlen
+geliefert.
+
+Damit ist der Satz „braucht ein echtes Gerät", der hier im Nachtrag zu E585
+stand, **falsch gewesen**. Er stimmt für den Finger, für die Trägheit des
+Rollens, für die Schriftglättung — nicht für die Frage, wo eine Leiste
+liegt.
+
+### Was gemessen wurde
+
+390 × 844, Tastatur 336 px (iPhone hochkant), sichtbar also bis 508:
+
+| | ohne Tastatur | mit Tastatur |
+|---|---|---|
+| Dock | 768–830, verdeckt 0 | 768–830, **verdeckt 322** |
+| Zurück/Vor | 708–760, verdeckt 0 | 708–760, **verdeckt 252** |
+| obere Leiste | 102–155, verdeckt 0 | 102–155, verdeckt 0 |
+| Suchzeile | 102–159, verdeckt 0 | 102–159, verdeckt 0 |
+
+Beide unteren Schwebenden lagen **ganz** hinter der Tastatur. Wer auf dem
+Telefon in eine Haftnotiz oder ein Textfeld tippt, verlor damit die ganze
+Stiftleiste und „Zurück" dazu.
+
+### Warum
+
+```css
+bottom: max(14px, env(safe-area-inset-bottom))
+```
+
+Das ist der untere Rand des **Layout**-Ausschnitts, und der schrumpft nicht,
+wenn die Tastatur aufgeht — das ist der Punkt, den `visualViewport`
+überhaupt erst nötig macht. `.overlay`, die Bottom Sheets, `.finder` und das
+Tabellenfeld rechnen seit je mit `--visual-bottom`. **Das Studio war der
+eine Ort, der es nicht tat.**
+
+### Die Änderung
+
+```css
+bottom: calc(var(--visual-bottom, 0px) + max(14px, env(safe-area-inset-bottom)))
+```
+
+und dieselbe Rechnung für die Verlaufskapsel am Telefon (`+ 84px`). Ohne
+Tastatur ist `--visual-bottom` gleich 0, und alles bleibt, wo es war —
+gemessen: 830 vorher, 830 nachher, und nach dem Schliessen wieder 830.
+
+**Der Gegenfall steht ausdrücklich im Prüflauf.** Eine Leiste, die dauerhaft
+336 px über dem Rand schwebt, wäre die schlechtere Hälfte des Tauschs.
+
+### Was bleibt
+
+Bei 844 px Höhe und 336 px Tastatur bleiben dem Papier 277 px zwischen
+oberer Leiste und Dock. Das ist knapp und richtig so: es ist dieselbe
+Rechnung, die jede Schreib-App auf dem Telefon macht.
+
+**Prüflauf:** `test524 §15`, fünf Zusicherungen, zwei rot gesehen.
+Angesehen: `bilder/studio-tastatur.png`.
+
+---
+
+## E589 — Neunzehn Zeichnungen, die nicht im Register standen
+
+**15. September 2026.** §8: „Keine doppelten Kataloge einführen. Ein zweiter
+Katalog für dasselbe läuft mit dem ersten auseinander, und niemand merkt,
+welcher gilt."
+
+Gemessen standen in `index.html` **19 gezeichnete `<svg>` mit 35 Pfaden**,
+und **22 dieser Pfade standen wörtlich auch in `src/register/symbole.ts`**.
+Wer dort ein Zeichen verbessert, lässt die Abschrift alt stehen — und sieht
+es nie, weil beide nebeneinander richtig aussehen. Genau das ist mit
+`inkLaser` und `inkText` in E577 passiert, nur eine Datei weiter.
+
+E200 hatte den Weg längst gebaut: `index.html` schreibt nur die STELLE
+(`<span data-sym="search">`), und `schale.ts` füllt sie als Allererstes in
+`start()` — „ganz vorn, weil sonst zwischen Aufbau und Füllung ein Bild mit
+leeren Kästchen stünde". **Siebenunddreissig Stellen taten das schon;
+neunzehn nicht.**
+
+### Fünfzehn waren wörtlich dasselbe
+
+`link`, `boxChecked`, `history` (zweimal), `plus`, `pencil`, `robot`, `mic`
+(zweimal), `book`, `database`, `page`, `settings`, `puzzle`, `learn`. Für
+diese fünfzehn ist der Umzug beweisbar ohne Bildänderung: die Pfade waren
+Zeichen für Zeichen gleich.
+
+### Vier waren zweite Zeichnungen für dieselbe Sache
+
+Und die sind der eigentliche Fund — nicht die Abschrift, sondern die
+Uneinigkeit:
+
+| Reiter unten | öffnet | Seitenleiste zeigt | Reiter zeigte |
+|---|---|---|---|
+| Dokumente | `Bibliothek.oeffne()` | `library` (offenes Buch) | zwei Felder |
+| Heute | `Produktwelten.lernen('heute')` | `home` (Haus mit Tür) | Haus ohne Tür |
+| Mehr | das Mehr-Blatt | `dots` (drei Ringe) | drei gefüllte Punkte |
+
+Derselbe Ort, zwei Bilder — und niemand konnte es sehen, weil die beiden nie
+nebeneinander stehen. Die drei Reiter nehmen jetzt das Zeichen, das die
+Seitenleiste für denselben Weg schon benutzt.
+
+**Der vierte** ist „Termine": sein Kalender trägt Tagespunkte, der
+`calendar` des Registers nicht — und `calendar` hat **einunddreissig**
+Verwender. Ihn zu ändern wäre eine Änderung an einunddreissig Stellen für
+eine. Also ein eigener Eintrag `calendarDays`, wörtlich die Zeichnung, die
+vorher in `index.html` stand. Kein Bild ändert sich, und sie steht im
+Register.
+
+### Was dabei nicht kaputtgehen durfte
+
+`#ai .ai-leiste button > svg` ist ein **Kind**-Wähler. Nach dem Umzug sitzt
+das `<svg>` in einer Hülle und wäre ein Enkel — die Zeile hätte still
+aufgehört zu wirken (derselbe Fehler wie in E585). Beide Schreibweisen
+stehen jetzt da.
+
+Gemessen nach dem Umbau: **85 Stellen mit `data-sym`, null davon leer.**
+
+### Der Wächter
+
+`test87` prüft jetzt, dass `index.html` **kein einziges** `path`, `rect`,
+`circle`, `ellipse`, `polygon`, `polyline` oder `line` enthält, dass es die
+Stellen wirklich gibt, und dass jeder dort genannte Name im Register steht —
+denn eine leere Stelle sieht aus wie ein fehlendes Zeichen, und `fuelle`
+schreibt darüber nur ein `console.warn`.
+
+**Prüflauf:** `test87`, vier Zusicherungen, zwei rot gesehen (48
+Zeichenbefehle, 37 statt 40 Stellen). Angesehen: `bilder/nav-vergleich.png`
+(alt gegen neu bei 19 und 40 px), `bilder/nav-nachher.png`,
+`bilder/ki-nachher.png`.
+
+---
+
+## E590 — Drei rote Läufe, und einer davon war ein echter Fehler
+
+**15. September 2026.** Beim Regressionslauf zu E589 fielen drei rote Läufe
+auf. Mit einem `git worktree` auf dem Stand **vor** der Änderung
+gegengeprüft, waren alle drei schon vorher rot — und damit dieselbe Lage wie
+in L163: ein Rot, das lange niemand angesehen hat.
+
+### `test37` — und dahinter ein echter Fehler
+
+Gemessen zeigte die Seitenleiste zweimal „Redion" nebeneinander: einmal im
+Zeichen, einmal im Namen.
+
+```txt
+#btn-settings enthält:
+  <span class="rmo-sliders">        ← seit der Bewegungsschicht
+  <span class="ws-icon">Redion      ← hier sollte „N" stehen
+  <span>Redion
+```
+
+Die Ursache steht an zwei Stellen — `schale.ts` und
+`einstellungen/ansicht/seite.ts` — und ist beide Male dieselbe Zeile:
+
+```ts
+const wsName = wsBtn?.querySelectorAll('span')[1];
+```
+
+**Ein Zugriff nach Platz.** `[1]` war einmal der Name. Dann setzte
+`motion.ts` (`ensure(element, 'rmo-sliders', …)`) eine Hülle als erstes Kind
+ein — eine Schicht, die von dieser Zeile nichts weiss und nichts wissen muss.
+Seither ist `[1]` das **Zeichen**, und die Zeile darunter schrieb den Namen
+hinein.
+
+Der Nutzer sah: ein Arbeitsbereichszeichen, das den Namen trägt, und ein
+eingestelltes Zeichen, das in der Seitenleiste nie ankam.
+
+**Repariert** mit `class="ws-name"` am Namensspan und
+`btn.querySelector('.ws-name')` an beiden Stellen. Nach Bedeutung, nicht
+nach Platz — ein Platz hält nur so lange, wie niemand etwas davorstellt.
+
+**Prüflauf:** `test37` 54/54; die neue Zusicherung „Das Zeichen trägt nicht
+den Namen des Arbeitsbereichs" war rot.
+
+### `test34` — dreimal die Oberfläche von gestern
+
+Drei Zusicherungen zeigten auf einen Stand, den es nicht mehr gibt:
+
+| Zusicherung | erwartete | gemessen |
+|---|---|---|
+| Klick auf `#ai-faehig` | in der Eingabezeile | in der Schublade „Werkzeuge & Kontext", und die ist zu |
+| „Sechs Knöpfe unter dem Feld" | 6 | 5 |
+| „Platzhalter wie bei Notion" | „Mach alles mit KI" | „Frag etwas oder beschreibe deine Idee …" |
+
+Alle drei sind **kein** Produktfehler: `dienst.ts` hängt `ai-quellen` und
+`ai-faehig` ausdrücklich in die Schublade, also sind es unter dem Feld fünf,
+und der Platzhalter ist seit Längerem der bessere Satz — er fragt, statt zu
+versprechen.
+
+Gemessen bei 1280 × 900: bei geschlossener Schublade behält der Knopf einen
+Kasten (1 Rechteck, 104 × 33) und liegt auf y = 884, unter dem Rand;
+geöffnet und nachgerollt steht er bei 679–712.
+
+**Die Zusicherungen sagen jetzt mehr als vorher.** Statt „sechs Knöpfe"
+stehen die fünf Kennungen da — eine blosse Zahl wäre auch dann grün, wenn
+zwei ganz andere Knöpfe dastünden. Und eine neue Zeile hält fest, dass
+„Fähigkeiten" **in** der Schublade liegt: zöge ihn jemand heraus, wäre das
+eine Änderung, die man sehen soll.
+
+### `test362` — ein Verzeichnis, das seit E509/E510 niemand nachzog
+
+Das Verzeichnis der rohen Pixelzahlen (`pruefungen/marken-decke.json`) stand
+auf dem Stand von E509/E510. Gemessen:
+
+| | Verzeichnis | gemessen | Δ |
+|---|---|---|---|
+| 44px | 153 | 168 | **+15** |
+| 28px | 56 | 63 | +7 |
+| 22px | 77 | 83 | +6 |
+| 16px | 246 | 266 | **+20** |
+| 56px | 12 | 14 | +2 |
+| 46px | 14 | 15 | +1 |
+
+Die Zahlen im Zweig dieser Sitzung sind dieselben wie am Sitzungsanfang —
+die Drift kam von davor.
+
+**Was dagegen getan wurde, statt neu einzupegeln:** `min-height:44px` und
+`min-width:44px` heissen immer dasselbe — die Trefferfläche aus §37. Und
+`--touch-min` ist an genau **einer** Stelle definiert, als 44px. Der Tausch
+ist damit wertgleich und nicht geraten:
+
+```txt
+114 Stellen in 11 Stildateien  →  var(--touch-min)
+44px roh:  168  →  54          (Verzeichnis sagte 153)
+```
+
+Die 44 steht jetzt **unter** der alten Decke, nicht darüber. Die anderen
+fünf Zahlen sind eingetragen worden, wie sie sind — 28 und 22 haben zwar
+Marken (`--mobile-gutter`, `--mobile-gutter-small`), aber die sind
+**semantisch**: „Gleiche Zahl bedeutet nur dann dieselbe Marke, wenn sie
+dieselbe Aufgabe hat" (`marken.css`). Ein Polster von 22 px, das kein
+Seitenrand ist, dürfte die Marke nicht tragen.
+
+**Prüflauf:** `test362` 18/18.
+
+### Was alle drei gemeinsam haben
+
+Zwei waren die Oberfläche von gestern, einer war ein echter Fehler — und der
+echte war der unauffälligste von den dreien. Genau deshalb steht in §46 „rot
+zuerst": man weiss vorher nicht, welcher es ist.
+
+---
+
+## E591 — Ein Lineal, dessen Griff man nicht erreicht, ist kein Werkzeug
+
+**15. September 2026.** Zwei offene Punkte aus Abschnitt 8 des
+Übergabeplans, beide nachgemessen.
+
+### Der Zoom schob das Lineal aus dem Bild
+
+> „`InkRuler` begrenzt die Lage an den Dokumentmaßen. Bei Zoom kann das
+> Lineal außerhalb des sichtbaren Ausschnitts stehen; sinnvollen Erstplatz
+> prüfen."
+
+Gemessen, Lineal an, dann gezoomt. „Sichtbarer Anteil" ist die Fläche des
+Lineals, die im Rollfenster liegt:
+
+| Zoom | 1440 × 960 | Griff erreichbar | 390 × 844 |
+|---|---|---|---|
+| 60 % | 100 % | ja | 100 % |
+| 100 % | 100 % | ja | 100 % |
+| 140 % | **1 %** | **nein** | 83 %, Griff nein |
+| 180 % | **0 %** | **nein** | 63 %, Griff nein |
+
+Die Ursache stand in einer Zeile: `y = Math.min(height * .4, width * .65)` —
+vier Zehntel der **Blatt**höhe. Solange das ganze Blatt ins Fenster passt,
+ist das die Mitte des Blicks. Beim Zoom ist das Blatt höher als das Fenster,
+der Blick steht oben, und vier Zehntel liegen darunter.
+
+**`sichtbareMitte()`** rechnet jetzt den Ausschnitt, den man wirklich sieht,
+in Blattmasse um: den Schnitt aus der Zeichenfläche und ihrem rollenden
+Vorfahren. Es fragt nichts über das Studio ab — es liest nur seine eigene
+Fläche —, und gilt damit auch für ein Blatt in der Seitenspalte.
+
+**Gemessen wird der Drehgriff, nicht die Mitte des Glases.** Beim ersten
+Wurf prüfte `insBild()` nur senkrecht; bei 180 % lag das Glas danach zu vier
+Fünfteln im Bild und der Griff trotzdem daneben. Der Griff ist der Teil, den
+man treffen muss, und er sitzt seitlich versetzt.
+
+**Verschoben wird nur, wenn es nötig ist**, und nie während eines Zuges: wer
+das Lineal irgendwohin gelegt hat, findet es dort wieder. Ein
+`ResizeObserver` auf der Fläche ist dabei die eine Stelle, die nicht
+vergessen werden kann — er muss nicht wissen, dass es einen Zoomregler gibt,
+und greift auch, wenn das Fenster schmaler wird.
+
+Nachher: 100 % bei 140 %, 91 % bei 180 %, Griff überall erreichbar.
+
+### Die Radierergrösse liess die Tinte in Ruhe — und niemand prüfte es
+
+> „Neue Studio-Radierergröße wird zunächst auf klein gesetzt. Prüfen, ob sie
+> zwischen Seiten wie erwartet bleibt. Sie darf die Tintenbreite nicht
+> ändern."
+
+Nachgemessen stimmte alles drei. Zwei Drittel hielt `test524 §3` schon; neu
+sind die zwei Sätze, die dort nicht stehen: die Tinte bleibt, und die Wahl
+überlebt auch den Wechsel auf die nächste **Seite** desselben Dokuments (der
+Zeichner wird je Blatt neu gebaut, die Wahl liegt in `meta`, E576).
+
+**Die erste Fassung der Zusicherung konnte den Fehler nicht sehen.** Sie las
+die Markierung der Strichstärke in der Leiste — und die wird vom Klick auf
+die Strichknöpfe gesetzt, nicht vom Zeichner. Gegengeprobt: liess man
+`setEraserSize` zusätzlich `setzeStrich(radius / 10)` rufen, blieb die Zeile
+**grün**, während jeder neue Strich 0,5 statt 2,4 breit wurde.
+
+Jetzt wird ein wirklich gezogener Strich gemessen: Breite davor, Grösse
+wechseln, Breite danach. Gegen den absichtlich kaputten Stand ergab das
+`0.5 → 2.8` — rot, wie es muss.
+
+**Das ist §55.2 zum dritten Mal in dieser Sitzung** (nach E585 und E587):
+eine Zusicherung, die richtig gemeint ist und die falsche Eigenschaft misst.
+Der einzige Schutz dagegen ist, sie einmal absichtlich zu brechen.
+
+**Prüflauf:** `test524 §16` (acht Zusicherungen, vier rot gesehen) und
+`§17` (fünf Zusicherungen, eine gegengeprobt). Angesehen:
+`bilder/lineal-zoom-140.png`, `lineal-zoom-180.png`.
+
+---
+
+## E592 — Die Originaldatei geht unverändert wieder heraus (Bogen O5)
+
+**15. September 2026.** Redur, 12. September: „ich will das redion auch die
+anderen datein auch öffnen kann z.B. word und powerpoint daten … aber
+wichtig **die originale datei wird immer geschützt**."
+
+### Was gemessen wurde
+
+Eine fremde `.pptx` mit zwei Folien, einem Bild, einer gefüllten Form, einem
+eigenen Thema und `docProps` — eingelesen und wieder ausgegeben:
+
+| | Original | Export |
+|---|---|---|
+| Einträge | 16 | 15 |
+| `docProps/core.xml` (Titel, Autor) | da | **weg** |
+| `docProps/app.xml` | da | **weg** |
+| `ppt/media/image1.png` | da | **weg** |
+| Folien | 2 | **3** |
+| Text auf Folie 1 | „Erste Folie" | „[Datei: probe.pptx]" |
+| Füllfarbe `FFCC00` | da | **weg** |
+| Thema „Redur-Thema" | da | **überschrieben** |
+
+**Es überlebte nichts ausser der Endung** — und der Dateianhang selbst wurde
+zur ersten Folie. `alsPowerPoint` baute eine frische Datei aus Text. Für eine
+selbst geschriebene Präsentation ist das richtig; für eine eingelesene ist es
+Datenverlust, und der steht in §46 an Platz eins.
+
+### Zwei Wege, und die Herkunft entscheidet
+
+- **Eingelesene Präsentation** → die Originaldatei wird **durchgereicht**.
+  Jeder Eintrag geht Byte für Byte zurück, mit seiner Packmethode und seiner
+  Prüfsumme. Das Werkzeug dafür stand seit **E539** bereit und war nie
+  benutzt worden.
+- **Selbst geschriebene Präsentation** → der frische Weg von vorher,
+  unverändert.
+
+Nachher, mit einem **fremden** Leser gegengeprüft (Pythons `zipfile`, nicht
+Redions):
+
+```txt
+16 Einträge · testzip: keine Schäden
+fehlt: nichts · neu: nichts · inhaltlich anders: kein Eintrag
+6432 Bytes hinein, 6432 Bytes heraus
+Packmethoden: nur 8 — nichts wurde entpackt und neu abgelegt
+Folie 1: „Erste Folie" · 1 Bild · FFCC00 · Thema „Redur-Thema"
+```
+
+### Ein Fehler beim ersten Wurf, der die Ursache erklärt
+
+`rohBytes(name)` gibt **den ganzen Satz** zurück — Bytes, Methode,
+Prüfsumme, Rohgrösse —, nicht nur die Bytes. Im ersten Wurf stand das OBJEKT
+im Feld `roh`; der Schreiber hielt es für Inhalt, `inhalt.length` war
+`undefined`, und das Archiv kündigte fünfzehn Einträge an, von denen keiner
+an seiner Stelle lag. Der Leser sagte es sofort und deutlich — das ist der
+Satz, den E350 dort hingeschrieben hat.
+
+### Was dieser Bogen NICHT liefert, und warum
+
+**Ein in Redion geänderter Folientext steht noch nicht in der Datei.** Eine
+Marke trägt keine Rückspur zu ihrem `<a:t>`; ohne sie bliebe nur ein
+Zuordnen nach Reihenfolge. Bei Gruppen, Tabellen und geerbten Platzhaltern
+schriebe das Text in die **falsche** Form — und ein falscher Text ist
+schlimmer als ein fehlender (§51).
+
+Die Spur wird beim EINLESEN angelegt; das ist Bogen **O5b** (L168).
+
+**Und es wird gesagt, nicht verschwiegen** (§35): die Ausgabe zeigt einen
+Hinweis — „Die Originaldatei ist vollständig erhalten. In Redion geänderte
+Folieninhalte stehen noch nicht darin." Sichtbar als Meldung, nicht nur im
+Rückgabewert: wer speichert, sieht sonst eine Datei und glaubt, seine
+Änderung sei darin.
+
+**Prüflauf:** `test525` (neu), 17 Zusicherungen, elf davon rot gesehen.
+Er baut seine `.pptx` aus eigenem XML und packt sie mit dem Browser —
+nicht mit Redions Schreiber, sonst prüfte er, ob Redion sich selbst
+versteht, statt ob sie fremde Dateien schützt.
+
+---
+
+## E593 — Die Rückspur zum `<a:t>` (Bogen O5b)
+
+**15. September 2026.** E592 hat die Originaldatei gerettet; was in Redion an
+einer Folie geändert wurde, stand danach aber noch nicht darin. L168 hat
+gesagt, warum: eine Marke trug keine Spur zu der Stelle, aus der sie kam.
+
+### Die Spur entsteht beim Einlesen, nicht beim Schreiben
+
+Jede Textmarke bekommt `quelle: { sp, p }` — die Kennung ihrer Form
+(`p:cNvPr@id`, innerhalb einer Folie eindeutig) und die Nummer ihres
+Absatzes. Das Feld reist von selbst mit: der Einleser gibt seit E560 alles
+an die Marke weiter **ausser** vier Massen (`x`, `y`, `w`, `h`) — eine
+Verbotsliste statt einer Erlaubnisliste, und genau deshalb musste hier
+keine Liste erweitert werden.
+
+### Nur wo es eindeutig ist
+
+Eine Spur bekommt nur, was **genau einem Absatz mit genau einem Lauf und
+ohne Aufzählungszeichen** entspricht. Nicht:
+
+- mehrere Läufe mit eigenem Format in einem Absatz (E561),
+- mehrere Absätze, die zu einer Marke zusammengefasst wurden (E557),
+- Aufzählungen, deren Zeichen der Einleser in den Text schreibt.
+
+In all diesen Fällen müsste der neue Text auf mehrere Stellen **verteilt**
+werden, und jede Verteilung wäre geraten. Ein falscher Text ist schlimmer
+als ein fehlender (§51). Was keine Spur hat, bleibt stehen.
+
+### Das Zurückschreiben sucht nicht, es schlägt nach
+
+`folieMitText()` legt die Formen der Folie einmal nach ihrer Kennung ab,
+schlägt dann je Marke Form und Absatz nach und ersetzt **genau das eine**
+`<a:t>`. Trägt der Absatz nicht genau eine Stelle, wird nichts geschrieben —
+dann ist die Spur falsch geworden, seit sie vergeben wurde (eine fremde
+Bearbeitung, ein zweiter Lauf), und daneben zu schreiben wäre schlimmer als
+gar nicht.
+
+### Mit einem fremden Leser gegengeprüft
+
+Pythons `zipfile`, nicht Redions — den Titel der ersten Folie geändert:
+
+```txt
+16 Einträge · testzip(): keine Schäden · fehlt nichts · neu nichts
+inhaltlich anders: GENAU EIN Eintrag — ppt/slides/slide1.xml
+Folie 1 vorher : ['Erste Folie']      Bilder 1 · FFCC00 · Lage 838200/500000
+Folie 1 nachher: ['Ganz neuer Titel'] Bilder 1 · FFCC00 · Lage 838200/500000
+Folie 2: Byte für Byte gleich
+XML wohlgeformt, Vorspann `<?xml …?>` erhalten
+```
+
+**Der Preis, und er steht hier, weil er einer ist:** die neu geschriebene
+Folie geht ungepackt hinein (Methode 0), der Rest bleibt Methode 8. Die
+Datei wuchs dadurch von 6432 auf 7104 Bytes. Redions Schreiber packt nicht;
+eine Folie ist ein paar Kilobyte, und dafür ein Packwerk einzuführen wäre
+die falsche Reihenfolge (§45).
+
+### Zwei Zusicherungen, die es ohne Anlass gibt
+
+Ein neu geschriebenes XML **ohne Vorspann** und ein XML **mit einem Fehler
+darin** sehen beide harmlos aus, und PowerPoint öffnet beide nicht. Der
+Serialisierer des Browsers behält den Vorspann — gemessen. Geprüft wird es
+trotzdem: „behält ihn" ist eine Annahme über einen fremden Baustein, und
+Annahmen über fremde Bausteine sind der teuerste Fehler dieses Projekts
+(E21).
+
+**Prüflauf:** `test525` 22/22, davon fünf Zusicherungen neu und drei rot
+gesehen.
+
+---
+
+## E594 — Die fünf Messlatten
+
+**15. September 2026.** Redur:
+
+> „Ich will das redion start wie goodnotes bein zeichenn ist, stark wie word
+> beim text schreiben bearbeiten, start wie Powerpoint beim Präsentation
+> erstellen, strat wie obsidian bein gedechnis und besser als notion mehrer
+> funktionen, mehr Qualität haben."
+
+Das ist die Richtung, an der Redion künftig gemessen wird. Bisher stand in
+der Visionskarte eine Aufzählung von Programmen; jetzt steht daneben, **worin**
+Redion ihnen gleichkommen soll. Das ist der Unterschied zwischen einem Wunsch
+und einer Messlatte: eine Messlatte sagt, wann man daneben liegt.
+
+**Fünf, nicht eine.** Redion muss nicht in allem gleich weit sein — es muss
+in jedem der fünf Felder **so gut wie das beste Programm dieses Feldes** sein,
+und im fünften darüber hinaus. Wo es das heute nicht ist, steht das unten,
+und zwar gezählt.
+
+### Wo Redion am 15. September 2026 steht
+
+Alles gezählt an der laufenden App, nicht geschätzt.
+
+| Feld | Messlatte | Was steht | Was fehlt |
+|---|---|---|---|
+| Zeichnen | GoodNotes | 13 Werkzeuge · 6 Stifte · 7 Formen · 5 Radierarten · Lineal mit Kantenführung · Zoomfenster · Formenerkennung · Kritzel-Löschen · Lasso · 100 Schritte zurück | der Rest von L133 |
+| Text | **Word** | 78 Blockarten · `.docx` lesen (verlustbehaftet) · `.docx` schreiben (minimal) | **Draufschreiben (O6), Text ändern (O7)** |
+| Präsentation | PowerPoint | 8 Layouts · 173 Bandeinträge in 7 Reitern · Vortragsmodus · `.pptx` lesen · `.pptx` als Rundreise schreiben (E592/E593) | Übergänge, Animationen, Folienmaster |
+| Gedächtnis | Obsidian | Rückverweise · unverlinkte Erwähnungen · Wissensgraph · Schlagwörter · Suche über mehrere Dokumente · alles lokal | tägliche Notizen als eigener Weg |
+| Alles zusammen | Notion, und darüber | 13 Ansichten · 35 Eigenschaftstypen · 255 Formelfunktionen · Relationen · Rollups · 11 Vorlagen · 8 Verbindungen · 16 Bereiche | — |
+
+Dazu der Unterbau: **467 Prüfläufe**, 221 TypeScript-Dateien, 146 661 Zeilen,
+574 Entscheidungen, 169 Lücken (31 davon geschlossen), und **keine einzige von
+Hand geschriebene `.js`** im ganzen Projekt (§54).
+
+### Die ehrliche Antwort: vier von fünf stehen, eine nicht
+
+**Text ist das schwächste Feld.** Redion hat 78 Blockarten und schreibt Text
+schöner als Notion — aber „stark wie Word" heisst für Redur etwas anderes: er
+will eine `.docx` öffnen, darauf schreiben und den Text ändern, **ohne dass
+die Originaldatei leidet**. Für `.pptx` ist genau das seit heute gebaut. Für
+`.docx` fehlt es:
+
+- **O7 (Text ändern)** ist derselbe Weg wie E593, nur auf `word/document.xml`
+  statt auf `ppt/slides/slideN.xml`. Das Werkzeug ist da, die Spur wäre
+  dieselbe Idee, und es ist der nächste Bogen.
+- **O6 (Draufschreiben)** braucht einen Rasterer — `pdf.js` liest nur PDF.
+  Das ist der teuerste Bogen des ganzen Projekts und der einzige ohne
+  gebahnten Weg.
+
+**Was NICHT als Antwort gilt:** „wir haben schon 78 Blockarten". Redur hat
+nicht nach der Zahl gefragt, sondern nach einer Fähigkeit. Eine Zahl, die
+eine fehlende Fähigkeit zudeckt, ist die unehrlichste Art zu antworten
+(§33: keine falschen Versprechen).
+
+### Was daraus für die Reihenfolge folgt
+
+1. **O7 — `.docx`-Text ändern.** Derselbe Weg wie E593, und damit steht das
+   schwächste Feld.
+2. **Folienmaster und Übergänge** — der Rest von „1:1 wie PowerPoint".
+3. **Tägliche Notizen** — der Rest von „wie Obsidian".
+4. **O6 — auf `.docx` schreiben.** Zuletzt, weil es einen Rasterer braucht.
+
+Der Rest von L133 (Zeichnen) läuft nebenher weiter: dort ist Redion schon
+auf der Messlatte, und was fehlt, sind Feinheiten, keine Fähigkeiten.

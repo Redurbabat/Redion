@@ -596,7 +596,7 @@
      breiten Gerät ist das keine Leiste, sondern eine Ausrede. */
   .tbl-werkzeuge button {
     flex: 0 0 auto;
-    min-width: 44px; height: 44px;
+    min-width:var(--touch-min); height: 44px;
     padding: 0 10px;
     font-size: 14px;
   }

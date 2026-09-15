@@ -1803,13 +1803,27 @@ const DocumentMode = (() => {
         workspace.setAttribute('aria-label', 'Dokument: ' + (page.text || 'Ohne Titel'));
         const top = document.createElement('div');
         top.className = 'document-topbar';
-        const topButton = (action, text, label) => {
+        /* ══ EIN ZEICHEN AUS DEM REGISTER, KEIN SCHRIFTZEICHEN (E586) ═════════
+           `sym` ist der vierte, freiwillige Teil. Wer ihn angibt, bekommt statt
+           des Textes eine Hülle mit `data-sym`; `Register.symbole.fuelle` malt
+           sie später aus. Wer ihn weglässt, bekommt weiter seinen Text — und
+           das ist richtig so für „+" und „‹", die Zeichen im Wortsinn sind und
+           kein Bild.
+    
+           WARUM ÜBERHAUPT: das Register sagt es seit E272 selbst — „ein Pfeil,
+           der aus einer Schrift kommt, sieht auf jedem System anders aus und
+           trägt nicht die Farbe seiner Zeile". Daneben stehen dreizehn
+           gezeichnete Werkzeuge. */
+        const topButton = (action, text, label, sym) => {
             const button = document.createElement('button');
             button.type = 'button';
             button.dataset.documentAction = action;
             button.setAttribute('aria-label', label);
-            button.textContent = text;
             button.title = label;
+            if (sym)
+                button.innerHTML = `<span data-sym="${sym}" aria-hidden="true"></span>`;
+            else
+                button.textContent = text;
             return button;
         };
         /* DER WEG ZURUECK STEHT IM DOKUMENT (E384). Solange Menueband und
@@ -1892,12 +1906,12 @@ const DocumentMode = (() => {
         }
         const topActions = document.createElement('div');
         topActions.className = 'document-top-actions';
-        const viewButton = topButton('view', '☷', 'Ansicht, Lesemodus und Zoom');
+        const viewButton = topButton('view', '', 'Ansicht, Lesemodus und Zoom', 'eye');
         viewButton.className = 'document-view-button';
         viewButton.setAttribute('aria-expanded', 'false');
         /* SUCHEN IM DOKUMENT (E468): der Knopf steht bei den Kopfaktionen,
            wie GoodNotes' Lupe; die Leiste dazu klappt unter dem Kopf auf. */
-        const findButton = topButton('find', '🔍', 'Im Dokument suchen (Strg F)');
+        const findButton = topButton('find', '', 'Im Dokument suchen (Strg F)', 'search');
         findButton.className = 'document-find-button';
         findButton.setAttribute('aria-expanded', 'false');
         /* PRÄSENTIEREN (E493), GoodNotes' Presentation Mode: das Dokument
@@ -1997,17 +2011,9 @@ const DocumentMode = (() => {
         drawingbar.className = 'document-drawingbar';
         drawingbar.setAttribute('role', 'toolbar');
         drawingbar.setAttribute('aria-label', 'PDF bearbeiten');
-        const drawingTools = [
-            ['schreiben', 'inkHand', 'Hand / Verschieben'], ['select', 'inkLasso', 'Lasso / Auswahl'],
-            ['stift', 'pencil', 'Stift'], ['marker', 'inkMarker', 'Marker'],
-            ['radierer', 'inkEraser', 'Radierer'], ['text', 'inkText', 'Text'],
-            ['formen', 'inkShapes', 'Formen'], ['zettel', 'comment', 'Haftnotiz'],
-            ['bild', 'image', 'Bild'], ['zeichen', 'bolt', 'Fachzeichen'], ['abdeck', 'eye', 'Abdecken'],
-            /* DIE ELEMENTE (E494): im Studio steht das Werkzeug mit in der Leiste,
-               weil das Studio der Ort ist, an dem gestempelt wird — ein Häkchen
-               auf zwanzig Seiten, eine Unterschrift, ein Kastenrahmen. */
-            ['elemente', 'star', 'Elemente']
-        ];
+        /* E572: derselbe Katalog wie auf dem Blatt. Die alte Abschrift hatte
+           den Laser vergessen und verwendete andere Symbole für dieselbe Tat. */
+        const drawingTools = Marken.WERKZEUGE.map(tool => [tool.id, tool.sym, tool.name]);
         drawingTools.forEach(([tool, icon, label]) => {
             const button = document.createElement('button');
             button.type = 'button';
@@ -2020,7 +2026,11 @@ const DocumentMode = (() => {
             button.appendChild(glyph);
             drawingbar.appendChild(button);
         });
-        const moreTools = topButton('ink-options', '···', 'Alle Stiftoptionen und Bearbeitungsaktionen');
+        const rulerButton = topButton('ink-ruler', '', 'Lineal ein- oder ausblenden');
+        rulerButton.innerHTML = '<span data-sym="inkRuler" aria-hidden="true"></span>';
+        rulerButton.setAttribute('aria-pressed', 'false');
+        drawingbar.append(rulerButton);
+        const moreTools = topButton('ink-options', '···', 'Weitere Zeichenoptionen und Leiste einrichten');
         moreTools.setAttribute('aria-expanded', 'false');
         drawingbar.appendChild(moreTools);
         /* ZURÜCK UND VOR STEHEN LINKS (E490, Redurs Bild vom 7. September).
@@ -2037,8 +2047,9 @@ const DocumentMode = (() => {
         history.className = 'document-ink-history';
         history.setAttribute('role', 'group');
         history.setAttribute('aria-label', 'Zeichenverlauf');
-        history.append(topButton('ink-undo', '↶', 'Letzten Zeichenstrich rückgängig machen'), topButton('ink-redo', '↷', 'Zeichenstrich wiederholen'));
-        drawingbar.prepend(history);
+        history.append(topButton('ink-undo', '', 'Letzten Zeichenstrich rückgängig machen', 'undo'), topButton('ink-redo', '', 'Zeichenstrich wiederholen', 'redo'));
+        /* E572: die feste Verlaufskapsel liegt über dem Papier, nicht im
+           rollenden Werkzeugband — wie in Redurs neuer Referenz. */
         /* WELCHE SPALTEN ES GIBT, STEHT AM KASTEN (E296). Vorher war das Raster
            fest — 190 px links, 280 px rechts, bei jeder Fensterbreite ueber
            1100 px. Auf 1440 px blieben der Seite damit rund 900, obwohl beide
@@ -2445,7 +2456,36 @@ const DocumentMode = (() => {
         inspector.setAttribute('aria-label', 'Dokumentdetails und verknüpfte Inhalte');
         inspectorButton.setAttribute('aria-controls', inspector.id);
         renderInspector(inspector, page, current);
-        body.append(thumbnails, center, inspector);
+        /* ══ DIE VERLAUFSKAPSEL LIEGT IM PAPIERBEREICH (E573) ═════════════════
+           E572 hängte sie als viertes Kind in `.document-body`. Das ist am
+           Rechner ein Raster mit drei Spalten (0 / Papier / 0) — ohne eigene
+           Spaltenangabe landete sie in der dritten, 0 px breiten, und stand
+           gemessen bei x = 1440 in einem 1440-px-Fenster. Am TELEFON ist
+           `.document-body` gar kein Raster, sondern `display:block`: dort stand
+           sie als letzter Block UNTER dem Papier, gemessen bei top = 812 in
+           einem 800 px hohen Fenster. Beides heisst dasselbe: Rückgängig war
+           nicht erreichbar, und das ist §46 Priorität 1.
+    
+           Jetzt liegt sie IN `.document-center`, also in der Spalte, in der das
+           Papier steht, und klebt dort oben links (`position:sticky`). Das
+           braucht kein Raster und keine Sonderregel je Bildschirmbreite — es
+           ist derselbe Kasten, in dem auch das Papier rollt. */
+        /* ══ DIE VERLAUFSKAPSEL BLEIBT EIN KIND DES KÖRPERS (E573) ════════════
+           Sie IN die Papierspalte zu hängen (`center.prepend`) sah nach dem
+           kürzeren Weg aus und war der falsche: gemessen baute das Studio danach
+           gar nicht mehr auf — `.document-workspace` wurde nie sichtbar, und
+           `test437` lief in seine Zeitgrenze. `.document-center` ist der
+           Rollkasten, dessen erste Kinder (Original, Beschriftung, Bühnen) von
+           Messung, Rollstand und ResizeObserver gelesen werden; ein schwebendes
+           Element davor gehört dort nicht hinein.
+    
+           Sie bleibt also Kind von `.document-body` — und bekommt IM STILBLATT
+           ihren Platz: seit E579 in JEDEM Raster `position:absolute` oben
+           links, am Rechner wie am Telefon. (Hier stand bis dahin „am Rechner
+           als Rasterfeld in derselben Zelle wie das Papier" — das stimmte für
+           eine Ansicht und schob in der anderen die Folienfläche um 54 px
+           nach unten, gefunden von `test508 §2`.) */
+        body.append(thumbnails, center, inspector, history);
         /* ══ DIE SUCHLEISTE (E468) ══════════════════════════════════════════════
            Ein Feld, die Zahl, vor und zurueck, zu. Enter springt zum naechsten
            Treffer, Umschalt+Enter zum vorigen, Escape schliesst (E302). Die
@@ -2582,17 +2622,154 @@ const DocumentMode = (() => {
         }
         if (typeof Register !== 'undefined')
             Register.symbole.fuelle(drawingbar);
+        /* UND DIE ZWEI ANDEREN ORTE MIT GEZEICHNETEN ZEICHEN (E586): die
+           Kopfzeile (Suchen, Ansicht) und die Verlaufskapsel. `fuelle` sucht
+           nur `[data-sym]` — es fasst nichts an, was keins hat. */
+        if (typeof Register !== 'undefined') {
+            try {
+                Register.symbole.fuelle(top);
+                Register.symbole.fuelle(history);
+            }
+            catch { /* ohne Zeichen bleibt der Name im `aria-label` */ }
+        }
         const inkToolbar = () => staende[state.index]?.querySelector('.blatt-werk') || null;
+        /* ══ EINE SORTIERBEWEGUNG IST KEINE ATTRIBUTÄNDERUNG (E575) ═════════════
+           Der Beobachter darüber horcht auf `disabled`, `aria-pressed` und
+           `data-tool` — und genau deshalb kam eine Sortierbewegung oben NIE an:
+           sie ist eine `childList`-Änderung. Gemessen: den letzten Knopf der
+           unteren Leiste nach vorn gezogen, 600 ms gewartet, obere Reihenfolge
+           Zeichen für Zeichen unverändert.
+           WARUM NICHT EINFACH `childList` OBEN DAZU: `center` enthält die
+           Zeichenfläche. Jeder Strich hängt dort Pfade ein, und `inkSync()`
+           liefe dann mitten im Zeichnen bei jedem Bild. Der zweite Beobachter
+           horcht deshalb nur auf die Leiste selbst, ohne `subtree` — dort sind
+           die Kinder genau die Knöpfe, um die es geht. Er wird umgehängt, wenn
+           die aktive Seite eine andere Leiste mitbringt. */
+        let beobachtet = null;
+        const ordnungObserver = new MutationObserver(() => {
+            if (!workspace.isConnected) {
+                ordnungObserver.disconnect();
+                return;
+            }
+            inkSync();
+        });
+        const ordnungBeobachten = () => {
+            const source = inkToolbar();
+            if (!source || source === beobachtet)
+                return;
+            ordnungObserver.disconnect();
+            ordnungObserver.observe(source, { childList: true });
+            beobachtet = source;
+        };
+        /* ══ DIE KOPIE ZEIGT, WAS DAS ORIGINAL ZEIGT (E583) ══════════════════════
+           Die obere Reihe wird EINMAL aus `Marken.WERKZEUGE` gebaut und trägt
+           seither dasselbe Zeichen. Für zwölf der dreizehn Werkzeuge stimmt
+           das: ein Stift bleibt ein Stift. Für den dreizehnten stimmt es nicht.
+    
+           `formen` ist kein Werkzeug, sondern ein Knopf für sieben (E375), und
+           E515 sagt ausdrücklich, was er zeigen soll: „nicht ‚Formen', sondern
+           WELCHE Form gerade gewählt ist — ein Dreieck, ein Pfeil, eine Kurve.
+           Ein gemeinsames Werkzeugzeichen nähme genau die Auskunft weg, für die
+           dieser Knopf da ist." Der Knopf auf dem Blatt hält das seit E515; er
+           schreibt sich beim Formwechsel selbst um (`marken.ts`, `formart`).
+    
+           GEMESSEN am 15. September 2026 hielt die Kopie es nicht: Dreieck,
+           Kurve, Ellipse gewählt — oben dreimal `inkShapes`, dreimal kein
+           `data-form`, dreimal der Titel „Form". Im Studio ist die obere Reihe
+           die einzige sichtbare (E573); die Auskunft fehlte also genau dort,
+           wo gezeichnet wird.
+    
+           WARUM ALLGEMEIN UND NICHT ALS SONDERFALL FÜR `formen`: derselbe Satz
+           gilt für jeden Knopf, der sich unterwegs umschreibt. Eine Zeile
+           `if (id === 'formen')` wäre beim nächsten solchen Knopf wieder falsch,
+           und niemand würde es merken. Hier wird verglichen, nicht geraten —
+           wer sein Zeichen nie ändert, kommt hier nie vorbei.
+    
+           NUR BEI ABWEICHUNG (E575): `Register.symbole.fuelle` schreibt ein
+           frisches `<svg>` hinein. Bei jedem der sechs Rufe von `inkSync()`
+           hiesse das sechsmal neues Markup unter dem Finger — derselbe Preis,
+           den das Umhängen oben schon gekostet hat. */
+        const zeichenSpiegeln = (kopie, echt) => {
+            if (!echt)
+                return;
+            const glyph = kopie.querySelector('[data-sym]');
+            const sym = echt.querySelector('[data-sym]')?.dataset.sym || '';
+            if (!glyph || !sym)
+                return;
+            const form = echt.dataset.form || '';
+            if (glyph.dataset.sym === sym && (kopie.dataset.form || '') === form)
+                return;
+            glyph.dataset.sym = sym;
+            if (form)
+                kopie.dataset.form = form;
+            else
+                delete kopie.dataset.form;
+            try {
+                Register.symbole.fuelle(kopie);
+            }
+            catch { /* dann bleibt das alte Zeichen stehen */ }
+            /* AUCH DAS WORT, NICHT NUR DAS BILD (§38): wer die Maus darauf hält
+               oder einen Vorleser benutzt, hörte sonst weiter „Form". */
+            const titel = echt.getAttribute('title');
+            if (titel) {
+                kopie.title = titel;
+                kopie.setAttribute('aria-label', titel);
+            }
+        };
         const inkSync = () => {
             if (!workspace.isConnected) {
                 Zeichenziel.vergiss(inkSync);
                 return;
             }
             const source = inkToolbar();
+            source?.dispatchEvent(new Event('ink-studio-ready'));
+            /* ══ NUR UMHÄNGEN, WENN SICH WIRKLICH ETWAS GEÄNDERT HAT (E575) ═══════
+               Hier stand dasselbe `insertBefore` ohne Bedingung. `insertBefore`
+               BEWEGT auch einen Knoten, der schon am richtigen Platz steht: erst
+               raus, dann rein. Gemessen mit einem Beobachter auf der oberen
+               Leiste ergab ein einziger Klick auf ein Werkzeug **156
+               Knotenbewegungen** — dreizehn Knöpfe mal zwei Bewegungen mal sechs
+               Rufe von `inkSync()`.
+               Der Preis war nicht nur Rechenzeit. Ein bewegter Knoten verliert
+               den Fokus: nach dem Klick stand `document.activeElement` auf
+               `BODY`, der Knopf war also unter dem Finger weggezogen worden. Und
+               jeder Übergang auf ihm (E568: der Wechsel der Auswahl) begann von
+               vorn, mitten im Bild.
+               Jetzt wird zuerst verglichen und nur bei Abweichung umgehängt. Die
+               benutzereigene Reihenfolge (§8/E570) gilt unverändert — sie kommt
+               nur ohne Neuaufbau an. */
+            const wunsch = Array.from(source?.querySelectorAll(':scope > [data-wz]') || [])
+                .map(real => drawingbar.querySelector(`[data-document-tool="${real.dataset.wz}"]`))
+                .filter((button) => !!button);
+            const jetzt = Array.from(drawingbar.querySelectorAll(':scope > [data-document-tool]'))
+                .filter(button => wunsch.includes(button));
+            if (wunsch.some((button, index) => button !== jetzt[index])) {
+                wunsch.forEach(button => drawingbar.insertBefore(button, rulerButton));
+            }
+            const realRuler = source?.querySelector('[data-act="lineal"]');
+            /* ══ IM LESEMODUS IST DIE OBERE REIHE AUS (E578) ═══════════════════════
+               GEMESSEN am 15. September 2026: im Lesemodus war
+               `[data-document-tool="marker"]` sichtbar UND nicht `disabled`. Ein
+               gewöhnlicher Mausklick darauf setzte die Zeichenschicht auf `marker`
+               und `pointer-events:auto` — und der nächste Zug landete als Marke im
+               Block (0 → 1). Ein Dokument, das man ausdrücklich zum LESEN geöffnet
+               hat, nahm damit Striche an.
+               Die untere Leiste war längst zu (`.blatt-reihe{display:none}`), die
+               obere aber nicht — sie hat ihre eigene `disabled`-Rechnung, und
+               `state.toolsOpen` kam darin nicht vor. Die Knöpfe sagten dabei sogar
+               schon die Wahrheit: ihr `aria-pressed` ist im Lesemodus überall
+               `false`. Eine Reihe, die „nichts gewählt" meldet und trotzdem
+               schreibt, ist der Widerspruch, der hier weggeht.
+               Dasselbe gilt für die gesperrte Seite und für fehlende Rechte:
+               beide schliessen dieselbe Reihe über `state.toolsOpen`. */
+            rulerButton.disabled = !canAnnotate || !state.toolsOpen || !realRuler;
+            rulerButton.setAttribute('aria-pressed', realRuler?.getAttribute('aria-pressed') || 'false');
+            workspace.dataset.inkTool = source?.dataset.tool || 'schreiben';
             drawingbar.querySelectorAll('[data-document-tool]').forEach(button => {
                 const real = source?.querySelector('[data-wz="' + button.dataset.documentTool + '"]');
-                button.disabled = !canAnnotate || !real || real.disabled;
+                button.disabled = !canAnnotate || !state.toolsOpen || !real || real.disabled;
                 button.setAttribute('aria-pressed', String(state.toolsOpen && real?.getAttribute('aria-pressed') === 'true'));
+                zeichenSpiegeln(button, real);
             });
             for (const action of ['undo', 'redo']) {
                 const real = source?.querySelector('[data-act="' + action + '"]');
@@ -2600,6 +2777,8 @@ const DocumentMode = (() => {
                 if (button)
                     button.disabled = !canAnnotate || !real || real.disabled;
             }
+            /* Die Leiste der aktiven Seite ist nicht immer dieselbe — nachziehen. */
+            ordnungBeobachten();
         };
         Zeichenziel.horche(inkSync);
         // History state is published on the existing controls via disabled attrs.
@@ -4181,6 +4360,11 @@ const DocumentMode = (() => {
                 }
                 toolsSetzen(true);
                 inkToolbar()?.querySelector('[data-wz="' + tool + '"]')?.click();
+                // Eine Auswahlklappe zeigt Möglichkeiten, ohne einen Strich abzulegen.
+                if (tool === 'laser' || tool === 'elemente')
+                    inkToolbar()?.dispatchEvent(new CustomEvent('ink-panel', {
+                        detail: { kind: tool, anchor: element?.closest('[data-document-tool]') }
+                    }));
                 inkSync();
                 return;
             }
@@ -4260,6 +4444,12 @@ const DocumentMode = (() => {
                 menueSchliessen();
             if (!action)
                 return;
+            if (action === 'ink-ruler' && canAnnotate) {
+                toolsSetzen(true);
+                inkToolbar()?.querySelector('[data-act="lineal"]')?.click();
+                inkSync();
+                return;
+            }
             if (action === 'folienmenue') {
                 folienMenue(tatKnopf);
                 return;

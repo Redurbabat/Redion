@@ -71,7 +71,7 @@
 .ai-foot{padding:10px 12px; border-top:1px solid var(--line)}
 .ai-foot textarea{
   width:100%; background:var(--bg-input); border:1px solid var(--line); border-radius:8px;
-  padding:10px 12px; resize:none; outline:none; font-size:14px; min-height:44px; max-height:160px;
+  padding:10px 12px; resize:none; outline:none; font-size:14px; min-height:var(--touch-min); max-height:160px;
 }
 .ai-foot textarea:focus{border-color:var(--accent-text)}
 .ai-quick{display:flex; gap:5px; flex-wrap:wrap; margin-bottom:8px}
@@ -188,8 +188,15 @@ body[data-small="1"] .b-text .ct{font-size:14px}
    ein SVG ist ein Ersatzelement und stünde sonst auf der Grundlinie, also
    zwei Punkte zu tief neben dem Text. */
 #ai .ai-quick button > svg,
+/* DIE ZEICHEN STEHEN SEIT E589 IN EINER HÜLLE (`<span data-sym>`), nicht
+   mehr roh im Knopf. Ein Kindwähler auf `svg` griffe danach ins Leere —
+   also beide Schreibweisen, damit auch ein Zeichen, das noch roh dasteht,
+   auf der Linie bleibt. */
 #ai .ai-leiste button > svg,
 #ai .ai-head b > svg,
-#ai .ai-head .icon-btn > svg{ vertical-align:-3px }
+#ai .ai-head .icon-btn > svg,
+#ai .ai-leiste button > [data-sym],
+#ai .ai-head b > [data-sym],
+#ai .ai-head .icon-btn > [data-sym]{ vertical-align:-3px }
 #ai .ai-head b{ display:inline-flex; align-items:center; gap:6px }
 #ai .ai-head b > svg{ vertical-align:0 }

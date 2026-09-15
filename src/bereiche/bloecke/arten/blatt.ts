@@ -177,6 +177,17 @@ const Blatt = (() => {
        Blatt bei jeder Fensterbreite, ohne eine einzige gerechnete Zahl. */
     papier.style.setProperty('aspect-ratio', breite + ' / ' + hoehe);
     papier.dataset.papier = jetzt;
+    /* DIE GRUNDFARBE DES BLATTS (E558). `--paper` gibt es im Stilblatt
+       längst (`.blatt-papier{background:var(--paper,#fff)}`) — gesetzt hat
+       es bisher nur das dunkle Thema. Eine eingelesene PowerPoint-Folie mit
+       farbigem Hintergrund kam deshalb weiss an.
+
+       NUR EINE ECHTE FARBE, und geprüft: ein Wert aus einer Datei geht hier
+       in einen Stil, und `setProperty` nimmt jede Zeichenkette. `#rgb`,
+       `#rrggbb` oder `#rrggbbaa` — sonst gar nichts (§19). */
+    const grundfarbe = String((block as any).grundfarbe || '');
+    if (/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(grundfarbe))
+      papier.style.setProperty('--paper', grundfarbe);
     for (const [name, wert] of Object.entries(masse(breite, hoehe, R.A4_HOEHE)))
       papier.style.setProperty(name, wert);
     /* Gedreht per Huelle (E467); ungedreht haengt das Papier wie immer

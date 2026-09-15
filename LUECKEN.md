@@ -7433,26 +7433,102 @@ Grösse, Schriftgrad und Fett, Bilder mit ihren Bytes. Das ist der erste
 Schritt, nicht der letzte. Was heute **nicht** ankommt, damit niemand es für
 verloren hält:
 
-- **Geerbtes vom Layout und vom Master.** Gelesen werden nur die Formen, die
-  im Folien-XML wirklich stehen. Hintergründe, Platzhaltertexte, Fusszeilen,
-  Foliennummern und das Farbthema stehen dort nicht. Eine Folie, die im
-  Original einen farbigen Grund hat, kommt weiss an.
-- **Ein Schriftgrad je Kasten.** Redions Textmarke hat genau einen; ein
-  PowerPoint-Kasten mit gemischten Graden oder Farben kommt vereinfacht an,
-  mit dem Grad des ersten Laufs.
-- **Absatzebenen und Aufzählungszeichen.** `a:pPr@lvl` und `a:buChar` werden
-  nicht gelesen; eine Gliederung kommt als flacher Text an.
-- **Tabellen (`a:tbl`) und Diagramme.** Beide werden übersprungen — sie haben
-  in der Markenschicht kein Gegenstück. **Seit E555 werden sie wenigstens
-  GENANNT**: der Hinweis nach dem Einlesen sagt „NICHT übernommen:
-  1 Tabellen".
-- **Formen ohne Text** (Pfeile, Rechtecke, Linien aus `a:prstGeom`). Die
-  Markenschicht kennt sieben Formen; die Zuordnung fehlt noch. Auch sie
-  stehen seit E555 im Hinweis — aber nur, wenn sie eine Fläche haben; ein
-  unsichtbarer Platzhalter zählt nicht mit.
-- **Drehung** (`a:xfrm@rot`) und Spiegelung (`flipH`/`flipV`). Die Marken
-  können drehen — gelesen wird es noch nicht.
+- ~~**Geerbtes vom Layout und vom Master.**~~ **GESCHLOSSEN mit E558** für
+  die drei Dinge, die man sieht: Lage, Schriftgrad und Hintergrundfarbe
+  werden über `Folie → Layout → Master` geerbt, verbunden über `.rels` und
+  nicht über Dateinamen. Vorher stand `slideLayout` und `slideMaster` kein
+  einziges Mal im Leser — eine Folie, die selbst nichts angibt (also jede,
+  in die nur getippt wurde), bekam eine geratene Stelle und 40 pt. **Offen
+  bleiben darin**: Fusszeilen und Foliennummern aus dem Master (sie sind
+  Platzhalter OHNE Text, und ihr Inhalt käme erst aus `p:hf`) sowie das
+  Farbthema — eine `schemeClr` bleibt bewusst liegen, weil sie ohne
+  `theme1.xml` nicht auflösbar ist und eine falsche Hintergrundfarbe
+  schlimmer wäre als keine. **Und der Preis davon steht gleich mit dabei**:
+  ein Absatz ohne eigene Farbe bekommt auf einem dunklen geerbten Grund
+  ausdrücklich Weiss — gerechnet über den WCAG-Kontrast gegen `#111111`,
+  Schwelle 4,5:1 (§38). Das ist keine Themenfarbe, sondern nur die
+  Untergrenze der Lesbarkeit; die echte Farbe käme erst aus `theme1.xml`.
+- ~~**Ein Schriftgrad je Kasten.**~~ **GESCHLOSSEN mit E557** für den Fall,
+  der zählt: je ABSATZ werden Grad, Gewicht und Farbe gelesen, und wo sie
+  auseinandergehen, entsteht eine Marke je Absatz. Gemessen vorher:
+  „klein"(12) + „GROSS"(36, fett, blau) kam als eine Marke in 12 pt schwarz
+  an. ~~**Offen bleibt der Fall darin**: gemischte Läufe INNERHALB eines
+  Absatzes.~~ **GESCHLOSSEN mit E561**: die Textmarke trägt jetzt optional
+  `laeufe` — mehrere Formate in einem Absatz, jedes mit eigenem Grad,
+  Gewicht und eigener Farbe. Die Stücke werden von SVG selbst gesetzt, nicht
+  gerechnet (siehe L155). Eine Marke OHNE das Feld geht unverändert den
+  alten Weg, und ein Absatz, dessen Läufe alle dasselbe Format haben,
+  bekommt gar keins — der Normalfall bleibt damit wörtlich der alte.
+- ~~**Absatzebenen und Aufzählungszeichen.**~~ **GESCHLOSSEN mit E557**:
+  `a:pPr@lvl` rückt ein (und verschmälert den Kasten entsprechend),
+  `a:buChar` kommt als Zeichen davor, `a:buNone` unterdrückt es. `buAutoNum`
+  bekommt ein neutrales „·" — die echte Nummer käme erst aus der Absatzfolge,
+  und eine falsche Nummer wäre schlimmer als ein neutrales Zeichen.
+- ~~**Ausrichtung** (`a:pPr@algn`).~~ **GESCHLOSSEN mit E560**: `ctr` und `r`
+  werden gelesen, gezeichnet (SVG-Anker, jede Zeile eines umbrechenden
+  Absatzes) und sind über einen eigenen Knopf in der Zeichenleiste auch von
+  Hand setzbar — die Lücke war nie nur eine Importlücke. **Offen bleibt der
+  Blocksatz**: `just` und `dist` kommen linksbündig an, weil die
+  Markenschicht keine gestreckten Wortabstände kann. Links ist die Kante,
+  die der Blocksatz mit ihr teilt; zentriert wäre an jeder Zeile falsch.
+- ~~**Tabellen (`a:tbl`)**~~ **GESCHLOSSEN mit E565**: eine Tabelle kommt als
+  Gitter auf die Folie — ein Rechteck und ein Text je Zelle, mit Zellfüllung,
+  Textfarbe und `gridSpan`. Sie wird bewusst KEIN Tabellenblock: eine Folie
+  ist ein Blatt mit Marken, und die Tabelle herauszunehmen hiesse, die Folie
+  anders aussehen zu lassen als das Original.
+  **Offen bleiben davon**: Zellränder mit eigener Farbe und Stärke
+  (`a:lnL`/`a:lnR`/…) und `vMerge` über mehrere Zeilen, wenn kein `rowSpan`
+  dabeisteht.
+- **Diagramme.** Werden weiter übersprungen und genannt („NICHT übernommen:
+  1 Diagramme"). Ein fremder Zeichner hätte sie auf einen Schlag gelöst;
+  Redur hat ihn am 13. September abgelehnt (**E564**), und die Gründe stehen
+  dort. Der Weg ist damit: selbst lesen, und wer es exakt sehen will, nimmt
+  den PDF-Weg.
+- ~~**Formen ohne Text** (Pfeile, Rechtecke, Linien aus `a:prstGeom`).~~
+  **GESCHLOSSEN mit E566** für die Formen, die Redion kennt: `rect`,
+  `roundRect`, `ellipse`, `triangle` und `line` kommen mit Füllung, Umriss
+  (`a:ln`) und Drehung an — und liegen UNTER dem Text. **Gefunden an Redurs
+  echter Datei**, nicht an einem Prüfstück: der dunkelblaue Kasten hinter
+  einem Titel und ein roter Balken fehlten beide, und ohne sie steht der
+  Titel im Nichts.
+  **Offen bleibt alles andere**: über hundert PowerPoint-Formen haben in der
+  Markenschicht kein Gegenstück. Sie werden gezählt und genannt („NICHT
+  übernommen: 1 Formen") statt geraten — ein Stern als Rechteck wäre
+  schlimmer als ein Stern, der fehlt.
+- ~~**Die Schriftart** (`a:latin@typeface`).~~ **GESCHLOSSEN mit E567**:
+  gelesen aus dem Lauf, aus dem `a:defRPr` des Layouts und über
+  `+mj-lt`/`+mn-lt` aus dem Schriftpaar des Themas — der dritte Weg ist der
+  häufigste, PowerPoint schreibt fast immer so. Die Zuordnung auf Redions
+  fünf Familien ist eine Näherung, die nur in EINE Richtung irrt: was nicht
+  erkannt wird, bleibt `standard`, also der heutige Zustand.
+  **Offen bleiben zwei Dinge**: zwei Schriften in EINER Zeile (die Marke hat
+  eine Familie für alle ihre Stücke — zwischen Absätzen geht es), und jede
+  Schrift, die weder in der Liste steht noch ihren Charakter im Namen trägt
+  („Optima" ist serifenlos, „Rockwell" hat Serifen). Wer eine vermisst,
+  trägt sie in `SCHRIFT_SERIF` und die drei Nachbarlisten ein.
+- ~~**Drehung** (`a:xfrm@rot`).~~ **GESCHLOSSEN mit E563**: gelesen für
+  Text, Bild und Abdeckung, in 60000steln Grad, auf 0…360 gebracht, gedreht
+  um die Mitte des Kastens. Sie erbt bewusst NICHT vom Layout — dass eine
+  Form schief steht, ist eine Entscheidung der einzelnen Folie.
+  **Offen bleiben**: Spiegelung (`flipH`/`flipV` — die Marke hat kein
+  allgemeines Spiegeln) und die Drehung einer GRUPPE. Für die zweite müsste
+  `abbilden` die Kindpositionen mitdrehen; nur den Winkel durchzureichen
+  wäre schlimmer als nichts.
 - **Notizen** (`ppt/notesSlides/`), Übergänge, Animationen.
+- ~~**Das Farbthema** (`ppt/theme/theme1.xml`).~~ **GESCHLOSSEN mit E559**:
+  `schemeClr` wird über `p:clrMap` (die Stufe, die man vergisst) und
+  `a:clrScheme` aufgelöst, `sysClr` über `lastClr`, dazu `lumMod`, `lumOff`,
+  `tint` und `shade`. Nachgemessen an PowerPoints eigenen Feldern: „Dunkler
+  25 %", „Heller 40 %" und „Dunkler 50 %" von `accent1` stimmen auf das Byte.
+  **Offen bleiben davon drei Kleinigkeiten:**
+  - `phClr` — die Farbe des Platzhalters, der eine Vorlage benutzt. Sie steht
+    nirgends in der Datei und ist nicht auflösbar; sie bleibt leer.
+  - `alpha` (Durchsichtigkeit), `satMod` und `hueMod` werden nicht gerechnet.
+    Für `alpha` hat die Markenschicht ohnehin kein Gegenstück.
+  - `tint`/`shade` rechnet Redion linear auf dem Kanal. Das ist die
+    verbreitete Auslegung, aber — anders als `lumMod`/`lumOff` — **nicht
+    gegen eine PowerPoint-Ausgabe nachgemessen**. Wer eine Datei hat, in der
+    eine Tönung sichtbar danebenliegt, hat den Beleg, der hier fehlt.
 
 **GEMESSEN am 12. September**, an einer echten Datei von Redur
 (27 Folien, 36 Bilder, 11 Layouts, 4:3, beide Packmethoden gemischt). Sie
@@ -7610,3 +7686,546 @@ Zusagen, die für eine rollende Liste gelten — dass sie wirklich rollt und
 dass ihr letzter Eintrag unten ankommt (64 px, ganz sichtbar). Beide
 Gegenproben gefahren, beide rot geworden. Das macht aus der Liste keinen
 Wegweiser; es hält nur fest, dass niemand unten abgeschnitten wird.
+
+
+L155 · Die Breitenschätzung für Text lag zu niedrig — GESCHLOSSEN mit E562
+--------------------------------------------------------------------------
+
+`InkGeometry.textWidth` rechnet die Breite eines Textes aus einer Tabelle
+von Buchstabenbreiten (`geometry.ts:237`): ein Grundwert je Schriftfamilie,
+mal einem Faktor für schmale Zeichen (`.,:;ijlt`), breite (`mwMW`) und
+Grossbuchstaben, mal 1,06 für fett. Daraus entsteht der Zeilenumbruch
+**jeder** Textmarke in Redion.
+
+**Gefunden am 13. September 2026 — durch ein Bild, nicht durch eine
+Prüfung.** Eine Folie mit gemischten Formaten (E561) zeigte eine Zeile, die
+über den Blattrand hinauslief, obwohl die Schätzung sagte, sie passe.
+
+### Nachgemessen mit `canvas.measureText`, gegen denselben Schriftstapel
+
+```txt
+Text                              echt      geschätzt   Verhältnis
+„Ein Satz mit "                    6,31 em     6,00        1,05
+„einem hervorgehobenen Wort" fett 16,88 em    14,89        1,13
+„ mittendrin, der über mehrere"   15,02 em    13,09        1,15
+„Zeilen läuft und dabei sein …"   21,00 em    19,22        1,09
+„GROSS" fett                       3,84 em     3,88        0,99
+
+ganze Zeile bei 18 pt:  echt 688 pt · geschätzt 611 pt · Kasten 636 pt
+```
+
+Es ist also **nicht nur der Fett-Faktor**, sondern das Modell insgesamt, und
+die Abweichung schwankt zwischen 0,99 und 1,15. Eine Zeile, die den Kasten
+ausfüllt, läuft dadurch um rund ein Achtel darüber hinaus.
+
+### GESCHLOSSEN mit E562 — und zwar auf dem zweiten Weg
+
+Bei E561 blieb das hier bewusst liegen: die Zahl steuert den Umbruch jeder
+Textmarke, auch jeder alten Notiz, und das ist eine eigene Arbeit mit
+eigener Prüfung (§45). E562 ist diese Arbeit.
+
+**Keine bessere Konstante.** Die Abweichung schwankt je nach Text zwischen
+0,99 und 1,15; ein einziger Faktor verschöbe den Fehler nur. Stattdessen
+wird im Browser **exakt gemessen** (`canvas.measureText`, bei 100 px
+gemessen und geteilt, gemerkt je Text und Format). Die Tabelle bleibt der
+Rückfall für Node, wo es kein Canvas gibt; `InkGeometry.gemessenAn()` sagt,
+welcher Weg gerade gilt.
+
+Geprüft wird nicht eine Zahl, sondern der Satz, den der alte Weg gebrochen
+hat: **keine gezeichnete Zeile darf breiter sein als ihr Kasten**
+(`test517` §3, gemessen mit `getComputedTextLength` am echten SVG). Die
+Gegenprobe mit der alten Schätzung nennt zwei Übertreter von 21 Zeilen.
+
+**Was seit E561 NICHT mehr davon abhängt:** die Stelle, an der ein Stück
+eines gemischten Absatzes gezeichnet wird. Die kommt jetzt von SVG selbst —
+nur das erste Stück einer Zeile bekommt ein `x`, die übrigen fliessen. Die
+Schätzung entscheidet weiterhin, WO umgebrochen wird, aber sie schreibt
+keine Stelle mehr ins Bild.
+
+
+L156 · Eine tote Regel im Stilblatt fällt niemandem auf — offen
+--------------------------------------------------------------------------
+
+**Gefunden am 14. September 2026** beim Umbau der Stiftleiste (E568).
+
+Drei Eigenschaften standen im Stilblatt, waren richtig geschrieben, und
+galten nie:
+
+```txt
+.blatt-farbe{width:22px}          geschlagen von min-width:36px
+.blatt-farbe{border-radius:50%}   geschlagen von .blatt-werk button{…:6px}
+background-clip:content-box       zurückgesetzt von style="background:…"
+```
+
+Die ersten zwei seit E351 (eingeführt am 8. September), die dritte im
+Studio seit E554. Auf dem Bildschirm standen dadurch Kacheln, wo Tupfer
+gemeint waren — und **niemand hat es gemeldet**, weil keine Prüfung je
+`getComputedStyle` an dieser Stelle gefragt hat und weil beim Lesen der
+Datei beide Zeilen richtig aussehen.
+
+**Was fehlt:** ein Wächter, der tote Stil-Regeln findet. Denkbar wäre er
+so: ein Prüflauf öffnet die App, geht eine Liste von Stellen durch, an
+denen eine Gestalt zugesagt ist (Tupfer rund, Knopf 44 px, Kante sichtbar),
+und vergleicht den BERECHNETEN Wert mit der Zusage. `test522` tut das jetzt
+für die Stiftleiste — für die anderen achtzig Bauteile der Schale tut es
+niemand.
+
+**Warum das nicht eben so geht:** die Zusage muss irgendwo stehen, sonst
+prüft der Lauf nur, dass der Browser rechnen kann. Eine zweite Liste neben
+dem Stilblatt wäre ein zweiter Katalog (§8) und liefe vom ersten weg. Der
+gangbare Weg ist deshalb vermutlich der schmalere: **die paar Stellen, an
+denen eine Gestalt wirklich etwas bedeutet**, bekommen ihren Wächter beim
+Bauen — und die Regel dazu steht als Arbeitsschritt, nicht als Werkzeug:
+*wer eine Gestaltung ändert, misst hinterher am echten Knoten nach, statt
+die Datei noch einmal zu lesen* (§55, P47).
+
+Eingetragen als offen, weil der Wächter fehlt — nicht der Befund.
+
+## L157 · Zeichenstudio nach Referenzbildern und bewegtes Dock — IN ARBEIT
+
+**14. September 2026 · E572 · `codex/drawing-reference-toolbar`.**
+Der vollständige Entscheidungs- und Ausführungsplan steht in E572. Diese
+Liste hält den Produktstatus fest; „geplant“ heißt ausdrücklich nicht fertig.
+
+| Punkt | Status zu Beginn | Geplante Schließung / Beleg |
+|---|---|---|
+| Neuester Zweig | ✅ geprüft | Remote nach Commitdatum: `claude/redion-tafel-wort`, `d4a53c8e`; neuer Arbeitszweig statt alter `main` |
+| Laser direkt oben | ✗ im Dokumentmodus vergessen | Werkzeugkatalog gemeinsam verwenden; `test524` bereits rot |
+| Formen direkt im Dock | ✗ ohne Alle-Optionen versteckt | alle sieben vorhandenen Formen sichtbar; `test524` bereits rot |
+| Radierer-Modusfeld und Größen | ◐ Modi vorhanden, nur Rundlauf; Größe an Strich gekoppelt | Auswahlfeld und drei unabhängige Größen; `test524` bereits rot |
+| Haftnotiz-Pastellpalette | ✗ normale Tintenfarben statt Notizpalette | neun klare Farben, echte gespeicherte Haftnotiz prüfen |
+| Elemente-Vorschaufeld | ◐ Bibliothek vorhanden, nicht wie Referenz angeordnet | verankertes Feld, eigene Elemente, Haftnotiz-Vorschauen, Verwaltungsweg erhalten |
+| Sichtbares Lineal | ✗ bisher nur unsichtbare Winkelrastung | verschieben, drehen, Kantenführung; `test524` für direkten Zugang rot |
+| Dock-Bewegung | ✗ noch nicht im gewünschten Stil | Hover-Vergrößerung, Nachbarn, federnder Wechsel; Reduced Motion und Touch |
+| Icons | ◐ kleine uneinheitliche Zeichen in der Dokumentleiste | gemeinsames SVG-Register, Konturen überarbeiten, Größen messen und Bilder ansehen |
+| Redion-Extras und eigene Reihenfolge | ✅ vorhanden, muss erhalten bleiben | Katalogvergleich und Nachbarprüfungen; keine still entfernten Bedienelemente |
+| Mobile/Fokus/Themen | ⚠ neue Anordnung noch ungeprüft | 390 px sowie niedrige Höhe; Fokus, Escape, Außenklick; Hell/Dunkel |
+| Build/Offline/Einzeldatei | ⚠ Quellcode in Änderung | Typecheck, Build, Dienststand, Einzeldatei und Startprüfung ausstehend |
+| Abschlussbilder und Regression | ⚠ ausstehend | reale Screenshots und gezielte grüne Läufe, Ergebnisse in E572 nachtragen |
+
+### Vollständiger Rest, der nicht durch bloße Gestaltung verschwindet
+
+1. **GIF-Katalog / Online-Suche:** nicht vorhanden und nicht eingeplant. Keine
+   Netzwerkabfragen oder funktionslosen GIF-Tabs als Tarnung einer fehlenden Funktion.
+2. **Zusätzliche Formtypen aus der Referenz:** Raute, Winkelverbinder und
+   gebogener Pfeil sind nicht gleichbedeutend mit Rechteck oder Kurve.
+   Sie bleiben offen; neue Typen benötigen Geometrie-, Auswahl- und Exporttests.
+3. **Echte Stifthardware:** Druck, Neigung, Handballenerkennung und
+   Hochfrequenz-Eingaben auf einem realen Gerät bleiben manuell zu prüfen.
+4. **Lineal:** Skala in Dokument-Zentimetern, nicht in physischen
+   Bildschirm-Zentimetern. Maus-/Tastaturbedienung wird gebaut; freie
+   Zwei-Finger-Drehung ist nicht Teil dieses Bogens.
+5. **Weitere Zeichenwelten:** Schwerpunkt ist die gemeinsame PDF-/Heft-
+   Zeichenschicht. Whiteboard-/Schaltplan-Editor sind eigene Oberflächen;
+   deren komplette Neuordnung ist hier nicht stillschweigend zugesagt.
+6. **Gesamttest:** gezielte Läufe sind geplant. Ein voller grüner Lauf und
+   Freigabe für `main`/Push sind dadurch nicht behauptet oder beauftragt.
+
+**Aktueller Nachweis:** der neue Browserlauf war vor der Umsetzung rot:
+1 grün, 4 rot. Abschlussstatus wird erst nach den tatsächlichen Prüfungen
+aktualisiert; offene Punkte bleiben sichtbar.
+
+**Übergabeplan:** `doku/CODEX-UEBERGABE-ZEICHENSTUDIO.md` enthält den vollständigen
+Auftrag für die nächste Codex-Aufgabe, die begonnenen Änderungen und alle
+ausstehenden Umsetzungsschritte. Die Übergabe selbst schließt keine Produktlücke.
+
+Typprüfung und `git diff --check` sind zum Übergabezeitpunkt grün. Build und
+neue Browser-/Gestaltungsabnahme sind weiterhin offen.
+
+### Stand am 14. September 2026, abends — was davon gemessen zu ist
+
+Die Tabelle oben ist der Stand **zu Beginn** und bleibt stehen. Hier steht,
+was seither wirklich geschlossen ist, mit Beleg — und was ausdrücklich nicht.
+
+| Punkt | jetzt | Beleg |
+|---|---|---|
+| Der gepushte Zweig lud zwei fehlende Dateien | ✅ zu | `quell/bereiche/pdf/ink-menu.js` und `ink-ruler.js` sind eingecheckt; `index.html` und der `GRUNDSTOCK` nennen sie, Dienststand v1072 (E573) |
+| Lineal frisst jeden Zeiger | ✅ zu | `pointer-events="none"` am `<g>`, Griffe unter dem Glas; `test267` 16/16 (E573) |
+| Lineal verschwindet nach „Zurück" | ✅ zu | `remount()` nach jedem `redraw()`; die Kante bleibt dabei erhalten (E573) |
+| „Zurück"/„Vor" im Studio unerreichbar | ✅ zu | eigene Kapsel am Dokumentkörper, Lage aus dem Stilblatt; `test393` 19/19, `test461` 34/34 (E573) |
+| Formen, Schrift, Auswahl nur hinter „···" | ✅ zu | das Dock liest die Gruppenliste (E356) statt acht Dinge pauschal zu verstecken; `test524` misst es je Werkzeug (E573) |
+| Lineal beim Stift nicht schaltbar | ✅ zu | `lineal` steht jetzt auch bei `stift` — die Kantenführung liess ihn längst zu; `test348`, `test351`, `test524` (E574) |
+| Haftnotizfarben in jedem Werkzeug | ✅ zu | eigene Gruppe `notizfarbe`, nur beim Zettel; `leiterReihe()` fasst sie nicht mehr an; `test524` 24/24 (E574) |
+| Tintenfarben zusätzlich beim Zettel | ✅ zu | der Zettel hat seine neun und das „+", sonst nichts (E574, Plan 7 B 4) |
+| `test464` suchte eine Abschrift, die E572 abgeschafft hat | ✅ zu | prüft jetzt `Marken.WERKZEUGE.map(` statt `'elemente', 'star'`; 63/63 (E574) |
+
+**Ausdrücklich NICHT geschlossen** — jeder Punkt ist unverändert offen:
+
+1. **„Alle Optionen" zeigt weiterhin alles** (Plan 7 B 9). Der geschlossene
+   Zustand ist kontextbezogen, der geöffnete nicht. Vier Prüfläufe
+   (`test177`, `test228`, `test437`, `test515`) erreichen über diesen Weg
+   Dinge, die sonst nirgends stehen — ein einfaches Wegnehmen wäre ein
+   Funktionsverlust, kein Aufräumen.
+2. **`InkMenu` hat kein Ende.** Kein Weg ruft `hidePopover()` ausser dem
+   Helfer selbst; ein Menü überlebt Seitenwechsel, Neuaufbau und das
+   Verlassen des Studios. Gemessen schwebte es über einer fremden Textseite.
+3. **`inkSync()` hängt bei jedem Aufruf alle dreizehn Knöpfe um** — 78 bei
+   einem einzigen Klick. Der Fokus fällt dabei auf `BODY`, Übergänge brechen
+   ab, und der Beobachter hört nur auf Attribute, nicht auf `childList`:
+   eine Sortierbewegung kommt live gar nicht an.
+4. **Radierergrössen** sind 14 px breit und optisch leer (kein Stil für
+   `--eraser-preview`), der alte Rundlaufknopf steht doppelt neben dem neuen
+   Modusfeld, und die gewählte Grösse überlebt keinen Seitenwechsel.
+5. **Stilblatt, Dock-Bewegung und Icons** (Plan 7 B 6, 7 C) sind unberührt:
+   `.blatt-popover`, Moduswahl, `.blatt-laser-options`, Galerie-Tabs,
+   Vorschauraster; Vergrösserung nur unter `(hover:hover)`, federnder
+   Wechsel, `prefers-reduced-motion`.
+6. **Tastatur „P" zeichnet in einem GESPERRTEN Dokument** (`marken.ts`,
+   Tastenweg). Älter als E572 und nicht von diesem Bogen verursacht —
+   gehört als eigene Lücke mit eigenem rot gesehenen Wächter repariert.
+7. **Ein voller grüner Lauf ist nicht behauptet.** `test290`
+   (CSS-Namensräume) ist rot und älter als dieser Zweig.
+
+### Nachtrag, 14. September 2026, spät — Zweig `codex/zeichenstudio-menues-radierer`
+
+Die Liste darüber bleibt stehen. Vier ihrer sieben offenen Punkte sind
+seither zu; die Punkte 1, 5 (teilweise) und 6 sind es nicht.
+
+| Punkt von oben | jetzt | Beleg |
+|---|---|---|
+| 2 · `InkMenu` hat kein Ende | ✅ zu | Das Feld beobachtet seinen Anker; verlässt der den Baum, geht es zu. Dazu `closeAll()`, ein Ersatzweg ohne `showPopover` und die Fokusregel „Escape zurück, Aussenklick nicht". `test524` (E575) |
+| 3 · `inkSync()` hängt alles um | ✅ zu | Gemessen 156 → **0** Knotenbewegungen je Klick; der angetippte Knopf behält den Fokus. Ein zweiter Beobachter bringt Sortierbewegungen live nach oben. `test524` (E575) |
+| 4 · Radierergrössen | ✅ zu | Drei sichtbare Kreise (14/22/30 px) in 44-px-Knöpfen, der Modus einmal statt zweimal, die Wahl in `meta`. `test524` (E576) |
+| 5 · Stilblatt für die Bedienfelder | ◐ halb | `.blatt-popover` hatte KEINE Regel und hat jetzt Kopf, „×", Zeilen, Auswahlzustand mit Haken; Laserarten und Radiererkreise gestaltet. **Offen bleiben** Galerie-Tabs, Vorschauraster, Dock-Bewegung und die Icons (Plan 7 B 6 Rest, 7 C) |
+
+**Neu dazugekommen und offen:** nichts. Die zwei Funde, die beim Bauen
+auffielen, sind im selben Zug geschlossen: ein Flex-Element staucht den
+grössten Radiererkreis auf die Breite des mittleren (E576), und eine
+Zusicherung verglich die Kreise in Baumreihenfolge, die seit E570 dem
+Nutzer gehört.
+
+**Weiterhin offen und unverändert:** Punkt 1 („Alle Optionen" zeigt alles),
+Punkt 6 (Tastatur „P" zeichnet in einem gesperrten Dokument — älter als
+E572) und Punkt 7 (`test290` rot, kein voller Lauf behauptet).
+
+**Nachgemessen und dabei korrigiert:** Die Übergabe nannte „19 handgeschriebene
+Inline-SVGs in `index.html`, davon 15 bytegleiche Kopien des Registers". Gezählt
+sind es **19 SVG mit zusammen 35 Pfaden, von denen 27 wörtlich auch in
+`src/register/symbole.ts` stehen** — also echte Doppelpflege im Sinn von §8, aber
+in anderer Gestalt als beschrieben. Sie wird hier NICHT nebenbei geschlossen:
+ein Teil dieser Zeichen steht in der Startschale, die gezeichnet sein muss,
+bevor das Register überhaupt geladen ist. Das ist ein eigener Bogen mit eigenem
+Wächter, kein Anhängsel an die Gestaltung.
+
+### Nachtrag, 15. September 2026 — Zweig `codex/zeichenstudio-dock-bewegung`
+
+| Punkt | jetzt | Beleg |
+|---|---|---|
+| 5 · Stilblatt für die Bedienfelder | ✅ zu | Galerie-Reiter, Dreispaltenraster, Vorschaukarten für Elemente und Haftnotizen; damit ist Plan 7 B 6 vollständig (E577) |
+| Dock-Bewegung (Plan 7 C 3–6) | ✅ zu | Das ZEICHEN wächst (25 → 32,5 px), der Knopf bleibt 44 × 44; Nachbarn 28,3 px; nur unter `(hover:hover) and (pointer:fine)`; `prefers-reduced-motion` nimmt sie weg; der federnde Wechsel läuft einmal. `test524 §7` (E577) |
+| Icons (Plan 7 C 1–2) | ◐ halb | Die zwei schlimmsten Paare sind weg: `inkPen`/`inkLaser` 69 % → 24 %, `inkText`/`inkImage` 64 % → unter 43 %; schlimmstes Paar jetzt 52 %. `test480 §7b` misst alle dreizehn dauerhaft (E577). **Offen:** `penBrush` und `penPencil` sehen einander mit blossem Auge weiterhin ähnlich — gemessen unter der Grenze, und E515 hat ihre Gestalt bewusst gewählt |
+| Verlaufskapsel am Telefon | ✅ zu | Sie deckte 87 × 39 px der Schreibfläche ab, genau die erste Zeile; steht jetzt unten links über dem Dock (E577) |
+
+**Weiterhin offen, unverändert:** „Alle Optionen" zeigt alles (Plan 7 B 9);
+Tastatur „P" zeichnet in einem gesperrten Dokument; `test290` rot; Plan 7 B 2
+(Stift-Dock im Detail), 7 B 5 (Form-Dock), 7 B 7 (die alten Toolbar-Styles
+an der History), 7 B 8 (kleine Breite, Bildschirmtastatur, sichtbarer
+Hinweis auf weitere Werkzeuge beim Rollen).
+
+**Neu gesehen und offen:** Am Telefon rollt die untere Leiste waagrecht, und
+nichts sagt, dass rechts noch etwas steht (Plan 7 B 8). Gesehen auf
+`bilder/studio-telefon.png`, nicht gemessen — deshalb steht es hier und
+nicht als geschlossen.
+
+## L158 · Lesemodus und Sperre — GESCHLOSSEN am 15. September 2026
+
+**Fund:** Ein Dokument, das ausdrücklich zum LESEN geöffnet war, nahm
+Striche an. Zwei Wege hinein, und der zweite war der grössere:
+
+1. Die Taste „P" klickte einen Werkzeugknopf in der eingeklappten unteren
+   Leiste — einen Knopf, den niemand sehen konnte. Gemessen: Schicht von
+   `schreiben`/`none` zurück auf `stift`/`auto`, ein Zug danach **0 → 1
+   Marke**.
+2. Der obere Werkzeugknopf war im Lesemodus **sichtbar und nicht
+   `disabled`**. Ein gewöhnlicher Mausklick genügte, ebenfalls **0 → 1**.
+
+Älter als E572; der Tastengriff steht seit E465 so da, die obere Reihe seit
+E464. Gehört zu §46 Punkt 1 und §51 — es ist kein Gestaltungsfehler,
+sondern eine Änderung an Nutzerdaten gegen den erklärten Willen des Nutzers.
+
+**Beleg der Schliessung:** `test438 §4b`, elf Zusicherungen, **sieben davon
+vorher rot gesehen** — darunter die Marke, die wirklich entstand. Die
+Gegenprobe „Im Schreibmodus holt H den Marker wieder" steht mit darin, damit
+die Reparatur die Abkürzung nicht einfach abschalten kann. Entscheidung
+E578. `test437` musste dabei nachgezogen werden: er klickte im Lesemodus
+direkt wieder auf den Stift und verliess sich damit auf genau diese Tür.
+
+**Was dabei ausdrücklich NICHT geschlossen wurde**, und warum:
+
+- **„Zurück" und „Vor" bleiben im Lesemodus bedienbar.** Rückgängig ist kein
+  Zeichnen, und der Lesemodus ist ein Ansichtsschalter, keine Rechtegrenze.
+  Bei einer gesperrten Seite greift ohnehin `canAnnotate`.
+- **Ein Klick auf ein Werkzeug schaltet den Modus NICHT mit.** Das wäre
+  freundlicher, und für eine gesperrte Seite oder fehlende Rechte wäre es
+  falsch — dort gibt es kein „doch". Ob das für den reinen Lesemodus anders
+  sein soll, ist eine Frage an Redur und keine an den Code.
+
+---
+
+## L159 · Das CSS-Verzeichnis wandert schneller, als es geprüft wird
+
+**Gemessen am 15. September 2026:** von 157 Präfixen hatten **45 eine
+falsche Zahl** im Verzeichnis (`rmo` stand auf 40 und ist 561), eines fehlte
+ganz (`fv`), und bei einem war die Hauptdatei gewandert (`els`, E323 → E537).
+
+Die Namen und die Hauptdatei hält `test290`. **Die Zahlenspalte hält
+niemand** — sie wird geparst und dann weggeworfen. Sie ist am 15. September
+einmal aus dem Stil neu gerechnet worden und wird wieder abwandern.
+
+**Warum sie trotzdem nicht geprüft wird:** ein Wächter, der bei jeder
+hinzugefügten CSS-Regel rot wird, wird abgeschaltet statt gelesen — genau
+das steht im Kopf von `test290` über seinen eigenen ersten Entwurf. Die
+ehrliche Lösung wäre, die Spalte ganz zu streichen; das bricht das Format,
+das `test290` liest, und ist ein eigener kleiner Bogen. Bis dahin steht im
+Verzeichnis, von wann die Zahlen sind.
+
+## L160 · Die Verlaufskapsel schob die Folienfläche — GESCHLOSSEN am 15. September 2026
+
+**Fund:** Die Rasterzelle aus E573 (`grid-column:2; grid-row:1`) überlagerte
+im Studio das Papier, bekam im **Foliensatz** aber eine eigene Zeile und schob
+`.document-center` um ihre Höhe nach unten: gemessen oben 272 statt 206,
+580 px statt 646. Die Folienfläche war damit seit E573 um 66 px kleiner.
+
+**Beleg:** `test508 §2` war rot und ist wieder 40/40. Entscheidung E579:
+`position:absolute` in jedem Raster, eine Regel statt zweier. Auch das
+Studio hat die Höhe zurückbekommen.
+
+**Und die Lehre, die mehr wert ist als der Fund:** ich hielt den roten Lauf
+zuerst für einen Altbestand wie `test290`. Ein Arbeitsbaum auf den einzelnen
+Commits (§30) hat gezeigt, dass er bei E571 und E572 grün war und mit E573
+rot wurde. „Älter als mein Zweig" ist eine Vermutung, solange niemand die
+Commits durchgeht — und sie ist die bequeme Antwort.
+
+## L161 · Kein Hinweis auf das, was ausserhalb des Bildes steht — GESCHLOSSEN am 15. September 2026
+
+**Fund:** Am Telefon standen **390 px der oberen Leiste und 562 px des
+unteren Docks ausserhalb des Bildes** — mehr als darin, acht von sechzehn
+Werkzeugen oben und zwei Drittel im Dock — und nichts sagte es. Plan 7 B 8.
+
+**Beleg der Schliessung:** Rollschatten aus vier Hintergrundschichten, ohne
+eine Zeile JavaScript; er zeigt sich nur dort, wo es etwas zu rollen gibt.
+`test524 §9`, sechs Zusicherungen, davon zwei vorher rot gesehen.
+Entscheidung E580.
+
+**Und der Fund im Fund:** der erste Schatten war schwarz und im Dunkelmodus
+nachgemessen **8 von 255** Helligkeitsunterschied — unsichtbar. Der Wächter
+misst deshalb Pixel, nicht CSS-Text (§55.1), und war mit dem schwarzen
+Schatten genau im dunklen Thema rot.
+
+**Offen bleibt aus 7 B 8:** die Bildschirmtastatur. Was passiert, wenn sie
+aufgeht und die schwebende Leiste verdeckt, ist nicht gemessen — dafür
+braucht es ein echtes Gerät (L157 nennt echte Stifthardware aus demselben
+Grund).
+
+## L162 · Das sichtbare Lineal im Druck — GESCHLOSSEN am 15. September 2026
+
+**Fund:** Die letzte offene Zusage aus Abschnitt 8 des Übergabeplans. Zwei
+der drei Ausgabewege waren in Ordnung, weil sie aus `marken` neu bauen; der
+**Druck** rendert das DOM, und dort war `[data-ink-ui="ruler"]` sichtbar.
+Kein Stilblatt nannte `[data-ink-ui]` — dieselbe Lücke galt damit für die
+Laserspur und die Auswahlgriffe.
+
+**Beleg:** `test524 §10`, vier Zusicherungen, zwei vorher rot gesehen; sie
+prüft beide Richtungen (nach dem Druck ist das Lineal wieder da).
+Entscheidung E581. Eine Zeile deckt alle drei Schichten ab, weil sie dem
+ATTRIBUT gilt und nicht einer Liste von Klassen.
+
+---
+
+## L163 · Drei rote Läufe, und nur einer war ein Produktfehler — 15. September 2026
+
+An einem Tag gefunden und alle drei geschlossen:
+
+| Lauf | seit | Ursache | war es ein Produktfehler? |
+|---|---|---|---|
+| `test290` | E537 | Verzeichnis abgewandert, 45 falsche Zahlen | nein, Doku |
+| `test429` | ≥ E571 | mass `getComputedStyle().transform` an einem SVG-Attribut | **nein** |
+| `test476` | ≥ E571 | zielte mit der Maus auf eine laufende Animation | **nein** |
+| `test508` | E573 | Verlaufskapsel schob die Folienfläche | **ja — meiner** |
+
+**Die Lücke, die bleibt, ist keine Zeile Code:** ein Lauf, der lange rot
+ist, nimmt dem nächsten echten Fehler die Aufmerksamkeit. `test429` und
+`test476` haben monatelang ein rotes Kreuz gemacht, hinter dem nichts stand
+— und `test508` stand daneben und wurde deshalb für „auch so einer"
+gehalten. Er war es nicht.
+
+**Was daraus folgt, ohne neue Regel:** §46 sagt „rot zuerst", und das gilt
+auch, wenn das Rot alt aussieht. Wie alt es wirklich ist, sagt ein
+Arbeitsbaum auf den Commits in zwei Minuten (§30).
+
+---
+
+## L164 · Drei Abschnitte tragen dieselben dreissig Zeilen — 15. September 2026
+
+`test480` misst Zeichen gegen Zeichen an drei Stellen, und alle drei tragen
+denselben Rasterer:
+
+| Abschnitt | Liste | seit |
+|---|---|---|
+| `§7` | `Marken.STIFTE` — die sechs Stiftarten | E515 |
+| `§7b` | `Marken.WERKZEUGE` — die dreizehn Werkzeuge | E577 |
+| `§7c` | `Marken.FORMEN` — die sieben Formen | E584 |
+
+Jeder der drei rastert auf 16 × 16, zählt Tinte gegen Tinte und vergleicht
+gegen dieselbe Grenze von 60 %. Dreissig Zeilen, dreimal.
+
+**Warum es trotzdem dreimal dasteht:** §7 und §7b sind laufende, grüne
+Wächter. Sie zum Teilen umzubauen, während ein dritter dazukommt, hiesse
+zwei Dinge auf einmal zu tun — und wenn danach etwas rot ist, weiss niemand,
+welches davon (§45). Der Kommentar in `§7b` sagt das seit E577; `§7c` sagt
+es auch.
+
+**Was zu tun ist, und wann:** eine gemeinsame Messung, sobald einer der drei
+Abschnitte aus einem anderen Grund angefasst werden muss. Nicht vorher, und
+nicht als eigener Bogen — ein Umbau ohne Anlass ist auch nur ein Umbau.
+
+**Was NICHT zu tun ist:** die drei Listen in einen Vergleich werfen. Ein
+Werkzeugzeichen und ein Formzeichen dürfen sich ähneln — `inkShapes` ist ein
+Rechteck, und `formRect` ist eins. Sie stehen nie nebeneinander.
+
+**Nachtrag 15. September 2026 (E587):** dazugekommen ist `§7d`, und der
+zählt hier NICHT mit. Er rastert zwar auch auf 16 × 16, misst danach aber
+etwas ganz anderes — die Hauptachse der Tinte statt der Deckung. Eine
+gemeinsame Messung für die vier müsste also zwei Masse tragen, nicht eins.
+Das ist ein Grund mehr, sie erst anzufassen, wenn es einen Anlass gibt.
+
+---
+
+## L165 · Eine CSS-Zeile, die aussah wie eine Regel — GESCHLOSSEN am 15. September 2026
+
+**Was fehlte:** `.blatt-werk .zeichen[data-sym]{width:16px}` und die drei
+Abwandlungen darunter bemassen die Hülle des Zeichens. Das `<svg>` darin
+trug seine eigene Breite als Attribut (`width="18"`) und hat sich nie darum
+gekümmert. Drei der vier Zahlen hatten deshalb keine Wirkung; die seitliche
+Leiste stand seit ihrer Einführung auf 18 statt auf den dort geschriebenen
+20 px.
+
+**Wie es gefunden wurde:** nicht beim Lesen — die Zeilen sehen richtig aus.
+Beim Nachmessen von Plan 7 C 2 („24–28 px in festen 44-px-Flächen") kamen
+in allen vier Zuständen 18 px heraus, und erst der Vergleich von Hülle und
+SVG zeigte, warum.
+
+**Geschlossen mit** E585: das SVG bekommt seine Grösse von seiner Hülle
+(`width:100%`), damit es nur noch EINE Stelle gibt, an der die Zahl steht.
+`test524 §12` hält es: Hülle und Zeichen müssen dieselbe Zahl sein, und am
+Telefon müssen es 24 bis 28 px sein, obwohl im Attribut weiter „18" steht.
+
+**Was daraus folgt, ohne neue Regel:** §39 warnt vor Tokens, die es nicht
+gibt. Dies ist derselbe Fehler eine Ebene tiefer — eine Eigenschaft am
+falschen Element. Beides findet nur eine Messung an der laufenden Seite.
+
+
+---
+
+## L166 · Ein Zugriff nach Platz — GESCHLOSSEN am 15. September 2026
+
+**Was fehlte:** `wsBtn.querySelectorAll('span')[1]` stand an zwei Stellen
+(`schale.ts`, `einstellungen/ansicht/seite.ts`) und meinte den Namen des
+Arbeitsbereichs. Seit die Bewegungsschicht (`motion.ts`) eine
+`rmo-sliders`-Hülle als erstes Kind einsetzt, zeigt `[1]` auf das ZEICHEN —
+und die Zeile darunter schrieb den Namen hinein. In der Seitenleiste stand
+zweimal „Redion" nebeneinander, und ein eingestelltes Zeichen kam dort nie an.
+
+**Warum es niemand meldete:** `test37` war rot, und zwar lange. Ein Lauf,
+der lange rot ist, nimmt dem nächsten echten Fehler die Aufmerksamkeit —
+derselbe Satz wie in L163, nur diesmal mit einem Fehler dahinter.
+
+**Geschlossen mit** E590: `class="ws-name"` am Namensspan, und beide Stellen
+fragen jetzt nach Bedeutung. `test37` hält es mit einer Zusicherung, die
+sagt, was wirklich gemeint ist: „Das Zeichen trägt nicht den Namen des
+Arbeitsbereichs".
+
+**Was daraus folgt, ohne neue Regel:** eine Schicht, die Hüllen einsetzt,
+darf das — sie weiss von keiner Zeile, die zählt. Wer zählt, muss damit
+rechnen. Ein Platz hält nur so lange, wie niemand etwas davorstellt.
+
+---
+
+## L167 · Hundertvierzehn Trefferflächen standen als rohe Zahl — GESCHLOSSEN am 15. September 2026
+
+**Was fehlte:** `min-height:44px` und `min-width:44px` standen 114-mal roh
+in elf Stildateien, obwohl `--touch-min` seit je genau dafür da ist und an
+genau einer Stelle als 44px definiert wird. Wer die Trefferfläche je ändern
+wollte, hätte 114 Stellen suchen müssen — und `test362` zählte die rohen
+Zahlen seit E509/E510 gegen ein Verzeichnis, das niemand nachzog (Δ +15 bei
+44px, +20 bei 16px).
+
+**Geschlossen mit** E590: 114 Stellen tragen die Marke; die rohe 44 sank von
+168 auf 54 und liegt damit UNTER der alten Decke. Das Verzeichnis steht auf
+den gemessenen Zahlen.
+
+**Was offen bleibt, und mit Grund:** 28px und 22px haben zwar Marken
+(`--mobile-gutter`, `--mobile-gutter-small`), aber die sind semantisch —
+`marken.css` sagt es selbst: „Gleiche Zahl bedeutet nur dann dieselbe Marke,
+wenn sie dieselbe Aufgabe hat." Ein Polster von 22 px, das kein Seitenrand
+ist, dürfte die Marke nicht tragen. Diese Zahlen einzeln anzusehen ist ein
+eigener Bogen, und er braucht Augen, nicht ein Skript.
+
+---
+
+## L168 · Geänderte Folien kommen noch nicht in die Datei — GESCHLOSSEN am 15. September 2026
+
+**Was fehlt:** Eine eingelesene `.pptx` geht seit E592 vollständig und
+unverändert wieder heraus. Was in Redion an einer Folie geändert wurde,
+steht aber noch nicht darin — die Folien gehen so zurück, wie sie
+hereinkamen.
+
+**Warum es nicht einfach nachgereicht wurde:** Eine Marke trägt keine
+Rückspur zu ihrem `<a:t>`. Ohne diese Spur bliebe nur ein Zuordnen nach
+Reihenfolge — der nte Text in der Folie zum nten Text im Block. Das hält
+nicht: Gruppen (E555), Tabellen (E565) und über Layout und Master geerbte
+Platzhalter (E558) tragen alle Text bei, und nicht jeder davon steht als
+`<a:t>` in der Folie selbst. Ein Zuordnen nach Reihenfolge schriebe Text in
+die **falsche** Form, und ein falscher Text ist schlimmer als ein fehlender
+(§51).
+
+**Was zu tun ist — Bogen O5b:** die Spur beim EINLESEN anlegen. Jede
+Textmarke bekommt, woher sie kommt: Folie, Form, Absatz, Lauf. Damit ist das
+Zurückschreiben kein Raten mehr, sondern ein Nachschlagen. Das Feld ist
+additiv — vorhandene Marken ohne Spur werden weiterhin nicht
+zurückgeschrieben, und das ist der richtige Rückfall.
+
+**Was NICHT zu tun ist:** die ganze Folie neu erzeugen. Redion liest heute
+mehr aus einer `.pptx`, als es schreiben kann — Diagramme, Zellränder,
+Spiegelungen, Gruppendrehung (L151). Eine neu erzeugte Folie verlöre genau
+das, was E592 gerade gerettet hat.
+
+**Bis dahin steht es da, statt still zu sein:** die Ausgabe zeigt „Die
+Originaldatei ist vollständig erhalten. In Redion geänderte Folieninhalte
+stehen noch nicht darin." `test525` hält beide Hälften dieses Satzes fest.
+
+
+**Geschlossen mit E593** am selben Tag: die Rückspur entsteht beim Einlesen.
+Jede Textmarke, die genau EINEM Absatz mit genau EINEM Lauf und ohne
+Aufzählungszeichen entspricht, bekommt `quelle: { sp, p }`; das
+Zurückschreiben schlägt Form und Absatz nach und ersetzt genau das eine
+`<a:t>`. Mit Pythons `zipfile` gegengeprüft: genau ein Eintrag anders, alles
+andere Byte für Byte gleich, XML wohlgeformt, Vorspann erhalten.
+
+**Was mit Absicht offen bleibt** — und deshalb steht diese Lücke weiter hier,
+nur als Rest: Absätze mit mehreren Läufen, zusammengefasste Absätze und
+Aufzählungen bekommen keine Spur. Ihr Text wird nicht zurückgeschrieben,
+weil er auf mehrere Stellen verteilt werden müsste und jede Verteilung
+geraten wäre (§51). Wer das schliessen will, braucht keine Spur je Marke
+mehr, sondern eine je LAUF — und dann auch eine Antwort darauf, was
+geschehen soll, wenn der neue Text kürzer ist als die Läufe, auf die er sich
+verteilen müsste.
+
+---
+
+## L169 · Eine zurückgeschriebene Folie geht ungepackt hinein — 15. September 2026
+
+**Was fehlt:** Redions ZIP-Schreiber packt nicht. Eine Folie, die E593
+geändert hat, wird deshalb mit Methode 0 abgelegt, während alle
+durchgereichten Einträge ihre Methode 8 behalten. Gemessen wuchs die
+Probedatei dadurch von 6432 auf 7104 Bytes.
+
+**Warum es so bleibt, bis es stört:** eine Folie ist ein paar Kilobyte. Ein
+Packwerk einzuführen, bevor die Grösse jemandem auffällt, wäre die falsche
+Reihenfolge (§45, §36: erst messen, dann bauen). Der Browser kann es
+ohnehin — `CompressionStream('deflate-raw')` steht schon in zwei Prüfläufen
+—, es ist also ein kleiner Bogen, wenn er denn gebraucht wird.
+
+**Woran man merkt, dass er gebraucht wird:** eine Präsentation mit vielen
+geänderten Folien. Bei zwanzig Folien zu je 30 KB wären es 600 KB
+ungepackt gegen etwa 90 KB gepackt.

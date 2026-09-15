@@ -54,8 +54,15 @@ try{
   check('Genau zwei kanonische PDF-Seiten',await page.locator('.document-stage').count()===2);
   check('Stift ist direkt bereit',await page.locator('.document-stage[data-aktiv] .blatt-marken').getAttribute('data-tool')==='stift');
   /* ZWÖLF SEIT E494 — die Elemente-Bibliothek steht im Studio mit in der
-     Zeichenleiste. Vorher elf (E465 ff.). */
-  check('Zwölf echte Zeichenwerkzeuge',await page.locator('[data-document-tool] svg').count()===12);
+     Zeichenleiste. Vorher elf (E465 ff.). DREIZEHN SEIT E572: die obere
+     Leiste schreibt den Katalog nicht mehr ab, sondern liest `Marken.WERKZEUGE`
+     (dort stehen seit E512 dreizehn, siehe test365) — und damit ist auch der
+     Laserpointer oben, der in der Abschrift fehlte.
+     WARUM DAS HIER WEHTAT: dieser Lauf prüft mit `assert`, nicht mit einem
+     Zähler. Die falsche Zahl liess ihn an Prüfung 8 STERBEN, und alles
+     danach — Stiftpunkt, Originalbytes, Ausgabe — lief nie mehr. Eine Zahl
+     ohne Nachzug kostet hier nicht eine Zusage, sondern den halben Lauf. */
+  check('Dreizehn echte Zeichenwerkzeuge',await page.locator('[data-document-tool] svg').count()===13);
   const identity=await page.evaluate<any>(`(() => {const p=Store.getBlock(App.aktuelleSeite());const b=DocumentMode.documentsIn(p)[0];return {page:p.id,block:b.id,source:b.quelleId,image:b.bildDateiId};})()`);
   const originalBytes=await page.evaluate<number[]>(`Dateien.alsBlob(${JSON.stringify(identity.source)}).then(b=>b.arrayBuffer()).then(b=>Array.from(new Uint8Array(b)))`);
   const ink=page.locator('.document-stage[data-aktiv] .blatt-marken');
@@ -90,6 +97,19 @@ try{
   await page.locator('[data-document-action="read"]').click();
   // E468: Lesen heisst Hand — das Papier ist nicht mehr inert (Abdeckband und Verweise bleiben antippbar), die Zeichenschicht steht auf „schreiben".
   check('Lesemodus schützt Arbeitskopie vor versehentlichen Strichen',await ink.getAttribute('data-tool')==='schreiben');
+  /* ══ ZURÜCK ÜBER DEN MODUSSCHALTER, NICHT ÜBER DAS WERKZEUG (E578) ════════
+     Hier stand `[data-document-tool="stift"]').click()` — ein Klick auf ein
+     Werkzeug MITTEN IM LESEMODUS, und er wirkte. Genau das war der Fehler:
+     gemessen setzte so ein Klick die Schicht auf `auto` zurück, und der
+     nächste Zug landete als Marke in einem Dokument, das man zum Lesen
+     geöffnet hatte (test438 §4b hält es fest). Seit E578 ist die obere Reihe
+     im Lesemodus abgeschaltet — dieser Klick wartete deshalb ins Leere.
+     Der echte Weg zurück heisst „Annotieren" und steht daneben. */
+  const annotieren=page.locator('[data-document-action="annotate"]');
+  if(!await annotieren.isVisible()){await page.locator('[data-document-action="view"]').click();await page.waitForTimeout(200);}
+  await annotieren.click();
+  await page.waitForTimeout(400);
+  check('Annotieren holt die Zeichenschicht zurück',await ink.getAttribute('data-tool')!=='schreiben');
   await page.locator('[data-document-tool="stift"]').click();
   for(const schema of ['hell','standard']){
     await page.evaluate(`Aussehen.setzen({schema:'${schema}'})`);

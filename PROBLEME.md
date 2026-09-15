@@ -46,6 +46,23 @@ sind der teuerste Teil und der lehrreichste.
 | P30 | 2026-09-13 | Ein Zierstrich war als „zugedeckte Antwort" gebaut — sieben Stueck | 🟠 mittel | E553 |
 | P31 | 2026-09-13 | Die naheliegende Farbreparatur haette den Barrierefreiheitsfall zerstoert | gross | E554 |
 | P32 | 2026-09-13 | Der Pruefllauf hat meine Rechnung korrigiert, nicht den Code | 🟡 klein | E555 |
+| P33 | 2026-09-13 | Dieselbe Feldliste hat dasselbe zum zweiten Mal vergessen | 🟡 klein | E557 |
+| P34 | 2026-09-13 | Ein Stichwort in der Lueckenliste, das kleiner klang als es war | 🟠 mittel | E558 |
+| P35 | 2026-09-13 | Eine Verbesserung, die ihren eigenen Schaden mitbrachte | 🟠 mittel | E558 |
+| P36 | 2026-09-13 | Die Pruefung hatte unrecht und der Code recht | 🟡 klein | E559 |
+| P37 | 2026-09-13 | Zwei alte Laeufe haben eine Aenderung gemeldet, die ich gar nicht vorhatte | 🟡 klein | E559 |
+| P38 | 2026-09-13 | Dieselbe Feldliste, das dritte Mal — und diesmal umgedreht | 🟠 mittel | E560 |
+| P39 | 2026-09-13 | Ein Knopf im DOM ist noch keine Funktion | 🟡 klein | E560 |
+| P40 | 2026-09-13 | Alle Zusagen gruen, und das Bild zeigte zwei Fehler | 🟠 mittel | E561 |
+| P41 | 2026-09-13 | Gemessen — am falschen Knoten | 🟡 klein | E561 |
+| P42 | 2026-09-13 | Die Zusage wurde gruen, weil die Liste leer war | 🟠 mittel | E562 |
+| P43 | 2026-09-13 | Die Zusage zeigte auf den Code, und schuld war mein Pruefstueck | 🟡 klein | E563 |
+| P44 | 2026-09-14 | Zehn Tabellenzellen wurden zu zehn leeren Anhaengen | 🟠 mittel | E565 |
+| P45 | 2026-09-14 | Zehn Boegen Pruefstuecke, und vier Bilder haben mehr gefunden | gross | E566 |
+| P46 | 2026-09-14 | Zum vierten Mal war mein Pruefstueck schuld, nicht der Code | 🟡 klein | E567 |
+| P47 | 2026-09-14 | Drei Zeilen im Stilblatt standen da und galten nie | 🟠 mittel | E568 |
+| P48 | 2026-09-14 | Sieben Pixel Layout machten aus einem Glaetter einen kaputten Glaetter | 🟠 mittel | E568 |
+| P49 | 2026-09-14 | Mein Zeilenraster zerschnitt eine Zeile in zwei | 🟡 klein | E570 |
 
 ---
 
@@ -669,4 +686,395 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Die Gegenprobe ohne Abbildung setzt die Kinder auf (0,0) und (72,36) — genau die Innenkoordinaten. Mit Abbildung (72,72) und (216,144). Beide Zahlenpaare stehen jetzt im Kopf des Laufs.
 
 **Die Lehre.** §45/E21 („nachsehen, nicht erinnern") gilt auch fuer Arithmetik. Eine erwartete Zahl, die aus dem Kopf kommt, ist genauso eine Behauptung wie eine erinnerte Schnittstelle — und wenn sie falsch ist, zeigt der rote Lauf auf den Code statt auf einen selbst. Rettung war, die Rechnung aufzuschreiben statt sie nachzubessern.
+
+
+---
+
+## P33 · Dieselbe Feldliste hat dasselbe zum zweiten Mal vergessen
+
+*2026-09-13 · 🟡 klein · E557*
+
+**Das Bild.** Die Farbe eines Absatzes wurde gelesen und kam trotzdem nicht an: „ist '', soll '#CC0000'". Grad und Fett desselben Absatzes kamen an.
+
+**Die falsche Vermutung.** Das Lesen sei schuld — `getElementsByTagName('a:srgbClr')` finde den Wert im `a:rPr` nicht. Es fand ihn.
+
+**Wie es gefunden wurde.** Durch den Widerspruch: wenn Grad und Fett ankommen, ist `rPr` gefunden. Also lag es hinter dem Lesen.
+
+**Die Ursache.** `marken.push` baut die Textmarke aus einer FESTEN Feldliste zusammen — `id, art, point, breiteBox, text, fontSize, fett`. `farbe` stand nicht darin und fiel weg.
+
+**Die Lösung.** `...(o.farbe ? { farbe: o.farbe } : {})`, genau wie E545 es vier Zeilen tiefer fuer `verlauf` tun musste.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** test512 §2 meldete den Fehler und ist nach der Zeile gruen.
+
+**Die Lehre.** Eine Feldliste, die aufzaehlt, vergisst beim naechsten Feld wieder — und sie hat es an DIESER Stelle jetzt zweimal getan (E545 mit `verlauf`, E557 mit `farbe`). Sie bleibt trotzdem, denn ein blindes Durchreichen des ganzen Objekts naehme `x`/`y`/`w`/`h` mit in die Ablage. Was sich aendern laesst, ist der Hinweis daneben: die Zeile sagt jetzt, dass sie vergisst.
+
+
+---
+
+## P34 · Ein Stichwort in der Lueckenliste, das kleiner klang als es war
+
+*2026-09-13 · 🟠 mittel · E558*
+
+**Das Bild.** Redur: „ich will das die orginale pptx so wie es sich oeffnen". Eine Folie, in die in PowerPoint nur getippt wurde, kam mit geratener Lage, 40 pt und weissem Grund an — also fast jede Folie einer Vorlage.
+
+**Die falsche Vermutung.** Der Punkt stand in L151 als „Geerbtes vom Layout und vom Master", einer von acht Aufzaehlungspunkten, und sein Satz endete mit „kommt weiss an". Das klang nach Kosmetik. Ich haette ihn beinahe hinter Ausrichtung und Drehung eingereiht.
+
+**Wie es gefunden wurde.** Ein grep, bevor ich etwas annahm: `grep -n "slideLayout\|slideMaster\|notesSlide" src/bereiche/dateien/einlesen.ts` gab NICHTS zurueck. Nicht „unvollstaendig" — gar nichts.
+
+**Die Ursache.** PowerPoint schreibt in das Folien-XML nur, was die Folie SELBST aendert. Die fehlende Erbkette nahm deshalb nicht nur den Hintergrund, sondern auch Lage und Schriftgrad JEDES Platzhalters — und ein Platzhalter ohne eigene Angaben ist der Normalfall, nicht der Sonderfall.
+
+**Die Lösung.** Die zweistufige Kette Folie → Layout → Master ueber `.rels` (nicht ueber Dateinamen) und eine Karte der Platzhalter, in der der Master zuerst steht und das Layout ihn ueberschreibt. Der Hintergrund brauchte dabei keine neue Leitung: `--paper` gab es im Stil schon, es hatte nur nie jemand gesetzt.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Die Gegenprobe, die die Kette nicht anwendet, faellt auf genau den alten Zustand zurueck: Titel bei (58,41) in 40 pt statt (36,18) in 44, Hintergrund "". 8 gruen, 5 rot.
+
+**Die Lehre.** Ein Punkt in der Lueckenliste wird danach eingeschaetzt, WIE ER FORMULIERT IST, nicht danach, was er kostet. „Kommt weiss an" beschrieb den sichtbarsten, aber kleinsten Teil derselben fehlenden Leitung. Wer eine Luecke abarbeitet, misst zuerst nach, was sie WIRKLICH umfasst — ein grep vor der Schaetzung hat hier eine Kosmetikaufgabe als die groesste Einzelursache entlarvt.
+
+
+---
+
+## P35 · Eine Verbesserung, die ihren eigenen Schaden mitbrachte
+
+*2026-09-13 · 🟠 mittel · E558*
+
+**Das Bild.** Keins. Alle 17 Zusagen von test513 waren gruen, das Bild sah richtig aus, und der Fehler waere erst bei einer echten Datei von Redur aufgetaucht — als spurlos verschwundener Text.
+
+**Die falsche Vermutung.** Dass ein farbiger Hintergrund eine reine Zugabe ist. Er ist es nicht: er aendert die Bedingung, unter der ALLES andere auf dem Blatt gezeichnet wird.
+
+**Wie es gefunden wurde.** Beim Lesen des eigenen Diffs vor dem Commit, gegen den Strich: „was macht das mit dem, was schon da ist?" Dann nachgesehen statt vermutet — `marken.ts:11` gibt einer Textmarke ohne eigene Farbe `#111111`.
+
+**Die Ursache.** Bis E558 war jedes Blatt weiss. Die feste schwarze Tinte war deshalb nie eine Annahme, sondern eine Tatsache — und sie wurde durch dieselbe Zeile zur Annahme, die den Hintergrund einfuehrte. Eine Folie mit dunklem Master und Text ohne eigene Farbe (weil sie im Original aus dem Thema kaeme) waere schwarz auf dunkelblau gewesen.
+
+**Die Lösung.** Nicht raten, sondern rechnen: WCAG-Kontrast der Grundfarbe gegen `#111111`. Unter 4,5:1 bekommt ein Absatz OHNE eigene Farbe ausdruecklich Weiss; ein Absatz MIT eigener Farbe behaelt sie immer. Gemessene Kante: #767676 kippt (4,16), #888888 nicht (5,33).
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** test513 §5, vier Zusagen an drei Gruenden plus Weiss. Die Gegenprobe ohne Kippen: 15 gruen, 2 rot. Und ein Bild (`bilder/pptx-tinte.png`), auf dem kein Absatz eine eigene Farbe nennt.
+
+**Die Lehre.** Eine neue Faehigkeit ist nie nur eine Zugabe — sie hebt eine stille Voraussetzung auf, unter der der Rest gebaut wurde. Hier war es „das Blatt ist weiss". Die Frage vor jedem Commit ist deshalb nicht „funktioniert das Neue?", sondern „welche Annahme des Alten habe ich gerade gekippt?". Keine Pruefung dieses Bogens haette danach gesucht; das eigene Diff zu lesen schon.
+
+
+---
+
+## P36 · Die Pruefung hatte unrecht und der Code recht
+
+*2026-09-13 · 🟡 klein · E559*
+
+**Das Bild.** `test514 §4` meldete beim ersten Lauf: „`phClr` wird NICHT geraten — ist '#ffffff', soll ''". Eine Farbe, von der ich gerade geschrieben hatte, dass sie nicht auflösbar ist, kam als Weiss an.
+
+**Die falsche Vermutung.** Dass mein `farbeAus` `phClr` doch irgendwo aufloest — etwa ueber einen Rueckfall im Thema.
+
+**Wie es gefunden wurde.** Nachgesehen statt nachgebessert. `farbeAus` gab tatsaechlich '' zurueck. Das Weiss kam ZWANZIG Zeilen spaeter: die Lesbarkeitsregel aus E558 gibt einem Absatz ohne Farbe auf dunklem Grund ausdruecklich Weiss — und der Grund dieser Prueffolie war Schwarz.
+
+**Die Ursache.** Meine Zusage hat zwei verschiedene Dinge fuer dasselbe gehalten: „die Farbe wurde nicht aufgeloest" und „die Marke hat keine Farbe". Seit E558 sind das nicht mehr dieselbe Aussage.
+
+**Die Lösung.** `phClr` wird jetzt auf HELLEM Grund gemessen, wo die Tinte nicht kippt. Daneben steht der Kommentar, warum — sonst macht der naechste dieselbe Verwechslung in die andere Richtung und schwaecht die Zusage, um sie gruen zu bekommen.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Die Gegenprobe G4 (phClr auf irgendwas aufloesen) ist auf dem hellen Grund rot: 12 gruen, 1 rot. Die Zusage kann also weiterhin rot werden — sie misst nur nicht mehr das Falsche.
+
+**Die Lehre.** Wenn eine neue Pruefung rot ist, ist die Pruefung genauso verdaechtig wie der Code — und bei einer Zusage, die ich GERADE geschrieben habe, sogar mehr. Der Reflex „den Code anpassen, bis es gruen ist" haette hier eine richtige Regel kaputtgemacht. Der zweite Reflex — „die Zusage abschwaechen" — waere genauso falsch gewesen. Richtig war, den Messplatz zu wechseln, damit die Zusage wieder GENAU das misst, was sie behauptet.
+
+
+---
+
+## P37 · Zwei alte Laeufe haben eine Aenderung gemeldet, die ich gar nicht vorhatte
+
+*2026-09-13 · 🟡 klein · E559*
+
+**Das Bild.** Nach E559 waren `test512` und `test513` rot: „ist '#cc0000', soll '#CC0000'" und „ist '#102a43', soll '#102A43'". Dieselben Farben, dieselben Werte — nur klein geschrieben.
+
+**Die falsche Vermutung.** Mein erster Gedanke war, die Zusagen seien zu streng: Hex ist in CSS gleichgueltig gegen Gross und Klein, gezeichnet haette es dasselbe. Also die Pruefungen auf `toLowerCase` umstellen und weiter.
+
+**Wie es gefunden wurde.** Der Batch nach dem Commit. Die neue Suite 514 war gruen — sie vergleicht selbst klein geschrieben und konnte es gar nicht sehen.
+
+**Die Ursache.** `abwandeln` rechnete IMMER, auch wo gar kein `lumMod`/`tint` stand. Das Ergebnis lief dann durch `toString(16)` und kam klein geschrieben heraus. Eine Farbe, die unveraendert aus der Datei kommt, wurde also trotzdem umgeschrieben.
+
+**Die Lösung.** Eine Zeile: steht keine Abwandlung im Knoten, kommt die Farbe unveraendert zurueck. Gerechnet wird nur, wo wirklich gerechnet werden muss.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** 512, 513 und 514 zusammen gruen. Und die drei roten Zusagen sind die Gegenprobe selbst: sie sind gefahren worden, nicht gebaut.
+
+**Die Lehre.** Die Versuchung war, die PRUEFUNG zu lockern, weil der Unterschied „egal" aussah. Er war es fuer das Zeichnen — aber nicht fuer die Frage, ob der Leser Daten unveraendert durchreicht. Eine Zusage, die zufaellig streng ist, faengt genau die Aenderungen, die man nicht vorhatte; sie zu lockern haette dieses Netz zerschnitten. Und: meine eigene neue Suite konnte den Fund nicht machen, weil sie selbst klein vergleicht. Die alten Laeufe sind nicht Ballast, sie sind das Gedaechtnis.
+
+
+---
+
+## P38 · Dieselbe Feldliste, das dritte Mal — und diesmal umgedreht
+
+*2026-09-13 · 🟠 mittel · E560*
+
+**Das Bild.** `test515 §1` meldete beim ersten Lauf „ist '', soll 'mitte'". Die Ausrichtung wurde gelesen, stand im Absatz, und kam trotzdem nicht an der Marke an.
+
+**Die falsche Vermutung.** Keine — ich wusste sofort, wo es liegt. Das war der eigentliche Befund.
+
+**Wie es gefunden wurde.** Der Kommentar an der Stelle sagte es selbst: „Eine Feldliste, die aufzaehlt, vergisst beim naechsten Feld wieder." Er stand da, seit E557 dasselbe passiert war, und davor hatte E545 dasselbe erlebt.
+
+**Die Ursache.** `marken.push` baute die Textmarke aus einer ERLAUBNISLISTE: id, art, point, breiteBox, text, fontSize, fett, farbe. Jedes neue Feld eines Absatzes faellt durch, bis jemand es eintraegt.
+
+**Die Lösung.** Die Liste umgedreht. Was NICHT in die Ablage darf, ist kurz, bekannt und abgeschlossen — `x`/`y`/`w`/`h`/`art`, die Masse, aus denen `point` und `breiteBox` schon gerechnet sind. Alles andere reist ueber Rest-Destrukturierung mit.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** test515 §1 und §3 gruen, ohne dass `ausricht` irgendwo aufgezaehlt wird. Die frueheren Faelle (`verlauf`, `farbe`) reisen unveraendert weiter mit; 512, 513 und 514 bleiben gruen.
+
+**Die Lehre.** Ein Kommentar, der eine Schwaeche BESCHREIBT, behebt sie nicht — er macht sie nur erwartbar. Zweimal habe ich hier die Zeile ergaenzt und den Hinweis daneben geschrieben; beim dritten Mal war klar, dass der Hinweis das Problem ist, nicht die Loesung. Die Frage ist nie „welches Feld fehlt", sondern „ist die Liste auf der richtigen Seite": Erlaubnislisten muessen wachsen, Verbotslisten nicht. Wo die verbotene Menge kurz und abgeschlossen ist, gehoert die Liste dorthin.
+
+
+---
+
+## P39 · Ein Knopf im DOM ist noch keine Funktion
+
+*2026-09-13 · 🟡 klein · E560*
+
+**Das Bild.** `test515 §5` war gruen: der Knopf steht in der Leiste, schaltet links → mitte → rechts → links. Auf dem Bild der fertigen Folie war er nirgends zu sehen.
+
+**Die falsche Vermutung.** Erst: die Schriftgruppe erscheine nur beim Text-Werkzeug, ich haette den Knopf in die falsche Gruppe gehaengt. Dann: meine Messsonde sei falsch (sie WAR falsch — auf einer leeren Seite gibt es gar keine Zeichenleiste).
+
+**Wie es gefunden wurde.** Auf dem richtigen Weg nachgemessen: der Knopf ist da, aber 0 x 0 und `display:none`. Und `fett` daneben genauso — eine Funktion, die es seit E360 gibt. Damit war klar, dass es nicht an meiner Zeile liegt. Die Ursache stand in `pdf-studio.css`: im Dokumentstudio liegt die ganze Schriftgruppe hinter dem Schalter `···` (E552), weil die schwebende Leiste unten nicht Platz fuer alles hat.
+
+**Die Ursache.** Keine — das ist Absicht. Der Fehler lag in der PRUEFUNG: sie fragte, ob der Knopf im DOM steht, und das ist nicht dieselbe Frage wie „bekommt man ihn zu sehen".
+
+**Die Lösung.** §5 oeffnet jetzt `···` und misst wirklich: vorher 0 x 0 und `display:none`, nachher 61 x 44, sichtbar, ganz im Bild — und die 44 px sind §37 gleich mitgeprueft.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Die Gegenprobe G5 (Knopf weglassen) ging von 4 auf 7 rote Zusagen, seit §5 die Sichtbarkeit misst statt der Anwesenheit.
+
+**Die Lehre.** §55.1 sagt „oeffne die Seite wirklich", und der Grund ist genau dieser: eine Zusage kann gruen sein, weil sie die bequeme Frage stellt. `querySelector` findet auch, was niemand sieht. Was zaehlt, ist eine gemessene Box — Breite, Hoehe, computed display, und ob sie im Bild liegt. Und das Bild hat die Frage ueberhaupt erst gestellt.
+
+
+---
+
+## P40 · Alle Zusagen gruen, und das Bild zeigte zwei Fehler
+
+*2026-09-13 · 🟠 mittel · E561*
+
+**Das Bild.** `test516` stand auf 23 gruen. Auf dem Bild stand „kleinGROSS" ohne Zwischenraum, und in der dritten Zeile lief „Wort" mitten in „mittendrin" hinein.
+
+**Die falsche Vermutung.** Dass der Satz fertig sei, weil die Zahlen stimmten. Die Marken trugen ihre Laeufe, die Grade waren richtig, die Hoehe war richtig — alles, was ich zu pruefen gedacht hatte, war gruen.
+
+**Wie es gefunden wurde.** §55.3 — ein Bild, wenn man etwas sehen kann. Ohne das Bild waere beides gefahren.
+
+**Die Ursache.** Zwei verschiedene: (1) XML verschluckt den Zwischenraum am Ende eines `tspan`, wenn `xml:space="preserve"` fehlt. (2) Ich hatte jedem Stueck ein ABSOLUTES `x` aus `InkGeometry.textWidth` gegeben — und `textWidth` ist eine Schaetzung aus Buchstabenbreiten, die um bis zu 15 % danebenliegt.
+
+**Die Lösung.** Nur das ERSTE Stueck einer Zeile bekommt ein `x`; die uebrigen fliessen, und SVG setzt sie mit den echten Massen. Die Schaetzung entscheidet weiterhin, WO umgebrochen wird — sie schreibt nur keine Stelle mehr ins Bild. Dazu `xml:space="preserve"`. Und `Stueck` traegt seither weder `x` noch `breite`: ein Feld, das aussieht wie eine Messung und eine Schaetzung ist, ist eine Falle.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Gegenprobe G5 (jedem Stueck ein gerechnetes x) setzt beide Stuecke auf x = 40, also uebereinander: 22 gruen, 3 rot. §5 misst seither `getStartPositionOfChar`, nicht das Attribut.
+
+**Die Lehre.** Eine Zusage prueft, was ich zu pruefen GEDACHT habe. Sie kann nicht pruefen, was mir nicht eingefallen ist — und genau dort sitzen die Fehler, die ein Mensch sofort sieht. Der Zwischenraum und die Ueberlappung waren beide unsichtbar fuer jede Zahl, die ich abgefragt habe, und beide sofort sichtbar auf dem Bild. Das ist kein Argument gegen Pruefungen, sondern fuer die Reihenfolge: erst hinsehen, dann die Zusage danach bauen.
+
+
+---
+
+## P41 · Gemessen — am falschen Knoten
+
+*2026-09-13 · 🟡 klein · E561*
+
+**Das Bild.** `getStartPositionOfChar` und `getBBox` gaben beide 0 zurueck. Kein Fehler, keine Ausnahme — nur Nullen.
+
+**Die falsche Vermutung.** Nacheinander: der Knoten sei noch nicht gelayoutet (Zeit); er liege unterhalb des Fensters (scrollIntoView); `getBBox` sei der bessere Weg. Alle drei falsch.
+
+**Wie es gefunden wurde.** Statt weiter zu raten eine Diagnosezeile eingebaut, die ALLE passenden Knoten auflistet — mit der Groesse ihrer `<svg>`. Ergebnis: es gibt ZWEI, der erste misst 0 x 0, der zweite 978 x 549.
+
+**Die Ursache.** Der erste Treffer ist die Vorschau in der Folienliste. Ihr SVG ist nicht gezeichnet, und in einem nicht gezeichneten SVG liefert jede Geometriefrage Null — ohne dass etwas kaputt waere. Mein `find` nahm einfach den ersten.
+
+**Die Lösung.** Erst filtern, dann nehmen: der Knoten, dessen `<svg>` breiter als 10 px ist. Der Kommentar daneben sagt, warum — sonst schreibt der Naechste wieder `find`.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Danach 25 gruen, und die Gegenprobe G5 wird rot mit echten Zahlen (beide Stuecke auf x = 40) statt mit Nullen.
+
+**Die Lehre.** Eine Messung, die Null zurueckgibt, ist nicht dasselbe wie eine Messung, die Null MISST. Bei Geometrie im Browser heisst Null fast immer „ich war nicht da" — und wer das fuer ein Ergebnis haelt, baut seine Zusage auf einem Knoten, den niemand sieht. Vor dem Messen gehoert die Frage: ist das ueberhaupt der Knoten, den ich meine, und ist er gezeichnet?
+
+
+---
+
+## P42 · Die Zusage wurde gruen, weil die Liste leer war
+
+*2026-09-13 · 🟠 mittel · E562*
+
+**Das Bild.** `test517 §3` meldete „KEINE Zeile ist breiter als ihr Kasten" — gruen. Daneben stand „Es wurden Zeilen gefunden — 0".
+
+**Die falsche Vermutung.** Keine. Der Widerspruch stand in derselben Ausgabe, zwei Zeilen untereinander.
+
+**Wie es gefunden wurde.** Durch die zweite Zusage, die ich daneben gesetzt hatte: „mindestens vier Zeilen fuellen ihren Kasten zur Haelfte". Sie wurde rot und hat die erste entlarvt.
+
+**Die Ursache.** Zwei aufeinanderfolgende: (1) Der `blatt`-Block war von Hand mit `Store.addBlock` gesetzt und hing an keiner Seite — es gab gar kein Papier. (2) Nachdem das behoben war, suchte die Probe mit `find(svg => breite > 10)` und traf ein Symbol von 25 px mit null Texten statt `svg.blatt-marken`.
+
+**Die Lösung.** Das Blatt entsteht jetzt auf dem echten Weg ueber `Einlesen.datei`, und der Knoten wird beim Namen genannt: `svg.blatt-marken`.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** Danach 14 gruen, und die Gegenprobe G1 (wieder schaetzen) nennt zwei Uebertreter von 21 Zeilen: a2 164,2 in 160, a6 202,2 in 200.
+
+**Die Lehre.** Eine Zusage ueber ALLE Elemente einer Liste ist auf der leeren Liste immer wahr. `filter(...).length === 0` sieht streng aus und prueft nichts, solange niemand fragt, ob ueberhaupt etwas darin war. Jede Allaussage braucht deshalb eine Zusage daneben, die sagt: und es waren genug, und sie waren nicht alle winzig. Genau die hat hier zweimal hintereinander den Fehler gefunden.
+
+
+---
+
+## P43 · Die Zusage zeigte auf den Code, und schuld war mein Pruefstueck
+
+*2026-09-13 · 🟡 klein · E563*
+
+**Das Bild.** `test518 §2` meldete „Die Abdeckung ist da — ['text','text','text','text','bild']". Der Deckel kam gar nicht an, obwohl das Bild danebenstand und sich richtig drehte.
+
+**Die falsche Vermutung.** Dass meine Drehungszeile fuer die Abdeckung nicht greift — sie steht in einem anderen Zweig als der Text, also lag der Verdacht nahe.
+
+**Wie es gefunden wurde.** Nachgesehen, wie der Leser eine Abdeckung ueberhaupt ERKENNT: ueber `klickschritte`, und dort zaehlt nur ein `p:cTn` mit `nodeType="clickEffect"`. Mein `p:timing` hatte die Verschachtelung nach Gefuehl und dieses Attribut gar nicht.
+
+**Die Ursache.** Das Pruefstueck war falsch, nicht der Code. Ohne `clickEffect` gibt es keinen Klickschritt, ohne Klickschritt keine Abdeckung — die Form fiel korrekt als „gefuellte Form ohne Text" durch.
+
+**Die Lösung.** Das `p:timing` nach der gelesenen Regel gebaut statt nach Gefuehl, mit einem Kommentar daneben, woher die Form kommt.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** 17 gruen. Und die Gegenproben G1/G2 werden mit 9 roten Zusagen rot — die Abdeckung ist jetzt eine davon.
+
+**Die Lehre.** §45/E21 („nachsehen, nicht erinnern") gilt auch fuer die PRUEFDATEI. Ein Pruefstueck, das ich aus dem Kopf baue, ist genauso eine Behauptung wie eine erinnerte Schnittstelle — nur faellt es staerker auf die Fuesse, weil die rote Zusage dann auf den Code zeigt, der recht hat. Beim dritten solchen Fall in dieser Sitzung (P32, P41, P43) ist das Muster deutlich: bevor ich einem roten Lauf glaube, pruefe ich, ob MEINE Seite der Messung stimmt.
+
+
+---
+
+## P44 · Zehn Tabellenzellen wurden zu zehn leeren Anhaengen
+
+*2026-09-14 · 🟠 mittel · E565*
+
+**Das Bild.** Auf dem Bild stand der Tabellentext, aber kein Gitter und keine Fuellung. Der Hinweis sagte: „1 Folien uebernommen, 10 BILDER aus 1 Dateien".
+
+**Die falsche Vermutung.** Dass die Rechtecke gezeichnet, aber unsichtbar seien — Strichstaerke null oder Fuellung `none`. Ich habe zuerst `strokeWidth` nachgelesen; die Vorgabe ist 2,4, also waeren sie sichtbar gewesen.
+
+**Wie es gefunden wurde.** Statt weiter im Zeichner zu suchen, nachgemessen, WAS das Blatt ueberhaupt traegt. Die Antwort war eindeutig: `arten` enthielt „bild" zehnmal und „rectangle" null mal.
+
+**Die Ursache.** Mein neuer Zweig `if (o.art === 'rectangle')` war beim Einsetzen IM Abdeckzweig gelandet, nicht daneben. Damit lief er nie — und die Schleife hat keinen Auffangfall: was weder Text noch Abdeckung ist, gilt als Bild. Jede Zelle ging durch `Dateien.ablegen` und legte einen leeren Anhang an.
+
+**Die Lösung.** Den Zweig VOR den Bildzweig gesetzt, mit einem Kommentar, der sagt, dass die Schleife keinen Auffangfall hat — sonst passiert es dem Naechsten mit der naechsten Markenart wieder.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** test519 §4 misst es: der Hinweis darf keine Bilder nennen, und es darf keine Bildmarke geben. Die Gegenprobe G5 setzt den Zweig hinter den Bildzweig und liefert wieder „10 Bilder aus 1 Dateien".
+
+**Die Lehre.** Zwei Dinge. Erstens: eine Schleife OHNE Auffangfall ist ein stiller Trichter — alles Unbekannte laeuft in den letzten Zweig, und der war hier ausgerechnet der, der Dateien anlegt. Zweitens, und das zaehlt mehr: ich habe das Bild gemacht, BEVOR ich die Zusagen geschrieben habe (P40), und nur deshalb ist es aufgefallen. Haette ich zuerst die Zusagen gebaut, haette ich sie nach dem gebaut, was ich zu pruefen gedacht habe — und „legt diese Aenderung heimlich Anhaenge an" waere nicht darunter gewesen.
+
+
+---
+
+## P45 · Zehn Boegen Pruefstuecke, und vier Bilder haben mehr gefunden
+
+*2026-09-14 · gross · E566*
+
+**Das Bild.** Redur hat zwei Folien seiner echten Datei neben Redions Fassung gestellt. Auf Folie 1 fehlte der dunkelblaue Kasten hinter dem Titel, auf Folie 2 der rote Balken — und ALLE VIER Textfarben kamen als Schwarz an.
+
+**Die falsche Vermutung.** Dass die grossen Posten nach E565 durch seien. Ich hatte gerade geschrieben: „die Liste der grossen Posten ist leer" und „was uebrig ist, ist alles klein".
+
+**Wie es gefunden wurde.** Gar nicht von mir. Ich hatte nach E565 um eine echte Datei gebeten, weil bei jedem Bogen das Messen an Wirklichem mehr gefunden hatte als meine Pruefstuecke. Vier Bilder spaeter standen zwei Posten da, die keiner meiner zehn Boegen beruehrt hatte.
+
+**Die Ursache.** Zwei: (1) `a:prstGeom` wurde nirgends gelesen — gefuellte Formen ohne Text fielen durch. (2) Die Textfarbe stand im `a:defRPr` des Platzhalters im Layout, und `vorgabenLesen` holte von genau diesem Element seit E558 nur `sz`.
+
+**Die Lösung.** Formen ueber `a:prstGeom` auf die fuenf Marken abbilden, die Redion hat, mit Fuellung (seit E565 moeglich), Umriss aus `a:ln` und Drehung. Und `a:defRPr` auch nach der Farbe fragen. Was Redion nicht kennt, wird gezaehlt statt geraten.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** test520, 25 Zusagen, fuenf Gegenproben. G1 (Formen ueberspringen) ist 16 rot, G2 (Farbe nicht erben) 5 rot — und die zweite meldet genau das Symptom: alle vier Texte fallen auf Schwarz.
+
+**Die Lehre.** Meine Pruefstuecke pruefen, was mir EINGEFALLEN ist. Sie waren richtig, sie haben gehalten, sie sind rot geworden, wenn sie sollten — und sie konnten trotzdem zehn Boegen lang nicht sehen, was in einer wirklichen Datei steht. Der nuetzlichste Satz dieser ganzen Reihe war die Bitte um eine echte Datei. Wenn ich das naechste Mal denke „die grossen Posten sind durch", ist genau das der Moment, an dem ich danach fragen muss — nicht der Moment, an dem ich weiterbaue.
+
+
+---
+
+## P46 · Zum vierten Mal war mein Pruefstueck schuld, nicht der Code
+
+*2026-09-14 · 🟡 klein · E567*
+
+**Das Bild.** Die Probe zeigte `schrift: null` fuer alle vier Texte. Die Farben derselben Vorgabe kamen an — also wurde das `a:defRPr` gelesen, nur die Schrift nicht.
+
+**Die falsche Vermutung.** Der neue Code. Ich habe die Reihenfolge von `themaDoc`, `paar` und `vorgabenLesen` nachgesehen; sie stimmte.
+
+**Wie es gefunden wurde.** `grep -c mj-lt` auf die Pruefdatei: null Treffer. Mein Ersetzen hatte die Zeile nicht getroffen, weil ich sie aus dem Kopf zitiert hatte statt sie vorher anzusehen.
+
+**Die Ursache.** Das Pruefstueck, nicht der Code. Ohne `+mj-lt` im `a:defRPr` gibt es nichts aufzuloesen — der Leser gab korrekt '' zurueck.
+
+**Die Lösung.** Die Zeile erst gelesen, dann ersetzt. Danach stimmte alles auf Anhieb.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** 16 gruen, und G1 (a:latin nicht lesen) ist 12 rot — die Zusagen koennen also wirklich rot werden.
+
+**Die Lehre.** P32, P41, P43 und jetzt P46. VIER MAL in zwei Tagen habe ich einem roten Lauf geglaubt, obwohl meine Seite der Messung falsch war — einmal die Arithmetik, einmal der gemessene Knoten, zweimal die Pruefdatei. Das ist keine Panne mehr, sondern ein fehlender Arbeitsschritt: bevor ich bei einem roten Lauf im Code suche, pruefe ich zuerst, ob das Pruefstueck ueberhaupt das enthaelt, was es pruefen soll. Ein `grep` auf die eigene Pruefdatei kostet zehn Sekunden.
+
+
+---
+
+## P47 · Drei Zeilen im Stilblatt standen da und galten nie
+
+*2026-09-14 · 🟠 mittel · E568*
+
+**Das Bild.** Redur: die Stiftleiste hat „keine Qualitaet, kein gutes Gefuehl". Im Stilblatt stand seit jeher `.blatt-farbe{width:22px; border-radius:50%}` — auf dem Bildschirm standen fuenf 36 x 32 px grosse abgerundete Kacheln statt einer Farbpalette.
+
+**Die falsche Vermutung.** Dass die Tupfer irgendwo ueberschrieben werden und ich die Stelle suchen muss. Gesucht habe ich in `pdf-studio.css`, in `marken.css`, im Studio-Block — alles falsch.
+
+**Wie es gefunden wurde.** Die Wichtung ausgerechnet statt sie zu fuehlen: `.blatt-farbe` wiegt (0,1,0), `.blatt-werk button` wiegt (0,1,1). Die Knopfregel gewinnt, und mit ihr `border-radius:6px` und `min-width:36px`. Es gab gar keine zweite Stelle — die erste hat nie gegolten.
+
+**Die Ursache.** Eine CSS-Eigenschaft, die im Blatt steht und von einer staerkeren Regel im selben Blatt geschlagen wird. Das sieht man beim Lesen NICHT: beide Zeilen sind richtig geschrieben, beide stehen da, und die Datei sagt nirgends, welche gewinnt.
+
+**Die Lösung.** Die Regel auf (0,2,1) gehoben (`.blatt-werk button.blatt-farbe`). Und das Gleiche noch zweimal in derselben Leiste: `background-clip:content-box` wurde von der Kurzschrift `style="background:…"` am Element zurueckgesetzt (`!important` noetig), und `min-width` machte aus dem runden „+" ein Ei.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** 27 gruen in test522, Gegenprobe G2 (Kachel statt Tupfer) 5 rot. Und ein Bild: die Palette ist jetzt eine Reihe runder Punkte.
+
+**Die Lehre.** Ein Stilblatt ist kein Text, den man lesen kann — es ist ein Wettbewerb, den man MESSEN muss. Drei Eigenschaften standen hier monatelang da und galten nie; keine Pruefung hat es gemeldet, weil keine Pruefung `getComputedStyle` gefragt hat. Wer eine Gestaltungsfrage untersucht, misst zuerst die BERECHNETEN Werte am echten Knoten (`getComputedStyle`, `getBoundingClientRect`) und liest erst danach die Datei. Und: die zweite der drei war im Studio seit E554 ebenso tot — eine tote Regel wird kopiert wie jede andere.
+
+
+---
+
+## P48 · Sieben Pixel Layout machten aus einem Glaetter einen kaputten Glaetter
+
+*2026-09-14 · 🟠 mittel · E568*
+
+**Das Bild.** `test366` meldete: „Der Glaetter halbiert die Punkte eines zittrigen Zugs mindestens — ohne 60, mit 60". Also: der Glaetter glaettet nicht mehr. Geaendert hatte ich an der Zeichenlogik keine Zeile — nur an der Blattleiste.
+
+**Die falsche Vermutung.** Dass die Leiste den Glaetter-Schalter verschoben hat oder dass mein Umbau irgendwie die Stiftkette beruehrt. Ich habe angefangen, `InkStroke.glaetter` zu lesen.
+
+**Wie es gefunden wurde.** Erst den Verdacht eingegrenzt (HEAD-Stilblatt zurueckgelegt: gruen, mit meinem: rot — es ist das CSS), dann die Zahlen geholt statt zu raten: die Zeichenflaeche begann bei y = 457, das Fenster ist 900 hoch, und der zweite Pruefzug lag fest bei `y + 440` = 897. Mit der 7 px hoeheren Leiste: 904. Ausserhalb des Bildes.
+
+**Die Ursache.** Ein Mausklick ausserhalb des Sichtfensters kommt nicht an. Der zweite Zug entstand gar nicht, `marken[letzte]` gab noch den ersten zurueck, beide Zahlen waren gleich — und der Lauf beschrieb das als „glaettet nicht". Der Glaetter hat die ganze Zeit geglaettet.
+
+**Die Lösung.** Die zwei Zugstellen werden jetzt aus dem WIRKLICH sichtbaren Platz gerechnet (`min(Kastenhoehe, Fensterhoehe - Kastenoberkante) - 40`), nicht als feste Zahl gesetzt. Damit haelt die Probe auch die naechste Leiste aus.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** 45 von 45 gruen, und die Debug-Zeile sagt wieder „ohne Glaetter 60 · mit 11" — der Unterschied, um den es geht, ist wieder da.
+
+**Die Lehre.** Eine Pruefung, die auf feste Bildschirmkoordinaten zeigt, misst drei Pixel vom Rand entfernt, ohne es zu sagen. Sie war nicht falsch und nicht flatterhaft — sie war SPROEDE, und der Bericht zeigte auf eine ganz andere Stelle als die Ursache. Wer eine Zahl in eine Pruefung schreibt, die aus dem Layout kommt, rechnet sie aus dem Layout aus. Und der Weg zur Ursache war beide Male derselbe wie bei P47: nicht lesen, sondern messen — erst die Haelfte wegnehmen (welche Datei?), dann die Zahl holen.
+
+
+---
+
+## P49 · Mein Zeilenraster zerschnitt eine Zeile in zwei
+
+*2026-09-14 · 🟡 klein · E570*
+
+**Das Bild.** Die Messung meldete „die drei Breiten stehen auf zwei Zeilen" — auf dem Bild standen sie nebeneinander.
+
+**Die falsche Vermutung.** Dass die Leiste wirklich umbricht, und ich habe angefangen, Pixel zu suchen.
+
+**Wie es gefunden wurde.** Die Rohzahlen angesehen statt der Auswertung: die Farbtupfer sind 30 px hoch, die Knoepfe 32. Ihre OBERKANTE liegt damit 1 px tiefer. Mein Raster war `Math.round(y / 12) * 12` — und genau an der Rasterkante fielen 54 und 55 in zwei verschiedene Faecher.
+
+**Die Ursache.** Das Raster, nicht das Layout. Eine Zeile mit zwei Elementhoehen hat keine gemeinsame Oberkante; sie hat eine gemeinsame MITTE.
+
+**Die Lösung.** Zeilen werden nach der senkrechten Mitte gebildet, mit 9 px Toleranz — in der Messprobe und in `test522`. Danach war der gemeldete Umbruch weg, und der ECHTE Umbruch (eine Breite allein eine Zeile tiefer) blieb sichtbar und liess sich reparieren.
+
+**Warum keine Uhr.** —
+
+**Der Beweis.** 31 gruen in test522, darunter die neue, staerkere Zusage: keine sichtbare Gruppe reisst ueber zwei Zeilen.
+
+**Die Lehre.** Zum vierten Mal in dieser Woche (P32, P41, P43, P46, P47) und zum ersten Mal nicht in einer Pruefdatei, sondern in der AUSWERTUNG: bevor ich einer Messung glaube, sehe ich mir an, wie sie zaehlt. Ein Raster, das eine Annahme enthaelt — hier: alle Elemente sind gleich hoch —, meldet den Bruch dieser Annahme als Befund ueber etwas ganz anderes. Und: dieselbe Messung hat danach einen ECHTEN Fehler gefunden. Ein kaputtes Messwerkzeug wegzuwerfen waere falsch gewesen; es zu reparieren war richtig.
 

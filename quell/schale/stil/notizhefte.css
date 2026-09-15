@@ -20,7 +20,7 @@
   flex:1; min-width:0; margin:0; overflow:hidden; text-overflow:ellipsis;
   white-space:nowrap; font-size:26px; font-weight:760; letter-spacing:-.02em;
 }
-.nh-zurueck{ flex:none; min-height:44px }
+.nh-zurueck{ flex:none; min-height:var(--touch-min) }
 
 /* --- Die Brotkrume (E366): der ganze Weg, ab der zweiten Ebene ----------- *
    Eigene Zeile, nicht in der Titelzeile: dort steht `h1{flex:1}`, und ein
@@ -48,7 +48,7 @@
 /* Der Weg am Ziel im Verschieben-Menü (E366) — zwei Fächer „Physik"
    in verschiedenen Bäumen wären sonst nicht zu unterscheiden. */
 .nh-zielweg{ color:var(--text-dim); font-size:12px; margin-right:2px }
-.nh-neu-knopf{ flex:none; min-height:44px; font-weight:650 }
+.nh-neu-knopf{ flex:none; min-height:var(--touch-min); font-weight:650 }
 
 /* Reiter und Formwahl: Wörter, keine Symbole (§38). Der aktive Reiter
    trägt Fläche UND Strich — nicht nur Farbe. */
@@ -62,7 +62,7 @@
    Ansicht auseinander. `margin-left:auto` hält ihn beide Male rechts. */
 .nh-form{ margin-left:auto }
 .nh-reiter button, .nh-form button{
-  min-height:44px; padding:0 var(--space-3); border-radius:var(--radius-md);
+  min-height:var(--touch-min); padding:0 var(--space-3); border-radius:var(--radius-md);
   background:transparent; color:var(--text-dim); font-size:13px; font-weight:600;
 }
 .nh-reiter button:hover, .nh-form button:hover{ background:var(--bg-hover); color:var(--text) }
@@ -75,8 +75,8 @@
   border:1px solid var(--line); border-radius:var(--radius-md);
   background:var(--bg-input); color:var(--text);
 }
-.nh-suche-knopf, .nh-alle{ min-height:44px }
-.nh-suche-knopf{ min-width:44px }
+.nh-suche-knopf, .nh-alle{ min-height:var(--touch-min) }
+.nh-suche-knopf{ min-width:var(--touch-min) }
 
 /* --- Weiterschreiben: der wahrscheinlichste nächste Schritt, gross ------- */
 .nh-weiter{
@@ -180,7 +180,7 @@
      `white-space:normal` aus demselben Grund: `.rb` verbietet den Umbruch,
      und dieser Satz ist länger als ein Knopftext. */
   display:flex; align-items:center; justify-content:flex-start; gap:9px;
-  margin-top:18px; max-width:92ch; min-height:44px;
+  margin-top:18px; max-width:92ch; min-height:var(--touch-min);
   padding:10px 14px; text-align:left;
   white-space:normal; font-weight:400;
   color:var(--text-dim); font-size:13.5px;
@@ -214,7 +214,7 @@
 .nh-korb .nh-gitter{ width:100% }
 .nh-tot .bib-deckel{ opacity:.55; cursor:default }
 .nh-herstellen{ width:100%; min-height:36px; margin-top:4px }
-.nh-korb-auf{ min-height:44px }
+.nh-korb-auf{ min-height:var(--touch-min) }
 
 /* --- Papier-Schnellwahl im Neu-Menü ---------------------------------------- */
 .nh-papiere{ display:flex; gap:var(--space-2); padding:2px 10px 8px }

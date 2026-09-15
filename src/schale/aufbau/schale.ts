@@ -3938,7 +3938,17 @@ const App = (() => {
 
     /* Name und Symbol des Arbeitsbereichs */
     const wsBtn = document.getElementById('btn-settings');
-    const wsName = wsBtn?.querySelectorAll('span')[1];
+    /* ══ NACH BEDEUTUNG, NICHT NACH PLATZ (E590) ════════════════════════
+       Hier stand `wsBtn?.querySelectorAll('span')[1]`. Das war einmal der
+       Name — bis die Bewegungsschicht (`motion.ts`) eine `rmo-sliders`-
+       Hülle als erstes Kind einsetzte. Seither ist `[1]` das ZEICHEN, und
+       die Zeile darunter schrieb den Namen hinein: in der Seitenleiste
+       stand zweimal „Redion" nebeneinander, und das eingestellte Zeichen
+       kam dort nie an.
+       Ein Zugriff nach Platz hält nur so lange, wie niemand etwas
+       davorstellt — und genau das darf eine Schicht, die nichts von
+       dieser Zeile weiss. */
+    const wsName = wsBtn?.querySelector<HTMLElement>('.ws-name');
     /* Alle `.ws-icon` — die Schublade und die Einstellungen. Das Konto rechts
        in der Menüleiste trägt seit E456 ein Symbol statt des Zeichens. */
     document.querySelectorAll('.ws-icon').forEach(ico => {

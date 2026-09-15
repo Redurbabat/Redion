@@ -11,7 +11,7 @@
 #ai.open { animation: rmo-panel-in .32s var(--rmo-ease); }
 #ai .ai-head { min-height: 58px; padding: 10px 18px; gap: 8px; }
 #ai .ai-head > b { flex: 1; font-size: 15px; letter-spacing: -.02em; }
-#ai .ai-head .icon-btn { min-width: 44px; min-height: 44px; border-radius: 50%; }
+#ai .ai-head .icon-btn { min-width:var(--touch-min); min-height:var(--touch-min); border-radius: 50%; }
 #ai #chat { min-height: 80px; padding: 22px 18px; gap: 20px; overscroll-behavior: contain; }
 #ai .ai-foot { flex: 0 0 auto; padding: 0 14px 14px; border-top: 0; }
 #ai .ai-compose {
@@ -38,7 +38,7 @@
 #ai .ai-leiste { display: flex; align-items: center; gap: 2px; padding: 0; min-width: 0; }
 #ai .ai-leiste button {
   display: inline-flex; align-items: center; justify-content: center;
-  min-height: 44px; min-width: 44px; padding: 0 7px; border: 0;
+  min-height:var(--touch-min); min-width:var(--touch-min); padding: 0 7px; border: 0;
   border-radius: 22px; background: transparent; color: var(--text-dim);
   transition: background .18s, color .18s, transform .18s;
 }
@@ -64,7 +64,7 @@
 #ai .ai-tools { margin: 0 0 8px; border-radius: 16px; }
 #ai .ai-tools > summary {
   display: flex; align-items: center; justify-content: space-between;
-  min-height: 44px; padding: 0 10px; border-radius: 12px;
+  min-height:var(--touch-min); padding: 0 10px; border-radius: 12px;
   list-style: none; cursor: pointer; color: var(--text-dim); font-size: 12px;
 }
 #ai .ai-tools > summary::-webkit-details-marker { display: none; }
@@ -634,7 +634,7 @@ body [data-rmo~="toggle"][data-rmo-state="an"]::before { animation:rmo-orbit .65
    drei Klassen. Erst die bestehende Dialogkennung zusammen mit data-rmo
    macht die Motion-Regel spezifischer. Die ältere Regel bleibt Grundlage,
    solange das Skript noch nicht gelaufen ist. */
-body .fbtns button.prim[data-rmo~="glass"] { min-height:44px; border:1px solid color-mix(in srgb,var(--accent) 55%,var(--line));
+body .fbtns button.prim[data-rmo~="glass"] { min-height:var(--touch-min); border:1px solid color-mix(in srgb,var(--accent) 55%,var(--line));
   box-shadow:inset 0 1px 0 #ffffff70, inset 0 -6px 12px #0001, 0 3px 0 #0003;
   transition:transform .16s,box-shadow .16s; }
 body .fbtns button.prim[data-rmo~="glass"]:active:not(:disabled) { transform:translateY(3px); box-shadow:inset 0 2px 5px #0003; }
@@ -711,7 +711,7 @@ body [data-rmo~="glass"]:active:not(:disabled) > :not(.rmo-glass) { opacity:.82;
 .rmo-liquid::before,.rmo-liquid::after { border-right-color:color-mix(in srgb,var(--accent) 50%,var(--text)); }
 .rmo-transport { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:3px; padding:6px;
   border:1px solid var(--line-stark); border-radius:14px; background:var(--bg-hover); box-shadow:inset 0 2px 5px #0002; }
-.rmo-transport button { min-height:44px; min-width:0; padding:8px 5px; border-radius:8px;
+.rmo-transport button { min-height:var(--touch-min); min-width:0; padding:8px 5px; border-radius:8px;
   box-shadow:inset 0 1px 0 #ffffff60,0 3px 0 #0003; transition:transform .15s,box-shadow .15s; }
 .rmo-transport button:active:not(:disabled) { transform:translateY(3px); box-shadow:inset 0 2px 4px #0003; }
 .rmo-transport button:disabled { opacity:.45; cursor:default; }
@@ -2215,7 +2215,7 @@ body .rmo-transport button.rb {
   position: relative;
   isolation: isolate;                /* ohne eigenen Stapel bliebe die Kappe
                                         (z-index:-1) hinter der Fläche */
-  min-height: 44px;                  /* §37, Hauptweg */
+  min-height:var(--touch-min);                  /* §37, Hauptweg */
   min-width: 0;
   padding: 8px 5px;
   border-radius: 6px;

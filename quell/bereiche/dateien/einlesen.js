@@ -1038,26 +1038,360 @@ const Einlesen = (() => {
         }
         return karte;
     };
-    /** Der Text einer Form: Absätze, Läufe, und der harte Umbruch `a:br`. */
-    const formText = (txBody) => {
-        const zeilen = [];
+    /**
+     * DER ERSTE LAUF EINES ABSATZES BESTIMMT SEIN FORMAT — nicht der erste
+     * Lauf des ganzen KASTENS (E557).
+     *
+     * Hier stand `txBody.getElementsByTagName('a:rPr')[0]`, also der erste
+     * Lauf der ersten Zeile, für alles. Gemessen an einer eigens gebauten
+     * Datei: „klein"(12 pt) + „GROSS"(36 pt, fett, blau) kam als EINE Marke
+     * „klein GROSS" in 12 pt normal an; ein roter Titel (`srgbClr CC0000`)
+     * kam schwarz; drei Aufzählungsebenen kamen als flacher Block.
+     *
+     * INNERHALB eines Absatzes bleibt es beim ersten Lauf — Redions Textmarke
+     * hat genau einen Grad, und das ist eine Lücke, keine Nachlässigkeit
+     * (L151). Ein Absatz ist aber die Einheit, die ein Mensch als „Zeile mit
+     * eigenem Aussehen" sieht, und die ist jetzt erreichbar.
+     */
+    const absaetzeLesen = (txBody, thema = {}, paar = { major: '', minor: '' }) => {
+        const raus = [];
         for (const absatz of txBody.getElementsByTagName('a:p')) {
-            let zeile = '';
+            /* ══ JEDER LAUF MIT SEINEM EIGENEN FORMAT (E561) ════════════════════
+               Bis hierher nahm diese Schleife nur den TEXT jedes Laufs und das
+               FORMAT des ersten. „klein GROSS" kam damit vollständig in 12 pt an,
+               und der Grad des zweiten Laufs war lautlos weg.
+      
+               Ein `a:br` ist ein harter Umbruch und wird ein eigener Lauf mit
+               `\n` — so bleibt er in der Reihenfolge stehen, statt am Ende zu
+               landen. Ein `a:fld` (Foliennummer, Datum) trägt sein Format wie
+               ein Lauf und wird auch so gelesen. */
+            let text = '';
+            const laeufe = [];
+            const laufAnhaengen = (stueck, eigen) => {
+                if (!stueck)
+                    return;
+                const g = Number(eigen?.getAttribute('sz'));
+                const f = eigen ? [...eigen.children].find(k => k.tagName === 'a:solidFill') : undefined;
+                const c = farbeAus(f, thema);
+                laeufe.push({ text: stueck,
+                    sz: Number.isFinite(g) && g > 0 ? Math.round(g / 100) : 0,
+                    fett: eigen?.getAttribute('b') === '1', farbe: c,
+                    schrift: schriftFamilie(schriftName(eigen, paar)) });
+            };
             for (const kind of absatz.children) {
-                if (kind.tagName === 'a:r')
-                    zeile += kind.getElementsByTagName('a:t')[0]?.textContent || '';
-                else if (kind.tagName === 'a:br')
-                    zeile += '\n';
-                else if (kind.tagName === 'a:fld')
-                    zeile += kind.getElementsByTagName('a:t')[0]?.textContent || '';
+                if (kind.tagName === 'a:r' || kind.tagName === 'a:fld') {
+                    const stueck = kind.getElementsByTagName('a:t')[0]?.textContent || '';
+                    text += stueck;
+                    laufAnhaengen(stueck, kind.getElementsByTagName('a:rPr')[0]);
+                }
+                else if (kind.tagName === 'a:br') {
+                    text += '\n';
+                    laufAnhaengen('\n', kind.getElementsByTagName('a:rPr')[0]);
+                }
             }
-            zeilen.push(zeile);
+            const pPr = [...absatz.children].find(k => k.tagName === 'a:pPr');
+            /* Der erste ECHTE Lauf, nicht der erste `a:rPr` überhaupt: `a:pPr`
+               trägt ein `a:defRPr`, und das ist nicht das Format des Textes. */
+            const lauf = [...absatz.children].find(k => k.tagName === 'a:r');
+            const rPr = lauf?.getElementsByTagName('a:rPr')[0];
+            const sz = Number(rPr?.getAttribute('sz'));
+            /* Die Farbe des Textes steht im LAUF, nicht in `p:spPr` — dort wäre
+               es die Füllung der Form. `formFarbe` darf hier also nicht helfen. */
+            const fuellung = rPr ? [...rPr.children].find(k => k.tagName === 'a:solidFill') : undefined;
+            const rgb = farbeAus(fuellung, thema).replace('#', '');
+            /* `buNone` schlägt jedes geerbte Zeichen; `buAutoNum` bekommt einen
+               Punkt, weil die echte Nummer erst aus der Absatzfolge käme — und
+               eine falsche Nummer wäre schlimmer als ein neutrales Zeichen. */
+            let zeichen = '';
+            if (pPr && !pPr.getElementsByTagName('a:buNone')[0]) {
+                const buChar = pPr.getElementsByTagName('a:buChar')[0]?.getAttribute('char');
+                if (buChar)
+                    zeichen = buChar;
+                else if (pPr.getElementsByTagName('a:buAutoNum')[0])
+                    zeichen = '·';
+            }
+            raus.push({ text,
+                sz: Number.isFinite(sz) && sz > 0 ? Math.round(sz / 100) : 0,
+                fett: rPr?.getAttribute('b') === '1',
+                farbe: rgb ? '#' + rgb : '',
+                lvl: Math.max(0, Math.min(8, Number(pPr?.getAttribute('lvl')) || 0)),
+                zeichen, ausricht: absatzAusricht(pPr), laeufe,
+                schrift: schriftFamilie(schriftName(rPr, paar)) });
         }
         /* Leerzeilen am Ende weg — PowerPoint hängt gern einen leeren Absatz an,
            und der macht aus einem Titel einen Kasten mit Loch darunter. */
-        while (zeilen.length && !zeilen[zeilen.length - 1]?.trim())
-            zeilen.pop();
-        return zeilen.join('\n');
+        while (raus.length && !raus[raus.length - 1]?.text.trim())
+            raus.pop();
+        return raus;
+    };
+    /** Der ganze Text eines Kastens, für Titelsuche und Leerprüfung. */
+    const formText = (txBody) => absaetzeLesen(txBody).map(a => a.text).join('\n');
+    /**
+     * Die Ausrichtung eines Absatzes — `a:pPr@algn` (E560).
+     *
+     * Heisst `absatzAusricht` und nicht `ausrichtung`: sechshundert Zeilen
+     * weiter oben gibt es schon ein `ausrichtung`, und das ist ein Element aus
+     * einer Excel-Stilvorlage. Zwei Namen für zwei Sachen.
+     *
+     * PowerPoint kennt fünf Werte, Redions Textmarke drei. Die Zuordnung ist
+     * deshalb keine Tabelle, sondern eine Entscheidung:
+     *
+     *     l     → links     (und das ist auch der Fall ohne Angabe)
+     *     ctr   → mitte
+     *     r     → rechts
+     *     just  → links     Blocksatz. Er BRAUCHT gestreckte Wortabstände,
+     *     dist  → links     und die hat die Markenschicht nicht. Links ist
+     *                       die Kante, die der Blocksatz mit sich teilt —
+     *                       zentriert wäre an jeder Zeile falsch.
+     *
+     * Gibt '' zurück, wo nichts steht: dann bekommt die Marke gar kein Feld,
+     * und eine alte Marke ohne das Feld verhält sich weiter wie bisher.
+     */
+    const absatzAusricht = (pPr) => {
+        const algn = pPr?.getAttribute('algn') || '';
+        if (algn === 'ctr')
+            return 'mitte';
+        if (algn === 'r')
+            return 'rechts';
+        return '';
+    };
+    /**
+     * EINE TABELLE ALS MARKEN AUF DER FOLIE (E565).
+     *
+     * Redion hat einen Tabellenblock — aber eine Folie ist ein BLATT mit
+     * Marken, kein Editor. Die Tabelle zum Block zu machen hiesse, sie von
+     * der Folie zu nehmen und woanders hinzulegen; die Folie sähe dann anders
+     * aus als das Original, und genau das war der Sinn der letzten acht Bögen.
+     * Also bleibt sie, wo sie ist: als Gitter aus Rechtecken und einem Text je
+     * Zelle. Sie später als Datenbank HERAUSZUZIEHEN wäre eine eigene
+     * Handlung und eine eigene Entscheidung.
+     *
+     * ─── DIE MASSE STEHEN IM GITTER, NICHT AN DEN ZELLEN ─────────────────
+     *     <a:tblGrid><a:gridCol w="2743200"/>…   Spaltenbreiten in EMU
+     *     <a:tr h="370840">                      Zeilenhöhe in EMU
+     * Eine Zelle hat keine eigene Lage. Sie ergibt sich aus der Summe der
+     * Spalten links von ihr und der Zeilen über ihr — und deshalb muss die
+     * Schleife mitzählen statt zu fragen.
+     *
+     * ─── VERBUNDENE ZELLEN ──────────────────────────────────────────────
+     * `gridSpan` sagt, über wie viele Spalten eine Zelle geht; `hMerge` und
+     * `vMerge` markieren die VERSCHLUCKTEN Nachbarn. Die werden übersprungen —
+     * ein Rechteck darüber wäre ein Strich mitten durch die verbundene Zelle.
+     * `rowSpan` wird gelesen, damit die Zelle hoch genug wird.
+     */
+    const tabelleLesen = (frame, thema, grund) => {
+        const tbl = frame.getElementsByTagName('a:tbl')[0];
+        if (!tbl)
+            return [];
+        /* EIN `p:graphicFrame` TRÄGT `p:xfrm`, NICHT `a:xfrm`. Derselbe Inhalt,
+           ein anderer Namensraum — `formLage` findet ihn deshalb nicht. */
+        const xfrm = frame.getElementsByTagName('p:xfrm')[0]
+            || frame.getElementsByTagName('a:xfrm')[0];
+        const off = xfrm?.getElementsByTagName('a:off')[0];
+        if (!off)
+            return [];
+        const x0 = emuZuPunkt(off.getAttribute('x'));
+        const y0 = emuZuPunkt(off.getAttribute('y'));
+        const spalten = [...tbl.getElementsByTagName('a:gridCol')]
+            .map(c => emuZuPunkt(c.getAttribute('w')));
+        if (!spalten.length)
+            return [];
+        const raus = [];
+        const zeilen = [...tbl.getElementsByTagName('a:tr')];
+        let y = y0;
+        for (let r = 0; r < zeilen.length; r++) {
+            const tr = zeilen[r];
+            const hoehe = emuZuPunkt(tr.getAttribute('h')) || 20;
+            let x = x0;
+            let c = 0;
+            for (const tc of [...tr.children].filter(k => k.tagName === 'a:tc')) {
+                const breite = spalten[c] ?? 0;
+                /* Eine verschluckte Zelle bekommt kein Rechteck — sonst liefe ein
+                   Strich mitten durch die verbundene. Ihre Breite zählt trotzdem. */
+                if (tc.getAttribute('hMerge') === '1' || tc.getAttribute('vMerge') === '1') {
+                    x += breite;
+                    c++;
+                    continue;
+                }
+                const spanne = Math.max(1, Number(tc.getAttribute('gridSpan')) || 1);
+                let voll = 0;
+                for (let i = 0; i < spanne; i++)
+                    voll += spalten[c + i] ?? 0;
+                const reihen = Math.max(1, Number(tc.getAttribute('rowSpan')) || 1);
+                let hoch = 0;
+                for (let i = 0; i < reihen; i++)
+                    hoch += emuZuPunkt(zeilen[r + i]?.getAttribute('h')) || hoehe;
+                const tcPr = [...tc.children].find(k => k.tagName === 'a:tcPr');
+                const fuell = tcPr ? [...tcPr.children].find(k => k.tagName === 'a:solidFill') : undefined;
+                const fuellung = farbeAus(fuell, thema);
+                raus.push({ art: 'rectangle', x, y, w: voll, h: hoch,
+                    farbe: '#9aa3ad', ...(fuellung ? { fuellung } : {}) });
+                const txBody = tc.getElementsByTagName('a:txBody')[0];
+                const absaetze = txBody ? absaetzeLesen(txBody, thema) : [];
+                const text = absaetze.map(a => a.text).join('\n').trim();
+                if (text) {
+                    const a0 = absaetze.find(a => a.text.trim()) || absaetze[0];
+                    /* Der Rand der Zelle: PowerPoints Vorgabe sind 0,1 Zoll links und
+                       rechts, 0,05 oben und unten — 7,2 bzw. 3,6 Punkt. */
+                    raus.push({ art: 'text', text,
+                        x: x + 7.2, y: y + 3.6,
+                        breiteBox: Math.max(12, voll - 14.4),
+                        fontSize: a0.sz || 12, fett: a0.fett,
+                        ...((a0.farbe || grund) ? { farbe: a0.farbe || grund } : {}),
+                        ...(a0.ausricht ? { ausricht: a0.ausricht } : {}) });
+                }
+                x += voll;
+                c += spanne;
+            }
+            y += hoehe;
+        }
+        return raus;
+    };
+    const schriftpaarLesen = (themaDoc) => {
+        const schema = themaDoc?.getElementsByTagName('a:fontScheme')[0];
+        const namen = (tag) => schema?.getElementsByTagName(tag)[0]
+            ?.getElementsByTagName('a:latin')[0]?.getAttribute('typeface') || '';
+        return { major: namen('a:majorFont'), minor: namen('a:minorFont') };
+    };
+    /**
+     * Aus einem Schriftnamen eine von Redions fünf Familien machen.
+     *
+     * DIE LISTE IST KURZ UND EHRLICH. Sie nennt, was auf Schweizer Rechnern
+     * und in Office-Vorlagen wirklich vorkommt; alles andere fällt auf
+     * `standard`. Dazu drei Endungen, die für sich sprechen — „Serif",
+     * „Mono", „Condensed" stehen im Namen, wenn sie zutreffen.
+     *
+     * KEINE RATEREI ÜBER DAS HINAUS: „Optima" ist serifenlos, „Rockwell" hat
+     * Serifen, und keins von beidem sagt es im Namen. Wer eine Schrift
+     * vermisst, trägt sie hier ein — eine Zeile, nachprüfbar.
+     */
+    const SCHRIFT_SERIF = new Set([
+        'georgia', 'times new roman', 'times', 'garamond', 'eb garamond',
+        'adobe garamond pro', 'cambria', 'constantia', 'book antiqua', 'palatino',
+        'palatino linotype', 'bookman old style', 'century', 'century schoolbook',
+        'baskerville', 'libre baskerville', 'merriweather', 'playfair display',
+        'source serif pro', 'pt serif', 'noto serif', 'droid serif', 'lora',
+        'spectral', 'crimson text', 'minion pro', 'sabon', 'utopia', 'cardo',
+        'charter', 'charis sil', 'liberation serif', 'dejavu serif', 'freeserif',
+        'stix two text', 'literata', 'newsreader', 'domine', 'arvo', 'rockwell',
+    ]);
+    const SCHRIFT_MONO = new Set([
+        'consolas', 'courier new', 'courier', 'menlo', 'monaco', 'lucida console',
+        'andale mono', 'dejavu sans mono', 'liberation mono', 'source code pro',
+        'fira code', 'jetbrains mono', 'ibm plex mono', 'cascadia code', 'sf mono',
+    ]);
+    const SCHRIFT_HAND = new Set([
+        'comic sans ms', 'segoe print', 'segoe script', 'bradley hand',
+        'brush script mt', 'lucida handwriting', 'ink free', 'caveat',
+        'dancing script', 'pacifico', 'kalam', 'patrick hand',
+    ]);
+    const SCHRIFT_SCHMAL = new Set([
+        'arial narrow', 'roboto condensed', 'helvetica neue condensed',
+        'oswald', 'barlow condensed', 'fira sans condensed', 'pt sans narrow',
+        'archivo narrow', 'liberation sans narrow',
+    ]);
+    const schriftFamilie = (roh) => {
+        const name = String(roh || '').trim().toLowerCase();
+        if (!name)
+            return '';
+        if (SCHRIFT_MONO.has(name) || /\bmono\b/.test(name))
+            return 'mono';
+        if (SCHRIFT_HAND.has(name) || /\b(script|hand)\b/.test(name))
+            return 'hand';
+        if (SCHRIFT_SCHMAL.has(name) || /\b(condensed|narrow)\b/.test(name))
+            return 'schmal';
+        if (SCHRIFT_SERIF.has(name) || /\bserif\b/.test(name))
+            return 'serif';
+        return '';
+    };
+    /** Den Schriftnamen aus einem `a:rPr`/`a:defRPr` holen, `+mj-lt` aufgelöst. */
+    const schriftName = (pr, paar) => {
+        const roh = pr?.getElementsByTagName('a:latin')[0]?.getAttribute('typeface') || '';
+        if (roh === '+mj-lt')
+            return paar.major;
+        if (roh === '+mn-lt')
+            return paar.minor;
+        return roh;
+    };
+    /**
+     * WELCHE FORM ES IST — `a:prstGeom@prst` (E566).
+     *
+     * PowerPoint kennt weit über hundert Formen, Redions Markenschicht fünf
+     * geschlossene und zwei offene. Abgebildet wird nur, was WIRKLICH passt;
+     * alles andere gibt '' zurück und wird gezählt statt geraten. Ein Stern
+     * als Rechteck wäre schlimmer als ein Stern, der fehlt und genannt wird.
+     *
+     * Ein Kasten ohne `a:prstGeom` ist in PowerPoint ein Rechteck — so steht
+     * es im Format, und so schreibt es auch jeder Textrahmen.
+     */
+    const FORMEN = {
+        rect: 'rectangle', roundRect: 'roundrect', round1Rect: 'roundrect',
+        round2SameRect: 'roundrect', round2DiagRect: 'roundrect', snip1Rect: 'rectangle',
+        ellipse: 'ellipse', triangle: 'triangle', rtTriangle: 'triangle',
+        line: 'line', straightConnector1: 'line',
+    };
+    const formGeometrie = (form) => {
+        const spPr = form.getElementsByTagName('p:spPr')[0];
+        if (!spPr)
+            return '';
+        const geom = [...spPr.children].find(k => k.tagName === 'a:prstGeom');
+        if (!geom)
+            return 'rectangle';
+        return FORMEN[geom.getAttribute('prst') || ''] || '';
+    };
+    /**
+     * DER UMRISS einer Form — `a:ln` (E566).
+     *
+     * `null` heisst „kein Strich". Das ist der häufige Fall und der wichtige:
+     * ein farbiger Kasten hinter einem Titel hat KEINEN Rand, und ein Rand in
+     * der Vorgabefarbe würde ihn um zweieinhalb Punkt vergrössern und mit
+     * einem grauen Saum umgeben, den im Original niemand sieht.
+     *
+     * Auch ein fehlendes `a:ln` heisst hier „kein Strich". Genau genommen käme
+     * die Vorgabe dann aus `p:style > a:lnRef` und dem Thema — aber zwischen
+     * „nichts zeichnen" und „etwas Geratenes zeichnen" ist nichts das
+     * ehrlichere.
+     */
+    const formRand = (form, thema) => {
+        const spPr = form.getElementsByTagName('p:spPr')[0];
+        const ln = spPr ? [...spPr.children].find(k => k.tagName === 'a:ln') : undefined;
+        if (!ln)
+            return null;
+        if ([...ln.children].some(k => k.tagName === 'a:noFill'))
+            return null;
+        const voll = [...ln.children].find(k => k.tagName === 'a:solidFill');
+        const farbe = farbeAus(voll, thema);
+        if (!farbe)
+            return null;
+        /* `w` steht in EMU; 12700 EMU sind ein Punkt. */
+        const roh = Number(ln.getAttribute('w'));
+        const breite = Number.isFinite(roh) && roh > 0
+            ? Math.max(0.5, Math.round((roh / 12700) * 10) / 10) : 1;
+        return { farbe, breite };
+    };
+    /**
+     * Die DREHUNG einer Form, in Grad im Uhrzeigersinn (E563).
+     *
+     * `a:xfrm@rot` steht in 60000steln Grad: 5400000 sind 90°. Die Richtung
+     * ist dieselbe wie bei SVGs `rotate` und bei Redions `dreh` — es muss
+     * also nichts gespiegelt werden, nur geteilt.
+     *
+     * AUF 0…360 GEBRACHT, und 0 heisst „keine". PowerPoint schreibt auch
+     * negative Werte und solche über 360; eine Marke mit `dreh: -90` wäre
+     * gültig, aber `dreh: 270` ist dieselbe Drehung und liest sich besser.
+     *
+     * NUR AUS DEM EIGENEN `a:xfrm`. `getElementsByTagName` fände auch das
+     * `a:xfrm` eines Kindes in einer Gruppe — und dessen Drehung gehört dem
+     * Kind, nicht der Gruppe. Deshalb derselbe Weg wie `formLage`: das erste,
+     * und das ist in einem `p:sp` das eigene.
+     */
+    const formDrehung = (form) => {
+        const xfrm = form.getElementsByTagName('a:xfrm')[0];
+        const roh = Number(xfrm?.getAttribute('rot'));
+        if (!Number.isFinite(roh) || roh === 0)
+            return 0;
+        const grad = Math.round((roh / 60000) * 100) / 100;
+        return ((grad % 360) + 360) % 360;
     };
     /** Lage und Grösse einer Form, in Blattpunkten. `null`, wenn sie fehlen. */
     const formLage = (form) => {
@@ -1127,7 +1461,7 @@ const Einlesen = (() => {
      * wäre ein `fill="url(#…)"` ins Leere ein UNSICHTBARER Deckel — und ein
      * unsichtbarer Deckel ist eine offene Antwort.
      */
-    const formFarbe = (form) => {
+    const formFarbe = (form, thema = {}) => {
         const verlauf = form.getElementsByTagName('a:gradFill')[0];
         if (verlauf) {
             /* Der mittlere Stopp ist bei einem Deckel die Farbe; die äusseren
@@ -1135,39 +1469,252 @@ const Einlesen = (() => {
                RGB-Wert — ein `schemeClr` ist ohne Thema ohnehin nicht auflösbar. */
             const stopps = [...verlauf.getElementsByTagName('a:gs')];
             const mitte = stopps.find(g => g.getAttribute('pos') === '50000') || null;
-            const rgbMitte = mitte?.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+            const rgbMitte = farbeAus(mitte, thema);
             if (rgbMitte)
-                return '#' + rgbMitte;
+                return rgbMitte;
             for (const g of stopps) {
-                const w = g.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+                const w = farbeAus(g, thema);
                 if (w)
-                    return '#' + w;
+                    return w;
             }
         }
         const voll = form.getElementsByTagName('a:solidFill')[0];
-        const rgb = voll?.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
-        return rgb ? '#' + rgb : '';
+        return farbeAus(voll, thema);
+    };
+    /** Ein `a:srgbClr` / `a:sysClr` / `a:schemeClr` zu `#rrggbb`. */
+    const farbeAus = (eltern, thema) => {
+        if (!eltern)
+            return '';
+        /* Die direkten Kinder, nicht der ganze Teilbaum: unter einer Füllung
+           kann eine Linie mit eigener Farbe liegen (§E545 hat das schon einmal
+           gekostet). */
+        const knoten = [...eltern.children].find(k => k.tagName === 'a:srgbClr' || k.tagName === 'a:sysClr' || k.tagName === 'a:schemeClr');
+        if (!knoten)
+            return '';
+        let roh = '';
+        if (knoten.tagName === 'a:srgbClr')
+            roh = knoten.getAttribute('val') || '';
+        else if (knoten.tagName === 'a:sysClr')
+            roh = knoten.getAttribute('lastClr') || '';
+        else {
+            const name = knoten.getAttribute('val') || '';
+            /* `phClr` ist die Farbe des Platzhalters, der diese Vorlage BENUTZT —
+               sie steht nirgends und lässt sich hier nicht auflösen. */
+            if (name === 'phClr')
+                return '';
+            roh = (thema[name] || '').replace('#', '');
+        }
+        if (!/^[0-9a-fA-F]{6}$/.test(roh))
+            return '';
+        return abwandeln('#' + roh, knoten);
     };
     /**
-     * Der VERLAUF einer Form, wenn sie einen hat (E545).
+     * `lumMod`, `lumOff`, `tint`, `shade` auf eine fertige Farbe anwenden.
      *
-     * Gemessen an Redurs Datei: die Abdeckungen sind weiss → `#FFCC00` in der
-     * Mitte → weiss, senkrecht. `formFarbe` gab davon EINE Farbe zurück, und
-     * der Deckel war eine gelbe Fläche, wo im Original ein Band mit weichen
-     * Rändern liegt.
-     *
-     * NUR AUS `p:spPr`, anders als `formFarbe`. Die alte Funktion sucht über
-     * den ganzen Teilbaum — und im selben Teilbaum liegt `a:ln`, die
-     * Umrisslinie, mit eigener Füllung. Für die Farbe ging das bisher gut;
-     * für den Verlauf wäre es ein Glücksspiel, und der Kommentar oben sagt
-     * selbst, dass die Füllung daneben der Linie gehört.
-     *
-     * Was NICHT gelesen wird und deshalb `null` ergibt: `a:schemeClr` und
-     * Verwandte (ohne `theme1.xml` nicht auflösbar), `a:path` (radiale
-     * Verläufe). Dann bleibt es bei der festen Farbe — eine gelbe Fläche ist
-     * eine ehrliche Näherung, eine falsche Farbe wäre es nicht.
+     * OHNE ABWANDLUNG KOMMT DIE FARBE UNVERÄNDERT ZURÜCK — Byte für Byte, mit
+     * der Schreibweise aus der Datei. Die erste Fassung rechnete immer und gab
+     * darum immer klein geschriebenes Hex heraus; `test512` und `test513`
+     * wurden davon rot („ist '#cc0000', soll '#CC0000'"). Gezeichnet hätte es
+     * dasselbe — Hex ist in CSS gleichgültig gegen Gross und Klein —, aber
+     * eine Änderung, die niemand wollte, ist eine Änderung zu viel: was
+     * unverändert aus der Datei kommt, geht unverändert weiter.
      */
-    const formVerlauf = (form) => {
+    const abwandeln = (farbe, knoten) => {
+        const WANDLER = ['a:lumMod', 'a:lumOff', 'a:tint', 'a:shade'];
+        if (![...knoten.children].some(k => WANDLER.includes(k.tagName)))
+            return farbe;
+        const wert = (tag) => {
+            const k = [...knoten.children].find(x => x.tagName === tag);
+            if (!k)
+                return null;
+            const v = Number(k.getAttribute('val'));
+            return Number.isFinite(v) ? v / 100000 : null;
+        };
+        let [r, g, b] = [0, 1, 2].map(n => parseInt(farbe.slice(1 + n * 2, 3 + n * 2), 16) / 255);
+        /* `tint` mischt gegen Weiss, `shade` gegen Schwarz — beide linear auf
+           dem Kanal, so steht es in ECMA-376 §20.1.2.3.34 und .30. */
+        const tint = wert('a:tint');
+        if (tint !== null) {
+            r = r * tint + (1 - tint);
+            g = g * tint + (1 - tint);
+            b = b * tint + (1 - tint);
+        }
+        const shade = wert('a:shade');
+        if (shade !== null) {
+            r *= shade;
+            g *= shade;
+            b *= shade;
+        }
+        /* `lumMod`/`lumOff` arbeiten auf der HELLIGKEIT, nicht auf dem Kanal.
+           Deshalb der Umweg über HSL — auf den Kanälen gerechnet würde aus
+           einem kräftigen Blau ein blasses Grau statt eines hellen Blaus. */
+        const lumMod = wert('a:lumMod');
+        const lumOff = wert('a:lumOff');
+        if (lumMod !== null || lumOff !== null) {
+            const hoch = Math.max(r, g, b), tief = Math.min(r, g, b);
+            let l = (hoch + tief) / 2;
+            const d = hoch - tief;
+            const sat = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+            let h = 0;
+            if (d !== 0) {
+                if (hoch === r)
+                    h = ((g - b) / d) % 6;
+                else if (hoch === g)
+                    h = (b - r) / d + 2;
+                else
+                    h = (r - g) / d + 4;
+                h *= 60;
+                if (h < 0)
+                    h += 360;
+            }
+            l = Math.min(1, Math.max(0, l * (lumMod ?? 1) + (lumOff ?? 0)));
+            const c = (1 - Math.abs(2 * l - 1)) * sat;
+            const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+            const m = l - c / 2;
+            const feld = [
+                [c, x, 0], [x, c, 0], [0, c, x], [0, x, c], [x, 0, c], [c, 0, x]
+            ];
+            const teil = feld[Math.min(5, Math.floor(h / 60))];
+            r = teil[0] + m;
+            g = teil[1] + m;
+            b = teil[2] + m;
+        }
+        const zwei = (v) => Math.min(255, Math.max(0, Math.round(v * 255))).toString(16).padStart(2, '0');
+        return '#' + zwei(r) + zwei(g) + zwei(b);
+    };
+    /**
+     * Die Farbzuordnung des Masters und das Thema zu einer Karte verrechnen.
+     *
+     * Heraus kommt eine flache Karte von JEDEM Namen, der in einer Folie
+     * stehen darf (`bg1`, `tx2`, `accent3`, `hlink`, …) auf `#rrggbb`. Die
+     * Themennamen selbst (`lt1`, `dk2`) stehen zusätzlich darin, weil ein
+     * Layout sie auch unmittelbar nennen darf.
+     */
+    const themaLesen = (themaDoc, masterDoc) => {
+        const karte = {};
+        if (!themaDoc)
+            return karte;
+        const schema = themaDoc.getElementsByTagName('a:clrScheme')[0];
+        if (!schema)
+            return karte;
+        for (const eintrag of schema.children) {
+            const name = eintrag.tagName.replace(/^a:/, '');
+            const wert = farbeAus(eintrag, {});
+            if (wert)
+                karte[name] = wert;
+        }
+        /* Und jetzt die Stufe, die man vergisst: die Zuordnung des Masters. */
+        const zuordnung = masterDoc?.getElementsByTagName('p:clrMap')[0];
+        if (zuordnung) {
+            for (const attribut of zuordnung.attributes) {
+                const ziel = karte[attribut.value];
+                if (ziel)
+                    karte[attribut.name] = ziel;
+            }
+        }
+        return karte;
+    };
+    /**
+     * Der Schlüssel eines Platzhalters.
+     *
+     * PowerPoint unterscheidet sie über `type` UND `idx`, und beide können
+     * fehlen. Ein fehlender `type` heisst „body", ein fehlender `idx` heisst
+     * „0" — das steht so im Format, und ohne diese zwei Vorgaben fände ein
+     * Titel seinen Platzhalter im Layout nicht wieder.
+     */
+    const phSchluessel = (ph) => {
+        if (!ph)
+            return '';
+        const typ = ph.getAttribute('type') || 'body';
+        const idx = ph.getAttribute('idx') || '0';
+        /* `ctrTitle` und `title` sind für die Vererbung dasselbe: beide sind
+           DER Titel der Folie, und ein Layout schreibt mal das eine, mal das
+           andere. Ohne diese Zeile erbt eine zentrierte Titelfolie nichts. */
+        const gleich = typ === 'ctrTitle' ? 'title' : typ;
+        return gleich + '#' + idx;
+    };
+    /** Alle Platzhalter eines Layout- oder Master-XML, nach Schlüssel. */
+    const vorgabenLesen = (doc, thema = {}, paar = { major: '', minor: '' }) => {
+        const karte = new Map();
+        if (!doc)
+            return karte;
+        const baum = doc.getElementsByTagName('p:spTree')[0];
+        for (const form of (baum ? baum.children : [])) {
+            if (form.tagName !== 'p:sp')
+                continue;
+            const ph = form.getElementsByTagName('p:ph')[0];
+            if (!ph)
+                continue;
+            /* AUS `a:defRPr` KOMMT MEHR ALS DER GRAD (E566).
+               Gemessen an Redurs Datei: der Titel steht dort weiss auf einem
+               dunkelblauen Kasten, und die Farbe steht NICHT im Lauf, sondern hier
+               in der Vorgabe des Platzhalters. Bis hierher wurde von diesem
+               Element nur `sz` gelesen — der Titel kam darum schwarz an, und auf
+               Folie 2 kamen vier verschiedene Farben allesamt als Schwarz. */
+            const defRPr = form.getElementsByTagName('a:defRPr')[0];
+            const sz = Number(defRPr?.getAttribute('sz'));
+            const voll = defRPr ? [...defRPr.children].find(k => k.tagName === 'a:solidFill') : undefined;
+            karte.set(phSchluessel(ph), {
+                lage: formLage(form),
+                sz: Number.isFinite(sz) && sz > 0 ? Math.round(sz / 100) : 0,
+                farbe: farbeAus(voll, thema),
+                /* SEIT E567 WIRD `a:latin` AUCH GELESEN — und benutzt. Bei E566
+                   stand hier, dass das Feld absichtlich fehlt; das war richtig,
+                   solange es niemand ausgewertet hätte. */
+                schrift: schriftFamilie(schriftName(defRPr, paar)),
+            });
+        }
+        return karte;
+    };
+    /**
+     * Die Hintergrundfarbe eines Folien-, Layout- oder Master-XML.
+     *
+     * NUR EINE VOLLE FARBE. Ein Verlauf, ein Bild oder eine Themenfarbe
+     * (`schemeClr` — ohne `theme1.xml` gar nicht auflösbar) geben leer zurück,
+     * und dann bleibt das Blatt weiss. Eine falsche Hintergrundfarbe wäre
+     * schlimmer als gar keine: sie macht den Text unlesbar, und man sieht
+     * nicht, woher sie kommt.
+     */
+    const hintergrund = (doc, thema = {}) => {
+        if (!doc)
+            return '';
+        const bg = doc.getElementsByTagName('p:bg')[0];
+        if (!bg)
+            return '';
+        /* `p:bgPr > a:solidFill > a:srgbClr`. Über `getElementsByTagName` geht
+           auch ein `a:srgbClr` in einer Linie oder einem Effekt darunter mit —
+           deshalb der Weg über die volle Füllung. */
+        const voll = bg.getElementsByTagName('a:solidFill')[0];
+        return farbeAus(voll, thema);
+    };
+    /**
+     * Welche Tinte auf diesem Grund lesbar ist — '' heisst „die gewohnte".
+     *
+     * Gerechnet wird der Kontrast nach WCAG, nicht nach Gefühl: die relative
+     * Helligkeit beider Farben, und daraus (hell + 0,05) / (dunkel + 0,05).
+     * Erst wenn Schwarz unter 4,5:1 fällt, wird auf Weiss gewechselt. Ein
+     * Grund wie `#f8f8f5` ändert damit gar nichts.
+     */
+    const tinteFuer = (grund) => {
+        const treffer = /^#([0-9a-fA-F]{6})$/.exec(grund);
+        if (!treffer)
+            return '';
+        const roh = treffer[1];
+        const kanal = (i) => {
+            const v = parseInt(roh.slice(i * 2, i * 2 + 2), 16) / 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        };
+        const helligkeit = 0.2126 * kanal(0) + 0.7152 * kanal(1) + 0.0722 * kanal(2);
+        /* `#111111` — die Farbe, die eine Textmarke ohne eigene Farbe bekommt —
+           hat die relative Helligkeit 0,005605. NACHGERECHNET, nicht geschätzt:
+           meine erste Zahl hier war 0,005182 und damit falsch (P32 zum zweiten
+           Mal). Die Schwelle liegt dadurch bei L < 0,2002, und das ist eine
+           messbare Kante: `#767676` kippt (4,16:1), `#888888` nicht (5,33:1). */
+        const schwarz = 0.005605;
+        const gegenSchwarz = (helligkeit + 0.05) / (schwarz + 0.05);
+        return gegenSchwarz < 4.5 ? '#ffffff' : '';
+    };
+    const formVerlauf = (form, thema = {}) => {
         const spPr = form.getElementsByTagName('p:spPr')[0];
         if (!spPr)
             return null;
@@ -1178,9 +1725,11 @@ const Einlesen = (() => {
             return null;
         const stopps = [];
         for (const g of [...verlauf.getElementsByTagName('a:gs')]) {
-            const rgb = g.getElementsByTagName('a:srgbClr')[0]?.getAttribute('val');
+            const rgb = farbeAus(g, thema);
+            /* Seit E559 ist eine Themenfarbe auflösbar. Leer bleibt nur noch, was
+               wirklich niemand kennt — ein Bild als Füllung oder `phClr`. */
             if (!rgb)
-                continue; /* eine Themenfarbe — dann lieber gar nichts */
+                continue;
             const roh = String(g.getAttribute('pos') ?? '');
             /* `pos` steht in Tausendstel Prozent (0…100000); die neuere
                Schreibweise `50%` gibt es auch. Beides auf 0…1 bringen. */
@@ -1188,7 +1737,7 @@ const Einlesen = (() => {
                 : Number(roh) / 100000;
             if (!Number.isFinite(anteil))
                 continue;
-            stopps.push({ pos: Math.min(1, Math.max(0, anteil)), farbe: '#' + rgb });
+            stopps.push({ pos: Math.min(1, Math.max(0, anteil)), farbe: rgb });
         }
         /* Weniger als zwei Stopps sind kein Verlauf. Und wenn EINER der Stopps
            eine Themenfarbe war, fehlt er — dann ist der Verlauf unvollständig
@@ -1243,6 +1792,58 @@ const Einlesen = (() => {
                 continue;
             const doc = xml(t);
             const rels = await relsLesen(zip, pfad);
+            /* ── DIE ERBKETTE: Folie → Layout → Master (E558) ────────────────── */
+            const holeXml = async (ziel) => {
+                if (!ziel)
+                    return null;
+                try {
+                    const t = await zip.text(ziel);
+                    return t ? xml(t) : null;
+                }
+                catch {
+                    return null;
+                }
+            };
+            const layoutPfad = Object.entries(rels)
+                .find(([, z]) => /slideLayouts\//.test(String(z)))?.[1] || '';
+            const layoutDoc = await holeXml(String(layoutPfad));
+            let masterDoc = null;
+            let masterPfad = '';
+            if (layoutPfad) {
+                const lRels = await relsLesen(zip, String(layoutPfad));
+                masterPfad = String(Object.entries(lRels)
+                    .find(([, z]) => /slideMasters\//.test(String(z)))?.[1] || '');
+                masterDoc = await holeXml(masterPfad);
+            }
+            /* DAS THEMA HÄNGT AM MASTER, NICHT AN DER FOLIE (E559). Auch hier
+               über die `.rels` und nicht über den Namen: ein Master darf
+               `theme3.xml` benutzen. Die Farbzuordnung (`p:clrMap`) steht dagegen
+               IM Master selbst — sie kommt also aus `masterDoc`. */
+            let themaDoc = null;
+            if (masterPfad) {
+                const mRels = await relsLesen(zip, masterPfad);
+                const themaPfad = Object.entries(mRels)
+                    .find(([, z]) => /theme\//.test(String(z)))?.[1] || '';
+                themaDoc = await holeXml(String(themaPfad));
+            }
+            const thema = themaLesen(themaDoc, masterDoc);
+            /* Layout gewinnt gegen Master — deshalb wird der Master ZUERST
+               eingetragen und vom Layout überschrieben. */
+            const paar = schriftpaarLesen(themaDoc);
+            const vorgaben = new Map([...vorgabenLesen(masterDoc, thema, paar),
+                ...vorgabenLesen(layoutDoc, thema, paar)]);
+            /* Und die Folie gewinnt gegen beide. */
+            const grundfarbe = hintergrund(doc, thema) || hintergrund(layoutDoc, thema)
+                || hintergrund(masterDoc, thema);
+            /* DIE TINTE MUSS AUF DEM GRUND LESBAR BLEIBEN (E558).
+               Eine Textmarke ohne eigene Farbe zeichnet `#111111` — das war
+               richtig, solange jedes Blatt weiss war. Mit einem geerbten dunklen
+               Grund wäre es schwarz auf dunkelblau, also unsichtbar. PowerPoint
+               hat dafür die Themenfarbe; die haben wir nicht. Was wir haben, ist
+               der Kontrast, und der entscheidet: nur wenn Schwarz die Schwelle
+               von 4,5:1 REISST (§38), bekommt der Absatz ausdrücklich Weiss.
+               Ein Absatz mit eigener Farbe behält sie in jedem Fall. */
+            const standardTinte = tinteFuer(grundfarbe);
             const baum = doc.getElementsByTagName('p:spTree')[0];
             const schritte = klickschritte(doc);
             const objekte = [];
@@ -1287,9 +1888,35 @@ const Einlesen = (() => {
                         await formenLesen(form.children, innen, tiefe + 1);
                         continue;
                     }
-                    /* ── Tabelle und Diagramm: noch nicht, aber NICHT still (E555) ── */
+                    /* ── Tabelle: als Gitter auf der Folie (E565). Diagramm: noch
+                          nicht, aber NICHT still (E555). ────────────────────────────── */
                     if (form.tagName === 'p:graphicFrame') {
-                        merkeWeg(form.getElementsByTagName('a:tbl').length ? 'Tabellen' : 'Diagramme');
+                        if (form.getElementsByTagName('a:tbl').length) {
+                            const zellen = tabelleLesen(form, thema, standardTinte);
+                            if (zellen.length) {
+                                /* DIE ABBILDUNG DER GRUPPE GILT AUCH HIER. Eine Tabelle kann
+                                   in einer Gruppe liegen; `abbilden` rechnet dann jede Zelle
+                                   mit, statt dass die Tabelle als einzige danebenläge. */
+                                for (const z of zellen) {
+                                    const l = abbilden({ x: z.x, y: z.y, w: z.w ?? z.breiteBox ?? 0, h: z.h ?? 0 }, ab);
+                                    if (!l)
+                                        continue;
+                                    z.x = l.x;
+                                    z.y = l.y;
+                                    if (z.w !== undefined) {
+                                        z.w = l.w;
+                                        z.h = l.h;
+                                    }
+                                    else
+                                        z.breiteBox = Math.max(12, l.w);
+                                    objekte.push(z);
+                                }
+                            }
+                            else
+                                merkeWeg('Tabellen');
+                        }
+                        else
+                            merkeWeg('Diagramme');
                         continue;
                     }
                     /* ── Textkasten ──────────────────────────────────────────────── */
@@ -1299,7 +1926,20 @@ const Einlesen = (() => {
                         /* DURCH DIE ABBILDUNG DER GRUPPE (E555). Ausserhalb einer Gruppe
                            ist `ab` null und `abbilden` gibt die Lage unverändert zurück —
                            dieselbe Zeile trägt beide Fälle. */
-                        const lage = abbilden(formLage(form), ab);
+                        /* UND WENN DIE FOLIE KEINE LAGE ANGIBT, ERBT SIE SIE (E558).
+                           PowerPoint schreibt `a:xfrm` nur, wenn die Folie den Platzhalter
+                           VERSCHOBEN hat. Ohne die Vererbung landete der Text auf einer
+                           geratenen Stelle — `breite * 0.08`, `hoehe * 0.1` —, und das
+                           sieht man sofort. */
+                        const eigenePh = form.getElementsByTagName('p:ph')[0];
+                        const geerbt = eigenePh ? vorgaben.get(phSchluessel(eigenePh)) : undefined;
+                        const lage = abbilden(formLage(form) || geerbt?.lage || null, ab);
+                        /* Die Drehung erbt NICHT (E563). Ein Layout gibt vor, wo ein
+                           Platzhalter steht und wie gross er ist; dass er schief steht,
+                           ist eine Entscheidung der einzelnen Folie. PowerPoint hält es
+                           genauso: `rot` steht im `a:xfrm` der Form, und ein geerbter
+                           Platzhalter hat gar keins. */
+                        const dreh = formDrehung(form);
                         /* ── EINE ABDECKUNG ──────────────────────────────────────────
                            Kein Text, eine feste Füllung, und ein Klick lässt sie
                            verschwinden: das ist ein Deckel über der Antwort. Redion hat
@@ -1309,38 +1949,203 @@ const Einlesen = (() => {
                         const sid = form.getElementsByTagName('p:cNvPr')[0]?.getAttribute('id') || '';
                         const schritt = sid ? schritte.get(sid) : undefined;
                         if (!text.trim() && schritt && lage && lage.w > 0 && lage.h > 0) {
-                            objekte.push({ art: 'abdeck', schritt, farbe: formFarbe(form) || '#ffcc00',
-                                verlauf: formVerlauf(form),
-                                x: lage.x, y: lage.y, w: lage.w, h: lage.h });
+                            objekte.push({ art: 'abdeck', schritt, farbe: formFarbe(form, thema) || '#ffcc00',
+                                verlauf: formVerlauf(form, thema),
+                                x: lage.x, y: lage.y, w: lage.w, h: lage.h, ...(dreh ? { dreh } : {}) });
                             continue;
                         }
-                        if (!text.trim()) {
-                            /* EINE FORM OHNE TEXT UND OHNE KLICK. Sie kommt nicht an —
-                               Redion hat für eine gefüllte PowerPoint-Form keine Marke, die
-                               ihre Füllung UND ihren Umriss trüge. Aber sie verschwindet
-                               nicht mehr schweigend (E555): gezählt wird sie nur, wenn sie
-                               überhaupt eine Fläche hat, sonst zählte jeder unsichtbare
-                               Platzhalter mit. */
-                            if (lage && lage.w > 0 && lage.h > 0)
-                                merkeWeg('gefüllte Formen');
-                            continue;
+                        /* ══ DIE FORM SELBST (E566) ═══════════════════════════════════
+                           Gemessen an Redurs echter Datei: der dunkelblaue Kasten hinter
+                           dem Titel und der rote Balken über „PERSON" fehlten BEIDE. Ohne
+                           sie steht der Titel im Nichts — das ist kein Schönheitsfehler,
+                           sondern eine andere Folie.
+              
+                           Die Form wird VOR dem Text eingetragen, damit der Text darauf
+                           liegt und nicht darunter. */
+                        const fuellung = formFarbe(form, thema);
+                        const geo = formGeometrie(form);
+                        const rand = formRand(form, thema);
+                        if (lage && lage.w > 0 && lage.h > 0 && geo && (fuellung || rand)) {
+                            objekte.push({ art: geo, x: lage.x, y: lage.y, w: lage.w, h: lage.h,
+                                ...(fuellung ? { fuellung } : {}),
+                                ...(rand ? { farbe: rand.farbe, breite: rand.breite } : { randlos: true }),
+                                ...(dreh ? { dreh } : {}) });
                         }
+                        else if (!text.trim() && lage && lage.w > 0 && lage.h > 0) {
+                            /* Was übrig bleibt, verschwindet nicht schweigend (E555): eine
+                               Form, deren Umriss Redion nicht kennt — ein Stern, ein Pfeil,
+                               eine Sprechblase. Gezählt wird sie nur, wenn sie überhaupt
+                               eine Fläche hat, sonst zählte jeder unsichtbare Platzhalter
+                               mit. */
+                            merkeWeg('Formen');
+                        }
+                        if (!text.trim())
+                            continue;
                         /* Der erste Lauf bestimmt Schriftgrad und Fett für den Kasten.
                            Redions Textmarke hat EINEN Grad je Kasten; ein Kasten mit
                            gemischten Graden käme also vereinfacht an. Das ist eine Lücke
                            und steht so in LUECKEN.md. */
-                        const rPr = txBody?.getElementsByTagName('a:rPr')[0];
-                        const sz2 = Number(rPr?.getAttribute('sz'));
                         /* Ist es der Titel? PowerPoint sagt es über den Platzhaltertyp. */
-                        const ph = form.getElementsByTagName('p:ph')[0];
+                        const ph = eigenePh;
                         const istTitel = /^(ctr)?[Tt]itle$/.test(ph?.getAttribute('type') || '');
+                        const absaetze = txBody ? absaetzeLesen(txBody, thema, paar) : [];
                         if (istTitel && !titel)
-                            titel = text.split('\n')[0] || '';
-                        objekte.push({ art: 'text', text,
-                            x: lage ? lage.x : breite * 0.08, y: lage ? lage.y : hoehe * 0.1,
-                            breiteBox: lage && lage.w > 0 ? lage.w : breite * 0.84,
-                            fontSize: Number.isFinite(sz2) && sz2 > 0 ? Math.round(sz2 / 100) : (istTitel ? 40 : 20),
-                            fett: rPr?.getAttribute('b') === '1' });
+                            titel = absaetze[0]?.text.split('\n')[0] || '';
+                        /* DER GRAD KOMMT AUS DEM LAYOUT, WENN DIE FOLIE KEINEN NENNT
+                           (E558). Die feste 40/20 bleibt als letzter Rückfall — sie ist
+                           geraten und war bis hierher die einzige Antwort. */
+                        const grund = geerbt?.sz || (istTitel ? 40 : 20);
+                        /* UND DIE FARBE EBENSO (E566). Der Lauf gewinnt, dann die Vorgabe
+                           aus dem Layout, dann die Lesbarkeitsregel aus E558. Genau diese
+                           Reihenfolge: was in der Folie steht, schlägt was im Layout
+                           steht, und beides schlägt eine Notlösung. */
+                        const grundfarbeText = geerbt?.farbe || standardTinte;
+                        /* Und die Schrift ebenso (E567): Lauf, dann Layout, dann nichts —
+                           und „nichts" heisst `standard`, also genau der heutige Zustand. */
+                        const grundschrift = geerbt?.schrift || '';
+                        const kx = lage ? lage.x : breite * 0.08;
+                        const ky = lage ? lage.y : hoehe * 0.1;
+                        const kb = lage && lage.w > 0 ? lage.w : breite * 0.84;
+                        /* ══ EINE MARKE JE ABSATZ — ABER NUR, WENN ES ETWAS BRINGT (E557)
+                           Absätze, die sich in NICHTS unterscheiden, bleiben EINE Marke
+                           mit `\n` dazwischen: genau wie bisher. Das ist der häufige Fall,
+                           und für ihn ist eine Marke die bessere — wer den Textkasten im
+                           Editor schiebt, schiebt dann den Kasten und nicht eine Zeile.
+              
+                           Aufgeteilt wird erst, wenn Grad, Gewicht, Farbe oder Ebene
+                           auseinandergehen. Dann ist eine Marke schlicht falsch: sie hat
+                           genau einen Grad, und der des ersten Absatzes gälte für alle.
+              
+                           DIE HÖHEN KOMMEN VOM ZEICHNER SELBST. `InkGeometry.textLayout`
+                           ist dieselbe Rechnung, die das Blatt später benutzt — samt
+                           Umbruch an `breiteBox`. Eine eigene Schätzung („Grad mal 1,25")
+                           liefe bei jedem umbrechenden Absatz in den nächsten hinein. */
+                        /* ══ LÄUFE NUR, WENN SIE ETWAS BRINGEN (E561) ══════════════════
+                           Dieselbe Regel wie bei den Absätzen in E557: ein Absatz, dessen
+                           Läufe alle dasselbe Format haben — also der Normalfall —, trägt
+                           KEIN `laeufe`. Er bleibt genau die Marke, die er vorher war,
+                           und geht im Zeichner den alten Weg.
+              
+                           Der Grund ist nicht Sparsamkeit, sondern Rückwärtsrisiko: der
+                           neue Satz läuft nur dort, wo er gebraucht wird. Wo er nicht
+                           gebraucht wird, kann er auch nichts kaputt machen (§9). */
+                        const laeufeNoetig = (laeufe) => {
+                            const echte = laeufe.filter(l => l.text && l.text !== '\n');
+                            if (echte.length < 2)
+                                return false;
+                            const erste = echte[0];
+                            return echte.some(l => l.sz !== erste.sz || l.fett !== erste.fett
+                                || l.farbe !== erste.farbe);
+                        };
+                        /* Der Einzug und das Aufzählungszeichen gehören VOR den ersten
+                           Lauf — sonst stünde das Zeichen im Format des Kastens und der
+                           Text daneben in seinem eigenen. */
+                        const mitZeichen = (a) => a.zeichen
+                            ? [{ text: a.zeichen + ' ', sz: a.sz, fett: a.fett, farbe: a.farbe,
+                                    schrift: a.schrift }, ...a.laeufe]
+                            : a.laeufe;
+                        /* ══ DIE RÜCKSPUR ZUM `<a:t>` (E593, Bogen O5b) ═══════════════════
+                           Damit ein geänderter Text wieder in die Originaldatei kommt,
+                           muss die Marke wissen, WOHER sie stammt. Sie bekommt deshalb
+                           `quelle: { sp, p }` — die Kennung ihrer Form (`p:cNvPr@id`,
+                           innerhalb einer Folie eindeutig) und die Nummer ihres Absatzes.
+              
+                           NUR WO ES EINDEUTIG IST. Eine Spur bekommt nur, was genau EINEM
+                           Absatz mit genau EINEM Lauf und ohne Aufzählungszeichen
+                           entspricht. Alles andere — mehrere Läufe mit eigenem Format,
+                           zusammengefasste Absätze, Aufzählungen — bleibt ohne Spur und
+                           wird nicht zurückgeschrieben.
+              
+                           Der Grund ist nicht Bequemlichkeit: bei mehreren Läufen müsste
+                           der neue Text auf sie verteilt werden, und jede Verteilung wäre
+                           geraten. Ein falscher Text ist schlimmer als ein fehlender
+                           (§51). Was keine Spur hat, bleibt stehen, und die Ausgabe sagt
+                           es (§35). */
+                        const spur = (absatzNr) => {
+                            const a = absaetze[absatzNr];
+                            if (!sid || !a || a.zeichen)
+                                return {};
+                            const echte = a.laeufe.filter(l => l.text && l.text !== '\n');
+                            if (echte.length !== 1)
+                                return {};
+                            return { quelle: { sp: sid, p: absatzNr } };
+                        };
+                        const gleichFormat = absaetze.length > 0 && absaetze.every(a => a.sz === absaetze[0].sz && a.fett === absaetze[0].fett
+                            && a.farbe === absaetze[0].farbe && a.lvl === absaetze[0].lvl
+                            && !a.zeichen === !absaetze[0].zeichen
+                            /* Die Ausrichtung gehört dazu (E560): ein zentrierter Titel über
+                               einem linksbündigen Absatz ist genau der Fall, in dem EINE
+                               Marke die falsche Antwort ist. */
+                            && a.ausricht === absaetze[0].ausricht
+                            /* Und die Schrift (E567). Sie steht bewusst NICHT in
+                               `laeufeNoetig`: die Marke hat EINE Schriftfamilie für alle
+                               ihre Stücke, ein `laeufe` könnte den Unterschied also gar
+                               nicht ausdrücken. Zwischen ABSÄTZEN geht es — darum hier. */
+                            && a.schrift === absaetze[0].schrift);
+                        if (absaetze.length <= 1 || gleichFormat) {
+                            const a = absaetze[0];
+                            objekte.push({ art: 'text',
+                                text: absaetze.map(z => (z.zeichen ? z.zeichen + ' ' : '') + z.text).join('\n'),
+                                x: kx + a.lvl * Math.max(10, (a.sz || grund) * 0.9), y: ky,
+                                breiteBox: Math.max(20, kb - a.lvl * Math.max(10, (a.sz || grund) * 0.9)),
+                                fontSize: a.sz || grund, fett: a.fett,
+                                ...((a.farbe || grundfarbeText) ? { farbe: a.farbe || grundfarbeText } : {}),
+                                ...(a.ausricht ? { ausricht: a.ausricht } : {}),
+                                ...((a.schrift || grundschrift) ? { schrift: a.schrift || grundschrift } : {}),
+                                ...(dreh ? { dreh } : {}),
+                                /* Bei mehreren gleich formatierten Absätzen werden ihre Läufe
+                                   mit `\n` dazwischen zu einer Kette — genau die Reihenfolge,
+                                   die der Text oben auch hat. */
+                                ...(() => {
+                                    const kette = [];
+                                    absaetze.forEach((z, i) => {
+                                        if (i > 0)
+                                            kette.push({ text: '\n', sz: z.sz, fett: z.fett,
+                                                farbe: z.farbe, schrift: z.schrift });
+                                        kette.push(...mitZeichen(z));
+                                    });
+                                    return laeufeNoetig(kette) ? { laeufe: kette } : {};
+                                })(),
+                                /* Nur bei GENAU EINEM Absatz. Sind mehrere zu einer Marke
+                                   zusammengefasst, stünden hinter einer Spur mehrere `<a:p>`,
+                                   und das Zurückschreiben müsste den Text auf sie aufteilen —
+                                   wieder ein Raten. */
+                                ...(absaetze.length === 1 ? spur(0) : {}) });
+                            continue;
+                        }
+                        let y = ky;
+                        for (const [absatzNr, a] of absaetze.entries()) {
+                            if (!a.text.trim()) {
+                                /* Ein leerer Absatz in der Mitte ist eine Leerzeile, keine
+                                   Marke — er bekommt seine Höhe und sonst nichts. */
+                                y += (a.sz || grund) * 1.25;
+                                continue;
+                            }
+                            const einzug = a.lvl * Math.max(10, (a.sz || grund) * 0.9);
+                            const marke = { art: 'text',
+                                text: (a.zeichen ? a.zeichen + ' ' : '') + a.text,
+                                x: kx + einzug, y,
+                                breiteBox: Math.max(20, kb - einzug),
+                                fontSize: a.sz || grund, fett: a.fett,
+                                ...((a.farbe || grundfarbeText) ? { farbe: a.farbe || grundfarbeText } : {}),
+                                ...(a.ausricht ? { ausricht: a.ausricht } : {}),
+                                ...((a.schrift || grundschrift) ? { schrift: a.schrift || grundschrift } : {}),
+                                ...(laeufeNoetig(mitZeichen(a)) ? { laeufe: mitZeichen(a) } : {}),
+                                ...(dreh ? { dreh } : {}),
+                                ...spur(absatzNr) };
+                            objekte.push(marke);
+                            /* Der Zeichner rechnet die Höhe, nicht ich. Fehlt er (halb
+                               geladenes Fenster), bleibt die einfache Schätzung — dann
+                               stehen die Absätze vielleicht eng, aber sie sind da. */
+                            let h = (a.sz || grund) * 1.25;
+                            try {
+                                const l = InkGeometry.textLayout({ ...marke, point: [marke.x, y] });
+                                if (l && l.height > 0)
+                                    h = l.height;
+                            }
+                            catch { /* dann die Schätzung */ }
+                            y += h;
+                        }
                         continue;
                     }
                     /* ── Bild ─────────────────────────────────────────────────────── */
@@ -1362,7 +2167,8 @@ const Einlesen = (() => {
                             bytes,
                             x: lage ? lage.x : breite * 0.2, y: lage ? lage.y : hoehe * 0.2,
                             w: lage && lage.w > 0 ? lage.w : breite * 0.4,
-                            h: lage && lage.h > 0 ? lage.h : hoehe * 0.4 });
+                            h: lage && lage.h > 0 ? lage.h : hoehe * 0.4,
+                            ...(formDrehung(form) ? { dreh: formDrehung(form) } : {}) });
                     }
                 }
             };
@@ -1379,7 +2185,7 @@ const Einlesen = (() => {
                 .sort((a, b) => a.y - b.y)
                 .map(o => String(o.text).split('\n')[0].trim())
                 .filter(z => z && z.length <= 80);
-            folien.push({ titel, objekte, kandidaten,
+            folien.push({ titel, objekte, kandidaten, grundfarbe,
                 weg: [...weggelassen.entries()] });
         }
         /* ══ WELCHER KASTEN IST DIE ÜBERSCHRIFT? ═══════════════════════════
@@ -1608,14 +2414,39 @@ const Einlesen = (() => {
             for (const [nr, folie] of p.folien.entries()) {
                 const block = Store.addBlock(seite.id, 'blatt', {
                     text: folie.titel || ('Folie ' + (nr + 1)),
-                    blattBreite: p.breite, blattHoehe: p.hoehe, papier: 'blanko'
+                    blattBreite: p.breite, blattHoehe: p.hoehe, papier: 'blanko',
+                    /* Nur wenn es eine gibt — ein leeres Feld an jedem Blatt wäre
+                       Ballast, und `blatt.ts` fällt ohne es auf Weiss zurück (E558). */
+                    ...(folie.grundfarbe ? { grundfarbe: folie.grundfarbe } : {})
                 });
                 const marken = [];
                 for (const o of folie.objekte) {
                     const id = 'm' + Math.random().toString(36).slice(2, 10);
                     if (o.art === 'text') {
-                        marken.push({ id, art: 'text', point: [o.x, o.y], breiteBox: o.breiteBox,
-                            text: o.text, fontSize: o.fontSize, fett: !!o.fett });
+                        /* ══ DIE FELDLISTE IST UMGEDREHT (E560) ══════════════════════
+                           Hier stand eine Liste, die AUFZÄHLT, was mitreisen darf. Sie
+                           hat dreimal dasselbe vergessen, und jedes Mal erst der
+                           Prüflauf es gefunden:
+            
+                               E545  `verlauf`   fehlte
+                               E557  `farbe`     fehlte    („ist '', soll '#CC0000'")
+                               E560  `ausricht`  fehlte    („ist '', soll 'mitte'")
+            
+                           Der Kommentar, der hier stand, sagte selbst voraus, dass sie
+                           „beim nächsten Feld wieder vergisst" — und begründete ihr
+                           Bleiben damit, dass ein blindes Durchreichen `x`/`y`/`w`/`h`
+                           mit in die Ablage nähme. Das stimmt. Es ist nur kein Grund
+                           für eine Erlaubnisliste, sondern einer für eine VERBOTSLISTE:
+            
+                           Was nicht in die Ablage darf, ist eine kurze, bekannte,
+                           abgeschlossene Menge — die Masse, aus denen `point` und
+                           `breiteBox` schon gerechnet sind. Was mitreisen soll, ist es
+                           nicht: jedes neue Feld eines Absatzes gehört dazu.
+            
+                           Seither reist alles mit AUSSER diesen vieren. Ein viertes
+                           vergessenes Feld kann es nicht mehr geben. */
+                        const { x: _x, y: _y, w: _w, h: _h, art: _art, ...rest } = o;
+                        marken.push({ id, art: 'text', point: [o.x, o.y], ...rest, fett: !!o.fett });
                         continue;
                     }
                     if (o.art === 'abdeck') {
@@ -1626,8 +2457,34 @@ const Einlesen = (() => {
                         /* `verlauf` nur, wenn es einen gibt — ein `undefined` im Objekt
                            überlebt `JSON.stringify` ohnehin nicht, und ein `null` an
                            jeder von Hand gezogenen Abdeckung wäre nur Ballast. */
+                        /* HIER BLEIBT DIE ERLAUBNISLISTE, anders als beim Text (E560).
+                           Ein Abdeck- und ein Bildobjekt tragen `bytes`, `pfad` und
+                           `name` — ein Durchreichen legte die ganzen Bilddaten in den
+                           Block. Die verbotene Menge ist hier also NICHT kurz und
+                           abgeschlossen, und damit gilt die Umkehrung nicht. */
                         marken.push({ id, art: 'abdeck', farbe: o.farbe, schritt: o.schritt,
                             ...(o.verlauf ? { verlauf: o.verlauf } : {}),
+                            ...(o.dreh ? { dreh: o.dreh } : {}),
+                            pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
+                        continue;
+                    }
+                    if (o.art === 'rectangle' || o.art === 'roundrect' || o.art === 'ellipse'
+                        || o.art === 'triangle' || o.art === 'line') {
+                        /* EINE TABELLENZELLE (E565).
+                           Dieser Zweig muss VOR dem Bildzweig stehen. Die Schleife hat
+                           keinen Auffangfall: was weder Text noch Abdeckung ist, gilt
+                           als Bild. Beim ersten Lauf sass die Prüfung versehentlich IM
+                           Abdeckzweig — die Zellen fielen durch, landeten im Bildzweig
+                           und legten zehn leere Anhänge an. Der Hinweis sagte dann
+                           „10 Bilder aus 1 Dateien", und auf dem Blatt fehlte das Gitter.
+            
+                           Wie bei Abdeckung und Bild bleibt hier die Erlaubnisliste —
+                           nur sind es weniger Felder. */
+                        marken.push({ id, art: o.art, farbe: o.farbe || '#9aa3ad',
+                            ...(o.fuellung ? { fuellung: o.fuellung } : {}),
+                            ...(o.breite ? { breite: o.breite } : {}),
+                            ...(o.randlos ? { randlos: true } : {}),
+                            ...(o.dreh ? { dreh: o.dreh } : {}),
                             pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
                         continue;
                     }
@@ -1643,6 +2500,7 @@ const Einlesen = (() => {
                         }
                         if (dateiId) {
                             marken.push({ id, art: 'bild', dateiId,
+                                ...(o.dreh ? { dreh: o.dreh } : {}),
                                 pts: [[o.x, o.y], [o.x + o.w, o.y + o.h]] });
                             mitBild++;
                         }

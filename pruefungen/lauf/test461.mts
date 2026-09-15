@@ -282,11 +282,27 @@ console.log('\n§5 Zurücknehmen links, wie bei GoodNotes');
       barLinks: Math.round(bar.getBoundingClientRect().left),
       barRechts: Math.round(bar.getBoundingClientRect().right) });
   })()`) as string);
-  gleich('Die Verlaufsgruppe ist das erste Kind der Leiste', lage.erstes, 'document-ink-history');
+  /* ══ DIE KAPSEL IST AUS DEM BAND AUSGEZOGEN (E572/E573) ═══════════════════
+     Hier stand: „Die Verlaufsgruppe ist das erste Kind der Leiste". Das war
+     die Anordnung aus E490 — Zurück und Vor ganz links IM Werkzeugband.
+     Redurs neue Referenz (E572, Bild 1) zeigt sie stattdessen als kleine
+     SCHWEBENDE Kapsel über dem Papier, und genau dorthin sind sie gezogen.
+
+     DIE ZUSAGE DAHINTER BLEIBT UND WIRD SOGAR SCHÄRFER: sie stehen links,
+     vor dem ersten Werkzeug, und sie sind ERREICHBAR. Das zweite ist der
+     Punkt, an dem dieser Umzug beinahe gescheitert wäre — die Kapsel landete
+     erst ausserhalb des Fensters (x = 1440 bei 1440 px) und dann unter dem
+     Papier (top = 812 bei 800 px). Gemessen wird deshalb jetzt gegen das
+     FENSTER, nicht gegen den Kasten der Leiste, den sie verlassen hat.
+     `test393 §1` hält dieselbe Sache an drei Telefonbreiten. */
+  p('Die Verlaufskapsel steht als eigener Kasten da, nicht im Werkzeugband',
+    lage.erstes !== 'document-ink-history' && lage.zurueck >= 0 && lage.vor >= 0,
+    JSON.stringify(lage));
   p('Zurück steht links vom Stift', lage.zurueck < lage.stift, JSON.stringify(lage));
   p('Vor steht rechts von Zurück und links vom Stift',
     lage.vor > lage.zurueck && lage.vor < lage.stift, JSON.stringify(lage));
-  p('… und beide ganz am linken Rand', lage.zurueck - lage.barLinks < 40, JSON.stringify(lage));
+  p('… und beide im Bild, nah am linken Rand',
+    lage.zurueck >= 0 && lage.zurueck < 120 && lage.vor < 160, JSON.stringify(lage));
   p('„···" bleibt ganz rechts', lage.barRechts - lage.mehr < 90, JSON.stringify(lage));
   await s.close();
 }
@@ -299,10 +315,44 @@ console.log('\n§6 Quellen');
   p('Der Ruhepunkt wird beim Absetzen weggeräumt', /delete mark\.ruhePunkt/.test(q));
   p('Der Schutzleiter hat seine zwei Farben', /PE_GRUEN/.test(q) && /PE_GELB/.test(q) && /PE_MUSTER/.test(q));
   p('… und überlebt das Geradeziehen', /mark\.stil !== 'schutzleiter'/.test(q));
-  p('Zurück und Vor werden vorangestellt',
-    /drawingbar\.prepend\(history\)/.test(lies('src/bereiche/pdf/document-mode.ts')));
-  p('Das Stilblatt hält die Mitte mit zwei `auto`-Rändern',
-    /\.document-ink-history\{[^}]*margin-right:auto/.test(lies('quell/schale/stil/pdf-studio.css')));
+  /* Die zwei Quellenzusagen hielten den ALTEN Weg fest: `prepend` ins Band
+     und zwei `auto`-Ränder, die das Band um die Kapsel herum mittig hielten.
+     Beides gibt es nicht mehr (E573). Was jetzt geprüft wird, ist der neue
+     Weg — und zwar so, dass er nicht zufällig stimmt: die Kapsel hängt am
+     Dokumentkörper, und das Stilblatt gibt ihr dort eine Lage. */
+  p('Die Kapsel hängt am Dokumentkörper, nicht im Werkzeugband',
+    /body\.append\(thumbnails, center, inspector, history\)/.test(lies('src/bereiche/pdf/document-mode.ts'))
+    && !/drawingbar\.prepend\(history\)/.test(lies('src/bereiche/pdf/document-mode.ts')));
+  /* ══ OHNE KOMMENTARE UND LEERRAUM LESEN (E577) ══════════════════════════
+     Diese Zeile suchte wörtlich `.document-ink-history{position:absolute`.
+     Sie wurde rot, als die Telefonregel einen Kommentar und Zeilenumbrüche
+     bekam — obwohl die Regel selbst unverändert galt. Eine Zusicherung, die
+     an der FORMATIERUNG hängt statt am Inhalt, meldet Fehler, die keine
+     sind, und lenkt vom nächsten echten ab. Jetzt wird das Stilblatt
+     entkommentiert und entleert gelesen. */
+  const stilOhneBeiwerk = lies('quell/schale/stil/pdf-studio.css')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, '');
+  /* ══ NICHT MEHR „IM RASTER", SONDERN ÜBERALL ABSOLUT (E579) ══════════════
+     Hier stand `grid-column:2` — die Rasterzelle, mit der die Kapsel sich im
+     Studio über das Papier legte. Im FOLIENSATZ hat der Dokumentkörper ein
+     anderes Raster, und dort bekam sie eine eigene Zeile und SCHOB die
+     Fläche: gemessen `.document-center` oben 272 statt 206, 580 px statt
+     646. `test508 §2` hat es gefunden.
+     Ein Raster, das in einer Ansicht überlagert und in der anderen schiebt,
+     ist kein Platz, sondern ein Zufall. `position:absolute` nimmt in jedem
+     Raster keinen. */
+  p('Das Stilblatt legt sie über das Papier, ohne irgendwo Platz zu nehmen',
+    /\.document-ink-history\{[^}]*position:absolute/.test(stilOhneBeiwerk)
+    && !/\.document-ink-history\{[^}]*grid-column/.test(stilOhneBeiwerk));
+  p('… und der Dokumentkörper ist ihr Bezug',
+    /\.document-body\{[^}]*position:relative/.test(stilOhneBeiwerk));
+  /* UND AM TELEFON UNTEN, NICHT OBEN (E577). Gemessen deckte `top:8px` dort
+     87 × 39 px der Schreibfläche ab — die Ecke, in der die erste Zeile
+     anfängt. `test524 §8` misst es an der laufenden App; hier steht nur,
+     dass die Regel überhaupt so geschrieben ist. */
+  p('… und am Telefon steht sie unten, nicht oben',
+    /\.document-ink-history\{[^}]*position:absolute[^}]*bottom:/.test(stilOhneBeiwerk)
+    && !/\.document-ink-history\{[^}]*position:absolute[^}]*top:8px/.test(stilOhneBeiwerk));
   p('Das erzeugte JS trägt es', /schutzleiter/.test(lies('quell/bereiche/pdf/marken.js')));
   gleich('Keine Seitenfehler', fehler, []);
 }

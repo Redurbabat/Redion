@@ -826,6 +826,36 @@ worden; die Karte mit jedem einzelnen Befund steht in
 Das Ziel bleibt offen, weil ein Ziel nie „erledigt" ist. Es steht deshalb
 hier und nicht dort.
 
+### Die fünf Messlatten (Redur, 15. September 2026, E594)
+
+> „Ich will das redion start wie goodnotes bein zeichenn ist, stark wie word
+> beim text schreiben bearbeiten, start wie Powerpoint beim Präsentation
+> erstellen, strat wie obsidian bein gedechnis und besser als notion mehrer
+> funktionen, mehr Qualität haben."
+
+Damit steht neben der Aufzählung von Programmen jetzt, **worin** Redion ihnen
+gleichkommen soll. Gezählt an der laufenden App am 15. September 2026:
+
+| Feld | Messlatte | Was steht | Was fehlt |
+|---|---|---|---|
+| Zeichnen | GoodNotes | 13 Werkzeuge · 6 Stifte · 7 Formen · 5 Radierarten · Lineal · Zoomfenster · Formenerkennung · Lasso · 100 Schritte zurück | der Rest von L133 |
+| Text | **Word** | 78 Blockarten · `.docx` lesen (verlustbehaftet) · schreiben (minimal) | **O6, O7 — das schwächste Feld** |
+| Präsentation | PowerPoint | 8 Layouts · 173 Bandeinträge in 7 Reitern · Vortragsmodus · `.pptx` lesen · Rundreise schreiben | Übergänge, Animationen, Folienmaster |
+| Gedächtnis | Obsidian | Rückverweise · unverlinkte Erwähnungen · Wissensgraph · Schlagwörter · Suche über mehrere Dokumente · alles lokal | tägliche Notizen als eigener Weg |
+| Alles zusammen | Notion, und darüber | 13 Ansichten · 35 Eigenschaftstypen · 255 Formeln · Relationen · Rollups · 11 Vorlagen · 8 Verbindungen · 16 Bereiche | — |
+
+**Vier von fünf stehen, eine nicht.** „Stark wie Word" heisst für Redur nicht
+„viele Blockarten", sondern: eine `.docx` öffnen, darauf schreiben, den Text
+ändern — ohne dass das Original leidet. Für `.pptx` ist genau das seit E592
+und E593 gebaut; für `.docx` fehlt es. Die Reihenfolge, die daraus folgt:
+
+1. **O7 — `.docx`-Text ändern.** Derselbe Weg wie E593, nur auf
+   `word/document.xml`. Damit steht das schwächste Feld.
+2. **Folienmaster und Übergänge** — der Rest von „1:1 wie PowerPoint".
+3. **Tägliche Notizen** — der Rest von „wie Obsidian".
+4. **O6 — auf `.docx` schreiben.** Zuletzt: braucht einen Rasterer, und das
+   ist der einzige Bogen ohne gebahnten Weg.
+
 ---
 
 ## Word und PowerPoint öffnen und bearbeiten (O1 … O7)
@@ -870,6 +900,19 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   `slideN.xml` (`p:spTree` → Textkästen mit `a:xfrm`-Lage, `p:pic` → Bilder),
   die `.rels` (Bildziele), `slideLayouts`/`slideMasters` für Geerbtes,
   `theme1.xml` für Farben. Jede Folie wird ein Block mit `marken`.
+  Nachgezogen seit: Gruppen rekursiv (E555), Format je Absatz (E557),
+  Lage, Grad und Hintergrund geerbt über Layout und Master (E558),
+  das Farbthema aufgelöst (E559), die Ausrichtung gelesen UND bedienbar
+  gemacht (E560), **gemischte Läufe innerhalb eines Absatzes (E561)**.
+  Was jetzt noch fehlt, steht in L151 und ist kleiner als das Erledigte:
+  Blocksatz, Spiegelung, die Drehung einer GRUPPE, Diagramme, Zellränder,
+  die Schriftart (`a:latin`) und alle Formen ausser den fünf, die Redion
+  kennt. **Gemessen an Redurs echter Datei am 14. September**: gefüllte
+  Formen und die geerbte Textfarbe fehlten — beides mit E566 geschlossen,
+  beides von keinem der zehn vorherigen Prüfstücke gefunden.
+  L155 (die zu niedrige Breitenschätzung, gefunden bei E561) ist mit
+  **E562** geschlossen, die Drehung mit **E563**, die Tabellen mit **E565** —
+  als Gitter auf der Folie, nicht als Tabellenblock (der Grund steht dort).
 - **O4 · Folien bearbeiten** — ZUR HÄLFTE (E546). Zwei Sachen sind erledigt:
   - Das ZEIGEN einer Folie ändert sie nicht mehr. `Blatt.zeichne` legte für
     jedes Blatt ohne Textkinder eine leere Zeile AN — bei 27 eingelesenen
@@ -970,8 +1013,24 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   Damit ist es eine Liste und kein Wegweiser mehr. Wegnehmen ist keine
   Lösung (§47); `test114` hält seit E549 wenigstens fest, dass der letzte
   Eintrag unten wirklich ankommt.
-- **O5 · `.pptx` schreiben mit Rundreise.** Geänderte Folien zurück, der Rest
-  der Originaldatei unangetastet (braucht O2).
+- **O5 · `.pptx` schreiben mit Rundreise** — ZUR HÄLFTE (E592). Eine
+  eingelesene Präsentation geht jetzt **vollständig und unverändert** wieder
+  heraus: jeder Eintrag Byte für Byte, mit seiner Packmethode und seiner
+  Prüfsumme. Vorher überlebte nichts ausser der Endung — gemessen fehlten
+  Bild, Thema und `docProps`, und der Dateianhang selbst wurde zur ersten
+  Folie. Mit Pythons `zipfile` gegengeprüft: 6432 Bytes hinein, 6432 heraus,
+  kein Eintrag anders.
+- **O5b · Geänderten Text zurückschreiben** — ERLEDIGT (E593). Jede
+  Textmarke, die genau EINEM Absatz mit genau EINEM Lauf und ohne
+  Aufzählungszeichen entspricht, merkt sich beim Einlesen ihre Stelle:
+  `quelle: { sp, p }`. Das Zurückschreiben schlägt Form und Absatz nach und
+  ersetzt genau das eine `<a:t>` — es sucht nicht und rät nicht. Mit Pythons
+  `zipfile` gegengeprüft: genau ein Eintrag anders, alles andere Byte für
+  Byte gleich, XML wohlgeformt, Vorspann erhalten.
+  **Der Rest steht in L168:** Absätze mit mehreren Läufen, zusammengefasste
+  Absätze und Aufzählungen bekommen keine Spur — ihr Text müsste auf mehrere
+  Stellen verteilt werden, und jede Verteilung wäre geraten (§51). Die
+  Ausgabe sagt, wie viele Stellen übernommen wurden.
 - **O6 · `.docx` draufschreiben.** Braucht den Rasterer. Das ist der teuerste
   Bogen und der einzige, für den es noch keinen Weg gibt.
 - **O7 · `.docx` Text ändern.** Rundreise auf `word/document.xml` (braucht O2).
@@ -980,3 +1039,94 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
 und selbst danach fehlen Übergänge, Animationen und Platzhalter-Vererbung.
 Ungemessen ist ausserdem, ob PowerPoint die `.pptx`, die Redion heute
 schreibt, überhaupt öffnet (`LUECKEN.md:2708`).
+
+
+## Die Werkzeugtafel (W1 … W5)
+
+Redur, 14. September 2026, mit fünf Bildern eines fertigen Entwurfs:
+**„Siehe Bildern, so will ich es haben."** Und einen Satz später:
+**„Die untere Dock sollte bleiben."**
+
+Was auf den Bildern steht, in Redurs eigener Beschriftung:
+
+```txt
+1  Standardansicht          die Leiste schwebt oben, unten die Dock
+2  Stift gewählt            eine TAFEL unter dem Werkzeug: Strichvorschau,
+                            fünf benannte Stiftkacheln, Strichstärke- und
+                            Deckkraft-Schieber, darunter die Farbreihe
+3  Marker gewählt           dieselbe Tafel, andere Werte (4,0 mm, 60 %)
+4  Radierer gewählt         fünf benannte Kacheln (Ganz · Teil · Nur Stift ·
+                            Nur Marker · Nur Inhalte), Grösse-Schieber,
+                            Haken „Automatisch an Strich anpassen"
+5  Formwerkzeuge            benannte Kacheln statt nackter Zeichen
+6  Textwerkzeug             Schriftwahl, B I U, Ausrichtung, Farben
+7  Dock-Effekt              die Zeichen wachsen beim Überfahren
+8  Farb-Dock                dasselbe für die Farben, mit Namensfähnchen
+9  Lasso                    Kopieren · Ausschneiden · Löschen · Farbe · Mehr
+10 Ergebnis                 natürliches Schreiben
+```
+
+Und auf den vier iPad-Bildern dazu: **jedes Werkzeug trägt sein Wort unter
+dem Zeichen** (Stift · Marker · Radierer · Auswählen · Formen · Text ·
+Bild │ Rückgängig · Wiederholen), die Stiftkacheln zeigen **eine
+Strichprobe, einen Namen und eine Millimeterzahl** (Fein 0,3 mm · Mittel
+0,7 mm · Markant 1,2 mm · Marker), und die Formen stehen als benannte
+Kacheln (Linie · Pfeil · Rechteck · Kreis · Stern).
+
+### Die drei Grenzen, die dabei gelten
+
+1. **Nichts wird gelöscht.** Alles, was heute in der Leiste steht, muss
+   danach noch erreichbar sein — auch das, wofür auf Redurs Bildern kein
+   Platz war (Lineal, Kritzeln, Elemente, Laser, Verweis, Sperren, Als
+   Element, der Platz der Leiste, die Adernreihe des Leiterstiftes).
+2. **Die untere Dock bleibt** — Redurs ausdrücklicher Satz. Im Studio ist
+   das der schwebende Streifen am unteren Rand (`position:fixed`), und die
+   Tafel geht ÜBER ihm auf, nicht an seiner Stelle.
+3. **Ein Katalog, nicht zwei** (§8). Die Tafel zeigt DIESELBEN
+   `[data-gruppe]`-Elemente, die heute in der Leiste stehen — sie werden
+   umgehängt, nicht abgeschrieben. Eine zweite Liste von Stiften, Farben
+   und Breiten liefe von der ersten weg, und zwar genau dann, wenn jemand
+   eine Farbe hinzufügt.
+
+### Die Bögen, in der Reihenfolge
+
+- **W0 · Die Leiste selbst ordnen** — ERLEDIGT (E570). Kam als eigene Bitte
+  dazwischen („Könntest du so machen, dass ich alles, was dort ist im Redion,
+  direkt selber ordnen kann?") und gehört trotzdem hierher: die Tafel wird
+  dieselben zwei Listen zeigen. Zwei Reihenfolgen in `meta`, ein Feld zum
+  Ziehen und Rücken, „Zurücksetzen". Gespeichert wird eine Reihenfolge, kein
+  Katalog — Unbekanntes fällt beim Lesen weg, Fehlendes kommt hinten dazu.
+  **Offen geblieben ist das Ausblenden**: Redur hat „ordnen" gesagt, nicht
+  „weglassen". Wenn er es will, braucht es einen Weg zurück (ein „Mehr"-Feld)
+  und keine Lücke — und dann vorher seine ausdrückliche Zusage, weil dabei
+  eine Funktion aus dem Bild verschwindet.
+- **W0b · Im Band selbst schieben** — ERLEDIGT (E571). Redurs Nachsatz zu
+  W0: „direkt im Website ordnen … die Position mit der Maus schieben."
+  «Einrichten» schaltet jetzt einen Modus im Band; die Liste aus W0 steht
+  darin als „Als Liste" und bleibt der Weg für die Tastatur und für das
+  Zubehör, das gerade nicht zu sehen ist.
+  **Offen daran:** der Modus ordnet die ZEICHENLEISTE. Ob Redur auch den
+  Rest der Oberfläche schieben können will — Seitenleiste, Spalten,
+  Kopfzeile —, ist nicht gesagt; das wäre ein eigener Bogen und ein sehr
+  viel grösserer.
+- **W1 · Die Zustands-Grammatik** — ERLEDIGT (E568). Eine laute Fläche statt
+  sechs, runde Farbtupfer, sichtbare Gruppen, Rangfolge zwischen Werkzeug
+  und Zubehör. Das ist die Grundlage: die Tafel erbt sie unverändert.
+- **W2 · Die Tafel als Behälter.** Ein Element `.blatt-tafel` INNERHALB von
+  `.blatt-werk`, das alle `[data-gruppe]`-Knoten aufnimmt. Der Haken sitzt
+  im CSS: rund fünfzig Regeln lesen heute `.blatt-werk > [data-gruppe]`
+  (Kindwähler). Die müssen mit — und genau das ist der Bogen, nicht die
+  Gestaltung.
+- **W3 · Wort unter dem Zeichen.** Die Werkzeuge bekommen ihren Namen
+  darunter statt daneben. Heute steht er daneben und wird unter 1150 px
+  weggeklemmt; darunter braucht er keine Breite, sondern Höhe.
+- **W4 · Die Tafel bekommt Inhalt.** Strichvorschau, benannte Stiftkacheln
+  mit Millimetern, Deckkraft als eigener Schieber (heute gibt es sie nur
+  beim Marker, fest verdrahtet), der Radierer mit Grösse und Haken.
+- **W5 · Der Dock-Effekt.** Vergrössern beim Überfahren, mit
+  `prefers-reduced-motion` als Abschaltung (§38).
+
+Was **nicht** dazugehört und trotzdem auffällt: dass Redurs Entwurf die
+Leiste OBEN zeigt und Redion sie im Studio unten hat. Beides ist richtig —
+der Platz ist seit E512 wählbar (der Knopf „Platz"), und Redur hat gerade
+gesagt, dass unten bleiben soll.

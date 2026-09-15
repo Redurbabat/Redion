@@ -108,7 +108,17 @@ Register.symbole = (() => {
     inkLasso: '<ellipse cx="12" cy="10" rx="9" ry="6" stroke-dasharray="3 3"/><path d="M7 14c-4 7 4 9 6 4"/>',
     inkMarker: '<path d="m13 3 7 7-8 8-7-7zM5 11l-2 7 3 3 6-3M3 21h7"/>',
     inkEraser: '<path d="m14 3 7 7-10 11H6l-4-4zM8 11l8 8M11 21h10"/>',
-    inkText: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M12 8v9M9 17h6"/>',
+    /* ══ DAS T OHNE RAHMEN (E577) ══════════════════════════════════════════
+       GEMESSEN mit der Methode aus `test480 §7` — jedes Zeichen in 16 × 16
+       gerastert, Schnitt durch Vereinigung: `inkText` gegen `inkImage`
+       **64 %**. Beide trugen denselben abgerundeten Rahmen, und der Rahmen
+       ist bei 16 px der grösste Teil der Tinte; was darin steht, sind
+       wenige Punkte. Die 60-%-Grenze aus E515 galt bis hierher nur für die
+       sechs Stifte — die dreizehn Werkzeuge hat niemand gegeneinander
+       gemessen.
+       Ein T braucht keinen Rahmen. Es IST der Buchstabe, und damit teilt es
+       mit einem Bild im Rahmen fast nichts mehr. */
+    inkText: '<path d="M3.8 7V4.4h16.4V7"/><path d="M12 4.4v15.2"/><path d="M8.4 19.6h7.2"/>',
     inkShapes: '<path d="m7 3 5 8H2z"/><circle cx="17" cy="7" r="4"/><rect x="4" y="15" width="7" height="6" rx="1"/><circle cx="18" cy="18" r="3"/>',
 
     /* ══ DIE WERKZEUGE DER ZEICHENLEISTE (E515) ═════════════════════════════
@@ -144,10 +154,23 @@ Register.symbole = (() => {
        an ihm ist die Ecke, die sich hochbiegt. */
     inkNote: '<path d="M4.2 5.4a1.6 1.6 0 0 1 1.6-1.6h12.4a1.6 1.6 0 0 1 1.6 1.6v8.4L13.8 19.8H5.8a1.6 1.6 0 0 1-1.6-1.6z"/>' +
              '<path d="M19.8 13.8h-4.4a1.6 1.6 0 0 0-1.6 1.6v4.4"/>',
-    /* Der Laserpointer: ein Griffel mit Funken an der Spitze. */
-    inkLaser: '<path d="m14.8 4.2 5 5-9.4 9.4-5-5z"/>' +
-              '<path d="m5.4 13.6-2.2 5.9 5.9-2.2"/>' +
-              '<path d="M18.4 2.6v2.4M21.4 5.6h-2.4M20.6 2.4l-1.4 1.4"/>',
+    /* ══ DER LASERPOINTER IST KEIN STIFT (E577) ═════════════════════════════
+       Hier stand „ein Griffel mit Funken an der Spitze" — und gemessen war
+       genau das das Problem: `inkPen` gegen `inkLaser` **69 %** derselben
+       Tinte (Methode aus `test480 §7`). Zwei Werkzeuge, die in derselben
+       Reihe nebeneinander stehen und zu 69 % dasselbe Bild sind, sind für
+       das Auge EIN Bild mit einem Fehler darin.
+       Der Laser ist auch gar kein Griffel: er hinterlässt nichts, er zeigt.
+       Ein leuchtender Punkt mit Strahlen sagt das in einem Blick — und er
+       teilt mit einem schrägen Stift fast keinen Punkt.
+       DER PUNKT IST EIN RING, KEINE FLÄCHE. Der erste Wurf hatte ihn
+       gefüllt (`fill="currentColor"`), und `test480 §5` wurde rot: die
+       Zeichen dieser Leiste sind reine Striche, alle dreizehn. Bei 16 px
+       schliesst sich ein Ring von 2,2 Einheiten ohnehin zu einem Punkt —
+       die Regel kostet hier also nichts und hält die Familie zusammen. */
+    inkLaser: '<circle cx="12" cy="12" r="2.2"/>' +
+              '<path d="M12 3.4v3M12 17.6v3M3.4 12h3M17.6 12h3"/>' +
+              '<path d="m5.9 5.9 2.1 2.1M16 16l2.1 2.1M18.1 5.9 16 8M8 16l-2.1 2.1"/>',
     /* Das Lineal: ein schräger Balken mit Teilstrichen. */
     inkRuler: '<rect x="1.6" y="7.4" width="20.8" height="9.2" rx="1.8" ' +
               'transform="rotate(-20 12 12)"/>' +
@@ -189,9 +212,30 @@ Register.symbole = (() => {
              '<path d="M9.2 14.8h5.6L12 19.2Z"/>' +
              '<circle cx="12" cy="20.6" r="1.1"/>' +
              '<path d="M14.8 6.6h1.6v5"/>',
-    penBrush: '<path d="M14.2 3.4 20.6 9.8"/>' +
-              '<path d="m17.4 6.6-7.2 7.2a3.2 3.2 0 0 0-.9 1.7l-.4 2.2 2.2-.4a3.2 3.2 0 0 0 1.7-.9z"/>' +
-              '<path d="M8.4 15.4c-1.5 1.5-1.1 3.6-3.6 4.6 1 .6 2.2.8 3.3.4 1.6-.5 2.5-2 2.1-3.5"/>',
+    /* ══ DER PINSEL ZEIGT IN DIE ANDERE RICHTUNG (E587) ══════════════════
+       Er lag von links unten nach rechts oben — genau wie der Bleistift.
+       `test480 §7` mass die beiden mit 40 % Tintendeckung und liess sie
+       durch, und das war richtig gerechnet: die Haare und die zwei
+       Querbänder des Bleistifts leuchten wirklich an anderen Stellen.
+
+       Nur liest das Auge bei 16 px keine Stellen, sondern eine RICHTUNG.
+       Gemessen als Hauptachse der Tinte: Pinsel 52°, Bleistift 45° — sieben
+       Grad auseinander, beide lang (69 % und 78 %). Zwei Striche in
+       derselben Richtung sind bei dieser Grösse dasselbe Bild, gleichgültig
+       was an ihnen hängt.
+
+       Gespiegelt sind es 128° gegen 45°: dreiundachtzig Grad, und bei
+       16 px sofort zu trennen. Die Tintendeckung bleibt unverändert bei
+       46 % als schlimmstem Paar (`penFountain/penEarth`).
+
+       WAS SONST PROBIERT WURDE, alles gemessen: senkrecht stehend traf den
+       Kugelschreiber (Δ4°, und die Deckung stieg auf 55 %); steiler bei
+       58° blieb mit Δ13° unter der Grenze; waagerecht liegend mass sauber,
+       legte den Pinsel aber als einziges Werkzeug hin, während alle
+       anderen stehen. `test480 §7d` hält die Richtung fest. */
+    penBrush: '<path d="M9.8 3.4 3.4 9.8"/>' +
+              '<path d="m6.6 6.6 7.2 7.2a3.2 3.2 0 0 1 .9 1.7l.4 2.2-2.2-.4a3.2 3.2 0 0 1-1.7-.9z"/>' +
+              '<path d="M15.6 15.4c1.5 1.5 1.1 3.6 3.6 4.6-1 .6-2.2.8-3.3.4-1.6-.5-2.5-2-2.1-3.5"/>',
     penPencil: '<path d="M19 2.6 21.4 5 10.6 15.8 3.6 20.4 8.2 13.4Z"/>' +
                '<path d="M17 4.6 19.4 7M8.2 13.4 10.6 15.8"/>',
     /* Der Schutzleiter: das Erdungszeichen, wie im Schaltplan. */
@@ -226,11 +270,24 @@ Register.symbole = (() => {
        Form gewählt ist — und ein „╱" neben zwölf gezeichneten Werkzeugen
        sieht aus wie ein Fehler, nicht wie eine Linie. */
     formLine: '<path d="M4.6 19.4 19.4 4.6"/>',
-    formArrow: '<path d="M4.6 19.4 19.4 4.6M13.4 4.6h6v6"/>',
+    /* ══ DER PFEIL LIEGT WAAGERECHT (E584) ═══════════════════════════════
+       Er war die Linie plus ein Häkchen am Ende — bei 16 px teilten sich
+       die beiden 70 % ihrer Tinte, und sie stehen in der Formenreihe
+       unmittelbar nebeneinander. Waagerecht mit offener Spitze teilt er
+       sich mit der Linie noch 28 %; die Linie bleibt die Schräge, weil
+       genau das ihr Bild ist. */
+    formArrow: '<path d="M3.6 12h15.6M14 6.8 19.4 12 14 17.2"/>',
     formRect: '<rect x="3.6" y="5.6" width="16.8" height="12.8"/>',
     formEllipse: '<ellipse cx="12" cy="12" rx="8.6" ry="6.6"/>',
     formTriangle: '<path d="M12 4.4 20.6 19.6H3.4z"/>',
-    formRoundrect: '<rect x="3.6" y="5.6" width="16.8" height="12.8" rx="4.2"/>',
+    /* ══ UND DAS RUNDE RECHTECK IST KLEINER UND RUNDER (E584) ════════════
+       Es war `formRect` mit `rx="4.2"` — dieselbe Kontur, vier gerundete
+       Ecken, und die vier Ecken sind bei 16 px zusammen ein knappes
+       Viertel der Tinte: 75 % gleich. Nur runder zu machen half nicht,
+       es lief dann der Ellipse ins Bild (rx 5.4 → 75 % gegen die
+       Ellipse, rx 6.4 → 81 %). Kleiner UND runder trennt beides:
+       38 % gegen das Rechteck, 29 % gegen die Ellipse. */
+    formRoundrect: '<rect x="5.4" y="7.4" width="13.2" height="9.2" rx="4.6"/>',
     formCurve: '<path d="M3.4 17.6c4.4 0 5.2-11.2 9.4-11.2s4.4 11.2 7.8 11.2"/>',
     /* Die Schere — Ausschneiden. Es gab sie im Register noch nicht. */
     scissors: '<circle cx="6.4" cy="6.4" r="2.6"/><circle cx="6.4" cy="17.6" r="2.6"/>' +
@@ -240,6 +297,22 @@ Register.symbole = (() => {
              '<path d="M4.4 11.4v7.4a2 2 0 0 0 2 2h7.4"/>',
     layerDown: '<rect x="7.4" y="11.6" width="9.2" height="9.2" rx="1.8"/>' +
                '<path d="M19.6 12.6V5.2a2 2 0 0 0-2-2h-7.4"/>',
+    /* ── AUSRICHTUNG: DREI ZEILENBILDER (E568) ────────────────────────────
+       Hier standen `⭰ ⭤ ⭲` als Textzeichen im Knopf. Sie sind kein Emoji
+       und sahen trotzdem falsch aus: Pfeile mit Balken, die auf keiner
+       Grundlinie sitzen und auf jedem System anders breit sind — genau
+       das, was E515 aus der Leiste geworfen hat. `test480` hat sie seit
+       E560 gemeldet, und es hatte recht.
+       Jetzt sagen sie, was sie bedeuten: vier Zeilen, links bündig, in der
+       Mitte, rechts bündig. Dasselbe Bild kennt jeder aus jedem
+       Schreibprogramm. */
+    alignLeft:   '<path d="M3.6 5.6h16.8M3.6 10.4h10.6M3.6 15.2h16.8M3.6 20h10.6"/>',
+    alignCenter: '<path d="M3.6 5.6h16.8M6.7 10.4h10.6M3.6 15.2h16.8M6.7 20h10.6"/>',
+    alignRight:  '<path d="M3.6 5.6h16.8M9.8 10.4h10.6M3.6 15.2h16.8M9.8 20h10.6"/>',
+    /* Die Leiste einrichten (E570): eine Liste mit einem Pfeil, der hoch
+       und runter zeigt — „hier wird die Reihenfolge geändert". */
+    ordnen: '<path d="M9.2 5.8h11.4M9.2 12h11.4M9.2 18.2h11.4"/>' +
+            '<path d="m3.2 8.6 2.2-2.6 2.2 2.6M5.4 6v12M3.2 15.4l2.2 2.6 2.2-2.6"/>',
     /* Das Kritzeln, das löscht: ein dichtes Hin und Her. */
     scribble: '<path d="M2.8 15.6c2.6-4.4 4.6 3 7-1.6s4.6 3 7-1.6 3.2 1.2 4.4-1.2"/>',
     /* Der Kreis für die Formerkennung — eine gezogene Form, die einrastet. */
@@ -251,6 +324,17 @@ Register.symbole = (() => {
               '<path d="m4.4 17.4 4.8-4.6a1.6 1.6 0 0 1 2.2 0l3 2.9M14.6 14l1.6-1.5a1.6 1.6 0 0 1 2.2 0l1.4 1.3"/>',
 
     /* --- Werkzeuge der Seitenleiste --------------------------------------- */
+    /* ══ DER KALENDER MIT TAGEN (E589) ═══════════════════════════════════
+       Er stand bis zum 15. September 2026 gezeichnet in `index.html`, am
+       Reiter „Termine" — die einzige der neunzehn Abschriften dort, für
+       die es im Register kein Gegenstück gab. `calendar` daneben hat
+       einunddreissig Verwender und trägt KEINE Tagespunkte; ihn zu ändern
+       wäre eine Änderung an einunddreissig Stellen für eine.
+       Also ein eigener Eintrag, und damit steht jede Zeichnung des
+       Projekts im Register (§8). */
+    calendarDays: '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/>' +
+                  '<path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/>' +
+                  '<path d="M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01"/>',
     calendar:  '<rect x="3.2" y="5" width="17.6" height="16" rx="2.6"/>' +
                '<path d="M3.2 10h17.6M8.2 3v4M15.8 3v4"/>',
     bolt:      '<path d="M13.2 2.5 4.5 13.4h6.2l-.9 8.1 8.7-10.9h-6.2z"/>',

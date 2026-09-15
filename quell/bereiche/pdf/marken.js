@@ -84,6 +84,21 @@ const Marken = (() => {
         const wert = typeof Store !== 'undefined' ? String(Store.getMeta('zeichnen:radierer') || '') : '';
         return RADIERER.some(r => r.id === wert) ? wert : RADIER_VORGABE;
     };
+    /* ══ DIE GRÖSSE DES RADIERERS WIRD GEMERKT (E576) ═══════════════════════
+       Sie stand als `controls.setEraserSize(5)` fest im Aufbau des Studios.
+       Gemessen: „groß" wählen, Seite wechseln, zurückkommen — wieder „klein".
+       Der Modus daneben (`zeichnen:radierer`) wird seit jeher gemerkt; die
+       Grösse war der einzige Schalter dieser Reihe ohne Gedächtnis, und das
+       fällt erst auf, wenn man dreimal am Tag dieselbe Wahl wiederholt.
+       DREI FESTE WERTE, kein Regler: sie sind die Kreise aus GoodNotes, und
+       sie sind auch die Prüfsteine — `setEraserSize` nimmt nur diese drei an,
+       damit ein alter oder verbogener Wert nicht als Radiergummi von einem
+       Meter Durchmesser ankommt. */
+    const RADIER_GROESSEN = [5, 14, 28];
+    const radierGroesseLesen = () => {
+        const wert = typeof Store !== 'undefined' ? Number(Store.getMeta('zeichnen:radierergroesse')) : NaN;
+        return RADIER_GROESSEN.includes(wert) ? wert : RADIER_GROESSEN[0];
+    };
     /* DIE STIFTE (E351). `kugel` ist der Strich, den es seit E100 gibt — eine
        Breite je Strich. `fueller` und `pinsel` zeichnen eine Flaeche, deren
        Breite dem Druck folgt: der Fueller massvoll, der Pinsel kraeftig.
@@ -296,6 +311,177 @@ const Marken = (() => {
         { id: 'rechts', zeichen: '⇥', sym: 'dockRight', name: 'rechts' },
         { id: 'unten', zeichen: '⤓', sym: 'dockBottom', name: 'unten in der Mitte' }
     ];
+    /* ══ DIE GRUPPEN, EINMAL AUFGESCHRIEBEN (E570) ═══════════════════════════
+       Welche Gruppe zu welchem Werkzeug erscheint, steht seit E356 im
+       Stilblatt — das bleibt dort, denn es ist eine Sichtbarkeitsregel. Was
+       hier dazukommt, ist etwas anderes: der NAME einer Gruppe, damit ein
+       Mensch sie in einer Liste wiedererkennt, und die Reihenfolge, in der
+       sie stehen.
+  
+       `form` und `formen` heissen fast gleich und sind zweierlei — die eine
+       ist die Formenwahl, die andere sind zwei Schalter. In der Leiste fällt
+       das nicht auf, weil man Zeichen sieht; in einer Liste mit Wörtern
+       wäre es die erste Verwechslung. Deshalb tragen sie hier Namen, die
+       sich unterscheiden lassen.
+  
+       DIE REIHENFOLGE HIER IST DIE VORGABE, und sie ist NICHT frei gewählt:
+       sie ist die, die bis E570 als `+1` bis `+5` im Stilblatt stand und die
+       `test348` seit E356 hält — erst die Spielart (Stifte, Formen, Laser),
+       dann Farbe und Breite, dann die Schalter. Redurs Satz aus E512 hängt
+       daran: „die Stiftreihe … sollte neben es, also links unten, wo die
+       Farben dort sind." Steht etwas anderes zwischen dem Stift und den
+       Farben, ist dieser Satz gebrochen — am Telefon um 100 px, gemessen.
+  
+       DER VERLAUF STEHT AM ENDE, weil „Zurück" und „Vor" zu jedem Werkzeug
+       gehören und zu keinem (E568). Bis E570 war das eine Zeile `order:1` im
+       Stilblatt; jetzt ist es der letzte Katalogeintrag, und Redur kann ihn
+       verschieben, ohne dass jemand eine CSS-Datei aufmacht. */
+    const GRUPPEN = [
+        /* ERST DIE SPIELART DES WERKZEUGS … */
+        { id: 'stil', name: 'Stifte' },
+        { id: 'form', name: 'Formenwahl: Linie, Pfeil, Rechteck …' },
+        { id: 'laser', name: 'Laser: Punkt oder Spur' },
+        { id: 'radierer', name: 'Radierer: Ganz, Teil, Stift …' },
+        { id: 'schrift', name: 'Schrift' },
+        { id: 'auswahl', name: 'Auswahl: Kopieren, Löschen, Sperren …' },
+        { id: 'elemente', name: 'Elemente' },
+        /* … dann, WOMIT es zeichnet … */
+        { id: 'farbe', name: 'Farben' },
+        { id: 'breite', name: 'Strichbreite' },
+        /* … dann die Schalter, die nebenher mitlaufen … */
+        { id: 'formen', name: 'Schalter: Formen erkennen, Kritzeln löscht' },
+        { id: 'lineal', name: 'Lineal' },
+        /* … und ganz zuletzt, was zu jedem Werkzeug gehört (E568). */
+        { id: 'verlauf', name: 'Zurück, Vor, Platz, Einrichten' }
+    ];
+    /* ══ DIE EIGENE ORDNUNG (E570) ═══════════════════════════════════════════
+       Redur, 14. September: „Könntest du so machen, dass ich alles, was dort
+       ist im Redion, direkt selber ordnen kann?"
+  
+       ZWEI LISTEN IN `meta`, wie jede andere Zeichenvorliebe auch — Stift,
+       Farbe, Form und der Platz der Leiste liegen seit jeher dort. Damit
+       reist die Ordnung in der Sicherung mit (`meta` ist eines der elf
+       Fächer, §9) und überlebt den Neustart.
+  
+       GESPEICHERT WIRD EINE REIHENFOLGE, KEIN KATALOG (§8). Was es gibt,
+       steht weiter in `WERKZEUGE` und `GRUPPEN`; hier steht nur, in welcher
+       Folge. Deshalb ist das Lesen keine Übernahme, sondern ein Abgleich:
+  
+         · was in der gemerkten Liste steht und den Katalog NICHT kennt,
+           fällt weg — eine Kennung aus einer älteren Fassung darf keine
+           leere Stelle in der Leiste machen;
+         · was der Katalog kennt und die Liste NICHT, wird HINTEN angehängt —
+           ein neues Werkzeug erscheint damit von selbst, statt unsichtbar
+           zu bleiben, bis jemand zurücksetzt.
+  
+       Das ist der ganze Grund, warum hier eine Funktion steht und nicht ein
+       `Store.getMeta`. */
+    const M_ORDNUNG = 'zeichnen:ordnung';
+    const ordnungAbgleichen = (gemerkt, katalog) => {
+        const liste = Array.isArray(gemerkt) ? gemerkt.map(String) : [];
+        const rein = liste.filter((id, i) => katalog.includes(id) && liste.indexOf(id) === i);
+        for (const id of katalog)
+            if (!rein.includes(id))
+                rein.push(id);
+        return rein;
+    };
+    const ordnungLesen = () => {
+        const roh = typeof Store !== 'undefined' ? Store.getMeta(M_ORDNUNG) : null;
+        const o = roh && typeof roh === 'object' ? roh : {};
+        return {
+            werkzeuge: ordnungAbgleichen(o['werkzeuge'], WERKZEUGE.map(w => w.id)),
+            gruppen: ordnungAbgleichen(o['gruppen'], GRUPPEN.map(g => g.id))
+        };
+    };
+    const ordnungMerken = (o) => {
+        if (typeof Store === 'undefined')
+            return;
+        try {
+            Store.setMeta(M_ORDNUNG, { werkzeuge: o.werkzeuge, gruppen: o.gruppen });
+        }
+        catch { /* dann eben nur diese Sitzung */ }
+    };
+    const ordnungVergessen = () => {
+        if (typeof Store === 'undefined')
+            return;
+        try {
+            Store.setMeta(M_ORDNUNG, null);
+        }
+        catch { /* dann eben nur diese Sitzung */ }
+    };
+    /**
+     * Die gemerkte Ordnung auf eine gebaute Leiste legen.
+     *
+     * ES WERDEN KNOTEN VERSCHOBEN, NICHT NEU GEBAUT. `insertBefore` und
+     * `appendChild` auf ein Element, das schon im Baum steht, HÄNGEN es um —
+     * mit allem, was daran hängt: Zustand, Klassen, Zuhörer. Ein Neubau
+     * würde den geführten Stift, die gewählte Farbe und den offenen
+     * Stärkeregler wegwerfen.
+     *
+     * UND DIE DOM-FOLGE IST DIE SICHTBARE FOLGE. Das ist kein Beiwerk: ein
+     * Vorleseprogramm und die Tabulatortaste gehen in Dokumentreihenfolge,
+     * und wenn die von der sichtbaren abweicht, führt die Tastatur woandershin
+     * als das Auge (§38). Am Telefon weicht sie ab — dort schiebt `order` die
+     * Gruppen hinter das gewählte Werkzeug (E356) —, und das ist dort mit
+     * geschriebenem Grund entschieden. Hier nicht.
+     */
+    const ordnungAnwenden = (tools) => {
+        const o = ordnungLesen();
+        const bruch = tools.querySelector(':scope > .blatt-zeilenbruch');
+        if (!bruch)
+            return;
+        for (const id of o.werkzeuge) {
+            const knopf = tools.querySelector(`:scope > [data-wz="${id}"]`);
+            if (knopf)
+                tools.insertBefore(knopf, bruch);
+        }
+        for (const id of o.gruppen) {
+            tools.querySelectorAll(`:scope > [data-gruppe="${id}"]`)
+                .forEach(knoten => tools.appendChild(knoten));
+        }
+        ordnungZahlen(tools, o);
+        platzSetzen(tools);
+    };
+    /* DIE ZAHLEN FÜR DAS TELEFON. Dort steht die Leiste in EINER rollenden
+       Zeile, und die Gruppen sollen unmittelbar hinter dem gewählten Werkzeug
+       liegen (E356) — das geht nur über `order`, weil die DOM-Folge Werkzeuge
+       und Zubehör trennt. Bis E570 standen diese Zahlen als dreissig Zeilen
+       im Stilblatt, eine je Werkzeug. Jetzt kommen sie aus der Ordnung, und
+       das Stilblatt liest nur noch zwei Variablen. */
+    const ordnungZahlen = (tools, o) => {
+        /* HUNDERTERSCHRITTE, NICHT ZEHNER — und das ist gemessen, nicht
+           geschätzt. Das alte Stilblatt zählte die Werkzeuge in Zehnern und
+           setzte die fünf Gruppen dazwischen (`+1` bis `+5`); zwölf Gruppen
+           passen da nicht mehr hinein. Bei Zehnern bekam die Farbgruppe des
+           Stifts (Platz 30, zehnte Gruppe) die Zahl 40 — dieselbe wie das
+           NÄCHSTE Werkzeug —, und Farben und Breiten standen am Telefon
+           hinter dem Marker statt hinter dem Stift. `test356` hat es gemeldet.
+           Hundert lässt Platz für neunundneunzig Gruppen. */
+        o.werkzeuge.forEach((id, i) => {
+            tools.querySelector(`:scope > [data-wz="${id}"]`)
+                ?.style.setProperty('--ordnung', String((i + 1) * 100));
+        });
+        o.gruppen.forEach((id, i) => {
+            tools.querySelectorAll(`:scope > [data-gruppe="${id}"]`)
+                .forEach(k => k.style.setProperty('--g-ordnung', String(i + 1)));
+        });
+    };
+    /**
+     * Wo das gewählte Werkzeug in der Reihe steht — die Zahl, hinter der die
+     * Gruppen einsortiert werden.
+     *
+     * EINE FORM IST KEIN EIGENES WERKZEUG. `data-tool` trägt beim Formknopf
+     * `line`, `curve` und so fort; in der Werkzeugreihe steht aber `formen`.
+     * Ohne diese Umrechnung landete das Zubehör der Formen am Anfang der
+     * Leiste statt hinter ihrem Knopf.
+     */
+    const platzSetzen = (tools) => {
+        const o = ordnungLesen();
+        const jetzt = String(tools.dataset.tool || '');
+        const id = o.werkzeuge.includes(jetzt) ? jetzt : (istForm(jetzt) ? 'formen' : '');
+        const i = o.werkzeuge.indexOf(id);
+        tools.style.setProperty('--platz', String(i >= 0 ? (i + 1) * 100 : 0));
+    };
     const M_LAGE = 'zeichnen:leistenlage';
     const lageJetzt = () => {
         const id = typeof Store !== 'undefined' ? String(Store.getMeta(M_LAGE, 'oben')) : 'oben';
@@ -360,23 +546,31 @@ const Marken = (() => {
        wie am Block (E101, Register.textstile), hier als Stapel fuer SVG —
        Attribute kennen keine CSS-Variablen, und der Druck liest sie roh.
        Die Stufen sind die Leiter, auf der A− und A+ gehen. */
-    const SCHRIFTEN = [
-        { id: 'standard', name: 'Standard', stapel: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" },
-        { id: 'serif', name: 'Serifen', stapel: "Georgia, 'Times New Roman', serif" },
-        { id: 'mono', name: 'Schreibmaschine', stapel: 'ui-monospace, Menlo, Consolas, monospace' },
-        { id: 'hand', name: 'Handschrift', stapel: "'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive" },
-        { id: 'schmal', name: 'Schmal', stapel: "'Arial Narrow', 'Roboto Condensed', 'Helvetica Neue', sans-serif" }
-    ];
+    /* DIE LISTE STEHT SEIT E562 IN `geometry.ts` — dort, wo die Breiten
+       gemessen werden. Hier bleibt nur der Verweis: ein zweiter Katalog läuft
+       mit dem ersten auseinander (§8). */
+    const SCHRIFTEN = InkGeometry.SCHRIFTEN;
     const SCHRIFT_STUFEN = [11, 13, 16, 20, 26, 34];
-    const SCHRIFT_VORGABE = { familie: 'standard', groesse: 16, fett: false, rahmen: false };
-    const schriftStapel = (id) => (SCHRIFTEN.find(x => x.id === String(id)) || SCHRIFTEN[0]).stapel;
+    const SCHRIFT_VORGABE = { familie: 'standard', groesse: 16, fett: false,
+        rahmen: false, ausricht: 'links' };
+    /* Die drei Namen sind die des Hauses (`bild-rahmen aus-links`), nicht neue. */
+    /* DAS `zeichen` BLEIBT ALS RÜCKFALL (wie bei den Werkzeugen, E515): eine
+       Meldung oder ein Eintrag im Inspector braucht ein TEXTzeichen, und dort
+       ist ein SVG keine Antwort. In der Leiste steht `sym` (E568). */
+    const AUSRICHTUNGEN = [
+        { id: 'links', zeichen: '⭰', sym: 'alignLeft', name: 'Links' },
+        { id: 'mitte', zeichen: '⭤', sym: 'alignCenter', name: 'Mitte' },
+        { id: 'rechts', zeichen: '⭲', sym: 'alignRight', name: 'Rechts' }
+    ];
+    const schriftStapel = (id) => InkGeometry.schriftStapel(id);
     const schriftLesen = () => {
         const roh = typeof Store !== 'undefined' ? Store.getMeta('zeichnen:schrift') : null;
         const s = roh && typeof roh === 'object' ? roh : {};
         return {
             familie: SCHRIFTEN.some(x => x.id === s.familie) ? String(s.familie) : SCHRIFT_VORGABE.familie,
             groesse: SCHRIFT_STUFEN.includes(Number(s.groesse)) ? Number(s.groesse) : SCHRIFT_VORGABE.groesse,
-            fett: !!s.fett, rahmen: !!s.rahmen
+            fett: !!s.fett, rahmen: !!s.rahmen,
+            ausricht: AUSRICHTUNGEN.some(x => x.id === s.ausricht) ? String(s.ausricht) : 'links'
         };
     };
     const naechsteStufe = (jetzt, richtung) => {
@@ -774,16 +968,65 @@ const Marken = (() => {
                         class: 'blatt-textrahmen' })
                     : svg('rect', { x: layout.x, y: layout.y, width: layout.width, height: layout.height,
                         fill: 'transparent', stroke: 'none' }));
+                /* DIE AUSRICHTUNG (E560): SVG kann sie selbst, wenn man ihm den
+                   richtigen Anker gibt — `middle` misst von der Mitte, `end` vom
+                   Ende. Jede Zeile bekommt dasselbe `x`, sonst laufen die Zeilen
+                   eines umbrechenden Absatzes auseinander. */
+                const anker = layout.ausricht === 'mitte' ? 'middle'
+                    : layout.ausricht === 'rechts' ? 'end' : 'start';
+                const zeilenX = layout.ausricht === 'mitte' ? layout.x + layout.width / 2
+                    : layout.ausricht === 'rechts' ? layout.x + layout.width - layout.pad
+                        : layout.x + layout.pad;
                 const textKnoten = svg('text', {
-                    x: layout.x + layout.pad, y: layout.y + layout.pad + layout.fontSize * 0.85, fill: color,
+                    x: zeilenX, y: layout.y + layout.pad + layout.fontSize * 0.85, fill: color,
                     'font-size': layout.fontSize, 'font-family': schriftStapel(layout.family),
-                    'font-weight': layout.bold ? 700 : 400
+                    'font-weight': layout.bold ? 700 : 400,
+                    ...(anker === 'start' ? {} : { 'text-anchor': anker })
                 });
-                layout.lines.forEach((zeile, index) => {
-                    const stueck = svg('tspan', { x: layout.x + layout.pad, dy: index === 0 ? 0 : layout.zeile });
-                    stueck.textContent = zeile || ' ';
-                    textKnoten.appendChild(stueck);
-                });
+                if (layout.zeilen) {
+                    /* ══ MEHRERE FORMATE IN EINEM ABSATZ (E561) ═══════════════════════
+                       NUR DAS ERSTE STÜCK EINER ZEILE BEKOMMT EIN `x`. Die übrigen
+                       fliessen dahinter — SVG setzt sie selbst, mit den ECHTEN
+                       Schriftmassen des Browsers.
+          
+                       DIE ERSTE FASSUNG GAB JEDEM STÜCK EIN ABSOLUTES `x`, gerechnet
+                       aus `textWidth`. Das Bild hat sie widerlegt, und keine einzige
+                       Zusage hatte es gesehen: `textWidth` ist eine SCHÄTZUNG aus
+                       Buchstabenbreiten (`geometry.ts:240`) — gut genug, um zu
+                       entscheiden, WO umgebrochen wird, und zu ungenau, um zu sagen,
+                       wo ein Stück ANFÄNGT. Bei „einem hervorgehobenen Wort" in fett
+                       lief das nächste Stück mitten hinein.
+          
+                       Gerechnet wird die Schätzung weiterhin — für den Umbruch. Sie
+                       steht nur nicht mehr im Bild.
+          
+                       `xml:space="preserve"`: ohne das verschluckt XML den Zwischen-
+                       raum am Ende eines Laufs, und aus „klein GROSS" wird
+                       „kleinGROSS". Auch das stand auf dem Bild und in keiner Zusage. */
+                    textKnoten.setAttribute('xml:space', 'preserve');
+                    let oben = layout.y + layout.pad;
+                    for (const zeile of layout.zeilen) {
+                        zeile.stuecke.forEach((st, i) => {
+                            const teil = svg('tspan', {
+                                /* Ein `x` beginnt in SVG einen neuen Textabschnitt, und
+                                   `text-anchor` gilt je Abschnitt — die Zeile richtet sich
+                                   also an ihrem eigenen Anfang aus, mit echten Massen. */
+                                ...(i === 0 ? { x: zeilenX, y: oben + zeile.basis } : {}),
+                                'font-size': st.fontSize, 'font-weight': st.bold ? 700 : 400,
+                                ...(st.farbe ? { fill: st.farbe } : {})
+                            });
+                            teil.textContent = st.text || ' ';
+                            textKnoten.appendChild(teil);
+                        });
+                        oben += zeile.hoehe;
+                    }
+                }
+                else
+                    layout.lines.forEach((zeile, index) => {
+                        const stueck = svg('tspan', { x: zeilenX, dy: index === 0 ? 0 : layout.zeile });
+                        stueck.textContent = zeile || ' ';
+                        textKnoten.appendChild(stueck);
+                    });
                 gruppe.appendChild(textKnoten);
                 gruppe.setAttribute('data-sid', idOf(mark));
                 gruppe.setAttribute('data-ink-art', art);
@@ -998,11 +1241,33 @@ const Marken = (() => {
         if (!element)
             return null;
         if (art !== 'text') {
-            element.setAttribute('fill', 'none');
+            /* ══ EINE FÜLLUNG, WENN DIE MARKE EINE MITBRINGT (E565) ═════════════
+               Geschlossene Formen waren bis hierher IMMER leer — „die Fläche
+               bleibt optisch leer" steht ein paar Zeilen tiefer, und für einen
+               von Hand gezogenen Rahmen ist das richtig.
+      
+               Eine eingelesene Tabellenzelle ist es nicht: PowerPoint gibt
+               Kopfzeilen gern eine dunkle Füllung und schreibt weiss hinein.
+               Ohne die Füllung stünde weisser Text auf weissem Grund — derselbe
+               Fall wie bei E558, nur eine Ebene tiefer.
+      
+               NUR WENN DAS FELD DA IST. Jede Marke ohne `fuellung` bleibt
+               wörtlich, was sie war; geprüft wird der Wert wie in `blatt.ts`,
+               denn er kommt aus einer Datei und geht in einen Stil (§19). */
+            const fuellung = String(mark.fuellung || '');
+            element.setAttribute('fill', /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(fuellung) ? fuellung : 'none');
+            /* UND EINE FORM DARF AUCH GAR KEINEN RAND HABEN (E566).
+               Ein farbiger Kasten hinter einem Titel hat im Original keinen — ein
+               Strich in der Vorgabefarbe machte ihn um zweieinhalb Punkt grösser
+               und legte einen grauen Saum darum, den niemand gezeichnet hat. */
             element.setAttribute('stroke', color);
             element.setAttribute('stroke-width', String(width));
             element.setAttribute('stroke-linecap', 'round');
             element.setAttribute('stroke-linejoin', 'round');
+            if (mark.randlos) {
+                element.setAttribute('stroke', 'none');
+                element.setAttribute('stroke-width', '0');
+            }
             if (art === 'marker') {
                 element.setAttribute('opacity', '0.32');
                 element.setAttribute('style', 'mix-blend-mode:multiply');
@@ -1386,6 +1651,10 @@ const Marken = (() => {
            die üblichen Winkel dazwischen, ohne zitternde Hand. Nur Laufzeit,
            Vorgabe aus. */
         let lineal = false;
+        const ruler = InkRuler.create(flaeche, breite, hoehe);
+        /* Unabhängig von der Stiftbreite: Radieren darf den nächsten Strich
+           nicht dicker machen. Alte Flächen behalten bis zur Wahl ihre Größe. */
+        let eraserSize = null;
         const rasten = (anfang, ende) => {
             const dx = ende[0] - anfang[0];
             const dy = ende[1] - anfang[1];
@@ -1529,6 +1798,12 @@ const Marken = (() => {
             defsAuffrischen();
             abdeckAnwenden();
             renderSelection();
+            /* DAS LINEAL ÜBERLEBT DAS NEUZEICHNEN (E573). Die Zeile ganz oben in
+               dieser Funktion räumt JEDES `[data-ink-ui]` aus der Fläche — das
+               Lineal trägt dieses Kennzeichen, und niemand hängte es zurück.
+               Gemessen war nach einem einzigen „Zurück" kein Lineal mehr da,
+               während der Schalter weiter „an" meldete. */
+            ruler.remount();
         };
         const restore = (next) => {
             /* Flach, aus demselben Grund wie `snapshot` (E378): die Marken werden
@@ -1849,7 +2124,7 @@ const Marken = (() => {
         };
         /* Der Radierer ist ein Kreis; seine Groesse haengt an der gewaehlten
            Strichstaerke — duenn, mittel, dick, wie beim Stift. */
-        const radierRadius = () => Math.max(5, width * 3);
+        const radierRadius = () => eraserSize ?? Math.max(5, width * 3);
         const frischeId = () => typeof Ids !== 'undefined' ? Ids.short(8) : 'm' + Math.random().toString(36).slice(2, 10);
         /* EIN RADIERSCHRITT (E352): alles, was der Kreis um `center` beruehrt.
            „ganz" nimmt die Marke, „marker" nur Marker, „teil" schneidet Stift
@@ -2075,7 +2350,8 @@ const Marken = (() => {
         const addSample = (event, um) => {
             if (!running)
                 return;
-            const roh = um ? um(event) : R.zuBlatt(flaeche, event);
+            const sample = um ? um(event) : R.zuBlatt(flaeche, event);
+            const roh = sample ? ruler.project(sample) : null;
             if (!roh)
                 return;
             /* DER DRUCK KOMMT AUS DEM ROHEN PUNKT (E376): der Ersatzdruck fuer
@@ -2169,7 +2445,7 @@ const Marken = (() => {
          * nicht — test366 haelt genau das fest.
          * -------------------------------------------------------------------- */
         const nassenSchwanz = (event, um) => {
-            if (!feder || !running)
+            if (!feder || !running || ruler.constrained())
                 return;
             const druck = running.pressure[running.pressure.length - 1] ?? 0.5;
             const halb = halbeBreite(running, druck);
@@ -2781,7 +3057,9 @@ const Marken = (() => {
                 const y = Math.round(Math.max(0, Math.min(point[1] ?? 0, hoehe - 40)) * 100) / 100;
                 const breiteBox = Math.max(120, Math.min(Math.round(breite * 0.4), Math.round(breite - x - 8)));
                 marks.push({ id: frischeId(), art: 'text', point: [x, y], text: answer, farbe: color,
-                    fontSize: schrift.groesse, breiteBox, schrift: schrift.familie, fett: schrift.fett, rahmen: schrift.rahmen });
+                    fontSize: schrift.groesse, breiteBox, schrift: schrift.familie, fett: schrift.fett,
+                    rahmen: schrift.rahmen,
+                    ...(schrift.ausricht !== 'links' ? { ausricht: schrift.ausricht } : {}) });
             }
             redraw();
             commit(before);
@@ -2997,9 +3275,10 @@ const Marken = (() => {
                 (e.button === 5 || e.button === 2 || (e.buttons & 32) !== 0);
             if (e.button !== 0 && !stiftRadiert)
                 return;
-            const point = R.zuBlatt(flaeche, e);
-            if (!point)
+            const rawPoint = R.zuBlatt(flaeche, e);
+            if (!rawPoint)
                 return;
+            const point = ruler.begin(rawPoint, !stiftRadiert && ['stift', 'marker', 'line', 'arrow'].includes(tool));
             event.preventDefault();
             aktiverZeiger = e.pointerId;
             zeigerZuletzt = Date.now();
@@ -3369,7 +3648,7 @@ const Marken = (() => {
             if (!running)
                 return;
             /* Stift und Marker sind oben schon heraus (E511). */
-            running.pts[1] = lineal && (running.art === 'line' || running.art === 'arrow')
+            running.pts[1] = ruler.constrained() ? ruler.project(point) : lineal && (running.art === 'line' || running.art === 'arrow')
                 ? rasten(running.pts[0], point) : point;
             runningNode = updateNode(runningNode, running);
         });
@@ -3390,7 +3669,8 @@ const Marken = (() => {
             // pointerup may carry a final position that no pointermove delivered.
             // Keep the previous pressure: pen devices report zero pressure on lift.
             if (event.type === 'pointerup' && running && (running.art === 'stift' || running.art === 'marker')) {
-                const end = R.zuBlatt(flaeche, event);
+                const rawEnd = R.zuBlatt(flaeche, event);
+                const end = rawEnd ? ruler.project(rawEnd) : null;
                 if (end) {
                     const last = running.pts[running.pts.length - 1];
                     if (Math.hypot(end[0] - last[0], end[1] - last[1]) > 0.01) {
@@ -3608,7 +3888,10 @@ const Marken = (() => {
                 groesse: schritt ? naechsteStufe(schrift.groesse, schritt)
                     : (aenderung.groesse !== undefined ? Math.max(8, Number(aenderung.groesse) || schrift.groesse) : schrift.groesse),
                 fett: aenderung.fett !== undefined ? !!aenderung.fett : schrift.fett,
-                rahmen: aenderung.rahmen !== undefined ? !!aenderung.rahmen : schrift.rahmen
+                rahmen: aenderung.rahmen !== undefined ? !!aenderung.rahmen : schrift.rahmen,
+                ausricht: aenderung.ausricht !== undefined
+                    && AUSRICHTUNGEN.some(x => x.id === aenderung.ausricht)
+                    ? String(aenderung.ausricht) : schrift.ausricht
             };
             if (typeof Store !== 'undefined')
                 Store.setMeta('zeichnen:schrift', schrift);
@@ -3631,6 +3914,8 @@ const Marken = (() => {
                     neu.fett = schrift.fett;
                 if (aenderung.rahmen !== undefined)
                     neu.rahmen = schrift.rahmen;
+                if (aenderung.ausricht !== undefined)
+                    neu.ausricht = schrift.ausricht;
                 marks[i] = neu;
                 updateNode(nodeFor(idOf(neu)), neu);
                 geaendert = true;
@@ -3659,7 +3944,7 @@ const Marken = (() => {
            oben braucht genau dieses Objekt, um sich beim Kern zu melden. Zwei
            verschiedene Objekte für dieselbe Fläche wären der sichere Weg zu
            einem Knopf, der auf nichts wirkt. */
-        const setzeLineal = (an) => { lineal = !!an; };
+        const setzeLineal = (an) => { lineal = !!an; ruler.setActive(lineal); };
         const linealAn = () => lineal;
         const setzeFormen = (an) => {
             formen = !!an;
@@ -3677,6 +3962,13 @@ const Marken = (() => {
             /* E494: die Elemente-Bibliothek — sichern aus der Auswahl, setzen per Tipp. */
             elementAusAuswahl,
             elementGewaehlt: () => letztesElement,
+            selectElement: (id) => { if (elementHolen(id)) {
+                letztesElement = id;
+                notifyState();
+            } },
+            setEraserSize: (radius) => { if ([5, 14, 28].includes(radius))
+                eraserSize = radius; },
+            eraserSize: () => radierRadius(),
             elementWaehlen: async () => {
                 const gewaehlt = await elementWaehlen();
                 if (gewaehlt) {
@@ -4071,6 +4363,222 @@ const Marken = (() => {
         document.body.appendChild(o);
         zu.focus();
     });
+    /**
+     * ══ DIE LEISTE EINRICHTEN (E570) ═══════════════════════════════════════
+     *
+     * Zwei Listen — die Werkzeuge und ihr Zubehör —, jede Zeile zu greifen
+     * und zu verschieben. Ein Feld und keine Leiste-im-Zeichnen-Modus, aus
+     * drei Gründen, und der dritte ist der, der entschieden hat:
+     *
+     *   1 · Die Leiste ROLLT am Telefon. Etwas in einem waagerecht rollenden
+     *       Band zu ziehen heisst, dass jeder Zug auch eine Rollbewegung
+     *       sein könnte; das ist auf einem Berührungsbildschirm nicht
+     *       auseinanderzuhalten.
+     *   2 · Eine Gruppe ist mehrere Knöpfe. „Die Farben verschieben" heisst
+     *       sieben Knöpfe auf einmal — in der Leiste sähe man sieben Dinge
+     *       und meinte eines.
+     *   3 · §38. Ein Ziehen allein ist keine Bedienung: wer mit der Tastatur
+     *       arbeitet, kann nichts ziehen. Hier hat jede Zeile zwei Knöpfe,
+     *       „hoch" und „runter", und die sind nicht der Notausgang, sondern
+     *       der Hauptweg — das Ziehen kommt dazu.
+     *
+     * WAS MAN ÄNDERT, SIEHT MAN SOFORT. Jede Bewegung legt die neue Ordnung
+     * augenblicklich auf jede Leiste der Seite. Ein Feld, das erst beim
+     * Schliessen wirkt, lässt einen raten, was man gerade getan hat.
+     */
+    const leisteEinrichten = () => new Promise(fertig => {
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        const finder = document.createElement('div');
+        finder.className = 'finder blatt-ordnen-feld';
+        finder.style.width = 'min(560px,94vw)';
+        const kopf = document.createElement('div');
+        kopf.className = 'fh';
+        kopf.textContent = 'Leiste einrichten';
+        const zu = document.createElement('button');
+        zu.className = 'icon-btn';
+        zu.dataset.a = 'zu';
+        zu.setAttribute('aria-label', 'Schliessen');
+        zu.textContent = '✕';
+        kopf.appendChild(zu);
+        finder.appendChild(kopf);
+        const koerper = document.createElement('div');
+        koerper.className = 'blatt-ordnen-koerper';
+        finder.appendChild(koerper);
+        const sagen = document.createElement('p');
+        sagen.className = 'blatt-ordnen-sagt';
+        sagen.setAttribute('aria-live', 'polite');
+        finder.appendChild(sagen);
+        const fuss = document.createElement('div');
+        fuss.className = 'blatt-ordnen-fuss';
+        const zurueck = document.createElement('button');
+        zurueck.className = 'blatt-ordnen-zurueck';
+        zurueck.type = 'button';
+        zurueck.textContent = 'Zurücksetzen';
+        zurueck.title = 'Die ursprüngliche Reihenfolge wiederherstellen';
+        const okay = document.createElement('button');
+        okay.className = 'blatt-ordnen-fertig';
+        okay.type = 'button';
+        okay.textContent = 'Fertig';
+        fuss.append(zurueck, okay);
+        finder.appendChild(fuss);
+        o.appendChild(finder);
+        let jetzt = ordnungLesen();
+        /** Die neue Ordnung merken und auf JEDE Leiste der Seite legen. */
+        const anwenden = () => {
+            ordnungMerken(jetzt);
+            document.querySelectorAll('.blatt-werk').forEach(ordnungAnwenden);
+        };
+        const namen = (art, id) => art === 'werkzeuge'
+            ? (WERKZEUGE.find(w => w.id === id)?.name || id)
+            : (GRUPPEN.find(g => g.id === id)?.name || id);
+        /** Eine Zeile um `schritt` Stellen verschieben. */
+        const ruecken = (art, id, schritt) => {
+            const liste = jetzt[art];
+            const i = liste.indexOf(id);
+            const ziel = i + schritt;
+            if (i < 0 || ziel < 0 || ziel >= liste.length)
+                return;
+            liste.splice(i, 1);
+            liste.splice(ziel, 0, id);
+            anwenden();
+            malen();
+            sagen.textContent = namen(art, id) + ' steht jetzt an Stelle ' + (ziel + 1)
+                + ' von ' + liste.length + '.';
+            /* DER FOKUS WANDERT MIT. Ohne das springt er beim Neuzeichnen an den
+               Anfang, und wer zweimal „runter" drücken will, muss sich neu
+               hinklicken — die Taste wäre unbrauchbar (§38). */
+            koerper.querySelector(`[data-art="${art}"][data-id="${id}"] [data-ruecken="${schritt > 0 ? 'runter' : 'hoch'}"]`)?.focus();
+        };
+        /* ── Ziehen (E570). Kein HTML5-Drag: das gibt es auf einem
+           Berührungsbildschirm nicht. Zeigerereignisse gibt es überall. */
+        let zieht = null;
+        const beiZug = (e) => {
+            if (!zieht)
+                return;
+            const unter = document.elementFromPoint(e.clientX, e.clientY);
+            const zeile = unter instanceof Element ? unter.closest('.blatt-ordnen-zeile') : null;
+            if (!zeile || zeile.dataset.art !== zieht.art)
+                return;
+            const ueber = String(zeile.dataset.id || '');
+            if (!ueber || ueber === zieht.id)
+                return;
+            const liste = jetzt[zieht.art];
+            const von = liste.indexOf(zieht.id);
+            const nach = liste.indexOf(ueber);
+            if (von < 0 || nach < 0)
+                return;
+            liste.splice(von, 1);
+            liste.splice(nach, 0, zieht.id);
+            anwenden();
+            malen();
+        };
+        const zugEnde = () => {
+            if (!zieht)
+                return;
+            sagen.textContent = namen(zieht.art, zieht.id) + ' abgelegt.';
+            zieht = null;
+            koerper.querySelectorAll('.blatt-ordnen-zeile.zieht').forEach(z => z.classList.remove('zieht'));
+            window.removeEventListener('pointermove', beiZug);
+            window.removeEventListener('pointerup', zugEnde);
+            window.removeEventListener('pointercancel', zugEnde);
+        };
+        const malen = () => {
+            koerper.textContent = '';
+            const bloecke = [
+                ['werkzeuge', 'Werkzeuge', 'Die Reihe oben in der Leiste.'],
+                ['gruppen', 'Zubehör', 'Was unter dem gewählten Werkzeug steht — je Gruppe, nicht je Knopf.']
+            ];
+            for (const [art, titel, hinweis] of bloecke) {
+                const block = document.createElement('section');
+                block.className = 'blatt-ordnen-block';
+                const h = document.createElement('h3');
+                h.textContent = titel;
+                const p = document.createElement('p');
+                p.textContent = hinweis;
+                block.append(h, p);
+                const liste = document.createElement('ul');
+                liste.className = 'blatt-ordnen-liste';
+                jetzt[art].forEach((id, i, alle) => {
+                    const zeile = document.createElement('li');
+                    zeile.className = 'blatt-ordnen-zeile';
+                    zeile.dataset.art = art;
+                    zeile.dataset.id = id;
+                    const nr = document.createElement('i');
+                    nr.className = 'blatt-ordnen-nr';
+                    nr.textContent = String(i + 1);
+                    const wort = document.createElement('b');
+                    wort.textContent = namen(art, id);
+                    const hoch = document.createElement('button');
+                    hoch.type = 'button';
+                    hoch.className = 'blatt-ordnen-pfeil';
+                    hoch.dataset.ruecken = 'hoch';
+                    hoch.textContent = '↑';
+                    hoch.disabled = i === 0;
+                    hoch.setAttribute('aria-label', namen(art, id) + ' nach vorn');
+                    const runter = document.createElement('button');
+                    runter.type = 'button';
+                    runter.className = 'blatt-ordnen-pfeil';
+                    runter.dataset.ruecken = 'runter';
+                    runter.textContent = '↓';
+                    runter.disabled = i === alle.length - 1;
+                    runter.setAttribute('aria-label', namen(art, id) + ' nach hinten');
+                    zeile.append(nr, wort, hoch, runter);
+                    liste.appendChild(zeile);
+                });
+                block.appendChild(liste);
+                koerper.appendChild(block);
+            }
+        };
+        malen();
+        koerper.addEventListener('pointerdown', e => {
+            const ziel = e.target instanceof Element ? e.target : null;
+            if (!ziel || ziel.closest('.blatt-ordnen-pfeil'))
+                return;
+            const zeile = ziel.closest('.blatt-ordnen-zeile');
+            if (!zeile)
+                return;
+            zieht = { art: zeile.dataset.art, id: String(zeile.dataset.id || '') };
+            zeile.classList.add('zieht');
+            window.addEventListener('pointermove', beiZug);
+            window.addEventListener('pointerup', zugEnde);
+            window.addEventListener('pointercancel', zugEnde);
+        });
+        koerper.addEventListener('click', e => {
+            const ziel = e.target instanceof Element ? e.target : null;
+            const pfeil = ziel?.closest('.blatt-ordnen-pfeil');
+            if (!pfeil)
+                return;
+            const zeile = pfeil.closest('.blatt-ordnen-zeile');
+            if (!zeile)
+                return;
+            ruecken(zeile.dataset.art, String(zeile.dataset.id || ''), pfeil.dataset.ruecken === 'runter' ? 1 : -1);
+        });
+        zurueck.addEventListener('click', () => {
+            ordnungVergessen();
+            jetzt = ordnungLesen();
+            document.querySelectorAll('.blatt-werk').forEach(ordnungAnwenden);
+            malen();
+            sagen.textContent = 'Die ursprüngliche Reihenfolge steht wieder.';
+        });
+        const schliessen = () => {
+            zugEnde();
+            o.remove();
+            document.removeEventListener('keydown', beiTaste);
+            fertig();
+        };
+        const beiTaste = (e) => { if (e.key === 'Escape')
+            schliessen(); };
+        okay.addEventListener('click', schliessen);
+        o.addEventListener('click', e => {
+            const ziel = e.target instanceof Element ? e.target : null;
+            if (!ziel || ziel === o || ziel.closest('[data-a="zu"]'))
+                schliessen();
+        });
+        document.addEventListener('keydown', beiTaste);
+        document.body.appendChild(o);
+        okay.focus();
+    });
     const leiste = (controls, extra = '') => {
         /* WELCHE FORM DER FORMEN-KNOPF FÜHRT (E375). Das ist Zustand der
            LEISTE, nicht der Fläche: die Fläche kennt nur `line` oder
@@ -4230,6 +4738,22 @@ const Marken = (() => {
                         `<span class="zeichen" data-sym="${jetzt.sym}" aria-hidden="true"></span>` +
                         `<span class="wort">Platz</span></button>`;
                 })() +
+                /* EIN STRICH VOR JEDER GRUPPE (E568): am Rechner steht das Zubehör
+                   untereinander, und ohne Trenner ist es eine Mauer aus gleichen
+                   Knöpfen. Der Strich trägt `data-gruppe` wie die Knöpfe dahinter —
+                   er kommt und geht also mit ihnen. Am Telefon bleibt er aus. */
+                '<span class="blatt-trenn" data-gruppe="auswahl"></span>' +
+                /* ══ DIE LEISTE EINRICHTEN (E570) ═══════════════════════════════════
+                   Redur, 14. September: „Könntest du so machen, dass ich alles, was
+                   dort ist im Redion, direkt selber ordnen kann?"
+          
+                   DER KNOPF STEHT BEI „PLATZ", weil beide dasselbe betreffen: nicht
+                   das Zeichnen, sondern die Leiste selbst. Wer den einen sucht,
+                   findet den anderen. */
+                '<button data-act="einrichten" data-gruppe="verlauf" ' +
+                'title="Leiste einrichten — die Reihenfolge der Werkzeuge und ihres Zubehörs selbst bestimmen">' +
+                '<span class="zeichen" data-sym="ordnen" aria-hidden="true"></span>' +
+                '<span class="wort">Einrichten</span></button>' +
                 '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen" data-sym="trash" aria-hidden="true"></span><span class="wort">Löschen</span></button>' +
                 /* KOPIEREN UND EINSETZEN (E353) — auch ohne Tastatur, am Telefon. */
                 '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen" data-sym="copy" aria-hidden="true"></span><span class="wort">Kopieren</span></button>' +
@@ -4250,11 +4774,13 @@ const Marken = (() => {
                 '<button data-act="elemente" data-gruppe="elemente" title="Elemente-Bibliothek öffnen und wählen, was der nächste Tipp setzt"><span class="zeichen" data-sym="star" aria-hidden="true"></span><span class="wort">Elemente</span></button>' +
                 /* Das Lineal ist ein SCHALTER neben den Werkzeugen: solange es
                    anliegt, rasten Linie und Pfeil auf 15°-Schritte (E267). */
+                '<span class="blatt-trenn" data-gruppe="lineal"></span>' +
                 '<button data-act="lineal" data-gruppe="lineal" aria-pressed="false" ' +
                 'title="Lineal: Linie und Pfeil rasten auf 15°-Schritte">' +
                 '<span class="zeichen" data-sym="inkRuler" aria-hidden="true"></span><span class="wort">Lineal</span></button>' +
                 /* FORMEN (E355): ein Schalter wie das Lineal — an, und ein gehaltener
                    Strich wird zur Linie, zum Kreis, zum Rechteck. */
+                '<span class="blatt-trenn" data-gruppe="formen"></span>' +
                 `<button data-act="formen" data-gruppe="formen" aria-pressed="${controls.formenAn ? (controls.formenAn() ? 'true' : 'false') : 'true'}"` +
                 `${controls.formenAn && controls.formenAn() ? ' class="on"' : ''} ` +
                 'title="Formen erkennen: einen Kreis, ein Rechteck oder eine Linie ziehen und am Ende kurz halten">' +
@@ -4267,6 +4793,7 @@ const Marken = (() => {
                 '<span class="zeichen" data-sym="scribble" aria-hidden="true"></span><span class="wort">Kritzeln</span></button>' +
                 /* DIE SCHRIFT (E360): Familie, Groesse, Fett, Rahmen — beim Text und
                    bei der Auswahl; wirkt auf Gewaehltes und auf den naechsten Text. */
+                '<span class="blatt-trenn" data-gruppe="schrift"></span>' +
                 (() => {
                     const s = (controls.schriftVon ? controls.schriftVon() : SCHRIFT_VORGABE);
                     const fam = SCHRIFTEN.find(x => x.id === s.familie) || SCHRIFTEN[0];
@@ -4280,7 +4807,17 @@ const Marken = (() => {
                         `<button data-act="fett" data-gruppe="schrift" aria-pressed="${s.fett ? 'true' : 'false'}"${s.fett ? ' class="on"' : ''} title="Fett">` +
                         '<span class="zeichen" aria-hidden="true">F</span><span class="wort">Fett</span></button>' +
                         `<button data-act="rahmen" data-gruppe="schrift" aria-pressed="${s.rahmen ? 'true' : 'false'}"${s.rahmen ? ' class="on"' : ''} title="Rahmen um den Text">` +
-                        '<span class="zeichen" aria-hidden="true">▭</span><span class="wort">Rahmen</span></button>';
+                        '<span class="zeichen" aria-hidden="true">▭</span><span class="wort">Rahmen</span></button>' +
+                        /* DIE AUSRICHTUNG (E560): EIN Knopf, der weiterschaltet — wie die
+                           Schriftart daneben. Drei Knöpfe nebeneinander wären am Telefon
+                           die drei, die die Leiste aus dem Bild schieben (§37). */
+                        (() => {
+                            const a2 = AUSRICHTUNGEN.find(x => x.id === s.ausricht) || AUSRICHTUNGEN[0];
+                            return `<button data-act="ausricht" data-gruppe="schrift" data-ausricht="${a2.id}" ` +
+                                `title="Ausrichtung: ${a2.name} — antippen wechselt: ${AUSRICHTUNGEN.map(x => x.name).join(' → ')}">` +
+                                `<span class="zeichen" data-sym="${a2.sym}" aria-hidden="true"></span>` +
+                                `<span class="wort">${a2.name}</span></button>`;
+                        })();
                 })() +
                 /* ══ DIE STIFTREIHE (E512) ═══════════════════════════════════════════
                    Redur, 8. September, mit vier Bildern aus GoodNotes: „die
@@ -4298,6 +4835,7 @@ const Marken = (() => {
                    führt, geht weiter zum nächsten — dieselbe Bewegung wie vorher,
                    nur ohne eigenen Knopf. Das steht bei den Tasten (`TASTEN`) und
                    in `register/tasten.ts`. */
+                '<span class="blatt-trenn" data-gruppe="stil"></span>' +
                 (() => {
                     /* WELCHER STIFT SCHON BEIM BAUEN FÜHRT. Ohne das stünde die Reihe
                        beim Öffnen ohne Markierung da, bis jemand etwas anfasst — der
@@ -4376,6 +4914,214 @@ const Marken = (() => {
                 '<label class="blatt-staerke" data-gruppe="breite" title="Strichstärke frei wählen">' +
                 '<input type="range" min="0.5" max="12" step="0.1" value="' + BREITEN[1] + '" aria-label="Strichstärke">' +
                 '<output aria-hidden="true">' + String(BREITEN[1]).replace('.', ',') + '</output></label>';
+        /* ══ DIE EIGENE ORDNUNG LEGT SICH DARÜBER (E570) ═══════════════════════
+           Die Zeilen oben bauen die Leiste in der Reihenfolge des Katalogs —
+           das bleibt so, denn der Katalog ist die Wahrheit darüber, WAS es
+           gibt. Wie es steht, ist eine zweite Frage, und sie wird hier
+           beantwortet: die Knoten werden umgehängt, keiner neu gebaut.
+    
+           DAS MUSS VOR DEM ERSTEN BILD GESCHEHEN, nicht nach dem ersten Klick.
+           Sonst steht die Leiste beim Öffnen in der Vorgabe und springt, sobald
+           man etwas anfasst — derselbe Fund wie bei der Adernreihe (E509). */
+        ordnungAnwenden(tools);
+        /* WELCHES WERKZEUG GEFÜHRT WIRD, ÄNDERT SICH AN SIEBEN STELLEN in
+           dieser Datei (`tools.dataset.tool = …`). Am Telefon hängt daran, wo
+           die Gruppen einsortiert werden — `--platz`. Statt sieben Stellen zu
+           erweitern und bei der achten daneben zu liegen, wird HIER zugehört:
+           ein Beobachter auf genau diesem Attribut. Eine Stelle, die nicht
+           vergessen werden kann. */
+        try {
+            new MutationObserver(() => platzSetzen(tools))
+                .observe(tools, { attributes: true, attributeFilter: ['data-tool'] });
+        }
+        catch { /* ohne Beobachter bleibt die Vorgabe stehen */ }
+        /* ══ IM BAND SELBST SCHIEBEN (E571) ═══════════════════════════════════
+           Redur, 14. September: „kannst du so machen, dass ich direkt im
+           Website ordnen kann — die Position mit der Maus schieben."
+    
+           E570 hat dafür eine Liste gebaut, und die Liste bleibt: sie ist der
+           Weg für die Tastatur, und sie zeigt auch das Zubehör, das gerade
+           nicht zu sehen ist (jedes Werkzeug zeigt nur seine eigenen Gruppen).
+           Was hier dazukommt, ist das, was Redur gemeint hat: den Knopf
+           anfassen und dorthin ziehen, wo er stehen soll — an Ort und Stelle,
+           mit dem Ergebnis unter dem Finger.
+    
+           WAS SICH IM MODUS ÄNDERT
+             · Ein Klick zeichnet nicht mehr, er greift. Der Klickabfänger
+               weiter unten läuft im EINFANG (`capture`), also VOR dem
+               gewöhnlichen — sonst hätte ein Zug auf den Radierer beim
+               Loslassen das Werkzeug gewechselt.
+             · Ein Zug auf ein Werkzeug schiebt das Werkzeug; ein Zug auf
+               irgendeinen Zubehörknopf schiebt seine GANZE Gruppe. Sechs
+               Stifte einzeln zu schieben wäre keine Bedienung, sondern eine
+               Geduldsprobe — und die Reihenfolge innerhalb einer Gruppe ist
+               keine Frage, die jemand hat.
+             · Die Pfeiltasten tun dasselbe wie der Zug, für jeden, der nicht
+               ziehen kann (§38). Escape beendet.
+    
+           VERSCHOBEN WIRD AUF EINE STELLE, NICHT GETAUSCHT. Ein Tausch lässt
+           den Nachbarn springen und die Reihe unter dem Finger flackern; „an
+           diese Stelle setzen" ist die Bewegung, die man meint. */
+        let ordnenAn = false;
+        let zug = null;
+        /** Was unter dem Zeiger liegt — als Werkzeug oder als Gruppe. */
+        const teilUnter = (x, y) => {
+            const knoten = document.elementFromPoint(x, y);
+            const el = knoten instanceof Element
+                ? knoten.closest('[data-wz],[data-gruppe]') : null;
+            if (!el || !tools.contains(el))
+                return null;
+            if (el.dataset.wz)
+                return { art: 'werkzeuge', id: el.dataset.wz };
+            if (el.dataset.gruppe)
+                return { art: 'gruppen', id: el.dataset.gruppe };
+            return null;
+        };
+        /** `id` an die Stelle von `zielId` setzen und überall anwenden. */
+        const setzeAn = (art, id, zielId) => {
+            const o = ordnungLesen();
+            const liste = o[art];
+            const von = liste.indexOf(id), nach = liste.indexOf(zielId);
+            if (von < 0 || nach < 0 || von === nach)
+                return false;
+            liste.splice(von, 1);
+            liste.splice(nach, 0, id);
+            ordnungMerken(o);
+            document.querySelectorAll('.blatt-werk').forEach(ordnungAnwenden);
+            return true;
+        };
+        /** Um eine Stelle rücken — der Weg der Pfeiltasten. */
+        const rueckeUm = (el, schritt) => {
+            const art = el.dataset.wz ? 'werkzeuge' : 'gruppen';
+            const id = String(el.dataset.wz || el.dataset.gruppe || '');
+            const liste = ordnungLesen()[art];
+            const i = liste.indexOf(id);
+            const ziel = liste[i + schritt];
+            if (!ziel || !setzeAn(art, id, ziel))
+                return;
+            /* Der Fokus bleibt am geschobenen Knopf — sonst wäre die zweite
+               Pfeiltaste ins Leere gedrückt. */
+            tools.querySelector(art === 'werkzeuge' ? `:scope > [data-wz="${id}"]` : `:scope > [data-gruppe="${id}"]`)?.focus();
+        };
+        const bandZeigen = (an) => {
+            const reihe = tools.closest('.blatt-reihe');
+            if (!reihe)
+                return;
+            reihe.querySelector('.blatt-ordnen-band')?.remove();
+            if (!an)
+                return;
+            const band = document.createElement('div');
+            band.className = 'blatt-ordnen-band';
+            const wort = document.createElement('span');
+            wort.textContent = 'Ziehen zum Ordnen';
+            const liste = document.createElement('button');
+            liste.type = 'button';
+            liste.dataset.ob = 'liste';
+            liste.textContent = 'Als Liste';
+            liste.title = 'Alles ordnen — auch das Zubehör, das gerade nicht zu sehen ist';
+            const zurueck = document.createElement('button');
+            zurueck.type = 'button';
+            zurueck.dataset.ob = 'zurueck';
+            zurueck.textContent = 'Zurücksetzen';
+            const fertig = document.createElement('button');
+            fertig.type = 'button';
+            fertig.dataset.ob = 'fertig';
+            fertig.textContent = 'Fertig';
+            fertig.className = 'ist-fertig';
+            band.append(wort, liste, zurueck, fertig);
+            reihe.appendChild(band);
+            fertig.focus();
+        };
+        const ordnenSetzen = (an) => {
+            ordnenAn = an;
+            if (an)
+                tools.dataset.ordnen = 'an';
+            else
+                delete tools.dataset.ordnen;
+            bandZeigen(an);
+            if (!an && zug) {
+                zug = null;
+                tools.querySelectorAll('.zieht').forEach(z => z.classList.remove('zieht'));
+            }
+        };
+        /* Der Klickabfänger im Einfang: im Modus greift ein Klick, er zeichnet
+           nicht. Die Knöpfe des Bandes sind davon ausgenommen — sie liegen
+           ausserhalb von `tools`. */
+        tools.addEventListener('click', event => {
+            if (!ordnenAn)
+                return;
+            event.preventDefault();
+            event.stopPropagation();
+        }, true);
+        tools.addEventListener('pointerdown', event => {
+            if (!ordnenAn)
+                return;
+            const el = event.target?.closest('[data-wz],[data-gruppe]');
+            if (!el || !tools.contains(el))
+                return;
+            event.preventDefault();
+            zug = el.dataset.wz
+                ? { art: 'werkzeuge', id: String(el.dataset.wz) }
+                : { art: 'gruppen', id: String(el.dataset.gruppe) };
+            el.classList.add('zieht');
+            const beiZug = (e) => {
+                if (!zug)
+                    return;
+                const ziel = teilUnter(e.clientX, e.clientY);
+                if (!ziel || ziel.art !== zug.art || ziel.id === zug.id)
+                    return;
+                setzeAn(zug.art, zug.id, ziel.id);
+            };
+            const ende = () => {
+                zug = null;
+                tools.querySelectorAll('.zieht').forEach(z => z.classList.remove('zieht'));
+                window.removeEventListener('pointermove', beiZug);
+                window.removeEventListener('pointerup', ende);
+                window.removeEventListener('pointercancel', ende);
+            };
+            window.addEventListener('pointermove', beiZug);
+            window.addEventListener('pointerup', ende);
+            window.addEventListener('pointercancel', ende);
+        }, true);
+        tools.addEventListener('keydown', event => {
+            if (!ordnenAn)
+                return;
+            if (event.key === 'Escape') {
+                ordnenSetzen(false);
+                return;
+            }
+            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')
+                return;
+            const el = event.target?.closest('[data-wz],[data-gruppe]');
+            if (!el || !tools.contains(el))
+                return;
+            event.preventDefault();
+            rueckeUm(el, event.key === 'ArrowRight' ? 1 : -1);
+        }, true);
+        /* Die Knöpfe des Bandes. Sie liegen an der Reihe, nicht an `tools` —
+           deshalb ein eigener Zuhörer, und deshalb fängt der Abfänger sie nicht. */
+        const reiheFuerBand = row;
+        reiheFuerBand.addEventListener('click', event => {
+            const knopf = event.target?.closest('[data-ob]');
+            if (!knopf)
+                return;
+            event.preventDefault();
+            event.stopPropagation();
+            const was = String(knopf.dataset.ob || '');
+            if (was === 'fertig') {
+                ordnenSetzen(false);
+                return;
+            }
+            if (was === 'liste') {
+                void leisteEinrichten();
+                return;
+            }
+            if (was === 'zurueck') {
+                ordnungVergessen();
+                document.querySelectorAll('.blatt-werk').forEach(ordnungAnwenden);
+            }
+        });
+        controls.ordnenUmschalten = () => ordnenSetzen(!ordnenAn);
         /* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
            Bei 390 px ist die Leiste 310 px breit und ihr Inhalt 1059 — von 21
            Knöpfen stehen 15 draussen, alle rechts. Gerollt werden kann sie
@@ -4736,7 +5482,12 @@ const Marken = (() => {
          */
         const leiterReihe = (an) => {
             tools.querySelectorAll('.blatt-farbe-leiter').forEach(node => node.remove());
-            tools.querySelectorAll('.blatt-farbe, .blatt-farbe-neu')
+            /* DIE HAFTNOTIZFARBEN GEHEN DIE ADERN NICHTS AN (E574). Sie tragen
+               `.blatt-farbe` und wären sonst mit weggenommen worden — im
+               Notizkontext stünde dann gar keine Farbe mehr, nur weil irgendwann
+               vorher der Leiterstift gewählt war. Ihre Sichtbarkeit entscheidet
+               allein die Gruppenregel. */
+            tools.querySelectorAll('.blatt-farbe:not(.blatt-note-color), .blatt-farbe-neu')
                 .forEach(node => node.classList.toggle('blatt-farbe-weg', an));
             if (!an)
                 return;
@@ -5018,6 +5769,16 @@ const Marken = (() => {
                     target.classList.toggle('on', an);
                     return;
                 }
+                if (target.dataset.act === 'einrichten') {
+                    /* DER KNOPF SCHALTET DEN MODUS EIN, er öffnet nicht mehr die
+                       Liste (E571). Redur wollte an Ort und Stelle schieben; die
+                       Liste steht im Band darunter als „Als Liste" und ist damit
+                       einen Tipp entfernt — für die Tastatur und für das Zubehör,
+                       das gerade nicht zu sehen ist. */
+                    if (controls.ordnenUmschalten)
+                        controls.ordnenUmschalten();
+                    return;
+                }
                 if (target.dataset.act === 'lage') {
                     /* WEITER ZUM NÄCHSTEN PLATZ. Ein Rundlauf statt eines Menüs:
                        die Leiste zeigt ihr Ergebnis unmittelbar, indem sie
@@ -5193,6 +5954,17 @@ const Marken = (() => {
                         groesser.title = `Schrift grösser (jetzt ${controls.schriftVon().groesse} px)`;
                     return;
                 }
+                if (target.dataset.act === 'ausricht' && controls.setzeSchrift) {
+                    const jetzt = AUSRICHTUNGEN.findIndex(x => x.id === target.dataset.ausricht);
+                    const naechste = AUSRICHTUNGEN[(jetzt + 1) % AUSRICHTUNGEN.length];
+                    controls.setzeSchrift({ ausricht: naechste.id });
+                    target.dataset.ausricht = naechste.id;
+                    target.title = `Ausrichtung: ${naechste.name} — antippen wechselt: ` +
+                        AUSRICHTUNGEN.map(x => x.name).join(' → ');
+                    target.innerHTML = `<span class="zeichen" aria-hidden="true">${naechste.zeichen}</span>` +
+                        `<span class="wort">${naechste.name}</span>`;
+                    return;
+                }
                 if ((target.dataset.act === 'fett' || target.dataset.act === 'rahmen') && controls.setzeSchrift) {
                     const an = target.getAttribute('aria-pressed') !== 'true';
                     controls.setzeSchrift(target.dataset.act === 'fett' ? { fett: an } : { rahmen: an });
@@ -5265,6 +6037,173 @@ const Marken = (() => {
             fixed.innerHTML = extra;
             row.appendChild(fixed);
         }
+        /* E572: Das Dokumentstudio nutzt dieselben echten Knöpfe. Die normale
+           Blockleiste und ihre frei gespeicherte Ordnung bleiben unverändert. */
+        const noteColors = [
+            ['#ffb2bd', 'Rosa'], ['#ffd09e', 'Apricot'], ['#ffe780', 'Gelb'],
+            ['#b9efa0', 'Grün'], ['#a9e9e4', 'Türkis'], ['#c5dfff', 'Blau'],
+            ['#e7d4fb', 'Flieder'], ['#f6c8e8', 'Pink'], ['#e6e3dd', 'Grau']
+        ];
+        tools.addEventListener('ink-studio-ready', () => {
+            if (tools.dataset.referenceUi)
+                return;
+            tools.dataset.referenceUi = 'ready';
+            const cycle = tools.querySelector('[data-act="radiermodus"]');
+            const choose = document.createElement('button');
+            choose.dataset.gruppe = 'radierer';
+            choose.dataset.act = 'eraser-menu';
+            choose.className = 'blatt-eraser-menu';
+            choose.type = 'button';
+            choose.setAttribute('aria-haspopup', 'dialog');
+            const syncEraser = () => {
+                choose.textContent = (RADIERER.find(mode => mode.id === cycle.dataset.modus)?.name || 'Ganz') + ' ⌄';
+                choose.setAttribute('aria-label', 'Radiermodus wählen: ' + choose.textContent);
+            };
+            syncEraser();
+            cycle.after(choose);
+            new MutationObserver(syncEraser).observe(cycle, { attributes: true, attributeFilter: ['data-modus'] });
+            choose.addEventListener('click', () => InkMenu.open(choose, 'Radierer', (body, close) => {
+                for (const mode of RADIERER) {
+                    const option = document.createElement('button');
+                    option.type = 'button';
+                    option.textContent = mode.name;
+                    option.title = mode.titel;
+                    option.setAttribute('aria-pressed', String(mode.id === cycle.dataset.modus));
+                    option.addEventListener('click', () => {
+                        for (let i = 0; i < RADIERER.length && cycle.dataset.modus !== mode.id; i++)
+                            cycle.click();
+                        close();
+                    });
+                    body.append(option);
+                }
+            }));
+            const gemerkteGroesse = radierGroesseLesen();
+            for (const [index, radius] of RADIER_GROESSEN.entries()) {
+                const size = document.createElement('button');
+                size.type = 'button';
+                size.dataset.gruppe = 'radierer';
+                size.dataset.eraserSize = String(radius);
+                size.className = 'blatt-eraser-size';
+                size.setAttribute('aria-label', 'Radierer ' + ['klein', 'mittel', 'groß'][index]);
+                size.setAttribute('aria-pressed', String(radius === gemerkteGroesse));
+                /* 14, 22, 30 — NACHGEMESSEN, nicht geschätzt. Hier stand 16/28/40;
+                   bei 44 px Knopf blieb für den grössten kein Platz, und der Browser
+                   schrumpfte ihn als Flex-Element von 40 auf 28 — genau so breit wie
+                   der mittlere. Zwei gleich grosse Kreise sind keine zwei Grössen. */
+                size.style.setProperty('--eraser-preview', [14, 22, 30][index] + 'px');
+                size.innerHTML = '<i aria-hidden="true"></i>';
+                size.addEventListener('click', () => {
+                    controls.setEraserSize(radius);
+                    /* Gemerkt wird hier, nicht im Zeichner: der lebt je Blatt, die
+                       Wahl gilt für den Menschen. */
+                    if (typeof Store !== 'undefined')
+                        Store.setMeta('zeichnen:radierergroesse', radius);
+                    tools.querySelectorAll('[data-eraser-size]').forEach(node => node.setAttribute('aria-pressed', String(node === size)));
+                });
+                choose.before(size);
+            }
+            controls.setEraserSize(gemerkteGroesse);
+            for (const [color, name] of noteColors) {
+                const swatch = document.createElement('button');
+                swatch.type = 'button';
+                swatch.className = 'blatt-farbe blatt-note-color';
+                swatch.dataset.c = color;
+                /* ══ EINE EIGENE GRUPPE, NICHT DIE DER TINTE (E574) ═══════════════════
+                   Hier stand `'farbe'`. Gemessen war die Folge: die neun Pastelle
+                   standen in JEDEM Werkzeug — beim Stift, beim Marker, bei der
+                   Schrift —, also vierzehn Tupfer, von denen neun zu einem Werkzeug
+                   gehören, das gerade nicht gewählt ist. Und weil `leiterReihe()`
+                   die Adern ebenfalls vor das „+" hängt, `ink-studio-ready` die
+                   Pastelle aber DANACH erzeugt, kamen sie nach einem Neustart mit
+                   dem Leiterstift mitten in die Adernreihe: `blatt-farbe-weg` war
+                   schon verteilt, als es sie noch nicht gab.
+                   `notizfarbe` steht in der Gruppenliste (E356) nur beim Werkzeug
+                   `zettel`. Damit gilt die Regel an jeder Stelle gleich, ohne dass
+                   irgendwer nachträglich eine Klasse verteilen muss. */
+                swatch.dataset.gruppe = 'notizfarbe';
+                swatch.style.backgroundColor = color;
+                swatch.setAttribute('aria-label', 'Haftnotiz ' + name);
+                swatch.title = name;
+                tools.querySelector('.blatt-farbe-neu')?.before(swatch);
+            }
+            ordnungAnwenden(tools);
+        });
+        tools.addEventListener('ink-panel', event => {
+            const { kind, anchor } = event.detail;
+            if (kind === 'laser')
+                InkMenu.open(anchor, 'Laserpointer', (body, close) => {
+                    body.classList.add('blatt-laser-options');
+                    for (const mode of LASER) {
+                        const option = document.createElement('button');
+                        option.type = 'button';
+                        option.dataset.laserOption = mode.id;
+                        option.setAttribute('aria-pressed', String(mode.id === laserArt()));
+                        option.innerHTML = '<i aria-hidden="true"></i><span>' + mode.name + '</span>';
+                        option.onclick = () => { tools.querySelector(`[data-laser="${mode.id}"]`)?.click(); close(); };
+                        body.append(option);
+                    }
+                });
+            if (kind === 'elemente')
+                InkMenu.open(anchor, 'Elemente & Haftnotizen', (body, close) => {
+                    const tabs = document.createElement('div');
+                    tabs.className = 'blatt-gallery-tabs';
+                    const grid = document.createElement('div');
+                    grid.className = 'blatt-gallery-grid';
+                    for (const kind of ['Elemente', 'Haftnotizen']) {
+                        const tab = document.createElement('button');
+                        tab.type = 'button';
+                        tab.textContent = kind;
+                        const show = () => {
+                            tabs.querySelectorAll('button').forEach(node => node.setAttribute('aria-pressed', String(node === tab)));
+                            grid.replaceChildren();
+                            if (kind === 'Haftnotizen') {
+                                for (const [color, name] of noteColors) {
+                                    const card = document.createElement('button');
+                                    card.type = 'button';
+                                    card.className = 'blatt-note-preview';
+                                    card.style.setProperty('--note-color', color);
+                                    card.textContent = name;
+                                    card.onclick = () => {
+                                        tools.querySelector('[data-wz="zettel"]')?.click();
+                                        tools.querySelector(`.blatt-note-color[data-c="${color}"]`)?.click();
+                                        close();
+                                    };
+                                    grid.append(card);
+                                }
+                            }
+                            else {
+                                const all = elemente();
+                                if (!all.length) {
+                                    const empty = document.createElement('p');
+                                    empty.className = 'blatt-gallery-empty';
+                                    empty.textContent = 'Deine eigenen Sticker: mit dem Lasso etwas auswählen und „Als Element“ sichern. Oder eine Haftnotiz wählen und auf dem Papier aufziehen.';
+                                    grid.append(empty);
+                                }
+                                for (const item of all) {
+                                    const card = document.createElement('button');
+                                    card.type = 'button';
+                                    card.className = 'blatt-element-preview';
+                                    const name = document.createElement('span');
+                                    name.textContent = item.name;
+                                    card.append(elementBild(item), name);
+                                    card.onclick = () => { controls.selectElement(item.id); close(); };
+                                    grid.append(card);
+                                }
+                            }
+                        };
+                        tab.onclick = show;
+                        tabs.append(tab);
+                        if (kind === 'Elemente')
+                            show();
+                    }
+                    body.append(tabs, grid);
+                    const manage = document.createElement('button');
+                    manage.type = 'button';
+                    manage.textContent = 'Bibliothek verwalten …';
+                    manage.onclick = () => { close(); tools.querySelector('[data-act="elemente"]')?.click(); };
+                    body.append(manage);
+                });
+        });
         return row;
     };
     /* ---- TASTEN WIE GOODNOTES (E465) --------------------------------------
@@ -5294,6 +6233,38 @@ const Marken = (() => {
         const huelle = flaeche?.closest('.blatt-huelle, .document-stage, .blatt, .pdfs, .page') || document;
         return huelle.querySelector('.blatt-werk') || document.querySelector('.blatt-werk');
     };
+    /* ══ EINE TASTE ÖFFNET KEINE TÜR, DIE ZU IST (E578) ═══════════════════════
+       GEMESSEN am 15. September 2026 im Dokumentstudio, Fenster 1440 × 960:
+  
+         frisch geöffnet   tool=stift      pointer-events=auto
+         im Lesemodus      tool=schreiben  pointer-events=none    richtig
+         nach der Taste P  tool=stift      pointer-events=auto    FALSCH
+         ein Zug danach    marken 0 → 1                           GEZEICHNET
+  
+       Der Lesemodus klappt die ganze Werkzeugleiste ein
+       (`[data-document-tools="closed"]` → `.blatt-reihe{display:none}`). Dieser
+       Griff sucht sich `.blatt-werk` aber mit `querySelector` und klickte darin
+       einen Knopf, den NIEMAND sehen kann — und der holte die Zeichenschicht
+       zurück. Ein Dokument, das man ausdrücklich zum Lesen geöffnet hat, nahm
+       damit Striche an (§46 Punkt 1, §51).
+  
+       DIE REGEL IST ALLGEMEINER ALS DER LESEMODUS und deshalb die richtige:
+       eine Abkürzung darf nur drücken, was auch eine Hand drücken könnte. Ohne
+       weiteres Zutun gilt sie damit auch für die gesperrte Seite
+       (`page.gesperrt`) und für fehlende Rechte (`Konten.darf('bearbeiten',…)`)
+       — beide klappen dieselbe Leiste ein. Und `marken.ts` muss dafür nichts
+       über den Dokumentmodus wissen (§5).
+  
+       `getClientRects()` und nicht `offsetParent`: ein Knopf in einer fest
+       positionierten Leiste hat kein `offsetParent` und wäre fälschlich „weg". */
+    const greifbar = (knopf) => !!knopf && !knopf.disabled && knopf.getClientRects().length > 0;
+    /** Drückt einen Knopf, wenn er wirklich da ist. Sagt, ob es geklappt hat. */
+    const druecke = (knopf) => {
+        if (!greifbar(knopf))
+            return false;
+        knopf.click();
+        return true;
+    };
     const kuerzel = (event) => {
         if (event.ctrlKey || event.metaKey || event.altKey || event.repeat)
             return;
@@ -5307,13 +6278,26 @@ const Marken = (() => {
         const leiste = aktiveLeiste();
         if (!leiste)
             return;
-        event.preventDefault();
+        /* ══ DIE ZWEITE TÜR: DIE OBERE REIHE (E578) ═══════════════════════════
+           Im Dokumentstudio stehen die WERKZEUGE oben im Band und nicht im
+           unteren Dock — dort sind die `[data-wz]` mit Absicht `display:none`
+           (E573). Ein Griff, der nur den unteren Knopf kennt, tut im Studio also
+           gar nichts. Er nimmt deshalb den oberen, wenn der untere nicht
+           greifbar ist; beide Wege enden ohnehin an derselben Zeichenmaschine.
+           Und im Lesemodus ist auch der obere `disabled` — damit greift die
+           Regel „nur drücken, was eine Hand drücken könnte" von selbst. */
+        const oben = document.querySelector('.document-drawingbar');
+        const werkzeug = (id) => druecke(leiste.querySelector(`[data-wz="${id}"]`))
+            || druecke(oben?.querySelector(`[data-document-tool="${id}"]`));
+        /* `preventDefault()` erst, wenn wirklich etwas gedrückt wurde: wer im
+           Lesemodus „p" tippt, soll das „p" behalten. */
         if (ziel === 'bleistift') {
             /* Der Bleistift ist ein Stift mit Stil — seit E512 ein Knopf in der
                Reihe, kein Weiterschalten mehr. */
-            leiste.querySelector('[data-act="stilwahl"][data-stil="bleistift"]')?.click();
-            if (Zeichenziel.jetzt() !== 'stift')
-                leiste.querySelector('[data-wz="stift"]')?.click();
+            if (druecke(leiste.querySelector('[data-act="stilwahl"][data-stil="bleistift"]')))
+                event.preventDefault();
+            if (Zeichenziel.jetzt() !== 'stift' && werkzeug('stift'))
+                event.preventDefault();
             return;
         }
         /* ══ P WECHSELT WEITER, WENN DER STIFT SCHON FÜHRT (E512) ═════════════
@@ -5326,14 +6310,18 @@ const Marken = (() => {
             const jetzt = leiste.querySelector('[data-act="stilwahl"].on');
             const i = STIFTE.findIndex(st => st.id === jetzt?.dataset.stil);
             const naechster = STIFTE[(i + 1) % STIFTE.length];
-            leiste.querySelector(`[data-act="stilwahl"][data-stil="${naechster.id}"]`)?.click();
+            if (druecke(leiste.querySelector(`[data-act="stilwahl"][data-stil="${naechster.id}"]`)))
+                event.preventDefault();
             return;
         }
         if (ziel === 'lineal') {
-            leiste.querySelector('[data-act="lineal"]')?.click();
+            if (druecke(leiste.querySelector('[data-act="lineal"]'))
+                || druecke(oben?.querySelector('[data-document-action="ink-ruler"]')))
+                event.preventDefault();
             return;
         }
-        leiste.querySelector(`[data-wz="${ziel}"]`)?.click();
+        if (werkzeug(ziel))
+            event.preventDefault();
     };
     if (typeof document !== 'undefined')
         document.addEventListener('keydown', kuerzel);

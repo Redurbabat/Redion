@@ -758,7 +758,7 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 
   .einst-inhalt{ padding-left:16px; padding-right:16px }
   .einst-zurueck{
-    display:flex; align-items:center; min-height:44px; margin:0 0 6px -6px;
+    display:flex; align-items:center; min-height:var(--touch-min); margin:0 0 6px -6px;
     padding:0 8px; font-size:15px; color:var(--accent-text); border-radius:8px;
   }
   .einst-zurueck:active{ background:var(--bg-hover) }
@@ -773,9 +773,9 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   .ez-steuer input.ez-grenze{ flex:1 1 auto; width:auto; min-width:0; text-align:left }
   .ez-steuer > select, .ez-steuer > input{
     flex:1 1 auto; min-width:0; width:100%;
-    min-height:44px; font-size:16px;   /* 16 px, sonst zoomt iOS beim Tippen */
+    min-height:var(--touch-min); font-size:16px;   /* 16 px, sonst zoomt iOS beim Tippen */
   }
-  .ez-steuer .ez-knopf, .ez-steuer button:not(.schalter){ min-height:44px; padding:0 14px }
+  .ez-steuer .ez-knopf, .ez-steuer button:not(.schalter){ min-height:var(--touch-min); padding:0 14px }
   /* Der Schalter bleibt klein und rutscht nach rechts — er ist die
      Antwort auf eine Ja-Nein-Frage und braucht keine ganze Zeile. */
   .ez-zeile .ez-steuer .schalter{ flex:0 0 auto; margin-left:auto }

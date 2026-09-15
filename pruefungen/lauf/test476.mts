@@ -253,16 +253,35 @@ console.log('\n§7 Die Blätter fächern nacheinander heraus');
      kalt — das entscheidet der Browser nach der wirklichen Zeigerlage.
      Der erste Versuch mass deshalb zweimal denselben Wert und wäre grün
      geblieben, egal was im Stilblatt steht (§55.2). */
+  /* ══ ERST LIEGEN LASSEN, DANN ZIELEN (E582) ═══════════════════════════════
+     Diese Stelle war seit mindestens E571 rot, und der Grund war kein Fehler
+     im Produkt: das Rechteck wurde gelesen, WÄHREND die Blätter noch aus dem
+     Fach fliegen (Verzug bis 0,152 s plus Übergang mit Überschwingen), und
+     die Maus dann dorthin gesetzt, wo das Blatt EINMAL war. Gemessen an der
+     laufenden App: `elementFromPoint` traf das Blatt, `:hover` aber nicht —
+     und in einem zweiten Lauf lag der Punkt sogar 226 px daneben, weil die
+     Karte selbst an einer anderen Stelle aufging.
+     Jetzt wird gewartet, bis das Blatt zwei Messungen lang an derselben
+     Stelle liegt. Eine Prüfung, die auf eine Animation zielt, misst die
+     Animation, nicht die Regel. */
+  await s.waitForFunction(`(() => {
+    const b = document.querySelector('.ru-fach-blatt');
+    if (!b) return false;
+    const jetzt = Math.round(b.getBoundingClientRect().top * 10) / 10;
+    const vorher = (window as any).__ruhe;
+    (window as any).__ruhe = jetzt;
+    return vorher === jetzt;
+  })()`.replace(/ as any/g, ''), null, { timeout: 8000 }).catch(() => { /* dann misst die Zusage es */ });
   const kasten = JSON.parse(await s.evaluate(`(() => {
     const b = document.querySelector('.ru-fach-blatt');
     if (!b) return JSON.stringify({ da: false });
     const r = b.getBoundingClientRect();
     return JSON.stringify({ da: true, oben: Math.round(r.top * 10) / 10,
-      x: Math.round(r.left + r.width / 2), y: Math.round(r.bottom - 8),
+      x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2),
       translate: String(getComputedStyle(b).translate) });
   })()`) as string);
   if (kasten.da) await s.mouse.move(kasten.x, kasten.y);
-  await s.waitForTimeout(500);
+  await s.waitForTimeout(600);
   const nachher = JSON.parse(await s.evaluate(`(() => {
     const b = document.querySelector('.ru-fach-blatt');
     if (!b) return JSON.stringify({ da: false });

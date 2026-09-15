@@ -162,9 +162,58 @@ body[data-dokument="an"] .document-studio .document-topbar button:hover{backgrou
    andere Seite. `margin-right:auto` hier und `margin-left:auto` am „···"
    halten die Werkzeuge dazwischen in der Mitte — ohne einen zweiten Kasten
    im Baum, den die Tastatur mitzählen müsste. */
-.document-ink-history{display:flex;gap:0;border-right:1px solid var(--line);padding-right:12px;margin-right:auto}
+/* ══ DIE VERLAUFSKAPSEL HAT EINEN PLATZ (E573) ═════════════════════════════
+   Mit E572 wanderte sie aus dem Werkzeugband in `.document-body` — und
+   `.document-body` ist ein Raster mit `grid-template-columns:0 minmax(0,1fr) 0`.
+   Ohne eigene Spaltenangabe landete sie automatisch in der DRITTEN Spalte,
+   und die ist 0 px breit. Gemessen bei 1440 px Fensterbreite: die Kapsel
+   stand bei x = 1440, also ausserhalb des Bildes; bei 390 px unterhalb.
+   `test393` fiel auf 6 von 19, `test461` auf 29 von 34 — und Rückgängig war
+   im Studio an KEINER Stelle erreichbar (§46 Priorität 1).
+
+   Jetzt liegt sie in der Papierspalte und schwebt links oben darüber, wie
+   in Redurs Referenz. Die alten Bandregeln (Rechtsrand, `margin-right:auto`)
+   galten für eine Kapsel IN einer Zeile und sind hier weg. */
+/* ══ DIE KAPSEL NIMMT NIRGENDS PLATZ (E579) ════════════════════════════════
+   Hier stand `grid-column:2; grid-row:1` — eine Rasterzelle, die sich im
+   Studio mit dem Papier überlagert. Im FOLIENSATZ hat der Dokumentkörper
+   aber ein anderes Raster, und dort bekam die Kapsel eine eigene Zeile.
+   Gemessen bei 1440 × 852, Reiter „Ansicht":
+
+     .document-body   oben 206, hoch 646
+     Kapsel           oben 218, hoch  54
+     .document-center oben 272  ← genau 218 + 54: geschoben, nicht überlagert
+     Fläche           580 px statt über 600
+
+   `test508 §2` hat es gefunden — er misst die Folienfläche gegen 600 px,
+   und sie war seit E573 um die Höhe der Kapsel kleiner. Ein Raster, das in
+   einer Ansicht überlagert und in der anderen schiebt, ist kein Platz,
+   sondern ein Zufall.
+   `position:absolute` nimmt in JEDEM Raster keinen Platz. Das ist dieselbe
+   Wahl, die der Telefonfall seit E573 trifft — sie gilt jetzt überall, und
+   damit gibt es nur noch eine Regel statt zweier, die sich widersprechen
+   können. `.document-body` ist dafür `position:relative` (Zeile darunter). */
+.document-ink-history{
+  position:absolute; top:12px; left:12px;
+  z-index:6; width:max-content; margin:0;
+  display:flex; gap:2px; padding:4px;
+  border:1px solid var(--line); border-radius:var(--radius-xl);
+  background:var(--pdf-tools); box-shadow:var(--shadow-2)
+}
+.document-body{position:relative}
+/* DIE KAPSEL SCHWEBT über dem Papier und schiebt es nicht nach unten —
+   das besorgt seit E579 `position:absolute` oben, nicht mehr ein negativer
+   Unterrand. (Hier stand der Satz über den negativen Unterrand noch, als
+   es ihn längst nicht mehr gab; ein Kommentar, der lügt, ist schlimmer als
+   keiner.) */
+.document-ink-history button{min-width:var(--touch-min); min-height:var(--touch-min)}
 .document-drawingbar [data-document-action="ink-options"]{margin-left:auto}
-.document-ink-history button{font-size:1.75rem}
+/* ══ DIE KAPSEL TRÄGT GEZEICHNETE ZEICHEN (E586) ══════════════════════════
+   Hier stand `font-size:1.75rem`, und die Zeile hatte genau eine Aufgabe:
+   die Schriftzeichen „↶" und „↷" gross zu machen. Beide sind weg — die
+   Kapsel holt `undo` und `redo` aus dem Register, wie die dreizehn
+   Werkzeuge daneben. 25 px, dieselbe Zahl wie in der Werkzeugzeile. */
+.document-ink-history svg{width:25px; height:25px}
 /* ZURÜCK UND VOR SIND NICHT DURCHSICHTIG (test393 §3, E396): abgeschaltet
    werden sie blass, nicht durchscheinend — sonst blitzen beim Rollen die
    Werkzeuge darunter durch. */
@@ -178,20 +227,61 @@ body[data-dokument="an"] .document-studio .document-center{background:var(--pdf-
 .document-source-master .do-wort{color:var(--text-dim)}
 .document-copy-label{max-width:var(--doc-blatt,var(--pdf-paper-max));margin:0 auto 14px;font-size:11px;letter-spacing:.3px;color:var(--text-dim)}
 body[data-dokument="an"] .document-studio .blatt-papier{border-radius:0;box-shadow:var(--shadow-2);border:1px solid var(--line)}
-body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe{position:fixed;top:auto;bottom:max(14px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:80;width:max-content;max-width:calc(100vw - 32px);background:transparent;border:0;box-shadow:none}
+/* ══ DIE TASTATUR SCHIEBT DAS DOCK NICHT WEG (E588) ════════════════════════
+   `bottom` stand auf `max(14px, env(safe-area-inset-bottom))`. Das ist der
+   untere Rand des LAYOUT-Ausschnitts — und der schrumpft nicht, wenn die
+   Bildschirmtastatur aufgeht. Gemessen bei 390 × 844 mit 336 px Tastatur
+   lag das ganze Dock (768–830) hinter ihr: 322 px verdeckt.
+
+   `--visual-bottom` ist genau die Zahl, die dort fehlt. `kern/einstellung/
+   app.ts` schreibt sie aus `visualViewport` an die Wurzel, und `.overlay`
+   und die Bottom Sheets rechnen seit je damit. Das Studio war der eine Ort,
+   der es nicht tat. Ohne Tastatur ist sie 0 und alles bleibt, wie es war. */
+body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe{position:fixed;top:auto;bottom:calc(var(--visual-bottom, 0px) + max(14px,env(safe-area-inset-bottom)));left:50%;transform:translateX(-50%);z-index:80;width:max-content;max-width:calc(100vw - 32px);background:transparent;border:0;box-shadow:none}
 body[data-dokument="an"] .document-studio .blatt-werk{display:flex;flex:0 1 auto;width:max-content;flex-wrap:nowrap;align-items:center;gap:6px;max-width:100%;margin:0;padding:8px 12px;border-radius:1.375rem;background:var(--pdf-dock);color:var(--text);border:1px solid var(--line);box-shadow:var(--shadow-3);overflow-x:auto;backdrop-filter:none}
 .document-studio:not([data-ink-options="open"]) .blatt-fest{display:none}
 .document-studio :is(.blatt-reihe,.blatt-werk){container-type:normal}
 .document-studio[data-ink-options="open"] .blatt-fest{background:var(--pdf-dock);color:var(--text);box-shadow:none;border:1px solid var(--line);border-radius:var(--radius-xl);padding:8px}
 body[data-dokument="an"] .document-studio .blatt-werk button{color:inherit;min-height:var(--touch-min);flex-shrink:0}
 body[data-dokument="an"] .document-studio .blatt-werk :is(.blatt-farbe,.blatt-farbe-neu){width:var(--touch-min);min-width:var(--touch-min);height:var(--touch-min);min-height:var(--touch-min);border-radius:50%;padding:6px!important;background-clip:content-box;border:1px solid transparent}
-body[data-dokument="an"] .document-studio .blatt-werk .blatt-farbe.on{border-color:var(--text);outline:none;box-shadow:none}
+body[data-dokument="an"] .document-studio .blatt-werk .blatt-farbe.on{border-color:var(--accent);outline:none;box-shadow:none}
 body[data-dokument="an"] .document-studio .blatt-werk .blatt-strich{min-width:var(--touch-min)}
 body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display:none}
-/* DIESELBE REGEL WIE OBEN (E554) — der Zustand „gewählt" wird einmal
-   gesagt, nicht zweimal in zwei Blautönen. */
-body[data-dokument="an"] .document-studio .blatt-werk .on:not(.blatt-farbe){background:var(--bg-hover);border-color:var(--accent);color:var(--text);box-shadow:inset 0 0 0 2px var(--accent)}
-.document-studio:not([data-ink-options="open"]) .blatt-werk>:is([data-wz],.blatt-trenn,[data-gruppe="verlauf"],[data-gruppe="auswahl"],[data-gruppe="lineal"],[data-gruppe="formen"],[data-gruppe="schrift"],[data-gruppe="form"]){display:none!important}
+/* DIESE REGEL IST NACH `bausteine.css` GEWANDERT (E568). Sie stand hier
+   seit E554 — „der Zustand «gewählt» wird einmal gesagt, nicht zweimal in
+   zwei Blautönen" — und galt damit NUR im Studio; auf einer gewöhnlichen
+   Seite blieb die laute Fassung stehen, und dort standen beim Stift sechs
+   volle Akzentflächen gleichzeitig. Jetzt gilt die Schale mit Ring
+   überall, und das Werkzeug behält als einziges die volle Fläche.
+   Die zwei Zeilen darüber (Tupfer, Ring) sind der Grund, warum hier noch
+   etwas steht: das Studio braucht seine 44 px auch am Rechner. */
+/* ══ DAS DOCK IST WIEDER KONTEXTBEZOGEN (E573) ═════════════════════════════
+   Hier stand eine Liste von acht Dingen, die im geschlossenen Zustand
+   ALLE weg waren. Gemessen an der laufenden App war das kein Kontextfilter,
+   sondern ein Schalter zwischen „fast nichts" und „alles auf einmal":
+
+     bei data-tool="line"     0 von 7 Formknöpfen sichtbar
+     bei data-tool="text"     0 von 7 Schriftknöpfen sichtbar
+     bei data-tool="select"   0 von 10 Auswahlknöpfen sichtbar
+     geschlossen              62 von 86 Kindern der Leiste unbedingt weg
+
+   Wer im Studio eine Form oder eine Schriftgrösse wollte, musste erst „···"
+   öffnen — und bekam dann 84 Bedienelemente gleichzeitig, samt einer
+   zweiten vollständigen Werkzeugreihe. Genau das zeigen Redurs Bilder 4
+   und 6 NICHT: dort steht unter dem gewählten Werkzeug sein Zubehör, und
+   sonst nichts.
+
+   WELCHE GRUPPE ZU WELCHEM WERKZEUG GEHÖRT, STEHT SCHON IN `bausteine.css`
+   (E356) und wird seit E570 sogar vom Nutzer geordnet. Das Studio muss das
+   nicht zweitens entscheiden — es muss nur wegnehmen, was hier doppelt
+   wäre. Und das sind genau drei Dinge:
+
+     [data-wz]        die Werkzeuge — sie stehen oben im Band
+     .blatt-trenn     Trenner — im kompakten Dock nur Striche im Weg
+     [data-gruppe=verlauf]  Zurück, Vor, Platz, Einrichten — „Zurück" und
+                      „Vor" stehen in der Kapsel über dem Papier, die zwei
+                      übrigen unter „···". */
+.document-studio:not([data-ink-options="open"]) .blatt-werk>:is([data-wz],.blatt-trenn,[data-gruppe="verlauf"]){display:none!important}
 .document-studio:not([data-ink-options="open"]) .blatt-werk[data-tool="schreiben"]{display:none}
 .document-studio[data-ink-options="open"] .blatt-werk{max-height:240px;flex-wrap:wrap!important;overflow:auto;width:min(850px,calc(100vw - 32px))}
 /* Die Klappe der freien Staerke (E465 Nachtrag) bleibt auch hier zu, bis die gewaehlte Stufe ein zweites Mal getippt wird — `.auf` zeigt sie dann in der Zeile. */
@@ -223,7 +313,31 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
      beim Rollen nach LINKS hinaus, und dafür braucht es `left:0`. Gemessen
      bei 390 px: ganz nach rechts gerollt standen beide ausserhalb der
      Leiste, und `test393 §2` sah es. */
-  .document-ink-history{position:sticky;left:0;z-index:1;padding-right:12px;margin-right:auto;background:var(--pdf-tools)}
+    /* AM TELEFON IST `.document-body` KEIN RASTER, sondern `display:block`
+     (bausteine.css) — `grid-column` und `grid-row` sind dort wirkungslos,
+     und die Kapsel stand als letzter Block UNTER dem Papier: gemessen
+     top = 812 in einem 800 px hohen Fenster, also ausserhalb des Bildes.
+     Absolut über der linken oberen Ecke des Körpers steht sie dort, wo sie
+     hingehört, ohne ein Raster zu brauchen. */
+  /* ══ AM TELEFON UNTEN LINKS, NICHT OBEN LINKS (E577) ═══════════════════
+     Hier stand `top:8px; left:8px`. GEMESSEN bei 390 × 844: die Kapsel
+     deckte 87 × 39 px der Schreibfläche ab — genau die Ecke, in der die
+     erste Zeile anfängt. Am Rechner ist dieselbe Stelle richtig, weil das
+     Papier dort erst bei 226 px beginnt und die Kapsel im Rand steht (0 × 0
+     überdeckt, Redurs Bild 1).
+     Am Telefon gibt es diesen Rand nicht: das Papier ist 342 von 390 px
+     breit. Dass die Kapsel dort ÜBER Papier liegt, ist nicht zu vermeiden —
+     die STELLE ist es. Unten links beginnt niemand zu schreiben, und der
+     Daumen kommt ohne Umgreifen hin.
+     `bottom` ist grosszügig gerechnet: darunter schwebt das Werkzeug-Dock,
+     und zwei Schwebende übereinander wären wieder eine Verdeckung. */
+  /* MIT DERSELBEN RECHNUNG WIE DAS DOCK DARUNTER (E588): sonst stünde die
+     Kapsel bei offener Tastatur zwar 84 px über dem Papierrand, aber immer
+     noch 252 px hinter der Tastatur. */
+  .document-ink-history{
+    position:absolute; top:auto; bottom:calc(var(--visual-bottom, 0px) + 84px);
+    left:8px; margin:0; padding:3px
+  }
   .document-studio .document-commandbar{left:8px;right:8px}
   body[data-dokument="an"] .document-studio .document-center{padding:10px 8px 100px}
   .document-source-master .do-name{font-size:11px}.document-source-master .do-wort{font-size:10px}
@@ -482,3 +596,117 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
 /* Ohne Band-Inhalt braucht die Fläche keinen Platz — sonst bliebe unter der
    Zeichenleiste ein leerer Streifen von 76 px stehen. */
 .folienband .folienband-flaeche[hidden]{display:none}
+
+/* ══ DIE DOCK-BEWEGUNG (E577, Redurs Wunsch aus E572) ══════════════════════
+   „Macbook Dock Animationen … beim Wechseln." Am Mac wächst das Zeichen
+   unter dem Zeiger, die Nachbarn heben schwächer mit, und die Leiste selbst
+   steht still.
+
+   WAS SICH BEWEGT, IST DAS ZEICHEN — NICHT DER KNOPF. Das ist die ganze
+   Entscheidung, und sie löst drei Punkte des Plans auf einmal:
+
+     · „Trefferflächen bleiben fest" (7 C 3): der Knopf misst weiterhin
+       44 × 44 px, im Layout UND für den Zeiger. Nur das SVG darin wächst.
+     · „Animationen dürfen am Scrollcontainer nicht abgeschnitten werden"
+       (7 C 5): beide Leisten rollen (`overflow-x:auto`), und was rollt,
+       schneidet auch oben und unten ab. Ein Knopf, der von 44 auf 51 px
+       wächst, steht in einer 48-px-Zeile über — das Zeichen wächst von
+       25 auf 32 px und bleibt mit elf Pixeln Luft darin.
+     · „Keine verschluckten Klicks beim Skalieren" (7 C 4): ein Zeichen
+       nimmt keine Zeiger an; der Knopf darunter tut es, unverändert gross.
+
+   `(hover:hover) and (pointer:fine)` — am Telefon gibt es kein Überfahren,
+   und ein Zeichen, das auf Berührung „hängen" bleibt, wäre dort ein Fehler
+   und kein Effekt (7 C 6). */
+@media (hover:hover) and (pointer:fine){
+  .document-drawingbar button svg,
+  .document-studio .blatt-werk > button svg{
+    transition:transform var(--motion-fast) var(--ease)
+  }
+  .document-drawingbar button:hover:not(:disabled) svg,
+  .document-studio .blatt-werk > button:hover:not(:disabled) svg{ transform:scale(1.3) }
+  /* Die zwei Nachbarn heben schwächer mit — das ist der Teil, an dem man ein
+     Dock erkennt. `:has(+ button:hover)` liest nach LINKS, der Nachbarwähler
+     nach rechts; zusammen sind es beide Seiten. */
+  .document-drawingbar button:hover + button svg,
+  .document-drawingbar button:has(+ button:hover) svg,
+  .document-studio .blatt-werk > button:hover + button svg,
+  .document-studio .blatt-werk > button:has(+ button:hover) svg{ transform:scale(1.13) }
+}
+/* Der federnde Wechsel auf die neue Auswahl: EINMAL, nicht in Schleife
+   (7 C 4). Er läuft, wenn `aria-pressed` auf `true` springt — und seit E575
+   springt es nur noch dann, weil `inkSync()` die Knöpfe nicht mehr bei jedem
+   Ruf neu einhängt. Vorher hätte dieselbe Regel bei jedem Sync neu gefedert. */
+@keyframes dock-feder{
+  0%{ transform:scale(.86) } 55%{ transform:scale(1.16) } 100%{ transform:scale(1) }
+}
+.document-drawingbar button[aria-pressed="true"] svg,
+.document-studio .blatt-werk > button[aria-pressed="true"] svg{
+  animation:dock-feder var(--motion-normal) var(--ease) 1
+}
+/* WER BEWEGUNG NICHT WILL, BEKOMMT AUCH KEINE VERGRÖSSERUNG (7 C 6).
+   `grund.css` setzt die Dauern auf .001ms — das macht die Bewegung sofort,
+   nicht abwesend. Die Vergrösserung selbst muss hier ausdrücklich weg. */
+@media (prefers-reduced-motion:reduce){
+  .document-drawingbar button:hover:not(:disabled) svg,
+  .document-drawingbar button:hover + button svg,
+  .document-drawingbar button:has(+ button:hover) svg,
+  .document-studio .blatt-werk > button:hover:not(:disabled) svg,
+  .document-studio .blatt-werk > button:hover + button svg,
+  .document-studio .blatt-werk > button:has(+ button:hover) svg{ transform:none }
+  .document-drawingbar button[aria-pressed="true"] svg,
+  .document-studio .blatt-werk > button[aria-pressed="true"] svg{ animation:none }
+}
+/* Im Druck bewegt sich ohnehin nichts — die Leisten sind dort schon aus
+   (Zeile mit `@media print` weiter oben). */
+
+/* ══ DER ROLLSCHATTEN: WAS AUSSERHALB STEHT, SAGT SICH SELBST (E580) ═══════
+   GEMESSEN am 15. September 2026, `scrollWidth` gegen `clientWidth`:
+
+     390 px   oben 780/390 → 390 px versteckt · Dock 918/356 → 562 versteckt
+     820 px   oben 834/820 →  14 px versteckt · Dock 939/786 → 153 versteckt
+    1440 px   nichts versteckt
+
+   Am Telefon stand also MEHR ausserhalb des Bildes als darin: acht von
+   sechzehn Werkzeugen oben, im Dock zwei Drittel. Dass die Leisten rollen,
+   ist Absicht (E356/E359 — eine rollende Zeile statt drei, die das Papier
+   auffressen). Dass nichts es sagte, war keine; Plan 7 B 8 nennt es
+   „sichtbarer Hinweis auf weitere Werkzeuge".
+
+   VIER HINTERGRUNDSCHICHTEN UND KEINE ZEILE JAVASCRIPT. Zwei `scroll`-
+   Schichten sind die Schatten links und rechts; zwei `local`-Schichten sind
+   Deckel in der Farbe der Leiste, die mit dem Inhalt mitrollen und den
+   Schatten an seinem Ende zudecken. Ergebnis: der Schatten zeigt sich genau
+   dort, wo es etwas zu rollen gibt, und verschwindet an beiden Enden — von
+   selbst, ohne Horcher, der beim Neuaufbau hängenbleiben kann (E575 lässt
+   grüssen).
+
+   DIE VOLLE FARBE STEHT ALS LETZTE SCHICHT dabei: `background` ist eine
+   Kurzform und würde sie sonst wegnehmen. Deshalb je Leiste ihre eigene
+   Regel statt einer gemeinsamen — die Farben sind verschieden.
+
+   UND DER SCHATTEN IST NICHT SCHWARZ. Der erste Wurf nahm `var(--roll-schatten)`
+   und war im Dunkelmodus nachgemessen **8 von 255** Helligkeitsunterschied
+   zwischen Rand und Mitte — also nichts. Im Hellmodus waren es 66. Ein
+   schwarzer Schatten auf einer dunklen Leiste ist keiner.
+   `--text` ist im Dunkelmodus hell und im Hellmodus dunkel; mit `color-mix`
+   wird daraus in beiden Themen ein Rand, der sich abhebt. Im Dunkeln ist es
+   streng genommen kein Schatten mehr, sondern ein Schimmer — die Aufgabe ist
+   dieselbe: „hier geht es weiter". */
+:root{ --roll-schatten: color-mix(in srgb, var(--text) 34%, transparent); }
+.document-studio .document-drawingbar{
+  background:
+    linear-gradient(to right, var(--pdf-tools) 60%, transparent) left / 28px 100% no-repeat local,
+    linear-gradient(to left,  var(--pdf-tools) 60%, transparent) right / 28px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, var(--roll-schatten), transparent) left / 16px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, var(--roll-schatten), transparent) right / 16px 100% no-repeat scroll,
+    var(--pdf-tools)
+}
+body[data-dokument="an"] .document-studio .blatt-werk{
+  background:
+    linear-gradient(to right, var(--pdf-dock) 60%, transparent) left / 28px 100% no-repeat local,
+    linear-gradient(to left,  var(--pdf-dock) 60%, transparent) right / 28px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, var(--roll-schatten), transparent) left / 16px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, var(--roll-schatten), transparent) right / 16px 100% no-repeat scroll,
+    var(--pdf-dock)
+}
