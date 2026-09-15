@@ -44,7 +44,7 @@ body[data-produktwelt="workspace"]:not(:has(#sidebar .side-item[aria-current="pa
 .produkt-bereiche-hinweis{margin:0;padding:12px 16px;color:var(--text-dim);font-size:13px;line-height:1.5}
 .produkt-bereiche-liste{display:grid;gap:5px;padding:0 10px 10px}
 .produkt-bereiche-liste>button{
-  width:100%;min-height:44px;display:grid;grid-template-columns:28px minmax(0,1fr) auto;
+  width:100%;min-height:var(--touch-min);display:grid;grid-template-columns:28px minmax(0,1fr) auto;
   align-items:center;gap:8px;padding:8px 10px;border:1px solid transparent;border-radius:9px;
   background:transparent;color:var(--text);text-align:left;cursor:pointer
 }
@@ -91,7 +91,7 @@ body[data-produktwelt="workspace"]:not(:has(#sidebar .side-item[aria-current="pa
   .produkt-welt{padding:10px 12px calc(112px + env(safe-area-inset-bottom))}
   .produkt-bereiche-dialog{width:100vw;max-height:82dvh;margin-top:auto;border-radius:18px 18px 0 0}
   .produkt-bereiche-fuss{padding-bottom:calc(14px + env(safe-area-inset-bottom))}
-  .produkt-bereiche-fuss button{min-height:44px;flex:1}
+  .produkt-bereiche-fuss button{min-height:var(--touch-min);flex:1}
 }
 
 @media(min-width:761px) and (max-width:1000px){

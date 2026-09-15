@@ -71,7 +71,7 @@
 .ai-foot{padding:10px 12px; border-top:1px solid var(--line)}
 .ai-foot textarea{
   width:100%; background:var(--bg-input); border:1px solid var(--line); border-radius:8px;
-  padding:10px 12px; resize:none; outline:none; font-size:14px; min-height:44px; max-height:160px;
+  padding:10px 12px; resize:none; outline:none; font-size:14px; min-height:var(--touch-min); max-height:160px;
 }
 .ai-foot textarea:focus{border-color:var(--accent-text)}
 .ai-quick{display:flex; gap:5px; flex-wrap:wrap; margin-bottom:8px}

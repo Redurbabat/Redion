@@ -756,9 +756,9 @@
     overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
   }
   .bst-nav::-webkit-scrollbar{ display: none }
-  .bst-zurueck{ margin: 0 var(--space-2) 0 0; flex: 0 0 auto; min-height: 44px }
+  .bst-zurueck{ margin: 0 var(--space-2) 0 0; flex: 0 0 auto; min-height:var(--touch-min) }
   .bst-nav-knopf{
-    width: auto; flex: 0 0 auto; min-height: 44px;
+    width: auto; flex: 0 0 auto; min-height:var(--touch-min);
     padding: 0 var(--space-3); white-space: nowrap;
     border-left: none; border-bottom: 2px solid transparent;
   }

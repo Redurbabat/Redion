@@ -8113,3 +8113,50 @@ Telefon müssen es 24 bis 28 px sein, obwohl im Attribut weiter „18" steht.
 **Was daraus folgt, ohne neue Regel:** §39 warnt vor Tokens, die es nicht
 gibt. Dies ist derselbe Fehler eine Ebene tiefer — eine Eigenschaft am
 falschen Element. Beides findet nur eine Messung an der laufenden Seite.
+
+
+---
+
+## L166 · Ein Zugriff nach Platz — GESCHLOSSEN am 15. September 2026
+
+**Was fehlte:** `wsBtn.querySelectorAll('span')[1]` stand an zwei Stellen
+(`schale.ts`, `einstellungen/ansicht/seite.ts`) und meinte den Namen des
+Arbeitsbereichs. Seit die Bewegungsschicht (`motion.ts`) eine
+`rmo-sliders`-Hülle als erstes Kind einsetzt, zeigt `[1]` auf das ZEICHEN —
+und die Zeile darunter schrieb den Namen hinein. In der Seitenleiste stand
+zweimal „Redion" nebeneinander, und ein eingestelltes Zeichen kam dort nie an.
+
+**Warum es niemand meldete:** `test37` war rot, und zwar lange. Ein Lauf,
+der lange rot ist, nimmt dem nächsten echten Fehler die Aufmerksamkeit —
+derselbe Satz wie in L163, nur diesmal mit einem Fehler dahinter.
+
+**Geschlossen mit** E590: `class="ws-name"` am Namensspan, und beide Stellen
+fragen jetzt nach Bedeutung. `test37` hält es mit einer Zusicherung, die
+sagt, was wirklich gemeint ist: „Das Zeichen trägt nicht den Namen des
+Arbeitsbereichs".
+
+**Was daraus folgt, ohne neue Regel:** eine Schicht, die Hüllen einsetzt,
+darf das — sie weiss von keiner Zeile, die zählt. Wer zählt, muss damit
+rechnen. Ein Platz hält nur so lange, wie niemand etwas davorstellt.
+
+---
+
+## L167 · Hundertvierzehn Trefferflächen standen als rohe Zahl — GESCHLOSSEN am 15. September 2026
+
+**Was fehlte:** `min-height:44px` und `min-width:44px` standen 114-mal roh
+in elf Stildateien, obwohl `--touch-min` seit je genau dafür da ist und an
+genau einer Stelle als 44px definiert wird. Wer die Trefferfläche je ändern
+wollte, hätte 114 Stellen suchen müssen — und `test362` zählte die rohen
+Zahlen seit E509/E510 gegen ein Verzeichnis, das niemand nachzog (Δ +15 bei
+44px, +20 bei 16px).
+
+**Geschlossen mit** E590: 114 Stellen tragen die Marke; die rohe 44 sank von
+168 auf 54 und liegt damit UNTER der alten Decke. Das Verzeichnis steht auf
+den gemessenen Zahlen.
+
+**Was offen bleibt, und mit Grund:** 28px und 22px haben zwar Marken
+(`--mobile-gutter`, `--mobile-gutter-small`), aber die sind semantisch —
+`marken.css` sagt es selbst: „Gleiche Zahl bedeutet nur dann dieselbe Marke,
+wenn sie dieselbe Aufgabe hat." Ein Polster von 22 px, das kein Seitenrand
+ist, dürfte die Marke nicht tragen. Diese Zahlen einzeln anzusehen ist ein
+eigener Bogen, und er braucht Augen, nicht ein Skript.

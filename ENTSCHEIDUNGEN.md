@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-569 Entscheidungen, E1 bis E589 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+570 Entscheidungen, E1 bis E590 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -633,6 +633,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E587** — Pinsel und Bleistift lagen in derselben Richtung; ein zweites Mass misst jetzt die Hauptachse statt der Bildpunkte
 * **E588** — Bei offener Bildschirmtastatur lagen Dock und Verlaufskapsel ganz dahinter; gemessen ohne echtes Gerät
 * **E589** — `index.html` zeichnete neunzehn Zeichen selbst, vier davon anders als die Seitenleiste für denselben Weg
+* **E590** — Drei rote Läufe angesehen: zweimal die Oberfläche von gestern, einmal ein Zugriff nach Platz statt nach Bedeutung
 
 ---
 
@@ -47772,3 +47773,114 @@ schreibt darüber nur ein `console.warn`.
 Zeichenbefehle, 37 statt 40 Stellen). Angesehen: `bilder/nav-vergleich.png`
 (alt gegen neu bei 19 und 40 px), `bilder/nav-nachher.png`,
 `bilder/ki-nachher.png`.
+
+---
+
+## E590 — Drei rote Läufe, und einer davon war ein echter Fehler
+
+**15. September 2026.** Beim Regressionslauf zu E589 fielen drei rote Läufe
+auf. Mit einem `git worktree` auf dem Stand **vor** der Änderung
+gegengeprüft, waren alle drei schon vorher rot — und damit dieselbe Lage wie
+in L163: ein Rot, das lange niemand angesehen hat.
+
+### `test37` — und dahinter ein echter Fehler
+
+Gemessen zeigte die Seitenleiste zweimal „Redion" nebeneinander: einmal im
+Zeichen, einmal im Namen.
+
+```txt
+#btn-settings enthält:
+  <span class="rmo-sliders">        ← seit der Bewegungsschicht
+  <span class="ws-icon">Redion      ← hier sollte „N" stehen
+  <span>Redion
+```
+
+Die Ursache steht an zwei Stellen — `schale.ts` und
+`einstellungen/ansicht/seite.ts` — und ist beide Male dieselbe Zeile:
+
+```ts
+const wsName = wsBtn?.querySelectorAll('span')[1];
+```
+
+**Ein Zugriff nach Platz.** `[1]` war einmal der Name. Dann setzte
+`motion.ts` (`ensure(element, 'rmo-sliders', …)`) eine Hülle als erstes Kind
+ein — eine Schicht, die von dieser Zeile nichts weiss und nichts wissen muss.
+Seither ist `[1]` das **Zeichen**, und die Zeile darunter schrieb den Namen
+hinein.
+
+Der Nutzer sah: ein Arbeitsbereichszeichen, das den Namen trägt, und ein
+eingestelltes Zeichen, das in der Seitenleiste nie ankam.
+
+**Repariert** mit `class="ws-name"` am Namensspan und
+`btn.querySelector('.ws-name')` an beiden Stellen. Nach Bedeutung, nicht
+nach Platz — ein Platz hält nur so lange, wie niemand etwas davorstellt.
+
+**Prüflauf:** `test37` 54/54; die neue Zusicherung „Das Zeichen trägt nicht
+den Namen des Arbeitsbereichs" war rot.
+
+### `test34` — dreimal die Oberfläche von gestern
+
+Drei Zusicherungen zeigten auf einen Stand, den es nicht mehr gibt:
+
+| Zusicherung | erwartete | gemessen |
+|---|---|---|
+| Klick auf `#ai-faehig` | in der Eingabezeile | in der Schublade „Werkzeuge & Kontext", und die ist zu |
+| „Sechs Knöpfe unter dem Feld" | 6 | 5 |
+| „Platzhalter wie bei Notion" | „Mach alles mit KI" | „Frag etwas oder beschreibe deine Idee …" |
+
+Alle drei sind **kein** Produktfehler: `dienst.ts` hängt `ai-quellen` und
+`ai-faehig` ausdrücklich in die Schublade, also sind es unter dem Feld fünf,
+und der Platzhalter ist seit Längerem der bessere Satz — er fragt, statt zu
+versprechen.
+
+Gemessen bei 1280 × 900: bei geschlossener Schublade behält der Knopf einen
+Kasten (1 Rechteck, 104 × 33) und liegt auf y = 884, unter dem Rand;
+geöffnet und nachgerollt steht er bei 679–712.
+
+**Die Zusicherungen sagen jetzt mehr als vorher.** Statt „sechs Knöpfe"
+stehen die fünf Kennungen da — eine blosse Zahl wäre auch dann grün, wenn
+zwei ganz andere Knöpfe dastünden. Und eine neue Zeile hält fest, dass
+„Fähigkeiten" **in** der Schublade liegt: zöge ihn jemand heraus, wäre das
+eine Änderung, die man sehen soll.
+
+### `test362` — ein Verzeichnis, das seit E509/E510 niemand nachzog
+
+Das Verzeichnis der rohen Pixelzahlen (`pruefungen/marken-decke.json`) stand
+auf dem Stand von E509/E510. Gemessen:
+
+| | Verzeichnis | gemessen | Δ |
+|---|---|---|---|
+| 44px | 153 | 168 | **+15** |
+| 28px | 56 | 63 | +7 |
+| 22px | 77 | 83 | +6 |
+| 16px | 246 | 266 | **+20** |
+| 56px | 12 | 14 | +2 |
+| 46px | 14 | 15 | +1 |
+
+Die Zahlen im Zweig dieser Sitzung sind dieselben wie am Sitzungsanfang —
+die Drift kam von davor.
+
+**Was dagegen getan wurde, statt neu einzupegeln:** `min-height:44px` und
+`min-width:44px` heissen immer dasselbe — die Trefferfläche aus §37. Und
+`--touch-min` ist an genau **einer** Stelle definiert, als 44px. Der Tausch
+ist damit wertgleich und nicht geraten:
+
+```txt
+114 Stellen in 11 Stildateien  →  var(--touch-min)
+44px roh:  168  →  54          (Verzeichnis sagte 153)
+```
+
+Die 44 steht jetzt **unter** der alten Decke, nicht darüber. Die anderen
+fünf Zahlen sind eingetragen worden, wie sie sind — 28 und 22 haben zwar
+Marken (`--mobile-gutter`, `--mobile-gutter-small`), aber die sind
+**semantisch**: „Gleiche Zahl bedeutet nur dann dieselbe Marke, wenn sie
+dieselbe Aufgabe hat" (`marken.css`). Ein Polster von 22 px, das kein
+Seitenrand ist, dürfte die Marke nicht tragen.
+
+**Prüflauf:** `test362` 18/18.
+
+### Was alle drei gemeinsam haben
+
+Zwei waren die Oberfläche von gestern, einer war ein echter Fehler — und der
+echte war der unauffälligste von den dreien. Genau deshalb steht in §46 „rot
+zuerst": man weiss vorher nicht, welcher es ist.

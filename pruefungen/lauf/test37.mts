@@ -487,6 +487,23 @@ import { chromium } from 'playwright';
      zeichenVorher.length >= 1, zeichenVorher.join(','));
   ok('Und alle zeigen dasselbe',
      new Set(zeichenVorher).size === 1, zeichenVorher.join(','));
+  /* ══ DAS ZEICHEN IST NICHT DER NAME (E590) ═════════════════════════════
+     GEMESSEN am 15. September 2026 stand in der Seitenleiste zweimal
+     „Redion" nebeneinander: einmal im Zeichen, einmal im Namen. Schuld war
+     ein Zugriff nach PLATZ statt nach Bedeutung —
+     `btn.querySelectorAll('span')[1]` war einmal der Name und ist es nicht
+     mehr, seit die Bewegungsschicht (`motion.ts`) eine Hülle davorsetzt.
+     `[1]` zeigt seither auf `.ws-icon` selbst, und der Name überschreibt
+     das Zeichen.
+     Diese Zusicherung fragt deshalb nicht „steht überall dasselbe", sondern
+     „steht dort überhaupt ein Zeichen" — ein Wort mit sechs Buchstaben ist
+     keins. */
+  const nameJetzt = await p.evaluate(() =>
+    (document.querySelector('#btn-settings .ws-name')
+     || document.querySelectorAll('#btn-settings span')[2])?.textContent?.trim() || '');
+  ok('Das Zeichen trägt nicht den Namen des Arbeitsbereichs',
+     zeichenVorher.every(z => z !== nameJetzt && z.length <= 3),
+     zeichenVorher.join(',') + ' · Name=' + nameJetzt);
 
   /* Und beim Ändern gehen alle mit — über das echte Feld, nicht über
      `setMeta`: die Auffrischung hängt am Feld, nicht am Speicher. */

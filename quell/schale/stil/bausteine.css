@@ -111,7 +111,7 @@
 .ag-grenzstreifen.aus button.prim{background:var(--accent); color:var(--auf-accent); border-color:transparent}
 @media(max-width:760px){
   .ag-grenzstreifen{flex-wrap:wrap}
-  .ag-grenzstreifen button{min-height:44px; width:100%}
+  .ag-grenzstreifen button{min-height:var(--touch-min); width:100%}
 }
 .agent-karte b{font-size:13.5px; font-weight:500}
 .agent-karte span{font-size:11.5px; color:var(--text-faint); line-height:1.45}
@@ -486,12 +486,12 @@
   hsl(0 62% 46%), hsl(55 62% 46%), hsl(135 62% 40%))}
 @media(max-width:760px){
   .rg-neu{padding:12px 16px}
-  .rg-neu input, .rg-neu select, .rg-neu button{min-height:44px; font-size:16px}
+  .rg-neu input, .rg-neu select, .rg-neu button{min-height:var(--touch-min); font-size:16px}
   .rg-neu #rg-bereich{flex:1 1 100%}
   .rg-neu button{flex:1 1 100%}
   /* An- und Ausschalten und Löschen sind am Telefon Fingerziele, keine
      Zeichen am Zeilenende (CLAUDE.md §37). */
-  .rg-liste .fr-zeile button{min-height:44px; min-width:44px}
+  .rg-liste .fr-zeile button{min-height:var(--touch-min); min-width:var(--touch-min)}
   .rg-hinweis{padding:10px 16px 12px}
 }
 .fr-farben{display:flex; gap:5px; margin-top:5px}
@@ -770,7 +770,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-neu{
   grid-column:2; grid-row:1;
   display:flex; align-items:center; gap:7px;
-  min-height:44px; padding:0 19px 0 15px; border:0; border-radius:999px;
+  min-height:var(--touch-min); padding:0 19px 0 15px; border:0; border-radius:999px;
   background:var(--accent); color:var(--auf-accent);
   font-size:15px; font-weight:640; cursor:pointer; box-shadow:var(--shadow-2)
 }
@@ -778,7 +778,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-neu:hover{ background:var(--accent-hover,var(--accent)) }
 .bib-form-knopf{
   grid-column:3; grid-row:1;
-  display:grid; place-items:center; min-width:44px; min-height:44px;
+  display:grid; place-items:center; min-width:var(--touch-min); min-height:var(--touch-min);
   border:0; border-radius:13px; background:none; color:var(--text-dim);
   font-size:16px; cursor:pointer
 }
@@ -1999,11 +1999,11 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Die Knöpfe werden dabei gleich 44 px gross. Sie waren 22 × 23. */
   .b-code .code-werk{ top:8px; right:auto; left:12px; gap:6px }
   .b-code .code-werk button{
-    min-width:44px; min-height:44px; font-size:17px; border-radius:10px;
+    min-width:var(--touch-min); min-height:var(--touch-min); font-size:17px; border-radius:10px;
   }
   .b-code select{
     top:8px !important; right:12px !important;
-    min-height:44px; font-size:14px !important; padding:0 8px !important;
+    min-height:var(--touch-min); font-size:14px !important; padding:0 8px !important;
     border-radius:10px !important;
   }
   .b-code .ct{ padding-top:64px }
@@ -2138,7 +2138,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      nicht, er wird um neun Prozent kürzer. Dafür sind zwei Knöpfe, die man
      in JEDER Ansicht braucht, endlich 44 × 44 (§37). */
   #topbar .icon-btn,
-  #topbar .top-btn{ min-height:44px; min-width:44px; justify-content:center }
+  #topbar .top-btn{ min-height:var(--touch-min); min-width:var(--touch-min); justify-content:center }
 
   /* ======================================================================
    * DIE KRUMENZEILE UND DIE REITERZEILE WERDEN EINE (E235)
@@ -2235,7 +2235,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Messung, nicht das Hinsehen: sie sind klein und unauffällig, und genau
      deshalb trifft man sie nicht. Dort ist Platz. */
   .seitenleiste .icon-btn, aside .icon-btn, #side .icon-btn{
-    min-width:44px; min-height:44px;
+    min-width:var(--touch-min); min-height:var(--touch-min);
     flex-basis:auto;
     display:grid; place-items:center;
   }
@@ -2280,19 +2280,19 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   .side-section{ min-height:48px; }
   .side-section button,
   .row .act button{
-    min-width:44px; min-height:44px;
+    min-width:var(--touch-min); min-height:var(--touch-min);
     padding:0;
     display:grid; place-items:center;
   }
 
   /* Der Schreibknopf unten in der Seitenleiste sass bei 38 × 38 — knapp
      daneben, und knapp daneben trifft man nicht. */
-  #btn-new-bottom{ min-width:44px; min-height:44px; }
+  #btn-new-bottom{ min-width:var(--touch-min); min-height:var(--touch-min); }
 
   /* Das ✕ einer Einladung war 23 × 27. Ein Wegklicken-Knopf, den man nicht
      trifft, ist ärgerlicher als einer, den es nicht gibt: man tippt daneben
      und löst stattdessen aus, was danebensteht. */
-  #rg-einladung [data-a="nie"]{ min-width:44px; min-height:44px; }
+  #rg-einladung [data-a="nie"]{ min-width:var(--touch-min); min-height:var(--touch-min); }
 
   /* DIESELBE SACHE ÜBER DEM SEITENTITEL. `.pg-tools` steht auf `opacity:0`
      und erscheint, wenn die Maus über der Seite ist — Cover, Volle Breite,
@@ -2303,15 +2303,15 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Wer sie sucht, findet sie dort — das ist mehr wert als eine Zeile
      Platz. */
   .pg-tools{ opacity:1; }
-  .pg-tools button{ min-height:44px; padding:4px 10px; }
+  .pg-tools button{ min-height:var(--touch-min); padding:4px 10px; }
 
   /* Der Knopf für einen neuen Chat war 39 px hoch — fünf zu wenig. */
-  #btn-neuer-chat{ min-height:44px; }
+  #btn-neuer-chat{ min-height:var(--touch-min); }
 
   /* Die Reiter und Chips über einer Datenbank: Tabelle, Board, Filter,
      Sortieren, Eigenschaften. Sie waren 31 bis 33 px hoch. Nach ihnen
      greift man mitten in der Arbeit, oft mit einer Hand. */
-  .db-tab, .db-tools button, .db-tools .new{ min-height:44px; }
+  .db-tab, .db-tools button, .db-tools .new{ min-height:var(--touch-min); }
 
   /* Zwei, die der neue Prüflauf gefunden hat und nicht das Auge:
 
@@ -2322,8 +2322,8 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 
      `.sr` sind die Reiter oben in der Seitenleiste. 41 px breit — vier zu
      wenig, und vier zu wenig merkt man erst, wenn man dreimal danebentippt. */
-  .prim{ min-height:44px; }
-  .sr{ min-width:44px; }
+  .prim{ min-height:var(--touch-min); }
+  .sr{ min-width:var(--touch-min); }
 }
 
 /* Karten im Blatt — iOS-Art wie in Notions App */
@@ -2372,7 +2372,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
    stand als einziger Weg da und war der flachste Knopf der Ansicht.
    Ein leerer Zustand, den man nicht trifft, ist eine Sackgasse. */
 @media(max-width:760px){
-  .pe-link{ min-height:44px; padding:10px 18px; font-size:16px;
+  .pe-link{ min-height:var(--touch-min); padding:10px 18px; font-size:16px;
             border-radius:12px; background:var(--bg-hover) }
 }
 
@@ -2467,7 +2467,7 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
   /* 44, nicht 38: die Fingerregel (§37) galt für die Breite und wurde bei
      der Höhe vergessen — gemessen am 9. August, 44×38. */
   #tastenleiste button{
-    flex:0 0 auto; min-width:44px; height:44px; border-radius:9px;
+    flex:0 0 auto; min-width:var(--touch-min); height:44px; border-radius:9px;
     background:var(--bg-hover); border:1px solid var(--line);
     color:var(--text); font-size:15px;
   }
@@ -3039,9 +3039,9 @@ button[disabled]{opacity:.4; cursor:not-allowed}
   #reiterleiste{min-height:48px; padding:4px 6px 0; scrollbar-width:none;
                 -webkit-overflow-scrolling:touch; overscroll-behavior-inline:contain}
   #reiterleiste::-webkit-scrollbar{display:none}
-  .rt-tab{min-height:44px; font-size:14px; max-width:66vw; padding:5px 4px 5px 12px}
-  .rt-tab button{min-width:44px; min-height:40px; font-size:15px}
-  .rt-plus{min-width:44px; min-height:44px; font-size:18px; padding:0}
+  .rt-tab{min-height:var(--touch-min); font-size:14px; max-width:66vw; padding:5px 4px 5px 12px}
+  .rt-tab button{min-width:var(--touch-min); min-height:40px; font-size:15px}
+  .rt-plus{min-width:var(--touch-min); min-height:var(--touch-min); font-size:18px; padding:0}
   #main.geteilt{flex-direction:column}
   #teil{flex-basis:45% !important; border-left:0; border-top:1px solid var(--line)}
   .linkvorschau{display:none}
@@ -3254,8 +3254,8 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .pl-frist{min-width:82px}
 @media(max-width:640px){
   /* §37: Zahlenfelder und der Zurückstellen-Griff sind Griffe. */
-  .pl-budget input, .pl-dauer input{min-height:44px}
-  .pl-z .wr-spaeter{min-width:44px; min-height:44px}
+  .pl-budget input, .pl-dauer input{min-height:var(--touch-min)}
+  .pl-z .wr-spaeter{min-width:var(--touch-min); min-height:var(--touch-min)}
   /* Der Ort einer Aufgabe ist am Telefon das erste, was weichen darf. */
   .pl-z .wr-wo{display:none}
   /* AUF DEM BILD GEFUNDEN: in einer Zeile blieb vom Titel „Mathe…" übrig,
@@ -3295,8 +3295,8 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   #offline-streifen{left:10px; right:10px; transform:none;
                     font-size:13px; gap:6px; padding:2px 4px 2px 13px}
   #offline-streifen span{flex:1 1 auto; min-width:0}
-  #offline-streifen button{min-height:44px; padding:0 10px}
-  #offline-streifen button[data-a="zu"]{min-width:44px; padding:0}
+  #offline-streifen button{min-height:var(--touch-min); padding:0 10px}
+  #offline-streifen button[data-a="zu"]{min-width:var(--touch-min); padding:0}
 }
 
 /* Hineinschauen in Diagramme und Kreuztabellen */
@@ -3579,7 +3579,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   #rg-neu{left:8px; right:8px; bottom:74px; width:auto}
   /* Am Telefon darf er nicht die halbe Seite nehmen. */
   #rg-neu{max-height:min(46vh, 340px)}
-  .rgn-kopf button{min-width:44px; min-height:44px}
+  .rgn-kopf button{min-width:var(--touch-min); min-height:var(--touch-min)}
   .rgn-titel{font-size:14px}
   .rgn-text{font-size:13px}
 }
@@ -3609,7 +3609,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   /* Die Fingerregel (§37) galt auch hier nicht: die Aktionsknöpfe der
      Auswahl-Leiste massen ~30 px — gesehen auf dem E84-Bild, dieselbe
      Fehlerklasse wie bei der Formatleiste (E81). */
-  #auswahl-leiste button{ min-height:44px; min-width:44px } }
+  #auswahl-leiste button{ min-height:var(--touch-min); min-width:var(--touch-min) } }
 
 /* ── Untere Leiste am Telefon: die vier Bereiche ──────────────────────────
    Notion hat unten Start, Chats, Besprechungen und Posteingang — bei uns
@@ -3893,7 +3893,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .fk-satz{ font-size:13.5px; line-height:1.55; color:var(--text-dim) }
 .fk-knoepfe{ display:flex; gap:8px; margin-top:12px }
 .fk-knoepfe button{
-  min-height:44px; padding:0 14px; border-radius:10px;
+  min-height:var(--touch-min); padding:0 14px; border-radius:10px;
   border:1px solid var(--line); color:var(--text-dim); font-size:13.5px;
 }
 .fk-knoepfe button:active{ background:rgba(255,255,255,.08) }
@@ -4306,7 +4306,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 }
 .blatt-reihe[data-lage="links"] .blatt-werk > .blatt-farbe-leiter,
 .blatt-reihe[data-lage="rechts"] .blatt-werk > .blatt-farbe-leiter{
-  width:44px; min-width:44px
+  width:44px; min-width:var(--touch-min)
 }
 .blatt-reihe[data-lage="links"]{left:6px}
 .blatt-reihe[data-lage="rechts"]{right:6px}
@@ -5421,7 +5421,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .blatt-werk::-webkit-scrollbar{display:none}
   .blatt-werk > *{flex:0 0 auto}
   .blatt-werk > .blatt-zeilenbruch{display:none}
-  .blatt-werk button{min-height:44px; min-width:44px; padding:4px 8px}
+  .blatt-werk button{min-height:var(--touch-min); min-width:var(--touch-min); padding:4px 8px}
 
   /* ── ZURÜCK UND VOR ROLLEN NICHT MIT (E396, Audit F14) ──────────────────
      GEMESSEN AM 4. SEPTEMBER bei 390 × 844, im Dokumentmodus mit einem
@@ -5538,7 +5538,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
     white-space:nowrap; border:0}
   .blatt-fest .zeichen{margin:0; font-size:17px}
-  .blatt-fest button{min-height:44px; min-width:44px}
+  .blatt-fest button{min-height:var(--touch-min); min-width:var(--touch-min)}
 }
 
 /* ── Ausbildung / Schulbibliothek (E128/E129) ───────────────────────────── */
@@ -5647,7 +5647,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 @media(max-width:760px){
   .school-home{padding:8px 10px 38px}.school-hero{display:block;padding:17px}.school-hero h1{font-size:25px}
   .school-quick{margin-top:16px}.school-quick button,.school-folder,.school-card button,.school-empty button,
-  .electrical-actions button{min-height:44px}.school-grid{grid-template-columns:1fr}.school-folders{grid-template-columns:1fr 1fr}
+  .electrical-actions button{min-height:var(--touch-min)}.school-grid{grid-template-columns:1fr}.school-folders{grid-template-columns:1fr 1fr}
   /* `overflow:auto` stand hier, als der ganze Dialog rollte. Jetzt rollt der
      Bauch, und der Dialog behält seinen Rahmen (`.finder` hat hidden). */
   .electrical-field{grid-template-columns:1fr 96px 54px}.electrical-dialog{max-height:92dvh}
@@ -5771,7 +5771,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
           font-size:13px; cursor:pointer}
 .pdfs-neu:hover{background:#e8e8e8}
 .pdfs-neu:disabled{opacity:.6; cursor:default}
-@media (max-width:760px){ .pdfs-neu{min-height:44px; padding:10px 16px} }
+@media (max-width:760px){ .pdfs-neu{min-height:var(--touch-min); padding:10px 16px} }
 @media (max-width:760px){ .pdfs-nr{font-size:12px} }
 
 /* ── Dokumentmodus (E126) ─────────────────────────────────────────────────
@@ -5917,7 +5917,7 @@ body[data-dokument="an"] #handy-oben{display:none}
    45 px kostete sie am Telefon von 844. Deshalb faellt hier auch das
    `max-width` der Blattbreite weg — im Inspector gilt dessen Breite. */
 .document-original{display:flex; align-items:center; gap:10px; width:100%;
-  min-height:44px; margin:0 0 10px;
+  min-height:var(--touch-min); margin:0 0 10px;
   padding:8px 14px; border:1px solid var(--border); border-radius:10px;
   background:var(--bg-card); color:var(--text); text-align:left; cursor:pointer}
 /* E384 · DER RANDSTREIFEN-SCHALTER, jetzt hier statt in der Leiste. Er sagt
@@ -6240,7 +6240,7 @@ body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2
     overflow-x:auto; overscroll-behavior-inline:contain; scrollbar-width:thin; }
   .document-workspace{height:calc(100dvh - 62px);
     min-height:320px;border-inline:0;border-radius:0}
-  .document-topbar{min-height:52px;position:relative}.document-topbar button{min-width:44px;min-height:44px;padding:6px}
+  .document-topbar{min-height:52px;position:relative}.document-topbar button{min-width:var(--touch-min);min-height:var(--touch-min);padding:6px}
   .document-topbar button:last-child{font-size:0}.document-topbar button:last-child::after{content:'✕';font-size:18px}
   .document-topbar input[type=range]{display:none}.document-zoom-label{margin-left:auto;min-width:40px}
   .document-position{font-size:12px;white-space:nowrap;margin-right:auto}
@@ -6287,11 +6287,11 @@ body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2
     max-height:68dvh;padding:12px 14px calc(14px + env(safe-area-inset-bottom));
     border:1px solid var(--border);border-radius:16px 16px 0 0;box-shadow:0 -12px 30px rgba(0,0,0,.22)}
   .document-thumbnails.is-open{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-  .document-thumbnails .document-panel-header{grid-column:1/-1}.document-panel-header button{display:block;min-width:44px;min-height:44px}
+  .document-thumbnails .document-panel-header{grid-column:1/-1}.document-panel-header button{display:block;min-width:var(--touch-min);min-height:var(--touch-min)}
   .document-thumbnail{margin:0;padding:5px}.document-thumbnail-label{font-size:11px}
   .document-inspector{top:auto;left:0;right:0;bottom:0;width:auto;max-height:72dvh;
     padding:14px 14px calc(14px + env(safe-area-inset-bottom));border-radius:16px 16px 0 0}
-  .document-inspector button{min-height:44px}.document-inspector-heading button{min-width:44px}
+  .document-inspector button{min-height:var(--touch-min)}.document-inspector-heading button{min-width:var(--touch-min)}
 }
 
 /* --- Was wäre, wenn (L28, E176) ------------------------------------------
@@ -6853,11 +6853,11 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
      teil — der Stern kam auf 43x27, die Kapitelknöpfe auf 27 hoch. Ein Knopf,
      den man dreimal antippen muss, ist kein Knopf. */
   .fh-kopfknoepfe button{width:44px; height:44px}
-  .fh-pdffuss button{min-width:44px; height:44px}
+  .fh-pdffuss button{min-width:var(--touch-min); height:44px}
   .fh-nr{height:44px}
   .fh-kapitel{padding:8px 10px}
-  .fh-kapitel button{min-height:44px; padding:0 14px; font-size:12.5px}
-  .fh-favseiten button{min-width:44px; height:44px; border-radius:22px}
+  .fh-kapitel button{min-height:var(--touch-min); padding:0 14px; font-size:12.5px}
+  .fh-favseiten button{min-width:var(--touch-min); height:44px; border-radius:22px}
   /* Nebeneinander ist auf 390 px kein Nebeneinander mehr: die Skizze wird
      zu schmal zum Erkennen und die Formel zu schmal zum Lesen. Also
      untereinander — Skizze zuerst, weil man sie zuerst ansieht. */
@@ -6881,8 +6881,8 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
      Zelle im Tabellenblock).
 
      Die Höhe kommt jetzt aus der Polsterung, und die stört keine Leerzeichen. */
-  .bs-formel{min-height:44px; padding-top:11px; padding-bottom:11px}
-  .bs-treffer-zeile{min-height:44px}
+  .bs-formel{min-height:var(--touch-min); padding-top:11px; padding-bottom:11px}
+  .bs-treffer-zeile{min-height:var(--touch-min)}
   .bs-blatt{margin:6px; padding:10px 11px 14px}
   /* Der Stern wächst mit — und die Überschrift macht ihm Platz, statt sich
      von ihm überdecken zu lassen. */
@@ -7057,7 +7057,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
    beim Bild zur Tippaufgabe (§55); betroffen war es seit E189. */
 .ea-eingabe button{padding:9px 16px; border:1px solid var(--line);
   border-radius:9px; background:var(--bg); color:var(--text); cursor:pointer;
-  font-size:13px; min-height:44px}
+  font-size:13px; min-height:var(--touch-min)}
 .ea-eingabe button.prim{background:var(--accent); color:var(--auf-accent);
   border-color:var(--accent-text); font-weight:600}
 .ea-eingabe button:disabled{opacity:.45; cursor:default}
@@ -7248,7 +7248,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 @media (max-width: 640px){
   .sk-regler label{width:100%; justify-content:space-between}
   .sk-regler input[type=range]{width:60%}
-  .fd-knopf{min-height:44px}
+  .fd-knopf{min-height:var(--touch-min)}
 }
 
 /* Die Symbolauswahl über der PDF-Seite (E191). Sie zeigt dieselbe Palette
@@ -7267,7 +7267,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   letter-spacing:.06em}
 .mz-zuletzt button{display:flex; align-items:center; gap:8px; padding:6px 12px;
   border:1px solid var(--accent); border-radius:9px; background:var(--bg-card);
-  color:var(--text); cursor:pointer; min-height:44px; text-transform:none;
+  color:var(--text); cursor:pointer; min-height:var(--touch-min); text-transform:none;
   letter-spacing:0; font-size:12.5px}
 .mz-zuletzt button svg{width:30px; height:30px}
 .mz-zuletzt i{font-style:normal}
@@ -7373,7 +7373,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
      Akzentfarbe, in beiden Themen abgestimmt. Eine eigene Farbe hier wäre
      eine zweite Wahrheit über dasselbe (§39). */
   background:var(--accent-schwach); color:var(--text);
-  text-align:left; cursor:pointer; min-height:44px;
+  text-align:left; cursor:pointer; min-height:var(--touch-min);
   transition:background var(--motion-fast,.14s) var(--ease-standard,ease)
 }
 .els-dran:hover{ background:var(--bg-hover) }
@@ -7388,7 +7388,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 
 .els-weiter{ display:flex; flex-wrap:wrap; gap:8px }
 .els-seite{
-  display:flex; align-items:center; gap:8px; min-height:44px;
+  display:flex; align-items:center; gap:8px; min-height:var(--touch-min);
   padding:8px 14px 8px 10px; border:1px solid var(--line); border-radius:999px;
   background:var(--bg-card); color:var(--text); cursor:pointer; max-width:100%;
   transition:background var(--motion-fast,.14s) var(--ease-standard,ease)
@@ -7409,7 +7409,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   grid-template-columns:repeat(auto-fill, minmax(210px, 1fr))
 }
 .els-kachel{
-  display:flex; align-items:flex-start; gap:11px; min-height:44px;
+  display:flex; align-items:flex-start; gap:11px; min-height:var(--touch-min);
   padding:13px 14px; border:1px solid var(--line); border-radius:13px;
   background:var(--bg-card); color:var(--text); text-align:left; cursor:pointer;
   transition:background var(--motion-fast,.14s) var(--ease-standard,ease),
@@ -7533,8 +7533,8 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   /* Am Telefon volle Breite und 44 px für den Daumen (§37). */
   .arb-fenster{ justify-content:center; padding:56px 10px 0 }
   .arb-kasten{ width:100% }
-  .arb-stopp{ min-height:44px; padding:3px 14px }
-  .arb-zu{ min-width:44px; min-height:44px }
+  .arb-stopp{ min-height:var(--touch-min); padding:3px 14px }
+  .arb-zu{ min-width:var(--touch-min); min-height:var(--touch-min) }
 }
 
 /* ==========================================================================

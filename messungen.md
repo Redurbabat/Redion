@@ -1175,3 +1175,68 @@ davon leer geblieben                  0
 wurde. Seither sind zwanzig rohe `16px` dazugekommen, ohne dass jemand die
 Zahl nachgezogen hat — dieselbe Bauform wie `js-bestand.json`, und dieselbe
 Nachlässigkeit wie bei der Prüflaufzahl in `CLAUDE.md` (§30).
+
+---
+
+## 30. Was hinter den drei roten Läufen stand
+
+**Wann:** 15. September 2026 · **Warum:** §46 „rot zuerst".
+
+### `test37` — der Arbeitsbereichsknopf
+
+```txt
+#btn-settings enthielt:
+  <span class="rmo-sliders">      ← von motion.ts, erstes Kind
+  <span class="ws-icon">Redion    ← hier sollte „N" stehen
+  <span>Redion
+```
+
+Gemessen über drei Zeitpunkte:
+
+| | Spans im Knopf | `.ws-icon`-Texte |
+|---|---|---|
+| vorher | `rmo-sliders`, `ws-icon`=„Redion", ``=„Redion" | `Redion` |
+| Einstellungen offen | dito | `Redion`, `N` |
+| Zeichen auf 🦊 geändert | dito | `Redion`, `🦊` |
+
+Das eingestellte Zeichen kam in der Seitenleiste nie an. Ursache:
+`querySelectorAll('span')[1]` an zwei Stellen — ein Zugriff nach Platz.
+
+### `test34` — die Oberfläche von gestern
+
+```txt
+#ai-faehig  liegt in  #ai-tools (Schublade „Werkzeuge & Kontext")
+  Schublade zu      1 Rechteck, 104 × 33 px, y = 884 bei 900 px Fenster
+  Schublade offen   nach scrollIntoView y = 679–712
+  .ai-tools-body    overflow-y:auto, 529 px Inhalt in 324 px Fenster
+
+.ai-leiste button  →  ai-plus · ai-modus · (ohne Kennung) · ai-diktat · ai-senden
+                      also fünf, die Zusicherung sagte sechs
+Platzhalter        →  „Frag etwas oder beschreibe deine Idee …"
+                      die Zusicherung suchte „Mach alles mit KI"
+```
+
+### `test362` — das Verzeichnis der rohen Pixelzahlen
+
+| | Verzeichnis (E509/E510) | gemessen | Δ | nach dem Tausch |
+|---|---|---|---|---|
+| 44px | 153 | 168 | +15 | **54** |
+| 28px | 56 | 63 | +7 | 63 |
+| 22px | 77 | 83 | +6 | 83 |
+| 16px | 246 | 266 | +20 | 266 |
+| 56px | 12 | 14 | +2 | 14 |
+| 46px | 14 | 15 | +1 | 15 |
+
+Gegengeprüft, dass die Drift nicht aus dieser Sitzung stammt: in
+`bausteine.css` + `pdf-studio.css` sind die Zahlen bei `2d8ca7cf`
+(Sitzungsanfang) und bei `HEAD` identisch — 44=91, 56=5, 46=8, 28=20,
+22=38, 16=125.
+
+**Der Tausch:** 114 Stellen in 11 Stildateien von `min-height:44px` /
+`min-width:44px` auf `var(--touch-min)`. Wertgleich, weil `--touch-min` an
+genau einer Stelle definiert ist (`marken.css:44`, 44px).
+
+```txt
+aufbau 5 · bausteine 69 · einstellungen 3 · ki 1 · lernwelt 6 · motion 8
+notizhefte 7 · premium 2 · produktwelten 2 · tabelle 1 · werkzeuge 10
+```

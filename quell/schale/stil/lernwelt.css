@@ -179,7 +179,7 @@
 /* Auch in der BREITE: „Uni" ist drei Buchstaben und war 37 px breit. In
    einer Reihe von Reitern sitzt der Nachbar direkt daneben — ein Fehltipp
    landet dort, nicht im Leeren. Genau dann zählt die Breite. */
-@media(pointer:coarse){ .lernwelt .lw-subnav button{ min-height:44px; min-width:44px } }
+@media(pointer:coarse){ .lernwelt .lw-subnav button{ min-height:var(--touch-min); min-width:var(--touch-min) } }
 
 /* Eine Kante, hinter der es weitergeht. Kein Knopf und kein Pfeil: beides
    wäre etwas, woneben man tippen kann. Das Merkmal setzt `reiterRollstand`
@@ -1118,7 +1118,7 @@
      Die Antwort ist nicht eine dritte Breite, sondern eine andere Frage:
      WOZU steht dort ein Wort, wenn es „ich filtere nicht" bedeutet? */
   .lernwelt .lw-area select{
-    min-height:44px;padding:7px 24px 7px 10px;border-radius:999px;
+    min-height:var(--touch-min);padding:7px 24px 7px 10px;border-radius:999px;
     max-width:min(150px,40vw)
   }
   /* Filtert nichts → nur das Zeichen, 44 × 44. Der Text bleibt im Feld
@@ -1127,7 +1127,7 @@
      Tipper ab, damit die native Auswahl weiter aufgeht. */
   .lernwelt .lw-area[data-alle="ja"]{ position:relative; width:44px }
   .lernwelt .lw-area[data-alle="ja"] select{
-    width:44px; min-width:44px; padding:0; color:transparent;
+    width:44px; min-width:var(--touch-min); padding:0; color:transparent;
     -webkit-appearance:none; appearance:none
   }
   .lernwelt .lw-area[data-alle="ja"]::after{
@@ -1138,7 +1138,7 @@
     position:sticky;z-index:5;top:0;margin-bottom:12px;padding:5px;border-radius:13px;
     box-shadow:var(--shadow-2)
   }
-  .lernwelt .lw-nav button{min-height:44px;padding:7px 10px;font-size:11.5px}
+  .lernwelt .lw-nav button{min-height:var(--touch-min);padding:7px 10px;font-size:11.5px}
   .lernwelt .lw-page-head{align-items:flex-start;flex-direction:column;gap:14px;padding:18px 16px}
   .lernwelt .lw-page-head h2{font-size:clamp(24px,7vw,32px)}
   .lernwelt .lw-page-head>div:first-child>span{font-size:12.5px}
@@ -1379,7 +1379,7 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
   display:flex;flex-wrap:wrap;gap:var(--space-2);margin:0 0 var(--space-4)
 }
 .lernwelt .lw-grade-zeitraeume button{
-  min-height:44px;padding:0 var(--space-4);border:1px solid var(--line);
+  min-height:var(--touch-min);padding:0 var(--space-4);border:1px solid var(--line);
   border-radius:var(--radius-lg);background:var(--lw-panel,var(--bg-card));
   color:var(--text);font-size:13px;cursor:pointer
 }
