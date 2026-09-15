@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-574 Entscheidungen, E1 bis E594 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+576 Entscheidungen, E1 bis E596 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -638,6 +638,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E592** — Eine eingelesene `.pptx` ging als frische Textdatei heraus und verlor alles; jetzt wird das Original durchgereicht
 * **E593** — Jede eindeutige Textmarke merkt sich beim Einlesen ihre Stelle im XML; geänderter Text kommt damit in der Datei an
 * **E594** — Redurs fünf Messlatten: GoodNotes, Word, PowerPoint, Obsidian, und über Notion hinaus — mit gezähltem Stand je Feld
+* **E595** — Eine eingelesene `.docx` geht unverändert wieder heraus, und geänderte Absätze kommen an ihrer Stelle im Original an
+* **E596** — Ein Wächter hing 56 Commits zurück: der Originalschutz aus E538 stand ihm im Weg, nicht umgekehrt
 
 ---
 
@@ -48180,3 +48182,163 @@ eine fehlende Fähigkeit zudeckt, ist die unehrlichste Art zu antworten
 
 Der Rest von L133 (Zeichnen) läuft nebenher weiter: dort ist Redion schon
 auf der Messlatte, und was fehlt, sind Feinheiten, keine Fähigkeiten.
+
+---
+
+## E595 — Die Originaldatei geht unverändert wieder heraus, und der geänderte Absatz kommt darin an (Bogen O7)
+
+**15. September 2026.** E594 hat die Reihenfolge gesetzt: „O7 — `.docx`-Text
+ändern. Derselbe Weg wie E593, und damit steht das schwächste Feld." Das ist
+dieser Bogen.
+
+### Zuerst gemessen, was verloren ging
+
+Nicht geschätzt. Eine `.docx` von Hand gebaut — Überschrift mit Stil
+`Heading1`, ein roter fetter Absatz (`w:color val="CC0000"`), ein Absatz aus
+drei Läufen mit einem kursiven Stück, eine Tabelle, ein PNG, `docProps/core.xml`
+— und durch Redion geschickt:
+
+```
+vorher   7 Einträge, 2284 Bytes
+nachher  6 Einträge, 5718 Bytes
+
+weg:  docProps/core.xml · word/media/image1.png · die Farbe CC0000
+neu:  „Redurs Bericht.docx" stand als gewöhnlicher ABSATZ im Dokument —
+      der Anhangsblock aus E538, den der frische Schreiber mitschrieb
+```
+
+Überlebt haben fett, kursiv und die Tabelle. Sie gehen über Markdown und
+werden neu geschrieben — alles andere kennt der frische Schreiber nicht, also
+schreibt er es nicht.
+
+**Für ein selbst geschriebenes Dokument ist der frische Weg richtig.** Für ein
+eingelesenes ist er Datenverlust (§46 Punkt 1, §51).
+
+### Was entschieden wurde
+
+Dasselbe wie bei `.pptx` in E592/E593, nur auf `word/document.xml`:
+
+1. **Liegt das Original als Anhang dabei** (E538 legt es seit dem
+   12. September ab), wird es **Eintrag für Eintrag durchgereicht** — mit
+   `rohBytes`, also ohne Auspacken und ohne Neupacken. Was Redion nicht
+   versteht, bleibt genau so liegen, wie Word es geschrieben hat.
+2. **Beim Einlesen bekommt jeder eindeutige Absatz eine Rückspur**
+   `quelle: { p: <Nummer im Körper> }`.
+3. **Beim Ausgeben wird genau dieser Absatz nachgeschlagen** und sein eines
+   `<w:t>` ersetzt. Farben, Stile, Tabellen, Bilder und der Abschnitt bleiben
+   stehen, weil nichts anderes angefasst wird.
+
+### Die zwei Stellen, an denen es schiefgehen konnte
+
+**Die Nummer ist die im Körper, nicht die des Blocks.** `docxLesen`
+überspringt leere Absätze (`if (!text) continue`) und behandelt Tabellen als
+eigene Knoten — der dritte Block ist also nicht der dritte `<w:p>`. Wer das
+verwechselt, schreibt Text in einen fremden Absatz. Der Zähler läuft deshalb
+über `koerper.children`, nicht über `bloecke`.
+
+**Eine Spur bekommt nur ein Absatz mit genau EINER Textstelle.** „Ein zweiter
+Absatz mit *kursivem* Teil" besteht aus drei `<w:r>` mit drei `<w:t>`; ihn
+zurückzuschreiben hiesse, den neuen Text auf drei Läufe zu verteilen, und
+jede Verteilung wäre geraten. Er behält seinen Text im Dokument, und der
+Hinweis sagt es: „Absätze ohne eindeutige Zuordnung stehen unverändert
+darin." Dasselbe Urteil wie E593.
+
+Dazu kommt eine dritte Kleinigkeit, die beim Messen auffiel: Der Text aus dem
+Editor trägt dessen Auszeichnungen (`**fett**`, `*kursiv*`). In ein `<w:t>`
+gehören sie nicht — dort stünden sie als Sternchen im Dokument. Der Absatz
+behält also seine Word-Formatierung, und der Text wird ohne Markdown
+eingesetzt.
+
+### Nachgemessen, und zwar mit fremdem Werkzeug
+
+Redions eigener ZIP-Leser ist kein Beweis für Redions eigenen ZIP-Schreiber.
+Geprüft wurde deshalb mit Pythons `zipfile`:
+
+```
+Python öffnet: 7 Einträge · testzip: keine Schäden · 2284 → 2650 Bytes
+fehlt: nichts · neu: nichts
+inhaltlich anders: ['word/document.xml']
+Text nachher: ['Ein ganz neuer Satz.', 'Ein farbiger, fetter Absatz.',
+               'Ein zweiter Absatz mit ', 'kursivem', ' Teil.', 'A1', 'B1']
+Farbe: ['CC0000'] · Tabellen: 1 · Kursiv: 1 · Stil: ['Heading1']
+document.xml: wohlgeformt · Packmethoden: [0, 8]
+```
+
+Sieben Einträge hinein, sieben heraus. Das Bild ist da, `docProps/core.xml`
+ist da, die Farbe ist da, der Mehrläufer steht unverändert. Geändert hat sich
+genau ein Teil und genau ein Satz darin.
+
+### Der Wächter war zuerst rot
+
+`pruefungen/lauf/test526.mts` (neu, 19 Zusicherungen) baut seine eigene
+`.docx` aus eigenem XML, schickt sie durch und liest nach. Gegen den Stand
+vor diesem Bogen: **14 von 19 rot.** Danach 19 von 19. Kein Wächter dieses
+Projekts zählt, bevor er einmal rot war (§50).
+
+### Was es kostet
+
+Eine eingelesene `.docx` geht jetzt als ihr Original heraus — auch dann,
+wenn der Nutzer in Redion Blöcke HINZUGEFÜGT hat. Die stehen nicht in der
+Datei. Das ist der Preis dafür, dass nichts verloren geht, und er steht in
+`LUECKEN.md` als **L170**, nicht in einer Fussnote. Der frische Schreiber
+bleibt für alles andere unverändert in Betrieb.
+
+---
+
+## E596 — Ein Wächter hing 56 Commits zurück
+
+**15. September 2026.** Beim Regressionsbündel zu E595 war `test252` rot, mit
+einer einzigen Zusicherung:
+
+```
+✗ Der Seitentitel kommt als H1 zurück (alsWord schreibt ihn als Heading1)
+  — {"typ":"file","text":"wochenbericht.docx"}
+```
+
+### Erst festgestellt, wem der rote Lauf gehört
+
+E579/E590 haben die Lehre geliefert: „‚Älter als mein Zweig' ist eine
+Vermutung, solange niemand die Commits durchgeht." Also durchgegangen, mit
+einem Arbeitsbaum (`git worktree`) statt mit einem Gefühl:
+
+```
+a26adfc7   (der Stand vor diesem Bogen)   test252 rot,  14/15
+d1f8e955   E538 „Originalschutz"          test252 rot
+d1f8e955~1 E537                           test252 GRÜN, 15/15
+```
+
+Der Lauf ist am **12. September** rot geworden, 56 Commits vor heute, und
+niemand hat ihn seither angesehen. Nicht dieser Bogen.
+
+### Und dann, wer recht hat
+
+Der Lauf las `drin[0]` und erwartete den Titel als `h1`. Seit E538 legt der
+Office-Weg die Originaldatei ab und hängt sie an Stelle 0 der neuen Seite —
+„aber wichtig die originale datei wird immer geschützt" (Redur,
+12. September 2026). Der Anhang gehört dorthin. Der **Lauf** hat unrecht, nicht
+die App.
+
+Entschieden: die Zusicherung wird nachgezogen, nicht der Originalschutz
+zurückgebaut. Der Titel wird als erster Block gesucht, der **kein** Anhang
+ist — und der Anhang bekommt seine eigene Zusicherung, damit er beim nächsten
+Mal nicht wieder stillschweigend verschwinden kann.
+
+### Die neue Zusicherung war rot
+
+Nicht behauptet, gemessen: dieselbe Datei in einem Arbeitsbaum auf
+`d1f8e955~1` — dem Stand ohne Originalschutz — gelegt und laufen lassen:
+
+```
+✗ Das Original liegt als Anhang an Stelle 0 (E538: die Originaldatei bleibt
+  unangetastet) — {"typ":"h1","text":"Wochenbericht KW 35"}
+15 bestanden, 1 durchgefallen
+```
+
+Auf dem heutigen Stand: 16 von 16. Ein Wächter, der nie rot war, ist eine
+Behauptung (§50, §55.2).
+
+### Was daraus folgt
+
+Der Fund ist nicht `test252`. Der Fund ist, dass ein roter Lauf 56 Commits
+lang unbemerkt bleiben konnte, weil das Regressionsbündel jedes Bogens nur
+die Läufe kennt, die der Bogen anfasst. Eingetragen als **L171**.

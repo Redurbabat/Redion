@@ -76,7 +76,18 @@ const rundlauf = await p.evaluate(async () => {
 pr('Die Ausgabe ist ein echtes ZIP (PK) — dieselbe, die test49 mit CRC prüft', rundlauf.pk);
 pr('Der Import meldet, was er übernommen hat', /übernommen/.test(rundlauf.hinweis), rundlauf.hinweis);
 pr('Die neue Seite heisst wie die Datei', rundlauf.seitenName === 'wochenbericht', rundlauf.seitenName);
-const titelBlock = rundlauf.drin[0];
+/* Seit E538 (12. September 2026) legt der Office-Weg die Originaldatei ab und
+   hängt sie an Stelle 0 der neuen Seite — „die originale datei wird immer
+   geschützt" (Redur). Der Titel ist deshalb nicht mehr `drin[0]`. Dieser Lauf
+   hat das 56 Commits lang nicht gesehen: gemessen am 15. September 2026 mit
+   einem Arbeitsbaum auf `d1f8e955~1` (dort grün) gegen `d1f8e955` (dort rot).
+   Das ist derselbe Fund wie E590 — ein Wächter, den niemand nachzieht, hält
+   nicht die App fest, sondern nur seinen eigenen Stand. */
+const anhang = rundlauf.drin[0];
+pr('Das Original liegt als Anhang an Stelle 0 (E538: die Originaldatei bleibt unangetastet)',
+  !!anhang && anhang.typ === 'file' && anhang.text === 'wochenbericht.docx',
+  JSON.stringify(anhang));
+const titelBlock = rundlauf.drin.find((x: any) => x.typ !== 'file');
 pr('Der Seitentitel kommt als H1 zurück (alsWord schreibt ihn als Heading1)',
   !!titelBlock && titelBlock.typ === 'h1' && titelBlock.text === 'Wochenbericht KW 35',
   JSON.stringify(titelBlock));

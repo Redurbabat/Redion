@@ -8229,3 +8229,65 @@ ohnehin — `CompressionStream('deflate-raw')` steht schon in zwei Prüfläufen
 **Woran man merkt, dass er gebraucht wird:** eine Präsentation mit vielen
 geänderten Folien. Bei zwanzig Folien zu je 30 KB wären es 600 KB
 ungepackt gegen etwa 90 KB gepackt.
+
+---
+
+## L170 · Was in Redion NEU dazukommt, steht nicht in der Original-`.docx` — 15. September 2026
+
+**Was fehlt:** Seit E595 geht eine eingelesene `.docx` als ihr Original
+wieder heraus — Eintrag für Eintrag durchgereicht, mit den geänderten
+Absätzen an ihrer Stelle darin. Wer in Redion aber einen **neuen** Block
+anlegt, findet ihn in der Datei nicht wieder. Dasselbe gilt für gelöschte
+Absätze: sie bleiben im Dokument stehen.
+
+**Warum es so entschieden wurde:** Der frische Schreiber kann neue Blöcke —
+er kann dafür nichts anderes. Gemessen verlor er an einer Probedatei
+`docProps/core.xml`, ein PNG und eine Zeichenfarbe und schrieb den
+Anhangsblock als Absatz mit hinein (E595). Zwischen „ein neuer Absatz fehlt"
+und „das Bild, die Farbe und die Dateiangaben fehlen" ist das erste der
+kleinere Schaden (§46 Punkt 1, §51).
+
+**Was dagegen hilft, wenn es stört:** Ein neuer Block trägt keine
+`quelle`-Spur. Er liesse sich am Ende des Körpers als frischer `<w:p>`
+anhängen, mit dem Stil, den sein Typ vorgibt — das ist ein kleiner Bogen,
+weil das Durchreichen und das Schreiben schon stehen. Ein gelöschter Block
+ist schwieriger: gelöscht ist in Redion nicht dasselbe wie „soll aus der
+Datei verschwinden", und wer das verwechselt, löscht fremden Text.
+
+**Woran man merkt, dass es gebraucht wird:** Wer eine Word-Datei einliest
+und in Redion daran weiterschreibt statt nur zu korrigieren.
+
+---
+
+## L171 · Das Regressionsbündel eines Bogens sieht nur, was der Bogen anfasst — 15. September 2026
+
+**Was fehlt:** `test252` war 56 Commits lang rot, ohne dass es jemand sah
+(E596). Der Grund ist keine Nachlässigkeit an einer Stelle, sondern die
+Form der Arbeit: jeder Bogen fährt am Ende ein **Bündel** der Läufe, die zu
+seinem Thema gehören. Ein Lauf, der von einer Änderung an einem anderen
+Thema getroffen wird, steht in keinem dieser Bündel.
+
+E538 („Office war die einzige Gruppe ohne Originalschutz") änderte den
+Einleseweg; `test252` prüft den Word-Rundlauf. Beide gehören zu Office, und
+trotzdem lief der eine im Bündel des anderen nicht mit.
+
+**Warum kein voller Lauf nach jedem Bogen:** Ein voller Lauf über 467
+Prüfungen dauert länger, als eine Sitzung sicher steht — deshalb steht in
+§30 ausdrücklich, dass er in Stücken und wiederaufnehmbar gefahren wird, und
+in §46, dass `main` sich erst bewegt, wenn er grün ist. Die Regel ist also
+da; was fehlt, ist der Weg dorthin innerhalb einer Sitzung.
+
+**Was helfen würde, in der Reihenfolge der Kosten:**
+
+1. **Ein Bündel je Bereich statt je Bogen.** Wer `src/bereiche/dateien/`
+   anfasst, fährt ALLE Läufe, die diesen Ordner laden — nicht die, an die er
+   gedacht hat. Das ist eine Liste, kein Werkzeug.
+2. **Ein Lauf, der nachsieht, wann jeder Lauf zuletzt grün war.** Eine
+   Merkdatei, wie sie der volle Lauf für seine Stücke schon führt (§30).
+3. **Der volle Lauf vor jedem Vorspulen von `main`.** Das steht als Regel
+   schon da; was fehlt, ist die Gewohnheit, ihn auch dann zu starten, wenn
+   der Bogen klein war.
+
+**Was es nicht heisst:** dass die Bündel weg sollen. Ein schnelles Bündel
+nach jedem Bogen findet den eigenen Fehler sofort — es findet nur nicht den
+fremden.

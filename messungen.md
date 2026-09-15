@@ -1413,3 +1413,84 @@ Abschnitte im Text. Der Unterschied sind Entscheidungen, die als Zeile im
 Verzeichnis stehen und ihren Fliesstext in einem gemeinsamen Abschnitt haben
 — das ist so gewachsen und kein Fehler, aber wer die Zahl 574 liest, sollte
 nicht 574 Kapitel erwarten.
+
+---
+
+## 36. Die Rundreise einer .docx
+
+**15. September 2026 · Bogen O7 / E595**
+
+Gemessen an einer von Hand gebauten Probedatei: Überschrift mit Stil
+`Heading1`, ein roter fetter Absatz (`w:color val="CC0000"`), ein Absatz aus
+drei Läufen mit kursivem Mittelstück, eine Tabelle mit zwei Zellen, ein PNG,
+`docProps/core.xml`. Methode: die Datei durch `Einlesen.datei` und
+`Austausch.alsWord` schicken, dann mit **Pythons `zipfile`** nachsehen —
+nicht mit Redions eigenem Leser, der ja Partei ist.
+
+**Vorher — der frische Schreiber:**
+
+```txt
+Einträge           7  →  6
+Bytes           2284  →  5718
+verloren        docProps/core.xml · word/media/image1.png · Farbe CC0000
+dazugekommen    „Redurs Bericht.docx" als gewöhnlicher Absatz im Text
+überlebt        fett · kursiv · die Tabelle (alle drei über Markdown)
+```
+
+**Nachher — durchgereicht mit einem geänderten Absatz:**
+
+```txt
+Python öffnet       7 Einträge · testzip: keine Schäden
+Bytes            2284  →  2650
+fehlt               nichts
+neu                 nichts
+inhaltlich anders   ['word/document.xml']
+Text nachher        ['Ein ganz neuer Satz.', 'Ein farbiger, fetter Absatz.',
+                     'Ein zweiter Absatz mit ', 'kursivem', ' Teil.',
+                     'A1', 'B1']
+Farbe               ['CC0000']   Tabellen 1   Kursiv 1   Stil ['Heading1']
+document.xml        wohlgeformt
+Packmethoden        [0, 8]
+```
+
+Die 366 Bytes Zuwachs sind `word/document.xml`: es geht ungepackt (Methode 0)
+wieder hinein, während die sechs durchgereichten Einträge ihre Methode 8
+behalten. Dieselbe Sache wie **L169** bei den Folien, dieselbe Grössenordnung.
+
+**Der Wächter vorher und nachher:**
+
+```txt
+test526 gegen den Stand vor E595    14 von 19 rot
+test526 gegen den Stand nach E595   19 von 19 grün
+```
+
+---
+
+## 37. Wie lange ein roter Lauf unbemerkt bleiben kann
+
+**15. September 2026 · E596**
+
+`test252` war rot. Nicht geraten, wem er gehört, sondern durchgegangen — mit
+einem Arbeitsbaum je Stand:
+
+```txt
+Stand        was dort steht                   test252
+a26adfc7     der Stand vor Bogen O7           rot   14 von 15
+d1f8e955     E538 „Originalschutz"            rot
+d1f8e955~1   E537                             grün  15 von 15
+```
+
+```txt
+rot geworden am          12. September 2026
+unbemerkt geblieben      56 Commits, 3 Tage
+Ursache                  E538 hängt die Originaldatei an Stelle 0;
+                         der Lauf las `drin[0]` als Titel
+```
+
+**Gegenprobe der Reparatur** — die neue Zusicherung über den Anhang gegen
+den Stand, der ihn noch nicht hatte:
+
+```txt
+d1f8e955~1   ✗ Das Original liegt als Anhang an Stelle 0   15 von 16
+heute        ✓                                             16 von 16
+```

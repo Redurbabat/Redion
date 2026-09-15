@@ -860,7 +860,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 466 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 468 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -874,6 +874,11 @@ Achtundzwanzig Läufe Abstand, nach hundertfünfzehn beim letzten Mal. Der
 Abstand wird kürzer, die Lehre bleibt dieselbe — die Zahl steht mit ihrem
 Befehl auch in `messungen.md`, wo sie neben dem Datum ihrer Messung lebt.*
 
+*Noch am selben Tag: 468. Die Läufe `test525` (`.pptx`-Rundreise) und
+`test526` (`.docx`-Rundreise) kamen dazu. Zwei Läufe Abstand — so soll es
+sein: die Zahl wird im selben Bogen nachgezogen, in dem der Lauf entsteht,
+nicht hundertfünfzehn später.*
+
 ### Die Befehle
 
 ```txt
@@ -882,7 +887,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 466 Läufe
+npm run pruefen                      alle 468 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -924,7 +929,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 466 Läufen sind diese fünf die, die man beim Namen kennt:
+Von 468 Läufen sind diese fünf die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
