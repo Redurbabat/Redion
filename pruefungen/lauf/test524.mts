@@ -652,6 +652,71 @@ try {
   await page.locator('[data-document-action="ink-ruler"]').click();
   await page.waitForTimeout(300);
 
+  /* ══ §11 DIE KOPIE MUSS ZEIGEN, WAS DAS ORIGINAL ZEIGT (E583) ════════════
+     Plan 7 B 5: „Form-Dock: alle sieben vorhandenen Formen direkt;
+     Farbe/Dicke dazu." Nachgemessen am 15. September 2026 war genau das
+     schon da — sieben Formknöpfe, alle sichtbar, alle 44 px hoch, fünf
+     Farben plus „+" und die drei Strichstufen daneben:
+
+       [data-tool="line"]   form 7/8 sichtbar · farbe 6/7 · breite 3/5
+       (die zwei fehlenden: der Trenner und die Klappe für die freie
+        Stärke — die öffnet sich erst auf den zweiten Tipp, E465)
+
+     GEFUNDEN WURDE DABEI ETWAS ANDERES, und es steht in E515 als Zusage:
+     „der Knopf zeigt nicht ‚Formen', sondern WELCHE Form gerade gewählt
+     ist". Der Knopf auf dem Blatt hält das. Seine KOPIE in der oberen
+     Studioleiste hielt es nicht:
+
+       im Dock gewählt      oben: data-sym          oben: data-form
+       ──────────────────   ────────────────────    ────────────────
+       Dreieck              inkShapes               (keins)
+       Kurve                inkShapes               (keins)
+       Ellipse              inkShapes               (keins)
+
+     Im Studio ist die obere Reihe die EINZIGE sichtbare Werkzeugreihe
+     (E573) — die Auskunft, für die dieser Knopf da ist, fehlte also genau
+     dort, wo gezeichnet wird. */
+  await werkzeug('formen');
+  const obenZeichen = async (): Promise<{ sym: string; form: string; titel: string }> =>
+    await page.evaluate(`(() => {
+      const b = document.querySelector('.document-drawingbar [data-document-tool="formen"]');
+      const z = b ? b.querySelector('[data-sym]') : null;
+      return { sym: (z && z.getAttribute('data-sym')) || '—',
+               form: (b && b.getAttribute('data-form')) || '—',
+               titel: (b && b.getAttribute('title')) || '' };
+    })()`) as { sym: string; form: string; titel: string };
+  for (const [id, sym] of [['triangle', 'formTriangle'], ['curve', 'formCurve'],
+                           ['ellipse', 'formEllipse'], ['line', 'formLine']] as const) {
+    await page.locator(`.document-stage[data-aktiv] .blatt-werk [data-act="formart"][data-form="${id}"]`).click();
+    await page.waitForTimeout(260);
+    const o = await obenZeichen();
+    check(`Oben steht das Zeichen der gewählten Form („${id}")`, o.sym === sym);
+    check(`… und die Kopie sagt auch im Attribut, welche es ist („${id}")`, o.form === id);
+    /* NICHT NUR DAS BILD, AUCH DAS WORT: wer die Maus darauf hält oder
+       einen Vorleser benutzt, hört sonst dreimal „Form" (§38). */
+    check(`… und der Titel nennt sie beim Namen („${id}")`,
+      o.titel !== 'Form' && o.titel.length > 4);
+  }
+  /* GEZEICHNET, NICHT GETIPPT (E515): ein „△" als Textzeichen sähe in einer
+     Reihe gezeichneter Werkzeuge aus wie ein Fremdkörper. */
+  check('Das Zeichen oben ist ein gezeichnetes SVG, kein Textzeichen',
+    await page.evaluate(`(() => {
+      const b = document.querySelector('.document-drawingbar [data-document-tool="formen"]');
+      return !!(b && b.querySelector('svg') && (b.textContent || '').trim() === '');
+    })()`));
+  /* UND DIE ANDEREN ZWÖLF BLEIBEN, WAS SIE WAREN. Eine Spiegelung, die
+     jedem Knopf sein Zeichen umschreibt, wäre schlimmer als gar keine —
+     `test480` misst die dreizehn Silhouetten gegeneinander. */
+  check('Die übrigen Werkzeuge behalten ihr eigenes Zeichen',
+    await page.evaluate(`(() => {
+      const soll = { stift:'inkPen', radierer:'inkEraser', select:'inkLasso', laser:'inkLaser' };
+      return Object.keys(soll).every(id => {
+        const b = document.querySelector('.document-drawingbar [data-document-tool="'+id+'"]');
+        const z = b ? b.querySelector('[data-sym]') : null;
+        return !!z && z.getAttribute('data-sym') === soll[id];
+      });
+    })()`));
+
   await werkzeug('stift');
   check('Keine Laufzeitfehler', errors.length === 0);
   mkdirSync(resolve(root, 'bilder'), { recursive: true });

@@ -24057,7 +24057,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1088, inhalt: '54c7e1d2debed128', gebaut: '2026-09-15T07:12:33.306Z' };
+const Stand = { fassung: 1090, inhalt: '2871456a2f729619', gebaut: '2026-09-15T09:39:27.516Z' };
 window.Stand = Stand;
 
 </script>
@@ -35681,11 +35681,24 @@ Register.symbole = (() => {
            Form gewählt ist — und ein „╱" neben zwölf gezeichneten Werkzeugen
            sieht aus wie ein Fehler, nicht wie eine Linie. */
         formLine: '<path d="M4.6 19.4 19.4 4.6"/>',
-        formArrow: '<path d="M4.6 19.4 19.4 4.6M13.4 4.6h6v6"/>',
+        /* ══ DER PFEIL LIEGT WAAGERECHT (E584) ═══════════════════════════════
+           Er war die Linie plus ein Häkchen am Ende — bei 16 px teilten sich
+           die beiden 70 % ihrer Tinte, und sie stehen in der Formenreihe
+           unmittelbar nebeneinander. Waagerecht mit offener Spitze teilt er
+           sich mit der Linie noch 28 %; die Linie bleibt die Schräge, weil
+           genau das ihr Bild ist. */
+        formArrow: '<path d="M3.6 12h15.6M14 6.8 19.4 12 14 17.2"/>',
         formRect: '<rect x="3.6" y="5.6" width="16.8" height="12.8"/>',
         formEllipse: '<ellipse cx="12" cy="12" rx="8.6" ry="6.6"/>',
         formTriangle: '<path d="M12 4.4 20.6 19.6H3.4z"/>',
-        formRoundrect: '<rect x="3.6" y="5.6" width="16.8" height="12.8" rx="4.2"/>',
+        /* ══ UND DAS RUNDE RECHTECK IST KLEINER UND RUNDER (E584) ════════════
+           Es war `formRect` mit `rx="4.2"` — dieselbe Kontur, vier gerundete
+           Ecken, und die vier Ecken sind bei 16 px zusammen ein knappes
+           Viertel der Tinte: 75 % gleich. Nur runder zu machen half nicht,
+           es lief dann der Ellipse ins Bild (rx 5.4 → 75 % gegen die
+           Ellipse, rx 6.4 → 81 %). Kleiner UND runder trennt beides:
+           38 % gegen das Rechteck, 29 % gegen die Ellipse. */
+        formRoundrect: '<rect x="5.4" y="7.4" width="13.2" height="9.2" rx="4.6"/>',
         formCurve: '<path d="M3.4 17.6c4.4 0 5.2-11.2 9.4-11.2s4.4 11.2 7.8 11.2"/>',
         /* Die Schere — Ausschneiden. Es gab sie im Register noch nicht. */
         scissors: '<circle cx="6.4" cy="6.4" r="2.6"/><circle cx="6.4" cy="17.6" r="2.6"/>' +
@@ -80635,6 +80648,61 @@ const DocumentMode = (() => {
             ordnungObserver.observe(source, { childList: true });
             beobachtet = source;
         };
+        /* ══ DIE KOPIE ZEIGT, WAS DAS ORIGINAL ZEIGT (E583) ══════════════════════
+           Die obere Reihe wird EINMAL aus `Marken.WERKZEUGE` gebaut und trägt
+           seither dasselbe Zeichen. Für zwölf der dreizehn Werkzeuge stimmt
+           das: ein Stift bleibt ein Stift. Für den dreizehnten stimmt es nicht.
+    
+           `formen` ist kein Werkzeug, sondern ein Knopf für sieben (E375), und
+           E515 sagt ausdrücklich, was er zeigen soll: „nicht ‚Formen', sondern
+           WELCHE Form gerade gewählt ist — ein Dreieck, ein Pfeil, eine Kurve.
+           Ein gemeinsames Werkzeugzeichen nähme genau die Auskunft weg, für die
+           dieser Knopf da ist." Der Knopf auf dem Blatt hält das seit E515; er
+           schreibt sich beim Formwechsel selbst um (`marken.ts`, `formart`).
+    
+           GEMESSEN am 15. September 2026 hielt die Kopie es nicht: Dreieck,
+           Kurve, Ellipse gewählt — oben dreimal `inkShapes`, dreimal kein
+           `data-form`, dreimal der Titel „Form". Im Studio ist die obere Reihe
+           die einzige sichtbare (E573); die Auskunft fehlte also genau dort,
+           wo gezeichnet wird.
+    
+           WARUM ALLGEMEIN UND NICHT ALS SONDERFALL FÜR `formen`: derselbe Satz
+           gilt für jeden Knopf, der sich unterwegs umschreibt. Eine Zeile
+           `if (id === 'formen')` wäre beim nächsten solchen Knopf wieder falsch,
+           und niemand würde es merken. Hier wird verglichen, nicht geraten —
+           wer sein Zeichen nie ändert, kommt hier nie vorbei.
+    
+           NUR BEI ABWEICHUNG (E575): `Register.symbole.fuelle` schreibt ein
+           frisches `<svg>` hinein. Bei jedem der sechs Rufe von `inkSync()`
+           hiesse das sechsmal neues Markup unter dem Finger — derselbe Preis,
+           den das Umhängen oben schon gekostet hat. */
+        const zeichenSpiegeln = (kopie, echt) => {
+            if (!echt)
+                return;
+            const glyph = kopie.querySelector('[data-sym]');
+            const sym = echt.querySelector('[data-sym]')?.dataset.sym || '';
+            if (!glyph || !sym)
+                return;
+            const form = echt.dataset.form || '';
+            if (glyph.dataset.sym === sym && (kopie.dataset.form || '') === form)
+                return;
+            glyph.dataset.sym = sym;
+            if (form)
+                kopie.dataset.form = form;
+            else
+                delete kopie.dataset.form;
+            try {
+                Register.symbole.fuelle(kopie);
+            }
+            catch { /* dann bleibt das alte Zeichen stehen */ }
+            /* AUCH DAS WORT, NICHT NUR DAS BILD (§38): wer die Maus darauf hält
+               oder einen Vorleser benutzt, hörte sonst weiter „Form". */
+            const titel = echt.getAttribute('title');
+            if (titel) {
+                kopie.title = titel;
+                kopie.setAttribute('aria-label', titel);
+            }
+        };
         const inkSync = () => {
             if (!workspace.isConnected) {
                 Zeichenziel.vergiss(inkSync);
@@ -80688,6 +80756,7 @@ const DocumentMode = (() => {
                 const real = source?.querySelector('[data-wz="' + button.dataset.documentTool + '"]');
                 button.disabled = !canAnnotate || !state.toolsOpen || !real || real.disabled;
                 button.setAttribute('aria-pressed', String(state.toolsOpen && real?.getAttribute('aria-pressed') === 'true'));
+                zeichenSpiegeln(button, real);
             });
             for (const action of ['undo', 'redo']) {
                 const real = source?.querySelector('[data-act="' + action + '"]');

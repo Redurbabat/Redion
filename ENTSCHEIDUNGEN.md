@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-562 Entscheidungen, E1 bis E582 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+564 Entscheidungen, E1 bis E584 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -626,6 +626,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E580** — Der Rollschatten: was ausserhalb des Bildes steht, sagt sich selbst — und ein schwarzer Schatten auf dunklem Grund ist keiner
 * **E581** — Was Bedienung ist, gehört auf kein Papier: `[data-ink-ui]` ist im Druck aus, und die Regel gilt dem Attribut
 * **E582** — Zwei Wächter waren jahrelang rot, ohne dass etwas kaputt war: einer mass das Unmessbare, einer zielte auf eine Animation
+* **E583** — Die Kopie in der oberen Studioleiste zeigt jetzt, was das Original auf dem Blatt zeigt — welche Form gewählt ist
+* **E584** — Ein Pfeil, der keine Linie ist, und ein rundes Rechteck, das rund aussieht: drei Zeichenpaare waren über 70 % gleich
 
 ---
 
@@ -47248,3 +47250,128 @@ Der Produktfehler des Tages kam von woanders: E578 hat ihn gefunden, weil
 jemand eine Frage gestellt hat, die kein Lauf stellte.
 
 **Prüfläufe:** `test429` 17/17 (war rot), `test476` 26/26 (war rot).
+
+---
+
+## E583 — Die Kopie zeigt, was das Original zeigt
+
+**15. September 2026.** Plan 7 B 5 verlangte: „Form-Dock: alle sieben
+vorhandenen Formen direkt; Farbe/Dicke dazu."
+
+**Nachgemessen war genau das schon da.** Mit `data-tool="line"` bei 1440 px:
+
+```txt
+form    7 von 8 sichtbar   (das achte ist der Trenner)
+farbe   6 von 7 sichtbar   (fünf Farben und das „+")
+breite  3 von 5 sichtbar   (die drei Stufen; die zwei anderen sind der
+                            Trenner und die Klappe für die freie Stärke,
+                            die sich erst auf den zweiten Tipp öffnet, E465)
+```
+
+Alle sieben Formknöpfe sind 44 px hoch, am Telefon 44 × 44 (§37). E569 hatte
+die Kurve in die Gruppenliste nachgetragen, E356 gibt der Gruppe ihren
+Kontext. Der Punkt war zu, bevor dieser Bogen begann.
+
+### Was stattdessen gefunden wurde
+
+E515 sagt über den Formenknopf ausdrücklich:
+
+> „der Knopf zeigt nicht ‚Formen', sondern WELCHE Form gerade gewählt ist —
+> ein Dreieck, ein Pfeil, eine Kurve. Ein gemeinsames Werkzeugzeichen nähme
+> genau die Auskunft weg, für die dieser Knopf da ist."
+
+Der Knopf auf dem Blatt hält das: `marken.ts` schreibt ihn beim Formwechsel
+selbst um. **Seine Kopie in der oberen Studioleiste hielt es nicht:**
+
+| im Dock gewählt | oben `data-sym` | oben `data-form` | oben Titel |
+|---|---|---|---|
+| Dreieck | `inkShapes` | — | „Form" |
+| Kurve | `inkShapes` | — | „Form" |
+| Ellipse | `inkShapes` | — | „Form" |
+
+Im Studio ist die obere Reihe die **einzige sichtbare** Werkzeugreihe (E573).
+Die Auskunft fehlte also genau dort, wo gezeichnet wird.
+
+### Warum allgemein und nicht als Sonderfall
+
+Die obere Reihe wird einmal aus `Marken.WERKZEUGE` gebaut und trägt seither
+dasselbe Zeichen. Für zwölf der dreizehn stimmt das — ein Stift bleibt ein
+Stift. Eine Zeile `if (id === 'formen')` wäre beim nächsten Knopf, der sich
+unterwegs umschreibt, wieder falsch, und niemand würde es merken.
+
+`zeichenSpiegeln()` in `inkSync` vergleicht deshalb, statt zu raten: wer sein
+Zeichen nie ändert, kommt dort nie vorbei. Gespiegelt werden `data-sym`,
+`data-form`, `title` und `aria-label` — das Wort mit dem Bild, weil ein
+Vorleser sonst weiter dreimal „Form" sagt (§38).
+
+**Und nur bei Abweichung**, aus dem Grund von E575: `Register.symbole.fuelle`
+schreibt ein frisches `<svg>` hinein, und `inkSync()` läuft bis zu sechsmal
+je Klick. Gemessen mit einem Beobachter auf dem Knopf: **7 Änderungen bei
+einem echten Formwechsel, 2 beim Klick auf dieselbe Form noch einmal** — und
+diese zwei sind das `aria-pressed`, das die Reihe ohnehin für alle dreizehn
+setzt.
+
+**Die Alternative** wäre gewesen, die obere Reihe beim Formwechsel neu zu
+bauen. Sie kostet den Fokus unter dem Finger und jeden laufenden Übergang —
+genau der Preis, den E575 gerade abgeschafft hat.
+
+**Prüflauf:** `test524 §11`, zwölf Zusicherungen, alle zwölf rot gesehen.
+
+---
+
+## E584 — Ein Pfeil, der keine Linie ist, und ein rundes Rechteck, das rund aussieht
+
+**15. September 2026.** Beim Ansehen des Form-Docks (E583) fiel auf, dass
+„Rechteck" und „Rund" nebeneinander fast dasselbe Bild sind. Gemessen mit
+der Methode aus `test480 §7` — jedes Zeichen auf 16 × 16 gerastert, Tinte
+gegen Tinte — ergab das drei Paare über der Grenze von 60 %, die E515 für
+die Stifte gezogen hat:
+
+```txt
+formRect     / formRoundrect    75 %
+formEllipse  / formRoundrect    72 %
+formLine     / formArrow        70 %
+```
+
+Alle drei stehen in **derselben Zeile nebeneinander**, und am Telefon tragen
+die Knöpfe kein Wort mehr (44 × 44 px, nur das Zeichen) — dort ist das
+Zeichen die einzige Auskunft.
+
+Der Grund war in beiden Fällen derselbe: das zweite Zeichen war das erste
+plus eine Kleinigkeit. `formRoundrect` war `formRect` mit `rx="4.2"`,
+`formArrow` war `formLine` plus ein Häkchen am Ende.
+
+### Was probiert und was gemessen wurde
+
+```txt
+Pfeil                                       schlimmstes Paar
+  heute (schräg mit Häkchen)                    70 %
+  grösserer Kopf                                65 %
+  Kopf als eigene Spitze                        69 %
+  waagerecht mit offener Spitze                 28 %   ✓
+
+Rundes Rechteck
+  heute (rx 4.2)                                75 % gegen das Rechteck
+  rx 5.4, gleiche Grösse                        75 % gegen die Ellipse
+  rx 6.4, gleiche Grösse                        81 % gegen die Ellipse
+  Stadion (rx 5.6)                              85 % gegen die Ellipse
+  etwas kleiner, rx 5.2                         73 % gegen die Ellipse
+  kleiner UND runder                            38 % / 29 %   ✓
+```
+
+„Nur runder" half nicht — das Zeichen lief dann der Ellipse ins Bild. Erst
+kleiner **und** runder trennt beides. Danach ist das ähnlichste Paar der
+ganzen Liste `formRect/formEllipse` mit **55 %**, und das sind zwei Formen,
+die zu Recht verschieden aussehen.
+
+**Was nicht geändert wurde:** die Linie bleibt die Schräge. Sie ist das
+Bild einer Linie, und der Pfeil ist der, der ausweichen muss.
+
+**Was verworfen wurde:** eine Fassung, die das runde Rechteck als zwei
+offene Eckbögen zeichnet — wie in Zeichenprogrammen die Eckrundung markiert
+wird. Sie misst noch besser (39 %), zeigt aber nicht mehr die Form, die man
+bekommt. Die anderen sechs Zeichen tun das alle.
+
+**Prüflauf:** `test480 §7c`, sieben Zeichen gegeneinander, vier Zusicherungen
+rot gesehen. Angesehen wurde es ausserdem: `bilder/formzeichen-vergleich.png`
+zeigt beide Sätze bei 18 und 26 px nebeneinander.

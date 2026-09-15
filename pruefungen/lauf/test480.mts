@@ -494,6 +494,97 @@ console.log('\n§7b Dreizehn Werkzeuge, dreizehn Bilder');
 }
 
 
+/* ══ §7c Sieben Formen, sieben Bilder ══════════════════════════════════════
+ *
+ * DIESELBE METHODE, DIE DRITTE LISTE. §7 misst die sechs Stiftarten, §7b die
+ * dreizehn Werkzeuge; die sieben FORMEN hat bis zum 15. September 2026
+ * niemand gegeneinander gehalten. Gemessen ergab das drei Paare über der
+ * Grenze, die E515 für die Stifte gezogen hat:
+ *
+ *     formRect     / formRoundrect    75 %
+ *     formEllipse  / formRoundrect    72 %
+ *     formLine     / formArrow        70 %
+ *
+ * Die drei stehen alle in DERSELBEN Zeile nebeneinander, und am Telefon
+ * tragen die Knöpfe kein Wort mehr (44 × 44 px, nur das Zeichen) — dort ist
+ * das Zeichen die einzige Auskunft darüber, welche Form man gerade wählt.
+ *
+ * WARUM DIESE DREI UND NICHT DIE ANDEREN: `formRoundrect` war `formRect` mit
+ * `rx="4.2"` — dieselbe Kontur, vier abgerundete Ecken, und die vier Ecken
+ * sind bei 16 px zusammen ein knappes Viertel der Tinte. `formArrow` war
+ * `formLine` plus ein Häkchen am Ende.
+ *
+ * WARUM DER CODE HIER NOCH EINMAL STEHT: derselbe Grund wie bei §7b — §7 und
+ * §7b sind laufende, grüne Wächter, und sie zum Teilen umzubauen hiesse zwei
+ * Dinge auf einmal zu tun (§45). Dass drei Abschnitte dieselben dreissig
+ * Zeilen tragen, steht als L164 in `LUECKEN.md`.
+ * ------------------------------------------------------------------------ */
+console.log('\n§7c Sieben Formen, sieben Bilder');
+{
+  const s = await mitBlatt();
+  const GRENZE = 60;
+  const r = JSON.parse(await s.evaluate(`(async () => {
+    const namen = Marken.FORMEN.map(x => x.sym).filter(Boolean);
+    const raster = async (n) => {
+      const wrap = document.createElement('span');
+      wrap.dataset.sym = n; document.body.appendChild(wrap);
+      Register.symbole.fuelle(wrap.parentNode);
+      const svg = wrap.querySelector('svg');
+      if (!svg) { wrap.remove(); return null; }
+      const txt = new XMLSerializer().serializeToString(svg);
+      const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(txt)));
+      const img = new Image(); img.width = 16; img.height = 16;
+      await new Promise((f, x) => { img.onload = f; img.onerror = x; img.src = url; });
+      const c = document.createElement('canvas'); c.width = 16; c.height = 16;
+      const g = c.getContext('2d'); g.drawImage(img, 0, 0, 16, 16);
+      const d = g.getImageData(0, 0, 16, 16).data;
+      const bits = []; let tinte = 0;
+      for (let i = 0; i < 256; i++) { const an = d[i*4+3] > 40 ? 1 : 0; bits.push(an); tinte += an; }
+      wrap.remove();
+      return { bits, tinte };
+    };
+    const b = {};
+    for (const n of namen) b[n] = await raster(n);
+    const leer = namen.filter(n => !b[n] || b[n].tinte < 8);
+    const paare = [];
+    for (let i = 0; i < namen.length; i++) for (let j = i + 1; j < namen.length; j++) {
+      const a = b[namen[i]], c = b[namen[j]];
+      if (!a || !c) continue;
+      let schnitt = 0, vereint = 0;
+      for (let k = 0; k < 256; k++) {
+        if (a.bits[k] && c.bits[k]) schnitt++;
+        if (a.bits[k] || c.bits[k]) vereint++;
+      }
+      paare.push({ p: namen[i] + '/' + namen[j], gleich: Math.round(100 * schnitt / vereint) });
+    }
+    paare.sort((x, y) => y.gleich - x.gleich);
+    return JSON.stringify({ namen, leer, paare });
+  })()`) as string) as { namen: string[]; leer: string[];
+                         paare: Array<{ p: string; gleich: number }> };
+
+  gleich('Sieben Formen, sieben verschiedene Zeichen', new Set(r.namen).size, 7);
+  p('… und jedes hat wirklich Tinte auf dem Raster',
+    r.leer.length === 0, JSON.stringify(r.leer));
+  const schlimmstes = r.paare[0];
+  p(`Kein Formenpaar teilt mehr als ${GRENZE} % seiner Tinte`,
+    !!schlimmstes && schlimmstes.gleich <= GRENZE,
+    schlimmstes ? `${schlimmstes.p} = ${schlimmstes.gleich} %` : 'kein Paar gemessen');
+  console.log('      (das ähnlichste Paar: ' +
+    (schlimmstes ? schlimmstes.p + ' = ' + schlimmstes.gleich + ' %' : '—') + ')');
+  /* DIE DREI NAMENTLICH, damit ein Rückschritt nicht als „irgendein Paar"
+     durchgeht: sie sind der Grund, warum es diesen Abschnitt gibt. */
+  const paarWert = (name: string) => r.paare.find(x => x.p === name)?.gleich ?? -1;
+  for (const [name, vorher] of [['formRect/formRoundrect', 75],
+                                ['formEllipse/formRoundrect', 72],
+                                ['formLine/formArrow', 70]] as const) {
+    p(`${name} ist nicht mehr dasselbe Bild`,
+      paarWert(name) >= 0 && paarWert(name) <= GRENZE,
+      `${paarWert(name)} % (vorher ${vorher})`);
+  }
+  await s.close();
+}
+
+
 /* ═══ §4 Quellen ═══════════════════════════════════════════════════════════ */
 console.log('\n§6 Quellen');
 p('Die Stiftreihe steht EINMAL im Quelltext, aus dem Katalog gebaut',

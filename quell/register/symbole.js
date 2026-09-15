@@ -239,11 +239,24 @@ Register.symbole = (() => {
            Form gewählt ist — und ein „╱" neben zwölf gezeichneten Werkzeugen
            sieht aus wie ein Fehler, nicht wie eine Linie. */
         formLine: '<path d="M4.6 19.4 19.4 4.6"/>',
-        formArrow: '<path d="M4.6 19.4 19.4 4.6M13.4 4.6h6v6"/>',
+        /* ══ DER PFEIL LIEGT WAAGERECHT (E584) ═══════════════════════════════
+           Er war die Linie plus ein Häkchen am Ende — bei 16 px teilten sich
+           die beiden 70 % ihrer Tinte, und sie stehen in der Formenreihe
+           unmittelbar nebeneinander. Waagerecht mit offener Spitze teilt er
+           sich mit der Linie noch 28 %; die Linie bleibt die Schräge, weil
+           genau das ihr Bild ist. */
+        formArrow: '<path d="M3.6 12h15.6M14 6.8 19.4 12 14 17.2"/>',
         formRect: '<rect x="3.6" y="5.6" width="16.8" height="12.8"/>',
         formEllipse: '<ellipse cx="12" cy="12" rx="8.6" ry="6.6"/>',
         formTriangle: '<path d="M12 4.4 20.6 19.6H3.4z"/>',
-        formRoundrect: '<rect x="3.6" y="5.6" width="16.8" height="12.8" rx="4.2"/>',
+        /* ══ UND DAS RUNDE RECHTECK IST KLEINER UND RUNDER (E584) ════════════
+           Es war `formRect` mit `rx="4.2"` — dieselbe Kontur, vier gerundete
+           Ecken, und die vier Ecken sind bei 16 px zusammen ein knappes
+           Viertel der Tinte: 75 % gleich. Nur runder zu machen half nicht,
+           es lief dann der Ellipse ins Bild (rx 5.4 → 75 % gegen die
+           Ellipse, rx 6.4 → 81 %). Kleiner UND runder trennt beides:
+           38 % gegen das Rechteck, 29 % gegen die Ellipse. */
+        formRoundrect: '<rect x="5.4" y="7.4" width="13.2" height="9.2" rx="4.6"/>',
         formCurve: '<path d="M3.4 17.6c4.4 0 5.2-11.2 9.4-11.2s4.4 11.2 7.8 11.2"/>',
         /* Die Schere — Ausschneiden. Es gab sie im Register noch nicht. */
         scissors: '<circle cx="6.4" cy="6.4" r="2.6"/><circle cx="6.4" cy="17.6" r="2.6"/>' +

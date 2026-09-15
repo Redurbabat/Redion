@@ -8052,3 +8052,33 @@ gehalten. Er war es nicht.
 **Was daraus folgt, ohne neue Regel:** §46 sagt „rot zuerst", und das gilt
 auch, wenn das Rot alt aussieht. Wie alt es wirklich ist, sagt ein
 Arbeitsbaum auf den Commits in zwei Minuten (§30).
+
+---
+
+## L164 · Drei Abschnitte tragen dieselben dreissig Zeilen — 15. September 2026
+
+`test480` misst Zeichen gegen Zeichen an drei Stellen, und alle drei tragen
+denselben Rasterer:
+
+| Abschnitt | Liste | seit |
+|---|---|---|
+| `§7` | `Marken.STIFTE` — die sechs Stiftarten | E515 |
+| `§7b` | `Marken.WERKZEUGE` — die dreizehn Werkzeuge | E577 |
+| `§7c` | `Marken.FORMEN` — die sieben Formen | E584 |
+
+Jeder der drei rastert auf 16 × 16, zählt Tinte gegen Tinte und vergleicht
+gegen dieselbe Grenze von 60 %. Dreissig Zeilen, dreimal.
+
+**Warum es trotzdem dreimal dasteht:** §7 und §7b sind laufende, grüne
+Wächter. Sie zum Teilen umzubauen, während ein dritter dazukommt, hiesse
+zwei Dinge auf einmal zu tun — und wenn danach etwas rot ist, weiss niemand,
+welches davon (§45). Der Kommentar in `§7b` sagt das seit E577; `§7c` sagt
+es auch.
+
+**Was zu tun ist, und wann:** eine gemeinsame Messung, sobald einer der drei
+Abschnitte aus einem anderen Grund angefasst werden muss. Nicht vorher, und
+nicht als eigener Bogen — ein Umbau ohne Anlass ist auch nur ein Umbau.
+
+**Was NICHT zu tun ist:** die drei Listen in einen Vergleich werfen. Ein
+Werkzeugzeichen und ein Formzeichen dürfen sich ähneln — `inkShapes` ist ein
+Rechteck, und `formRect` ist eins. Sie stehen nie nebeneinander.

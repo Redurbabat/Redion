@@ -550,3 +550,63 @@ in L157 — gesehen, nicht gemessen.
 `test522`, `test523` grün. `npm run typecheck` und `npm run bauen:ts` grün.
 
 **Die Gesamtsuite ist NICHT als grün behauptet.**
+
+---
+
+## Nachtrag — Abschnitt 7 B 5 (15. September 2026)
+
+### B 5 war zu, bevor der Bogen begann
+
+„Form-Dock: alle sieben vorhandenen Formen direkt; Farbe/Dicke dazu."
+Nachgemessen bei `data-tool="line"`:
+
+```txt
+1440 px   form 7/8 sichtbar · farbe 6/7 · breite 3/5 · Dock 1079 px
+ 390 px   dieselben sieben, 44 × 44 px, ohne Wort
+```
+
+Die jeweils fehlenden sind der Gruppentrenner und die Klappe für die freie
+Stärke (öffnet sich nach E465 erst auf den zweiten Tipp). E569 hatte die
+Kurve nachgetragen, E356 gibt der Gruppe ihren Kontext — der Punkt stand.
+
+### Was stattdessen gefunden wurde (E583)
+
+Der Formenknopf auf dem Blatt zeigt seit E515, WELCHE Form gewählt ist.
+**Seine Kopie in der oberen Studioleiste zeigte immer `inkShapes` und immer
+den Titel „Form"** — und im Studio ist die obere Reihe die einzige sichtbare
+Werkzeugreihe (E573). `zeichenSpiegeln()` in `inkSync` gleicht jetzt
+`data-sym`, `data-form`, `title` und `aria-label` ab, allgemein und nur bei
+Abweichung: 7 Knotenänderungen bei einem echten Wechsel, 2 bei einem Klick
+auf dieselbe Form.
+
+### Und was das Hinsehen dazu fand (E584)
+
+Im Bild des Docks waren „Rechteck" und „Rund" dasselbe Bild. Gemessen mit
+der Methode aus `test480 §7`:
+
+```txt
+vorher   75 % formRect/formRoundrect · 72 % formEllipse/formRoundrect
+         70 % formLine/formArrow
+nachher  38 %                        · 29 %
+         28 %                          (schlimmstes Paar der Liste: 55 %)
+```
+
+Der Pfeil liegt jetzt waagerecht, das runde Rechteck ist kleiner und runder.
+Verworfen: eine Fassung mit offenen Eckbögen — sie misst besser (39 %),
+zeigt aber nicht die Form, die man bekommt.
+
+### Offen aus 7 B
+
+B 2 (Stift-Dock im Detail), B 7 (History-Stil — die Lage stimmt seit E573,
+die alten Toolbar-Styles hängen noch dran), B 8 (kleine Breite ist mit E580
+zur Hälfte zu; die Bildschirmtastatur braucht ein echtes Gerät), B 9 (siehe
+Tabelle weiter oben — „Alle Optionen" bleibt mit Grund vollständig).
+**Offen aus 7 C:** C 2 verlangt Zeichen von 24–28 px in den 44-px-Flächen;
+heute sind es 18 px.
+
+### Prüfstand dieses Bogens
+
+`test524` 76/76 (12 Zusicherungen neu, alle 12 rot gesehen), `test480` 54/54
+(4 neu, alle 4 rot gesehen). `npm run typecheck` und `npm run bauen:ts` grün.
+
+**Die Gesamtsuite ist NICHT als grün behauptet.**

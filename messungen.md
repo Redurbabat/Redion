@@ -785,3 +785,117 @@ Stelle verborgen sind. Gemessen wird jetzt an einer sichtbaren Kopie.
 Der Verzug der fünf Blätter: 0,152 s · 0,114 s · 0,076 s · 0,038 s · 0 s,
 dazu ein Übergang mit Überschwingen. Wer währenddessen misst, misst die
 Animation.
+
+---
+
+## 20. Das Form-Dock — was schon dastand
+
+**Wann:** 15. September 2026 · **Womit:** eigenes Messskript, Studio geöffnet,
+Formwerkzeug über die obere Leiste gewählt · **Warum:** Plan 7 B 5 verlangte
+„alle sieben vorhandenen Formen direkt; Farbe/Dicke dazu".
+
+Sichtbare Kinder der unteren Leiste, nach Gruppe, bei `data-tool="line"`:
+
+| Gruppe | sichtbar / gesamt | 1440 px | 390 px |
+|---|---|---|---|
+| `form` | 7 / 8 | ja | ja |
+| `farbe` | 6 / 7 | ja | ja |
+| `breite` | 3 / 5 | ja | ja |
+| `lineal` | 1 / 2 | ja | ja |
+| `stil`, `laser`, `radierer`, `schrift`, `auswahl`, `notizfarbe` | 0 | — | — |
+
+Die jeweils fehlenden sind der Trenner der Gruppe und — bei `breite` — die
+Klappe für die freie Stärke, die sich nach E465 erst auf den zweiten Tipp
+öffnet. **Der Punkt war zu, bevor der Bogen begann.**
+
+Knopfmasse der sieben Formen:
+
+```txt
+1440 px   61 · 59 · 88 · 72 · 78 · 65 · 68 px breit, alle 44 px hoch (mit Wort)
+ 390 px   44 × 44 px, alle sieben, ohne Wort
+Dockbreite   1440 px: 1079 px · 390 px: 358 px sichtbar von 868 px Inhalt
+```
+
+---
+
+## 21. Die Kopie in der oberen Leiste folgte der Form nicht
+
+**Wann:** 15. September 2026 · **Womit:** dasselbe Skript, Form im Dock
+gewechselt, oberen Knopf gelesen.
+
+| im Dock gewählt | `data-tool` unten | oben `data-sym` | oben `data-form` | oben Titel |
+|---|---|---|---|---|
+| Dreieck | `triangle` | `inkShapes` | — | „Form" |
+| Kurve | `curve` | `inkShapes` | — | „Form" |
+| Ellipse | `ellipse` | `inkShapes` | — | „Form" |
+
+**Nachher** (E583), derselbe Weg:
+
+| gewählt | oben `data-sym` | oben `data-form` | oben Titel |
+|---|---|---|---|
+| Dreieck | `formTriangle` | `triangle` | „Dreieck — die Form wählst du darunter" |
+| Kurve | `formCurve` | `curve` | „Kurve — nach dem Ziehen biegt der Griff …" |
+| Ellipse | `formEllipse` | `ellipse` | „Ellipse — die Form wählst du darunter" |
+| Rund | `formRoundrect` | `roundrect` | „Rechteck mit runden Ecken — …" |
+| Pfeil | `formArrow` | `arrow` | „Pfeil — die Form wählst du darunter" |
+| Linie | `formLine` | `line` | „Gerade Linie — die Form wählst du darunter" |
+
+**Was es an Bewegung kostet** (Beobachter auf dem oberen Knopf, `childList`,
+`subtree`, `attributes`):
+
+```txt
+echter Formwechsel          7 Änderungen
+dieselbe Form nochmal       2 Änderungen   ← und die zwei sind das
+                                             `aria-pressed`, das die Reihe
+                                             ohnehin für alle dreizehn setzt
+```
+
+Ohne die Abweichungsprüfung wären es sechs frische `<svg>` je Klick gewesen
+— `inkSync()` läuft bis zu sechsmal (gemessen in E575).
+
+---
+
+## 22. Sieben Formzeichen gegeneinander
+
+**Wann:** 15. September 2026 · **Womit:** die Methode aus `test480 §7` —
+jedes Zeichen als SVG auf 16 × 16 gerastert, Deckung durch Vereinigung ·
+**Warum:** „Rechteck" und „Rund" sahen im Bild des Docks gleich aus.
+
+**Vorher:**
+
+```txt
+75 %  formRect/formRoundrect
+72 %  formEllipse/formRoundrect
+70 %  formLine/formArrow
+55 %  formRect/formEllipse
+44 %  formTriangle/formCurve
+```
+
+Tinte je Zeichen (von 256 Rasterfeldern): formLine 33 · formArrow 47 ·
+formRect 76 · formEllipse 60 · formTriangle 60 · formRoundrect 64 ·
+formCurve 35.
+
+**Die Kandidaten, gemessen statt geraten** (jeweils das schlimmste Paar der
+ganzen Liste):
+
+| Fassung | schlimmstes Paar |
+|---|---|
+| heute | 75 % |
+| Pfeil: grösserer Kopf | 75 % (der Pfeil selbst 65 %) |
+| Pfeil: Kopf als eigene Spitze | 75 % (der Pfeil selbst 69 %) |
+| Pfeil: waagerecht mit offener Spitze | 75 % (der Pfeil selbst 28 %) |
+| Rund: rx 5.4, gleiche Grösse | 75 % — jetzt gegen die Ellipse |
+| Rund: rx 6.4, gleiche Grösse | 81 % gegen die Ellipse |
+| Rund: Stadion rx 5.6 | 85 % gegen die Ellipse |
+| Rund: etwas kleiner, rx 5.2 | 73 % gegen die Ellipse |
+| Rund: offene Eckbögen | 39 % — verworfen, zeigt nicht die Form |
+| **waagerechter Pfeil + kleiner und runder** | **55 %** ✓ |
+
+**Nachher:** das ähnlichste Paar der Liste ist `formRect/formEllipse` mit
+55 %, und das sind zwei Formen, die zu Recht verschieden aussehen.
+`formRect/formRoundrect` 38 %, `formEllipse/formRoundrect` 29 %,
+`formLine/formArrow` 28 %.
+
+**Angesehen:** `bilder/formzeichen-vergleich.png` (beide Sätze bei 18 und
+26 px), `bilder/dock-form.png`, `bilder/dock-form-handy.png`,
+`bilder/oben-leiste-form.png`.

@@ -2530,6 +2530,50 @@ const DocumentMode = (() => {
       ordnungObserver.observe(source, { childList: true });
       beobachtet = source;
     };
+    /* ══ DIE KOPIE ZEIGT, WAS DAS ORIGINAL ZEIGT (E583) ══════════════════════
+       Die obere Reihe wird EINMAL aus `Marken.WERKZEUGE` gebaut und trägt
+       seither dasselbe Zeichen. Für zwölf der dreizehn Werkzeuge stimmt
+       das: ein Stift bleibt ein Stift. Für den dreizehnten stimmt es nicht.
+
+       `formen` ist kein Werkzeug, sondern ein Knopf für sieben (E375), und
+       E515 sagt ausdrücklich, was er zeigen soll: „nicht ‚Formen', sondern
+       WELCHE Form gerade gewählt ist — ein Dreieck, ein Pfeil, eine Kurve.
+       Ein gemeinsames Werkzeugzeichen nähme genau die Auskunft weg, für die
+       dieser Knopf da ist." Der Knopf auf dem Blatt hält das seit E515; er
+       schreibt sich beim Formwechsel selbst um (`marken.ts`, `formart`).
+
+       GEMESSEN am 15. September 2026 hielt die Kopie es nicht: Dreieck,
+       Kurve, Ellipse gewählt — oben dreimal `inkShapes`, dreimal kein
+       `data-form`, dreimal der Titel „Form". Im Studio ist die obere Reihe
+       die einzige sichtbare (E573); die Auskunft fehlte also genau dort,
+       wo gezeichnet wird.
+
+       WARUM ALLGEMEIN UND NICHT ALS SONDERFALL FÜR `formen`: derselbe Satz
+       gilt für jeden Knopf, der sich unterwegs umschreibt. Eine Zeile
+       `if (id === 'formen')` wäre beim nächsten solchen Knopf wieder falsch,
+       und niemand würde es merken. Hier wird verglichen, nicht geraten —
+       wer sein Zeichen nie ändert, kommt hier nie vorbei.
+
+       NUR BEI ABWEICHUNG (E575): `Register.symbole.fuelle` schreibt ein
+       frisches `<svg>` hinein. Bei jedem der sechs Rufe von `inkSync()`
+       hiesse das sechsmal neues Markup unter dem Finger — derselbe Preis,
+       den das Umhängen oben schon gekostet hat. */
+    const zeichenSpiegeln = (kopie: HTMLElement, echt: HTMLElement | null | undefined): void => {
+      if (!echt) return;
+      const glyph = kopie.querySelector<HTMLElement>('[data-sym]');
+      const sym = echt.querySelector<HTMLElement>('[data-sym]')?.dataset.sym || '';
+      if (!glyph || !sym) return;
+      const form = echt.dataset.form || '';
+      if (glyph.dataset.sym === sym && (kopie.dataset.form || '') === form) return;
+      glyph.dataset.sym = sym;
+      if (form) kopie.dataset.form = form; else delete kopie.dataset.form;
+      try { Register.symbole.fuelle(kopie); } catch { /* dann bleibt das alte Zeichen stehen */ }
+      /* AUCH DAS WORT, NICHT NUR DAS BILD (§38): wer die Maus darauf hält
+         oder einen Vorleser benutzt, hörte sonst weiter „Form". */
+      const titel = echt.getAttribute('title');
+      if (titel) { kopie.title = titel; kopie.setAttribute('aria-label', titel); }
+    };
+
     const inkSync = (): void => {
       if (!workspace.isConnected) { Zeichenziel.vergiss(inkSync); return; }
       const source = inkToolbar();
@@ -2580,6 +2624,7 @@ const DocumentMode = (() => {
         const real = source?.querySelector<HTMLButtonElement>('[data-wz="' + button.dataset.documentTool + '"]');
         button.disabled = !canAnnotate || !state.toolsOpen || !real || real.disabled;
         button.setAttribute('aria-pressed', String(state.toolsOpen && real?.getAttribute('aria-pressed') === 'true'));
+        zeichenSpiegeln(button, real);
       });
       for (const action of ['undo', 'redo']) {
         const real = source?.querySelector<HTMLButtonElement>('[data-act="' + action + '"]');
