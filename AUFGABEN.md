@@ -826,6 +826,36 @@ worden; die Karte mit jedem einzelnen Befund steht in
 Das Ziel bleibt offen, weil ein Ziel nie „erledigt" ist. Es steht deshalb
 hier und nicht dort.
 
+### Die fünf Messlatten (Redur, 15. September 2026, E594)
+
+> „Ich will das redion start wie goodnotes bein zeichenn ist, stark wie word
+> beim text schreiben bearbeiten, start wie Powerpoint beim Präsentation
+> erstellen, strat wie obsidian bein gedechnis und besser als notion mehrer
+> funktionen, mehr Qualität haben."
+
+Damit steht neben der Aufzählung von Programmen jetzt, **worin** Redion ihnen
+gleichkommen soll. Gezählt an der laufenden App am 15. September 2026:
+
+| Feld | Messlatte | Was steht | Was fehlt |
+|---|---|---|---|
+| Zeichnen | GoodNotes | 13 Werkzeuge · 6 Stifte · 7 Formen · 5 Radierarten · Lineal · Zoomfenster · Formenerkennung · Lasso · 100 Schritte zurück | der Rest von L133 |
+| Text | **Word** | 78 Blockarten · `.docx` lesen (verlustbehaftet) · schreiben (minimal) | **O6, O7 — das schwächste Feld** |
+| Präsentation | PowerPoint | 8 Layouts · 173 Bandeinträge in 7 Reitern · Vortragsmodus · `.pptx` lesen · Rundreise schreiben | Übergänge, Animationen, Folienmaster |
+| Gedächtnis | Obsidian | Rückverweise · unverlinkte Erwähnungen · Wissensgraph · Schlagwörter · Suche über mehrere Dokumente · alles lokal | tägliche Notizen als eigener Weg |
+| Alles zusammen | Notion, und darüber | 13 Ansichten · 35 Eigenschaftstypen · 255 Formeln · Relationen · Rollups · 11 Vorlagen · 8 Verbindungen · 16 Bereiche | — |
+
+**Vier von fünf stehen, eine nicht.** „Stark wie Word" heisst für Redur nicht
+„viele Blockarten", sondern: eine `.docx` öffnen, darauf schreiben, den Text
+ändern — ohne dass das Original leidet. Für `.pptx` ist genau das seit E592
+und E593 gebaut; für `.docx` fehlt es. Die Reihenfolge, die daraus folgt:
+
+1. **O7 — `.docx`-Text ändern.** Derselbe Weg wie E593, nur auf
+   `word/document.xml`. Damit steht das schwächste Feld.
+2. **Folienmaster und Übergänge** — der Rest von „1:1 wie PowerPoint".
+3. **Tägliche Notizen** — der Rest von „wie Obsidian".
+4. **O6 — auf `.docx` schreiben.** Zuletzt: braucht einen Rasterer, und das
+   ist der einzige Bogen ohne gebahnten Weg.
+
 ---
 
 ## Word und PowerPoint öffnen und bearbeiten (O1 … O7)

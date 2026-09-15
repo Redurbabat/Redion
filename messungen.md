@@ -1372,3 +1372,44 @@ Die 672 Bytes mehr sind die eine Folie, die ungepackt hineingeht (L169).
 Der Hinweis der Ausgabe lautete: „Die Originaldatei ist vollständig
 erhalten; 1 Textstelle wurde übernommen. Formen ohne eindeutige Zuordnung
 stehen unverändert darin."
+
+---
+
+## 35. Die fünf Messlatten, gezählt
+
+**Wann:** 15. September 2026 · **Womit:** die Register der laufenden App
+ausgelesen, dazu Zählungen im Verzeichnisbaum · **Warum:** Redurs fünf
+Messlatten (E594) brauchen einen Stand, gegen den sie gelten.
+
+**Aus den Registern, an der laufenden App:**
+
+```txt
+Blockarten        78      Ansichten             13      Eigenschaftstypen  35
+Formelfunktionen 255      Vorlagen              11      Verbindungen        8
+Bereiche          16      Zeichen im Register  129      Bandeinträge      173
+Bandreiter         7      Werkzeuge (Zeichnen)  13      Stifte              6
+Formen             7      Radierarten            5      Folienlayouts       8
+```
+
+`Register.befehle` trägt nur **9** Einträge — die Befehle der Bereiche stehen
+im Slash-Menü und im Band, nicht dort. Die Zahl ist richtig und sagt wenig;
+sie steht hier, damit sie beim nächsten Lesen nicht für „Redion hat neun
+Befehle" gehalten wird.
+
+**Aus dem Verzeichnisbaum:**
+
+```txt
+Prüfläufe                 467
+TypeScript-Dateien        221
+TypeScript-Zeilen     146 661
+Entscheidungen (Index)    574
+Lücken                    169, davon 31 geschlossen
+js-bestand.json             0 Einträge — keine handgeschriebene .js mehr
+```
+
+**Eine Unstimmigkeit, die dabei auffiel und nicht verschwiegen wird:**
+`ENTSCHEIDUNGEN.md` hat **574** Einträge im Verzeichnis, aber nur **223**
+Abschnitte im Text. Der Unterschied sind Entscheidungen, die als Zeile im
+Verzeichnis stehen und ihren Fliesstext in einem gemeinsamen Abschnitt haben
+— das ist so gewachsen und kein Fehler, aber wer die Zahl 574 liest, sollte
+nicht 574 Kapitel erwarten.

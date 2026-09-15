@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-573 Entscheidungen, E1 bis E593 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+574 Entscheidungen, E1 bis E594 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -637,6 +637,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E591** — Beim Zoom lag das Lineal ausserhalb des Bildes; und eine Zusicherung über die Tintenbreite konnte ihren Fehler nicht sehen
 * **E592** — Eine eingelesene `.pptx` ging als frische Textdatei heraus und verlor alles; jetzt wird das Original durchgereicht
 * **E593** — Jede eindeutige Textmarke merkt sich beim Einlesen ihre Stelle im XML; geänderter Text kommt damit in der Datei an
+* **E594** — Redurs fünf Messlatten: GoodNotes, Word, PowerPoint, Obsidian, und über Notion hinaus — mit gezähltem Stand je Feld
 
 ---
 
@@ -48111,3 +48112,71 @@ Annahmen über fremde Bausteine sind der teuerste Fehler dieses Projekts
 
 **Prüflauf:** `test525` 22/22, davon fünf Zusicherungen neu und drei rot
 gesehen.
+
+---
+
+## E594 — Die fünf Messlatten
+
+**15. September 2026.** Redur:
+
+> „Ich will das redion start wie goodnotes bein zeichenn ist, stark wie word
+> beim text schreiben bearbeiten, start wie Powerpoint beim Präsentation
+> erstellen, strat wie obsidian bein gedechnis und besser als notion mehrer
+> funktionen, mehr Qualität haben."
+
+Das ist die Richtung, an der Redion künftig gemessen wird. Bisher stand in
+der Visionskarte eine Aufzählung von Programmen; jetzt steht daneben, **worin**
+Redion ihnen gleichkommen soll. Das ist der Unterschied zwischen einem Wunsch
+und einer Messlatte: eine Messlatte sagt, wann man daneben liegt.
+
+**Fünf, nicht eine.** Redion muss nicht in allem gleich weit sein — es muss
+in jedem der fünf Felder **so gut wie das beste Programm dieses Feldes** sein,
+und im fünften darüber hinaus. Wo es das heute nicht ist, steht das unten,
+und zwar gezählt.
+
+### Wo Redion am 15. September 2026 steht
+
+Alles gezählt an der laufenden App, nicht geschätzt.
+
+| Feld | Messlatte | Was steht | Was fehlt |
+|---|---|---|---|
+| Zeichnen | GoodNotes | 13 Werkzeuge · 6 Stifte · 7 Formen · 5 Radierarten · Lineal mit Kantenführung · Zoomfenster · Formenerkennung · Kritzel-Löschen · Lasso · 100 Schritte zurück | der Rest von L133 |
+| Text | **Word** | 78 Blockarten · `.docx` lesen (verlustbehaftet) · `.docx` schreiben (minimal) | **Draufschreiben (O6), Text ändern (O7)** |
+| Präsentation | PowerPoint | 8 Layouts · 173 Bandeinträge in 7 Reitern · Vortragsmodus · `.pptx` lesen · `.pptx` als Rundreise schreiben (E592/E593) | Übergänge, Animationen, Folienmaster |
+| Gedächtnis | Obsidian | Rückverweise · unverlinkte Erwähnungen · Wissensgraph · Schlagwörter · Suche über mehrere Dokumente · alles lokal | tägliche Notizen als eigener Weg |
+| Alles zusammen | Notion, und darüber | 13 Ansichten · 35 Eigenschaftstypen · 255 Formelfunktionen · Relationen · Rollups · 11 Vorlagen · 8 Verbindungen · 16 Bereiche | — |
+
+Dazu der Unterbau: **467 Prüfläufe**, 221 TypeScript-Dateien, 146 661 Zeilen,
+574 Entscheidungen, 169 Lücken (31 davon geschlossen), und **keine einzige von
+Hand geschriebene `.js`** im ganzen Projekt (§54).
+
+### Die ehrliche Antwort: vier von fünf stehen, eine nicht
+
+**Text ist das schwächste Feld.** Redion hat 78 Blockarten und schreibt Text
+schöner als Notion — aber „stark wie Word" heisst für Redur etwas anderes: er
+will eine `.docx` öffnen, darauf schreiben und den Text ändern, **ohne dass
+die Originaldatei leidet**. Für `.pptx` ist genau das seit heute gebaut. Für
+`.docx` fehlt es:
+
+- **O7 (Text ändern)** ist derselbe Weg wie E593, nur auf `word/document.xml`
+  statt auf `ppt/slides/slideN.xml`. Das Werkzeug ist da, die Spur wäre
+  dieselbe Idee, und es ist der nächste Bogen.
+- **O6 (Draufschreiben)** braucht einen Rasterer — `pdf.js` liest nur PDF.
+  Das ist der teuerste Bogen des ganzen Projekts und der einzige ohne
+  gebahnten Weg.
+
+**Was NICHT als Antwort gilt:** „wir haben schon 78 Blockarten". Redur hat
+nicht nach der Zahl gefragt, sondern nach einer Fähigkeit. Eine Zahl, die
+eine fehlende Fähigkeit zudeckt, ist die unehrlichste Art zu antworten
+(§33: keine falschen Versprechen).
+
+### Was daraus für die Reihenfolge folgt
+
+1. **O7 — `.docx`-Text ändern.** Derselbe Weg wie E593, und damit steht das
+   schwächste Feld.
+2. **Folienmaster und Übergänge** — der Rest von „1:1 wie PowerPoint".
+3. **Tägliche Notizen** — der Rest von „wie Obsidian".
+4. **O6 — auf `.docx` schreiben.** Zuletzt, weil es einen Rasterer braucht.
+
+Der Rest von L133 (Zeichnen) läuft nebenher weiter: dort ist Redion schon
+auf der Messlatte, und was fehlt, sind Feinheiten, keine Fähigkeiten.
