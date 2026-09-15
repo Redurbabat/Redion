@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-574 Entscheidungen, E1 bis E594 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+578 Entscheidungen, E1 bis E598 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -638,6 +638,10 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E592** — Eine eingelesene `.pptx` ging als frische Textdatei heraus und verlor alles; jetzt wird das Original durchgereicht
 * **E593** — Jede eindeutige Textmarke merkt sich beim Einlesen ihre Stelle im XML; geänderter Text kommt damit in der Datei an
 * **E594** — Redurs fünf Messlatten: GoodNotes, Word, PowerPoint, Obsidian, und über Notion hinaus — mit gezähltem Stand je Feld
+* **E595** — Eine eingelesene `.docx` geht unverändert wieder heraus, und geänderte Absätze kommen an ihrer Stelle im Original an
+* **E596** — Ein Wächter hing 56 Commits zurück: der Originalschutz aus E538 stand ihm im Weg, nicht umgekehrt
+* **E597** — Direkt auf dem Blatt schreiben statt in ein Fenster: ein Tipp legt das Schreibfeld dorthin, wo der Text stehen wird
+* **E598** — Die Stilregel „textarea 16px !important" hat das Schreibfeld am Telefon umgerechnet; die Antwort ist nicht, sie auszunehmen
 
 ---
 
@@ -48180,3 +48184,359 @@ eine fehlende Fähigkeit zudeckt, ist die unehrlichste Art zu antworten
 
 Der Rest von L133 (Zeichnen) läuft nebenher weiter: dort ist Redion schon
 auf der Messlatte, und was fehlt, sind Feinheiten, keine Fähigkeiten.
+
+---
+
+## E595 — Die Originaldatei geht unverändert wieder heraus, und der geänderte Absatz kommt darin an (Bogen O7)
+
+**15. September 2026.** E594 hat die Reihenfolge gesetzt: „O7 — `.docx`-Text
+ändern. Derselbe Weg wie E593, und damit steht das schwächste Feld." Das ist
+dieser Bogen.
+
+### Zuerst gemessen, was verloren ging
+
+Nicht geschätzt. Eine `.docx` von Hand gebaut — Überschrift mit Stil
+`Heading1`, ein roter fetter Absatz (`w:color val="CC0000"`), ein Absatz aus
+drei Läufen mit einem kursiven Stück, eine Tabelle, ein PNG, `docProps/core.xml`
+— und durch Redion geschickt:
+
+```
+vorher   7 Einträge, 2284 Bytes
+nachher  6 Einträge, 5718 Bytes
+
+weg:  docProps/core.xml · word/media/image1.png · die Farbe CC0000
+neu:  „Redurs Bericht.docx" stand als gewöhnlicher ABSATZ im Dokument —
+      der Anhangsblock aus E538, den der frische Schreiber mitschrieb
+```
+
+Überlebt haben fett, kursiv und die Tabelle. Sie gehen über Markdown und
+werden neu geschrieben — alles andere kennt der frische Schreiber nicht, also
+schreibt er es nicht.
+
+**Für ein selbst geschriebenes Dokument ist der frische Weg richtig.** Für ein
+eingelesenes ist er Datenverlust (§46 Punkt 1, §51).
+
+### Was entschieden wurde
+
+Dasselbe wie bei `.pptx` in E592/E593, nur auf `word/document.xml`:
+
+1. **Liegt das Original als Anhang dabei** (E538 legt es seit dem
+   12. September ab), wird es **Eintrag für Eintrag durchgereicht** — mit
+   `rohBytes`, also ohne Auspacken und ohne Neupacken. Was Redion nicht
+   versteht, bleibt genau so liegen, wie Word es geschrieben hat.
+2. **Beim Einlesen bekommt jeder eindeutige Absatz eine Rückspur**
+   `quelle: { p: <Nummer im Körper> }`.
+3. **Beim Ausgeben wird genau dieser Absatz nachgeschlagen** und sein eines
+   `<w:t>` ersetzt. Farben, Stile, Tabellen, Bilder und der Abschnitt bleiben
+   stehen, weil nichts anderes angefasst wird.
+
+### Die zwei Stellen, an denen es schiefgehen konnte
+
+**Die Nummer ist die im Körper, nicht die des Blocks.** `docxLesen`
+überspringt leere Absätze (`if (!text) continue`) und behandelt Tabellen als
+eigene Knoten — der dritte Block ist also nicht der dritte `<w:p>`. Wer das
+verwechselt, schreibt Text in einen fremden Absatz. Der Zähler läuft deshalb
+über `koerper.children`, nicht über `bloecke`.
+
+**Eine Spur bekommt nur ein Absatz mit genau EINER Textstelle.** „Ein zweiter
+Absatz mit *kursivem* Teil" besteht aus drei `<w:r>` mit drei `<w:t>`; ihn
+zurückzuschreiben hiesse, den neuen Text auf drei Läufe zu verteilen, und
+jede Verteilung wäre geraten. Er behält seinen Text im Dokument, und der
+Hinweis sagt es: „Absätze ohne eindeutige Zuordnung stehen unverändert
+darin." Dasselbe Urteil wie E593.
+
+Dazu kommt eine dritte Kleinigkeit, die beim Messen auffiel: Der Text aus dem
+Editor trägt dessen Auszeichnungen (`**fett**`, `*kursiv*`). In ein `<w:t>`
+gehören sie nicht — dort stünden sie als Sternchen im Dokument. Der Absatz
+behält also seine Word-Formatierung, und der Text wird ohne Markdown
+eingesetzt.
+
+### Nachgemessen, und zwar mit fremdem Werkzeug
+
+Redions eigener ZIP-Leser ist kein Beweis für Redions eigenen ZIP-Schreiber.
+Geprüft wurde deshalb mit Pythons `zipfile`:
+
+```
+Python öffnet: 7 Einträge · testzip: keine Schäden · 2284 → 2650 Bytes
+fehlt: nichts · neu: nichts
+inhaltlich anders: ['word/document.xml']
+Text nachher: ['Ein ganz neuer Satz.', 'Ein farbiger, fetter Absatz.',
+               'Ein zweiter Absatz mit ', 'kursivem', ' Teil.', 'A1', 'B1']
+Farbe: ['CC0000'] · Tabellen: 1 · Kursiv: 1 · Stil: ['Heading1']
+document.xml: wohlgeformt · Packmethoden: [0, 8]
+```
+
+Sieben Einträge hinein, sieben heraus. Das Bild ist da, `docProps/core.xml`
+ist da, die Farbe ist da, der Mehrläufer steht unverändert. Geändert hat sich
+genau ein Teil und genau ein Satz darin.
+
+### Der Wächter war zuerst rot
+
+`pruefungen/lauf/test526.mts` (neu, 19 Zusicherungen) baut seine eigene
+`.docx` aus eigenem XML, schickt sie durch und liest nach. Gegen den Stand
+vor diesem Bogen: **14 von 19 rot.** Danach 19 von 19. Kein Wächter dieses
+Projekts zählt, bevor er einmal rot war (§50).
+
+### Was es kostet
+
+Eine eingelesene `.docx` geht jetzt als ihr Original heraus — auch dann,
+wenn der Nutzer in Redion Blöcke HINZUGEFÜGT hat. Die stehen nicht in der
+Datei. Das ist der Preis dafür, dass nichts verloren geht, und er steht in
+`LUECKEN.md` als **L170**, nicht in einer Fussnote. Der frische Schreiber
+bleibt für alles andere unverändert in Betrieb.
+
+---
+
+## E596 — Ein Wächter hing 56 Commits zurück
+
+**15. September 2026.** Beim Regressionsbündel zu E595 war `test252` rot, mit
+einer einzigen Zusicherung:
+
+```
+✗ Der Seitentitel kommt als H1 zurück (alsWord schreibt ihn als Heading1)
+  — {"typ":"file","text":"wochenbericht.docx"}
+```
+
+### Erst festgestellt, wem der rote Lauf gehört
+
+E579/E590 haben die Lehre geliefert: „‚Älter als mein Zweig' ist eine
+Vermutung, solange niemand die Commits durchgeht." Also durchgegangen, mit
+einem Arbeitsbaum (`git worktree`) statt mit einem Gefühl:
+
+```
+a26adfc7   (der Stand vor diesem Bogen)   test252 rot,  14/15
+d1f8e955   E538 „Originalschutz"          test252 rot
+d1f8e955~1 E537                           test252 GRÜN, 15/15
+```
+
+Der Lauf ist am **12. September** rot geworden, 56 Commits vor heute, und
+niemand hat ihn seither angesehen. Nicht dieser Bogen.
+
+### Und dann, wer recht hat
+
+Der Lauf las `drin[0]` und erwartete den Titel als `h1`. Seit E538 legt der
+Office-Weg die Originaldatei ab und hängt sie an Stelle 0 der neuen Seite —
+„aber wichtig die originale datei wird immer geschützt" (Redur,
+12. September 2026). Der Anhang gehört dorthin. Der **Lauf** hat unrecht, nicht
+die App.
+
+Entschieden: die Zusicherung wird nachgezogen, nicht der Originalschutz
+zurückgebaut. Der Titel wird als erster Block gesucht, der **kein** Anhang
+ist — und der Anhang bekommt seine eigene Zusicherung, damit er beim nächsten
+Mal nicht wieder stillschweigend verschwinden kann.
+
+### Die neue Zusicherung war rot
+
+Nicht behauptet, gemessen: dieselbe Datei in einem Arbeitsbaum auf
+`d1f8e955~1` — dem Stand ohne Originalschutz — gelegt und laufen lassen:
+
+```
+✗ Das Original liegt als Anhang an Stelle 0 (E538: die Originaldatei bleibt
+  unangetastet) — {"typ":"h1","text":"Wochenbericht KW 35"}
+15 bestanden, 1 durchgefallen
+```
+
+Auf dem heutigen Stand: 16 von 16. Ein Wächter, der nie rot war, ist eine
+Behauptung (§50, §55.2).
+
+### Was daraus folgt
+
+Der Fund ist nicht `test252`. Der Fund ist, dass ein roter Lauf 56 Commits
+lang unbemerkt bleiben konnte, weil das Regressionsbündel jedes Bogens nur
+die Läufe kennt, die der Bogen anfasst. Eingetragen als **L171**.
+
+---
+
+## E597 — Direkt auf dem Blatt schreiben, wie in OneNote
+
+**15. September 2026.** Redurs Satz:
+
+> „bei redion fehlt freier Text einfügen bei der PDF oder überhaupt — es
+> sollte wie OneNote sein: wenn ich irgendwo klicke, sollte ich direkt Text
+> schreiben können."
+
+### Zuerst nachgesehen, was heute passiert
+
+Nicht geraten. Ein Tipp mit dem Textwerkzeug auf ein Blatt, und dann
+nachgemessen, was auf der Seite steht:
+
+```
+Überlagerungen        1
+Dialogtext            „Text · Übernehmen mit Strg + Enter · Übernehmen · Abbrechen"
+aktives Element       TEXTAREA (im Dialog)
+Marken auf dem Blatt  []
+Das Getippte steht in TEXTAREA, Wert „Hallo Redion"
+```
+
+Ein **modales Fenster**. Das Getippte stand darin, das Blatt blieb leer, und
+erst „Übernehmen" brachte den Satz an seine Stelle. Für einen Gedanken, den
+man beim Lesen einer PDF nebenher notiert, sind das drei Schritte zu viel —
+und für jemanden, der OneNote kennt, ist es schlicht das falsche Gefühl.
+
+### Was jetzt passiert
+
+Der Tipp legt ein **Schreibfeld genau dorthin, wo der Text stehen wird** —
+mit seiner Schrift, seiner Grösse, seiner Farbe, seiner Ausrichtung und
+seinem Umbruch. Man tippt hinein, und was man sieht, ist, was danach dasteht.
+
+- **Ein Tipp woanders** schliesst das eine Feld und öffnet gleich das
+  nächste. Der Satz geht dabei nicht verloren: geschlossen heisst
+  übernommen, nie verworfen (§51).
+- **Ein Tipp auf einen vorhandenen Text** schreibt ihn an seiner Stelle
+  weiter, statt ihn zu überschreiben.
+- **Ein Doppeltipp** öffnet ihn auch mit der Auswahl — man muss für einen
+  Tippfehler nicht erst das Werkzeug wechseln.
+- **Escape und Strg/Cmd + Enter** beenden und behalten. Escape wirft nichts
+  weg; in OneNote verlässt es den Kasten, es löscht ihn nicht.
+- **Ein leeres Feld** hinterlässt keine Marke.
+- **Eine gesperrte Marke** öffnet gar nicht (E473).
+
+### Drei Entscheidungen, die im Code stehen und hier begründet sind
+
+**Ein `<textarea>` und kein `contenteditable`.** Ein Textkasten hält reinen
+Text (`mark.text`), keinen HTML-Baum. Ein `<textarea>` kann gar nichts
+anderes liefern — es gibt keinen Weg, über das Einfügen aus der
+Zwischenablage Auszeichnung oder Markup hereinzutragen (§19). `test201` §4
+prüft genau das weiterhin, und zwar jetzt über den neuen Weg: der Satz
+`<img src=x onerror=1> Loesung` kommt wortgleich an und erzeugt kein fremdes
+Element.
+
+**Im Elternknoten und nicht als `<foreignObject>`.** Die Zeichenfläche trägt
+`preserveAspectRatio="none"` und wird über ihren Kasten GEZOGEN. Ein Feld
+darin würde mitgezogen — waagrecht gestauchte Buchstaben, die mit dem
+fertigen Text nichts zu tun haben. Der Elternknoten (`.blatt-papier` oder
+`.blatt-flur`) steht auf `position:relative` und deckt genau denselben
+Kasten; dort gerechnet stimmt die Stelle, und die Schrift bleibt Schrift.
+
+**Der Dialog bleibt als Rückfall.** Wo es keinen Elternknoten gibt, öffnet
+weiterhin das Fenster von früher. Nicht aus Höflichkeit: ein Weg weniger
+wäre hier ein Weg gar keiner.
+
+### Die eine Stelle, an der es still schiefgehen konnte
+
+`blur` kommt in Chromium **nach** `pointerdown`. Ohne Gegenmassnahme stünden
+für einen Wimpernschlag zwei Felder da, und das zweite wäre schon offen,
+wenn das erste sich schliesst. Deshalb schliesst der Zeigerabdruck ein
+offenes Feld als Allererstes, bevor er irgendetwas anderes tut.
+
+### Und die Stelle, an der ein Satz still verschwinden konnte
+
+Ein Feld, das noch offen ist, wenn die Zeichenfläche verschwindet, nähme den
+Satz mit. Beim Blättern fängt `blur` das ab — beim Schliessen des Reiters
+nicht. Die **Lebenswache aus E115** (sie schliesst einen laufenden Strich,
+bevor seine SVG weg ist, und hängt an `pagehide` und `visibilitychange`)
+schliesst deshalb jetzt auch das Schreibfeld.
+
+Das war eine Zusicherung, die beinahe aus dem falschen Grund grün gewesen
+wäre: ihr erster Entwurf blätterte auf eine andere Seite — und blieb grün,
+auch mit ausgebauter Wache, weil dort `blur` übernimmt. Gemessen, dann
+umgeschrieben auf `pagehide`. Dort ist sie ohne die Wache rot (§55.2).
+
+### Was es kostet
+
+Ein Kasten mit mehreren Formaten in einem Absatz (`laeufe`, E561 — so kommen
+Texte aus `.pptx`) fällt beim Ändern auf ein Format zusammen und behält
+Grösse, Fett und Farbe seines ersten Stücks. Stehen zu lassen wäre
+schlimmer: `textLayout` zeigt dann weiter den ALTEN Text, und die Änderung
+wäre unsichtbar verschluckt. Steht als **L172**.
+
+### Geprüft
+
+`pruefungen/lauf/test527.mts` (neu, 27 Zusicherungen) fährt den ganzen Weg
+mit Maus und Tastatur — auf einem Blatt, am Telefon und auf einer PDF-Seite,
+weil Redur die PDF ausdrücklich genannt hat. Gegen den Stand davor, in seiner
+damaligen Fassung mit zwanzig Zusicherungen: **16 rot**. Drei der
+vier grünen waren es aus dem falschen Grund — „Escape schliesst das Feld",
+„das neue Feld ist leer" und „kein Schreibfeld über einer gesperrten Marke"
+sind alle wahr, wenn es gar kein Feld gibt. Das steht im Kopf des Laufs,
+damit niemand sie für einen Beweis hält (§55.2).
+
+Nachgezogen wurden `test201` §4, `test352` (`textSetzen`) und `test368` §2a:
+alle drei fuhren den Dialog. Ihre Frage ist dieselbe geblieben, nur der Weg
+dorthin ist der eines Menschen.
+
+---
+
+## E598 — Die Stilregel, die das Schreibfeld umgerechnet hat
+
+**15. September 2026.** Gefunden auf einem Bild, nicht in einer Messung
+(§55.1) — und das ist der Punkt dieses Eintrags.
+
+Am Telefon stand im Schreibfeld:
+
+```
+Ein Klick, und
+ich schreibe
+schon.
+```
+
+und danach auf dem Blatt:
+
+```
+Ein Klick, und ich schreibe
+schon.
+```
+
+Drei Zeilen gegen zwei. Kein Prüflauf hatte etwas dazu zu sagen, weil keiner
+die zwei Umbrüche MITEINANDER verglich.
+
+### Gemessen
+
+```
+Rechner 1280 × 900   Feld fontPx 26,3   Zeilen 2     Blatt Zeilen 2
+Telefon  390 × 844   Feld fontPx 16     Zeilen 3     Blatt Zeilen 2
+                     gesetzt waren 9,23 px
+```
+
+`bausteine.css:312` schreibt unter 760 px:
+
+```css
+input, textarea, select{ font-size:16px !important; }
+```
+
+damit iOS beim Tippen in ein Feld nicht in die Seite hineinzoomt. Die Regel
+ist richtig. Sie hat dieses Projekt schon einmal Zeit gekostet — in
+`lernwelt.css:1113` steht dieselbe Lehre, dort mit einem Auswahlfeld, das
+49 px aus dem Bild ragte.
+
+### Was entschieden wurde
+
+**Nicht, die Regel auszunehmen.** Ein Feld mit 9 px Schrift lässt iOS beim
+Hineintippen zoomen, und dann steht der Nutzer vor einem verrutschten Blatt.
+
+Stattdessen wird das Feld in **seiner** Grösse gesetzt — nie unter 16 px —
+und als Ganzes verkleinert:
+
+```
+sollPx  = Schriftgrösse × Skala der Fläche      (was auf dem Schirm stehen soll)
+basisPx = max(16, sollPx)                       (was der Browser sehen soll)
+zoom    = sollPx / basisPx                      (1, wenn es ohnehin gross genug ist)
+
+font-size  : basisPx, inline und `important`
+Breite     : (Kastenbreite × Skala) / zoom
+transform  : scale(zoom), Ursprung links oben
+```
+
+Der Umbruch fällt damit an derselben Stelle wie im Blattmass, und der
+Browser sieht eine Schrift, bei der er nicht zoomt.
+
+**Inline und `important`**, weil die Stilregel `important` ist — nur so
+gewinnt die Stelle, die das Blattmass wirklich kennt. Bei Grösse 16 fällt
+beides zufällig zusammen; erst ab Grösse 20 sieht man, wer gewinnt.
+
+### Das gilt nicht nur am Telefon
+
+Jede verkleinerte Fläche — ein Zoomfenster, ein schmaler Bildschirm — hatte
+denselben Fehler. Er fiel nur am Telefon auf, weil er dort gross genug war,
+um ihn zu sehen.
+
+### Der Wächter war rot, und zwar zweimal verschieden
+
+`test527` §10 vergleicht die zwei Umbrüche miteinander, bei Schriftgrösse 34
+statt der Vorgabe 16 — sonst wäre er grün, egal wer gewinnt. Gegengeprüft:
+
+```
+ohne das inline-`important`   Feld 3 Zeilen · Blatt 4 · fontPx 16    ✗ ✗
+ohne die 16-px-Untergrenze    fontPx 9,21                            ✗
+mit beidem                    Feld und Blatt gleich · fontPx 19,6    ✓ ✓
+```

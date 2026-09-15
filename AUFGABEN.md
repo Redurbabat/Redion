@@ -839,18 +839,24 @@ gleichkommen soll. Gezählt an der laufenden App am 15. September 2026:
 | Feld | Messlatte | Was steht | Was fehlt |
 |---|---|---|---|
 | Zeichnen | GoodNotes | 13 Werkzeuge · 6 Stifte · 7 Formen · 5 Radierarten · Lineal · Zoomfenster · Formenerkennung · Lasso · 100 Schritte zurück | der Rest von L133 |
-| Text | **Word** | 78 Blockarten · `.docx` lesen (verlustbehaftet) · schreiben (minimal) | **O6, O7 — das schwächste Feld** |
+| Freier Text | **OneNote** | ein Tipp aufs Blatt, und man schreibt direkt dort (E597) · auf Blättern UND auf PDF-Seiten · Doppeltipp öffnet einen vorhandenen Text | Auszeichnung IM Feld (L172) |
+| Text | **Word** | 78 Blockarten · `.docx` lesen · Rundreise ohne Verlust · geänderte Absätze kommen im Original an (E595) | **O6** · neue Blöcke kommen nicht mit (L170) |
 | Präsentation | PowerPoint | 8 Layouts · 173 Bandeinträge in 7 Reitern · Vortragsmodus · `.pptx` lesen · Rundreise schreiben | Übergänge, Animationen, Folienmaster |
 | Gedächtnis | Obsidian | Rückverweise · unverlinkte Erwähnungen · Wissensgraph · Schlagwörter · Suche über mehrere Dokumente · alles lokal | tägliche Notizen als eigener Weg |
 | Alles zusammen | Notion, und darüber | 13 Ansichten · 35 Eigenschaftstypen · 255 Formeln · Relationen · Rollups · 11 Vorlagen · 8 Verbindungen · 16 Bereiche | — |
 
-**Vier von fünf stehen, eine nicht.** „Stark wie Word" heisst für Redur nicht
-„viele Blockarten", sondern: eine `.docx` öffnen, darauf schreiben, den Text
-ändern — ohne dass das Original leidet. Für `.pptx` ist genau das seit E592
-und E593 gebaut; für `.docx` fehlt es. Die Reihenfolge, die daraus folgt:
+**Stand 15. September 2026: fünf von fünf stehen im Kern, zwei mit Rest.**
+„Stark wie Word" heisst für Redur nicht „viele Blockarten", sondern: eine
+`.docx` öffnen, darauf schreiben, den Text ändern — ohne dass das Original
+leidet. Für `.pptx` ist das seit E592/E593 gebaut, für `.docx` seit **E595**:
+die Datei geht Eintrag für Eintrag unverändert wieder heraus, und ein in
+Redion geänderter Absatz steht an seiner Stelle darin. Geblieben ist das
+Draufschreiben (O6) und das, was in L170 steht. Die Reihenfolge, die daraus
+folgt:
 
-1. **O7 — `.docx`-Text ändern.** Derselbe Weg wie E593, nur auf
-   `word/document.xml`. Damit steht das schwächste Feld.
+1. ~~**O7 — `.docx`-Text ändern.**~~ **ERLEDIGT (E595).** Mit Pythons
+   `zipfile` gegengeprüft: 7 Einträge hinein, 7 heraus, genau ein Teil
+   inhaltlich anders.
 2. **Folienmaster und Übergänge** — der Rest von „1:1 wie PowerPoint".
 3. **Tägliche Notizen** — der Rest von „wie Obsidian".
 4. **O6 — auf `.docx` schreiben.** Zuletzt: braucht einen Rasterer, und das
@@ -1033,7 +1039,18 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   Ausgabe sagt, wie viele Stellen übernommen wurden.
 - **O6 · `.docx` draufschreiben.** Braucht den Rasterer. Das ist der teuerste
   Bogen und der einzige, für den es noch keinen Weg gibt.
-- **O7 · `.docx` Text ändern.** Rundreise auf `word/document.xml` (braucht O2).
+- **O7 · `.docx` Text ändern** — ERLEDIGT (E595). Liegt das Original als
+  Anhang dabei (E538), wird es Eintrag für Eintrag durchgereicht und nur
+  `word/document.xml` angefasst. Jeder Absatz mit genau EINER Textstelle
+  bekommt beim Einlesen seine Spur `quelle: { p }` — die Nummer im KÖRPER,
+  nicht die des Blocks, weil leere Absätze übersprungen werden und Tabellen
+  eigene Knoten sind. Gemessen verlor der frische Schreiber vorher
+  `docProps/core.xml`, ein PNG und die Farbe `CC0000` und schrieb den
+  Anhangsblock als Absatz mit hinein; nachher fehlt nichts und es kommt
+  nichts dazu. `test526` (neu, 19 Zusicherungen) war gegen den alten Stand
+  14-mal rot.
+  **Der Rest steht in L170:** in Redion NEU angelegte Blöcke stehen nicht in
+  der Datei, gelöschte bleiben darin stehen — sie tragen keine Spur.
 
 **Ehrlich dazu:** „1:1 wie PowerPoint" ist kein Bogen, sondern O3 bis O5 —
 und selbst danach fehlen Übergänge, Animationen und Platzhalter-Vererbung.

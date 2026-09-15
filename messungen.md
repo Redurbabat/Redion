@@ -1413,3 +1413,169 @@ Abschnitte im Text. Der Unterschied sind Entscheidungen, die als Zeile im
 Verzeichnis stehen und ihren Fliesstext in einem gemeinsamen Abschnitt haben
 — das ist so gewachsen und kein Fehler, aber wer die Zahl 574 liest, sollte
 nicht 574 Kapitel erwarten.
+
+---
+
+## 36. Die Rundreise einer .docx
+
+**15. September 2026 · Bogen O7 / E595**
+
+Gemessen an einer von Hand gebauten Probedatei: Überschrift mit Stil
+`Heading1`, ein roter fetter Absatz (`w:color val="CC0000"`), ein Absatz aus
+drei Läufen mit kursivem Mittelstück, eine Tabelle mit zwei Zellen, ein PNG,
+`docProps/core.xml`. Methode: die Datei durch `Einlesen.datei` und
+`Austausch.alsWord` schicken, dann mit **Pythons `zipfile`** nachsehen —
+nicht mit Redions eigenem Leser, der ja Partei ist.
+
+**Vorher — der frische Schreiber:**
+
+```txt
+Einträge           7  →  6
+Bytes           2284  →  5718
+verloren        docProps/core.xml · word/media/image1.png · Farbe CC0000
+dazugekommen    „Redurs Bericht.docx" als gewöhnlicher Absatz im Text
+überlebt        fett · kursiv · die Tabelle (alle drei über Markdown)
+```
+
+**Nachher — durchgereicht mit einem geänderten Absatz:**
+
+```txt
+Python öffnet       7 Einträge · testzip: keine Schäden
+Bytes            2284  →  2650
+fehlt               nichts
+neu                 nichts
+inhaltlich anders   ['word/document.xml']
+Text nachher        ['Ein ganz neuer Satz.', 'Ein farbiger, fetter Absatz.',
+                     'Ein zweiter Absatz mit ', 'kursivem', ' Teil.',
+                     'A1', 'B1']
+Farbe               ['CC0000']   Tabellen 1   Kursiv 1   Stil ['Heading1']
+document.xml        wohlgeformt
+Packmethoden        [0, 8]
+```
+
+Die 366 Bytes Zuwachs sind `word/document.xml`: es geht ungepackt (Methode 0)
+wieder hinein, während die sechs durchgereichten Einträge ihre Methode 8
+behalten. Dieselbe Sache wie **L169** bei den Folien, dieselbe Grössenordnung.
+
+**Der Wächter vorher und nachher:**
+
+```txt
+test526 gegen den Stand vor E595    14 von 19 rot
+test526 gegen den Stand nach E595   19 von 19 grün
+```
+
+---
+
+## 37. Wie lange ein roter Lauf unbemerkt bleiben kann
+
+**15. September 2026 · E596**
+
+`test252` war rot. Nicht geraten, wem er gehört, sondern durchgegangen — mit
+einem Arbeitsbaum je Stand:
+
+```txt
+Stand        was dort steht                   test252
+a26adfc7     der Stand vor Bogen O7           rot   14 von 15
+d1f8e955     E538 „Originalschutz"            rot
+d1f8e955~1   E537                             grün  15 von 15
+```
+
+```txt
+rot geworden am          12. September 2026
+unbemerkt geblieben      56 Commits, 3 Tage
+Ursache                  E538 hängt die Originaldatei an Stelle 0;
+                         der Lauf las `drin[0]` als Titel
+```
+
+**Gegenprobe der Reparatur** — die neue Zusicherung über den Anhang gegen
+den Stand, der ihn noch nicht hatte:
+
+```txt
+d1f8e955~1   ✗ Das Original liegt als Anhang an Stelle 0   15 von 16
+heute        ✓                                             16 von 16
+```
+
+---
+
+## 38. Was ein Tipp mit dem Textwerkzeug auslöste
+
+**15. September 2026 · E597**
+
+Vorher, an der laufenden App, Fenster 1440 × 960, ein Tipp auf ein leeres
+Blatt mit dem Textwerkzeug:
+
+```txt
+Überlagerungen           1
+Dialogtext               „Text · Übernehmen mit Strg + Enter · Übernehmen · Abbrechen"
+Textfelder auf der Seite 2   (beide im Dialog)
+aktives Element          TEXTAREA
+Marken auf dem Blatt     []
+nach „Hallo Redion"      steht in der TEXTAREA des Dialogs, nicht auf dem Blatt
+```
+
+Nachher, derselbe Tipp:
+
+```txt
+Überlagerungen           0
+Schreibfeld auf dem Blatt ja, mit Fokus, ohne Anklicken
+Stelle                   120 / 160 Blatteinheiten getippt → 120,0 / 160,2 gemessen
+Schriftgrösse im Feld    dieselbe, die die fertige Marke trägt
+nach „Freier Text…"      steht in der Marke, an der Stelle des Tipps
+```
+
+**Der Wächter vorher und nachher:**
+
+```txt
+test527 gegen den Stand vor E597    16 von 20 rot (damalige Fassung)
+test527 gegen den Stand nach E598   27 von 27 grün
+```
+
+Drei der vier grünen im ersten Lauf waren es aus dem falschen Grund: „Escape
+schliesst das Feld", „das neue Feld ist leer" und „kein Schreibfeld über
+einer gesperrten Marke" sind alle wahr, wenn es gar kein Feld gibt. Sie
+zählen für den neuen Zustand, nicht als Beleg (§55.2).
+
+---
+
+## 39. Der Umbruch im Schreibfeld gegen den Umbruch auf dem Blatt
+
+**15. September 2026 · E598 · gefunden auf einem Bild**
+
+Derselbe Satz, „Ein Klick, und ich schreibe schon.", Schriftgrösse 16,
+Kastenbreite 238 Blatteinheiten:
+
+```txt
+                     im Feld                       auf dem Blatt
+Rechner 1280×900     fontPx 26,3 · Zeilen 2        fontPx 16 · Zeilen 2   ✓
+Telefon  390×844     fontPx 16   · Zeilen 3        fontPx 16 · Zeilen 2   ✗
+                     gesetzt waren 9,23 px
+```
+
+Der Grund: `bausteine.css:312` setzt unter 760 px
+`input, textarea, select{ font-size:16px !important }`, damit iOS beim
+Tippen nicht in die Seite hineinzoomt.
+
+Nach der Reparatur (Feld in seiner Grösse, nie unter 16 px, als Ganzes
+verkleinert):
+
+```txt
+Telefon  390×844     fontPx 16 · Zeilen 2          fontPx 16 · Zeilen 2   ✓
+                     Zeilenhöhe 20 px · Innenbreite 226 px · scale 0,577
+```
+
+**Gegenproben** — `test527` §10, bei Schriftgrösse 34 statt der Vorgabe 16
+(bei 16 fallen Rechnung und Stilregel zufällig zusammen):
+
+```txt
+ohne das inline-„important"   Feld 3 Zeilen · Blatt 4 · fontPx 16    ✗ ✗
+ohne die 16-px-Untergrenze    fontPx 9,21                            ✗
+mit beidem                    Feld und Blatt gleich · fontPx 19,6    ✓ ✓
+```
+
+**Und eine dritte Gegenprobe**, die den ersten Entwurf einer Zusicherung
+widerlegt hat (§12 des Laufs, die Lebenswache aus E115):
+
+```txt
+Weg „auf eine andere Seite blättern"   ohne Wache GRÜN   — `blur` übernimmt
+Weg „pagehide" (der Reiter geht zu)    ohne Wache ROT    — nur die Wache hält ihn
+```

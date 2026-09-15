@@ -121,16 +121,22 @@ const antwortet = (text: string | null): Promise<void> => seite.evaluate((t: str
   (Dialog as any).frage = async () => t;
 }, text);
 
-/* a) DER TEXTKASTEN (E360) */
-await antwortet('Hallo Welt');
+/* a) DER TEXTKASTEN (E360, seit E597 ohne Fenster)
+   SEIT E597 FRAGT DER TIPP NICHT MEHR, sondern legt ein Schreibfeld auf das
+   Blatt — Redurs OneNote-Satz vom 15. September 2026. Der Merkzettel, um
+   den es diesem Abschnitt geht, ist derselbe geblieben: getippt,
+   übernommen, einmal zurück, alter Wert da. Nur der Weg dorthin ist der
+   eines Menschen und nicht mehr der eines Dialogs. */
 await seite.click('.blatt-werk [data-wz="text"]');
 await seite.mouse.click(kasten.x + 120, kasten.y + 120);
-await seite.waitForTimeout(500);
+await seite.waitForSelector('.blatt-schreiber', { timeout: 5000 });
+await seite.fill('.blatt-schreiber', 'Hallo Welt');
+await seite.keyboard.press('Escape');
+await seite.waitForTimeout(400);
 const textMarke = (await marken()).find(m => m.art === 'text');
 p('Ein Textkasten ist entstanden', !!textMarke && textMarke.text === 'Hallo Welt',
   JSON.stringify(textMarke || null).slice(0, 100));
 if (textMarke) {
-  await antwortet('Anderer Text');
   /* AUF DEN KNOTEN ZIELEN, NICHT AUF DEN GESETZTEN PUNKT: `point` ist die
      linke OBERE Ecke des Kastens, und der Kasten steht in Blattkoordinaten,
      nicht in Bildschirmkoordinaten. Ein Tipp daneben öffnete nichts — und
@@ -139,7 +145,10 @@ if (textMarke) {
   const feld = await seite.locator('.blatt-marken [data-ink-art="text"]').first().boundingBox();
   p('Der Textkasten ist auf der Fläche zu treffen', !!feld, JSON.stringify(feld));
   if (feld) await seite.mouse.click(feld.x + feld.width / 2, feld.y + feld.height / 2);
-  await seite.waitForTimeout(600);
+  await seite.waitForSelector('.blatt-schreiber', { timeout: 5000 });
+  await seite.fill('.blatt-schreiber', 'Anderer Text');
+  await seite.keyboard.press('Escape');
+  await seite.waitForTimeout(500);
   const jetzt = (await marken()).find(m => m.id === textMarke.id);
   p('Der Text lässt sich ändern', jetzt?.text === 'Anderer Text', String(jetzt?.text));
   await zurueck();

@@ -4844,6 +4844,31 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 }
 .blatt-marken{position:absolute; inset:0; width:100%; height:100%; z-index:2;
               color:#111; touch-action:none}
+/* ══ DIREKT AUF DEM BLATT SCHREIBEN (E597) ═════════════════════════════════
+   Das Feld liegt im Elternknoten der Fläche (`.blatt-papier` oder
+   `.blatt-flur`, beide `position:relative`) und deckt damit genau denselben
+   Kasten wie die Fläche selbst. Stelle, Breite, Schriftgrösse, Zeilenhöhe,
+   Ausrichtung und Farbe setzt `marken.ts` in Pixeln — sie kommen aus dem
+   BLATTRAUM und werden mit der Fläche skaliert, damit im Feld steht, was
+   danach auf dem Blatt steht.
+
+   WARUM `outline` UND KEIN `border`: die Breite des Feldes ist die Breite des
+   Textkastens. Ein Rahmen würde sie mit `box-sizing:border-box` von innen
+   auffressen, und die Zeilen brächen einen Buchstaben früher um als im
+   fertigen Text. Ein `outline` liegt draussen und verschiebt nichts. */
+.blatt-schreiber{
+  position:absolute; z-index:3; margin:0; box-sizing:border-box;
+  background:color-mix(in srgb, var(--accent, #2f7ed8) 7%, transparent);
+  border:0; outline:1.5px dashed color-mix(in srgb, var(--accent, #2f7ed8) 65%, transparent);
+  outline-offset:0; border-radius:3px;
+  resize:none; overflow:hidden; white-space:pre-wrap; overflow-wrap:break-word;
+  caret-color:currentColor; -webkit-text-fill-color:currentColor;
+  font-kerning:normal; touch-action:manipulation
+}
+.blatt-schreiber:focus{ outline:2px solid var(--accent, #2f7ed8) }
+/* Solange das Feld den Text zeigt, tritt der gezeichnete zurück — sonst
+   stünde derselbe Satz zweimal übereinander. */
+.blatt-marken [data-sid][data-schreibt]{visibility:hidden}
 /* AM TELEFON WIRD GEROLLT, NICHT GESTAPELT — und das ist ein Fund vom Bild,
    nicht aus einer Messung (§55.1).
 

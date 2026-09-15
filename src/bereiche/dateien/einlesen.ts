@@ -934,22 +934,42 @@ const Einlesen = (() => {
 
     const koerper = doc.getElementsByTagName('w:body')[0] || doc.documentElement;
 
+    /* ══ DIE RÜCKSPUR ZUM `<w:t>` (E595, Bogen O7) ═════════════════════════
+       Damit ein geänderter Absatz wieder in die Originaldatei kommt, muss
+       der Block wissen, WOHER er stammt. Er bekommt deshalb
+       `quelle: { p: <Nummer im Körper> }`.
+
+       DIE NUMMER IST DIE IM KÖRPER, NICHT DIE DES BLOCKS. Leere Absätze
+       werden übersprungen (`if (!text) continue`), Tabellen sind eigene
+       Knoten — der dritte Block ist also nicht der dritte `<w:p>`. Wer das
+       verwechselt, schreibt Text in den falschen Absatz, und das ist
+       schlimmer als gar nicht zu schreiben (§51).
+
+       NUR WO ES EINDEUTIG IST: eine Spur bekommt nur ein Absatz mit genau
+       EINER Textstelle. Ein Absatz aus mehreren Läufen — „Ein zweiter
+       Absatz mit *kursivem* Teil" — müsste beim Zurückschreiben auf seine
+       Läufe verteilt werden, und jede Verteilung wäre geraten. Dasselbe
+       Urteil wie bei den Folien (E593). */
+    let nr = -1;
     for (const knoten of koerper.children) {
       const tag = knoten.tagName;
+      nr++;
 
       if (tag === 'w:p') {
         const text = absatzText(knoten);
         const stil = knoten.getElementsByTagName('w:pStyle')[0]?.getAttribute('w:val') || '';
         const nummeriert = knoten.getElementsByTagName('w:numPr').length > 0;
         if (!text) continue;
+        const spur = knoten.getElementsByTagName('w:t').length === 1
+          ? { quelle: { p: nr } } : {};
 
-        if (/^Heading1|^berschrift1|^Title/i.test(stil.replace(/\s/g, ''))) bloecke.push({ typ: 'h1', text });
-        else if (/^Heading2|^berschrift2/i.test(stil.replace(/\s/g, ''))) bloecke.push({ typ: 'h2', text });
-        else if (/^Heading[3-6]|^berschrift[3-6]/i.test(stil.replace(/\s/g, ''))) bloecke.push({ typ: 'h3', text });
-        else if (/Quote|Zitat/i.test(stil)) bloecke.push({ typ: 'quote', text });
-        else if (/ListNumber|ListeNummer|NummerierteListe/i.test(stil.replace(/\s/g, ''))) bloecke.push({ typ: 'number', text });
-        else if (nummeriert || /List|Liste|Aufz/i.test(stil)) bloecke.push({ typ: 'bullet', text });
-        else bloecke.push({ typ: 'text', text });
+        if (/^Heading1|^berschrift1|^Title/i.test(stil.replace(/\s/g, ''))) bloecke.push({ typ: 'h1', text, ...spur });
+        else if (/^Heading2|^berschrift2/i.test(stil.replace(/\s/g, ''))) bloecke.push({ typ: 'h2', text, ...spur });
+        else if (/^Heading[3-6]|^berschrift[3-6]/i.test(stil.replace(/\s/g, ''))) bloecke.push({ typ: 'h3', text, ...spur });
+        else if (/Quote|Zitat/i.test(stil)) bloecke.push({ typ: 'quote', text, ...spur });
+        else if (/ListNumber|ListeNummer|NummerierteListe/i.test(stil.replace(/\s/g, ''))) bloecke.push({ typ: 'number', text, ...spur });
+        else if (nummeriert || /List|Liste|Aufz/i.test(stil)) bloecke.push({ typ: 'bullet', text, ...spur });
+        else bloecke.push({ typ: 'text', text, ...spur });
       }
 
       if (tag === 'w:tbl') {
@@ -2445,7 +2465,8 @@ const Einlesen = (() => {
       const seite = Store.addPage(elternId, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📄' });
       bloecke.forEach((b: any) => {
         if (b.typ === 'table') Store.addBlock(seite.id, 'table', { rows: b.rows, kopfZeile: true });
-        else Store.addBlock(seite.id, b.typ, { text: b.text });
+        else Store.addBlock(seite.id, b.typ, { text: b.text,
+          ...(b.quelle ? { quelle: b.quelle } : {}) });
       });
       if (quelle) await originalAnhaengen(seite.id, f, quelle);
       /* „übernommen", nicht „eingelesen": die Umwandlung lässt Bilder,

@@ -251,9 +251,14 @@ await selectTool('text');
 const paperBox = await page.locator('.blatt-papier').boundingBox();
 if (!paperBox) throw new Error('Kein Blatt');
 await page.mouse.click(paperBox.x + paperBox.width * 0.55, paperBox.y + paperBox.height * 0.18);
-await page.locator('#fq').fill('<img src=x onerror=1> Loesung');
-await page.locator('[data-a="ok"]').click();
-await page.waitForTimeout(150);
+/* SEIT E597 ÖFFNET DER TIPP KEIN FENSTER, sondern ein Schreibfeld auf dem
+   Blatt (Redurs OneNote-Satz vom 15. September 2026). Die Sicherheitsfrage
+   dieses Abschnitts ist dieselbe geblieben und wird sogar schärfer: das Feld
+   ist ein `<textarea>` und kann gar nichts anderes als reinen Text liefern. */
+await page.waitForSelector('.blatt-schreiber', { timeout: 5000 });
+await page.locator('.blatt-schreiber').fill('<img src=x onerror=1> Loesung');
+await page.keyboard.press('Escape');
+await page.waitForTimeout(250);
 /* Seit E360 ist ein neuer Text ein KASTEN: eine Gruppe aus Greifflaeche und
    <text> mit einer <tspan> je Zeile. Gelesen wird der <text>-Knoten; die
    Zeilen ergeben zusammen den Text, und ausser tspan darf darin nichts
@@ -275,9 +280,10 @@ await textNode.evaluate((node: Element) => {
   node.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, isPrimary: true,
     pointerId: 31, button: 0, clientX: box.left + box.width / 2, clientY: box.top + box.height / 2 }));
 });
-await page.locator('#fq').fill('Bearbeitete Loesung');
-await page.locator('[data-a="ok"]').click();
-await page.waitForTimeout(100);
+await page.waitForSelector('.blatt-schreiber', { timeout: 5000 });
+await page.locator('.blatt-schreiber').fill('Bearbeitete Loesung');
+await page.keyboard.press('Escape');
+await page.waitForTimeout(250);
 const editedText = async (): Promise<string> => page.evaluate((id: string) =>
   ((Store.getBlock(id) || {}).marken || []).find((item: any) => item.art === 'text')?.text || '', built.sheet);
 equal('Eine bestehende Textanmerkung laesst sich bearbeiten', await editedText(), 'Bearbeitete Loesung');

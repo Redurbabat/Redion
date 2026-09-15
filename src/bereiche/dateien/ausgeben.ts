@@ -800,7 +800,117 @@ const Austausch = (() => {
     return raus.join('');
   };
 
+  /* ══ EINEN GEÄNDERTEN ABSATZ IN DAS DOKUMENT ZURÜCKSCHREIBEN (E595) ══════
+     Dasselbe Verfahren wie bei den Folien (E593), nur auf
+     `word/document.xml`: der Block bringt `quelle.p` mit — die Nummer
+     seines Absatzes IM KÖRPER, nicht die des Blocks —, und hier wird genau
+     dieser Absatz nachgeschlagen und sein eines `<w:t>` ersetzt.
+
+     GEÄNDERT WIRD NUR DER TEXTKNOTEN. Farben, Stile, Tabellen, Bilder und
+     der Abschnitt bleiben stehen, weil nichts anderes angefasst wird. */
+  const dokumentMitText = (xml: string, bloecke: any[]): { xml: string; geschrieben: number } => {
+    const spuren = (bloecke || []).filter((b: any) =>
+      b && b.quelle && Number.isFinite(Number(b.quelle.p)) && typeof b.text === 'string');
+    if (!spuren.length) return { xml, geschrieben: 0 };
+    let doc: Document;
+    try {
+      doc = new DOMParser().parseFromString(xml, 'application/xml');
+      if (doc.getElementsByTagName('parsererror').length) return { xml, geschrieben: 0 };
+    } catch { return { xml, geschrieben: 0 }; }
+    const koerper = doc.getElementsByTagName('w:body')[0] || doc.documentElement;
+    if (!koerper) return { xml, geschrieben: 0 };
+    const kinder = Array.from(koerper.children);
+    let geschrieben = 0;
+    for (const b of spuren) {
+      const absatz = kinder[Number(b.quelle.p)];
+      if (!absatz || absatz.tagName !== 'w:p') continue;
+      const stellen = absatz.getElementsByTagName('w:t');
+      /* GENAU EINE STELLE — sonst ist die Spur falsch geworden, seit sie
+         vergeben wurde, und daneben zu schreiben wäre schlimmer als gar
+         nicht (§51). */
+      if (stellen.length !== 1) continue;
+      const stelle = stellen[0]!;
+      /* DER TEXT KOMMT AUS DEM EDITOR und trägt dessen Auszeichnungen
+         (`**fett**`, `*kursiv*`). Sie gehören nicht in ein `<w:t>` — dort
+         stünden sie als Sternchen im Dokument. Der Absatz behält also seine
+         Word-Formatierung, und der Text wird ohne Markdown eingesetzt. */
+      const roh = String(b.text).replace(/\*\*(.+?)\*\*/g, '$1')
+                                .replace(/\*(.+?)\*/g, '$1')
+                                .replace(/`(.+?)`/g, '$1');
+      if (stelle.textContent === roh) continue;
+      stelle.textContent = roh;
+      /* Führende und schliessende Leerzeichen bewahrt Word nur mit diesem
+         Attribut — ohne es frisst jeder Leser sie. */
+      if (/^\s|\s$/.test(roh)) stelle.setAttribute('xml:space', 'preserve');
+      geschrieben++;
+    }
+    if (!geschrieben) return { xml, geschrieben: 0 };
+    return { xml: new XMLSerializer().serializeToString(doc), geschrieben };
+  };
+
+  /* ══ DIE ORIGINALDATEI EINES EINGELESENEN DOKUMENTS (E595) ════════════════
+     Dieselbe Frage wie bei `.pptx` (E592), dieselbe Antwort. */
+  const originalDokument = async (seite: any): Promise<any> => {
+    if (typeof Dateien === 'undefined' || !Dateien.alsBlob) return null;
+    let kinder: any[] = [];
+    try { kinder = Store.childrenOf(seite.id) || []; } catch { return null; }
+    const anhang = kinder.find((k: any) => k && k.type === 'file' && k.original
+      && /\.docx$/i.test(String(k.text || '')));
+    if (!anhang || !anhang.dateiId) return null;
+    try {
+      const blob = await Dateien.alsBlob(anhang.dateiId);
+      if (!blob) return null;
+      const leser = await Einlesen.zipLesen(await blob.arrayBuffer());
+      if (!leser || !leser.namen?.includes('word/document.xml')) return null;
+      return { leser, kinder };
+    } catch { return null; }
+  };
+
   const alsWord = async (seite: any) => {
+    /* ══ EINE EINGELESENE .docx WIRD DURCHGEREICHT (E595) ══════════════════
+       GEMESSEN am 15. September 2026 verlor die Rundreise fast alles:
+
+         Original 7 Einträge, 2284 Bytes   Export 6 Einträge, 5718 Bytes
+         docProps/core.xml   WEG           word/media/image1.png   WEG
+         Farbe CC0000        WEG           „Redurs Bericht.docx" stand als
+                                            ABSATZ im Dokument
+
+       Fett, kursiv und die Tabelle überlebten — sie gehen über Markdown und
+       werden neu geschrieben. Alles andere nicht. Für ein selbst
+       geschriebenes Dokument ist der frische Weg richtig; für ein
+       eingelesenes ist er Datenverlust (§46). */
+    const originalPaket = await originalDokument(seite);
+    if (originalPaket) {
+      const bloecke = originalPaket.kinder.filter((k: any) => k && k.quelle);
+      let neuesDokument = '';
+      let geschrieben = 0;
+      try {
+        const alt = await originalPaket.leser.text('word/document.xml');
+        const neu = dokumentMitText(String(alt || ''), bloecke);
+        if (neu.geschrieben) { neuesDokument = neu.xml; geschrieben = neu.geschrieben; }
+      } catch { /* dann bleibt das Dokument, wie es war */ }
+      const teile: any[] = [];
+      for (const name of originalPaket.leser.namen) {
+        if (name === 'word/document.xml' && neuesDokument) {
+          teile.push({ name, inhalt: neuesDokument }); continue;
+        }
+        const teil = await originalPaket.leser.rohBytes(name);
+        if (!teil) continue;
+        teile.push({ name, ...teil });
+      }
+      const blob = await zipSchreiben(teile);
+      laden(blob, (seite.text || 'Seite').replace(/[\\/:*?"<>|]/g, '-') + '.docx');
+      const hinweis = geschrieben
+        ? 'Die Originaldatei ist vollständig erhalten; '
+          + geschrieben + (geschrieben === 1 ? ' Absatz wurde' : ' Absätze wurden')
+          + ' übernommen. Absätze ohne eindeutige Zuordnung stehen unverändert darin.'
+        : 'Die Originaldatei ist vollständig erhalten. In Redion geänderte '
+          + 'Absätze stehen noch nicht darin.';
+      try { if (typeof UI !== 'undefined' && UI.toast) UI.toast(hinweis, 7000); }
+      catch { /* ohne Meldung bleibt die Datei */ }
+      return blob;
+    }
+
     /* ERST DIE BILDER, DANN DER TEXT (E346). Siehe den Kopf bei
        `wortBilder`: der Baum wird synchron gebaut, damit die Reihenfolge der
        Absätze nicht von der Ladegeschwindigkeit abhängt. */
