@@ -8817,8 +8817,12 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   position:absolute; left:50%; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px;
   border-radius:50%; background:#2b2b2b; transition:transform .3s ease
 }
+/* ZURÜCKGENOMMEN (E603): das Auge schielte zur Seite und zwinkerte, sobald
+   die Maus es streifte. Redur: „wenn ich mit maus dort gehe, das zeigt mir
+   etwas anderes." Der Knopf zeigt jetzt nur noch seinen Grund — das sagt
+   „du bist hier" und sonst nichts.
 .bib-blick:hover .bib-blick-auge b, .bib-blick:focus-visible .bib-blick-auge b{ transform:translateX(-5px) }
-.bib-blick:hover .bib-blick-auge{ animation:bib-blick-zwinkern 1.2s ease }
+.bib-blick:hover .bib-blick-auge{ animation:bib-blick-zwinkern 1.2s ease } */
 @keyframes bib-blick-zwinkern{ 0%,100%{ transform:none } 12%{ transform:scaleY(.1) } 24%{ transform:none } }
 
 /* ---- Wenn das System um Ruhe bittet ------------------------------------- */

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-581 Entscheidungen, E1 bis E602 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+582 Entscheidungen, E1 bis E603 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -645,6 +645,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E599** — Der Feinschliff am freien Text: die Leiste wirkt auf den Kasten, in den gerade getippt wird, und zwei Tipps auf leeres Papier heissen „hier schreiben"
 * **E601** — Das Auge sass auf dem Ordnerreiter, und der Deckel war ein Farbklotz — beides am Bild gemessen und nachgezogen (**zurückgenommen, siehe E602**)
 * **E602** — Nicht das Auge weicht, sondern der Reiter: E601 zurückgenommen, zwei Zeilen geblieben
+* **E603** — Die Ordnerkarte verwandelt sich nicht mehr unter der Maus: vier Wirkungen beim Darüberfahren zurückgenommen
 
 ---
 
@@ -48756,3 +48757,76 @@ Deckel, ein neues Sichtbarkeitsverhalten und eine verschobene Zahl: vier
 Änderungen, von denen er eine wollte. Die kleinste Änderung, die den
 genannten Fehler behebt, ist die richtige — und wenn unklar ist, welche das
 ist, kostet eine Frage weniger als zwei Rücknahmen.
+
+---
+
+## E603 — Die Ordnerkarte verwandelt sich nicht mehr unter der Maus
+
+**15. September 2026.** Redur, nachdem drei Anläufe an seiner Beschwerde
+vorbeigegangen waren:
+
+> „die animationen — wenn ich mit maus dort gehe, das zeigt mir etwas
+> anderes."
+
+Damit war es endlich klar, und es war die ganze Zeit dieselbe Sache: nicht
+die Stelle des Auges, nicht die Masse des Deckels — **das Darüberfahren**.
+
+### Gezählt, was beim blossen Darüberfahren passierte
+
+Vier Dinge auf einmal, an derselben Kachel:
+
+```txt
+1  der Vorderdeckel kippte in die Tiefe      rotateX(-32deg) translateZ(6px)
+2  die fünf Blätter fächerten auf und drehten  translateY(-12…-32px) rotate(±14deg)
+3  drei Namensstreifen legten sich darüber     opacity 0 -> 1
+4  das Auge zwinkerte und schielte zur Seite   1,2 s Animation + Pupille -5px
+```
+
+Wer mit der Maus über das Regal fährt, um irgendwo anders hinzukommen, löst
+das an **jeder Kachel aus, die er streift**. Bei drei Fächern
+nebeneinander sind das zwölf Bewegungen für einen Weg, den man gar nicht
+gemeint hat.
+
+### Was entschieden wurde
+
+**Alle vier sind weg.** Zurückgenommen, nicht umgebaut — die Regeln stehen
+auskommentiert an ihrer Stelle, mit dem Grund daneben, damit niemand sie in
+drei Wochen „wieder repariert".
+
+**Was bleibt:** der Schatten des Deckels beim Darüberfahren und das
+Zusammendrücken beim Antippen. Das sagt „du bist hier" und „ich habe deinen
+Klick" — es zeigt nichts anderes.
+
+**Hineinsehen ist eine Frage, kein Versehen.** Wer wissen will, was im Fach
+liegt, tippt auf das Auge oder wählt „Blick hinein" im ⌄-Menü. Dann kommt
+die Ordnerkarte (E459), und die zeigt ALLES statt drei Namen. Der Weg ist
+besser als der Zufall — und er war schon vorher da.
+
+### Und die Tastatur?
+
+`:focus-visible` hing an denselben Regeln. Es fällt mit — und das ist
+richtig: die Zeile in `test493` hiess „Tastaturfokus öffnet die
+Ordnerklappe" und hielt die PARITÄT zwischen Maus und Tastatur (§38). Die
+Parität ist gewahrt, nur andersherum: die Klappe öffnet für niemanden mehr
+beim blossen Ansehen. Der Lauf hält jetzt genau das fest — und dazu, dass
+der Blick-Knopf ein `<button>` bleibt und mit dem Tabulator erreichbar ist.
+
+### Die Lehre, und sie ist die dritte in dieser Reihe
+
+E601 hat den falschen Fehler behoben. E602 hat ihn zurückgenommen und den
+genannten behoben. Erst E603 trifft, was gemeint war. Dreimal derselbe
+Fehler bei mir: aus einem Satz eine Diagnose gemacht, statt nachzufragen,
+WAS genau stört. „Die Augen sitzen falsch" hiess nicht „die Augen sitzen
+falsch" — es hiess „hier passiert etwas, das ich nicht wollte".
+
+**Woran man es hätte merken können:** Redur hat in seiner ersten Nachricht
+beides gesagt — „die augen wo links oben bei date war" UND „du hast die alle
+animationen". Ich habe den ersten Halbsatz gelesen und den zweiten als
+Verstärkung genommen. Er war die eigentliche Aussage.
+
+### Geprüft
+
+`test436`, `test476`, `test492`, `test493` (46 Zusicherungen, zwei davon
+neu), `test494` (153 Zusicherungen zur Bewegungsfamilie) und `test87` —
+grün. Bilder angesehen: Ruhezustand und Maus darüber sehen jetzt gleich aus,
+bis auf den Schatten.
