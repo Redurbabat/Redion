@@ -610,3 +610,46 @@ heute sind es 18 px.
 (4 neu, alle 4 rot gesehen). `npm run typecheck` und `npm run bauen:ts` grün.
 
 **Die Gesamtsuite ist NICHT als grün behauptet.**
+
+---
+
+## Nachtrag — Abschnitt 7 C 2, Grössenteil (15. September 2026)
+
+„Symbole im Dock ca. 24–28 px innerhalb fester 44-px-Trefferflächen."
+
+Gemessen waren es **18 px, und zwar überall** — auch dort, wo das Stilblatt
+16 oder 20 sagte. Der Grund: `Register.symbole.fuelle` schreibt
+`width="18"` als Attribut in das `<svg>`, das Stilblatt bemasst die Hülle
+darum, und ein SVG mit eigener Breite kümmert sich nicht um seinen Kasten.
+Drei von vier Zahlen hatten keine Wirkung (E585).
+
+```txt
+nachher   obere Leiste    25 px in 44 × 44   (war schon richtig)
+           390 px unten   24 px in 44 × 44
+           390 px seitl.  24 px in 48 × 44
+          1440 px unten   16 px in 32–79 × 44   (war 18 und stand über)
+```
+
+**Nicht am Rechner auf 24**, gemessen: dort wächst die Leiste von 959 auf
+1013 px und der Zubehörknopf von 32 auf 40 — bei 1280 px genau der Umbruch
+in eine dritte Zeile, den E576 weggerechnet hat. Am Telefon kostet es
+nichts: die Rollbreite bleibt bei 18, 22, 24 und 26 px unverändert 918 px.
+
+### Offen aus 7 C
+
+C 2 verlangt ausserdem, dass Füller, Kugelschreiber, Pinsel und Bleistift
+sofort unterscheidbar sind. `test480 §7` misst das seit E515 und ist grün;
+mit Augen sind sich `penBrush` und `penPencil` weiterhin ähnlich. Das steht
+so im Nachtrag von E577 und bleibt eine Frage an Redur, keine stille
+Änderung. C 1, C 3 bis C 6 sind mit E577 zu.
+
+### Prüfstand dieses Bogens
+
+`test524` 83/83 (7 Zusicherungen neu, 5 rot gesehen). Grün dazu: `test87`,
+`test174`, `test177`, `test209`, `test228`, `test239`, `test263`, `test266`,
+`test267`, `test285`, `test343`, `test344`, `test348`, `test349`, `test351`,
+`test365`, `test367`, `test393`, `test429`, `test437`, `test438`, `test439`,
+`test461`, `test464`, `test476`, `test480`, `test508`, `test515`, `test522`,
+`test523`.
+
+**Die Gesamtsuite ist NICHT als grün behauptet.**

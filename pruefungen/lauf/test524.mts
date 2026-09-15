@@ -717,6 +717,91 @@ try {
       });
     })()`));
 
+  /* ══ §12 DAS STILBLATT REGIERTE DAS ZEICHEN NICHT (E585) ═════════════════
+     Plan 7 C 2: „Symbole im Dock ca. 24–28 px innerhalb fester 44-px-
+     Trefferflächen."
+
+     GEMESSEN am 15. September 2026 waren es 18 px — und zwar ÜBERALL,
+     gleichgültig, was das Stilblatt sagte:
+
+       Zustand          Hülle laut CSS   SVG-Attribut   SVG laut CSS
+       ──────────────   ──────────────   ────────────   ────────────
+       1440 unten             16 px           18            18 px
+       1440 links/rechts      20 px           18            18 px
+        390 unten             18 px           18            18 px
+        390 links/rechts      20 px           18            18 px
+
+     `Register.symbole.fuelle` schreibt `width="18" height="18"` als
+     Attribut in das `<svg>`. Das Stilblatt bemasst aber die HÜLLE
+     (`.zeichen[data-sym]`), nicht das SVG darin — und ein SVG mit eigener
+     Breite kümmert sich nicht darum, wie breit sein Kasten ist.
+
+     Damit war jede der vier Zahlen im Stilblatt Zierde: die 16 liess das
+     Zeichen zwei Pixel über seine Hülle stehen, die 20 für die seitliche
+     Leiste hat nie etwas getan. Nur die 18 stimmte — weil sie zufällig die
+     Zahl ist, die im Attribut steht.
+
+     DIE OBERE LEISTE MACHT ES SEIT JE RICHTIG: `.document-drawingbar
+     svg{width:25px}` bemasst das SVG selbst, und dort sind es gemessen
+     auch 25 px. Genau dieselbe Stelle, zwei Wege, ein Ergebnis mehr.
+
+     Das ist die Warnung aus §39 in neuer Gestalt: eine CSS-Zeile, die
+     aussieht wie eine Regel und keine ist. Drei von vier Zahlen waren es. */
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(700);
+  const zeichenMass = async (): Promise<{ huelle: number; svg: number; knopf: number;
+                                          attribut: string; n: number }> =>
+    await page.evaluate(`(() => {
+      const knoepfe = Array.from(document.querySelectorAll('.document-stage[data-aktiv] .blatt-werk > button'))
+        .filter(n => n.getClientRects().length && n.querySelector('.zeichen[data-sym] svg'));
+      const b = knoepfe[0];
+      if (!b) return { huelle: 0, svg: 0, knopf: 0, attribut: '—', n: 0 };
+      const sp = b.querySelector('.zeichen[data-sym]'), svg = sp.querySelector('svg');
+      const px = (v) => Math.round(parseFloat(v) || 0);
+      return { huelle: px(getComputedStyle(sp).width), svg: px(getComputedStyle(svg).width),
+               knopf: Math.round(b.getBoundingClientRect().width),
+               attribut: svg.getAttribute('width') || '—', n: knoepfe.length };
+    })()`) as { huelle: number; svg: number; knopf: number; attribut: string; n: number };
+
+  const handy = await zeichenMass();
+  check(`Am Telefon steht das Zeichen in einer 44-px-Fläche (${handy.knopf} px, ${handy.n} Knöpfe)`,
+    handy.knopf >= 44 && handy.n >= 5);
+  check(`… und ist 24 bis 28 px gross (gemessen ${handy.svg} px)`,
+    handy.svg >= 24 && handy.svg <= 28);
+  /* DER KERN DES FUNDES: Hülle und Zeichen müssen dieselbe Zahl sein.
+     Gingen sie auseinander, regierte wieder das Attribut. */
+  check(`… und die Hülle sagt dieselbe Zahl (${handy.huelle} px gegen ${handy.svg} px)`,
+    handy.huelle === handy.svg);
+  check(`… obwohl im Attribut weiter „${handy.attribut}" steht`,
+    handy.attribut === '18' && handy.svg !== 18);
+
+  await page.evaluate(`(() => { const r = document.querySelector('.document-stage[data-aktiv] .blatt-reihe');
+    if (r) r.dataset.lage = 'links'; })()`);
+  await page.waitForTimeout(350);
+  const seite = await zeichenMass();
+  check(`An der Seite ebenso (${seite.svg} px in ${seite.knopf} px)`,
+    seite.svg >= 24 && seite.svg <= 28 && seite.huelle === seite.svg);
+  await page.evaluate(`(() => { const r = document.querySelector('.document-stage[data-aktiv] .blatt-reihe');
+    if (r) r.dataset.lage = 'unten'; })()`);
+  await page.waitForTimeout(350);
+
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await page.waitForTimeout(700);
+  const rechner = await zeichenMass();
+  /* UND DIE ENGE RECHNERZEILE WÄCHST NICHT MIT. Dort stehen die Wörter
+     neben den Zeichen, und dort sind 44-px-Flächen nicht die Regel — die
+     Stiftknöpfe sind mit gutem Grund 32 px breit (E576, Arithmetik des
+     Umbruchs). Ein 24-px-Zeichen würde sie aufblähen. */
+  check(`Am Rechner bleibt das Zeichen klein (${rechner.svg} px in ${rechner.knopf} px)`,
+    rechner.svg <= 20 && rechner.huelle === rechner.svg);
+
+  /* DIE QUELLE, damit die Zahl nicht wieder von der Hülle abkoppelt: das
+     SVG bekommt seine Grösse VON der Hülle, nicht als eigene Zahl. */
+  const stilB = lies('quell/schale/stil/bausteine.css')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
+  check('Das Stilblatt gibt dem SVG die Grösse seiner Hülle',
+    /\.blatt-werk \.zeichen\[data-sym\] svg\{[^}]*width:\s*100%/.test(stilB));
+
   await werkzeug('stift');
   check('Keine Laufzeitfehler', errors.length === 0);
   mkdirSync(resolve(root, 'bilder'), { recursive: true });

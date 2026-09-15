@@ -8082,3 +8082,28 @@ nicht als eigener Bogen — ein Umbau ohne Anlass ist auch nur ein Umbau.
 **Was NICHT zu tun ist:** die drei Listen in einen Vergleich werfen. Ein
 Werkzeugzeichen und ein Formzeichen dürfen sich ähneln — `inkShapes` ist ein
 Rechteck, und `formRect` ist eins. Sie stehen nie nebeneinander.
+
+---
+
+## L165 · Eine CSS-Zeile, die aussah wie eine Regel — GESCHLOSSEN am 15. September 2026
+
+**Was fehlte:** `.blatt-werk .zeichen[data-sym]{width:16px}` und die drei
+Abwandlungen darunter bemassen die Hülle des Zeichens. Das `<svg>` darin
+trug seine eigene Breite als Attribut (`width="18"`) und hat sich nie darum
+gekümmert. Drei der vier Zahlen hatten deshalb keine Wirkung; die seitliche
+Leiste stand seit ihrer Einführung auf 18 statt auf den dort geschriebenen
+20 px.
+
+**Wie es gefunden wurde:** nicht beim Lesen — die Zeilen sehen richtig aus.
+Beim Nachmessen von Plan 7 C 2 („24–28 px in festen 44-px-Flächen") kamen
+in allen vier Zuständen 18 px heraus, und erst der Vergleich von Hülle und
+SVG zeigte, warum.
+
+**Geschlossen mit** E585: das SVG bekommt seine Grösse von seiner Hülle
+(`width:100%`), damit es nur noch EINE Stelle gibt, an der die Zahl steht.
+`test524 §12` hält es: Hülle und Zeichen müssen dieselbe Zahl sein, und am
+Telefon müssen es 24 bis 28 px sein, obwohl im Attribut weiter „18" steht.
+
+**Was daraus folgt, ohne neue Regel:** §39 warnt vor Tokens, die es nicht
+gibt. Dies ist derselbe Fehler eine Ebene tiefer — eine Eigenschaft am
+falschen Element. Beides findet nur eine Messung an der laufenden Seite.

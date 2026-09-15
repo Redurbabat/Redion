@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-564 Entscheidungen, E1 bis E584 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+565 Entscheidungen, E1 bis E585 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -628,6 +628,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E582** — Zwei Wächter waren jahrelang rot, ohne dass etwas kaputt war: einer mass das Unmessbare, einer zielte auf eine Animation
 * **E583** — Die Kopie in der oberen Studioleiste zeigt jetzt, was das Original auf dem Blatt zeigt — welche Form gewählt ist
 * **E584** — Ein Pfeil, der keine Linie ist, und ein rundes Rechteck, das rund aussieht: drei Zeichenpaare waren über 70 % gleich
+* **E585** — Drei von vier Grössenangaben im Stilblatt hatten keine Wirkung: bemasst war die Hülle, gross war das SVG darin
 
 ---
 
@@ -47375,3 +47376,83 @@ bekommt. Die anderen sechs Zeichen tun das alle.
 **Prüflauf:** `test480 §7c`, sieben Zeichen gegeneinander, vier Zusicherungen
 rot gesehen. Angesehen wurde es ausserdem: `bilder/formzeichen-vergleich.png`
 zeigt beide Sätze bei 18 und 26 px nebeneinander.
+
+---
+
+## E585 — Drei von vier Zahlen im Stilblatt waren Zierde
+
+**15. September 2026.** Plan 7 C 2 verlangt: „Symbole im Dock ca. 24–28 px
+innerhalb fester 44-px-Trefferflächen." Gemessen waren es 18 px — und zwar
+überall, gleichgültig, was das Stilblatt sagte.
+
+| Zustand | Hülle laut CSS | SVG-Attribut | SVG laut CSS |
+|---|---|---|---|
+| 1440 px, Leiste unten | 16 px | 18 | **18 px** |
+| 1440 px, Leiste links/rechts | 20 px | 18 | **18 px** |
+| 390 px, Leiste unten | 18 px | 18 | **18 px** |
+| 390 px, Leiste links/rechts | 20 px | 18 | **18 px** |
+
+### Warum
+
+`Register.symbole.fuelle` schreibt `width="18" height="18"` als **Attribut**
+in das erzeugte `<svg>`. Das Stilblatt bemasst aber die **Hülle**
+(`.blatt-werk .zeichen[data-sym]`), und ein SVG mit eigener Breite kümmert
+sich nicht darum, wie breit sein Kasten ist.
+
+Damit war jede Zahl ausser der 18 wirkungslos:
+
+- die **16** liess das Zeichen zwei Pixel über seine Hülle stehen;
+- die **20** für die seitliche Leiste hat nie etwas getan — seit sie
+  dasteht.
+
+Die obere Studioleiste macht es seit je richtig:
+`.document-drawingbar svg{width:25px}` bemasst das SVG selbst, und dort
+kommen gemessen auch 25 px an. Dieselbe Aufgabe, zwei Wege, ein Ergebnis
+mehr.
+
+**Das ist die Warnung aus §39 in neuer Gestalt** — dort ging es um Tokens,
+die zweimal erfunden und zweimal unsichtbar waren. Hier ist es eine
+CSS-Zeile, die aussieht wie eine Regel und keine ist. Sie ist nur mit einer
+Messung zu finden; beim Lesen sieht sie richtig aus (§55.1).
+
+### Die Reparatur
+
+```css
+.blatt-werk .zeichen[data-sym] svg{display:block; width:100%; height:100%}
+```
+
+`width:100%` und keine eigene Zahl — damit gibt es ab hier **eine** Stelle,
+an der die Grösse steht, und die beiden können nicht wieder auseinander
+laufen.
+
+### Und wo dann 24 px stehen
+
+Nur dort, wo die Fläche wirklich fest 44 px ist: **am Telefon und in der
+seitlichen Leiste.** Dort ist der Knopf 44 × 44 beziehungsweise 48 × 44, das
+Wort ist weg, und das Zeichen ist die einzige Auskunft.
+
+**Nicht am Rechner**, und das ist gemessen, nicht gemutmasst:
+
+```txt
+Zeichen   Dockbreite   Knöpfe
+18 px       959 px     34/44/71/79/81
+22 px       995 px     38/44/75/83/85
+24 px      1013 px     40/44/77/85/87
+26 px      1031 px     42/44/79/87/89
+```
+
+Der Zubehörknopf trägt am Rechner 32 px Mindestbreite, weil bei 1280 px
+sonst die Breite als einzelner Knopf in eine dritte Zeile fällt (E576). Ein
+24-px-Zeichen macht aus den 32 px vierzig und aus der Leiste 54 px mehr —
+bei 1280 px genau der Umbruch, den E576 weggerechnet hat.
+
+**Am Telefon kostet es nichts.** Gemessen bei 390 px blieb die Rollbreite
+bei 18, 22, 24 und 26 px unverändert **918 px**: der Knopf ist dort ohnehin
+44 px breit, das Zeichen wächst nur in den Platz hinein, der schon da war.
+
+**Die Nebenwirkung**, ausdrücklich: am Rechner wird das Zeichen von 18 auf
+16 px kleiner — auf die Zahl, die das Stilblatt seit E515 nennt. Das ist
+keine Verkleinerung, sondern das Ende eines Überstands.
+
+**Prüflauf:** `test524 §12`, sieben Zusicherungen, fünf rot gesehen.
+Angesehen: `bilder/dock-form-handy.png` (390 px, zweifach), `dock-form.png`.

@@ -899,3 +899,69 @@ ganzen Liste):
 **Angesehen:** `bilder/formzeichen-vergleich.png` (beide Sätze bei 18 und
 26 px), `bilder/dock-form.png`, `bilder/dock-form-handy.png`,
 `bilder/oben-leiste-form.png`.
+
+---
+
+## 23. Wie gross ein Zeichen im Dock wirklich ist
+
+**Wann:** 15. September 2026 · **Womit:** eigenes Messskript, Studio
+geöffnet, `getComputedStyle` auf Hülle UND SVG · **Warum:** Plan 7 C 2
+verlangt „24–28 px innerhalb fester 44-px-Trefferflächen".
+
+**Erste Messung — nur das SVG angesehen:**
+
+```txt
+obere Leiste   25 px in 44 × 44 px   ✓ im Bereich
+unteres Dock   18 px                 ✗ darunter
+  1440 px   Knöpfe 32 / 44 / 69 / 77 / 79 × 44 px, Dock 941 px
+   390 px   Knöpfe 44 × 44 px,                     Dock 358 px von 868 px
+```
+
+**Zweite Messung — Hülle gegen SVG, und da fiel es auf:**
+
+| Zustand | Hülle laut CSS | SVG-Attribut | SVG laut CSS |
+|---|---|---|---|
+| 1440 unten | 16 px | 18 | 18 px |
+| 1440 links/rechts | 20 px | 18 | 18 px |
+| 390 unten | 18 px | 18 | 18 px |
+| 390 links/rechts | 20 px | 18 | 18 px |
+
+Drei von vier Zahlen im Stilblatt hatten keine Wirkung. Das Stilblatt
+bemasste die Hülle, `Register.symbole.fuelle` schrieb `width="18"` als
+Attribut in das SVG — und ein SVG mit eigener Breite kümmert sich nicht um
+seinen Kasten.
+
+**Was ein grösseres Zeichen kostet** (Dockbreite und Knopfbreiten):
+
+| Zeichen | 390 px Rollbreite | 1440 px Dockbreite | 1440 px Knöpfe |
+|---|---|---|---|
+| 18 px | 918 px | 959 px | 34/44/71/79/81 |
+| 22 px | 918 px | 995 px | 38/44/75/83/85 |
+| 24 px | **918 px** | 1013 px | 40/44/77/85/87 |
+| 26 px | 918 px | 1031 px | 42/44/79/87/89 |
+
+Am Telefon kostet es **nichts** — der Knopf ist dort ohnehin 44 px breit.
+Am Rechner kostet es 54 px, und bei 1280 px wäre das der Umbruch, den E576
+weggerechnet hat. Deshalb 24 px nur am Telefon und an der Seite.
+
+**Nachher:**
+
+```txt
+obere Leiste   25 px in 44 × 44   (unverändert)
+ 390 px unten  24 px in 44 × 44
+ 390 px seitl. 24 px in 48 × 44
+1440 px unten  16 px in 32–79 × 44   (vorher 18, stand 2 px über der Hülle)
+```
+
+**Die vier Leistenlagen, nebenbei gemessen** (Knopf × Höhe / Zeichen,
+vorher):
+
+```txt
+1440 unten   32/69/77/79 × 44 / 18      1440 links   48 × 44 / 18
+1440 oben    32/69/77/79 × 44 / 18      1440 rechts  48 × 44 / 18
+ 390 unten   44 × 44 / 18                390 links   48 × 44 / 18
+```
+
+**Angesehen:** `bilder/dock-zeichen-18.png`, `-22`, `-24`, `-26` (Telefon),
+`bilder/dock1440-zeichen-*.png` (Rechner), `bilder/dock-form-handy.png`
+zweifach.

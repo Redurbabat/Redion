@@ -16331,22 +16331,58 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    jedes Emoji seine eigene. */
 .blatt-werk .zeichen[data-sym]{display:inline-flex; align-items:center;
                                justify-content:center; width:16px; height:16px}
-.blatt-werk .zeichen[data-sym] svg{display:block}
+/* ══ DAS ZEICHEN BEKOMMT SEINE GRÖSSE VON SEINER HÜLLE (E585) ═════════════
+   Hier stand nur `display:block`, und damit war jede Zahl darunter Zierde.
+   `Register.symbole.fuelle` schreibt `width="18" height="18"` als ATTRIBUT
+   in das `<svg>`; die Regeln darunter bemassen die HÜLLE, und ein SVG mit
+   eigener Breite kümmert sich nicht darum, wie breit sein Kasten ist.
+
+   GEMESSEN am 15. September 2026, vier Zustände, eine Zahl:
+
+     1440 unten          Hülle 16 px   SVG 18 px   ← stand 2 px über
+     1440 links/rechts   Hülle 20 px   SVG 18 px   ← die 20 tat nie etwas
+      390 unten          Hülle 18 px   SVG 18 px
+      390 links/rechts   Hülle 20 px   SVG 18 px   ← ebenso
+
+   Drei von vier Zahlen hatten keine Wirkung. Die obere Studioleiste macht
+   es seit je richtig (`.document-drawingbar svg{width:25px}`) — sie
+   bemasst das SVG selbst, und dort kommen gemessen auch 25 px an.
+
+   `width:100%` statt einer eigenen Zahl, damit die beiden nicht wieder
+   auseinanderlaufen: es gibt ab hier nur EINE Stelle, an der die Grösse
+   steht, und das ist die Hülle. */
+.blatt-werk .zeichen[data-sym] svg{display:block; width:100%; height:100%}
 /* WO KEIN WORT STEHT, TRÄGT DAS ZEICHEN ALLEIN — und darf grösser sein.
    16 px neben einem Wort von 13 px ist reichlich; 16 px ALLEIN in einem
-   36-px-Knopf ist knapp. Die drei wortlosen Zustände (enge Leiste, Spalte,
-   Telefon) bekommen deshalb 18 px zurück, die Seitenspalte 20. */
+   36-px-Knopf ist knapp. Die enge Rechnerleiste und die Spalte bekommen
+   deshalb 18 px zurück. */
 @media (min-width:761px){
   @container (max-width:1150px){
     .blatt-werk .zeichen[data-sym]{width:18px; height:18px}
   }
 }
 .spalte .blatt-werk .zeichen[data-sym]{width:18px; height:18px}
+/* ══ UND WO DIE FLÄCHE FEST 44 PX IST, SIND ES 24 (E585, Plan 7 C 2) ═══════
+   „Symbole im Dock ca. 24–28 px innerhalb fester 44-px-Trefferflächen."
+   Das sind genau zwei Zustände: das Telefon und die seitliche Leiste. Dort
+   ist der Knopf 44 × 44 beziehungsweise 48 × 44, das Wort ist weg, und das
+   Zeichen ist die einzige Auskunft.
+
+   NICHT AM RECHNER, und das ist gemessen, nicht gemutmasst: dort trägt der
+   Zubehörknopf 32 px Mindestbreite, weil bei 1280 px sonst die Breite als
+   einzelner Knopf in eine dritte Zeile fällt (E576). Ein 24-px-Zeichen
+   macht aus den 32 px vierzig und aus der Leiste 959 → 1013 px. Bei 1280
+   wäre das der Umbruch, den E576 gerade weggerechnet hat.
+
+   AM TELEFON KOSTET ES NICHTS: gemessen bei 390 px blieb die Rollbreite
+   bei 18, 22, 24 und 26 px unverändert 918 px — der Knopf ist dort ohnehin
+   44 px breit, das Zeichen wächst nur in den Platz hinein, der schon da
+   war. */
 @media (max-width:760px){
-  .blatt-werk .zeichen[data-sym]{width:18px; height:18px}
+  .blatt-werk .zeichen[data-sym]{width:24px; height:24px}
 }
 .blatt-reihe[data-lage="links"] .blatt-werk .zeichen[data-sym],
-.blatt-reihe[data-lage="rechts"] .blatt-werk .zeichen[data-sym]{width:20px; height:20px;
+.blatt-reihe[data-lage="rechts"] .blatt-werk .zeichen[data-sym]{width:24px; height:24px;
                                                                 margin-right:0}
 /* Die Schrift-Knoepfe (E360): das Muster zeigt die Familie, das F ist fett. */
 .blatt-werk [data-act="schriftart"] .zeichen{font-size:15px}
@@ -24057,7 +24093,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1090, inhalt: '2871456a2f729619', gebaut: '2026-09-15T09:39:27.516Z' };
+const Stand = { fassung: 1091, inhalt: 'e4d1fefb21495845', gebaut: '2026-09-15T10:08:16.791Z' };
 window.Stand = Stand;
 
 </script>
