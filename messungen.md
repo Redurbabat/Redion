@@ -554,3 +554,138 @@ node bilder.mts                   Bilder, wenn es etwas zu SEHEN gibt
 Ein Wert, der hier steht und beim Nachmessen anders herauskommt, ist kein
 Streit — er ist ein Fund. Dann kommt die neue Zahl dazu, mit Datum, und die
 alte bleibt stehen.
+
+---
+
+# Teil III — Die Messungen vom 15. September 2026, zweiter Tag
+
+## 13. Die CSS-Namensräume — wie weit das Verzeichnis abgewandert war
+
+**Frage:** `test290` war rot. Woran?
+
+**Methode:** `doku/CSS-NAMENSRAEUME.md` gegen `quell/schale/stil/*.css`,
+mit demselben Regex, mit dem das Verzeichnis entstanden ist
+(`\.([a-z]{2,4})-[a-z0-9-]+`, ab vier Vorkommen ein eigener Namensraum).
+
+| Was | gemessen |
+|---|---|
+| Präfixe im Stil | **157** |
+| Zeilen im Verzeichnis | 156 |
+| fehlt im Verzeichnis | **1** — `fv` (der Folienvorlagen-Wähler, E548) |
+| Karteileichen | 0 |
+| **falsche Zahl in der Spalte** | **45 von 157** |
+| falsche Hauptdatei | 1 — `els` |
+
+Die schlimmsten Zahlen: `rmo` stand auf 40 und ist **561**, `ai` auf 130 und
+ist **97**, `stat` auf 16 und ist **45**. Von den sieben nachgesehenen
+stimmte nur `bs` (64).
+
+### 13.1 Der `els`-Fund war echt, und mein erster Verdacht war falsch
+
+Zuerst sah es nach einem Messfehler des Wächters aus: `els` hat in
+`bausteine.css` **14 verschiedene** Klassen, in `motion.css` nur **zwei** —
+die aber in 53 Regeln. Ein Maß, das Regeln zählt, macht die Datei, die zwei
+Klassen oft anfasst, zur Eigentümerin.
+
+Zwei Maße nebeneinander über alle 157 Präfixe:
+
+| | Antwort nach Vorkommen | Antwort nach verschiedenen Klassen |
+|---|---|---|
+| gleich bei | 151 Präfixen | |
+| verschieden bei | **6** | `els`, `ist`, `ka`, `leer`, `side`, `stat` |
+
+**Die Geschichte hat entschieden, nicht das Maß:** der Verzeichniseintrag
+stammt aus **E323**, die `motion.css`-Regeln kamen mit **E537** dazu —
+`git merge-base --is-ancestor` bestätigt die Reihenfolge. Der Schwerpunkt
+ist also wirklich gewandert, und `§4` hat genau das gemeldet, wofür es ihn
+gibt. Das Verzeichnis sagt jetzt `motion.css`; ein neuer Abschnitt darin
+sagt, wo das Aussehen trotzdem liegt.
+
+**Vier Präfixe haben `motion.css` als Hauptdatei**, weil Bewegung seit
+E43/E259 ausschliesslich dort wohnt: `ai`, `els`, `rmo`, `stat`.
+
+---
+
+## 14. Lesen heisst lesen — zwei Türen, beide offen
+
+**Frage:** Schützt der Lesemodus die Arbeitskopie wirklich?
+
+**Methode:** Dokumentstudio, Fenster 1440 × 960, ein Heft mit einem leeren
+Blatt. Nach jedem Schritt `data-tool` und `pointer-events` der Zeichenschicht
+lesen und `Store.getBlock(blatt).marken.length` zählen. Danach ein echter Zug
+mit synthetischen Zeigerereignissen.
+
+### 14.1 Tür 1 — die Tastatur
+
+| Schritt | Werkzeug | `pointer-events` | Marken |
+|---|---|---|---|
+| frisch geöffnet | `stift` | `auto` | 0 |
+| „Lesen" gewählt | `schreiben` | `none` | 0 ✓ |
+| **Taste „P"** | `stift` | `auto` | — |
+| ein Zug danach | | | **0 → 1** ✗ |
+
+### 14.2 Tür 2 — die Maus, und sie war die grössere
+
+Gemessen NACH der ersten Reparatur, weil nachgemessen statt geglaubt wurde:
+
+| Im Lesemodus | gemessen |
+|---|---|
+| `[data-document-tool="marker"]` sichtbar | **ja** |
+| … `disabled` | **nein** |
+| … `aria-pressed` | `false` |
+| nach einem gewöhnlichen **Mausklick** | `marker`, `pointer-events:auto` |
+| ein Zug danach | **0 → 1** |
+
+### 14.3 Nachher (E578)
+
+| Schritt | Ergebnis |
+|---|---|
+| Taste „P" im Lesemodus | Schicht bleibt `schreiben`/`none` |
+| ein Zug danach | Fläche unerreichbar, Marken unverändert |
+| oberer Werkzeugknopf | `disabled` |
+| Mausklick darauf | ändert nichts, keine Marke |
+| **Gegenprobe:** „H" im Schreibmodus | holt den Marker — die Abkürzung lebt |
+
+### 14.4 Und ein Nebenfund an der eigenen Reparatur
+
+Die erste Fassung der Regel („eine Abkürzung drückt nur, was greifbar ist")
+schaltete im Studio **alle** Werkzeugtasten ab. Gemessen:
+`[data-wz="marker"]` im unteren Dock hat dort `display:none` und
+`getClientRects().length === 0` — die Werkzeuge stehen im Studio mit Absicht
+oben (E573). Die Abkürzung greift seither nach oben, wenn der untere Knopf
+nicht greifbar ist.
+
+---
+
+## 15. Die Verlaufskapsel im Foliensatz — 66 Pixel, die niemand bestellt hat
+
+**Frage:** `test508 §2` meldete 580 px statt über 600. Woher?
+
+**Methode:** Foliensatz öffnen, Reiter „Ansicht", die Rechtecke von
+`.document-body`, `.document-ink-history` und `.document-center` lesen.
+Fenster 1440 × 852, 15. September 2026.
+
+| Element | vorher oben | vorher hoch | nachher oben | nachher hoch |
+|---|---|---|---|---|
+| `.document-body` | 206 | 646 | 206 | 646 |
+| Kapsel | 218 | 54 | 218 | 54 |
+| `.document-center` | **272** | **580** | **206** | **646** |
+
+272 = 218 + 54. Die Kapsel hatte im Foliensatz eine eigene Rasterzeile und
+schob die Fläche um ihre Höhe nach unten; im Studio überlagerte dieselbe
+Regel. `position:absolute` nimmt in jedem Raster keinen Platz (E579).
+
+### 15.1 Welcher Bogen es war — und dass mein erster Schluss falsch war
+
+Ich hielt den roten Lauf für einen Altbestand. Ein Arbeitsbaum auf den
+einzelnen Commits hat es entschieden:
+
+```txt
+d4a53c8e (E571)   Suite 508: 40 grün
+5d415d61 (E572)   Suite 508: 40 grün
+4ac55759 (E573)   Suite 508: 39 grün, 1 rot   ← hier
+5aa8876f (E574)   Suite 508: 39 grün, 1 rot
+```
+
+**„Älter als mein Zweig" ist eine Vermutung, solange niemand die Commits
+durchgeht** — und sie ist die bequeme Antwort, was sie verdächtig macht.

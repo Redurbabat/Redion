@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-557 Entscheidungen, E1 bis E577 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+559 Entscheidungen, E1 bis E579 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -621,6 +621,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E575** — Ein Feld, das aufgeht, muss auch wieder zugehen; ein Klick darf die Leiste nicht neu aufbauen; und eine Sortierbewegung ist keine Attributänderung
 * **E576** — Der Radierer: drei sichtbare Kreise, der Modus einmal statt zweimal, und eine Grösse, die den Seitenwechsel überlebt
 * **E577** — Die Dock-Bewegung bewegt das Zeichen, nicht den Knopf; das Galeriefeld bekommt sein Raster; und zwei Werkzeugzeichen waren dasselbe Bild
+* **E578** — Ein Dokument im Lesemodus nahm Striche an: die Taste war nur die kleinere von zwei Türen
+* **E579** — Die Verlaufskapsel nimmt nirgends Platz: ein Raster, das hier überlagert und dort schiebt, ist kein Platz
 
 ---
 
@@ -46917,3 +46919,149 @@ lenkt vom nächsten echten ab.
 **Prüfläufe:** `test480` 50/50 (fünf Zusicherungen neu, drei davon rot
 gesehen), `test524` 50/50 (elf neu, vier rot gesehen), `test461` 35/35,
 `test393`, `test437`, `test522`, `test523` grün.
+
+---
+
+## E578 — Lesen heisst lesen. Auch mit der Tastatur, auch mit der Maus
+
+**15. September 2026.** Ein Datenfund, älter als E572, gefunden beim
+Abarbeiten der offenen Punkte aus L157 — und beim Reparieren stellte sich
+heraus, dass er grösser war als gemeldet.
+
+### Was gemessen wurde
+
+Dokumentstudio, Fenster 1440 × 960, ein Heft mit einem leeren Blatt:
+
+| Schritt | Werkzeug | `pointer-events` | Marken |
+|---|---|---|---|
+| frisch geöffnet | `stift` | `auto` | 0 |
+| „Lesen" gewählt | `schreiben` | `none` | 0 ✓ richtig |
+| **Taste „P"** | `stift` | `auto` | — |
+| ein Zug danach | | | **0 → 1** ✗ |
+
+Der Lesemodus klappt die ganze Werkzeugleiste ein
+(`[data-document-tools="closed"]` → `.blatt-reihe{display:none}`). Der
+Tastengriff aus E465 suchte sich `.blatt-werk` aber mit `querySelector` und
+klickte darin einen Knopf, **den niemand sehen kann** — und der holte die
+Zeichenschicht zurück.
+
+### Die zweite Tür war grösser als die erste
+
+Nach der ersten Reparatur wurde nachgemessen statt geglaubt — und dabei fiel
+auf, dass die Taste nur der kleinere Weg war:
+
+| Im Lesemodus | gemessen |
+|---|---|
+| `[data-document-tool="marker"]` sichtbar | **ja** |
+| … `disabled` | **nein** |
+| … `aria-pressed` | `false` |
+| ein gewöhnlicher **Mausklick** darauf | Schicht auf `marker`, `pointer-events:auto` |
+| ein Zug danach | **0 → 1** |
+
+Die obere Reihe hat ihre eigene `disabled`-Rechnung, und `state.toolsOpen`
+kam darin nicht vor. Die Knöpfe sagten dabei sogar schon die Wahrheit: ihr
+`aria-pressed` ist im Lesemodus überall `false`. **Eine Reihe, die „nichts
+gewählt" meldet und trotzdem schreibt, ist der Widerspruch, der hier
+weggeht.**
+
+Wer nur die Tastatur repariert hätte, hätte die Maus offen gelassen — und
+das wäre die schlimmere Hälfte gewesen.
+
+### Entschieden
+
+1. **Die obere Reihe ist im Lesemodus aus.** `state.toolsOpen` kommt in die
+   `disabled`-Rechnung der Werkzeugknöpfe und des Linealknopfs. Damit gilt
+   dasselbe ohne weiteres Zutun für die **gesperrte Seite**
+   (`page.gesperrt`) und für **fehlende Rechte**
+   (`Konten.darf('bearbeiten', …)`) — beide schliessen dieselbe Reihe.
+2. **Eine Abkürzung darf nur drücken, was auch eine Hand drücken könnte.**
+   Der Tastengriff prüft `disabled` und `getClientRects()`, bevor er klickt,
+   und ruft `preventDefault()` nur, wenn wirklich etwas gedrückt wurde — wer
+   im Lesemodus „p" tippt, behält sein „p".
+   `getClientRects()` und nicht `offsetParent`: ein Knopf in einer fest
+   positionierten Leiste hat kein `offsetParent` und wäre fälschlich „weg".
+3. **Im Studio greift die Abkürzung nach oben.** Dort stehen die Werkzeuge
+   im Band und im unteren Dock mit Absicht nicht (E573) — ein Griff, der nur
+   den unteren Knopf kennt, täte im Studio gar nichts. Er nimmt den oberen,
+   wenn der untere nicht greifbar ist; beide enden an derselben
+   Zeichenmaschine.
+
+### Die Alternative, und warum sie nicht gewählt wurde
+
+Man könnte einen Klick auf ein Werkzeug im Lesemodus als „ich will jetzt
+doch schreiben" lesen und den Modus mitschalten. Das ist freundlicher — und
+für eine **gesperrte** Seite oder fehlende Rechte wäre es falsch, denn dort
+gibt es kein „doch". Eine Regel, die in der Hälfte der Fälle nicht gelten
+darf, ist keine. Der Weg zurück steht daneben und heisst „Annotieren".
+Als mögliche Verbesserung steht sie in `LUECKEN.md`; entscheiden kann sie
+nur Redur.
+
+### Was ausdrücklich NICHT mitrepariert wurde
+
+„Zurück" und „Vor" bleiben im Lesemodus bedienbar. Rückgängig ist kein
+Zeichnen, und der Lesemodus ist ein Ansichtsschalter, keine Rechtegrenze —
+wer seinen eigenen letzten Strich zurücknehmen will, soll das können, ohne
+erst den Modus zu wechseln. Bei einer **gesperrten** Seite greift ohnehin
+`canAnnotate` und schaltet auch sie ab.
+
+**Prüfläufe:** `test438 §4b` neu, elf Zusicherungen, **sieben davon vorher
+rot gesehen** — darunter die Marke, die wirklich entstand. Die Gegenprobe
+„Im Schreibmodus holt H den Marker wieder" steht mit darin, damit die
+Reparatur die Abkürzung nicht einfach abschalten kann.
+
+---
+
+## E579 — Ein Raster, das hier überlagert und dort schiebt, ist kein Platz
+
+**15. September 2026.** E573 gab der Verlaufskapsel eine Rasterzelle
+(`grid-column:2; grid-row:1`), damit sie sich im Studio über das Papier
+legt. Das tat sie dort auch. Im **Foliensatz** hat der Dokumentkörper aber
+ein anderes Raster — und dort bekam sie eine eigene Zeile und schob die
+Fläche nach unten.
+
+Gemessen bei 1440 × 852, Reiter „Ansicht":
+
+| Element | oben | hoch |
+|---|---|---|
+| `.document-body` | 206 | 646 |
+| Kapsel | 218 | 54 |
+| `.document-center` | **272** | **580** |
+
+272 ist genau 218 + 54: geschoben, nicht überlagert. Die Folienfläche war
+damit seit E573 um die Höhe der Kapsel kleiner — 580 statt über 600.
+
+### Wer es gefunden hat, und was ich dabei zuerst falsch gemacht habe
+
+`test508 §2` misst die Folienfläche gegen 600 px. Er wurde rot, und mein
+erster Schluss war **falsch**: ich hielt ihn für einen Altbestand wie
+`test290` und `test464`. Ein Arbeitsbaum auf den einzelnen Commits hat es
+entschieden (§30 — genau dafür steht `git worktree` dort):
+
+```txt
+d4a53c8e (E571)   40 grün
+5d415d61 (E572)   40 grün
+4ac55759 (E573)   39 grün, 1 rot     ← hier
+5aa8876f (E574)   39 grün, 1 rot
+```
+
+**Der Bogen war meiner.** „Älter als mein Zweig" ist eine Vermutung, solange
+niemand die Commits durchgeht — und sie ist bequem, was sie verdächtig
+macht.
+
+### Entschieden
+
+`position:absolute` statt Rasterzelle, in **jedem** Raster und bei jeder
+Breite. Das ist dieselbe Wahl, die der Telefonfall seit E573 trifft; sie
+gilt jetzt überall, und damit gibt es eine Regel statt zweier, die sich
+widersprechen können. `.document-body` ist ihr Bezug (`position:relative`,
+steht seit E573 daneben).
+
+Der Gewinn ist grösser als die 66 px im Foliensatz: **auch im Studio** hat
+das Papier die Höhe zurückbekommen, die die Kapselzeile gekostet hat.
+
+`test461` trug die alte Fassung als Quellenzusage (`grid-column:2`) und sagt
+jetzt die neue — mit der Begründung daneben, damit niemand sie für eine
+Verschlechterung hält.
+
+**Prüfläufe:** `test508` 40/40 (wieder), `test461`, `test393`, `test437`,
+`test524`, `test386`, `test424`, `test471` grün.

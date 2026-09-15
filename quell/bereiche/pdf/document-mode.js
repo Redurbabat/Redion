@@ -2666,12 +2666,27 @@ const DocumentMode = (() => {
                 wunsch.forEach(button => drawingbar.insertBefore(button, rulerButton));
             }
             const realRuler = source?.querySelector('[data-act="lineal"]');
-            rulerButton.disabled = !canAnnotate || !realRuler;
+            /* ══ IM LESEMODUS IST DIE OBERE REIHE AUS (E578) ═══════════════════════
+               GEMESSEN am 15. September 2026: im Lesemodus war
+               `[data-document-tool="marker"]` sichtbar UND nicht `disabled`. Ein
+               gewöhnlicher Mausklick darauf setzte die Zeichenschicht auf `marker`
+               und `pointer-events:auto` — und der nächste Zug landete als Marke im
+               Block (0 → 1). Ein Dokument, das man ausdrücklich zum LESEN geöffnet
+               hat, nahm damit Striche an.
+               Die untere Leiste war längst zu (`.blatt-reihe{display:none}`), die
+               obere aber nicht — sie hat ihre eigene `disabled`-Rechnung, und
+               `state.toolsOpen` kam darin nicht vor. Die Knöpfe sagten dabei sogar
+               schon die Wahrheit: ihr `aria-pressed` ist im Lesemodus überall
+               `false`. Eine Reihe, die „nichts gewählt" meldet und trotzdem
+               schreibt, ist der Widerspruch, der hier weggeht.
+               Dasselbe gilt für die gesperrte Seite und für fehlende Rechte:
+               beide schliessen dieselbe Reihe über `state.toolsOpen`. */
+            rulerButton.disabled = !canAnnotate || !state.toolsOpen || !realRuler;
             rulerButton.setAttribute('aria-pressed', realRuler?.getAttribute('aria-pressed') || 'false');
             workspace.dataset.inkTool = source?.dataset.tool || 'schreiben';
             drawingbar.querySelectorAll('[data-document-tool]').forEach(button => {
                 const real = source?.querySelector('[data-wz="' + button.dataset.documentTool + '"]');
-                button.disabled = !canAnnotate || !real || real.disabled;
+                button.disabled = !canAnnotate || !state.toolsOpen || !real || real.disabled;
                 button.setAttribute('aria-pressed', String(state.toolsOpen && real?.getAttribute('aria-pressed') === 'true'));
             });
             for (const action of ['undo', 'redo']) {

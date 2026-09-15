@@ -174,9 +174,28 @@ body[data-dokument="an"] .document-studio .document-topbar button:hover{backgrou
    Jetzt liegt sie in der Papierspalte und schwebt links oben darüber, wie
    in Redurs Referenz. Die alten Bandregeln (Rechtsrand, `margin-right:auto`)
    galten für eine Kapsel IN einer Zeile und sind hier weg. */
+/* ══ DIE KAPSEL NIMMT NIRGENDS PLATZ (E579) ════════════════════════════════
+   Hier stand `grid-column:2; grid-row:1` — eine Rasterzelle, die sich im
+   Studio mit dem Papier überlagert. Im FOLIENSATZ hat der Dokumentkörper
+   aber ein anderes Raster, und dort bekam die Kapsel eine eigene Zeile.
+   Gemessen bei 1440 × 852, Reiter „Ansicht":
+
+     .document-body   oben 206, hoch 646
+     Kapsel           oben 218, hoch  54
+     .document-center oben 272  ← genau 218 + 54: geschoben, nicht überlagert
+     Fläche           580 px statt über 600
+
+   `test508 §2` hat es gefunden — er misst die Folienfläche gegen 600 px,
+   und sie war seit E573 um die Höhe der Kapsel kleiner. Ein Raster, das in
+   einer Ansicht überlagert und in der anderen schiebt, ist kein Platz,
+   sondern ein Zufall.
+   `position:absolute` nimmt in JEDEM Raster keinen Platz. Das ist dieselbe
+   Wahl, die der Telefonfall seit E573 trifft — sie gilt jetzt überall, und
+   damit gibt es nur noch eine Regel statt zweier, die sich widersprechen
+   können. `.document-body` ist dafür `position:relative` (Zeile darunter). */
 .document-ink-history{
-  grid-column:2; grid-row:1; align-self:start; justify-self:start;
-  z-index:6; width:max-content; margin:12px 0 0 12px;
+  position:absolute; top:12px; left:12px;
+  z-index:6; width:max-content; margin:0;
   display:flex; gap:2px; padding:4px;
   border:1px solid var(--line); border-radius:var(--radius-xl);
   background:var(--pdf-tools); box-shadow:var(--shadow-2)

@@ -21504,9 +21504,28 @@ body[data-dokument="an"] .document-studio .document-topbar button:hover{backgrou
    Jetzt liegt sie in der Papierspalte und schwebt links oben darüber, wie
    in Redurs Referenz. Die alten Bandregeln (Rechtsrand, `margin-right:auto`)
    galten für eine Kapsel IN einer Zeile und sind hier weg. */
+/* ══ DIE KAPSEL NIMMT NIRGENDS PLATZ (E579) ════════════════════════════════
+   Hier stand `grid-column:2; grid-row:1` — eine Rasterzelle, die sich im
+   Studio mit dem Papier überlagert. Im FOLIENSATZ hat der Dokumentkörper
+   aber ein anderes Raster, und dort bekam die Kapsel eine eigene Zeile.
+   Gemessen bei 1440 × 852, Reiter „Ansicht":
+
+     .document-body   oben 206, hoch 646
+     Kapsel           oben 218, hoch  54
+     .document-center oben 272  ← genau 218 + 54: geschoben, nicht überlagert
+     Fläche           580 px statt über 600
+
+   `test508 §2` hat es gefunden — er misst die Folienfläche gegen 600 px,
+   und sie war seit E573 um die Höhe der Kapsel kleiner. Ein Raster, das in
+   einer Ansicht überlagert und in der anderen schiebt, ist kein Platz,
+   sondern ein Zufall.
+   `position:absolute` nimmt in JEDEM Raster keinen Platz. Das ist dieselbe
+   Wahl, die der Telefonfall seit E573 trifft — sie gilt jetzt überall, und
+   damit gibt es nur noch eine Regel statt zweier, die sich widersprechen
+   können. `.document-body` ist dafür `position:relative` (Zeile darunter). */
 .document-ink-history{
-  grid-column:2; grid-row:1; align-self:start; justify-self:start;
-  z-index:6; width:max-content; margin:12px 0 0 12px;
+  position:absolute; top:12px; left:12px;
+  z-index:6; width:max-content; margin:0;
   display:flex; gap:2px; padding:4px;
   border:1px solid var(--line); border-radius:var(--radius-xl);
   background:var(--pdf-tools); box-shadow:var(--shadow-2)
@@ -23964,7 +23983,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1082, inhalt: 'a8be6f3bb1e657d0', gebaut: '2026-09-14T23:59:14.916Z' };
+const Stand = { fassung: 1085, inhalt: 'b9698d051519c3c5', gebaut: '2026-09-15T04:51:54.596Z' };
 window.Stand = Stand;
 
 </script>
@@ -65735,6 +65754,38 @@ const Marken = (() => {
         const huelle = flaeche?.closest('.blatt-huelle, .document-stage, .blatt, .pdfs, .page') || document;
         return huelle.querySelector('.blatt-werk') || document.querySelector('.blatt-werk');
     };
+    /* ══ EINE TASTE ÖFFNET KEINE TÜR, DIE ZU IST (E578) ═══════════════════════
+       GEMESSEN am 15. September 2026 im Dokumentstudio, Fenster 1440 × 960:
+  
+         frisch geöffnet   tool=stift      pointer-events=auto
+         im Lesemodus      tool=schreiben  pointer-events=none    richtig
+         nach der Taste P  tool=stift      pointer-events=auto    FALSCH
+         ein Zug danach    marken 0 → 1                           GEZEICHNET
+  
+       Der Lesemodus klappt die ganze Werkzeugleiste ein
+       (`[data-document-tools="closed"]` → `.blatt-reihe{display:none}`). Dieser
+       Griff sucht sich `.blatt-werk` aber mit `querySelector` und klickte darin
+       einen Knopf, den NIEMAND sehen kann — und der holte die Zeichenschicht
+       zurück. Ein Dokument, das man ausdrücklich zum Lesen geöffnet hat, nahm
+       damit Striche an (§46 Punkt 1, §51).
+  
+       DIE REGEL IST ALLGEMEINER ALS DER LESEMODUS und deshalb die richtige:
+       eine Abkürzung darf nur drücken, was auch eine Hand drücken könnte. Ohne
+       weiteres Zutun gilt sie damit auch für die gesperrte Seite
+       (`page.gesperrt`) und für fehlende Rechte (`Konten.darf('bearbeiten',…)`)
+       — beide klappen dieselbe Leiste ein. Und `marken.ts` muss dafür nichts
+       über den Dokumentmodus wissen (§5).
+  
+       `getClientRects()` und nicht `offsetParent`: ein Knopf in einer fest
+       positionierten Leiste hat kein `offsetParent` und wäre fälschlich „weg". */
+    const greifbar = (knopf) => !!knopf && !knopf.disabled && knopf.getClientRects().length > 0;
+    /** Drückt einen Knopf, wenn er wirklich da ist. Sagt, ob es geklappt hat. */
+    const druecke = (knopf) => {
+        if (!greifbar(knopf))
+            return false;
+        knopf.click();
+        return true;
+    };
     const kuerzel = (event) => {
         if (event.ctrlKey || event.metaKey || event.altKey || event.repeat)
             return;
@@ -65748,13 +65799,26 @@ const Marken = (() => {
         const leiste = aktiveLeiste();
         if (!leiste)
             return;
-        event.preventDefault();
+        /* ══ DIE ZWEITE TÜR: DIE OBERE REIHE (E578) ═══════════════════════════
+           Im Dokumentstudio stehen die WERKZEUGE oben im Band und nicht im
+           unteren Dock — dort sind die `[data-wz]` mit Absicht `display:none`
+           (E573). Ein Griff, der nur den unteren Knopf kennt, tut im Studio also
+           gar nichts. Er nimmt deshalb den oberen, wenn der untere nicht
+           greifbar ist; beide Wege enden ohnehin an derselben Zeichenmaschine.
+           Und im Lesemodus ist auch der obere `disabled` — damit greift die
+           Regel „nur drücken, was eine Hand drücken könnte" von selbst. */
+        const oben = document.querySelector('.document-drawingbar');
+        const werkzeug = (id) => druecke(leiste.querySelector(`[data-wz="${id}"]`))
+            || druecke(oben?.querySelector(`[data-document-tool="${id}"]`));
+        /* `preventDefault()` erst, wenn wirklich etwas gedrückt wurde: wer im
+           Lesemodus „p" tippt, soll das „p" behalten. */
         if (ziel === 'bleistift') {
             /* Der Bleistift ist ein Stift mit Stil — seit E512 ein Knopf in der
                Reihe, kein Weiterschalten mehr. */
-            leiste.querySelector('[data-act="stilwahl"][data-stil="bleistift"]')?.click();
-            if (Zeichenziel.jetzt() !== 'stift')
-                leiste.querySelector('[data-wz="stift"]')?.click();
+            if (druecke(leiste.querySelector('[data-act="stilwahl"][data-stil="bleistift"]')))
+                event.preventDefault();
+            if (Zeichenziel.jetzt() !== 'stift' && werkzeug('stift'))
+                event.preventDefault();
             return;
         }
         /* ══ P WECHSELT WEITER, WENN DER STIFT SCHON FÜHRT (E512) ═════════════
@@ -65767,14 +65831,18 @@ const Marken = (() => {
             const jetzt = leiste.querySelector('[data-act="stilwahl"].on');
             const i = STIFTE.findIndex(st => st.id === jetzt?.dataset.stil);
             const naechster = STIFTE[(i + 1) % STIFTE.length];
-            leiste.querySelector(`[data-act="stilwahl"][data-stil="${naechster.id}"]`)?.click();
+            if (druecke(leiste.querySelector(`[data-act="stilwahl"][data-stil="${naechster.id}"]`)))
+                event.preventDefault();
             return;
         }
         if (ziel === 'lineal') {
-            leiste.querySelector('[data-act="lineal"]')?.click();
+            if (druecke(leiste.querySelector('[data-act="lineal"]'))
+                || druecke(oben?.querySelector('[data-document-action="ink-ruler"]')))
+                event.preventDefault();
             return;
         }
-        leiste.querySelector(`[data-wz="${ziel}"]`)?.click();
+        if (werkzeug(ziel))
+            event.preventDefault();
     };
     if (typeof document !== 'undefined')
         document.addEventListener('keydown', kuerzel);
@@ -80524,12 +80592,27 @@ const DocumentMode = (() => {
                 wunsch.forEach(button => drawingbar.insertBefore(button, rulerButton));
             }
             const realRuler = source?.querySelector('[data-act="lineal"]');
-            rulerButton.disabled = !canAnnotate || !realRuler;
+            /* ══ IM LESEMODUS IST DIE OBERE REIHE AUS (E578) ═══════════════════════
+               GEMESSEN am 15. September 2026: im Lesemodus war
+               `[data-document-tool="marker"]` sichtbar UND nicht `disabled`. Ein
+               gewöhnlicher Mausklick darauf setzte die Zeichenschicht auf `marker`
+               und `pointer-events:auto` — und der nächste Zug landete als Marke im
+               Block (0 → 1). Ein Dokument, das man ausdrücklich zum LESEN geöffnet
+               hat, nahm damit Striche an.
+               Die untere Leiste war längst zu (`.blatt-reihe{display:none}`), die
+               obere aber nicht — sie hat ihre eigene `disabled`-Rechnung, und
+               `state.toolsOpen` kam darin nicht vor. Die Knöpfe sagten dabei sogar
+               schon die Wahrheit: ihr `aria-pressed` ist im Lesemodus überall
+               `false`. Eine Reihe, die „nichts gewählt" meldet und trotzdem
+               schreibt, ist der Widerspruch, der hier weggeht.
+               Dasselbe gilt für die gesperrte Seite und für fehlende Rechte:
+               beide schliessen dieselbe Reihe über `state.toolsOpen`. */
+            rulerButton.disabled = !canAnnotate || !state.toolsOpen || !realRuler;
             rulerButton.setAttribute('aria-pressed', realRuler?.getAttribute('aria-pressed') || 'false');
             workspace.dataset.inkTool = source?.dataset.tool || 'schreiben';
             drawingbar.querySelectorAll('[data-document-tool]').forEach(button => {
                 const real = source?.querySelector('[data-wz="' + button.dataset.documentTool + '"]');
-                button.disabled = !canAnnotate || !real || real.disabled;
+                button.disabled = !canAnnotate || !state.toolsOpen || !real || real.disabled;
                 button.setAttribute('aria-pressed', String(state.toolsOpen && real?.getAttribute('aria-pressed') === 'true'));
             });
             for (const action of ['undo', 'redo']) {

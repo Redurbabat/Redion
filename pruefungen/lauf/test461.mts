@@ -332,9 +332,20 @@ console.log('\n§6 Quellen');
      entkommentiert und entleert gelesen. */
   const stilOhneBeiwerk = lies('quell/schale/stil/pdf-studio.css')
     .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, '');
-  p('Das Stilblatt gibt ihr eine Lage über dem Papier — am Rechner im Raster, am Telefon absolut',
-    /\.document-ink-history\{[^}]*grid-column:2/.test(stilOhneBeiwerk)
-    && /\.document-ink-history\{[^}]*position:absolute/.test(stilOhneBeiwerk));
+  /* ══ NICHT MEHR „IM RASTER", SONDERN ÜBERALL ABSOLUT (E579) ══════════════
+     Hier stand `grid-column:2` — die Rasterzelle, mit der die Kapsel sich im
+     Studio über das Papier legte. Im FOLIENSATZ hat der Dokumentkörper ein
+     anderes Raster, und dort bekam sie eine eigene Zeile und SCHOB die
+     Fläche: gemessen `.document-center` oben 272 statt 206, 580 px statt
+     646. `test508 §2` hat es gefunden.
+     Ein Raster, das in einer Ansicht überlagert und in der anderen schiebt,
+     ist kein Platz, sondern ein Zufall. `position:absolute` nimmt in jedem
+     Raster keinen. */
+  p('Das Stilblatt legt sie über das Papier, ohne irgendwo Platz zu nehmen',
+    /\.document-ink-history\{[^}]*position:absolute/.test(stilOhneBeiwerk)
+    && !/\.document-ink-history\{[^}]*grid-column/.test(stilOhneBeiwerk));
+  p('… und der Dokumentkörper ist ihr Bezug',
+    /\.document-body\{[^}]*position:relative/.test(stilOhneBeiwerk));
   /* UND AM TELEFON UNTEN, NICHT OBEN (E577). Gemessen deckte `top:8px` dort
      87 × 39 px der Schreibfläche ab — die Ecke, in der die erste Zeile
      anfängt. `test524 §8` misst es an der laufenden App; hier steht nur,

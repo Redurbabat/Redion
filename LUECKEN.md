@@ -7926,3 +7926,72 @@ Hinweis auf weitere Werkzeuge beim Rollen).
 nichts sagt, dass rechts noch etwas steht (Plan 7 B 8). Gesehen auf
 `bilder/studio-telefon.png`, nicht gemessen — deshalb steht es hier und
 nicht als geschlossen.
+
+## L158 · Lesemodus und Sperre — GESCHLOSSEN am 15. September 2026
+
+**Fund:** Ein Dokument, das ausdrücklich zum LESEN geöffnet war, nahm
+Striche an. Zwei Wege hinein, und der zweite war der grössere:
+
+1. Die Taste „P" klickte einen Werkzeugknopf in der eingeklappten unteren
+   Leiste — einen Knopf, den niemand sehen konnte. Gemessen: Schicht von
+   `schreiben`/`none` zurück auf `stift`/`auto`, ein Zug danach **0 → 1
+   Marke**.
+2. Der obere Werkzeugknopf war im Lesemodus **sichtbar und nicht
+   `disabled`**. Ein gewöhnlicher Mausklick genügte, ebenfalls **0 → 1**.
+
+Älter als E572; der Tastengriff steht seit E465 so da, die obere Reihe seit
+E464. Gehört zu §46 Punkt 1 und §51 — es ist kein Gestaltungsfehler,
+sondern eine Änderung an Nutzerdaten gegen den erklärten Willen des Nutzers.
+
+**Beleg der Schliessung:** `test438 §4b`, elf Zusicherungen, **sieben davon
+vorher rot gesehen** — darunter die Marke, die wirklich entstand. Die
+Gegenprobe „Im Schreibmodus holt H den Marker wieder" steht mit darin, damit
+die Reparatur die Abkürzung nicht einfach abschalten kann. Entscheidung
+E578. `test437` musste dabei nachgezogen werden: er klickte im Lesemodus
+direkt wieder auf den Stift und verliess sich damit auf genau diese Tür.
+
+**Was dabei ausdrücklich NICHT geschlossen wurde**, und warum:
+
+- **„Zurück" und „Vor" bleiben im Lesemodus bedienbar.** Rückgängig ist kein
+  Zeichnen, und der Lesemodus ist ein Ansichtsschalter, keine Rechtegrenze.
+  Bei einer gesperrten Seite greift ohnehin `canAnnotate`.
+- **Ein Klick auf ein Werkzeug schaltet den Modus NICHT mit.** Das wäre
+  freundlicher, und für eine gesperrte Seite oder fehlende Rechte wäre es
+  falsch — dort gibt es kein „doch". Ob das für den reinen Lesemodus anders
+  sein soll, ist eine Frage an Redur und keine an den Code.
+
+---
+
+## L159 · Das CSS-Verzeichnis wandert schneller, als es geprüft wird
+
+**Gemessen am 15. September 2026:** von 157 Präfixen hatten **45 eine
+falsche Zahl** im Verzeichnis (`rmo` stand auf 40 und ist 561), eines fehlte
+ganz (`fv`), und bei einem war die Hauptdatei gewandert (`els`, E323 → E537).
+
+Die Namen und die Hauptdatei hält `test290`. **Die Zahlenspalte hält
+niemand** — sie wird geparst und dann weggeworfen. Sie ist am 15. September
+einmal aus dem Stil neu gerechnet worden und wird wieder abwandern.
+
+**Warum sie trotzdem nicht geprüft wird:** ein Wächter, der bei jeder
+hinzugefügten CSS-Regel rot wird, wird abgeschaltet statt gelesen — genau
+das steht im Kopf von `test290` über seinen eigenen ersten Entwurf. Die
+ehrliche Lösung wäre, die Spalte ganz zu streichen; das bricht das Format,
+das `test290` liest, und ist ein eigener kleiner Bogen. Bis dahin steht im
+Verzeichnis, von wann die Zahlen sind.
+
+## L160 · Die Verlaufskapsel schob die Folienfläche — GESCHLOSSEN am 15. September 2026
+
+**Fund:** Die Rasterzelle aus E573 (`grid-column:2; grid-row:1`) überlagerte
+im Studio das Papier, bekam im **Foliensatz** aber eine eigene Zeile und schob
+`.document-center` um ihre Höhe nach unten: gemessen oben 272 statt 206,
+580 px statt 646. Die Folienfläche war damit seit E573 um 66 px kleiner.
+
+**Beleg:** `test508 §2` war rot und ist wieder 40/40. Entscheidung E579:
+`position:absolute` in jedem Raster, eine Regel statt zweier. Auch das
+Studio hat die Höhe zurückbekommen.
+
+**Und die Lehre, die mehr wert ist als der Fund:** ich hielt den roten Lauf
+zuerst für einen Altbestand wie `test290`. Ein Arbeitsbaum auf den einzelnen
+Commits (§30) hat gezeigt, dass er bei E571 und E572 grün war und mit E573
+rot wurde. „Älter als mein Zweig" ist eine Vermutung, solange niemand die
+Commits durchgeht — und sie ist die bequeme Antwort.

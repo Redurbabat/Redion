@@ -65,6 +65,37 @@ gedacht, sondern als Grössenordnung: ob `lw-` sechshundert oder sechs
 Vorkommen hat, sagt einem sofort, wie schwer eine Umbenennung wäre.
 `test290` prüft die NAMEN, nicht die Zahlen.
 
+**Stand der Zahlen: 15. September 2026.** Sie waren bis dahin so weit
+abgewandert, wie man es von einer ungeprüften Spalte erwarten muss: von 157
+Präfixen hatten **45 eine falsche Zahl** — `rmo` stand auf 40 und ist 561,
+`ai` auf 130 und ist 97. Die Spalte ist einmal aus dem Stil neu gerechnet
+worden und ist ab hier wieder eine Grössenordnung statt einer Erfindung. Dass
+sie erneut abwandert, ist eingeplant; dass sie es UNBEMERKT tut, steht jetzt
+wenigstens hier.
+
+## Was „Hauptdatei" bedeutet — und was nicht
+
+Die dritte Spalte ist **die Datei mit den meisten Vorkommen**, nicht die
+Datei, in der das Aussehen definiert wird. Bei den meisten Präfixen ist das
+dasselbe. Bei vieren nicht, und wer dort sucht, sucht sonst falsch:
+
+| Präfix | Hauptdatei (Spalte) | wo das Aussehen steht |
+|---|---|---|
+| `els` | `motion.css` — 53 Regeln für **2** Klassen | `bausteine.css`, alle **14** Klassen |
+| `stat` | `motion.css` — 33 Regeln für **1** Klasse | `werkzeuge.css`, **3** Klassen |
+| `ai` | `motion.css` | `bausteine.css` und `ki.css` |
+| `rmo` | `motion.css` | dort auch wirklich zu Hause |
+
+Der Grund ist E43/E259: **Bewegung wohnt ausschliesslich in `motion.css`.**
+Ein Bereich mit viel Bewegung sammelt dort zwangsläufig mehr Regeln als in
+seiner eigenen Datei — er ist deshalb nicht dorthin umgezogen.
+
+`els` ist genau so aufgefallen: der Verzeichniseintrag stammte aus **E323**
+und sagte `bausteine.css`, die Animationsregeln kamen mit **E537** dazu, und
+`test290 §4` hat den Schwerpunktwechsel gemeldet. Die Meldung war richtig —
+die Spalte sagt jetzt `motion.css`, und dieser Abschnitt sagt, wo das
+Aussehen trotzdem liegt.
+
 ## Ein Präfix ausserhalb der Zählung
 
 `res-` gehört der UI-Reserve (`quell/entwicklung/ui-reserve/reserve.css`,
@@ -81,21 +112,21 @@ Präfix Anzahl  Hauptdatei
 ab        4  bausteine.css
 abo       5  einstellungen.css
 ag       11  bausteine.css
-ai      130  motion.css
+ai       97  motion.css
 an        6  bausteine.css
-arb      24  bausteine.css
 app      10  bausteine.css
+arb      24  bausteine.css
 as        4  bausteine.css
-au       49  bausteine.css
+au       51  bausteine.css
 auf      16  bausteine.css
 auto      6  einstellungen.css
 av       15  bausteine.css
-aw      244  arbeitswelt.css
+aw      261  arbeitswelt.css
 ax       11  bausteine.css
 bahn      4  bausteine.css
 bg       24  grund.css
-bib     209  bausteine.css
-bild     15  bausteine.css
+bib     412  bausteine.css
+bild     21  bausteine.css
 bl        6  werkzeuge.css
 bs       64  bausteine.css
 bst      44  premium.css
@@ -103,46 +134,47 @@ cal       8  bausteine.css
 cb       15  bausteine.css
 chr      56  bausteine.css
 code      9  bausteine.css
-cw        6  bausteine.css
+cw       18  bausteine.css
 da       12  bausteine.css
 dash     22  bausteine.css
-db       41  bausteine.css
+db       52  bausteine.css
 dd        4  bausteine.css
 dk        8  bausteine.css
 dl       17  bausteine.css
 do        6  bausteine.css
-dz        7  bausteine.css
-ea      129  bausteine.css
+dz       10  bausteine.css
+ea      138  bausteine.css
 eg       21  bausteine.css
 eh        4  bausteine.css
 el        9  bausteine.css
-els      30  bausteine.css
+els      83  motion.css
 ew       33  bausteine.css
-ez       38  einstellungen.css
+ez       57  einstellungen.css
 fb       11  bausteine.css
 fd       22  bausteine.css
-fe        8  einstellungen.css
+fe       11  einstellungen.css
 fg        9  einstellungen.css
-fh       90  bausteine.css
+fh       91  bausteine.css
 fk       17  bausteine.css
 fn       15  werkzeuge.css
 form     27  ansichten.css
-fr       26  bausteine.css
+fr       27  bausteine.css
 frei     10  einstellungen.css
+fv        9  einstellungen.css
 fx        5  bausteine.css
 gal       6  einstellungen.css
+hat       6  notizhefte.css
 hk       12  bausteine.css
-hat       4  notizhefte.css
 hl        4  bausteine.css
 home     63  werkzeuge.css
 hs       20  werkzeuge.css
-icon     13  bausteine.css
-is       42  lernwelt.css
-ist      45  aufbau.css
+icon     16  bausteine.css
+is       56  lernwelt.css
+ist      65  aufbau.css
 ka        8  einstellungen.css
 kal      10  einstellungen.css
 kb       17  bausteine.css
-ki       38  bausteine.css
+ki       60  bausteine.css
 kl       18  premium.css
 komm     18  bausteine.css
 kopf      5  ansichten.css
@@ -154,60 +186,60 @@ kt       15  einstellungen.css
 kw       20  bausteine.css
 kz       15  bausteine.css
 leer      9  werkzeuge.css
+lern      6  werkzeuge.css
 list      7  datenbanken.css
 lr        6  datenbanken.css
 lv        5  bausteine.css
-lern      6  werkzeuge.css
-lw      657  lernwelt.css
+lw      758  lernwelt.css
 lz        6  werkzeuge.css
 mail      5  einstellungen.css
-mb      141  aufbau.css
+mb      154  aufbau.css
 mbl       8  premium.css
 meet      7  bausteine.css
 memo     10  werkzeuge.css
-menu     11  bausteine.css
+menu     12  bausteine.css
 mini     11  bausteine.css
 mit       4  bausteine.css
-msg       4  bausteine.css
+msg       6  bausteine.css
 mz       11  bausteine.css
 ne        5  bausteine.css
-nh      115  notizhefte.css
-nur       6  bausteine.css
-ohne       5  bausteine.css
-opt       4  ansichten.css
+nh      129  notizhefte.css
+nur       7  bausteine.css
+ohne      5  bausteine.css
+opt       5  ansichten.css
 pdf       5  bausteine.css
-pdfs     13  bausteine.css
+pdfs     15  bausteine.css
 pe       19  bausteine.css
-peek     11  ansichten.css
+peek     14  ansichten.css
 pers      8  bausteine.css
-pf       12  bausteine.css
+pf       17  bausteine.css
 pg       23  bausteine.css
 pk       15  bausteine.css
-pl       15  bausteine.css
+pl       18  bausteine.css
 pp        5  ansichten.css
 pr       12  bausteine.css
 pv        8  bausteine.css
-rg       37  bausteine.css
+rg       46  bausteine.css
 rgn      13  bausteine.css
 rm       16  bausteine.css
-rmo      40  motion.css
+rmo     561  motion.css
 rs        5  bausteine.css
-ru        9  bausteine.css
-rt       13  bausteine.css
+rt       22  bausteine.css
+ru      498  bausteine.css
 side     75  aufbau.css
 sk       46  bausteine.css
 sl        7  bausteine.css
 sm       21  bausteine.css
 so        5  bausteine.css
-sp      121  bausteine.css
-stab     13  werkzeuge.css
-stat     16  motion.css
+sp      162  bausteine.css
+stab     19  werkzeuge.css
+stat     45  motion.css
 such     18  einstellungen.css
 sv        5  aufbau.css
 sy        7  bausteine.css
 tbl     104  tabelle.css
 tblk     13  bausteine.css
-td        6  einstellungen.css
+td        7  einstellungen.css
 teil     11  bausteine.css
 tg       17  bausteine.css
 th        5  ansichten.css
@@ -215,23 +247,23 @@ toc       8  bausteine.css
 top      15  grund.css
 tp       15  bausteine.css
 ts        8  bausteine.css
-tt       13  bausteine.css
+tt       17  bausteine.css
 typ       6  bausteine.css
 ue        8  bausteine.css
 verb     19  einstellungen.css
 vg       29  bausteine.css
 vor       7  bausteine.css
-vs        8  einstellungen.css
+vs       11  einstellungen.css
 wahl      6  bausteine.css
-wb       20  werkzeuge.css
+wb       23  werkzeuge.css
 we       14  bausteine.css
 wiki     11  einstellungen.css
 with     12  bausteine.css
 wk       18  bausteine.css
-wl       30  werkzeuge.css
-wr       28  bausteine.css
+wl       37  werkzeuge.css
+wr       33  bausteine.css
 ws       10  aufbau.css
 wz       11  bausteine.css
-zm       12  bausteine.css
-zs       30  ansichten.css
+zm       17  bausteine.css
+zs       38  ansichten.css
 ```

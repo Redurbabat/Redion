@@ -286,6 +286,129 @@ console.log('\n§4 Die Tasten wie GoodNotes');
   await s.close();
 }
 
+/* ═══ §4b Eine Taste öffnet keine Tür, die zu ist ══════════════════════════
+ *
+ * GEMESSEN am 15. September 2026, Fenster 1440 × 960, im Dokumentstudio:
+ *
+ *     frisch geöffnet   tool=stift      pointer-events=auto
+ *     im Lesemodus      tool=schreiben  pointer-events=none    ← richtig
+ *     nach der Taste P  tool=stift      pointer-events=auto    ← falsch
+ *     ein Zug danach    marken 0 → 1                           ← GEZEICHNET
+ *
+ * Der Lesemodus klappt die ganze Werkzeugleiste ein
+ * (`[data-document-tools="closed"]` → `.blatt-reihe{display:none}`). Der
+ * Tastengriff sucht sich `.blatt-werk` aber mit `querySelector` und klickt
+ * darin einen Knopf, den NIEMAND sehen kann — und der holt die Zeichenschicht
+ * zurück. Ein Dokument, das man ausdrücklich zum Lesen geöffnet hat, nimmt
+ * damit Striche an.
+ *
+ * DIE REGEL, DIE HIER FEHLTE, IST ALLGEMEINER ALS DER LESEMODUS: eine
+ * Tastenabkürzung darf nur drücken, was auch eine Hand drücken könnte. Damit
+ * gilt sie ohne weiteres Zutun auch für die gesperrte Seite (`page.gesperrt`)
+ * und für fehlende Rechte (`Konten.darf('bearbeiten', …)`) — beide klappen
+ * dieselbe Leiste ein.
+ *
+ * Älter als E572: der Griff steht seit E465 so da. Er ist hier und nicht in
+ * `test524`, weil dieser Lauf die TASTEN hält.
+ * ------------------------------------------------------------------------ */
+console.log('\n§4b Eine Taste öffnet keine Tür, die zu ist');
+{
+  const s = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  s.on('pageerror', e => fehler.push(e.message.slice(0, 140)));
+  await s.goto(`http://localhost:${PORT}/index.html`);
+  await s.waitForFunction("typeof App !== 'undefined' && typeof Marken !== 'undefined'");
+  const blattId = await s.evaluate(`(async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const seite = Store.addPage(null, { text: 'Nur zum Lesen', icon: '📓' });
+    const blatt = Store.addBlock(seite.id, 'blatt',
+      { text: '', papier: 'punkte', blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1, marken: [] });
+    Store.updateBlock(seite.id, { dokumentModus: true });
+    await Store.flush();
+    App.oeffne(seite.id);
+    return blatt.id;
+  })()`) as string;
+  await s.waitForSelector('.document-drawingbar', { timeout: 15000 });
+  await s.waitForTimeout(800);
+
+  const schicht = () => s.evaluate(`(() => {
+    const svg = document.querySelector('.document-stage[data-aktiv] .blatt-marken');
+    return { tool: svg ? svg.dataset.tool : '—',
+      zeiger: svg ? getComputedStyle(svg).pointerEvents : '—' };
+  })()`) as Promise<{ tool: string; zeiger: string }>;
+
+  gleich('Frisch geöffnet führt der Stift', (await schicht()).tool, 'stift');
+  await s.click('[data-document-action="view"]');
+  await s.waitForTimeout(250);
+  await s.click('[data-document-action="read"]');
+  await s.waitForTimeout(500);
+  const imLesen = await schicht();
+  gleich('Lesen heisst Hand', imLesen.tool, 'schreiben');
+  gleich('… und die Schicht nimmt keine Zeiger an', imLesen.zeiger, 'none');
+
+  const vorher = await s.evaluate(id => (Store as any).getBlock(id).marken.length, blattId) as number;
+  await s.evaluate(`document.activeElement && document.activeElement.blur && document.activeElement.blur()`);
+  await s.keyboard.press('p');
+  await s.waitForTimeout(400);
+  const nachTaste = await schicht();
+  gleich('P holt den Stift NICHT zurück, solange gelesen wird', nachTaste.tool, 'schreiben');
+  gleich('… und die Schicht bleibt durchlässig', nachTaste.zeiger, 'none');
+
+  /* UND DER BEWEIS, DASS DAS NICHT NUR EIN ATTRIBUT IST: ein echter Zug. */
+  const gemalt = await s.evaluate(`(() => {
+    const svg = document.querySelector('.document-stage[data-aktiv] .blatt-marken');
+    if (!svg || getComputedStyle(svg).pointerEvents === 'none') return 'unerreichbar';
+    const m = svg.getScreenCTM();
+    const emit = (type, x, y, buttons) => {
+      const p = new DOMPoint(x, y).matrixTransform(m);
+      svg.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: 77, pointerType: 'pen',
+        isPrimary: true, button: 0, buttons, pressure: buttons ? .6 : 0, clientX: p.x, clientY: p.y }));
+    };
+    emit('pointerdown', 90, 170, 1); emit('pointermove', 150, 180, 1); emit('pointerup', 210, 200, 0);
+    return 'gezogen';
+  })()`) as string;
+  await s.waitForTimeout(400);
+  const nachher = await s.evaluate(id => (Store as any).getBlock(id).marken.length, blattId) as number;
+  gleich('Ein Zug im Lesemodus hinterlässt nichts', nachher, vorher);
+  p('… weil die Fläche gar nicht erst erreichbar ist', gemalt === 'unerreichbar', gemalt);
+
+  /* Und zurück im Schreibmodus tut die Taste wieder, was sie soll — sonst
+     hätte die Reparatur die Abkürzung einfach abgeschaltet. */
+  /* ══ UND DIE ZWEITE TÜR, DIE GRÖSSER WAR ALS DIE ERSTE ═══════════════════
+     Beim Nachmessen der Reparatur stellte sich heraus: die Taste war nur EIN
+     Weg hinein. Der obere Werkzeugknopf war im Lesemodus SICHTBAR und NICHT
+     `disabled` — ein gewöhnlicher Mausklick darauf setzte die Schicht auf
+     `marker` und `pointer-events:auto`, und der nächste Zug landete (0 → 1).
+     Wer nur die Tastatur repariert hätte, hätte die Maus offen gelassen. */
+  const obenMarker = s.locator('.document-drawingbar [data-document-tool="marker"]');
+  p('Der obere Werkzeugknopf ist im Lesemodus abgeschaltet',
+    await obenMarker.isDisabled(), 'sichtbar=' + await obenMarker.isVisible());
+  const vorMaus = await s.evaluate(id => (Store as any).getBlock(id).marken.length, blattId) as number;
+  await obenMarker.click({ force: true, timeout: 5000 }).catch(() => { /* abgeschaltet: genau richtig */ });
+  await s.waitForTimeout(400);
+  gleich('… und ein Klick darauf ändert die Schicht nicht', (await schicht()).tool, 'schreiben');
+  gleich('… und hinterlässt keine Marke',
+    await s.evaluate(id => (Store as any).getBlock(id).marken.length, blattId), vorMaus);
+
+  /* ZURÜCK INS SCHREIBEN. Der Knopf steht im Klappmenü „Ansicht"; ob das
+     nach dem Lesen-Klick noch offen ist, hängt am Menügriff — also wird
+     geöffnet, wenn er nicht sichtbar ist, statt blind zu klicken. */
+  const annot = s.locator('[data-document-action="annotate"]');
+  if (!(await annot.isVisible())) {
+    await s.click('[data-document-action="view"]');
+    await s.waitForTimeout(250);
+  }
+  await annot.click();
+  await s.waitForTimeout(600);
+  await s.evaluate(`document.activeElement && document.activeElement.blur && document.activeElement.blur()`);
+  await s.keyboard.press('h');
+  await s.waitForTimeout(300);
+  gleich('Im Schreibmodus holt H den Marker wieder', (await schicht()).tool, 'marker');
+  await s.close();
+}
+
 /* ═══ §5 Am Telefon ════════════════════════════════════════════════════════ */
 console.log('\n§5 Am Telefon');
 {

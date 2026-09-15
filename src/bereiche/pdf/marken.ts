@@ -5672,6 +5672,37 @@ const Marken = (() => {
     const huelle = flaeche?.closest('.blatt-huelle, .document-stage, .blatt, .pdfs, .page') || document;
     return huelle.querySelector<HTMLElement>('.blatt-werk') || document.querySelector<HTMLElement>('.blatt-werk');
   };
+  /* ══ EINE TASTE ÖFFNET KEINE TÜR, DIE ZU IST (E578) ═══════════════════════
+     GEMESSEN am 15. September 2026 im Dokumentstudio, Fenster 1440 × 960:
+
+       frisch geöffnet   tool=stift      pointer-events=auto
+       im Lesemodus      tool=schreiben  pointer-events=none    richtig
+       nach der Taste P  tool=stift      pointer-events=auto    FALSCH
+       ein Zug danach    marken 0 → 1                           GEZEICHNET
+
+     Der Lesemodus klappt die ganze Werkzeugleiste ein
+     (`[data-document-tools="closed"]` → `.blatt-reihe{display:none}`). Dieser
+     Griff sucht sich `.blatt-werk` aber mit `querySelector` und klickte darin
+     einen Knopf, den NIEMAND sehen kann — und der holte die Zeichenschicht
+     zurück. Ein Dokument, das man ausdrücklich zum Lesen geöffnet hat, nahm
+     damit Striche an (§46 Punkt 1, §51).
+
+     DIE REGEL IST ALLGEMEINER ALS DER LESEMODUS und deshalb die richtige:
+     eine Abkürzung darf nur drücken, was auch eine Hand drücken könnte. Ohne
+     weiteres Zutun gilt sie damit auch für die gesperrte Seite
+     (`page.gesperrt`) und für fehlende Rechte (`Konten.darf('bearbeiten',…)`)
+     — beide klappen dieselbe Leiste ein. Und `marken.ts` muss dafür nichts
+     über den Dokumentmodus wissen (§5).
+
+     `getClientRects()` und nicht `offsetParent`: ein Knopf in einer fest
+     positionierten Leiste hat kein `offsetParent` und wäre fälschlich „weg". */
+  const greifbar = (knopf: HTMLElement | null | undefined): boolean =>
+    !!knopf && !(knopf as HTMLButtonElement).disabled && knopf.getClientRects().length > 0;
+  /** Drückt einen Knopf, wenn er wirklich da ist. Sagt, ob es geklappt hat. */
+  const druecke = (knopf: HTMLButtonElement | null | undefined): boolean => {
+    if (!greifbar(knopf)) return false;
+    knopf!.click(); return true;
+  };
   const kuerzel = (event: KeyboardEvent): void => {
     if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
     if (tippt()) return;
@@ -5680,12 +5711,25 @@ const Marken = (() => {
     if (!ziel) return;
     const leiste = aktiveLeiste();
     if (!leiste) return;
-    event.preventDefault();
+    /* ══ DIE ZWEITE TÜR: DIE OBERE REIHE (E578) ═══════════════════════════
+       Im Dokumentstudio stehen die WERKZEUGE oben im Band und nicht im
+       unteren Dock — dort sind die `[data-wz]` mit Absicht `display:none`
+       (E573). Ein Griff, der nur den unteren Knopf kennt, tut im Studio also
+       gar nichts. Er nimmt deshalb den oberen, wenn der untere nicht
+       greifbar ist; beide Wege enden ohnehin an derselben Zeichenmaschine.
+       Und im Lesemodus ist auch der obere `disabled` — damit greift die
+       Regel „nur drücken, was eine Hand drücken könnte" von selbst. */
+    const oben = document.querySelector<HTMLElement>('.document-drawingbar');
+    const werkzeug = (id: string): boolean =>
+      druecke(leiste.querySelector<HTMLButtonElement>(`[data-wz="${id}"]`))
+      || druecke(oben?.querySelector<HTMLButtonElement>(`[data-document-tool="${id}"]`));
+    /* `preventDefault()` erst, wenn wirklich etwas gedrückt wurde: wer im
+       Lesemodus „p" tippt, soll das „p" behalten. */
     if (ziel === 'bleistift') {
       /* Der Bleistift ist ein Stift mit Stil — seit E512 ein Knopf in der
          Reihe, kein Weiterschalten mehr. */
-      leiste.querySelector<HTMLButtonElement>('[data-act="stilwahl"][data-stil="bleistift"]')?.click();
-      if (Zeichenziel.jetzt() !== 'stift') leiste.querySelector<HTMLButtonElement>('[data-wz="stift"]')?.click();
+      if (druecke(leiste.querySelector<HTMLButtonElement>('[data-act="stilwahl"][data-stil="bleistift"]'))) event.preventDefault();
+      if (Zeichenziel.jetzt() !== 'stift' && werkzeug('stift')) event.preventDefault();
       return;
     }
     /* ══ P WECHSELT WEITER, WENN DER STIFT SCHON FÜHRT (E512) ═════════════
@@ -5698,11 +5742,15 @@ const Marken = (() => {
       const jetzt = leiste.querySelector<HTMLElement>('[data-act="stilwahl"].on');
       const i = STIFTE.findIndex(st => st.id === jetzt?.dataset.stil);
       const naechster = STIFTE[(i + 1) % STIFTE.length]!;
-      leiste.querySelector<HTMLButtonElement>(`[data-act="stilwahl"][data-stil="${naechster.id}"]`)?.click();
+      if (druecke(leiste.querySelector<HTMLButtonElement>(`[data-act="stilwahl"][data-stil="${naechster.id}"]`))) event.preventDefault();
       return;
     }
-    if (ziel === 'lineal') { leiste.querySelector<HTMLButtonElement>('[data-act="lineal"]')?.click(); return; }
-    leiste.querySelector<HTMLButtonElement>(`[data-wz="${ziel}"]`)?.click();
+    if (ziel === 'lineal') {
+      if (druecke(leiste.querySelector<HTMLButtonElement>('[data-act="lineal"]'))
+        || druecke(oben?.querySelector<HTMLButtonElement>('[data-document-action="ink-ruler"]'))) event.preventDefault();
+      return;
+    }
+    if (werkzeug(ziel)) event.preventDefault();
   };
   if (typeof document !== 'undefined') document.addEventListener('keydown', kuerzel);
 
