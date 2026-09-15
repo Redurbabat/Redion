@@ -2655,6 +2655,67 @@ const Austausch = (() => {
         });
         return dateien;
     };
+    /* ══ EINEN GEÄNDERTEN TEXT IN DIE FOLIE ZURÜCKSCHREIBEN (E593, O5b) ══════
+       Die Marke bringt seit E593 mit, woher sie stammt: `quelle.sp` ist die
+       Kennung ihrer Form (`p:cNvPr@id`), `quelle.p` die Nummer ihres Absatzes.
+       Beides vergibt der Einleser nur dort, wo es EINDEUTIG ist — ein Absatz,
+       ein Lauf, kein Aufzählungszeichen.
+  
+       Hier wird deshalb nichts gesucht und nichts geraten: die Form wird an
+       ihrer Kennung nachgeschlagen, der Absatz an seiner Nummer, und in ihm
+       genau das eine `<a:t>` ersetzt. Was keine Spur hat, bleibt stehen.
+  
+       GEÄNDERT WIRD NUR DER TEXTKNOTEN. Die Folie behält ihre Füllung, ihre
+       Bilder, ihre Masse, ihre Drehung — alles andere im XML wird nicht
+       angefasst, weil nichts anderes angefasst wird. */
+    const folieMitText = (xml, marken) => {
+        const spuren = (marken || []).filter((m) => m && m.art === 'text' && m.quelle && m.quelle.sp && typeof m.text === 'string');
+        if (!spuren.length)
+            return { xml, geschrieben: 0 };
+        let doc;
+        try {
+            doc = new DOMParser().parseFromString(xml, 'application/xml');
+            if (doc.getElementsByTagName('parsererror').length)
+                return { xml, geschrieben: 0 };
+        }
+        catch {
+            return { xml, geschrieben: 0 };
+        }
+        /* Die Formen einmal nach ihrer Kennung ablegen — sonst wäre es je Marke
+           ein Durchlauf durch den ganzen Baum. */
+        const formen = new Map();
+        for (const sp of Array.from(doc.getElementsByTagName('p:sp'))) {
+            const id = sp.getElementsByTagName('p:cNvPr')[0]?.getAttribute('id');
+            if (id && !formen.has(id))
+                formen.set(id, sp);
+        }
+        let geschrieben = 0;
+        for (const m of spuren) {
+            const sp = formen.get(String(m.quelle.sp));
+            if (!sp)
+                continue;
+            const koerper = sp.getElementsByTagName('p:txBody')[0];
+            if (!koerper)
+                continue;
+            const absatz = koerper.getElementsByTagName('a:p')[Number(m.quelle.p) || 0];
+            if (!absatz)
+                continue;
+            const stellen = absatz.getElementsByTagName('a:t');
+            /* GENAU EINE STELLE — sonst wäre die Spur falsch geworden, seit sie
+               vergeben wurde (eine fremde Bearbeitung der Datei, ein zweiter
+               Lauf). Dann lieber nichts schreiben als daneben. */
+            if (stellen.length !== 1)
+                continue;
+            const stelle = stellen[0];
+            if (stelle.textContent === m.text)
+                continue;
+            stelle.textContent = String(m.text);
+            geschrieben++;
+        }
+        if (!geschrieben)
+            return { xml, geschrieben: 0 };
+        return { xml: new XMLSerializer().serializeToString(doc), geschrieben };
+    };
     /**
      * EINE SEITE ALS POWERPOINT (L69).
      *
@@ -2735,8 +2796,37 @@ const Austausch = (() => {
         const dateiName = (seite.text || 'Vortrag').replace(/[\\/:*?"<>|]/g, '-') + '.pptx';
         const paket = await originalPaket(seite);
         if (paket) {
+            /* Welche Folie welchem Blattblock entspricht: `ppt/slides/slideN.xml`
+               in der Reihenfolge der Präsentation, und die Blätter der Seite in
+               ihrer Reihenfolge. Der Anhang an Platz 0 ist kein Blatt (E592). */
+            const blaetter = (Store.childrenOf(seite.id) || [])
+                .filter((k) => k && k.type === 'blatt');
+            const folienNamen = paket.leser.namen
+                .filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
+                .sort((a, b) => (Number(a.match(/(\d+)/)?.[1]) || 0) - (Number(b.match(/(\d+)/)?.[1]) || 0));
+            const neueFolien = new Map();
+            let geschrieben = 0;
+            for (const [i, name] of folienNamen.entries()) {
+                const blatt = blaetter[i];
+                if (!blatt || !Array.isArray(blatt.marken) || !blatt.marken.length)
+                    continue;
+                try {
+                    const alt = await paket.leser.text(name);
+                    const neu = folieMitText(String(alt || ''), blatt.marken);
+                    if (neu.geschrieben) {
+                        neueFolien.set(name, neu.xml);
+                        geschrieben += neu.geschrieben;
+                    }
+                }
+                catch { /* diese Folie bleibt, wie sie war */ }
+            }
             const teile = [];
             for (const name of paket.leser.namen) {
+                const ersetzt = neueFolien.get(name);
+                if (ersetzt !== undefined) {
+                    teile.push({ name, inhalt: ersetzt });
+                    continue;
+                }
                 /* `rohBytes` gibt den ganzen Satz zurück — Bytes, Methode,
                    Prüfsumme, Rohgrösse —, nicht nur die Bytes. Beim ersten Wurf
                    stand hier `roh: (await rohBytes(name))`, also das OBJEKT im Feld
@@ -2757,8 +2847,16 @@ const Austausch = (() => {
                trägt diese Datei noch nicht — dafür fehlt die Rückspur von der
                Marke zu ihrem `<a:t>`, und die wird beim Einlesen angelegt
                (Bogen O5b, L168). Ein stilles Weglassen wäre das Schlimmere. */
-            const hinweis = 'Die Originaldatei ist vollständig erhalten. In Redion '
-                + 'geänderte Folieninhalte stehen noch nicht darin.';
+            /* ══ EHRLICH SAGEN, WAS DRIN IST UND WAS NICHT (§35) ════════════════
+               Zurückgeschrieben wird nur, was eine Rückspur trägt. Der Satz
+               richtet sich deshalb danach, ob überhaupt etwas geschrieben wurde —
+               eine feste Formel wäre in einem der beiden Fälle gelogen. */
+            const hinweis = geschrieben
+                ? 'Die Originaldatei ist vollständig erhalten; '
+                    + geschrieben + (geschrieben === 1 ? ' Textstelle wurde' : ' Textstellen wurden')
+                    + ' übernommen. Formen ohne eindeutige Zuordnung stehen unverändert darin.'
+                : 'Die Originaldatei ist vollständig erhalten. In Redion '
+                    + 'geänderte Folieninhalte stehen noch nicht darin.';
             /* UND ZWAR SICHTBAR, nicht nur im Rückgabewert. Wer speichert, sieht
                eine Datei und glaubt sonst, seine Änderung sei darin — das wäre
                ein stiller Verlust, und still ist hier das Schlimmere (§35). */
@@ -2767,7 +2865,7 @@ const Austausch = (() => {
                     UI.toast(hinweis, 7000);
             }
             catch { /* ohne Meldung bleibt der Rückgabewert */ }
-            return { blob, folien, durchgereicht: true, hinweis };
+            return { blob, folien, durchgereicht: true, geschrieben, hinweis };
         }
         const roh = Folien.teilen(seite, (id) => Store.childrenOf(id));
         const folien = roh.map((f) => ({

@@ -990,11 +990,17 @@ Dokumentinhalt zu ändern — Marken liegen NEBEN dem Dokument.
   Bild, Thema und `docProps`, und der Dateianhang selbst wurde zur ersten
   Folie. Mit Pythons `zipfile` gegengeprüft: 6432 Bytes hinein, 6432 heraus,
   kein Eintrag anders.
-  **Offen bleibt die andere Hälfte (O5b, L168):** ein in Redion geänderter
-  Folientext steht noch nicht in der Datei. Dafür muss beim EINLESEN eine
-  Rückspur von der Marke zu ihrem `<a:t>` angelegt werden — ein Zuordnen
-  nach Reihenfolge schriebe bei Gruppen, Tabellen und geerbten Platzhaltern
-  in die falsche Form (§51). Die Ausgabe sagt es, statt still zu sein.
+- **O5b · Geänderten Text zurückschreiben** — ERLEDIGT (E593). Jede
+  Textmarke, die genau EINEM Absatz mit genau EINEM Lauf und ohne
+  Aufzählungszeichen entspricht, merkt sich beim Einlesen ihre Stelle:
+  `quelle: { sp, p }`. Das Zurückschreiben schlägt Form und Absatz nach und
+  ersetzt genau das eine `<a:t>` — es sucht nicht und rät nicht. Mit Pythons
+  `zipfile` gegengeprüft: genau ein Eintrag anders, alles andere Byte für
+  Byte gleich, XML wohlgeformt, Vorspann erhalten.
+  **Der Rest steht in L168:** Absätze mit mehreren Läufen, zusammengefasste
+  Absätze und Aufzählungen bekommen keine Spur — ihr Text müsste auf mehrere
+  Stellen verteilt werden, und jede Verteilung wäre geraten (§51). Die
+  Ausgabe sagt, wie viele Stellen übernommen wurden.
 - **O6 · `.docx` draufschreiben.** Braucht den Rasterer. Das ist der teuerste
   Bogen und der einzige, für den es noch keinen Weg gibt.
 - **O7 · `.docx` Text ändern.** Rundreise auf `word/document.xml` (braucht O2).

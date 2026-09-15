@@ -8163,7 +8163,7 @@ eigener Bogen, und er braucht Augen, nicht ein Skript.
 
 ---
 
-## L168 · Geänderte Folien kommen noch nicht in die Datei — 15. September 2026
+## L168 · Geänderte Folien kommen noch nicht in die Datei — GESCHLOSSEN am 15. September 2026
 
 **Was fehlt:** Eine eingelesene `.pptx` geht seit E592 vollständig und
 unverändert wieder heraus. Was in Redion an einer Folie geändert wurde,
@@ -8193,3 +8193,39 @@ das, was E592 gerade gerettet hat.
 **Bis dahin steht es da, statt still zu sein:** die Ausgabe zeigt „Die
 Originaldatei ist vollständig erhalten. In Redion geänderte Folieninhalte
 stehen noch nicht darin." `test525` hält beide Hälften dieses Satzes fest.
+
+
+**Geschlossen mit E593** am selben Tag: die Rückspur entsteht beim Einlesen.
+Jede Textmarke, die genau EINEM Absatz mit genau EINEM Lauf und ohne
+Aufzählungszeichen entspricht, bekommt `quelle: { sp, p }`; das
+Zurückschreiben schlägt Form und Absatz nach und ersetzt genau das eine
+`<a:t>`. Mit Pythons `zipfile` gegengeprüft: genau ein Eintrag anders, alles
+andere Byte für Byte gleich, XML wohlgeformt, Vorspann erhalten.
+
+**Was mit Absicht offen bleibt** — und deshalb steht diese Lücke weiter hier,
+nur als Rest: Absätze mit mehreren Läufen, zusammengefasste Absätze und
+Aufzählungen bekommen keine Spur. Ihr Text wird nicht zurückgeschrieben,
+weil er auf mehrere Stellen verteilt werden müsste und jede Verteilung
+geraten wäre (§51). Wer das schliessen will, braucht keine Spur je Marke
+mehr, sondern eine je LAUF — und dann auch eine Antwort darauf, was
+geschehen soll, wenn der neue Text kürzer ist als die Läufe, auf die er sich
+verteilen müsste.
+
+---
+
+## L169 · Eine zurückgeschriebene Folie geht ungepackt hinein — 15. September 2026
+
+**Was fehlt:** Redions ZIP-Schreiber packt nicht. Eine Folie, die E593
+geändert hat, wird deshalb mit Methode 0 abgelegt, während alle
+durchgereichten Einträge ihre Methode 8 behalten. Gemessen wuchs die
+Probedatei dadurch von 6432 auf 7104 Bytes.
+
+**Warum es so bleibt, bis es stört:** eine Folie ist ein paar Kilobyte. Ein
+Packwerk einzuführen, bevor die Grösse jemandem auffällt, wäre die falsche
+Reihenfolge (§45, §36: erst messen, dann bauen). Der Browser kann es
+ohnehin — `CompressionStream('deflate-raw')` steht schon in zwei Prüfläufen
+—, es ist also ein kleiner Bogen, wenn er denn gebraucht wird.
+
+**Woran man merkt, dass er gebraucht wird:** eine Präsentation mit vielen
+geänderten Folien. Bei zwanzig Folien zu je 30 KB wären es 600 KB
+ungepackt gegen etwa 90 KB gepackt.

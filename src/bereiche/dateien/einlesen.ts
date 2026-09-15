@@ -2127,6 +2127,31 @@ const Einlesen = (() => {
                 schrift: a.schrift }, ...a.laeufe]
             : a.laeufe;
 
+          /* ══ DIE RÜCKSPUR ZUM `<a:t>` (E593, Bogen O5b) ═══════════════════
+             Damit ein geänderter Text wieder in die Originaldatei kommt,
+             muss die Marke wissen, WOHER sie stammt. Sie bekommt deshalb
+             `quelle: { sp, p }` — die Kennung ihrer Form (`p:cNvPr@id`,
+             innerhalb einer Folie eindeutig) und die Nummer ihres Absatzes.
+
+             NUR WO ES EINDEUTIG IST. Eine Spur bekommt nur, was genau EINEM
+             Absatz mit genau EINEM Lauf und ohne Aufzählungszeichen
+             entspricht. Alles andere — mehrere Läufe mit eigenem Format,
+             zusammengefasste Absätze, Aufzählungen — bleibt ohne Spur und
+             wird nicht zurückgeschrieben.
+
+             Der Grund ist nicht Bequemlichkeit: bei mehreren Läufen müsste
+             der neue Text auf sie verteilt werden, und jede Verteilung wäre
+             geraten. Ein falscher Text ist schlimmer als ein fehlender
+             (§51). Was keine Spur hat, bleibt stehen, und die Ausgabe sagt
+             es (§35). */
+          const spur = (absatzNr: number): any => {
+            const a = absaetze[absatzNr];
+            if (!sid || !a || a.zeichen) return {};
+            const echte = a.laeufe.filter(l => l.text && l.text !== '\n');
+            if (echte.length !== 1) return {};
+            return { quelle: { sp: sid, p: absatzNr } };
+          };
+
           const gleichFormat = absaetze.length > 0 && absaetze.every(a =>
             a.sz === absaetze[0]!.sz && a.fett === absaetze[0]!.fett
             && a.farbe === absaetze[0]!.farbe && a.lvl === absaetze[0]!.lvl
@@ -2163,12 +2188,17 @@ const Einlesen = (() => {
                   kette.push(...mitZeichen(z));
                 });
                 return laeufeNoetig(kette) ? { laeufe: kette } : {};
-              })() });
+              })(),
+              /* Nur bei GENAU EINEM Absatz. Sind mehrere zu einer Marke
+                 zusammengefasst, stünden hinter einer Spur mehrere `<a:p>`,
+                 und das Zurückschreiben müsste den Text auf sie aufteilen —
+                 wieder ein Raten. */
+              ...(absaetze.length === 1 ? spur(0) : {}) });
             continue;
           }
 
           let y = ky;
-          for (const a of absaetze) {
+          for (const [absatzNr, a] of absaetze.entries()) {
             if (!a.text.trim()) {
               /* Ein leerer Absatz in der Mitte ist eine Leerzeile, keine
                  Marke — er bekommt seine Höhe und sonst nichts. */
@@ -2185,7 +2215,8 @@ const Einlesen = (() => {
               ...(a.ausricht ? { ausricht: a.ausricht } : {}),
               ...((a.schrift || grundschrift) ? { schrift: a.schrift || grundschrift } : {}),
               ...(laeufeNoetig(mitZeichen(a)) ? { laeufe: mitZeichen(a) } : {}),
-              ...(dreh ? { dreh } : {}) };
+              ...(dreh ? { dreh } : {}),
+              ...spur(absatzNr) };
             objekte.push(marke);
             /* Der Zeichner rechnet die Höhe, nicht ich. Fehlt er (halb
                geladenes Fenster), bleibt die einfache Schätzung — dann

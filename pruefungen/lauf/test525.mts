@@ -268,6 +268,21 @@ const ergebnis = JSON.parse(await seite.evaluate(async () => {
     texteVorher: texte(vorher['ppt/slides/slide1.xml'] || ''),
     texteNachher: texte(nachher['ppt/slides/slide1.xml'] || ''),
     texteNachAenderung: texte(nachAenderung['ppt/slides/slide1.xml'] || ''),
+    nachAenderungFuellung: /srgbClr val="FFCC00"/.test(nachAenderung['ppt/slides/slide1.xml'] || ''),
+    nachAenderungBild: /<p:pic>/.test(nachAenderung['ppt/slides/slide1.xml'] || ''),
+    nachAenderungLage: /<a:off x="838200" y="500000"\/>/.test(nachAenderung['ppt/slides/slide1.xml'] || ''),
+    andersNachAenderung: Object.keys(vorher)
+      .filter(n => nachAenderung[n] !== undefined && nachAenderung[n] !== vorher[n]).sort(),
+    folieNachAenderung: String(nachAenderung['ppt/slides/slide1.xml'] || ''),
+    folieWohlgeformt: (() => {
+      const x = nachAenderung['ppt/slides/slide1.xml'];
+      if (!x) return false;
+      try {
+        const d = new DOMParser().parseFromString(x, 'application/xml');
+        return d.getElementsByTagName('parsererror').length === 0
+          && !!d.getElementsByTagName('p:sld')[0];
+      } catch { return false; }
+    })(),
     gesetzt,
     fuellungNachher: /srgbClr val="FFCC00"/.test(nachher['ppt/slides/slide1.xml'] || ''),
     bildNachher: /<p:pic>/.test(nachher['ppt/slides/slide1.xml'] || ''),
@@ -314,17 +329,44 @@ p('Der Text der ersten Folie ist unverändert',
   JSON.stringify(ergebnis.texteVorher) + ' → ' + JSON.stringify(ergebnis.texteNachher));
 p('Die gefüllte Form hat ihre Farbe behalten', ergebnis.fuellungNachher);
 p('Und das Bild steht noch auf der Folie', ergebnis.bildNachher);
-/* ══ WAS DIESER BOGEN NICHT LIEFERT, UND WARUM (L168, Bogen O5b) ═══════════
-   Ein in Redion geänderter Folientext steht noch NICHT in der Datei — die
-   Folie geht so zurück, wie sie hereinkam. Das ist gemessen und gewollt:
-   eine Marke trägt keine Rückspur zu ihrem `<a:t>`, und ohne diese Spur
-   bliebe nur ein Zuordnen nach Reihenfolge. Bei Gruppen, Tabellen und
-   geerbten Platzhaltern schriebe das Text in die FALSCHE Form — und ein
-   falscher Text ist schlimmer als ein fehlender (§51).
-   Die Spur wird beim EINLESEN angelegt; das ist der nächste Bogen. */
-p('Der geänderte Titel steht noch nicht in der Datei — wie angekündigt',
-  !!ergebnis.gesetzt && !ergebnis.texteNachAenderung.includes(ergebnis.gesetzt),
+/* ══ DER GEÄNDERTE TEXT KOMMT AN (E593, Bogen O5b) ═════════════════════════
+   Möglich wird das durch eine Rückspur, die beim EINLESEN entsteht: jede
+   Textmarke, die genau EINEM Absatz mit genau EINEM Lauf entspricht,
+   bekommt `quelle: { sp, p }` — die Kennung ihrer Form und die Nummer ihres
+   Absatzes. Zurückgeschrieben wird nur, was diese Spur trägt.
+
+   WARUM NICHT MEHR: bei Gruppen, Tabellen und geerbten Platzhaltern wäre
+   ein Zuordnen nach Reihenfolge ein Raten, und es schriebe Text in die
+   FALSCHE Form. Ein falscher Text ist schlimmer als ein fehlender (§51).
+   Was keine Spur hat, bleibt stehen — und die Ausgabe sagt es. */
+p('Ein geänderter Titel kommt in der Datei an',
+  !!ergebnis.gesetzt && ergebnis.texteNachAenderung.includes(ergebnis.gesetzt),
   ergebnis.gesetzt + ' · ' + JSON.stringify(ergebnis.texteNachAenderung));
+p('… und der alte Text steht nicht mehr darin',
+  !ergebnis.texteNachAenderung.includes('Erste Folie'),
+  JSON.stringify(ergebnis.texteNachAenderung));
+/* UND NUR DER TEXT. Die Folie behält ihre Füllung, ihr Bild und ihre Masse —
+   sonst wäre aus dem Ändern eines Wortes ein Neuschreiben geworden. */
+p('Die Folie behält dabei Füllung, Bild und Masse',
+  ergebnis.nachAenderungFuellung && ergebnis.nachAenderungBild
+  && ergebnis.nachAenderungLage,
+  JSON.stringify([ergebnis.nachAenderungFuellung, ergebnis.nachAenderungBild,
+    ergebnis.nachAenderungLage]));
+/* UND DIE ANDEREN EINTRÄGE AUCH. Geändert werden darf genau eine Folie. */
+p('Nur die geänderte Folie ist anders, sonst kein Eintrag',
+  ergebnis.andersNachAenderung.length === 1
+  && ergebnis.andersNachAenderung[0] === 'ppt/slides/slide1.xml',
+  JSON.stringify(ergebnis.andersNachAenderung));
+/* ══ DIE ZWEI DINGE, DIE EINE DATEI STILL UNLESBAR MACHEN ══════════════════
+   Ein neu geschriebenes XML ohne Vorspann und ein XML mit einem Fehler
+   darin sehen beide harmlos aus — und PowerPoint öffnet beide nicht. Der
+   Serialisierer des Browsers behält den Vorspann; geprüft wird es
+   trotzdem, weil „behält ihn" eine Annahme über einen fremden Baustein
+   ist (§45, E21). */
+p('Die geänderte Folie trägt weiter ihren XML-Vorspann',
+  /^<\?xml /.test(ergebnis.folieNachAenderung),
+  JSON.stringify(ergebnis.folieNachAenderung.slice(0, 40)));
+p('… und ist wohlgeformtes XML', ergebnis.folieWohlgeformt);
 
 console.log('\n5 · Was nicht geht, wird gesagt');
 p('Das Einlesen sagt, dass die Umwandlung Grenzen hat',

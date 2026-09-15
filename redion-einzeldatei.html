@@ -24121,7 +24121,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1104, inhalt: 'eff49de3b2883083', gebaut: '2026-09-15T17:28:26.529Z' };
+const Stand = { fassung: 1105, inhalt: '5ea1487476729fda', gebaut: '2026-09-15T17:36:02.338Z' };
 window.Stand = Stand;
 
 </script>
@@ -113230,6 +113230,32 @@ const Einlesen = (() => {
                             ? [{ text: a.zeichen + ' ', sz: a.sz, fett: a.fett, farbe: a.farbe,
                                     schrift: a.schrift }, ...a.laeufe]
                             : a.laeufe;
+                        /* ══ DIE RÜCKSPUR ZUM `<a:t>` (E593, Bogen O5b) ═══════════════════
+                           Damit ein geänderter Text wieder in die Originaldatei kommt,
+                           muss die Marke wissen, WOHER sie stammt. Sie bekommt deshalb
+                           `quelle: { sp, p }` — die Kennung ihrer Form (`p:cNvPr@id`,
+                           innerhalb einer Folie eindeutig) und die Nummer ihres Absatzes.
+              
+                           NUR WO ES EINDEUTIG IST. Eine Spur bekommt nur, was genau EINEM
+                           Absatz mit genau EINEM Lauf und ohne Aufzählungszeichen
+                           entspricht. Alles andere — mehrere Läufe mit eigenem Format,
+                           zusammengefasste Absätze, Aufzählungen — bleibt ohne Spur und
+                           wird nicht zurückgeschrieben.
+              
+                           Der Grund ist nicht Bequemlichkeit: bei mehreren Läufen müsste
+                           der neue Text auf sie verteilt werden, und jede Verteilung wäre
+                           geraten. Ein falscher Text ist schlimmer als ein fehlender
+                           (§51). Was keine Spur hat, bleibt stehen, und die Ausgabe sagt
+                           es (§35). */
+                        const spur = (absatzNr) => {
+                            const a = absaetze[absatzNr];
+                            if (!sid || !a || a.zeichen)
+                                return {};
+                            const echte = a.laeufe.filter(l => l.text && l.text !== '\n');
+                            if (echte.length !== 1)
+                                return {};
+                            return { quelle: { sp: sid, p: absatzNr } };
+                        };
                         const gleichFormat = absaetze.length > 0 && absaetze.every(a => a.sz === absaetze[0].sz && a.fett === absaetze[0].fett
                             && a.farbe === absaetze[0].farbe && a.lvl === absaetze[0].lvl
                             && !a.zeichen === !absaetze[0].zeichen
@@ -113265,11 +113291,16 @@ const Einlesen = (() => {
                                         kette.push(...mitZeichen(z));
                                     });
                                     return laeufeNoetig(kette) ? { laeufe: kette } : {};
-                                })() });
+                                })(),
+                                /* Nur bei GENAU EINEM Absatz. Sind mehrere zu einer Marke
+                                   zusammengefasst, stünden hinter einer Spur mehrere `<a:p>`,
+                                   und das Zurückschreiben müsste den Text auf sie aufteilen —
+                                   wieder ein Raten. */
+                                ...(absaetze.length === 1 ? spur(0) : {}) });
                             continue;
                         }
                         let y = ky;
-                        for (const a of absaetze) {
+                        for (const [absatzNr, a] of absaetze.entries()) {
                             if (!a.text.trim()) {
                                 /* Ein leerer Absatz in der Mitte ist eine Leerzeile, keine
                                    Marke — er bekommt seine Höhe und sonst nichts. */
@@ -113286,7 +113317,8 @@ const Einlesen = (() => {
                                 ...(a.ausricht ? { ausricht: a.ausricht } : {}),
                                 ...((a.schrift || grundschrift) ? { schrift: a.schrift || grundschrift } : {}),
                                 ...(laeufeNoetig(mitZeichen(a)) ? { laeufe: mitZeichen(a) } : {}),
-                                ...(dreh ? { dreh } : {}) };
+                                ...(dreh ? { dreh } : {}),
+                                ...spur(absatzNr) };
                             objekte.push(marke);
                             /* Der Zeichner rechnet die Höhe, nicht ich. Fehlt er (halb
                                geladenes Fenster), bleibt die einfache Schätzung — dann
@@ -132376,6 +132408,67 @@ const Austausch = (() => {
         });
         return dateien;
     };
+    /* ══ EINEN GEÄNDERTEN TEXT IN DIE FOLIE ZURÜCKSCHREIBEN (E593, O5b) ══════
+       Die Marke bringt seit E593 mit, woher sie stammt: `quelle.sp` ist die
+       Kennung ihrer Form (`p:cNvPr@id`), `quelle.p` die Nummer ihres Absatzes.
+       Beides vergibt der Einleser nur dort, wo es EINDEUTIG ist — ein Absatz,
+       ein Lauf, kein Aufzählungszeichen.
+  
+       Hier wird deshalb nichts gesucht und nichts geraten: die Form wird an
+       ihrer Kennung nachgeschlagen, der Absatz an seiner Nummer, und in ihm
+       genau das eine `<a:t>` ersetzt. Was keine Spur hat, bleibt stehen.
+  
+       GEÄNDERT WIRD NUR DER TEXTKNOTEN. Die Folie behält ihre Füllung, ihre
+       Bilder, ihre Masse, ihre Drehung — alles andere im XML wird nicht
+       angefasst, weil nichts anderes angefasst wird. */
+    const folieMitText = (xml, marken) => {
+        const spuren = (marken || []).filter((m) => m && m.art === 'text' && m.quelle && m.quelle.sp && typeof m.text === 'string');
+        if (!spuren.length)
+            return { xml, geschrieben: 0 };
+        let doc;
+        try {
+            doc = new DOMParser().parseFromString(xml, 'application/xml');
+            if (doc.getElementsByTagName('parsererror').length)
+                return { xml, geschrieben: 0 };
+        }
+        catch {
+            return { xml, geschrieben: 0 };
+        }
+        /* Die Formen einmal nach ihrer Kennung ablegen — sonst wäre es je Marke
+           ein Durchlauf durch den ganzen Baum. */
+        const formen = new Map();
+        for (const sp of Array.from(doc.getElementsByTagName('p:sp'))) {
+            const id = sp.getElementsByTagName('p:cNvPr')[0]?.getAttribute('id');
+            if (id && !formen.has(id))
+                formen.set(id, sp);
+        }
+        let geschrieben = 0;
+        for (const m of spuren) {
+            const sp = formen.get(String(m.quelle.sp));
+            if (!sp)
+                continue;
+            const koerper = sp.getElementsByTagName('p:txBody')[0];
+            if (!koerper)
+                continue;
+            const absatz = koerper.getElementsByTagName('a:p')[Number(m.quelle.p) || 0];
+            if (!absatz)
+                continue;
+            const stellen = absatz.getElementsByTagName('a:t');
+            /* GENAU EINE STELLE — sonst wäre die Spur falsch geworden, seit sie
+               vergeben wurde (eine fremde Bearbeitung der Datei, ein zweiter
+               Lauf). Dann lieber nichts schreiben als daneben. */
+            if (stellen.length !== 1)
+                continue;
+            const stelle = stellen[0];
+            if (stelle.textContent === m.text)
+                continue;
+            stelle.textContent = String(m.text);
+            geschrieben++;
+        }
+        if (!geschrieben)
+            return { xml, geschrieben: 0 };
+        return { xml: new XMLSerializer().serializeToString(doc), geschrieben };
+    };
     /**
      * EINE SEITE ALS POWERPOINT (L69).
      *
@@ -132456,8 +132549,37 @@ const Austausch = (() => {
         const dateiName = (seite.text || 'Vortrag').replace(/[\\/:*?"<>|]/g, '-') + '.pptx';
         const paket = await originalPaket(seite);
         if (paket) {
+            /* Welche Folie welchem Blattblock entspricht: `ppt/slides/slideN.xml`
+               in der Reihenfolge der Präsentation, und die Blätter der Seite in
+               ihrer Reihenfolge. Der Anhang an Platz 0 ist kein Blatt (E592). */
+            const blaetter = (Store.childrenOf(seite.id) || [])
+                .filter((k) => k && k.type === 'blatt');
+            const folienNamen = paket.leser.namen
+                .filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
+                .sort((a, b) => (Number(a.match(/(\d+)/)?.[1]) || 0) - (Number(b.match(/(\d+)/)?.[1]) || 0));
+            const neueFolien = new Map();
+            let geschrieben = 0;
+            for (const [i, name] of folienNamen.entries()) {
+                const blatt = blaetter[i];
+                if (!blatt || !Array.isArray(blatt.marken) || !blatt.marken.length)
+                    continue;
+                try {
+                    const alt = await paket.leser.text(name);
+                    const neu = folieMitText(String(alt || ''), blatt.marken);
+                    if (neu.geschrieben) {
+                        neueFolien.set(name, neu.xml);
+                        geschrieben += neu.geschrieben;
+                    }
+                }
+                catch { /* diese Folie bleibt, wie sie war */ }
+            }
             const teile = [];
             for (const name of paket.leser.namen) {
+                const ersetzt = neueFolien.get(name);
+                if (ersetzt !== undefined) {
+                    teile.push({ name, inhalt: ersetzt });
+                    continue;
+                }
                 /* `rohBytes` gibt den ganzen Satz zurück — Bytes, Methode,
                    Prüfsumme, Rohgrösse —, nicht nur die Bytes. Beim ersten Wurf
                    stand hier `roh: (await rohBytes(name))`, also das OBJEKT im Feld
@@ -132478,8 +132600,16 @@ const Austausch = (() => {
                trägt diese Datei noch nicht — dafür fehlt die Rückspur von der
                Marke zu ihrem `<a:t>`, und die wird beim Einlesen angelegt
                (Bogen O5b, L168). Ein stilles Weglassen wäre das Schlimmere. */
-            const hinweis = 'Die Originaldatei ist vollständig erhalten. In Redion '
-                + 'geänderte Folieninhalte stehen noch nicht darin.';
+            /* ══ EHRLICH SAGEN, WAS DRIN IST UND WAS NICHT (§35) ════════════════
+               Zurückgeschrieben wird nur, was eine Rückspur trägt. Der Satz
+               richtet sich deshalb danach, ob überhaupt etwas geschrieben wurde —
+               eine feste Formel wäre in einem der beiden Fälle gelogen. */
+            const hinweis = geschrieben
+                ? 'Die Originaldatei ist vollständig erhalten; '
+                    + geschrieben + (geschrieben === 1 ? ' Textstelle wurde' : ' Textstellen wurden')
+                    + ' übernommen. Formen ohne eindeutige Zuordnung stehen unverändert darin.'
+                : 'Die Originaldatei ist vollständig erhalten. In Redion '
+                    + 'geänderte Folieninhalte stehen noch nicht darin.';
             /* UND ZWAR SICHTBAR, nicht nur im Rückgabewert. Wer speichert, sieht
                eine Datei und glaubt sonst, seine Änderung sei darin — das wäre
                ein stiller Verlust, und still ist hier das Schlimmere (§35). */
@@ -132488,7 +132618,7 @@ const Austausch = (() => {
                     UI.toast(hinweis, 7000);
             }
             catch { /* ohne Meldung bleibt der Rückgabewert */ }
-            return { blob, folien, durchgereicht: true, hinweis };
+            return { blob, folien, durchgereicht: true, geschrieben, hinweis };
         }
         const roh = Folien.teilen(seite, (id) => Store.childrenOf(id));
         const folien = roh.map((f) => ({

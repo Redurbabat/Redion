@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-572 Entscheidungen, E1 bis E592 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+573 Entscheidungen, E1 bis E593 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -636,6 +636,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E590** — Drei rote Läufe angesehen: zweimal die Oberfläche von gestern, einmal ein Zugriff nach Platz statt nach Bedeutung
 * **E591** — Beim Zoom lag das Lineal ausserhalb des Bildes; und eine Zusicherung über die Tintenbreite konnte ihren Fehler nicht sehen
 * **E592** — Eine eingelesene `.pptx` ging als frische Textdatei heraus und verlor alles; jetzt wird das Original durchgereicht
+* **E593** — Jede eindeutige Textmarke merkt sich beim Einlesen ihre Stelle im XML; geänderter Text kommt damit in der Datei an
 
 ---
 
@@ -48040,3 +48041,73 @@ Rückgabewert: wer speichert, sieht sonst eine Datei und glaubt, seine
 Er baut seine `.pptx` aus eigenem XML und packt sie mit dem Browser —
 nicht mit Redions Schreiber, sonst prüfte er, ob Redion sich selbst
 versteht, statt ob sie fremde Dateien schützt.
+
+---
+
+## E593 — Die Rückspur zum `<a:t>` (Bogen O5b)
+
+**15. September 2026.** E592 hat die Originaldatei gerettet; was in Redion an
+einer Folie geändert wurde, stand danach aber noch nicht darin. L168 hat
+gesagt, warum: eine Marke trug keine Spur zu der Stelle, aus der sie kam.
+
+### Die Spur entsteht beim Einlesen, nicht beim Schreiben
+
+Jede Textmarke bekommt `quelle: { sp, p }` — die Kennung ihrer Form
+(`p:cNvPr@id`, innerhalb einer Folie eindeutig) und die Nummer ihres
+Absatzes. Das Feld reist von selbst mit: der Einleser gibt seit E560 alles
+an die Marke weiter **ausser** vier Massen (`x`, `y`, `w`, `h`) — eine
+Verbotsliste statt einer Erlaubnisliste, und genau deshalb musste hier
+keine Liste erweitert werden.
+
+### Nur wo es eindeutig ist
+
+Eine Spur bekommt nur, was **genau einem Absatz mit genau einem Lauf und
+ohne Aufzählungszeichen** entspricht. Nicht:
+
+- mehrere Läufe mit eigenem Format in einem Absatz (E561),
+- mehrere Absätze, die zu einer Marke zusammengefasst wurden (E557),
+- Aufzählungen, deren Zeichen der Einleser in den Text schreibt.
+
+In all diesen Fällen müsste der neue Text auf mehrere Stellen **verteilt**
+werden, und jede Verteilung wäre geraten. Ein falscher Text ist schlimmer
+als ein fehlender (§51). Was keine Spur hat, bleibt stehen.
+
+### Das Zurückschreiben sucht nicht, es schlägt nach
+
+`folieMitText()` legt die Formen der Folie einmal nach ihrer Kennung ab,
+schlägt dann je Marke Form und Absatz nach und ersetzt **genau das eine**
+`<a:t>`. Trägt der Absatz nicht genau eine Stelle, wird nichts geschrieben —
+dann ist die Spur falsch geworden, seit sie vergeben wurde (eine fremde
+Bearbeitung, ein zweiter Lauf), und daneben zu schreiben wäre schlimmer als
+gar nicht.
+
+### Mit einem fremden Leser gegengeprüft
+
+Pythons `zipfile`, nicht Redions — den Titel der ersten Folie geändert:
+
+```txt
+16 Einträge · testzip(): keine Schäden · fehlt nichts · neu nichts
+inhaltlich anders: GENAU EIN Eintrag — ppt/slides/slide1.xml
+Folie 1 vorher : ['Erste Folie']      Bilder 1 · FFCC00 · Lage 838200/500000
+Folie 1 nachher: ['Ganz neuer Titel'] Bilder 1 · FFCC00 · Lage 838200/500000
+Folie 2: Byte für Byte gleich
+XML wohlgeformt, Vorspann `<?xml …?>` erhalten
+```
+
+**Der Preis, und er steht hier, weil er einer ist:** die neu geschriebene
+Folie geht ungepackt hinein (Methode 0), der Rest bleibt Methode 8. Die
+Datei wuchs dadurch von 6432 auf 7104 Bytes. Redions Schreiber packt nicht;
+eine Folie ist ein paar Kilobyte, und dafür ein Packwerk einzuführen wäre
+die falsche Reihenfolge (§45).
+
+### Zwei Zusicherungen, die es ohne Anlass gibt
+
+Ein neu geschriebenes XML **ohne Vorspann** und ein XML **mit einem Fehler
+darin** sehen beide harmlos aus, und PowerPoint öffnet beide nicht. Der
+Serialisierer des Browsers behält den Vorspann — gemessen. Geprüft wird es
+trotzdem: „behält ihn" ist eine Annahme über einen fremden Baustein, und
+Annahmen über fremde Bausteine sind der teuerste Fehler dieses Projekts
+(E21).
+
+**Prüflauf:** `test525` 22/22, davon fünf Zusicherungen neu und drei rot
+gesehen.

@@ -1347,3 +1347,28 @@ Thema: ['Redur-Thema'] · core.xml: ['Redurs Probevortrag']
 **Was noch nicht geht** (L168): ein in Redion geänderter Titel steht nicht in
 der Datei — gemessen `['Erste Folie']` statt `['Geänderte Folie']`. Die
 Ausgabe sagt es.
+
+---
+
+## 34. Die Rundreise mit einer echten Änderung
+
+**Wann:** 15. September 2026 · **Womit:** dieselbe fremde `.pptx` wie in §33,
+Titel der ersten Folie in Redion geändert, dann ausgegeben und mit Pythons
+`zipfile` gelesen · **Warum:** Bogen O5b.
+
+```txt
+16 Einträge · testzip(): keine Schäden · fehlt nichts · neu nichts
+inhaltlich anders: GENAU EIN Eintrag — ppt/slides/slide1.xml
+
+Folie 1 vorher : ['Erste Folie']       Bilder 1 · FFCC00 · Lage 838200/500000, 1000000/2200000
+Folie 1 nachher: ['Ganz neuer Titel']  Bilder 1 · FFCC00 · Lage 838200/500000, 1000000/2200000
+Folie 2        : Byte für Byte gleich
+XML wohlgeformt · Vorspann <?xml …?> erhalten
+
+Bytes   6432 → 7104      Packmethoden   [8] → [0, 8]
+```
+
+Die 672 Bytes mehr sind die eine Folie, die ungepackt hineingeht (L169).
+Der Hinweis der Ausgabe lautete: „Die Originaldatei ist vollständig
+erhalten; 1 Textstelle wurde übernommen. Formen ohne eindeutige Zuordnung
+stehen unverändert darin."
