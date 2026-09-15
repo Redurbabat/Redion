@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-579 Entscheidungen, E1 bis E599 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+580 Entscheidungen, E1 bis E601 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -643,6 +643,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E597** — Direkt auf dem Blatt schreiben statt in ein Fenster: ein Tipp legt das Schreibfeld dorthin, wo der Text stehen wird
 * **E598** — Die Stilregel „textarea 16px !important" hat das Schreibfeld am Telefon umgerechnet; die Antwort ist nicht, sie auszunehmen
 * **E599** — Der Feinschliff am freien Text: die Leiste wirkt auf den Kasten, in den gerade getippt wird, und zwei Tipps auf leeres Papier heissen „hier schreiben"
+* **E601** — Das Auge sass auf dem Ordnerreiter, und der Deckel war ein Farbklotz — beides am Bild gemessen und nachgezogen
 
 ---
 
@@ -48616,3 +48617,78 @@ dass der Knopf etwas getan hätte — die Schriftgrösse wandert im Lauf, §10
 stellt sie auf 34, und dort ist „Grösser" ein Knopf ohne Wirkung (34 ist die
 oberste Stufe). Jetzt vergleicht sie das Feld VOR dem Klick mit dem Feld und
 der Marke DANACH (§55.2).
+
+---
+
+## E601 — Das Auge sass auf dem Reiter
+
+**15. September 2026.** Redur, zu einem Bild des Ordnerdeckels:
+
+> „alter man du hast hier die augen wo links oben bei date war und du hast
+> die alle animationen alter was ist das"
+
+Er hat recht, und das Bild zeigt es sofort. Was auf dem Deckel eines Fachs
+stand, war kein Ordner, sondern ein Farbklotz mit einem Aufkleber.
+
+### Gemessen, an einer Kachel von 200 × 267 Bildpunkten
+
+```txt
+was                        wo                          wie gross
+Blick-Knopf (.bib-blick)   left:4px  top:4px           44 × 44, Auge 26 × 15, IMMER da
+Ordnerreiter (::after)     left:4%   top:8%            88 × 35   — dieselbe Ecke
+Vorderdeckel (::before)    inset 34% 4% 8%             184 × 155 einfarbig
+die fünf Blätter           inset 24% 14% 20%           davon sichtbar: 10 %
+„7 Unterseiten"            inset 17% 12% auto          halb auf dem Reiter
+```
+
+Drei Dinge wollten dieselbe obere linke Ecke, der Deckel war zu über der
+Hälfte eine einzige Fläche, und von dem, was einen Ordner zum Ordner macht —
+den Blättern darin — sah man einen Streifen.
+
+### Was entschieden wurde
+
+**1. Das Auge erscheint erst beim Darüberfahren.** „Blick hinein" gibt es
+seit E459 auch im ⌄-Menü; ein Weg, den es zweimal gibt, braucht keinen
+dauerhaften Aufkleber. `:focus-within` hält ihn für die Tastatur
+erreichbar (§38), und die Trefferfläche bleibt 44 × 44 (§37) — kleiner
+gezeichnet ist nur das Auge selbst (20 × 12).
+
+**Am Telefon gibt es ihn gar nicht** (`@media (hover:none)`). Dort gibt es
+kein Darüberfahren, und ein dauerhaftes Auge auf einer 102-px-Kachel wäre
+wieder der Aufkleber. Der Weg bleibt das ⌄-Menü. Das ist der ausdrückliche
+Nebenweg nach §37, mit geschriebenem Grund und nicht stillschweigend.
+
+**2. Der Deckel ist wieder ein Ordner.** Neue Verhältnisse, an drei
+Kachelbreiten nachgesehen (102 px am Telefon, 200 px im Regal, 288 px in
+Redurs Vorlage):
+
+```txt
+                 vorher              nachher
+Reiter           left 4%  top 8%     left 7%  top 20%, schmaler und flacher
+Blätter          inset 24% 14% 20%   inset 22% 16% 38%   — sie stehen sichtbar heraus
+Vorderdeckel     inset 34% 4% 8%     inset 52% 7% 16%    — er deckt, statt zu füllen
+```
+
+**3. Die Zahl steht einmal da, nicht zweimal.** „7 Unterseiten" schwebte als
+Pille über dem Reiter, und zwei Zeilen tiefer stand „7 Sachen · gerade
+eben". Die Pille gehört zur VORSCHAU und erscheint jetzt mit ihr — beim
+Darüberfahren, zusammen mit den Namen, die sie beschriftet.
+
+**4. Die Vorschaustreifen sind so breit wie ihr Name.** Sie waren so breit
+wie die Karte und deckten beim Darüberfahren genau die aufgefächerten
+Blätter zu, die sie zeigen sollen.
+
+### Was NICHT entschieden wurde
+
+Die Bewegung selbst bleibt. Das Auffächern beim Anfassen und das Kippen des
+Deckels sind Redurs eigene Vorgabe vom 6. September (E459, E528) und tun
+etwas: sie zeigen, dass da etwas drin ist. Was weg ist, ist das, was im
+LEERLAUF stand — und das war nie Bewegung, sondern Stillstand an der
+falschen Stelle.
+
+### Geprüft
+
+`test436`, `test476`, `test492`, `test493`, `test494` (153 Zusicherungen zur
+Bewegungsfamilie, darunter „folder") und `test87` — alle grün. Und vier
+Bilder, weil das hier eine Sache für Augen ist (§55.3): Leerlauf,
+Darüberfahren, ganze Bibliothek, Telefon.

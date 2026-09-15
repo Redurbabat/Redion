@@ -1616,3 +1616,28 @@ ohne die Ausnahme für die Leiste       Feld schliesst beim ersten Knopf   3 rot
 ohne `schreiberUmformen`               26,3 → 26,3 px · Marke 16          2 rot
 ohne den Doppeltipp auf leeres Papier  kein Feld, kein Satz               2 rot
 ```
+
+---
+
+## 41. Der Ordnerdeckel, nachdem Redur ihn gesehen hat
+
+**15. September 2026 · E601 · Kachel 200 × 267 px**
+
+```txt
+was                        vorher                       nachher
+Blick-Knopf                left:4px top:4px, IMMER da   erst beim Darüberfahren,
+                           Auge 26 × 15                 Auge 20 × 12, am Telefon gar nicht
+Ordnerreiter               left:4%  top:8%  44% × 13%   left:7% top:20% 34% × 8%
+Vorderdeckel               inset 34% 4% 8%  = 184 × 155 inset 52% 7% 16%
+die fünf Blätter           inset 24% 14% 20%            inset 22% 16% 38%
+davon sichtbar             10 % der Blatthöhe           30 %
+„7 Unterseiten"            immer, halb auf dem Reiter   mit der Vorschau, unter dem Reiter
+Vorschaustreifen           so breit wie die Karte       so breit wie der Name
+```
+
+Drei Dinge wollten dieselbe obere linke Ecke. Kein Prüflauf konnte das
+sehen — sie prüfen, DASS der Knopf da ist und dass er wirkt, nicht, WORAUF
+er liegt. Das Bild hat es gefunden (§55.1), und zwar Redurs Bild.
+
+**Geprüft:** `test436`, `test476`, `test492`, `test493`, `test494` (153
+Zusicherungen zur Bewegungsfamilie, darunter „folder"), `test87` — grün.
