@@ -5,24 +5,9 @@
  * das kommen, sondern wenn ich mit Maus drauf gehe? Und ich will, dass du
  * es bisschen lustig machst."
  *
- * Also: die Karte kommt beim ÜBERFAHREN. Aber ein Weg mit dem Finger muss
- * bleiben — §37 nennt das Telefon den Normalfall, und dort gibt es kein
- * Überfahren. Eine Bedienung, die nur mit der Maus geht, ist eine halbe
- * Bedienung.
- *
- * ─── WAS SICH AM 16. SEPTEMBER GEÄNDERT HAT (E608) ──────────────────────────
- * Redur: „mach die Augen weg und behalte nur so: wenn ich mit Maus drauf
- * gehe, sollte sie mir zeigen, oder mit Laptop-Stift."
- *
- * Das Auge `.bib-blick` gibt es nicht mehr. Alles, was hier auf das Auge
- * zeigte, zeigt jetzt auf den DECKEL — derselbe Lauf, ein anderes Element.
- * Zwei Zusicherungen mussten dabei umgeschrieben werden, nicht nur
- * umgehängt:
- *   §5 hiess „der Klick bleibt und hält die Karte". Ein Klick auf den Deckel
- *      GEHT IN DEN ORDNER; er kann die Karte nicht halten. Der Weg mit dem
- *      Finger ist deshalb jetzt das ⌄-Menü, und genau das prüft §5.
- *   §6 prüft weiter, dass ein Finger nichts per Überfahren öffnet — und neu
- *      §6b, dass ein STIFT es sehr wohl tut.
+ * Also: die Karte kommt beim ÜBERFAHREN. Aber der Klick bleibt — §37 nennt
+ * das Telefon den Normalfall, und dort gibt es kein Überfahren. Eine
+ * Bedienung, die nur mit der Maus geht, ist eine halbe Bedienung.
  *
  *   §1 DIE MAUS ÖFFNET, OHNE ZU KLICKEN — nach einer kurzen Wartezeit.
  *   §2 EIN KURZES ÜBERSTREICHEN ÖFFNET NICHTS. Wer mit der Maus über das
@@ -30,12 +15,11 @@
  *   §3 DER ZEIGER DARF IN DIE KARTE WANDERN, ohne dass sie zugeht — sonst
  *      wäre sie zu sehen und nicht zu benutzen.
  *   §4 UND WEG IST WEG: verlässt der Zeiger beides, klappt sie zu.
- *   §5 DER WEG MIT DEM FINGER BLEIBT: „Blick hinein" im ⌄-Menü öffnet
- *      dieselbe Karte, und eine so geöffnete bleibt offen, auch wenn der
- *      Zeiger weggeht. Der Deckel selbst geht in den Ordner.
+ *   §5 DER KLICK BLEIBT, und eine geklickte Karte bleibt offen. Wer sie
+ *      antippt, will sie halten — nicht, dass sie beim Wegziehen der Hand
+ *      verschwindet.
  *   §6 EINE BERÜHRUNG ÖFFNET NICHT PER ÜBERFAHREN. `pointerType: touch`
- *      meldet auf manchen Geräten ein Hover, das kein Hover ist. Ein STIFT
- *      dagegen schon — er schwebt wirklich.
+ *      meldet auf manchen Geräten ein Hover, das kein Hover ist.
  *   §7 DAS LUSTIGE: die Blätter fächern NACHEINANDER heraus, nicht alle
  *      auf einmal — und jedes hebt sich, wenn man darauf zeigt.
  *   §8 UND ES LÄSST SICH ABSTELLEN: `prefers-reduced-motion` nimmt die
@@ -45,13 +29,6 @@
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  * Vor dem Bauen war sie es in §1 bis §4 und §7. Die Gegenproben danach
  * stehen in ENTSCHEIDUNGEN.md unter E508.
- *
- * Und zweimal am 16. September, für E608:
- *   · Die Verdrahtung am Ordnerdeckel abgeklemmt: §1 wurde mit allen drei
- *     Zusicherungen rot.
- *   · Den Stift wieder ausgesperrt (nur `pointerType === 'mouse'`, dazu die
- *     Abfrage `(hover: hover)`): §6 wurde in der zweiten Zusicherung rot,
- *     während die erste grün blieb. Genau das soll sie unterscheiden.
  *
  *   node pruefungen/lauf/test476.mts
  * ==========================================================================*/
@@ -117,11 +94,10 @@ const mitOrdner = async (): Promise<Page> => {
   return s;
 };
 
-/** Zur Bibliothek gehen und den Ordnerdeckel finden. */
-const ORDNER = '.bib-deckel[data-art="ordner"]';
+/** Zur Bibliothek gehen und den Blick-Knopf finden. */
 const zumRegal = async (s: Page): Promise<void> => {
   await s.evaluate('Bibliothek.oeffne()');
-  await s.waitForSelector(ORDNER, { timeout: 20000 });
+  await s.waitForSelector('.bib-blick[data-blick]', { timeout: 20000 });
   await s.waitForTimeout(400);
 };
 
@@ -157,7 +133,7 @@ console.log('\n§1 Die Maus öffnet die Karte, ohne zu klicken');
 {
   const s = await mitOrdner();
   await zumRegal(s);
-  await zeigeAuf(s, ORDNER);
+  await zeigeAuf(s, '.bib-blick[data-blick]');
   await s.waitForTimeout(700);
   p('Nach kurzem Verweilen steht die Karte da', await karteDa(s));
   const inhalt = JSON.parse(await s.evaluate(`(() => {
@@ -177,7 +153,7 @@ console.log('\n§2 Ein kurzes Überstreichen öffnet nichts');
 {
   const s = await mitOrdner();
   await zumRegal(s);
-  await zeigeAuf(s, ORDNER);
+  await zeigeAuf(s, '.bib-blick[data-blick]');
   await s.waitForTimeout(90);
   /* IM AUGENBLICK DES VORBEIFAHRENS MESSEN, nicht danach. Der erste
      Entwurf sah erst nach dem Weggehen nach — und dann ist die Karte auch
@@ -185,7 +161,7 @@ console.log('\n§2 Ein kurzes Überstreichen öffnet nichts');
      (Wartezeit auf null) blieb deshalb grün: ein Wächter, der den Fehler
      nicht sehen kann, den er bewachen soll (§55.2). */
   p('Nach 90 ms Verweilen steht noch nichts da', !(await karteDa(s)));
-  await zeigeWeg(s, ORDNER);
+  await zeigeWeg(s, '.bib-blick[data-blick]');
   await s.waitForTimeout(700);
   p('… und nach dem Weggehen erst recht nicht', !(await karteDa(s)));
   await s.close();
@@ -196,14 +172,14 @@ console.log('\n§3 Der Zeiger darf in die Karte wandern');
 {
   const s = await mitOrdner();
   await zumRegal(s);
-  await zeigeAuf(s, ORDNER);
+  await zeigeAuf(s, '.bib-blick[data-blick]');
   await s.waitForTimeout(700);
   p('Die Karte ist offen', await karteDa(s));
   /* VOM KNOPF WEG, DANN IN DIE KARTE — in dieser Reihenfolge, denn so
      meldet es der Browser: erst verlässt der Zeiger den Knopf, dann
      erreicht er die Karte. Andersherum geprüft wäre es eine Bewegung, die
      es nicht gibt. */
-  await zeigeWeg(s, ORDNER);
+  await zeigeWeg(s, '.bib-blick[data-blick]');
   await zeigeAuf(s, '.ru-fach-lage');
   await s.waitForTimeout(600);
   p('Sie bleibt stehen, während der Zeiger auf ihr liegt', await karteDa(s));
@@ -224,36 +200,21 @@ console.log('\n§3 Der Zeiger darf in die Karte wandern');
   await s.close();
 }
 
-/* ═══ §5 Der Weg mit dem Finger bleibt ═════════════════════════════════════ */
-console.log('\n§5 Der Weg mit dem Finger bleibt — über das ⌄-Menü');
+/* ═══ §5 Der Klick bleibt ══════════════════════════════════════════════════ */
+console.log('\n§5 Der Klick bleibt — und hält');
 {
   const s = await mitOrdner();
   await zumRegal(s);
-  /* SEIT E608 GEHT EIN KLICK AUF DEN DECKEL IN DEN ORDNER. Er kann die
-     Karte also nicht mehr öffnen und schon gar nicht halten — vorher tat
-     das der Klick aufs Auge. Der Weg ohne Maus ist jetzt „Blick hinein" im
-     ⌄-Menü, und dass es ihn gibt, ist die Bedingung, unter der das Auge
-     gehen durfte (§37). */
-  await s.click(ORDNER + ' .bib-deckel-mehr');
-  await s.waitForTimeout(350);
-  p('Das ⌄-Menü kennt „Blick hinein"',
-    await s.evaluate(`[...document.querySelectorAll('.menu [data-a]')].some(b => b.dataset.a === 'blick')`));
-  await s.click('.menu [data-a="blick"]');
+  await s.click('.bib-blick[data-blick]');
   await s.waitForTimeout(400);
-  p('… und es öffnet dieselbe Karte', await karteDa(s));
-  await zeigeWeg(s, ORDNER);
+  p('Ein Klick öffnet die Karte', await karteDa(s));
+  await zeigeWeg(s, '.bib-blick[data-blick]');
   await zeigeWeg(s, '.ru-fach-lage');
   await s.waitForTimeout(800);
-  p('… die offen bleibt, auch wenn der Zeiger weggeht', await karteDa(s));
+  p('… und sie bleibt offen, auch wenn der Zeiger weggeht', await karteDa(s));
   await s.keyboard.press('Escape');
   await s.waitForTimeout(300);
   p('Escape schliesst sie (§38)', !(await karteDa(s)));
-  p('Der Deckel selbst geht in den Ordner, statt zu zeigen',
-    await (async () => {
-      await s.click(ORDNER);
-      await s.waitForTimeout(500);
-      return await s.evaluate(`Store.getMeta('bibOrdner', '') !== ''`) as boolean;
-    })());
   await s.close();
 }
 
@@ -262,14 +223,9 @@ console.log('\n§6 Eine Berührung öffnet nicht per Überfahren');
 {
   const s = await mitOrdner();
   await zumRegal(s);
-  await zeigeAuf(s, ORDNER, 'touch');
+  await zeigeAuf(s, '.bib-blick[data-blick]', 'touch');
   await s.waitForTimeout(800);
-  p('Ein Finger allein öffnet nichts — dafür ist das ⌄-Menü da', !(await karteDa(s)));
-  /* ABER DER STIFT SCHON (E608). Redur hat ihn ausdrücklich genannt, und er
-     schwebt wirklich über dem Glas, statt es zu berühren. */
-  await zeigeAuf(s, ORDNER, 'pen');
-  await s.waitForTimeout(800);
-  p('Ein Stift dagegen öffnet — er schwebt wirklich', await karteDa(s));
+  p('Ein Finger allein öffnet nichts — dafür ist der Tipp da', !(await karteDa(s)));
   await s.close();
 }
 
@@ -278,7 +234,7 @@ console.log('\n§7 Die Blätter fächern nacheinander heraus');
 {
   const s = await mitOrdner();
   await zumRegal(s);
-  await zeigeAuf(s, ORDNER);
+  await zeigeAuf(s, '.bib-blick[data-blick]');
   await s.waitForTimeout(700);
   const r = JSON.parse(await s.evaluate(`(() => {
     const blaetter = Array.from(document.querySelectorAll('.ru-fach-blatt'));
@@ -370,7 +326,7 @@ console.log('\n§8 Wer keine Bewegung will, bekommt keine');
     await Store.flush();
   })()`);
   await zumRegal(s);
-  await zeigeAuf(s, ORDNER);
+  await zeigeAuf(s, '.bib-blick[data-blick]');
   await s.waitForTimeout(700);
   p('Die Karte kommt auch ohne Bewegung', await karteDa(s));
   const ruhig = JSON.parse(await s.evaluate(`(() => {
