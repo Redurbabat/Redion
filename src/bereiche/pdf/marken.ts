@@ -2637,6 +2637,34 @@ const Marken = (() => {
             });
           }
           renderSelection();
+          /* ══ EIN TIPP AUF LEERES PAPIER SCHREIBT (E605) ══════════════════
+             REDUR, 16. September 2026: „dort sollte, wenn ich klicke, wie
+             Word direkt erstellen können."
+
+             In Word klickt man in die Seite und tippt — kein Werkzeug
+             dazwischen. Genau das fehlte noch: E597 brauchte das
+             Textwerkzeug, E599 zwei Tipps. Jetzt genügt EINER.
+
+             DREI BEDINGUNGEN, und jede hat ihren Grund:
+
+               · `istTipp` — der Zeiger hat sich nicht bewegt. Ein Zug ist
+                 ein Lasso und bleibt eines; nur ein Tipp schreibt.
+               · `drag.warLeer` — vor dem Tipp war nichts gewählt. Der erste
+                 Tipp nach einer Auswahl HEBT SIE AUF, und das muss er
+                 weiter tun: wer drei Striche gewählt hat und danebentippt,
+                 will sie loswerden, nicht einen Kasten anfangen.
+               · `!selection.size` — der Tipp hat auch nichts eingefangen.
+
+             Das gilt nur mit der Auswahl: ein Lasso entsteht nur dort. Mit
+             dem Stift ist ein Tipp ein Punkt, mit dem Radierer ein
+             Radierversuch — beides soll er bleiben. */
+          const istTipp = pts.length < 2 || pts.every(q =>
+            Math.abs((q[0] ?? 0) - (pts[0]![0] ?? 0)) <= 4
+            && Math.abs((q[1] ?? 0) - (pts[0]![1] ?? 0)) <= 4);
+          if (istTipp && drag.warLeer && !drag.add && !selection.size) {
+            schreiberOeffnen(pts[0] ?? [0, 0], '');
+            return false;
+          }
         }
         return false;
       }
@@ -3455,10 +3483,13 @@ const Marken = (() => {
           selectDrag = { mode: 'move', start: point, before: snapshot(), moved: false,
             originals: new Map([...selection].map(id => [id, clone(marks.find(mark => idOf(mark) === id))])) };
         } else {
+          /* War vor diesem Tipp etwas gewählt? Die Antwort entscheidet
+             unten, ob ein Tipp ohne Zug schreibt oder nur abwählt (E605). */
+          const warLeer = !selection.size;
           if (!event.shiftKey) { selection.clear(); renderSelection(); }
           /* DAS LASSO (E353): ein freier Zug um die Marken, wie in GoodNotes.
              Ein gerader Zug ohne Flaeche bleibt der Kasten von frueher. */
-          selectDrag = { mode: 'lasso', pts: [point], add: event.shiftKey };
+          selectDrag = { mode: 'lasso', pts: [point], add: event.shiftKey, warLeer };
           const schlinge = svg('path', { d: `M${point[0]} ${point[1]}`,
             class: 'blatt-auswahlfeld', 'data-ink-ui': 'box' });
           flaeche.appendChild(schlinge);

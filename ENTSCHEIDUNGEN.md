@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-581 Entscheidungen, E1 bis E602 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+584 Entscheidungen, E1 bis E605 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -644,7 +644,10 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E598** — Die Stilregel „textarea 16px !important" hat das Schreibfeld am Telefon umgerechnet; die Antwort ist nicht, sie auszunehmen
 * **E599** — Der Feinschliff am freien Text: die Leiste wirkt auf den Kasten, in den gerade getippt wird, und zwei Tipps auf leeres Papier heissen „hier schreiben"
 * **E601** — Das Auge sass auf dem Ordnerreiter, und der Deckel war ein Farbklotz — beides am Bild gemessen und nachgezogen (**zurückgenommen, siehe E602**)
-* **E602** — Nicht das Auge weicht, sondern der Reiter: E601 zurückgenommen, zwei Zeilen geblieben
+* **E602** — Nicht das Auge weicht, sondern der Reiter: E601 zurückgenommen, zwei Zeilen geblieben (**auch zurückgenommen, siehe E604**)
+* **E603** — Die Ordnerkarte verwandelt sich nicht mehr unter der Maus: vier Wirkungen beim Darüberfahren zurückgenommen (**zurückgenommen, siehe E604**)
+* **E604** — Redur hat die Geschichte der Kachel gesehen und sich entschieden: die main-Fassung, mit Bewegung und mit Auge
+* **E605** — Ein Tipp auf leeres Papier schreibt schon: wie in Word, ohne Werkzeug und ohne zweiten Klick
 
 ---
 
@@ -48703,6 +48706,11 @@ Darüberfahren, ganze Bibliothek, Telefon.
 
 ## E602 — Nicht das Auge weicht, sondern der Reiter
 
+> **ZURÜCKGENOMMEN AM 15. September 2026 — siehe E604.** Redur hat die
+> vier Stände der Kachel nebeneinander gesehen und die main-Fassung
+> gewählt: mit Bewegung, mit Auge, unverändert. Der Text bleibt als
+> Messung stehen; gebaut ist davon nichts mehr.
+
 **15. September 2026.** E601 hat einen echten Fund gehabt und die falsche
 Antwort darauf gegeben. Der Verlauf, weil er die Lehre trägt:
 
@@ -48756,3 +48764,190 @@ Deckel, ein neues Sichtbarkeitsverhalten und eine verschobene Zahl: vier
 Änderungen, von denen er eine wollte. Die kleinste Änderung, die den
 genannten Fehler behebt, ist die richtige — und wenn unklar ist, welche das
 ist, kostet eine Frage weniger als zwei Rücknahmen.
+
+---
+
+## E603 — Die Ordnerkarte verwandelt sich nicht mehr unter der Maus
+
+> **ZURÜCKGENOMMEN AM 15. September 2026 — siehe E604.** Redur hat die
+> vier Stände der Kachel nebeneinander gesehen und die main-Fassung
+> gewählt: mit Bewegung, mit Auge, unverändert. Der Text bleibt als
+> Messung stehen; gebaut ist davon nichts mehr.
+
+**15. September 2026.** Redur, nachdem drei Anläufe an seiner Beschwerde
+vorbeigegangen waren:
+
+> „die animationen — wenn ich mit maus dort gehe, das zeigt mir etwas
+> anderes."
+
+Damit war es endlich klar, und es war die ganze Zeit dieselbe Sache: nicht
+die Stelle des Auges, nicht die Masse des Deckels — **das Darüberfahren**.
+
+### Gezählt, was beim blossen Darüberfahren passierte
+
+Vier Dinge auf einmal, an derselben Kachel:
+
+```txt
+1  der Vorderdeckel kippte in die Tiefe      rotateX(-32deg) translateZ(6px)
+2  die fünf Blätter fächerten auf und drehten  translateY(-12…-32px) rotate(±14deg)
+3  drei Namensstreifen legten sich darüber     opacity 0 -> 1
+4  das Auge zwinkerte und schielte zur Seite   1,2 s Animation + Pupille -5px
+```
+
+Wer mit der Maus über das Regal fährt, um irgendwo anders hinzukommen, löst
+das an **jeder Kachel aus, die er streift**. Bei drei Fächern
+nebeneinander sind das zwölf Bewegungen für einen Weg, den man gar nicht
+gemeint hat.
+
+### Was entschieden wurde
+
+**Alle vier sind weg.** Zurückgenommen, nicht umgebaut — die Regeln stehen
+auskommentiert an ihrer Stelle, mit dem Grund daneben, damit niemand sie in
+drei Wochen „wieder repariert".
+
+**Was bleibt:** der Schatten des Deckels beim Darüberfahren und das
+Zusammendrücken beim Antippen. Das sagt „du bist hier" und „ich habe deinen
+Klick" — es zeigt nichts anderes.
+
+**Hineinsehen ist eine Frage, kein Versehen.** Wer wissen will, was im Fach
+liegt, tippt auf das Auge oder wählt „Blick hinein" im ⌄-Menü. Dann kommt
+die Ordnerkarte (E459), und die zeigt ALLES statt drei Namen. Der Weg ist
+besser als der Zufall — und er war schon vorher da.
+
+### Und die Tastatur?
+
+`:focus-visible` hing an denselben Regeln. Es fällt mit — und das ist
+richtig: die Zeile in `test493` hiess „Tastaturfokus öffnet die
+Ordnerklappe" und hielt die PARITÄT zwischen Maus und Tastatur (§38). Die
+Parität ist gewahrt, nur andersherum: die Klappe öffnet für niemanden mehr
+beim blossen Ansehen. Der Lauf hält jetzt genau das fest — und dazu, dass
+der Blick-Knopf ein `<button>` bleibt und mit dem Tabulator erreichbar ist.
+
+### Die Lehre, und sie ist die dritte in dieser Reihe
+
+E601 hat den falschen Fehler behoben. E602 hat ihn zurückgenommen und den
+genannten behoben. Erst E603 trifft, was gemeint war. Dreimal derselbe
+Fehler bei mir: aus einem Satz eine Diagnose gemacht, statt nachzufragen,
+WAS genau stört. „Die Augen sitzen falsch" hiess nicht „die Augen sitzen
+falsch" — es hiess „hier passiert etwas, das ich nicht wollte".
+
+**Woran man es hätte merken können:** Redur hat in seiner ersten Nachricht
+beides gesagt — „die augen wo links oben bei date war" UND „du hast die alle
+animationen". Ich habe den ersten Halbsatz gelesen und den zweiten als
+Verstärkung genommen. Er war die eigentliche Aussage.
+
+### Geprüft
+
+`test436`, `test476`, `test492`, `test493` (46 Zusicherungen, zwei davon
+neu), `test494` (153 Zusicherungen zur Bewegungsfamilie) und `test87` —
+grün. Bilder angesehen: Ruhezustand und Maus darüber sehen jetzt gleich aus,
+bis auf den Schatten.
+
+---
+
+## E604 — Die Kachel bleibt, wie sie in `main` steht
+
+**15. September 2026.** Nach drei Anläufen (E601, E602, E603) habe ich Redur
+die Geschichte der Ordnerkachel als Bilder nebeneinandergelegt:
+
+```txt
+ 5. September  E462        flacher Ordner, Reiter oben links, kein Auge
+ 6. September  E463        das Auge kommt — und sitzt von Anfang an auf dem Reiter
+10. September  „Website"   Deckel mit Tiefe, ein Blatt, das Auffächern
+12./13. Sept.  „Stand"     die Pille „7 Unterseiten" und die Namensstreifen
+```
+
+Seine Antwort:
+
+> „Ich will mit bewegung, mit augen, und die main version"
+
+### Was das heisst
+
+**E601, E602 und E603 sind alle drei zurückgenommen.** Die Ordnerkachel steht
+wieder Zeichen für Zeichen so da wie in `main`:
+
+```txt
+Reiter                left:4%             (E602 hatte max(27%, 52px))
+Blick-Knopf           z-index:2           (E602 hatte 4)
+Kippen beim Zeigen    wieder in Kraft     (E603 hatte es ausgebaut)
+Blätter fächern auf   wieder in Kraft     (E603 hatte es ausgebaut)
+Namensstreifen        wieder in Kraft     (E603 hatte es ausgebaut)
+Auge zwinkert         wieder in Kraft     (E603 hatte es ausgebaut)
+```
+
+Nachgeprüft wurde nicht nach Gefühl: jede der sechs Regeln steht im Lauf
+gegen `git show origin/main:` — sechsmal „gleich wie main". Auch
+`test493` kommt wieder aus `main`, samt seiner Zeile „Tastaturfokus öffnet
+die Ordnerklappe".
+
+### Was davon bleibt, und es ist das Wertvollste
+
+Die **Messungen**. Sie stehen in E601 bis E603 und in `messungen.md §41`,
+und sie sind richtig, auch wenn nichts davon gebaut ist:
+
+- Der Blick-Knopf (44 × 44 bei `left:4px`) und der Reiter (`left:4%`, 44 %
+  breit) liegen 40 px lang übereinander.
+- Beim Darüberfahren passieren vier Dinge auf einmal.
+- Die Zahl „7" steht zweimal auf derselben Kachel.
+
+Sollte das je wieder zur Sprache kommen, muss niemand neu messen.
+
+### Die Lehre
+
+Vier Bögen für eine Kachel, und der einzige, der getroffen hat, war der, in
+dem ich **gefragt** habe. Der Unterschied zwischen E601 und E604 ist nicht
+Können, sondern Reihenfolge: erst zeigen, was es gibt, dann bauen, was
+gewählt wurde.
+
+Und die zweite Hälfte davon: **die Geschichte zeigen ist billig.** Vier
+Bilder aus vier Commits kosten zwei Minuten mit `git worktree`; drei
+Rücknahmen kosten einen Abend. Wer vor einer Gestaltungsfrage steht, für die
+es einen früheren Stand gibt, legt die Stände nebeneinander, bevor er den
+ersten Strich macht (§55.3, um eine Zeile erweitert).
+
+---
+
+## E605 — Ein Tipp auf leeres Papier schreibt schon
+
+**16. September 2026.** Redur:
+
+> „Weiter an die frei text erstellen — also dort sollte, wenn ich klicke,
+> wie Word direkt erstellen können."
+
+In Word klickt man in die Seite und tippt. Kein Werkzeug dazwischen, kein
+zweiter Klick.
+
+### Wo der Weg bisher aufhörte
+
+```txt
+E597  Textwerkzeug wählen, dann tippen          zwei Schritte
+E599  mit der Auswahl: zweimal tippen           ein Schritt, aber doppelt
+E605  mit der Auswahl: EINMAL tippen            wie Word
+```
+
+### Die drei Bedingungen, und warum jede da ist
+
+Ein Tipp schreibt nur, wenn **alle drei** stimmen:
+
+- **Er ist ein Tipp, kein Zug.** Bewegt sich der Zeiger mehr als vier
+  Blatteinheiten, ist es ein Lasso und bleibt eines.
+- **Vor dem Tipp war nichts gewählt.** Der erste Tipp nach einer Auswahl
+  HEBT SIE AUF, und das muss er weiter tun: wer drei Striche gewählt hat
+  und danebentippt, will sie loswerden und keinen Kasten anfangen. Ohne
+  diese Bedingung käme man aus einer Auswahl nie mehr heraus, ohne etwas zu
+  schreiben.
+- **Der Tipp hat nichts eingefangen.** Sonst wäre er eine Auswahl.
+
+**Nur mit der Auswahl.** Ein Lasso entsteht nur dort; mit dem Stift ist ein
+Tipp ein Punkt, mit dem Radierer ein Radierversuch, und beides soll er
+bleiben.
+
+### Geprüft
+
+`test527` §15, vier Zusicherungen — zwei für den neuen Weg, zwei für die
+Bedingung, die ihn begrenzt. Gegengeprüft: mit abgeschalteter Stelle sind
+die ersten beiden rot und die letzten beiden grün, also hält die zweite
+Hälfte genau das, was sie soll.
+
+Der Lauf steht damit bei 36 Zusicherungen. Er ist der Lauf für das freie
+Schreiben, von E597 bis hierher.

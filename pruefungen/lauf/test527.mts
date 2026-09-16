@@ -24,6 +24,8 @@
  * §12 GEHT DER REITER ZU, während das Feld offen ist, ist der Satz nicht weg (§51).
  * §13 DIE SCHRIFTLEISTE wirkt auf den Kasten, in den gerade getippt wird (E599).
  * §14 ZWEIMAL AUF LEERES PAPIER heisst: hier schreiben — auch mit der Auswahl (E599).
+ * §15 EIN EINZIGER TIPP genügt, wie in Word (E605) — aber nicht der erste
+ *     nach einer Auswahl: der hebt sie auf.
  *
  * ZWEI DINGE, DIE BEIM SCHREIBEN DIESES LAUFS GEMESSEN WURDEN:
  *
@@ -462,7 +464,50 @@ try {
     ohneWechsel.some((m: any) => m.text === 'Ohne Werkzeugwechsel'),
     JSON.stringify(ohneWechsel.map((m: any) => m.text)));
 
-  console.log('\n15 · Und nichts ist dabei kaputtgegangen');
+  console.log('\n15 · Ein einziger Tipp auf leeres Papier schreibt schon (wie in Word)');
+  /* REDUR, 16. September 2026: „dort sollte, wenn ich klicke, wie Word
+     direkt erstellen können." E597 brauchte das Textwerkzeug, E599 zwei
+     Tipps — jetzt genügt einer, mit der Auswahl in der Hand.
+     WARUM DAS ROT WERDEN KANN: ohne die Stelle in `finish()` hebt der Tipp
+     nur die Auswahl auf und hinterlässt kein Feld. */
+  await page.locator('[data-document-tool="select"]').click();
+  await page.waitForTimeout(250);
+  await tippe(120, 180);
+  pr('Ein Tipp auf leeres Papier öffnet ein Schreibfeld — ohne Werkzeugwechsel',
+    await page.locator('.blatt-schreiber').count() === 1);
+  await page.keyboard.type('Ein Klick genügt');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  const einKlick = await page.evaluate(id =>
+    JSON.parse(JSON.stringify(Store.getBlock(id)?.marken || [])), pdfIds.seite);
+  pr('Und der Satz steht danach auf der Seite',
+    einKlick.some((m: any) => m.text === 'Ein Klick genügt'),
+    JSON.stringify(einKlick.map((m: any) => m.text)));
+
+  /* DIE GEGENPROBE IM LAUF SELBST: der erste Tipp NACH einer Auswahl muss
+     sie aufheben und darf kein Feld öffnen. Ohne diese Zeile würde die
+     Auswahl unbrauchbar — man käme nie mehr aus ihr heraus, ohne einen
+     Kasten anzufangen. */
+  const markenVorAbwahl = einKlick.length;
+  await page.evaluate(() => {
+    const knoten = document.querySelector<SVGElement>('.blatt-marken [data-sid]');
+    const r = knoten?.getBoundingClientRect();
+    if (!r) return;
+    knoten!.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, isPrimary: true,
+      pointerId: 77, button: 0, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }));
+    knoten!.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, isPrimary: true,
+      pointerId: 77, button: 0, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }));
+  });
+  await page.waitForTimeout(250);
+  await tippe(430, 120);
+  pr('Der erste Tipp nach einer Auswahl hebt sie auf, statt zu schreiben',
+    await page.locator('.blatt-schreiber').count() === 0);
+  const nachAbwahl = await page.evaluate(id =>
+    JSON.parse(JSON.stringify(Store.getBlock(id)?.marken || [])), pdfIds.seite);
+  pr('… und legt auch keine Marke an', nachAbwahl.length === markenVorAbwahl,
+    markenVorAbwahl + ' → ' + nachAbwahl.length);
+
+  console.log('\n16 · Und nichts ist dabei kaputtgegangen');
   pr('Keine Seitenfehler', errors.length === 0, errors.slice(0, 3).join(' · '));
 } catch (fehler) {
   failed++;

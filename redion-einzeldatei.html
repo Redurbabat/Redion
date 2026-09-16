@@ -12298,26 +12298,8 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   content:""; position:absolute; inset:16% 4% 8%;
   border-radius:4px 12px 12px 12px; background:var(--accent); opacity:.85
 }
-/* ══ DER REITER GEHT DEM AUGE AUS DEM WEG (E602) ═════════════════════════
-   REDUR, 15. September 2026: „du hast hier die augen wo links oben bei date
-   war" — und dann, als ich das Auge wegnehmen wollte: „nein die auge nicht
-   weg". Es bleibt also oben links und bleibt immer sichtbar; was weicht,
-   ist der Reiter.
-
-   GEMESSEN: der Blick-Knopf ist `left:4px top:4px` und 44 × 44 gross, deckt
-   also x 4…48 px ab. Auf einer 200-px-Kachel sind 48 px genau 24 %. Der
-   Reiter stand bei `left:4%` (8 px) und war 44 % breit — die beiden lagen
-   40 px lang übereinander, und das ist es, was auf dem Bild wie ein
-   Aufkleber auf dem Reiter aussah.
-
-   `max(27%, 52px)` und nicht bloss `27%`: der Knopf misst 44 PIXEL, nicht
-   44 Prozent. Auf der 158-px-Kachel des Telefons wären 27 % nur 43 px, und
-   die beiden lägen wieder aufeinander. Der Pixelwert deckelt das.
-
-   ALLES ANDERE AM DECKEL BLEIBT, WIE ES WAR — das ist Redurs Vorgabe
-   („so wie vorher wie es war"), und E601 ist deshalb zurückgenommen. */
 .bib-deckel[data-art="ordner"] .bib-deckel-blatt::after{
-  content:""; position:absolute; left:max(27%, 52px); top:8%; width:44%; height:13%;
+  content:""; position:absolute; left:4%; top:8%; width:44%; height:13%;
   border-radius:4px 8px 0 0; background:var(--accent); opacity:.85
 }
 
@@ -20099,11 +20081,8 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 
 /* ---- Das Auge am Ordnerdeckel (.bib-blick) ------------------------------ */
 .bib-zelle{ position:relative; display:block; min-width:0 }
-/* `z-index:4` statt 2 (E602): der Vorderdeckel des Ordners liegt auf 3
-   (`motion.css`) und schnitt dem Auge sonst die untere Kante ab. „Immer
-   sichtbar" heisst ganz sichtbar. */
 .bib-blick{
-  position:absolute; left:4px; top:4px; z-index:4;
+  position:absolute; left:4px; top:4px; z-index:2;
   width:var(--touch-min); height:var(--touch-min); padding:0; border:0;
   background:none; cursor:pointer; display:grid; place-items:center;
   border-radius:10px; color:var(--text)
@@ -24210,7 +24189,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1127, inhalt: '29dda8728c576ec5', gebaut: '2026-09-15T20:26:18.270Z' };
+const Stand = { fassung: 1132, inhalt: '1219e9ab873524a7', gebaut: '2026-09-16T04:38:49.054Z' };
 window.Stand = Stand;
 
 </script>
@@ -62689,6 +62668,33 @@ const Marken = (() => {
                         });
                     }
                     renderSelection();
+                    /* ══ EIN TIPP AUF LEERES PAPIER SCHREIBT (E605) ══════════════════
+                       REDUR, 16. September 2026: „dort sollte, wenn ich klicke, wie
+                       Word direkt erstellen können."
+          
+                       In Word klickt man in die Seite und tippt — kein Werkzeug
+                       dazwischen. Genau das fehlte noch: E597 brauchte das
+                       Textwerkzeug, E599 zwei Tipps. Jetzt genügt EINER.
+          
+                       DREI BEDINGUNGEN, und jede hat ihren Grund:
+          
+                         · `istTipp` — der Zeiger hat sich nicht bewegt. Ein Zug ist
+                           ein Lasso und bleibt eines; nur ein Tipp schreibt.
+                         · `drag.warLeer` — vor dem Tipp war nichts gewählt. Der erste
+                           Tipp nach einer Auswahl HEBT SIE AUF, und das muss er
+                           weiter tun: wer drei Striche gewählt hat und danebentippt,
+                           will sie loswerden, nicht einen Kasten anfangen.
+                         · `!selection.size` — der Tipp hat auch nichts eingefangen.
+          
+                       Das gilt nur mit der Auswahl: ein Lasso entsteht nur dort. Mit
+                       dem Stift ist ein Tipp ein Punkt, mit dem Radierer ein
+                       Radierversuch — beides soll er bleiben. */
+                    const istTipp = pts.length < 2 || pts.every(q => Math.abs((q[0] ?? 0) - (pts[0][0] ?? 0)) <= 4
+                        && Math.abs((q[1] ?? 0) - (pts[0][1] ?? 0)) <= 4);
+                    if (istTipp && drag.warLeer && !drag.add && !selection.size) {
+                        schreiberOeffnen(pts[0] ?? [0, 0], '');
+                        return false;
+                    }
                 }
                 return false;
             }
@@ -63607,13 +63613,16 @@ const Marken = (() => {
                         originals: new Map([...selection].map(id => [id, clone(marks.find(mark => idOf(mark) === id))])) };
                 }
                 else {
+                    /* War vor diesem Tipp etwas gewählt? Die Antwort entscheidet
+                       unten, ob ein Tipp ohne Zug schreibt oder nur abwählt (E605). */
+                    const warLeer = !selection.size;
                     if (!event.shiftKey) {
                         selection.clear();
                         renderSelection();
                     }
                     /* DAS LASSO (E353): ein freier Zug um die Marken, wie in GoodNotes.
                        Ein gerader Zug ohne Flaeche bleibt der Kasten von frueher. */
-                    selectDrag = { mode: 'lasso', pts: [point], add: event.shiftKey };
+                    selectDrag = { mode: 'lasso', pts: [point], add: event.shiftKey, warLeer };
                     const schlinge = svg('path', { d: `M${point[0]} ${point[1]}`,
                         class: 'blatt-auswahlfeld', 'data-ink-ui': 'box' });
                     flaeche.appendChild(schlinge);
