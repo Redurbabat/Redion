@@ -102,25 +102,15 @@
 /* 1 — Ordner: fünf Blätter fächern sich beim Anfassen auf. */
 .bib-deckel[data-art="ordner"] { perspective: 900px; }
 .bib-deckel[data-art="ordner"] .bib-deckel-blatt { transform-style: preserve-3d; transition: transform .45s cubic-bezier(.2,.8,.2,1); }
-/* ══ EIN ORDNER, KEIN KLOTZ (E601) ═══════════════════════════════════════
-   GEMESSEN an einem Bild des Deckels, 200 × 267 px: der Vorderdeckel lief
-   von 34 % bis 92 % der Höhe — 155 px einfarbige Fläche — und darüber lugten
-   von den fünf Blättern noch 10 % hervor. Was man sah, war ein Farbblock mit
-   einem Fähnchen oben links, und Redur hat genau das gesagt.
-
-   Ein Ordner wird zum Ordner durch das VERHÄLTNIS: der Deckel deckt gut die
-   untere Hälfte, die Blätter stehen sichtbar darüber hinaus, der Reiter ist
-   schmal. Die Zahlen unten sind an drei Kachelbreiten nachgesehen, nicht
-   geraten (102 px am Telefon, 200 px im Regal, 288 px in Redurs Vorlage). */
 body .bib-deckel[data-art="ordner"] .bib-deckel-blatt::before {
-  inset: 52% 7% 16%; z-index: 3; opacity: 1;
+  inset: 34% 4% 8%; z-index: 3; opacity: 1;
   transform-origin: 50% 100%;
   background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 85%, white), var(--accent));
   box-shadow: inset 0 1px 0 #ffffff50, 0 6px 12px #0002;
   transition: transform .5s cubic-bezier(.22,1,.36,1);
 }
 body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt::before { transform: rotateX(-32deg) translateZ(6px); }
-.rmo-folder-stack { position: absolute; inset: 22% 16% 38%; z-index: 2; pointer-events: none; }
+.rmo-folder-stack { position: absolute; inset: 24% 14% 20%; z-index: 2; pointer-events: none; }
 .rmo-folder-sheet {
   position: absolute; inset: 0; border-radius: 5px;
   background: linear-gradient(150deg, #f5f1fc, #cfc9e5);
@@ -532,27 +522,12 @@ body .rmo-ticket .ru-drucker-status { padding: 11px 12px 15px; }
 }
 
 /* Vollständiger Katalog: keine globalen Demo-Regeln, keine neuen Schriften. */
-/* UNTER DEN REITER, NICHT DARAUF (E601): bei `17 %` stand die schwarze
-   Pille „7 Unterseiten" halb auf dem Reiter und halb daneben. */
-body .bib-deckel .rmo-folder-preview { position:absolute; inset:30% 12% auto; z-index:5; display:grid; gap:3px;
+body .bib-deckel .rmo-folder-preview { position:absolute; inset:17% 12% auto; z-index:4; display:grid; gap:3px;
   color:var(--text); font-size:10px; text-align:left; pointer-events:none; }
-/* SO BREIT WIE DER NAME, NICHT SO BREIT WIE DIE KARTE (E601). Auf dem Bild
-   lagen drei schwarze Balken quer über den aufgefächerten Blättern und
-   deckten genau das zu, was die Vorschau zeigen soll. */
 .rmo-folder-preview > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  width:fit-content; max-width:100%;
   opacity:0; transform:translateY(5px); transition:opacity .25s, transform .3s;
   background:var(--bg-card); border-radius:3px; padding:2px 4px; }
-/* DIE ZAHL STAND ZWEIMAL DA (E601). „7 Unterseiten" schwebte als schwarze
-   Pille über dem Reiter, und zwei Zeilen tiefer stand „7 Sachen · gerade
-   eben" — dieselbe Auskunft, einmal als Aufkleber. Der Aufkleber gehört zur
-   VORSCHAU und erscheint mit ihr: beim Darüberfahren, zusammen mit den
-   Namen, die er beschriftet. Im Leerlauf steht die Zahl dort, wo sie
-   hingehört — in der Zeile unter dem Deckel. */
-.rmo-folder-preview > b { width:fit-content; padding:3px 5px; border-radius:6px;
-  background:var(--bg-card);
-  opacity:0; transition:opacity .25s var(--ease,ease); }
-[data-rmo~="folder"]:is(:hover,:focus-visible,:active) .rmo-folder-preview > b { opacity:1; }
+.rmo-folder-preview > b { width:fit-content; padding:3px 5px; border-radius:6px; background:var(--bg-card); }
 [data-rmo~="folder"]:is(:hover,:focus-visible,:active) .rmo-folder-preview > span { opacity:1; transform:none; }
 body [data-rmo~="folder"]:active .bib-deckel-blatt::before { transform:rotateX(-32deg) translateZ(6px); }
 [data-rmo~="sliders"]:is(:hover,:focus-visible,:active) .rmo-sliders i::after { transform:translateX(4px); }

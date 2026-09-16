@@ -997,11 +997,26 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   content:""; position:absolute; inset:16% 4% 8%;
   border-radius:4px 12px 12px 12px; background:var(--accent); opacity:.85
 }
-/* Der Reiter: schmaler und flacher als bisher (E601) — er soll ein Reiter
-   sein und nicht ein zweiter Deckel. Und er beginnt weiter unten, damit
-   oben links Platz für den Blick-Knopf bleibt. */
+/* ══ DER REITER GEHT DEM AUGE AUS DEM WEG (E602) ═════════════════════════
+   REDUR, 15. September 2026: „du hast hier die augen wo links oben bei date
+   war" — und dann, als ich das Auge wegnehmen wollte: „nein die auge nicht
+   weg". Es bleibt also oben links und bleibt immer sichtbar; was weicht,
+   ist der Reiter.
+
+   GEMESSEN: der Blick-Knopf ist `left:4px top:4px` und 44 × 44 gross, deckt
+   also x 4…48 px ab. Auf einer 200-px-Kachel sind 48 px genau 24 %. Der
+   Reiter stand bei `left:4%` (8 px) und war 44 % breit — die beiden lagen
+   40 px lang übereinander, und das ist es, was auf dem Bild wie ein
+   Aufkleber auf dem Reiter aussah.
+
+   `max(27%, 52px)` und nicht bloss `27%`: der Knopf misst 44 PIXEL, nicht
+   44 Prozent. Auf der 158-px-Kachel des Telefons wären 27 % nur 43 px, und
+   die beiden lägen wieder aufeinander. Der Pixelwert deckelt das.
+
+   ALLES ANDERE AM DECKEL BLEIBT, WIE ES WAR — das ist Redurs Vorgabe
+   („so wie vorher wie es war"), und E601 ist deshalb zurückgenommen. */
 .bib-deckel[data-art="ordner"] .bib-deckel-blatt::after{
-  content:""; position:absolute; left:7%; top:20%; width:34%; height:8%;
+  content:""; position:absolute; left:max(27%, 52px); top:8%; width:44%; height:13%;
   border-radius:4px 8px 0 0; background:var(--accent); opacity:.85
 }
 
@@ -8783,50 +8798,26 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 
 /* ---- Das Auge am Ordnerdeckel (.bib-blick) ------------------------------ */
 .bib-zelle{ position:relative; display:block; min-width:0 }
-/* ══ ES SITZT NICHT MEHR AUF DEM REITER (E601) ═══════════════════════════
-   REDUR, 15. September 2026, zu einem Bild des Ordnerdeckels: „du hast hier
-   die augen wo links oben bei date war". Er hat recht, und das Bild zeigt es
-   sofort: `left:4px; top:4px` ist genau die Ecke, in der der Ordnerreiter
-   sitzt (`.bib-deckel-blatt::after`, `left:4%; top:8%`). Ein weisser
-   Augapfel von 26 × 15 px klebte damit dauerhaft auf jedem Fach — und auf
-   einer Kachel mit Bild auf dessen Titel.
-
-   ZWEI ÄNDERUNGEN, UND BEIDE HABEN EINEN GRUND:
-
-   1. ES ERSCHEINT ERST BEIM DARÜBERFAHREN. Ein Weg, den es zweimal gibt
-      (das ⌄-Menü trägt „Blick hinein" seit E459), braucht keinen
-      dauerhaften Aufkleber. `:focus-within` hält ihn für die Tastatur
-      erreichbar (§38) — wer mit Tabulator auf den Deckel geht, sieht ihn.
-
-   2. AM TELEFON GIBT ES IHN NICHT. Dort gibt es kein Darüberfahren, und ein
-      dauerhaftes Auge auf einer 102-px-Kachel wäre wieder der Aufkleber.
-      Der Weg bleibt: das ⌄-Menü. Das ist der ausdrückliche Nebenweg nach
-      §37 — mit geschriebenem Grund, nicht stillschweigend.
-
-   Der Knopf bleibt 44 × 44 (§37 Hauptweg), auch wenn das Auge kleiner
-   gezeichnet ist: die Trefferfläche ist die Grösse, nicht das Bild. */
+/* `z-index:4` statt 2 (E602): der Vorderdeckel des Ordners liegt auf 3
+   (`motion.css`) und schnitt dem Auge sonst die untere Kante ab. „Immer
+   sichtbar" heisst ganz sichtbar. */
 .bib-blick{
   position:absolute; left:4px; top:4px; z-index:4;
   width:var(--touch-min); height:var(--touch-min); padding:0; border:0;
   background:none; cursor:pointer; display:grid; place-items:center;
-  border-radius:10px; color:var(--text);
-  opacity:0; transition:opacity var(--motion-fast,.16s) var(--ease,ease)
+  border-radius:10px; color:var(--text)
 }
-.bib-zelle:hover .bib-blick,
-.bib-zelle:focus-within .bib-blick,
-.bib-blick:focus-visible{ opacity:1 }
-@media (hover:none){ .bib-blick{ display:none } }
 .bib-blick:hover, .bib-blick:focus-visible{ background:rgba(0,0,0,.08) }
 .bib-blick-auge{
-  position:relative; display:block; width:20px; height:12px; box-sizing:border-box;
-  border-radius:50%; background:#fff; border:1.5px solid #2b2b2b;
+  position:relative; display:block; width:26px; height:15px; box-sizing:border-box;
+  border-radius:50%; background:#fff; border:2px solid #2b2b2b;
   box-shadow:0 1px 3px rgba(0,0,0,.25)
 }
 .bib-blick-auge b{
-  position:absolute; left:50%; top:50%; width:7px; height:7px; margin:-3.5px 0 0 -3.5px;
+  position:absolute; left:50%; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px;
   border-radius:50%; background:#2b2b2b; transition:transform .3s ease
 }
-.bib-blick:hover .bib-blick-auge b, .bib-blick:focus-visible .bib-blick-auge b{ transform:translateX(-4px) }
+.bib-blick:hover .bib-blick-auge b, .bib-blick:focus-visible .bib-blick-auge b{ transform:translateX(-5px) }
 .bib-blick:hover .bib-blick-auge{ animation:bib-blick-zwinkern 1.2s ease }
 @keyframes bib-blick-zwinkern{ 0%,100%{ transform:none } 12%{ transform:scaleY(.1) } 24%{ transform:none } }
 
