@@ -203,7 +203,7 @@ const Vorschau = (() => {
        tragen. Ein leerer Absatz bleibt leer und soll es auch — sonst stünde
        in jeder Miniatur ein Streifen für jede Leerzeile. */
     const TRAEGT_KEINEN_TEXT = new Set([
-        'blatt', 'schaltplan', 'pdfseite', 'zeichenflaeche', 'whiteboard',
+        'blatt', 'schaltplan', 'pdfseite', 'zeichenflaeche', 'whiteboard', 'mindmap',
         'image', 'video', 'audio', 'file', 'pdf', 'table', 'spreadsheet',
         'database', 'chart', 'dashboard', 'embed', 'simulation'
     ]);

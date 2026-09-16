@@ -899,6 +899,12 @@ const Blocks = (() => {
         box.appendChild(Zusatz.whiteboard(block));
         break;
 
+      /* Die Gedankenkarte: Knoten als HTML, Linien als SVG — sie misst ihren
+         Text beim Browser, statt ihn zu schätzen (E607). */
+      case 'mindmap':
+        box.appendChild(Gedankenkarte.zeichne(block));
+        break;
+
       /* Ein Schaltplan: Symbolpalette links, Zeichenfläche rechts (Punkt 11). */
       case 'schaltplan':
         box.appendChild(Planflaeche.zeichne(block));
