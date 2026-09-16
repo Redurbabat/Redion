@@ -5548,17 +5548,26 @@ Reihenfolge:
    `register/navigation.ts` (39 Einträge), es ist also ein Umzug, keine
    Neuschöpfung.
 
-3. **Die Stiftleiste zum Schweben bringen.** Der Schritt mit dem grössten
-   Raumgewinn: rund 120 px. Auftrag 01 hat vertikal AUSDRÜCKLICH nichts
-   gewonnen — die 36-px-Zeile bleibt, weil `.mb-rechts` darin steht. Wer
-   Platz will, holt ihn hier.
+3. ~~**Die Stiftleiste zum Schweben bringen.**~~ IM SCHREIBSTUDIO ERLEDIGT,
+   nachgemessen am 16. September 2026: dort steht sie längst
+   `position:fixed` am unteren Rand (`pdf-studio.css`), ist 62 px hoch und
+   kostet **0 px Layouthöhe**; `--visual-bottom` hält sie seit E588 auch vor
+   der Bildschirmtastatur frei. Die erwarteten „rund 120 px" sind an dieser
+   Stelle nicht mehr zu holen — der Platz lag oben, und E612 hat ihn dort
+   geholt (301 → 160 px). OFFEN BLEIBT die Leiste auf einer gewöhnlichen
+   Seite: dort steht `.blatt-reihe` weiter im Fluss (`bausteine.css`, zwei
+   Zeilen unter 100 px, drei unter 140).
 
 4. **Die Heft-Leiste an den Fuss des Papiers**, wie in GoodNotes.
 
-5. **Ein Prüflauf, der die Zahl der sichtbaren Bedienelemente je Zustand
-   festhält** — damit die Leiste nicht in einem halben Jahr wieder zuwächst.
-   Sie ist ja nicht aus Absicht so geworden. `test384` hält heute nur den
-   einen Zustand des Menübandes; gemeint ist eine Decke über alle.
+5. ~~**Ein Prüflauf, der die Zahl der sichtbaren Bedienelemente je Zustand
+   festhält**~~ — GESCHLOSSEN mit E612 für das Schreibstudio: `test532` misst
+   die Höhe der Bedienung über der Folie gegen eine Decke von 175 px und
+   prüft jeden Zustand einzeln (ruhig, aufgeklappt, Reiter „Zeichnen", ohne
+   Ruhe). Zwei Gegenproben rot gesehen; die Decke fängt jeden der beiden
+   Eingriffe auch einzeln (224 und 227 px).
+   OFFEN BLEIBT dieselbe Decke für die ÜBRIGEN Ansichten — `test384` und
+   `test532` halten je eine; „eine Decke über alle" ist damit halb.
 
 UND EIN FUND AM RANDE, der zu Schritt 5 gehört: `.mb-klapp` ist auf 32 px
 Breite festgesetzt. Beim Einbau des Wortes ragten Wort und Pfeil aus dem
@@ -7792,9 +7801,17 @@ die Datei noch einmal zu lesen* (§55, P47).
 
 Eingetragen als offen, weil der Wächter fehlt — nicht der Befund.
 
-## L157 · Zeichenstudio nach Referenzbildern und bewegtes Dock — IN ARBEIT
+## L157 · Zeichenstudio nach Referenzbildern und bewegtes Dock — GELANDET
 
-**14. September 2026 · E572 · `codex/drawing-reference-toolbar`.**
+> **Nachgesehen am 16. September 2026 (E612):** hier stand „IN ARBEIT", und
+> das stimmt nicht mehr. Der Zweig `codex/drawing-reference-toolbar`
+> existiert nicht mehr, und die Bogen E572 bis E588 sind auf `main` — bis
+> hin zu „E588 — Die Tastatur schiebt das Dock nicht weg". Was unten unter
+> „Ausdrücklich NICHT geschlossen" steht, gilt weiter; der Zweig-Hinweis
+> nicht. Eine Lücke, die einen toten Zweig nennt, schickt den Nächsten an
+> eine Stelle, an der nichts steht.
+
+**14. September 2026 · E572 · `codex/drawing-reference-toolbar` (gelandet).**
 Der vollständige Entscheidungs- und Ausführungsplan steht in E572. Diese
 Liste hält den Produktstatus fest; „geplant“ heißt ausdrücklich nicht fertig.
 
@@ -8566,3 +8583,43 @@ etwas zu ändern: zwei Zeilen in `bibliothek.ts`.
 **Woran man merkt, dass er gebraucht wird:** Sobald jemand Redion mit einem
 Stift bedient — Surface, iPad mit Tastatur, Wacom. Genau das hat Redur am
 16. September genannt.
+
+--------------------------------------------------------------------------------
+
+## L181 · Das Lineal steht zweimal, sobald „Zeichnen" offen ist — 16. September 2026
+
+**Gemessen** im Schreibstudio bei offenem Foliensatz, 1440 × 852, Reiter
+„Zeichnen":
+
+```txt
+[data-document-action="ink-ruler"]   oben in der Zeichenleiste   1 sichtbar
+[data-act="lineal"]                  unten im Dock               1 sichtbar
+```
+
+Zwei Schalter, **ein** Zustand — der obere klickt den unteren durch
+(`document-mode.ts`). Beim Reiter „Präsentation" ist die Zeichenleiste
+`hidden`, und dann ist der im Dock der einzige; dort gibt es die Doppelung
+nicht. Auf Redurs Bild vom 16. September steht deshalb nur eines.
+
+**Warum es in E612 NICHT behoben wurde.** Die naheliegende Regel — den
+unteren im geschlossenen Dock ausblenden, sobald die Zeichenleiste steht —
+dreht **E574** um. Der Eintrag dort sagt ausdrücklich:
+
+> „Wer mit dem Stift ein Lineal wollte, kam nur über die Taste „r" oder über
+> „···" daran. Ein Weg, den man kennen muss, ist am Telefon kein Weg."
+
+`test524` hält beides fest: „Lineal oben direkt erreichbar" (Zeile 53) und
+„Lineal-Schalter steht beim Stift im Dock" (Zeile 116). Es ist also eine
+zweite Entscheidung, keine Nebenwirkung — und sie gehört Redur.
+
+**Die drei Möglichkeiten, keine davon entschieden:**
+
+1. **Den unteren ausblenden, solange die Zeichenleiste steht.** Der Schalter
+   bleibt oben erreichbar. Dreht E574 an dieser Stelle um.
+2. **Den oberen ausblenden, solange das Dock ihn trägt.** Dann erscheint das
+   Lineal nur bei den Werkzeugen, die es können (`stift`, `marker`, `line`,
+   `arrow`) — näher an E574, aber gegen die Zeichenleiste aus E572.
+3. **Beide stehen lassen** und es als bewusste Doppelung schreiben.
+
+**Woran man merkt, dass es drückt:** sobald jemand im Foliensatz den Reiter
+„Zeichnen" benutzt und sich fragt, welches der beiden Lineale gilt.
