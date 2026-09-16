@@ -8412,3 +8412,107 @@ abgekündigt. Der eigene Weg ist richtig und braucht einen eigenen Bogen.
 
 **Woran man merkt, dass er gebraucht wird:** Wer eine eingelesene
 Präsentation nicht nur korrigiert, sondern gestaltet.
+
+---
+
+## L176 · Die Gedankenkarte kennt noch keine Querverbindungen — 16. September 2026
+
+**Was fehlt:** Seit E607 gibt es die Gedankenkarte, und sie zeichnet einen
+Baum: jeder Knoten hat genau einen Elternteil, jede Linie geht von oben nach
+unten. Redurs zweites Bild zeigt aber etwas anderes — eine Karte, in der
+gestrichelte Linien quer durch den Baum laufen und „Blog about how to write"
+mit „creative writing" verbinden, obwohl beide in verschiedenen Ästen sitzen.
+Das ist in XMind die **Beziehung** (relationship), und Redion hat sie nicht.
+
+**Was dazu gehört:** eine zweite Liste am Block (`beziehungen`), zwei
+Knotenkennungen je Eintrag, eine gestrichelte Linie, eine Beschriftung
+darauf, und ein Weg, sie zu ziehen — in XMind: einen Knoten wählen, das
+Werkzeug greifen, auf den zweiten tippen.
+
+**Warum nicht gleich:** Der erste Bogen sollte die Karte selbst tragen.
+Eine Beziehung, die man nicht löschen und nicht beschriften kann, wäre eine
+halbe Sache; und sie braucht eine eigene Prüfung dafür, dass sie eine
+gelöschte Gegenseite überlebt, statt ins Leere zu zeigen (§9).
+
+**Woran man merkt, dass sie gebraucht wird:** Sobald jemand mit der Karte
+nicht mehr gliedert, sondern denkt. Ein Baum ordnet; ein Gedanke springt.
+
+---
+
+## L177 · Marker, Notizen und Grenzen fehlen der Gedankenkarte — 16. September 2026
+
+**Was fehlt:** In Redurs Liste stehen sie ausdrücklich — „Labels und Marker:
+Themen nach Wichtigkeit, Fortschritt oder Kategorie kennzeichnen",
+„Notizen zu Themen: hinter einem kurzen Stichpunkt längere Erklärungen
+hinterlegen", „Grenzen/Zusammenfassungen: mehrere Themen optisch gruppieren".
+Die Gedankenkarte kennt heute nur Text, Farbe und Zuklappen.
+
+**Was dazu gehört:**
+
+| Sache | Am Knoten | Was man sieht |
+|---|---|---|
+| Marker | `marken: string[]` | kleine Zeichen vor dem Text (Priorität 1–3, Fortschritt 0–100 %, Aufgabe) |
+| Notiz | `notiz: string` | ein Zeichen am Knoten, der Text in einem Feld daneben |
+| Grenze | eigene Liste | ein gestrichelter Rahmen um einen Ast, mit Namen |
+| Zusammenfassung | eigene Liste | eine geschweifte Klammer rechts davon, mit einem Knoten daran |
+
+**Warum nicht gleich:** Jedes davon ist ein eigener Aufbau-Fall. Eine Grenze
+muss den Platzbedarf des Astes kennen, eine Zusammenfassung wächst über
+mehrere Geschwister — beides greift in `aufbauen` ein, und das sollte erst
+stehen, bevor es wächst.
+
+**Und ein Punkt, der nicht vergessen werden darf:** Ein Marker, der nur eine
+Farbe ist, verstösst gegen §38. Er braucht ein Zeichen und einen Namen.
+
+---
+
+## L178 · Die Gedankenkarte kann keine fremden Formate lesen oder schreiben — 16. September 2026
+
+**Was fehlt:** Redurs drittes Bild ist die Ein-/Ausgabetafel von ConceptDraw
+— eine Wand aus Formaten, die ineinander übergehen: MindManager, FreeMind,
+XMind, NovaMind, MindMeister, OPML, Markdown-Gliederung. Redion kann heute
+keines davon, weder hinein noch hinaus.
+
+**Was machbar ist, und in welcher Reihenfolge:**
+
+| Format | Wie es ginge | Aufwand |
+|---|---|---|
+| Markdown-Gliederung | `#`/`##`/`###` und Einrückung ⇄ Ebenen | klein, und es ist der ehrlichste erste Schritt |
+| OPML | XML mit verschachtelten `<outline text="…">` | klein, `DOMParser` ist da |
+| FreeMind `.mm` | XML mit verschachtelten `<node TEXT="…">` | klein, dasselbe Werkzeug |
+| `.xmind` | ZIP mit `content.json` (neu) oder `content.xml` (alt) | mittel — der ZIP-Leser aus `.redion` trägt es schon |
+| MindManager `.mmap` | ZIP mit eigenem XML | gross, und das Format ist nicht offen |
+
+**Der Weg dahin geht über den ZIP-Leser, den es schon gibt.** `Einlesen.zipLesenAusBlob`
+öffnet `.redion`, `.docx`, `.pptx` — `.xmind` ist derselbe Griff mit einem
+anderen Inhalt. Das ist der Grund, warum diese Lücke machbar ist und nicht
+gross.
+
+**Und was dabei zu beachten ist (§18):** Was Redion nicht kennt, darf nicht
+verschwinden. Ein `.xmind` mit Markern und Beziehungen, das Redion einliest
+und wieder ausgibt, hätte sie sonst verloren — und das ist ein Datenverlust,
+auch wenn er in einer fremden Datei passiert.
+
+---
+
+## L179 · Die Gedankenkarte lässt sich nicht als Bild speichern — 16. September 2026
+
+**Was fehlt:** Das Whiteboard hat den Knopf ⭳ und schreibt ein PNG. Die
+Gedankenkarte hat ihn nicht.
+
+**Warum das genau am Preis von E607 hängt:** Die Knoten sind HTML, nicht
+SVG — deshalb misst der Browser ihren Text, statt dass Redion ihn schätzt.
+Der Preis dafür ist genau hier fällig: ein `<canvas>` kann kein HTML
+zeichnen. Das Whiteboard kommt mit `toDataURL` aus, weil bei ihm alles im
+SVG liegt.
+
+**Was ginge:** beim Speichern ein zweites Bild aufbauen — dieselben Orte,
+aber die Knoten als `<rect>` und `<text>` im SVG, mit den **gemessenen**
+Grössen aus dem Aufbau. Die Schätzung käme dadurch nicht zurück: gerechnet
+wird weiter am HTML, das SVG bekommt das Ergebnis vorgesetzt. Umbrüche
+müssten dabei als `<tspan>` je Zeile ausgegeben werden, und die Zeilen
+kennt nur der Browser — also zusätzlich `Range.getClientRects()` je Knoten,
+um zu erfahren, wo er umgebrochen hat.
+
+**Ein Umweg, der heute schon geht:** die Seite drucken. Das ist keine Lösung,
+aber es ist keine Sackgasse.

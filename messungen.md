@@ -1672,3 +1672,85 @@ Die drei, die schon vorher grün waren, waren es aus dem falschen Grund: sie
 prüfen die Läufe der Marke, und solange das Feld gar nicht aufging, blieben
 sie unangetastet. Erst zusammen mit „der Kasten öffnet sich mit seinem
 vollen Text" tragen sie etwas.
+
+---
+
+## 43. Die Gedankenkarte: gemessen statt geschätzt (E607)
+
+**Was:** Der Aufbau der Gedankenkarte braucht die Breite jedes Knotens. Zwei
+Wege standen zur Wahl — der Browser misst sie (HTML-Knoten), oder Redion
+schätzt sie (SVG-Text). Die Schätzung wurde gebaut und gemessen, statt sie
+für schlecht zu halten.
+
+**Wie:** `test529` §3 setzt eine Karte mit „Mitte" als Wurzel und zwei
+Zweigen. Die Linien zur Wurzel müssen an deren gemessener Kante beginnen.
+Für die Gegenprobe wurde im Zeichner `offsetWidth` durch die naive Formel
+`7 px je Zeichen + 26` ersetzt und neu gebaut.
+
+```txt
+                             gemessen (E607)     geschätzt (Gegenprobe)
+rechte Kante der Wurzel      101 px              101 px   (das DOM lügt nicht)
+Anfang der Linie             101 px              89 px
+Abweichung waagerecht        0 px                12 px
+Abweichung senkrecht         0 px                6 px
+test529 §3                   3 von 3 grün        1 von 3 grün
+```
+
+Die eine Zusicherung, die auch mit der Schätzung grün blieb, ist „der lange
+Zweig ist breiter als der kurze". Sie hält nichts — auch eine Schätzung macht
+längeren Text breiter. Sie steht im Kopf von `test529` ausdrücklich als
+solche, statt in der Zahl mitzulaufen (§55.2).
+
+**Was der zweite Durchgang kostet:** einhängen, messen, rechnen, stellen.
+Bei der Karte aus dem Bild (18 Knoten) unter einer Millisekunde.
+
+---
+
+## 44. Der erste Blick auf eine Gedankenkarte (E607)
+
+**Was:** Beim Öffnen passt sich die Karte in ihren Kasten. Ohne Untergrenze
+tut sie das IMMER — auch, wenn dabei niemand mehr etwas lesen kann.
+
+```txt
+                       Rechner 1440×960     iPhone 13 Pro Max 390×844
+Karte (18 Knoten)      1050 × 430 px        1050 × 430 px
+ganz eingepasst        69 %                 33 %
+Schrift am Bildschirm  9,3 px               4,6 px
+lesbar                 ja                   nein
+```
+
+**Die Grenze:** 10 px sind die Grenze, unter der man aufhört zu lesen und
+anfängt zu raten. 10 / 13,5 ergibt 0,74; gesetzt sind **0,72**, weil die
+Schrift am Telefon 14 px ist. Unterhalb davon wird nicht mehr eingepasst,
+sondern die MITTE bei 72 % gezeigt; der Rest wird erschoben.
+
+```txt
+                       vorher (ohne Grenze)   nachher (E607)
+Rechner                69 %, ganz             69 %, ganz      (unverändert)
+Telefon                33 %, ganz             72 %, Mitte
+Schrift am Telefon     4,6 px                 10,1 px
+```
+
+Der Knopf ⤢ kennt die Grenze nicht: wer wirklich alles sehen will, bekommt
+alles.
+
+---
+
+## 45. Wie weit die Karte sprang, bevor sie festgehalten wurde (E607)
+
+**Was:** Der Aufbau normiert sein Ergebnis auf eine linke obere Ecke bei
+`RAND` — sonst hätte die Welt negative Koordinaten. Wächst die Karte nach
+links, wandert deshalb in Weltkoordinaten alles nach rechts.
+
+**Wie:** `test529` §11 misst die Bildschirmlage der Wurzel, legt links ein
+breites Unterthema an und misst wieder.
+
+```txt
+                       ohne Ausgleich      mit Ausgleich (E607)
+Wurzel vorher          x = 770,5           x = 770,5
+Wurzel nachher         x = 1054,5          x = 770,5
+Sprung                 284 px              0 px
+```
+
+284 Pixel sind kein Feinschliff. Wer ein Unterthema anlegt, schaut auf den
+Knoten, an den es kommt — und der war danach woanders.

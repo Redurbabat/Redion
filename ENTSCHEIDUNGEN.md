@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-585 Entscheidungen, E1 bis E606 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+586 Entscheidungen, E1 bis E607 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -649,6 +649,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E604** — Redur hat die Geschichte der Kachel gesehen und sich entschieden: die main-Fassung, mit Bewegung und mit Auge
 * **E605** — Ein Tipp auf leeres Papier schreibt schon: wie in Word, ohne Werkzeug und ohne zweiten Klick
 * **E606** — Das Schreibfeld hält mehrere Formate: ein `<span>` je Lauf statt eines `<textarea>` (L172 geschlossen)
+* **E607** — Die Gedankenkarte: Knoten als HTML, Linien als SVG — gemessen statt geschätzt (Redurs „ich will auch das XMind erstellen können")
 
 ---
 
@@ -49032,3 +49033,137 @@ gleicher Art wieder zusammenfassen — und sie steht als **L175**.
 `execCommand` täte es in zwei Zeilen und ist genau deshalb nicht der Weg: es
 erzeugt `<b>`, `<font>` und verschachtelte Spans, die `feldLesen` nicht
 kennt.
+
+
+---
+
+## E607 — Die Gedankenkarte: Knoten als HTML, Linien als SVG
+
+**Redurs Satz, 16. September 2026:** „Ich will bei Redion auch das XMind
+erstellen können." Dazu drei Bilder: eine Karte mit Ästen nach beiden Seiten,
+eine bunte Karte mit Querverbindungen, und die Ein-/Ausgabetafel von
+ConceptDraw. Und eine lange Liste dessen, wofür man XMind benutzt — von
+Brainstorming über Prüfungsvorbereitung bis Fischgräte-Diagramm.
+
+**Was entschieden wurde:** eine neue Blockart `mindmap` („Gedankenkarte") in
+der Gruppe Wissen, neben Whiteboard und Schaltplan. Kein eigener Bereich, kein
+eigenes Fach in IndexedDB, kein eigenes Dateiformat — die Karte liegt als Feld
+`karte` am Block.
+
+### Warum als Block und nicht als Bereich
+
+Ein eigener Bereich hätte eigene Navigation, eigene Ablage, eigenen Export und
+eigene Rechte gebraucht. Als Block bekommt die Karte all das geschenkt: sie
+steht auf einer Seite zwischen zwei Absätzen, sie wandert mit der Seite, sie
+reist in jeder `.json`- und `.redion`-Sicherung mit, ohne dass Sicherung oder
+Abgleich eine Zeile davon wissen müssen (§9). `test529` §14 fährt beide
+Sicherungswege — sichern, alles löschen, zurückholen — und vergleicht die
+Karte Zeichen für Zeichen.
+
+### Die Entscheidung, die alles andere erklärt: HTML-Knoten, SVG-Linien
+
+Der nächstliegende Weg wäre ein einziges `<svg>` mit `<text>` darin — so macht
+es das Whiteboard, so macht es der Schaltplan. Für eine Gedankenkarte ist es
+der falsche Weg, und zwar aus einem Grund, der hier schon Geld gekostet hat:
+
+> **SVG bricht keinen Text um.** Wer die Breite eines Knotens in SVG braucht,
+> muss sie SCHÄTZEN.
+
+Genau diese Schätzung steht seit L173 als offene Lücke in der PDF-Fläche.
+Hier ist jeder Knoten ein `<div>` mit `max-width` und Umbruch. Er wird
+eingehängt, der Browser bricht um, und **erst danach** wird gerechnet:
+`offsetWidth` und `offsetHeight` sind die Wahrheit, keine Formel. Die Linien
+sind SVG und liegen darunter.
+
+**Gemessen, was die Alternative gekostet hätte.** Für die Gegenprobe wurde die
+Messung durch die naive Schätzung `7 px je Zeichen + 26` ersetzt: die Wurzel
+endet bei 101 px, die Linie begönne bei 89 — zwölf Pixel daneben, senkrecht
+sechs. `test529` §3 hält das fest und wurde damit rot gesehen.
+
+### Der Preis
+
+Ein zweiter Durchgang beim Zeichnen: einhängen, messen, rechnen, stellen.
+Gemessen kostet er bei 18 Knoten unter einer Millisekunde. Und die Knoten
+liegen nicht im SVG, also kann die Karte nicht mit einem `toDataURL` zum Bild
+werden — das ist der eine Weg, den diese Entscheidung teurer macht, und er
+steht als **L179**.
+
+### Was die Karte beim ersten Blick tut
+
+Sie passt sich ein und stellt sich mittig — aber **nicht unter 72 %**. Ohne
+diese Grenze passt sie sich immer ganz ein, und auf dem Bild vom
+16. September am iPhone 13 Pro Max hiess das: 33 %. Ein Knoten mit 14 px
+Schrift stand mit 4,6 px am Bildschirm — sichtbar, aber nicht lesbar.
+Unterhalb der Grenze zeigt sie stattdessen die MITTE bei 72 %, und der Rest
+wird erschoben. Der Knopf ⤢ kennt diese Grenze nicht: wer wirklich alles
+sehen will, bekommt alles.
+
+Eingepasst wird **ohne zu speichern**. Eine Karte, die sich beim Öffnen
+zurechtrückt, ist angenehmer als eine, die beim blossen Ansehen den Block
+ändert. Erst wer selbst schiebt oder zoomt, speichert seine Sicht.
+
+### Und die Karte springt nicht, wenn sie wächst
+
+Der Aufbau schiebt sein Ergebnis so, dass die linke obere Ecke bei `RAND`
+liegt — sonst hätte die Welt negative Koordinaten. Die Folge: wächst die Karte
+nach LINKS, wandert in Weltkoordinaten alles nach rechts, und der Ausschnitt
+zeigt plötzlich etwas anderes. Gemessen sprang die Wurzel um **284 Pixel**,
+als ein breites Unterthema links dazukam. Deshalb wird der Ausschnitt um genau
+den Betrag mitgezogen, um den die Wurzel gewandert ist. `test529` §11 hält es;
+auch diese Zusicherung wurde einzeln rot gesehen.
+
+### Kaputte Daten verschwinden nicht (§9)
+
+Zwei Sorten Schaden sind denkbar und beide kommen aus dem echten Leben: ein
+Knoten zeigt auf einen Elternteil, den es nicht mehr gibt (Zusammenführen
+zweier Geräte), und ein Knoten hängt über Umwege an sich selbst (einen Ast in
+sich hinein verschoben). Beide enden gleich: der Knoten hängt sich an die
+Wurzel. Er ist dann vielleicht am falschen Platz — aber er ist **sichtbar**.
+Ein Knoten, der wegen eines kaputten Zeigers nicht gezeichnet wird, sieht aus
+wie gelöscht (§51).
+
+### Das Schreibfeld ist ein `contenteditable`-Div
+
+Dasselbe wie in E597/E598 bei der freien Textmarke, aus demselben Grund und
+mit einer Falle weniger: `bausteine.css` setzt unter 760 px
+`input, textarea, select { font-size:16px !important }`, damit iOS beim Tippen
+nicht hineinzoomt. Ein `<textarea>` in einem Knoten würde am Telefon plötzlich
+16 px gross — und der Knoten spränge beim Antippen auf eine andere Breite als
+die, die er eben noch hatte. Ein Div ist von dieser Regel nicht betroffen;
+nachgesehen in `bausteine.css:312`, nicht vermutet.
+
+### Die Leiste ist nicht die bequeme Fassung der Tastatur (§37)
+
+Am Rechner legt **Tab** ein Unterthema an und **Enter** eines daneben, **Entf**
+nimmt den Ast, die Pfeiltasten wandern, die **Leertaste** klappt zu. Am
+Telefon gibt es keine dieser Tasten. Ohne die Leiste wäre die Gedankenkarte
+dort eine Karte zum Ansehen — und §37 sagt: kein Desktop-only für
+Kernfunktionen. Jeder Weg ist deshalb auch ein Knopf mit 44 px Trefffläche.
+`test529` §12 misst sie.
+
+### Angesehen, nicht nur gerechnet (§55.3)
+
+Drei Bilder, und jedes hat etwas gefunden:
+
+1. Die halbe Karte lag ausserhalb des Kastens (kein Einpassen).
+2. Das Zeichen `✎` in der Leiste wurde von der Emoji-Schrift als schräg
+   liegender Stift gezeichnet und sah aus wie eine **Büroklammer** — dieselbe
+   Sorte Fund wie die Ausrichtungsknöpfe, die wie Klammern aussahen (§55.1).
+   Es ist jetzt ein `T`; ein Buchstabe kann nicht falsch gelesen werden.
+3. Am Telefon 33 % — siehe oben.
+
+### Geprüft
+
+`test529`, 56 Zusicherungen, alle grün. Zwei davon wurden einzeln rot gesehen
+(§3 mit der Schätzung, §11 ohne den Ausgleich). Eine hält nichts und ist als
+solche aufgeschrieben: „Der lange Zweig ist breiter als der kurze" bleibt auch
+mit einer Schätzung grün.
+
+### Was der erste Bogen NICHT kann
+
+Querverbindungen zwischen beliebigen Knoten (das zweite Bild), Marker und
+Symbole, Notizen hinter einem Knoten, Grenzen um mehrere Knoten, die anderen
+XMind-Strukturen (Organigramm, Fischgräte, Zeitstrahl, Matrix), und die
+fremden Formate aus dem dritten Bild (`.xmind`, FreeMind `.mm`, OPML,
+Markdown-Gliederung). Alles davon steht als **L176** bis **L179** in
+`LUECKEN.md` — als benannte Lücke, nicht als stiller Mangel (§35).

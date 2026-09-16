@@ -1458,6 +1458,49 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  gedankenkarte: {
+    titel: 'Die Gedankenkarte — zentrales Thema, Äste nach beiden Seiten (E607)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Prüfungsplan', icon: '🧠' });
+      const k = (id: string, text: string, eltern: string | null, rest: object = {}) =>
+        ({ id, text, eltern, ...rest });
+      Store.addBlock(seite.id, 'mindmap', {
+        text: 'Gedankenkarte',
+        hoehe: 460,
+        karte: {
+          aufbau: 'karte',
+          knoten: [
+            k('w', 'Prüfung Elektrotechnik', null),
+            k('a', 'Grundlagen', 'w'),
+              k('a1', 'Ohmsches Gesetz', 'a'),
+              k('a2', 'Leistung und Arbeit', 'a'),
+              k('a3', 'Reihe und Parallel', 'a'),
+            k('b', 'Schutzmassnahmen', 'w'),
+              k('b1', 'Schutzleiter', 'b'),
+              k('b2', 'FI-Schalter', 'b'),
+              k('b3', 'Schutzklassen I bis III', 'b'),
+            k('c', 'Messen', 'w'),
+              k('c1', 'Spannung', 'c'),
+              k('c2', 'Strom', 'c'),
+              k('c3', 'Isolationswiderstand', 'c'),
+            k('d', 'Schaltpläne lesen', 'w'),
+              k('d1', 'Stromlaufplan', 'd'),
+              k('d2', 'Übersichtsplan', 'd'),
+            k('e', 'Termine', 'w'),
+              k('e1', 'Probe am 24.', 'e'),
+              k('e2', 'Prüfung am 8.', 'e'),
+          ]
+        }
+      });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
   whiteboards: {
     titel: 'Whiteboards als eigener Bereich im Workspace',
     bauen: async () => {

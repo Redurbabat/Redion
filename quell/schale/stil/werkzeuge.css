@@ -1288,3 +1288,87 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 @media(hover:none){
   .stab-wrap .stab-tools{opacity:1}
 }
+
+/* ==========================================================================
+   GEDANKENKARTE (E607) — Namensraum `gk-`
+
+   Eingetragen in `doku/CSS-NAMENSRAEUME.md`; `test290` meldet einen
+   Namensraum, den niemand aufgeschrieben hat (L90).
+
+   DER AUFBAU IN DREI SCHICHTEN, von unten nach oben:
+     .gk-buehne   der Ausschnitt. Schneidet ab, nimmt die Zeiger entgegen.
+     .gk-welt     die Karte in ihren eigenen Koordinaten. Sie wird
+                  verschoben und skaliert — nichts darin weiss davon.
+     .gk-linien   die Bögen als SVG, darunter; .gk-kn die Knoten als HTML,
+                  darüber. Nur so misst der Browser den Text, statt dass wir
+                  ihn schätzen (siehe Kopf von gedankenkarte.ts).
+   ========================================================================== */
+.gk{ width:100%; margin:8px 0; border:1px solid var(--line); border-radius:8px;
+     background:var(--bg-card); overflow:hidden; }
+
+.gk-leiste{ display:flex; align-items:center; gap:2px; padding:6px 8px; flex-wrap:wrap;
+            border-bottom:1px solid var(--line); background:var(--bg-card); }
+.gk-leiste button{ width:28px; height:26px; border-radius:5px; font-size:14px;
+                   color:var(--text-dim); display:grid; place-items:center;
+                   position:relative; border:none; background:none; cursor:pointer; }
+/* 44 px TREFFFLÄCHE (§37, E406). HAUPTWEG: die Werkzeuge der Karte — am Telefon
+   ist das der EINZIGE Weg, ein Unterthema anzulegen; dort gibt es kein Tab.
+   Die Fläche wächst nur nach oben und unten — waagerecht stehen die Nachbarn,
+   und eine Fläche, die sie überdeckt, macht es schlimmer statt besser. */
+.gk-leiste button::after{ content:""; position:absolute; left:0; right:0; top:50%;
+                          height:var(--touch-min); transform:translateY(-50%); }
+.gk-leiste button:hover{ background:var(--bg-hover); color:var(--text); }
+.gk-leiste button:disabled{ opacity:.35; pointer-events:none; }
+.gk-leiste .gk-farbe{ width:17px; height:17px; border-radius:50%;
+                      border:2px solid transparent; }
+.gk-leiste .gk-farbe::after{ left:-3px; right:-3px; }
+.gk-leiste .gk-farbe-weg{ background:var(--bg-input); color:var(--text-faint);
+                          font-size:10px; }
+.gk-farben{ display:inline-flex; align-items:center; gap:2px; }
+.gk-trenn{ width:1px; height:18px; background:var(--line); margin:0 5px; }
+.gk-zoom{ display:inline-flex; align-items:center; gap:2px; }
+.gk-massstab{ min-width:46px; text-align:center; font-size:11px; font-weight:600;
+              color:var(--text-dim); }
+
+.gk-buehne{ position:relative; overflow:hidden; touch-action:none; outline:none;
+            background:var(--bg); }
+.gk-buehne:focus-visible{ box-shadow:inset 0 0 0 2px var(--accent); }
+.gk-buehne.gk-schiebt{ cursor:grabbing; }
+.gk-welt{ position:absolute; left:0; top:0; transform-origin:0 0; }
+.gk-linien{ position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
+
+.gk-kn{ position:absolute; box-sizing:border-box; max-width:230px;
+        display:flex; align-items:center; gap:6px;
+        padding:6px 11px; border-radius:8px;
+        border:2px solid var(--ast, var(--line));
+        background:var(--bg-card); color:var(--text);
+        font-size:13.5px; line-height:1.35;
+        white-space:pre-wrap; overflow-wrap:anywhere; cursor:pointer; }
+.gk-kn:hover{ background:var(--bg-hover); }
+/* Der gewählte Knoten trägt einen Ring in seiner Astfarbe — aber nicht NUR
+   den: er bekommt auch eine kräftigere Kante. §38 verlangt, dass keine
+   Auskunft allein über die Farbe läuft, und „ausgewählt" ist eine Auskunft. */
+.gk-kn.on{ box-shadow:0 0 0 2px var(--bg-card), 0 0 0 4px var(--ast, var(--accent));
+           font-weight:600; }
+.gk-kn.gk-wurzel{ font-size:16px; font-weight:600; padding:10px 16px;
+                  border-radius:11px; background:var(--bg-input); max-width:260px; }
+.gk-txt{ outline:none; min-width:10px; }
+.gk-txt.gk-leer::before{ content:"Thema"; color:var(--text-faint); }
+.gk-txt.gk-schreibt{ cursor:text; }
+/* Der Zähler an einem zugeklappten Ast. Die ZAHL steht da, nicht nur ein
+   Dreieck — wer drei verborgene Unterthemen hat, soll die Drei sehen. */
+.gk-zahl{ flex:none; min-width:17px; height:17px; padding:0 4px; border-radius:9px;
+          background:var(--ast, var(--text-faint)); color:#fff;
+          font-size:10.5px; font-weight:700; line-height:17px; text-align:center; }
+
+.gk-griff{ height:9px; cursor:ns-resize; background:var(--bg-card);
+           border-top:1px solid var(--line); }
+.gk-griff:hover{ background:var(--bg-hover); }
+
+@media (max-width:760px){
+  /* Am Telefon ist der Bildschirm schmal — ein 230 px breiter Knoten neben
+     einem zweiten passt nicht mehr nebeneinander. Schmaler heisst hier: mehr
+     Umbrüche, aber alles bleibt lesbar. */
+  .gk-kn{ max-width:160px; font-size:14px; }
+  .gk-kn.gk-wurzel{ max-width:180px; font-size:16px; }
+}
