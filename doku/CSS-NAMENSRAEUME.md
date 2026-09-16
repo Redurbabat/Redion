@@ -125,7 +125,7 @@ aw      261  arbeitswelt.css
 ax       11  bausteine.css
 bahn      4  bausteine.css
 bg       24  grund.css
-bib      397  bausteine.css
+bib     412  bausteine.css
 bild     21  bausteine.css
 bl        6  werkzeuge.css
 bs       64  bausteine.css
@@ -163,7 +163,7 @@ frei     10  einstellungen.css
 fv        9  einstellungen.css
 fx        5  bausteine.css
 gal       6  einstellungen.css
-gk       41  werkzeuge.css
+gk       40  werkzeuge.css
 hat       6  notizhefte.css
 hk       12  bausteine.css
 hl        4  bausteine.css

@@ -1757,50 +1757,39 @@ Knoten, an den es kommt — und der war danach woanders.
 
 ---
 
-## 46. Was das Auge am Ordner gekostet und gebracht hat (E608)
+## 47. Die Ordnerkachel, hin und zurück an einem Tag (E608 → E609)
 
-**Was:** Am Deckel jedes Ordners sass seit E463 ein Auge — ein 44-px-Knopf,
-der den Blick in den Ordner öffnete. Seit E508 tat das auch das blosse
-Hinschauen darauf. Redur hat das Auge am 16. September abbestellt.
-
-```txt
-                            vorher (E463/E508)   nachher (E608)
-Knöpfe auf der Kachel       1 (Auge)             0
-Trefffläche zum Hinschauen  44 × 44 px           die ganze Ordnerkachel
-Maus öffnet die Karte       ja, auf dem Auge     ja, auf dem Deckel
-Stift öffnet die Karte      nein                 ja
-Finger öffnet per Hover     nein                 nein
-Weg ohne Maus               Auge antippen        ⌄-Menü „Blick hinein"
-CSS-Regeln dafür            13                   0
-`bib`-Vorkommen im Stil     412                  397
-```
-
-**Der Stift war vorher ausgesperrt, und zwar nicht absichtlich.** Die
-Bedingung lautete `pointerType !== 'mouse' || !zeigerHatHover()`. Sie
-verlangt zweierlei, und beides schliesst einen Stift aus: seine Art ist
-`pen`, und `(hover: hover) and (pointer: fine)` beschreibt den Hauptzeiger
-des Geräts — auf einem Laptop mit Berührungsbildschirm den Finger.
-
-**Was nicht gemessen, sondern nur festgehalten ist:** Die Wartezeit steht
-weiter bei 280 ms. Sie wurde für ein 44-px-Auge gewählt und hängt jetzt an
-einer ganzen Kachel, die man beim Weg über das Regal viel eher überstreicht.
-Ob das zu schnell ist, lässt sich nicht am Schreibtisch ausrechnen — es
-zeigt sich beim Benutzen. Die Zahl bleibt deshalb, bis es eine Messung gibt
-(§36: erst messen, dann bauen).
-
-**Die Wächter vorher und nachher:**
+**Was:** Das Auge am Ordnerdeckel wurde entfernt (E608) und noch am selben
+Tag vollständig zurückgeholt (E609). Was dabei zählbar ist:
 
 ```txt
-test436 §7                       8 Zusicherungen, neu geschrieben
-test476                         29 Zusicherungen, umgehängt
-
-Gegenprobe 1: Verdrahtung am Deckel abgeklemmt
-  test476 §1                    3 von 3 rot
-  test436 §7                    2 von 8 rot (Maus und Stift)
-Gegenprobe 2: Stift wieder ausgesperrt
-  test476 §6                    1 von 2 rot — die Maus blieb grün
-  test436 §7                    1 von 8 rot — nur der Stift
+                         vorher      ohne Auge (E608)   zurück (E609)
+Knöpfe auf der Kachel    1           0                  1
+CSS-Regeln dafür         13          0                  13
+`bib` im Stilblatt       412         397                412
+test436 §7               9 Zusich.   8 Zusich. (neu)    9 Zusich. (alt)
+test476                  29          29 (umgehängt)     29 (alt)
+Dateien im Bogen         —           16                 16 (dieselben)
 ```
 
-Die zweite Gegenprobe ist die wichtigere: sie zeigt, dass die Zusicherung
-für den Stift wirklich den Stift prüft und nicht beim Mitlaufen grün wird.
+**Der Beweis, dass „zurück" wirklich zurück heisst:**
+
+```txt
+git revert 70cf4503
+git diff codex/frei-text-auswahl --stat    →  leer
+```
+
+Kein Unterschied zum Stand vor E608 — Zeichen für Zeichen, nicht „sieht gut
+aus". Von Hand zurückgebaut wäre das nicht nachweisbar gewesen (E604, dieselbe
+Lehre).
+
+**Nach dem Zurücknehmen gemessen:**
+
+```txt
+test436   70 von 70 grün
+test476   29 von 29 grün
+test290   13 von 13 grün   (der Namensraum-Wächter — `bib` wieder bei 412)
+```
+
+**Was offen bleibt und nicht mit zurückging:** der Fund, dass der Stift den
+Blick gar nicht öffnen kann. Er steht als L180 und ist zwei Zeilen gross.

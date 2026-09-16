@@ -905,25 +905,17 @@ const Bibliothek = (() => {
         '<i class="bib-deckel-mehr" aria-hidden="true">\u2304</i></span>' +
       '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
       '</button>';
-    /* KEIN AUGE MEHR AM ORDNER (E608).
-     *
-     * Redur, 16. September 2026: „wenn ich auf Ordner mit Maus gehe, sollte
-     * es sein [Bild der offenen Karte] — mach die Augen weg und behalte nur
-     * so: wenn ich mit Maus drauf gehe, sollte sie mir zeigen, oder mit
-     * Laptop-Stift."
-     *
-     * Das Auge kam mit E463 als sichtbarer Weg zum „Blick hinein", das
-     * Hinschauen kam mit E508 dazu. Jetzt bleibt nur das Hinschauen, und es
-     * gilt für den DECKEL selbst — die Verdrahtung steht weiter unten bei
-     * `.bib-deckel[data-id]`.
-     *
-     * DER WEG MIT DEM FINGER GEHT NICHT VERLOREN, und das ist die Bedingung,
-     * unter der das Auge gehen durfte (§37): „Blick hinein" steht seit E459
-     * im ⌄-Menü jedes Ordners und steht dort weiter. Ohne diesen Weg wäre
-     * der Blick am Telefon verschwunden, und das wäre kein Aufräumen,
-     * sondern ein Verlust.
-     */
-    return deckel;
+    if (art.id !== 'ordner') return deckel;
+    /* DAS AUGE AM ORDNER (E463). „Blick hinein" stand seit E459 nur im
+       ⌄-Menü — ein Weg, den man kennen muss. Jetzt sitzt am Deckel jedes
+       Ordners ein Auge, das beim Darüberfahren zwinkert und zur Seite
+       schaut. Es ist ein GESCHWISTER des Deckels, kein Kind: ein Knopf im
+       Knopf ist kein gültiges HTML, und der Klick käme zweimal an. */
+    return '<span class="bib-zelle">' + deckel +
+      `<button class="bib-blick" data-blick="${esc(p.id)}" ` +
+        `aria-label="Blick in „${esc(p.text || 'Ohne Titel')}\u201c" title="Blick hinein">` +
+        '<i class="bib-blick-auge" aria-hidden="true"><b></b></i>' +
+      '</button></span>';
   };
 
   type Heft = { id: string; icon: string; name: string;
@@ -1562,51 +1554,47 @@ const Bibliothek = (() => {
     });
     wrap.querySelectorAll<HTMLElement>('[data-ordner]').forEach(b =>
       b.addEventListener('click', () => geheIn(b.dataset['ordner'] || null)));
+    /* Das Auge am Ordner (E463) — derselbe Weg wie im ⌄-Menü, ohne Menü.
+       Seit E508 öffnet auch das blosse HINSCHAUEN, siehe `blickHinein`. */
+    wrap.querySelectorAll<HTMLElement>('.bib-blick[data-blick]').forEach(b => {
+      const seiteVon = (): any => Store.getBlock(b.dataset['blick'] || '');
+      b.addEventListener('click', ereignis => {
+        ereignis.stopPropagation();
+        schauAbsagen();
+        const p = seiteVon();
+        /* Ein Tipp auf denselben Ordner, dessen Karte gerade vom Zeigen
+           offen steht, klappt sie nicht zu und wieder auf — er HÄLT sie
+           fest. Alles andere wäre ein Flackern für nichts. */
+        if (p && schauId === String(p.id) && document.querySelector('.ru-fach-lage')) {
+          schauId = '';
+          return;
+        }
+        if (p) blickHinein(p, b.getBoundingClientRect());
+      });
+      b.addEventListener('pointerenter', ereignis => {
+        const e = ereignis as PointerEvent;
+        /* NUR DIE MAUS. Ein Finger meldet auf manchen Geräten ein
+           `pointerenter`, das kein Überfahren ist — er tippt gerade. Und
+           ein Gerät ohne Zeiger meldet gar keines; die Abfrage kostet
+           dort nichts. */
+        if (e.pointerType !== 'mouse' || !zeigerHatHover()) return;
+        if (document.querySelector('.ru-fach-lage')) return;
+        schauAbsagen();
+        schauUhr = window.setTimeout(() => {
+          schauUhr = 0;
+          const p = seiteVon();
+          if (p) blickHinein(p, b.getBoundingClientRect(), true);
+        }, SCHAU_AUF_MS);
+      });
+      b.addEventListener('pointerleave', ereignis => {
+        if ((ereignis as PointerEvent).pointerType === 'touch') return;
+        /* Noch nicht aufgegangen: die Absicht war keine. Schon offen: die
+           Karte selbst entscheidet, ob der Zeiger zu ihr gewandert ist. */
+        if (schauUhr) { clearTimeout(schauUhr); schauUhr = 0; }
+        if (schauId) schauZuSpaeter();
+      });
+    });
     wrap.querySelectorAll<HTMLElement>('.bib-deckel[data-id]').forEach(k => {
-      /* DER BLICK KOMMT VOM DECKEL SELBST (E608, vorher E463/E508 am Auge).
-         Redurs Satz vom 16. September: Auge weg, und was es zeigte, soll
-         beim Darüberfahren kommen — „mit Maus … oder mit Laptop-Stift".
-
-         DREI ZEIGERARTEN, DREI ANTWORTEN:
-           Maus   öffnet nach kurzer Wartezeit. Wie bisher.
-           Stift  ebenso — aber OHNE die `(hover: hover)`-Abfrage. Sie
-                  beschreibt den HAUPTZEIGER des Geräts, und auf einem
-                  Laptop mit Berührungsbildschirm ist das der Finger; die
-                  Abfrage sagte dort „kein Überfahren" und hätte den Stift
-                  ausgesperrt, der gerade darüber schwebt.
-           Finger öffnet gar nicht per Überfahren. Er meldet auf manchen
-                  Geräten ein `pointerenter`, das kein Überfahren ist — er
-                  tippt gerade.
-
-         UND EIN TIPP IST KEIN HINSCHAUEN. Beim Antippen mit Maus oder Stift
-         kommt erst `pointerenter`, dann `pointerdown` — ohne die Absage
-         unten liefe die Uhr weiter, und wer in einen Ordner hineingeht,
-         bekäme obendrein seine Karte aufgeklappt. */
-      if (k.dataset['art'] === 'ordner') {
-        const seiteVon = (): any => Store.getBlock(k.dataset['id'] || '');
-        k.addEventListener('pointerenter', ereignis => {
-          const e = ereignis as PointerEvent;
-          if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
-          if (e.pointerType === 'mouse' && !zeigerHatHover()) return;
-          if (document.querySelector('.ru-fach-lage')) return;
-          schauAbsagen();
-          schauUhr = window.setTimeout(() => {
-            schauUhr = 0;
-            const p = seiteVon();
-            if (p) blickHinein(p, k.getBoundingClientRect(), true);
-          }, SCHAU_AUF_MS);
-        });
-        k.addEventListener('pointerdown', () => {
-          if (schauUhr) { clearTimeout(schauUhr); schauUhr = 0; }
-        });
-        k.addEventListener('pointerleave', ereignis => {
-          if ((ereignis as PointerEvent).pointerType === 'touch') return;
-          /* Noch nicht aufgegangen: die Absicht war keine. Schon offen: die
-             Karte selbst entscheidet, ob der Zeiger zu ihr gewandert ist. */
-          if (schauUhr) { clearTimeout(schauUhr); schauUhr = 0; }
-          if (schauId) schauZuSpaeter();
-        });
-      }
       k.addEventListener('click', ereignis => {
         /* Der Pfeil im Namen öffnet das Menü zum Stück, nicht das Stück. */
         if (ereignis.target instanceof Element &&

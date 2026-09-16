@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-587 Entscheidungen, E1 bis E608 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+587 Entscheidungen, E1 bis E609 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -650,7 +650,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E605** — Ein Tipp auf leeres Papier schreibt schon: wie in Word, ohne Werkzeug und ohne zweiten Klick
 * **E606** — Das Schreibfeld hält mehrere Formate: ein `<span>` je Lauf statt eines `<textarea>` (L172 geschlossen)
 * **E607** — Die Gedankenkarte: Knoten als HTML, Linien als SVG — gemessen statt geschätzt (Redurs „ich will auch das XMind erstellen können")
-* **E608** — Das Auge am Ordner ist weg; der Blick kommt vom Deckel selbst, mit Maus und mit Stift (E463 zurückgenommen, E508 umgehängt)
+* **E608** — ~~Das Auge am Ordner ist weg~~ — **zurückgenommen durch E609.** Der Eintrag bleibt stehen, damit niemand den Weg ein zweites Mal geht
+* **E609** — Die Ordnerkachel steht wieder genau wie vorher: Auge, Zwinkern, Bewegung, alles (E608 vollständig zurückgenommen)
 
 ---
 
@@ -49172,104 +49173,101 @@ Markdown-Gliederung). Alles davon steht als **L176** bis **L179** in
 
 ---
 
-## E608 — Das Auge am Ordner ist weg, der Blick bleibt
+## E608 — Das Auge am Ordner ist weg  ·  ZURÜCKGENOMMEN durch E609
 
-**Redurs Satz, 16. September 2026**, mit einem Bild der offenen Ordnerkarte:
-„wenn ich auf Ordner mit Maus gehe, sollte es sein [so] — mach die Augen weg
-und behalte nur so: wenn ich mit Maus drauf gehe, sollte sie mir zeigen, oder
-mit Laptop-Stift."
+**Dieser Eintrag beschreibt einen Weg, der wieder abgebaut wurde.** Er bleibt
+stehen, weil §35 gilt: eine bekannte Lücke ist besser als ein stiller Fehler,
+und ein zurückgenommener Weg ist die Lücke im Gedächtnis. Wer ihn nicht
+aufschreibt, geht ihn ein zweites Mal.
 
-**Entschieden:** Das Auge `.bib-blick` verschwindet. Was es zeigte — die
-Ordnerkarte — kommt beim Hinschauen auf den **Deckel selbst**, mit der Maus
-und mit dem Stift.
+**Was geschah:** Redur am 16. September 2026, mit einem Bild der offenen
+Ordnerkarte: „wenn ich auf Ordner mit Maus gehe, sollte es sein [so] — mach
+die Augen weg und behalte nur so: wenn ich mit Maus drauf gehe, sollte sie
+mir zeigen, oder mit Laptop-Stift."
 
-### Was damit zurückgenommen wird, und was nicht
+Daraufhin wurde das Auge `.bib-blick` entfernt und das Hinschauen an den
+Deckel gehängt, samt Stift-Unterstützung. Gebaut, geprüft (`test436` §7 neu,
+`test476` umgehängt), gegengeprüft, gebildert, gepusht als `70cf4503`.
 
-| | vorher | jetzt |
-|---|---|---|
-| Auge am Deckel (E463) | ja, 44 px, zwinkert | **weg** |
-| Klick aufs Auge öffnet die Karte (E463) | ja | weg — es gibt kein Auge |
-| Hinschauen öffnet die Karte (E508) | auf dem Auge | **auf dem Deckel** |
-| „Blick hinein" im ⌄-Menü (E459) | ja | **ja, unverändert** |
-| Klick auf den Deckel | geht in den Ordner | geht in den Ordner |
+**Noch am selben Tag, nach dem Bild:** „bringe es wieder komplett wie vorher
+mit Auge usw, mit Animationen, mit Bewegung, mit Anzeige, alles."
 
-**E463 ist in diesem einen Punkt zurückgenommen**, E508 ist umgehängt, E459
-steht unangetastet. Das ist kein Detail: E459 ist die Bedingung, unter der
-das Auge gehen durfte.
+Damit ist E608 vollständig zurückgenommen. Was sie inhaltlich sagte, steht
+unten in E609 unter „Was dabei mit verschwunden ist" — denn ein Fund
+verschwindet nicht, nur weil der Weg dorthin falsch war.
 
-### Warum das Auge gehen durfte, ohne §37 zu brechen
+---
 
-§37 sagt: kein Desktop-only für Kernfunktionen. Ein Blick in den Ordner, den
-es nur mit einer Maus gibt, wäre genau das — am Telefon gibt es kein
-Überfahren.
+## E609 — Die Ordnerkachel steht wieder genau wie vorher
 
-Der Weg mit dem Finger geht aber nicht verloren: **„Blick hinein" steht seit
-E459 im ⌄-Menü jedes Ordners und steht dort weiter.** `test476` §5 prüft
-genau diesen Weg und nichts anderes; `test436` §7 prüft ihn ein zweites Mal,
-nebenan. Ohne diesen Weg wäre das Entfernen des Auges kein Aufräumen
-gewesen, sondern ein Verlust.
+**Redurs Satz, 16. September 2026:** „bringe es wieder komplett wie vorher
+mit Auge usw, mit Animationen, mit Bewegung, mit Anzeige, alles."
 
-### Drei Zeigerarten, drei Antworten
+**Entschieden:** E608 wird vollständig zurückgenommen — nicht in Teilen,
+nicht „das Gute behalten".
 
-```txt
-Maus    öffnet nach 280 ms. Wie bisher.
-Stift   ebenso — aber OHNE die Abfrage `(hover: hover) and (pointer: fine)`.
-Finger  öffnet gar nicht per Überfahren.
-```
+### Wie, und warum genau so
 
-**Warum der Stift die Abfrage nicht bestehen muss.** `matchMedia('(hover:
-hover) and (pointer: fine)')` beschreibt den HAUPTZEIGER des Geräts. Auf
-einem Laptop mit Berührungsbildschirm ist das der Finger — die Abfrage sagt
-dort „kein Überfahren", und sie hätte damit genau den Stift ausgesperrt, den
-Redur ausdrücklich genannt hat. Für die Maus bleibt sie: ein Gerät ohne
-Zeiger meldet ohnehin kein `pointerenter`, und die Abfrage kostet dort
-nichts.
+`git revert 70cf4503`, ein einziger Griff über alle sechzehn Dateien. **Nicht
+von Hand zurückgebaut.** Der Grund steht in E604, und er hat schon einmal
+Geld gekostet: wer von Hand zurückbaut, entscheidet bei jeder Zeile neu, was
+„vorher" hiess — und behält dabei unweigerlich das, was ihm gefiel.
 
-**Und ein Tipp ist kein Hinschauen.** Beim Antippen mit Maus oder Stift
-kommt erst `pointerenter`, dann `pointerdown`. Ohne eine Absage liefe die
-Uhr weiter — wer in einen Ordner hineingeht, bekäme obendrein seine Karte
-aufgeklappt. `pointerdown` am Deckel löscht deshalb die Uhr.
-
-### Die Wartezeit bleibt bei 280 ms — und das ist der Punkt zum Nachmessen
-
-Die 280 ms sind aus E508 übernommen. Sie wurden für ein **44 px grosses
-Auge** gewählt; jetzt hängen sie an einer **ganzen Ordnerkachel**. Eine
-Kachel überstreicht man beim Weg über das Regal viel eher als ein Auge, und
-280 ms sind schnell vorbei.
-
-Die Zahl wurde trotzdem nicht angetastet: sie ist die, die Redur bei E508
-gutgeheissen hat, und eine Zahl im Vorbeigehen zu ändern, weil sie einem zu
-klein vorkommt, ist genau die Sorte Entscheidung, die §36 verbietet („erst
-messen, dann bauen"). Wenn sich beim Benutzen zeigt, dass Karten aufgehen,
-die niemand wollte, ist das eine Messung — und dann wird die Zahl geändert,
-mit ihrem Grund.
-
-### Geprüft
+Der Beweis steht daneben und ist nachrechenbar:
 
 ```txt
-test436 §7    8 Zusicherungen, neu geschrieben
-test476      29 Zusicherungen, umgehängt, §5 und §6 neu
+git diff codex/frei-text-auswahl --stat    →  leer
 ```
 
-Zwei Gegenproben (§55.2), beide gelaufen und rot gesehen:
+Kein Unterschied zum Stand vor E608. Zeichen für Zeichen, nicht „sieht gut
+aus".
 
-1. **Verdrahtung am Deckel abgeklemmt** — `test476` §1 wurde mit allen drei
-   Zusicherungen rot, `test436` §7 in zweien.
-2. **Stift wieder ausgesperrt** (nur `mouse`, dazu die Hover-Abfrage) —
-   `test476` §6 wurde in der zweiten Zusicherung rot, die erste blieb grün.
-   Genau das soll sie unterscheiden.
+### Was wieder da ist
 
-### Angesehen (§55.3)
+| | |
+|---|---|
+| Auge `.bib-blick` auf jedem Ordnerdeckel | ja, 44 px, oben links |
+| Zwinkern beim Darüberfahren (`bib-blick-zwinkern`) | ja |
+| Die Pupille schaut zur Seite (`translateX(-5px)`) | ja |
+| `prefers-reduced-motion` nimmt beides weg | ja |
+| Klick aufs Auge öffnet die Karte und hält sie | ja |
+| Hinschauen aufs Auge öffnet sie (E508) | ja |
+| `.bib-zelle` und die 13 Stilregeln | ja |
+| `test436` §7 und `test476` in ihrer alten Fassung | ja |
+| Die beiden Bildziele in `bilder.mts` | ja |
 
-`bilder/ordnerkarte-rechner-dunkel.png`: die Karte steht offen über dem
-Deckel, so wie in Redurs Bild — Name, Zähler, Suchfeld, die Blätter
-aufgefächert, „Ordner öffnen →". Und auf der Ordnerkachel darunter sitzt
-kein Knopf mehr.
+Und `doku/CSS-NAMENSRAEUME.md` steht wieder bei `bib 412` — die 397 waren
+die Zahl ohne das Auge.
 
-### Was dabei aus dem Stilblatt verschwunden ist
+### Was dabei mit verschwunden ist — und was das wert war
 
-`.bib-zelle`, `.bib-blick`, `.bib-blick-auge`, die Keyframes
-`bib-blick-zwinkern` und die zugehörige `prefers-reduced-motion`-Zeile.
-Die Stelle trägt jetzt einen Kommentar statt Regeln — wer sucht, warum das
-Auge weg ist, findet es dort und nicht nur hier. `doku/CSS-NAMENSRAEUME.md`
-ist nachgezählt: `bib` steht bei 397 statt 412.
+Drei Dinge aus E608 sind mit zurückgegangen. Sie stehen hier, damit sie
+nicht verloren sind, falls Redur eines davon später einzeln will:
+
+1. **Der Stift war nie absichtlich ausgesperrt.** Die Bedingung lautet
+   `pointerType !== 'mouse' || !zeigerHatHover()`. Beides schliesst einen
+   Stift aus: seine Art ist `pen`, und `(hover: hover) and (pointer: fine)`
+   beschreibt den HAUPTZEIGER des Geräts — auf einem Laptop mit
+   Berührungsbildschirm den Finger. Das ist ein echter Fund und er gilt
+   weiter; er steht jetzt als **L180** in `LUECKEN.md`.
+2. **Ein Tipp löscht die Aufklapp-Uhr nicht.** Beim Antippen kommt erst
+   `pointerenter`, dann `pointerdown` — die Uhr läuft weiter. Am Auge fällt
+   das kaum auf, weil ein Klick dort ohnehin die Karte öffnet. Ebenfalls
+   **L180**.
+3. Der Blick vom Deckel selbst. Das war der Teil, den Redur nicht wollte.
+
+### Die Lehre, und sie ist dieselbe wie bei E604
+
+E601 bis E603 wurden zurückgenommen, weil aus **einem** Satz Redurs **vier**
+Änderungen gemacht wurden. Hier war es anders: der Auftrag war eindeutig
+(„mach die Augen weg"), er wurde eins zu eins ausgeführt, und Redur hat nach
+dem Bild anders entschieden. Das ist kein Fehler im Ausführen, sondern der
+normale Weg — und genau deshalb war das Bild richtig, bevor es weiterging.
+
+Was daraus folgt, ist trotzdem etwas:
+
+> **Ein Bild vor dem Push ist besser als ein Bild nach dem Push.**
+
+Das Bild, auf dem die Ordnerkachel ohne Auge zu sehen war, ist erst nach dem
+Commit im Gespräch gelandet. Wäre es vorher dort gewesen, hätte dieser Bogen
+nicht stattgefunden. `bilder.mts` kostet zehn Sekunden.

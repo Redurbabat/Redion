@@ -8516,3 +8516,42 @@ um zu erfahren, wo er umgebrochen hat.
 
 **Ein Umweg, der heute schon geht:** die Seite drucken. Das ist keine Lösung,
 aber es ist keine Sackgasse.
+
+---
+
+## L180 · Der Stift öffnet den Blick in den Ordner nicht — 16. September 2026
+
+**Was fehlt:** Das Auge am Ordnerdeckel öffnet die Ordnerkarte beim
+Hinschauen (E508) — aber nur mit der **Maus**. Mit einem Laptop-Stift, der
+über dem Glas schwebt, passiert nichts.
+
+**Warum, nachgesehen und nicht vermutet.** Die Bedingung in
+`bibliothek.ts` lautet:
+
+```ts
+if (e.pointerType !== 'mouse' || !zeigerHatHover()) return;
+```
+
+Beides schliesst einen Stift aus, und zwar unabhängig voneinander:
+
+1. Seine Art ist `pen`, nicht `mouse`.
+2. `zeigerHatHover()` fragt `matchMedia('(hover: hover) and (pointer: fine)')`.
+   Das beschreibt den **Hauptzeiger** des Geräts — auf einem Laptop mit
+   Berührungsbildschirm ist das der Finger, und die Abfrage sagt dort „kein
+   Überfahren".
+
+**Und ein zweiter Punkt an derselben Stelle:** Beim Antippen kommt erst
+`pointerenter`, dann `pointerdown`. Es gibt keine Absage dazwischen, die Uhr
+läuft also weiter. Am Auge fällt das kaum auf, weil ein Klick dort ohnehin
+die Karte öffnet — es wäre aber überall dort ein Fehler, wo Tippen und
+Hinschauen Verschiedenes bedeuten.
+
+**Warum es noch offen ist:** Beides war in E608 gebaut und geprüft. E608 ist
+durch E609 vollständig zurückgenommen worden, weil Redur die Ordnerkachel
+wieder wie vorher wollte — der Fund ist damit zurück in die Lücke gefallen,
+nicht widerlegt. Er lässt sich jederzeit einzeln einsetzen, ohne am Auge
+etwas zu ändern: zwei Zeilen in `bibliothek.ts`.
+
+**Woran man merkt, dass er gebraucht wird:** Sobald jemand Redion mit einem
+Stift bedient — Surface, iPad mit Tastatur, Wacom. Genau das hat Redur am
+16. September genannt.
