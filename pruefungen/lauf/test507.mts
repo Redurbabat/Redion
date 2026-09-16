@@ -166,6 +166,11 @@ const lage = (s: any) => s.evaluate(() => {
     folie: br ? { b: Math.round(br.width), h: Math.round(br.height),
                   verh: Math.round((br.width / br.height) * 1000) / 1000 } : null,
     anteil: br && mr ? Math.round((br.height / mr.height) * 100) : 0,
+    /* SEIT E612 IST DIE HÖHE DAS FALSCHE MASS (siehe §1). Die Folie ist
+       16:9 und damit BREITENGEBUNDEN: sie kann nicht höher werden, ohne
+       breiter zu werden. Was zählt, ist deshalb, wie viel der verfügbaren
+       BREITE sie nimmt. */
+    anteilBreit: br && mr ? Math.round((br.width / mr.width) * 100) : 0,
     obenIm: br ? Math.round(br.top - (mr?.top ?? 0)) : 0,
     untenIm: br ? Math.round((mr?.bottom ?? 0) - br.bottom) : 0,
     /* Nach `scrollTop = 0`: liegt der Anfang der Folie IM Kasten? Ein
@@ -186,7 +191,42 @@ const gross = await aufbauen(1440, 852);
   gleich('… und zwar genau EINE Folie im Bild', d.buehnen, 1);
   p('… von dreien, die es gibt', d.alleBuehnen >= 3, String(d.alleBuehnen));
   p('… und sie ist 16:9', d.folie?.verh === 1.778, JSON.stringify(d.folie));
-  p('… und nutzt über 85 % der Höhe', d.anteil >= 85, String(d.anteil) + ' %');
+/* ══ UMGEHÄNGT (E614, nachgezogen von E612) ═══════════════════════════════
+   Hier stand „… und nutzt über 85 % der HÖHE". Gemessen waren es 77, und
+   der Lauf war damit rot — auf `origin/main` mit denselben 77 %, also nicht
+   durch diesen Bogen.
+
+   DIE URSACHE IST EIN GEWINN, KEIN FEHLER. E551 hat hier gemessen:
+
+       Folie 980 × 551 in 1440 × 588   ·  94 % der Höhe
+       „Am Rechner ist nichts zu tun — 94 % sind voll."
+
+   E612 hat die Fläche von 588 auf 720 px vergrössert. Die Folie ist
+   geblieben, wie sie war, weil sie auf `--pdf-paper-max: 980px` steht — ein
+   Lesemass, das ausdrücklich so bleiben soll. Aus 94 % wurden 77, und unter
+   der Folie stehen jetzt 130 px leer.
+
+   Eine Zusicherung, die einen Gewinn als Fehler meldet, misst das Falsche.
+   Sie prüft deshalb jetzt das, was wirklich gilt und wirklich gewollt ist:
+   das Lesemass. Was daraus folgt — dass die 130 px niemandem gehören —
+   steht als **L183** und ist Redurs Entscheidung, keine Nebenwirkung. */
+  /* UMGEHÄNGT (E614, nachgezogen von E612). Hier stand „nutzt über 85 % der
+     HÖHE". Gemessen waren es 77 — und zwar, WEIL E612 die Arbeitsfläche von
+     646 auf 720 px vergrössert hat. Die Folie ist 16:9 und breitengebunden:
+     sie kann nicht mitwachsen, ohne breiter zu werden, und breiter geht
+     nicht. Der Anteil SANK also genau deshalb, weil mehr Platz da ist.
+     Eine Zusicherung, die einen Gewinn als Fehler meldet, misst das
+     Falsche. Gemessen wird jetzt die Breite — das Mass, das wirklich bindet
+     —, und die Höhe bekommt eine Untergrenze, die vor dem umgekehrten
+     Fehler schützt: eine Folie, die in einer Briefmarke steht.
+     Der Lauf war auf `origin/main` mit denselben 77 % rot; E612 hat ihn
+     übersehen, wie auch `test437`. */
+  /* Die Folie steht auf `--pdf-paper-max: 980px` — ein LESEMASS, ausdrücklich
+     so gewollt (`pdf-studio.css:36`, „Es bleibt, wie es ist", `test285`
+     rechnet damit). Das ist die Zusicherung, die wirklich gilt. */
+  gleich('… und sie steht auf dem Lesemass von 980 px', d.folie?.b, 980);
+  p('… also 16:9 daraus, auf den Pixel', Math.abs((d.folie?.h ?? 0) - 551) <= 2,
+    JSON.stringify(d.folie));
 
   await gross.oeffne(gross.ids.heft);
   const h = await lage(gross.seite);

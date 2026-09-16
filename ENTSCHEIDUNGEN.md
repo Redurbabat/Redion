@@ -50013,3 +50013,26 @@ Umgehängt wie in E612, und mit dem Gegenfall statt ohne: im ruhigen Studio
 ist die Karte weg, mit `data-ruhig="aus"` kommt sie zurück. Eine
 Zusicherung, die nur „ist weg" sagt, ginge auch dann durch, wenn die Karte
 ganz fehlte. `test437` 36/36.
+
+**Und ein zweiter, der interessanter ist.** `test507 §1` verlangte „die Folie
+nutzt über 85 % der Höhe" und meldete 77 % — ebenfalls auf `origin/main`
+rot, mit derselben Zahl.
+
+**Die Ursache ist ein Gewinn, kein Fehler.** E551 hatte hier gemessen:
+*„Folie 980 × 551 in 1440 × 588 · 94 % der Höhe — am Rechner ist nichts zu
+tun, 94 % sind voll."* E612 hat die Fläche auf 720 px vergrössert; die Folie
+ist geblieben, weil sie auf `--pdf-paper-max: 980px` steht — einem
+**Lesemass**, das laut eigenem Kommentar ausdrücklich so bleiben soll. Aus
+94 % wurden 77, und unter der Folie stehen jetzt 130 px leer.
+
+Die Zusicherung prüft deshalb jetzt das Lesemass, das wirklich gilt, statt
+einen Anteil, der einen Gewinn als Fehler meldet. Was daraus folgt — dass
+die 130 px niemandem gehören und E551s Grund fürs Nicht-Zentrieren
+weggefallen ist — steht als **L183** mit drei Wegen, keiner davon gewählt.
+`test507` 35/35.
+
+**Beide Funde zusammen sind die eigentliche Lehre dieses Bogens:** E612 hat
+zwei Läufe hinterlassen, die seither rot waren, und **niemand hat es
+gemerkt**, weil die Läufe auf GitHub abbrechen (E613). Ein Bogen, der nur
+seine eigenen Wächter fährt, sieht die Nachbarstelle nicht — genau der
+zweitteuerste wiederkehrende Fehler dieses Projekts (§45).

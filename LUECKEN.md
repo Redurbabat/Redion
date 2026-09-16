@@ -8701,3 +8701,53 @@ ist eine Entscheidung und keine Nebenwirkung:
 1400 px, wo die Zubehörzeile voll ist und er als Einzelgänger umbricht.
 Breiter fällt er in die zweite Zeile zurück, schmaler rollt die Leiste
 ohnehin.
+
+L183 · Unter der Folie stehen 130 px, die niemandem gehören — 16. September 2026
+--------------------------------------------------------------------------
+
+**Ein Nebenprodukt von E612, gefunden durch einen roten Lauf, nicht durch
+Hinsehen.** `test507 §1` verlangte „die Folie nutzt über 85 % der Höhe" und
+meldete 77 %. Der Lauf war auf `origin/main` mit derselben Zahl rot — E612
+hat ihn übersehen, wie auch `test437`.
+
+**Gemessen** (1440 × 852, Foliensatz, stehende Folie):
+
+```txt
+                    vor E612            nach E612
+Arbeitsfläche       1440 × 588          1440 × 720
+Folie                980 × 551           980 × 551
+Anteil Höhe              94 %                77 %
+Anteil Breite            68 %                68 %
+leer darunter            ~10 px              130 px
+```
+
+**Die Folie ist weder breiten- noch höhengebunden.** Sie steht auf
+`--pdf-paper-max: 980px` (`pdf-studio.css:36`) — ein **Lesemass**, kein
+Zufall: der Kommentar dort sagt „KEINE FARBE, sondern ein Lesemass — und
+`test285.mts:223` rechnet damit. Es bleibt, wie es ist."
+
+**Warum das jetzt drückt und vorher nicht.** E551 hat an genau dieser Stelle
+gemessen und geschlossen: *„Am Rechner ist nichts zu tun — 94 % sind voll"*
+— und daraus folgte die zweite Entscheidung, am Rechner **nicht** zu
+zentrieren (`safe center` fällt dort auf `start` zurück). Beide Sätze standen
+auf den 588 px von damals. Seit E612 sind es 720, und damit steht die Folie
+oben mit 130 px Leere darunter.
+
+**Die drei Möglichkeiten, keine davon entschieden:**
+
+1. **Zentrieren statt oben.** Die kleinste Änderung: E551s Grund für `start`
+   ist weggefallen, die Leere verteilt sich auf oben und unten. Ändert
+   nichts an der Grösse — nur an der Lage. Achtung: `safe center` war gegen
+   kurze Fenster gebaut (gemessen −28, −204, −464 px), die Vorsicht bleibt
+   nötig.
+2. **Das Lesemass für den Foliensatz anheben.** Bei 720 px Fläche passte
+   eine Folie von rund 1156 × 650 hinein — 80 % der Breite eines
+   1440er-Bildschirms. Das dreht das Lesemass für DIESEN einen Fall um, und
+   `test285` rechnet damit; es wäre ein eigener Eintrag nach dem Muster von
+   E554.
+3. **So lassen.** 130 px Luft unter einer Folie sind kein Fehler, und
+   Redurs Bitte galt der Bedienung über der Folie, nicht der Folie selbst.
+
+**Woran man merkt, dass es drückt:** an jedem breiten Bildschirm im
+Foliensatz — die Folie klebt oben, darunter steht ein Streifen Nichts.
+Am Telefon nicht: dort steht sie seit E551 mittig.
