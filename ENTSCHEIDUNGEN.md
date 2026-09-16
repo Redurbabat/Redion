@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-584 Entscheidungen, E1 bis E605 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+585 Entscheidungen, E1 bis E606 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -648,6 +648,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E603** — Die Ordnerkarte verwandelt sich nicht mehr unter der Maus: vier Wirkungen beim Darüberfahren zurückgenommen (**zurückgenommen, siehe E604**)
 * **E604** — Redur hat die Geschichte der Kachel gesehen und sich entschieden: die main-Fassung, mit Bewegung und mit Auge
 * **E605** — Ein Tipp auf leeres Papier schreibt schon: wie in Word, ohne Werkzeug und ohne zweiten Klick
+* **E606** — Das Schreibfeld hält mehrere Formate: ein `<span>` je Lauf statt eines `<textarea>` (L172 geschlossen)
 
 ---
 
@@ -48951,3 +48952,83 @@ Hälfte genau das, was sie soll.
 
 Der Lauf steht damit bei 36 Zusicherungen. Er ist der Lauf für das freie
 Schreiben, von E597 bis hierher.
+
+---
+
+## E606 — Das Schreibfeld hält mehrere Formate
+
+**16. September 2026.** Redur: „L172 weiter." Das ist die Lücke, die E597
+selbst aufgerissen hat.
+
+### Was sie war
+
+So kommt Text aus einer `.pptx`: ein Kasten trägt `laeufe` — je Stück ein
+eigenes Format (E561). Ein Absatz wie
+
+```txt
+Klein GROSS rot
+  Klein   16 pt
+  GROSS   30 pt, fett
+   rot    16 pt, #CC0000
+```
+
+ging beim Ändern auf **ein** Format zusammen. Der Grund war ehrlich im Code
+notiert: das Schreibfeld war ein `<textarea>` und hält nur reinen Text. Also
+bekam der Kasten das Format seines ersten Stücks, und zwei Drittel der
+Gestaltung waren weg.
+
+### Was jetzt da ist
+
+Das Feld ist ein `contenteditable` mit **einem `<span>` je Lauf**. Was der
+Browser beim Tippen mit den Spans macht, ist genau das, was ein Mensch
+erwartet: hineingetippt verlängert das Stück, über eine Grenze hinweg
+gelöscht führt sie zusammen, ans Ende getippt erbt das Format der Stelle —
+wie in Word.
+
+Zurückgelesen wird mit `feldLesen`: es läuft die Knoten ab, sammelt Text und
+Format, fasst gleiche Formate nebeneinander zu einem Lauf zusammen (dieselbe
+Regel, die `laufSatz` beim Zeichnen anwendet) und macht aus `<br>` und aus
+einem Block je eine Zeile.
+
+**Ein gewöhnlicher Kasten bleibt ein gewöhnlicher Kasten.** Läufe werden nur
+gespeichert, wenn wenigstens einer ein eigenes Format hat — jede schon
+geschriebene Marke sieht damit unverändert aus (§9).
+
+### Die Sicherheitsfrage, und sie ist beantwortet (§19)
+
+Ein `contenteditable` nimmt sonst alles, was in der Zwischenablage liegt —
+samt Elementen und Stilen. Zwei Riegel:
+
+1. **Eingefügt wird nur reiner Text.** `paste` wird abgefangen, und der Text
+   geht über `insertText` hinein; er erbt das Format der Stelle. `drop`
+   ebenso. Damit kann über die Zwischenablage kein Markup ins Feld gelangen.
+2. **Gelesen werden nur die eigenen Marken.** `feldLesen` sieht ausschliesslich
+   `data-sz`, `data-fett`, `data-farbe`, `data-schrift` an — nie ein `style`,
+   nie ein `class`, nie ein Element. Und die Farbe wird geprüft, bevor sie
+   gespeichert wird: was kein `#rrggbb` und kein `rgb(...)` ist, fällt weg.
+
+Der Weg in die Marke ist damit so eng wie beim `<textarea>` vorher, nur dass
+jetzt vier bekannte Zahlen und Zeichenketten mitreisen statt keiner.
+`test201` §4 fährt weiterhin `<img src=x onerror=1>` durch das Feld und
+prüft, dass daraus kein Element wird.
+
+### Geprüft
+
+`test527` §16, sieben Zusicherungen: drei Läufe hinein, ans Ende getippt,
+drei Läufe heraus — mit 30 pt und fett am richtigen Stück und `#CC0000` am
+richtigen. Gegen den Stand davor waren **vier davon rot** (das Feld zeigte
+keine Stücke, und nach dem Ändern war `laeufe` ganz weg).
+
+Und ein Bild, weil es etwas zu sehen gibt (§55.3): der Kasten sieht im Feld
+aus wie danach auf dem Blatt — „Klein" klein, „GROSS" gross und fett, „rot
+und weiter" rot.
+
+### Was es nicht kann
+
+Ein Stück markieren und ihm ein NEUES Format geben. „Fett" in der Leiste
+wirkt weiter auf den ganzen Kasten (E599). Das ist eine andere Aufgabe —
+Textknoten an den Auswahlgrenzen teilen, Spans einziehen, benachbarte
+gleicher Art wieder zusammenfassen — und sie steht als **L175**.
+`execCommand` täte es in zwei Zeilen und ist genau deshalb nicht der Weg: es
+erzeugt `<b>`, `<font>` und verschachtelte Spans, die `feldLesen` nicht
+kennt.

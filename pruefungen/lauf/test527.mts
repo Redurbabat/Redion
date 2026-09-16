@@ -26,6 +26,7 @@
  * §14 ZWEIMAL AUF LEERES PAPIER heisst: hier schreiben — auch mit der Auswahl (E599).
  * §15 EIN EINZIGER TIPP genügt, wie in Word (E605) — aber nicht der erste
  *     nach einer Auswahl: der hebt sie auf.
+ * §16 MEHRERE FORMATE in einem Kasten überleben das Ändern (L172).
  *
  * ZWEI DINGE, DIE BEIM SCHREIBEN DIESES LAUFS GEMESSEN WURDEN:
  *
@@ -104,7 +105,7 @@ try {
   console.log('\n1 · Ein Tipp öffnet kein Fenster, sondern ein Schreibfeld auf dem Blatt');
   await tippe(120, 160);
   const nachTipp = await page.evaluate(() => {
-    const feld = document.querySelector<HTMLTextAreaElement>('.blatt-schreiber');
+    const feld = document.querySelector<HTMLElement>('.blatt-schreiber');
     return { overlays: document.querySelectorAll('.overlay').length,
       feld: !!feld, fokus: !!feld && document.activeElement === feld };
   });
@@ -157,9 +158,9 @@ try {
   await page.keyboard.type('Zweiter Kasten');
   await tippe(350, 260);
   const zweiTipps = await page.evaluate(() => {
-    const feld = document.querySelector<HTMLTextAreaElement>('.blatt-schreiber');
+    const feld = document.querySelector<HTMLElement>('.blatt-schreiber');
     return { felder: document.querySelectorAll('.blatt-schreiber').length,
-      leer: (feld?.value || '') === '' };
+      leer: (feld?.textContent || '') === '' };
   });
   pr('Es steht immer nur EIN Schreibfeld offen', zweiTipps.felder === 1,
     zweiTipps.felder + ' Felder');
@@ -179,7 +180,7 @@ try {
   console.log('\n6 · Ein vorhandener Text wird an Ort und Stelle weitergeschrieben');
   await tippe(130, 340);
   const beimOeffnen = await page.evaluate(() =>
-    document.querySelector<HTMLTextAreaElement>('.blatt-schreiber')?.value ?? null);
+    document.querySelector<HTMLElement>('.blatt-schreiber')?.textContent ?? null);
   pr('Der Tipp auf einen vorhandenen Text öffnet ihn statt ihn zu überschreiben',
     beimOeffnen === 'Zweiter Kasten', JSON.stringify(beimOeffnen));
   await page.keyboard.press('End');
@@ -238,7 +239,7 @@ try {
     }
   }
   const beimDoppel = await page.evaluate(() =>
-    document.querySelector<HTMLTextAreaElement>('.blatt-schreiber')?.value ?? null);
+    document.querySelector<HTMLElement>('.blatt-schreiber')?.textContent ?? null);
   pr('Zwei Tipps auf einen Text öffnen ihn, ohne das Werkzeug zu wechseln',
     beimDoppel === 'Zweiter Kasten — erweitert', JSON.stringify(beimDoppel));
   await page.keyboard.press('Escape');
@@ -277,7 +278,7 @@ try {
   await page.waitForTimeout(250);
   await tippe(60, 520);
   const feldZeilen = await page.evaluate(() => {
-    const feld = document.querySelector<HTMLTextAreaElement>('.blatt-schreiber');
+    const feld = document.querySelector<HTMLElement>('.blatt-schreiber');
     if (!feld) return null;
     const stil = getComputedStyle(feld);
     const innen = feld.scrollHeight - parseFloat(stil.paddingTop) - parseFloat(stil.paddingBottom);
@@ -287,7 +288,7 @@ try {
   await page.keyboard.type('Ein Klick, und ich schreibe schon.');
   await page.waitForTimeout(150);
   const imFeld = await page.evaluate(() => {
-    const feld = document.querySelector<HTMLTextAreaElement>('.blatt-schreiber');
+    const feld = document.querySelector<HTMLElement>('.blatt-schreiber');
     if (!feld) return -1;
     const stil = getComputedStyle(feld);
     const innen = feld.scrollHeight - parseFloat(stil.paddingTop) - parseFloat(stil.paddingBottom);
@@ -413,10 +414,10 @@ try {
   await page.locator('[data-act="groesser"]').first().click();
   await page.waitForTimeout(250);
   const nachher = await page.evaluate(({ hoehe }) => {
-    const feld = document.querySelector<HTMLTextAreaElement>('.blatt-schreiber');
+    const feld = document.querySelector<HTMLElement>('.blatt-schreiber');
     if (!feld) return null;
     const raum = document.querySelector('.blatt-marken')!.getBoundingClientRect();
-    return { px: parseFloat(getComputedStyle(feld).fontSize), wert: feld.value,
+    return { px: parseFloat(getComputedStyle(feld).fontSize), wert: feld.textContent || '',
       skala: raum.height / hoehe };
   }, { hoehe: HOEHE });
   pr('Das offene Feld wird sofort grösser', !!nachher && nachher.px > vorher,
@@ -507,7 +508,73 @@ try {
   pr('… und legt auch keine Marke an', nachAbwahl.length === markenVorAbwahl,
     markenVorAbwahl + ' → ' + nachAbwahl.length);
 
-  console.log('\n16 · Und nichts ist dabei kaputtgegangen');
+  console.log('\n16 · Mehrere Formate in einem Kasten überleben das Ändern (L172)');
+  /* SO KOMMT TEXT AUS EINER .pptx: ein Kasten trägt `laeufe` — je Stück ein
+     eigenes Format (E561). Bis hierher fiel das beim Ändern zusammen: das
+     Schreibfeld war ein `<textarea>` und hielt nur reinen Text, also bekam
+     der Kasten das Format seines ERSTEN Stücks und sonst nichts.
+     WARUM DAS ROT WERDEN KANN: gegen ein Feld ohne Formate stehen hier
+     hinterher ein Lauf statt drei und ein fehlendes Rot. */
+  /* EINE EIGENE SEITE für diesen Abschnitt: die Seiten davor sind voll, und
+     ein Tipp, der aus Versehen einen Nachbarkasten trifft, prüft etwas
+     anderes als er behauptet — das ist diesem Lauf heute schon zweimal
+     passiert. Der Kasten steht bei (60/120), also sicher im Fenster. */
+  const laufIds = await page.evaluate(async ({ breite, hoehe }) => {
+    const seite = Store.addPage(null, { text: 'Kasten mit Läufen', icon: '🎨' });
+    const blatt = Store.addBlock(seite.id, 'blatt', { text: '', papier: 'blanko',
+      blattBreite: breite, blattHoehe: hoehe, raumVersion: 1,
+      marken: [{ id: 'lauf1', art: 'text', point: [60, 120], text: 'Klein GROSS rot',
+        farbe: '#111111', fontSize: 16, breiteBox: 380, schrift: 'standard',
+        laeufe: [ { text: 'Klein ', sz: 16, fett: false, farbe: '', schrift: 'standard' },
+                  { text: 'GROSS', sz: 30, fett: true, farbe: '', schrift: 'standard' },
+                  { text: ' rot', sz: 16, fett: false, farbe: '#CC0000', schrift: 'standard' } ] }] });
+    Store.updateBlock(seite.id, { dokumentModus: true });
+    await Store.flush(); App.oeffne(seite.id);
+    return { seite: seite.id, blatt: blatt.id };
+  }, { breite: BREITE, hoehe: HOEHE });
+  await page.waitForSelector('.document-drawingbar');
+  await page.waitForTimeout(500);
+  const mitLaeufen = await page.evaluate(id =>
+    ((Store.getBlock(id)?.marken || [])[0]?.laeufe || []).length, laufIds.blatt);
+  pr('Die Probe trägt drei Läufe', mitLaeufen === 3, String(mitLaeufen));
+  await page.locator('[data-document-tool="text"]').click();
+  await page.waitForTimeout(250);
+  await tippe(70, 130);
+  const imFeldLaeufe = await page.evaluate(() => {
+    const feld = document.querySelector<HTMLElement>('.blatt-schreiber');
+    if (!feld) return null;
+    return { text: feld.textContent,
+      stuecke: feld.querySelectorAll('[data-lauf]').length };
+  });
+  pr('Der Kasten öffnet sich mit seinem vollen Text',
+    !!imFeldLaeufe && String(imFeldLaeufe.text) === 'Klein GROSS rot',
+    JSON.stringify(imFeldLaeufe));
+  pr('… und das Feld zeigt die drei Stücke als eigene Teile',
+    !!imFeldLaeufe && imFeldLaeufe.stuecke === 3, JSON.stringify(imFeldLaeufe));
+  /* Ans Ende tippen — das ist die Änderung, an der es bisher zerfiel. */
+  await page.keyboard.press('Control+End');
+  await page.keyboard.type(' und mehr');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(350);
+  const danach = await page.evaluate(id => {
+    const m = (Store.getBlock(id)?.marken || []).find((x: any) => x.id === 'lauf1');
+    return m ? JSON.parse(JSON.stringify({ text: m.text, laeufe: m.laeufe || null })) : null;
+  }, laufIds.blatt);
+  pr('Der neue Text steht im Kasten',
+    !!danach && String(danach.text).startsWith('Klein GROSS rot') && /und mehr/.test(String(danach.text)),
+    JSON.stringify(danach?.text));
+  pr('Die Läufe sind NICHT zusammengefallen',
+    !!danach?.laeufe && danach.laeufe.length >= 3,
+    JSON.stringify(danach?.laeufe?.length));
+  pr('Das grosse Stück ist weiter gross und fett',
+    !!danach?.laeufe?.some((l: any) => l.text === 'GROSS' && Number(l.sz) === 30 && l.fett === true),
+    JSON.stringify(danach?.laeufe));
+  pr('Und das rote Stück ist weiter rot',
+    !!danach?.laeufe?.some((l: any) => /rot/.test(String(l.text))
+      && String(l.farbe).toUpperCase() === '#CC0000'),
+    JSON.stringify(danach?.laeufe));
+
+  console.log('\n17 · Und nichts ist dabei kaputtgegangen');
   pr('Keine Seitenfehler', errors.length === 0, errors.slice(0, 3).join(' · '));
 } catch (fehler) {
   failed++;
