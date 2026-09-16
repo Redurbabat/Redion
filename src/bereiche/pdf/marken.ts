@@ -2887,8 +2887,89 @@ const Marken = (() => {
        (`.blatt-papier` oder `.blatt-flur`) steht auf `position:relative` und
        deckt genau denselben Kasten; dort gerechnet stimmt die Stelle, und
        die Schrift bleibt Schrift. */
-    type Schreiber = { feld: HTMLTextAreaElement; ziel: string; before: any[];
+    type Schreiber = { feld: HTMLElement; ziel: string; before: any[];
                        entwurf: any; beobachter: ResizeObserver | null };
+
+    /* ══ EIN KASTEN MIT MEHREREN FORMATEN (E606, L172) ══════════════════════
+       So kommt Text aus einer `.pptx`: ein Kasten trägt `laeufe`, je Stück
+       ein eigenes Format (E561). Bis hierher fiel das beim Ändern zusammen —
+       das Schreibfeld war ein `<textarea>` und hält nur reinen Text.
+
+       JETZT IST DAS FELD EIN `contenteditable`, und jeder Lauf ist ein
+       `<span>` darin. Was der Browser beim Tippen mit den Spans macht, ist
+       genau das, was ein Mensch erwartet: hineingetippt verlängert das
+       Stück, über eine Grenze hinweg gelöscht führt sie zusammen.
+
+       DIE SICHERHEITSFRAGE, UND SIE IST BEANTWORTET (§19): gelesen werden
+       beim Übernehmen NUR die `data-*`-Marken, die dieser Code selbst
+       gesetzt hat — nie ein `style`, nie ein `class`, nie ein Element.
+       Eingefügt wird ausserdem nur REINER Text (`paste` unten). Damit kann
+       durch dieses Feld kein Markup in eine Marke gelangen, auch nicht über
+       die Zwischenablage. Die Farbe wird zusätzlich geprüft, bevor sie
+       gespeichert wird: was kein `#rrggbb` und kein `rgb(...)` ist, fällt
+       weg. */
+    const farbeGueltig = (wert: unknown): string => {
+      const w = String(wert || '').trim();
+      return /^#[0-9a-fA-F]{3,8}$/.test(w) || /^rgba?\([\d\s.,%]+\)$/.test(w) ? w : '';
+    };
+    const laeufeVon = (mark: any): any[] | null =>
+      Array.isArray(mark?.laeufe) && mark.laeufe.length ? mark.laeufe : null;
+
+    /** Das Feld aus einer Marke füllen — je Lauf ein `<span>` mit Format. */
+    const feldFuellen = (feld: HTMLElement, mark: any): void => {
+      feld.textContent = '';
+      const laeufe = laeufeVon(mark);
+      if (!laeufe) { feld.append(document.createTextNode(textVon(mark))); return; }
+      for (const l of laeufe) {
+        const stueck = document.createElement('span');
+        stueck.dataset.lauf = '1';
+        const sz = Number(l?.sz) || 0;
+        if (sz > 0) stueck.dataset.sz = String(sz);
+        if (l?.fett) { stueck.dataset.fett = '1'; stueck.style.fontWeight = '700'; }
+        const farbe = farbeGueltig(l?.farbe);
+        if (farbe) { stueck.dataset.farbe = farbe; stueck.style.color = farbe; }
+        if (l?.schrift) stueck.dataset.schrift = String(l.schrift);
+        stueck.textContent = String(l?.text ?? '');
+        feld.appendChild(stueck);
+      }
+    };
+
+    /** Was im Feld steht — als Text und als Läufe. */
+    const feldLesen = (feld: HTMLElement): { text: string; laeufe: any[] } => {
+      const laeufe: any[] = [];
+      let text = '';
+      const anhaengen = (stueck: string, form: any): void => {
+        if (!stueck) return;
+        text += stueck;
+        const letzter = laeufe[laeufe.length - 1];
+        /* Gleiches Format nebeneinander wird EIN Lauf — dieselbe Regel, die
+           `laufSatz` beim Zeichnen anwendet (geometry.ts). */
+        if (letzter && letzter.sz === form.sz && letzter.fett === form.fett
+            && letzter.farbe === form.farbe && letzter.schrift === form.schrift) {
+          letzter.text += stueck; return;
+        }
+        laeufe.push({ text: stueck, ...form });
+      };
+      const gehe = (knoten: Node, form: any): void => {
+        for (const kind of Array.from(knoten.childNodes)) {
+          if (kind.nodeType === 3) { anhaengen(kind.nodeValue || '', form); continue; }
+          const el = kind as HTMLElement;
+          if (!el.tagName) continue;
+          if (el.tagName === 'BR') { anhaengen('\n', form); continue; }
+          /* Enter macht im `contenteditable` einen Block. Für uns ist das
+             eine Zeile — ausser beim allerersten, der die erste Zeile IST. */
+          if ((el.tagName === 'DIV' || el.tagName === 'P') && text && !text.endsWith('\n'))
+            anhaengen('\n', form);
+          gehe(el, {
+            sz: Number(el.dataset?.sz) || form.sz,
+            fett: el.dataset?.fett === '1' ? true : form.fett,
+            farbe: farbeGueltig(el.dataset?.farbe) || form.farbe,
+            schrift: el.dataset?.schrift || form.schrift });
+        }
+      };
+      gehe(feld, { sz: 0, fett: false, farbe: '', schrift: '' });
+      return { text, laeufe };
+    };
     let schreiber: Schreiber | null = null;
 
     /**
@@ -2974,8 +3055,15 @@ const Marken = (() => {
         : layout.ausricht === 'rechts' ? 'right' : 'left';
       feld.style.color = String(marke.farbe || color);
       /* Mitwachsen wie der Kasten, den er später zeichnet. */
-      feld.style.height = 'auto';
-      feld.style.height = Math.max(feld.scrollHeight, (layout.height * sy) / zoom).toFixed(2) + 'px';
+      /* Ein `div` wächst von selbst; gesetzt wird nur die Mindesthöhe, damit
+         ein leerer Kasten so gross ist wie der, den er später zeichnet. */
+      feld.style.minHeight = ((layout.height * sy) / zoom).toFixed(2) + 'px';
+      /* Und jeder Lauf bekommt seine eigene Grösse — im selben Massstab wie
+         das Feld, sonst stünde ein 30-pt-Stück in 16 pt da. */
+      feld.querySelectorAll<HTMLElement>('[data-sz]').forEach(stueck => {
+        const sz = Number(stueck.dataset.sz) || 0;
+        if (sz > 0) stueck.style.fontSize = ((sz * sy) / zoom).toFixed(2) + 'px';
+      });
     };
 
     /**
@@ -2992,7 +3080,13 @@ const Marken = (() => {
          genau hier wieder herein. */
       schreiber = null;
       offen.beobachter?.disconnect();
-      const text = offen.feld.value;
+      const gelesen = feldLesen(offen.feld);
+      const text = gelesen.text;
+      /* Läufe nur behalten, wenn wenigstens EINER ein eigenes Format hat.
+         Ein gewöhnlicher Kasten bleibt sonst ein gewöhnlicher Kasten — und
+         jede schon geschriebene Marke sieht unverändert aus (§9). */
+      const neueLaeufe = gelesen.laeufe.some((l: any) => l.sz || l.fett || l.farbe || l.schrift)
+        ? gelesen.laeufe : null;
       const node = offen.ziel ? nodeFor(offen.ziel) : null;
       node?.removeAttribute('data-schreibt');
       offen.feld.remove();
@@ -3000,27 +3094,21 @@ const Marken = (() => {
       if (platz >= 0) {
         const alt = marks[platz];
         if (!text.trim()) marks.splice(platz, 1);
-        else if (String(alt.text || '') !== text) {
-          /* MEHRERE FORMATE IN EINEM ABSATZ (E561) fallen beim Ändern
-             zusammen: `laeufe` trägt die Auszeichnung je Stück, und ein
-             reines Textfeld kann nicht sagen, welches Stück der neue Satz
-             ist. Stehen zu lassen wäre schlimmer — `textLayout` zeigt dann
-             weiter den ALTEN Text, und die Änderung wäre unsichtbar
-             verschluckt. Also fallen sie, und der Kasten behält Grösse,
-             Fett und Farbe seines ersten Stücks. Steht als L172. */
-          const erstes = Array.isArray(alt.laeufe) ? alt.laeufe[0] : null;
+        else if (String(alt.text || '') !== text
+                 || JSON.stringify(alt.laeufe ?? null) !== JSON.stringify(neueLaeufe)) {
+          /* MEHRERE FORMATE IN EINEM ABSATZ (E561) BLEIBEN JETZT STEHEN
+             (E606, L172 geschlossen). Bis zum 16. September fielen sie hier
+             auf das Format des ersten Stücks zusammen, weil ein `<textarea>`
+             nur reinen Text halten kann. Das Feld ist seither ein
+             `contenteditable` mit einem `<span>` je Lauf, und `feldLesen`
+             holt sie unverändert zurück. */
           const neu: any = { ...alt, text };
-          if (erstes) {
-            delete neu.laeufe;
-            if (erstes.fontSize) neu.fontSize = erstes.fontSize;
-            if (erstes.bold !== undefined) neu.fett = !!erstes.bold;
-            if (erstes.farbe) neu.farbe = erstes.farbe;
-          }
+          if (neueLaeufe) neu.laeufe = neueLaeufe; else delete neu.laeufe;
           ersetze(platz, neu);
         } else { redraw(); return; }
       } else {
         if (!text.trim()) { redraw(); return; }
-        marks.push({ ...offen.entwurf, text });
+        marks.push({ ...offen.entwurf, text, ...(neueLaeufe ? { laeufe: neueLaeufe } : {}) });
       }
       redraw();
       commit(offen.before);
@@ -3078,11 +3166,16 @@ const Marken = (() => {
           rahmen: schrift.rahmen,
           ...(schrift.ausricht !== 'links' ? { ausricht: schrift.ausricht } : {}) };
       }
-      const feld = document.createElement('textarea');
+      const feld = document.createElement('div');
       feld.className = 'blatt-schreiber';
+      feld.contentEditable = 'true';
+      /* Ein `contenteditable` ist für ein Vorleseprogramm nichts, solange es
+         nicht sagt, was es ist (§38). */
+      feld.setAttribute('role', 'textbox');
+      feld.setAttribute('aria-multiline', 'true');
       feld.setAttribute('aria-label', vorhanden ? 'Text bearbeiten' : 'Text schreiben');
       feld.spellcheck = false;
-      feld.value = vorhanden ? textVon(vorhanden) : '';
+      if (vorhanden) feldFuellen(feld, vorhanden);
       raum.appendChild(feld);
       /* Die gezeichnete Marke tritt zurück, solange das Feld sie zeigt —
          sonst stünde derselbe Satz zweimal übereinander. */
@@ -3095,6 +3188,18 @@ const Marken = (() => {
       schreiber = { feld, ziel: vorhanden ? idOf(vorhanden) : '', before, entwurf, beobachter };
       schreiberLegen();
       feld.addEventListener('input', () => schreiberLegen());
+      /* ══ EINGEFÜGT WIRD NUR REINER TEXT (§19, E606) ══════════════════════
+         Ein `contenteditable` nimmt sonst alles, was in der Zwischenablage
+         liegt — samt Elementen, Stilen und allem, was daran hängt. Der
+         eingefügte Text erbt das Format der Stelle, an der er landet; genau
+         das tut Word auch bei „Nur den Text übernehmen". */
+      feld.addEventListener('paste', event => {
+        event.preventDefault();
+        const roh = (event as ClipboardEvent).clipboardData?.getData('text/plain') || '';
+        if (roh) document.execCommand('insertText', false, roh);
+      });
+      /* Ziehen und Ablegen ebenso: was hineinfällt, wäre HTML. */
+      feld.addEventListener('drop', event => event.preventDefault());
       /* ══ EIN GRIFF AN DIE WERKZEUGLEISTE IST KEIN VERLASSEN (E599) ═══════
          GEMESSEN: „A+ Grösser" antippen, während man schreibt, schloss den
          Kasten — der Knopf nimmt den Fokus, `blur` kommt, und das Feld war
@@ -3134,8 +3239,17 @@ const Marken = (() => {
         event.stopPropagation();
       });
       feld.focus({ preventScroll: true });
-      /* Der Cursor ans Ende, damit Weiterschreiben wirklich weiter heisst. */
-      try { feld.setSelectionRange(feld.value.length, feld.value.length); } catch { /* optional */ }
+      /* Der Cursor ans Ende, damit Weiterschreiben wirklich weiter heisst.
+         In einem `contenteditable` geht das über einen Bereich, nicht über
+         `setSelectionRange` — das gibt es nur an Formularfeldern. */
+      try {
+        const bereich = document.createRange();
+        bereich.selectNodeContents(feld);
+        bereich.collapse(false);
+        const wahl = getSelection();
+        wahl?.removeAllRanges();
+        wahl?.addRange(bereich);
+      } catch { /* optional */ }
     };
 
     const editText = async (point: number[], targetId = ''): Promise<void> => {

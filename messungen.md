@@ -1641,3 +1641,34 @@ er liegt. Das Bild hat es gefunden (§55.1), und zwar Redurs Bild.
 
 **Geprüft:** `test436`, `test476`, `test492`, `test493`, `test494` (153
 Zusicherungen zur Bewegungsfamilie, darunter „folder"), `test87` — grün.
+
+---
+
+## 42. Ein Kasten mit drei Formaten, durch das Schreibfeld geschickt
+
+**16. September 2026 · E606 · L172**
+
+Probe: ein Textkasten mit drei Läufen, wie ihn der `.pptx`-Weg anlegt.
+Geöffnet, ans Ende getippt, übernommen.
+
+```txt
+                        vorher                nachher (bis E605)   nachher (E606)
+Läufe                   3                     keine                3
+„GROSS" 30 pt fett      ja                    nein                 ja
+„ rot" #CC0000          ja                    nein                 ja
+Text                    Klein GROSS rot       + Getipptes          + Getipptes
+Format des Kastens      16 pt, #111111        16 pt, #111111       unverändert
+```
+
+**Der Wächter vorher und nachher:**
+
+```txt
+test527 §16 gegen den Stand vor E606    4 von 7 rot
+test527 §16 gegen den Stand nach E606   7 von 7 grün
+test527 gesamt                          43 Zusicherungen
+```
+
+Die drei, die schon vorher grün waren, waren es aus dem falschen Grund: sie
+prüfen die Läufe der Marke, und solange das Feld gar nicht aufging, blieben
+sie unangetastet. Erst zusammen mit „der Kasten öffnet sich mit seinem
+vollen Text" tragen sie etwas.

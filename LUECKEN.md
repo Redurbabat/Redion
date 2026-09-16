@@ -8294,7 +8294,14 @@ fremden.
 
 ---
 
-## L172 · Mehrere Formate in einem Kasten fallen beim Ändern zusammen — 15. September 2026
+## L172 · ~~Mehrere Formate in einem Kasten fallen beim Ändern zusammen~~ — GESCHLOSSEN am 16. September 2026
+
+> **GESCHLOSSEN durch E606.** Das Schreibfeld ist kein `<textarea>` mehr,
+> sondern ein `contenteditable` mit einem `<span>` je Lauf. Die Formate
+> stehen beim Öffnen im Feld, überleben das Tippen und kommen unverändert
+> zurück in die Marke. Beleg: `test527` §16, sieben Zusicherungen — gegen
+> den Stand davor vier davon rot. Was unten steht, ist der Befund von
+> damals und bleibt stehen (§35).
 
 **Was fehlt:** Ein Textkasten kann seit E561 mehrere Formate in einem Absatz
 tragen (`laeufe` — so kommen Texte aus einer `.pptx`: ein Wort fett, eines
@@ -8380,3 +8387,28 @@ Am Rechner ist es eine Überraschung.
 
 **Woran man merkt, dass es stört:** Wer „Sperren" oder „Verweis" sucht und
 sie nicht findet, obwohl sie da sind.
+
+---
+
+## L175 · Auszeichnung lässt sich im Feld noch nicht auf einen Teil anwenden — 16. September 2026
+
+**Was fehlt:** Seit E606 hält das Schreibfeld mehrere Formate in einem Kasten
+— es **bewahrt** sie. Was es noch nicht kann: ein Stück markieren und ihm
+ein neues Format geben. „Fett" in der Leiste wirkt auf den GANZEN Kasten
+(E599), nicht auf die Auswahl im Feld.
+
+Neu getippter Text erbt das Format der Stelle, an der er landet — tippt man
+mitten in ein fettes Wort, wird das Getippte fett. Das ist das Verhalten
+jedes Textprogramms und deckt den Alltag; was fehlt, ist die bewusste
+Änderung an einem markierten Stück.
+
+**Warum es nicht gleich mitgebaut wurde:** Es ist eine andere Aufgabe. Ein
+Format auf eine Auswahl anzuwenden heisst, Textknoten an den Grenzen der
+Auswahl zu teilen, Spans einzuziehen und benachbarte gleicher Art wieder
+zusammenzufassen — und dabei den Cursor stehen zu lassen. `execCommand` täte
+es in zwei Zeilen und ist genau deshalb nicht der Weg: es erzeugt `<b>`,
+`<font>` und verschachtelte Spans, die `feldLesen` nicht kennt, und es ist
+abgekündigt. Der eigene Weg ist richtig und braucht einen eigenen Bogen.
+
+**Woran man merkt, dass er gebraucht wird:** Wer eine eingelesene
+Präsentation nicht nur korrigiert, sondern gestaltet.
