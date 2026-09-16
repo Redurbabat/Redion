@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-590 Entscheidungen, E1 bis E612 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+591 Entscheidungen, E1 bis E613 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -655,6 +655,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E610** — Der Ablagename des Dienst-Arbeiters folgt dem INHALT, nicht der Nummer — weil ein Zurücknehmen die Nummer mit zurückdreht (L83.8, `test530`)
 * **E611** — Das Auge sitzt an JEDEM Ordner, nicht nur im Regal: die Notizhefte bekommen DASSELBE Auge und „Blick hinein“, aus einer Quelle (`test531`)
 * **E612** — Das Schreibstudio wird ruhig: 301 px Bedienung über der Folie werden 160 — das Folienband klappt zu, die Dateikarte zieht ins Details-Fenster (dreht E464 an dieser Stelle um, `test532`)
+* **E613** — Die Chronik kommt erst beim Öffnen: 54 KB Chronikprosa verlassen den Startweg (Muster von E389), und die Startdecke in `test388 §5` steigt von 2300 auf 2700 KB — mit gezählter Begründung statt still (L146)
 
 ---
 
@@ -49690,3 +49691,129 @@ rot, ohne dass etwas zugewachsen wäre.
    „Präsentation", um einen bekannten Zustand herzustellen — und seit
    diesem Bogen ist genau dieser Klick der Klapp-Griff. Gefunden, weil §1
    mit 224 px rot war statt mit 301.
+
+---
+
+## E613 — Die Chronik kommt erst, wenn jemand sie öffnet (und die Decke bekommt ihre Begründung)
+
+**16. September 2026.** `test388 §5` war rot, und zwar seit zwölf Tagen,
+ohne dass es jemandem aufgefallen wäre — die Läufe auf GitHub brechen seit
+Wochen nach drei Sekunden ab (Konto-Ebene, kein Codefehler), und im Container
+hatte den Lauf niemand gefahren.
+
+### Was der Lauf sagt, und warum er recht hatte
+
+Er deckelt, was der Start über die Leitung holt, auf 2300 KB gzip. Sein
+eigener Kommentar erlaubt das Wachsen ausdrücklich:
+
+> „Sie DARF wachsen, wenn jemand einen Grund aufschreibt — sie soll nur nicht
+> schweigend wachsen."
+
+Genau das ist passiert. Gemessen am laufenden Programm:
+
+```txt
+ 4. September   203 Dateien   2081 KB   ← die Zahl, aus der die 2300 kamen
+ 5. September   207 Dateien   2169 KB
+16. September   232 Dateien   2637 KB   ← die Decke war gerissen
+```
+
+### Woher die 512 KB kamen — gezählt, nicht vermutet
+
+gzip Stufe 6 über alles, was `index.html` lädt, gegen `57a5199`:
+
+| Woher | KB |
+|---|---|
+| 26 **neue** Dateien | 229 |
+| 206 **gewachsene** Dateien | 291 |
+
+Und die vier grössten Einzelposten:
+
+```txt
+neu        quell/bereiche/chronik/daten.js       54,2 KB   (182 KB roh)
+neu        quell/schale/stil/motion.css          47,6 KB
+gewachsen  quell/bereiche/pdf/marken.js         +68,1 KB
+gewachsen  quell/bereiche/pdf/document-mode.js  +64,1 KB
+```
+
+**`marken.js` und `document-mode.js` sind kein Fehler.** Das sind das
+Zeichen- und das Schreibstudio, und sie sind gewachsen, weil dort gearbeitet
+wurde (E568 bis E612). Wer diese Zahl kleiner haben will, will weniger
+Produkt.
+
+**`chronik/daten.js` war einer.** 182 KB Chronikprosa bei *jedem* Start —
+für einen Bildschirm, der hinter einem Zugangscode liegt (L140) und den fast
+niemand öffnet. Nachgesehen wird sie von genau einer Stelle, und die tut es
+faul: `chronik.ts:53`, `(window as any).ChronikDaten || { tage: [], probleme: [] }`.
+
+### Was entschieden wurde
+
+**Der Weg war schon gebahnt.** E389 hat pdf.js (527 KB) genau so vom Startweg
+genommen. `src/fremd/pdfjs/laden.ts` ist die Vorlage, und ihr Kommentar
+beantwortet alle drei Fallstricke; `src/bereiche/chronik/laden.ts` ist die
+einfachere Schwester davon — kein gzip, nur ein Skript einhängen und das
+Versprechen behalten.
+
+| | |
+|---|---|
+| **§6** | ein `<script>`-Element und kein `fetch` — unter `file://` scheitert `fetch` an der Herkunftsprüfung |
+| **§29** | die Einzeldatei hat keinen Ordner neben sich: `bauen.mts` setzt die Bytes an der Marke `<!-- chronik-daten: … -->` ein, wie bei pdf.js. **Fehlt die Marke, bricht der Bau ab** — ein stilles Weglassen wäre eine Einzeldatei, die beim ersten Öffnen der Chronik leer bleibt |
+| **§28** | `daten.js` bleibt im `GRUNDSTOCK` von `sw.ts`, und `laden.js` kommt dazu. **Der GRUNDSTOCK ist die Ablage, nicht die Startliste** — offline bleibt offline, das Nachladen bedient der Zwischenspeicher |
+
+Ein gescheitertes Versprechen wird **nicht** behalten: beim nächsten Versuch
+soll es wieder gehen, wenn das Netz wieder da ist.
+
+`laden.js` steht in `index.html` **vor** `chronik.js` — sonst läge
+`ChronikLaden` als `const` in seiner zeitlichen Totzone, und schon
+`typeof ChronikLaden` würfe dort.
+
+### Und die ehrliche Hälfte: die Decke steht jetzt auf 2700
+
+54 KB reichen nicht, um 2637 unter 2300 zu bringen, und das ist auch nicht
+das Ziel. **L146 verbietet das stille Anheben, nicht das begründete.** Die
+Zahl ist gewählt und nicht geraten:
+
+* **nicht 2600** — dann reisst sie beim nächsten Bogen und wird zum Rauschen.
+* **nicht 3000** — dann passte pdf.js wieder unbemerkt hinein, und genau das
+  soll die zweite Zusicherung verhindern (`kb + 526 > DECKE`). Sie bleibt
+  damit eine Zusicherung und wird keine Zierde (§55.2).
+* **2700** lässt rund 115 KB für gewöhnliche Arbeit.
+
+### Was die Alternative gewesen wäre
+
+`motion.css` (47,6 KB) genauso nachzuladen. Dagegen spricht, dass ein
+Stilblatt beim Nachladen **sichtbar** ist: die Seite stünde einen Moment ohne
+seine Regeln da. Ein JSON-Literal hinter einem Zugangscode hat dieses Problem
+nicht. Eingetragen als Kandidat in L146, nicht gebaut.
+
+### Gemessen
+
+```txt
+Startlast   2637 → 2585 KB   am laufenden Programm, test388 §5
+test388     19 von 19 grün   (2 Zusicherungen neu)
+test481     39 von 39 grün   (5 Zusicherungen neu, §3b)
+test270     77 ok            (.assetsignore, Bau-Hygiene)
+test105 · test109 · test87   grün
+npm run typecheck            sauber
+Einzeldatei                  10 243 KB, `ChronikDaten` fünfmal darin
+Dienststand                  v1145 → v1146
+```
+
+**Die Gegenprobe (§50), gelaufen und rot gesehen:** `daten.js` wieder als
+`<script src>` in `index.html` eingehängt → `test388` **18/19**, die neue
+Zusicherung „Die Chronik wird beim Start nicht geholt" rot, Startlast
+2639 KB.
+
+### Ein Fund im Nachbarlauf, der teurer war als der Bogen
+
+`test481 §7` sagte „index.html lädt beides, die Daten zuerst" — und war
+**nach** der Änderung immer noch grün. Der Grund: die Zusicherung suchte mit
+`indexOf('chronik/daten.js')`, und dieser Name steht jetzt in der *Baumarke*,
+einem HTML-Kommentar. Eine Zusage, die auf einen Kommentar trifft, prüft
+nichts. Umgehängt auf das, was wirklich gilt: kein `<script src>` auf
+`daten.js`, der Lader vor `chronik.js`, die Marke da, `bauen.mts` kennt sie.
+
+Dieselbe Sorte Fehler wie in E610 (`ablageAus` traf den Kommentar statt den
+Code) und E612 (§5 zählte einen Zustand, in dem es nie zwei gab). Dreimal in
+einer Woche — die Lehre ist nicht „aufpassen", sondern: **eine neue Zusage
+wird rot gesehen, bevor sie grün gilt**, und eine alte, die eine Änderung
+überlebt, ist verdächtig und nicht beruhigend.

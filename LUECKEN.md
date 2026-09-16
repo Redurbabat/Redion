@@ -7211,8 +7211,46 @@ richtiggestellt.
 
 ---
 
-L146 · Die Startnutzlast steht über ihrer Decke — offen
+L146 · Die Startnutzlast steht über ihrer Decke — ~~offen~~ **GESCHLOSSEN am 16. September 2026 durch E613**
 --------------------------------------------------------------------------
+
+> **Geschlossen, und zwar so, wie Punkt 1 bis 3 unten es verlangt haben:
+> erst die Posten gezählt, dann gehandelt, und die Decke nur mit
+> geschriebenem Grund angehoben.**
+>
+> Gemessen am laufenden Programm: **2637 KB** am 16. September (nicht 2389 —
+> die Zahl vom 9. September war sieben Bögen alt). Die 512 KB seit dem
+> 5. September teilen sich in **229 KB aus 26 neuen Dateien** und **291 KB
+> aus 206 gewachsenen**. Die zwei grössten Wachser sind `pdf/marken.js`
+> (+68) und `pdf/document-mode.js` (+64) — das Zeichen- und das
+> Schreibstudio, gewachsen weil dort gearbeitet wurde (E568–E612). Das ist
+> Produkt, kein Ballast.
+>
+> Der eine echte Ballast war **`chronik/daten.js`**: 182 KB Chronikprosa bei
+> jedem Start, für einen Bildschirm hinter einem Zugangscode. Seit E613 holt
+> `chronik/laden.js` sie nach — dasselbe Muster wie pdf.js in E389.
+> **2637 → 2585 KB.**
+>
+> Die Decke steht jetzt auf **2700** statt 2300: nicht 2600 (dann reisst sie
+> beim nächsten Bogen und wird zum Rauschen), nicht 3000 (dann passte pdf.js
+> wieder unbemerkt hinein). Die zweite Zusicherung `kb + 526 > DECKE` prüft
+> genau das und bleibt damit eine Zusicherung.
+>
+> **Was offen BLEIBT, als Kandidat und nicht als Lücke:** `motion.css`
+> (47,6 KB) liesse sich genauso nachladen. Dagegen spricht, dass ein
+> Stilblatt beim Nachladen SICHTBAR ist — die Seite stünde einen Moment ohne
+> seine Regeln da. Ein JSON-Literal hinter einem Zugangscode hat dieses
+> Problem nicht. Wer es trotzdem angeht, misst zuerst, wie lange dieser
+> Moment dauert.
+>
+> Und der zweite Fund des Bogens, der nicht hierher gehört und trotzdem
+> teuer war: **die Läufe auf GitHub brechen seit Wochen nach drei Sekunden
+> ab**, ohne Protokoll. Deshalb ist diese Lücke zwölf Tage lang rot
+> dagestanden, ohne dass jemand es merkte. Das ist Konto-Ebene und kein
+> Codefehler — aber solange es so ist, ist „die CI hätte es gefunden" keine
+> Aussage über Redion.
+
+*Der ursprüngliche Eintrag vom 9. September, unverändert:*
 
 `test388 §5` deckelt, was der Start überhaupt holt, auf **2300 KB gzip**.
 Gemessen am 9. September: **2389 KB über 225 Dateien.** Der Lauf ist damit

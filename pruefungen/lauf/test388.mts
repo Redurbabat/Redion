@@ -192,19 +192,60 @@ p('`bauen.mts` bricht wirklich ab, wenn sie fehlt',
  * §5 · Eine Decke über das, was der Start holt
  * --------------------------------------------------------------------------
  * KEINE ZAHL AUS DER LUFT. Gemessen am 4. September: 2081 KB über 203
- * Dateien, gzip. Die Decke steht auf 2300 KB — genug Luft für gewöhnliche
- * Arbeit, aber nicht genug, um pdf.js unbemerkt zurückzuholen (das wären
- * 2607) oder eine zweite Bibliothek dieser Grösse hinzuzufügen.
+ * Dateien, gzip. Die Decke stand auf 2300 KB — genug Luft für gewöhnliche
+ * Arbeit, aber nicht genug, um pdf.js unbemerkt zurückzuholen.
  *
  * Sie DARF wachsen, wenn jemand einen Grund aufschreibt — sie soll nur
  * nicht schweigend wachsen.
+ *
+ * ── SIE IST SCHWEIGEND GEWACHSEN, UND ZWAR ZWÖLF TAGE LANG (E613) ─────────
+ *
+ * Am 16. September nachgemessen, weil niemand hinsah: die Läufe auf GitHub
+ * brechen seit Wochen nach drei Sekunden ab (Konto-Ebene, kein Codefehler),
+ * und im Container hatte den Lauf niemand gefahren.
+ *
+ *     4. September    203 Dateien   2081 KB   ← die Zahl, aus der 2300 kam
+ *     5. September    207 Dateien   2169 KB
+ *     16. September   232 Dateien   2637 KB   ← die Decke war gerissen
+ *
+ * WOHER DIE 512 KB KAMEN, gezählt und nicht vermutet (gzip Stufe 6, gegen
+ * `57a5199`):
+ *
+ *     26 NEUE Dateien                           229 KB
+ *     206 GEWACHSENE Dateien                    291 KB
+ *
+ *     davon  chronik/daten.js         neu      54,2 KB
+ *            schale/stil/motion.css   neu      47,6 KB
+ *            pdf/marken.js            +68,1 KB
+ *            pdf/document-mode.js     +64,1 KB
+ *
+ * `marken.js` und `document-mode.js` sind das Zeichen- und das Schreibstudio.
+ * Sie sind gewachsen, WEIL dort gearbeitet wurde (E568–E612) — das ist kein
+ * Fehler, das ist das Produkt.
+ *
+ * `chronik/daten.js` war einer. 182 KB Chronikprosa bei jedem Start, für
+ * einen Bildschirm hinter einem Zugangscode. Seit E613 holt
+ * `chronik/laden.js` sie nach — dasselbe Muster wie pdf.js hier in §2/§3.
+ * Gemessen an diesem Lauf: **2637 → 2585 KB**.
+ *
+ * ── UND DESHALB STEHT DIE DECKE JETZT AUF 2700 ───────────────────────────
+ *
+ * Nicht auf 2600 (dann reisst sie beim nächsten Bogen und wird zum Rauschen),
+ * nicht auf 3000 (dann passte pdf.js wieder unbemerkt hinein). 2700 lässt
+ * rund 115 KB für gewöhnliche Arbeit und bleibt 526 KB unter dem Punkt, an
+ * dem eine ganze Bibliothek zurückkäme — das prüft die zweite Zusicherung
+ * darunter, und sie ist der Grund, warum die Zahl nicht grosszügig sein darf.
  * ======================================================================== */
 console.log('\n5 · Was der Start holt, hat eine Decke');
 const kb = Math.round(beimStart.reduce((s, g) => s + g.bytes, 0) / 1024);
-p(`Der Start holt ${kb} KB (gzip) über ${beimStart.length} Dateien — Decke 2300 KB`,
-  kb <= 2300, `${kb} KB`);
+const DECKE = 2700;   /* 16. September 2026, gemessen — siehe oben */
+p(`Der Start holt ${kb} KB (gzip) über ${beimStart.length} Dateien — Decke ${DECKE} KB`,
+  kb <= DECKE, `${kb} KB`);
 p('Und die Decke kann überhaupt reissen — pdf.js allein wären 526 KB mehr',
-  kb + 526 > 2300, `${kb} + 526 = ${kb + 526}`);
+  kb + 526 > DECKE, `${kb} + 526 = ${kb + 526}`);
+p('Die Chronik wird beim Start nicht geholt (E613)',
+  !beimStart.some(g => /chronik\/daten\.js/.test(g.url)),
+  beimStart.filter(g => /chronik/.test(g.url)).map(g => g.url.split('/').pop()).join(', ') || '(nichts)');
 
 console.log('');
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.slice(0, 3).join(' ‖ '));

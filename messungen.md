@@ -1952,3 +1952,71 @@ Dienststand                   v1141 → v1145
 ```
 
 **Nicht gemessen:** die Gesamtsuite.
+
+---
+
+## §51 · Die Startnutzlast — woher die 512 KB kamen (E613, 16. September 2026)
+
+`test388 §5` war rot, und zwar seit zwölf Tagen. Zuerst gezählt, dann
+gehandelt — das ist die Reihenfolge, die L146 Punkt 1 bis 3 verlangt hat.
+
+**Am laufenden Programm gemessen** (`node pruefungen/lauf/test388.mts`, gzip
+Stufe 6 wie ein echter Server, der Lauf zählt, was der Browser wirklich holt):
+
+```txt
+ 4. September   203 Dateien   2081 KB     Decke damals gesetzt: 2300
+ 5. September   207 Dateien   2169 KB
+16. September   232 Dateien   2637 KB     ← rot
+nach E613       232 Dateien   2585 KB     Decke jetzt: 2700
+```
+
+Die 2637 stammen aus einem eigenen Arbeitsbaum auf `origin/main`
+(`git worktree add … origin/main`), nicht aus einer Rechnung.
+
+**Die Aufteilung der 512 KB** (gzip Stufe 6 über alle `<script src>` und
+`<link rel=stylesheet>` aus `index.html`, gegen `57a5199`):
+
+```txt
+26 NEUE Dateien        229 KB
+206 GEWACHSENE         291 KB
+```
+
+Die sechs grössten Posten:
+
+```txt
+neu        quell/bereiche/chronik/daten.js       54,2 KB   (182 KB roh)
+neu        quell/schale/stil/motion.css          47,6 KB
+neu        quell/schale/stil/pdf-studio.css      16,2 KB
+gewachsen  quell/bereiche/pdf/marken.js         +68,1 KB
+gewachsen  quell/bereiche/pdf/document-mode.js  +64,1 KB
+gewachsen  quell/schale/stil/bausteine.css      +45,8 KB
+```
+
+**Was die Zahlen sagen, und was nicht.** `marken.js` und `document-mode.js`
+sind zusammen 132 KB gewachsen — das Zeichen- und das Schreibstudio, E568
+bis E612. Wer diese Zahl kleiner haben will, will weniger Produkt. Der eine
+Posten, der *nichts* mit Arbeit am Produkt zu tun hatte, war
+`chronik/daten.js`.
+
+**Der Befehl, mit dem sich das jederzeit nachzählen lässt:**
+
+```bash
+node pruefungen/lauf/test388.mts          # was der Browser wirklich holt
+```
+
+**Gegenprobe (§55.2), gelaufen und rot gesehen:** `daten.js` wieder als
+`<script src>` in `index.html` → `test388` 18/19, Startlast 2639 KB.
+
+**Läufe:**
+
+```txt
+test388     19/19   (2 Zusicherungen neu, 1 in der Gegenprobe rot gesehen)
+test481     39/39   (5 neu, §3b — die Chronik kommt beim Öffnen wirklich an)
+test270     77 ok
+test105 · test109 · test87   grün
+npm run typecheck   sauber
+Einzeldatei         10 243 KB
+Dienststand         v1145 → v1146
+```
+
+**Nicht gemessen:** die Gesamtsuite.

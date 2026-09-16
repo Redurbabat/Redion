@@ -223,7 +223,22 @@ const Chronik = (() => {
 
   const schliessen = (): void => { lage?.remove(); lage = null; };
 
-  const zeigen = (): void => {
+  /**
+   * Zeigen — und vorher die Daten holen, falls sie noch nicht da sind (E613).
+   *
+   * `chronik/daten.js` hängt seit E613 nicht mehr in `index.html`; sie wird
+   * hier nachgeholt. Deshalb ist diese Funktion asynchron geworden. Wer sie
+   * ohne `await` ruft, bekommt trotzdem die volle Chronik — nur einen
+   * Wimpernschlag später.
+   */
+  const zeigen = async (): Promise<void> => {
+    if (typeof ChronikLaden !== 'undefined') {
+      try { await ChronikLaden.laden(); }
+      catch (e) {
+        if (typeof UI !== 'undefined') UI.toast('Die Chronik liess sich nicht laden.');
+        console.warn(e);
+      }
+    }
     schliessen();
     const d = daten();
     lage = document.createElement('div');
@@ -302,7 +317,7 @@ const Chronik = (() => {
    * wieder.
    */
   const oeffnen = async (): Promise<boolean> => {
-    if (offen()) { zeigen(); return true; }
+    if (offen()) { await zeigen(); return true; }
     const eingabe = typeof Dialog !== 'undefined' && Dialog.frage
       ? await Dialog.frage('Red-ur — Zugangscode', '', 'passwort')
       : prompt('Red-ur — Zugangscode');
@@ -312,7 +327,7 @@ const Chronik = (() => {
       return false;
     }
     try { sessionStorage.setItem(M_OFFEN, '1'); } catch { /* dann eben je Klick */ }
-    zeigen();
+    await zeigen();
     return true;
   };
 

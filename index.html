@@ -596,9 +596,17 @@
 <script src="quell/bereiche/elektro/arbeitsplatz.js" defer></script>
 <script src="quell/bereiche/elektro/lernbilder.js" defer></script>
 <script src="quell/bereiche/elektro/skizzen.js" defer></script>
-<!-- DIE CHRONIK (E514). `daten.js` ist erzeugt (node chronik.mts) und muss
-     VOR `chronik.js` stehen — die Ansicht liest die Daten beim Bauen. -->
-<script src="quell/bereiche/chronik/daten.js" defer></script>
+<!-- DIE CHRONIK (E514). `daten.js` ist erzeugt (node chronik.mts) und wird
+     seit E613 NICHT mehr beim Start geholt: 54 KB über die Leitung für einen
+     Bildschirm hinter einem Zugangscode. `laden.js` holt sie nach, sobald
+     jemand die Chronik öffnet — dasselbe Muster wie pdf.js in E389.
+     `laden.js` steht VOR `chronik.js`, damit `ChronikLaden` nicht in der
+     zeitlichen Totzone eines `const` liegt. -->
+<!-- chronik-daten: quell/bereiche/chronik/daten.js — NICHT hier geladen (E613).
+     `bauen.mts` setzt die Bytes an DIESER Stelle in die Einzeldatei ein, weil
+     sie keinen Ordner neben sich hat, aus dem `laden.js` nachladen könnte.
+     Fehlt die Marke, bricht der Bau ab. -->
+<script src="quell/bereiche/chronik/laden.js" defer></script>
 <script src="quell/bereiche/chronik/chronik.js" defer></script>
 <!-- Die Elektro-Startseite (L65). Sie liest das Menüband-Register und
      muss deshalb NACH ihm geladen werden — die Reihenfolge hier ist

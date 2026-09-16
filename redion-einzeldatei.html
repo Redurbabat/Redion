@@ -24285,7 +24285,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1145, inhalt: '00afcf615594f8ab', gebaut: '2026-09-16T13:09:59.367Z' };
+const Stand = { fassung: 1146, inhalt: '02c78998bd16c7c8', gebaut: '2026-09-16T17:41:26.164Z' };
 window.Stand = Stand;
 
 </script>
@@ -77453,8 +77453,12 @@ const Elektroskizzen = (() => {
 globalThis.Elektroskizzen = Elektroskizzen;
 
 </script>
-<!-- DIE CHRONIK (E514). `daten.js` ist erzeugt (node chronik.mts) und muss
-     VOR `chronik.js` stehen — die Ansicht liest die Daten beim Bauen. -->
+<!-- DIE CHRONIK (E514). `daten.js` ist erzeugt (node chronik.mts) und wird
+     seit E613 NICHT mehr beim Start geholt: 54 KB über die Leitung für einen
+     Bildschirm hinter einem Zugangscode. `laden.js` holt sie nach, sobald
+     jemand die Chronik öffnet — dasselbe Muster wie pdf.js in E389.
+     `laden.js` steht VOR `chronik.js`, damit `ChronikLaden` nicht in der
+     zeitlichen Totzone eines `const` liegt. -->
 <script>
 /* ===== quell/bereiche/chronik/daten.js ===== */
 "use strict";
@@ -79391,6 +79395,90 @@ window.ChronikDaten = ChronikDaten;
 
 </script>
 <script>
+/* ===== quell/bereiche/chronik/laden.js ===== */
+"use strict";
+/* ============================================================================
+ * chronik/laden.ts — die Chronik erst holen, wenn jemand sie öffnet
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/bereiche/chronik/laden.ts`.
+ * ----------------------------------------------------------------------------
+ * WARUM ES DIESE DATEI GIBT (E613)
+ *
+ * `chronik/daten.js` ist die Projektchronik als JSON-Literal: 182 KB roh,
+ * 54 KB über die Leitung. Bis zum 16. September 2026 stand sie als
+ * gewöhnliches `<script src>` in `index.html` und wurde bei JEDEM Start
+ * geholt — für einen Bildschirm, der hinter einem Zugangscode liegt und den
+ * fast niemand öffnet.
+ *
+ * Gemessen (gzip Stufe 6 über alles, was `index.html` lädt):
+ *
+ *     5. September   207 Dateien   2169 KB
+ *     16. September  232 Dateien   2682 KB    Decke in test388 §5: 2300
+ *
+ * Von den 512 KB Zuwachs sind 54 diese eine Datei — der grösste einzelne
+ * Posten, der KEINE Arbeit am Produkt ist.
+ *
+ * DAS MUSTER IST NICHT NEU. E389 hat pdf.js (527 KB) genau so vom Startweg
+ * genommen; `src/fremd/pdfjs/laden.ts` ist die Vorlage. Diese Datei ist die
+ * einfachere Schwester davon: kein gzip, kein Auspacken, nur ein Skript
+ * einhängen und das Versprechen behalten.
+ *
+ * DREI DINGE, DIE DABEI NICHT BRECHEN DÜRFEN — alle drei geprüft:
+ *
+ *   §6  EIN `<script>`-ELEMENT UND KEIN `fetch`. Redion muss sich per
+ *       Doppelklick öffnen lassen; unter `file://` scheitert `fetch` an der
+ *       Herkunftsprüfung, ein eingehängtes Skript nicht.
+ *
+ *   §29 IN DER EINZELDATEI GIBT ES NICHTS ZU HOLEN. `bauen.mts` setzt alle
+ *       Skripte ein, `ChronikDaten` steht dort also schon da, und `laden()`
+ *       kehrt sofort zurück.
+ *
+ *   §28 OFFLINE BLEIBT ES OFFLINE. `daten.js` steht weiterhin im GRUNDSTOCK
+ *       von `sw.ts` — der GRUNDSTOCK ist die Ablage, nicht die Startliste.
+ *       Das Nachladen bedient dann der Zwischenspeicher, nicht das Netz.
+ * ==========================================================================*/
+const ChronikLaden = (() => {
+    let versprechen = null;
+    /** Steht die Chronik schon im Fenster? (Einzeldatei, zweiter Aufruf.) */
+    const da = () => window.ChronikDaten !== undefined;
+    /**
+     * Einmal holen, dann behalten — und zwar das VERSPRECHEN, nicht das
+     * Ergebnis: zwei gleichzeitige Aufrufe warten dann auf dasselbe Laden,
+     * statt es zweimal zu starten.
+     */
+    const laden = () => {
+        if (da())
+            return Promise.resolve();
+        if (versprechen)
+            return versprechen;
+        versprechen = new Promise((ja, nein) => {
+            if (typeof document === 'undefined') {
+                nein(new Error('Die Chronik lässt sich hier nicht nachladen.'));
+                return;
+            }
+            const s = document.createElement('script');
+            s.src = 'quell/bereiche/chronik/daten.js';
+            s.addEventListener('load', () => {
+                if (!da())
+                    nein(new Error('quell/bereiche/chronik/daten.js wurde geladen, ist aber leer.'));
+                else
+                    ja();
+            });
+            s.addEventListener('error', () => nein(new Error('Die Chronik fehlt — quell/bereiche/chronik/daten.js liess sich nicht laden.')));
+            document.head.appendChild(s);
+        });
+        /* Ein gescheitertes Versprechen nicht für immer behalten: beim nächsten
+           Versuch soll es wieder gehen, wenn das Netz wieder da ist. */
+        versprechen.catch(() => { versprechen = null; });
+        return versprechen;
+    };
+    return { laden, da };
+})();
+window.ChronikLaden = ChronikLaden;
+
+</script>
+<script>
 /* ===== quell/bereiche/chronik/chronik.js ===== */
 "use strict";
 /* ============================================================================
@@ -79593,7 +79681,25 @@ const Chronik = (() => {
     /* ── Das Fenster ──────────────────────────────────────────────────────*/
     let lage = null;
     const schliessen = () => { lage?.remove(); lage = null; };
-    const zeigen = () => {
+    /**
+     * Zeigen — und vorher die Daten holen, falls sie noch nicht da sind (E613).
+     *
+     * `chronik/daten.js` hängt seit E613 nicht mehr in `index.html`; sie wird
+     * hier nachgeholt. Deshalb ist diese Funktion asynchron geworden. Wer sie
+     * ohne `await` ruft, bekommt trotzdem die volle Chronik — nur einen
+     * Wimpernschlag später.
+     */
+    const zeigen = async () => {
+        if (typeof ChronikLaden !== 'undefined') {
+            try {
+                await ChronikLaden.laden();
+            }
+            catch (e) {
+                if (typeof UI !== 'undefined')
+                    UI.toast('Die Chronik liess sich nicht laden.');
+                console.warn(e);
+            }
+        }
         schliessen();
         const d = daten();
         lage = document.createElement('div');
@@ -79682,7 +79788,7 @@ const Chronik = (() => {
      */
     const oeffnen = async () => {
         if (offen()) {
-            zeigen();
+            await zeigen();
             return true;
         }
         const eingabe = typeof Dialog !== 'undefined' && Dialog.frage
@@ -79699,7 +79805,7 @@ const Chronik = (() => {
             sessionStorage.setItem(M_OFFEN, '1');
         }
         catch { /* dann eben je Klick */ }
-        zeigen();
+        await zeigen();
         return true;
     };
     /* Als Befehl in der Palette — derselbe Weg, denselben Namen (§8). */
