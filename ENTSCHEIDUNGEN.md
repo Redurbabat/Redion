@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-583 Entscheidungen, E1 bis E604 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+584 Entscheidungen, E1 bis E605 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -647,6 +647,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E602** — Nicht das Auge weicht, sondern der Reiter: E601 zurückgenommen, zwei Zeilen geblieben (**auch zurückgenommen, siehe E604**)
 * **E603** — Die Ordnerkarte verwandelt sich nicht mehr unter der Maus: vier Wirkungen beim Darüberfahren zurückgenommen (**zurückgenommen, siehe E604**)
 * **E604** — Redur hat die Geschichte der Kachel gesehen und sich entschieden: die main-Fassung, mit Bewegung und mit Auge
+* **E605** — Ein Tipp auf leeres Papier schreibt schon: wie in Word, ohne Werkzeug und ohne zweiten Klick
 
 ---
 
@@ -48903,3 +48904,50 @@ Bilder aus vier Commits kosten zwei Minuten mit `git worktree`; drei
 Rücknahmen kosten einen Abend. Wer vor einer Gestaltungsfrage steht, für die
 es einen früheren Stand gibt, legt die Stände nebeneinander, bevor er den
 ersten Strich macht (§55.3, um eine Zeile erweitert).
+
+---
+
+## E605 — Ein Tipp auf leeres Papier schreibt schon
+
+**16. September 2026.** Redur:
+
+> „Weiter an die frei text erstellen — also dort sollte, wenn ich klicke,
+> wie Word direkt erstellen können."
+
+In Word klickt man in die Seite und tippt. Kein Werkzeug dazwischen, kein
+zweiter Klick.
+
+### Wo der Weg bisher aufhörte
+
+```txt
+E597  Textwerkzeug wählen, dann tippen          zwei Schritte
+E599  mit der Auswahl: zweimal tippen           ein Schritt, aber doppelt
+E605  mit der Auswahl: EINMAL tippen            wie Word
+```
+
+### Die drei Bedingungen, und warum jede da ist
+
+Ein Tipp schreibt nur, wenn **alle drei** stimmen:
+
+- **Er ist ein Tipp, kein Zug.** Bewegt sich der Zeiger mehr als vier
+  Blatteinheiten, ist es ein Lasso und bleibt eines.
+- **Vor dem Tipp war nichts gewählt.** Der erste Tipp nach einer Auswahl
+  HEBT SIE AUF, und das muss er weiter tun: wer drei Striche gewählt hat
+  und danebentippt, will sie loswerden und keinen Kasten anfangen. Ohne
+  diese Bedingung käme man aus einer Auswahl nie mehr heraus, ohne etwas zu
+  schreiben.
+- **Der Tipp hat nichts eingefangen.** Sonst wäre er eine Auswahl.
+
+**Nur mit der Auswahl.** Ein Lasso entsteht nur dort; mit dem Stift ist ein
+Tipp ein Punkt, mit dem Radierer ein Radierversuch, und beides soll er
+bleiben.
+
+### Geprüft
+
+`test527` §15, vier Zusicherungen — zwei für den neuen Weg, zwei für die
+Bedingung, die ihn begrenzt. Gegengeprüft: mit abgeschalteter Stelle sind
+die ersten beiden rot und die letzten beiden grün, also hält die zweite
+Hälfte genau das, was sie soll.
+
+Der Lauf steht damit bei 36 Zusicherungen. Er ist der Lauf für das freie
+Schreiben, von E597 bis hierher.
