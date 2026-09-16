@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-587 Entscheidungen, E1 bis E609 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+588 Entscheidungen, E1 bis E610 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -652,6 +652,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E607** — Die Gedankenkarte: Knoten als HTML, Linien als SVG — gemessen statt geschätzt (Redurs „ich will auch das XMind erstellen können")
 * **E608** — ~~Das Auge am Ordner ist weg~~ — **zurückgenommen durch E609.** Der Eintrag bleibt stehen, damit niemand den Weg ein zweites Mal geht
 * **E609** — Die Ordnerkachel steht wieder genau wie vorher: Auge, Zwinkern, Bewegung, alles (E608 vollständig zurückgenommen)
+* **E610** — Der Ablagename des Dienst-Arbeiters folgt dem INHALT, nicht der Nummer — weil ein Zurücknehmen die Nummer mit zurückdreht (L83.8, `test530`)
 
 ---
 
@@ -49271,3 +49272,133 @@ Was daraus folgt, ist trotzdem etwas:
 Das Bild, auf dem die Ordnerkachel ohne Auge zu sehen war, ist erst nach dem
 Commit im Gespräch gelandet. Wäre es vorher dort gewesen, hätte dieser Bogen
 nicht stattgefunden. `bilder.mts` kostet zehn Sekunden.
+
+---
+
+## E610 — Der Ablagename folgt dem Inhalt, nicht der Nummer
+
+**16. September 2026.** Gefunden beim Nachsehen, warum Redur das Auge am
+Ordner immer noch nicht sah, obwohl E609 es längst zurückgeholt hatte.
+
+### Der Fund
+
+E608 hob den Dienststand auf `notizen-v1145`. E609 nahm E608 mit
+`git revert` zurück — und weil der Bogen `sw.ts` und `stand.ts` mit
+angefasst hatte, ging die Nummer **mit zurück**, auf `v1141`:
+
+```txt
+E601   notizen-v1125
+E608   notizen-v1145      das Auge ist weg
+E609   notizen-v1141      zurückgenommen — und die Nummer fällt mit
+```
+
+Damit sind `v1142` bis `v1145` wieder frei. Der nächste Bogen vergibt sie
+ein zweites Mal, mit anderem Inhalt. Und der Ablagename war bis heute:
+
+```js
+const ABLAGE = VERSION;
+```
+
+Wer die erste `v1142` im Browser hatte, bekommt beim zweiten Mal
+**dieselbe Ablage geöffnet** — `caches.open(ABLAGE)` gibt die vorhandene
+zurück. Der Aufräumer in `activate` löscht nur, was **anders** heisst, und
+`cache.add` überschreibt nur die Pfade, die der **neue** Grundstock noch
+nennt. Eine Datei, die aus dem Grundstock gefallen ist, bleibt liegen und
+wird weiter bedient. Genau das verbietet §28: *„Der Service Worker darf
+keine alten kritischen Dateien endlos halten."*
+
+### Was entschieden wurde
+
+Der Ablagename trägt ab jetzt den **Inhaltsstempel**, den `dienststand.mts`
+seit E361 ohnehin rechnet:
+
+```js
+const VERSION = 'notizen-v1141';
+const INHALT  = '7b5c3ef121062083';
+const ABLAGE  = VERSION + '-' + INHALT;
+```
+
+Gleicher Name heisst damit gleiche Bytes — **per Konstruktion**, nicht per
+Disziplin. Und nach einem Zurücknehmen ist der Name wieder der alte, was
+richtig ist: die Bytes sind es auch, ein zweites Herunterladen wäre Arbeit
+ohne Gewinn.
+
+### Die Alternative, und warum sie nicht genommen wurde
+
+Ein Merkbuch der schon vergebenen Nummern, das nur wachsen darf. Es
+scheitert an genau dem, was den Fehler erzeugt hat: `git revert` nimmt
+**jede** Datei des Bogens zurück, das Merkbuch eingeschlossen. Eine Regel,
+die ein Zurücknehmen nicht überlebt, hilft gegen ein Zurücknehmen nicht.
+
+Der Stempel braucht kein Gedächtnis. Er ist eine Funktion des Inhalts und
+kommt nach jedem Zurücknehmen von selbst wieder heraus.
+
+### Was es kostet
+
+- **Einmal neu herunterladen.** Die Ablage heisst jetzt
+  `notizen-v1141-7b5c3ef121062083` statt `notizen-v1141`; der Aufräumer
+  löscht die alte und legt sie unter dem neuen Namen an. Ein Ladevorgang.
+  Für Redur ist das kein Preis, sondern der Gewinn: es ist derselbe Griff,
+  der ihm endlich das Auge am Ordner zeigt.
+- **`VERSION` bleibt unangetastet.** `test143` prüft daran die Form
+  `notizen-v<Zahl>`. Der Stempel steht deshalb **neben** der Nummer, nicht
+  in ihr — zwei Zeilen statt einer zusammengesetzten.
+- **`dienststand.mts` schreibt jetzt zwei Stellen in `sw.ts`.** Fehlt die
+  Stempelzeile (ein ganz neues Projekt, `test353` §3), wird sie unter die
+  Nummer geschrieben, statt ewig „veraltet" zu melden.
+
+### Gemessen, nicht geschätzt
+
+```txt
+test530   16 von 16 grün   (neu)
+test353   der Dienststand selbst        alle grün
+test143   Form von VERSION, Grundstock  alle grün
+test31    der echte Dienst im Browser   alle grün
+test99    die Fassungsnummer            alle grün
+                                        zusammen 105/105
+test105 test109 test87                  grün
+npm run typecheck                       sauber
+npm run stand                           v1141 unverändert (7b5c3ef121062083)
+```
+
+Die Nummer bleibt bei **v1141** — richtig so: der Stempel hat sich nicht
+geändert, nur der Name, unter dem er abgelegt wird. `sw.ts` liegt nicht im
+Grundstock und ändert ihn deshalb nicht.
+
+**Die Ablage im echten Browser, abgelesen statt behauptet:**
+
+```txt
+vorher   ["notizen-v1141"]
+jetzt    ["notizen-v1141-7b5c3ef121062083"]
+```
+
+### Die Gegenprobe (§50, §55.2)
+
+`const ABLAGE = VERSION + '-' + INHALT;` zurück auf `= VERSION;` gedreht,
+in `sw.ts` **und** `sw.js`:
+
+```txt
+✗ ABLAGE setzt sich aus Nummer UND Stempel zusammen — notizen-v1141
+✗ … aber die beiden Ablagen heissen trotzdem verschieden
+                                 — notizen-v1143 gegen notizen-v1143
+✗ … der Stempel steht wirklich im Namen
+13/16 · ✗=3
+```
+
+Die mittlere Zeile ist der Fehler selbst, in einem Satz: zwei Inhalte, eine
+Ablage. Danach wiederhergestellt, 16/16.
+
+**Und eine Gegenprobe am Wächter selbst.** Sein erstes Muster für den
+Bauplan war `/const ABLAGE = ([^;]+);/` ohne Anker — es fand den Satz
+`Hier stand \`const ABLAGE = VERSION;\`` im **Kommentar** über der Zeile und
+las damit den alten Bauplan, während der neue drei Zeilen tiefer stand. Der
+Lauf blieb rot, obwohl die Reparatur längst dastand. Mit `^…$/m` zeigt er
+auf den Code. Das ist §55.2 von der anderen Seite: eine Prüfung, die aus dem
+falschen Grund rot ist, ist so wenig wert wie eine, die nie rot wird.
+
+### Was das für Redurs Browser heisst
+
+Der alte Stand hielt sich als `notizen-v1141` fest — dieselbe Nummer, die
+E609 wieder eingesetzt hat. Mit dem neuen Namen hat der Aufräumer einen
+Grund, ihn wegzuräumen. Ein Neuladen genügt (`skipWaiting` im Einrichten,
+`clients.claim` im Aktivieren), und danach steht das Auge wieder am Ordner.
