@@ -914,6 +914,26 @@ const DocumentMode = (() => {
         let aktiv = bandReiterVon(String(page?.id || ''));
         if (!offen.some(r => r.id === aktiv))
             aktiv = offen[0].id;
+        /* ══ DAS BAND KLAPPT ZU (E612) ═══════════════════════════════════════
+           Redur, 16. September, mit einem Bild des Studios: „hier sieht es sehr
+           viel aus und haben nicht so viel Platz für Bearbeiten … will nicht so
+           viel Sachen sehen aber trotzdem alles machen kann".
+    
+           Gemessen waren es 301 px über der ersten Folie, und nichts davon liess
+           sich wegklicken. Die Fläche ist mit 74 px der grösste Posten, den ein
+           Klick zurückholen kann.
+    
+           DIE VORGABE IST `data-ruhig` — kein zweiter Schalter (§8). Das globale
+           Menüband ist seit E236 überall zugeklappt voreingestellt; hier gilt
+           dasselbe, nur an die ruhige Fassung gehängt, die im Studio ohnehin
+           schon am `body` steht (gemessen: `data-ruhig="an"`).
+    
+           DIE REITERZEILE BLEIBT STEHEN. Sie ist der Griff — wie `.mb-rechts`
+           die 36-px-Zeile in E383 hält. Wer sie mit ausblendet, hat geklappt
+           und dabei gelöscht. */
+        const MERKE_ZU = 'folienbandZu';
+        const ruhigAn = () => document.body.dataset['ruhig'] !== 'aus';
+        let zu = ruhigAn() && Store.getMeta(MERKE_ZU, true) === true;
         const flaecheFuellen = () => {
             /* BEIM REITER „ZEICHNEN" TRITT DIE LEISTE AN DIE STELLE DES BANDES.
                Sie bleibt IMMER ein Kind des Bandes und wird nur `hidden` — ein
@@ -923,7 +943,11 @@ const DocumentMode = (() => {
                 zeichenleiste.hidden = aktiv !== ZEICHEN_REITER;
                 zeichenleiste.setAttribute('aria-label', aktiv === ZEICHEN_REITER ? 'Zeichnen' : 'PDF bearbeiten');
             }
-            flaeche.hidden = aktiv === ZEICHEN_REITER && !!zeichenleiste;
+            /* ZUGEKLAPPT VERSTECKT DIE FLÄCHE — aber NIE die Zeichenleiste.
+               Sie ist ein Kind des Bandes (E552), und wer beim Reiter „Zeichnen"
+               zuklappte, stünde ohne Werkzeuge da (§47). Deshalb hängt ihre
+               Sichtbarkeit oben allein am Reiter, nicht an `zu`. */
+            flaeche.hidden = (aktiv === ZEICHEN_REITER && !!zeichenleiste) || zu;
             flaeche.replaceChildren();
             if (flaeche.hidden)
                 return;
@@ -960,6 +984,23 @@ const DocumentMode = (() => {
             }
             flaeche.setAttribute('aria-label', namen[aktiv] || aktiv);
         };
+        /** Auf- und zuklappen, und es hinterher merken. */
+        const zuSetzen = (neu) => {
+            zu = neu;
+            try {
+                Store.setMeta(MERKE_ZU, neu);
+            }
+            catch { /* das Merken ist Bequemlichkeit, kein Auftrag */ }
+            band.dataset['zu'] = neu ? 'an' : 'aus';
+            reiterzeile.querySelectorAll('[data-fb-reiter]').forEach(x => x.setAttribute('aria-expanded', String(!neu)));
+            const k = reiterzeile.querySelector('[data-fb-klapp]');
+            if (k) {
+                k.setAttribute('aria-expanded', String(!neu));
+                k.title = neu ? 'Band aufklappen' : 'Band zuklappen';
+                k.setAttribute('aria-label', k.title);
+            }
+            flaecheFuellen();
+        };
         offen.forEach(r => {
             const t = document.createElement('button');
             t.type = 'button';
@@ -968,20 +1009,64 @@ const DocumentMode = (() => {
             t.setAttribute('role', 'tab');
             t.textContent = namen[r.id] || r.id;
             t.setAttribute('aria-selected', String(r.id === aktiv));
+            t.setAttribute('aria-expanded', String(!zu));
             t.addEventListener('click', () => {
+                /* DER REITER IST DER GRIFF (E612). Ein Klick auf den SCHON
+                   gewählten Reiter klappt auf und wieder zu — wörtlich das Muster
+                   der Strichstärken-Klappe (E465): „die schon gewählte Stufe ein
+                   zweites Mal antippen". Ein Klick auf einen ANDEREN Reiter
+                   wechselt und klappt auf; so macht es PowerPoint auch, und ein
+                   Reiter, der nichts zeigt, wäre ein toter Knopf.
+        
+                   „Zeichnen" ist ausgenommen: dort steht die Leiste selbst, und
+                   `zu` würde sie nicht treffen (siehe `flaecheFuellen`). Ein
+                   zweiter Klick darauf soll nichts tun, statt einen Zustand zu
+                   merken, den man nicht sieht. */
+                if (r.id === aktiv) {
+                    if (r.id !== ZEICHEN_REITER)
+                        zuSetzen(!zu);
+                    return;
+                }
                 aktiv = r.id;
                 try {
                     Store.setMeta('folienbandReiter:' + String(page?.id || ''), aktiv);
                 }
                 catch { /* das Merken ist Bequemlichkeit, kein Auftrag */ }
                 reiterzeile.querySelectorAll('[data-fb-reiter]').forEach(x => x.setAttribute('aria-selected', String(x.dataset['fbReiter'] === aktiv)));
-                flaecheFuellen();
+                if (r.id === ZEICHEN_REITER)
+                    flaecheFuellen();
+                else
+                    zuSetzen(false);
             });
             reiterzeile.appendChild(t);
         });
+        /* EIN ZEICHEN, DASS DA NOCH ETWAS IST (E612, Lehre aus E383).
+           Beim Hinsehen (§55.3) sagte die Reiterzeile allein nicht, dass sich
+           darunter etwas aufklappen lässt — genau der Fund, den E383 beim
+           Klapp-Pfeil des Menübandes gemacht hat: „allein an der rechten Kante
+           kann er zu einer Zierde werden, die niemand anklickt". Dort war die
+           Antwort, ihm ein Wort zu geben; hier genügt das Zeichen, weil die
+           Reiter daneben schon sagen, WAS aufklappt.
+    
+           §37: der Knopf ist so hoch wie die Reiterzeile (35 px) und damit ein
+           Nebenweg. Das ist keine neue Abweichung — die Zeile ist seit E550 so
+           hoch, und ihre Reiter sind es auch; ein 44-px-Knopf darin würde die
+           Zeile aufblasen und einen Teil des gewonnenen Platzes zurücknehmen.
+           Am Finger gilt weiter `pdf-studio.css:516` mit 44 px für die Zeile. */
+        const klapp = document.createElement('button');
+        klapp.type = 'button';
+        klapp.className = 'folienband-klapp';
+        klapp.dataset['fbKlapp'] = '1';
+        klapp.textContent = '\u2304';
+        klapp.addEventListener('click', () => zuSetzen(!zu));
+        reiterzeile.appendChild(klapp);
         band.append(reiterzeile, flaeche);
         if (zeichenleiste)
             band.appendChild(zeichenleiste);
+        band.dataset['zu'] = zu ? 'an' : 'aus';
+        klapp.setAttribute('aria-expanded', String(!zu));
+        klapp.title = zu ? 'Band aufklappen' : 'Band zuklappen';
+        klapp.setAttribute('aria-label', klapp.title);
         flaecheFuellen();
         /* VON AUSSEN UMSCHALTBAR (E552): „✎ Annotieren" holt den Reiter
            „Zeichnen" nach vorn. Das ist der Preis dafür, dass die Leiste nicht
@@ -2095,7 +2180,23 @@ const DocumentMode = (() => {
            `‹ ›` und die Miniaturen wechseln nichts mehr, sie SPRINGEN. */
         // The source file remains untouched. Existing pdfseite blocks below are
         // its editable printout: do not duplicate files or discard annotations.
-        const original = originalKnopf(page, current);
+        /* DIE DATEIKARTE STEHT IN DER RUHIGEN FASSUNG NUR NOCH IM DETAILS-
+           FENSTER (E612) — und das dreht E464 an dieser einen Stelle um.
+    
+           Gemessen kostet sie über dem Blatt 40 px Karte, 17 px Hinweis und
+           ihre Abstände, zusammen rund 95 von 301. E384 hatte sie schon einmal
+           in den Inspector geräumt („die 45 px kostete sie am Telefon von
+           844"), E464 hat sie zurückgeholt. Redur hat am 16. September beides
+           gegeneinander gesehen und für den Inspector entschieden.
+    
+           SIE IST NICHT GELÖSCHT: `renderInspector` setzt sie unverändert, und
+           `test532 §4` prüft genau das — erst dass sie oben fehlt, dann dass
+           sie im Details-Fenster steht. Ohne diese zweite Zusicherung wäre es
+           Löschen mit anderem Namen.
+    
+           Ohne Ruhe (`data-ruhig="aus"`) bleibt alles wie in E464. */
+        const original = document.body.dataset['ruhig'] === 'aus'
+            ? originalKnopf(page, current) : null;
         if (original) {
             original.classList.add('document-source-master');
             original.querySelector('.do-wort').textContent = 'Original · geschützt';

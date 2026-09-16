@@ -29,6 +29,7 @@
  * ==========================================================================*/
 declare const Store: any; declare const App: any;
 import { chromium } from 'playwright';
+declare const Ruhig: any;
 import http from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import fs from 'node:fs';
@@ -199,11 +200,27 @@ await pc.waitForTimeout(500);
 m = await pc.evaluate(MESS) as any;
 gleich('Das Dokument geht wieder als Dokument auf', m.marke, 'an');
 
-console.log('\n4 · Die Original-Karte steht über der Arbeitskopie UND im Inspector');
+console.log('\n4 · Die Original-Karte: über der Arbeitskopie — und immer im Inspector');
 /* E385 nahm sie vom Papier in den Inspector; Redurs Schreibtisch (E464) stellt
    sie als Kopf der Arbeitskopie zurück — sein test437 verlangt genau das
-   („Original über der Arbeitskopie sichtbar"). Der Inspector behält sie. */
-p('Über der Arbeitskopie steht sie (E464)', m.originalUeberPapier);
+   („Original über der Arbeitskopie sichtbar"). Der Inspector behält sie.
+
+   SEIT E612 GILT DAS NUR NOCH OHNE DIE RUHIGE FASSUNG. Redur hat die Karte
+   am 16. September über dem Blatt abbestellt: sie kostete dort gemessen
+   95 von 301 px, und im Details-Fenster steht sie unverändert. Die Zusage
+   von E464 wird deshalb nicht weicher gemacht, sondern in den Zustand
+   gestellt, über den sie spricht (Verfahren aus
+   `doku/AUFTRAG-01-ruhiges-band.md`, Abschnitt 5). Dass sie im
+   Ruhezustand oben FEHLT und im Inspector STEHT, hält `test532 §4`. */
+await pc.evaluate(() => {
+  if (typeof Ruhig !== 'undefined' && Ruhig.setzen) Ruhig.setzen(false);
+  document.body.dataset['ruhig'] = 'aus';
+});
+await pc.evaluate((id: string) => App.oeffne(id), dokId);
+await pc.waitForTimeout(900);
+m = await pc.evaluate(MESS) as any;
+p('Ohne die ruhige Fassung steht sie über der Arbeitskopie (E464)',
+  m.originalUeberPapier);
 /* Der Inspector ist zu (E296 Punkt 2) — also erst öffnen. */
 await pc.click('.document-topbar [data-document-action="inspector"]');
 await pc.waitForTimeout(500);

@@ -1901,3 +1901,54 @@ nachher (Zusicherung an heft:fach)         18/19  ✗=1
 Erst die zweite Fassung misst, was sie behauptet.
 
 **Nicht gemessen:** die Gesamtsuite. Gelaufen sind die fünf oben.
+
+--------------------------------------------------------------------------------
+
+## §50 — Die Bedienung über der Folie (E612, 16. September 2026)
+
+**Zweimal gemessen, und beide Male 301.** Erst aus den Stilblättern
+gerechnet, dann am laufenden Programm abgelesen (1440 × 852, Foliensatz mit
+eingelesener `.ppsx`, dunkles Thema) — von der Oberkante bis zur ersten
+Folie:
+
+```txt
+                                    vorher   nachher
+Reiterleiste (offene Dokumente)      48 px     48 px
+Dokument-Kopfzeile                   48 px     48 px
+Folienband — Reiterzeile (Griff)     35 px     35 px
+Folienband — Fläche                  74 px      0 px   ← zugeklappt
+Polster, Dateikarte, Hinweissatz     95 px      0 px   ← im Details-Fenster
+──────────────────────────────────────────────────
+Bedienung über der Folie            301 px    160 px
+Arbeitsfläche (.document-center)    646 px    720 px
+Folie selbst (.document-stage)      571 px    571 px
+```
+
+**Die letzte Zeile ist die ehrliche.** Die Folie wird nicht grösser: sie
+hängt am Seitenverhältnis und an der Spaltenbreite, nicht an der Höhe.
+Gewonnen sind Arbeitsfläche und Ruhe — wer „die Folie wird grösser"
+verspricht, misst falsch (dieselbe Lehre wie E383).
+
+**Die Gegenproben, jede einzeln gelaufen und rot gesehen:**
+
+```txt
+Klappen abgeklemmt  (`let zu = false`)    224 px   test532 12/17 · ✗=5
+Dateikarte zurück   (Ruhig-Abfrage weg)   227 px   test532 14/17 · ✗=3
+```
+
+Die Decke steht deshalb auf **175** und nicht auf den gemessenen 160: sie
+muss beide Rückfälle fangen (224 und 227), darf aber nicht beim ersten
+geänderten Rand rot werden.
+
+**Läufe:**
+
+```txt
+test532                       22/22   (neu)
+test385                       38/38   §4 umgehängt
+test506 508 524               grün
+test430 424 348 351 290 87 105 109   alle acht grün
+npm run typecheck             sauber
+Dienststand                   v1141 → v1145
+```
+
+**Nicht gemessen:** die Gesamtsuite.

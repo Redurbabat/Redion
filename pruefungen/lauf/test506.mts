@@ -143,6 +143,19 @@ console.log('\n§1 Eine Reiterzeile mit Band, zwischen Kopfleiste und Zeichenlei
 const gross = await aufbauen(1440, 852);
 {
   await gross.oeffne(gross.ids.deck);
+  /* DAS BAND AUFKLAPPEN, BEVOR SEINE HÖHE GEMESSEN WIRD (E612).
+     Seit E612 startet die Fläche in der ruhigen Fassung zugeklappt — dann
+     ist das Band 36 px statt 110, und „zwischen 80 und 150" war zu Recht
+     rot. Die Aussage dieses Abschnitts ist, WIE das Band aussieht, wenn es
+     etwas zeigt; sie wird deshalb nicht weicher gemacht, sondern in den
+     Zustand gestellt, über den sie spricht (Verfahren aus
+     `doku/AUFTRAG-01-ruhiges-band.md`, Abschnitt 5).
+     Dass es zugeklappt STARTET, hält `test532 §1` fest. */
+  await gross.seite.evaluate(() => {
+    const r = document.querySelector<HTMLElement>('.folienband-reiter [aria-selected="true"]');
+    if (r && r.getAttribute('aria-expanded') === 'false') r.click();
+  });
+  await gross.seite.waitForTimeout(400);
   const m = await gross.seite.evaluate(() => {
     const band = document.querySelector<HTMLElement>('.folienband');
     const top = document.querySelector<HTMLElement>('.document-topbar');
@@ -245,6 +258,17 @@ console.log('\n§3 Gruppen mit Überschriften, Knöpfe mit Zeichen (der Fund des
   for (const r of reiter) {
     await gross.seite.click(`[data-fb-reiter="${r}"]`);
     await gross.seite.waitForTimeout(350);
+    /* SICHERSTELLEN, DASS DIE FLÄCHE OFFEN IST (E612). Ein Klick auf den
+       SCHON gewählten Reiter ist seit E612 der Klapp-Griff — für den
+       ersten Reiter der Schleife (er ist beim Start der aktive) hätte der
+       Klick oben also zugeklappt statt gewählt, und gezählt würden null
+       Knöpfe. Hier wird nicht die Zusage weicher gemacht, sondern der
+       Zustand hergestellt, über den sie spricht. */
+    await gross.seite.evaluate(() => {
+      const k = document.querySelector<HTMLElement>('.folienband-reiter [aria-selected="true"]');
+      if (k && k.getAttribute('aria-expanded') === 'false') k.click();
+    });
+    await gross.seite.waitForTimeout(300);
     const m = await gross.seite.evaluate(() => {
       const f = document.querySelector<HTMLElement>('.folienband-flaeche');
       const fr = f?.getBoundingClientRect();
@@ -373,6 +397,15 @@ console.log('\n§6 Zieht man das Fenster schmal, geht das Band — und kommt wie
 
   await w.seite.setViewportSize({ width: 1440, height: 852 });
   await w.seite.waitForTimeout(600);
+  /* AUFKLAPPEN, DENN GEZÄHLT WERDEN KNÖPFE (E612). Zugeklappt ist die
+     Fläche leer — `flaecheFuellen` kehrt vor dem Füllen um. Die Aussage
+     hier ist „das Band ist zurück und vollständig", nicht „es steht
+     offen"; also erst den Zustand herstellen, über den sie spricht. */
+  await w.seite.evaluate(() => {
+    const r = document.querySelector<HTMLElement>('.folienband-reiter [aria-selected="true"]');
+    if (r && r.getAttribute('aria-expanded') === 'false') r.click();
+  });
+  await w.seite.waitForTimeout(400);
   const wieder = await w.seite.evaluate(() => {
     const b = document.querySelector<HTMLElement>('.folienband');
     return {

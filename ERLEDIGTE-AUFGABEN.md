@@ -1,5 +1,44 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 16. September 2026 · E612 · Das Schreibstudio wird ruhig
+
+**Redur:** „hier sieht es sehr viel aus und haben nicht so viel Platz für
+Bearbeiten … will nicht so viel Sachen sehen aber trotzdem alles machen
+kann."
+
+**Gemessen statt geschätzt:** 301 px Bedienung über der ersten Folie, und
+nichts davon war wegzuklicken. Zweimal gemessen — erst aus den Stilblättern
+gerechnet, dann am laufenden Programm. Nachher 160 px, Arbeitsfläche
+646 → 720 px.
+
+**Gebaut.** Das Folienband klappt zu (74 px), die Reiterzeile bleibt als
+Griff stehen, und die Dateikarte steht nur noch im Details-Fenster (95 px).
+Beides hängt an `data-ruhig`, das im Studio ohnehin schon am `body` stand —
+kein zweiter Schalter (§8). Der Griff ist der Reiter selbst, wie bei der
+Strichstärken-Klappe aus E465.
+
+**Nicht erfunden, sondern nachgesehen:** der gefürchtete E552-Fallstrick
+(„unter 900 px keine Zeichenwerkzeuge") war bereits gelöst — die
+Zeichenleiste wird dort als eigene Leiste gehängt, dasselbe Element. Die
+echte Gefahr lag beim Zuklappen ab 900 px, und dort hängt ihre Sichtbarkeit
+jetzt allein am Reiter.
+
+**Geprüft.** `test532` neu, 22 Zusicherungen, zwei Gegenproben rot gesehen —
+jeder der beiden Eingriffe einzeln. `test385 §4` und `test506` umgehängt
+statt weichgemacht. Acht weitere Läufe grün. **Nicht** geprüft: die
+Gesamtsuite.
+
+**Was das Hinsehen fand (§55.3):** die Reiterzeile allein sagte nicht, dass
+sich darunter etwas aufklappen lässt — wörtlich der Fund von E383. Ein `⌄`
+am rechten Ende, das sich dreht, behebt es.
+
+**Was aufgeschoben wurde, mit Grund:** das Lineal steht beim Reiter
+„Zeichnen" zweimal. Die Regel dagegen dreht E574 um — eine zweite
+Entscheidung, keine Nebenwirkung. Eingetragen als L181 mit drei Wegen,
+keiner davon gewählt.
+
+---
+
 ## 16. September 2026 · E611 · Das Auge an jedem Ordner
 
 **Redur:** „das ist nur bei Bibliothek — ich will überall, wenn ein Ordner

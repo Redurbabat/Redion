@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-589 Entscheidungen, E1 bis E611 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+590 Entscheidungen, E1 bis E612 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -654,6 +654,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E609** — Die Ordnerkachel steht wieder genau wie vorher: Auge, Zwinkern, Bewegung, alles (E608 vollständig zurückgenommen)
 * **E610** — Der Ablagename des Dienst-Arbeiters folgt dem INHALT, nicht der Nummer — weil ein Zurücknehmen die Nummer mit zurückdreht (L83.8, `test530`)
 * **E611** — Das Auge sitzt an JEDEM Ordner, nicht nur im Regal: die Notizhefte bekommen DASSELBE Auge und „Blick hinein“, aus einer Quelle (`test531`)
+* **E612** — Das Schreibstudio wird ruhig: 301 px Bedienung über der Folie werden 160 — das Folienband klappt zu, die Dateikarte zieht ins Details-Fenster (dreht E464 an dieser Stelle um, `test532`)
 
 ---
 
@@ -49532,3 +49533,160 @@ festhält.
 Drei Fächer im Regal der Notizhefte, jedes mit dem Auge oben links auf dem
 Reiter — dasselbe Auge, dieselbe Stelle, dieselbe Grösse wie in der
 Bibliothek.
+
+---
+
+## E612 — Das Schreibstudio wird ruhig
+
+**16. September 2026.** Redur, mit einem Bildschirmfoto des Studios bei
+offener `.ppsx`:
+
+> „hier sieht es sehr viel aus und haben nicht so viel Platz für Bearbeiten,
+> und räume es auf und will nicht so viel Sachen sehen aber trotzdem alles
+> machen kann"
+
+### Gemessen, nicht geschätzt
+
+Am laufenden Programm, 1440 × 852, Foliensatz mit eingelesener Datei — von
+der Oberkante bis zur ersten Folie:
+
+```txt
+Reiterleiste (offene Dokumente)      48 px
+Dokument-Kopfzeile                   48 px
+Folienband (35 Reiter + 74 Fläche)  110 px
+Polster + Dateikarte + Hinweissatz   95 px
+─────────────────────────────────────────
+                                    301 px
+```
+
+Und davon liess sich **nichts** wegklicken. Der Wert war zuerst aus den
+Stilblättern gerechnet und dann am Bildschirm nachgemessen: beide Male 301.
+
+**Nachher: 160 px.** Die Arbeitsfläche wächst von 646 auf 720 px.
+
+> **Was dabei NICHT geschieht, und das gehört hierher:** die Folie selbst
+> bleibt 571 px hoch. Sie ist seitenverhältnisgebunden und hängt an der
+> Spaltenbreite, nicht an der Höhe. Wer „die Folie wird grösser" verspricht,
+> misst falsch — gewonnen sind Arbeitsfläche und Ruhe, nicht Foliengrösse.
+
+### Was entschieden wurde
+
+**1 · Das Folienband klappt zu.** Die Fläche (74 px) ist zugeklappt,
+solange `data-ruhig` nicht auf `aus` steht. Die **Reiterzeile bleibt
+stehen** — sie ist der Griff, wie `.mb-rechts` die 36-px-Zeile in E383 hält.
+
+Kein zweiter Schalter (§8): die Vorgabe hängt an der ruhigen Fassung, die im
+Studio ohnehin schon am `body` steht (gemessen: `data-ruhig="an"`). Gemerkt
+wird sie unter `folienbandZu` — dasselbe Muster wie `bandZu` beim globalen
+Menüband, das seit E236 überall zugeklappt voreingestellt ist.
+
+**Der Griff ist der Reiter selbst.** Ein Klick auf den schon gewählten
+Reiter klappt auf und wieder zu — wörtlich das Muster der
+Strichstärken-Klappe (E465: „die schon gewählte Stufe ein zweites Mal
+antippen"). Ein Klick auf einen anderen Reiter wechselt und klappt auf, wie
+in PowerPoint.
+
+**2 · Die Dateikarte steht nur noch im Details-Fenster.** Über dem Blatt
+kostete sie 40 px Karte, 17 px Hinweis und ihre Abstände — rund 95 von 301.
+
+### Der Widerspruch, im Wortlaut (E464)
+
+E384 hatte die Karte schon einmal vom Papier in den Inspector geräumt („die
+45 px kostete sie am Telefon von 844"). **E464** hat sie mit Redurs
+Schreibtisch zurückgeholt, und `test385 §4` verlangte sie seither
+ausdrücklich „über der Arbeitskopie".
+
+Beides ist vertretbar. Beides gleichzeitig geht nicht.
+
+Redur hat am 16. September beide Fassungen nebeneinander gesehen und für
+den Inspector entschieden. **E464 gilt weiter für alles andere** — den
+Schreibtisch, die Stiftmarken, den Verlauf; an dieser einen Stelle ist es
+umgedreht, und der Auftraggeber ist derselbe. Das ist das Muster von E554,
+nicht eine stille Änderung.
+
+**Und der Prüflauf wurde nicht weichgemacht**, sondern in den Zustand
+gestellt, über den er spricht: `test385 §4` setzt jetzt `data-ruhig="aus"`
+und prüft dort unverändert „über der Arbeitskopie". Dass sie im Ruhezustand
+oben fehlt **und im Details-Fenster steht**, hält `test532 §4`. Ohne diese
+zweite Zusicherung wäre es Löschen mit anderem Namen.
+
+### Der E552-Fallstrick, und wo er wirklich liegt
+
+Die Zeichenleiste ist ein **Kind des Bandes** (E552). Die Chronik warnt:
+„Wer das Band entfernt, nimmt sie mit — dann hätte ein Fenster unter 900 px
+keine Zeichenwerkzeuge mehr (§47)."
+
+Nachgesehen, nicht angenommen (`document-mode.ts`):
+
+```js
+let folienband = folienbandBauen(page, drawingbar);   // < 900 px → null
+workspace.append(top, ...(folienband ? [folienband] : []),
+                 findbar, ...(folienband ? [] : [drawingbar]), …);
+```
+
+Unter 900 px steht die Leiste als eigene Leiste da — **dasselbe Element,
+nur anders gehängt.** Die Gefahr lag also nicht dort, sondern genau beim
+Zuklappen ab 900 px. Deshalb hängt `zeichenleiste.hidden` allein am Reiter
+und **nicht** an `zu`: beim Reiter „Zeichnen" steht die Leiste immer.
+`test532 §3` hält es fest.
+
+### Ein Zeichen, dass da noch etwas ist
+
+Beim Hinsehen (§55.3) sagte die Reiterzeile allein nicht, dass sich darunter
+etwas aufklappen lässt — **genau der Fund von E383** beim Klapp-Pfeil des
+Menübandes: „allein an der rechten Kante kann er zu einer Zierde werden, die
+niemand anklickt." Dort war die Antwort, ihm ein Wort zu geben; hier genügt
+ein `⌄` am rechten Ende, weil die Reiter daneben schon sagen, *was*
+aufklappt. Es dreht sich, wenn das Band offen ist.
+
+§37: der Knopf ist so hoch wie die Reiterzeile (34 px) und damit ein
+Nebenweg — **keine neue Abweichung**, die Zeile ist seit E550 so hoch und
+ihre Reiter sind es auch. Ein 44-px-Knopf darin würde die Zeile aufblasen
+und einen Teil des gewonnenen Platzes zurücknehmen. Am Finger gilt weiter
+`pointer:coarse` mit 44 px.
+
+### Was NICHT in diesem Bogen steckt, obwohl es auffiel
+
+**Das Lineal steht zweimal**, sobald der Reiter „Zeichnen" offen ist: oben
+`[data-document-action="ink-ruler"]`, unten `[data-act="lineal"]`. Gemessen,
+bestätigt — und wieder herausgenommen.
+
+Der Grund: eine Regel, die den unteren versteckt, dreht **E574** um („der
+Lineal-Schalter gehört beim Stift ins Dock", mit eigener Begründung und
+eigener Zusicherung in `test524`). Das ist eine zweite Entscheidung, keine
+Nebenwirkung — und auf Redurs Bild steht das Lineal gar nicht doppelt, weil
+dort der Reiter „Präsentation" offen ist. Eingetragen als **L181**.
+
+### Gemessen
+
+```txt
+test532   22 von 22 grün   (neu, der Wächter aus L121 Punkt 5)
+test385   38/38   §4 umgehängt statt weichgemacht
+test506   §1 und die Reiterschleife umgehängt   grün
+test508   grün
+test524   unverändert grün (das Lineal blieb, wie es war)
+npm run typecheck   sauber
+Dienststand   v1141 → v1145
+```
+
+**Zwei Gegenproben (§50, §55.2), beide gelaufen und rot gesehen:**
+
+```txt
+Klappen abgeklemmt  (`let zu = false`)   → 224 px   12/17 · ✗=5
+Dateikarte zurück   (Ruhig-Abfrage weg)  → 227 px   14/17 · ✗=3
+```
+
+Jeder der beiden Eingriffe ist damit **einzeln** gehütet, nicht nur
+zusammen. Die Decke steht auf 175 und nicht auf den gemessenen 160: eine
+Decke, die genau auf dem Messwert sitzt, wird beim ersten geänderten Rand
+rot, ohne dass etwas zugewachsen wäre.
+
+### Und zwei Funde im eigenen Wächter
+
+1. **§5 war grün, bevor irgendetwas gebaut war.** Er zählte die
+   Lineal-Schalter beim Reiter „Präsentation" — dort gab es nie zwei. Eine
+   Zusicherung, die nicht rot werden kann, ist keine (§55.2).
+2. **Der Testhelfer klappte selbst auf.** Er klickte den Reiter
+   „Präsentation", um einen bekannten Zustand herzustellen — und seit
+   diesem Bogen ist genau dieser Klick der Klapp-Griff. Gefunden, weil §1
+   mit 224 px rot war statt mit 301.
