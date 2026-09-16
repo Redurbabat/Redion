@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-588 Entscheidungen, E1 bis E610 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+589 Entscheidungen, E1 bis E611 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -653,6 +653,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E608** — ~~Das Auge am Ordner ist weg~~ — **zurückgenommen durch E609.** Der Eintrag bleibt stehen, damit niemand den Weg ein zweites Mal geht
 * **E609** — Die Ordnerkachel steht wieder genau wie vorher: Auge, Zwinkern, Bewegung, alles (E608 vollständig zurückgenommen)
 * **E610** — Der Ablagename des Dienst-Arbeiters folgt dem INHALT, nicht der Nummer — weil ein Zurücknehmen die Nummer mit zurückdreht (L83.8, `test530`)
+* **E611** — Das Auge sitzt an JEDEM Ordner, nicht nur im Regal: die Notizhefte bekommen DASSELBE Auge und „Blick hinein“, aus einer Quelle (`test531`)
 
 ---
 
@@ -49402,3 +49403,132 @@ Der alte Stand hielt sich als `notizen-v1141` fest — dieselbe Nummer, die
 E609 wieder eingesetzt hat. Mit dem neuen Namen hat der Aufräumer einen
 Grund, ihn wegzuräumen. Ein Neuladen genügt (`skipWaiting` im Einrichten,
 `clients.claim` im Aktivieren), und danach steht das Auge wieder am Ordner.
+
+---
+
+## E611 — Das Auge sitzt an jedem Ordner, nicht nur im Regal
+
+**16. September 2026.** Redur, mit einem Bild der Bibliothekskachel:
+
+> „und das ist nur bei Bibliothek — ich will überall, wenn ein Ordner
+> erstellt wird, das haben."
+
+### Was „überall" wirklich heisst — gezählt, nicht geschätzt
+
+```txt
+grep -rn 'data-art="ordner"' src/ --include=*.ts
+```
+
+Es gibt genau **zwei** Stellen, die eine Ordner-Kachel zeichnen:
+
+| Ort | Auge | „Blick hinein" im Menü |
+|---|---|---|
+| `bibliothek.ts` · `deckelKarte` | ✅ seit E463 | ✅ seit E459 |
+| `notebook.ts` · `fachCard` | ❌ | ❌ |
+
+„Überall" ist also eine Stelle. Und in den Notizheften fehlte nicht nur das
+Auge: es gab **gar keinen Weg**, in ein Fach zu sehen, ohne es zu öffnen —
+weder mit der Maus noch über das ⋯-Menü.
+
+Nebenbei löst das ein Rätsel aus demselben Tag. Redurs erstes Bild zeigte
+Ordnerkacheln mit `•••` oben rechts und ohne Auge; im Code war das Auge
+nachweislich da. Beides stimmte: das Bild kam aus den **Notizheften**
+(`nh-mehr`, das `⋯`), nicht aus der Bibliothek.
+
+### Was entschieden wurde
+
+Auszeichnung **und** Verdrahtung stehen ab jetzt an einer Stelle und werden
+nach aussen gegeben:
+
+```ts
+Bibliothek.blickKnopf(id, name)      // das Auge als HTML
+Bibliothek.mitBlick(deckel, id, …)   // Deckel + Auge in einer .bib-zelle
+Bibliothek.blickAnbringen(wurzel, beiOeffnen?)
+Bibliothek.blickHinein(seite, rect, perZeigen?, beiOeffnen?)
+```
+
+Beide Dateien liegen im Bereich `wissen`; §5 Regel 1 erlaubt eigene Dateien
+untereinander.
+
+**Der Mitgabewert `beiOeffnen` ist der Kern.** Ohne ihn nimmt die Karte das
+`geheIn` der Bibliothek — und „Ordner öffnen" spränge aus dem Regal der
+Notizhefte in die Bibliothek. Die Notizhefte reichen ihr eigenes `openFach`
+herein.
+
+### Die Alternative, und warum sie nicht genommen wurde
+
+Das Auge in `notebook.ts` **nachbauen**. Das wäre der sicherere Weg gewesen
+— kein Anfassen der Bibliothek, kein Regressionsrisiko an dem einen Ding,
+das Redur viermal zurückgeholt hat (E601–E604, E608/E609).
+
+Und es wäre der falsche gewesen. Zwei Kopien laufen auseinander: die zweite
+bliebe beim nächsten Bogen am Auge stehen, und Redion hätte zwei Augen, die
+sich verschieden benehmen. Redur hat nicht „auch eins" gesagt, sondern
+„**das** haben". Das Regressionsrisiko ist dafür der richtige Preis — und
+`test436` (71) und `test476` (26) halten die Bibliothek dagegen.
+
+### Was es kostet
+
+- **`bibliothek.ts` wurde angefasst.** Die Verdrahtung ist aus `bindeRegal`
+  herausgezogen; funktional unverändert, geprüft durch `test531` §4 und die
+  beiden Läufe oben.
+- **Die Notizhefte hängen jetzt an der Bibliothek.** Fehlt sie (ein eigenes
+  Skript), steht die Kachel wie vorher da — ohne Auge, aber vollständig
+  bedienbar. Die Abfrage `typeof Bibliothek !== 'undefined'` ist kein
+  Zierrat.
+- **Kein neues Skript, kein neuer `GRUNDSTOCK`-Eintrag** (§28). Ein eigener
+  `ordnerblick.ts` hätte beides gebraucht.
+
+### Gemessen, nicht geschätzt
+
+```txt
+test531   19 von 19 grün   (neu)
+test436   71 von 71 grün   (das Auge der Bibliothek)
+test476   26 von 26 grün   (der Blick beim Hinschauen)
+test264   25 von 25 grün   (die Notizhefte selbst)
+test290   13 von 13 grün   (Namensräume)
+npm run typecheck          sauber
+Dienststand               v1141 → v1142, Stempel e1266feeeb8eca65
+```
+
+**Das Auge sitzt in beiden Bereichen gleich** — abgelesen am laufenden
+Programm, nicht behauptet:
+
+```txt
+                 Masse    von oben   von links
+Notizhefte       44×44      4 px       4 px
+Bibliothek       44×44      4 px       4 px
+```
+
+### Die Gegenprobe — und was sie fand (§50, §55.2)
+
+Die erste Gegenprobe zum Mitgabewert `beiOeffnen` ging **grün durch**. Der
+Wächter behauptete „danach steht man in den Notizheften", und das prüfte er
+an `.nh-regal` und am Hash — beides bleibt aber stehen, wenn die Karte
+`geheIn` ruft: die Bibliothek ändert dann nur unsichtbar etwas an sich
+selbst. Eine Zusicherung, die nicht rot werden kann, ist keine.
+
+Geschärft auf `Store.getMeta('heft:fach')` — das setzt einzig `openFach`.
+Damit sagt die Gegenprobe, was sie soll:
+
+```txt
+Bibliothek.blickAnbringen(wurzel)     ← Mitgabewert entfernt
+✗ … und danach steht man IN DIESEM Fach der Notizhefte
+     — ist "", soll "66bfb571-8734-45cd-85db-63bef8ce14db"
+18/19 · ✗=1
+```
+
+Die zweite Gegenprobe war der Zustand vor dem Bauen: 11 von 18 rot, §4
+(Bibliothek) grün.
+
+**Die Lehre**, und sie ist dieselbe wie in §55.2, nur von der anderen Seite:
+eine Prüfung kann auch dann wertlos sein, wenn sie beim ersten Mal rot war.
+Sie war hier rot, WEIL das Element fehlte — nicht, weil sie das Verhalten
+gemessen hätte. Erst die Gegenprobe am fertigen Bau zeigt, ob sie das Richtige
+festhält.
+
+### Angesehen (§55.3)
+
+Drei Fächer im Regal der Notizhefte, jedes mit dem Auge oben links auf dem
+Reiter — dasselbe Auge, dieselbe Stelle, dieselbe Grösse wie in der
+Bibliothek.

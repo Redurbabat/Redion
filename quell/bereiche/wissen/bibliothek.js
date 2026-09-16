@@ -574,9 +574,13 @@ const Bibliothek = (() => {
     };
     /** Die Karte über dem Deckel aufschlagen. `r` ist das Rechteck des Deckels.
      *  `perZeigen` heisst: sie geht wieder zu, sobald der Zeiger fortgeht. */
-    const blickHinein = (p, r, perZeigen = false) => {
+    const blickHinein = (p, r, perZeigen = false, beiOeffnen) => {
+        /* WOHIN „ÖFFNEN" FÜHRT, entscheidet der Aufrufer (E611). `geheIn` ist
+           ein Schritt IN DER BIBLIOTHEK; die Notizhefte reichen ihr eigenes
+           `openFach` herein, sonst spränge ein Fach aus dem Regal heraus. */
+        const oeffne = beiOeffnen || ((id) => geheIn(id));
         if (typeof Ordnerkarte === 'undefined') {
-            geheIn(p.id);
+            oeffne(p.id);
             return;
         }
         document.querySelectorAll('.ru-fach-lage').forEach(a => a.remove());
@@ -591,11 +595,11 @@ const Bibliothek = (() => {
             beiWahl: (stueck) => {
                 zu();
                 if (stueck.ordner)
-                    geheIn(stueck.id);
+                    oeffne(stueck.id);
                 else
                     App.oeffne(stueck.id);
             },
-            beiOrdner: () => { zu(); geheIn(p.id); }
+            beiOrdner: () => { zu(); oeffne(p.id); }
         });
         lage.append(griff.element);
         document.body.append(lage);
@@ -658,6 +662,83 @@ const Bibliothek = (() => {
            über einen Ordner fuhr, wäre ein Diebstahl (§38). */
         if (!perZeigen)
             griff.element.querySelector('.ru-fach-griff')?.focus();
+    };
+    /* ═══ DAS AUGE ALS DIENST DES BEREICHS (E611) ══════════════════════════
+       Redur, 16. September: „das ist nur bei Bibliothek — ich will überall,
+       wenn ein Ordner erstellt wird, das haben."
+  
+       Es gibt genau ZWEI Stellen, die eine Ordner-Kachel zeichnen: hier und
+       `fachCard` in `notebook.ts`. Damit die zweite dasselbe bekommt und
+       nicht etwas Ähnliches, stehen Auszeichnung UND Verdrahtung ab jetzt
+       an EINER Stelle und werden nach aussen gegeben. Beide Dateien liegen
+       im Bereich `wissen` — §5 Regel 1 erlaubt eigene Dateien untereinander.
+  
+       Zwei Kopien wären der sicherere Weg gewesen, aber der falsche: die
+       zweite wäre beim nächsten Bogen am Auge stehengeblieben, und dann
+       hätte Redion zwei Augen, die sich verschieden benehmen. */
+    /** Das Auge selbst. EINE Quelle für die Auszeichnung. */
+    const blickKnopf = (id, name) => `<button class="bib-blick" data-blick="${esc(id)}" ` +
+        `aria-label="Blick in „${esc(name || 'Ohne Titel')}“" title="Blick hinein">` +
+        '<i class="bib-blick-auge" aria-hidden="true"><b></b></i></button>';
+    /** Deckel und Auge in einer Zelle. Das Auge ist ein GESCHWISTER des
+     *  Deckels, kein Kind: ein Knopf im Knopf ist kein gültiges HTML, und
+     *  der Klick käme zweimal an (E463). */
+    const mitBlick = (deckelHtml, id, name) => '<span class="bib-zelle">' + deckelHtml + blickKnopf(id, name) + '</span>';
+    /** Die Augen in `wurzel` verdrahten — derselbe Weg wie im ⌄-Menü, ohne
+     *  Menü. Seit E508 öffnet auch das blosse HINSCHAUEN.
+     *
+     *  `beiOeffnen` sagt, was „Ordner öffnen" tun soll. Ohne Angabe ist das
+     *  `geheIn`, also ein Schritt IN DER BIBLIOTHEK. Für die Notizhefte wäre
+     *  das falsch — dort führt es aus dem Regal heraus; sie reichen deshalb
+     *  ihr eigenes `openFach` herein. `test531` §2 hält genau das fest. */
+    const blickAnbringen = (wurzel, beiOeffnen) => {
+        wurzel.querySelectorAll('.bib-blick[data-blick]').forEach(b => {
+            const seiteVon = () => Store.getBlock(b.dataset['blick'] || '');
+            b.addEventListener('click', ereignis => {
+                ereignis.stopPropagation();
+                schauAbsagen();
+                const p = seiteVon();
+                /* Ein Tipp auf denselben Ordner, dessen Karte gerade vom Zeigen
+                   offen steht, klappt sie nicht zu und wieder auf — er HÄLT sie
+                   fest. Alles andere wäre ein Flackern für nichts. */
+                if (p && schauId === String(p.id) && document.querySelector('.ru-fach-lage')) {
+                    schauId = '';
+                    return;
+                }
+                if (p)
+                    blickHinein(p, b.getBoundingClientRect(), false, beiOeffnen);
+            });
+            b.addEventListener('pointerenter', ereignis => {
+                const e = ereignis;
+                /* NUR DIE MAUS. Ein Finger meldet auf manchen Geräten ein
+                   `pointerenter`, das kein Überfahren ist — er tippt gerade. Und
+                   ein Gerät ohne Zeiger meldet gar keines; die Abfrage kostet
+                   dort nichts. */
+                if (e.pointerType !== 'mouse' || !zeigerHatHover())
+                    return;
+                if (document.querySelector('.ru-fach-lage'))
+                    return;
+                schauAbsagen();
+                schauUhr = window.setTimeout(() => {
+                    schauUhr = 0;
+                    const p = seiteVon();
+                    if (p)
+                        blickHinein(p, b.getBoundingClientRect(), true, beiOeffnen);
+                }, SCHAU_AUF_MS);
+            });
+            b.addEventListener('pointerleave', ereignis => {
+                if (ereignis.pointerType === 'touch')
+                    return;
+                /* Noch nicht aufgegangen: die Absicht war keine. Schon offen: die
+                   Karte selbst entscheidet, ob der Zeiger zu ihr gewandert ist. */
+                if (schauUhr) {
+                    clearTimeout(schauUhr);
+                    schauUhr = 0;
+                }
+                if (schauId)
+                    schauZuSpaeter();
+            });
+        });
     };
     /** Nach einer kurzen Frist zuklappen — jeder neue Zeigerkontakt sagt ab. */
     const schauZuSpaeter = () => {
@@ -918,13 +999,10 @@ const Bibliothek = (() => {
         /* DAS AUGE AM ORDNER (E463). „Blick hinein" stand seit E459 nur im
            ⌄-Menü — ein Weg, den man kennen muss. Jetzt sitzt am Deckel jedes
            Ordners ein Auge, das beim Darüberfahren zwinkert und zur Seite
-           schaut. Es ist ein GESCHWISTER des Deckels, kein Kind: ein Knopf im
-           Knopf ist kein gültiges HTML, und der Klick käme zweimal an. */
-        return '<span class="bib-zelle">' + deckel +
-            `<button class="bib-blick" data-blick="${esc(p.id)}" ` +
-            `aria-label="Blick in „${esc(p.text || 'Ohne Titel')}\u201c" title="Blick hinein">` +
-            '<i class="bib-blick-auge" aria-hidden="true"><b></b></i>' +
-            '</button></span>';
+           schaut. Auszeichnung und Verdrahtung stehen seit E611 in `mitBlick`
+           und `blickAnbringen`, damit die Notizhefte DASSELBE Auge bekommen
+           und nicht ein ähnliches. */
+        return mitBlick(deckel, p.id, p.text);
     };
     const hefte = (liste) => {
         const nach = new Map();
@@ -1523,55 +1601,7 @@ const Bibliothek = (() => {
             krume.scrollLeft = krume.scrollWidth;
         });
         wrap.querySelectorAll('[data-ordner]').forEach(b => b.addEventListener('click', () => geheIn(b.dataset['ordner'] || null)));
-        /* Das Auge am Ordner (E463) — derselbe Weg wie im ⌄-Menü, ohne Menü.
-           Seit E508 öffnet auch das blosse HINSCHAUEN, siehe `blickHinein`. */
-        wrap.querySelectorAll('.bib-blick[data-blick]').forEach(b => {
-            const seiteVon = () => Store.getBlock(b.dataset['blick'] || '');
-            b.addEventListener('click', ereignis => {
-                ereignis.stopPropagation();
-                schauAbsagen();
-                const p = seiteVon();
-                /* Ein Tipp auf denselben Ordner, dessen Karte gerade vom Zeigen
-                   offen steht, klappt sie nicht zu und wieder auf — er HÄLT sie
-                   fest. Alles andere wäre ein Flackern für nichts. */
-                if (p && schauId === String(p.id) && document.querySelector('.ru-fach-lage')) {
-                    schauId = '';
-                    return;
-                }
-                if (p)
-                    blickHinein(p, b.getBoundingClientRect());
-            });
-            b.addEventListener('pointerenter', ereignis => {
-                const e = ereignis;
-                /* NUR DIE MAUS. Ein Finger meldet auf manchen Geräten ein
-                   `pointerenter`, das kein Überfahren ist — er tippt gerade. Und
-                   ein Gerät ohne Zeiger meldet gar keines; die Abfrage kostet
-                   dort nichts. */
-                if (e.pointerType !== 'mouse' || !zeigerHatHover())
-                    return;
-                if (document.querySelector('.ru-fach-lage'))
-                    return;
-                schauAbsagen();
-                schauUhr = window.setTimeout(() => {
-                    schauUhr = 0;
-                    const p = seiteVon();
-                    if (p)
-                        blickHinein(p, b.getBoundingClientRect(), true);
-                }, SCHAU_AUF_MS);
-            });
-            b.addEventListener('pointerleave', ereignis => {
-                if (ereignis.pointerType === 'touch')
-                    return;
-                /* Noch nicht aufgegangen: die Absicht war keine. Schon offen: die
-                   Karte selbst entscheidet, ob der Zeiger zu ihr gewandert ist. */
-                if (schauUhr) {
-                    clearTimeout(schauUhr);
-                    schauUhr = 0;
-                }
-                if (schauId)
-                    schauZuSpaeter();
-            });
-        });
+        blickAnbringen(wrap);
         wrap.querySelectorAll('.bib-deckel[data-id]').forEach(k => {
             k.addEventListener('click', ereignis => {
                 /* Der Pfeil im Namen öffnet das Menü zum Stück, nicht das Stück. */
@@ -2138,7 +2168,12 @@ const Bibliothek = (() => {
        Prüflauf die Sprache messen kann, ohne dreihundert Seiten anzulegen
        (test359 §6) — und damit die Decke eine Zahl mit Namen bleibt. */
     return { oeffne, alleZeigen, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon,
-        pdfImportieren, wannText, umfangSatz, DECKE_KUERZLICH };
+        pdfImportieren, wannText, umfangSatz, DECKE_KUERZLICH,
+        /* Der Ordnerblick als Dienst des Bereichs `wissen` (E611):
+           `blickKnopf`/`mitBlick` für die Auszeichnung, `blickAnbringen`
+           für die Verdrahtung, `blickHinein` für den Weg aus einem Menü
+           heraus. Die Notizhefte nutzen alle vier. */
+        blickKnopf, mitBlick, blickAnbringen, blickHinein };
 })();
 window.Bibliothek = Bibliothek;
 /* Die Bibliothek meldet ihre Kontextkante an (E272 Phase F). */

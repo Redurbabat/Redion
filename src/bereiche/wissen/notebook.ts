@@ -559,14 +559,24 @@ const Notebook = (() => {
   /** Die Fach-Karte: Redions gezeichnete Ordner-Mappe (`data-art="ordner"`
    *  aus der Bibliotheks-Anatomie) mit Symbol und ehrlicher Zählung. */
   const fachCard = (f: any): string => {
-    return `<div class="nh-karte nh-fach">` +
+    const deckel =
       `<button class="bib-deckel" data-fach="${esc(f.id)}" data-art="ordner" ` +
       `aria-label="Fach öffnen: ${esc(f.text || 'Ohne Namen')}">` +
       `<span class="bib-deckel-blatt is-leer">` +
       `<span class="nh-fach-icon" aria-hidden="true">${esc(f.icon || '🗂')}</span></span>` +
       `<span class="bib-deckel-name"><b>${esc(f.text || 'Ohne Namen')}</b></span>` +
       `<small>${esc(fachInhaltSatz(f.id))}</small>` +
-      `</button>` +
+      `</button>`;
+    /* DAS AUGE, WIE IM REGAL (E611). Redur, 16. September: „das ist nur bei
+       Bibliothek — ich will überall, wenn ein Ordner erstellt wird, das
+       haben." Geholt, nicht nachgebaut: `mitBlick` ist dieselbe Quelle, die
+       die Bibliothek benutzt, damit hier nie ein zweites, anders gelauntes
+       Auge entsteht. Fehlt die Bibliothek (sie ist ein eigenes Skript), steht
+       die Kachel wie vorher da — ohne Auge, aber vollständig bedienbar. */
+    const kachel = typeof Bibliothek !== 'undefined' && Bibliothek.mitBlick
+      ? Bibliothek.mitBlick(deckel, f.id, f.text || 'Ohne Namen')
+      : deckel;
+    return `<div class="nh-karte nh-fach">` + kachel +
       `<button class="nh-mehr" data-mehr-fach="${esc(f.id)}" title="Mehr zu diesem Fach" ` +
       `aria-label="Mehr zu ${esc(f.text || 'diesem Fach')}">⋯</button></div>`;
   };
@@ -1019,8 +1029,15 @@ const Notebook = (() => {
     const f = Store.getBlock(id);
     if (!f) return;
     const r = anker.getBoundingClientRect();
+    /* „BLICK HINEIN" AUCH HIER (E611, §37). Das Auge an der Kachel ist der
+       Weg für Maus und Stift; der Finger braucht einen genannten. In der
+       Bibliothek steht er seit E459 im ⌄-Menü — in den Notizheften fehlte
+       er, und damit gab es gar keine Möglichkeit, in ein Fach zu sehen,
+       ohne es zu öffnen. */
+    const kannBlick = typeof Bibliothek !== 'undefined' && !!Bibliothek.blickHinein;
     const m = UI.menu(
       `<button data-k="auf">Öffnen</button>` +
+      (kannBlick ? `<button data-k="blick"><span class="mi">⌕</span>Blick hinein</button>` : '') +
       `<button data-k="name">Umbenennen</button>` +
       `<div class="sep"></div>` +
       `<button data-k="korb">In den Papierkorb</button>`,
@@ -1030,6 +1047,9 @@ const Notebook = (() => {
       if (!b) return;
       m.remove();
       if (b.dataset['k'] === 'auf') return openFach(id);
+      if (b.dataset['k'] === 'blick')
+        return Bibliothek.blickHinein(f, anker.getBoundingClientRect(), false,
+          (ziel: string) => openFach(ziel));
       if (b.dataset['k'] === 'name') {
         void (async () => {
           const name = await UI.frage('Name des Fachs', String(f.text || ''));
@@ -1318,6 +1338,12 @@ const Notebook = (() => {
       searchText = '';
       renderShelf();
     });
+    /* DIE AUGEN VERDRAHTEN (E611) — und zwar mit `openFach`. Ohne diesen
+       Mitgabewert nähme die Bibliothek ihr eigenes `geheIn`, und „Ordner
+       öffnen" in der Karte spränge aus dem Regal in die Bibliothek. Das
+       ist der Fehler, den `test531` §2 festhält. */
+    if (typeof Bibliothek !== 'undefined' && Bibliothek.blickAnbringen)
+      Bibliothek.blickAnbringen(wurzel, (id: string) => openFach(id));
   };
 
   const render = (wrap: HTMLElement): void => {

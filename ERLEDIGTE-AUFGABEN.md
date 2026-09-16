@@ -1,5 +1,34 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 16. September 2026 · E611 · Das Auge an jedem Ordner
+
+**Redur:** „das ist nur bei Bibliothek — ich will überall, wenn ein Ordner
+erstellt wird, das haben."
+
+**Gezählt statt geschätzt:** es gibt genau zwei Zeichner von Ordnerkacheln.
+`bibliothek.ts` hatte das Auge, `notebook.ts` nicht — und dort fehlte auch
+„Blick hinein" im ⋯-Menü, es gab also gar keinen Weg, in ein Fach zu sehen,
+ohne es zu öffnen.
+
+**Gebaut.** Auszeichnung und Verdrahtung stehen jetzt an EINER Stelle
+(`blickKnopf`, `mitBlick`, `blickAnbringen`, `blickHinein`) und werden nach
+aussen gegeben; die Notizhefte holen sie und reichen ihr eigenes `openFach`
+herein, damit „Ordner öffnen" im Regal bleibt. Nachgebaut wurde bewusst
+nichts: zwei Kopien laufen auseinander.
+
+**Geprüft.** `test531` neu, 19 Zusicherungen. `test436` (71), `test476`
+(26), `test264` (25), `test290` (13) grün, `typecheck` sauber. **Nicht**
+geprüft: die Gesamtsuite.
+
+**Der Fund im eigenen Wächter, und er gehört hierher:** die erste Gegenprobe
+ging grün durch. Die Zusicherung „danach steht man in den Notizheften" hing
+an `.nh-regal` und am Hash — beides bleibt stehen, auch wenn der falsche Weg
+genommen wird. Erst `Store.getMeta('heft:fach')` misst es wirklich. Eine
+Prüfung, die beim ersten Mal rot war, WEIL das Element fehlte, hat damit noch
+nichts über das Verhalten gesagt.
+
+---
+
 ## 16. September 2026 · E610 · Der Ablagename folgt dem Inhalt
 
 **Der Fund kam aus einer Frage, nicht aus einem Plan.** Redur sah das Auge
