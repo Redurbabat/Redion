@@ -1848,3 +1848,56 @@ npm run stand                  v1141 unverändert (7b5c3ef121062083)
 
 **Was der Bogen NICHT gemessen hat:** die Gesamtsuite. Gelaufen sind die
 oben genannten acht Läufe.
+
+--------------------------------------------------------------------------------
+
+## §49 — Wie viele Ordner es wirklich gibt (E611, 16. September 2026)
+
+**„Überall" ist eine Stelle.** Gezählt, nicht geschätzt:
+
+```txt
+grep -rn 'data-art="ordner"' src/ --include=*.ts
+
+bibliothek.ts  deckelKarte   Auge seit E463, „Blick hinein" seit E459
+notebook.ts    fachCard      beides fehlte
+motion.ts                    nur der Selektor der Blätter-Fächerung
+```
+
+Zwei Zeichner, einer mit Auge. Das erklärt nebenbei Redurs erstes Bild
+desselben Tages: Ordnerkacheln mit `•••` und ohne Auge — das war die
+`nh-mehr`-Schaltfläche der **Notizhefte**, nicht die Bibliothek.
+
+**Das Auge sitzt in beiden Bereichen gleich** — am laufenden Programm
+abgelesen (`getBoundingClientRect`, dunkles Thema, 1280 px):
+
+```txt
+                 Masse    von oben   von links
+Notizhefte       44×44      4 px       4 px
+Bibliothek       44×44      4 px       4 px
+```
+
+**Läufe:**
+
+```txt
+test531   19/19   (neu)
+test436   71/71   das Auge der Bibliothek
+test476   26/26   der Blick beim Hinschauen
+test264   25/25   die Notizhefte selbst
+test290   13/13   Namensräume
+npm run typecheck   sauber
+Dienststand         v1141 → v1142, Stempel e1266feeeb8eca65
+```
+
+**Die Gegenprobe, die zuerst grün war.** Der Mitgabewert `beiOeffnen` wurde
+entfernt — und der Lauf blieb grün. Die Zusicherung prüfte `.nh-regal` und
+den Hash, und beide bleiben stehen, wenn die Karte das `geheIn` der
+Bibliothek ruft. Geschärft auf `Store.getMeta('heft:fach')`:
+
+```txt
+vorher (Zusicherung an .nh-regal + Hash)   19/19  ← wertlos
+nachher (Zusicherung an heft:fach)         18/19  ✗=1
+```
+
+Erst die zweite Fassung misst, was sie behauptet.
+
+**Nicht gemessen:** die Gesamtsuite. Gelaufen sind die fünf oben.
