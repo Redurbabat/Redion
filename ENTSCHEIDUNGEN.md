@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-586 Entscheidungen, E1 bis E607 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+587 Entscheidungen, E1 bis E608 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -650,6 +650,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E605** — Ein Tipp auf leeres Papier schreibt schon: wie in Word, ohne Werkzeug und ohne zweiten Klick
 * **E606** — Das Schreibfeld hält mehrere Formate: ein `<span>` je Lauf statt eines `<textarea>` (L172 geschlossen)
 * **E607** — Die Gedankenkarte: Knoten als HTML, Linien als SVG — gemessen statt geschätzt (Redurs „ich will auch das XMind erstellen können")
+* **E608** — Das Auge am Ordner ist weg; der Blick kommt vom Deckel selbst, mit Maus und mit Stift (E463 zurückgenommen, E508 umgehängt)
 
 ---
 
@@ -49167,3 +49168,108 @@ XMind-Strukturen (Organigramm, Fischgräte, Zeitstrahl, Matrix), und die
 fremden Formate aus dem dritten Bild (`.xmind`, FreeMind `.mm`, OPML,
 Markdown-Gliederung). Alles davon steht als **L176** bis **L179** in
 `LUECKEN.md` — als benannte Lücke, nicht als stiller Mangel (§35).
+
+
+---
+
+## E608 — Das Auge am Ordner ist weg, der Blick bleibt
+
+**Redurs Satz, 16. September 2026**, mit einem Bild der offenen Ordnerkarte:
+„wenn ich auf Ordner mit Maus gehe, sollte es sein [so] — mach die Augen weg
+und behalte nur so: wenn ich mit Maus drauf gehe, sollte sie mir zeigen, oder
+mit Laptop-Stift."
+
+**Entschieden:** Das Auge `.bib-blick` verschwindet. Was es zeigte — die
+Ordnerkarte — kommt beim Hinschauen auf den **Deckel selbst**, mit der Maus
+und mit dem Stift.
+
+### Was damit zurückgenommen wird, und was nicht
+
+| | vorher | jetzt |
+|---|---|---|
+| Auge am Deckel (E463) | ja, 44 px, zwinkert | **weg** |
+| Klick aufs Auge öffnet die Karte (E463) | ja | weg — es gibt kein Auge |
+| Hinschauen öffnet die Karte (E508) | auf dem Auge | **auf dem Deckel** |
+| „Blick hinein" im ⌄-Menü (E459) | ja | **ja, unverändert** |
+| Klick auf den Deckel | geht in den Ordner | geht in den Ordner |
+
+**E463 ist in diesem einen Punkt zurückgenommen**, E508 ist umgehängt, E459
+steht unangetastet. Das ist kein Detail: E459 ist die Bedingung, unter der
+das Auge gehen durfte.
+
+### Warum das Auge gehen durfte, ohne §37 zu brechen
+
+§37 sagt: kein Desktop-only für Kernfunktionen. Ein Blick in den Ordner, den
+es nur mit einer Maus gibt, wäre genau das — am Telefon gibt es kein
+Überfahren.
+
+Der Weg mit dem Finger geht aber nicht verloren: **„Blick hinein" steht seit
+E459 im ⌄-Menü jedes Ordners und steht dort weiter.** `test476` §5 prüft
+genau diesen Weg und nichts anderes; `test436` §7 prüft ihn ein zweites Mal,
+nebenan. Ohne diesen Weg wäre das Entfernen des Auges kein Aufräumen
+gewesen, sondern ein Verlust.
+
+### Drei Zeigerarten, drei Antworten
+
+```txt
+Maus    öffnet nach 280 ms. Wie bisher.
+Stift   ebenso — aber OHNE die Abfrage `(hover: hover) and (pointer: fine)`.
+Finger  öffnet gar nicht per Überfahren.
+```
+
+**Warum der Stift die Abfrage nicht bestehen muss.** `matchMedia('(hover:
+hover) and (pointer: fine)')` beschreibt den HAUPTZEIGER des Geräts. Auf
+einem Laptop mit Berührungsbildschirm ist das der Finger — die Abfrage sagt
+dort „kein Überfahren", und sie hätte damit genau den Stift ausgesperrt, den
+Redur ausdrücklich genannt hat. Für die Maus bleibt sie: ein Gerät ohne
+Zeiger meldet ohnehin kein `pointerenter`, und die Abfrage kostet dort
+nichts.
+
+**Und ein Tipp ist kein Hinschauen.** Beim Antippen mit Maus oder Stift
+kommt erst `pointerenter`, dann `pointerdown`. Ohne eine Absage liefe die
+Uhr weiter — wer in einen Ordner hineingeht, bekäme obendrein seine Karte
+aufgeklappt. `pointerdown` am Deckel löscht deshalb die Uhr.
+
+### Die Wartezeit bleibt bei 280 ms — und das ist der Punkt zum Nachmessen
+
+Die 280 ms sind aus E508 übernommen. Sie wurden für ein **44 px grosses
+Auge** gewählt; jetzt hängen sie an einer **ganzen Ordnerkachel**. Eine
+Kachel überstreicht man beim Weg über das Regal viel eher als ein Auge, und
+280 ms sind schnell vorbei.
+
+Die Zahl wurde trotzdem nicht angetastet: sie ist die, die Redur bei E508
+gutgeheissen hat, und eine Zahl im Vorbeigehen zu ändern, weil sie einem zu
+klein vorkommt, ist genau die Sorte Entscheidung, die §36 verbietet („erst
+messen, dann bauen"). Wenn sich beim Benutzen zeigt, dass Karten aufgehen,
+die niemand wollte, ist das eine Messung — und dann wird die Zahl geändert,
+mit ihrem Grund.
+
+### Geprüft
+
+```txt
+test436 §7    8 Zusicherungen, neu geschrieben
+test476      29 Zusicherungen, umgehängt, §5 und §6 neu
+```
+
+Zwei Gegenproben (§55.2), beide gelaufen und rot gesehen:
+
+1. **Verdrahtung am Deckel abgeklemmt** — `test476` §1 wurde mit allen drei
+   Zusicherungen rot, `test436` §7 in zweien.
+2. **Stift wieder ausgesperrt** (nur `mouse`, dazu die Hover-Abfrage) —
+   `test476` §6 wurde in der zweiten Zusicherung rot, die erste blieb grün.
+   Genau das soll sie unterscheiden.
+
+### Angesehen (§55.3)
+
+`bilder/ordnerkarte-rechner-dunkel.png`: die Karte steht offen über dem
+Deckel, so wie in Redurs Bild — Name, Zähler, Suchfeld, die Blätter
+aufgefächert, „Ordner öffnen →". Und auf der Ordnerkachel darunter sitzt
+kein Knopf mehr.
+
+### Was dabei aus dem Stilblatt verschwunden ist
+
+`.bib-zelle`, `.bib-blick`, `.bib-blick-auge`, die Keyframes
+`bib-blick-zwinkern` und die zugehörige `prefers-reduced-motion`-Zeile.
+Die Stelle trägt jetzt einen Kommentar statt Regeln — wer sucht, warum das
+Auge weg ist, findet es dort und nicht nur hier. `doku/CSS-NAMENSRAEUME.md`
+ist nachgezählt: `bib` steht bei 397 statt 412.

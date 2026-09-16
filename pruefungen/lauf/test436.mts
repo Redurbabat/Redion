@@ -21,8 +21,12 @@
  *   §6 DAS RAUSCHEN ALS COVER: drei Kacheln in der Wahl, zwei Lagen auf der
  *      Seite, EIN Filterhalter — und der alte Fehler, dass `conic-gradient`
  *      als Bildadresse gelesen wurde, ist weg.
- *   §7 DAS AUGE am Ordnerdeckel: Geschwister des Deckels, 44 px, öffnet die
- *      Ordnerkarte; der Deckel selbst öffnet weiter den Ordner.
+ *   §7 KEIN AUGE MEHR am Ordnerdeckel (E608, war E463). Redur am
+ *      16. September: „mach die Augen weg und behalte nur so: wenn ich mit
+ *      Maus drauf gehe, sollte sie mir zeigen, oder mit Laptop-Stift."
+ *      Geprüft wird deshalb dreierlei: das Auge ist WEG, der Blick kommt
+ *      vom Deckel (Maus UND Stift), und der Weg mit dem Finger ist nicht
+ *      verlorengegangen — „Blick hinein" steht weiter im ⌄-Menü (§37).
  *   §8 OHNE BEWEGUNG steht alles still.
  *   §9 Eingebunden (index.html, GRUNDSTOCK, TypeScript-Quelle).
  *
@@ -32,8 +36,10 @@
  *        Gelaufen am 6. September 2026, rot.
  *   §4 → in `rundgang.ts` `Geste.weg()` aus `aufraeumen` nehmen: die Hand
  *        bleibt nach „Fertig" stehen. Gelaufen, rot.
- *   §7 → in `bibliothek.ts` die Verdrahtung der `.bib-blick` weglassen: der
- *        Klick auf das Auge öffnet keine Karte. Gelaufen, rot.
+ *   §7 → in `bibliothek.ts` die Verdrahtung am Ordnerdeckel weglassen: das
+ *        Hinschauen öffnet keine Karte. Gelaufen am 16. September, rot.
+ *        (Vorher lautete diese Zeile „die Verdrahtung der `.bib-blick`
+ *        weglassen" — das Auge gibt es seit E608 nicht mehr.)
  *
  *   node pruefungen/lauf/test436.mts
  * ==========================================================================*/
@@ -387,8 +393,8 @@ console.log('\n§6 Das Rauschen als Cover');
   await s.close();
 }
 
-/* ═══ §7 Das Auge am Ordnerdeckel ══════════════════════════════════════════ */
-console.log('\n§7 Das Auge am Ordnerdeckel');
+/* ═══ §7 Der Blick kommt vom Deckel, ohne Auge ════════════════════════════ */
+console.log('\n§7 Der Blick kommt vom Deckel, ohne Auge');
 {
   const s = await oeffne();
   const w = JSON.parse(await s.evaluate(`(async () => {
@@ -400,42 +406,72 @@ console.log('\n§7 Das Auge am Ordnerdeckel');
     Store.setMeta('bibOrdner', '');
     Bibliothek.oeffne();
     await new Promise(r => setTimeout(r, 500));
-    const zelle = document.querySelector('.bib-zelle');
-    const auge = zelle?.querySelector('.bib-blick[data-blick]');
-    const deckel = zelle?.querySelector('.bib-deckel[data-art="ordner"]');
-    const r = auge?.getBoundingClientRect();
-    const oben = r ? document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) : null;
-    const bau = {
-      zelle: !!zelle, auge: !!auge, deckel: !!deckel,
-      geschwister: !!auge && !!deckel && auge.parentElement === deckel.parentElement && !deckel.contains(auge),
-      imKnopf: document.querySelectorAll('.bib-deckel .bib-blick').length,
-      label: auge?.getAttribute('aria-label'),
-      mass: r ? [Math.round(r.width), Math.round(r.height)] : null,
-      vorne: !!oben && oben.closest('.bib-blick') === auge,
-      nurOrdner: document.querySelectorAll('.bib-blick').length === document.querySelectorAll('.bib-deckel[data-art="ordner"]').length,
-      anzahlNichtOrdner: document.querySelectorAll('.bib-deckel:not([data-art="ordner"])').length
+    /* Ein Zeiger, der wirklich schwebt — „pointerType" entscheidet, ob die
+       App ihn als Überfahren nimmt. */
+    const schau = (el, art) => {
+      const r = el.getBoundingClientRect();
+      el.dispatchEvent(new PointerEvent('pointerenter', { bubbles: false,
+        pointerId: 1, pointerType: art, isPrimary: true,
+        clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }));
     };
-    auge.click();
-    await new Promise(r => setTimeout(r, 400));
-    const lage = document.querySelector('.ru-fach-lage');
-    const karte = { da: !!lage, offen: lage?.querySelector('.ru-fach-griff')?.getAttribute('aria-expanded'),
-      nochHier: Store.getMeta('bibOrdner', '') === '' };
+    const deckel = document.querySelector('.bib-deckel[data-art="ordner"]');
+    const bau = {
+      /* DAS AUGE IST WEG — nirgends, nicht nur an diesem einen Ordner. */
+      augen: document.querySelectorAll('.bib-blick').length,
+      zellen: document.querySelectorAll('.bib-zelle').length,
+      deckel: !!deckel,
+      ordner: document.querySelectorAll('.bib-deckel[data-art="ordner"]').length,
+      andere: document.querySelectorAll('.bib-deckel:not([data-art="ordner"])').length
+    };
+
+    /* --- Die Maus --- */
+    schau(deckel, 'mouse');
+    await new Promise(r => setTimeout(r, 600));
+    const maus = { da: !!document.querySelector('.ru-fach-lage'),
+                   nochHier: Store.getMeta('bibOrdner', '') === '' };
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise(r => setTimeout(r, 250));
     const zu = !document.querySelector('.ru-fach-lage');
+
+    /* --- Der Stift. Er darf NICHT an der „hover: hover"-Abfrage
+           scheitern: auf einem Laptop mit Berührungsbildschirm beschreibt
+           sie den Finger, nicht den schwebenden Stift. --- */
+    schau(deckel, 'pen');
+    await new Promise(r => setTimeout(r, 600));
+    const stift = !!document.querySelector('.ru-fach-lage');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await new Promise(r => setTimeout(r, 250));
+
+    /* --- Der Finger öffnet nichts per Überfahren --- */
+    schau(deckel, 'touch');
+    await new Promise(r => setTimeout(r, 600));
+    const finger = !!document.querySelector('.ru-fach-lage');
+
+    /* --- UND DER WEG MIT DEM FINGER IST NICHT WEG: „Blick hinein" steht
+           weiter im ⌄-Menü. Ohne ihn hätte das Auge nicht gehen dürfen. --- */
+    document.querySelector('.bib-deckel[data-art="ordner"] .bib-deckel-mehr').click();
+    await new Promise(r => setTimeout(r, 300));
+    const imMenue = [...document.querySelectorAll('.menu [data-a]')]
+      .some(b => b.dataset.a === 'blick');
+    document.querySelectorAll('.menu').forEach(m => m.remove());
+    await new Promise(r => setTimeout(r, 150));
+
+    /* --- Der Deckel selbst geht weiter in den Ordner --- */
     deckel.click();
     await new Promise(r => setTimeout(r, 400));
-    return JSON.stringify({ bau, karte, zu, drin: Store.getMeta('bibOrdner', '') === fach.id });
+    return JSON.stringify({ bau, maus, zu, stift, finger, imMenue,
+      drin: Store.getMeta('bibOrdner', '') === fach.id });
   })()`) as string);
-  p('Der Ordnerdeckel steht in einer Zelle mit dem Auge daneben', w.bau.zelle && w.bau.auge && w.bau.deckel);
-  p('… als Geschwister, nicht als Knopf im Knopf', w.bau.geschwister && w.bau.imKnopf === 0);
-  p('… nur an Ordnern, nicht an Seiten', w.bau.nurOrdner && w.bau.anzahlNichtOrdner >= 1);
-  p('… mit Vorlesenamen', /Blick in „Elektrotechnik\u201c/.test(String(w.bau.label)), String(w.bau.label));
-  p('… 44 px gross (§37)', !!w.bau.mass && w.bau.mass[0] >= 44 && w.bau.mass[1] >= 44, JSON.stringify(w.bau.mass));
-  p('… und wirklich vorn — ein Klick in die Mitte trifft das Auge', w.bau.vorne);
-  p('Ein Klick aufs Auge öffnet die Ordnerkarte, ohne in den Ordner zu gehen',
-    w.karte.da && w.karte.offen === 'true' && w.karte.nochHier, JSON.stringify(w.karte));
+  p('Kein Auge mehr — nirgends im Regal', w.bau.augen === 0 && w.bau.zellen === 0,
+    JSON.stringify(w.bau));
+  p('Die Ordnerkachel steht allein da', w.bau.deckel && w.bau.ordner === 1 && w.bau.andere >= 1,
+    JSON.stringify(w.bau));
+  p('Die MAUS über dem Deckel öffnet die Karte, ohne in den Ordner zu gehen',
+    w.maus.da && w.maus.nochHier, JSON.stringify(w.maus));
   p('Escape schliesst sie', w.zu);
+  p('Der STIFT öffnet sie ebenso — Redur hat ihn ausdrücklich genannt', w.stift);
+  p('Der FINGER öffnet sie nicht per Überfahren — er tippt gerade', !w.finger);
+  p('„Blick hinein" steht weiter im ⌄-Menü — der Weg am Telefon bleibt (§37)', w.imMenue);
   p('Der Deckel selbst öffnet weiter den Ordner', w.drin);
   await s.close();
 }

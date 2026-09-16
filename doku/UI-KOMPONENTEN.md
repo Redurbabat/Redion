@@ -285,7 +285,7 @@ zusätzlich dort, wo man täglich vorbeikommt:
 
 | Bauteil | Zusätzlich hier | Was daran echt ist |
 |---|---|---|
-| Ordnerkarte (E459) | ein Auge auf jedem Ordnerdeckel der Bibliothek | dieselbe Karte, derselbe Unterbaum |
+| Ordnerkarte (E459) | beim Hinschauen auf jeden Ordnerdeckel der Bibliothek — Maus oder Stift; mit dem Finger über „Blick hinein" im ⌄-Menü | dieselbe Karte, derselbe Unterbaum |
 | Presse (E461) | schwebende Karte unten rechts beim PDF-Einlesen | „Seite n von m" aus der echten Schleife |
 | Sterne (E461) | `#studio-auftraege` im Studio-Kopf | `Auftraege.offen()`, Zahl und Vorlesename |
 | Wort-Lader (E461) | der Vorhang beim Start, „Redion" | der Start selbst; weg, sobald er durch ist |
