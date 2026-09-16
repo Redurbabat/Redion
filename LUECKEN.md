@@ -3242,8 +3242,19 @@ L83 — Was zwischen „gepusht" und „Redur sieht es" noch fehlt (E271)
 6. **`ADRESSEN` (mehrere Adressen) bleibt ungeprüft** — siehe L82.7.
 7. **Die Skripte gibt es nur auf Windows.** Kein `.sh`-Gegenstück. Bisher
    kein Bedarf, aber es steht nirgends.
+8. ~~**Ein Zurücknehmen dreht die Fassungsnummer mit zurück.**~~ GESCHLOSSEN
+   in E610. Punkt 3 hat die Erhöhung zugesichert, aber nicht, dass eine
+   Nummer nur EINMAL vergeben wird: `git revert` nimmt `sw.ts` und
+   `stand.ts` mit, E609 hat v1145 auf v1141 gedreht, und v1142…v1145 waren
+   wieder frei — mit anderem Inhalt beim zweiten Mal, aber demselben
+   Ablagenamen. Der Name trägt jetzt den Inhaltsstempel
+   (`ABLAGE = VERSION + '-' + INHALT`), damit gleicher Name gleiche Bytes
+   heisst, per Konstruktion. `test530`, 16 Zusicherungen, Gegenprobe rot
+   gesehen.
 
-Gefunden am 30. August 2026 (beim Bau von E271, durch die Prüfung).
+Gefunden am 30. August 2026 (beim Bau von E271, durch die Prüfung);
+Punkt 8 am 16. September 2026, beim Nachsehen, warum ein zurückgeholtes
+Auge am Ordner im Browser trotzdem nicht ankam.
 
 ================================================================================
 L84 — ERLEDIGT: „Simulation starten" war lesbar, die MESSUNG war falsch

@@ -1793,3 +1793,58 @@ test290   13 von 13 grün   (der Namensraum-Wächter — `bib` wieder bei 412)
 
 **Was offen bleibt und nicht mit zurückging:** der Fund, dass der Stift den
 Blick gar nicht öffnen kann. Er steht als L180 und ist zwei Zeilen gross.
+
+--------------------------------------------------------------------------------
+
+## §48 — Der Ablagename des Dienst-Arbeiters (E610, 16. September 2026)
+
+**Die Nummer läuft nicht nur vorwärts.** Abgelesen aus `sw.js` über vier
+Bögen, nicht erinnert:
+
+```txt
+git show <commit>:sw.js | grep -o "VERSION[^;]*"
+
+E601  5c1f757   notizen-v1125
+E608  70cf450   notizen-v1145
+E609  ca2a422   notizen-v1141     ← vier Stufen ZURÜCK
+HEAD            notizen-v1141
+```
+
+E609 war ein `git revert` von E608. Weil E608 `sw.ts` und `stand.ts`
+angefasst hatte, gingen sie mit zurück — und `v1142` bis `v1145` sind wieder
+frei zur zweiten Vergabe, mit anderem Inhalt.
+
+**Was der Ablagename vorher und nachher ist**, im echten Browser abgelesen
+(`caches.keys()` nach echter Anmeldung des Dienst-Arbeiters, `test530` §3):
+
+```txt
+vorher   ["notizen-v1141"]
+jetzt    ["notizen-v1141-7b5c3ef121062083"]
+```
+
+Genau eine Ablage in beiden Fällen — der Aufräumer in `activate` arbeitet.
+Er löscht aber nur, was **anders** heisst, und genau das war die Lücke.
+
+**Der Zusammenstoss, hergestellt statt behauptet** (`test530` §2, vier
+Schritte in einem Wegwerf-Projekt: Inhalt A → Inhalt B → Zurücknehmen auf A
+samt `sw.ts`/`stand.ts` → Inhalt C):
+
+```txt
+Schritt 2   Inhalt B   notizen-v1143
+Schritt 4   Inhalt C   notizen-v1143     dieselbe Nummer, anderer Inhalt
+```
+
+Vor E610 waren das zwei gleiche Namen, nach E610 zwei verschiedene.
+
+**Läufe:**
+
+```txt
+test530                        16/16   (neu)
+test353 143 31 99 zusammen    105/105
+test105 109 87                 grün
+npm run typecheck              sauber
+npm run stand                  v1141 unverändert (7b5c3ef121062083)
+```
+
+**Was der Bogen NICHT gemessen hat:** die Gesamtsuite. Gelaufen sind die
+oben genannten acht Läufe.

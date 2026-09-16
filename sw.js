@@ -35,7 +35,25 @@ const ich = self;
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
 const VERSION = 'notizen-v1141';
-const ABLAGE = VERSION;
+/** Der Stempel über den Grundstock — geschrieben von `dienststand.mts`,
+ *  von Hand nicht anfassen. Er steht NEBEN der Nummer, nicht in ihr:
+ *  `test143` prüft an `VERSION` die Form `notizen-v<Zahl>`. */
+const INHALT = '7b5c3ef121062083';
+/* DER ABLAGENAME FOLGT DEM INHALT, NICHT DER NUMMER (E610).
+   Hier stand `const ABLAGE = VERSION;`. Solange die Nummer nur steigt, geht
+   das gut — sie steigt aber nicht immer: ein `git revert` nimmt sw.ts und
+   stand.ts mit zurück, und die Nummer fällt mit. E609 hat v1145 auf v1141
+   gedreht. Damit sind v1142…v1145 wieder frei und werden ein zweites Mal
+   vergeben, mit anderem Inhalt. Wer die erste v1142 im Browser hatte, bekam
+   beim zweiten Mal DIESELBE Ablage geöffnet: `activate` löscht nur, was
+   anders heisst, und `cache.add` überschreibt nur, was der neue Grundstock
+   noch nennt — eine herausgefallene Datei blieb liegen und wurde weiter
+   bedient. Genau das verbietet §28.
+   Mit dem Stempel im Namen kann das nicht mehr vorkommen: gleicher Name
+   heisst gleiche Bytes, per Konstruktion. Und nach einem Zurücknehmen ist
+   der Name wieder der alte — richtig so, die Bytes sind es auch.
+   `test530` hält es. */
+const ABLAGE = VERSION + '-' + INHALT;
 /* Was beim ersten Besuch gleich mitgenommen wird. */
 const GRUNDSTOCK = [
     './',

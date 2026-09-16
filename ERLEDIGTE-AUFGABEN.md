@@ -1,5 +1,34 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 16. September 2026 · E610 · Der Ablagename folgt dem Inhalt
+
+**Der Fund kam aus einer Frage, nicht aus einem Plan.** Redur sah das Auge
+am Ordner immer noch nicht, obwohl E609 es vollständig zurückgeholt hatte.
+Der Code war in Ordnung — gemessen: drei Augen, 44 × 44 px, fünf Blätter
+±14° gefächert, Deckel `rotateX(-32°)`, `test436` und `test476` grün.
+Festgehalten hat es der Browser: `git revert` nahm `sw.ts` und `stand.ts`
+mit zurück, die Fassung fiel von v1145 auf v1141, und der Ablagename war
+`const ABLAGE = VERSION;`.
+
+**Gebaut.** `ABLAGE = VERSION + '-' + INHALT`. Der Stempel, den
+`dienststand.mts` seit E361 ohnehin rechnet, steht jetzt im Namen — gleicher
+Name heisst gleiche Bytes, per Konstruktion statt per Disziplin. `VERSION`
+behält seine schlichte Form, weil `test143` daran hängt.
+
+**Geprüft.** `test530` neu, 16 Zusicherungen, davon drei am echten Dienst im
+Browser (`caches.keys()` nach echter Anmeldung). Gegenprobe gelaufen und rot
+gesehen: zurückgedreht heissen zwei verschiedene Inhalte wieder
+`notizen-v1143` gegen `notizen-v1143`. Dazu `test353 143 31 99` mit 105/105,
+`test105 109 87` grün, `npm run typecheck` sauber, `npm run stand`
+unverändert. **Nicht** geprüft: die Gesamtsuite.
+
+**Was dabei auch herauskam, und es gehört hierher:** der erste Wächter war
+aus dem falschen Grund rot. Sein Muster für den Bauplan fand den alten
+`const ABLAGE = VERSION;` im **Kommentar** über der Zeile. Ein Anker auf den
+Zeilenanfang hat es behoben — §55.2 von der anderen Seite.
+
+---
+
 ## 12. September 2026 · E534 · Animationsreste auf ad4ccbc
 
 Ticket-Vorder-/Rückseite und Statistikherz ergänzt. Zahlen und Statussätze

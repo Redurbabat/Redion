@@ -51,12 +51,16 @@ export const inhaltsStempel = (wurzel: string, dateien: string[]): string => {
 export type Stand = { fassung: number; inhalt: string; gebaut: string };
 
 /** Was sw.ts und stand.ts gerade sagen. */
-export const gelesen = (wurzel: string): { swTs: string; fassungSw: number; stand: Stand } => {
+export const gelesen = (wurzel: string): { swTs: string; fassungSw: number; inhaltSw: string; stand: Stand } => {
   const swTs = fs.readFileSync(path.join(wurzel, SW), 'utf8');
   const fassungSw = Number(/const VERSION = 'notizen-v(\d+)'/.exec(swTs)?.[1] ?? 0);
+  /* Der Stempel steht seit E610 auch in sw.ts, weil der Ablagename ihn
+     trägt. Fehlt die Zeile (ein ganz neues Projekt, test353 §3), ist er
+     leer — dann schreibt `abgleichen` sie an. */
+  const inhaltSw = /const INHALT = '([0-9a-f]*)'/.exec(swTs)?.[1] ?? '';
   const standPfad = path.join(wurzel, STAND);
   const standTs = fs.existsSync(standPfad) ? fs.readFileSync(standPfad, 'utf8') : '';
-  return { swTs, fassungSw, stand: {
+  return { swTs, fassungSw, inhaltSw, stand: {
     fassung: Number(/fassung: (\d+)/.exec(standTs)?.[1] ?? 0),
     inhalt: /inhalt: '([0-9a-f]*)'/.exec(standTs)?.[1] ?? '',
     gebaut: /gebaut: '([^']*)'/.exec(standTs)?.[1] ?? '' } };
@@ -78,16 +82,25 @@ const Stand = { fassung: ${s.fassung}, inhalt: '${s.inhalt}', gebaut: '${s.gebau
 
 /** Prüft, hebt bei Änderung. Gibt zurück, was jetzt gilt und ob geschrieben wurde. */
 export const abgleichen = (wurzel: string, nurPruefen: boolean): { stand: Stand; veraltet: boolean; geschrieben: boolean } => {
-  const { swTs, fassungSw, stand } = gelesen(wurzel);
+  const { swTs, fassungSw, inhaltSw, stand } = gelesen(wurzel);
   const jetzt = inhaltsStempel(wurzel, grundstock(swTs));
-  const inhaltGleich = jetzt === stand.inhalt;
+  const inhaltGleich = jetzt === stand.inhalt && jetzt === inhaltSw;
   const fassungGleich = fassungSw === stand.fassung && fassungSw > 0;
   if (inhaltGleich && fassungGleich) return { stand, veraltet: false, geschrieben: false };
   if (nurPruefen) return { stand: { ...stand, inhalt: jetzt }, veraltet: true, geschrieben: false };
-  /* Eine von Hand höher gesetzte Fassung bleibt höher; sonst eine Stufe. */
-  const fassung = Math.max(fassungSw, stand.fassung) + (inhaltGleich ? 0 : 1);
-  const neu: Stand = { fassung, inhalt: jetzt, gebaut: inhaltGleich ? stand.gebaut : new Date().toISOString() };
-  const swNeu = swTs.replace(/const VERSION = 'notizen-v\d+';/, `const VERSION = 'notizen-v${fassung}';`);
+  /* Eine von Hand höher gesetzte Fassung bleibt höher; sonst eine Stufe.
+     Der Stempel entscheidet über die Stufe, nicht über den Ablagenamen —
+     den trägt er seit E610 selbst. */
+  const fassung = Math.max(fassungSw, stand.fassung) + (jetzt === stand.inhalt ? 0 : 1);
+  const neu: Stand = { fassung, inhalt: jetzt,
+    gebaut: jetzt === stand.inhalt ? stand.gebaut : new Date().toISOString() };
+  /* Zwei Zeilen in sw.ts: die Nummer für den Menschen, der Stempel für die
+     Ablage (E610). Fehlt die Stempelzeile, kommt sie unter die Nummer —
+     sonst liefe ein neues Projekt ewig als „veraltet". */
+  const swNummer = swTs.replace(/const VERSION = 'notizen-v\d+';/, `const VERSION = 'notizen-v${fassung}';`);
+  const swNeu = /const INHALT = '[0-9a-f]*';/.test(swNummer)
+    ? swNummer.replace(/const INHALT = '[0-9a-f]*';/, `const INHALT = '${jetzt}';`)
+    : swNummer.replace(/(const VERSION = 'notizen-v\d+';)/, `$1\nconst INHALT = '${jetzt}';`);
   fs.writeFileSync(path.join(wurzel, SW), swNeu);
   /* Beim allerersten Mal gibt es den Ordner noch nicht (test353 §3 fand es). */
   fs.mkdirSync(path.dirname(path.join(wurzel, STAND)), { recursive: true });
