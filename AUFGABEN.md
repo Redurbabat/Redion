@@ -647,8 +647,10 @@ und Zugänglichkeit.
   · Die Karte in `doku/UI-KOMPONENTEN.md`: je Komponente Quelle-Status,
     Redion-Status, Ort, ob gebaut.
   · Redurs vierzehn Vorgaben vom 6. September (E458–E463, test431–436):
-    Drucker-Karte (Nr. 28), Ordnerkarte (Nr. 29) mit dem Auge am
-    Ordnerdeckel, Merkzeichen, vier Lader (Ring, Sterne, Wort, Presse),
+    Drucker-Karte (Nr. 28), Ordnerkarte (Nr. 29) — das Auge am
+    Ordnerdeckel hat Redur am 16. September wieder abbestellt (E608), die
+    Karte selbst kommt jetzt beim Hinschauen —, Merkzeichen, vier Lader
+    (Ring, Sterne, Wort, Presse),
     Schalter, Staffelei, Textur, Symbolreihe, die tippende Hand (Nr. 09) im
     Rundgang und der Funkel-Knopf. Seit E463 stehen sie an den Wegen, die
     man täglich geht — Studio-Kopf, PDF-Einlesen, Start, Cover-Wahl.

@@ -2317,8 +2317,9 @@ const ANSICHTEN: Record<string, {
       await Store.flush();
       (window as any).Bibliothek?.oeffne?.();
       await new Promise(r => setTimeout(r, 900));
-      /* Über denselben Weg, den auch die Maus nimmt: hinschauen, warten. */
-      const knopf = document.querySelector<HTMLElement>('.bib-blick[data-blick]');
+      /* Über denselben Weg, den auch die Maus nimmt: hinschauen, warten.
+         Seit E608 ist das der DECKEL selbst, nicht mehr das Auge daneben. */
+      const knopf = document.querySelector<HTMLElement>('.bib-deckel[data-art="ordner"]');
       const k = knopf?.getBoundingClientRect();
       if (knopf && k) {
         knopf.dispatchEvent(new PointerEvent('pointerenter', { bubbles: false,
@@ -3008,8 +3009,16 @@ ANSICHTEN['auge'] = {
     await new Promise(r => setTimeout(r, 700));
   },
   dann: async () => {
-    document.querySelector<HTMLElement>('.bib-blick[data-blick]')?.click();
-    await new Promise(r => setTimeout(r, 900));
+    /* E608: das Auge gibt es nicht mehr — der Blick kommt vom Hinschauen
+       auf den Deckel. Ein Klick würde in den Ordner GEHEN. */
+    const deckel = document.querySelector<HTMLElement>('.bib-deckel[data-art="ordner"]');
+    const r = deckel?.getBoundingClientRect();
+    if (deckel && r) {
+      deckel.dispatchEvent(new PointerEvent('pointerenter', { bubbles: false,
+        pointerId: 1, pointerType: 'mouse', isPrimary: true,
+        clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }));
+    }
+    await new Promise(r2 => setTimeout(r2, 1200));
   }
 };
 

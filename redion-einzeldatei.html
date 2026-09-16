@@ -20163,27 +20163,17 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   to{ transform:translate(2%,2%) scale(1.08) }
 }
 
-/* ---- Das Auge am Ordnerdeckel (.bib-blick) ------------------------------ */
-.bib-zelle{ position:relative; display:block; min-width:0 }
-.bib-blick{
-  position:absolute; left:4px; top:4px; z-index:2;
-  width:var(--touch-min); height:var(--touch-min); padding:0; border:0;
-  background:none; cursor:pointer; display:grid; place-items:center;
-  border-radius:10px; color:var(--text)
-}
-.bib-blick:hover, .bib-blick:focus-visible{ background:rgba(0,0,0,.08) }
-.bib-blick-auge{
-  position:relative; display:block; width:26px; height:15px; box-sizing:border-box;
-  border-radius:50%; background:#fff; border:2px solid #2b2b2b;
-  box-shadow:0 1px 3px rgba(0,0,0,.25)
-}
-.bib-blick-auge b{
-  position:absolute; left:50%; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px;
-  border-radius:50%; background:#2b2b2b; transition:transform .3s ease
-}
-.bib-blick:hover .bib-blick-auge b, .bib-blick:focus-visible .bib-blick-auge b{ transform:translateX(-5px) }
-.bib-blick:hover .bib-blick-auge{ animation:bib-blick-zwinkern 1.2s ease }
-@keyframes bib-blick-zwinkern{ 0%,100%{ transform:none } 12%{ transform:scaleY(.1) } 24%{ transform:none } }
+/* ---- Das Auge am Ordnerdeckel ist weg (E608) ----------------------------
+   Hier standen die Klassen `bib-zelle`, `bib-blick` und `bib-blick-auge`
+   — ein Auge,
+   das beim Darüberfahren zwinkerte und zur Seite schaute (E463). Redur hat
+   es am 16. September abbestellt: „mach die Augen weg und behalte nur so:
+   wenn ich mit Maus drauf gehe, sollte sie mir zeigen."
+
+   Der Blick selbst ist geblieben; er hängt jetzt am Deckel. Dass hier nichts
+   mehr steht, ist deshalb kein Verlust, sondern der ganze Punkt — eine
+   Ordnerkachel ohne Knopf darauf.
+   ------------------------------------------------------------------------ */
 
 /* ---- Wenn das System um Ruhe bittet ------------------------------------- */
 @media (prefers-reduced-motion:reduce){
@@ -20194,7 +20184,6 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   .ru-funkel-b, .ru-funkel:hover .ru-funkel-b, .ru-funkel:focus-visible .ru-funkel-b,
   .ru-funkel > svg{ animation:none; color:#fff; opacity:1 }
   .cover-textur .ru-textur{ animation:none }
-  .bib-blick:hover .bib-blick-auge{ animation:none }
 }
 
 /* ---- Die freie Strichstärke (E465): ein Regler unter den drei Stufen ----
@@ -24273,7 +24262,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1141, inhalt: '7b5c3ef121062083', gebaut: '2026-09-16T05:45:36.341Z' };
+const Stand = { fassung: 1145, inhalt: '1893eee272d3a42e', gebaut: '2026-09-16T05:57:34.828Z' };
 window.Stand = Stand;
 
 </script>
@@ -149048,18 +149037,25 @@ const Bibliothek = (() => {
             '<i class="bib-deckel-mehr" aria-hidden="true">\u2304</i></span>' +
             '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
             '</button>';
-        if (art.id !== 'ordner')
-            return deckel;
-        /* DAS AUGE AM ORDNER (E463). „Blick hinein" stand seit E459 nur im
-           ⌄-Menü — ein Weg, den man kennen muss. Jetzt sitzt am Deckel jedes
-           Ordners ein Auge, das beim Darüberfahren zwinkert und zur Seite
-           schaut. Es ist ein GESCHWISTER des Deckels, kein Kind: ein Knopf im
-           Knopf ist kein gültiges HTML, und der Klick käme zweimal an. */
-        return '<span class="bib-zelle">' + deckel +
-            `<button class="bib-blick" data-blick="${esc(p.id)}" ` +
-            `aria-label="Blick in „${esc(p.text || 'Ohne Titel')}\u201c" title="Blick hinein">` +
-            '<i class="bib-blick-auge" aria-hidden="true"><b></b></i>' +
-            '</button></span>';
+        /* KEIN AUGE MEHR AM ORDNER (E608).
+         *
+         * Redur, 16. September 2026: „wenn ich auf Ordner mit Maus gehe, sollte
+         * es sein [Bild der offenen Karte] — mach die Augen weg und behalte nur
+         * so: wenn ich mit Maus drauf gehe, sollte sie mir zeigen, oder mit
+         * Laptop-Stift."
+         *
+         * Das Auge kam mit E463 als sichtbarer Weg zum „Blick hinein", das
+         * Hinschauen kam mit E508 dazu. Jetzt bleibt nur das Hinschauen, und es
+         * gilt für den DECKEL selbst — die Verdrahtung steht weiter unten bei
+         * `.bib-deckel[data-id]`.
+         *
+         * DER WEG MIT DEM FINGER GEHT NICHT VERLOREN, und das ist die Bedingung,
+         * unter der das Auge gehen durfte (§37): „Blick hinein" steht seit E459
+         * im ⌄-Menü jedes Ordners und steht dort weiter. Ohne diesen Weg wäre
+         * der Blick am Telefon verschwunden, und das wäre kein Aufräumen,
+         * sondern ein Verlust.
+         */
+        return deckel;
     };
     const hefte = (liste) => {
         const nach = new Map();
@@ -149658,56 +149654,63 @@ const Bibliothek = (() => {
             krume.scrollLeft = krume.scrollWidth;
         });
         wrap.querySelectorAll('[data-ordner]').forEach(b => b.addEventListener('click', () => geheIn(b.dataset['ordner'] || null)));
-        /* Das Auge am Ordner (E463) — derselbe Weg wie im ⌄-Menü, ohne Menü.
-           Seit E508 öffnet auch das blosse HINSCHAUEN, siehe `blickHinein`. */
-        wrap.querySelectorAll('.bib-blick[data-blick]').forEach(b => {
-            const seiteVon = () => Store.getBlock(b.dataset['blick'] || '');
-            b.addEventListener('click', ereignis => {
-                ereignis.stopPropagation();
-                schauAbsagen();
-                const p = seiteVon();
-                /* Ein Tipp auf denselben Ordner, dessen Karte gerade vom Zeigen
-                   offen steht, klappt sie nicht zu und wieder auf — er HÄLT sie
-                   fest. Alles andere wäre ein Flackern für nichts. */
-                if (p && schauId === String(p.id) && document.querySelector('.ru-fach-lage')) {
-                    schauId = '';
-                    return;
-                }
-                if (p)
-                    blickHinein(p, b.getBoundingClientRect());
-            });
-            b.addEventListener('pointerenter', ereignis => {
-                const e = ereignis;
-                /* NUR DIE MAUS. Ein Finger meldet auf manchen Geräten ein
-                   `pointerenter`, das kein Überfahren ist — er tippt gerade. Und
-                   ein Gerät ohne Zeiger meldet gar keines; die Abfrage kostet
-                   dort nichts. */
-                if (e.pointerType !== 'mouse' || !zeigerHatHover())
-                    return;
-                if (document.querySelector('.ru-fach-lage'))
-                    return;
-                schauAbsagen();
-                schauUhr = window.setTimeout(() => {
-                    schauUhr = 0;
-                    const p = seiteVon();
-                    if (p)
-                        blickHinein(p, b.getBoundingClientRect(), true);
-                }, SCHAU_AUF_MS);
-            });
-            b.addEventListener('pointerleave', ereignis => {
-                if (ereignis.pointerType === 'touch')
-                    return;
-                /* Noch nicht aufgegangen: die Absicht war keine. Schon offen: die
-                   Karte selbst entscheidet, ob der Zeiger zu ihr gewandert ist. */
-                if (schauUhr) {
-                    clearTimeout(schauUhr);
-                    schauUhr = 0;
-                }
-                if (schauId)
-                    schauZuSpaeter();
-            });
-        });
         wrap.querySelectorAll('.bib-deckel[data-id]').forEach(k => {
+            /* DER BLICK KOMMT VOM DECKEL SELBST (E608, vorher E463/E508 am Auge).
+               Redurs Satz vom 16. September: Auge weg, und was es zeigte, soll
+               beim Darüberfahren kommen — „mit Maus … oder mit Laptop-Stift".
+      
+               DREI ZEIGERARTEN, DREI ANTWORTEN:
+                 Maus   öffnet nach kurzer Wartezeit. Wie bisher.
+                 Stift  ebenso — aber OHNE die `(hover: hover)`-Abfrage. Sie
+                        beschreibt den HAUPTZEIGER des Geräts, und auf einem
+                        Laptop mit Berührungsbildschirm ist das der Finger; die
+                        Abfrage sagte dort „kein Überfahren" und hätte den Stift
+                        ausgesperrt, der gerade darüber schwebt.
+                 Finger öffnet gar nicht per Überfahren. Er meldet auf manchen
+                        Geräten ein `pointerenter`, das kein Überfahren ist — er
+                        tippt gerade.
+      
+               UND EIN TIPP IST KEIN HINSCHAUEN. Beim Antippen mit Maus oder Stift
+               kommt erst `pointerenter`, dann `pointerdown` — ohne die Absage
+               unten liefe die Uhr weiter, und wer in einen Ordner hineingeht,
+               bekäme obendrein seine Karte aufgeklappt. */
+            if (k.dataset['art'] === 'ordner') {
+                const seiteVon = () => Store.getBlock(k.dataset['id'] || '');
+                k.addEventListener('pointerenter', ereignis => {
+                    const e = ereignis;
+                    if (e.pointerType !== 'mouse' && e.pointerType !== 'pen')
+                        return;
+                    if (e.pointerType === 'mouse' && !zeigerHatHover())
+                        return;
+                    if (document.querySelector('.ru-fach-lage'))
+                        return;
+                    schauAbsagen();
+                    schauUhr = window.setTimeout(() => {
+                        schauUhr = 0;
+                        const p = seiteVon();
+                        if (p)
+                            blickHinein(p, k.getBoundingClientRect(), true);
+                    }, SCHAU_AUF_MS);
+                });
+                k.addEventListener('pointerdown', () => {
+                    if (schauUhr) {
+                        clearTimeout(schauUhr);
+                        schauUhr = 0;
+                    }
+                });
+                k.addEventListener('pointerleave', ereignis => {
+                    if (ereignis.pointerType === 'touch')
+                        return;
+                    /* Noch nicht aufgegangen: die Absicht war keine. Schon offen: die
+                       Karte selbst entscheidet, ob der Zeiger zu ihr gewandert ist. */
+                    if (schauUhr) {
+                        clearTimeout(schauUhr);
+                        schauUhr = 0;
+                    }
+                    if (schauId)
+                        schauZuSpaeter();
+                });
+            }
             k.addEventListener('click', ereignis => {
                 /* Der Pfeil im Namen öffnet das Menü zum Stück, nicht das Stück. */
                 if (ereignis.target instanceof Element &&
