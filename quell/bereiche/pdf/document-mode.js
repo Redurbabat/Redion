@@ -2734,6 +2734,16 @@ const DocumentMode = (() => {
             catch { /* ohne Zeichen bleibt der Name im `aria-label` */ }
         }
         const inkToolbar = () => staende[state.index]?.querySelector('.blatt-werk') || null;
+        /* DIE FLÄCHE, AUF DER DIE KNÖPFE WIRKLICH LIEGEN (E614, W2).
+           Seit der Tafel ist das einzige Kind von `.blatt-werk` ein `<div>`.
+           Wer hier die Leiste nimmt, beobachtet ein Element, das sich nie mehr
+           ändert, und fragt nach Kindern, die es nicht mehr hat — beides ohne
+           Fehlermeldung. Der Rückfall auf die Leiste ist Absicht: eine Leiste
+           ohne Tafel ist ihre eigene Fläche. */
+        const inkFlaeche = () => {
+            const leiste = inkToolbar();
+            return leiste?.querySelector(':scope > .blatt-tafel') || leiste;
+        };
         /* ══ EINE SORTIERBEWEGUNG IST KEINE ATTRIBUTÄNDERUNG (E575) ═════════════
            Der Beobachter darüber horcht auf `disabled`, `aria-pressed` und
            `data-tool` — und genau deshalb kam eine Sortierbewegung oben NIE an:
@@ -2755,7 +2765,7 @@ const DocumentMode = (() => {
             inkSync();
         });
         const ordnungBeobachten = () => {
-            const source = inkToolbar();
+            const source = inkFlaeche();
             if (!source || source === beobachtet)
                 return;
             ordnungObserver.disconnect();
@@ -2839,7 +2849,7 @@ const DocumentMode = (() => {
                Jetzt wird zuerst verglichen und nur bei Abweichung umgehängt. Die
                benutzereigene Reihenfolge (§8/E570) gilt unverändert — sie kommt
                nur ohne Neuaufbau an. */
-            const wunsch = Array.from(source?.querySelectorAll(':scope > [data-wz]') || [])
+            const wunsch = Array.from(inkFlaeche()?.querySelectorAll(':scope > [data-wz]') || [])
                 .map(real => drawingbar.querySelector(`[data-document-tool="${real.dataset.wz}"]`))
                 .filter((button) => !!button);
             const jetzt = Array.from(drawingbar.querySelectorAll(':scope > [data-document-tool]'))

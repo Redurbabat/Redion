@@ -429,17 +429,33 @@ const Marken = (() => {
    * Gruppen hinter das gewählte Werkzeug (E356) —, und das ist dort mit
    * geschriebenem Grund entschieden. Hier nicht.
    */
+  /**
+   * Die Fläche, auf der die Knoten wirklich liegen (E614, W2).
+   *
+   * Seit der Tafel sind die Kinder von `.blatt-werk` nicht mehr die Knöpfe,
+   * sondern ein einziges Element. Jeder `:scope > …`-Griff in dieser Datei
+   * fragt deshalb die Fläche und nicht die Leiste.
+   *
+   * DER RÜCKFALL IST ABSICHT: gibt es keine Tafel — eine ältere Leiste, ein
+   * Prüflauf, der ein nacktes `.blatt-werk` baut —, ist die Leiste selbst
+   * die Fläche. Sonst stiege `ordnungAnwenden` stumm aus und die ganze
+   * Nutzerordnung aus E570/E571 wäre wirkungslos, ohne dass etwas meldet.
+   */
+  const flaeche = (tools: HTMLElement): HTMLElement =>
+    tools.querySelector<HTMLElement>(':scope > .blatt-tafel') ?? tools;
+
   const ordnungAnwenden = (tools: HTMLElement): void => {
     const o = ordnungLesen();
-    const bruch = tools.querySelector<HTMLElement>(':scope > .blatt-zeilenbruch');
+    const f = flaeche(tools);
+    const bruch = f.querySelector<HTMLElement>(':scope > .blatt-zeilenbruch');
     if (!bruch) return;
     for (const id of o.werkzeuge) {
-      const knopf = tools.querySelector<HTMLElement>(`:scope > [data-wz="${id}"]`);
-      if (knopf) tools.insertBefore(knopf, bruch);
+      const knopf = f.querySelector<HTMLElement>(`:scope > [data-wz="${id}"]`);
+      if (knopf) f.insertBefore(knopf, bruch);
     }
     for (const id of o.gruppen) {
-      tools.querySelectorAll<HTMLElement>(`:scope > [data-gruppe="${id}"]`)
-        .forEach(knoten => tools.appendChild(knoten));
+      f.querySelectorAll<HTMLElement>(`:scope > [data-gruppe="${id}"]`)
+        .forEach(knoten => f.appendChild(knoten));
     }
     ordnungZahlen(tools, o);
     platzSetzen(tools);
@@ -460,12 +476,13 @@ const Marken = (() => {
        NÄCHSTE Werkzeug —, und Farben und Breiten standen am Telefon
        hinter dem Marker statt hinter dem Stift. `test356` hat es gemeldet.
        Hundert lässt Platz für neunundneunzig Gruppen. */
+    const f = flaeche(tools);
     o.werkzeuge.forEach((id, i) => {
-      tools.querySelector<HTMLElement>(`:scope > [data-wz="${id}"]`)
+      f.querySelector<HTMLElement>(`:scope > [data-wz="${id}"]`)
         ?.style.setProperty('--ordnung', String((i + 1) * 100));
     });
     o.gruppen.forEach((id, i) => {
-      tools.querySelectorAll<HTMLElement>(`:scope > [data-gruppe="${id}"]`)
+      f.querySelectorAll<HTMLElement>(`:scope > [data-gruppe="${id}"]`)
         .forEach(k => k.style.setProperty('--g-ordnung', String(i + 1)));
     });
   };
@@ -4830,7 +4847,37 @@ const Marken = (() => {
         `aria-pressed="${w.id === 'schreiben' ? 'true' : 'false'}" title="${w.titel}">` +
         bild + `<span class="wort">${w.name}</span></button>`;
     };
-    tools.innerHTML =
+    /* ══ DIE TAFEL ALS BEHÄLTER (E614, W2) ════════════════════════════════
+       Zwischen `.blatt-werk` und ihre Kinder schiebt sich EINE Ebene:
+       `.blatt-tafel`. Sie nimmt ALLE Kinder auf — Werkzeuge, Trenner,
+       Zeilenbruch und Zubehör —, nicht nur die `[data-gruppe]`-Knoten.
+
+       WARUM ALLE UND NICHT NUR DIE GRUPPEN. Drei Mechanismen der Leiste
+       wirken ausschliesslich zwischen unmittelbaren Geschwistern, und jeder
+       einzelne risse, wenn die Grenze mitten hindurchginge:
+
+         · `.blatt-zeilenbruch + span.blatt-trenn` (bausteine.css) — der
+           doppelte Trennstrich am Zeilenanfang, der Fund aus E568;
+         · `button:hover + button` (pdf-studio.css) — Redurs Dock-Welle;
+         · `insertBefore(knopf, bruch)` in `ordnungAnwenden` — zwei
+           Elternteile, und der Aufruf würfe.
+
+       WARUM SIE `display:contents` TRÄGT. Die drei Layoutmechanismen sind
+       Flex-KIND-Eigenschaften: `flex:1 0 100%` am Zeilenbruch (E359),
+       `order` für das Telefon (E356/E570), `position:sticky` an Zurück/Vor.
+       Alle drei wirken nur zwischen direkten Flex-Geschwistern. Mit
+       `display:contents` entsteht kein Kasten, die Kinder bleiben Flex-
+       Elemente von `.blatt-werk`, und am Bildschirm ändert sich nichts —
+       genau die Zusage dieses Bogens. Einen eigenen Kasten bekommt die
+       Tafel erst mit W4, wenn sie wirklich eine Tafel wird.
+
+       WAS SIE NICHT TRÄGT: kein `data-gruppe` und kein `data-wz`. Drei
+       `closest('[data-wz],[data-gruppe]')` in dieser Datei träfen sonst die
+       Tafel statt den Knopf, den der Finger meint. */
+    const tafel = document.createElement('div');
+    tafel.className = 'blatt-tafel';
+    tools.appendChild(tafel);
+    tafel.innerHTML =
       button('schreiben') +
       button('select') +
       button('stift') +
@@ -5161,7 +5208,7 @@ const Marken = (() => {
       if (!ziel || !setzeAn(art, id, ziel)) return;
       /* Der Fokus bleibt am geschobenen Knopf — sonst wäre die zweite
          Pfeiltaste ins Leere gedrückt. */
-      tools.querySelector<HTMLElement>(
+      flaeche(tools).querySelector<HTMLElement>(
         art === 'werkzeuge' ? `:scope > [data-wz="${id}"]` : `:scope > [data-gruppe="${id}"]`
       )?.focus();
     };

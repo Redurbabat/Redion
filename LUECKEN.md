@@ -8661,3 +8661,43 @@ zweite Entscheidung, keine Nebenwirkung — und sie gehört Redur.
 
 **Woran man merkt, dass es drückt:** sobald jemand im Foliensatz den Reiter
 „Zeichnen" benutzt und sich fragt, welches der beiden Lineale gilt.
+
+L182 · «Einrichten» steht allein in einer dritten Zeile — 16. September 2026
+--------------------------------------------------------------------------
+
+**Beim Hinsehen gefunden, nicht beim Prüfen** (§55.1). Auf dem Bild zu W3
+steht der Knopf «Einrichten» als einziges Bedienteil in einer dritten
+Leistenzeile, links unten, mit einer leeren Zeile daneben.
+
+**Gemessen** an der laufenden App, 1280 px Fenster, breite Seite, Stift
+gewählt — und zwar auf BEIDEN Ständen:
+
+```txt
+                  origin/main      mit E614
+Leiste                 860 px        860 px
+Höhe                   127 px        128 px
+Zeile 1 (y≈0)      13 Werkzeuge   13 Werkzeuge
+Zeile 2 (y≈50)     26 Zubehör     26 Zubehör
+Zeile 3 (y≈80/90)  «Einrichten»   «Einrichten»
+```
+
+**Er ist also älter als E614** — dieser Bogen hat ihn nur sichtbar gemacht.
+Wahrscheinlich stammt er aus **E571**, als «Einrichten» als letzter Eintrag
+an die Leiste kam.
+
+**Warum er nicht in E614 behoben wurde.** Drei Wege stehen offen, und jeder
+ist eine Entscheidung und keine Nebenwirkung:
+
+1. **«Einrichten» zum festen Teil rechts** (`.blatt-fest`, wo schon Seite
+   und Papier stehen). Er gehört dorthin: er bedient die Leiste, nicht das
+   Blatt. Kostet die Breite dort.
+2. **Ihn ans Ende der Zubehörzeile hängen**, mit `order:9999` wie den
+   Verlauf. Dann steht er neben Zurück/Vor — und die kleben dort am Telefon.
+3. **Ihn nur im Menü lassen.** «Als Liste» erreicht dasselbe, und der Weg
+   über die Befehlspalette steht ohnehin. Das wäre allerdings ein Knopf
+   weniger im Bild, und §47 verlangt dafür Redurs Zusage.
+
+**Woran man merkt, dass es drückt:** an jedem Fenster zwischen rund 1100 und
+1400 px, wo die Zubehörzeile voll ist und er als Einzelgänger umbricht.
+Breiter fällt er in die zweite Zeile zurück, schmaler rollt die Leiste
+ohnehin.

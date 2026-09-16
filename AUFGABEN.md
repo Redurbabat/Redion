@@ -1129,14 +1129,26 @@ Kacheln (Linie · Pfeil · Rechteck · Kreis · Stern).
 - **W1 · Die Zustands-Grammatik** — ERLEDIGT (E568). Eine laute Fläche statt
   sechs, runde Farbtupfer, sichtbare Gruppen, Rangfolge zwischen Werkzeug
   und Zubehör. Das ist die Grundlage: die Tafel erbt sie unverändert.
-- **W2 · Die Tafel als Behälter.** Ein Element `.blatt-tafel` INNERHALB von
-  `.blatt-werk`, das alle `[data-gruppe]`-Knoten aufnimmt. Der Haken sitzt
-  im CSS: rund fünfzig Regeln lesen heute `.blatt-werk > [data-gruppe]`
-  (Kindwähler). Die müssen mit — und genau das ist der Bogen, nicht die
-  Gestaltung.
-- **W3 · Wort unter dem Zeichen.** Die Werkzeuge bekommen ihren Namen
-  darunter statt daneben. Heute steht er daneben und wird unter 1150 px
-  weggeklemmt; darunter braucht er keine Breite, sondern Höhe.
+- **W2 · Die Tafel als Behälter** — ERLEDIGT (E614, `test533`). Gezählt
+  waren es **51 Kindwähler** über 104 Selektorzeilen (nicht „rund fünfzig"
+  geschätzt) und **sieben `:scope >`** im TypeScript. Zwei Dinge hat der
+  Auftrag nicht vorhergesehen: die Tafel nimmt **alle** Kinder auf und nicht
+  nur die Gruppen (drei Mechanismen wirken nur zwischen Geschwistern), und
+  sie trägt `display:contents` — ein echter Kasten hätte `flex:1 0 100%`,
+  `order` und `position:sticky` gebrochen. Einen eigenen Kasten bekommt sie
+  mit W4. Gemessen: 127 → 128 px, sonst nichts.
+- **W3 · Wort unter dem Zeichen** — ERLEDIGT (E614). Die Schwelle ist
+  gewandert: Zubehör lässt sein Wort weiter bei 1150 px, die Werkzeuge erst
+  bei 820 — gemessen brauchen dreizehn gestapelte rund 790 px statt 1142
+  daneben. Bei 1360 px Fenster stehen sie jetzt mit Wort in EINER Zeile,
+  vorher ohne Wort in zwei.
+
+  **Offen daran, beim Hinsehen gefunden:** im Schreibstudio trägt die OBERE
+  Reihe (`.document-drawingbar`) weiterhin nur Zeichen. Sie ist ein eigenes
+  Element und hatte nie Wörter — W3 galt der Leiste, nicht der Kopie. Auf
+  Redurs iPad-Bildern steht das Wort auch dort. Das ist ein eigener,
+  kleiner Bogen und keine Nebenwirkung: die Kopie wird aus
+  `Marken.WERKZEUGE` gebaut (E583), also käme das Wort von derselben Stelle.
 - **W4 · Die Tafel bekommt Inhalt.** Strichvorschau, benannte Stiftkacheln
   mit Millimetern, Deckkraft als eigener Schieber (heute gibt es sie nur
   beim Marker, fest verdrahtet), der Radierer mit Grösse und Haken.

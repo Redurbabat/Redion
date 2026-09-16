@@ -281,7 +281,7 @@ body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display
      [data-gruppe=verlauf]  Zurück, Vor, Platz, Einrichten — „Zurück" und
                       „Vor" stehen in der Kapsel über dem Papier, die zwei
                       übrigen unter „···". */
-.document-studio:not([data-ink-options="open"]) .blatt-werk>:is([data-wz],.blatt-trenn,[data-gruppe="verlauf"]){display:none!important}
+.document-studio:not([data-ink-options="open"]) .blatt-werk > .blatt-tafel > :is([data-wz],.blatt-trenn,[data-gruppe="verlauf"]){display:none!important}
 .document-studio:not([data-ink-options="open"]) .blatt-werk[data-tool="schreiben"]{display:none}
 /* DAS KLAPP-ZEICHEN DES FOLIENBANDES (E612). Es steht am rechten Ende der
    Reiterzeile und dreht sich, wenn das Band offen ist — damit die Zeile
@@ -297,7 +297,7 @@ body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display
 @media (prefers-reduced-motion:reduce){.folienband-klapp{transition:none}}
 .document-studio[data-ink-options="open"] .blatt-werk{max-height:240px;flex-wrap:wrap!important;overflow:auto;width:min(850px,calc(100vw - 32px))}
 /* Die Klappe der freien Staerke (E465 Nachtrag) bleibt auch hier zu, bis die gewaehlte Stufe ein zweites Mal getippt wird — `.auf` zeigt sie dann in der Zeile. */
-.document-studio[data-ink-options="open"] .blatt-werk>[data-gruppe]:not(.blatt-staerke){display:inline-flex!important}
+.document-studio[data-ink-options="open"] .blatt-werk > .blatt-tafel > [data-gruppe]:not(.blatt-staerke){display:inline-flex!important}
 body[data-dokument="an"] .document-studio .blatt-marken[data-stift="an"]{touch-action:none}
 body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{touch-action:pan-x pan-y pinch-zoom}
 @media(max-width:760px){
@@ -632,18 +632,18 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
    und kein Effekt (7 C 6). */
 @media (hover:hover) and (pointer:fine){
   .document-drawingbar button svg,
-  .document-studio .blatt-werk > button svg{
+  .document-studio .blatt-werk > .blatt-tafel > button svg{
     transition:transform var(--motion-fast) var(--ease)
   }
   .document-drawingbar button:hover:not(:disabled) svg,
-  .document-studio .blatt-werk > button:hover:not(:disabled) svg{ transform:scale(1.3) }
+  .document-studio .blatt-werk > .blatt-tafel > button:hover:not(:disabled) svg{ transform:scale(1.3) }
   /* Die zwei Nachbarn heben schwächer mit — das ist der Teil, an dem man ein
      Dock erkennt. `:has(+ button:hover)` liest nach LINKS, der Nachbarwähler
      nach rechts; zusammen sind es beide Seiten. */
   .document-drawingbar button:hover + button svg,
   .document-drawingbar button:has(+ button:hover) svg,
-  .document-studio .blatt-werk > button:hover + button svg,
-  .document-studio .blatt-werk > button:has(+ button:hover) svg{ transform:scale(1.13) }
+  .document-studio .blatt-werk > .blatt-tafel > button:hover + button svg,
+  .document-studio .blatt-werk > .blatt-tafel > button:has(+ button:hover) svg{ transform:scale(1.13) }
 }
 /* Der federnde Wechsel auf die neue Auswahl: EINMAL, nicht in Schleife
    (7 C 4). Er läuft, wenn `aria-pressed` auf `true` springt — und seit E575
@@ -653,7 +653,7 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
   0%{ transform:scale(.86) } 55%{ transform:scale(1.16) } 100%{ transform:scale(1) }
 }
 .document-drawingbar button[aria-pressed="true"] svg,
-.document-studio .blatt-werk > button[aria-pressed="true"] svg{
+.document-studio .blatt-werk > .blatt-tafel > button[aria-pressed="true"] svg{
   animation:dock-feder var(--motion-normal) var(--ease) 1
 }
 /* WER BEWEGUNG NICHT WILL, BEKOMMT AUCH KEINE VERGRÖSSERUNG (7 C 6).
@@ -663,11 +663,11 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
   .document-drawingbar button:hover:not(:disabled) svg,
   .document-drawingbar button:hover + button svg,
   .document-drawingbar button:has(+ button:hover) svg,
-  .document-studio .blatt-werk > button:hover:not(:disabled) svg,
-  .document-studio .blatt-werk > button:hover + button svg,
-  .document-studio .blatt-werk > button:has(+ button:hover) svg{ transform:none }
+  .document-studio .blatt-werk > .blatt-tafel > button:hover:not(:disabled) svg,
+  .document-studio .blatt-werk > .blatt-tafel > button:hover + button svg,
+  .document-studio .blatt-werk > .blatt-tafel > button:has(+ button:hover) svg{ transform:none }
   .document-drawingbar button[aria-pressed="true"] svg,
-  .document-studio .blatt-werk > button[aria-pressed="true"] svg{ animation:none }
+  .document-studio .blatt-werk > .blatt-tafel > button[aria-pressed="true"] svg{ animation:none }
 }
 /* Im Druck bewegt sich ohnehin nichts — die Leisten sind dort schon aus
    (Zeile mit `@media print` weiter oben). */

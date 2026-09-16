@@ -1,5 +1,90 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 16. September 2026 · E614 · Die Tafel als Behälter, und das Wort unter dem Zeichen (W2 + W3)
+
+**Redur, 14. September, mit fünf Bildern:** „Siehe Bildern, so will ich es
+haben." Und: „Die untere Dock sollte bleiben."
+
+**W2 baut keine Gestaltung** — er schiebt eine Ebene ein, damit W4 dort
+später eine Tafel aufgehen lassen kann. Die Zusage ist deshalb eine
+Negation: *danach sieht die Leiste genauso aus wie vorher.* Gemessen auf
+beiden Ständen, 1280 px, Stift gewählt: 860 px breit, **127 → 128 px hoch**,
+dieselben drei Zeilen, dieselben 26 Zubehörteile. Der eine Pixel gehört W3.
+
+**Gezählt statt geschätzt.** Der Auftrag sprach von „rund fünfzig Regeln".
+Es sind **51 Regelblöcke über 104 Selektorzeilen** — und 67 weitere Regeln
+(57 %) sind gar nicht betroffen, weil sie Nachfahren sind. Dazu sieben
+`:scope >` im TypeScript.
+
+**Zwei Dinge, die der Auftrag nicht vorhergesehen hat.** Die Tafel nimmt
+**alle** Kinder auf und nicht nur die `[data-gruppe]`-Knoten: drei
+Mechanismen wirken ausschliesslich zwischen unmittelbaren Geschwistern (der
+Trenner hinter dem Zeilenbruch aus E568, Redurs Dock-Welle, und
+`insertBefore` in `ordnungAnwenden`). Und sie trägt `display:contents` — ein
+echter Kasten hätte `flex:1 0 100%`, `order` und `position:sticky`
+gebrochen, weil alle drei Flex-**Kind**-Eigenschaften sind. Den eigenen
+Kasten bekommt sie mit W4.
+
+**Der leiseste mögliche Ausfall** war `ordnungAnwenden`: sein
+`if (!bruch) return` steigt stumm aus, und die ganze Nutzerordnung aus
+E570/E571 wäre wirkungslos geworden, ohne dass etwas meldet. `test533 §4`
+hält genau das.
+
+**W3.** Das Wort kostet jetzt Höhe statt Breite — und Höhe hat der Knopf
+ohnehin (§37). Die Schwelle wandert von 1150 auf 820 px Leistenbreite,
+gemessen: dreizehn gestapelte Werkzeuge brauchen rund 790 px statt 1142
+daneben. Bei 1360 px Fenster stehen sie jetzt **mit** Wort in EINER Zeile,
+vorher **ohne** Wort in zwei.
+
+**Geprüft.** `test533` neu, 29 Zusicherungen, **zwei Gegenproben einzeln rot
+gesehen** (einen Kindwähler zurücklassen → 12 Gruppen statt 6 und 163 px;
+die Stapelung abklemmen → `flex-direction:row`). `test351` §3 umgehängt
+statt weichgemacht — und schärfer als vorher. `test522`, `test523`,
+`test524` auf die Fläche umgehängt, keiner weichgemacht (118/118).
+**Nicht** geprüft: die Gesamtsuite.
+
+**Was das Hinsehen fand (§55.3):** «Einrichten» steht allein in einer
+dritten Leistenzeile. Nachgemessen auf `origin/main` — **dort genauso**.
+Kein Fund dieses Bogens, aber jetzt gesehen; eingetragen als **L182** mit
+drei Wegen, keiner davon gewählt.
+
+---
+
+## 16. September 2026 · E613 · Die Chronik kommt erst, wenn jemand sie öffnet
+
+**`test388 §5` war rot, seit zwölf Tagen.** Gesehen hat es niemand: die
+Läufe auf GitHub brechen seit Wochen nach drei Sekunden ab (Konto-Ebene,
+kein Codefehler), und im Container hatte den Lauf niemand gefahren.
+
+**Zuerst gezählt, dann gehandelt** — die Reihenfolge, die L146 Punkt 1 bis 3
+verlangt hat. 2081 KB am 4. September, **2637 KB** am 16.; von den 512 KB
+Zuwachs kamen 229 aus 26 neuen Dateien und 291 aus 206 gewachsenen. Die zwei
+grössten Wachser sind `pdf/marken.js` (+68) und `pdf/document-mode.js`
+(+64) — das Zeichen- und das Schreibstudio, E568 bis E612. Das ist Produkt,
+kein Ballast.
+
+**Der eine echte Ballast** war `chronik/daten.js`: 182 KB Chronikprosa bei
+jedem Start, für einen Bildschirm hinter einem Zugangscode. Seit jetzt holt
+`chronik/laden.js` sie nach — dasselbe Muster wie pdf.js in E389, mit
+denselben drei Vorkehrungen (`<script>` statt `fetch` wegen `file://`, die
+Bytes an einer Marke in die Einzeldatei, `daten.js` bleibt im GRUNDSTOCK).
+**2637 → 2585 KB.**
+
+**Die Decke steht jetzt auf 2700 statt 2300**, mit geschriebener Begründung
+im Lauf: nicht 2600 (dann reisst sie beim nächsten Bogen und wird zum
+Rauschen), nicht 3000 (dann passte pdf.js wieder unbemerkt hinein).
+
+**Ein Fund im Nachbarlauf, teurer als der Bogen.** `test481 §7` sagte
+„index.html lädt beides, die Daten zuerst" und war **nach** der Änderung
+immer noch grün — die Zusicherung traf den Namen in einem HTML-Kommentar
+statt in einem `<script src>`. Dritte Zusage in einer Woche, die einen
+Kommentar statt Code prüft (E610, E612, E613).
+
+**Geprüft.** `test388` 19/19 (Gegenprobe rot gesehen: 18/19), `test481`
+39/39 mit fünf neuen Zusicherungen, `test270` 77 ok, `test105`/`test109`/
+`test87` grün. **Nicht** geprüft: die Gesamtsuite.
+
+---
 ## 16. September 2026 · E612 · Das Schreibstudio wird ruhig
 
 **Redur:** „hier sieht es sehr viel aus und haben nicht so viel Platz für

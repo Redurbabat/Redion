@@ -763,6 +763,28 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  werkzeugtafel: {
+    titel: 'Die Werkzeugleiste: Wort unter dem Zeichen (W2+W3)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.querySelectorAll('.overlay').forEach(o => o.remove());
+      const s = Store.addPage(null, { text: 'Werkzeugleiste', icon: '🧰' });
+      /* BREIT. Die Wörter hängen an der Breite der LEISTE, nicht des
+         Fensters (E359, Behälterabfrage) — eine schmale Seite zeigte hier
+         gar keine. */
+      Store.updateBlock(s.id, { wide: true });
+      const b = Store.addBlock(s.id, 'blatt', { text: '', papier: 'kariert' });
+      Store.addBlock(b.id, 'text', { text: 'Ohmsches Gesetz: U = R · I' });
+      await Store.flush();
+      App.oeffne(s.id);
+      await new Promise(r => setTimeout(r, 1100));
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
   papier: {
     titel: 'Die Papiervorlagen am A4-Blatt',
     bauen: async () => {

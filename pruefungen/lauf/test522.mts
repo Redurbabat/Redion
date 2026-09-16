@@ -128,7 +128,13 @@ const messen = (pg: Page) => pg.evaluate(() => {
     probe.style.color = akzent; document.body.appendChild(probe);
     const c = getComputedStyle(probe).color; probe.remove(); return c;
   })();
-  const teile = [...w.children].filter(sichtbar).map(k => {
+  /* DIE KINDER LIEGEN SEIT E614 IN DER TAFEL, nicht unmittelbar in der
+     Leiste (W2). `w.children` gäbe hier genau EIN Element — und weil
+     `.blatt-tafel` `display:contents` trägt, sähe am Bildschirm alles
+     unverändert aus, während dieser Lauf ins Leere zählte. Umgehängt auf
+     die Fläche, mit Rückfall auf die Leiste selbst. */
+  const flaeche = w.querySelector<HTMLElement>(':scope > .blatt-tafel') ?? w;
+  const teile = [...flaeche.children].filter(sichtbar).map(k => {
     const el = k as HTMLElement, r = el.getBoundingClientRect(), cs = getComputedStyle(el);
     return {
       name: el.dataset.wz || el.dataset.act || el.className || el.tagName.toLowerCase(),

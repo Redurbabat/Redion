@@ -2020,3 +2020,89 @@ Dienststand         v1145 → v1146
 ```
 
 **Nicht gemessen:** die Gesamtsuite.
+
+---
+
+## §52 · Die Tafel als Behälter — was sich NICHT bewegt hat (E614, 16. September 2026)
+
+W2 baut keine Gestaltung. Er schiebt eine Ebene ein, und die Zusage ist,
+dass am Bildschirm nichts passiert. Das lässt sich nur so belegen: dieselbe
+Messung auf beiden Ständen, in einem eigenen Arbeitsbaum.
+
+**1280 px Fenster, breite Seite, Blatt mit kariertem Papier, Stift gewählt:**
+
+```txt
+                          origin/main (2f35d03)   mit E614
+Leiste, Breite                     860 px           860 px
+Leiste, Höhe                       127 px           128 px
+Zeile 1  (y ≈ 0)              13 Werkzeuge      13 Werkzeuge
+Zeile 2  (y ≈ 50)             26 Zubehörteile   26 Zubehörteile
+Zeile 3                       «Einrichten»      «Einrichten»
+```
+
+**Ein Pixel.** Das ist die ganze sichtbare Wirkung von W2 — und es ist der
+eine Pixel des gestapelten Wortes aus W3, nicht der Ebene.
+
+Gefahren mit `git worktree add … origin/main`, damit im Hauptbaum
+weitergearbeitet werden konnte (§30).
+
+### Der Umfang, gezählt statt geschätzt
+
+```txt
+.blatt-werk in CSS              182 Zeilen in 2 Dateien
+  davon Kindwähler               51 Regelblöcke / 104 Selektorzeilen  ← ziehen mit
+  davon Nachfahre                44 Regelblöcke                       ← bleiben
+  davon `.blatt-werk` selbst     23 Regelblöcke                       ← bleiben
+:scope > im TypeScript            7 Stellen (6 marken.ts, 1 document-mode.ts)
+:first/last/nth-child im Kontext  0   ← eine ganze Gefahrenklasse fällt weg
+Geschwisterwähler `+`             3 Regeln;  `~`  0
+Läufe, die `.blatt-werk` nennen  56 von 475
+  davon auf dem Kindwähler        3   (test522, test523, test524)
+```
+
+Befehl für die Kindwähler — das naive Muster übersieht die Regeln mit
+Attributanhängsel, und das sind gerade die Kernregeln:
+
+```bash
+grep -rnE "\.blatt-werk(\[[^]]*\]|:[a-z-]+(\([^)]*\))?)*\s*>" quell/schale/stil/
+```
+
+### W3: das Wort kostet Höhe statt Breite
+
+Gemessen an der Stelle, die `test351` ohnehin misst — 1360 px Fenster,
+Leiste 940 px:
+
+```txt
+vorher    0 Wörter,  ZWEI Werkzeugzeilen
+nachher  13 Wörter,  EINE Werkzeugzeile
+```
+
+Dreizehn gestapelte Werkzeuge brauchen in einer Zeile rund **790 px**
+(daneben waren es 1142, E515). Die Schwelle steht deshalb auf **820** und
+nicht auf 790 — eine Schwelle auf dem Messwert reisst beim ersten längeren
+Wort. Bei 592 px (Leiste in einer Spalte) kippen sie in zwei Zeilen und die
+Leiste wird 165 px hoch; `test351` fängt das.
+
+### Gegenproben (§55.2), jede einzeln gelaufen und rot gesehen
+
+```txt
+EINEN Kindwähler zurücklassen     test533 27/29
+  → „Beim Stift steht nur SEIN Zubehör da" meldet ZWÖLF Gruppen statt
+    sechs; Leiste 163 px statt 128.
+W3-Stapelung abgeklemmt           test533 26/29
+  → `flex-direction: row`, das Wort steht wieder daneben.
+```
+
+**Läufe:**
+
+```txt
+test533   29/29   (neu)
+test351   26/26   §3 umgehängt
+test522   31/31 · test523 40/40 · test524 118/118   je umgehängt
+test343–352 (neun Läufe)   alle grün
+npm run typecheck   sauber
+Einzeldatei         10 252 KB
+Dienststand         v1146 → v1148
+```
+
+**Nicht gemessen:** die Gesamtsuite.

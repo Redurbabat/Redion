@@ -121,10 +121,15 @@ const aufbauen = async (breite: number): Promise<Page> => {
 
 /** Die Folge der Werkzeuge und Gruppen, wie sie im DOM stehen. */
 const domFolge = (pg: Page) => pg.evaluate(() => {
+  /* UMGEHÄNGT AUF DIE TAFEL (E614, W2). Die Kinder liegen seit W2 in
+     `.blatt-tafel`; `:scope >` an der Leiste fände gar nichts mehr — und
+     weil die Tafel `display:contents` trägt, sähe der Bildschirm dabei
+     unverändert aus. Der Rückfall auf die Leiste ist Absicht. */
   const w = document.querySelector<HTMLElement>('.blatt-werk')!;
+  const f = w.querySelector<HTMLElement>(':scope > .blatt-tafel') ?? w;
   return {
-    werkzeuge: [...w.querySelectorAll<HTMLElement>(':scope > [data-wz]')].map(k => String(k.dataset.wz)),
-    gruppen: [...new Set([...w.querySelectorAll<HTMLElement>(':scope > [data-gruppe]')]
+    werkzeuge: [...f.querySelectorAll<HTMLElement>(':scope > [data-wz]')].map(k => String(k.dataset.wz)),
+    gruppen: [...new Set([...f.querySelectorAll<HTMLElement>(':scope > [data-gruppe]')]
       .map(k => String(k.dataset.gruppe)))],
     platz: w.style.getPropertyValue('--platz')
   };
@@ -298,7 +303,8 @@ for (let i = 0; i < 4; i++) {
 await feldZu(pg);
 const folge = await pg.evaluate(() => {
   const w = document.querySelector<HTMLElement>('.blatt-werk')!;
-  const knoepfe = [...w.querySelectorAll<HTMLElement>(':scope > [data-wz]')];
+  const f = w.querySelector<HTMLElement>(':scope > .blatt-tafel') ?? w;   /* E614 */
+  const knoepfe = [...f.querySelectorAll<HTMLElement>(':scope > [data-wz]')];
   return {
     dom: knoepfe.map(k => String(k.dataset.wz)),
     nachX: [...knoepfe].sort((a, b) =>
@@ -343,7 +349,8 @@ p('… vorher war es ein anderer', platzVorher.trim() !== nachher8.platz.trim(),
   JSON.stringify([platzVorher, nachher8.platz]));
 const handyMasse = await handy.evaluate(() => {
   const w = document.querySelector<HTMLElement>('.blatt-werk')!;
-  return [...w.querySelectorAll<HTMLElement>(':scope > button')]
+  const f = w.querySelector<HTMLElement>(':scope > .blatt-tafel') ?? w;   /* E614 */
+  return [...f.querySelectorAll<HTMLElement>(':scope > button')]
     .filter(k => k.getClientRects().length > 0)
     .map(k => { const r = k.getBoundingClientRect(); return [String(k.dataset.wz || k.dataset.act || k.className), Math.round(r.width), Math.round(r.height)]; })
     .filter(m => (m[1] as number) < 44 || (m[2] as number) < 44);

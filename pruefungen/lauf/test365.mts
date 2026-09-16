@@ -212,9 +212,12 @@ p('Der Katalog der Formen steht im Quelltext',
   /FORMEN\s*=\s*\[/.test(ohneWorte(js)) && js.includes("'rectangle'"));
 p('Die alten Kennungen sind unangetastet',
   ["'line'", "'arrow'", "'rectangle'", "'ellipse'"].every(k => js.includes(k)));
+/* UMGEHÄNGT MIT W2 (E614): zwischen `.blatt-werk` und ihre Kinder steht
+   seither `.blatt-tafel`, und alle 51 Kindwähler zeigen auf sie. Die Zusage
+   selbst ist unverändert — nur der Weg dahin ist eine Ebene länger. */
 p('Der Stil zeigt die Formenwahl bei allen vieren',
   ['line', 'arrow', 'rectangle', 'ellipse'].every(f =>
-    css.includes(`.blatt-werk[data-tool="${f}"] > [data-gruppe="form"]`)));
+    css.includes(`.blatt-werk[data-tool="${f}"] > .blatt-tafel > [data-gruppe="form"]`)));
 p('Die Einzeldatei kennt den Formen-Knopf',
   fs.readFileSync(path.join(WURZEL, 'redion-einzeldatei.html'), 'utf8').includes('data-act="formart"'));
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.slice(0, 3).join(' | '));

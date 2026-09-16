@@ -219,8 +219,23 @@ await pg.evaluate(async (id: string) => {
 }, seiteId);
 await werkzeug(pg, 'stift');
 z = await leiste(pg);
-p('Volle Breite bei 1360 px Fenster: die Leiste hat rund 1070 px — noch keine Wörter, zwei Zeilen',
-  z.woerter === 0 && z.breite > 900 && z.breite < 1150 && z.werkzeugZeilen === 1, `${z.woerter} Wörter bei ${z.breite} px, ${z.werkzeugZeilen} Zeilen`);
+/* UMGEHÄNGT MIT W3 (E614), NICHT WEICHGEMACHT.
+   Hier stand „noch keine Wörter". Das war richtig, solange das Wort NEBEN
+   dem Zeichen stand und Breite kostete — die Schwelle 1150 aus E359 war
+   genau diese Breitenrechnung. Seit W3 steht es DARUNTER: dreizehn
+   gestapelte Werkzeuge brauchen rund 790 px statt 1142.
+   Gemessen an dieser Stelle, 1360 px Fenster, Leiste 940 px:
+
+       vorher   0 Wörter, 2 Werkzeugzeilen
+       nachher  13 Wörter, 1 Werkzeugzeile
+
+   Die Zusicherung prüft deshalb jetzt das, was wirklich gilt — und sie ist
+   SCHÄRFER als vorher, weil sie beides zugleich verlangt: die Wörter UND
+   die eine Zeile. Die alte Schwelle lebt weiter, sie ist nur tiefer
+   gerutscht; §3 unten misst sie bei 592 px. */
+p('Volle Breite bei 1360 px Fenster (Leiste über 820 px): dreizehn Wörter, EINE Werkzeugzeile',
+  z.woerter === 13 && z.breite > 820 && z.breite < 1150 && z.werkzeugZeilen === 1,
+  `${z.woerter} Wörter bei ${z.breite} px, ${z.werkzeugZeilen} Zeilen`);
 await pg.setViewportSize({ width: 1600, height: 950 });
 await pg.waitForTimeout(400);
 z = await leiste(pg);

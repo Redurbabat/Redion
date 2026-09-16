@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-591 Entscheidungen, E1 bis E613 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+592 Entscheidungen, E1 bis E614 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -656,6 +656,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E611** — Das Auge sitzt an JEDEM Ordner, nicht nur im Regal: die Notizhefte bekommen DASSELBE Auge und „Blick hinein“, aus einer Quelle (`test531`)
 * **E612** — Das Schreibstudio wird ruhig: 301 px Bedienung über der Folie werden 160 — das Folienband klappt zu, die Dateikarte zieht ins Details-Fenster (dreht E464 an dieser Stelle um, `test532`)
 * **E613** — Die Chronik kommt erst beim Öffnen: 54 KB Chronikprosa verlassen den Startweg (Muster von E389), und die Startdecke in `test388 §5` steigt von 2300 auf 2700 KB — mit gezählter Begründung statt still (L146)
+* **E614** — Die Tafel als Behälter (W2) und das Wort unter dem Zeichen (W3): eine Ebene `.blatt-tafel` mit `display:contents`, 51 Kindwähler und sieben `:scope >` ziehen mit; die Werkzeuge zeigen ihr Wort jetzt ab 820 statt 1150 px Leistenbreite (`test533`)
 
 ---
 
@@ -49817,3 +49818,198 @@ Code) und E612 (§5 zählte einen Zustand, in dem es nie zwei gab). Dreimal in
 einer Woche — die Lehre ist nicht „aufpassen", sondern: **eine neue Zusage
 wird rot gesehen, bevor sie grün gilt**, und eine alte, die eine Änderung
 überlebt, ist verdächtig und nicht beruhigend.
+
+---
+
+## E614 — Die Tafel als Behälter, und das Wort unter dem Zeichen (W2 + W3)
+
+**16. September 2026.** Redur, am 14. September, mit fünf Bildern eines
+fertigen Entwurfs: **„Siehe Bildern, so will ich es haben."** Und einen Satz
+später: **„Die untere Dock sollte bleiben."** Aus fünf Bögen standen drei
+(W0 E570, W0b E571, W1 E568); dies sind W2 und W3.
+
+### W2 baut keine Gestaltung — und das ist das Gefährliche daran
+
+`AUFGABEN.md:1132` sagt es selbst: „Ein Element `.blatt-tafel` INNERHALB von
+`.blatt-werk`, das alle `[data-gruppe]`-Knoten aufnimmt. **Der Haken sitzt im
+CSS: rund fünfzig Regeln lesen heute `.blatt-werk > [data-gruppe]`
+(Kindwähler). Die müssen mit — und genau das ist der Bogen, nicht die
+Gestaltung.**"
+
+Nachgezählt waren es **51 Regelblöcke über 104 Selektorzeilen**, verteilt auf
+`bausteine.css` (43) und `pdf-studio.css` (8), dazu **sieben `:scope >`** im
+TypeScript. Und die ehrliche Gegenzahl: **44 Nachfahren-Regeln und 23 Regeln
+auf `.blatt-werk` selbst — 57 % — sind vom Einschieben gar nicht betroffen.**
+Deshalb wurde gezählt statt ersetzt.
+
+### Die Entscheidung, die der Auftrag nicht vorhergesehen hat
+
+Der Auftrag sagt „**alle `[data-gruppe]`-Knoten**". Die Vermessung fand, dass
+das zu wenig ist. **Drei Mechanismen der Leiste wirken ausschliesslich
+zwischen unmittelbaren Geschwistern**, und jeder einzelne risse, wenn die
+Grenze mitten hindurchginge:
+
+```txt
+bausteine.css   .blatt-zeilenbruch + span.blatt-trenn[data-gruppe]
+                → der doppelte Trennstrich am Zeilenanfang, der Fund aus E568
+pdf-studio.css  button:hover + button  /  button:has(+ button:hover)
+                → Redurs Dock-Welle von Bild 7
+marken.ts       insertBefore(knopf, bruch) in `ordnungAnwenden`
+                → zwei Elternteile, und der Aufruf würfe
+```
+
+**Die Tafel nimmt deshalb ALLE Kinder auf**, Werkzeuge und Zeilenbruch
+eingeschlossen — nicht nur die Gruppen.
+
+### Und die zweite, die den Bogen überhaupt möglich macht: `display:contents`
+
+Hier lag der eigentliche Konstruktionskonflikt. Die drei **Layout**mechanismen
+der Leiste sind Flex-**Kind**-Eigenschaften:
+
+```txt
+flex:1 0 100%   am Zeilenbruch          der Umbruch in zwei Zeilen (E359)
+order           an Werkzeug und Gruppe  die Telefon-Einsortierung (E356/E570)
+position:sticky an Zurück/Vor           im waagerechten Roller (E359)
+```
+
+Alle drei wirken nur zwischen direkten Flex-Geschwistern. Ein echter Kasten
+zwischen ihnen und `.blatt-werk` hätte alle drei gebrochen. `display:contents`
+erzeugt keinen Kasten: die Kinder bleiben Flex-Elemente von `.blatt-werk`,
+`gap` zählt über die Tafel hinweg, und am Bildschirm ändert sich nichts.
+
+**Was das kostet:** die Tafel kann heute keinen eigenen Grund, Rand und kein
+`overflow` tragen. Genau das braucht W4 — und genau dort bekommt sie es, als
+Zustandswechsel. W2 ist die Ebene, nicht die Tafel.
+
+**Zur Zugänglichkeit (§38):** die Tafel ist ein nacktes `<div>` ohne `role`.
+Für solche Elemente lassen die Browser die Kinder seit 2021 im
+Zugänglichkeitsbaum stehen; der alte `display:contents`-Fehler betraf
+Elemente MIT eigener Bedeutung (Listen, Tabellen). Wer der Tafel je eine
+`role` gibt, muss das nachlesen — es steht als Kommentar an der Regel.
+
+**Und sie trägt kein `data-gruppe` und kein `data-wz`.** Drei
+`closest('[data-wz],[data-gruppe]')` in `marken.ts` träfen sonst die Tafel
+statt den Knopf, den der Finger meint.
+
+### Die drei Andockstellen statt eines zweiten Weges (§8)
+
+```txt
+marken.ts:445        `flaeche(tools)` — ein Helfer, sechs Griffe gehen durch ihn
+document-mode.ts     `inkFlaeche()` — der MutationObserver horcht ohne `subtree`,
+                     und ohne diese Zeile feuerte er NIE mehr (E575)
+bausteine.css:4362   der `+`-Wähler, der über die künftige Grenze griff
+```
+
+Der leiseste Ausfall des ganzen Bogens wäre `ordnungAnwenden` gewesen: sein
+`if (!bruch) return` steigt **stumm** aus, wenn der Zeilenbruch nicht als
+direktes Kind gefunden wird. Die ganze Nutzerordnung aus E570/E571 wäre
+wirkungslos geworden, ohne dass etwas meldet. `test533 §4` hält genau das.
+
+### W3 — das Wort unter das Zeichen
+
+Redurs vier iPad-Bilder: „jedes Werkzeug trägt sein Wort unter dem Zeichen".
+
+**Warum das mehr ist als ein Umbruch.** Nebeneinander kostet das Wort
+**Breite**, und Breite ist in dieser Leiste das Knappe: dreizehn Werkzeuge
+brauchten mit Wort 1142 px statt 556 (E515), und deshalb wurde es unter
+1150 px Behälterbreite weggeklemmt (E359). Darunter kostet es **Höhe** — und
+die hat der Knopf ohnehin, weil §37 ihm 44 px gibt.
+
+Die Schwelle ist deshalb gewandert, gemessen und nicht gewählt:
+
+```txt
+Zubehör (Wort daneben)      weiterhin 1150 px
+Werkzeuge (Wort darunter)   jetzt 820 px
+```
+
+Dreizehn gestapelte Werkzeuge brauchen in einer Zeile rund 790 px; 820 lässt
+Luft für ein längeres Wort. Darunter klemmt es wie bisher — und bleibt im
+Vorlesebaum, nicht in `display:none` (Audit F04).
+
+**Der Gewinn, an der Stelle gemessen, die `test351` schon hatte** — 1360 px
+Fenster, Leiste 940 px:
+
+```txt
+vorher    0 Wörter, ZWEI Werkzeugzeilen
+nachher   13 Wörter, EINE Werkzeugzeile
+```
+
+Es ist also nicht nur Redurs Bild, es ist auch weniger Leiste.
+
+### Gemessen
+
+```txt
+Leiste bei 1280 px Fenster, Stift gewählt, am laufenden Programm:
+
+                    vorher (origin/main)   nachher
+Breite                    860 px            860 px
+Höhe                      127 px            128 px
+Zeilen                    3                 3
+Zubehörteile sichtbar     26                26
+```
+
+**Eins mehr an Höhe. Das ist die ganze sichtbare Wirkung von W2** — und
+genau das war die Zusage.
+
+```txt
+test533   29 von 29 grün   (neu)
+test351   26/26   §3 umgehängt statt weichgemacht (siehe unten)
+test522   31/31 · test523  40/40 · test524  118/118   je umgehängt
+test343 344 345 346 347 348 349 350 352   alle grün
+npm run typecheck   sauber
+Dienststand   v1146 → v1148
+```
+
+**Zwei Gegenproben (§50, §55.2), beide einzeln gelaufen und rot gesehen:**
+
+```txt
+EINEN Kindwähler zurücklassen        test533 27/29
+  (`.blatt-werk[data-tool] > [data-gruppe]{display:none}`)
+  → „Beim Stift steht nur SEIN Zubehör da" meldet alle ZWÖLF Gruppen
+    statt sechs, und die Leiste wird 163 px hoch.
+W3-Stapelung abgeklemmt              test533 26/29
+  → das Wort steht wieder rechts neben dem Zeichen, `flex-direction: row`.
+```
+
+### Was umgehängt wurde, und warum das kein Weichmachen ist
+
+`test351` sagte: „Volle Breite bei 1360 px Fenster — **noch keine Wörter,
+zwei Zeilen**." Das war richtig, solange das Wort Breite kostete; die
+Schwelle 1150 aus E359 WAR diese Breitenrechnung. Die Zusicherung prüft
+jetzt „**dreizehn Wörter, EINE Werkzeugzeile**" — und sie ist damit
+**schärfer** als vorher, weil sie beides zugleich verlangt. Die alte
+Schwelle lebt weiter, sie ist nur tiefer gerutscht; `test351 §3` misst sie
+bei 592 px.
+
+Drei weitere Läufe (`test522`, `test523`, `test524`) standen auf
+`w.children` oder `:scope >` an der Leiste. Alle drei wurden auf die Fläche
+umgehängt, keiner weichgemacht — `test524` zählt weiterhin „mindestens 15
+sichtbare Bedienteile im Dock", nur eine Ebene tiefer.
+
+### Ein Fund im eigenen Wächter, und einer beim Hinsehen
+
+1. **Der Lauf zählte „15 Werkzeuge statt 13".** Er suchte per
+   `querySelector` nach dem NAMEN — und „formen" gibt es dreimal: als
+   Werkzeug, als `data-act` in der Formengruppe und als Gruppe selbst.
+   Jetzt zählt er, was selbst ein `data-wz` trägt.
+2. **§6 meldete dreizehn Fehler, wo keiner war.** Er mass
+   `getBoundingClientRect()` gegen 44 px — aber die Trefffläche kommt aus
+   `::after` und nicht aus der Höhe des Knopfes (§37, E406). Wer den Kasten
+   misst, misst das Falsche.
+3. **Auf dem Bild steht ein einzelner Knopf allein in einer dritten Zeile:**
+   «Einrichten». Nachgemessen auf `origin/main` — **er steht dort genauso**.
+   Kein Fund dieses Bogens, aber jetzt gesehen; eingetragen als **L182**.
+
+### Und ein roter Lauf, der schon auf `main` rot war
+
+`test437` behauptete „Original über der Arbeitskopie sichtbar" — die Zusage
+aus **E464**, die **E612** an dieser Stelle umgedreht hat. E612 hat
+`test385 §4` umgehängt und **diese Stelle übersehen**; seither war der Lauf
+rot, und gesehen hat es niemand (die Läufe auf GitHub brechen ab, siehe
+E613). Gegengeprüft in einem Arbeitsbaum auf `origin/main`: **dort rot,
+mit demselben Satz.**
+
+Umgehängt wie in E612, und mit dem Gegenfall statt ohne: im ruhigen Studio
+ist die Karte weg, mit `data-ruhig="aus"` kommt sie zurück. Eine
+Zusicherung, die nur „ist weg" sagt, ginge auch dann durch, wenn die Karte
+ganz fehlte. `test437` 36/36.
