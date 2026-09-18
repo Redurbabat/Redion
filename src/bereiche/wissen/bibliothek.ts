@@ -589,8 +589,18 @@ const Bibliothek = (() => {
   };
 
   /** Gibt es an diesem Gerät überhaupt ein Überfahren? */
+  /** Kann dieses GERÄT überfahren — mit irgendeinem seiner Eingabemittel?
+   *
+   *  BIS E615 STAND HIER `(hover: hover) and (pointer: fine)`, und das ist
+   *  die falsche Frage. Sie beschreibt den HAUPTZEIGER: auf einem Laptop
+   *  mit Berührungsbildschirm ist das der Finger, und die Abfrage antwortet
+   *  dort „kein Überfahren" — obwohl eine Maus danebenliegt und ein Stift
+   *  über dem Glas schwebt.
+   *
+   *  `any-hover` und `any-pointer` fragen nach ALLEN Eingabemitteln. Das
+   *  ist die Frage, die hier gemeint war (L180). */
   const zeigerHatHover = (): boolean => {
-    try { return matchMedia('(hover: hover) and (pointer: fine)').matches; }
+    try { return matchMedia('(any-hover: hover) and (any-pointer: fine)').matches; }
     catch { return false; }
   };
 
@@ -721,11 +731,16 @@ const Bibliothek = (() => {
       });
       b.addEventListener('pointerenter', ereignis => {
         const e = ereignis as PointerEvent;
-        /* NUR DIE MAUS. Ein Finger meldet auf manchen Geräten ein
-           `pointerenter`, das kein Überfahren ist — er tippt gerade. Und
-           ein Gerät ohne Zeiger meldet gar keines; die Abfrage kostet
-           dort nichts. */
-        if (e.pointerType !== 'mouse' || !zeigerHatHover()) return;
+        /* MAUS ODER STIFT (E615, L180). Ein Stift, der über dem Glas
+           schwebt, IST ein Überfahren — Surface, iPad mit Tastatur, Wacom.
+           Bis hierher stand `!== 'mouse'`, und damit war er zusammen mit
+           dem Finger ausgesperrt; Redur hat es am 16. September gemeldet.
+
+           DER FINGER BLEIBT DRAUSSEN, und zwar mit Grund: er meldet auf
+           manchen Geräten ein `pointerenter`, das kein Überfahren ist,
+           sondern der Anfang eines Tippens. `test476 §6` hält das fest. */
+        if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+        if (!zeigerHatHover()) return;
         if (document.querySelector('.ru-fach-lage')) return;
         schauAbsagen();
         schauUhr = window.setTimeout(() => {
@@ -733,6 +748,15 @@ const Bibliothek = (() => {
           const p = seiteVon();
           if (p) blickHinein(p, b.getBoundingClientRect(), true, beiOeffnen);
         }, SCHAU_AUF_MS);
+      });
+      /* EIN TIPP IST KEIN HINSCHAUEN (E615, L180).
+         Beim Antippen kommt erst `pointerenter`, dann `pointerdown` — und
+         dazwischen sagte nichts ab. Die Uhr lief weiter, und die Karte ging
+         nach dem Tippen von selbst auf. Am Auge fiel das kaum auf, weil ein
+         Klick sie ohnehin öffnet; überall dort, wo Tippen und Hinschauen
+         Verschiedenes bedeuten, wäre es ein Fehler. */
+      b.addEventListener('pointerdown', () => {
+        if (schauUhr) { clearTimeout(schauUhr); schauUhr = 0; }
       });
       b.addEventListener('pointerleave', ereignis => {
         if ((ereignis as PointerEvent).pointerType === 'touch') return;

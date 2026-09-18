@@ -2106,3 +2106,56 @@ Dienststand         v1146 → v1148
 ```
 
 **Nicht gemessen:** die Gesamtsuite.
+
+---
+
+## §53 · Der Stift am Ordner-Auge (E615, 17. September 2026)
+
+Kein Bild — hier gibt es nichts zu sehen, nur ein Verhalten (§55.3). Die
+Messung ist der Beweis.
+
+**Was vorher galt**, an der einen Bedingung in `bibliothek.ts`:
+
+```txt
+Eingabemittel      pointerType    zeigerHatHover()   Karte ging auf?
+Maus               mouse          ja                 ja
+Stift              pen            ja                 NEIN  ← der Fund
+Finger             touch          —                  nein  (gewollt)
+```
+
+Und der zweite, unterschätzte Grund — `(hover: hover) and (pointer: fine)`
+beschreibt den **Hauptzeiger**:
+
+```txt
+Gerät                                  (hover:hover)   (any-hover:hover)
+Rechner mit Maus                       ja              ja
+Laptop mit Berührungsbildschirm        NEIN            ja   ← auch die MAUS
+   + Maus oder Stift daneben                                   war gesperrt
+Telefon                                nein            nein
+```
+
+Die alte Abfrage hätte also nicht nur den Stift ausgesperrt, sondern auf
+jedem Touch-Laptop auch die Maus — an einem Gerät, das Redur benutzt.
+
+**Läufe:**
+
+```txt
+test476   31/31   (5 Zusicherungen neu)
+npm run typecheck   sauber
+Dienststand         v1148 → v1149
+```
+
+**Gegenproben (§55.2), jede einzeln gelaufen und rot gesehen:**
+
+```txt
+alter Stand (`!== 'mouse'`, `hover: hover`)      test476 27/31
+nur die `pointerdown`-Absage entfernt            test476 29/31
+```
+
+**Und ein Fund im eigenen Wächter, der vierte dieser Woche.** Die
+Quellenzusicherung „`(hover: hover)` steht nirgends mehr" war rot, obwohl
+der Code stimmte: sie traf den **Kommentar**, der erklärt, warum die alte
+Abfrage weg ist. Mit `matchMedia\(` davor zeigt sie auf den Aufruf.
+Dieselbe Sorte wie E610, E612 und E613.
+
+**Nicht gemessen:** die Gesamtsuite.

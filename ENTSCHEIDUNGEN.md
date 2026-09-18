@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-592 Entscheidungen, E1 bis E614 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+593 Entscheidungen, E1 bis E615 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -657,6 +657,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E612** — Das Schreibstudio wird ruhig: 301 px Bedienung über der Folie werden 160 — das Folienband klappt zu, die Dateikarte zieht ins Details-Fenster (dreht E464 an dieser Stelle um, `test532`)
 * **E613** — Die Chronik kommt erst beim Öffnen: 54 KB Chronikprosa verlassen den Startweg (Muster von E389), und die Startdecke in `test388 §5` steigt von 2300 auf 2700 KB — mit gezählter Begründung statt still (L146)
 * **E614** — Die Tafel als Behälter (W2) und das Wort unter dem Zeichen (W3): eine Ebene `.blatt-tafel` mit `display:contents`, 51 Kindwähler und sieben `:scope >` ziehen mit; die Werkzeuge zeigen ihr Wort jetzt ab 820 statt 1150 px Leistenbreite (`test533`)
+* **E615** — Der Stift öffnet den Blick in den Ordner: `pointerType` lässt `pen` zu, `any-hover` ersetzt `hover` (das fragte den Hauptzeiger und sperrte auf einem Touch-Laptop auch die Maus aus), und ein `pointerdown` sagt die Uhr ab (L180, `test476`)
 
 ---
 
@@ -50036,3 +50037,81 @@ zwei Läufe hinterlassen, die seither rot waren, und **niemand hat es
 gemerkt**, weil die Läufe auf GitHub abbrechen (E613). Ein Bogen, der nur
 seine eigenen Wächter fährt, sieht die Nachbarstelle nicht — genau der
 zweitteuerste wiederkehrende Fehler dieses Projekts (§45).
+
+---
+
+## E615 — Der Stift öffnet den Blick in den Ordner (L180)
+
+**17. September 2026.** Redur, am 16. September: das Auge am Ordnerdeckel
+öffnet die Karte beim Hinschauen (E508) — aber nur mit der **Maus**. Mit
+einem Laptop-Stift, der über dem Glas schwebt, passierte nichts.
+
+### Zwei Gründe, und beide schlossen den Stift unabhängig voneinander aus
+
+```ts
+if (e.pointerType !== 'mouse' || !zeigerHatHover()) return;
+```
+
+1. **Seine Art ist `pen`, nicht `mouse`.** Der Kommentar daneben sagte „NUR
+   DIE MAUS" und meinte den Finger — der Stift war Kollateralschaden.
+2. **`zeigerHatHover()` fragte `(hover: hover) and (pointer: fine)`.** Das
+   beschreibt den **Hauptzeiger** des Geräts. Auf einem Laptop mit
+   Berührungsbildschirm ist das der Finger, und die Abfrage antwortet dort
+   „kein Überfahren" — obwohl eine Maus danebenliegt und ein Stift über dem
+   Glas schwebt.
+
+Der zweite ist der interessantere: er hätte auch die **Maus** ausgesperrt,
+sobald das Gerät einen Berührungsbildschirm hat. `any-hover` und
+`any-pointer` fragen nach ALLEN Eingabemitteln und sind die Frage, die hier
+von Anfang an gemeint war.
+
+### Und der dritte Punkt an derselben Stelle
+
+Beim Antippen kommt erst `pointerenter`, dann `pointerdown` — **dazwischen
+sagte nichts ab.** Die Uhr lief weiter, und die Karte ging nach dem Tippen
+von selbst auf. Am Auge fiel das kaum auf, weil ein Klick sie ohnehin
+öffnet; überall dort, wo Tippen und Hinschauen Verschiedenes bedeuten, wäre
+es ein Fehler. `pointerdown` sagt jetzt ab.
+
+### Warum das überhaupt nochmal anstand
+
+**Alles drei war in E608 schon gebaut und geprüft.** E608 ist durch **E609**
+vollständig zurückgenommen worden, weil Redur die Ordnerkachel wieder wie
+vorher wollte — der Fund fiel damit in die Lücke zurück, **nicht widerlegt,
+nur verschüttet** (L180). Er liess sich jetzt einzeln einsetzen, ohne am
+Auge etwas zu ändern: drei Stellen in `bibliothek.ts`.
+
+Der Finger bleibt draussen, und zwar mit Grund: er meldet auf manchen
+Geräten ein `pointerenter`, das kein Überfahren ist, sondern der Anfang
+eines Tippens. `test476 §6` hält das fest und bleibt unverändert.
+
+### Gemessen
+
+```txt
+test476   31 von 31 grün   (5 Zusicherungen neu: §6b, §6c, drei Quellen)
+npm run typecheck   sauber
+Dienststand   v1148 → v1149
+```
+
+**Zwei Gegenproben (§50, §55.2), jede einzeln gelaufen und rot gesehen:**
+
+```txt
+gegen den alten Stand (`!== 'mouse'`, `hover: hover`)   test476 27/31
+nur die `pointerdown`-Absage entfernt                   test476 29/31
+```
+
+Damit ist **jede der beiden Hälften einzeln gehütet**, nicht nur zusammen.
+
+### Und zum vierten Mal in einer Woche: eine Zusage, die Prosa liest
+
+Die neue Quellenzusicherung hiess zuerst „`any-hover` steht da **und**
+`(hover: hover)` steht nirgends mehr" — und war rot, obwohl der Code
+stimmte. Sie traf den **Kommentar**, der erklärt, warum die alte Abfrage weg
+ist. Jetzt steht `matchMedia\(` davor, und sie zeigt auf den Aufruf.
+
+Vierter Fall dieser Sorte nach E610 (`ablageAus` traf den Kommentar), E612
+(§5 zählte einen Zustand, den es nie gab) und E613 (`indexOf` fand den Namen
+in einer Baumarke). Die Lehre ist nicht „aufpassen", sondern die Regel, die
+§55.2 ohnehin verlangt: **eine Zusage wird rot gesehen, bevor sie grün
+gilt** — und wenn sie beim ersten Lauf grün ist, ist das ein Verdacht und
+keine Beruhigung.

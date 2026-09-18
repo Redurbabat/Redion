@@ -8585,7 +8585,22 @@ aber es ist keine Sackgasse.
 
 ---
 
-## L180 · Der Stift öffnet den Blick in den Ordner nicht — 16. September 2026
+## L180 · Der Stift öffnet den Blick in den Ordner nicht — ~~16. September 2026~~ **GESCHLOSSEN am 17. September 2026 durch E615**
+
+> **Geschlossen, und zwar genau so, wie es hier stand: „zwei Zeilen in
+> `bibliothek.ts`" — es wurden drei.**
+>
+> `pointerType` lässt jetzt `pen` zu; `zeigerHatHover()` fragt `any-hover`
+> statt `hover` (die alte Abfrage beschrieb den HAUPTZEIGER und hätte auf
+> einem Laptop mit Berührungsbildschirm auch die MAUS ausgesperrt — der
+> unterschätzte der beiden Gründe); und `pointerdown` sagt die Uhr ab, damit
+> ein Tipp nicht als Hinschauen zählt.
+>
+> `test476` 31/31, fünf Zusicherungen neu. **Zwei Gegenproben einzeln rot
+> gesehen:** gegen den alten Stand 27/31, mit entfernter `pointerdown`-Absage
+> 29/31 — jede Hälfte ist damit für sich gehütet.
+>
+> Der Finger bleibt draussen, unverändert und mit Grund (`test476 §6`).
 
 **Was fehlt:** Das Auge am Ordnerdeckel öffnet die Ordnerkarte beim
 Hinschauen (E508) — aber nur mit der **Maus**. Mit einem Laptop-Stift, der

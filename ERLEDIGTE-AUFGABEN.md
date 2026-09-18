@@ -1,5 +1,40 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 17. September 2026 · E615 · Der Stift öffnet den Blick in den Ordner (L180)
+
+**Redurs Fund vom 16. September:** das Auge am Ordnerdeckel öffnet die Karte
+beim Hinschauen — aber nur mit der Maus. Mit einem Laptop-Stift passiert
+nichts.
+
+**Zwei Gründe, beide unabhängig voneinander.** Die Art ist `pen` und nicht
+`mouse` — der Kommentar sagte „NUR DIE MAUS" und meinte den Finger, der
+Stift war Kollateralschaden. Und `zeigerHatHover()` fragte
+`(hover: hover) and (pointer: fine)`, was den **Hauptzeiger** beschreibt:
+auf einem Laptop mit Berührungsbildschirm ist das der Finger, und die
+Abfrage sagt dort „kein Überfahren" — sie hätte also auch die **Maus**
+ausgesperrt. Das war der unterschätzte der beiden.
+
+**Und ein dritter Punkt an derselben Stelle:** beim Antippen kommt erst
+`pointerenter`, dann `pointerdown`, und dazwischen sagte nichts ab. Die Uhr
+lief weiter, die Karte ging nach dem Tippen von selbst auf.
+
+**Warum es nochmal anstand:** alles drei war in E608 gebaut und geprüft.
+E609 hat E608 vollständig zurückgenommen, weil Redur die Ordnerkachel wieder
+wie vorher wollte — der Fund fiel in die Lücke zurück, nicht widerlegt, nur
+verschüttet. Jetzt einzeln eingesetzt, ohne am Auge etwas zu ändern.
+
+**Geprüft.** `test476` 31/31, fünf Zusicherungen neu. **Zwei Gegenproben
+einzeln rot gesehen:** gegen den alten Stand 27/31, mit entfernter
+`pointerdown`-Absage 29/31 — jede Hälfte für sich gehütet. Der Finger bleibt
+draussen (`test476 §6`, unverändert). **Nicht** geprüft: die Gesamtsuite.
+
+**Vierter Fund dieser Sorte in einer Woche:** die neue Quellenzusicherung
+war rot, obwohl der Code stimmte — sie traf den Kommentar, der erklärt,
+warum die alte Abfrage weg ist. Nach E610, E612 und E613 jetzt E615. Die
+Lehre steht in §55.2 und heisst: eine Zusage, die beim ersten Lauf grün ist,
+ist ein Verdacht und keine Beruhigung.
+
+---
 ## 16. September 2026 · E614 · Die Tafel als Behälter, und das Wort unter dem Zeichen (W2 + W3)
 
 **Redur, 14. September, mit fünf Bildern:** „Siehe Bildern, so will ich es
