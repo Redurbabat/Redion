@@ -90,8 +90,13 @@ try {
        unverändertem Bildschirm, weil ".blatt-tafel" ein "display:contents"
        trägt. KEINE RÜCKWÄRTSHOCHKOMMAS HIER: dieser Block steht in einer
        Schablonenzeichenkette, und eines davon beendet sie mitten im Satz. */
-    const flaeche = werk?.querySelector(':scope > .blatt-tafel') ?? werk;
-    for (const kind of flaeche ? Array.from(flaeche.children) : []) {
+    /* ZWEI FLÄCHEN SEIT E618: Werkzeuge in der Leiste, Zubehör in der Tafel. */
+    const tafel = werk?.querySelector(':scope > .blatt-tafel');
+    const flaeche = [].concat(
+      werk ? Array.from(werk.children) : [],
+      tafel ? Array.from(tafel.children) : []
+    ).filter(k => !k.classList || !k.classList.contains('blatt-tafel'));
+    for (const kind of flaeche) {
       const g = kind.getAttribute('data-gruppe') || (kind.hasAttribute('data-wz') ? 'werkzeug' : 'sonst');
       out[g] = out[g] || [0, 0];
       out[g][1]++; if (sicht(kind)) out[g][0]++;
@@ -325,15 +330,16 @@ try {
   const vorSortieren = await reihe();
   await page.evaluate(`(() => {
     const werk = document.querySelector('.document-stage[data-aktiv] .blatt-werk');
-    const flaeche = werk.querySelector(':scope > .blatt-tafel') || werk;   /* E614 */
-    const wz = Array.from(flaeche.querySelectorAll(':scope > [data-wz]'));
-    flaeche.insertBefore(wz[wz.length - 1], wz[0]);
+    /* SEIT E618 liegen die Werkzeuge wieder in der LEISTE, nicht in der
+       Tafel — dort liegt nur noch das Zubehör. */
+    const wz = Array.from(werk.querySelectorAll(':scope > [data-wz]'));
+    werk.insertBefore(wz[wz.length - 1], wz[0]);
   })()`);
   await page.waitForTimeout(500);
   const nachSortieren = await reihe();
   check('Eine Sortierbewegung unten kommt oben live an', vorSortieren !== nachSortieren);
   check('… und zwar genau als dieselbe Reihenfolge',
-    nachSortieren === await page.evaluate(`Array.from(document.querySelectorAll('.document-stage[data-aktiv] .blatt-werk .blatt-tafel > [data-wz]')).map(b => b.dataset.wz).join(',')`));
+    nachSortieren === await page.evaluate(`Array.from(document.querySelectorAll('.document-stage[data-aktiv] .blatt-werk > [data-wz]')).map(b => b.dataset.wz).join(',')`));
 
   /* ══ §6 DER RADIERER: SICHTBAR, EINFACH, MIT GEDÄCHTNIS (E576) ════════════
      GEMESSEN an der laufenden App, Fenster 1440 × 960:
@@ -759,7 +765,13 @@ try {
   const zeichenMass = async (): Promise<{ huelle: number; svg: number; knopf: number;
                                           attribut: string; n: number }> =>
     await page.evaluate(`(() => {
-      const knoepfe = Array.from(document.querySelectorAll('.document-stage[data-aktiv] .blatt-werk .blatt-tafel > button'))
+      /* BEIDE FLÄCHEN (E618): die Werkzeuge liegen in der Leiste, das
+         Zubehör in der Tafel — und im Studio-Dock ist genau das Zubehör
+         sichtbar, die Werkzeuge sind dort ausgeblendet (E573). Wer nur die
+         Leiste liest, findet im Dock KEINEN Knopf und misst 0 px. */
+      const knoepfe = Array.from(document.querySelectorAll(
+        '.document-stage[data-aktiv] .blatt-werk > button,' +
+        '.document-stage[data-aktiv] .blatt-werk > .blatt-tafel > button'))
         .filter(n => n.getClientRects().length && n.querySelector('.zeichen[data-sym] svg'));
       const b = knoepfe[0];
       if (!b) return { huelle: 0, svg: 0, knopf: 0, attribut: '—', n: 0 };
@@ -919,8 +931,9 @@ try {
     return await page.evaluate(`(() => {
       const w = document.querySelector('.document-stage[data-aktiv] .blatt-werk');
       if (!w) return { da: 0, sichtbar: 0, roll: 0, fenster: 0, versteckt: [] };
-      const f = w.querySelector(':scope > .blatt-tafel') || w;   /* E614 */
-      const kinder = Array.from(f.children).filter(k => !k.classList.contains('blatt-trenn'));
+      const t = w.querySelector(':scope > .blatt-tafel');   /* E618: zwei Flächen */
+      const kinder = [].concat(Array.from(w.children), t ? Array.from(t.children) : [])
+        .filter(k => !k.classList.contains('blatt-trenn') && !k.classList.contains('blatt-tafel'));
       const sicht = (e) => { const s = getComputedStyle(e);
         return s.display !== 'none' && s.visibility !== 'hidden' && e.getClientRects().length > 0; };
       /* Die Gruppenregel aus E356 blendet fremde Gruppen aus — das IST ihr

@@ -281,7 +281,11 @@ body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display
      [data-gruppe=verlauf]  Zurück, Vor, Platz, Einrichten — „Zurück" und
                       „Vor" stehen in der Kapsel über dem Papier, die zwei
                       übrigen unter „···". */
-.document-studio:not([data-ink-options="open"]) .blatt-werk > .blatt-tafel > :is([data-wz],.blatt-trenn,[data-gruppe="verlauf"]){display:none!important}
+/* ZWEI FLÄCHEN SEIT E618: `[data-wz]` und der Zeilenbruch liegen in der
+   Leiste, der Rest in der Tafel. Die Zusage bleibt dieselbe — im
+   geschlossenen Dock steht nur das Zubehör des Werkzeugs (E573). */
+.document-studio:not([data-ink-options="open"]) .blatt-werk > :is([data-wz],.blatt-zeilenbruch),
+.document-studio:not([data-ink-options="open"]) .blatt-werk > .blatt-tafel > :is(.blatt-trenn,[data-gruppe="verlauf"]){display:none!important}
 .document-studio:not([data-ink-options="open"]) .blatt-werk[data-tool="schreiben"]{display:none}
 /* DAS KLAPP-ZEICHEN DES FOLIENBANDES (E612). Es steht am rechten Ende der
    Reiterzeile und dreht sich, wenn das Band offen ist — damit die Zeile
@@ -632,16 +636,23 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
    und kein Effekt (7 C 6). */
 @media (hover:hover) and (pointer:fine){
   .document-drawingbar button svg,
+  .document-studio .blatt-werk > button svg,
   .document-studio .blatt-werk > .blatt-tafel > button svg{
     transition:transform var(--motion-fast) var(--ease)
   }
   .document-drawingbar button:hover:not(:disabled) svg,
+  .document-studio .blatt-werk > button:hover:not(:disabled) svg,
   .document-studio .blatt-werk > .blatt-tafel > button:hover:not(:disabled) svg{ transform:scale(1.3) }
   /* Die zwei Nachbarn heben schwächer mit — das ist der Teil, an dem man ein
      Dock erkennt. `:has(+ button:hover)` liest nach LINKS, der Nachbarwähler
-     nach rechts; zusammen sind es beide Seiten. */
+     nach rechts; zusammen sind es beide Seiten.
+     ZWEI FLÄCHEN SEIT E618: die Welle läuft innerhalb der Werkzeuge und
+     innerhalb des Zubehörs — über die Grenze hinweg sind sie keine
+     Geschwister mehr, und das ist richtig so: es sind zwei Reihen. */
   .document-drawingbar button:hover + button svg,
   .document-drawingbar button:has(+ button:hover) svg,
+  .document-studio .blatt-werk > button:hover + button svg,
+  .document-studio .blatt-werk > button:has(+ button:hover) svg,
   .document-studio .blatt-werk > .blatt-tafel > button:hover + button svg,
   .document-studio .blatt-werk > .blatt-tafel > button:has(+ button:hover) svg{ transform:scale(1.13) }
 }
@@ -653,6 +664,7 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
   0%{ transform:scale(.86) } 55%{ transform:scale(1.16) } 100%{ transform:scale(1) }
 }
 .document-drawingbar button[aria-pressed="true"] svg,
+.document-studio .blatt-werk > button[aria-pressed="true"] svg,
 .document-studio .blatt-werk > .blatt-tafel > button[aria-pressed="true"] svg{
   animation:dock-feder var(--motion-normal) var(--ease) 1
 }
@@ -663,10 +675,14 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
   .document-drawingbar button:hover:not(:disabled) svg,
   .document-drawingbar button:hover + button svg,
   .document-drawingbar button:has(+ button:hover) svg,
+  .document-studio .blatt-werk > button:hover:not(:disabled) svg,
+  .document-studio .blatt-werk > button:hover + button svg,
+  .document-studio .blatt-werk > button:has(+ button:hover) svg,
   .document-studio .blatt-werk > .blatt-tafel > button:hover:not(:disabled) svg,
   .document-studio .blatt-werk > .blatt-tafel > button:hover + button svg,
   .document-studio .blatt-werk > .blatt-tafel > button:has(+ button:hover) svg{ transform:none }
   .document-drawingbar button[aria-pressed="true"] svg,
+  .document-studio .blatt-werk > button[aria-pressed="true"] svg{ animation:none }
   .document-studio .blatt-werk > .blatt-tafel > button[aria-pressed="true"] svg{ animation:none }
 }
 /* Im Druck bewegt sich ohnehin nichts — die Leisten sind dort schon aus

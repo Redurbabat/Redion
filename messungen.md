@@ -2307,3 +2307,70 @@ die dritte Schwelle entfernt       test533 38/40   (Leiste 127 statt 91 px)
 ```
 
 **Nicht gemessen:** die Gesamtsuite.
+
+---
+
+## §56 · Die Tafel als Kasten (E618, 17. September 2026)
+
+### Was der Rückbau an E614 gekostet hat
+
+E614 legte alle Kinder in die Tafel; E618 holt die Werkzeuge und den
+Zeilenbruch zurück in die Leiste. Gezählt, was dabei mitziehen musste:
+
+```txt
+Kindwähler der GRUPPEN   (.blatt-tafel > [data-gruppe])   51   unberührt
+Regeln mit [data-wz] oder .blatt-zeilenbruch               8   umgeschrieben
+Geschwisterwähler über die neue Grenze                     1   neu gefasst
+:scope > im TypeScript                                     5   auf zwei Flächen
+Prüfläufe umgehängt                       test522 523 524 533
+```
+
+**Ein Achtel der Arbeit von E614** — weil die 51 Gruppenwähler weiterhin auf
+die Tafel zeigen. Das Zubehör ist ja darin geblieben.
+
+### Der Kasten, gemessen
+
+```txt
+Fenster 1900 px   Leiste 1407 px   Tafel: display:flex, eigene Zeile, voller Breite
+Fenster 1600 px   Leiste 1180 px   Tafel: display:contents — alles wie bisher
+```
+
+Die Schwelle ist dieselbe wie bei den Stiftnamen (1300, E617).
+`display:contents` unter ihr ist **keine Sparmassnahme, sondern die
+Bedingung**: am Telefon kommt die Reihenfolge aus `order` über Werkzeuge UND
+Zubehör hinweg (E356), und ein Kasten dazwischen bräche das.
+
+### Und zweimal hat das Bild die Arbeit korrigiert (§55)
+
+**Erstes Bild — „0,4 mm0,8 mm 1,8 mm".** Die Zahlen liefen ineinander:
+`.blatt-strich` steht auf festen `width:30px`, die Zahl lief darüber hinaus.
+
+```txt
+vorher   width:30px                 Zahl überlappt den Nachbarn
+nachher  width:auto; min-width:52px sie steht in ihrer Kachel
+```
+
+Eine überlappte Zahl ist eine falsche Zahl — derselbe Fund wie §55.1 mit der
+abgeschnittenen Tabellenzahl. `test533 §5d` misst seither ausdrücklich, dass
+keine Zahl über ihre Kachel hinausläuft.
+
+**Zweites Bild — der Kasten war kaum zu sehen.**
+
+```txt
+vorher   --bg-tief  #f4f4f2   gegen --bg-card #f7f7f5   = 3/100 Helligkeit
+nachher  --bg       #ffffff                             = ein Feld
+```
+
+**Läufe:**
+
+```txt
+test533   54/54   (14 Zusicherungen neu: §5d und §5e)
+test522 523 524 351 438 345 365 476 532 506   grün
+npm run typecheck   sauber
+Dienststand         v1157 → v1160
+```
+
+**Gegenprobe (§55.2), gelaufen und rot gesehen:** den Kasten wieder zu
+`display:contents` → `test533` 50/54.
+
+**Nicht gemessen:** die Gesamtsuite.

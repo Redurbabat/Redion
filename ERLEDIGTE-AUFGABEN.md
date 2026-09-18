@@ -1,5 +1,48 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 17. September 2026 · E618 · Die Tafel wird ein Kasten (W4, dritter Teil)
+
+**Redurs Bilder 2 bis 6 zeigen alle dasselbe:** unter der Werkzeugreihe ein
+Feld mit dem Zubehör des gewählten Werkzeugs. Dafür hat E614 die Ebene
+eingezogen.
+
+**Zuerst ein Rückbau an E614, einen Tag später und mit Grund.** E614 legte
+ALLE Kinder in die Tafel — richtig für W2, wo sie nur eine Ebene ohne Kasten
+war. Für W4 ist es falsch: ein Kasten um die Werkzeugreihe herum wäre keine
+Tafel, sondern die ganze Leiste. Also ziehen Werkzeuge und Zeilenbruch
+zurück in die Leiste, das Zubehör bleibt in der Tafel.
+
+**Und genau so kostet der Rückbau fast nichts:** die 51 Kindwähler der
+Gruppen bleiben unberührt, weil das Zubehör in der Tafel geblieben ist. Nur
+acht Regeln ziehen mit — ein Achtel der Arbeit von E614.
+
+**Der Kasten steht ab 1300 px Leistenbreite**, derselben Schwelle wie die
+Stiftnamen aus E617. Darunter bleibt `display:contents`, und das ist **keine
+Sparmassnahme, sondern die Bedingung**: am Telefon kommt die Reihenfolge aus
+`order` über Werkzeuge UND Zubehör hinweg (E356), und ein Kasten dazwischen
+bräche das.
+
+**Der sichtbare Gewinn:** die Millimeter aus E616 stehen jetzt auf der
+Kachel — 0,4 mm · 0,8 mm · 1,8 mm, und beim Marker das Vierfache. In der
+Zeile war dafür kein Platz; im Kasten ist er.
+
+**Zweimal hat das Bild die Arbeit korrigiert (§55).** Auf dem ersten stand
+„0,4 mm0,8 mm 1,8 mm" — die Zahlen liefen ineinander, weil `.blatt-strich`
+auf festen 30 px steht. Eine überlappte Zahl ist eine falsche Zahl;
+`test533 §5d` misst seither ausdrücklich, dass keine über ihre Kachel
+hinausläuft. Auf dem zweiten war der Kasten kaum zu sehen: `--bg-tief` gegen
+`--bg-card` sind drei Hundertstel Helligkeit.
+
+**Geprüft.** `test533` 54/54, vierzehn Zusicherungen neu. Vier Läufe
+umgehängt (`test522`, `test523`, `test524`, `test533`) — keiner
+weichgemacht. **Gegenprobe rot gesehen:** den Kasten zurück auf
+`display:contents` → 50/54. **Nicht** geprüft: die Gesamtsuite.
+
+**Offen bleibt von W4:** Strichvorschau, Name UND Millimeter auf einer
+Kachel, der Deckkraft-Schieber (zusätzlich eine Datenfrage, §9) und der
+Radierer mit Grösse und Haken.
+
+---
 ## 17. September 2026 · E617 · Die Stiftkacheln tragen ihren Namen (W4, zweiter Teil)
 
 **Redurs Bild 2: „fünf benannte Stiftkacheln".** Im Stilblatt stand, warum

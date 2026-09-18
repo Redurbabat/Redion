@@ -124,7 +124,14 @@ const aufnahme = (pg: Page) => pg.evaluate(() => {
   const f = w.querySelector<HTMLElement>(':scope > .blatt-tafel') ?? w;
   const wb = w.getBoundingClientRect();
   const sichtbar = (e: Element) => (e as HTMLElement).getClientRects().length > 0;
-  const teile = [...f.children].filter(sichtbar).map(k => {
+  /* ZWEI FLÄCHEN SEIT E618: die Werkzeuge und der Zeilenbruch liegen in der
+     Leiste, das Zubehör in der Tafel. Wer nur eine von beiden liest, zählt
+     die Hälfte — und weil die Tafel `display:contents` trägt, sähe der
+     Bildschirm dabei unverändert aus. Genau der Fehler, den W2 schon einmal
+     gemacht hätte. */
+  const alle = [...w.children, ...f.children]
+    .filter(k => !(k as HTMLElement).classList?.contains('blatt-tafel'));
+  const teile = alle.filter(sichtbar).map(k => {
     const el = k as HTMLElement, r = el.getBoundingClientRect();
     return {
       name: el.dataset.wz || el.dataset.act || el.dataset.gruppe || el.className,
@@ -132,11 +139,15 @@ const aufnahme = (pg: Page) => pg.evaluate(() => {
       w: Math.round(r.width), h: Math.round(r.height)
     };
   });
-  const bruch = f.querySelector<HTMLElement>(':scope > .blatt-zeilenbruch');
+  const bruch = w.querySelector<HTMLElement>(':scope > .blatt-zeilenbruch');
   const redo = f.querySelector<HTMLElement>(':scope > [data-act="redo"]');
   return {
     tafel: !!w.querySelector(':scope > .blatt-tafel'),
     tafelKinderVonWerk: w.children.length,
+    /* Was WIRKLICH in der Tafel liegt: seit E618 nur noch Zubehör. Kein
+       Werkzeug darf hineinrutschen — sonst stünde es später im Kasten. */
+    werkzeugeInTafel: f.querySelectorAll(':scope > [data-wz]').length,
+    bruchInTafel: f.querySelectorAll(':scope > .blatt-zeilenbruch').length,
     tafelHatGruppe: !!(w.querySelector<HTMLElement>(':scope > .blatt-tafel')?.dataset.gruppe),
     tafelHatWz: !!(w.querySelector<HTMLElement>(':scope > .blatt-tafel')?.dataset.wz),
     tafelDisplay: w.querySelector(':scope > .blatt-tafel')
@@ -150,12 +161,12 @@ const aufnahme = (pg: Page) => pg.evaluate(() => {
     /* NUR, WAS SELBST `data-wz` TRÄGT. Ein `querySelector` auf den NAMEN
        traf auch das Zubehör: die Formengruppe hat ein `data-act="formen"`,
        und „formen" kam dreimal vor. Gefunden, weil §2 „15 statt 13" sagte. */
-    werkzeuge: [...f.querySelectorAll<HTMLElement>(':scope > [data-wz]')]
+    werkzeuge: [...w.querySelectorAll<HTMLElement>(':scope > [data-wz]')]
       .filter(sichtbar).map(k => String(k.dataset.wz)),
     /* DIE ZEILEN DER WERKZEUGE, an den Knöpfen selbst gemessen. Über die
        Namensliste zu gehen wäre falsch: die Formengruppe trägt ein
        `data-act="formen"`, und „formen" käme dreimal vor. */
-    werkzeugZeilen: new Set([...f.querySelectorAll<HTMLElement>(':scope > [data-wz]')]
+    werkzeugZeilen: new Set([...w.querySelectorAll<HTMLElement>(':scope > [data-wz]')]
       .filter(sichtbar).map(k => Math.round(k.getBoundingClientRect().top))).size,
     /* WELCHE GRUPPEN SICHTBAR SIND. Das ist die schärfste einzelne Zahl
        dieses Laufs: der Gruppenkatalog aus E356 besteht aus 46 Kindwählern
@@ -170,8 +181,16 @@ const aufnahme = (pg: Page) => pg.evaluate(() => {
 console.log('\n§1 Die Ebene ist da — und sie ist nur eine Ebene');
 const { ktx: k1, pg: p1 } = await kontext(1600);
 let a = await aufnahme(p1);
-p('`.blatt-tafel` steht als einziges Kind in `.blatt-werk`',
-  a.tafel && a.tafelKinderVonWerk === 1, `${a.tafelKinderVonWerk} Kinder`);
+/* UMGEHÄNGT MIT E618. Hier stand „als EINZIGES Kind". Das war die Form
+   von W2, wo die Tafel nur eine Ebene ohne Kasten war. W4 braucht sie als
+   Kasten — und ein Kasten um die Werkzeugreihe herum wäre keine Tafel,
+   sondern die ganze Leiste. Also: Werkzeuge und Zeilenbruch in der
+   Leiste, Zubehör in der Tafel. */
+p('`.blatt-tafel` steht in `.blatt-werk`, neben den Werkzeugen',
+  a.tafel && a.tafelKinderVonWerk > 1, `${a.tafelKinderVonWerk} Kinder`);
+gleich('… und kein Werkzeug ist in ihr gelandet', a.werkzeugeInTafel, 0);
+gleich('… und der Zeilenbruch auch nicht — er trennt die zwei Flächen',
+  a.bruchInTafel, 0);
 p('Sie erzeugt keinen Kasten (`display:contents`) — sonst bräche das Flex-Layout',
   a.tafelDisplay === 'contents', a.tafelDisplay);
 p('Sie trägt KEIN `data-gruppe` — `closest` träfe sonst sie statt den Knopf',
@@ -211,29 +230,36 @@ p('… und nimmt die volle Breite (`flex:1 0 100%`, E359)',
    Die Zusicherung dazu steht deshalb in §7 und nicht hier — sie hier zu
    stellen hiesse, am falschen Ort das Richtige zu verlangen. */
 gleich('Am Rechner kleben Zurück/Vor NICHT — sie haben ihre eigene Zeile', a.redoSticky, 'relative');
+/* UMGEHÄNGT MIT E618, NICHT WEGGELASSEN. Die Zusage ist dieselbe (E568:
+   kein Trennstrich am Zeilenanfang), der Weg dahin ein anderer: bis E614
+   war es ein Geschwisterwähler `.blatt-zeilenbruch + .blatt-trenn`. Seit
+   E618 liegt der Zeilenbruch in der Leiste und das Zubehör in der Tafel —
+   die beiden sind keine Geschwister mehr. Derselbe Satz heisst jetzt:
+   der ERSTE Trenner in der Tafel steht am Zeilenanfang. */
 const trenner = await p1.evaluate(() => {
   const f = document.querySelector<HTMLElement>('.blatt-werk > .blatt-tafel')!;
-  const bruch = f.querySelector<HTMLElement>(':scope > .blatt-zeilenbruch');
-  const nachbar = bruch?.nextElementSibling as HTMLElement | null;
+  const erstes = f.firstElementChild as HTMLElement | null;
   return {
-    nachbarIstTrenner: !!nachbar?.classList.contains('blatt-trenn'),
-    nachbarSichtbar: nachbar ? nachbar.getClientRects().length > 0 : false
+    erstesIstTrenner: !!erstes?.classList.contains('blatt-trenn'),
+    erstesSichtbar: erstes ? erstes.getClientRects().length > 0 : false,
+    name: erstes?.className || ''
   };
 });
-p('Der Trenner direkt hinter dem Zeilenbruch ist weg (E568) — der `+`-Wähler greift',
-  !trenner.nachbarIstTrenner || !trenner.nachbarSichtbar, JSON.stringify(trenner));
+p('Der erste Trenner der Tafel ist weg — kein Strich am Zeilenanfang (E568)',
+  !trenner.erstesIstTrenner || !trenner.erstesSichtbar, JSON.stringify(trenner));
 
 /* ═══ §4 Die eigene Ordnung kommt an ═══════════════════════════════════════ */
 console.log('\n§4 Die Nutzerordnung geht durch die Tafel (E570/E571)');
 const vorher = a.werkzeuge.join(',');
 await p1.evaluate(() => {
-  const f = document.querySelector<HTMLElement>('.blatt-werk > .blatt-tafel')!;
-  const wz = [...f.querySelectorAll<HTMLElement>(':scope > [data-wz]')];
-  f.insertBefore(wz[wz.length - 1]!, wz[0]!);
+  /* Die Werkzeuge liegen seit E618 in der LEISTE, nicht in der Tafel. */
+  const w = document.querySelector<HTMLElement>('.blatt-werk')!;
+  const wz = [...w.querySelectorAll<HTMLElement>(':scope > [data-wz]')];
+  w.insertBefore(wz[wz.length - 1]!, wz[0]!);
 });
 await p1.waitForTimeout(200);
 let b2 = await aufnahme(p1);
-p('Eine Bewegung in der Tafel kommt an', b2.werkzeuge.join(',') !== vorher,
+p('Eine Bewegung in der Werkzeugreihe kommt an', b2.werkzeuge.join(',') !== vorher,
   `${vorher} → ${b2.werkzeuge.join(',')}`);
 p('… und keines ist dabei verlorengegangen', b2.werkzeuge.length === 13,
   String(b2.werkzeuge.length));
@@ -252,7 +278,7 @@ p('`ordnungAnwenden` läuft durch — nach dem Neubau stehen dreizehn Werkzeuge 
 /* ═══ §5 Das Wort steht unter dem Zeichen (W3) ═════════════════════════════ */
 console.log('\n§5 Das Wort steht UNTER dem Zeichen, nicht daneben');
 const w3 = await p1.evaluate(() => {
-  const knoepfe = [...document.querySelectorAll<HTMLElement>('.blatt-tafel > button[data-wz]')];
+  const knoepfe = [...document.querySelectorAll<HTMLElement>('.blatt-werk > button[data-wz]')];
   const mass = knoepfe.map(k => {
     const z = k.querySelector<HTMLElement>('.zeichen');
     const wo = k.querySelector<HTMLElement>('.wort');
@@ -363,6 +389,94 @@ console.log('\n§5c Unter 1300 px stehen die Namen nicht — und die Leiste wäc
   await ktx.close();
 }
 
+/* ═══ §5d Ab 1300 px ist die Tafel ein KASTEN (E618, W4) ═══════════════════
+   Redurs Bilder 2 bis 6: unter der Werkzeugreihe ein Feld mit dem Zubehör.
+   Das ist der Zweck, für den E614 die Ebene eingezogen hat — und der Grund,
+   warum E618 die Werkzeuge wieder aus ihr herausgeholt hat: ein Kasten um
+   die Werkzeugreihe herum wäre keine Tafel, sondern die ganze Leiste.
+
+   UND ER IST DER GRUND FÜR `display:contents` (E614). Unter der Schwelle
+   — Telefon, Spalte, Studio-Dock — bleibt die Tafel kastenlos, weil die
+   Reihenfolge dort aus `order` über Werkzeuge UND Zubehör hinweg kommt
+   (E356). Ein Kasten dazwischen bräche das. §5e prüft genau diesen Fall. */
+console.log('\n§5d Ab 1300 px ist die Tafel ein Kasten');
+{
+  const { ktx, pg } = await kontext(1900);
+  const kasten = await pg.evaluate(() => {
+    const w = document.querySelector<HTMLElement>('.blatt-werk')!;
+    const t = w.querySelector<HTMLElement>(':scope > .blatt-tafel')!;
+    const st = getComputedStyle(t);
+    const tr = t.getBoundingClientRect(), wr = w.getBoundingClientRect();
+    const striche = [...t.querySelectorAll<HTMLElement>(':scope > .blatt-strich')];
+    return {
+      leiste: Math.round(wr.width),
+      anzeige: st.display,
+      eigeneBreite: Math.round(tr.width),
+      grund: st.backgroundColor,
+      rand: st.borderTopWidth,
+      /* Er nimmt eine eigene Zeile — sonst stünde er neben den Werkzeugen. */
+      unterhalb: tr.top >= wr.top + 20,
+      mm: striche.map(k => (k.querySelector('.wort')?.textContent || '').trim()),
+      mmSichtbar: striche.filter(k => {
+        const x = k.querySelector('.wort');
+        return !!x && x.getBoundingClientRect().width > 1;
+      }).length,
+      /* Keine Zahl darf über ihre Kachel hinauslaufen — auf dem ersten Bild
+         stand „0,4 mm0,8 mm", und eine überlappte Zahl ist eine falsche. */
+      passtRein: striche.every(k => {
+        const b = k.getBoundingClientRect();
+        const x = k.querySelector('.wort')?.getBoundingClientRect();
+        return !!x && x.left >= b.left - 1 && x.right <= b.right + 1;
+      })
+    };
+  });
+  p('Die Leiste ist breit genug', kasten.leiste > 1300, `${kasten.leiste} px`);
+  gleich('Die Tafel ist ein Kasten, kein `display:contents`', kasten.anzeige, 'flex');
+  p('… mit eigenem Grund und Rand', kasten.grund !== 'rgba(0, 0, 0, 0)' &&
+    parseFloat(kasten.rand) > 0, `${kasten.grund}, ${kasten.rand}`);
+  p('… und er steht UNTER der Werkzeugreihe', kasten.unterhalb);
+  p('… und nimmt die ganze Breite', kasten.eigeneBreite > kasten.leiste * 0.9,
+    `${kasten.eigeneBreite} von ${kasten.leiste} px`);
+  gleich('Die drei Strichstärken zeigen ihre Millimeter',
+    kasten.mm, ['0,4 mm', '0,8 mm', '1,8 mm']);
+  gleich('… und alle drei sind zu sehen', kasten.mmSichtbar, 3);
+  p('… und keine Zahl läuft über ihre Kachel hinaus', kasten.passtRein);
+  await ktx.close();
+}
+
+/* ═══ §5e Unter der Schwelle bleibt die Tafel kastenlos (E618) ═════════════
+   Der Gegenfall, und der Kern der ganzen Bauweise: `display:contents` ist
+   kein Notbehelf, sondern die Bedingung dafür, dass Umbruch, `order` und
+   das Kleben von Zurück/Vor über die Tafelgrenze hinweg weiterwirken. */
+console.log('\n§5e Unter 1300 px bleibt die Tafel kastenlos');
+{
+  const { ktx, pg } = await kontext(1600);
+  const eng = await pg.evaluate(() => {
+    const w = document.querySelector<HTMLElement>('.blatt-werk')!;
+    const t = w.querySelector<HTMLElement>(':scope > .blatt-tafel')!;
+    const striche = [...t.querySelectorAll<HTMLElement>(':scope > .blatt-strich')];
+    return {
+      leiste: Math.round(w.getBoundingClientRect().width),
+      anzeige: getComputedStyle(t).display,
+      mmSichtbar: striche.filter(k => {
+        const x = k.querySelector('.wort');
+        return !!x && x.getBoundingClientRect().width > 1;
+      }).length,
+      /* Geklemmt, nicht entfernt — die Zahl bleibt im Vorlesebaum (§38). */
+      imBaum: striche.every(k => {
+        const x = k.querySelector('.wort');
+        return !!x && getComputedStyle(x as Element).display !== 'none'
+          && (x.textContent || '').includes('mm');
+      })
+    };
+  });
+  p('Die Leiste liegt unter 1300 px', eng.leiste < 1300, `${eng.leiste} px`);
+  gleich('Die Tafel erzeugt dort keinen Kasten', eng.anzeige, 'contents');
+  gleich('… und keine Millimeterzahl ist zu sehen', eng.mmSichtbar, 0);
+  p('… aber jede steht im Vorlesebaum (geklemmt, nicht entfernt)', eng.imBaum);
+  await ktx.close();
+}
+
 /* ═══ §6 §37 ═══════════════════════════════════════════════════════════════ */
 console.log('\n§6 §37: der Hauptweg misst 44 px');
 /* DIE TREFFFLÄCHE IST NICHT DER KASTEN (§37, E406). Die 44 px kommen aus
@@ -371,7 +485,7 @@ console.log('\n§6 §37: der Hauptweg misst 44 px');
    `getBoundingClientRect()` misst, misst das Falsche und meldet dreizehn
    Fehler, wo keiner ist. Gemessen wird deshalb das Pseudoelement. */
 const klein = await p1.evaluate(() =>
-  [...document.querySelectorAll<HTMLElement>('.blatt-tafel > button[data-wz]')]
+  [...document.querySelectorAll<HTMLElement>('.blatt-werk > button[data-wz]')]
     .filter(k => k.getClientRects().length > 0)
     .map(k => {
       const r = k.getBoundingClientRect();
@@ -390,7 +504,7 @@ const handy = await aufnahme(p2);
 p('Die Leiste ist eine Zeile', handy.hoehe < 70, `${handy.hoehe} px`);
 p('Die Tafel steht auch dort', handy.tafel);
 const handyWort = await p2.evaluate(() =>
-  [...document.querySelectorAll<HTMLElement>('.blatt-tafel > button[data-wz] .wort')]
+  [...document.querySelectorAll<HTMLElement>('.blatt-werk > button[data-wz] .wort')]
     .filter(w => w.getBoundingClientRect().width > 1).length);
 gleich('… und kein Wort ist sichtbar (es bleibt im Vorlesebaum, Audit F04)', handyWort, 0);
 /* HIER gehört die Klebezusage hin: im waagerechten Roller bleiben Zurück

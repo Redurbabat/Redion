@@ -460,14 +460,17 @@ const Marken = (() => {
     const flaeche = (tools) => tools.querySelector(':scope > .blatt-tafel') ?? tools;
     const ordnungAnwenden = (tools) => {
         const o = ordnungLesen();
+        /* ZWEI FLÄCHEN SEIT E618: die Werkzeuge liegen in der Leiste, das
+           Zubehör in der Tafel. Der Zeilenbruch gehört zu den Werkzeugen — er
+           trennt sie vom Zubehör und muss ihr Geschwister bleiben. */
         const f = flaeche(tools);
-        const bruch = f.querySelector(':scope > .blatt-zeilenbruch');
+        const bruch = tools.querySelector(':scope > .blatt-zeilenbruch');
         if (!bruch)
             return;
         for (const id of o.werkzeuge) {
-            const knopf = f.querySelector(`:scope > [data-wz="${id}"]`);
+            const knopf = tools.querySelector(`:scope > [data-wz="${id}"]`);
             if (knopf)
-                f.insertBefore(knopf, bruch);
+                tools.insertBefore(knopf, bruch);
         }
         for (const id of o.gruppen) {
             f.querySelectorAll(`:scope > [data-gruppe="${id}"]`)
@@ -493,7 +496,7 @@ const Marken = (() => {
            Hundert lässt Platz für neunundneunzig Gruppen. */
         const f = flaeche(tools);
         o.werkzeuge.forEach((id, i) => {
-            f.querySelector(`:scope > [data-wz="${id}"]`)
+            tools.querySelector(`:scope > [data-wz="${id}"]`)
                 ?.style.setProperty('--ordnung', String((i + 1) * 100));
         });
         o.gruppen.forEach((id, i) => {
@@ -5498,7 +5501,14 @@ const Marken = (() => {
                 BREITEN.map((value, index) => `<button class="blatt-strich${index === 1 ? ' on' : ''}" data-gruppe="breite" ` +
                     `data-b="${value}" title="${BREITEN_NAMEN[index] ?? 'Strich'} · ${alsMm(value)} — die gewählte nochmal antippen: Stärke frei wählen" ` +
                     `aria-label="Strichstärke ${BREITEN_NAMEN[index] ?? 'Strich'}, ${alsMm(value)}">` +
-                    `<i style="height:${Math.max(2, value * 2)}px"></i></button>`).join('') +
+                    `<i style="height:${Math.max(2, value * 2)}px"></i>` +
+                    /* DIE MILLIMETER ALS WORT (E618). Leer gebaut und von
+                       `staerkenBeschriften` gefüllt — der Wert hängt am Werkzeug (der
+                       Marker zieht das Vierfache, E616), und eine Zahl, die beim Bauen
+                       festgeschrieben wird, steht beim Marker falsch da.
+                       Sichtbar ist sie nur im Kasten; sonst geklemmt wie jedes andere
+                       Wort der Leiste, also weiterhin im Vorlesebaum (§38). */
+                    '<span class="wort"></span></button>').join('') +
                 /* DIE FREIE STAERKE (E465), wie GoodNotes' Schieber: drei Stufen zum
                    Antippen bleiben, der Regler dazwischen nimmt jeden Wert von 0,5
                    bis 12. Sein Wert IST die Staerke — kein Zwischenzustand.
@@ -5509,6 +5519,27 @@ const Marken = (() => {
                 '<label class="blatt-staerke" data-gruppe="breite" title="Strichstärke frei wählen">' +
                 '<input type="range" min="0.5" max="12" step="0.1" value="' + BREITEN[1] + '" aria-label="Strichstärke">' +
                 '<output aria-hidden="true">' + alsMm(BREITEN[1]) + '</output></label>';
+        /* ══ WERKZEUGE IN DIE LEISTE, ZUBEHÖR IN DIE TAFEL (E618) ═════════════
+           E614 hat ALLE Kinder in die Tafel gelegt — richtig für W2, wo sie nur
+           eine Ebene ohne Kasten war. W4 braucht sie als KASTEN, und ein Kasten
+           um die Werkzeuge herum wäre kein Zubehörfeld, sondern die ganze
+           Leiste.
+    
+           GEBAUT WIRD WEITER IN EINER ZEICHENKETTE — sie ist die Reihenfolge
+           des Katalogs (§8). Danach werden die zwei Sorten getrennt:
+           Werkzeuge und Zeilenbruch wandern in die Leiste, das Zubehör bleibt.
+           Umhängen statt zweimal bauen; dasselbe Prinzip wie `ordnungAnwenden`
+           eine Zeile tiefer.
+    
+           DIE 51 KINDWÄHLER DER GRUPPEN BLEIBEN DAMIT UNBERÜHRT
+           (`.blatt-tafel > [data-gruppe]`) — sie zeigen weiterhin auf die
+           Tafel, weil das Zubehör darin bleibt. Nur die acht Regeln, die
+           `[data-wz]` oder den Zeilenbruch nennen, ziehen mit. */
+        tafel.querySelectorAll(':scope > [data-wz]')
+            .forEach(knopf => tools.insertBefore(knopf, tafel));
+        const bruchRaus = tafel.querySelector(':scope > .blatt-zeilenbruch');
+        if (bruchRaus)
+            tools.insertBefore(bruchRaus, tafel);
         /* ══ DIE EIGENE ORDNUNG LEGT SICH DARÜBER (E570) ═══════════════════════
            Die Zeilen oben bauen die Leiste in der Reihenfolge des Katalogs —
            das bleibt so, denn der Katalog ist die Wahrheit darüber, WAS es
@@ -5606,7 +5637,7 @@ const Marken = (() => {
                 return;
             /* Der Fokus bleibt am geschobenen Knopf — sonst wäre die zweite
                Pfeiltaste ins Leere gedrückt. */
-            flaeche(tools).querySelector(art === 'werkzeuge' ? `:scope > [data-wz="${id}"]` : `:scope > [data-gruppe="${id}"]`)?.focus();
+            (art === 'werkzeuge' ? tools : flaeche(tools)).querySelector(art === 'werkzeuge' ? `:scope > [data-wz="${id}"]` : `:scope > [data-gruppe="${id}"]`)?.focus();
         };
         const bandZeigen = (an) => {
             const reihe = tools.closest('.blatt-reihe');
@@ -6211,6 +6242,13 @@ const Marken = (() => {
                 const wort = `${BREITEN_NAMEN[i] ?? 'Strich'} · ${alsMm(pt * f)}`;
                 knopf.title = `${wort} — die gewählte nochmal antippen: Stärke frei wählen`;
                 knopf.setAttribute('aria-label', `Strichstärke ${wort}`);
+                /* Auf der Kachel steht NUR die Zahl. Der Name („Fein") steht im
+                   Titel und im `aria-label`; beides auf 32 px Breite wäre
+                   abgeschnitten, und eine abgeschnittene Zahl ist eine falsche
+                   Zahl (§55.1). */
+                const zettel = knopf.querySelector('.wort');
+                if (zettel)
+                    zettel.textContent = alsMm(pt * f);
             });
             const feld = tools.querySelector('.blatt-staerke input');
             const zahl = tools.querySelector('.blatt-staerke output');

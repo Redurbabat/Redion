@@ -1164,14 +1164,19 @@ Kacheln (Linie · Pfeil · Rechteck · Kreis · Stern).
   Die Leiste ist bei jeder geprüften Breite so hoch wie vorher, und
   `display:none` ist dem Klemmen gewichen (§38).
 
-  **Offen bleibt der grössere Teil**, und er hängt alle vier an einer
-  Bedingung: Strichvorschau, benannte Stiftkacheln, Deckkraft-Schieber und
-  der Radierer mit Grösse und Haken brauchen die **Tafel als sichtbaren
-  Kasten**. Die trägt seit E614 `display:contents` und erzeugt keinen —
-  absichtlich, weil `flex:1 0 100%`, `order` und `position:sticky` sonst
-  über die Grenze hinweg brechen. Sie zu einem Kasten zu machen, ohne die
-  Werkzeuge mitzunehmen, braucht eine weitere Ebene: **ein eigener Bogen
-  mit einem Bild für Redur, bevor er landet.**
+  **Und seit E618 IST die Tafel ein Kasten** — ab 1300 px Leistenbreite,
+  mit eigenem Grund und eigener Zeile, genau wie auf den Bildern 2 bis 6.
+  Dafür sind die Werkzeuge aus ihr zurück in die Leiste gezogen (ein Kasten
+  um die Werkzeugreihe herum wäre keine Tafel, sondern die ganze Leiste);
+  die 51 Gruppenwähler blieben dabei unberührt. Unter der Schwelle bleibt
+  `display:contents`, weil am Telefon `order` über Werkzeuge UND Zubehör
+  hinweg gilt. Die Millimeter aus E616 stehen jetzt auf der Kachel:
+  **0,4 mm · 0,8 mm · 1,8 mm**, beim Marker das Vierfache.
+
+  **Offen bleibt:** die Strichvorschau, Name UND Millimeter auf EINER
+  Kachel (die Namen stehen an den Stiften, die Millimeter an den
+  Strichstärken), der Deckkraft-Schieber und der Radierer mit Grösse und
+  Haken. Der Deckkraft-Schieber ist zusätzlich eine Datenfrage.
 
   **Und die Deckkraft ist zusätzlich eine Datenfrage:** sie steht heute fest
   je Stift (Marker 0,32 · Pinsel 0,92 · Bleistift 0,72 minus Neigung). Sie

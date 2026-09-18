@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-595 Entscheidungen, E1 bis E617 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+596 Entscheidungen, E1 bis E618 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -660,6 +660,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E615** — Der Stift öffnet den Blick in den Ordner: `pointerType` lässt `pen` zu, `any-hover` ersetzt `hover` (das fragte den Hauptzeiger und sperrte auf einem Touch-Laptop auch die Maus aus), und ein `pointerdown` sagt die Uhr ab (L180, `test476`)
 * **E616** — Die Strichstärke sagt, wie dick sie ist: die Zeichenfläche rechnet in PDF-Punkten (`viewBox` A4), also sind 2,4 nicht „2,4 px" sondern **0,8 mm** — und am Marker das Vierfache. Redurs Wörter übernommen, seine Zahlen nicht (W4, `test438`)
 * **E617** — Die Stiftkacheln tragen ihren Namen: gestapelt kostet das Wort Höhe statt Breite, also gilt die alte 320-px-Rechnung nicht mehr; dritte Schwelle bei 1300 px Leistenbreite, `display:none` weicht dem Klemmen (§38), und `bilder.mts` bekommt endlich einen breiten Bildschirm (W4, `test533`)
+* **E618** — Die Tafel wird ein Kasten: die Werkzeuge ziehen zurück in die Leiste (die 51 Gruppenwähler bleiben unberührt), und ab 1300 px Leistenbreite steht das Zubehör in einem eigenen Feld — mit den Millimetern auf der Kachel. Darunter bleibt `display:contents`, weil `order` dort über beide Flächen hinweg gilt (W4, `test533`)
 
 ---
 
@@ -50327,3 +50328,117 @@ Deckkraft-Schieber und der Radierer mit Grösse und Haken. Alle vier
 brauchen die Tafel als sichtbaren Kasten — die trägt seit E614 absichtlich
 `display:contents`. Das bleibt der eigene Bogen, und er bekommt sein Bild,
 bevor er landet.
+
+---
+
+## E618 — Die Tafel wird ein Kasten (W4, dritter Teil)
+
+**17. September 2026.** Redurs Bilder 2 bis 6 vom 14. September zeigen alle
+dasselbe: **unter der Werkzeugreihe ein Feld** mit dem Zubehör des gewählten
+Werkzeugs. Das ist der Zweck, für den E614 die Ebene `.blatt-tafel`
+überhaupt eingezogen hat.
+
+### Zuerst ein Rückbau an E614 — einen Tag später, und mit Grund
+
+E614 hat **alle** Kinder in die Tafel gelegt. Das war richtig für W2, wo sie
+nur eine Ebene ohne Kasten war, und es hatte einen gemessenen Grund: drei
+Mechanismen wirken ausschliesslich zwischen unmittelbaren Geschwistern.
+
+**Für W4 ist es falsch.** Ein Kasten um die Werkzeugreihe herum wäre keine
+Tafel, sondern die ganze Leiste. Also ziehen die **Werkzeuge und der
+Zeilenbruch zurück in die Leiste**, das Zubehör bleibt in der Tafel:
+
+```txt
+.blatt-werk
+  button[data-wz] × 13        ← die Werkzeugreihe
+  span.blatt-zeilenbruch      ← trennt die zwei Flächen
+  .blatt-tafel                ← das Feld: nur Zubehör
+    [data-gruppe] × viele
+```
+
+**Und genau so kostet der Rückbau fast nichts:** die **51 Kindwähler der
+Gruppen** (`.blatt-tafel > [data-gruppe]`) bleiben **unberührt** — das
+Zubehör liegt weiterhin in der Tafel. Nur die **acht** Regeln, die
+`[data-wz]` oder den Zeilenbruch nennen, ziehen mit. Wäre die Tafel als
+Zubehörfeld gebaut worden und nicht als Vollwrapper, wäre E614 dieselbe
+Arbeit gewesen; so ist es ein Achtel davon.
+
+### Was dabei umgeschrieben werden musste
+
+| Stelle | vorher | jetzt |
+|---|---|---|
+| `bausteine.css` | `.blatt-zeilenbruch + span.blatt-trenn` | `.blatt-tafel > span.blatt-trenn:first-child` |
+| `pdf-studio.css` | ein `:is([data-wz],.blatt-trenn,…)` | zwei Regeln, je Fläche eine |
+| Dock-Welle | `button:hover + button` in der Tafel | in beiden Flächen |
+| `marken.ts` | `ordnungAnwenden` mit einer Fläche | Werkzeuge in der Leiste, Gruppen in der Tafel |
+| `document-mode.ts` | `inkFlaeche()` zeigte in die Tafel | wieder auf die Leiste — die obere Reihe spiegelt `[data-wz]` |
+
+Der Geschwisterwähler ist der interessante: die Zusage (E568, kein
+Trennstrich am Zeilenanfang) ist dieselbe, der Weg ein anderer. Seit der
+Trennung sind Zeilenbruch und Trenner keine Geschwister mehr — derselbe Satz
+heisst jetzt „der **erste** Trenner in der Tafel", und das ist die klarere
+Form.
+
+### Und dann der Kasten selbst — nur ab 1300 px
+
+```txt
+unter 1300 px   .blatt-tafel{display:contents}    alles wie bisher
+ab   1300 px    ein Feld mit Grund, Rand und eigener Zeile
+```
+
+**`display:contents` ist damit kein Notbehelf mehr, sondern die Bedingung**:
+am Telefon, in der Spalte und im Studio-Dock steht alles in EINER rollenden
+Zeile, und die Reihenfolge kommt dort aus `order` **über Werkzeuge und
+Zubehör hinweg** (E356). Ein Kasten dazwischen bräche das. `test533 §5e`
+hält genau diesen Fall.
+
+Die Schwelle ist dieselbe wie die der Stiftnamen (1300, E617): darunter ist
+die Zeile ohnehin zu eng für Wörter, und zwei verschiedene Marken für
+dasselbe „jetzt ist Platz" wären eine zu viel.
+
+### Der sichtbare Gewinn: die Millimeter stehen auf der Kachel
+
+E616 hat die Millimeter gerechnet und in den Titel gelegt — in der Zeile war
+kein Platz. **Im Kasten ist er.** Die drei Strichstärken zeigen jetzt
+**0,4 mm · 0,8 mm · 1,8 mm**, und beim Marker das Vierfache (E616).
+
+Die Zahl wird **nicht beim Bauen** geschrieben, sondern von
+`staerkenBeschriften` gesetzt — sie hängt am Werkzeug.
+
+### Was das Hinsehen gefunden hat (§55)
+
+**Erstes Bild: „0,4 mm0,8 mm 1,8 mm".** Die Zahlen liefen ineinander.
+`.blatt-strich` steht auf festen `width:30px`, und die Zahl lief darüber
+hinaus. **Eine überlappte Zahl ist eine falsche Zahl** — genau der Fund aus
+§55.1 mit der abgeschnittenen Tabellenzahl, nur eine Leiste weiter. Behoben
+mit `width:auto; min-width:52px` im Kastenzustand; `test533 §5d` misst
+seither ausdrücklich, dass **keine Zahl über ihre Kachel hinausläuft**.
+
+**Zweites Bild: der Kasten war kaum zu sehen.** `--bg-tief` (#f4f4f2) gegen
+`--bg-card` (#f7f7f5) sind drei Hundertstel Helligkeit. Jetzt `--bg`, also
+Weiss im Hellmodus — ein Feld, das man als Feld erkennt.
+
+### Gemessen
+
+```txt
+test533   54 von 54 grün   (14 Zusicherungen neu: §5d und §5e)
+test522 523 524 351 438 345 365 476 532 506   grün
+npm run typecheck   sauber
+Dienststand   v1157 → v1160
+```
+
+**Gegenprobe (§50, §55.2), gelaufen und rot gesehen:** den Kasten wieder zu
+`display:contents` gemacht → `test533` **50/54**; die vier Zusagen über
+Anzeige, Grund, Lage und Breite fallen einzeln.
+
+### Was von W4 weiterhin offen ist
+
+Die **Strichvorschau**, die **benannten Stiftkacheln mit Millimetern** (die
+Namen stehen seit E617, die Millimeter stehen an den Strichstärken — auf
+*einer* Kachel beides zu zeigen ist der nächste Schritt), der eigene
+**Deckkraft-Schieber** und der **Radierer mit Grösse und Haken**.
+
+Der Deckkraft-Schieber bleibt zusätzlich eine **Datenfrage**: Deckung steht
+heute fest je Stift (Marker 0,32 · Pinsel 0,92 · Bleistift 0,72 minus
+Neigung). Sie wählbar zu machen heisst, ein Feld an die Marke zu hängen —
+§9, und damit Redurs Entscheidung.
