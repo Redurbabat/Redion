@@ -782,6 +782,12 @@ const ANSICHTEN: Record<string, {
       await new Promise(r => setTimeout(r, 1100));
       document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.click();
       await new Promise(r => setTimeout(r, 400));
+      /* DIE KLAPPE MIT DEM REGLER AUFMACHEN (E616). Sie geht auf, wenn man
+         die schon gewählte Stufe ein zweites Mal antippt (E465) — und erst
+         dann steht die Zahl mit ihrer Einheit im Bild. */
+      const stufe = document.querySelector<HTMLElement>('.blatt-werk .blatt-strich.on');
+      stufe?.click();                       /* EIN Klick. Zwei klappen auf und wieder zu. */
+      await new Promise(r => setTimeout(r, 500));
     }
   },
 

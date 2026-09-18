@@ -4063,15 +4063,47 @@ Zehn Leser sind durch `src/` gegangen, jeder Befund von einem zweiten Agenten
 angegriffen. Was dabei auffiel und NICHT zu E284 gehört, steht hier, damit es
 nicht verlorengeht:
 
-1. **Der Kalender liefert still FALSCHE Daten.** `wiederholungen()`
-   (`kalender.ts:143-182`) zerlegt eine RRULE vollständig in `teile`, liest
-   davon aber nur vier Schlüssel und wirft den Rest wortlos weg.
-   `FREQ=MONTHLY;BYDAY=2TU` — „jeder zweite Dienstag" — wird zu „jeden Monat
-   am selben Tag". Kein Fehler, keine Meldung, ein falscher Termin.
-   Repo-weit null Treffer für BYDAY, EXDATE, RDATE, VTODO, TZID, VTIMEZONE,
-   BYMONTHDAY, BYSETPOS — auch in Doku und Prüfläufen.
+1. **Der Kalender liefert still FALSCHE Daten.** — **GESCHLOSSEN, und zwar
+   lange vor heute: mit E290 (BYDAY), E335–E338 (Rundlauf, Dauer, EXDATE)
+   und dem eigenen Modul `src/core/calendar/wiederholung.ts`. Nachgesehen
+   am 17. September 2026.**
 
-   Das ist schlimmer als „fehlt" und gehört vor die Ausbaupunkte.
+   Hier stand: „`wiederholungen()` (`kalender.ts:143-182`) liest nur vier
+   Schlüssel und wirft den Rest wortlos weg. `FREQ=MONTHLY;BYDAY=2TU` wird
+   zu ‚jeden Monat am selben Tag'. Repo-weit null Treffer für BYDAY,
+   EXDATE, RDATE, BYMONTHDAY, BYSETPOS — auch in Doku und Prüfläufen."
+
+   **Nachgezählt gilt heute das Gegenteil:**
+
+   ```txt
+   BYDAY        src: 2 Dateien   Prüfläufe: test284 §2 und §3
+   EXDATE       src: 2           Prüfläufe: 2
+   RDATE        src: 5           Prüfläufe: 2
+   BYMONTHDAY   src: 1           Prüfläufe: 1
+   BYSETPOS     src: 1           Prüfläufe: 1
+   ```
+
+   `wiederholung.ts` wertet **FREQ, INTERVAL, COUNT, UNTIL, BYDAY (auch mit
+   Ordnungszahl: `2TU`, `-1FR`), BYMONTHDAY (auch negativ), BYMONTH,
+   BYSETPOS und WKST** aus — und was es nicht kann, sagt es: jeder nicht
+   gelesene Teil steht in `nichtVerstanden` und reist als `regelUnklar` mit
+   dem Termin bis zur Anzeige. Genau die Regel, die dieser Punkt verlangt
+   hat. `test284` hält es mit **49 Zusicherungen**, darunter der Fall aus
+   dem Absatz oben („zweiter Dienstag", „letzter Freitag") und der
+   Grenzfall „der 31. in einem Monat ohne 31. fällt AUS statt auf den
+   3. März zu rutschen". Gelaufen am 17. September: **49/49.**
+
+   **Offen bleibt nur, was der Absatz gar nicht nannte:** `VTIMEZONE` gibt
+   es im ganzen Verzeichnis nicht (0 Treffer), `TZID` steht an drei
+   Stellen. Zeitzonen sind damit die echte Restlücke dieses Punktes — und
+   eine kleinere und andere als „der Kalender zeigt falsche Tage".
+
+   **Die Lehre ist die von §49, und sie hat diesmal richtig weh getan:**
+   dieser Punkt stand als **Rang 1 nach §46** ganz oben in der Übersicht
+   vom 16. September und wurde Redur als der dringendste offene Punkt
+   angeboten — auf Aktenlage, die seit E290 falsch war. Ein Punkt, der als
+   offen dasteht, ohne dass jemand nachgesehen hat, ist schlimmer als gar
+   keiner.
 
 2. **Die Rechteprüfung der Agenten fragt die falsche Seite.** — **GANZ
    GESCHLOSSEN am 1. September 2026: die eine Hälfte durch E291, die andere

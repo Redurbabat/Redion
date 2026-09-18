@@ -2159,3 +2159,71 @@ Abfrage weg ist. Mit `matchMedia\(` davor zeigt sie auf den Aufruf.
 Dieselbe Sorte wie E610, E612 und E613.
 
 **Nicht gemessen:** die Gesamtsuite.
+
+---
+
+## §54 · Was ein Strich in Millimetern ist (E616, 17. September 2026)
+
+Die Frage, mit der W4 anfing: Redurs iPad-Bilder nennen „Fein 0,3 mm ·
+Mittel 0,7 mm · Markant 1,2 mm". Passen diese Zahlen auf Redion?
+
+**Nein.** Und das liess sich nur durch Nachsehen herausfinden.
+
+**Gemessen am laufenden Programm** (1440 × 950, A4-Blatt, Papier „mm"):
+
+```txt
+.blatt-papier auf dem Schirm      1136 × 1607 px
+viewBox der Markenfläche          0 0 595.28 841.89     ← A4 in PDF-PUNKTEN
+```
+
+Der Massstab der Marken ist also **nicht** der des Bildschirms. `BREITEN`
+sind Punkte. Ein Punkt ist 1/72 Zoll, ein Zoll 25,4 mm — ab hier ist die
+Rechnung exakt:
+
+```txt
+                 Punkte    Redion      GoodNotes (Redurs Bild)   Abweichung
+Fein               1,2     0,4 mm      0,3 mm                    +33 %
+Mittel             2,4     0,8 mm      0,7 mm                    +14 %
+Markant            5,0     1,8 mm      1,2 mm                    +50 %
+Marker (× 4)       9,6     3,4 mm      4,0 mm                    −15 %
+Regler, Maximum   12,0     4,2 mm      —
+```
+
+**Hätte der Bogen Redurs Tabelle abgeschrieben**, stünde bei „Markant"
+1,2 mm an einem Strich, der 1,8 mm zieht — um die Hälfte daneben, und
+plausibel genug, dass es niemandem auffällt (§55.1).
+
+**Und die zweite Falle an derselben Stelle:** Stift und Marker teilen sich
+die drei Stufenknöpfe, aber der Marker zieht das Vierfache. Eine feste
+Beschriftung hätte am Marker „0,8 mm" an einen 3,4-mm-Strich geschrieben.
+Die Beschriftung hängt deshalb am Werkzeug.
+
+**Der Befehl, mit dem sich das nachzählen lässt:**
+
+```bash
+node pruefungen/alle.mts 438     # §3 prüft das viewBox und rechnet selbst
+```
+
+Die Zusicherung schreibt ihren Sollwert **nicht** ab, sondern rechnet ihn
+aus dem `viewBox`, das die Seite wirklich trägt.
+
+**Läufe:**
+
+```txt
+test438   59/59   (5 Zusicherungen neu, 2 umgehängt)
+npm run typecheck   sauber
+Dienststand         v1149 → v1156
+```
+
+**Gegenproben (§55.2), jede einzeln gelaufen und rot gesehen:**
+
+```txt
+„Punkte sind Millimeter"   test438 55/59
+Marker-Faktor weg          test438 58/59
+```
+
+Die erste baute zunächst gar nicht: `MM_JE_PT` war nur in `alsMm` benutzt,
+und `noUnusedLocals` brach ab (§52.6). Die Konstante musste mit weg — sonst
+wäre es keine Gegenprobe gewesen, sondern ein Bauabbruch.
+
+**Nicht gemessen:** die Gesamtsuite.

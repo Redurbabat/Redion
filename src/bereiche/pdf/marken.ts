@@ -10,6 +10,29 @@ const Marken = (() => {
   const NS = 'http://www.w3.org/2000/svg';
   const FARBEN = ['#111111', '#d64545', '#2f7ed8', '#3aa757', '#e0a419'] as const;
   const BREITEN = [1.2, 2.4, 5] as const;
+
+  /* ══ PUNKTE, NICHT PIXEL — UND DESHALB MILLIMETER (E616) ══════════════════
+     NACHGEMESSEN AM LAUFENDEN PROGRAMM, nicht angenommen: das `viewBox` der
+     Zeichenfläche ist `0 0 595.28 841.89` — A4 in PDF-PUNKTEN
+     (`SheetSpace.A4_BREITE`). Die Zahlen oben sind also Punkte.
+
+     BIS HIERHER STAND AN DEN STUFENKNÖPFEN „1,2 px" und „2,4 px". Das war
+     falsch: 1,2 pt sind 0,4 mm, 1,2 px wären 0,3 mm — und auf dem Bildschirm
+     stand überhaupt nur „1,2", eine Zahl ohne Einheit. Sie sagt niemandem
+     etwas, und wer sie für Millimeter hielt, lag daneben.
+
+     Ein Punkt ist 1/72 Zoll, ein Zoll 25,4 mm. Die Umrechnung ist damit
+     exakt und braucht keine Messung — gemessen wurde nur, DASS es Punkte
+     sind. */
+  const MM_JE_PT = 25.4 / 72;
+  const alsMm = (pt: number): string =>
+    (Math.round(pt * MM_JE_PT * 10) / 10).toFixed(1).replace('.', ',') + ' mm';
+
+  /* Redurs Wörter von den iPad-Bildern (W4): „Fein · Mittel · Markant".
+     Die Zahlen daneben sind NICHT seine — GoodNotes nennt 0,3/0,7/1,2 mm,
+     Redion zieht 0,4/0,8/1,8. Eine abgeschriebene Zahl wäre eine falsche
+     Angabe auf dem Bildschirm (§33). */
+  const BREITEN_NAMEN = ['Fein', 'Mittel', 'Markant'] as const;
   const MARKER_FARBE = '#e0a419';
   const HISTORY_LIMIT = 100;
   /* DIE ZWISCHENABLAGE DER ZEICHENSCHICHT (E353): ein Ort fuer alle
@@ -5107,10 +5130,12 @@ const Marken = (() => {
       'aria-label="Farben: eigene Farbe wählen oder Farbsätze">+</button>' +
       '<span class="blatt-trenn" data-gruppe="breite"></span>' +
       /* Doppelter Massstab wie im Menüband: mit der wahren Stärke sahen
-         „dünn" (1,2 px) und „mittel" (2,4 px) gleich aus, weil der Boden
-         von 2 px den ersten hochzog. Das Verhältnis 1 : 2 : 4 bleibt. */
+         „dünn" (1,2 pt) und „mittel" (2,4 pt) gleich aus, weil der Boden
+         von 2 px den ersten hochzog. Das Verhältnis 1 : 2 : 4 bleibt.
+         (Hier stand „px". Es sind PUNKTE — siehe `alsMm` oben, E616.) */
       BREITEN.map((value, index) => `<button class="blatt-strich${index === 1 ? ' on' : ''}" data-gruppe="breite" ` +
-        `data-b="${value}" title="Strichbreite ${String(value).replace('.', ',')} — die gewählte nochmal antippen: Stärke frei wählen">` +
+        `data-b="${value}" title="${BREITEN_NAMEN[index] ?? 'Strich'} · ${alsMm(value)} — die gewählte nochmal antippen: Stärke frei wählen" ` +
+        `aria-label="Strichstärke ${BREITEN_NAMEN[index] ?? 'Strich'}, ${alsMm(value)}">` +
         `<i style="height:${Math.max(2, value * 2)}px"></i></button>`).join('') +
       /* DIE FREIE STAERKE (E465), wie GoodNotes' Schieber: drei Stufen zum
          Antippen bleiben, der Regler dazwischen nimmt jeden Wert von 0,5
@@ -5121,7 +5146,7 @@ const Marken = (() => {
          Reihe (test351, 132 px Leiste). Die Klasse `auf` oeffnet ihn. */
       '<label class="blatt-staerke" data-gruppe="breite" title="Strichstärke frei wählen">' +
       '<input type="range" min="0.5" max="12" step="0.1" value="' + BREITEN[1] + '" aria-label="Strichstärke">' +
-      '<output aria-hidden="true">' + String(BREITEN[1]).replace('.', ',') + '</output></label>';
+      '<output aria-hidden="true">' + alsMm(BREITEN[1]) + '</output></label>';
 
     /* ══ DIE EIGENE ORDNUNG LEGT SICH DARÜBER (E570) ═══════════════════════
        Die Zeilen oben bauen die Leiste in der Reihenfolge des Katalogs —
@@ -5140,8 +5165,15 @@ const Marken = (() => {
        ein Beobachter auf genau diesem Attribut. Eine Stelle, die nicht
        vergessen werden kann. */
     try {
-      new MutationObserver(() => platzSetzen(tools))
-        .observe(tools, { attributes: true, attributeFilter: ['data-tool'] });
+      new MutationObserver(() => {
+        platzSetzen(tools);
+        /* DIE MILLIMETER HÄNGEN AM WERKZEUG (E616): derselbe Stufenknopf
+           heisst beim Stift „0,8 mm" und beim Marker „3,4 mm", weil der
+           Marker viermal seine Zahl zieht. Hier zuzuhören ist dieselbe
+           Entscheidung wie bei `platzSetzen` eine Zeile höher — eine
+           Stelle statt sieben, die man vergessen kann. */
+        try { staerkenBeschriften(); } catch { /* vor dem Aufbau */ }
+      }).observe(tools, { attributes: true, attributeFilter: ['data-tool'] });
     } catch { /* ohne Beobachter bleibt die Vorgabe stehen */ }
 
     /* ══ IM BAND SELBST SCHIEBEN (E571) ═══════════════════════════════════
@@ -5719,12 +5751,45 @@ const Marken = (() => {
         label.classList.remove('auf');
       }
     };
+    /* ══ WIE BREIT DER STRICH WIRKLICH WIRD (E616) ═════════════════════════
+       DER MARKER ZIEHT VIERMAL SEINE ZAHL. Das steht so in `strokeWidth`
+       und noch einmal in `alsAnnotation` („der Marker ist auf dem
+       Bildschirm viermal so breit wie seine Zahl") — und eine
+       Beschriftung, die das verschweigt, wäre die ZWEITE falsche Angabe an
+       derselben Stelle: „0,8 mm" an einem Strich, der 3,4 mm breit ist.
+
+       Die Stufen selbst bleiben dieselben Knöpfe mit denselben Werten
+       (§8) — nur ihr Wort ändert sich mit dem Werkzeug. */
+    const staerkeFaktor = (): number => tools.dataset['tool'] === 'marker' ? 4 : 1;
+
+    /** Die drei Stufen und den Regler neu beschriften — nach Werkzeug. */
+    const staerkenBeschriften = (): void => {
+      const f = staerkeFaktor();
+      tools.querySelectorAll<HTMLElement>('.blatt-strich').forEach((knopf, i) => {
+        const pt = Number(knopf.dataset['b']) || BREITEN[1];
+        const wort = `${BREITEN_NAMEN[i] ?? 'Strich'} · ${alsMm(pt * f)}`;
+        knopf.title = `${wort} — die gewählte nochmal antippen: Stärke frei wählen`;
+        knopf.setAttribute('aria-label', `Strichstärke ${wort}`);
+      });
+      const feld = tools.querySelector<HTMLInputElement>('.blatt-staerke input');
+      const zahl = tools.querySelector<HTMLElement>('.blatt-staerke output');
+      const wert = Number(feld?.value) || BREITEN[1];
+      if (feld) feld.setAttribute('aria-label', `Strichstärke frei wählen, ${alsMm(wert * f)}`);
+      if (zahl) zahl.textContent = alsMm(wert * f);
+    };
+
+    /* EINMAL BEIM AUFBAU. Die Zeichenkette oben beschriftet für den Stift;
+       steht beim Öffnen schon der Marker, gälte sie nicht. */
+    staerkenBeschriften();
+
     /** Der Regler zeigt die Staerke, die gilt — auch nach einem Tipp auf eine Stufe. */
     const staerkeZeigen = (wert: number): void => {
       const feld = tools.querySelector<HTMLInputElement>('.blatt-staerke input');
       const zahl = tools.querySelector<HTMLElement>('.blatt-staerke output');
       if (feld && Number(feld.value) !== wert) feld.value = String(wert);
-      if (zahl) zahl.textContent = String(Math.round(wert * 10) / 10).replace('.', ',');
+      if (zahl) zahl.textContent = alsMm(wert * staerkeFaktor());
+      if (feld) feld.setAttribute('aria-label',
+        `Strichstärke frei wählen, ${alsMm(wert * staerkeFaktor())}`);
     };
     /**
      * EINE STRICHSTÄRKE SETZEN — an allen vier Orten, an denen sie steht

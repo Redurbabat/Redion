@@ -8906,7 +8906,11 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
    Bild vom Telefon zeigte die zwei Pfeile durch den Regler hindurch. */
 .blatt-werk > .blatt-tafel > label.blatt-staerke{ scroll-margin-inline-end:calc(var(--touch-min) * 2 + 12px) }
 .blatt-werk > .blatt-tafel > label.blatt-staerke input{ width:7rem; margin:0; accent-color:var(--accent); cursor:pointer }
-.blatt-werk > .blatt-tafel > label.blatt-staerke output{ min-width:2.2em; text-align:right; font-variant-numeric:tabular-nums }
+/* 4,4em STATT 2,2 (E616): die Zahl trägt jetzt ihre Einheit — „0,8 mm"
+   statt „0,8". Ohne die Breite sprang der Regler bei jedem Schritt, weil
+   „1,0 mm" schmaler ist als „12,7 mm". `tabular-nums` hält die Ziffern
+   ohnehin auf gleicher Breite; das „mm" kommt dazu. */
+.blatt-werk > .blatt-tafel > label.blatt-staerke output{ min-width:4.4em; text-align:right; font-variant-numeric:tabular-nums }
 .spalte .blatt-werk > .blatt-tafel > label.blatt-staerke.auf,
 body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
   position:static; box-shadow:none; border:0; background:none; padding:0 6px; color:inherit

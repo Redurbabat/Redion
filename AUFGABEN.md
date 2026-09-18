@@ -1149,9 +1149,27 @@ Kacheln (Linie · Pfeil · Rechteck · Kreis · Stern).
   Redurs iPad-Bildern steht das Wort auch dort. Das ist ein eigener,
   kleiner Bogen und keine Nebenwirkung: die Kopie wird aus
   `Marken.WERKZEUGE` gebaut (E583), also käme das Wort von derselben Stelle.
-- **W4 · Die Tafel bekommt Inhalt.** Strichvorschau, benannte Stiftkacheln
-  mit Millimetern, Deckkraft als eigener Schieber (heute gibt es sie nur
-  beim Marker, fest verdrahtet), der Radierer mit Grösse und Haken.
+- **W4 · Die Tafel bekommt Inhalt.** ZUM TEIL (E616): **die Millimeter
+  stehen** — und sie sind Redions, nicht GoodNotes'. Gemessen rechnet die
+  Zeichenfläche in PDF-Punkten (`viewBox` = A4), also sind die drei Stufen
+  0,4 / 0,8 / 1,8 mm und nicht 0,3 / 0,7 / 1,2 wie auf Redurs Bild;
+  abgeschrieben wären sie bei „Markant" um die Hälfte daneben gewesen. Der
+  Marker zieht das Vierfache, und die Beschriftung hängt deshalb am
+  Werkzeug. Redurs Wörter (Fein · Mittel · Markant) sind übernommen.
+
+  **Offen bleibt der grössere Teil**, und er hängt alle vier an einer
+  Bedingung: Strichvorschau, benannte Stiftkacheln, Deckkraft-Schieber und
+  der Radierer mit Grösse und Haken brauchen die **Tafel als sichtbaren
+  Kasten**. Die trägt seit E614 `display:contents` und erzeugt keinen —
+  absichtlich, weil `flex:1 0 100%`, `order` und `position:sticky` sonst
+  über die Grenze hinweg brechen. Sie zu einem Kasten zu machen, ohne die
+  Werkzeuge mitzunehmen, braucht eine weitere Ebene: **ein eigener Bogen
+  mit einem Bild für Redur, bevor er landet.**
+
+  **Und die Deckkraft ist zusätzlich eine Datenfrage:** sie steht heute fest
+  je Stift (Marker 0,32 · Pinsel 0,92 · Bleistift 0,72 minus Neigung). Sie
+  wählbar zu machen heisst, ein Feld an die Marke zu hängen — §9, also eine
+  eigene Entscheidung und kein Nebensatz.
 - **W5 · Der Dock-Effekt.** Vergrössern beim Überfahren, mit
   `prefers-reduced-motion` als Abschaltung (§38).
 

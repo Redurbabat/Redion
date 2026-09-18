@@ -232,7 +232,50 @@ console.log('\n§3 Die freie Stärke');
   await s.evaluate(`(() => { const i = document.querySelector('.blatt-werk .blatt-staerke input'); i.value = '7.5'; i.dispatchEvent(new Event('input', { bubbles: true })); })()`);
   gleich('Der Regler setzt die Stärke sofort', await s.evaluate(`Zeichenziel.jetztDicke()`), 7.5);
   gleich('… keine Stufe ist mehr markiert', await s.evaluate(`document.querySelectorAll('.blatt-werk .blatt-strich.on').length`), 0);
-  gleich('… und die Zahl daneben sagt es', await s.evaluate(`document.querySelector('.blatt-werk .blatt-staerke output').textContent`), '7,5');
+/* ══ UMGEHÄNGT MIT E616 — UND SCHÄRFER ALS VORHER ═════════════════════════
+   Hier stand: die Zahl sagt „7,5". Das war richtig und nutzlos: „7,5" ist
+   eine Zahl OHNE EINHEIT, und wer sie für Millimeter hielt, lag um mehr
+   als das Doppelte daneben. Die Zeichenfläche rechnet in PDF-PUNKTEN
+   (`viewBox="0 0 595.28 841.89"` = A4), und 7,5 pt sind 2,6 mm.
+
+   DIE ZAHL WIRD NICHT ABGESCHRIEBEN, SONDERN GERECHNET — aus dem
+   `viewBox`, das die Seite wirklich trägt. Eine Zusicherung, die ihren
+   Sollwert neben dem Istwert stehen hat, prüft die Umrechnung nicht (§55.2). */
+{
+  const viewBox = await s.evaluate(
+    `document.querySelector('.blatt-marken svg, svg.blatt-marken')?.getAttribute('viewBox') || ''`) as string;
+  p('Die Zeichenfläche rechnet in A4-Punkten — daher kommen die Millimeter',
+    /^0 0 595\.28 841\.89$/.test(viewBox.trim()), viewBox);
+  const soll = (Math.round(7.5 * 25.4 / 72 * 10) / 10).toFixed(1).replace('.', ',') + ' mm';
+  gleich('… und die Zahl daneben sagt es — in Millimetern, nicht in nackten Punkten',
+    await s.evaluate(`document.querySelector('.blatt-werk .blatt-staerke output').textContent`), soll);
+  p('… und der Regler sagt einem Vorleser dasselbe (§38)',
+    ((await s.evaluate(`document.querySelector('.blatt-werk .blatt-staerke input').getAttribute('aria-label')`)) as string || '')
+      .includes(soll));
+}
+
+/* ══ DER MARKER ZIEHT VIERMAL SEINE ZAHL (E616) ═══════════════════════════
+   Das ist die zweite falsche Angabe, die an dieser Stelle möglich war:
+   derselbe Stufenknopf heisst beim Stift „0,8 mm" und beim Marker
+   „3,4 mm". Eine Beschriftung, die das verschweigt, ist genauer falsch
+   als eine ohne Einheit. */
+{
+  const beimStift = await s.evaluate(
+    `document.querySelector('.blatt-werk .blatt-strich[data-b="2.4"]').getAttribute('aria-label')`) as string;
+  await s.click('.blatt-werk [data-wz="marker"]');
+  await s.waitForTimeout(260);
+  const beimMarker = await s.evaluate(
+    `document.querySelector('.blatt-werk .blatt-strich[data-b="2.4"]').getAttribute('aria-label')`) as string;
+  p('Beim Stift heisst die mittlere Stufe „Mittel" und nennt ihre Millimeter',
+    /Mittel/.test(beimStift) && /0,8 mm/.test(beimStift), beimStift);
+  p('Beim Marker steht dieselbe Stufe mit dem VIERFACHEN da',
+    /3,4 mm/.test(beimMarker), beimMarker);
+  await s.click('.blatt-werk [data-wz="stift"]');
+  await s.waitForTimeout(260);
+  gleich('… und zurück beim Stift steht wieder ihr eigener Wert',
+    await s.evaluate(`document.querySelector('.blatt-werk .blatt-strich[data-b="2.4"]').getAttribute('aria-label')`),
+    beimStift);
+}
   await zug(s, [100, 300], [300, 320]);
   const marken = JSON.parse(await s.evaluate(MARKEN) as string) as any[];
   gleich('Der nächste Strich hat genau diese Stärke', marken[0]?.breite, 7.5);

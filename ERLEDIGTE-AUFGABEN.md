@@ -1,5 +1,51 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 17. September 2026 · E616 · Die Strichstärke sagt, wie dick sie ist (W4, erster Teil)
+
+**W4 fängt nicht mit Gestaltung an, sondern mit einer Zahl, die falsch
+dastand.** Auf dem Bildschirm stand „1,2" — eine Zahl ohne Einheit. Der
+Kommentar daneben nannte sie „px". Beides war irreführend.
+
+**Gemessen statt abgeschrieben.** Redurs iPad-Bilder nennen „Fein 0,3 mm ·
+Mittel 0,7 mm · Markant 1,2 mm", und die naheliegende Arbeit wäre gewesen,
+diese Zahlen zu übernehmen. Nachgesehen am laufenden Programm: das `viewBox`
+der Zeichenfläche ist `0 0 595.28 841.89` — **A4 in PDF-Punkten**. Die
+Breiten sind also Punkte, und ein Punkt ist 1/72 Zoll:
+
+```txt
+              Redion     GoodNotes      Abweichung
+Fein          0,4 mm     0,3 mm         +33 %
+Mittel        0,8 mm     0,7 mm         +14 %
+Markant       1,8 mm     1,2 mm         +50 %
+```
+
+Hätte der Bogen die Tabelle abgeschrieben, stünde bei „Markant" 1,2 mm an
+einem Strich, der 1,8 mm zieht — um die Hälfte daneben und plausibel genug,
+dass es niemandem auffällt. **Die Wörter sind Redurs, die Zahlen sind
+Redions.**
+
+**Die zweite Falle an derselben Stelle:** Stift und Marker teilen sich die
+drei Stufenknöpfe, aber der Marker zieht das Vierfache. Eine feste
+Beschriftung hätte am Marker „0,8 mm" an einen 3,4-mm-Strich geschrieben.
+Sie hängt deshalb am Werkzeug — an EINER Stelle, dem Beobachter auf
+`data-tool`, der seit E356 ohnehin dort horcht.
+
+**Geprüft.** `test438` 59/59, fünf Zusicherungen neu und zwei umgehängt.
+Die neue Zusage **rechnet ihren Sollwert aus dem `viewBox`**, statt ihn
+abzuschreiben. **Zwei Gegenproben einzeln rot gesehen:** „Punkte sind
+Millimeter" 55/59, Marker-Faktor weg 58/59. **Nicht** geprüft: die
+Gesamtsuite.
+
+**Und §52.6 zum zweiten Mal:** die erste Gegenprobe baute gar nicht, weil
+`MM_JE_PT` nur in `alsMm` benutzt war und `noUnusedLocals` abbricht. Eine
+Gegenprobe, die nicht baut, ist keine — die Konstante musste mit weg.
+
+**Offen bleibt der grössere Teil von W4**, und er hängt an einer Bedingung:
+Strichvorschau, Stiftkacheln, Deckkraft und Radierer brauchen die Tafel als
+sichtbaren Kasten. Die trägt seit E614 absichtlich `display:contents`. Das
+ist ein eigener Bogen mit einem eigenen Bild.
+
+---
 ## 17. September 2026 · E615 · Der Stift öffnet den Blick in den Ordner (L180)
 
 **Redurs Fund vom 16. September:** das Auge am Ordnerdeckel öffnet die Karte

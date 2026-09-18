@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-593 Entscheidungen, E1 bis E615 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+594 Entscheidungen, E1 bis E616 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -658,6 +658,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E613** — Die Chronik kommt erst beim Öffnen: 54 KB Chronikprosa verlassen den Startweg (Muster von E389), und die Startdecke in `test388 §5` steigt von 2300 auf 2700 KB — mit gezählter Begründung statt still (L146)
 * **E614** — Die Tafel als Behälter (W2) und das Wort unter dem Zeichen (W3): eine Ebene `.blatt-tafel` mit `display:contents`, 51 Kindwähler und sieben `:scope >` ziehen mit; die Werkzeuge zeigen ihr Wort jetzt ab 820 statt 1150 px Leistenbreite (`test533`)
 * **E615** — Der Stift öffnet den Blick in den Ordner: `pointerType` lässt `pen` zu, `any-hover` ersetzt `hover` (das fragte den Hauptzeiger und sperrte auf einem Touch-Laptop auch die Maus aus), und ein `pointerdown` sagt die Uhr ab (L180, `test476`)
+* **E616** — Die Strichstärke sagt, wie dick sie ist: die Zeichenfläche rechnet in PDF-Punkten (`viewBox` A4), also sind 2,4 nicht „2,4 px" sondern **0,8 mm** — und am Marker das Vierfache. Redurs Wörter übernommen, seine Zahlen nicht (W4, `test438`)
 
 ---
 
@@ -50115,3 +50116,108 @@ in einer Baumarke). Die Lehre ist nicht „aufpassen", sondern die Regel, die
 §55.2 ohnehin verlangt: **eine Zusage wird rot gesehen, bevor sie grün
 gilt** — und wenn sie beim ersten Lauf grün ist, ist das ein Verdacht und
 keine Beruhigung.
+
+---
+
+## E616 — Die Strichstärke sagt, wie dick sie ist (W4, erster Teil)
+
+**17. September 2026.** Der erste Teil von **W4** aus Redurs Werkzeugtafel —
+und er fängt nicht mit Gestaltung an, sondern mit einer Zahl, die falsch
+dastand.
+
+### Was auf dem Bildschirm stand
+
+```txt
+Regler:          1,2          ← eine Zahl ohne Einheit
+Stufenknopf:     „Strichbreite 1,2"
+Kommentar dazu:  „dünn (1,2 px) und mittel (2,4 px)"
+```
+
+Redurs iPad-Bilder zeigen daneben „Fein 0,3 mm · Mittel 0,7 mm · Markant
+1,2 mm · Marker 4,0 mm". Die naheliegende Arbeit wäre gewesen, diese Wörter
+und diese Zahlen abzuschreiben. **Das wäre falsch gewesen, und zwar messbar.**
+
+### Gemessen, statt abgeschrieben
+
+Am laufenden Programm nachgesehen, was das `viewBox` der Zeichenfläche ist:
+
+```txt
+viewBox="0 0 595.28 841.89"      ← A4 in PDF-PUNKTEN (SheetSpace.A4_BREITE)
+Papier auf dem Schirm: 1136 px   ← das ist NICHT der Massstab der Marken
+```
+
+Die Zahlen `BREITEN = [1.2, 2.4, 5]` sind also **Punkte**, nicht Pixel. Ein
+Punkt ist 1/72 Zoll, ein Zoll 25,4 mm — die Umrechnung ist damit **exakt**
+und braucht keine Messung; gemessen wurde nur, DASS es Punkte sind.
+
+```txt
+                     Redion          GoodNotes (Redurs Bild)
+Fein      1,2 pt  →  0,4 mm          0,3 mm
+Mittel    2,4 pt  →  0,8 mm          0,7 mm
+Markant   5,0 pt  →  1,8 mm          1,2 mm
+```
+
+**Hätte ich Redurs Zahlen übernommen, stünde bei „Markant" 1,2 mm an einem
+Strich, der 1,8 mm zieht** — eine falsche Angabe auf dem Bildschirm (§33),
+und genau die Sorte, die niemand bemerkt, weil sie plausibel aussieht
+(§55.1). Die Wörter sind seine, die Zahlen sind Redions.
+
+### Und die zweite falsche Angabe, die dabei fast entstanden wäre
+
+**Der Marker zieht viermal seine Zahl.** Das steht in `strokeWidth` und noch
+einmal in `alsAnnotation` („der Marker ist auf dem Bildschirm viermal so
+breit wie seine Zahl") — und die Stufenknöpfe sind für Stift und Marker
+**dieselben**. Eine feste Beschriftung hätte am Marker „0,8 mm" an einen
+Strich geschrieben, der 3,4 mm breit ist.
+
+Die Beschriftung hängt deshalb am Werkzeug und wird beim Wechsel neu
+gesetzt — an **einer** Stelle, dem Beobachter auf `data-tool`, der seit E356
+ohnehin dort horcht. Nicht an den sieben Stellen, an denen `data-tool`
+gesetzt wird (§8).
+
+### Was das kostet
+
+Der `<output>` neben dem Regler wird von 2,2em auf 4,4em breit — „0,8 mm"
+braucht mehr Platz als „0,8". Er steht in der Klappe, die erst auf einen
+zweiten Tipp aufgeht (E465), also kostet es keine Zeile in der Leiste.
+`test351` bleibt bei seinen drei Zeilen.
+
+### Was NICHT in diesem Bogen ist
+
+W4 verlangt ausserdem Strichvorschau, benannte Stiftkacheln, einen eigenen
+Deckkraft-Schieber und den Radierer mit Grösse und Haken. Alles vier braucht
+die **Tafel als sichtbaren Kasten** — und die trägt heute `display:contents`
+(E614), erzeugt also keinen. Sie zu einem Kasten zu machen, ohne die
+Werkzeuge mitzunehmen, braucht eine weitere Ebene; das ist ein eigener Bogen
+mit einem eigenen Bild für Redur, kein Nebensatz hier.
+
+**Der Deckkraft-Schieber ist zusätzlich eine Datenfrage:** Deckung steht
+heute fest je Stift (Marker 0,32, Pinsel 0,92, Bleistift 0,72 minus
+Neigung). Sie wählbar zu machen heisst, ein Feld an die Marke zu hängen —
+§9, und damit eine eigene Entscheidung.
+
+### Gemessen
+
+```txt
+test438   59 von 59 grün   (5 Zusicherungen neu, 2 umgehängt)
+npm run typecheck   sauber
+Dienststand   v1149 → v1156
+```
+
+**Zwei Gegenproben (§50, §55.2), jede einzeln gelaufen und rot gesehen:**
+
+```txt
+„Punkte sind Millimeter" (die Umrechnung weg)   test438 55/59
+der Marker-Faktor weg                            test438 58/59
+```
+
+Die erste ist die realistische Fassung des Fehlers: jemand hält die Zahl für
+Millimeter und schreibt die Einheit dahinter. Genau das hätte der Bogen
+gebaut, wenn er Redurs Tabelle abgeschrieben hätte.
+
+### Und wieder §52.6
+
+Die erste Gegenprobe **baute nicht**: `alsMm` war die einzige Verwendung von
+`MM_JE_PT`, und `noUnusedLocals` bricht dann ab. Eine Gegenprobe, die nicht
+baut, ist keine — die Konstante musste mit weg. Steht so in CLAUDE.md §52.6
+und ist jetzt zum zweiten Mal aufgetreten.
