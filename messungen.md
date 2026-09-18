@@ -2227,3 +2227,83 @@ und `noUnusedLocals` brach ab (§52.6). Die Konstante musste mit weg — sonst
 wäre es keine Gegenprobe gewesen, sondern ein Bauabbruch.
 
 **Nicht gemessen:** die Gesamtsuite.
+
+---
+
+## §55 · Was ein Stiftname kostet (E617, 17. September 2026)
+
+Im Stilblatt stand seit E512 eine Zahl als Grund dafür, dass die
+Stiftkacheln keinen Namen tragen: „Sechs Stifte mit Namen sind rund 320 px."
+Sie war richtig — für ein Wort **neben** dem Zeichen.
+
+**Gemessen, gestapelt** (laufende App, Stift gewählt, breite Seite):
+
+```txt
+Kachel ohne Wort                    32 px
+Kachel mit Wort, gestapelt          77 px   („Kugelschreiber", das längste)
+sechs Kacheln, Zuwachs             ~270 px  statt der befürchteten 320
+```
+
+**Und was das für die Leiste heisst** — das ist die Zahl, die zählt:
+
+```txt
+Leistenbreite   Zubehörzeilen   Leistenhöhe
+    1180 px          4            127 px    ← zu eng
+    1280 px          3             91 px
+    1307 px          3             91 px
+    1507 px          3             91 px
+```
+
+Die Schwelle steht deshalb auf **1300** und nicht auf 1280: eine Schwelle
+auf dem Messwert reisst beim ersten längeren Namen. Nach der Umstellung ist
+die Leiste bei **jeder** geprüften Breite so hoch wie vorher:
+
+```txt
+Fenster   Leiste    Höhe vorher / nachher   Namen sichtbar
+ 1280      860 px      128 / 128                 0
+ 1500     1080 px       92 /  92                 0
+ 1600     1180 px       91 /  91                 0
+ 1700     1280 px       91 /  91                 0
+ 1900     1407 px       91 /  91                 6
+```
+
+**Die drei Schwellen der Leiste, gesammelt:**
+
+```txt
+ 820 px   die dreizehn Werkzeuge      W3 (E614)
+1150 px   Formen, Kritzeln, Lineal …  E359
+1300 px   die sechs Stifte            E617
+```
+
+### Und der Fehler, den das Bild gefunden hat
+
+Die erste Messung sagte „Kachel 36 px" — also „der Name wird
+abgeschnitten". Auf dem Bild stand er **vollständig** da. Nachgemessen sind
+es 77 px; die erste Zahl war am falschen Knoten genommen. Hätte ich ihr
+geglaubt, wäre der Bogen als „geht nicht" abgebrochen worden.
+
+**§55 ist deshalb keine Zierde: hier hat das Bild die Messung widerlegt,
+nicht umgekehrt.**
+
+### Und `bilder.mts` konnte den Zustand gar nicht zeigen
+
+Das breiteste Gerät war `rechner` mit 1280 px Fenster — Leiste 860 px. Die
+obere Schwelle war damit **auf keinem Bild dieses Verzeichnisses je zu
+sehen**. Neu: `breit`, 1920 × 1080, Leiste 1407 px.
+
+**Läufe:**
+
+```txt
+test533   40/40   (11 Zusicherungen neu: §5b und §5c)
+test351 522 523 524 438 345 365   alle grün
+npm run typecheck   sauber
+```
+
+**Gegenproben (§55.2), jede einzeln gelaufen und rot gesehen:**
+
+```txt
+die dritte Schwelle entfernt       test533 38/40   (Leiste 127 statt 91 px)
+`display:none` wieder eingesetzt   test533 36/40   (keine Namen, keiner im Baum)
+```
+
+**Nicht gemessen:** die Gesamtsuite.

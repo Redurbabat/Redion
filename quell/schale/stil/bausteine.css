@@ -4178,13 +4178,38 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 /* DIE STIFTREIHE (E512): sechs Knöpfe statt eines Wechslers. Ihr Wort
    bleibt weg, wo es eng ist — das Zeichen trägt, der Titel und das
    aria-label sagen den Namen (§38). */
-/* NUR DAS ZEICHEN, KEIN WORT. Sechs Stifte mit Namen sind rund 320 px
-   und kippen die Leiste in eine dritte Zeile — gegen E359 und `test351`,
-   nachgemessen an einer 120 px hohen Leiste statt 80. Der Name steht im
-   Titel und im `aria-label`; ein Vorleser liest ihn, ein Zeiger zeigt
-   ihn, und der geführte Stift ist an seiner Fläche zu erkennen (§38). */
+/* ══ DIE STIFTKACHEL BEKOMMT IHR WORT (E617, W4) ══════════════════════════
+   Redurs Bild 2 vom 14. September: „fünf benannte Stiftkacheln".
+
+   HIER STAND, WARUM DAS NICHT GEHT — und es war richtig gerechnet:
+
+     „Sechs Stifte mit Namen sind rund 320 px und kippen die Leiste in eine
+      dritte Zeile — gegen E359 und `test351`, nachgemessen an einer 120 px
+      hohen Leiste statt 80."
+
+   Gerechnet für ein Wort NEBEN dem Zeichen. W3 (E614) hat an den
+   Werkzeugen gezeigt, dass ein GESTAPELTES Wort keine Breite kostet,
+   sondern Höhe — und Höhe hat der Knopf ohnehin, weil §37 ihm 44 px gibt.
+   Nachgemessen wächst eine Kachel von 32 auf 55 px, sechs also um 138 px
+   und nicht um 320.
+
+   UND `display:none` GEHT OHNEHIN WEG (§38). Es nahm den Namen auch aus
+   dem Vorlesebaum; der alte Kommentar sagte „der Name steht im Titel", und
+   `title` zählt nur, wenn sonst kein Name da ist. Unter der Schwelle wird
+   jetzt GEKLEMMT statt entfernt — dieselbe Klasse wie überall seit Audit
+   F04. Das ist auch dort besser, wo das Wort gar nicht zu sehen ist. */
 .blatt-werk button[data-act="stilwahl"]{padding:4px 6px}
-.blatt-werk button[data-act="stilwahl"] .wort{display:none}
+@media (min-width:761px){
+  .blatt-werk .blatt-tafel > button[data-act="stilwahl"]{
+    display:inline-flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:0; padding:2px 6px; line-height:1.1;
+  }
+  .blatt-werk .blatt-tafel > button[data-act="stilwahl"] > .zeichen{margin:0}
+  .blatt-werk .blatt-tafel > button[data-act="stilwahl"] > .wort{
+    font-size:10px; letter-spacing:-.01em; max-width:7em;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+}
 
 /* ══ DER STIFT WIRD IN DIE HAND GENOMMEN (E511) ═══════════════════════════
    Redur, 8. September: „mehr Animationen."
@@ -5495,6 +5520,31 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
       margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
       white-space:nowrap; border:0}
     .blatt-werk .blatt-tafel > button[data-wz]{padding:4px 7px}
+  }
+  /* ══ UND DIE STIFTKACHELN HABEN EINE DRITTE SCHWELLE (E617, W4) ═════════
+     GEMESSEN, nicht gewählt. Die sechs Namen sind lang — „Kugelschreiber"
+     allein macht die Kachel 77 px breit statt 32 —, und die Stiftreihe
+     steht in derselben Zeile wie Farben, Breiten, Formen und der Verlauf.
+     An der laufenden App, Stift gewählt, breite Seite:
+
+         Leiste 1180 px   Zubehör in VIER Zeilen, Leiste 127 px hoch
+         Leiste 1280 px   Zubehör in drei Zeilen,  Leiste  91 px hoch
+         Leiste 1307 px   drei Zeilen,             91 px
+         Leiste 1507 px   drei Zeilen,             91 px
+
+     Die Schwelle steht deshalb auf 1300 und nicht auf 1280: eine Schwelle
+     auf dem Messwert reisst beim ersten längeren Stiftnamen.
+
+     WARUM NICHT DIESELBEN 1150 WIE DAS ÜBRIGE ZUBEHÖR: weil dort GENAU an
+     dieser Stelle alle anderen Wörter zugleich aufgehen (Formen, Kritzeln,
+     Lineal, Zurück, Vor, Platz). Die Stifte kommen obendrauf und brauchen
+     ihre eigene, höhere Marke. */
+  @container (max-width:1300px){
+    .blatt-werk .blatt-tafel > button[data-act="stilwahl"] > .wort{
+      position:absolute; width:1px; height:1px; padding:0;
+      margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
+      white-space:nowrap; border:0}
+    .blatt-werk .blatt-tafel > button[data-act="stilwahl"]{padding:4px 6px}
   }
   @container (max-width:1400px){
     .blatt-fest .wort{position:absolute; width:1px; height:1px; padding:0;

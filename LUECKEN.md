@@ -8798,3 +8798,39 @@ oben mit 130 px Leere darunter.
 **Woran man merkt, dass es drückt:** an jedem breiten Bildschirm im
 Foliensatz — die Folie klebt oben, darunter steht ein Streifen Nichts.
 Am Telefon nicht: dort steht sie seit E551 mittig.
+
+L184 · Ist `laptop` in `bilder.mts` ein Tastgerät? — 17. September 2026
+--------------------------------------------------------------------------
+
+**Beim Einbau des breiten Bildschirms (E617) aufgefallen, nicht gesucht.**
+
+`bilder.mts` stellte bis E617 jedes Gerät ausser `rechner` als **Tastgerät**
+nach (`isMobile: true, hasTouch: true`) und machte davon nur ein Bild statt
+zwei. Das stand an zwei Stellen als `g !== 'rechner'`, und solange es genau
+ein Rechnergerät gab, war es richtig.
+
+Mit `breit` (1920 × 1080) ist es das nicht mehr — dort entscheidet jetzt die
+Menge `ZEIGER_GERAETE`. **`laptop` (1024 × 768) blieb dabei absichtlich
+draussen**, damit seine bisherigen Bilder sich nicht ändern.
+
+**Die Frage, die damit offen steht:** ist 1024 × 768 ein Laptop oder ein
+Tablet? Der Name sagt Laptop, das Verhalten sagt Tablet.
+
+```txt
+heute       laptop  →  isMobile, hasTouch, nur dunkel
+der Name    „laptop"
+die Folge   in jedem laptop-Bild gilt `hover: none` und `pointer: coarse`
+```
+
+Ist es wirklich ein Laptop gemeint, dann zeigen alle seine Bilder seit je
+den falschen Zustand — dasselbe wie L108, nur andersherum und für ein
+anderes Gerät. Ist ein Tablet gemeint, dann stimmt das Verhalten und der
+**Name** ist falsch.
+
+**Was es kostet, das nachzusehen:** wenig — ein Lauf von `node bilder.mts`
+mit und ohne die Umstellung und ein Blick auf zwei Bilder. **Was es kostet,
+es nicht zu tun:** eine Gerätegrösse, deren Bilder niemand richtig deuten
+kann.
+
+**Nicht mit E617 entschieden**, weil es eine Änderung an Bildern wäre, die
+mit diesem Bogen nichts zu tun haben.

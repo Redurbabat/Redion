@@ -1157,6 +1157,13 @@ Kacheln (Linie · Pfeil · Rechteck · Kreis · Stern).
   Marker zieht das Vierfache, und die Beschriftung hängt deshalb am
   Werkzeug. Redurs Wörter (Fein · Mittel · Markant) sind übernommen.
 
+  **Und seit E617 tragen die Stiftkacheln ihren Namen** — Füller ·
+  Kugelschreiber · Pinsel · Bleistift · Schutzleiter · Leiter, ab 1300 px
+  Leistenbreite. Die alte Begründung („sechs Stifte mit Namen sind rund
+  320 px") galt für ein Wort NEBEN dem Zeichen; gestapelt kostet es Höhe.
+  Die Leiste ist bei jeder geprüften Breite so hoch wie vorher, und
+  `display:none` ist dem Klemmen gewichen (§38).
+
   **Offen bleibt der grössere Teil**, und er hängt alle vier an einer
   Bedingung: Strichvorschau, benannte Stiftkacheln, Deckkraft-Schieber und
   der Radierer mit Grösse und Haken brauchen die **Tafel als sichtbaren

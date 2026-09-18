@@ -1,5 +1,52 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 17. September 2026 · E617 · Die Stiftkacheln tragen ihren Namen (W4, zweiter Teil)
+
+**Redurs Bild 2: „fünf benannte Stiftkacheln".** Im Stilblatt stand, warum
+das nicht geht — „sechs Stifte mit Namen sind rund 320 px und kippen die
+Leiste in eine dritte Zeile". Richtig gerechnet, für ein Wort **neben** dem
+Zeichen. Gestapelt kostet es Höhe, und die hat der Knopf ohnehin (§37).
+
+**Drei Schwellen, nicht eine.** Die Werkzeuge zeigen ihr Wort ab 820 px
+Leistenbreite (W3), das übrige Zubehör ab 1150 (E359), die Stifte erst ab
+**1300** — ihre Namen sind lang („Kugelschreiber" macht die Kachel 77 px
+statt 32), und bei 1150 gehen alle anderen Wörter gleichzeitig auf. Gemessen
+kippte die Leiste bei 1180 px auf vier Zubehörzeilen und 127 px Höhe; ab
+1280 blieb sie bei 91. Die Schwelle steht auf 1300, nicht auf dem Messwert.
+**Nach der Umstellung ist die Leiste bei jeder geprüften Breite so hoch wie
+vorher.**
+
+**Ein halber Bogen, der nicht im Auftrag stand (§38):** der alte Weg war
+`display:none` — das nimmt den Namen auch aus dem Vorlesebaum, und der
+Kommentar daneben behauptete „der Name steht im Titel". Jetzt wird
+geklemmt statt entfernt.
+
+**Zwei Fehler, die mir dabei selbst unterlaufen sind.** Die erste Messung
+sagte „Kachel 36 px", also „der Name wird abgeschnitten" — auf dem Bild
+stand er vollständig da, nachgemessen sind es 77 px. Hätte ich der Zahl
+geglaubt, wäre der Bogen als „geht nicht" abgebrochen worden; **das Bild hat
+die Messung widerlegt, nicht umgekehrt.** Und `bilder.mts` konnte diesen
+Zustand gar nicht zeigen: das breiteste Gerät war 1280 px, die Leiste dort
+860 px — die obere Schwelle war auf keinem Bild je zu sehen. Neu: `breit`,
+1920 × 1080.
+
+**Dabei noch ein Fund:** an zwei Stellen stand `g !== 'rechner'` — einmal
+für „nur ein Thema", einmal für „mit Berührung nachstellen". Mit `breit`
+wäre ein 1920er Bildschirm als Tastgerät nachgestellt worden, mit
+`hover: none`: der Fund aus L108 von der anderen Seite. Jetzt entscheidet
+eine Menge, kein Vergleich. `laptop` bleibt absichtlich, wie es war —
+**L184** fragt nach.
+
+**Geprüft.** `test533` 40/40, elf Zusicherungen neu. **Zwei Gegenproben
+einzeln rot gesehen:** Schwelle entfernt 38/40 (Leiste 127 statt 91 px),
+`display:none` zurück 36/40. Sieben Nachbarläufe grün. **Nicht** geprüft:
+die Gesamtsuite.
+
+**Offen bleibt von W4:** Strichvorschau, die Millimeter sichtbar an der
+Kachel, der Deckkraft-Schieber und der Radierer mit Grösse und Haken. Alle
+vier brauchen die Tafel als sichtbaren Kasten.
+
+---
 ## 17. September 2026 · E616 · Die Strichstärke sagt, wie dick sie ist (W4, erster Teil)
 
 **W4 fängt nicht mit Gestaltung an, sondern mit einer Zahl, die falsch

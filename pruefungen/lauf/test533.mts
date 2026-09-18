@@ -279,6 +279,90 @@ p('Der Knopf stapelt (`flex-direction:column`)',
   w3.mass.every(m => m.richtung === 'column'),
   [...new Set(w3.mass.map(m => m.richtung))].join(', '));
 
+/* ═══ §5b Die Stiftkacheln tragen ihren Namen (E617, W4) ═══════════════════
+   Redurs Bild 2: „fünf benannte Stiftkacheln". Bis E617 stand an dieser
+   Stelle `display:none` — der Name war weg, auch aus dem Vorlesebaum.
+
+   DREI SCHWELLEN, NICHT EINE. Die Werkzeuge zeigen ihr Wort ab 820 px
+   Leistenbreite (W3), das übrige Zubehör ab 1150 (E359), die Stifte erst
+   ab 1300 — weil ihre Namen lang sind („Kugelschreiber" macht die Kachel
+   77 px breit statt 32) und weil bei 1150 alle anderen Wörter zugleich
+   aufgehen. Gemessen: bei 1180 px Leiste kippte das Zubehör in eine
+   vierte Zeile und die Leiste auf 127 px; ab 1280 blieb sie bei 91. */
+console.log('\n§5b Die Stiftkacheln tragen ihren Namen — ab 1300 px');
+{
+  const { ktx, pg } = await kontext(1900);
+  const weit = await pg.evaluate(() => {
+    const w = document.querySelector<HTMLElement>('.blatt-werk')!;
+    const f = w.querySelector<HTMLElement>(':scope > .blatt-tafel') ?? w;
+    const sicht = (e: Element) => (e as HTMLElement).getClientRects().length > 0;
+    const stifte = [...f.querySelectorAll<HTMLElement>('[data-act="stilwahl"]')].filter(sicht);
+    return {
+      leiste: Math.round(w.getBoundingClientRect().width),
+      hoehe: Math.round(w.getBoundingClientRect().height),
+      zahl: stifte.length,
+      namen: stifte.map(k => (k.querySelector('.wort')?.textContent || '').trim()),
+      sichtbar: stifte.filter(k => {
+        const x = k.querySelector('.wort');
+        return !!x && x.getBoundingClientRect().width > 1;
+      }).length,
+      /* KEIN `display:none` MEHR (§38): geklemmt heisst, ein Vorleser
+         liest den Namen weiterhin. Das ist der halbe Bogen. */
+      keinesVersteckt: stifte.every(k => {
+        const x = k.querySelector('.wort');
+        return !!x && getComputedStyle(x as Element).display !== 'none';
+      }),
+      darunter: stifte.every(k => {
+        const z = k.querySelector('.zeichen')?.getBoundingClientRect();
+        const o = k.querySelector('.wort')?.getBoundingClientRect();
+        return !!z && !!o && o.top >= z.bottom - 1;
+      })
+    };
+  });
+  p('Die Leiste ist breit genug (über 1300 px)', weit.leiste > 1300, `${weit.leiste} px`);
+  gleich('Sechs Stifte', weit.zahl, 6);
+  gleich('… und alle sechs zeigen ihren Namen', weit.sichtbar, 6);
+  p('… und zwar diese', weit.namen.join(', ') ===
+    'Füller, Kugelschreiber, Pinsel, Bleistift, Schutzleiter, Leiter', weit.namen.join(', '));
+  p('Jeder Name steht UNTER seinem Zeichen', weit.darunter);
+  p('Kein Name ist per `display:none` weg — ein Vorleser bekommt ihn (§38)',
+    weit.keinesVersteckt);
+  p('Und die Leiste bleibt bei drei Zeilen', weit.hoehe < 140, `${weit.hoehe} px`);
+  await ktx.close();
+}
+
+/* ═══ §5c Unter der Schwelle kostet es NICHTS (E617) ═══════════════════════
+   Der Gegenfall, und der eigentliche Grund für die dritte Schwelle: bei
+   1180 px Leiste dürfen die Namen NICHT stehen, sonst wächst die Leiste
+   von 91 auf 127 px. Eine Schwelle ohne diese Zusicherung wäre geraten. */
+console.log('\n§5c Unter 1300 px stehen die Namen nicht — und die Leiste wächst nicht');
+{
+  const { ktx, pg } = await kontext(1600);
+  const eng = await pg.evaluate(() => {
+    const w = document.querySelector<HTMLElement>('.blatt-werk')!;
+    const f = w.querySelector<HTMLElement>(':scope > .blatt-tafel') ?? w;
+    const sicht = (e: Element) => (e as HTMLElement).getClientRects().length > 0;
+    const stifte = [...f.querySelectorAll<HTMLElement>('[data-act="stilwahl"]')].filter(sicht);
+    return {
+      leiste: Math.round(w.getBoundingClientRect().width),
+      hoehe: Math.round(w.getBoundingClientRect().height),
+      sichtbar: stifte.filter(k => {
+        const x = k.querySelector('.wort');
+        return !!x && x.getBoundingClientRect().width > 1;
+      }).length,
+      imBaum: stifte.every(k => {
+        const x = k.querySelector('.wort');
+        return !!x && getComputedStyle(x as Element).display !== 'none';
+      })
+    };
+  });
+  p('Die Leiste liegt unter 1300 px', eng.leiste < 1300, `${eng.leiste} px`);
+  gleich('… und kein Stiftname ist zu sehen', eng.sichtbar, 0);
+  p('… aber jeder steht noch im Vorlesebaum (geklemmt, nicht entfernt)', eng.imBaum);
+  gleich('… und die Leiste ist so hoch wie vorher', eng.hoehe, 91);
+  await ktx.close();
+}
+
 /* ═══ §6 §37 ═══════════════════════════════════════════════════════════════ */
 console.log('\n§6 §37: der Hauptweg misst 44 px');
 /* DIE TREFFFLÄCHE IST NICHT DER KASTEN (§37, E406). Die 44 px kommen aus

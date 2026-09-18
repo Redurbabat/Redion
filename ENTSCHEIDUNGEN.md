@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-594 Entscheidungen, E1 bis E616 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+595 Entscheidungen, E1 bis E617 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -659,6 +659,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E614** — Die Tafel als Behälter (W2) und das Wort unter dem Zeichen (W3): eine Ebene `.blatt-tafel` mit `display:contents`, 51 Kindwähler und sieben `:scope >` ziehen mit; die Werkzeuge zeigen ihr Wort jetzt ab 820 statt 1150 px Leistenbreite (`test533`)
 * **E615** — Der Stift öffnet den Blick in den Ordner: `pointerType` lässt `pen` zu, `any-hover` ersetzt `hover` (das fragte den Hauptzeiger und sperrte auf einem Touch-Laptop auch die Maus aus), und ein `pointerdown` sagt die Uhr ab (L180, `test476`)
 * **E616** — Die Strichstärke sagt, wie dick sie ist: die Zeichenfläche rechnet in PDF-Punkten (`viewBox` A4), also sind 2,4 nicht „2,4 px" sondern **0,8 mm** — und am Marker das Vierfache. Redurs Wörter übernommen, seine Zahlen nicht (W4, `test438`)
+* **E617** — Die Stiftkacheln tragen ihren Namen: gestapelt kostet das Wort Höhe statt Breite, also gilt die alte 320-px-Rechnung nicht mehr; dritte Schwelle bei 1300 px Leistenbreite, `display:none` weicht dem Klemmen (§38), und `bilder.mts` bekommt endlich einen breiten Bildschirm (W4, `test533`)
 
 ---
 
@@ -50221,3 +50222,108 @@ Die erste Gegenprobe **baute nicht**: `alsMm` war die einzige Verwendung von
 `MM_JE_PT`, und `noUnusedLocals` bricht dann ab. Eine Gegenprobe, die nicht
 baut, ist keine — die Konstante musste mit weg. Steht so in CLAUDE.md §52.6
 und ist jetzt zum zweiten Mal aufgetreten.
+
+---
+
+## E617 — Die Stiftkacheln tragen ihren Namen (W4, zweiter Teil)
+
+**17. September 2026.** Redurs Bild 2 vom 14. September: „fünf benannte
+Stiftkacheln". Im Stilblatt stand, warum das nicht geht — und es war
+richtig gerechnet:
+
+> „Sechs Stifte mit Namen sind rund 320 px und kippen die Leiste in eine
+> dritte Zeile — gegen E359 und `test351`, nachgemessen an einer 120 px
+> hohen Leiste statt 80."
+
+**Gerechnet für ein Wort NEBEN dem Zeichen.** W3 (E614) hat an den dreizehn
+Werkzeugen gezeigt, dass ein **gestapeltes** Wort keine Breite kostet,
+sondern Höhe — und Höhe hat der Knopf ohnehin, weil §37 ihm 44 px gibt.
+Dieselbe Rechnung noch einmal, nur eine Zeile tiefer.
+
+### Die dritte Schwelle, und warum es drei sein müssen
+
+```txt
+ 820 px Leistenbreite    die dreizehn Werkzeuge          (W3, E614)
+1150 px                  Formen, Kritzeln, Lineal, …     (E359)
+1300 px                  die sechs Stifte                (dieser Bogen)
+```
+
+Die Stifte brauchen ihre **eigene, höhere** Marke, und zwar aus zwei
+Gründen zugleich: ihre Namen sind lang („Kugelschreiber" macht die Kachel
+77 px breit statt 32), und bei 1150 gehen alle *anderen* Wörter gleichzeitig
+auf. Die Stifte kommen obendrauf.
+
+**Gemessen an der laufenden App**, Stift gewählt, breite Seite:
+
+```txt
+Leiste 1180 px    Zubehör in VIER Zeilen, Leiste 127 px hoch
+Leiste 1280 px    drei Zeilen,             91 px
+Leiste 1307 px    drei Zeilen,             91 px
+Leiste 1507 px    drei Zeilen,             91 px
+```
+
+Die Schwelle steht auf **1300** und nicht auf 1280: eine Schwelle auf dem
+Messwert reisst beim ersten längeren Stiftnamen. Nachgemessen ist die Leiste
+damit bei **jeder** Breite so hoch wie vorher.
+
+### Und ein halber Bogen, der gar nicht im Auftrag stand: §38
+
+Der alte Weg war `display:none`. Das nimmt den Namen **auch aus dem
+Vorlesebaum** — und der Kommentar daneben behauptete, „der Name steht im
+Titel". `title` zählt nur, wenn sonst kein Name da ist. Unter der Schwelle
+wird jetzt **geklemmt statt entfernt**, dieselbe Klasse wie überall seit
+Audit F04. Das ist auch dort eine Verbesserung, wo das Wort gar nicht zu
+sehen ist.
+
+### Zwei Fehler, die mir dabei selbst unterlaufen sind
+
+1. **Die erste Messung sagte „Kachel 36 px", also „der Name wird
+   abgeschnitten".** Auf dem Bild stand er vollständig da. Nachgemessen
+   sind es **77 px**; die erste Zahl war am falschen Knoten genommen.
+   Hätte ich ihr geglaubt, wäre der Bogen als „geht nicht" abgebrochen
+   worden — §55 ist deshalb nicht Zierde: **das Bild hat die Messung
+   widerlegt**, nicht umgekehrt.
+2. **`bilder.mts` konnte diesen Zustand gar nicht zeigen.** Siehe unten.
+
+### `bilder.mts` bekommt einen breiten Bildschirm
+
+Das Werkzeug kannte vier Geräte, und das breiteste war `rechner` mit
+1280 px — dort ist die Leiste 860 px breit. **Die obere Schwelle war damit
+auf keinem Bild dieses Verzeichnisses je zu sehen.** Ein Zustand, den kein
+Bild erreicht, wird auch nicht angesehen (§55). Neu: `breit`, 1920 × 1080,
+der häufigste Rechnerbildschirm; die Leiste ist dort 1407 px breit.
+
+**Dabei fiel eine zweite Sache auf, und sie ist der Fund aus L108 von der
+anderen Seite:** an zwei Stellen stand `g !== 'rechner'` — einmal für „nur
+ein Thema", einmal für „mit Berührung nachstellen". Solange es genau EIN
+Rechnergerät gab, war das dasselbe. Mit `breit` wäre ein 1920er Bildschirm
+als **Tastgerät** nachgestellt worden, mit `hover: none` — und genau das
+hat L108 einmal andersherum gekostet. Jetzt entscheidet eine Menge
+(`ZEIGER_GERAETE`), nicht ein Vergleich.
+
+`laptop` bleibt absichtlich draussen und behält sein Verhalten — seine
+Bilder ändern sich damit nicht. Ob 1024 × 768 wirklich ein Tastgerät ist,
+ist eine eigene Frage: **L184**.
+
+### Gemessen
+
+```txt
+test533   40 von 40 grün   (11 Zusicherungen neu: §5b und §5c)
+test351 522 523 524 438 345 365   grün
+npm run typecheck   sauber
+```
+
+**Zwei Gegenproben (§50, §55.2), jede einzeln gelaufen und rot gesehen:**
+
+```txt
+die dritte Schwelle entfernt      test533 38/40  (Leiste 127 statt 91 px)
+`display:none` wieder eingesetzt  test533 36/40  (keine Namen, keiner im Baum)
+```
+
+### Was von W4 weiterhin offen ist
+
+Strichvorschau, die Millimeter **sichtbar** an der Kachel, der eigene
+Deckkraft-Schieber und der Radierer mit Grösse und Haken. Alle vier
+brauchen die Tafel als sichtbaren Kasten — die trägt seit E614 absichtlich
+`display:contents`. Das bleibt der eigene Bogen, und er bekommt sein Bild,
+bevor er landet.
