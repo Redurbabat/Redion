@@ -9098,3 +9098,48 @@ beim Schaltplan, der das kann (`elektro:planvorlagen`). Das ist bewusst so
 gelassen und keine vergessene Zeile: eine eigene Vorlagenliste ist ein
 eigener Speicherort mit eigener Sicherungsfrage (§11), und die gehört in
 einen eigenen Bogen.
+
+---
+
+## L193 · Ein Name, der mehreren Bereichen gehört, gehört im Wächter keinem — 19. September 2026
+
+`test537` ordnet einen globalen Namen dem Bereich zu, der ihn anmeldet.
+Steht derselbe Name in **zwei** Bereichen, gehört er nach der Regel des
+Laufs keinem — und jeder Zugriff darauf wird nicht mehr gemeldet.
+
+Das ist absichtlich so (eine Zuordnung, die geraten wäre, sagt nichts), aber
+es hat einen Preis, und der wurde am selben Abend sichtbar. Mit der
+Berichtigung des Katalogs (E629) bekommen 59 Namen zum ersten Mal einen
+Besitzer — und **zehn verlieren ihn**:
+
+```txt
+ANSICHTEN   chronik + wissen          REITER      wissen + register
+AUSLOESER   datenbanken + editor      STUFEN      spreadsheet + core + kern
+BEREICHE    einstellungen + elektro   WERKZEUGE   ki + pdf + register
+FORMEN      bloecke + dateien + pdf   M           elektro + core
+NAMEN       ki + core + schale        RANG        dateien + kern
+```
+
+Zwei Einträge sind dadurch aus dem Verzeichnis gefallen:
+
+```txt
+bereiche/ki     → AUSLOESER → bereiche/datenbanken   (2 Treffer)
+bereiche/wissen → ANSICHTEN → bereiche/chronik       (4 Treffer)
+```
+
+**Sie stehen weiter im Code.** Der Lauf kann sie nur niemandem mehr
+zuordnen. Das Verzeichnis ist von 127/523 auf 125/517 gefallen, und diese
+sechs Treffer sind **kein Fortschritt** — sie sind unsichtbar geworden.
+Genau deshalb steht es hier und im Kopf des Verzeichnisses.
+
+**Was helfen würde**, in der Reihenfolge des Aufwands:
+
+1. Die Zuordnung am ORT der Benutzung entscheiden statt am Namen: wer
+   `FORMEN` in `bereiche/pdf` benutzt und dort auch anmeldet, meint die
+   eigene. Nur ein Zugriff OHNE eigene Anmeldung im selben Bereich ist ein
+   Querverweis. Das fängt neun der zehn Fälle.
+2. Gleichnamige globale Namen überhaupt melden — zwei Bereiche mit
+   derselben Konstanten sind auch ohne Wächter eine Stolperstelle.
+3. Die Namen auseinanderziehen. Das ist die sauberste und die teuerste
+   Lösung, und sie gehört nicht in denselben Bogen wie der Wächter.
+

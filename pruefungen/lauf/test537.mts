@@ -54,6 +54,23 @@
  *   §5 Der Seitenweg über `window` zählt mit.
  *   §6 Die Gegenproben der Ausdrücke selbst.
  *
+ * ─── WAS SIE AM ERSTEN ABEND GEMELDET HAT, UND WARUM ES FALSCH WAR ─────────
+ * Ein Tag nach dem Bau meldete sie „bereiche/bloecke → FORMEN (bereiche/pdf)".
+ * Die Gedankenkarte hatte eine EIGENE Formenliste bekommen — mit Typangabe:
+ *
+ *     const FORMEN: ReadonlyArray<readonly [string, string]> = [ … ]
+ *
+ * Der Katalog suchte `const NAME =` und liess die Typangabe nicht zu. Damit
+ * galt die eigene Liste nicht als Anmeldung, und ihre Benutzung sah aus wie
+ * der Griff in den PDF-Bereich. Ein Waechter, der eine Schreibweise nicht
+ * kennt, erfindet eine Kopplung — und das ist schlimmer als eine uebersehene,
+ * weil jemand danach eine Arbeit macht, die es nicht gibt.
+ *
+ * Mit der Berichtigung bekommen 59 Namen zum ersten Mal einen Besitzer, und
+ * zehn verlieren ihn, weil sie in mehreren Bereichen angemeldet sind. Das
+ * Verzeichnis faellt dadurch von 127/523 auf 125/517 — und diese zwei
+ * Eintraege sind NICHT verschwunden, sondern nur nicht mehr zuzuordnen (L193).
+ *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ──────────────────────────────────
  * §6 ist die eingebaute Antwort, nach dem Vorbild von `test87:162`: jeder
  * Ausdruck wird an einem erfundenen Stück Code geprüft, das er finden MUSS —
@@ -140,7 +157,14 @@ const heimat = new Map<string, Set<string>>();
 for (const datei of alleDateien) {
   const ort = ortVon(datei);
   const text = fs.readFileSync(datei, 'utf8');
-  for (const m of text.matchAll(/^[ \t]*(?:const|let|var)[ \t]+([A-Z][A-Za-z0-9_]*)[ \t]*=/gm))
+  /* EIN NAME MIT TYP IST DERSELBE NAME (gefunden am 19. September).
+     Hier stand `[ \t]*=` direkt hinter dem Namen. Damit galt
+     `const FORMEN = […]` als Anmeldung, `const FORMEN: ReadonlyArray<…> = […]`
+     aber nicht — und die Gedankenkarte, die ihre eigene Formenliste MIT Typ
+     anlegt, wurde als Zugriff auf die gleichnamige Liste im PDF-Bereich
+     gemeldet. Ein Waechter, der eine Schreibweise nicht kennt, erfindet eine
+     Kopplung. Jetzt darf zwischen Name und `=` eine Typangabe stehen. */
+  for (const m of text.matchAll(/^[ \t]*(?:const|let|var)[ \t]+([A-Z][A-Za-z0-9_]*)[ \t]*(?::[^=\n]+)?=/gm))
     (heimat.get(m[1] ?? '') ?? heimat.set(m[1] ?? '', new Set()).get(m[1] ?? '')!).add(ort);
   for (const m of text.matchAll(/\(window as any\)\.([A-Z][A-Za-z0-9_]*)\s*=/g))
     (heimat.get(m[1] ?? '') ?? heimat.set(m[1] ?? '', new Set()).get(m[1] ?? '')!).add(ort);

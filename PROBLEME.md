@@ -74,6 +74,8 @@ sind der teuerste Teil und der lehrreichste.
 | P58 | 2026-09-19 | Der geschriebene Grund stand da, wo ihn niemand sucht | 🟡 klein | E627 |
 | P59 | 2026-09-19 | Meine eigene Rot-Erkennung konnte nicht rot werden | gross | — |
 | P60 | 2026-09-19 | Die Gesamtsuite war seit PR #100 nicht gelaufen | gross | — |
+| P61 | 2026-09-19 | Mein Wächter erfand eine Kopplung, die es nicht gab | 🟠 mittel | E629 |
+| P62 | 2026-09-19 | Meine Sicherungskopie nahm die falsche Datei | gross | E629 |
 
 ---
 
@@ -1341,4 +1343,50 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Stück 71–80 war im Nachlauf grün — entweder ein flockiger Lauf oder eine Wechselwirkung in der Reihenfolge. Das wird gemessen, nicht geraten.
 
 **Die Lehre.** „Die zuständigen Prüfläufe" (§30) sind das Minimum, nicht das Ziel. `main` bewegt sich deshalb erst nach einem vollen grünen Lauf (§46).
+
+
+---
+
+## P61 · Mein Wächter erfand eine Kopplung, die es nicht gab
+
+*2026-09-19 · 🟠 mittel · E629*
+
+**Das Bild.** `test537` meldete „bereiche/bloecke → FORMEN (bereiche/pdf)" — die Gedankenkarte greife in den PDF-Bereich.
+
+**Die falsche Vermutung.** Dass ich beim Bau der Gedankenkarte wirklich einen fremden Namen benutzt habe, und ich habe nach der Stelle gesucht.
+
+**Wie es gefunden wurde.** Beide Stellen nebeneinandergelegt: `const FORMEN = [` im PDF, `const FORMEN: ReadonlyArray<…> = [` in der Karte. Der Katalog las `const NAME =` und liess die Typangabe nicht zu.
+
+**Die Ursache.** Der Ausdruck im Namenskatalog kannte eine gültige Schreibweise nicht. Damit galt die EIGENE Liste nicht als Anmeldung — und ihre Benutzung sah aus wie ein Griff nach aussen.
+
+**Die Lösung.** Zwischen Name und `=` darf eine Typangabe stehen. Dadurch bekommen 59 Namen erstmals einen Besitzer und zehn verlieren ihn (L193).
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** Gegenprobe mit einem echten Querverweis (`Chronik.oeffne(0)` in bereiche/bloecke): 126 Paare gegen 125, mit Namen. Danach entfernt, 17/17 grün.
+
+**Die Lehre.** Eine erfundene Kopplung ist schlimmer als eine übersehene: die übersehene kostet Wachsamkeit, die erfundene kostet Arbeit an etwas, das es nicht gibt.
+
+
+---
+
+## P62 · Meine Sicherungskopie nahm die falsche Datei
+
+*2026-09-19 · gross · E629*
+
+**Das Bild.** Nach dem Zurückschreiben stand der Inhalt von `chronik.ts` in `blatt.ts`. Der Typecheck meldete „Cannot find name 'Blatt'".
+
+**Die falsche Vermutung.** Keine — der Fehler war sofort sichtbar. Gefährlich war er trotzdem.
+
+**Wie es gefunden wurde.** `npm run typecheck` direkt nach dem Zurückschreiben. Ohne diesen Schritt wäre eine 320-Zeilen-Datei still überschrieben gewesen.
+
+**Die Ursache.** `cp A || cp B` als Sicherung. Der erste Befehl gelang und legte die falsche Datei ab; der Oder-Zweig war nie dafür gedacht, die Quelle zu WÄHLEN.
+
+**Die Lösung.** Aus dem letzten Commit zurückgeholt (`git checkout HEAD -- <datei>`), 320 Zeilen, Kopfzeile geprüft.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** Zeilenzahl und Kopfzeile wieder wie in HEAD, Typecheck grün, `git status` zeigt nur die zwei beabsichtigten Dateien.
+
+**Die Lehre.** Ein Oder-Zweig, der eine Sicherung wählt, ist keine Sicherung: er sichert, was zuerst gelingt, nicht was gemeint war. Für eine Gegenprobe ist git die Sicherung — nicht eine Kopie daneben.
 

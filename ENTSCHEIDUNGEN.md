@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-606 Entscheidungen, E1 bis E628 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+607 Entscheidungen, E1 bis E629 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -671,6 +671,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E626** — Bereiche bleiben getrennt, und jetzt weiss es jemand: §5 Regel 1 hatte seit ihrer Niederschrift keinen Wächter (L150), und der Satz „der Wächter dafür ist test87" stimmte nicht. Gemessen sind es **523 Querverweise in 63 Bereichspaaren** — L150s „es gibt keinen Querverweis" war falsch. Verschoben wird nichts (die grossen Namen sind die Kerne ihrer Bereiche, nicht gemeinsame Helfer); stattdessen ein Verzeichnis, das nur schrumpfen darf, und ein Lauf, der jeden NEUEN Verweis rot macht — auch den über `(window as any)` (`test537`)
 * **E627** — Ein Grund gilt nur, wo der Lauf ihn sucht: `test402` war rot, obwohl die Trefffläche der Gedankenkarte ihre 44 px längst hatte — ihr Beleg stand HINTER der Regel statt darüber, ausserhalb des Fensters, das der Lauf liest. Der Kommentar zieht um; der zweite Treffer (`#ai .ki-quellschalter`, 32 px) war ein echter und bekommt seinen geschriebenen Grund (§37)
 * **E628** — Die Gedankenkarte bekommt Griffe, Verbindungen, Formen und Vorlagen (Redurs Bestellung): vier Griffe am gewählten Thema, die tippend ein Thema anlegen und ziehend eine freie Verbindung ziehen; Verbindungen mit Spitze, gestrichelt gegen den Ast, wählbar und löschbar; sechs Formen, bei denen `rund` nichts in die Daten schreibt und eine unbekannte Form STEHEN BLEIBT (§18); sechs fertige Vorlagen, die vor dem Überschreiben fragen — aber nur, wenn etwas auf dem Spiel steht. Vier Fehler fand erst das Hinsehen, darunter eine Verbindung, die als 181 × 0 px grosse Linie quer durch die Wurzel lief (`test538`, 53 Zusicherungen)
+* **E629** — Ein Name mit Typangabe ist derselbe Name: `test537` erkannte `const X: Typ = …` nicht als Anmeldung und meldete deshalb die EIGENE Formenliste der Gedankenkarte als Griff in den PDF-Bereich. Ein Wächter, der eine Schreibweise nicht kennt, erfindet eine Kopplung — schlimmer als eine übersehene, weil jemand danach eine Arbeit macht, die es nicht gibt. Mit der Berichtigung bekommen 59 Namen erstmals einen Besitzer und zehn verlieren ihn (L193)
 
 ---
 
@@ -51273,3 +51274,62 @@ Zusicherung misst jetzt VOR dem ersten Klick (§55.2).
 Zweimal stand dabei `noUnusedLocals` im Weg (§52.6): `if (false)` liess den
 Zweig nicht mehr bauen, weil zwei Konstanten damit unbenutzt waren. Eine
 Gegenprobe, die nicht baut, ist keine.
+
+---
+
+## E629 — Ein Name mit Typangabe ist derselbe Name
+
+**Entscheidung:** Der Namenskatalog in `test537` erkennt eine Anmeldung auch
+dann, wenn zwischen Name und `=` eine Typangabe steht.
+
+```txt
+vorher   /^[ \t]*(?:const|let|var)[ \t]+([A-Z]\w*)[ \t]*=/
+nachher  /^[ \t]*(?:const|let|var)[ \t]+([A-Z]\w*)[ \t]*(?::[^=\n]+)?=/
+```
+
+**Der Fund.** Einen Tag nach dem Bau meldete der Lauf:
+
+```txt
+✗ Kein Bereich fasst einen neuen anderen an
+    bereiche/bloecke → FORMEN (bereiche/pdf)
+```
+
+Die Gedankenkarte hatte aus E628 ihre **eigene** Formenliste bekommen:
+
+```ts
+const FORMEN: ReadonlyArray<readonly [string, string]> = [ … ]
+```
+
+Der Katalog las `const NAME =` und liess die Typangabe nicht zu. Damit galt
+die eigene Liste nicht als Anmeldung — und ihre Benutzung sah aus wie der
+Griff in eine gleichnamige Liste im PDF-Bereich.
+
+**Warum das schlimmer ist als eine übersehene Kopplung:** Eine übersehene
+kostet Wachsamkeit. Eine **erfundene** kostet Arbeit — jemand hätte
+angefangen, eine Kopplung aufzulösen, die es nie gab. Ein Wächter, der eine
+Schreibweise nicht kennt, ist nicht streng, sondern falsch.
+
+**Was es kostet.** 59 Namen bekommen zum ersten Mal einen Besitzer; zehn
+verlieren ihn, weil sie in mehreren Bereichen angemeldet sind. Das
+Verzeichnis fällt von 127/523 auf 125/517 — und zwei dieser Einträge sind
+**nicht verschwunden, sondern unsichtbar geworden** (`ki → AUSLOESER →
+datenbanken` und `wissen → ANSICHTEN → chronik`). Das steht im Kopf des
+Verzeichnisses, im Kopf des Laufs und als **L193**.
+
+**Die Alternative** wäre gewesen, die eigene Liste umzubenennen und den
+Ausdruck stehen zu lassen. Das hätte diesen einen Fall geheilt und den
+Fehler behalten: jede künftige typisierte Konstante hätte dieselbe falsche
+Meldung erzeugt.
+
+**Gegenprobe.** `Chronik.oeffne(0)` in `bereiche/bloecke` eingesetzt — der
+Lauf meldet 126 Paare gegen 125 und nennt das Paar beim Namen. Wieder
+entfernt, 17 von 17 grün.
+
+**Und ein eigener Fehler in derselben Stunde, weil er hierher gehört:** Die
+Sicherungskopie für diese Gegenprobe war ein `cp A || cp B`. Der erste
+Befehl gelang — und legte die FALSCHE Datei als Sicherung ab. Beim
+Zurückschreiben stand danach der Inhalt von `chronik.ts` in `blatt.ts`.
+Aufgefallen ist es am Typecheck (`Cannot find name 'Blatt'`), zurückgeholt
+aus dem letzten Commit. Ein Oder-Zweig, der eine Sicherung wählt, ist keine
+Sicherung: er sichert, was zuerst gelingt, nicht was gemeint war.
+
