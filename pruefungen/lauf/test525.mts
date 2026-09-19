@@ -53,7 +53,12 @@ declare const Einlesen: any;
 declare const Store: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
-const PORT = 9625;
+/* 9640 UND NICHT 9625 (E630). Die Zahl war doppelt vergeben — sie gehörte
+   schon einem älteren Lauf, und dessen Port steht in ENTSCHEIDUNGEN.md.
+   Zwei Läufe mit derselben Zahl können nie nebeneinander laufen, und ein
+   Ergebnis, das aus dem falschen Grund rot ist, ist schlimmer als eines,
+   das grün lügt (test400). */
+const PORT = 9640;
 const TYP: Record<string, string> = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.json': 'application/json',

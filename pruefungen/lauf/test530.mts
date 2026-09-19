@@ -43,7 +43,12 @@ import path from 'node:path';
 import { grundstock, inhaltsStempel, gelesen, abgleichen } from '../../dienststand.mts';
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
-const PORT = 9530;
+/* 9638 UND NICHT 9530 (E630). Die Zahl war doppelt vergeben — sie gehörte
+   schon einem älteren Lauf, und dessen Port steht in ENTSCHEIDUNGEN.md.
+   Zwei Läufe mit derselben Zahl können nie nebeneinander laufen, und ein
+   Ergebnis, das aus dem falschen Grund rot ist, ist schlimmer als eines,
+   das grün lügt (test400). */
+const PORT = 9638;
 
 let ok = 0, weg = 0;
 const p = (n: string, b: unknown, extra = ''): void => {

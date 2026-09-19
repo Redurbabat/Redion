@@ -976,6 +976,26 @@ Gefahren wird er in einem eigenen Arbeitsbaum (`git worktree`), damit im
 Hauptbaum weitergearbeitet werden kann, während er läuft. Das Vorspulen von
 `main` passiert dagegen **immer im Hauptbaum**.
 
+**Aber im Hauptbaum wird dabei kein Prüflauf gestartet.** Weitergearbeitet
+heisst: schreiben, lesen, bauen — nicht prüfen. Jede Suite hält einen festen
+Port; zwei Läufe mit derselben Zahl machen einander rot, und `test400` nennt
+den Fall vom 4. September beim Namen: ein ganzes Stück rot, und nichts daran
+war ein Fehler im Produkt. Am 19. September ist es wieder passiert, diesmal
+mir: vier Stücke waren im vollen Lauf rot und einzeln grün.
+
+**Und der Arbeitsbaum ist nicht der Hauptbaum.** Zwei Unterschiede, beide
+gemessen, beide können einen dateilesenden Lauf täuschen:
+
+```txt
+.git           im Arbeitsbaum eine DATEI (52 Bytes, „gitdir: …"), kein Ordner
+node_modules   muss von Hand verlinkt werden — ein Symlink, kein Ordner
+```
+
+`test270` filtert Ordnermuster mit `istOrdner && name === …` und meldete
+deshalb im Arbeitsbaum, `.git` und `node_modules` gingen mit ins Netz.
+`.assetsignore` schliesst beide korrekt aus. **Ein roter Lauf aus dem
+Arbeitsbaum wird im Hauptbaum nachgemessen, bevor jemand ihn repariert.**
+
 ### Wann welche Prüfung Pflicht ist
 
 | Geändert wurde … | dann muss laufen |
