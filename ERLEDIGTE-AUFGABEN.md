@@ -5690,3 +5690,36 @@ obwohl 46 px Lücke dastanden.
 
 **Offen von W4:** nur noch der **Deckkraft-Schieber**, und der ist eine
 Datenfrage (§9): eine Marke speichert heute kein Feld `deckkraft`.
+
+---
+
+## Die Dock-Welle gilt auch ohne Studio (19. September 2026)
+
+`AUFGABEN.md` führte W5 als offen. **Nachgemessen war er zum grössten Teil
+gebaut** — nur eben in `pdf-studio.css`, mit `.document-studio` vor jedem
+Wähler. Auf einer gewöhnlichen Seite traf keine der drei Familien; dort war
+die Leiste still. Genau deshalb sagt ein „offen" in einer Liste nichts über
+den Zustand: gebaut war es, gesehen hatte es nur, wer im Schreibstudio war.
+
+Die zwei `.blatt-werk`-Familien sind nach `bausteine.css` gewandert und
+haben den Vorsatz verloren — **aus drei Familien wurden zwei, nicht vier**.
+Eine Kopie danebenzulegen wäre der bequeme Weg gewesen und hätte §8
+gebrochen.
+
+Dazu das **Farb-Dock** aus Redurs Bild 8: die Tupfer tragen kein `svg`,
+fielen also überall aus den Regeln heraus. Jetzt wächst der Knopf selbst,
+mit derselben Welle zu den Nachbarn.
+
+**Was NICHT gebaut ist, und warum:** das Namensfähnchen. Am Tupfer sind
+beide Pseudoelemente vergeben — `::before` ist die 1-px-Kante gegen den im
+Dunkelmodus verschwindenden schwarzen Tupfer (E568), `::after` die
+44-px-Trefffläche (§37). Auf `::before` gelegt erbte das Fähnchen das
+`inset:5px` der Kantenregel und lag mitten auf dem Tupfer; unter den Tupfer
+gelegt war es zu sechzig Prozent vom Papier verdeckt — und `getComputedStyle`
+meldete dabei `opacity: 1`. Steht als **L190**, mit drei Wegen.
+
+**Geprüft.** `test536` neu, 18 Zusagen, **sechs davon rot gesehen**.
+`test524` (105), `test535`, `test534`, `test533`, `test351`, `test348`,
+`test438`, `test247`, `test393`, `test481` grün; `npm run typecheck` sauber.
+Drei Bilder angesehen — und sie haben zweimal widerlegt, was die Rechnung
+behauptete.
