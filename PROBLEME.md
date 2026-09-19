@@ -63,6 +63,17 @@ sind der teuerste Teil und der lehrreichste.
 | P47 | 2026-09-14 | Drei Zeilen im Stilblatt standen da und galten nie | 🟠 mittel | E568 |
 | P48 | 2026-09-14 | Sieben Pixel Layout machten aus einem Glaetter einen kaputten Glaetter | 🟠 mittel | E568 |
 | P49 | 2026-09-14 | Mein Zeilenraster zerschnitt eine Zeile in zwei | 🟡 klein | E570 |
+| P50 | 2026-09-19 | Die Leiste ging nach oben, als ich sie nach unten stellte | 🟠 mittel | E622 |
+| P51 | 2026-09-19 | «unten in der Mitte» war zwei Pixel breit | 🟠 mittel | E620 |
+| P52 | 2026-09-19 | Die Strichprobe war unsichtbar | 🟡 klein | E623 |
+| P53 | 2026-09-19 | Der Radiererzweig war toter Code | 🟠 mittel | E624 |
+| P54 | 2026-09-19 | L150 behauptete das Gegenteil dessen, was gemessen war | gross | E626 |
+| P55 | 2026-09-19 | Die vier Griffe erschienen gar nicht | 🟠 mittel | E628 |
+| P56 | 2026-09-19 | Die Verbindung lief quer durch die Wurzel | 🟠 mittel | E628 |
+| P57 | 2026-09-19 | Die Entf-Taste lief ins Leere | 🟡 klein | E628 |
+| P58 | 2026-09-19 | Der geschriebene Grund stand da, wo ihn niemand sucht | 🟡 klein | E627 |
+| P59 | 2026-09-19 | Meine eigene Rot-Erkennung konnte nicht rot werden | gross | — |
+| P60 | 2026-09-19 | Die Gesamtsuite war seit PR #100 nicht gelaufen | gross | — |
 
 ---
 
@@ -1077,4 +1088,257 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** 31 gruen in test522, darunter die neue, staerkere Zusage: keine sichtbare Gruppe reisst ueber zwei Zeilen.
 
 **Die Lehre.** Zum vierten Mal in dieser Woche (P32, P41, P43, P46, P47) und zum ersten Mal nicht in einer Pruefdatei, sondern in der AUSWERTUNG: bevor ich einer Messung glaube, sehe ich mir an, wie sie zaehlt. Ein Raster, das eine Annahme enthaelt — hier: alle Elemente sind gleich hoch —, meldet den Bruch dieser Annahme als Befund ueber etwas ganz anderes. Und: dieselbe Messung hat danach einen ECHTEN Fehler gefunden. Ein kaputtes Messwerkzeug wegzuwerfen waere falsch gewesen; es zu reparieren war richtig.
+
+
+---
+
+## P50 · Die Leiste ging nach oben, als ich sie nach unten stellte
+
+*2026-09-19 · 🟠 mittel · E622*
+
+**Das Bild.** `position:sticky` mit `bottom` gesetzt — die Leiste stand danach auf y=335 statt am Blattfuss.
+
+**Die falsche Vermutung.** Dass die Regel nicht greift, und ich habe an der Spezifität gesucht.
+
+**Wie es gefunden wurde.** Nachgemessen statt nachgelesen: y blieb exakt gleich. Sticky mit `bottom` ZIEHT ein Element nach oben, wenn es sonst aus dem Bild liefe — es schiebt nie nach unten.
+
+**Die Ursache.** Die Leiste stand in der Reihenfolge VOR dem Blatt. Sticky kann nur innerhalb des eigenen Elternteils wirken.
+
+**Die Lösung.** `leisteEinordnen()` hängt die Reihe für den Platz „unten" hinter das Papier, sonst als erstes Kind.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** test534 §1b vergleicht den Abstand jetzt gegen `orte['oben'].y` statt gegen eine lose Schranke von 400 px — die alte Zusage blieb bei 46 px Abstand grün.
+
+**Die Lehre.** Eine Zusage mit einer runden Zahl als Schranke ist oft gar keine Zusage.
+
+
+---
+
+## P51 · «unten in der Mitte» war zwei Pixel breit
+
+*2026-09-19 · 🟠 mittel · E620*
+
+**Das Bild.** Die Leiste fiel auf 2 px zusammen, sobald sie den Platz „unten" bekam.
+
+**Die falsche Vermutung.** Dass die Breite fehlt, und ich habe Breitenangaben gesucht.
+
+**Wie es gefunden wurde.** Im Bild gesehen, dann gemessen: `container-type:inline-size` stand auf `.blatt-reihe` UND `.blatt-werk`.
+
+**Die Ursache.** `container-type:inline-size` ist `contain:inline-size` — ein solches Element trägt zur Breite seines Elternteils NICHTS bei. Bei einem Elternteil, der sich nach seinem Inhalt richtet, bleibt dann nichts übrig.
+
+**Die Lösung.** Für die frei stehenden Plätze wird `container-type:normal` gesetzt.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** test534 misst die Breite je Platz.
+
+**Die Lehre.** Eine Eigenschaft, die man für Abfragen setzt, kann das Layout ändern.
+
+
+---
+
+## P52 · Die Strichprobe war unsichtbar
+
+*2026-09-19 · 🟡 klein · E623*
+
+**Das Bild.** Die Probe sollte den echten Strich zeigen — auf dem Bild war nichts zu sehen.
+
+**Die falsche Vermutung.** Dass sie gar nicht gezeichnet wird.
+
+**Wie es gefunden wurde.** Kontrast gerechnet: rgb(17,17,17) auf rgb(32,32,32) = 1,2:1.
+
+**Die Ursache.** Der Strich wurde in der Tintenfarbe auf die dunkle Leiste gemalt — ohne Papier darunter.
+
+**Die Lösung.** Eine Papierfläche hinter die Probe (`box-shadow` in `--paper`). Danach 17,7:1.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** test535 misst den Kontrast, nicht das Vorhandensein.
+
+**Die Lehre.** `getComputedStyle` sagt „opacity: 1" auch dann, wenn man nichts sieht.
+
+
+---
+
+## P53 · Der Radiererzweig war toter Code
+
+*2026-09-19 · 🟠 mittel · E624*
+
+**Das Bild.** Die drei Radiergrössen taten nichts.
+
+**Die falsche Vermutung.** Dass die Knöpfe nicht ankommen.
+
+**Wie es gefunden wurde.** Der Zweig lag INNERHALB von `if (target.dataset.act)`, und die Größenknöpfe tragen kein `data-act`.
+
+**Die Ursache.** Eine Verzweigung an der falschen Stelle im Behandler.
+
+**Die Lösung.** Der Zweig steht jetzt vor dem `data-act`-Block; die Markierung wird über `document.querySelectorAll` gesetzt, nicht nur am eigenen Blatt.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** test535 misst den Radius des `.blatt-radierkreis` (28 → 7,2), nicht die Klasse am Knopf.
+
+**Die Lehre.** „Die Markierung wandert mit (5 → 5)" — eine Zusage, die dieselbe Zahl zweimal liest, prüft nichts.
+
+
+---
+
+## P54 · L150 behauptete das Gegenteil dessen, was gemessen war
+
+*2026-09-19 · gross · E626*
+
+**Das Bild.** In LUECKEN.md stand seit Monaten „heute hält die Regel … es gibt keinen Querverweis".
+
+**Die falsche Vermutung.** Dass ich nur einen Wächter für einen sauberen Bestand schreiben muss.
+
+**Wie es gefunden wurde.** Gemessen statt geglaubt: 523 Querverweise in 63 von 306 Bereichspaaren, über 61 fremde Namen.
+
+**Die Ursache.** Die alte Messung suchte nach `import`-Zeilen. In `src/bereiche/` gibt es keine einzige — geladen wird über 208 `<script>`, geredet wird über globale Namen.
+
+**Die Lösung.** Ein Verzeichnis (`bereiche-bestand.json`), das nur schrumpfen darf, und `test537`.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** Der Lauf zählt beide Wege, den Namen und `(window as any)`.
+
+**Die Lehre.** Eine Lücke, die eine Behauptung über den Bestand enthält, gehört nachgemessen, bevor man sie schliesst.
+
+
+---
+
+## P55 · Die vier Griffe erschienen gar nicht
+
+*2026-09-19 · 🟠 mittel · E628*
+
+**Das Bild.** Ein Knoten wurde gewählt — keine Griffe.
+
+**Die falsche Vermutung.** Dass die CSS-Regeln fehlen.
+
+**Wie es gefunden wurde.** test538 §1 gemessen: 0 statt 4.
+
+**Die Ursache.** `wähle` zeichnet die Karte nicht neu, es setzt nur die Marke `on` um. Die Griffe entstanden im Zeichner — also erst bei der nächsten Aenderung.
+
+**Die Lösung.** `griffeBauen()`, von beiden Wegen benutzt.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** test538 zählt die Griffe VOR dem ersten Klick — nach einem Klick bleibt die Zahl auch dann richtig, wenn der Zeichner sie an jeden Knoten hängt.
+
+**Die Lehre.** Wer eine Zusage nach dem Ereignis misst, misst manchmal das Aufräumen statt die Sache.
+
+
+---
+
+## P56 · Die Verbindung lief quer durch die Wurzel
+
+*2026-09-19 · 🟠 mittel · E628*
+
+**Das Bild.** Ein Klick auf die freie Verbindung wählte den Wurzelknoten.
+
+**Die falsche Vermutung.** Dass der Klick am falschen Element hängt.
+
+**Wie es gefunden wurde.** Den Kasten der Linie gemessen: 181 × 0 px. Sie lag vollständig hinter dem Wurzelknoten.
+
+**Die Ursache.** Zwei Aeste links und rechts auf gleicher Höhe ergeben eine waagerechte Gerade — mitten durch alles, was dazwischen steht.
+
+**Die Lösung.** Der Bogen weicht senkrecht zur Verbindung aus, weg von der Mitte der Karte.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** Danach 181 × 45 px, und `elementFromPoint` auf der Bogenmitte trifft `.gk-verb-fang`.
+
+**Die Lehre.** Eine Linie mit Höhe null ist nicht unsichtbar — sie ist unerreichbar.
+
+
+---
+
+## P57 · Die Entf-Taste lief ins Leere
+
+*2026-09-19 · 🟡 klein · E628*
+
+**Das Bild.** Verbindung angeklickt, markiert, Entf gedrückt — nichts geschah.
+
+**Die falsche Vermutung.** Dass die Taste nicht ankommt.
+
+**Wie es gefunden wurde.** `document.activeElement` gelesen: der Körper der Seite, nicht die Bühne.
+
+**Die Ursache.** Ohne `preventDefault` nimmt der Browser nach dem Klick auf einen SVG-Pfad den Fokus wieder weg. Ein Knoten ist ein `div` und gibt ihn an die Bühne weiter; ein SVG-Pfad tut das nicht.
+
+**Die Lösung.** `e.preventDefault()` im Verbindungszweig.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** test538 §4 löscht und holt zurück.
+
+**Die Lehre.** Fokus ist kein Zustand, den man setzt — er ist einer, den man behält.
+
+
+---
+
+## P58 · Der geschriebene Grund stand da, wo ihn niemand sucht
+
+*2026-09-19 · 🟡 klein · E627*
+
+**Das Bild.** `test402` meldete die Kartenleiste als Trefffläche ohne Begründung — obwohl sie ihre 44 px längst hatte.
+
+**Die falsche Vermutung.** Dass die Fläche zu klein ist.
+
+**Wie es gefunden wurde.** Den Lauf gelesen: er sucht acht Zeilen UEBER einer Regel und drei darunter. Der Kommentar stand DAHINTER.
+
+**Die Ursache.** Nicht die Fläche war falsch, sondern der Ort ihres Belegs.
+
+**Die Lösung.** Der Kommentar zieht vor die Regel; der zweite Treffer (`#ai .ki-quellschalter`, 32 px) war ein echter und bekam seinen Grund.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** test402 4/4.
+
+**Die Lehre.** §37 verlangt den Grund „an Ort und Stelle" — das ist wörtlich gemeint.
+
+
+---
+
+## P59 · Meine eigene Rot-Erkennung konnte nicht rot werden
+
+*2026-09-19 · gross · —*
+
+**Das Bild.** Der Stück-Treiber meldete „rot bisher: 0", während Stücke mit Ausgang 1 durchliefen.
+
+**Die falsche Vermutung.** Dass die Stücke grün sind.
+
+**Wie es gefunden wurde.** Der Ausgang stand in derselben Zeile daneben. Erst beim zweiten Hinsehen gelesen.
+
+**Die Ursache.** Ich suchte nach `✗ testNNN`. Der Orchestrator schreibt aber „✗ 1 von 10 Läufen gescheitert:" ohne Namen und darunter den Namen EINGERUECKT ohne Kreuz.
+
+**Die Lösung.** Der Treiber zählt den Ausgang und hebt die Ausgabe jedes Stücks auf.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** Nach der Umstellung meldete dieselbe Datei 17 rote Stücke, die vorher unsichtbar waren.
+
+**Die Lehre.** §55.2 gilt auch für Werkzeuge, die keine Prüfläufe sind. Wer eine Erkennung schreibt, prüft zuerst, ob sie überhaupt anschlagen KANN.
+
+
+---
+
+## P60 · Die Gesamtsuite war seit PR #100 nicht gelaufen
+
+*2026-09-19 · gross · —*
+
+**Das Bild.** 17 von 48 Stücken rot, quer durch das ganze Projekt.
+
+**Die falsche Vermutung.** Dass die Einzelbögen dieser Woche etwas gebrochen haben.
+
+**Wie es gefunden wurde.** Die roten Stücke liegen in Bereichen, die diese Woche niemand angefasst hat. In ERLEDIGTE-AUFGABEN.md steht zehnmal hintereinander „Nicht geprüft: die Gesamtsuite".
+
+**Die Ursache.** Jeder Bogen war für sich sauber geprüft — nur eben nie gegen das Ganze. Erster bestätigter Einzelfund: `test164`, die Blocktypen-Inventur, rot seit E607, weil die Gedankenkarte nie in `doku/BLOCKTYPEN.md` eingetragen wurde.
+
+**Die Lösung.** Nachlauf der 17 Stücke einzeln, mit aufgehobener Ausgabe, um die Namen zu bekommen.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** Stück 71–80 war im Nachlauf grün — entweder ein flockiger Lauf oder eine Wechselwirkung in der Reihenfolge. Das wird gemessen, nicht geraten.
+
+**Die Lehre.** „Die zuständigen Prüfläufe" (§30) sind das Minimum, nicht das Ziel. `main` bewegt sich deshalb erst nach einem vollen grünen Lauf (§46).
 

@@ -1245,6 +1245,883 @@ const ChronikDaten = {
                     "risiko": "keins an Daten. Absaetze mit gleichem Format bleiben EINE Marke — sonst haette der Editor statt eines Kastens lauter Zeilen. Die Hoehen kommen vom Zeichner selbst, nicht aus einer Schaetzung; die Gegenprobe mit Schaetzung misst 18 pt Abstand statt ueber 40, also Ueberlappung."
                 }
             ]
+        },
+        {
+            "datum": "2026-09-13",
+            "wochentag": "Sonntag",
+            "titel": "Zwei Bögen am PowerPoint-Einleser: die Drehung, und kein zweiter Zeichner",
+            "wasIchWeiss": "Teilweise. Die Commits und ihre Zeiten stehen in git und sind hier unverändert übernommen. Redurs WORTLAUT fehlt für diesen Tag im Gesprächsgedächtnis — die Sätze hier stehen zitiert in ENTSCHEIDUNGEN.md und sind von dort übernommen. Wo kein Zitat belegt ist, steht keines. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
+            "nachrichten": [],
+            "arbeit": [
+                {
+                    "was": "E563 — Drehung: `a:rot` wird gelesen und auf die Marke übertragen",
+                    "vonCommit": "(nach E562)",
+                    "bisCommit": "7d1142a",
+                    "zeitraum": "19:28",
+                    "dauer": "—",
+                    "pruefungen": "test511 mitgefahren"
+                },
+                {
+                    "was": "E564 — Kein fremder PowerPoint-Zeichner: die Folie benutzt den vorhandenen Blatt-Zeichner",
+                    "vonCommit": "7d1142a",
+                    "bisCommit": "cf01c36",
+                    "zeitraum": "19:53",
+                    "dauer": "ca. 25 min",
+                    "pruefungen": "test511"
+                }
+            ],
+            "zahlen": {
+                "commits": 2,
+                "entscheidungen": 2
+            },
+            "groesstesProblem": "Nicht überliefert. Der Tag hat zwei Böge und keinen dokumentierten Fehlschlag.",
+            "interessantesteAnfrage": "Nicht überliefert.",
+            "massnahmen": [
+                {
+                    "zeit": "19:53",
+                    "was": "Kein eigener Zeichner für Folien — die vorhandene Blatt-Maschine bekommt die Folieninhalte.",
+                    "warum": "§8: ein zweiter Zeichner für dieselbe Sache läuft mit dem ersten auseinander.",
+                    "risiko": "keins an Daten — Zeichnen."
+                }
+            ]
+        },
+        {
+            "datum": "2026-09-14",
+            "wochentag": "Montag",
+            "titel": "Vormittags Folien, abends das Zeichenstudio: die Stiftleiste, das Lineal und der Radierer",
+            "wasIchWeiss": "Teilweise. Die Commits und ihre Zeiten stehen in git und sind hier unverändert übernommen. Redurs WORTLAUT fehlt für diesen Tag im Gesprächsgedächtnis — die Sätze hier stehen zitiert in ENTSCHEIDUNGEN.md und sind von dort übernommen. Wo kein Zitat belegt ist, steht keines. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 18:00",
+                    "wortlaut": "Einheitliches SVG-Register nutzen; keine zweite lose Icon-Sammlung neben ihm.",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Die Zeichen kommen aus dem einen Register, das es schon gibt — keine zweite Sammlung daneben (§8).",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 18:30",
+                    "wortlaut": "der Knopf zeigt nicht ‚Formen', sondern WELCHE Form gerade gewählt ist — ein Dreieck, ein Pfeil, eine Kurve.",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Der Werkzeugknopf ist keine Beschriftung, sondern eine Anzeige: er zeigt den Zustand.",
+                    "besser": "",
+                    "besserePrompt": ""
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E565 — Tabellen als Gitter auf der Folie",
+                    "vonCommit": "cf01c36",
+                    "bisCommit": "3764f67",
+                    "zeitraum": "05:04",
+                    "dauer": "—",
+                    "pruefungen": "test511"
+                },
+                {
+                    "was": "E566 — Gefüllte Formen und die geerbte Textfarbe",
+                    "vonCommit": "3764f67",
+                    "bisCommit": "2b95054",
+                    "zeitraum": "07:32",
+                    "dauer": "—",
+                    "pruefungen": "test511 nachgezogen (b608903)"
+                },
+                {
+                    "was": "E567 — Die Schriftart",
+                    "vonCommit": "2b95054",
+                    "bisCommit": "c9ef40e",
+                    "zeitraum": "10:24",
+                    "dauer": "—",
+                    "pruefungen": "test511"
+                },
+                {
+                    "was": "E568 — Die Stiftleiste: eine laute Fläche statt sechs",
+                    "vonCommit": "c9ef40e",
+                    "bisCommit": "85e3dcf",
+                    "zeitraum": "18:14",
+                    "dauer": "ca. 4 h mit Pausen",
+                    "pruefungen": "Zeichenstudio-Läufe"
+                },
+                {
+                    "was": "E569 — Die Kurve war eine Sackgasse",
+                    "vonCommit": "85e3dcf",
+                    "bisCommit": "c83f6a1",
+                    "zeitraum": "18:46",
+                    "dauer": "ca. 30 min",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E570 — Die Leiste selbst ordnen",
+                    "vonCommit": "c83f6a1",
+                    "bisCommit": "0e83901",
+                    "zeitraum": "19:34",
+                    "dauer": "ca. 45 min",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E571 — Im Band selbst schieben",
+                    "vonCommit": "0e83901",
+                    "bisCommit": "d4a53c8",
+                    "zeitraum": "20:23",
+                    "dauer": "ca. 50 min",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "WIP E572 — Zeichenstudio-Zwischenstand und Uebergabe",
+                    "vonCommit": "d4a53c8",
+                    "bisCommit": "5d415d6",
+                    "zeitraum": "22:54",
+                    "dauer": "—",
+                    "pruefungen": "keine — ausdrücklich unfertig gesichert"
+                },
+                {
+                    "was": "E573 — Das Lineal, die Verlaufskapsel und die fehlenden Bahnen",
+                    "vonCommit": "5d415d6",
+                    "bisCommit": "4ac5575",
+                    "zeitraum": "22:55",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E574 — Das Lineal gehört auch dem Stift, die Pastelle dem Marker",
+                    "vonCommit": "4ac5575",
+                    "bisCommit": "5aa8876",
+                    "zeitraum": "23:19",
+                    "dauer": "ca. 25 min",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E575 — Was aufgeht, geht zu; was gleich bleibt, bleibt stehen",
+                    "vonCommit": "5aa8876",
+                    "bisCommit": "cda6f48",
+                    "zeitraum": "23:34",
+                    "dauer": "ca. 15 min",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E576 — Der Radierer: sichtbar, einfach, mit Gedächtnis",
+                    "vonCommit": "cda6f48",
+                    "bisCommit": "6a25d6c",
+                    "zeitraum": "23:44",
+                    "dauer": "ca. 10 min",
+                    "pruefungen": "—"
+                }
+            ],
+            "zahlen": {
+                "commits": 13,
+                "entscheidungen": 12
+            },
+            "groesstesProblem": "P49 fällt auf diesen Tag: mein Zeilenraster zerschnitt eine Zeile in zwei, weil ich nach Oberkanten gruppiert habe statt nach der Mitte. Die Messung meldete einen Umbruch, den das Bild nicht zeigte.",
+            "interessantesteAnfrage": "Die Stiftleiste — Redur wollte keine sechs Knöpfe, sondern EINE Fläche, die zeigt, was gewählt ist.",
+            "massnahmen": [
+                {
+                    "zeit": "22:54",
+                    "was": "Einen ausdrücklich UNFERTIGEN Stand als WIP gesichert, mit vollständiger Uebergabe in doku/.",
+                    "warum": "Ein halb gebautes Studio zu verschweigen und weiterzubauen hätte den nächsten Durchgang blind gemacht.",
+                    "risiko": "keins — nichts wurde als fertig behauptet."
+                }
+            ]
+        },
+        {
+            "datum": "2026-09-15",
+            "wochentag": "Dienstag",
+            "titel": "Der grösste Tag: 29 Commits — Zeichenstudio fertig, messungen.md angelegt, Word und PowerPoint gehen unverändert wieder heraus",
+            "wasIchWeiss": "Teilweise. Die Commits und ihre Zeiten stehen in git und sind hier unverändert übernommen. Redurs WORTLAUT fehlt für diesen Tag im Gesprächsgedächtnis — die Sätze hier stehen zitiert in ENTSCHEIDUNGEN.md und sind von dort übernommen. Wo kein Zitat belegt ist, steht keines. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 00:00",
+                    "wortlaut": "Macbook Dock Animationen … beim Wechseln",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Die Vergrösserung der Nachbarn beim Überfahren, wie im macOS-Dock.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 05:00",
+                    "wortlaut": "Zurück",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 10:00",
+                    "wortlaut": "passt schon",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 17:20",
+                    "wortlaut": "ich will das redion auch die anderen datein auch öffnen kann z.B. word und powerpoint daten … aber wichtig die originale datei wird immer geschützt",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 17:40",
+                    "wortlaut": "Ich will das redion start wie goodnotes bein zeichenn ist, stark wie word beim text schreiben bearbeiten, start wie Powerpoint beim Präsentation",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Drei Messlatten: beim Zeichnen GoodNotes, beim Schreiben Word, beim Vortragen PowerPoint.",
+                    "besser": "„Redion soll beim Zeichnen so stark sein wie GoodNotes, beim Schreiben wie Word und beim Präsentieren wie PowerPoint.\"",
+                    "besserePrompt": "Daraus wurden die fünf Messlatten in E594 — ein Satz, der als Prüfbedingung taugt, weil er Vergleiche nennt statt Wünsche."
+                },
+                {
+                    "zeit": "ca. 19:30",
+                    "wortlaut": "bei redion fehlt freier Text einfügen bei der PDF oder überhaupt — es sollte wie OneNote sein: wenn ich irgendwo klicke, sollte ich direkt Text schreiben",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 20:10",
+                    "wortlaut": "alter man du hast hier die augen wo links oben bei date war und du hast die alle animationen alter was ist das",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Beim Umbau war das Auge am Ordner verschwunden — mitsamt den Animationen, um die es nie ging.",
+                    "besser": "„Das Auge oben links am Ordner ist weg, und die Animationen auch. Bitte stell beides wieder her.\"",
+                    "besserePrompt": "Ärger ist ein Signal, keine Anweisung — die Anweisung steckte im nächsten Satz: „stoppe deine arbeit sofort\"."
+                },
+                {
+                    "zeit": "ca. 20:15",
+                    "wortlaut": "es sollte wie vorher sein — stoppe deine arbeit sofort",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht weiterbauen, sondern zuerst den alten Zustand zurückholen.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 20:16",
+                    "wortlaut": "nein die auge nicht weg",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Meine erste Reparatur hatte das Auge entfernt statt den Konflikt — falsche Richtung.",
+                    "besser": "",
+                    "besserePrompt": ""
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E577 — Was sich bewegt, ist das Zeichen",
+                    "vonCommit": "6a25d6c",
+                    "bisCommit": "0777e19",
+                    "zeitraum": "00:05",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "messungen.md angelegt — alle Messungen an einem Ort",
+                    "vonCommit": "0777e19",
+                    "bisCommit": "f2aeb93",
+                    "zeitraum": "00:10",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E578/E579 — Lesen heisst lesen, und die Kapsel nimmt nirgends teil",
+                    "vonCommit": "f2aeb93",
+                    "bisCommit": "b362734",
+                    "zeitraum": "04:56",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E580 — Was ausserhalb des Bildes steht, sagt sich selbst",
+                    "vonCommit": "b362734",
+                    "bisCommit": "c426693",
+                    "zeitraum": "05:05",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E581/E582 — Was Bedienung ist, gehört auf kein Papier",
+                    "vonCommit": "c426693",
+                    "bisCommit": "2d8ca7c",
+                    "zeitraum": "07:24",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E583/E584 — Die Kopie zeigt, was das Original zeigt",
+                    "vonCommit": "2d8ca7c",
+                    "bisCommit": "76be392",
+                    "zeitraum": "09:50",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E585 — Drei von vier Zahlen im Stilblatt waren Zierde",
+                    "vonCommit": "76be392",
+                    "bisCommit": "19d2694",
+                    "zeitraum": "10:10",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E586 — Ein Pfeil aus einer Schrift ist kein Zeichen",
+                    "vonCommit": "19d2694",
+                    "bisCommit": "6fd6030",
+                    "zeitraum": "10:27",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E587 — Zwei Striche in derselben Richtung sind ein Bild",
+                    "vonCommit": "6fd6030",
+                    "bisCommit": "9bf8804",
+                    "zeitraum": "13:37",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E588 — Die Tastatur schiebt das Dock nicht weg",
+                    "vonCommit": "9bf8804",
+                    "bisCommit": "b7d194e",
+                    "zeitraum": "13:47",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E589 — Neunzehn Zeichnungen, die nicht im Register standen",
+                    "vonCommit": "b7d194e",
+                    "bisCommit": "14b3d96",
+                    "zeitraum": "14:10",
+                    "dauer": "—",
+                    "pruefungen": "Registerlauf"
+                },
+                {
+                    "was": "E590 — Drei rote Läufe, und einer davon war ein echter Fehler",
+                    "vonCommit": "14b3d96",
+                    "bisCommit": "9b9a89e",
+                    "zeitraum": "14:34",
+                    "dauer": "ca. 25 min",
+                    "pruefungen": "drei Läufe, einer echt rot"
+                },
+                {
+                    "was": "E591 — Ein Lineal, dessen Griff man nicht erreicht, ist keines",
+                    "vonCommit": "9b9a89e",
+                    "bisCommit": "603028a",
+                    "zeitraum": "15:51",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E592 — Die Originaldatei geht unverändert wieder heraus",
+                    "vonCommit": "603028a",
+                    "bisCommit": "313aced",
+                    "zeitraum": "17:31",
+                    "dauer": "ca. 1,5 h",
+                    "pruefungen": "test525/test526 Rundreisen"
+                },
+                {
+                    "was": "E593 — Die Rückspur zum <a:t>",
+                    "vonCommit": "313aced",
+                    "bisCommit": "29086c8",
+                    "zeitraum": "17:39",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E594 — Die fünf Messlatten",
+                    "vonCommit": "29086c8",
+                    "bisCommit": "a26adfc",
+                    "zeitraum": "17:43",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E595 — Eine eingelesene .docx geht unverändert wieder heraus",
+                    "vonCommit": "a26adfc",
+                    "bisCommit": "e095907",
+                    "zeitraum": "19:00",
+                    "dauer": "—",
+                    "pruefungen": "test526"
+                },
+                {
+                    "was": "E597 — Direkt auf dem Blatt schreiben, wie in OneNote",
+                    "vonCommit": "e095907",
+                    "bisCommit": "8f580c9",
+                    "zeitraum": "19:40",
+                    "dauer": "—",
+                    "pruefungen": "test527"
+                },
+                {
+                    "was": "E599 — Der Feinschliff am freien Text",
+                    "vonCommit": "8f580c9",
+                    "bisCommit": "3bec815",
+                    "zeitraum": "19:54",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E601 — Das Auge sass auf dem Ordnerreiter",
+                    "vonCommit": "3bec815",
+                    "bisCommit": "5c1f757",
+                    "zeitraum": "20:15",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E602 — Nicht das Auge weicht, sondern der Reiter",
+                    "vonCommit": "5c1f757",
+                    "bisCommit": "5a07d8f",
+                    "zeitraum": "20:28",
+                    "dauer": "ca. 13 min",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E603 — Die Ordnerkarte verwandelt sich nicht mehr unter der Hand",
+                    "vonCommit": "5a07d8f",
+                    "bisCommit": "cc1f62d",
+                    "zeitraum": "20:42",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E604 — Die Ordnerkachel bleibt, wie sie in main steht",
+                    "vonCommit": "cc1f62d",
+                    "bisCommit": "fb65b34",
+                    "zeitraum": "20:50",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                }
+            ],
+            "zahlen": {
+                "commits": 29,
+                "entscheidungen": 26,
+                "pullRequests": "#86, #88, #89, #90, #91"
+            },
+            "groesstesProblem": "Das Auge am Ordner. Ich hatte es beim Umbau mitgenommen, ohne dass jemand darum gebeten hatte — Redurs Antwort kam in drei Nachrichten hintereinander und endete mit „stoppe deine arbeit sofort\". Die Reparatur brauchte danach vier Bögen (E601 bis E604), und die eigentliche Lehre steht in E609: wiederherstellen heisst VOLLSTAENDIG, nicht ungefähr.",
+            "interessantesteAnfrage": "„start wie goodnotes … stark wie word … start wie Powerpoint\" — drei Programme in einem Satz, und jedes meint einen anderen Teil von Redion. Daraus wurden die fünf Messlatten (E594).",
+            "massnahmen": [
+                {
+                    "zeit": "00:10",
+                    "was": "`messungen.md` angelegt.",
+                    "warum": "Die Zahlen lagen über ENTSCHEIDUNGEN, LUECKEN und Prüfläufe verstreut; eine Zahl ohne Datum und Methode ist keine Messung.",
+                    "risiko": "keins — Dokumentation."
+                },
+                {
+                    "zeit": "17:31",
+                    "was": "Die Originaldatei wird beim Einlesen IMMER behalten und geht unverändert wieder heraus.",
+                    "warum": "Redur: „die originale datei wird immer geschützt\". Jede Umwandlung ist verlustbehaftet — das Original ist die einzige Fassung, die es nicht ist.",
+                    "risiko": "§9/§13: das ist die Zusage, dass ein Import nie eine Einbahnstrasse ist. test525/526 fahren die Rundreise mit echten Bytes."
+                },
+                {
+                    "zeit": "20:28",
+                    "was": "Das Auge bleibt, der Reiter weicht aus.",
+                    "warum": "Redur: „nein die auge nicht weg\" — meine erste Reparatur hatte das Auge entfernt statt den Konflikt.",
+                    "risiko": "keins an Daten — Oberfläche."
+                }
+            ]
+        },
+        {
+            "datum": "2026-09-16",
+            "wochentag": "Mittwoch",
+            "titel": "Die Gedankenkarte entsteht, das Auge zieht an jeden Ordner, und das Schreibstudio wird ruhig",
+            "wasIchWeiss": "Teilweise. Die Commits und ihre Zeiten stehen in git und sind hier unverändert übernommen. Redurs WORTLAUT fehlt für diesen Tag im Gesprächsgedächtnis — die Sätze hier stehen zitiert in ENTSCHEIDUNGEN.md und sind von dort übernommen. Wo kein Zitat belegt ist, steht keines. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 04:30",
+                    "wortlaut": "Weiter an die frei text erstellen — also dort sollte, wenn ich klicke, wie Word direkt erstellen können.",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 05:40",
+                    "wortlaut": "Ich will bei Redion auch das XMind erstellen können.",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 06:00",
+                    "wortlaut": "wenn ich auf Ordner mit Maus gehe, sollte es sein [so] — mach die Augen weg und behalte nur so: wenn ich mit Maus drauf gehe, sollte sie mir zeigen, was drin ist",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Der Blick in den Ordner kommt beim Überfahren vom Deckel, nicht von einem eigenen Auge-Knopf.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 06:20",
+                    "wortlaut": "bringe es wieder komplett wie vorher mit Auge usw, mit Animationen, mit Bewegung, mit Anzeige, alles.",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Vollständig wiederherstellen — nicht ungefähr.",
+                    "besser": "„Stell bitte den vorherigen Stand vollständig wieder her: Auge, Animationen, Bewegung und Anzeige.\"",
+                    "besserePrompt": "Das Wort „komplett\" mit der Aufzählung dahinter ist genau richtig — es macht das Ergebnis prüfbar."
+                },
+                {
+                    "zeit": "ca. 09:10",
+                    "wortlaut": "und das ist nur bei Bibliothek — ich will überall, wenn ein Ordner erstellt wird, das haben.",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 13:00",
+                    "wortlaut": "hier sieht es sehr viel aus und haben nicht so viel Platz für Bearbeiten, und räume es auf",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 15:00",
+                    "wortlaut": "jedes Werkzeug trägt sein Wort unter dem Zeichen",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E605 — Ein Tipp auf leeres Papier schreibt schon",
+                    "vonCommit": "fb65b34",
+                    "bisCommit": "73ed00a",
+                    "zeitraum": "04:42",
+                    "dauer": "—",
+                    "pruefungen": "test527"
+                },
+                {
+                    "was": "E606 — Mehrere Formate in einem Textfeld überleben das Bearbeiten",
+                    "vonCommit": "73ed00a",
+                    "bisCommit": "bf6428b",
+                    "zeitraum": "05:14",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E607 — Die Gedankenkarte: XMind, aber im Block und ohne Konto",
+                    "vonCommit": "bf6428b",
+                    "bisCommit": "20bdbaf",
+                    "zeitraum": "05:47",
+                    "dauer": "ca. 35 min",
+                    "pruefungen": "test529 neu, 56 Zusagen, zwei Gegenproben einzeln rot gesehen"
+                },
+                {
+                    "was": "E608 — Das Auge am Ordner ist weg, der Blick kommt vom Deckel",
+                    "vonCommit": "20bdbaf",
+                    "bisCommit": "70cf450",
+                    "zeitraum": "06:02",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E609 — Die Ordnerkachel steht wieder genau wie vorher",
+                    "vonCommit": "70cf450",
+                    "bisCommit": "ca2a422",
+                    "zeitraum": "06:26",
+                    "dauer": "ca. 25 min",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E610 — Der Ablagename des Dienstes folgt dem Inhalt",
+                    "vonCommit": "ca2a422",
+                    "bisCommit": "5a1a5ab",
+                    "zeitraum": "08:43",
+                    "dauer": "—",
+                    "pruefungen": "test530 neu"
+                },
+                {
+                    "was": "E611 — Das Auge sitzt an jedem Ordner, nicht nur im Regal",
+                    "vonCommit": "5a1a5ab",
+                    "bisCommit": "3d83722",
+                    "zeitraum": "09:17",
+                    "dauer": "—",
+                    "pruefungen": "test531 neu"
+                },
+                {
+                    "was": "E612 — Das Schreibstudio wird ruhig: 301 px Bedienung werden weniger",
+                    "vonCommit": "3d83722",
+                    "bisCommit": "c955cd4",
+                    "zeitraum": "13:16",
+                    "dauer": "ca. 4 h",
+                    "pruefungen": "test532 neu — der Wächter, den L121 seit dem 3. September forderte"
+                },
+                {
+                    "was": "E613/E614 — Die Tafel als Behälter und das Wort unter dem Zeichen",
+                    "vonCommit": "c955cd4",
+                    "bisCommit": "(Tagesende)",
+                    "zeitraum": "ca. 15:00",
+                    "dauer": "—",
+                    "pruefungen": "test533 neu"
+                }
+            ],
+            "zahlen": {
+                "commits": 20,
+                "entscheidungen": 10,
+                "pullRequests": "#92 bis #99"
+            },
+            "groesstesProblem": "E608 und E609 am selben Morgen: Ich hatte das Auge entfernt, weil Redur „mach die Augen weg\" schrieb — und dabei die Animationen, die Bewegung und die Anzeige mitgenommen, um die es ihm nie ging. Seine Antwort war „bringe es wieder komplett wie vorher … alles\". Zweimal derselbe Fehler in zwei Tagen.",
+            "interessantesteAnfrage": "„Ich will bei Redion auch das XMind erstellen können\" — daraus wurde an einem Vormittag eine vollständige Blockart mit eigenem Zeichner, eigener Tastatur und 56 geprüften Zusagen.",
+            "massnahmen": [
+                {
+                    "zeit": "05:47",
+                    "was": "Die Gedankenkarte als BLOCKART, nicht als eigener Bereich.",
+                    "warum": "Eine Karte ist ein Inhalt einer Seite, kein Ort. So erbt sie Versionen, Rechte, Sicherung und Suche, ohne dass etwas davon zweimal gebaut wird (§8).",
+                    "risiko": "keins an Daten — ein neuer Blocktyp. Unbekannte Knoten werden beim Lesen aufgefangen statt gelöscht (§18)."
+                },
+                {
+                    "zeit": "09:17",
+                    "was": "Das Auge zieht an JEDEN Ordner statt nur in die Bibliothek.",
+                    "warum": "Redur: „ich will überall\". Eine Funktion, die nur an einer Stelle wirkt, sieht aus wie ein Fehler an allen anderen.",
+                    "risiko": "keins an Daten. test531 hält es fest."
+                }
+            ]
+        },
+        {
+            "datum": "2026-09-18",
+            "wochentag": "Freitag",
+            "titel": "W4: die Strichstärke sagt, wie dick sie ist — und die Kacheln bekommen ihren Namen",
+            "wasIchWeiss": "Teilweise. Die Commits und ihre Zeiten stehen in git und sind hier unverändert übernommen. Redurs WORTLAUT fehlt für diesen Tag im Gesprächsgedächtnis — die Sätze hier stehen zitiert in ENTSCHEIDUNGEN.md und sind von dort übernommen. Wo kein Zitat belegt ist, steht keines. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 07:10",
+                    "wortlaut": "Fein 0,3 mm · Mittel 0,7 mm · Markant 1,2 mm · Marker 4,0 mm",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Die vier Strichstärken mit ihren echten Millimetern, von Redur selbst vorgegeben.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 14:30",
+                    "wortlaut": "fünf benannte Stiftkacheln",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 14:40",
+                    "wortlaut": "Kachel 36 px",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Die Kachelhöhe, von ihm gemessen und vorgegeben.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 14:45",
+                    "wortlaut": "der Name wird abgeschnitten",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Der Name passte nicht in die Kachel — im Bild gesehen.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 18:00",
+                    "wortlaut": "Siehe Bildern, so will ich es haben.",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Das Bild ist der Auftrag, nicht die Beschreibung daneben.",
+                    "besser": "",
+                    "besserePrompt": "Ein Bild schlägt jede Beschreibung — und es ist prüfbar, weil man danebenhalten kann."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E615 — Der Stift öffnet den Blick in den Ordner (L180)",
+                    "vonCommit": "(nach E614)",
+                    "bisCommit": "(07:18)",
+                    "zeitraum": "07:18",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E616 — Die Strichstärke sagt, wie dick sie ist (W4, erster Teil)",
+                    "vonCommit": "(E615)",
+                    "bisCommit": "(07:32)",
+                    "zeitraum": "07:32",
+                    "dauer": "ca. 15 min",
+                    "pruefungen": "test533; Gegenprobe scheiterte zuerst an `noUnusedLocals` (§52.6)"
+                },
+                {
+                    "was": "E617 — Die Stiftkacheln tragen ihren Namen (W4, zweiter Teil)",
+                    "vonCommit": "(E616)",
+                    "bisCommit": "(14:57)",
+                    "zeitraum": "14:57",
+                    "dauer": "ca. 7 h mit Pausen",
+                    "pruefungen": "test533"
+                },
+                {
+                    "was": "E618 — Die Tafel wird ein Kasten (W4, dritter Teil)",
+                    "vonCommit": "(E617)",
+                    "bisCommit": "(18:19)",
+                    "zeitraum": "18:19",
+                    "dauer": "ca. 3,5 h",
+                    "pruefungen": "test533 54/54, vierzehn Zusagen neu, Gegenprobe rot gesehen (50/54)"
+                }
+            ],
+            "zahlen": {
+                "commits": 4,
+                "entscheidungen": 4
+            },
+            "groesstesProblem": "Zweimal hat das Bild die Arbeit korrigiert. Auf dem ersten standen die Millimeter als „0,4 mm0,8 mm 1,8 mm\" ineinander — `.blatt-strich` steht auf festen 30 px. Auf dem zweiten war der neue Kasten kaum zu sehen: `--bg-tief` gegen `--bg-card` sind drei Hundertstel Helligkeit.",
+            "interessantesteAnfrage": "„jedes Werkzeug trägt sein Wort unter dem Zeichen\" — ein Satz, der eine ganze Leiste umbaut.",
+            "massnahmen": [
+                {
+                    "zeit": "07:32",
+                    "was": "Die Millimeter stehen an der Kachel, nicht nur im Tooltip.",
+                    "warum": "Redur hat die vier Zahlen selbst vorgegeben. Eine Stärke, die man erst beim Ueberfahren erfährt, gibt es am Telefon nicht.",
+                    "risiko": "keins an Daten. `test533 §5d` misst seither, dass keine Zahl über ihre Kachel läuft."
+                },
+                {
+                    "zeit": "18:19",
+                    "was": "Rückbau an E614 einen Tag später: Werkzeuge und Zeilenbruch ziehen aus der Tafel zurück in die Leiste.",
+                    "warum": "Was für W2 richtig war, ist für W4 falsch — ein Kasten um die Werkzeugreihe wäre die ganze Leiste, keine Tafel.",
+                    "risiko": "Gering: die 51 Kindwähler blieben unberührt, weil das Zubehör in der Tafel geblieben ist."
+                }
+            ]
+        },
+        {
+            "datum": "2026-09-19",
+            "wochentag": "Samstag",
+            "titel": "Wo die Leiste steht, der Wächter für §5, die Gedankenkarte bekommt Griffe — und der erste volle Lauf seit PR #100",
+            "wasIchWeiss": "Voller Wortlaut für diesen Tag: er liegt im Gespräch vor.",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 09:00",
+                    "wortlaut": "Die untere Dock sollte bleiben.",
+                    "woher": "aus ENTSCHEIDUNGEN.md (E619) zitiert",
+                    "gemeint": "Die untere Werkzeugleiste des Studios bleibt, wo sie ist — der neue Platz kommt dazu, nicht an ihre Stelle.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 11:00",
+                    "wortlaut": "Sticky am Blattfuss: sie wandert mit, solange das Blatt im Bild ist, und bleibt trotzdem beim Blatt.",
+                    "woher": "Antwort auf meine Frage (L187)",
+                    "gemeint": "Seine Antwort auf L187: die Leiste klebt am Fuss des Blattes, nicht am Fenster.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 14:00",
+                    "wortlaut": "Verschieben, dann Rest ins Verzeichnis",
+                    "woher": "Antwort auf meine Frage zu den 523 Querverweisen",
+                    "gemeint": "Seine Wahl zu den 523 Querverweisen: die grossen gemeinsamen Teile umziehen, der Rest wird eingefroren. Beim Nachmessen stellte sich heraus, dass die grossen Namen keine Helfer sind, sondern Bereichskerne — verschoben wurde deshalb nichts, und die Richtung bleibt offen (E626).",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 14:45",
+                    "wortlaut": "könntest du die xmind teil verbessern , so wenn ich oben mit taster oben link oder rechts oder unter klicke sollte dort diek eine verbingung erstelle ich sollte die verbung^dungen lösch es solte so vershideden vormmen haben fertigen vorlagen usw alle s$",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 16:30",
+                    "wortlaut": "Ich teste gerade Jev von TypeSafe AI und möchte herausfinden, wo Jev in Redion wirklich sinnvoll eingesetzt werden könnte.",
+                    "woher": "wörtlich aus dem Gespräch, gekürzt",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 17:30",
+                    "wortlaut": "machst du ur.md oder nicht weil es ist seit 5 tagen nicht gemacht",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Die Chronik war seit dem 12. September nicht nachgetragen — sechs Arbeitstage fehlten.",
+                    "besser": "",
+                    "besserePrompt": "Die Frage war berechtigt und die Antwort war nein. Sie hat die Lücke geschlossen, die sonst weitergewachsen wäre."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E619-E621 — Wo die Leiste steht, und dass sie dort auch wirklich steht",
+                    "vonCommit": "(nach E618)",
+                    "bisCommit": "(11:17)",
+                    "zeitraum": "11:17",
+                    "dauer": "ca. 3 h",
+                    "pruefungen": "test534 neu, 50 Zusagen"
+                },
+                {
+                    "was": "E622-E624 — Die Strichprobe zeigt den Strich, und der Radierer hat eine Grösse",
+                    "vonCommit": "(E621)",
+                    "bisCommit": "(12:43)",
+                    "zeitraum": "12:43",
+                    "dauer": "ca. 1,5 h",
+                    "pruefungen": "test535 neu, 27 Zusagen"
+                },
+                {
+                    "was": "E625 — Der Dock-Effekt gilt auch ohne Studio (W5)",
+                    "vonCommit": "(E624)",
+                    "bisCommit": "(13:07)",
+                    "zeitraum": "13:07",
+                    "dauer": "ca. 25 min",
+                    "pruefungen": "test536 neu, 18 Zusagen"
+                },
+                {
+                    "was": "E626 — Bereiche bleiben getrennt: der Wächter, den §5 nie hatte (L150)",
+                    "vonCommit": "(E625)",
+                    "bisCommit": "(14:20)",
+                    "zeitraum": "14:20",
+                    "dauer": "ca. 1 h",
+                    "pruefungen": "test537 neu, 17 Zusagen, drei Gegenproben einzeln rot"
+                },
+                {
+                    "was": "E627/E628 — Die Gedankenkarte bekommt Griffe, Verbindungen, Formen und Vorlagen",
+                    "vonCommit": "(E626)",
+                    "bisCommit": "(15:08)",
+                    "zeitraum": "15:08",
+                    "dauer": "ca. 50 min",
+                    "pruefungen": "test538 neu, 53 Zusagen, vier Gegenproben einzeln rot"
+                },
+                {
+                    "was": "Der volle Lauf — alle 480 Prüfläufe in 48 Stücken, im eigenen Arbeitsbaum",
+                    "vonCommit": "(E628)",
+                    "bisCommit": "(läuft)",
+                    "zeitraum": "15:20 – 17:00",
+                    "dauer": "ca. 1,5 h",
+                    "pruefungen": "17 von 48 Stücken rot — der erste volle Lauf seit PR #100"
+                },
+                {
+                    "was": "Analyse: wo eine Entscheidungsschicht (Jev) in Redion Sinn ergäbe",
+                    "vonCommit": "—",
+                    "bisCommit": "—",
+                    "zeitraum": "16:30 – 17:20",
+                    "dauer": "ca. 50 min",
+                    "pruefungen": "keine — Analyse, kein Bau"
+                }
+            ],
+            "zahlen": {
+                "commits": 5,
+                "entscheidungen": 10,
+                "neue Prüfläufe": 5,
+                "volle Läufe": 1
+            },
+            "groesstesProblem": "Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im Stück-Treiber konnte GAR NICHT rot werden: sie suchte nach „✗ testNNN\", der Orchestrator schreibt den Namen aber eingerückt und ohne Kreuz. Derselbe Fehler, den §55.2 beschreibt, diesmal in meinem eigenen Werkzeug.",
+            "interessantesteAnfrage": "„könntest du die xmind teil verbessern\" — vier Wünsche in einem Satz (Griffe, Verbindungen löschen, Formen, Vorlagen), und alle vier waren an einem Nachmittag gebaut und geprüft.",
+            "massnahmen": [
+                {
+                    "zeit": "11:17",
+                    "was": "Die Zeichenleiste bekommt fünf Plätze, einen Zug-Griff und eine Tastaturführung.",
+                    "warum": "Redur: „Die untere Dock sollte bleiben\" — und L187 war seine Entscheidung: Sticky am Blattfuss.",
+                    "risiko": "keins an Daten; der freie Platz wird als Prozentpaar gemerkt (§9)."
+                },
+                {
+                    "zeit": "14:20",
+                    "was": "Ein Verzeichnis der 523 Querverweise zwischen Bereichen, das nur schrumpfen darf.",
+                    "warum": "§5 Regel 1 ist [hart] und hatte neun Monate keinen Wächter. Verschoben wurde nichts: die grossen Namen sind die Kerne ihrer Bereiche, nicht gemeinsame Helfer — sie nach kern/ zu schieben hiesse §4 brechen.",
+                    "risiko": "Keins am Code. Die Richtung bleibt Redurs Entscheidung."
+                },
+                {
+                    "zeit": "15:08",
+                    "was": "Eine unbekannte Form an einem Knoten BLEIBT stehen, statt beim Lesen wegzufallen.",
+                    "warum": "Hier stand zuerst eine Prüfung gegen die Liste der bekannten Formen. Eine Karte aus einer neueren Fassung hätte ihre Sternform beim ersten Oeffnen verloren — still und endgültig (§18).",
+                    "risiko": "Das war die gefährliche Richtung, und sie ist behoben, bevor sie jemanden getroffen hat."
+                },
+                {
+                    "zeit": "15:20",
+                    "was": "Der volle Lauf fährt in einem eigenen Arbeitsbaum (git worktree), in Stücken zu zehn, mit Merkdatei.",
+                    "warum": "§30: ein voller Lauf dauert länger, als eine Sitzung sicher steht.",
+                    "risiko": "keins — er liest nur. `main` bewegt sich nicht, solange etwas rot ist (§46)."
+                }
+            ]
         }
     ],
     "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
@@ -1925,6 +2802,171 @@ const ChronikDaten = {
             "beweis": "31 gruen in test522, darunter die neue, staerkere Zusage: keine sichtbare Gruppe reisst ueber zwei Zeilen.",
             "lehre": "Zum vierten Mal in dieser Woche (P32, P41, P43, P46, P47) und zum ersten Mal nicht in einer Pruefdatei, sondern in der AUSWERTUNG: bevor ich einer Messung glaube, sehe ich mir an, wie sie zaehlt. Ein Raster, das eine Annahme enthaelt — hier: alle Elemente sind gleich hoch —, meldet den Bruch dieser Annahme als Befund ueber etwas ganz anderes. Und: dieselbe Messung hat danach einen ECHTEN Fehler gefunden. Ein kaputtes Messwerkzeug wegzuwerfen waere falsch gewesen; es zu reparieren war richtig.",
             "entscheidung": "E570"
+        },
+        {
+            "nr": "P50",
+            "datum": "2026-09-19",
+            "titel": "Die Leiste ging nach oben, als ich sie nach unten stellte",
+            "schwere": "mittel",
+            "symptom": "`position:sticky` mit `bottom` gesetzt — die Leiste stand danach auf y=335 statt am Blattfuss.",
+            "falscheVermutung": "Dass die Regel nicht greift, und ich habe an der Spezifität gesucht.",
+            "wieGefunden": "Nachgemessen statt nachgelesen: y blieb exakt gleich. Sticky mit `bottom` ZIEHT ein Element nach oben, wenn es sonst aus dem Bild liefe — es schiebt nie nach unten.",
+            "ursache": "Die Leiste stand in der Reihenfolge VOR dem Blatt. Sticky kann nur innerhalb des eigenen Elternteils wirken.",
+            "loesung": "`leisteEinordnen()` hängt die Reihe für den Platz „unten\" hinter das Papier, sonst als erstes Kind.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "test534 §1b vergleicht den Abstand jetzt gegen `orte['oben'].y` statt gegen eine lose Schranke von 400 px — die alte Zusage blieb bei 46 px Abstand grün.",
+            "lehre": "Eine Zusage mit einer runden Zahl als Schranke ist oft gar keine Zusage.",
+            "entscheidung": "E622"
+        },
+        {
+            "nr": "P51",
+            "datum": "2026-09-19",
+            "titel": "«unten in der Mitte» war zwei Pixel breit",
+            "schwere": "mittel",
+            "symptom": "Die Leiste fiel auf 2 px zusammen, sobald sie den Platz „unten\" bekam.",
+            "falscheVermutung": "Dass die Breite fehlt, und ich habe Breitenangaben gesucht.",
+            "wieGefunden": "Im Bild gesehen, dann gemessen: `container-type:inline-size` stand auf `.blatt-reihe` UND `.blatt-werk`.",
+            "ursache": "`container-type:inline-size` ist `contain:inline-size` — ein solches Element trägt zur Breite seines Elternteils NICHTS bei. Bei einem Elternteil, der sich nach seinem Inhalt richtet, bleibt dann nichts übrig.",
+            "loesung": "Für die frei stehenden Plätze wird `container-type:normal` gesetzt.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "test534 misst die Breite je Platz.",
+            "lehre": "Eine Eigenschaft, die man für Abfragen setzt, kann das Layout ändern.",
+            "entscheidung": "E620"
+        },
+        {
+            "nr": "P52",
+            "datum": "2026-09-19",
+            "titel": "Die Strichprobe war unsichtbar",
+            "schwere": "klein",
+            "symptom": "Die Probe sollte den echten Strich zeigen — auf dem Bild war nichts zu sehen.",
+            "falscheVermutung": "Dass sie gar nicht gezeichnet wird.",
+            "wieGefunden": "Kontrast gerechnet: rgb(17,17,17) auf rgb(32,32,32) = 1,2:1.",
+            "ursache": "Der Strich wurde in der Tintenfarbe auf die dunkle Leiste gemalt — ohne Papier darunter.",
+            "loesung": "Eine Papierfläche hinter die Probe (`box-shadow` in `--paper`). Danach 17,7:1.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "test535 misst den Kontrast, nicht das Vorhandensein.",
+            "lehre": "`getComputedStyle` sagt „opacity: 1\" auch dann, wenn man nichts sieht.",
+            "entscheidung": "E623"
+        },
+        {
+            "nr": "P53",
+            "datum": "2026-09-19",
+            "titel": "Der Radiererzweig war toter Code",
+            "schwere": "mittel",
+            "symptom": "Die drei Radiergrössen taten nichts.",
+            "falscheVermutung": "Dass die Knöpfe nicht ankommen.",
+            "wieGefunden": "Der Zweig lag INNERHALB von `if (target.dataset.act)`, und die Größenknöpfe tragen kein `data-act`.",
+            "ursache": "Eine Verzweigung an der falschen Stelle im Behandler.",
+            "loesung": "Der Zweig steht jetzt vor dem `data-act`-Block; die Markierung wird über `document.querySelectorAll` gesetzt, nicht nur am eigenen Blatt.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "test535 misst den Radius des `.blatt-radierkreis` (28 → 7,2), nicht die Klasse am Knopf.",
+            "lehre": "„Die Markierung wandert mit (5 → 5)\" — eine Zusage, die dieselbe Zahl zweimal liest, prüft nichts.",
+            "entscheidung": "E624"
+        },
+        {
+            "nr": "P54",
+            "datum": "2026-09-19",
+            "titel": "L150 behauptete das Gegenteil dessen, was gemessen war",
+            "schwere": "gross",
+            "symptom": "In LUECKEN.md stand seit Monaten „heute hält die Regel … es gibt keinen Querverweis\".",
+            "falscheVermutung": "Dass ich nur einen Wächter für einen sauberen Bestand schreiben muss.",
+            "wieGefunden": "Gemessen statt geglaubt: 523 Querverweise in 63 von 306 Bereichspaaren, über 61 fremde Namen.",
+            "ursache": "Die alte Messung suchte nach `import`-Zeilen. In `src/bereiche/` gibt es keine einzige — geladen wird über 208 `<script>`, geredet wird über globale Namen.",
+            "loesung": "Ein Verzeichnis (`bereiche-bestand.json`), das nur schrumpfen darf, und `test537`.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "Der Lauf zählt beide Wege, den Namen und `(window as any)`.",
+            "lehre": "Eine Lücke, die eine Behauptung über den Bestand enthält, gehört nachgemessen, bevor man sie schliesst.",
+            "entscheidung": "E626"
+        },
+        {
+            "nr": "P55",
+            "datum": "2026-09-19",
+            "titel": "Die vier Griffe erschienen gar nicht",
+            "schwere": "mittel",
+            "symptom": "Ein Knoten wurde gewählt — keine Griffe.",
+            "falscheVermutung": "Dass die CSS-Regeln fehlen.",
+            "wieGefunden": "test538 §1 gemessen: 0 statt 4.",
+            "ursache": "`wähle` zeichnet die Karte nicht neu, es setzt nur die Marke `on` um. Die Griffe entstanden im Zeichner — also erst bei der nächsten Aenderung.",
+            "loesung": "`griffeBauen()`, von beiden Wegen benutzt.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "test538 zählt die Griffe VOR dem ersten Klick — nach einem Klick bleibt die Zahl auch dann richtig, wenn der Zeichner sie an jeden Knoten hängt.",
+            "lehre": "Wer eine Zusage nach dem Ereignis misst, misst manchmal das Aufräumen statt die Sache.",
+            "entscheidung": "E628"
+        },
+        {
+            "nr": "P56",
+            "datum": "2026-09-19",
+            "titel": "Die Verbindung lief quer durch die Wurzel",
+            "schwere": "mittel",
+            "symptom": "Ein Klick auf die freie Verbindung wählte den Wurzelknoten.",
+            "falscheVermutung": "Dass der Klick am falschen Element hängt.",
+            "wieGefunden": "Den Kasten der Linie gemessen: 181 × 0 px. Sie lag vollständig hinter dem Wurzelknoten.",
+            "ursache": "Zwei Aeste links und rechts auf gleicher Höhe ergeben eine waagerechte Gerade — mitten durch alles, was dazwischen steht.",
+            "loesung": "Der Bogen weicht senkrecht zur Verbindung aus, weg von der Mitte der Karte.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "Danach 181 × 45 px, und `elementFromPoint` auf der Bogenmitte trifft `.gk-verb-fang`.",
+            "lehre": "Eine Linie mit Höhe null ist nicht unsichtbar — sie ist unerreichbar.",
+            "entscheidung": "E628"
+        },
+        {
+            "nr": "P57",
+            "datum": "2026-09-19",
+            "titel": "Die Entf-Taste lief ins Leere",
+            "schwere": "klein",
+            "symptom": "Verbindung angeklickt, markiert, Entf gedrückt — nichts geschah.",
+            "falscheVermutung": "Dass die Taste nicht ankommt.",
+            "wieGefunden": "`document.activeElement` gelesen: der Körper der Seite, nicht die Bühne.",
+            "ursache": "Ohne `preventDefault` nimmt der Browser nach dem Klick auf einen SVG-Pfad den Fokus wieder weg. Ein Knoten ist ein `div` und gibt ihn an die Bühne weiter; ein SVG-Pfad tut das nicht.",
+            "loesung": "`e.preventDefault()` im Verbindungszweig.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "test538 §4 löscht und holt zurück.",
+            "lehre": "Fokus ist kein Zustand, den man setzt — er ist einer, den man behält.",
+            "entscheidung": "E628"
+        },
+        {
+            "nr": "P58",
+            "datum": "2026-09-19",
+            "titel": "Der geschriebene Grund stand da, wo ihn niemand sucht",
+            "schwere": "klein",
+            "symptom": "`test402` meldete die Kartenleiste als Trefffläche ohne Begründung — obwohl sie ihre 44 px längst hatte.",
+            "falscheVermutung": "Dass die Fläche zu klein ist.",
+            "wieGefunden": "Den Lauf gelesen: er sucht acht Zeilen UEBER einer Regel und drei darunter. Der Kommentar stand DAHINTER.",
+            "ursache": "Nicht die Fläche war falsch, sondern der Ort ihres Belegs.",
+            "loesung": "Der Kommentar zieht vor die Regel; der zweite Treffer (`#ai .ki-quellschalter`, 32 px) war ein echter und bekam seinen Grund.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "test402 4/4.",
+            "lehre": "§37 verlangt den Grund „an Ort und Stelle\" — das ist wörtlich gemeint.",
+            "entscheidung": "E627"
+        },
+        {
+            "nr": "P59",
+            "datum": "2026-09-19",
+            "titel": "Meine eigene Rot-Erkennung konnte nicht rot werden",
+            "schwere": "gross",
+            "symptom": "Der Stück-Treiber meldete „rot bisher: 0\", während Stücke mit Ausgang 1 durchliefen.",
+            "falscheVermutung": "Dass die Stücke grün sind.",
+            "wieGefunden": "Der Ausgang stand in derselben Zeile daneben. Erst beim zweiten Hinsehen gelesen.",
+            "ursache": "Ich suchte nach `✗ testNNN`. Der Orchestrator schreibt aber „✗ 1 von 10 Läufen gescheitert:\" ohne Namen und darunter den Namen EINGERUECKT ohne Kreuz.",
+            "loesung": "Der Treiber zählt den Ausgang und hebt die Ausgabe jedes Stücks auf.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "Nach der Umstellung meldete dieselbe Datei 17 rote Stücke, die vorher unsichtbar waren.",
+            "lehre": "§55.2 gilt auch für Werkzeuge, die keine Prüfläufe sind. Wer eine Erkennung schreibt, prüft zuerst, ob sie überhaupt anschlagen KANN.",
+            "entscheidung": "—"
+        },
+        {
+            "nr": "P60",
+            "datum": "2026-09-19",
+            "titel": "Die Gesamtsuite war seit PR #100 nicht gelaufen",
+            "schwere": "gross",
+            "symptom": "17 von 48 Stücken rot, quer durch das ganze Projekt.",
+            "falscheVermutung": "Dass die Einzelbögen dieser Woche etwas gebrochen haben.",
+            "wieGefunden": "Die roten Stücke liegen in Bereichen, die diese Woche niemand angefasst hat. In ERLEDIGTE-AUFGABEN.md steht zehnmal hintereinander „Nicht geprüft: die Gesamtsuite\".",
+            "ursache": "Jeder Bogen war für sich sauber geprüft — nur eben nie gegen das Ganze. Erster bestätigter Einzelfund: `test164`, die Blocktypen-Inventur, rot seit E607, weil die Gedankenkarte nie in `doku/BLOCKTYPEN.md` eingetragen wurde.",
+            "loesung": "Nachlauf der 17 Stücke einzeln, mit aufgehobener Ausgabe, um die Namen zu bekommen.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "Stück 71–80 war im Nachlauf grün — entweder ein flockiger Lauf oder eine Wechselwirkung in der Reihenfolge. Das wird gemessen, nicht geraten.",
+            "lehre": "„Die zuständigen Prüfläufe\" (§30) sind das Minimum, nicht das Ziel. `main` bewegt sich deshalb erst nach einem vollen grünen Lauf (§46).",
+            "entscheidung": "—"
         }
     ]
 };

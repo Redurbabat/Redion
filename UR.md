@@ -1064,9 +1064,585 @@ Der zweite ist schlimmer, weil er in der Reparatur steckte: ich habe den Glaskno
 | 19:00 | `einlesen.ts`: die Formenschleife liest `p:grpSp` rekursiv, bildet `a:chOff`/`a:chExt` ab und bremst bei acht Ebenen; `p:graphicFrame` und gefuellte Formen ohne Text werden gezaehlt statt still fallen gelassen, und der Hinweis nennt sie. `document-mode.ts`: ein Tipp im Laserpointer-Vortrag sucht den Deckel ueber `elementsFromPoint` statt ueber `event.target`. | Redur: „verbesser fuer die pptx oefnnen". Gemessen an einer eigens gebauten Datei: ein gruppierter Deckel kam gar nicht an — DIE ANTWORT STAND OFFEN —, und der Hinweis sagte „1 Folien uebernommen". | keins an Daten; es kommt MEHR an als vorher. Der einzige Weg, auf dem etwas verschwinden koennte, waere eine falsche Kindabbildung — deshalb baut test511 eine Gruppe mit Faktor zwei und rechnet die zwei Kinderlagen nach. |
 | 20:30 | `absaetzeLesen` gibt je `a:p` Grad, Gewicht, Farbe, Ebene und Aufzaehlungszeichen; wo sie auseinandergehen, entsteht eine Textmarke je Absatz, gestapelt mit den Hoehen aus `InkGeometry.textLayout`. | Redur: „verbesser fuer die pptx oefnnen". Gemessen: „klein"(12 pt) + „GROSS"(36 pt, fett, blau) kam als EINE Marke in 12 pt schwarz an; ein roter Titel kam schwarz; drei Gliederungsebenen kamen flach. | keins an Daten. Absaetze mit gleichem Format bleiben EINE Marke — sonst haette der Editor statt eines Kastens lauter Zeilen. Die Hoehen kommen vom Zeichner selbst, nicht aus einer Schaetzung; die Gegenprobe mit Schaetzung misst 18 pt Abstand statt ueber 40, also Ueberlappung. |
 
+### 2026-09-13 · Sonntag — Zwei Bögen am PowerPoint-Einleser: die Drehung, und kein zweiter Zeichner
+
+> Teilweise. Die Commits und ihre Zeiten stehen in git und sind hier unverändert übernommen. Redurs WORTLAUT fehlt für diesen Tag im Gesprächsgedächtnis — die Sätze hier stehen zitiert in ENTSCHEIDUNGEN.md und sind von dort übernommen. Wo kein Zitat belegt ist, steht keines. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E563 — Drehung: `a:rot` wird gelesen und auf die Marke übertragen | `(nach E562)` → `7d1142a` | 19:28 | — | test511 mitgefahren |
+| E564 — Kein fremder PowerPoint-Zeichner: die Folie benutzt den vorhandenen Blatt-Zeichner | `7d1142a` → `cf01c36` | 19:53 | ca. 25 min | test511 |
+
+#### Zahlen des Tages
+
+- **commits:** 2
+- **entscheidungen:** 2
+
+#### Das grösste Problem
+
+Nicht überliefert. Der Tag hat zwei Böge und keinen dokumentierten Fehlschlag.
+
+#### Das Interessanteste, das Redur wollte
+
+Nicht überliefert.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| 19:53 | Kein eigener Zeichner für Folien — die vorhandene Blatt-Maschine bekommt die Folieninhalte. | §8: ein zweiter Zeichner für dieselbe Sache läuft mit dem ersten auseinander. | keins an Daten — Zeichnen. |
+
+### 2026-09-14 · Montag — Vormittags Folien, abends das Zeichenstudio: die Stiftleiste, das Lineal und der Radierer
+
+> Teilweise. Die Commits und ihre Zeiten stehen in git und sind hier unverändert übernommen. Redurs WORTLAUT fehlt für diesen Tag im Gesprächsgedächtnis — die Sätze hier stehen zitiert in ENTSCHEIDUNGEN.md und sind von dort übernommen. Wo kein Zitat belegt ist, steht keines. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · ca. 18:00**
+
+> Einheitliches SVG-Register nutzen; keine zweite lose Icon-Sammlung neben ihm.
+
+**Gemeint:** Die Zeichen kommen aus dem einen Register, das es schon gibt — keine zweite Sammlung daneben (§8).
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**2 · ca. 18:30**
+
+> der Knopf zeigt nicht ‚Formen', sondern WELCHE Form gerade gewählt ist — ein Dreieck, ein Pfeil, eine Kurve.
+
+**Gemeint:** Der Werkzeugknopf ist keine Beschriftung, sondern eine Anzeige: er zeigt den Zustand.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E565 — Tabellen als Gitter auf der Folie | `cf01c36` → `3764f67` | 05:04 | — | test511 |
+| E566 — Gefüllte Formen und die geerbte Textfarbe | `3764f67` → `2b95054` | 07:32 | — | test511 nachgezogen (b608903) |
+| E567 — Die Schriftart | `2b95054` → `c9ef40e` | 10:24 | — | test511 |
+| E568 — Die Stiftleiste: eine laute Fläche statt sechs | `c9ef40e` → `85e3dcf` | 18:14 | ca. 4 h mit Pausen | Zeichenstudio-Läufe |
+| E569 — Die Kurve war eine Sackgasse | `85e3dcf` → `c83f6a1` | 18:46 | ca. 30 min | — |
+| E570 — Die Leiste selbst ordnen | `c83f6a1` → `0e83901` | 19:34 | ca. 45 min | — |
+| E571 — Im Band selbst schieben | `0e83901` → `d4a53c8` | 20:23 | ca. 50 min | — |
+| WIP E572 — Zeichenstudio-Zwischenstand und Uebergabe | `d4a53c8` → `5d415d6` | 22:54 | — | keine — ausdrücklich unfertig gesichert |
+| E573 — Das Lineal, die Verlaufskapsel und die fehlenden Bahnen | `5d415d6` → `4ac5575` | 22:55 | — | — |
+| E574 — Das Lineal gehört auch dem Stift, die Pastelle dem Marker | `4ac5575` → `5aa8876` | 23:19 | ca. 25 min | — |
+| E575 — Was aufgeht, geht zu; was gleich bleibt, bleibt stehen | `5aa8876` → `cda6f48` | 23:34 | ca. 15 min | — |
+| E576 — Der Radierer: sichtbar, einfach, mit Gedächtnis | `cda6f48` → `6a25d6c` | 23:44 | ca. 10 min | — |
+
+#### Zahlen des Tages
+
+- **commits:** 13
+- **entscheidungen:** 12
+
+#### Das grösste Problem
+
+P49 fällt auf diesen Tag: mein Zeilenraster zerschnitt eine Zeile in zwei, weil ich nach Oberkanten gruppiert habe statt nach der Mitte. Die Messung meldete einen Umbruch, den das Bild nicht zeigte.
+
+#### Das Interessanteste, das Redur wollte
+
+Die Stiftleiste — Redur wollte keine sechs Knöpfe, sondern EINE Fläche, die zeigt, was gewählt ist.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| 22:54 | Einen ausdrücklich UNFERTIGEN Stand als WIP gesichert, mit vollständiger Uebergabe in doku/. | Ein halb gebautes Studio zu verschweigen und weiterzubauen hätte den nächsten Durchgang blind gemacht. | keins — nichts wurde als fertig behauptet. |
+
+### 2026-09-15 · Dienstag — Der grösste Tag: 29 Commits — Zeichenstudio fertig, messungen.md angelegt, Word und PowerPoint gehen unverändert wieder heraus
+
+> Teilweise. Die Commits und ihre Zeiten stehen in git und sind hier unverändert übernommen. Redurs WORTLAUT fehlt für diesen Tag im Gesprächsgedächtnis — die Sätze hier stehen zitiert in ENTSCHEIDUNGEN.md und sind von dort übernommen. Wo kein Zitat belegt ist, steht keines. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · ca. 00:00**
+
+> Macbook Dock Animationen … beim Wechseln
+
+**Gemeint:** Die Vergrösserung der Nachbarn beim Überfahren, wie im macOS-Dock.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**2 · ca. 05:00**
+
+> Zurück
+
+**Gemeint:** Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**3 · ca. 10:00**
+
+> passt schon
+
+**Gemeint:** Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**4 · ca. 17:20**
+
+> ich will das redion auch die anderen datein auch öffnen kann z.B. word und powerpoint daten … aber wichtig die originale datei wird immer geschützt
+
+**Gemeint:** Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**5 · ca. 17:40**
+
+> Ich will das redion start wie goodnotes bein zeichenn ist, stark wie word beim text schreiben bearbeiten, start wie Powerpoint beim Präsentation
+
+**Gemeint:** Drei Messlatten: beim Zeichnen GoodNotes, beim Schreiben Word, beim Vortragen PowerPoint.
+
+**Besser geschrieben:** „Redion soll beim Zeichnen so stark sein wie GoodNotes, beim Schreiben wie Word und beim Präsentieren wie PowerPoint."
+
+**Besserer Prompt:** Daraus wurden die fünf Messlatten in E594 — ein Satz, der als Prüfbedingung taugt, weil er Vergleiche nennt statt Wünsche.
+
+
+**6 · ca. 19:30**
+
+> bei redion fehlt freier Text einfügen bei der PDF oder überhaupt — es sollte wie OneNote sein: wenn ich irgendwo klicke, sollte ich direkt Text schreiben
+
+**Gemeint:** Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**7 · ca. 20:10**
+
+> alter man du hast hier die augen wo links oben bei date war und du hast die alle animationen alter was ist das
+
+**Gemeint:** Beim Umbau war das Auge am Ordner verschwunden — mitsamt den Animationen, um die es nie ging.
+
+**Besser geschrieben:** „Das Auge oben links am Ordner ist weg, und die Animationen auch. Bitte stell beides wieder her."
+
+**Besserer Prompt:** Ärger ist ein Signal, keine Anweisung — die Anweisung steckte im nächsten Satz: „stoppe deine arbeit sofort".
+
+
+**8 · ca. 20:15**
+
+> es sollte wie vorher sein — stoppe deine arbeit sofort
+
+**Gemeint:** Nicht weiterbauen, sondern zuerst den alten Zustand zurückholen.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**9 · ca. 20:16**
+
+> nein die auge nicht weg
+
+**Gemeint:** Meine erste Reparatur hatte das Auge entfernt statt den Konflikt — falsche Richtung.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E577 — Was sich bewegt, ist das Zeichen | `6a25d6c` → `0777e19` | 00:05 | — | — |
+| messungen.md angelegt — alle Messungen an einem Ort | `0777e19` → `f2aeb93` | 00:10 | — | — |
+| E578/E579 — Lesen heisst lesen, und die Kapsel nimmt nirgends teil | `f2aeb93` → `b362734` | 04:56 | — | — |
+| E580 — Was ausserhalb des Bildes steht, sagt sich selbst | `b362734` → `c426693` | 05:05 | — | — |
+| E581/E582 — Was Bedienung ist, gehört auf kein Papier | `c426693` → `2d8ca7c` | 07:24 | — | — |
+| E583/E584 — Die Kopie zeigt, was das Original zeigt | `2d8ca7c` → `76be392` | 09:50 | — | — |
+| E585 — Drei von vier Zahlen im Stilblatt waren Zierde | `76be392` → `19d2694` | 10:10 | — | — |
+| E586 — Ein Pfeil aus einer Schrift ist kein Zeichen | `19d2694` → `6fd6030` | 10:27 | — | — |
+| E587 — Zwei Striche in derselben Richtung sind ein Bild | `6fd6030` → `9bf8804` | 13:37 | — | — |
+| E588 — Die Tastatur schiebt das Dock nicht weg | `9bf8804` → `b7d194e` | 13:47 | — | — |
+| E589 — Neunzehn Zeichnungen, die nicht im Register standen | `b7d194e` → `14b3d96` | 14:10 | — | Registerlauf |
+| E590 — Drei rote Läufe, und einer davon war ein echter Fehler | `14b3d96` → `9b9a89e` | 14:34 | ca. 25 min | drei Läufe, einer echt rot |
+| E591 — Ein Lineal, dessen Griff man nicht erreicht, ist keines | `9b9a89e` → `603028a` | 15:51 | — | — |
+| E592 — Die Originaldatei geht unverändert wieder heraus | `603028a` → `313aced` | 17:31 | ca. 1,5 h | test525/test526 Rundreisen |
+| E593 — Die Rückspur zum <a:t> | `313aced` → `29086c8` | 17:39 | — | — |
+| E594 — Die fünf Messlatten | `29086c8` → `a26adfc` | 17:43 | — | — |
+| E595 — Eine eingelesene .docx geht unverändert wieder heraus | `a26adfc` → `e095907` | 19:00 | — | test526 |
+| E597 — Direkt auf dem Blatt schreiben, wie in OneNote | `e095907` → `8f580c9` | 19:40 | — | test527 |
+| E599 — Der Feinschliff am freien Text | `8f580c9` → `3bec815` | 19:54 | — | — |
+| E601 — Das Auge sass auf dem Ordnerreiter | `3bec815` → `5c1f757` | 20:15 | — | — |
+| E602 — Nicht das Auge weicht, sondern der Reiter | `5c1f757` → `5a07d8f` | 20:28 | ca. 13 min | — |
+| E603 — Die Ordnerkarte verwandelt sich nicht mehr unter der Hand | `5a07d8f` → `cc1f62d` | 20:42 | — | — |
+| E604 — Die Ordnerkachel bleibt, wie sie in main steht | `cc1f62d` → `fb65b34` | 20:50 | — | — |
+
+#### Zahlen des Tages
+
+- **commits:** 29
+- **entscheidungen:** 26
+- **pullRequests:** #86, #88, #89, #90, #91
+
+#### Das grösste Problem
+
+Das Auge am Ordner. Ich hatte es beim Umbau mitgenommen, ohne dass jemand darum gebeten hatte — Redurs Antwort kam in drei Nachrichten hintereinander und endete mit „stoppe deine arbeit sofort". Die Reparatur brauchte danach vier Bögen (E601 bis E604), und die eigentliche Lehre steht in E609: wiederherstellen heisst VOLLSTAENDIG, nicht ungefähr.
+
+#### Das Interessanteste, das Redur wollte
+
+„start wie goodnotes … stark wie word … start wie Powerpoint" — drei Programme in einem Satz, und jedes meint einen anderen Teil von Redion. Daraus wurden die fünf Messlatten (E594).
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| 00:10 | `messungen.md` angelegt. | Die Zahlen lagen über ENTSCHEIDUNGEN, LUECKEN und Prüfläufe verstreut; eine Zahl ohne Datum und Methode ist keine Messung. | keins — Dokumentation. |
+| 17:31 | Die Originaldatei wird beim Einlesen IMMER behalten und geht unverändert wieder heraus. | Redur: „die originale datei wird immer geschützt". Jede Umwandlung ist verlustbehaftet — das Original ist die einzige Fassung, die es nicht ist. | §9/§13: das ist die Zusage, dass ein Import nie eine Einbahnstrasse ist. test525/526 fahren die Rundreise mit echten Bytes. |
+| 20:28 | Das Auge bleibt, der Reiter weicht aus. | Redur: „nein die auge nicht weg" — meine erste Reparatur hatte das Auge entfernt statt den Konflikt. | keins an Daten — Oberfläche. |
+
+### 2026-09-16 · Mittwoch — Die Gedankenkarte entsteht, das Auge zieht an jeden Ordner, und das Schreibstudio wird ruhig
+
+> Teilweise. Die Commits und ihre Zeiten stehen in git und sind hier unverändert übernommen. Redurs WORTLAUT fehlt für diesen Tag im Gesprächsgedächtnis — die Sätze hier stehen zitiert in ENTSCHEIDUNGEN.md und sind von dort übernommen. Wo kein Zitat belegt ist, steht keines. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · ca. 04:30**
+
+> Weiter an die frei text erstellen — also dort sollte, wenn ich klicke, wie Word direkt erstellen können.
+
+**Gemeint:** Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**2 · ca. 05:40**
+
+> Ich will bei Redion auch das XMind erstellen können.
+
+**Gemeint:** Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**3 · ca. 06:00**
+
+> wenn ich auf Ordner mit Maus gehe, sollte es sein [so] — mach die Augen weg und behalte nur so: wenn ich mit Maus drauf gehe, sollte sie mir zeigen, was drin ist
+
+**Gemeint:** Der Blick in den Ordner kommt beim Überfahren vom Deckel, nicht von einem eigenen Auge-Knopf.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**4 · ca. 06:20**
+
+> bringe es wieder komplett wie vorher mit Auge usw, mit Animationen, mit Bewegung, mit Anzeige, alles.
+
+**Gemeint:** Vollständig wiederherstellen — nicht ungefähr.
+
+**Besser geschrieben:** „Stell bitte den vorherigen Stand vollständig wieder her: Auge, Animationen, Bewegung und Anzeige."
+
+**Besserer Prompt:** Das Wort „komplett" mit der Aufzählung dahinter ist genau richtig — es macht das Ergebnis prüfbar.
+
+
+**5 · ca. 09:10**
+
+> und das ist nur bei Bibliothek — ich will überall, wenn ein Ordner erstellt wird, das haben.
+
+**Gemeint:** Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**6 · ca. 13:00**
+
+> hier sieht es sehr viel aus und haben nicht so viel Platz für Bearbeiten, und räume es auf
+
+**Gemeint:** Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**7 · ca. 15:00**
+
+> jedes Werkzeug trägt sein Wort unter dem Zeichen
+
+**Gemeint:** Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E605 — Ein Tipp auf leeres Papier schreibt schon | `fb65b34` → `73ed00a` | 04:42 | — | test527 |
+| E606 — Mehrere Formate in einem Textfeld überleben das Bearbeiten | `73ed00a` → `bf6428b` | 05:14 | — | — |
+| E607 — Die Gedankenkarte: XMind, aber im Block und ohne Konto | `bf6428b` → `20bdbaf` | 05:47 | ca. 35 min | test529 neu, 56 Zusagen, zwei Gegenproben einzeln rot gesehen |
+| E608 — Das Auge am Ordner ist weg, der Blick kommt vom Deckel | `20bdbaf` → `70cf450` | 06:02 | — | — |
+| E609 — Die Ordnerkachel steht wieder genau wie vorher | `70cf450` → `ca2a422` | 06:26 | ca. 25 min | — |
+| E610 — Der Ablagename des Dienstes folgt dem Inhalt | `ca2a422` → `5a1a5ab` | 08:43 | — | test530 neu |
+| E611 — Das Auge sitzt an jedem Ordner, nicht nur im Regal | `5a1a5ab` → `3d83722` | 09:17 | — | test531 neu |
+| E612 — Das Schreibstudio wird ruhig: 301 px Bedienung werden weniger | `3d83722` → `c955cd4` | 13:16 | ca. 4 h | test532 neu — der Wächter, den L121 seit dem 3. September forderte |
+| E613/E614 — Die Tafel als Behälter und das Wort unter dem Zeichen | `c955cd4` → `(Tagesende)` | ca. 15:00 | — | test533 neu |
+
+#### Zahlen des Tages
+
+- **commits:** 20
+- **entscheidungen:** 10
+- **pullRequests:** #92 bis #99
+
+#### Das grösste Problem
+
+E608 und E609 am selben Morgen: Ich hatte das Auge entfernt, weil Redur „mach die Augen weg" schrieb — und dabei die Animationen, die Bewegung und die Anzeige mitgenommen, um die es ihm nie ging. Seine Antwort war „bringe es wieder komplett wie vorher … alles". Zweimal derselbe Fehler in zwei Tagen.
+
+#### Das Interessanteste, das Redur wollte
+
+„Ich will bei Redion auch das XMind erstellen können" — daraus wurde an einem Vormittag eine vollständige Blockart mit eigenem Zeichner, eigener Tastatur und 56 geprüften Zusagen.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| 05:47 | Die Gedankenkarte als BLOCKART, nicht als eigener Bereich. | Eine Karte ist ein Inhalt einer Seite, kein Ort. So erbt sie Versionen, Rechte, Sicherung und Suche, ohne dass etwas davon zweimal gebaut wird (§8). | keins an Daten — ein neuer Blocktyp. Unbekannte Knoten werden beim Lesen aufgefangen statt gelöscht (§18). |
+| 09:17 | Das Auge zieht an JEDEN Ordner statt nur in die Bibliothek. | Redur: „ich will überall". Eine Funktion, die nur an einer Stelle wirkt, sieht aus wie ein Fehler an allen anderen. | keins an Daten. test531 hält es fest. |
+
+### 2026-09-18 · Freitag — W4: die Strichstärke sagt, wie dick sie ist — und die Kacheln bekommen ihren Namen
+
+> Teilweise. Die Commits und ihre Zeiten stehen in git und sind hier unverändert übernommen. Redurs WORTLAUT fehlt für diesen Tag im Gesprächsgedächtnis — die Sätze hier stehen zitiert in ENTSCHEIDUNGEN.md und sind von dort übernommen. Wo kein Zitat belegt ist, steht keines. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · ca. 07:10**
+
+> Fein 0,3 mm · Mittel 0,7 mm · Markant 1,2 mm · Marker 4,0 mm
+
+**Gemeint:** Die vier Strichstärken mit ihren echten Millimetern, von Redur selbst vorgegeben.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**2 · ca. 14:30**
+
+> fünf benannte Stiftkacheln
+
+**Gemeint:** Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**3 · ca. 14:40**
+
+> Kachel 36 px
+
+**Gemeint:** Die Kachelhöhe, von ihm gemessen und vorgegeben.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**4 · ca. 14:45**
+
+> der Name wird abgeschnitten
+
+**Gemeint:** Der Name passte nicht in die Kachel — im Bild gesehen.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**5 · ca. 18:00**
+
+> Siehe Bildern, so will ich es haben.
+
+**Gemeint:** Das Bild ist der Auftrag, nicht die Beschreibung daneben.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** Ein Bild schlägt jede Beschreibung — und es ist prüfbar, weil man danebenhalten kann.
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E615 — Der Stift öffnet den Blick in den Ordner (L180) | `(nach E614)` → `(07:18)` | 07:18 | — | — |
+| E616 — Die Strichstärke sagt, wie dick sie ist (W4, erster Teil) | `(E615)` → `(07:32)` | 07:32 | ca. 15 min | test533; Gegenprobe scheiterte zuerst an `noUnusedLocals` (§52.6) |
+| E617 — Die Stiftkacheln tragen ihren Namen (W4, zweiter Teil) | `(E616)` → `(14:57)` | 14:57 | ca. 7 h mit Pausen | test533 |
+| E618 — Die Tafel wird ein Kasten (W4, dritter Teil) | `(E617)` → `(18:19)` | 18:19 | ca. 3,5 h | test533 54/54, vierzehn Zusagen neu, Gegenprobe rot gesehen (50/54) |
+
+#### Zahlen des Tages
+
+- **commits:** 4
+- **entscheidungen:** 4
+
+#### Das grösste Problem
+
+Zweimal hat das Bild die Arbeit korrigiert. Auf dem ersten standen die Millimeter als „0,4 mm0,8 mm 1,8 mm" ineinander — `.blatt-strich` steht auf festen 30 px. Auf dem zweiten war der neue Kasten kaum zu sehen: `--bg-tief` gegen `--bg-card` sind drei Hundertstel Helligkeit.
+
+#### Das Interessanteste, das Redur wollte
+
+„jedes Werkzeug trägt sein Wort unter dem Zeichen" — ein Satz, der eine ganze Leiste umbaut.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| 07:32 | Die Millimeter stehen an der Kachel, nicht nur im Tooltip. | Redur hat die vier Zahlen selbst vorgegeben. Eine Stärke, die man erst beim Ueberfahren erfährt, gibt es am Telefon nicht. | keins an Daten. `test533 §5d` misst seither, dass keine Zahl über ihre Kachel läuft. |
+| 18:19 | Rückbau an E614 einen Tag später: Werkzeuge und Zeilenbruch ziehen aus der Tafel zurück in die Leiste. | Was für W2 richtig war, ist für W4 falsch — ein Kasten um die Werkzeugreihe wäre die ganze Leiste, keine Tafel. | Gering: die 51 Kindwähler blieben unberührt, weil das Zubehör in der Tafel geblieben ist. |
+
+### 2026-09-19 · Samstag — Wo die Leiste steht, der Wächter für §5, die Gedankenkarte bekommt Griffe — und der erste volle Lauf seit PR #100
+
+> Voller Wortlaut für diesen Tag: er liegt im Gespräch vor.
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · ca. 09:00**
+
+> Die untere Dock sollte bleiben.
+
+**Gemeint:** Die untere Werkzeugleiste des Studios bleibt, wo sie ist — der neue Platz kommt dazu, nicht an ihre Stelle.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**2 · ca. 11:00**
+
+> Sticky am Blattfuss: sie wandert mit, solange das Blatt im Bild ist, und bleibt trotzdem beim Blatt.
+
+**Gemeint:** Seine Antwort auf L187: die Leiste klebt am Fuss des Blattes, nicht am Fenster.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**3 · ca. 14:00**
+
+> Verschieben, dann Rest ins Verzeichnis
+
+**Gemeint:** Seine Wahl zu den 523 Querverweisen: die grossen gemeinsamen Teile umziehen, der Rest wird eingefroren. Beim Nachmessen stellte sich heraus, dass die grossen Namen keine Helfer sind, sondern Bereichskerne — verschoben wurde deshalb nichts, und die Richtung bleibt offen (E626).
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**4 · ca. 14:45**
+
+> könntest du die xmind teil verbessern , so wenn ich oben mit taster oben link oder rechts oder unter klicke sollte dort diek eine verbingung erstelle ich sollte die verbung^dungen lösch es solte so vershideden vormmen haben fertigen vorlagen usw alle s$
+
+**Gemeint:** Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**5 · ca. 16:30**
+
+> Ich teste gerade Jev von TypeSafe AI und möchte herausfinden, wo Jev in Redion wirklich sinnvoll eingesetzt werden könnte.
+
+**Gemeint:** Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**6 · ca. 17:30**
+
+> machst du ur.md oder nicht weil es ist seit 5 tagen nicht gemacht
+
+**Gemeint:** Die Chronik war seit dem 12. September nicht nachgetragen — sechs Arbeitstage fehlten.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** Die Frage war berechtigt und die Antwort war nein. Sie hat die Lücke geschlossen, die sonst weitergewachsen wäre.
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E619-E621 — Wo die Leiste steht, und dass sie dort auch wirklich steht | `(nach E618)` → `(11:17)` | 11:17 | ca. 3 h | test534 neu, 50 Zusagen |
+| E622-E624 — Die Strichprobe zeigt den Strich, und der Radierer hat eine Grösse | `(E621)` → `(12:43)` | 12:43 | ca. 1,5 h | test535 neu, 27 Zusagen |
+| E625 — Der Dock-Effekt gilt auch ohne Studio (W5) | `(E624)` → `(13:07)` | 13:07 | ca. 25 min | test536 neu, 18 Zusagen |
+| E626 — Bereiche bleiben getrennt: der Wächter, den §5 nie hatte (L150) | `(E625)` → `(14:20)` | 14:20 | ca. 1 h | test537 neu, 17 Zusagen, drei Gegenproben einzeln rot |
+| E627/E628 — Die Gedankenkarte bekommt Griffe, Verbindungen, Formen und Vorlagen | `(E626)` → `(15:08)` | 15:08 | ca. 50 min | test538 neu, 53 Zusagen, vier Gegenproben einzeln rot |
+| Der volle Lauf — alle 480 Prüfläufe in 48 Stücken, im eigenen Arbeitsbaum | `(E628)` → `(läuft)` | 15:20 – 17:00 | ca. 1,5 h | 17 von 48 Stücken rot — der erste volle Lauf seit PR #100 |
+| Analyse: wo eine Entscheidungsschicht (Jev) in Redion Sinn ergäbe | `—` → `—` | 16:30 – 17:20 | ca. 50 min | keine — Analyse, kein Bau |
+
+#### Zahlen des Tages
+
+- **commits:** 5
+- **entscheidungen:** 10
+- **neue Prüfläufe:** 5
+- **volle Läufe:** 1
+
+#### Das grösste Problem
+
+Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im Stück-Treiber konnte GAR NICHT rot werden: sie suchte nach „✗ testNNN", der Orchestrator schreibt den Namen aber eingerückt und ohne Kreuz. Derselbe Fehler, den §55.2 beschreibt, diesmal in meinem eigenen Werkzeug.
+
+#### Das Interessanteste, das Redur wollte
+
+„könntest du die xmind teil verbessern" — vier Wünsche in einem Satz (Griffe, Verbindungen löschen, Formen, Vorlagen), und alle vier waren an einem Nachmittag gebaut und geprüft.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| 11:17 | Die Zeichenleiste bekommt fünf Plätze, einen Zug-Griff und eine Tastaturführung. | Redur: „Die untere Dock sollte bleiben" — und L187 war seine Entscheidung: Sticky am Blattfuss. | keins an Daten; der freie Platz wird als Prozentpaar gemerkt (§9). |
+| 14:20 | Ein Verzeichnis der 523 Querverweise zwischen Bereichen, das nur schrumpfen darf. | §5 Regel 1 ist [hart] und hatte neun Monate keinen Wächter. Verschoben wurde nichts: die grossen Namen sind die Kerne ihrer Bereiche, nicht gemeinsame Helfer — sie nach kern/ zu schieben hiesse §4 brechen. | Keins am Code. Die Richtung bleibt Redurs Entscheidung. |
+| 15:08 | Eine unbekannte Form an einem Knoten BLEIBT stehen, statt beim Lesen wegzufallen. | Hier stand zuerst eine Prüfung gegen die Liste der bekannten Formen. Eine Karte aus einer neueren Fassung hätte ihre Sternform beim ersten Oeffnen verloren — still und endgültig (§18). | Das war die gefährliche Richtung, und sie ist behoben, bevor sie jemanden getroffen hat. |
+| 15:20 | Der volle Lauf fährt in einem eigenen Arbeitsbaum (git worktree), in Stücken zu zehn, mit Merkdatei. | §30: ein voller Lauf dauert länger, als eine Sitzung sicher steht. | keins — er liest nur. `main` bewegt sich nicht, solange etwas rot ist (§46). |
+
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 49 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 60 Einträge.
 
