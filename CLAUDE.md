@@ -293,12 +293,12 @@ dieser Reihenfolge zu prüfen:
 2. **Gemeinsame Logik nach `kern/`** verschieben.
 3. **Über `register/`** bekannt machen.
 
-**Der Wächter dafür fehlt — nachgemessen am 12. September 2026.** Hier stand
-„Der Wächter dafür ist `test87`". Das stimmt nicht: `test87` prüft rohe
-Steuerzeichen, den Abgleich der Rollen zwischen Oberfläche und Server, die
-A1/A2-Grenze (die drei Zeichner rufen `App` nicht an), die Reihenfolge der
-Stilblätter, das Manifest, `esc`, das Schema und ein paar Namen. Ein Bereich,
-der einen anderen anfasst, kommt darin nicht vor.
+**Der Wächter dafür ist `test537` — seit dem 19. September 2026.** Hier stand
+einmal „Der Wächter dafür ist `test87`", und das stimmte nicht: `test87`
+prüft rohe Steuerzeichen, den Abgleich der Rollen zwischen Oberfläche und
+Server, die A1/A2-Grenze (die drei Zeichner rufen `App` nicht an), die
+Reihenfolge der Stilblätter, das Manifest, `esc`, das Schema und ein paar
+Namen. Ein Bereich, der einen anderen anfasst, kam darin nicht vor.
 
 Dazu kommt: **es gibt in `src/bereiche/` keine einzige `import`-Zeile.**
 Gezählt, nicht geschätzt — alles wird über 208 `<script>` in `index.html`
@@ -307,8 +307,31 @@ also einen Weg, den dieses Projekt gar nicht benutzt; brechen lässt sich die
 Regel heute nur über einen globalen Namen (`Bibliothek.…` mitten im Editor).
 Genau das prüft niemand.
 
-Die Regel gilt unverändert. Was fehlt, ist ihr Beweis — eingetragen als
-**L150**.
+**Und die Regel wird heute 523-mal gebrochen.** Gemessen am 19. September
+2026 (E626): 523 Querverweise in **63 von 306** möglichen Bereichspaaren, in
+127 Einträgen über 61 fremde Namen; sechs davon über `(window as any)`. L150
+hatte das Gegenteil behauptet („es gibt keinen Querverweis") — die alte
+Messung suchte nach `import`, und den gibt es hier nicht.
+
+`test537` prüft deshalb zwei Wege — den Namen (`Datenbank.oeffne(…)`) und den
+Umweg über `window` — und führt den Stand in
+`pruefungen/bereiche-bestand.json`. Das Verzeichnis darf nur **schrumpfen**:
+es ist keine Erlaubnis, sondern eine Schuld. Jeder NEUE Querverweis macht den
+Lauf rot.
+
+Verschoben wurde nichts, und der Grund steht in E626: die grossen Namen sind
+die Kerne ihrer Bereiche (`Datenbank` ist eine halbe Megabyte
+Datenbanksteuerung), keine gemeinsamen Helfer — sie nach `kern/` zu schieben
+hiesse §4 brechen.
+
+**Offen ist damit die Richtung, und sie gehört Redur:** die 523 über
+`register/` auflösen (§5s dritter Weg), oder diese Regel umschreiben, weil
+achtzehn Bereiche einander in 63 von 306 Paaren anrufen und das der
+Normalfall dieses Programms ist. Die Regel ist **[hart]** — also entscheidet
+er.
+
+Der dritte Kopplungsweg — der Griff ins fremde Markup — wird **nicht**
+geprüft: die Zuordnung Präfix→Bereich gibt es nicht (**L191**).
 
 ### Regel 2 — Neuer Bereich = zwei Register-Einträge
 
@@ -860,7 +883,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 478 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 479 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -912,6 +935,10 @@ eine Grösse (E623/E624). Gezählt am 19. September, im selben Bogen: 477.*
 *Und 478: `test536` — die Dock-Welle gilt auch ohne Studio (E625). Gezählt
 am 19. September: 478.*
 
+*Und 479: `test537` — Bereiche bleiben getrennt (E626, L150). Er hält eine
+**harte** Regel, die neun Monate lang keinen Wächter hatte. Gezählt am
+19. September: 479.*
+
 ### Die Befehle
 
 ```txt
@@ -920,7 +947,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 478 Läufe
+npm run pruefen                      alle 479 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -962,7 +989,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 478 Läufen sind diese fünf die, die man beim Namen kennt:
+Von 479 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
@@ -971,6 +998,7 @@ Von 478 Läufen sind diese fünf die, die man beim Namen kennt:
 | `test100` | `.redion` mit echten Bytes: sichern, löschen, zurückholen, vergleichen |
 | `test105` | dass jede `.ts` ihr gebautes `.js` hat und `tsconfig.bauen.json` vollständig ist |
 | `test109` | dass kein neues JavaScript entsteht (§54) und `js-bestand.json` nur schrumpft |
+| `test537` | dass kein Bereich einen anderen NEU anfasst (§5 Regel 1) — `bereiche-bestand.json` nur schrumpft |
 
 **Diese Läufe nicht entfernen.** Bei Änderungen an Backup, ZIP oder Dateien
 zuerst `test96` und `test100` ansehen.
