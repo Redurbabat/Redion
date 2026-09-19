@@ -1173,10 +1173,17 @@ Kacheln (Linie · Pfeil · Rechteck · Kreis · Stern).
   hinweg gilt. Die Millimeter aus E616 stehen jetzt auf der Kachel:
   **0,4 mm · 0,8 mm · 1,8 mm**, beim Marker das Vierfache.
 
-  **Offen bleibt:** die Strichvorschau, Name UND Millimeter auf EINER
-  Kachel (die Namen stehen an den Stiften, die Millimeter an den
-  Strichstärken), der Deckkraft-Schieber und der Radierer mit Grösse und
-  Haken. Der Deckkraft-Schieber ist zusätzlich eine Datenfrage.
+  **Und seit E623/E624 ist W4 bis auf einen Punkt fertig.** Die
+  **Strichprobe** trug `currentColor` — die Textfarbe des Knopfes, nicht die
+  Tinte — und gar keine Deckung; jetzt beides, und zwar aus derselben
+  Funktion, die auch den echten Strich und das PDF färbt (sie stand vorher
+  viermal). **Name und Millimeter** stehen auf EINER Kachel, untereinander:
+  nebeneinander wuchs die Leiste von 128 auf 143 px und riss ihre Decke. Und
+  der **Radierer** hat seine drei Grössen jetzt auch ohne Studio — dort
+  standen sie seit E576 und nur dort — samt dem Haken «Automatisch an den
+  Strich anpassen».
+
+  **Offen bleibt allein der Deckkraft-Schieber.**
 
   **Und die Deckkraft ist zusätzlich eine Datenfrage:** sie steht heute fest
   je Stift (Marker 0,32 · Pinsel 0,92 · Bleistift 0,72 minus Neigung). Sie
@@ -1184,6 +1191,18 @@ Kacheln (Linie · Pfeil · Rechteck · Kreis · Stern).
   eigene Entscheidung und kein Nebensatz.
 - **W5 · Der Dock-Effekt.** Vergrössern beim Überfahren, mit
   `prefers-reduced-motion` als Abschaltung (§38).
+
+  **NACHGEMESSEN am 19. September 2026: er ist zum grössten Teil gebaut.**
+  `pdf-studio.css:666–716`, unter `@media (hover:hover) and (pointer:fine)`:
+  der überfahrene Knopf auf `scale(1.3)`, beide Nachbarn auf `scale(1.13)`
+  (Redurs Dock-Welle — `:has(+ button:hover)` liest nach links, der
+  Nachbarwähler nach rechts), die Federung `@keyframes dock-feder`, und die
+  Abschaltung unter `prefers-reduced-motion` bei `:703–716`.
+
+  **Offen davon sind zwei Dinge:** die **gewöhnliche Seite** — keiner dieser
+  Wähler trifft sie, alle hängen an `.document-studio` — und Redurs Bild 8,
+  das **Farb-Dock mit Namensfähnchen**: die Farbtupfer tragen kein `svg` und
+  fallen deshalb aus jeder dieser Regeln heraus.
 
 Was **nicht** dazugehört und trotzdem auffällt: dass Redurs Entwurf die
 Leiste OBEN zeigt und Redion sie im Studio unten hat. Beides ist richtig —

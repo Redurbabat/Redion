@@ -5638,3 +5638,55 @@ aus dem Blatt.
 
 **Offen daraus:** L187 — «unten» steht am Fuss des Blattes, nicht des
 Fensters. Drei Wege, Redurs Wahl.
+
+---
+
+## Die Strichprobe, die eine Kachel und der Radierer (19. September 2026)
+
+Redur hat zwei Dinge entschieden: **L187** (die Leiste bei «unten» soll
+sticky am Blattfuss kleben) und **W4-Rest** als nächsten Bogen.
+
+**L187 (E622).** `position:sticky` statt `absolute` — und dazu ein Fund, den
+die Lückenbeschreibung noch nicht kannte: sticky mit `bottom` **zieht nach
+oben**, es schiebt nichts nach unten. Die Leiste musste im Fluss hinter das
+Papier, sonst blieb sie oben stehen. Gemessen: y = 1885 → y = 904 in einem
+960 px hohen Fenster, und über dem Papier bleibt keine Lücke.
+
+**Die Strichprobe (E623).** Sie hiess so und war keine:
+`background:currentColor` ist die Textfarbe des Knopfes — gemessen
+`rgb(242,242,242)` bei jeder Tinte —, und eine Deckung hatte der Balken gar
+nicht. Jetzt trägt er die gewählte Tinte und die Deckung des Stifts.
+
+**Der Fund dabei:** die Deckung stand **viermal** im Quelltext, obwohl der
+Kommentar über `alsAnnotation` seit E506 behauptet, sie stehe „hier und
+nirgends sonst (§8)". Jetzt eine Funktion, und `test535 §3` vergleicht die
+Zahl auf der Kachel mit der eines echten, gezogenen Strichs.
+
+**Name und Millimeter auf einer Kachel (E623).** Der erste Wurf schrieb
+„Markant · 1,8 mm" in eine Zeile — gemessen wuchs die Leiste von 128 auf
+143 px und riss die Decke von `test533 §5b`. Untereinander kostet es Höhe
+statt Breite, und es ist ausserdem die Form auf Redurs Bild.
+
+**Der Radierer (E624).** Drei Grössen gab es im Studio und nur dort — gebaut
+im Hörer auf `ink-studio-ready`, den allein `document-mode.ts` auslöst. Jetzt
+stehen sie in der Leiste, und das Studio nimmt dieselben Knöpfe. Dazu der
+Haken «Automatisch an den Strich anpassen»: den Zustand gab es seit je
+(`eraserSize ?? max(5, Breite × 3)`), nur führte kein Weg zurück.
+
+**Geprüft.** `test535` neu, 24 Zusagen, **acht davon rot gesehen** (sieben
+für die Probe, eine für den Haken). `test534` um §1b gewachsen (50 grün, zwei
+Zusagen rot gesehen), `test533` um zwei Zusagen (56 grün). `test524`,
+`test348`, `test351`, `test438`, `test247`, `test475`, `test506`, `test393`,
+`test481` grün — zwei Zahlen darin nachgezogen, beide mit geschriebenem
+Grund: der Radierer zeigt jetzt fünf Knöpfe statt einem, und seine Leiste ist
+1068 statt 828 px lang.
+
+**Und drei Fehler, die die Läufe gefunden haben**, nicht das Lesen: der
+Klickzweig für die Grössen lag tot (er stand innerhalb von
+`if (target.dataset.act)`, und die Knöpfe tragen kein `data-act`); die
+Markierung zog nur das eigene Blatt mit, nicht die Nachbarblätter; und die
+Lückenprüfung in `test534 §1b` war zu weich formuliert — sie blieb grün,
+obwohl 46 px Lücke dastanden.
+
+**Offen von W4:** nur noch der **Deckkraft-Schieber**, und der ist eine
+Datenfrage (§9): eine Marke speichert heute kein Feld `deckkraft`.

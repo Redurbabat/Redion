@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-599 Entscheidungen, E1 bis E621 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+602 Entscheidungen, E1 bis E624 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -664,6 +664,9 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E619** — Im Studio bleibt der Dock, und der Platz-Knopf hört auf zu lügen: `pdf-studio.css` setzte die Leiste ohne `[data-lage]` im Wähler fest, die Spaltenform aus `bausteine.css` griff trotzdem — gemessen stand eine 74 px schmale Spalte mitten auf dem Papier. Statt den Platz im Studio wirken zu lassen (das hätte den Vorgabewert in den Dock hinein verschoben) ist der Knopf dort weg (`test534`)
 * **E620** — Die Leiste wandert am Griff: ziehen statt nur tippen, gefangen am nächsten Rand, und ein fünfter Platz «frei» im selben Katalog — dazu die zwei Pixel, zu denen «unten in der Mitte» auf der gewöhnlichen Seite zusammengefallen war (`container-type:inline-size` gegen Schrumpf-auf-Inhalt) (`test534`)
 * **E621** — Die Leiste sagt, dass sie eine Leiste ist: `role="toolbar"` kam in `src/` null mal vor; mit der Rolle kommen die Pfeiltasten und der eine Tabstopp, sonst wäre sie eine Behauptung (§38, `test534`)
+* **E622** — «Unten in der Mitte» klebt am Fenster, nicht am Blattfuss: `position:sticky` statt `absolute`, und dafür ein Zug im Baum — sticky mit `bottom` zieht nach oben, es schiebt nichts nach unten, also muss die Leiste hinter das Papier (L187, Redurs Wahl, `test534 §1b`)
+* **E623** — Die Strichprobe zeigt den Strich: der Balken trug `currentColor` und keine Deckung; jetzt die gewählte Tinte und die Deckung des Stifts — aus EINER Funktion, die auch den echten Strich und das PDF färbt (sie stand viermal). Dazu Name und Millimeter auf einer Kachel, untereinander, weil nebeneinander die Leiste von 128 auf 143 px wuchs (W4, `test535`, `test533`)
+* **E624** — Der Radierer bekommt seine Grösse auch ohne Studio, und den Haken «Automatisch an den Strich anpassen»: den Zustand gab es seit je (`eraserSize` oder das Dreifache der Strichbreite), nur führte kein Weg zurück — das Studio setzte beim Aufbau immer eine Zahl (W4, `test535 §4`, `test524`)
 
 ---
 
@@ -50650,3 +50653,233 @@ role="toolbar" in src/    vorher 0    nachher 1
 Tabstationen der Leiste   vorher 35   nachher 1
 test534 §3                7 von 7 grün
 ```
+
+---
+
+## E622 — «Unten in der Mitte» klebt am Fenster, nicht am Blattfuss
+
+**19. September 2026, L187.** E620 hat den vierten Platz der Leiste repariert
+— aus zwei Pixeln wurde eine Leiste. Beim Hinsehen fiel sofort das Nächste
+auf: sie stand am **Fuss des Blattes**.
+
+```txt
+gemessen   Blatt ~1400 px hoch, Fenster 900 px
+           Leiste bei y = 1885      →   ausserhalb des Bildes
+```
+
+Wer oben auf dem Blatt zeichnet, sieht sie nicht. Drei Wege standen in
+`LUECKEN.md`; Redur hat am selben Tag gewählt: **sticky**.
+
+> „Sticky am Blattfuss: sie wandert mit, solange das Blatt im Bild ist, und
+> bleibt trotzdem beim Blatt."
+
+`position:fixed` wäre die andere Form gewesen — die des Studios und die des
+Papiers vom 19. September. Sie scheitert daran, dass eine gewöhnliche Seite
+**mehrere Blätter** tragen kann: zwei Leisten, die beide am Fensterfuss
+kleben, lägen übereinander.
+
+### Was dabei zu lernen war
+
+`position:sticky` mit `bottom` **zieht ein Element nach oben**, wenn es
+sonst unter den Fensterrand rutschte. Es schiebt keines nach unten. Der
+erste Wurf tauschte nur `absolute` gegen `sticky` — und die Leiste blieb bei
+y = 335 stehen, also oben, weil `seite.ts:111` sie als **erstes** Kind der
+Hülle einhängt.
+
+Damit sie am unteren Rand klebt, muss sie im Fluss **hinter dem Papier**
+stehen. Das ist ein Zug im Baum (`leisteEinordnen`), kein zweiter Wähler.
+Die Alternative wäre gewesen, die Hülle zu einer Flexspalte zu machen, um
+`order` zu bekommen — dann wären Papier, Drehhülle und Abbild zu
+Flexelementen geworden: vier Dinge geändert, um eines zu verschieben.
+
+Und es stimmt auch für den Vorleser: bei «unten» steht die Leiste unter dem
+Blatt, und dort soll sie gelesen werden (§38).
+
+Zwei kleinere Funde nebenbei: `left:50%` ist bei `sticky` keine Platzierung,
+sondern eine Haftgrenze — mit `translateX(-50%)` landete die Leiste bei
+x = −288. Jetzt `margin-inline:auto`. Und die Lücke, die ein sticky-Element
+im Fluss hinterlassen könnte, entsteht gar nicht: hinter dem Papier liegt
+sein Platz unter dem Blatt, nicht darüber.
+
+### Gemessen
+
+```txt
+vorher    y = 1885   (Blattfuss)            Papier 335 … 1941
+nachher   y =  904   in 960 px Fenster      Papier 335 … 1941
+test534   50 von 50 grün (§1b neu, 6 Zusagen)
+```
+
+**Gegenprobe (§50):** den Zug im Baum abgeschaltet → `test534 §1b` fällt mit
+zwei Zusagen („steht im Baum HINTER dem Papier", „klebt am unteren
+Fensterrand"). Dabei kam heraus, dass die dritte Zusage zu weich formuliert
+war: „Papier beginnt unter 400 px" blieb grün, obwohl 46 px Lücke dastanden.
+Sie misst jetzt gegen «oben» statt gegen eine geratene Zahl.
+
+---
+
+## E623 — Die Strichprobe zeigt den Strich, und die Deckung steht nur noch einmal
+
+**19. September 2026, W4.** `AUFGABEN.md` führte die **Strichvorschau** und
+**Name UND Millimeter auf EINER Kachel** als offen. Beides ist jetzt gebaut,
+und dazwischen lag ein Fund, der nicht auf der Liste stand.
+
+### Die Probe war keine
+
+```css
+.blatt-strich i{ width:18px; background:currentColor; border-radius:999px }
+```
+
+`currentColor` ist die **Textfarbe des Knopfes**. Gemessen an der laufenden
+App im Dunkelmodus: `rgb(242, 242, 242)` — dieselbe Farbe, ganz gleich,
+welche Tinte gewählt war. Eine Deckung hatte der Balken gar nicht.
+
+Er sagte also **dick**, und das ist die eine Eigenschaft, die man einem
+Strich ohnehin ansieht. Der Unterschied zwischen einem Bleistiftstrich und
+einem Markerstrich derselben Zahl steckt in Farbe und Deckung.
+
+Jetzt trägt er beides. Kein `<canvas>` und kein zweiter Zeichenweg — es
+bleibt der `<i>`-Balken, nur mit den richtigen Zahlen. Das ist der kleinste
+Eingriff, der aus „dick" ein „so wird es aussehen" macht.
+
+**Und damit kam ein Fehler, den die richtige Farbe erst schuf.** Gemessen:
+
+```txt
+schwarze Tinte        rgb( 17,  17,  17)
+Leiste im Dunkelmodus rgb( 32,  32,  32)      Kontrast 1,2 zu 1
+```
+
+Ein schwarzer Strich auf schwarzem Grund ist keine Probe, sondern ein leeres
+Feld. Mit `currentColor` fiel das nie auf — die Textfarbe passte
+zwangsläufig zum Grund.
+
+Die Abhilfe ist zugleich die ehrlichere Anzeige: **die Probe liegt auf
+Papier**, `box-shadow: 0 0 0 3px var(--paper)`, derselbe Wert wie das Blatt.
+Sie zeigt damit, wie der Strich AUF DEM BLATT aussieht — und dort ist der
+Grund weiss, auch im Dunkelmodus. Nachher 17,7 zu 1. `test535 §1b` misst
+beides: den Kontrast gegen das Papier **und** den gegen die Leiste, damit die
+Zusage nicht nur „ist hell genug" heisst, sondern „wäre ohne Papier
+unsichtbar".
+
+### Und dabei fiel auf: die Deckung stand viermal
+
+Über `alsAnnotation` steht seit E506:
+
+> Farbe, Breite, Druckkurve und Deckkraft stehen hier und nirgends sonst (§8).
+
+Nachgemessen stimmte das nicht. Die Zahlen standen am Bildschirm beim Pinsel
+(0,92), beim Bleistift (0,72 − Neigung × 0,22) und beim Marker (0,32) — und
+noch einmal im PDF-Export. Zwei Rechnungen mit denselben Zahlen gehen genau
+so lange gut, bis jemand eine davon ändert; dann sieht das PDF anders aus als
+der Bildschirm, und kein Lauf merkt etwas.
+
+Jetzt eine Funktion `deckungVon(art, stil, neigung)`, und **weil** es eine
+Stelle ist, kann die Probe in der Leiste dieselbe Zahl zeigen. `test535 §3`
+misst das nicht im Quelltext, sondern zieht einen echten Strich und liest
+seine Deckung am gezeichneten SVG ab.
+
+### Name und Millimeter auf einer Kachel
+
+Hier stand der Grund, warum sie getrennt waren:
+
+> Auf der Kachel steht NUR die Zahl. Der Name („Fein") steht im Titel; beides
+> auf 32 px Breite wäre abgeschnitten, und eine abgeschnittene Zahl ist eine
+> falsche Zahl (§55.1).
+
+Das galt für die Kachel von E616. Seit E618 ist sie im Kastenzustand
+`width:auto` mit `min-width:52px` und darf wachsen.
+
+**Der erste Wurf schrieb „Markant · 1,8 mm" in eine Zeile.** Gemessen wuchs
+die Leiste damit von 128 auf **143 px** — über die Decke von `test533 §5b`:
+drei Kacheln je rund 95 statt 52 px sind 129 px mehr, und die Tafel bricht
+um. Untereinander kostet es Höhe statt Breite, genau wie beim Wort unter dem
+Zeichen (W3, E614) — und es ist ausserdem die Form auf Redurs Bild.
+
+Unterhalb des Kastens bleibt das Wort geklemmt, nicht `display:none` (§38):
+dort ändert sich am Bild nichts, und ein Vorleser bekommt den vollen Namen
+weiterhin aus dem `aria-label`.
+
+### Gemessen
+
+```txt
+Probe vorher    rgb(242,242,242), keine Deckung   — bei jeder Tinte
+Probe nachher   die gewählte Tinte auf Papier, Deckung des Stifts
+                Kontrast gegen Papier 17,7 zu 1 · gegen die Leiste 1,2 zu 1
+                Bleistift 0,72 · Pinsel 0,92 · Marker 0,32 · Füller 1
+Kachel          „Fein / 0,4 mm" · „Mittel / 0,8 mm" · „Markant / 1,8 mm"
+                beim Marker „3,4 mm" (das Vierfache, E616)
+Leistenhöhe     eine Zeile 143 px · untereinander unter 140 · Decke 140
+test535         27 von 27 grün      test533   56 von 56 grün
+```
+
+**Gegenprobe (§50):** die zwei Zeilen in `staerkenBeschriften` wieder
+herausgenommen → `test535` **5 von 12**; sieben Zusagen fallen einzeln, und
+die Probe meldet wieder `rgb(242,242,242)` bei roter Tinte.
+
+---
+
+## E624 — Der Radierer bekommt seine Grösse auch ohne Studio, und den Haken
+
+**19. September 2026, W4.** Gezählt, nicht erinnert:
+
+| Baustein | gewöhnliche Seite | Studio |
+|---|---|---|
+| Rundlauf `[data-act="radiermodus"]` | 1 sichtbar | 1, per CSS versteckt |
+| Modusfeld `[data-act="eraser-menu"]` | 0 | 1 |
+| Grössen `[data-eraser-size]` | **0** | 3 (5/14/28) |
+| Haken | 0 | 0 |
+
+Die drei Grössen standen seit E576 im Studio und **nur** dort: gebaut im
+Hörer auf `ink-studio-ready`, den allein `document-mode.ts` auslöst. Wer auf
+einer gewöhnlichen Seite zeichnet, hatte einen Radierer ohne Grösse.
+
+Jetzt werden sie dort gebaut, wo die Leiste ohnehin entsteht; das Studio
+nimmt dieselben Knöpfe und hängt sie nur vor sein Modusfeld. Ein Katalog,
+eine Stelle (§8).
+
+### Der Haken war schon da — nur ohne Schalter
+
+`radierRadius()` ist seit je `eraserSize ?? Math.max(5, width * 3)`. Der
+Zustand „automatisch an den Strich anpassen" — Redurs Wort aus seinem Bild 4
+— ist also genau `eraserSize === null`. Nur führte **kein Weg zurück**: das
+Studio setzte beim Aufbau sofort die gemerkte Zahl.
+
+Der Haken ist damit keine neue Funktion, sondern der fehlende Schalter zu
+einem Zustand, den es gibt. Gemessen am Radierkreis auf dem Blatt:
+
+```txt
+gewählt „groß"     r = 28
+automatisch        r = 7,2     (Strichbreite 2,4 × 3)
+```
+
+**Kein `<input type="checkbox">`**: in `src/bereiche/pdf/` gibt es null
+davon, und ein fremdes Bedienteil mitten in einer Reihe aus Knöpfen sieht aus
+wie ein Fehler. Ein Knopf mit `aria-pressed` sagt dasselbe (§38).
+
+**Ein eigener Schlüssel** (`zeichnen:radiererauto`) statt eines Sonderwerts
+in `zeichnen:radierergroesse`: dort stehen auf jedem Gerät, das Redion schon
+benutzt hat, Zahlen. Ein „auto" hineinzuschreiben hiesse, einen vorhandenen
+Wert neu zu deuten — eine Datenänderung, und für einen Schalter ist sie nicht
+nötig (§9). So bleibt die gemerkte Grösse stehen, während der Haken an ist,
+und kommt beim Abwählen zurück.
+
+### Zwei Fehler, die die Läufe gefunden haben
+
+1. **Der Zweig lag tot.** Er stand innerhalb von `if (target.dataset.act)`,
+   und die Grössenknöpfe tragen kein `data-act`. `test524` sagte: „Die
+   Markierung wandert mit (5 → 5)".
+2. **Nur das eigene Blatt zog mit.** Die Markierung wurde über
+   `tools.querySelectorAll` gesetzt — jedes Blatt baut aber seine eigene
+   Leiste. Seite umblättern, und die alte Grösse stand wieder markiert da.
+   Genau das hält `test524` seit E576 fest: „die Wahl gilt für den Menschen,
+   nicht für das Blatt."
+
+### Gemessen
+
+```txt
+Grössen auf der Seite   vorher 0   nachher 3, je 44 × 44 px (§37)
+Radierkreis             28 → 7,2 beim Umschalten auf „automatisch"
+test535 §4              14 von 14 grün      test524   105 von 105 grün
+```
+
+**Gegenprobe (§50):** `setEraserSize(0)` zu einem Nichts gemacht → „der
+Radierer rechnet wirklich anders" fällt, 28 → 28.

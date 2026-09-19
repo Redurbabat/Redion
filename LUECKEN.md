@@ -8872,7 +8872,7 @@ sah niemand hin. Der Platz war gebaut, der Prüflauf dafür prüfte, dass sich
 
 ---
 
-## L187 · «unten» steht am Fuss des BLATTES, nicht am Fuss des Fensters — 19. September 2026
+## L187 · «unten» steht am Fuss des BLATTES, nicht am Fuss des Fensters — ~~19. September 2026~~ **GESCHLOSSEN am selben Tag durch E622**
 
 Offen, und es ist eine Frage an Redur, keine technische.
 
@@ -8901,4 +8901,50 @@ Drei Wege, und keiner ist offensichtlich richtig:
    meint. Braucht eine Regel dafür, welches Blatt „das aktive" ist.
 3. **`position:sticky` am Blattfuss.** Sie wandert mit, solange das Blatt im
    Bild ist, und bleibt beim Blatt. Der kleinste Eingriff.
+
+
+**GESCHLOSSEN am 19. September 2026 durch E622.** Redur hat Weg 3 gewählt
+(`position:sticky`). Dazu kam ein Zug im Baum, den die Beschreibung oben noch
+nicht kannte: sticky mit `bottom` zieht ein Element nach OBEN, wenn es sonst
+unter den Fensterrand rutschte — es schiebt keines nach unten. Die Leiste
+musste also im Fluss hinter das Papier. Gemessen: y = 1885 → y = 904 in einem
+960 px hohen Fenster, und über dem Papier bleibt keine Lücke
+(`test534 §1b`, sechs Zusagen).
+
+---
+
+## L188 · Die Deckkraft stand viermal, obwohl ein Kommentar das Gegenteil behauptete — 19. September 2026, **GESCHLOSSEN am selben Tag durch E623**
+
+Gefunden beim Bau der Strichprobe, nicht gesucht. Über `alsAnnotation` steht
+seit E506:
+
+> Farbe, Breite, Druckkurve und Deckkraft stehen hier und nirgends sonst (§8).
+
+Nachgemessen stimmte das für die Deckkraft nicht: sie stand am Bildschirm
+beim Pinsel (0,92), beim Bleistift (0,72 − Neigung × 0,22) und beim Marker
+(0,32) — und noch einmal im PDF-Export. Vier Stellen, zwei Rechnungen,
+dieselben Zahlen.
+
+Das ist die gefährliche Sorte Doppelung: sie fällt nicht auf, solange
+niemand eine der beiden ändert. Danach sieht das PDF anders aus als der
+Bildschirm, und kein Prüflauf merkt etwas — es gab keinen, der beide
+verglichen hätte.
+
+Geschlossen mit `deckungVon(art, stil, neigung)`. `test535 §3` zieht seither
+einen echten Strich und vergleicht seine Deckung am gezeichneten SVG mit der
+Zahl auf der Kachel.
+
+---
+
+## L189 · Der Radierer hatte auf einer gewöhnlichen Seite keine Grösse — 19. September 2026, **GESCHLOSSEN am selben Tag durch E624**
+
+Gezählt am 19. September: drei Grössen im Studio, **null** auf einer
+gewöhnlichen Seite. Der Grund war ein Ort, kein Wille: sie wurden im Hörer
+auf `ink-studio-ready` gebaut, und den löst allein `document-mode.ts` aus.
+
+Dazu der Haken «Automatisch an den Strich anpassen» aus Redurs Bild 4: den
+Zustand gab es seit je (`radierRadius()` ist `eraserSize ?? max(5, Breite ×
+3)`), nur führte kein Weg zurück — das Studio setzte beim Aufbau immer eine
+Zahl. Jetzt ist er ein Schalter; gemessen am Radierkreis: r = 28 gewählt,
+r = 7,2 automatisch.
 

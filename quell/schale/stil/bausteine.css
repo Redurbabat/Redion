@@ -4105,6 +4105,16 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     .blatt-werk > .blatt-tafel > button.blatt-strich > .wort{
       font-size:10px; letter-spacing:-.01em; white-space:nowrap;
       font-variant-numeric:tabular-nums;
+      /* NAME UEBER MILLIMETER (E623). Nebeneinander („Markant · 1,8 mm")
+         wuchsen die drei Kacheln von je 52 auf rund 95 px, und die Tafel
+         brach um: die Leiste wurde 143 statt 128 px hoch und riss die
+         Decke von `test533 §5b`. Untereinander kostet es Hoehe statt
+         Breite — dieselbe Rechnung wie beim Wort unter dem Zeichen (W3,
+         E614), und es ist ausserdem die Form auf Redurs Bild. */
+      display:flex; flex-direction:column; align-items:center; line-height:1.06;
+    }
+    .blatt-werk > .blatt-tafel > button.blatt-strich .strich-mm{
+      font-size:9.5px; color:var(--text-dim)
     }
   }
 }
@@ -4466,8 +4476,24 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    steht in EINER Zeile, die rollt — genau wie der Dock im Studio
    (`pdf-studio.css`). Eine schwebende Leiste, die drei Zeilen hoch wird,
    waere kein Dock mehr, sondern eine Wand. */
+/* STICKY, NICHT ABSOLUT (E622, L187). Redur, 19. September, vor die Wahl
+   gestellt: „Sticky am Blattfuss." Absolut gesetzt klebte die Leiste am
+   FUSS DES BLATTES — bei einem A4-Blatt (rund 1400 px) in einem 900 px
+   hohen Fenster heisst das: wer oben zeichnet, sieht sie nicht.
+   GEMESSEN am 19. September: y = 1885 bei 900 px Fensterhöhe.
+
+   `position:sticky` mit `bottom` geht, weil `seite.ts:111` die Leiste als
+   ERSTES Kind der Hülle einhängt und das Papier danach: die Leiste darf
+   sich innerhalb der hohen Hülle nach unten schieben lassen und bleibt am
+   unteren Fensterrand, solange das Blatt im Bild ist. `position:fixed`
+   wäre die andere Form gewesen — die hätte bei mehreren Blättern auf einer
+   Seite zwei Leisten übereinandergelegt. */
 .blatt-reihe[data-lage="unten"]{
-  position:absolute; left:50%; transform:translateX(-50%);
+  /* MITTIG MIT `margin-inline:auto`, NICHT MIT `left:50%`. Bei `sticky` ist
+     `left` keine Platzierung, sondern eine Haftgrenze — die Leiste bleibt
+     im Fluss und wurde von `translateX(-50%)` um ihre halbe Breite nach
+     links geschoben. Gemessen: x = -288 statt 256. */
+  position:sticky; margin-inline:auto;
   bottom:10px; top:auto; z-index:6;
   container-type:normal; width:max-content; max-width:calc(100% - 24px);
   border-radius:12px; border:1px solid var(--line);
@@ -4670,7 +4696,19 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    ein dicker Strich — auf dem Bild war er das auffälligste Ding der
    ganzen Zeile. Ein voll gerundetes Ende ist das, was ein Stift auf
    Papier hinterlässt. */
-.blatt-strich i{display:block; width:18px; background:currentColor; border-radius:999px}
+/* ══ DIE PROBE LIEGT AUF PAPIER (E623) ══════════════════════════════════
+   Der Balken trug `currentColor` — die Textfarbe des Knopfes. Seit E623
+   trägt er die gewählte TINTE, und damit kam ein Fehler, den erst das
+   Nachmessen zeigte: schwarze Tinte ist `rgb(17,17,17)`, die Leiste im
+   Dunkelmodus `rgb(32,32,32)`. Ein schwarzer Strich auf schwarzem Grund
+   ist keine Probe, sondern ein leeres Feld (§38, Kontrast).
+
+   Also liegt er auf Papier — derselbe Wert wie das Blatt (`--paper`,
+   #fff). Das ist nicht nur die Abhilfe, sondern die ehrlichere Anzeige:
+   die Probe zeigt, wie der Strich AUF DEM BLATT aussieht, und dort ist
+   der Grund weiss, auch im Dunkelmodus. */
+.blatt-strich i{display:block; width:18px; background:currentColor; border-radius:999px;
+                box-shadow:0 0 0 3px var(--paper,#fff)}
 
 /* ══ ORDNEN AN ORT UND STELLE (E571) ═══════════════════════════════════════
    Im Modus ist jeder Knopf ein Ding, das man anfassen kann — und das muss

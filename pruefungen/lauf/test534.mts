@@ -157,13 +157,42 @@ const kasten = (pg: Page) => pg.evaluate(() => {
        hatte noch Knöpfe im Baum — sie waren nur nicht mehr zu erkennen. */
     sichtbar: werk ? [...werk.querySelectorAll<HTMLElement>('button')]
       .filter(x => { const q = x.getBoundingClientRect(); return q.width >= 16 && q.height >= 16; }).length : 0,
-    papier: pap ? { x: Math.round(pap.x), r: Math.round(pap.right) } : null,
+    papier: pap ? {
+      x: Math.round(pap.x), r: Math.round(pap.right),
+      y: Math.round(pap.y), u: Math.round(pap.bottom)
+    } : null,
+    /* WO SIE IM BAUM STEHT. Seit E622 ist das keine Nebensache: «unten»
+       klebt nur dann am Fensterrand, wenn sie im Fluss HINTER dem Papier
+       steht — `position:sticky` mit `bottom` zieht nach oben, es schiebt
+       nichts nach unten. */
+    baum: (() => {
+      const h = r.parentElement;
+      return h ? [...h.children].indexOf(r) : -1;
+    })(),
+    letztes: r.parentElement?.lastElementChild === r,
     fenster: { w: window.innerWidth, h: window.innerHeight }
   };
 });
 
-/** Platz setzen wie der Knopf es täte: gemerkt UND am Baum. */
+/** Platz setzen ÜBER DEN KNOPF — der echte Weg. Seit E622 hängt am Platz
+ *  auch ein Zug im Baum («unten» muss hinter das Papier), und den macht nur
+ *  `lageAnwenden`. Wer das Attribut von Hand setzt, misst eine Leiste, die
+ *  es so nie gibt. */
 const lageSetzen = async (pg: Page, lage: string) => {
+  for (let i = 0; i < 6; i++) {
+    const jetzt = await pg.evaluate(() =>
+      document.querySelector<HTMLElement>('.blatt-reihe')?.dataset.lage ?? '');
+    if (jetzt === lage) break;
+    await pg.click('.blatt-werk [data-act="lage"]');
+    await pg.waitForTimeout(180);
+  }
+  await pg.waitForTimeout(200);
+};
+
+/** Nur den GEMERKTEN Platz setzen, ohne Knopf — für das Studio, wo es
+ *  keinen gibt (E619). Geprüft wird dort, dass ein gemerkter Platz den Dock
+ *  nicht verformt. */
+const lageMerken = async (pg: Page, lage: string) => {
   await pg.evaluate((l: string) => {
     try { Store.setMeta('zeichnen:leistenlage', l); } catch { /* nur diese Sitzung */ }
     document.querySelectorAll<HTMLElement>('.blatt-reihe').forEach(r => { r.dataset.lage = l; });
@@ -203,6 +232,34 @@ if (alleVier) {
   }
 }
 
+/* ═══ §1b «unten» klebt am Fenster, nicht am Blattfuss (L187, E622) ═══════ */
+console.log('\n§1b «unten» bleibt im Bild, auch wenn das Blatt lang ist');
+await lageSetzen(p1, 'unten');
+const klebt = await kasten(p1);
+console.log(`    y=${klebt?.y} in ${klebt?.fenster.h} px Fenster, Papier ${klebt?.papier?.y}…${klebt?.papier?.u}, Platz im Baum ${klebt?.baum}`);
+p('Sie ist `position:sticky`, nicht absolut',
+  await p1.evaluate(() => getComputedStyle(document.querySelector('.blatt-reihe')!).position) === 'sticky');
+p('… und steht im Baum HINTER dem Papier', klebt?.letztes === true, `Platz ${klebt?.baum}`);
+p('… und klebt am unteren Fensterrand, nicht am Blattfuss',
+  !!klebt && klebt.y + klebt.h <= klebt.fenster.h + 2 && klebt.y > klebt.fenster.h / 2,
+  `y=${klebt?.y}+${klebt?.h} in ${klebt?.fenster.h}`);
+p('… obwohl das Blatt länger ist als das Fenster',
+  !!klebt?.papier && klebt.papier.u > klebt.fenster.h,
+  `Papier bis ${klebt?.papier?.u}`);
+/* DIE LÜCKE, die `sticky` im Fluss machen könnte: sie entsteht NICHT, weil
+   die Leiste hinter dem Papier steht. Gemessen gegen «oben»: dort beginnt
+   die LEISTE bei 335 und das Papier darunter bei 428; bei «unten» muss das
+   Papier selbst bei 335 anfangen. Eine feste Zahl wie „< 400" wäre hier
+   zu weich — in der Gegenprobe stand das Papier bei 381 und der Lauf blieb
+   grün, obwohl 46 px Lücke dastanden. */
+p('Über dem Papier steht keine Lücke — es beginnt, wo bei «oben» die Leiste beginnt',
+  !!klebt?.papier && !!orte['oben'] && klebt.papier.y <= orte['oben']!.y + 4,
+  `Papier bei ${klebt?.papier?.y}, «oben» beginnt bei ${orte['oben']?.y}`);
+await lageSetzen(p1, 'oben');
+const zurueck = await kasten(p1);
+p('Und zurück bei «oben» steht sie wieder vor dem Papier',
+  zurueck?.baum === 0, `Platz ${zurueck?.baum}`);
+
 /* ═══ §2 Im Studio bleibt der Dock ═════════════════════════════════════════ */
 console.log('\n§2 Im Studio bleibt der Dock — Redur, 14. September');
 const { ktx: k2, pg: p2 } = await aufbauen(1440, true);
@@ -222,7 +279,7 @@ const platzImStudio = await p2.evaluate(() =>
 p('Kein sichtbarer Platz-Knopf im Studio — er hätte dort keine Wirkung (E619)',
   platzImStudio === 0, `${platzImStudio} sichtbar`);
 for (const lage of ['links', 'rechts', 'unten']) {
-  await lageSetzen(p2, lage);
+  await lageMerken(p2, lage);
   const m = await kasten(p2);
   p(`Ein gemerktes «${lage}» verformt den Dock nicht`,
     !!m && m.w >= 300 && m.h <= 220 && m.richtung === 'row',

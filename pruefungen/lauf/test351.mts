@@ -193,7 +193,13 @@ gleich('Stift: Stil, Formen, Farben, Breiten, Verlauf und EIN Lineal — kein Ra
   [true, true, true, true, true, 0, 0, 1]);
 await werkzeug(pg, 'radierer');
 z = await leiste(pg);
-gleich('Radierer: sein Modus und der Verlauf, sonst nichts', [z.gruppen.radierer, z.gruppen.verlauf, z.gruppen.farbe, z.gruppen.stil, z.gruppen.breite], [1, 4, 0, 0, 0]);
+/* FUENF SEIT E624, nicht mehr einer: der Modus-Rundlauf, die drei Groessen
+   und der Haken «Automatisch an den Strich anpassen». Die drei Groessen
+   standen bis zum 19. September 2026 NUR im Studio (gebaut im Hoerer auf
+   `ink-studio-ready`); auf einer gewoehnlichen Seite hatte der Radierer
+   keine Groesse. Was diese Zeile weiterhin haelt, ist das Wichtige: KEINE
+   Farben, KEINE Stifte, KEINE Strichstaerken beim Radierer. */
+gleich('Radierer: sein Modus, seine drei Groessen, der Haken und der Verlauf, sonst nichts', [z.gruppen.radierer, z.gruppen.verlauf, z.gruppen.farbe, z.gruppen.stil, z.gruppen.breite], [5, 4, 0, 0, 0]);
 await werkzeug(pg, 'select');
 z = await leiste(pg);
 /* NEUN IN DER GRUPPE „AUSWAHL": Löschen, Kopieren, Einsetzen; dazu seit

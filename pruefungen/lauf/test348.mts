@@ -178,9 +178,17 @@ const alles = await pgH.evaluate(() => {
 console.log(`   Länge ohne Regel ${alles} px, beim Schreiben ${schreiben.laenge} px, beim Stift ${stift.laenge} px, beim Radierer ${radierer.laenge} px`);
 p('Beim Schreiben ist die Leiste weniger als halb so lang wie ohne Regel', schreiben.laenge < alles / 2, `${schreiben.laenge} von ${alles}`);
 p('Beim Stift ist sie kürzer als ohne Regel', stift.laenge < alles * 0.85, `${stift.laenge} von ${alles}`);
-/* Die Werkzeugreihe selbst ist rund 700 px; der Radierer legt genau
-   seinen Modus-Knopf dazu. */
-p('Beim Radierer ist sie die Schreib-Leiste plus ein Knopf', radierer.laenge <= schreiben.laenge + 60 && radierer.laenge < alles * 0.6, `${radierer.laenge} von ${alles}`);
+/* Die Werkzeugreihe selbst ist rund 700 px; der Radierer legt sein Zubehoer
+   dazu. SEIT E624 SIND DAS FUENF KNOEPFE und nicht mehr einer: der
+   Modus-Rundlauf, die drei Groessen (je 44 px, §37) und der Haken
+   «Automatisch an den Strich anpassen». Die drei Groessen gab es vorher nur
+   im Studio.
+   GEMESSEN am 19. September 2026, Fenster wie oben:
+       ohne Regel 3282 · Schreiben 828 · Stift 1692 · Radierer 1068
+   Die Zusage bleibt dieselbe und behaelt ihren Sinn: der Radierer ist
+   deutlich kuerzer als der Stift und weit von der ungefilterten Leiste
+   entfernt — er zeigt sein Zubehoer, nicht alles. */
+p('Beim Radierer ist sie die Schreib-Leiste plus sein Zubehoer', radierer.laenge <= schreiben.laenge + 280 && radierer.laenge < stift.laenge && radierer.laenge < alles * 0.5, `${radierer.laenge} von ${alles}, Schreiben ${schreiben.laenge}, Stift ${stift.laenge}`);
 /* DIE GRUPPEN STEHEN DIREKT HINTER DEM WERKZEUG, und die Leiste rollt hin:
    nach dem Tipp auf den Stift liegen Stift-Knopf, Stil und erster Tupfer
    nebeneinander im Bild — nicht drei Bildschirme weiter rechts. */

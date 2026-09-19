@@ -416,7 +416,17 @@ console.log('\n§5d Ab 1300 px ist die Tafel ein Kasten');
       rand: st.borderTopWidth,
       /* Er nimmt eine eigene Zeile — sonst stünde er neben den Werkzeugen. */
       unterhalb: tr.top >= wr.top + 20,
-      mm: striche.map(k => (k.querySelector('.wort')?.textContent || '').trim()),
+      /* ZWEI ZEILEN SEIT E623: Name über Millimeter. `textContent` klebt sie
+         ohne Trenner zusammen („Fein0,4 mm"), also werden sie einzeln
+         gelesen — und gleich mit ihren Kästen, damit „untereinander" eine
+         Messung bleibt und keine Behauptung. */
+      mm: striche.map(k => (k.querySelector('.strich-mm')?.textContent || '').trim()),
+      namen: striche.map(k => (k.querySelector('.strich-name')?.textContent || '').trim()),
+      gestapelt: striche.every(k => {
+        const n = k.querySelector('.strich-name')?.getBoundingClientRect();
+        const m = k.querySelector('.strich-mm')?.getBoundingClientRect();
+        return !!n && !!m && m.top >= n.bottom - 1;
+      }),
       mmSichtbar: striche.filter(k => {
         const x = k.querySelector('.wort');
         return !!x && x.getBoundingClientRect().width > 1;
@@ -439,6 +449,13 @@ console.log('\n§5d Ab 1300 px ist die Tafel ein Kasten');
     `${kasten.eigeneBreite} von ${kasten.leiste} px`);
   gleich('Die drei Strichstärken zeigen ihre Millimeter',
     kasten.mm, ['0,4 mm', '0,8 mm', '1,8 mm']);
+  /* SEIT E623 STEHT DER NAME DANEBEN — genauer: darüber. Bis dahin trug
+     die Kachel nur die Zahl, und der Name stand im Titel; W4 wollte
+     beides auf EINER Kachel. Nebeneinander riss das die Höhendecke
+     (143 statt 128 px), untereinander nicht. */
+  gleich('… und dazu ihren Namen, auf derselben Kachel',
+    kasten.namen, ['Fein', 'Mittel', 'Markant']);
+  p('… der Name steht ÜBER der Zahl, nicht daneben', kasten.gestapelt);
   gleich('… und alle drei sind zu sehen', kasten.mmSichtbar, 3);
   p('… und keine Zahl läuft über ihre Kachel hinaus', kasten.passtRein);
   await ktx.close();

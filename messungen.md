@@ -2442,3 +2442,67 @@ Gerechnet mit `python3`, euklidisch im RGB:
 
 Beide sind Violett, beide liegen nah — und genau deshalb wäre der Hex-Wert
 des Papiers ein **drittes** Violett neben zwei vorhandenen gewesen (§39).
+
+---
+
+## §58 · Die Strichprobe, die Kachel und der Radierer (E622–E624, 19. September 2026)
+
+Gemessen an der laufenden App mit Playwright, `deviceScaleFactor: 1`.
+
+### Wo «unten» steht (E622)
+
+```txt
+Fenster 1440 × 960, Blatt rund 1600 px hoch
+
+vorher    position:absolute   y = 1885      (Blattfuss, ausserhalb des Bildes)
+nachher   position:sticky     y =  904      (10 px über dem Fensterrand)
+          Papier              335 … 1941    — keine Lücke darüber
+          Platz im Baum       1 von 2       (hinter dem Papier)
+```
+
+Zwischenstand, der zum Zug im Baum führte: nur `absolute` → `sticky` getauscht
+ergab y = 335, also gar keine Bewegung. Und mit `left:50%` zusätzlich
+x = −288, weil `left` bei sticky eine Haftgrenze ist und keine Platzierung.
+
+### Was die Strichprobe zeigte (E623)
+
+```txt
+vorher    background:currentColor  →  rgb(242, 242, 242) bei JEDER Tinte
+nachher   rot gewählt              →  rgb(214, 69, 69)
+
+Kontrast der schwarzen Tinte (rgb 17,17,17)
+  gegen die Leiste im Dunkelmodus (rgb 32,32,32)      1,2 zu 1   unsichtbar
+  gegen den Papiergrund (rgb 248,248,245)            17,7 zu 1   lesbar
+
+Deckung der Probe        Bleistift 0,72 · Pinsel 0,92 · Marker 0,32 · Füller 1
+Deckung am echten Strich Bleistift 0,72 · Pinsel 0,92      (am SVG abgelesen)
+```
+
+### Was die Kachel kostet (E623)
+
+```txt
+„Markant · 1,8 mm" in EINER Zeile     Leiste 143 px   Decke 140  → gerissen
+Name über Millimeter                  Leiste < 140 px            → passt
+Kachelbreite im Kasten                min-width 52 px, width:auto
+beim Marker                           „3,4 mm" (das Vierfache, E616)
+```
+
+### Der Radierer (E624)
+
+```txt
+Grössen auf der gewöhnlichen Seite    vorher 0      nachher 3
+Kantenlänge je Grösse                 44 × 44 px    (§37, E576)
+Radierkreis „groß" gewählt            r = 28
+Radierkreis „automatisch"             r = 7,2       (Strichbreite 2,4 × 3)
+```
+
+### Was die Läufe dazu sagen
+
+```txt
+test535   27 von 27 grün   (neu)
+test534   50 von 50 grün   (§1b neu)
+test533   56 von 56 grün   (zwei Zusagen neu)
+test524  105 von 105 grün
+test348   34 von 34 grün   (eine Zahl nachgezogen: 1068 statt 828 + 60)
+test351   34 von 34 grün   (eine Zahl nachgezogen: 5 statt 1)
+```

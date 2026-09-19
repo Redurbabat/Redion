@@ -259,6 +259,12 @@ Register.symbole = (() => {
            darin statt eines Randes. Das Bild sagt damit dasselbe wie die vier
            anderen — WO sie landet —, und der Unterschied ist auf den ersten
            Blick zu sehen: an keinem Rand. */
+        /* AUTOMATISCH AN DEN STRICH (E624): der Radierer nimmt die Breite
+           dessen, was er trifft — ein Radiergummi mit einem Pfeil, der ihm
+           seine Grösse zeigt. */
+        eraserAuto: '<path d="M5 15.2 12.6 7.6a2 2 0 0 1 2.8 0l3 3a2 2 0 0 1 0 2.8L15.6 17H8.4z"/>' +
+            '<path d="M4 20.4h16"/>' +
+            '<path d="M17.6 4.6h3v3" stroke-width="1.6"/>',
         dockFree: '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="2.6"/>' +
             '<rect x="8.6" y="9.8" width="6.8" height="4.4" rx="1.4" stroke-width="2.2"/>',
         /* Die sieben Formen des Formen-Werkzeugs. Sie stehen hier und nicht

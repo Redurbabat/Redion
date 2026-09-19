@@ -120,6 +120,16 @@ const Marken = (() => {
      damit ein alter oder verbogener Wert nicht als Radiergummi von einem
      Meter Durchmesser ankommt. */
   const RADIER_GROESSEN = [5, 14, 28];
+  /* ══ DER HAKEN „AUTOMATISCH AN STRICH ANPASSEN" (E624) ══════════════════
+     Ein EIGENER Schlüssel und nicht ein Sonderwert in
+     `zeichnen:radierergroesse`: dort stehen auf jedem Gerät, das Redion
+     schon benutzt hat, Zahlen. Ein „auto" hineinzuschreiben hiesse, einen
+     vorhandenen Wert neu zu deuten — das ist eine Datenänderung, und für
+     einen Schalter ist sie nicht nötig (§9). So bleibt die gemerkte Grösse
+     stehen, während der Haken an ist, und kommt beim Abwählen zurück. */
+  const M_RADIER_AUTO = 'zeichnen:radiererauto';
+  const radierAutoLesen = (): boolean =>
+    typeof Store !== 'undefined' && String(Store.getMeta(M_RADIER_AUTO, '')) === 'ja';
   const radierGroesseLesen = (): number => {
     const wert = typeof Store !== 'undefined' ? Number(Store.getMeta('zeichnen:radierergroesse')) : NaN;
     return RADIER_GROESSEN.includes(wert) ? wert : RADIER_GROESSEN[0]!;
@@ -685,6 +695,32 @@ const Marken = (() => {
     if (stil === 'schutzleiter') return 1;
     return 0.5 + d * 1.0;
   };
+  /* ══ DIE DECKUNG EINES STRICHS — EINE STELLE (E623) ══════════════════════
+     Sie stand VIERMAL: am Bildschirm beim Pinsel, beim Bleistift und beim
+     Marker, und noch einmal im PDF-Export. Der Kommentar über
+     `alsAnnotation` behauptet seit E506, Farbe, Breite, Druckkurve und
+     Deckkraft stünden „hier und nirgends sonst (§8)" — nachgemessen waren
+     es zwei Rechnungen mit denselben Zahlen. Das geht genau so lange gut,
+     bis jemand eine davon ändert, und dann sieht das PDF anders aus als
+     der Bildschirm, ohne dass ein Lauf etwas merkt.
+
+     Jetzt eine Stelle. Und weil es eine Stelle ist, kann die Strichprobe
+     in der Leiste dieselbe Zahl zeigen (E623, die Probe). */
+  const deckungVon = (art: string, stil: string, neigung?: number[] | number): number => {
+    if (art === 'marker') return 0.32;
+    if (stil === 'pinsel') return 0.92;
+    if (stil === 'bleistift') {
+      /* FLACH IST WEICHER (E507): ein flach gehaltener Bleistift trägt
+         breiter auf, aber nicht dunkler. Ohne Neigung bleibt es bei den
+         0,72 aus E465 — das hält `test475` §4 fest. */
+      const n = Array.isArray(neigung)
+        ? (neigung.length ? neigung.reduce((a, b) => a + (Number(b) || 0), 0) / neigung.length : 0)
+        : (Number(neigung) || 0);
+      return Math.round((0.72 - n * 0.22) * 100) / 100;
+    }
+    return 1;
+  };
+
   /** Die drei Stifte, die als FLAECHE gezeichnet werden (der Kugelschreiber ist die Linie). */
   const FLAECHEN_STIFTE = new Set(['fueller', 'pinsel', 'bleistift']);
 
@@ -781,12 +817,9 @@ const Marken = (() => {
          (siehe `strokeWidth`) — im PDF muss er dieselbe Breite haben. */
       breite: mark.art === 'marker' ? base * 4 : base,
       /* Der Bleistift ist durchscheinend, und flach gehalten noch mehr —
-         dieselbe Zahl wie am Bildschirm (E465, E507). */
-      deckkraft: mark.art === 'marker' ? 0.32
-        : String(mark.stil) === 'bleistift'
-          ? Math.round((0.72 - (neig.length
-              ? neig.reduce((a, b) => a + (Number(b) || 0), 0) / neig.length : 0) * 0.22) * 100) / 100
-        : String(mark.stil) === 'pinsel' ? 0.92 : 1,
+         dieselbe Zahl wie am Bildschirm, und seit E623 buchstäblich
+         dieselbe: eine Funktion, zwei Aufrufer. */
+      deckkraft: deckungVon(String(mark.art), String(mark.stil), neig),
       name: mark.art === 'marker' ? 'Marker' : 'Handschrift'
     };
   };
@@ -1277,19 +1310,15 @@ const Marken = (() => {
         druck[i] ?? druck[druck.length - 1] ?? 0.5, neigBei(i)));
       element = svg('path', { d: InkGeometry.outline(points, halb), fill: color, stroke: color,
         'stroke-width': 0.25, 'stroke-linejoin': 'round' });
-      if (mark.stil === 'pinsel') element.setAttribute('opacity', '0.92');
+      if (mark.stil === 'pinsel') element.setAttribute('opacity', String(deckungVon(art, 'pinsel')));
       /* DIE KOERNUNG DES BLEISTIFTS (E465): ein gestrichelter Haarstrich
          um die Flaeche — die Kante wird rau, wie Graphit auf Papier, und
          die Flaeche bleibt durchscheinend. Kein Filter: ein `feTurbulence`
          je Strich kostet auf einer vollen Seite ein Bild je Bild. */
       if (mark.stil === 'bleistift') {
-        /* FLACH IST WEICHER (E507). Ein flach gehaltener Bleistift trägt
-           breiter auf, aber nicht dunkler — dieselbe Menge Graphit auf
-           mehr Papier. Ohne Neigung bleibt es bei den 0,72 von E465, und
-           genau das hält `test475` §4 fest. */
-        const mittel = neig.length
-          ? neig.reduce((a, b) => a + (Number(b) || 0), 0) / neig.length : 0;
-        element.setAttribute('opacity', String(Math.round((0.72 - mittel * 0.22) * 100) / 100));
+        /* FLACH IST WEICHER (E507) — die Rechnung steht seit E623 in
+           `deckungVon`, zusammen mit der des PDF. */
+        element.setAttribute('opacity', String(deckungVon(art, 'bleistift', neig)));
         element.setAttribute('stroke-width', '0.7');
         element.setAttribute('stroke-dasharray', '0.9 0.6');
       }
@@ -1332,7 +1361,7 @@ const Marken = (() => {
         element.setAttribute('stroke-width', '0');
       }
       if (art === 'marker') {
-        element.setAttribute('opacity', '0.32');
+        element.setAttribute('opacity', String(deckungVon('marker', '')));
         element.setAttribute('style', 'mix-blend-mode:multiply');
       }
       /* Geschlossene Formen lassen sich auch in ihrer Flaeche greifen. Die
@@ -4167,7 +4196,14 @@ const Marken = (() => {
       elementAusAuswahl,
       elementGewaehlt: (): string => letztesElement,
       selectElement: (id: string): void => { if (elementHolen(id)) { letztesElement = id; notifyState(); } },
-      setEraserSize: (radius: number): void => { if ([5, 14, 28].includes(radius)) eraserSize = radius; },
+      /* NULL HEISST „AUTOMATISCH AN STRICH ANPASSEN" (E624). Der Zustand
+         gab es seit je — `radierRadius()` ist `eraserSize ?? max(5, width*3)`
+         —, nur führte kein Weg dorthin zurück: das Studio setzte beim
+         Aufbau sofort die gemerkte Grösse. Jetzt ist er ein Schalter. */
+      setEraserSize: (radius: number): void => {
+        if (radius === 0) { eraserSize = null; return; }
+        if (RADIER_GROESSEN.includes(radius)) eraserSize = radius;
+      },
       eraserSize: (): number => radierRadius(),
       elementWaehlen: async (): Promise<string> => {
         const gewaehlt = await elementWaehlen();
@@ -4858,6 +4894,10 @@ const Marken = (() => {
       row.style.setProperty('--leiste-x', punkt.x);
       row.style.setProperty('--leiste-y', punkt.y);
     }
+    /* Der Platz im Baum gilt erst, wenn die Hülle steht — `seite.ts` hängt
+       die Leiste nach diesem Aufruf ein. Ein Mikroauftrag läuft nach dem
+       ganzen Aufbau und sieht die fertige Hülle. */
+    queueMicrotask(() => { try { leisteEinordnen(row); } catch { /* ohne Hülle bleibt es, wie es ist */ } });
     const tools = document.createElement('div');
     tools.className = 'blatt-werk';
     tools.dataset.tool = 'schreiben';
@@ -4991,6 +5031,42 @@ const Marken = (() => {
         return `<button data-act="radiermodus" data-gruppe="radierer" data-modus="${jetzt.id}" title="${jetzt.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}">` +
           `<span class="zeichen" data-sym="${(jetzt as any).sym}" aria-hidden="true"></span>` +
           `<span class="wort">${jetzt.name}</span></button>`;
+      })() +
+      /* ══ DIE DREI GRÖSSEN, AUF BEIDEN OBERFLÄCHEN (E624) ══════════════════
+         Sie standen seit E576 im Studio und NUR dort: gebaut im Hörer auf
+         `ink-studio-ready`, den allein `document-mode.ts` auslöst. Gezählt
+         am 19. September: drei im Studio, null auf der gewöhnlichen Seite.
+         Wer auf einer Seite zeichnet, hatte einen Radierer ohne Grösse.
+
+         Jetzt stehen sie hier, wo die Leiste ohnehin gebaut wird — ein
+         Katalog, eine Stelle (§8). Das Studio nimmt dieselben Knöpfe; sein
+         Hörer legt nur noch das Modusfeld daneben.
+
+         Die drei Kreisgrössen 14/22/30 sind nachgemessen (E576): bei 44 px
+         Knopf blieb für 40 kein Platz, und der Browser schrumpfte ihn auf
+         dieselben 28 wie den mittleren — zwei gleich grosse Kreise sind
+         keine zwei Grössen. */
+      (() => {
+        const gemerkt = radierGroesseLesen();
+        const auto = radierAutoLesen();
+        const namen = ['klein', 'mittel', 'groß'];
+        const kreise = [14, 22, 30];
+        return RADIER_GROESSEN.map((radius, i) =>
+          `<button type="button" class="blatt-eraser-size" data-gruppe="radierer" ` +
+          `data-eraser-size="${radius}" style="--eraser-preview:${kreise[i]}px" ` +
+          `aria-pressed="${!auto && radius === gemerkt ? 'true' : 'false'}" ` +
+          `title="Radierer ${namen[i]}" aria-label="Radierer ${namen[i]}">` +
+          `<i aria-hidden="true"></i></button>`).join('') +
+          /* DER HAKEN (E624). Kein `<input type="checkbox">`: in
+             `src/bereiche/pdf/` gibt es null davon, und ein fremdes
+             Bedienteil mitten in einer Reihe aus Knöpfen sieht aus wie ein
+             Fehler. Ein Knopf mit `aria-pressed` sagt dasselbe (§38). */
+          `<button type="button" data-act="radierauto" data-gruppe="radierer" ` +
+          `aria-pressed="${auto ? 'true' : 'false'}"${auto ? ' class="on"' : ''} ` +
+          `title="Automatisch an den Strich anpassen — der Radierer nimmt die Breite des Strichs, den er trifft" ` +
+          `aria-label="Radierergrösse automatisch an den Strich anpassen">` +
+          `<span class="zeichen" data-sym="eraserAuto" aria-hidden="true"></span>` +
+          `<span class="wort">Automatisch</span></button>`;
       })() +
       /* JEDER KNOPF KENNT SEINE GRUPPE (E356): am Telefon zeigt die Leiste
          nur die Gruppen des gewaehlten Werkzeugs — Farben und Breiten beim
@@ -5467,6 +5543,28 @@ const Marken = (() => {
        Der Rundlauf tat das bisher inmitten seines Klickzweigs. Seit es einen
        zweiten Weg zum selben Ziel gibt (das Ziehen), wäre das zweimal
        dasselbe an zwei Stellen — und zwei Wege laufen auseinander (§8). */
+    /* ══ «UNTEN» MUSS HINTER DAS PAPIER (E622, L187) ═══════════════════════
+       `position:sticky` mit `bottom` zieht ein Element NACH OBEN, wenn es
+       sonst unter den Fensterrand rutschte — es schiebt keines nach unten.
+       Gemessen: die Leiste blieb bei y = 335 stehen, also oben, weil
+       `seite.ts:111` sie als ERSTES Kind der Hülle einhängt.
+
+       Damit sie am unteren Fensterrand klebt, muss sie im Fluss HINTER dem
+       Papier stehen. Das ist ein Zug im Baum, kein zweiter Wähler: die
+       Hülle bleibt ein gewöhnlicher Block (sie zu einer Flexspalte zu
+       machen, nur um `order` zu bekommen, hätte Papier, Drehhülle und
+       Abbild zu Flexelementen gemacht — vier Dinge geändert, um eines zu
+       verschieben).
+
+       Und es stimmt auch für den Vorleser: bei «unten» steht die Leiste
+       unter dem Blatt, und dann soll sie dort auch gelesen werden (§38). */
+    const leisteEinordnen = (r: HTMLElement): void => {
+      const h = r.parentElement;
+      if (!h || !h.classList.contains('blatt-huelle')) return;
+      if (r.dataset.lage === 'unten') { if (h.lastElementChild !== r) h.appendChild(r); }
+      else if (h.firstElementChild !== r) h.insertBefore(r, h.firstElementChild);
+    };
+
     const lageAnwenden = (id: string, merken = true): void => {
       const eintrag = LAGEN.find(l => l.id === id) ?? LAGEN[0]!;
       if (merken && typeof Store !== 'undefined') {
@@ -5474,7 +5572,10 @@ const Marken = (() => {
       }
       const i = LAGEN.findIndex(l => l.id === eintrag.id);
       const naechst = naechsteLage(i);
-      document.querySelectorAll<HTMLElement>('.blatt-reihe').forEach(r => { r.dataset.lage = eintrag.id; });
+      document.querySelectorAll<HTMLElement>('.blatt-reihe').forEach(r => {
+        r.dataset.lage = eintrag.id;
+        leisteEinordnen(r);
+      });
       document.querySelectorAll<HTMLElement>('[data-act="lage"]').forEach(k => {
         k.dataset.lage = eintrag.id;
         k.title = 'Leiste verschieben — jetzt ' + eintrag.name + ', als Nächstes ' + naechst.name
@@ -5878,6 +5979,9 @@ const Marken = (() => {
         node.setAttribute('aria-pressed', an ? 'true' : 'false');
       });
       leiterReihe(stift.id === 'leiter');
+      /* Der Stift entscheidet über die Deckung der Probe (E623) — Bleistift
+         0,72, Pinsel 0,92, sonst voll. Also muss sie ihn sehen. */
+      try { staerkenBeschriften(); } catch { /* vor dem Aufbau */ }
     };
 
     /**
@@ -5999,6 +6103,15 @@ const Marken = (() => {
     const staerkeFaktor = (): number => tools.dataset['tool'] === 'marker' ? 4 : 1;
 
     /** Die drei Stufen und den Regler neu beschriften — nach Werkzeug. */
+    /** Die Tinte, die gerade gewählt ist — dieselbe, die der Strich bekäme. */
+    const farbeJetzt = (): string =>
+      tools.querySelector<HTMLElement>('.blatt-farbe.on')?.dataset['c']
+      || tools.querySelector<HTMLElement>('.blatt-farbe')?.dataset['c']
+      || 'currentColor';
+    /** Der gewählte Stift — er entscheidet über die Deckung, nicht die Stärke. */
+    const stiftJetzt = (): string =>
+      tools.querySelector<HTMLElement>('[data-act="stilwahl"].on')?.dataset['stil'] || '';
+
     const staerkenBeschriften = (): void => {
       const f = staerkeFaktor();
       tools.querySelectorAll<HTMLElement>('.blatt-strich').forEach((knopf, i) => {
@@ -6006,12 +6119,60 @@ const Marken = (() => {
         const wort = `${BREITEN_NAMEN[i] ?? 'Strich'} · ${alsMm(pt * f)}`;
         knopf.title = `${wort} — die gewählte nochmal antippen: Stärke frei wählen`;
         knopf.setAttribute('aria-label', `Strichstärke ${wort}`);
-        /* Auf der Kachel steht NUR die Zahl. Der Name („Fein") steht im
-           Titel und im `aria-label`; beides auf 32 px Breite wäre
-           abgeschnitten, und eine abgeschnittene Zahl ist eine falsche
-           Zahl (§55.1). */
+        /* ══ NAME UND MILLIMETER AUF EINER KACHEL (E623) ══════════════════
+           Hier stand: „Auf der Kachel steht NUR die Zahl. Der Name (‚Fein')
+           steht im Titel und im `aria-label`; beides auf 32 px Breite wäre
+           abgeschnitten." Das galt für die Kachel von E616 — 30 px breit.
+
+           Seit E618 ist die Kachel im Kastenzustand `width:auto` mit
+           `min-width:52px` und darf wachsen; und E617 hat für die Stifte
+           dasselbe schon getan (‚Kugelschreiber' macht 77 px). Also steht
+           jetzt beides da, wo Platz ist.
+
+           WARUM DAS TROTZDEM SICHER IST: unterhalb des Kastens ist das
+           Wort geklemmt, nicht `display:none` (E617, §38) — dort ändert
+           sich am Bild nichts, und ein Vorleser bekommt weiterhin den
+           vollen Namen aus dem `aria-label`. Dass keine Zahl über ihre
+           Kachel hinausläuft, misst `test533 §5d`; diese Zusage bleibt und
+           ist der Wächter für diese Änderung. */
         const zettel = knopf.querySelector<HTMLElement>('.wort');
-        if (zettel) zettel.textContent = alsMm(pt * f);
+        if (zettel) {
+          /* ZWEI ZEILEN, NICHT EINE. Der erste Wurf schrieb „Markant ·
+             1,8 mm" in eine Zeile — gemessen wuchs die Leiste damit von
+             128 auf 143 px, also über die Decke von `test533 §5b` hinaus:
+             drei Kacheln je rund 95 statt 52 px sind 129 px mehr, und die
+             Tafel bricht um. Untereinander kostet es Höhe statt Breite,
+             genau wie beim Wort unter dem Zeichen (W3, E614) — und es ist
+             ausserdem die Form auf Redurs Bild.
+             Keine Zeichenkette in `innerHTML` (§19), auch wenn hier nichts
+             vom Nutzer kommt: zwei Kinder, zweimal `textContent`. */
+          let oben = zettel.querySelector<HTMLElement>('.strich-name');
+          let unten = zettel.querySelector<HTMLElement>('.strich-mm');
+          if (!oben || !unten) {
+            zettel.textContent = '';
+            oben = document.createElement('span'); oben.className = 'strich-name';
+            unten = document.createElement('span'); unten.className = 'strich-mm';
+            zettel.append(oben, unten);
+          }
+          oben.textContent = BREITEN_NAMEN[i] ?? 'Strich';
+          unten.textContent = alsMm(pt * f);
+        }
+        /* ══ DIE STRICHPROBE ZEIGT DEN STRICH (E623) ═══════════════════════
+           Der Balken hiess „Strichprobe" und war keine: `bausteine.css`
+           gab ihm `background:currentColor` — die TEXTfarbe des Knopfes,
+           nicht die gewählte Tinte — und gar keine Deckung. Er sagte also
+           „dick" und sonst nichts, obwohl Farbe, Stift und Deckung den
+           Unterschied zwischen einem Bleistiftstrich und einem Markerstrich
+           derselben Zahl ausmachen.
+
+           Jetzt trägt er beides, und die Deckung kommt aus `deckungVon` —
+           derselben Funktion, die den echten Strich und das PDF färbt. */
+        const balken = knopf.querySelector<HTMLElement>('i');
+        if (balken) {
+          balken.style.background = farbeJetzt();
+          const deck = deckungVon(String(tools.dataset.tool || ''), stiftJetzt());
+          balken.style.opacity = String(deck);
+        }
       });
       const feld = tools.querySelector<HTMLInputElement>('.blatt-staerke input');
       const zahl = tools.querySelector<HTMLElement>('.blatt-staerke output');
@@ -6139,6 +6300,36 @@ const Marken = (() => {
         zumWerkzeugRollen(target.dataset.wz);
         return;
       }
+      /* ══ DIE RADIERERGRÖSSE (E624) ════════════════════════════════════════
+         VOR dem `data-act`-Block, nicht darin: die Grössenknöpfe tragen
+         kein `data-act`, sondern nur `data-eraser-size`. Innen lag der
+         Zweig tot — `test524` sagte „Die Markierung wandert mit (5 → 5)",
+         und genau dafür steht der Lauf da. */
+      if (target.dataset.eraserSize) {
+        const radius = Number(target.dataset.eraserSize);
+        if (!RADIER_GROESSEN.includes(radius)) return;
+        controls.setEraserSize(radius);
+        if (typeof Store !== 'undefined') {
+          try {
+            Store.setMeta('zeichnen:radierergroesse', radius);
+            /* Eine Grösse zu wählen heisst: nicht mehr automatisch. */
+            Store.setMeta(M_RADIER_AUTO, 'nein');
+          } catch { /* nur diese Sitzung */ }
+        }
+        /* ALLE LEISTEN ZIEHEN MIT, nicht nur diese. Jedes Blatt baut seine
+           eigene Leiste; die des Nachbarblatts entstand, bevor hier gewählt
+           wurde. GEMESSEN mit `tools` statt `document`: Seite umblättern,
+           und die alte Grösse stand wieder markiert da — genau das hält
+           `test524` seit E576 fest („die Wahl gilt für den Menschen, nicht
+           für das Blatt"). */
+        document.querySelectorAll<HTMLElement>('[data-eraser-size]').forEach(node =>
+          node.setAttribute('aria-pressed',
+            String(Number(node.dataset.eraserSize) === radius)));
+        document.querySelectorAll<HTMLElement>('[data-act="radierauto"]').forEach(haken => {
+          haken.setAttribute('aria-pressed', 'false'); haken.classList.remove('on');
+        });
+        return;
+      }
       if (target.dataset.act) {
         if (target.dataset.act === 'undo') controls.undo();
         if (target.dataset.act === 'redo') controls.redo();
@@ -6173,6 +6364,26 @@ const Marken = (() => {
              einen Tipp entfernt — für die Tastatur und für das Zubehör,
              das gerade nicht zu sehen ist. */
           if (controls.ordnenUmschalten) controls.ordnenUmschalten();
+          return;
+        }
+        if (target.dataset.act === 'radierauto') {
+          const an = target.getAttribute('aria-pressed') !== 'true';
+          controls.setEraserSize(an ? 0 : radierGroesseLesen());
+          if (typeof Store !== 'undefined') {
+            try { Store.setMeta(M_RADIER_AUTO, an ? 'ja' : 'nein'); } catch { /* nur diese Sitzung */ }
+          }
+          document.querySelectorAll<HTMLElement>('[data-act="radierauto"]').forEach(haken => {
+            haken.setAttribute('aria-pressed', an ? 'true' : 'false');
+            haken.classList.toggle('on', an);
+          });
+          /* Die drei Kreise zeigen wieder, was gilt: bei „automatisch"
+             keiner, sonst der gemerkte — und das auf JEDEM Blatt: jedes
+             baut seine eigene Leiste, und die des Nachbarn entstand,
+             bevor hier gewählt wurde. */
+          const gemerkt = radierGroesseLesen();
+          document.querySelectorAll<HTMLElement>('[data-eraser-size]').forEach(node =>
+            node.setAttribute('aria-pressed',
+              String(!an && Number(node.dataset.eraserSize) === gemerkt)));
           return;
         }
         if (target.dataset.act === 'lage') {
@@ -6335,6 +6546,9 @@ const Marken = (() => {
         }
         tools.querySelectorAll('.blatt-farbe').forEach(node => node.classList.remove('on'));
         target.classList.add('on');
+        /* Die Probe trägt die Tinte, also muss sie eine neue Tinte sehen
+           (E623). Dieselbe Stelle, die auch den Marker-Faktor nachträgt. */
+        try { staerkenBeschriften(); } catch { /* vor dem Aufbau */ }
         return;
       }
       if (target.dataset.b) {
@@ -6387,28 +6601,22 @@ const Marken = (() => {
           }); body.append(option);
         }
       }));
-      const gemerkteGroesse = radierGroesseLesen();
-      for (const [index, radius] of RADIER_GROESSEN.entries()) {
-        const size = document.createElement('button'); size.type = 'button';
-        size.dataset.gruppe = 'radierer'; size.dataset.eraserSize = String(radius);
-        size.className = 'blatt-eraser-size';
-        size.setAttribute('aria-label', 'Radierer ' + ['klein', 'mittel', 'groß'][index]);
-        size.setAttribute('aria-pressed', String(radius === gemerkteGroesse));
-        /* 14, 22, 30 — NACHGEMESSEN, nicht geschätzt. Hier stand 16/28/40;
-           bei 44 px Knopf blieb für den grössten kein Platz, und der Browser
-           schrumpfte ihn als Flex-Element von 40 auf 28 — genau so breit wie
-           der mittlere. Zwei gleich grosse Kreise sind keine zwei Grössen. */
-        size.style.setProperty('--eraser-preview', [14, 22, 30][index] + 'px');
-        size.innerHTML = '<i aria-hidden="true"></i>';
-        size.addEventListener('click', () => {
-          controls.setEraserSize(radius);
-          /* Gemerkt wird hier, nicht im Zeichner: der lebt je Blatt, die
-             Wahl gilt für den Menschen. */
-          if (typeof Store !== 'undefined') Store.setMeta('zeichnen:radierergroesse', radius);
-          tools.querySelectorAll<HTMLElement>('[data-eraser-size]').forEach(node => node.setAttribute('aria-pressed', String(node === size)));
-        }); choose.before(size);
-      }
-      controls.setEraserSize(gemerkteGroesse);
+      /* ══ DIE GRÖSSEN STEHEN JETZT IN DER LEISTE (E624) ════════════════
+         Hier wurden sie bis zum 19. September 2026 erzeugt — und damit
+         gab es sie nur im Studio, weil `ink-studio-ready` nur dort
+         ausgelöst wird. Gebaut werden sie seither in der gewöhnlichen
+         Leiste; das Studio bekommt sie damit von selbst, und niemand baut
+         dieselben drei Knöpfe zweimal (§8). Das Modusfeld darüber bleibt
+         hier: es ist wirklich nur im Studio.
+
+         Die Knöpfe sollen trotzdem VOR dem Modusfeld stehen, wie bisher —
+         sie sind im HTML schon da, also werden sie nur umgehängt. */
+      tools.querySelectorAll<HTMLElement>('[data-eraser-size]')
+        .forEach(node => choose.before(node));
+      /* Und die gemerkte Wahl gilt — es sei denn, der Haken steht auf
+         „automatisch" (E624). Genau diese Zeile war der Grund, warum es
+         keinen Weg zurück gab: sie setzte immer eine Zahl. */
+      controls.setEraserSize(radierAutoLesen() ? 0 : radierGroesseLesen());
       for (const [color, name] of noteColors) {
         const swatch = document.createElement('button'); swatch.type = 'button';
         swatch.className = 'blatt-farbe blatt-note-color'; swatch.dataset.c = color;
