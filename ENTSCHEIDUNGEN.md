@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-612 Entscheidungen, E1 bis E634 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+613 Entscheidungen, E1 bis E635 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -677,6 +677,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E632** — Die Inventur zieht nach, und die Prüfung lernt die vierte Schreibweise: `doku/BLOCKTYPEN.md` fehlte die Gedankenkarte seit E607 (drei Tage, 78 gegen 79). `test225` dagegen hatte recht zu melden und unrecht im Grund: die sechs Verweise stimmen, nur drucken die jüngeren Läufe ihre Abschnitte als `§1 Titel` ohne den Mittelpunkt
 * **E633** — Nur Tokens, die es gibt: `--bg-2` (viermal, seit E514 als falsch benannt bekannt) wird `--bg-hover`, `var(--accent, #2f7ed8)` verliert den festen Hellwert, `--rmo-knauf-grund` weicht dem Token, auf das es ohnehin immer zurückfiel. Dazu die Falle `.pf-karte` — ein Lichtschlitz nur über `:hover` — und ein vierter Sammler-Fehler: `--i` galt als erfunden, weil der Ausdruck in `style="--i:…;--dick:…"` nur das LETZTE Token fand
 * **E634** — Zwei Zusagen, die den Stand von gestern halten: `test285` verlangte GENAU EINE gezeichnete Seite, seit dem Lesemass (E464) sind es zwei — denselben Fund hat `test395` §7 am 7. September gemacht (E467) und wurde nachgezogen, dieser Punkt nicht. `test442` verlangte die Miniatur ohne Nummer, die seit E547 davorsteht und die `test503` §3 ausdrücklich einfordert. Beide Male hätte eine Reparatur AM PRODUKT den Schwesterlauf rot gemacht
+* **E635** — Wer im ersten Bild misst, misst das Anfangsbild: `test432` mass im selben Tick wie das Aufklappen — seit E537 haben Zählpille und Suchzeile einen Auftritt mit `animation-fill-mode:both`, und `both` hält sie bis dahin auf `scale(0)` und `width:30px`. Nicht verdeckt, sondern noch nicht da. Dazu `test435`, der die Deckung `.85` aus E462 festhielt, obwohl E537 sie auf `.4` gesetzt hat — und der in §6 ausgerechnet die ÜBERSCHRIEBENE Regel als die gültige bescheinigte
 
 ---
 
@@ -51643,3 +51644,112 @@ Stand gesetzt hat (E464/E467 und E547), statt nur einer Zahl.
 
 **Gemessen.** `test285` 27/27 · `test442` 24/24. Vorher: `test285` 26/27,
 `test442` 23/24.
+---
+
+## E635 — Wer im ersten Bild misst, misst das Anfangsbild
+
+Bogen 6 der roten Läufe. Zwei Läufe, ein gemeinsamer Urheber: **E537 vom
+12. September**, der Abend vor der Sechstagewoche. Beide Läufe liefen bei
+E537 nicht mit (geprüft wurden damals `test493` bis `test496`), und beide
+halten seitdem den Stand von davor.
+
+### `test432` — nicht verdeckt, sondern noch nicht da
+
+Zwei Punkte sagten „Die Suchzeile ist nicht von den Blättern verdeckt" und
+„Der Zähler auch nicht", und beide waren rot. Verdeckt war nichts.
+
+E537 hat beiden Elementen einen Auftritt gegeben. Die Zählpille wächst aus
+`transform:scale(0)` heraus, **mit 0,2 s Verzögerung**; die Suchzeile wächst
+aus `width:30px` hinter `overflow:hidden`. Beide Auftritte tragen
+`animation-fill-mode:both` — und `both` heisst: **vor dem ersten Bild gilt
+das Anfangsbild.** `klappen(true)` ist synchron und kehrt sofort zurück; der
+Lauf mass im selben Tick. Die Pille war da 0 × 0 Punkte gross, die Suchzeile
+30 Punkte breit. `elementFromPoint` griff beide Male daneben.
+
+Der Lauf wartet jetzt 700 ms. Nicht `getAnimations().finished`: der
+Hinweispfeil winkt mit `infinite`, das hätte nie aufgelöst.
+
+**Und er sagt ab jetzt, was davorliegt.** Diese zwei Punkte waren die
+einzigen ihres Abschnitts ohne Meldungstext — sie sagten „verdeckt" und
+verschwiegen, wovon. Die Gegenprobe zeigt den Unterschied:
+
+> `✗ Die Suchzeile ist nicht von den Blättern verdeckt — davor liegt ru-fach-blaetter, breit 180`
+
+Das ist eine Zeile Aufwand und beim nächsten Mal eine Stunde.
+
+### `test435` — die Zahl von E462, festgehalten bis heute
+
+`p('Der Verlauf liegt nur am eingeschalteten Schalter', … > 0.5 …)`. Die `0.5`
+ist gegen die `.85` aus E462 geschrieben. E537 hat den Verlauf auf `.4`
+gesetzt und `mix-blend-mode:screen` dazugegeben, und der Grund steht wörtlich
+an der Regel in `einstellungen.css`:
+
+> Deshalb auch .4 statt .85 — bei voller Deckung stände der weisse Griff auf
+> hellem Violett, und das waren gemessen 1,6:1 statt der 5,15:1, für die die
+> Farbe gewählt wurde (E199).
+
+Die `.4` ist also nicht „weniger Verlauf", sondern die Zahl, die zur Mischung
+gehört. **Deshalb hält der Lauf jetzt beide zusammen** — `opacity === 0.4`
+UND `mixBlendMode === 'screen'`. Einzeln wäre jede von beiden falsch: `.4`
+ohne `screen` wäre zu blass, `screen` ohne die Zahl gäbe es nicht zu prüfen.
+
+### Der Fund, der nicht rot war
+
+In §6 stand dieser Punkt, und er war grün:
+
+```ts
+p('Der Schalter-Verlauf steht in einstellungen.css, nicht in einem neuen Blatt',
+  /\.schalter\.an::before\{opacity:\.85; animation:ez-schalter-dreh/.test(…));
+```
+
+Die Zeile, die er findet, gibt es wirklich — und sie **gilt nicht**.
+`einstellungen.css:228` überschreibt sie neunundsechzig Zeilen später bei
+gleicher Stärke. Der Lauf bescheinigte damit eine Deckung von `.85`, während
+die Seite `.4` malt, und blieb grün, während §2 genau daran rot wurde.
+
+**Das ist schlimmer als ein roter Punkt.** Ein roter Punkt sagt „sieh nach".
+Dieser sagte „alles in Ordnung" über etwas, das die Seite nicht tut. Er prüft
+jetzt beide Zeilen und ausdrücklich ihre **Reihenfolge** — dass die wirksame
+unter der ersten steht.
+
+Dasselbe Paar meldet übrigens `test332` als tote Regel (`.schalter i`,
+`einstellungen.css` gegen `studio.css`). Zwei Läufe, derselbe Befund, aus zwei
+Richtungen.
+
+### Die Gegenproben
+
+Beide am 19. September gefahren, beide rot (§55.2, §50):
+
+```txt
+.ru-fach-blaetter  inset:0 → inset:-200px 0 0 0, z-index:20 → 900
+  ✗ Die Suchzeile ist nicht von den Blättern verdeckt — davor liegt ru-fach-blaetter
+  ✗ Der Zähler auch nicht — davor liegt ru-fach-blaetter
+
+.schalter.an::before  mix-blend-mode:screen entfernt
+  ✗ Der Verlauf liegt nur am eingeschalteten Schalter — 0.4 (normal) / 0
+  ✗ … und die Deckung, die WIRKT, steht im selben Blatt darunter
+```
+
+Die erste ist die wichtigere: sie beweist, dass das Warten den Wächter nicht
+entschärft hat. Ein Lauf, der wartet, bis alles gut aussieht, prüft nichts —
+dieser hier findet die Verdeckung auch nach dem Warten.
+
+### Was die Alternative gewesen wäre
+
+Den Auftritt im Produkt ändern: `clip-path` statt `width`, `opacity` statt
+`transform:scale(0)`. Dann stimmte die Trefferfläche ab dem ersten Bild, das
+Auge sähe dasselbe, und kein Lauf müsste warten. Das ist die bessere Lösung
+— aber sie ändert Redurs Auftritt aus E537, und der Nebenbefund dahinter
+(zwei Zehntel ohne Trefferfläche) ist eine dünne Stelle, kein Fehler. Er steht
+als **L197** in `LUECKEN.md`, wo er gefunden werden kann, wenn jemand den
+Auftritt ohnehin anfasst.
+
+### Was es kostet
+
+700 ms je Lauf von `test432`. Und die Erkenntnis, die teurer war: **ein Lauf,
+der eine überschriebene Regel als die gültige ausweist, ist ein falscher
+Zeuge.** Das ist der fünfte Fall dieser Woche, in dem ein Wächter etwas über
+die Seite sagte, das die Seite nicht tut (E629, E631 zweimal, E633, jetzt
+E635) — nur war dieser der erste, der dabei **grün** blieb.
+
+**Gemessen.** `test432` 48/48 · `test435` 44/44. Vorher 46/48 und 41/43.

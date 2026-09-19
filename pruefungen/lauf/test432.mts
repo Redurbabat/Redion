@@ -154,7 +154,16 @@ console.log('\n§2 Und man kann die Zeilen wirklich lesen');
 /* elementFromPoint statt querySelector: ein Element, das vollständig hinter
    einem anderen liegt, steht trotzdem im Baum. Genau das war der Fehler,
    den erst das Bild zeigte — dreimal, an drei verschiedenen Stellen. */
-const sicht = JSON.parse(await s.evaluate(`JSON.stringify((() => {
+/* ERST DEN AUFTRITT ABWARTEN, DANN MESSEN (nachgemessen am 19. September
+   2026). Der Block hier mass im selben Tick wie `klappen(true)` — und seit
+   E537 haben Pille und Suchzeile einen Auftritt mit `animation-fill-mode:both`.
+   `both` heisst: vor dem ersten Bild gilt das Anfangsbild. Die Pille stand
+   deshalb auf `scale(0)` (0 × 0 gross, weil ihre Vorlage 0,2 s wartet), die
+   Suchzeile auf `width:30px` hinter `overflow:hidden`. `elementFromPoint`
+   griff beides daneben und meldete „verdeckt", wo nichts verdeckt war.
+   Kein `getAnimations().finished`: `ru-fach-winke` am Hinweispfeil läuft
+   `infinite` und löste nie auf. */
+const sicht = JSON.parse(await s.evaluate(`(async () => {
   const kinder = Store.childrenOf(${JSON.stringify(bestand.fach)})
     .filter(b => b.alive !== false && b.type === 'page')
     .map(b => ({ id: b.id, name: b.text, art: 'Seite' }));
@@ -163,6 +172,7 @@ const sicht = JSON.parse(await s.evaluate(`JSON.stringify((() => {
   document.body.append(lage);
   const g = Ordnerkarte.bauen({ name: 'Elektrotechnik', kinder, beiWahl: () => {} });
   lage.append(g.element); g.klappen(true);
+  await new Promise(r => setTimeout(r, 700));
   const treffer = [...g.element.querySelectorAll('.ru-fach-blatt')].map((b, i) => {
     const t = b.querySelector('.ru-fach-text');
     const r = t.getBoundingClientRect();
@@ -176,16 +186,26 @@ const sicht = JSON.parse(await s.evaluate(`JSON.stringify((() => {
   const zaehler = g.element.querySelector('.ru-fach-zaehler').getBoundingClientRect();
   const zOben = document.elementFromPoint(Math.round(zaehler.left + 8), Math.round(zaehler.top + zaehler.height / 2));
   const karte = g.element.getBoundingClientRect();
+  const wer = (e) => e ? (e.className || e.tagName) : 'nichts';
   lage.remove();
-  return { treffer, sucheFrei: sOben && sOben.classList.contains('ru-fach-eingabe'),
+  return JSON.stringify({ treffer,
+    sucheFrei: !!sOben && sOben.classList.contains('ru-fach-eingabe'),
+    sucheDavor: wer(sOben), sucheBreit: Math.round(suche.width),
     zaehlerFrei: !!zOben && g.element.querySelector('.ru-fach-zaehler').contains(zOben),
-    hoch: Math.round(karte.height) };
-})())`) as string);
+    zaehlerDavor: wer(zOben), zaehlerBreit: Math.round(zaehler.width),
+    hoch: Math.round(karte.height) });
+})()`) as string);
 for (const t of sicht.treffer as Array<Record<string, unknown>>)
   p(`Zeile ${Number(t['nr']) + 1} steht frei im Bild`, t['frei'], 'davor liegt ' + String(t['davor']));
 p('Jede Zeile hat auch Breite', (sicht.treffer as Array<Record<string, number>>).every(t => t['breit']! > 40));
-p('Die Suchzeile ist nicht von den Blättern verdeckt', sicht.sucheFrei);
-p('Der Zähler auch nicht', sicht.zaehlerFrei);
+/* MIT `extra`, NICHT OHNE. Diese zwei Punkte waren die einzigen im Abschnitt
+   ohne Meldungstext — sie sagten „verdeckt" und verschwiegen, wovon. Der
+   Fund vom 19. September hat deshalb zwei Stunden gekostet, die eine Zeile
+   gespart hätte. */
+p('Die Suchzeile ist nicht von den Blättern verdeckt', sicht.sucheFrei,
+  'davor liegt ' + String(sicht.sucheDavor) + ', breit ' + String(sicht.sucheBreit));
+p('Der Zähler auch nicht', sicht.zaehlerFrei,
+  'davor liegt ' + String(sicht.zaehlerDavor) + ', breit ' + String(sicht.zaehlerBreit));
 p('Die Karte bleibt kleiner als ein halber Bildschirm', sicht.hoch < 450, String(sicht.hoch));
 
 console.log('\n§3 Die Suche geht tiefer als die des Regals');

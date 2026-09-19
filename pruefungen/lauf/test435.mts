@@ -148,6 +148,7 @@ const schalter = JSON.parse(await s.evaluate(`(async () => {
       x.querySelector('i') && x.children.length === 1),
     anDeckung: an ? vor(an, '::before').opacity : null,
     ausDeckung: aus ? vor(aus, '::before').opacity : null,
+    anMischung: an ? vor(an, '::before').mixBlendMode : null,
     anDreht: an ? vor(an, '::before').animationName : null,
     ausDreht: aus ? vor(aus, '::before').animationName : null,
     trefferZ: an ? vor(an, '::after').zIndex : null,
@@ -167,9 +168,19 @@ const schalter = JSON.parse(await s.evaluate(`(async () => {
 })()`) as string);
 p('Es gibt Schalter, und alle tragen das alte Markup (button[role=switch] > i)',
   schalter.anzahl >= 3 && schalter.markup, String(schalter.anzahl));
-p('Der Verlauf liegt nur am eingeschalteten Schalter',
-  Number(schalter.anDeckung) > 0.5 && Number(schalter.ausDeckung) === 0,
-  schalter.anDeckung + ' / ' + schalter.ausDeckung);
+/* .4, NICHT .85 (E537). Hier stand `> 0.5`, geschrieben gegen die .85 aus
+   E462. Seit E537 mischt sich der Verlauf mit `screen` ein, statt alles zu
+   überdecken, und die Deckung ist .4 — der geschriebene Grund steht in
+   `einstellungen.css` an der Regel: bei voller Deckung stand der weisse
+   Griff auf hellem Violett, gemessen 1,6:1 statt der 5,15:1, für die die
+   Farbe gewählt wurde (E199).
+   Die Mischung wird mitgeprüft, denn OHNE sie wäre .4 zu wenig: dann
+   verlöre der Verlauf, was er hier gewinnt. Zwei Zahlen, die zusammen
+   gelten, werden zusammen gehalten. */
+p('Der Verlauf liegt nur am eingeschalteten Schalter — .4, und dafür mit `screen` gemischt (E537)',
+  Number(schalter.anDeckung) === 0.4 && schalter.anMischung === 'screen' &&
+  Number(schalter.ausDeckung) === 0,
+  schalter.anDeckung + ' (' + schalter.anMischung + ') / ' + schalter.ausDeckung);
 p('… und dreht sich nur dort', schalter.anDreht !== 'none' && schalter.ausDreht === 'none');
 p('Die Trefferfläche liegt VOR dem Verlauf', Number(schalter.trefferZ) > Number(schalter.verlaufZ),
   schalter.trefferZ + ' / ' + schalter.verlaufZ);
@@ -277,8 +288,8 @@ const sekunden = (w: string): number => Math.max(...String(w).split(',').map(t =
 p('Die Seite weiss, dass keine Bewegung gewünscht ist', still.reduziert);
 p('Die Blende springt statt zu gleiten', sekunden(still.blende) < 0.05, still.blende);
 p('Der Pinsel auch', sekunden(still.pinsel) < 0.05, still.pinsel);
-p('Der Verlauf im Schalter steht still — bleibt aber sichtbar',
-  still.dreht === 'none' && Number(still.deckung) > 0.5, still.dreht + ' / ' + still.deckung);
+p('Der Verlauf im Schalter steht still — bleibt aber sichtbar (.4 seit E537)',
+  still.dreht === 'none' && Number(still.deckung) === 0.4, still.dreht + ' / ' + still.deckung);
 await ruhig.close();
 
 console.log('\n§6 Eingebunden');
@@ -290,8 +301,20 @@ for (const name of ['textur', 'staffelei']) {
     fs.existsSync(path.join(WURZEL, 'src/schale/bedienung/' + name + '.ts')) &&
     /ERZEUGT/.test(lies('quell/schale/bedienung/' + name + '.js')));
 }
-p('Der Schalter-Verlauf steht in einstellungen.css, nicht in einem neuen Blatt',
-  /\.schalter\.an::before\{opacity:\.85; animation:ez-schalter-dreh/.test(lies('quell/schale/stil/einstellungen.css')));
+/* BEIDE ZEILEN, UND DIE SPÄTERE GILT. Hier stand nur die erste — und die
+   behauptete eine Deckung von .85, die seit E537 von Zeile 228 desselben
+   Blattes überschrieben wird. Ein Lauf, der eine tote Regel als die
+   gültige ausweist, ist schlimmer als ein roter Punkt: er sagt etwas über
+   die Seite, das die Seite nicht tut. Gefunden am 19. September, als §2
+   rot wurde und diese Zeile trotzdem grün blieb. */
+{
+  const ez = lies('quell/schale/stil/einstellungen.css');
+  p('Der Schalter-Verlauf steht in einstellungen.css, nicht in einem neuen Blatt',
+    /\.schalter\.an::before\{opacity:\.85; animation:ez-schalter-dreh/.test(ez));
+  p('… und die Deckung, die WIRKT, steht im selben Blatt darunter (E537)',
+    ez.indexOf('.schalter.an::before{opacity:.4; mix-blend-mode:screen}') >
+    ez.indexOf('.schalter.an::before{opacity:.85; animation:ez-schalter-dreh'));
+}
 
 p('Keine Fehler auf den Seiten', fehler.length === 0, fehler.slice(0, 3).join(' | '));
 console.log(`\n${ok}/${ok + weg} bestanden · ✗=${weg}`);

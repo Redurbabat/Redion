@@ -9230,4 +9230,28 @@ angefasst hat.
 Fenster mitwächst, oder ob die Platten bei vielen Tagen flacher gestapelt
 werden. Mit elf Tagen fällt es auf; mit dreissig wird der Satz darunter
 unlesbar.
+## L197 · Zwei Zehntel lang ist die Zählpille nicht zu treffen — 19. September 2026
 
+Der Auftritt der Ordnerkarte aus E537 malt die Zählpille mit
+`transform:scale(0)` und einer Verzögerung von 0,2 s, gehalten durch
+`animation-fill-mode:both` (`bausteine.css:8764`). In diesen zwei Zehnteln
+ist die Pille **0 × 0 Punkte gross** — nicht nur unsichtbar, sondern ohne
+Trefferfläche. Die Suchzeile daneben beginnt bei `width:30px` hinter
+`overflow:hidden` (`bausteine.css:8793`), ihr Eingabefeld ist dabei auf
+etwa null Punkte gequetscht.
+
+**Gefunden nicht am Bild, sondern am Prüflauf:** `test432` mass im selben
+Tick wie das Aufklappen und meldete „verdeckt", wo nichts verdeckte. Der
+Lauf wartet jetzt den Auftritt ab (E635) — die Lücke im Produkt bleibt
+davon unberührt und steht deshalb hier.
+
+**Wie schwer es wiegt.** Die Pille trägt `role="status"` und ist kein
+Bedienelement, §37 greift für sie nicht. Die Suchzeile ist ein `<label>`,
+und wer die Karte gerade erst aufgeklappt hat, tippt selten in derselben
+Fünftelsekunde hinein. Es ist eine dünne Stelle, kein Fehler.
+
+**Was zu klären ist:** ob der Auftritt statt `width` und `transform:scale(0)`
+mit `clip-path` und `opacity` gemalt wird. Dann stimmt die Trefferfläche ab
+dem ersten Bild, das Auge sieht dasselbe, und ein Prüflauf müsste gar nicht
+warten. Das wäre die bessere Lösung, aber sie ändert Redurs Auftritt, und
+das ist seine Entscheidung.
