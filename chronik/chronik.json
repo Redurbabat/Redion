@@ -3059,6 +3059,36 @@
    "beweis": "Zeilenzahl und Kopfzeile wieder wie in HEAD, Typecheck grün, `git status` zeigt nur die zwei beabsichtigten Dateien.",
    "lehre": "Ein Oder-Zweig, der eine Sicherung wählt, ist keine Sicherung: er sichert, was zuerst gelingt, nicht was gemeint war. Für eine Gegenprobe ist git die Sicherung — nicht eine Kopie daneben.",
    "entscheidung": "E629"
+  },
+  {
+   "nr": "P63",
+   "datum": "2026-09-19",
+   "titel": "Meine Reparatur machte den Wächter blind, und er wurde dadurch grün",
+   "schwere": "gross",
+   "symptom": "`test444` klagte einen Kommentar an. Nach der Reparatur war er grün — und blieb grün, als ein echter Verstoss danebenstand.",
+   "falscheVermutung": "Dass grün nach der Reparatur bedeutet, die Reparatur sei richtig.",
+   "wieGefunden": "Die Gegenprobe nach §55.2: `Konten.darf('bearbeiten', page)` in echten Code eingesetzt. 13/13 grün — also fand der Lauf gar nichts mehr.",
+   "ursache": "Ich hatte `nurCode` genommen, und das leert auch Zeichenketten. Der Lauf verlangt als erstes Argument ein Wort in Anführungszeichen; aus `'bearbeiten'` wurde `''`, und das Muster traf nie wieder.",
+   "loesung": "`ohneKommentare`: nur die Prosa heraus, die Zeichenketten bleiben. Zeilentreu, weil der Lauf die Zeilennummer meldet.",
+   "warumKeineUhr": "Keine Uhr im Spiel.",
+   "beweis": "Mit der neuen Fassung: der eingesetzte Verstoss wird gemeldet, mit Datei und Zeile 330 — genau der Zeile, in der er stand. Nach dem Zurücknehmen wieder 13/13.",
+   "lehre": "Eine Reparatur an einem Wächter ist erst fertig, wenn er mit einem echten Verstoss rot wird. Grün nach der Reparatur beweist gar nichts — es kann heissen, dass er nichts mehr sieht.",
+   "entscheidung": "E631"
+  },
+  {
+   "nr": "P64",
+   "datum": "2026-09-19",
+   "titel": "Der Wächter klagte den Satz an, der von ihm handelt",
+   "schwere": "klein",
+   "symptom": "Eine Stunde nach der Reparatur war `test444` wieder rot, mit einer Fundstelle in `src/bereiche/chronik/daten.ts`.",
+   "falscheVermutung": "Dass die Reparatur nicht gegriffen hat.",
+   "wieGefunden": "Die gemeldete Zeile angesehen: es ist die Chronik, erzeugt als Daten — und sie BESCHREIBT seit einer Stunde genau diesen Fehlalarm, samt der Zeile, die ihn auslöste.",
+   "ursache": "Der Wächter sieht den Unterschied zwischen einer Sache und dem Reden über die Sache nicht. Und die Kommentare zu entfernen half nicht: das Zitat steht in einer Zeichenkette, und die müssen für diesen Lauf stehen bleiben.",
+   "loesung": "Nicht den Text verändern, sondern die Fundstelle prüfen: `inZeichenkette` zählt die unmaskierten Anführungszeichen links davon. Ein Aufruf im Code steht nicht in einem String.",
+   "warumKeineUhr": "Keine Uhr im Spiel.",
+   "beweis": "Gegenprobe nach der zweiten Reparatur: der eingesetzte Verstoss wird weiter gemeldet, Datei und Zeile stimmen. Zurückgenommen wieder 13/13.",
+   "lehre": "Wer einen Fehlalarm dokumentiert, schreibt die auslösende Zeile in den Bestand — und erzeugt damit den nächsten. Bei textlesenden Wächtern ist das Aufschreiben selbst eine Änderung am geprüften Stoff.",
+   "entscheidung": "E631"
   }
  ]
 }

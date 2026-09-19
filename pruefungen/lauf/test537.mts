@@ -86,6 +86,7 @@
  * ==========================================================================*/
 import fs from 'node:fs';
 import path from 'node:path';
+import { nurCode, ohneSchablonen } from '../hilfe/quelltext.mts';
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 const QUELLE = path.join(WURZEL, 'src');
@@ -114,14 +115,8 @@ const p = (n: string, b: unknown, extra = ''): void => {
    Backticks sähe aus wie `Bibliothek.`. Gemessen macht das 88 Treffer
    Unterschied. Also wird für die SUCHE zusätzlich der Inhalt der Schablonen
    geleert — nicht die Schablone selbst. */
-const nurCode = (text: string): string => text
-  .replace(/\/\*[\s\S]*?\*\//g, ' ')
-  .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ')
-  .replace(/'(?:[^'\\\n]|\\.)*'/g, "''")
-  .replace(/"(?:[^"\\\n]|\\.)*"/g, '""');
-
-const ohneSchablonen = (text: string): string =>
-  text.replace(/`(?:[^`\\]|\\.)*`/g, '``');
+/* Beide Fassungen stehen jetzt in `pruefungen/hilfe/quelltext.mts`.
+   Der Kommentar darüber ist dorthin umgezogen. */
 
 /* ══ WER EINEN NAMEN ANBIETET ══════════════════════════════════════════════
    Gelesen, nicht gepflegt. Eine Liste, die jemand nachtragen muss, ist nach

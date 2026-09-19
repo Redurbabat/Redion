@@ -9143,3 +9143,40 @@ Genau deshalb steht es hier und im Kopf des Verzeichnisses.
 3. Die Namen auseinanderziehen. Das ist die sauberste und die teuerste
    Lösung, und sie gehört nicht in denselben Bogen wie der Wächter.
 
+---
+
+## L194 · Wie viele Wächter Prosa für Code halten, ist nicht gezählt — 19. September 2026
+
+An einem Tag haben **drei** Wächter etwas gemeldet, das es nicht gab, und
+jedes Mal stand der „Fund" in einem Satz: `test537` (E629), `test444` und
+`test483` (E631). Alle drei sind repariert; `pruefungen/hilfe/quelltext.mts`
+ist die gemeinsame Stelle.
+
+**Was nicht beantwortet ist: wie viele es noch gibt.**
+
+```txt
+196   Prüfläufe lesen eine Datei unter src/ oder quell/ als Text
+        (readFileSync + ein Pfad dorthin, gezählt am 19. September)
+  4   davon lesen sie durch quelltext.mts, also als Code
+```
+
+Die 196 sind eine **Obergrenze, keine Fehlerzahl.** Viele davon prüfen zu
+Recht den rohen Text: ob eine Datei eine Zeile enthält, ob ein erzeugtes
+`.js` zu seiner `.ts` passt, ob ein Name im Register steht. Ein Wächter ist
+nur dann anfällig, wenn er nach einem **Code-Muster** sucht — und das sagt
+die Zahl nicht.
+
+**Warum es trotzdem hier steht:** Die drei gefundenen Fälle waren nicht
+gesucht, sondern gestolpert. Ein vierter fällt beim nächsten vollen Lauf
+auf, oder er fällt nie auf und macht eine Zusage still wertlos.
+
+**Was zu tun wäre**, und zwar als eigener Bogen:
+
+1. Die 196 danach trennen, ob sie nach einer Zeichenfolge (harmlos) oder
+   nach einem Muster mit Klammern und Punkten (anfällig) suchen.
+2. Für die anfälligen je eine Gegenprobe schreiben, die einen echten
+   Verstoss einsetzt — die einzige Art, das zu beantworten (§55.2).
+3. Erst danach umstellen. Die Reihenfolge ist wichtig: die Gegenprobe zu
+   `test444` hat gezeigt, dass eine Reparatur einen Wächter **blind**
+   machen kann, ohne dass eine einzige Zeile rot wird.
+

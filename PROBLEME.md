@@ -76,6 +76,8 @@ sind der teuerste Teil und der lehrreichste.
 | P60 | 2026-09-19 | Die Gesamtsuite war seit PR #100 nicht gelaufen | gross | — |
 | P61 | 2026-09-19 | Mein Wächter erfand eine Kopplung, die es nicht gab | 🟠 mittel | E629 |
 | P62 | 2026-09-19 | Meine Sicherungskopie nahm die falsche Datei | gross | E629 |
+| P63 | 2026-09-19 | Meine Reparatur machte den Wächter blind, und er wurde dadurch grün | gross | E631 |
+| P64 | 2026-09-19 | Der Wächter klagte den Satz an, der von ihm handelt | 🟡 klein | E631 |
 
 ---
 
@@ -1389,4 +1391,50 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Zeilenzahl und Kopfzeile wieder wie in HEAD, Typecheck grün, `git status` zeigt nur die zwei beabsichtigten Dateien.
 
 **Die Lehre.** Ein Oder-Zweig, der eine Sicherung wählt, ist keine Sicherung: er sichert, was zuerst gelingt, nicht was gemeint war. Für eine Gegenprobe ist git die Sicherung — nicht eine Kopie daneben.
+
+
+---
+
+## P63 · Meine Reparatur machte den Wächter blind, und er wurde dadurch grün
+
+*2026-09-19 · gross · E631*
+
+**Das Bild.** `test444` klagte einen Kommentar an. Nach der Reparatur war er grün — und blieb grün, als ein echter Verstoss danebenstand.
+
+**Die falsche Vermutung.** Dass grün nach der Reparatur bedeutet, die Reparatur sei richtig.
+
+**Wie es gefunden wurde.** Die Gegenprobe nach §55.2: `Konten.darf('bearbeiten', page)` in echten Code eingesetzt. 13/13 grün — also fand der Lauf gar nichts mehr.
+
+**Die Ursache.** Ich hatte `nurCode` genommen, und das leert auch Zeichenketten. Der Lauf verlangt als erstes Argument ein Wort in Anführungszeichen; aus `'bearbeiten'` wurde `''`, und das Muster traf nie wieder.
+
+**Die Lösung.** `ohneKommentare`: nur die Prosa heraus, die Zeichenketten bleiben. Zeilentreu, weil der Lauf die Zeilennummer meldet.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** Mit der neuen Fassung: der eingesetzte Verstoss wird gemeldet, mit Datei und Zeile 330 — genau der Zeile, in der er stand. Nach dem Zurücknehmen wieder 13/13.
+
+**Die Lehre.** Eine Reparatur an einem Wächter ist erst fertig, wenn er mit einem echten Verstoss rot wird. Grün nach der Reparatur beweist gar nichts — es kann heissen, dass er nichts mehr sieht.
+
+
+---
+
+## P64 · Der Wächter klagte den Satz an, der von ihm handelt
+
+*2026-09-19 · 🟡 klein · E631*
+
+**Das Bild.** Eine Stunde nach der Reparatur war `test444` wieder rot, mit einer Fundstelle in `src/bereiche/chronik/daten.ts`.
+
+**Die falsche Vermutung.** Dass die Reparatur nicht gegriffen hat.
+
+**Wie es gefunden wurde.** Die gemeldete Zeile angesehen: es ist die Chronik, erzeugt als Daten — und sie BESCHREIBT seit einer Stunde genau diesen Fehlalarm, samt der Zeile, die ihn auslöste.
+
+**Die Ursache.** Der Wächter sieht den Unterschied zwischen einer Sache und dem Reden über die Sache nicht. Und die Kommentare zu entfernen half nicht: das Zitat steht in einer Zeichenkette, und die müssen für diesen Lauf stehen bleiben.
+
+**Die Lösung.** Nicht den Text verändern, sondern die Fundstelle prüfen: `inZeichenkette` zählt die unmaskierten Anführungszeichen links davon. Ein Aufruf im Code steht nicht in einem String.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** Gegenprobe nach der zweiten Reparatur: der eingesetzte Verstoss wird weiter gemeldet, Datei und Zeile stimmen. Zurückgenommen wieder 13/13.
+
+**Die Lehre.** Wer einen Fehlalarm dokumentiert, schreibt die auslösende Zeile in den Bestand — und erzeugt damit den nächsten. Bei textlesenden Wächtern ist das Aufschreiben selbst eine Änderung am geprüften Stoff.
 

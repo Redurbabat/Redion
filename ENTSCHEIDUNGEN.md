@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-607 Entscheidungen, E1 bis E629 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+609 Entscheidungen, E1 bis E631 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -672,6 +672,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E627** — Ein Grund gilt nur, wo der Lauf ihn sucht: `test402` war rot, obwohl die Trefffläche der Gedankenkarte ihre 44 px längst hatte — ihr Beleg stand HINTER der Regel statt darüber, ausserhalb des Fensters, das der Lauf liest. Der Kommentar zieht um; der zweite Treffer (`#ai .ki-quellschalter`, 32 px) war ein echter und bekommt seinen geschriebenen Grund (§37)
 * **E628** — Die Gedankenkarte bekommt Griffe, Verbindungen, Formen und Vorlagen (Redurs Bestellung): vier Griffe am gewählten Thema, die tippend ein Thema anlegen und ziehend eine freie Verbindung ziehen; Verbindungen mit Spitze, gestrichelt gegen den Ast, wählbar und löschbar; sechs Formen, bei denen `rund` nichts in die Daten schreibt und eine unbekannte Form STEHEN BLEIBT (§18); sechs fertige Vorlagen, die vor dem Überschreiben fragen — aber nur, wenn etwas auf dem Spiel steht. Vier Fehler fand erst das Hinsehen, darunter eine Verbindung, die als 181 × 0 px grosse Linie quer durch die Wurzel lief (`test538`, 53 Zusicherungen)
 * **E629** — Ein Name mit Typangabe ist derselbe Name: `test537` erkannte `const X: Typ = …` nicht als Anmeldung und meldete deshalb die EIGENE Formenliste der Gedankenkarte als Griff in den PDF-Bereich. Ein Wächter, der eine Schreibweise nicht kennt, erfindet eine Kopplung — schlimmer als eine übersehene, weil jemand danach eine Arbeit macht, die es nicht gibt. Mit der Berichtigung bekommen 59 Namen erstmals einen Besitzer und zehn verlieren ihn (L193)
+* **E630** — Kein Lauf teilt mehr seinen Port: vier doppelt vergebene Zahlen aufgelöst (die jüngeren Läufe weichen, weil die älteren mit ihrer Zahl in der Doku stehen). Dazu zwei Sätze in §30, die gefehlt haben: im Hauptbaum wird kein Prüflauf gestartet, während ein voller Lauf im Arbeitsbaum läuft — und ein Arbeitsbaum ist nicht der Hauptbaum, weil dort `.git` eine Datei und `node_modules` ein Symlink ist
+* **E631** — Der Quelltext wird als Code gelesen, nicht als Prosa: `nurCode` lag zweimal wortgleich im Baum (mit dem Satz „wiederverwenden, nicht nachbauen" über der zweiten Kopie) und zog jetzt nach `pruefungen/hilfe/quelltext.mts` um. `test444` und `test483` klagten je einen SATZ an. Und die Gegenprobe hat die erste Reparatur widerlegt: wer die Zeichenketten mitleert, macht einen Wächter blind, der nach einer Zeichenkette sucht
 
 ---
 
@@ -51332,4 +51334,124 @@ Zurückschreiben stand danach der Inhalt von `chronik.ts` in `blatt.ts`.
 Aufgefallen ist es am Typecheck (`Cannot find name 'Blatt'`), zurückgeholt
 aus dem letzten Commit. Ein Oder-Zweig, der eine Sicherung wählt, ist keine
 Sicherung: er sichert, was zuerst gelingt, nicht was gemeint war.
+
+---
+
+## E630 — Kein Lauf teilt mehr seinen Port
+
+**Entscheidung:** Die vier doppelt vergebenen Portzahlen sind aufgelöst; die
+**jüngeren** Läufe weichen.
+
+```txt
+test530  9530 → 9638      test525  9625 → 9640
+test531  9531 → 9639      test526  9626 → 9641
+```
+
+Warum die jüngeren: `test407` und `test408` stehen mit ihrer Zahl in
+ENTSCHEIDUNGEN.md und ERLEDIGTE-AUFGABEN.md. Ein Protokoll, dessen Zahl
+nicht mehr stimmt, ist schlechter als eine umgezogene Suite.
+
+**Der Anlass.** Der erste volle Lauf seit PR #100 meldete 17 von 48 Stücken
+rot. Vier davon waren einzeln **grün** — und der Kopf von `test400` nennt
+denselben Fall vom 4. September: „Ein Ergebnis, das aus dem falschen Grund
+rot ist, ist schlimmer als eines, das grün lügt."
+
+**Und zwei Sätze in §30, die gefehlt haben:**
+
+1. **Im Hauptbaum wird kein Prüflauf gestartet**, während ein voller Lauf im
+   Arbeitsbaum läuft. Genau das habe ich getan.
+2. **Ein Arbeitsbaum ist nicht der Hauptbaum.** Dort ist `.git` eine Datei
+   (52 Bytes) und `node_modules` ein Symlink. `test270` filtert Ordnermuster
+   mit `istOrdner` und meldete deshalb, beide gingen mit ins Netz —
+   `.assetsignore` schliesst sie korrekt aus. **Nachgemessen im Hauptbaum:
+   `test270` ist grün.** Von 17 nachgemessenen Läufen war er der einzige.
+
+---
+
+## E631 — Der Quelltext wird als Code gelesen, nicht als Prosa
+
+**Entscheidung:** `pruefungen/hilfe/quelltext.mts` ist die eine Stelle für
+das Lesen von Quelltext. Vier Wächter benutzen sie.
+
+```txt
+nurCode              Kommentare und Zeichenketten leer
+ohneSchablonen       zusätzlich der Inhalt der Backticks
+nurEchterCode        beides
+ohneKommentare       NUR die Kommentare, zeilentreu — Zeichenketten bleiben
+nurCodeZeilentreu    wie nurCode, aber jede Zeile bleibt ihre Zeile
+```
+
+**Der Anlass: drei erfundene Meldungen an einem Tag.**
+
+```txt
+test537   die eigene Formenliste der Gedankenkarte     (E629)
+test444   ein KOMMENTAR, der über Rechte spricht
+test483   ein Satz der CHRONIK über E525, eingebettet als Daten
+```
+
+Eine erfundene Meldung ist schlimmer als eine übersehene: die übersehene
+kostet Wachsamkeit, die erfundene kostet Arbeit an etwas, das es nicht gibt.
+Und drei davon in einem vollen Lauf erziehen dazu, Rot zu überlesen.
+
+**`nurCode` lag schon zweimal wortgleich im Baum** — und über der zweiten
+Kopie stand „wiederverwenden, nicht nachbauen (§8)". Eine Kopie mit diesem
+Satz darüber ist genau der Katalog, den §8 verbietet.
+
+### Was die Gegenprobe widerlegt hat
+
+Die erste Reparatur von `test444` nahm `nurCode`. Der Lauf wurde grün — und
+blieb grün, **als ein echter Verstoss danebenstand**:
+
+```ts
+const _gegenprobe = (page: any) => Konten.darf('bearbeiten', page);
+```
+
+Der Grund: dieser Lauf verlangt als erstes Argument ein Wort in
+Anführungszeichen, und `nurCode` macht aus `'bearbeiten'` ein `''`. Der
+Wächter fand nichts mehr — auch nichts Echtes. **Er war nicht repariert,
+er war blind.**
+
+Deshalb `ohneKommentare`: nur die Prosa heraus, die Zeichenketten bleiben.
+Wer nach einem Muster sucht, in dem eine Zeichenkette vorkommt, nimmt diese
+Fassung; wer nach einem Namen sucht, der auch in Prosa stehen kann, nimmt
+`nurCode`.
+
+**Zeilentreu**, weil `test444` die Zeilennummer meldet. Ein Entferner, der
+einen Blockkommentar durch ein Leerzeichen ersetzt, schiebt jede spätere
+Fundstelle um dessen Länge nach oben. Gemessen in der Gegenprobe: der
+Verstoss stand auf Zeile 330, gemeldet wurde 330.
+
+**Und `test483` sucht jetzt nach Verweisen statt nach Zeichenfolgen** —
+`src=`, `href=`, `url(`. Die Zusage meint den Browser, nicht den Text: er
+darf nicht in einen Ordner greifen, den die Einzeldatei nicht neben sich
+hat. Sonst macht jede künftige Chronikzeile, die einen Pfad zitiert, den
+Lauf rot.
+
+### Und der dritte Fall kam aus dieser Entscheidung selbst
+
+Kaum stand `test444` grün, war er wieder rot — mit einer neuen Fundstelle:
+
+```txt
+src/bereiche/chronik/daten.ts:3078 → page
+```
+
+`daten.ts` ist erzeugt und trägt die Chronik als **Daten**. Und die Chronik
+beschreibt seit einer Stunde diesen Fehlalarm, samt der Zeile, die ihn
+auslöste. Der Wächter klagte den Satz an, der von ihm handelt.
+
+`ohneKommentare` kann das nicht fangen — die Zeichenketten müssen ja stehen
+bleiben. Also wird nicht der Text verändert, sondern die **Fundstelle
+geprüft**: `inZeichenkette(zeile, stelle)` zählt die unmaskierten
+Anführungszeichen links davon; eine ungerade Zahl heisst „mittendrin". Ein
+Aufruf im Code steht nicht in einem String, ein Zitat in erzeugten Daten
+schon.
+
+Dreimal an einem Tag derselbe Fehler, und der dritte entstand beim
+Aufschreiben des zweiten. Das ist kein Zufall, sondern die Eigenschaft
+dieser Sorte Wächter: **sie sehen den Unterschied zwischen einer Sache und
+dem Reden über die Sache nicht.**
+
+**Gemessen.** `test87` 173/173 · `test537` 17/17 · `test444` 13/13 ·
+`test483` 25/25. Drei Gegenproben einzeln rot gesehen und zurückgenommen —
+die zu `test444` zweimal, vor und nach der zweiten Reparatur.
 

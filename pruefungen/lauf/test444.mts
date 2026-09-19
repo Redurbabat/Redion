@@ -33,6 +33,7 @@ import http from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import { ohneKommentare, inZeichenkette } from '../hilfe/quelltext.mts';
 
 declare const Store: any; declare const App: any; declare const Konten: any;
 
@@ -82,12 +83,35 @@ console.log('\n§1 Die Quelle: keine Rechtefrage mit einem Objekt');
   const gut: string[] = [];
   const muster = /Konten\.darf\(\s*(['"][a-zA-Z]+['"]|[A-Za-z_$][\w$]*)\s*,\s*([^),]+)\)/g;
   for (const datei of dateien) {
-    const text = fs.readFileSync(datei, 'utf8');
+    /* NUR DER CODE, NICHT DIE PROSA — und ZEILENTREU (E631).
+       Hier stand `fs.readFileSync(…)` roh. Der einzige Treffer am
+       19. September war ein KOMMENTAR in `src/bereiche/pdf/marken.ts`, der
+       über Rechte SPRICHT: „… für fehlende Rechte (`Konten.darf('bearbeiten',
+       …)`)". Der Wächter klagte einen Satz an.
+
+       Zeilentreu, weil dieser Lauf die ZEILENNUMMER meldet: ein Entferner,
+       der einen Blockkommentar durch ein Leerzeichen ersetzt, schiebt jede
+       spätere Fundstelle um dessen Länge nach oben. Eine falsche
+       Zeilennummer ist die zweite Sorte erfundener Meldung — man sucht
+       dort und findet nichts.
+
+       UND NUR DIE KOMMENTARE, NICHT DIE ZEICHENKETTEN. Die erste Fassung
+       nahm `nurCode` und wurde dadurch BLIND: dieser Lauf verlangt als
+       erstes Argument ein Wort in Anführungszeichen, und `nurCode` macht
+       aus `'bearbeiten'` ein `''`. Die Gegenprobe blieb grün, obwohl ein
+       echter Verstoss danebenstand — genau der Fall, vor dem §55.2 warnt.
+       Gefunden nur, weil die Gegenprobe Pflicht ist. */
+    const text = ohneKommentare(fs.readFileSync(datei, 'utf8'));
     const zeilen = text.split('\n');
     zeilen.forEach((zeile, i) => {
       muster.lastIndex = 0;
       let treffer: RegExpExecArray | null;
       while ((treffer = muster.exec(zeile))) {
+        /* EIN ZITAT IST KEIN AUFRUF (E631). `src/bereiche/chronik/daten.ts`
+           ist erzeugt und trägt die Chronik als Daten — dort steht dieser
+           Fehler inzwischen BESCHRIEBEN, mitsamt der Zeile, die ihn
+           auslöste. Wer in einer Zeichenkette steht, ist kein Aufruf. */
+        if (inZeichenkette(zeile, treffer.index)) continue;
         const zweites = String(treffer[2]).trim();
         const kennung = /(^|\.)([Ii]d|ID)$/.test(zweites) || /^['"]/.test(zweites)
           || /Id\b/.test(zweites) || zweites === 'pageId' || zweites === 'seiteId';
