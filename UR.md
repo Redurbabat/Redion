@@ -1710,5 +1710,5 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 64 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 65 Einträge.
 

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-609 Entscheidungen, E1 bis E631 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+610 Entscheidungen, E1 bis E632 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -674,6 +674,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E629** — Ein Name mit Typangabe ist derselbe Name: `test537` erkannte `const X: Typ = …` nicht als Anmeldung und meldete deshalb die EIGENE Formenliste der Gedankenkarte als Griff in den PDF-Bereich. Ein Wächter, der eine Schreibweise nicht kennt, erfindet eine Kopplung — schlimmer als eine übersehene, weil jemand danach eine Arbeit macht, die es nicht gibt. Mit der Berichtigung bekommen 59 Namen erstmals einen Besitzer und zehn verlieren ihn (L193)
 * **E630** — Kein Lauf teilt mehr seinen Port: vier doppelt vergebene Zahlen aufgelöst (die jüngeren Läufe weichen, weil die älteren mit ihrer Zahl in der Doku stehen). Dazu zwei Sätze in §30, die gefehlt haben: im Hauptbaum wird kein Prüflauf gestartet, während ein voller Lauf im Arbeitsbaum läuft — und ein Arbeitsbaum ist nicht der Hauptbaum, weil dort `.git` eine Datei und `node_modules` ein Symlink ist
 * **E631** — Der Quelltext wird als Code gelesen, nicht als Prosa: `nurCode` lag zweimal wortgleich im Baum (mit dem Satz „wiederverwenden, nicht nachbauen" über der zweiten Kopie) und zog jetzt nach `pruefungen/hilfe/quelltext.mts` um. `test444` und `test483` klagten je einen SATZ an. Und die Gegenprobe hat die erste Reparatur widerlegt: wer die Zeichenketten mitleert, macht einen Wächter blind, der nach einer Zeichenkette sucht
+* **E632** — Die Inventur zieht nach, und die Prüfung lernt die vierte Schreibweise: `doku/BLOCKTYPEN.md` fehlte die Gedankenkarte seit E607 (drei Tage, 78 gegen 79). `test225` dagegen hatte recht zu melden und unrecht im Grund: die sechs Verweise stimmen, nur drucken die jüngeren Läufe ihre Abschnitte als `§1 Titel` ohne den Mittelpunkt
 
 ---
 
@@ -51454,4 +51455,63 @@ dem Reden über die Sache nicht.**
 **Gemessen.** `test87` 173/173 · `test537` 17/17 · `test444` 13/13 ·
 `test483` 25/25. Drei Gegenproben einzeln rot gesehen und zurückgenommen —
 die zu `test444` zweimal, vor und nach der zweiten Reparatur.
+
+---
+
+## E632 — Die Inventur zieht nach, und die Prüfung lernt die vierte Schreibweise
+
+Zwei rote Läufe, zwei verschiedene Ursachen — und genau darin liegt der
+Punkt dieses Eintrags: **der eine war ein Fehler in der Doku, der andere
+einer in der Prüfung.** Wer beide gleich behandelt, verdirbt einen davon.
+
+### `test164` — die Doku hatte unrecht
+
+`doku/BLOCKTYPEN.md` führte 78 Blockarten, das Register 79. Es fehlte
+`mindmap`, die Gedankenkarte aus **E607** vom 16. September. Der Lauf war
+drei Tage rot, und niemand hat ihn in dieser Zeit gefahren — der Bogen, der
+die Blockart baute, fuhr `test529` und seine Nachbarn, nicht die Inventur.
+
+Nachgetragen: `mindmap` in der Gruppe Wissen (6 → 7), Stand 78 → 79.
+
+**Was dabei auffiel und hier stehen bleibt:** Die Datei behauptet in ihrem
+Kopf, sie sei „aus dem laufenden Register erzeugt". **Einen Erzeuger gibt es
+nicht** — sie wird von Hand gepflegt. Die Behauptung ist der Grund, warum
+sie driften konnte, ohne dass jemand stutzte. Das ist eine eigene Arbeit und
+steht als Lücke, nicht als Nebensatz.
+
+### `test225` — die Prüfung hatte unrecht
+
+Sechs Verweise galten als „ins Leere zeigend":
+
+```txt
+ENTSCHEIDUNGEN.md: test534 §1 · §2 · §3 · test535 §4 · test536 §6 · test506 §1
+```
+
+**Alle sechs gibt es.** `hatAbschnitt` kannte drei Schreibweisen, und alle
+drei verlangen ein „ · " hinter der Zahl. Die jüngeren Läufe drucken ihre
+Abschnitte aber als `console.log('\n§1 Vier Plätze …')` — mit dem
+Paragraphenzeichen und ohne Mittelpunkt.
+
+Entschieden wird das wie schon einmal bei `test67` (**E168**): **berichtigt
+wird die Prüfung, nicht die Doku** — die Verweise stimmten. Eine Prüfung,
+die aus dem falschen Grund rot wird, ist so wenig wert wie eine, die aus
+dem falschen Grund grün ist.
+
+Das Leerzeichen hinter der Zahl im neuen Muster ist keine Zierde: ohne es
+erfüllte ein gedrucktes `§12` auch einen Verweis auf `§1`.
+
+**Gegenprobe:** einen Verweis auf einen Abschnitt siebenundsiebzig
+eingesetzt, den es in jenem Lauf nicht gibt — gemeldet, mit Namen. Wieder
+entfernt, 11/11 grün. Und die eingebaute Gegenrichtung (jener Lauf hat
+einen dritten und einen achten Abschnitt, aber keinen neunundneunzigsten)
+bleibt grün: der neue Ausdruck macht den Lauf nicht weich.
+
+**Und die Gegenprobe musste dafür umgeschrieben werden** — beim ersten Mal
+stand sie hier mit Namen und Nummer, und `test225` meldete prompt einen
+Verweis ins Leere. Es ist dieselbe Falle wie bei `test444` am selben Tag
+(P64): **wer einen Fehlalarm dokumentiert, schreibt die auslösende Zeile in
+den Bestand.** Bei Wächtern, die Text lesen, ist das Aufschreiben selbst
+eine Änderung am geprüften Stoff.
+
+**Gemessen.** `test164` 6/6 · `test225` 11/11.
 

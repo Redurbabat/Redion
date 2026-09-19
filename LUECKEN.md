@@ -9180,3 +9180,34 @@ auf, oder er fällt nie auf und macht eine Zusage still wertlos.
    `test444` hat gezeigt, dass eine Reparatur einen Wächter **blind**
    machen kann, ohne dass eine einzige Zeile rot wird.
 
+---
+
+## L195 · Die Blocktypen-Inventur behauptet, erzeugt zu sein — sie ist es nicht — 19. September 2026
+
+`doku/BLOCKTYPEN.md` beginnt mit dem Satz:
+
+> Diese Liste ist aus dem laufenden Register erzeugt (`Register.bloecke`),
+> nicht abgetippt.
+
+**Einen Erzeuger gibt es im ganzen Baum nicht.** Die Datei wird von Hand
+gepflegt, und `test164` ist das einzige, was sie zusammenhält.
+
+Genau deshalb konnte sie driften: Am 16. September kam die Gedankenkarte
+ins Register (E607), die Doku blieb auf 78 stehen, und der Lauf war drei
+Tage rot, ohne dass jemand ihn fuhr. Nachgetragen am 19. September (E632).
+
+**Zwei Wege, und beide sind vertretbar:**
+
+1. **Den Erzeuger wirklich bauen.** Ein kleines `.mts`, das die Tabelle aus
+   `src/register/bloecke.ts` schreibt — dann kann sie nie wieder abweichen.
+   Kosten: die Gruppenüberschriften und die drei erklärenden Abschnitte am
+   Ende („Bausteine ohne Menüeintrag", „Die sechs Kandidaten aus L19", „Die
+   alte Zählung") müssten erhalten bleiben; ein Erzeuger, der sie
+   überschreibt, macht die Datei ärmer.
+2. **Den Satz berichtigen.** Eine Zeile, und die Datei sagt die Wahrheit
+   über sich selbst: von Hand gepflegt, von `test164` gehalten.
+
+Der zweite Weg ist ehrlich und kostet nichts; der erste ist besser und
+kostet einen eigenen Bogen. Solange keiner gegangen ist, steht hier, dass
+der Kopf der Datei nicht stimmt.
+

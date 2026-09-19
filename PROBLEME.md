@@ -78,6 +78,7 @@ sind der teuerste Teil und der lehrreichste.
 | P62 | 2026-09-19 | Meine Sicherungskopie nahm die falsche Datei | gross | E629 |
 | P63 | 2026-09-19 | Meine Reparatur machte den Wächter blind, und er wurde dadurch grün | gross | E631 |
 | P64 | 2026-09-19 | Der Wächter klagte den Satz an, der von ihm handelt | 🟡 klein | E631 |
+| P65 | 2026-09-19 | Zum zweiten Mal an einem Tag: das Aufschreiben erzeugte den nächsten Fehlalarm | 🟡 klein | E632 |
 
 ---
 
@@ -1437,4 +1438,27 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Gegenprobe nach der zweiten Reparatur: der eingesetzte Verstoss wird weiter gemeldet, Datei und Zeile stimmen. Zurückgenommen wieder 13/13.
 
 **Die Lehre.** Wer einen Fehlalarm dokumentiert, schreibt die auslösende Zeile in den Bestand — und erzeugt damit den nächsten. Bei textlesenden Wächtern ist das Aufschreiben selbst eine Änderung am geprüften Stoff.
+
+
+---
+
+## P65 · Zum zweiten Mal an einem Tag: das Aufschreiben erzeugte den nächsten Fehlalarm
+
+*2026-09-19 · 🟡 klein · E632*
+
+**Das Bild.** Kaum stand `test225` grün, war er wieder rot — Fundstelle: der Eintrag E632, den ich gerade darüber geschrieben hatte.
+
+**Die falsche Vermutung.** Keine. Nach P64 habe ich es erwartet — und es trotzdem gemacht.
+
+**Wie es gefunden wurde.** Der Lauf lief direkt nach dem Schreiben. Die gemeldete Fundstelle war meine eigene Zeile über die Gegenprobe.
+
+**Die Ursache.** Die Gegenprobe stand mit Namen und Nummer im Text. Ein Wächter, der Verweise sucht, findet den Satz über den Verweis genauso wie den Verweis.
+
+**Die Lösung.** Die Gegenprobe in Worten beschrieben statt in der Schreibweise, die der Lauf sucht.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** Danach 11/11, und die eingebaute Gegenrichtung des Laufs blieb grün — der Ausdruck ist also nicht weich geworden.
+
+**Die Lehre.** Bei textlesenden Wächtern ist das Aufschreiben eine Änderung am geprüften Stoff. Zweimal an einem Tag dieselbe Falle: einmal in der Chronik (P64), einmal in ENTSCHEIDUNGEN.md.
 
