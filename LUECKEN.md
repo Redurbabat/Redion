@@ -7472,7 +7472,7 @@ und physische Safari-/Chrome-Geräteprüfungen bleiben ausstehend.
 
 ---
 
-L150 · §5 Regel 1 hat keinen Wächter — offen
+L150 · §5 Regel 1 hat keinen Wächter — ~~offen~~ **GESCHLOSSEN am 19. September 2026 durch E626 (test537) — mit einer Richtigstellung**
 --------------------------------------------------------------------------
 
 CLAUDE.md §5 Regel 1 ist **[hart]**: „Bereiche importieren sich nicht
@@ -8987,3 +8987,72 @@ Was fehlt, ist die Gestalt aus Redurs Bild, nicht die Auskunft.
    Schatten zu einem Ring um den Knopf statt zu einer Kante am Punkt —
    genau deshalb war es ein Pseudoelement (E568).
 3. So lassen. Der Name ist da, nur nicht als Fähnchen.
+
+---
+
+## L150 — nachgetragen am 19. September 2026 (E626)
+
+**Der Wächter steht: `test537`.** Und mit ihm eine Richtigstellung an dieser
+Lücke selbst.
+
+Oben steht: „heute hält die Regel, gemessen über alle `src/bereiche/*/` — es
+gibt keinen Querverweis", und daraus folgte die Sorge, ein Lauf auf sauberem
+Bestand bliebe für immer grün. **Das war falsch.** Gemessen mit genau dem
+Verfahren, das diese Lücke vorschlägt (`nurCode()` aus `test87`, für jeden
+Bereichsnamen statt für `App`):
+
+```txt
+523 Querverweise   in 63 von 306 möglichen Bereichspaaren
+                   127 Einträge (Bereich + fremder Name), 61 fremde Namen
+  6 davon über `(window as any).X`
+```
+
+Woran es lag, ist lehrreich: die alte Messung suchte nach `import`. Den gibt
+es hier nicht — und der Schluss „also keine Querverweise" ist derselbe
+Fehler wie eine Prüfung, die das Falsche misst und deshalb immer grün sagt
+(§55.2). Die Lücke warnte vor genau diesem Fehler und machte ihn selbst.
+
+**Verschoben wurde nichts**, und der Grund steht in E626 mit Zahlen: die
+grossen Namen sind die Kerne ihrer Bereiche (`Datenbank` = 502 KB
+Datenbanksteuerung), keine gemeinsamen Helfer. Stattdessen führt
+`pruefungen/bereiche-bestand.json` den Stand, darf nur schrumpfen, und jeder
+NEUE Verweis macht `test537` rot.
+
+**Was damit offen bleibt** — und zwar als Frage an Redur, nicht als Arbeit:
+ob die 523 über `register/` aufgelöst werden (§5s dritter Weg, 523 Stellen),
+oder ob §5 Regel 1 umgeschrieben gehört, weil achtzehn Bereiche einander in
+63 von 306 Paaren anrufen und das der Normalfall dieses Programms ist. §5 ist
+**[hart]** — das ist seine Entscheidung.
+
+---
+
+## L191 · Der dritte Kopplungsweg hat keine Zuordnung — 19. September 2026
+
+`test537` prüft zwei Wege, auf denen ein Bereich einen anderen anfasst: den
+Namen und den Umweg über `(window as any)`. **Der dritte fehlt**, und der
+Grund ist gemessen, nicht gemeint.
+
+Ein `querySelector('.lw-karte')` mitten im Editor koppelt genauso fest wie
+ein Aufruf. Um das zu prüfen, bräuchte der Lauf die Zuordnung
+Präfix → Bereich. Die gibt es nicht: `doku/CSS-NAMENSRAEUME.md` führt
+**144 Präfixe auf Stilblätter**
+
+```txt
+aw      261  arbeitswelt.css
+ai       97  motion.css
+```
+
+— und ein Stilblatt gehört keinem Bereich. `bausteine.css` gehört allen.
+
+Eine zweite, von Hand gepflegte Zuordnung wäre genau der Katalog, den §8
+verbietet: „Ein zweiter Katalog für dasselbe läuft mit dem ersten
+auseinander, und niemand merkt, welcher gilt."
+
+**Zwei Wege, wenn es doch sein soll:**
+
+1. Die Zugehörigkeit aus der Quelle lesen, wie `test537` es mit den Namen
+   tut: ein Präfix gehört dem Bereich, in dessen `.ts` es vorkommt — und
+   nur, wenn es in **genau einem** vorkommt und in `kern/`/`schale/` gar
+   nicht. Präfixe, die mehrere führen, gehören niemandem.
+2. `doku/CSS-NAMENSRAEUME.md` um eine dritte Spalte erweitern (Bereich), und
+   `test290` — der Lauf, der dieses Verzeichnis schon hält — prüft sie mit.

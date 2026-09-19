@@ -5723,3 +5723,55 @@ meldete dabei `opacity: 1`. Steht als **L190**, mit drei Wegen.
 `test438`, `test247`, `test393`, `test481` grün; `npm run typecheck` sauber.
 Drei Bilder angesehen — und sie haben zweimal widerlegt, was die Rechnung
 behauptete.
+
+---
+
+## Bereiche bleiben getrennt — der Wächter, den §5 nie hatte (19. September 2026)
+
+**L150 ist geschlossen.** §5 Regel 1 ist **[hart]** und hatte seit ihrer
+Niederschrift keinen Wächter; der Satz „Der Wächter dafür ist `test87`" stand
+in `CLAUDE.md` und stimmte nicht.
+
+**Und L150 selbst lag falsch.** Dort stand: „heute hält die Regel — es gibt
+keinen Querverweis". Gemessen sind es **523, in 63 von 306 Bereichspaaren**.
+Woran es lag, ist die Lehre: die alte Messung suchte nach `import`. Den gibt
+es in diesem Programm nicht (0 Zeilen in `src/bereiche/`), und der Schluss
+„also keine Querverweise" ist derselbe Fehler, vor dem dieselbe Lücke warnt —
+eine Messung, die das Falsche misst, sagt immer das Beruhigende.
+
+**Verschoben wurde nichts.** Der naheliegende Weg wäre §5s zweiter gewesen
+(„gemeinsame Logik nach `kern/`"), aber die grossen Namen sind keine Helfer:
+`Datenbank` ist `datenbanken/steuerung.ts` mit **502 KB**, `Werkzeuge` die
+Befehlspalette samt Journal mit 163 KB. Sie nach `kern/` zu schieben hiesse
+§4 brechen.
+
+**Stattdessen ein Verzeichnis**, nach dem dreimal erprobten Muster
+(`js-bestand.json`, `masse-bestand.json`, `schalter-bestand.json`):
+`pruefungen/bereiche-bestand.json` führt die 127 Einträge, darf nur
+schrumpfen, und `test537` macht jeden NEUEN Verweis rot — auch den über
+`(window as any)`, der sonst die eine Zeile wäre, mit der der Wächter zu
+umgehen ist.
+
+**Geprüft.** `test537` neu, 17 Zusagen, **drei Gegenproben einzeln rot
+gesehen** (ein nackter Verweis, derselbe über `window`, und ein entfernter
+Verweis, der einen Eintrag zur Karteileiche macht). Dazu sieben eingebaute
+Gegenproben der Ausdrücke selbst, nach dem Vorbild von `test87:162`.
+`test87`, `test105`, `test109` grün, `npm run typecheck` sauber.
+
+**Zwei Fehler, die erst die Gegenprobe zeigte:** ohne die zusätzliche
+Schablonen-Leerung zählte der Lauf 88 Treffer aus deutscher Prosa in
+Backticks mit („öffne die Bibliothek."), und der Fensterweg zählte dieselbe
+Zeile zweimal — 526 statt 523.
+
+**Offen und Redurs Entscheidung:** die 523 über `register/` auflösen (§5s
+dritter Weg), oder §5 Regel 1 umschreiben, weil achtzehn Bereiche einander in
+63 von 306 Paaren anrufen und das der Normalfall dieses Programms ist.
+Eingetragen ist auch, was der Wächter **nicht** kann: den Griff ins fremde
+Markup, weil die Zuordnung Präfix→Bereich nicht existiert (**L191**).
+
+**Und ein roter Lauf, der nicht zu diesem Bogen gehört:** `test402` meldet
+zwei Trefflächen unter 44 px ohne geschriebenen Grund —
+`motion.css #ai .ki-quellschalter button` (32 px) und
+`werkzeuge.css .gk-leiste button` (26 px, aus E607). Beide sind älter als
+dieser Zweig und liegen schon auf `main`. §46 sagt „rot zuerst": das ist der
+nächste Bogen.

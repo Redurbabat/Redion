@@ -2546,3 +2546,73 @@ test524               105 von 105 grün
 auf ::before          top 5px    — erbt `inset:5px` der Kantenregel (E568)
 unter dem Tupfer      opacity 1  — und zu 60 % vom Papier verdeckt
 ```
+
+---
+
+## §60 · Wie oft Bereiche einander anfassen (E626, 19. September 2026)
+
+Gemessen mit `pruefungen/lauf/test537.mts` über `src/` — Kommentare,
+Zeichenketten und der Inhalt von Schablonen entfernt (`nurCode()` aus
+`test87:145`, plus eine Schablonen-Leerung), gesucht nach einem **Aufruf**
+(`Name.glied`), nicht nach dem blossen Wort.
+
+### Die Fläche
+
+```txt
+ls -d src/bereiche/*/ | wc -l                              18 Bereiche
+find src/bereiche -name "*.ts" | wc -l                     86 Dateien
+grep -rh "^import " src/bereiche --include=*.ts | wc -l     0 Importe
+eindeutig zugeordnete globale Namen                       182
+```
+
+### Die Querverweise
+
+```txt
+523 Treffer        in 63 von 306 möglichen Bereichspaaren
+                   127 Einträge (Bereich + fremder Name)
+                   über 61 verschiedene fremde Namen
+ 88 weitere nur in Schablonen (Backticks) — nicht mitgezählt
+  6 über `(window as any).X`
+```
+
+Am meisten gerufen werden:
+
+```txt
+114  bereiche/datenbanken
+101  bereiche/wissen
+ 86  bereiche/dateien
+ 59  bereiche/ki
+ 40  bereiche/verbinden
+ 17  bereiche/elektro
+```
+
+### Die zwölf dicksten Namen — und ihre Grösse
+
+Die Grösse entscheidet, ob „nach `kern/` verschieben" überhaupt in Frage
+kommt. Sie kam nicht.
+
+```txt
+68  Werkzeuge     aus 10 Bereichen   wissen/werkzeuge.ts            163 KB
+68  Datenbank     aus  8 Bereichen   datenbanken/steuerung.ts       502 KB
+46  Dateien       aus  4 Bereichen   dateien/ablage.ts               23 KB
+30  KI            aus  5 Bereichen   ki/dienst.ts                   108 KB
+26  Formula       aus  6 Bereichen   datenbanken/formeln/laufzeit.ts 82 KB
+21  Links         aus  6 Bereichen   wissen/verweise.ts              69 KB
+14  Blocks        aus  4 Bereichen   editor/…
+14  Austausch     aus  4 Bereichen   dateien/…
+13  Verbindungen  aus  3 Bereichen   verbinden/…
+11  Kommentare    aus  2 Bereichen   kommentare/…
+11  Plan          aus  2 Bereichen   planen/…
+11  Marken        aus  4 Bereichen   pdf/…
+
+  diese zwölf zusammen: 333 von 520 = 64 %
+```
+
+### Was die Messung selbst gekostet hat
+
+```txt
+ohne Schablonen-Leerung         +88 Treffer aus deutscher Prosa in Backticks
+Fensterweg doppelt gezählt      526 statt 523 (eine Zeile zählte zweimal)
+```
+
+Beides fiel in der Gegenprobe auf, nicht beim Lesen.

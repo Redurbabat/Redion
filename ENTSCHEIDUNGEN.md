@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-603 Entscheidungen, E1 bis E625 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+604 Entscheidungen, E1 bis E626 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -668,6 +668,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E623** — Die Strichprobe zeigt den Strich: der Balken trug `currentColor` und keine Deckung; jetzt die gewählte Tinte und die Deckung des Stifts — aus EINER Funktion, die auch den echten Strich und das PDF färbt (sie stand viermal). Dazu Name und Millimeter auf einer Kachel, untereinander, weil nebeneinander die Leiste von 128 auf 143 px wuchs (W4, `test535`, `test533`)
 * **E624** — Der Radierer bekommt seine Grösse auch ohne Studio, und den Haken «Automatisch an den Strich anpassen»: den Zustand gab es seit je (`eraserSize` oder das Dreifache der Strichbreite), nur führte kein Weg zurück — das Studio setzte beim Aufbau immer eine Zahl (W4, `test535 §4`, `test524`)
 * **E625** — Der Dock-Effekt gilt auch ohne Studio: die Welle stand in `pdf-studio.css` mit `.document-studio` davor, auf einer gewöhnlichen Seite traf keine ihrer drei Wählerfamilien. Sie ist nach `bausteine.css` gewandert und hat den Vorsatz verloren — aus drei Familien wurden zwei. Dazu das Farb-Dock, das bisher überall fehlte, weil Tupfer kein `svg` tragen. Ohne Namensfähnchen, und der Grund steht als L190 (W5, `test536`)
+* **E626** — Bereiche bleiben getrennt, und jetzt weiss es jemand: §5 Regel 1 hatte seit ihrer Niederschrift keinen Wächter (L150), und der Satz „der Wächter dafür ist test87" stimmte nicht. Gemessen sind es **523 Querverweise in 63 Bereichspaaren** — L150s „es gibt keinen Querverweis" war falsch. Verschoben wird nichts (die grossen Namen sind die Kerne ihrer Bereiche, nicht gemeinsame Helfer); stattdessen ein Verzeichnis, das nur schrumpfen darf, und ein Lauf, der jeden NEUEN Verweis rot macht — auch den über `(window as any)` (`test537`)
 
 ---
 
@@ -50960,3 +50961,129 @@ Studio                       unverändert (test536 §6, test524 105 von 105)
 Wählerfamilien               3 → 2
 test536                      18 von 18 grün (neu)
 ```
+
+---
+
+## E626 — Bereiche bleiben getrennt, und jetzt weiss es jemand
+
+**19. September 2026, L150.** `CLAUDE.md` §5 Regel 1 ist **[hart]**:
+
+> Bereiche importieren sich nicht gegenseitig. Ein Bereich darf verwenden:
+> `kern/`, `register/`, eigene Dateien. Sonst nichts.
+
+Darunter stand bis zum 12. September der Satz „Der Wächter dafür ist
+`test87`". Er stimmte nicht — `test87` prüft Steuerzeichen, Rollen, die
+A1/A2-Grenze, Stilblätter, Manifest, `esc`, Schema und ein paar Namen. Ein
+Bereich, der einen anderen anfasst, kommt darin nicht vor. Seither stand die
+Regel ohne Beweis da, und zwar **seit sie geschrieben wurde**.
+
+### Die Regel beschreibt einen Mechanismus, den es hier nicht gibt
+
+```txt
+grep -rh "^import " src/bereiche --include=*.ts | wc -l     →  0
+```
+
+Kein einziger Import. Geladen wird über 209 `<script>` in `index.html`,
+geredet wird über globale Namen. Das `import`-Beispiel in §5 kann also gar
+nicht auftreten; gebrochen wird die Regel über den Namen — und über den
+Seitenweg `(window as any).Name`.
+
+### Und L150s Kernannahme war falsch
+
+L150 hielt fest: „heute hält die Regel, gemessen über alle `src/bereiche/*/`
+— es gibt keinen Querverweis", und warnte deshalb, ein Lauf auf sauberem
+Bestand bliebe leicht für immer grün. **Nachgemessen mit dem Verfahren
+dieses Laufs:**
+
+```txt
+523 Querverweise   in 63 von 306 möglichen Bereichspaaren
+                   in 127 Einträgen (Bereich + fremder Name)
+                   über 61 verschiedene fremde Namen
+ 88 weitere nur in Schablonen (Backticks) — nicht mitgezählt
+  6 davon über `(window as any).X`
+```
+
+Am meisten gerufen werden `datenbanken` (114), `wissen` (101), `dateien`
+(86), `ki` (59). Zwölf Namen tragen 64 % des Ganzen.
+
+### Warum nichts verschoben wurde
+
+Der naheliegende Weg wäre §5s zweiter: „gemeinsame Logik nach `kern/`
+verschieben". Nachgesehen sind die grossen Namen **keine gemeinsamen
+Helfer, sondern die Kerne ihrer Bereiche**:
+
+| Name | Treffer | aus Bereichen | Datei | Grösse |
+|---|---|---|---|---|
+| `Werkzeuge` | 68 | 10 | `wissen/werkzeuge.ts` | 163 KB |
+| `Datenbank` | 68 | 8 | `datenbanken/steuerung.ts` | **502 KB** |
+| `Dateien` | 46 | 4 | `dateien/ablage.ts` | 23 KB |
+| `KI` | 30 | 5 | `ki/dienst.ts` | 108 KB |
+| `Formula` | 26 | 6 | `datenbanken/formeln/laufzeit.ts` | 82 KB |
+| `Links` | 21 | 6 | `wissen/verweise.ts` | 69 KB |
+
+`steuerung.ts` ist die Datenbanksteuerung; sie nach `kern/` zu schieben
+hiesse §4 brechen — „`kern/` kennt keinen einzelnen Bereich und darf keinen
+kennen". `werkzeuge.ts` ist die Befehlspalette samt Journal und
+Schnellnotizen. Das sind keine Helfer.
+
+**Also ein Verzeichnis statt eines Urteils**, nach dem Vorbild von
+`js-bestand.json` (§54.4), `masse-bestand.json` (E407) und
+`schalter-bestand.json` (E417):
+
+> Ein Verzeichnis ist keine Erlaubnis, sondern eine Schuld.
+
+`pruefungen/bereiche-bestand.json` führt die 127 Einträge mit ihrer Zahl.
+Es darf nur **schrumpfen**. Der Stand ist damit eingefroren: jeder NEUE
+Querverweis macht `test537` rot, und die 523 werden weniger, wann immer
+jemand ohnehin an einer Stelle arbeitet.
+
+### Was der Lauf misst — und was nicht
+
+Geführt wird **je Bereich und Name**, nicht je Zeile: eine Zeilennummer
+veraltet beim nächsten Einrücken, ein Paar nicht.
+
+Zwei Kopplungswege:
+
+1. **Der Name** — gesucht wird `\bName\s*\??\.\s*[a-z_$]\w*`, also ein
+   Aufruf und nicht das blosse Wort. Bereichsnamen sind deutsche Wörter;
+   „Die Bibliothek. Danach" darf kein Treffer sein.
+2. **Der Umweg über `window`** — derselbe Verstoss in anderer Schreibweise,
+   und die eine Zeile, mit der Weg 1 zu umgehen wäre.
+
+Gemessen auf `nurCode()` aus `test87:145` — **wiederverwendet, nicht
+nachgebaut** (§8). Ein Schritt kommt dazu: `nurCode` lässt Schablonen
+absichtlich stehen, weil in `${…}` echter Code steht. Für `App.` ist das
+richtig; für deutsche Bereichsnamen rutscht damit Prosa durch. Gemessen
+macht die zusätzliche Schablonen-Leerung **88 Treffer** Unterschied.
+
+**Ein Fund aus der Gegenprobe:** beide Wege zählten dieselbe Zeile doppelt —
+`(window as any).Chronik?.oeffne()` traf den Fensterausdruck UND den nackten
+`Chronik?.oeffne`. 526 wurden 528, obwohl eine Zeile dazugekommen war. Jetzt
+wird der Fensterweg zuerst gezählt und dann aus dem Text genommen. Eine
+Zahl, die eine Kopplung doppelt zählt, sagt beim Schrumpfen das Falsche.
+
+**Der dritte Weg fehlt, und das steht im Lauf.** Ein `querySelector` in
+fremdes Markup koppelt genauso fest — aber die Zuordnung Präfix→Bereich gibt
+es nicht: `doku/CSS-NAMENSRAEUME.md` führt 144 Präfixe auf **Stilblätter**,
+und `bausteine.css` gehört allen. Eine zweite, von Hand gepflegte Zuordnung
+wäre der Katalog, den §8 verbietet. Eingetragen als **L191**.
+
+### Gemessen
+
+```txt
+test537   17 von 17 grün
+Katalog   18 Bereiche · 86 Dateien · 182 eindeutig zugeordnete Namen
+```
+
+**Drei Gegenproben, jede einzeln rot gesehen und zurückgenommen:**
+
+```txt
+1. `Chronik.oeffne(0)` in den Editor        →  §2 und §4 fallen (128 gegen 127)
+2. `(window as any).Chronik?.oeffne(0)`     →  dieselben, plus der Fensterzähler
+3. einen echten Verweis entfernt            →  §3 meldet die Karteileiche
+```
+
+Dazu die eingebauten Gegenproben in §6, nach dem Vorbild von `test87:162`:
+jeder Ausdruck wird an einem erfundenen Stück Code geprüft, das er finden
+MUSS, und an Kommentar, Zeichenkette, Schablone und Satzende, die er in Ruhe
+lassen muss.

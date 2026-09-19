@@ -1235,3 +1235,24 @@ Studio stand der Platz-Knopf da, ohne wirken zu können (L185).
 
 **Offen daraus:** L187 — «unten» steht am Fuss des BLATTES, nicht des
 Fensters. Drei Wege stehen dort, und die Wahl ist Redurs.
+
+---
+
+## Rot, und älter als der Zweig — `test402` (19. September 2026)
+
+`test402` hält §37: Trefflächen unter 44 px dürfen nur weniger werden, und
+eine neue braucht einen geschriebenen Grund in `masse-bestand.json`. Gemessen
+am 19. September meldet er **zwei neue ohne Grund**:
+
+```txt
+motion.css     #ai .ki-quellschalter button    32 px
+werkzeuge.css  .gk-leiste button               26 px    (aus E607, Gedankenkarte)
+```
+
+Beide liegen schon auf `main`, sind also älter als die Bögen dieser Woche.
+`.gk-leiste` ist eine **Werkzeugleiste** — §37 nennt Werkzeuge ausdrücklich
+als Hauptweg, dort gilt 44 px ohne Ausnahme. 26 px ist keine Abweichung mit
+Grund, sondern ein Fehler. Der Quellschalter der KI ist eher ein Nebenweg;
+dann braucht er den geschriebenen Grund und den Eintrag.
+
+**§46: rot zuerst.** Das ist der nächste Bogen.
