@@ -53,7 +53,7 @@ E143 (die leere Wand vor vollen Regalen) — alle vier in Teilen, die als
 | 28 | Globale Suche | ✅ | Seiten, Blöcke, Aliasse, PDF-Suchtext und OCR-Text; Aufgaben, Lernkarten, Wiki und Meetings kommen als Blocktext mit. Dateinamen aus dem Fach `dateien` und Quellenangaben (`quiz.source`, `learningPackage.license`) seit E147. Eine Funktion — `Store.durchsuchbar` — entscheidet für beide Suchen, was durchsuchbar ist. test195 (Index), test213 (Breite, 20 Punkte) |
 | 29 | Command Palette | ✅ | test206 §11 (E139) |
 | 30 | Mobile first (428 px) | ✅ | test114, test54, test209 §9, test210 §3 |
-| 31 | Mobile Lernen | ✅ | test217 (fünf Abschnitte, 24 Punkte): die vier Zahlen und „Tagesrunde starten" stehen am Telefon über der Falz — vorher lag der Knopf 188 px darunter (E151). Reiterleiste mit Rollhinweis. Am Rechner unverändert |
+| 31 | Mobile Lernen | ◐ | test217 (fünf Abschnitte, 27 Punkte): „Lernen starten" steht am Telefon über der Falz, samt seiner Karte — vorher lag der Knopf 188 px darunter (E151), und nach Redurs Umbau vom 6. September wieder 271 px darunter, weil die `order`-Leiter auf drei abgeschaffte Klassen zeigte (E638). Reiterleiste mit Rollhinweis. Am Rechner unverändert. **Offen:** die vier Zahlen (fällig · neu · Fehler · nächste Prüfung) stehen seit demselben Umbau in der Lernübersicht statt auf dem Startbild — §31s Bild zeigt sie dort (L200) |
 | 32 | Mobile PDF | ✅ | test210 §3–§5 |
 | 33 | Mobile Workspace | ✅ | test209 §9, test206 §6 |
 | 34 | Responsive | ✅ | test114 misst 320–1440 px |

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-615 Entscheidungen, E1 bis E637 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+616 Entscheidungen, E1 bis E638 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -680,6 +680,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E635** — Wer im ersten Bild misst, misst das Anfangsbild: `test432` mass im selben Tick wie das Aufklappen — seit E537 haben Zählpille und Suchzeile einen Auftritt mit `animation-fill-mode:both`, und `both` hält sie bis dahin auf `scale(0)` und `width:30px`. Nicht verdeckt, sondern noch nicht da. Dazu `test435`, der die Deckung `.85` aus E462 festhielt, obwohl E537 sie auf `.4` gesetzt hat — und der in §6 ausgerechnet die ÜBERSCHRIEBENE Regel als die gültige bescheinigte
 * **E636** — Ein Prüflauf mit tausend Hertz: `test449` feuerte seine Zeigerpunkte in einer Schleife, also mit `dt = 1 ms`. Der Glätter rechnet seit E504 in ZEIT — bei 1 ms dämpft er doppelt so stark wie bei einem echten Stift, der schräge Zickzack schrumpfte von 1716 auf 1037 Weg und fiel unter die Schwelle von `istKritzel`. Der Zug war damit kein Gekritzel mehr, es wurde NICHTS gelöscht — und die zentrale Zusage über die zwei unbeteiligten Marken war grün, weil gar nichts geschah. Der Lauf taktet jetzt mit 8 ms (125 Hz)
 * **E637** — Erst nachsehen, dann eintragen: die sechs Marken-Decken waren gewachsen, und Redur hat entschieden, erst die Stellen zu suchen. Alle zehn liegen in `werkzeuge.css`, alle aus E607 und E628. Sieben haben eine andere Aufgabe als ihre gleichnamige Marke; zwei Polster bekommen `--space-5`, und die rohe 46 war eine Abschrift von `.wb-massstab`, die dabei `tabular-nums` verloren hatte — beide Massstäbe teilen sich jetzt eine Regel. Zwei Zahlen hinunter, zwei hinauf, jede einzeln begründet in `messungen.md`
+* **E638** — Tot war nicht die Regel, sondern das, worauf sie zeigte: die fünf `order`-Zeilen aus E151 standen Zeichen für Zeichen unverändert da — aber drei ihrer vier Ziele hat Redurs Umbau vom 6. September abgeschafft. Übrig blieb `.lw-hero{order:4}` gegen `*{order:5}`, und damit stand die Begrüssung wieder ganz oben und „Lernen starten" bei y = 1115 in einem 844 px hohen Bild. Eine Regel, deren Selektor ins Leere greift, sieht im Quelltext aus wie am ersten Tag. Dazu drei Messfehler im Lauf selbst, darunter ein Schmuck-`<span>`, das vor jedem Namen stand
 
 ---
 
@@ -51979,3 +51980,124 @@ Messung, die vor einer Reparatur zu machen ist.
 
 **Gemessen.** `test362` 18/18, vorher 17/18. `node bauen.mts` neu, weil
 `werkzeuge.css` im Grundstock liegt.
+
+---
+
+## E638 — Tot war nicht die Regel, sondern das, worauf sie zeigte
+
+Bogen 9 der roten Läufe, und der einzige mit einem echten Produktfehler.
+`test217` war mit **13 von 27** Punkten rot — der grösste rote Lauf des Tages.
+
+### Der Fund
+
+```txt
+✗ Er heisst „Tagesrunde starten" — ist "Lernen starten →"
+✗ Er steht ganz im ersten Bild — y = 1115 von 844
+```
+
+Am **6. September** hat Redur die Heute-Ansicht umgebaut (`4d3748e`, „Was ich
+geändert habe"): ein Dokumentenstudio kam dazu, die Karte mit dem Startknopf
+heisst seitdem `.lw-next-step`, die vier Kennzahlen wanderten in einen
+Aufklapper, und der Knopf bekam den Namen, den §31 ihm im Auftragsbild selbst
+gibt — „Lernen starten".
+
+**Die fünf CSS-Zeilen aus E151 hat er dabei nicht angefasst.** Sie standen
+Zeichen für Zeichen unverändert da:
+
+```css
+.lernwelt .lw-today>*{order:5}
+.lernwelt .lw-today>.lw-metrics{order:1}
+.lernwelt .lw-today>.lw-primary-grid{order:2}
+.lernwelt .lw-today>.lw-setup{order:3}
+.lernwelt .lw-today>.lw-hero{order:4}
+```
+
+Drei der vier Ziele gibt es nicht mehr. `.lw-primary-grid` und `.lw-setup`
+kommen im ganzen Quelltext nicht ein einziges Mal vor; `.lw-metrics` ist kein
+Kind von `.lw-today` mehr. Was wirkt, ist damit nur noch `.lw-hero{order:4}`
+gegen `*{order:5}` — **die Begrüssung steht wieder ganz oben, genau der
+Zustand vor E151.** Der 619 px hohe Dokumenten-Block schiebt den Startknopf
+auf y = 1115, in ein Bild, das 844 px hoch ist.
+
+**Das ist die Lehre, und sie ist neu.** Eine tote Regel sieht man: sie steht
+da und tut nichts (das ist `test332`). Eine Regel, deren **Selektor** ins
+Leere greift, sieht im Quelltext aus wie am ersten Tag — der Code ist
+unverändert, die Wirkung ist weg, und der Fehler entsteht in einer ganz
+anderen Datei als der, in der er steht.
+
+### Was gebaut wurde
+
+Die Leiter zeigt jetzt auf die Kinder, die es gibt, in der Reihenfolge von
+2026: zuerst die Handlung, dann die Arbeitsblöcke, zuletzt die Begrüssung.
+
+```css
+.lernwelt .lw-today>*{order:5}
+.lernwelt .lw-today>.lw-next-step{order:1}
+.lernwelt .lw-today>.lw-desk{order:2}
+.lernwelt .lw-today>.lw-hero{order:3}
+```
+
+**Gemessen im Browser**, auf 390 × 844:
+
+```txt
+                       vorher            nachher
+.lw-next-step          y = 1174          y =  119
+.lw-desk               y = 1511          y =  455
+.lw-hero               y =  119          y = 1113
+„Lernen starten →"     y = 1115          y =  296
+```
+
+**Im Bild nachgesehen** (§55.3): das erste Telefonbild ist jetzt „Ein guter
+nächster Schritt · 5 Karten für heute · [ Lernen starten → ]". Genau das
+Bild, das §31 beschreibt.
+
+### Und drei Messfehler im Lauf selbst
+
+`test217` mass auf drei Wegen daneben, und zwei davon hätten ihn auch nach
+der Reparatur rot gelassen:
+
+1. **`.lw-focus-card`** — die Karte, gegen die er mass, gibt es seit dem
+   6. September nicht mehr. Der Lauf mass `null` und verglich `undefined`
+   gegen `undefined`. Jetzt `.lw-next-step`.
+2. **Zwei `.lw-metrics`** stehen in der Lernübersicht: „Heute auf einen
+   Blick" und die Lernroutine darunter (Level, Minuten, Tage). Ohne
+   `aria-label` im Wähler kamen acht Karten statt vier.
+3. **Der Lichtschmuck** (`data-rmo`) legt jeder Kennzahl einen
+   `<span class="rmo-pfad">` als ERSTES Kind unter. `querySelector('span')`
+   fand also den Schmuck und nicht den Namen — jeder Name war leer, und vier
+   Punkte waren aus dem falschen Grund rot. Jetzt wird das erste `<span>`
+   ohne `aria-hidden` genommen.
+
+Der dritte ist der siebte Fall dieser Woche, in dem ein Wächter etwas über
+die Seite sagte, das die Seite nicht tut.
+
+### Die Gegenprobe
+
+Ein Ziel der Leiter auf einen Namen gesetzt, den es nicht gibt
+(`.lw-gibtesnicht`), dann der Lauf:
+
+```txt
+✗ Er steht ganz im ersten Bild — y = 1115 von 844
+```
+
+**Auf den Pixel derselbe Wert wie im roten Lauf.** Damit ist der Befund
+nicht erklärt, sondern bewiesen: ein Selektor ins Leere erzeugt genau diesen
+Fehler.
+
+### Was NICHT gemacht wurde
+
+Die vier Kennzahlen bleiben im Aufklapper. §31s Bild zeigt sie auf dem
+Startbild — aber Redur hat sie mit einem geschriebenen Grund dorthin gelegt
+(„Auswertungen bleiben vollständig über native Details erreichbar"), und die
+Zahl, um die es beim Öffnen geht, steht gross auf der Karte mit dem Knopf.
+Das rückgängig zu machen wäre gewesen, seinen Umbau ohne Rückfrage zu
+drehen. Es steht als **L200** offen, und `doku/AUFTRAG-STAND.md` sagt §31
+jetzt ◐ statt ✅ — dort stand bis heute ein Knopfname, den es seit zwei
+Wochen nicht mehr gibt.
+
+Nebenbei aus dem Bild: der Hauptknopf ist schwarz statt violett, weil
+`.lernwelt button.is-primary.ru-funkel` die Hauptfläche überschreibt — mit
+Messwerten als **L201**.
+
+**Gemessen.** `test217` 27/27, vorher 14/27. Gegenprobe rot mit y = 1115.
+`node bauen.mts` neu, weil `lernwelt.css` im Grundstock liegt.

@@ -1155,12 +1155,22 @@
      und einem Knopf. Am Rechner stimmt die Reihenfolge — dort ist alles
      gleichzeitig zu sehen. Nur am Telefon wird sie gedreht, und zwar mit
      `order`, nicht mit einer zweiten Baumstruktur: derselbe Inhalt, dieselbe
-     Reihenfolge für ein Vorleseprogramm, nur anders gestapelt. */
+     Reihenfolge für ein Vorleseprogramm, nur anders gestapelt.
+
+     NACHGEZOGEN AM 19. SEPTEMBER 2026 (E638). Drei der vier Ziele hat es nicht
+     mehr: `.lw-metrics` ist seit dem 6. September ein Kind der
+     Lernübersicht statt von `.lw-today`, `.lw-primary-grid` und `.lw-setup`
+     kommen im ganzen Quelltext nicht mehr vor. Übrig blieb `.lw-hero{order:4}`
+     gegen `*{order:5}` — und damit stand die Begrüssung wieder ganz oben,
+     genau der Zustand VOR E151. Die fünf Zeilen standen unverändert da; tot
+     war nicht die Regel, sondern das, worauf sie zeigte.
+     Die Leiter zeigt jetzt auf die Kinder, die es gibt. Die Reihenfolge ist
+     dieselbe wie 2026: zuerst die Handlung, dann die Arbeitsblöcke, zuletzt
+     die Begrüssung. */
   .lernwelt .lw-today>*{order:5}
-  .lernwelt .lw-today>.lw-metrics{order:1}
-  .lernwelt .lw-today>.lw-primary-grid{order:2}
-  .lernwelt .lw-today>.lw-setup{order:3}
-  .lernwelt .lw-today>.lw-hero{order:4}
+  .lernwelt .lw-today>.lw-next-step{order:1}
+  .lernwelt .lw-today>.lw-desk{order:2}
+  .lernwelt .lw-today>.lw-hero{order:3}
 
   .lernwelt .lw-hero{align-items:stretch;min-height:0;padding:20px 16px}
   .lernwelt .lw-hero h2{font-size:clamp(27px,8vw,37px)}

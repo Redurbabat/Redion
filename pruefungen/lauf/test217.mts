@@ -25,6 +25,21 @@
  * scrollen, um den Knopf zu finden. Am Rechner stimmte alles, weil dort
  * nichts unter einer Falz liegt.
  *
+ * ─── EINMAL SCHON WIEDER PASSIERT (E638, 19. September 2026) ────────────────
+ * Am 6. September hat Redur die Heute-Ansicht umgebaut. Die fünf Zeilen von
+ * E151 hat er dabei nicht angefasst — aber drei ihrer vier Ziele:
+ * `.lw-metrics` wohnt seitdem in der Lernübersicht, `.lw-primary-grid` und
+ * `.lw-setup` gibt es gar nicht mehr. Übrig blieb `.lw-hero{order:4}` gegen
+ * `*{order:5}`, und damit stand die Begrüssung wieder ganz oben — genau der
+ * Zustand VOR E151, gemessen y = 1115 in einem 844 px hohen Bild.
+ * TOT WAR NICHT DIE REGEL, SONDERN DAS, WORAUF SIE ZEIGTE. Eine CSS-Regel,
+ * deren Selektor ins Leere greift, sieht im Quelltext aus wie am ersten Tag.
+ *
+ * Dieser Lauf misst seitdem gegen die Kinder, die es GIBT: `.lw-next-step`
+ * (die Karte mit dem Knopf), `.lw-desk` (das Dokumentenstudio), `.lw-hero`.
+ * Und der Knopf heisst „Lernen starten" — so, wie §31 ihn oben selbst nennt;
+ * „Tagesrunde starten" war die Abweichung, nicht der Knopf.
+ *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  * §1 und §2 waren vor E151 rot — das ist keine Behauptung, das ist die
  * Messung oben. Zusätzlich sind die Gegenproben einzeln auf einem Abzug des
@@ -107,13 +122,28 @@ const lage = (seite: any): Promise<any> => seite.evaluate(() => {
   const leiste = document.querySelector<HTMLElement>('.lw-nav');
   return {
     hoehe: window.innerHeight,
-    zahlen: kasten('.lw-today > .lw-metrics'),
-    fokus: kasten('.lw-focus-card'),
+    /* DIE VIER ZAHLEN WOHNEN SEIT DEM 6. SEPTEMBER IN DER LERNÜBERSICHT.
+       Redur hat die Heute-Ansicht damals umgebaut und dazu geschrieben:
+       „Auswertungen bleiben vollständig über native Details erreichbar."
+       Ihr Kasten ist deshalb 0 × 0, solange der Aufklapper zu ist — gemessen
+       wird hier darum nicht ihre Lage, sondern ob es sie gibt und ob man
+       hinkommt. Der Text steht auch im zugeklappten `<details>` im Baum. */
+    uebersicht: (() => {
+      const d = document.querySelector<HTMLDetailsElement>('.lw-insights');
+      return d ? { da: true, wort: (d.querySelector('summary')?.textContent || '').trim().slice(0, 40),
+                   zahlenDrin: !!d.querySelector('.lw-metrics') } : null;
+    })(),
+    /* `.lw-focus-card` gibt es nicht mehr; die Karte mit dem Knopf heisst
+       seit demselben Umbau `.lw-next-step`. */
+    fokus: kasten('.lw-next-step'),
+    desk: kasten('.lw-desk'),
     hero: kasten('.lw-hero'),
     pruefung: kasten('.lw-exam-card'),
     start: kk ? { oben: Math.round(kk.top), hoch: Math.round(kk.height),
                   sichtbar: kk.top >= 0 && kk.bottom <= window.innerHeight,
-                  text: (knopf?.textContent || '').trim(),
+                  /* OHNE DEN PFEIL. §31 schreibt „[ Lernen starten ]"; der
+                     Pfeil ist Schmuck und darf kommen und gehen. */
+                  text: (knopf?.textContent || '').replace(/[\s→]+$/, '').trim(),
                   gesperrt: (knopf as HTMLButtonElement | null)?.disabled } : null,
     /* WERT UND BESCHRIFTUNG GETRENNT, nicht als ein Text.
        Der erste Entwurf hängte beides aneinander und suchte darin mit einem
@@ -121,10 +151,21 @@ const lage = (seite: any): Promise<any> => seite.evaluate(() => {
        Wort, der Punkt wurde falsch rot — und schlimmer, `\b2\b` fand die 2
        in „SM-2-Wissensstand" und machte einen anderen Punkt falsch GRÜN.
        Die Auszeichnung trennt beides ohnehin: <strong> und <span>. */
-    kennzahlen: [...document.querySelectorAll<HTMLElement>('.lw-today > .lw-metrics > *')]
+    /* GENAU DIE EINE LEISTE, UND GENAU DAS EINE SPAN (gemessen am
+       19. September). Zwei Fallen auf einmal:
+       · In der Lernübersicht stehen ZWEI `.lw-metrics` — „Heute auf einen
+         Blick" und die Lernroutine darunter (Level, Minuten, Tage). Ohne
+         `aria-label` kamen acht Karten statt vier.
+       · Jede Karte trägt seit dem Lichtschmuck (`data-rmo`) einen
+         `<span class="rmo-pfad">` als ERSTES Kind. `querySelector('span')`
+         fand also den Schmuck, nicht den Namen — jeder Name war leer, und
+         die vier Punkte darunter waren aus dem falschen Grund rot. */
+    kennzahlen: [...document.querySelectorAll<HTMLElement>(
+      '.lw-insights .lw-metrics[aria-label="Heute auf einen Blick"] > *')]
       .map(el => ({
         wert: (el.querySelector('strong')?.textContent || '').trim(),
-        name: (el.querySelector('span')?.textContent || '').trim()
+        name: ([...el.querySelectorAll(':scope > span')]
+          .find(x => !x.hasAttribute('aria-hidden'))?.textContent || '').trim()
       })),
     /* Und daneben, was der Bestand sagt — damit die Anzeige an ihm gemessen
        wird und nicht an einer Zahl, die ich hier hingeschrieben habe. */
@@ -158,32 +199,48 @@ await bestand(telefon);
 const t = await lage(telefon);
 
 p('Es gibt einen Startknopf', !!t.start, JSON.stringify(t.start));
-gleich('Er heisst „Tagesrunde starten"', t.start?.text, 'Tagesrunde starten');
+/* §31 SCHREIBT ES SELBST. Hier stand „Tagesrunde starten" — und das Bild in
+   §31, das dieser ganze Lauf hält, sagt wörtlich „[ Lernen starten ]".
+   Redur hat den Knopf am 6. September auf genau diesen Namen gebracht; die
+   Erwartung hier war seitdem die Abweichung, nicht der Knopf (E638). */
+gleich('Er heisst „Lernen starten", wie §31 ihn nennt', t.start?.text, 'Lernen starten');
 p('Er ist NICHT gesperrt — es warten Karten', t.start?.gesperrt === false,
   `gesperrt: ${t.start?.gesperrt}`);
 p('Er steht ganz im ersten Bild', t.start?.sichtbar === true,
   `y = ${t.start?.oben} von ${t.hoehe}`);
 p('Und ist mit dem Finger zu treffen (44 px, §37)', (t.start?.hoch || 0) >= 44,
   `${t.start?.hoch} px`);
-p('Auch die Zahlen stehen im ersten Bild', t.zahlen?.sichtbar === true,
-  `y = ${t.zahlen?.oben}`);
-p('Die Tagesrunden-Karte ebenso', t.fokus?.sichtbar === true, `y = ${t.fokus?.oben}`);
+p('Seine Karte steht ganz im ersten Bild', t.fokus?.sichtbar === true, `y = ${t.fokus?.oben}`);
+p('Die Lernübersicht mit den vier Zahlen ist da und aufklappbar',
+  t.uebersicht?.da === true && t.uebersicht?.zahlenDrin === true,
+  JSON.stringify(t.uebersicht));
 
 /* ==========================================================================
  * §2 · Und zwar VOR Begrüssung und Datum
  * --------------------------------------------------------------------------
  * Der eigentliche Punkt. Ohne ihn könnte alles zufällig gerade so passen.
  * ========================================================================*/
-console.log('\n2 · Und zwar vor Begrüssung und Datum');
-p('Die Zahlen stehen über der Tagesrunden-Karte',
-  (t.zahlen?.oben ?? 9999) < (t.fokus?.oben ?? 0), `${t.zahlen?.oben} < ${t.fokus?.oben}`);
-p('Und beide über der Begrüssung',
+console.log('\n2 · Und zwar vor Begrüssung und Dokumentenstudio');
+/* DER EIGENTLICHE PUNKT, UNVERÄNDERT SEIT E151 — nur gegen die Kinder
+   gemessen, die es heute gibt. Die Leiter hiess einmal
+   `.lw-metrics · .lw-primary-grid · .lw-setup · .lw-hero`; drei dieser vier
+   Klassen gibt es seit dem 6. September nicht mehr, und übrig blieb
+   `.lw-hero{order:4}` gegen `*{order:5}` — die Begrüssung stand damit wieder
+   ganz oben, genau wie VOR E151, und der Knopf bei y = 1115 in einem
+   844 px hohen Bild. */
+p('Die Handlung steht über dem Dokumentenstudio',
+  (t.fokus?.unten ?? 9999) <= (t.desk?.oben ?? 0), `${t.fokus?.unten} ≤ ${t.desk?.oben}`);
+p('Und über der Begrüssung',
   (t.fokus?.unten ?? 9999) <= (t.hero?.oben ?? 0), `${t.fokus?.unten} ≤ ${t.hero?.oben}`);
 
-/* §31 nennt vier Dinge, die dort stehen sollen. */
+/* §31 nennt vier Dinge. Sie stehen seit dem 6. September in der
+   Lernübersicht statt auf dem ersten Bild — das ist Redurs Umbau, nicht ein
+   Verlust: die Zahl, um die es beim Öffnen geht („N Karten für heute"),
+   steht auf der Karte mit dem Knopf. Dass §31s Bild die vier trotzdem auf
+   dem Startbild zeigt, ist eine offene Frage an Redur (L200). */
 const namen = t.kennzahlen.map((k: any) => k.name);
 for (const wort of ['fällig', 'neu', 'Fehler', 'nächste Prüfung'])
-  p(`§31 nennt „${wort}" — es steht da`, namen.includes(wort), namen.join(' | '));
+  p(`§31 nennt „${wort}" — es steht in der Lernübersicht`, namen.includes(wort), namen.join(' | '));
 
 /* Und die Zahlen stimmen mit dem Bestand überein. Eine Ansicht, die immer 0
    zeigt, bestünde die Punkte darüber ebenfalls. Verglichen wird mit dem, was
@@ -255,7 +312,7 @@ await rechner.waitForTimeout(2700);
 await bestand(rechner);
 const r = await lage(rechner);
 p('Dort steht die Begrüssung wieder oben',
-  (r.hero?.oben ?? 9999) < (r.zahlen?.oben ?? 0), `${r.hero?.oben} < ${r.zahlen?.oben}`);
+  (r.hero?.oben ?? 9999) < (r.fokus?.oben ?? 0), `${r.hero?.oben} < ${r.fokus?.oben}`);
 p('Und der Startknopf ist trotzdem ohne Rollen zu sehen', r.start?.sichtbar === true,
   `y = ${r.start?.oben} von ${r.hoehe}`);
 gleich('Und die Leiste braucht dort keinen Hinweis', r.leiste?.mehr, 'nein');

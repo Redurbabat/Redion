@@ -9324,3 +9324,72 @@ Zeitpunkt; stimmen beide, ist es der Ursprung. Erst danach die Reparatur
 verloren. Aber der erste Blick auf eine Gedankenkarte ist der, für den ⤢
 gebaut wurde, und ein angeschnittenes Wort im ersten Blick sieht aus wie ein
 Fehler — weil es einer ist.
+
+## L200 · Die vier Zahlen aus §31 stehen jetzt im Aufklapper — 19. September 2026
+
+§31 des Auftrags beschreibt das Telefonbild wörtlich so:
+
+```txt
+    18 Karten fällig
+    5 neue
+    2 Fehler
+
+    [ Lernen starten ]
+```
+
+Seit Redurs Umbau vom **6. September** (`4d3748e`, „Was ich geändert habe")
+stehen diese vier Zahlen nicht mehr auf dem Startbild, sondern in einem
+zugeklappten `<details class="lw-insights">` namens „Lernübersicht &
+Fortschritt". Der Umbau hat dazu einen eigenen Satz im Quelltext
+(`lernwelt.ts:1416`):
+
+> Eine klare Startfolge: Dokument öffnen, Lernrunde, dann der Tagesplan.
+> Auswertungen bleiben vollständig über native Details erreichbar.
+
+**Das ist keine Lücke, solange Redur es so will** — und einiges spricht
+dafür: die Zahl, um die es beim Öffnen geht, steht weiterhin gross auf der
+Karte mit dem Knopf („5 Karten für heute"), und vier Kacheln über dem
+Startknopf waren genau das, was E151 einmal unter die Falz gedrückt hat.
+
+**Offen ist nur, ob §31 damit als erfüllt gilt.** `doku/AUFTRAG-STAND.md`
+stand dafür bis heute auf ✅ und nannte einen Knopfnamen, den es seit dem
+6. September nicht mehr gibt; jetzt steht dort ◐ und dieser Verweis.
+
+**Was zu entscheiden ist (Redur):** entweder §31 gilt als erfüllt, weil die
+Zahl des Tages oben steht und die Aufschlüsselung einen Griff entfernt ist —
+dann wird die Zeile in `AUFTRAG-STAND.md` wieder ✅ und diese Lücke
+GESCHLOSSEN. Oder die vier gehören aufs Startbild, dann wandert `.lw-metrics`
+aus dem `<details>` heraus und wird in der `order`-Leiter mit aufgeführt.
+Beides ist in einer Sitzung gemacht; die Frage ist, was er sehen will.
+
+## L201 · Der Hauptknopf der Lernwelt ist schwarz statt violett — 19. September 2026
+
+Auf dem Telefonbild vom 19. September (`bilder.mts heute handy`) sieht
+„Lernen starten →" aus wie der Nebenknopf „Lernplan ansehen" darunter: fast
+schwarz, mit dünnem Rand. Der Knopf daneben im Dokumentenstudio
+(„Dokumente öffnen") ist dagegen leuchtend violett.
+
+**Gemessen** im Browser, nicht geschätzt:
+
+```txt
+Lernen starten →    background-image: none          background-color: rgb(16,16,16)
+Dokumente öffnen    background-image: linear-gradient(rgb(109,74,255), …)
+--accent            #6d4aff
+--haupt-flaeche     linear-gradient(180deg, #6d4aff, color-mix(…))
+```
+
+Die Tokens sind also da und richtig. Von den Regeln, die auf den Knopf
+passen, ist die letzte diese (`bausteine.css`):
+
+```css
+.lernwelt button.is-primary.ru-funkel{background:var(--ru-funkel-farbe)}
+```
+
+Der Funkel-Schmuck legt seine eigene Fläche über die Hauptfläche. Ob
+`--ru-funkel-farbe` dabei zu dunkel ist oder gar nicht aufgelöst wird, ist
+**noch nicht gemessen** — das ist der erste Schritt vor jeder Reparatur (§36).
+
+**Warum es zählt:** §38 verlangt, dass Information nicht nur über Farbe
+läuft — hier läuft sie über *gar nichts*: Haupt- und Nebenknopf sind optisch
+gleich, und der Nebenknopf steht darunter, also am Daumen. Wer schnell tippt,
+öffnet den Lernplan statt zu lernen.
