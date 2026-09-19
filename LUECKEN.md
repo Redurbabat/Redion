@@ -9255,3 +9255,43 @@ mit `clip-path` und `opacity` gemalt wird. Dann stimmt die Trefferfläche ab
 dem ersten Bild, das Auge sieht dasselbe, und ein Prüflauf müsste gar nicht
 warten. Das wäre die bessere Lösung, aber sie ändert Redurs Auftritt, und
 das ist seine Entscheidung.
+
+## L198 · Ein Gekritzel wird am GEGLÄTTETEN Weg gemessen — 19. September 2026
+
+`istKritzel` (`src/bereiche/pdf/marken.ts:2606`) entscheidet über die Frage
+„ist dieser Zug ein Radiergekritzel oder ein Strich?" an der **Weglänge**:
+sie muss mindestens das 2,2-fache der Kastendiagonale betragen. Gemessen
+wird der Weg, der nach dem Glätter übrigbleibt.
+
+Seit E504 rechnet der Glätter in **Zeit** statt je Messpunkt
+(`src/core/ink/stroke.ts:286`). Damit hängt die geglättete Weglänge an der
+Meldefrequenz des Eingabegeräts: je dichter die Punkte zeitlich liegen,
+desto stärker wird gedämpft. Nachgerechnet für den schrägen Zickzack aus
+`test449`:
+
+```txt
+dt = 1 ms  (1000 Hz, nur ein Prüflauf)   Weg 1037 gegen Schwelle 1262  ✗
+dt = 4 ms  (240 Hz)                      Weg 1520 gegen Schwelle 1286  ✓
+dt = 8 ms  (120 Hz)                      Weg 1648 gegen Schwelle 1292  ✓
+dt = 16 ms (60 Hz)                       Weg 1357 gegen Schwelle 1279  ✓
+```
+
+**Kein Gerät erreicht heute den Auslöser** — 1000 Hz bei diesem Punktabstand
+wären rund 9500 Punkte je Sekunde. Und die Fehlrichtung ist die sichere: wer
+durchfällt, radiert **nicht**, sondern hinterlässt einen sichtbaren Strich,
+den ein Zurück wegnimmt. Der gefährliche Fall aus E476 — eine Marke ist weg,
+die nie überquert wurde — kann daraus nicht entstehen.
+
+**Aber bei 60 Hz beträgt die Reserve nur sechs Prozent.** Wer den Glätter das
+nächste Mal anfasst, verschiebt damit unbemerkt, ab wann ein Gekritzel eines
+ist.
+
+**Der Prüflauf misst inzwischen wie ein Gerät** (E636, `takt: 8` = 125 Hz).
+Damit ist der Lauf ehrlich — die Frage am Produkt bleibt offen und steht
+deshalb hier.
+
+**Was zu klären ist:** ob `istKritzel` am **rohen** Weg messen sollte statt
+am geglätteten. Der rohe Weg ist von der Meldefrequenz unabhängig; die
+Glättung ist eine Frage des Aussehens, nicht der Absicht. Das wäre ein
+Eingriff in eine Funktion, die Daten löscht, und gehört deshalb in einen
+eigenen Bogen mit eigener Gegenprobe (§30).

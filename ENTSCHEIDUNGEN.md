@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-613 Entscheidungen, E1 bis E635 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+614 Entscheidungen, E1 bis E636 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -678,6 +678,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E633** — Nur Tokens, die es gibt: `--bg-2` (viermal, seit E514 als falsch benannt bekannt) wird `--bg-hover`, `var(--accent, #2f7ed8)` verliert den festen Hellwert, `--rmo-knauf-grund` weicht dem Token, auf das es ohnehin immer zurückfiel. Dazu die Falle `.pf-karte` — ein Lichtschlitz nur über `:hover` — und ein vierter Sammler-Fehler: `--i` galt als erfunden, weil der Ausdruck in `style="--i:…;--dick:…"` nur das LETZTE Token fand
 * **E634** — Zwei Zusagen, die den Stand von gestern halten: `test285` verlangte GENAU EINE gezeichnete Seite, seit dem Lesemass (E464) sind es zwei — denselben Fund hat `test395` §7 am 7. September gemacht (E467) und wurde nachgezogen, dieser Punkt nicht. `test442` verlangte die Miniatur ohne Nummer, die seit E547 davorsteht und die `test503` §3 ausdrücklich einfordert. Beide Male hätte eine Reparatur AM PRODUKT den Schwesterlauf rot gemacht
 * **E635** — Wer im ersten Bild misst, misst das Anfangsbild: `test432` mass im selben Tick wie das Aufklappen — seit E537 haben Zählpille und Suchzeile einen Auftritt mit `animation-fill-mode:both`, und `both` hält sie bis dahin auf `scale(0)` und `width:30px`. Nicht verdeckt, sondern noch nicht da. Dazu `test435`, der die Deckung `.85` aus E462 festhielt, obwohl E537 sie auf `.4` gesetzt hat — und der in §6 ausgerechnet die ÜBERSCHRIEBENE Regel als die gültige bescheinigte
+* **E636** — Ein Prüflauf mit tausend Hertz: `test449` feuerte seine Zeigerpunkte in einer Schleife, also mit `dt = 1 ms`. Der Glätter rechnet seit E504 in ZEIT — bei 1 ms dämpft er doppelt so stark wie bei einem echten Stift, der schräge Zickzack schrumpfte von 1716 auf 1037 Weg und fiel unter die Schwelle von `istKritzel`. Der Zug war damit kein Gekritzel mehr, es wurde NICHTS gelöscht — und die zentrale Zusage über die zwei unbeteiligten Marken war grün, weil gar nichts geschah. Der Lauf taktet jetzt mit 8 ms (125 Hz)
 
 ---
 
@@ -51753,3 +51754,123 @@ die Seite sagte, das die Seite nicht tut (E629, E631 zweimal, E633, jetzt
 E635) — nur war dieser der erste, der dabei **grün** blieb.
 
 **Gemessen.** `test432` 48/48 · `test435` 44/44. Vorher 46/48 und 41/43.
+
+---
+
+## E636 — Ein Prüflauf mit tausend Hertz
+
+Bogen 7 der roten Läufe, und der einzige, bei dem ein grüner Punkt schlimmer
+war als die zwei roten.
+
+### Was rot war
+
+```txt
+✗ Die Marke AUF dem Weg ist weg — ["drauf","daneben","daneben2","c85cc834"]
+✗ … und das Gekritzel selbst wurde kein Strich — ["drauf","daneben","daneben2","c85cc834"]
+```
+
+Nach dem Gekritzel stand **alles** noch da, das Gekritzel eingeschlossen. Es
+war nichts gelöscht worden.
+
+### Was grün war, und warum das schlimmer ist
+
+Dazwischen, unberührt grün:
+
+```txt
+✓ Die zwei daneben stehen noch — sie wurden nie überquert
+```
+
+**Das ist die zentrale Zusage dieses Laufs.** E476 hatte gefunden, dass
+`kritzelTrifft` nach dem KASTEN des Gekritzels fragte statt nach dem ZUG —
+wer schräg über die Seite kritzelte, spannte einen Kasten über die halbe
+Seite auf, und alles darin war weg, auch was handbreit daneben stand. §1
+prüft genau diesen Datenverlust.
+
+Und §1 war grün, weil **gar nichts gelöscht wurde.** Ein Wächter gegen
+Datenverlust, der grün ist, weil die Funktion nicht mehr läuft, ist kein
+Wächter. Er ist die Sorte Zusage, vor der §55.2 warnt: eine Prüfung, die
+immer „passt schon" sagt, ist keine Prüfung.
+
+### Die Ursache liegt zwei Stufen vor `kritzelTrifft`
+
+Nicht `kritzelTrifft` war falsch — die Funktion wurde gar nicht erst
+gerufen. Das Tor davor ist `istKritzel` (`marken.ts:2606`): ein Zug gilt als
+Gekritzel, wenn sein **Weg** mindestens das 2,2-fache seiner Kastendiagonale
+misst. Gemessen wird der Weg NACH dem Glätter.
+
+Und der Glätter rechnet seit **E504** (8. September) in Zeit statt je
+Messpunkt:
+
+```ts
+const tau = MESS_MS * (1 - gemessen) / gemessen;   // stroke.ts:286
+const alpha = ms / (ms + tau);
+```
+
+`ms` ist `dt` aus `marken.ts:2341`, und das kommt aus `event.timeStamp`. Der
+Prüflauf feuerte alle 189 Punkte in **einer synchronen Schleife** — die
+Zeitstempel lagen Mikrosekunden auseinander, `Math.max(1, …)` machte daraus
+`dt = 1`. Bei 1 ms wird α = 0,418 statt 0,92: **doppelt so starke Glättung je
+Punkt.** Die Zacke von ±18 Punkten kam als ±10 an.
+
+Nachgerechnet, mit den Zahlen dieses Laufs:
+
+```txt
+dt = 1 ms  (1000 Hz, nur dieser Lauf)   Weg 1037 gegen Schwelle 1262   ✗
+dt = 4 ms  (240 Hz)                     Weg 1520 gegen Schwelle 1286   ✓
+dt = 8 ms  (120 Hz)                     Weg 1648 gegen Schwelle 1292   ✓
+dt = 16 ms (60 Hz)                      Weg 1357 gegen Schwelle 1279   ✓
+```
+
+**Nur der Prüflauf fällt durch.** 1 ms bei diesem Punktabstand wären rund
+9500 Punkte je Sekunde; echte Stifte melden 60 bis 240 Hz. §2 dieses Laufs
+blieb grün, weil sein waagerechtes Gekritzel 170 % Reserve hat — §1s schräger
+Zug war mit 32 % der einzige Grenzfall im Haus.
+
+### Die Entscheidung: der Lauf bekommt einen Takt, nicht der Zickzack mehr Zacken
+
+`zug()` kennt jetzt `takt`, und die drei Gekritzel dieses Laufs setzen
+`takt: 8` — 125 Hz, mitten im Feld echter Geräte.
+
+**Die Alternative** wäre gewesen, den Zickzack dichter zu machen (`PITCH`
+12→8, `SUB` 4→6), bis er auch bei 1000 Hz durchkommt. Das wäre billiger
+gewesen — und falsch: es hätte die Zahlen so lange verschoben, bis sie unter
+einer Bedingung passen, die kein Gerät herstellt. Der nächste Griff an den
+Glätter hätte dieselbe Reserve wieder aufgebraucht, und niemand hätte
+gewusst, warum. CLAUDE.md §30 sagt es kürzer: **keine Mocks, wenn die echte
+App geprüft werden kann** — und ein Zeigergerät, das taktet, ist näher an der
+echten App als eines, das es nicht tut.
+
+**Nicht angefasst** wurden `2.2 * diag` in `istKritzel` und `KRITZEL_NAH = 6`.
+Beide Zahlen sind gegen echte Geräte gemessen; sie zu lockern, um einen
+erfundenen 1000-Hz-Zug zu bedienen, machte genau den Datenverlust wieder
+wahrscheinlicher, gegen den E476 gebaut wurde.
+
+### Die Gegenprobe
+
+Nicht die naheliegende — Takt wieder weg, das war der rote Lauf selbst —,
+sondern die, die zählt: **fängt §1 den Fund aus E476 wieder?**
+
+`kritzelTrifft` auf den Stand vor E476 zurückgedreht, sodass der Kasten
+entscheidet und nicht der Zug; dann `npm run bauen:ts`, dann der Lauf:
+
+```txt
+✗ Die zwei daneben stehen noch — sie wurden nie überquert — []
+```
+
+Leer. **Alle** Marken weg, auch die zwei, die der Zug nie berührt hat. Das
+ist der Datenverlust aus E476, und §1 sieht ihn wieder. Vorher sah er ihn
+nicht, weil er nichts sah.
+
+### Was offen bleibt
+
+`istKritzel` misst am geglätteten Weg. Damit hängt die Frage „ist das ein
+Gekritzel?" an der Meldefrequenz des Eingabegeräts, und bei 60 Hz beträgt die
+Reserve sechs Prozent. Kein Fehler heute, aber eine dünne Stelle — **L198**.
+
+### Was es kostet
+
+Rund vier Sekunden je Lauf: drei Züge à 189 Punkte à 8 ms. Dafür misst der
+Lauf, was ein Stift tut, statt was eine Schleife tut.
+
+**Gemessen.** `test449` 16/16, vorher 14/16. Gegenprobe rot. `npm run stand`
+unverändert (v1200, `1817321f7b3929c3`).

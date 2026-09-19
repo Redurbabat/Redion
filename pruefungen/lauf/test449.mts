@@ -70,7 +70,15 @@ const lies = (f: string): string => fs.readFileSync(path.join(WURZEL, f), 'utf8'
 const browser = await chromium.launch();
 const fehler: string[] = [];
 
-type Zug = { art?: string; ziel?: string; halten?: number };
+/* DER TAKT IST NICHT BEIWERK (E636, 19. September 2026). Ein Zug ohne Takt
+   feuert alle Punkte in einer Schleife — die Zeitstempel liegen dann
+   Mikrosekunden auseinander, `marken.ts` rechnet mit `dt = 1 ms`, und der
+   Glätter dämpft seit E504 nach ZEIT. Bei dt = 1 ms glättet er doppelt so
+   stark wie bei einem echten Stift. Das ist kein Gerät, das es gibt: 1 ms
+   bei diesem Punktabstand wären rund 9500 Punkte je Sekunde.
+   Wer misst, ob ein Zug als Gekritzel ERKANNT wird, muss ihn deshalb
+   takten. 8 ms sind 125 Hz — mitten im Feld echter Stifte (60–240 Hz). */
+type Zug = { art?: string; ziel?: string; halten?: number; takt?: number };
 const zug = (s: Page, punkte: number[][], opt: Zug = {}) =>
   s.evaluate(async ({ punkte, opt }: { punkte: number[][]; opt: Zug }) => {
     const f = document.querySelector<SVGSVGElement>('.blatt-marken');
@@ -85,7 +93,10 @@ const zug = (s: Page, punkte: number[][], opt: Zug = {}) =>
     const start = opt.ziel ? f.querySelector(opt.ziel) : f;
     if (!start) throw new Error('Ziel fehlt: ' + opt.ziel);
     start.dispatchEvent(ev('pointerdown', punkte[0]!));
-    for (let i = 1; i < punkte.length; i++) f.dispatchEvent(ev('pointermove', punkte[i]!));
+    for (let i = 1; i < punkte.length; i++) {
+      f.dispatchEvent(ev('pointermove', punkte[i]!));
+      if (opt.takt) await new Promise(r => setTimeout(r, opt.takt));
+    }
     if (opt.halten) await new Promise(r => setTimeout(r, opt.halten));
     f.dispatchEvent(ev('pointerup', punkte[punkte.length - 1]!));
     await new Promise(r => setTimeout(r, 400));
@@ -135,7 +146,14 @@ const schraegKritzel = (): number[][] => {
      als Bogen an — dann wäre es kein Gekritzel mehr, und die Prüfung
      prüfte etwas anderes als sie sagt. Nachgemessen mit diesen Zahlen:
      Weg 1716 gegen die Schwelle 1308, und die Diagonale liegt überall
-     unter 3,2 Punkten vom Weg. */
+     unter 3,2 Punkten vom Weg.
+
+     UND GETAKTET, seit E636. Diese 1716 sind unter dem Glätter von vor
+     E504 gemessen. Seit E504 rechnet er in Zeit, und ohne Takt meldet
+     dieser Lauf 1000 Hz — dabei schrumpft derselbe Weg auf 1037 und
+     fällt unter die Schwelle. Der Zug wurde dann gar nicht mehr als
+     Gekritzel erkannt, und §1 war grün, weil NICHTS gelöscht wurde:
+     die schlimmste Sorte grün. `takt: 8` macht daraus 125 Hz. */
   const A = 18, PITCH = 12, SUB = 4;
   const N = Math.round(laenge / PITCH);
   const ecken: number[][] = [];
@@ -183,7 +201,7 @@ console.log('\n§1 Was der Zug nie berührt hat, bleibt');
     lage.drin, [{ id: 'daneben', imKasten: true }, { id: 'daneben2', imKasten: true }]);
 
   await s.click('.blatt-werk [data-wz="stift"]');
-  await zug(s, pfad);
+  await zug(s, pfad, { takt: 8 });
   const nachher = (await marken(s)).map(m => m.id);
   p('Die Marke AUF dem Weg ist weg', !nachher.includes('drauf'), JSON.stringify(nachher));
   p('Die zwei daneben stehen noch — sie wurden nie überquert',
@@ -214,11 +232,11 @@ console.log('\n§2 Was der Zug überquert, ist weg');
     { id: 'fest', art: 'line', farbe: '#3aa757', breite: 2.4, pts: [[110, 505], [290, 505]], gesperrt: true }
   ]);
   await s.click('.blatt-werk [data-wz="stift"]');
-  await zug(s, gekritzel(490));
+  await zug(s, gekritzel(490), { takt: 8 });
   const n1 = (await marken(s)).map(m => m.id);
   p('Der überkritzelte Strich ist weg', !n1.includes('strich'), JSON.stringify(n1));
   p('… der gesperrte daneben bleibt (E466)', n1.includes('fest'), JSON.stringify(n1));
-  await zug(s, gekritzel(630));
+  await zug(s, gekritzel(630), { takt: 8 });
   const n2 = (await marken(s)).map(m => m.id);
   p('Ein Gekritzel MITTEN durch einen Kasten nimmt ihn', !n2.includes('kasten'), JSON.stringify(n2));
   await s.close();
