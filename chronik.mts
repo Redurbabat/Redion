@@ -59,6 +59,19 @@ const urText = (): string => {
   t.push('\n### Wie mit ihm gearbeitet wird\n');
   daten.ueberRedur.wieMitIhmArbeiten.forEach((s: string) => t.push('- ' + zeile(s)));
 
+  /* WEITERE ABSCHNITTE ÜBER REDUR, frei benannt. Redur am 19. September:
+     „wie arbeite ich, wieso und alles wirklich alles dort strukturiert
+     dokumentieren". Zwei Listen trugen das nicht mehr — aber jeder
+     Abschnitt bleibt eine Liste aus Sätzen, damit die Datei nicht in
+     Fliesstext zerläuft. `quelle` steht klein darunter: wo eine Zahl
+     herkommt, steht neben der Zahl (§35). */
+  (daten.ueberRedur.abschnitte || []).forEach((a: any) => {
+    t.push('\n### ' + zeile(a.titel) + '\n');
+    if (a.einleitung) t.push(zeile(a.einleitung) + '\n');
+    (a.punkte || []).forEach((s: string) => t.push('- ' + zeile(s)));
+    if (a.quelle) t.push('\n*Gemessen: ' + zeile(a.quelle) + '*');
+  });
+
   t.push('\n---\n\n## Teil II — ' + zeile(daten.arbeitsweise.titel) + '\n');
   daten.arbeitsweise.grundsaetze.forEach((g: any, i: number) => {
     t.push(`\n### ${i + 1}. ${zeile(g.name)}  ·  ${zeile(g.regel)}\n`);

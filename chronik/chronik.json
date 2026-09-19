@@ -4,17 +4,87 @@
   "name": "Redur Babat",
   "wer": [
    "Elektroberuf in der Schweiz — Schaltpläne, NIV, Minuterie, Wechselschaltung, Kreuzschaltung. Die Beispiele in seinen Bildern sind echte Prüfungsaufgaben, keine erfundenen.",
-   "Er arbeitet mit GoodNotes auf dem iPad und hält es Redion daneben. Wenn er ein Bild schickt, ist es fast immer GoodNotes — und er will nicht 'so ähnlich', sondern 1:1.",
+   "Er lernt neben der Arbeit: Berufsfachschule, Modulprüfungen, Lehrmittel als PDF. Redion ist für ihn zuerst ein Arbeitsgerät und erst danach ein Projekt — was er baut, benutzt er am selben Tag.",
+   "Er arbeitet mit GoodNotes auf dem iPad und hält es Redion daneben. Wenn er ein Bild schickt, ist es fast immer GoodNotes — und er will nicht „so ähnlich\", sondern 1:1.",
    "Sein Deutsch ist gesprochen, nicht geschrieben: schnell getippt, ohne Punkt, mit Tippfehlern. Der Inhalt ist dabei IMMER präzise. Wer die Rechtschreibung liest statt den Inhalt, versteht ihn falsch.",
-   "Er sagt sehr deutlich, wenn ihm etwas gefällt ('das sieht brutal gut aus') und ebenso deutlich, wenn etwas fehlt ('alter, wieso habe ich keinen Laserpointer').",
-   "Er will Tempo. 'Weiter', 'weiter ohne Pause', 'mache es sofort' kommen oft — und meinen: nicht fragen, machen.",
-   "Aber er will auch Ehrlichkeit. Er hat mehrfach Regeln gesetzt, die genau das erzwingen: nicht behaupten, die Gesamtsuite sei grün; nichts löschen ohne Rückfrage; Lücken aufschreiben statt verstecken."
+   "Er sagt sehr deutlich, wenn ihm etwas gefällt („das sieht brutal gut aus\") und ebenso deutlich, wenn etwas fehlt („alter, wieso habe ich keinen Laserpointer\").",
+   "Er will Tempo. „Weiter\", „weiter ohne Pause\", „mache es sofort\" kommen oft — und meinen: nicht fragen, machen.",
+   "Aber er will auch Ehrlichkeit. Er hat mehrfach Regeln gesetzt, die genau das erzwingen: nicht behaupten, die Gesamtsuite sei grün; nichts löschen ohne Rückfrage; Lücken aufschreiben statt verstecken.",
+   "Und er merkt, wenn etwas liegenbleibt. Die Chronik lag sechs Tage brach — seine Frage dazu war ein einziger Satz und kam, bevor jemand anders es bemerkt hätte."
   ],
   "wieMitIhmArbeiten": [
-   "SEINE SÄTZE SIND DER AUFTRAG, wörtlich. 'Strich Strich Strich, so nur Strich' heisst: zwei Zahlen im Muster, nicht vier. Er hat es zweimal gesagt — das war kein Versehen, das war Nachdruck.",
+   "SEINE SÄTZE SIND DER AUFTRAG, wörtlich. „Strich Strich Strich, so nur Strich\" heisst: zwei Zahlen im Muster, nicht vier. Er hat es zweimal gesagt — das war kein Versehen, das war Nachdruck.",
    "EIN BILD SCHLÄGT EINE BESCHREIBUNG. Wenn er eines schickt, ist die Antwort auch ein Bild.",
    "NICHT FRAGEN, WO ICH ES SELBST MESSEN KANN. Fragen nur, wo die Antwort das Ergebnis ändert und ich sie nicht messen kann (Beispiel: welcher Knopf genau, L139).",
-   "WAS ES KOSTET, GEHÖRT DAZU. Er nimmt Kosten in Kauf, wenn sie danebenstehen — und merkt es, wenn sie fehlen."
+   "WAS ES KOSTET, GEHÖRT DAZU. Er nimmt Kosten in Kauf, wenn sie danebenstehen — und merkt es, wenn sie fehlen.",
+   "EIN SATZ KANN MEHRERE AUFTRÄGE TRAGEN. „könntest du die xmind teil verbessern …\" waren vier: Griffe, Verbindungen löschen, Formen, Vorlagen. Wer nur den ersten baut, hat drei überhört.",
+   "WENN ER KORRIGIERT, KORRIGIERT ER DIE RICHTUNG, nicht das Detail. „stoppe deine arbeit sofort\" heisst nicht „mach es anders\", sondern „hör auf, bevor es mehr wird\".",
+   "WIEDERHERSTELLEN HEISST VOLLSTÄNDIG. „bringe es wieder komplett wie vorher mit Auge usw, mit Animationen, mit Bewegung, mit Anzeige, alles.\" Ungefähr zurück ist für ihn nicht zurück.",
+   "ER GIBT DIE ZAHLEN SELBST. 0,3 · 0,7 · 1,2 · 4,0 mm für die Striche, 36 px für die Kachel, der Zugangscode 733877. Wo er eine Zahl nennt, wird sie übernommen und nicht verbessert."
+  ],
+  "abschnitte": [
+   {
+    "titel": "In Zahlen — wie er schreibt",
+    "einleitung": "Gezählt über alle 95 aufgeschriebenen Nachrichten in dieser Chronik, nicht geschätzt.",
+    "punkte": [
+     "**Kurz.** Die mittlere Nachricht hat 72 Zeichen. Die kürzeste sechs („weiter\"), die längste 1494 — und das war der Auftrag, diese Datei hier anzulegen.",
+     "**In Schüben.** 33 Nachrichten an einem Tag (12. September), an drei anderen Tagen keine einzige. Er arbeitet nicht gleichmässig, sondern in Bögen.",
+     "**Rund um die Uhr.** 16 Nachrichten vor 7 Uhr morgens, 48 zwischen 7 und 19 Uhr, 31 nach 19 Uhr. Die früheste um 00:10, die späteste um 23:25.",
+     "**Das häufigste Wort nach „Redion\" (26x) ist „weiter\" (19x).** Danach kommen „alles\" (12x) und „klicke\" (10x) — Tempo, Vollständigkeit, und eine Hand, die etwas anfasst."
+    ],
+    "quelle": "chronik/chronik.json, alle Nachrichtenfelder, 19. September 2026"
+   },
+   {
+    "titel": "Woran er Qualität misst",
+    "einleitung": "Er beschreibt selten abstrakt. Er nennt ein Programm, und das Programm ist die Messlatte.",
+    "punkte": [
+     "**PowerPoint** (11x genannt) für das Vortragen, **Word** (5x) für das Schreiben, **GoodNotes** (3x) für das Zeichnen, **XMind** (2x) für Gedankenkarten, **OneNote** (1x) für den freien Text, das **macOS-Dock** (1x) für die Bewegung.",
+     "„Ich will das redion start wie goodnotes bein zeichenn ist, stark wie word beim text schreiben bearbeiten, start wie Powerpoint beim Präsentation\" — drei Messlatten in einem Satz. Daraus wurden die fünf Messlatten in E594.",
+     "**1:1 ist wörtlich gemeint** (26 Stellen in ENTSCHEIDUNGEN.md). „So ähnlich\" ist für ihn ein anderes Ergebnis, nicht ein schlechteres.",
+     "Ein Vorbild zu nennen ist bei ihm die kürzeste Form eines vollständigen Auftrags: Form, Bedienung und Erwartung in einem Wort."
+    ],
+    "quelle": "alle Nachrichten dieser Chronik und 459 Nennungen in ENTSCHEIDUNGEN.md"
+   },
+   {
+    "titel": "Wie er entscheidet",
+    "einleitung": "Er entscheidet selten viel, aber dann endgültig — und er entscheidet am Bild, nicht an der Beschreibung.",
+    "punkte": [
+     "**Er entscheidet, nachdem er es gesehen hat.** E78 legte am 8. August eine React-Zielarchitektur fest; E80 widerrief sie am 9. August, nachdem der Rohbau dastand. Nicht die Idee hat ihn überzeugt oder nicht, sondern der Anblick.",
+     "**Vier Marken in CLAUDE.md hat er selbst gesetzt** (3. September): §30 der volle Lauf in Stücken, §37 die 44 px mit ihrer Ausnahme, §46 rot zuerst, §55.3 ein Bild, wenn man etwas sehen kann. Alle vier sind Regeln über Ehrlichkeit, keine über Funktionen.",
+     "**E521, am 9. September:** ein Zweig, ein Push, dann ein neuer. Eine Arbeitsregel, die er selbst formuliert hat, weil ein Zweig seinen Namen verliert, wenn er weiterwächst.",
+     "**Er wählt zwischen Wegen, die ich vorlege** — „Sticky am Blattfuss\", „Verschieben, dann Rest ins Verzeichnis\" —, und er wählt schnell. Eine Auswahl mit drei benannten Wegen bekommt eine Antwort; eine offene Frage bekommt „mach\".",
+     "**Was er nicht entscheidet, delegiert er ausdrücklich**: „arbeite an redion selbständig weiter\". Das ist kein Desinteresse, sondern Arbeitsteilung."
+    ],
+    "quelle": "ENTSCHEIDUNGEN.md (67 Stellen „Redur hat/entschied/…\"), CLAUDE.md, E78/E80/E521"
+   },
+   {
+    "titel": "Was ihn ärgert — und was daraus zu lernen war",
+    "einleitung": "Dreimal in zwei Wochen dieselbe Sorte Fehler, und jedes Mal habe ich sie gemacht, nicht er.",
+    "punkte": [
+     "**Mitgenommenes.** Beim Umbau verschwand das Auge am Ordner — samt Animationen, um die es nie ging. „alter man du hast hier die augen wo links oben bei date war und du hast die alle animationen alter was ist das\". Vier Bögen Reparatur (E601–E604), und am nächsten Tag noch einmal (E608/E609).",
+     "**Halb wiederhergestellt.** Seine Antwort darauf war nicht „mach es hübscher\", sondern „komplett wie vorher … alles\".",
+     "**Behauptetes.** Er hat ausdrücklich verboten zu sagen, die Gesamtsuite sei grün, wenn sie nicht gelaufen ist. Am 19. September zeigte der erste volle Lauf seit PR #100, warum: 17 von 48 Stücken rot.",
+     "**Liegengebliebenes.** „machst du ur.md oder nicht weil es ist seit 5 tagen nicht gemacht.\" Kein Vorwurf, eine Frage — aber sie kam, bevor ich es selbst gemerkt hatte."
+    ],
+    "quelle": "Tage 15.–19. September dieser Chronik"
+   },
+   {
+    "titel": "Was er gebaut haben will, und warum gerade das",
+    "einleitung": "Seine Wünsche sind nicht beliebig. Sie kommen aus zwei Leben, die beide dieselbe App benutzen.",
+    "punkte": [
+     "**Aus der Schule:** Lernkarten aus dem eigenen PDF, Prüfungsplanung mit Countdown, Fehlertraining, Formelheft, Fachzeichen und Schutzleiter. Nichts davon hat Notion.",
+     "**Aus dem Betrieb:** Schaltpläne, Materiallisten, Baustellen, Normen, Rechnungen.",
+     "**Und daraus folgt local-first.** Seine Daten sind Prüfungen, Lohnabrechnungen und Kundenunterlagen — die Regel „Daten gehören dem Nutzer\" ist bei ihm kein Prinzip, sondern eine Anforderung.",
+     "**Die Reihenfolge, in der er baut, ist die Reihenfolge, in der er es braucht.** Deshalb kommt Zeichnen vor Abgleich und Prüfungsplanung vor Cloudflare."
+    ],
+    "quelle": "LUECKEN.md, ENTSCHEIDUNGEN.md, die Bereiche unter src/bereiche/"
+   },
+   {
+    "titel": "Die kürzeste Zusammenfassung",
+    "punkte": [
+     "**Schreib kurz, miss nach, zeig ein Bild, verlier nichts.** Alles andere in dieser Datei ist die ausführliche Fassung dieses Satzes."
+    ]
+   }
   ]
  },
  "arbeitsweise": {

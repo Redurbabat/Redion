@@ -50,6 +50,8 @@ umgeschrieben, aber nicht umnummeriert.
 | `ENTSCHEIDUNGEN.md` | Warum wurde etwas so entschieden? (E1 … E369) |
 | `LUECKEN.md` | Was fehlt noch im Produkt? (L1 … L116) |
 | `messungen.md` | Was kam beim Nachmessen heraus? (Zahlen, vorher/nachher) |
+| `UR.md` | Wer ist Redur, wie wird hier gearbeitet, was geschah an welchem Tag? (§56) |
+| `PROBLEME.md` | Welche Fehler gab es, und wie wurden sie gefunden? (P1 … P60) |
 | `doku/ARCHITEKTUR.md` | Wie ist es aufgebaut? |
 | `doku/REDION-FORMAT.md` | Wie sieht eine `.redion`-Sicherung von innen aus? |
 | `doku/TYPESCRIPT-MIGRATION.md` | In welcher Reihenfolge wird migriert? |
@@ -139,6 +141,9 @@ zusammengehört.
 
 **Teil XII — Hinsehen**
 [55](#55-bilder-machen-nicht-nur-code-lesen) Bilder machen, nicht nur Code lesen
+
+**Teil XIII — Das Gedächtnis**
+[56](#56-die-chronik--hart) Die Chronik
 
 ---
 ---
@@ -1027,6 +1032,7 @@ sucht, wo etwas geprüft wird, sucht im Quelltext, nicht in dieser Liste.
 | `LUECKEN.md` | was im Produkt fehlt (§35) |
 | `ENTSCHEIDUNGEN.md` | warum etwas so ist (§34) |
 | `messungen.md` | was gemessen wurde: Zahl, Fenster, Datum, Methode (§36, §55.2) |
+| `UR.md`, `PROBLEME.md` | das Gedächtnis — erzeugt aus `chronik/chronik.json` (§56) |
 | `CLOUDFLARE.md`, `SERVER-EINRICHTEN.md` | die Wolke einrichten |
 | `START-MIT-CLAUDE-CODE.md` | wie hier gearbeitet wird |
 | `doku/ARCHITEKTUR.md` | wie es aufgebaut ist |
@@ -2381,6 +2387,47 @@ Zwei Gründe, und der zweite ist der wichtigere:
 
 `bilder.mts` selbst gehört sehr wohl ins Verzeichnis. Es ist das Werkzeug,
 nicht das Ergebnis.
+
+---
+---
+
+# Teil XIII — Das Gedächtnis
+
+## 56. Die Chronik  **[hart]**
+
+`UR.md` und `PROBLEME.md` sind **erzeugt**. Die Quelle ist
+`chronik/chronik.json`; `node chronik.mts` schreibt daraus beide Dateien
+**und** die Ansicht in Redion (`src/bereiche/chronik/daten.ts`, danach
+`npm run bauen:ts`). Wer in die erzeugten Dateien schreibt, verliert es.
+
+**Nachgetragen wird am Ende eines Arbeitstages, nicht irgendwann.** Am
+19. September 2026 fehlten sechs Tage und 73 Commits, und gemerkt hat es
+Redur, nicht ich. Ein Gedächtnis mit Lücken ist schlechter als keines: es
+sieht vollständig aus.
+
+Was in einen Tag gehört:
+
+```txt
+nachrichten   Redurs Sätze WÖRTLICH, mit Uhrzeit — dazu: was gemeint war,
+              wie er es kürzer hätte sagen können, was ein besserer Prompt wäre
+arbeit        was gebaut wurde, von Commit bis Commit, Zeitraum, Dauer, Prüfläufe
+zahlen        Commits, Entscheidungen, neue Prüfläufe
+groesstesProblem · interessantesteAnfrage · massnahmen (Zeit · was · warum · Risiko)
+```
+
+Und ein Problem gehört nach `probleme`, mit **falscher Vermutung**, **wie
+gefunden**, **Ursache**, **Beweis** und **Lehre** — gerade die falsche
+Vermutung, denn sie ist der Teil, den man beim nächsten Mal wiedererkennt.
+
+**Die Uhr ist ehrlich oder sie fehlt.** Commit-Zeiten kommen aus git und
+sind genau. Abgeleitete Zeiten tragen ein „ca.". Ein Wortlaut, den niemand
+mehr hat, wird **nicht erfunden** — dann steht dort, woher das Zitat
+stammt, oder gar nichts (§35).
+
+**Teil I ist keine Nettigkeit, sondern Arbeitsgrundlage.** Wer Redurs
+Sätze falsch liest, baut das Falsche; deshalb steht dort gemessen, wie er
+schreibt, woran er Qualität misst und wie er entscheidet. Er hat am
+19. September ausdrücklich darum gebeten, dass dieser Teil genau ist.
 
 ---
 ---
