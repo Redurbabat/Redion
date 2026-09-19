@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-611 Entscheidungen, E1 bis E633 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+612 Entscheidungen, E1 bis E634 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -676,6 +676,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E631** — Der Quelltext wird als Code gelesen, nicht als Prosa: `nurCode` lag zweimal wortgleich im Baum (mit dem Satz „wiederverwenden, nicht nachbauen" über der zweiten Kopie) und zog jetzt nach `pruefungen/hilfe/quelltext.mts` um. `test444` und `test483` klagten je einen SATZ an. Und die Gegenprobe hat die erste Reparatur widerlegt: wer die Zeichenketten mitleert, macht einen Wächter blind, der nach einer Zeichenkette sucht
 * **E632** — Die Inventur zieht nach, und die Prüfung lernt die vierte Schreibweise: `doku/BLOCKTYPEN.md` fehlte die Gedankenkarte seit E607 (drei Tage, 78 gegen 79). `test225` dagegen hatte recht zu melden und unrecht im Grund: die sechs Verweise stimmen, nur drucken die jüngeren Läufe ihre Abschnitte als `§1 Titel` ohne den Mittelpunkt
 * **E633** — Nur Tokens, die es gibt: `--bg-2` (viermal, seit E514 als falsch benannt bekannt) wird `--bg-hover`, `var(--accent, #2f7ed8)` verliert den festen Hellwert, `--rmo-knauf-grund` weicht dem Token, auf das es ohnehin immer zurückfiel. Dazu die Falle `.pf-karte` — ein Lichtschlitz nur über `:hover` — und ein vierter Sammler-Fehler: `--i` galt als erfunden, weil der Ausdruck in `style="--i:…;--dick:…"` nur das LETZTE Token fand
+* **E634** — Zwei Zusagen, die den Stand von gestern halten: `test285` verlangte GENAU EINE gezeichnete Seite, seit dem Lesemass (E464) sind es zwei — denselben Fund hat `test395` §7 am 7. September gemacht (E467) und wurde nachgezogen, dieser Punkt nicht. `test442` verlangte die Miniatur ohne Nummer, die seit E547 davorsteht und die `test503` §3 ausdrücklich einfordert. Beide Male hätte eine Reparatur AM PRODUKT den Schwesterlauf rot gemacht
 
 ---
 
@@ -51574,4 +51575,71 @@ ausser der Form: **ein Ausdruck, der eine gültige Schreibweise nicht
 kennt.**
 
 **Gemessen.** `test401` 4/4 · `test412` 27/27 · `test303` 16/16.
+---
 
+## E634 — Zwei Zusagen, die den Stand von gestern halten
+
+Bogen 5 der roten Läufe. Zwei rote Punkte, ein gemeinsamer Befund: **nicht
+das Produkt ist gewandert, die Erwartung ist stehengeblieben.** In beiden
+Fällen hält ein Schwesterlauf längst das Gegenteil fest — wer hier „das
+Produkt repariert" hätte, hätte jenen Lauf rot gemacht.
+
+### `test285` — genau eine Seite, seit dem Lesemass sind es zwei
+
+Der Punkt hiess „Gezeichnet ist aber nur die erste — der Rest wartet auf den
+Blick" und verlangte die Zahl **1**. Gemessen werden **2**.
+
+Gewandert ist nicht die Vorausschau, sondern die Blatthöhe. `nachziehen`
+zeichnet seit je, was in `scrollTop − clientHeight` bis
+`scrollTop + 2 × clientHeight` fällt (`document-mode.ts:2981`). Seit E464 ist
+ein Blatt auf 980 px gedeckelt (`--pdf-paper-max`), eine A4-Seite also rund
+1387 px hoch; die zweite Bühne beginnt bei etwa 1441 und liegt damit im
+Fenster. Bei achtzig Seiten sind es weiterhin zwei — die Zusage von E299
+(„was man nicht sieht, wird nicht gezeichnet") ist unberührt.
+
+**Genau diesen Fund gab es schon.** E467 hat ihn am 7. September gemacht und
+`test395` §7 nachgezogen; dort steht seitdem wörtlich „nur die in Reichweite
+(eins oder zwei)". `test285` stellt dieselbe Frage und wurde übersehen. Er
+sagt jetzt dasselbe.
+
+**Die obere Schranke bleibt bei 2**, und das ist der ganze Punkt: `>= 1` allein
+kann nicht mehr rot werden, auch nicht, wenn eines Tages alle vier gezeichnet
+werden. Ein Wächter, der nicht rot werden kann, ist keiner (§55.2).
+
+### `test442` — die Miniatur ohne Nummer, die es seit E547 nicht mehr gibt
+
+Der Punkt verglich den Text der Miniatur auf Gleichheit mit „Bild · quer.png".
+Dastehen tut „2 · Bild · quer.png".
+
+Die Nummer ist **gewollt** und steht in E547 Punkt 3: „bei 27 Folien zählt
+niemand Kästchen ab". `test503` §3 verlangt sie ausdrücklich — und warnt in
+seinem eigenen Kommentar vor genau der Falle, in die `test442` getappt ist:
+
+> AUF „ENTHÄLT", NICHT AUF „IST GLEICH". Der erste Entwurf verglich auf
+> Gleichheit — und mit der Nummer davor heisst die Zeile „1 · A4-Blatt", also
+> nicht gleich, also grün.
+
+`test442` vergleicht weiter auf Gleichheit, aber auf den **ganzen** Text
+mitsamt Nummer. Der Name ohne Nummer wird eine Zeile höher geprüft
+(`sourceLabel`) und steht unverändert im `aria-label` des Knopfes
+(`document-mode.ts:1105`) — für Vorleser gibt es die Nummer also gar nicht.
+
+### Was die Alternative gewesen wäre
+
+Die Nummer aus `document-mode.ts:1146` wieder entfernen und die Vorausschau
+in `nachziehen` von zwei Bildhöhen auf eine verkleinern. Beides hätte den
+roten Punkt grün gemacht **und je einen anderen Lauf rot** — test503 §3 und,
+beim Rollen, test285s eigene Gegenprobe „Beim Rollen kommen weitere Seiten
+dazu". Das ist der Preis, den diese Sorte Reparatur immer hat: sie
+verschiebt die Farbe, statt sie wegzunehmen.
+
+### Was es kostet
+
+Zwei Läufe halten ab jetzt einen Stand, den zwei andere Läufe schon hielten
+— die Doppelung ist gewollt, sie prüft dieselbe Sache von zwei Seiten. Der
+Preis ist, dass beim nächsten Wandern **vier** Stellen nachzuziehen sind.
+Deshalb steht in beiden jetzt die Nummer der Entscheidung daneben, die den
+Stand gesetzt hat (E464/E467 und E547), statt nur einer Zahl.
+
+**Gemessen.** `test285` 27/27 · `test442` 24/24. Vorher: `test285` 26/27,
+`test442` 23/24.

@@ -225,8 +225,20 @@ const zwei = await pc.evaluate(() => {
 });
 
 gleich('Für jede der vier Seiten steht ein Platz in der Rolle', zwei.staende, 4);
-gleich('Gezeichnet ist aber nur die erste — der Rest wartet auf den Blick',
-  zwei.gezeichnet, 1);
+/* EINS ODER ZWEI, NICHT VIER (nachgemessen am 19. September 2026). Der Punkt
+   hiess einmal „nur die erste" und war damit seit dem Lesemass falsch: seit
+   ein Blatt auf 980 px gedeckelt ist (E464, `--pdf-paper-max`), ist eine
+   A4-Seite rund 1387 px hoch, und die zweite Bühne beginnt bei etwa 1441 —
+   innerhalb der einen Bildhöhe nach unten, die `nachziehen` mitzeichnet
+   (`scrollTop + 2 × clientHeight`). Gezeichnet werden also zwei, nicht eine.
+   Die Zusage von E299 ist davon unberührt und steht hier unverändert: NICHT
+   ALLE VIER. Genau diesen Fund hat test395 §7 schon am 7. September gemacht
+   (E467) — dieser Punkt ist derselbe und wurde damals übersehen.
+   Die obere Schranke bleibt bei 2. Ohne sie kann der Punkt nicht mehr rot
+   werden, und ein Wächter, der nicht rot werden kann, ist keiner (§55.2). */
+p('Gezeichnet sind nur die in Reichweite — nicht alle vier (E299 unberührt)',
+  zwei.gezeichnet >= 1 && zwei.gezeichnet <= 2,
+  `gezeichnet ${zwei.gezeichnet} von ${zwei.staende}`);
 p('Es gibt ein Blatt mit echter Ausdehnung',
   zwei.papierHoch > 200 && zwei.papierBreit > 140, JSON.stringify(zwei));
 p('Das Seitenverhältnis stimmt noch (A4)',
