@@ -1308,13 +1308,23 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 
 .gk-leiste{ display:flex; align-items:center; gap:2px; padding:6px 8px; flex-wrap:wrap;
             border-bottom:1px solid var(--line); background:var(--bg-card); }
+/* 44 px TREFFFLÄCHE (§37, E406). HAUPTWEG: die Werkzeuge der Karte — am Telefon
+   ist das der EINZIGE Weg, ein Unterthema anzulegen; dort gibt es kein Tab.
+   Der Knopf SIEHT 26 px hoch aus, seine Fläche misst 44: `::after` legt sie
+   darüber. Sie wächst nur nach oben und unten — waagerecht stehen die
+   Nachbarn, und eine Fläche, die sie überdeckt, macht es schlimmer statt
+   besser.
+
+   DER KOMMENTAR STEHT SEIT E627 VOR DER REGEL, nicht dahinter. `test402`
+   sucht den geschriebenen Grund in den acht Zeilen ÜBER einer Regel und den
+   drei darunter — dahinter lag er ausserhalb dieses Fensters, und der Lauf
+   meldete die Karte als Treffläche ohne Grund. Die Fläche war die ganze Zeit
+   richtig; nur stand ihr Beleg an einer Stelle, an der niemand ihn sucht.
+   (Und er muss NAH stehen: `test402` liest acht Zeilen über der Regel.) */
+/* §37: 26 px Knopf, 44 px TREFFFLÄCHE über `::after` — siehe darüber. */
 .gk-leiste button{ width:28px; height:26px; border-radius:5px; font-size:14px;
                    color:var(--text-dim); display:grid; place-items:center;
                    position:relative; border:none; background:none; cursor:pointer; }
-/* 44 px TREFFFLÄCHE (§37, E406). HAUPTWEG: die Werkzeuge der Karte — am Telefon
-   ist das der EINZIGE Weg, ein Unterthema anzulegen; dort gibt es kein Tab.
-   Die Fläche wächst nur nach oben und unten — waagerecht stehen die Nachbarn,
-   und eine Fläche, die sie überdeckt, macht es schlimmer statt besser. */
 .gk-leiste button::after{ content:""; position:absolute; left:0; right:0; top:50%;
                           height:var(--touch-min); transform:translateY(-50%); }
 .gk-leiste button:hover{ background:var(--bg-hover); color:var(--text); }
@@ -1325,6 +1335,30 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .gk-leiste .gk-farbe-weg{ background:var(--bg-input); color:var(--text-faint);
                           font-size:10px; }
 .gk-farben{ display:inline-flex; align-items:center; gap:2px; }
+/* DIE FORMGRUPPE BRAUCHT DIESE ZEILE. Ohne sie ist `.gk-formen` ein
+   gewöhnliches `span`, seine sechs Knöpfe sind `display:grid` und stapeln
+   sich SENKRECHT — auf dem Bild vom 19. September stand eine Spalte aus
+   sechs Formen neben der Leiste (§55.1). */
+.gk-formen{ display:inline-flex; align-items:center; gap:2px; }
+/* Jeder Knopf zeigt die Form selbst, nicht ein Zeichen dafür — und zwar
+   dieselbe Form, die der Knoten bekommt. Ein gezeichnetes Sechseck kann
+   nicht als etwas anderes gelesen werden. */
+.gk-leiste .gk-form i{ display:block; width:15px; height:11px;
+                       border:1.5px solid currentColor; }
+/* DREI PIXEL, NICHT FÜNF. Bei 5 px ist die Rundung an einem 11 px hohen
+   Kästchen eine halbe Höhe — dann sieht „abgerundet" aus wie „Pille", und
+   zwei Knöpfe nebeneinander sagen dasselbe. Der Unterschied zur Pille ist
+   stattdessen ihre LÄNGE (19 px gegen 15). Beides im Bild nachgesehen. */
+.gk-leiste .gk-form[data-f="rund"] i    { border-radius:3px; }
+.gk-leiste .gk-form[data-f="kasten"] i  { border-radius:0; }
+.gk-leiste .gk-form[data-f="pille"] i   { border-radius:999px; width:19px; }
+.gk-leiste .gk-form[data-f="ellipse"] i { border-radius:50%; }
+/* Ein Vieleck lässt sich mit `clip-path` nicht umranden — bei 15 px ist
+   eine gefüllte Form ohnehin deutlicher als eine umrandete. */
+.gk-leiste .gk-form[data-f="raute"] i{ border:none; background:currentColor;
+  clip-path:polygon(50% 0, 100% 50%, 50% 100%, 0 50%); width:13px; height:13px; }
+.gk-leiste .gk-form[data-f="sechseck"] i{ border:none; background:currentColor;
+  clip-path:polygon(14% 0, 86% 0, 100% 50%, 86% 100%, 14% 100%, 0 50%); }
 .gk-trenn{ width:1px; height:18px; background:var(--line); margin:0 5px; }
 .gk-zoom{ display:inline-flex; align-items:center; gap:2px; }
 .gk-massstab{ min-width:46px; text-align:center; font-size:11px; font-weight:600;
@@ -1365,10 +1399,112 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
            border-top:1px solid var(--line); }
 .gk-griff:hover{ background:var(--bg-hover); }
 
+/* ══ DIE VIER GRIFFE (E628) ═══════════════════════════════════════════════
+   Sie stehen NEBEN dem Knoten, nicht darauf. Ein Griff auf dem Kasten
+   nimmt dem Kasten seine Fläche: ein Knoten ist rund 34 px hoch, und zwei
+   Griffe mit anständiger Treffläche hätten ihn ganz zugedeckt — der
+   Doppelklick zum Umbenennen wäre nicht mehr zu treffen gewesen.
+
+   §37, geschriebener Grund für 16 px sichtbar / 28 px Fläche: Die Griffe
+   sind ein NEBENWEG. Der Hauptweg zu einem neuen Thema ist die Leiste
+   (＋ und ⏎, beide mit voller 44-px-Fläche) und am Rechner Tab/Enter; sie
+   bleiben unverändert und können alles, was die Griffe können. Die Griffe
+   sind der genauere Weg — „hier, an dieser Seite" — und erscheinen nur am
+   gewählten Knoten. Eine 44-px-Fläche je Griff wäre hier keine Hilfe: vier
+   davon um einen 34 px hohen Kasten überlappen einander und den Kasten.
+   ────────────────────────────────────────────────────────────────────── */
+.gk-griffel{ position:absolute; z-index:2; width:16px; height:16px; padding:0;
+             border-radius:50%; border:2px solid var(--bg-card);
+             background:var(--ast, var(--accent)); color:#fff;
+             display:grid; place-items:center; line-height:1;
+             font-size:11px; font-weight:700; cursor:crosshair; }
+.gk-griffel::before{ content:"+"; }
+/* Die Treffläche — 28 px, und sie wächst nach AUSSEN, weg vom Kasten. */
+.gk-griffel::after{ content:""; position:absolute; inset:-6px; }
+.gk-griffel:hover{ transform:scale(1.15); }
+.gk-griffel-oben  { left:50%; top:-10px;    margin-left:-8px; }
+.gk-griffel-unten { left:50%; bottom:-10px; margin-left:-8px; }
+.gk-griffel-links { top:50%;  left:-10px;   margin-top:-8px; }
+.gk-griffel-rechts{ top:50%;  right:-10px;  margin-top:-8px; }
+/* `transform` statt `margin` wäre kürzer — aber `:hover` skaliert, und eine
+   zweite Transformation am selben Element löscht die erste. */
+
+/* Der Knoten, auf dem die Verbindung landen würde. GESTRICHELT und nicht
+   nur farbig: §38 — keine Auskunft nur über die Farbe. */
+.gk-buehne.gk-zieht-verb, .gk-buehne.gk-zieht-verb .gk-kn{ cursor:crosshair; }
+.gk-kn.gk-ziel{ box-shadow:0 0 0 3px var(--accent); border-style:dashed; }
+
+/* ══ DIE FREIEN VERBINDUNGEN (E628) ═══════════════════════════════════════
+   Zwei Pfade übereinander: einer breit und unsichtbar zum Treffen, einer
+   dünn und sichtbar zum Ansehen. Eine 1,6 px dünne Linie mit dem Finger zu
+   treffen ist unmöglich; 14 px sind zu schaffen.
+
+   Gestrichelt gegen die Astbögen, damit man die freie Verbindung von der
+   Baumkante unterscheidet — und im gewählten Zustand DURCHGEZOGEN und
+   dicker, nicht nur anders gefärbt (§38). */
+.gk-verb-fang{ stroke:transparent; stroke-width:14; pointer-events:stroke;
+               cursor:pointer; }
+.gk-verb-linie{ stroke:var(--text-faint); stroke-width:1.6; fill:none;
+                stroke-dasharray:6 5; stroke-linecap:round; pointer-events:none; }
+.gk-verb:hover .gk-verb-linie{ stroke:var(--text-dim); }
+.gk-verb.on .gk-verb-linie{ stroke:var(--accent); stroke-width:2.8;
+                            stroke-dasharray:none; }
+.gk-spitze{ fill:var(--text-faint); }
+
+/* ══ DIE FORMEN (E628) ════════════════════════════════════════════════════
+   Vier Formen sind eine Rundung, zwei sind ein Vieleck.
+
+   Die zwei Vielecke können NICHT `clip-path` auf dem Knoten selbst
+   benutzen: das schnitte die vier Griffe ab, die absichtlich über den Rand
+   hinausragen, und die Kante gleich mit — `clip-path` beschneidet den
+   Rahmen, statt ihn mitzunehmen. Deshalb zwei Ebenen: `::before` ist die
+   Kante in der Astfarbe, `::after` dieselbe Form 3 px kleiner in der
+   Kartenfarbe. Was dazwischen stehen bleibt, IST die Kante.
+
+   Ein unbekannter Wert in `data-form` trifft keinen dieser Wähler und
+   bleibt damit still die runde Grundform (§18). */
+.gk-kn[data-form="kasten"]  { border-radius:3px; }
+.gk-kn[data-form="pille"]   { border-radius:999px; padding-inline:16px; }
+.gk-kn[data-form="ellipse"] { border-radius:50%; padding:12px 22px; }
+
+.gk-kn[data-form="raute"], .gk-kn[data-form="sechseck"]{
+  border-color:transparent; background:transparent; box-shadow:none; }
+.gk-kn[data-form="raute"]{ padding:14px 26px; }
+.gk-kn[data-form="sechseck"]{ padding:8px 22px; }
+.gk-kn[data-form="raute"]::before,  .gk-kn[data-form="raute"]::after,
+.gk-kn[data-form="sechseck"]::before, .gk-kn[data-form="sechseck"]::after{
+  content:""; position:absolute; pointer-events:none; }
+.gk-kn[data-form="raute"]::before, .gk-kn[data-form="sechseck"]::before{
+  inset:0; background:var(--ast, var(--line)); }
+.gk-kn[data-form="raute"]::after, .gk-kn[data-form="sechseck"]::after{
+  inset:3px; background:var(--bg-card); }
+.gk-kn[data-form="raute"]::before, .gk-kn[data-form="raute"]::after{
+  clip-path:polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.gk-kn[data-form="sechseck"]::before, .gk-kn[data-form="sechseck"]::after{
+  clip-path:polygon(14% 0, 86% 0, 100% 50%, 86% 100%, 14% 100%, 0 50%); }
+/* Der Text liegt sonst UNTER den beiden Ebenen: ein positioniertes
+   `::before` malt über den laufenden Inhalt, nicht darunter. */
+.gk-kn[data-form="raute"] > *, .gk-kn[data-form="sechseck"] > *{
+  position:relative; z-index:1; }
+/* Gewählt heisst hier: dickere Kante und fetter Text — der Ring aus
+   `box-shadow` wäre ein Rechteck um ein Sechseck. */
+.gk-kn[data-form="raute"].on::after, .gk-kn[data-form="sechseck"].on::after{
+  inset:6px; }
+.gk-kn[data-form="raute"].on::before, .gk-kn[data-form="sechseck"].on::before{
+  background:var(--ast, var(--accent)); }
+
+
 @media (max-width:760px){
   /* Am Telefon ist der Bildschirm schmal — ein 230 px breiter Knoten neben
      einem zweiten passt nicht mehr nebeneinander. Schmaler heisst hier: mehr
      Umbrüche, aber alles bleibt lesbar. */
   .gk-kn{ max-width:160px; font-size:14px; }
   .gk-kn.gk-wurzel{ max-width:180px; font-size:16px; }
+  /* Am Telefon zieht ein Finger, kein Zeiger: 20 px sichtbar, 36 px Fläche.
+     Der Grund für weniger als 44 px steht oben bei `.gk-griffel` — die
+     Griffe sind der genaue Nebenweg, die Leiste bleibt der Hauptweg. */
+  .gk-griffel{ width:20px; height:20px; font-size:13px; }
+  .gk-griffel::after{ inset:-8px; }
+  .gk-griffel-oben, .gk-griffel-unten{ margin-left:-10px; }
+  .gk-griffel-links, .gk-griffel-rechts{ margin-top:-10px; }
 }

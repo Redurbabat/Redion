@@ -3642,6 +3642,71 @@ for (const l of DB_ANSICHTEN) {
   };
 }
 
+/* --- Formen, Griffe und freie Verbindungen (E628) -------------------------
+   Zu sehen ist das, was Redur bestellt hat, in einem Bild: sechs Formen an
+   sechs Ästen, eine gestrichelte Verbindung quer durch die Karte — die,
+   die der Baum nicht hergibt —, und die vier Griffe am gewählten Thema.
+
+   Der gewählte Knoten wird nicht geklickt, sondern der Zeiger auf ihn
+   gesetzt: ein Klick auf dem Telefon öffnet die Tastatur, und ein Bild mit
+   halb verdeckter Karte zeigt nichts. */
+ANSICHTEN['gkformen'] = {
+  titel: 'Gedankenkarte: sechs Formen, freie Verbindungen, die vier Griffe (E628)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const seite = Store.addPage(null, { text: 'Prüfungsplan', icon: '🧠' });
+    const k = (id: string, text: string, eltern: string | null, rest: object = {}) =>
+      ({ id, text, eltern, ...rest });
+    Store.addBlock(seite.id, 'mindmap', {
+      text: 'Gedankenkarte', hoehe: 520,
+      karte: {
+        aufbau: 'karte',
+        knoten: [
+          k('w', 'Prüfung Elektrotechnik', null),
+          k('a', 'Grundlagen', 'w', { seite: 'rechts', farbe: '#d9534f' }),
+            k('a1', 'Ohmsches Gesetz', 'a', { form: 'kasten' }),
+            k('a2', 'Leistung und Arbeit', 'a'),
+          k('b', 'Schutzmassnahmen', 'w', { seite: 'links', farbe: '#e08a2e', form: 'pille' }),
+            k('b1', 'Schutzleiter', 'b'),
+            k('b2', 'FI-Schalter', 'b', { form: 'ellipse' }),
+          k('c', 'Messen', 'w', { seite: 'rechts', farbe: '#4a9d5f', form: 'sechseck' }),
+            k('c1', 'Isolationswiderstand', 'c'),
+          k('d', 'Schaltpläne lesen', 'w', { seite: 'links', farbe: '#2f8ab5', form: 'kasten' }),
+            k('d1', 'Stromlaufplan', 'd'),
+          k('e', 'Termine', 'w', { seite: 'rechts', farbe: '#7a5cc5', form: 'raute' }),
+            k('e1', 'Prüfung am 8.', 'e')
+        ],
+        /* Genau das, was ein Baum nicht kann: „Messen" hängt an
+           „Schutzmassnahmen", ohne dort zu wohnen. */
+        verbindungen: [
+          { id: 'v1', von: 'c', zu: 'b' },
+          { id: 'v2', von: 'e1', zu: 'a1' }
+        ]
+      }
+    });
+    await Store.flush();
+    App.oeffne(seite.id);
+    await new Promise(r => setTimeout(r, 800));
+    document.querySelector<HTMLElement>('.gk-kn[data-k="b"]')
+      ?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    await new Promise(r => setTimeout(r, 400));
+  }
+};
+
+/* Derselbe Aufbau, ein anderer Zustand: die Vorlagenliste offen. */
+ANSICHTEN['gkvorlagen'] = {
+  titel: 'Gedankenkarte: die sechs fertigen Vorlagen (E628)',
+  bauen: ANSICHTEN['gkformen']!.bauen,
+  dann: async () => {
+    document.querySelector<HTMLElement>('.gk-leiste [data-a="vorlage"]')?.click();
+    await new Promise(r => setTimeout(r, 400));
+  }
+};
+
 /* WELCHE GERAETE EINEN ZEIGER HABEN (E617).
    Bis hierher stand zweimal `g !== 'rechner'` — einmal fuer „nur ein Thema"
    und einmal fuer „mit Beruehrung nachstellen". Solange es genau EIN
