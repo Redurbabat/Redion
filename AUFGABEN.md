@@ -1199,10 +1199,17 @@ Kacheln (Linie · Pfeil · Rechteck · Kreis · Stern).
   Nachbarwähler nach rechts), die Federung `@keyframes dock-feder`, und die
   Abschaltung unter `prefers-reduced-motion` bei `:703–716`.
 
-  **Offen davon sind zwei Dinge:** die **gewöhnliche Seite** — keiner dieser
-  Wähler trifft sie, alle hängen an `.document-studio` — und Redurs Bild 8,
-  das **Farb-Dock mit Namensfähnchen**: die Farbtupfer tragen kein `svg` und
-  fallen deshalb aus jeder dieser Regeln heraus.
+  **ERLEDIGT am 19. September 2026 mit E625.** Die zwei
+  `.blatt-werk`-Familien sind nach `bausteine.css` gewandert und haben den
+  Studio-Vorsatz verloren — damit gilt die Welle auf beiden Oberflächen; aus
+  drei Wählerfamilien wurden zwei, nicht vier. Das **Farb-Dock** ist dazu
+  gebaut: die Tupfer tragen kein `svg`, also wächst der Knopf selbst.
+
+  **Offen bleibt davon allein das Namensfähnchen** (Redurs Bild 8), und der
+  Grund steht als **L190**: am Tupfer sind beide Pseudoelemente vergeben —
+  `::before` ist die Kante gegen den verschwindenden schwarzen Tupfer
+  (E568), `::after` die 44-px-Trefffläche (§37). Der Name selbst ist da, in
+  `title` und `aria-label`.
 
 Was **nicht** dazugehört und trotzdem auffällt: dass Redurs Entwurf die
 Leiste OBEN zeigt und Redion sie im Studio unten hat. Beides ist richtig —

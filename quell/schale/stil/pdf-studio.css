@@ -663,27 +663,23 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
    `(hover:hover) and (pointer:fine)` — am Telefon gibt es kein Überfahren,
    und ein Zeichen, das auf Berührung „hängen" bleibt, wäre dort ein Fehler
    und kein Effekt (7 C 6). */
+/* ══ DIE WELLE STEHT JETZT IN `bausteine.css` (E625) ═══════════════════════
+   Hier standen drei Wählerfamilien: `.document-drawingbar`,
+   `.document-studio .blatt-werk > button` und dieselbe noch einmal für die
+   Tafel. Die letzten beiden sind gewandert und haben dabei ihren
+   Studio-Vorsatz verloren — damit gelten sie auch auf einer gewöhnlichen
+   Seite, wo bis zum 19. September 2026 gar nichts wuchs (W5).
+   Hier bleibt, was es nur hier gibt: die obere Leiste des Studios. */
 @media (hover:hover) and (pointer:fine){
-  .document-drawingbar button svg,
-  .document-studio .blatt-werk > button svg,
-  .document-studio .blatt-werk > .blatt-tafel > button svg{
+  .document-drawingbar button svg{
     transition:transform var(--motion-fast) var(--ease)
   }
-  .document-drawingbar button:hover:not(:disabled) svg,
-  .document-studio .blatt-werk > button:hover:not(:disabled) svg,
-  .document-studio .blatt-werk > .blatt-tafel > button:hover:not(:disabled) svg{ transform:scale(1.3) }
+  .document-drawingbar button:hover:not(:disabled) svg{ transform:scale(1.3) }
   /* Die zwei Nachbarn heben schwächer mit — das ist der Teil, an dem man ein
      Dock erkennt. `:has(+ button:hover)` liest nach LINKS, der Nachbarwähler
-     nach rechts; zusammen sind es beide Seiten.
-     ZWEI FLÄCHEN SEIT E618: die Welle läuft innerhalb der Werkzeuge und
-     innerhalb des Zubehörs — über die Grenze hinweg sind sie keine
-     Geschwister mehr, und das ist richtig so: es sind zwei Reihen. */
+     nach rechts; zusammen sind es beide Seiten. */
   .document-drawingbar button:hover + button svg,
-  .document-drawingbar button:has(+ button:hover) svg,
-  .document-studio .blatt-werk > button:hover + button svg,
-  .document-studio .blatt-werk > button:has(+ button:hover) svg,
-  .document-studio .blatt-werk > .blatt-tafel > button:hover + button svg,
-  .document-studio .blatt-werk > .blatt-tafel > button:has(+ button:hover) svg{ transform:scale(1.13) }
+  .document-drawingbar button:has(+ button:hover) svg{ transform:scale(1.13) }
 }
 /* Der federnde Wechsel auf die neue Auswahl: EINMAL, nicht in Schleife
    (7 C 4). Er läuft, wenn `aria-pressed` auf `true` springt — und seit E575
@@ -703,13 +699,7 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
 @media (prefers-reduced-motion:reduce){
   .document-drawingbar button:hover:not(:disabled) svg,
   .document-drawingbar button:hover + button svg,
-  .document-drawingbar button:has(+ button:hover) svg,
-  .document-studio .blatt-werk > button:hover:not(:disabled) svg,
-  .document-studio .blatt-werk > button:hover + button svg,
-  .document-studio .blatt-werk > button:has(+ button:hover) svg,
-  .document-studio .blatt-werk > .blatt-tafel > button:hover:not(:disabled) svg,
-  .document-studio .blatt-werk > .blatt-tafel > button:hover + button svg,
-  .document-studio .blatt-werk > .blatt-tafel > button:has(+ button:hover) svg{ transform:none }
+  .document-drawingbar button:has(+ button:hover) svg{ transform:none }
   .document-drawingbar button[aria-pressed="true"] svg,
   .document-studio .blatt-werk > button[aria-pressed="true"] svg{ animation:none }
   .document-studio .blatt-werk > .blatt-tafel > button[aria-pressed="true"] svg{ animation:none }

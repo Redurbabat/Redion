@@ -2506,3 +2506,43 @@ test524  105 von 105 grün
 test348   34 von 34 grün   (eine Zahl nachgezogen: 1068 statt 828 + 60)
 test351   34 von 34 grün   (eine Zahl nachgezogen: 5 statt 1)
 ```
+
+---
+
+## §59 · Die Dock-Welle (E625, 19. September 2026)
+
+Gemessen am `transform` der Zeichen, Fenster 1500 × 950, Playwright mit
+`hover: hover` und `pointer: fine`.
+
+### Gewöhnliche Seite
+
+```txt
+                      vorher      nachher
+überfahrener Knopf    none (1)    1,3
+linker Nachbar        none (1)    1,13
+rechter Nachbar       none (1)    1,13
+zwei Knöpfe weiter    none (1)    1
+Farbtupfer            none (1)    1,3   (Nachbar 1,13)
+```
+
+### Mit `prefers-reduced-motion: reduce`
+
+```txt
+alles                 1
+```
+
+### Studio (Gegenprobe gegen eine Verdoppelung)
+
+```txt
+obere Leiste          1,3        unverändert
+Dock                  1,3        unverändert, jetzt aus bausteine.css
+Wählerfamilien        3 → 2
+test524               105 von 105 grün
+```
+
+### Das Fähnchen, das nicht ging
+
+```txt
+auf ::before          top 5px    — erbt `inset:5px` der Kantenregel (E568)
+unter dem Tupfer      opacity 1  — und zu 60 % vom Papier verdeckt
+```

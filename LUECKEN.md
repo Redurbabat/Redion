@@ -8948,3 +8948,42 @@ Zustand gab es seit je (`radierRadius()` ist `eraserSize ?? max(5, Breite ×
 Zahl. Jetzt ist er ein Schalter; gemessen am Radierkreis: r = 28 gewählt,
 r = 7,2 automatisch.
 
+
+---
+
+## L190 · Das Namensfähnchen am Farbtupfer fehlt — 19. September 2026
+
+Redurs Bild 8 zeigt neben dem Farb-Dock ein Fähnchen mit dem Farbnamen. Das
+Dock ist mit E625 gebaut, das Fähnchen nicht — und zwar nicht aus
+Vergesslichkeit, sondern weil am Tupfer **beide Pseudoelemente vergeben
+sind** und keines entbehrlich ist:
+
+```txt
+::before   die 1-px-Kante gegen den im Dunkelmodus verschwindenden
+           schwarzen Tupfer (E568)
+::after    die 44-px-Trefffläche (§37, E406)
+```
+
+Zwei Versuche, beide gemessen:
+
+1. **Auf `::before`** — erbt das `inset:5px` der Kantenregel, die später im
+   Stilblatt steht und gewinnt. Das Fähnchen lag mitten auf dem Tupfer.
+2. **Unter den Tupfer gelegt** — zu sechzig Prozent vom Papier verdeckt,
+   weil die Leiste in mehreren Lagen rollt und damit auch nach unten
+   klemmt. `getComputedStyle` meldete dabei `opacity: 1`; das Bild zeigte
+   die Hälfte (§55.1).
+
+**Was heute schon stimmt:** jeder Tupfer trägt `title` und `aria-label` mit
+seinem Namen — die Kurzinfo des Browsers zeigt ihn, ein Vorleser nennt ihn.
+Was fehlt, ist die Gestalt aus Redurs Bild, nicht die Auskunft.
+
+**Drei Wege, wenn es doch sein soll:**
+
+1. Ein echtes Element statt eines Pseudoelements, beim Überfahren aus
+   JavaScript an die Leiste gehängt. Kostet einen Zuhörer und einen Weg
+   mehr, kann aber überall stehen.
+2. Die Kante aus `::before` in ein `box-shadow` am Knopf verwandeln und
+   `::before` freimachen. Risiko: `background-clip:content-box` macht den
+   Schatten zu einem Ring um den Knopf statt zu einer Kante am Punkt —
+   genau deshalb war es ein Pseudoelement (E568).
+3. So lassen. Der Name ist da, nur nicht als Fähnchen.

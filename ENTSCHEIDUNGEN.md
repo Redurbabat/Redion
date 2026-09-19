@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-602 Entscheidungen, E1 bis E624 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+603 Entscheidungen, E1 bis E625 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -667,6 +667,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E622** — «Unten in der Mitte» klebt am Fenster, nicht am Blattfuss: `position:sticky` statt `absolute`, und dafür ein Zug im Baum — sticky mit `bottom` zieht nach oben, es schiebt nichts nach unten, also muss die Leiste hinter das Papier (L187, Redurs Wahl, `test534 §1b`)
 * **E623** — Die Strichprobe zeigt den Strich: der Balken trug `currentColor` und keine Deckung; jetzt die gewählte Tinte und die Deckung des Stifts — aus EINER Funktion, die auch den echten Strich und das PDF färbt (sie stand viermal). Dazu Name und Millimeter auf einer Kachel, untereinander, weil nebeneinander die Leiste von 128 auf 143 px wuchs (W4, `test535`, `test533`)
 * **E624** — Der Radierer bekommt seine Grösse auch ohne Studio, und den Haken «Automatisch an den Strich anpassen»: den Zustand gab es seit je (`eraserSize` oder das Dreifache der Strichbreite), nur führte kein Weg zurück — das Studio setzte beim Aufbau immer eine Zahl (W4, `test535 §4`, `test524`)
+* **E625** — Der Dock-Effekt gilt auch ohne Studio: die Welle stand in `pdf-studio.css` mit `.document-studio` davor, auf einer gewöhnlichen Seite traf keine ihrer drei Wählerfamilien. Sie ist nach `bausteine.css` gewandert und hat den Vorsatz verloren — aus drei Familien wurden zwei. Dazu das Farb-Dock, das bisher überall fehlte, weil Tupfer kein `svg` tragen. Ohne Namensfähnchen, und der Grund steht als L190 (W5, `test536`)
 
 ---
 
@@ -50883,3 +50884,79 @@ test535 §4              14 von 14 grün      test524   105 von 105 grün
 
 **Gegenprobe (§50):** `setEraserSize(0)` zu einem Nichts gemacht → „der
 Radierer rechnet wirklich anders" fällt, 28 → 28.
+
+---
+
+## E625 — Der Dock-Effekt gilt auch ohne Studio
+
+**19. September 2026, W5.** `AUFGABEN.md:1185` führte W5 — „Vergrössern beim
+Überfahren, mit `prefers-reduced-motion` als Abschaltung" — als offen.
+**Nachgemessen war er zum grössten Teil gebaut**, nur eben nicht überall:
+
+```txt
+pdf-studio.css:666-716
+   .document-drawingbar button svg
+   .document-studio .blatt-werk > button svg
+   .document-studio .blatt-werk > .blatt-tafel > button svg
+```
+
+Drei Wählerfamilien, und alle drei hängen am Studio. Auf einer gewöhnlichen
+Seite traf keine einzige — dort war die Leiste still. Das ist der Grund,
+warum ein „offen" in einer Liste nichts über den Zustand sagt: gebaut war
+es, gesehen hatte es nur, wer im Schreibstudio war.
+
+### Was sich geändert hat
+
+Die zwei `.blatt-werk`-Familien sind nach `bausteine.css` gewandert — dorthin,
+wo `.blatt-werk` zu Hause ist — und haben dabei den Studio-Vorsatz verloren.
+Damit gelten sie auf **beiden** Oberflächen. In `pdf-studio.css` bleibt
+allein `.document-drawingbar`, die obere Leiste, die es nur dort gibt.
+
+**Aus drei Familien wurden zwei, nicht vier.** Eine Kopie für die
+gewöhnliche Seite daneben zu legen wäre der bequeme Weg gewesen und hätte
+§8 gebrochen: zwei Regelsätze für dieselbe Bewegung laufen auseinander.
+
+### Das Farb-Dock (Redurs Bild 8)
+
+Die Farbtupfer tragen **kein `svg`** — sie sind ein Knopf mit einem
+Hintergrund. Gezählt: damit fielen sie auch im Studio aus jeder Regel oben
+heraus, seit es den Effekt gibt. Jetzt wächst der Knopf selbst, mit
+derselben Welle zu den Nachbarn.
+
+### Und was NICHT gebaut ist: das Namensfähnchen
+
+Redurs Bild zeigt neben dem Dock ein Fähnchen mit dem Farbnamen. Es ist
+nicht gebaut, und der Grund ist gemessen:
+
+**Am Tupfer sind beide Pseudoelemente vergeben.**
+
+```txt
+::before   die 1-px-Kante, damit ein schwarzer Tupfer im Dunkelmodus
+           nicht verschwindet (E568)
+::after    die 44-px-Trefffläche (§37, E406)
+```
+
+Der Versuch, das Fähnchen auf `::before` zu legen, erbte das `inset:5px` der
+Kantenregel — sie steht später im Stilblatt und gewinnt. Das Fähnchen lag
+**mitten auf dem Tupfer** statt darüber. Unter den Tupfer gelegt war es zu
+sechzig Prozent vom Papier verdeckt, weil die Leiste in mehreren Lagen rollt
+und damit auch nach unten klemmt — und `getComputedStyle` meldete dabei brav
+`opacity: 1`. Zum wievielten Mal §55.1: die Rechnung sagte „da", das Auge
+sagte „halb".
+
+Eines der beiden zu opfern hiesse, **Kontrast oder Trefffläche gegen eine
+Beschriftung zu tauschen, die es schon gibt**: jeder Tupfer trägt `title`
+UND `aria-label` mit seinem Namen. Das steht als **L190**, damit die Frage
+nicht als vergessen durchgeht.
+
+### Gemessen
+
+```txt
+gewöhnliche Seite, vorher    transform: none bei jedem Knopf
+gewöhnliche Seite, nachher   überfahren 1,3 · beide Nachbarn 1,13 · zwei weiter 1
+Farbtupfer                   überfahren 1,3 · Nachbar 1,13
+prefers-reduced-motion       alles 1
+Studio                       unverändert (test536 §6, test524 105 von 105)
+Wählerfamilien               3 → 2
+test536                      18 von 18 grün (neu)
+```
