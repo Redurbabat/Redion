@@ -1189,3 +1189,23 @@ Was **nicht** dazugehört und trotzdem auffällt: dass Redurs Entwurf die
 Leiste OBEN zeigt und Redion sie im Studio unten hat. Beides ist richtig —
 der Platz ist seit E512 wählbar (der Knopf „Platz"), und Redur hat gerade
 gesagt, dass unten bleiben soll.
+
+---
+
+### Wo die Leiste steht — ERLEDIGT am 19. September (E619/E620/E621)
+
+Redur hat am 19. September ein Papier hochgeladen, das die Leiste nach dem
+GoodNotes-Modell neu bauen wollte. Nachgemessen war das meiste gebaut; was
+fehlte, steht jetzt auch:
+
+- **Am Griff ziehen** statt nur tippen, gefangen am nächsten Rand (64 px).
+- **«frei»** als fünfter Platz im selben Katalog, der Punkt als Prozent
+  gemerkt.
+- **`role="toolbar"`** mit Pfeiltasten und einem Tabstopp (§38).
+
+Und zwei Fehler, die dabei herausfielen und behoben sind: «unten in der
+Mitte» war auf der gewöhnlichen Seite **zwei Pixel breit** (L186), und im
+Studio stand der Platz-Knopf da, ohne wirken zu können (L185).
+
+**Offen daraus:** L187 — «unten» steht am Fuss des BLATTES, nicht des
+Fensters. Drei Wege stehen dort, und die Wahl ist Redurs.

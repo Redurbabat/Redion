@@ -4451,13 +4451,77 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-reihe[data-lage="links"] .wort,
 .blatt-reihe[data-lage="rechts"] .wort{display:none}
 
-/* UNTEN IN DER MITTE — die schwebende Leiste aus GoodNotes. */
+/* UNTEN IN DER MITTE — die schwebende Leiste aus GoodNotes.
+
+   DIE BREITE MUSS DASTEHEN (E619). Hier fehlte `width`, und damit galt
+   „schrumpfe auf den Inhalt". Das geht mit einer umbrechenden Flexbox
+   nicht auf: `.blatt-werk > .blatt-zeilenbruch` traegt `flex:1 0 100%`
+   (E359), und dieses 100 % ist in einem Kasten ohne feste Breite
+   unbestimmt. GEMESSEN am 19. September 2026, Fenster 1440 x 960:
+   die Leiste stand als ZWEI PIXEL breiter, 1409 px hoher Streifen quer
+   ueber dem Blatt (`bilder/messung-unten-seite.png`). Kein Bruch, kein
+   Fehler in der Konsole — nur ein Strich.
+
+   `width:max-content` gibt ihr die Breite ihres Inhalts, und der Inhalt
+   steht in EINER Zeile, die rollt — genau wie der Dock im Studio
+   (`pdf-studio.css`). Eine schwebende Leiste, die drei Zeilen hoch wird,
+   waere kein Dock mehr, sondern eine Wand. */
 .blatt-reihe[data-lage="unten"]{
   position:absolute; left:50%; transform:translateX(-50%);
-  bottom:10px; top:auto; z-index:6; max-width:calc(100% - 24px);
+  bottom:10px; top:auto; z-index:6;
+  container-type:normal; width:max-content; max-width:calc(100% - 24px);
   border-radius:12px; border:1px solid var(--line);
   box-shadow:var(--shadow-4); background:var(--bg-card)
 }
+.blatt-reihe[data-lage="unten"] .blatt-werk{
+  /* `container-type:inline-size` (E359) HAELT DEN INHALT ZURUECK. Es ist
+     `contain:inline-size` mit anderem Namen: die Breite wird OHNE den
+     Inhalt bestimmt. In einer Zeile mit fester Breite faellt das nicht
+     auf — in einem Kasten, der auf seinen Inhalt schrumpft, bleiben null
+     Pixel uebrig. Genau daher kamen die zwei Pixel. `pdf-studio.css` hat
+     denselben Schalter fuer den Dock schon einmal zuruecknehmen muessen;
+     hier steht der Grund dazu. Der Preis: keine Behaelterabfragen in
+     dieser Lage, also keine Woerter — wie im Dock. */
+  container-type:normal;
+  flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden;
+  scrollbar-width:none
+}
+.blatt-reihe[data-lage="unten"] .blatt-werk::-webkit-scrollbar{display:none}
+.blatt-reihe[data-lage="unten"] .blatt-werk > .blatt-zeilenbruch{display:none}
+
+/* FREI STEHEND (E620) — dorthin fuehrt nur das Ziehen, nicht der Rundlauf.
+   Die zwei Zahlen kommen als Prozent aus `meta`; Prozent und nicht Pixel,
+   weil ein kleineres Fenster die Leiste sonst hinter den Rand schoebe.
+   `translate(-50%,-50%)` macht den gemerkten Punkt zur MITTE der Leiste —
+   so bleibt sie beim Wachsen um ihren Griff herum stehen. */
+.blatt-reihe[data-lage="frei"]{
+  position:absolute; z-index:7;
+  left:var(--leiste-x, 50%); top:var(--leiste-y, 50%); bottom:auto;
+  transform:translate(-50%, -50%);
+  container-type:normal; width:max-content; max-width:calc(100% - 24px);
+  border-radius:12px; border:1px solid var(--line);
+  box-shadow:var(--shadow-4); background:var(--bg-card)
+}
+.blatt-reihe[data-lage="frei"] .blatt-werk{
+  /* `container-type:inline-size` (E359) HAELT DEN INHALT ZURUECK. Es ist
+     `contain:inline-size` mit anderem Namen: die Breite wird OHNE den
+     Inhalt bestimmt. In einer Zeile mit fester Breite faellt das nicht
+     auf — in einem Kasten, der auf seinen Inhalt schrumpft, bleiben null
+     Pixel uebrig. Genau daher kamen die zwei Pixel. `pdf-studio.css` hat
+     denselben Schalter fuer den Dock schon einmal zuruecknehmen muessen;
+     hier steht der Grund dazu. Der Preis: keine Behaelterabfragen in
+     dieser Lage, also keine Woerter — wie im Dock. */
+  container-type:normal;
+  flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden;
+  scrollbar-width:none
+}
+.blatt-reihe[data-lage="frei"] .blatt-werk::-webkit-scrollbar{display:none}
+.blatt-reihe[data-lage="frei"] .blatt-werk > .blatt-zeilenbruch{display:none}
+/* WÄHREND DES ZIEHENS folgt sie dem Finger ohne Übergang und ohne
+   Zeigerereignisse — sonst faengt sie ihren eigenen Zug ab. */
+.blatt-reihe[data-zug="an"]{transition:none; will-change:left, top}
+.blatt-reihe[data-zug="an"] .blatt-werk{pointer-events:none}
+.blatt-reihe[data-zug="an"] [data-act="lage"]{pointer-events:auto}
 
 .blatt-reihe{position:relative}
 .blatt-reihe::before{

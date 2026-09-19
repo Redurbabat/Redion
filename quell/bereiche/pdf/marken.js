@@ -324,13 +324,29 @@ const Marken = (() => {
        Vier Plätze, EIN Katalog (§8) — Kennung, Zeichen, Name. Die Reihenfolge
        ist die des Rundlaufs: oben (wie bisher) → links → rechts → unten in
        der Mitte, wie die schwebende Leiste in GoodNotes. Gemerkt wird der
-       Platz in `meta`, also überlebt er das Schliessen. */
+       Platz in `meta`, also überlebt er das Schliessen.
+  
+       FÜNFTER EINTRAG SEIT E620: `frei`. Er steht NICHT im Rundlauf — dorthin
+       führt nur das Ziehen am Griff, und ein Tipp muss weiter berechenbar
+       bleiben. Trotzdem gehört er in DIESEN Katalog und nicht in eine zweite
+       Liste daneben (§8): Name, Zeichen und Symbol braucht er genauso, und
+       zwei Kataloge für dieselbe Sache laufen auseinander. */
     const LAGEN = [
-        { id: 'oben', zeichen: '⤒', sym: 'dockTop', name: 'oben' },
-        { id: 'links', zeichen: '⇤', sym: 'dockLeft', name: 'links' },
-        { id: 'rechts', zeichen: '⇥', sym: 'dockRight', name: 'rechts' },
-        { id: 'unten', zeichen: '⤓', sym: 'dockBottom', name: 'unten in der Mitte' }
+        { id: 'oben', zeichen: '⤒', sym: 'dockTop', name: 'oben', nurZiehen: false },
+        { id: 'links', zeichen: '⇤', sym: 'dockLeft', name: 'links', nurZiehen: false },
+        { id: 'rechts', zeichen: '⇥', sym: 'dockRight', name: 'rechts', nurZiehen: false },
+        { id: 'unten', zeichen: '⤓', sym: 'dockBottom', name: 'unten in der Mitte', nurZiehen: false },
+        { id: 'frei', zeichen: '✥', sym: 'dockFree', name: 'frei stehend', nurZiehen: true }
     ];
+    /** Der nächste Platz IM RUNDLAUF — `frei` wird dabei übersprungen. */
+    const naechsteLage = (von) => {
+        for (let s = 1; s <= LAGEN.length; s++) {
+            const l = LAGEN[(von + s + LAGEN.length) % LAGEN.length];
+            if (!l.nurZiehen)
+                return l;
+        }
+        return LAGEN[0];
+    };
     /* ══ DIE GRUPPEN, EINMAL AUFGESCHRIEBEN (E570) ═══════════════════════════
        Welche Gruppe zu welchem Werkzeug erscheint, steht seit E356 im
        Stilblatt — das bleibt dort, denn es ist eine Sichtbarkeitsregel. Was
@@ -521,9 +537,22 @@ const Marken = (() => {
         tools.style.setProperty('--platz', String(i >= 0 ? (i + 1) * 100 : 0));
     };
     const M_LAGE = 'zeichnen:leistenlage';
+    /* ZWEI ZAHLEN ALS TEXT, durch ein Leerzeichen getrennt: „43.10% 62.80%".
+       Prozent, weil ein kleineres Fenster die Leiste sonst hinter den Rand
+       schöbe; Text, weil `meta` Text sicher übersteht (§9). */
+    const M_FREI = 'zeichnen:leistenfrei';
     const lageJetzt = () => {
         const id = typeof Store !== 'undefined' ? String(Store.getMeta(M_LAGE, 'oben')) : 'oben';
         return LAGEN.some(l => l.id === id) ? id : 'oben';
+    };
+    /** Der gemerkte freie Punkt, oder die Mitte, wenn nichts dasteht. */
+    const freiJetzt = () => {
+        const roh = typeof Store !== 'undefined' ? String(Store.getMeta(M_FREI, '')) : '';
+        const teile = roh.trim().split(/\s+/);
+        const gut = (w) => !!w && /^-?\d+(\.\d+)?%$/.test(w);
+        return gut(teile[0]) && gut(teile[1])
+            ? { x: teile[0], y: teile[1] }
+            : { x: '50%', y: '50%' };
     };
     const M_LASER = 'zeichnen:laser';
     const laserArt = () => (typeof Store !== 'undefined' ? String(Store.getMeta(M_LASER, 'punkt')) : 'punkt');
@@ -5180,6 +5209,14 @@ const Marken = (() => {
         /* Der gemerkte Platz gilt sofort, nicht erst nach dem ersten Klick —
            derselbe Fund wie bei der Adernreihe in E509 (§55). */
         row.dataset.lage = lageJetzt();
+        /* Und wenn sie frei steht, auch WO (E620). Ohne diese zwei Zeilen
+           stünde sie nach dem Neuladen wieder in der Mitte — der gemerkte
+           Platz wäre dann nur ein halber. */
+        if (row.dataset.lage === 'frei') {
+            const punkt = freiJetzt();
+            row.style.setProperty('--leiste-x', punkt.x);
+            row.style.setProperty('--leiste-y', punkt.y);
+        }
         const tools = document.createElement('div');
         tools.className = 'blatt-werk';
         tools.dataset.tool = 'schreiben';
@@ -5758,6 +5795,193 @@ const Marken = (() => {
             }
         });
         controls.ordnenUmschalten = () => ordnenSetzen(!ordnenAn);
+        /* ══ DIE LEISTE SAGT, DASS SIE EINE LEISTE IST (E621) ═══════════════════
+           `role="toolbar"` kam in `src/` bis zum 19. September 2026 NULL mal vor
+           — bei elf anderen Rollen und 24 `aria-label`. Wer die Seite vorlesen
+           lässt, hört heute dreissig einzelne Knöpfe hintereinander, ohne dass
+           gesagt wird, dass sie zusammengehören.
+    
+           Eine Rolle allein wäre aber eine Behauptung (§55.2): `toolbar`
+           verspricht dem Vorleser, dass EIN Tabsprung hineinführt und die
+           Pfeiltasten darin weitergehen. Also steht beides hier, oder keines. */
+        tools.setAttribute('role', 'toolbar');
+        tools.setAttribute('aria-label', 'Zeichenwerkzeuge');
+        const sichtbareKnoepfe = () => {
+            const alle = [...tools.querySelectorAll('button')];
+            const sichtbar = alle.filter(k => k.getClientRects().length > 0 && !k.hasAttribute('disabled'));
+            /* VOR DEM EINHÄNGEN hat noch nichts einen Kasten. Dann gilt die ganze
+               Liste — sonst bliebe der erste Durchlauf wirkungslos und der frisch
+               geladene Bildschirm hätte dreissig Tabstationen. */
+            return sichtbar.length ? sichtbar : alle;
+        };
+        /** Genau ein Knopf im Tabbaum — der zuletzt berührte, sonst der erste. */
+        const fokusFuehrung = (bevorzugt) => {
+            const liste = sichtbareKnoepfe();
+            if (!liste.length)
+                return;
+            const jetzt = liste.find(k => k.tabIndex === 0);
+            const eins = (bevorzugt && liste.includes(bevorzugt)) ? bevorzugt : (jetzt ?? liste[0]);
+            tools.querySelectorAll('button').forEach(k => { k.tabIndex = -1; });
+            eins.tabIndex = 0;
+        };
+        /* Einmal beim Bauen, und danach bei jedem Klick — ein Werkzeugwechsel
+           blendet halbe Gruppen um, und der eine Tabstopp darf nicht in einem
+           Knopf landen, den gerade niemand sieht. */
+        fokusFuehrung();
+        tools.addEventListener('click', event => {
+            const k = event.target?.closest('button');
+            fokusFuehrung(k && tools.contains(k) ? k : undefined);
+        });
+        tools.addEventListener('focusin', event => {
+            const k = event.target?.closest('button');
+            if (k && tools.contains(k))
+                fokusFuehrung(k);
+        });
+        tools.addEventListener('keydown', event => {
+            /* Im Einrichten-Modus gehören die Pfeiltasten dem Umsortieren (E571). */
+            if (ordnenAn)
+                return;
+            const schritt = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1
+                : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 0;
+            if (!schritt && event.key !== 'Home' && event.key !== 'End')
+                return;
+            const liste = sichtbareKnoepfe();
+            if (liste.length < 2)
+                return;
+            const hier = event.target?.closest('button');
+            const i = hier ? liste.indexOf(hier) : -1;
+            const ziel = event.key === 'Home' ? liste[0]
+                : event.key === 'End' ? liste[liste.length - 1]
+                    : liste[((i < 0 ? 0 : i) + schritt + liste.length) % liste.length];
+            event.preventDefault();
+            fokusFuehrung(ziel);
+            ziel.focus();
+        });
+        /* ══ DEN PLATZ ÜBERALL SETZEN — EIN WEG (E620) ══════════════════════════
+           Der Rundlauf tat das bisher inmitten seines Klickzweigs. Seit es einen
+           zweiten Weg zum selben Ziel gibt (das Ziehen), wäre das zweimal
+           dasselbe an zwei Stellen — und zwei Wege laufen auseinander (§8). */
+        const lageAnwenden = (id, merken = true) => {
+            const eintrag = LAGEN.find(l => l.id === id) ?? LAGEN[0];
+            if (merken && typeof Store !== 'undefined') {
+                try {
+                    Store.setMeta(M_LAGE, eintrag.id);
+                }
+                catch { /* nur diese Sitzung */ }
+            }
+            const i = LAGEN.findIndex(l => l.id === eintrag.id);
+            const naechst = naechsteLage(i);
+            document.querySelectorAll('.blatt-reihe').forEach(r => { r.dataset.lage = eintrag.id; });
+            document.querySelectorAll('[data-act="lage"]').forEach(k => {
+                k.dataset.lage = eintrag.id;
+                k.title = 'Leiste verschieben — jetzt ' + eintrag.name + ', als Nächstes ' + naechst.name
+                    + ' (ziehen geht auch)';
+                k.setAttribute('aria-label', 'Leiste verschieben, jetzt ' + eintrag.name);
+                const z = k.querySelector('.zeichen');
+                if (z) {
+                    z.dataset.sym = eintrag.sym;
+                    z.textContent = '';
+                }
+                try {
+                    Register.symbole.fuelle(k);
+                }
+                catch { /* dann bleibt es leer */ }
+            });
+        };
+        /* ══ AM GRIFF ZIEHEN (E620) ═════════════════════════════════════════════
+           Das Papier vom 19. September wollte eine Palette, die man greift und
+           hinschiebt. Gebaut war nur der Rundlauf: tippen, und sie springt zum
+           nächsten Platz. Beides zusammen geht, wenn der Griff zwei Wege kennt —
+           und der Griff ist der Knopf, der ohnehin schon „Platz" heisst.
+    
+           GEZOGEN WIRD ERST NACH SECHS PIXELN. Darunter ist es ein Tipp, und der
+           Tipp bleibt der Rundlauf (E512); am Telefon gibt es gar nichts anderes,
+           denn eine Leiste, die beim Zeichnen mitwandert, ist dort ein Schaden.
+    
+           GEFANGEN WIRD AM RAND, und das Fangband ist 64 px breit — dieselbe
+           Zahl, die die Spalte links und rechts misst (`bausteine.css`). Eine
+           geratene Zahl wäre hier besonders teuer: ein zu schmales Band trifft
+           man nie, ein zu breites lässt nichts frei stehen. */
+        const ZUG_AB = 6;
+        const FANG = 64;
+        tools.addEventListener('pointerdown', event => {
+            if (ordnenAn)
+                return;
+            const griff = event.target?.closest('[data-act="lage"]');
+            if (!griff || !tools.contains(griff))
+                return;
+            if (window.matchMedia && window.matchMedia('(max-width:760px)').matches)
+                return;
+            const huelle = row.parentElement;
+            if (!huelle)
+                return;
+            const startX = event.clientX, startY = event.clientY;
+            let zieht = false;
+            const bewegen = (e) => {
+                if (!zieht && Math.abs(e.clientX - startX) + Math.abs(e.clientY - startY) < ZUG_AB)
+                    return;
+                if (!zieht) {
+                    zieht = true;
+                    row.dataset.zug = 'an';
+                    griff.setPointerCapture?.(e.pointerId);
+                }
+                const k = huelle.getBoundingClientRect();
+                if (!k.width || !k.height)
+                    return;
+                /* GANZ IM BILD BLEIBEN. Der gemerkte Punkt ist die MITTE der Leiste
+                   (`translate(-50%,-50%)`), also darf er nicht näher an den Rand als
+                   ihre halbe Breite — sonst hängt eine Hälfte draussen, und beim
+                   Bild vom 19. September tat sie das auch: rechts abgeschnitten. */
+                const halbX = ((row.offsetWidth / 2) / k.width) * 100;
+                const halbY = ((row.offsetHeight / 2) / k.height) * 100;
+                const klemm = (wert, halb) => halb * 2 >= 100 ? 50 : Math.min(100 - halb, Math.max(halb, wert));
+                const x = klemm(((e.clientX - k.x) / k.width) * 100, halbX);
+                const y = klemm(((e.clientY - k.y) / k.height) * 100, halbY);
+                row.dataset.lage = 'frei';
+                row.style.setProperty('--leiste-x', x.toFixed(2) + '%');
+                row.style.setProperty('--leiste-y', y.toFixed(2) + '%');
+            };
+            const beenden = (e) => {
+                window.removeEventListener('pointermove', bewegen);
+                window.removeEventListener('pointerup', beenden);
+                window.removeEventListener('pointercancel', beenden);
+                if (!zieht)
+                    return;
+                delete row.dataset.zug;
+                /* DER KLICK NACH DEM ZIEHEN GEHÖRT NICHT DEM RUNDLAUF. Ohne das
+                   spränge die Leiste im selben Atemzug noch einen Platz weiter. */
+                const schlucken = (c) => { c.preventDefault(); c.stopPropagation(); };
+                window.addEventListener('click', schlucken, true);
+                setTimeout(() => window.removeEventListener('click', schlucken, true), 0);
+                const k = huelle.getBoundingClientRect();
+                const nah = {
+                    links: e.clientX - k.x, rechts: k.right - e.clientX,
+                    oben: e.clientY - k.y, unten: k.bottom - e.clientY
+                };
+                const rand = Object.keys(nah)
+                    .sort((a, b) => nah[a] - nah[b])[0];
+                if (nah[rand] <= FANG) {
+                    row.style.removeProperty('--leiste-x');
+                    row.style.removeProperty('--leiste-y');
+                    lageAnwenden(rand);
+                    return;
+                }
+                /* Frei stehen geblieben: die zwei Zahlen als Prozent merken, nicht
+                   als Pixel — ein kleineres Fenster schöbe sie sonst hinter den
+                   Rand. Als Text, weil `meta` Text sicher übersteht (§9). */
+                lageAnwenden('frei');
+                if (typeof Store !== 'undefined') {
+                    try {
+                        Store.setMeta(M_FREI, row.style.getPropertyValue('--leiste-x').trim()
+                            + ' ' + row.style.getPropertyValue('--leiste-y').trim());
+                    }
+                    catch { /* nur diese Sitzung */ }
+                }
+            };
+            window.addEventListener('pointermove', bewegen);
+            window.addEventListener('pointerup', beenden);
+            window.addEventListener('pointercancel', beenden);
+        });
         /* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
            Bei 390 px ist die Leiste 310 px breit und ihr Inhalt 1059 — von 21
            Knöpfen stehen 15 draussen, alle rechts. Gerollt werden kann sie
@@ -6457,46 +6681,10 @@ const Marken = (() => {
                 if (target.dataset.act === 'lage') {
                     /* WEITER ZUM NÄCHSTEN PLATZ. Ein Rundlauf statt eines Menüs:
                        die Leiste zeigt ihr Ergebnis unmittelbar, indem sie
-                       hinspringt — eine Wahl, die man SIEHT, braucht keine Liste. */
-                    const i = LAGEN.findIndex(l => l.id === lageJetzt());
-                    const naechst = LAGEN[(i + 1) % LAGEN.length];
-                    const dann = LAGEN[(i + 2) % LAGEN.length];
-                    if (typeof Store !== 'undefined') {
-                        try {
-                            Store.setMeta(M_LAGE, naechst.id);
-                        }
-                        catch { /* nur diese Sitzung */ }
-                    }
-                    const reihe = tools.closest('.blatt-reihe');
-                    if (reihe)
-                        reihe.dataset.lage = naechst.id;
-                    target.dataset.lage = naechst.id;
-                    target.title = 'Leiste verschieben — jetzt ' + naechst.name + ', als Nächstes ' + dann.name;
-                    target.setAttribute('aria-label', 'Leiste verschieben, jetzt ' + naechst.name);
-                    const z = target.querySelector('.zeichen');
-                    if (z) {
-                        z.dataset.sym = naechst.sym;
-                        z.textContent = '';
-                    }
-                    try {
-                        Register.symbole.fuelle(target);
-                    }
-                    catch { /* dann bleibt es leer */ }
-                    /* Und alle anderen Leisten derselben Seite ziehen mit — es ist
-                       EIN Platz, nicht einer je Blatt. */
-                    document.querySelectorAll('.blatt-reihe').forEach(r => { r.dataset.lage = naechst.id; });
-                    document.querySelectorAll('[data-act="lage"]').forEach(k => {
-                        k.dataset.lage = naechst.id;
-                        const zz = k.querySelector('.zeichen');
-                        if (zz) {
-                            zz.dataset.sym = naechst.sym;
-                            zz.textContent = '';
-                        }
-                        try {
-                            Register.symbole.fuelle(k);
-                        }
-                        catch { /* dann bleibt es leer */ }
-                    });
+                       hinspringt — eine Wahl, die man SIEHT, braucht keine Liste.
+                       Seit E620 macht das Setzen `lageAnwenden`, denn das Ziehen
+                       braucht dasselbe und zwei Wege liefen auseinander (§8). */
+                    lageAnwenden(naechsteLage(LAGEN.findIndex(l => l.id === lageJetzt())).id);
                     return;
                 }
                 if (target.dataset.act === 'laserart') {

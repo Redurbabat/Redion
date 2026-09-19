@@ -5586,3 +5586,55 @@ Dateien abweichen lässt. Dazu `test31`, `test204`, `test351` grün,
 kostet 8,7 KB in der Startnutzlast, und `test388` misst jetzt 2389 KB gegen
 eine Decke von 2300. Die Decke war schon vorher gerissen — 2379 vor diesem
 Bogen —, aber zehn Kilobyte davon sind meine. Das ist L146.
+
+---
+
+## Wo die Leiste steht — und dass sie dort auch wirklich steht (19. September 2026)
+
+Redur hat ein Papier hochgeladen (*Executive Summary, 19.09.2026*) und kein
+Wort dazu geschrieben. Es wollte Redions Zeichenleiste nach dem
+GoodNotes-Modell neu bauen.
+
+**Nachgemessen statt geglaubt** (§45, E21). Von acht Wünschen waren sieben
+gebaut — das Andocken (E512), der gemerkte Platz, die schwebende Leiste, die
+Verlaufskapsel (E572), das Rollen am schmalen Schirm, die offenen Stifte, die
+beschrifteten Strichstärken von vorgestern (E616/E618) und das Ausweichen vor
+der Bildschirmtastatur (E588). Vier Behauptungen seiner Vergleichstabelle
+über „Redion (aktuell)" stimmten nicht mehr, und seine Zahl „ab < 768 px"
+liegt acht Pixel neben Redions Umbruch.
+
+**Was wirklich fehlte:** die Leiste als Ganzes ziehen, eine freie Position,
+und `role="toolbar"` (null Treffer in `src/`).
+
+**Was das Messen zusätzlich fand — und das war der teurere Teil:**
+
+```txt
+gewöhnliche Seite, «unten in der Mitte»    2 × 1409 px    ein Streifen
+Studio, «links» oder «rechts»              74 × 749 px    mitten auf dem Papier
+```
+
+Der erste Fehler kam von `container-type:inline-size` (E359): das ist
+`contain:inline-size` mit anderem Namen, und in einem Kasten, der auf seinen
+Inhalt schrumpfen soll, bleiben dann null Pixel. Der zweite davon, dass
+`pdf-studio.css` die Leiste ohne `[data-lage]` im Wähler festsetzt, die
+Spaltenform aus `bausteine.css` aber trotzdem greift — der Platz-Knopf
+versprach dort etwas, das er nicht konnte.
+
+**Gebaut:** E619 (im Studio bleibt der Dock, der Knopf ist dort weg),
+E620 (am Griff ziehen, «frei» als fünfter Eintrag im selben Katalog, die
+zwei Pixel behoben), E621 (die Rolle mit Pfeiltasten und einem Tabstopp).
+
+**Nicht gebaut, mit Grund in E619:** `palette.tsx` und der Komponentenbaum
+(§6 [hart], E80 hat React widerrufen) und die fünf festen Hex-Farben (§39 —
+`#905CFF` wäre ein drittes Violett neben `--accent` hell und dunkel, die 43
+bzw. 39 davon entfernt liegen).
+
+**Geprüft.** `test534` neu, 44 Zusagen, **15 davon rot gesehen**, bevor sie
+grün waren. Dazu `test533`, `test524`, `test351`, `test393`, `test481`,
+`test105`, `test109`, `test87` grün, `npm run typecheck` sauber, Einzeldatei
+und Dienststand (v1164) nachgezogen, sechs Bilder angesehen — und eines davon
+hat einen Fehler gezeigt, den kein Lauf hatte: die freie Leiste hing rechts
+aus dem Blatt.
+
+**Offen daraus:** L187 — «unten» steht am Fuss des Blattes, nicht des
+Fensters. Drei Wege, Redurs Wahl.

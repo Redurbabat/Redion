@@ -860,7 +860,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 475 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 476 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -902,6 +902,10 @@ eine Zahl je Zustand, damit die Leiste nicht wieder zuwächst.*
 (E614). Gezählt am 16. September, im selben Bogen: `ls pruefungen/lauf/test*.mts
 | wc -l` sagt 475.*
 
+*Und 476: `test534` — wo die Leiste steht, und dass sie dort auch wirklich
+steht (E619/E620/E621). Gezählt am 19. September, im selben Bogen: der Befehl
+sagt 476.*
+
 ### Die Befehle
 
 ```txt
@@ -910,7 +914,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 475 Läufe
+npm run pruefen                      alle 476 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -952,7 +956,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 475 Läufen sind diese fünf die, die man beim Namen kennt:
+Von 476 Läufen sind diese fünf die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

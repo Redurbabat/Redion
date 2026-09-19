@@ -2374,3 +2374,71 @@ Dienststand         v1157 → v1160
 `display:contents` → `test533` 50/54.
 
 **Nicht gemessen:** die Gesamtsuite.
+
+---
+
+## §57 · Wo die Leiste wirklich stand (E619/E620, 19. September 2026)
+
+Gemessen an der laufenden App mit Playwright, Fenster 1440 × 960,
+`deviceScaleFactor: 1`. `data-lage` gesetzt, danach
+`getBoundingClientRect()` der `.blatt-reihe` abgelesen — die Werte sind
+gerundete Pixel, nicht geschätzt.
+
+```txt
+Befehl   node /tmp/.../messe-lage.mts   (Wegwerfskript, siehe test534 §1/§2)
+```
+
+### Gewöhnliche Seite, vorher
+
+```txt
+oben     x=244   y=335   1136 × 93      richtig
+links    x=250   y=369     64 × 749     richtig
+rechts   x=1310  y=369     64 × 749     richtig
+unten    x=811   y=522      2 × 1409    ← zwei Pixel breit
+```
+
+### Gewöhnliche Seite, nachher
+
+```txt
+oben     x=244   y=335   1136 × 93      unverändert
+links    x=250   y=335     64 × 749     unverändert
+rechts   x=1310  y=335     64 × 749     unverändert
+unten    x=256   y=1885  1112 × 46      eine Leiste
+frei     gezogen, geklemmt auf die halbe Leistenbreite vom Rand
+```
+
+### Studio, vorher
+
+```txt
+oben     x=198   y=884   1044 × 62      der Dock
+links    x=683   y=197     74 × 749     mitten auf dem Papier (x=225 … 1205)
+rechts   x=683   y=197     74 × 749     dasselbe
+unten    x=198   y=884   1044 × 62      der Dock
+```
+
+### Studio, nachher
+
+```txt
+alle vier gemerkten Plätze   x=198  y=884  1044 × 62  —  der Dock, unverformt
+Platz-Knopf im Studio        0 sichtbar (vorher 1)
+```
+
+### Der Vorlesebaum
+
+```txt
+role="toolbar" in src/      vorher 0   nachher 1
+   (bei 11 anderen Rollen: status 11, switch 8, tab 6, img 5, group 5, dialog 5 …)
+Tabstationen der Leiste     vorher 35  nachher 1      frisch geladen, ohne Klick
+```
+
+### Die Farben des Papiers gegen Redions Marken
+
+Gerechnet mit `python3`, euklidisch im RGB:
+
+```txt
+#905CFF (Papier)  gegen  --accent hell  #7c3aed    Abstand 43,4
+#905CFF (Papier)  gegen  --accent dunkel #6d4aff   Abstand 39,4
+```
+
+Beide sind Violett, beide liegen nah — und genau deshalb wäre der Hex-Wert
+des Papiers ein **drittes** Violett neben zwei vorhandenen gewesen (§39).

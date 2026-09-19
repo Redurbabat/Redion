@@ -238,6 +238,35 @@ body[data-dokument="an"] .document-studio .blatt-papier{border-radius:0;box-shad
    und die Bottom Sheets rechnen seit je damit. Das Studio war der eine Ort,
    der es nicht tat. Ohne Tastatur ist sie 0 und alles bleibt, wie es war. */
 body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe{position:fixed;top:auto;bottom:calc(var(--visual-bottom, 0px) + max(14px,env(safe-area-inset-bottom)));left:50%;transform:translateX(-50%);z-index:80;width:max-content;max-width:calc(100vw - 32px);background:transparent;border:0;box-shadow:none}
+/* ══ IM STUDIO BLEIBT DER DOCK (E619) ══════════════════════════════════════
+   Redur, 14. September: „Die untere Dock sollte bleiben." Die Regel darüber
+   setzt die Leiste deshalb OHNE `[data-lage]` im Wähler fest ans untere
+   Ende — nur: die Spaltenform aus `bausteine.css` greift trotzdem, denn die
+   steht in `flex-direction` und `width`, nicht in `left`.
+
+   GEMESSEN am 19. September 2026, Fenster 1440 x 960, `data-lage="links"`:
+
+     Leiste   x=683  y=197   74 x 749    Papier   x=225 ... 1205
+
+   Also eine 74 px schmale Spalte MITTEN AUF DEM PAPIER — der Platz-Knopf
+   kündigte im Titel „jetzt links" an und lieferte das. Ein Knopf, der lügt,
+   ist schlimmer als ein fehlender (§33).
+
+   Zwei Wege standen offen: den Platz im Studio wirken lassen, oder ihn dort
+   weglassen. Der erste hätte den Vorgabewert `oben` in den Studio-Dock
+   hinein verschoben — also genau das geändert, was bleiben sollte. Deshalb
+   der zweite: der Dock steht, wo er steht, der Knopf ist dort nicht da, und
+   ein gemerkter Platz von der gewöhnlichen Seite verformt ihn nicht mehr.
+   Auf der Seite selbst bleibt der Platz unverändert wählbar (E512). */
+body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe{flex-direction:row;width:max-content;max-height:none;border:0;border-radius:0;box-shadow:none;background:transparent}
+body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe .blatt-werk{flex-direction:row;max-height:none;overflow-y:hidden}
+/* NUR DIE SPALTE ZURÜCKNEHMEN, nicht jedes Wort: `bausteine.css` blendet
+   die Namen in der Spalte aus (64 px tragen Zeichen, keine Wörter). Ein
+   nacktes `.wort{display:revert}` hätte dagegen AUCH die Behälterabfragen
+   überstimmt und im Dock plötzlich sechs Stiftnamen aufgemacht — gesehen
+   am Bild, nicht am Code (§55). */
+body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe:is([data-lage="links"],[data-lage="rechts"]) .wort{display:revert}
+body[data-dokument="an"] .document-stage [data-act="lage"]{display:none}
 body[data-dokument="an"] .document-studio .blatt-werk{display:flex;flex:0 1 auto;width:max-content;flex-wrap:nowrap;align-items:center;gap:6px;max-width:100%;margin:0;padding:8px 12px;border-radius:1.375rem;background:var(--pdf-dock);color:var(--text);border:1px solid var(--line);box-shadow:var(--shadow-3);overflow-x:auto;backdrop-filter:none}
 .document-studio:not([data-ink-options="open"]) .blatt-fest{display:none}
 .document-studio :is(.blatt-reihe,.blatt-werk){container-type:normal}

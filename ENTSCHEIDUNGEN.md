@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-596 Entscheidungen, E1 bis E618 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+599 Entscheidungen, E1 bis E621 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -661,6 +661,9 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E616** — Die Strichstärke sagt, wie dick sie ist: die Zeichenfläche rechnet in PDF-Punkten (`viewBox` A4), also sind 2,4 nicht „2,4 px" sondern **0,8 mm** — und am Marker das Vierfache. Redurs Wörter übernommen, seine Zahlen nicht (W4, `test438`)
 * **E617** — Die Stiftkacheln tragen ihren Namen: gestapelt kostet das Wort Höhe statt Breite, also gilt die alte 320-px-Rechnung nicht mehr; dritte Schwelle bei 1300 px Leistenbreite, `display:none` weicht dem Klemmen (§38), und `bilder.mts` bekommt endlich einen breiten Bildschirm (W4, `test533`)
 * **E618** — Die Tafel wird ein Kasten: die Werkzeuge ziehen zurück in die Leiste (die 51 Gruppenwähler bleiben unberührt), und ab 1300 px Leistenbreite steht das Zubehör in einem eigenen Feld — mit den Millimetern auf der Kachel. Darunter bleibt `display:contents`, weil `order` dort über beide Flächen hinweg gilt (W4, `test533`)
+* **E619** — Im Studio bleibt der Dock, und der Platz-Knopf hört auf zu lügen: `pdf-studio.css` setzte die Leiste ohne `[data-lage]` im Wähler fest, die Spaltenform aus `bausteine.css` griff trotzdem — gemessen stand eine 74 px schmale Spalte mitten auf dem Papier. Statt den Platz im Studio wirken zu lassen (das hätte den Vorgabewert in den Dock hinein verschoben) ist der Knopf dort weg (`test534`)
+* **E620** — Die Leiste wandert am Griff: ziehen statt nur tippen, gefangen am nächsten Rand, und ein fünfter Platz «frei» im selben Katalog — dazu die zwei Pixel, zu denen «unten in der Mitte» auf der gewöhnlichen Seite zusammengefallen war (`container-type:inline-size` gegen Schrumpf-auf-Inhalt) (`test534`)
+* **E621** — Die Leiste sagt, dass sie eine Leiste ist: `role="toolbar"` kam in `src/` null mal vor; mit der Rolle kommen die Pfeiltasten und der eine Tabstopp, sonst wäre sie eine Behauptung (§38, `test534`)
 
 ---
 
@@ -50442,3 +50445,208 @@ Der Deckkraft-Schieber bleibt zusätzlich eine **Datenfrage**: Deckung steht
 heute fest je Stift (Marker 0,32 · Pinsel 0,92 · Bleistift 0,72 minus
 Neigung). Sie wählbar zu machen heisst, ein Feld an die Marke zu hängen —
 §9, und damit Redurs Entscheidung.
+
+---
+
+## E619 — Im Studio bleibt der Dock, und der Platz-Knopf hört auf zu lügen
+
+**19. September 2026.** Redur hat ein Papier hochgeladen
+(*Executive Summary, 19.09.2026*) und kein Wort dazu geschrieben. Es schlägt
+vor, Redions Zeichenleiste nach dem GoodNotes-Modell neu zu bauen: eine
+obere Zeichenleiste plus eine ziehbare, andockbare Palette mit Griff,
+Fangabstand, gemerktem Platz, Ausweichen vor der Bildschirmtastatur — und
+dazu feste Hex-Farben, `.toolbar-float`-Klassen und ein Modul `palette.tsx`
+mit dem Baum `MainToolbar → FloatingPalette → ToolOptionsPane`.
+
+**Nachgemessen statt geglaubt** (§45, E21). Das meiste davon steht längst:
+
+| Wunsch des Papiers | Zustand | Beleg |
+|---|---|---|
+| Andocken oben/links/rechts/unten | gebaut | E512, `marken.ts:341` |
+| Der Platz wird gemerkt | gebaut | `M_LAGE`, `marken.ts:533` |
+| Schwebende Leiste | gebaut | `bausteine.css`, `pdf-studio.css` |
+| Zurück/Vor in eigener Kapsel | gebaut im Studio | E572/E579/E588 |
+| Rollen statt Weglassen am schmalen Schirm | gebaut | `test524` |
+| Stifte offen statt im Menü | gebaut | E512 |
+| Beschriftete Strichstärken 0,4/0,8/1,8 mm | gebaut vorgestern | E616/E618 |
+| Ausweichen vor der Tastatur | gebaut | E588 |
+
+Vier Behauptungen seiner Vergleichstabelle über „Redion (aktuell)" stimmen
+nicht mehr; die fünfte, „ab < 768 px", trifft Redions Umbruch um acht Pixel
+daneben — er liegt bei **760**.
+
+### Was das Messen stattdessen fand
+
+`pdf-studio.css` setzt die Leiste im Dokumentmodus auf `position:fixed;
+left:50%` — **ohne `[data-lage]` im Wähler**, mit höherer Spezifität als
+`.blatt-reihe[data-lage="links"]`. Die Spaltenform aus `bausteine.css` greift
+trotzdem, denn die steht in `flex-direction` und `width`, nicht in `left`.
+
+GEMESSEN, Fenster 1440 × 960, `data-lage="links"`:
+
+```txt
+Leiste   x=683  y=197   74 × 749          Papier   x=225 … 1205
+```
+
+Also eine 74 px schmale Spalte **mitten auf dem Papier**, während der Knopf
+im Titel „jetzt links" ankündigte. Ein Knopf, der lügt, ist schlimmer als
+ein fehlender (§33). Kein Prüflauf hielt das.
+
+### Entschieden
+
+**Im Studio bleibt der Dock, und der Platz-Knopf ist dort weg.**
+
+Die Alternative wäre gewesen, den Platz im Studio wirken zu lassen. Sie
+scheitert an einem Satz von Redur, 14. September: **„Die untere Dock sollte
+bleiben."** Der Vorgabewert von `M_LAGE` ist `oben`; den im Studio wirken zu
+lassen hätte den Dock nach oben verschoben — bei jedem, der nie etwas
+eingestellt hat. Also das Gegenteil dessen, was bleiben sollte.
+
+Der Preis: im Schreibstudio lässt sich die Leiste nicht verschieben. Das ist
+kein Verlust, sondern das Ende einer Täuschung — sie liess sich auch vorher
+nicht verschieben, sie tat nur so. Auf der gewöhnlichen Seite bleibt der
+Platz unverändert wählbar (E512), und dort ist er jetzt sogar vollständig
+(E620).
+
+Dazu drei Zeilen, die die Spaltenform im Studio zurücknehmen
+(`flex-direction`, `width`, `max-height`) und eine, die die Wörter nur in der
+Spalte wieder hereinholt. Der erste Wurf dieser letzten Zeile war ein nacktes
+`.wort{display:revert}` — **im Bild** war zu sehen, dass es auch die
+Behälterabfragen überstimmt und im Dock plötzlich sechs Stiftnamen aufmacht
+(§55). Jetzt trägt sie `:is([data-lage="links"],[data-lage="rechts"])`.
+
+### Was aus dem Papier NICHT übernommen wurde — und warum
+
+| Aus dem Papier | Warum nicht |
+|---|---|
+| `palette.tsx`, Komponentenbaum | **§6 [hart]**, §52.1. Redion hat null `.tsx`-Dateien; E78 hat React einmal beschlossen, **E80 hat es widerrufen**. Gebaut als `.ts`, dort wo `LAGEN` schon steht |
+| `#202024`, `#2E2E32`, `#3C3C40`, `#905CFF`, `#AAAAAA` | §39. `--accent` ist hell `#7c3aed`, dunkel `#6d4aff` — beide Violett, euklidisch 43 bzw. 39 vom `#905CFF` entfernt. Ein **drittes** Violett neben zwei vorhandenen, und erfundene Marken sind hier schon dreimal unbemerkt durchgegangen |
+| Nur-Dunkel-Farben | Redion hat Hell **und** Dunkel. Feste Hex-Werte ergäben im Hellmodus eine schwarze Leiste |
+| 12 px Radius als neue Zahl | Gibt es: `--radius-lg`. Die schwebende Leiste nimmt `--radius-xl` (16 px) — eine Wahl zwischen zwei vorhandenen Marken, keine neue Zahl |
+| „ab < 768 px" | Redions Umbruch ist **760** |
+
+Das steht hier, damit dieselbe Vorlage in vier Wochen nicht noch einmal von
+vorn beantwortet werden muss.
+
+### Gemessen
+
+```txt
+test534 §2   der Dock unverändert bei allen vier gemerkten Plätzen
+test524      105 von 105 grün (das Dock selbst)
+```
+
+---
+
+## E620 — Die Leiste wandert am Griff, und «unten» ist keine zwei Pixel mehr
+
+**19. September 2026.** Der einzige Teil des Papiers, der wirklich fehlte:
+die Leiste **als Ganzes ziehen**. Belegt mit drei Negativsuchen — kein
+`snap`/`andock`/`dockPos` im Zeichenbereich, kein `style.left =` an einer
+`.blatt-reihe`, und der einzige `pointerdown` an der Leiste ist E571, das
+Sortieren *einzelner* Knöpfe.
+
+### Die zwei Pixel
+
+Beim Schreiben des Wächters fiel auf, dass «unten in der Mitte» auf einer
+gewöhnlichen Seite gar nicht funktionierte. GEMESSEN, 1440 × 960:
+
+```txt
+oben     x=244   y=335   1136 × 93       richtig
+links    x=250   y=369     64 × 749      richtig
+rechts   x=1310  y=369     64 × 749      richtig
+unten    x=811   y=522      2 × 1409     ← ZWEI PIXEL BREIT
+```
+
+Das Bild dazu (`bilder/messung-unten-seite.png`) zeigt, was die Zahl
+bedeutet: ein zwei Pixel breiter Streifen quer über das Blatt, in dem ein
+einzelner Knopf steckt. Kein Bruch, kein Fehler in der Konsole.
+
+**Die Ursache ist `container-type:inline-size`** (E359), und sie ist lehrreich:
+das ist `contain:inline-size` mit anderem Namen — die Breite wird **ohne den
+Inhalt** bestimmt. In einer Zeile mit fester Breite fällt das nie auf; in
+einem absolut gesetzten Kasten, der auf seinen Inhalt schrumpfen soll,
+bleiben null Pixel übrig. `pdf-studio.css` hat denselben Schalter für den
+Dock schon einmal zurücknehmen müssen — dort stand nur nicht, warum.
+
+Behoben mit `container-type:normal` an Reihe **und** Leiste in dieser Lage,
+`width:max-content`, `flex-wrap:nowrap` und einem ausgeblendeten
+Zeilenbruch — also genau die Gestalt des Studio-Docks. Der Preis steht im
+Stilblatt: keine Behälterabfragen in dieser Lage, also keine Wörter. Eine
+schwebende Leiste, die drei Zeilen hoch wird, wäre kein Dock, sondern eine
+Wand.
+
+### Der Griff kennt zwei Wege
+
+**Tippen** bleibt der Rundlauf aus E512 — oben → links → rechts → unten.
+**Ziehen** schiebt sie hin. Der Unterschied sind sechs Pixel Weg; darunter
+ist es ein Tipp. Am Telefon gibt es nur den Rundlauf: eine Leiste, die beim
+Zeichnen mitwandert, ist dort ein Schaden.
+
+Gefangen wird am nächsten Rand, und das Fangband ist **64 px** breit —
+dieselbe Zahl, die die Spalte links und rechts misst. Das Papier schlug 20 px
+vor; bei 44-px-Zielen und einer 64 px breiten Spalte wäre das ein Band, das
+man nie trifft. Gemessene Zahl statt abgeschriebener, wie schon bei den
+Millimetern in E616.
+
+### «frei» ist der fünfte Eintrag im selben Katalog
+
+Nicht eine zweite Liste daneben (§8): Name, Zeichen und Symbol braucht er
+genauso. Er trägt `nurZiehen: true`, und der Rundlauf überspringt ihn — ein
+Tipp muss berechenbar bleiben.
+
+Gemerkt wird der Punkt als **Prozent, nicht als Pixel**
+(`zeichnen:leistenfrei`, zwei Zahlen als Text, weil `meta` Text sicher
+übersteht, §9). Das ist der Unterschied zwischen „merkt sich den Platz" und
+„liegt morgen hinter dem Rand". Dazu klemmt der Zug den Punkt um die halbe
+Leistenbreite von jedem Rand weg — **gesehen am Bild**: beim ersten Wurf hing
+die rechte Hälfte draussen.
+
+Und das Setzen läuft jetzt über **einen** Weg (`lageAnwenden`), nicht über
+zwei — der Rundlauf tat es bisher inmitten seines Klickzweigs, und zwei Wege
+zum selben Ziel laufen auseinander (§8).
+
+### Gemessen
+
+```txt
+unten, vorher      2 × 1409 px      nachher   1112 × 46 px
+test534            44 von 44 grün
+test533 524 351 393 481 105 109 87   grün
+Dienststand        v1160 → v1164
+```
+
+---
+
+## E621 — Die Leiste sagt, dass sie eine Leiste ist
+
+**19. September 2026.** `role="toolbar"` kam in `src/` **null** mal vor —
+bei elf anderen Rollen (`status` 11×, `switch` 8×, `tab` 6×, `img` 5×,
+`group` 5×, `dialog` 5× …) und 24 `aria-label`. Wer die Seite vorlesen lässt,
+hörte dreissig einzelne Knöpfe hintereinander, ohne dass gesagt wird, dass sie
+zusammengehören.
+
+Eine Rolle allein wäre eine Behauptung gewesen (§55.2): `toolbar` verspricht
+dem Vorleser, dass **ein** Tabsprung hineinführt und die **Pfeiltasten**
+darin weitergehen. Also steht beides, oder keines:
+
+* `.blatt-werk` trägt `role="toolbar"` und `aria-label="Zeichenwerkzeuge"`.
+* Genau ein Knopf hat `tabindex="0"` — beim Bauen der erste sichtbare,
+  danach der zuletzt berührte.
+* Pfeil links/rechts (und hoch/runter, für die Spalte) wandern, `Home` und
+  `End` springen an die Enden.
+* Im Einrichten-Modus gehören die Pfeiltasten weiterhin dem Umsortieren
+  (E571) — dort tritt die Rolle zurück.
+
+Der leiseste Fehler steckte im ersten Wurf: `sichtbareKnoepfe()` filterte auf
+`getClientRects().length > 0`, und **beim Bauen hat noch nichts einen
+Kasten**. Der erste Durchlauf blieb wirkungslos, und der frisch geladene
+Bildschirm hatte weiterhin 35 Tabstationen — grün war der Lauf trotzdem, weil
+vor der Messung geklickt worden war. `test534 §3` misst seither ausdrücklich
+**vor dem ersten Klick**.
+
+### Gemessen
+
+```txt
+role="toolbar" in src/    vorher 0    nachher 1
+Tabstationen der Leiste   vorher 35   nachher 1
+test534 §3                7 von 7 grün
+```

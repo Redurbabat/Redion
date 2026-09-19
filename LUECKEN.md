@@ -8834,3 +8834,71 @@ kann.
 
 **Nicht mit E617 entschieden**, weil es eine Änderung an Bildern wäre, die
 mit diesem Bogen nichts zu tun haben.
+
+---
+
+## L185 · Der Platz-Knopf versprach im Studio etwas, das er nicht konnte — 19. September 2026, **GESCHLOSSEN am selben Tag durch E619**
+
+Gefunden beim Nachmessen des Papiers vom 19. September, nicht beim Lesen des
+Codes. `pdf-studio.css` setzte die Leiste im Dokumentmodus ohne `[data-lage]`
+im Wähler fest; die Spaltenform aus `bausteine.css` griff trotzdem.
+
+```txt
+Studio, 1440 × 960, data-lage="links"
+   Leiste   x=683  y=197   74 × 749       Papier   x=225 … 1205
+```
+
+Eine 74 px schmale Spalte mitten auf dem Papier, während der `title` des
+Knopfes „Leiste verschieben — jetzt links" sagte. Geschlossen, indem der
+Knopf im Studio nicht mehr erscheint und ein gemerkter Platz den Dock nicht
+mehr verformt (`test534 §2`). Redurs Satz vom 14. September — „Die untere
+Dock sollte bleiben" — war dabei der Entscheider, nicht der Geschmack.
+
+---
+
+## L186 · «unten in der Mitte» war auf der gewöhnlichen Seite zwei Pixel breit — 19. September 2026, **GESCHLOSSEN am selben Tag durch E620**
+
+Einer der vier Plätze aus E512 funktionierte seit seinem Bau nicht.
+GEMESSEN, 1440 × 960: `2 × 1409 px`, ein Streifen quer über das Blatt
+(`bilder/messung-unten-seite.png`). Ursache: `container-type:inline-size`
+(E359) nimmt der Leiste ihren Beitrag zur eigenen Breite, und ein Kasten,
+der auf seinen Inhalt schrumpfen soll, bleibt dann leer. Behoben mit
+`container-type:normal` in dieser Lage; nachher `1112 × 46 px`
+(`test534 §1`).
+
+**Die Lehre gehört zu §55.1 und nicht in eine Fussnote:** drei Wochen lang
+sah niemand hin. Der Platz war gebaut, der Prüflauf dafür prüfte, dass sich
+`data-lage` ändert — nicht, dass danach etwas Sichtbares dasteht.
+
+---
+
+## L187 · «unten» steht am Fuss des BLATTES, nicht am Fuss des Fensters — 19. September 2026
+
+Offen, und es ist eine Frage an Redur, keine technische.
+
+Seit E620 ist der Platz «unten in der Mitte» wieder eine echte Leiste. Nur
+steht sie am unteren Rand der **Blatthülle** (`position:absolute`), nicht am
+unteren Rand des **Fensters**. Bei einem A4-Blatt in einem 900 px hohen
+Fenster heisst das: wer oben auf dem Blatt zeichnet, sieht sie nicht.
+
+```txt
+gemessen    Blatt ~1400 px hoch, Fenster 900 px
+            Leiste bei y = 1885 (Blattfuss)   —   ausserhalb des Bildes
+```
+
+Im Schreibstudio ist es anders gelöst: dort ist der Dock `position:fixed` und
+klebt am Fenster (E588 rechnet sogar die Bildschirmtastatur heraus). Dasselbe
+hier zu tun wäre ein Eingriff, der über diesen Bogen hinausgeht: eine
+gewöhnliche Seite kann **mehrere** Blätter tragen, und zwei Leisten, die
+beide am Fensterfuss kleben, lägen übereinander.
+
+Drei Wege, und keiner ist offensichtlich richtig:
+
+1. **So lassen.** «Unten» heisst „unten am Blatt". Ehrlich, aber beim langen
+   Blatt unbrauchbar.
+2. **`position:fixed` für die Leiste des Blattes, an dem gerade gezeichnet
+   wird.** Das ist die GoodNotes-Form und was das Papier vom 19. September
+   meint. Braucht eine Regel dafür, welches Blatt „das aktive" ist.
+3. **`position:sticky` am Blattfuss.** Sie wandert mit, solange das Blatt im
+   Bild ist, und bleibt beim Blatt. Der kleinste Eingriff.
+
