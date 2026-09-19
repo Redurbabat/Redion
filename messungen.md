@@ -2679,3 +2679,80 @@ test538   53 von 53 grün      Griffe, Verbindungen, Formen, Vorlagen
 test529   56 von 56 grün      die Karte selbst, unverändert
 test402    4 von  4 grün      Trefflächen (E627)
 ```
+
+---
+
+## Die sechs Marken-Decken, nachgemessen — 19. September 2026 (E637)
+
+`test362` meldete: `{16:272, 22:85, 28:64, 44:54, 46:16, 56:14}` gegen die
+Decke `{16:266, 22:83, 28:63, 44:54, 46:15, 56:14}`. Redur hatte entschieden:
+**erst nachsehen, dann entscheiden** — also nicht nachtragen, sondern die
+Stellen suchen.
+
+### Wo der Zuwachs steckt
+
+Gezählt je Datei, gegen `9b9a89e` (den Stand, an dem die Decke zuletzt
+geschrieben wurde):
+
+```txt
+16px   werkzeuge.css    29 → 35   (+6)     alle anderen 21 Dateien: unverändert
+22px   werkzeuge.css     7 →  9   (+2)
+28px   werkzeuge.css     9 → 10   (+1)
+46px   werkzeuge.css     3 →  4   (+1)
+44px   —                          (+0)
+56px   —                          (+0)
+```
+
+**Restlos in einer Datei, und restlos aus zwei Bögen:** E607 (die
+Gedankenkarte, 16. September) und E628 (Griffe, Formen, Vorlagen,
+19. September). Keine Gegenbewegung anderswo.
+
+### Die zehn Stellen, je eine Zeile, je ein Urteil
+
+```txt
+ Zeile  Zahl  was es ist                       Marke dieser Zahl        Urteil
+ 1325   28px  Breite eines Werkzeugknopfs      --mobile-gutter          andere Aufgabe
+ 1364   46px  min-width der Zoomanzeige        (keine — 46 ist der      aufgelöst
+                                                verworfene Wert)
+ 1387   16px  Schriftgrösse der Wurzel         --sheet-radius           andere Aufgabe
+ 1387   16px  waagerechtes Polster             --sheet-radius           → --space-5
+ 1416   16px  Breite des Griffels              --sheet-radius           andere Aufgabe
+ 1416   16px  Höhe des Griffels                --sheet-radius           andere Aufgabe
+ 1467   16px  Polster der Pillenform           --sheet-radius           → --space-5
+ 1468   22px  Polster der Ellipse              --mobile-gutter-small    andere Aufgabe
+ 1473   22px  Polster des Sechsecks            --mobile-gutter-small    andere Aufgabe
+ 1502   16px  Schriftgrösse am Telefon         --sheet-radius           andere Aufgabe
+```
+
+Der Massstab für „andere Aufgabe" steht in `marken.css:40`: *„Gleiche Zahl
+bedeutet nur dann dieselbe Marke, wenn sie dieselbe Aufgabe hat."* Eine
+Schriftgrösse ist keine Blattgeometrie, ein Knopf ist kein Seitenrand, ein
+Formpolster ist kein Telefonrand.
+
+### Die 46 hatte Vorrang — und war unschuldig
+
+E372 hat `--mobile-topbar` von falschen 46 auf die gemessenen 56 gesetzt; die
+46 steht seitdem als Fangzaun in der Decke. Die neue 46 ist `min-width` der
+Zoom-Prozentanzeige und eine wörtliche Abschrift von `.wb-massstab`
+(Whiteboard, seit E138). Kein `--mobile-topbar` in derselben Datei, kein
+Telefonbalken in Sichtweite.
+
+Die Abschrift war trotzdem ein Fehler, nur ein anderer: sie hatte
+`font-variant-numeric:tabular-nums` verloren — genau das, wofür die Regel da
+ist. Beide teilen sich jetzt eine Regel.
+
+### Was daraus wurde
+
+```txt
+46px   16 → 15    eine Regel für beide Massstäbe statt zweier Abschriften
+16px  272 → 270   zwei Polster benutzen --space-5 (grund.css:44), das es gibt
+22px   85         bleibt — kein Token für 22, und es ist kein Seitenrand
+28px   64         bleibt — Knopfbreite, die Trefffläche holt --touch-min
+```
+
+Neue Decke: `{16:270, 22:85, 28:64, 44:54, 46:15, 56:14}`. **Zwei nach unten,
+zwei nach oben.** `test362` 18/18.
+
+Dass eine Decke steigt, ist die Ausnahme und steht deshalb hier mit jeder
+einzelnen Zeile. Wer sie später senken will, findet oben, welche sieben
+Zahlen noch roh dastehen und warum.

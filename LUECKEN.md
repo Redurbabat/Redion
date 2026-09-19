@@ -9295,3 +9295,32 @@ am geglätteten. Der rohe Weg ist von der Meldefrequenz unabhängig; die
 Glättung ist eine Frage des Aussehens, nicht der Absicht. Das wäre ein
 Eingriff in eine Funktion, die Daten löscht, und gehört deshalb in einen
 eigenen Bogen mit eigener Gegenprobe (§30).
+
+## L199 · „Alles einpassen" lässt den linken Rand draussen — 19. September 2026
+
+Auf dem Bild vom 19. September (`bilder.mts gedankenkarte`, hell und dunkel
+gleichermassen) steht der Massstab auf **72 %** — die Karte wurde also
+eingepasst — und trotzdem ist der linke Knoten angeschnitten: von
+„Schutzklassen I bis III" fehlt das S, rechts bleibt dagegen ein Streifen
+frei.
+
+**Gefunden beim Nachsehen zu E637**, nicht gesucht.
+
+Die Rechnung in `einpassen` (`gedankenkarte.ts:1251`) sieht richtig aus: der
+Kasten kommt aus `maxX - minX + RAND * 2`, und `maxX` nimmt `o.x + m.w`, also
+die Breite der Knoten mit. Dass die Karte trotzdem links übersteht, heisst
+also: entweder misst `mass(id)` beim ersten Einpassen etwas anderes als
+später — Schrift noch nicht geladen, Umbruch noch nicht entschieden —, oder
+die Verschiebung `karte.sicht.x` und der Kasten rechnen mit verschiedenen
+Ursprüngen.
+
+**Nicht geraten, sondern gemessen werden muss:** `plan.breite`, `buehne`-Breite
+und `karte.sicht.x` zum Zeitpunkt des ersten Einpassens gegen dieselben Werte
+nach einem Druck auf ⤢. Stimmen die zweiten, ist es die Messung zum falschen
+Zeitpunkt; stimmen beide, ist es der Ursprung. Erst danach die Reparatur
+(§36, §55.2).
+
+**Wie schwer es wiegt:** man kann die Karte schieben, es geht also nichts
+verloren. Aber der erste Blick auf eine Gedankenkarte ist der, für den ⤢
+gebaut wurde, und ein angeschnittenes Wort im ersten Blick sieht aus wie ein
+Fehler — weil es einer ist.

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-614 Entscheidungen, E1 bis E636 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+615 Entscheidungen, E1 bis E637 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -679,6 +679,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E634** — Zwei Zusagen, die den Stand von gestern halten: `test285` verlangte GENAU EINE gezeichnete Seite, seit dem Lesemass (E464) sind es zwei — denselben Fund hat `test395` §7 am 7. September gemacht (E467) und wurde nachgezogen, dieser Punkt nicht. `test442` verlangte die Miniatur ohne Nummer, die seit E547 davorsteht und die `test503` §3 ausdrücklich einfordert. Beide Male hätte eine Reparatur AM PRODUKT den Schwesterlauf rot gemacht
 * **E635** — Wer im ersten Bild misst, misst das Anfangsbild: `test432` mass im selben Tick wie das Aufklappen — seit E537 haben Zählpille und Suchzeile einen Auftritt mit `animation-fill-mode:both`, und `both` hält sie bis dahin auf `scale(0)` und `width:30px`. Nicht verdeckt, sondern noch nicht da. Dazu `test435`, der die Deckung `.85` aus E462 festhielt, obwohl E537 sie auf `.4` gesetzt hat — und der in §6 ausgerechnet die ÜBERSCHRIEBENE Regel als die gültige bescheinigte
 * **E636** — Ein Prüflauf mit tausend Hertz: `test449` feuerte seine Zeigerpunkte in einer Schleife, also mit `dt = 1 ms`. Der Glätter rechnet seit E504 in ZEIT — bei 1 ms dämpft er doppelt so stark wie bei einem echten Stift, der schräge Zickzack schrumpfte von 1716 auf 1037 Weg und fiel unter die Schwelle von `istKritzel`. Der Zug war damit kein Gekritzel mehr, es wurde NICHTS gelöscht — und die zentrale Zusage über die zwei unbeteiligten Marken war grün, weil gar nichts geschah. Der Lauf taktet jetzt mit 8 ms (125 Hz)
+* **E637** — Erst nachsehen, dann eintragen: die sechs Marken-Decken waren gewachsen, und Redur hat entschieden, erst die Stellen zu suchen. Alle zehn liegen in `werkzeuge.css`, alle aus E607 und E628. Sieben haben eine andere Aufgabe als ihre gleichnamige Marke; zwei Polster bekommen `--space-5`, und die rohe 46 war eine Abschrift von `.wb-massstab`, die dabei `tabular-nums` verloren hatte — beide Massstäbe teilen sich jetzt eine Regel. Zwei Zahlen hinunter, zwei hinauf, jede einzeln begründet in `messungen.md`
 
 ---
 
@@ -51874,3 +51875,107 @@ Lauf, was ein Stift tut, statt was eine Schleife tut.
 
 **Gemessen.** `test449` 16/16, vorher 14/16. Gegenprobe rot. `npm run stand`
 unverändert (v1200, `1817321f7b3929c3`).
+
+---
+
+## E637 — Erst nachsehen, dann eintragen
+
+Bogen 8 der roten Läufe, und der einzige, bei dem Redur die Reihenfolge
+selbst gesetzt hat. `test362` meldete sechs Zahlen gegen die Decke:
+
+```txt
+ist   {16:272, 22:85, 28:64, 44:54, 46:16, 56:14}
+soll  {16:266, 22:83, 28:63, 44:54, 46:15, 56:14}
+```
+
+Die naheliegende Reparatur ist eine Zeile: die Decke nachtragen, Lauf grün,
+weiter. Redur hat **erst nachsehen, dann entscheiden** gesagt, und das ist
+der Unterschied zwischen einer Decke und einer Zahl.
+
+### Was die Decke ist
+
+`marken-decke.json` hält fest, wie oft sechs Zahlen ROH in den Stildateien
+stehen, für die es eine Telefonmarke gibt. Der Lauf sagt selbst, warum es ein
+Verzeichnis ist und kein Verbot: *„ein Zeichen, das zufällig 44 px misst,
+meint keine Trefferfläche. Ein Verbot wäre also entweder unehrlich oder
+unerfüllbar."* Und er prüft auf GENAU GLEICH, nicht auf höchstens — damit
+auch das Schrumpfen auffällt.
+
+Die Richtung ist trotzdem eine: **hinunter.** Eine Decke, die bei jedem Fund
+mitwächst, ist keine.
+
+### Was das Nachsehen ergeben hat
+
+Der ganze Zuwachs steckt in **einer** Datei — `werkzeuge.css` — und in
+**zwei** Bögen: E607 und E628, beide die Gedankenkarte, beide von mir.
+Zehn Stellen, jede einzeln geprüft; die Tabelle steht in `messungen.md`.
+
+Der Massstab dafür steht in `marken.css:40` und ist der eigentliche Punkt:
+
+> Gleiche Zahl bedeutet nur dann dieselbe Marke, wenn sie dieselbe
+> **Aufgabe** hat.
+
+Eine Schriftgrösse von 16 px ist kein Blattradius. Ein Werkzeugknopf von
+28 px ist kein Seitenrand am Telefon. Ein Polster von 22 px, das den Text in
+eine Ellipse bringt, ist kein Telefonrand. Sieben der zehn sind in diesem
+Sinn sauber — und zwei von ihnen holen die Trefferfläche ausdrücklich aus der
+Marke (`.gk-leiste button::after{height:var(--touch-min)}`), was das Gegenteil
+von Schlamperei ist.
+
+### Drei waren es nicht
+
+**Zwei Polster hatten eine Stufe.** `padding:10px 16px` und
+`padding-inline:16px` sind Abstände, und `grund.css:44` führt `--space-5: 16px`
+seit jeher. Sie heissen jetzt so. Das ist §39 wörtlich: gemeinsame Tokens
+nutzen — und nur die, die es gibt.
+
+**Und die 46 war eine Abschrift.** `.gk-massstab` — die Prozentanzeige der
+Gedankenkarte — war Zeile für Zeile von `.wb-massstab` abgeschrieben, der des
+Whiteboards, die seit E138 vierzig Zeilen darüber steht. Dabei ist genau die
+Eigenschaft verlorengegangen, für die es die Regel gibt:
+
+```css
+font-variant-numeric:tabular-nums;
+```
+
+Ohne sie springt die Zahl bei jedem Zoomschritt, weil `1` schmaler ist als
+`7`. Das ist der Grund, aus dem die Whiteboard-Regel sie trägt, und die
+Abschrift hat ihn nicht mitgenommen — die Sorte Fehler, die §8 meint, wenn es
+doppelte Kataloge verbietet: *„Ein zweiter Katalog für dasselbe läuft mit dem
+ersten auseinander, und niemand merkt, welcher gilt."*
+
+Beide teilen sich jetzt eine Regel. Die Gedankenkarte hat damit gleichbreite
+Ziffern bekommen, und die rohe 46 ist von selbst verschwunden.
+
+### Das Ergebnis
+
+```txt
+46px   16 → 15    eine Regel statt zweier Abschriften
+16px  272 → 270   zwei Polster auf --space-5
+22px   83 → 85    bleibt, mit Grund
+28px   63 → 64    bleibt, mit Grund
+```
+
+Zwei Zahlen hinunter, zwei hinauf. **Die Decke steigt** — das ist die
+Ausnahme, und deshalb steht in `messungen.md` jede der sieben verbliebenen
+rohen Zahlen mit ihrer Zeile und ihrem Urteil. Wer sie später senken will,
+muss nicht noch einmal suchen.
+
+### Was die Alternative gewesen war
+
+Die Decke ohne Nachsehen auf `{16:272, …, 46:16}` setzen. Das wäre in einer
+Minute grün gewesen — und die abgeschriebene Massstabsregel stünde noch da,
+mitsamt der springenden Zahl, die kein Prüflauf je gefunden hätte. Die
+zweite Alternative wäre gewesen, alle zehn rohen Zahlen zu ersetzen. Auch
+falsch: für 22 und 28 gibt es keine Stufe, und eine Marke zu erfinden, um
+eine Zahl loszuwerden, ist genau das, wovor §39 warnt.
+
+### Nebenbei gefunden
+
+Beim Bild zu diesem Bogen (§55.3) steht der Massstab auf 72 % — die Karte ist
+also eingepasst — und der linke Knoten ist trotzdem angeschnitten. Das ist
+nicht dieser Bogen und steht als **L199** in `LUECKEN.md`, mitsamt der
+Messung, die vor einer Reparatur zu machen ist.
+
+**Gemessen.** `test362` 18/18, vorher 17/18. `node bauen.mts` neu, weil
+`werkzeuge.css` im Grundstock liegt.

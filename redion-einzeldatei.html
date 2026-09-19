@@ -3627,7 +3627,12 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
    sichtbar: WO man ist (der Prozentwert) und WOMIT man schiebt (die Hand).
    Ohne den Prozentwert weiss niemand, warum die Zeichnung plötzlich klein
    ist; ohne den Zeiger sieht die Hand aus wie ein Zeichenwerkzeug. */
-.wb-massstab{
+/* EINE REGEL FÜR BEIDE MASSSTÄBE (E637). Die Gedankenkarte hatte diese
+   Regel abgeschrieben und dabei `tabular-nums` verloren — genau das, wofür
+   sie hier steht: ohne gleichbreite Ziffern springt die Zahl bei jedem
+   Zoomschritt. Zwei Erklärungen für dieselbe Sache laufen auseinander,
+   und niemand sieht es im Code (§8, §39). */
+.wb-massstab, .gk-massstab{
   min-width:46px; padding:0 4px; text-align:center; font-size:11px; font-weight:600;
   color:var(--text-dim); font-variant-numeric:tabular-nums;
 }
@@ -3847,8 +3852,6 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   clip-path:polygon(14% 0, 86% 0, 100% 50%, 86% 100%, 14% 100%, 0 50%); }
 .gk-trenn{ width:1px; height:18px; background:var(--line); margin:0 5px; }
 .gk-zoom{ display:inline-flex; align-items:center; gap:2px; }
-.gk-massstab{ min-width:46px; text-align:center; font-size:11px; font-weight:600;
-              color:var(--text-dim); }
 
 .gk-buehne{ position:relative; overflow:hidden; touch-action:none; outline:none;
             background:var(--bg); }
@@ -3870,7 +3873,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
    Auskunft allein über die Farbe läuft, und „ausgewählt" ist eine Auskunft. */
 .gk-kn.on{ box-shadow:0 0 0 2px var(--bg-card), 0 0 0 4px var(--ast, var(--accent));
            font-weight:600; }
-.gk-kn.gk-wurzel{ font-size:16px; font-weight:600; padding:10px 16px;
+.gk-kn.gk-wurzel{ font-size:16px; font-weight:600; padding:10px var(--space-5);
                   border-radius:11px; background:var(--bg-input); max-width:260px; }
 .gk-txt{ outline:none; min-width:10px; }
 .gk-txt.gk-leer::before{ content:"Thema"; color:var(--text-faint); }
@@ -3950,7 +3953,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
    Ein unbekannter Wert in `data-form` trifft keinen dieser Wähler und
    bleibt damit still die runde Grundform (§18). */
 .gk-kn[data-form="kasten"]  { border-radius:3px; }
-.gk-kn[data-form="pille"]   { border-radius:999px; padding-inline:16px; }
+.gk-kn[data-form="pille"]   { border-radius:999px; padding-inline:var(--space-5); }
 .gk-kn[data-form="ellipse"] { border-radius:50%; padding:12px 22px; }
 
 .gk-kn[data-form="raute"], .gk-kn[data-form="sechseck"]{
@@ -24839,7 +24842,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1200, inhalt: '1817321f7b3929c3', gebaut: '2026-09-19T22:55:43.299Z' };
+const Stand = { fassung: 1201, inhalt: '57609fee112c9af0', gebaut: '2026-09-19T23:34:42.470Z' };
 window.Stand = Stand;
 
 </script>
