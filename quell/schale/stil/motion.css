@@ -82,6 +82,13 @@
 }
 #ai .ai-context-group { margin-bottom: 18px; }
 #ai .ki-quellschalter { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; }
+/* 32 px, und das ist ein NEBENWEG (§37, E627). Die Quellschalter sagen, worin
+   die KI suchen darf — man stellt sie einmal ein und fasst sie danach selten
+   wieder an; der tägliche Weg ist das Eingabefeld darunter. Sie stehen in
+   einer umbrechenden Reihe, und 44 px machten daraus am Telefon drei Zeilen
+   statt zwei: die Schalter schöben genau das Feld aus dem Bild, das sie
+   begleiten. Der geschriebene Grund steht damit hier, wie §37 ihn verlangt —
+   nicht stillschweigend. */
 #ai .ki-quellschalter button { min-height: 32px; border-radius: 10px; padding: 6px 9px; }
 #ai .ai-quick { display: grid; gap: 18px; overflow: visible; margin: 0; }
 #ai .ai-action-group { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 7px; padding: 4px; }

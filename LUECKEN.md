@@ -8513,7 +8513,7 @@ Präsentation nicht nur korrigiert, sondern gestaltet.
 
 ---
 
-## L176 · Die Gedankenkarte kennt noch keine Querverbindungen — 16. September 2026
+## L176 · Die Gedankenkarte kennt noch keine Querverbindungen — ~~16. September 2026~~ **GESCHLOSSEN am 19. September durch E628 — bis auf die Beschriftung, die als L192 weiterlebt**
 
 **Was fehlt:** Seit E607 gibt es die Gedankenkarte, und sie zeichnet einen
 Baum: jeder Knoten hat genau einen Elternteil, jede Linie geht von oben nach
@@ -8534,6 +8534,17 @@ gelöschte Gegenseite überlebt, statt ins Leere zu zeigen (§9).
 
 **Woran man merkt, dass sie gebraucht wird:** Sobald jemand mit der Karte
 nicht mehr gliedert, sondern denkt. Ein Baum ordnet; ein Gedanke springt.
+
+**Geschlossen am 19. September 2026 (E628).** Es gibt die zweite Liste
+(`verbindungen`), die gestrichelte Linie mit Spitze, den Weg, sie zu ziehen
+(vom Griff auf den anderen Knoten) und den Weg, sie zu löschen (anklicken,
+Entf — und ↶ holt sie zurück). Die Prüfung, die dieser Eintrag verlangt hat,
+steht als `test538 §6`: eine Verbindung zu einem gelöschten Knoten fällt
+still weg, statt ins Leere zu zeigen.
+
+**Was NICHT geschlossen ist: die Beschriftung.** Der Absatz oben nennt sie
+ausdrücklich („eine Beschriftung darauf"), und sie fehlt. Sie steht als
+**L192**, damit dieser Eintrag nicht halb geschlossen im Raum hängt.
 
 ---
 
@@ -9056,3 +9067,34 @@ auseinander, und niemand merkt, welcher gilt."
    nicht. Präfixe, die mehrere führen, gehören niemandem.
 2. `doku/CSS-NAMENSRAEUME.md` um eine dritte Spalte erweitern (Bereich), und
    `test290` — der Lauf, der dieses Verzeichnis schon hält — prüft sie mit.
+
+---
+
+## L192 · Eine Verbindung kann nichts sagen — 19. September 2026
+
+**Was fehlt:** E628 hat die freien Verbindungen gebaut — ziehen, wählen,
+löschen, zurückholen. Beschriften kann man sie nicht. In XMind steht auf der
+Linie ein Wort („widerspricht", „führt zu", „siehe auch"), und genau das ist
+oft der Inhalt: DASS zwei Themen zusammenhängen, sieht man an der Linie;
+WIE sie zusammenhängen, steht nirgends.
+
+**Was dazu gehört:**
+
+| Sache | Wo | Wie |
+|---|---|---|
+| das Wort | `verbindungen[i].text` | ein Feld mehr, alte Karten bleiben lesbar (§9) |
+| die Anzeige | auf der Linie | ein `<text>` auf der Bogenmitte, mit einer Decke in der Flächenfarbe darunter — sonst liest man Linie und Wort übereinander |
+| das Schreiben | Doppelklick auf die Linie | derselbe Weg wie beim Knoten (F2/Doppelklick) |
+
+**Warum nicht gleich:** Der Text braucht einen Platz, der beim Zoomen
+mitwächst und bei kurzen Bögen nicht über die Knoten ragt — das ist ein
+eigener Aufbau-Fall, und der Bogen hier sollte erst stehen. Wer ihn baut,
+misst die Deckung nach (§19: der Text ist Nutzertext und wird escapet; im
+SVG heisst das `textContent`, nicht `innerHTML`).
+
+**Und ein zweiter Punkt am selben Ort:** Die sechs Vorlagen sind fest
+eingebaut. Eine eigene Karte als Vorlage zu SICHERN geht nicht — anders als
+beim Schaltplan, der das kann (`elektro:planvorlagen`). Das ist bewusst so
+gelassen und keine vergessene Zeile: eine eigene Vorlagenliste ist ein
+eigener Speicherort mit eigener Sicherungsfrage (§11), und die gehört in
+einen eigenen Bogen.

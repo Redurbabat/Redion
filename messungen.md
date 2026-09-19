@@ -2616,3 +2616,66 @@ Fensterweg doppelt gezählt      526 statt 523 (eine Zeile zählte zweimal)
 ```
 
 Beides fiel in der Gegenprobe auf, nicht beim Lesen.
+
+---
+
+## §61 · Was an der Gedankenkarte zu sehen war (E628, 19. September 2026)
+
+Vier Messungen, und drei davon hat erst das Bild oder der Prüflauf gefunden —
+im Quelltext stand jedes Mal etwas, das richtig aussah.
+
+### Die Griffe, die nicht kamen
+
+```txt
+Griffe am gewählten Knoten nach einem Klick   0    (soll 4)
+```
+
+Der Grund: `waehle` zeichnet die Karte nicht neu, es setzt nur die Marke
+`on` um. Die Griffe entstanden im Zeichner — also erst bei der nächsten
+Änderung. Behoben mit `griffeBauen`, das beide Wege benutzen.
+
+**Und die Gegenprobe dazu entlarvte eine Prüfung, die nicht rot werden
+konnte** (§55.2):
+
+```txt
+Zeichner hängt Griffe an JEDEN Knoten
+  gemessen NACH einem Klick    4    ← bleibt grün, `waehle` räumt auf
+  gemessen VOR  einem Klick   16    ← hier fällt sie
+```
+
+### Die Linie quer durch die Wurzel
+
+Zwei Äste links und rechts der Wurzel, auf gleicher Höhe:
+
+```txt
+Kasten der Verbindung   181 × 0 px
+Klick auf ihre Mitte    traf `.gk-kn` (die Wurzel), nicht die Linie
+```
+
+Eine waagerechte Linie zwischen zwei gleich hohen Knoten läuft genau durch
+das, was dazwischen steht. Mit dem Bogen zur Seite:
+
+```txt
+Kasten der Verbindung   181 × 45 px
+Klick auf die Bogenmitte  traf `.gk-verb-fang`
+```
+
+### Der Fokus, den der Browser zurücknahm
+
+```txt
+nach dem Klick auf die Linie   document.activeElement = <body>
+Entf                           löschte nichts
+mit preventDefault             document.activeElement = .gk-buehne
+Entf                           löschte die Verbindung
+```
+
+Ein Knoten ist ein `div` und gibt den Fokus an die Bühne weiter; ein
+SVG-Pfad tut das nicht.
+
+### Was der Lauf hält
+
+```txt
+test538   53 von 53 grün      Griffe, Verbindungen, Formen, Vorlagen
+test529   56 von 56 grün      die Karte selbst, unverändert
+test402    4 von  4 grün      Trefflächen (E627)
+```

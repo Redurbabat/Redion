@@ -1,5 +1,58 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 19. September 2026 · E628 · Die Gedankenkarte bekommt Griffe, Verbindungen, Formen und Vorlagen
+
+**Redurs Bestellung, vier Punkte:** Taster oben/links/rechts/unten, die eine
+Verbindung erzeugen · Verbindungen löschen können · verschiedene Formen ·
+fertige Vorlagen.
+
+**Gebaut.** Vier Griffe am gewählten Thema, und jeder kann zweierlei: tippen
+legt ein Thema in dieser Richtung an (links/rechts ein Unterthema,
+oben/unten ein Geschwister), ziehen zieht eine freie Verbindung auf den
+Knoten, auf dem man loslässt — dieselbe Sechs-Pixel-Schwelle wie beim
+Platz-Griff der Zeichenleiste (E620). Verbindungen sind gestrichelt und
+tragen eine Spitze; anklicken wählt, Entf löscht, ↶ holt zurück. Sechs
+Formen, sechs Vorlagen.
+
+**Was das Hinsehen und der neue Lauf gefunden haben — vier Fehler, keiner
+im Code zu sehen (§55):** die Griffe erschienen gar nicht, weil `waehle` die
+Karte nicht neu zeichnet · die Verbindung zwischen zwei gleich hohen Ästen
+lief als 181 × 0 px grosse Gerade mitten durch die Wurzel, und ein Klick
+darauf traf die Wurzel · die Entf-Taste lief ins Leere, weil der Browser
+nach dem Klick auf den SVG-Pfad den Fokus zurücknahm · und die sechs
+Formknöpfe standen senkrecht untereinander, weil `.gk-formen` keine Regel
+hatte.
+
+**Zwei Entscheidungen gegen Datenverlust (§9/§18):** `rund` schreibt nichts
+in die Daten — es ist die Form ohne Feld. Und eine Form, die diese Fassung
+nicht kennt, BLEIBT stehen; hier stand zuerst eine Prüfung gegen die Liste
+der bekannten Formen, die eine Karte aus einer neueren Fassung beim ersten
+Öffnen stillschweigend beschnitten hätte.
+
+**Geprüft.** `test538` 53/53 (neu), `test529` 56/56 unverändert, `test402`
+4/4, dazu `test87`, `test105`, `test109`, `test290` — alle sieben grün.
+**Vier Gegenproben einzeln rot gesehen**, und eine davon entlarvte eine
+Zusicherung, die nicht rot werden konnte (die Griffe nach statt vor dem
+ersten Klick zu zählen). **Nicht** geprüft: die Gesamtsuite.
+
+**Bilder:** `gkformen` und `gkvorlagen`, Rechner und Telefon — sie haben den
+Klecks statt der Pille gefunden und die senkrechte Formspalte.
+
+---
+
+## 19. September 2026 · E627 · Ein Grund gilt nur, wo der Lauf ihn sucht
+
+**Rot zuerst (§46).** `test402` war rot, bevor dieser Bogen anfing — zwei
+Trefflächen unter 44 px ohne geschriebenen Grund. Einer war keiner: die
+Knöpfe der Gedankenkarte haben ihre 44 px über `::after`, und der Grund
+stand ausführlich da — nur HINTER der Regel statt darüber, ausserhalb der
+acht Zeilen, die der Lauf liest. Der zweite war echt: `#ai .ki-quellschalter`
+ist 32 px hoch, und niemand hatte je aufgeschrieben, warum das ein Nebenweg
+ist.
+
+**Geprüft.** `test402` 4/4.
+
+
 ## 17. September 2026 · E618 · Die Tafel wird ein Kasten (W4, dritter Teil)
 
 **Redurs Bilder 2 bis 6 zeigen alle dasselbe:** unter der Werkzeugreihe ein

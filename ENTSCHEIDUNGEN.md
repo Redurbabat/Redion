@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-604 Entscheidungen, E1 bis E626 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+606 Entscheidungen, E1 bis E628 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -669,6 +669,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E624** — Der Radierer bekommt seine Grösse auch ohne Studio, und den Haken «Automatisch an den Strich anpassen»: den Zustand gab es seit je (`eraserSize` oder das Dreifache der Strichbreite), nur führte kein Weg zurück — das Studio setzte beim Aufbau immer eine Zahl (W4, `test535 §4`, `test524`)
 * **E625** — Der Dock-Effekt gilt auch ohne Studio: die Welle stand in `pdf-studio.css` mit `.document-studio` davor, auf einer gewöhnlichen Seite traf keine ihrer drei Wählerfamilien. Sie ist nach `bausteine.css` gewandert und hat den Vorsatz verloren — aus drei Familien wurden zwei. Dazu das Farb-Dock, das bisher überall fehlte, weil Tupfer kein `svg` tragen. Ohne Namensfähnchen, und der Grund steht als L190 (W5, `test536`)
 * **E626** — Bereiche bleiben getrennt, und jetzt weiss es jemand: §5 Regel 1 hatte seit ihrer Niederschrift keinen Wächter (L150), und der Satz „der Wächter dafür ist test87" stimmte nicht. Gemessen sind es **523 Querverweise in 63 Bereichspaaren** — L150s „es gibt keinen Querverweis" war falsch. Verschoben wird nichts (die grossen Namen sind die Kerne ihrer Bereiche, nicht gemeinsame Helfer); stattdessen ein Verzeichnis, das nur schrumpfen darf, und ein Lauf, der jeden NEUEN Verweis rot macht — auch den über `(window as any)` (`test537`)
+* **E627** — Ein Grund gilt nur, wo der Lauf ihn sucht: `test402` war rot, obwohl die Trefffläche der Gedankenkarte ihre 44 px längst hatte — ihr Beleg stand HINTER der Regel statt darüber, ausserhalb des Fensters, das der Lauf liest. Der Kommentar zieht um; der zweite Treffer (`#ai .ki-quellschalter`, 32 px) war ein echter und bekommt seinen geschriebenen Grund (§37)
+* **E628** — Die Gedankenkarte bekommt Griffe, Verbindungen, Formen und Vorlagen (Redurs Bestellung): vier Griffe am gewählten Thema, die tippend ein Thema anlegen und ziehend eine freie Verbindung ziehen; Verbindungen mit Spitze, gestrichelt gegen den Ast, wählbar und löschbar; sechs Formen, bei denen `rund` nichts in die Daten schreibt und eine unbekannte Form STEHEN BLEIBT (§18); sechs fertige Vorlagen, die vor dem Überschreiben fragen — aber nur, wenn etwas auf dem Spiel steht. Vier Fehler fand erst das Hinsehen, darunter eine Verbindung, die als 181 × 0 px grosse Linie quer durch die Wurzel lief (`test538`, 53 Zusicherungen)
 
 ---
 
@@ -51087,3 +51089,187 @@ Dazu die eingebauten Gegenproben in §6, nach dem Vorbild von `test87:162`:
 jeder Ausdruck wird an einem erfundenen Stück Code geprüft, das er finden
 MUSS, und an Kommentar, Zeichenkette, Schablone und Satzende, die er in Ruhe
 lassen muss.
+
+---
+
+## E627 — Ein Grund gilt nur, wo der Lauf ihn sucht
+
+**Entscheidung:** Die Begründung einer Treffläche unter 44 px steht **über**
+ihrer Regel, nicht dahinter. Wo sie fehlte, wird sie geschrieben.
+
+**Der Fund.** `test402` war rot — zwei Trefflächen ohne geschriebenen Grund,
+obwohl `masse-bestand.json` beide nicht führte:
+
+```txt
+werkzeuge.css  .gk-leiste button        (26px)
+motion.css     #ai .ki-quellschalter button (32px)
+```
+
+Der erste war kein Fehler an der Fläche. Die Knöpfe der Gedankenkarte haben
+ihre 44 px längst — über `::after` —, und der Grund dafür stand ausführlich
+im Quelltext. Nur stand er **hinter** der Regel. `test402` liest acht Zeilen
+über einer Regel und drei darunter; der Beleg lag ausserhalb dieses
+Fensters, und für den Lauf war er nicht vorhanden.
+
+Der zweite war ein echter: die Quellschalter der KI sind 32 px hoch und
+niemand hatte je aufgeschrieben, warum sie ein Nebenweg sind.
+
+**Warum so:** §37 sagt nicht „32 px sind verboten", sondern „32 px brauchen
+einen geschriebenen Grund an Ort und Stelle". Ein Grund, den der Lauf nicht
+findet, ist für jeden Späteren nicht vorhanden — er wird beim nächsten Lauf
+wieder gemeldet, und beim dritten Mal streicht ihn jemand als „Fehlalarm".
+
+**Die Alternative** wäre gewesen, das Fenster von `test402` zu vergrössern.
+Dagegen spricht die Richtung: je weiter das Fenster, desto eher fängt es den
+Kommentar der NACHBARREGEL ein und erklärt eine Fläche für begründet, die es
+nicht ist.
+
+**Kosten:** Ein Kommentar musste umziehen und einer neu geschrieben werden.
+`test402` ist wieder 4 von 4 grün.
+
+---
+
+## E628 — Die Gedankenkarte bekommt Griffe, Verbindungen, Formen und Vorlagen
+
+**Redurs Satz, 19. September 2026:** „Könntest du den XMind-Teil verbessern —
+wenn ich oben, links, rechts oder unten auf einen Taster klicke, sollte dort
+eine Verbindung entstehen; ich sollte die Verbindungen löschen können; es
+sollte verschiedene Formen haben, fertige Vorlagen usw."
+
+Vier Dinge. Alle vier sind gebaut, und `test538` hält sie mit 53
+Zusicherungen.
+
+### 1 · Die vier Griffe — und warum einer zweierlei kann
+
+Am gewählten Knoten stehen vier kleine Griffe: oben, rechts, unten, links.
+
+```txt
+tippen  →  ein neues Thema in dieser Richtung
+ziehen  →  eine freie Verbindung zu dem Knoten, auf dem man loslässt
+```
+
+Entschieden wird am zurückgelegten Weg: unter sechs Pixeln ist es ein Tipp.
+Dieselbe Schwelle und derselbe Grund wie beim Platz-Griff der Zeichenleiste
+(E620) — ein Finger wackelt immer ein wenig.
+
+Links und rechts legen ein **Unterthema** an, oben und unten ein
+**Geschwister** — davor beziehungsweise dahinter. Das ist nicht erfunden,
+sondern das, was die Karte ohnehin kann (Tab und Enter); die Griffe sind der
+genaue Weg dorthin, „hier, an dieser Seite".
+
+**Nur am gewählten Knoten.** Bei vierzig Themen wären es sonst
+hundertsechzig Knöpfe, und vier Punkte an jedem Kasten sehen aus wie ein
+Raster, nicht wie ein Angebot.
+
+**§37, geschriebener Grund für 16 px sichtbar / 28 px Fläche:** Die Griffe
+sind ein **Nebenweg**. Der Hauptweg bleibt die Leiste (＋ und ⏎, beide mit
+voller 44-px-Fläche) und am Rechner Tab/Enter; sie können alles, was die
+Griffe können. Vier 44-px-Flächen um einen 34 px hohen Kasten überlappen
+einander und den Kasten — der Doppelklick zum Umbenennen wäre nicht mehr zu
+treffen. Am Telefon sind es 20 px sichtbar und 36 px Fläche.
+
+### 2 · Die freien Verbindungen
+
+Eine Verbindung ist **keine Kante des Baums**. Ein Ast sagt „gehört dazu",
+eine Verbindung sagt „hat damit zu tun" — zwei Auskünfte, also zwei
+Gestalten: gestrichelt, dünner, in der gedämpften Textfarbe, mit einer
+Spitze am Ziel. Gewählt wird sie durchgezogen und dicker, **nicht nur anders
+gefärbt** (§38).
+
+Sie liegt als eigene Liste `verbindungen` neben `knoten`. Eine Karte ohne
+dieses Feld ist eine Karte ohne Verbindungen — jede schon gespeicherte Karte
+bleibt damit unverändert lesbar (§9).
+
+**Abgelehnt wird, was nichts sagt:** eine Verbindung auf sich selbst,
+dieselbe zweimal (sie läge auf sich und nur eine liesse sich löschen), und
+die zwischen Elternteil und Kind — dort zeichnet der Baum schon eine Linie.
+Eine Verbindung zu einem gelöschten Knoten fällt beim Lesen still weg, statt
+eine Linie ins Nichts zu malen.
+
+**Der Bogen zur Seite ist kein Schmuck.** Zuerst lief die Linie gerade. Zwei
+Äste links und rechts der Wurzel auf gleicher Höhe ergaben damit eine
+waagerechte Linie **mitten durch die Wurzel**: gemessen war ihr Kasten
+181 × 0 px, sie lag vollständig hinter dem Wurzelknoten, und ein Klick
+darauf traf die Wurzel statt die Verbindung. Jetzt weicht sie senkrecht zur
+Verbindung aus, weg von der Mitte der Karte — dort steht das meiste im Weg.
+
+### 3 · Sechs Formen, und keine zwanzig
+
+```txt
+abgerundet · Rechteck · Pille · Ellipse · Raute · Sechseck
+```
+
+Eine Form muss auf dreissig Pixel Höhe noch als DIESE Form erkennbar sein,
+und ein Achteck ist bei der Grösse ein Kreis mit Ecken.
+
+`rund` schreibt **nichts** in die Daten: es ist, was ein Knoten ohne Feld
+ist. Und eine Form, die diese Fassung nicht kennt, **bleibt stehen** —
+geprüft wird die Gestalt des Wertes (Kleinbuchstaben, Ziffern, Bindestrich),
+nicht seine Bekanntheit. Eine Karte aus einer neueren Fassung verlöre sonst
+ihre Sternform beim ersten Öffnen, still und endgültig (§18).
+
+Raute und Sechseck können `clip-path` **nicht** auf dem Knoten selbst
+benutzen: das schnitte die vier Griffe ab, die absichtlich über den Rand
+hinausragen, und die Kante gleich mit. Deshalb zwei Ebenen — `::before` ist
+die Kante in der Astfarbe, `::after` dieselbe Form 3 px kleiner in der
+Kartenfarbe. Was dazwischen stehen bleibt, IST die Kante.
+
+### 4 · Sechs fertige Vorlagen
+
+```txt
+Projekt · Diese Woche · Entscheidung · Prüfung vorbereiten ·
+Vier Felder · Thema sammeln
+```
+
+Jede bringt Wurzel, Äste und Unterthemen mit, die Äste wechseln die Seite
+und bekommen der Reihe nach eine Farbe — genau das, was ein Mensch von Hand
+täte. Kein neues Feld: `seite` und `farbe` stehen schon im Modell.
+
+**Sie fragt, bevor sie überschreibt** (§9) — aber nur, wenn wirklich etwas
+auf dem Spiel steht. „Leer" heisst: ein einziger Knoten mit dem Text, den
+eine frische Karte mitbringt, und keine Verbindung. Wer zwei Wörter getippt
+hat, wird gefragt; wer die Karte gerade angelegt hat, nicht. Eine Rückfrage,
+die immer kommt, wird nicht mehr gelesen. Und ↶ holt in beiden Fällen die
+alte Karte in einem Schritt zurück.
+
+**Kein Zeichen vor dem Vorlagennamen**, und keines auf den Formknöpfen.
+Zuerst standen dort sechs: ▢ ▭ ▰ ⬭ ◇ ⬡. Auf dem Bild war ▰ ein schwarzer
+Klecks und sagte alles Mögliche, nur nicht „Pille" — dieselbe Sorte Fund wie
+der Stift, der wie eine Büroklammer aussah (§55.1). Jeder Formknopf zeigt
+stattdessen die Form SELBST, aus demselben Stil wie der Knoten.
+
+### Was das Hinsehen gefunden hat (§55)
+
+Vier Fehler, keiner davon im Code zu sehen:
+
+```txt
+· Die Griffe erschienen nicht. `waehle` zeichnet die Karte nicht neu, es
+  setzt nur die Marke `on` um — die Griffe entstanden erst bei der nächsten
+  Änderung. Gemessen: 0 statt 4.
+· Die Linie lief durch die Wurzel (oben).
+· Die Entf-Taste lief ins Leere: ohne `preventDefault` nahm der Browser
+  nach dem Klick auf den SVG-Pfad den Fokus wieder weg. Gemessen stand
+  `document.activeElement` auf dem Körper der Seite statt auf der Bühne.
+  Ein Knoten ist ein `div` und gibt den Fokus an die Bühne weiter; ein
+  SVG-Pfad tut das nicht.
+· Die sechs Formknöpfe standen SENKRECHT untereinander. `.gk-formen` hatte
+  keine Regel und war damit ein gewöhnliches `span` — seine Knöpfe sind
+  `display:grid` und stapeln sich.
+```
+
+### Gemessen
+
+```txt
+test538   53 von 53 grün
+test529   unverändert grün (die Karte selbst)
+```
+
+**Vier Gegenproben, jede einzeln rot gesehen und zurückgenommen** — und eine
+davon hat eine Prüfung entlarvt, die nicht rot werden konnte: die Zahl der
+Griffe NACH einem Klick bleibt auch dann richtig, wenn der Zeichner sie an
+jeden Knoten hängt, weil `waehle` die fremden ohnehin wegräumt. Die
+Zusicherung misst jetzt VOR dem ersten Klick (§55.2).
+
+Zweimal stand dabei `noUnusedLocals` im Weg (§52.6): `if (false)` liess den
+Zweig nicht mehr bauen, weil zwei Konstanten damit unbenutzt waren. Eine
+Gegenprobe, die nicht baut, ist keine.
