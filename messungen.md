@@ -1952,3 +1952,557 @@ Dienststand                   v1141 → v1145
 ```
 
 **Nicht gemessen:** die Gesamtsuite.
+
+---
+
+## §51 · Die Startnutzlast — woher die 512 KB kamen (E613, 16. September 2026)
+
+`test388 §5` war rot, und zwar seit zwölf Tagen. Zuerst gezählt, dann
+gehandelt — das ist die Reihenfolge, die L146 Punkt 1 bis 3 verlangt hat.
+
+**Am laufenden Programm gemessen** (`node pruefungen/lauf/test388.mts`, gzip
+Stufe 6 wie ein echter Server, der Lauf zählt, was der Browser wirklich holt):
+
+```txt
+ 4. September   203 Dateien   2081 KB     Decke damals gesetzt: 2300
+ 5. September   207 Dateien   2169 KB
+16. September   232 Dateien   2637 KB     ← rot
+nach E613       232 Dateien   2585 KB     Decke jetzt: 2700
+```
+
+Die 2637 stammen aus einem eigenen Arbeitsbaum auf `origin/main`
+(`git worktree add … origin/main`), nicht aus einer Rechnung.
+
+**Die Aufteilung der 512 KB** (gzip Stufe 6 über alle `<script src>` und
+`<link rel=stylesheet>` aus `index.html`, gegen `57a5199`):
+
+```txt
+26 NEUE Dateien        229 KB
+206 GEWACHSENE         291 KB
+```
+
+Die sechs grössten Posten:
+
+```txt
+neu        quell/bereiche/chronik/daten.js       54,2 KB   (182 KB roh)
+neu        quell/schale/stil/motion.css          47,6 KB
+neu        quell/schale/stil/pdf-studio.css      16,2 KB
+gewachsen  quell/bereiche/pdf/marken.js         +68,1 KB
+gewachsen  quell/bereiche/pdf/document-mode.js  +64,1 KB
+gewachsen  quell/schale/stil/bausteine.css      +45,8 KB
+```
+
+**Was die Zahlen sagen, und was nicht.** `marken.js` und `document-mode.js`
+sind zusammen 132 KB gewachsen — das Zeichen- und das Schreibstudio, E568
+bis E612. Wer diese Zahl kleiner haben will, will weniger Produkt. Der eine
+Posten, der *nichts* mit Arbeit am Produkt zu tun hatte, war
+`chronik/daten.js`.
+
+**Der Befehl, mit dem sich das jederzeit nachzählen lässt:**
+
+```bash
+node pruefungen/lauf/test388.mts          # was der Browser wirklich holt
+```
+
+**Gegenprobe (§55.2), gelaufen und rot gesehen:** `daten.js` wieder als
+`<script src>` in `index.html` → `test388` 18/19, Startlast 2639 KB.
+
+**Läufe:**
+
+```txt
+test388     19/19   (2 Zusicherungen neu, 1 in der Gegenprobe rot gesehen)
+test481     39/39   (5 neu, §3b — die Chronik kommt beim Öffnen wirklich an)
+test270     77 ok
+test105 · test109 · test87   grün
+npm run typecheck   sauber
+Einzeldatei         10 243 KB
+Dienststand         v1145 → v1146
+```
+
+**Nicht gemessen:** die Gesamtsuite.
+
+---
+
+## §52 · Die Tafel als Behälter — was sich NICHT bewegt hat (E614, 16. September 2026)
+
+W2 baut keine Gestaltung. Er schiebt eine Ebene ein, und die Zusage ist,
+dass am Bildschirm nichts passiert. Das lässt sich nur so belegen: dieselbe
+Messung auf beiden Ständen, in einem eigenen Arbeitsbaum.
+
+**1280 px Fenster, breite Seite, Blatt mit kariertem Papier, Stift gewählt:**
+
+```txt
+                          origin/main (2f35d03)   mit E614
+Leiste, Breite                     860 px           860 px
+Leiste, Höhe                       127 px           128 px
+Zeile 1  (y ≈ 0)              13 Werkzeuge      13 Werkzeuge
+Zeile 2  (y ≈ 50)             26 Zubehörteile   26 Zubehörteile
+Zeile 3                       «Einrichten»      «Einrichten»
+```
+
+**Ein Pixel.** Das ist die ganze sichtbare Wirkung von W2 — und es ist der
+eine Pixel des gestapelten Wortes aus W3, nicht der Ebene.
+
+Gefahren mit `git worktree add … origin/main`, damit im Hauptbaum
+weitergearbeitet werden konnte (§30).
+
+### Der Umfang, gezählt statt geschätzt
+
+```txt
+.blatt-werk in CSS              182 Zeilen in 2 Dateien
+  davon Kindwähler               51 Regelblöcke / 104 Selektorzeilen  ← ziehen mit
+  davon Nachfahre                44 Regelblöcke                       ← bleiben
+  davon `.blatt-werk` selbst     23 Regelblöcke                       ← bleiben
+:scope > im TypeScript            7 Stellen (6 marken.ts, 1 document-mode.ts)
+:first/last/nth-child im Kontext  0   ← eine ganze Gefahrenklasse fällt weg
+Geschwisterwähler `+`             3 Regeln;  `~`  0
+Läufe, die `.blatt-werk` nennen  56 von 475
+  davon auf dem Kindwähler        3   (test522, test523, test524)
+```
+
+Befehl für die Kindwähler — das naive Muster übersieht die Regeln mit
+Attributanhängsel, und das sind gerade die Kernregeln:
+
+```bash
+grep -rnE "\.blatt-werk(\[[^]]*\]|:[a-z-]+(\([^)]*\))?)*\s*>" quell/schale/stil/
+```
+
+### W3: das Wort kostet Höhe statt Breite
+
+Gemessen an der Stelle, die `test351` ohnehin misst — 1360 px Fenster,
+Leiste 940 px:
+
+```txt
+vorher    0 Wörter,  ZWEI Werkzeugzeilen
+nachher  13 Wörter,  EINE Werkzeugzeile
+```
+
+Dreizehn gestapelte Werkzeuge brauchen in einer Zeile rund **790 px**
+(daneben waren es 1142, E515). Die Schwelle steht deshalb auf **820** und
+nicht auf 790 — eine Schwelle auf dem Messwert reisst beim ersten längeren
+Wort. Bei 592 px (Leiste in einer Spalte) kippen sie in zwei Zeilen und die
+Leiste wird 165 px hoch; `test351` fängt das.
+
+### Gegenproben (§55.2), jede einzeln gelaufen und rot gesehen
+
+```txt
+EINEN Kindwähler zurücklassen     test533 27/29
+  → „Beim Stift steht nur SEIN Zubehör da" meldet ZWÖLF Gruppen statt
+    sechs; Leiste 163 px statt 128.
+W3-Stapelung abgeklemmt           test533 26/29
+  → `flex-direction: row`, das Wort steht wieder daneben.
+```
+
+**Läufe:**
+
+```txt
+test533   29/29   (neu)
+test351   26/26   §3 umgehängt
+test522   31/31 · test523 40/40 · test524 118/118   je umgehängt
+test343–352 (neun Läufe)   alle grün
+npm run typecheck   sauber
+Einzeldatei         10 252 KB
+Dienststand         v1146 → v1148
+```
+
+**Nicht gemessen:** die Gesamtsuite.
+
+---
+
+## §53 · Der Stift am Ordner-Auge (E615, 17. September 2026)
+
+Kein Bild — hier gibt es nichts zu sehen, nur ein Verhalten (§55.3). Die
+Messung ist der Beweis.
+
+**Was vorher galt**, an der einen Bedingung in `bibliothek.ts`:
+
+```txt
+Eingabemittel      pointerType    zeigerHatHover()   Karte ging auf?
+Maus               mouse          ja                 ja
+Stift              pen            ja                 NEIN  ← der Fund
+Finger             touch          —                  nein  (gewollt)
+```
+
+Und der zweite, unterschätzte Grund — `(hover: hover) and (pointer: fine)`
+beschreibt den **Hauptzeiger**:
+
+```txt
+Gerät                                  (hover:hover)   (any-hover:hover)
+Rechner mit Maus                       ja              ja
+Laptop mit Berührungsbildschirm        NEIN            ja   ← auch die MAUS
+   + Maus oder Stift daneben                                   war gesperrt
+Telefon                                nein            nein
+```
+
+Die alte Abfrage hätte also nicht nur den Stift ausgesperrt, sondern auf
+jedem Touch-Laptop auch die Maus — an einem Gerät, das Redur benutzt.
+
+**Läufe:**
+
+```txt
+test476   31/31   (5 Zusicherungen neu)
+npm run typecheck   sauber
+Dienststand         v1148 → v1149
+```
+
+**Gegenproben (§55.2), jede einzeln gelaufen und rot gesehen:**
+
+```txt
+alter Stand (`!== 'mouse'`, `hover: hover`)      test476 27/31
+nur die `pointerdown`-Absage entfernt            test476 29/31
+```
+
+**Und ein Fund im eigenen Wächter, der vierte dieser Woche.** Die
+Quellenzusicherung „`(hover: hover)` steht nirgends mehr" war rot, obwohl
+der Code stimmte: sie traf den **Kommentar**, der erklärt, warum die alte
+Abfrage weg ist. Mit `matchMedia\(` davor zeigt sie auf den Aufruf.
+Dieselbe Sorte wie E610, E612 und E613.
+
+**Nicht gemessen:** die Gesamtsuite.
+
+---
+
+## §54 · Was ein Strich in Millimetern ist (E616, 17. September 2026)
+
+Die Frage, mit der W4 anfing: Redurs iPad-Bilder nennen „Fein 0,3 mm ·
+Mittel 0,7 mm · Markant 1,2 mm". Passen diese Zahlen auf Redion?
+
+**Nein.** Und das liess sich nur durch Nachsehen herausfinden.
+
+**Gemessen am laufenden Programm** (1440 × 950, A4-Blatt, Papier „mm"):
+
+```txt
+.blatt-papier auf dem Schirm      1136 × 1607 px
+viewBox der Markenfläche          0 0 595.28 841.89     ← A4 in PDF-PUNKTEN
+```
+
+Der Massstab der Marken ist also **nicht** der des Bildschirms. `BREITEN`
+sind Punkte. Ein Punkt ist 1/72 Zoll, ein Zoll 25,4 mm — ab hier ist die
+Rechnung exakt:
+
+```txt
+                 Punkte    Redion      GoodNotes (Redurs Bild)   Abweichung
+Fein               1,2     0,4 mm      0,3 mm                    +33 %
+Mittel             2,4     0,8 mm      0,7 mm                    +14 %
+Markant            5,0     1,8 mm      1,2 mm                    +50 %
+Marker (× 4)       9,6     3,4 mm      4,0 mm                    −15 %
+Regler, Maximum   12,0     4,2 mm      —
+```
+
+**Hätte der Bogen Redurs Tabelle abgeschrieben**, stünde bei „Markant"
+1,2 mm an einem Strich, der 1,8 mm zieht — um die Hälfte daneben, und
+plausibel genug, dass es niemandem auffällt (§55.1).
+
+**Und die zweite Falle an derselben Stelle:** Stift und Marker teilen sich
+die drei Stufenknöpfe, aber der Marker zieht das Vierfache. Eine feste
+Beschriftung hätte am Marker „0,8 mm" an einen 3,4-mm-Strich geschrieben.
+Die Beschriftung hängt deshalb am Werkzeug.
+
+**Der Befehl, mit dem sich das nachzählen lässt:**
+
+```bash
+node pruefungen/alle.mts 438     # §3 prüft das viewBox und rechnet selbst
+```
+
+Die Zusicherung schreibt ihren Sollwert **nicht** ab, sondern rechnet ihn
+aus dem `viewBox`, das die Seite wirklich trägt.
+
+**Läufe:**
+
+```txt
+test438   59/59   (5 Zusicherungen neu, 2 umgehängt)
+npm run typecheck   sauber
+Dienststand         v1149 → v1156
+```
+
+**Gegenproben (§55.2), jede einzeln gelaufen und rot gesehen:**
+
+```txt
+„Punkte sind Millimeter"   test438 55/59
+Marker-Faktor weg          test438 58/59
+```
+
+Die erste baute zunächst gar nicht: `MM_JE_PT` war nur in `alsMm` benutzt,
+und `noUnusedLocals` brach ab (§52.6). Die Konstante musste mit weg — sonst
+wäre es keine Gegenprobe gewesen, sondern ein Bauabbruch.
+
+**Nicht gemessen:** die Gesamtsuite.
+
+---
+
+## §55 · Was ein Stiftname kostet (E617, 17. September 2026)
+
+Im Stilblatt stand seit E512 eine Zahl als Grund dafür, dass die
+Stiftkacheln keinen Namen tragen: „Sechs Stifte mit Namen sind rund 320 px."
+Sie war richtig — für ein Wort **neben** dem Zeichen.
+
+**Gemessen, gestapelt** (laufende App, Stift gewählt, breite Seite):
+
+```txt
+Kachel ohne Wort                    32 px
+Kachel mit Wort, gestapelt          77 px   („Kugelschreiber", das längste)
+sechs Kacheln, Zuwachs             ~270 px  statt der befürchteten 320
+```
+
+**Und was das für die Leiste heisst** — das ist die Zahl, die zählt:
+
+```txt
+Leistenbreite   Zubehörzeilen   Leistenhöhe
+    1180 px          4            127 px    ← zu eng
+    1280 px          3             91 px
+    1307 px          3             91 px
+    1507 px          3             91 px
+```
+
+Die Schwelle steht deshalb auf **1300** und nicht auf 1280: eine Schwelle
+auf dem Messwert reisst beim ersten längeren Namen. Nach der Umstellung ist
+die Leiste bei **jeder** geprüften Breite so hoch wie vorher:
+
+```txt
+Fenster   Leiste    Höhe vorher / nachher   Namen sichtbar
+ 1280      860 px      128 / 128                 0
+ 1500     1080 px       92 /  92                 0
+ 1600     1180 px       91 /  91                 0
+ 1700     1280 px       91 /  91                 0
+ 1900     1407 px       91 /  91                 6
+```
+
+**Die drei Schwellen der Leiste, gesammelt:**
+
+```txt
+ 820 px   die dreizehn Werkzeuge      W3 (E614)
+1150 px   Formen, Kritzeln, Lineal …  E359
+1300 px   die sechs Stifte            E617
+```
+
+### Und der Fehler, den das Bild gefunden hat
+
+Die erste Messung sagte „Kachel 36 px" — also „der Name wird
+abgeschnitten". Auf dem Bild stand er **vollständig** da. Nachgemessen sind
+es 77 px; die erste Zahl war am falschen Knoten genommen. Hätte ich ihr
+geglaubt, wäre der Bogen als „geht nicht" abgebrochen worden.
+
+**§55 ist deshalb keine Zierde: hier hat das Bild die Messung widerlegt,
+nicht umgekehrt.**
+
+### Und `bilder.mts` konnte den Zustand gar nicht zeigen
+
+Das breiteste Gerät war `rechner` mit 1280 px Fenster — Leiste 860 px. Die
+obere Schwelle war damit **auf keinem Bild dieses Verzeichnisses je zu
+sehen**. Neu: `breit`, 1920 × 1080, Leiste 1407 px.
+
+**Läufe:**
+
+```txt
+test533   40/40   (11 Zusicherungen neu: §5b und §5c)
+test351 522 523 524 438 345 365   alle grün
+npm run typecheck   sauber
+```
+
+**Gegenproben (§55.2), jede einzeln gelaufen und rot gesehen:**
+
+```txt
+die dritte Schwelle entfernt       test533 38/40   (Leiste 127 statt 91 px)
+`display:none` wieder eingesetzt   test533 36/40   (keine Namen, keiner im Baum)
+```
+
+**Nicht gemessen:** die Gesamtsuite.
+
+---
+
+## §56 · Die Tafel als Kasten (E618, 17. September 2026)
+
+### Was der Rückbau an E614 gekostet hat
+
+E614 legte alle Kinder in die Tafel; E618 holt die Werkzeuge und den
+Zeilenbruch zurück in die Leiste. Gezählt, was dabei mitziehen musste:
+
+```txt
+Kindwähler der GRUPPEN   (.blatt-tafel > [data-gruppe])   51   unberührt
+Regeln mit [data-wz] oder .blatt-zeilenbruch               8   umgeschrieben
+Geschwisterwähler über die neue Grenze                     1   neu gefasst
+:scope > im TypeScript                                     5   auf zwei Flächen
+Prüfläufe umgehängt                       test522 523 524 533
+```
+
+**Ein Achtel der Arbeit von E614** — weil die 51 Gruppenwähler weiterhin auf
+die Tafel zeigen. Das Zubehör ist ja darin geblieben.
+
+### Der Kasten, gemessen
+
+```txt
+Fenster 1900 px   Leiste 1407 px   Tafel: display:flex, eigene Zeile, voller Breite
+Fenster 1600 px   Leiste 1180 px   Tafel: display:contents — alles wie bisher
+```
+
+Die Schwelle ist dieselbe wie bei den Stiftnamen (1300, E617).
+`display:contents` unter ihr ist **keine Sparmassnahme, sondern die
+Bedingung**: am Telefon kommt die Reihenfolge aus `order` über Werkzeuge UND
+Zubehör hinweg (E356), und ein Kasten dazwischen bräche das.
+
+### Und zweimal hat das Bild die Arbeit korrigiert (§55)
+
+**Erstes Bild — „0,4 mm0,8 mm 1,8 mm".** Die Zahlen liefen ineinander:
+`.blatt-strich` steht auf festen `width:30px`, die Zahl lief darüber hinaus.
+
+```txt
+vorher   width:30px                 Zahl überlappt den Nachbarn
+nachher  width:auto; min-width:52px sie steht in ihrer Kachel
+```
+
+Eine überlappte Zahl ist eine falsche Zahl — derselbe Fund wie §55.1 mit der
+abgeschnittenen Tabellenzahl. `test533 §5d` misst seither ausdrücklich, dass
+keine Zahl über ihre Kachel hinausläuft.
+
+**Zweites Bild — der Kasten war kaum zu sehen.**
+
+```txt
+vorher   --bg-tief  #f4f4f2   gegen --bg-card #f7f7f5   = 3/100 Helligkeit
+nachher  --bg       #ffffff                             = ein Feld
+```
+
+**Läufe:**
+
+```txt
+test533   54/54   (14 Zusicherungen neu: §5d und §5e)
+test522 523 524 351 438 345 365 476 532 506   grün
+npm run typecheck   sauber
+Dienststand         v1157 → v1160
+```
+
+**Gegenprobe (§55.2), gelaufen und rot gesehen:** den Kasten wieder zu
+`display:contents` → `test533` 50/54.
+
+**Nicht gemessen:** die Gesamtsuite.
+
+---
+
+## §57 · Wo die Leiste wirklich stand (E619/E620, 19. September 2026)
+
+Gemessen an der laufenden App mit Playwright, Fenster 1440 × 960,
+`deviceScaleFactor: 1`. `data-lage` gesetzt, danach
+`getBoundingClientRect()` der `.blatt-reihe` abgelesen — die Werte sind
+gerundete Pixel, nicht geschätzt.
+
+```txt
+Befehl   node /tmp/.../messe-lage.mts   (Wegwerfskript, siehe test534 §1/§2)
+```
+
+### Gewöhnliche Seite, vorher
+
+```txt
+oben     x=244   y=335   1136 × 93      richtig
+links    x=250   y=369     64 × 749     richtig
+rechts   x=1310  y=369     64 × 749     richtig
+unten    x=811   y=522      2 × 1409    ← zwei Pixel breit
+```
+
+### Gewöhnliche Seite, nachher
+
+```txt
+oben     x=244   y=335   1136 × 93      unverändert
+links    x=250   y=335     64 × 749     unverändert
+rechts   x=1310  y=335     64 × 749     unverändert
+unten    x=256   y=1885  1112 × 46      eine Leiste
+frei     gezogen, geklemmt auf die halbe Leistenbreite vom Rand
+```
+
+### Studio, vorher
+
+```txt
+oben     x=198   y=884   1044 × 62      der Dock
+links    x=683   y=197     74 × 749     mitten auf dem Papier (x=225 … 1205)
+rechts   x=683   y=197     74 × 749     dasselbe
+unten    x=198   y=884   1044 × 62      der Dock
+```
+
+### Studio, nachher
+
+```txt
+alle vier gemerkten Plätze   x=198  y=884  1044 × 62  —  der Dock, unverformt
+Platz-Knopf im Studio        0 sichtbar (vorher 1)
+```
+
+### Der Vorlesebaum
+
+```txt
+role="toolbar" in src/      vorher 0   nachher 1
+   (bei 11 anderen Rollen: status 11, switch 8, tab 6, img 5, group 5, dialog 5 …)
+Tabstationen der Leiste     vorher 35  nachher 1      frisch geladen, ohne Klick
+```
+
+### Die Farben des Papiers gegen Redions Marken
+
+Gerechnet mit `python3`, euklidisch im RGB:
+
+```txt
+#905CFF (Papier)  gegen  --accent hell  #7c3aed    Abstand 43,4
+#905CFF (Papier)  gegen  --accent dunkel #6d4aff   Abstand 39,4
+```
+
+Beide sind Violett, beide liegen nah — und genau deshalb wäre der Hex-Wert
+des Papiers ein **drittes** Violett neben zwei vorhandenen gewesen (§39).
+
+---
+
+## §58 · Die Strichprobe, die Kachel und der Radierer (E622–E624, 19. September 2026)
+
+Gemessen an der laufenden App mit Playwright, `deviceScaleFactor: 1`.
+
+### Wo «unten» steht (E622)
+
+```txt
+Fenster 1440 × 960, Blatt rund 1600 px hoch
+
+vorher    position:absolute   y = 1885      (Blattfuss, ausserhalb des Bildes)
+nachher   position:sticky     y =  904      (10 px über dem Fensterrand)
+          Papier              335 … 1941    — keine Lücke darüber
+          Platz im Baum       1 von 2       (hinter dem Papier)
+```
+
+Zwischenstand, der zum Zug im Baum führte: nur `absolute` → `sticky` getauscht
+ergab y = 335, also gar keine Bewegung. Und mit `left:50%` zusätzlich
+x = −288, weil `left` bei sticky eine Haftgrenze ist und keine Platzierung.
+
+### Was die Strichprobe zeigte (E623)
+
+```txt
+vorher    background:currentColor  →  rgb(242, 242, 242) bei JEDER Tinte
+nachher   rot gewählt              →  rgb(214, 69, 69)
+
+Kontrast der schwarzen Tinte (rgb 17,17,17)
+  gegen die Leiste im Dunkelmodus (rgb 32,32,32)      1,2 zu 1   unsichtbar
+  gegen den Papiergrund (rgb 248,248,245)            17,7 zu 1   lesbar
+
+Deckung der Probe        Bleistift 0,72 · Pinsel 0,92 · Marker 0,32 · Füller 1
+Deckung am echten Strich Bleistift 0,72 · Pinsel 0,92      (am SVG abgelesen)
+```
+
+### Was die Kachel kostet (E623)
+
+```txt
+„Markant · 1,8 mm" in EINER Zeile     Leiste 143 px   Decke 140  → gerissen
+Name über Millimeter                  Leiste < 140 px            → passt
+Kachelbreite im Kasten                min-width 52 px, width:auto
+beim Marker                           „3,4 mm" (das Vierfache, E616)
+```
+
+### Der Radierer (E624)
+
+```txt
+Grössen auf der gewöhnlichen Seite    vorher 0      nachher 3
+Kantenlänge je Grösse                 44 × 44 px    (§37, E576)
+Radierkreis „groß" gewählt            r = 28
+Radierkreis „automatisch"             r = 7,2       (Strichbreite 2,4 × 3)
+```
+
+### Was die Läufe dazu sagen
+
+```txt
+test535   27 von 27 grün   (neu)
+test534   50 von 50 grün   (§1b neu)
+test533   56 von 56 grün   (zwei Zusagen neu)
+test524  105 von 105 grün
+test348   34 von 34 grün   (eine Zahl nachgezogen: 1068 statt 828 + 60)
+test351   34 von 34 grün   (eine Zahl nachgezogen: 5 statt 1)
+```

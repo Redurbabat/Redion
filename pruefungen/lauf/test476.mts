@@ -20,6 +20,10 @@
  *      verschwindet.
  *   §6 EINE BERÜHRUNG ÖFFNET NICHT PER ÜBERFAHREN. `pointerType: touch`
  *      meldet auf manchen Geräten ein Hover, das kein Hover ist.
+ *   §6b DER STIFT ABER SCHON (L180/E615) — ein Stift über dem Glas ist
+ *      genau der Fall, für den „beim Hinschauen" gebaut wurde.
+ *   §6c UND EIN TIPP SAGT DIE UHR AB: `pointerenter` kommt vor
+ *      `pointerdown`, und dazwischen sagte bis E615 nichts ab.
  *   §7 DAS LUSTIGE: die Blätter fächern NACHEINANDER heraus, nicht alle
  *      auf einmal — und jedes hebt sich, wenn man darauf zeigt.
  *   §8 UND ES LÄSST SICH ABSTELLEN: `prefers-reduced-motion` nimmt die
@@ -229,6 +233,54 @@ console.log('\n§6 Eine Berührung öffnet nicht per Überfahren');
   await s.close();
 }
 
+/* ═══ §6b Der STIFT öffnet sehr wohl (L180) ════════════════════════════════
+   Der Gegenfall zu §6, und der Grund, warum §6 nicht „alles ausser Maus"
+   heissen darf. Ein Stift, der über dem Glas schwebt, IST ein Überfahren —
+   Surface, iPad mit Tastatur, Wacom. Redur hat genau das am 16. September
+   genannt.
+
+   Bis E615 stand in `bibliothek.ts` `pointerType !== 'mouse'`, und damit
+   war der Stift zusammen mit dem Finger draussen. Diese Zusicherung war
+   gegen den alten Stand rot. */
+console.log('\n§6b Ein Stift öffnet die Karte wie eine Maus');
+{
+  const s = await mitOrdner();
+  await zumRegal(s);
+  await zeigeAuf(s, '.bib-blick[data-blick]', 'pen');
+  await s.waitForTimeout(800);
+  p('Ein schwebender Stift öffnet die Karte', await karteDa(s));
+  await zeigeWeg(s, '.bib-blick[data-blick]', 'pen');
+  await s.waitForTimeout(600);
+  p('… und sie geht wieder zu, wenn er fortgeht', !(await karteDa(s)));
+  await s.close();
+}
+
+/* ═══ §6c Ein Tipp ist kein Hinschauen (L180) ══════════════════════════════
+   Beim Antippen kommt erst `pointerenter`, dann `pointerdown`. Dazwischen
+   sagte nichts ab — die Uhr lief weiter, und die Karte ging nach dem
+   Tippen von selbst auf. Am Auge fiel das kaum auf, weil ein Klick sie
+   ohnehin öffnet; an jeder anderen Stelle wäre es ein Fehler.
+
+   HIER WIRD DESHALB KEIN KLICK GESENDET, nur `pointerdown`. Was danach
+   noch aufgeht, ist die Uhr und nichts sonst. */
+console.log('\n§6c Ein Tipp sagt die Uhr ab');
+{
+  const s = await mitOrdner();
+  await zumRegal(s);
+  await zeigeAuf(s, '.bib-blick[data-blick]', 'pen');
+  await s.waitForTimeout(90);          /* kürzer als SCHAU_AUF_MS (280) */
+  await s.evaluate(`(() => {
+    const el = document.querySelector('.bib-blick[data-blick]');
+    const r = el.getBoundingClientRect();
+    el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true,
+      pointerId: 1, pointerType: 'pen', isPrimary: true,
+      clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }));
+  })()`);
+  await s.waitForTimeout(700);
+  p('Nach einem Tipp geht die Karte NICHT von selbst auf', !(await karteDa(s)));
+  await s.close();
+}
+
 /* ═══ §7/§8 Das Lustige ════════════════════════════════════════════════════ */
 console.log('\n§7 Die Blätter fächern nacheinander heraus');
 {
@@ -347,8 +399,22 @@ console.log('\n§9 Quellen');
   const css = lies('quell/schale/stil/bausteine.css');
   p('Das Überfahren hat eine Wartezeit, keinen Sofortstart',
     /SCHAU_AUF_MS\s*=\s*\d/.test(b) && /SCHAU_ZU_MS\s*=\s*\d/.test(b));
-  p('… und gilt nur, wo es wirklich ein Überfahren gibt',
-    /hover: hover|pointerType !== 'mouse'|pointerType === 'mouse'/.test(b));
+  /* UMGEHÄNGT MIT L180 (E615). Hier stand ein Muster, das auch auf
+     `pointerType !== 'mouse'` passte — also genau auf die Zeile, die den
+     Stift aussperrte. Es prüft jetzt die Regel, die wirklich gelten soll:
+     Maus ODER Stift, und `any-hover` statt `hover`. */
+  p('… und gilt für Maus UND Stift, nicht nur für die Maus',
+    /pointerType !== 'mouse' && e\.pointerType !== 'pen'/.test(b));
+  /* AUF DEN AUFRUF ZEIGEN, NICHT AUF DEN FLIESSTEXT. Der erste Versuch
+     verbot `(hover: hover)` IRGENDWO in der Datei — und traf damit den
+     Kommentar, der erklärt, warum die alte Abfrage weg ist. Vierter Fall
+     dieser Sorte in einer Woche (E610, E612, E613): eine Zusicherung, die
+     Prosa liest, prüft nichts. Also `matchMedia(` davor. */
+  p('… und fragt nach ALLEN Eingabemitteln, nicht nur dem Hauptzeiger',
+    /matchMedia\('\(any-hover: hover\)/.test(b)
+    && !/matchMedia\('\(hover: hover\)/.test(b));
+  p('… und ein Tipp sagt die Uhr ab',
+    /addEventListener\('pointerdown'/.test(b));
   p('Eine geklickte Karte weiss, dass sie geklickt wurde',
     /geklickt|perKlick|festgehalten/.test(b));
   p('Die Staffelung steht als EINE Zahl im Stilblatt, nicht im Code',

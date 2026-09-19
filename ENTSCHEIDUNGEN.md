@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-590 Entscheidungen, E1 bis E612 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+602 Entscheidungen, E1 bis E624 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -655,6 +655,18 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E610** — Der Ablagename des Dienst-Arbeiters folgt dem INHALT, nicht der Nummer — weil ein Zurücknehmen die Nummer mit zurückdreht (L83.8, `test530`)
 * **E611** — Das Auge sitzt an JEDEM Ordner, nicht nur im Regal: die Notizhefte bekommen DASSELBE Auge und „Blick hinein“, aus einer Quelle (`test531`)
 * **E612** — Das Schreibstudio wird ruhig: 301 px Bedienung über der Folie werden 160 — das Folienband klappt zu, die Dateikarte zieht ins Details-Fenster (dreht E464 an dieser Stelle um, `test532`)
+* **E613** — Die Chronik kommt erst beim Öffnen: 54 KB Chronikprosa verlassen den Startweg (Muster von E389), und die Startdecke in `test388 §5` steigt von 2300 auf 2700 KB — mit gezählter Begründung statt still (L146)
+* **E614** — Die Tafel als Behälter (W2) und das Wort unter dem Zeichen (W3): eine Ebene `.blatt-tafel` mit `display:contents`, 51 Kindwähler und sieben `:scope >` ziehen mit; die Werkzeuge zeigen ihr Wort jetzt ab 820 statt 1150 px Leistenbreite (`test533`)
+* **E615** — Der Stift öffnet den Blick in den Ordner: `pointerType` lässt `pen` zu, `any-hover` ersetzt `hover` (das fragte den Hauptzeiger und sperrte auf einem Touch-Laptop auch die Maus aus), und ein `pointerdown` sagt die Uhr ab (L180, `test476`)
+* **E616** — Die Strichstärke sagt, wie dick sie ist: die Zeichenfläche rechnet in PDF-Punkten (`viewBox` A4), also sind 2,4 nicht „2,4 px" sondern **0,8 mm** — und am Marker das Vierfache. Redurs Wörter übernommen, seine Zahlen nicht (W4, `test438`)
+* **E617** — Die Stiftkacheln tragen ihren Namen: gestapelt kostet das Wort Höhe statt Breite, also gilt die alte 320-px-Rechnung nicht mehr; dritte Schwelle bei 1300 px Leistenbreite, `display:none` weicht dem Klemmen (§38), und `bilder.mts` bekommt endlich einen breiten Bildschirm (W4, `test533`)
+* **E618** — Die Tafel wird ein Kasten: die Werkzeuge ziehen zurück in die Leiste (die 51 Gruppenwähler bleiben unberührt), und ab 1300 px Leistenbreite steht das Zubehör in einem eigenen Feld — mit den Millimetern auf der Kachel. Darunter bleibt `display:contents`, weil `order` dort über beide Flächen hinweg gilt (W4, `test533`)
+* **E619** — Im Studio bleibt der Dock, und der Platz-Knopf hört auf zu lügen: `pdf-studio.css` setzte die Leiste ohne `[data-lage]` im Wähler fest, die Spaltenform aus `bausteine.css` griff trotzdem — gemessen stand eine 74 px schmale Spalte mitten auf dem Papier. Statt den Platz im Studio wirken zu lassen (das hätte den Vorgabewert in den Dock hinein verschoben) ist der Knopf dort weg (`test534`)
+* **E620** — Die Leiste wandert am Griff: ziehen statt nur tippen, gefangen am nächsten Rand, und ein fünfter Platz «frei» im selben Katalog — dazu die zwei Pixel, zu denen «unten in der Mitte» auf der gewöhnlichen Seite zusammengefallen war (`container-type:inline-size` gegen Schrumpf-auf-Inhalt) (`test534`)
+* **E621** — Die Leiste sagt, dass sie eine Leiste ist: `role="toolbar"` kam in `src/` null mal vor; mit der Rolle kommen die Pfeiltasten und der eine Tabstopp, sonst wäre sie eine Behauptung (§38, `test534`)
+* **E622** — «Unten in der Mitte» klebt am Fenster, nicht am Blattfuss: `position:sticky` statt `absolute`, und dafür ein Zug im Baum — sticky mit `bottom` zieht nach oben, es schiebt nichts nach unten, also muss die Leiste hinter das Papier (L187, Redurs Wahl, `test534 §1b`)
+* **E623** — Die Strichprobe zeigt den Strich: der Balken trug `currentColor` und keine Deckung; jetzt die gewählte Tinte und die Deckung des Stifts — aus EINER Funktion, die auch den echten Strich und das PDF färbt (sie stand viermal). Dazu Name und Millimeter auf einer Kachel, untereinander, weil nebeneinander die Leiste von 128 auf 143 px wuchs (W4, `test535`, `test533`)
+* **E624** — Der Radierer bekommt seine Grösse auch ohne Studio, und den Haken «Automatisch an den Strich anpassen»: den Zustand gab es seit je (`eraserSize` oder das Dreifache der Strichbreite), nur führte kein Weg zurück — das Studio setzte beim Aufbau immer eine Zahl (W4, `test535 §4`, `test524`)
 
 ---
 
@@ -49690,3 +49702,1184 @@ rot, ohne dass etwas zugewachsen wäre.
    „Präsentation", um einen bekannten Zustand herzustellen — und seit
    diesem Bogen ist genau dieser Klick der Klapp-Griff. Gefunden, weil §1
    mit 224 px rot war statt mit 301.
+
+---
+
+## E613 — Die Chronik kommt erst, wenn jemand sie öffnet (und die Decke bekommt ihre Begründung)
+
+**16. September 2026.** `test388 §5` war rot, und zwar seit zwölf Tagen,
+ohne dass es jemandem aufgefallen wäre — die Läufe auf GitHub brechen seit
+Wochen nach drei Sekunden ab (Konto-Ebene, kein Codefehler), und im Container
+hatte den Lauf niemand gefahren.
+
+### Was der Lauf sagt, und warum er recht hatte
+
+Er deckelt, was der Start über die Leitung holt, auf 2300 KB gzip. Sein
+eigener Kommentar erlaubt das Wachsen ausdrücklich:
+
+> „Sie DARF wachsen, wenn jemand einen Grund aufschreibt — sie soll nur nicht
+> schweigend wachsen."
+
+Genau das ist passiert. Gemessen am laufenden Programm:
+
+```txt
+ 4. September   203 Dateien   2081 KB   ← die Zahl, aus der die 2300 kamen
+ 5. September   207 Dateien   2169 KB
+16. September   232 Dateien   2637 KB   ← die Decke war gerissen
+```
+
+### Woher die 512 KB kamen — gezählt, nicht vermutet
+
+gzip Stufe 6 über alles, was `index.html` lädt, gegen `57a5199`:
+
+| Woher | KB |
+|---|---|
+| 26 **neue** Dateien | 229 |
+| 206 **gewachsene** Dateien | 291 |
+
+Und die vier grössten Einzelposten:
+
+```txt
+neu        quell/bereiche/chronik/daten.js       54,2 KB   (182 KB roh)
+neu        quell/schale/stil/motion.css          47,6 KB
+gewachsen  quell/bereiche/pdf/marken.js         +68,1 KB
+gewachsen  quell/bereiche/pdf/document-mode.js  +64,1 KB
+```
+
+**`marken.js` und `document-mode.js` sind kein Fehler.** Das sind das
+Zeichen- und das Schreibstudio, und sie sind gewachsen, weil dort gearbeitet
+wurde (E568 bis E612). Wer diese Zahl kleiner haben will, will weniger
+Produkt.
+
+**`chronik/daten.js` war einer.** 182 KB Chronikprosa bei *jedem* Start —
+für einen Bildschirm, der hinter einem Zugangscode liegt (L140) und den fast
+niemand öffnet. Nachgesehen wird sie von genau einer Stelle, und die tut es
+faul: `chronik.ts:53`, `(window as any).ChronikDaten || { tage: [], probleme: [] }`.
+
+### Was entschieden wurde
+
+**Der Weg war schon gebahnt.** E389 hat pdf.js (527 KB) genau so vom Startweg
+genommen. `src/fremd/pdfjs/laden.ts` ist die Vorlage, und ihr Kommentar
+beantwortet alle drei Fallstricke; `src/bereiche/chronik/laden.ts` ist die
+einfachere Schwester davon — kein gzip, nur ein Skript einhängen und das
+Versprechen behalten.
+
+| | |
+|---|---|
+| **§6** | ein `<script>`-Element und kein `fetch` — unter `file://` scheitert `fetch` an der Herkunftsprüfung |
+| **§29** | die Einzeldatei hat keinen Ordner neben sich: `bauen.mts` setzt die Bytes an der Marke `<!-- chronik-daten: … -->` ein, wie bei pdf.js. **Fehlt die Marke, bricht der Bau ab** — ein stilles Weglassen wäre eine Einzeldatei, die beim ersten Öffnen der Chronik leer bleibt |
+| **§28** | `daten.js` bleibt im `GRUNDSTOCK` von `sw.ts`, und `laden.js` kommt dazu. **Der GRUNDSTOCK ist die Ablage, nicht die Startliste** — offline bleibt offline, das Nachladen bedient der Zwischenspeicher |
+
+Ein gescheitertes Versprechen wird **nicht** behalten: beim nächsten Versuch
+soll es wieder gehen, wenn das Netz wieder da ist.
+
+`laden.js` steht in `index.html` **vor** `chronik.js` — sonst läge
+`ChronikLaden` als `const` in seiner zeitlichen Totzone, und schon
+`typeof ChronikLaden` würfe dort.
+
+### Und die ehrliche Hälfte: die Decke steht jetzt auf 2700
+
+54 KB reichen nicht, um 2637 unter 2300 zu bringen, und das ist auch nicht
+das Ziel. **L146 verbietet das stille Anheben, nicht das begründete.** Die
+Zahl ist gewählt und nicht geraten:
+
+* **nicht 2600** — dann reisst sie beim nächsten Bogen und wird zum Rauschen.
+* **nicht 3000** — dann passte pdf.js wieder unbemerkt hinein, und genau das
+  soll die zweite Zusicherung verhindern (`kb + 526 > DECKE`). Sie bleibt
+  damit eine Zusicherung und wird keine Zierde (§55.2).
+* **2700** lässt rund 115 KB für gewöhnliche Arbeit.
+
+### Was die Alternative gewesen wäre
+
+`motion.css` (47,6 KB) genauso nachzuladen. Dagegen spricht, dass ein
+Stilblatt beim Nachladen **sichtbar** ist: die Seite stünde einen Moment ohne
+seine Regeln da. Ein JSON-Literal hinter einem Zugangscode hat dieses Problem
+nicht. Eingetragen als Kandidat in L146, nicht gebaut.
+
+### Gemessen
+
+```txt
+Startlast   2637 → 2585 KB   am laufenden Programm, test388 §5
+test388     19 von 19 grün   (2 Zusicherungen neu)
+test481     39 von 39 grün   (5 Zusicherungen neu, §3b)
+test270     77 ok            (.assetsignore, Bau-Hygiene)
+test105 · test109 · test87   grün
+npm run typecheck            sauber
+Einzeldatei                  10 243 KB, `ChronikDaten` fünfmal darin
+Dienststand                  v1145 → v1146
+```
+
+**Die Gegenprobe (§50), gelaufen und rot gesehen:** `daten.js` wieder als
+`<script src>` in `index.html` eingehängt → `test388` **18/19**, die neue
+Zusicherung „Die Chronik wird beim Start nicht geholt" rot, Startlast
+2639 KB.
+
+### Ein Fund im Nachbarlauf, der teurer war als der Bogen
+
+`test481 §7` sagte „index.html lädt beides, die Daten zuerst" — und war
+**nach** der Änderung immer noch grün. Der Grund: die Zusicherung suchte mit
+`indexOf('chronik/daten.js')`, und dieser Name steht jetzt in der *Baumarke*,
+einem HTML-Kommentar. Eine Zusage, die auf einen Kommentar trifft, prüft
+nichts. Umgehängt auf das, was wirklich gilt: kein `<script src>` auf
+`daten.js`, der Lader vor `chronik.js`, die Marke da, `bauen.mts` kennt sie.
+
+Dieselbe Sorte Fehler wie in E610 (`ablageAus` traf den Kommentar statt den
+Code) und E612 (§5 zählte einen Zustand, in dem es nie zwei gab). Dreimal in
+einer Woche — die Lehre ist nicht „aufpassen", sondern: **eine neue Zusage
+wird rot gesehen, bevor sie grün gilt**, und eine alte, die eine Änderung
+überlebt, ist verdächtig und nicht beruhigend.
+
+---
+
+## E614 — Die Tafel als Behälter, und das Wort unter dem Zeichen (W2 + W3)
+
+**16. September 2026.** Redur, am 14. September, mit fünf Bildern eines
+fertigen Entwurfs: **„Siehe Bildern, so will ich es haben."** Und einen Satz
+später: **„Die untere Dock sollte bleiben."** Aus fünf Bögen standen drei
+(W0 E570, W0b E571, W1 E568); dies sind W2 und W3.
+
+### W2 baut keine Gestaltung — und das ist das Gefährliche daran
+
+`AUFGABEN.md:1132` sagt es selbst: „Ein Element `.blatt-tafel` INNERHALB von
+`.blatt-werk`, das alle `[data-gruppe]`-Knoten aufnimmt. **Der Haken sitzt im
+CSS: rund fünfzig Regeln lesen heute `.blatt-werk > [data-gruppe]`
+(Kindwähler). Die müssen mit — und genau das ist der Bogen, nicht die
+Gestaltung.**"
+
+Nachgezählt waren es **51 Regelblöcke über 104 Selektorzeilen**, verteilt auf
+`bausteine.css` (43) und `pdf-studio.css` (8), dazu **sieben `:scope >`** im
+TypeScript. Und die ehrliche Gegenzahl: **44 Nachfahren-Regeln und 23 Regeln
+auf `.blatt-werk` selbst — 57 % — sind vom Einschieben gar nicht betroffen.**
+Deshalb wurde gezählt statt ersetzt.
+
+### Die Entscheidung, die der Auftrag nicht vorhergesehen hat
+
+Der Auftrag sagt „**alle `[data-gruppe]`-Knoten**". Die Vermessung fand, dass
+das zu wenig ist. **Drei Mechanismen der Leiste wirken ausschliesslich
+zwischen unmittelbaren Geschwistern**, und jeder einzelne risse, wenn die
+Grenze mitten hindurchginge:
+
+```txt
+bausteine.css   .blatt-zeilenbruch + span.blatt-trenn[data-gruppe]
+                → der doppelte Trennstrich am Zeilenanfang, der Fund aus E568
+pdf-studio.css  button:hover + button  /  button:has(+ button:hover)
+                → Redurs Dock-Welle von Bild 7
+marken.ts       insertBefore(knopf, bruch) in `ordnungAnwenden`
+                → zwei Elternteile, und der Aufruf würfe
+```
+
+**Die Tafel nimmt deshalb ALLE Kinder auf**, Werkzeuge und Zeilenbruch
+eingeschlossen — nicht nur die Gruppen.
+
+### Und die zweite, die den Bogen überhaupt möglich macht: `display:contents`
+
+Hier lag der eigentliche Konstruktionskonflikt. Die drei **Layout**mechanismen
+der Leiste sind Flex-**Kind**-Eigenschaften:
+
+```txt
+flex:1 0 100%   am Zeilenbruch          der Umbruch in zwei Zeilen (E359)
+order           an Werkzeug und Gruppe  die Telefon-Einsortierung (E356/E570)
+position:sticky an Zurück/Vor           im waagerechten Roller (E359)
+```
+
+Alle drei wirken nur zwischen direkten Flex-Geschwistern. Ein echter Kasten
+zwischen ihnen und `.blatt-werk` hätte alle drei gebrochen. `display:contents`
+erzeugt keinen Kasten: die Kinder bleiben Flex-Elemente von `.blatt-werk`,
+`gap` zählt über die Tafel hinweg, und am Bildschirm ändert sich nichts.
+
+**Was das kostet:** die Tafel kann heute keinen eigenen Grund, Rand und kein
+`overflow` tragen. Genau das braucht W4 — und genau dort bekommt sie es, als
+Zustandswechsel. W2 ist die Ebene, nicht die Tafel.
+
+**Zur Zugänglichkeit (§38):** die Tafel ist ein nacktes `<div>` ohne `role`.
+Für solche Elemente lassen die Browser die Kinder seit 2021 im
+Zugänglichkeitsbaum stehen; der alte `display:contents`-Fehler betraf
+Elemente MIT eigener Bedeutung (Listen, Tabellen). Wer der Tafel je eine
+`role` gibt, muss das nachlesen — es steht als Kommentar an der Regel.
+
+**Und sie trägt kein `data-gruppe` und kein `data-wz`.** Drei
+`closest('[data-wz],[data-gruppe]')` in `marken.ts` träfen sonst die Tafel
+statt den Knopf, den der Finger meint.
+
+### Die drei Andockstellen statt eines zweiten Weges (§8)
+
+```txt
+marken.ts:445        `flaeche(tools)` — ein Helfer, sechs Griffe gehen durch ihn
+document-mode.ts     `inkFlaeche()` — der MutationObserver horcht ohne `subtree`,
+                     und ohne diese Zeile feuerte er NIE mehr (E575)
+bausteine.css:4362   der `+`-Wähler, der über die künftige Grenze griff
+```
+
+Der leiseste Ausfall des ganzen Bogens wäre `ordnungAnwenden` gewesen: sein
+`if (!bruch) return` steigt **stumm** aus, wenn der Zeilenbruch nicht als
+direktes Kind gefunden wird. Die ganze Nutzerordnung aus E570/E571 wäre
+wirkungslos geworden, ohne dass etwas meldet. `test533 §4` hält genau das.
+
+### W3 — das Wort unter das Zeichen
+
+Redurs vier iPad-Bilder: „jedes Werkzeug trägt sein Wort unter dem Zeichen".
+
+**Warum das mehr ist als ein Umbruch.** Nebeneinander kostet das Wort
+**Breite**, und Breite ist in dieser Leiste das Knappe: dreizehn Werkzeuge
+brauchten mit Wort 1142 px statt 556 (E515), und deshalb wurde es unter
+1150 px Behälterbreite weggeklemmt (E359). Darunter kostet es **Höhe** — und
+die hat der Knopf ohnehin, weil §37 ihm 44 px gibt.
+
+Die Schwelle ist deshalb gewandert, gemessen und nicht gewählt:
+
+```txt
+Zubehör (Wort daneben)      weiterhin 1150 px
+Werkzeuge (Wort darunter)   jetzt 820 px
+```
+
+Dreizehn gestapelte Werkzeuge brauchen in einer Zeile rund 790 px; 820 lässt
+Luft für ein längeres Wort. Darunter klemmt es wie bisher — und bleibt im
+Vorlesebaum, nicht in `display:none` (Audit F04).
+
+**Der Gewinn, an der Stelle gemessen, die `test351` schon hatte** — 1360 px
+Fenster, Leiste 940 px:
+
+```txt
+vorher    0 Wörter, ZWEI Werkzeugzeilen
+nachher   13 Wörter, EINE Werkzeugzeile
+```
+
+Es ist also nicht nur Redurs Bild, es ist auch weniger Leiste.
+
+### Gemessen
+
+```txt
+Leiste bei 1280 px Fenster, Stift gewählt, am laufenden Programm:
+
+                    vorher (origin/main)   nachher
+Breite                    860 px            860 px
+Höhe                      127 px            128 px
+Zeilen                    3                 3
+Zubehörteile sichtbar     26                26
+```
+
+**Eins mehr an Höhe. Das ist die ganze sichtbare Wirkung von W2** — und
+genau das war die Zusage.
+
+```txt
+test533   29 von 29 grün   (neu)
+test351   26/26   §3 umgehängt statt weichgemacht (siehe unten)
+test522   31/31 · test523  40/40 · test524  118/118   je umgehängt
+test343 344 345 346 347 348 349 350 352   alle grün
+npm run typecheck   sauber
+Dienststand   v1146 → v1148
+```
+
+**Zwei Gegenproben (§50, §55.2), beide einzeln gelaufen und rot gesehen:**
+
+```txt
+EINEN Kindwähler zurücklassen        test533 27/29
+  (`.blatt-werk[data-tool] > [data-gruppe]{display:none}`)
+  → „Beim Stift steht nur SEIN Zubehör da" meldet alle ZWÖLF Gruppen
+    statt sechs, und die Leiste wird 163 px hoch.
+W3-Stapelung abgeklemmt              test533 26/29
+  → das Wort steht wieder rechts neben dem Zeichen, `flex-direction: row`.
+```
+
+### Was umgehängt wurde, und warum das kein Weichmachen ist
+
+`test351` sagte: „Volle Breite bei 1360 px Fenster — **noch keine Wörter,
+zwei Zeilen**." Das war richtig, solange das Wort Breite kostete; die
+Schwelle 1150 aus E359 WAR diese Breitenrechnung. Die Zusicherung prüft
+jetzt „**dreizehn Wörter, EINE Werkzeugzeile**" — und sie ist damit
+**schärfer** als vorher, weil sie beides zugleich verlangt. Die alte
+Schwelle lebt weiter, sie ist nur tiefer gerutscht; `test351 §3` misst sie
+bei 592 px.
+
+Drei weitere Läufe (`test522`, `test523`, `test524`) standen auf
+`w.children` oder `:scope >` an der Leiste. Alle drei wurden auf die Fläche
+umgehängt, keiner weichgemacht — `test524` zählt weiterhin „mindestens 15
+sichtbare Bedienteile im Dock", nur eine Ebene tiefer.
+
+### Ein Fund im eigenen Wächter, und einer beim Hinsehen
+
+1. **Der Lauf zählte „15 Werkzeuge statt 13".** Er suchte per
+   `querySelector` nach dem NAMEN — und „formen" gibt es dreimal: als
+   Werkzeug, als `data-act` in der Formengruppe und als Gruppe selbst.
+   Jetzt zählt er, was selbst ein `data-wz` trägt.
+2. **§6 meldete dreizehn Fehler, wo keiner war.** Er mass
+   `getBoundingClientRect()` gegen 44 px — aber die Trefffläche kommt aus
+   `::after` und nicht aus der Höhe des Knopfes (§37, E406). Wer den Kasten
+   misst, misst das Falsche.
+3. **Auf dem Bild steht ein einzelner Knopf allein in einer dritten Zeile:**
+   «Einrichten». Nachgemessen auf `origin/main` — **er steht dort genauso**.
+   Kein Fund dieses Bogens, aber jetzt gesehen; eingetragen als **L182**.
+
+### Und ein roter Lauf, der schon auf `main` rot war
+
+`test437` behauptete „Original über der Arbeitskopie sichtbar" — die Zusage
+aus **E464**, die **E612** an dieser Stelle umgedreht hat. E612 hat
+`test385 §4` umgehängt und **diese Stelle übersehen**; seither war der Lauf
+rot, und gesehen hat es niemand (die Läufe auf GitHub brechen ab, siehe
+E613). Gegengeprüft in einem Arbeitsbaum auf `origin/main`: **dort rot,
+mit demselben Satz.**
+
+Umgehängt wie in E612, und mit dem Gegenfall statt ohne: im ruhigen Studio
+ist die Karte weg, mit `data-ruhig="aus"` kommt sie zurück. Eine
+Zusicherung, die nur „ist weg" sagt, ginge auch dann durch, wenn die Karte
+ganz fehlte. `test437` 36/36.
+
+**Und ein zweiter, der interessanter ist.** `test507 §1` verlangte „die Folie
+nutzt über 85 % der Höhe" und meldete 77 % — ebenfalls auf `origin/main`
+rot, mit derselben Zahl.
+
+**Die Ursache ist ein Gewinn, kein Fehler.** E551 hatte hier gemessen:
+*„Folie 980 × 551 in 1440 × 588 · 94 % der Höhe — am Rechner ist nichts zu
+tun, 94 % sind voll."* E612 hat die Fläche auf 720 px vergrössert; die Folie
+ist geblieben, weil sie auf `--pdf-paper-max: 980px` steht — einem
+**Lesemass**, das laut eigenem Kommentar ausdrücklich so bleiben soll. Aus
+94 % wurden 77, und unter der Folie stehen jetzt 130 px leer.
+
+Die Zusicherung prüft deshalb jetzt das Lesemass, das wirklich gilt, statt
+einen Anteil, der einen Gewinn als Fehler meldet. Was daraus folgt — dass
+die 130 px niemandem gehören und E551s Grund fürs Nicht-Zentrieren
+weggefallen ist — steht als **L183** mit drei Wegen, keiner davon gewählt.
+`test507` 35/35.
+
+**Beide Funde zusammen sind die eigentliche Lehre dieses Bogens:** E612 hat
+zwei Läufe hinterlassen, die seither rot waren, und **niemand hat es
+gemerkt**, weil die Läufe auf GitHub abbrechen (E613). Ein Bogen, der nur
+seine eigenen Wächter fährt, sieht die Nachbarstelle nicht — genau der
+zweitteuerste wiederkehrende Fehler dieses Projekts (§45).
+
+---
+
+## E615 — Der Stift öffnet den Blick in den Ordner (L180)
+
+**17. September 2026.** Redur, am 16. September: das Auge am Ordnerdeckel
+öffnet die Karte beim Hinschauen (E508) — aber nur mit der **Maus**. Mit
+einem Laptop-Stift, der über dem Glas schwebt, passierte nichts.
+
+### Zwei Gründe, und beide schlossen den Stift unabhängig voneinander aus
+
+```ts
+if (e.pointerType !== 'mouse' || !zeigerHatHover()) return;
+```
+
+1. **Seine Art ist `pen`, nicht `mouse`.** Der Kommentar daneben sagte „NUR
+   DIE MAUS" und meinte den Finger — der Stift war Kollateralschaden.
+2. **`zeigerHatHover()` fragte `(hover: hover) and (pointer: fine)`.** Das
+   beschreibt den **Hauptzeiger** des Geräts. Auf einem Laptop mit
+   Berührungsbildschirm ist das der Finger, und die Abfrage antwortet dort
+   „kein Überfahren" — obwohl eine Maus danebenliegt und ein Stift über dem
+   Glas schwebt.
+
+Der zweite ist der interessantere: er hätte auch die **Maus** ausgesperrt,
+sobald das Gerät einen Berührungsbildschirm hat. `any-hover` und
+`any-pointer` fragen nach ALLEN Eingabemitteln und sind die Frage, die hier
+von Anfang an gemeint war.
+
+### Und der dritte Punkt an derselben Stelle
+
+Beim Antippen kommt erst `pointerenter`, dann `pointerdown` — **dazwischen
+sagte nichts ab.** Die Uhr lief weiter, und die Karte ging nach dem Tippen
+von selbst auf. Am Auge fiel das kaum auf, weil ein Klick sie ohnehin
+öffnet; überall dort, wo Tippen und Hinschauen Verschiedenes bedeuten, wäre
+es ein Fehler. `pointerdown` sagt jetzt ab.
+
+### Warum das überhaupt nochmal anstand
+
+**Alles drei war in E608 schon gebaut und geprüft.** E608 ist durch **E609**
+vollständig zurückgenommen worden, weil Redur die Ordnerkachel wieder wie
+vorher wollte — der Fund fiel damit in die Lücke zurück, **nicht widerlegt,
+nur verschüttet** (L180). Er liess sich jetzt einzeln einsetzen, ohne am
+Auge etwas zu ändern: drei Stellen in `bibliothek.ts`.
+
+Der Finger bleibt draussen, und zwar mit Grund: er meldet auf manchen
+Geräten ein `pointerenter`, das kein Überfahren ist, sondern der Anfang
+eines Tippens. `test476 §6` hält das fest und bleibt unverändert.
+
+### Gemessen
+
+```txt
+test476   31 von 31 grün   (5 Zusicherungen neu: §6b, §6c, drei Quellen)
+npm run typecheck   sauber
+Dienststand   v1148 → v1149
+```
+
+**Zwei Gegenproben (§50, §55.2), jede einzeln gelaufen und rot gesehen:**
+
+```txt
+gegen den alten Stand (`!== 'mouse'`, `hover: hover`)   test476 27/31
+nur die `pointerdown`-Absage entfernt                   test476 29/31
+```
+
+Damit ist **jede der beiden Hälften einzeln gehütet**, nicht nur zusammen.
+
+### Und zum vierten Mal in einer Woche: eine Zusage, die Prosa liest
+
+Die neue Quellenzusicherung hiess zuerst „`any-hover` steht da **und**
+`(hover: hover)` steht nirgends mehr" — und war rot, obwohl der Code
+stimmte. Sie traf den **Kommentar**, der erklärt, warum die alte Abfrage weg
+ist. Jetzt steht `matchMedia\(` davor, und sie zeigt auf den Aufruf.
+
+Vierter Fall dieser Sorte nach E610 (`ablageAus` traf den Kommentar), E612
+(§5 zählte einen Zustand, den es nie gab) und E613 (`indexOf` fand den Namen
+in einer Baumarke). Die Lehre ist nicht „aufpassen", sondern die Regel, die
+§55.2 ohnehin verlangt: **eine Zusage wird rot gesehen, bevor sie grün
+gilt** — und wenn sie beim ersten Lauf grün ist, ist das ein Verdacht und
+keine Beruhigung.
+
+---
+
+## E616 — Die Strichstärke sagt, wie dick sie ist (W4, erster Teil)
+
+**17. September 2026.** Der erste Teil von **W4** aus Redurs Werkzeugtafel —
+und er fängt nicht mit Gestaltung an, sondern mit einer Zahl, die falsch
+dastand.
+
+### Was auf dem Bildschirm stand
+
+```txt
+Regler:          1,2          ← eine Zahl ohne Einheit
+Stufenknopf:     „Strichbreite 1,2"
+Kommentar dazu:  „dünn (1,2 px) und mittel (2,4 px)"
+```
+
+Redurs iPad-Bilder zeigen daneben „Fein 0,3 mm · Mittel 0,7 mm · Markant
+1,2 mm · Marker 4,0 mm". Die naheliegende Arbeit wäre gewesen, diese Wörter
+und diese Zahlen abzuschreiben. **Das wäre falsch gewesen, und zwar messbar.**
+
+### Gemessen, statt abgeschrieben
+
+Am laufenden Programm nachgesehen, was das `viewBox` der Zeichenfläche ist:
+
+```txt
+viewBox="0 0 595.28 841.89"      ← A4 in PDF-PUNKTEN (SheetSpace.A4_BREITE)
+Papier auf dem Schirm: 1136 px   ← das ist NICHT der Massstab der Marken
+```
+
+Die Zahlen `BREITEN = [1.2, 2.4, 5]` sind also **Punkte**, nicht Pixel. Ein
+Punkt ist 1/72 Zoll, ein Zoll 25,4 mm — die Umrechnung ist damit **exakt**
+und braucht keine Messung; gemessen wurde nur, DASS es Punkte sind.
+
+```txt
+                     Redion          GoodNotes (Redurs Bild)
+Fein      1,2 pt  →  0,4 mm          0,3 mm
+Mittel    2,4 pt  →  0,8 mm          0,7 mm
+Markant   5,0 pt  →  1,8 mm          1,2 mm
+```
+
+**Hätte ich Redurs Zahlen übernommen, stünde bei „Markant" 1,2 mm an einem
+Strich, der 1,8 mm zieht** — eine falsche Angabe auf dem Bildschirm (§33),
+und genau die Sorte, die niemand bemerkt, weil sie plausibel aussieht
+(§55.1). Die Wörter sind seine, die Zahlen sind Redions.
+
+### Und die zweite falsche Angabe, die dabei fast entstanden wäre
+
+**Der Marker zieht viermal seine Zahl.** Das steht in `strokeWidth` und noch
+einmal in `alsAnnotation` („der Marker ist auf dem Bildschirm viermal so
+breit wie seine Zahl") — und die Stufenknöpfe sind für Stift und Marker
+**dieselben**. Eine feste Beschriftung hätte am Marker „0,8 mm" an einen
+Strich geschrieben, der 3,4 mm breit ist.
+
+Die Beschriftung hängt deshalb am Werkzeug und wird beim Wechsel neu
+gesetzt — an **einer** Stelle, dem Beobachter auf `data-tool`, der seit E356
+ohnehin dort horcht. Nicht an den sieben Stellen, an denen `data-tool`
+gesetzt wird (§8).
+
+### Was das kostet
+
+Der `<output>` neben dem Regler wird von 2,2em auf 4,4em breit — „0,8 mm"
+braucht mehr Platz als „0,8". Er steht in der Klappe, die erst auf einen
+zweiten Tipp aufgeht (E465), also kostet es keine Zeile in der Leiste.
+`test351` bleibt bei seinen drei Zeilen.
+
+### Was NICHT in diesem Bogen ist
+
+W4 verlangt ausserdem Strichvorschau, benannte Stiftkacheln, einen eigenen
+Deckkraft-Schieber und den Radierer mit Grösse und Haken. Alles vier braucht
+die **Tafel als sichtbaren Kasten** — und die trägt heute `display:contents`
+(E614), erzeugt also keinen. Sie zu einem Kasten zu machen, ohne die
+Werkzeuge mitzunehmen, braucht eine weitere Ebene; das ist ein eigener Bogen
+mit einem eigenen Bild für Redur, kein Nebensatz hier.
+
+**Der Deckkraft-Schieber ist zusätzlich eine Datenfrage:** Deckung steht
+heute fest je Stift (Marker 0,32, Pinsel 0,92, Bleistift 0,72 minus
+Neigung). Sie wählbar zu machen heisst, ein Feld an die Marke zu hängen —
+§9, und damit eine eigene Entscheidung.
+
+### Gemessen
+
+```txt
+test438   59 von 59 grün   (5 Zusicherungen neu, 2 umgehängt)
+npm run typecheck   sauber
+Dienststand   v1149 → v1156
+```
+
+**Zwei Gegenproben (§50, §55.2), jede einzeln gelaufen und rot gesehen:**
+
+```txt
+„Punkte sind Millimeter" (die Umrechnung weg)   test438 55/59
+der Marker-Faktor weg                            test438 58/59
+```
+
+Die erste ist die realistische Fassung des Fehlers: jemand hält die Zahl für
+Millimeter und schreibt die Einheit dahinter. Genau das hätte der Bogen
+gebaut, wenn er Redurs Tabelle abgeschrieben hätte.
+
+### Und wieder §52.6
+
+Die erste Gegenprobe **baute nicht**: `alsMm` war die einzige Verwendung von
+`MM_JE_PT`, und `noUnusedLocals` bricht dann ab. Eine Gegenprobe, die nicht
+baut, ist keine — die Konstante musste mit weg. Steht so in CLAUDE.md §52.6
+und ist jetzt zum zweiten Mal aufgetreten.
+
+---
+
+## E617 — Die Stiftkacheln tragen ihren Namen (W4, zweiter Teil)
+
+**17. September 2026.** Redurs Bild 2 vom 14. September: „fünf benannte
+Stiftkacheln". Im Stilblatt stand, warum das nicht geht — und es war
+richtig gerechnet:
+
+> „Sechs Stifte mit Namen sind rund 320 px und kippen die Leiste in eine
+> dritte Zeile — gegen E359 und `test351`, nachgemessen an einer 120 px
+> hohen Leiste statt 80."
+
+**Gerechnet für ein Wort NEBEN dem Zeichen.** W3 (E614) hat an den dreizehn
+Werkzeugen gezeigt, dass ein **gestapeltes** Wort keine Breite kostet,
+sondern Höhe — und Höhe hat der Knopf ohnehin, weil §37 ihm 44 px gibt.
+Dieselbe Rechnung noch einmal, nur eine Zeile tiefer.
+
+### Die dritte Schwelle, und warum es drei sein müssen
+
+```txt
+ 820 px Leistenbreite    die dreizehn Werkzeuge          (W3, E614)
+1150 px                  Formen, Kritzeln, Lineal, …     (E359)
+1300 px                  die sechs Stifte                (dieser Bogen)
+```
+
+Die Stifte brauchen ihre **eigene, höhere** Marke, und zwar aus zwei
+Gründen zugleich: ihre Namen sind lang („Kugelschreiber" macht die Kachel
+77 px breit statt 32), und bei 1150 gehen alle *anderen* Wörter gleichzeitig
+auf. Die Stifte kommen obendrauf.
+
+**Gemessen an der laufenden App**, Stift gewählt, breite Seite:
+
+```txt
+Leiste 1180 px    Zubehör in VIER Zeilen, Leiste 127 px hoch
+Leiste 1280 px    drei Zeilen,             91 px
+Leiste 1307 px    drei Zeilen,             91 px
+Leiste 1507 px    drei Zeilen,             91 px
+```
+
+Die Schwelle steht auf **1300** und nicht auf 1280: eine Schwelle auf dem
+Messwert reisst beim ersten längeren Stiftnamen. Nachgemessen ist die Leiste
+damit bei **jeder** Breite so hoch wie vorher.
+
+### Und ein halber Bogen, der gar nicht im Auftrag stand: §38
+
+Der alte Weg war `display:none`. Das nimmt den Namen **auch aus dem
+Vorlesebaum** — und der Kommentar daneben behauptete, „der Name steht im
+Titel". `title` zählt nur, wenn sonst kein Name da ist. Unter der Schwelle
+wird jetzt **geklemmt statt entfernt**, dieselbe Klasse wie überall seit
+Audit F04. Das ist auch dort eine Verbesserung, wo das Wort gar nicht zu
+sehen ist.
+
+### Zwei Fehler, die mir dabei selbst unterlaufen sind
+
+1. **Die erste Messung sagte „Kachel 36 px", also „der Name wird
+   abgeschnitten".** Auf dem Bild stand er vollständig da. Nachgemessen
+   sind es **77 px**; die erste Zahl war am falschen Knoten genommen.
+   Hätte ich ihr geglaubt, wäre der Bogen als „geht nicht" abgebrochen
+   worden — §55 ist deshalb nicht Zierde: **das Bild hat die Messung
+   widerlegt**, nicht umgekehrt.
+2. **`bilder.mts` konnte diesen Zustand gar nicht zeigen.** Siehe unten.
+
+### `bilder.mts` bekommt einen breiten Bildschirm
+
+Das Werkzeug kannte vier Geräte, und das breiteste war `rechner` mit
+1280 px — dort ist die Leiste 860 px breit. **Die obere Schwelle war damit
+auf keinem Bild dieses Verzeichnisses je zu sehen.** Ein Zustand, den kein
+Bild erreicht, wird auch nicht angesehen (§55). Neu: `breit`, 1920 × 1080,
+der häufigste Rechnerbildschirm; die Leiste ist dort 1407 px breit.
+
+**Dabei fiel eine zweite Sache auf, und sie ist der Fund aus L108 von der
+anderen Seite:** an zwei Stellen stand `g !== 'rechner'` — einmal für „nur
+ein Thema", einmal für „mit Berührung nachstellen". Solange es genau EIN
+Rechnergerät gab, war das dasselbe. Mit `breit` wäre ein 1920er Bildschirm
+als **Tastgerät** nachgestellt worden, mit `hover: none` — und genau das
+hat L108 einmal andersherum gekostet. Jetzt entscheidet eine Menge
+(`ZEIGER_GERAETE`), nicht ein Vergleich.
+
+`laptop` bleibt absichtlich draussen und behält sein Verhalten — seine
+Bilder ändern sich damit nicht. Ob 1024 × 768 wirklich ein Tastgerät ist,
+ist eine eigene Frage: **L184**.
+
+### Gemessen
+
+```txt
+test533   40 von 40 grün   (11 Zusicherungen neu: §5b und §5c)
+test351 522 523 524 438 345 365   grün
+npm run typecheck   sauber
+```
+
+**Zwei Gegenproben (§50, §55.2), jede einzeln gelaufen und rot gesehen:**
+
+```txt
+die dritte Schwelle entfernt      test533 38/40  (Leiste 127 statt 91 px)
+`display:none` wieder eingesetzt  test533 36/40  (keine Namen, keiner im Baum)
+```
+
+### Was von W4 weiterhin offen ist
+
+Strichvorschau, die Millimeter **sichtbar** an der Kachel, der eigene
+Deckkraft-Schieber und der Radierer mit Grösse und Haken. Alle vier
+brauchen die Tafel als sichtbaren Kasten — die trägt seit E614 absichtlich
+`display:contents`. Das bleibt der eigene Bogen, und er bekommt sein Bild,
+bevor er landet.
+
+---
+
+## E618 — Die Tafel wird ein Kasten (W4, dritter Teil)
+
+**17. September 2026.** Redurs Bilder 2 bis 6 vom 14. September zeigen alle
+dasselbe: **unter der Werkzeugreihe ein Feld** mit dem Zubehör des gewählten
+Werkzeugs. Das ist der Zweck, für den E614 die Ebene `.blatt-tafel`
+überhaupt eingezogen hat.
+
+### Zuerst ein Rückbau an E614 — einen Tag später, und mit Grund
+
+E614 hat **alle** Kinder in die Tafel gelegt. Das war richtig für W2, wo sie
+nur eine Ebene ohne Kasten war, und es hatte einen gemessenen Grund: drei
+Mechanismen wirken ausschliesslich zwischen unmittelbaren Geschwistern.
+
+**Für W4 ist es falsch.** Ein Kasten um die Werkzeugreihe herum wäre keine
+Tafel, sondern die ganze Leiste. Also ziehen die **Werkzeuge und der
+Zeilenbruch zurück in die Leiste**, das Zubehör bleibt in der Tafel:
+
+```txt
+.blatt-werk
+  button[data-wz] × 13        ← die Werkzeugreihe
+  span.blatt-zeilenbruch      ← trennt die zwei Flächen
+  .blatt-tafel                ← das Feld: nur Zubehör
+    [data-gruppe] × viele
+```
+
+**Und genau so kostet der Rückbau fast nichts:** die **51 Kindwähler der
+Gruppen** (`.blatt-tafel > [data-gruppe]`) bleiben **unberührt** — das
+Zubehör liegt weiterhin in der Tafel. Nur die **acht** Regeln, die
+`[data-wz]` oder den Zeilenbruch nennen, ziehen mit. Wäre die Tafel als
+Zubehörfeld gebaut worden und nicht als Vollwrapper, wäre E614 dieselbe
+Arbeit gewesen; so ist es ein Achtel davon.
+
+### Was dabei umgeschrieben werden musste
+
+| Stelle | vorher | jetzt |
+|---|---|---|
+| `bausteine.css` | `.blatt-zeilenbruch + span.blatt-trenn` | `.blatt-tafel > span.blatt-trenn:first-child` |
+| `pdf-studio.css` | ein `:is([data-wz],.blatt-trenn,…)` | zwei Regeln, je Fläche eine |
+| Dock-Welle | `button:hover + button` in der Tafel | in beiden Flächen |
+| `marken.ts` | `ordnungAnwenden` mit einer Fläche | Werkzeuge in der Leiste, Gruppen in der Tafel |
+| `document-mode.ts` | `inkFlaeche()` zeigte in die Tafel | wieder auf die Leiste — die obere Reihe spiegelt `[data-wz]` |
+
+Der Geschwisterwähler ist der interessante: die Zusage (E568, kein
+Trennstrich am Zeilenanfang) ist dieselbe, der Weg ein anderer. Seit der
+Trennung sind Zeilenbruch und Trenner keine Geschwister mehr — derselbe Satz
+heisst jetzt „der **erste** Trenner in der Tafel", und das ist die klarere
+Form.
+
+### Und dann der Kasten selbst — nur ab 1300 px
+
+```txt
+unter 1300 px   .blatt-tafel{display:contents}    alles wie bisher
+ab   1300 px    ein Feld mit Grund, Rand und eigener Zeile
+```
+
+**`display:contents` ist damit kein Notbehelf mehr, sondern die Bedingung**:
+am Telefon, in der Spalte und im Studio-Dock steht alles in EINER rollenden
+Zeile, und die Reihenfolge kommt dort aus `order` **über Werkzeuge und
+Zubehör hinweg** (E356). Ein Kasten dazwischen bräche das. `test533 §5e`
+hält genau diesen Fall.
+
+Die Schwelle ist dieselbe wie die der Stiftnamen (1300, E617): darunter ist
+die Zeile ohnehin zu eng für Wörter, und zwei verschiedene Marken für
+dasselbe „jetzt ist Platz" wären eine zu viel.
+
+### Der sichtbare Gewinn: die Millimeter stehen auf der Kachel
+
+E616 hat die Millimeter gerechnet und in den Titel gelegt — in der Zeile war
+kein Platz. **Im Kasten ist er.** Die drei Strichstärken zeigen jetzt
+**0,4 mm · 0,8 mm · 1,8 mm**, und beim Marker das Vierfache (E616).
+
+Die Zahl wird **nicht beim Bauen** geschrieben, sondern von
+`staerkenBeschriften` gesetzt — sie hängt am Werkzeug.
+
+### Was das Hinsehen gefunden hat (§55)
+
+**Erstes Bild: „0,4 mm0,8 mm 1,8 mm".** Die Zahlen liefen ineinander.
+`.blatt-strich` steht auf festen `width:30px`, und die Zahl lief darüber
+hinaus. **Eine überlappte Zahl ist eine falsche Zahl** — genau der Fund aus
+§55.1 mit der abgeschnittenen Tabellenzahl, nur eine Leiste weiter. Behoben
+mit `width:auto; min-width:52px` im Kastenzustand; `test533 §5d` misst
+seither ausdrücklich, dass **keine Zahl über ihre Kachel hinausläuft**.
+
+**Zweites Bild: der Kasten war kaum zu sehen.** `--bg-tief` (#f4f4f2) gegen
+`--bg-card` (#f7f7f5) sind drei Hundertstel Helligkeit. Jetzt `--bg`, also
+Weiss im Hellmodus — ein Feld, das man als Feld erkennt.
+
+### Gemessen
+
+```txt
+test533   54 von 54 grün   (14 Zusicherungen neu: §5d und §5e)
+test522 523 524 351 438 345 365 476 532 506   grün
+npm run typecheck   sauber
+Dienststand   v1157 → v1160
+```
+
+**Gegenprobe (§50, §55.2), gelaufen und rot gesehen:** den Kasten wieder zu
+`display:contents` gemacht → `test533` **50/54**; die vier Zusagen über
+Anzeige, Grund, Lage und Breite fallen einzeln.
+
+### Was von W4 weiterhin offen ist
+
+Die **Strichvorschau**, die **benannten Stiftkacheln mit Millimetern** (die
+Namen stehen seit E617, die Millimeter stehen an den Strichstärken — auf
+*einer* Kachel beides zu zeigen ist der nächste Schritt), der eigene
+**Deckkraft-Schieber** und der **Radierer mit Grösse und Haken**.
+
+Der Deckkraft-Schieber bleibt zusätzlich eine **Datenfrage**: Deckung steht
+heute fest je Stift (Marker 0,32 · Pinsel 0,92 · Bleistift 0,72 minus
+Neigung). Sie wählbar zu machen heisst, ein Feld an die Marke zu hängen —
+§9, und damit Redurs Entscheidung.
+
+---
+
+## E619 — Im Studio bleibt der Dock, und der Platz-Knopf hört auf zu lügen
+
+**19. September 2026.** Redur hat ein Papier hochgeladen
+(*Executive Summary, 19.09.2026*) und kein Wort dazu geschrieben. Es schlägt
+vor, Redions Zeichenleiste nach dem GoodNotes-Modell neu zu bauen: eine
+obere Zeichenleiste plus eine ziehbare, andockbare Palette mit Griff,
+Fangabstand, gemerktem Platz, Ausweichen vor der Bildschirmtastatur — und
+dazu feste Hex-Farben, `.toolbar-float`-Klassen und ein Modul `palette.tsx`
+mit dem Baum `MainToolbar → FloatingPalette → ToolOptionsPane`.
+
+**Nachgemessen statt geglaubt** (§45, E21). Das meiste davon steht längst:
+
+| Wunsch des Papiers | Zustand | Beleg |
+|---|---|---|
+| Andocken oben/links/rechts/unten | gebaut | E512, `marken.ts:341` |
+| Der Platz wird gemerkt | gebaut | `M_LAGE`, `marken.ts:533` |
+| Schwebende Leiste | gebaut | `bausteine.css`, `pdf-studio.css` |
+| Zurück/Vor in eigener Kapsel | gebaut im Studio | E572/E579/E588 |
+| Rollen statt Weglassen am schmalen Schirm | gebaut | `test524` |
+| Stifte offen statt im Menü | gebaut | E512 |
+| Beschriftete Strichstärken 0,4/0,8/1,8 mm | gebaut vorgestern | E616/E618 |
+| Ausweichen vor der Tastatur | gebaut | E588 |
+
+Vier Behauptungen seiner Vergleichstabelle über „Redion (aktuell)" stimmen
+nicht mehr; die fünfte, „ab < 768 px", trifft Redions Umbruch um acht Pixel
+daneben — er liegt bei **760**.
+
+### Was das Messen stattdessen fand
+
+`pdf-studio.css` setzt die Leiste im Dokumentmodus auf `position:fixed;
+left:50%` — **ohne `[data-lage]` im Wähler**, mit höherer Spezifität als
+`.blatt-reihe[data-lage="links"]`. Die Spaltenform aus `bausteine.css` greift
+trotzdem, denn die steht in `flex-direction` und `width`, nicht in `left`.
+
+GEMESSEN, Fenster 1440 × 960, `data-lage="links"`:
+
+```txt
+Leiste   x=683  y=197   74 × 749          Papier   x=225 … 1205
+```
+
+Also eine 74 px schmale Spalte **mitten auf dem Papier**, während der Knopf
+im Titel „jetzt links" ankündigte. Ein Knopf, der lügt, ist schlimmer als
+ein fehlender (§33). Kein Prüflauf hielt das.
+
+### Entschieden
+
+**Im Studio bleibt der Dock, und der Platz-Knopf ist dort weg.**
+
+Die Alternative wäre gewesen, den Platz im Studio wirken zu lassen. Sie
+scheitert an einem Satz von Redur, 14. September: **„Die untere Dock sollte
+bleiben."** Der Vorgabewert von `M_LAGE` ist `oben`; den im Studio wirken zu
+lassen hätte den Dock nach oben verschoben — bei jedem, der nie etwas
+eingestellt hat. Also das Gegenteil dessen, was bleiben sollte.
+
+Der Preis: im Schreibstudio lässt sich die Leiste nicht verschieben. Das ist
+kein Verlust, sondern das Ende einer Täuschung — sie liess sich auch vorher
+nicht verschieben, sie tat nur so. Auf der gewöhnlichen Seite bleibt der
+Platz unverändert wählbar (E512), und dort ist er jetzt sogar vollständig
+(E620).
+
+Dazu drei Zeilen, die die Spaltenform im Studio zurücknehmen
+(`flex-direction`, `width`, `max-height`) und eine, die die Wörter nur in der
+Spalte wieder hereinholt. Der erste Wurf dieser letzten Zeile war ein nacktes
+`.wort{display:revert}` — **im Bild** war zu sehen, dass es auch die
+Behälterabfragen überstimmt und im Dock plötzlich sechs Stiftnamen aufmacht
+(§55). Jetzt trägt sie `:is([data-lage="links"],[data-lage="rechts"])`.
+
+### Was aus dem Papier NICHT übernommen wurde — und warum
+
+| Aus dem Papier | Warum nicht |
+|---|---|
+| `palette.tsx`, Komponentenbaum | **§6 [hart]**, §52.1. Redion hat null `.tsx`-Dateien; E78 hat React einmal beschlossen, **E80 hat es widerrufen**. Gebaut als `.ts`, dort wo `LAGEN` schon steht |
+| `#202024`, `#2E2E32`, `#3C3C40`, `#905CFF`, `#AAAAAA` | §39. `--accent` ist hell `#7c3aed`, dunkel `#6d4aff` — beide Violett, euklidisch 43 bzw. 39 vom `#905CFF` entfernt. Ein **drittes** Violett neben zwei vorhandenen, und erfundene Marken sind hier schon dreimal unbemerkt durchgegangen |
+| Nur-Dunkel-Farben | Redion hat Hell **und** Dunkel. Feste Hex-Werte ergäben im Hellmodus eine schwarze Leiste |
+| 12 px Radius als neue Zahl | Gibt es: `--radius-lg`. Die schwebende Leiste nimmt `--radius-xl` (16 px) — eine Wahl zwischen zwei vorhandenen Marken, keine neue Zahl |
+| „ab < 768 px" | Redions Umbruch ist **760** |
+
+Das steht hier, damit dieselbe Vorlage in vier Wochen nicht noch einmal von
+vorn beantwortet werden muss.
+
+### Gemessen
+
+```txt
+test534 §2   der Dock unverändert bei allen vier gemerkten Plätzen
+test524      105 von 105 grün (das Dock selbst)
+```
+
+---
+
+## E620 — Die Leiste wandert am Griff, und «unten» ist keine zwei Pixel mehr
+
+**19. September 2026.** Der einzige Teil des Papiers, der wirklich fehlte:
+die Leiste **als Ganzes ziehen**. Belegt mit drei Negativsuchen — kein
+`snap`/`andock`/`dockPos` im Zeichenbereich, kein `style.left =` an einer
+`.blatt-reihe`, und der einzige `pointerdown` an der Leiste ist E571, das
+Sortieren *einzelner* Knöpfe.
+
+### Die zwei Pixel
+
+Beim Schreiben des Wächters fiel auf, dass «unten in der Mitte» auf einer
+gewöhnlichen Seite gar nicht funktionierte. GEMESSEN, 1440 × 960:
+
+```txt
+oben     x=244   y=335   1136 × 93       richtig
+links    x=250   y=369     64 × 749      richtig
+rechts   x=1310  y=369     64 × 749      richtig
+unten    x=811   y=522      2 × 1409     ← ZWEI PIXEL BREIT
+```
+
+Das Bild dazu (`bilder/messung-unten-seite.png`) zeigt, was die Zahl
+bedeutet: ein zwei Pixel breiter Streifen quer über das Blatt, in dem ein
+einzelner Knopf steckt. Kein Bruch, kein Fehler in der Konsole.
+
+**Die Ursache ist `container-type:inline-size`** (E359), und sie ist lehrreich:
+das ist `contain:inline-size` mit anderem Namen — die Breite wird **ohne den
+Inhalt** bestimmt. In einer Zeile mit fester Breite fällt das nie auf; in
+einem absolut gesetzten Kasten, der auf seinen Inhalt schrumpfen soll,
+bleiben null Pixel übrig. `pdf-studio.css` hat denselben Schalter für den
+Dock schon einmal zurücknehmen müssen — dort stand nur nicht, warum.
+
+Behoben mit `container-type:normal` an Reihe **und** Leiste in dieser Lage,
+`width:max-content`, `flex-wrap:nowrap` und einem ausgeblendeten
+Zeilenbruch — also genau die Gestalt des Studio-Docks. Der Preis steht im
+Stilblatt: keine Behälterabfragen in dieser Lage, also keine Wörter. Eine
+schwebende Leiste, die drei Zeilen hoch wird, wäre kein Dock, sondern eine
+Wand.
+
+### Der Griff kennt zwei Wege
+
+**Tippen** bleibt der Rundlauf aus E512 — oben → links → rechts → unten.
+**Ziehen** schiebt sie hin. Der Unterschied sind sechs Pixel Weg; darunter
+ist es ein Tipp. Am Telefon gibt es nur den Rundlauf: eine Leiste, die beim
+Zeichnen mitwandert, ist dort ein Schaden.
+
+Gefangen wird am nächsten Rand, und das Fangband ist **64 px** breit —
+dieselbe Zahl, die die Spalte links und rechts misst. Das Papier schlug 20 px
+vor; bei 44-px-Zielen und einer 64 px breiten Spalte wäre das ein Band, das
+man nie trifft. Gemessene Zahl statt abgeschriebener, wie schon bei den
+Millimetern in E616.
+
+### «frei» ist der fünfte Eintrag im selben Katalog
+
+Nicht eine zweite Liste daneben (§8): Name, Zeichen und Symbol braucht er
+genauso. Er trägt `nurZiehen: true`, und der Rundlauf überspringt ihn — ein
+Tipp muss berechenbar bleiben.
+
+Gemerkt wird der Punkt als **Prozent, nicht als Pixel**
+(`zeichnen:leistenfrei`, zwei Zahlen als Text, weil `meta` Text sicher
+übersteht, §9). Das ist der Unterschied zwischen „merkt sich den Platz" und
+„liegt morgen hinter dem Rand". Dazu klemmt der Zug den Punkt um die halbe
+Leistenbreite von jedem Rand weg — **gesehen am Bild**: beim ersten Wurf hing
+die rechte Hälfte draussen.
+
+Und das Setzen läuft jetzt über **einen** Weg (`lageAnwenden`), nicht über
+zwei — der Rundlauf tat es bisher inmitten seines Klickzweigs, und zwei Wege
+zum selben Ziel laufen auseinander (§8).
+
+### Gemessen
+
+```txt
+unten, vorher      2 × 1409 px      nachher   1112 × 46 px
+test534            44 von 44 grün
+test533 524 351 393 481 105 109 87   grün
+Dienststand        v1160 → v1164
+```
+
+---
+
+## E621 — Die Leiste sagt, dass sie eine Leiste ist
+
+**19. September 2026.** `role="toolbar"` kam in `src/` **null** mal vor —
+bei elf anderen Rollen (`status` 11×, `switch` 8×, `tab` 6×, `img` 5×,
+`group` 5×, `dialog` 5× …) und 24 `aria-label`. Wer die Seite vorlesen lässt,
+hörte dreissig einzelne Knöpfe hintereinander, ohne dass gesagt wird, dass sie
+zusammengehören.
+
+Eine Rolle allein wäre eine Behauptung gewesen (§55.2): `toolbar` verspricht
+dem Vorleser, dass **ein** Tabsprung hineinführt und die **Pfeiltasten**
+darin weitergehen. Also steht beides, oder keines:
+
+* `.blatt-werk` trägt `role="toolbar"` und `aria-label="Zeichenwerkzeuge"`.
+* Genau ein Knopf hat `tabindex="0"` — beim Bauen der erste sichtbare,
+  danach der zuletzt berührte.
+* Pfeil links/rechts (und hoch/runter, für die Spalte) wandern, `Home` und
+  `End` springen an die Enden.
+* Im Einrichten-Modus gehören die Pfeiltasten weiterhin dem Umsortieren
+  (E571) — dort tritt die Rolle zurück.
+
+Der leiseste Fehler steckte im ersten Wurf: `sichtbareKnoepfe()` filterte auf
+`getClientRects().length > 0`, und **beim Bauen hat noch nichts einen
+Kasten**. Der erste Durchlauf blieb wirkungslos, und der frisch geladene
+Bildschirm hatte weiterhin 35 Tabstationen — grün war der Lauf trotzdem, weil
+vor der Messung geklickt worden war. `test534 §3` misst seither ausdrücklich
+**vor dem ersten Klick**.
+
+### Gemessen
+
+```txt
+role="toolbar" in src/    vorher 0    nachher 1
+Tabstationen der Leiste   vorher 35   nachher 1
+test534 §3                7 von 7 grün
+```
+
+---
+
+## E622 — «Unten in der Mitte» klebt am Fenster, nicht am Blattfuss
+
+**19. September 2026, L187.** E620 hat den vierten Platz der Leiste repariert
+— aus zwei Pixeln wurde eine Leiste. Beim Hinsehen fiel sofort das Nächste
+auf: sie stand am **Fuss des Blattes**.
+
+```txt
+gemessen   Blatt ~1400 px hoch, Fenster 900 px
+           Leiste bei y = 1885      →   ausserhalb des Bildes
+```
+
+Wer oben auf dem Blatt zeichnet, sieht sie nicht. Drei Wege standen in
+`LUECKEN.md`; Redur hat am selben Tag gewählt: **sticky**.
+
+> „Sticky am Blattfuss: sie wandert mit, solange das Blatt im Bild ist, und
+> bleibt trotzdem beim Blatt."
+
+`position:fixed` wäre die andere Form gewesen — die des Studios und die des
+Papiers vom 19. September. Sie scheitert daran, dass eine gewöhnliche Seite
+**mehrere Blätter** tragen kann: zwei Leisten, die beide am Fensterfuss
+kleben, lägen übereinander.
+
+### Was dabei zu lernen war
+
+`position:sticky` mit `bottom` **zieht ein Element nach oben**, wenn es
+sonst unter den Fensterrand rutschte. Es schiebt keines nach unten. Der
+erste Wurf tauschte nur `absolute` gegen `sticky` — und die Leiste blieb bei
+y = 335 stehen, also oben, weil `seite.ts:111` sie als **erstes** Kind der
+Hülle einhängt.
+
+Damit sie am unteren Rand klebt, muss sie im Fluss **hinter dem Papier**
+stehen. Das ist ein Zug im Baum (`leisteEinordnen`), kein zweiter Wähler.
+Die Alternative wäre gewesen, die Hülle zu einer Flexspalte zu machen, um
+`order` zu bekommen — dann wären Papier, Drehhülle und Abbild zu
+Flexelementen geworden: vier Dinge geändert, um eines zu verschieben.
+
+Und es stimmt auch für den Vorleser: bei «unten» steht die Leiste unter dem
+Blatt, und dort soll sie gelesen werden (§38).
+
+Zwei kleinere Funde nebenbei: `left:50%` ist bei `sticky` keine Platzierung,
+sondern eine Haftgrenze — mit `translateX(-50%)` landete die Leiste bei
+x = −288. Jetzt `margin-inline:auto`. Und die Lücke, die ein sticky-Element
+im Fluss hinterlassen könnte, entsteht gar nicht: hinter dem Papier liegt
+sein Platz unter dem Blatt, nicht darüber.
+
+### Gemessen
+
+```txt
+vorher    y = 1885   (Blattfuss)            Papier 335 … 1941
+nachher   y =  904   in 960 px Fenster      Papier 335 … 1941
+test534   50 von 50 grün (§1b neu, 6 Zusagen)
+```
+
+**Gegenprobe (§50):** den Zug im Baum abgeschaltet → `test534 §1b` fällt mit
+zwei Zusagen („steht im Baum HINTER dem Papier", „klebt am unteren
+Fensterrand"). Dabei kam heraus, dass die dritte Zusage zu weich formuliert
+war: „Papier beginnt unter 400 px" blieb grün, obwohl 46 px Lücke dastanden.
+Sie misst jetzt gegen «oben» statt gegen eine geratene Zahl.
+
+---
+
+## E623 — Die Strichprobe zeigt den Strich, und die Deckung steht nur noch einmal
+
+**19. September 2026, W4.** `AUFGABEN.md` führte die **Strichvorschau** und
+**Name UND Millimeter auf EINER Kachel** als offen. Beides ist jetzt gebaut,
+und dazwischen lag ein Fund, der nicht auf der Liste stand.
+
+### Die Probe war keine
+
+```css
+.blatt-strich i{ width:18px; background:currentColor; border-radius:999px }
+```
+
+`currentColor` ist die **Textfarbe des Knopfes**. Gemessen an der laufenden
+App im Dunkelmodus: `rgb(242, 242, 242)` — dieselbe Farbe, ganz gleich,
+welche Tinte gewählt war. Eine Deckung hatte der Balken gar nicht.
+
+Er sagte also **dick**, und das ist die eine Eigenschaft, die man einem
+Strich ohnehin ansieht. Der Unterschied zwischen einem Bleistiftstrich und
+einem Markerstrich derselben Zahl steckt in Farbe und Deckung.
+
+Jetzt trägt er beides. Kein `<canvas>` und kein zweiter Zeichenweg — es
+bleibt der `<i>`-Balken, nur mit den richtigen Zahlen. Das ist der kleinste
+Eingriff, der aus „dick" ein „so wird es aussehen" macht.
+
+**Und damit kam ein Fehler, den die richtige Farbe erst schuf.** Gemessen:
+
+```txt
+schwarze Tinte        rgb( 17,  17,  17)
+Leiste im Dunkelmodus rgb( 32,  32,  32)      Kontrast 1,2 zu 1
+```
+
+Ein schwarzer Strich auf schwarzem Grund ist keine Probe, sondern ein leeres
+Feld. Mit `currentColor` fiel das nie auf — die Textfarbe passte
+zwangsläufig zum Grund.
+
+Die Abhilfe ist zugleich die ehrlichere Anzeige: **die Probe liegt auf
+Papier**, `box-shadow: 0 0 0 3px var(--paper)`, derselbe Wert wie das Blatt.
+Sie zeigt damit, wie der Strich AUF DEM BLATT aussieht — und dort ist der
+Grund weiss, auch im Dunkelmodus. Nachher 17,7 zu 1. `test535 §1b` misst
+beides: den Kontrast gegen das Papier **und** den gegen die Leiste, damit die
+Zusage nicht nur „ist hell genug" heisst, sondern „wäre ohne Papier
+unsichtbar".
+
+### Und dabei fiel auf: die Deckung stand viermal
+
+Über `alsAnnotation` steht seit E506:
+
+> Farbe, Breite, Druckkurve und Deckkraft stehen hier und nirgends sonst (§8).
+
+Nachgemessen stimmte das nicht. Die Zahlen standen am Bildschirm beim Pinsel
+(0,92), beim Bleistift (0,72 − Neigung × 0,22) und beim Marker (0,32) — und
+noch einmal im PDF-Export. Zwei Rechnungen mit denselben Zahlen gehen genau
+so lange gut, bis jemand eine davon ändert; dann sieht das PDF anders aus als
+der Bildschirm, und kein Lauf merkt etwas.
+
+Jetzt eine Funktion `deckungVon(art, stil, neigung)`, und **weil** es eine
+Stelle ist, kann die Probe in der Leiste dieselbe Zahl zeigen. `test535 §3`
+misst das nicht im Quelltext, sondern zieht einen echten Strich und liest
+seine Deckung am gezeichneten SVG ab.
+
+### Name und Millimeter auf einer Kachel
+
+Hier stand der Grund, warum sie getrennt waren:
+
+> Auf der Kachel steht NUR die Zahl. Der Name („Fein") steht im Titel; beides
+> auf 32 px Breite wäre abgeschnitten, und eine abgeschnittene Zahl ist eine
+> falsche Zahl (§55.1).
+
+Das galt für die Kachel von E616. Seit E618 ist sie im Kastenzustand
+`width:auto` mit `min-width:52px` und darf wachsen.
+
+**Der erste Wurf schrieb „Markant · 1,8 mm" in eine Zeile.** Gemessen wuchs
+die Leiste damit von 128 auf **143 px** — über die Decke von `test533 §5b`:
+drei Kacheln je rund 95 statt 52 px sind 129 px mehr, und die Tafel bricht
+um. Untereinander kostet es Höhe statt Breite, genau wie beim Wort unter dem
+Zeichen (W3, E614) — und es ist ausserdem die Form auf Redurs Bild.
+
+Unterhalb des Kastens bleibt das Wort geklemmt, nicht `display:none` (§38):
+dort ändert sich am Bild nichts, und ein Vorleser bekommt den vollen Namen
+weiterhin aus dem `aria-label`.
+
+### Gemessen
+
+```txt
+Probe vorher    rgb(242,242,242), keine Deckung   — bei jeder Tinte
+Probe nachher   die gewählte Tinte auf Papier, Deckung des Stifts
+                Kontrast gegen Papier 17,7 zu 1 · gegen die Leiste 1,2 zu 1
+                Bleistift 0,72 · Pinsel 0,92 · Marker 0,32 · Füller 1
+Kachel          „Fein / 0,4 mm" · „Mittel / 0,8 mm" · „Markant / 1,8 mm"
+                beim Marker „3,4 mm" (das Vierfache, E616)
+Leistenhöhe     eine Zeile 143 px · untereinander unter 140 · Decke 140
+test535         27 von 27 grün      test533   56 von 56 grün
+```
+
+**Gegenprobe (§50):** die zwei Zeilen in `staerkenBeschriften` wieder
+herausgenommen → `test535` **5 von 12**; sieben Zusagen fallen einzeln, und
+die Probe meldet wieder `rgb(242,242,242)` bei roter Tinte.
+
+---
+
+## E624 — Der Radierer bekommt seine Grösse auch ohne Studio, und den Haken
+
+**19. September 2026, W4.** Gezählt, nicht erinnert:
+
+| Baustein | gewöhnliche Seite | Studio |
+|---|---|---|
+| Rundlauf `[data-act="radiermodus"]` | 1 sichtbar | 1, per CSS versteckt |
+| Modusfeld `[data-act="eraser-menu"]` | 0 | 1 |
+| Grössen `[data-eraser-size]` | **0** | 3 (5/14/28) |
+| Haken | 0 | 0 |
+
+Die drei Grössen standen seit E576 im Studio und **nur** dort: gebaut im
+Hörer auf `ink-studio-ready`, den allein `document-mode.ts` auslöst. Wer auf
+einer gewöhnlichen Seite zeichnet, hatte einen Radierer ohne Grösse.
+
+Jetzt werden sie dort gebaut, wo die Leiste ohnehin entsteht; das Studio
+nimmt dieselben Knöpfe und hängt sie nur vor sein Modusfeld. Ein Katalog,
+eine Stelle (§8).
+
+### Der Haken war schon da — nur ohne Schalter
+
+`radierRadius()` ist seit je `eraserSize ?? Math.max(5, width * 3)`. Der
+Zustand „automatisch an den Strich anpassen" — Redurs Wort aus seinem Bild 4
+— ist also genau `eraserSize === null`. Nur führte **kein Weg zurück**: das
+Studio setzte beim Aufbau sofort die gemerkte Zahl.
+
+Der Haken ist damit keine neue Funktion, sondern der fehlende Schalter zu
+einem Zustand, den es gibt. Gemessen am Radierkreis auf dem Blatt:
+
+```txt
+gewählt „groß"     r = 28
+automatisch        r = 7,2     (Strichbreite 2,4 × 3)
+```
+
+**Kein `<input type="checkbox">`**: in `src/bereiche/pdf/` gibt es null
+davon, und ein fremdes Bedienteil mitten in einer Reihe aus Knöpfen sieht aus
+wie ein Fehler. Ein Knopf mit `aria-pressed` sagt dasselbe (§38).
+
+**Ein eigener Schlüssel** (`zeichnen:radiererauto`) statt eines Sonderwerts
+in `zeichnen:radierergroesse`: dort stehen auf jedem Gerät, das Redion schon
+benutzt hat, Zahlen. Ein „auto" hineinzuschreiben hiesse, einen vorhandenen
+Wert neu zu deuten — eine Datenänderung, und für einen Schalter ist sie nicht
+nötig (§9). So bleibt die gemerkte Grösse stehen, während der Haken an ist,
+und kommt beim Abwählen zurück.
+
+### Zwei Fehler, die die Läufe gefunden haben
+
+1. **Der Zweig lag tot.** Er stand innerhalb von `if (target.dataset.act)`,
+   und die Grössenknöpfe tragen kein `data-act`. `test524` sagte: „Die
+   Markierung wandert mit (5 → 5)".
+2. **Nur das eigene Blatt zog mit.** Die Markierung wurde über
+   `tools.querySelectorAll` gesetzt — jedes Blatt baut aber seine eigene
+   Leiste. Seite umblättern, und die alte Grösse stand wieder markiert da.
+   Genau das hält `test524` seit E576 fest: „die Wahl gilt für den Menschen,
+   nicht für das Blatt."
+
+### Gemessen
+
+```txt
+Grössen auf der Seite   vorher 0   nachher 3, je 44 × 44 px (§37)
+Radierkreis             28 → 7,2 beim Umschalten auf „automatisch"
+test535 §4              14 von 14 grün      test524   105 von 105 grün
+```
+
+**Gegenprobe (§50):** `setEraserSize(0)` zu einem Nichts gemacht → „der
+Radierer rechnet wirklich anders" fällt, 28 → 28.

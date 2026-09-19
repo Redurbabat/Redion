@@ -68,6 +68,15 @@ const TYP: Record<string, string> = {
    das grosse iPhone ist ausdrücklich das Zielgerät, nicht das kleine. */
 const GERAETE: Record<string, { breite: number; hoehe: number }> = {
   rechner:   { breite: 1280, hoehe: 900 },
+  /* DER BREITE BILDSCHIRM (E617). Er fehlte, und das ist mehr als eine
+     Lücke im Werkzeug: die Werkzeugleiste hat drei Schwellen, bei denen
+     Woerter aufgehen — 820, 1150 und 1300 px LEISTENBREITE. Bei 1280 px
+     Fenster ist die Leiste 860 px breit; die obere Schwelle war damit auf
+     KEINEM Bild dieses Verzeichnisses je zu sehen. Ein Zustand, den kein
+     Bild erreicht, wird auch nicht angesehen (§55).
+     1920 x 1080 ist der haeufigste Rechnerbildschirm; die Leiste ist dort
+     1407 px breit und damit ueber allen drei Schwellen. */
+  breit:     { breite: 1920, hoehe: 1080 },
   laptop:    { breite: 1024, hoehe: 768 },
   handy:     { breite: 390,  hoehe: 844 },   /* iPhone 13/14/15 — die enge Probe */
   handyGross:{ breite: 428,  hoehe: 926 }    /* iPhone 13 Pro Max — das Zielgerät */
@@ -760,6 +769,32 @@ const ANSICHTEN: Record<string, {
       document.getElementById('rg-willkommen')?.remove();
       w.Produktwelten.workspace('start');
       await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
+  werkzeugtafel: {
+    titel: 'Die Werkzeugleiste: Wort unter dem Zeichen (W2+W3)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.querySelectorAll('.overlay').forEach(o => o.remove());
+      const s = Store.addPage(null, { text: 'Werkzeugleiste', icon: '🧰' });
+      /* BREIT. Die Wörter hängen an der Breite der LEISTE, nicht des
+         Fensters (E359, Behälterabfrage) — eine schmale Seite zeigte hier
+         gar keine. */
+      Store.updateBlock(s.id, { wide: true });
+      const b = Store.addBlock(s.id, 'blatt', { text: '', papier: 'kariert' });
+      Store.addBlock(b.id, 'text', { text: 'Ohmsches Gesetz: U = R · I' });
+      await Store.flush();
+      App.oeffne(s.id);
+      await new Promise(r => setTimeout(r, 1100));
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+      /* DIE KLAPPE MIT DEM REGLER AUFMACHEN (E616). Sie geht auf, wenn man
+         die schon gewählte Stufe ein zweites Mal antippt (E465) — und erst
+         dann steht die Zahl mit ihrer Einheit im Bild. */
+      await new Promise(r => setTimeout(r, 200));
     }
   },
 
@@ -3607,6 +3642,18 @@ for (const l of DB_ANSICHTEN) {
   };
 }
 
+/* WELCHE GERAETE EINEN ZEIGER HABEN (E617).
+   Bis hierher stand zweimal `g !== 'rechner'` — einmal fuer „nur ein Thema"
+   und einmal fuer „mit Beruehrung nachstellen". Solange es genau EIN
+   Rechnergeraet gab, war das dasselbe; mit `breit` ist es das nicht mehr,
+   und ein 1920er Bildschirm waere als Tastgeraet nachgestellt worden.
+   Das ist genau der Fund aus L108, nur andersherum.
+
+   `laptop` bleibt absichtlich draussen und behaelt sein bisheriges
+   Verhalten: seine Bilder aendern sich damit nicht. Ob 1024 x 768 wirklich
+   ein Tastgeraet ist, ist eine eigene Frage — siehe L184. */
+const ZEIGER_GERAETE = new Set(['rechner', 'breit']);
+
 const wunsch = process.argv.slice(2);
 const nurAnsicht = wunsch.filter(a => ANSICHTEN[a]);
 const nurGeraet = wunsch.filter(a => GERAETE[a]);
@@ -3644,7 +3691,7 @@ for (const name of ansichten) {
     for (const thema of themen) {
       /* Das Telefon nur einmal — zwei Themen mal vier Geräte wären zwölf
          Bilder, und niemand sieht sich zwölf Bilder an. */
-      if (g !== 'rechner' && thema === 'light') continue;
+      if (!ZEIGER_GERAETE.has(g) && thema === 'light') continue;
 
       /* DAS TELEFON IST EIN TASTGERÄT (E300). Hier stand nur die Bildgrösse.
          Damit galt in jedem Telefonbild `hover:hover` — und alles, was erst
@@ -3658,7 +3705,7 @@ for (const name of ansichten) {
       const seite = await browser.newPage({
         viewport: { width: geraet.breite, height: geraet.hoehe },
         deviceScaleFactor: 2,
-        ...(g === 'rechner' ? {} : { isMobile: true, hasTouch: true })
+        ...(ZEIGER_GERAETE.has(g) ? {} : { isMobile: true, hasTouch: true })
       });
       await seite.goto(`http://localhost:${PORT}/index.html`);
       await seite.waitForFunction(

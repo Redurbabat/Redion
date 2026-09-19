@@ -83,6 +83,24 @@ html = html.replace(PDF_MARKE,
   () => '<script>\n/* ===== quell/fremd/pdfjs/daten.js ===== */\n' +
         lies('quell/fremd/pdfjs/daten.js') + '\n</script>');
 
+/* DIE CHRONIK IN DIE EINZELDATEI (E613) — dasselbe aus demselben Grund.
+ *
+ * `chronik/daten.js` ist seit E613 nicht mehr im Startweg: 182 KB roh, 54 KB
+ * über die Leitung, für einen Bildschirm hinter einem Zugangscode. Im
+ * Ordnerbetrieb holt `chronik/laden.js` sie nach.
+ *
+ * Die Einzeldatei kann auch das nicht — also stehen die Bytes hier, vor
+ * `laden.js`. `ChronikLaden.da()` sieht `window.ChronikDaten` dann schon
+ * stehen und kehrt sofort zurück, ohne ein Skript einzuhängen. */
+const CHRONIK_MARKE = /<!-- chronik-daten:[\s\S]*?-->/;
+if (!CHRONIK_MARKE.test(html)) {
+  throw new Error('bauen.mts: die Marke „chronik-daten" fehlt in index.html — ' +
+    'ohne sie hätte die Einzeldatei keine Chronik.');
+}
+html = html.replace(CHRONIK_MARKE,
+  () => '<script>\n/* ===== quell/bereiche/chronik/daten.js ===== */\n' +
+        lies('quell/bereiche/chronik/daten.js') + '\n</script>');
+
 /* Skripte einsetzen — in der Reihenfolge, in der sie im HTML stehen.
  *
  * `defer` WIRD DABEI WEGGELASSEN, und zwar richtig: seit E389 tragen die

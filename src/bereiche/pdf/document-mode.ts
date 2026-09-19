@@ -2628,6 +2628,19 @@ const DocumentMode = (() => {
 
     const inkToolbar = (): HTMLElement | null =>
       staende[state.index]?.querySelector<HTMLElement>('.blatt-werk') || null;
+    /* DIE FLÄCHE, AUF DER DIE KNÖPFE WIRKLICH LIEGEN (E614, W2).
+       Seit der Tafel ist das einzige Kind von `.blatt-werk` ein `<div>`.
+       Wer hier die Leiste nimmt, beobachtet ein Element, das sich nie mehr
+       ändert, und fragt nach Kindern, die es nicht mehr hat — beides ohne
+       Fehlermeldung. Der Rückfall auf die Leiste ist Absicht: eine Leiste
+       ohne Tafel ist ihre eigene Fläche. */
+    /* SEIT E618 WIEDER DIE LEISTE SELBST. E614 legte ALLE Kinder in die
+       Tafel, also musste hier eine Ebene tiefer gesucht werden. E618 hat
+       die WERKZEUGE zurück in die Leiste geholt — und nur um die geht es
+       hier: die obere Reihe spiegelt `[data-wz]`, nicht das Zubehör.
+       Der Helfer bleibt trotzdem stehen, weil er die Absicht benennt und
+       weil ein Rückfall nichts kostet. */
+    const inkFlaeche = (): HTMLElement | null => inkToolbar();
     /* ══ EINE SORTIERBEWEGUNG IST KEINE ATTRIBUTÄNDERUNG (E575) ═════════════
        Der Beobachter darüber horcht auf `disabled`, `aria-pressed` und
        `data-tool` — und genau deshalb kam eine Sortierbewegung oben NIE an:
@@ -2646,7 +2659,7 @@ const DocumentMode = (() => {
       inkSync();
     });
     const ordnungBeobachten = (): void => {
-      const source = inkToolbar();
+      const source = inkFlaeche();
       if (!source || source === beobachtet) return;
       ordnungObserver.disconnect();
       ordnungObserver.observe(source, { childList: true });
@@ -2715,7 +2728,7 @@ const DocumentMode = (() => {
          Jetzt wird zuerst verglichen und nur bei Abweichung umgehängt. Die
          benutzereigene Reihenfolge (§8/E570) gilt unverändert — sie kommt
          nur ohne Neuaufbau an. */
-      const wunsch = Array.from(source?.querySelectorAll<HTMLElement>(':scope > [data-wz]') || [])
+      const wunsch = Array.from(inkFlaeche()?.querySelectorAll<HTMLElement>(':scope > [data-wz]') || [])
         .map(real => drawingbar.querySelector<HTMLButtonElement>(`[data-document-tool="${real.dataset.wz}"]`))
         .filter((button): button is HTMLButtonElement => !!button);
       const jetzt = Array.from(drawingbar.querySelectorAll<HTMLButtonElement>(':scope > [data-document-tool]'))

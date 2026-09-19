@@ -10,6 +10,26 @@ const Marken = (() => {
     const NS = 'http://www.w3.org/2000/svg';
     const FARBEN = ['#111111', '#d64545', '#2f7ed8', '#3aa757', '#e0a419'];
     const BREITEN = [1.2, 2.4, 5];
+    /* ══ PUNKTE, NICHT PIXEL — UND DESHALB MILLIMETER (E616) ══════════════════
+       NACHGEMESSEN AM LAUFENDEN PROGRAMM, nicht angenommen: das `viewBox` der
+       Zeichenfläche ist `0 0 595.28 841.89` — A4 in PDF-PUNKTEN
+       (`SheetSpace.A4_BREITE`). Die Zahlen oben sind also Punkte.
+  
+       BIS HIERHER STAND AN DEN STUFENKNÖPFEN „1,2 px" und „2,4 px". Das war
+       falsch: 1,2 pt sind 0,4 mm, 1,2 px wären 0,3 mm — und auf dem Bildschirm
+       stand überhaupt nur „1,2", eine Zahl ohne Einheit. Sie sagt niemandem
+       etwas, und wer sie für Millimeter hielt, lag daneben.
+  
+       Ein Punkt ist 1/72 Zoll, ein Zoll 25,4 mm. Die Umrechnung ist damit
+       exakt und braucht keine Messung — gemessen wurde nur, DASS es Punkte
+       sind. */
+    const MM_JE_PT = 25.4 / 72;
+    const alsMm = (pt) => (Math.round(pt * MM_JE_PT * 10) / 10).toFixed(1).replace('.', ',') + ' mm';
+    /* Redurs Wörter von den iPad-Bildern (W4): „Fein · Mittel · Markant".
+       Die Zahlen daneben sind NICHT seine — GoodNotes nennt 0,3/0,7/1,2 mm,
+       Redion zieht 0,4/0,8/1,8. Eine abgeschriebene Zahl wäre eine falsche
+       Angabe auf dem Bildschirm (§33). */
+    const BREITEN_NAMEN = ['Fein', 'Mittel', 'Markant'];
     const MARKER_FARBE = '#e0a419';
     const HISTORY_LIMIT = 100;
     /* DIE ZWISCHENABLAGE DER ZEICHENSCHICHT (E353): ein Ort fuer alle
@@ -95,6 +115,15 @@ const Marken = (() => {
        damit ein alter oder verbogener Wert nicht als Radiergummi von einem
        Meter Durchmesser ankommt. */
     const RADIER_GROESSEN = [5, 14, 28];
+    /* ══ DER HAKEN „AUTOMATISCH AN STRICH ANPASSEN" (E624) ══════════════════
+       Ein EIGENER Schlüssel und nicht ein Sonderwert in
+       `zeichnen:radierergroesse`: dort stehen auf jedem Gerät, das Redion
+       schon benutzt hat, Zahlen. Ein „auto" hineinzuschreiben hiesse, einen
+       vorhandenen Wert neu zu deuten — das ist eine Datenänderung, und für
+       einen Schalter ist sie nicht nötig (§9). So bleibt die gemerkte Grösse
+       stehen, während der Haken an ist, und kommt beim Abwählen zurück. */
+    const M_RADIER_AUTO = 'zeichnen:radiererauto';
+    const radierAutoLesen = () => typeof Store !== 'undefined' && String(Store.getMeta(M_RADIER_AUTO, '')) === 'ja';
     const radierGroesseLesen = () => {
         const wert = typeof Store !== 'undefined' ? Number(Store.getMeta('zeichnen:radierergroesse')) : NaN;
         return RADIER_GROESSEN.includes(wert) ? wert : RADIER_GROESSEN[0];
@@ -304,13 +333,29 @@ const Marken = (() => {
        Vier Plätze, EIN Katalog (§8) — Kennung, Zeichen, Name. Die Reihenfolge
        ist die des Rundlaufs: oben (wie bisher) → links → rechts → unten in
        der Mitte, wie die schwebende Leiste in GoodNotes. Gemerkt wird der
-       Platz in `meta`, also überlebt er das Schliessen. */
+       Platz in `meta`, also überlebt er das Schliessen.
+  
+       FÜNFTER EINTRAG SEIT E620: `frei`. Er steht NICHT im Rundlauf — dorthin
+       führt nur das Ziehen am Griff, und ein Tipp muss weiter berechenbar
+       bleiben. Trotzdem gehört er in DIESEN Katalog und nicht in eine zweite
+       Liste daneben (§8): Name, Zeichen und Symbol braucht er genauso, und
+       zwei Kataloge für dieselbe Sache laufen auseinander. */
     const LAGEN = [
-        { id: 'oben', zeichen: '⤒', sym: 'dockTop', name: 'oben' },
-        { id: 'links', zeichen: '⇤', sym: 'dockLeft', name: 'links' },
-        { id: 'rechts', zeichen: '⇥', sym: 'dockRight', name: 'rechts' },
-        { id: 'unten', zeichen: '⤓', sym: 'dockBottom', name: 'unten in der Mitte' }
+        { id: 'oben', zeichen: '⤒', sym: 'dockTop', name: 'oben', nurZiehen: false },
+        { id: 'links', zeichen: '⇤', sym: 'dockLeft', name: 'links', nurZiehen: false },
+        { id: 'rechts', zeichen: '⇥', sym: 'dockRight', name: 'rechts', nurZiehen: false },
+        { id: 'unten', zeichen: '⤓', sym: 'dockBottom', name: 'unten in der Mitte', nurZiehen: false },
+        { id: 'frei', zeichen: '✥', sym: 'dockFree', name: 'frei stehend', nurZiehen: true }
     ];
+    /** Der nächste Platz IM RUNDLAUF — `frei` wird dabei übersprungen. */
+    const naechsteLage = (von) => {
+        for (let s = 1; s <= LAGEN.length; s++) {
+            const l = LAGEN[(von + s + LAGEN.length) % LAGEN.length];
+            if (!l.nurZiehen)
+                return l;
+        }
+        return LAGEN[0];
+    };
     /* ══ DIE GRUPPEN, EINMAL AUFGESCHRIEBEN (E570) ═══════════════════════════
        Welche Gruppe zu welchem Werkzeug erscheint, steht seit E356 im
        Stilblatt — das bleibt dort, denn es ist eine Sichtbarkeitsregel. Was
@@ -425,8 +470,25 @@ const Marken = (() => {
      * Gruppen hinter das gewählte Werkzeug (E356) —, und das ist dort mit
      * geschriebenem Grund entschieden. Hier nicht.
      */
+    /**
+     * Die Fläche, auf der die Knoten wirklich liegen (E614, W2).
+     *
+     * Seit der Tafel sind die Kinder von `.blatt-werk` nicht mehr die Knöpfe,
+     * sondern ein einziges Element. Jeder `:scope > …`-Griff in dieser Datei
+     * fragt deshalb die Fläche und nicht die Leiste.
+     *
+     * DER RÜCKFALL IST ABSICHT: gibt es keine Tafel — eine ältere Leiste, ein
+     * Prüflauf, der ein nacktes `.blatt-werk` baut —, ist die Leiste selbst
+     * die Fläche. Sonst stiege `ordnungAnwenden` stumm aus und die ganze
+     * Nutzerordnung aus E570/E571 wäre wirkungslos, ohne dass etwas meldet.
+     */
+    const flaeche = (tools) => tools.querySelector(':scope > .blatt-tafel') ?? tools;
     const ordnungAnwenden = (tools) => {
         const o = ordnungLesen();
+        /* ZWEI FLÄCHEN SEIT E618: die Werkzeuge liegen in der Leiste, das
+           Zubehör in der Tafel. Der Zeilenbruch gehört zu den Werkzeugen — er
+           trennt sie vom Zubehör und muss ihr Geschwister bleiben. */
+        const f = flaeche(tools);
         const bruch = tools.querySelector(':scope > .blatt-zeilenbruch');
         if (!bruch)
             return;
@@ -436,8 +498,8 @@ const Marken = (() => {
                 tools.insertBefore(knopf, bruch);
         }
         for (const id of o.gruppen) {
-            tools.querySelectorAll(`:scope > [data-gruppe="${id}"]`)
-                .forEach(knoten => tools.appendChild(knoten));
+            f.querySelectorAll(`:scope > [data-gruppe="${id}"]`)
+                .forEach(knoten => f.appendChild(knoten));
         }
         ordnungZahlen(tools, o);
         platzSetzen(tools);
@@ -457,12 +519,13 @@ const Marken = (() => {
            NÄCHSTE Werkzeug —, und Farben und Breiten standen am Telefon
            hinter dem Marker statt hinter dem Stift. `test356` hat es gemeldet.
            Hundert lässt Platz für neunundneunzig Gruppen. */
+        const f = flaeche(tools);
         o.werkzeuge.forEach((id, i) => {
             tools.querySelector(`:scope > [data-wz="${id}"]`)
                 ?.style.setProperty('--ordnung', String((i + 1) * 100));
         });
         o.gruppen.forEach((id, i) => {
-            tools.querySelectorAll(`:scope > [data-gruppe="${id}"]`)
+            f.querySelectorAll(`:scope > [data-gruppe="${id}"]`)
                 .forEach(k => k.style.setProperty('--g-ordnung', String(i + 1)));
         });
     };
@@ -483,9 +546,22 @@ const Marken = (() => {
         tools.style.setProperty('--platz', String(i >= 0 ? (i + 1) * 100 : 0));
     };
     const M_LAGE = 'zeichnen:leistenlage';
+    /* ZWEI ZAHLEN ALS TEXT, durch ein Leerzeichen getrennt: „43.10% 62.80%".
+       Prozent, weil ein kleineres Fenster die Leiste sonst hinter den Rand
+       schöbe; Text, weil `meta` Text sicher übersteht (§9). */
+    const M_FREI = 'zeichnen:leistenfrei';
     const lageJetzt = () => {
         const id = typeof Store !== 'undefined' ? String(Store.getMeta(M_LAGE, 'oben')) : 'oben';
         return LAGEN.some(l => l.id === id) ? id : 'oben';
+    };
+    /** Der gemerkte freie Punkt, oder die Mitte, wenn nichts dasteht. */
+    const freiJetzt = () => {
+        const roh = typeof Store !== 'undefined' ? String(Store.getMeta(M_FREI, '')) : '';
+        const teile = roh.trim().split(/\s+/);
+        const gut = (w) => !!w && /^-?\d+(\.\d+)?%$/.test(w);
+        return gut(teile[0]) && gut(teile[1])
+            ? { x: teile[0], y: teile[1] }
+            : { x: '50%', y: '50%' };
     };
     const M_LASER = 'zeichnen:laser';
     const laserArt = () => (typeof Store !== 'undefined' ? String(Store.getMeta(M_LASER, 'punkt')) : 'punkt');
@@ -609,6 +685,33 @@ const Marken = (() => {
             return 1;
         return 0.5 + d * 1.0;
     };
+    /* ══ DIE DECKUNG EINES STRICHS — EINE STELLE (E623) ══════════════════════
+       Sie stand VIERMAL: am Bildschirm beim Pinsel, beim Bleistift und beim
+       Marker, und noch einmal im PDF-Export. Der Kommentar über
+       `alsAnnotation` behauptet seit E506, Farbe, Breite, Druckkurve und
+       Deckkraft stünden „hier und nirgends sonst (§8)" — nachgemessen waren
+       es zwei Rechnungen mit denselben Zahlen. Das geht genau so lange gut,
+       bis jemand eine davon ändert, und dann sieht das PDF anders aus als
+       der Bildschirm, ohne dass ein Lauf etwas merkt.
+  
+       Jetzt eine Stelle. Und weil es eine Stelle ist, kann die Strichprobe
+       in der Leiste dieselbe Zahl zeigen (E623, die Probe). */
+    const deckungVon = (art, stil, neigung) => {
+        if (art === 'marker')
+            return 0.32;
+        if (stil === 'pinsel')
+            return 0.92;
+        if (stil === 'bleistift') {
+            /* FLACH IST WEICHER (E507): ein flach gehaltener Bleistift trägt
+               breiter auf, aber nicht dunkler. Ohne Neigung bleibt es bei den
+               0,72 aus E465 — das hält `test475` §4 fest. */
+            const n = Array.isArray(neigung)
+                ? (neigung.length ? neigung.reduce((a, b) => a + (Number(b) || 0), 0) / neigung.length : 0)
+                : (Number(neigung) || 0);
+            return Math.round((0.72 - n * 0.22) * 100) / 100;
+        }
+        return 1;
+    };
     /** Die drei Stifte, die als FLAECHE gezeichnet werden (der Kugelschreiber ist die Linie). */
     const FLAECHEN_STIFTE = new Set(['fueller', 'pinsel', 'bleistift']);
     const svg = (name, attributes = {}) => {
@@ -697,12 +800,9 @@ const Marken = (() => {
                (siehe `strokeWidth`) — im PDF muss er dieselbe Breite haben. */
             breite: mark.art === 'marker' ? base * 4 : base,
             /* Der Bleistift ist durchscheinend, und flach gehalten noch mehr —
-               dieselbe Zahl wie am Bildschirm (E465, E507). */
-            deckkraft: mark.art === 'marker' ? 0.32
-                : String(mark.stil) === 'bleistift'
-                    ? Math.round((0.72 - (neig.length
-                        ? neig.reduce((a, b) => a + (Number(b) || 0), 0) / neig.length : 0) * 0.22) * 100) / 100
-                    : String(mark.stil) === 'pinsel' ? 0.92 : 1,
+               dieselbe Zahl wie am Bildschirm, und seit E623 buchstäblich
+               dieselbe: eine Funktion, zwei Aufrufer. */
+            deckkraft: deckungVon(String(mark.art), String(mark.stil), neig),
             name: mark.art === 'marker' ? 'Marker' : 'Handschrift'
         };
     };
@@ -1214,19 +1314,15 @@ const Marken = (() => {
             element = svg('path', { d: InkGeometry.outline(points, halb), fill: color, stroke: color,
                 'stroke-width': 0.25, 'stroke-linejoin': 'round' });
             if (mark.stil === 'pinsel')
-                element.setAttribute('opacity', '0.92');
+                element.setAttribute('opacity', String(deckungVon(art, 'pinsel')));
             /* DIE KOERNUNG DES BLEISTIFTS (E465): ein gestrichelter Haarstrich
                um die Flaeche — die Kante wird rau, wie Graphit auf Papier, und
                die Flaeche bleibt durchscheinend. Kein Filter: ein `feTurbulence`
                je Strich kostet auf einer vollen Seite ein Bild je Bild. */
             if (mark.stil === 'bleistift') {
-                /* FLACH IST WEICHER (E507). Ein flach gehaltener Bleistift trägt
-                   breiter auf, aber nicht dunkler — dieselbe Menge Graphit auf
-                   mehr Papier. Ohne Neigung bleibt es bei den 0,72 von E465, und
-                   genau das hält `test475` §4 fest. */
-                const mittel = neig.length
-                    ? neig.reduce((a, b) => a + (Number(b) || 0), 0) / neig.length : 0;
-                element.setAttribute('opacity', String(Math.round((0.72 - mittel * 0.22) * 100) / 100));
+                /* FLACH IST WEICHER (E507) — die Rechnung steht seit E623 in
+                   `deckungVon`, zusammen mit der des PDF. */
+                element.setAttribute('opacity', String(deckungVon(art, 'bleistift', neig)));
                 element.setAttribute('stroke-width', '0.7');
                 element.setAttribute('stroke-dasharray', '0.9 0.6');
             }
@@ -1269,7 +1365,7 @@ const Marken = (() => {
                 element.setAttribute('stroke-width', '0');
             }
             if (art === 'marker') {
-                element.setAttribute('opacity', '0.32');
+                element.setAttribute('opacity', String(deckungVon('marker', '')));
                 element.setAttribute('style', 'mix-blend-mode:multiply');
             }
             /* Geschlossene Formen lassen sich auch in ihrer Flaeche greifen. Die
@@ -4494,8 +4590,18 @@ const Marken = (() => {
                 letztesElement = id;
                 notifyState();
             } },
-            setEraserSize: (radius) => { if ([5, 14, 28].includes(radius))
-                eraserSize = radius; },
+            /* NULL HEISST „AUTOMATISCH AN STRICH ANPASSEN" (E624). Der Zustand
+               gab es seit je — `radierRadius()` ist `eraserSize ?? max(5, width*3)`
+               —, nur führte kein Weg dorthin zurück: das Studio setzte beim
+               Aufbau sofort die gemerkte Grösse. Jetzt ist er ein Schalter. */
+            setEraserSize: (radius) => {
+                if (radius === 0) {
+                    eraserSize = null;
+                    return;
+                }
+                if (RADIER_GROESSEN.includes(radius))
+                    eraserSize = radius;
+            },
             eraserSize: () => radierRadius(),
             elementWaehlen: async () => {
                 const gewaehlt = await elementWaehlen();
@@ -5142,6 +5248,21 @@ const Marken = (() => {
         /* Der gemerkte Platz gilt sofort, nicht erst nach dem ersten Klick —
            derselbe Fund wie bei der Adernreihe in E509 (§55). */
         row.dataset.lage = lageJetzt();
+        /* Und wenn sie frei steht, auch WO (E620). Ohne diese zwei Zeilen
+           stünde sie nach dem Neuladen wieder in der Mitte — der gemerkte
+           Platz wäre dann nur ein halber. */
+        if (row.dataset.lage === 'frei') {
+            const punkt = freiJetzt();
+            row.style.setProperty('--leiste-x', punkt.x);
+            row.style.setProperty('--leiste-y', punkt.y);
+        }
+        /* Der Platz im Baum gilt erst, wenn die Hülle steht — `seite.ts` hängt
+           die Leiste nach diesem Aufruf ein. Ein Mikroauftrag läuft nach dem
+           ganzen Aufbau und sieht die fertige Hülle. */
+        queueMicrotask(() => { try {
+            leisteEinordnen(row);
+        }
+        catch { /* ohne Hülle bleibt es, wie es ist */ } });
         const tools = document.createElement('div');
         tools.className = 'blatt-werk';
         tools.dataset.tool = 'schreiben';
@@ -5195,7 +5316,37 @@ const Marken = (() => {
                 `aria-pressed="${w.id === 'schreiben' ? 'true' : 'false'}" title="${w.titel}">` +
                 bild + `<span class="wort">${w.name}</span></button>`;
         };
-        tools.innerHTML =
+        /* ══ DIE TAFEL ALS BEHÄLTER (E614, W2) ════════════════════════════════
+           Zwischen `.blatt-werk` und ihre Kinder schiebt sich EINE Ebene:
+           `.blatt-tafel`. Sie nimmt ALLE Kinder auf — Werkzeuge, Trenner,
+           Zeilenbruch und Zubehör —, nicht nur die `[data-gruppe]`-Knoten.
+    
+           WARUM ALLE UND NICHT NUR DIE GRUPPEN. Drei Mechanismen der Leiste
+           wirken ausschliesslich zwischen unmittelbaren Geschwistern, und jeder
+           einzelne risse, wenn die Grenze mitten hindurchginge:
+    
+             · `.blatt-zeilenbruch + span.blatt-trenn` (bausteine.css) — der
+               doppelte Trennstrich am Zeilenanfang, der Fund aus E568;
+             · `button:hover + button` (pdf-studio.css) — Redurs Dock-Welle;
+             · `insertBefore(knopf, bruch)` in `ordnungAnwenden` — zwei
+               Elternteile, und der Aufruf würfe.
+    
+           WARUM SIE `display:contents` TRÄGT. Die drei Layoutmechanismen sind
+           Flex-KIND-Eigenschaften: `flex:1 0 100%` am Zeilenbruch (E359),
+           `order` für das Telefon (E356/E570), `position:sticky` an Zurück/Vor.
+           Alle drei wirken nur zwischen direkten Flex-Geschwistern. Mit
+           `display:contents` entsteht kein Kasten, die Kinder bleiben Flex-
+           Elemente von `.blatt-werk`, und am Bildschirm ändert sich nichts —
+           genau die Zusage dieses Bogens. Einen eigenen Kasten bekommt die
+           Tafel erst mit W4, wenn sie wirklich eine Tafel wird.
+    
+           WAS SIE NICHT TRÄGT: kein `data-gruppe` und kein `data-wz`. Drei
+           `closest('[data-wz],[data-gruppe]')` in dieser Datei träfen sonst die
+           Tafel statt den Knopf, den der Finger meint. */
+        const tafel = document.createElement('div');
+        tafel.className = 'blatt-tafel';
+        tools.appendChild(tafel);
+        tafel.innerHTML =
             button('schreiben') +
                 button('select') +
                 button('stift') +
@@ -5247,6 +5398,41 @@ const Marken = (() => {
                     return `<button data-act="radiermodus" data-gruppe="radierer" data-modus="${jetzt.id}" title="${jetzt.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}">` +
                         `<span class="zeichen" data-sym="${jetzt.sym}" aria-hidden="true"></span>` +
                         `<span class="wort">${jetzt.name}</span></button>`;
+                })() +
+                /* ══ DIE DREI GRÖSSEN, AUF BEIDEN OBERFLÄCHEN (E624) ══════════════════
+                   Sie standen seit E576 im Studio und NUR dort: gebaut im Hörer auf
+                   `ink-studio-ready`, den allein `document-mode.ts` auslöst. Gezählt
+                   am 19. September: drei im Studio, null auf der gewöhnlichen Seite.
+                   Wer auf einer Seite zeichnet, hatte einen Radierer ohne Grösse.
+          
+                   Jetzt stehen sie hier, wo die Leiste ohnehin gebaut wird — ein
+                   Katalog, eine Stelle (§8). Das Studio nimmt dieselben Knöpfe; sein
+                   Hörer legt nur noch das Modusfeld daneben.
+          
+                   Die drei Kreisgrössen 14/22/30 sind nachgemessen (E576): bei 44 px
+                   Knopf blieb für 40 kein Platz, und der Browser schrumpfte ihn auf
+                   dieselben 28 wie den mittleren — zwei gleich grosse Kreise sind
+                   keine zwei Grössen. */
+                (() => {
+                    const gemerkt = radierGroesseLesen();
+                    const auto = radierAutoLesen();
+                    const namen = ['klein', 'mittel', 'groß'];
+                    const kreise = [14, 22, 30];
+                    return RADIER_GROESSEN.map((radius, i) => `<button type="button" class="blatt-eraser-size" data-gruppe="radierer" ` +
+                        `data-eraser-size="${radius}" style="--eraser-preview:${kreise[i]}px" ` +
+                        `aria-pressed="${!auto && radius === gemerkt ? 'true' : 'false'}" ` +
+                        `title="Radierer ${namen[i]}" aria-label="Radierer ${namen[i]}">` +
+                        `<i aria-hidden="true"></i></button>`).join('') +
+                        /* DER HAKEN (E624). Kein `<input type="checkbox">`: in
+                           `src/bereiche/pdf/` gibt es null davon, und ein fremdes
+                           Bedienteil mitten in einer Reihe aus Knöpfen sieht aus wie ein
+                           Fehler. Ein Knopf mit `aria-pressed` sagt dasselbe (§38). */
+                        `<button type="button" data-act="radierauto" data-gruppe="radierer" ` +
+                        `aria-pressed="${auto ? 'true' : 'false'}"${auto ? ' class="on"' : ''} ` +
+                        `title="Automatisch an den Strich anpassen — der Radierer nimmt die Breite des Strichs, den er trifft" ` +
+                        `aria-label="Radierergrösse automatisch an den Strich anpassen">` +
+                        `<span class="zeichen" data-sym="eraserAuto" aria-hidden="true"></span>` +
+                        `<span class="wort">Automatisch</span></button>`;
                 })() +
                 /* JEDER KNOPF KENNT SEINE GRUPPE (E356): am Telefon zeigt die Leiste
                    nur die Gruppen des gewaehlten Werkzeugs — Farben und Breiten beim
@@ -5427,11 +5613,20 @@ const Marken = (() => {
                 'aria-label="Farben: eigene Farbe wählen oder Farbsätze">+</button>' +
                 '<span class="blatt-trenn" data-gruppe="breite"></span>' +
                 /* Doppelter Massstab wie im Menüband: mit der wahren Stärke sahen
-                   „dünn" (1,2 px) und „mittel" (2,4 px) gleich aus, weil der Boden
-                   von 2 px den ersten hochzog. Das Verhältnis 1 : 2 : 4 bleibt. */
+                   „dünn" (1,2 pt) und „mittel" (2,4 pt) gleich aus, weil der Boden
+                   von 2 px den ersten hochzog. Das Verhältnis 1 : 2 : 4 bleibt.
+                   (Hier stand „px". Es sind PUNKTE — siehe `alsMm` oben, E616.) */
                 BREITEN.map((value, index) => `<button class="blatt-strich${index === 1 ? ' on' : ''}" data-gruppe="breite" ` +
-                    `data-b="${value}" title="Strichbreite ${String(value).replace('.', ',')} — die gewählte nochmal antippen: Stärke frei wählen">` +
-                    `<i style="height:${Math.max(2, value * 2)}px"></i></button>`).join('') +
+                    `data-b="${value}" title="${BREITEN_NAMEN[index] ?? 'Strich'} · ${alsMm(value)} — die gewählte nochmal antippen: Stärke frei wählen" ` +
+                    `aria-label="Strichstärke ${BREITEN_NAMEN[index] ?? 'Strich'}, ${alsMm(value)}">` +
+                    `<i style="height:${Math.max(2, value * 2)}px"></i>` +
+                    /* DIE MILLIMETER ALS WORT (E618). Leer gebaut und von
+                       `staerkenBeschriften` gefüllt — der Wert hängt am Werkzeug (der
+                       Marker zieht das Vierfache, E616), und eine Zahl, die beim Bauen
+                       festgeschrieben wird, steht beim Marker falsch da.
+                       Sichtbar ist sie nur im Kasten; sonst geklemmt wie jedes andere
+                       Wort der Leiste, also weiterhin im Vorlesebaum (§38). */
+                    '<span class="wort"></span></button>').join('') +
                 /* DIE FREIE STAERKE (E465), wie GoodNotes' Schieber: drei Stufen zum
                    Antippen bleiben, der Regler dazwischen nimmt jeden Wert von 0,5
                    bis 12. Sein Wert IST die Staerke — kein Zwischenzustand.
@@ -5441,7 +5636,28 @@ const Marken = (() => {
                    Reihe (test351, 132 px Leiste). Die Klasse `auf` oeffnet ihn. */
                 '<label class="blatt-staerke" data-gruppe="breite" title="Strichstärke frei wählen">' +
                 '<input type="range" min="0.5" max="12" step="0.1" value="' + BREITEN[1] + '" aria-label="Strichstärke">' +
-                '<output aria-hidden="true">' + String(BREITEN[1]).replace('.', ',') + '</output></label>';
+                '<output aria-hidden="true">' + alsMm(BREITEN[1]) + '</output></label>';
+        /* ══ WERKZEUGE IN DIE LEISTE, ZUBEHÖR IN DIE TAFEL (E618) ═════════════
+           E614 hat ALLE Kinder in die Tafel gelegt — richtig für W2, wo sie nur
+           eine Ebene ohne Kasten war. W4 braucht sie als KASTEN, und ein Kasten
+           um die Werkzeuge herum wäre kein Zubehörfeld, sondern die ganze
+           Leiste.
+    
+           GEBAUT WIRD WEITER IN EINER ZEICHENKETTE — sie ist die Reihenfolge
+           des Katalogs (§8). Danach werden die zwei Sorten getrennt:
+           Werkzeuge und Zeilenbruch wandern in die Leiste, das Zubehör bleibt.
+           Umhängen statt zweimal bauen; dasselbe Prinzip wie `ordnungAnwenden`
+           eine Zeile tiefer.
+    
+           DIE 51 KINDWÄHLER DER GRUPPEN BLEIBEN DAMIT UNBERÜHRT
+           (`.blatt-tafel > [data-gruppe]`) — sie zeigen weiterhin auf die
+           Tafel, weil das Zubehör darin bleibt. Nur die acht Regeln, die
+           `[data-wz]` oder den Zeilenbruch nennen, ziehen mit. */
+        tafel.querySelectorAll(':scope > [data-wz]')
+            .forEach(knopf => tools.insertBefore(knopf, tafel));
+        const bruchRaus = tafel.querySelector(':scope > .blatt-zeilenbruch');
+        if (bruchRaus)
+            tools.insertBefore(bruchRaus, tafel);
         /* ══ DIE EIGENE ORDNUNG LEGT SICH DARÜBER (E570) ═══════════════════════
            Die Zeilen oben bauen die Leiste in der Reihenfolge des Katalogs —
            das bleibt so, denn der Katalog ist die Wahrheit darüber, WAS es
@@ -5459,8 +5675,18 @@ const Marken = (() => {
            ein Beobachter auf genau diesem Attribut. Eine Stelle, die nicht
            vergessen werden kann. */
         try {
-            new MutationObserver(() => platzSetzen(tools))
-                .observe(tools, { attributes: true, attributeFilter: ['data-tool'] });
+            new MutationObserver(() => {
+                platzSetzen(tools);
+                /* DIE MILLIMETER HÄNGEN AM WERKZEUG (E616): derselbe Stufenknopf
+                   heisst beim Stift „0,8 mm" und beim Marker „3,4 mm", weil der
+                   Marker viermal seine Zahl zieht. Hier zuzuhören ist dieselbe
+                   Entscheidung wie bei `platzSetzen` eine Zeile höher — eine
+                   Stelle statt sieben, die man vergessen kann. */
+                try {
+                    staerkenBeschriften();
+                }
+                catch { /* vor dem Aufbau */ }
+            }).observe(tools, { attributes: true, attributeFilter: ['data-tool'] });
         }
         catch { /* ohne Beobachter bleibt die Vorgabe stehen */ }
         /* ══ IM BAND SELBST SCHIEBEN (E571) ═══════════════════════════════════
@@ -5529,7 +5755,7 @@ const Marken = (() => {
                 return;
             /* Der Fokus bleibt am geschobenen Knopf — sonst wäre die zweite
                Pfeiltaste ins Leere gedrückt. */
-            tools.querySelector(art === 'werkzeuge' ? `:scope > [data-wz="${id}"]` : `:scope > [data-gruppe="${id}"]`)?.focus();
+            (art === 'werkzeuge' ? tools : flaeche(tools)).querySelector(art === 'werkzeuge' ? `:scope > [data-wz="${id}"]` : `:scope > [data-gruppe="${id}"]`)?.focus();
         };
         const bandZeigen = (an) => {
             const reihe = tools.closest('.blatt-reihe');
@@ -5650,6 +5876,222 @@ const Marken = (() => {
             }
         });
         controls.ordnenUmschalten = () => ordnenSetzen(!ordnenAn);
+        /* ══ DIE LEISTE SAGT, DASS SIE EINE LEISTE IST (E621) ═══════════════════
+           `role="toolbar"` kam in `src/` bis zum 19. September 2026 NULL mal vor
+           — bei elf anderen Rollen und 24 `aria-label`. Wer die Seite vorlesen
+           lässt, hört heute dreissig einzelne Knöpfe hintereinander, ohne dass
+           gesagt wird, dass sie zusammengehören.
+    
+           Eine Rolle allein wäre aber eine Behauptung (§55.2): `toolbar`
+           verspricht dem Vorleser, dass EIN Tabsprung hineinführt und die
+           Pfeiltasten darin weitergehen. Also steht beides hier, oder keines. */
+        tools.setAttribute('role', 'toolbar');
+        tools.setAttribute('aria-label', 'Zeichenwerkzeuge');
+        const sichtbareKnoepfe = () => {
+            const alle = [...tools.querySelectorAll('button')];
+            const sichtbar = alle.filter(k => k.getClientRects().length > 0 && !k.hasAttribute('disabled'));
+            /* VOR DEM EINHÄNGEN hat noch nichts einen Kasten. Dann gilt die ganze
+               Liste — sonst bliebe der erste Durchlauf wirkungslos und der frisch
+               geladene Bildschirm hätte dreissig Tabstationen. */
+            return sichtbar.length ? sichtbar : alle;
+        };
+        /** Genau ein Knopf im Tabbaum — der zuletzt berührte, sonst der erste. */
+        const fokusFuehrung = (bevorzugt) => {
+            const liste = sichtbareKnoepfe();
+            if (!liste.length)
+                return;
+            const jetzt = liste.find(k => k.tabIndex === 0);
+            const eins = (bevorzugt && liste.includes(bevorzugt)) ? bevorzugt : (jetzt ?? liste[0]);
+            tools.querySelectorAll('button').forEach(k => { k.tabIndex = -1; });
+            eins.tabIndex = 0;
+        };
+        /* Einmal beim Bauen, und danach bei jedem Klick — ein Werkzeugwechsel
+           blendet halbe Gruppen um, und der eine Tabstopp darf nicht in einem
+           Knopf landen, den gerade niemand sieht. */
+        fokusFuehrung();
+        tools.addEventListener('click', event => {
+            const k = event.target?.closest('button');
+            fokusFuehrung(k && tools.contains(k) ? k : undefined);
+        });
+        tools.addEventListener('focusin', event => {
+            const k = event.target?.closest('button');
+            if (k && tools.contains(k))
+                fokusFuehrung(k);
+        });
+        tools.addEventListener('keydown', event => {
+            /* Im Einrichten-Modus gehören die Pfeiltasten dem Umsortieren (E571). */
+            if (ordnenAn)
+                return;
+            const schritt = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1
+                : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 0;
+            if (!schritt && event.key !== 'Home' && event.key !== 'End')
+                return;
+            const liste = sichtbareKnoepfe();
+            if (liste.length < 2)
+                return;
+            const hier = event.target?.closest('button');
+            const i = hier ? liste.indexOf(hier) : -1;
+            const ziel = event.key === 'Home' ? liste[0]
+                : event.key === 'End' ? liste[liste.length - 1]
+                    : liste[((i < 0 ? 0 : i) + schritt + liste.length) % liste.length];
+            event.preventDefault();
+            fokusFuehrung(ziel);
+            ziel.focus();
+        });
+        /* ══ DEN PLATZ ÜBERALL SETZEN — EIN WEG (E620) ══════════════════════════
+           Der Rundlauf tat das bisher inmitten seines Klickzweigs. Seit es einen
+           zweiten Weg zum selben Ziel gibt (das Ziehen), wäre das zweimal
+           dasselbe an zwei Stellen — und zwei Wege laufen auseinander (§8). */
+        /* ══ «UNTEN» MUSS HINTER DAS PAPIER (E622, L187) ═══════════════════════
+           `position:sticky` mit `bottom` zieht ein Element NACH OBEN, wenn es
+           sonst unter den Fensterrand rutschte — es schiebt keines nach unten.
+           Gemessen: die Leiste blieb bei y = 335 stehen, also oben, weil
+           `seite.ts:111` sie als ERSTES Kind der Hülle einhängt.
+    
+           Damit sie am unteren Fensterrand klebt, muss sie im Fluss HINTER dem
+           Papier stehen. Das ist ein Zug im Baum, kein zweiter Wähler: die
+           Hülle bleibt ein gewöhnlicher Block (sie zu einer Flexspalte zu
+           machen, nur um `order` zu bekommen, hätte Papier, Drehhülle und
+           Abbild zu Flexelementen gemacht — vier Dinge geändert, um eines zu
+           verschieben).
+    
+           Und es stimmt auch für den Vorleser: bei «unten» steht die Leiste
+           unter dem Blatt, und dann soll sie dort auch gelesen werden (§38). */
+        const leisteEinordnen = (r) => {
+            const h = r.parentElement;
+            if (!h || !h.classList.contains('blatt-huelle'))
+                return;
+            if (r.dataset.lage === 'unten') {
+                if (h.lastElementChild !== r)
+                    h.appendChild(r);
+            }
+            else if (h.firstElementChild !== r)
+                h.insertBefore(r, h.firstElementChild);
+        };
+        const lageAnwenden = (id, merken = true) => {
+            const eintrag = LAGEN.find(l => l.id === id) ?? LAGEN[0];
+            if (merken && typeof Store !== 'undefined') {
+                try {
+                    Store.setMeta(M_LAGE, eintrag.id);
+                }
+                catch { /* nur diese Sitzung */ }
+            }
+            const i = LAGEN.findIndex(l => l.id === eintrag.id);
+            const naechst = naechsteLage(i);
+            document.querySelectorAll('.blatt-reihe').forEach(r => {
+                r.dataset.lage = eintrag.id;
+                leisteEinordnen(r);
+            });
+            document.querySelectorAll('[data-act="lage"]').forEach(k => {
+                k.dataset.lage = eintrag.id;
+                k.title = 'Leiste verschieben — jetzt ' + eintrag.name + ', als Nächstes ' + naechst.name
+                    + ' (ziehen geht auch)';
+                k.setAttribute('aria-label', 'Leiste verschieben, jetzt ' + eintrag.name);
+                const z = k.querySelector('.zeichen');
+                if (z) {
+                    z.dataset.sym = eintrag.sym;
+                    z.textContent = '';
+                }
+                try {
+                    Register.symbole.fuelle(k);
+                }
+                catch { /* dann bleibt es leer */ }
+            });
+        };
+        /* ══ AM GRIFF ZIEHEN (E620) ═════════════════════════════════════════════
+           Das Papier vom 19. September wollte eine Palette, die man greift und
+           hinschiebt. Gebaut war nur der Rundlauf: tippen, und sie springt zum
+           nächsten Platz. Beides zusammen geht, wenn der Griff zwei Wege kennt —
+           und der Griff ist der Knopf, der ohnehin schon „Platz" heisst.
+    
+           GEZOGEN WIRD ERST NACH SECHS PIXELN. Darunter ist es ein Tipp, und der
+           Tipp bleibt der Rundlauf (E512); am Telefon gibt es gar nichts anderes,
+           denn eine Leiste, die beim Zeichnen mitwandert, ist dort ein Schaden.
+    
+           GEFANGEN WIRD AM RAND, und das Fangband ist 64 px breit — dieselbe
+           Zahl, die die Spalte links und rechts misst (`bausteine.css`). Eine
+           geratene Zahl wäre hier besonders teuer: ein zu schmales Band trifft
+           man nie, ein zu breites lässt nichts frei stehen. */
+        const ZUG_AB = 6;
+        const FANG = 64;
+        tools.addEventListener('pointerdown', event => {
+            if (ordnenAn)
+                return;
+            const griff = event.target?.closest('[data-act="lage"]');
+            if (!griff || !tools.contains(griff))
+                return;
+            if (window.matchMedia && window.matchMedia('(max-width:760px)').matches)
+                return;
+            const huelle = row.parentElement;
+            if (!huelle)
+                return;
+            const startX = event.clientX, startY = event.clientY;
+            let zieht = false;
+            const bewegen = (e) => {
+                if (!zieht && Math.abs(e.clientX - startX) + Math.abs(e.clientY - startY) < ZUG_AB)
+                    return;
+                if (!zieht) {
+                    zieht = true;
+                    row.dataset.zug = 'an';
+                    griff.setPointerCapture?.(e.pointerId);
+                }
+                const k = huelle.getBoundingClientRect();
+                if (!k.width || !k.height)
+                    return;
+                /* GANZ IM BILD BLEIBEN. Der gemerkte Punkt ist die MITTE der Leiste
+                   (`translate(-50%,-50%)`), also darf er nicht näher an den Rand als
+                   ihre halbe Breite — sonst hängt eine Hälfte draussen, und beim
+                   Bild vom 19. September tat sie das auch: rechts abgeschnitten. */
+                const halbX = ((row.offsetWidth / 2) / k.width) * 100;
+                const halbY = ((row.offsetHeight / 2) / k.height) * 100;
+                const klemm = (wert, halb) => halb * 2 >= 100 ? 50 : Math.min(100 - halb, Math.max(halb, wert));
+                const x = klemm(((e.clientX - k.x) / k.width) * 100, halbX);
+                const y = klemm(((e.clientY - k.y) / k.height) * 100, halbY);
+                row.dataset.lage = 'frei';
+                row.style.setProperty('--leiste-x', x.toFixed(2) + '%');
+                row.style.setProperty('--leiste-y', y.toFixed(2) + '%');
+            };
+            const beenden = (e) => {
+                window.removeEventListener('pointermove', bewegen);
+                window.removeEventListener('pointerup', beenden);
+                window.removeEventListener('pointercancel', beenden);
+                if (!zieht)
+                    return;
+                delete row.dataset.zug;
+                /* DER KLICK NACH DEM ZIEHEN GEHÖRT NICHT DEM RUNDLAUF. Ohne das
+                   spränge die Leiste im selben Atemzug noch einen Platz weiter. */
+                const schlucken = (c) => { c.preventDefault(); c.stopPropagation(); };
+                window.addEventListener('click', schlucken, true);
+                setTimeout(() => window.removeEventListener('click', schlucken, true), 0);
+                const k = huelle.getBoundingClientRect();
+                const nah = {
+                    links: e.clientX - k.x, rechts: k.right - e.clientX,
+                    oben: e.clientY - k.y, unten: k.bottom - e.clientY
+                };
+                const rand = Object.keys(nah)
+                    .sort((a, b) => nah[a] - nah[b])[0];
+                if (nah[rand] <= FANG) {
+                    row.style.removeProperty('--leiste-x');
+                    row.style.removeProperty('--leiste-y');
+                    lageAnwenden(rand);
+                    return;
+                }
+                /* Frei stehen geblieben: die zwei Zahlen als Prozent merken, nicht
+                   als Pixel — ein kleineres Fenster schöbe sie sonst hinter den
+                   Rand. Als Text, weil `meta` Text sicher übersteht (§9). */
+                lageAnwenden('frei');
+                if (typeof Store !== 'undefined') {
+                    try {
+                        Store.setMeta(M_FREI, row.style.getPropertyValue('--leiste-x').trim()
+                            + ' ' + row.style.getPropertyValue('--leiste-y').trim());
+                    }
+                    catch { /* nur diese Sitzung */ }
+                }
+            };
+            window.addEventListener('pointermove', bewegen);
+            window.addEventListener('pointerup', beenden);
+            window.addEventListener('pointercancel', beenden);
+        });
         /* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
            Bei 390 px ist die Leiste 310 px breit und ihr Inhalt 1059 — von 21
            Knöpfen stehen 15 draussen, alle rechts. Gerollt werden kann sie
@@ -5990,6 +6432,12 @@ const Marken = (() => {
                 node.setAttribute('aria-pressed', an ? 'true' : 'false');
             });
             leiterReihe(stift.id === 'leiter');
+            /* Der Stift entscheidet über die Deckung der Probe (E623) — Bleistift
+               0,72, Pinsel 0,92, sonst voll. Also muss sie ihn sehen. */
+            try {
+                staerkenBeschriften();
+            }
+            catch { /* vor dem Aufbau */ }
         };
         /**
          * DIE FARBREIHE WIRD ZUR ADERNREIHE (E509).
@@ -6116,6 +6564,98 @@ const Marken = (() => {
                 label.classList.remove('auf');
             }
         };
+        /* ══ WIE BREIT DER STRICH WIRKLICH WIRD (E616) ═════════════════════════
+           DER MARKER ZIEHT VIERMAL SEINE ZAHL. Das steht so in `strokeWidth`
+           und noch einmal in `alsAnnotation` („der Marker ist auf dem
+           Bildschirm viermal so breit wie seine Zahl") — und eine
+           Beschriftung, die das verschweigt, wäre die ZWEITE falsche Angabe an
+           derselben Stelle: „0,8 mm" an einem Strich, der 3,4 mm breit ist.
+    
+           Die Stufen selbst bleiben dieselben Knöpfe mit denselben Werten
+           (§8) — nur ihr Wort ändert sich mit dem Werkzeug. */
+        const staerkeFaktor = () => tools.dataset['tool'] === 'marker' ? 4 : 1;
+        /** Die drei Stufen und den Regler neu beschriften — nach Werkzeug. */
+        /** Die Tinte, die gerade gewählt ist — dieselbe, die der Strich bekäme. */
+        const farbeJetzt = () => tools.querySelector('.blatt-farbe.on')?.dataset['c']
+            || tools.querySelector('.blatt-farbe')?.dataset['c']
+            || 'currentColor';
+        /** Der gewählte Stift — er entscheidet über die Deckung, nicht die Stärke. */
+        const stiftJetzt = () => tools.querySelector('[data-act="stilwahl"].on')?.dataset['stil'] || '';
+        const staerkenBeschriften = () => {
+            const f = staerkeFaktor();
+            tools.querySelectorAll('.blatt-strich').forEach((knopf, i) => {
+                const pt = Number(knopf.dataset['b']) || BREITEN[1];
+                const wort = `${BREITEN_NAMEN[i] ?? 'Strich'} · ${alsMm(pt * f)}`;
+                knopf.title = `${wort} — die gewählte nochmal antippen: Stärke frei wählen`;
+                knopf.setAttribute('aria-label', `Strichstärke ${wort}`);
+                /* ══ NAME UND MILLIMETER AUF EINER KACHEL (E623) ══════════════════
+                   Hier stand: „Auf der Kachel steht NUR die Zahl. Der Name (‚Fein')
+                   steht im Titel und im `aria-label`; beides auf 32 px Breite wäre
+                   abgeschnitten." Das galt für die Kachel von E616 — 30 px breit.
+        
+                   Seit E618 ist die Kachel im Kastenzustand `width:auto` mit
+                   `min-width:52px` und darf wachsen; und E617 hat für die Stifte
+                   dasselbe schon getan (‚Kugelschreiber' macht 77 px). Also steht
+                   jetzt beides da, wo Platz ist.
+        
+                   WARUM DAS TROTZDEM SICHER IST: unterhalb des Kastens ist das
+                   Wort geklemmt, nicht `display:none` (E617, §38) — dort ändert
+                   sich am Bild nichts, und ein Vorleser bekommt weiterhin den
+                   vollen Namen aus dem `aria-label`. Dass keine Zahl über ihre
+                   Kachel hinausläuft, misst `test533 §5d`; diese Zusage bleibt und
+                   ist der Wächter für diese Änderung. */
+                const zettel = knopf.querySelector('.wort');
+                if (zettel) {
+                    /* ZWEI ZEILEN, NICHT EINE. Der erste Wurf schrieb „Markant ·
+                       1,8 mm" in eine Zeile — gemessen wuchs die Leiste damit von
+                       128 auf 143 px, also über die Decke von `test533 §5b` hinaus:
+                       drei Kacheln je rund 95 statt 52 px sind 129 px mehr, und die
+                       Tafel bricht um. Untereinander kostet es Höhe statt Breite,
+                       genau wie beim Wort unter dem Zeichen (W3, E614) — und es ist
+                       ausserdem die Form auf Redurs Bild.
+                       Keine Zeichenkette in `innerHTML` (§19), auch wenn hier nichts
+                       vom Nutzer kommt: zwei Kinder, zweimal `textContent`. */
+                    let oben = zettel.querySelector('.strich-name');
+                    let unten = zettel.querySelector('.strich-mm');
+                    if (!oben || !unten) {
+                        zettel.textContent = '';
+                        oben = document.createElement('span');
+                        oben.className = 'strich-name';
+                        unten = document.createElement('span');
+                        unten.className = 'strich-mm';
+                        zettel.append(oben, unten);
+                    }
+                    oben.textContent = BREITEN_NAMEN[i] ?? 'Strich';
+                    unten.textContent = alsMm(pt * f);
+                }
+                /* ══ DIE STRICHPROBE ZEIGT DEN STRICH (E623) ═══════════════════════
+                   Der Balken hiess „Strichprobe" und war keine: `bausteine.css`
+                   gab ihm `background:currentColor` — die TEXTfarbe des Knopfes,
+                   nicht die gewählte Tinte — und gar keine Deckung. Er sagte also
+                   „dick" und sonst nichts, obwohl Farbe, Stift und Deckung den
+                   Unterschied zwischen einem Bleistiftstrich und einem Markerstrich
+                   derselben Zahl ausmachen.
+        
+                   Jetzt trägt er beides, und die Deckung kommt aus `deckungVon` —
+                   derselben Funktion, die den echten Strich und das PDF färbt. */
+                const balken = knopf.querySelector('i');
+                if (balken) {
+                    balken.style.background = farbeJetzt();
+                    const deck = deckungVon(String(tools.dataset.tool || ''), stiftJetzt());
+                    balken.style.opacity = String(deck);
+                }
+            });
+            const feld = tools.querySelector('.blatt-staerke input');
+            const zahl = tools.querySelector('.blatt-staerke output');
+            const wert = Number(feld?.value) || BREITEN[1];
+            if (feld)
+                feld.setAttribute('aria-label', `Strichstärke frei wählen, ${alsMm(wert * f)}`);
+            if (zahl)
+                zahl.textContent = alsMm(wert * f);
+        };
+        /* EINMAL BEIM AUFBAU. Die Zeichenkette oben beschriftet für den Stift;
+           steht beim Öffnen schon der Marker, gälte sie nicht. */
+        staerkenBeschriften();
         /** Der Regler zeigt die Staerke, die gilt — auch nach einem Tipp auf eine Stufe. */
         const staerkeZeigen = (wert) => {
             const feld = tools.querySelector('.blatt-staerke input');
@@ -6123,7 +6663,9 @@ const Marken = (() => {
             if (feld && Number(feld.value) !== wert)
                 feld.value = String(wert);
             if (zahl)
-                zahl.textContent = String(Math.round(wert * 10) / 10).replace('.', ',');
+                zahl.textContent = alsMm(wert * staerkeFaktor());
+            if (feld)
+                feld.setAttribute('aria-label', `Strichstärke frei wählen, ${alsMm(wert * staerkeFaktor())}`);
         };
         /**
          * EINE STRICHSTÄRKE SETZEN — an allen vier Orten, an denen sie steht
@@ -6256,6 +6798,37 @@ const Marken = (() => {
                 zumWerkzeugRollen(target.dataset.wz);
                 return;
             }
+            /* ══ DIE RADIERERGRÖSSE (E624) ════════════════════════════════════════
+               VOR dem `data-act`-Block, nicht darin: die Grössenknöpfe tragen
+               kein `data-act`, sondern nur `data-eraser-size`. Innen lag der
+               Zweig tot — `test524` sagte „Die Markierung wandert mit (5 → 5)",
+               und genau dafür steht der Lauf da. */
+            if (target.dataset.eraserSize) {
+                const radius = Number(target.dataset.eraserSize);
+                if (!RADIER_GROESSEN.includes(radius))
+                    return;
+                controls.setEraserSize(radius);
+                if (typeof Store !== 'undefined') {
+                    try {
+                        Store.setMeta('zeichnen:radierergroesse', radius);
+                        /* Eine Grösse zu wählen heisst: nicht mehr automatisch. */
+                        Store.setMeta(M_RADIER_AUTO, 'nein');
+                    }
+                    catch { /* nur diese Sitzung */ }
+                }
+                /* ALLE LEISTEN ZIEHEN MIT, nicht nur diese. Jedes Blatt baut seine
+                   eigene Leiste; die des Nachbarblatts entstand, bevor hier gewählt
+                   wurde. GEMESSEN mit `tools` statt `document`: Seite umblättern,
+                   und die alte Grösse stand wieder markiert da — genau das hält
+                   `test524` seit E576 fest („die Wahl gilt für den Menschen, nicht
+                   für das Blatt"). */
+                document.querySelectorAll('[data-eraser-size]').forEach(node => node.setAttribute('aria-pressed', String(Number(node.dataset.eraserSize) === radius)));
+                document.querySelectorAll('[data-act="radierauto"]').forEach(haken => {
+                    haken.setAttribute('aria-pressed', 'false');
+                    haken.classList.remove('on');
+                });
+                return;
+            }
             if (target.dataset.act) {
                 if (target.dataset.act === 'undo')
                     controls.undo();
@@ -6307,49 +6880,34 @@ const Marken = (() => {
                         controls.ordnenUmschalten();
                     return;
                 }
-                if (target.dataset.act === 'lage') {
-                    /* WEITER ZUM NÄCHSTEN PLATZ. Ein Rundlauf statt eines Menüs:
-                       die Leiste zeigt ihr Ergebnis unmittelbar, indem sie
-                       hinspringt — eine Wahl, die man SIEHT, braucht keine Liste. */
-                    const i = LAGEN.findIndex(l => l.id === lageJetzt());
-                    const naechst = LAGEN[(i + 1) % LAGEN.length];
-                    const dann = LAGEN[(i + 2) % LAGEN.length];
+                if (target.dataset.act === 'radierauto') {
+                    const an = target.getAttribute('aria-pressed') !== 'true';
+                    controls.setEraserSize(an ? 0 : radierGroesseLesen());
                     if (typeof Store !== 'undefined') {
                         try {
-                            Store.setMeta(M_LAGE, naechst.id);
+                            Store.setMeta(M_RADIER_AUTO, an ? 'ja' : 'nein');
                         }
                         catch { /* nur diese Sitzung */ }
                     }
-                    const reihe = tools.closest('.blatt-reihe');
-                    if (reihe)
-                        reihe.dataset.lage = naechst.id;
-                    target.dataset.lage = naechst.id;
-                    target.title = 'Leiste verschieben — jetzt ' + naechst.name + ', als Nächstes ' + dann.name;
-                    target.setAttribute('aria-label', 'Leiste verschieben, jetzt ' + naechst.name);
-                    const z = target.querySelector('.zeichen');
-                    if (z) {
-                        z.dataset.sym = naechst.sym;
-                        z.textContent = '';
-                    }
-                    try {
-                        Register.symbole.fuelle(target);
-                    }
-                    catch { /* dann bleibt es leer */ }
-                    /* Und alle anderen Leisten derselben Seite ziehen mit — es ist
-                       EIN Platz, nicht einer je Blatt. */
-                    document.querySelectorAll('.blatt-reihe').forEach(r => { r.dataset.lage = naechst.id; });
-                    document.querySelectorAll('[data-act="lage"]').forEach(k => {
-                        k.dataset.lage = naechst.id;
-                        const zz = k.querySelector('.zeichen');
-                        if (zz) {
-                            zz.dataset.sym = naechst.sym;
-                            zz.textContent = '';
-                        }
-                        try {
-                            Register.symbole.fuelle(k);
-                        }
-                        catch { /* dann bleibt es leer */ }
+                    document.querySelectorAll('[data-act="radierauto"]').forEach(haken => {
+                        haken.setAttribute('aria-pressed', an ? 'true' : 'false');
+                        haken.classList.toggle('on', an);
                     });
+                    /* Die drei Kreise zeigen wieder, was gilt: bei „automatisch"
+                       keiner, sonst der gemerkte — und das auf JEDEM Blatt: jedes
+                       baut seine eigene Leiste, und die des Nachbarn entstand,
+                       bevor hier gewählt wurde. */
+                    const gemerkt = radierGroesseLesen();
+                    document.querySelectorAll('[data-eraser-size]').forEach(node => node.setAttribute('aria-pressed', String(!an && Number(node.dataset.eraserSize) === gemerkt)));
+                    return;
+                }
+                if (target.dataset.act === 'lage') {
+                    /* WEITER ZUM NÄCHSTEN PLATZ. Ein Rundlauf statt eines Menüs:
+                       die Leiste zeigt ihr Ergebnis unmittelbar, indem sie
+                       hinspringt — eine Wahl, die man SIEHT, braucht keine Liste.
+                       Seit E620 macht das Setzen `lageAnwenden`, denn das Ziehen
+                       braucht dasselbe und zwei Wege liefen auseinander (§8). */
+                    lageAnwenden(naechsteLage(LAGEN.findIndex(l => l.id === lageJetzt())).id);
                     return;
                 }
                 if (target.dataset.act === 'laserart') {
@@ -6537,6 +7095,12 @@ const Marken = (() => {
                 }
                 tools.querySelectorAll('.blatt-farbe').forEach(node => node.classList.remove('on'));
                 target.classList.add('on');
+                /* Die Probe trägt die Tinte, also muss sie eine neue Tinte sehen
+                   (E623). Dieselbe Stelle, die auch den Marker-Faktor nachträgt. */
+                try {
+                    staerkenBeschriften();
+                }
+                catch { /* vor dem Aufbau */ }
                 return;
             }
             if (target.dataset.b) {
@@ -6605,32 +7169,22 @@ const Marken = (() => {
                     body.append(option);
                 }
             }));
-            const gemerkteGroesse = radierGroesseLesen();
-            for (const [index, radius] of RADIER_GROESSEN.entries()) {
-                const size = document.createElement('button');
-                size.type = 'button';
-                size.dataset.gruppe = 'radierer';
-                size.dataset.eraserSize = String(radius);
-                size.className = 'blatt-eraser-size';
-                size.setAttribute('aria-label', 'Radierer ' + ['klein', 'mittel', 'groß'][index]);
-                size.setAttribute('aria-pressed', String(radius === gemerkteGroesse));
-                /* 14, 22, 30 — NACHGEMESSEN, nicht geschätzt. Hier stand 16/28/40;
-                   bei 44 px Knopf blieb für den grössten kein Platz, und der Browser
-                   schrumpfte ihn als Flex-Element von 40 auf 28 — genau so breit wie
-                   der mittlere. Zwei gleich grosse Kreise sind keine zwei Grössen. */
-                size.style.setProperty('--eraser-preview', [14, 22, 30][index] + 'px');
-                size.innerHTML = '<i aria-hidden="true"></i>';
-                size.addEventListener('click', () => {
-                    controls.setEraserSize(radius);
-                    /* Gemerkt wird hier, nicht im Zeichner: der lebt je Blatt, die
-                       Wahl gilt für den Menschen. */
-                    if (typeof Store !== 'undefined')
-                        Store.setMeta('zeichnen:radierergroesse', radius);
-                    tools.querySelectorAll('[data-eraser-size]').forEach(node => node.setAttribute('aria-pressed', String(node === size)));
-                });
-                choose.before(size);
-            }
-            controls.setEraserSize(gemerkteGroesse);
+            /* ══ DIE GRÖSSEN STEHEN JETZT IN DER LEISTE (E624) ════════════════
+               Hier wurden sie bis zum 19. September 2026 erzeugt — und damit
+               gab es sie nur im Studio, weil `ink-studio-ready` nur dort
+               ausgelöst wird. Gebaut werden sie seither in der gewöhnlichen
+               Leiste; das Studio bekommt sie damit von selbst, und niemand baut
+               dieselben drei Knöpfe zweimal (§8). Das Modusfeld darüber bleibt
+               hier: es ist wirklich nur im Studio.
+      
+               Die Knöpfe sollen trotzdem VOR dem Modusfeld stehen, wie bisher —
+               sie sind im HTML schon da, also werden sie nur umgehängt. */
+            tools.querySelectorAll('[data-eraser-size]')
+                .forEach(node => choose.before(node));
+            /* Und die gemerkte Wahl gilt — es sei denn, der Haken steht auf
+               „automatisch" (E624). Genau diese Zeile war der Grund, warum es
+               keinen Weg zurück gab: sie setzte immer eine Zahl. */
+            controls.setEraserSize(radierAutoLesen() ? 0 : radierGroesseLesen());
             for (const [color, name] of noteColors) {
                 const swatch = document.createElement('button');
                 swatch.type = 'button';

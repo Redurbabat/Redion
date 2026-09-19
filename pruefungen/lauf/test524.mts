@@ -85,7 +85,18 @@ try {
     const sicht = (e) => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e);
       return r.width > 0 && r.height > 0 && s.display !== 'none' && s.visibility !== 'hidden'; };
     const out = {};
-    for (const kind of werk ? Array.from(werk.children) : []) {
+    /* DIE TAFEL (E614, W2): die Kinder liegen eine Ebene tiefer. "werk.children"
+       gäbe genau ein Element, und alle Gruppenzahlen fielen auf 0 — bei
+       unverändertem Bildschirm, weil ".blatt-tafel" ein "display:contents"
+       trägt. KEINE RÜCKWÄRTSHOCHKOMMAS HIER: dieser Block steht in einer
+       Schablonenzeichenkette, und eines davon beendet sie mitten im Satz. */
+    /* ZWEI FLÄCHEN SEIT E618: Werkzeuge in der Leiste, Zubehör in der Tafel. */
+    const tafel = werk?.querySelector(':scope > .blatt-tafel');
+    const flaeche = [].concat(
+      werk ? Array.from(werk.children) : [],
+      tafel ? Array.from(tafel.children) : []
+    ).filter(k => !k.classList || !k.classList.contains('blatt-tafel'));
+    for (const kind of flaeche) {
       const g = kind.getAttribute('data-gruppe') || (kind.hasAttribute('data-wz') ? 'werkzeug' : 'sonst');
       out[g] = out[g] || [0, 0];
       out[g][1]++; if (sicht(kind)) out[g][0]++;
@@ -319,6 +330,8 @@ try {
   const vorSortieren = await reihe();
   await page.evaluate(`(() => {
     const werk = document.querySelector('.document-stage[data-aktiv] .blatt-werk');
+    /* SEIT E618 liegen die Werkzeuge wieder in der LEISTE, nicht in der
+       Tafel — dort liegt nur noch das Zubehör. */
     const wz = Array.from(werk.querySelectorAll(':scope > [data-wz]'));
     werk.insertBefore(wz[wz.length - 1], wz[0]);
   })()`);
@@ -752,7 +765,13 @@ try {
   const zeichenMass = async (): Promise<{ huelle: number; svg: number; knopf: number;
                                           attribut: string; n: number }> =>
     await page.evaluate(`(() => {
-      const knoepfe = Array.from(document.querySelectorAll('.document-stage[data-aktiv] .blatt-werk > button'))
+      /* BEIDE FLÄCHEN (E618): die Werkzeuge liegen in der Leiste, das
+         Zubehör in der Tafel — und im Studio-Dock ist genau das Zubehör
+         sichtbar, die Werkzeuge sind dort ausgeblendet (E573). Wer nur die
+         Leiste liest, findet im Dock KEINEN Knopf und misst 0 px. */
+      const knoepfe = Array.from(document.querySelectorAll(
+        '.document-stage[data-aktiv] .blatt-werk > button,' +
+        '.document-stage[data-aktiv] .blatt-werk > .blatt-tafel > button'))
         .filter(n => n.getClientRects().length && n.querySelector('.zeichen[data-sym] svg'));
       const b = knoepfe[0];
       if (!b) return { huelle: 0, svg: 0, knopf: 0, attribut: '—', n: 0 };
@@ -912,7 +931,9 @@ try {
     return await page.evaluate(`(() => {
       const w = document.querySelector('.document-stage[data-aktiv] .blatt-werk');
       if (!w) return { da: 0, sichtbar: 0, roll: 0, fenster: 0, versteckt: [] };
-      const kinder = Array.from(w.children).filter(k => !k.classList.contains('blatt-trenn'));
+      const t = w.querySelector(':scope > .blatt-tafel');   /* E618: zwei Flächen */
+      const kinder = [].concat(Array.from(w.children), t ? Array.from(t.children) : [])
+        .filter(k => !k.classList.contains('blatt-trenn') && !k.classList.contains('blatt-tafel'));
       const sicht = (e) => { const s = getComputedStyle(e);
         return s.display !== 'none' && s.visibility !== 'hidden' && e.getClientRects().length > 0; };
       /* Die Gruppenregel aus E356 blendet fremde Gruppen aus — das IST ihr

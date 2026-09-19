@@ -49,8 +49,23 @@ try{
   check('Dokument nimmt volle Fensterbreite ein',await page.locator('.document-workspace').evaluate(e=>Math.abs(e.getBoundingClientRect().width-innerWidth)<3));
   check('Keine Bereichsnavigation im PDF',!await page.locator('#kante').isVisible()&&!await page.locator('#studio-bar').isVisible());
   check('Echte Dokument-Tabs sichtbar',await page.locator('#reiterleiste').isVisible());
-  check('Original über der Arbeitskopie sichtbar',await page.locator('.document-source-master').isVisible());
+  /* UMGEHÄNGT (E614, nachgezogen von E612). Seit E612 steht die Dateikarte
+     im RUHIGEN Studio nicht mehr über der Arbeitskopie, sondern im
+     Details-Fenster — 95 px, die der Folie gehören. Ruhig ist der Standard,
+     also ist sie hier nicht da. `test385 §4` wurde in E612 umgehängt, DIESE
+     Stelle wurde übersehen und war seither rot; gefunden, weil der volle
+     Lauf zu diesem Bogen sie mitnahm.
+     Der Gegenfall wird nicht weggelassen, sondern gestellt: mit
+     `data-ruhig="aus"` muss sie zurückkommen. Eine Zusicherung, die nur
+     „ist weg" sagt, ginge auch dann durch, wenn die Karte ganz fehlte. */
+  check('Im ruhigen Studio steht die Dateikarte NICHT über der Arbeitskopie (E612)',
+    !await page.locator('.document-source-master').isVisible());
+  await page.evaluate(`document.body.dataset.ruhig='aus';App.zeichneSeite()`);
+  await page.waitForTimeout(900);
+  check('Original über der Arbeitskopie sichtbar, sobald es laut sein darf',await page.locator('.document-source-master').isVisible());
   check('Original ausdrücklich geschützt',/geschützt/.test(await page.locator('.document-source-master').innerText()));
+  await page.evaluate(`document.body.dataset.ruhig='an';App.zeichneSeite()`);
+  await page.waitForTimeout(900);
   check('Genau zwei kanonische PDF-Seiten',await page.locator('.document-stage').count()===2);
   check('Stift ist direkt bereit',await page.locator('.document-stage[data-aktiv] .blatt-marken').getAttribute('data-tool')==='stift');
   /* ZWÖLF SEIT E494 — die Elemente-Bibliothek steht im Studio mit in der

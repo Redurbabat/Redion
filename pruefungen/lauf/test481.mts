@@ -144,6 +144,30 @@ console.log('\n§3 Der Zugangscode');
   await s.close();
 }
 
+/* ═══ §3b Die Chronik kommt erst beim Öffnen (E613) ════════════════════════
+   Das Gegenstück zu test388 §5. Dort steht, dass die 54 KB beim Start NICHT
+   geholt werden; hier steht, dass sie beim Öffnen sehr wohl da sind. Eine
+   Ersparnis, die die Chronik leer lässt, wäre keine. */
+console.log('\n§3b Die Daten kommen erst beim Öffnen');
+{
+  const s = await frisch();
+  p('Vor dem Öffnen steht die Chronik nicht im Fenster',
+    await s.evaluate(`typeof window.ChronikDaten === 'undefined'`));
+  p('… der Lader aber schon — sonst ginge sie nie auf',
+    await s.evaluate(`typeof ChronikLaden !== 'undefined'`));
+  await s.evaluate(`Chronik.zeigen()`);
+  await s.waitForTimeout(400);
+  const nach = JSON.parse(await s.evaluate(`(() => JSON.stringify({
+    da: typeof window.ChronikDaten !== 'undefined',
+    tage: (window.ChronikDaten || { tage: [] }).tage.length,
+    platten: document.querySelectorAll('.chr-platte').length }))()`) as string);
+  p('Nach dem Öffnen ist sie da — mit allen Tagen',
+    nach.da && nach.tage > 0, JSON.stringify(nach));
+  p('… und die Ansicht hat sie auch wirklich benutzt',
+    nach.platten === nach.tage, JSON.stringify(nach));
+  await s.close();
+}
+
 /* ═══ §4 Graphen und der Stapel ════════════════════════════════════════════ */
 console.log('\n§4 Graphen und der Stapel der Tage');
 {
@@ -250,11 +274,21 @@ p('Die Chronik ist ein eigener Bereich',
   fs.existsSync(path.join(WURZEL, 'src/bereiche/chronik/chronik.ts')));
 p('Die Daten sind erzeugt und sagen es',
   /ERZEUGT — NICHT VON HAND ÄNDERN/.test(lies('src/bereiche/chronik/daten.ts')));
-p('index.html lädt beides, die Daten zuerst',
-  lies('index.html').indexOf('chronik/daten.js') < lies('index.html').indexOf('chronik/chronik.js')
-  && lies('index.html').includes('chronik/chronik.js'));
-p('Der Dienst kennt beide Dateien',
+/* UMGEHÄNGT AM 16. SEPTEMBER (E613). Hier stand „index.html lädt beides,
+   die Daten zuerst". Das stimmt nicht mehr — und schlimmer: es war GRÜN,
+   obwohl es nicht mehr stimmte, weil `indexOf('chronik/daten.js')` den
+   Namen in der Baumarke fand statt in einem `<script src>`. Eine Zusage,
+   die auf einen Kommentar trifft, prüft nichts (§55.2). */
+p('index.html holt die Daten NICHT beim Start, sondern den Lader davor',
+  !/<script src="quell\/bereiche\/chronik\/daten\.js"/.test(lies('index.html'))
+  && lies('index.html').indexOf('chronik/laden.js') < lies('index.html').indexOf('chronik/chronik.js'),
+  lies('index.html').split('\n').filter(z => /<script[^>]*chronik/.test(z)).join(' · '));
+p('Die Baumarke steht da — ohne sie hätte die Einzeldatei keine Chronik',
+  /<!-- chronik-daten:/.test(lies('index.html'))
+  && /CHRONIK_MARKE/.test(lies('bauen.mts')));
+p('Der Dienst kennt alle drei Dateien',
   /chronik\/daten\.js/.test(lies('src/dienst/sw.ts'))
+  && /chronik\/laden\.js/.test(lies('src/dienst/sw.ts'))
   && /chronik\/chronik\.js/.test(lies('src/dienst/sw.ts')));
 p('Die Suche geht über EINE Tür (§8)',
   /Chronik\.trifft\(roh\)/.test(lies('src/schale/aufbau/schale.ts'))

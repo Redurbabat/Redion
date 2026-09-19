@@ -4063,15 +4063,47 @@ Zehn Leser sind durch `src/` gegangen, jeder Befund von einem zweiten Agenten
 angegriffen. Was dabei auffiel und NICHT zu E284 gehört, steht hier, damit es
 nicht verlorengeht:
 
-1. **Der Kalender liefert still FALSCHE Daten.** `wiederholungen()`
-   (`kalender.ts:143-182`) zerlegt eine RRULE vollständig in `teile`, liest
-   davon aber nur vier Schlüssel und wirft den Rest wortlos weg.
-   `FREQ=MONTHLY;BYDAY=2TU` — „jeder zweite Dienstag" — wird zu „jeden Monat
-   am selben Tag". Kein Fehler, keine Meldung, ein falscher Termin.
-   Repo-weit null Treffer für BYDAY, EXDATE, RDATE, VTODO, TZID, VTIMEZONE,
-   BYMONTHDAY, BYSETPOS — auch in Doku und Prüfläufen.
+1. **Der Kalender liefert still FALSCHE Daten.** — **GESCHLOSSEN, und zwar
+   lange vor heute: mit E290 (BYDAY), E335–E338 (Rundlauf, Dauer, EXDATE)
+   und dem eigenen Modul `src/core/calendar/wiederholung.ts`. Nachgesehen
+   am 17. September 2026.**
 
-   Das ist schlimmer als „fehlt" und gehört vor die Ausbaupunkte.
+   Hier stand: „`wiederholungen()` (`kalender.ts:143-182`) liest nur vier
+   Schlüssel und wirft den Rest wortlos weg. `FREQ=MONTHLY;BYDAY=2TU` wird
+   zu ‚jeden Monat am selben Tag'. Repo-weit null Treffer für BYDAY,
+   EXDATE, RDATE, BYMONTHDAY, BYSETPOS — auch in Doku und Prüfläufen."
+
+   **Nachgezählt gilt heute das Gegenteil:**
+
+   ```txt
+   BYDAY        src: 2 Dateien   Prüfläufe: test284 §2 und §3
+   EXDATE       src: 2           Prüfläufe: 2
+   RDATE        src: 5           Prüfläufe: 2
+   BYMONTHDAY   src: 1           Prüfläufe: 1
+   BYSETPOS     src: 1           Prüfläufe: 1
+   ```
+
+   `wiederholung.ts` wertet **FREQ, INTERVAL, COUNT, UNTIL, BYDAY (auch mit
+   Ordnungszahl: `2TU`, `-1FR`), BYMONTHDAY (auch negativ), BYMONTH,
+   BYSETPOS und WKST** aus — und was es nicht kann, sagt es: jeder nicht
+   gelesene Teil steht in `nichtVerstanden` und reist als `regelUnklar` mit
+   dem Termin bis zur Anzeige. Genau die Regel, die dieser Punkt verlangt
+   hat. `test284` hält es mit **49 Zusicherungen**, darunter der Fall aus
+   dem Absatz oben („zweiter Dienstag", „letzter Freitag") und der
+   Grenzfall „der 31. in einem Monat ohne 31. fällt AUS statt auf den
+   3. März zu rutschen". Gelaufen am 17. September: **49/49.**
+
+   **Offen bleibt nur, was der Absatz gar nicht nannte:** `VTIMEZONE` gibt
+   es im ganzen Verzeichnis nicht (0 Treffer), `TZID` steht an drei
+   Stellen. Zeitzonen sind damit die echte Restlücke dieses Punktes — und
+   eine kleinere und andere als „der Kalender zeigt falsche Tage".
+
+   **Die Lehre ist die von §49, und sie hat diesmal richtig weh getan:**
+   dieser Punkt stand als **Rang 1 nach §46** ganz oben in der Übersicht
+   vom 16. September und wurde Redur als der dringendste offene Punkt
+   angeboten — auf Aktenlage, die seit E290 falsch war. Ein Punkt, der als
+   offen dasteht, ohne dass jemand nachgesehen hat, ist schlimmer als gar
+   keiner.
 
 2. **Die Rechteprüfung der Agenten fragt die falsche Seite.** — **GANZ
    GESCHLOSSEN am 1. September 2026: die eine Hälfte durch E291, die andere
@@ -7211,8 +7243,46 @@ richtiggestellt.
 
 ---
 
-L146 · Die Startnutzlast steht über ihrer Decke — offen
+L146 · Die Startnutzlast steht über ihrer Decke — ~~offen~~ **GESCHLOSSEN am 16. September 2026 durch E613**
 --------------------------------------------------------------------------
+
+> **Geschlossen, und zwar so, wie Punkt 1 bis 3 unten es verlangt haben:
+> erst die Posten gezählt, dann gehandelt, und die Decke nur mit
+> geschriebenem Grund angehoben.**
+>
+> Gemessen am laufenden Programm: **2637 KB** am 16. September (nicht 2389 —
+> die Zahl vom 9. September war sieben Bögen alt). Die 512 KB seit dem
+> 5. September teilen sich in **229 KB aus 26 neuen Dateien** und **291 KB
+> aus 206 gewachsenen**. Die zwei grössten Wachser sind `pdf/marken.js`
+> (+68) und `pdf/document-mode.js` (+64) — das Zeichen- und das
+> Schreibstudio, gewachsen weil dort gearbeitet wurde (E568–E612). Das ist
+> Produkt, kein Ballast.
+>
+> Der eine echte Ballast war **`chronik/daten.js`**: 182 KB Chronikprosa bei
+> jedem Start, für einen Bildschirm hinter einem Zugangscode. Seit E613 holt
+> `chronik/laden.js` sie nach — dasselbe Muster wie pdf.js in E389.
+> **2637 → 2585 KB.**
+>
+> Die Decke steht jetzt auf **2700** statt 2300: nicht 2600 (dann reisst sie
+> beim nächsten Bogen und wird zum Rauschen), nicht 3000 (dann passte pdf.js
+> wieder unbemerkt hinein). Die zweite Zusicherung `kb + 526 > DECKE` prüft
+> genau das und bleibt damit eine Zusicherung.
+>
+> **Was offen BLEIBT, als Kandidat und nicht als Lücke:** `motion.css`
+> (47,6 KB) liesse sich genauso nachladen. Dagegen spricht, dass ein
+> Stilblatt beim Nachladen SICHTBAR ist — die Seite stünde einen Moment ohne
+> seine Regeln da. Ein JSON-Literal hinter einem Zugangscode hat dieses
+> Problem nicht. Wer es trotzdem angeht, misst zuerst, wie lange dieser
+> Moment dauert.
+>
+> Und der zweite Fund des Bogens, der nicht hierher gehört und trotzdem
+> teuer war: **die Läufe auf GitHub brechen seit Wochen nach drei Sekunden
+> ab**, ohne Protokoll. Deshalb ist diese Lücke zwölf Tage lang rot
+> dagestanden, ohne dass jemand es merkte. Das ist Konto-Ebene und kein
+> Codefehler — aber solange es so ist, ist „die CI hätte es gefunden" keine
+> Aussage über Redion.
+
+*Der ursprüngliche Eintrag vom 9. September, unverändert:*
 
 `test388 §5` deckelt, was der Start überhaupt holt, auf **2300 KB gzip**.
 Gemessen am 9. September: **2389 KB über 225 Dateien.** Der Lauf ist damit
@@ -8547,7 +8617,22 @@ aber es ist keine Sackgasse.
 
 ---
 
-## L180 · Der Stift öffnet den Blick in den Ordner nicht — 16. September 2026
+## L180 · Der Stift öffnet den Blick in den Ordner nicht — ~~16. September 2026~~ **GESCHLOSSEN am 17. September 2026 durch E615**
+
+> **Geschlossen, und zwar genau so, wie es hier stand: „zwei Zeilen in
+> `bibliothek.ts`" — es wurden drei.**
+>
+> `pointerType` lässt jetzt `pen` zu; `zeigerHatHover()` fragt `any-hover`
+> statt `hover` (die alte Abfrage beschrieb den HAUPTZEIGER und hätte auf
+> einem Laptop mit Berührungsbildschirm auch die MAUS ausgesperrt — der
+> unterschätzte der beiden Gründe); und `pointerdown` sagt die Uhr ab, damit
+> ein Tipp nicht als Hinschauen zählt.
+>
+> `test476` 31/31, fünf Zusicherungen neu. **Zwei Gegenproben einzeln rot
+> gesehen:** gegen den alten Stand 27/31, mit entfernter `pointerdown`-Absage
+> 29/31 — jede Hälfte ist damit für sich gehütet.
+>
+> Der Finger bleibt draussen, unverändert und mit Grund (`test476 §6`).
 
 **Was fehlt:** Das Auge am Ordnerdeckel öffnet die Ordnerkarte beim
 Hinschauen (E508) — aber nur mit der **Maus**. Mit einem Laptop-Stift, der
@@ -8623,3 +8708,243 @@ zweite Entscheidung, keine Nebenwirkung — und sie gehört Redur.
 
 **Woran man merkt, dass es drückt:** sobald jemand im Foliensatz den Reiter
 „Zeichnen" benutzt und sich fragt, welches der beiden Lineale gilt.
+
+L182 · «Einrichten» steht allein in einer dritten Zeile — 16. September 2026
+--------------------------------------------------------------------------
+
+**Beim Hinsehen gefunden, nicht beim Prüfen** (§55.1). Auf dem Bild zu W3
+steht der Knopf «Einrichten» als einziges Bedienteil in einer dritten
+Leistenzeile, links unten, mit einer leeren Zeile daneben.
+
+**Gemessen** an der laufenden App, 1280 px Fenster, breite Seite, Stift
+gewählt — und zwar auf BEIDEN Ständen:
+
+```txt
+                  origin/main      mit E614
+Leiste                 860 px        860 px
+Höhe                   127 px        128 px
+Zeile 1 (y≈0)      13 Werkzeuge   13 Werkzeuge
+Zeile 2 (y≈50)     26 Zubehör     26 Zubehör
+Zeile 3 (y≈80/90)  «Einrichten»   «Einrichten»
+```
+
+**Er ist also älter als E614** — dieser Bogen hat ihn nur sichtbar gemacht.
+Wahrscheinlich stammt er aus **E571**, als «Einrichten» als letzter Eintrag
+an die Leiste kam.
+
+**Warum er nicht in E614 behoben wurde.** Drei Wege stehen offen, und jeder
+ist eine Entscheidung und keine Nebenwirkung:
+
+1. **«Einrichten» zum festen Teil rechts** (`.blatt-fest`, wo schon Seite
+   und Papier stehen). Er gehört dorthin: er bedient die Leiste, nicht das
+   Blatt. Kostet die Breite dort.
+2. **Ihn ans Ende der Zubehörzeile hängen**, mit `order:9999` wie den
+   Verlauf. Dann steht er neben Zurück/Vor — und die kleben dort am Telefon.
+3. **Ihn nur im Menü lassen.** «Als Liste» erreicht dasselbe, und der Weg
+   über die Befehlspalette steht ohnehin. Das wäre allerdings ein Knopf
+   weniger im Bild, und §47 verlangt dafür Redurs Zusage.
+
+**Woran man merkt, dass es drückt:** an jedem Fenster zwischen rund 1100 und
+1400 px, wo die Zubehörzeile voll ist und er als Einzelgänger umbricht.
+Breiter fällt er in die zweite Zeile zurück, schmaler rollt die Leiste
+ohnehin.
+
+L183 · Unter der Folie stehen 130 px, die niemandem gehören — 16. September 2026
+--------------------------------------------------------------------------
+
+**Ein Nebenprodukt von E612, gefunden durch einen roten Lauf, nicht durch
+Hinsehen.** `test507 §1` verlangte „die Folie nutzt über 85 % der Höhe" und
+meldete 77 %. Der Lauf war auf `origin/main` mit derselben Zahl rot — E612
+hat ihn übersehen, wie auch `test437`.
+
+**Gemessen** (1440 × 852, Foliensatz, stehende Folie):
+
+```txt
+                    vor E612            nach E612
+Arbeitsfläche       1440 × 588          1440 × 720
+Folie                980 × 551           980 × 551
+Anteil Höhe              94 %                77 %
+Anteil Breite            68 %                68 %
+leer darunter            ~10 px              130 px
+```
+
+**Die Folie ist weder breiten- noch höhengebunden.** Sie steht auf
+`--pdf-paper-max: 980px` (`pdf-studio.css:36`) — ein **Lesemass**, kein
+Zufall: der Kommentar dort sagt „KEINE FARBE, sondern ein Lesemass — und
+`test285.mts:223` rechnet damit. Es bleibt, wie es ist."
+
+**Warum das jetzt drückt und vorher nicht.** E551 hat an genau dieser Stelle
+gemessen und geschlossen: *„Am Rechner ist nichts zu tun — 94 % sind voll"*
+— und daraus folgte die zweite Entscheidung, am Rechner **nicht** zu
+zentrieren (`safe center` fällt dort auf `start` zurück). Beide Sätze standen
+auf den 588 px von damals. Seit E612 sind es 720, und damit steht die Folie
+oben mit 130 px Leere darunter.
+
+**Die drei Möglichkeiten, keine davon entschieden:**
+
+1. **Zentrieren statt oben.** Die kleinste Änderung: E551s Grund für `start`
+   ist weggefallen, die Leere verteilt sich auf oben und unten. Ändert
+   nichts an der Grösse — nur an der Lage. Achtung: `safe center` war gegen
+   kurze Fenster gebaut (gemessen −28, −204, −464 px), die Vorsicht bleibt
+   nötig.
+2. **Das Lesemass für den Foliensatz anheben.** Bei 720 px Fläche passte
+   eine Folie von rund 1156 × 650 hinein — 80 % der Breite eines
+   1440er-Bildschirms. Das dreht das Lesemass für DIESEN einen Fall um, und
+   `test285` rechnet damit; es wäre ein eigener Eintrag nach dem Muster von
+   E554.
+3. **So lassen.** 130 px Luft unter einer Folie sind kein Fehler, und
+   Redurs Bitte galt der Bedienung über der Folie, nicht der Folie selbst.
+
+**Woran man merkt, dass es drückt:** an jedem breiten Bildschirm im
+Foliensatz — die Folie klebt oben, darunter steht ein Streifen Nichts.
+Am Telefon nicht: dort steht sie seit E551 mittig.
+
+L184 · Ist `laptop` in `bilder.mts` ein Tastgerät? — 17. September 2026
+--------------------------------------------------------------------------
+
+**Beim Einbau des breiten Bildschirms (E617) aufgefallen, nicht gesucht.**
+
+`bilder.mts` stellte bis E617 jedes Gerät ausser `rechner` als **Tastgerät**
+nach (`isMobile: true, hasTouch: true`) und machte davon nur ein Bild statt
+zwei. Das stand an zwei Stellen als `g !== 'rechner'`, und solange es genau
+ein Rechnergerät gab, war es richtig.
+
+Mit `breit` (1920 × 1080) ist es das nicht mehr — dort entscheidet jetzt die
+Menge `ZEIGER_GERAETE`. **`laptop` (1024 × 768) blieb dabei absichtlich
+draussen**, damit seine bisherigen Bilder sich nicht ändern.
+
+**Die Frage, die damit offen steht:** ist 1024 × 768 ein Laptop oder ein
+Tablet? Der Name sagt Laptop, das Verhalten sagt Tablet.
+
+```txt
+heute       laptop  →  isMobile, hasTouch, nur dunkel
+der Name    „laptop"
+die Folge   in jedem laptop-Bild gilt `hover: none` und `pointer: coarse`
+```
+
+Ist es wirklich ein Laptop gemeint, dann zeigen alle seine Bilder seit je
+den falschen Zustand — dasselbe wie L108, nur andersherum und für ein
+anderes Gerät. Ist ein Tablet gemeint, dann stimmt das Verhalten und der
+**Name** ist falsch.
+
+**Was es kostet, das nachzusehen:** wenig — ein Lauf von `node bilder.mts`
+mit und ohne die Umstellung und ein Blick auf zwei Bilder. **Was es kostet,
+es nicht zu tun:** eine Gerätegrösse, deren Bilder niemand richtig deuten
+kann.
+
+**Nicht mit E617 entschieden**, weil es eine Änderung an Bildern wäre, die
+mit diesem Bogen nichts zu tun haben.
+
+---
+
+## L185 · Der Platz-Knopf versprach im Studio etwas, das er nicht konnte — 19. September 2026, **GESCHLOSSEN am selben Tag durch E619**
+
+Gefunden beim Nachmessen des Papiers vom 19. September, nicht beim Lesen des
+Codes. `pdf-studio.css` setzte die Leiste im Dokumentmodus ohne `[data-lage]`
+im Wähler fest; die Spaltenform aus `bausteine.css` griff trotzdem.
+
+```txt
+Studio, 1440 × 960, data-lage="links"
+   Leiste   x=683  y=197   74 × 749       Papier   x=225 … 1205
+```
+
+Eine 74 px schmale Spalte mitten auf dem Papier, während der `title` des
+Knopfes „Leiste verschieben — jetzt links" sagte. Geschlossen, indem der
+Knopf im Studio nicht mehr erscheint und ein gemerkter Platz den Dock nicht
+mehr verformt (`test534 §2`). Redurs Satz vom 14. September — „Die untere
+Dock sollte bleiben" — war dabei der Entscheider, nicht der Geschmack.
+
+---
+
+## L186 · «unten in der Mitte» war auf der gewöhnlichen Seite zwei Pixel breit — 19. September 2026, **GESCHLOSSEN am selben Tag durch E620**
+
+Einer der vier Plätze aus E512 funktionierte seit seinem Bau nicht.
+GEMESSEN, 1440 × 960: `2 × 1409 px`, ein Streifen quer über das Blatt
+(`bilder/messung-unten-seite.png`). Ursache: `container-type:inline-size`
+(E359) nimmt der Leiste ihren Beitrag zur eigenen Breite, und ein Kasten,
+der auf seinen Inhalt schrumpfen soll, bleibt dann leer. Behoben mit
+`container-type:normal` in dieser Lage; nachher `1112 × 46 px`
+(`test534 §1`).
+
+**Die Lehre gehört zu §55.1 und nicht in eine Fussnote:** drei Wochen lang
+sah niemand hin. Der Platz war gebaut, der Prüflauf dafür prüfte, dass sich
+`data-lage` ändert — nicht, dass danach etwas Sichtbares dasteht.
+
+---
+
+## L187 · «unten» steht am Fuss des BLATTES, nicht am Fuss des Fensters — ~~19. September 2026~~ **GESCHLOSSEN am selben Tag durch E622**
+
+Offen, und es ist eine Frage an Redur, keine technische.
+
+Seit E620 ist der Platz «unten in der Mitte» wieder eine echte Leiste. Nur
+steht sie am unteren Rand der **Blatthülle** (`position:absolute`), nicht am
+unteren Rand des **Fensters**. Bei einem A4-Blatt in einem 900 px hohen
+Fenster heisst das: wer oben auf dem Blatt zeichnet, sieht sie nicht.
+
+```txt
+gemessen    Blatt ~1400 px hoch, Fenster 900 px
+            Leiste bei y = 1885 (Blattfuss)   —   ausserhalb des Bildes
+```
+
+Im Schreibstudio ist es anders gelöst: dort ist der Dock `position:fixed` und
+klebt am Fenster (E588 rechnet sogar die Bildschirmtastatur heraus). Dasselbe
+hier zu tun wäre ein Eingriff, der über diesen Bogen hinausgeht: eine
+gewöhnliche Seite kann **mehrere** Blätter tragen, und zwei Leisten, die
+beide am Fensterfuss kleben, lägen übereinander.
+
+Drei Wege, und keiner ist offensichtlich richtig:
+
+1. **So lassen.** «Unten» heisst „unten am Blatt". Ehrlich, aber beim langen
+   Blatt unbrauchbar.
+2. **`position:fixed` für die Leiste des Blattes, an dem gerade gezeichnet
+   wird.** Das ist die GoodNotes-Form und was das Papier vom 19. September
+   meint. Braucht eine Regel dafür, welches Blatt „das aktive" ist.
+3. **`position:sticky` am Blattfuss.** Sie wandert mit, solange das Blatt im
+   Bild ist, und bleibt beim Blatt. Der kleinste Eingriff.
+
+
+**GESCHLOSSEN am 19. September 2026 durch E622.** Redur hat Weg 3 gewählt
+(`position:sticky`). Dazu kam ein Zug im Baum, den die Beschreibung oben noch
+nicht kannte: sticky mit `bottom` zieht ein Element nach OBEN, wenn es sonst
+unter den Fensterrand rutschte — es schiebt keines nach unten. Die Leiste
+musste also im Fluss hinter das Papier. Gemessen: y = 1885 → y = 904 in einem
+960 px hohen Fenster, und über dem Papier bleibt keine Lücke
+(`test534 §1b`, sechs Zusagen).
+
+---
+
+## L188 · Die Deckkraft stand viermal, obwohl ein Kommentar das Gegenteil behauptete — 19. September 2026, **GESCHLOSSEN am selben Tag durch E623**
+
+Gefunden beim Bau der Strichprobe, nicht gesucht. Über `alsAnnotation` steht
+seit E506:
+
+> Farbe, Breite, Druckkurve und Deckkraft stehen hier und nirgends sonst (§8).
+
+Nachgemessen stimmte das für die Deckkraft nicht: sie stand am Bildschirm
+beim Pinsel (0,92), beim Bleistift (0,72 − Neigung × 0,22) und beim Marker
+(0,32) — und noch einmal im PDF-Export. Vier Stellen, zwei Rechnungen,
+dieselben Zahlen.
+
+Das ist die gefährliche Sorte Doppelung: sie fällt nicht auf, solange
+niemand eine der beiden ändert. Danach sieht das PDF anders aus als der
+Bildschirm, und kein Prüflauf merkt etwas — es gab keinen, der beide
+verglichen hätte.
+
+Geschlossen mit `deckungVon(art, stil, neigung)`. `test535 §3` zieht seither
+einen echten Strich und vergleicht seine Deckung am gezeichneten SVG mit der
+Zahl auf der Kachel.
+
+---
+
+## L189 · Der Radierer hatte auf einer gewöhnlichen Seite keine Grösse — 19. September 2026, **GESCHLOSSEN am selben Tag durch E624**
+
+Gezählt am 19. September: drei Grössen im Studio, **null** auf einer
+gewöhnlichen Seite. Der Grund war ein Ort, kein Wille: sie wurden im Hörer
+auf `ink-studio-ready` gebaut, und den löst allein `document-mode.ts` aus.
+
+Dazu der Haken «Automatisch an den Strich anpassen» aus Redurs Bild 4: den
+Zustand gab es seit je (`radierRadius()` ist `eraserSize ?? max(5, Breite ×
+3)`), nur führte kein Weg zurück — das Studio setzte beim Aufbau immer eine
+Zahl. Jetzt ist er ein Schalter; gemessen am Radierkreis: r = 28 gewählt,
+r = 7,2 automatisch.
+

@@ -1129,21 +1129,102 @@ Kacheln (Linie · Pfeil · Rechteck · Kreis · Stern).
 - **W1 · Die Zustands-Grammatik** — ERLEDIGT (E568). Eine laute Fläche statt
   sechs, runde Farbtupfer, sichtbare Gruppen, Rangfolge zwischen Werkzeug
   und Zubehör. Das ist die Grundlage: die Tafel erbt sie unverändert.
-- **W2 · Die Tafel als Behälter.** Ein Element `.blatt-tafel` INNERHALB von
-  `.blatt-werk`, das alle `[data-gruppe]`-Knoten aufnimmt. Der Haken sitzt
-  im CSS: rund fünfzig Regeln lesen heute `.blatt-werk > [data-gruppe]`
-  (Kindwähler). Die müssen mit — und genau das ist der Bogen, nicht die
-  Gestaltung.
-- **W3 · Wort unter dem Zeichen.** Die Werkzeuge bekommen ihren Namen
-  darunter statt daneben. Heute steht er daneben und wird unter 1150 px
-  weggeklemmt; darunter braucht er keine Breite, sondern Höhe.
-- **W4 · Die Tafel bekommt Inhalt.** Strichvorschau, benannte Stiftkacheln
-  mit Millimetern, Deckkraft als eigener Schieber (heute gibt es sie nur
-  beim Marker, fest verdrahtet), der Radierer mit Grösse und Haken.
+- **W2 · Die Tafel als Behälter** — ERLEDIGT (E614, `test533`). Gezählt
+  waren es **51 Kindwähler** über 104 Selektorzeilen (nicht „rund fünfzig"
+  geschätzt) und **sieben `:scope >`** im TypeScript. Zwei Dinge hat der
+  Auftrag nicht vorhergesehen: die Tafel nimmt **alle** Kinder auf und nicht
+  nur die Gruppen (drei Mechanismen wirken nur zwischen Geschwistern), und
+  sie trägt `display:contents` — ein echter Kasten hätte `flex:1 0 100%`,
+  `order` und `position:sticky` gebrochen. Einen eigenen Kasten bekommt sie
+  mit W4. Gemessen: 127 → 128 px, sonst nichts.
+- **W3 · Wort unter dem Zeichen** — ERLEDIGT (E614). Die Schwelle ist
+  gewandert: Zubehör lässt sein Wort weiter bei 1150 px, die Werkzeuge erst
+  bei 820 — gemessen brauchen dreizehn gestapelte rund 790 px statt 1142
+  daneben. Bei 1360 px Fenster stehen sie jetzt mit Wort in EINER Zeile,
+  vorher ohne Wort in zwei.
+
+  **Offen daran, beim Hinsehen gefunden:** im Schreibstudio trägt die OBERE
+  Reihe (`.document-drawingbar`) weiterhin nur Zeichen. Sie ist ein eigenes
+  Element und hatte nie Wörter — W3 galt der Leiste, nicht der Kopie. Auf
+  Redurs iPad-Bildern steht das Wort auch dort. Das ist ein eigener,
+  kleiner Bogen und keine Nebenwirkung: die Kopie wird aus
+  `Marken.WERKZEUGE` gebaut (E583), also käme das Wort von derselben Stelle.
+- **W4 · Die Tafel bekommt Inhalt.** ZUM TEIL (E616): **die Millimeter
+  stehen** — und sie sind Redions, nicht GoodNotes'. Gemessen rechnet die
+  Zeichenfläche in PDF-Punkten (`viewBox` = A4), also sind die drei Stufen
+  0,4 / 0,8 / 1,8 mm und nicht 0,3 / 0,7 / 1,2 wie auf Redurs Bild;
+  abgeschrieben wären sie bei „Markant" um die Hälfte daneben gewesen. Der
+  Marker zieht das Vierfache, und die Beschriftung hängt deshalb am
+  Werkzeug. Redurs Wörter (Fein · Mittel · Markant) sind übernommen.
+
+  **Und seit E617 tragen die Stiftkacheln ihren Namen** — Füller ·
+  Kugelschreiber · Pinsel · Bleistift · Schutzleiter · Leiter, ab 1300 px
+  Leistenbreite. Die alte Begründung („sechs Stifte mit Namen sind rund
+  320 px") galt für ein Wort NEBEN dem Zeichen; gestapelt kostet es Höhe.
+  Die Leiste ist bei jeder geprüften Breite so hoch wie vorher, und
+  `display:none` ist dem Klemmen gewichen (§38).
+
+  **Und seit E618 IST die Tafel ein Kasten** — ab 1300 px Leistenbreite,
+  mit eigenem Grund und eigener Zeile, genau wie auf den Bildern 2 bis 6.
+  Dafür sind die Werkzeuge aus ihr zurück in die Leiste gezogen (ein Kasten
+  um die Werkzeugreihe herum wäre keine Tafel, sondern die ganze Leiste);
+  die 51 Gruppenwähler blieben dabei unberührt. Unter der Schwelle bleibt
+  `display:contents`, weil am Telefon `order` über Werkzeuge UND Zubehör
+  hinweg gilt. Die Millimeter aus E616 stehen jetzt auf der Kachel:
+  **0,4 mm · 0,8 mm · 1,8 mm**, beim Marker das Vierfache.
+
+  **Und seit E623/E624 ist W4 bis auf einen Punkt fertig.** Die
+  **Strichprobe** trug `currentColor` — die Textfarbe des Knopfes, nicht die
+  Tinte — und gar keine Deckung; jetzt beides, und zwar aus derselben
+  Funktion, die auch den echten Strich und das PDF färbt (sie stand vorher
+  viermal). **Name und Millimeter** stehen auf EINER Kachel, untereinander:
+  nebeneinander wuchs die Leiste von 128 auf 143 px und riss ihre Decke. Und
+  der **Radierer** hat seine drei Grössen jetzt auch ohne Studio — dort
+  standen sie seit E576 und nur dort — samt dem Haken «Automatisch an den
+  Strich anpassen».
+
+  **Offen bleibt allein der Deckkraft-Schieber.**
+
+  **Und die Deckkraft ist zusätzlich eine Datenfrage:** sie steht heute fest
+  je Stift (Marker 0,32 · Pinsel 0,92 · Bleistift 0,72 minus Neigung). Sie
+  wählbar zu machen heisst, ein Feld an die Marke zu hängen — §9, also eine
+  eigene Entscheidung und kein Nebensatz.
 - **W5 · Der Dock-Effekt.** Vergrössern beim Überfahren, mit
   `prefers-reduced-motion` als Abschaltung (§38).
+
+  **NACHGEMESSEN am 19. September 2026: er ist zum grössten Teil gebaut.**
+  `pdf-studio.css:666–716`, unter `@media (hover:hover) and (pointer:fine)`:
+  der überfahrene Knopf auf `scale(1.3)`, beide Nachbarn auf `scale(1.13)`
+  (Redurs Dock-Welle — `:has(+ button:hover)` liest nach links, der
+  Nachbarwähler nach rechts), die Federung `@keyframes dock-feder`, und die
+  Abschaltung unter `prefers-reduced-motion` bei `:703–716`.
+
+  **Offen davon sind zwei Dinge:** die **gewöhnliche Seite** — keiner dieser
+  Wähler trifft sie, alle hängen an `.document-studio` — und Redurs Bild 8,
+  das **Farb-Dock mit Namensfähnchen**: die Farbtupfer tragen kein `svg` und
+  fallen deshalb aus jeder dieser Regeln heraus.
 
 Was **nicht** dazugehört und trotzdem auffällt: dass Redurs Entwurf die
 Leiste OBEN zeigt und Redion sie im Studio unten hat. Beides ist richtig —
 der Platz ist seit E512 wählbar (der Knopf „Platz"), und Redur hat gerade
 gesagt, dass unten bleiben soll.
+
+---
+
+### Wo die Leiste steht — ERLEDIGT am 19. September (E619/E620/E621)
+
+Redur hat am 19. September ein Papier hochgeladen, das die Leiste nach dem
+GoodNotes-Modell neu bauen wollte. Nachgemessen war das meiste gebaut; was
+fehlte, steht jetzt auch:
+
+- **Am Griff ziehen** statt nur tippen, gefangen am nächsten Rand (64 px).
+- **«frei»** als fünfter Platz im selben Katalog, der Punkt als Prozent
+  gemerkt.
+- **`role="toolbar"`** mit Pfeiltasten und einem Tabstopp (§38).
+
+Und zwei Fehler, die dabei herausfielen und behoben sind: «unten in der
+Mitte» war auf der gewöhnlichen Seite **zwei Pixel breit** (L186), und im
+Studio stand der Platz-Knopf da, ohne wirken zu können (L185).
+
+**Offen daraus:** L187 — «unten» steht am Fuss des BLATTES, nicht des
+Fensters. Drei Wege stehen dort, und die Wahl ist Redurs.
