@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-610 Entscheidungen, E1 bis E632 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+611 Entscheidungen, E1 bis E633 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -675,6 +675,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E630** — Kein Lauf teilt mehr seinen Port: vier doppelt vergebene Zahlen aufgelöst (die jüngeren Läufe weichen, weil die älteren mit ihrer Zahl in der Doku stehen). Dazu zwei Sätze in §30, die gefehlt haben: im Hauptbaum wird kein Prüflauf gestartet, während ein voller Lauf im Arbeitsbaum läuft — und ein Arbeitsbaum ist nicht der Hauptbaum, weil dort `.git` eine Datei und `node_modules` ein Symlink ist
 * **E631** — Der Quelltext wird als Code gelesen, nicht als Prosa: `nurCode` lag zweimal wortgleich im Baum (mit dem Satz „wiederverwenden, nicht nachbauen" über der zweiten Kopie) und zog jetzt nach `pruefungen/hilfe/quelltext.mts` um. `test444` und `test483` klagten je einen SATZ an. Und die Gegenprobe hat die erste Reparatur widerlegt: wer die Zeichenketten mitleert, macht einen Wächter blind, der nach einer Zeichenkette sucht
 * **E632** — Die Inventur zieht nach, und die Prüfung lernt die vierte Schreibweise: `doku/BLOCKTYPEN.md` fehlte die Gedankenkarte seit E607 (drei Tage, 78 gegen 79). `test225` dagegen hatte recht zu melden und unrecht im Grund: die sechs Verweise stimmen, nur drucken die jüngeren Läufe ihre Abschnitte als `§1 Titel` ohne den Mittelpunkt
+* **E633** — Nur Tokens, die es gibt: `--bg-2` (viermal, seit E514 als falsch benannt bekannt) wird `--bg-hover`, `var(--accent, #2f7ed8)` verliert den festen Hellwert, `--rmo-knauf-grund` weicht dem Token, auf das es ohnehin immer zurückfiel. Dazu die Falle `.pf-karte` — ein Lichtschlitz nur über `:hover` — und ein vierter Sammler-Fehler: `--i` galt als erfunden, weil der Ausdruck in `style="--i:…;--dick:…"` nur das LETZTE Token fand
 
 ---
 
@@ -51514,4 +51515,63 @@ den Bestand.** Bei Wächtern, die Text lesen, ist das Aufschreiben selbst
 eine Änderung am geprüften Stoff.
 
 **Gemessen.** `test164` 6/6 · `test225` 11/11.
+
+---
+
+## E633 — Nur Tokens, die es gibt
+
+Bogen 4. Vier Befunde in drei Läufen, und wieder war einer davon der
+Wächter selbst.
+
+### `--bg-2` gibt es nicht — und das steht seit E514 in derselben Datei
+
+Viermal stand `background:var(--bg-2)` in den `.chr-*`-Regeln. Das Token
+ist nie definiert worden; die Fläche blieb also **ganz aus**, und niemand
+hat es gemerkt, weil ein ungültiges `var()` die Eigenschaft still
+verwirft. `bausteine.css:7686` sagt sogar, wie es heisst:
+
+> `--gefahr` und `--bg-hover`, nicht `--danger` und `--bg-2`
+
+Jetzt `--bg-hover`. **Im Bild nachgesehen** (§55.3): die vier Kacheln der
+Chronik-Übersicht haben wieder eine Fläche und heben sich vom Blatt ab.
+CLAUDE.md §39 nennt genau diesen Fall — „`--akzent`, `--flaeche-2` und
+`--bg-2` wurden je zweimal erfunden und waren je zweimal unsichtbar".
+
+### Ein Rückfall, der immer greift, ist kein Rückfall
+
+`var(--accent, #2f7ed8)` an drei Stellen: `--accent` ist in `hell.css` und
+`dunkel.css` definiert, der feste Hellwert konnte also nie zum Zug kommen.
+Er ist toter Text und verspricht eine Sicherheit, die er nicht gibt —
+schlimmer, im Dunkelmodus wäre er die falsche Farbe, falls er je griffe.
+
+Dasselbe bei `--rmo-knauf-grund`: das Token gibt es nirgends, der Rückfall
+`var(--bg-card)` griff **immer**. Jetzt steht `var(--bg-card)` direkt da.
+
+### Die Falle `.pf-karte`
+
+Ein Lichtschlitz, sichtbar nur über `:hover` — auf einem Tastgerät also gar
+nicht, mit der Tastatur auch nicht. `test303` nennt so etwas eine Falle und
+hat neun davon gefunden, als er entstand. Diese hier ist die zehnte, und
+die Lösung stand zwölf Zeilen höher: `.els-kachel:is(:hover,
+:focus-visible)`. Dieselbe Form bekommt die Karte.
+
+### Und der vierte Sammler-Fehler des Tages
+
+`--i` galt als erfunden. Gesetzt wird es in `chronik.ts`:
+
+```ts
+`<div class="chr-platte" style="--i:${i};--dick:${dick}px">`
+```
+
+Der Ausdruck im Lauf las `style="(?:[^"]*;)?\s*(--[\w-]+)\s*:` — gierig,
+und deshalb fand er nur das **letzte** Token vor einem Semikolon. Aus dem
+Attribut oben kam allein `--dick` an. Jetzt wird erst das ganze Attribut
+genommen und dann jedes Token darin.
+
+Das ist der vierte Wächter an einem Tag, der etwas gemeldet hat, das es
+nicht gab (E629, E631 zweimal, jetzt E633). Sie haben nichts gemeinsam
+ausser der Form: **ein Ausdruck, der eine gültige Schreibweise nicht
+kennt.**
+
+**Gemessen.** `test401` 4/4 · `test412` 27/27 · `test303` 16/16.
 

@@ -9211,3 +9211,23 @@ Der zweite Weg ist ehrlich und kostet nichts; der erste ist besser und
 kostet einen eigenen Bogen. Solange keiner gegangen ist, steht hier, dass
 der Kopf der Datei nicht stimmt.
 
+---
+
+## L196 · Die Zeitleiste der Chronik ragt aus ihrem Fenster — 19. September 2026
+
+Auf dem Bild vom 19. September (`bilder.mts chronik`) stehen die
+3D-Platten der Tage unten über den Rand des Chronik-Fensters hinaus: die
+vierte Platte ist angeschnitten, und sie liegt über dem erklärenden Satz
+„Zeiger darüber zeigt die Arbeit des Tages", von dem nur noch die ersten
+und letzten Wörter zu lesen sind.
+
+**Gefunden beim Nachsehen zu E633**, nicht gesucht — und deshalb hier und
+nicht im Bogen: die Ursache ist der 3D-Stapel (`--i` schiebt jede Platte
+um 70 px in die Tiefe und 84 px nach unten), nicht die Farbe, die E633
+angefasst hat.
+
+**Was zu klären ist:** ob der Stapel eine eigene Höhe bekommt, ob das
+Fenster mitwächst, oder ob die Platten bei vielen Tagen flacher gestapelt
+werden. Mit elf Tagen fällt es auf; mit dreissig wird der Satz darunter
+unlesbar.
+
