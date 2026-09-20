@@ -3334,3 +3334,68 @@ node bilder.mts heute handy              Linse über „Heute", Name lesbar
 Die Gegenprobe war nicht zu bauen — sie war da: beide Läufe **waren** rot und
 sind es nicht mehr. Ein Wächter, der nie rot war, ist eine Behauptung
 (§55.2); diese zwei haben sich selbst belegt.
+
+## 20. September 2026 — Die Auswahlleiste traf die falsche Stelle (E650)
+
+Aus der Bestandsaufnahme desselben Tages; kein Prüflauf hatte es je angefasst.
+
+### Der Fehler, gemessen
+
+```txt
+Block           "Test und Test"
+markiert        das ZWEITE Wort
+gedrückt        Fett
+
+erwartet        Test und **Test**
+bekommen        **Test** und Test
+```
+
+Dasselbe für kursiv, Code, durchgestrichen und den Link — alle sechs Marken
+laufen durch `umschliesse`, der Link durch `linkSetzen`, beide mit
+`String.replace(txt, …)`.
+
+```txt
+"a b a b a", das DRITTE „a" markiert
+  bekommen    **a** b a b a
+```
+
+### Was richtig blieb
+
+```txt
+"Test und Test", das ERSTE markiert      ✓ richtig  (Zufall: erstes = erstes)
+"Nur einmal hier", einmaliges Wort       ✓ richtig
+"Anfang mitte ende", ganz vorn           ✓ richtig
+```
+
+Genau deshalb ist es neun Monate nicht aufgefallen: der Normalfall eines
+kurzen Blocks mit einem einmaligen Wort war immer richtig.
+
+### Nach der Reparatur
+
+```txt
+node pruefungen/lauf/test542.mts        10/10   (vorher 5/10)
+node pruefungen/alle.mts 132 202        grün    Markdown-Kürzel, Lückenkarten
+node pruefungen/alle.mts 105 109 400    grün
+npm run typecheck                        ohne Befund
+```
+
+`test400` misst den Messstand gleich mit:
+
+```txt
+382 feste Ports · 9 × listen(0) · 390 von 484 Läufen starten einen Server
+```
+
+### Eine Messung, die zweimal rot war — und nur einmal richtig
+
+Der erste Anlauf von `test542` war rot mit **„KEIN BLOCK"**. Grund:
+`App.zeichneSeite(id)` allein lässt die Bibliothek stehen; erst
+`App.oeffne(id)` schaltet auf den Editor. Der Lauf hätte dasselbe Rot
+gezeigt, wenn der Fehler gar nicht existierte.
+
+```txt
+erster Anlauf    5/10 rot — davon 8× "KEIN BLOCK"   → misst nichts
+zweiter Anlauf   5/10 rot — mit dem falschen Wert   → misst den Fehler
+nach der Reparatur  10/10
+```
+
+Das ist der Unterschied zwischen einem roten Lauf und einem Beweis.

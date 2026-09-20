@@ -93,6 +93,7 @@ sind der teuerste Teil und der lehrreichste.
 | P77 | 2026-09-20 | Der vorausgeschickte Frame ging an niemanden | 🟠 mittel | — |
 | P78 | 2026-09-20 | Ein `<svg>` ist kein `HTMLElement`, und `fokus.ts` wusste das | 🟠 mittel | — |
 | P79 | 2026-09-20 | Ein Präfix fehlte im Verzeichnis, und die Zahl daneben stimmte schon vorher nicht | 🟡 klein | — |
+| P80 | 2026-09-20 | Fett traf das erste Wort, nicht das markierte | 🟠 mittel | — |
 
 ---
 
@@ -1769,4 +1770,25 @@ sind der teuerste Teil und der lehrreichste.
 **Warum keine Uhr.** Aus einem Prüflaufergebnis abgeleitet.
 
 **Die Lehre.** Dieselbe Lehre wie bei der Prüflaufzahl in §30: eine Zahl im Fliesstext, die kein Lauf anfasst, driftet. Sie gehört mit ihrem Befehl aufgeschrieben oder gar nicht.
+
+
+---
+
+## P80 · Fett traf das erste Wort, nicht das markierte
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** In „Test und Test" das zweite Wort markieren und auf Fett drücken ergibt `**Test** und Test`. Der Text ändert sich, nur an der falschen Stelle — kein Absturz, keine Meldung.
+
+**Die falsche Vermutung.** Keine bei der Ursache — `String.replace` mit einem String ist eindeutig. Die falsche Vermutung steckte im WÄCHTER: der erste Anlauf war rot und ich hielt ihn für einen Beweis. Er war rot mit „KEIN BLOCK", weil `App.zeichneSeite(id)` ohne `App.oeffne(id)` die Bibliothek stehen lässt. Er wäre genauso rot gewesen, wenn der Fehler gar nicht existierte.
+
+**Wie es gefunden wurde.** Die Bestandsaufnahme vom selben Tag, beim Gegenlesen des Editor-Befunds. Kein Prüflauf hatte die Auswahlleiste je angefasst.
+
+**Die Ursache.** `umschliesse` und `linkSetzen` ersetzten mit `(b.text||'').replace(txt, …)`. Ein String als Muster trifft das erste Vorkommen. Neun Monate unauffällig, weil der Normalfall — kurzer Block, einmaliges Wort — immer richtig war.
+
+**Die Lösung.** `auswahlOffset()` gab es schon (E289, Lückenkarten). Jetzt in drei Stufen: geprüfte Zeichenstelle im Normalfall, Reihenfolge bei gerendertem Markdown, alter Weg als Rest. Neuer Wächter `test542`, der den falschen Wert ausdruckt statt nur „passt nicht".
+
+**Warum keine Uhr.** Aus der Bestandsaufnahme abgeleitet, nicht aus einem Commit.
+
+**Die Lehre.** Ein roter Lauf ist noch kein Beweis. Er muss aus dem RICHTIGEN Grund rot sein — und am sichersten sieht man das daran, dass er den falschen Wert nennt, nicht nur die Ungleichheit.
 

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-627 Entscheidungen, E1 bis E649 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+628 Entscheidungen, E1 bis E650 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -692,6 +692,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E647** — Dieselbe Feder für die Werkzeugleiste, und L204 ist zu: `.bw-flug` bewegte `left`, `top`, `width` und `height` — vier Layout-Eigenschaften, und das ausgerechnet an der Stelle, an der man mitten im Zeichnen das Werkzeug wechselt. `SelectionFlow.fliege()` rechnet dieselbe Feder als FLIP auf `transform` um. Die Bauform von E640 bleibt (der Grund sitzt am Knopf, nur der Wechsel fliegt) — zwei Bauformen, ein Bewegungsgesetz
 * **E648** — Der vorausgeschickte Frame ging an niemanden: Redurs #108 (Feder auf 292 ms, Dehnung grosszügiger) und #109 (erst die Fläche, dann der Bildschirm) nachdokumentiert — und der Griff von #109 ging zweimal ins Leere. `handyLeiste()` konnte die Fläche nicht losschicken, weil seit E274 der Schauplatz den Reiter sticht und der sich erst beim Aufbau ändert; und EIN `requestAnimationFrame` ist eines zu wenig, weil eine Animation ihre Startzeit erst mit dem ersten wirklich gemalten Bild bekommt. Gemessen „17 → 17" nach 60 ms
 * **E649** — Ein `<svg>` ist kein `HTMLElement`, und `fokus.ts` wusste das: zwei Ressourcenhalter (`linse.ts` E639, `textur.ts` E462) hingen direkt im Körper und wurden beim Öffnen eines Dialogs nicht stillgelegt, weil die Schleife `instanceof HTMLElement` verlangt. `test272` misst `.inert` über ALLE Kinder — auf einem `SVGElement` gibt es die Eigenschaft nicht, `undefined` ist falsch, der Lauf war rot. Repariert wurde der Körper, nicht der Wächter: beide Halter liegen jetzt in einer von Geburt an stillgelegten Hülle. Dazu `bw` ins Namensraum-Verzeichnis, das seit E640 fehlte (`test290`).
+* **E650** — `String.replace` trifft das erste Vorkommen, nicht das markierte: `umschliesse` und `linkSetzen` in der Auswahlleiste ersetzten mit `(b.text||'').replace(txt, …)`. Wer in „Test und Test" das zweite Wort markiert und auf Fett drückt, bekam das erste fett — kein Absturz, keine Meldung, nur Text an der falschen Stelle. Repariert über `auswahlOffset()` mit Nachprüfung, Rückfall auf die Reihenfolge bei gerendertem Markdown und auf den alten Weg, wenn beides nicht trägt. Neuer Wächter `test542`, gegen den alten Stand rot.
 
 ---
 
@@ -53357,3 +53358,72 @@ keine Messung, solange kein Lauf sie anfasst.
 Und beide waren **nicht** im Lauf vom 19. September rot. Sie sind in den
 achtundvierzig Stunden danach entstanden — in meinen eigenen Bögen E639 und
 E640. Genau dafür ist der volle Lauf da.
+
+
+## E650 — `String.replace` trifft das erste Vorkommen, nicht das markierte
+
+**20. September 2026.** Aus der Bestandsaufnahme desselben Tages, und einer
+der Funde, für die es keinen Prüflauf gab.
+
+In `src/bereiche/editor/ansicht/auswahlleiste.ts` standen zwei Zeilen
+derselben Bauart:
+
+```ts
+const neu = (b.text || '').replace(txt, marke + txt + marke);
+Store.updateBlock(bl.id, { text: (bl.text || '').replace(text, `[${text}](${url})`) });
+```
+
+`String.replace` mit einem **String** als Muster ersetzt das **erste**
+Vorkommen. Nicht das markierte — das erste.
+
+### Warum das schlimmer ist als ein Knopf, der nichts tut
+
+Es ist kein Absturz und keine Fehlermeldung. Der Text ändert sich, nur an
+der falschen Stelle. Wer einen langen Absatz formatiert, merkt es erst beim
+Lesen — und dann steht schon nicht mehr da, was er geschrieben hat. Das ist
+dieselbe Klasse wie die abgeschnittene Zahl aus §55.1: ein Ergebnis, das
+gültig aussieht und falsch ist.
+
+Gemessen in `test542`, gegen den alten Stand:
+
+```txt
+„Test und Test", das ZWEITE markiert, Fett gedrückt
+  erwartet   Test und **Test**
+  bekommen   **Test** und Test
+```
+
+### Die Reparatur, in drei Stufen
+
+`auswahlOffset()` gab es schon — der Lückenkarten-Weg benutzt es seit E289.
+Es gibt die Zeichenzahl im **sichtbaren** Text. Das genügt nicht immer, denn
+gespeichert wird Markdown, und `**fett**` davor verschiebt die Zahlen.
+Deshalb drei Stufen, in dieser Reihenfolge:
+
+1. **Der Normalfall.** Bei schlichtem Text ist die sichtbare Stelle auch die
+   gespeicherte. Das wird **nachgeprüft**, nicht geglaubt: steht bei
+   `text.slice(off, off + wort.length)` wirklich das gewählte Wort, ist die
+   Sache entschieden.
+2. **Gerendertes Markdown.** Die Zeichenzahlen laufen auseinander, die
+   **Reihenfolge** nicht. Kommt das Wort im Sichtbaren genauso oft vor wie
+   im Gespeicherten, ist das n-te hier auch das n-te dort.
+3. **Alles andere.** Dann bleibt es beim alten Weg. Der Fehler bleibt in
+   genau diesem Restfall bestehen, und das ist bewusst: ein Ratespiel an
+   Nutzertext wäre schlimmer als ein bekannter Rest.
+
+### Was dabei NICHT repariert wurde
+
+Dieselbe Funktion hat einen zweiten Mangel, den die Bestandsaufnahme
+gefunden hat: **Fett lässt sich nicht abschalten.** `umschliesse` legt die
+Marken immer neu um die Auswahl; `Strg B` auf bereits fettem Text ergibt
+`****Text****`. Das ist eine Bedienlücke, kein falscher Text — und §43 sagt,
+eine Änderung hat ein Ziel. Es steht als eigener Punkt offen.
+
+### Der Wächter
+
+`test542` ist neu und war gegen den alten Stand rot — und zwar aus dem
+richtigen Grund: er hat den falschen Wert ausgedruckt, nicht nur „passt
+nicht". Der erste Anlauf war rot mit „KEIN BLOCK", weil `App.zeichneSeite()`
+ohne `App.oeffne()` die Bibliothek stehen lässt statt den Editor zu zeigen.
+Eine Messung, die aus dem falschen Grund rot ist, prüft genauso wenig wie
+eine, die immer grün ist (§55.2) — deshalb erst der Messstand, dann die
+Reparatur.

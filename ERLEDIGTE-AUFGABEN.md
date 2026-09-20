@@ -1,5 +1,47 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E650 · Die Auswahlleiste trifft die markierte Stelle
+
+**Der Fund** kommt aus der Bestandsaufnahme desselben Tages — aus dem
+Gegenleser, dessen Auftrag war, den Editor-Befund zu widerlegen. Kein
+Prüflauf hatte die Auswahlleiste je angefasst.
+
+```ts
+const neu = (b.text || '').replace(txt, marke + txt + marke);
+```
+
+`String.replace` mit einem **String** als Muster ersetzt das **erste**
+Vorkommen. Nicht das markierte. Wer in „Test und Test" das zweite Wort
+markiert und auf Fett drückt, bekommt das erste fett — kein Absturz, keine
+Meldung, nur Text an der falschen Stelle. Dieselbe Zeile ein zweites Mal in
+`linkSetzen`.
+
+**Neun Monate unauffällig**, weil der Normalfall immer richtig war: ein
+kurzer Block mit einem einmaligen Wort.
+
+**Zuerst der Wächter** (§30). `test542` war gegen den alten Stand rot — und
+beim ersten Anlauf aus dem falschen Grund: „KEIN BLOCK", weil
+`App.zeichneSeite(id)` ohne `App.oeffne(id)` die Bibliothek stehen lässt. Er
+wäre genauso rot gewesen, wenn es den Fehler nicht gäbe. Erst der zweite
+Anlauf hat den falschen Wert ausgedruckt — `**Test** und Test` — und damit
+wirklich etwas gemessen.
+
+**Gebaut.** Drei Stufen: geprüfte Zeichenstelle aus `auswahlOffset()` im
+Normalfall · die Reihenfolge des Vorkommens bei gerendertem Markdown · der
+alte Weg als Rest. Der Fehler bleibt in genau diesem Rest bestehen, und das
+steht so im Quelltext — ein Ratespiel an Nutzertext wäre schlimmer.
+
+**Offen geblieben und benannt:** dieselbe Funktion kann Fett nicht
+abschalten (`Strg B` auf fettem Text ergibt `****Text****`). Eine
+Bedienlücke, kein falscher Text — und §43 sagt, eine Änderung hat ein Ziel.
+
+**Geprüft.** `test542` 10/10 (vorher 5/10) · `test132`, `test202` grün —
+Markdown-Kürzel und Lückenkarten, die denselben Offset benutzen ·
+`test105`, `test109`, `test400` grün · `npm run typecheck` ohne Befund.
+`CLAUDE.md` §30/§31 auf **484** nachgezählt.
+
+---
+
 ## 20. September 2026 · E649 · Zwei rote Läufe, und beide waren achtundvierzig Stunden alt
 
 **Der Anlass:** der erste volle Lauf gegen das neue `main` — 483 Läufe in 49

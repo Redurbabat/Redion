@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 483 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 484 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -965,6 +965,15 @@ A→B→C lenkt um statt anzustehen, kein Hit-Target bewegt sich, und ohne
 Bewegung wird gesetzt. Gezählt am 20. September, im selben Bogen: der Befehl
 sagt 483.*
 
+
+*Und 484: `test542` — die Auswahlleiste trifft die markierte Stelle (E650).
+Er hält etwas, wofür es neun Monate lang keinen Wächter gab: `umschliesse`
+und `linkSetzen` ersetzten mit `String.replace(txt, …)`, und das trifft das
+ERSTE Vorkommen, nicht das markierte. Gegen den alten Stand war er rot und
+hat den Fehler wörtlich ausgedruckt — `**Test** und Test` statt `Test und
+**Test**`. Gezählt am 20. September, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 484.*
+
 ### Die Befehle
 
 ```txt
@@ -973,7 +982,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 483 Läufe
+npm run pruefen                      alle 484 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1035,7 +1044,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 483 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 484 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

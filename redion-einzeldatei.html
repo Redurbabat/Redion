@@ -25124,7 +25124,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1235, inhalt: 'dd730d6aa84bbce7', gebaut: '2026-09-20T15:53:47.955Z' };
+const Stand = { fassung: 1237, inhalt: '3dcbb1cbd296b8ad', gebaut: '2026-09-20T16:07:28.881Z' };
 window.Stand = Stand;
 
 </script>
@@ -83618,6 +83618,19 @@ const ChronikDaten = {
             "loesung": "`bw  7  bausteine.css` eingetragen; die Zahl im Fliesstext auf 159 nachgezählt und den Zählbefehl danebengeschrieben, statt sie fortzuschreiben.",
             "warumKeineUhr": "Aus einem Prüflaufergebnis abgeleitet.",
             "lehre": "Dieselbe Lehre wie bei der Prüflaufzahl in §30: eine Zahl im Fliesstext, die kein Lauf anfasst, driftet. Sie gehört mit ihrem Befehl aufgeschrieben oder gar nicht."
+        },
+        {
+            "nr": "P80",
+            "datum": "2026-09-20",
+            "titel": "Fett traf das erste Wort, nicht das markierte",
+            "schwere": "mittel",
+            "symptom": "In „Test und Test\" das zweite Wort markieren und auf Fett drücken ergibt `**Test** und Test`. Der Text ändert sich, nur an der falschen Stelle — kein Absturz, keine Meldung.",
+            "falscheVermutung": "Keine bei der Ursache — `String.replace` mit einem String ist eindeutig. Die falsche Vermutung steckte im WÄCHTER: der erste Anlauf war rot und ich hielt ihn für einen Beweis. Er war rot mit „KEIN BLOCK\", weil `App.zeichneSeite(id)` ohne `App.oeffne(id)` die Bibliothek stehen lässt. Er wäre genauso rot gewesen, wenn der Fehler gar nicht existierte.",
+            "wieGefunden": "Die Bestandsaufnahme vom selben Tag, beim Gegenlesen des Editor-Befunds. Kein Prüflauf hatte die Auswahlleiste je angefasst.",
+            "ursache": "`umschliesse` und `linkSetzen` ersetzten mit `(b.text||'').replace(txt, …)`. Ein String als Muster trifft das erste Vorkommen. Neun Monate unauffällig, weil der Normalfall — kurzer Block, einmaliges Wort — immer richtig war.",
+            "loesung": "`auswahlOffset()` gab es schon (E289, Lückenkarten). Jetzt in drei Stufen: geprüfte Zeichenstelle im Normalfall, Reihenfolge bei gerendertem Markdown, alter Weg als Rest. Neuer Wächter `test542`, der den falschen Wert ausdruckt statt nur „passt nicht\".",
+            "warumKeineUhr": "Aus der Bestandsaufnahme abgeleitet, nicht aus einem Commit.",
+            "lehre": "Ein roter Lauf ist noch kein Beweis. Er muss aus dem RICHTIGEN Grund rot sein — und am sichersten sieht man das daran, dass er den falschen Wert nennt, nicht nur die Ungleichheit."
         }
     ]
 };
@@ -113759,6 +113772,85 @@ const Auswahl = (() => {
             return -1;
         }
     };
+    /** Der sichtbare Text des Blocks, in dem die Auswahl steht. */
+    const sichtbarerText = () => {
+        const selection = auswahl();
+        if (!selection)
+            return '';
+        const range = selection.getRangeAt(0);
+        const node = range.startContainer.nodeType === 3
+            ? range.startContainer.parentElement : range.startContainer;
+        return node?.closest('.ct')?.textContent ?? '';
+    };
+    /** Wie oft `was` in `wo` vor der Stelle `bis` beginnt. */
+    const davor = (wo, was, bis) => {
+        let n = 0, i = -1;
+        while ((i = wo.indexOf(was, i + 1)) !== -1 && i < bis)
+            n++;
+        return n;
+    };
+    /** Der Anfang des `n`-ten Vorkommens, von null gezählt; -1 wenn es fehlt. */
+    const nteStelle = (wo, was, n) => {
+        let i = -1;
+        for (let k = 0; k <= n; k++) {
+            i = wo.indexOf(was, i + 1);
+            if (i === -1)
+                return -1;
+        }
+        return i;
+    };
+    /* ══ WELCHE STELLE GEMEINT IST (E650) ═══════════════════════════════════
+     * Hier stand `(b.text || '').replace(txt, …)`, und zwar zweimal —
+     * in `umschliesse` und in `linkSetzen`.
+     *
+     * `String.replace` mit einem STRING als Muster ersetzt das ERSTE
+     * Vorkommen. Nicht das markierte. Wer in „Test und Test" das zweite Wort
+     * markiert und auf Fett drückt, bekommt das erste fett, und an der Stelle,
+     * die er angefasst hat, passiert nichts. Gemessen in `test542`:
+     * `**Test** und Test` statt `Test und **Test**`.
+     *
+     * Das ist kein Absturz und keine Fehlermeldung — der Text ändert sich, nur
+     * an der falschen Stelle. In einem langen Absatz merkt man es erst beim
+     * Lesen, und dann steht schon nicht mehr da, was man geschrieben hat.
+     *
+     * DREI WEGE, IN DIESER REIHENFOLGE:
+     *
+     *   1  Der Normalfall. `auswahlOffset()` gibt die Zeichenzahl im
+     *      SICHTBAREN Text; bei schlichtem Text ist das auch die gespeicherte
+     *      Stelle. Wir prüfen das nach, statt es zu glauben: steht dort
+     *      wirklich das gewählte Wort, ist die Sache entschieden.
+     *
+     *   2  Gerendertes Markdown. Ein `**fett**` davor verschiebt die
+     *      Zeichenzahlen — die REIHENFOLGE aber nicht. Kommt das Wort im
+     *      Sichtbaren genauso oft vor wie im Gespeicherten, dann ist das
+     *      n-te hier auch das n-te dort.
+     *
+     *   3  Alles andere. Dann bleibt es beim alten Weg, und der Fehler
+     *      bleibt in genau diesem Restfall bestehen. Das ist bewusst: ein
+     *      Ratespiel an Nutzertext wäre schlimmer als ein bekannter Rest.
+     * ====================================================================== */
+    const stelleImText = (text, gewaehlt) => {
+        const off = auswahlOffset();
+        if (off < 0 || !gewaehlt)
+            return text.indexOf(gewaehlt);
+        if (text.slice(off, off + gewaehlt.length) === gewaehlt)
+            return off;
+        const sicht = sichtbarerText();
+        if (!sicht)
+            return text.indexOf(gewaehlt);
+        const imSicht = davor(sicht, gewaehlt, sicht.length);
+        const imText = davor(text, gewaehlt, text.length);
+        if (imSicht !== imText || imSicht === 0)
+            return text.indexOf(gewaehlt);
+        return nteStelle(text, gewaehlt, davor(sicht, gewaehlt, off));
+    };
+    /** `gewaehlt` an der gemeinten Stelle durch `ersatz` tauschen. */
+    const tauscheDort = (text, gewaehlt, ersatz) => {
+        const i = stelleImText(text, gewaehlt);
+        if (i < 0)
+            return text;
+        return text.slice(0, i) + ersatz + text.slice(i + gewaehlt.length);
+    };
     /** Legt Marken um die Auswahl — genau wie Notions Strg + B. */
     const umschliesse = (marke) => {
         const txt = getSelection()?.toString() ?? '';
@@ -113767,7 +113859,7 @@ const Auswahl = (() => {
         const b = markierterBlock();
         if (!b)
             return;
-        const neu = (b.text || '').replace(txt, marke + txt + marke);
+        const neu = tauscheDort(b.text || '', txt, marke + txt + marke);
         Store.updateBlock(b.id, { text: neu });
         App.zeichneSeite(b.id, 'ende');
         weg();
@@ -113789,7 +113881,7 @@ const Auswahl = (() => {
         const url = adresse ?? prompt('Adresse des Links', 'https://') ?? '';
         if (!url || url === 'https://')
             return false;
-        Store.updateBlock(bl.id, { text: (bl.text || '').replace(text, `[${text}](${url})`) });
+        Store.updateBlock(bl.id, { text: tauscheDort(bl.text || '', text, `[${text}](${url})`) });
         App.zeichneSeite(bl.id, 'ende');
         weg();
         return true;
