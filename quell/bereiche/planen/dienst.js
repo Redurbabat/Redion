@@ -195,7 +195,14 @@ const Plan = (() => {
             raus.push({ id: b.id, text: b.text, fertig: !!b.checked,
                 wo: seite ? (seite.text || 'Ohne Titel') : '', datum: null,
                 minuten: null,
-                art: 'block', erledigtAm: b.erledigtAm || null });
+                /* DERSELBE RÜCKFALL WIE BEI DEN ZEILEN (E663, §8). Zwanzig
+                   Zeilen tiefer steht `r.erledigtAm || r.edited` — für
+                   Datenbankzeilen gab es ihn längst, für Blöcke nicht.
+                   Ohne ihn wäre jede VOR E663 abgehakte Aufgabe für immer
+                   unsichtbar: sie hat `checked`, aber kein Datum. `edited`
+                   ist nicht genau, aber es ist das, was der Bestand hat —
+                   und eine ungefähre Woche ist mehr wert als eine leere. */
+                art: 'block', erledigtAm: b.erledigtAm || b.edited || null });
         });
         /* Datenbankzeilen */
         Object.values(Store.cache.collections).forEach(c => {

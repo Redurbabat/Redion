@@ -109,6 +109,8 @@ sind der teuerste Teil und der lehrreichste.
 | P93 | 2026-09-20 | Die eigene Erklärung vor die des Anbieters gestellt | 🟠 mittel | — |
 | P94 | 2026-09-20 | Die Gegenprobe war falsch, nicht der Code | niedrig | — |
 | P95 | 2026-09-20 | Das Werkzeug für die Prüfläufe war selbst ungeprüft | 🟠 mittel | — |
+| P96 | 2026-09-20 | Eine Auswertung, die mit einem Feld rechnet, das niemand schreibt | 🟠 mittel | — |
+| P97 | 2026-09-20 | Ein Wächter, der an der Reihenfolge im Block scheitert | niedrig | — |
 
 ---
 
@@ -2095,4 +2097,42 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Gegenprobe mit der alten Regel: genau das beobachtete Symptom, [266 bis 277] statt [270].
 
 **Die Lehre.** Ein Werkzeug, das Prüfläufe auswertet, ist selbst ungeprüft, bis es einen Wächter hat. Dieses war zwei Stunden alt und hat in seinem ersten Ernstfall danebengegriffen. Und: der vorsichtige Rückfall war richtig — er hat nur die echte Spur unter neun falschen begraben.
+
+
+---
+
+## P96 · Eine Auswertung, die mit einem Feld rechnet, das niemand schreibt
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Die Wochenrückschau zeigte eine leere Liste und ein Tagesdiagramm aus Nullen, obwohl Aufgaben abgehakt waren.
+
+**Die falsche Vermutung.** Dass die Rückschau falsch rechnet oder das Datum falsch vergleicht.
+
+**Wie es gefunden wurde.** Gezählt, wer das Feld schreibt: im ganzen Programm genau eine Stelle, der ICS-Import. Das Kästchen im Editor schrieb nur checked.
+
+**Die Ursache.** Das Feld wurde beim Lesen eingeplant und beim Schreiben vergessen. Zwanzig Zeilen tiefer hatten Datenbankzeilen längst einen Rückfall auf edited — Blöcke nicht.
+
+**Der Beweis.** test554 gegen den alten Stand: in der Rückschau false, insgesamt 0 erledigte, Tagesdiagramm 0.
+
+**Die Lehre.** Wer eine Auswertung baut, prüft nicht nur, ob sie richtig rechnet, sondern ob irgendjemand ihre Eingabe schreibt. Und: der Stempel gehört an die eine Stelle, durch die alle sechs Schreibwege gehen, nicht an jeden einzelnen.
+
+
+---
+
+## P97 · Ein Wächter, der an der Reihenfolge im Block scheitert
+
+*2026-09-20 · niedrig*
+
+**Das Bild.** test403 meldete im vollen Lauf: Beide stehen in einem finally — [false,true]. Der Code stand korrekt in einem finally.
+
+**Die falsche Vermutung.** Dass beim Umbau des KI-Chats (E652) ein remove aus dem finally gerutscht ist.
+
+**Wie es gefunden wurde.** Die Stelle angesehen: das remove stand im finally, nur nicht mehr als erste Zeile. Der Wächter sah zwei Zeilen zurück.
+
+**Die Ursache.** E652 hat zwei Zeilen in dasselbe finally geschoben. Die Messung prüfte damit die Reihenfolge innerhalb des Blocks statt den Block.
+
+**Der Beweis.** Nach dem Umbau auf Klammernzählen: 22 von 22 grün, und die Gegenprobe (ein remove aus dem finally geholt) wird wieder rot.
+
+**Die Lehre.** Eine Messung, die von der Reihenfolge im Block abhängt, meldet Umbauten als Fehler. Das kostet beim nächsten vollen Lauf genau so viel Zeit wie ein echter Fund — und erzieht dazu, rote Läufe für Rauschen zu halten.
 

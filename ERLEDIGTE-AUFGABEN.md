@@ -1,5 +1,35 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E663/E664 · Die Rückschau zählt wieder, und ein Wächter sieht den ganzen Block
+
+**E663 — was abgehakt wird, zählt.** Die Wochenrückschau rechnet mit
+`erledigtAm`, und für Blöcke schrieb das Feld **niemand**: der einzige
+Schreiber im ganzen Programm war der ICS-Import. Wer eine Woche lang
+Aufgaben abhakte, sah am Sonntag eine leere Rückschau und ein Tagesdiagramm
+aus Nullen — kein Fehler, keine Meldung, immer null (§47).
+
+Der Stempel sitzt jetzt in `Store.updateBlock`, weil `checked` an sechs
+Stellen geschrieben wird und sechs Kopien fünf Gelegenheiten zum Vergessen
+wären (§8). Der Haken zurück nimmt das Datum mit. Und der Altbestand zählt
+über `edited` mit — dieselbe Regel, die Datenbankzeilen zwanzig Zeilen
+tiefer längst hatten.
+
+**E664 — ein zu kleines Fenster.** Der volle Lauf meldete „Beide stehen in
+einem finally — [false,true]". Der Code war richtig: `test403` sah zwei
+Zeilen zurück, und E652 hatte zwei Zeilen in dasselbe `finally` geschoben.
+Ein Wächter, der an der Reihenfolge innerhalb eines Blocks scheitert, prüft
+die Reihenfolge und nicht den Block. Jetzt wird der Blockkopf gesucht,
+Klammern zählend nach oben.
+
+**Geprüft.** `test554` neu, elf Messungen, gegen den alten Stand 7/11, mit
+zwei Gegenproben. `test403` 22/22 mit eigener Gegenprobe (ein `remove` aus
+seinem `finally` geholt → wieder rot). `test550` 8/8.
+
+**Nachgesehen, nicht angenommen:** dieselbe Redewendung
+`slice(Math.max(0, i - …))` kommt in keinem der übrigen 495 Läufe vor.
+
+---
+
 ## 20. September 2026 · E662 · Der Sweep nennt den Schuldigen, nicht sein ganzes Stück
 
 **Der Ernstfall.** Zwei Stunden nach seinem Bau meldete `volllauf.mts` zehn

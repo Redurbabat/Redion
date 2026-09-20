@@ -3954,3 +3954,63 @@ Die alte Ein-Zeilen-Regel eingesetzt → genau das beobachtete Symptom,
 — wörtlich das Artefakt, das §30 beschreibt (im Arbeitsbaum ist `.git` eine
 Datei und `node_modules` ein Symlink). **Nachzumessen im Hauptbaum**, sobald
 der Sweep durch ist; vorher wird daran nichts repariert.
+
+---
+
+## 20. September 2026 — Die Wochenrückschau zählte nie (E663, `test554`)
+
+```txt
+                            vorher      nachher
+erledigtAm nach dem Haken   null        gesetzt
+in der Rückschau            nein        ja
+heute im Tagesdiagramm      0           1
+Haken zurück → erledigtAm   —           null, nicht mehr gezählt
+Altbestand (ohne Datum)     unsichtbar  über `edited` gezählt
+```
+
+Wer `erledigtAm` schrieb, vorher: **niemand** für Blöcke. Einziger Schreiber
+im ganzen Programm war der ICS-Import (`kalender.ts:211`).
+
+`checked` wird an **sechs** Stellen geschrieben — Kästchen, Tastenkürzel,
+Markdown-Kürzel, Befehlspalette, Schnittstelle, PWA. Deshalb sitzt der
+Stempel in `Store.updateBlock`, wo alle sechs durchgehen.
+
+### Zwei Gegenproben
+
+```txt
+Stempel abgehängt   erledigtAm bleibt null — die Rückschau zählt dann nur
+                    noch ungefähr, über `edited`
+Rückfall abgehängt  Altbestand wieder unsichtbar
+```
+
+---
+
+## 20. September 2026 — Ein zu kleines Fenster (E664, `test403`)
+
+Der volle Lauf meldete:
+
+```txt
+✗ Beide stehen in einem finally — [false,true]
+```
+
+Der Code war richtig. Der Wächter sah **zwei Zeilen** zurück:
+
+```js
+const davor = alle.slice(Math.max(0, i - 2), i + 1).join(' ');
+```
+
+E652 hatte zwei Zeilen in dasselbe `finally` geschoben — `zustand.abbruch`
+und `sendenKnopf(false)`. Damit rutschte das `remove` auf Position 3.
+
+```txt
+finally {            ← Zeile i-3, ausserhalb des Fensters
+  zustand.abbruch = null;
+  sendenKnopf(false);
+  ziel.classList.remove('ki-schreibt');   ← Zeile i
+```
+
+Jetzt wird der Blockkopf gesucht, Klammern zählend nach oben. Gegenprobe:
+ein `remove` aus seinem `finally` geholt → wieder `[false,true]`.
+
+Dieselbe Redewendung kommt in keinem der übrigen 495 Läufe vor — gesucht,
+nicht angenommen.

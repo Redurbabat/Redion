@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-642 Entscheidungen, E1 bis E662 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+644 Entscheidungen, E1 bis E664 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -705,6 +705,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E660** — Die Tabellenwerkzeuge sind am Telefon zu treffen: sieben Knöpfe à 26 px waren dort der EINZIGE Weg, eine Spalte anzulegen — die Griffe daneben messen 7 px und brauchen ein `mouseover`, das ein Daumen nicht erzeugt. Jetzt 44 px unter `@media(hover:none)`, am Rechner unverändert schlank. Und der Fund über den Fund: `test402` konnte das nie sehen, weil er nur DEKLARIERTE Höhen liest — 26 px aus Innenabstand und Schriftgrösse sind für ihn unsichtbar (L206). Wächter `test551`.
 * **E661** — Der Anbieter hat immer recht, und die Modellliste wird erfragt: Groq mustert `llama-3.3-70b-versatile` aus, Redion führt es weiter und meldet dazu „Die Adresse gibt es nicht" — die Adresse war in Ordnung, das Modell war weg, und der Anbieter sagte das wörtlich. Jetzt führt SEIN Satz die Meldung an, die Statustabelle bleibt für den, der schweigt, und `modelleHolen` fragt `/models`. Das tote Modell ist gestrichen; ein Ersatz wird nicht geraten (§56). Wächter `test552`.
 * **E662** — Der Sweep nennt den Schuldigen, nicht sein ganzes Stück: keine Stunde nach seinem ersten Einsatz meldete `volllauf.mts` zehn rote Läufe, wo einer war. `alle.mts` schreibt seine Bilanz auf zwei Zeilen — die erste hat das ✗ und keine Nummer, die zweite die Nummer und kein ✗. Die Zerlegung fand nichts und fiel auf „ganzes Stück rot" zurück. Der Rückfall bleibt (er erfindet keinen Schuldigen), er wird nur schwerer getroffen. Wächter `test553`.
+* **E663** — Was abgehakt wird, zählt in der Wochenrückschau: sie rechnet mit `erledigtAm`, und NIEMAND schrieb das Feld für Blöcke — wer eine Woche lang Aufgaben abhakte, sah am Sonntag eine leere Rückschau und ein Tagesdiagramm aus Nullen. Der Stempel sitzt jetzt in `Store.updateBlock` statt an sechs Kästchen (§8), und der Altbestand zählt über `edited` mit, wie die Datenbankzeilen es längst tun. Wächter `test554`.
+* **E664** — Ein Wächter, der an der Reihenfolge im Block scheitert: `test403` prüfte „steht das `remove` in einem `finally`", indem er zwei Zeilen zurücksah. E652 schob zwei Zeilen dazwischen — dasselbe `finally`, dieselbe Zusage, und der volle Lauf wurde rot. Jetzt wird der umschliessende Block wirklich gesucht (Klammern zählend nach oben).
 
 ---
 
@@ -54233,6 +54235,104 @@ importiert, gibt es nur `roteAus` her.
 das Prüfläufe auswertet, ist selbst ungeprüft, bis es einen Wächter hat.
 Dieses hier war zwei Stunden alt und hat in seinem ersten Ernstfall
 danebengegriffen.
+
+
+## E663 — Was abgehakt wird, zählt in der Wochenrückschau
+
+**Was wurde entschieden?** `Store.updateBlock` stempelt `erledigtAm`, wenn
+ein `todo`-Block abgehakt wird, und räumt es weg, wenn der Haken zurückgeht.
+Die Wochenrückschau rechnet für Blöcke zusätzlich mit `edited` als Rückfall
+— wie sie es für Datenbankzeilen längst tut.
+
+**Warum?** Die Rückschau filtert so (`planen/dienst.ts:235`):
+
+```js
+const erledigt = alle.filter(a => a.fertig && a.erledigtAm && inWoche(a.erledigtAm));
+```
+
+Sie braucht `erledigtAm`. Für Blöcke stand dort `b.erledigtAm || null` — und
+**nichts im ganzen Programm schrieb dieses Feld für Blöcke.** Gezählt, nicht
+vermutet: der einzige Schreiber war der ICS-Import (`kalender.ts:211`). Das
+Kästchen im Editor tat genau eins:
+
+```js
+Store.updateBlock(block.id, { checked: cb.checked });
+```
+
+Wer eine Woche lang Aufgaben abhakte, sah am Sonntag eine **leere**
+Rückschau und ein Tagesdiagramm aus Nullen. Kein Fehler, keine Meldung —
+die heimtückischere Hälfte von §47: etwas zeigt eine Zahl, und die Zahl ist
+immer null.
+
+**Und es war inkonsequent.** Zwanzig Zeilen tiefer rechnen Datenbankzeilen
+mit `r.erledigtAm || r.edited`. Für sie gab es den Rückfall, für Blöcke
+nicht — zwei Wege für dieselbe Frage, und der eine antwortete immer null
+(§8).
+
+**Warum der Stempel in `Store.updateBlock` sitzt und nicht am Kästchen.**
+`checked` wird an **sechs** Stellen geschrieben: Kästchen, Tastenkürzel,
+Markdown-Kürzel, Befehlspalette, Schnittstelle und der PWA-Weg. Sechs
+Kopien derselben Zeile wären fünf Gelegenheiten, sie zu vergessen. Hier
+geht jeder dieser Wege durch, und jeder künftige auch.
+
+**Warum der Rückfall auf `edited` trotzdem bleibt.** Jede Aufgabe, die VOR
+diesem Bogen abgehakt wurde, hat `checked` und kein Datum. Ohne Rückfall
+wäre sie für immer unsichtbar. `edited` ist nicht genau — es wandert bei
+jeder Bearbeitung —, aber es ist das, was der Bestand hat, und eine
+ungefähre Woche ist mehr wert als eine leere. Für alles ab jetzt ist der
+Stempel genau.
+
+**Was war die Alternative?** Eine Migration, die für alle abgehakten Blöcke
+`erledigtAm = edited` schreibt. Sie hätte dasselbe Ergebnis, aber sie
+verändert Nutzerdaten für eine Anzeige — und §9 sagt, dass eine
+Speicheränderung ohne Not keine gute Idee ist. Der Rückfall beim Lesen
+kostet nichts und lügt nicht.
+
+**Der Wächter.** `test554`, elf Messungen, gegen den alten Stand 7/11.
+Zwei Gegenproben: ohne den Stempel bleibt `erledigtAm` leer (die Rückschau
+zählt dann nur noch ungefähr, über `edited`), ohne den Rückfall ist der
+Altbestand für immer weg.
+
+
+## E664 — Ein Wächter, der an der Reihenfolge im Block scheitert
+
+**Was wurde entschieden?** `test403` sucht den umschliessenden Block
+wirklich, statt zwei Zeilen zurückzusehen.
+
+**Warum?** Er hält eine gute Zusage: jedes `classList.remove('ki-schreibt')`
+muss in einem `finally` stehen, damit der Schimmer auch nach einem Fehler
+verschwindet. Gemessen hat er sie so:
+
+```js
+const davor = alle.slice(Math.max(0, i - 2), i + 1).join(' ');
+return /finally/.test(davor);
+```
+
+Das hielt, solange das `remove` die erste Zeile im Block war. In **E652**
+kamen `zustand.abbruch = null` und `sendenKnopf(false)` davor — dasselbe
+`finally`, dieselbe Zusage, und der volle Lauf meldete:
+
+```txt
+✗ Beide stehen in einem finally — [false,true]
+```
+
+Der Code war richtig, das Fensterchen war zu klein. **Ein Wächter, der an
+der Reihenfolge innerhalb eines Blocks scheitert, prüft die Reihenfolge und
+nicht den Block.**
+
+**Wie jetzt gemessen wird.** Von der Zeile aus nach oben, Klammern zählend:
+eine `}` betritt einen Block, eine `{` verlässt ihn. Wo die Zählung unter
+null geht, steht der Kopf des Blocks, in dem die Zeile liegt — und der muss
+`finally` heissen. Das ist unempfindlich gegen alles, was innerhalb des
+Blocks passiert, und bleibt empfindlich gegen das, worum es geht.
+
+**Gegenprobe.** Ein `remove` aus seinem `finally` herausgenommen → wieder
+`[false,true]`. Die Zusage hält, die Messung ist nur nicht mehr
+kitzlig.
+
+**Was dabei nicht gefunden wurde:** dieselbe Redewendung
+(`slice(Math.max(0, i - …))`) kommt in keinem anderen der 496 Läufe vor.
+Gesucht, nicht angenommen.
 
 ## E123 — Titel                     die heutige Form
 =====  /  E123 — Titel  /  =====    ein Banner zwischen zwei Linien

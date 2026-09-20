@@ -2561,12 +2561,20 @@ const ChronikDaten = {
      "zeitraum": "ca. 20:55 –",
      "dauer": "laufend",
      "pruefungen": "test553 (6/6, Gegenprobe gefahren), test550 (8/8)"
+    },
+    {
+     "was": "E663/E664 — die Wochenrückschau zählt wieder, und test403 sieht den ganzen Block",
+     "vonCommit": "(offen)",
+     "bisCommit": "(offen)",
+     "zeitraum": "ca. 21:20 –",
+     "dauer": "laufend",
+     "pruefungen": "test554 (11/11, zwei Gegenproben), test403 (22/22, Gegenprobe), test550 (8/8)"
     }
    ],
    "zahlen": {
     "commits": 2,
-    "entscheidungen": 20,
-    "neue Prüfläufe": 12,
+    "entscheidungen": 22,
+    "neue Prüfläufe": 13,
     "volle Läufe": 0
    },
    "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -3888,6 +3896,30 @@ const ChronikDaten = {
    "ursache": "Die Zerlegung suchte je ZEILE nach einem Kreuz UND einer Testnummer. Keine der beiden Zeilen trägt beides, also fand sie nichts und fiel auf das ganze Stück zurück.",
    "beweis": "Gegenprobe mit der alten Regel: genau das beobachtete Symptom, [266 bis 277] statt [270].",
    "lehre": "Ein Werkzeug, das Prüfläufe auswertet, ist selbst ungeprüft, bis es einen Wächter hat. Dieses war zwei Stunden alt und hat in seinem ersten Ernstfall danebengegriffen. Und: der vorsichtige Rückfall war richtig — er hat nur die echte Spur unter neun falschen begraben."
+  },
+  {
+   "nr": "P96",
+   "datum": "2026-09-20",
+   "titel": "Eine Auswertung, die mit einem Feld rechnet, das niemand schreibt",
+   "schwere": "mittel",
+   "symptom": "Die Wochenrückschau zeigte eine leere Liste und ein Tagesdiagramm aus Nullen, obwohl Aufgaben abgehakt waren.",
+   "falscheVermutung": "Dass die Rückschau falsch rechnet oder das Datum falsch vergleicht.",
+   "wieGefunden": "Gezählt, wer das Feld schreibt: im ganzen Programm genau eine Stelle, der ICS-Import. Das Kästchen im Editor schrieb nur checked.",
+   "ursache": "Das Feld wurde beim Lesen eingeplant und beim Schreiben vergessen. Zwanzig Zeilen tiefer hatten Datenbankzeilen längst einen Rückfall auf edited — Blöcke nicht.",
+   "beweis": "test554 gegen den alten Stand: in der Rückschau false, insgesamt 0 erledigte, Tagesdiagramm 0.",
+   "lehre": "Wer eine Auswertung baut, prüft nicht nur, ob sie richtig rechnet, sondern ob irgendjemand ihre Eingabe schreibt. Und: der Stempel gehört an die eine Stelle, durch die alle sechs Schreibwege gehen, nicht an jeden einzelnen."
+  },
+  {
+   "nr": "P97",
+   "datum": "2026-09-20",
+   "titel": "Ein Wächter, der an der Reihenfolge im Block scheitert",
+   "schwere": "niedrig",
+   "symptom": "test403 meldete im vollen Lauf: Beide stehen in einem finally — [false,true]. Der Code stand korrekt in einem finally.",
+   "falscheVermutung": "Dass beim Umbau des KI-Chats (E652) ein remove aus dem finally gerutscht ist.",
+   "wieGefunden": "Die Stelle angesehen: das remove stand im finally, nur nicht mehr als erste Zeile. Der Wächter sah zwei Zeilen zurück.",
+   "ursache": "E652 hat zwei Zeilen in dasselbe finally geschoben. Die Messung prüfte damit die Reihenfolge innerhalb des Blocks statt den Block.",
+   "beweis": "Nach dem Umbau auf Klammernzählen: 22 von 22 grün, und die Gegenprobe (ein remove aus dem finally geholt) wird wieder rot.",
+   "lehre": "Eine Messung, die von der Reihenfolge im Block abhängt, meldet Umbauten als Fehler. Das kostet beim nächsten vollen Lauf genau so viel Zeit wie ein echter Fund — und erzieht dazu, rote Läufe für Rauschen zu halten."
   }
  ]
 } as const;
