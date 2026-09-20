@@ -90,6 +90,7 @@ sind der teuerste Teil und der lehrreichste.
 | P74 | 2026-09-20 | Der Textur-Wächter bestrafte die neue Linse | 🟡 klein | — |
 | P75 | 2026-09-20 | Die Bewegung war da und kam nicht an | gross | — |
 | P76 | 2026-09-20 | Eine Feder, die auf ihr eigenes Ziel neu gestartet wird, verliert ihren Schwung | 🟡 klein | — |
+| P77 | 2026-09-20 | Der vorausgeschickte Frame ging an niemanden | 🟠 mittel | — |
 
 ---
 
@@ -1703,4 +1704,25 @@ sind der teuerste Teil und der lehrreichste.
 **Warum keine Uhr.** Keine Uhr im Spiel.
 
 **Die Lehre.** Ein Modul, das mehrfach mit demselben Ziel gerufen wird, ist der Normalfall, nicht der Sonderfall — eine Oberfläche ruft ihre Zeichner gern zweimal. Wer eine Bewegung baut, muss „nochmal dasselbe" als NICHTS behandeln, nicht als neuen Anlass.
+
+
+---
+
+## P77 · Der vorausgeschickte Frame ging an niemanden
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** `test541` §3 wurde rot, nachdem Redurs #109 auf main war: „Sie ist unterwegs schon losgefahren — 17 → 17". Nach 60 ms war die Fläche keinen Pixel gewandert.
+
+**Die falsche Vermutung.** Mein eigener Bogen hat etwas kaputtgemacht. Dann: die Glasbrechung hält die Bewegung auf dem Hauptfaden. Beides falsch — ohne Glas und mit `will-change` dasselbe Bild.
+
+**Wie es gefunden wurde.** Ein Messer, der je Bild Ort, aktiven Knopf und Zahl der Animationen mitschreibt. Er zeigte zweierlei: der aktive Knopf stimmte sofort, die Animation lief — und trotzdem stand die Fläche 94 ms lang still.
+
+**Die Ursache.** Zwei Dinge hintereinander. Erstens konnte `handyLeiste()` die Fläche gar nicht losschicken: seit E274 sticht der Schauplatz den Reiter, und der ändert sich erst beim Aufbau. Zweitens bekommt eine Animation ihre Startzeit erst mit dem ersten WIRKLICH gemalten Bild — mit einem einzigen requestAnimationFrame fiel der Bildschirmaufbau in genau dieses Bild.
+
+**Die Lösung.** `handyLeiste(vorauf)` nimmt das Ziel entgegen, und `dockWechsel` wartet zwei Bilder statt eines. Danach: t=10 x=17, t=26 x=27 — losgefahren, bevor der Aufbau beginnt.
+
+**Warum keine Uhr.** Die Zeiten kommen aus `performance.now()` in der Seite und sind relativ zum Klick.
+
+**Die Lehre.** Eine gute Absicht mit dem falschen Griff sieht im Code aus wie eine Lösung. Und die zweite Hälfte ist bitterer: mein eigener Messplatz war blind. Ein Messer, der je requestAnimationFrame liest, steht genau dann still, wenn der Hauptfaden blockiert — er kann über eine Bewegung unter Last gar nichts sagen. Dafür taugt nur ein Film. Eine Zusage, die am falschen Platz geprüft wird, ist keine.
 

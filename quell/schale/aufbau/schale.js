@@ -201,7 +201,7 @@ const App = (() => {
      * findet. Genau so hält es `UI` für `Menue`, `Hinweis` und `Dialog`.
      * ======================================================================*/
     const zeichneBaum = () => Seitenleiste.zeichne();
-    const handyLeiste = () => Seitenleiste.handyLeiste();
+    const handyLeiste = (vorauf) => Seitenleiste.handyLeiste(vorauf);
     const reiterWechseln = (id) => Seitenleiste.reiterWechseln(id);
     const abschnitteAnpassen = () => Seitenleiste.abschnitteAnpassen();
     const abschnittAn = (id) => Seitenleiste.abschnittAn(id);
@@ -4369,22 +4369,51 @@ const App = (() => {
            Der eigentliche Bildschirmaufbau folgt im nächsten Frame. So kann der
            Browser mindestens einen sichtbaren Compositor-Frame der Reise zeigen,
            bevor die neue Ansicht synchron DOM aufbaut. */
-        const dockWechsel = (reiterId, oeffnen) => {
+        /* ══ UND DAS ZIEL MUSS MITGEGEBEN WERDEN (E648) ════════════════════
+         * Hier stand `handyLeiste()` ohne Angabe, und der Griff ging ins Leere:
+         * seit E274 sticht der SCHAUPLATZ den Reiter, und der ändert sich erst,
+         * wenn `oeffnen()` gelaufen ist — also einen Bildaufbau später. Die
+         * Fläche blieb stehen, wo sie stand, und der gewonnene Frame ging an
+         * niemanden.
+         *
+         * `test541` §3 hat es gemessen: nach 60 ms „17 → 17", keinen Pixel
+         * gewandert. Mit der Angabe fährt sie sofort los, und der Ruf aus
+         * `redion:schauplatz` bestätigt sie danach. */
+        const dockWechsel = (reiterId, knopfId, oeffnen) => {
             Seitenleiste.reiter(reiterId);
-            handyLeiste();
-            requestAnimationFrame(() => oeffnen());
+            handyLeiste(knopfId);
+            /* ══ ZWEI BILDER, NICHT EINES (E648) ══════════════════════════════
+             * Hier stand ein einzelnes `requestAnimationFrame`, und gemessen kam
+             * dabei heraus:
+             *
+             *     t =   6 ms   x = 17   Animation läuft (1)
+             *     t = 100 ms   x = 17   — 94 ms lang kein Bild, und kein Pixel
+             *     t = 125 ms   x = 27   erst jetzt geht es los
+             *
+             * Eine Animation bekommt ihre Startzeit erst, wenn das erste Bild
+             * nach `animate()` WIRKLICH gemalt wurde. Mit einem einzigen `rAF`
+             * fällt der Bildschirmaufbau in genau dieses Bild — die Bahn hat
+             * ihre Uhr also noch nicht gestartet, steht die ganze Blockade über
+             * still und fängt erst danach an. Der gewonnene Frame ging an
+             * niemanden.
+             *
+             * Mit zwei Bildern ist das erste dem Losfahren gewidmet und der
+             * Aufbau kommt ins zweite. Das kostet eine Bildauffrischung Latenz
+             * (rund 16 ms) und gibt dafür den Anfang der Bewegung — den Teil,
+             * den das Auge braucht, um ihr folgen zu können. */
+            requestAnimationFrame(() => requestAnimationFrame(() => oeffnen()));
         };
         an('hl-dok', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            dockWechsel('dokumente', () => { Bibliothek.oeffne(); handyLeiste(); });
+            dockWechsel('dokumente', 'hl-dok', () => { Bibliothek.oeffne(); handyLeiste(); });
         });
         an('hl-start', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            dockWechsel('start', () => { Produktwelten.lernen('heute'); handyLeiste(); });
+            dockWechsel('start', 'hl-start', () => { Produktwelten.lernen('heute'); handyLeiste(); });
         });
         an('hl-lernen', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            dockWechsel('lernen', () => { Produktwelten.lernen('lernen'); handyLeiste(); });
+            dockWechsel('lernen', 'hl-lernen', () => { Produktwelten.lernen('lernen'); handyLeiste(); });
         });
         /* HIER STAND `an('hl-seiten', …)` — bis E280 (L86).
            Der Knopf war seit E236 in keinem Markup mehr; die Zeile blieb als
@@ -4400,7 +4429,7 @@ const App = (() => {
            Reiter, der sie wieder hereinholt, macht die Hälfte davon rückgängig. */
         an('hl-bespr', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            dockWechsel('bespr', () => { Produktwelten.planung(); handyLeiste(); });
+            dockWechsel('bespr', 'hl-bespr', () => { Produktwelten.planung(); handyLeiste(); });
         });
         /* `hu-ki`, `hu-suche` und `hu-neu` gab es in der schwebenden Leiste
            unten. Sie ist mit E236 weggefallen — zwei Leisten am unteren Rand
@@ -4434,7 +4463,7 @@ const App = (() => {
            `reiter('mehr')`, nicht `'start'`: die Pille oben liest ihn. */
         an('hl-mehr', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            dockWechsel('mehr', () => { Ansichten.mehr(); handyLeiste(); });
+            dockWechsel('mehr', 'hl-mehr', () => { Ansichten.mehr(); handyLeiste(); });
         });
         an('btn-suche-handy', () => suche());
         /* HIER STAND `an('btn-suche-mitte', …)` — bis E272.

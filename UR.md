@@ -1825,6 +1825,17 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 **Besserer Prompt:** 
 
 
+**8 · ca. 11:25**
+
+> Also nehem was ich gepuscht habe und pusche alles auf main
+
+**Gemeint:** Meine offenen Zweige auf seinen Stand heben und alles zusammen nach main bringen.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -1839,13 +1850,14 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 | E644 — Erst wiederherstellen, dann beobachten (die gemerkte PDF-Seite) | `(03:05)` → `(03:30)` | 03:05 – 03:30 | ca. 25 min | test540 neu (9/9, Gegenprobe rot gesehen) · test424 (50/50) · test395, test202, test386 |
 | E645 — Ein Wächter zählte das ganze Haus, gemeint war ein Zimmer | `(03:30)` → `(08:10)` | 03:30 – 08:10 | ca. 15 min Arbeit, dann Pause | test435 (45/45, zwei Gegenproben rot gesehen) |
 | E646 — Die Fläche wandert auch dann, wenn der Hauptfaden arbeitet | `(08:15)` → `(09:05)` | 08:15 – 09:05 | ca. 50 min | test541 neu (23/23, Gegenprobe rot gesehen) · test539 · test114 §17 · test435 · test105, test109, test87, test270, test332, test126, test483 |
-| E647 — Dieselbe Feder für die Werkzeugleiste, L204 geschlossen | `(09:05)` → `(offen)` | 09:05 – | laufend | steht aus — im Hauptbaum wird nicht geprüft, solange der volle Lauf fährt (§30) |
-| Der zweite volle Lauf über alle 483, in Stücken, im Arbeitsbaum | `08:53` → `(läuft)` | 08:53 – | laufend | alle 483, zehn je Stück, wiederaufnehmbar — diesmal ohne zweiten Lauf daneben |
+| E647 — Dieselbe Feder für die Werkzeugleiste, L204 geschlossen | `(09:05)` → `(11:40)` | 09:05 – | abgeschlossen | steht aus — im Hauptbaum wird nicht geprüft, solange der volle Lauf fährt (§30) |
+| Der zweite volle Lauf über alle 483, in Stücken, im Arbeitsbaum | `08:53` → `(11:40)` | 08:53 – | abgeschlossen | alle 483, zehn je Stück, wiederaufnehmbar — diesmal ohne zweiten Lauf daneben |
+| E648 — Redurs #108/#109 nachdokumentiert, und der vorausgeschickte Frame repariert | `(11:40)` → `(offen)` | 11:40 – | laufend | test541 (25/25), test539, test478, test114, test225, test105, test109, test87 |
 
 #### Zahlen des Tages
 
 - **commits:** 2
-- **entscheidungen:** 9
+- **entscheidungen:** 10
 - **neue Prüfläufe:** 3
 - **volle Läufe:** 0
 
@@ -1869,5 +1881,5 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 76 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 77 Einträge.
 

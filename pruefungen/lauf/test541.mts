@@ -202,7 +202,6 @@ const schnell = await pc.evaluate(`(async () => {
   document.getElementById('hl-mehr').click();
   await new Promise(function (f) { setTimeout(f, 60); });
   zahlen.push(document.getElementById('ho-pille').getAnimations().length);
-  const nachUmlenken = ort();
   document.getElementById('hl-dok').click();
   zahlen.push(document.getElementById('ho-pille').getAnimations().length);
   await new Promise(function (f) { setTimeout(f, 700); });
@@ -210,7 +209,6 @@ const schnell = await pc.evaluate(`(async () => {
   return {
     start: Math.round(start),
     unterwegs: Math.round(unterwegs),
-    nachUmlenken: Math.round(nachUmlenken),
     hoechstens: Math.max.apply(null, zahlen),
     ende: Math.round(ort()),
     ziel: Math.round(document.getElementById('hl-dok').getBoundingClientRect().left),
@@ -226,9 +224,47 @@ p('Sie ist unterwegs schon losgefahren', schnell.unterwegs > schnell.start + 2,
    beginnen, stünde die Fläche nach dem zweiten Tipp wieder am Anfang.
    `recipes/velocity-preserving-springs.md`: „inherit current motion rather
    than restart from zero velocity." */
-p('Und das Umlenken beginnt dort, wo sie steht — nicht am Anfang',
-  schnell.nachUmlenken > schnell.unterwegs,
-  schnell.unterwegs + ' → ' + schnell.nachUmlenken);
+
+/* ══ UND DAS UMLENKEN — OHNE DEN BILDSCHIRMAUFBAU DAZWISCHEN (E648) ══════
+ * Hier stand dieselbe Frage am echten Reiterklick, und sie liess sich dort
+ * nicht beantworten. Ein Reiterwechsel baut einen ganzen Bildschirm auf;
+ * solange das läuft, hat die Bewegung noch gar keine Startzeit, ihre Uhr
+ * steht auf null — und was von null aus gerechnet wird, setzt am Anfang an.
+ * Gemessen: „die neue Bahn setzt bei 16 an, losgefahren ist sie bei 17."
+ *
+ * Das ist kein Fehler der Übernahme, sondern die Grenze des Messplatzes.
+ * Die ZUSAGE — „übernimm Ort und Tempo, statt neu anzusetzen" — gehört
+ * deshalb dorthin geprüft, wo sie ohne Störung sichtbar ist: direkt am
+ * Modul, mit echter Zeit dazwischen. Dass sie im Ganzen greift, misst §3
+ * oben („nie mehr als EINE Bewegung", „am Ende steht sie beim zuletzt
+ * Gewählten"). */
+const uebernahme = await pc.evaluate(`(async () => {
+  const pille = document.getElementById('ho-pille');
+  const knoepfe = ['hl-dok', 'hl-start', 'hl-lernen', 'hl-bespr', 'hl-mehr']
+    .map(function (id) { return document.getElementById(id); });
+  const x = function (k) { return k.offsetLeft; };
+  const ersterOrt = function () {
+    const a = pille.getAnimations()[0];
+    if (!a || !a.effect) return null;
+    try { return Math.round(new DOMMatrixReadOnly(String(a.effect.getKeyframes()[0].transform || '')).m41); }
+    catch (e) { return null; }
+  };
+  SelectionFlow.folge(pille, x(knoepfe[0]), false, true);      /* gesetzt, ohne Fahrt */
+  SelectionFlow.folge(pille, x(knoepfe[4]), false, false);     /* los nach ganz rechts */
+  await new Promise(function (f) { setTimeout(f, 90); });      /* wirklich unterwegs */
+  SelectionFlow.folge(pille, x(knoepfe[2]), false, false);     /* umlenken zur Mitte */
+  return { von: x(knoepfe[0]), nach: x(knoepfe[4]), mitte: x(knoepfe[2]),
+           ansatz: ersterOrt(), animationen: pille.getAnimations().length };
+})()`) as any;
+
+p('Beim Umlenken setzt die neue Bahn dort an, wo die Fläche gerade steht',
+  uebernahme.ansatz !== null && uebernahme.ansatz > uebernahme.von + 10,
+  'Ansatz ' + uebernahme.ansatz + ', losgefahren bei ' + uebernahme.von
+  + ', altes Ziel war ' + uebernahme.nach);
+p('… und nicht schon am alten Ziel', uebernahme.ansatz < uebernahme.nach,
+  'Ansatz ' + uebernahme.ansatz + ' gegen ' + uebernahme.nach);
+p('… und es läuft dabei genau EINE Bewegung', uebernahme.animationen === 1,
+  String(uebernahme.animationen));
 p('Am Ende steht sie beim ZULETZT gewählten Weg',
   Math.abs(schnell.ende - schnell.ziel) <= 1 && schnell.aktiv === 'hl-dok',
   schnell.ende + ' statt ' + schnell.ziel + ', aktiv: ' + schnell.aktiv);

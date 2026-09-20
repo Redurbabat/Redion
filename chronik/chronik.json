@@ -2347,6 +2347,13 @@
           "gemeint": "Freigabe für das Entfernen der toten CSS-Erklärungen (§43 verlangt die Rückfrage) und Auftrag weiterzuarbeiten.",
           "kuerzer": "Genau richtig kurz — die Frage war eine Ja/Nein-Frage, die Antwort ist eine.",
           "besserer Prompt": "Nichts zu verbessern. Wer eine geschlossene Frage geschlossen beantwortet, spart beiden Seiten einen Absatz."
+        },
+        {
+          "zeit": "ca. 11:25",
+          "wortlaut": "Also nehem was ich gepuscht habe und pusche alles auf main",
+          "gemeint": "Meine offenen Zweige auf seinen Stand heben und alles zusammen nach main bringen.",
+          "kuerzer": "Passt so.",
+          "besserer Prompt": "Nichts zu verbessern. Wichtig war, dass ich VOR dem Push die Wächter laufen lasse — und genau die haben dann gefunden, dass sein eigener #109 gar nicht griff."
         }
       ],
       "arbeit": [
@@ -2433,23 +2440,31 @@
         {
           "was": "E647 — Dieselbe Feder für die Werkzeugleiste, L204 geschlossen",
           "vonCommit": "(09:05)",
-          "bisCommit": "(offen)",
+          "bisCommit": "(11:40)",
           "zeitraum": "09:05 –",
-          "dauer": "laufend",
+          "dauer": "abgeschlossen",
           "pruefungen": "steht aus — im Hauptbaum wird nicht geprüft, solange der volle Lauf fährt (§30)"
         },
         {
           "was": "Der zweite volle Lauf über alle 483, in Stücken, im Arbeitsbaum",
           "vonCommit": "08:53",
-          "bisCommit": "(läuft)",
+          "bisCommit": "(11:40)",
           "zeitraum": "08:53 –",
-          "dauer": "laufend",
+          "dauer": "abgeschlossen",
           "pruefungen": "alle 483, zehn je Stück, wiederaufnehmbar — diesmal ohne zweiten Lauf daneben"
+        },
+        {
+          "was": "E648 — Redurs #108/#109 nachdokumentiert, und der vorausgeschickte Frame repariert",
+          "vonCommit": "(11:40)",
+          "bisCommit": "(offen)",
+          "zeitraum": "11:40 –",
+          "dauer": "laufend",
+          "pruefungen": "test541 (25/25), test539, test478, test114, test225, test105, test109, test87"
         }
       ],
       "zahlen": {
         "commits": 2,
-        "entscheidungen": 9,
+        "entscheidungen": 10,
         "neue Prüfläufe": 3,
         "volle Läufe": 0
       },
@@ -3538,6 +3553,19 @@
       "loesung": "Wer schon dorthin unterwegs ist, wird nicht neu gestartet. Eine Zeile: die Prüfung auf das gleiche Ziel gilt jetzt auch für die laufende Bewegung.",
       "warumKeineUhr": "Keine Uhr im Spiel.",
       "lehre": "Ein Modul, das mehrfach mit demselben Ziel gerufen wird, ist der Normalfall, nicht der Sonderfall — eine Oberfläche ruft ihre Zeichner gern zweimal. Wer eine Bewegung baut, muss „nochmal dasselbe\" als NICHTS behandeln, nicht als neuen Anlass."
+    },
+    {
+      "nr": "P77",
+      "datum": "2026-09-20",
+      "titel": "Der vorausgeschickte Frame ging an niemanden",
+      "schwere": "mittel",
+      "symptom": "`test541` §3 wurde rot, nachdem Redurs #109 auf main war: „Sie ist unterwegs schon losgefahren — 17 → 17\". Nach 60 ms war die Fläche keinen Pixel gewandert.",
+      "falscheVermutung": "Mein eigener Bogen hat etwas kaputtgemacht. Dann: die Glasbrechung hält die Bewegung auf dem Hauptfaden. Beides falsch — ohne Glas und mit `will-change` dasselbe Bild.",
+      "wieGefunden": "Ein Messer, der je Bild Ort, aktiven Knopf und Zahl der Animationen mitschreibt. Er zeigte zweierlei: der aktive Knopf stimmte sofort, die Animation lief — und trotzdem stand die Fläche 94 ms lang still.",
+      "ursache": "Zwei Dinge hintereinander. Erstens konnte `handyLeiste()` die Fläche gar nicht losschicken: seit E274 sticht der Schauplatz den Reiter, und der ändert sich erst beim Aufbau. Zweitens bekommt eine Animation ihre Startzeit erst mit dem ersten WIRKLICH gemalten Bild — mit einem einzigen requestAnimationFrame fiel der Bildschirmaufbau in genau dieses Bild.",
+      "loesung": "`handyLeiste(vorauf)` nimmt das Ziel entgegen, und `dockWechsel` wartet zwei Bilder statt eines. Danach: t=10 x=17, t=26 x=27 — losgefahren, bevor der Aufbau beginnt.",
+      "warumKeineUhr": "Die Zeiten kommen aus `performance.now()` in der Seite und sind relativ zum Klick.",
+      "lehre": "Eine gute Absicht mit dem falschen Griff sieht im Code aus wie eine Lösung. Und die zweite Hälfte ist bitterer: mein eigener Messplatz war blind. Ein Messer, der je requestAnimationFrame liest, steht genau dann still, wenn der Hauptfaden blockiert — er kann über eine Bewegung unter Last gar nichts sagen. Dafür taugt nur ein Film. Eine Zusage, die am falschen Platz geprüft wird, ist keine."
     }
   ]
 }

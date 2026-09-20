@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-625 Entscheidungen, E1 bis E647 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+626 Entscheidungen, E1 bis E648 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -690,6 +690,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E645** — Ein Wächter zählte das ganze Haus, gemeint war ein Zimmer: `test435` §3 zählte ALLE SVG-Filter der Seite und verlangte zwei — das war zufällig wahr, bis die Linse der unteren Leiste (E639) zwei eigene mitbrachte. Gezählt wird jetzt im Halter der Textur, und daneben steht die Frage, um die es E440 wirklich ging: teilen sich zwei Filter eine Kennung? Diese Zahl wächst nicht mit dem Programm mit
 * **E646** — Die Fläche wandert auch dann, wenn der Hauptfaden arbeitet: Redurs Aufnahme zeigte vier Wechsel und viermal EIN Bild für 190 bis 210 Pixel; am Rechner wanderte dieselbe Fassung über 16 bis 21 Orte. Schuld war `width` in der Übergangsliste — wer Layout animiert, bleibt auf dem Hauptfaden, und der baut beim Reiterwechsel gerade einen Bildschirm auf. Die Bewegung fährt jetzt als Federbahn über `element.animate()` auf `transform` allein (`SelectionFlow`, der Helfer, den L204 verlangt hat), mit erhaltener Geschwindigkeit beim Umlenken. Im ersten Bild: 11 % des Weges statt 31 %. Scrubbing wurde NICHT gebaut, und zwar aus Redurs eigenem Vorbehalt: ein Reiterwechsel kostet unter Last 0,8 bis 1,5 Sekunden
 * **E647** — Dieselbe Feder für die Werkzeugleiste, und L204 ist zu: `.bw-flug` bewegte `left`, `top`, `width` und `height` — vier Layout-Eigenschaften, und das ausgerechnet an der Stelle, an der man mitten im Zeichnen das Werkzeug wechselt. `SelectionFlow.fliege()` rechnet dieselbe Feder als FLIP auf `transform` um. Die Bauform von E640 bleibt (der Grund sitzt am Knopf, nur der Wechsel fliegt) — zwei Bauformen, ein Bewegungsgesetz
+* **E648** — Der vorausgeschickte Frame ging an niemanden: Redurs #108 (Feder auf 292 ms, Dehnung grosszügiger) und #109 (erst die Fläche, dann der Bildschirm) nachdokumentiert — und der Griff von #109 ging zweimal ins Leere. `handyLeiste()` konnte die Fläche nicht losschicken, weil seit E274 der Schauplatz den Reiter sticht und der sich erst beim Aufbau ändert; und EIN `requestAnimationFrame` ist eines zu wenig, weil eine Animation ihre Startzeit erst mit dem ersten wirklich gemalten Bild bekommt. Gemessen „17 → 17" nach 60 ms
 
 ---
 
@@ -53138,3 +53139,116 @@ in EINEN Helfer (§8)". Beide Stellen benutzen ihn jetzt.
 
 **Gemessen.** `test539` §5 (der Flug, die Zwischenorte, A→B→C) · `test478` ·
 `test114` §17 · `test541`.
+
+---
+
+## E648 — Der vorausgeschickte Frame ging an niemanden
+
+Redur hat nach E646 zwei eigene Bögen nachgelegt ([#108](https://github.com/Redurbabat/Redion/pull/108),
+[#109](https://github.com/Redurbabat/Redion/pull/109)). Beide gehören hierher
+dokumentiert, denn §34 gilt für jede technische Entscheidung — und die
+Begründung stand bisher nur im Commit-Kommentar.
+
+### Was er geändert hat
+
+**#108 · die Feder langsamer und die Dehnung grosszügiger:**
+
+```txt
+OMEGA              0,033 → 0,026     (230 ms → 292 ms bis zum halben Prozent)
+DEHNUNG_MAX        0,18  → 0,24
+DEHNUNG_JE_TEMPO   0,2   → 0,24
+```
+
+Sein Grund, wörtlich: *„Die vorherigen 230 ms waren in der echten
+Bildschirmaufnahme trotz korrekter Bewegung zu leicht als harter
+Zustandswechsel zu lesen."* Das ist die Sorte Korrektur, die eine Messung am
+Rechner nicht liefern kann — ich habe gerechnet, er hat hingesehen.
+
+**Nachgerechnet, ob die Wächter das halten:**
+
+```txt
+Federdauer            292 ms
+Höchsttempo Nachbar   0,689 px/ms
+Dehnung zum Nachbarn  1,165        ← der neue Deckel 1,24 wird nie erreicht
+erstes Bild            7,1 %       (vorher 11 %, alte Kurve 31 %)
+```
+
+Alle drei Zusagen halten. Und bemerkenswert: weil die langsamere Feder
+weniger Tempo erreicht, bleibt die tatsächliche Dehnung bei 1,165 — **Redurs
+eigener Wert von 1,18 aus E641 gilt damit faktisch weiter**, obwohl der
+Deckel angehoben wurde.
+
+**#109 · erst die Fläche, dann der Bildschirm:**
+
+```ts
+const dockWechsel = (reiterId, oeffnen) => {
+  Seitenleiste.reiter(reiterId);
+  handyLeiste();
+  requestAnimationFrame(() => oeffnen());
+};
+```
+
+Die Absicht ist genau richtig und ergänzt E646 von der anderen Seite: E646
+sorgt dafür, dass die Bewegung einen blockierten Hauptfaden überlebt, #109
+dafür, dass sie ANFÄNGT, bevor er blockiert.
+
+### Nur ging der Griff zweimal ins Leere
+
+**Erstens: `handyLeiste()` konnte die Fläche gar nicht losschicken.** Seit
+E274 sticht der SCHAUPLATZ den Reiter, und der Schauplatz ändert sich erst,
+wenn die neue Ansicht wirklich aufgebaut ist — also einen Bildaufbau später.
+Der Ruf davor las noch den alten Ort und liess die Fläche stehen.
+
+```txt
+test541 §3, gemessen:   nach 60 ms   „17 → 17"   — kein Pixel
+```
+
+`handyLeiste()` nimmt jetzt ein Ziel entgegen (`vorauf`). Das nimmt E274
+nicht zurück: der Schauplatz bleibt die Wahrheit, `vorauf` ist eine **Ansage
+für ein einziges Bild**, und der nächste Ruf setzt sie gerade, falls sie
+nicht eingetreten ist.
+
+**Zweitens: ein `requestAnimationFrame` ist eines zu wenig.** Mit der Ansage
+allein blieb es beim Stillstand:
+
+```txt
+t =   6 ms   x = 17   Animation läuft (1)
+t = 100 ms   x = 17   — 94 ms kein Bild, kein Pixel
+t = 125 ms   x = 27   erst jetzt
+```
+
+**Eine Animation bekommt ihre Startzeit erst, wenn das erste Bild nach
+`animate()` wirklich gemalt wurde.** Mit einem einzigen `rAF` fällt der
+Bildschirmaufbau in genau dieses Bild — die Bahn hat ihre Uhr noch nicht
+gestartet, steht die ganze Blockade über still und fängt erst danach an.
+Mit zwei Bildern gehört das erste dem Losfahren:
+
+```txt
+t =  10 ms   x = 17
+t =  26 ms   x = 27   ← losgefahren, bevor der Aufbau beginnt
+```
+
+Der Preis ist eine Bildauffrischung Latenz, rund 16 ms.
+
+### Und eine Zusage, die am falschen Platz stand
+
+`test541` §3 prüfte „das Umlenken beginnt dort, wo sie steht" am echten
+Reiterklick — und konnte die Frage dort nicht beantworten. Während des
+Bildschirmaufbaus hat die Bewegung noch keine Startzeit, ihre Uhr steht auf
+null, und was von null aus gerechnet wird, setzt am Anfang an (gemessen: die
+neue Bahn setzte bei 16 an, losgefahren war sie bei 17).
+
+**Das ist kein Fehler der Übernahme, sondern die Grenze des Messplatzes.**
+Die Zusage wird jetzt direkt am Modul geprüft, mit echter Zeit dazwischen;
+dass sie im Ganzen greift, halten die übrigen Punkte von §3 („nie mehr als
+EINE Bewegung", „am Ende steht sie beim zuletzt Gewählten").
+
+**Was dabei auch gelernt ist, und es schränkt E646 ein:** ein Messer, der
+je `requestAnimationFrame` die Position liest, ist genau dann blind, wenn
+der Hauptfaden blockiert. Er kann deshalb nicht beantworten, ob die Bewegung
+auf dem Compositor läuft — dafür taugt nur ein Film. E646 behauptet an einer
+Stelle mehr, als gemessen ist; was gemessen IST, steht dort: im Film unter
+vierfacher Drosselung 9 bis 10 Zwischenorte statt 5.
+
+**Gemessen.** `test541` (25 von 25) · `test539`, `test478`, `test114` §17,
+`test225`, `test105`, `test109`, `test87`.

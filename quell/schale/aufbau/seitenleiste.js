@@ -392,7 +392,26 @@ const Seitenleiste = (() => {
        Pille soll dort stehenbleiben. */
     const ORTE_OHNE_KNOPF = ['posteingang', 'kompass', 'workspace',
         'aufgaben', 'papierkorb', 'elektro'];
-    const handyLeiste = () => {
+    /* ══ EIN ZIEL DARF VORAUSGESCHICKT WERDEN (E648) ═══════════════════════
+     * `vorauf` ist die Kennung des Knopfes, auf den gleich gewechselt wird —
+     * bevor der Bildschirm dahinter steht.
+     *
+     * WARUM ES DAS BRAUCHT. `dockWechsel` in `schale.ts` (Redurs #109) will
+     * genau das: erst die Fläche losschicken, dann den Bildschirm bauen. Nur
+     * ging der Griff ins Leere. Seit E274 sticht der SCHAUPLATZ den Reiter,
+     * und der Schauplatz ändert sich erst, wenn die neue Ansicht wirklich
+     * aufgebaut ist. Ein `handyLeiste()` davor liest also noch den alten Ort
+     * und lässt die Fläche stehen, wo sie steht.
+     *
+     * GEMESSEN, nicht vermutet: `test541` §3 las nach 60 ms „17 → 17" — die
+     * Fläche war nach einem Sechzehntel der Federdauer noch keinen Pixel
+     * gewandert.
+     *
+     * E274 wird damit nicht zurückgenommen. Der Schauplatz bleibt die
+     * Wahrheit; `vorauf` ist eine ANSAGE für ein einziges Bild, und der
+     * nächste Ruf (aus `redion:schauplatz`) setzt sie gerade, falls die
+     * Ansage nicht eingetreten ist. */
+    const handyLeiste = (vorauf) => {
         const l = document.getElementById('handy-oben');
         if (!l)
             return;
@@ -435,7 +454,8 @@ const Seitenleiste = (() => {
            nur nichts, woran man das hätte erkennen können. Seit E273 gibt es
            das: `App.schauplatz()` sagt seit den sechs umgestellten Bildschirmen
            auf JEDEM Bildschirm die Wahrheit. */
-        const id = ORT_ZU_KNOPF[schauplatzJetzt]
+        const id = vorauf
+            ?? ORT_ZU_KNOPF[schauplatzJetzt]
             ?? (ORTE_OHNE_KNOPF.includes(schauplatzJetzt) ? undefined : karte[reiter]);
         const aktiv = id ? document.getElementById(id) : null;
         if (aktiv) {
