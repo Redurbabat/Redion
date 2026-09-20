@@ -4365,20 +4365,24 @@ const App = (() => {
         /* Den Reiter setzt `Bibliothek.oeffne()` selbst — dort gehört er hin,
            weil das Regal auch vom Start, aus dem Mehr-Blatt und über einen
            Verweis aufgeht und die Markierung jedes Mal stimmen muss. */
+        /* Erst die gemeinsame Dock-Fläche losschicken; der schwere
+           Bildschirmaufbau folgt im nächsten Frame. */
+        const dockWechsel = (reiterId, oeffnen) => {
+            Seitenleiste.reiter(reiterId);
+            handyLeiste();
+            requestAnimationFrame(() => oeffnen());
+        };
         an('hl-dok', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            Bibliothek.oeffne();
-            handyLeiste();
+            dockWechsel('dokumente', () => { Bibliothek.oeffne(); handyLeiste(); });
         });
         an('hl-start', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            Produktwelten.lernen('heute');
-            handyLeiste();
+            dockWechsel('start', () => { Produktwelten.lernen('heute'); handyLeiste(); });
         });
         an('hl-lernen', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            Produktwelten.lernen('lernen');
-            handyLeiste();
+            dockWechsel('lernen', () => { Produktwelten.lernen('lernen'); handyLeiste(); });
         });
         /* HIER STAND `an('hl-seiten', …)` — bis E280 (L86).
            Der Knopf war seit E236 in keinem Markup mehr; die Zeile blieb als
@@ -4394,8 +4398,7 @@ const App = (() => {
            Reiter, der sie wieder hereinholt, macht die Hälfte davon rückgängig. */
         an('hl-bespr', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            Produktwelten.planung();
-            handyLeiste();
+            dockWechsel('bespr', () => { Produktwelten.planung(); handyLeiste(); });
         });
         /* `hu-ki`, `hu-suche` und `hu-neu` gab es in der schwebenden Leiste
            unten. Sie ist mit E236 weggefallen — zwei Leisten am unteren Rand
@@ -4429,9 +4432,7 @@ const App = (() => {
            `reiter('mehr')`, nicht `'start'`: die Pille oben liest ihn. */
         an('hl-mehr', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            Seitenleiste.reiter('mehr');
-            Ansichten.mehr();
-            handyLeiste();
+            dockWechsel('mehr', () => { Ansichten.mehr(); handyLeiste(); });
         });
         an('btn-suche-handy', () => suche());
         /* HIER STAND `an('btn-suche-mitte', …)` — bis E272.
