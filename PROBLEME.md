@@ -86,6 +86,7 @@ sind der teuerste Teil und der lehrreichste.
 | P70 | 2026-09-20 | Eine Zusage, die nur rot werden kann, ist keine | 🟡 klein | — |
 | P71 | 2026-09-20 | Der Wächter zerriss die Wähler und klagte dann die echten Regeln an | 🟠 mittel | — |
 | P72 | 2026-09-20 | Der Wächter gegen Port-Kollisionen meldete grün und übersah sieben | gross | — |
+| P73 | 2026-09-20 | Die zuletzt gelesene Seite ging verloren, sobald das Fenster sich meldete | gross | — |
 
 ---
 
@@ -1615,4 +1616,25 @@ sind der teuerste Teil und der lehrreichste.
 **Warum keine Uhr.** Die Kollision ist zeitlos — sie wirkt nur, wenn zwei Läufe gleichzeitig laufen.
 
 **Die Lehre.** Zum vierten Mal an zwei Tagen ein Ausdruck, der eine gültige Schreibweise nicht kennt — aber der erste, der dabei etwas ÜBERSAH statt etwas zu erfinden. Und die Zahl in der Ausgabe („374 von 481") nannte die Lücke seit Monaten; eine Zahl, die eine Lücke NENNT, ersetzt keine Prüfung, die sie schliesst. Nebenbei blieb test424 auch allein und auf dem Stand von HEAD rot: ein achtzehnter roter Lauf, der nicht meiner ist.
+
+
+---
+
+## P73 · Die zuletzt gelesene Seite ging verloren, sobald das Fenster sich meldete
+
+*2026-09-20 · gross*
+
+**Das Bild.** `test424` war rot: „PDF page position survives reload (ist \"0\")". Nach dem Neuladen stand das Dokument wieder auf Seite 1 statt auf der zuletzt gelesenen.
+
+**Die falsche Vermutung.** Last im Stapel — die Zeile führt ihren eigenen Lastverlauf im Kommentar und war schon zweimal daran repariert worden. Dann: mein eigener Bogen. Beides falsch; der Lauf war auch allein und auf dem Stand von HEAD rot.
+
+**Wie es gefunden wurde.** Ein Haken auf `Store.setMeta`, der jeden Schreibvorgang auf `dokSeite:*` mit Wert und Aufrufweg festhält. Genau ein Schreibvorgang, Wert 0, Weg: seiteMerken ⟵ nachziehen ⟵ beiGroesse.
+
+**Die Ursache.** `nachziehen()` rechnet aus dem Rollstand, welche Seite in der Fenstermitte steht, und MERKT sie. Beim frisch geöffneten Dokument steht der Rollstand noch auf 0, während die gemerkte Seite erst im requestAnimationFrame angerollt wird. Eine Fenstermeldung in diesem Spalt beantwortet die Frage mit „Seite 1".
+
+**Die Lösung.** Eine Reihenfolge statt einer Wartezeit: `standGesetzt` fällt erst in dem rAF, der die gemerkte Seite anrollt. Davor schweigt der Beobachter. Und ein neuer Lauf, test540, der das Rennen STELLT statt es zu gewinnen.
+
+**Warum keine Uhr.** Die Zeiten stammen aus einem `performance.now()`-Haken in der Seite, nicht aus git — sie sind relativ und stehen deshalb nicht als Uhrzeit da.
+
+**Die Lehre.** Derselbe Haken, der den Fehler sichtbar machte, machte ihn beim zweiten Versuch unsichtbar: ein paar Millisekunden mehr Arbeit darin, und derselbe Durchgang lief 50 von 50. Ein Wächter, der ein Rennen zufällig gewinnt, ist keiner — er muss es stellen. Das ist die dritte Fassung von §55.2 an zwei Tagen: „kann er rot werden?", „kann er grün werden?", und jetzt „gewinnt er nur zufällig?".
 

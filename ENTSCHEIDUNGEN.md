@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-621 Entscheidungen, E1 bis E643 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+622 Entscheidungen, E1 bis E644 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -686,6 +686,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E641** — Was das Design-System an der Linse auszusetzen hat: das am 20. September nachgereichte Regelwerk (`Redurbabat/UI-Kit`) urteilt auch über den Bogen von gestern, und neun von zehn klaren Verstössen stammen aus E639. Drei davon sind geändert: gedehnt wird nur noch zwischen NACHBARN (E639 dehnte um so stärker, je weiter der Sprung — das Gegenteil der Regel), der Deckel fällt von 1,85 auf 1,18, und die Ruhe-Brechung von 15 auf 8, damit die Schrift im Ruhezustand optisch still steht. Der vierte — ob über Schrift überhaupt gebrochen werden darf — gehört Redur
 * **E642** — Sechsundsiebzig Regeln, die nie zum Zug kamen: der erste volle Lauf seit PR #100 meldete 76 tote CSS-Erklärungen; dreizehn davon gab es gar nicht (`split(',')` zerriss die Kommas in `:is()` und erfand Wähler wie `#menueband)`), die übrigen 63 waren echt. Eine davon war eine Absicht, die nie wirkte: `motion.css` hatte die Übergangsliste der Kachel ersetzt und dabei `background` verloren — zehn Tage harter Flächenwechsel, den kein Auge meldete. Die letzten 35 sind die Bibliothek, die seit PR #56 zweimal gestaltet ist (§8): das Studio-Blatt gewinnt durchweg, also gehört ihm, was es setzt
 * **E643** — Der Wächter gegen Port-Kollisionen kannte nur eine Schreibweise: `test400` las `PORT = N` und war blind für `listen(9624, …)` — acht Läufe schreiben so, und sieben Ports waren dadurch doppelt vergeben, während der Wächter grün meldete. Zum vierten Mal an zwei Tagen ein Ausdruck, der eine gültige Schreibweise nicht kennt (E629, E631, E642) — und der erste, der dabei etwas ÜBERSAH statt etwas zu erfinden. Er prüft jetzt auch, dass er keinen Lauf übersieht, und `listen(0)` gilt als die bessere Antwort statt als fehlende Zahl
+* **E644** — Erst wiederherstellen, dann beobachten: die zuletzt gelesene PDF-Seite ging verloren, sobald zwischen dem Öffnen und dem Anrollen eine Fenstergrösse gemeldet wurde — `nachziehen()` las den Rollstand 0, schloss auf „Seite 1" und MERKTE das. Auf dem Telefon reicht dafür das Drehen. `test424` prüfte es schon, aber als Wettlauf: derselbe Durchgang lief mit ein paar Millisekunden mehr Arbeit grün. `test540` stellt das Rennen, statt es zu gewinnen
 
 ---
 
@@ -52724,3 +52725,88 @@ achtzehn Läufe rot sind, ist die falsche Reihenfolge (§46). Es steht als
 **Gemessen.** `test400` (4 von 4, mit zwei Gegenproben: eine
 wiedereingesetzte Kollision wird gefunden, eine unbekannte Schreibweise
 macht rot) · die vierzehn betroffenen Läufe einzeln.
+
+---
+
+## E644 — Erst wiederherstellen, dann beobachten
+
+Seit E349 öffnet Redion ein Dokument dort, wo man es verlassen hat — der
+Satz dazu steht im Quelltext: *„GoodNotes öffnet ein Dokument dort, wo man
+es verlassen hat; hier begann jedes Öffnen bei Seite 1."* Gemerkt wird je
+Dokument als Meta unter `dokSeite:<id>`.
+
+Am 20. September war die Zusage gebrochen, und zwar seit wann, weiss
+niemand: `test424` prüfte sie über einen Weg, der das Ergebnis dem Zufall
+überliess.
+
+### Der Befund
+
+`test424` war rot — allein, im Stapel, auf dem Zweig und auf `main`. Ein
+Haken auf `Store.setMeta` zeigte den Weg und genau einen Schreibvorgang:
+
+```txt
+direkt nach dem Blättern   meta=1  aktiv=1
+vor dem Zurück ins Regal   meta=1  aktiv=1
+nach der Bildmatrix        meta=1  aktiv=null
+nach dem letzten Öffnen    meta=0  aktiv=0      ← hier
+
+seiteMerken ⟵ nachziehen ⟵ beiGroesse
+```
+
+`nachziehen()` rechnet aus dem Rollstand, welche Seite in der Fenstermitte
+steht, und **merkt** sie. Beim frisch geöffneten Dokument steht der Rollstand
+aber noch auf 0, während die zuletzt gelesene Seite erst im
+`requestAnimationFrame` angerollt wird. Wer in diesen Spalt eine
+Fenstergrösse meldet, bekommt die Antwort „Seite 1" — und die ist dann
+gemerkt.
+
+**Was das für einen Menschen heisst:** ein Skript auf Seite 40 zuklappen,
+das Telefon drehen, und Redion beginnt wieder bei Seite 1. Am Rechner reicht
+das Ziehen am Fensterrand oder das Aufklappen der Seitenleiste.
+
+### Und warum der alte Wächter es nicht halten konnte
+
+Derselbe Haken, der den Fehler sichtbar machte, machte ihn beim zweiten
+Versuch unsichtbar: mit ein paar Millisekunden mehr Arbeit darin lief
+derselbe Durchgang grün, 50 von 50. Das ist kein Messfehler, sondern die
+Natur der Sache — es ist ein **Wettlauf**, und `test424` hat ihn manchmal
+gewonnen.
+
+> Ein Wächter, der ein Rennen zufällig gewinnt, ist keiner.
+
+`test540` stellt das Rennen deshalb: das Fenster meldet seine neue Grösse
+ausdrücklich, bevor der `rAF` laufen kann. Damit ist die Zusage nicht mehr
+eine Frage der Maschine, auf der geprüft wird.
+
+### Die Reparatur ist eine Reihenfolge, keine Wartezeit
+
+```ts
+let standGesetzt = false;          // erst wiederherstellen …
+…
+const nachziehen = (): void => {
+  if (!center.isConnected) return;
+  if (!standGesetzt) return;       // … dann beobachten
+```
+
+und im selben `rAF`, in dem die gemerkte Seite angerollt wird, fällt die
+Sperre — eine Bildauffrischung später, nicht nach einer geschätzten Zahl von
+Millisekunden.
+
+**Die Alternative** wäre gewesen, `beiGroesse` nach jedem Fensterwechsel
+wieder auf `state.index` zu rollen. Das hätte den Fehler auch behoben und
+wäre für sich genommen sogar wünschenswert (bei einer neuen Breite ändern
+sich alle Seitenhöhen, und heute driftet die Ansicht dabei). Dagegen
+spricht, dass es **mehr** ändert als den Fehler: wer mitten auf Seite 3
+liest und das Fenster zieht, würde an deren Oberkante geschnappt. Eine
+Reparatur, die nebenbei das Rollverhalten ändert, ist keine Reparatur,
+sondern ein zweiter Bogen (§45: nicht mehrere Themen vermischen).
+
+**Was es kostet:** eine Bildauffrischung lang zeichnet das faule Zeichnen
+nicht nach. Gemessen ist das dieselbe Auffrischung, in der die Seiten
+ohnehin erst ihre Höhe bekommen — es gibt in diesem Spalt nichts zu
+zeichnen, was hinterher nicht gezeichnet würde.
+
+**Gemessen.** `test540` (9 von 9; Gegenprobe: mit `if (false && …)` statt
+der Sperre sind genau die drei Zeilen wieder rot, die den Fehler
+beschreiben) · `test424` · `test395`, `test202`, `test386` — die Läufe, die
+am faulen Zeichnen und an der Seitenzahl hängen.

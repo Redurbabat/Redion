@@ -3080,3 +3080,54 @@ Ein Wächter, der beide Male rot war, bevor er grün wurde (§50).
 Die zweite ist die lehrreichere: `nurCode` lässt Schablonen mit Absicht
 stehen, weil in `${…}` echter Code steht. Dort hilft kein Entferner, sondern
 nur die richtige Reihenfolge der Fragen.
+
+---
+
+## 20. September 2026 — Die zuletzt gelesene Seite, und ein Wächter, der ein Rennen gewann
+
+**Methode.** Ein Haken auf `Store.setMeta`, der jeden Schreibvorgang auf
+`dokSeite:*` mit Zeit, Wert und Aufrufweg festhält, im Ablauf von
+`test424`.
+
+```txt
+Stelle                        meta   aktiv   scrollTop
+────────────────────────────────────────────────────────
+direkt nach dem Blättern         1     "1"           0
+vor dem Zurück ins Regal         1     "1"          18
+nach der Bildmatrix              1    null        null
+nach dem letzten Öffnen          0     "0"           0   ← verloren
+nach dem Neuladen                0     "0"           0
+```
+
+Genau **ein** Schreibvorgang, und sein Weg:
+
+```txt
+seiteMerken ⟵ nachziehen ⟵ beiGroesse
+```
+
+### Der Haken hat den Fehler beim zweiten Mal weggemessen
+
+```txt
+Durchgang 1   Haken mit Zeit + Wert + Stapel        ✗ 49/50, meta=0
+Durchgang 2   Haken zusätzlich mit Buehnen-Geometrie ✓ 50/50, keine Schreibung
+```
+
+Dieselbe Datei, derselbe Rechner, ein paar Millisekunden mehr Arbeit im
+Haken. **Das ist die eigentliche Messung dieses Bogens:** die Zusage hing
+nicht am Code, sondern am Zufall. Deshalb prüft `test540` sie nicht mehr über
+einen Umweg, sondern stellt das Rennen — `window.dispatchEvent(new
+Event('resize'))` vor dem `requestAnimationFrame`.
+
+### Nach der Reparatur
+
+```txt
+                                 ohne Sperre   mit Sperre
+gemerkte Seite nach dem resize        0             1
+aktive Bühne                         "0"           "1"
+scrollTop                             0          1441
+```
+
+Die Gegenprobe lief über `if (false && !standGesetzt) return;` — die Sperre
+ausgeschaltet, die Konstante aber weiter benutzt, damit `noUnusedLocals` den
+Bau nicht abbricht (§52.6). Ergebnis: genau die drei Zeilen wieder rot, die
+den Fehler beschreiben, und keine vierte.

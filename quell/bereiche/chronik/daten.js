@@ -2395,16 +2395,24 @@ const ChronikDaten = {
                 {
                     "was": "E643 — Der Wächter gegen Port-Kollisionen kannte nur eine Schreibweise",
                     "vonCommit": "(02:35)",
-                    "bisCommit": "(offen)",
-                    "zeitraum": "02:35 –",
-                    "dauer": "laufend",
+                    "bisCommit": "(03:05)",
+                    "zeitraum": "02:35 – 03:05",
+                    "dauer": "ca. 30 min",
                     "pruefungen": "test400 (4/4, zwei Gegenproben) · die vierzehn betroffenen Läufe"
+                },
+                {
+                    "was": "E644 — Erst wiederherstellen, dann beobachten (die gemerkte PDF-Seite)",
+                    "vonCommit": "(03:05)",
+                    "bisCommit": "(offen)",
+                    "zeitraum": "03:05 –",
+                    "dauer": "laufend",
+                    "pruefungen": "test540 neu (9/9, Gegenprobe rot gesehen) · test424 (50/50) · test395, test202, test386"
                 }
             ],
             "zahlen": {
                 "commits": 2,
-                "entscheidungen": 5,
-                "neue Prüfläufe": 1,
+                "entscheidungen": 6,
+                "neue Prüfläufe": 2,
                 "volle Läufe": 0
             },
             "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -3440,6 +3448,19 @@ const ChronikDaten = {
             "loesung": "Beide Schreibweisen lesen; `listen(0)` als richtig zählen statt als fehlend; und PRÜFEN, dass kein Lauf mit eigenem Server ohne erkannte Zahl bleibt. Die sieben jüngeren Läufe sind auf 9643–9649 umgezogen.",
             "warumKeineUhr": "Die Kollision ist zeitlos — sie wirkt nur, wenn zwei Läufe gleichzeitig laufen.",
             "lehre": "Zum vierten Mal an zwei Tagen ein Ausdruck, der eine gültige Schreibweise nicht kennt — aber der erste, der dabei etwas ÜBERSAH statt etwas zu erfinden. Und die Zahl in der Ausgabe („374 von 481\") nannte die Lücke seit Monaten; eine Zahl, die eine Lücke NENNT, ersetzt keine Prüfung, die sie schliesst. Nebenbei blieb test424 auch allein und auf dem Stand von HEAD rot: ein achtzehnter roter Lauf, der nicht meiner ist."
+        },
+        {
+            "nr": "P73",
+            "datum": "2026-09-20",
+            "titel": "Die zuletzt gelesene Seite ging verloren, sobald das Fenster sich meldete",
+            "schwere": "gross",
+            "symptom": "`test424` war rot: „PDF page position survives reload (ist \\\"0\\\")\". Nach dem Neuladen stand das Dokument wieder auf Seite 1 statt auf der zuletzt gelesenen.",
+            "falscheVermutung": "Last im Stapel — die Zeile führt ihren eigenen Lastverlauf im Kommentar und war schon zweimal daran repariert worden. Dann: mein eigener Bogen. Beides falsch; der Lauf war auch allein und auf dem Stand von HEAD rot.",
+            "wieGefunden": "Ein Haken auf `Store.setMeta`, der jeden Schreibvorgang auf `dokSeite:*` mit Wert und Aufrufweg festhält. Genau ein Schreibvorgang, Wert 0, Weg: seiteMerken ⟵ nachziehen ⟵ beiGroesse.",
+            "ursache": "`nachziehen()` rechnet aus dem Rollstand, welche Seite in der Fenstermitte steht, und MERKT sie. Beim frisch geöffneten Dokument steht der Rollstand noch auf 0, während die gemerkte Seite erst im requestAnimationFrame angerollt wird. Eine Fenstermeldung in diesem Spalt beantwortet die Frage mit „Seite 1\".",
+            "loesung": "Eine Reihenfolge statt einer Wartezeit: `standGesetzt` fällt erst in dem rAF, der die gemerkte Seite anrollt. Davor schweigt der Beobachter. Und ein neuer Lauf, test540, der das Rennen STELLT statt es zu gewinnen.",
+            "warumKeineUhr": "Die Zeiten stammen aus einem `performance.now()`-Haken in der Seite, nicht aus git — sie sind relativ und stehen deshalb nicht als Uhrzeit da.",
+            "lehre": "Derselbe Haken, der den Fehler sichtbar machte, machte ihn beim zweiten Versuch unsichtbar: ein paar Millisekunden mehr Arbeit darin, und derselbe Durchgang lief 50 von 50. Ein Wächter, der ein Rennen zufällig gewinnt, ist keiner — er muss es stellen. Das ist die dritte Fassung von §55.2 an zwei Tagen: „kann er rot werden?\", „kann er grün werden?\", und jetzt „gewinnt er nur zufällig?\"."
         }
     ]
 };
