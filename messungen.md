@@ -3514,3 +3514,66 @@ nicht.**
 
 `bilder/ki-stoppknopf.png` — derselbe blaue Kreis, `■` statt `↑`, während
 „KI arbeitet …" läuft (§55.3).
+
+---
+
+## 20. September 2026 — Das KI-Blatt am Telefon (E653, `test545`)
+
+Gemessen auf 390 × 844, Blatt offen:
+
+```txt
+#ai                      oben bei 101 px, 743 px hoch, z-index 920
+#handy-oben              z-index 401 — vollständig darunter
+#btn-ai sichtbar         nein (display:none, bausteine.css:300 und :2119)
+Knöpfe im Kopf           ai-verlauf, ai-clear
+Knöpfe, die schliessen   0 von 2
+```
+
+Nicht geschätzt, sondern gedrückt: jeder sichtbare Knopf in `.ai-head`
+wurde geklickt und danach nachgesehen, ob `.open` weg ist. Die Zeile, die
+der Lauf gegen den alten Stand ausgab:
+
+```txt
+✗ Mindestens ein sichtbarer Knopf schliesst das Blatt wirklich
+  — 2 geprüft, 0 schliessen — das Blatt ist eine Falle
+```
+
+Nach dem Bogen:
+
+```txt
+Knöpfe im Kopf           ai-verlauf, ai-clear, ai-zu
+Knöpfe, die schliessen   1 von 3  ·  ai-zu · 44 × 44 px · "KI schliessen"
+Zug 180 px nach unten    schliesst
+Zug  26 px nach unten    schliesst NICHT (federt zurück)
+Rest-transform danach    keines
+Zug am Rechner (1280)    schliesst nichts — eine Spalte ist kein Blatt
+```
+
+### Und zweimal rot aus dem falschen Grund
+
+```txt
+1. Anlauf   Knopfmass 0 × 0          gemessen NACH dem Klick; geschlossen
+                                     steht #ai auf display:none
+2. Anlauf   "Geste gibt es nicht"    der Zug landete auf #rg-willkommen,
+                                     dem Willkommensblatt über allem
+```
+
+Beide Male war der Lauf rot, beide Male sagte er etwas anderes, als er
+mass. Er prüft jetzt mit `elementFromPoint`, wer unter dem Finger liegt,
+und nennt ihn beim Namen, wenn es nicht das Blatt ist.
+
+Vierter und fünfter Fall derselben Sorte an zwei Tagen, nach `test542`,
+`test543` und `test544`. **Ein roter Lauf ist noch kein Beweis, und ein
+grüner erst recht nicht.**
+
+### Gegenprobe
+
+`kiGriff()` im gebauten `schale.js` abgehängt, Lauf wiederholt: genau eine
+Zeile wird rot („Ein Zug nach unten schliesst das Blatt"), während „Der Zug
+landet wirklich auf dem Kopf des Blattes" grün bleibt. Die Röte gilt also
+der Geste, nicht dem Zielen (§50, §55.2).
+
+### Bild
+
+`bilder/kiBlatt-handy-dunkel.png` — der Strich oben, das Kreuz rechts im
+Kopf, 390 px breit (§55.3).

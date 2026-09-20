@@ -2468,12 +2468,20 @@ const ChronikDaten = {
      "zeitraum": "11:40 –",
      "dauer": "laufend",
      "pruefungen": "test541 (25/25), test539, test478, test114, test225, test105, test109, test87"
+    },
+    {
+     "was": "E653 — Das KI-Blatt am Telefon: ein Kreuz im Kopf, und der Griff zieht wirklich",
+     "vonCommit": "(offen)",
+     "bisCommit": "(offen)",
+     "zeitraum": "ca. 16:30 –",
+     "dauer": "laufend",
+     "pruefungen": "test545 (12/12, dreimal rot gesehen), test544, test87, test105, test109"
     }
    ],
    "zahlen": {
     "commits": 2,
-    "entscheidungen": 10,
-    "neue Prüfläufe": 3,
+    "entscheidungen": 11,
+    "neue Prüfläufe": 4,
     "volle Läufe": 0
    },
    "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -3639,6 +3647,30 @@ const ChronikDaten = {
    "loesung": "Der Senden-Knopf wird für die Dauer des Laufs zum Stopp-Knopf — dasselbe Element, dieselbe Grösse (§37), `aria-label` wechselt mit (§38). Ein Abbruch behält die Teilantwort und sagt „Abgebrochen\" statt „AbortError\". Der Menüpunkt öffnet dieselbe Schalterleiste, die im Fuss steht (§8).",
    "warumKeineUhr": "Aus der Bestandsaufnahme abgeleitet.",
    "lehre": "Ein grüner Prüflauf ist so wenig ein Beweis wie ein roter. Abschnitt 2 war zuerst grün, weil er sichtbare Schalter im GANZEN Dokument zählte — und die Leiste steht ohnehin im Fuss. Gemessen werden muss, was der Klick NEU öffnet. Dritter Fall dieser Art an einem Tag."
+  },
+  {
+   "nr": "P83",
+   "datum": "2026-09-20",
+   "titel": "Ein Blatt ohne Weg zurück, und ein Griff, der nichts hält",
+   "schwere": "hoch",
+   "symptom": "Wer das KI-Feld am Telefon öffnete, konnte es nicht mehr schliessen. Kein Kreuz im Kopf, `#btn-ai` auf `display:none`, kein Strg+J an einem Telefon, und die untere Leiste lag unter einem 88vh hohen Blatt auf z-index 920. Der einzige Ausweg war, den Tab zu schliessen.",
+   "falscheVermutung": "Dass es irgendeinen Weg geben muss — ein Tippen daneben, die Leiste darunter, Escape. Es gab keinen. Der Escape-Griff räumt `.menu` und `.overlay`; `#ai` ist ein `<aside>` und heisst weder so noch so.",
+   "wieGefunden": "Bestandsaufnahme vom selben Tag, §37-Durchgang. Nachgemessen mit einem Lauf, der nicht fragt, ob ein Kreuz dasteht, sondern jeden sichtbaren Knopf im Kopf DRÜCKT und danach nachsieht, ob `.open` weg ist: „2 geprüft, 0 schliessen\".",
+   "ursache": "Der Weg zurück hing seit jeher an `#btn-ai` in der Kopfleiste. Als die Kopfleiste am Telefon ausgedünnt wurde (bausteine.css:297, „sonst quetschen sich zwölf Knöpfe in 428 Pixel\"), ging er mit — und niemand hat gefragt, was dann das Blatt schliesst. Dazu zeichnete `#ai::before` einen Wischgriff, dessen Kommentar die Geste ausdrücklich verspricht; gehört hat auf `#ai` nie jemand.",
+   "beweis": "`test545` gegen den alten Stand: „✗ Mindestens ein sichtbarer Knopf schliesst das Blatt wirklich — 2 geprüft, 0 schliessen — das Blatt ist eine Falle\". Gegenprobe nach dem Bau: `kiGriff()` abgehängt → genau eine Zeile rot, während „Der Zug landet wirklich auf dem Kopf des Blattes\" grün bleibt.",
+   "lehre": "Ein Knopf, der auf einem Bildschirm ausgeblendet wird, nimmt jede Funktion mit, die NUR an ihm hing. Wer eine Leiste ausdünnt, muss für jeden entfernten Knopf sagen, wer seine Aufgabe übernimmt — und für das Zu eines Blattes gilt das doppelt, weil es kein zweites Mal geöffnet werden kann, wenn es offen feststeckt."
+  },
+  {
+   "nr": "P84",
+   "datum": "2026-09-20",
+   "titel": "Zweimal rot aus dem falschen Grund — derselbe Lauf",
+   "schwere": "mittel",
+   "symptom": "`test545` war rot, sagte aber zweimal etwas anderes, als er mass: erst „der Knopf misst 0 × 0\", dann „die Geste gibt es nicht\" — obwohl der Knopf 44 px hatte und die Geste gebaut war.",
+   "falscheVermutung": "Beim ersten Mal: der Knopf sei zu klein. Beim zweiten Mal: der Griff sei nicht angeschlossen. Beides falsch.",
+   "wieGefunden": "Nachgesehen statt geglaubt. Das Maß wurde NACH dem Klick genommen — geschlossen steht `#ai` auf `display:none`, und dann misst jeder Knopf darin 0 × 0. Und `document.elementFromPoint` an der Zugstelle nannte den wahren Empfänger: `DIV#rg-willkommen`, das Willkommensblatt über allem.",
+   "ursache": "Zwei Messfehler im Wächter, keiner im Produkt.",
+   "beweis": "Nach der Korrektur: „→ ai-zu · 44×44 px\" und „Der Zug landet wirklich auf dem Kopf des Blattes\" — und die Gegenprobe wird nur an der Geste rot.",
+   "lehre": "Vierter und fünfter Fall derselben Sorte an zwei Tagen, nach `test542`, `test543` und `test544`. Die Lehre steht jetzt in beide Richtungen: ein roter Lauf ist noch kein Beweis, und ein grüner erst recht nicht. Ein Wächter, der eine Stelle anfasst, prüft zuerst, WER dort liegt."
   }
  ]
 } as const;

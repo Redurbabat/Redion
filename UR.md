@@ -1853,12 +1853,13 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 | E647 — Dieselbe Feder für die Werkzeugleiste, L204 geschlossen | `(09:05)` → `(11:40)` | 09:05 – | abgeschlossen | steht aus — im Hauptbaum wird nicht geprüft, solange der volle Lauf fährt (§30) |
 | Der zweite volle Lauf über alle 483, in Stücken, im Arbeitsbaum | `08:53` → `(11:40)` | 08:53 – | abgeschlossen | alle 483, zehn je Stück, wiederaufnehmbar — diesmal ohne zweiten Lauf daneben |
 | E648 — Redurs #108/#109 nachdokumentiert, und der vorausgeschickte Frame repariert | `(11:40)` → `(offen)` | 11:40 – | laufend | test541 (25/25), test539, test478, test114, test225, test105, test109, test87 |
+| E653 — Das KI-Blatt am Telefon: ein Kreuz im Kopf, und der Griff zieht wirklich | `(offen)` → `(offen)` | ca. 16:30 – | laufend | test545 (12/12, dreimal rot gesehen), test544, test87, test105, test109 |
 
 #### Zahlen des Tages
 
 - **commits:** 2
-- **entscheidungen:** 10
-- **neue Prüfläufe:** 3
+- **entscheidungen:** 11
+- **neue Prüfläufe:** 4
 - **volle Läufe:** 0
 
 #### Das grösste Problem
@@ -1881,5 +1882,5 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 82 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 84 Einträge.
 

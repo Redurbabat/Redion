@@ -23446,6 +23446,13 @@ body[data-dokument="an"] .document-studio .blatt-werk{
     <b>Redion KI</b>
     <button class="icon-btn" id="ai-verlauf" title="Unterhaltungen" aria-label="Unterhaltungen"><span data-sym="history" data-sym-groesse="16"></span></button>
     <button class="icon-btn" id="ai-clear" title="Neuer Chat" aria-label="Neuer Chat"><span data-sym="plus" data-sym-groesse="16"></span></button>
+    <!-- DER WEG ZURÜCK (E653). Am Rechner klappt `#btn-ai` in der Kopfleiste
+         das Feld auf und zu; am Telefon steht dieser Knopf auf
+         `display:none` (bausteine.css:300, :2119), das Blatt ist 88vh hoch
+         und liegt auf z-index 920 über der unteren Leiste — offen war es
+         dort eine Sackgasse. Der Knopf steht hier für BEIDE Bildschirme:
+         ein Weg, nicht zwei (§8). -->
+    <button class="icon-btn" id="ai-zu" title="KI schliessen" aria-label="KI schliessen"><span data-sym="close" data-sym-groesse="16"></span></button>
   </div>
 
   <div id="chat"></div>
@@ -25124,7 +25131,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1242, inhalt: 'f9291a7b63a6e39f', gebaut: '2026-09-20T16:39:53.884Z' };
+const Stand = { fassung: 1244, inhalt: 'cba8b8e1657f85c7', gebaut: '2026-09-20T17:01:30.783Z' };
 window.Stand = Stand;
 
 </script>
@@ -82486,12 +82493,20 @@ const ChronikDaten = {
                     "zeitraum": "11:40 –",
                     "dauer": "laufend",
                     "pruefungen": "test541 (25/25), test539, test478, test114, test225, test105, test109, test87"
+                },
+                {
+                    "was": "E653 — Das KI-Blatt am Telefon: ein Kreuz im Kopf, und der Griff zieht wirklich",
+                    "vonCommit": "(offen)",
+                    "bisCommit": "(offen)",
+                    "zeitraum": "ca. 16:30 –",
+                    "dauer": "laufend",
+                    "pruefungen": "test545 (12/12, dreimal rot gesehen), test544, test87, test105, test109"
                 }
             ],
             "zahlen": {
                 "commits": 2,
-                "entscheidungen": 10,
-                "neue Prüfläufe": 3,
+                "entscheidungen": 11,
+                "neue Prüfläufe": 4,
                 "volle Läufe": 0
             },
             "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -83657,6 +83672,30 @@ const ChronikDaten = {
             "loesung": "Der Senden-Knopf wird für die Dauer des Laufs zum Stopp-Knopf — dasselbe Element, dieselbe Grösse (§37), `aria-label` wechselt mit (§38). Ein Abbruch behält die Teilantwort und sagt „Abgebrochen\" statt „AbortError\". Der Menüpunkt öffnet dieselbe Schalterleiste, die im Fuss steht (§8).",
             "warumKeineUhr": "Aus der Bestandsaufnahme abgeleitet.",
             "lehre": "Ein grüner Prüflauf ist so wenig ein Beweis wie ein roter. Abschnitt 2 war zuerst grün, weil er sichtbare Schalter im GANZEN Dokument zählte — und die Leiste steht ohnehin im Fuss. Gemessen werden muss, was der Klick NEU öffnet. Dritter Fall dieser Art an einem Tag."
+        },
+        {
+            "nr": "P83",
+            "datum": "2026-09-20",
+            "titel": "Ein Blatt ohne Weg zurück, und ein Griff, der nichts hält",
+            "schwere": "hoch",
+            "symptom": "Wer das KI-Feld am Telefon öffnete, konnte es nicht mehr schliessen. Kein Kreuz im Kopf, `#btn-ai` auf `display:none`, kein Strg+J an einem Telefon, und die untere Leiste lag unter einem 88vh hohen Blatt auf z-index 920. Der einzige Ausweg war, den Tab zu schliessen.",
+            "falscheVermutung": "Dass es irgendeinen Weg geben muss — ein Tippen daneben, die Leiste darunter, Escape. Es gab keinen. Der Escape-Griff räumt `.menu` und `.overlay`; `#ai` ist ein `<aside>` und heisst weder so noch so.",
+            "wieGefunden": "Bestandsaufnahme vom selben Tag, §37-Durchgang. Nachgemessen mit einem Lauf, der nicht fragt, ob ein Kreuz dasteht, sondern jeden sichtbaren Knopf im Kopf DRÜCKT und danach nachsieht, ob `.open` weg ist: „2 geprüft, 0 schliessen\".",
+            "ursache": "Der Weg zurück hing seit jeher an `#btn-ai` in der Kopfleiste. Als die Kopfleiste am Telefon ausgedünnt wurde (bausteine.css:297, „sonst quetschen sich zwölf Knöpfe in 428 Pixel\"), ging er mit — und niemand hat gefragt, was dann das Blatt schliesst. Dazu zeichnete `#ai::before` einen Wischgriff, dessen Kommentar die Geste ausdrücklich verspricht; gehört hat auf `#ai` nie jemand.",
+            "beweis": "`test545` gegen den alten Stand: „✗ Mindestens ein sichtbarer Knopf schliesst das Blatt wirklich — 2 geprüft, 0 schliessen — das Blatt ist eine Falle\". Gegenprobe nach dem Bau: `kiGriff()` abgehängt → genau eine Zeile rot, während „Der Zug landet wirklich auf dem Kopf des Blattes\" grün bleibt.",
+            "lehre": "Ein Knopf, der auf einem Bildschirm ausgeblendet wird, nimmt jede Funktion mit, die NUR an ihm hing. Wer eine Leiste ausdünnt, muss für jeden entfernten Knopf sagen, wer seine Aufgabe übernimmt — und für das Zu eines Blattes gilt das doppelt, weil es kein zweites Mal geöffnet werden kann, wenn es offen feststeckt."
+        },
+        {
+            "nr": "P84",
+            "datum": "2026-09-20",
+            "titel": "Zweimal rot aus dem falschen Grund — derselbe Lauf",
+            "schwere": "mittel",
+            "symptom": "`test545` war rot, sagte aber zweimal etwas anderes, als er mass: erst „der Knopf misst 0 × 0\", dann „die Geste gibt es nicht\" — obwohl der Knopf 44 px hatte und die Geste gebaut war.",
+            "falscheVermutung": "Beim ersten Mal: der Knopf sei zu klein. Beim zweiten Mal: der Griff sei nicht angeschlossen. Beides falsch.",
+            "wieGefunden": "Nachgesehen statt geglaubt. Das Maß wurde NACH dem Klick genommen — geschlossen steht `#ai` auf `display:none`, und dann misst jeder Knopf darin 0 × 0. Und `document.elementFromPoint` an der Zugstelle nannte den wahren Empfänger: `DIV#rg-willkommen`, das Willkommensblatt über allem.",
+            "ursache": "Zwei Messfehler im Wächter, keiner im Produkt.",
+            "beweis": "Nach der Korrektur: „→ ai-zu · 44×44 px\" und „Der Zug landet wirklich auf dem Kopf des Blattes\" — und die Gegenprobe wird nur an der Geste rot.",
+            "lehre": "Vierter und fünfter Fall derselben Sorte an zwei Tagen, nach `test542`, `test543` und `test544`. Die Lehre steht jetzt in beide Richtungen: ein roter Lauf ist noch kein Beweis, und ein grüner erst recht nicht. Ein Wächter, der eine Stelle anfasst, prüft zuerst, WER dort liegt."
         }
     ]
 };
@@ -173406,6 +173445,80 @@ const App = (() => {
         if (an)
             setTimeout(() => document.getElementById('ai-input')?.focus(), 60);
     };
+    /* ══ DER GRIFF AM BLATT (E653) ═══════════════════════════════════════════
+     * Am Telefon ist `#ai` kein Panel neben der Seite, sondern ein Blatt, das
+     * von unten kommt — und `#ai::before` zeichnet oben einen Strich. Der
+     * Kommentar daneben (bausteine.css:356) sagt wörtlich, was der Strich
+     * verspricht: „er sagt ohne Wort, dass man das Blatt wegwischen kann".
+     *
+     * Gewischt werden konnte nichts. `wischen.ts` kennt `#handy-oben` und
+     * sonst nichts; auf `#ai` hörte niemand zu. Ein gezeichnetes Versprechen
+     * ist dasselbe Versprechen (§47) — und weil `#btn-ai` am Telefon auf
+     * `display:none` steht, war der Strich nicht nur unehrlich, sondern der
+     * einzige Hinweis auf einen Weg, den es nicht gab.
+     *
+     * NUR AM TELEFON. Am Rechner ist `#ai` eine Spalte; sie nach unten zu
+     * ziehen ergäbe keinen Sinn und würde das Markieren von Text im Kopf
+     * stören. `matchMedia` fragt dieselbe Grenze ab, die auch die Stilblätter
+     * benutzen: 760 px.
+     *
+     * NUR AM KOPF. Unter dem Kopf steht der Verlauf, und der rollt. Ein Zug
+     * irgendwo auf dem Blatt wäre beides zugleich.
+     *
+     * UND NICHT AUF DEN KNÖPFEN. Wer „Neuer Chat" trifft und dabei um zwei
+     * Pixel verrutscht, meint den Knopf.
+     * ======================================================================*/
+    /** So weit muss der Zug gehen, damit er als Wegwischen zählt. Darunter
+     *  federt das Blatt zurück — sonst wäre jedes Verrutschen ein Schliessen. */
+    const BLATT_ZUG = 90;
+    /** 760 px: dieselbe Grenze wie in `bausteine.css` und `ki.css`. */
+    const blattAmTelefon = () => typeof matchMedia === 'function' && matchMedia('(max-width:760px)').matches;
+    const kiGriff = () => {
+        const blatt = document.getElementById('ai');
+        if (!blatt)
+            return;
+        let start = 0, zug = 0, zieht = false;
+        const bewegen = (e) => {
+            if (!zieht)
+                return;
+            zug = Math.max(0, e.clientY - start);
+            blatt.style.transform = 'translateY(' + zug + 'px)';
+        };
+        const ende = () => {
+            if (!zieht)
+                return;
+            zieht = false;
+            document.removeEventListener('pointermove', bewegen);
+            document.removeEventListener('pointerup', ende);
+            document.removeEventListener('pointercancel', ende);
+            /* Erst den Übergang zurückgeben, DANN den Wert ändern. Ohne das
+               Lesen von `offsetHeight` dazwischen fasst der Browser beides zu
+               einem Schritt zusammen, und das Blatt springt statt zu gleiten. */
+            blatt.style.transition = '';
+            void blatt.offsetHeight;
+            blatt.style.transform = '';
+            if (zug > BLATT_ZUG)
+                kiPanel(false);
+        };
+        blatt.addEventListener('pointerdown', (e) => {
+            if (!blattAmTelefon())
+                return;
+            const ziel = e.target;
+            if (!ziel || typeof ziel.closest !== 'function')
+                return;
+            if (!ziel.closest('.ai-head'))
+                return;
+            if (ziel.closest('button, a, input, textarea, select'))
+                return;
+            start = e.clientY;
+            zug = 0;
+            zieht = true;
+            blatt.style.transition = 'none';
+            document.addEventListener('pointermove', bewegen);
+            document.addEventListener('pointerup', ende);
+            document.addEventListener('pointercancel', ende);
+        });
+    };
     const neueSeite = (elternId = null) => {
         const p = Store.addPage(elternId, { text: '' });
         zeichneBaum();
@@ -174876,6 +174989,10 @@ const App = (() => {
             });
         }
         an('btn-ai', () => kiPanel());
+        /* Der Weg zurück, und er gilt auf JEDEM Bildschirm (E653). Am
+           Telefon ist er der einzige — `#btn-ai` ist dort ausgeblendet. */
+        an('ai-zu', () => kiPanel(false));
+        kiGriff();
         /* `btn-trash` hängt seit E167 am Register — die Zeile hier wäre die
            zweite Verdrahtung desselben Knopfes, und wohin das führt, steht in
            E160: ein Klick auf „Neue Seite" legte zwei Seiten an. */

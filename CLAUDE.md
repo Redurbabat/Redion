@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 486 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 487 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -993,6 +993,17 @@ Schalterleiste steht ohnehin im Fuss. Erst als er nur zählte, was der
 Menüpunkt NEU öffnet, stand da „0 Schalter sichtbar". Gezählt am
 20. September, im selben Bogen: der Befehl sagt 486.*
 
+*Und 487: `test545` — das KI-Blatt lässt sich am Telefon schliessen (E653).
+Er hält §37 an einer Stelle, an der niemand hingesehen hatte: `#btn-ai`
+steht am Telefon auf `display:none`, `.ai-head` trug kein Kreuz, und das
+Blatt liegt 88vh hoch über der unteren Leiste. Gegen den alten Stand stand
+die Zeile da, um die es geht — „2 geprüft, 0 schliessen — das Blatt ist eine
+Falle". Und zweimal war er aus dem FALSCHEN Grund rot: einmal mass er den
+Knopf nach dem Klick (geschlossen ist `#ai` `display:none`, also 0 × 0),
+einmal zog er gegen das Willkommensblatt, das über allem lag. Gezählt am
+20. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+487.*
+
 ### Die Befehle
 
 ```txt
@@ -1001,7 +1012,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 486 Läufe
+npm run pruefen                      alle 487 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1063,7 +1074,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 486 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 487 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

@@ -1,5 +1,48 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E653 · Das KI-Blatt am Telefon hatte keinen Weg zurück
+
+**Der Fund.** Am Telefon ist `#ai` ein Blatt, das von unten kommt — und wer
+es öffnete, konnte es nicht mehr schliessen. Gemessen auf 390 × 844:
+`#btn-ai` steht dort auf `display:none` (bausteine.css:300 und :2119),
+`.ai-head` trug zwei Knöpfe und kein Kreuz, Strg+J gibt es an einem Telefon
+nicht, und der Escape-Griff in `schale.ts` räumt `.menu` und `.overlay` —
+`#ai` ist ein `<aside>`. Das Blatt ist 88vh hoch und liegt auf z-index 920;
+die untere Leiste auf 401 ist vollständig verdeckt. Der einzige Ausweg war,
+den Tab zu schliessen. §37 ist **[hart im Kern]**.
+
+**Der zweite, leisere Fund.** `#ai::before` zeichnet oben den Wischgriff,
+und sein eigener Kommentar sagt, was er verspricht: „er sagt ohne Wort, dass
+man das Blatt wegwischen kann". Gewischt werden konnte nichts —
+`wischen.ts` kennt `#handy-oben` und sonst nichts. Ein gezeichnetes
+Versprechen ist dasselbe Versprechen (§47), und hier war es das einzige,
+das überhaupt einen Weg zurück andeutete.
+
+**Gebaut.** Ein Schliess-Knopf `#ai-zu` im Kopf (44 px, `aria-label`) für
+BEIDE Bildschirme — ein Weg, nicht zwei (§8). Und der Griff zieht wirklich:
+`pointerdown` auf `.ai-head`, mehr als 90 px nach unten schliesst, darunter
+federt es zurück; nur unter 760 px, nicht auf den Knöpfen, nicht auf dem
+Verlauf darunter (der rollt).
+
+**Geprüft.** `test545` neu, zwölf Messungen, gegen den alten Stand rot mit
+der Zeile, um die es geht: „2 geprüft, 0 schliessen — das Blatt ist eine
+Falle". Gegenprobe: `kiGriff()` abgehängt → genau eine Zeile wird rot,
+während „Der Zug landet wirklich auf dem Kopf" grün bleibt. `test544`,
+`test87`, `test105`, `test109` grün, `npm run typecheck` sauber,
+`redion-einzeldatei.html` neu gebaut, `npm run stand` unverändert.
+
+**Und zweimal rot aus dem falschen Grund.** Erst mass der Lauf den Knopf
+NACH dem Klick — geschlossen steht `#ai` auf `display:none`, also 0 × 0.
+Dann zog er gegen `#rg-willkommen`, das Willkommensblatt über allem, und
+meldete „die Geste gibt es nicht", obwohl sie gebaut war. Er prüft jetzt mit
+`elementFromPoint`, wer unter dem Finger liegt. Vierter und fünfter Fall
+derselben Sorte an zwei Tagen.
+
+**Bild.** `bilder/kiBlatt-handy-dunkel.png`, neue Ansicht `kiBlatt` in
+`bilder.mts` (§55.3).
+
+---
+
 ## 20. September 2026 · E652 · Das KI-Fenster tut, was seine Knöpfe versprechen
 
 Zwei Funde der Bestandsaufnahme, beide in `src/bereiche/ki/dienst.ts`.

@@ -387,6 +387,25 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* --- Das KI-Blatt am Telefon (E653) -------------------------------------
+     Zu sehen ist genau das, was gefehlt hat: das Kreuz rechts im Kopf, und
+     darüber der Strich, der jetzt hält, was er zeigt. Am Rechner wäre das
+     Bild sinnlos — dort klappt `#btn-ai` in der Kopfleiste auf und zu.
+       node bilder.mts kiBlatt handy */
+  kiBlatt: {
+    titel: 'KI am Telefon — der Weg zurück (E653)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Elektrotechnik — Skript', icon: '⚡' });
+      Store.addBlock(s.id, 'text', { text: 'U = R · I.' });
+      App.oeffne(s.id);
+      App.kiPanel(true);
+      await new Promise(f => setTimeout(f, 520));
+    }
+  },
+
   kiVerlauf: {
     titel: 'KI — der Chatverlauf am Rechner (L93)',
     bauen: async () => {

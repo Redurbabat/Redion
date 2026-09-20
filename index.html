@@ -410,6 +410,13 @@
     <b>Redion KI</b>
     <button class="icon-btn" id="ai-verlauf" title="Unterhaltungen" aria-label="Unterhaltungen"><span data-sym="history" data-sym-groesse="16"></span></button>
     <button class="icon-btn" id="ai-clear" title="Neuer Chat" aria-label="Neuer Chat"><span data-sym="plus" data-sym-groesse="16"></span></button>
+    <!-- DER WEG ZURÜCK (E653). Am Rechner klappt `#btn-ai` in der Kopfleiste
+         das Feld auf und zu; am Telefon steht dieser Knopf auf
+         `display:none` (bausteine.css:300, :2119), das Blatt ist 88vh hoch
+         und liegt auf z-index 920 über der unteren Leiste — offen war es
+         dort eine Sackgasse. Der Knopf steht hier für BEIDE Bildschirme:
+         ein Weg, nicht zwei (§8). -->
+    <button class="icon-btn" id="ai-zu" title="KI schliessen" aria-label="KI schliessen"><span data-sym="close" data-sym-groesse="16"></span></button>
   </div>
 
   <div id="chat"></div>

@@ -96,6 +96,8 @@ sind der teuerste Teil und der lehrreichste.
 | P80 | 2026-09-20 | Fett traf das erste Wort, nicht das markierte | 🟠 mittel | — |
 | P81 | 2026-09-20 | Ein Schalter, der Sicherheit verspricht und nicht gelesen wird | 🟠 mittel | — |
 | P82 | 2026-09-20 | Das Teure war gebaut, das Billige fehlte | 🟠 mittel | — |
+| P83 | 2026-09-20 | Ein Blatt ohne Weg zurück, und ein Griff, der nichts hält | hoch | — |
+| P84 | 2026-09-20 | Zweimal rot aus dem falschen Grund — derselbe Lauf | 🟠 mittel | — |
 
 ---
 
@@ -1835,4 +1837,42 @@ sind der teuerste Teil und der lehrreichste.
 **Warum keine Uhr.** Aus der Bestandsaufnahme abgeleitet.
 
 **Die Lehre.** Ein grüner Prüflauf ist so wenig ein Beweis wie ein roter. Abschnitt 2 war zuerst grün, weil er sichtbare Schalter im GANZEN Dokument zählte — und die Leiste steht ohnehin im Fuss. Gemessen werden muss, was der Klick NEU öffnet. Dritter Fall dieser Art an einem Tag.
+
+
+---
+
+## P83 · Ein Blatt ohne Weg zurück, und ein Griff, der nichts hält
+
+*2026-09-20 · hoch*
+
+**Das Bild.** Wer das KI-Feld am Telefon öffnete, konnte es nicht mehr schliessen. Kein Kreuz im Kopf, `#btn-ai` auf `display:none`, kein Strg+J an einem Telefon, und die untere Leiste lag unter einem 88vh hohen Blatt auf z-index 920. Der einzige Ausweg war, den Tab zu schliessen.
+
+**Die falsche Vermutung.** Dass es irgendeinen Weg geben muss — ein Tippen daneben, die Leiste darunter, Escape. Es gab keinen. Der Escape-Griff räumt `.menu` und `.overlay`; `#ai` ist ein `<aside>` und heisst weder so noch so.
+
+**Wie es gefunden wurde.** Bestandsaufnahme vom selben Tag, §37-Durchgang. Nachgemessen mit einem Lauf, der nicht fragt, ob ein Kreuz dasteht, sondern jeden sichtbaren Knopf im Kopf DRÜCKT und danach nachsieht, ob `.open` weg ist: „2 geprüft, 0 schliessen".
+
+**Die Ursache.** Der Weg zurück hing seit jeher an `#btn-ai` in der Kopfleiste. Als die Kopfleiste am Telefon ausgedünnt wurde (bausteine.css:297, „sonst quetschen sich zwölf Knöpfe in 428 Pixel"), ging er mit — und niemand hat gefragt, was dann das Blatt schliesst. Dazu zeichnete `#ai::before` einen Wischgriff, dessen Kommentar die Geste ausdrücklich verspricht; gehört hat auf `#ai` nie jemand.
+
+**Der Beweis.** `test545` gegen den alten Stand: „✗ Mindestens ein sichtbarer Knopf schliesst das Blatt wirklich — 2 geprüft, 0 schliessen — das Blatt ist eine Falle". Gegenprobe nach dem Bau: `kiGriff()` abgehängt → genau eine Zeile rot, während „Der Zug landet wirklich auf dem Kopf des Blattes" grün bleibt.
+
+**Die Lehre.** Ein Knopf, der auf einem Bildschirm ausgeblendet wird, nimmt jede Funktion mit, die NUR an ihm hing. Wer eine Leiste ausdünnt, muss für jeden entfernten Knopf sagen, wer seine Aufgabe übernimmt — und für das Zu eines Blattes gilt das doppelt, weil es kein zweites Mal geöffnet werden kann, wenn es offen feststeckt.
+
+
+---
+
+## P84 · Zweimal rot aus dem falschen Grund — derselbe Lauf
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** `test545` war rot, sagte aber zweimal etwas anderes, als er mass: erst „der Knopf misst 0 × 0", dann „die Geste gibt es nicht" — obwohl der Knopf 44 px hatte und die Geste gebaut war.
+
+**Die falsche Vermutung.** Beim ersten Mal: der Knopf sei zu klein. Beim zweiten Mal: der Griff sei nicht angeschlossen. Beides falsch.
+
+**Wie es gefunden wurde.** Nachgesehen statt geglaubt. Das Maß wurde NACH dem Klick genommen — geschlossen steht `#ai` auf `display:none`, und dann misst jeder Knopf darin 0 × 0. Und `document.elementFromPoint` an der Zugstelle nannte den wahren Empfänger: `DIV#rg-willkommen`, das Willkommensblatt über allem.
+
+**Die Ursache.** Zwei Messfehler im Wächter, keiner im Produkt.
+
+**Der Beweis.** Nach der Korrektur: „→ ai-zu · 44×44 px" und „Der Zug landet wirklich auf dem Kopf des Blattes" — und die Gegenprobe wird nur an der Geste rot.
+
+**Die Lehre.** Vierter und fünfter Fall derselben Sorte an zwei Tagen, nach `test542`, `test543` und `test544`. Die Lehre steht jetzt in beide Richtungen: ein roter Lauf ist noch kein Beweis, und ein grüner erst recht nicht. Ein Wächter, der eine Stelle anfasst, prüft zuerst, WER dort liegt.
 

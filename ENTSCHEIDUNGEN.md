@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-630 Entscheidungen, E1 bis E652 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+631 Entscheidungen, E1 bis E653 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -695,6 +695,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E650** — `String.replace` trifft das erste Vorkommen, nicht das markierte: `umschliesse` und `linkSetzen` in der Auswahlleiste ersetzten mit `(b.text||'').replace(txt, …)`. Wer in „Test und Test" das zweite Wort markiert und auf Fett drückt, bekam das erste fett — kein Absturz, keine Meldung, nur Text an der falschen Stelle. Repariert über `auswahlOffset()` mit Nachprüfung, Rückfall auf die Reihenfolge bei gerendertem Markdown und auf den alten Weg, wenn beides nicht trägt. Neuer Wächter `test542`, gegen den alten Stand rot.
 * **E651** — Ein Schalter, der Sicherheit verspricht und nicht gelesen wird: das Datenbankmenü sagte „Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und schreiben", aber `coll.verbindungen` wurde nur geschrieben. Schlimmer noch die Anzeige — bei einer nie angefassten Datenbank stand bei JEDEM Dienst „aus", während der Spiegel lief. Jetzt beantwortet `Spiegel.darf` die Frage an einer Stelle, für Anzeige UND Sperre; gesperrt wird vor dem Netzruf, also auch das Lesen. `undefined` heisst erlaubt (Bestandsschutz), `[]` heisst gesperrt. Wächter `test543`.
 * **E652** — Das Teure war gebaut, das Billige fehlte: die ganze Abbruchkette des KI-Chats stand (`frage(…, {signal})`, abbrechbares `schlafen`, `signal` bis in `fetch`), nur `senden` reichte das dritte Argument nicht durch — und es gab keinen Knopf. Jetzt wird der Senden-Knopf für die Dauer des Laufs zum Stopp-Knopf (derselbe Knopf, §37; `aria-label` wechselt mit, §38), ein Abbruch behält die Teilantwort und sagt „Abgebrochen" statt „AbortError". Dazu der tote Menüpunkt „Meine Quellen", der ein HTML-Element an eine Funktion gab, die eine Liste erwartet. Wächter `test544`.
+* **E653** — Ein Griff, der nichts hält, und ein Blatt ohne Weg zurück: am Telefon ist `#ai` ein Blatt von unten, `#btn-ai` steht dort auf `display:none` (bausteine.css:300, :2119), `.ai-head` trug kein Kreuz, und Strg+J gibt es an einem Telefon nicht — einmal geöffnet, war das KI-Feld eine Sackgasse über der unteren Leiste (88vh, z-index 920 gegen 401). Dazu zeichnete `#ai::before` einen Wischgriff, dessen eigener Kommentar sagt, was er verspricht — gewischt werden konnte nichts (§47). Jetzt: ein Schliess-Knopf `#ai-zu` (44 px, `aria-label`) für BEIDE Bildschirme, und der Griff zieht wirklich (90 px Schwelle, darunter federt es zurück; nur unter 760 px, nur am Kopf, nicht auf den Knöpfen). Wächter `test545`.
 
 ---
 
@@ -53572,3 +53573,74 @@ Erst als er nur noch zählte, was der Klick **neu** öffnet, stand da, was
 Sache war. Dieselbe Lehre wie bei `test542` und `test543` am selben Tag,
 und inzwischen die dritte: **ein roter Lauf ist noch kein Beweis, und ein
 grüner erst recht nicht.**
+
+
+## E653 — Ein Griff, der nichts hält, und ein Blatt ohne Weg zurück
+
+**Was wurde entschieden?** Das KI-Feld bekommt einen Schliess-Knopf im Kopf
+(`#ai-zu`, 44 px, `aria-label="KI schliessen"`), und der Wischgriff am
+oberen Rand des Blattes zieht wirklich: ein Zug von mehr als 90 px nach
+unten schliesst es, darunter federt es zurück. Beides gilt für denselben
+Weg — `kiPanel(false)` —, nicht als zweite Logik daneben (§8).
+
+**Warum?** Am Telefon ist `#ai` kein Panel neben der Seite, sondern ein
+Blatt, das von unten kommt (bausteine.css:339). Gemessen am 20. September
+auf 390 × 844:
+
+```txt
+#btn-ai                  display:none — zweimal (bausteine.css:300, :2119)
+.ai-head                 zwei Knöpfe: Unterhaltungen, Neuer Chat. Kein Kreuz.
+Strg+J                   gibt es an einem Telefon nicht
+Escape-Griff             räumt .menu und .overlay — #ai ist ein <aside>
+#ai                      88vh hoch, z-index 920
+#handy-oben              z-index 401 — liegt vollständig darunter
+```
+
+Wer das KI-Feld am Telefon öffnete, konnte es nicht mehr schliessen. Nicht
+über die Kopfleiste, nicht über die Reiter darunter, nicht über eine Taste.
+Der einzige Ausweg war, den Tab zu schliessen — und das ist keine
+Bedienung, sondern eine Falle. §37 ist **[hart im Kern]**, und „Kein
+Desktop-only für Kernfunktionen" meint genau diesen Fall.
+
+**Der zweite, leisere Fund.** `#ai::before` zeichnet oben den Strich, den
+jedes Blatt dieser Art trägt, und der Kommentar daneben sagt wörtlich, was
+er verspricht: *„er sagt ohne Wort, dass man das Blatt wegwischen kann"*.
+Gewischt werden konnte nichts. `wischen.ts` kennt `#handy-oben` und sonst
+nichts; auf `#ai` hörte niemand zu. Ein gezeichnetes Versprechen ist
+dasselbe Versprechen (§47) — und hier war es das einzige, das überhaupt
+einen Weg zurück andeutete.
+
+**Was war die Alternative?** `#btn-ai` am Telefon wieder einblenden. Dagegen
+steht der Kommentar an bausteine.css:297, und er hat recht: „sonst quetschen
+sich zwölf Knöpfe in 428 Pixel und der Titel verschwindet". Der Weg zurück
+gehört an das Blatt, nicht in eine Leiste, die es verdeckt.
+
+Zweite Alternative: nur den Knopf, den Griff Zierde lassen. Dann bliebe §47
+halb gebrochen — ein Strich, der eine Geste zeigt, die es nicht gibt. Und
+die Geste ist am Telefon die schnellere: der Daumen liegt ohnehin unten.
+
+**Was kostet es?** Ein Knopf mehr im Kopf (drei statt zwei — bei 44 px und
+390 px Breite bleibt der Titel unangetastet) und rund siebzig Zeilen in
+`schale.ts`. Der Zug hängt an `pointerdown` auf `.ai-head`, nicht auf dem
+ganzen Blatt: darunter steht der Verlauf, und der rollt.
+
+**Die Stelle, an der es fast schiefging.** Beim Loslassen wird erst der
+Übergang zurückgegeben und dann der Wert geändert — mit einem `void
+blatt.offsetHeight` dazwischen. Ohne das Lesen fasst der Browser beides zu
+einem Schritt zusammen, und das Blatt springt, statt zu gleiten.
+
+**Der Wächter.** `test545`, zwölf Messungen. Er fragt nicht, ob ein Kreuz
+dasteht, sondern ob einer WIRKT: jeder sichtbare Knopf in `.ai-head` wird
+gedrückt, und danach wird nachgesehen, ob `.open` weg ist. Gegen den alten
+Stand stand da die Zeile, um die es geht — *„2 geprüft, 0 schliessen — das
+Blatt ist eine Falle"*.
+
+**Und zweimal war er aus dem falschen Grund rot.** Beim ersten Anlauf mass
+er den Knopf NACH dem Klick; geschlossen steht `#ai` auf `display:none`,
+und dann misst jeder Knopf darin 0 × 0. Beim zweiten zog er gegen
+`#rg-willkommen`, das Willkommensblatt, das über allem lag — der Zug kam
+nie am Kopf an, und der Lauf meldete „die Geste gibt es nicht", obwohl sie
+gebaut war. Er prüft jetzt mit `elementFromPoint`, wer unter dem Finger
+liegt, und sagt es, wenn es nicht das Blatt ist. Das ist derselbe Fund wie
+an den vier Tagen davor, nur von der anderen Seite: ein roter Lauf ist noch
+kein Beweis.
