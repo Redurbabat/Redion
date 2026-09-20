@@ -2369,6 +2369,13 @@ const ChronikDaten = {
      "gemeint": "Die KI soll mehr Werkzeuge bekommen — und genau eine Grenze, die hält: nichts wird gelöscht, ohne dass Redur zugestimmt hat.",
      "kuerzer": "„KI darf alles ausser löschen ohne meine Bestätigung.\"",
      "besserer prompt": "Wie oben, plus die Reihenfolge: erst die Grenze bauen, dann die neuen Werkzeuge."
+    },
+    {
+     "zeit": "ca. 18:10",
+     "wortlaut": "ja mach das mit dem text bearbeiten weiter",
+     "gemeint": "Zustimmung zu dem Vorschlag, den ich am Ende von E655 gemacht hatte: die KI soll Text auf einer Seite ändern können.",
+     "kuerzer": "„ja\" hätte gereicht — der Vorschlag stand direkt darüber.",
+     "besserer prompt": "Kein besserer nötig. Eine Zustimmung zu einem konkreten Vorschlag ist der kürzeste mögliche Auftrag."
     }
    ],
    "arbeit": [
@@ -2499,12 +2506,20 @@ const ChronikDaten = {
      "zeitraum": "ca. 17:45 –",
      "dauer": "laufend",
      "pruefungen": "test547 (18/18, Gegenprobe gefahren), test546, test291, test281, test286, test87, test105, test109"
+    },
+    {
+     "was": "E656 — textBearbeiten: das erste Werkzeug, das bestehenden Text anfasst",
+     "vonCommit": "(offen)",
+     "bisCommit": "(offen)",
+     "zeitraum": "ca. 18:15 –",
+     "dauer": "laufend",
+     "pruefungen": "test548 (17/17, zwei Gegenproben gefahren), test547, test546, test291, test281, test286, test87, test105, test109"
     }
    ],
    "zahlen": {
     "commits": 2,
-    "entscheidungen": 13,
-    "neue Prüfläufe": 6,
+    "entscheidungen": 14,
+    "neue Prüfläufe": 7,
     "volle Läufe": 0
    },
    "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -3718,6 +3733,18 @@ const ChronikDaten = {
    "ursache": "Der Satz, den ein Werkzeug zurückgibt, wird vom Werkzeug geschrieben — nicht vom Ergebnis. Er kann also alles behaupten.",
    "beweis": "Gegenprobe: „Antwort: 3 Lernkarten … stehen ab sofort im Lernzentrum bereit\" bei „Learning.cards(): 1 → 1 · neu erkannt: 0\".",
    "lehre": "Ein Wächter misst dort, wo das Ergebnis GEBRAUCHT wird, nicht dort, wo es entsteht. Beim alten Schnellbefehl „Mache Karteikarten\" ist derselbe Fehler jahrelang unbemerkt geblieben: er schrieb Text ins Chatfenster, und es sah nach Karteikarten aus."
+  },
+  {
+   "nr": "P87",
+   "datum": "2026-09-20",
+   "titel": "Derselbe Fehler, zwei Bögen später, an einer anderen Stelle",
+   "schwere": "mittel",
+   "symptom": "Ein Werkzeug, das eine Textstelle ersetzt, trifft die falsche — `String.replace` nimmt das erste Vorkommen. Die Gegenprobe druckt es aus: „Die Leitung liegt. Das Kabel bleibt.\"",
+   "falscheVermutung": "Dass E650 diesen Fehler erledigt hat. E650 hat ihn in der Auswahlleiste des Editors repariert; als ich zwei Bögen später ein Werkzeug baute, das dasselbe tut, stand er als Möglichkeit sofort wieder da.",
+   "wieGefunden": "Nicht gefunden — vorhergesehen. Beim Entwurf von `textBearbeiten` war E650 noch in Reichweite, also wurde die Regel „genau einmal oder gar nicht\" von vornherein eingebaut und die Gegenprobe gefahren, um zu sehen, was ohne sie passiert.",
+   "ursache": "Ein Modell plant eine Ersetzung aus dem, was es GELESEN hat, und liest nicht, wie oft etwas dasteht. Die Eindeutigkeit ist deshalb keine Eingabeprüfung, sondern ein Teil der Aufgabe.",
+   "beweis": "Gegenprobe mit abgehängter Prüfung: von zwei gleichlautenden Blöcken wurde der erste geändert, der zweite nicht — und im Satz mit zwei „Das Kabel\" traf es das erste.",
+   "lehre": "Ein reparierter Fehler ist nicht erledigt, sondern bekannt. Wer kurz danach etwas Ähnliches baut, hat den billigsten Moment, ihn gar nicht erst entstehen zu lassen — und die Gegenprobe zeigt, dass die Vorkehrung nicht dekorativ ist."
   }
  ]
 } as const;

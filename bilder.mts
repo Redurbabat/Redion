@@ -392,6 +392,37 @@ const ANSICHTEN: Record<string, {
      darüber der Strich, der jetzt hält, was er zeigt. Am Rechner wäre das
      Bild sinnlos — dort klappt `#btn-ai` in der Kopfleiste auf und zu.
        node bilder.mts kiBlatt handy */
+  /* --- Das Tor vor einer Textänderung (E656) ------------------------------
+     Was Redur sieht, bevor ein Satz umgeschrieben wird: die Stelle vorher
+     und nachher, im Klartext. „Höchstens ein gespeichertes Objekt" stand da
+     früher — richtig, und ohne jeden Nutzen für die Entscheidung.
+       node bilder.mts kiTextTor rechner */
+  kiTextTor: {
+    titel: 'Die KI möchte einen Satz ändern (E656)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('agent:fragen', 'immer');
+      const s = Store.addPage(null, { text: 'Installationshinweise', icon: '🔌' });
+      Store.addBlock(s.id, 'text',
+        { text: 'Der Leiter wird an die Klemme gefuehrt und dort gesichert.' });
+      Store.addBlock(s.id, 'text', { text: 'Danach wird gemessen.' });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 250));
+      (KI as any).frageKurz = () => Promise.resolve(JSON.stringify({
+        gedanke: 'Der Fachbegriff heisst Reihenklemme',
+        werkzeug: 'textBearbeiten',
+        argument: { titel: 'Installationshinweise',
+                    alt: 'an die Klemme gefuehrt',
+                    neu: 'auf die Reihenklemme aufgelegt' } }));
+      Store.setMeta('agent:eigene', [{ id: 'bild-text', name: 'Redakteur', guthaben: 3,
+        werkzeuge: ['textBearbeiten', 'fertig'], anweisung: '', wissen: [], ausloeser: {} }]);
+      void Agent.laufen('bild-text', 'Bring die Fachbegriffe in Ordnung');
+      await new Promise(f => setTimeout(f, 700));
+    }
+  },
+
   /* --- Was die KI jetzt bauen kann (E655) ---------------------------------
      Die Tabelle ist das Sichtbare der drei: Lernkarten prüft man an
      `Learning.cards()`, PDF-Text an seinem Wortlaut — eine Tabelle sieht man

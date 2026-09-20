@@ -179,6 +179,93 @@ const Agent = (() => {
                     (a.bloecke || []).length + ' Blöcken.';
             }
         },
+        /* ── DAS ERSTE WERKZEUG, DAS BESTEHENDEN TEXT ANFASST (E656) ──────────
+           Anlegen kostet nichts: was neu ist, war vorher nicht da. Ändern
+           kostet den alten Stand, und §51 sagt, was davon wichtiger ist.
+           Deshalb zwei Vorkehrungen, und beide sind der ganze Unterschied
+           zwischen diesem Werkzeug und einem `String.replace`:
+    
+           1 · VOR DEM SCHREIBEN EINE FASSUNG. `Store.updateBlock` sichert
+               keine; die automatische Sicherung hat eine Vier-Minuten-Sperre
+               UND einen Schalter (`autoVersionen`, E417). Wer ihn ausmacht,
+               hätte nach einer KI-Änderung gar nichts mehr. Also sichert das
+               Werkzeug selbst — wie „vor Wiederherstellung" und „vor
+               Quelltext-Änderung" es längst tun. Der Satz dazu steht wörtlich
+               in `werkzeuge.ts:924`: ein Schalter darf keinen Schutz
+               abschalten, um den gebeten wurde.
+    
+           2 · GENAU EINMAL ODER GAR NICHT. Das ist die Lehre aus E650, zwei
+               Bögen alt: `String.replace` trifft das ERSTE Vorkommen, nicht
+               das gemeinte. Ein Modell, das „ändere ‚das Kabel' in ‚die
+               Leitung'" sagt, weiss nicht, dass „das Kabel" dreimal dasteht.
+               Kommt die Stelle nicht genau einmal vor, wird nichts geändert
+               und die Zahl genannt. Eine Absage ist billig; eine falsch
+               ersetzte Stelle merkt niemand. */
+        textBearbeiten: {
+            recht: 'bearbeiten',
+            beschreibung: 'Ersetzt eine EINDEUTIGE Textstelle auf einer Seite. Die Stelle muss ' +
+                'genau einmal vorkommen, sonst wird nichts geändert. Der alte Stand bleibt als ' +
+                'Fassung erhalten. Argument: {"titel":"Seite","alt":"genauer alter Wortlaut",' +
+                '"neu":"neuer Wortlaut"}',
+            lauf: async (a, protokoll) => {
+                const alt = String((a && a.alt) ?? '');
+                const neuerText = String((a && a.neu) ?? '');
+                if (!alt)
+                    return 'Ohne „alt" ist nicht zu erkennen, welche Stelle gemeint ist. Nichts geändert.';
+                const seite = seiteNachTitel(a && a.titel);
+                if (!seite)
+                    return 'Keine Seite gefunden, die „' + (a && a.titel) + '" heisst.';
+                if (!Konten.darf('bearbeiten', seite.id))
+                    return 'Diese Seite darfst du nicht ändern.';
+                /* WIE VIELE BLÖCKE ENTHALTEN DIE STELLE, und wie oft je Block?
+                   Beide Zahlen werden gebraucht: zwei Treffer in einem Block sind
+                   genauso mehrdeutig wie je einer in zwei Blöcken. */
+                const zaehle = (heu, nadel) => {
+                    let n = 0, i = heu.indexOf(nadel);
+                    while (i >= 0) {
+                        n++;
+                        i = heu.indexOf(nadel, i + nadel.length);
+                    }
+                    return n;
+                };
+                const treffer = Store.childrenOf(seite.id)
+                    .filter((b) => b.alive && typeof b.text === 'string' && b.text.includes(alt))
+                    .map((b) => ({ b, wie: zaehle(String(b.text), alt) }));
+                const gesamt = treffer.reduce((n, t) => n + t.wie, 0);
+                if (!gesamt)
+                    return 'Die Stelle „' + alt.slice(0, 60) + '" steht nicht auf dieser Seite. ' +
+                        'Nichts geändert. Lies die Seite und nimm den Wortlaut genau so, wie er dasteht.';
+                if (gesamt > 1)
+                    return 'Die Stelle „' + alt.slice(0, 60) + '" steht ' + gesamt + '-mal auf dieser Seite' +
+                        (treffer.length > 1 ? ' (in ' + treffer.length + ' Blöcken)' : ' (im selben Block)') +
+                        '. Es ist nicht zu erkennen, welche gemeint ist — deshalb wurde NICHTS geändert. ' +
+                        'Nimm mehr Text drumherum, bis die Stelle eindeutig ist.';
+                const ziel = treffer[0].b;
+                const vorher = String(ziel.text);
+                /* DIE FASSUNG KOMMT VOR DEM SCHREIBEN, nicht danach — sonst hielte
+                   sie den neuen Stand fest, und das Alte wäre weg. */
+                try {
+                    await Store.versionSpeichern(seite.id, 'vor KI-Änderung');
+                }
+                catch (e) {
+                    return 'Die Sicherungsfassung liess sich nicht schreiben, deshalb wurde nichts ' +
+                        'geändert: ' + (e instanceof Error ? e.message : String(e));
+                }
+                const nachher = vorher.replace(alt, neuerText);
+                /* `herkunft: 'ki'` AUCH AN EINEM BLOCK, DEN EIN MENSCH GESCHRIEBEN
+                   HAT. Zwei Fehler sind möglich, und dieser ist der kleinere: der
+                   Streifen sagt „hier war die KI", nicht „das ist ganz von ihr".
+                   Nicht zu markieren hiesse, eine KI-Änderung unsichtbar zu machen —
+                   und genau dafür gibt es E307. */
+                Store.updateBlock(ziel.id, { text: nachher, herkunft: 'ki' });
+                protokoll.ids.push(ziel.id);
+                App.zeichneSeite();
+                return 'Geändert auf „' + (seite.text || 'Ohne Titel') + '":\n' +
+                    'vorher: ' + vorher.slice(0, 200) + '\n' +
+                    'nachher: ' + nachher.slice(0, 200) + '\n' +
+                    'Der alte Stand liegt als Fassung „vor KI-Änderung" im Verlauf der Seite.';
+            }
+        },
         /* ── DIE DREI, DIE REDUR GENANNT HAT (E655) ───────────────────────────
            „lernkarten erstellen pdf elssen, tabelas usw". Alle drei legen nur an
            oder lesen — keines fällt unter das Tor aus E654, und genau deshalb
@@ -611,6 +698,16 @@ const Agent = (() => {
             objekte = c ? Math.min(15, Store.rowsOf(c.id).length) + 1 : 1;
             text = 'höchstens ' + Math.max(0, objekte - 1) + ' Feldwert(e) und die Spalteneinstellung';
         }
+        else if (werkzeug === 'textBearbeiten') {
+            /* EIN BLOCK, UND DAS TOR SOLL DEN WORTLAUT ZEIGEN. „Höchstens ein
+               gespeichertes Objekt" stimmt zwar, sagt aber nicht, WAS sich
+               ändert — und genau das ist die Frage, die der Mensch am Tor
+               beantworten muss. */
+            objekte = 1;
+            text = 'eine Textstelle auf „' + String(a?.titel || '?') + '": ' +
+                '„' + String(a?.alt || '').slice(0, 80) + '" → ' +
+                '„' + String(a?.neu || '').slice(0, 80) + '"';
+        }
         else if (werkzeug === 'worker') {
             text = 'Worker-Eingabe und -Ergebnis, keine direkten Arbeitsbereichsdaten';
         }
@@ -653,7 +750,7 @@ const Agent = (() => {
             text: 'Sucht im Arbeitsbereich, fasst zusammen, legt Seiten und Einträge an.',
             werkzeuge: ['suchen', 'seiteLesen', 'seiteAnlegen', 'zeileAnlegen', 'datenbankLesen',
                 'kalenderLesen', 'mailLesen', 'pdfLesen', 'tabelleAnlegen',
-                'karteikartenAnlegen', 'seiteLoeschen', 'fertig'],
+                'karteikartenAnlegen', 'textBearbeiten', 'seiteLoeschen', 'fertig'],
             anweisung: 'Du bist ein persönlicher Assistent. Arbeite ruhig und knapp. ' +
                 'Suche zuerst im Arbeitsbereich, bevor du etwas behauptest. ' +
                 'Wenn du etwas anlegst, sag genau, was du angelegt hast. ' +
@@ -668,9 +765,11 @@ const Agent = (() => {
                 'woher sie stammt. Was du nicht belegen kannst, kennzeichnest du als Vermutung.' },
         { id: 'redakteur', icon: '✍️', name: 'Redakteur',
             text: 'Überarbeitet Texte, ohne den Sinn zu verändern.',
-            werkzeuge: ['seiteLesen', 'suchen', 'pdfLesen', 'fertig'],
+            werkzeuge: ['seiteLesen', 'suchen', 'pdfLesen', 'textBearbeiten', 'fertig'],
             anweisung: 'Du überarbeitest Texte. Der Sinn bleibt, die Sprache wird klarer. ' +
-                'Keine neuen Behauptungen, keine Ausschmückung. Schreib in ganzen Sätzen.' },
+                'Keine neuen Behauptungen, keine Ausschmückung. Schreib in ganzen Sätzen. ' +
+                'Zum Ändern liest du die Seite ZUERST und nimmst den alten Wortlaut ' +
+                'buchstabengetreu — eine Stelle, die mehrfach vorkommt, wird nicht geändert.' },
         { id: 'bau', icon: '🗂', name: 'Datenbank-Baumeister',
             text: 'Entwirft Datenbanken, legt Spalten an und füllt sie.',
             werkzeuge: ['suchen', 'datenbankLesen', 'datenbankAnlegen', 'zeileAnlegen', 'feldFuellen', 'fertig'],

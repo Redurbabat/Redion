@@ -1,5 +1,35 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E656 · Text ändern, ohne den alten Stand zu verlieren
+
+**Redurs „usw."** Umschreiben, kürzen, übersetzen ging nur über das
+Chatfenster; als Agentenwerkzeug fehlte es.
+
+**Was daran anders ist.** `textBearbeiten` ist das erste Werkzeug, das
+BESTEHENDEN Text anfasst. Anlegen kostet im Fehlerfall einen überflüssigen
+Block; Ändern kostet den alten Stand.
+
+**Gebaut, mit zwei Vorkehrungen.** Erstens eine Fassung „vor KI-Änderung"
+VOR dem Schreiben — unabhängig von der Vier-Minuten-Sperre und vom
+Schalter `autoVersionen` (E417), denn ein Schalter darf keinen Schutz
+abschalten, um den gebeten wurde. Scheitert sie, wird gar nicht geändert.
+Zweitens „genau einmal oder gar nicht": kommt die Stelle mehrfach vor — im
+selben Block oder in zweien —, wird nichts geändert und die Zahl genannt.
+Der geänderte Block trägt danach `herkunft: "ki"` (E307), und das Tor aus
+E295 zeigt jetzt den Wortlaut vorher und nachher statt „höchstens ein
+gespeichertes Objekt".
+
+**Geprüft.** `test548` neu, siebzehn Messungen, gegen den alten Stand
+2/17. Zwei Gegenproben, beide gefahren: ohne die Fassung steht da „0 → 0"
+und „KEINE FASSUNG"; ohne die Eindeutigkeitsprüfung kommt der Fehler aus
+E650 wörtlich zurück — „Die Leitung liegt. Das Kabel bleibt."
+`test547`, `test546`, `test291`, `test281`, `test286`, `test87`, `test105`,
+`test109` grün, `typecheck` sauber, Einzeldatei neu.
+
+**Bild.** `bilder/kiTextTor-rechner-hell.png` (§55.3).
+
+---
+
 ## 20. September 2026 · E655 · Lernkarten, PDF und Tabellen
 
 **Redurs erste Hälfte.** „lernkarten erstellen pdf elssen, tabelas usw."

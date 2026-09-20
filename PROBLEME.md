@@ -100,6 +100,7 @@ sind der teuerste Teil und der lehrreichste.
 | P84 | 2026-09-20 | Zweimal rot aus dem falschen Grund — derselbe Lauf | 🟠 mittel | — |
 | P85 | 2026-09-20 | Eine Regel, die nur galt, weil es die Handlung nicht gab | 🟠 mittel | — |
 | P86 | 2026-09-20 | Eine Erfolgsmeldung ist kein Erfolg | 🟠 mittel | — |
+| P87 | 2026-09-20 | Derselbe Fehler, zwei Bögen später, an einer anderen Stelle | 🟠 mittel | — |
 
 ---
 
@@ -1915,4 +1916,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Gegenprobe: „Antwort: 3 Lernkarten … stehen ab sofort im Lernzentrum bereit" bei „Learning.cards(): 1 → 1 · neu erkannt: 0".
 
 **Die Lehre.** Ein Wächter misst dort, wo das Ergebnis GEBRAUCHT wird, nicht dort, wo es entsteht. Beim alten Schnellbefehl „Mache Karteikarten" ist derselbe Fehler jahrelang unbemerkt geblieben: er schrieb Text ins Chatfenster, und es sah nach Karteikarten aus.
+
+
+---
+
+## P87 · Derselbe Fehler, zwei Bögen später, an einer anderen Stelle
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Ein Werkzeug, das eine Textstelle ersetzt, trifft die falsche — `String.replace` nimmt das erste Vorkommen. Die Gegenprobe druckt es aus: „Die Leitung liegt. Das Kabel bleibt."
+
+**Die falsche Vermutung.** Dass E650 diesen Fehler erledigt hat. E650 hat ihn in der Auswahlleiste des Editors repariert; als ich zwei Bögen später ein Werkzeug baute, das dasselbe tut, stand er als Möglichkeit sofort wieder da.
+
+**Wie es gefunden wurde.** Nicht gefunden — vorhergesehen. Beim Entwurf von `textBearbeiten` war E650 noch in Reichweite, also wurde die Regel „genau einmal oder gar nicht" von vornherein eingebaut und die Gegenprobe gefahren, um zu sehen, was ohne sie passiert.
+
+**Die Ursache.** Ein Modell plant eine Ersetzung aus dem, was es GELESEN hat, und liest nicht, wie oft etwas dasteht. Die Eindeutigkeit ist deshalb keine Eingabeprüfung, sondern ein Teil der Aufgabe.
+
+**Der Beweis.** Gegenprobe mit abgehängter Prüfung: von zwei gleichlautenden Blöcken wurde der erste geändert, der zweite nicht — und im Satz mit zwei „Das Kabel" traf es das erste.
+
+**Die Lehre.** Ein reparierter Fehler ist nicht erledigt, sondern bekannt. Wer kurz danach etwas Ähnliches baut, hat den billigsten Moment, ihn gar nicht erst entstehen zu lassen — und die Gegenprobe zeigt, dass die Vorkehrung nicht dekorativ ist.
 

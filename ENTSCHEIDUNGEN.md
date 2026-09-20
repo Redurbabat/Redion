@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-633 Entscheidungen, E1 bis E655 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+634 Entscheidungen, E1 bis E656 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -698,6 +698,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E653** — Ein Griff, der nichts hält, und ein Blatt ohne Weg zurück: am Telefon ist `#ai` ein Blatt von unten, `#btn-ai` steht dort auf `display:none` (bausteine.css:300, :2119), `.ai-head` trug kein Kreuz, und Strg+J gibt es an einem Telefon nicht — einmal geöffnet, war das KI-Feld eine Sackgasse über der unteren Leiste (88vh, z-index 920 gegen 401). Dazu zeichnete `#ai::before` einen Wischgriff, dessen eigener Kommentar sagt, was er verspricht — gewischt werden konnte nichts (§47). Jetzt: ein Schliess-Knopf `#ai-zu` (44 px, `aria-label`) für BEIDE Bildschirme, und der Griff zieht wirklich (90 px Schwelle, darunter federt es zurück; nur unter 760 px, nur am Kopf, nicht auf den Knöpfen). Wächter `test545`.
 * **E654** — Die KI darf löschen, aber nie ohne ein ausdrückliches Ja: Redurs Satz „alles machen kann ausser ohne meine bestetigung etwas löschen" ist eine eigene Rechteklasse, keine strengere Stufe von `bearbeiten`. Vorher kannte der Agentenkatalog zwei Rechte (`lesen`, `bearbeiten`) und kein Löschwerkzeug — die Regel war nur Abwesenheit. Jetzt: `seiteLoeschen` mit `recht: "loeschen"`, und ein Tor in der SCHLEIFE (nicht im Werkzeug), das für jedes künftige Löschwerkzeug gilt. Drei Dinge, die beim Bearbeiten richtig sind, gelten dort nicht: `fragenModus() === "nie"`, „für diesen Lauf erlauben" und `darfAllein` unbeaufsichtigt. Gelöscht wird in den Papierkorb, nie endgültig (§43). Wächter `test546`.
 * **E655** — Lernkarten, PDF und Tabellen: Redurs erste Hälfte („lernkarten erstellen pdf elssen, tabelas"). Drei neue Agentenwerkzeuge, die nur anlegen und lesen — sie fallen nicht unter das Tor aus E654, und deshalb durften sie im selben Zug kommen. `karteikartenAnlegen` legt echte `flashcard`-Blöcke an, die `Learning.cards()` auch findet (der alte Schnellbefehl schrieb nur Text ins Chatfenster); `pdfLesen` gibt den Wortlaut einer bestimmten Seitenspanne aus `suchtext` (E107) statt ihn über die Suche zu streifen; `tabelleAnlegen` baut einen `table`-Block mit `rows`, den der Editor zeichnet. Alle drei tragen `herkunft: "ki"` und damit den Streifen aus E307. Wächter `test547`.
+* **E656** — Die KI bearbeitet Text, und das Alte bleibt holbar: `textBearbeiten` ist das erste Werkzeug, das BESTEHENDEN Text anfasst. Zwei Vorkehrungen machen den Unterschied zu einem `String.replace` — vor dem Schreiben eine Fassung „vor KI-Änderung" (unabhängig vom Schalter `autoVersionen` und von der Vier-Minuten-Sperre), und „genau einmal oder gar nicht": kommt die Stelle mehrfach vor, wird nichts geändert und die Zahl genannt (die Lehre aus E650, zwei Bögen alt). Der geänderte Block trägt danach `herkunft: "ki"`. Wächter `test548`.
 
 ---
 
@@ -53783,3 +53784,93 @@ was die KI gebaut hat, sagt es von selbst.
 3/18 — die drei grünen waren „keines der drei darf löschen" und „nichts
 Vorhandenes wird angefasst", also genau die Zusagen, die auch ohne die
 Werkzeuge gelten.
+
+
+## E656 — Die KI bearbeitet Text, und das Alte bleibt holbar
+
+**Was wurde entschieden?** Ein Werkzeug `textBearbeiten`, das eine
+**eindeutige** Textstelle auf einer Seite ersetzt — mit einer
+Sicherungsfassung davor und einer Absage bei Mehrdeutigkeit.
+
+**Warum?** Redurs „usw." nach E655. Umschreiben, kürzen, übersetzen ging
+bisher nur über das Chatfenster; als Agentenwerkzeug fehlte es.
+
+**Was daran anders ist als bei allen Werkzeugen davor.** `seiteAnlegen`,
+`karteikartenAnlegen`, `tabelleAnlegen` legen an: was neu ist, war vorher
+nicht da, und ein Fehler kostet einen überflüssigen Block. `textBearbeiten`
+ist das erste, das **bestehenden** Text anfasst — und da kostet ein Fehler
+den alten Stand.
+
+### Vorkehrung 1 — vor dem Schreiben eine Fassung
+
+`Store.updateBlock` sichert keine. Die automatische Sicherung
+(`versionAutomatisch`) hat zwei Ausreden, jede für sich berechtigt:
+
+```txt
+Vier-Minuten-Sperre     eine Fassung je Seite und Viertelstunde reicht,
+                        wenn ein Mensch tippt
+Schalter autoVersionen  E417 — wer ihn ausmacht, will den Platz nicht
+                        ausgeben
+```
+
+Beide zusammen heissen: eine KI-Änderung könnte den einzigen Stand
+überschreiben, den es gab. Deshalb ruft das Werkzeug selbst
+`Store.versionSpeichern(seite.id, 'vor KI-Änderung')` — genau wie es „vor
+Wiederherstellung" (`fassungen.ts:326`) und „vor Quelltext-Änderung"
+(`werkzeuge.ts:1382`) längst tun. Der Satz dazu steht wörtlich in
+`werkzeuge.ts:924` und gilt hier genauso:
+
+> Ein Schalter darf keinen Schutz abschalten, um den gebeten wurde.
+
+Und die Fassung kommt **vor** dem Schreiben, nicht danach — sonst hielte
+sie den neuen Stand fest, und das Alte wäre weg. Scheitert sie, wird gar
+nicht geändert.
+
+### Vorkehrung 2 — genau einmal oder gar nicht
+
+Das ist E650, zwei Bögen alt, von der anderen Seite: `String.replace`
+trifft das ERSTE Vorkommen, nicht das gemeinte. Ein Modell, das „ändere
+‚das Kabel' in ‚die Leitung'" plant, weiss nicht, dass „das Kabel" dreimal
+dasteht — es hat die Seite gelesen, nicht gezählt.
+
+Gezählt werden deshalb zwei Dinge, und beide müssen eins ergeben: in wie
+vielen Blöcken die Stelle steht, und wie oft je Block. Sonst:
+
+```txt
+Die Stelle „Das Kabel" steht 2-mal auf dieser Seite (im selben Block).
+Es ist nicht zu erkennen, welche gemeint ist — deshalb wurde NICHTS
+geändert. Nimm mehr Text drumherum, bis die Stelle eindeutig ist.
+```
+
+Eine Absage ist billig: das Modell nimmt beim nächsten Schritt mehr Text
+drumherum. Eine falsch ersetzte Stelle merkt niemand.
+
+**Was war die Alternative?** Die Stelle über einen Blockindex ansprechen
+(„Block 3"). Dagegen spricht, dass jede Änderung an der Seite die Indizes
+verschiebt — und der Plan des Modells entsteht einen Schritt, bevor er
+ausgeführt wird. Der Wortlaut verschiebt sich nicht.
+
+**Und `herkunft: 'ki'` auch an einem Block, den ein Mensch geschrieben
+hat.** Zwei Fehler sind hier möglich, und dieser ist der kleinere: der
+Streifen aus E307 sagt „hier war die KI", nicht „das ist ganz von ihr".
+Nicht zu markieren hiesse, eine KI-Änderung unsichtbar zu machen — und
+genau dagegen wurde der Streifen gebaut.
+
+**Was kostet es?** Eine Fassung je Änderung. Das Ausdünnen in
+`fassungenAusduennen` räumt sie mit allen anderen weg (§15).
+
+**Das Tor sagt jetzt, was es ändert.** `wirkungPlanen` hat für dieses
+Werkzeug einen eigenen Zweig: statt „höchstens ein gespeichertes Objekt" —
+richtig und ohne jeden Nutzen für die Entscheidung — steht dort der
+Wortlaut vorher und nachher. Zu sehen auf
+`bilder/kiTextTor-rechner-hell.png`.
+
+**Der Wächter.** `test548`, siebzehn Messungen, gegen den alten Stand
+2/17. Zwei Gegenproben, beide gefahren:
+
+```txt
+Fassung abgehängt              „0 → 0" und „KEINE FASSUNG" — der alte
+                               Wortlaut wäre für immer weg
+Eindeutigkeitsprüfung abgehängt „Die Leitung liegt. Das Kabel bleibt."
+                               — der E650-Fehler, wörtlich zurück
+```

@@ -3671,3 +3671,53 @@ nicht gesehen. Er muss dort messen, wo das Ergebnis gebraucht wird.
 `bilder/kiTabelle-rechner-hell.png` — vier Spalten, Kopfzeile, und links
 der lila Herkunftsstreifen aus E307: was die KI gebaut hat, sagt es von
 selbst (§55.3).
+
+---
+
+## 20. September 2026 — Text ändern, ohne den alten Stand zu verlieren (E656, `test548`)
+
+Der Katalog wächst von 16 auf 17 Werkzeuge. `textBearbeiten` ist das erste,
+das bestehenden Text anfasst.
+
+```txt
+vorher   Der Leiter wird an die Klemme gefuehrt und dort gesichert.
+nachher  Der Leiter wird auf die Reihenklemme aufgelegt und dort gesichert.
+
+Fassungen          0 → 1
+Anlass             "vor KI-Änderung"
+alter Text darin   ja
+autoVersionen      AUS — die Fassung kam trotzdem
+Nachbarblock       unberührt
+herkunft danach    "ki"
+```
+
+Und die drei Fälle, in denen NICHTS geschieht:
+
+```txt
+zweimal im selben Block   „steht 2-mal … (im selben Block)" · Text unverändert
+in zwei Blöcken           „steht 2-mal … (in 2 Blöcken)"    · beide unverändert
+gar nicht gefunden        „steht nicht auf dieser Seite"    · Text unverändert
+```
+
+### Zwei Gegenproben
+
+```txt
+Sicherungsfassung abgehängt
+  ✗ Vor der Änderung wurde eine Fassung gesichert — 0 → 0
+  ✗ Die Fassung heisst „vor KI-Änderung" — "KEINE FASSUNG"
+
+Eindeutigkeitsprüfung abgehängt
+  nachher: Die Leitung liegt. Das Kabel bleibt.
+  ✗ In zwei Blöcken → nichts geändert — Kurz. | Ein Hinweis ohne Wiederholung.
+```
+
+Die zweite ist der Fehler aus **E650** wörtlich zurück, nur an einer anderen
+Stelle des Programms: `String.replace` trifft das erste Vorkommen, nicht das
+gemeinte. Zwei Bögen Abstand zwischen demselben Fehler an zwei Orten — das
+ist der Grund, warum er hier von vornherein verhindert und nicht repariert
+wurde.
+
+### Bild
+
+`bilder/kiTextTor-rechner-hell.png` — das Tor zeigt jetzt den Wortlaut
+vorher und nachher statt „höchstens ein gespeichertes Objekt" (§55.3).

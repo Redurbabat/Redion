@@ -1847,6 +1847,17 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 **Besserer Prompt:** 
 
 
+**10 · ca. 18:10**
+
+> ja mach das mit dem text bearbeiten weiter
+
+**Gemeint:** Zustimmung zu dem Vorschlag, den ich am Ende von E655 gemacht hatte: die KI soll Text auf einer Seite ändern können.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -1867,12 +1878,13 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 | E653 — Das KI-Blatt am Telefon: ein Kreuz im Kopf, und der Griff zieht wirklich | `(offen)` → `(offen)` | ca. 16:30 – | laufend | test545 (12/12, dreimal rot gesehen), test544, test87, test105, test109 |
 | E654 — Die KI darf löschen, aber nie ohne ein ausdrückliches Ja | `(offen)` → `(offen)` | ca. 17:15 – | laufend | test546 (13/13, Gegenprobe gefahren), test291, test281, test286, test301, test87, test105, test109 |
 | E655 — Lernkarten, PDF und Tabellen: die drei Werkzeuge, die Redur genannt hat | `(offen)` → `(offen)` | ca. 17:45 – | laufend | test547 (18/18, Gegenprobe gefahren), test546, test291, test281, test286, test87, test105, test109 |
+| E656 — textBearbeiten: das erste Werkzeug, das bestehenden Text anfasst | `(offen)` → `(offen)` | ca. 18:15 – | laufend | test548 (17/17, zwei Gegenproben gefahren), test547, test546, test291, test281, test286, test87, test105, test109 |
 
 #### Zahlen des Tages
 
 - **commits:** 2
-- **entscheidungen:** 13
-- **neue Prüfläufe:** 6
+- **entscheidungen:** 14
+- **neue Prüfläufe:** 7
 - **volle Läufe:** 0
 
 #### Das grösste Problem
@@ -1895,5 +1907,5 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 86 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 87 Einträge.
 
