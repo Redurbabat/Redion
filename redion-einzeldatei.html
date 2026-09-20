@@ -25147,7 +25147,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1254, inhalt: '37ce54f1a6fd532a', gebaut: '2026-09-20T18:38:39.813Z' };
+const Stand = { fassung: 1257, inhalt: '17875f415a45fc86', gebaut: '2026-09-20T18:47:40.592Z' };
 window.Stand = Stand;
 
 </script>
@@ -82417,6 +82417,13 @@ const ChronikDaten = {
                     "gemeint": "Zustimmung zu dem Vorschlag, den ich am Ende von E655 gemacht hatte: die KI soll Text auf einer Seite ändern können.",
                     "kuerzer": "„ja\" hätte gereicht — der Vorschlag stand direkt darüber.",
                     "besserer prompt": "Kein besserer nötig. Eine Zustimmung zu einem konkreten Vorschlag ist der kürzeste mögliche Auftrag."
+                },
+                {
+                    "zeit": "ca. 20:15",
+                    "wortlaut": "⚠ Groq antwortet mit 404. Die Adresse gibt es nicht (object_not_found). {\"error\":{\"message\":\"The model `llama-3.3-70b-versatile` does not exist or you do not have access to it.\",\"type\":\"invalid_request_error\",\"code\":\"model_not_found\"}} Werkzeuge & Kontext  sch aml das an",
+                    "gemeint": "Er hat die Fehlermeldung aus dem KI-Fenster kopiert und will, dass ich mir ansehe, warum Groq nicht antwortet.",
+                    "kuerzer": "Genau so. Die Meldung wörtlich zu schicken war das Beste, was er tun konnte — darin stand die Ursache, die Redions eigener Text verdeckte.",
+                    "besserer prompt": "Keiner nötig. Eine kopierte Fehlermeldung ist der genaueste Auftrag, den es gibt."
                 }
             ],
             "arbeit": [
@@ -82579,12 +82586,20 @@ const ChronikDaten = {
                     "zeitraum": "ca. 19:50 –",
                     "dauer": "laufend",
                     "pruefungen": "test551 (9/9), test402, test549 (6/6), test550 (8/8)"
+                },
+                {
+                    "was": "E661 — Groqs 404: der Anbieter hat immer recht, und die Modellliste wird erfragt",
+                    "vonCommit": "(offen)",
+                    "bisCommit": "(offen)",
+                    "zeitraum": "ca. 20:20 –",
+                    "dauer": "laufend",
+                    "pruefungen": "test552 (15/15, zwei Gegenproben), test550 (8/8)"
                 }
             ],
             "zahlen": {
                 "commits": 2,
-                "entscheidungen": 18,
-                "neue Prüfläufe": 10,
+                "entscheidungen": 19,
+                "neue Prüfläufe": 11,
                 "volle Läufe": 0
             },
             "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -83870,6 +83885,30 @@ const ChronikDaten = {
             "ursache": "§45 Schritt 1 übersprungen: die Datei an der interessanten Stelle gelesen, nicht zu Ende.",
             "beweis": "Der Wächter wurde weggeworfen und neu geschrieben; der echte Fund war 26 px statt 44, nicht dass es nichts gibt.",
             "lehre": "Der teuerste wiederkehrende Fehler dieses Projekts ist laut §45, etwas aus dem Gedächtnis zu bauen statt nachzuschlagen. Einen Wächter wegzuwerfen ist billiger als einen zweiten Katalog zu pflegen (§8)."
+        },
+        {
+            "nr": "P93",
+            "datum": "2026-09-20",
+            "titel": "Die eigene Erklärung vor die des Anbieters gestellt",
+            "schwere": "mittel",
+            "symptom": "Redion meldete: Groq antwortet mit 404. Die Adresse gibt es nicht. Dahinter stand Groqs eigener Satz, dass das MODELL nicht mehr existiert.",
+            "falscheVermutung": "Beim Lesen der Meldung zuerst: die URL sei falsch oder der Schlüssel abgelaufen. Beides war in Ordnung.",
+            "wieGefunden": "Redur hat die Meldung wörtlich geschickt — darin stand code: model_not_found. Die Ursache war also mitgeliefert und wurde von der eigenen Tabelle verdeckt.",
+            "ursache": "FEHLERTEXT ordnet jeder Statuszahl genau einen Satz zu. Eine Zahl hat aber mehrere Ursachen, und 404 heisst bei einem Chat-Dienst fast immer: das Modell, nicht die Adresse.",
+            "beweis": "Gegenprobe mit dem alten Wurf: Die Adresse gibt es nicht (object_not_found) steht wieder da, obwohl der Körper die Wahrheit enthält.",
+            "lehre": "Wer redet, hat recht. Eine eigene Erklärung gehört dorthin, wo der andere schweigt — nicht davor. Und eine Meldung, die in die falsche Richtung zeigt, kostet mehr Zeit als gar keine."
+        },
+        {
+            "nr": "P94",
+            "datum": "2026-09-20",
+            "titel": "Die Gegenprobe war falsch, nicht der Code",
+            "schwere": "niedrig",
+            "symptom": "Eine Gegenprobe sollte den neuen Zweig abhängen, und der Lauf blieb grün. Kurz sah es nach einem zu schwachen Wächter aus.",
+            "falscheVermutung": "Dass der Wächter die Stelle nicht wirklich misst.",
+            "wieGefunden": "Die eingesetzte Zeile gelesen: const modellWeg = false && A || B. In JavaScript bindet && stärker als ||, also blieb B übrig und der Zweig lief weiter.",
+            "ursache": "Eine Gegenprobe wird schnell hingeschrieben, weil sie ja nur wegnehmen soll. Sie ist trotzdem Code.",
+            "beweis": "Mit if (modellWeg) zu if (false) wurden genau zwei Zusagen rot, die richtigen.",
+            "lehre": "Eine Gegenprobe ist ein Stück Code wie jedes andere und kann genauso falsch sein. Ein grüner Lauf nach einer Gegenprobe heisst zuerst: die Gegenprobe ansehen."
         }
     ]
 };
@@ -117562,8 +117601,16 @@ const Einstellungen = (() => {
             try {
                 KI.zustand.quelle = 'wolke';
                 KI.zustand.anbieter = id;
+                /* ZUERST FRAGEN, WAS ES GIBT (E661). Die eingebaute Liste veraltet
+                   still: Redur bekam am 20. September eine 404 für
+                   `llama-3.3-70b-versatile`, weil Groq es ausgemustert hatte und
+                   die Liste im Programm es noch führte. Der Probelauf ist der
+                   natürliche Ort dafür — hier wird der Schlüssel ohnehin das erste
+                   Mal benutzt. Geht es schief, gilt die eingebaute Liste weiter. */
+                if (id !== 'eigen')
+                    await KI.modelleHolen(id);
                 KI.zustand.modell = id === 'eigen'
-                    ? Store.getMeta('api:eigenModell', 'lokal') : KI.anbieter(id).modelle[0];
+                    ? Store.getMeta('api:eigenModell', 'lokal') : (KI.modelleVon(id)[0] || '');
                 let antwort = '';
                 for await (const t of KI.wolkeFragen([{ role: 'user', content: 'Antworte nur mit dem Wort: bereit' }], KI.zustand.modell))
                     antwort += t;
@@ -163624,9 +163671,17 @@ const KI = (() => {
      * „frei" heisst: es gibt ein kostenloses Kontingent ohne Kreditkarte.
      * ----------------------------------------------------------------------*/
     const ANBIETER = [
+        /* DIE MODELLNAMEN HIER SIND EIN RÜCKFALL, KEINE WAHRHEIT (E661).
+           Ein Anbieter mustert Modelle aus, ohne dass dieses Programm es
+           erfährt: Redur bekam am 20. September 2026 eine 404 für
+           `llama-3.3-70b-versatile`, das hier an erster Stelle stand und
+           deshalb als Vorgabe gewählt wurde. Es ist gestrichen — was an seine
+           Stelle getreten ist, weiss der Anbieter, nicht ich, und geraten wird
+           hier nichts (§56). `modelleHolen` fragt ihn; diese Liste hält nur
+           das Menü am Leben, solange niemand gefragt hat. */
         { id: 'groq', name: 'Groq', frei: true,
             url: 'https://api.groq.com/openai/v1/chat/completions',
-            modelle: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'gemma2-9b-it'],
+            modelle: ['llama-3.1-8b-instant'],
             woher: 'console.groq.com/keys',
             hinweis: 'Kostenloses Kontingent, sehr schnell' },
         { id: 'openrouter', name: 'OpenRouter', frei: true,
@@ -163701,6 +163756,49 @@ const KI = (() => {
         504: 'Der Anbieter hat zu lange gebraucht (gateway_timeout).'
     };
     /**
+     * Was in der Meldung steht — und WARUM nicht einfach die Tabelle.
+     *
+     * Redur, 20. September 2026, aus seinem Fenster:
+     *
+     *   „⚠ Groq antwortet mit 404. Die Adresse gibt es nicht (object_not_found).
+     *    {"error":{"message":"The model `llama-3.3-70b-versatile` does not exist
+     *    …","code":"model_not_found"}}"
+     *
+     * Die Adresse gab es sehr wohl — Groq hat sie beantwortet. Es war das
+     * MODELL, das ausgemustert wurde, und der Anbieter sagte das wörtlich.
+     * Redion hatte den Satz in der Hand und stellte trotzdem seine eigene,
+     * falsche Erklärung davor. Wer sie liest, sucht am falschen Ort.
+     *
+     * EINE STATUSZAHL HAT MEHRERE URSACHEN, der Anbieter kennt die richtige.
+     * Also gilt: sagt er etwas, gilt SEIN Satz. Die Tabelle bleibt die
+     * Antwort für den, der schweigt — und das ist der häufigere Fall bei
+     * einem kaputten Proxy oder einer leeren 502.
+     */
+    const fehlerSatz = (status, koerper) => {
+        let meldung = '', code = '';
+        try {
+            const d = JSON.parse(koerper || '{}');
+            const e = d && (d.error || d.detail || d);
+            meldung = String((e && (e.message || e.msg)) || '').trim();
+            code = String((e && (e.code || e.type)) || '').trim();
+        }
+        catch { /* kein JSON — dann eben die Tabelle */ }
+        if (!meldung)
+            return (FEHLERTEXT[status] || 'unbekannter Fehler') +
+                (koerper ? ' ' + koerper.slice(0, 180) : '');
+        /* DER HÄUFIGSTE FALL BEKOMMT EINEN WEG, NICHT NUR EINEN BEFUND. Ein
+           Anbieter mustert Modelle aus; die eingebaute Liste merkt es nie.
+           „Das Modell gibt es nicht mehr" ohne „und so kommst du weiter" ist
+           eine halbe Auskunft. */
+        const modellWeg = /model_not_found/i.test(code) ||
+            /does not exist|has been deprecated|decommissioned|no longer/i.test(meldung);
+        if (modellWeg)
+            return 'Dieses Modell gibt es beim Anbieter nicht mehr. ' + meldung +
+                ' — wähle im KI-Fenster ein anderes Modell; „Modelle erneut holen" fragt ' +
+                'den Anbieter, was er heute anbietet.';
+        return meldung;
+    };
+    /**
      * fetch mit Wiederholung. Gibt die Antwort zurück, sobald sie brauchbar ist.
      * @param {object} opt  versuche, basis (ms), beiWartezeit (Rückmeldung)
      */
@@ -163743,6 +163841,84 @@ const KI = (() => {
      * Fragt einen Wolken-Anbieter. Streamt Stück für Stück, damit die Antwort
      * genauso erscheint wie bei den lokalen Modellen.
      */
+    /* ========================================================================
+     * DEN ANBIETER FRAGEN, WAS ER HAT (E661)
+     * ------------------------------------------------------------------------
+     * `ANBIETER` führt seine Modelle als Text im Programm. Groq mustert
+     * Modelle aus, und die Liste merkt es nie — bis jemand eine 404 bekommt.
+     * Für Ollama fragt Redion längst nach, was da ist (`sucheOllamaJetzt`);
+     * für die Wolke stand dieselbe Frage nie.
+     *
+     * Alle OpenAI-artigen Anbieter haben `/models` unter derselben Wurzel wie
+     * `/chat/completions`. Anthropic ebenso, unter `/v1/models`.
+     *
+     * DIE EINGEBAUTE LISTE BLEIBT — als Rückfall, nicht als Wahrheit. Ohne
+     * Netz, ohne Schlüssel oder bei einem Anbieter ohne `/models` steht
+     * immer noch etwas im Menü; ein leeres Menü wäre schlimmer als ein
+     * veraltetes.
+     * ======================================================================*/
+    /** Die Adresse der Modell-Liste zu einer Chat-Adresse. */
+    const modellAdresse = (url) => {
+        if (!url)
+            return '';
+        if (/\/chat\/completions\/?$/.test(url))
+            return url.replace(/\/chat\/completions\/?$/, '/models');
+        if (/\/messages\/?$/.test(url))
+            return url.replace(/\/messages\/?$/, '/models');
+        return url.replace(/\/+$/, '') + '/models';
+    };
+    /**
+     * Holt die Modelle beim Anbieter und merkt sie. Gibt `null` zurück, wenn
+     * es nicht geht — und wirft dabei NICHT: wer im Menü auf „erneut holen"
+     * drückt, soll kein rotes Fenster bekommen, sondern die alte Liste.
+     */
+    const modelleHolen = async (id) => {
+        try {
+            const a = anbieter(id);
+            const key = schluessel(a.id);
+            const url = modellAdresse(a.id === 'eigen' ? Store.getMeta('api:eigenUrl', '') : a.url);
+            if (!url)
+                return null;
+            /* DERSELBE KOPF WIE BEIM FRAGEN, nicht ein zweiter daneben (§8).
+               Und er geht an DIESE Adresse und an keine andere (§21, §42). */
+            const kopf = { 'Content-Type': 'application/json' };
+            if (a.id === 'anthropic') {
+                kopf['x-api-key'] = key;
+                kopf['anthropic-version'] = '2023-06-01';
+                kopf['anthropic-dangerous-direct-browser-access'] = 'true';
+            }
+            else if (key) {
+                kopf['Authorization'] = 'Bearer ' + key;
+            }
+            const r = await fetch(url, { method: 'GET', headers: kopf });
+            if (!r.ok)
+                return null;
+            const d = await r.json();
+            const roh = Array.isArray(d?.data) ? d.data : (Array.isArray(d?.models) ? d.models : []);
+            const liste = roh
+                .map((m) => String(m?.id || m?.name || '')).filter(Boolean)
+                /* WAS NICHT REDEN KANN, GEHÖRT NICHT IN EIN CHAT-MENÜ. Groq führt
+                   Whisper und TTS in derselben Liste; sie beantworten keine Frage. */
+                .filter((n) => !/whisper|tts|embed|guard|moderat|vision-ocr/i.test(n))
+                .sort();
+            if (!liste.length)
+                return null;
+            Store.setMeta('ki:modelle:' + a.id, liste);
+            return liste;
+        }
+        catch {
+            /* Kein Netz, kein JSON, kein `/models` — die eingebaute Liste gilt. */
+            return null;
+        }
+    };
+    /** Was das Menü zeigt: was der Anbieter zuletzt sagte, sonst das Eingebaute. */
+    const modelleVon = (id) => {
+        const gemerkt = Store.getMeta('ki:modelle:' + id, null);
+        if (Array.isArray(gemerkt) && gemerkt.length)
+            return gemerkt;
+        const a = anbieter(id);
+        return Array.isArray(a.modelle) ? a.modelle : [];
+    };
     const wolkeFragen = async function* (nachrichten, modell, signal, 
     /* WOHIN DIE GEZÄHLTE TOKENZAHL GEHT (L104, E319).
        Ein Generator liefert Textstücke; die Abrechnung
@@ -163783,8 +163959,7 @@ const KI = (() => {
         const r = await holen(url, { method: 'POST', headers: kopf, body: JSON.stringify(koerper), signal: signal ?? null }, { beiWartezeit: (sek, nr, code) => UI.toast(`${a.name}: ${code} — neuer Versuch ${nr + 1} in ${sek} s`) });
         if (!r.ok) {
             const txt = await r.text().catch(() => '');
-            throw new Error(a.name + ' antwortet mit ' + r.status + '. ' +
-                (FEHLERTEXT[r.status] || '') + ' ' + txt.slice(0, 180));
+            throw new Error(a.name + ' antwortet mit ' + r.status + '. ' + fehlerSatz(r.status, txt));
         }
         if (!r.body)
             throw new Error('Die Antwort hat keinen Inhalt.');
@@ -164333,7 +164508,8 @@ const KI = (() => {
             mitSchluessel.forEach(a => {
                 const modelle = a.id === 'eigen'
                     ? [Store.getMeta('api:eigenModell', 'lokal')]
-                    : a.modelle;
+                    /* Was der Anbieter zuletzt gesagt hat, sonst das Eingebaute (E661). */
+                    : modelleVon(a.id);
                 modelle.forEach(mo => {
                     const an = zustand.quelle === 'wolke' && zustand.anbieter === a.id && zustand.modell === mo;
                     html += `<button data-q="wolke" data-a="${a.id}" data-m="${esc(mo)}" ${an ? 'class="on"' : ''}>` +
@@ -164343,8 +164519,12 @@ const KI = (() => {
                 });
             });
         }
-        html += '<hr><button data-q="check"><span class="mi">⟳</span>Erneut nach Ollama suchen</button>' +
-            '<button data-q="schluessel"><span class="mi">🔑</span>Schlüssel hinterlegen …</button>';
+        html += '<hr><button data-q="check"><span class="mi">⟳</span>Erneut nach Ollama suchen</button>';
+        /* Nur zeigen, wo es etwas zu holen gibt — ein Knopf ohne Schlüssel
+           könnte nichts tun und wäre genau das, was §47 verbietet. */
+        if (mitSchluessel.some(a => a.id !== 'eigen'))
+            html += '<button data-q="modelle"><span class="mi">☁</span>Modelle erneut holen</button>';
+        html += '<button data-q="schluessel"><span class="mi">🔑</span>Schlüssel hinterlegen …</button>';
         const m = UI.menu(html, Math.max(10, r.right - 300), r.bottom + 6);
         m.addEventListener('click', async (e) => {
             const b = elVon(e)?.closest('button[data-q]');
@@ -164354,6 +164534,21 @@ const KI = (() => {
                 m.remove();
                 start();
                 UI.toast('Suche nach Ollama …');
+                return;
+            }
+            /* JEDEN ANBIETER MIT SCHLÜSSEL FRAGEN, was er heute anbietet (E661).
+               Der Knopf sagt danach, was herauskam — auch wenn es nichts war:
+               ein Knopf, der schweigend nichts tut, ist die heimtückischere
+               Hälfte von §47. */
+            if (b.dataset.q === 'modelle') {
+                m.remove();
+                UI.toast('Frage die Anbieter nach ihren Modellen …');
+                const ziele = ANBIETER.filter(a => a.id !== 'eigen' && schluessel(a.id));
+                const erg = await Promise.all(ziele.map(a => modelleHolen(a.id)));
+                const gut = erg.filter(Boolean).length;
+                UI.toast(gut
+                    ? gut + ' von ' + ziele.length + ' Anbietern haben geantwortet — die Liste ist aktuell.'
+                    : 'Kein Anbieter hat geantwortet. Es bleibt bei der eingebauten Liste.');
                 return;
             }
             if (b.dataset.q === 'schluessel') {
@@ -166011,6 +166206,7 @@ const KI = (() => {
         quellenKarte, quellenLeiste, seitenKontext, SYSTEM,
         SCHREIB_BEFEHLE, schreibMenue, schreibLauf, alsBloeckeEinfuegen,
         ANBIETER, anbieter, wolkeFragen, holen, FEHLERTEXT, WIEDERHOLBAR,
+        modelleHolen, modelleVon, fehlerSatz,
         datenbankAuswerten, frageKurz, zustand, modellMenue,
         seitenleiste, chatBaum, verlauf, neuerChat, chatOeffnen, chatsLesen,
         chatsGruppiert, chatSichern,

@@ -106,6 +106,8 @@ sind der teuerste Teil und der lehrreichste.
 | P90 | 2026-09-20 | Vier Anläufe, vier erfundene Zahlen — und die Datei war immer in Ordnung | niedrig | — |
 | P91 | 2026-09-20 | Ein Wächter, der die Höhe nicht sehen kann, die er prüft | 🟠 mittel | — |
 | P92 | 2026-09-20 | Fast eine zweite Werkzeugzeile gebaut, die es schon gab | niedrig | — |
+| P93 | 2026-09-20 | Die eigene Erklärung vor die des Anbieters gestellt | 🟠 mittel | — |
+| P94 | 2026-09-20 | Die Gegenprobe war falsch, nicht der Code | niedrig | — |
 
 ---
 
@@ -2035,4 +2037,42 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Der Wächter wurde weggeworfen und neu geschrieben; der echte Fund war 26 px statt 44, nicht dass es nichts gibt.
 
 **Die Lehre.** Der teuerste wiederkehrende Fehler dieses Projekts ist laut §45, etwas aus dem Gedächtnis zu bauen statt nachzuschlagen. Einen Wächter wegzuwerfen ist billiger als einen zweiten Katalog zu pflegen (§8).
+
+
+---
+
+## P93 · Die eigene Erklärung vor die des Anbieters gestellt
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Redion meldete: Groq antwortet mit 404. Die Adresse gibt es nicht. Dahinter stand Groqs eigener Satz, dass das MODELL nicht mehr existiert.
+
+**Die falsche Vermutung.** Beim Lesen der Meldung zuerst: die URL sei falsch oder der Schlüssel abgelaufen. Beides war in Ordnung.
+
+**Wie es gefunden wurde.** Redur hat die Meldung wörtlich geschickt — darin stand code: model_not_found. Die Ursache war also mitgeliefert und wurde von der eigenen Tabelle verdeckt.
+
+**Die Ursache.** FEHLERTEXT ordnet jeder Statuszahl genau einen Satz zu. Eine Zahl hat aber mehrere Ursachen, und 404 heisst bei einem Chat-Dienst fast immer: das Modell, nicht die Adresse.
+
+**Der Beweis.** Gegenprobe mit dem alten Wurf: Die Adresse gibt es nicht (object_not_found) steht wieder da, obwohl der Körper die Wahrheit enthält.
+
+**Die Lehre.** Wer redet, hat recht. Eine eigene Erklärung gehört dorthin, wo der andere schweigt — nicht davor. Und eine Meldung, die in die falsche Richtung zeigt, kostet mehr Zeit als gar keine.
+
+
+---
+
+## P94 · Die Gegenprobe war falsch, nicht der Code
+
+*2026-09-20 · niedrig*
+
+**Das Bild.** Eine Gegenprobe sollte den neuen Zweig abhängen, und der Lauf blieb grün. Kurz sah es nach einem zu schwachen Wächter aus.
+
+**Die falsche Vermutung.** Dass der Wächter die Stelle nicht wirklich misst.
+
+**Wie es gefunden wurde.** Die eingesetzte Zeile gelesen: const modellWeg = false && A || B. In JavaScript bindet && stärker als ||, also blieb B übrig und der Zweig lief weiter.
+
+**Die Ursache.** Eine Gegenprobe wird schnell hingeschrieben, weil sie ja nur wegnehmen soll. Sie ist trotzdem Code.
+
+**Der Beweis.** Mit if (modellWeg) zu if (false) wurden genau zwei Zusagen rot, die richtigen.
+
+**Die Lehre.** Eine Gegenprobe ist ein Stück Code wie jedes andere und kann genauso falsch sein. Ein grüner Lauf nach einer Gegenprobe heisst zuerst: die Gegenprobe ansehen.
 

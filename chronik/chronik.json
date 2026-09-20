@@ -2368,6 +2368,13 @@
           "gemeint": "Zustimmung zu dem Vorschlag, den ich am Ende von E655 gemacht hatte: die KI soll Text auf einer Seite ändern können.",
           "kuerzer": "„ja\" hätte gereicht — der Vorschlag stand direkt darüber.",
           "besserer prompt": "Kein besserer nötig. Eine Zustimmung zu einem konkreten Vorschlag ist der kürzeste mögliche Auftrag."
+        },
+        {
+          "zeit": "ca. 20:15",
+          "wortlaut": "⚠ Groq antwortet mit 404. Die Adresse gibt es nicht (object_not_found). {\"error\":{\"message\":\"The model `llama-3.3-70b-versatile` does not exist or you do not have access to it.\",\"type\":\"invalid_request_error\",\"code\":\"model_not_found\"}} Werkzeuge & Kontext  sch aml das an",
+          "gemeint": "Er hat die Fehlermeldung aus dem KI-Fenster kopiert und will, dass ich mir ansehe, warum Groq nicht antwortet.",
+          "kuerzer": "Genau so. Die Meldung wörtlich zu schicken war das Beste, was er tun konnte — darin stand die Ursache, die Redions eigener Text verdeckte.",
+          "besserer prompt": "Keiner nötig. Eine kopierte Fehlermeldung ist der genaueste Auftrag, den es gibt."
         }
       ],
       "arbeit": [
@@ -2530,12 +2537,20 @@
           "zeitraum": "ca. 19:50 –",
           "dauer": "laufend",
           "pruefungen": "test551 (9/9), test402, test549 (6/6), test550 (8/8)"
+        },
+        {
+          "was": "E661 — Groqs 404: der Anbieter hat immer recht, und die Modellliste wird erfragt",
+          "vonCommit": "(offen)",
+          "bisCommit": "(offen)",
+          "zeitraum": "ca. 20:20 –",
+          "dauer": "laufend",
+          "pruefungen": "test552 (15/15, zwei Gegenproben), test550 (8/8)"
         }
       ],
       "zahlen": {
         "commits": 2,
-        "entscheidungen": 18,
-        "neue Prüfläufe": 10,
+        "entscheidungen": 19,
+        "neue Prüfläufe": 11,
         "volle Läufe": 0
       },
       "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -3821,6 +3836,30 @@
       "ursache": "§45 Schritt 1 übersprungen: die Datei an der interessanten Stelle gelesen, nicht zu Ende.",
       "beweis": "Der Wächter wurde weggeworfen und neu geschrieben; der echte Fund war 26 px statt 44, nicht dass es nichts gibt.",
       "lehre": "Der teuerste wiederkehrende Fehler dieses Projekts ist laut §45, etwas aus dem Gedächtnis zu bauen statt nachzuschlagen. Einen Wächter wegzuwerfen ist billiger als einen zweiten Katalog zu pflegen (§8)."
+    },
+    {
+      "nr": "P93",
+      "datum": "2026-09-20",
+      "titel": "Die eigene Erklärung vor die des Anbieters gestellt",
+      "schwere": "mittel",
+      "symptom": "Redion meldete: Groq antwortet mit 404. Die Adresse gibt es nicht. Dahinter stand Groqs eigener Satz, dass das MODELL nicht mehr existiert.",
+      "falscheVermutung": "Beim Lesen der Meldung zuerst: die URL sei falsch oder der Schlüssel abgelaufen. Beides war in Ordnung.",
+      "wieGefunden": "Redur hat die Meldung wörtlich geschickt — darin stand code: model_not_found. Die Ursache war also mitgeliefert und wurde von der eigenen Tabelle verdeckt.",
+      "ursache": "FEHLERTEXT ordnet jeder Statuszahl genau einen Satz zu. Eine Zahl hat aber mehrere Ursachen, und 404 heisst bei einem Chat-Dienst fast immer: das Modell, nicht die Adresse.",
+      "beweis": "Gegenprobe mit dem alten Wurf: Die Adresse gibt es nicht (object_not_found) steht wieder da, obwohl der Körper die Wahrheit enthält.",
+      "lehre": "Wer redet, hat recht. Eine eigene Erklärung gehört dorthin, wo der andere schweigt — nicht davor. Und eine Meldung, die in die falsche Richtung zeigt, kostet mehr Zeit als gar keine."
+    },
+    {
+      "nr": "P94",
+      "datum": "2026-09-20",
+      "titel": "Die Gegenprobe war falsch, nicht der Code",
+      "schwere": "niedrig",
+      "symptom": "Eine Gegenprobe sollte den neuen Zweig abhängen, und der Lauf blieb grün. Kurz sah es nach einem zu schwachen Wächter aus.",
+      "falscheVermutung": "Dass der Wächter die Stelle nicht wirklich misst.",
+      "wieGefunden": "Die eingesetzte Zeile gelesen: const modellWeg = false && A || B. In JavaScript bindet && stärker als ||, also blieb B übrig und der Zweig lief weiter.",
+      "ursache": "Eine Gegenprobe wird schnell hingeschrieben, weil sie ja nur wegnehmen soll. Sie ist trotzdem Code.",
+      "beweis": "Mit if (modellWeg) zu if (false) wurden genau zwei Zusagen rot, die richtigen.",
+      "lehre": "Eine Gegenprobe ist ein Stück Code wie jedes andere und kann genauso falsch sein. Ein grüner Lauf nach einer Gegenprobe heisst zuerst: die Gegenprobe ansehen."
     }
   ]
 }

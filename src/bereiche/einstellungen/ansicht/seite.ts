@@ -1480,8 +1480,15 @@ const Einstellungen = (() => {
       try {
         KI.zustand.quelle = 'wolke';
         KI.zustand.anbieter = id;
+        /* ZUERST FRAGEN, WAS ES GIBT (E661). Die eingebaute Liste veraltet
+           still: Redur bekam am 20. September eine 404 für
+           `llama-3.3-70b-versatile`, weil Groq es ausgemustert hatte und
+           die Liste im Programm es noch führte. Der Probelauf ist der
+           natürliche Ort dafür — hier wird der Schlüssel ohnehin das erste
+           Mal benutzt. Geht es schief, gilt die eingebaute Liste weiter. */
+        if (id !== 'eigen') await KI.modelleHolen(id);
         KI.zustand.modell = id === 'eigen'
-          ? Store.getMeta('api:eigenModell', 'lokal') : KI.anbieter(id).modelle[0];
+          ? Store.getMeta('api:eigenModell', 'lokal') : (KI.modelleVon(id)[0] || '');
         let antwort = '';
         for await (const t of KI.wolkeFragen(
           [{ role: 'user', content: 'Antworte nur mit dem Wort: bereit' }], KI.zustand.modell)) antwort += t;

@@ -3856,3 +3856,56 @@ für den Daumen bauen wollte. `.stab-tools` gibt es seit langem, und **L108
 hat sie am Telefon schon sichtbar gemacht**. Der fertige Wächter wurde
 weggeworfen und neu geschrieben; das ist billiger als die zweite Zeile
 (§8, §45 Schritt 1).
+
+---
+
+## 20. September 2026 — Groqs 404 (E661, `test552`)
+
+Redurs Meldung, wörtlich, und was daran falsch war:
+
+```txt
+Groq antwortet mit 404. Die Adresse gibt es nicht (object_not_found).
+{"error":{"message":"The model `llama-3.3-70b-versatile` does not exist …",
+ "code":"model_not_found"}}
+```
+
+Die Adresse war in Ordnung — Groq hat sie beantwortet. Das Modell war weg,
+und der Anbieter sagte es wörtlich.
+
+```txt
+                          vorher                    nachher
+führender Satz            Statustabelle (falsch)    der Satz des Anbieters
+Hinweis, was zu tun ist   keiner                    „wähle ein anderes Modell"
+404 ohne Körper           Statustabelle             Statustabelle (unverändert)
+Modellliste               fest im Programm          /models beim Anbieter
+Rückfall ohne Netz        —                         die eingebaute Liste
+gefiltert                 —                         whisper/tts/embed/guard
+```
+
+Gemessen mit abgehängtem `fetch` und genau Groqs Körper:
+
+```txt
+gerufen   https://api.groq.com/openai/v1/models
+zurück    ["llama-neu-70b","llama-neu-8b"]   (whisper-gross-v3 gefiltert)
+Netzfehler → geworfen: false, Menü nimmt die eingebaute Liste
+```
+
+### Zwei Gegenproben — und die erste war falsch
+
+```txt
+1. Versuch   const modellWeg = false && A || B     → blieb GRÜN
+```
+
+`&&` bindet stärker als `||`, also blieb `B` übrig und der Zweig lief
+weiter. Der grüne Lauf sah kurz nach einem zu schwachen Wächter aus. **Eine
+Gegenprobe ist ein Stück Code wie jedes andere und kann genauso falsch
+sein.**
+
+Richtig gefahren:
+
+```txt
+`if (modellWeg)` → `if (false)`     ✗ sagt nicht, was zu tun ist
+alter Wurf zurück                    ✗ „Die Adresse gibt es nicht"
+```
+
+Kein Bild: hier ist ein Satz zu lesen, keine Fläche zu sehen (§55.3).

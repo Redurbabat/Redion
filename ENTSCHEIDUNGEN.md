@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-640 Entscheidungen, E1 bis E660 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+641 Entscheidungen, E1 bis E661 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -703,6 +703,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E658** — Die Lückenliste sagt die Wahrheit über sich selbst: 33 OFFENE Lücken standen unterhalb der Überschrift „Anhang B · Was erledigt ist" — wer von oben las, hielt sie für erledigt (§35). Sie stehen jetzt oben unter „Weitere offene Lücken"; das Verschieben ist byteweise gegengeprüft. Dazu: ein Wort für „zu" statt fünf (GESCHLOSSEN, wie §35 es nennt), und die selbstgenannte Zahl stimmt wieder. Wächter `test549`.
 * **E659** — Die Doku zählt, was da ist: ein Wächter für §30s eigenen Satz („sie wird nicht geschätzt, sie wird gezählt") und für §34s „beides: Verzeichnis und Text". Er wurde gegen den Stand rot, den er selbst erzeugt hatte — 492 Dateien, 491 in der Doku. Vier Anläufe der Messung waren vorher zu eng und meldeten je eine erfundene Zahl; `ENTSCHEIDUNGEN.md` kennt drei Überschriftsformen, und die Regel, die hält, setzt keine voraus. Wächter `test550`.
 * **E660** — Die Tabellenwerkzeuge sind am Telefon zu treffen: sieben Knöpfe à 26 px waren dort der EINZIGE Weg, eine Spalte anzulegen — die Griffe daneben messen 7 px und brauchen ein `mouseover`, das ein Daumen nicht erzeugt. Jetzt 44 px unter `@media(hover:none)`, am Rechner unverändert schlank. Und der Fund über den Fund: `test402` konnte das nie sehen, weil er nur DEKLARIERTE Höhen liest — 26 px aus Innenabstand und Schriftgrösse sind für ihn unsichtbar (L206). Wächter `test551`.
+* **E661** — Der Anbieter hat immer recht, und die Modellliste wird erfragt: Groq mustert `llama-3.3-70b-versatile` aus, Redion führt es weiter und meldet dazu „Die Adresse gibt es nicht" — die Adresse war in Ordnung, das Modell war weg, und der Anbieter sagte das wörtlich. Jetzt führt SEIN Satz die Meldung an, die Statustabelle bleibt für den, der schweigt, und `modelleHolen` fragt `/models`. Das tote Modell ist gestrichen; ein Ersatz wird nicht geraten (§56). Wächter `test552`.
 
 ---
 
@@ -54092,6 +54093,82 @@ Textsuche gegen eine gerechnete Höhe.
 `test551` misst die gerenderte Box im echten Browser — für diese eine
 Stelle. Was fehlt, ist derselbe Blick auf alle Hauptwege; das steht als
 **L206** in `LUECKEN.md`, statt hier als Versprechen (§35).
+
+
+## E661 — Der Anbieter hat immer recht, und die Modellliste wird erfragt
+
+**Was wurde entschieden?** Drei Dinge, die zusammengehören:
+
+1. Sagt ein Anbieter im Fehlerkörper, was schiefging, steht **sein** Satz in
+   der Meldung. Die Statustabelle bleibt die Antwort für den, der schweigt.
+2. `modelleHolen(id)` fragt den Anbieter unter `/models`, was er heute
+   anbietet; das Ergebnis wird gemerkt und im Menü gezeigt.
+3. Die eingebaute Liste ist ab jetzt ein **Rückfall**, keine Wahrheit.
+
+**Warum?** Redur am 20. September 2026, wörtlich aus seinem Fenster:
+
+```txt
+⚠ Groq antwortet mit 404. Die Adresse gibt es nicht (object_not_found).
+{"error":{"message":"The model `llama-3.3-70b-versatile` does not exist or
+you do not have access to it.","type":"invalid_request_error",
+"code":"model_not_found"}}
+```
+
+**Zwei Fehler in einer Zeile, und der erste ist der teure.** „Die Adresse
+gibt es nicht" ist falsch: die Adresse gab es sehr wohl, Groq hat sie
+beantwortet. Es war das MODELL, das ausgemustert wurde — und Groq sagt das
+wörtlich, mit `code: model_not_found`. Redion hatte den Satz in der Hand
+und stellte trotzdem seine eigene, falsche Erklärung davor.
+
+Wer sie liest, sucht am falschen Ort: an der URL, am Schlüssel, an der
+Firewall. Eine Meldung, die in die falsche Richtung zeigt, ist schlimmer
+als eine nackte Zahl (§47 dem Sinn nach: sie verspricht eine Erklärung, die
+nicht stimmt).
+
+**Warum die Tabelle trotzdem bleibt.** Eine Statuszahl hat mehrere
+Ursachen, und der Anbieter kennt die richtige — aber nicht jeder schickt
+eine. Ein kaputter Proxy, eine leere 502, ein Gateway ohne Körper: dort ist
+`FEHLERTEXT` genau richtig. Die Regel ist deshalb nicht „Tabelle weg",
+sondern **„wer redet, hat recht"**.
+
+**Der zweite Fehler: die Liste veraltet still.** `ANBIETER` führt seine
+Modelle als Text im Programm. Groq mustert aus, die Liste merkt es nie —
+bis jemand eine 404 bekommt. Für Ollama fragt Redion längst nach, was da
+ist (`sucheOllamaJetzt`); für die Wolke stand dieselbe Frage nie. Alle
+OpenAI-artigen Anbieter haben `/models` unter derselben Wurzel, Anthropic
+ebenso.
+
+Gefragt wird an zwei Stellen: beim Probelauf nach dem Hinterlegen eines
+Schlüssels (dort wird er ohnehin das erste Mal benutzt) und über „Modelle
+erneut holen" im Modellmenü. Der Knopf sagt danach, was herauskam — auch
+wenn es nichts war; ein Knopf, der schweigend nichts tut, ist die
+heimtückischere Hälfte von §47.
+
+**Was NICHT geraten wurde.** `llama-3.3-70b-versatile` ist aus der
+eingebauten Liste gestrichen — es ist belegt tot. Was an seine Stelle
+getreten ist, weiss Groq und nicht ich, also steht dort nichts Erfundenes
+(§56: ein Wortlaut, den niemand hat, wird nicht erfunden). Übrig bleibt
+`llama-3.1-8b-instant` als Rückfall, und `modelleHolen` holt beim ersten
+Gebrauch die echte Liste.
+
+**Was im Preisverzeichnis stehen bleibt.** `kosten.ts` führt
+`llama-3.3-70b-versatile` weiter mit 0/0. Das ist Absicht: dort werden
+BEREITS GELAUFENE Aufrufe nachgeschlagen, und ein gestrichener Eintrag
+machte alte Abrechnungszeilen unlesbar.
+
+**Was gefiltert wird.** Groq führt Whisper und TTS in derselben Liste. Sie
+beantworten keine Frage und gehören nicht in ein Chat-Menü.
+
+**Der Wächter.** `test552`, fünfzehn Messungen, gegen den alten Stand 4/15,
+mit Groqs echtem Fehlerkörper. Zwei Gegenproben, beide gefahren: ohne den
+Modell-Zweig fehlt der Weg nach vorn, ohne den ganzen Umbau steht wieder
+„Die Adresse gibt es nicht" da.
+
+**Und die erste Gegenprobe war falsch, nicht der Code.** Ich hatte
+`const modellWeg = false && A || B` geschrieben — `&&` bindet stärker als
+`||`, also blieb `B` übrig und der Zweig lief weiter. Der Lauf blieb grün
+und ich hielt das kurz für einen zu schwachen Wächter. Eine Gegenprobe ist
+ein Stück Code wie jedes andere und kann genauso falsch sein.
 
 ## E123 — Titel                     die heutige Form
 =====  /  E123 — Titel  /  =====    ein Banner zwischen zwei Linien

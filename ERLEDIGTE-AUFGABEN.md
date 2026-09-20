@@ -1,5 +1,34 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E661 · Groqs 404 — der Anbieter hat immer recht
+
+**Redurs Meldung.** „Groq antwortet mit 404. Die Adresse gibt es nicht
+(object_not_found)" — gefolgt von Groqs eigenem Satz, dass das MODELL
+`llama-3.3-70b-versatile` nicht mehr existiert.
+
+**Der Fund.** Die Adresse gab es sehr wohl; Groq hat sie beantwortet.
+Redion hatte die richtige Erklärung in der Hand und stellte seine eigene,
+falsche davor. Wer sie liest, sucht an der URL, am Schlüssel, an der
+Firewall — überall ausser am Modell.
+
+**Gebaut.** Sagt der Anbieter etwas, führt SEIN Satz die Meldung an; die
+Statustabelle bleibt für den, der schweigt (leere 502, kaputter Proxy).
+Bei `model_not_found` kommt dazu, was zu tun ist. Und `modelleHolen` fragt
+den Anbieter unter `/models`, was er heute anbietet — beim Probelauf nach
+dem Hinterlegen eines Schlüssels und über „Modelle erneut holen" im Menü.
+Die eingebaute Liste ist ab jetzt ein Rückfall, keine Wahrheit.
+
+**Was nicht geraten wurde.** Das tote Modell ist gestrichen. Was an seine
+Stelle getreten ist, weiss Groq und nicht ich (§56). Im Preisverzeichnis
+bleibt es stehen — dort werden bereits gelaufene Aufrufe nachgeschlagen.
+
+**Geprüft.** `test552` neu, 15 Messungen mit Groqs echtem Fehlerkörper,
+gegen den alten Stand 4/15. Zwei Gegenproben — und die erste war FALSCH,
+nicht der Code: `false && A || B` lässt `B` übrig. Eine Gegenprobe ist ein
+Stück Code wie jedes andere.
+
+---
+
 ## 20. September 2026 · E660 · Die Tabellenwerkzeuge sind am Telefon zu treffen
 
 **Der Fund.** Am Telefon sind die sieben Knöpfe unter einer Tabelle der
