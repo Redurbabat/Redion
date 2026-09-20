@@ -25131,7 +25131,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1246, inhalt: '242ec33440ab062b', gebaut: '2026-09-20T17:25:08.146Z' };
+const Stand = { fassung: 1248, inhalt: 'b12501bb8c4984bb', gebaut: '2026-09-20T17:34:50.715Z' };
 window.Stand = Stand;
 
 </script>
@@ -82516,12 +82516,20 @@ const ChronikDaten = {
                     "zeitraum": "ca. 17:15 –",
                     "dauer": "laufend",
                     "pruefungen": "test546 (13/13, Gegenprobe gefahren), test291, test281, test286, test301, test87, test105, test109"
+                },
+                {
+                    "was": "E655 — Lernkarten, PDF und Tabellen: die drei Werkzeuge, die Redur genannt hat",
+                    "vonCommit": "(offen)",
+                    "bisCommit": "(offen)",
+                    "zeitraum": "ca. 17:45 –",
+                    "dauer": "laufend",
+                    "pruefungen": "test547 (18/18, Gegenprobe gefahren), test546, test291, test281, test286, test87, test105, test109"
                 }
             ],
             "zahlen": {
                 "commits": 2,
-                "entscheidungen": 12,
-                "neue Prüfläufe": 5,
+                "entscheidungen": 13,
+                "neue Prüfläufe": 6,
                 "volle Läufe": 0
             },
             "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -83723,6 +83731,18 @@ const ChronikDaten = {
             "ursache": "Eine Fähigkeit, die es nie gab, braucht keine Grenze — bis jemand sie baut. Dann fehlt die Grenze genau in dem Bogen, in dem am wenigsten Zeit dafür ist.",
             "beweis": "`test546` gegen den alten Stand: 6/13, darunter „kein Werkzeug mit Recht loeschen\". Nach dem Bau 13/13, und die Gegenprobe mit abgehängtem Tor druckt „Seite ‚Weg damit' liegt im Papierkorb\" bei null Dialogen nach einem Nein.",
             "lehre": "Das Tor gehört in die Schleife, nicht ins Werkzeug. Ein Werkzeug, das selbst fragen muss, ist ein Werkzeug, bei dem das Fragen beim nächsten Mal vergessen wird — und beim Löschen merkt man es erst, wenn etwas fehlt."
+        },
+        {
+            "nr": "P86",
+            "datum": "2026-09-20",
+            "titel": "Eine Erfolgsmeldung ist kein Erfolg",
+            "schwere": "mittel",
+            "symptom": "Ein Werkzeug meldet „3 Lernkarten angelegt — sie stehen ab sofort im Lernzentrum bereit\", und das Lernzentrum zählt null.",
+            "falscheVermutung": "Dass es reicht zu prüfen, ob Blöcke entstehen. Entstanden sind sie — nur mit `type:'text'`, und `Learning.cards()` filtert auf `type === 'flashcard'`.",
+            "wieGefunden": "Als Gegenprobe zum eigenen Wächter gestellt: im gebauten `agenten.js` den Typ von `flashcard` auf `text` geändert und den Lauf wiederholt.",
+            "ursache": "Der Satz, den ein Werkzeug zurückgibt, wird vom Werkzeug geschrieben — nicht vom Ergebnis. Er kann also alles behaupten.",
+            "beweis": "Gegenprobe: „Antwort: 3 Lernkarten … stehen ab sofort im Lernzentrum bereit\" bei „Learning.cards(): 1 → 1 · neu erkannt: 0\".",
+            "lehre": "Ein Wächter misst dort, wo das Ergebnis GEBRAUCHT wird, nicht dort, wo es entsteht. Beim alten Schnellbefehl „Mache Karteikarten\" ist derselbe Fehler jahrelang unbemerkt geblieben: er schrieb Text ins Chatfenster, und es sah nach Karteikarten aus."
         }
     ]
 };
@@ -126166,6 +126186,143 @@ const Agent = (() => {
                     (a.bloecke || []).length + ' Blöcken.';
             }
         },
+        /* ── DIE DREI, DIE REDUR GENANNT HAT (E655) ───────────────────────────
+           „lernkarten erstellen pdf elssen, tabelas usw". Alle drei legen nur an
+           oder lesen — keines fällt unter das Tor aus E654, und genau deshalb
+           durften sie im selben Zug kommen.
+    
+           WARUM NICHT DER SCHNELLBEFEHL. „Mache aus dieser Seite Karteikarten"
+           gibt es seit langem. Er schreibt TEXT ins Chatfenster, und was dort
+           steht, lernt niemand: die Lernwelt zählt `flashcard`-Blöcke, nicht
+           Absätze. Der Unterschied zwischen „sieht aus wie Karteikarten" und
+           „ist eine Karteikarte" ist genau der, den `test547` misst —
+           `Learning.cards()` vorher und nachher. */
+        karteikartenAnlegen: {
+            recht: 'bearbeiten',
+            beschreibung: 'Legt echte Lernkarten an, die im Lernzentrum auftauchen. Argument: ' +
+                '{"titel":"Name der Kartenseite","karten":[{"frage":"…","antwort":"…"}]}',
+            lauf: async (a, protokoll) => {
+                const karten = Array.isArray(a && a.karten) ? a.karten : [];
+                if (!karten.length)
+                    return 'Keine Karten angegeben. Nichts angelegt.';
+                const unterId = App.aktuelleSeite();
+                if (!Konten.darf('bearbeiten', unterId))
+                    return 'Hier darfst du nichts anlegen.';
+                const seite = Store.addPage(unterId, { text: String((a && a.titel) || 'Lernkarten'), icon: '🎴' });
+                let gezaehlt = 0;
+                karten.forEach((k) => {
+                    const frage = String((k && k.frage) || '').trim();
+                    const antwort = String((k && k.antwort) || '').trim();
+                    if (!frage)
+                        return;
+                    /* `Frage :: Antwort` ist KEINE Formatierung, sondern das Format:
+                       `Learning.splitCard` trennt an `::`, und ohne die zwei Punkte
+                       steht dort „(noch keine Antwort)". Eine Karte ohne Antwort ist
+                       keine Karte. */
+                    Store.addBlock(seite.id, 'flashcard', { text: frage + ' :: ' + (antwort || '…'), herkunft: 'ki' });
+                    gezaehlt++;
+                });
+                protokoll.ids.push(seite.id);
+                App.zeichneBaum();
+                return gezaehlt + ' Lernkarten auf der Seite „' + (seite.text || 'Lernkarten') +
+                    '" angelegt. Sie stehen ab sofort im Lernzentrum zur Wiederholung bereit.';
+            }
+        },
+        /* PDF LESEN, UND ZWAR GEZIELT. Der Wortlaut einer eingelesenen Seite
+           steht seit E107 in `suchtext` (nicht in `text` — `text` ist, was ein
+           Mensch geschrieben hat). Über `suchen` war er zufällig erreichbar:
+           wer nach einem Stichwort fragte, bekam einen Ausschnitt. „Lies mir
+           Seite 4 bis 6 des Skripts" ging nicht.
+    
+           KEINE EIGENE RECHTEPRÜFUNG NÖTIG? Doch — `seiteLesen` prüft sie auch,
+           und aus demselben Grund (E331): gelesen wird eine bestimmte Seite,
+           also entscheidet deren Freigabe, nicht die Rolle im Allgemeinen. */
+        pdfLesen: {
+            recht: 'lesen',
+            beschreibung: 'Liest den Text eines eingelesenen PDF-Dokuments, wahlweise nur ' +
+                'eine Seitenspanne. Argument: {"titel":"Name des Dokuments","von":1,"bis":5}',
+            lauf: async (a) => {
+                const doku = seiteNachTitel(a && a.titel);
+                if (!doku)
+                    return 'Kein Dokument gefunden, das „' + (a && a.titel) + '" heisst.';
+                if (!Konten.darf('lesen', doku.id))
+                    return 'Dieses Dokument darfst du nicht lesen.';
+                const seiten = Store.childrenOf(doku.id)
+                    .filter((b) => b.alive && b.type === 'pdfseite')
+                    .sort((x, y) => (Number(x.nr) || 0) - (Number(y.nr) || 0));
+                if (!seiten.length)
+                    return 'Die Seite „' + (doku.text || '') + '" enthält keine eingelesenen PDF-Seiten.';
+                const von = Number(a && a.von) > 0 ? Number(a.von) : 1;
+                const bis = Number(a && a.bis) > 0 ? Number(a.bis) : Number.MAX_SAFE_INTEGER;
+                const gewaehlt = seiten.filter((b) => {
+                    const n = Number(b.nr) || 0;
+                    return n >= von && n <= bis;
+                });
+                if (!gewaehlt.length)
+                    return 'Das Dokument hat ' + seiten.length + ' Seiten — ' + von + ' bis ' +
+                        (bis === Number.MAX_SAFE_INTEGER ? 'Ende' : bis) + ' ist nicht darunter.';
+                /* GEKÜRZT WIRD AM ENDE UND MIT ANSAGE. Ein Skript kann hundert
+                   Seiten haben; was nicht mehr hineinpasst, wird genannt und nicht
+                   stillschweigend abgeschnitten — sonst hält das Modell die halbe
+                   Seite für die ganze. */
+                const GRENZE = 6000;
+                let raus = '';
+                let bisSeite = 0;
+                for (const b of gewaehlt) {
+                    const stueck = 'Seite ' + (b.nr || '?') + ':\n' +
+                        String(b.suchtext || b.ocrText || '(kein Text auf dieser Seite)') + '\n\n';
+                    if (raus.length + stueck.length > GRENZE)
+                        break;
+                    raus += stueck;
+                    bisSeite = Number(b.nr) || bisSeite;
+                }
+                const rest = gewaehlt.length - gewaehlt.filter((b) => (Number(b.nr) || 0) <= bisSeite).length;
+                return raus.trim() +
+                    (rest > 0 ? '\n\n[' + rest + ' weitere Seiten passen nicht mehr in eine Antwort. ' +
+                        'Frag gezielt nach ab Seite ' + (bisSeite + 1) + '.]' : '');
+            }
+        },
+        /* EINE EINFACHE TABELLE IM TEXT — nicht dasselbe wie `datenbankAnlegen`.
+           Eine Datenbank hat ein Schema, Ansichten und Zeilen, die eigene Seiten
+           sind; eine Tabelle sind drei mal vier Zellen mitten im Absatz. Redurs
+           „tabelas" meint beides, und das zweite fehlte ganz.
+    
+           `type:'table'` mit `rows: string[][]`, wie der Zeichner es liest
+           (`zeichenflaeche.ts:1179`): die Kopfzeile ist die erste Zeile, nicht
+           ein eigenes Feld. */
+        tabelleAnlegen: {
+            recht: 'bearbeiten',
+            beschreibung: 'Legt eine einfache Tabelle auf der offenen Seite an. Argument: ' +
+                '{"kopfzeile":["Spalte A","Spalte B"],"zeilen":[["a1","b1"],["a2","b2"]]}',
+            lauf: async (a, protokoll) => {
+                const kopf = Array.isArray(a && a.kopfzeile) ? a.kopfzeile.map((x) => String(x ?? '')) : [];
+                const zeilen = Array.isArray(a && a.zeilen) ? a.zeilen : [];
+                if (!kopf.length && !zeilen.length)
+                    return 'Weder Kopfzeile noch Zeilen. Nichts angelegt.';
+                const unterId = App.aktuelleSeite();
+                if (!Konten.darf('bearbeiten', unterId))
+                    return 'Hier darfst du nichts anlegen.';
+                /* ALLE ZEILEN GLEICH BREIT. Eine kurze Zeile zeichnete sonst eine
+                   Tabelle mit Löchern, und wer dann hineintippt, schreibt in eine
+                   Zelle, die es im Bestand nicht gibt. */
+                const breite = Math.max(kopf.length, ...zeilen.map((z) => (Array.isArray(z) ? z.length : 0)), 1);
+                const fuellen = (z) => {
+                    const r = (Array.isArray(z) ? z : []).map((x) => String(x ?? ''));
+                    while (r.length < breite)
+                        r.push('');
+                    return r.slice(0, breite);
+                };
+                const rows = [];
+                if (kopf.length)
+                    rows.push(fuellen(kopf));
+                zeilen.forEach((z) => rows.push(fuellen(z)));
+                const b = Store.addBlock(unterId, 'table', { rows, kopfZeile: kopf.length > 0, herkunft: 'ki' });
+                protokoll.ids.push(b.id);
+                App.zeichneSeite();
+                return 'Tabelle mit ' + rows.length + ' Zeilen und ' + breite +
+                    ' Spalten auf der offenen Seite angelegt.';
+            }
+        },
         /* ── DAS EINZIGE WERKZEUG, DAS ETWAS WEGNIMMT (E654) ──────────────────
            Redur am 20. September 2026: „die ai teil darf mehr machen … alles
            machen kann ausser ohne meine bestetigung etwas löschen."
@@ -126502,7 +126659,8 @@ const Agent = (() => {
         { id: 'assistent', icon: '🧭', name: 'Persönlicher Assistent',
             text: 'Sucht im Arbeitsbereich, fasst zusammen, legt Seiten und Einträge an.',
             werkzeuge: ['suchen', 'seiteLesen', 'seiteAnlegen', 'zeileAnlegen', 'datenbankLesen',
-                'kalenderLesen', 'mailLesen', 'seiteLoeschen', 'fertig'],
+                'kalenderLesen', 'mailLesen', 'pdfLesen', 'tabelleAnlegen',
+                'karteikartenAnlegen', 'seiteLoeschen', 'fertig'],
             anweisung: 'Du bist ein persönlicher Assistent. Arbeite ruhig und knapp. ' +
                 'Suche zuerst im Arbeitsbereich, bevor du etwas behauptest. ' +
                 'Wenn du etwas anlegst, sag genau, was du angelegt hast. ' +
@@ -126511,12 +126669,13 @@ const Agent = (() => {
                 'diesen Schritt weiter.' },
         { id: 'recherche', icon: '🔍', name: 'Rechercheur',
             text: 'Sammelt aus mehreren Quellen, vergleicht und schreibt mit Quellenangabe.',
-            werkzeuge: ['suchen', 'seiteLesen', 'datenbankLesen', 'nachschlagen', 'seiteAnlegen', 'fertig'],
+            werkzeuge: ['suchen', 'seiteLesen', 'datenbankLesen', 'nachschlagen', 'seiteAnlegen',
+                'pdfLesen', 'tabelleAnlegen', 'fertig'],
             anweisung: 'Du recherchierst. Sammle erst breit, dann ordne. Nenne zu jeder Aussage, ' +
                 'woher sie stammt. Was du nicht belegen kannst, kennzeichnest du als Vermutung.' },
         { id: 'redakteur', icon: '✍️', name: 'Redakteur',
             text: 'Überarbeitet Texte, ohne den Sinn zu verändern.',
-            werkzeuge: ['seiteLesen', 'suchen', 'fertig'],
+            werkzeuge: ['seiteLesen', 'suchen', 'pdfLesen', 'fertig'],
             anweisung: 'Du überarbeitest Texte. Der Sinn bleibt, die Sprache wird klarer. ' +
                 'Keine neuen Behauptungen, keine Ausschmückung. Schreib in ganzen Sätzen.' },
         { id: 'bau', icon: '🗂', name: 'Datenbank-Baumeister',

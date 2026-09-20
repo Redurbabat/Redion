@@ -2491,12 +2491,20 @@ const ChronikDaten = {
      "zeitraum": "ca. 17:15 –",
      "dauer": "laufend",
      "pruefungen": "test546 (13/13, Gegenprobe gefahren), test291, test281, test286, test301, test87, test105, test109"
+    },
+    {
+     "was": "E655 — Lernkarten, PDF und Tabellen: die drei Werkzeuge, die Redur genannt hat",
+     "vonCommit": "(offen)",
+     "bisCommit": "(offen)",
+     "zeitraum": "ca. 17:45 –",
+     "dauer": "laufend",
+     "pruefungen": "test547 (18/18, Gegenprobe gefahren), test546, test291, test281, test286, test87, test105, test109"
     }
    ],
    "zahlen": {
     "commits": 2,
-    "entscheidungen": 12,
-    "neue Prüfläufe": 5,
+    "entscheidungen": 13,
+    "neue Prüfläufe": 6,
     "volle Läufe": 0
    },
    "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -3698,6 +3706,18 @@ const ChronikDaten = {
    "ursache": "Eine Fähigkeit, die es nie gab, braucht keine Grenze — bis jemand sie baut. Dann fehlt die Grenze genau in dem Bogen, in dem am wenigsten Zeit dafür ist.",
    "beweis": "`test546` gegen den alten Stand: 6/13, darunter „kein Werkzeug mit Recht loeschen\". Nach dem Bau 13/13, und die Gegenprobe mit abgehängtem Tor druckt „Seite ‚Weg damit' liegt im Papierkorb\" bei null Dialogen nach einem Nein.",
    "lehre": "Das Tor gehört in die Schleife, nicht ins Werkzeug. Ein Werkzeug, das selbst fragen muss, ist ein Werkzeug, bei dem das Fragen beim nächsten Mal vergessen wird — und beim Löschen merkt man es erst, wenn etwas fehlt."
+  },
+  {
+   "nr": "P86",
+   "datum": "2026-09-20",
+   "titel": "Eine Erfolgsmeldung ist kein Erfolg",
+   "schwere": "mittel",
+   "symptom": "Ein Werkzeug meldet „3 Lernkarten angelegt — sie stehen ab sofort im Lernzentrum bereit\", und das Lernzentrum zählt null.",
+   "falscheVermutung": "Dass es reicht zu prüfen, ob Blöcke entstehen. Entstanden sind sie — nur mit `type:'text'`, und `Learning.cards()` filtert auf `type === 'flashcard'`.",
+   "wieGefunden": "Als Gegenprobe zum eigenen Wächter gestellt: im gebauten `agenten.js` den Typ von `flashcard` auf `text` geändert und den Lauf wiederholt.",
+   "ursache": "Der Satz, den ein Werkzeug zurückgibt, wird vom Werkzeug geschrieben — nicht vom Ergebnis. Er kann also alles behaupten.",
+   "beweis": "Gegenprobe: „Antwort: 3 Lernkarten … stehen ab sofort im Lernzentrum bereit\" bei „Learning.cards(): 1 → 1 · neu erkannt: 0\".",
+   "lehre": "Ein Wächter misst dort, wo das Ergebnis GEBRAUCHT wird, nicht dort, wo es entsteht. Beim alten Schnellbefehl „Mache Karteikarten\" ist derselbe Fehler jahrelang unbemerkt geblieben: er schrieb Text ins Chatfenster, und es sah nach Karteikarten aus."
   }
  ]
 } as const;

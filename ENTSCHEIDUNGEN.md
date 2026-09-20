@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-632 Entscheidungen, E1 bis E654 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+633 Entscheidungen, E1 bis E655 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -697,6 +697,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E652** — Das Teure war gebaut, das Billige fehlte: die ganze Abbruchkette des KI-Chats stand (`frage(…, {signal})`, abbrechbares `schlafen`, `signal` bis in `fetch`), nur `senden` reichte das dritte Argument nicht durch — und es gab keinen Knopf. Jetzt wird der Senden-Knopf für die Dauer des Laufs zum Stopp-Knopf (derselbe Knopf, §37; `aria-label` wechselt mit, §38), ein Abbruch behält die Teilantwort und sagt „Abgebrochen" statt „AbortError". Dazu der tote Menüpunkt „Meine Quellen", der ein HTML-Element an eine Funktion gab, die eine Liste erwartet. Wächter `test544`.
 * **E653** — Ein Griff, der nichts hält, und ein Blatt ohne Weg zurück: am Telefon ist `#ai` ein Blatt von unten, `#btn-ai` steht dort auf `display:none` (bausteine.css:300, :2119), `.ai-head` trug kein Kreuz, und Strg+J gibt es an einem Telefon nicht — einmal geöffnet, war das KI-Feld eine Sackgasse über der unteren Leiste (88vh, z-index 920 gegen 401). Dazu zeichnete `#ai::before` einen Wischgriff, dessen eigener Kommentar sagt, was er verspricht — gewischt werden konnte nichts (§47). Jetzt: ein Schliess-Knopf `#ai-zu` (44 px, `aria-label`) für BEIDE Bildschirme, und der Griff zieht wirklich (90 px Schwelle, darunter federt es zurück; nur unter 760 px, nur am Kopf, nicht auf den Knöpfen). Wächter `test545`.
 * **E654** — Die KI darf löschen, aber nie ohne ein ausdrückliches Ja: Redurs Satz „alles machen kann ausser ohne meine bestetigung etwas löschen" ist eine eigene Rechteklasse, keine strengere Stufe von `bearbeiten`. Vorher kannte der Agentenkatalog zwei Rechte (`lesen`, `bearbeiten`) und kein Löschwerkzeug — die Regel war nur Abwesenheit. Jetzt: `seiteLoeschen` mit `recht: "loeschen"`, und ein Tor in der SCHLEIFE (nicht im Werkzeug), das für jedes künftige Löschwerkzeug gilt. Drei Dinge, die beim Bearbeiten richtig sind, gelten dort nicht: `fragenModus() === "nie"`, „für diesen Lauf erlauben" und `darfAllein` unbeaufsichtigt. Gelöscht wird in den Papierkorb, nie endgültig (§43). Wächter `test546`.
+* **E655** — Lernkarten, PDF und Tabellen: Redurs erste Hälfte („lernkarten erstellen pdf elssen, tabelas"). Drei neue Agentenwerkzeuge, die nur anlegen und lesen — sie fallen nicht unter das Tor aus E654, und deshalb durften sie im selben Zug kommen. `karteikartenAnlegen` legt echte `flashcard`-Blöcke an, die `Learning.cards()` auch findet (der alte Schnellbefehl schrieb nur Text ins Chatfenster); `pdfLesen` gibt den Wortlaut einer bestimmten Seitenspanne aus `suchtext` (E107) statt ihn über die Suche zu streifen; `tabelleAnlegen` baut einen `table`-Block mit `rows`, den der Editor zeichnet. Alle drei tragen `herkunft: "ki"` und damit den Streifen aus E307. Wächter `test547`.
 
 ---
 
@@ -53717,3 +53718,68 @@ verhindert haben will — *„Seite ‚Weg damit' liegt im Papierkorb"*, bei
 **Was dieser Eintrag NICHT einlöst.** Redurs erster Satz nennt Lernkarten,
 PDF-Lesen und Tabellen. Die sind der nächste Bogen; dieser hier baut die
 Grenze, die sie sicher macht — §46: Daten zuerst, Funktionen danach.
+
+
+## E655 — Lernkarten, PDF und Tabellen
+
+**Was wurde entschieden?** Drei neue Werkzeuge im Agentenkatalog:
+`karteikartenAnlegen`, `pdfLesen`, `tabelleAnlegen`. Alle drei legen an
+oder lesen; keines nimmt etwas weg.
+
+**Warum?** Redurs Satz vom 20. September nennt sie beim Namen: „lernkarten
+erstellen pdf elssen, tabelas usw". E654 hat die Grenze gebaut, die das
+Erweitern sicher macht — das hier ist das Erweitern.
+
+**Was vorher fehlte, nachgesehen und nicht vermutet:**
+
+```txt
+Lernkarten   Schnellbefehl „Mache aus dieser Seite Karteikarten" — er
+             schreibt TEXT ins Chatfenster. `flashcard`-Blöcke entstanden
+             daraus nie.
+PDF          Der Wortlaut steht in `suchtext` (E107) und war über `suchen`
+             zufällig erreichbar. „Seite 4 bis 6 des Skripts" ging nicht.
+Tabellen     `datenbankAnlegen` gibt es. Eine einfache Tabelle im Text
+             (`type:'table'` mit `rows`) konnte die KI nicht anlegen.
+```
+
+**Der Unterschied, um den es bei den Lernkarten geht.** „Sieht aus wie
+Karteikarten" und „ist eine Karteikarte" sind nicht dasselbe: das
+Lernzentrum zählt `flashcard`-Blöcke, nicht Absätze, und `Learning.splitCard`
+trennt an `::`. Eine Karte ohne die zwei Punkte zeigt im Lernzentrum
+„(noch keine Antwort)". Deshalb misst `test547` nicht, ob Blöcke entstehen,
+sondern ob `Learning.cards()` sie **zählt**.
+
+Die Gegenprobe zeigt, warum das nicht zu viel verlangt ist: schreibt das
+Werkzeug `text` statt `flashcard`, sagt es weiterhin *„3 Lernkarten … stehen
+ab sofort im Lernzentrum bereit"* — und `Learning.cards()` steht bei
+**0**. Eine Erfolgsmeldung ist kein Erfolg.
+
+**Warum `pdfLesen` kürzt und es sagt.** Ein Skript kann hundert Seiten
+haben. Was nicht mehr in eine Antwort passt, wird beim Namen genannt
+(„[7 weitere Seiten passen nicht mehr … Frag gezielt nach ab Seite 12.]")
+statt stillschweigend abgeschnitten — sonst hält das Modell die halbe Seite
+für die ganze. Dasselbe Prinzip wie `enthaelt`/`fehlt` im `.redion`-Manifest
+(§52.10): eine Auslassung, die sich nicht nennt, ist die gefährliche.
+
+**Warum alle Zeilen der Tabelle gleich breit werden.** Eine kurze Zeile
+zeichnete sonst eine Tabelle mit Löchern, und wer dort hineintippt,
+schreibt in eine Zelle, die es im Bestand nicht gibt.
+
+**Was war die Alternative?** Ein einziges Werkzeug „blockAnlegen" mit einem
+Typ-Argument. Dagegen spricht §8: das Modell liest die Beschreibungen, und
+drei genaue schlagen eine allgemeine. Ausserdem braucht jede der drei eine
+eigene Prüfung — die Kartenseite eine andere als die Tabelle.
+
+**Was kostet es?** Drei Werkzeuge mehr im Systemtext jedes Agenten, der sie
+hat. Verteilt sind sie sparsam: der Assistent bekommt alle drei, der
+Rechercheur `pdfLesen` und `tabelleAnlegen`, der Redakteur nur `pdfLesen`.
+
+**Die Herkunft reist mit.** Alle drei setzen `herkunft: 'ki'`, und damit
+zeichnet der Editor den lila Streifen aus E307 daneben. Auf dem Bild
+`bilder/kiTabelle-rechner-hell.png` ist er links an der Tabelle zu sehen:
+was die KI gebaut hat, sagt es von selbst.
+
+**Der Wächter.** `test547`, achtzehn Messungen. Gegen den alten Stand
+3/18 — die drei grünen waren „keines der drei darf löschen" und „nichts
+Vorhandenes wird angefasst", also genau die Zusagen, die auch ohne die
+Werkzeuge gelten.

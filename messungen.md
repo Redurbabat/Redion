@@ -3623,3 +3623,51 @@ sind.
 
 `bilder/kiLoeschTor-rechner-hell.png` — die Seite beim Namen, 3 Blöcke
 darunter, zwei Knöpfe, und der Fokus liegt auf „Nicht löschen" (§55.3).
+
+---
+
+## 20. September 2026 — Was die KI jetzt bauen kann (E655, `test547`)
+
+Der Katalog wächst von 13 auf 16 Werkzeuge:
+
+```txt
+karteikartenAnlegen   bearbeiten   echte flashcard-Blöcke
+pdfLesen              lesen        Wortlaut einer Seitenspanne aus `suchtext`
+tabelleAnlegen        bearbeiten   table-Block mit `rows`
+```
+
+Gemessen, nicht behauptet:
+
+```txt
+Learning.cards()            1 → 4 · drei neue erkannt
+Typ der neuen Blöcke        ["flashcard"]
+splitCard der ersten        ["Wie lautet das ohmsche Gesetz?","U = R mal I"]
+
+pdfLesen von 4 bis 5        enthält S4 und S5 · enthält NICHT S1 oder S6
+pdfLesen ohne Spanne        316 Zeichen, S1 bis S6
+pdfLesen, Dokument fehlt    „Kein Dokument gefunden, das „Gibt es nicht" heisst."
+
+table-Block                 4 Zeilen × 3 Spalten
+vom Editor gezeichnet       3 th, 9 td · erste Zelle „Querschnitt"
+```
+
+### Die Gegenprobe, und warum sie die wichtigste ist
+
+`karteikartenAnlegen` im gebauten `agenten.js` auf `text` statt `flashcard`
+umgestellt:
+
+```txt
+    Antwort: 3 Lernkarten … stehen ab sofort im Lernzentrum bereit.
+    Learning.cards(): 1 → 1 · neu erkannt: 0
+  ✗ Die Lernwelt zählt drei neue Karten — 0 statt 3
+```
+
+Das Werkzeug meldet weiterhin Erfolg. **Eine Erfolgsmeldung ist kein
+Erfolg** — und ein Wächter, der nur zählt, ob Blöcke entstehen, hätte das
+nicht gesehen. Er muss dort messen, wo das Ergebnis gebraucht wird.
+
+### Bild
+
+`bilder/kiTabelle-rechner-hell.png` — vier Spalten, Kopfzeile, und links
+der lila Herkunftsstreifen aus E307: was die KI gebaut hat, sagt es von
+selbst (§55.3).

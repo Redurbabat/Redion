@@ -99,6 +99,7 @@ sind der teuerste Teil und der lehrreichste.
 | P83 | 2026-09-20 | Ein Blatt ohne Weg zurück, und ein Griff, der nichts hält | hoch | — |
 | P84 | 2026-09-20 | Zweimal rot aus dem falschen Grund — derselbe Lauf | 🟠 mittel | — |
 | P85 | 2026-09-20 | Eine Regel, die nur galt, weil es die Handlung nicht gab | 🟠 mittel | — |
+| P86 | 2026-09-20 | Eine Erfolgsmeldung ist kein Erfolg | 🟠 mittel | — |
 
 ---
 
@@ -1895,4 +1896,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** `test546` gegen den alten Stand: 6/13, darunter „kein Werkzeug mit Recht loeschen". Nach dem Bau 13/13, und die Gegenprobe mit abgehängtem Tor druckt „Seite ‚Weg damit' liegt im Papierkorb" bei null Dialogen nach einem Nein.
 
 **Die Lehre.** Das Tor gehört in die Schleife, nicht ins Werkzeug. Ein Werkzeug, das selbst fragen muss, ist ein Werkzeug, bei dem das Fragen beim nächsten Mal vergessen wird — und beim Löschen merkt man es erst, wenn etwas fehlt.
+
+
+---
+
+## P86 · Eine Erfolgsmeldung ist kein Erfolg
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Ein Werkzeug meldet „3 Lernkarten angelegt — sie stehen ab sofort im Lernzentrum bereit", und das Lernzentrum zählt null.
+
+**Die falsche Vermutung.** Dass es reicht zu prüfen, ob Blöcke entstehen. Entstanden sind sie — nur mit `type:'text'`, und `Learning.cards()` filtert auf `type === 'flashcard'`.
+
+**Wie es gefunden wurde.** Als Gegenprobe zum eigenen Wächter gestellt: im gebauten `agenten.js` den Typ von `flashcard` auf `text` geändert und den Lauf wiederholt.
+
+**Die Ursache.** Der Satz, den ein Werkzeug zurückgibt, wird vom Werkzeug geschrieben — nicht vom Ergebnis. Er kann also alles behaupten.
+
+**Der Beweis.** Gegenprobe: „Antwort: 3 Lernkarten … stehen ab sofort im Lernzentrum bereit" bei „Learning.cards(): 1 → 1 · neu erkannt: 0".
+
+**Die Lehre.** Ein Wächter misst dort, wo das Ergebnis GEBRAUCHT wird, nicht dort, wo es entsteht. Beim alten Schnellbefehl „Mache Karteikarten" ist derselbe Fehler jahrelang unbemerkt geblieben: er schrieb Text ins Chatfenster, und es sah nach Karteikarten aus.
 

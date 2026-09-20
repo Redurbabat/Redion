@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 488 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 489 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1011,6 +1011,13 @@ druckt er die Zeile, die es zu verhindern gilt — „Seite ‚Weg damit' liegt 
 Papierkorb", bei NULL Dialogen, nachdem der Mensch Nein gesagt hatte.
 Gezählt am 20. September, im selben Bogen: der Befehl sagt 488.*
 
+*Und 489: `test547` — Lernkarten, PDF und Tabellen (E655). Seine wichtigste
+Messung ist nicht, ob Blöcke entstehen, sondern ob `Learning.cards()` sie
+ZÄHLT: die Gegenprobe schreibt `text` statt `flashcard`, das Werkzeug meldet
+weiterhin „3 Lernkarten … stehen ab sofort im Lernzentrum bereit", und die
+Lernwelt zählt null. Eine Erfolgsmeldung ist kein Erfolg. Gezählt am
+20. September, im selben Bogen: der Befehl sagt 489.*
+
 ### Die Befehle
 
 ```txt
@@ -1019,7 +1026,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 488 Läufe
+npm run pruefen                      alle 489 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1081,7 +1088,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 488 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 489 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

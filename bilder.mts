@@ -392,6 +392,35 @@ const ANSICHTEN: Record<string, {
      darüber der Strich, der jetzt hält, was er zeigt. Am Rechner wäre das
      Bild sinnlos — dort klappt `#btn-ai` in der Kopfleiste auf und zu.
        node bilder.mts kiBlatt handy */
+  /* --- Was die KI jetzt bauen kann (E655) ---------------------------------
+     Die Tabelle ist das Sichtbare der drei: Lernkarten prüft man an
+     `Learning.cards()`, PDF-Text an seinem Wortlaut — eine Tabelle sieht man
+     oder man sieht sie nicht (§55.3).
+       node bilder.mts kiTabelle rechner */
+  kiTabelle: {
+    titel: 'Die KI hat eine Tabelle gebaut (E655)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Kabelquerschnitte', icon: '⚡' });
+      Store.addBlock(s.id, 'text',
+        { text: 'Aus dem Skript, Kapitel 7 — von der KI zusammengestellt.' });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 250));
+      await Agent.WERKZEUGE['tabelleAnlegen'].lauf({
+        kopfzeile: ['Querschnitt', 'Belastbarkeit', 'Absicherung', 'Typische Verwendung'],
+        zeilen: [
+          ['1,5 mm²', '16 A', 'B16', 'Licht, Steckdosen'],
+          ['2,5 mm²', '20 A', 'B20', 'Steckdosenkreise'],
+          ['4 mm²', '25 A', 'B25', 'Herd, Durchlauferhitzer'],
+          ['6 mm²', '32 A', 'B32', 'Zuleitungen, Unterverteilung']]
+      }, { ids: [] });
+      App.zeichneSeite();
+      await new Promise(f => setTimeout(f, 400));
+    }
+  },
+
   /* --- Das Tor vor dem Löschen (E654) -------------------------------------
      Zu sehen ist, was Redur sieht, bevor irgendetwas verschwindet: die Seite
      beim Namen, wie viele Blöcke daran hängen, und ZWEI Knöpfe — kein

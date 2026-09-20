@@ -1,5 +1,35 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E655 · Lernkarten, PDF und Tabellen
+
+**Redurs erste Hälfte.** „lernkarten erstellen pdf elssen, tabelas usw."
+E654 hat die Grenze gebaut; das hier ist das, wofür sie da war.
+
+**Der Fund.** Für alle drei gab es etwas, das fast passte, und nichts, das
+passte. Den Schnellbefehl „Mache aus dieser Seite Karteikarten" — der
+schreibt Text ins Chatfenster, und Text lernt niemand. Den PDF-Wortlaut in
+`suchtext`, über die Suche zufällig erreichbar, gezielt nicht. Und
+`datenbankAnlegen`, das eine Datenbank baut, wo drei mal vier Zellen im
+Absatz gemeint waren.
+
+**Gebaut.** `karteikartenAnlegen` (echte `flashcard`-Blöcke im Format
+`Frage :: Antwort`), `pdfLesen` (Seitenspanne, kürzt mit Ansage statt
+stillschweigend) und `tabelleAnlegen` (`table`-Block mit `rows`, alle Zeilen
+auf gleiche Breite gefüllt). Alle drei setzen `herkunft: 'ki'` und tragen
+damit den Streifen aus E307. Verteilt sind sie sparsam: der Assistent
+bekommt alle drei, der Rechercheur zwei, der Redakteur nur `pdfLesen`.
+
+**Geprüft.** `test547` neu, achtzehn Messungen, gegen den alten Stand
+3/18. Die Gegenprobe ist die lehrreiche: schreibt das Kartenwerkzeug `text`
+statt `flashcard`, meldet es weiterhin „3 Lernkarten … stehen ab sofort im
+Lernzentrum bereit", und `Learning.cards()` zählt null. Eine
+Erfolgsmeldung ist kein Erfolg. `test546`, `test291`, `test281`, `test286`,
+`test87`, `test105`, `test109` grün, `typecheck` sauber, Einzeldatei neu.
+
+**Bild.** `bilder/kiTabelle-rechner-hell.png` (§55.3).
+
+---
+
 ## 20. September 2026 · E654 · Die KI darf löschen — und fragt jedes Mal
 
 **Redurs Auftrag.** „die ai teil darf mehr machen z.B lernkarten erstellen
