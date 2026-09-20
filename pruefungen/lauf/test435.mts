@@ -193,17 +193,35 @@ const textur = JSON.parse(await s.evaluate(`JSON.stringify((() => {
   Textur.legen(a); Textur.legen(a); Textur.legen(a);
   const b = document.createElement('div'); document.body.append(b); Textur.legen(b);
   const halter = document.querySelectorAll('#' + Textur.HALTER).length;
-  const filter = document.querySelectorAll('filter').length;
+  /* IM HALTER ZAEHLEN, NICHT IM GANZEN DOKUMENT (E645). Hier wurden alle
+     filter-Elemente der Seite gezaehlt, und das hiess in Wahrheit: es gibt
+     in ganz Redion genau zwei SVG-Filter. Das war am 19. September
+     zufaellig wahr; am 20. kam die Linse der unteren Leiste dazu (E639,
+     zwei Filter), und die Zeile wurde rot, ohne dass an der Textur
+     irgendetwas falsch war. Gemeint ist und war: DIE TEXTUR legt ihre zwei
+     Filter genau einmal an, auch wenn man sie viermal legt.
+     (Ohne Schraegstrich-Zeichen und ohne Akzentzeichen: dieser Kommentar
+     steht INNERHALB einer Schablone, und ein Akzentzeichen darin beendet
+     sie mitten im Satz. Der Kopf dieser Datei warnt davor.) */
+  const filter = document.querySelectorAll('#' + Textur.HALTER + ' filter').length;
+  /* UND DAS, WORUM ES E440 WIRKLICH GING: keine zwei Filter mit derselben
+     Kennung. Am KI-Funken hat das einmal zwei Instanzen dieselbe ID teilen
+     lassen, und die zweite gewann. Diese Zahl bleibt richtig, egal wie
+     viele Bauteile eigene Filter mitbringen. */
+  const ids = Array.from(document.querySelectorAll('filter')).map(f => f.id).filter(Boolean);
+  const doppelt = ids.filter((x, i) => ids.indexOf(x) !== i);
   const lagenA = a.querySelectorAll(':scope > .ru-textur').length;
   const inhaltA = a.classList.contains('ru-textur-wirt');
   const verweis = getComputedStyle(a.querySelector('.ru-textur-fein')).filter;
   const versteckt = document.getElementById(Textur.HALTER).getAttribute('aria-hidden');
   const groesse = document.getElementById(Textur.HALTER).getBoundingClientRect();
   a.remove(); b.remove();
-  return { halter, filter, lagenA, inhaltA, verweis, versteckt, breit: groesse.width, hoch: groesse.height };
+  return { halter, filter, doppelt, ids, lagenA, inhaltA, verweis, versteckt, breit: groesse.width, hoch: groesse.height };
 })())`) as string);
 p('Dreimal legen, viermal legen — EIN Halter', textur.halter === 1, String(textur.halter));
-p('… und genau zwei Filter (fein, grob) im ganzen Dokument', textur.filter === 2, String(textur.filter));
+p('… und genau zwei Filter (fein, grob) in ihrem Halter', textur.filter === 2, String(textur.filter));
+p('Und keine zwei Filter im Dokument teilen sich eine Kennung (E440)',
+  textur.doppelt.length === 0, textur.doppelt.join(', ') + '  —  alle: ' + textur.ids.join(', '));
 p('Dreimal legen gibt trotzdem nur zwei Lagen', textur.lagenA === 2, String(textur.lagenA));
 p('Die Lage zeigt auf den globalen Filter', /url\("?#ru-textur-fein"?\)/.test(textur.verweis), textur.verweis);
 p('Der Halter ist für Vorleser unsichtbar und ohne Grösse',

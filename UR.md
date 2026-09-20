@@ -1814,12 +1814,13 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 | E641 — Was das Design-System an der Linse auszusetzen hat | `(01:26)` → `(01:52)` | 01:30 – 01:52 | ca. 22 min | test539 §7 neu |
 | E642 — Sechsundsiebzig tote CSS-Regeln, gezählt bis null | `(01:52)` → `(02:35)` | 01:52 – 02:35 | ca. 43 min | test332 (76 → 0) · 26 Nachbarläufe der Bibliothek und der Stilblätter |
 | E643 — Der Wächter gegen Port-Kollisionen kannte nur eine Schreibweise | `(02:35)` → `(03:05)` | 02:35 – 03:05 | ca. 30 min | test400 (4/4, zwei Gegenproben) · die vierzehn betroffenen Läufe |
-| E644 — Erst wiederherstellen, dann beobachten (die gemerkte PDF-Seite) | `(03:05)` → `(offen)` | 03:05 – | laufend | test540 neu (9/9, Gegenprobe rot gesehen) · test424 (50/50) · test395, test202, test386 |
+| E644 — Erst wiederherstellen, dann beobachten (die gemerkte PDF-Seite) | `(03:05)` → `(03:30)` | 03:05 – 03:30 | ca. 25 min | test540 neu (9/9, Gegenprobe rot gesehen) · test424 (50/50) · test395, test202, test386 |
+| E645 — Ein Wächter zählte das ganze Haus, gemeint war ein Zimmer | `(03:30)` → `(offen)` | 03:30 – | laufend | test435 (45/45, zwei Gegenproben rot gesehen) |
 
 #### Zahlen des Tages
 
 - **commits:** 2
-- **entscheidungen:** 6
+- **entscheidungen:** 7
 - **neue Prüfläufe:** 2
 - **volle Läufe:** 0
 
@@ -1843,5 +1844,5 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 73 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 74 Einträge.
 

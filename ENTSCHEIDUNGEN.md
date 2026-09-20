@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-622 Entscheidungen, E1 bis E644 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+623 Entscheidungen, E1 bis E645 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -687,6 +687,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E642** — Sechsundsiebzig Regeln, die nie zum Zug kamen: der erste volle Lauf seit PR #100 meldete 76 tote CSS-Erklärungen; dreizehn davon gab es gar nicht (`split(',')` zerriss die Kommas in `:is()` und erfand Wähler wie `#menueband)`), die übrigen 63 waren echt. Eine davon war eine Absicht, die nie wirkte: `motion.css` hatte die Übergangsliste der Kachel ersetzt und dabei `background` verloren — zehn Tage harter Flächenwechsel, den kein Auge meldete. Die letzten 35 sind die Bibliothek, die seit PR #56 zweimal gestaltet ist (§8): das Studio-Blatt gewinnt durchweg, also gehört ihm, was es setzt
 * **E643** — Der Wächter gegen Port-Kollisionen kannte nur eine Schreibweise: `test400` las `PORT = N` und war blind für `listen(9624, …)` — acht Läufe schreiben so, und sieben Ports waren dadurch doppelt vergeben, während der Wächter grün meldete. Zum vierten Mal an zwei Tagen ein Ausdruck, der eine gültige Schreibweise nicht kennt (E629, E631, E642) — und der erste, der dabei etwas ÜBERSAH statt etwas zu erfinden. Er prüft jetzt auch, dass er keinen Lauf übersieht, und `listen(0)` gilt als die bessere Antwort statt als fehlende Zahl
 * **E644** — Erst wiederherstellen, dann beobachten: die zuletzt gelesene PDF-Seite ging verloren, sobald zwischen dem Öffnen und dem Anrollen eine Fenstergrösse gemeldet wurde — `nachziehen()` las den Rollstand 0, schloss auf „Seite 1" und MERKTE das. Auf dem Telefon reicht dafür das Drehen. `test424` prüfte es schon, aber als Wettlauf: derselbe Durchgang lief mit ein paar Millisekunden mehr Arbeit grün. `test540` stellt das Rennen, statt es zu gewinnen
+* **E645** — Ein Wächter zählte das ganze Haus, gemeint war ein Zimmer: `test435` §3 zählte ALLE SVG-Filter der Seite und verlangte zwei — das war zufällig wahr, bis die Linse der unteren Leiste (E639) zwei eigene mitbrachte. Gezählt wird jetzt im Halter der Textur, und daneben steht die Frage, um die es E440 wirklich ging: teilen sich zwei Filter eine Kennung? Diese Zahl wächst nicht mit dem Programm mit
 
 ---
 
@@ -52810,3 +52811,75 @@ zeichnen, was hinterher nicht gezeichnet würde.
 der Sperre sind genau die drei Zeilen wieder rot, die den Fehler
 beschreiben) · `test424` · `test395`, `test202`, `test386` — die Läufe, die
 am faulen Zeichnen und an der Seitenzahl hängen.
+
+---
+
+## E645 — Ein Wächter zählte das ganze Haus, gemeint war ein Zimmer
+
+`test435` §3 hält seit E462 fest, dass die Textur ihre zwei SVG-Filter
+**genau einmal** anlegt — auch wenn man sie viermal legt. Gemessen hat er
+das so:
+
+```js
+const filter = document.querySelectorAll('filter').length;   // === 2
+```
+
+Das ist nicht dieselbe Aussage. Es heisst: **„es gibt in ganz Redion genau
+zwei SVG-Filter."** Am 19. September war das zufällig wahr. Am 20. kam die
+Linse der unteren Leiste dazu (E639, zwei Filter), und die Zeile wurde rot —
+ohne dass an der Textur irgendetwas falsch war.
+
+**Das ist die vierte Fassung derselben Sorte an zwei Tagen** (E629, E631,
+E642, E643): ein Ausdruck, der etwas anderes misst, als der Satz daneben
+behauptet. Diesmal ist sie besonders lehrreich, weil der Wächter dadurch
+**jede neue Funktion bestraft**, die einen Filter mitbringt — er war nicht
+falsch, er war zu weit.
+
+### Was geändert ist
+
+**1 · Im Halter zählen, nicht im Dokument.**
+
+```js
+const filter = document.querySelectorAll('#' + Textur.HALTER + ' filter').length;
+```
+
+Damit steht da, was gemeint war, und die Linse ist keine Störung mehr.
+
+**2 · Und die Frage stellen, um die es E440 wirklich ging.** Am KI-Funken
+teilten sich zwei Instanzen eine Filter-ID, und die zweite gewann. Genau das
+prüft jetzt eine eigene Zeile:
+
+```js
+const ids = Array.from(document.querySelectorAll('filter')).map(f => f.id).filter(Boolean);
+const doppelt = ids.filter((x, i) => ids.indexOf(x) !== i);
+```
+
+Diese Zahl bleibt richtig, **egal wie viele Bauteile eigene Filter
+mitbringen** — sie wächst nicht mit dem Programm, sondern hält eine
+Eigenschaft. Das ist der Unterschied zwischen einer Zusage und einer
+Momentaufnahme.
+
+### Beide Gegenproben rot gesehen (§50)
+
+```txt
+ein dritter Filter im Halter        →  ✗ „… genau zwei Filter in ihrem Halter — 3"
+ein zweiter `ru-textur-fein`        →  ✗ „… teilen sich eine Kennung — ru-textur-fein
+                                          — alle: ru-linse-ruhe, ru-linse-fahrt,
+                                            ru-textur-fein, ru-textur-grob, ru-textur-fein"
+beides zurückgenommen               →  ✓ 45/45
+```
+
+### Und eine Falle, die zum dritten Mal zuschlug
+
+Der Kommentar, den ich an die Stelle schrieb, steht **innerhalb** einer
+Schablone (`page.evaluate(\`…\`)`). Ein Akzentzeichen darin beendet die
+Zeichenkette mitten im Satz — Node meldete `ERR_INVALID_TYPESCRIPT_SYNTAX`
+an einer Stelle, die wie Prosa aussieht. Der Kopf der Datei warnt davor, und
+ich habe es trotzdem getan. Der Kommentar steht jetzt ohne Akzentzeichen da
+und sagt selbst, warum.
+
+**Was es kostet:** nichts. Die alte Zeile hat nie etwas gehalten, was die
+neuen zwei nicht besser halten.
+
+**Gemessen.** `test435` (45/45, zwei Gegenproben) · `test539` (die Linse) ·
+`test87`.

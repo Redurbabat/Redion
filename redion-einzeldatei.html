@@ -25050,7 +25050,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1221, inhalt: '244864f1fd120bb8', gebaut: '2026-09-20T02:33:59.683Z' };
+const Stand = { fassung: 1222, inhalt: '43aa0830856fe699', gebaut: '2026-09-20T08:05:55.170Z' };
 window.Stand = Stand;
 
 </script>
@@ -81959,15 +81959,23 @@ const ChronikDaten = {
                 {
                     "was": "E644 — Erst wiederherstellen, dann beobachten (die gemerkte PDF-Seite)",
                     "vonCommit": "(03:05)",
-                    "bisCommit": "(offen)",
-                    "zeitraum": "03:05 –",
-                    "dauer": "laufend",
+                    "bisCommit": "(03:30)",
+                    "zeitraum": "03:05 – 03:30",
+                    "dauer": "ca. 25 min",
                     "pruefungen": "test540 neu (9/9, Gegenprobe rot gesehen) · test424 (50/50) · test395, test202, test386"
+                },
+                {
+                    "was": "E645 — Ein Wächter zählte das ganze Haus, gemeint war ein Zimmer",
+                    "vonCommit": "(03:30)",
+                    "bisCommit": "(offen)",
+                    "zeitraum": "03:30 –",
+                    "dauer": "laufend",
+                    "pruefungen": "test435 (45/45, zwei Gegenproben rot gesehen)"
                 }
             ],
             "zahlen": {
                 "commits": 2,
-                "entscheidungen": 6,
+                "entscheidungen": 7,
                 "neue Prüfläufe": 2,
                 "volle Läufe": 0
             },
@@ -83017,6 +83025,19 @@ const ChronikDaten = {
             "loesung": "Eine Reihenfolge statt einer Wartezeit: `standGesetzt` fällt erst in dem rAF, der die gemerkte Seite anrollt. Davor schweigt der Beobachter. Und ein neuer Lauf, test540, der das Rennen STELLT statt es zu gewinnen.",
             "warumKeineUhr": "Die Zeiten stammen aus einem `performance.now()`-Haken in der Seite, nicht aus git — sie sind relativ und stehen deshalb nicht als Uhrzeit da.",
             "lehre": "Derselbe Haken, der den Fehler sichtbar machte, machte ihn beim zweiten Versuch unsichtbar: ein paar Millisekunden mehr Arbeit darin, und derselbe Durchgang lief 50 von 50. Ein Wächter, der ein Rennen zufällig gewinnt, ist keiner — er muss es stellen. Das ist die dritte Fassung von §55.2 an zwei Tagen: „kann er rot werden?\", „kann er grün werden?\", und jetzt „gewinnt er nur zufällig?\"."
+        },
+        {
+            "nr": "P74",
+            "datum": "2026-09-20",
+            "titel": "Der Textur-Wächter bestrafte die neue Linse",
+            "schwere": "klein",
+            "symptom": "Beim Nachfahren der achtzehn ehemals roten Läufe war test435 rot: „… und genau zwei Filter (fein, grob) im ganzen Dokument — 4\".",
+            "falscheVermutung": "Die Textur legt ihre Filter jetzt doppelt an — also ein Fehler in textur.ts oder ein zweiter Halter.",
+            "wieGefunden": "Die Meldung nennt die Zahl, nicht die Namen. Mit den Namen: ru-linse-ruhe, ru-linse-fahrt, ru-textur-fein, ru-textur-grob. Zwei davon sind meine Linse von derselben Nacht (E639).",
+            "ursache": "Der Lauf zählte `document.querySelectorAll('filter')` — also ALLE SVG-Filter der Seite — und verlangte zwei. Die Zusage im Satz daneben lautete aber: die TEXTUR legt ihre zwei genau einmal an. Zwei verschiedene Aussagen.",
+            "loesung": "Im Halter der Textur zählen statt im Dokument. Und daneben die Frage, um die es E440 wirklich ging: teilen sich zwei Filter eine Kennung? Diese Zahl wächst nicht mit dem Programm mit.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "lehre": "Vierte Fassung derselben Sorte an zwei Tagen (E629, E631, E642, E643): ein Ausdruck misst etwas anderes, als der Satz daneben behauptet. Diese hier war nicht falsch, sondern ZU WEIT — und ein zu weiter Wächter bestraft jede neue Funktion, die zufällig dasselbe Element benutzt. Und zum dritten Mal die Schablonen-Falle: ein Akzentzeichen im Kommentar INNERHALB von page.evaluate beendet die Zeichenkette; der Kopf der Datei warnt davor, und ich habe es trotzdem getan."
         }
     ]
 };

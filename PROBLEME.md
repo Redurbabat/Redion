@@ -87,6 +87,7 @@ sind der teuerste Teil und der lehrreichste.
 | P71 | 2026-09-20 | Der Wächter zerriss die Wähler und klagte dann die echten Regeln an | 🟠 mittel | — |
 | P72 | 2026-09-20 | Der Wächter gegen Port-Kollisionen meldete grün und übersah sieben | gross | — |
 | P73 | 2026-09-20 | Die zuletzt gelesene Seite ging verloren, sobald das Fenster sich meldete | gross | — |
+| P74 | 2026-09-20 | Der Textur-Wächter bestrafte die neue Linse | 🟡 klein | — |
 
 ---
 
@@ -1637,4 +1638,25 @@ sind der teuerste Teil und der lehrreichste.
 **Warum keine Uhr.** Die Zeiten stammen aus einem `performance.now()`-Haken in der Seite, nicht aus git — sie sind relativ und stehen deshalb nicht als Uhrzeit da.
 
 **Die Lehre.** Derselbe Haken, der den Fehler sichtbar machte, machte ihn beim zweiten Versuch unsichtbar: ein paar Millisekunden mehr Arbeit darin, und derselbe Durchgang lief 50 von 50. Ein Wächter, der ein Rennen zufällig gewinnt, ist keiner — er muss es stellen. Das ist die dritte Fassung von §55.2 an zwei Tagen: „kann er rot werden?", „kann er grün werden?", und jetzt „gewinnt er nur zufällig?".
+
+
+---
+
+## P74 · Der Textur-Wächter bestrafte die neue Linse
+
+*2026-09-20 · 🟡 klein*
+
+**Das Bild.** Beim Nachfahren der achtzehn ehemals roten Läufe war test435 rot: „… und genau zwei Filter (fein, grob) im ganzen Dokument — 4".
+
+**Die falsche Vermutung.** Die Textur legt ihre Filter jetzt doppelt an — also ein Fehler in textur.ts oder ein zweiter Halter.
+
+**Wie es gefunden wurde.** Die Meldung nennt die Zahl, nicht die Namen. Mit den Namen: ru-linse-ruhe, ru-linse-fahrt, ru-textur-fein, ru-textur-grob. Zwei davon sind meine Linse von derselben Nacht (E639).
+
+**Die Ursache.** Der Lauf zählte `document.querySelectorAll('filter')` — also ALLE SVG-Filter der Seite — und verlangte zwei. Die Zusage im Satz daneben lautete aber: die TEXTUR legt ihre zwei genau einmal an. Zwei verschiedene Aussagen.
+
+**Die Lösung.** Im Halter der Textur zählen statt im Dokument. Und daneben die Frage, um die es E440 wirklich ging: teilen sich zwei Filter eine Kennung? Diese Zahl wächst nicht mit dem Programm mit.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Die Lehre.** Vierte Fassung derselben Sorte an zwei Tagen (E629, E631, E642, E643): ein Ausdruck misst etwas anderes, als der Satz daneben behauptet. Diese hier war nicht falsch, sondern ZU WEIT — und ein zu weiter Wächter bestraft jede neue Funktion, die zufällig dasselbe Element benutzt. Und zum dritten Mal die Schablonen-Falle: ein Akzentzeichen im Kommentar INNERHALB von page.evaluate beendet die Zeichenkette; der Kopf der Datei warnt davor, und ich habe es trotzdem getan.
 
