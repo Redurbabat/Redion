@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-616 Entscheidungen, E1 bis E638 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+617 Entscheidungen, E1 bis E639 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -681,6 +681,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E636** — Ein Prüflauf mit tausend Hertz: `test449` feuerte seine Zeigerpunkte in einer Schleife, also mit `dt = 1 ms`. Der Glätter rechnet seit E504 in ZEIT — bei 1 ms dämpft er doppelt so stark wie bei einem echten Stift, der schräge Zickzack schrumpfte von 1716 auf 1037 Weg und fiel unter die Schwelle von `istKritzel`. Der Zug war damit kein Gekritzel mehr, es wurde NICHTS gelöscht — und die zentrale Zusage über die zwei unbeteiligten Marken war grün, weil gar nichts geschah. Der Lauf taktet jetzt mit 8 ms (125 Hz)
 * **E637** — Erst nachsehen, dann eintragen: die sechs Marken-Decken waren gewachsen, und Redur hat entschieden, erst die Stellen zu suchen. Alle zehn liegen in `werkzeuge.css`, alle aus E607 und E628. Sieben haben eine andere Aufgabe als ihre gleichnamige Marke; zwei Polster bekommen `--space-5`, und die rohe 46 war eine Abschrift von `.wb-massstab`, die dabei `tabular-nums` verloren hatte — beide Massstäbe teilen sich jetzt eine Regel. Zwei Zahlen hinunter, zwei hinauf, jede einzeln begründet in `messungen.md`
 * **E638** — Tot war nicht die Regel, sondern das, worauf sie zeigte: die fünf `order`-Zeilen aus E151 standen Zeichen für Zeichen unverändert da — aber drei ihrer vier Ziele hat Redurs Umbau vom 6. September abgeschafft. Übrig blieb `.lw-hero{order:4}` gegen `*{order:5}`, und damit stand die Begrüssung wieder ganz oben und „Lernen starten" bei y = 1115 in einem 844 px hohen Bild. Eine Regel, deren Selektor ins Leere greift, sieht im Quelltext aus wie am ersten Tag. Dazu drei Messfehler im Lauf selbst, darunter ein Schmuck-`<span>`, das vor jedem Namen stand
+* **E639** — Die Pille wird eine Linse: Redurs Video (Apple TV, iOS 26) zeigt keine Fläche, die springt, sondern eine, die BRICHT — sie vergrössert, zieht die Zeichen mit, wirft einen Farbsaum und dehnt sich in Laufrichtung. Redion hatte die wandernde Pille seit E236 schon; sie hat Glas bekommen. Die eine Zeile, an der alles hing: sie lag auf `z-index:0`, UNTER den Knöpfen — eine Linse kann aber nur brechen, was hinter ihr liegt. Dazu der Fund von `test114` §17, dessen Kommentar ein halbes Jahr vorher aufgeschrieben hatte, wann er scharf wird
 
 ---
 
@@ -52101,3 +52102,147 @@ Messwerten als **L201**.
 
 **Gemessen.** `test217` 27/27, vorher 14/27. Gegenprobe rot mit y = 1115.
 `node bauen.mts` neu, weil `lernwelt.css` im Grundstock liegt.
+
+---
+
+## E639 — Die Pille wird eine Linse
+
+Redur hat am 20. September zwei Bildschirmaufnahmen geschickt — die Apple-TV-App
+unter iOS 26 und GoodNotes — und dazu: *„ich will bei der 1 video die untere
+übergans haben und bei der GoodNotes so."* Dieser Eintrag ist die erste Hälfte:
+der Übergang unten.
+
+### Was im Video wirklich passiert
+
+Nicht eine Fläche, die springt, und auch nicht eine, die bloss gleitet. Bild für
+Bild aus der Aufnahme gelesen (15 Bilder je Sekunde, Ausschnitt der Leiste):
+
+```txt
+· sie VERGRÖSSERT, was unter ihr liegt — das Zeichen im Ziel wird grösser
+· sie ZIEHT MIT: die Zeichen, über die sie läuft, werden in ihre Richtung
+  geschleift, statt still stehenzubleiben
+· an ihrer Oberkante liegt ein FARBSAUM, grün nach violett — echtes Glas
+  bricht Farben verschieden stark
+· sie DEHNT SICH in Laufrichtung und wölbt sich über die Leiste hinaus
+· am Ziel RASTET sie ein, und die Dehnung löst sich, bevor sie ankommt
+```
+
+### Redion hatte die Hälfte davon schon
+
+`#ho-pille` wandert seit **E236** von Reiter zu Reiter, und der Grund steht dort
+so gut, dass er hier noch einmal stehen soll:
+
+> Ein Hintergrund, der springt, sagt „ein anderer Knopf" — einer, der wandert,
+> sagt „derselbe Ort, weiter vorn".
+
+Gebaut wurde also nichts Zweites daneben (§8). Die vorhandene Pille hat Glas
+bekommen.
+
+### Die eine Zeile, an der alles hing
+
+Die Pille lag auf `z-index:0`, **unter** den Knöpfen, mit dem Satz „sie liegt
+unter den Knöpfen". Das war richtig, solange sie eine FARBE war: eine farbige
+Fläche über dem Zeichen hätte es verdeckt.
+
+Eine Linse kann aber nur brechen, was HINTER ihr liegt. Unter den Knöpfen hat
+sie nichts zu tun — und genau das zeigte der erste Versuch: gar keine Brechung,
+obwohl der Filter stimmte. Sie liegt jetzt auf `z-index:2`, über den Knöpfen,
+und nimmt weiterhin keine Berührung an. Die Trefferfläche bleibt der Knopf
+darunter (§37); das ist keine Behauptung, `elementFromPoint` in der Mitte des
+aktiven Reiters gibt den Knopf zurück.
+
+### Wie die Brechung gemacht ist
+
+`src/schale/bedienung/linse.ts`, nach dem Muster der Textur (E462): **ein**
+Halter, **einmal** am Ende von `<body>`, zwei Filter darin. E440 hat am
+KI-Funken gezeigt, was passiert, wenn mehrere Instanzen sich eine ID teilen.
+
+Der Kern ist eine Verschiebungskarte. `feDisplacementMap` liest ein Bild und
+schiebt jeden Bildpunkt um das, was dort im roten (waagerecht) und grünen Kanal
+(senkrecht) steht; Grau — 128,128,128 — heisst „nicht verschieben". Unsere Karte
+läuft von Rot links nach Schwarz rechts und von Grün oben nach Schwarz unten: am
+Rand wird nach innen gegriffen, in der Mitte gar nicht. Das ist eine Lupe.
+
+Der Farbsaum kommt danach: derselbe gebrochene Inhalt dreimal, rot und blau um
+einen Hauch gegeneinander versetzt, die drei Kanäle mit `screen` wieder
+zusammengelegt.
+
+**Zwei Filter, nicht einer.** Im Vorbild ist die Linse in Ruhe fast klar und erst
+während der Fahrt heftig. Ein Filterwert lässt sich nicht animieren, also gibt es
+zwei und die Pille tauscht sie über eine Klasse.
+
+```txt
+Ruhe    weich 9   Verschiebung 15   Saum 0,22
+Fahrt   weich 9   Verschiebung 24   Saum 0,55
+```
+
+Die Zahlen sind nicht geschätzt. Fünf Varianten nebeneinander gebaut, aufgenommen
+und angesehen; bei Verschiebung 46 verdoppelten sich die Zeichen und der Saum
+wurde ein grelles RGB-Gitter, bei 8 sah man nichts.
+
+### Der Filterbereich ist genau das Element
+
+Der erste Anlauf setzte `x="-30%" width="160%"`, damit der Farbsaum nicht am Rand
+abschneidet. Ergebnis: die Karte lag um dreissig Prozent verschoben über dem
+Glas, und heraus kam ein dunkler Balken quer durch die Linse statt einer
+Brechung. `feImage` misst in Anteilen des FILTERBEREICHS, nicht des Elements.
+Jetzt `0% / 100%`, und der Saum darf am Rand abschneiden.
+
+### Die Dehnung ist der Weg
+
+Wie weit sich die Linse dehnt, hängt davon ab, wie weit sie muss:
+`1 + Weg / Reiterbreite × 0,3`, gedeckelt bei 1,85. Ohne Deckel verschluckte ein
+Sprung von ganz links nach ganz rechts die halbe Leiste.
+
+Zwei Uhren lösen sie wieder: die Dehnung nach 190 ms — dann FLIESST die Linse ins
+Ziel, statt dort anzukommen und erst danach schmal zu werden —, die Brechung nach
+430 ms, damit sie mit dem Anhalten abklingt und nicht vorher.
+
+### Was `test114` gefunden hat, bevor ein Mensch es sah
+
+Der Lauf wurde rot: *„Beim Start steht die Pille sofort da, statt hereinzugleiten
+— sie glitt 1×"*. Nachgemessen mit `transitionstart` und dem gerechneten
+`transform`:
+
+```txt
+t=676 ms   opacity     scaleX = 1,309   ← die Dehnung stand schon
+t=792 ms   transform   scaleX = 1,212   ← der Übergang, den niemand wollte
+t=1008 ms  opacity     scaleX = 1
+```
+
+Beim Start läuft `pilleSchieben` zweimal, und der zweite Ruf rückt die Pille um
+sechs Punkte. Solange `.stumm` liegt, sieht man davon nichts — von der DEHNUNG
+aber doch: sie wurde gesetzt, während die Sperre galt, und fiel 190 ms später
+zurück, als die Sperre längst weg war. Ein Übergang ohne Anlass, genau der, den
+E236 verboten hat.
+
+**Der Kommentar an der Sperre hatte das vorhergesagt**, Wort für Wort:
+
+> Der Schutz greift also erst, wenn jemand oben Anfangswerte einträgt, die
+> WIRKLICH gemalt werden.
+
+Die Dehnung war genau das. Sie läuft jetzt nicht mehr, solange `.stumm` liegt.
+Ein Wächter, der ein halbes Jahr auf seinen Fall gewartet hat, hat ihn bekommen.
+
+### Ohne Bewegung, ohne Brechung
+
+`prefers-reduced-motion` nimmt die Bewegung weg und lässt das Bild stehen —
+dieselbe Regel wie beim Schalter (E537/E635). Die Falle davor ist ausdrücklich
+benannt: eine Linse, die bei `reduce` verschwindet, liesse den aktiven Reiter
+unmarkiert, und die Prüfung „keine Bewegung" wäre trotzdem grün (§55.2).
+
+Wo `backdrop-filter:url()` fehlt, fällt **nur die Brechung** weg. Die Fläche
+darüber steht in einer eigenen Regel und bleibt — sichtbar ist dann genau das,
+was vorher da war, eine ruhige Hervorhebung, nur leichter.
+
+### Was noch aussteht
+
+Redur hat am 20. September ein verbindliches Design-System nachgereicht
+(`Redurbabat/UI-Kit`, `skills/web-design/SKILL.md`). Dessen Module zu Federn,
+Unterbrechbarkeit und Glas werden gerade ausgewertet. Was dieser Bogen mit
+CSS-`transition` macht, **erhält keine Geschwindigkeit** bei einem schnellen
+A→B→C→A; verlangt das System das, wird umgebaut. Und die zweite Hälfte von
+Redurs Satz — GoodNotes — ist noch gar nicht angefasst.
+
+**Gemessen.** `test114` 87/87 (vorher 86/87), `npm run typecheck` grün, Bild
+angesehen (§55.3).

@@ -2756,3 +2756,91 @@ zwei nach oben.** `test362` 18/18.
 Dass eine Decke steigt, ist die Ausnahme und steht deshalb hier mit jeder
 einzelnen Zeile. Wer sie später senken will, findet oben, welche sieben
 Zahlen noch roh dastehen und warum.
+
+---
+
+## Die wandernde Linse — 20. September 2026 (E639)
+
+Redurs Video (Apple TV, iOS 26) Bild für Bild gelesen, dann nachgebaut und
+gegeneinandergehalten. Alle Zahlen sind gemessen, keine geschätzt.
+
+### Was das Vorbild tut
+
+Aufnahme mit 15 Bildern je Sekunde, Ausschnitt der Leiste (1284 × 420 aus
+1284 × 2778), Fahrt von „Mediathek" nach „Apple TV":
+
+```txt
+Dauer der Fahrt          rund 0,45 s
+Dehnung in der Mitte     die Kapsel überspannt etwa 2,5 Reiter
+Farbsaum                 grün → weiss → violett, nur an der Oberkante
+Wölbung                  die Kapsel ragt über den oberen Rand der Leiste
+```
+
+### Die fünf Varianten, die ich nebeneinander gebaut habe
+
+Gemessen an derselben Leiste mit fünf Reitern, dunkles Thema, 390 px breit:
+
+```txt
+Verschiebung   Sicht
+  8            nichts zu sehen
+ 15            das Zeichen wird grösser, der Name bleibt lesbar   ← Ruhe
+ 24            die Nachbarzeichen werden mitgezogen               ← Fahrt
+ 46            die Zeichen VERDOPPELN sich, der Saum wird ein RGB-Gitter
+ 70            unlesbar
+```
+
+```txt
+Farbsaum       Sicht
+ 0,22          ein Hauch an der Kante                             ← Ruhe
+ 0,55          sichtbar, aber nicht bunt                          ← Fahrt
+ 1,6           harte rote und blaue Doppelkanten
+ 3,6           Kirmes
+```
+
+### Der Fehler, der wie ein Balken aussah
+
+Erster Anlauf mit `x="-30%" width="160%"` am Filter, damit der Saum am Rand
+nicht abschneidet:
+
+```txt
+gesehen     ein dunkelblauer senkrechter Balken quer durch die Linse,
+            in JEDER Variante an derselben Stelle
+Ursache     `feImage` misst in Anteilen des FILTERBEREICHS, nicht des
+            Elements — die Karte lag um 30 % verschoben über dem Glas
+behoben     x="0%" width="100%"; der Saum darf am Rand abschneiden
+```
+
+### Der Übergang ohne Anlass
+
+`test114` §17 wurde rot. Nachgemessen mit `transitionstart` und dem
+gerechneten `transform` beim Start der App:
+
+```txt
+t = 676 ms    opacity     scaleX = 1,309   ← die Dehnung stand schon
+t = 792 ms    transform   scaleX = 1,212   ← der Übergang, den niemand wollte
+t = 1008 ms   opacity     scaleX = 1
+```
+
+Beim Start läuft `pilleSchieben` zweimal; der zweite Ruf rückt die Pille um
+**sechs Punkte**. Die `stumm`-Sperre verdeckt das — aber nicht das
+Zurückfedern der Dehnung 190 ms später, wenn die Sperre schon weg ist.
+
+### Die drei Gegenproben
+
+```txt
+`pointer-events:none` entfernt   → elementFromPoint gibt "ho-pille" statt "knopf"
+Wächterzeile in linse.ts weg     → 5 Halter, 5 Ruhe-Filter, 5 Fahrt-Filter
+die zwei CSS-Regeln vereint      → „und die beiden sind NICHT dieselbe Regel" rot
+```
+
+Die zweite ist die lehrreichste: `sicherstellen()` wird bei jedem Reiterwechsel
+gerufen, und ohne die eine Zeile wächst der Halterstapel mit jedem Tipp. Das ist
+der Fehler aus E440, nur an einer neuen Stelle.
+
+### Was der Lauf hält
+
+```txt
+test539    27 von 27 grün    die Linse (neu)
+test114    87 von 87 grün    die gleitende Pille, seit E236
+22 Läufe   alle grün         jeder, der `#handy-oben` oder `#ho-pille` anfasst
+```

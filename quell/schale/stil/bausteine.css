@@ -1876,13 +1876,90 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     /* SEIT E236 STEHT SIE UNTEN und ist so hoch wie ein Weg, nicht wie
        eine Pille: 48 statt 56, und der Radius passt zu den Knöpfen. Der
        Abstand von oben ist das Polster der Leiste (5 px). */
-    position:absolute; left:0; top:5px; z-index:0;
+    position:absolute; left:0; top:5px;
     height:48px; width:0; border-radius:var(--radius-2xl);
-    background:var(--bg-hover);
     pointer-events:none; opacity:0;
+
+    /* ════════════════════════════════════════════════════════════════════
+     * SEIT E639 LIEGT SIE DARÜBER, NICHT DARUNTER — und das ist der ganze
+     * Unterschied zwischen einer Fläche und einer Linse.
+     *
+     * Hier stand `z-index:0`, mit dem Satz „sie liegt unter den Knöpfen".
+     * Das war richtig, solange sie eine FARBE war: eine farbige Fläche über
+     * dem Zeichen hätte es verdeckt. Eine Linse dagegen kann nur brechen,
+     * was hinter ihr liegt — unter den Knöpfen hat sie nichts zu tun.
+     *
+     * Sie nimmt trotzdem keine Berührung an (`pointer-events:none`), die
+     * Trefferfläche bleibt also der Knopf darunter (§37). Das ist keine
+     * Behauptung: `test539` fragt `elementFromPoint` in der Mitte des
+     * aktiven Reiters und will den Knopf zurück, nicht die Pille.
+     * ══════════════════════════════════════════════════════════════════ */
+    z-index:2;
+
+    /* DIE FLÄCHE BLEIBT DIESELBE MARKE, nur durchsichtiger. Ohne Brechung
+       (ältere Browser) sieht man genau das, was vorher hier stand — eine
+       ruhige Hervorhebung, nur leichter. Deshalb steht sie zuerst da. */
+    background:color-mix(in srgb,var(--bg-hover) 62%,transparent);
+    box-shadow:inset 0 1.6px .6px color-mix(in srgb,var(--text) 34%,transparent),
+               inset 0 -1.2px .6px color-mix(in srgb,var(--text) 10%,transparent),
+               inset 1.2px 0 .6px color-mix(in srgb,var(--text) 9%,transparent),
+               inset -1.2px 0 .6px color-mix(in srgb,var(--text) 9%,transparent);
+    -webkit-backdrop-filter:saturate(1.5) brightness(1.08);
+    backdrop-filter:saturate(1.5) brightness(1.08);
+
     transition:transform var(--motion-normal) var(--ease-standard),
                width var(--motion-normal) var(--ease-standard),
                opacity var(--motion-fast) linear;
+  }
+
+  /* DIE BRECHUNG, wo der Browser sie kann. Eigene Regel und nicht oben
+     dazugeschrieben: ein Browser, der `url()` in `backdrop-filter` nicht
+     kennt, verwirft NUR diese Zeile und behält die Fläche darüber. Stünde
+     beides in einer Regel, fiele beides weg. */
+  #handy-oben #ho-pille{
+    -webkit-backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+    backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+  }
+  /* WÄHREND DER FAHRT verzerrt sie stärker — wie Wasser, das man zieht.
+     Im Vorbild ist das der auffälligste Teil: die Zeichen, über die sie
+     läuft, werden mitgeschleift, statt still stehenzubleiben. */
+  #handy-oben #ho-pille.faehrt{
+    -webkit-backdrop-filter:url(#ru-linse-fahrt) saturate(1.55) brightness(1.13);
+    backdrop-filter:url(#ru-linse-fahrt) saturate(1.55) brightness(1.13);
+  }
+
+  /* DER GLANZRAND. Oben auf der Kapsel sitzt im Vorbild ein heller Bogen
+     mit einem feinen Farbschimmer — die Kante des Glases, die das Licht
+     zerlegt. Ein eigenes Element dafür, weil ein `box-shadow` keine Farbe
+     verlaufen lassen kann. */
+  #handy-oben #ho-pille::before{
+    content:""; position:absolute; inset:0; border-radius:inherit;
+    pointer-events:none;
+    background:linear-gradient(100deg,
+      rgba(120,255,205,0) 12%, rgba(120,255,210,.5) 26%,
+      rgba(255,255,255,.75) 42%, rgba(190,200,255,.5) 58%,
+      rgba(255,170,220,.35) 70%, rgba(255,255,255,0) 86%);
+    -webkit-mask:linear-gradient(180deg,#000 0,transparent 17%);
+    mask:linear-gradient(180deg,#000 0,transparent 17%);
+    opacity:.32;
+    transition:opacity var(--motion-normal) var(--ease-standard);
+  }
+  #handy-oben #ho-pille.faehrt::before{ opacity:.72 }
+
+  /* OHNE BEWEGUNG STEHT SIE STILL — UND BLEIBT SICHTBAR. Das ist genau die
+     Falle, vor der §55.2 warnt: eine Linse, die bei `reduce` einfach
+     verschwindet, hätte den aktiven Reiter unmarkiert gelassen, und
+     niemand hätte es gemerkt, weil die Prüfung „keine Bewegung" grün
+     gewesen wäre. Dieselbe Regel wie beim Schalter (E537/E635): die
+     Bewegung geht weg, das Bild bleibt. */
+  @media (prefers-reduced-motion:reduce){
+    #handy-oben #ho-pille{ transition:none }
+    #handy-oben #ho-pille.faehrt{
+      -webkit-backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+      backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+    }
+    #handy-oben #ho-pille::before,
+    #handy-oben #ho-pille.faehrt::before{ opacity:.32; transition:none }
   }
   /* Beim ersten Setzen darf sie NICHT gleiten — sonst schiebt sie sich
      beim Öffnen der App von der linken Kante herein, und das sieht aus

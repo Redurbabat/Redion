@@ -13426,13 +13426,90 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     /* SEIT E236 STEHT SIE UNTEN und ist so hoch wie ein Weg, nicht wie
        eine Pille: 48 statt 56, und der Radius passt zu den Knöpfen. Der
        Abstand von oben ist das Polster der Leiste (5 px). */
-    position:absolute; left:0; top:5px; z-index:0;
+    position:absolute; left:0; top:5px;
     height:48px; width:0; border-radius:var(--radius-2xl);
-    background:var(--bg-hover);
     pointer-events:none; opacity:0;
+
+    /* ════════════════════════════════════════════════════════════════════
+     * SEIT E639 LIEGT SIE DARÜBER, NICHT DARUNTER — und das ist der ganze
+     * Unterschied zwischen einer Fläche und einer Linse.
+     *
+     * Hier stand `z-index:0`, mit dem Satz „sie liegt unter den Knöpfen".
+     * Das war richtig, solange sie eine FARBE war: eine farbige Fläche über
+     * dem Zeichen hätte es verdeckt. Eine Linse dagegen kann nur brechen,
+     * was hinter ihr liegt — unter den Knöpfen hat sie nichts zu tun.
+     *
+     * Sie nimmt trotzdem keine Berührung an (`pointer-events:none`), die
+     * Trefferfläche bleibt also der Knopf darunter (§37). Das ist keine
+     * Behauptung: `test539` fragt `elementFromPoint` in der Mitte des
+     * aktiven Reiters und will den Knopf zurück, nicht die Pille.
+     * ══════════════════════════════════════════════════════════════════ */
+    z-index:2;
+
+    /* DIE FLÄCHE BLEIBT DIESELBE MARKE, nur durchsichtiger. Ohne Brechung
+       (ältere Browser) sieht man genau das, was vorher hier stand — eine
+       ruhige Hervorhebung, nur leichter. Deshalb steht sie zuerst da. */
+    background:color-mix(in srgb,var(--bg-hover) 62%,transparent);
+    box-shadow:inset 0 1.6px .6px color-mix(in srgb,var(--text) 34%,transparent),
+               inset 0 -1.2px .6px color-mix(in srgb,var(--text) 10%,transparent),
+               inset 1.2px 0 .6px color-mix(in srgb,var(--text) 9%,transparent),
+               inset -1.2px 0 .6px color-mix(in srgb,var(--text) 9%,transparent);
+    -webkit-backdrop-filter:saturate(1.5) brightness(1.08);
+    backdrop-filter:saturate(1.5) brightness(1.08);
+
     transition:transform var(--motion-normal) var(--ease-standard),
                width var(--motion-normal) var(--ease-standard),
                opacity var(--motion-fast) linear;
+  }
+
+  /* DIE BRECHUNG, wo der Browser sie kann. Eigene Regel und nicht oben
+     dazugeschrieben: ein Browser, der `url()` in `backdrop-filter` nicht
+     kennt, verwirft NUR diese Zeile und behält die Fläche darüber. Stünde
+     beides in einer Regel, fiele beides weg. */
+  #handy-oben #ho-pille{
+    -webkit-backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+    backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+  }
+  /* WÄHREND DER FAHRT verzerrt sie stärker — wie Wasser, das man zieht.
+     Im Vorbild ist das der auffälligste Teil: die Zeichen, über die sie
+     läuft, werden mitgeschleift, statt still stehenzubleiben. */
+  #handy-oben #ho-pille.faehrt{
+    -webkit-backdrop-filter:url(#ru-linse-fahrt) saturate(1.55) brightness(1.13);
+    backdrop-filter:url(#ru-linse-fahrt) saturate(1.55) brightness(1.13);
+  }
+
+  /* DER GLANZRAND. Oben auf der Kapsel sitzt im Vorbild ein heller Bogen
+     mit einem feinen Farbschimmer — die Kante des Glases, die das Licht
+     zerlegt. Ein eigenes Element dafür, weil ein `box-shadow` keine Farbe
+     verlaufen lassen kann. */
+  #handy-oben #ho-pille::before{
+    content:""; position:absolute; inset:0; border-radius:inherit;
+    pointer-events:none;
+    background:linear-gradient(100deg,
+      rgba(120,255,205,0) 12%, rgba(120,255,210,.5) 26%,
+      rgba(255,255,255,.75) 42%, rgba(190,200,255,.5) 58%,
+      rgba(255,170,220,.35) 70%, rgba(255,255,255,0) 86%);
+    -webkit-mask:linear-gradient(180deg,#000 0,transparent 17%);
+    mask:linear-gradient(180deg,#000 0,transparent 17%);
+    opacity:.32;
+    transition:opacity var(--motion-normal) var(--ease-standard);
+  }
+  #handy-oben #ho-pille.faehrt::before{ opacity:.72 }
+
+  /* OHNE BEWEGUNG STEHT SIE STILL — UND BLEIBT SICHTBAR. Das ist genau die
+     Falle, vor der §55.2 warnt: eine Linse, die bei `reduce` einfach
+     verschwindet, hätte den aktiven Reiter unmarkiert gelassen, und
+     niemand hätte es gemerkt, weil die Prüfung „keine Bewegung" grün
+     gewesen wäre. Dieselbe Regel wie beim Schalter (E537/E635): die
+     Bewegung geht weg, das Bild bleibt. */
+  @media (prefers-reduced-motion:reduce){
+    #handy-oben #ho-pille{ transition:none }
+    #handy-oben #ho-pille.faehrt{
+      -webkit-backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+      backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+    }
+    #handy-oben #ho-pille::before,
+    #handy-oben #ho-pille.faehrt::before{ opacity:.32; transition:none }
   }
   /* Beim ersten Setzen darf sie NICHT gleiten — sonst schiebt sie sich
      beim Öffnen der App von der linken Kante herein, und das sieht aus
@@ -24852,7 +24929,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1202, inhalt: '23a5b2fc88929d39', gebaut: '2026-09-19T23:56:25.806Z' };
+const Stand = { fassung: 1204, inhalt: '3341c80409afcf87', gebaut: '2026-09-20T00:30:03.678Z' };
 window.Stand = Stand;
 
 </script>
@@ -49041,6 +49118,115 @@ const Lader = (() => {
     return { SAETZE, bauen, schweben };
 })();
 window.Lader = Lader;
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/linse.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/bedienung/linse.ts — die wandernde Glaslinse, genau einmal definiert
+ * ----------------------------------------------------------------------------
+ * ERZEUGT DARAUS WIRD `quell/schale/bedienung/linse.js`.
+ * Die Quelle ist DIESE Datei. `npm run bauen:ts` schreibt das .js; wer das
+ * .js bearbeitet, verliert die Änderung beim nächsten Bauen (test105).
+ * ----------------------------------------------------------------------------
+ * WOFÜR. Redur hat am 20. September zwei Bildschirmaufnahmen geschickt: die
+ * Apple-TV-App unter iOS 26 und GoodNotes. An der ersten hing sein Satz „ich
+ * will die untere Übergang haben". Was dort passiert, ist nicht ein Kasten,
+ * der springt, sondern eine LINSE, die wandert: sie vergrössert, was unter
+ * ihr liegt, zieht es beim Fahren mit, wirft an ihrer Oberkante einen
+ * Farbsaum und rastet am Ziel ein.
+ *
+ * Redion hatte die Hälfte davon schon. `#ho-pille` wandert seit E236 von
+ * Reiter zu Reiter, und der Grund steht dort: „ein Hintergrund, der springt,
+ * sagt ‚ein anderer Knopf' — einer, der wandert, sagt ‚derselbe Ort, weiter
+ * vorn'." Diese Datei fügt hinzu, was fehlte: das GLAS.
+ *
+ * ZWEI FILTER, NICHT EINER. Im Vorbild ist die Linse im Ruhezustand fast
+ * klar und erst während der Fahrt heftig — sie verzerrt, wenn sie sich
+ * bewegt, wie Wasser, das man zieht. Ein Filterwert lässt sich nicht
+ * animieren, also gibt es zwei und die Pille tauscht sie. Gemessen, nicht
+ * geschätzt: Ruhe verschiebt um 15, Fahrt um 24 Blattpunkte.
+ *
+ * WARUM EINE EIGENE DATEI — und nicht nur CSS: eine Brechung braucht
+ * `feDisplacementMap`, und das braucht einen `<filter id="…">`. Dieselbe
+ * Antwort wie bei der Textur (E462): GENAU EINMAL global definieren und dann
+ * referenzieren. Zwei Halter wären zwei gleiche Filter, und E440 hat am
+ * KI-Funken gezeigt, was passiert, wenn mehrere Instanzen sich eine ID
+ * teilen.
+ *
+ * DIE KARTE IST DER GANZE TRICK. `feDisplacementMap` liest ein Bild und
+ * verschiebt jeden Bildpunkt um das, was dort im roten (waagerecht) und
+ * grünen Kanal (senkrecht) steht. Grau — 128,128,128 — heisst „nicht
+ * verschieben". Unsere Karte läuft von Rot am linken Rand nach Schwarz am
+ * rechten und von Grün oben nach Schwarz unten; am Rand wird also nach
+ * innen gegriffen, in der Mitte gar nicht. Das ist eine Lupe.
+ *
+ * DER FARBSAUM entsteht danach: derselbe gebrochene Inhalt wird dreimal
+ * genommen, rot und blau um einen Hauch gegeneinander versetzt, und die
+ * drei Kanäle werden wieder zusammengelegt. Echtes Glas tut genau das,
+ * weil es Farben verschieden stark bricht.
+ * ==========================================================================*/
+const Linse = (() => {
+    const NS = 'http://www.w3.org/2000/svg';
+    const HALTER = 'ru-linse-halter';
+    const RUHE = 'ru-linse-ruhe';
+    const FAHRT = 'ru-linse-fahrt';
+    /* Die Karte als Bild. Sie wird auf die Grösse der Linse gezogen
+       (`preserveAspectRatio="none"`), die Zahlen hier sind also nur ein
+       Seitenverhältnis, keine Pixel. */
+    const KARTE = 'data:image/svg+xml;utf8,' + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='120' height='52'><defs>" +
+        "<linearGradient id='x' x1='0' y1='0' x2='1' y2='0'>" +
+        "<stop offset='0' stop-color='#f00'/><stop offset='1' stop-color='#000'/></linearGradient>" +
+        "<linearGradient id='y' x1='0' y1='0' x2='0' y2='1'>" +
+        "<stop offset='0' stop-color='#0f0'/><stop offset='1' stop-color='#000'/></linearGradient>" +
+        "</defs><rect width='120' height='52' fill='#808080'/>" +
+        "<rect width='120' height='52' fill='url(#x)' style='mix-blend-mode:screen'/>" +
+        "<rect width='120' height='52' fill='url(#y)' style='mix-blend-mode:screen'/></svg>");
+    const el = (name, werte) => {
+        const k = document.createElementNS(NS, name);
+        for (const [n, w] of Object.entries(werte))
+            k.setAttribute(n, w);
+        return k;
+    };
+    /** Ein Filter: Karte holen, weichzeichnen, damit verschieben, Farbsaum. */
+    const glas = (id, weich, verschub, saum) => {
+        /* DER FILTERBEREICH IST GENAU DAS ELEMENT. Mit einem grösseren Bereich
+           (etwa -30%/160%) läge die Karte verschoben über dem Glas, und heraus
+           käme ein dunkler Balken quer durch die Linse statt einer Brechung.
+           Am 20. September einmal gebaut und im Bild gesehen. */
+        const f = el('filter', {
+            id, x: '0%', y: '0%', width: '100%', height: '100%',
+            'color-interpolation-filters': 'sRGB'
+        });
+        f.append(el('feImage', { href: KARTE, x: '0%', y: '0%', width: '100%', height: '100%',
+            preserveAspectRatio: 'none', result: 'k' }), el('feGaussianBlur', { in: 'k', stdDeviation: weich, result: 'kw' }), el('feDisplacementMap', { in: 'SourceGraphic', in2: 'kw', scale: verschub,
+            xChannelSelector: 'R', yChannelSelector: 'G', result: 'g' }), el('feOffset', { in: 'g', dx: saum, result: 'vr' }), el('feOffset', { in: 'g', dx: '-' + saum, result: 'vb' }), el('feColorMatrix', { in: 'vr', type: 'matrix', result: 'kr',
+            values: '1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0' }), el('feColorMatrix', { in: 'g', type: 'matrix', result: 'kg',
+            values: '0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0' }), el('feColorMatrix', { in: 'vb', type: 'matrix', result: 'kb',
+            values: '0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0' }), el('feBlend', { in: 'kr', in2: 'kg', mode: 'screen', result: 'krg' }), el('feBlend', { in: 'krg', in2: 'kb', mode: 'screen' }));
+        return f;
+    };
+    /** Den Halter anlegen, falls es ihn noch nicht gibt. Mehrfach rufen ist
+     *  ausdrücklich erlaubt — der zweite Ruf tut nichts. */
+    const sicherstellen = () => {
+        if (document.getElementById(HALTER))
+            return;
+        const svg = document.createElementNS(NS, 'svg');
+        svg.setAttribute('id', HALTER);
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('focusable', 'false');
+        svg.setAttribute('width', '0');
+        svg.setAttribute('height', '0');
+        svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+        const defs = document.createElementNS(NS, 'defs');
+        defs.append(glas(RUHE, '9', '15', '0.22'), glas(FAHRT, '9', '24', '0.55'));
+        svg.append(defs);
+        document.body.append(svg);
+    };
+    return { HALTER, RUHE, FAHRT, sicherstellen };
+})();
+window.Linse = Linse;
 
 </script>
 <script>
@@ -164130,10 +164316,22 @@ const Seitenleiste = (() => {
      *      `getBoundingClientRect()` nähme, hätte die Pille an der richtigen
      *      Stelle des Bildschirms und an der falschen des Inhalts.
      */
+    /* `ReturnType<typeof setTimeout>` statt `number` oder `any`: im Browser
+       ist es eine Zahl, unter Node ein Objekt, und `npm run typecheck` sieht
+       beide Welten. Ein `any` wäre hier der bequeme Weg und genau der, den
+       §52.7 verbietet. */
+    let fahrtUhr;
+    let glasUhr;
     const pilleSchieben = (l, aktiv) => {
         const pille = l.querySelector('#ho-pille');
         if (!pille)
             return;
+        /* DAS GLAS BRAUCHT SEINEN FILTER. Er hängt einmal am Ende von `<body>`
+           (`linse.ts`, nach dem Muster der Textur aus E462). Ohne ihn bleibt
+           die Fläche stehen, wie sie vorher war — die Regel im Stilblatt ist
+           so gebaut, dass nur die Brechung wegfällt, nicht die Hervorhebung. */
+        if (typeof Linse !== 'undefined')
+            Linse.sicherstellen();
         /* „Mehr" und „Kompass" haben oben keinen Reiter (E42). Dann gehört
            auch keine Pille irgendwohin — sie bleibt, wo sie war, und
            verschwindet. Sie an den Anfang zu schieben wäre eine Aussage, und
@@ -164149,7 +164347,51 @@ const Seitenleiste = (() => {
             return; /* Leiste unsichtbar — am Rechner */
         if (!pilleGesetzt)
             pille.classList.add('stumm');
-        pille.style.transform = `translateX(${x}px)`;
+        /* ════════════════════════════════════════════════════════════════════
+         * DIE DEHNUNG IST DER WEG (E639, aus Redurs Video vom 20. September).
+         * Die Linse zieht sich beim Fahren in die Länge und fliesst ins Ziel,
+         * statt als starrer Kasten hinüberzurutschen. Wie weit sie sich dehnt,
+         * hängt davon ab, wie weit sie muss: ein Sprung über vier Reiter reisst
+         * sie weiter auseinander als einer über einen. Gedeckelt bei 1,85 —
+         * ohne Deckel verschluckte ein Sprung von ganz links nach ganz rechts
+         * die halbe Leiste.
+         *
+         * Kein Weg, keine Dehnung: wer denselben Reiter noch einmal antippt,
+         * soll keine Bewegung sehen, sondern nichts.
+         * ══════════════════════════════════════════════════════════════════ */
+        const vorher = Number(pille.dataset['x'] ?? NaN);
+        const weg = Number.isFinite(vorher) ? Math.abs(x - vorher) : 0;
+        pille.dataset['x'] = String(x);
+        /* NICHT WÄHREND DER STUMM-SPERRE (gemessen am 20. September). Beim Start
+           läuft `pilleSchieben` zweimal, und der zweite Ruf rückt die Pille um ein
+           paar Punkte. Solange `.stumm` liegt, sieht man davon nichts — von der
+           DEHNUNG aber doch: sie wurde gesetzt, während die Sperre galt, und fiel
+           190 ms später zurück, als die Sperre längst weg war. Ergebnis: ein
+           Übergang ohne Anlass, genau der, den `test114` §17 seit E236 verbietet.
+           Der Lauf hat ihn gefunden, und sein Kommentar hatte ihn vorhergesagt:
+           „Der Schutz greift erst, wenn jemand oben Anfangswerte einträgt, die
+           WIRKLICH gemalt werden." Genau das war die Dehnung. */
+        if (weg > 1 && pilleGesetzt && !pille.classList.contains('stumm')) {
+            pille.style.setProperty('--dehnung', String(Math.min(1.85, 1 + (weg / Math.max(1, b)) * 0.3)));
+            pille.classList.add('faehrt');
+            clearTimeout(fahrtUhr);
+            clearTimeout(glasUhr);
+            /* ZWEI UHREN, NICHT EINE. Die Dehnung löst sich nach einem knappen
+               Drittel des Weges — dann FLIESST die Linse ins Ziel, statt dort
+               anzukommen und erst danach schmal zu werden. Die Brechung bleibt
+               länger, damit sie mit dem Anhalten abklingt und nicht vorher. */
+            fahrtUhr = setTimeout(() => pille.style.setProperty('--dehnung', '1'), 190);
+            glasUhr = setTimeout(() => pille.classList.remove('faehrt'), 430);
+        }
+        else if (!pilleGesetzt) {
+            /* Beim ersten Setzen ausdrücklich flach — sonst stünde ein Wert von
+               einem früheren Leben der Seite noch drin. */
+            pille.style.setProperty('--dehnung', '1');
+            pille.classList.remove('faehrt');
+        }
+        /* `scaleX` steht MIT in der Verschiebung, nicht daneben: eine zweite
+           `transform`-Angabe im Stilblatt würde diese hier überschreiben. */
+        pille.style.transform = `translateX(${x}px) scaleX(var(--dehnung,1))`;
         pille.style.width = b + 'px';
         pille.style.top = y + 'px';
         pille.style.opacity = '1';
