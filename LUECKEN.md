@@ -9453,7 +9453,28 @@ Dasselbe gilt für die drei älteren Regeln derselben Art:
 Werkzeugleiste) und `bausteine.css:8467` (die Textur). Keine von ihnen ist je
 gegen eine Seite gemessen worden.
 
-## L204 · Die Auswahl fängt bei jedem Wechsel wieder bei null an — 20. September 2026
+## L204 · ~~Die Auswahl fängt bei jedem Wechsel wieder bei null an~~ — GESCHLOSSEN am 20. September 2026 (E646)
+
+**Geschlossen für die untere Leiste, offen für die Werkzeugleiste.**
+`SelectionFlow` (`src/schale/bedienung/selection-flow.ts`) ist genau der
+Helfer, den dieser Eintrag verlangt hat: er liest beim Umlenken Ort UND
+Tempo aus der Federformel und gibt beides an die neue Bahn weiter. Gemessen
+in `test541` §3: nach dem zweiten Tipp steht die Fläche weiter als beim
+ersten, statt neu anzusetzen.
+
+Der Weg war ein anderer als hier vermutet. Der Eintrag schlug
+`element.animate()` mit ausgelesener Geschwindigkeit vor; gebaut ist eine
+Federbahn, die EINMAL ausgerechnet und als Keyframes übergeben wird — denn
+eine Feder, die je Bild JavaScript braucht, steht genau dann still, wenn der
+Hauptfaden arbeitet, und das tut er beim Reiterwechsel immer (E646).
+
+**Was offen bleibt:** `wahlFliegen` in `marken.ts` (die Werkzeugleiste des
+Schreibstudios, E640) benutzt den Helfer noch nicht. Eigener Bogen — der
+Helfer steht bereit, und sein Kopf sagt, wie.
+
+---
+
+## L204-alt · Der Wortlaut von vorhin, zum Nachlesen
 
 Das Design-System verlangt für schnelle Wechsel zweierlei:
 

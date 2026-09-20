@@ -273,12 +273,12 @@ const Seitenleiste = (() => {
    *      `getBoundingClientRect()` nähme, hätte die Pille an der richtigen
    *      Stelle des Bildschirms und an der falschen des Inhalts.
    */
-  /* `ReturnType<typeof setTimeout>` statt `number` oder `any`: im Browser
-     ist es eine Zahl, unter Node ein Objekt, und `npm run typecheck` sieht
-     beide Welten. Ein `any` wäre hier der bequeme Weg und genau der, den
-     §52.7 verbietet. */
-  let fahrtUhr: ReturnType<typeof setTimeout> | undefined;
-  let glasUhr: ReturnType<typeof setTimeout> | undefined;
+  /* HIER STANDEN ZWEI UHREN (E646). `fahrtUhr` nahm die Dehnung nach 190 ms
+     zurück, `glasUhr` die Brechung nach 430 ms — zwei Zahlen, die raten
+     mussten, wann die Bewegung vorbei ist. Jetzt weiss die Bewegung es
+     selbst: `SelectionFlow` hält seinen Lauf, und `.faehrt` fällt, wenn die
+     Feder ausgelaufen ist. Eine Uhr, die neben einer Animation herläuft, ist
+     immer eine Vermutung über deren Ende. */
 
   const pilleSchieben = (l: HTMLElement, aktiv: HTMLElement | null) => {
     const pille = l.querySelector<HTMLElement>('#ho-pille');
@@ -303,75 +303,54 @@ const Seitenleiste = (() => {
 
     if (!pilleGesetzt) pille.classList.add('stumm');
 
-    /* ════════════════════════════════════════════════════════════════════
-     * DIE DEHNUNG IST DER WEG (E639, aus Redurs Video vom 20. September).
-     * Die Linse zieht sich beim Fahren in die Länge und fliesst ins Ziel,
-     * statt als starrer Kasten hinüberzurutschen. Wie weit sie sich dehnt,
-     * hängt davon ab, wie weit sie muss: ein Sprung über vier Reiter reisst
-     * sie weiter auseinander als einer über einen. Gedeckelt bei 1,85 —
-     * ohne Deckel verschluckte ein Sprung von ganz links nach ganz rechts
-     * die halbe Leiste.
+    /* ══════════════════════════════════════════════════════════════════════
+     * DIE FLÄCHE WANDERT — UND ZWAR AUCH DANN, WENN DER HAUPTFADEN ARBEITET
+     * (E646, aus Redurs Aufnahme vom 20. September, 10:12 Uhr)
+     * ----------------------------------------------------------------------
+     * Hier stand eine Rechnung, die `--dehnung` setzte und die Bewegung dem
+     * Stilblatt überliess (`transition: transform, width`). Am Rechner sah
+     * das richtig aus — 16 bis 21 Zwischenorte je Wechsel. Auf dem Telefon
+     * kam davon NICHTS an: Redurs Aufnahme zeigt viermal einen einzigen
+     * Bildsprung über 190 bis 210 Pixel.
      *
-     * Kein Weg, keine Dehnung: wer denselben Reiter noch einmal antippt,
-     * soll keine Bewegung sehen, sondern nichts.
-     * ══════════════════════════════════════════════════════════════════ */
+     * Der Grund ist nicht die Kurve, sondern der Faden. Ein Wechsel auf
+     * „Heute" oder „Lernen" baut einen ganzen Bildschirm neu auf; eine
+     * CSS-Transition, die `width` mitanimiert, läuft dabei auf demselben
+     * Faden und kommt nicht voran. Gemessen mit gedrosselter Rechenleistung:
+     *
+     *     Drossel 1×   16 Orte      Drossel 4×   7 Orte      Drossel 8×   5 Orte
+     *
+     * Die Bewegung gehört deshalb auf den Compositor, und dorthin kommt sie
+     * nur über `transform` allein. `SelectionFlow` rechnet die Federbahn
+     * einmal aus und übergibt sie als Keyframes; die Breite wird gesetzt,
+     * nicht bewegt. Dass sie dabei gleich bleiben DARF, ist kein Zufall:
+     * `flex:1 1 0` gibt allen fünf Wegen dieselbe Breite (gemessen 70 px bei
+     * 390 px Fensterbreite). `test541` misst das nach, damit aus der
+     * Voraussetzung keine stille Annahme wird.
+     * ══════════════════════════════════════════════════════════════════════ */
     const vorher = Number(pille.dataset['x'] ?? NaN);
-    const weg = Number.isFinite(vorher) ? Math.abs(x - vorher) : 0;
+    const wegJetzt = Number.isFinite(vorher) ? Math.abs(x - vorher) : 0;
     pille.dataset['x'] = String(x);
 
-    /* NICHT WÄHREND DER STUMM-SPERRE (gemessen am 20. September). Beim Start
-       läuft `pilleSchieben` zweimal, und der zweite Ruf rückt die Pille um ein
-       paar Punkte. Solange `.stumm` liegt, sieht man davon nichts — von der
-       DEHNUNG aber doch: sie wurde gesetzt, während die Sperre galt, und fiel
-       190 ms später zurück, als die Sperre längst weg war. Ergebnis: ein
-       Übergang ohne Anlass, genau der, den `test114` §17 seit E236 verbietet.
-       Der Lauf hat ihn gefunden, und sein Kommentar hatte ihn vorhergesagt:
-       „Der Schutz greift erst, wenn jemand oben Anfangswerte einträgt, die
-       WIRKLICH gemalt werden." Genau das war die Dehnung. */
-    if (weg > 1 && pilleGesetzt && !pille.classList.contains('stumm')) {
-      /* ══ NUR ZWISCHEN NACHBARN, UND NUR EIN BISSCHEN (E641) ════════════
-       * Hier stand `Math.min(1.85, 1 + (weg / b) * 0.3)` — die Dehnung
-       * wuchs also mit dem Weg, und der weiteste Sprung der Leiste bekam
-       * die stärkste Verformung. Das Design-System verlangt das Gegenteil,
-       * an zwei Stellen:
-       *
-       *   „When source and destination directly touch or nearly touch, the
-       *    selection surface may visually stretch/bridge during travel …
-       *    Keep the bridge subtle and bounded."
-       *   „Disable deformation for long-distance navigation."
-       *
-       * Und das ist nicht Geschmack, sondern Sinn: eine Brücke spannt sich
-       * zwischen zwei Dingen, die sich fast berühren. Über vier Reiter
-       * hinweg ist sie keine Brücke mehr, sondern ein Schlauch, und die
-       * 85 % Überlänge von gestern waren in einer Arbeitsoberfläche
-       * ohnehin zu viel.
-       *
-       * Jetzt: EIN Reiter Abstand darf eine Brücke schlagen, mehr nicht.
-       * Gemessen wird in Reiterbreiten, damit die Regel auch dann gilt,
-       * wenn die Leiste einmal andere Masse bekommt. */
-      const reiter = weg / Math.max(1, b);
-      pille.style.setProperty('--dehnung', reiter <= 1.35 ? '1.18' : '1');
-      pille.classList.add('faehrt');
-      clearTimeout(fahrtUhr); clearTimeout(glasUhr);
-      /* ZWEI UHREN, NICHT EINE. Die Dehnung löst sich nach einem knappen
-         Drittel des Weges — dann FLIESST die Linse ins Ziel, statt dort
-         anzukommen und erst danach schmal zu werden. Die Brechung bleibt
-         länger, damit sie mit dem Anhalten abklingt und nicht vorher. */
-      fahrtUhr = setTimeout(() => pille.style.setProperty('--dehnung', '1'), 190);
-      glasUhr = setTimeout(() => pille.classList.remove('faehrt'), 430);
-    } else if (!pilleGesetzt) {
-      /* Beim ersten Setzen ausdrücklich flach — sonst stünde ein Wert von
-         einem früheren Leben der Seite noch drin. */
-      pille.style.setProperty('--dehnung', '1');
-      pille.classList.remove('faehrt');
-    }
+    /* NUR ZWISCHEN NACHBARN WIRD GEDEHNT (E641, Redurs Entscheidung).
+       `recipes/shape-stretch-compress.md`: „Disable deformation for
+       long-distance navigation." Gemessen wird in Reiterbreiten, damit die
+       Regel auch bei anderen Massen gilt. */
+    const nachbar = wegJetzt > 1 && wegJetzt / Math.max(1, b) <= 1.35;
 
-    /* `scaleX` steht MIT in der Verschiebung, nicht daneben: eine zweite
-       `transform`-Angabe im Stilblatt würde diese hier überschreiben. */
-    pille.style.transform = `translateX(${x}px) scaleX(var(--dehnung,1))`;
     pille.style.width = b + 'px';
     pille.style.top = y + 'px';
     pille.style.opacity = '1';
+
+    /* OHNE DAS MODUL BLEIBT DIE ALTE ANTWORT STEHEN. Ein Browser, der die
+       Datei nicht geladen hat, bekommt die Fläche gesetzt statt bewegt —
+       das ist weniger schön und keineswegs kaputt (§38: der aktive Reiter
+       bleibt markiert). */
+    if (typeof SelectionFlow === 'undefined') {
+      pille.style.transform = `translateX(${x}px)`;
+    } else {
+      SelectionFlow.folge(pille, x, nachbar, !pilleGesetzt || pille.classList.contains('stumm'));
+    }
 
     if (!pilleGesetzt) {
       /* Die Sperre erst im nächsten Bild lösen, sonst gilt sie für die

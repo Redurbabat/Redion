@@ -1842,8 +1842,14 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     display:block; font-size:10.5px; font-weight:500; letter-spacing:-.01em;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;
   }
-  #handy-oben > button.an b{ font-weight:650 }
-  #handy-oben > button.an{ color:var(--accent-text,var(--accent)) }
+  /* ══ HIER STANDEN `.an` UND `.an b` — ZWEIMAL (E646) ══════════════════
+     Dieselben zwei Regeln stehen weiter unten in DERSELBEN Abfrage noch
+     einmal, wortgleich. Bei gleicher Stärke gewinnt die spätere; diese
+     hier hat nie etwas getan. `test332` konnte das nicht melden, weil er
+     nur ANDERE Werte für dieselbe Eigenschaft findet — zwei identische
+     Regeln sind für ihn keine Doppelung, sondern zweimal dasselbe.
+     Deshalb steht es hier als Satz: die Regeln für den aktiven Reiter
+     stehen unten, an einer Stelle (§8). */
   /* ─── WAS HIER STAND, UND WARUM ES WEG IST (E236) ──────────────────
      Hier lagen drei Absätze Messungen aus dem 6., 7. und 24. August: wie
      breit sechs runde Pillen mit Namen nebeneinander werden, und ab
@@ -1916,29 +1922,68 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
        (ältere Browser) sieht man genau das, was vorher hier stand — eine
        ruhige Hervorhebung, nur leichter. Deshalb steht sie zuerst da. */
     background:color-mix(in srgb,var(--bg-hover) 62%,transparent);
-    box-shadow:inset 0 1.6px .6px color-mix(in srgb,var(--text) 34%,transparent),
-               inset 0 -1.2px .6px color-mix(in srgb,var(--text) 10%,transparent),
-               inset 1.2px 0 .6px color-mix(in srgb,var(--text) 9%,transparent),
-               inset -1.2px 0 .6px color-mix(in srgb,var(--text) 9%,transparent);
+    /* ══ EINE KONTUR, NICHT DREI (E646) ═════════════════════════════════
+       Hier lagen VIER Innenschatten und zogen einen hellen Ring rund um
+       die Fläche. Zusammen mit dem Rand der Leiste selbst und ihrem
+       Hintergrund waren das drei Umrisse, die um dieselbe Aufmerksamkeit
+       stritten — Redurs Punkt 6, und im Bild gut zu sehen: die aktive
+       Fläche las sich wie eine umrandete Einzeltaste, nicht wie eine
+       Linse IN der Leiste.
+
+       Geblieben sind die zwei, die echtes Glas auch hätte: Licht von
+       oben, ein Hauch Rückwurf von unten. Die Seitenkanten sind weg.
+       `recipes/glass-morphing.md`: „Blur is supporting material, not the
+       animation itself." */
+    box-shadow:inset 0 1.6px .6px color-mix(in srgb,var(--text) 30%,transparent),
+               inset 0 -1.2px .6px color-mix(in srgb,var(--text) 8%,transparent);
     -webkit-backdrop-filter:saturate(1.5) brightness(1.08);
     backdrop-filter:saturate(1.5) brightness(1.08);
 
-    transition:transform var(--motion-normal) var(--ease-standard),
-               width var(--motion-normal) var(--ease-standard),
-               opacity var(--motion-fast) linear;
+    /* ══ DIE BEWEGUNG STEHT NICHT MEHR HIER (E646) ══════════════════════
+       Hier stand `transition: transform …, width …`. Beides zusammen ist
+       genau die Kombination, die eine Bewegung auf dem HAUPTFADEN hält:
+       `width` ist Layout, und wer Layout animiert, kann nicht auf den
+       Compositor. Auf Redurs Telefon kam davon nichts an — vier Wechsel,
+       viermal ein einziger Bildsprung über 190 bis 210 Pixel (gemessen am
+       20. September aus seiner Aufnahme, Bild für Bild bei 60 je Sekunde).
+
+       Die Verschiebung macht jetzt `SelectionFlow` über
+       `element.animate()` mit lauter `transform`-Keyframes; die Breite wird
+       gesetzt statt bewegt (alle fünf Wege sind gleich breit, `flex:1 1 0`).
+
+       Die Deckung bleibt hier: sie läuft einmal beim ersten Erscheinen und
+       ist keine Bewegung im Raum. */
+    transition:opacity var(--motion-fast) linear;
   }
 
-  /* DIE BRECHUNG, wo der Browser sie kann. Eigene Regel und nicht oben
+  /* ══ IM RUHEZUSTAND WIRD NICHT GEBROCHEN (E646) ══════════════════════
+     Hier stand `url(#ru-linse-ruhe)` auch für den Ruhezustand — eine
+     Brechung, die immer lief. Im Bild machte sie aus der Fläche einen
+     hellen Ring, und genau das war Redurs Punkt 5: „Weniger wie eine
+     umrandete einzelne Taste, stärker wie eine weiche Materiallinse
+     innerhalb des Docks."
+
+     Zwei Regeln des Systems sagen dasselbe:
+
+       `recipes/glass-morphing.md`  „Blur is supporting material, not the
+                                     animation itself."
+       `recipes/dock-material-flow.md`  „For mobile bottom navigation, avoid
+                                     excessive liquid distortion; labels/icons
+                                     must remain legible throughout."
+
+     Glas bleibt die Fläche trotzdem: sie tastet den Hintergrund ab
+     (`saturate`/`brightness`), sie hat ihren Lichtsaum oben, sie hat ihren
+     Ton. Was wegfällt, ist nur das Verzerren — und das kommt zurück, sobald
+     sie sich bewegt, also genau dann, wenn es etwas erklärt. Nebenbei liegt
+     damit im Ruhezustand kein SVG-Filter mehr dauerhaft über dem Bild
+     (`references/materials-glass.md`: „Limit the number and area of
+     simultaneously blurred surfaces"). */
+  /* WÄHREND DER FAHRT verzerrt sie — wie Wasser, das man zieht. Im Vorbild
+     ist das der auffälligste Teil: die Zeichen, über die sie läuft, werden
+     mitgeschleift, statt still stehenzubleiben. Eigene Regel und nicht oben
      dazugeschrieben: ein Browser, der `url()` in `backdrop-filter` nicht
      kennt, verwirft NUR diese Zeile und behält die Fläche darüber. Stünde
      beides in einer Regel, fiele beides weg. */
-  #handy-oben #ho-pille{
-    -webkit-backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
-    backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
-  }
-  /* WÄHREND DER FAHRT verzerrt sie stärker — wie Wasser, das man zieht.
-     Im Vorbild ist das der auffälligste Teil: die Zeichen, über die sie
-     läuft, werden mitgeschleift, statt still stehenzubleiben. */
   #handy-oben #ho-pille.faehrt{
     -webkit-backdrop-filter:url(#ru-linse-fahrt) saturate(1.55) brightness(1.13);
     backdrop-filter:url(#ru-linse-fahrt) saturate(1.55) brightness(1.13);
@@ -1970,9 +2015,13 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Bewegung geht weg, das Bild bleibt. */
   @media (prefers-reduced-motion:reduce){
     #handy-oben #ho-pille{ transition:none }
+    /* OHNE BEWEGUNG AUCH KEINE FAHRT-BRECHUNG. Seit E646 trägt der
+       Ruhezustand gar keinen `url()`-Filter mehr; hier muss deshalb nur
+       noch die Fahrt zurückgenommen werden — auf dieselbe Fläche wie im
+       Ruhezustand, nicht auf eine schwächere Brechung. */
     #handy-oben #ho-pille.faehrt{
-      -webkit-backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
-      backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+      -webkit-backdrop-filter:saturate(1.5) brightness(1.08);
+      backdrop-filter:saturate(1.5) brightness(1.08);
     }
     #handy-oben #ho-pille::before,
     #handy-oben #ho-pille.faehrt::before{ opacity:.32; transition:none }
@@ -2029,7 +2078,29 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      herüber; stünde er hier auch, wären es zwei Flächen übereinander und
      die wandernde käme bei einer schon fertigen an — die Bewegung wäre da
      und würde nichts erklären. */
-  #handy-oben > button.an{ color:var(--accent-text,var(--accent)) }
+  /* ══ DAS ZEICHEN WIRD STARK, WENN DIE FLÄCHE ANKOMMT (E646) ═══════════
+     `recipes/continuous-material-selection.md` ist an dieser Stelle genau:
+     „The moving material is primary. Icon/label emphasis is secondary. …
+     destination icon may gain emphasis as the material arrives; source
+     emphasis may crossfade out."
+
+     Vorher wechselten beide Seiten im selben Augenblick die Farbe — die
+     Fläche war noch unterwegs, und am Ziel leuchtete es schon. Das ist
+     der Grund für Redurs Satz „Material und Inhalt fühlen sich noch etwas
+     getrennt an".
+
+     Die Lösung braucht kein JavaScript, nur eine Verzögerung auf EINER
+     Seite: der ankommende Reiter wartet, der abgebende nicht — er verliert
+     `.an` und damit auch die Verzögerung. 130 ms sind etwas mehr als ein
+     Drittel der Federdauer (230 ms): die Farbe setzt ein, wenn die Fläche
+     den grössten Teil des Weges hinter sich hat.
+
+     Die Schriftstärke wechselt weiterhin OHNE Übergang. Sie ändert die
+     Textbreite, und ein animiertes Gewicht wäre Layout je Bild — genau
+     das, was E646 aus der Bewegung herausgenommen hat. Dass die Knöpfe
+     dabei nicht wandern, hält `flex:1 1 0` fest, und `test541` misst es. */
+  #handy-oben > button.an{ color:var(--accent-text,var(--accent));
+                           transition-delay:130ms }
   #handy-oben > button.an b{ font-weight:650 }
 
   #handy-oben .ho-z{ display:flex; align-items:center; justify-content:center }

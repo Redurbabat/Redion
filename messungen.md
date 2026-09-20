@@ -3131,3 +3131,101 @@ Die Gegenprobe lief über `if (false && !standGesetzt) return;` — die Sperre
 ausgeschaltet, die Konstante aber weiter benutzt, damit `noUnusedLocals` den
 Bau nicht abbricht (§52.6). Ergebnis: genau die drei Zeilen wieder rot, die
 den Fehler beschreiben, und keine vierte.
+
+---
+
+## 20. September 2026 — Warum die untere Leiste springt, obwohl sie wandert
+
+**Methode 1 · Redurs Aufnahme, Bild für Bild.** 1284 × 2778, 50 fps,
+10,5 Sekunden. Ein waagerechter Streifen durch die Leiste, auf 122 Spalten
+verkleinert, Helligkeitsschwerpunkt je Bild.
+
+```txt
+Wechsel              letztes Bild davor   erstes Bild danach   Abstand
+────────────────────────────────────────────────────────────────────────
+Dokumente → Heute     2,717 s  x = 127     2,733 s  x = 318     191 px
+Heute → Lernen        4,333 s  x = 369     4,350 s  x = 578     209 px
+Lernen → Termine      5,617 s  x = 602     5,633 s  x = 742     140 px
+Termine → Mehr        7,083 s  x = 842     7,100 s  x = 1013    171 px
+```
+
+Viermal **ein einziges Bild** (16,7 ms) für 140 bis 209 Pixel.
+
+**Methode 2 · dieselbe Fassung im Browser**, 390 × 844, Orte je
+`requestAnimationFrame`:
+
+```txt
+17 → 37,5 → 53,5 → 64,2 → 71 → 75,3 → 78,1 → 79,9 → 81,2 → 81,9 → 82,4 → 82,6
+```
+
+16 bis 21 Zwischenorte. Die Bewegung ist also da — und **72 % des Weges
+liegen in den ersten 50 ms.**
+
+**Methode 3 · mit gedrosselter Rechenleistung** (`Emulation.setCPUThrottlingRate`):
+
+```txt
+Ziel          Drossel 1×   Drossel 4×   Drossel 8×
+„Heute"         16 Orte       7 Orte       5 Orte
+„Lernen"        17 Orte       9 Orte       5 Orte
+„Termine"       17 Orte      17 Orte      17 Orte
+„Mehr"          17 Orte      17 Orte      16 Orte
+```
+
+Nur die beiden schweren Bildschirme brechen ein. „Heute" und „Lernen" bauen
+beim Wechsel einen ganzen Bildschirm neu auf.
+
+### Die erste Vermutung war falsch, und das ist die Messung wert
+
+```txt
+mit Glasbrechung      Drossel 8×, „Heute"   5 Orte
+ohne Glasbrechung     Drossel 8×, „Heute"   4 Orte
+```
+
+Der SVG-Filter war unschuldig. Schuld war `width` in der Übergangsliste:
+eine Bewegung, die Layout animiert, bleibt auf dem Hauptfaden.
+
+### Nachher
+
+```txt
+                              im ERSTEN Bild zurückgelegt
+alte Kurve                            31 %
+Feder (E646)                          11 %
+```
+
+Und im Film unter vierfacher Drosselung, Aufnahme mit 25 Bildern je Sekunde,
+die Fläche für die Messung rot eingefärbt:
+
+```txt
+vorher   5 Orte, grösster Schritt 50 px
+nachher  9 bis 10 Orte, grösster Schritt 14 bis 18 px
+```
+
+### Das Daumenkino
+
+Die Bahn angehalten und an feste Zeitpunkte gesetzt (`animation.currentTime`),
+damit das Bild die GEBAUTE Bewegung zeigt und nicht das, was der Aufnahme
+gerade gelungen ist:
+
+```txt
+t =   0 ms   Fläche auf „Dokumente"
+t =  30 ms   eben losgefahren
+t =  60 ms   über „Heute", deutlich in die Länge gezogen
+t =  90 ms   über „Lernen", noch gedehnt
+t = 130 ms   fast am Ziel, wieder kompakt
+t = 180 ms   steht
+t = 230 ms   steht
+```
+
+**Und ein Befund daraus, den keine Zahl hatte:** bei einer Verschiebung von
+24 war der Name UNTER der Linse nicht mehr zu lesen — „Dokume", „Lern",
+„Termi" standen doppelt und verschmiert. Bei 12 (also ±6 px) bleibt er
+lesbar. `recipes/dock-material-flow.md` verlangt genau das für die untere
+Leiste: „labels/icons must remain legible throughout."
+
+### Die Voraussetzung, die gemessen wird statt angenommen
+
+```txt
+Knopfbreiten bei 390 px Fenster:  [70, 70, 70, 70, 70]
+```
+
+Nur deshalb muss die Breite nicht animiert werden. `test541` §1 misst es mit.

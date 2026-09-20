@@ -18,11 +18,12 @@
  * sagt ‚ein anderer Knopf' — einer, der wandert, sagt ‚derselbe Ort, weiter
  * vorn'." Diese Datei fügt hinzu, was fehlte: das GLAS.
  *
- * ZWEI FILTER, NICHT EINER. Im Vorbild ist die Linse im Ruhezustand fast
- * klar und erst während der Fahrt heftig — sie verzerrt, wenn sie sich
- * bewegt, wie Wasser, das man zieht. Ein Filterwert lässt sich nicht
- * animieren, also gibt es zwei und die Pille tauscht sie. Gemessen, nicht
- * geschätzt: Ruhe verschiebt um 15, Fahrt um 24 Blattpunkte.
+ * EINER, NICHT ZWEI (seit E646). Hier standen zwei Filter — einer für die
+ * Ruhe, einer für die Fahrt —, weil ein Filterwert sich nicht animieren
+ * lässt. Im Ruhezustand bricht die Fläche seit E646 gar nicht mehr: die
+ * Brechung machte aus ihr einen hellen Ring, und `glass-morphing.md` sagt
+ * „Blur is supporting material, not the animation itself". Gewechselt wird
+ * jetzt zwischen KEINEM Filter und diesem einen, und das genügt.
  *
  * WARUM EINE EIGENE DATEI — und nicht nur CSS: eine Brechung braucht
  * `feDisplacementMap`, und das braucht einen `<filter id="…">`. Dieselbe
@@ -46,7 +47,11 @@
 const Linse = (() => {
     const NS = 'http://www.w3.org/2000/svg';
     const HALTER = 'ru-linse-halter';
-    const RUHE = 'ru-linse-ruhe';
+    /* HIER STAND AUCH `RUHE` (E646). Seit die Fläche im Stillstand gar nicht
+       mehr bricht, rief ihn niemand mehr — ein Filter, den kein Stilblatt
+       nennt, ist eine Zeile, die aussieht, als täte sie etwas. Der Grund für
+       zwei Filter war „ein Filterwert lässt sich nicht animieren"; jetzt
+       wechselt die Pille zwischen KEINEM und diesem einen, und das genügt. */
     const FAHRT = 'ru-linse-fahrt';
     /* Die Karte als Bild. Sie wird auf die Grösse der Linse gezogen
        (`preserveAspectRatio="none"`), die Zahlen hier sind also nur ein
@@ -107,10 +112,25 @@ const Linse = (() => {
          * eingestuft worden. Genau das ist hier das Ziel: das Glas soll sich
          * am Rand zeigen, nicht den Inhalt vergrössern. Die Fahrt bleibt bei
          * 24 — dort erklärt die Verzerrung die Bewegung, und da gehört sie hin. */
-        defs.append(glas(RUHE, '9', '8', '0.18'), glas(FAHRT, '9', '24', '0.55'));
+        /* ══ 12, NICHT 24 (E646) ═══════════════════════════════════════════
+         * Im Daumenkino der Fahrt war der Name UNTER der Linse nicht mehr zu
+         * lesen: „Dokume", „Lern", „Termi" standen doppelt und verschmiert.
+         * Bei 24 verschiebt die Karte jeden Bildpunkt um bis zu ±12 — das ist
+         * ein Viertel der Höhe der Leiste.
+         *
+         * `recipes/dock-material-flow.md` sagt dazu genau einen Satz, und er
+         * gilt ausdrücklich für diese Stelle:
+         *
+         *     „For mobile bottom navigation, avoid excessive liquid distortion;
+         *      labels/icons must remain legible throughout."
+         *
+         * Bei 12 sind es ±6, und der Name bleibt lesbar, während die Linse
+         * darüberläuft. Der Farbsaum geht von 0,55 auf 0,3 mit — er verdoppelt
+         * sonst optisch, was die Verschiebung schon verzogen hat. */
+        defs.append(glas(FAHRT, '9', '12', '0.3'));
         svg.append(defs);
         document.body.append(svg);
     };
-    return { HALTER, RUHE, FAHRT, sicherstellen };
+    return { HALTER, FAHRT, sicherstellen };
 })();
 window.Linse = Linse;
