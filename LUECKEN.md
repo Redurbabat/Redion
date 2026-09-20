@@ -8071,6 +8071,60 @@ allesamt im Browser nachmisst, statt sie in den Stilblättern zu suchen.
 den offensichtlichen Fall (`height:30px`) schon beim Schreiben ab. Die zwei
 Prüfungen schliessen einander nicht aus — die zweite fehlt.
 
+
+---
+
+## L207 · Das Bereichs-Verzeichnis zählt zu wenig — und Redur entscheidet, was daraus folgt
+
+**Gefunden am 20. September 2026 beim ersten vollen Lauf seit E626.**
+
+`test537` hält §5 Regel 1 über `pruefungen/bereiche-bestand.json`: 125 Paare,
+517 Treffer, und das Verzeichnis darf nur schrumpfen. Der Lauf wurde rot mit
+518 gegen 517. Nachgemessen ist der eine zusätzliche Treffer **kein neuer
+Querverweis**, sondern ein alter aus E500, den der Wächter bisher nicht sehen
+konnte:
+
+```txt
+Einstellungen.oeffne('schluessel')   in src/bereiche/ki/dienst.ts
+  in der Fassung, als das Verzeichnis gesetzt wurde:  roh 2 · gefiltert 1
+  heute:                                              roh 2 · gefiltert 2
+```
+
+`ohneSchablonen` hatte ihn für Text in einer Schablone gehalten. Ein Umbau
+des Menüs (E661) hat ihn hervorgeholt.
+
+**Wie viel sonst noch verdeckt ist**, gemessen über alle 86 Dateien in
+`src/bereiche/`:
+
+```txt
+Aufrufe nach nurCode:              7907
+davon nach ohneSchablonen:         7641
+verdeckt:                           266   (3,4 %)
+
+  136  editor/ansicht/editor.ts       (457 → 321)
+   30  wissen/werkzeuge.ts            (471 → 441)
+   26  einstellungen/ansicht/seite.ts (215 → 189)
+   21  datenbanken/steuerung.ts      (1119 → 1098)
+```
+
+**Die 517 sind ein Mindestwert, kein Stand.** Die Regel dahinter ist richtig
+— E626 hat `ohneSchablonen` eingeführt, weil 88 Treffer aus deutscher Prosa
+in Backticks mitzählten. Sie wirft nur zu viel weg: `${Datenbank.name(x)}`
+in einer Schablone ist ein Aufruf, kein Text.
+
+**Drei Wege, und die Wahl gehört Redur** (§5 sagt es selbst: „Offen ist damit
+die Richtung, und sie gehört Redur"):
+
+| Weg | was er kostet |
+|---|---|
+| **A** Den einen Eintrag von 1 auf 2 korrigieren, mit Grund im Verzeichnis | eine Zeile. Die Zahl bleibt weich, und das Verzeichnis lernt, dass Anheben manchmal geht — genau die Aufweichung, gegen die es gebaut ist. |
+| **B** Den Filter genauer machen (nur Textteile weg, `${…}` bleibt) und das Verzeichnis EINMAL auf die Wahrheit setzen | ein halber Tag, ein sprunghaft höherer Stand (bis +266), und danach zählt der Wächter wirklich. Die Schuld wird grösser, weil sie sichtbar wird — nicht weil sie wächst. |
+| **C** `ki → Einstellungen` wirklich auflösen | der Menüpunkt „Schlüssel hinterlegen …" müsste über Bus oder Register gehen. Löst EINEN Fall und lässt die 266 stehen. |
+
+Bis dahin ist `test537` rot und `main` bewegt sich nicht (§46). Das ist
+Absicht: eine rote Zahl, die auf eine Entscheidung wartet, ist besser als
+eine grüne, die nicht stimmt.
+
 # Anhang A · Was gemessen wurde
 
 Diese Zahlen sind die Grundlage für mehrere Lücken. Sie stehen hier, damit
@@ -8222,7 +8276,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 20. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 102 Lücken, 52 offene und 50 geschlossene. Der Befehl dazu ist
+Datei führt 103 Lücken, 53 offene und 50 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

@@ -4014,3 +4014,53 @@ ein `remove` aus seinem `finally` geholt → wieder `[false,true]`.
 
 Dieselbe Redewendung kommt in keinem der übrigen 495 Läufe vor — gesucht,
 nicht angenommen.
+
+---
+
+## 20. September 2026 — Was das Bereichs-Verzeichnis nicht sieht (E665, L207)
+
+Der erste volle Lauf seit E626 machte `test537` rot: **518 gegen 517**, bei
+unverändert 125 Paaren. Welche zwei Treffer dazugekommen waren:
+
+```txt
+MEHR  bereiche/einstellungen | KI            | bereiche/ki             15 → 16
+MEHR  bereiche/ki            | Einstellungen | bereiche/einstellungen   1 → 2
+```
+
+Der erste war meiner (E661: zwei Griffe statt eines) und ist mit E665 weg —
+519 → 518.
+
+Der zweite ist **kein neuer Aufruf**. `Einstellungen.oeffne('schluessel')`
+steht seit E500 im KI-Fenster. Dieselbe Datei, durch denselben Filter:
+
+```txt
+                      roh   nach ohneSchablonen
+Fassung von E626       2            1
+heute                  2            2
+```
+
+Er war für den Wächter unsichtbar, weil `ohneSchablonen` ihn für Text in
+einer Schablone hielt.
+
+### Wie viel sonst noch unsichtbar ist
+
+Über alle 86 Dateien in `src/bereiche/`:
+
+```txt
+Aufrufe nach nurCode:              7907
+davon nach ohneSchablonen:         7641
+verdeckt:                           266   (3,4 %)
+
+  136  editor/ansicht/editor.ts       (457 → 321)
+   30  wissen/werkzeuge.ts            (471 → 441)
+   26  einstellungen/ansicht/seite.ts (215 → 189)
+   21  datenbanken/steuerung.ts      (1119 → 1098)
+```
+
+**Die 517 sind ein Mindestwert, kein Stand.** `${Datenbank.name(x)}` in
+einer Schablone ist ein Aufruf, kein Text.
+
+Das Verzeichnis wurde NICHT angehoben. Die drei Wege und ihre Kosten stehen
+als **L207**; §5 sagt selbst, dass die Richtung Redur gehört. Bis dahin
+bleibt `test537` rot und `main` steht (§46) — eine rote Zahl, die auf eine
+Entscheidung wartet, ist besser als eine grüne, die nicht stimmt.

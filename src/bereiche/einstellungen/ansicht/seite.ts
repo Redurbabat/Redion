@@ -1485,10 +1485,13 @@ const Einstellungen = (() => {
            `llama-3.3-70b-versatile`, weil Groq es ausgemustert hatte und
            die Liste im Programm es noch führte. Der Probelauf ist der
            natürliche Ort dafür — hier wird der Schlüssel ohnehin das erste
-           Mal benutzt. Geht es schief, gilt die eingebaute Liste weiter. */
-        if (id !== 'eigen') await KI.modelleHolen(id);
-        KI.zustand.modell = id === 'eigen'
-          ? Store.getMeta('api:eigenModell', 'lokal') : (KI.modelleVon(id)[0] || '');
+           Mal benutzt. Geht es schief, gilt die eingebaute Liste weiter.
+
+           EIN GRIFF, NICHT ZWEI (E665). „Holen und dann das erste nehmen"
+           ist eine Prozedur der KI; diese Seite braucht nur das Ergebnis.
+           `test537` hat den zweiten Griff als neuen Querverweis gemeldet,
+           und er hatte recht (§5 Regel 1). */
+        KI.zustand.modell = await KI.modellWaehlen(id);
         let antwort = '';
         for await (const t of KI.wolkeFragen(
           [{ role: 'user', content: 'Antworte nur mit dem Wort: bereit' }], KI.zustand.modell)) antwort += t;

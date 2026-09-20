@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-644 Entscheidungen, E1 bis E664 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+645 Entscheidungen, E1 bis E665 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -707,6 +707,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E662** — Der Sweep nennt den Schuldigen, nicht sein ganzes Stück: keine Stunde nach seinem ersten Einsatz meldete `volllauf.mts` zehn rote Läufe, wo einer war. `alle.mts` schreibt seine Bilanz auf zwei Zeilen — die erste hat das ✗ und keine Nummer, die zweite die Nummer und kein ✗. Die Zerlegung fand nichts und fiel auf „ganzes Stück rot" zurück. Der Rückfall bleibt (er erfindet keinen Schuldigen), er wird nur schwerer getroffen. Wächter `test553`.
 * **E663** — Was abgehakt wird, zählt in der Wochenrückschau: sie rechnet mit `erledigtAm`, und NIEMAND schrieb das Feld für Blöcke — wer eine Woche lang Aufgaben abhakte, sah am Sonntag eine leere Rückschau und ein Tagesdiagramm aus Nullen. Der Stempel sitzt jetzt in `Store.updateBlock` statt an sechs Kästchen (§8), und der Altbestand zählt über `edited` mit, wie die Datenbankzeilen es längst tun. Wächter `test554`.
 * **E664** — Ein Wächter, der an der Reihenfolge im Block scheitert: `test403` prüfte „steht das `remove` in einem `finally`", indem er zwei Zeilen zurücksah. E652 schob zwei Zeilen dazwischen — dasselbe `finally`, dieselbe Zusage, und der volle Lauf wurde rot. Jetzt wird der umschliessende Block wirklich gesucht (Klammern zählend nach oben).
+* **E665** — Ein Griff statt zwei: `test537` meldete einen neuen Querverweis, weil die Einstellungsseite für den Probelauf erst `KI.modelleHolen(id)` und dann `KI.modelleVon(id)[0]` rief. Der Wächter hatte recht, und zwar doppelt — „holen und dann das erste nehmen" ist eine Prozedur der KI, nicht Wissen der Einstellungsseite. Jetzt `KI.modellWaehlen(id)`, ein Satz. Dabei gemessen: `ohneSchablonen` verdeckt **266 echte Aufrufe** im Bestand (L207).
 
 ---
 
@@ -54333,6 +54334,82 @@ kitzlig.
 **Was dabei nicht gefunden wurde:** dieselbe Redewendung
 (`slice(Math.max(0, i - …))`) kommt in keinem anderen der 496 Läufe vor.
 Gesucht, nicht angenommen.
+
+
+## E665 — Ein Griff statt zwei, und was der Wächter dabei verriet
+
+**Was wurde entschieden?** Die Einstellungsseite ruft für den Probelauf
+`KI.modellWaehlen(id)` — einen Satz statt zweier Griffe.
+
+**Warum?** Der erste volle Lauf meldete `test537` rot:
+
+```txt
+✗ Und die Zahl der Treffer auch nicht — 519 gegen 517
+```
+
+Kein NEUES Paar (die Struktur von §5 Regel 1 hielt), aber zwei Treffer mehr.
+Nachgemessen, welche:
+
+```txt
+MEHR  bereiche/einstellungen | KI          | bereiche/ki            15 → 16
+MEHR  bereiche/ki            | Einstellungen | bereiche/einstellungen 1 → 2
+```
+
+**Der erste war meiner.** E661 hatte in der Einstellungsseite
+`KI.anbieter(id).modelle[0]` durch `await KI.modelleHolen(id)` **und**
+`KI.modelleVon(id)[0]` ersetzt — zwei Griffe statt einem. Der Wächter hatte
+recht, und zwar doppelt: „erst holen, dann das erste nehmen" ist eine
+Prozedur der KI und nichts, was die Einstellungsseite wissen muss. Ein
+Griff, ein Satz. 519 → 518.
+
+**Der zweite war nicht neu.** `Einstellungen.oeffne('schluessel')` im
+KI-Fenster gibt es seit **E500**. Nachgemessen an der Fassung, in der das
+Verzeichnis gesetzt wurde:
+
+```txt
+roh                  alt 2 · neu 2
+nach dem Filtern     alt 1 · neu 2
+```
+
+Beide Aufrufe standen immer da. Einer war für den Wächter **unsichtbar**,
+weil `ohneSchablonen` ihn für Text in einer Schablone hielt; mein Umbau des
+Menüs in E661 hat ihn hervorgeholt. Es ist also kein neuer Querverweis,
+sondern ein alter, der endlich gezählt wird.
+
+### Und damit die eigentliche Nachricht
+
+Wenn ein Aufruf so verschwinden kann, wie viele verschwinden sonst noch?
+Gemessen über alle 86 Dateien in `src/bereiche/`:
+
+```txt
+Aufrufe nach nurCode:              7907
+davon nach ohneSchablonen:         7641
+von der Schablonenregel verdeckt:   266   (3,4 %)
+
+  136  src/bereiche/editor/ansicht/editor.ts   (457 → 321)
+   30  src/bereiche/wissen/werkzeuge.ts        (471 → 441)
+   26  src/bereiche/einstellungen/ansicht/seite.ts (215 → 189)
+   21  src/bereiche/datenbanken/steuerung.ts  (1119 → 1098)
+```
+
+**Die 517 sind also ein Mindestwert, kein Stand.** Die Regel dahinter ist
+richtig — E626 hat `ohneSchablonen` eingeführt, weil 88 Treffer aus
+deutscher Prosa in Backticks mitgezählt wurden. Aber sie wirft zu viel weg:
+`${Datenbank.name(x)}` in einer Schablone ist ein echter Aufruf, kein Text.
+Der genauere Filter nähme nur die Textteile heraus und liesse `${…}` stehen.
+
+**Was hier NICHT getan wurde.** Das Verzeichnis wurde nicht angehoben. §5
+sagt, es darf nur schrumpfen — „es ist keine Erlaubnis, sondern eine
+Schuld". Eine Zahl zu erhöhen, weil die Messung besser geworden ist, ist
+etwas anderes als eine neue Kopplung; aber der Unterschied muss sichtbar
+bleiben, sonst verrottet die Regel. §5 sagt selbst: die Richtung gehört
+Redur. `test537` bleibt deshalb rot bei 518 gegen 517, `main` bleibt stehen
+(§46), und die Frage steht als **L207** in `LUECKEN.md`.
+
+**Die drei Wege, aus denen Redur wählen kann**, stehen dort mit ihren
+Kosten: den einen Eintrag als Korrektur anheben; den Filter genauer machen
+und das Verzeichnis einmal auf die Wahrheit setzen; oder die Kopplung
+`ki → Einstellungen` wirklich auflösen.
 
 ## E123 — Titel                     die heutige Form
 =====  /  E123 — Titel  /  =====    ein Banner zwischen zwei Linien

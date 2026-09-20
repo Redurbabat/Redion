@@ -344,6 +344,26 @@ const KI = (() => {
     }
   };
 
+  /**
+   * Ein Modell für diesen Anbieter — frisch erfragt, sonst das Eingebaute.
+   *
+   * WARUM DAS HIER STEHT UND NICHT IN DEN EINSTELLUNGEN (E665). Dort stand
+   * erst `KI.anbieter(id).modelle[0]`, dann wollte ich
+   * `await KI.modelleHolen(id)` und `KI.modelleVon(id)[0]` schreiben — zwei
+   * Griffe statt einem. `test537` hat es gemeldet: ein Querverweis mehr
+   * zwischen zwei Bereichen, und das Verzeichnis darf nur schrumpfen
+   * (§5 Regel 1).
+   *
+   * Der Wächter hatte recht, und zwar doppelt: „erst holen, dann das erste
+   * nehmen" ist eine Prozedur der KI und keine Sache, die die
+   * Einstellungsseite wissen muss. Ein Griff, ein Satz.
+   */
+  const modellWaehlen = async (id: string): Promise<string> => {
+    if (id === 'eigen') return Store.getMeta('api:eigenModell', 'lokal');
+    await modelleHolen(id);
+    return modelleVon(id)[0] || '';
+  };
+
   /** Was das Menü zeigt: was der Anbieter zuletzt sagte, sonst das Eingebaute. */
   const modelleVon = (id: string): string[] => {
     const gemerkt = Store.getMeta('ki:modelle:' + id, null);
@@ -2498,7 +2518,7 @@ const KI = (() => {
            quellenKarte, quellenLeiste, seitenKontext, SYSTEM,
            SCHREIB_BEFEHLE, schreibMenue, schreibLauf, alsBloeckeEinfuegen,
            ANBIETER, anbieter, wolkeFragen, holen, FEHLERTEXT, WIEDERHOLBAR,
-           modelleHolen, modelleVon, fehlerSatz,
+           modelleHolen, modelleVon, modellWaehlen, fehlerSatz,
            datenbankAuswerten, frageKurz, zustand, modellMenue,
            seitenleiste, chatBaum, verlauf, neuerChat, chatOeffnen, chatsLesen,
            chatsGruppiert, chatSichern,

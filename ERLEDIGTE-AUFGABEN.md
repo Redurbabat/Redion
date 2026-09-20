@@ -1,5 +1,39 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · Der volle Lauf, und E665
+
+**Der volle Lauf.** 490 Läufe in 49 Stücken, 107 Minuten, im eigenen
+Arbeitsbaum auf `74bde43`. **487 grün, 3 rot** — und keiner der drei war
+ein Produktfehler:
+
+| Lauf | was er meldete | was es war |
+|---|---|---|
+| `test270` | `[".git","node_modules"]` gehen ins Netz | das Arbeitsbaum-Artefakt aus §30. Im HAUPTBAUM nachgemessen: 77 ok, 0 offen. |
+| `test403` | „Beide stehen in einem finally — [false,true]" | zu enges Fenster, E664 |
+| `test537` | 518 gegen 517 Treffer | einer meiner (E665), einer seit E500 unsichtbar (L207) |
+
+Dazu 27 mitmarkierte Unschuldige durch den Werkzeugfehler aus E662 — der
+ist repariert, bevor er ein zweites Mal irreführt.
+
+**E665 — ein Griff statt zwei.** `test537` meldete einen neuen Querverweis,
+weil E661 in der Einstellungsseite `KI.modelleHolen(id)` UND
+`KI.modelleVon(id)[0]` rief. Der Wächter hatte recht, und zwar doppelt:
+„holen und dann das erste nehmen" ist eine Prozedur der KI, nicht Wissen
+der Einstellungsseite. Jetzt `KI.modellWaehlen(id)` — 519 → 518.
+
+**Und was dabei herauskam.** Der zweite Treffer ist kein neuer Aufruf:
+`Einstellungen.oeffne('schluessel')` steht seit E500 im KI-Fenster und war
+für den Wächter unsichtbar, weil `ohneSchablonen` ihn für Text hielt.
+Nachgemessen über alle 86 Dateien: **266 echte Aufrufe (3,4 %) werden
+verdeckt**, allein 136 in `editor.ts`. Die 517 sind ein Mindestwert, kein
+Stand.
+
+**Das Verzeichnis wurde NICHT angehoben.** Die drei Wege stehen mit ihren
+Kosten als **L207**; §5 sagt selbst, dass die Richtung Redur gehört. Bis
+dahin bleibt `test537` rot und `main` steht (§46).
+
+---
+
 ## 20. September 2026 · E663/E664 · Die Rückschau zählt wieder, und ein Wächter sieht den ganzen Block
 
 **E663 — was abgehakt wird, zählt.** Die Wochenrückschau rechnet mit

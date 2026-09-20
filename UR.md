@@ -1896,13 +1896,14 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 | E661 — Groqs 404: der Anbieter hat immer recht, und die Modellliste wird erfragt | `(offen)` → `(offen)` | ca. 20:20 – | laufend | test552 (15/15, zwei Gegenproben), test550 (8/8) |
 | E662 — volllauf.mts nennt den Schuldigen statt sein ganzes Stück | `(offen)` → `(offen)` | ca. 20:55 – | laufend | test553 (6/6, Gegenprobe gefahren), test550 (8/8) |
 | E663/E664 — die Wochenrückschau zählt wieder, und test403 sieht den ganzen Block | `(offen)` → `(offen)` | ca. 21:20 – | laufend | test554 (11/11, zwei Gegenproben), test403 (22/22, Gegenprobe), test550 (8/8) |
+| Voller Lauf (490 Läufe, 107 min) und E665 — ein Griff statt zwei | `74bde43` → `(offen)` | 17:57 – 21:50 | 107 min Lauf plus Nacharbeit | 490 Läufe: 487 grün, 3 rot (test270 Arbeitsbaum-Artefakt, test403 zu enges Fenster, test537 Verzeichnis). test270 im Hauptbaum nachgemessen: 77 ok, 0 offen. |
 
 #### Zahlen des Tages
 
 - **commits:** 2
-- **entscheidungen:** 22
+- **entscheidungen:** 23
 - **neue Prüfläufe:** 13
-- **volle Läufe:** 0
+- **volle Läufe:** 1
 
 #### Das grösste Problem
 
@@ -1924,5 +1925,5 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 97 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 98 Einträge.
 

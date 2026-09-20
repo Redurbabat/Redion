@@ -2569,13 +2569,21 @@ const ChronikDaten = {
      "zeitraum": "ca. 21:20 –",
      "dauer": "laufend",
      "pruefungen": "test554 (11/11, zwei Gegenproben), test403 (22/22, Gegenprobe), test550 (8/8)"
+    },
+    {
+     "was": "Voller Lauf (490 Läufe, 107 min) und E665 — ein Griff statt zwei",
+     "vonCommit": "74bde43",
+     "bisCommit": "(offen)",
+     "zeitraum": "17:57 – 21:50",
+     "dauer": "107 min Lauf plus Nacharbeit",
+     "pruefungen": "490 Läufe: 487 grün, 3 rot (test270 Arbeitsbaum-Artefakt, test403 zu enges Fenster, test537 Verzeichnis). test270 im Hauptbaum nachgemessen: 77 ok, 0 offen."
     }
    ],
    "zahlen": {
     "commits": 2,
-    "entscheidungen": 22,
+    "entscheidungen": 23,
     "neue Prüfläufe": 13,
-    "volle Läufe": 0
+    "volle Läufe": 1
    },
    "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
    "interessantesteAnfrage": "Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die über einen Bogen urteilt, der schon gepusht war — und sie hat gegen ihn entschieden: neun von zehn klaren Verstössen stammen aus E639, der Linse von vor einer Stunde. Dass Redur im selben Auftrag geschrieben hat „Übernimm nicht blind eine generische Regel\", ist der Grund, warum daraus kein Zurückrudern wurde, sondern drei Korrekturen und eine Frage an ihn.",
@@ -3920,6 +3928,18 @@ const ChronikDaten = {
    "ursache": "E652 hat zwei Zeilen in dasselbe finally geschoben. Die Messung prüfte damit die Reihenfolge innerhalb des Blocks statt den Block.",
    "beweis": "Nach dem Umbau auf Klammernzählen: 22 von 22 grün, und die Gegenprobe (ein remove aus dem finally geholt) wird wieder rot.",
    "lehre": "Eine Messung, die von der Reihenfolge im Block abhängt, meldet Umbauten als Fehler. Das kostet beim nächsten vollen Lauf genau so viel Zeit wie ein echter Fund — und erzieht dazu, rote Läufe für Rauschen zu halten."
+  },
+  {
+   "nr": "P98",
+   "datum": "2026-09-20",
+   "titel": "Das Verzeichnis der Querverweise zählt zu wenig",
+   "schwere": "mittel",
+   "symptom": "test537 wurde rot: 519 gegen 517 Treffer, bei unverändert 125 Paaren. Es sah nach zwei neuen Kopplungen aus.",
+   "falscheVermutung": "Dass beide neu sind. Einer war meiner (E661, zwei Griffe statt eines). Der zweite steht seit E500 im Code.",
+   "wieGefunden": "Die alte Fassung der Datei durch denselben Filter geschickt: roh 2 Treffer, nach ohneSchablonen 1. Der Aufruf war immer da und für den Wächter unsichtbar.",
+   "ursache": "ohneSchablonen wirft ganze Schablonen weg, damit deutsche Prosa in Backticks nicht mitzählt (E626, 88 Falschtreffer). Dabei fliegen auch echte Aufrufe heraus: ein ${Name.methode(x)} in einer Schablone ist ein Aufruf, kein Text.",
+   "beweis": "Über alle 86 Dateien in src/bereiche gemessen: 7907 Aufrufe nach nurCode, 7641 nach ohneSchablonen — 266 verdeckt, 3,4 Prozent, davon 136 allein in editor.ts.",
+   "lehre": "Ein Wächter, der zu viel wegfiltert, meldet nicht zu viel, sondern zu wenig — und seine Zahl sieht dabei genauso fest aus. Das Verzeichnis wurde NICHT angehoben: eine Zahl zu erhöhen, weil die Messung besser wurde, ist etwas anderes als eine neue Kopplung, und der Unterschied muss sichtbar bleiben. Die Wahl steht als L207 bei Redur."
   }
  ]
 } as const;

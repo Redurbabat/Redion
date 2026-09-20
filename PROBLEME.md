@@ -111,6 +111,7 @@ sind der teuerste Teil und der lehrreichste.
 | P95 | 2026-09-20 | Das Werkzeug für die Prüfläufe war selbst ungeprüft | 🟠 mittel | — |
 | P96 | 2026-09-20 | Eine Auswertung, die mit einem Feld rechnet, das niemand schreibt | 🟠 mittel | — |
 | P97 | 2026-09-20 | Ein Wächter, der an der Reihenfolge im Block scheitert | niedrig | — |
+| P98 | 2026-09-20 | Das Verzeichnis der Querverweise zählt zu wenig | 🟠 mittel | — |
 
 ---
 
@@ -2135,4 +2136,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Nach dem Umbau auf Klammernzählen: 22 von 22 grün, und die Gegenprobe (ein remove aus dem finally geholt) wird wieder rot.
 
 **Die Lehre.** Eine Messung, die von der Reihenfolge im Block abhängt, meldet Umbauten als Fehler. Das kostet beim nächsten vollen Lauf genau so viel Zeit wie ein echter Fund — und erzieht dazu, rote Läufe für Rauschen zu halten.
+
+
+---
+
+## P98 · Das Verzeichnis der Querverweise zählt zu wenig
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** test537 wurde rot: 519 gegen 517 Treffer, bei unverändert 125 Paaren. Es sah nach zwei neuen Kopplungen aus.
+
+**Die falsche Vermutung.** Dass beide neu sind. Einer war meiner (E661, zwei Griffe statt eines). Der zweite steht seit E500 im Code.
+
+**Wie es gefunden wurde.** Die alte Fassung der Datei durch denselben Filter geschickt: roh 2 Treffer, nach ohneSchablonen 1. Der Aufruf war immer da und für den Wächter unsichtbar.
+
+**Die Ursache.** ohneSchablonen wirft ganze Schablonen weg, damit deutsche Prosa in Backticks nicht mitzählt (E626, 88 Falschtreffer). Dabei fliegen auch echte Aufrufe heraus: ein ${Name.methode(x)} in einer Schablone ist ein Aufruf, kein Text.
+
+**Der Beweis.** Über alle 86 Dateien in src/bereiche gemessen: 7907 Aufrufe nach nurCode, 7641 nach ohneSchablonen — 266 verdeckt, 3,4 Prozent, davon 136 allein in editor.ts.
+
+**Die Lehre.** Ein Wächter, der zu viel wegfiltert, meldet nicht zu viel, sondern zu wenig — und seine Zahl sieht dabei genauso fest aus. Das Verzeichnis wurde NICHT angehoben: eine Zahl zu erhöhen, weil die Messung besser wurde, ist etwas anderes als eine neue Kopplung, und der Unterschied muss sichtbar bleiben. Die Wahl steht als L207 bei Redur.
 
