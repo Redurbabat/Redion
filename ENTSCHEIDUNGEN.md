@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-624 Entscheidungen, E1 bis E646 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+625 Entscheidungen, E1 bis E647 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -689,6 +689,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E644** — Erst wiederherstellen, dann beobachten: die zuletzt gelesene PDF-Seite ging verloren, sobald zwischen dem Öffnen und dem Anrollen eine Fenstergrösse gemeldet wurde — `nachziehen()` las den Rollstand 0, schloss auf „Seite 1" und MERKTE das. Auf dem Telefon reicht dafür das Drehen. `test424` prüfte es schon, aber als Wettlauf: derselbe Durchgang lief mit ein paar Millisekunden mehr Arbeit grün. `test540` stellt das Rennen, statt es zu gewinnen
 * **E645** — Ein Wächter zählte das ganze Haus, gemeint war ein Zimmer: `test435` §3 zählte ALLE SVG-Filter der Seite und verlangte zwei — das war zufällig wahr, bis die Linse der unteren Leiste (E639) zwei eigene mitbrachte. Gezählt wird jetzt im Halter der Textur, und daneben steht die Frage, um die es E440 wirklich ging: teilen sich zwei Filter eine Kennung? Diese Zahl wächst nicht mit dem Programm mit
 * **E646** — Die Fläche wandert auch dann, wenn der Hauptfaden arbeitet: Redurs Aufnahme zeigte vier Wechsel und viermal EIN Bild für 190 bis 210 Pixel; am Rechner wanderte dieselbe Fassung über 16 bis 21 Orte. Schuld war `width` in der Übergangsliste — wer Layout animiert, bleibt auf dem Hauptfaden, und der baut beim Reiterwechsel gerade einen Bildschirm auf. Die Bewegung fährt jetzt als Federbahn über `element.animate()` auf `transform` allein (`SelectionFlow`, der Helfer, den L204 verlangt hat), mit erhaltener Geschwindigkeit beim Umlenken. Im ersten Bild: 11 % des Weges statt 31 %. Scrubbing wurde NICHT gebaut, und zwar aus Redurs eigenem Vorbehalt: ein Reiterwechsel kostet unter Last 0,8 bis 1,5 Sekunden
+* **E647** — Dieselbe Feder für die Werkzeugleiste, und L204 ist zu: `.bw-flug` bewegte `left`, `top`, `width` und `height` — vier Layout-Eigenschaften, und das ausgerechnet an der Stelle, an der man mitten im Zeichnen das Werkzeug wechselt. `SelectionFlow.fliege()` rechnet dieselbe Feder als FLIP auf `transform` um. Die Bauform von E640 bleibt (der Grund sitzt am Knopf, nur der Wechsel fliegt) — zwei Bauformen, ein Bewegungsgesetz
 
 ---
 
@@ -53053,3 +53054,87 @@ Zeilen rot, darunter „31 % von 215px im ersten Bild") · `test114` §17 ·
 `test539` · `test435` · `test87` · `test105` · `test109` · `test332`.
 Dazu ein Film des Dock unter 4-facher Drosselung: vorher 5 Orte, nachher 9
 bis 10 Orte bei 25 Bildern je Sekunde Aufnahme.
+
+---
+
+## E647 — Dieselbe Feder für die Werkzeugleiste, und L204 ist zu
+
+E646 hat die untere Leiste vom Hauptfaden geholt. Die Werkzeugleiste des
+Schreibstudios (E640) hatte denselben Fehler — nur hat ihn dort noch niemand
+gesehen, weil niemand gefilmt hat.
+
+```css
+.bw-flug{
+  transition:left   … ,
+             top    … ,
+             width  … ,
+             height … ;     /* VIER Layout-Eigenschaften */
+}
+```
+
+**Und hier ist es absehbarer als unten:** das Werkzeug wechselt man MITTEN IM
+Zeichnen auf einem PDF. Wenn der Hauptfaden irgendwo beschäftigt ist, dann
+dort.
+
+### Was gebaut wurde
+
+`SelectionFlow` bekommt einen zweiten Eingang, `fliege()`. Er rechnet
+dieselbe Feder auf `transform` um — die alte FLIP-Rechnung:
+
+```txt
+Das Element bekommt die Masse des ZIELS
+und wird per transform dorthin zurückgeschoben, wo es herkommt:
+
+  scaleX = von.breite / nach.breite     translateX = von.links − nach.links
+  scaleY = von.hoehe  / nach.hoehe      translateY = von.oben  − nach.oben
+
+Animiert wird auf `none`. Mit `transform-origin:0 0` ist das eine Zeile
+Mathematik und kein Layout.
+```
+
+**Der Fortschritt der Feder kommt aus derselben Formel, nicht aus einer
+zweiten.** `fortschritt(t)` ruft `weg()` mit Startabstand −1 und Tempo 0;
+`1 + weg` ist damit genau der Anteil des zurückgelegten Weges. Eine
+ausgeschriebene Kopie könnte von der Federformel abweichen, ohne dass es
+jemand merkt (§8).
+
+```txt
+t =  20 ms → 0,142      t = 120 ms → 0,905
+t =  40 ms → 0,380      t = 230 ms → 0,996
+```
+
+### Was dabei wegfiel
+
+**Die zwei Bilder Wartezeit.** Hier stand ein doppeltes
+`requestAnimationFrame`, damit der Startwert als gemalt gilt und der
+Übergang überhaupt beginnt — die Falle aus E639. Eine Keyframe-Bahn hat
+ihren Startwert IN sich; die Falle gibt es bei ihr nicht.
+
+**Die geratene 700.** Das Sicherheitsnetz (`setTimeout`, falls der Übergang
+nie beginnt) stand auf 700 ms, ohne dass jemand wusste, wie lang die
+Bewegung ist. Jetzt hängt es an `SelectionFlow.DAUER + 250`: eine Uhr neben
+einer Animation soll wenigstens deren Länge kennen.
+
+### Was NICHT geändert wurde, und warum
+
+**Die Bauform von E640 bleibt.** Dort steht der Grund am Knopf, und nur der
+WECHSEL bekommt eine kurzlebige Fläche. Das sieht auf den ersten Blick aus
+wie ein Verstoss gegen `continuous-material-selection.md` („one persistent
+material object") — ist es aber nicht: sichtbar ist zu jedem Zeitpunkt
+genau eine Fläche, und das ist die Zusage. Was E640 vermeiden wollte, steht
+in P69 und gilt weiter: **eine gespeicherte Stelle veraltet bei jedem
+Umbruch, bei jedem Rollen, bei jeder Breitenabfrage.** `test478` hatte den
+ersten Entwurf mit 55 px Versatz widerlegt.
+
+Die untere Leiste kann sich eine dauerhafte Fläche leisten, weil ihre fünf
+Wege gleich breit sind und nie umbrechen. Die Werkzeugleiste kann es nicht.
+**Zwei Bauformen, ein Bewegungsgesetz** — das ist der Unterschied zwischen
+„denselben Helfer benutzen" und „alles gleich machen".
+
+### Damit ist L204 zu
+
+L204 verlangte wörtlich: „zwei Stellen, dieselbe Rechnung, also gehört sie
+in EINEN Helfer (§8)". Beide Stellen benutzen ihn jetzt.
+
+**Gemessen.** `test539` §5 (der Flug, die Zwischenorte, A→B→C) · `test478` ·
+`test114` §17 · `test541`.

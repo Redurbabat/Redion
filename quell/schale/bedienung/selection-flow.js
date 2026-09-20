@@ -248,6 +248,52 @@ const SelectionFlow = (() => {
             flaeche.classList.remove('faehrt');
         }).catch(() => { });
     };
-    return { folge, DAUER, OMEGA, DEHNUNG_MAX };
+    /**
+     * Der Fortschritt der Feder, 0 bis 1.
+     *
+     * DIESELBE FORMEL, NICHT EINE ZWEITE (§8): `weg` wird mit Startabstand −1
+     * und Tempo 0 gerufen, und `1 + weg` ist damit genau der Anteil des Weges,
+     * der zurückgelegt ist. Eine ausgeschriebene Kopie könnte von der
+     * Federformel abweichen, ohne dass es jemand merkt.
+     *
+     *     t =  20 ms → 0,142      t = 120 ms → 0,905
+     *     t =  40 ms → 0,380      t = 230 ms → 0,996
+     */
+    const fortschritt = (t) => 1 + weg({ ziel: 0, x0: -1, v0: 0, start: 0, dehnen: false }, t);
+    /**
+     * Ein Element von `von` nach `nach` fliegen lassen.
+     *
+     * Das Element muss `position:fixed` sein; `nach` und `von` sind
+     * Bildschirmmasse (`getBoundingClientRect`). Zurück kommt die Animation,
+     * damit der Rufer sie abbrechen oder ihr Ende abwarten kann.
+     */
+    const fliege = (flaeche, von, nach) => {
+        if (!nach.width || !nach.height)
+            return null;
+        flaeche.style.left = nach.left + 'px';
+        flaeche.style.top = nach.top + 'px';
+        flaeche.style.width = nach.width + 'px';
+        flaeche.style.height = nach.height + 'px';
+        flaeche.style.transformOrigin = '0 0';
+        const sx = von.width / nach.width;
+        const sy = von.height / nach.height;
+        const dx = von.left - nach.left;
+        const dy = von.top - nach.top;
+        if (ruhig()) {
+            flaeche.style.transform = 'none';
+            return null;
+        }
+        const bilder = [];
+        for (let t = 0; t <= DAUER; t += SCHRITT) {
+            const f = fortschritt(t);
+            bilder.push({
+                transform: 'translate(' + (dx * (1 - f)).toFixed(2) + 'px,' + (dy * (1 - f)).toFixed(2) + 'px)'
+                    + ' scale(' + (1 + (sx - 1) * (1 - f)).toFixed(4) + ',' + (1 + (sy - 1) * (1 - f)).toFixed(4) + ')'
+            });
+        }
+        bilder.push({ transform: 'none' });
+        return flaeche.animate(bilder, { duration: DAUER, easing: 'linear', fill: 'forwards' });
+    };
+    return { folge, fliege, DAUER, OMEGA, DEHNUNG_MAX };
 })();
 window.SelectionFlow = SelectionFlow;

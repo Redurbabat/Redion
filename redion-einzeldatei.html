@@ -16095,10 +16095,13 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .bw-flug{
   position:fixed; z-index:600; pointer-events:none;
   border-radius:6px; background:var(--accent);
-  transition:left var(--motion-normal) var(--ease-standard),
-             top var(--motion-normal) var(--ease-standard),
-             width var(--motion-normal) var(--ease-standard),
-             height var(--motion-normal) var(--ease-standard);
+  /* ══ DIE BEWEGUNG STEHT NICHT MEHR HIER (E647) ══════════════════════
+     Hier standen vier Übergänge: `left`, `top`, `width`, `height`. Alle
+     vier sind Layout, und eine Bewegung, die Layout animiert, bleibt auf
+     dem Hauptfaden — bei der unteren Leiste hat das dazu geführt, dass sie
+     auf dem Telefon gar nicht mehr wanderte (E646). Hier ist es genauso
+     absehbar: das Werkzeug wechselt man mitten im Zeichnen.
+     Die Bahn rechnet jetzt `SelectionFlow.fliege()` auf `transform` um. */
 }
 /* OHNE BEWEGUNG FLIEGT NICHTS. Der Zustand ist trotzdem sofort richtig —
    er hängt am Knopf und nicht am Flug. Genau das ist der Grund, warum der
@@ -25121,7 +25124,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1227, inhalt: 'a2f3a5437a4de79b', gebaut: '2026-09-20T08:49:35.753Z' };
+const Stand = { fassung: 1229, inhalt: 'e8534c07af80dd90', gebaut: '2026-09-20T09:05:48.021Z' };
 window.Stand = Stand;
 
 </script>
@@ -49704,7 +49707,53 @@ const SelectionFlow = (() => {
             flaeche.classList.remove('faehrt');
         }).catch(() => { });
     };
-    return { folge, DAUER, OMEGA, DEHNUNG_MAX };
+    /**
+     * Der Fortschritt der Feder, 0 bis 1.
+     *
+     * DIESELBE FORMEL, NICHT EINE ZWEITE (§8): `weg` wird mit Startabstand −1
+     * und Tempo 0 gerufen, und `1 + weg` ist damit genau der Anteil des Weges,
+     * der zurückgelegt ist. Eine ausgeschriebene Kopie könnte von der
+     * Federformel abweichen, ohne dass es jemand merkt.
+     *
+     *     t =  20 ms → 0,142      t = 120 ms → 0,905
+     *     t =  40 ms → 0,380      t = 230 ms → 0,996
+     */
+    const fortschritt = (t) => 1 + weg({ ziel: 0, x0: -1, v0: 0, start: 0, dehnen: false }, t);
+    /**
+     * Ein Element von `von` nach `nach` fliegen lassen.
+     *
+     * Das Element muss `position:fixed` sein; `nach` und `von` sind
+     * Bildschirmmasse (`getBoundingClientRect`). Zurück kommt die Animation,
+     * damit der Rufer sie abbrechen oder ihr Ende abwarten kann.
+     */
+    const fliege = (flaeche, von, nach) => {
+        if (!nach.width || !nach.height)
+            return null;
+        flaeche.style.left = nach.left + 'px';
+        flaeche.style.top = nach.top + 'px';
+        flaeche.style.width = nach.width + 'px';
+        flaeche.style.height = nach.height + 'px';
+        flaeche.style.transformOrigin = '0 0';
+        const sx = von.width / nach.width;
+        const sy = von.height / nach.height;
+        const dx = von.left - nach.left;
+        const dy = von.top - nach.top;
+        if (ruhig()) {
+            flaeche.style.transform = 'none';
+            return null;
+        }
+        const bilder = [];
+        for (let t = 0; t <= DAUER; t += SCHRITT) {
+            const f = fortschritt(t);
+            bilder.push({
+                transform: 'translate(' + (dx * (1 - f)).toFixed(2) + 'px,' + (dy * (1 - f)).toFixed(2) + 'px)'
+                    + ' scale(' + (1 + (sx - 1) * (1 - f)).toFixed(4) + ',' + (1 + (sy - 1) * (1 - f)).toFixed(4) + ')'
+            });
+        }
+        bilder.push({ transform: 'none' });
+        return flaeche.animate(bilder, { duration: DAUER, easing: 'linear', fill: 'forwards' });
+    };
+    return { folge, fliege, DAUER, OMEGA, DEHNUNG_MAX };
 })();
 window.SelectionFlow = SelectionFlow;
 
@@ -70021,9 +70070,6 @@ const Marken = (() => {
             const flug = document.createElement('i');
             flug.className = 'bw-flug';
             flug.setAttribute('aria-hidden', 'true');
-            flug.style.cssText =
-                'left:' + von.left + 'px;top:' + von.top + 'px;' +
-                    'width:' + von.width + 'px;height:' + von.height + 'px;';
             document.body.append(flug);
             flugJetzt = flug;
             /* Wer vorher wartete, wartet nicht mehr: sonst bliebe ein
@@ -70036,19 +70082,37 @@ const Marken = (() => {
                     flugJetzt = null;
                 neu.classList.remove('bw-wartet');
             };
-            /* Zwei Bilder warten, sonst gilt der Startwert als nie gemalt und es
-               gibt keinen Übergang — dieselbe Falle wie bei `#ho-pille` (E639). */
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                flug.style.left = nach.left + 'px';
-                flug.style.top = nach.top + 'px';
-                flug.style.width = nach.width + 'px';
-                flug.style.height = nach.height + 'px';
-            }));
-            flug.addEventListener('transitionend', fertig, { once: true });
-            /* EIN NETZ. Ein Übergang, der nie beginnt (Fenster im Hintergrund,
-               Bewegung aus), meldet auch kein Ende — dann bliebe der neue Knopf
-               für immer ohne Grund. */
-            setTimeout(fertig, 700);
+            /* ══ DIE BAHN KOMMT AUS `SelectionFlow` (E647) ══════════════════════
+             * Hier stand ein Übergang auf `left`, `top`, `width` und `height` —
+             * VIER Layout-Eigenschaften. Genau daran ist die untere Leiste
+             * gescheitert (E646): eine Bewegung, die Layout animiert, bleibt auf
+             * dem Hauptfaden und kommt nicht voran, während dort gearbeitet wird.
+             * Und hier wird gearbeitet: man wechselt das Werkzeug MITTEN IM
+             * Zeichnen auf einem PDF.
+             *
+             * `fliege` rechnet dieselbe Feder auf `transform` um (FLIP: das
+             * Element bekommt die Masse des Ziels und wird dorthin
+             * zurückgeschoben, wo es herkommt). Damit darf die Bewegung auf den
+             * Compositor.
+             *
+             * Die zwei Bilder Wartezeit, die hier standen, braucht es nicht mehr:
+             * eine Keyframe-Bahn hat ihren Startwert IN sich und nicht im zuvor
+             * gemalten Zustand — die Falle aus E639 gibt es bei ihr nicht. */
+            const bahn = typeof SelectionFlow === 'undefined'
+                ? null : SelectionFlow.fliege(flug, von, nach);
+            if (!bahn) {
+                /* Ohne das Modul fliegt nichts — der Zustand stimmt trotzdem, weil
+                   er am Knopf hängt und nicht am Flug (§38). */
+                fertig();
+                return;
+            }
+            bahn.finished.then(fertig).catch(() => { });
+            /* EIN NETZ. Eine Bewegung, die nie beginnt (Fenster im Hintergrund),
+               meldet auch kein Ende — dann bliebe der neue Knopf für immer ohne
+               Grund. Die Zahl hängt an der Federdauer statt an einer geratenen
+               700: eine Uhr neben einer Animation soll wenigstens wissen, wie
+               lang diese ist. */
+            setTimeout(fertig, SelectionFlow.DAUER + 250);
         };
         try {
             new MutationObserver(wahlFliegen).observe(tools, {
@@ -82252,6 +82316,13 @@ const ChronikDaten = {
                     "gemeint": "Eine Bildschirmaufnahme der unteren Leiste, sieben Punkte Kritik und ein fertig formulierter Auftrag an Claude Code — mit den Namen der Skill-Module, die zu benutzen sind.",
                     "kuerzer": "Der Auftrag war schon so kurz, wie er sein konnte. Das Wertvolle daran ist die Aufnahme: ohne sie hätte ich den Fehler nicht gefunden, weil er am Rechner gar nicht auftritt.",
                     "besserer Prompt": "Nichts zu verbessern. Die Kombination aus Aufnahme, eigener Beobachtung und dem Hinweis auf die zuständigen Regelmodule ist die beste Form, in der eine Gestaltungsaufgabe hier ankommen kann — sie gibt das SYMPTOM, die VERMUTUNG und den MASSSTAB getrennt."
+                },
+                {
+                    "zeit": "ca. 09:00",
+                    "wortlaut": "Ja passt so, mach weiter",
+                    "gemeint": "Freigabe für das Entfernen der toten CSS-Erklärungen (§43 verlangt die Rückfrage) und Auftrag weiterzuarbeiten.",
+                    "kuerzer": "Genau richtig kurz — die Frage war eine Ja/Nein-Frage, die Antwort ist eine.",
+                    "besserer Prompt": "Nichts zu verbessern. Wer eine geschlossene Frage geschlossen beantwortet, spart beiden Seiten einen Absatz."
                 }
             ],
             "arbeit": [
@@ -82330,15 +82401,31 @@ const ChronikDaten = {
                 {
                     "was": "E646 — Die Fläche wandert auch dann, wenn der Hauptfaden arbeitet",
                     "vonCommit": "(08:15)",
-                    "bisCommit": "(offen)",
-                    "zeitraum": "08:15 –",
-                    "dauer": "laufend",
+                    "bisCommit": "(09:05)",
+                    "zeitraum": "08:15 – 09:05",
+                    "dauer": "ca. 50 min",
                     "pruefungen": "test541 neu (23/23, Gegenprobe rot gesehen) · test539 · test114 §17 · test435 · test105, test109, test87, test270, test332, test126, test483"
+                },
+                {
+                    "was": "E647 — Dieselbe Feder für die Werkzeugleiste, L204 geschlossen",
+                    "vonCommit": "(09:05)",
+                    "bisCommit": "(offen)",
+                    "zeitraum": "09:05 –",
+                    "dauer": "laufend",
+                    "pruefungen": "steht aus — im Hauptbaum wird nicht geprüft, solange der volle Lauf fährt (§30)"
+                },
+                {
+                    "was": "Der zweite volle Lauf über alle 483, in Stücken, im Arbeitsbaum",
+                    "vonCommit": "08:53",
+                    "bisCommit": "(läuft)",
+                    "zeitraum": "08:53 –",
+                    "dauer": "laufend",
+                    "pruefungen": "alle 483, zehn je Stück, wiederaufnehmbar — diesmal ohne zweiten Lauf daneben"
                 }
             ],
             "zahlen": {
                 "commits": 2,
-                "entscheidungen": 8,
+                "entscheidungen": 9,
                 "neue Prüfläufe": 3,
                 "volle Läufe": 0
             },

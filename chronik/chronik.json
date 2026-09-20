@@ -2340,6 +2340,13 @@
           "gemeint": "Eine Bildschirmaufnahme der unteren Leiste, sieben Punkte Kritik und ein fertig formulierter Auftrag an Claude Code — mit den Namen der Skill-Module, die zu benutzen sind.",
           "kuerzer": "Der Auftrag war schon so kurz, wie er sein konnte. Das Wertvolle daran ist die Aufnahme: ohne sie hätte ich den Fehler nicht gefunden, weil er am Rechner gar nicht auftritt.",
           "besserer Prompt": "Nichts zu verbessern. Die Kombination aus Aufnahme, eigener Beobachtung und dem Hinweis auf die zuständigen Regelmodule ist die beste Form, in der eine Gestaltungsaufgabe hier ankommen kann — sie gibt das SYMPTOM, die VERMUTUNG und den MASSSTAB getrennt."
+        },
+        {
+          "zeit": "ca. 09:00",
+          "wortlaut": "Ja passt so, mach weiter",
+          "gemeint": "Freigabe für das Entfernen der toten CSS-Erklärungen (§43 verlangt die Rückfrage) und Auftrag weiterzuarbeiten.",
+          "kuerzer": "Genau richtig kurz — die Frage war eine Ja/Nein-Frage, die Antwort ist eine.",
+          "besserer Prompt": "Nichts zu verbessern. Wer eine geschlossene Frage geschlossen beantwortet, spart beiden Seiten einen Absatz."
         }
       ],
       "arbeit": [
@@ -2418,15 +2425,31 @@
         {
           "was": "E646 — Die Fläche wandert auch dann, wenn der Hauptfaden arbeitet",
           "vonCommit": "(08:15)",
-          "bisCommit": "(offen)",
-          "zeitraum": "08:15 –",
-          "dauer": "laufend",
+          "bisCommit": "(09:05)",
+          "zeitraum": "08:15 – 09:05",
+          "dauer": "ca. 50 min",
           "pruefungen": "test541 neu (23/23, Gegenprobe rot gesehen) · test539 · test114 §17 · test435 · test105, test109, test87, test270, test332, test126, test483"
+        },
+        {
+          "was": "E647 — Dieselbe Feder für die Werkzeugleiste, L204 geschlossen",
+          "vonCommit": "(09:05)",
+          "bisCommit": "(offen)",
+          "zeitraum": "09:05 –",
+          "dauer": "laufend",
+          "pruefungen": "steht aus — im Hauptbaum wird nicht geprüft, solange der volle Lauf fährt (§30)"
+        },
+        {
+          "was": "Der zweite volle Lauf über alle 483, in Stücken, im Arbeitsbaum",
+          "vonCommit": "08:53",
+          "bisCommit": "(läuft)",
+          "zeitraum": "08:53 –",
+          "dauer": "laufend",
+          "pruefungen": "alle 483, zehn je Stück, wiederaufnehmbar — diesmal ohne zweiten Lauf daneben"
         }
       ],
       "zahlen": {
         "commits": 2,
-        "entscheidungen": 8,
+        "entscheidungen": 9,
         "neue Prüfläufe": 3,
         "volle Läufe": 0
       },

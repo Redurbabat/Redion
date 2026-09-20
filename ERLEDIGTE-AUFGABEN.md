@@ -1,5 +1,108 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E646/E647 · Die Auswahlfläche wandert — auch unter Last
+
+**Redurs Frage:** eine Bildschirmaufnahme der unteren Leiste, sieben Punkte
+Kritik, und „Denkst du ist das so gut?"
+
+**Der Fund.** Aus seiner Aufnahme, Bild für Bild bei 50 Bildern je Sekunde:
+vier Reiterwechsel, viermal **ein einziges Bild** für 140 bis 209 Pixel. Am
+Rechner wandert dieselbe Fassung über 16 bis 21 Zwischenorte — die Bewegung
+war da und kam nicht an. Mit gedrosselter Rechenleistung brachen genau die
+zwei Wechsel ein, die einen ganzen Bildschirm neu aufbauen (8×: 5 statt 16
+Orte). **Die erste Vermutung war falsch:** ohne die SVG-Glasbrechung
+dasselbe Ergebnis. Schuld war `width` in der Übergangsliste — wer Layout
+animiert, bleibt auf dem Hauptfaden.
+
+**Gebaut.** `src/schale/bedienung/selection-flow.ts`: eine kritisch
+gedämpfte Federbahn, einmal ausgerechnet und als `transform`-Keyframes
+übergeben, damit die Bewegung auf den Compositor darf. Beim Umlenken werden
+Ort UND Tempo aus der Formel übernommen; eine Bahn wird nie angestellt.
+Im ersten Bild: **11 % des Weges statt 31 %.** Dazu: Dehnung am Tempo statt
+an einer Uhr · Farbe des ankommenden Reiters um 130 ms verzögert · im
+Ruhezustand keine Brechung mehr · zwei Innenschatten statt vier.
+E647 zieht die Werkzeugleiste des Schreibstudios nach (FLIP auf `transform`
+statt vier Layout-Eigenschaften) — damit ist **L204 geschlossen**.
+
+**Scrubbing wurde NICHT gebaut**, aus Redurs eigenem Vorbehalt: ein
+Reiterwechsel kostet unter Last 0,8 bis 1,5 Sekunden Bildschirmaufbau.
+
+**Geprüft.** `test541` neu (23 Zusagen, Gegenprobe gegen den alten Stand rot
+gesehen: „31 % von 215px im ersten Bild") · `test539` auf die neue Linse
+nachgezogen (50/50) · `test114` §17 · `test435`, `test105`, `test109`,
+`test87`, `test270`, `test332`, `test126`, `test483`.
+
+**Zwei Fehler, die erst die eigene Messung zeigte:** nach einer beendeten
+Bahn blieb der Startabstand stehen, und der nächste Wechsel begann am
+vorletzten Ort (im Film gesehen, jeder Wechsel startete bei x = 51) ·
+`handyLeiste()` läuft je Tipp ZWEIMAL, der zweite Ruf startete die laufende
+Feder neu und nahm ihr die Dehnung (1,000 statt 1,175).
+
+---
+
+## 20. September 2026 · E644 · Die zuletzt gelesene PDF-Seite überlebt eine Fenstergrösse
+
+**Der Fund.** `test424` war rot — allein, im Stapel, auf dem Zweig und auf
+`main`. Ein Haken auf `Store.setMeta` zeigte genau einen Schreibvorgang und
+seinen Weg: `seiteMerken ⟵ nachziehen ⟵ beiGroesse`. Beim frisch geöffneten
+Dokument steht der Rollstand noch auf 0, während die gemerkte Seite erst im
+`requestAnimationFrame` angerollt wird; eine Fenstermeldung in diesem Spalt
+beantwortet die Frage mit „Seite 1" — und merkt sie. Auf dem Telefon reicht
+dafür das Drehen. Seit E349 eine gebrochene Zusage.
+
+**Gebaut.** Eine Reihenfolge statt einer Wartezeit: `standGesetzt` fällt
+erst in dem `rAF`, der die gemerkte Seite anrollt. Davor schweigt der
+Beobachter.
+
+**Geprüft.** `test540` neu — und er stellt das Rennen, statt es zu gewinnen:
+derselbe Haken, der den Fehler sichtbar machte, machte ihn beim zweiten
+Versuch unsichtbar (50/50 statt 49/50). `test424` (50/50), `test395`,
+`test202`, `test386`.
+
+---
+
+## 20. September 2026 · E642/E643 · Sechsundsiebzig tote CSS-Regeln, und ein blinder Port-Wächter
+
+**Der Fund.** Der erste volle Lauf seit PR #100 meldete 76 tote
+CSS-Erklärungen. **Dreizehn davon gab es gar nicht:** `selectorText.split(',')`
+zerriss die Kommas in `:is()`, `:where()`, `:not()` und `:has()` und erfand
+Wähler wie `#menueband)`, die nie ein Element treffen — der Lauf verglich
+sie mit den echten Regeln und meldete **die echten** als tot.
+
+**Gebaut.** Klammertiefe statt blindem Trennen. Die übrigen 63 waren echt,
+in zwei Sorten: überflüssige Zeilen (`#ai`, `.schalter i`, `#handy-oben`,
+`#reiterleiste`, `.document-*`, sieben Rasterzeilen in `premium.css`,
+`#kanten-lade`) und **eine Absicht, die nie wirkte** — `motion.css` hatte
+die Übergangsliste von `.els-kachel` ersetzt und dabei `background`
+verloren; zehn Tage lang wechselte die Kachel ihre Fläche hart statt weich.
+Die letzten 35 sind die Bibliothek, seit PR #56 zweimal gestaltet (§8).
+
+**Und dabei kam heraus, dass `test400` blind war:** er las `PORT = N` und
+kannte `listen(9624, …)` nicht. Acht Läufe schreiben so, **sieben Ports
+waren doppelt vergeben**, während der Wächter grün meldete — genau die Sorte
+Fehlalarm, die den Sweep vom 19. September verfälscht hat.
+
+**Geprüft.** `test332` (76 → 0), `test400` (4/4 mit zwei Gegenproben), die
+vierzehn betroffenen Läufe einzeln, `test105`, `test109`, `test87` und 26
+Nachbarläufe. Bild-Gegenprobe der Bibliothek: kein Pixel Unterschied.
+
+---
+
+## 20. September 2026 · E645 · Ein Wächter zählte das ganze Haus
+
+**Der Fund.** `test435` §3 zählte ALLE SVG-Filter der Seite und verlangte
+zwei. Das war zufällig wahr — bis die Linse der unteren Leiste (E639) zwei
+eigene mitbrachte. Der Lauf bestrafte also eine neue Funktion dafür, dass
+sie dasselbe Element benutzt.
+
+**Gebaut.** Gezählt wird im Halter der Textur. Daneben steht jetzt die
+Frage, um die es E440 wirklich ging: teilen sich zwei Filter eine Kennung?
+Diese Zahl wächst nicht mit dem Programm mit.
+
+**Geprüft.** `test435` (45/45), beide Gegenproben rot gesehen.
+
+---
+
 ## 19. September 2026 · E628 · Die Gedankenkarte bekommt Griffe, Verbindungen, Formen und Vorlagen
 
 **Redurs Bestellung, vier Punkte:** Taster oben/links/rechts/unten, die eine

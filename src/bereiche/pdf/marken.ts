@@ -6629,9 +6629,6 @@ const Marken = (() => {
       const flug = document.createElement('i');
       flug.className = 'bw-flug';
       flug.setAttribute('aria-hidden', 'true');
-      flug.style.cssText =
-        'left:' + von.left + 'px;top:' + von.top + 'px;' +
-        'width:' + von.width + 'px;height:' + von.height + 'px;';
       document.body.append(flug);
       flugJetzt = flug;
       /* Wer vorher wartete, wartet nicht mehr: sonst bliebe ein
@@ -6644,19 +6641,39 @@ const Marken = (() => {
         if (flugJetzt === flug) flugJetzt = null;
         neu.classList.remove('bw-wartet');
       };
-      /* Zwei Bilder warten, sonst gilt der Startwert als nie gemalt und es
-         gibt keinen Übergang — dieselbe Falle wie bei `#ho-pille` (E639). */
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        flug.style.left = nach.left + 'px';
-        flug.style.top = nach.top + 'px';
-        flug.style.width = nach.width + 'px';
-        flug.style.height = nach.height + 'px';
-      }));
-      flug.addEventListener('transitionend', fertig, { once: true });
-      /* EIN NETZ. Ein Übergang, der nie beginnt (Fenster im Hintergrund,
-         Bewegung aus), meldet auch kein Ende — dann bliebe der neue Knopf
-         für immer ohne Grund. */
-      setTimeout(fertig, 700);
+
+      /* ══ DIE BAHN KOMMT AUS `SelectionFlow` (E647) ══════════════════════
+       * Hier stand ein Übergang auf `left`, `top`, `width` und `height` —
+       * VIER Layout-Eigenschaften. Genau daran ist die untere Leiste
+       * gescheitert (E646): eine Bewegung, die Layout animiert, bleibt auf
+       * dem Hauptfaden und kommt nicht voran, während dort gearbeitet wird.
+       * Und hier wird gearbeitet: man wechselt das Werkzeug MITTEN IM
+       * Zeichnen auf einem PDF.
+       *
+       * `fliege` rechnet dieselbe Feder auf `transform` um (FLIP: das
+       * Element bekommt die Masse des Ziels und wird dorthin
+       * zurückgeschoben, wo es herkommt). Damit darf die Bewegung auf den
+       * Compositor.
+       *
+       * Die zwei Bilder Wartezeit, die hier standen, braucht es nicht mehr:
+       * eine Keyframe-Bahn hat ihren Startwert IN sich und nicht im zuvor
+       * gemalten Zustand — die Falle aus E639 gibt es bei ihr nicht. */
+      const bahn = typeof SelectionFlow === 'undefined'
+        ? null : SelectionFlow.fliege(flug, von, nach);
+
+      if (!bahn) {
+        /* Ohne das Modul fliegt nichts — der Zustand stimmt trotzdem, weil
+           er am Knopf hängt und nicht am Flug (§38). */
+        fertig();
+        return;
+      }
+      bahn.finished.then(fertig).catch(() => { /* abgebrochen */ });
+      /* EIN NETZ. Eine Bewegung, die nie beginnt (Fenster im Hintergrund),
+         meldet auch kein Ende — dann bliebe der neue Knopf für immer ohne
+         Grund. Die Zahl hängt an der Federdauer statt an einer geratenen
+         700: eine Uhr neben einer Animation soll wenigstens wissen, wie
+         lang diese ist. */
+      setTimeout(fertig, SelectionFlow.DAUER + 250);
     };
     try {
       new MutationObserver(wahlFliegen).observe(tools, {

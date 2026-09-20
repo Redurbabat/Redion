@@ -4523,10 +4523,13 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .bw-flug{
   position:fixed; z-index:600; pointer-events:none;
   border-radius:6px; background:var(--accent);
-  transition:left var(--motion-normal) var(--ease-standard),
-             top var(--motion-normal) var(--ease-standard),
-             width var(--motion-normal) var(--ease-standard),
-             height var(--motion-normal) var(--ease-standard);
+  /* ══ DIE BEWEGUNG STEHT NICHT MEHR HIER (E647) ══════════════════════
+     Hier standen vier Übergänge: `left`, `top`, `width`, `height`. Alle
+     vier sind Layout, und eine Bewegung, die Layout animiert, bleibt auf
+     dem Hauptfaden — bei der unteren Leiste hat das dazu geführt, dass sie
+     auf dem Telefon gar nicht mehr wanderte (E646). Hier ist es genauso
+     absehbar: das Werkzeug wechselt man mitten im Zeichnen.
+     Die Bahn rechnet jetzt `SelectionFlow.fliege()` auf `transform` um. */
 }
 /* OHNE BEWEGUNG FLIEGT NICHTS. Der Zustand ist trotzdem sofort richtig —
    er hängt am Knopf und nicht am Flug. Genau das ist der Grund, warum der

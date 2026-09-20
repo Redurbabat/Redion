@@ -1814,6 +1814,17 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 **Besserer Prompt:** 
 
 
+**7 · ca. 09:00**
+
+> Ja passt so, mach weiter
+
+**Gemeint:** Freigabe für das Entfernen der toten CSS-Erklärungen (§43 verlangt die Rückfrage) und Auftrag weiterzuarbeiten.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -1827,12 +1838,14 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 | E643 — Der Wächter gegen Port-Kollisionen kannte nur eine Schreibweise | `(02:35)` → `(03:05)` | 02:35 – 03:05 | ca. 30 min | test400 (4/4, zwei Gegenproben) · die vierzehn betroffenen Läufe |
 | E644 — Erst wiederherstellen, dann beobachten (die gemerkte PDF-Seite) | `(03:05)` → `(03:30)` | 03:05 – 03:30 | ca. 25 min | test540 neu (9/9, Gegenprobe rot gesehen) · test424 (50/50) · test395, test202, test386 |
 | E645 — Ein Wächter zählte das ganze Haus, gemeint war ein Zimmer | `(03:30)` → `(08:10)` | 03:30 – 08:10 | ca. 15 min Arbeit, dann Pause | test435 (45/45, zwei Gegenproben rot gesehen) |
-| E646 — Die Fläche wandert auch dann, wenn der Hauptfaden arbeitet | `(08:15)` → `(offen)` | 08:15 – | laufend | test541 neu (23/23, Gegenprobe rot gesehen) · test539 · test114 §17 · test435 · test105, test109, test87, test270, test332, test126, test483 |
+| E646 — Die Fläche wandert auch dann, wenn der Hauptfaden arbeitet | `(08:15)` → `(09:05)` | 08:15 – 09:05 | ca. 50 min | test541 neu (23/23, Gegenprobe rot gesehen) · test539 · test114 §17 · test435 · test105, test109, test87, test270, test332, test126, test483 |
+| E647 — Dieselbe Feder für die Werkzeugleiste, L204 geschlossen | `(09:05)` → `(offen)` | 09:05 – | laufend | steht aus — im Hauptbaum wird nicht geprüft, solange der volle Lauf fährt (§30) |
+| Der zweite volle Lauf über alle 483, in Stücken, im Arbeitsbaum | `08:53` → `(läuft)` | 08:53 – | laufend | alle 483, zehn je Stück, wiederaufnehmbar — diesmal ohne zweiten Lauf daneben |
 
 #### Zahlen des Tages
 
 - **commits:** 2
-- **entscheidungen:** 8
+- **entscheidungen:** 9
 - **neue Prüfläufe:** 3
 - **volle Läufe:** 0
 
