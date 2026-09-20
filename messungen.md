@@ -3577,3 +3577,49 @@ der Geste, nicht dem Zielen (§50, §55.2).
 
 `bilder/kiBlatt-handy-dunkel.png` — der Strich oben, das Kreuz rechts im
 Kopf, 390 px breit (§55.3).
+
+---
+
+## 20. September 2026 — Was die KI darf, und was sie nie darf (E654, `test546`)
+
+Der Katalog der Agentenwerkzeuge, vorher und nachher:
+
+```txt
+                       vorher                       nachher
+Werkzeuge              12                           13
+Rechte                 lesen · bearbeiten           lesen · bearbeiten · loeschen
+mit Recht "loeschen"   []                           ["seiteLoeschen"]
+```
+
+Das Tor, sechs Fälle, jeder gefahren statt behauptet:
+
+```txt
+Nein gesagt                    Seite lebt · 1 Dialog
+Ja gesagt                      alive=false, Block noch da (Papierkorb) · 1 Dialog
+Knöpfe im Dialog               ["nein","ja"] — kein "für diesen Lauf"
+fragenModus = "nie"            fragt trotzdem · 1 Dialog
+zwei Löschungen                2 Dialoge
+unbeaufsichtigt + darfAllein   0 Dialoge, 0 Löschungen
+```
+
+### Die Gegenprobe
+
+Das Tor im gebauten `agenten.js` abgehängt (`if (false)`), Lauf wiederholt.
+Was dann dastand, ist genau der Satz, den Redur verhindert haben wollte:
+
+```txt
+    Dialoge: 0 · Seite lebt: false
+    Ergebnis: Seite „Weg damit" liegt im Papierkorb.
+  ✗ Vor dem Löschen wird überhaupt gefragt — kein Dialog
+  ✗ Nach einem Nein lebt die Seite weiter — die Seite ist weg, obwohl abgelehnt wurde
+```
+
+Abschnitt 6 blieb dabei grün — der Filter, der unbeaufsichtigten Läufen
+Löschwerkzeuge gar nicht erst anbietet, greift unabhängig vom Tor. Zwei
+Sperren für denselben Fall, und die Gegenprobe zeigt, dass es wirklich zwei
+sind.
+
+### Bild
+
+`bilder/kiLoeschTor-rechner-hell.png` — die Seite beim Namen, 3 Blöcke
+darunter, zwei Knöpfe, und der Fokus liegt auf „Nicht löschen" (§55.3).

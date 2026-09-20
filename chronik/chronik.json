@@ -2354,6 +2354,13 @@
           "gemeint": "Meine offenen Zweige auf seinen Stand heben und alles zusammen nach main bringen.",
           "kuerzer": "Passt so.",
           "besserer Prompt": "Nichts zu verbessern. Wichtig war, dass ich VOR dem Push die Wächter laufen lasse — und genau die haben dann gefunden, dass sein eigener #109 gar nicht griff."
+        },
+        {
+          "zeit": "ca. 17:10",
+          "wortlaut": "weiter die ai teil darf mehr machen z.B lernkarten erstellen pdf elssen, tabelas usw alles machen kann ausser ohne meine bestetigung etwas löschen",
+          "gemeint": "Die KI soll mehr Werkzeuge bekommen — und genau eine Grenze, die hält: nichts wird gelöscht, ohne dass Redur zugestimmt hat.",
+          "kuerzer": "„KI darf alles ausser löschen ohne meine Bestätigung.\"",
+          "besserer prompt": "Wie oben, plus die Reihenfolge: erst die Grenze bauen, dann die neuen Werkzeuge."
         }
       ],
       "arbeit": [
@@ -2468,12 +2475,20 @@
           "zeitraum": "ca. 16:30 –",
           "dauer": "laufend",
           "pruefungen": "test545 (12/12, dreimal rot gesehen), test544, test87, test105, test109"
+        },
+        {
+          "was": "E654 — Die KI darf löschen, aber nie ohne ein ausdrückliches Ja",
+          "vonCommit": "(offen)",
+          "bisCommit": "(offen)",
+          "zeitraum": "ca. 17:15 –",
+          "dauer": "laufend",
+          "pruefungen": "test546 (13/13, Gegenprobe gefahren), test291, test281, test286, test301, test87, test105, test109"
         }
       ],
       "zahlen": {
         "commits": 2,
-        "entscheidungen": 11,
-        "neue Prüfläufe": 4,
+        "entscheidungen": 12,
+        "neue Prüfläufe": 5,
         "volle Läufe": 0
       },
       "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -3663,6 +3678,18 @@
       "ursache": "Zwei Messfehler im Wächter, keiner im Produkt.",
       "beweis": "Nach der Korrektur: „→ ai-zu · 44×44 px\" und „Der Zug landet wirklich auf dem Kopf des Blattes\" — und die Gegenprobe wird nur an der Geste rot.",
       "lehre": "Vierter und fünfter Fall derselben Sorte an zwei Tagen, nach `test542`, `test543` und `test544`. Die Lehre steht jetzt in beide Richtungen: ein roter Lauf ist noch kein Beweis, und ein grüner erst recht nicht. Ein Wächter, der eine Stelle anfasst, prüft zuerst, WER dort liegt."
+    },
+    {
+      "nr": "P85",
+      "datum": "2026-09-20",
+      "titel": "Eine Regel, die nur galt, weil es die Handlung nicht gab",
+      "schwere": "mittel",
+      "symptom": "„Die KI löscht nichts ohne Bestätigung\" war wahr — aber nur, weil kein Werkzeug löschen konnte. Die Rechte des Agentenkatalogs waren `lesen` und `bearbeiten`, mehr nicht.",
+      "falscheVermutung": "Dass das vorhandene Tor für `bearbeiten` (E295 ff.) auch fürs Löschen reicht. Es reicht an drei Stellen nicht: `fragenModus()` kennt „nie\", es gibt „für diesen Lauf erlauben\", und `darfAllein` lässt unbeaufsichtigt schreiben.",
+      "wieGefunden": "Redurs Auftrag gelesen, dann den Katalog gezählt statt erinnert: 12 Werkzeuge, 2 Rechte, 0 Löschwerkzeuge.",
+      "ursache": "Eine Fähigkeit, die es nie gab, braucht keine Grenze — bis jemand sie baut. Dann fehlt die Grenze genau in dem Bogen, in dem am wenigsten Zeit dafür ist.",
+      "beweis": "`test546` gegen den alten Stand: 6/13, darunter „kein Werkzeug mit Recht loeschen\". Nach dem Bau 13/13, und die Gegenprobe mit abgehängtem Tor druckt „Seite ‚Weg damit' liegt im Papierkorb\" bei null Dialogen nach einem Nein.",
+      "lehre": "Das Tor gehört in die Schleife, nicht ins Werkzeug. Ein Werkzeug, das selbst fragen muss, ist ein Werkzeug, bei dem das Fragen beim nächsten Mal vergessen wird — und beim Löschen merkt man es erst, wenn etwas fehlt."
     }
   ]
 }

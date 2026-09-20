@@ -98,6 +98,7 @@ sind der teuerste Teil und der lehrreichste.
 | P82 | 2026-09-20 | Das Teure war gebaut, das Billige fehlte | 🟠 mittel | — |
 | P83 | 2026-09-20 | Ein Blatt ohne Weg zurück, und ein Griff, der nichts hält | hoch | — |
 | P84 | 2026-09-20 | Zweimal rot aus dem falschen Grund — derselbe Lauf | 🟠 mittel | — |
+| P85 | 2026-09-20 | Eine Regel, die nur galt, weil es die Handlung nicht gab | 🟠 mittel | — |
 
 ---
 
@@ -1875,4 +1876,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Nach der Korrektur: „→ ai-zu · 44×44 px" und „Der Zug landet wirklich auf dem Kopf des Blattes" — und die Gegenprobe wird nur an der Geste rot.
 
 **Die Lehre.** Vierter und fünfter Fall derselben Sorte an zwei Tagen, nach `test542`, `test543` und `test544`. Die Lehre steht jetzt in beide Richtungen: ein roter Lauf ist noch kein Beweis, und ein grüner erst recht nicht. Ein Wächter, der eine Stelle anfasst, prüft zuerst, WER dort liegt.
+
+
+---
+
+## P85 · Eine Regel, die nur galt, weil es die Handlung nicht gab
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** „Die KI löscht nichts ohne Bestätigung" war wahr — aber nur, weil kein Werkzeug löschen konnte. Die Rechte des Agentenkatalogs waren `lesen` und `bearbeiten`, mehr nicht.
+
+**Die falsche Vermutung.** Dass das vorhandene Tor für `bearbeiten` (E295 ff.) auch fürs Löschen reicht. Es reicht an drei Stellen nicht: `fragenModus()` kennt „nie", es gibt „für diesen Lauf erlauben", und `darfAllein` lässt unbeaufsichtigt schreiben.
+
+**Wie es gefunden wurde.** Redurs Auftrag gelesen, dann den Katalog gezählt statt erinnert: 12 Werkzeuge, 2 Rechte, 0 Löschwerkzeuge.
+
+**Die Ursache.** Eine Fähigkeit, die es nie gab, braucht keine Grenze — bis jemand sie baut. Dann fehlt die Grenze genau in dem Bogen, in dem am wenigsten Zeit dafür ist.
+
+**Der Beweis.** `test546` gegen den alten Stand: 6/13, darunter „kein Werkzeug mit Recht loeschen". Nach dem Bau 13/13, und die Gegenprobe mit abgehängtem Tor druckt „Seite ‚Weg damit' liegt im Papierkorb" bei null Dialogen nach einem Nein.
+
+**Die Lehre.** Das Tor gehört in die Schleife, nicht ins Werkzeug. Ein Werkzeug, das selbst fragen muss, ist ein Werkzeug, bei dem das Fragen beim nächsten Mal vergessen wird — und beim Löschen merkt man es erst, wenn etwas fehlt.
 

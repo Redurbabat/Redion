@@ -392,6 +392,41 @@ const ANSICHTEN: Record<string, {
      darüber der Strich, der jetzt hält, was er zeigt. Am Rechner wäre das
      Bild sinnlos — dort klappt `#btn-ai` in der Kopfleiste auf und zu.
        node bilder.mts kiBlatt handy */
+  /* --- Das Tor vor dem Löschen (E654) -------------------------------------
+     Zu sehen ist, was Redur sieht, bevor irgendetwas verschwindet: die Seite
+     beim Namen, wie viele Blöcke daran hängen, und ZWEI Knöpfe — kein
+     „für diesen Lauf erlauben".
+       node bilder.mts kiLoeschTor rechner */
+  kiLoeschTor: {
+    titel: 'Die KI möchte löschen — und fragt (E654)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const alt2 = Store.addPage(null, { text: 'Notizen von der Messe 2024', icon: '📦' });
+      Store.addBlock(alt2.id, 'text', { text: 'Stand B14, Ansprechpartner …' });
+      Store.addBlock(alt2.id, 'bullet', { text: 'Preisliste nachfragen' });
+      Store.addBlock(alt2.id, 'bullet', { text: 'Kabeltrommel 3×2,5 mm²' });
+      App.oeffne(alt2.id);
+      /* Ein ECHTER Agentenlauf, kein nachgebauter Dialog: nur das Modell ist
+         abgehängt, damit das Bild nicht von einem Ollama abhängt. */
+      /* `KI` ist eine Konstante im Skript-Bereich, KEIN Feld an `window` —
+         `window.KI` ist undefined, und der erste Anlauf ist genau daran
+         gescheitert. Der Name selbst ist hier erreichbar. */
+      (KI as any).frageKurz = () => Promise.resolve(JSON.stringify({
+        gedanke: 'Die alte Messeseite wird nicht mehr gebraucht',
+        werkzeug: 'seiteLoeschen',
+        argument: { titel: 'Notizen von der Messe 2024' } }));
+      Store.setMeta('agent:eigene', [{ id: 'bild-loesch', name: 'Persönlicher Assistent',
+        guthaben: 3, werkzeuge: ['seiteLoeschen', 'fertig'], anweisung: '',
+        wissen: [], ausloeser: {} }]);
+      /* NICHT abwarten — der Dialog steht, bis jemand drückt. Genau das
+         soll auf dem Bild sein. */
+      void Agent.laufen('bild-loesch', 'Räum die alten Messenotizen weg');
+      await new Promise(f => setTimeout(f, 700));
+    }
+  },
+
   kiBlatt: {
     titel: 'KI am Telefon — der Weg zurück (E653)',
     bauen: async () => {

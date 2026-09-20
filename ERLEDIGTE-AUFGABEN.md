@@ -1,5 +1,41 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E654 · Die KI darf löschen — und fragt jedes Mal
+
+**Redurs Auftrag.** „die ai teil darf mehr machen z.B lernkarten erstellen
+pdf elssen, tabelas usw alles machen kann ausser ohne meine bestetigung
+etwas löschen." Zwei Sätze in einem; der zweite ist der, der den ersten
+erst erlaubt.
+
+**Der Fund.** Der Agentenkatalog kannte zwölf Werkzeuge und zwei Rechte —
+`lesen` und `bearbeiten`. Kein Löschwerkzeug. Die Regel galt also nur,
+weil es die Handlung nicht gab, und das ist keine Sicherheit, sondern eine
+Lücke im Können. Das vorhandene Tor für `bearbeiten` wäre für Löschen an
+drei Stellen zu weich: `fragenModus() === "nie"`, „für diesen Lauf
+erlauben", und `darfAllein` im unbeaufsichtigten Lauf.
+
+**Gebaut.** Eine eigene Rechteklasse `loeschen` mit einem Tor in der
+SCHLEIFE — nicht im Werkzeug, damit es für jedes künftige Löschwerkzeug
+gilt, ohne dass jemand daran denken muss. Keine der drei Weichheiten greift
+dort. Das erste Werkzeug der Klasse ist `seiteLoeschen`: es ruft
+`Store.trashBlock`, legt also in den Papierkorb und vernichtet nichts
+(§43). Unbeaufsichtigt werden Löschwerkzeuge zusätzlich gar nicht erst
+angeboten — zwei Sperren für denselben Fall.
+
+**Geprüft.** `test546` neu, dreizehn Messungen. Gegenprobe mit abgehängtem
+Tor: der Lauf druckt die Zeile, um die es geht — „Seite ‚Weg damit' liegt
+im Papierkorb", bei null Dialogen, nachdem der Mensch Nein gesagt hatte.
+`test291`, `test281`, `test286`, `test301`, `test87`, `test105`, `test109`
+grün, `typecheck` sauber, Einzeldatei neu gebaut.
+
+**Bild.** `bilder/kiLoeschTor-rechner-hell.png` — echter Agentenlauf, nur
+das Modell abgehängt; der Fokus liegt auf „Nicht löschen" (§55.3).
+
+**Offen und als nächstes.** Redurs erster Satz: Lernkarten, PDF-Lesen,
+Tabellen. Dieser Bogen baut die Grenze, die sie sicher macht (§46).
+
+---
+
 ## 20. September 2026 · E653 · Das KI-Blatt am Telefon hatte keinen Weg zurück
 
 **Der Fund.** Am Telefon ist `#ai` ein Blatt, das von unten kommt — und wer

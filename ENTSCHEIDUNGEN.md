@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-631 Entscheidungen, E1 bis E653 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+632 Entscheidungen, E1 bis E654 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -696,6 +696,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E651** — Ein Schalter, der Sicherheit verspricht und nicht gelesen wird: das Datenbankmenü sagte „Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und schreiben", aber `coll.verbindungen` wurde nur geschrieben. Schlimmer noch die Anzeige — bei einer nie angefassten Datenbank stand bei JEDEM Dienst „aus", während der Spiegel lief. Jetzt beantwortet `Spiegel.darf` die Frage an einer Stelle, für Anzeige UND Sperre; gesperrt wird vor dem Netzruf, also auch das Lesen. `undefined` heisst erlaubt (Bestandsschutz), `[]` heisst gesperrt. Wächter `test543`.
 * **E652** — Das Teure war gebaut, das Billige fehlte: die ganze Abbruchkette des KI-Chats stand (`frage(…, {signal})`, abbrechbares `schlafen`, `signal` bis in `fetch`), nur `senden` reichte das dritte Argument nicht durch — und es gab keinen Knopf. Jetzt wird der Senden-Knopf für die Dauer des Laufs zum Stopp-Knopf (derselbe Knopf, §37; `aria-label` wechselt mit, §38), ein Abbruch behält die Teilantwort und sagt „Abgebrochen" statt „AbortError". Dazu der tote Menüpunkt „Meine Quellen", der ein HTML-Element an eine Funktion gab, die eine Liste erwartet. Wächter `test544`.
 * **E653** — Ein Griff, der nichts hält, und ein Blatt ohne Weg zurück: am Telefon ist `#ai` ein Blatt von unten, `#btn-ai` steht dort auf `display:none` (bausteine.css:300, :2119), `.ai-head` trug kein Kreuz, und Strg+J gibt es an einem Telefon nicht — einmal geöffnet, war das KI-Feld eine Sackgasse über der unteren Leiste (88vh, z-index 920 gegen 401). Dazu zeichnete `#ai::before` einen Wischgriff, dessen eigener Kommentar sagt, was er verspricht — gewischt werden konnte nichts (§47). Jetzt: ein Schliess-Knopf `#ai-zu` (44 px, `aria-label`) für BEIDE Bildschirme, und der Griff zieht wirklich (90 px Schwelle, darunter federt es zurück; nur unter 760 px, nur am Kopf, nicht auf den Knöpfen). Wächter `test545`.
+* **E654** — Die KI darf löschen, aber nie ohne ein ausdrückliches Ja: Redurs Satz „alles machen kann ausser ohne meine bestetigung etwas löschen" ist eine eigene Rechteklasse, keine strengere Stufe von `bearbeiten`. Vorher kannte der Agentenkatalog zwei Rechte (`lesen`, `bearbeiten`) und kein Löschwerkzeug — die Regel war nur Abwesenheit. Jetzt: `seiteLoeschen` mit `recht: "loeschen"`, und ein Tor in der SCHLEIFE (nicht im Werkzeug), das für jedes künftige Löschwerkzeug gilt. Drei Dinge, die beim Bearbeiten richtig sind, gelten dort nicht: `fragenModus() === "nie"`, „für diesen Lauf erlauben" und `darfAllein` unbeaufsichtigt. Gelöscht wird in den Papierkorb, nie endgültig (§43). Wächter `test546`.
 
 ---
 
@@ -53644,3 +53645,75 @@ gebaut war. Er prüft jetzt mit `elementFromPoint`, wer unter dem Finger
 liegt, und sagt es, wenn es nicht das Blatt ist. Das ist derselbe Fund wie
 an den vier Tagen davor, nur von der anderen Seite: ein roter Lauf ist noch
 kein Beweis.
+
+
+## E654 — Die KI darf löschen, aber nie ohne ein ausdrückliches Ja
+
+**Was wurde entschieden?** Löschen wird eine eigene Rechteklasse im
+Agentenkatalog (`recht: 'loeschen'`), mit einem eigenen Tor in der
+Ausführungsschleife — nicht im einzelnen Werkzeug. Das erste Werkzeug
+dieser Klasse ist `seiteLoeschen`; es legt in den Papierkorb und vernichtet
+nichts.
+
+**Warum?** Redur am 20. September 2026:
+
+> „die ai teil darf mehr machen z.B lernkarten erstellen pdf elssen,
+> tabelas usw alles machen kann ausser ohne meine bestetigung etwas
+> löschen"
+
+Zwei Sätze in einem, und der zweite ist der, der den ersten erst erlaubt:
+eine KI, die MEHR darf, braucht genau eine Grenze, die hält.
+
+**Der Stand vorher, gemessen.** Zwölf Werkzeuge, zwei Rechte:
+
+```txt
+Rechte im Katalog      ["lesen","bearbeiten"]
+mit Recht "loeschen"   []
+```
+
+Die KI konnte also gar nicht löschen. Das ist keine Sicherheit, sondern
+eine Lücke im Können — und eine Regel, die nur gilt, weil es die Handlung
+nicht gibt, hält beim ersten neuen Werkzeug nicht mehr.
+
+**Warum nicht einfach `bearbeiten` mit einer Warnung?** Weil das vorhandene
+Tor für `bearbeiten` (E295 ff.) an drei Stellen weicher ist, als Redurs
+Satz erlaubt — jede einzeln in `test546` gemessen:
+
+```txt
+fragenModus() === 'nie'        gar keine Frage
+„Für diesen Lauf erlauben"     ein Ja gilt für alle weiteren Schritte
+darfAllein + unbeaufsichtigt   Schreiben, während niemand zusieht
+```
+
+Jede dieser drei ist beim Bearbeiten richtig: wer einen Agenten dreissig
+Zeilen schreiben lässt, will nicht dreissigmal gefragt werden. Beim
+Löschen ist jede davon falsch. „Ohne meine Bestätigung" kennt kein
+„einmal reicht".
+
+**Warum das Tor in der Schleife und nicht im Werkzeug?** Ein Werkzeug, das
+selbst fragen muss, ist ein Werkzeug, bei dem das Fragen beim nächsten Mal
+vergessen wird. In der Schleife gilt die Grenze für jedes künftige
+Löschwerkzeug, ohne dass jemand daran denken muss — und `test546` § 7 misst
+zusätzlich, dass kein Werkzeug ausserhalb der Klasse `alive` anfasst.
+
+**Doppelt gesichert beim unbeaufsichtigten Lauf.** Löschwerkzeuge werden
+dort gar nicht erst angeboten (das Modell plant nicht gegen eine Wand), und
+das Tor lehnt denselben Fall noch einmal ab. Bei einer Grenze, hinter der
+Daten liegen, ist die zweite Sperre keine Redundanz.
+
+**Was war die Alternative?** Ein „Immer erlauben"-Haken in den
+Einstellungen. Genau den gibt es absichtlich nicht: er wäre einmal
+angeklickt und danach nie wieder gesehen, und Redurs Satz sagt das
+Gegenteil.
+
+**Was kostet es?** Bei zwei Löschungen zwei Fragen. Das ist der Preis, und
+er ist der Sinn: was hier verloren geht, holt niemand zurück (§51).
+
+**Der Wächter.** `test546`, dreizehn Messungen. Die Gegenprobe ist die, auf
+die es ankommt: mit abgehängtem Tor druckt der Lauf die Zeile, die Redur
+verhindert haben will — *„Seite ‚Weg damit' liegt im Papierkorb"*, bei
+**null** Dialogen, nachdem der Mensch Nein gesagt hatte.
+
+**Was dieser Eintrag NICHT einlöst.** Redurs erster Satz nennt Lernkarten,
+PDF-Lesen und Tabellen. Die sind der nächste Bogen; dieser hier baut die
+Grenze, die sie sicher macht — §46: Daten zuerst, Funktionen danach.

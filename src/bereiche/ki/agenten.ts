@@ -148,6 +148,13 @@ const Agent = (() => {
    * lesen kann. Was ein Agent nicht darf, steht ihm gar nicht erst zur
    * Verfügung — die Rechte werden hier gefiltert, nicht im Text erbeten.
    * ======================================================================*/
+  /** Eine lebende Seite zum Titel — dieselbe Suche wie in `seiteLesen`,
+   *  einmal benannt statt zweimal geschrieben (§8). */
+  const seiteNachTitel = (titel: unknown): any =>
+    Object.values<any>(Store.cache.blocks).find(b =>
+      b.alive && b.type === 'page' && b.parentTable !== 'collection' &&
+      (b.text || '').toLowerCase().includes(String(titel ?? '').toLowerCase()));
+
   const WERKZEUGE: Record<string, any> = {
 
     suchen: {
@@ -198,6 +205,59 @@ const Agent = (() => {
         App.zeichneBaum();
         return 'Seite „' + (a.titel || 'Neue Seite') + '" angelegt mit ' +
                (a.bloecke || []).length + ' Blöcken.';
+      }
+    },
+
+    /* ── DAS EINZIGE WERKZEUG, DAS ETWAS WEGNIMMT (E654) ──────────────────
+       Redur am 20. September 2026: „die ai teil darf mehr machen … alles
+       machen kann ausser ohne meine bestetigung etwas löschen."
+
+       Beide Hälften stehen hier. Die KI DARF löschen — vorher konnte sie es
+       gar nicht, und eine Regel, die nur gilt, weil es die Handlung nicht
+       gibt, ist keine Regel, sondern eine Lücke im Können.
+
+       DAS TOR SITZT NICHT IN DIESER FUNKTION, sondern in der Schleife
+       (`recht === 'loeschen'`, weiter unten). Ein Werkzeug, das selbst
+       fragen müsste, ist ein Werkzeug, bei dem das Fragen beim nächsten Mal
+       vergessen wird. So gilt die Grenze für JEDES künftige Löschwerkzeug,
+       ohne dass jemand daran denken muss.
+
+       UND ES LÖSCHT NICHT — es legt in den Papierkorb. `Store.trashBlock`
+       setzt `alive:false` und `trashedAt`; wiederherstellbar, wie jede
+       Löschung in Redion. §43 („nichts löschen ohne Rückfrage") und §51
+       gelten für die KI wie für jede Hand: ein Ja ist die Erlaubnis zum
+       Wegräumen, nicht zum Vernichten. */
+    seiteLoeschen: {
+      recht: 'loeschen',
+      beschreibung: 'Legt eine Seite in den Papierkorb. Sie bleibt wiederherstellbar. ' +
+        'Der Mensch wird vorher jedes Mal gefragt. Argument: {"titel":"Name der Seite"}',
+      /* Was im Tor stehen soll, bevor jemand Ja sagt. Kein Text aus dem
+         Modell — was gelöscht wird, sagt der Bestand, nicht die KI. */
+      vorschau: (a: any) => {
+        const p2 = seiteNachTitel(a && a.titel);
+        if (!p2) return { text: 'Keine Seite gefunden, die „' + (a && a.titel) + '" heisst.',
+                          objekte: 0 };
+        const tief = (id: string, t: number): number => t > 3 ? 0 :
+          Store.childrenOf(id).filter((k: any) => k.alive)
+            .reduce((n: number, k: any) => n + 1 + tief(k.id, t + 1), 0);
+        const kinder = tief(p2.id, 0);
+        return { text: 'Seite „' + (p2.text || 'Ohne Titel') + '" mit ' + kinder +
+                       ' Blöcken darunter kommt in den Papierkorb.',
+                 objekte: kinder + 1, id: p2.id };
+      },
+      lauf: async (a: any, protokoll: any) => {
+        const p2 = seiteNachTitel(a && a.titel);
+        if (!p2) return 'Keine Seite gefunden, die „' + (a && a.titel) + '" heisst. Nichts gelöscht.';
+        if (!Konten.darf('loeschen', p2.id))
+          return 'Diese Seite darfst du nicht löschen.';
+        const name = p2.text || 'Ohne Titel';
+        Store.trashBlock(p2.id);
+        /* Damit „Zurücknehmen" den Schritt findet — dieselbe Liste, die auch
+           angelegte Seiten führt. */
+        if (protokoll && protokoll.ids) protokoll.ids.push(p2.id);
+        App.zeichneBaum();
+        return 'Seite „' + name + '" liegt im Papierkorb. ' +
+               'Sie ist dort wiederherstellbar — endgültig gelöscht ist nichts.';
       }
     },
 
@@ -476,10 +536,13 @@ const Agent = (() => {
     { id: 'assistent', icon: '🧭', name: 'Persönlicher Assistent',
       text: 'Sucht im Arbeitsbereich, fasst zusammen, legt Seiten und Einträge an.',
       werkzeuge: ['suchen','seiteLesen','seiteAnlegen','zeileAnlegen','datenbankLesen',
-                  'kalenderLesen','mailLesen','fertig'],
+                  'kalenderLesen','mailLesen','seiteLoeschen','fertig'],
       anweisung: 'Du bist ein persönlicher Assistent. Arbeite ruhig und knapp. ' +
         'Suche zuerst im Arbeitsbereich, bevor du etwas behauptest. ' +
-        'Wenn du etwas anlegst, sag genau, was du angelegt hast.' },
+        'Wenn du etwas anlegst, sag genau, was du angelegt hast. ' +
+        'Löschen darfst du nur, wenn der Mensch es verlangt — und er wird ' +
+        'vor jeder einzelnen Löschung gefragt. Sagt er nein, arbeite ohne ' +
+        'diesen Schritt weiter.' },
 
     { id: 'recherche', icon: '🔍', name: 'Rechercheur',
       text: 'Sammelt aus mehreren Quellen, vergleicht und schreibt mit Quellenangabe.',
@@ -856,6 +919,19 @@ const Agent = (() => {
       gesperrt = gesperrt.concat(nutzbar.filter((n: any) => !nurLesen.includes(n)));
       nutzbar = nurLesen;
     }
+    /* UND LÖSCHEN GEHT OHNE ZUSCHAUER NIE (E654) — auch nicht mit
+       `darfAllein`. Die Erlaubnis, allein zu arbeiten, ist die Erlaubnis zu
+       schreiben, nicht die, etwas wegzunehmen: ein Ja kann nur geben, wer
+       da ist. Das Tor in der Schleife lehnt denselben Fall noch einmal ab —
+       hier wird das Werkzeug gar nicht erst angeboten, damit das Modell
+       nicht gegen eine Wand plant. */
+    if (ohneAufsicht) {
+      const loeschend = nutzbar.filter((n: any) => WERKZEUGE[n].recht === 'loeschen');
+      if (loeschend.length) {
+        gesperrt = gesperrt.concat(loeschend);
+        nutzbar = nutzbar.filter((n: any) => !loeschend.includes(n));
+      }
+    }
 
     const wissen = (a.wissen || []).map((wissensId: any) => {
       const p = Store.getBlock(wissensId);
@@ -929,7 +1005,64 @@ const Agent = (() => {
           hatFehler = true;
         } else {
           let darfAusfuehren = true;
-          if (wz.recht === 'bearbeiten') {
+
+          /* ══ DAS TOR VOR DEM LÖSCHEN (E654) ═══════════════════════════════
+           * Redurs Satz vom 20. September ist eine eigene Klasse, nicht eine
+           * strengere Stufe von `bearbeiten`: „alles machen kann ausser ohne
+           * meine bestetigung etwas löschen".
+           *
+           * Deshalb steht dieser Zweig VOR dem Bearbeiten-Zweig und teilt
+           * sich keine Zeile mit ihm. Drei Dinge, die dort richtig sind,
+           * wären hier falsch — jedes einzeln gemessen in `test546`:
+           *
+           *   `fragenModus() === 'nie'`   hiesse: nie fragen.  Gilt hier nicht.
+           *   „Für diesen Lauf erlauben"  hiesse: einmal reicht. Gibt es hier nicht.
+           *   `darfAllein` unbeaufsichtigt hiesse: löschen, während niemand
+           *                               zusieht. Wird hier abgelehnt.
+           *
+           * Ein Ja gilt für GENAU DIESEN Schritt. Zwei Löschungen sind zwei
+           * Fragen, und das ist keine Unbequemlichkeit, sondern der ganze
+           * Sinn: was hier verloren geht, holt niemand zurück (§51).
+           * ===============================================================*/
+          if (wz.recht === 'loeschen') {
+            const v = typeof wz.vorschau === 'function'
+              ? wz.vorschau(plan.argument || {})
+              : { text: 'Etwas wird entfernt.', objekte: 1 };
+            schritt.wirkung = { text: v.text, objekte: v.objekte || 1, bytes: 0, gross: false };
+
+            if (ohneAufsicht) {
+              /* NIEMAND KANN JA SAGEN, ALSO IST DIE ANTWORT NEIN. Einen
+                 Dialog zu öffnen, den keiner sieht, wäre schlimmer: der Lauf
+                 stünde bis zum Abbruch, und der nächste Bogen baute ihm eine
+                 Abkürzung. */
+              schritt.ergebnis = 'Nicht gelöscht: ' + v.text + ' Löschen braucht eine ' +
+                'ausdrückliche Bestätigung, und dieser Lauf hat keinen Zuschauer. ' +
+                'Schreib es als Vorschlag in deine Antwort.';
+              schritt.fehler = true;
+              hatFehler = true;
+              darfAusfuehren = false;
+            } else {
+              const antwortLoeschen = await mitAbbruch(Dialog.wahl({
+                titel: '🗑 ' + a.name + ' möchte etwas löschen',
+                text: v.text + '\n\n' +
+                      'Werkzeug: ' + plan.werkzeug + '\n' +
+                      (plan.gedanke ? 'Vorhaben: ' + plan.gedanke + '\n' : '') +
+                      'Betroffene Objekte: ' + (v.objekte || 1) + '\n' +
+                      'Argumente: ' + JSON.stringify(plan.argument || {}).slice(0, 400),
+                knoepfe: [
+                  { id: 'nein', text: 'Nicht löschen',
+                    hinweis: 'Der Agent bekommt eine Absage und arbeitet ohne diesen Schritt weiter.' },
+                  { id: 'ja', text: 'In den Papierkorb legen',
+                    hinweis: 'Nur diese eine Handlung. Wiederherstellbar über den Papierkorb.' }
+                ]
+              }), lauf.controller.signal);
+              if (antwortLoeschen !== 'ja') {
+                schritt.ergebnis = 'Der Mensch hat das Löschen abgelehnt. ' +
+                                   'Arbeite ohne diesen Schritt weiter oder werde fertig.';
+                darfAusfuehren = false;
+              }
+            }
+          } else if (wz.recht === 'bearbeiten') {
             const wirkung = wirkungPlanen(plan.werkzeug, plan.argument || {});
             schritt.wirkung = wirkung;
             const grenze = wirkungGrenze(lauf, wirkung);
