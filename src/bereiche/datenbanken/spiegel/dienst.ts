@@ -67,8 +67,76 @@ const Spiegel = (() => {
     Store.updateCollection(coll.id, { schema: coll.schema });
   };
 
+  /* ══ DER VERBINDUNGSSCHALTER GILT WIRKLICH (E651) ═══════════════════════
+   * Das Datenbankmenü hat seit je einen Punkt „Verbindungen dieser
+   * Datenbank" mit einem Fusstext, der etwas Sicherheitsrelevantes zusagt:
+   *
+   *     „Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und
+   *      schreiben — etwa der GitHub-Spiegel."
+   *
+   * Gemessen am 20. September: `coll.verbindungen` wurde an genau zwei
+   * Stellen ANGEFASST — vom Menü, das es schreibt, und von der Zeile, die
+   * die Anzahl zeigt. GELESEN als Erlaubnis wurde es nirgends. Der Spiegel
+   * hängt an `gespiegelt` und `spiegelQuelle` und fragte den Schalter nie.
+   *
+   * Zwei Fehler auf einmal, und der zweite ist der schlimmere: die ANZEIGE
+   * stimmte auch nicht. `drin.includes(id)` ist bei einer nie angefassten
+   * Datenbank für jeden Dienst falsch — das Menü zeigte „GitHub · aus",
+   * WÄHREND der GitHub-Spiegel lief. Wer das liest, glaubt, er sei
+   * geschützt. Das ist §47 in seiner gefährlichen Form.
+   *
+   * ─── WARUM `undefined` ERLAUBT UND `[]` SPERRT ────────────────────────
+   *
+   * Ein Schalter, der bei seiner Einführung jeden laufenden Spiegel
+   * abwürgt, wäre schlimmer als der Fehler, den er behebt (§46, §51).
+   * Deshalb dieser Unterschied, und er ist der ganze Entwurf:
+   *
+   *     verbindungen fehlt   → nie eingerichtet → erlaubt, wie bisher
+   *     verbindungen: []     → ausdrücklich leer → gesperrt
+   *     verbindungen: ['github'] → genau das ist erlaubt
+   *
+   * Das Menü schreibt beim ersten Anfassen eine echte Liste, und ab da
+   * gilt sie. Wer nie hingeht, merkt nichts — und wer hingeht, sieht ab
+   * sofort die Wahrheit, weil die Anzeige dieselbe Frage stellt.
+   *
+   * EINE FRAGE, EIN ORT (§8). `steuerung.ts` zeichnet das Menü und ruft
+   * für die Anzeige dieselbe Funktion, die hier sperrt. Zwei getrennte
+   * Regeln liefen unweigerlich auseinander, und genau das war der Zustand
+   * davor. */
+  const darf = (coll: any, dienst: string): boolean => {
+    const liste = coll && coll.verbindungen;
+    if (!Array.isArray(liste)) return true;
+    return liste.includes(dienst);
+  };
+
+  /** Der Dienst, an dem dieser Spiegel hängt — oder nichts. */
+  const eigenerDienst = (coll: any): string =>
+    String((coll && coll.spiegelQuelle) || '').split(':')[0] || '';
+
+  /** Sperrt, wenn der Schalter es sagt. Wirft mit einem Grund statt still
+      zurückzukehren — eine stille Rückkehr sähe aus wie „nichts zu tun". */
+  const sperrePruefen = (coll: any, dienst: string): void => {
+    if (darf(coll, dienst)) return;
+    throw new Error('Für diese Datenbank ist die Verbindung zu ' + dienst
+      + ' ausgeschaltet. Datenbankmenü → Verbindungen.');
+  };
+
+  /** Die schon vorhandene Zieldatenbank zu einem Spiegelnamen — oder nichts. */
+  const zielSchon = (name: string): any =>
+    Object.values<any>(Store.cache.collections).find(c => c.name === name && c.gespiegelt) || null;
+
+  /* Der Fusstext sagt „lesen UND schreiben". Also muss die Sperre VOR den
+     Netzruf, nicht dazwischen — sonst waere das Holen erlaubt und nur das
+     Zurueckschreiben gesperrt, und das Versprechen bliebe halbwahr (E651).
+     Gibt es die Zieldatenbank noch gar nicht, ist nichts zu schuetzen: einen
+     neuen Spiegel legt der Nutzer ausdruecklich an. */
+  const sperrePruefenFuerZiel = (name: string, dienst: string): void => {
+    const da = zielSchon(name);
+    if (da) sperrePruefen(da, dienst);
+  };
+
   const zielDatenbank = (name: string, schema: any, layout = 'table'): any => {
-    const da = Object.values<any>(Store.cache.collections).find(c => c.name === name && c.gespiegelt);
+    const da = zielSchon(name);
     if (da) return da;
     const { collectionId } = Store.addDatabase(App.aktuelleSeite(), name, schema(), layout);
     const c = Store.getCollection(collectionId);
@@ -90,6 +158,7 @@ const Spiegel = (() => {
   };
 
   const githubAbgleich = async (repo: string, zustand = 'all'): Promise<any> => {
+    sperrePruefenFuerZiel('GitHub · ' + repo, 'github');
     const roh = await githubHolen(repo, zustand);
     const coll = zielDatenbank('GitHub · ' + repo, GH_SCHEMA, 'board');
 
@@ -143,7 +212,9 @@ const Spiegel = (() => {
   };
 
   /** Eine Änderung zurück nach GitHub schreiben. */
-  const githubZurueck = async (row: any, _coll?: any): Promise<any> => {
+  const githubZurueck = async (row: any, coll?: any): Promise<any> => {
+    /* VOR jedem Ruf, nicht danach (E651). */
+    sperrePruefen(coll || (row && row.parentId ? Store.getCollection(row.parentId) : null), 'github');
     const repo = (row.props || {}).repo || Store.getMeta('api:githubRepo', '');
     const nr = (row.props || {}).nr;
     if (!repo || !nr) throw new Error('Zu diesem Eintrag fehlt die GitHub-Nummer.');
@@ -188,6 +259,7 @@ const Spiegel = (() => {
   });
 
   const jiraAbgleich = async (projekt: string): Promise<any> => {
+    sperrePruefenFuerZiel('Jira · ' + projekt, 'jira');
     const basis = Store.getMeta('api:jiraUrl', '').replace(/\/$/, '');
     const jql = encodeURIComponent('project = ' + projekt + ' ORDER BY updated DESC');
     const d = await Verbindungen.jiraRuf(
@@ -377,7 +449,8 @@ const Spiegel = (() => {
     });
   };
 
-  return { githubAbgleich, githubZurueck, githubNeu, githubDialog,
+  return { darf, eigenerDienst, sperrePruefen, sperrePruefenFuerZiel,
+           githubAbgleich, githubZurueck, githubNeu, githubDialog,
            jiraAbgleich, jiraDialog, textAusAdf,
            spiegelListe, alleAuffrischen, dialog };
 })();

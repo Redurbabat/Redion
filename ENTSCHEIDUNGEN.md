@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-628 Entscheidungen, E1 bis E650 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+629 Entscheidungen, E1 bis E651 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -693,6 +693,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E648** — Der vorausgeschickte Frame ging an niemanden: Redurs #108 (Feder auf 292 ms, Dehnung grosszügiger) und #109 (erst die Fläche, dann der Bildschirm) nachdokumentiert — und der Griff von #109 ging zweimal ins Leere. `handyLeiste()` konnte die Fläche nicht losschicken, weil seit E274 der Schauplatz den Reiter sticht und der sich erst beim Aufbau ändert; und EIN `requestAnimationFrame` ist eines zu wenig, weil eine Animation ihre Startzeit erst mit dem ersten wirklich gemalten Bild bekommt. Gemessen „17 → 17" nach 60 ms
 * **E649** — Ein `<svg>` ist kein `HTMLElement`, und `fokus.ts` wusste das: zwei Ressourcenhalter (`linse.ts` E639, `textur.ts` E462) hingen direkt im Körper und wurden beim Öffnen eines Dialogs nicht stillgelegt, weil die Schleife `instanceof HTMLElement` verlangt. `test272` misst `.inert` über ALLE Kinder — auf einem `SVGElement` gibt es die Eigenschaft nicht, `undefined` ist falsch, der Lauf war rot. Repariert wurde der Körper, nicht der Wächter: beide Halter liegen jetzt in einer von Geburt an stillgelegten Hülle. Dazu `bw` ins Namensraum-Verzeichnis, das seit E640 fehlte (`test290`).
 * **E650** — `String.replace` trifft das erste Vorkommen, nicht das markierte: `umschliesse` und `linkSetzen` in der Auswahlleiste ersetzten mit `(b.text||'').replace(txt, …)`. Wer in „Test und Test" das zweite Wort markiert und auf Fett drückt, bekam das erste fett — kein Absturz, keine Meldung, nur Text an der falschen Stelle. Repariert über `auswahlOffset()` mit Nachprüfung, Rückfall auf die Reihenfolge bei gerendertem Markdown und auf den alten Weg, wenn beides nicht trägt. Neuer Wächter `test542`, gegen den alten Stand rot.
+* **E651** — Ein Schalter, der Sicherheit verspricht und nicht gelesen wird: das Datenbankmenü sagte „Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und schreiben", aber `coll.verbindungen` wurde nur geschrieben. Schlimmer noch die Anzeige — bei einer nie angefassten Datenbank stand bei JEDEM Dienst „aus", während der Spiegel lief. Jetzt beantwortet `Spiegel.darf` die Frage an einer Stelle, für Anzeige UND Sperre; gesperrt wird vor dem Netzruf, also auch das Lesen. `undefined` heisst erlaubt (Bestandsschutz), `[]` heisst gesperrt. Wächter `test543`.
 
 ---
 
@@ -53427,3 +53428,80 @@ ohne `App.oeffne()` die Bibliothek stehen lässt statt den Editor zu zeigen.
 Eine Messung, die aus dem falschen Grund rot ist, prüft genauso wenig wie
 eine, die immer grün ist (§55.2) — deshalb erst der Messstand, dann die
 Reparatur.
+
+
+## E651 — Ein Schalter, der Sicherheit verspricht und nicht gelesen wird
+
+**20. September 2026.** Aus der Bestandsaufnahme desselben Tages, gefunden
+vom Gegenleser des Datenbank-Befunds.
+
+Das Datenbankmenü hat einen Punkt „Verbindungen dieser Datenbank". Sein
+Fusstext sagt etwas, das man als Zusage liest:
+
+> „Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und schreiben —
+> etwa der GitHub-Spiegel."
+
+**Gemessen:** `coll.verbindungen` wurde an genau zwei Stellen angefasst — vom
+Menü, das es schreibt, und von der Zeile darüber, die die Anzahl zeigt. Als
+Erlaubnis **gelesen wurde es nirgends.** Der Spiegel hängt an `gespiegelt`
+und `spiegelQuelle` und fragte den Schalter nie.
+
+### Der zweite Fehler war der schlimmere
+
+Nicht nur die Sperre fehlte — **die Anzeige war falsch.** Der Ausdruck
+`drin.includes(d.id) ? 'an' : 'aus'` ist bei einer nie angefassten Datenbank
+für jeden Dienst falsch: das Menü zeigte „GitHub · aus", **während der
+GitHub-Spiegel lief.** Wer das liest, glaubt, er sei geschützt.
+
+Das ist §47 in seiner gefährlichen Form. Ein Knopf, der nichts tut, ist
+ärgerlich; ein Knopf, der „aus" anzeigt, während etwas läuft, ist eine
+falsche Auskunft über die eigenen Daten.
+
+### `undefined` erlaubt, `[]` sperrt
+
+Der ganze Entwurf steckt in diesem Unterschied:
+
+```txt
+verbindungen fehlt        → nie eingerichtet → erlaubt, wie bisher
+verbindungen: []          → ausdrücklich leer → gesperrt
+verbindungen: ['github']  → genau das ist erlaubt
+```
+
+Ein Schalter, der bei seiner Einführung jeden laufenden Spiegel abwürgt,
+wäre schlimmer als der Fehler, den er behebt (§46, §51). Deshalb keine
+Migration und kein Stichtag: wer nie hingeht, merkt nichts. Wer hingeht,
+bekommt beim ersten Klick eine echte Liste aus dem, was **heute** gilt —
+sonst würde ein einziger Klick alle anderen Dienste mitsperren, ohne dass
+jemand das gesagt hat.
+
+### Eine Frage, ein Ort
+
+`Spiegel.darf(coll, dienst)` beantwortet sie, und **das Menü ruft dieselbe
+Funktion für die Anzeige**, die den Zugriff sperrt. Zwei getrennte Regeln
+liefen unweigerlich auseinander — genau das war der Zustand davor (§8).
+
+### Die Sperre sitzt vor dem Netzruf
+
+Der Fusstext sagt „lesen **und** schreiben". Beide Abgleichwege holen aber
+zuerst und suchen die Zieldatenbank danach. Hätte ich nur `githubZurueck`
+gesperrt, wäre das Lesen weiter gelaufen — und mit ihm das Token. Deshalb
+`sperrePruefenFuerZiel(name, dienst)` **vor** `githubHolen` und vor
+`jiraRuf`: gibt es die Zieldatenbank schon und ist der Dienst aus, geht kein
+Byte hinaus. Gibt es sie noch nicht, ist nichts zu schützen — einen neuen
+Spiegel legt der Nutzer ausdrücklich an.
+
+Und es wird **geworfen**, nicht still zurückgekehrt: eine stille Rückkehr
+sähe aus wie „nichts zu tun". `alleAuffrischen` fängt das je Datenbank schon
+ab und nennt sie im Banner.
+
+### Der Wächter
+
+`test543`, gegen den alten Stand rot — mit der Zeile, auf die es ankommt:
+
+```txt
+✗ Und es geht KEIN Ruf hinaus — 1 Rufe
+```
+
+Bei ausdrücklich gesperrter Datenbank ging der Schreibruf trotzdem hinaus.
+Der Lauf hängt `fetch` und `Verbindungen.githubRuf` ab und zählt nur, ob
+jemand hinauswollte — kein Netz, keine Zugangsdaten, nichts zu erraten.

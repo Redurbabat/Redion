@@ -3399,3 +3399,61 @@ nach der Reparatur  10/10
 ```
 
 Das ist der Unterschied zwischen einem roten Lauf und einem Beweis.
+
+## 20. September 2026 — Ein Schalter, der Sicherheit verspricht (E651)
+
+### Was `coll.verbindungen` wirklich war
+
+```txt
+geschrieben von   steuerung.ts:5186  das Menü selbst
+angezeigt von     steuerung.ts:5070  die Anzahl in der Zeile darüber
+gelesen als Erlaubnis   NIRGENDS
+```
+
+Der Spiegel hängt an `gespiegelt` und `spiegelQuelle`. Gemessen mit
+`grep -rn "\.verbindungen\b" src/`: zwölf Treffer, davon zehn in der
+Gedankenkarte (Kanten) und der Schale (Seitenverbindungen) — also etwas ganz
+anderes. Für die Datenbank blieben genau die zwei oben.
+
+### Der Beweis, gegen den alten Stand
+
+```txt
+Datenbank         gespiegelt, spiegelQuelle "github:a/b", verbindungen: []
+Aktion            Spiegel.githubZurueck(zeile)
+erwartet          kein Netzruf
+gemessen          1 Ruf
+```
+
+Und die Anzeige:
+
+```txt
+Datenbank ohne das Feld, GitHub-Spiegel läuft
+Menü zeigte       GitHub · aus
+```
+
+### Nach der Reparatur
+
+```txt
+node pruefungen/lauf/test543.mts          13/13   (vorher 5/13 und ein Absturz)
+  Bestandsschutz ohne Feld                erlaubt
+  verbindungen: []                        0 Rufe beim Schreiben
+  verbindungen: []                        0 Rufe beim LESEN
+  verbindungen: ['github']                1 Ruf, wie erwartet
+node pruefungen/alle.mts 537 87 105 109 400   alle grün
+npm run typecheck                          ohne Befund
+```
+
+`test537` bleibt grün: `steuerung.ts` und `spiegel/dienst.ts` liegen beide
+unter `bereiche/datenbanken/` — derselbe Bereich, kein neuer Querverweis.
+
+### Und ein Wächter, der zweimal etwas anderes mass
+
+```txt
+erster Lauf    rot, dann ABSTURZ ("Spiegel.darf is not a function")
+               → Abschnitte 3–6 wurden nie gemessen
+nach der Härtung  rot mit "1 Rufe" in Abschnitt 2 — der eigentliche Beweis
+nach der Reparatur  13/13
+```
+
+Ein Wächter, der beim ersten fehlenden Namen abstürzt, prüft nur bis dorthin.
+Dieselbe Lehre wie bei `test542` am selben Tag, nur eine Stufe früher.

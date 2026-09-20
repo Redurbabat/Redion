@@ -94,6 +94,7 @@ sind der teuerste Teil und der lehrreichste.
 | P78 | 2026-09-20 | Ein `<svg>` ist kein `HTMLElement`, und `fokus.ts` wusste das | 🟠 mittel | — |
 | P79 | 2026-09-20 | Ein Präfix fehlte im Verzeichnis, und die Zahl daneben stimmte schon vorher nicht | 🟡 klein | — |
 | P80 | 2026-09-20 | Fett traf das erste Wort, nicht das markierte | 🟠 mittel | — |
+| P81 | 2026-09-20 | Ein Schalter, der Sicherheit verspricht und nicht gelesen wird | 🟠 mittel | — |
 
 ---
 
@@ -1791,4 +1792,25 @@ sind der teuerste Teil und der lehrreichste.
 **Warum keine Uhr.** Aus der Bestandsaufnahme abgeleitet, nicht aus einem Commit.
 
 **Die Lehre.** Ein roter Lauf ist noch kein Beweis. Er muss aus dem RICHTIGEN Grund rot sein — und am sichersten sieht man das daran, dass er den falschen Wert nennt, nicht nur die Ungleichheit.
+
+
+---
+
+## P81 · Ein Schalter, der Sicherheit verspricht und nicht gelesen wird
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Das Datenbankmenü sagt „Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und schreiben" — und zeigte bei jeder nie angefassten Datenbank „GitHub · aus", während der GitHub-Spiegel lief.
+
+**Die falsche Vermutung.** Dass nur die Sperre fehle. Der schlimmere Teil war die ANZEIGE: `drin.includes(id)` ist ohne das Feld für jeden Dienst falsch. Ein Knopf, der nichts tut, ist ärgerlich; einer, der „aus" sagt, während etwas läuft, ist eine falsche Auskunft über die eigenen Daten.
+
+**Wie es gefunden wurde.** Bestandsaufnahme vom selben Tag, Gegenleser des Datenbank-Befunds. Nachgemessen mit grep: `coll.verbindungen` wurde an zwei Stellen geschrieben und nirgends als Erlaubnis gelesen.
+
+**Die Ursache.** Die Oberfläche für ein Rechtemodell war gebaut, das Modell selbst nie. Der Spiegel hängt an `gespiegelt`/`spiegelQuelle` und kannte den Schalter nicht.
+
+**Die Lösung.** `Spiegel.darf` beantwortet die Frage an EINER Stelle, für Anzeige und Sperre. `undefined` heisst erlaubt (Bestandsschutz — ein Schalter, der bei Einführung alle Spiegel abwürgt, wäre schlimmer als der Fehler), `[]` heisst gesperrt. Gesperrt wird VOR dem Netzruf, also auch das Lesen, denn beide Abgleichwege holen zuerst und suchen die Datenbank danach.
+
+**Warum keine Uhr.** Aus der Bestandsaufnahme abgeleitet.
+
+**Die Lehre.** Ein Fusstext ist eine Zusage. Wer eine schreibt, muss zeigen, wer sie einlöst — und die ANZEIGE muss dieselbe Frage stellen wie die Sperre, sonst laufen sie auseinander und die falsche Auskunft ist die gefährlichere Hälfte.
 

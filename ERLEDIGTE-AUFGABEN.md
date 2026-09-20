@@ -1,5 +1,44 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E651 · Der Verbindungsschalter gilt wirklich
+
+**Der Fund** kommt aus der Bestandsaufnahme desselben Tages. Das
+Datenbankmenü hat einen Punkt „Verbindungen dieser Datenbank" mit einem
+Fusstext, der wie eine Zusage klingt:
+
+> „Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und schreiben —
+> etwa der GitHub-Spiegel."
+
+`coll.verbindungen` wurde an zwei Stellen **geschrieben** und **nirgends als
+Erlaubnis gelesen**. Der Spiegel hängt an `gespiegelt`/`spiegelQuelle` und
+kannte den Schalter nicht.
+
+**Der zweite Fehler war der schlimmere:** die Anzeige. Bei einer nie
+angefassten Datenbank stand bei jedem Dienst „aus" — **während der Spiegel
+lief.** Ein Knopf, der nichts tut, ist ärgerlich; einer, der „aus" sagt,
+während etwas läuft, ist eine falsche Auskunft über die eigenen Daten.
+
+**Gebaut.** `Spiegel.darf(coll, dienst)` beantwortet die Frage an einer
+Stelle — und das Menü ruft für die **Anzeige** dieselbe Funktion, die den
+Zugriff **sperrt** (§8). `undefined` heisst erlaubt, `[]` heisst gesperrt:
+ein Schalter, der bei seiner Einführung jeden laufenden Spiegel abwürgt,
+wäre schlimmer als der Fehler (§46, §51). Keine Migration, kein Stichtag.
+
+**Die Sperre sitzt vor dem Netzruf.** Beide Abgleichwege holen zuerst und
+suchen die Datenbank danach — hätte ich nur das Zurückschreiben gesperrt,
+wäre das Lesen weitergelaufen und mit ihm das Token.
+
+**Geprüft.** `test543` 13/13, gegen den alten Stand rot mit der Zeile, auf
+die es ankommt: **„Und es geht KEIN Ruf hinaus — 1 Rufe"**. Dazu `test537`
+(kein neuer Querverweis — beide Dateien liegen unter
+`bereiche/datenbanken/`), `test87`, `test105`, `test109`, `test400` grün ·
+`npm run typecheck` ohne Befund. `CLAUDE.md` §30/§31 auf **485** nachgezählt.
+
+**Kein Bild:** eine Rechteprüfung hat nichts zu sehen — hier ist die Messung
+der Beweis (§55.3).
+
+---
+
 ## 20. September 2026 · E650 · Die Auswahlleiste trifft die markierte Stelle
 
 **Der Fund** kommt aus der Bestandsaufnahme desselben Tages — aus dem
