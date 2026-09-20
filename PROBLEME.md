@@ -91,6 +91,13 @@ sind der teuerste Teil und der lehrreichste.
 | P75 | 2026-09-20 | Die Bewegung war da und kam nicht an | gross | — |
 | P76 | 2026-09-20 | Eine Feder, die auf ihr eigenes Ziel neu gestartet wird, verliert ihren Schwung | 🟡 klein | — |
 | P77 | 2026-09-20 | Der vorausgeschickte Frame ging an niemanden | 🟠 mittel | — |
+| P78 | 2026-09-20 | Ein `<svg>` ist kein `HTMLElement`, und `fokus.ts` wusste das | 🟠 mittel | — |
+| P79 | 2026-09-20 | Ein Präfix fehlte im Verzeichnis, und die Zahl daneben stimmte schon vorher nicht | 🟡 klein | — |
+| P80 | 2026-09-20 | Fett traf das erste Wort, nicht das markierte | 🟠 mittel | — |
+| P81 | 2026-09-20 | Ein Schalter, der Sicherheit verspricht und nicht gelesen wird | 🟠 mittel | — |
+| P82 | 2026-09-20 | Das Teure war gebaut, das Billige fehlte | 🟠 mittel | — |
+| P83 | 2026-09-20 | Ein Blatt ohne Weg zurück, und ein Griff, der nichts hält | hoch | — |
+| P84 | 2026-09-20 | Zweimal rot aus dem falschen Grund — derselbe Lauf | 🟠 mittel | — |
 
 ---
 
@@ -1725,4 +1732,147 @@ sind der teuerste Teil und der lehrreichste.
 **Warum keine Uhr.** Die Zeiten kommen aus `performance.now()` in der Seite und sind relativ zum Klick.
 
 **Die Lehre.** Eine gute Absicht mit dem falschen Griff sieht im Code aus wie eine Lösung. Und die zweite Hälfte ist bitterer: mein eigener Messplatz war blind. Ein Messer, der je requestAnimationFrame liest, steht genau dann still, wenn der Hauptfaden blockiert — er kann über eine Bewegung unter Last gar nichts sagen. Dafür taugt nur ein Film. Eine Zusage, die am falschen Platz geprüft wird, ist keine.
+
+
+---
+
+## P78 · Ein `<svg>` ist kein `HTMLElement`, und `fokus.ts` wusste das
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Der erste volle Lauf gegen das neue `main` war rot: `test272` meldete „Und alles dahinter ist stillgelegt". Bei offenem Backstage-Blatt konnte man hinter die Fläche tabben.
+
+**Die falsche Vermutung.** Dass es wie `test270` ein Artefakt des Arbeitsbaums sei. `test270` war es wirklich — im Hauptbaum grün. `test272` und `test290` waren es nicht, und beide waren MEINE, achtundvierzig Stunden alt.
+
+**Wie es gefunden wurde.** Nach dem Ende des Sweeps im Hauptbaum einzeln nachgemessen, wie §30 es verlangt. Danach die Schleife in `fokus.ts` gegen die Behauptung des Wächters gelesen.
+
+**Die Ursache.** `fokus.ts` legt beim Öffnen eines Dialogs die Körperkinder still, überspringt dabei aber alles, was kein `HTMLElement` ist. E639 hat für die Glaslinse ein `<svg>` direkt an den Körper gehängt — ein `SVGElement`. Es fiel durch, und `.inert` gibt es dort gar nicht: `undefined`. Derselbe Fehler stand seit E462 in `textur.ts` daneben und fiel nur nie auf, weil dieser Halter erst bei Gebrauch entsteht.
+
+**Die Lösung.** Nicht den Wächter gelockert, sondern den Körper aufgeräumt: beide Halter liegen jetzt in einer von Geburt an stillgelegten Hülle. Eine Ausnahme im Wächter hätte jede spätere gedeckt (§55.2). Auf die Filter wirkt es nicht — mit `node bilder.mts heute handy` nachgesehen, die Linse liegt über „Heute" und der Name bleibt lesbar.
+
+**Warum keine Uhr.** Aus einem Prüflaufergebnis abgeleitet, nicht aus einem Commit.
+
+**Die Lehre.** `instanceof HTMLElement` heisst nicht „jedes Element". Derselbe Bautyp wie die fünf Fehler vom Vortag: ein Ausdruck misst etwas anderes, als der Satz daneben behauptet. Und: ein zweiter Halter kann jahrelang denselben Fehler tragen, solange kein Prüflauf ihn je entstehen lässt.
+
+
+---
+
+## P79 · Ein Präfix fehlte im Verzeichnis, und die Zahl daneben stimmte schon vorher nicht
+
+*2026-09-20 · 🟡 klein*
+
+**Das Bild.** `test290`: „Kein Präfix fehlt im Verzeichnis — bw — bitte in doku/CSS-NAMENSRAEUME.md eintragen".
+
+**Die falsche Vermutung.** Keine — der Wächter nennt die Sache beim Namen. Die Überraschung kam beim Eintragen.
+
+**Wie es gefunden wurde.** Im Hauptbaum nachgemessen; dann mit dem Regex des Wächters selbst gezählt, woher `bw` kommt.
+
+**Die Ursache.** `.bw-flug` und `.bw-wartet` kamen mit E640 dazu, zusammen mit dem älteren `.bw-trenn` sind es sieben Vorkommen. Ab vier gilt ein Präfix als eigener Namensraum. Beim Eintragen fiel auf, dass der Fliesstext derselben Datei „Es sind 144" behauptete, während das Verzeichnis 158 Einträge trug.
+
+**Die Lösung.** `bw  7  bausteine.css` eingetragen; die Zahl im Fliesstext auf 159 nachgezählt und den Zählbefehl danebengeschrieben, statt sie fortzuschreiben.
+
+**Warum keine Uhr.** Aus einem Prüflaufergebnis abgeleitet.
+
+**Die Lehre.** Dieselbe Lehre wie bei der Prüflaufzahl in §30: eine Zahl im Fliesstext, die kein Lauf anfasst, driftet. Sie gehört mit ihrem Befehl aufgeschrieben oder gar nicht.
+
+
+---
+
+## P80 · Fett traf das erste Wort, nicht das markierte
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** In „Test und Test" das zweite Wort markieren und auf Fett drücken ergibt `**Test** und Test`. Der Text ändert sich, nur an der falschen Stelle — kein Absturz, keine Meldung.
+
+**Die falsche Vermutung.** Keine bei der Ursache — `String.replace` mit einem String ist eindeutig. Die falsche Vermutung steckte im WÄCHTER: der erste Anlauf war rot und ich hielt ihn für einen Beweis. Er war rot mit „KEIN BLOCK", weil `App.zeichneSeite(id)` ohne `App.oeffne(id)` die Bibliothek stehen lässt. Er wäre genauso rot gewesen, wenn der Fehler gar nicht existierte.
+
+**Wie es gefunden wurde.** Die Bestandsaufnahme vom selben Tag, beim Gegenlesen des Editor-Befunds. Kein Prüflauf hatte die Auswahlleiste je angefasst.
+
+**Die Ursache.** `umschliesse` und `linkSetzen` ersetzten mit `(b.text||'').replace(txt, …)`. Ein String als Muster trifft das erste Vorkommen. Neun Monate unauffällig, weil der Normalfall — kurzer Block, einmaliges Wort — immer richtig war.
+
+**Die Lösung.** `auswahlOffset()` gab es schon (E289, Lückenkarten). Jetzt in drei Stufen: geprüfte Zeichenstelle im Normalfall, Reihenfolge bei gerendertem Markdown, alter Weg als Rest. Neuer Wächter `test542`, der den falschen Wert ausdruckt statt nur „passt nicht".
+
+**Warum keine Uhr.** Aus der Bestandsaufnahme abgeleitet, nicht aus einem Commit.
+
+**Die Lehre.** Ein roter Lauf ist noch kein Beweis. Er muss aus dem RICHTIGEN Grund rot sein — und am sichersten sieht man das daran, dass er den falschen Wert nennt, nicht nur die Ungleichheit.
+
+
+---
+
+## P81 · Ein Schalter, der Sicherheit verspricht und nicht gelesen wird
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Das Datenbankmenü sagt „Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und schreiben" — und zeigte bei jeder nie angefassten Datenbank „GitHub · aus", während der GitHub-Spiegel lief.
+
+**Die falsche Vermutung.** Dass nur die Sperre fehle. Der schlimmere Teil war die ANZEIGE: `drin.includes(id)` ist ohne das Feld für jeden Dienst falsch. Ein Knopf, der nichts tut, ist ärgerlich; einer, der „aus" sagt, während etwas läuft, ist eine falsche Auskunft über die eigenen Daten.
+
+**Wie es gefunden wurde.** Bestandsaufnahme vom selben Tag, Gegenleser des Datenbank-Befunds. Nachgemessen mit grep: `coll.verbindungen` wurde an zwei Stellen geschrieben und nirgends als Erlaubnis gelesen.
+
+**Die Ursache.** Die Oberfläche für ein Rechtemodell war gebaut, das Modell selbst nie. Der Spiegel hängt an `gespiegelt`/`spiegelQuelle` und kannte den Schalter nicht.
+
+**Die Lösung.** `Spiegel.darf` beantwortet die Frage an EINER Stelle, für Anzeige und Sperre. `undefined` heisst erlaubt (Bestandsschutz — ein Schalter, der bei Einführung alle Spiegel abwürgt, wäre schlimmer als der Fehler), `[]` heisst gesperrt. Gesperrt wird VOR dem Netzruf, also auch das Lesen, denn beide Abgleichwege holen zuerst und suchen die Datenbank danach.
+
+**Warum keine Uhr.** Aus der Bestandsaufnahme abgeleitet.
+
+**Die Lehre.** Ein Fusstext ist eine Zusage. Wer eine schreibt, muss zeigen, wer sie einlöst — und die ANZEIGE muss dieselbe Frage stellen wie die Sperre, sonst laufen sie auseinander und die falsche Auskunft ist die gefährlichere Hälfte.
+
+
+---
+
+## P82 · Das Teure war gebaut, das Billige fehlte
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Eine lange KI-Antwort liess sich nur durch Schliessen des Tabs beenden. Und der Menüpunkt „Meine Quellen" öffnete nichts — er zeigte eine Zahl und ein „▸" und tat nichts.
+
+**Die falsche Vermutung.** Dass der Abbruch erst gebaut werden müsse. Er WAR gebaut: `frage` nimmt ein Signal, reicht es bis in `fetch`, und sogar der Backoff-`schlafen` bricht ab. Nur `senden` liess das dritte Argument weg, und es gab keinen Knopf.
+
+**Wie es gefunden wurde.** Bestandsaufnahme vom selben Tag, Bereich KI/UX. Nachgemessen mit einem `fetch`, das nie antwortet — ausser das Signal kommt an.
+
+**Die Ursache.** Ein Argument, das beim Aufruf fehlte, und ein Menüpunkt, der `quellenKarte(e.currentTarget)` rief: ein HTML-Element an eine Funktion, die eine Liste erwartet. `!element.length` ist wahr, also lautlos `null`.
+
+**Die Lösung.** Der Senden-Knopf wird für die Dauer des Laufs zum Stopp-Knopf — dasselbe Element, dieselbe Grösse (§37), `aria-label` wechselt mit (§38). Ein Abbruch behält die Teilantwort und sagt „Abgebrochen" statt „AbortError". Der Menüpunkt öffnet dieselbe Schalterleiste, die im Fuss steht (§8).
+
+**Warum keine Uhr.** Aus der Bestandsaufnahme abgeleitet.
+
+**Die Lehre.** Ein grüner Prüflauf ist so wenig ein Beweis wie ein roter. Abschnitt 2 war zuerst grün, weil er sichtbare Schalter im GANZEN Dokument zählte — und die Leiste steht ohnehin im Fuss. Gemessen werden muss, was der Klick NEU öffnet. Dritter Fall dieser Art an einem Tag.
+
+
+---
+
+## P83 · Ein Blatt ohne Weg zurück, und ein Griff, der nichts hält
+
+*2026-09-20 · hoch*
+
+**Das Bild.** Wer das KI-Feld am Telefon öffnete, konnte es nicht mehr schliessen. Kein Kreuz im Kopf, `#btn-ai` auf `display:none`, kein Strg+J an einem Telefon, und die untere Leiste lag unter einem 88vh hohen Blatt auf z-index 920. Der einzige Ausweg war, den Tab zu schliessen.
+
+**Die falsche Vermutung.** Dass es irgendeinen Weg geben muss — ein Tippen daneben, die Leiste darunter, Escape. Es gab keinen. Der Escape-Griff räumt `.menu` und `.overlay`; `#ai` ist ein `<aside>` und heisst weder so noch so.
+
+**Wie es gefunden wurde.** Bestandsaufnahme vom selben Tag, §37-Durchgang. Nachgemessen mit einem Lauf, der nicht fragt, ob ein Kreuz dasteht, sondern jeden sichtbaren Knopf im Kopf DRÜCKT und danach nachsieht, ob `.open` weg ist: „2 geprüft, 0 schliessen".
+
+**Die Ursache.** Der Weg zurück hing seit jeher an `#btn-ai` in der Kopfleiste. Als die Kopfleiste am Telefon ausgedünnt wurde (bausteine.css:297, „sonst quetschen sich zwölf Knöpfe in 428 Pixel"), ging er mit — und niemand hat gefragt, was dann das Blatt schliesst. Dazu zeichnete `#ai::before` einen Wischgriff, dessen Kommentar die Geste ausdrücklich verspricht; gehört hat auf `#ai` nie jemand.
+
+**Der Beweis.** `test545` gegen den alten Stand: „✗ Mindestens ein sichtbarer Knopf schliesst das Blatt wirklich — 2 geprüft, 0 schliessen — das Blatt ist eine Falle". Gegenprobe nach dem Bau: `kiGriff()` abgehängt → genau eine Zeile rot, während „Der Zug landet wirklich auf dem Kopf des Blattes" grün bleibt.
+
+**Die Lehre.** Ein Knopf, der auf einem Bildschirm ausgeblendet wird, nimmt jede Funktion mit, die NUR an ihm hing. Wer eine Leiste ausdünnt, muss für jeden entfernten Knopf sagen, wer seine Aufgabe übernimmt — und für das Zu eines Blattes gilt das doppelt, weil es kein zweites Mal geöffnet werden kann, wenn es offen feststeckt.
+
+
+---
+
+## P84 · Zweimal rot aus dem falschen Grund — derselbe Lauf
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** `test545` war rot, sagte aber zweimal etwas anderes, als er mass: erst „der Knopf misst 0 × 0", dann „die Geste gibt es nicht" — obwohl der Knopf 44 px hatte und die Geste gebaut war.
+
+**Die falsche Vermutung.** Beim ersten Mal: der Knopf sei zu klein. Beim zweiten Mal: der Griff sei nicht angeschlossen. Beides falsch.
+
+**Wie es gefunden wurde.** Nachgesehen statt geglaubt. Das Maß wurde NACH dem Klick genommen — geschlossen steht `#ai` auf `display:none`, und dann misst jeder Knopf darin 0 × 0. Und `document.elementFromPoint` an der Zugstelle nannte den wahren Empfänger: `DIV#rg-willkommen`, das Willkommensblatt über allem.
+
+**Die Ursache.** Zwei Messfehler im Wächter, keiner im Produkt.
+
+**Der Beweis.** Nach der Korrektur: „→ ai-zu · 44×44 px" und „Der Zug landet wirklich auf dem Kopf des Blattes" — und die Gegenprobe wird nur an der Geste rot.
+
+**Die Lehre.** Vierter und fünfter Fall derselben Sorte an zwei Tagen, nach `test542`, `test543` und `test544`. Die Lehre steht jetzt in beide Richtungen: ein roter Lauf ist noch kein Beweis, und ein grüner erst recht nicht. Ein Wächter, der eine Stelle anfasst, prüft zuerst, WER dort liegt.
 

@@ -2865,6 +2865,80 @@ const App = (() => {
         if (an)
             setTimeout(() => document.getElementById('ai-input')?.focus(), 60);
     };
+    /* ══ DER GRIFF AM BLATT (E653) ═══════════════════════════════════════════
+     * Am Telefon ist `#ai` kein Panel neben der Seite, sondern ein Blatt, das
+     * von unten kommt — und `#ai::before` zeichnet oben einen Strich. Der
+     * Kommentar daneben (bausteine.css:356) sagt wörtlich, was der Strich
+     * verspricht: „er sagt ohne Wort, dass man das Blatt wegwischen kann".
+     *
+     * Gewischt werden konnte nichts. `wischen.ts` kennt `#handy-oben` und
+     * sonst nichts; auf `#ai` hörte niemand zu. Ein gezeichnetes Versprechen
+     * ist dasselbe Versprechen (§47) — und weil `#btn-ai` am Telefon auf
+     * `display:none` steht, war der Strich nicht nur unehrlich, sondern der
+     * einzige Hinweis auf einen Weg, den es nicht gab.
+     *
+     * NUR AM TELEFON. Am Rechner ist `#ai` eine Spalte; sie nach unten zu
+     * ziehen ergäbe keinen Sinn und würde das Markieren von Text im Kopf
+     * stören. `matchMedia` fragt dieselbe Grenze ab, die auch die Stilblätter
+     * benutzen: 760 px.
+     *
+     * NUR AM KOPF. Unter dem Kopf steht der Verlauf, und der rollt. Ein Zug
+     * irgendwo auf dem Blatt wäre beides zugleich.
+     *
+     * UND NICHT AUF DEN KNÖPFEN. Wer „Neuer Chat" trifft und dabei um zwei
+     * Pixel verrutscht, meint den Knopf.
+     * ======================================================================*/
+    /** So weit muss der Zug gehen, damit er als Wegwischen zählt. Darunter
+     *  federt das Blatt zurück — sonst wäre jedes Verrutschen ein Schliessen. */
+    const BLATT_ZUG = 90;
+    /** 760 px: dieselbe Grenze wie in `bausteine.css` und `ki.css`. */
+    const blattAmTelefon = () => typeof matchMedia === 'function' && matchMedia('(max-width:760px)').matches;
+    const kiGriff = () => {
+        const blatt = document.getElementById('ai');
+        if (!blatt)
+            return;
+        let start = 0, zug = 0, zieht = false;
+        const bewegen = (e) => {
+            if (!zieht)
+                return;
+            zug = Math.max(0, e.clientY - start);
+            blatt.style.transform = 'translateY(' + zug + 'px)';
+        };
+        const ende = () => {
+            if (!zieht)
+                return;
+            zieht = false;
+            document.removeEventListener('pointermove', bewegen);
+            document.removeEventListener('pointerup', ende);
+            document.removeEventListener('pointercancel', ende);
+            /* Erst den Übergang zurückgeben, DANN den Wert ändern. Ohne das
+               Lesen von `offsetHeight` dazwischen fasst der Browser beides zu
+               einem Schritt zusammen, und das Blatt springt statt zu gleiten. */
+            blatt.style.transition = '';
+            void blatt.offsetHeight;
+            blatt.style.transform = '';
+            if (zug > BLATT_ZUG)
+                kiPanel(false);
+        };
+        blatt.addEventListener('pointerdown', (e) => {
+            if (!blattAmTelefon())
+                return;
+            const ziel = e.target;
+            if (!ziel || typeof ziel.closest !== 'function')
+                return;
+            if (!ziel.closest('.ai-head'))
+                return;
+            if (ziel.closest('button, a, input, textarea, select'))
+                return;
+            start = e.clientY;
+            zug = 0;
+            zieht = true;
+            blatt.style.transition = 'none';
+            document.addEventListener('pointermove', bewegen);
+            document.addEventListener('pointerup', ende);
+            document.addEventListener('pointercancel', ende);
+        });
+    };
     const neueSeite = (elternId = null) => {
         const p = Store.addPage(elternId, { text: '' });
         zeichneBaum();
@@ -4335,6 +4409,10 @@ const App = (() => {
             });
         }
         an('btn-ai', () => kiPanel());
+        /* Der Weg zurück, und er gilt auf JEDEM Bildschirm (E653). Am
+           Telefon ist er der einzige — `#btn-ai` ist dort ausgeblendet. */
+        an('ai-zu', () => kiPanel(false));
+        kiGriff();
         /* `btn-trash` hängt seit E167 am Register — die Zeile hier wäre die
            zweite Verdrahtung desselben Knopfes, und wohin das führt, steht in
            E160: ein Klick auf „Neue Seite" legte zwei Seiten an. */

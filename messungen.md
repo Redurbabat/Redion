@@ -3260,3 +3260,320 @@ sind zwei verschiedene Einträge, und der Ausdruck, der sie als Doppelung
 meldete, war zu grob (`^## L[0-9]+` trifft `L8` auch in `L8b`). Zum fünften
 Mal an zwei Tagen ein Ausdruck, der etwas anderes misst, als der Satz
 daneben behauptet.
+
+## 20. September 2026 — Zwei rote Läufe, und beide waren achtundvierzig Stunden alt (E649)
+
+Der erste volle Lauf gegen das neue `main`: **483 Läufe, 49 Stücke, drei rot.**
+
+```txt
+test270   im Arbeitsbaum rot, im Hauptbaum GRÜN
+          .git ist dort eine Datei (52 Bytes), node_modules ein Symlink;
+          test270 filtert mit `istOrdner && name === …` und sieht beide nicht.
+          CLAUDE.md §30 beschreibt genau diesen Fall — er ist eingetreten.
+
+test272   echt rot.  „Und alles dahinter ist stillgelegt"
+test290   echt rot.  „Kein Präfix fehlt im Verzeichnis — bw"
+```
+
+**Keiner der beiden war im Lauf vom 19. September rot.** Die achtzehn von
+damals sind alle abgearbeitet; diese zwei sind in den achtundvierzig Stunden
+danach entstanden, in E639 (Glaslinse) und E640 (fliegende Werkzeugleiste).
+
+### Was `test272` wirklich misst
+
+```txt
+fokus.ts, Schleife       if (!(kind instanceof HTMLElement)) return
+test272, Behauptung      .every(k => (k as HTMLElement).inert)
+
+document.body.children   vor E639   nur HTMLElement → beide Sätze gleich
+                         nach E639  ein <svg> dazwischen → SVGElement
+                                    .inert gibt es dort nicht → undefined
+```
+
+Gemessen, nicht geschätzt: **zwei** solche Halter hängen im Körper —
+`ru-linse-halter` (E639, beim Start) und `ru-textur-halter` (E462, erst bei
+Gebrauch). Der zweite war seit vier Wochen derselbe Fehler und fiel nie auf,
+weil `Textur.sicherstellen()` im Prüflauf nicht lief.
+
+### Was `bw` wirklich ist
+
+```txt
+.bw-flug      3   bausteine.css     seit E640
+.bw-wartet    3   bausteine.css     seit E640
+.bw-trenn     1   bausteine.css     seit E500
+              ──
+              7   Schwelle für einen eigenen Namensraum: 4
+```
+
+Und beim Eintragen fiel eine zweite Zahl um:
+
+```txt
+doku/CSS-NAMENSRAEUME.md, Fliesstext     „Es sind 144"
+Einträge im Verzeichnis, gezählt          158
+nach diesem Eintrag                       159
+```
+
+`test290` prüft die Einträge, nicht den Satz darüber. Die Zahl steht jetzt
+mit ihrem Befehl daneben:
+
+```bash
+grep -cE "^[a-z]{2,4}\s+[0-9]+\s+[a-z]+\.css" doku/CSS-NAMENSRAEUME.md
+```
+
+### Nach der Reparatur
+
+```txt
+node pruefungen/alle.mts 272 290        beide grün  (272: 153 ok · 290: 13/13)
+node pruefungen/alle.mts 128 435 539 541  alle vier grün
+npm run typecheck                        ohne Befund
+npm run stand                            v1234 unverändert (89f28ca703fd9a1f)
+node bauen.mts                           10 514 KB
+node bilder.mts heute handy              Linse über „Heute", Name lesbar
+```
+
+Die Gegenprobe war nicht zu bauen — sie war da: beide Läufe **waren** rot und
+sind es nicht mehr. Ein Wächter, der nie rot war, ist eine Behauptung
+(§55.2); diese zwei haben sich selbst belegt.
+
+## 20. September 2026 — Die Auswahlleiste traf die falsche Stelle (E650)
+
+Aus der Bestandsaufnahme desselben Tages; kein Prüflauf hatte es je angefasst.
+
+### Der Fehler, gemessen
+
+```txt
+Block           "Test und Test"
+markiert        das ZWEITE Wort
+gedrückt        Fett
+
+erwartet        Test und **Test**
+bekommen        **Test** und Test
+```
+
+Dasselbe für kursiv, Code, durchgestrichen und den Link — alle sechs Marken
+laufen durch `umschliesse`, der Link durch `linkSetzen`, beide mit
+`String.replace(txt, …)`.
+
+```txt
+"a b a b a", das DRITTE „a" markiert
+  bekommen    **a** b a b a
+```
+
+### Was richtig blieb
+
+```txt
+"Test und Test", das ERSTE markiert      ✓ richtig  (Zufall: erstes = erstes)
+"Nur einmal hier", einmaliges Wort       ✓ richtig
+"Anfang mitte ende", ganz vorn           ✓ richtig
+```
+
+Genau deshalb ist es neun Monate nicht aufgefallen: der Normalfall eines
+kurzen Blocks mit einem einmaligen Wort war immer richtig.
+
+### Nach der Reparatur
+
+```txt
+node pruefungen/lauf/test542.mts        10/10   (vorher 5/10)
+node pruefungen/alle.mts 132 202        grün    Markdown-Kürzel, Lückenkarten
+node pruefungen/alle.mts 105 109 400    grün
+npm run typecheck                        ohne Befund
+```
+
+`test400` misst den Messstand gleich mit:
+
+```txt
+382 feste Ports · 9 × listen(0) · 390 von 484 Läufen starten einen Server
+```
+
+### Eine Messung, die zweimal rot war — und nur einmal richtig
+
+Der erste Anlauf von `test542` war rot mit **„KEIN BLOCK"**. Grund:
+`App.zeichneSeite(id)` allein lässt die Bibliothek stehen; erst
+`App.oeffne(id)` schaltet auf den Editor. Der Lauf hätte dasselbe Rot
+gezeigt, wenn der Fehler gar nicht existierte.
+
+```txt
+erster Anlauf    5/10 rot — davon 8× "KEIN BLOCK"   → misst nichts
+zweiter Anlauf   5/10 rot — mit dem falschen Wert   → misst den Fehler
+nach der Reparatur  10/10
+```
+
+Das ist der Unterschied zwischen einem roten Lauf und einem Beweis.
+
+## 20. September 2026 — Ein Schalter, der Sicherheit verspricht (E651)
+
+### Was `coll.verbindungen` wirklich war
+
+```txt
+geschrieben von   steuerung.ts:5186  das Menü selbst
+angezeigt von     steuerung.ts:5070  die Anzahl in der Zeile darüber
+gelesen als Erlaubnis   NIRGENDS
+```
+
+Der Spiegel hängt an `gespiegelt` und `spiegelQuelle`. Gemessen mit
+`grep -rn "\.verbindungen\b" src/`: zwölf Treffer, davon zehn in der
+Gedankenkarte (Kanten) und der Schale (Seitenverbindungen) — also etwas ganz
+anderes. Für die Datenbank blieben genau die zwei oben.
+
+### Der Beweis, gegen den alten Stand
+
+```txt
+Datenbank         gespiegelt, spiegelQuelle "github:a/b", verbindungen: []
+Aktion            Spiegel.githubZurueck(zeile)
+erwartet          kein Netzruf
+gemessen          1 Ruf
+```
+
+Und die Anzeige:
+
+```txt
+Datenbank ohne das Feld, GitHub-Spiegel läuft
+Menü zeigte       GitHub · aus
+```
+
+### Nach der Reparatur
+
+```txt
+node pruefungen/lauf/test543.mts          13/13   (vorher 5/13 und ein Absturz)
+  Bestandsschutz ohne Feld                erlaubt
+  verbindungen: []                        0 Rufe beim Schreiben
+  verbindungen: []                        0 Rufe beim LESEN
+  verbindungen: ['github']                1 Ruf, wie erwartet
+node pruefungen/alle.mts 537 87 105 109 400   alle grün
+npm run typecheck                          ohne Befund
+```
+
+`test537` bleibt grün: `steuerung.ts` und `spiegel/dienst.ts` liegen beide
+unter `bereiche/datenbanken/` — derselbe Bereich, kein neuer Querverweis.
+
+### Und ein Wächter, der zweimal etwas anderes mass
+
+```txt
+erster Lauf    rot, dann ABSTURZ ("Spiegel.darf is not a function")
+               → Abschnitte 3–6 wurden nie gemessen
+nach der Härtung  rot mit "1 Rufe" in Abschnitt 2 — der eigentliche Beweis
+nach der Reparatur  13/13
+```
+
+Ein Wächter, der beim ersten fehlenden Namen abstürzt, prüft nur bis dorthin.
+Dieselbe Lehre wie bei `test542` am selben Tag, nur eine Stufe früher.
+
+## 20. September 2026 — Der Stopp-Knopf, den es nicht gab (E652)
+
+### Die Kette war vollständig — bis auf ein Argument
+
+```txt
+frage(nachrichten, beiText, { signal })   dienst.ts:612   nimmt ein Signal
+ollamaFragen(n, modell, signal)                   :507   reicht es weiter
+fetch(…, { signal })                              :512   bis ganz nach unten
+schlafen(ms, signal)                              :156   sogar der Backoff
+
+senden → frage(nachrichten, cb)                  :1113   OHNE das dritte Argument
+```
+
+### Gemessen, gegen den alten Stand
+
+`fetch` abgehängt und so gebaut, dass es **nie** antwortet — ausser das
+Signal kommt an:
+
+```txt
+Signal in fetch angekommen       nein
+data-lauf am Senden-Knopf        null
+Klick auf den Knopf              HAENGT (3 s Abbruch der Messung)
+```
+
+Nach der Reparatur:
+
+```txt
+Signal in fetch angekommen       ja
+data-lauf während des Laufs      "1"
+aria-label während des Laufs     "Antwort abbrechen"
+Klick beendet den Lauf           geworfen → gefangen → "Abgebrochen."
+Knopfgrösse vorher/nachher       gleich (§37)
+```
+
+### Und der Wächter, der fast danebengriff
+
+Abschnitt 2 war im ersten Anlauf **grün**, ohne dass etwas repariert war:
+
+```txt
+gezählt    sichtbare [data-qs] im ganzen Dokument     → 5 (die Leiste im Fuss)
+gemeint    was der Menüpunkt NEU öffnet               → 0
+```
+
+Die Schalterleiste steht ohnehin im Panelfuss. Der Lauf mass sie statt des
+Menüpunkts. Erst mit einem `Set` der Schalter **vor** dem Klick stand da
+„0 Schalter sichtbar" — der eigentliche Befund.
+
+Dritter Fall an einem Tag, nach `test542` (Absturz statt Messung) und
+`test543` (Absturz nach dem ersten fehlenden Namen). Die Lehre wächst
+mit: **ein roter Lauf ist noch kein Beweis, und ein grüner erst recht
+nicht.**
+
+### Bild
+
+`bilder/ki-stoppknopf.png` — derselbe blaue Kreis, `■` statt `↑`, während
+„KI arbeitet …" läuft (§55.3).
+
+---
+
+## 20. September 2026 — Das KI-Blatt am Telefon (E653, `test545`)
+
+Gemessen auf 390 × 844, Blatt offen:
+
+```txt
+#ai                      oben bei 101 px, 743 px hoch, z-index 920
+#handy-oben              z-index 401 — vollständig darunter
+#btn-ai sichtbar         nein (display:none, bausteine.css:300 und :2119)
+Knöpfe im Kopf           ai-verlauf, ai-clear
+Knöpfe, die schliessen   0 von 2
+```
+
+Nicht geschätzt, sondern gedrückt: jeder sichtbare Knopf in `.ai-head`
+wurde geklickt und danach nachgesehen, ob `.open` weg ist. Die Zeile, die
+der Lauf gegen den alten Stand ausgab:
+
+```txt
+✗ Mindestens ein sichtbarer Knopf schliesst das Blatt wirklich
+  — 2 geprüft, 0 schliessen — das Blatt ist eine Falle
+```
+
+Nach dem Bogen:
+
+```txt
+Knöpfe im Kopf           ai-verlauf, ai-clear, ai-zu
+Knöpfe, die schliessen   1 von 3  ·  ai-zu · 44 × 44 px · "KI schliessen"
+Zug 180 px nach unten    schliesst
+Zug  26 px nach unten    schliesst NICHT (federt zurück)
+Rest-transform danach    keines
+Zug am Rechner (1280)    schliesst nichts — eine Spalte ist kein Blatt
+```
+
+### Und zweimal rot aus dem falschen Grund
+
+```txt
+1. Anlauf   Knopfmass 0 × 0          gemessen NACH dem Klick; geschlossen
+                                     steht #ai auf display:none
+2. Anlauf   "Geste gibt es nicht"    der Zug landete auf #rg-willkommen,
+                                     dem Willkommensblatt über allem
+```
+
+Beide Male war der Lauf rot, beide Male sagte er etwas anderes, als er
+mass. Er prüft jetzt mit `elementFromPoint`, wer unter dem Finger liegt,
+und nennt ihn beim Namen, wenn es nicht das Blatt ist.
+
+Vierter und fünfter Fall derselben Sorte an zwei Tagen, nach `test542`,
+`test543` und `test544`. **Ein roter Lauf ist noch kein Beweis, und ein
+grüner erst recht nicht.**
+
+### Gegenprobe
+
+`kiGriff()` im gebauten `schale.js` abgehängt, Lauf wiederholt: genau eine
+Zeile wird rot („Ein Zug nach unten schliesst das Blatt"), während „Der Zug
+landet wirklich auf dem Kopf des Blattes" grün bleibt. Die Röte gilt also
+der Geste, nicht dem Zielen (§50, §55.2).
+
+### Bild
+
+`bilder/kiBlatt-handy-dunkel.png` — der Strich oben, das Kreuz rechts im
+Kopf, 390 px breit (§55.3).

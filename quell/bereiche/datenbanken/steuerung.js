@@ -5291,18 +5291,35 @@ const Datenbank = (() => {
     const dbVerbindungenMenue = (anker, coll) => {
         const r = anker.getBoundingClientRect();
         const dienste = Verbindungen.DIENSTE || [];
-        const drin = coll.verbindungen || [];
+        /* ══ DIE ANZEIGE STELLT DIESELBE FRAGE WIE DIE SPERRE (E651) ═════════
+         * Hier stand `drin.includes(d.id) ? 'an' : 'aus'` — und bei einer nie
+         * angefassten Datenbank ist das für JEDEN Dienst falsch. Das Menü zeigte
+         * „GitHub · aus", während der GitHub-Spiegel lief.
+         *
+         * `Spiegel.darf` beantwortet die Frage an EINER Stelle: fehlt das Feld,
+         * ist nichts eingerichtet und alles erlaubt; eine ausdrückliche Liste
+         * gilt. Zwei getrennte Regeln liefen unweigerlich auseinander — das war
+         * genau der Zustand davor (§8). */
+        const offen = (id) => typeof Spiegel !== 'undefined' && Spiegel.darf
+            ? Spiegel.darf(coll, id)
+            : (coll.verbindungen || []).includes(id);
+        /* Beim ersten Anfassen entsteht eine echte Liste aus dem, was HEUTE
+           gilt — sonst würde ein einziger Klick alle anderen Dienste
+           mitsperren, ohne dass jemand das gesagt hat. */
+        const jetzt = Array.isArray(coll.verbindungen)
+            ? coll.verbindungen.slice()
+            : dienste.filter((d) => offen(d.id)).map((d) => d.id);
         const m = UI.menu('<div class="grp">Verbindungen dieser Datenbank</div>' +
             dienste.map(d => `<button data-v="${d.id}"><span class="mi">${d.icon || '⊞'}</span>` +
-                `${esc(d.name)}<span class="ms">${drin.includes(d.id) ? 'an' : 'aus'}</span></button>`).join('') +
-            '<div class="menu-fuss">Verknüpfte Dienste dürfen Zeilen dieser Datenbank ' +
-            'lesen und schreiben — etwa der GitHub-Spiegel.</div>', r.left, r.bottom + 4);
+                `${esc(d.name)}<span class="ms">${offen(d.id) ? 'an' : 'aus'}</span></button>`).join('') +
+            '<div class="menu-fuss">Nur eingeschaltete Dienste dürfen Zeilen dieser ' +
+            'Datenbank lesen und schreiben — etwa der GitHub-Spiegel.</div>', r.left, r.bottom + 4);
         m.addEventListener('click', e => {
             const b = elVon(e)?.closest('[data-v]');
             if (!b)
                 return;
-            const id = b.dataset.v;
-            const neu = drin.includes(id) ? drin.filter((x) => x !== id) : [...drin, id];
+            const id = String(b.dataset.v);
+            const neu = jetzt.includes(id) ? jetzt.filter((x) => x !== id) : [...jetzt, id];
             Store.updateCollection(coll.id, { verbindungen: neu });
             m.remove();
             App.zeichneSeite();

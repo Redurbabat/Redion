@@ -55,13 +55,89 @@ const Auswahl = (() => {
     } catch { return -1; }
   };
 
+  /** Der sichtbare Text des Blocks, in dem die Auswahl steht. */
+  const sichtbarerText = (): string => {
+    const selection = auswahl(); if (!selection) return '';
+    const range = selection.getRangeAt(0);
+    const node = range.startContainer.nodeType === 3
+      ? range.startContainer.parentElement : range.startContainer as Element;
+    return node?.closest<HTMLElement>('.ct')?.textContent ?? '';
+  };
+
+  /** Wie oft `was` in `wo` vor der Stelle `bis` beginnt. */
+  const davor = (wo: string, was: string, bis: number): number => {
+    let n = 0, i = -1;
+    while ((i = wo.indexOf(was, i + 1)) !== -1 && i < bis) n++;
+    return n;
+  };
+
+  /** Der Anfang des `n`-ten Vorkommens, von null gezählt; -1 wenn es fehlt. */
+  const nteStelle = (wo: string, was: string, n: number): number => {
+    let i = -1;
+    for (let k = 0; k <= n; k++) {
+      i = wo.indexOf(was, i + 1);
+      if (i === -1) return -1;
+    }
+    return i;
+  };
+
+  /* ══ WELCHE STELLE GEMEINT IST (E650) ═══════════════════════════════════
+   * Hier stand `(b.text || '').replace(txt, …)`, und zwar zweimal —
+   * in `umschliesse` und in `linkSetzen`.
+   *
+   * `String.replace` mit einem STRING als Muster ersetzt das ERSTE
+   * Vorkommen. Nicht das markierte. Wer in „Test und Test" das zweite Wort
+   * markiert und auf Fett drückt, bekommt das erste fett, und an der Stelle,
+   * die er angefasst hat, passiert nichts. Gemessen in `test542`:
+   * `**Test** und Test` statt `Test und **Test**`.
+   *
+   * Das ist kein Absturz und keine Fehlermeldung — der Text ändert sich, nur
+   * an der falschen Stelle. In einem langen Absatz merkt man es erst beim
+   * Lesen, und dann steht schon nicht mehr da, was man geschrieben hat.
+   *
+   * DREI WEGE, IN DIESER REIHENFOLGE:
+   *
+   *   1  Der Normalfall. `auswahlOffset()` gibt die Zeichenzahl im
+   *      SICHTBAREN Text; bei schlichtem Text ist das auch die gespeicherte
+   *      Stelle. Wir prüfen das nach, statt es zu glauben: steht dort
+   *      wirklich das gewählte Wort, ist die Sache entschieden.
+   *
+   *   2  Gerendertes Markdown. Ein `**fett**` davor verschiebt die
+   *      Zeichenzahlen — die REIHENFOLGE aber nicht. Kommt das Wort im
+   *      Sichtbaren genauso oft vor wie im Gespeicherten, dann ist das
+   *      n-te hier auch das n-te dort.
+   *
+   *   3  Alles andere. Dann bleibt es beim alten Weg, und der Fehler
+   *      bleibt in genau diesem Restfall bestehen. Das ist bewusst: ein
+   *      Ratespiel an Nutzertext wäre schlimmer als ein bekannter Rest.
+   * ====================================================================== */
+  const stelleImText = (text: string, gewaehlt: string): number => {
+    const off = auswahlOffset();
+    if (off < 0 || !gewaehlt) return text.indexOf(gewaehlt);
+    if (text.slice(off, off + gewaehlt.length) === gewaehlt) return off;
+
+    const sicht = sichtbarerText();
+    if (!sicht) return text.indexOf(gewaehlt);
+    const imSicht = davor(sicht, gewaehlt, sicht.length);
+    const imText = davor(text, gewaehlt, text.length);
+    if (imSicht !== imText || imSicht === 0) return text.indexOf(gewaehlt);
+    return nteStelle(text, gewaehlt, davor(sicht, gewaehlt, off));
+  };
+
+  /** `gewaehlt` an der gemeinten Stelle durch `ersatz` tauschen. */
+  const tauscheDort = (text: string, gewaehlt: string, ersatz: string): string => {
+    const i = stelleImText(text, gewaehlt);
+    if (i < 0) return text;
+    return text.slice(0, i) + ersatz + text.slice(i + gewaehlt.length);
+  };
+
   /** Legt Marken um die Auswahl — genau wie Notions Strg + B. */
   const umschliesse = (marke: string): void => {
     const txt = getSelection()?.toString() ?? '';
     if (!txt) return;
     const b = markierterBlock();
     if (!b) return;
-    const neu = (b.text || '').replace(txt, marke + txt + marke);
+    const neu = tauscheDort(b.text || '', txt, marke + txt + marke);
     Store.updateBlock(b.id, { text: neu });
     App.zeichneSeite(b.id, 'ende');
     weg();
@@ -81,7 +157,7 @@ const Auswahl = (() => {
     if (!bl) return false;
     const url = adresse ?? prompt('Adresse des Links', 'https://') ?? '';
     if (!url || url === 'https://') return false;
-    Store.updateBlock(bl.id, { text: (bl.text || '').replace(text, `[${text}](${url})`) });
+    Store.updateBlock(bl.id, { text: tauscheDort(bl.text || '', text, `[${text}](${url})`) });
     App.zeichneSeite(bl.id, 'ende');
     weg();
     return true;

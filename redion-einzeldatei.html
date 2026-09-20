@@ -23446,6 +23446,13 @@ body[data-dokument="an"] .document-studio .blatt-werk{
     <b>Redion KI</b>
     <button class="icon-btn" id="ai-verlauf" title="Unterhaltungen" aria-label="Unterhaltungen"><span data-sym="history" data-sym-groesse="16"></span></button>
     <button class="icon-btn" id="ai-clear" title="Neuer Chat" aria-label="Neuer Chat"><span data-sym="plus" data-sym-groesse="16"></span></button>
+    <!-- DER WEG ZURÜCK (E653). Am Rechner klappt `#btn-ai` in der Kopfleiste
+         das Feld auf und zu; am Telefon steht dieser Knopf auf
+         `display:none` (bausteine.css:300, :2119), das Blatt ist 88vh hoch
+         und liegt auf z-index 920 über der unteren Leiste — offen war es
+         dort eine Sackgasse. Der Knopf steht hier für BEIDE Bildschirme:
+         ein Weg, nicht zwei (§8). -->
+    <button class="icon-btn" id="ai-zu" title="KI schliessen" aria-label="KI schliessen"><span data-sym="close" data-sym-groesse="16"></span></button>
   </div>
 
   <div id="chat"></div>
@@ -25124,7 +25131,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1233, inhalt: 'cf5ccb578b550d3e', gebaut: '2026-09-20T09:51:45.650Z' };
+const Stand = { fassung: 1244, inhalt: 'cba8b8e1657f85c7', gebaut: '2026-09-20T17:01:30.783Z' };
 window.Stand = Stand;
 
 </script>
@@ -49448,7 +49455,43 @@ const Linse = (() => {
          * sonst optisch, was die Verschiebung schon verzogen hat. */
         defs.append(glas(FAHRT, '9', '12', '0.3'));
         svg.append(defs);
-        document.body.append(svg);
+        /* ══ DER HALTER LIEGT IN EINER HÜLLE (E649) ══════════════════════════
+         * Hier stand `document.body.append(svg)`, und das hat `test272` rot
+         * gemacht — vier Wochen nachdem die Zusage geschrieben wurde, die es
+         * bricht.
+         *
+         * `fokus.ts` legt beim Öffnen eines Dialogs alles still, was daneben
+         * im Körper steht, damit man nicht hinter die Fläche tabbt. Dabei
+         * geht es die direkten Kinder durch und lässt aus, was kein
+         * `HTMLElement` ist — und ein `<svg>` ist ein `SVGElement`. Es fiel
+         * also durch. Der Wächter misst `.inert` über ALLE Kinder, und auf
+         * einem `SVGElement` gibt es diese Eigenschaft gar nicht: `undefined`
+         * ist falsch, und der Lauf war rot.
+         *
+         * ZWEI WEGE WÄREN GEGANGEN. Den Wächter lockern — er prüft strenger,
+         * als die Gefahr ist, denn dieses `<svg>` ist `aria-hidden`, null
+         * Pixel gross, `focusable="false"` und enthält nur `<defs>`. Oder den
+         * Körper aufräumen, so dass die Zusage wieder ohne Ausnahme gilt.
+         * Es ist der zweite geworden: eine Ausnahme im Wächter hätte jede
+         * spätere gedeckt, und §55.2 warnt genau davor.
+         *
+         * DIE HÜLLE IST VON GEBURT AN STILLGELEGT, nicht erst wenn ein Dialog
+         * aufgeht. Sie ist nie Inhalt — sie hält eine Ressource. `fokus.ts`
+         * hat dafür schon den richtigen Zweig („fremden Zustand bewahren")
+         * und fasst sie deshalb nie an. Auf die Filter wirkt das nicht:
+         * `filter: url(#…)` schlägt die Kennung im ganzen Dokument nach, und
+         * `inert` ändert weder Darstellung noch Auflösung.
+         *
+         * DER ZWEITE HALTER IST `textur.ts` (E462) und bekommt dieselben
+         * vier Zeilen mit einem kurzen Verweis hierher. Bei zwei Haltern ist
+         * das billiger als ein drittes Modul; beim dritten gehört es in einen
+         * gemeinsamen Helfer unter `kern/helfer/`. */
+        const huelle = document.createElement('div');
+        huelle.setAttribute('aria-hidden', 'true');
+        huelle.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+        huelle.inert = true;
+        huelle.append(svg);
+        document.body.append(huelle);
     };
     return { HALTER, FAHRT, sicherstellen };
 })();
@@ -49833,7 +49876,18 @@ const Textur = (() => {
         const defs = document.createElementNS(NS, 'defs');
         defs.append(rauschen(FEIN, '0.85', '3', '7'), rauschen(GROB, '0.24', '2', '19'));
         svg.append(defs);
-        document.body.append(svg);
+        /* DER HALTER LIEGT IN EINER HÜLLE (E649). Ein `<svg>` ist ein
+         * `SVGElement`, und `fokus.ts` legt beim Öffnen eines Dialogs nur
+         * `HTMLElement`-Kinder des Körpers stumm — dieser Halter fiel durch,
+         * und `test272` war zu Recht rot. Die Hülle ist von Geburt an
+         * stillgelegt, weil sie nie Inhalt ist. Der ganze Grund steht bei der
+         * gleichen Stelle in `linse.ts`. */
+        const huelle = document.createElement('div');
+        huelle.setAttribute('aria-hidden', 'true');
+        huelle.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+        huelle.inert = true;
+        huelle.append(svg);
+        document.body.append(huelle);
     };
     /**
      * Eine Textur in ein Element legen. Sie kommt als zwei absolute Lagen
@@ -82439,12 +82493,20 @@ const ChronikDaten = {
                     "zeitraum": "11:40 –",
                     "dauer": "laufend",
                     "pruefungen": "test541 (25/25), test539, test478, test114, test225, test105, test109, test87"
+                },
+                {
+                    "was": "E653 — Das KI-Blatt am Telefon: ein Kreuz im Kopf, und der Griff zieht wirklich",
+                    "vonCommit": "(offen)",
+                    "bisCommit": "(offen)",
+                    "zeitraum": "ca. 16:30 –",
+                    "dauer": "laufend",
+                    "pruefungen": "test545 (12/12, dreimal rot gesehen), test544, test87, test105, test109"
                 }
             ],
             "zahlen": {
                 "commits": 2,
-                "entscheidungen": 10,
-                "neue Prüfläufe": 3,
+                "entscheidungen": 11,
+                "neue Prüfläufe": 4,
                 "volle Läufe": 0
             },
             "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -83545,6 +83607,95 @@ const ChronikDaten = {
             "loesung": "`handyLeiste(vorauf)` nimmt das Ziel entgegen, und `dockWechsel` wartet zwei Bilder statt eines. Danach: t=10 x=17, t=26 x=27 — losgefahren, bevor der Aufbau beginnt.",
             "warumKeineUhr": "Die Zeiten kommen aus `performance.now()` in der Seite und sind relativ zum Klick.",
             "lehre": "Eine gute Absicht mit dem falschen Griff sieht im Code aus wie eine Lösung. Und die zweite Hälfte ist bitterer: mein eigener Messplatz war blind. Ein Messer, der je requestAnimationFrame liest, steht genau dann still, wenn der Hauptfaden blockiert — er kann über eine Bewegung unter Last gar nichts sagen. Dafür taugt nur ein Film. Eine Zusage, die am falschen Platz geprüft wird, ist keine."
+        },
+        {
+            "nr": "P78",
+            "datum": "2026-09-20",
+            "titel": "Ein `<svg>` ist kein `HTMLElement`, und `fokus.ts` wusste das",
+            "schwere": "mittel",
+            "symptom": "Der erste volle Lauf gegen das neue `main` war rot: `test272` meldete „Und alles dahinter ist stillgelegt\". Bei offenem Backstage-Blatt konnte man hinter die Fläche tabben.",
+            "falscheVermutung": "Dass es wie `test270` ein Artefakt des Arbeitsbaums sei. `test270` war es wirklich — im Hauptbaum grün. `test272` und `test290` waren es nicht, und beide waren MEINE, achtundvierzig Stunden alt.",
+            "wieGefunden": "Nach dem Ende des Sweeps im Hauptbaum einzeln nachgemessen, wie §30 es verlangt. Danach die Schleife in `fokus.ts` gegen die Behauptung des Wächters gelesen.",
+            "ursache": "`fokus.ts` legt beim Öffnen eines Dialogs die Körperkinder still, überspringt dabei aber alles, was kein `HTMLElement` ist. E639 hat für die Glaslinse ein `<svg>` direkt an den Körper gehängt — ein `SVGElement`. Es fiel durch, und `.inert` gibt es dort gar nicht: `undefined`. Derselbe Fehler stand seit E462 in `textur.ts` daneben und fiel nur nie auf, weil dieser Halter erst bei Gebrauch entsteht.",
+            "loesung": "Nicht den Wächter gelockert, sondern den Körper aufgeräumt: beide Halter liegen jetzt in einer von Geburt an stillgelegten Hülle. Eine Ausnahme im Wächter hätte jede spätere gedeckt (§55.2). Auf die Filter wirkt es nicht — mit `node bilder.mts heute handy` nachgesehen, die Linse liegt über „Heute\" und der Name bleibt lesbar.",
+            "warumKeineUhr": "Aus einem Prüflaufergebnis abgeleitet, nicht aus einem Commit.",
+            "lehre": "`instanceof HTMLElement` heisst nicht „jedes Element\". Derselbe Bautyp wie die fünf Fehler vom Vortag: ein Ausdruck misst etwas anderes, als der Satz daneben behauptet. Und: ein zweiter Halter kann jahrelang denselben Fehler tragen, solange kein Prüflauf ihn je entstehen lässt."
+        },
+        {
+            "nr": "P79",
+            "datum": "2026-09-20",
+            "titel": "Ein Präfix fehlte im Verzeichnis, und die Zahl daneben stimmte schon vorher nicht",
+            "schwere": "klein",
+            "symptom": "`test290`: „Kein Präfix fehlt im Verzeichnis — bw — bitte in doku/CSS-NAMENSRAEUME.md eintragen\".",
+            "falscheVermutung": "Keine — der Wächter nennt die Sache beim Namen. Die Überraschung kam beim Eintragen.",
+            "wieGefunden": "Im Hauptbaum nachgemessen; dann mit dem Regex des Wächters selbst gezählt, woher `bw` kommt.",
+            "ursache": "`.bw-flug` und `.bw-wartet` kamen mit E640 dazu, zusammen mit dem älteren `.bw-trenn` sind es sieben Vorkommen. Ab vier gilt ein Präfix als eigener Namensraum. Beim Eintragen fiel auf, dass der Fliesstext derselben Datei „Es sind 144\" behauptete, während das Verzeichnis 158 Einträge trug.",
+            "loesung": "`bw  7  bausteine.css` eingetragen; die Zahl im Fliesstext auf 159 nachgezählt und den Zählbefehl danebengeschrieben, statt sie fortzuschreiben.",
+            "warumKeineUhr": "Aus einem Prüflaufergebnis abgeleitet.",
+            "lehre": "Dieselbe Lehre wie bei der Prüflaufzahl in §30: eine Zahl im Fliesstext, die kein Lauf anfasst, driftet. Sie gehört mit ihrem Befehl aufgeschrieben oder gar nicht."
+        },
+        {
+            "nr": "P80",
+            "datum": "2026-09-20",
+            "titel": "Fett traf das erste Wort, nicht das markierte",
+            "schwere": "mittel",
+            "symptom": "In „Test und Test\" das zweite Wort markieren und auf Fett drücken ergibt `**Test** und Test`. Der Text ändert sich, nur an der falschen Stelle — kein Absturz, keine Meldung.",
+            "falscheVermutung": "Keine bei der Ursache — `String.replace` mit einem String ist eindeutig. Die falsche Vermutung steckte im WÄCHTER: der erste Anlauf war rot und ich hielt ihn für einen Beweis. Er war rot mit „KEIN BLOCK\", weil `App.zeichneSeite(id)` ohne `App.oeffne(id)` die Bibliothek stehen lässt. Er wäre genauso rot gewesen, wenn der Fehler gar nicht existierte.",
+            "wieGefunden": "Die Bestandsaufnahme vom selben Tag, beim Gegenlesen des Editor-Befunds. Kein Prüflauf hatte die Auswahlleiste je angefasst.",
+            "ursache": "`umschliesse` und `linkSetzen` ersetzten mit `(b.text||'').replace(txt, …)`. Ein String als Muster trifft das erste Vorkommen. Neun Monate unauffällig, weil der Normalfall — kurzer Block, einmaliges Wort — immer richtig war.",
+            "loesung": "`auswahlOffset()` gab es schon (E289, Lückenkarten). Jetzt in drei Stufen: geprüfte Zeichenstelle im Normalfall, Reihenfolge bei gerendertem Markdown, alter Weg als Rest. Neuer Wächter `test542`, der den falschen Wert ausdruckt statt nur „passt nicht\".",
+            "warumKeineUhr": "Aus der Bestandsaufnahme abgeleitet, nicht aus einem Commit.",
+            "lehre": "Ein roter Lauf ist noch kein Beweis. Er muss aus dem RICHTIGEN Grund rot sein — und am sichersten sieht man das daran, dass er den falschen Wert nennt, nicht nur die Ungleichheit."
+        },
+        {
+            "nr": "P81",
+            "datum": "2026-09-20",
+            "titel": "Ein Schalter, der Sicherheit verspricht und nicht gelesen wird",
+            "schwere": "mittel",
+            "symptom": "Das Datenbankmenü sagt „Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und schreiben\" — und zeigte bei jeder nie angefassten Datenbank „GitHub · aus\", während der GitHub-Spiegel lief.",
+            "falscheVermutung": "Dass nur die Sperre fehle. Der schlimmere Teil war die ANZEIGE: `drin.includes(id)` ist ohne das Feld für jeden Dienst falsch. Ein Knopf, der nichts tut, ist ärgerlich; einer, der „aus\" sagt, während etwas läuft, ist eine falsche Auskunft über die eigenen Daten.",
+            "wieGefunden": "Bestandsaufnahme vom selben Tag, Gegenleser des Datenbank-Befunds. Nachgemessen mit grep: `coll.verbindungen` wurde an zwei Stellen geschrieben und nirgends als Erlaubnis gelesen.",
+            "ursache": "Die Oberfläche für ein Rechtemodell war gebaut, das Modell selbst nie. Der Spiegel hängt an `gespiegelt`/`spiegelQuelle` und kannte den Schalter nicht.",
+            "loesung": "`Spiegel.darf` beantwortet die Frage an EINER Stelle, für Anzeige und Sperre. `undefined` heisst erlaubt (Bestandsschutz — ein Schalter, der bei Einführung alle Spiegel abwürgt, wäre schlimmer als der Fehler), `[]` heisst gesperrt. Gesperrt wird VOR dem Netzruf, also auch das Lesen, denn beide Abgleichwege holen zuerst und suchen die Datenbank danach.",
+            "warumKeineUhr": "Aus der Bestandsaufnahme abgeleitet.",
+            "lehre": "Ein Fusstext ist eine Zusage. Wer eine schreibt, muss zeigen, wer sie einlöst — und die ANZEIGE muss dieselbe Frage stellen wie die Sperre, sonst laufen sie auseinander und die falsche Auskunft ist die gefährlichere Hälfte."
+        },
+        {
+            "nr": "P82",
+            "datum": "2026-09-20",
+            "titel": "Das Teure war gebaut, das Billige fehlte",
+            "schwere": "mittel",
+            "symptom": "Eine lange KI-Antwort liess sich nur durch Schliessen des Tabs beenden. Und der Menüpunkt „Meine Quellen\" öffnete nichts — er zeigte eine Zahl und ein „▸\" und tat nichts.",
+            "falscheVermutung": "Dass der Abbruch erst gebaut werden müsse. Er WAR gebaut: `frage` nimmt ein Signal, reicht es bis in `fetch`, und sogar der Backoff-`schlafen` bricht ab. Nur `senden` liess das dritte Argument weg, und es gab keinen Knopf.",
+            "wieGefunden": "Bestandsaufnahme vom selben Tag, Bereich KI/UX. Nachgemessen mit einem `fetch`, das nie antwortet — ausser das Signal kommt an.",
+            "ursache": "Ein Argument, das beim Aufruf fehlte, und ein Menüpunkt, der `quellenKarte(e.currentTarget)` rief: ein HTML-Element an eine Funktion, die eine Liste erwartet. `!element.length` ist wahr, also lautlos `null`.",
+            "loesung": "Der Senden-Knopf wird für die Dauer des Laufs zum Stopp-Knopf — dasselbe Element, dieselbe Grösse (§37), `aria-label` wechselt mit (§38). Ein Abbruch behält die Teilantwort und sagt „Abgebrochen\" statt „AbortError\". Der Menüpunkt öffnet dieselbe Schalterleiste, die im Fuss steht (§8).",
+            "warumKeineUhr": "Aus der Bestandsaufnahme abgeleitet.",
+            "lehre": "Ein grüner Prüflauf ist so wenig ein Beweis wie ein roter. Abschnitt 2 war zuerst grün, weil er sichtbare Schalter im GANZEN Dokument zählte — und die Leiste steht ohnehin im Fuss. Gemessen werden muss, was der Klick NEU öffnet. Dritter Fall dieser Art an einem Tag."
+        },
+        {
+            "nr": "P83",
+            "datum": "2026-09-20",
+            "titel": "Ein Blatt ohne Weg zurück, und ein Griff, der nichts hält",
+            "schwere": "hoch",
+            "symptom": "Wer das KI-Feld am Telefon öffnete, konnte es nicht mehr schliessen. Kein Kreuz im Kopf, `#btn-ai` auf `display:none`, kein Strg+J an einem Telefon, und die untere Leiste lag unter einem 88vh hohen Blatt auf z-index 920. Der einzige Ausweg war, den Tab zu schliessen.",
+            "falscheVermutung": "Dass es irgendeinen Weg geben muss — ein Tippen daneben, die Leiste darunter, Escape. Es gab keinen. Der Escape-Griff räumt `.menu` und `.overlay`; `#ai` ist ein `<aside>` und heisst weder so noch so.",
+            "wieGefunden": "Bestandsaufnahme vom selben Tag, §37-Durchgang. Nachgemessen mit einem Lauf, der nicht fragt, ob ein Kreuz dasteht, sondern jeden sichtbaren Knopf im Kopf DRÜCKT und danach nachsieht, ob `.open` weg ist: „2 geprüft, 0 schliessen\".",
+            "ursache": "Der Weg zurück hing seit jeher an `#btn-ai` in der Kopfleiste. Als die Kopfleiste am Telefon ausgedünnt wurde (bausteine.css:297, „sonst quetschen sich zwölf Knöpfe in 428 Pixel\"), ging er mit — und niemand hat gefragt, was dann das Blatt schliesst. Dazu zeichnete `#ai::before` einen Wischgriff, dessen Kommentar die Geste ausdrücklich verspricht; gehört hat auf `#ai` nie jemand.",
+            "beweis": "`test545` gegen den alten Stand: „✗ Mindestens ein sichtbarer Knopf schliesst das Blatt wirklich — 2 geprüft, 0 schliessen — das Blatt ist eine Falle\". Gegenprobe nach dem Bau: `kiGriff()` abgehängt → genau eine Zeile rot, während „Der Zug landet wirklich auf dem Kopf des Blattes\" grün bleibt.",
+            "lehre": "Ein Knopf, der auf einem Bildschirm ausgeblendet wird, nimmt jede Funktion mit, die NUR an ihm hing. Wer eine Leiste ausdünnt, muss für jeden entfernten Knopf sagen, wer seine Aufgabe übernimmt — und für das Zu eines Blattes gilt das doppelt, weil es kein zweites Mal geöffnet werden kann, wenn es offen feststeckt."
+        },
+        {
+            "nr": "P84",
+            "datum": "2026-09-20",
+            "titel": "Zweimal rot aus dem falschen Grund — derselbe Lauf",
+            "schwere": "mittel",
+            "symptom": "`test545` war rot, sagte aber zweimal etwas anderes, als er mass: erst „der Knopf misst 0 × 0\", dann „die Geste gibt es nicht\" — obwohl der Knopf 44 px hatte und die Geste gebaut war.",
+            "falscheVermutung": "Beim ersten Mal: der Knopf sei zu klein. Beim zweiten Mal: der Griff sei nicht angeschlossen. Beides falsch.",
+            "wieGefunden": "Nachgesehen statt geglaubt. Das Maß wurde NACH dem Klick genommen — geschlossen steht `#ai` auf `display:none`, und dann misst jeder Knopf darin 0 × 0. Und `document.elementFromPoint` an der Zugstelle nannte den wahren Empfänger: `DIV#rg-willkommen`, das Willkommensblatt über allem.",
+            "ursache": "Zwei Messfehler im Wächter, keiner im Produkt.",
+            "beweis": "Nach der Korrektur: „→ ai-zu · 44×44 px\" und „Der Zug landet wirklich auf dem Kopf des Blattes\" — und die Gegenprobe wird nur an der Geste rot.",
+            "lehre": "Vierter und fünfter Fall derselben Sorte an zwei Tagen, nach `test542`, `test543` und `test544`. Die Lehre steht jetzt in beide Richtungen: ein roter Lauf ist noch kein Beweis, und ein grüner erst recht nicht. Ein Wächter, der eine Stelle anfasst, prüft zuerst, WER dort liegt."
         }
     ]
 };
@@ -102969,18 +103120,35 @@ const Datenbank = (() => {
     const dbVerbindungenMenue = (anker, coll) => {
         const r = anker.getBoundingClientRect();
         const dienste = Verbindungen.DIENSTE || [];
-        const drin = coll.verbindungen || [];
+        /* ══ DIE ANZEIGE STELLT DIESELBE FRAGE WIE DIE SPERRE (E651) ═════════
+         * Hier stand `drin.includes(d.id) ? 'an' : 'aus'` — und bei einer nie
+         * angefassten Datenbank ist das für JEDEN Dienst falsch. Das Menü zeigte
+         * „GitHub · aus", während der GitHub-Spiegel lief.
+         *
+         * `Spiegel.darf` beantwortet die Frage an EINER Stelle: fehlt das Feld,
+         * ist nichts eingerichtet und alles erlaubt; eine ausdrückliche Liste
+         * gilt. Zwei getrennte Regeln liefen unweigerlich auseinander — das war
+         * genau der Zustand davor (§8). */
+        const offen = (id) => typeof Spiegel !== 'undefined' && Spiegel.darf
+            ? Spiegel.darf(coll, id)
+            : (coll.verbindungen || []).includes(id);
+        /* Beim ersten Anfassen entsteht eine echte Liste aus dem, was HEUTE
+           gilt — sonst würde ein einziger Klick alle anderen Dienste
+           mitsperren, ohne dass jemand das gesagt hat. */
+        const jetzt = Array.isArray(coll.verbindungen)
+            ? coll.verbindungen.slice()
+            : dienste.filter((d) => offen(d.id)).map((d) => d.id);
         const m = UI.menu('<div class="grp">Verbindungen dieser Datenbank</div>' +
             dienste.map(d => `<button data-v="${d.id}"><span class="mi">${d.icon || '⊞'}</span>` +
-                `${esc(d.name)}<span class="ms">${drin.includes(d.id) ? 'an' : 'aus'}</span></button>`).join('') +
-            '<div class="menu-fuss">Verknüpfte Dienste dürfen Zeilen dieser Datenbank ' +
-            'lesen und schreiben — etwa der GitHub-Spiegel.</div>', r.left, r.bottom + 4);
+                `${esc(d.name)}<span class="ms">${offen(d.id) ? 'an' : 'aus'}</span></button>`).join('') +
+            '<div class="menu-fuss">Nur eingeschaltete Dienste dürfen Zeilen dieser ' +
+            'Datenbank lesen und schreiben — etwa der GitHub-Spiegel.</div>', r.left, r.bottom + 4);
         m.addEventListener('click', e => {
             const b = elVon(e)?.closest('[data-v]');
             if (!b)
                 return;
-            const id = b.dataset.v;
-            const neu = drin.includes(id) ? drin.filter((x) => x !== id) : [...drin, id];
+            const id = String(b.dataset.v);
+            const neu = jetzt.includes(id) ? jetzt.filter((x) => x !== id) : [...jetzt, id];
             Store.updateCollection(coll.id, { verbindungen: neu });
             m.remove();
             App.zeichneSeite();
@@ -113686,6 +113854,85 @@ const Auswahl = (() => {
             return -1;
         }
     };
+    /** Der sichtbare Text des Blocks, in dem die Auswahl steht. */
+    const sichtbarerText = () => {
+        const selection = auswahl();
+        if (!selection)
+            return '';
+        const range = selection.getRangeAt(0);
+        const node = range.startContainer.nodeType === 3
+            ? range.startContainer.parentElement : range.startContainer;
+        return node?.closest('.ct')?.textContent ?? '';
+    };
+    /** Wie oft `was` in `wo` vor der Stelle `bis` beginnt. */
+    const davor = (wo, was, bis) => {
+        let n = 0, i = -1;
+        while ((i = wo.indexOf(was, i + 1)) !== -1 && i < bis)
+            n++;
+        return n;
+    };
+    /** Der Anfang des `n`-ten Vorkommens, von null gezählt; -1 wenn es fehlt. */
+    const nteStelle = (wo, was, n) => {
+        let i = -1;
+        for (let k = 0; k <= n; k++) {
+            i = wo.indexOf(was, i + 1);
+            if (i === -1)
+                return -1;
+        }
+        return i;
+    };
+    /* ══ WELCHE STELLE GEMEINT IST (E650) ═══════════════════════════════════
+     * Hier stand `(b.text || '').replace(txt, …)`, und zwar zweimal —
+     * in `umschliesse` und in `linkSetzen`.
+     *
+     * `String.replace` mit einem STRING als Muster ersetzt das ERSTE
+     * Vorkommen. Nicht das markierte. Wer in „Test und Test" das zweite Wort
+     * markiert und auf Fett drückt, bekommt das erste fett, und an der Stelle,
+     * die er angefasst hat, passiert nichts. Gemessen in `test542`:
+     * `**Test** und Test` statt `Test und **Test**`.
+     *
+     * Das ist kein Absturz und keine Fehlermeldung — der Text ändert sich, nur
+     * an der falschen Stelle. In einem langen Absatz merkt man es erst beim
+     * Lesen, und dann steht schon nicht mehr da, was man geschrieben hat.
+     *
+     * DREI WEGE, IN DIESER REIHENFOLGE:
+     *
+     *   1  Der Normalfall. `auswahlOffset()` gibt die Zeichenzahl im
+     *      SICHTBAREN Text; bei schlichtem Text ist das auch die gespeicherte
+     *      Stelle. Wir prüfen das nach, statt es zu glauben: steht dort
+     *      wirklich das gewählte Wort, ist die Sache entschieden.
+     *
+     *   2  Gerendertes Markdown. Ein `**fett**` davor verschiebt die
+     *      Zeichenzahlen — die REIHENFOLGE aber nicht. Kommt das Wort im
+     *      Sichtbaren genauso oft vor wie im Gespeicherten, dann ist das
+     *      n-te hier auch das n-te dort.
+     *
+     *   3  Alles andere. Dann bleibt es beim alten Weg, und der Fehler
+     *      bleibt in genau diesem Restfall bestehen. Das ist bewusst: ein
+     *      Ratespiel an Nutzertext wäre schlimmer als ein bekannter Rest.
+     * ====================================================================== */
+    const stelleImText = (text, gewaehlt) => {
+        const off = auswahlOffset();
+        if (off < 0 || !gewaehlt)
+            return text.indexOf(gewaehlt);
+        if (text.slice(off, off + gewaehlt.length) === gewaehlt)
+            return off;
+        const sicht = sichtbarerText();
+        if (!sicht)
+            return text.indexOf(gewaehlt);
+        const imSicht = davor(sicht, gewaehlt, sicht.length);
+        const imText = davor(text, gewaehlt, text.length);
+        if (imSicht !== imText || imSicht === 0)
+            return text.indexOf(gewaehlt);
+        return nteStelle(text, gewaehlt, davor(sicht, gewaehlt, off));
+    };
+    /** `gewaehlt` an der gemeinten Stelle durch `ersatz` tauschen. */
+    const tauscheDort = (text, gewaehlt, ersatz) => {
+        const i = stelleImText(text, gewaehlt);
+        if (i < 0)
+            return text;
+        return text.slice(0, i) + ersatz + text.slice(i + gewaehlt.length);
+    };
     /** Legt Marken um die Auswahl — genau wie Notions Strg + B. */
     const umschliesse = (marke) => {
         const txt = getSelection()?.toString() ?? '';
@@ -113694,7 +113941,7 @@ const Auswahl = (() => {
         const b = markierterBlock();
         if (!b)
             return;
-        const neu = (b.text || '').replace(txt, marke + txt + marke);
+        const neu = tauscheDort(b.text || '', txt, marke + txt + marke);
         Store.updateBlock(b.id, { text: neu });
         App.zeichneSeite(b.id, 'ende');
         weg();
@@ -113716,7 +113963,7 @@ const Auswahl = (() => {
         const url = adresse ?? prompt('Adresse des Links', 'https://') ?? '';
         if (!url || url === 'https://')
             return false;
-        Store.updateBlock(bl.id, { text: (bl.text || '').replace(text, `[${text}](${url})`) });
+        Store.updateBlock(bl.id, { text: tauscheDort(bl.text || '', text, `[${text}](${url})`) });
         App.zeichneSeite(bl.id, 'ende');
         weg();
         return true;
@@ -123231,8 +123478,72 @@ const Spiegel = (() => {
         coll.schema[key].options = liste;
         Store.updateCollection(coll.id, { schema: coll.schema });
     };
+    /* ══ DER VERBINDUNGSSCHALTER GILT WIRKLICH (E651) ═══════════════════════
+     * Das Datenbankmenü hat seit je einen Punkt „Verbindungen dieser
+     * Datenbank" mit einem Fusstext, der etwas Sicherheitsrelevantes zusagt:
+     *
+     *     „Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und
+     *      schreiben — etwa der GitHub-Spiegel."
+     *
+     * Gemessen am 20. September: `coll.verbindungen` wurde an genau zwei
+     * Stellen ANGEFASST — vom Menü, das es schreibt, und von der Zeile, die
+     * die Anzahl zeigt. GELESEN als Erlaubnis wurde es nirgends. Der Spiegel
+     * hängt an `gespiegelt` und `spiegelQuelle` und fragte den Schalter nie.
+     *
+     * Zwei Fehler auf einmal, und der zweite ist der schlimmere: die ANZEIGE
+     * stimmte auch nicht. `drin.includes(id)` ist bei einer nie angefassten
+     * Datenbank für jeden Dienst falsch — das Menü zeigte „GitHub · aus",
+     * WÄHREND der GitHub-Spiegel lief. Wer das liest, glaubt, er sei
+     * geschützt. Das ist §47 in seiner gefährlichen Form.
+     *
+     * ─── WARUM `undefined` ERLAUBT UND `[]` SPERRT ────────────────────────
+     *
+     * Ein Schalter, der bei seiner Einführung jeden laufenden Spiegel
+     * abwürgt, wäre schlimmer als der Fehler, den er behebt (§46, §51).
+     * Deshalb dieser Unterschied, und er ist der ganze Entwurf:
+     *
+     *     verbindungen fehlt   → nie eingerichtet → erlaubt, wie bisher
+     *     verbindungen: []     → ausdrücklich leer → gesperrt
+     *     verbindungen: ['github'] → genau das ist erlaubt
+     *
+     * Das Menü schreibt beim ersten Anfassen eine echte Liste, und ab da
+     * gilt sie. Wer nie hingeht, merkt nichts — und wer hingeht, sieht ab
+     * sofort die Wahrheit, weil die Anzeige dieselbe Frage stellt.
+     *
+     * EINE FRAGE, EIN ORT (§8). `steuerung.ts` zeichnet das Menü und ruft
+     * für die Anzeige dieselbe Funktion, die hier sperrt. Zwei getrennte
+     * Regeln liefen unweigerlich auseinander, und genau das war der Zustand
+     * davor. */
+    const darf = (coll, dienst) => {
+        const liste = coll && coll.verbindungen;
+        if (!Array.isArray(liste))
+            return true;
+        return liste.includes(dienst);
+    };
+    /** Der Dienst, an dem dieser Spiegel hängt — oder nichts. */
+    const eigenerDienst = (coll) => String((coll && coll.spiegelQuelle) || '').split(':')[0] || '';
+    /** Sperrt, wenn der Schalter es sagt. Wirft mit einem Grund statt still
+        zurückzukehren — eine stille Rückkehr sähe aus wie „nichts zu tun". */
+    const sperrePruefen = (coll, dienst) => {
+        if (darf(coll, dienst))
+            return;
+        throw new Error('Für diese Datenbank ist die Verbindung zu ' + dienst
+            + ' ausgeschaltet. Datenbankmenü → Verbindungen.');
+    };
+    /** Die schon vorhandene Zieldatenbank zu einem Spiegelnamen — oder nichts. */
+    const zielSchon = (name) => Object.values(Store.cache.collections).find(c => c.name === name && c.gespiegelt) || null;
+    /* Der Fusstext sagt „lesen UND schreiben". Also muss die Sperre VOR den
+       Netzruf, nicht dazwischen — sonst waere das Holen erlaubt und nur das
+       Zurueckschreiben gesperrt, und das Versprechen bliebe halbwahr (E651).
+       Gibt es die Zieldatenbank noch gar nicht, ist nichts zu schuetzen: einen
+       neuen Spiegel legt der Nutzer ausdruecklich an. */
+    const sperrePruefenFuerZiel = (name, dienst) => {
+        const da = zielSchon(name);
+        if (da)
+            sperrePruefen(da, dienst);
+    };
     const zielDatenbank = (name, schema, layout = 'table') => {
-        const da = Object.values(Store.cache.collections).find(c => c.name === name && c.gespiegelt);
+        const da = zielSchon(name);
         if (da)
             return da;
         const { collectionId } = Store.addDatabase(App.aktuelleSeite(), name, schema(), layout);
@@ -123254,6 +123565,7 @@ const Spiegel = (() => {
         return alle;
     };
     const githubAbgleich = async (repo, zustand = 'all') => {
+        sperrePruefenFuerZiel('GitHub · ' + repo, 'github');
         const roh = await githubHolen(repo, zustand);
         const coll = zielDatenbank('GitHub · ' + repo, GH_SCHEMA, 'board');
         /* Board nach Zustand gruppieren, damit man sofort etwas sieht */
@@ -123304,7 +123616,9 @@ const Spiegel = (() => {
         return { neu, frisch, coll };
     };
     /** Eine Änderung zurück nach GitHub schreiben. */
-    const githubZurueck = async (row, _coll) => {
+    const githubZurueck = async (row, coll) => {
+        /* VOR jedem Ruf, nicht danach (E651). */
+        sperrePruefen(coll || (row && row.parentId ? Store.getCollection(row.parentId) : null), 'github');
         const repo = (row.props || {}).repo || Store.getMeta('api:githubRepo', '');
         const nr = (row.props || {}).nr;
         if (!repo || !nr)
@@ -123347,6 +123661,7 @@ const Spiegel = (() => {
         text: { name: 'Beschreibung', type: 'text' }
     });
     const jiraAbgleich = async (projekt) => {
+        sperrePruefenFuerZiel('Jira · ' + projekt, 'jira');
         const basis = Store.getMeta('api:jiraUrl', '').replace(/\/$/, '');
         const jql = encodeURIComponent('project = ' + projekt + ' ORDER BY updated DESC');
         const d = await Verbindungen.jiraRuf('/rest/api/3/search?jql=' + jql + '&maxResults=100' +
@@ -123568,7 +123883,8 @@ const Spiegel = (() => {
             }
         });
     };
-    return { githubAbgleich, githubZurueck, githubNeu, githubDialog,
+    return { darf, eigenerDienst, sperrePruefen, sperrePruefenFuerZiel,
+        githubAbgleich, githubZurueck, githubNeu, githubDialog,
         jiraAbgleich, jiraDialog, textAusAdf,
         spiegelListe, alleAuffrischen, dialog };
 })();
@@ -162981,6 +163297,7 @@ const KI = (() => {
         laedt: false,
         ollamaModelle: [],
         engine: null, /* die WebLLM-Instanz */
+        abbruch: null, /* läuft gerade eine Antwort? (E652) */
         verlauf: [],
         chatId: '', /* welcher gespeicherte Chat gerade offen ist */
         modus: 'standard' /* 'standard' darf ändern, 'fragen' nur antworten */
@@ -163690,6 +164007,42 @@ const KI = (() => {
         });
         return d;
     };
+    /* ══ DER STOPP-KNOPF (E652) ═════════════════════════════════════════════
+     * Die ganze Abbruchkette war gebaut: `frage(…, {signal})`, ein
+     * abbrechbares `schlafen` für den Backoff, `signal` bis in `fetch`
+     * hinein. Nur `senden` rief `frage` OHNE das dritte Argument, und im
+     * Markup gab es keinen Knopf dafür. Wer eine lange Antwort losgeschickt
+     * hatte, konnte sie nur durch Schliessen des Tabs beenden.
+     *
+     * Das Teure war gebaut, das Billige fehlte.
+     *
+     * KEIN ZWEITER KNOPF. Der Senden-Knopf wird für die Dauer des Laufs zum
+     * Stopp-Knopf — dasselbe Element, dieselbe Grösse. Ein Knopf, der
+     * daneben auftaucht, verschiebt die Trefferfläche mitten in der
+     * Bewegung; §37 verlangt das Gegenteil. `test544` misst die Grösse vor
+     * und nach dem Lauf.
+     *
+     * Und der Zustand steht NICHT nur in der Farbe (§38): `aria-label`
+     * wechselt mit, sonst weiss ein Vorleseprogramm nichts davon. */
+    const sendenKnopf = (imLauf) => {
+        const k = document.getElementById('ai-senden');
+        if (!k)
+            return;
+        k.textContent = imLauf ? '■' : '↑';
+        k.setAttribute('aria-label', imLauf ? 'Antwort abbrechen' : 'Nachricht senden');
+        k.setAttribute('title', imLauf ? 'Abbrechen' : 'Senden');
+        if (imLauf)
+            k.setAttribute('data-lauf', '1');
+        else
+            k.removeAttribute('data-lauf');
+    };
+    /** Bricht die laufende Antwort ab. Ohne Lauf tut es nichts. */
+    const abbrechen = () => {
+        if (!zustand.abbruch)
+            return false;
+        zustand.abbruch.abort();
+        return true;
+    };
     const senden = async (text, mitKontext = true) => {
         if (!text.trim())
             return;
@@ -163779,6 +164132,11 @@ const KI = (() => {
            Fehler. */
         const aktivitaet = zeigeAktivitaet(ziel);
         ziel.classList.add('ki-schreibt');
+        /* Ein Steuermann je Lauf (E652). Er steht im Zustand, damit der Knopf
+           und `abbrechen()` denselben erreichen. */
+        const steuer = new AbortController();
+        zustand.abbruch = steuer;
+        sendenKnopf(true);
         try {
             await frage(nachrichten, (t) => {
                 antwort += t;
@@ -163786,14 +164144,29 @@ const KI = (() => {
                 const kasten = document.getElementById('chat');
                 if (kasten)
                     kasten.scrollTop = 1e9;
-            });
+            }, { signal: steuer.signal });
             zustand.verlauf.push({ role: 'user', content: text });
             zustand.verlauf.push({ role: 'assistant', content: antwort });
         }
         catch (e) {
-            ziel.textContent = '⚠ ' + (e instanceof Error ? e.message : String(e));
+            /* EIN ABBRUCH IST KEIN FEHLER, und `AbortError` ist kein Satz, den
+               ein Mensch lesen will. Was schon dasteht, bleibt stehen — es
+               gehört dem Nutzer (§51); nur der Verlauf bekommt die halbe
+               Antwort nicht, weil sie unvollständig ist. */
+            const abbruch = steuer.signal.aborted
+                || (e instanceof Error && e.name === 'AbortError');
+            if (abbruch) {
+                ziel.textContent = antwort
+                    ? antwort + '\n\n— Abgebrochen.'
+                    : 'Abgebrochen.';
+            }
+            else {
+                ziel.textContent = '⚠ ' + (e instanceof Error ? e.message : String(e));
+            }
         }
         finally {
+            zustand.abbruch = null;
+            sendenKnopf(false);
             ziel.classList.remove('ki-schreibt');
             aktivitaet.remove();
         }
@@ -164936,6 +165309,11 @@ const KI = (() => {
             }
         });
         document.getElementById('ai-senden')?.addEventListener('click', () => {
+            /* Läuft gerade eine Antwort, ist derselbe Knopf der Stopp-Knopf
+               (E652). Erst danach wird das Feld geleert — sonst verlöre man
+               seine Frage beim Abbrechen. */
+            if (abbrechen())
+                return;
             const t = ta.value;
             ta.value = '';
             ta.style.height = 'auto';
@@ -165012,8 +165390,17 @@ const KI = (() => {
                 if (!b)
                     return;
                 m.remove();
-                if (b.dataset.y === 'quellen')
-                    quellenKarte(e.currentTarget);
+                /* HIER STAND `quellenKarte(e.currentTarget)` (E652): ein
+                   HTML-Element an eine Funktion, die eine LISTE erwartet.
+                   `!element.length` ist wahr, also kam lautlos `null` zurück — und
+                   selbst das wurde nirgends eingehängt. Der Punkt zeigte eine Zahl
+                   und ein „▸", versprach also ein Untermenü, und tat nichts.
+                   Jetzt öffnet er DIESELBE Schalterleiste, die im Fuss steht:
+                   ein Katalog, nicht zwei (§8). */
+                if (b.dataset.y === 'quellen') {
+                    const q2 = UI.menu('<div class="grp">Meine Quellen</div>', r.left, r.top - 160);
+                    q2.appendChild(quellenLeiste());
+                }
                 if (b.dataset.y === 'mcp')
                     Einstellungen.oeffne('mcp');
                 if (b.dataset.y === 'modus')
@@ -165075,7 +165462,7 @@ const KI = (() => {
             status('ok', kurzName(zustand.modell));
         zeichneModellKnopf();
     };
-    return { start, bindePanel, sucheOllamaJetzt, senden, blockAktion, frageMitAuswahl, wikipedia, nachschlagen,
+    return { start, bindePanel, sucheOllamaJetzt, senden, abbrechen, sendenKnopf, blockAktion, frageMitAuswahl, wikipedia, nachschlagen,
         datenbankBauen, datenbankBauenAus, seiteBauen, protokollZeigen, protokoll,
         quellenKarte, quellenLeiste, seitenKontext, SYSTEM,
         SCHREIB_BEFEHLE, schreibMenue, schreibLauf, alsBloeckeEinfuegen,
@@ -173058,6 +173445,80 @@ const App = (() => {
         if (an)
             setTimeout(() => document.getElementById('ai-input')?.focus(), 60);
     };
+    /* ══ DER GRIFF AM BLATT (E653) ═══════════════════════════════════════════
+     * Am Telefon ist `#ai` kein Panel neben der Seite, sondern ein Blatt, das
+     * von unten kommt — und `#ai::before` zeichnet oben einen Strich. Der
+     * Kommentar daneben (bausteine.css:356) sagt wörtlich, was der Strich
+     * verspricht: „er sagt ohne Wort, dass man das Blatt wegwischen kann".
+     *
+     * Gewischt werden konnte nichts. `wischen.ts` kennt `#handy-oben` und
+     * sonst nichts; auf `#ai` hörte niemand zu. Ein gezeichnetes Versprechen
+     * ist dasselbe Versprechen (§47) — und weil `#btn-ai` am Telefon auf
+     * `display:none` steht, war der Strich nicht nur unehrlich, sondern der
+     * einzige Hinweis auf einen Weg, den es nicht gab.
+     *
+     * NUR AM TELEFON. Am Rechner ist `#ai` eine Spalte; sie nach unten zu
+     * ziehen ergäbe keinen Sinn und würde das Markieren von Text im Kopf
+     * stören. `matchMedia` fragt dieselbe Grenze ab, die auch die Stilblätter
+     * benutzen: 760 px.
+     *
+     * NUR AM KOPF. Unter dem Kopf steht der Verlauf, und der rollt. Ein Zug
+     * irgendwo auf dem Blatt wäre beides zugleich.
+     *
+     * UND NICHT AUF DEN KNÖPFEN. Wer „Neuer Chat" trifft und dabei um zwei
+     * Pixel verrutscht, meint den Knopf.
+     * ======================================================================*/
+    /** So weit muss der Zug gehen, damit er als Wegwischen zählt. Darunter
+     *  federt das Blatt zurück — sonst wäre jedes Verrutschen ein Schliessen. */
+    const BLATT_ZUG = 90;
+    /** 760 px: dieselbe Grenze wie in `bausteine.css` und `ki.css`. */
+    const blattAmTelefon = () => typeof matchMedia === 'function' && matchMedia('(max-width:760px)').matches;
+    const kiGriff = () => {
+        const blatt = document.getElementById('ai');
+        if (!blatt)
+            return;
+        let start = 0, zug = 0, zieht = false;
+        const bewegen = (e) => {
+            if (!zieht)
+                return;
+            zug = Math.max(0, e.clientY - start);
+            blatt.style.transform = 'translateY(' + zug + 'px)';
+        };
+        const ende = () => {
+            if (!zieht)
+                return;
+            zieht = false;
+            document.removeEventListener('pointermove', bewegen);
+            document.removeEventListener('pointerup', ende);
+            document.removeEventListener('pointercancel', ende);
+            /* Erst den Übergang zurückgeben, DANN den Wert ändern. Ohne das
+               Lesen von `offsetHeight` dazwischen fasst der Browser beides zu
+               einem Schritt zusammen, und das Blatt springt statt zu gleiten. */
+            blatt.style.transition = '';
+            void blatt.offsetHeight;
+            blatt.style.transform = '';
+            if (zug > BLATT_ZUG)
+                kiPanel(false);
+        };
+        blatt.addEventListener('pointerdown', (e) => {
+            if (!blattAmTelefon())
+                return;
+            const ziel = e.target;
+            if (!ziel || typeof ziel.closest !== 'function')
+                return;
+            if (!ziel.closest('.ai-head'))
+                return;
+            if (ziel.closest('button, a, input, textarea, select'))
+                return;
+            start = e.clientY;
+            zug = 0;
+            zieht = true;
+            blatt.style.transition = 'none';
+            document.addEventListener('pointermove', bewegen);
+            document.addEventListener('pointerup', ende);
+            document.addEventListener('pointercancel', ende);
+        });
+    };
     const neueSeite = (elternId = null) => {
         const p = Store.addPage(elternId, { text: '' });
         zeichneBaum();
@@ -174528,6 +174989,10 @@ const App = (() => {
             });
         }
         an('btn-ai', () => kiPanel());
+        /* Der Weg zurück, und er gilt auf JEDEM Bildschirm (E653). Am
+           Telefon ist er der einzige — `#btn-ai` ist dort ausgeblendet. */
+        an('ai-zu', () => kiPanel(false));
+        kiGriff();
         /* `btn-trash` hängt seit E167 am Register — die Zeile hier wäre die
            zweite Verdrahtung desselben Knopfes, und wohin das führt, steht in
            E160: ein Klick auf „Neue Seite" legte zwei Seiten an. */

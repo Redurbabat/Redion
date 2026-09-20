@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 483 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 487 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -965,6 +965,45 @@ A→B→C lenkt um statt anzustehen, kein Hit-Target bewegt sich, und ohne
 Bewegung wird gesetzt. Gezählt am 20. September, im selben Bogen: der Befehl
 sagt 483.*
 
+
+*Und 484: `test542` — die Auswahlleiste trifft die markierte Stelle (E650).
+Er hält etwas, wofür es neun Monate lang keinen Wächter gab: `umschliesse`
+und `linkSetzen` ersetzten mit `String.replace(txt, …)`, und das trifft das
+ERSTE Vorkommen, nicht das markierte. Gegen den alten Stand war er rot und
+hat den Fehler wörtlich ausgedruckt — `**Test** und Test` statt `Test und
+**Test**`. Gezählt am 20. September, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 484.*
+
+
+*Und 485: `test543` — der Verbindungsschalter einer Datenbank gilt wirklich
+(E651). Er hält eine Zusage, die im Menü stand und nirgends eingelöst wurde:
+„Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und schreiben."
+`coll.verbindungen` wurde nur geschrieben, nie gelesen — und das Menü zeigte
+„GitHub · aus", WÄHREND der Spiegel lief. Gegen den alten Stand war er rot
+mit der Zeile, auf die es ankommt: „Und es geht KEIN Ruf hinaus — 1 Rufe".
+Gezählt am 20. September, im selben Bogen: der Befehl sagt 485.*
+
+
+*Und 486: `test544` — das KI-Fenster tut, was seine Knöpfe versprechen
+(E652). Zwei Funde in einem Lauf: der Chat hatte keinen Stopp-Knopf, obwohl
+die ganze Abbruchkette gebaut war, und „Meine Quellen" öffnete nichts.
+Bemerkenswert ist, wie er rot wurde: der erste Anlauf war bei den Quellen
+GRÜN, weil er sichtbare `[data-qs]` im ganzen Dokument zählte — und die
+Schalterleiste steht ohnehin im Fuss. Erst als er nur zählte, was der
+Menüpunkt NEU öffnet, stand da „0 Schalter sichtbar". Gezählt am
+20. September, im selben Bogen: der Befehl sagt 486.*
+
+*Und 487: `test545` — das KI-Blatt lässt sich am Telefon schliessen (E653).
+Er hält §37 an einer Stelle, an der niemand hingesehen hatte: `#btn-ai`
+steht am Telefon auf `display:none`, `.ai-head` trug kein Kreuz, und das
+Blatt liegt 88vh hoch über der unteren Leiste. Gegen den alten Stand stand
+die Zeile da, um die es geht — „2 geprüft, 0 schliessen — das Blatt ist eine
+Falle". Und zweimal war er aus dem FALSCHEN Grund rot: einmal mass er den
+Knopf nach dem Klick (geschlossen ist `#ai` `display:none`, also 0 × 0),
+einmal zog er gegen das Willkommensblatt, das über allem lag. Gezählt am
+20. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+487.*
+
 ### Die Befehle
 
 ```txt
@@ -973,7 +1012,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 483 Läufe
+npm run pruefen                      alle 487 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1035,7 +1074,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 483 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 487 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

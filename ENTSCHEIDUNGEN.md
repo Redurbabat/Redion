@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-626 Entscheidungen, E1 bis E648 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+631 Entscheidungen, E1 bis E653 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -691,6 +691,11 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E646** — Die Fläche wandert auch dann, wenn der Hauptfaden arbeitet: Redurs Aufnahme zeigte vier Wechsel und viermal EIN Bild für 190 bis 210 Pixel; am Rechner wanderte dieselbe Fassung über 16 bis 21 Orte. Schuld war `width` in der Übergangsliste — wer Layout animiert, bleibt auf dem Hauptfaden, und der baut beim Reiterwechsel gerade einen Bildschirm auf. Die Bewegung fährt jetzt als Federbahn über `element.animate()` auf `transform` allein (`SelectionFlow`, der Helfer, den L204 verlangt hat), mit erhaltener Geschwindigkeit beim Umlenken. Im ersten Bild: 11 % des Weges statt 31 %. Scrubbing wurde NICHT gebaut, und zwar aus Redurs eigenem Vorbehalt: ein Reiterwechsel kostet unter Last 0,8 bis 1,5 Sekunden
 * **E647** — Dieselbe Feder für die Werkzeugleiste, und L204 ist zu: `.bw-flug` bewegte `left`, `top`, `width` und `height` — vier Layout-Eigenschaften, und das ausgerechnet an der Stelle, an der man mitten im Zeichnen das Werkzeug wechselt. `SelectionFlow.fliege()` rechnet dieselbe Feder als FLIP auf `transform` um. Die Bauform von E640 bleibt (der Grund sitzt am Knopf, nur der Wechsel fliegt) — zwei Bauformen, ein Bewegungsgesetz
 * **E648** — Der vorausgeschickte Frame ging an niemanden: Redurs #108 (Feder auf 292 ms, Dehnung grosszügiger) und #109 (erst die Fläche, dann der Bildschirm) nachdokumentiert — und der Griff von #109 ging zweimal ins Leere. `handyLeiste()` konnte die Fläche nicht losschicken, weil seit E274 der Schauplatz den Reiter sticht und der sich erst beim Aufbau ändert; und EIN `requestAnimationFrame` ist eines zu wenig, weil eine Animation ihre Startzeit erst mit dem ersten wirklich gemalten Bild bekommt. Gemessen „17 → 17" nach 60 ms
+* **E649** — Ein `<svg>` ist kein `HTMLElement`, und `fokus.ts` wusste das: zwei Ressourcenhalter (`linse.ts` E639, `textur.ts` E462) hingen direkt im Körper und wurden beim Öffnen eines Dialogs nicht stillgelegt, weil die Schleife `instanceof HTMLElement` verlangt. `test272` misst `.inert` über ALLE Kinder — auf einem `SVGElement` gibt es die Eigenschaft nicht, `undefined` ist falsch, der Lauf war rot. Repariert wurde der Körper, nicht der Wächter: beide Halter liegen jetzt in einer von Geburt an stillgelegten Hülle. Dazu `bw` ins Namensraum-Verzeichnis, das seit E640 fehlte (`test290`).
+* **E650** — `String.replace` trifft das erste Vorkommen, nicht das markierte: `umschliesse` und `linkSetzen` in der Auswahlleiste ersetzten mit `(b.text||'').replace(txt, …)`. Wer in „Test und Test" das zweite Wort markiert und auf Fett drückt, bekam das erste fett — kein Absturz, keine Meldung, nur Text an der falschen Stelle. Repariert über `auswahlOffset()` mit Nachprüfung, Rückfall auf die Reihenfolge bei gerendertem Markdown und auf den alten Weg, wenn beides nicht trägt. Neuer Wächter `test542`, gegen den alten Stand rot.
+* **E651** — Ein Schalter, der Sicherheit verspricht und nicht gelesen wird: das Datenbankmenü sagte „Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und schreiben", aber `coll.verbindungen` wurde nur geschrieben. Schlimmer noch die Anzeige — bei einer nie angefassten Datenbank stand bei JEDEM Dienst „aus", während der Spiegel lief. Jetzt beantwortet `Spiegel.darf` die Frage an einer Stelle, für Anzeige UND Sperre; gesperrt wird vor dem Netzruf, also auch das Lesen. `undefined` heisst erlaubt (Bestandsschutz), `[]` heisst gesperrt. Wächter `test543`.
+* **E652** — Das Teure war gebaut, das Billige fehlte: die ganze Abbruchkette des KI-Chats stand (`frage(…, {signal})`, abbrechbares `schlafen`, `signal` bis in `fetch`), nur `senden` reichte das dritte Argument nicht durch — und es gab keinen Knopf. Jetzt wird der Senden-Knopf für die Dauer des Laufs zum Stopp-Knopf (derselbe Knopf, §37; `aria-label` wechselt mit, §38), ein Abbruch behält die Teilantwort und sagt „Abgebrochen" statt „AbortError". Dazu der tote Menüpunkt „Meine Quellen", der ein HTML-Element an eine Funktion gab, die eine Liste erwartet. Wächter `test544`.
+* **E653** — Ein Griff, der nichts hält, und ein Blatt ohne Weg zurück: am Telefon ist `#ai` ein Blatt von unten, `#btn-ai` steht dort auf `display:none` (bausteine.css:300, :2119), `.ai-head` trug kein Kreuz, und Strg+J gibt es an einem Telefon nicht — einmal geöffnet, war das KI-Feld eine Sackgasse über der unteren Leiste (88vh, z-index 920 gegen 401). Dazu zeichnete `#ai::before` einen Wischgriff, dessen eigener Kommentar sagt, was er verspricht — gewischt werden konnte nichts (§47). Jetzt: ein Schliess-Knopf `#ai-zu` (44 px, `aria-label`) für BEIDE Bildschirme, und der Griff zieht wirklich (90 px Schwelle, darunter federt es zurück; nur unter 760 px, nur am Kopf, nicht auf den Knöpfen). Wächter `test545`.
 
 ---
 
@@ -53252,3 +53257,390 @@ vierfacher Drosselung 9 bis 10 Zwischenorte statt 5.
 
 **Gemessen.** `test541` (25 von 25) · `test539`, `test478`, `test114` §17,
 `test225`, `test105`, `test109`, `test87`.
+
+
+## E649 — Ein `<svg>` ist kein `HTMLElement`, und `fokus.ts` wusste das
+
+**20. September 2026.** Der erste volle Lauf gegen das neue `main` war rot:
+drei von 483. Einer davon, `test270`, ist der bekannte Arbeitsbaum-Fehlalarm
+und im Hauptbaum grün (§30). Die anderen zwei waren echt — und beide waren
+diese Woche entstanden, beide bei mir.
+
+### Der erste: `test272`
+
+> ✗ Und alles dahinter ist stillgelegt
+
+`fokus.ts` legt beim Öffnen eines Dialogs alles still, was daneben im Körper
+steht. Sonst tabbt man hinter die Fläche in eine Seite, die niemand mehr
+sieht. Die Schleife sieht so aus:
+
+```ts
+[...document.body.children].forEach(kind => {
+  if (!(kind instanceof HTMLElement)) return;     // ← hier
+  ...
+  kind.inert = true;
+});
+```
+
+Der Wächter misst dagegen ALLE Kinder:
+
+```ts
+hinterStill: [...document.body.children]
+  .filter(k => k.id !== 'backstage' && !k.classList.contains('menu-grund'))
+  .every(k => (k as HTMLElement).inert)
+```
+
+Solange jedes direkte Körperkind ein `HTMLElement` war, sagten beide dasselbe.
+**E639 hat das gebrochen:** die wandernde Glaslinse braucht einen
+`<filter id="…">`, und der muss im Dokument stehen. `linse.ts:147` hängte
+dafür ein `<svg>` direkt an `document.body`. Ein `<svg>` ist ein
+`SVGElement`. Es fiel durch das `instanceof`, bekam nie `inert`, und `.inert`
+gibt es auf `SVGElement` gar nicht — `undefined` ist falsch, und der Lauf war
+rot.
+
+**Derselbe Fehler stand seit E462 daneben** und war nur nie aufgefallen:
+`textur.ts:71` hängt genauso ein `<svg>` an den Körper. Es fiel nicht auf,
+weil `Textur.sicherstellen()` erst läuft, wenn jemand eine Textur benutzt —
+`Linse.sicherstellen()` dagegen beim Start. E639 hat also nicht den Fehler
+gemacht, sondern ihn sichtbar gemacht.
+
+### Zwei Wege wären gegangen, und warum es der zweite wurde
+
+**Den Wächter lockern.** Er prüft strenger, als die Gefahr ist: dieses `<svg>`
+ist `aria-hidden="true"`, null Pixel gross, `focusable="false"` und enthält
+nur `<defs>`. Da ist nichts zu fokussieren, nichts anzuklicken, nichts
+vorzulesen. Eine Ausnahme wäre sachlich vertretbar gewesen.
+
+**Den Körper aufräumen.** Beide Halter kommen in eine Hülle, die ein
+`HTMLElement` ist. Dann gilt die Zusage wieder ohne Ausnahme.
+
+Es ist der zweite geworden, und der Grund steht in §55.2: eine Ausnahme im
+Wächter hätte jede spätere gedeckt. „Alles dahinter ist stillgelegt" ist ein
+Satz, den man nachprüfen kann; „alles dahinter ausser SVG-Haltern und was
+sonst noch dazukommt" ist keiner mehr.
+
+**Die Hülle ist von Geburt an stillgelegt**, nicht erst wenn ein Dialog
+aufgeht. Sie ist nie Inhalt — sie hält eine Ressource. `fokus.ts` hat dafür
+schon den richtigen Zweig (`if (kind.inert) return; /* fremden Zustand
+bewahren */`) und fasst sie deshalb nie an, weder beim Stilllegen noch beim
+Freigeben.
+
+**Auf die Filter wirkt das nicht.** `filter: url(#ru-linse-fahrt)` schlägt die
+Kennung im ganzen Dokument nach; `inert` ändert weder Darstellung noch
+Auflösung. Nachgesehen wurde es trotzdem, und zwar mit Augen: `node bilder.mts
+heute handy` zeigt die Linse über „Heute", und der Name darunter bleibt
+lesbar (§55.3).
+
+**Vier Zeilen in zwei Dateien**, mit dem ganzen Grund bei `linse.ts` und einem
+Verweis darauf bei `textur.ts`. Bei zwei Haltern ist das billiger als ein
+drittes Modul; beim dritten gehört es in einen gemeinsamen Helfer unter
+`kern/helfer/`.
+
+### Der zweite: `test290`
+
+> ✗ Kein Präfix fehlt im Verzeichnis — bw — bitte in doku/CSS-NAMENSRAEUME.md eintragen
+
+`.bw-flug` und `.bw-wartet` kamen mit **E640** dazu — der fliegenden
+Werkzeugleiste im Schreibstudio. Zusammen mit dem älteren `.bw-trenn` sind es
+sieben Vorkommen, und ab vier gilt ein Präfix als eigener Namensraum. Es
+stand nicht im Verzeichnis. Eingetragen: `bw  7  bausteine.css`.
+
+Beim Eintragen fiel auf, dass die Zahl im Fliesstext derselben Datei schon
+vorher nicht stimmte: dort stand 144, das Verzeichnis trug 158 Einträge.
+`test290` prüft nur die Einträge, nicht den Satz darüber. Die Zahl steht jetzt
+auf 159 **mit dem Befehl daneben**, mit dem man sie nachzählt — dieselbe
+Lehre wie bei der Prüflaufzahl in §30.
+
+### Was daran allgemein ist
+
+Beide Fehler sind vom selben Bautyp wie die fünf vom Vortag: **ein Ausdruck
+misst etwas anderes, als der Satz daneben behauptet.** `instanceof
+HTMLElement` heisst nicht „jedes Element", und eine Zahl im Fliesstext ist
+keine Messung, solange kein Lauf sie anfasst.
+
+Und beide waren **nicht** im Lauf vom 19. September rot. Sie sind in den
+achtundvierzig Stunden danach entstanden — in meinen eigenen Bögen E639 und
+E640. Genau dafür ist der volle Lauf da.
+
+
+## E650 — `String.replace` trifft das erste Vorkommen, nicht das markierte
+
+**20. September 2026.** Aus der Bestandsaufnahme desselben Tages, und einer
+der Funde, für die es keinen Prüflauf gab.
+
+In `src/bereiche/editor/ansicht/auswahlleiste.ts` standen zwei Zeilen
+derselben Bauart:
+
+```ts
+const neu = (b.text || '').replace(txt, marke + txt + marke);
+Store.updateBlock(bl.id, { text: (bl.text || '').replace(text, `[${text}](${url})`) });
+```
+
+`String.replace` mit einem **String** als Muster ersetzt das **erste**
+Vorkommen. Nicht das markierte — das erste.
+
+### Warum das schlimmer ist als ein Knopf, der nichts tut
+
+Es ist kein Absturz und keine Fehlermeldung. Der Text ändert sich, nur an
+der falschen Stelle. Wer einen langen Absatz formatiert, merkt es erst beim
+Lesen — und dann steht schon nicht mehr da, was er geschrieben hat. Das ist
+dieselbe Klasse wie die abgeschnittene Zahl aus §55.1: ein Ergebnis, das
+gültig aussieht und falsch ist.
+
+Gemessen in `test542`, gegen den alten Stand:
+
+```txt
+„Test und Test", das ZWEITE markiert, Fett gedrückt
+  erwartet   Test und **Test**
+  bekommen   **Test** und Test
+```
+
+### Die Reparatur, in drei Stufen
+
+`auswahlOffset()` gab es schon — der Lückenkarten-Weg benutzt es seit E289.
+Es gibt die Zeichenzahl im **sichtbaren** Text. Das genügt nicht immer, denn
+gespeichert wird Markdown, und `**fett**` davor verschiebt die Zahlen.
+Deshalb drei Stufen, in dieser Reihenfolge:
+
+1. **Der Normalfall.** Bei schlichtem Text ist die sichtbare Stelle auch die
+   gespeicherte. Das wird **nachgeprüft**, nicht geglaubt: steht bei
+   `text.slice(off, off + wort.length)` wirklich das gewählte Wort, ist die
+   Sache entschieden.
+2. **Gerendertes Markdown.** Die Zeichenzahlen laufen auseinander, die
+   **Reihenfolge** nicht. Kommt das Wort im Sichtbaren genauso oft vor wie
+   im Gespeicherten, ist das n-te hier auch das n-te dort.
+3. **Alles andere.** Dann bleibt es beim alten Weg. Der Fehler bleibt in
+   genau diesem Restfall bestehen, und das ist bewusst: ein Ratespiel an
+   Nutzertext wäre schlimmer als ein bekannter Rest.
+
+### Was dabei NICHT repariert wurde
+
+Dieselbe Funktion hat einen zweiten Mangel, den die Bestandsaufnahme
+gefunden hat: **Fett lässt sich nicht abschalten.** `umschliesse` legt die
+Marken immer neu um die Auswahl; `Strg B` auf bereits fettem Text ergibt
+`****Text****`. Das ist eine Bedienlücke, kein falscher Text — und §43 sagt,
+eine Änderung hat ein Ziel. Es steht als eigener Punkt offen.
+
+### Der Wächter
+
+`test542` ist neu und war gegen den alten Stand rot — und zwar aus dem
+richtigen Grund: er hat den falschen Wert ausgedruckt, nicht nur „passt
+nicht". Der erste Anlauf war rot mit „KEIN BLOCK", weil `App.zeichneSeite()`
+ohne `App.oeffne()` die Bibliothek stehen lässt statt den Editor zu zeigen.
+Eine Messung, die aus dem falschen Grund rot ist, prüft genauso wenig wie
+eine, die immer grün ist (§55.2) — deshalb erst der Messstand, dann die
+Reparatur.
+
+
+## E651 — Ein Schalter, der Sicherheit verspricht und nicht gelesen wird
+
+**20. September 2026.** Aus der Bestandsaufnahme desselben Tages, gefunden
+vom Gegenleser des Datenbank-Befunds.
+
+Das Datenbankmenü hat einen Punkt „Verbindungen dieser Datenbank". Sein
+Fusstext sagt etwas, das man als Zusage liest:
+
+> „Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und schreiben —
+> etwa der GitHub-Spiegel."
+
+**Gemessen:** `coll.verbindungen` wurde an genau zwei Stellen angefasst — vom
+Menü, das es schreibt, und von der Zeile darüber, die die Anzahl zeigt. Als
+Erlaubnis **gelesen wurde es nirgends.** Der Spiegel hängt an `gespiegelt`
+und `spiegelQuelle` und fragte den Schalter nie.
+
+### Der zweite Fehler war der schlimmere
+
+Nicht nur die Sperre fehlte — **die Anzeige war falsch.** Der Ausdruck
+`drin.includes(d.id) ? 'an' : 'aus'` ist bei einer nie angefassten Datenbank
+für jeden Dienst falsch: das Menü zeigte „GitHub · aus", **während der
+GitHub-Spiegel lief.** Wer das liest, glaubt, er sei geschützt.
+
+Das ist §47 in seiner gefährlichen Form. Ein Knopf, der nichts tut, ist
+ärgerlich; ein Knopf, der „aus" anzeigt, während etwas läuft, ist eine
+falsche Auskunft über die eigenen Daten.
+
+### `undefined` erlaubt, `[]` sperrt
+
+Der ganze Entwurf steckt in diesem Unterschied:
+
+```txt
+verbindungen fehlt        → nie eingerichtet → erlaubt, wie bisher
+verbindungen: []          → ausdrücklich leer → gesperrt
+verbindungen: ['github']  → genau das ist erlaubt
+```
+
+Ein Schalter, der bei seiner Einführung jeden laufenden Spiegel abwürgt,
+wäre schlimmer als der Fehler, den er behebt (§46, §51). Deshalb keine
+Migration und kein Stichtag: wer nie hingeht, merkt nichts. Wer hingeht,
+bekommt beim ersten Klick eine echte Liste aus dem, was **heute** gilt —
+sonst würde ein einziger Klick alle anderen Dienste mitsperren, ohne dass
+jemand das gesagt hat.
+
+### Eine Frage, ein Ort
+
+`Spiegel.darf(coll, dienst)` beantwortet sie, und **das Menü ruft dieselbe
+Funktion für die Anzeige**, die den Zugriff sperrt. Zwei getrennte Regeln
+liefen unweigerlich auseinander — genau das war der Zustand davor (§8).
+
+### Die Sperre sitzt vor dem Netzruf
+
+Der Fusstext sagt „lesen **und** schreiben". Beide Abgleichwege holen aber
+zuerst und suchen die Zieldatenbank danach. Hätte ich nur `githubZurueck`
+gesperrt, wäre das Lesen weiter gelaufen — und mit ihm das Token. Deshalb
+`sperrePruefenFuerZiel(name, dienst)` **vor** `githubHolen` und vor
+`jiraRuf`: gibt es die Zieldatenbank schon und ist der Dienst aus, geht kein
+Byte hinaus. Gibt es sie noch nicht, ist nichts zu schützen — einen neuen
+Spiegel legt der Nutzer ausdrücklich an.
+
+Und es wird **geworfen**, nicht still zurückgekehrt: eine stille Rückkehr
+sähe aus wie „nichts zu tun". `alleAuffrischen` fängt das je Datenbank schon
+ab und nennt sie im Banner.
+
+### Der Wächter
+
+`test543`, gegen den alten Stand rot — mit der Zeile, auf die es ankommt:
+
+```txt
+✗ Und es geht KEIN Ruf hinaus — 1 Rufe
+```
+
+Bei ausdrücklich gesperrter Datenbank ging der Schreibruf trotzdem hinaus.
+Der Lauf hängt `fetch` und `Verbindungen.githubRuf` ab und zählt nur, ob
+jemand hinauswollte — kein Netz, keine Zugangsdaten, nichts zu erraten.
+
+
+## E652 — Das Teure war gebaut, das Billige fehlte
+
+**20. September 2026.** Zwei Funde der Bestandsaufnahme, beide in
+`src/bereiche/ki/dienst.ts`, beide von der stillen Sorte (§47).
+
+### Der Chat hatte keinen Stopp-Knopf
+
+Und das ist das Ärgerliche daran: **die ganze Abbruchkette war gebaut.**
+
+```txt
+frage(nachrichten, beiText, { signal })     :612   nimmt ein Signal
+ollamaFragen(n, modell, signal)             :507   reicht es weiter
+fetch(…, { signal })                        :512   bis ganz nach unten
+schlafen(ms, signal)                        :156   sogar der Backoff bricht ab
+```
+
+Nur `senden` rief `frage(nachrichten, cb)` — **ohne das dritte Argument.**
+Und im Markup gab es keinen Knopf. Wer eine lange Antwort losgeschickt
+hatte, konnte sie nur durch Schliessen des Tabs beenden.
+
+**Kein zweiter Knopf.** Der Senden-Knopf wird für die Dauer des Laufs zum
+Stopp-Knopf — dasselbe Element, dieselbe Grösse. Ein Knopf, der *daneben*
+auftaucht, verschiebt die Trefferfläche mitten in der Bewegung; §37
+verlangt das Gegenteil, und `test544` misst die Grösse vor und nach dem
+Lauf. Der Zustand steht auch nicht nur in der Form: `aria-label` wechselt
+von „Nachricht senden" auf „Antwort abbrechen" (§38).
+
+**Ein Abbruch ist kein Fehler.** `AbortError` ist kein Satz, den ein Mensch
+lesen will. Was schon dasteht, bleibt stehen — es gehört dem Nutzer (§51);
+nur der Verlauf bekommt die halbe Antwort nicht, weil sie unvollständig
+ist. Und das Eingabefeld wird beim Abbrechen nicht geleert: sonst verlöre
+man seine Frage.
+
+### Der tote Menüpunkt
+
+```ts
+if (b.dataset.y === 'quellen') quellenKarte(e.currentTarget);
+```
+
+Ein HTML-Element an eine Funktion, die eine **Liste** erwartet.
+`!element.length` ist wahr, also kam lautlos `null` zurück — und selbst das
+wurde nirgends eingehängt. Der Punkt zeigte eine Zahl und ein „▸",
+versprach also ein Untermenü, und tat nichts.
+
+Jetzt öffnet er **dieselbe Schalterleiste**, die im Fuss des Panels steht.
+Nicht eine zweite Liste mit denselben fünf Quellen — dieselbe Funktion
+(§8), sonst laufen sie auseinander.
+
+### Wie der Wächter fast danebengegriffen hätte
+
+`test544` war im ersten Anlauf bei den Quellen **grün**, ohne dass etwas
+repariert war. Der Grund: er zählte sichtbare `[data-qs]`-Schalter im
+ganzen Dokument — und die Schalterleiste steht ohnehin im Fuss. Er mass
+die Leiste, nicht den Menüpunkt.
+
+```txt
+erster Anlauf     3 von 3 gruen  — misst die Leiste im Fuss
+nach der Korrektur  „0 Schalter sichtbar" — misst den Menuepunkt
+```
+
+Erst als er nur noch zählte, was der Klick **neu** öffnet, stand da, was
+Sache war. Dieselbe Lehre wie bei `test542` und `test543` am selben Tag,
+und inzwischen die dritte: **ein roter Lauf ist noch kein Beweis, und ein
+grüner erst recht nicht.**
+
+
+## E653 — Ein Griff, der nichts hält, und ein Blatt ohne Weg zurück
+
+**Was wurde entschieden?** Das KI-Feld bekommt einen Schliess-Knopf im Kopf
+(`#ai-zu`, 44 px, `aria-label="KI schliessen"`), und der Wischgriff am
+oberen Rand des Blattes zieht wirklich: ein Zug von mehr als 90 px nach
+unten schliesst es, darunter federt es zurück. Beides gilt für denselben
+Weg — `kiPanel(false)` —, nicht als zweite Logik daneben (§8).
+
+**Warum?** Am Telefon ist `#ai` kein Panel neben der Seite, sondern ein
+Blatt, das von unten kommt (bausteine.css:339). Gemessen am 20. September
+auf 390 × 844:
+
+```txt
+#btn-ai                  display:none — zweimal (bausteine.css:300, :2119)
+.ai-head                 zwei Knöpfe: Unterhaltungen, Neuer Chat. Kein Kreuz.
+Strg+J                   gibt es an einem Telefon nicht
+Escape-Griff             räumt .menu und .overlay — #ai ist ein <aside>
+#ai                      88vh hoch, z-index 920
+#handy-oben              z-index 401 — liegt vollständig darunter
+```
+
+Wer das KI-Feld am Telefon öffnete, konnte es nicht mehr schliessen. Nicht
+über die Kopfleiste, nicht über die Reiter darunter, nicht über eine Taste.
+Der einzige Ausweg war, den Tab zu schliessen — und das ist keine
+Bedienung, sondern eine Falle. §37 ist **[hart im Kern]**, und „Kein
+Desktop-only für Kernfunktionen" meint genau diesen Fall.
+
+**Der zweite, leisere Fund.** `#ai::before` zeichnet oben den Strich, den
+jedes Blatt dieser Art trägt, und der Kommentar daneben sagt wörtlich, was
+er verspricht: *„er sagt ohne Wort, dass man das Blatt wegwischen kann"*.
+Gewischt werden konnte nichts. `wischen.ts` kennt `#handy-oben` und sonst
+nichts; auf `#ai` hörte niemand zu. Ein gezeichnetes Versprechen ist
+dasselbe Versprechen (§47) — und hier war es das einzige, das überhaupt
+einen Weg zurück andeutete.
+
+**Was war die Alternative?** `#btn-ai` am Telefon wieder einblenden. Dagegen
+steht der Kommentar an bausteine.css:297, und er hat recht: „sonst quetschen
+sich zwölf Knöpfe in 428 Pixel und der Titel verschwindet". Der Weg zurück
+gehört an das Blatt, nicht in eine Leiste, die es verdeckt.
+
+Zweite Alternative: nur den Knopf, den Griff Zierde lassen. Dann bliebe §47
+halb gebrochen — ein Strich, der eine Geste zeigt, die es nicht gibt. Und
+die Geste ist am Telefon die schnellere: der Daumen liegt ohnehin unten.
+
+**Was kostet es?** Ein Knopf mehr im Kopf (drei statt zwei — bei 44 px und
+390 px Breite bleibt der Titel unangetastet) und rund siebzig Zeilen in
+`schale.ts`. Der Zug hängt an `pointerdown` auf `.ai-head`, nicht auf dem
+ganzen Blatt: darunter steht der Verlauf, und der rollt.
+
+**Die Stelle, an der es fast schiefging.** Beim Loslassen wird erst der
+Übergang zurückgegeben und dann der Wert geändert — mit einem `void
+blatt.offsetHeight` dazwischen. Ohne das Lesen fasst der Browser beides zu
+einem Schritt zusammen, und das Blatt springt, statt zu gleiten.
+
+**Der Wächter.** `test545`, zwölf Messungen. Er fragt nicht, ob ein Kreuz
+dasteht, sondern ob einer WIRKT: jeder sichtbare Knopf in `.ai-head` wird
+gedrückt, und danach wird nachgesehen, ob `.open` weg ist. Gegen den alten
+Stand stand da die Zeile, um die es geht — *„2 geprüft, 0 schliessen — das
+Blatt ist eine Falle"*.
+
+**Und zweimal war er aus dem falschen Grund rot.** Beim ersten Anlauf mass
+er den Knopf NACH dem Klick; geschlossen steht `#ai` auf `display:none`,
+und dann misst jeder Knopf darin 0 × 0. Beim zweiten zog er gegen
+`#rg-willkommen`, das Willkommensblatt, das über allem lag — der Zug kam
+nie am Kopf an, und der Lauf meldete „die Geste gibt es nicht", obwohl sie
+gebaut war. Er prüft jetzt mit `elementFromPoint`, wer unter dem Finger
+liegt, und sagt es, wenn es nicht das Blatt ist. Das ist derselbe Fund wie
+an den vier Tagen davor, nur von der anderen Seite: ein roter Lauf ist noch
+kein Beweis.

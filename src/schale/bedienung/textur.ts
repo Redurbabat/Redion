@@ -68,7 +68,18 @@ const Textur = (() => {
     const defs = document.createElementNS(NS, 'defs');
     defs.append(rauschen(FEIN, '0.85', '3', '7'), rauschen(GROB, '0.24', '2', '19'));
     svg.append(defs);
-    document.body.append(svg);
+    /* DER HALTER LIEGT IN EINER HÜLLE (E649). Ein `<svg>` ist ein
+     * `SVGElement`, und `fokus.ts` legt beim Öffnen eines Dialogs nur
+     * `HTMLElement`-Kinder des Körpers stumm — dieser Halter fiel durch,
+     * und `test272` war zu Recht rot. Die Hülle ist von Geburt an
+     * stillgelegt, weil sie nie Inhalt ist. Der ganze Grund steht bei der
+     * gleichen Stelle in `linse.ts`. */
+    const huelle = document.createElement('div');
+    huelle.setAttribute('aria-hidden', 'true');
+    huelle.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+    huelle.inert = true;
+    huelle.append(svg);
+    document.body.append(huelle);
   };
 
   /**

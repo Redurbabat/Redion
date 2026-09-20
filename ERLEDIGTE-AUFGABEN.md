@@ -1,5 +1,209 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E653 · Das KI-Blatt am Telefon hatte keinen Weg zurück
+
+**Der Fund.** Am Telefon ist `#ai` ein Blatt, das von unten kommt — und wer
+es öffnete, konnte es nicht mehr schliessen. Gemessen auf 390 × 844:
+`#btn-ai` steht dort auf `display:none` (bausteine.css:300 und :2119),
+`.ai-head` trug zwei Knöpfe und kein Kreuz, Strg+J gibt es an einem Telefon
+nicht, und der Escape-Griff in `schale.ts` räumt `.menu` und `.overlay` —
+`#ai` ist ein `<aside>`. Das Blatt ist 88vh hoch und liegt auf z-index 920;
+die untere Leiste auf 401 ist vollständig verdeckt. Der einzige Ausweg war,
+den Tab zu schliessen. §37 ist **[hart im Kern]**.
+
+**Der zweite, leisere Fund.** `#ai::before` zeichnet oben den Wischgriff,
+und sein eigener Kommentar sagt, was er verspricht: „er sagt ohne Wort, dass
+man das Blatt wegwischen kann". Gewischt werden konnte nichts —
+`wischen.ts` kennt `#handy-oben` und sonst nichts. Ein gezeichnetes
+Versprechen ist dasselbe Versprechen (§47), und hier war es das einzige,
+das überhaupt einen Weg zurück andeutete.
+
+**Gebaut.** Ein Schliess-Knopf `#ai-zu` im Kopf (44 px, `aria-label`) für
+BEIDE Bildschirme — ein Weg, nicht zwei (§8). Und der Griff zieht wirklich:
+`pointerdown` auf `.ai-head`, mehr als 90 px nach unten schliesst, darunter
+federt es zurück; nur unter 760 px, nicht auf den Knöpfen, nicht auf dem
+Verlauf darunter (der rollt).
+
+**Geprüft.** `test545` neu, zwölf Messungen, gegen den alten Stand rot mit
+der Zeile, um die es geht: „2 geprüft, 0 schliessen — das Blatt ist eine
+Falle". Gegenprobe: `kiGriff()` abgehängt → genau eine Zeile wird rot,
+während „Der Zug landet wirklich auf dem Kopf" grün bleibt. `test544`,
+`test87`, `test105`, `test109` grün, `npm run typecheck` sauber,
+`redion-einzeldatei.html` neu gebaut, `npm run stand` unverändert.
+
+**Und zweimal rot aus dem falschen Grund.** Erst mass der Lauf den Knopf
+NACH dem Klick — geschlossen steht `#ai` auf `display:none`, also 0 × 0.
+Dann zog er gegen `#rg-willkommen`, das Willkommensblatt über allem, und
+meldete „die Geste gibt es nicht", obwohl sie gebaut war. Er prüft jetzt mit
+`elementFromPoint`, wer unter dem Finger liegt. Vierter und fünfter Fall
+derselben Sorte an zwei Tagen.
+
+**Bild.** `bilder/kiBlatt-handy-dunkel.png`, neue Ansicht `kiBlatt` in
+`bilder.mts` (§55.3).
+
+---
+
+## 20. September 2026 · E652 · Das KI-Fenster tut, was seine Knöpfe versprechen
+
+Zwei Funde der Bestandsaufnahme, beide in `src/bereiche/ki/dienst.ts`.
+
+**Der Chat hatte keinen Stopp-Knopf** — und das Ärgerliche daran: die ganze
+Abbruchkette war gebaut. `frage` nimmt ein Signal, reicht es über
+`ollamaFragen` bis in `fetch`, und sogar der Backoff-`schlafen` bricht ab.
+Nur `senden` liess das dritte Argument weg, und im Markup gab es keinen
+Knopf. Wer eine lange Antwort losgeschickt hatte, konnte sie nur durch
+Schliessen des Tabs beenden.
+
+**„Meine Quellen" öffnete nichts.** `quellenKarte(e.currentTarget)` — ein
+HTML-Element an eine Funktion, die eine Liste erwartet. `!element.length`
+ist wahr, also lautlos `null`, und selbst das wurde nirgends eingehängt.
+
+**Gebaut.** Kein zweiter Knopf: der Senden-Knopf wird für die Dauer des
+Laufs zum Stopp-Knopf — dasselbe Element, dieselbe Grösse (§37), und
+`aria-label` wechselt mit (§38). Ein Abbruch behält die Teilantwort und
+sagt „Abgebrochen" statt „AbortError"; das Eingabefeld bleibt gefüllt,
+sonst verlöre man seine Frage. Der Menüpunkt öffnet jetzt **dieselbe**
+Schalterleiste, die im Fuss steht — nicht eine zweite Liste (§8).
+
+**Und der Wächter hätte fast danebengegriffen.** `test544` war bei den
+Quellen im ersten Anlauf **grün**, ohne dass etwas repariert war: er zählte
+sichtbare `[data-qs]` im ganzen Dokument, und die Leiste steht ohnehin im
+Fuss. Erst mit einem `Set` der Schalter **vor** dem Klick stand da
+„0 Schalter sichtbar". Dritter Fall dieser Art an einem Tag.
+
+**Geprüft.** `test544` 11/11 (vorher 3/11) · `test34`, `test37`, `test272`,
+`test391`, `test105`, `test109` grün · `npm run typecheck` ohne Befund.
+`CLAUDE.md` §30/§31 auf **486**. **Bild:** `bilder/ki-stoppknopf.png` —
+derselbe blaue Kreis, `■` statt `↑`, während „KI arbeitet …" läuft (§55.3).
+
+---
+
+## 20. September 2026 · E651 · Der Verbindungsschalter gilt wirklich
+
+**Der Fund** kommt aus der Bestandsaufnahme desselben Tages. Das
+Datenbankmenü hat einen Punkt „Verbindungen dieser Datenbank" mit einem
+Fusstext, der wie eine Zusage klingt:
+
+> „Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und schreiben —
+> etwa der GitHub-Spiegel."
+
+`coll.verbindungen` wurde an zwei Stellen **geschrieben** und **nirgends als
+Erlaubnis gelesen**. Der Spiegel hängt an `gespiegelt`/`spiegelQuelle` und
+kannte den Schalter nicht.
+
+**Der zweite Fehler war der schlimmere:** die Anzeige. Bei einer nie
+angefassten Datenbank stand bei jedem Dienst „aus" — **während der Spiegel
+lief.** Ein Knopf, der nichts tut, ist ärgerlich; einer, der „aus" sagt,
+während etwas läuft, ist eine falsche Auskunft über die eigenen Daten.
+
+**Gebaut.** `Spiegel.darf(coll, dienst)` beantwortet die Frage an einer
+Stelle — und das Menü ruft für die **Anzeige** dieselbe Funktion, die den
+Zugriff **sperrt** (§8). `undefined` heisst erlaubt, `[]` heisst gesperrt:
+ein Schalter, der bei seiner Einführung jeden laufenden Spiegel abwürgt,
+wäre schlimmer als der Fehler (§46, §51). Keine Migration, kein Stichtag.
+
+**Die Sperre sitzt vor dem Netzruf.** Beide Abgleichwege holen zuerst und
+suchen die Datenbank danach — hätte ich nur das Zurückschreiben gesperrt,
+wäre das Lesen weitergelaufen und mit ihm das Token.
+
+**Geprüft.** `test543` 13/13, gegen den alten Stand rot mit der Zeile, auf
+die es ankommt: **„Und es geht KEIN Ruf hinaus — 1 Rufe"**. Dazu `test537`
+(kein neuer Querverweis — beide Dateien liegen unter
+`bereiche/datenbanken/`), `test87`, `test105`, `test109`, `test400` grün ·
+`npm run typecheck` ohne Befund. `CLAUDE.md` §30/§31 auf **485** nachgezählt.
+
+**Kein Bild:** eine Rechteprüfung hat nichts zu sehen — hier ist die Messung
+der Beweis (§55.3).
+
+---
+
+## 20. September 2026 · E650 · Die Auswahlleiste trifft die markierte Stelle
+
+**Der Fund** kommt aus der Bestandsaufnahme desselben Tages — aus dem
+Gegenleser, dessen Auftrag war, den Editor-Befund zu widerlegen. Kein
+Prüflauf hatte die Auswahlleiste je angefasst.
+
+```ts
+const neu = (b.text || '').replace(txt, marke + txt + marke);
+```
+
+`String.replace` mit einem **String** als Muster ersetzt das **erste**
+Vorkommen. Nicht das markierte. Wer in „Test und Test" das zweite Wort
+markiert und auf Fett drückt, bekommt das erste fett — kein Absturz, keine
+Meldung, nur Text an der falschen Stelle. Dieselbe Zeile ein zweites Mal in
+`linkSetzen`.
+
+**Neun Monate unauffällig**, weil der Normalfall immer richtig war: ein
+kurzer Block mit einem einmaligen Wort.
+
+**Zuerst der Wächter** (§30). `test542` war gegen den alten Stand rot — und
+beim ersten Anlauf aus dem falschen Grund: „KEIN BLOCK", weil
+`App.zeichneSeite(id)` ohne `App.oeffne(id)` die Bibliothek stehen lässt. Er
+wäre genauso rot gewesen, wenn es den Fehler nicht gäbe. Erst der zweite
+Anlauf hat den falschen Wert ausgedruckt — `**Test** und Test` — und damit
+wirklich etwas gemessen.
+
+**Gebaut.** Drei Stufen: geprüfte Zeichenstelle aus `auswahlOffset()` im
+Normalfall · die Reihenfolge des Vorkommens bei gerendertem Markdown · der
+alte Weg als Rest. Der Fehler bleibt in genau diesem Rest bestehen, und das
+steht so im Quelltext — ein Ratespiel an Nutzertext wäre schlimmer.
+
+**Offen geblieben und benannt:** dieselbe Funktion kann Fett nicht
+abschalten (`Strg B` auf fettem Text ergibt `****Text****`). Eine
+Bedienlücke, kein falscher Text — und §43 sagt, eine Änderung hat ein Ziel.
+
+**Geprüft.** `test542` 10/10 (vorher 5/10) · `test132`, `test202` grün —
+Markdown-Kürzel und Lückenkarten, die denselben Offset benutzen ·
+`test105`, `test109`, `test400` grün · `npm run typecheck` ohne Befund.
+`CLAUDE.md` §30/§31 auf **484** nachgezählt.
+
+---
+
+## 20. September 2026 · E649 · Zwei rote Läufe, und beide waren achtundvierzig Stunden alt
+
+**Der Anlass:** der erste volle Lauf gegen das neue `main` — 483 Läufe in 49
+Stücken, drei rot.
+
+**Die Trennung zuerst.** `test270` war im Arbeitsbaum rot und im Hauptbaum
+grün: dort ist `.git` eine Datei und `node_modules` ein Symlink, und der Lauf
+filtert Ordnermuster mit `istOrdner && name === …`. CLAUDE.md §30 beschreibt
+genau diesen Fall; er ist eingetreten. `test272` und `test290` waren echt —
+und **keiner von beiden war im Lauf vom 19. September rot.** Sie sind in den
+achtundvierzig Stunden danach entstanden, in meinen eigenen Bögen E639 und
+E640.
+
+**Der Fund 1.** `fokus.ts` legt beim Öffnen eines Dialogs alles still, was
+daneben im Körper steht — überspringt dabei aber alles, was kein
+`HTMLElement` ist. E639 hat für die Glaslinse ein `<svg>` direkt an den
+Körper gehängt. Ein `SVGElement` fällt durch das `instanceof`, und `.inert`
+gibt es dort gar nicht: `undefined`. Bei offenem Backstage-Blatt konnte man
+hinter die Fläche tabben. **Derselbe Fehler stand seit E462 in `textur.ts`
+daneben** und fiel nur nie auf, weil dieser Halter erst bei Gebrauch
+entsteht.
+
+**Der Fund 2.** `.bw-flug` und `.bw-wartet` kamen mit E640 dazu; mit dem
+älteren `.bw-trenn` sind es sieben Vorkommen, und ab vier gilt ein Präfix als
+eigener Namensraum. Es stand nicht im Verzeichnis. Beim Eintragen fiel auf,
+dass der Fliesstext derselben Datei „Es sind 144" behauptete, während das
+Verzeichnis 158 Einträge trug.
+
+**Gebaut.** Nicht den Wächter gelockert, sondern den Körper aufgeräumt: beide
+Halter liegen jetzt in einer von Geburt an stillgelegten Hülle. Eine Ausnahme
+im Wächter hätte jede spätere gedeckt (§55.2). `bw  7  bausteine.css`
+eingetragen, die Zahl im Fliesstext auf 159 nachgezählt und den Zählbefehl
+danebengeschrieben.
+
+**Geprüft.** `test272` und `test290` grün · `test128`, `test435`, `test539`,
+`test541` grün · `npm run typecheck` ohne Befund · `npm run stand` v1235 ·
+`node bauen.mts` 10 517 KB. **Und hingesehen:** `node bilder.mts heute handy`
+zeigt die Linse über „Heute", der Name darunter bleibt lesbar — die Hülle hat
+den Filter nicht gebrochen (§55.3).
+
+**Die Gegenprobe war nicht zu bauen, sie war da.** Beide Läufe *waren* rot und
+sind es nicht mehr.
+
+---
+
 ## 20. September 2026 · E646/E647 · Die Auswahlfläche wandert — auch unter Last
 
 **Redurs Frage:** eine Bildschirmaufnahme der unteren Leiste, sieben Punkte
