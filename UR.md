@@ -1811,12 +1811,14 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 | E639 — Die Pille wird eine Linse | `0cdb38a` → `(00:31)` | 00:05 – 00:31 | ca. 26 min | test539 neu (27 Zusagen), test114 87/87, 22 Wächter der Leiste; drei Gegenproben gefahren |
 | Die Module des Design-Systems gelesen und gegen Redions Quelltext gehalten | `—` → `—` | 00:15 – 01:05 | ca. 50 min | 83 Regeln geprüft: 44 erfüllt, 20 teilweise, 10 verletzt |
 | E640 — Der Grund sitzt, der Wechsel fliegt (die Werkzeugleiste) | `(00:31)` → `(01:26)` | 00:35 – 01:26 | ca. 50 min | test539 47/47, test478 43/43, test522, test533 unverändert grün; Gegenprobe gefahren |
-| E641 — Was das Design-System an der Linse auszusetzen hat | `(01:26)` → `(offen)` | 01:30 – | laufend | test539 §7 neu |
+| E641 — Was das Design-System an der Linse auszusetzen hat | `(01:26)` → `(01:52)` | 01:30 – 01:52 | ca. 22 min | test539 §7 neu |
+| E642 — Sechsundsiebzig tote CSS-Regeln, gezählt bis null | `(01:52)` → `(02:35)` | 01:52 – 02:35 | ca. 43 min | test332 (76 → 0) · 26 Nachbarläufe der Bibliothek und der Stilblätter |
+| E643 — Der Wächter gegen Port-Kollisionen kannte nur eine Schreibweise | `(02:35)` → `(offen)` | 02:35 – | laufend | test400 (4/4, zwei Gegenproben) · die vierzehn betroffenen Läufe |
 
 #### Zahlen des Tages
 
 - **commits:** 2
-- **entscheidungen:** 3
+- **entscheidungen:** 5
 - **neue Prüfläufe:** 1
 - **volle Läufe:** 0
 
@@ -1840,5 +1842,5 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 70 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 72 Einträge.
 

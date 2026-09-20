@@ -17,7 +17,12 @@
    KI-PANEL
    ========================================================================== */
 #ai{
-  width:380px; flex:0 0 380px; background:var(--bg-side);
+  /* 420, NICHT 380 (E642). Hier stand 380, und es galt seit dem
+     10. September nie: `motion.css` lädt später und setzt 420. Zwei Zahlen
+     für dieselbe Breite, und die frühere war ein Versprechen, das die Seite
+     nicht hielt — genau der Fall, den `test332` zählt. Die Breite steht
+     jetzt HIER, im Blatt des Bauteils, und nur hier. */
+  width:420px; flex:0 0 420px; background:var(--bg-side);
   border-left:1px solid var(--line); display:none; flex-direction:column;
 }
 #ai.open{display:flex}

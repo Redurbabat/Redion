@@ -9481,3 +9481,42 @@ nicht geschätzt, und eine Feder ohne Messung ist eine Zahl, die jemand
 hingeschrieben hat. Dazu kommt `prefers-reduced-motion`, das bei
 `element.animate()` von Hand behandelt werden muss — CSS nimmt einem das ab,
 JavaScript nicht. Eigener Bogen, eigene Gegenprobe.
+
+---
+
+## L205 · 382 Prüfläufe vergeben ihren Port von Hand — 20. September 2026
+
+Jeder Prüflauf startet einen eigenen kleinen Webserver. **382 von 481**
+schreiben die Portnummer als feste Zahl in die Datei:
+
+```ts
+const PORT = 9645;
+```
+
+Zwei Läufe mit derselben Zahl können nie nebeneinander laufen — und genau
+das ist an zwei Tagen zweimal passiert (E405 am 4. September, E643 am
+20. September, zusammen elf Kollisionen). Der Wächter `test400` findet sie
+jetzt zuverlässig, aber er behebt nur die Folge: **die Ursache ist, dass die
+Zahl von Hand vergeben wird.**
+
+**Sechs Läufe machen es schon richtig** — `test492`, `test524`, `test527`,
+`test528`, `test529`, `test538`:
+
+```ts
+await new Promise<void>(done => server.listen(0, '127.0.0.1', done));
+const port = (server.address() as { port: number }).port;
+```
+
+`listen(0)` heisst „such du dir einen freien". Zwei solche Läufe können sich
+**gar nicht** in die Quere kommen, und niemand muss eine Liste führen.
+
+**Warum es nicht in diesem Bogen erledigt ist:** 382 Dateien anzufassen,
+während achtzehn Prüfläufe rot sind, ist die falsche Reihenfolge (§46). Und
+es ist nicht ganz mechanisch: jeder Lauf baut seine Adressen aus `PORT`, und
+wer die Konstante erst nach dem `listen` kennt, muss die Reihenfolge im Kopf
+der Datei umstellen. Bei 382 Dateien ist ein Fehler darin teurer als die
+Kollisionen, die er verhindern soll.
+
+**Der kleine Schritt, der jederzeit geht:** jeder NEUE Lauf nimmt `listen(0)`.
+Dann schrumpft die Liste von selbst, statt zu wachsen. Das steht seit E643
+auch im Kommentar von `test400`, wo es gelesen wird.

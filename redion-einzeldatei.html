@@ -2297,7 +2297,12 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
    KI-PANEL
    ========================================================================== */
 #ai{
-  width:380px; flex:0 0 380px; background:var(--bg-side);
+  /* 420, NICHT 380 (E642). Hier stand 380, und es galt seit dem
+     10. September nie: `motion.css` lädt später und setzt 420. Zwei Zahlen
+     für dieselbe Breite, und die frühere war ein Versprechen, das die Seite
+     nicht hielt — genau der Fall, den `test332` zählt. Die Breite steht
+     jetzt HIER, im Blatt des Bauteils, und nur hier. */
+  width:420px; flex:0 0 420px; background:var(--bg-side);
   border-left:1px solid var(--line); display:none; flex-direction:column;
 }
 #ai.open{display:flex}
@@ -4409,7 +4414,14 @@ html[data-theme="light"] .banner{color:#37352f}
 }
 .schalter i{
   position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%;
-  background:var(--text-dim); transition:transform .16s, background .16s; display:block;
+  /* KEIN EIGENER ÜBERGANG MEHR (E642). Hier stand
+     `transition:transform .16s, background .16s` — und galt seit dem
+     6. September nie: `studio.css:203` lädt später und setzt denselben
+     Übergang mit den Bewegungsmarken statt mit festen Zahlen. Zwei
+     Erklärungen für dasselbe, und die frühere kam nie zum Zug. Die
+     spätere ist auch die bessere: sie folgt `--motion-normal`, also auch
+     dem Wunsch nach weniger Bewegung. */
+  background:var(--text-dim); display:block;
 }
 .schalter.an{background:var(--accent)}
 .schalter.an i{transform:translateX(16px); background:#fff}
@@ -8484,9 +8496,11 @@ body.nh-zieht .nh-regal{ touch-action:none }
  * doku/ANIMATIONEN-ZUORDNUNG.md. Die bestehenden ru-funkel-Regeln bleiben.
  */
 #ai {
+  /* DIE BREITE STEHT IN `ki.css` (E642). Sie stand einmal hier und
+     überschrieb dort die 380 — eine Animationssammlung ist aber nicht der
+     Ort, an dem ein Bauteil seine Masse bekommt. Jetzt sagt `ki.css` 420,
+     und diese Datei sagt dazu nichts mehr. */
   --rmo-ease: cubic-bezier(.22, 1, .36, 1);
-  width: 420px;
-  flex-basis: 420px;
   min-height: 0;
 }
 #ai.open { animation: rmo-panel-in .32s var(--rmo-ease); }
@@ -8645,7 +8659,15 @@ body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt
 /* 3 + 10 — Lichtschlitz und kleiner Perspektivwechsel: echte Fach-/Statistikkarten. */
 .els-kachel, .stat-karte.lw-metrik {
   position: relative; overflow: hidden;
-  transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s, border-color .25s;
+  /* `background` MUSS MIT IN DIE LISTE (E642). Hier stand dieselbe Zeile
+     ohne sie — und weil `transition` EINE Eigenschaft ist, gewinnt die
+     spätere Liste ganz: der Übergang aus `bausteine.css:7938`
+     (`background`, `box-shadow`) galt seit dem 10. September nicht mehr,
+     und die Kachel wechselte ihre Fläche beim Überfahren hart statt
+     weich. Gefunden von `test332`, nicht vom Auge — ein Übergang, der
+     fehlt, sieht nicht kaputt aus, nur billig. */
+  transition: background var(--motion-fast,.14s) var(--ease-standard,ease),
+              transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s, border-color .25s;
 }
 .els-kachel::after, .stat-karte.lw-metrik::after {
   content: ''; position: absolute; pointer-events: none; inset: 0; opacity: 0;
@@ -12238,14 +12260,21 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
  * ist der ANFANG der Seite in kleiner Schrift, genau wie im Heftregal — und
  * darüber, je nach Art, ein paar Linien, die das Papier andeuten.
  * ======================================================================== */
-/* EIN RASTER, KEIN UMBRUCH. Mit `flex-wrap` fiel der Listenknopf in eine
-   eigene Zeile, sobald „Dokumente" und „+ Neu" die Breite füllten — aus
-   einer Bank wurden zwei, und genau die zählt Redur. Das Raster sagt
-   stattdessen, WAS schrumpfen darf: der Titel. */
-.bib-dkopf{
-  display:grid; grid-template-columns:minmax(0,1fr) auto auto;
-  align-items:center; gap:6px 10px; margin:0 0 var(--space-4)
-}
+/* ══ DIE KOPFZEILE GEHÖRT DEM STUDIO-BLATT (E642) ═══════════════════════
+   Hier stand ein Raster mit dem Titel „EIN RASTER, KEIN UMBRUCH": es
+   sollte verhindern, dass der Listenknopf in eine eigene Zeile fällt.
+   Seit dem 6. September setzt `bibliothek-studio.css`
+   `display:flex;flex-wrap:wrap` und ordnet Krume, Ort und Importknopf
+   selbst über `order` und `flex-basis` — und weil es NACH dieser Datei
+   geladen wird, hat das Raster seither nichts mehr getan. Mit ihm jedes
+   `grid-row` und `grid-column` darunter: ein Raster ohne `display:grid`
+   ist eine Zeile, die aussieht, als tue sie etwas.
+   Die Sorge von damals ist damit nicht erledigt, sondern nur woanders
+   beantwortet — das Studio-Blatt legt Krume und Ort mit `flex-basis:100%`
+   auf eigene Zeilen und lässt Titel und Knöpfe auf einer. Nachgesehen im
+   Bild, nicht erinnert.
+   §8: ein Katalog für eine Sache. Was hier noch steht, ist nur das, was
+   das Studio-Blatt NICHT setzt. */
 /* DIE BROTKRUME DER ABLAGE (E380).
    Sie steht ÜBER dem Titel und über die ganze Breite — nicht daneben: der
    Weg kann lang werden, der Titel darf davon nicht schmaler werden. An der
@@ -12253,7 +12282,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
    Der Zurück-Pfeil ist der einzige Knopf, den man am Telefon oft trifft;
    er bekommt darum die volle Trefferfläche (§37). */
 .bib-krume{
-  grid-column:1 / -1; grid-row:1; min-width:0;
+  min-width:0;
   display:flex; align-items:center; gap:2px;
   overflow-x:auto; scrollbar-width:none; white-space:nowrap;
   /* DIE MARKEN HEISSEN `--text-dim`, `--text` UND `--bg-hover`.
@@ -12296,15 +12325,13 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 .bib-krume b{ flex:0 0 auto; padding:0 6px; color:var(--text); font-weight:600 }
 .bib-krume span{ flex:0 0 auto; opacity:.5 }
-.bib-dkopf:has(.bib-krume) h1{ grid-row:2 }
-.bib-dkopf:has(.bib-krume) .bib-neu{ grid-row:2 }
-.bib-dkopf:has(.bib-krume) .bib-form-knopf{ grid-row:2 }
-.bib-dkopf:has(.bib-krume) .bib-ort{ grid-row:3 }
-
+/* NUR NOCH DAS AUSLASSUNGSZEICHEN. Grösse, Laufweite und Mindestbreite
+   setzt `bibliothek-studio.css` (26px / -.7px / 120px, am Tablet 240px);
+   das Abschneiden mit „…" setzt es nicht — und ohne das hier würde der
+   Titel die Knöpfe aus der Zeile drücken statt zu schrumpfen. */
 .bib-dkopf h1{
-  grid-column:1; grid-row:1; min-width:0; margin:0;
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  font-size:27px; font-weight:760; letter-spacing:-.03em
+  margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-weight:760
 }
 /* Der Ort ist eine Auskunft mit einem Weg dahinter, keine Überschrift:
    „Kürzlich verwendet · 23 Dokumente ▾". Er steht unter dem Titel, weil er
@@ -12334,21 +12361,27 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 .bib-form-knopf:hover{ background:var(--bg-hover); color:var(--text) }
 
+/* Abstand und Aussenmass kommen aus `bibliothek-studio.css` (6px / 24px).
+   Hier bleibt, was dort fehlt: dass die Leiste eine Zeile ist und quer
+   geschoben werden kann, wenn die Arten nicht nebeneinander passen. */
 .bib-arten{
-  display:flex; gap:7px; margin:0 0 var(--space-5); overflow-x:auto;
-  scrollbar-width:none
+  display:flex; overflow-x:auto; scrollbar-width:none
 }
 .bib-arten::-webkit-scrollbar{ display:none }
+/* Polster, Rundung und Schriftgrösse setzt das Studio-Blatt. */
 .bib-arten button{
-  flex:none; min-height:34px; padding:0 14px; border:0; border-radius:999px;
-  background:var(--bg-card); color:var(--text-dim); font-size:13px; cursor:pointer
+  flex:none; min-height:34px; border:0;
+  background:var(--bg-card); color:var(--text-dim); cursor:pointer
 }
 .bib-arten button:hover{ background:var(--bg-hover); color:var(--text) }
 .bib-arten button.on{ background:var(--text); color:var(--bg); font-weight:620 }
 
+/* DASS es ein Raster ist, steht hier — WIE breit die Spalten sind, im
+   Studio-Blatt (155–200px, am Telefon zwei feste Spalten). `display:grid`
+   setzt es nicht, und ohne diese Zeile fiele das ganze Regal auseinander;
+   `notizhefte.css` baut auf derselben Klasse auf (E207). */
 .bib-gitter{
-  display:grid; grid-template-columns:repeat(auto-fill,minmax(148px,1fr));
-  gap:26px 20px; align-items:start
+  display:grid; align-items:start
 }
 /* Ein `<button>` zentriert seinen Inhalt senkrecht — auch mit `display:block`.
    Ohne diese Spalte begannen die Deckel einer Reihe auf verschiedenen Höhen,
@@ -12361,12 +12394,14 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-deckel-blatt{
   position:relative; display:block; overflow:hidden;
   aspect-ratio:3/4; margin:0 0 9px; padding:14px 11px 0;
-  border:1px solid var(--line); border-radius:6px;
-  background:var(--bg-card); box-shadow:var(--shadow-2);
+  border:1px solid var(--line);
+  /* Rundung und Schatten macht das Studio-Blatt zum Buchrücken:
+     `6px 12px 12px 6px` und zwei gestaffelte Schatten. Hier stand einmal
+     ein gleichmässiges `6px` mit `--shadow-2` — beides wirkungslos. */
+  background:var(--bg-card);
   color:var(--text-dim); font-size:8px; line-height:1.6
 }
 .bib-deckel:hover .bib-deckel-blatt{ box-shadow:var(--shadow-3) }
-.bib-deckel:active .bib-deckel-blatt{ transform:scale(.985) }
 /* Der Auslauf nach unten — dasselbe Papier wie im Heftregal. */
 /* DAS ECHTE BILD AUF DEM DECKEL (L61, E313).
    Es füllt das Blatt ganz aus und wird beschnitten statt verzerrt — ein
@@ -12425,8 +12460,8 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
    E227 bei der Zahl). */
 .bib-deckel-name b{
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
-  overflow:hidden; min-height:33px; min-width:0; overflow-wrap:break-word;
-  font-size:12.5px; font-weight:580; line-height:1.3; letter-spacing:-.005em
+  overflow:hidden; min-height:39px; min-width:0; overflow-wrap:break-word;
+  font-weight:580; letter-spacing:-.005em
 }
 .bib-deckel-mehr{
   margin-left:auto; flex:none; width:20px; height:20px; display:grid;
@@ -12435,7 +12470,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 .bib-deckel-mehr:hover{ background:var(--bg-hover); color:var(--text) }
 .bib-deckel small{
-  display:block; overflow:hidden; margin-top:2px; color:var(--text-faint);
+  display:block; overflow:hidden; margin-top:2px;
   font-size:11px; white-space:nowrap; text-overflow:ellipsis
 }
 /* ---- DIE GEZEICHNETEN DECKEL -------------------------------------------
@@ -12553,10 +12588,8 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 
 @media(max-width:760px){
-  .bib-gitter{ grid-template-columns:repeat(auto-fill,minmax(102px,1fr));
-               gap:20px 14px }
-  .bib-dkopf{ gap:6px 8px }
-  .bib-dkopf h1{ font-size:24px }
+  /* Spalten, Abstände und Titelgrösse am Telefon: alle drei stehen in
+     `bibliothek-studio.css` unter derselben Breite und gewinnen dort. */
   .bib-neu{ padding:0 17px 0 13px }
   /* GEMESSEN: `#page` gibt 28 px Polster, die Bibliothek noch einmal 16 —
      zusammen 88 von 390. Übrig blieben 302, und damit passten nur ZWEI
@@ -13331,7 +13364,12 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     display:flex; align-items:stretch; gap:2px;
     position:fixed; left:10px; right:10px; top:auto; z-index:401;
     bottom:calc(9px + env(safe-area-inset-bottom));
-    padding:5px 6px; border-radius:29px;
+    padding:5px 6px;
+    /* DER RADIUS STEHT IN `studio.css` (E642). Hier stand `29px` und galt
+       seit dem 6. September nie: `studio.css:224` setzt ihn als halbe
+       Leistenhöhe (`calc(var(--mobile-nav-height)/2)`), und dort steht
+       auch der Grund dafür. Eine zweite Zahl daneben war nur eine, die
+       auseinanderlaufen kann. */
     /* DER INHALT LÄUFT DAHINTER DURCH, also muss die Fläche tragen.
        `--bg-card` allein wäre auf einem hellen Regal zu durchsichtig;
        der Weichzeichner dahinter macht aus dem, was durchscheint, eine
@@ -14601,7 +14639,9 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 button[disabled]{opacity:.4; cursor:not-allowed}
 
 /* Reiter, geteilte Ansicht, Linkvorschau */
-#reiterleiste{display:flex; align-items:stretch; gap:2px; padding:4px 6px 0;
+/* DER ABSTAND STEHT IN `studio.css` (E642) — hier stand `gap:2px` und galt
+   nicht mehr. */
+#reiterleiste{display:flex; align-items:stretch; padding:4px 6px 0;
               background:var(--bg-side); border-bottom:1px solid var(--line);
               overflow-x:auto; flex:0 0 auto}
 /* DER AKTIVE REITER KLINKT IN DIE FLÄCHE EIN (E263, aus Amdion): drei
@@ -17860,7 +17900,8 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .document-topbar button,.document-inspector button,.document-panel-header button{
   min-height:36px; border:1px solid var(--border); border-radius:8px;
   background:var(--bg); color:var(--text); cursor:pointer}
-.document-topbar button{padding:6px 10px}.document-position{margin-left:4px;font-weight:650}
+/* `margin-left` steht in `pdf-studio.css` (E642) und galt hier nie. */
+.document-topbar button{padding:6px 10px}.document-position{font-weight:650}
 /* E296 · DER TITEL STEHT IN DER KOPFZEILE, weil der Seitenkopf darueber
    weggefallen ist. Er nimmt den freien Platz (und schiebt damit Zoom,
    Inspector und Ausgang nach rechts, wofuer vorher `margin-left:auto` am
@@ -18315,7 +18356,9 @@ body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2
     min-height:320px;border-inline:0;border-radius:0}
   .document-topbar{min-height:52px;position:relative}.document-topbar button{min-width:var(--touch-min);min-height:var(--touch-min);padding:6px}
   .document-topbar button:last-child{font-size:0}.document-topbar button:last-child::after{content:'✕';font-size:18px}
-  .document-topbar input[type=range]{display:none}.document-zoom-label{margin-left:auto;min-width:40px}
+  /* `min-width` und `display` stehen für diese Breite in `pdf-studio.css`
+     (E642); hier galten sie nicht. */
+  .document-topbar input[type=range]{display:none}.document-zoom-label{margin-left:auto}
   .document-position{font-size:12px;white-space:nowrap;margin-right:auto}
   /* ZWEI DINGE FALLEN AM TELEFON WEG, und beide aus einem gemessenen Grund.
      Der TITEL, weil dort kein Platz fuer ihn ist: auf 390 px blieben ihm
@@ -18345,7 +18388,8 @@ body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2
   .document-topbar button[data-document-action="next"]{display:none}
   .document-title{display:block; flex:1 1 auto; min-width:60px;
     padding-inline:8px; font-size:13.5px}
-  .document-zoom-label{display:none}
+  /* `display` steht für diese Breite in `pdf-studio.css:103` (E642) und
+     sagt dort `inline` — das `none`, das hier stand, galt nie. */
   /* E384 · AM TELEFON NUR DER PFEIL. Gemessen mit dem Wort: die Leiste war
      411 px breit in einem 390 px breiten Fenster, und der Ausgang stand bei
      367..411 — also 21 px AUSSERHALB des Bildschirms. Der Knopf faellt damit
@@ -19485,8 +19529,11 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   display:flex; align-items:flex-start; gap:11px; min-height:var(--touch-min);
   padding:13px 14px; border:1px solid var(--line); border-radius:13px;
   background:var(--bg-card); color:var(--text); text-align:left; cursor:pointer;
-  transition:background var(--motion-fast,.14s) var(--ease-standard,ease),
-             box-shadow var(--motion-fast,.14s) var(--ease-standard,ease)
+  /* DER ÜBERGANG STEHT IN `motion.css` (E642). Er stand einmal hier und
+     galt seit dem 10. September nicht mehr: die spätere Datei setzt
+     `transition` ganz neu, und eine Liste ersetzt die andere. Statt zwei
+     Listen zu pflegen, die auseinanderlaufen, steht jetzt EINE dort —
+     mitsamt dem `background`, das dabei verlorengegangen war. */
 }
 .els-kachel:hover{ background:var(--bg-hover); box-shadow:var(--shadow-2) }
 /* Die grosse Kachel nimmt die ganze Zeile. Welche das ist, entscheidet das
@@ -21452,16 +21499,29 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
      zweiter Zustand. */
   body[data-schale="premium"] #sidebar{ display: none }
 
+  /* ══ DIE ZEILEN STEHEN IN `studio.css` (E642) ═════════════════════════
+     Hier standen einmal vier Zeilen und die Plätze darin — und seit dem
+     6. September galt davon keine einzige: `studio.css:97-114` setzt für
+     dieselbe Hülle FÜNF Zeilen, weil oben der Studio-Balken dazugekommen
+     ist, und verteilt alle Plätze neu. Jede Zeile hier war eine Zahl, die
+     nie zum Zug kam.
+
+     `test332` hat alle sieben auf einmal gemeldet, und das ist die
+     eigentliche Auskunft: es war kein Versehen an einer Stelle, sondern
+     ein ganzes Raster, das ein späteres ersetzt hat, ohne dass das
+     frühere weggeräumt wurde. Wer die Premium-Schale lesen will, liest sie
+     jetzt in `studio.css`, an EINER Stelle.
+
+     Was hier bleibt, sind die SPALTEN — die setzt `studio.css` nicht. */
   body[data-schale="premium"] #main{
     display: grid;
     grid-template-columns: var(--kante-b) minmax(0, 1fr);
-    grid-template-rows: auto auto auto minmax(0, 1fr);
   }
-  body[data-schale="premium"] #main > #menueband{ grid-column: 1 / -1; grid-row: 1 }
-  body[data-schale="premium"] #main > #kante{ grid-column: 1; grid-row: 2 / -1 }
-  body[data-schale="premium"] #main > #reiterleiste{ grid-column: 2; grid-row: 2 }
-  body[data-schale="premium"] #main > #topbar{ grid-column: 2; grid-row: 3 }
-  body[data-schale="premium"] #main > #scroll{ grid-column: 2; grid-row: 4 }
+  body[data-schale="premium"] #main > #menueband{ grid-column: 1 / -1 }
+  body[data-schale="premium"] #main > #kante{ grid-column: 1 }
+  body[data-schale="premium"] #main > #reiterleiste{ grid-column: 2 }
+  body[data-schale="premium"] #main > #topbar{ grid-column: 2 }
+  body[data-schale="premium"] #main > #scroll{ grid-column: 2 }
 
   /* OHNE KANTE RÜCKT DER INHALT NACH LINKS. Sie kann zu sein (Strg + \),
      und dann sollen die 54 Pixel nicht als leerer Streifen stehenbleiben. */
@@ -21575,7 +21635,10 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
     display: flex; flex-direction: column;
     background: var(--bg-side);
     border-right: 1px solid var(--line);
-    box-shadow: var(--gold-shadow);
+    /* DER SCHATTEN STEHT IN `studio.css:128` (E642). Hier stand
+       `var(--gold-shadow)` und galt seit dem 6. September nicht mehr —
+       die spätere Datei setzt `var(--studio-elevation)`. Zwei Schatten
+       für dieselbe Lade, und der goldene war nie zu sehen. */
   }
   body[data-schale="premium"] #kanten-lade[hidden]{ display: none }
   .kl-kopf{
@@ -24987,7 +25050,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1215, inhalt: '3656684ddfd8c639', gebaut: '2026-09-20T01:45:50.893Z' };
+const Stand = { fassung: 1217, inhalt: '4563cdfe84661c06', gebaut: '2026-09-20T02:19:57.385Z' };
 window.Stand = Stand;
 
 </script>
@@ -81872,15 +81935,31 @@ const ChronikDaten = {
                 {
                     "was": "E641 — Was das Design-System an der Linse auszusetzen hat",
                     "vonCommit": "(01:26)",
-                    "bisCommit": "(offen)",
-                    "zeitraum": "01:30 –",
-                    "dauer": "laufend",
+                    "bisCommit": "(01:52)",
+                    "zeitraum": "01:30 – 01:52",
+                    "dauer": "ca. 22 min",
                     "pruefungen": "test539 §7 neu"
+                },
+                {
+                    "was": "E642 — Sechsundsiebzig tote CSS-Regeln, gezählt bis null",
+                    "vonCommit": "(01:52)",
+                    "bisCommit": "(02:35)",
+                    "zeitraum": "01:52 – 02:35",
+                    "dauer": "ca. 43 min",
+                    "pruefungen": "test332 (76 → 0) · 26 Nachbarläufe der Bibliothek und der Stilblätter"
+                },
+                {
+                    "was": "E643 — Der Wächter gegen Port-Kollisionen kannte nur eine Schreibweise",
+                    "vonCommit": "(02:35)",
+                    "bisCommit": "(offen)",
+                    "zeitraum": "02:35 –",
+                    "dauer": "laufend",
+                    "pruefungen": "test400 (4/4, zwei Gegenproben) · die vierzehn betroffenen Läufe"
                 }
             ],
             "zahlen": {
                 "commits": 2,
-                "entscheidungen": 3,
+                "entscheidungen": 5,
                 "neue Prüfläufe": 1,
                 "volle Läufe": 0
             },
@@ -82891,6 +82970,32 @@ const ChronikDaten = {
             "loesung": "§6 prüft jetzt die QUELLE statt die Seite und sagt in seinem Kommentar, warum. Dass die Regel auch WIRKT, steht als L203 offen.",
             "warumKeineUhr": "Keine Uhr im Spiel.",
             "lehre": "§55.2 sagt „prüfe zuerst, ob sie überhaupt rot werden kann\". Die Umkehrung fehlte mir: prüfe auch, ob sie überhaupt GRÜN werden kann. Eine Zusage, die den Zustand nicht herstellen kann, den sie prüft, ist eine Dauerbeschwerde."
+        },
+        {
+            "nr": "P71",
+            "datum": "2026-09-20",
+            "titel": "Der Wächter zerriss die Wähler und klagte dann die echten Regeln an",
+            "schwere": "mittel",
+            "symptom": "`test332` meldete 76 tote CSS-Erklärungen. Darunter Wähler, die es gar nicht geben kann: `#menueband)`, `select):focus-visible`, `:focus-visible)`.",
+            "falscheVermutung": "Erst dachte ich, das seien Schreibfehler IM Stilblatt — eine überzählige Klammer irgendwo in `bausteine.css`. Ich habe nach `)` am Wähleranfang gesucht und nichts gefunden.",
+            "wieGefunden": "Die Suche nach der schliessenden Klammer im Quelltext ging ins Leere. Erst da habe ich die Zeile im Lauf selbst gelesen: `r.selectorText.split(',')`.",
+            "ursache": "Nicht jedes Komma trennt. In `:is(a,b)`, `:where()`, `:not()` und `:has()` steht es INNERHALB der Klammer. `split(',')` zerriss sie, und die Bruchstücke verloren Vorfahren und `!important` — der Lauf verglich sie mit echten Regeln und meldete die echten als tot.",
+            "loesung": "Getrennt wird nur noch an einem Komma auf Klammertiefe null. Dreizehn der 76 Meldungen waren danach weg, ohne dass eine Zeile Stil angefasst wurde.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "lehre": "Zum dritten Mal an zwei Tagen dieselbe Sorte: ein Ausdruck, der eine gültige Schreibweise nicht kennt (E629, E631, jetzt hier). Und die Lehre darüber: eine Meldung eines Wächters ist ein BEFUND, keine Wahrheit. 17 % dieses Befunds waren das Messgerät. Wer ungeprüft repariert, baut die Seite nach dem Fehler des Prüfstands um."
+        },
+        {
+            "nr": "P72",
+            "datum": "2026-09-20",
+            "titel": "Der Wächter gegen Port-Kollisionen meldete grün und übersah sieben",
+            "schwere": "gross",
+            "symptom": "`test424` wurde in einem Stapel von sechzehn rot, an einer Zeile, die ihren eigenen Lastverlauf im Kommentar führt. `test400` — der Wächter GEGEN genau diese Sorte Fehlalarm — war grün.",
+            "falscheVermutung": "Last. Der Kommentar der Zeile sagt selbst, dass sie im Stapel von elf durchlief und im Stapel von vierzehn brach; ich wollte die Zahl wieder anheben. Dann: mein eigener Bogen. Beides falsch.",
+            "wieGefunden": "Beim Nachsehen, welchen Port test424 hält, stand dort nicht `const PORT = …`, sondern `server.listen(9624, '127.0.0.1', resolve)`. Und test400 liest `/PORT = (\\d+)/`.",
+            "ursache": "Acht Läufe schreiben ihre Portzahl direkt in den Aufruf. Für den Ausdruck waren sie unsichtbar — und damit sieben doppelt vergebene Ports, während der Wächter „kein Port ist zweimal vergeben\" meldete.",
+            "loesung": "Beide Schreibweisen lesen; `listen(0)` als richtig zählen statt als fehlend; und PRÜFEN, dass kein Lauf mit eigenem Server ohne erkannte Zahl bleibt. Die sieben jüngeren Läufe sind auf 9643–9649 umgezogen.",
+            "warumKeineUhr": "Die Kollision ist zeitlos — sie wirkt nur, wenn zwei Läufe gleichzeitig laufen.",
+            "lehre": "Zum vierten Mal an zwei Tagen ein Ausdruck, der eine gültige Schreibweise nicht kennt — aber der erste, der dabei etwas ÜBERSAH statt etwas zu erfinden. Und die Zahl in der Ausgabe („374 von 481\") nannte die Lücke seit Monaten; eine Zahl, die eine Lücke NENNT, ersetzt keine Prüfung, die sie schliesst. Nebenbei blieb test424 auch allein und auf dem Stand von HEAD rot: ein achtzehnter roter Lauf, der nicht meiner ist."
         }
     ]
 };

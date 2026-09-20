@@ -84,6 +84,8 @@ sind der teuerste Teil und der lehrreichste.
 | P68 | 2026-09-20 | Ein Übergang ohne Anlass — und der Wächter hatte ihn ein halbes Jahr vorher beschrieben | 🟡 klein | — |
 | P69 | 2026-09-20 | Fünfmal gerechnet, fünfmal zu früh: die Bauform war falsch, nicht die Formel | gross | — |
 | P70 | 2026-09-20 | Eine Zusage, die nur rot werden kann, ist keine | 🟡 klein | — |
+| P71 | 2026-09-20 | Der Wächter zerriss die Wähler und klagte dann die echten Regeln an | 🟠 mittel | — |
+| P72 | 2026-09-20 | Der Wächter gegen Port-Kollisionen meldete grün und übersah sieben | gross | — |
 
 ---
 
@@ -1571,4 +1573,46 @@ sind der teuerste Teil und der lehrreichste.
 **Warum keine Uhr.** Keine Uhr im Spiel.
 
 **Die Lehre.** §55.2 sagt „prüfe zuerst, ob sie überhaupt rot werden kann". Die Umkehrung fehlte mir: prüfe auch, ob sie überhaupt GRÜN werden kann. Eine Zusage, die den Zustand nicht herstellen kann, den sie prüft, ist eine Dauerbeschwerde.
+
+
+---
+
+## P71 · Der Wächter zerriss die Wähler und klagte dann die echten Regeln an
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** `test332` meldete 76 tote CSS-Erklärungen. Darunter Wähler, die es gar nicht geben kann: `#menueband)`, `select):focus-visible`, `:focus-visible)`.
+
+**Die falsche Vermutung.** Erst dachte ich, das seien Schreibfehler IM Stilblatt — eine überzählige Klammer irgendwo in `bausteine.css`. Ich habe nach `)` am Wähleranfang gesucht und nichts gefunden.
+
+**Wie es gefunden wurde.** Die Suche nach der schliessenden Klammer im Quelltext ging ins Leere. Erst da habe ich die Zeile im Lauf selbst gelesen: `r.selectorText.split(',')`.
+
+**Die Ursache.** Nicht jedes Komma trennt. In `:is(a,b)`, `:where()`, `:not()` und `:has()` steht es INNERHALB der Klammer. `split(',')` zerriss sie, und die Bruchstücke verloren Vorfahren und `!important` — der Lauf verglich sie mit echten Regeln und meldete die echten als tot.
+
+**Die Lösung.** Getrennt wird nur noch an einem Komma auf Klammertiefe null. Dreizehn der 76 Meldungen waren danach weg, ohne dass eine Zeile Stil angefasst wurde.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Die Lehre.** Zum dritten Mal an zwei Tagen dieselbe Sorte: ein Ausdruck, der eine gültige Schreibweise nicht kennt (E629, E631, jetzt hier). Und die Lehre darüber: eine Meldung eines Wächters ist ein BEFUND, keine Wahrheit. 17 % dieses Befunds waren das Messgerät. Wer ungeprüft repariert, baut die Seite nach dem Fehler des Prüfstands um.
+
+
+---
+
+## P72 · Der Wächter gegen Port-Kollisionen meldete grün und übersah sieben
+
+*2026-09-20 · gross*
+
+**Das Bild.** `test424` wurde in einem Stapel von sechzehn rot, an einer Zeile, die ihren eigenen Lastverlauf im Kommentar führt. `test400` — der Wächter GEGEN genau diese Sorte Fehlalarm — war grün.
+
+**Die falsche Vermutung.** Last. Der Kommentar der Zeile sagt selbst, dass sie im Stapel von elf durchlief und im Stapel von vierzehn brach; ich wollte die Zahl wieder anheben. Dann: mein eigener Bogen. Beides falsch.
+
+**Wie es gefunden wurde.** Beim Nachsehen, welchen Port test424 hält, stand dort nicht `const PORT = …`, sondern `server.listen(9624, '127.0.0.1', resolve)`. Und test400 liest `/PORT = (\d+)/`.
+
+**Die Ursache.** Acht Läufe schreiben ihre Portzahl direkt in den Aufruf. Für den Ausdruck waren sie unsichtbar — und damit sieben doppelt vergebene Ports, während der Wächter „kein Port ist zweimal vergeben" meldete.
+
+**Die Lösung.** Beide Schreibweisen lesen; `listen(0)` als richtig zählen statt als fehlend; und PRÜFEN, dass kein Lauf mit eigenem Server ohne erkannte Zahl bleibt. Die sieben jüngeren Läufe sind auf 9643–9649 umgezogen.
+
+**Warum keine Uhr.** Die Kollision ist zeitlos — sie wirkt nur, wenn zwei Läufe gleichzeitig laufen.
+
+**Die Lehre.** Zum vierten Mal an zwei Tagen ein Ausdruck, der eine gültige Schreibweise nicht kennt — aber der erste, der dabei etwas ÜBERSAH statt etwas zu erfinden. Und die Zahl in der Ausgabe („374 von 481") nannte die Lücke seit Monaten; eine Zahl, die eine Lücke NENNT, ersetzt keine Prüfung, die sie schliesst. Nebenbei blieb test424 auch allein und auf dem Stand von HEAD rot: ein achtzehnter roter Lauf, der nicht meiner ist.
 

@@ -426,16 +426,29 @@
      zweiter Zustand. */
   body[data-schale="premium"] #sidebar{ display: none }
 
+  /* ══ DIE ZEILEN STEHEN IN `studio.css` (E642) ═════════════════════════
+     Hier standen einmal vier Zeilen und die Plätze darin — und seit dem
+     6. September galt davon keine einzige: `studio.css:97-114` setzt für
+     dieselbe Hülle FÜNF Zeilen, weil oben der Studio-Balken dazugekommen
+     ist, und verteilt alle Plätze neu. Jede Zeile hier war eine Zahl, die
+     nie zum Zug kam.
+
+     `test332` hat alle sieben auf einmal gemeldet, und das ist die
+     eigentliche Auskunft: es war kein Versehen an einer Stelle, sondern
+     ein ganzes Raster, das ein späteres ersetzt hat, ohne dass das
+     frühere weggeräumt wurde. Wer die Premium-Schale lesen will, liest sie
+     jetzt in `studio.css`, an EINER Stelle.
+
+     Was hier bleibt, sind die SPALTEN — die setzt `studio.css` nicht. */
   body[data-schale="premium"] #main{
     display: grid;
     grid-template-columns: var(--kante-b) minmax(0, 1fr);
-    grid-template-rows: auto auto auto minmax(0, 1fr);
   }
-  body[data-schale="premium"] #main > #menueband{ grid-column: 1 / -1; grid-row: 1 }
-  body[data-schale="premium"] #main > #kante{ grid-column: 1; grid-row: 2 / -1 }
-  body[data-schale="premium"] #main > #reiterleiste{ grid-column: 2; grid-row: 2 }
-  body[data-schale="premium"] #main > #topbar{ grid-column: 2; grid-row: 3 }
-  body[data-schale="premium"] #main > #scroll{ grid-column: 2; grid-row: 4 }
+  body[data-schale="premium"] #main > #menueband{ grid-column: 1 / -1 }
+  body[data-schale="premium"] #main > #kante{ grid-column: 1 }
+  body[data-schale="premium"] #main > #reiterleiste{ grid-column: 2 }
+  body[data-schale="premium"] #main > #topbar{ grid-column: 2 }
+  body[data-schale="premium"] #main > #scroll{ grid-column: 2 }
 
   /* OHNE KANTE RÜCKT DER INHALT NACH LINKS. Sie kann zu sein (Strg + \),
      und dann sollen die 54 Pixel nicht als leerer Streifen stehenbleiben. */
@@ -549,7 +562,10 @@
     display: flex; flex-direction: column;
     background: var(--bg-side);
     border-right: 1px solid var(--line);
-    box-shadow: var(--gold-shadow);
+    /* DER SCHATTEN STEHT IN `studio.css:128` (E642). Hier stand
+       `var(--gold-shadow)` und galt seit dem 6. September nicht mehr —
+       die spätere Datei setzt `var(--studio-elevation)`. Zwei Schatten
+       für dieselbe Lade, und der goldene war nie zu sehen. */
   }
   body[data-schale="premium"] #kanten-lade[hidden]{ display: none }
   .kl-kopf{

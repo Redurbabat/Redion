@@ -2379,15 +2379,31 @@ const ChronikDaten = {
     {
      "was": "E641 — Was das Design-System an der Linse auszusetzen hat",
      "vonCommit": "(01:26)",
-     "bisCommit": "(offen)",
-     "zeitraum": "01:30 –",
-     "dauer": "laufend",
+     "bisCommit": "(01:52)",
+     "zeitraum": "01:30 – 01:52",
+     "dauer": "ca. 22 min",
      "pruefungen": "test539 §7 neu"
+    },
+    {
+     "was": "E642 — Sechsundsiebzig tote CSS-Regeln, gezählt bis null",
+     "vonCommit": "(01:52)",
+     "bisCommit": "(02:35)",
+     "zeitraum": "01:52 – 02:35",
+     "dauer": "ca. 43 min",
+     "pruefungen": "test332 (76 → 0) · 26 Nachbarläufe der Bibliothek und der Stilblätter"
+    },
+    {
+     "was": "E643 — Der Wächter gegen Port-Kollisionen kannte nur eine Schreibweise",
+     "vonCommit": "(02:35)",
+     "bisCommit": "(offen)",
+     "zeitraum": "02:35 –",
+     "dauer": "laufend",
+     "pruefungen": "test400 (4/4, zwei Gegenproben) · die vierzehn betroffenen Läufe"
     }
    ],
    "zahlen": {
     "commits": 2,
-    "entscheidungen": 3,
+    "entscheidungen": 5,
     "neue Prüfläufe": 1,
     "volle Läufe": 0
    },
@@ -3398,6 +3414,32 @@ const ChronikDaten = {
    "loesung": "§6 prüft jetzt die QUELLE statt die Seite und sagt in seinem Kommentar, warum. Dass die Regel auch WIRKT, steht als L203 offen.",
    "warumKeineUhr": "Keine Uhr im Spiel.",
    "lehre": "§55.2 sagt „prüfe zuerst, ob sie überhaupt rot werden kann\". Die Umkehrung fehlte mir: prüfe auch, ob sie überhaupt GRÜN werden kann. Eine Zusage, die den Zustand nicht herstellen kann, den sie prüft, ist eine Dauerbeschwerde."
+  },
+  {
+   "nr": "P71",
+   "datum": "2026-09-20",
+   "titel": "Der Wächter zerriss die Wähler und klagte dann die echten Regeln an",
+   "schwere": "mittel",
+   "symptom": "`test332` meldete 76 tote CSS-Erklärungen. Darunter Wähler, die es gar nicht geben kann: `#menueband)`, `select):focus-visible`, `:focus-visible)`.",
+   "falscheVermutung": "Erst dachte ich, das seien Schreibfehler IM Stilblatt — eine überzählige Klammer irgendwo in `bausteine.css`. Ich habe nach `)` am Wähleranfang gesucht und nichts gefunden.",
+   "wieGefunden": "Die Suche nach der schliessenden Klammer im Quelltext ging ins Leere. Erst da habe ich die Zeile im Lauf selbst gelesen: `r.selectorText.split(',')`.",
+   "ursache": "Nicht jedes Komma trennt. In `:is(a,b)`, `:where()`, `:not()` und `:has()` steht es INNERHALB der Klammer. `split(',')` zerriss sie, und die Bruchstücke verloren Vorfahren und `!important` — der Lauf verglich sie mit echten Regeln und meldete die echten als tot.",
+   "loesung": "Getrennt wird nur noch an einem Komma auf Klammertiefe null. Dreizehn der 76 Meldungen waren danach weg, ohne dass eine Zeile Stil angefasst wurde.",
+   "warumKeineUhr": "Keine Uhr im Spiel.",
+   "lehre": "Zum dritten Mal an zwei Tagen dieselbe Sorte: ein Ausdruck, der eine gültige Schreibweise nicht kennt (E629, E631, jetzt hier). Und die Lehre darüber: eine Meldung eines Wächters ist ein BEFUND, keine Wahrheit. 17 % dieses Befunds waren das Messgerät. Wer ungeprüft repariert, baut die Seite nach dem Fehler des Prüfstands um."
+  },
+  {
+   "nr": "P72",
+   "datum": "2026-09-20",
+   "titel": "Der Wächter gegen Port-Kollisionen meldete grün und übersah sieben",
+   "schwere": "gross",
+   "symptom": "`test424` wurde in einem Stapel von sechzehn rot, an einer Zeile, die ihren eigenen Lastverlauf im Kommentar führt. `test400` — der Wächter GEGEN genau diese Sorte Fehlalarm — war grün.",
+   "falscheVermutung": "Last. Der Kommentar der Zeile sagt selbst, dass sie im Stapel von elf durchlief und im Stapel von vierzehn brach; ich wollte die Zahl wieder anheben. Dann: mein eigener Bogen. Beides falsch.",
+   "wieGefunden": "Beim Nachsehen, welchen Port test424 hält, stand dort nicht `const PORT = …`, sondern `server.listen(9624, '127.0.0.1', resolve)`. Und test400 liest `/PORT = (\\d+)/`.",
+   "ursache": "Acht Läufe schreiben ihre Portzahl direkt in den Aufruf. Für den Ausdruck waren sie unsichtbar — und damit sieben doppelt vergebene Ports, während der Wächter „kein Port ist zweimal vergeben\" meldete.",
+   "loesung": "Beide Schreibweisen lesen; `listen(0)` als richtig zählen statt als fehlend; und PRÜFEN, dass kein Lauf mit eigenem Server ohne erkannte Zahl bleibt. Die sieben jüngeren Läufe sind auf 9643–9649 umgezogen.",
+   "warumKeineUhr": "Die Kollision ist zeitlos — sie wirkt nur, wenn zwei Läufe gleichzeitig laufen.",
+   "lehre": "Zum vierten Mal an zwei Tagen ein Ausdruck, der eine gültige Schreibweise nicht kennt — aber der erste, der dabei etwas ÜBERSAH statt etwas zu erfinden. Und die Zahl in der Ausgabe („374 von 481\") nannte die Lücke seit Monaten; eine Zahl, die eine Lücke NENNT, ersetzt keine Prüfung, die sie schliesst. Nebenbei blieb test424 auch allein und auf dem Stand von HEAD rot: ein achtzehnter roter Lauf, der nicht meiner ist."
   }
  ]
 } as const;

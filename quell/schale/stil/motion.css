@@ -3,9 +3,11 @@
  * doku/ANIMATIONEN-ZUORDNUNG.md. Die bestehenden ru-funkel-Regeln bleiben.
  */
 #ai {
+  /* DIE BREITE STEHT IN `ki.css` (E642). Sie stand einmal hier und
+     überschrieb dort die 380 — eine Animationssammlung ist aber nicht der
+     Ort, an dem ein Bauteil seine Masse bekommt. Jetzt sagt `ki.css` 420,
+     und diese Datei sagt dazu nichts mehr. */
   --rmo-ease: cubic-bezier(.22, 1, .36, 1);
-  width: 420px;
-  flex-basis: 420px;
   min-height: 0;
 }
 #ai.open { animation: rmo-panel-in .32s var(--rmo-ease); }
@@ -164,7 +166,15 @@ body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt
 /* 3 + 10 — Lichtschlitz und kleiner Perspektivwechsel: echte Fach-/Statistikkarten. */
 .els-kachel, .stat-karte.lw-metrik {
   position: relative; overflow: hidden;
-  transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s, border-color .25s;
+  /* `background` MUSS MIT IN DIE LISTE (E642). Hier stand dieselbe Zeile
+     ohne sie — und weil `transition` EINE Eigenschaft ist, gewinnt die
+     spätere Liste ganz: der Übergang aus `bausteine.css:7938`
+     (`background`, `box-shadow`) galt seit dem 10. September nicht mehr,
+     und die Kachel wechselte ihre Fläche beim Überfahren hart statt
+     weich. Gefunden von `test332`, nicht vom Auge — ein Übergang, der
+     fehlt, sieht nicht kaputt aus, nur billig. */
+  transition: background var(--motion-fast,.14s) var(--ease-standard,ease),
+              transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s, border-color .25s;
 }
 .els-kachel::after, .stat-karte.lw-metrik::after {
   content: ''; position: absolute; pointer-events: none; inset: 0; opacity: 0;

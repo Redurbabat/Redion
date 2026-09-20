@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-619 Entscheidungen, E1 bis E641 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+621 Entscheidungen, E1 bis E643 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -684,6 +684,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E639** — Die Pille wird eine Linse: Redurs Video (Apple TV, iOS 26) zeigt keine Fläche, die springt, sondern eine, die BRICHT — sie vergrössert, zieht die Zeichen mit, wirft einen Farbsaum und dehnt sich in Laufrichtung. Redion hatte die wandernde Pille seit E236 schon; sie hat Glas bekommen. Die eine Zeile, an der alles hing: sie lag auf `z-index:0`, UNTER den Knöpfen — eine Linse kann aber nur brechen, was hinter ihr liegt. Dazu der Fund von `test114` §17, dessen Kommentar ein halbes Jahr vorher aufgeschrieben hatte, wann er scharf wird
 * **E640** — Der Grund sitzt, der Wechsel fliegt: das Design-System verlangt EINE Fläche, die sich bewegt, statt zweier, die auf- und abtauchen — Beispiel dort wörtlich „Pen → Marker → Eraser". Der erste Entwurf übernahm die Bauform von `#ho-pille`: eine dauerhafte Fläche, die wandert. `test478` hat sie widerlegt — 55 px neben ihrem Werkzeug, Überdeckung null. Drei Formeln und fünf Auslöser später stand immer noch derselbe Wert da; ein Zähler im Element zeigte, dass die Rechnung fünfmal gelaufen und jedes Mal ZU FRÜH war. Eine gespeicherte Stelle veraltet bei jedem Umbruch, jedem Rollen, jeder Breitenabfrage. Jetzt bleibt der Grund am Knopf, und nur der Wechsel bekommt eine kurzlebige Fläche in Bildschirmmassen
 * **E641** — Was das Design-System an der Linse auszusetzen hat: das am 20. September nachgereichte Regelwerk (`Redurbabat/UI-Kit`) urteilt auch über den Bogen von gestern, und neun von zehn klaren Verstössen stammen aus E639. Drei davon sind geändert: gedehnt wird nur noch zwischen NACHBARN (E639 dehnte um so stärker, je weiter der Sprung — das Gegenteil der Regel), der Deckel fällt von 1,85 auf 1,18, und die Ruhe-Brechung von 15 auf 8, damit die Schrift im Ruhezustand optisch still steht. Der vierte — ob über Schrift überhaupt gebrochen werden darf — gehört Redur
+* **E642** — Sechsundsiebzig Regeln, die nie zum Zug kamen: der erste volle Lauf seit PR #100 meldete 76 tote CSS-Erklärungen; dreizehn davon gab es gar nicht (`split(',')` zerriss die Kommas in `:is()` und erfand Wähler wie `#menueband)`), die übrigen 63 waren echt. Eine davon war eine Absicht, die nie wirkte: `motion.css` hatte die Übergangsliste der Kachel ersetzt und dabei `background` verloren — zehn Tage harter Flächenwechsel, den kein Auge meldete. Die letzten 35 sind die Bibliothek, die seit PR #56 zweimal gestaltet ist (§8): das Studio-Blatt gewinnt durchweg, also gehört ihm, was es setzt
+* **E643** — Der Wächter gegen Port-Kollisionen kannte nur eine Schreibweise: `test400` las `PORT = N` und war blind für `listen(9624, …)` — acht Läufe schreiben so, und sieben Ports waren dadurch doppelt vergeben, während der Wächter grün meldete. Zum vierten Mal an zwei Tagen ein Ausdruck, der eine gültige Schreibweise nicht kennt (E629, E631, E642) — und der erste, der dabei etwas ÜBERSAH statt etwas zu erfinden. Er prüft jetzt auch, dass er keinen Lauf übersieht, und `listen(0)` gilt als die bessere Antwort statt als fehlende Zahl
 
 ---
 
@@ -52462,3 +52464,263 @@ einer der beiden Punkte immer rot — ein Wächter, der nicht beide Seiten
 prüft, hält nur eine.
 
 **Gemessen.** `test539` · `test114` · die Wächter der unteren Leiste.
+
+---
+
+## E642 — Sechsundsiebzig Regeln, die nie zum Zug kamen
+
+`test332` ist seit E340 der Wächter gegen die vierte Variante von L111:
+**dieselbe Erklärung in zwei Dateien, und die frühere kommt nie dran.**
+Am 19. September meldete er beim ersten vollen Lauf seit PR #100
+**76 tote Erklärungen**. Dieser Bogen bringt sie auf null.
+
+Die Zahlen des Wegs, nach jeder Gruppe nachgemessen mit
+`node pruefungen/alle.mts 332`:
+
+```txt
+76 → 63 → 51 → 43 → 37 → 35 → 0
+```
+
+### Zuerst: dreizehn davon gab es gar nicht
+
+Der erste Schritt war nicht eine Reparatur, sondern eine **Gegenfrage an den
+Wächter** — und sie war berechtigt. `test332` trennte Wähler mit
+
+```js
+r.selectorText.split(',')
+```
+
+Das ist falsch, sobald ein Komma INNERHALB von `:is()`, `:where()`, `:not()`
+oder `:has()` steht. Aus
+
+```css
+body[data-dokument="an"] :is(#topbar,#menueband){ display:none !important }
+```
+
+wurden zwei Bruchstücke: `body[…] :is(#topbar` und `#menueband)`. Das zweite
+ist gar kein Wähler — es hat den Vorfahren verloren UND das `!important` —,
+und der Lauf verglich es mit der echten Regel `#menueband{display:flex}` und
+meldete **sie** als tot. `select):focus-visible` und `:focus-visible)` waren
+zwei weitere solche Gespenster: Zeichenketten, die nie ein Element treffen.
+
+Gezählt wird jetzt die Klammertiefe; getrennt wird nur an einem Komma auf
+Tiefe null. **Dreizehn der 76 Meldungen waren danach weg**, ohne dass eine
+einzige Zeile Stil angefasst wurde.
+
+Das ist die Lehre, die über diesen Bogen hinausgeht und schon E629 und E631
+trug: **eine Meldung eines Wächters ist ein Befund, keine Wahrheit.** Wer
+sie ungeprüft repariert, baut die Seite nach dem Fehler des Prüfstands um.
+
+### Dann: was wirklich tot war
+
+Die übrigen 63 waren echt, und sie zerfielen in zwei Sorten — genau die
+zwei, die der Plan vorhergesagt hat.
+
+**Sorte 1 · eine überflüssige Zeile.** Die spätere Datei sagt dasselbe
+besser, die frühere sagt es nur noch für die Akten:
+
+| Was | Früher (tot) | Es gilt |
+|---|---|---|
+| `#ai` Breite | `ki.css`: 380px | `motion.css`: 420px |
+| `.schalter i` Übergang | `einstellungen.css`: feste `.16s` | `studio.css`: Bewegungsmarken |
+| `#handy-oben` Rundung | `bausteine.css`: 29px | `studio.css` |
+| `#reiterleiste` Abstand | `bausteine.css`: `gap:2px` | `studio.css` |
+| `.document-position` | `bausteine.css`: `margin-left` | `pdf-studio.css` |
+| `.document-zoom-label` | `bausteine.css`, zwei Breiten | `pdf-studio.css` |
+| `#kanten-lade` Schatten | `premium.css`: `--gold-shadow` | `studio.css`: `--studio-elevation` |
+| Premium-Hülle, 7 Zeilen | `premium.css`: vier Rasterzeilen | `studio.css`: fünf |
+| Die Bibliothek, 35 Stück | `bausteine.css` | `bibliothek-studio.css` |
+
+Bei zweien war die Reparatur nicht „löschen", sondern **umziehen**: Die
+Breite des KI-Fensters gehört in `ki.css`, nicht in eine Animationssammlung
+— also steht dort jetzt 420 und `motion.css` sagt dazu nichts mehr. Die
+Premium-Hülle hat ihre sieben Zeilen an `studio.css` abgegeben, weil dort
+seit dem 6. September die fünfte Zeile für den Studio-Balken steht; hier
+blieben nur die Spalten.
+
+**Sorte 2 · eine Absicht, die nie gewirkt hat.** Davon gab es genau eine,
+und sie ist der Grund, warum dieser Wächter sein Geld wert ist:
+
+```css
+/* motion.css — so stand es seit dem 10. September */
+.els-kachel, .stat-karte.lw-metrik{
+  transition: transform .35s …, box-shadow .35s, border-color .25s;
+}
+```
+
+`transition` ist EINE Eigenschaft. Die spätere Liste gewinnt ganz — also
+galt die frühere aus `bausteine.css` nicht mehr, und in ihr stand
+`background`. Zehn Tage lang wechselte die Kachel beim Überfahren ihre
+Fläche **hart statt weich**. Niemandem ist es aufgefallen, und das ist
+folgerichtig: ein fehlender Übergang sieht nicht kaputt aus, nur billig.
+`background` steht jetzt mit in der Liste.
+
+### Die Bibliothek ist ein Fall für sich
+
+Die letzten 35 waren **eine** Sache, kein Dutzend. Redur hat am
+6. September mit PR #56 `bibliothek-studio.css` gebaut — 101 Zeilen, die
+das Regal zu echten Buchdeckeln machen. Das Blatt lädt nach `bausteine.css`
+und gewinnt seither bei jeder Eigenschaft, die beide setzen: Kopfzeile,
+Artenleiste, Spaltenbreite, Rundung, Schatten, Schriftgrösse, Zeilenhöhe.
+
+Das ist §8 in freier Wildbahn: **zwei Kataloge für dasselbe Bauteil.** Der
+Bogen führt sie nicht zusammen — er sagt, wem was gehört, und räumt beim
+Verlierer weg, was er nur noch behauptet:
+
+* Was das Studio-Blatt setzt, steht **nur** noch dort.
+* Was es nicht setzt, bleibt in `bausteine.css` — und steht nun mit einem
+  Satz dabei, warum es bleibt: `display:grid` für das Regal (das Studio
+  setzt nur die Spaltenbreite, und `notizhefte.css` baut auf derselben
+  Klasse auf, E207), das Auslassungszeichen am Titel, das Querschieben der
+  Artenleiste.
+
+Eine Zeile verdient eine eigene Erwähnung, weil sie zeigt, dass eine tote
+Regel Nachbarn hat:
+
+```css
+.bib-deckel-name b{ min-height:33px }   /* für 12,5px / 1,3 gerechnet */
+```
+
+Die 33 waren zwei Zeilen Name — **bei der alten Schrift**. Das Studio-Blatt
+setzt 13px bei 1,5, also 19,5px je Zeile. Der Wächter sieht das nicht
+(`min-height` setzt das Studio-Blatt nicht, es ist also keine Doppelung),
+aber die Zahl war trotzdem falsch geworden. Gemessen, nicht gerechnet:
+
+```txt
+min-height:33px   kurzer Name 33 px · langer Name 39 px   → 6 px Versatz
+min-height:39px   kurzer Name 39 px · langer Name 39 px   → bündig
+```
+
+Jetzt 39. Das ist keine neue Absicht, sondern dieselbe von damals, auf die
+heutige Schrift nachgezogen.
+
+### Was es kostet
+
+`test332` ist ab jetzt ein Wächter mit einer Null, und jede neue Doppelung
+macht ihn rot — auch eine absichtliche. Wer künftig in einer späteren Datei
+etwas überschreiben WILL, muss es in der früheren wegnehmen statt es
+stehenzulassen. Das ist genau die Absicht: eine Erklärung, die überschrieben
+wird, ist keine Erklärung, sondern eine Behauptung über den Zustand der App.
+
+**Die Alternative** wäre ein Verzeichnis erlaubter Doppelungen gewesen, wie
+es `js-bestand.json` oder `bereiche-bestand.json` führen. Dagegen spricht,
+was E340 schon beim Bau des Laufs geschrieben hat: bei Breiten gibt es
+gewollte Ausnahmen, **hier nicht**. Zwei Erklärungen für dasselbe in zwei
+Dateien sind immer ein Versehen. Ein Verzeichnis hätte das Versehen nur
+verwaltet.
+
+**Gemessen.** `test332` (76 → 0) · die Bild-Gegenprobe der Bibliothek vor
+und nach dem Aufräumen: kein Pixel Unterschied, denn jede entfernte Zeile
+war schon vorher wirkungslos.
+
+---
+
+## E643 — Der Wächter gegen Port-Kollisionen kannte nur eine Schreibweise
+
+`test400` ist seit E405 der Wächter, der verhindert, dass zwei Prüfläufe
+sich einen Port teilen. Der Grund steht in seinem eigenen Kopf: am
+4. September war ein ganzes Stück eines vollen Laufs rot, **und nichts daran
+war ein Fehler im Produkt**. Ein Ergebnis, das aus dem falschen Grund rot
+ist, ist schlimmer als eines, das grün lügt.
+
+Am 20. September hat dieser Wächter selbst sieben Kollisionen durchgelassen.
+
+### Wie es aufgefallen ist
+
+`test424` wurde in einem Stapel von sechzehn an einer Zeile rot, die ihren
+eigenen Lastverlauf im Kommentar führt („DREISSIG SEKUNDEN, NICHT
+FUENFZEHN"). Beim Nachsehen, welchen Port der Lauf hält, stand da nicht
+`const PORT = …`, sondern:
+
+```ts
+await new Promise<void>(resolve => server.listen(9624, '127.0.0.1', resolve));
+```
+
+Und `test400` las:
+
+```ts
+const m = roh.match(/PORT = (\d+)/);
+```
+
+Acht Läufe schreiben ihre Zahl direkt in den Aufruf. Für den Ausdruck waren
+sie unsichtbar — und damit auch **sieben doppelt vergebene Ports**, gemessen
+mit einem Ausdruck, der beide Schreibweisen kennt:
+
+```txt
+8799: test31  + test130      9629: test429 + test519
+8963: test205 + test243      9630: test430 + test520
+9624: test424 + test514      9631: test437 + test521
+9628: test428 + test518
+```
+
+Vier andere hatte Bogen 1 am selben Tag von Hand gefunden und aufgelöst.
+Diese sieben standen daneben und wurden nicht gesehen, **weil der Wächter
+sagte, es gebe keine.**
+
+### Das ist zum vierten Mal dieselbe Sorte
+
+An zwei Tagen viermal: ein Ausdruck, der eine gültige Schreibweise nicht
+kennt, und ein Wächter, der daraufhin das Falsche behauptet.
+
+```txt
+E629    test537 kannte `const X: Typ = …` nicht        → erfand eine Kopplung
+E631    test444 las einen Kommentar als Code           → erfand einen Verstoss
+E642    test332 zerriss die Kommas in `:is(…)`         → erfand tote Regeln
+E643    test400 kannte `listen(9624, …)` nicht         → übersah sieben Kollisionen
+```
+
+Die ersten drei **erfanden** etwas, dieser hier **übersah** etwas. Das ist
+der gefährlichere Fehler: eine erfundene Meldung kostet Arbeit, eine
+übersehene kostet Vertrauen in einen ganzen vollen Lauf.
+
+### Was geändert ist
+
+**1 · Alle Schreibweisen.** `PORT = N`, `PORT: number = N`, `listen(N, …)`.
+
+**2 · `listen(0)` zählt als richtig, nicht als fehlend.** Sechs Läufe
+(`test492`, `test524`, `test527`, `test528`, `test529`, `test538`) lassen
+sich den Port vom Rechner geben. Die können **gar nicht** kollidieren, und
+das ist die bessere Antwort auf das ganze Problem — nicht eine weitere
+Zahl von Hand zu vergeben. Wer einen neuen Lauf schreibt, nimmt diesen Weg.
+
+**3 · Der Wächter muss wissen, was er nicht sieht.** Seine Ausgabe sagte
+schon immer „374 von 481 Läufen halten einen festen Port", und niemand hat
+gefragt, was mit den übrigen 107 ist. Jetzt ist es eine Prüfung: **jeder
+Lauf, der einen eigenen Server startet, nennt entweder eine Zahl oder
+`listen(0)`.** Eine dritte Schreibweise macht die Zeile rot, statt lautlos
+ein Loch zu lassen.
+
+**4 · Und er liest Code, nicht Prosa.** Beim ersten Bauen meldete er
+prompt „9624: test400 + test424" — die Tabelle oben steht in seinem eigenen
+Kopfkommentar. Zum dritten Mal an zwei Tagen hat das Aufschreiben den
+nächsten Fehlalarm erzeugt (E631, E633). Er benutzt jetzt `nurCode` aus
+`pruefungen/hilfe/quelltext.mts` — die eine Stelle, nicht eine Kopie (§8).
+Eine vierte Fassung derselben Lehre kam gleich hinterher: er zählte sich
+selbst als `listen(0)`, weil die Worte in seiner **Ausgabezeile** stehen und
+`nurCode` Schablonen mit Absicht stehen lässt. Dort half kein Entferner,
+sondern nur die richtige Reihenfolge der Fragen: erst „gibt es überhaupt
+einen Server?", dann „welche Zahl?".
+
+### Die sieben sind umgezogen
+
+Dieselbe Regel wie in Bogen 1: **der jüngere Lauf weicht**, der ältere behält
+seine Zahl.
+
+```txt
+test130 → 9643    test518 → 9646    test520 → 9648
+test243 → 9644    test519 → 9647    test521 → 9649
+test514 → 9645
+```
+
+### Was es kostet
+
+Die Ports werden weiterhin von Hand vergeben, und der Vorrat ist endlich.
+**Die Alternative** wäre gewesen, alle 382 Läufe auf `listen(0)` umzustellen.
+Dagegen spricht nichts Grundsätzliches — es ist nur ein eigener Bogen: jeder
+Lauf baut seine Adressen aus `PORT`, und 382 Dateien anzufassen, während
+achtzehn Läufe rot sind, ist die falsche Reihenfolge (§46). Es steht als
+**L205** offen.
+
+**Gemessen.** `test400` (4 von 4, mit zwei Gegenproben: eine
+wiedereingesetzte Kollision wird gefunden, eine unbekannte Schreibweise
+macht rot) · die vierzehn betroffenen Läufe einzeln.

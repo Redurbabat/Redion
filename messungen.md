@@ -2949,3 +2949,134 @@ dafür verstümmeln musste (§50).
 
 60 von 61 Wächtern der Werkzeugleiste waren im selben Durchgang grün — der
 eine rote war §7 selbst.
+
+---
+
+## 20. September 2026 — Sechsundsiebzig tote CSS-Regeln, gezählt bis null
+
+**Methode.** `node pruefungen/alle.mts 332`. Der Lauf liest die CSSOM im
+echten Browser, in der Reihenfolge, in der `index.html` die Blätter lädt —
+keine selbstgebaute Spezifitätsrechnung (E340). Gemessen nach jeder Gruppe,
+nicht am Ende hochgerechnet.
+
+```txt
+Stand                                          tote Erklärungen
+──────────────────────────────────────────────────────────────
+19. September, erster voller Lauf seit PR #100       76
+nach dem Klammer-Trennen im Wächter selbst           63   (−13 Gespenster)
+nach #ai, .schalter i, .els-kachel                   51
+nach #handy-oben, #reiterleiste                      43
+nach .document-position, .document-zoom-label        37
+nach premium.css (7 Rasterzeilen) und #kanten-lade   35
+nach der Bibliothek (bausteine ↔ bibliothek-studio)   0
+```
+
+**Die dreizehn Gespenster sind die wichtigste Zahl der Liste.** Sie waren
+kein Produktfehler, sondern ein Fehler im Messgerät: `selectorText.split(',')`
+zerriss die Kommas innerhalb von `:is()`, `:where()`, `:not()` und `:has()`.
+Was dabei herauskam, waren Bruchstücke wie
+
+```txt
+body[data-dokument="an"] :is(#topbar      ← verlor die schliessende Klammer
+#menueband)                               ← verlor Vorfahren UND !important
+select):focus-visible
+:focus-visible)
+```
+
+Zeichenketten, die nie ein Element treffen. Der Lauf verglich sie mit echten
+Regeln und meldete **die echten** als tot. Anteil am Befund: **17 %.**
+
+### Die eine echte Regression darunter
+
+```txt
+.els-kachel  Überfahren, Flächenwechsel
+   10. September – 20. September    HART   (motion.css ersetzte die Liste
+                                            und verlor `background`)
+   ab 20. September                 WEICH  var(--motion-fast) = .14s
+```
+
+Zehn Tage. Kein Auge hat es gemeldet — ein fehlender Übergang sieht nicht
+kaputt aus.
+
+### Der Deckelname: eine Zahl, die eine Schrift überlebt hat
+
+`.bib-deckel-name b{min-height:33px}` war für 12,5px bei Zeilenhöhe 1,3
+gerechnet. `bibliothek-studio.css` setzt seit dem 6. September 13px bei 1,5
+— also 19,5px je Zeile, 39px für zwei. Gemessen im Browser mit einem kurzen
+und einem langen Namen nebeneinander:
+
+```txt
+min-height:33px    kurz 33 px · lang 39 px    →  6 px Versatz
+min-height:39px    kurz 39 px · lang 39 px    →  bündig
+```
+
+Der Wächter konnte das nicht sehen: `min-height` setzt das Studio-Blatt gar
+nicht, es ist also keine Doppelung. Die Zahl war trotzdem falsch geworden.
+**Eine tote Regel hat Nachbarn** — wer sie wegräumt, sieht sie.
+
+### Bild-Gegenprobe
+
+`node bilder.mts bibliothek rechner` vor und nach dem Aufräumen der 35
+Bibliotheks-Erklärungen: **kein sichtbarer Unterschied** — was zu erwarten
+war, denn jede entfernte Zeile war vorher schon wirkungslos. Genau das ist
+der Beleg, dass entfernt und nicht verändert wurde.
+
+---
+
+## 20. September 2026 — Elf Prüfläufe teilten sich einen Port, sieben unbemerkt
+
+**Methode.** Alle 481 Dateien unter `pruefungen/lauf/` gelesen, Kommentare
+und Zeichenketten mit `nurCode` entfernt, dann nach **beiden** Schreibweisen
+gesucht: `PORT = N` und `listen(N, …)`.
+
+```txt
+                                          alter Ausdruck    beide Schreibweisen
+Läufe insgesamt                                  481                481
+davon mit eigenem Server                           —                387
+davon mit erkannter Portzahl                     374                382
+davon mit listen(0) (Rechner wählt)                —                  6
+davon für den Wächter unsichtbar                 107                  0
+doppelt vergebene Ports                            0                  7
+```
+
+**Die 107 waren nie eine Frage.** Der Lauf gab seit E405 die Zeile
+„374 von 481 Läufen halten einen festen Port" aus, und niemand hat gefragt,
+was mit den übrigen ist. Eine Zahl, die eine Lücke NENNT, ersetzt keine
+Prüfung, die sie schliesst.
+
+### Die sieben, die niemand sah
+
+```txt
+8799: test31  + test130      9629: test429 + test519
+8963: test205 + test243      9630: test430 + test520
+9624: test424 + test514      9631: test437 + test521
+9628: test428 + test518
+```
+
+Vier weitere hatte Bogen 1 am selben Tag von Hand gefunden (9530, 9531,
+9625, 9626) — zusammen **elf** an einem Tag, in einem Bestand, über den ein
+grüner Wächter wachte.
+
+### Die Gegenproben
+
+```txt
+test514 zurück auf 9624 gesetzt   →  ✗ „9624: test424 + test514"
+test514 auf `const HAFEN = 9645`  →  ✗ „Jeder Lauf … zeigt seinen Port — test514"
+beides zurückgenommen             →  ✓ 4 von 4
+```
+
+Ein Wächter, der beide Male rot war, bevor er grün wurde (§50).
+
+### Und zwei Fehlalarme beim Bauen, beide durch das Aufschreiben
+
+```txt
+1. Die Tabelle oben steht im Kopfkommentar von test400
+   → gemeldet: „9624: test400 + test424"      Lösung: nurCode (§8, eine Stelle)
+2. „listen(0)" steht in der Ausgabezeile des Laufs, in einer Schablone
+   → gezählt: 7 × listen(0) statt 6           Lösung: erst fragen, OB es
+                                              einen Server gibt, dann welche Zahl
+```
+
+Die zweite ist die lehrreichere: `nurCode` lässt Schablonen mit Absicht
+stehen, weil in `${…}` echter Code steht. Dort hilft kein Entferner, sondern
+nur die richtige Reihenfolge der Fragen.
