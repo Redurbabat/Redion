@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-626 Entscheidungen, E1 bis E648 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+627 Entscheidungen, E1 bis E649 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -691,6 +691,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E646** — Die Fläche wandert auch dann, wenn der Hauptfaden arbeitet: Redurs Aufnahme zeigte vier Wechsel und viermal EIN Bild für 190 bis 210 Pixel; am Rechner wanderte dieselbe Fassung über 16 bis 21 Orte. Schuld war `width` in der Übergangsliste — wer Layout animiert, bleibt auf dem Hauptfaden, und der baut beim Reiterwechsel gerade einen Bildschirm auf. Die Bewegung fährt jetzt als Federbahn über `element.animate()` auf `transform` allein (`SelectionFlow`, der Helfer, den L204 verlangt hat), mit erhaltener Geschwindigkeit beim Umlenken. Im ersten Bild: 11 % des Weges statt 31 %. Scrubbing wurde NICHT gebaut, und zwar aus Redurs eigenem Vorbehalt: ein Reiterwechsel kostet unter Last 0,8 bis 1,5 Sekunden
 * **E647** — Dieselbe Feder für die Werkzeugleiste, und L204 ist zu: `.bw-flug` bewegte `left`, `top`, `width` und `height` — vier Layout-Eigenschaften, und das ausgerechnet an der Stelle, an der man mitten im Zeichnen das Werkzeug wechselt. `SelectionFlow.fliege()` rechnet dieselbe Feder als FLIP auf `transform` um. Die Bauform von E640 bleibt (der Grund sitzt am Knopf, nur der Wechsel fliegt) — zwei Bauformen, ein Bewegungsgesetz
 * **E648** — Der vorausgeschickte Frame ging an niemanden: Redurs #108 (Feder auf 292 ms, Dehnung grosszügiger) und #109 (erst die Fläche, dann der Bildschirm) nachdokumentiert — und der Griff von #109 ging zweimal ins Leere. `handyLeiste()` konnte die Fläche nicht losschicken, weil seit E274 der Schauplatz den Reiter sticht und der sich erst beim Aufbau ändert; und EIN `requestAnimationFrame` ist eines zu wenig, weil eine Animation ihre Startzeit erst mit dem ersten wirklich gemalten Bild bekommt. Gemessen „17 → 17" nach 60 ms
+* **E649** — Ein `<svg>` ist kein `HTMLElement`, und `fokus.ts` wusste das: zwei Ressourcenhalter (`linse.ts` E639, `textur.ts` E462) hingen direkt im Körper und wurden beim Öffnen eines Dialogs nicht stillgelegt, weil die Schleife `instanceof HTMLElement` verlangt. `test272` misst `.inert` über ALLE Kinder — auf einem `SVGElement` gibt es die Eigenschaft nicht, `undefined` ist falsch, der Lauf war rot. Repariert wurde der Körper, nicht der Wächter: beide Halter liegen jetzt in einer von Geburt an stillgelegten Hülle. Dazu `bw` ins Namensraum-Verzeichnis, das seit E640 fehlte (`test290`).
 
 ---
 
@@ -53252,3 +53253,107 @@ vierfacher Drosselung 9 bis 10 Zwischenorte statt 5.
 
 **Gemessen.** `test541` (25 von 25) · `test539`, `test478`, `test114` §17,
 `test225`, `test105`, `test109`, `test87`.
+
+
+## E649 — Ein `<svg>` ist kein `HTMLElement`, und `fokus.ts` wusste das
+
+**20. September 2026.** Der erste volle Lauf gegen das neue `main` war rot:
+drei von 483. Einer davon, `test270`, ist der bekannte Arbeitsbaum-Fehlalarm
+und im Hauptbaum grün (§30). Die anderen zwei waren echt — und beide waren
+diese Woche entstanden, beide bei mir.
+
+### Der erste: `test272`
+
+> ✗ Und alles dahinter ist stillgelegt
+
+`fokus.ts` legt beim Öffnen eines Dialogs alles still, was daneben im Körper
+steht. Sonst tabbt man hinter die Fläche in eine Seite, die niemand mehr
+sieht. Die Schleife sieht so aus:
+
+```ts
+[...document.body.children].forEach(kind => {
+  if (!(kind instanceof HTMLElement)) return;     // ← hier
+  ...
+  kind.inert = true;
+});
+```
+
+Der Wächter misst dagegen ALLE Kinder:
+
+```ts
+hinterStill: [...document.body.children]
+  .filter(k => k.id !== 'backstage' && !k.classList.contains('menu-grund'))
+  .every(k => (k as HTMLElement).inert)
+```
+
+Solange jedes direkte Körperkind ein `HTMLElement` war, sagten beide dasselbe.
+**E639 hat das gebrochen:** die wandernde Glaslinse braucht einen
+`<filter id="…">`, und der muss im Dokument stehen. `linse.ts:147` hängte
+dafür ein `<svg>` direkt an `document.body`. Ein `<svg>` ist ein
+`SVGElement`. Es fiel durch das `instanceof`, bekam nie `inert`, und `.inert`
+gibt es auf `SVGElement` gar nicht — `undefined` ist falsch, und der Lauf war
+rot.
+
+**Derselbe Fehler stand seit E462 daneben** und war nur nie aufgefallen:
+`textur.ts:71` hängt genauso ein `<svg>` an den Körper. Es fiel nicht auf,
+weil `Textur.sicherstellen()` erst läuft, wenn jemand eine Textur benutzt —
+`Linse.sicherstellen()` dagegen beim Start. E639 hat also nicht den Fehler
+gemacht, sondern ihn sichtbar gemacht.
+
+### Zwei Wege wären gegangen, und warum es der zweite wurde
+
+**Den Wächter lockern.** Er prüft strenger, als die Gefahr ist: dieses `<svg>`
+ist `aria-hidden="true"`, null Pixel gross, `focusable="false"` und enthält
+nur `<defs>`. Da ist nichts zu fokussieren, nichts anzuklicken, nichts
+vorzulesen. Eine Ausnahme wäre sachlich vertretbar gewesen.
+
+**Den Körper aufräumen.** Beide Halter kommen in eine Hülle, die ein
+`HTMLElement` ist. Dann gilt die Zusage wieder ohne Ausnahme.
+
+Es ist der zweite geworden, und der Grund steht in §55.2: eine Ausnahme im
+Wächter hätte jede spätere gedeckt. „Alles dahinter ist stillgelegt" ist ein
+Satz, den man nachprüfen kann; „alles dahinter ausser SVG-Haltern und was
+sonst noch dazukommt" ist keiner mehr.
+
+**Die Hülle ist von Geburt an stillgelegt**, nicht erst wenn ein Dialog
+aufgeht. Sie ist nie Inhalt — sie hält eine Ressource. `fokus.ts` hat dafür
+schon den richtigen Zweig (`if (kind.inert) return; /* fremden Zustand
+bewahren */`) und fasst sie deshalb nie an, weder beim Stilllegen noch beim
+Freigeben.
+
+**Auf die Filter wirkt das nicht.** `filter: url(#ru-linse-fahrt)` schlägt die
+Kennung im ganzen Dokument nach; `inert` ändert weder Darstellung noch
+Auflösung. Nachgesehen wurde es trotzdem, und zwar mit Augen: `node bilder.mts
+heute handy` zeigt die Linse über „Heute", und der Name darunter bleibt
+lesbar (§55.3).
+
+**Vier Zeilen in zwei Dateien**, mit dem ganzen Grund bei `linse.ts` und einem
+Verweis darauf bei `textur.ts`. Bei zwei Haltern ist das billiger als ein
+drittes Modul; beim dritten gehört es in einen gemeinsamen Helfer unter
+`kern/helfer/`.
+
+### Der zweite: `test290`
+
+> ✗ Kein Präfix fehlt im Verzeichnis — bw — bitte in doku/CSS-NAMENSRAEUME.md eintragen
+
+`.bw-flug` und `.bw-wartet` kamen mit **E640** dazu — der fliegenden
+Werkzeugleiste im Schreibstudio. Zusammen mit dem älteren `.bw-trenn` sind es
+sieben Vorkommen, und ab vier gilt ein Präfix als eigener Namensraum. Es
+stand nicht im Verzeichnis. Eingetragen: `bw  7  bausteine.css`.
+
+Beim Eintragen fiel auf, dass die Zahl im Fliesstext derselben Datei schon
+vorher nicht stimmte: dort stand 144, das Verzeichnis trug 158 Einträge.
+`test290` prüft nur die Einträge, nicht den Satz darüber. Die Zahl steht jetzt
+auf 159 **mit dem Befehl daneben**, mit dem man sie nachzählt — dieselbe
+Lehre wie bei der Prüflaufzahl in §30.
+
+### Was daran allgemein ist
+
+Beide Fehler sind vom selben Bautyp wie die fünf vom Vortag: **ein Ausdruck
+misst etwas anderes, als der Satz daneben behauptet.** `instanceof
+HTMLElement` heisst nicht „jedes Element", und eine Zahl im Fliesstext ist
+keine Messung, solange kein Lauf sie anfasst.
+
+Und beide waren **nicht** im Lauf vom 19. September rot. Sie sind in den
+achtundvierzig Stunden danach entstanden — in meinen eigenen Bögen E639 und
+E640. Genau dafür ist der volle Lauf da.

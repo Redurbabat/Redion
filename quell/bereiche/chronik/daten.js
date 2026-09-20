@@ -3574,6 +3574,32 @@ const ChronikDaten = {
             "loesung": "`handyLeiste(vorauf)` nimmt das Ziel entgegen, und `dockWechsel` wartet zwei Bilder statt eines. Danach: t=10 x=17, t=26 x=27 — losgefahren, bevor der Aufbau beginnt.",
             "warumKeineUhr": "Die Zeiten kommen aus `performance.now()` in der Seite und sind relativ zum Klick.",
             "lehre": "Eine gute Absicht mit dem falschen Griff sieht im Code aus wie eine Lösung. Und die zweite Hälfte ist bitterer: mein eigener Messplatz war blind. Ein Messer, der je requestAnimationFrame liest, steht genau dann still, wenn der Hauptfaden blockiert — er kann über eine Bewegung unter Last gar nichts sagen. Dafür taugt nur ein Film. Eine Zusage, die am falschen Platz geprüft wird, ist keine."
+        },
+        {
+            "nr": "P78",
+            "datum": "2026-09-20",
+            "titel": "Ein `<svg>` ist kein `HTMLElement`, und `fokus.ts` wusste das",
+            "schwere": "mittel",
+            "symptom": "Der erste volle Lauf gegen das neue `main` war rot: `test272` meldete „Und alles dahinter ist stillgelegt\". Bei offenem Backstage-Blatt konnte man hinter die Fläche tabben.",
+            "falscheVermutung": "Dass es wie `test270` ein Artefakt des Arbeitsbaums sei. `test270` war es wirklich — im Hauptbaum grün. `test272` und `test290` waren es nicht, und beide waren MEINE, achtundvierzig Stunden alt.",
+            "wieGefunden": "Nach dem Ende des Sweeps im Hauptbaum einzeln nachgemessen, wie §30 es verlangt. Danach die Schleife in `fokus.ts` gegen die Behauptung des Wächters gelesen.",
+            "ursache": "`fokus.ts` legt beim Öffnen eines Dialogs die Körperkinder still, überspringt dabei aber alles, was kein `HTMLElement` ist. E639 hat für die Glaslinse ein `<svg>` direkt an den Körper gehängt — ein `SVGElement`. Es fiel durch, und `.inert` gibt es dort gar nicht: `undefined`. Derselbe Fehler stand seit E462 in `textur.ts` daneben und fiel nur nie auf, weil dieser Halter erst bei Gebrauch entsteht.",
+            "loesung": "Nicht den Wächter gelockert, sondern den Körper aufgeräumt: beide Halter liegen jetzt in einer von Geburt an stillgelegten Hülle. Eine Ausnahme im Wächter hätte jede spätere gedeckt (§55.2). Auf die Filter wirkt es nicht — mit `node bilder.mts heute handy` nachgesehen, die Linse liegt über „Heute\" und der Name bleibt lesbar.",
+            "warumKeineUhr": "Aus einem Prüflaufergebnis abgeleitet, nicht aus einem Commit.",
+            "lehre": "`instanceof HTMLElement` heisst nicht „jedes Element\". Derselbe Bautyp wie die fünf Fehler vom Vortag: ein Ausdruck misst etwas anderes, als der Satz daneben behauptet. Und: ein zweiter Halter kann jahrelang denselben Fehler tragen, solange kein Prüflauf ihn je entstehen lässt."
+        },
+        {
+            "nr": "P79",
+            "datum": "2026-09-20",
+            "titel": "Ein Präfix fehlte im Verzeichnis, und die Zahl daneben stimmte schon vorher nicht",
+            "schwere": "klein",
+            "symptom": "`test290`: „Kein Präfix fehlt im Verzeichnis — bw — bitte in doku/CSS-NAMENSRAEUME.md eintragen\".",
+            "falscheVermutung": "Keine — der Wächter nennt die Sache beim Namen. Die Überraschung kam beim Eintragen.",
+            "wieGefunden": "Im Hauptbaum nachgemessen; dann mit dem Regex des Wächters selbst gezählt, woher `bw` kommt.",
+            "ursache": "`.bw-flug` und `.bw-wartet` kamen mit E640 dazu, zusammen mit dem älteren `.bw-trenn` sind es sieben Vorkommen. Ab vier gilt ein Präfix als eigener Namensraum. Beim Eintragen fiel auf, dass der Fliesstext derselben Datei „Es sind 144\" behauptete, während das Verzeichnis 158 Einträge trug.",
+            "loesung": "`bw  7  bausteine.css` eingetragen; die Zahl im Fliesstext auf 159 nachgezählt und den Zählbefehl danebengeschrieben, statt sie fortzuschreiben.",
+            "warumKeineUhr": "Aus einem Prüflaufergebnis abgeleitet.",
+            "lehre": "Dieselbe Lehre wie bei der Prüflaufzahl in §30: eine Zahl im Fliesstext, die kein Lauf anfasst, driftet. Sie gehört mit ihrem Befehl aufgeschrieben oder gar nicht."
         }
     ]
 };

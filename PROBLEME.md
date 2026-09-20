@@ -91,6 +91,8 @@ sind der teuerste Teil und der lehrreichste.
 | P75 | 2026-09-20 | Die Bewegung war da und kam nicht an | gross | — |
 | P76 | 2026-09-20 | Eine Feder, die auf ihr eigenes Ziel neu gestartet wird, verliert ihren Schwung | 🟡 klein | — |
 | P77 | 2026-09-20 | Der vorausgeschickte Frame ging an niemanden | 🟠 mittel | — |
+| P78 | 2026-09-20 | Ein `<svg>` ist kein `HTMLElement`, und `fokus.ts` wusste das | 🟠 mittel | — |
+| P79 | 2026-09-20 | Ein Präfix fehlte im Verzeichnis, und die Zahl daneben stimmte schon vorher nicht | 🟡 klein | — |
 
 ---
 
@@ -1725,4 +1727,46 @@ sind der teuerste Teil und der lehrreichste.
 **Warum keine Uhr.** Die Zeiten kommen aus `performance.now()` in der Seite und sind relativ zum Klick.
 
 **Die Lehre.** Eine gute Absicht mit dem falschen Griff sieht im Code aus wie eine Lösung. Und die zweite Hälfte ist bitterer: mein eigener Messplatz war blind. Ein Messer, der je requestAnimationFrame liest, steht genau dann still, wenn der Hauptfaden blockiert — er kann über eine Bewegung unter Last gar nichts sagen. Dafür taugt nur ein Film. Eine Zusage, die am falschen Platz geprüft wird, ist keine.
+
+
+---
+
+## P78 · Ein `<svg>` ist kein `HTMLElement`, und `fokus.ts` wusste das
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Der erste volle Lauf gegen das neue `main` war rot: `test272` meldete „Und alles dahinter ist stillgelegt". Bei offenem Backstage-Blatt konnte man hinter die Fläche tabben.
+
+**Die falsche Vermutung.** Dass es wie `test270` ein Artefakt des Arbeitsbaums sei. `test270` war es wirklich — im Hauptbaum grün. `test272` und `test290` waren es nicht, und beide waren MEINE, achtundvierzig Stunden alt.
+
+**Wie es gefunden wurde.** Nach dem Ende des Sweeps im Hauptbaum einzeln nachgemessen, wie §30 es verlangt. Danach die Schleife in `fokus.ts` gegen die Behauptung des Wächters gelesen.
+
+**Die Ursache.** `fokus.ts` legt beim Öffnen eines Dialogs die Körperkinder still, überspringt dabei aber alles, was kein `HTMLElement` ist. E639 hat für die Glaslinse ein `<svg>` direkt an den Körper gehängt — ein `SVGElement`. Es fiel durch, und `.inert` gibt es dort gar nicht: `undefined`. Derselbe Fehler stand seit E462 in `textur.ts` daneben und fiel nur nie auf, weil dieser Halter erst bei Gebrauch entsteht.
+
+**Die Lösung.** Nicht den Wächter gelockert, sondern den Körper aufgeräumt: beide Halter liegen jetzt in einer von Geburt an stillgelegten Hülle. Eine Ausnahme im Wächter hätte jede spätere gedeckt (§55.2). Auf die Filter wirkt es nicht — mit `node bilder.mts heute handy` nachgesehen, die Linse liegt über „Heute" und der Name bleibt lesbar.
+
+**Warum keine Uhr.** Aus einem Prüflaufergebnis abgeleitet, nicht aus einem Commit.
+
+**Die Lehre.** `instanceof HTMLElement` heisst nicht „jedes Element". Derselbe Bautyp wie die fünf Fehler vom Vortag: ein Ausdruck misst etwas anderes, als der Satz daneben behauptet. Und: ein zweiter Halter kann jahrelang denselben Fehler tragen, solange kein Prüflauf ihn je entstehen lässt.
+
+
+---
+
+## P79 · Ein Präfix fehlte im Verzeichnis, und die Zahl daneben stimmte schon vorher nicht
+
+*2026-09-20 · 🟡 klein*
+
+**Das Bild.** `test290`: „Kein Präfix fehlt im Verzeichnis — bw — bitte in doku/CSS-NAMENSRAEUME.md eintragen".
+
+**Die falsche Vermutung.** Keine — der Wächter nennt die Sache beim Namen. Die Überraschung kam beim Eintragen.
+
+**Wie es gefunden wurde.** Im Hauptbaum nachgemessen; dann mit dem Regex des Wächters selbst gezählt, woher `bw` kommt.
+
+**Die Ursache.** `.bw-flug` und `.bw-wartet` kamen mit E640 dazu, zusammen mit dem älteren `.bw-trenn` sind es sieben Vorkommen. Ab vier gilt ein Präfix als eigener Namensraum. Beim Eintragen fiel auf, dass der Fliesstext derselben Datei „Es sind 144" behauptete, während das Verzeichnis 158 Einträge trug.
+
+**Die Lösung.** `bw  7  bausteine.css` eingetragen; die Zahl im Fliesstext auf 159 nachgezählt und den Zählbefehl danebengeschrieben, statt sie fortzuschreiben.
+
+**Warum keine Uhr.** Aus einem Prüflaufergebnis abgeleitet.
+
+**Die Lehre.** Dieselbe Lehre wie bei der Prüflaufzahl in §30: eine Zahl im Fliesstext, die kein Lauf anfasst, driftet. Sie gehört mit ihrem Befehl aufgeschrieben oder gar nicht.
 

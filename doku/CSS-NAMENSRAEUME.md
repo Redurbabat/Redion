@@ -23,7 +23,13 @@ L90 hält seither fest, dass das nicht die Lücke ist:
 > ins Leere, und der Fehler sieht wieder nicht wie ein Fehler aus — er sieht
 > aus wie ein Stil, den man nicht bestellt hat.
 
-Es sind nicht vierzig. Es sind 144 (seit E464 auch `do`, die Original-Karte des Dokumentmodus).
+Es sind nicht vierzig. Es sind **159** — gezählt, nicht fortgeschrieben.
+
+*Hier stand 144, und das war schon vor diesem Durchgang falsch: das
+Verzeichnis trug 158 Einträge. Die Zahl im Fliesstext prüft `test290`
+nicht — nur die Einträge selbst. Sie wird deshalb beim Eintragen
+nachgezählt (`grep -cE "^[a-z]{2,4}\s+[0-9]+\s+[a-z]+\.css"`), nicht
+im Kopf fortgeschrieben.*
 
 ## Zwei Sorten Präfix, und die zweite sieht nicht danach aus
 
@@ -130,6 +136,7 @@ bild     21  bausteine.css
 bl        6  werkzeuge.css
 bs       64  bausteine.css
 bst      44  premium.css
+bw        7  bausteine.css
 cal       8  bausteine.css
 cb       15  bausteine.css
 chr      56  bausteine.css

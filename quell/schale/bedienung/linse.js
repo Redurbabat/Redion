@@ -129,7 +129,43 @@ const Linse = (() => {
          * sonst optisch, was die Verschiebung schon verzogen hat. */
         defs.append(glas(FAHRT, '9', '12', '0.3'));
         svg.append(defs);
-        document.body.append(svg);
+        /* ══ DER HALTER LIEGT IN EINER HÜLLE (E649) ══════════════════════════
+         * Hier stand `document.body.append(svg)`, und das hat `test272` rot
+         * gemacht — vier Wochen nachdem die Zusage geschrieben wurde, die es
+         * bricht.
+         *
+         * `fokus.ts` legt beim Öffnen eines Dialogs alles still, was daneben
+         * im Körper steht, damit man nicht hinter die Fläche tabbt. Dabei
+         * geht es die direkten Kinder durch und lässt aus, was kein
+         * `HTMLElement` ist — und ein `<svg>` ist ein `SVGElement`. Es fiel
+         * also durch. Der Wächter misst `.inert` über ALLE Kinder, und auf
+         * einem `SVGElement` gibt es diese Eigenschaft gar nicht: `undefined`
+         * ist falsch, und der Lauf war rot.
+         *
+         * ZWEI WEGE WÄREN GEGANGEN. Den Wächter lockern — er prüft strenger,
+         * als die Gefahr ist, denn dieses `<svg>` ist `aria-hidden`, null
+         * Pixel gross, `focusable="false"` und enthält nur `<defs>`. Oder den
+         * Körper aufräumen, so dass die Zusage wieder ohne Ausnahme gilt.
+         * Es ist der zweite geworden: eine Ausnahme im Wächter hätte jede
+         * spätere gedeckt, und §55.2 warnt genau davor.
+         *
+         * DIE HÜLLE IST VON GEBURT AN STILLGELEGT, nicht erst wenn ein Dialog
+         * aufgeht. Sie ist nie Inhalt — sie hält eine Ressource. `fokus.ts`
+         * hat dafür schon den richtigen Zweig („fremden Zustand bewahren")
+         * und fasst sie deshalb nie an. Auf die Filter wirkt das nicht:
+         * `filter: url(#…)` schlägt die Kennung im ganzen Dokument nach, und
+         * `inert` ändert weder Darstellung noch Auflösung.
+         *
+         * DER ZWEITE HALTER IST `textur.ts` (E462) und bekommt dieselben
+         * vier Zeilen mit einem kurzen Verweis hierher. Bei zwei Haltern ist
+         * das billiger als ein drittes Modul; beim dritten gehört es in einen
+         * gemeinsamen Helfer unter `kern/helfer/`. */
+        const huelle = document.createElement('div');
+        huelle.setAttribute('aria-hidden', 'true');
+        huelle.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+        huelle.inert = true;
+        huelle.append(svg);
+        document.body.append(huelle);
     };
     return { HALTER, FAHRT, sicherstellen };
 })();

@@ -3260,3 +3260,77 @@ sind zwei verschiedene Einträge, und der Ausdruck, der sie als Doppelung
 meldete, war zu grob (`^## L[0-9]+` trifft `L8` auch in `L8b`). Zum fünften
 Mal an zwei Tagen ein Ausdruck, der etwas anderes misst, als der Satz
 daneben behauptet.
+
+## 20. September 2026 — Zwei rote Läufe, und beide waren achtundvierzig Stunden alt (E649)
+
+Der erste volle Lauf gegen das neue `main`: **483 Läufe, 49 Stücke, drei rot.**
+
+```txt
+test270   im Arbeitsbaum rot, im Hauptbaum GRÜN
+          .git ist dort eine Datei (52 Bytes), node_modules ein Symlink;
+          test270 filtert mit `istOrdner && name === …` und sieht beide nicht.
+          CLAUDE.md §30 beschreibt genau diesen Fall — er ist eingetreten.
+
+test272   echt rot.  „Und alles dahinter ist stillgelegt"
+test290   echt rot.  „Kein Präfix fehlt im Verzeichnis — bw"
+```
+
+**Keiner der beiden war im Lauf vom 19. September rot.** Die achtzehn von
+damals sind alle abgearbeitet; diese zwei sind in den achtundvierzig Stunden
+danach entstanden, in E639 (Glaslinse) und E640 (fliegende Werkzeugleiste).
+
+### Was `test272` wirklich misst
+
+```txt
+fokus.ts, Schleife       if (!(kind instanceof HTMLElement)) return
+test272, Behauptung      .every(k => (k as HTMLElement).inert)
+
+document.body.children   vor E639   nur HTMLElement → beide Sätze gleich
+                         nach E639  ein <svg> dazwischen → SVGElement
+                                    .inert gibt es dort nicht → undefined
+```
+
+Gemessen, nicht geschätzt: **zwei** solche Halter hängen im Körper —
+`ru-linse-halter` (E639, beim Start) und `ru-textur-halter` (E462, erst bei
+Gebrauch). Der zweite war seit vier Wochen derselbe Fehler und fiel nie auf,
+weil `Textur.sicherstellen()` im Prüflauf nicht lief.
+
+### Was `bw` wirklich ist
+
+```txt
+.bw-flug      3   bausteine.css     seit E640
+.bw-wartet    3   bausteine.css     seit E640
+.bw-trenn     1   bausteine.css     seit E500
+              ──
+              7   Schwelle für einen eigenen Namensraum: 4
+```
+
+Und beim Eintragen fiel eine zweite Zahl um:
+
+```txt
+doku/CSS-NAMENSRAEUME.md, Fliesstext     „Es sind 144"
+Einträge im Verzeichnis, gezählt          158
+nach diesem Eintrag                       159
+```
+
+`test290` prüft die Einträge, nicht den Satz darüber. Die Zahl steht jetzt
+mit ihrem Befehl daneben:
+
+```bash
+grep -cE "^[a-z]{2,4}\s+[0-9]+\s+[a-z]+\.css" doku/CSS-NAMENSRAEUME.md
+```
+
+### Nach der Reparatur
+
+```txt
+node pruefungen/alle.mts 272 290        beide grün  (272: 153 ok · 290: 13/13)
+node pruefungen/alle.mts 128 435 539 541  alle vier grün
+npm run typecheck                        ohne Befund
+npm run stand                            v1234 unverändert (89f28ca703fd9a1f)
+node bauen.mts                           10 514 KB
+node bilder.mts heute handy              Linse über „Heute", Name lesbar
+```
+
+Die Gegenprobe war nicht zu bauen — sie war da: beide Läufe **waren** rot und
+sind es nicht mehr. Ein Wächter, der nie rot war, ist eine Behauptung
+(§55.2); diese zwei haben sich selbst belegt.

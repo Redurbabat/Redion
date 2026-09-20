@@ -1,5 +1,50 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E649 · Zwei rote Läufe, und beide waren achtundvierzig Stunden alt
+
+**Der Anlass:** der erste volle Lauf gegen das neue `main` — 483 Läufe in 49
+Stücken, drei rot.
+
+**Die Trennung zuerst.** `test270` war im Arbeitsbaum rot und im Hauptbaum
+grün: dort ist `.git` eine Datei und `node_modules` ein Symlink, und der Lauf
+filtert Ordnermuster mit `istOrdner && name === …`. CLAUDE.md §30 beschreibt
+genau diesen Fall; er ist eingetreten. `test272` und `test290` waren echt —
+und **keiner von beiden war im Lauf vom 19. September rot.** Sie sind in den
+achtundvierzig Stunden danach entstanden, in meinen eigenen Bögen E639 und
+E640.
+
+**Der Fund 1.** `fokus.ts` legt beim Öffnen eines Dialogs alles still, was
+daneben im Körper steht — überspringt dabei aber alles, was kein
+`HTMLElement` ist. E639 hat für die Glaslinse ein `<svg>` direkt an den
+Körper gehängt. Ein `SVGElement` fällt durch das `instanceof`, und `.inert`
+gibt es dort gar nicht: `undefined`. Bei offenem Backstage-Blatt konnte man
+hinter die Fläche tabben. **Derselbe Fehler stand seit E462 in `textur.ts`
+daneben** und fiel nur nie auf, weil dieser Halter erst bei Gebrauch
+entsteht.
+
+**Der Fund 2.** `.bw-flug` und `.bw-wartet` kamen mit E640 dazu; mit dem
+älteren `.bw-trenn` sind es sieben Vorkommen, und ab vier gilt ein Präfix als
+eigener Namensraum. Es stand nicht im Verzeichnis. Beim Eintragen fiel auf,
+dass der Fliesstext derselben Datei „Es sind 144" behauptete, während das
+Verzeichnis 158 Einträge trug.
+
+**Gebaut.** Nicht den Wächter gelockert, sondern den Körper aufgeräumt: beide
+Halter liegen jetzt in einer von Geburt an stillgelegten Hülle. Eine Ausnahme
+im Wächter hätte jede spätere gedeckt (§55.2). `bw  7  bausteine.css`
+eingetragen, die Zahl im Fliesstext auf 159 nachgezählt und den Zählbefehl
+danebengeschrieben.
+
+**Geprüft.** `test272` und `test290` grün · `test128`, `test435`, `test539`,
+`test541` grün · `npm run typecheck` ohne Befund · `npm run stand` v1235 ·
+`node bauen.mts` 10 517 KB. **Und hingesehen:** `node bilder.mts heute handy`
+zeigt die Linse über „Heute", der Name darunter bleibt lesbar — die Hülle hat
+den Filter nicht gebrochen (§55.3).
+
+**Die Gegenprobe war nicht zu bauen, sie war da.** Beide Läufe *waren* rot und
+sind es nicht mehr.
+
+---
+
 ## 20. September 2026 · E646/E647 · Die Auswahlfläche wandert — auch unter Last
 
 **Redurs Frage:** eine Bildschirmaufnahme der unteren Leiste, sieben Punkte
