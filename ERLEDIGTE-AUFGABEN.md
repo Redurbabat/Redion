@@ -1,5 +1,174 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E659 · Die Doku zählt, was da ist
+
+**Der Anlass.** §30 sagt über die Zahl der Prüfläufe: „Sie wird nicht
+geschätzt, sie wird gezählt." Sie stand einmal hundertfünfzehn Läufe
+daneben, dann achtundzwanzig, dann einen — und dieser eine war schon vorher
+falsch. Der Satz „im selben Bogen nachziehen" steht fünfzehnmal in §30. Was
+fehlte, war nie die Absicht, sondern die Prüfung.
+
+**Gebaut.** `test550` prüft die drei Stellen in CLAUDE.md gegen die echte
+Dateizahl, das Verzeichnis von ENTSCHEIDUNGEN.md gegen seinen Text (§34),
+die selbstgenannte Zahl gegen die gezählte, und ob jede Lücke in der
+Nummernfolge oben erklärt ist.
+
+**Er hat sofort funktioniert** — gegen den Stand, den er selbst erzeugt
+hatte: 492 Dateien, 491 in der Doku, weil `test550.mts` die 492. ist. Und
+beim Nachziehen erwischte er mich beim Vorgreifen: „639 … E659" geschrieben,
+bevor es E659 gab.
+
+**Die schwierige Stelle war das Zählen.** ENTSCHEIDUNGEN.md kennt drei
+Überschriftsformen; vier Anläufe meldeten nacheinander 351, 253 und 203
+fehlende Einträge — jedes Mal der Prüfer, nie die Datei. Die Regel, die
+hält, setzt keine Form voraus.
+
+**Zwei Funde lösten sich beim Lesen auf:** dass E198/E199/E222/E269 ohne
+Eintrag zitiert werden (steht seit langem in Zeile 35, mit Grund), und dass
+Index und Text auseinanderliefen (638 von 638, stimmt). Beides steht hier,
+weil das Nicht-Erfinden zur Arbeit gehört.
+
+**Geprüft.** `test550` 8/8, gegen den alten Stand 4/8. Gegenprobe: eine der
+drei Zahlen verstellt → genau diese eine Zeile wird rot. Kein Browser, kein
+Port — er darf neben dem vollen Lauf laufen.
+
+---
+
+## 20. September 2026 · E657/E658 · Ein Werkzeug für den vollen Lauf, und eine ehrliche Lückenliste
+
+**E657 — der volle Lauf bekommt ein Werkzeug.** §30 beschreibt seit dem
+3. September, wie er gefahren wird: in Stücken, wiederaufnehmbar, mit einer
+Merkdatei. Es gab das nur als Handgriff — zehn Nummern abtippen, warten,
+die nächsten zehn, und im Kopf behalten, wo man war. Beim vorletzten vollen
+Lauf ist genau das schiefgegangen. `pruefungen/volllauf.mts` schreibt nach
+JEDEM Stück, verträgt eine Liste, die unterwegs wächst, und erfindet
+keinen Schuldigen, wenn ein Stück rot ist, ohne dass die Ausgabe den Lauf
+nennt. Der erste Versuch scheiterte nach vier Sekunden an etwas, das jetzt
+in §30 steht: ein Arbeitsbaum enthält, was eingecheckt ist.
+
+**E658 — die Lückenliste sagt die Wahrheit über sich selbst.** 33 OFFENE
+Lücken standen unterhalb von „Anhang B · Was erledigt ist"; wer von oben
+las, hielt sie für erledigt. Das ist der stille Fehler, gegen den §35
+geschrieben ist — in der Datei, die ihn verhindern soll. Dazu fünf
+Überschriften mit „abgearbeitet", „erledigt" oder „GELANDET" statt des
+einen Wortes, das §35 nennt, und eine selbstgenannte Zahl (103/53/50), die
+um zwei danebenlag.
+
+Verschoben wurde nicht von Hand: die Datei wird in 109 Blöcke zerlegt, und
+BEVOR etwas bewegt wird, muss das Zusammensetzen byteweise die alte Datei
+ergeben. 6816 Zeilen sind gewandert, keine verloren (§43).
+
+**Geprüft.** `test549` neu, sechs Messungen, gegen den alten Stand 3/6.
+Gegenprobe: ein offener Eintrag ans Dateiende gehängt → Abschnitt 2 wird
+rot. Er liest nur eine Datei — kein Browser, kein Port —, darf also neben
+einem vollen Lauf laufen. `test105`, `test109`, `test87` grün.
+
+**Zweimal hat der Wächter zuerst sich selbst korrigiert:** „offen" im TITEL
+von L181 als Status gelesen, und das Datum im Selbstzähl-Satz für die
+Zählung gehalten. Beide Male rot und beide Male das Falsche gesagt.
+
+**Offen und Redurs Entscheidung:** `L52` ist durchgestrichen und trägt im
+Titel „die Prüfseite bleibt offen". Nach der Regel zählt er als geschlossen.
+Ob der Rest eine eigene Nummer bekommt, ist inhaltlich und gehört ihm.
+
+---
+
+## 20. September 2026 · E656 · Text ändern, ohne den alten Stand zu verlieren
+
+**Redurs „usw."** Umschreiben, kürzen, übersetzen ging nur über das
+Chatfenster; als Agentenwerkzeug fehlte es.
+
+**Was daran anders ist.** `textBearbeiten` ist das erste Werkzeug, das
+BESTEHENDEN Text anfasst. Anlegen kostet im Fehlerfall einen überflüssigen
+Block; Ändern kostet den alten Stand.
+
+**Gebaut, mit zwei Vorkehrungen.** Erstens eine Fassung „vor KI-Änderung"
+VOR dem Schreiben — unabhängig von der Vier-Minuten-Sperre und vom
+Schalter `autoVersionen` (E417), denn ein Schalter darf keinen Schutz
+abschalten, um den gebeten wurde. Scheitert sie, wird gar nicht geändert.
+Zweitens „genau einmal oder gar nicht": kommt die Stelle mehrfach vor — im
+selben Block oder in zweien —, wird nichts geändert und die Zahl genannt.
+Der geänderte Block trägt danach `herkunft: "ki"` (E307), und das Tor aus
+E295 zeigt jetzt den Wortlaut vorher und nachher statt „höchstens ein
+gespeichertes Objekt".
+
+**Geprüft.** `test548` neu, siebzehn Messungen, gegen den alten Stand
+2/17. Zwei Gegenproben, beide gefahren: ohne die Fassung steht da „0 → 0"
+und „KEINE FASSUNG"; ohne die Eindeutigkeitsprüfung kommt der Fehler aus
+E650 wörtlich zurück — „Die Leitung liegt. Das Kabel bleibt."
+`test547`, `test546`, `test291`, `test281`, `test286`, `test87`, `test105`,
+`test109` grün, `typecheck` sauber, Einzeldatei neu.
+
+**Bild.** `bilder/kiTextTor-rechner-hell.png` (§55.3).
+
+---
+
+## 20. September 2026 · E655 · Lernkarten, PDF und Tabellen
+
+**Redurs erste Hälfte.** „lernkarten erstellen pdf elssen, tabelas usw."
+E654 hat die Grenze gebaut; das hier ist das, wofür sie da war.
+
+**Der Fund.** Für alle drei gab es etwas, das fast passte, und nichts, das
+passte. Den Schnellbefehl „Mache aus dieser Seite Karteikarten" — der
+schreibt Text ins Chatfenster, und Text lernt niemand. Den PDF-Wortlaut in
+`suchtext`, über die Suche zufällig erreichbar, gezielt nicht. Und
+`datenbankAnlegen`, das eine Datenbank baut, wo drei mal vier Zellen im
+Absatz gemeint waren.
+
+**Gebaut.** `karteikartenAnlegen` (echte `flashcard`-Blöcke im Format
+`Frage :: Antwort`), `pdfLesen` (Seitenspanne, kürzt mit Ansage statt
+stillschweigend) und `tabelleAnlegen` (`table`-Block mit `rows`, alle Zeilen
+auf gleiche Breite gefüllt). Alle drei setzen `herkunft: 'ki'` und tragen
+damit den Streifen aus E307. Verteilt sind sie sparsam: der Assistent
+bekommt alle drei, der Rechercheur zwei, der Redakteur nur `pdfLesen`.
+
+**Geprüft.** `test547` neu, achtzehn Messungen, gegen den alten Stand
+3/18. Die Gegenprobe ist die lehrreiche: schreibt das Kartenwerkzeug `text`
+statt `flashcard`, meldet es weiterhin „3 Lernkarten … stehen ab sofort im
+Lernzentrum bereit", und `Learning.cards()` zählt null. Eine
+Erfolgsmeldung ist kein Erfolg. `test546`, `test291`, `test281`, `test286`,
+`test87`, `test105`, `test109` grün, `typecheck` sauber, Einzeldatei neu.
+
+**Bild.** `bilder/kiTabelle-rechner-hell.png` (§55.3).
+
+---
+
+## 20. September 2026 · E654 · Die KI darf löschen — und fragt jedes Mal
+
+**Redurs Auftrag.** „die ai teil darf mehr machen z.B lernkarten erstellen
+pdf elssen, tabelas usw alles machen kann ausser ohne meine bestetigung
+etwas löschen." Zwei Sätze in einem; der zweite ist der, der den ersten
+erst erlaubt.
+
+**Der Fund.** Der Agentenkatalog kannte zwölf Werkzeuge und zwei Rechte —
+`lesen` und `bearbeiten`. Kein Löschwerkzeug. Die Regel galt also nur,
+weil es die Handlung nicht gab, und das ist keine Sicherheit, sondern eine
+Lücke im Können. Das vorhandene Tor für `bearbeiten` wäre für Löschen an
+drei Stellen zu weich: `fragenModus() === "nie"`, „für diesen Lauf
+erlauben", und `darfAllein` im unbeaufsichtigten Lauf.
+
+**Gebaut.** Eine eigene Rechteklasse `loeschen` mit einem Tor in der
+SCHLEIFE — nicht im Werkzeug, damit es für jedes künftige Löschwerkzeug
+gilt, ohne dass jemand daran denken muss. Keine der drei Weichheiten greift
+dort. Das erste Werkzeug der Klasse ist `seiteLoeschen`: es ruft
+`Store.trashBlock`, legt also in den Papierkorb und vernichtet nichts
+(§43). Unbeaufsichtigt werden Löschwerkzeuge zusätzlich gar nicht erst
+angeboten — zwei Sperren für denselben Fall.
+
+**Geprüft.** `test546` neu, dreizehn Messungen. Gegenprobe mit abgehängtem
+Tor: der Lauf druckt die Zeile, um die es geht — „Seite ‚Weg damit' liegt
+im Papierkorb", bei null Dialogen, nachdem der Mensch Nein gesagt hatte.
+`test291`, `test281`, `test286`, `test301`, `test87`, `test105`, `test109`
+grün, `typecheck` sauber, Einzeldatei neu gebaut.
+
+**Bild.** `bilder/kiLoeschTor-rechner-hell.png` — echter Agentenlauf, nur
+das Modell abgehängt; der Fokus liegt auf „Nicht löschen" (§55.3).
+
+**Offen und als nächstes.** Redurs erster Satz: Lernkarten, PDF-Lesen,
+Tabellen. Dieser Bogen baut die Grenze, die sie sicher macht (§46).
+
+---
+
 ## 20. September 2026 · E653 · Das KI-Blatt am Telefon hatte keinen Weg zurück
 
 **Der Fund.** Am Telefon ist `#ai` ein Blatt, das von unten kommt — und wer

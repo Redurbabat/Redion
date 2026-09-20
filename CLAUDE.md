@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 487 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 492 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1004,6 +1004,39 @@ einmal zog er gegen das Willkommensblatt, das über allem lag. Gezählt am
 20. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
 487.*
 
+*Und 488: `test546` — die KI darf löschen, aber nie ohne ein ausdrückliches
+Ja (E654). Er hält Redurs Satz vom 20. September in dreizehn Messungen, und
+seine Gegenprobe ist die überzeugendste des Monats: mit abgehängtem Tor
+druckt er die Zeile, die es zu verhindern gilt — „Seite ‚Weg damit' liegt im
+Papierkorb", bei NULL Dialogen, nachdem der Mensch Nein gesagt hatte.
+Gezählt am 20. September, im selben Bogen: der Befehl sagt 488.*
+
+*Und 489: `test547` — Lernkarten, PDF und Tabellen (E655). Seine wichtigste
+Messung ist nicht, ob Blöcke entstehen, sondern ob `Learning.cards()` sie
+ZÄHLT: die Gegenprobe schreibt `text` statt `flashcard`, das Werkzeug meldet
+weiterhin „3 Lernkarten … stehen ab sofort im Lernzentrum bereit", und die
+Lernwelt zählt null. Eine Erfolgsmeldung ist kein Erfolg. Gezählt am
+20. September, im selben Bogen: der Befehl sagt 489.*
+
+*Und 490: `test548` — die KI bearbeitet Text, und das Alte bleibt holbar
+(E656). Zwei Gegenproben, beide gefahren: ohne die Sicherungsfassung steht
+da „0 → 0" und „KEINE FASSUNG", ohne die Eindeutigkeitsprüfung kommt der
+Fehler aus E650 wörtlich zurück — „Die Leitung liegt. Das Kabel bleibt."
+Gezählt am 20. September, im selben Bogen: der Befehl sagt 490.*
+
+*Und 492: `test550` — die Doku zählt, was da ist (E659). Er hält §30s
+eigenen Satz („sie wird nicht geschätzt, sie wird gezählt") und §34s
+„beides: Verzeichnis und Text". Er wurde gegen den Stand rot, den ER SELBST
+erzeugt hatte: 492 Dateien, 491 in der Doku — die Drift, die §30 seit einem
+Jahr beklagt, im Abstand von Minuten. Gezählt am 20. September: 492.*
+
+*Und 491: `test549` — die Lückenliste sagt die Wahrheit über sich selbst
+(E658). Er ist der erste Lauf, der eine DOKU-Datei hält: 33 offene Lücken
+standen unter „Anhang B · Was erledigt ist", fünf Überschriften sagten
+„abgearbeitet" statt GESCHLOSSEN, und die Datei zählte sich selbst falsch.
+Er liest nur eine Datei — kein Browser, kein Port —, darf also neben einem
+vollen Lauf gefahren werden. Gezählt am 20. September: der Befehl sagt 491.*
+
 ### Die Befehle
 
 ```txt
@@ -1012,7 +1045,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 487 Läufe
+npm run pruefen                      alle 492 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1027,6 +1060,31 @@ Ein voller Lauf dauert länger, als eine Sitzung sicher steht. Er wird
 deshalb **in Stücken und wiederaufnehmbar** gefahren: zehn Läufe je Stück,
 eine Merkdatei hält fest, welche Stücke fertig sind. Bricht die Sitzung ab,
 geht nur das laufende Stück verloren, nicht die Stunde davor.
+
+**Und dafür gibt es seit dem 20. September ein Werkzeug** (E657). Vorher war
+dieser Absatz ein Handgriff: zehn Nummern abtippen, warten, die nächsten
+zehn abtippen — und im Kopf behalten, wo man war. Genau das ist beim
+vorletzten vollen Lauf schiefgegangen.
+
+```txt
+node pruefungen/volllauf.mts            weitermachen, wo es aufhörte
+node pruefungen/volllauf.mts --neu      von vorne, Merkdatei verwerfen
+node pruefungen/volllauf.mts --stand    nur sagen, wie weit es ist
+node pruefungen/volllauf.mts --rot      nur die roten Läufe wiederholen
+node pruefungen/volllauf.mts --stueck 5 Stückgrösse ändern (Vorgabe 10)
+```
+
+Die Merkdatei heisst `pruefungen/.volllauf-stand.json` und steht in
+`.gitignore`: sie sagt, wie weit DIESER Rechner gekommen ist. Geschrieben
+wird sie **nach jedem Stück**, nicht am Ende — sonst wäre bei einem Abbruch
+genau das verloren, wogegen sie gebaut wurde. Und sie verträgt eine Liste,
+die sich unterwegs ändert: ein Prüflauf, der mitten im Sweep entsteht,
+gehört dazu und ist noch nicht fertig.
+
+**Der Arbeitsbaum braucht den Commit.** Ein `git worktree` enthält, was
+eingecheckt ist — ein Werkzeug, das noch im Hauptbaum liegt, gibt es dort
+nicht. Der erste Versuch am 20. September scheiterte genau daran, nach
+vier Sekunden: `Cannot find module …/pruefungen/volllauf.mts`.
 
 Gefahren wird er in einem eigenen Arbeitsbaum (`git worktree`), damit im
 Hauptbaum weitergearbeitet werden kann, während er läuft. Das Vorspulen von
@@ -1074,7 +1132,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 487 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 492 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

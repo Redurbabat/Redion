@@ -1836,6 +1836,28 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 **Besserer Prompt:** 
 
 
+**9 · ca. 17:10**
+
+> weiter die ai teil darf mehr machen z.B lernkarten erstellen pdf elssen, tabelas usw alles machen kann ausser ohne meine bestetigung etwas löschen
+
+**Gemeint:** Die KI soll mehr Werkzeuge bekommen — und genau eine Grenze, die hält: nichts wird gelöscht, ohne dass Redur zugestimmt hat.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**10 · ca. 18:10**
+
+> ja mach das mit dem text bearbeiten weiter
+
+**Gemeint:** Zustimmung zu dem Vorschlag, den ich am Ende von E655 gemacht hatte: die KI soll Text auf einer Seite ändern können.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -1854,12 +1876,17 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 | Der zweite volle Lauf über alle 483, in Stücken, im Arbeitsbaum | `08:53` → `(11:40)` | 08:53 – | abgeschlossen | alle 483, zehn je Stück, wiederaufnehmbar — diesmal ohne zweiten Lauf daneben |
 | E648 — Redurs #108/#109 nachdokumentiert, und der vorausgeschickte Frame repariert | `(11:40)` → `(offen)` | 11:40 – | laufend | test541 (25/25), test539, test478, test114, test225, test105, test109, test87 |
 | E653 — Das KI-Blatt am Telefon: ein Kreuz im Kopf, und der Griff zieht wirklich | `(offen)` → `(offen)` | ca. 16:30 – | laufend | test545 (12/12, dreimal rot gesehen), test544, test87, test105, test109 |
+| E654 — Die KI darf löschen, aber nie ohne ein ausdrückliches Ja | `(offen)` → `(offen)` | ca. 17:15 – | laufend | test546 (13/13, Gegenprobe gefahren), test291, test281, test286, test301, test87, test105, test109 |
+| E655 — Lernkarten, PDF und Tabellen: die drei Werkzeuge, die Redur genannt hat | `(offen)` → `(offen)` | ca. 17:45 – | laufend | test547 (18/18, Gegenprobe gefahren), test546, test291, test281, test286, test87, test105, test109 |
+| E656 — textBearbeiten: das erste Werkzeug, das bestehenden Text anfasst | `(offen)` → `(offen)` | ca. 18:15 – | laufend | test548 (17/17, zwei Gegenproben gefahren), test547, test546, test291, test281, test286, test87, test105, test109 |
+| E657/E658 — volllauf.mts, und die Lückenliste sagt die Wahrheit über sich selbst | `(offen)` → `(offen)` | ca. 18:45 – | laufend | test549 (6/6, Gegenprobe gefahren), test105, test109, test87 · dazu läuft der volle Lauf im Arbeitsbaum |
+| E659 — test550: die Doku zählt, was da ist | `(offen)` → `(offen)` | ca. 19:20 – | laufend | test550 (8/8, Gegenprobe gefahren), test549 · der volle Lauf läuft weiter im Arbeitsbaum |
 
 #### Zahlen des Tages
 
 - **commits:** 2
-- **entscheidungen:** 11
-- **neue Prüfläufe:** 4
+- **entscheidungen:** 17
+- **neue Prüfläufe:** 9
 - **volle Läufe:** 0
 
 #### Das grösste Problem
@@ -1882,5 +1909,5 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 84 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 90 Einträge.
 

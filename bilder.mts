@@ -392,6 +392,101 @@ const ANSICHTEN: Record<string, {
      darüber der Strich, der jetzt hält, was er zeigt. Am Rechner wäre das
      Bild sinnlos — dort klappt `#btn-ai` in der Kopfleiste auf und zu.
        node bilder.mts kiBlatt handy */
+  /* --- Das Tor vor einer Textänderung (E656) ------------------------------
+     Was Redur sieht, bevor ein Satz umgeschrieben wird: die Stelle vorher
+     und nachher, im Klartext. „Höchstens ein gespeichertes Objekt" stand da
+     früher — richtig, und ohne jeden Nutzen für die Entscheidung.
+       node bilder.mts kiTextTor rechner */
+  kiTextTor: {
+    titel: 'Die KI möchte einen Satz ändern (E656)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('agent:fragen', 'immer');
+      const s = Store.addPage(null, { text: 'Installationshinweise', icon: '🔌' });
+      Store.addBlock(s.id, 'text',
+        { text: 'Der Leiter wird an die Klemme gefuehrt und dort gesichert.' });
+      Store.addBlock(s.id, 'text', { text: 'Danach wird gemessen.' });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 250));
+      (KI as any).frageKurz = () => Promise.resolve(JSON.stringify({
+        gedanke: 'Der Fachbegriff heisst Reihenklemme',
+        werkzeug: 'textBearbeiten',
+        argument: { titel: 'Installationshinweise',
+                    alt: 'an die Klemme gefuehrt',
+                    neu: 'auf die Reihenklemme aufgelegt' } }));
+      Store.setMeta('agent:eigene', [{ id: 'bild-text', name: 'Redakteur', guthaben: 3,
+        werkzeuge: ['textBearbeiten', 'fertig'], anweisung: '', wissen: [], ausloeser: {} }]);
+      void Agent.laufen('bild-text', 'Bring die Fachbegriffe in Ordnung');
+      await new Promise(f => setTimeout(f, 700));
+    }
+  },
+
+  /* --- Was die KI jetzt bauen kann (E655) ---------------------------------
+     Die Tabelle ist das Sichtbare der drei: Lernkarten prüft man an
+     `Learning.cards()`, PDF-Text an seinem Wortlaut — eine Tabelle sieht man
+     oder man sieht sie nicht (§55.3).
+       node bilder.mts kiTabelle rechner */
+  kiTabelle: {
+    titel: 'Die KI hat eine Tabelle gebaut (E655)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Kabelquerschnitte', icon: '⚡' });
+      Store.addBlock(s.id, 'text',
+        { text: 'Aus dem Skript, Kapitel 7 — von der KI zusammengestellt.' });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 250));
+      await Agent.WERKZEUGE['tabelleAnlegen'].lauf({
+        kopfzeile: ['Querschnitt', 'Belastbarkeit', 'Absicherung', 'Typische Verwendung'],
+        zeilen: [
+          ['1,5 mm²', '16 A', 'B16', 'Licht, Steckdosen'],
+          ['2,5 mm²', '20 A', 'B20', 'Steckdosenkreise'],
+          ['4 mm²', '25 A', 'B25', 'Herd, Durchlauferhitzer'],
+          ['6 mm²', '32 A', 'B32', 'Zuleitungen, Unterverteilung']]
+      }, { ids: [] });
+      App.zeichneSeite();
+      await new Promise(f => setTimeout(f, 400));
+    }
+  },
+
+  /* --- Das Tor vor dem Löschen (E654) -------------------------------------
+     Zu sehen ist, was Redur sieht, bevor irgendetwas verschwindet: die Seite
+     beim Namen, wie viele Blöcke daran hängen, und ZWEI Knöpfe — kein
+     „für diesen Lauf erlauben".
+       node bilder.mts kiLoeschTor rechner */
+  kiLoeschTor: {
+    titel: 'Die KI möchte löschen — und fragt (E654)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const alt2 = Store.addPage(null, { text: 'Notizen von der Messe 2024', icon: '📦' });
+      Store.addBlock(alt2.id, 'text', { text: 'Stand B14, Ansprechpartner …' });
+      Store.addBlock(alt2.id, 'bullet', { text: 'Preisliste nachfragen' });
+      Store.addBlock(alt2.id, 'bullet', { text: 'Kabeltrommel 3×2,5 mm²' });
+      App.oeffne(alt2.id);
+      /* Ein ECHTER Agentenlauf, kein nachgebauter Dialog: nur das Modell ist
+         abgehängt, damit das Bild nicht von einem Ollama abhängt. */
+      /* `KI` ist eine Konstante im Skript-Bereich, KEIN Feld an `window` —
+         `window.KI` ist undefined, und der erste Anlauf ist genau daran
+         gescheitert. Der Name selbst ist hier erreichbar. */
+      (KI as any).frageKurz = () => Promise.resolve(JSON.stringify({
+        gedanke: 'Die alte Messeseite wird nicht mehr gebraucht',
+        werkzeug: 'seiteLoeschen',
+        argument: { titel: 'Notizen von der Messe 2024' } }));
+      Store.setMeta('agent:eigene', [{ id: 'bild-loesch', name: 'Persönlicher Assistent',
+        guthaben: 3, werkzeuge: ['seiteLoeschen', 'fertig'], anweisung: '',
+        wissen: [], ausloeser: {} }]);
+      /* NICHT abwarten — der Dialog steht, bis jemand drückt. Genau das
+         soll auf dem Bild sein. */
+      void Agent.laufen('bild-loesch', 'Räum die alten Messenotizen weg');
+      await new Promise(f => setTimeout(f, 700));
+    }
+  },
+
   kiBlatt: {
     titel: 'KI am Telefon — der Weg zurück (E653)',
     bauen: async () => {

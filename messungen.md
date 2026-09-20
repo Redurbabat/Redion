@@ -3577,3 +3577,239 @@ der Geste, nicht dem Zielen (§50, §55.2).
 
 `bilder/kiBlatt-handy-dunkel.png` — der Strich oben, das Kreuz rechts im
 Kopf, 390 px breit (§55.3).
+
+---
+
+## 20. September 2026 — Was die KI darf, und was sie nie darf (E654, `test546`)
+
+Der Katalog der Agentenwerkzeuge, vorher und nachher:
+
+```txt
+                       vorher                       nachher
+Werkzeuge              12                           13
+Rechte                 lesen · bearbeiten           lesen · bearbeiten · loeschen
+mit Recht "loeschen"   []                           ["seiteLoeschen"]
+```
+
+Das Tor, sechs Fälle, jeder gefahren statt behauptet:
+
+```txt
+Nein gesagt                    Seite lebt · 1 Dialog
+Ja gesagt                      alive=false, Block noch da (Papierkorb) · 1 Dialog
+Knöpfe im Dialog               ["nein","ja"] — kein "für diesen Lauf"
+fragenModus = "nie"            fragt trotzdem · 1 Dialog
+zwei Löschungen                2 Dialoge
+unbeaufsichtigt + darfAllein   0 Dialoge, 0 Löschungen
+```
+
+### Die Gegenprobe
+
+Das Tor im gebauten `agenten.js` abgehängt (`if (false)`), Lauf wiederholt.
+Was dann dastand, ist genau der Satz, den Redur verhindert haben wollte:
+
+```txt
+    Dialoge: 0 · Seite lebt: false
+    Ergebnis: Seite „Weg damit" liegt im Papierkorb.
+  ✗ Vor dem Löschen wird überhaupt gefragt — kein Dialog
+  ✗ Nach einem Nein lebt die Seite weiter — die Seite ist weg, obwohl abgelehnt wurde
+```
+
+Abschnitt 6 blieb dabei grün — der Filter, der unbeaufsichtigten Läufen
+Löschwerkzeuge gar nicht erst anbietet, greift unabhängig vom Tor. Zwei
+Sperren für denselben Fall, und die Gegenprobe zeigt, dass es wirklich zwei
+sind.
+
+### Bild
+
+`bilder/kiLoeschTor-rechner-hell.png` — die Seite beim Namen, 3 Blöcke
+darunter, zwei Knöpfe, und der Fokus liegt auf „Nicht löschen" (§55.3).
+
+---
+
+## 20. September 2026 — Was die KI jetzt bauen kann (E655, `test547`)
+
+Der Katalog wächst von 13 auf 16 Werkzeuge:
+
+```txt
+karteikartenAnlegen   bearbeiten   echte flashcard-Blöcke
+pdfLesen              lesen        Wortlaut einer Seitenspanne aus `suchtext`
+tabelleAnlegen        bearbeiten   table-Block mit `rows`
+```
+
+Gemessen, nicht behauptet:
+
+```txt
+Learning.cards()            1 → 4 · drei neue erkannt
+Typ der neuen Blöcke        ["flashcard"]
+splitCard der ersten        ["Wie lautet das ohmsche Gesetz?","U = R mal I"]
+
+pdfLesen von 4 bis 5        enthält S4 und S5 · enthält NICHT S1 oder S6
+pdfLesen ohne Spanne        316 Zeichen, S1 bis S6
+pdfLesen, Dokument fehlt    „Kein Dokument gefunden, das „Gibt es nicht" heisst."
+
+table-Block                 4 Zeilen × 3 Spalten
+vom Editor gezeichnet       3 th, 9 td · erste Zelle „Querschnitt"
+```
+
+### Die Gegenprobe, und warum sie die wichtigste ist
+
+`karteikartenAnlegen` im gebauten `agenten.js` auf `text` statt `flashcard`
+umgestellt:
+
+```txt
+    Antwort: 3 Lernkarten … stehen ab sofort im Lernzentrum bereit.
+    Learning.cards(): 1 → 1 · neu erkannt: 0
+  ✗ Die Lernwelt zählt drei neue Karten — 0 statt 3
+```
+
+Das Werkzeug meldet weiterhin Erfolg. **Eine Erfolgsmeldung ist kein
+Erfolg** — und ein Wächter, der nur zählt, ob Blöcke entstehen, hätte das
+nicht gesehen. Er muss dort messen, wo das Ergebnis gebraucht wird.
+
+### Bild
+
+`bilder/kiTabelle-rechner-hell.png` — vier Spalten, Kopfzeile, und links
+der lila Herkunftsstreifen aus E307: was die KI gebaut hat, sagt es von
+selbst (§55.3).
+
+---
+
+## 20. September 2026 — Text ändern, ohne den alten Stand zu verlieren (E656, `test548`)
+
+Der Katalog wächst von 16 auf 17 Werkzeuge. `textBearbeiten` ist das erste,
+das bestehenden Text anfasst.
+
+```txt
+vorher   Der Leiter wird an die Klemme gefuehrt und dort gesichert.
+nachher  Der Leiter wird auf die Reihenklemme aufgelegt und dort gesichert.
+
+Fassungen          0 → 1
+Anlass             "vor KI-Änderung"
+alter Text darin   ja
+autoVersionen      AUS — die Fassung kam trotzdem
+Nachbarblock       unberührt
+herkunft danach    "ki"
+```
+
+Und die drei Fälle, in denen NICHTS geschieht:
+
+```txt
+zweimal im selben Block   „steht 2-mal … (im selben Block)" · Text unverändert
+in zwei Blöcken           „steht 2-mal … (in 2 Blöcken)"    · beide unverändert
+gar nicht gefunden        „steht nicht auf dieser Seite"    · Text unverändert
+```
+
+### Zwei Gegenproben
+
+```txt
+Sicherungsfassung abgehängt
+  ✗ Vor der Änderung wurde eine Fassung gesichert — 0 → 0
+  ✗ Die Fassung heisst „vor KI-Änderung" — "KEINE FASSUNG"
+
+Eindeutigkeitsprüfung abgehängt
+  nachher: Die Leitung liegt. Das Kabel bleibt.
+  ✗ In zwei Blöcken → nichts geändert — Kurz. | Ein Hinweis ohne Wiederholung.
+```
+
+Die zweite ist der Fehler aus **E650** wörtlich zurück, nur an einer anderen
+Stelle des Programms: `String.replace` trifft das erste Vorkommen, nicht das
+gemeinte. Zwei Bögen Abstand zwischen demselben Fehler an zwei Orten — das
+ist der Grund, warum er hier von vornherein verhindert und nicht repariert
+wurde.
+
+### Bild
+
+`bilder/kiTextTor-rechner-hell.png` — das Tor zeigt jetzt den Wortlaut
+vorher und nachher statt „höchstens ein gespeichertes Objekt" (§55.3).
+
+---
+
+## 20. September 2026 — Die Lückenliste über sich selbst (E658, `test549`)
+
+Gezählt mit `node pruefungen/lauf/test549.mts`, nicht geschätzt:
+
+```txt
+                              vorher        nachher
+Einträge                      101           101
+offen                         52            51
+geschlossen                   49            50
+offen UNTER „Anhang B"        33            0
+fremde Schlusswörter          5             0
+Datei nennt sich selbst       103/53/50     101/51/50   (gemessen: stimmt)
+```
+
+Der eine Wanderer zwischen „offen" und „geschlossen" ist `L157`: die
+Überschrift sagte „GELANDET", was kein Wort dieser Datei ist.
+
+### Das Verschieben, und wie es gegengeprüft wurde
+
+```txt
+Datei in Blöcke zerlegt                   109 Blöcke
+Gegenprobe vor jeder Bewegung             Zusammensetzen ist byte-gleich
+gewandert                                 33 Blöcke · 6816 Zeilen
+Gegenprobe nach der Bewegung              jeder Block genau einmal
+Zeilen vorher/nachher                     9566 → 9585 (+19 neue Überschrift)
+```
+
+### Und zweimal hat der Wächter zuerst sich selbst korrigiert
+
+```txt
+1. Anlauf   „offen" im TITEL von L181 als Status gelesen
+2. Anlauf   „genannt 20/2026/103" — die ersten Zahlen waren das Datum
+```
+
+Beide Male war er rot und sagte das Falsche. Vierter und fünfter Fall nach
+`test544`, `test545` und `test548`. **Eine Messung, die den Titel für den
+Status hält, misst den Titel.**
+
+Kein Bild: hier ist nichts zu sehen, hier ist zu zählen (§55.3).
+
+---
+
+## 20. September 2026 — Was die Doku über sich selbst behauptet (E659, `test550`)
+
+Der Wächter wurde gegen den Stand rot, den **er selbst** erzeugt hatte:
+
+```txt
+gezählt: 492 Dateien unter pruefungen/lauf/
+§30 „Heute sind es N Läufe":     491
+§30 Befehlsblock „alle N Läufe": 491
+§31 „Von N Läufen":              491
+ENTSCHEIDUNGEN.md nennt sich     636   ·  gezählt 638
+```
+
+`test550.mts` ist die 492. Datei — die Drift, die §30 seit einem Jahr
+beklagt, im Abstand von Minuten und diesmal mit Beleg.
+
+### Vier Anläufe, vier erfundene Zahlen
+
+`ENTSCHEIDUNGEN.md` kennt drei Überschriftsformen für dieselbe Sache. Was
+die Messung nacheinander meldete, bevor sie stimmte:
+
+```txt
+nur `## E123`                     351 Einträge ohne Text
++ Banner zwischen zwei ===        253
++ Titel mit === darunter          203
++ Titel über zwei Zeilen            0   ← die Datei war immer in Ordnung
+```
+
+Die Regel, die hält, setzt **keine Form voraus**: eine Zeile, die mit der
+Nummer beginnt und ein Trennzeichen trägt, ist eine Überschrift. Alles
+andere ist eine Erwähnung.
+
+### Und zwei „Funde", die beim Lesen verschwanden
+
+```txt
+E198/E199/E222/E269 zitiert, ohne Eintrag   → steht seit langem in Zeile 35
+ENTSCHEIDUNGEN.md Index ≠ Text              → 638 von 638, stimmt
+```
+
+Deshalb prüft der Lauf nicht, ob es Lücken GIBT (die darf es), sondern ob
+jede Lücke oben GENANNT ist.
+
+### Gegenprobe
+
+Eine der drei Zahlen in CLAUDE.md auf 480 gesetzt: genau diese eine Zeile
+wird rot, die beiden anderen bleiben grün. Drei Stellen, drei Messungen.
+
+Kein Bild: hier ist zu zählen, nicht zu sehen (§55.3).

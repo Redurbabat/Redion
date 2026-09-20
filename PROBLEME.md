@@ -98,6 +98,12 @@ sind der teuerste Teil und der lehrreichste.
 | P82 | 2026-09-20 | Das Teure war gebaut, das Billige fehlte | 🟠 mittel | — |
 | P83 | 2026-09-20 | Ein Blatt ohne Weg zurück, und ein Griff, der nichts hält | hoch | — |
 | P84 | 2026-09-20 | Zweimal rot aus dem falschen Grund — derselbe Lauf | 🟠 mittel | — |
+| P85 | 2026-09-20 | Eine Regel, die nur galt, weil es die Handlung nicht gab | 🟠 mittel | — |
+| P86 | 2026-09-20 | Eine Erfolgsmeldung ist kein Erfolg | 🟠 mittel | — |
+| P87 | 2026-09-20 | Derselbe Fehler, zwei Bögen später, an einer anderen Stelle | 🟠 mittel | — |
+| P88 | 2026-09-20 | Die Lückenliste war selbst der stille Fehler | 🟠 mittel | — |
+| P89 | 2026-09-20 | Der Titel ist nicht der Status | niedrig | — |
+| P90 | 2026-09-20 | Vier Anläufe, vier erfundene Zahlen — und die Datei war immer in Ordnung | niedrig | — |
 
 ---
 
@@ -1875,4 +1881,118 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Nach der Korrektur: „→ ai-zu · 44×44 px" und „Der Zug landet wirklich auf dem Kopf des Blattes" — und die Gegenprobe wird nur an der Geste rot.
 
 **Die Lehre.** Vierter und fünfter Fall derselben Sorte an zwei Tagen, nach `test542`, `test543` und `test544`. Die Lehre steht jetzt in beide Richtungen: ein roter Lauf ist noch kein Beweis, und ein grüner erst recht nicht. Ein Wächter, der eine Stelle anfasst, prüft zuerst, WER dort liegt.
+
+
+---
+
+## P85 · Eine Regel, die nur galt, weil es die Handlung nicht gab
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** „Die KI löscht nichts ohne Bestätigung" war wahr — aber nur, weil kein Werkzeug löschen konnte. Die Rechte des Agentenkatalogs waren `lesen` und `bearbeiten`, mehr nicht.
+
+**Die falsche Vermutung.** Dass das vorhandene Tor für `bearbeiten` (E295 ff.) auch fürs Löschen reicht. Es reicht an drei Stellen nicht: `fragenModus()` kennt „nie", es gibt „für diesen Lauf erlauben", und `darfAllein` lässt unbeaufsichtigt schreiben.
+
+**Wie es gefunden wurde.** Redurs Auftrag gelesen, dann den Katalog gezählt statt erinnert: 12 Werkzeuge, 2 Rechte, 0 Löschwerkzeuge.
+
+**Die Ursache.** Eine Fähigkeit, die es nie gab, braucht keine Grenze — bis jemand sie baut. Dann fehlt die Grenze genau in dem Bogen, in dem am wenigsten Zeit dafür ist.
+
+**Der Beweis.** `test546` gegen den alten Stand: 6/13, darunter „kein Werkzeug mit Recht loeschen". Nach dem Bau 13/13, und die Gegenprobe mit abgehängtem Tor druckt „Seite ‚Weg damit' liegt im Papierkorb" bei null Dialogen nach einem Nein.
+
+**Die Lehre.** Das Tor gehört in die Schleife, nicht ins Werkzeug. Ein Werkzeug, das selbst fragen muss, ist ein Werkzeug, bei dem das Fragen beim nächsten Mal vergessen wird — und beim Löschen merkt man es erst, wenn etwas fehlt.
+
+
+---
+
+## P86 · Eine Erfolgsmeldung ist kein Erfolg
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Ein Werkzeug meldet „3 Lernkarten angelegt — sie stehen ab sofort im Lernzentrum bereit", und das Lernzentrum zählt null.
+
+**Die falsche Vermutung.** Dass es reicht zu prüfen, ob Blöcke entstehen. Entstanden sind sie — nur mit `type:'text'`, und `Learning.cards()` filtert auf `type === 'flashcard'`.
+
+**Wie es gefunden wurde.** Als Gegenprobe zum eigenen Wächter gestellt: im gebauten `agenten.js` den Typ von `flashcard` auf `text` geändert und den Lauf wiederholt.
+
+**Die Ursache.** Der Satz, den ein Werkzeug zurückgibt, wird vom Werkzeug geschrieben — nicht vom Ergebnis. Er kann also alles behaupten.
+
+**Der Beweis.** Gegenprobe: „Antwort: 3 Lernkarten … stehen ab sofort im Lernzentrum bereit" bei „Learning.cards(): 1 → 1 · neu erkannt: 0".
+
+**Die Lehre.** Ein Wächter misst dort, wo das Ergebnis GEBRAUCHT wird, nicht dort, wo es entsteht. Beim alten Schnellbefehl „Mache Karteikarten" ist derselbe Fehler jahrelang unbemerkt geblieben: er schrieb Text ins Chatfenster, und es sah nach Karteikarten aus.
+
+
+---
+
+## P87 · Derselbe Fehler, zwei Bögen später, an einer anderen Stelle
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Ein Werkzeug, das eine Textstelle ersetzt, trifft die falsche — `String.replace` nimmt das erste Vorkommen. Die Gegenprobe druckt es aus: „Die Leitung liegt. Das Kabel bleibt."
+
+**Die falsche Vermutung.** Dass E650 diesen Fehler erledigt hat. E650 hat ihn in der Auswahlleiste des Editors repariert; als ich zwei Bögen später ein Werkzeug baute, das dasselbe tut, stand er als Möglichkeit sofort wieder da.
+
+**Wie es gefunden wurde.** Nicht gefunden — vorhergesehen. Beim Entwurf von `textBearbeiten` war E650 noch in Reichweite, also wurde die Regel „genau einmal oder gar nicht" von vornherein eingebaut und die Gegenprobe gefahren, um zu sehen, was ohne sie passiert.
+
+**Die Ursache.** Ein Modell plant eine Ersetzung aus dem, was es GELESEN hat, und liest nicht, wie oft etwas dasteht. Die Eindeutigkeit ist deshalb keine Eingabeprüfung, sondern ein Teil der Aufgabe.
+
+**Der Beweis.** Gegenprobe mit abgehängter Prüfung: von zwei gleichlautenden Blöcken wurde der erste geändert, der zweite nicht — und im Satz mit zwei „Das Kabel" traf es das erste.
+
+**Die Lehre.** Ein reparierter Fehler ist nicht erledigt, sondern bekannt. Wer kurz danach etwas Ähnliches baut, hat den billigsten Moment, ihn gar nicht erst entstehen zu lassen — und die Gegenprobe zeigt, dass die Vorkehrung nicht dekorativ ist.
+
+
+---
+
+## P88 · Die Lückenliste war selbst der stille Fehler
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** 33 offene Lücken standen unterhalb der Überschrift „Anhang B · Was erledigt ist". Wer von oben liest, hält sie für erledigt.
+
+**Die falsche Vermutung.** Dass es ein Formatierungsproblem ist. Es ist das Gegenteil dessen, wofür die Datei da ist: §35 sagt „eine bekannte Lücke ist besser als ein stiller Fehler", und hier war eine bekannte Lücke ZU einem stillen Fehler geworden.
+
+**Wie es gefunden wurde.** Die Warnung stand schon in der Datei — jemand hatte es gefunden und das Umsortieren vertagt, „während achtzehn Läufe rot waren" (§46). Die sind weg; also nachgemessen und repariert.
+
+**Die Ursache.** Der Anhang endete mit seiner letzten Tabelle, und alles Spätere wurde ans Dateiende geschrieben. Eine Datei wächst über ihre Gliederung hinaus, und niemand merkt den Tag, an dem es passiert.
+
+**Der Beweis.** `test549` gegen den alten Stand: 3/6, mit „33 offene Lücken lesen sich von oben wie erledigt", fünf fremden Schlusswörtern und „genannt 103/53/50 · gemessen 101/52/49".
+
+**Die Lehre.** Auch eine Doku-Datei kann einen Wächter haben. Der hier liest nur Text, braucht keinen Browser und läuft in einer Sekunde — es gab keinen Grund, ihn nicht schon vor einem Jahr zu schreiben.
+
+
+---
+
+## P89 · Der Titel ist nicht der Status
+
+*2026-09-20 · niedrig*
+
+**Das Bild.** Der neue Wächter hielt L181 („Das Lineal steht zweimal, sobald ‚Zeichnen' offen ist") für einen Eintrag mit dem Status „offen" — und im selben Lauf das Datum „20. September 2026" für die Zählung „20/2026/103".
+
+**Die falsche Vermutung.** Dass ein Suchwort reicht, um einen Zustand zu erkennen.
+
+**Wie es gefunden wurde.** Beide Male war der Lauf ROT — und sagte etwas anderes, als er mass. Aufgefallen beim Lesen der eigenen Ausgabe, nicht beim Schreiben des Codes.
+
+**Die Ursache.** Ein Wort kommt in einer Überschrift vor, ohne dort etwas zu bedeuten. Die Regel muss sagen, WO sie zählt, nicht nur WAS.
+
+**Der Beweis.** Nach der Korrektur: dieselbe Datei, dieselben Einträge, andere Zahl — 51 statt 52 offene.
+
+**Die Lehre.** Vierter und fünfter Fall nach test544, test545 und test548. Eine Messung, die den Titel für den Status hält, misst den Titel. Ein roter Lauf ist noch kein Beweis, und ein grüner erst recht nicht.
+
+
+---
+
+## P90 · Vier Anläufe, vier erfundene Zahlen — und die Datei war immer in Ordnung
+
+*2026-09-20 · niedrig*
+
+**Das Bild.** Eine Prüfung von ENTSCHEIDUNGEN.md meldete nacheinander 351, dann 253, dann 203 Index-Einträge ohne Text. Es klang jedes Mal nach einem ernsten Fund.
+
+**Die falsche Vermutung.** Dass die Datei kaputt ist. Sie war es nie: 638 von 638 Einträgen haben ihren Text.
+
+**Wie es gefunden wurde.** Nach dem dritten Mal nicht repariert, sondern die MESSUNG angesehen. ENTSCHEIDUNGEN.md kennt drei Überschriftsformen — `## E123`, einen Banner zwischen zwei ===-Zeilen, und einen Titel mit === darunter, der über zwei Zeilen laufen kann. Jede engere Regel übersah eine davon.
+
+**Die Ursache.** Eine gewachsene Datei benutzt die Form, die zur Zeit ihres Eintrags üblich war. Wer sie mit der HEUTIGEN Form misst, misst das Alter, nicht den Inhalt.
+
+**Der Beweis.** Die Regel, die keine Form voraussetzt — eine Zeile, die mit der Nummer BEGINNT und ein Trennzeichen trägt —, findet 638 von 638.
+
+**Die Lehre.** Bei der dritten Zahl, die nach einem Fund aussieht, ist der Prüfer verdächtig, nicht die Datei. Dazu: zwei weitere „Funde" dieses Bogens standen bereits als Erklärung in der Datei — nachlesen ist billiger als nachbessern.
 

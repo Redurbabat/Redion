@@ -148,6 +148,13 @@ const Agent = (() => {
    * lesen kann. Was ein Agent nicht darf, steht ihm gar nicht erst zur
    * Verfügung — die Rechte werden hier gefiltert, nicht im Text erbeten.
    * ======================================================================*/
+  /** Eine lebende Seite zum Titel — dieselbe Suche wie in `seiteLesen`,
+   *  einmal benannt statt zweimal geschrieben (§8). */
+  const seiteNachTitel = (titel: unknown): any =>
+    Object.values<any>(Store.cache.blocks).find(b =>
+      b.alive && b.type === 'page' && b.parentTable !== 'collection' &&
+      (b.text || '').toLowerCase().includes(String(titel ?? '').toLowerCase()));
+
   const WERKZEUGE: Record<string, any> = {
 
     suchen: {
@@ -198,6 +205,282 @@ const Agent = (() => {
         App.zeichneBaum();
         return 'Seite „' + (a.titel || 'Neue Seite') + '" angelegt mit ' +
                (a.bloecke || []).length + ' Blöcken.';
+      }
+    },
+
+    /* ── DAS ERSTE WERKZEUG, DAS BESTEHENDEN TEXT ANFASST (E656) ──────────
+       Anlegen kostet nichts: was neu ist, war vorher nicht da. Ändern
+       kostet den alten Stand, und §51 sagt, was davon wichtiger ist.
+       Deshalb zwei Vorkehrungen, und beide sind der ganze Unterschied
+       zwischen diesem Werkzeug und einem `String.replace`:
+
+       1 · VOR DEM SCHREIBEN EINE FASSUNG. `Store.updateBlock` sichert
+           keine; die automatische Sicherung hat eine Vier-Minuten-Sperre
+           UND einen Schalter (`autoVersionen`, E417). Wer ihn ausmacht,
+           hätte nach einer KI-Änderung gar nichts mehr. Also sichert das
+           Werkzeug selbst — wie „vor Wiederherstellung" und „vor
+           Quelltext-Änderung" es längst tun. Der Satz dazu steht wörtlich
+           in `werkzeuge.ts:924`: ein Schalter darf keinen Schutz
+           abschalten, um den gebeten wurde.
+
+       2 · GENAU EINMAL ODER GAR NICHT. Das ist die Lehre aus E650, zwei
+           Bögen alt: `String.replace` trifft das ERSTE Vorkommen, nicht
+           das gemeinte. Ein Modell, das „ändere ‚das Kabel' in ‚die
+           Leitung'" sagt, weiss nicht, dass „das Kabel" dreimal dasteht.
+           Kommt die Stelle nicht genau einmal vor, wird nichts geändert
+           und die Zahl genannt. Eine Absage ist billig; eine falsch
+           ersetzte Stelle merkt niemand. */
+    textBearbeiten: {
+      recht: 'bearbeiten',
+      beschreibung: 'Ersetzt eine EINDEUTIGE Textstelle auf einer Seite. Die Stelle muss ' +
+        'genau einmal vorkommen, sonst wird nichts geändert. Der alte Stand bleibt als ' +
+        'Fassung erhalten. Argument: {"titel":"Seite","alt":"genauer alter Wortlaut",' +
+        '"neu":"neuer Wortlaut"}',
+      lauf: async (a: any, protokoll: any) => {
+        const alt = String((a && a.alt) ?? '');
+        const neuerText = String((a && a.neu) ?? '');
+        if (!alt) return 'Ohne „alt" ist nicht zu erkennen, welche Stelle gemeint ist. Nichts geändert.';
+        const seite = seiteNachTitel(a && a.titel);
+        if (!seite) return 'Keine Seite gefunden, die „' + (a && a.titel) + '" heisst.';
+        if (!Konten.darf('bearbeiten', seite.id))
+          return 'Diese Seite darfst du nicht ändern.';
+
+        /* WIE VIELE BLÖCKE ENTHALTEN DIE STELLE, und wie oft je Block?
+           Beide Zahlen werden gebraucht: zwei Treffer in einem Block sind
+           genauso mehrdeutig wie je einer in zwei Blöcken. */
+        const zaehle = (heu: string, nadel: string): number => {
+          let n = 0, i = heu.indexOf(nadel);
+          while (i >= 0) { n++; i = heu.indexOf(nadel, i + nadel.length); }
+          return n;
+        };
+        const treffer = Store.childrenOf(seite.id)
+          .filter((b: any) => b.alive && typeof b.text === 'string' && b.text.includes(alt))
+          .map((b: any) => ({ b, wie: zaehle(String(b.text), alt) }));
+        const gesamt = treffer.reduce((n: number, t: any) => n + t.wie, 0);
+
+        if (!gesamt)
+          return 'Die Stelle „' + alt.slice(0, 60) + '" steht nicht auf dieser Seite. ' +
+                 'Nichts geändert. Lies die Seite und nimm den Wortlaut genau so, wie er dasteht.';
+        if (gesamt > 1)
+          return 'Die Stelle „' + alt.slice(0, 60) + '" steht ' + gesamt + '-mal auf dieser Seite' +
+                 (treffer.length > 1 ? ' (in ' + treffer.length + ' Blöcken)' : ' (im selben Block)') +
+                 '. Es ist nicht zu erkennen, welche gemeint ist — deshalb wurde NICHTS geändert. ' +
+                 'Nimm mehr Text drumherum, bis die Stelle eindeutig ist.';
+
+        const ziel = treffer[0].b;
+        const vorher = String(ziel.text);
+
+        /* DIE FASSUNG KOMMT VOR DEM SCHREIBEN, nicht danach — sonst hielte
+           sie den neuen Stand fest, und das Alte wäre weg. */
+        try {
+          await Store.versionSpeichern(seite.id, 'vor KI-Änderung');
+        } catch (e: unknown) {
+          return 'Die Sicherungsfassung liess sich nicht schreiben, deshalb wurde nichts ' +
+                 'geändert: ' + (e instanceof Error ? e.message : String(e));
+        }
+
+        const nachher = vorher.replace(alt, neuerText);
+        /* `herkunft: 'ki'` AUCH AN EINEM BLOCK, DEN EIN MENSCH GESCHRIEBEN
+           HAT. Zwei Fehler sind möglich, und dieser ist der kleinere: der
+           Streifen sagt „hier war die KI", nicht „das ist ganz von ihr".
+           Nicht zu markieren hiesse, eine KI-Änderung unsichtbar zu machen —
+           und genau dafür gibt es E307. */
+        Store.updateBlock(ziel.id, { text: nachher, herkunft: 'ki' });
+        protokoll.ids.push(ziel.id);
+        App.zeichneSeite();
+        return 'Geändert auf „' + (seite.text || 'Ohne Titel') + '":\n' +
+               'vorher: ' + vorher.slice(0, 200) + '\n' +
+               'nachher: ' + nachher.slice(0, 200) + '\n' +
+               'Der alte Stand liegt als Fassung „vor KI-Änderung" im Verlauf der Seite.';
+      }
+    },
+
+    /* ── DIE DREI, DIE REDUR GENANNT HAT (E655) ───────────────────────────
+       „lernkarten erstellen pdf elssen, tabelas usw". Alle drei legen nur an
+       oder lesen — keines fällt unter das Tor aus E654, und genau deshalb
+       durften sie im selben Zug kommen.
+
+       WARUM NICHT DER SCHNELLBEFEHL. „Mache aus dieser Seite Karteikarten"
+       gibt es seit langem. Er schreibt TEXT ins Chatfenster, und was dort
+       steht, lernt niemand: die Lernwelt zählt `flashcard`-Blöcke, nicht
+       Absätze. Der Unterschied zwischen „sieht aus wie Karteikarten" und
+       „ist eine Karteikarte" ist genau der, den `test547` misst —
+       `Learning.cards()` vorher und nachher. */
+    karteikartenAnlegen: {
+      recht: 'bearbeiten',
+      beschreibung: 'Legt echte Lernkarten an, die im Lernzentrum auftauchen. Argument: ' +
+        '{"titel":"Name der Kartenseite","karten":[{"frage":"…","antwort":"…"}]}',
+      lauf: async (a: any, protokoll: any) => {
+        const karten = Array.isArray(a && a.karten) ? a.karten : [];
+        if (!karten.length) return 'Keine Karten angegeben. Nichts angelegt.';
+        const unterId = App.aktuelleSeite();
+        if (!Konten.darf('bearbeiten', unterId))
+          return 'Hier darfst du nichts anlegen.';
+        const seite = Store.addPage(unterId,
+          { text: String((a && a.titel) || 'Lernkarten'), icon: '🎴' });
+        let gezaehlt = 0;
+        karten.forEach((k: any) => {
+          const frage = String((k && k.frage) || '').trim();
+          const antwort = String((k && k.antwort) || '').trim();
+          if (!frage) return;
+          /* `Frage :: Antwort` ist KEINE Formatierung, sondern das Format:
+             `Learning.splitCard` trennt an `::`, und ohne die zwei Punkte
+             steht dort „(noch keine Antwort)". Eine Karte ohne Antwort ist
+             keine Karte. */
+          Store.addBlock(seite.id, 'flashcard',
+            { text: frage + ' :: ' + (antwort || '…'), herkunft: 'ki' });
+          gezaehlt++;
+        });
+        protokoll.ids.push(seite.id);
+        App.zeichneBaum();
+        return gezaehlt + ' Lernkarten auf der Seite „' + (seite.text || 'Lernkarten') +
+               '" angelegt. Sie stehen ab sofort im Lernzentrum zur Wiederholung bereit.';
+      }
+    },
+
+    /* PDF LESEN, UND ZWAR GEZIELT. Der Wortlaut einer eingelesenen Seite
+       steht seit E107 in `suchtext` (nicht in `text` — `text` ist, was ein
+       Mensch geschrieben hat). Über `suchen` war er zufällig erreichbar:
+       wer nach einem Stichwort fragte, bekam einen Ausschnitt. „Lies mir
+       Seite 4 bis 6 des Skripts" ging nicht.
+
+       KEINE EIGENE RECHTEPRÜFUNG NÖTIG? Doch — `seiteLesen` prüft sie auch,
+       und aus demselben Grund (E331): gelesen wird eine bestimmte Seite,
+       also entscheidet deren Freigabe, nicht die Rolle im Allgemeinen. */
+    pdfLesen: {
+      recht: 'lesen',
+      beschreibung: 'Liest den Text eines eingelesenen PDF-Dokuments, wahlweise nur ' +
+        'eine Seitenspanne. Argument: {"titel":"Name des Dokuments","von":1,"bis":5}',
+      lauf: async (a: any) => {
+        const doku = seiteNachTitel(a && a.titel);
+        if (!doku) return 'Kein Dokument gefunden, das „' + (a && a.titel) + '" heisst.';
+        if (!Konten.darf('lesen', doku.id)) return 'Dieses Dokument darfst du nicht lesen.';
+        const seiten = Store.childrenOf(doku.id)
+          .filter((b: any) => b.alive && b.type === 'pdfseite')
+          .sort((x: any, y: any) => (Number(x.nr) || 0) - (Number(y.nr) || 0));
+        if (!seiten.length)
+          return 'Die Seite „' + (doku.text || '') + '" enthält keine eingelesenen PDF-Seiten.';
+        const von = Number(a && a.von) > 0 ? Number(a.von) : 1;
+        const bis = Number(a && a.bis) > 0 ? Number(a.bis) : Number.MAX_SAFE_INTEGER;
+        const gewaehlt = seiten.filter((b: any) => {
+          const n = Number(b.nr) || 0;
+          return n >= von && n <= bis;
+        });
+        if (!gewaehlt.length)
+          return 'Das Dokument hat ' + seiten.length + ' Seiten — ' + von + ' bis ' +
+                 (bis === Number.MAX_SAFE_INTEGER ? 'Ende' : bis) + ' ist nicht darunter.';
+        /* GEKÜRZT WIRD AM ENDE UND MIT ANSAGE. Ein Skript kann hundert
+           Seiten haben; was nicht mehr hineinpasst, wird genannt und nicht
+           stillschweigend abgeschnitten — sonst hält das Modell die halbe
+           Seite für die ganze. */
+        const GRENZE = 6000;
+        let raus = '';
+        let bisSeite = 0;
+        for (const b of gewaehlt) {
+          const stueck = 'Seite ' + (b.nr || '?') + ':\n' +
+            String(b.suchtext || b.ocrText || '(kein Text auf dieser Seite)') + '\n\n';
+          if (raus.length + stueck.length > GRENZE) break;
+          raus += stueck;
+          bisSeite = Number(b.nr) || bisSeite;
+        }
+        const rest = gewaehlt.length - gewaehlt.filter((b: any) => (Number(b.nr) || 0) <= bisSeite).length;
+        return raus.trim() +
+          (rest > 0 ? '\n\n[' + rest + ' weitere Seiten passen nicht mehr in eine Antwort. ' +
+                      'Frag gezielt nach ab Seite ' + (bisSeite + 1) + '.]' : '');
+      }
+    },
+
+    /* EINE EINFACHE TABELLE IM TEXT — nicht dasselbe wie `datenbankAnlegen`.
+       Eine Datenbank hat ein Schema, Ansichten und Zeilen, die eigene Seiten
+       sind; eine Tabelle sind drei mal vier Zellen mitten im Absatz. Redurs
+       „tabelas" meint beides, und das zweite fehlte ganz.
+
+       `type:'table'` mit `rows: string[][]`, wie der Zeichner es liest
+       (`zeichenflaeche.ts:1179`): die Kopfzeile ist die erste Zeile, nicht
+       ein eigenes Feld. */
+    tabelleAnlegen: {
+      recht: 'bearbeiten',
+      beschreibung: 'Legt eine einfache Tabelle auf der offenen Seite an. Argument: ' +
+        '{"kopfzeile":["Spalte A","Spalte B"],"zeilen":[["a1","b1"],["a2","b2"]]}',
+      lauf: async (a: any, protokoll: any) => {
+        const kopf = Array.isArray(a && a.kopfzeile) ? a.kopfzeile.map((x: any) => String(x ?? '')) : [];
+        const zeilen = Array.isArray(a && a.zeilen) ? a.zeilen : [];
+        if (!kopf.length && !zeilen.length) return 'Weder Kopfzeile noch Zeilen. Nichts angelegt.';
+        const unterId = App.aktuelleSeite();
+        if (!Konten.darf('bearbeiten', unterId))
+          return 'Hier darfst du nichts anlegen.';
+        /* ALLE ZEILEN GLEICH BREIT. Eine kurze Zeile zeichnete sonst eine
+           Tabelle mit Löchern, und wer dann hineintippt, schreibt in eine
+           Zelle, die es im Bestand nicht gibt. */
+        const breite = Math.max(kopf.length,
+          ...zeilen.map((z: any) => (Array.isArray(z) ? z.length : 0)), 1);
+        const fuellen = (z: any[]): string[] => {
+          const r = (Array.isArray(z) ? z : []).map((x: any) => String(x ?? ''));
+          while (r.length < breite) r.push('');
+          return r.slice(0, breite);
+        };
+        const rows: string[][] = [];
+        if (kopf.length) rows.push(fuellen(kopf));
+        zeilen.forEach((z: any) => rows.push(fuellen(z)));
+        const b = Store.addBlock(unterId, 'table',
+          { rows, kopfZeile: kopf.length > 0, herkunft: 'ki' });
+        protokoll.ids.push(b.id);
+        App.zeichneSeite();
+        return 'Tabelle mit ' + rows.length + ' Zeilen und ' + breite +
+               ' Spalten auf der offenen Seite angelegt.';
+      }
+    },
+
+    /* ── DAS EINZIGE WERKZEUG, DAS ETWAS WEGNIMMT (E654) ──────────────────
+       Redur am 20. September 2026: „die ai teil darf mehr machen … alles
+       machen kann ausser ohne meine bestetigung etwas löschen."
+
+       Beide Hälften stehen hier. Die KI DARF löschen — vorher konnte sie es
+       gar nicht, und eine Regel, die nur gilt, weil es die Handlung nicht
+       gibt, ist keine Regel, sondern eine Lücke im Können.
+
+       DAS TOR SITZT NICHT IN DIESER FUNKTION, sondern in der Schleife
+       (`recht === 'loeschen'`, weiter unten). Ein Werkzeug, das selbst
+       fragen müsste, ist ein Werkzeug, bei dem das Fragen beim nächsten Mal
+       vergessen wird. So gilt die Grenze für JEDES künftige Löschwerkzeug,
+       ohne dass jemand daran denken muss.
+
+       UND ES LÖSCHT NICHT — es legt in den Papierkorb. `Store.trashBlock`
+       setzt `alive:false` und `trashedAt`; wiederherstellbar, wie jede
+       Löschung in Redion. §43 („nichts löschen ohne Rückfrage") und §51
+       gelten für die KI wie für jede Hand: ein Ja ist die Erlaubnis zum
+       Wegräumen, nicht zum Vernichten. */
+    seiteLoeschen: {
+      recht: 'loeschen',
+      beschreibung: 'Legt eine Seite in den Papierkorb. Sie bleibt wiederherstellbar. ' +
+        'Der Mensch wird vorher jedes Mal gefragt. Argument: {"titel":"Name der Seite"}',
+      /* Was im Tor stehen soll, bevor jemand Ja sagt. Kein Text aus dem
+         Modell — was gelöscht wird, sagt der Bestand, nicht die KI. */
+      vorschau: (a: any) => {
+        const p2 = seiteNachTitel(a && a.titel);
+        if (!p2) return { text: 'Keine Seite gefunden, die „' + (a && a.titel) + '" heisst.',
+                          objekte: 0 };
+        const tief = (id: string, t: number): number => t > 3 ? 0 :
+          Store.childrenOf(id).filter((k: any) => k.alive)
+            .reduce((n: number, k: any) => n + 1 + tief(k.id, t + 1), 0);
+        const kinder = tief(p2.id, 0);
+        return { text: 'Seite „' + (p2.text || 'Ohne Titel') + '" mit ' + kinder +
+                       ' Blöcken darunter kommt in den Papierkorb.',
+                 objekte: kinder + 1, id: p2.id };
+      },
+      lauf: async (a: any, protokoll: any) => {
+        const p2 = seiteNachTitel(a && a.titel);
+        if (!p2) return 'Keine Seite gefunden, die „' + (a && a.titel) + '" heisst. Nichts gelöscht.';
+        if (!Konten.darf('loeschen', p2.id))
+          return 'Diese Seite darfst du nicht löschen.';
+        const name = p2.text || 'Ohne Titel';
+        Store.trashBlock(p2.id);
+        /* Damit „Zurücknehmen" den Schritt findet — dieselbe Liste, die auch
+           angelegte Seiten führt. */
+        if (protokoll && protokoll.ids) protokoll.ids.push(p2.id);
+        App.zeichneBaum();
+        return 'Seite „' + name + '" liegt im Papierkorb. ' +
+               'Sie ist dort wiederherstellbar — endgültig gelöscht ist nichts.';
       }
     },
 
@@ -431,6 +714,15 @@ const Agent = (() => {
         (x.name || '').toLowerCase().includes(String(a?.datenbank || '').toLowerCase()));
       objekte = c ? Math.min(15, Store.rowsOf(c.id).length) + 1 : 1;
       text = 'höchstens ' + Math.max(0, objekte - 1) + ' Feldwert(e) und die Spalteneinstellung';
+    } else if (werkzeug === 'textBearbeiten') {
+      /* EIN BLOCK, UND DAS TOR SOLL DEN WORTLAUT ZEIGEN. „Höchstens ein
+         gespeichertes Objekt" stimmt zwar, sagt aber nicht, WAS sich
+         ändert — und genau das ist die Frage, die der Mensch am Tor
+         beantworten muss. */
+      objekte = 1;
+      text = 'eine Textstelle auf „' + String(a?.titel || '?') + '": ' +
+             '„' + String(a?.alt || '').slice(0, 80) + '" → ' +
+             '„' + String(a?.neu || '').slice(0, 80) + '"';
     } else if (werkzeug === 'worker') {
       text = 'Worker-Eingabe und -Ergebnis, keine direkten Arbeitsbereichsdaten';
     } else if (WERKZEUGE[werkzeug]?.recht === 'bearbeiten') {
@@ -476,22 +768,29 @@ const Agent = (() => {
     { id: 'assistent', icon: '🧭', name: 'Persönlicher Assistent',
       text: 'Sucht im Arbeitsbereich, fasst zusammen, legt Seiten und Einträge an.',
       werkzeuge: ['suchen','seiteLesen','seiteAnlegen','zeileAnlegen','datenbankLesen',
-                  'kalenderLesen','mailLesen','fertig'],
+                  'kalenderLesen','mailLesen','pdfLesen','tabelleAnlegen',
+                  'karteikartenAnlegen','textBearbeiten','seiteLoeschen','fertig'],
       anweisung: 'Du bist ein persönlicher Assistent. Arbeite ruhig und knapp. ' +
         'Suche zuerst im Arbeitsbereich, bevor du etwas behauptest. ' +
-        'Wenn du etwas anlegst, sag genau, was du angelegt hast.' },
+        'Wenn du etwas anlegst, sag genau, was du angelegt hast. ' +
+        'Löschen darfst du nur, wenn der Mensch es verlangt — und er wird ' +
+        'vor jeder einzelnen Löschung gefragt. Sagt er nein, arbeite ohne ' +
+        'diesen Schritt weiter.' },
 
     { id: 'recherche', icon: '🔍', name: 'Rechercheur',
       text: 'Sammelt aus mehreren Quellen, vergleicht und schreibt mit Quellenangabe.',
-      werkzeuge: ['suchen','seiteLesen','datenbankLesen','nachschlagen','seiteAnlegen','fertig'],
+      werkzeuge: ['suchen','seiteLesen','datenbankLesen','nachschlagen','seiteAnlegen',
+                  'pdfLesen','tabelleAnlegen','fertig'],
       anweisung: 'Du recherchierst. Sammle erst breit, dann ordne. Nenne zu jeder Aussage, ' +
         'woher sie stammt. Was du nicht belegen kannst, kennzeichnest du als Vermutung.' },
 
     { id: 'redakteur', icon: '✍️', name: 'Redakteur',
       text: 'Überarbeitet Texte, ohne den Sinn zu verändern.',
-      werkzeuge: ['seiteLesen','suchen','fertig'],
+      werkzeuge: ['seiteLesen','suchen','pdfLesen','textBearbeiten','fertig'],
       anweisung: 'Du überarbeitest Texte. Der Sinn bleibt, die Sprache wird klarer. ' +
-        'Keine neuen Behauptungen, keine Ausschmückung. Schreib in ganzen Sätzen.' },
+        'Keine neuen Behauptungen, keine Ausschmückung. Schreib in ganzen Sätzen. ' +
+        'Zum Ändern liest du die Seite ZUERST und nimmst den alten Wortlaut ' +
+        'buchstabengetreu — eine Stelle, die mehrfach vorkommt, wird nicht geändert.' },
 
     { id: 'bau', icon: '🗂', name: 'Datenbank-Baumeister',
       text: 'Entwirft Datenbanken, legt Spalten an und füllt sie.',
@@ -856,6 +1155,19 @@ const Agent = (() => {
       gesperrt = gesperrt.concat(nutzbar.filter((n: any) => !nurLesen.includes(n)));
       nutzbar = nurLesen;
     }
+    /* UND LÖSCHEN GEHT OHNE ZUSCHAUER NIE (E654) — auch nicht mit
+       `darfAllein`. Die Erlaubnis, allein zu arbeiten, ist die Erlaubnis zu
+       schreiben, nicht die, etwas wegzunehmen: ein Ja kann nur geben, wer
+       da ist. Das Tor in der Schleife lehnt denselben Fall noch einmal ab —
+       hier wird das Werkzeug gar nicht erst angeboten, damit das Modell
+       nicht gegen eine Wand plant. */
+    if (ohneAufsicht) {
+      const loeschend = nutzbar.filter((n: any) => WERKZEUGE[n].recht === 'loeschen');
+      if (loeschend.length) {
+        gesperrt = gesperrt.concat(loeschend);
+        nutzbar = nutzbar.filter((n: any) => !loeschend.includes(n));
+      }
+    }
 
     const wissen = (a.wissen || []).map((wissensId: any) => {
       const p = Store.getBlock(wissensId);
@@ -929,7 +1241,64 @@ const Agent = (() => {
           hatFehler = true;
         } else {
           let darfAusfuehren = true;
-          if (wz.recht === 'bearbeiten') {
+
+          /* ══ DAS TOR VOR DEM LÖSCHEN (E654) ═══════════════════════════════
+           * Redurs Satz vom 20. September ist eine eigene Klasse, nicht eine
+           * strengere Stufe von `bearbeiten`: „alles machen kann ausser ohne
+           * meine bestetigung etwas löschen".
+           *
+           * Deshalb steht dieser Zweig VOR dem Bearbeiten-Zweig und teilt
+           * sich keine Zeile mit ihm. Drei Dinge, die dort richtig sind,
+           * wären hier falsch — jedes einzeln gemessen in `test546`:
+           *
+           *   `fragenModus() === 'nie'`   hiesse: nie fragen.  Gilt hier nicht.
+           *   „Für diesen Lauf erlauben"  hiesse: einmal reicht. Gibt es hier nicht.
+           *   `darfAllein` unbeaufsichtigt hiesse: löschen, während niemand
+           *                               zusieht. Wird hier abgelehnt.
+           *
+           * Ein Ja gilt für GENAU DIESEN Schritt. Zwei Löschungen sind zwei
+           * Fragen, und das ist keine Unbequemlichkeit, sondern der ganze
+           * Sinn: was hier verloren geht, holt niemand zurück (§51).
+           * ===============================================================*/
+          if (wz.recht === 'loeschen') {
+            const v = typeof wz.vorschau === 'function'
+              ? wz.vorschau(plan.argument || {})
+              : { text: 'Etwas wird entfernt.', objekte: 1 };
+            schritt.wirkung = { text: v.text, objekte: v.objekte || 1, bytes: 0, gross: false };
+
+            if (ohneAufsicht) {
+              /* NIEMAND KANN JA SAGEN, ALSO IST DIE ANTWORT NEIN. Einen
+                 Dialog zu öffnen, den keiner sieht, wäre schlimmer: der Lauf
+                 stünde bis zum Abbruch, und der nächste Bogen baute ihm eine
+                 Abkürzung. */
+              schritt.ergebnis = 'Nicht gelöscht: ' + v.text + ' Löschen braucht eine ' +
+                'ausdrückliche Bestätigung, und dieser Lauf hat keinen Zuschauer. ' +
+                'Schreib es als Vorschlag in deine Antwort.';
+              schritt.fehler = true;
+              hatFehler = true;
+              darfAusfuehren = false;
+            } else {
+              const antwortLoeschen = await mitAbbruch(Dialog.wahl({
+                titel: '🗑 ' + a.name + ' möchte etwas löschen',
+                text: v.text + '\n\n' +
+                      'Werkzeug: ' + plan.werkzeug + '\n' +
+                      (plan.gedanke ? 'Vorhaben: ' + plan.gedanke + '\n' : '') +
+                      'Betroffene Objekte: ' + (v.objekte || 1) + '\n' +
+                      'Argumente: ' + JSON.stringify(plan.argument || {}).slice(0, 400),
+                knoepfe: [
+                  { id: 'nein', text: 'Nicht löschen',
+                    hinweis: 'Der Agent bekommt eine Absage und arbeitet ohne diesen Schritt weiter.' },
+                  { id: 'ja', text: 'In den Papierkorb legen',
+                    hinweis: 'Nur diese eine Handlung. Wiederherstellbar über den Papierkorb.' }
+                ]
+              }), lauf.controller.signal);
+              if (antwortLoeschen !== 'ja') {
+                schritt.ergebnis = 'Der Mensch hat das Löschen abgelehnt. ' +
+                                   'Arbeite ohne diesen Schritt weiter oder werde fertig.';
+                darfAusfuehren = false;
+              }
+            }
+          } else if (wz.recht === 'bearbeiten') {
             const wirkung = wirkungPlanen(plan.werkzeug, plan.argument || {});
             schritt.wirkung = wirkung;
             const grenze = wirkungGrenze(lauf, wirkung);

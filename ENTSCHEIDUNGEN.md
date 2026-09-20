@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-631 Entscheidungen, E1 bis E653 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+639 Entscheidungen, E1 bis E659 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -696,6 +696,12 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E651** — Ein Schalter, der Sicherheit verspricht und nicht gelesen wird: das Datenbankmenü sagte „Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und schreiben", aber `coll.verbindungen` wurde nur geschrieben. Schlimmer noch die Anzeige — bei einer nie angefassten Datenbank stand bei JEDEM Dienst „aus", während der Spiegel lief. Jetzt beantwortet `Spiegel.darf` die Frage an einer Stelle, für Anzeige UND Sperre; gesperrt wird vor dem Netzruf, also auch das Lesen. `undefined` heisst erlaubt (Bestandsschutz), `[]` heisst gesperrt. Wächter `test543`.
 * **E652** — Das Teure war gebaut, das Billige fehlte: die ganze Abbruchkette des KI-Chats stand (`frage(…, {signal})`, abbrechbares `schlafen`, `signal` bis in `fetch`), nur `senden` reichte das dritte Argument nicht durch — und es gab keinen Knopf. Jetzt wird der Senden-Knopf für die Dauer des Laufs zum Stopp-Knopf (derselbe Knopf, §37; `aria-label` wechselt mit, §38), ein Abbruch behält die Teilantwort und sagt „Abgebrochen" statt „AbortError". Dazu der tote Menüpunkt „Meine Quellen", der ein HTML-Element an eine Funktion gab, die eine Liste erwartet. Wächter `test544`.
 * **E653** — Ein Griff, der nichts hält, und ein Blatt ohne Weg zurück: am Telefon ist `#ai` ein Blatt von unten, `#btn-ai` steht dort auf `display:none` (bausteine.css:300, :2119), `.ai-head` trug kein Kreuz, und Strg+J gibt es an einem Telefon nicht — einmal geöffnet, war das KI-Feld eine Sackgasse über der unteren Leiste (88vh, z-index 920 gegen 401). Dazu zeichnete `#ai::before` einen Wischgriff, dessen eigener Kommentar sagt, was er verspricht — gewischt werden konnte nichts (§47). Jetzt: ein Schliess-Knopf `#ai-zu` (44 px, `aria-label`) für BEIDE Bildschirme, und der Griff zieht wirklich (90 px Schwelle, darunter federt es zurück; nur unter 760 px, nur am Kopf, nicht auf den Knöpfen). Wächter `test545`.
+* **E654** — Die KI darf löschen, aber nie ohne ein ausdrückliches Ja: Redurs Satz „alles machen kann ausser ohne meine bestetigung etwas löschen" ist eine eigene Rechteklasse, keine strengere Stufe von `bearbeiten`. Vorher kannte der Agentenkatalog zwei Rechte (`lesen`, `bearbeiten`) und kein Löschwerkzeug — die Regel war nur Abwesenheit. Jetzt: `seiteLoeschen` mit `recht: "loeschen"`, und ein Tor in der SCHLEIFE (nicht im Werkzeug), das für jedes künftige Löschwerkzeug gilt. Drei Dinge, die beim Bearbeiten richtig sind, gelten dort nicht: `fragenModus() === "nie"`, „für diesen Lauf erlauben" und `darfAllein` unbeaufsichtigt. Gelöscht wird in den Papierkorb, nie endgültig (§43). Wächter `test546`.
+* **E655** — Lernkarten, PDF und Tabellen: Redurs erste Hälfte („lernkarten erstellen pdf elssen, tabelas"). Drei neue Agentenwerkzeuge, die nur anlegen und lesen — sie fallen nicht unter das Tor aus E654, und deshalb durften sie im selben Zug kommen. `karteikartenAnlegen` legt echte `flashcard`-Blöcke an, die `Learning.cards()` auch findet (der alte Schnellbefehl schrieb nur Text ins Chatfenster); `pdfLesen` gibt den Wortlaut einer bestimmten Seitenspanne aus `suchtext` (E107) statt ihn über die Suche zu streifen; `tabelleAnlegen` baut einen `table`-Block mit `rows`, den der Editor zeichnet. Alle drei tragen `herkunft: "ki"` und damit den Streifen aus E307. Wächter `test547`.
+* **E656** — Die KI bearbeitet Text, und das Alte bleibt holbar: `textBearbeiten` ist das erste Werkzeug, das BESTEHENDEN Text anfasst. Zwei Vorkehrungen machen den Unterschied zu einem `String.replace` — vor dem Schreiben eine Fassung „vor KI-Änderung" (unabhängig vom Schalter `autoVersionen` und von der Vier-Minuten-Sperre), und „genau einmal oder gar nicht": kommt die Stelle mehrfach vor, wird nichts geändert und die Zahl genannt (die Lehre aus E650, zwei Bögen alt). Der geänderte Block trägt danach `herkunft: "ki"`. Wächter `test548`.
+* **E657** — Der volle Lauf bekommt ein Werkzeug: `pruefungen/volllauf.mts` fährt alle Läufe in Stücken, merkt nach JEDEM Stück, wie weit er ist, und verträgt eine Liste, die sich unterwegs ändert. §30 beschrieb diese Arbeitsweise seit dem 3. September — es gab sie nur als Handgriff, und beim vorletzten vollen Lauf ist genau das schiefgegangen.
+* **E658** — Die Lückenliste sagt die Wahrheit über sich selbst: 33 OFFENE Lücken standen unterhalb der Überschrift „Anhang B · Was erledigt ist" — wer von oben las, hielt sie für erledigt (§35). Sie stehen jetzt oben unter „Weitere offene Lücken"; das Verschieben ist byteweise gegengeprüft. Dazu: ein Wort für „zu" statt fünf (GESCHLOSSEN, wie §35 es nennt), und die selbstgenannte Zahl stimmt wieder. Wächter `test549`.
+* **E659** — Die Doku zählt, was da ist: ein Wächter für §30s eigenen Satz („sie wird nicht geschätzt, sie wird gezählt") und für §34s „beides: Verzeichnis und Text". Er wurde gegen den Stand rot, den er selbst erzeugt hatte — 492 Dateien, 491 in der Doku. Vier Anläufe der Messung waren vorher zu eng und meldeten je eine erfundene Zahl; `ENTSCHEIDUNGEN.md` kennt drei Überschriftsformen, und die Regel, die hält, setzt keine voraus. Wächter `test550`.
 
 ---
 
@@ -53644,3 +53650,405 @@ gebaut war. Er prüft jetzt mit `elementFromPoint`, wer unter dem Finger
 liegt, und sagt es, wenn es nicht das Blatt ist. Das ist derselbe Fund wie
 an den vier Tagen davor, nur von der anderen Seite: ein roter Lauf ist noch
 kein Beweis.
+
+
+## E654 — Die KI darf löschen, aber nie ohne ein ausdrückliches Ja
+
+**Was wurde entschieden?** Löschen wird eine eigene Rechteklasse im
+Agentenkatalog (`recht: 'loeschen'`), mit einem eigenen Tor in der
+Ausführungsschleife — nicht im einzelnen Werkzeug. Das erste Werkzeug
+dieser Klasse ist `seiteLoeschen`; es legt in den Papierkorb und vernichtet
+nichts.
+
+**Warum?** Redur am 20. September 2026:
+
+> „die ai teil darf mehr machen z.B lernkarten erstellen pdf elssen,
+> tabelas usw alles machen kann ausser ohne meine bestetigung etwas
+> löschen"
+
+Zwei Sätze in einem, und der zweite ist der, der den ersten erst erlaubt:
+eine KI, die MEHR darf, braucht genau eine Grenze, die hält.
+
+**Der Stand vorher, gemessen.** Zwölf Werkzeuge, zwei Rechte:
+
+```txt
+Rechte im Katalog      ["lesen","bearbeiten"]
+mit Recht "loeschen"   []
+```
+
+Die KI konnte also gar nicht löschen. Das ist keine Sicherheit, sondern
+eine Lücke im Können — und eine Regel, die nur gilt, weil es die Handlung
+nicht gibt, hält beim ersten neuen Werkzeug nicht mehr.
+
+**Warum nicht einfach `bearbeiten` mit einer Warnung?** Weil das vorhandene
+Tor für `bearbeiten` (E295 ff.) an drei Stellen weicher ist, als Redurs
+Satz erlaubt — jede einzeln in `test546` gemessen:
+
+```txt
+fragenModus() === 'nie'        gar keine Frage
+„Für diesen Lauf erlauben"     ein Ja gilt für alle weiteren Schritte
+darfAllein + unbeaufsichtigt   Schreiben, während niemand zusieht
+```
+
+Jede dieser drei ist beim Bearbeiten richtig: wer einen Agenten dreissig
+Zeilen schreiben lässt, will nicht dreissigmal gefragt werden. Beim
+Löschen ist jede davon falsch. „Ohne meine Bestätigung" kennt kein
+„einmal reicht".
+
+**Warum das Tor in der Schleife und nicht im Werkzeug?** Ein Werkzeug, das
+selbst fragen muss, ist ein Werkzeug, bei dem das Fragen beim nächsten Mal
+vergessen wird. In der Schleife gilt die Grenze für jedes künftige
+Löschwerkzeug, ohne dass jemand daran denken muss — und `test546` § 7 misst
+zusätzlich, dass kein Werkzeug ausserhalb der Klasse `alive` anfasst.
+
+**Doppelt gesichert beim unbeaufsichtigten Lauf.** Löschwerkzeuge werden
+dort gar nicht erst angeboten (das Modell plant nicht gegen eine Wand), und
+das Tor lehnt denselben Fall noch einmal ab. Bei einer Grenze, hinter der
+Daten liegen, ist die zweite Sperre keine Redundanz.
+
+**Was war die Alternative?** Ein „Immer erlauben"-Haken in den
+Einstellungen. Genau den gibt es absichtlich nicht: er wäre einmal
+angeklickt und danach nie wieder gesehen, und Redurs Satz sagt das
+Gegenteil.
+
+**Was kostet es?** Bei zwei Löschungen zwei Fragen. Das ist der Preis, und
+er ist der Sinn: was hier verloren geht, holt niemand zurück (§51).
+
+**Der Wächter.** `test546`, dreizehn Messungen. Die Gegenprobe ist die, auf
+die es ankommt: mit abgehängtem Tor druckt der Lauf die Zeile, die Redur
+verhindert haben will — *„Seite ‚Weg damit' liegt im Papierkorb"*, bei
+**null** Dialogen, nachdem der Mensch Nein gesagt hatte.
+
+**Was dieser Eintrag NICHT einlöst.** Redurs erster Satz nennt Lernkarten,
+PDF-Lesen und Tabellen. Die sind der nächste Bogen; dieser hier baut die
+Grenze, die sie sicher macht — §46: Daten zuerst, Funktionen danach.
+
+
+## E655 — Lernkarten, PDF und Tabellen
+
+**Was wurde entschieden?** Drei neue Werkzeuge im Agentenkatalog:
+`karteikartenAnlegen`, `pdfLesen`, `tabelleAnlegen`. Alle drei legen an
+oder lesen; keines nimmt etwas weg.
+
+**Warum?** Redurs Satz vom 20. September nennt sie beim Namen: „lernkarten
+erstellen pdf elssen, tabelas usw". E654 hat die Grenze gebaut, die das
+Erweitern sicher macht — das hier ist das Erweitern.
+
+**Was vorher fehlte, nachgesehen und nicht vermutet:**
+
+```txt
+Lernkarten   Schnellbefehl „Mache aus dieser Seite Karteikarten" — er
+             schreibt TEXT ins Chatfenster. `flashcard`-Blöcke entstanden
+             daraus nie.
+PDF          Der Wortlaut steht in `suchtext` (E107) und war über `suchen`
+             zufällig erreichbar. „Seite 4 bis 6 des Skripts" ging nicht.
+Tabellen     `datenbankAnlegen` gibt es. Eine einfache Tabelle im Text
+             (`type:'table'` mit `rows`) konnte die KI nicht anlegen.
+```
+
+**Der Unterschied, um den es bei den Lernkarten geht.** „Sieht aus wie
+Karteikarten" und „ist eine Karteikarte" sind nicht dasselbe: das
+Lernzentrum zählt `flashcard`-Blöcke, nicht Absätze, und `Learning.splitCard`
+trennt an `::`. Eine Karte ohne die zwei Punkte zeigt im Lernzentrum
+„(noch keine Antwort)". Deshalb misst `test547` nicht, ob Blöcke entstehen,
+sondern ob `Learning.cards()` sie **zählt**.
+
+Die Gegenprobe zeigt, warum das nicht zu viel verlangt ist: schreibt das
+Werkzeug `text` statt `flashcard`, sagt es weiterhin *„3 Lernkarten … stehen
+ab sofort im Lernzentrum bereit"* — und `Learning.cards()` steht bei
+**0**. Eine Erfolgsmeldung ist kein Erfolg.
+
+**Warum `pdfLesen` kürzt und es sagt.** Ein Skript kann hundert Seiten
+haben. Was nicht mehr in eine Antwort passt, wird beim Namen genannt
+(„[7 weitere Seiten passen nicht mehr … Frag gezielt nach ab Seite 12.]")
+statt stillschweigend abgeschnitten — sonst hält das Modell die halbe Seite
+für die ganze. Dasselbe Prinzip wie `enthaelt`/`fehlt` im `.redion`-Manifest
+(§52.10): eine Auslassung, die sich nicht nennt, ist die gefährliche.
+
+**Warum alle Zeilen der Tabelle gleich breit werden.** Eine kurze Zeile
+zeichnete sonst eine Tabelle mit Löchern, und wer dort hineintippt,
+schreibt in eine Zelle, die es im Bestand nicht gibt.
+
+**Was war die Alternative?** Ein einziges Werkzeug „blockAnlegen" mit einem
+Typ-Argument. Dagegen spricht §8: das Modell liest die Beschreibungen, und
+drei genaue schlagen eine allgemeine. Ausserdem braucht jede der drei eine
+eigene Prüfung — die Kartenseite eine andere als die Tabelle.
+
+**Was kostet es?** Drei Werkzeuge mehr im Systemtext jedes Agenten, der sie
+hat. Verteilt sind sie sparsam: der Assistent bekommt alle drei, der
+Rechercheur `pdfLesen` und `tabelleAnlegen`, der Redakteur nur `pdfLesen`.
+
+**Die Herkunft reist mit.** Alle drei setzen `herkunft: 'ki'`, und damit
+zeichnet der Editor den lila Streifen aus E307 daneben. Auf dem Bild
+`bilder/kiTabelle-rechner-hell.png` ist er links an der Tabelle zu sehen:
+was die KI gebaut hat, sagt es von selbst.
+
+**Der Wächter.** `test547`, achtzehn Messungen. Gegen den alten Stand
+3/18 — die drei grünen waren „keines der drei darf löschen" und „nichts
+Vorhandenes wird angefasst", also genau die Zusagen, die auch ohne die
+Werkzeuge gelten.
+
+
+## E656 — Die KI bearbeitet Text, und das Alte bleibt holbar
+
+**Was wurde entschieden?** Ein Werkzeug `textBearbeiten`, das eine
+**eindeutige** Textstelle auf einer Seite ersetzt — mit einer
+Sicherungsfassung davor und einer Absage bei Mehrdeutigkeit.
+
+**Warum?** Redurs „usw." nach E655. Umschreiben, kürzen, übersetzen ging
+bisher nur über das Chatfenster; als Agentenwerkzeug fehlte es.
+
+**Was daran anders ist als bei allen Werkzeugen davor.** `seiteAnlegen`,
+`karteikartenAnlegen`, `tabelleAnlegen` legen an: was neu ist, war vorher
+nicht da, und ein Fehler kostet einen überflüssigen Block. `textBearbeiten`
+ist das erste, das **bestehenden** Text anfasst — und da kostet ein Fehler
+den alten Stand.
+
+### Vorkehrung 1 — vor dem Schreiben eine Fassung
+
+`Store.updateBlock` sichert keine. Die automatische Sicherung
+(`versionAutomatisch`) hat zwei Ausreden, jede für sich berechtigt:
+
+```txt
+Vier-Minuten-Sperre     eine Fassung je Seite und Viertelstunde reicht,
+                        wenn ein Mensch tippt
+Schalter autoVersionen  E417 — wer ihn ausmacht, will den Platz nicht
+                        ausgeben
+```
+
+Beide zusammen heissen: eine KI-Änderung könnte den einzigen Stand
+überschreiben, den es gab. Deshalb ruft das Werkzeug selbst
+`Store.versionSpeichern(seite.id, 'vor KI-Änderung')` — genau wie es „vor
+Wiederherstellung" (`fassungen.ts:326`) und „vor Quelltext-Änderung"
+(`werkzeuge.ts:1382`) längst tun. Der Satz dazu steht wörtlich in
+`werkzeuge.ts:924` und gilt hier genauso:
+
+> Ein Schalter darf keinen Schutz abschalten, um den gebeten wurde.
+
+Und die Fassung kommt **vor** dem Schreiben, nicht danach — sonst hielte
+sie den neuen Stand fest, und das Alte wäre weg. Scheitert sie, wird gar
+nicht geändert.
+
+### Vorkehrung 2 — genau einmal oder gar nicht
+
+Das ist E650, zwei Bögen alt, von der anderen Seite: `String.replace`
+trifft das ERSTE Vorkommen, nicht das gemeinte. Ein Modell, das „ändere
+‚das Kabel' in ‚die Leitung'" plant, weiss nicht, dass „das Kabel" dreimal
+dasteht — es hat die Seite gelesen, nicht gezählt.
+
+Gezählt werden deshalb zwei Dinge, und beide müssen eins ergeben: in wie
+vielen Blöcken die Stelle steht, und wie oft je Block. Sonst:
+
+```txt
+Die Stelle „Das Kabel" steht 2-mal auf dieser Seite (im selben Block).
+Es ist nicht zu erkennen, welche gemeint ist — deshalb wurde NICHTS
+geändert. Nimm mehr Text drumherum, bis die Stelle eindeutig ist.
+```
+
+Eine Absage ist billig: das Modell nimmt beim nächsten Schritt mehr Text
+drumherum. Eine falsch ersetzte Stelle merkt niemand.
+
+**Was war die Alternative?** Die Stelle über einen Blockindex ansprechen
+(„Block 3"). Dagegen spricht, dass jede Änderung an der Seite die Indizes
+verschiebt — und der Plan des Modells entsteht einen Schritt, bevor er
+ausgeführt wird. Der Wortlaut verschiebt sich nicht.
+
+**Und `herkunft: 'ki'` auch an einem Block, den ein Mensch geschrieben
+hat.** Zwei Fehler sind hier möglich, und dieser ist der kleinere: der
+Streifen aus E307 sagt „hier war die KI", nicht „das ist ganz von ihr".
+Nicht zu markieren hiesse, eine KI-Änderung unsichtbar zu machen — und
+genau dagegen wurde der Streifen gebaut.
+
+**Was kostet es?** Eine Fassung je Änderung. Das Ausdünnen in
+`fassungenAusduennen` räumt sie mit allen anderen weg (§15).
+
+**Das Tor sagt jetzt, was es ändert.** `wirkungPlanen` hat für dieses
+Werkzeug einen eigenen Zweig: statt „höchstens ein gespeichertes Objekt" —
+richtig und ohne jeden Nutzen für die Entscheidung — steht dort der
+Wortlaut vorher und nachher. Zu sehen auf
+`bilder/kiTextTor-rechner-hell.png`.
+
+**Der Wächter.** `test548`, siebzehn Messungen, gegen den alten Stand
+2/17. Zwei Gegenproben, beide gefahren:
+
+```txt
+Fassung abgehängt              „0 → 0" und „KEINE FASSUNG" — der alte
+                               Wortlaut wäre für immer weg
+Eindeutigkeitsprüfung abgehängt „Die Leitung liegt. Das Kabel bleibt."
+                               — der E650-Fehler, wörtlich zurück
+```
+
+
+## E657 — Der volle Lauf bekommt ein Werkzeug
+
+**Was wurde entschieden?** `pruefungen/volllauf.mts` — der volle Prüflauf in
+Stücken, wiederaufnehmbar, mit einer Merkdatei.
+
+**Warum?** §30 beschreibt diese Arbeitsweise seit dem 3. September 2026, und
+Redur hat sie selbst entschieden. Es gab sie nur als **Handgriff**: zehn
+Nummern abtippen, warten, die nächsten zehn abtippen — und im Kopf behalten,
+wo man war. Beim vorletzten vollen Lauf ist genau das schiefgegangen.
+
+Eine Arbeitsweise, die in einer Regel steht und nirgends im Werkzeugkasten,
+wird beim dritten Mal anders gemacht.
+
+**Drei Dinge, die das Werkzeug ausdrücklich tut:**
+
+```txt
+nach JEDEM Stück schreiben   sonst wäre bei einem Abbruch genau das
+                             verloren, wogegen die Merkdatei gebaut ist
+Liste darf wachsen           ein Prüflauf, der mitten im Sweep entsteht,
+                             gehört dazu und ist noch nicht fertig
+kein Schuldiger erfunden     sagt ein Stück rot, ohne dass die Ausgabe den
+                             Lauf nennt, gilt das GANZE Stück als rot
+```
+
+Der dritte ist der, über den man leicht hinwegliest. Ein Werkzeug, das aus
+einem roten Stück irgendeinen Lauf herausrät, schickt den nächsten Menschen
+auf die falsche Fährte.
+
+**Was war die Alternative?** Ein Bash-Einzeiler mit `xargs`. Dagegen steht
+§54 (keine neue Sprache ohne Eintrag in E28) und der Umstand, dass genau die
+Merkdatei fehlen würde, um die es geht.
+
+**Was kostet es?** 170 Zeilen und eine Datei in `.gitignore`.
+
+**Der Fund des ersten Versuchs** steht jetzt in §30, weil er sich
+wiederholen wird: ein `git worktree` enthält, was **eingecheckt** ist. Ein
+Werkzeug, das noch im Hauptbaum liegt, gibt es dort nicht — der erste
+Anlauf scheiterte nach vier Sekunden mit `Cannot find module`.
+
+
+## E658 — Die Lückenliste sagt die Wahrheit über sich selbst
+
+**Was wurde entschieden?** Die offenen Lücken stehen oben, die geschlossenen
+unten, und „geschlossen" heisst überall dasselbe Wort.
+
+**Warum?** §35 ist **[hart]** und begründet sich selbst:
+
+> Eine bekannte Lücke ist besser als ein stiller Fehler.
+
+Gemessen am 20. September, vor dem Bogen:
+
+```txt
+101 Einträge · 52 offen · 49 geschlossen
+33 davon OFFEN und unterhalb von „Anhang B · Was erledigt ist"
+5  Überschriften mit „abgearbeitet", „erledigt" oder „GELANDET"
+die Datei nannte sich selbst 103 / 53 / 50
+```
+
+Eine Lückenliste, die offene Punkte unter „Was erledigt ist" führt, ist
+selbst der stille Fehler, gegen den sie geschrieben wurde. Wer von oben
+liest, hält sie für erledigt.
+
+**Das stand schon in der Datei.** Jemand hatte es gefunden und das
+Umsortieren vertagt — mit der Begründung, eine 9500-Zeilen-Datei
+umzustellen, „während achtzehn Läufe rot waren", sei die falsche
+Reihenfolge (§46). Das war richtig. Die achtzehn sind weg.
+
+**Wie verschoben wurde.** Nicht von Hand. Die Datei wird in Blöcke zerlegt
+(L-Überschrift bis zur nächsten L- oder Ebene-1-Überschrift), und **bevor**
+irgendetwas bewegt wird, muss das Zusammensetzen der Blöcke die Datei
+byteweise reproduzieren. Danach: jeder Block genau einmal in der neuen
+Ordnung, gegengeprüft über einen Abgleich der Blocktexte. 6816 Zeilen sind
+gewandert; keine ist verlorengegangen (§43).
+
+**Warum die 33 nicht einsortiert wurden.** Sie stehen in einem eigenen
+Abschnitt „Weitere offene Lücken · in der Reihenfolge ihres Fundes" und
+nicht in den vier Dringlichkeitsstufen oben. Welche Lücke wie dringend ist,
+ist eine Entscheidung je Eintrag, und die gehört Redur. Eine falsche
+Einsortierung wäre derselbe stille Fehler in neu.
+
+**Ein Wort für „zu".** §35 nennt es: GESCHLOSSEN. Fünf Überschriften sagten
+etwas anderes; drei Wörter für dieselbe Sache heissen, dass niemand zählen
+kann. Der alte Wortlaut steht, wo er etwas trug, in Klammern daneben
+(`L157 … — GESCHLOSSEN (gelandet)`).
+
+**Und die Überschrift „Hier endet Anhang B"** heisst jetzt „Anhang C ·
+Geschlossene Lücken in der Reihenfolge ihres Fundes". Eine Überschrift, die
+sagt, was AUFHÖRT, sagt nichts über die siebenundsechzig Einträge, die ihr
+folgen.
+
+**Der Wächter.** `test549`, sechs Messungen, gegen den alten Stand 3/6. Er
+liest nur eine Datei — kein Browser, kein Port —, darf also auch neben einem
+vollen Lauf gefahren werden.
+
+**Und er hat zuerst sich selbst korrigiert, zweimal.** Der erste Anlauf
+hielt das Wort „offen" im TITEL von L181 für eine Statusangabe. Der zweite
+verglich „genannt 20/2026/103" gegen „gemessen 101/52/49" — die ersten
+beiden Zahlen waren das Datum im selben Satz. Beide Male war der Lauf rot
+und sagte das Falsche. Das ist derselbe Fund wie bei `test544` und
+`test545`, und er hört nicht auf, wahr zu sein: **eine Messung, die den
+Titel für den Status hält, misst den Titel.**
+
+**Was dieser Bogen NICHT entschieden hat.** `L52` heisst
+`~~Zwei Willkommensdialoge~~ — die Prüfseite bleibt offen`: durchgestrichen,
+also geschlossen, mit einem offenen Rest im Titel. Nach der Regel zählt er
+als zu. Ob der Rest eine eigene Nummer bekommt, ist eine inhaltliche Frage
+und gehört Redur — sie steht hier, damit sie nicht untergeht (§35).
+
+
+## E659 — Die Doku zählt, was da ist
+
+**Was wurde entschieden?** `test550` prüft die Zahlen, die die
+Dokumentation über sich selbst nennt.
+
+**Warum?** Weil §30 seinen eigenen Satz nicht halten konnte:
+
+> Sie wird nicht geschätzt, sie wird gezählt:
+> `ls pruefungen/lauf/test*.mts | wc -l`
+
+Die Zahl stand einmal **hundertfünfzehn** Läufe daneben. Beim nächsten
+Nachzählen achtundzwanzig. Beim übernächsten einen — und dieser eine war
+schon vorher falsch, ohne dass es jemand merkte. Der Satz „im selben Bogen
+nachziehen" steht inzwischen fünfzehnmal in §30. Was fehlte, war nie die
+Absicht, sondern die Prüfung.
+
+**Und er hat sofort funktioniert.** Beim ersten Lauf stand da:
+
+```txt
+gezählt: 492 Dateien unter pruefungen/lauf/
+§30 „Heute sind es N Läufe": 491
+```
+
+Er wurde rot gegen den Stand, den **er selbst** erzeugt hatte — die Datei
+`test550.mts` ist die 492. Das ist die Drift, die §30 seit einem Jahr
+beklagt, im Abstand von Minuten und diesmal mit Beleg.
+
+Dazu fand er `636 Entscheidungen`, wo 638 dastanden, und beim Nachziehen
+erwischte er mich beim Vorgreifen: `639 … E659` geschrieben, bevor es E659
+gab.
+
+**Die schwierige Stelle ist das Zählen selbst.** `ENTSCHEIDUNGEN.md` kennt
+mindestens drei Überschriftsformen für dieselbe Sache:
+
+```txt
+## E123 — Titel                     die heutige Form
+=====  /  E123 — Titel  /  =====    ein Banner zwischen zwei Linien
+E123 — Titel  /  =====              ein Titel mit Linie darunter,
+                                    der auch über zwei Zeilen läuft
+```
+
+**Vier Anläufe sind daran nacheinander gescheitert** und meldeten je eine
+Zahl, die nach einem Fehler aussah: 351 fehlende Einträge, dann 253, dann
+203. Es war jedes Mal der Prüfer, nicht die Datei. Die Regel, die hält,
+setzt keine Form voraus: *eine Zeile, die MIT der Nummer beginnt und ein
+Trennzeichen trägt, ist eine Überschrift; alles andere ist eine Erwähnung.*
+Damit: 638 Index-Zeilen, 638 Überschriften, keine Abweichung.
+
+**Was dabei KEIN Fund war, obwohl es zweimal danach aussah.** E198, E199,
+E222 und E269 werden im Text zitiert und haben keinen Eintrag — das steht
+seit langem in Zeile 35 der Datei, ausdrücklich und mit Grund. Der Wächter
+prüft deshalb nicht, ob es Lücken gibt (die darf es), sondern ob jede
+Lücke **oben genannt** ist. Eine unerklärte Lücke ist ein Verweis ins
+Leere; eine erklärte ist eine Entscheidung.
+
+**Was war die Alternative?** Die Zahlen automatisch einsetzen lassen, wie
+`dienststand.mts` es für den Dienststand tut (E361). Dagegen spricht, dass
+diese Zahlen in Fliesstext stehen, der um sie herum argumentiert — „die
+Zahl stand hier bis zum 12. September auf 323". Ein Programm, das darin
+Zahlen ersetzt, schreibt Geschichte um. Prüfen ja, schreiben nein.
+
+**Was kostet es?** Ein Lauf ohne Browser, der in einer Sekunde durch ist.
+Er darf deshalb auch neben einem vollen Lauf gefahren werden — §30 meint
+die Ports, und dieser hält keinen.

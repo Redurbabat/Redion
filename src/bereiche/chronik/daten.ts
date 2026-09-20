@@ -2362,6 +2362,20 @@ const ChronikDaten = {
      "gemeint": "Meine offenen Zweige auf seinen Stand heben und alles zusammen nach main bringen.",
      "kuerzer": "Passt so.",
      "besserer Prompt": "Nichts zu verbessern. Wichtig war, dass ich VOR dem Push die Wächter laufen lasse — und genau die haben dann gefunden, dass sein eigener #109 gar nicht griff."
+    },
+    {
+     "zeit": "ca. 17:10",
+     "wortlaut": "weiter die ai teil darf mehr machen z.B lernkarten erstellen pdf elssen, tabelas usw alles machen kann ausser ohne meine bestetigung etwas löschen",
+     "gemeint": "Die KI soll mehr Werkzeuge bekommen — und genau eine Grenze, die hält: nichts wird gelöscht, ohne dass Redur zugestimmt hat.",
+     "kuerzer": "„KI darf alles ausser löschen ohne meine Bestätigung.\"",
+     "besserer prompt": "Wie oben, plus die Reihenfolge: erst die Grenze bauen, dann die neuen Werkzeuge."
+    },
+    {
+     "zeit": "ca. 18:10",
+     "wortlaut": "ja mach das mit dem text bearbeiten weiter",
+     "gemeint": "Zustimmung zu dem Vorschlag, den ich am Ende von E655 gemacht hatte: die KI soll Text auf einer Seite ändern können.",
+     "kuerzer": "„ja\" hätte gereicht — der Vorschlag stand direkt darüber.",
+     "besserer prompt": "Kein besserer nötig. Eine Zustimmung zu einem konkreten Vorschlag ist der kürzeste mögliche Auftrag."
     }
    ],
    "arbeit": [
@@ -2476,12 +2490,52 @@ const ChronikDaten = {
      "zeitraum": "ca. 16:30 –",
      "dauer": "laufend",
      "pruefungen": "test545 (12/12, dreimal rot gesehen), test544, test87, test105, test109"
+    },
+    {
+     "was": "E654 — Die KI darf löschen, aber nie ohne ein ausdrückliches Ja",
+     "vonCommit": "(offen)",
+     "bisCommit": "(offen)",
+     "zeitraum": "ca. 17:15 –",
+     "dauer": "laufend",
+     "pruefungen": "test546 (13/13, Gegenprobe gefahren), test291, test281, test286, test301, test87, test105, test109"
+    },
+    {
+     "was": "E655 — Lernkarten, PDF und Tabellen: die drei Werkzeuge, die Redur genannt hat",
+     "vonCommit": "(offen)",
+     "bisCommit": "(offen)",
+     "zeitraum": "ca. 17:45 –",
+     "dauer": "laufend",
+     "pruefungen": "test547 (18/18, Gegenprobe gefahren), test546, test291, test281, test286, test87, test105, test109"
+    },
+    {
+     "was": "E656 — textBearbeiten: das erste Werkzeug, das bestehenden Text anfasst",
+     "vonCommit": "(offen)",
+     "bisCommit": "(offen)",
+     "zeitraum": "ca. 18:15 –",
+     "dauer": "laufend",
+     "pruefungen": "test548 (17/17, zwei Gegenproben gefahren), test547, test546, test291, test281, test286, test87, test105, test109"
+    },
+    {
+     "was": "E657/E658 — volllauf.mts, und die Lückenliste sagt die Wahrheit über sich selbst",
+     "vonCommit": "(offen)",
+     "bisCommit": "(offen)",
+     "zeitraum": "ca. 18:45 –",
+     "dauer": "laufend",
+     "pruefungen": "test549 (6/6, Gegenprobe gefahren), test105, test109, test87 · dazu läuft der volle Lauf im Arbeitsbaum"
+    },
+    {
+     "was": "E659 — test550: die Doku zählt, was da ist",
+     "vonCommit": "(offen)",
+     "bisCommit": "(offen)",
+     "zeitraum": "ca. 19:20 –",
+     "dauer": "laufend",
+     "pruefungen": "test550 (8/8, Gegenprobe gefahren), test549 · der volle Lauf läuft weiter im Arbeitsbaum"
     }
    ],
    "zahlen": {
     "commits": 2,
-    "entscheidungen": 11,
-    "neue Prüfläufe": 4,
+    "entscheidungen": 17,
+    "neue Prüfläufe": 9,
     "volle Läufe": 0
    },
    "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -3671,6 +3725,78 @@ const ChronikDaten = {
    "ursache": "Zwei Messfehler im Wächter, keiner im Produkt.",
    "beweis": "Nach der Korrektur: „→ ai-zu · 44×44 px\" und „Der Zug landet wirklich auf dem Kopf des Blattes\" — und die Gegenprobe wird nur an der Geste rot.",
    "lehre": "Vierter und fünfter Fall derselben Sorte an zwei Tagen, nach `test542`, `test543` und `test544`. Die Lehre steht jetzt in beide Richtungen: ein roter Lauf ist noch kein Beweis, und ein grüner erst recht nicht. Ein Wächter, der eine Stelle anfasst, prüft zuerst, WER dort liegt."
+  },
+  {
+   "nr": "P85",
+   "datum": "2026-09-20",
+   "titel": "Eine Regel, die nur galt, weil es die Handlung nicht gab",
+   "schwere": "mittel",
+   "symptom": "„Die KI löscht nichts ohne Bestätigung\" war wahr — aber nur, weil kein Werkzeug löschen konnte. Die Rechte des Agentenkatalogs waren `lesen` und `bearbeiten`, mehr nicht.",
+   "falscheVermutung": "Dass das vorhandene Tor für `bearbeiten` (E295 ff.) auch fürs Löschen reicht. Es reicht an drei Stellen nicht: `fragenModus()` kennt „nie\", es gibt „für diesen Lauf erlauben\", und `darfAllein` lässt unbeaufsichtigt schreiben.",
+   "wieGefunden": "Redurs Auftrag gelesen, dann den Katalog gezählt statt erinnert: 12 Werkzeuge, 2 Rechte, 0 Löschwerkzeuge.",
+   "ursache": "Eine Fähigkeit, die es nie gab, braucht keine Grenze — bis jemand sie baut. Dann fehlt die Grenze genau in dem Bogen, in dem am wenigsten Zeit dafür ist.",
+   "beweis": "`test546` gegen den alten Stand: 6/13, darunter „kein Werkzeug mit Recht loeschen\". Nach dem Bau 13/13, und die Gegenprobe mit abgehängtem Tor druckt „Seite ‚Weg damit' liegt im Papierkorb\" bei null Dialogen nach einem Nein.",
+   "lehre": "Das Tor gehört in die Schleife, nicht ins Werkzeug. Ein Werkzeug, das selbst fragen muss, ist ein Werkzeug, bei dem das Fragen beim nächsten Mal vergessen wird — und beim Löschen merkt man es erst, wenn etwas fehlt."
+  },
+  {
+   "nr": "P86",
+   "datum": "2026-09-20",
+   "titel": "Eine Erfolgsmeldung ist kein Erfolg",
+   "schwere": "mittel",
+   "symptom": "Ein Werkzeug meldet „3 Lernkarten angelegt — sie stehen ab sofort im Lernzentrum bereit\", und das Lernzentrum zählt null.",
+   "falscheVermutung": "Dass es reicht zu prüfen, ob Blöcke entstehen. Entstanden sind sie — nur mit `type:'text'`, und `Learning.cards()` filtert auf `type === 'flashcard'`.",
+   "wieGefunden": "Als Gegenprobe zum eigenen Wächter gestellt: im gebauten `agenten.js` den Typ von `flashcard` auf `text` geändert und den Lauf wiederholt.",
+   "ursache": "Der Satz, den ein Werkzeug zurückgibt, wird vom Werkzeug geschrieben — nicht vom Ergebnis. Er kann also alles behaupten.",
+   "beweis": "Gegenprobe: „Antwort: 3 Lernkarten … stehen ab sofort im Lernzentrum bereit\" bei „Learning.cards(): 1 → 1 · neu erkannt: 0\".",
+   "lehre": "Ein Wächter misst dort, wo das Ergebnis GEBRAUCHT wird, nicht dort, wo es entsteht. Beim alten Schnellbefehl „Mache Karteikarten\" ist derselbe Fehler jahrelang unbemerkt geblieben: er schrieb Text ins Chatfenster, und es sah nach Karteikarten aus."
+  },
+  {
+   "nr": "P87",
+   "datum": "2026-09-20",
+   "titel": "Derselbe Fehler, zwei Bögen später, an einer anderen Stelle",
+   "schwere": "mittel",
+   "symptom": "Ein Werkzeug, das eine Textstelle ersetzt, trifft die falsche — `String.replace` nimmt das erste Vorkommen. Die Gegenprobe druckt es aus: „Die Leitung liegt. Das Kabel bleibt.\"",
+   "falscheVermutung": "Dass E650 diesen Fehler erledigt hat. E650 hat ihn in der Auswahlleiste des Editors repariert; als ich zwei Bögen später ein Werkzeug baute, das dasselbe tut, stand er als Möglichkeit sofort wieder da.",
+   "wieGefunden": "Nicht gefunden — vorhergesehen. Beim Entwurf von `textBearbeiten` war E650 noch in Reichweite, also wurde die Regel „genau einmal oder gar nicht\" von vornherein eingebaut und die Gegenprobe gefahren, um zu sehen, was ohne sie passiert.",
+   "ursache": "Ein Modell plant eine Ersetzung aus dem, was es GELESEN hat, und liest nicht, wie oft etwas dasteht. Die Eindeutigkeit ist deshalb keine Eingabeprüfung, sondern ein Teil der Aufgabe.",
+   "beweis": "Gegenprobe mit abgehängter Prüfung: von zwei gleichlautenden Blöcken wurde der erste geändert, der zweite nicht — und im Satz mit zwei „Das Kabel\" traf es das erste.",
+   "lehre": "Ein reparierter Fehler ist nicht erledigt, sondern bekannt. Wer kurz danach etwas Ähnliches baut, hat den billigsten Moment, ihn gar nicht erst entstehen zu lassen — und die Gegenprobe zeigt, dass die Vorkehrung nicht dekorativ ist."
+  },
+  {
+   "nr": "P88",
+   "datum": "2026-09-20",
+   "titel": "Die Lückenliste war selbst der stille Fehler",
+   "schwere": "mittel",
+   "symptom": "33 offene Lücken standen unterhalb der Überschrift „Anhang B · Was erledigt ist\". Wer von oben liest, hält sie für erledigt.",
+   "falscheVermutung": "Dass es ein Formatierungsproblem ist. Es ist das Gegenteil dessen, wofür die Datei da ist: §35 sagt „eine bekannte Lücke ist besser als ein stiller Fehler\", und hier war eine bekannte Lücke ZU einem stillen Fehler geworden.",
+   "wieGefunden": "Die Warnung stand schon in der Datei — jemand hatte es gefunden und das Umsortieren vertagt, „während achtzehn Läufe rot waren\" (§46). Die sind weg; also nachgemessen und repariert.",
+   "ursache": "Der Anhang endete mit seiner letzten Tabelle, und alles Spätere wurde ans Dateiende geschrieben. Eine Datei wächst über ihre Gliederung hinaus, und niemand merkt den Tag, an dem es passiert.",
+   "beweis": "`test549` gegen den alten Stand: 3/6, mit „33 offene Lücken lesen sich von oben wie erledigt\", fünf fremden Schlusswörtern und „genannt 103/53/50 · gemessen 101/52/49\".",
+   "lehre": "Auch eine Doku-Datei kann einen Wächter haben. Der hier liest nur Text, braucht keinen Browser und läuft in einer Sekunde — es gab keinen Grund, ihn nicht schon vor einem Jahr zu schreiben."
+  },
+  {
+   "nr": "P89",
+   "datum": "2026-09-20",
+   "titel": "Der Titel ist nicht der Status",
+   "schwere": "niedrig",
+   "symptom": "Der neue Wächter hielt L181 („Das Lineal steht zweimal, sobald ‚Zeichnen' offen ist\") für einen Eintrag mit dem Status „offen\" — und im selben Lauf das Datum „20. September 2026\" für die Zählung „20/2026/103\".",
+   "falscheVermutung": "Dass ein Suchwort reicht, um einen Zustand zu erkennen.",
+   "wieGefunden": "Beide Male war der Lauf ROT — und sagte etwas anderes, als er mass. Aufgefallen beim Lesen der eigenen Ausgabe, nicht beim Schreiben des Codes.",
+   "ursache": "Ein Wort kommt in einer Überschrift vor, ohne dort etwas zu bedeuten. Die Regel muss sagen, WO sie zählt, nicht nur WAS.",
+   "beweis": "Nach der Korrektur: dieselbe Datei, dieselben Einträge, andere Zahl — 51 statt 52 offene.",
+   "lehre": "Vierter und fünfter Fall nach test544, test545 und test548. Eine Messung, die den Titel für den Status hält, misst den Titel. Ein roter Lauf ist noch kein Beweis, und ein grüner erst recht nicht."
+  },
+  {
+   "nr": "P90",
+   "datum": "2026-09-20",
+   "titel": "Vier Anläufe, vier erfundene Zahlen — und die Datei war immer in Ordnung",
+   "schwere": "niedrig",
+   "symptom": "Eine Prüfung von ENTSCHEIDUNGEN.md meldete nacheinander 351, dann 253, dann 203 Index-Einträge ohne Text. Es klang jedes Mal nach einem ernsten Fund.",
+   "falscheVermutung": "Dass die Datei kaputt ist. Sie war es nie: 638 von 638 Einträgen haben ihren Text.",
+   "wieGefunden": "Nach dem dritten Mal nicht repariert, sondern die MESSUNG angesehen. ENTSCHEIDUNGEN.md kennt drei Überschriftsformen — `## E123`, einen Banner zwischen zwei ===-Zeilen, und einen Titel mit === darunter, der über zwei Zeilen laufen kann. Jede engere Regel übersah eine davon.",
+   "ursache": "Eine gewachsene Datei benutzt die Form, die zur Zeit ihres Eintrags üblich war. Wer sie mit der HEUTIGEN Form misst, misst das Alter, nicht den Inhalt.",
+   "beweis": "Die Regel, die keine Form voraussetzt — eine Zeile, die mit der Nummer BEGINNT und ein Trennzeichen trägt —, findet 638 von 638.",
+   "lehre": "Bei der dritten Zahl, die nach einem Fund aussieht, ist der Prüfer verdächtig, nicht die Datei. Dazu: zwei weitere „Funde\" dieses Bogens standen bereits als Erklärung in der Datei — nachlesen ist billiger als nachbessern."
   }
  ]
 } as const;
