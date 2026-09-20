@@ -3457,3 +3457,60 @@ nach der Reparatur  13/13
 
 Ein Wächter, der beim ersten fehlenden Namen abstürzt, prüft nur bis dorthin.
 Dieselbe Lehre wie bei `test542` am selben Tag, nur eine Stufe früher.
+
+## 20. September 2026 — Der Stopp-Knopf, den es nicht gab (E652)
+
+### Die Kette war vollständig — bis auf ein Argument
+
+```txt
+frage(nachrichten, beiText, { signal })   dienst.ts:612   nimmt ein Signal
+ollamaFragen(n, modell, signal)                   :507   reicht es weiter
+fetch(…, { signal })                              :512   bis ganz nach unten
+schlafen(ms, signal)                              :156   sogar der Backoff
+
+senden → frage(nachrichten, cb)                  :1113   OHNE das dritte Argument
+```
+
+### Gemessen, gegen den alten Stand
+
+`fetch` abgehängt und so gebaut, dass es **nie** antwortet — ausser das
+Signal kommt an:
+
+```txt
+Signal in fetch angekommen       nein
+data-lauf am Senden-Knopf        null
+Klick auf den Knopf              HAENGT (3 s Abbruch der Messung)
+```
+
+Nach der Reparatur:
+
+```txt
+Signal in fetch angekommen       ja
+data-lauf während des Laufs      "1"
+aria-label während des Laufs     "Antwort abbrechen"
+Klick beendet den Lauf           geworfen → gefangen → "Abgebrochen."
+Knopfgrösse vorher/nachher       gleich (§37)
+```
+
+### Und der Wächter, der fast danebengriff
+
+Abschnitt 2 war im ersten Anlauf **grün**, ohne dass etwas repariert war:
+
+```txt
+gezählt    sichtbare [data-qs] im ganzen Dokument     → 5 (die Leiste im Fuss)
+gemeint    was der Menüpunkt NEU öffnet               → 0
+```
+
+Die Schalterleiste steht ohnehin im Panelfuss. Der Lauf mass sie statt des
+Menüpunkts. Erst mit einem `Set` der Schalter **vor** dem Klick stand da
+„0 Schalter sichtbar" — der eigentliche Befund.
+
+Dritter Fall an einem Tag, nach `test542` (Absturz statt Messung) und
+`test543` (Absturz nach dem ersten fehlenden Namen). Die Lehre wächst
+mit: **ein roter Lauf ist noch kein Beweis, und ein grüner erst recht
+nicht.**
+
+### Bild
+
+`bilder/ki-stoppknopf.png` — derselbe blaue Kreis, `■` statt `↑`, während
+„KI arbeitet …" läuft (§55.3).

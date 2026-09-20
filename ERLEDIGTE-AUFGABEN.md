@@ -1,5 +1,40 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E652 · Das KI-Fenster tut, was seine Knöpfe versprechen
+
+Zwei Funde der Bestandsaufnahme, beide in `src/bereiche/ki/dienst.ts`.
+
+**Der Chat hatte keinen Stopp-Knopf** — und das Ärgerliche daran: die ganze
+Abbruchkette war gebaut. `frage` nimmt ein Signal, reicht es über
+`ollamaFragen` bis in `fetch`, und sogar der Backoff-`schlafen` bricht ab.
+Nur `senden` liess das dritte Argument weg, und im Markup gab es keinen
+Knopf. Wer eine lange Antwort losgeschickt hatte, konnte sie nur durch
+Schliessen des Tabs beenden.
+
+**„Meine Quellen" öffnete nichts.** `quellenKarte(e.currentTarget)` — ein
+HTML-Element an eine Funktion, die eine Liste erwartet. `!element.length`
+ist wahr, also lautlos `null`, und selbst das wurde nirgends eingehängt.
+
+**Gebaut.** Kein zweiter Knopf: der Senden-Knopf wird für die Dauer des
+Laufs zum Stopp-Knopf — dasselbe Element, dieselbe Grösse (§37), und
+`aria-label` wechselt mit (§38). Ein Abbruch behält die Teilantwort und
+sagt „Abgebrochen" statt „AbortError"; das Eingabefeld bleibt gefüllt,
+sonst verlöre man seine Frage. Der Menüpunkt öffnet jetzt **dieselbe**
+Schalterleiste, die im Fuss steht — nicht eine zweite Liste (§8).
+
+**Und der Wächter hätte fast danebengegriffen.** `test544` war bei den
+Quellen im ersten Anlauf **grün**, ohne dass etwas repariert war: er zählte
+sichtbare `[data-qs]` im ganzen Dokument, und die Leiste steht ohnehin im
+Fuss. Erst mit einem `Set` der Schalter **vor** dem Klick stand da
+„0 Schalter sichtbar". Dritter Fall dieser Art an einem Tag.
+
+**Geprüft.** `test544` 11/11 (vorher 3/11) · `test34`, `test37`, `test272`,
+`test391`, `test105`, `test109` grün · `npm run typecheck` ohne Befund.
+`CLAUDE.md` §30/§31 auf **486**. **Bild:** `bilder/ki-stoppknopf.png` —
+derselbe blaue Kreis, `■` statt `↑`, während „KI arbeitet …" läuft (§55.3).
+
+---
+
 ## 20. September 2026 · E651 · Der Verbindungsschalter gilt wirklich
 
 **Der Fund** kommt aus der Bestandsaufnahme desselben Tages. Das

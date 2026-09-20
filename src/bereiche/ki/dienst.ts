@@ -326,6 +326,10 @@ const KI = (() => {
     laedt: boolean; ollamaModelle: any[]; engine: any;
     verlauf: { role: string; content: string; [k: string]: any }[];
     chatId: string; modus: string;
+    /* Der Steuermann der laufenden Antwort, oder nichts (E652). Er steht
+       hier und nicht in einer Abschlussvariablen, damit der Knopf und
+       `abbrechen()` denselben erreichen. */
+    abbruch: AbortController | null;
   };
   const zustand: Zustand = {
     quelle: 'ollama',      /* 'ollama', 'webllm' oder 'wolke' */
@@ -335,6 +339,7 @@ const KI = (() => {
     laedt: false,
     ollamaModelle: [],
     engine: null,          /* die WebLLM-Instanz */
+    abbruch: null,         /* läuft gerade eine Antwort? (E652) */
     verlauf: [],
     chatId: '',            /* welcher gespeicherte Chat gerade offen ist */
     modus: 'standard'      /* 'standard' darf ändern, 'fragen' nur antworten */
@@ -1019,6 +1024,40 @@ const KI = (() => {
     return d;
   };
 
+  /* ══ DER STOPP-KNOPF (E652) ═════════════════════════════════════════════
+   * Die ganze Abbruchkette war gebaut: `frage(…, {signal})`, ein
+   * abbrechbares `schlafen` für den Backoff, `signal` bis in `fetch`
+   * hinein. Nur `senden` rief `frage` OHNE das dritte Argument, und im
+   * Markup gab es keinen Knopf dafür. Wer eine lange Antwort losgeschickt
+   * hatte, konnte sie nur durch Schliessen des Tabs beenden.
+   *
+   * Das Teure war gebaut, das Billige fehlte.
+   *
+   * KEIN ZWEITER KNOPF. Der Senden-Knopf wird für die Dauer des Laufs zum
+   * Stopp-Knopf — dasselbe Element, dieselbe Grösse. Ein Knopf, der
+   * daneben auftaucht, verschiebt die Trefferfläche mitten in der
+   * Bewegung; §37 verlangt das Gegenteil. `test544` misst die Grösse vor
+   * und nach dem Lauf.
+   *
+   * Und der Zustand steht NICHT nur in der Farbe (§38): `aria-label`
+   * wechselt mit, sonst weiss ein Vorleseprogramm nichts davon. */
+  const sendenKnopf = (imLauf: boolean): void => {
+    const k = document.getElementById('ai-senden');
+    if (!k) return;
+    k.textContent = imLauf ? '■' : '↑';
+    k.setAttribute('aria-label', imLauf ? 'Antwort abbrechen' : 'Nachricht senden');
+    k.setAttribute('title', imLauf ? 'Abbrechen' : 'Senden');
+    if (imLauf) k.setAttribute('data-lauf', '1');
+    else k.removeAttribute('data-lauf');
+  };
+
+  /** Bricht die laufende Antwort ab. Ohne Lauf tut es nichts. */
+  const abbrechen = (): boolean => {
+    if (!zustand.abbruch) return false;
+    zustand.abbruch.abort();
+    return true;
+  };
+
   const senden = async (text: string, mitKontext = true) => {
     if (!text.trim()) return;
 
@@ -1109,18 +1148,37 @@ const KI = (() => {
        Fehler. */
     const aktivitaet = zeigeAktivitaet(ziel);
     ziel.classList.add('ki-schreibt');
+    /* Ein Steuermann je Lauf (E652). Er steht im Zustand, damit der Knopf
+       und `abbrechen()` denselben erreichen. */
+    const steuer = new AbortController();
+    zustand.abbruch = steuer;
+    sendenKnopf(true);
     try {
       await frage(nachrichten, (t: any) => {
         antwort += t;
         ziel.textContent = antwort;
         const kasten = document.getElementById('chat');
         if (kasten) kasten.scrollTop = 1e9;
-      });
+      }, { signal: steuer.signal });
       zustand.verlauf.push({ role: 'user', content: text });
       zustand.verlauf.push({ role: 'assistant', content: antwort });
     } catch (e: unknown) {
-      ziel.textContent = '⚠ ' + (e instanceof Error ? e.message : String(e));
+      /* EIN ABBRUCH IST KEIN FEHLER, und `AbortError` ist kein Satz, den
+         ein Mensch lesen will. Was schon dasteht, bleibt stehen — es
+         gehört dem Nutzer (§51); nur der Verlauf bekommt die halbe
+         Antwort nicht, weil sie unvollständig ist. */
+      const abbruch = steuer.signal.aborted
+        || (e instanceof Error && e.name === 'AbortError');
+      if (abbruch) {
+        ziel.textContent = antwort
+          ? antwort + '\n\n— Abgebrochen.'
+          : 'Abgebrochen.';
+      } else {
+        ziel.textContent = '⚠ ' + (e instanceof Error ? e.message : String(e));
+      }
     } finally {
+      zustand.abbruch = null;
+      sendenKnopf(false);
       ziel.classList.remove('ki-schreibt');
       aktivitaet.remove();
     }
@@ -2149,6 +2207,10 @@ const KI = (() => {
     });
 
     document.getElementById('ai-senden')?.addEventListener('click', () => {
+      /* Läuft gerade eine Antwort, ist derselbe Knopf der Stopp-Knopf
+         (E652). Erst danach wird das Feld geleert — sonst verlöre man
+         seine Frage beim Abbrechen. */
+      if (abbrechen()) return;
       const t = ta.value; ta.value = ''; ta.style.height = 'auto'; senden(t);
     });
 
@@ -2216,7 +2278,17 @@ const KI = (() => {
         const b = elVon(ev)?.closest<HTMLElement>('[data-y]');
         if (!b) return;
         m.remove();
-        if (b.dataset.y === 'quellen') quellenKarte(e.currentTarget);
+        /* HIER STAND `quellenKarte(e.currentTarget)` (E652): ein
+           HTML-Element an eine Funktion, die eine LISTE erwartet.
+           `!element.length` ist wahr, also kam lautlos `null` zurück — und
+           selbst das wurde nirgends eingehängt. Der Punkt zeigte eine Zahl
+           und ein „▸", versprach also ein Untermenü, und tat nichts.
+           Jetzt öffnet er DIESELBE Schalterleiste, die im Fuss steht:
+           ein Katalog, nicht zwei (§8). */
+        if (b.dataset.y === 'quellen') {
+          const q2 = UI.menu('<div class="grp">Meine Quellen</div>', r.left, r.top - 160);
+          q2.appendChild(quellenLeiste());
+        }
         if (b.dataset.y === 'mcp')     Einstellungen.oeffne('mcp');
         if (b.dataset.y === 'modus')   modusWechseln();
         if (b.dataset.y === 'pers')    personalisieren();
@@ -2278,7 +2350,7 @@ const KI = (() => {
     zeichneModellKnopf();
   };
 
-  return { start, bindePanel, sucheOllamaJetzt, senden, blockAktion, frageMitAuswahl, wikipedia, nachschlagen,
+  return { start, bindePanel, sucheOllamaJetzt, senden, abbrechen, sendenKnopf, blockAktion, frageMitAuswahl, wikipedia, nachschlagen,
            datenbankBauen, datenbankBauenAus, seiteBauen, protokollZeigen, protokoll,
            quellenKarte, quellenLeiste, seitenKontext, SYSTEM,
            SCHREIB_BEFEHLE, schreibMenue, schreibLauf, alsBloeckeEinfuegen,

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-629 Entscheidungen, E1 bis E651 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+630 Entscheidungen, E1 bis E652 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -694,6 +694,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E649** — Ein `<svg>` ist kein `HTMLElement`, und `fokus.ts` wusste das: zwei Ressourcenhalter (`linse.ts` E639, `textur.ts` E462) hingen direkt im Körper und wurden beim Öffnen eines Dialogs nicht stillgelegt, weil die Schleife `instanceof HTMLElement` verlangt. `test272` misst `.inert` über ALLE Kinder — auf einem `SVGElement` gibt es die Eigenschaft nicht, `undefined` ist falsch, der Lauf war rot. Repariert wurde der Körper, nicht der Wächter: beide Halter liegen jetzt in einer von Geburt an stillgelegten Hülle. Dazu `bw` ins Namensraum-Verzeichnis, das seit E640 fehlte (`test290`).
 * **E650** — `String.replace` trifft das erste Vorkommen, nicht das markierte: `umschliesse` und `linkSetzen` in der Auswahlleiste ersetzten mit `(b.text||'').replace(txt, …)`. Wer in „Test und Test" das zweite Wort markiert und auf Fett drückt, bekam das erste fett — kein Absturz, keine Meldung, nur Text an der falschen Stelle. Repariert über `auswahlOffset()` mit Nachprüfung, Rückfall auf die Reihenfolge bei gerendertem Markdown und auf den alten Weg, wenn beides nicht trägt. Neuer Wächter `test542`, gegen den alten Stand rot.
 * **E651** — Ein Schalter, der Sicherheit verspricht und nicht gelesen wird: das Datenbankmenü sagte „Verknüpfte Dienste dürfen Zeilen dieser Datenbank lesen und schreiben", aber `coll.verbindungen` wurde nur geschrieben. Schlimmer noch die Anzeige — bei einer nie angefassten Datenbank stand bei JEDEM Dienst „aus", während der Spiegel lief. Jetzt beantwortet `Spiegel.darf` die Frage an einer Stelle, für Anzeige UND Sperre; gesperrt wird vor dem Netzruf, also auch das Lesen. `undefined` heisst erlaubt (Bestandsschutz), `[]` heisst gesperrt. Wächter `test543`.
+* **E652** — Das Teure war gebaut, das Billige fehlte: die ganze Abbruchkette des KI-Chats stand (`frage(…, {signal})`, abbrechbares `schlafen`, `signal` bis in `fetch`), nur `senden` reichte das dritte Argument nicht durch — und es gab keinen Knopf. Jetzt wird der Senden-Knopf für die Dauer des Laufs zum Stopp-Knopf (derselbe Knopf, §37; `aria-label` wechselt mit, §38), ein Abbruch behält die Teilantwort und sagt „Abgebrochen" statt „AbortError". Dazu der tote Menüpunkt „Meine Quellen", der ein HTML-Element an eine Funktion gab, die eine Liste erwartet. Wächter `test544`.
 
 ---
 
@@ -53505,3 +53506,69 @@ ab und nennt sie im Banner.
 Bei ausdrücklich gesperrter Datenbank ging der Schreibruf trotzdem hinaus.
 Der Lauf hängt `fetch` und `Verbindungen.githubRuf` ab und zählt nur, ob
 jemand hinauswollte — kein Netz, keine Zugangsdaten, nichts zu erraten.
+
+
+## E652 — Das Teure war gebaut, das Billige fehlte
+
+**20. September 2026.** Zwei Funde der Bestandsaufnahme, beide in
+`src/bereiche/ki/dienst.ts`, beide von der stillen Sorte (§47).
+
+### Der Chat hatte keinen Stopp-Knopf
+
+Und das ist das Ärgerliche daran: **die ganze Abbruchkette war gebaut.**
+
+```txt
+frage(nachrichten, beiText, { signal })     :612   nimmt ein Signal
+ollamaFragen(n, modell, signal)             :507   reicht es weiter
+fetch(…, { signal })                        :512   bis ganz nach unten
+schlafen(ms, signal)                        :156   sogar der Backoff bricht ab
+```
+
+Nur `senden` rief `frage(nachrichten, cb)` — **ohne das dritte Argument.**
+Und im Markup gab es keinen Knopf. Wer eine lange Antwort losgeschickt
+hatte, konnte sie nur durch Schliessen des Tabs beenden.
+
+**Kein zweiter Knopf.** Der Senden-Knopf wird für die Dauer des Laufs zum
+Stopp-Knopf — dasselbe Element, dieselbe Grösse. Ein Knopf, der *daneben*
+auftaucht, verschiebt die Trefferfläche mitten in der Bewegung; §37
+verlangt das Gegenteil, und `test544` misst die Grösse vor und nach dem
+Lauf. Der Zustand steht auch nicht nur in der Form: `aria-label` wechselt
+von „Nachricht senden" auf „Antwort abbrechen" (§38).
+
+**Ein Abbruch ist kein Fehler.** `AbortError` ist kein Satz, den ein Mensch
+lesen will. Was schon dasteht, bleibt stehen — es gehört dem Nutzer (§51);
+nur der Verlauf bekommt die halbe Antwort nicht, weil sie unvollständig
+ist. Und das Eingabefeld wird beim Abbrechen nicht geleert: sonst verlöre
+man seine Frage.
+
+### Der tote Menüpunkt
+
+```ts
+if (b.dataset.y === 'quellen') quellenKarte(e.currentTarget);
+```
+
+Ein HTML-Element an eine Funktion, die eine **Liste** erwartet.
+`!element.length` ist wahr, also kam lautlos `null` zurück — und selbst das
+wurde nirgends eingehängt. Der Punkt zeigte eine Zahl und ein „▸",
+versprach also ein Untermenü, und tat nichts.
+
+Jetzt öffnet er **dieselbe Schalterleiste**, die im Fuss des Panels steht.
+Nicht eine zweite Liste mit denselben fünf Quellen — dieselbe Funktion
+(§8), sonst laufen sie auseinander.
+
+### Wie der Wächter fast danebengegriffen hätte
+
+`test544` war im ersten Anlauf bei den Quellen **grün**, ohne dass etwas
+repariert war. Der Grund: er zählte sichtbare `[data-qs]`-Schalter im
+ganzen Dokument — und die Schalterleiste steht ohnehin im Fuss. Er mass
+die Leiste, nicht den Menüpunkt.
+
+```txt
+erster Anlauf     3 von 3 gruen  — misst die Leiste im Fuss
+nach der Korrektur  „0 Schalter sichtbar" — misst den Menuepunkt
+```
+
+Erst als er nur noch zählte, was der Klick **neu** öffnet, stand da, was
+Sache war. Dieselbe Lehre wie bei `test542` und `test543` am selben Tag,
+und inzwischen die dritte: **ein roter Lauf ist noch kein Beweis, und ein
+grüner erst recht nicht.**

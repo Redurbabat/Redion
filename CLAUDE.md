@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 485 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 486 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -983,6 +983,16 @@ pruefungen/lauf/test*.mts | wc -l` sagt 484.*
 mit der Zeile, auf die es ankommt: „Und es geht KEIN Ruf hinaus — 1 Rufe".
 Gezählt am 20. September, im selben Bogen: der Befehl sagt 485.*
 
+
+*Und 486: `test544` — das KI-Fenster tut, was seine Knöpfe versprechen
+(E652). Zwei Funde in einem Lauf: der Chat hatte keinen Stopp-Knopf, obwohl
+die ganze Abbruchkette gebaut war, und „Meine Quellen" öffnete nichts.
+Bemerkenswert ist, wie er rot wurde: der erste Anlauf war bei den Quellen
+GRÜN, weil er sichtbare `[data-qs]` im ganzen Dokument zählte — und die
+Schalterleiste steht ohnehin im Fuss. Erst als er nur zählte, was der
+Menüpunkt NEU öffnet, stand da „0 Schalter sichtbar". Gezählt am
+20. September, im selben Bogen: der Befehl sagt 486.*
+
 ### Die Befehle
 
 ```txt
@@ -991,7 +1001,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 485 Läufe
+npm run pruefen                      alle 486 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1053,7 +1063,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 485 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 486 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

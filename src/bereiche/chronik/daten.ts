@@ -3626,6 +3626,19 @@ const ChronikDaten = {
    "loesung": "`Spiegel.darf` beantwortet die Frage an EINER Stelle, für Anzeige und Sperre. `undefined` heisst erlaubt (Bestandsschutz — ein Schalter, der bei Einführung alle Spiegel abwürgt, wäre schlimmer als der Fehler), `[]` heisst gesperrt. Gesperrt wird VOR dem Netzruf, also auch das Lesen, denn beide Abgleichwege holen zuerst und suchen die Datenbank danach.",
    "warumKeineUhr": "Aus der Bestandsaufnahme abgeleitet.",
    "lehre": "Ein Fusstext ist eine Zusage. Wer eine schreibt, muss zeigen, wer sie einlöst — und die ANZEIGE muss dieselbe Frage stellen wie die Sperre, sonst laufen sie auseinander und die falsche Auskunft ist die gefährlichere Hälfte."
+  },
+  {
+   "nr": "P82",
+   "datum": "2026-09-20",
+   "titel": "Das Teure war gebaut, das Billige fehlte",
+   "schwere": "mittel",
+   "symptom": "Eine lange KI-Antwort liess sich nur durch Schliessen des Tabs beenden. Und der Menüpunkt „Meine Quellen\" öffnete nichts — er zeigte eine Zahl und ein „▸\" und tat nichts.",
+   "falscheVermutung": "Dass der Abbruch erst gebaut werden müsse. Er WAR gebaut: `frage` nimmt ein Signal, reicht es bis in `fetch`, und sogar der Backoff-`schlafen` bricht ab. Nur `senden` liess das dritte Argument weg, und es gab keinen Knopf.",
+   "wieGefunden": "Bestandsaufnahme vom selben Tag, Bereich KI/UX. Nachgemessen mit einem `fetch`, das nie antwortet — ausser das Signal kommt an.",
+   "ursache": "Ein Argument, das beim Aufruf fehlte, und ein Menüpunkt, der `quellenKarte(e.currentTarget)` rief: ein HTML-Element an eine Funktion, die eine Liste erwartet. `!element.length` ist wahr, also lautlos `null`.",
+   "loesung": "Der Senden-Knopf wird für die Dauer des Laufs zum Stopp-Knopf — dasselbe Element, dieselbe Grösse (§37), `aria-label` wechselt mit (§38). Ein Abbruch behält die Teilantwort und sagt „Abgebrochen\" statt „AbortError\". Der Menüpunkt öffnet dieselbe Schalterleiste, die im Fuss steht (§8).",
+   "warumKeineUhr": "Aus der Bestandsaufnahme abgeleitet.",
+   "lehre": "Ein grüner Prüflauf ist so wenig ein Beweis wie ein roter. Abschnitt 2 war zuerst grün, weil er sichtbare Schalter im GANZEN Dokument zählte — und die Leiste steht ohnehin im Fuss. Gemessen werden muss, was der Klick NEU öffnet. Dritter Fall dieser Art an einem Tag."
   }
  ]
 } as const;
