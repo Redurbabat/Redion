@@ -4365,8 +4365,10 @@ const App = (() => {
         /* Den Reiter setzt `Bibliothek.oeffne()` selbst — dort gehört er hin,
            weil das Regal auch vom Start, aus dem Mehr-Blatt und über einen
            Verweis aufgeht und die Markierung jedes Mal stimmen muss. */
-        /* Erst die gemeinsame Dock-Fläche losschicken; der schwere
-           Bildschirmaufbau folgt im nächsten Frame. */
+        /* Erst die gemeinsame Dock-Fläche auf das getippte Ziel schicken.
+           Der eigentliche Bildschirmaufbau folgt im nächsten Frame. So kann der
+           Browser mindestens einen sichtbaren Compositor-Frame der Reise zeigen,
+           bevor die neue Ansicht synchron DOM aufbaut. */
         const dockWechsel = (reiterId, oeffnen) => {
             Seitenleiste.reiter(reiterId);
             handyLeiste();

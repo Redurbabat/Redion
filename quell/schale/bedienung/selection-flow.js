@@ -83,8 +83,11 @@
  * und beim Ankommen wieder kompakter werden."
  *
  * Das Abklingen auf ein halbes Prozent liegt bei ω·t ≈ 7,6. Für die
- * 180–300 ms, die `continuous-material-selection.md` als Zielbereich nennt,
- * ist das ω = 7,6 / 230 ms ≈ 0,033 je Millisekunde.
+ * 180–300 ms, die `continuous-material-selection.md` als Zielbereich nennt.
+ * Für den mobilen Dock nehmen wir bewusst die sichtbarere obere Hälfte dieses
+ * Bereichs: ω = 0,026 ergibt rund 292 ms bis zum halben Prozent. Die vorherigen
+ * 230 ms waren in der echten Bildschirmaufnahme trotz korrekter Bewegung zu
+ * leicht als harter Zustandswechsel zu lesen.
  *
  * ─── WARUM KEYFRAMES UND KEINE EIGENE SCHLEIFE ──────────────────────────────
  *
