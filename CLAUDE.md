@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 497 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 498 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1071,6 +1071,16 @@ Erinnerungsmaschine danebenstand. Zwei seiner Zusagen waren im ersten
 Anlauf grün, WEIL nichts lief — `undefined` enthält kein „@remind", und
 `undefined === undefined` ist wahr. Gezählt am 20. September: 497.*
 
+*Und 498: `test556` — Strg+F findet vier Stellen und zeigte eine (E667).
+Die Leiste markierte alles, rollte zur ERSTEN und schrieb „4 Treffer"; ihr
+`keydown` kannte genau eine Taste, und die hiess `Escape`. Gegen den alten
+Stand war er rot mit 5 von 17 — „aktiv bleibt 0 — Enter tut nichts". Seine
+letzten fünf Zusagen hat aber nicht er gefunden, sondern das BILD: am
+Telefon lief das Suchfeld links aus dem Bild, `-90 … 368` bei 390 px
+Fensterbreite, und sichtbar war davon ein „r" (§55.1). Gezählt am
+20. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+498.*
+
 ### Die Befehle
 
 ```txt
@@ -1079,7 +1089,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 497 Läufe
+npm run pruefen                      alle 498 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1166,7 +1176,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 497 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 498 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

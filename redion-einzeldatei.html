@@ -3389,8 +3389,30 @@ table.stab td:focus, table.stab th:focus{box-shadow:inset 0 0 0 2px var(--accent
   display:flex; align-items:center; gap:8px; padding:7px 10px;
 }
 #findbar input{background:none; border:none; outline:none; font-size:14px; width:210px; color:var(--text)}
-#findbar .n{font-size:12px; color:var(--text-faint); min-width:52px}
+#findbar .n{font-size:12px; color:var(--text-faint); min-width:62px; text-align:center}
+/* E667: DIE KNOEPFE DER SUCHE SIND EIN HAUPTWEG (§37). Das Kreuz mass
+   13×24 px — und die Suchleiste des Schreibstudios setzt seit E468
+   `min-height:var(--touch-min)`. Dieselbe Geste, dasselbe Mass. */
+#findbar button{
+  min-width:var(--touch-min); min-height:var(--touch-min);
+  display:grid; place-items:center; font-size:17px; line-height:1;
+  background:none; border:none; border-radius:7px; color:var(--text-dim); cursor:pointer;
+}
+#findbar button:hover{background:var(--bg-hover); color:var(--text)}
 #page mark{background:#ffdc4966; color:inherit; border-radius:2px}
+/* DIE STELLE, BEI DER MAN GERADE IST. Nicht nur eine andere Farbe (§38):
+   der Rahmen ist eine Form, und der Zähler sagt es daneben in Worten. */
+#page mark.aktiv{background:#ff9e2c99; outline:2px solid var(--accent); outline-offset:1px}
+/* AM TELEFON SPANNT DIE LEISTE ÜBER DIE BREITE (E667). Mit Feld, Zahl,
+   Kreuz war sie 310 px breit und passte knapp; mit den zwei Pfeilen sind
+   es 458, und `right:22px` schob das SUCHFELD links aus dem Bild — auf dem
+   Bildschirmfoto stand davon ein „r" (§55.1, §37). Das Feld gibt hier seine
+   feste Breite auf und nimmt, was nach den drei Knöpfen übrig ist. */
+@media (max-width:760px){
+  #findbar{ left:10px; right:10px; top:52px; gap:2px; padding:6px 8px; }
+  #findbar input{ width:auto; flex:1 1 0; min-width:0 }
+  #findbar .n{ min-width:56px; flex:0 0 auto }
+}
 
 /* --- Fokus-Modus ---------------------------------------------------------------------------------- */
 /* SEIT E272 PHASE F AUCH DIE NEUE SCHALE. Der Fokusmodus versteckte
@@ -25147,7 +25169,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1264, inhalt: '35a2c0556176a0f8', gebaut: '2026-09-20T20:03:15.109Z' };
+const Stand = { fassung: 1266, inhalt: '6599b935b6c0e82e', gebaut: '2026-09-20T20:20:27.899Z' };
 window.Stand = Stand;
 
 </script>
@@ -173197,7 +173219,22 @@ const App = (() => {
             return;
         oeffne(t.page.id);
     };
-    /** Suchen auf der offenen Seite — Strg + F. */
+    /** Suchen auf der offenen Seite — Strg + F.
+     *
+     *  SEIT E667 GEHT ES AUCH ZUR ZWEITEN STELLE. Vorher markierte diese
+     *  Leiste jede Fundstelle, rollte zur ERSTEN und schrieb „12 Treffer" —
+     *  und zu den elf anderen gab es keinen Weg. Eine Zahl, die elf Orte
+     *  nennt und einen zeigt, ist dasselbe Versprechen wie ein README, das
+     *  etwas ankündigt, das nicht läuft (§47).
+     *
+     *  Die Geste ist die des Schreibstudios (E468) und die jedes Browsers:
+     *  Enter vor, Umschalt+Enter zurück, ‹ und › als Knöpfe, Escape zu. Sie
+     *  läuft um — hinter der letzten Stelle steht wieder die erste, und das
+     *  ist der Unterschied zwischen einem Ring und einer Wand.
+     *
+     *  Die aktive Stelle trägt `.aktiv` und nicht nur eine andere Farbe: §38
+     *  verbietet Information allein über Farbe, und der Zähler sagt sie
+     *  deshalb noch einmal in Worten — „2 von 4". */
     const seitenSuche = () => {
         const alt = document.getElementById('findbar');
         if (alt) {
@@ -173207,8 +173244,13 @@ const App = (() => {
         }
         const bar = document.createElement('div');
         bar.id = 'findbar';
-        bar.innerHTML = '<input placeholder="Auf dieser Seite suchen …"><span class="n"></span>' +
-            '<button data-a="zu">✕</button>';
+        bar.setAttribute('role', 'search');
+        bar.innerHTML =
+            '<input placeholder="Auf dieser Seite suchen …" aria-label="Auf dieser Seite suchen">' +
+                '<span class="n" aria-live="polite"></span>' +
+                '<button data-a="zurueck" aria-label="Vorige Stelle (Umschalt+Enter)" title="Vorige Stelle">‹</button>' +
+                '<button data-a="vor" aria-label="Nächste Stelle (Enter)" title="Nächste Stelle">›</button>' +
+                '<button data-a="zu" aria-label="Suche schliessen (Escape)" title="Suche schliessen">✕</button>';
         document.body.appendChild(bar);
         const inp = bar.querySelector('input');
         if (!inp)
@@ -173216,14 +173258,45 @@ const App = (() => {
         const n = bar.querySelector('.n');
         if (!n)
             return;
+        /* Die Fundstellen in der Reihenfolge, in der sie auf der Seite stehen,
+           und die, bei der man gerade ist. Beides lebt nur, solange die Leiste
+           steht — `zeichneSeite()` baut den Text ohnehin neu. */
+        let stellen = [];
+        let bei = 0;
+        const zeige = (rollen) => {
+            stellen.forEach(m => m.classList.remove('aktiv'));
+            if (!stellen.length) {
+                n.textContent = inp.value.trim() ? 'nichts' : '';
+                return;
+            }
+            if (bei < 0)
+                bei = stellen.length - 1;
+            if (bei >= stellen.length)
+                bei = 0;
+            const jetzt = stellen[bei];
+            if (!jetzt)
+                return;
+            jetzt.classList.add('aktiv');
+            n.textContent = (bei + 1) + ' von ' + stellen.length;
+            if (rollen)
+                jetzt.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        };
+        /* Ein Ring, keine Wand: hinter der letzten Stelle kommt die erste. */
+        const gehe = (richtung) => {
+            if (!stellen.length)
+                return;
+            bei = (bei + richtung + stellen.length) % stellen.length;
+            zeige(true);
+        };
         const suchen = () => {
             document.querySelectorAll('#page mark').forEach(m => m.replaceWith(...m.childNodes));
+            stellen = [];
+            bei = 0;
             const q = inp.value.trim();
             if (!q) {
                 n.textContent = '';
                 return;
             }
-            let anzahl = 0;
             const seitenKasten = document.getElementById('page');
             if (!seitenKasten)
                 return;
@@ -173240,23 +173313,37 @@ const App = (() => {
                 const mark = document.createElement('mark');
                 mark.textContent = nach.nodeValue;
                 nach.replaceWith(mark);
-                if (!anzahl)
-                    mark.scrollIntoView({ block: 'center', behavior: 'smooth' });
-                anzahl++;
+                stellen.push(mark);
             });
-            n.textContent = anzahl ? anzahl + ' Treffer' : 'nichts';
+            zeige(true);
         };
         inp.addEventListener('input', suchen);
         inp.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
                 bar.remove();
                 zeichneSeite();
+                return;
+            }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                gehe(e.shiftKey ? -1 : 1);
             }
         });
         bar.addEventListener('click', e => {
-            if (elVon(e)?.closest('[data-a="zu"]')) {
+            const knopf = elVon(e)?.closest('[data-a]');
+            if (!knopf)
+                return;
+            const was = knopf.dataset.a;
+            if (was === 'zu') {
                 bar.remove();
                 zeichneSeite();
+                return;
+            }
+            /* Nach dem Klick gehört die Schreibmarke wieder ins Feld — sonst
+               landet das nächste Enter auf dem Knopf statt in der Suche. */
+            if (was === 'vor' || was === 'zurueck') {
+                gehe(was === 'vor' ? 1 : -1);
+                inp.focus();
             }
         });
         inp.focus();

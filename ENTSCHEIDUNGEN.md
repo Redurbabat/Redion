@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-646 Entscheidungen, E1 bis E666 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+647 Entscheidungen, E1 bis E667 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -709,6 +709,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E664** — Ein Wächter, der an der Reihenfolge im Block scheitert: `test403` prüfte „steht das `remove` in einem `finally`", indem er zwei Zeilen zurücksah. E652 schob zwei Zeilen dazwischen — dasselbe `finally`, dieselbe Zusage, und der volle Lauf wurde rot. Jetzt wird der umschliessende Block wirklich gesucht (Klammern zählend nach oben).
 * **E665** — Ein Griff statt zwei: `test537` meldete einen neuen Querverweis, weil die Einstellungsseite für den Probelauf erst `KI.modelleHolen(id)` und dann `KI.modelleVon(id)[0]` rief. Der Wächter hatte recht, und zwar doppelt — „holen und dann das erste nehmen" ist eine Prozedur der KI, nicht Wissen der Einstellungsseite. Jetzt `KI.modellWaehlen(id)`, ein Satz. Dabei gemessen: `ohneSchablonen` verdeckt **266 echte Aufrufe** im Bestand (L207).
 * **E666** — „Erinnerung" führt zu einer Erinnerung: der Slash-Eintrag schrieb `@remind ` in den Text, und NIRGENDS im Programm wurde `@remind` gelesen — während `Werkzeuge.erinnerungSetzen` samt Dialog, Liste und Geräte-Meldung längst dastand. Der Draht liegt im REGISTER (§5 dritter Weg) und nicht im Editor: `bereiche/editor → Werkzeuge` steht bei 1, und das Verzeichnis darf nur schrumpfen. Nach dem Bogen: unverändert 518 Treffer. Wächter `test555`.
+* **E667** — Strg+F findet vier Stellen und zeigte eine: die Seitensuche markierte jede Fundstelle, rollte zur ERSTEN und schrieb „12 Treffer" — zu den elf anderen gab es keinen Weg, denn ihr `keydown` kannte nur `Escape`. Jetzt Enter vor, Umschalt+Enter zurück, ‹ und › als 44-px-Knöpfe (§37), Zähler „2 von 4" statt „4 Treffer" (§38), und ein Ring statt einer Wand. Das BILD fand dazu, was kein Lauf sah: am Telefon lief das Suchfeld links aus dem Bild (`-90 … 368` bei 390 px), weil die zwei neuen Knöpfe die Leiste auf 458 px verbreiterten (§55.1). Wächter `test556`.
 
 ---
 
@@ -54510,3 +54511,73 @@ Zahlen ersetzt, schreibt Geschichte um. Prüfen ja, schreiben nein.
 **Was kostet es?** Ein Lauf ohne Browser, der in einer Sekunde durch ist.
 Er darf deshalb auch neben einem vollen Lauf gefahren werden — §30 meint
 die Ports, und dieser hält keinen.
+
+
+## E667 — Strg+F findet vier Stellen und zeigte eine
+
+**Was wurde entschieden?** Die Suche auf der offenen Seite (`seitenSuche`
+in `src/schale/aufbau/schale.ts`) bekommt, was jeder Browser seit zwanzig
+Jahren hat: Enter zur nächsten Fundstelle, Umschalt+Enter zur vorigen,
+zwei Knöpfe ‹ und › für dieselbe Sache, und einen Zähler, der sagt, die
+wievielte gerade gilt — „2 von 4" statt „4 Treffer".
+
+**Warum?** Weil der alte Zähler ein Versprechen war, das die Leiste nicht
+einlöste. Sie markierte jede Fundstelle mit `<mark>`, rollte zur **ersten**
+(`if (!anzahl) mark.scrollIntoView(…)`) und schrieb die Zahl. Zu den
+anderen gab es keinen Weg: das `keydown` am Feld kannte genau eine Taste,
+`Escape`; Enter fiel durch. Wer auf einer langen Seite „12 Treffer" las,
+bekam einen — und musste die übrigen elf mit dem Auge suchen.
+
+Das ist derselbe Fehler wie „im README versprechen, was nicht läuft"
+(§47), nur im Kleinen: eine Zahl behauptet zwölf Orte und liefert einen.
+
+**Und daneben stand die Lösung schon.** Die Suchleiste des Schreibstudios
+kann das seit E468 — Feld, Zahl, ‹ und ›, Enter vor, Umschalt+Enter
+zurück. Dieselbe Geste, zwei Häuser, und in einem ging sie nicht.
+
+**Was war die Alternative?** Die Studio-Leiste auch für die Seite
+benutzen. Dagegen spricht, dass sie auf einem ganz anderen Fundament
+steht: ihre Treffer liegen **nicht** im DOM, sondern als Seite + Kasten in
+Blattpunkten, damit auch ungezeichnete Seiten gefunden werden. Die
+Seitensuche arbeitet auf `<mark>`-Elementen im gezeichneten Text. Eine
+gemeinsame Leiste hätte zwei Datenmodelle in einem Griff vereinigen
+müssen — viel Arbeit, um zwei Pfeile zu sparen. Geteilt wird deshalb die
+**Geste**, nicht der Code.
+
+**Ein Ring, keine Wand.** Hinter der letzten Stelle kommt wieder die
+erste. Das ist keine Bequemlichkeit: wer bei Stelle 4 von 4 steht und
+weiterdrückt, will von vorn — und eine Taste, die nichts tut, sieht aus
+wie eine kaputte Taste.
+
+**Die aktive Stelle trägt `.aktiv`, nicht nur eine andere Farbe.** §38
+verbietet Information allein über Farbe; deshalb ein Rahmen (eine Form)
+**und** der Zähler, der es in Worten sagt.
+
+**Was das Bild gefunden hat, und kein Prüflauf.** §55.3 verlangt ein Bild,
+wo es etwas zu sehen gibt — und darauf stand am Telefon vom Suchfeld genau
+ein Buchstabe: „r". Die Leiste steht `position:fixed; right:22px`; mit
+Feld, Zahl und Kreuz war sie 310 px breit und passte auf 390 px knapp. Die
+zwei neuen Knöpfe machten 458 daraus, und das **Feld, in das man tippt**,
+lief links aus dem Bild. Gemessen: `-90 … 368` in einem 390 px breiten
+Fenster. Unter 760 px spannt die Leiste jetzt über die Breite
+(`left:10px; right:10px`), und das Feld gibt seine feste Breite auf.
+
+Das ist genau der Fall aus §55.1 — „am Telefon stand die halbe
+Werkzeugleiste ausserhalb des Bildes" — und er ist zum zweiten Mal
+passiert, weil ein Mass wuchs und niemand nachsah. Der Wächter misst es
+jetzt in Zahlen.
+
+**Und die Knöpfe messen 44 px** (§37). Das Kreuz mass 13×24 — die einzige
+Stelle der Leiste, die man je treffen musste, und sie war kleiner als
+jeder Nebenweg. Die Studio-Leiste setzt seit E468 `min-height:
+var(--touch-min)`; hier steht jetzt dasselbe.
+
+**Was kostet es?** Zwei Knöpfe mehr in einer Leiste und 60 statt 38 px
+Höhe am Rechner. Dafür ist die Suche zu Ende gedacht, statt auf halbem
+Weg stehenzubleiben.
+
+**Wächter `test556`**, 22 Zusagen. Gegen den alten Stand war er rot mit
+5 von 17 — darunter die Zeilen, um die es geht: „aktiv bleibt 0 — Enter
+tut nichts" und „unter 44 px: ✕ (13×24)". Der Telefon-Teil kam **nach**
+dem Bild dazu und war noch einmal rot: „sie reicht von -90 bis 368 in
+einem 390 px breiten Fenster".

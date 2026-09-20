@@ -942,6 +942,41 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* --- Suchen auf der Seite (E667) ---------------------------------------
+     Die Leiste hatte Feld, Zahl und Kreuz — und keinen Weg zur zweiten
+     Fundstelle. Auf dem Bild ist zu sehen, was der Zähler jetzt sagt
+     („2 von 4") und dass die aktive Stelle einen Rahmen trägt, nicht nur
+     eine andere Farbe (§38). */
+  suchen: {
+    titel: 'Suchen auf der Seite — zweite von vier Stellen',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const seite = Store.addPage(null, { text: 'Kabelkunde' });
+      for (let i = 1; i <= 4; i++) {
+        Store.addBlock(seite.id, 'text',
+          { text: 'Stelle ' + i + ': der Schutzleiter ist grün-gelb und wird zuerst angeklemmt.' });
+        Store.addBlock(seite.id, 'text', { text: 'Fuelltext '.repeat(14) });
+      }
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 500));
+    },
+    dann: async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown',
+        { key: 'f', ctrlKey: true, bubbles: true, cancelable: true }));
+      await new Promise(r => setTimeout(r, 250));
+      const feld = document.querySelector('#findbar input') as HTMLInputElement | null;
+      if (!feld) return;
+      feld.value = 'Schutzleiter';
+      feld.dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise(r => setTimeout(r, 350));
+      (document.querySelector('#findbar [data-a="vor"]') as HTMLElement | null)?.click();
+      await new Promise(r => setTimeout(r, 500));
+    }
+  },
+
+
   papier: {
     titel: 'Die Papiervorlagen am A4-Blatt',
     bauen: async () => {
