@@ -82,8 +82,11 @@
  * und beim Ankommen wieder kompakter werden."
  *
  * Das Abklingen auf ein halbes Prozent liegt bei ω·t ≈ 7,6. Für die
- * 180–300 ms, die `continuous-material-selection.md` als Zielbereich nennt,
- * ist das ω = 7,6 / 230 ms ≈ 0,033 je Millisekunde.
+ * 180–300 ms, die `continuous-material-selection.md` als Zielbereich nennt.
+ * Für den mobilen Dock nehmen wir bewusst die sichtbarere obere Hälfte dieses
+ * Bereichs: ω = 0,026 ergibt rund 292 ms bis zum halben Prozent. Die vorherigen
+ * 230 ms waren in der echten Bildschirmaufnahme trotz korrekter Bewegung zu
+ * leicht als harter Zustandswechsel zu lesen.
  *
  * ─── WARUM KEYFRAMES UND KEINE EIGENE SCHLEIFE ──────────────────────────────
  *
@@ -99,7 +102,7 @@
 const SelectionFlow = (() => {
 
   /** Wie schnell die Feder ausläuft, je Millisekunde. Siehe Kopf. */
-  const OMEGA = 0.033;
+  const OMEGA = 0.026;
   /** Abgetastet wird alle 8 ms — bei 120 Hz knapp ein Wert je Bild. */
   const SCHRITT = 8;
   /** Nach 7,6/ω ist sie auf ein halbes Prozent herunter. */
@@ -111,9 +114,9 @@ const SelectionFlow = (() => {
    * deformation subtle. Preserve recognizable control boundaries and avoid
    * cartoon-like elasticity in professional/productivity UI."
    */
-  const DEHNUNG_MAX = 0.18;
+  const DEHNUNG_MAX = 0.24;
   /** Aus Geschwindigkeit (px/ms) wird Dehnung. 0,2 · 0,88 px/ms ≈ 0,18. */
-  const DEHNUNG_JE_TEMPO = 0.2;
+  const DEHNUNG_JE_TEMPO = 0.24;
 
   type Lauf = {
     /** Wo die Fläche hinsoll, in Pixeln vom Anfang des Behälters. */
