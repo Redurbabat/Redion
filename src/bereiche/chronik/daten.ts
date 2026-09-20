@@ -2530,12 +2530,20 @@ const ChronikDaten = {
      "zeitraum": "ca. 19:20 –",
      "dauer": "laufend",
      "pruefungen": "test550 (8/8, Gegenprobe gefahren), test549 · der volle Lauf läuft weiter im Arbeitsbaum"
+    },
+    {
+     "was": "E660 — Tabellenwerkzeuge am Telefon: 26 px werden 44 px",
+     "vonCommit": "(offen)",
+     "bisCommit": "(offen)",
+     "zeitraum": "ca. 19:50 –",
+     "dauer": "laufend",
+     "pruefungen": "test551 (9/9), test402, test549 (6/6), test550 (8/8)"
     }
    ],
    "zahlen": {
     "commits": 2,
-    "entscheidungen": 17,
-    "neue Prüfläufe": 9,
+    "entscheidungen": 18,
+    "neue Prüfläufe": 10,
     "volle Läufe": 0
    },
    "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -3797,6 +3805,30 @@ const ChronikDaten = {
    "ursache": "Eine gewachsene Datei benutzt die Form, die zur Zeit ihres Eintrags üblich war. Wer sie mit der HEUTIGEN Form misst, misst das Alter, nicht den Inhalt.",
    "beweis": "Die Regel, die keine Form voraussetzt — eine Zeile, die mit der Nummer BEGINNT und ein Trennzeichen trägt —, findet 638 von 638.",
    "lehre": "Bei der dritten Zahl, die nach einem Fund aussieht, ist der Prüfer verdächtig, nicht die Datei. Dazu: zwei weitere „Funde\" dieses Bogens standen bereits als Erklärung in der Datei — nachlesen ist billiger als nachbessern."
+  },
+  {
+   "nr": "P91",
+   "datum": "2026-09-20",
+   "titel": "Ein Wächter, der die Höhe nicht sehen kann, die er prüft",
+   "schwere": "mittel",
+   "symptom": "test402 hält §37 (44 px auf den Hauptwegen) und war jahrelang grün, während sieben Knöpfe unter jeder Tabelle 26 px hoch waren.",
+   "falscheVermutung": "Dass ein grüner §37-Wächter heisst, die Trefflächen stimmen.",
+   "wieGefunden": "Beim Nachmessen im Browser für E660: 7 von 7 Knöpfen 26 px. Danach im Wächter nachgesehen, warum er schweigt — er sucht height/min-height im Stilblatt, und dort stand keine Höhe.",
+   "ursache": "Die 26 px entstehen aus font-size:12px und padding:3px 9px. Eine Textsuche im CSS kann eine gerechnete Höhe nicht sehen; deshalb stand die Regel auch nie im Verzeichnis masse-bestand.json.",
+   "beweis": "test551 misst die gerenderte Box: vorher 7 × 26 px, nachher 7 × 44 px — bei unverändert grünem test402.",
+   "lehre": "Dasselbe wie §55.2, an anderer Stelle: eine Messung, die nicht messen KANN, was sie behauptet, sagt immer, es passe schon. Und: ein grüner Wächter ist eine Aussage über das, was er misst, nicht über die Regel, die er im Namen trägt."
+  },
+  {
+   "nr": "P92",
+   "datum": "2026-09-20",
+   "titel": "Fast eine zweite Werkzeugzeile gebaut, die es schon gab",
+   "schwere": "niedrig",
+   "symptom": "Ein fertig geschriebener Wächter suchte nach .stab-daumen — einer Werkzeugzeile, die ich für das Telefon bauen wollte.",
+   "falscheVermutung": "Dass es am Telefon keinen Weg zu den Tabellenbefehlen gibt, weil die Griffe 7 px messen und ein mouseover brauchen.",
+   "wieGefunden": "Beim Lesen der Stelle, an der die Griffe entstehen — zwanzig Zeilen weiter stand .stab-tools mit sieben Knöpfen, und im Stilblatt die Regel aus L108, die sie am Telefon sichtbar macht.",
+   "ursache": "§45 Schritt 1 übersprungen: die Datei an der interessanten Stelle gelesen, nicht zu Ende.",
+   "beweis": "Der Wächter wurde weggeworfen und neu geschrieben; der echte Fund war 26 px statt 44, nicht dass es nichts gibt.",
+   "lehre": "Der teuerste wiederkehrende Fehler dieses Projekts ist laut §45, etwas aus dem Gedächtnis zu bauen statt nachzuschlagen. Einen Wächter wegzuwerfen ist billiger als einen zweiten Katalog zu pflegen (§8)."
   }
  ]
 } as const;

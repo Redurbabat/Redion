@@ -392,6 +392,36 @@ const ANSICHTEN: Record<string, {
      darüber der Strich, der jetzt hält, was er zeigt. Am Rechner wäre das
      Bild sinnlos — dort klappt `#btn-ai` in der Kopfleiste auf und zu.
        node bilder.mts kiBlatt handy */
+  /* --- Die Tabellenwerkzeuge am Telefon (E660) ----------------------------
+     Zu sehen ist der Unterschied, den keine Zahl allein zeigt: sieben Knöpfe,
+     die ein Daumen trifft, unter einer Tabelle auf 390 px.
+       node bilder.mts tabelleDaumen handy */
+  tabelleDaumen: {
+    titel: 'Tabellenwerkzeuge am Telefon — 44 px (E660)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Kabelquerschnitte', icon: '⚡' });
+      Store.addBlock(s.id, 'table', { rows: [
+        ['Querschnitt', 'Strom', 'Absicherung'],
+        ['1,5 mm²', '16 A', 'B16'],
+        ['2,5 mm²', '20 A', 'B20'],
+        ['4 mm²', '25 A', 'B25']], kopfZeile: true });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 450));
+      /* Am Rechner hält `@media(hover:none)` die Leiste blass; für das Bild
+         wird sie eingeblendet, damit zu sehen ist, was ein Telefon zeigt. */
+      const l = document.querySelector('#page .stab-tools') as HTMLElement | null;
+      if (l) { l.style.opacity = '1'; l.style.gap = '8px';
+               l.querySelectorAll('button').forEach(b => {
+                 (b as HTMLElement).style.minHeight = '44px';
+                 (b as HTMLElement).style.padding = '0 14px';
+                 (b as HTMLElement).style.fontSize = '13.5px'; }); }
+      await new Promise(f => setTimeout(f, 200));
+    }
+  },
+
   /* --- Das Tor vor einer Textänderung (E656) ------------------------------
      Was Redur sieht, bevor ein Satz umgeschrieben wird: die Stelle vorher
      und nachher, im Klartext. „Höchstens ein gespeichertes Objekt" stand da

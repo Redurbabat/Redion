@@ -1881,12 +1881,13 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 | E656 — textBearbeiten: das erste Werkzeug, das bestehenden Text anfasst | `(offen)` → `(offen)` | ca. 18:15 – | laufend | test548 (17/17, zwei Gegenproben gefahren), test547, test546, test291, test281, test286, test87, test105, test109 |
 | E657/E658 — volllauf.mts, und die Lückenliste sagt die Wahrheit über sich selbst | `(offen)` → `(offen)` | ca. 18:45 – | laufend | test549 (6/6, Gegenprobe gefahren), test105, test109, test87 · dazu läuft der volle Lauf im Arbeitsbaum |
 | E659 — test550: die Doku zählt, was da ist | `(offen)` → `(offen)` | ca. 19:20 – | laufend | test550 (8/8, Gegenprobe gefahren), test549 · der volle Lauf läuft weiter im Arbeitsbaum |
+| E660 — Tabellenwerkzeuge am Telefon: 26 px werden 44 px | `(offen)` → `(offen)` | ca. 19:50 – | laufend | test551 (9/9), test402, test549 (6/6), test550 (8/8) |
 
 #### Zahlen des Tages
 
 - **commits:** 2
-- **entscheidungen:** 17
-- **neue Prüfläufe:** 9
+- **entscheidungen:** 18
+- **neue Prüfläufe:** 10
 - **volle Läufe:** 0
 
 #### Das grösste Problem
@@ -1909,5 +1910,5 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 90 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 92 Einträge.
 

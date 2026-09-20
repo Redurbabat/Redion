@@ -104,6 +104,8 @@ sind der teuerste Teil und der lehrreichste.
 | P88 | 2026-09-20 | Die Lückenliste war selbst der stille Fehler | 🟠 mittel | — |
 | P89 | 2026-09-20 | Der Titel ist nicht der Status | niedrig | — |
 | P90 | 2026-09-20 | Vier Anläufe, vier erfundene Zahlen — und die Datei war immer in Ordnung | niedrig | — |
+| P91 | 2026-09-20 | Ein Wächter, der die Höhe nicht sehen kann, die er prüft | 🟠 mittel | — |
+| P92 | 2026-09-20 | Fast eine zweite Werkzeugzeile gebaut, die es schon gab | niedrig | — |
 
 ---
 
@@ -1995,4 +1997,42 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Die Regel, die keine Form voraussetzt — eine Zeile, die mit der Nummer BEGINNT und ein Trennzeichen trägt —, findet 638 von 638.
 
 **Die Lehre.** Bei der dritten Zahl, die nach einem Fund aussieht, ist der Prüfer verdächtig, nicht die Datei. Dazu: zwei weitere „Funde" dieses Bogens standen bereits als Erklärung in der Datei — nachlesen ist billiger als nachbessern.
+
+
+---
+
+## P91 · Ein Wächter, der die Höhe nicht sehen kann, die er prüft
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** test402 hält §37 (44 px auf den Hauptwegen) und war jahrelang grün, während sieben Knöpfe unter jeder Tabelle 26 px hoch waren.
+
+**Die falsche Vermutung.** Dass ein grüner §37-Wächter heisst, die Trefflächen stimmen.
+
+**Wie es gefunden wurde.** Beim Nachmessen im Browser für E660: 7 von 7 Knöpfen 26 px. Danach im Wächter nachgesehen, warum er schweigt — er sucht height/min-height im Stilblatt, und dort stand keine Höhe.
+
+**Die Ursache.** Die 26 px entstehen aus font-size:12px und padding:3px 9px. Eine Textsuche im CSS kann eine gerechnete Höhe nicht sehen; deshalb stand die Regel auch nie im Verzeichnis masse-bestand.json.
+
+**Der Beweis.** test551 misst die gerenderte Box: vorher 7 × 26 px, nachher 7 × 44 px — bei unverändert grünem test402.
+
+**Die Lehre.** Dasselbe wie §55.2, an anderer Stelle: eine Messung, die nicht messen KANN, was sie behauptet, sagt immer, es passe schon. Und: ein grüner Wächter ist eine Aussage über das, was er misst, nicht über die Regel, die er im Namen trägt.
+
+
+---
+
+## P92 · Fast eine zweite Werkzeugzeile gebaut, die es schon gab
+
+*2026-09-20 · niedrig*
+
+**Das Bild.** Ein fertig geschriebener Wächter suchte nach .stab-daumen — einer Werkzeugzeile, die ich für das Telefon bauen wollte.
+
+**Die falsche Vermutung.** Dass es am Telefon keinen Weg zu den Tabellenbefehlen gibt, weil die Griffe 7 px messen und ein mouseover brauchen.
+
+**Wie es gefunden wurde.** Beim Lesen der Stelle, an der die Griffe entstehen — zwanzig Zeilen weiter stand .stab-tools mit sieben Knöpfen, und im Stilblatt die Regel aus L108, die sie am Telefon sichtbar macht.
+
+**Die Ursache.** §45 Schritt 1 übersprungen: die Datei an der interessanten Stelle gelesen, nicht zu Ende.
+
+**Der Beweis.** Der Wächter wurde weggeworfen und neu geschrieben; der echte Fund war 26 px statt 44, nicht dass es nichts gibt.
+
+**Die Lehre.** Der teuerste wiederkehrende Fehler dieses Projekts ist laut §45, etwas aus dem Gedächtnis zu bauen statt nachzuschlagen. Einen Wächter wegzuwerfen ist billiger als einen zweiten Katalog zu pflegen (§8).
 

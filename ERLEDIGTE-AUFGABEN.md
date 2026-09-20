@@ -1,5 +1,40 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E660 · Die Tabellenwerkzeuge sind am Telefon zu treffen
+
+**Der Fund.** Am Telefon sind die sieben Knöpfe unter einer Tabelle der
+EINZIGE Weg, eine Spalte oder Zeile anzulegen — die Griffe daneben messen
+7 px und stehen erst nach einem `mouseover` da, den ein Daumen nicht
+erzeugt. Die Knöpfe waren 26 px hoch: weder die harte 44 noch die 32 eines
+Nebenwegs, und ohne den geschriebenen Grund, den §37 dafür verlangt.
+
+**Gebaut.** 44 px unter `@media(hover:none)`, dort wo L108 schon steht —
+kein zweiter Katalog. Am Rechner bleibt es bei 26 px, und `test551` misst
+auch das: eine Maus trifft genauer, und eine hohe Leiste unter jeder
+Tabelle wäre dort nur laut.
+
+**Was ich zuerst falsch gebaut hätte.** Ich war dabei, eine zweite
+Werkzeugzeile für den Daumen zu schreiben — `.stab-tools` gibt es seit
+langem, und L108 hat sie am Telefon längst sichtbar gemacht. Der fertig
+geschriebene Wächter dafür wurde weggeworfen und neu geschrieben. §45
+Schritt 1 heisst „bestehenden Code lesen", und er ist der Schritt, der am
+häufigsten fehlt.
+
+**Der Fund über dem Fund.** `test402` hält dieselbe Regel und konnte diese
+Knöpfe nie sehen: er sucht `height`/`min-height` im Stilblatt, und die 26 px
+kamen aus Innenabstand und Schriftgrösse. Eine Messung, die nicht messen
+KANN, was sie behauptet, sagt immer „passt schon" — eingetragen als L206,
+statt hier versprochen (§35).
+
+**Geprüft.** `test551` neu, 9 Messungen, gegen den alten Stand 8/9 mit
+genau der einen roten Zeile („7 von 7 unter 44 px"). `test402` grün,
+`test549` 6/6, `test550` 8/8 — die beiden Doku-Wächter haben im selben Bogen
+zugeschlagen, als L206 und `test551` die Zahlen verschoben.
+
+**Bild.** `bilder/tabelleDaumen-handy-dunkel.png` (§55.3).
+
+---
+
 ## 20. September 2026 · E659 · Die Doku zählt, was da ist
 
 **Der Anlass.** §30 sagt über die Zahl der Prüfläufe: „Sie wird nicht

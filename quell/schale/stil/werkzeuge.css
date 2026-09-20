@@ -1291,7 +1291,23 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
  * acht schon zu waren — genau dafür ist er da.
  * ==========================================================================*/
 @media(hover:none){
-  .stab-wrap .stab-tools{opacity:1}
+  .stab-wrap .stab-tools{opacity:1; gap:8px}
+
+  /* 44 px TREFFFLÄCHE (§37, E660). HAUPTWEG, kein Nebenweg: am Telefon sind
+     diese sieben Knöpfe der EINZIGE Weg, eine Spalte oder Zeile anzulegen —
+     die Griffe daneben messen 7 px und stehen erst nach einem `mouseover`
+     da, den ein Daumen nicht erzeugt.
+
+     Gemessen vor E660: 7 von 7 Knöpfen 26 px hoch. Das ist weder die harte
+     44 noch die 32 eines Nebenwegs, und ein geschriebener Grund stand auch
+     nicht daneben.
+
+     NUR HIER, nicht am Rechner: dort trifft eine Maus 26 px genauer als ein
+     Daumen 44, und eine hohe Leiste unter jeder Tabelle wäre nur laut.
+     `test551` misst beide Seiten. */
+  .stab-wrap .stab-tools button{
+    min-height:var(--touch-min); padding:0 14px; font-size:13.5px;
+  }
 }
 
 /* ==========================================================================

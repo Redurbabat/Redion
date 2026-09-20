@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-639 Entscheidungen, E1 bis E659 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+640 Entscheidungen, E1 bis E660 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -702,6 +702,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E657** — Der volle Lauf bekommt ein Werkzeug: `pruefungen/volllauf.mts` fährt alle Läufe in Stücken, merkt nach JEDEM Stück, wie weit er ist, und verträgt eine Liste, die sich unterwegs ändert. §30 beschrieb diese Arbeitsweise seit dem 3. September — es gab sie nur als Handgriff, und beim vorletzten vollen Lauf ist genau das schiefgegangen.
 * **E658** — Die Lückenliste sagt die Wahrheit über sich selbst: 33 OFFENE Lücken standen unterhalb der Überschrift „Anhang B · Was erledigt ist" — wer von oben las, hielt sie für erledigt (§35). Sie stehen jetzt oben unter „Weitere offene Lücken"; das Verschieben ist byteweise gegengeprüft. Dazu: ein Wort für „zu" statt fünf (GESCHLOSSEN, wie §35 es nennt), und die selbstgenannte Zahl stimmt wieder. Wächter `test549`.
 * **E659** — Die Doku zählt, was da ist: ein Wächter für §30s eigenen Satz („sie wird nicht geschätzt, sie wird gezählt") und für §34s „beides: Verzeichnis und Text". Er wurde gegen den Stand rot, den er selbst erzeugt hatte — 492 Dateien, 491 in der Doku. Vier Anläufe der Messung waren vorher zu eng und meldeten je eine erfundene Zahl; `ENTSCHEIDUNGEN.md` kennt drei Überschriftsformen, und die Regel, die hält, setzt keine voraus. Wächter `test550`.
+* **E660** — Die Tabellenwerkzeuge sind am Telefon zu treffen: sieben Knöpfe à 26 px waren dort der EINZIGE Weg, eine Spalte anzulegen — die Griffe daneben messen 7 px und brauchen ein `mouseover`, das ein Daumen nicht erzeugt. Jetzt 44 px unter `@media(hover:none)`, am Rechner unverändert schlank. Und der Fund über den Fund: `test402` konnte das nie sehen, weil er nur DEKLARIERTE Höhen liest — 26 px aus Innenabstand und Schriftgrösse sind für ihn unsichtbar (L206). Wächter `test551`.
 
 ---
 
@@ -54023,6 +54024,75 @@ gab.
 mindestens drei Überschriftsformen für dieselbe Sache:
 
 ```txt
+
+## E660 — Die Tabellenwerkzeuge sind am Telefon zu treffen
+
+**Was wurde entschieden?** Die Werkzeugzeile der einfachen Tabelle bekommt
+unter `@media(hover:none)` 44 px hohe Knöpfe. Am Rechner bleibt sie schlank.
+
+**Warum?** §37 ist **[hart im Kern]**, und am Telefon sind diese sieben
+Knöpfe der **einzige** Weg, eine Spalte oder Zeile anzulegen. Gemessen:
+
+```txt
+.stab-tools button    7 von 7 Knöpfen 26 px hoch
+.stab-griff.x/.y      7 px — und erst nach einem `mouseover` sichtbar
+```
+
+26 px ist weder die harte 44 noch die 32 eines Nebenwegs, und der
+geschriebene Grund, den §37 für einen Nebenweg verlangt, stand auch nicht
+daneben.
+
+**Was ich zuerst falsch vermutet habe — und der Grund, warum §45 Schritt 1
+existiert.** Die 7-px-Griffe sahen nach „am Telefon geht gar nichts" aus,
+und ich war dabei, eine zweite Werkzeugzeile für den Daumen zu bauen. Es
+gibt sie schon: `.stab-tools` mit sieben Knöpfen, und **L108 hat sie am
+Telefon längst sichtbar gemacht** (`@media(hover:none){ .stab-tools{opacity:1} }`,
+gefunden von `test303` als neunter Fall). Eine zweite Zeile daneben wäre
+ein zweiter Katalog gewesen (§8) — und der teuerste wiederkehrende Fehler
+dieses Projekts ist laut §45 genau dieser: etwas aus dem Gedächtnis bauen,
+statt nachzusehen.
+
+Der fertig geschriebene Wächter für die erfundene zweite Zeile wurde
+weggeworfen und neu geschrieben. Das ist billiger als die Zeile.
+
+**Warum nicht einfach die Griffe vergrössern?** Sie liegen ÜBER der
+Tabelle, und `.stab-wrap` hat 12 px Platz darüber. Eine 44-px-Trefffläche
+ragte 32 px in die erste Zeile hinein und schluckte jeden Klick, der in
+eine Zelle gehört. Die Fläche kann dort nicht wachsen, ohne etwas anderes
+kaputtzumachen — §37 nennt für genau diesen Fall den zweiten Weg: kein
+Desktop-only, also ein eigener Weg für den Daumen. Den gab es; er war nur
+zu klein.
+
+**Warum am Rechner NICHT 44 px?** Eine Maus trifft 26 px genauer als ein
+Daumen 44, und eine hohe Leiste unter jeder Tabelle wäre dort nur laut.
+`test551` misst beide Seiten — die Zusage ist, dass der Rechner schlank
+BLEIBT, nicht nur dass das Telefon gross wird.
+
+**Was es kostet:** drei Reihen statt zwei unter der Tabelle am Telefon. Das
+ist der Preis, und §37 hat ihn entschieden.
+
+### Der Fund über dem Fund
+
+`test402` hält §37 seit langem — und **konnte diesen Fall nie sehen**. Er
+sucht in den Stilblättern nach `height` und `min-height`:
+
+```js
+const h = body.match(/(?<!max-)(?:min-)?height\s*:\s*(\d+)px/);
+```
+
+Die 26 px kamen aus `font-size:12px` und `padding:3px 9px` — nirgends stand
+eine Höhe. Deshalb stand die Regel auch nicht in `masse-bestand.json`: er
+hat sie nie gesehen, also nie eingetragen.
+
+Das ist derselbe Fund wie in §55.2, an einer anderen Stelle: **eine Messung,
+die nicht messen KANN, was sie behauptet, sagt immer „passt schon".** Dort
+war es `scrollWidth` gegen `clientWidth` bei einem Flex-Element, hier eine
+Textsuche gegen eine gerechnete Höhe.
+
+`test551` misst die gerenderte Box im echten Browser — für diese eine
+Stelle. Was fehlt, ist derselbe Blick auf alle Hauptwege; das steht als
+**L206** in `LUECKEN.md`, statt hier als Versprechen (§35).
+
 ## E123 — Titel                     die heutige Form
 =====  /  E123 — Titel  /  =====    ein Banner zwischen zwei Linien
 E123 — Titel  /  =====              ein Titel mit Linie darunter,

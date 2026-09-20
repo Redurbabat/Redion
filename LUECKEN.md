@@ -8031,6 +8031,46 @@ Kollisionen, die er verhindern soll.
 Dann schrumpft die Liste von selbst, statt zu wachsen. Das steht seit E643
 auch im Kommentar von `test400`, wo es gelesen wird.
 
+
+---
+
+## L206 · `test402` sieht nur deklarierte Höhen, nicht gerenderte
+
+**Gefunden am 20. September 2026 beim Bogen E660.**
+
+`test402` hält §37 („44 px auf den Hauptwegen") über eine Textsuche in den
+Stilblättern:
+
+```js
+const h = body.match(/(?<!max-)(?:min-)?height\s*:\s*(\d+)px/);
+```
+
+Er findet also nur, was als `height` oder `min-height` **dasteht**. Die
+Werkzeugzeile der einfachen Tabelle war 26 px hoch, ohne dass irgendwo eine
+Höhe stand:
+
+```css
+.stab-tools button{ font-size:12px; padding:3px 9px; … }
+```
+
+12 px Schrift, zweimal 3 px Innenabstand, zwei Ränder — gerendert 26 px.
+Für `test402` unsichtbar, und deshalb stand die Regel auch nicht in
+`masse-bestand.json`: er hat sie nie gesehen, also nie eingetragen.
+
+**Das ist derselbe Fund wie in §55.2**, nur an einer anderen Stelle: eine
+Messung, die nicht messen KANN, was sie behauptet, sagt immer „passt schon".
+Dort war es `scrollWidth` gegen `clientWidth` bei einem Flex-Element, hier
+ist es eine Textsuche gegen eine gerechnete Höhe.
+
+**Was heute dagegen hilft:** `test551` misst die gerenderte Box im echten
+Browser — für die Tabellenwerkzeuge. Das ist eine Stelle, nicht alle.
+
+**Was fehlt:** ein Lauf, der die Trefflächen der Hauptwege am Telefon
+allesamt im Browser nachmisst, statt sie in den Stilblättern zu suchen.
+`test402` bleibt trotzdem nützlich: er ist in einer Sekunde durch und fängt
+den offensichtlichen Fall (`height:30px`) schon beim Schreiben ab. Die zwei
+Prüfungen schliessen einander nicht aus — die zweite fehlt.
+
 # Anhang A · Was gemessen wurde
 
 Diese Zahlen sind die Grundlage für mehrere Lücken. Sie stehen hier, damit
@@ -8182,7 +8222,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 20. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 101 Lücken, 51 offene und 50 geschlossene. Der Befehl dazu ist
+Datei führt 102 Lücken, 52 offene und 50 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

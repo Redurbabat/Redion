@@ -3813,3 +3813,46 @@ Eine der drei Zahlen in CLAUDE.md auf 480 gesetzt: genau diese eine Zeile
 wird rot, die beiden anderen bleiben grün. Drei Stellen, drei Messungen.
 
 Kein Bild: hier ist zu zählen, nicht zu sehen (§55.3).
+
+---
+
+## 20. September 2026 — Tabellenwerkzeuge am Telefon (E660, `test551`)
+
+Gemessen auf 390 × 844 mit echtem Touch (`hasTouch`, sonst greift
+`@media(hover:none)` nicht):
+
+```txt
+                        vorher      nachher
+.stab-tools button      7 × 26 px   7 × 44 px
+.stab-griff.x/.y        7 px        7 px  (der Rechnerweg, unverändert)
+am Rechner (1280 px)    26 px       26 px  (bleibt schlank — geprüft)
+```
+
+Die Knöpfe tun dabei weiterhin, was sie sagen:
+
+```txt
+Spalte +   [3,3,3] → [4,4,4]     in JEDER Zeile
+Zeile +    3 → 4 Zeilen
+Inhalt     „Querschnitt" / „1,5 mm²" unverändert
+```
+
+### Der Fund über dem Fund
+
+`test402` hält §37 seit langem und hat diese sieben Knöpfe **nie gesehen**:
+
+```js
+const h = body.match(/(?<!max-)(?:min-)?height\s*:\s*(\d+)px/);
+```
+
+Er sucht nach `height`/`min-height` im Stilblatt. Die 26 px kamen aus
+`font-size:12px` und `padding:3px 9px` — nirgends stand eine Höhe. Deshalb
+stand die Regel auch nicht in `masse-bestand.json`: nie gesehen, nie
+eingetragen. Steht als **L206**.
+
+### Und was ich zuerst falsch gebaut hätte
+
+Der erste Wächter suchte nach `.stab-daumen` — einer Werkzeugzeile, die ich
+für den Daumen bauen wollte. `.stab-tools` gibt es seit langem, und **L108
+hat sie am Telefon schon sichtbar gemacht**. Der fertige Wächter wurde
+weggeworfen und neu geschrieben; das ist billiger als die zweite Zeile
+(§8, §45 Schritt 1).

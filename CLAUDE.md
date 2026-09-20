@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 492 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 493 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1024,6 +1024,14 @@ da „0 → 0" und „KEINE FASSUNG", ohne die Eindeutigkeitsprüfung kommt der
 Fehler aus E650 wörtlich zurück — „Die Leitung liegt. Das Kabel bleibt."
 Gezählt am 20. September, im selben Bogen: der Befehl sagt 490.*
 
+*Und 493: `test551` — die Tabellenwerkzeuge sind am Telefon zu treffen
+(E660). Er misst die GERENDERTE Box im Browser, und genau darin liegt sein
+Wert: `test402` hält dieselbe Regel über eine Textsuche nach `height:` in
+den Stilblättern und konnte die 26 px deshalb nie sehen — sie kamen aus
+Innenabstand und Schriftgrösse. Eine Messung, die nicht messen KANN, was
+sie behauptet, sagt immer „passt schon" (L206). Gezählt am 20. September:
+493.*
+
 *Und 492: `test550` — die Doku zählt, was da ist (E659). Er hält §30s
 eigenen Satz („sie wird nicht geschätzt, sie wird gezählt") und §34s
 „beides: Verzeichnis und Text". Er wurde gegen den Stand rot, den ER SELBST
@@ -1045,7 +1053,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 492 Läufe
+npm run pruefen                      alle 493 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1132,7 +1140,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 492 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 493 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
