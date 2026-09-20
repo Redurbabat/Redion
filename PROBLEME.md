@@ -74,6 +74,20 @@ sind der teuerste Teil und der lehrreichste.
 | P58 | 2026-09-19 | Der geschriebene Grund stand da, wo ihn niemand sucht | 🟡 klein | E627 |
 | P59 | 2026-09-19 | Meine eigene Rot-Erkennung konnte nicht rot werden | gross | — |
 | P60 | 2026-09-19 | Die Gesamtsuite war seit PR #100 nicht gelaufen | gross | — |
+| P61 | 2026-09-19 | Mein Wächter erfand eine Kopplung, die es nicht gab | 🟠 mittel | E629 |
+| P62 | 2026-09-19 | Meine Sicherungskopie nahm die falsche Datei | gross | E629 |
+| P63 | 2026-09-19 | Meine Reparatur machte den Wächter blind, und er wurde dadurch grün | gross | E631 |
+| P64 | 2026-09-19 | Der Wächter klagte den Satz an, der von ihm handelt | 🟡 klein | E631 |
+| P65 | 2026-09-19 | Zum zweiten Mal an einem Tag: das Aufschreiben erzeugte den nächsten Fehlalarm | 🟡 klein | E632 |
+| P66 | 2026-09-20 | Die Linse zeigte gar keine Brechung — die Knöpfe lagen davor | 🟠 mittel | — |
+| P67 | 2026-09-20 | Ein dunkler Balken quer durch die Linse, in jeder Fassung an derselben Stelle | 🟡 klein | — |
+| P68 | 2026-09-20 | Ein Übergang ohne Anlass — und der Wächter hatte ihn ein halbes Jahr vorher beschrieben | 🟡 klein | — |
+| P69 | 2026-09-20 | Fünfmal gerechnet, fünfmal zu früh: die Bauform war falsch, nicht die Formel | gross | — |
+| P70 | 2026-09-20 | Eine Zusage, die nur rot werden kann, ist keine | 🟡 klein | — |
+| P71 | 2026-09-20 | Der Wächter zerriss die Wähler und klagte dann die echten Regeln an | 🟠 mittel | — |
+| P72 | 2026-09-20 | Der Wächter gegen Port-Kollisionen meldete grün und übersah sieben | gross | — |
+| P73 | 2026-09-20 | Die zuletzt gelesene Seite ging verloren, sobald das Fenster sich meldete | gross | — |
+| P74 | 2026-09-20 | Der Textur-Wächter bestrafte die neue Linse | 🟡 klein | — |
 
 ---
 
@@ -1341,4 +1355,308 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Stück 71–80 war im Nachlauf grün — entweder ein flockiger Lauf oder eine Wechselwirkung in der Reihenfolge. Das wird gemessen, nicht geraten.
 
 **Die Lehre.** „Die zuständigen Prüfläufe" (§30) sind das Minimum, nicht das Ziel. `main` bewegt sich deshalb erst nach einem vollen grünen Lauf (§46).
+
+
+---
+
+## P61 · Mein Wächter erfand eine Kopplung, die es nicht gab
+
+*2026-09-19 · 🟠 mittel · E629*
+
+**Das Bild.** `test537` meldete „bereiche/bloecke → FORMEN (bereiche/pdf)" — die Gedankenkarte greife in den PDF-Bereich.
+
+**Die falsche Vermutung.** Dass ich beim Bau der Gedankenkarte wirklich einen fremden Namen benutzt habe, und ich habe nach der Stelle gesucht.
+
+**Wie es gefunden wurde.** Beide Stellen nebeneinandergelegt: `const FORMEN = [` im PDF, `const FORMEN: ReadonlyArray<…> = [` in der Karte. Der Katalog las `const NAME =` und liess die Typangabe nicht zu.
+
+**Die Ursache.** Der Ausdruck im Namenskatalog kannte eine gültige Schreibweise nicht. Damit galt die EIGENE Liste nicht als Anmeldung — und ihre Benutzung sah aus wie ein Griff nach aussen.
+
+**Die Lösung.** Zwischen Name und `=` darf eine Typangabe stehen. Dadurch bekommen 59 Namen erstmals einen Besitzer und zehn verlieren ihn (L193).
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** Gegenprobe mit einem echten Querverweis (`Chronik.oeffne(0)` in bereiche/bloecke): 126 Paare gegen 125, mit Namen. Danach entfernt, 17/17 grün.
+
+**Die Lehre.** Eine erfundene Kopplung ist schlimmer als eine übersehene: die übersehene kostet Wachsamkeit, die erfundene kostet Arbeit an etwas, das es nicht gibt.
+
+
+---
+
+## P62 · Meine Sicherungskopie nahm die falsche Datei
+
+*2026-09-19 · gross · E629*
+
+**Das Bild.** Nach dem Zurückschreiben stand der Inhalt von `chronik.ts` in `blatt.ts`. Der Typecheck meldete „Cannot find name 'Blatt'".
+
+**Die falsche Vermutung.** Keine — der Fehler war sofort sichtbar. Gefährlich war er trotzdem.
+
+**Wie es gefunden wurde.** `npm run typecheck` direkt nach dem Zurückschreiben. Ohne diesen Schritt wäre eine 320-Zeilen-Datei still überschrieben gewesen.
+
+**Die Ursache.** `cp A || cp B` als Sicherung. Der erste Befehl gelang und legte die falsche Datei ab; der Oder-Zweig war nie dafür gedacht, die Quelle zu WÄHLEN.
+
+**Die Lösung.** Aus dem letzten Commit zurückgeholt (`git checkout HEAD -- <datei>`), 320 Zeilen, Kopfzeile geprüft.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** Zeilenzahl und Kopfzeile wieder wie in HEAD, Typecheck grün, `git status` zeigt nur die zwei beabsichtigten Dateien.
+
+**Die Lehre.** Ein Oder-Zweig, der eine Sicherung wählt, ist keine Sicherung: er sichert, was zuerst gelingt, nicht was gemeint war. Für eine Gegenprobe ist git die Sicherung — nicht eine Kopie daneben.
+
+
+---
+
+## P63 · Meine Reparatur machte den Wächter blind, und er wurde dadurch grün
+
+*2026-09-19 · gross · E631*
+
+**Das Bild.** `test444` klagte einen Kommentar an. Nach der Reparatur war er grün — und blieb grün, als ein echter Verstoss danebenstand.
+
+**Die falsche Vermutung.** Dass grün nach der Reparatur bedeutet, die Reparatur sei richtig.
+
+**Wie es gefunden wurde.** Die Gegenprobe nach §55.2: `Konten.darf('bearbeiten', page)` in echten Code eingesetzt. 13/13 grün — also fand der Lauf gar nichts mehr.
+
+**Die Ursache.** Ich hatte `nurCode` genommen, und das leert auch Zeichenketten. Der Lauf verlangt als erstes Argument ein Wort in Anführungszeichen; aus `'bearbeiten'` wurde `''`, und das Muster traf nie wieder.
+
+**Die Lösung.** `ohneKommentare`: nur die Prosa heraus, die Zeichenketten bleiben. Zeilentreu, weil der Lauf die Zeilennummer meldet.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** Mit der neuen Fassung: der eingesetzte Verstoss wird gemeldet, mit Datei und Zeile 330 — genau der Zeile, in der er stand. Nach dem Zurücknehmen wieder 13/13.
+
+**Die Lehre.** Eine Reparatur an einem Wächter ist erst fertig, wenn er mit einem echten Verstoss rot wird. Grün nach der Reparatur beweist gar nichts — es kann heissen, dass er nichts mehr sieht.
+
+
+---
+
+## P64 · Der Wächter klagte den Satz an, der von ihm handelt
+
+*2026-09-19 · 🟡 klein · E631*
+
+**Das Bild.** Eine Stunde nach der Reparatur war `test444` wieder rot, mit einer Fundstelle in `src/bereiche/chronik/daten.ts`.
+
+**Die falsche Vermutung.** Dass die Reparatur nicht gegriffen hat.
+
+**Wie es gefunden wurde.** Die gemeldete Zeile angesehen: es ist die Chronik, erzeugt als Daten — und sie BESCHREIBT seit einer Stunde genau diesen Fehlalarm, samt der Zeile, die ihn auslöste.
+
+**Die Ursache.** Der Wächter sieht den Unterschied zwischen einer Sache und dem Reden über die Sache nicht. Und die Kommentare zu entfernen half nicht: das Zitat steht in einer Zeichenkette, und die müssen für diesen Lauf stehen bleiben.
+
+**Die Lösung.** Nicht den Text verändern, sondern die Fundstelle prüfen: `inZeichenkette` zählt die unmaskierten Anführungszeichen links davon. Ein Aufruf im Code steht nicht in einem String.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** Gegenprobe nach der zweiten Reparatur: der eingesetzte Verstoss wird weiter gemeldet, Datei und Zeile stimmen. Zurückgenommen wieder 13/13.
+
+**Die Lehre.** Wer einen Fehlalarm dokumentiert, schreibt die auslösende Zeile in den Bestand — und erzeugt damit den nächsten. Bei textlesenden Wächtern ist das Aufschreiben selbst eine Änderung am geprüften Stoff.
+
+
+---
+
+## P65 · Zum zweiten Mal an einem Tag: das Aufschreiben erzeugte den nächsten Fehlalarm
+
+*2026-09-19 · 🟡 klein · E632*
+
+**Das Bild.** Kaum stand `test225` grün, war er wieder rot — Fundstelle: der Eintrag E632, den ich gerade darüber geschrieben hatte.
+
+**Die falsche Vermutung.** Keine. Nach P64 habe ich es erwartet — und es trotzdem gemacht.
+
+**Wie es gefunden wurde.** Der Lauf lief direkt nach dem Schreiben. Die gemeldete Fundstelle war meine eigene Zeile über die Gegenprobe.
+
+**Die Ursache.** Die Gegenprobe stand mit Namen und Nummer im Text. Ein Wächter, der Verweise sucht, findet den Satz über den Verweis genauso wie den Verweis.
+
+**Die Lösung.** Die Gegenprobe in Worten beschrieben statt in der Schreibweise, die der Lauf sucht.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Der Beweis.** Danach 11/11, und die eingebaute Gegenrichtung des Laufs blieb grün — der Ausdruck ist also nicht weich geworden.
+
+**Die Lehre.** Bei textlesenden Wächtern ist das Aufschreiben eine Änderung am geprüften Stoff. Zweimal an einem Tag dieselbe Falle: einmal in der Chronik (P64), einmal in ENTSCHEIDUNGEN.md.
+
+
+---
+
+## P66 · Die Linse zeigte gar keine Brechung — die Knöpfe lagen davor
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Der erste Prototyp hatte den Filter, die Karte und den Farbsaum — und im Bild war nichts zu sehen.
+
+**Die falsche Vermutung.** Der Filter ist falsch gebaut. Ich habe fünf Fassungen der Verschiebungskarte nebeneinandergestellt, bevor ich weitergesucht habe.
+
+**Wie es gefunden wurde.** Beim Ansehen des Vergleichsbilds: das Glas war da, aber der Inhalt darunter unverändert.
+
+**Die Ursache.** `backdrop-filter` bricht, was HINTER dem Element liegt. Die Knöpfe lagen davor (z-index 2 gegen 1) — es gab schlicht nichts zu brechen.
+
+**Die Lösung.** Die Linse über die Knöpfe, `pointer-events:none` dazu. Die Trefferfläche bleibt der Knopf, und `test539 §1` hält es.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Die Lehre.** Eine Linse ist keine Fläche. Was eine Fläche verdeckt, muss unter ihr liegen; was eine Linse bricht, muss hinter ihr liegen — und das ist bei gestapelten Elementen genau umgekehrt.
+
+
+---
+
+## P67 · Ein dunkler Balken quer durch die Linse, in jeder Fassung an derselben Stelle
+
+*2026-09-20 · 🟡 klein*
+
+**Das Bild.** Fünf verschiedene Filterfassungen, fünfmal derselbe dunkelblaue senkrechte Balken mitten im Glas.
+
+**Die falsche Vermutung.** Der Farbsaum ist zu stark. Ich habe den Versatz dreimal verkleinert, ohne dass sich etwas änderte.
+
+**Wie es gefunden wurde.** Dass der Balken in ALLEN Fassungen an derselben Stelle stand, obwohl die Fassungen verschieden stark verschoben — das passt zu keinem Farbsaum.
+
+**Die Ursache.** Der Filterbereich stand auf `x=-30% width=160%`, damit der Saum am Rand nicht abschneidet. `feImage` misst aber in Anteilen des FILTERBEREICHS, nicht des Elements — die Karte lag um dreissig Prozent verschoben über dem Glas.
+
+**Die Lösung.** Filterbereich genau das Element (`0% / 100%`). Der Saum darf am Rand abschneiden.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Die Lehre.** Wenn ein Fehler sich über alle Parameterfassungen NICHT ändert, liegt er nicht an den Parametern. Das ist ein billiges Ausschlussverfahren, und ich habe es zu spät angewandt.
+
+
+---
+
+## P68 · Ein Übergang ohne Anlass — und der Wächter hatte ihn ein halbes Jahr vorher beschrieben
+
+*2026-09-20 · 🟡 klein*
+
+**Das Bild.** `test114` §17 wurde rot: „Beim Start steht die Pille sofort da, statt hereinzugleiten — sie glitt 1×".
+
+**Die falsche Vermutung.** Die `stumm`-Sperre greift nicht mehr. Ich habe sie zuerst gesucht, statt zu messen.
+
+**Wie es gefunden wurde.** Mit `transitionstart` und dem gerechneten `transform` mitgeschrieben: bei 676 ms stand scaleX auf 1,309, bei 792 ms lief der Übergang.
+
+**Die Ursache.** Beim Start läuft `pilleSchieben` zweimal; der zweite Ruf rückt die Pille um sechs Punkte. Die Sperre verdeckt das — aber nicht das Zurückfedern MEINER Dehnung 190 ms später, wenn die Sperre schon weg war.
+
+**Die Lösung.** Die Dehnung läuft nicht mehr, solange `.stumm` liegt.
+
+**Warum keine Uhr.** Zwei Uhren im Spiel, und genau ihre Entkopplung war der Fehler.
+
+**Die Lehre.** Der Kommentar an der Sperre hatte es wörtlich vorhergesagt: „Der Schutz greift erst, wenn jemand oben Anfangswerte einträgt, die WIRKLICH gemalt werden." Ein Wächter, der ein halbes Jahr auf seinen Fall wartet, hat ihn bekommen — und ich habe den Kommentar gelesen, bevor ich den Fehler gebaut habe.
+
+
+---
+
+## P69 · Fünfmal gerechnet, fünfmal zu früh: die Bauform war falsch, nicht die Formel
+
+*2026-09-20 · gross*
+
+**Das Bild.** Die wandernde Fläche der Werkzeugleiste stand 55 px neben ihrem Werkzeug, Überdeckung null. `test478` meldete es.
+
+**Die falsche Vermutung.** Drei nacheinander, und alle falsch: (1) ein Auslöser fehlt, (2) der Ursprung ist falsch berechnet, (3) die Hülle ist eine andere. Nach jedem Anlauf stand derselbe Wert da: --bx: 88px.
+
+**Wie es gefunden wurde.** Erst ein Zähler im Element selbst — lief die Rechnung überhaupt? — brachte es: `laeufe: 5`. Sie war gelaufen, fünfmal, und jedes Mal zu früh.
+
+**Die Ursache.** Danach rollte die Leiste zum Werkzeug (E356), brach um und klemmte Wörter weg. Eine gespeicherte Stelle veraltet bei jedem dieser Vorgänge.
+
+**Die Lösung.** Die Bauform gedreht: der Grund bleibt am Knopf, nur der Wechsel bekommt eine kurzlebige Fläche in Bildschirmmassen. Keine Hülle, kein Versatz, keine Rollung.
+
+**Warum keine Uhr.** Keine Uhr im Spiel — im Gegenteil, ein Zähler hätte die drei Fehlanläufe von Anfang an gespart.
+
+**Die Lehre.** Wenn derselbe Wert drei Reparaturen überlebt, ist die Frage nicht mehr „warum ist er falsch", sondern „läuft der Code überhaupt". Und: wer Auslöser nachlegt, weiss nie, ob er alle hat. Der Beleg, dass die zweite Bauform die richtige war, kam umsonst — die drei Läufe, die den ersten widerlegt hatten, blieben UNVERÄNDERT grün.
+
+
+---
+
+## P70 · Eine Zusage, die nur rot werden kann, ist keine
+
+*2026-09-20 · 🟡 klein*
+
+**Das Bild.** `test539` §6 prüfte „ohne Durchsicht kein Glas" und war rot — die Seite meldete `prefers-reduced-transparency` als nicht gesetzt.
+
+**Die falsche Vermutung.** Ich rufe `emulateMedia` an der falschen Stelle. Ich habe es am Kontext statt an der Seite versucht, dann mit dem Startschalter.
+
+**Wie es gefunden wurde.** Ein Vierzeiler ohne Redion: Seite, Kontext und Startschalter, alle drei meldeten `false`.
+
+**Die Ursache.** Der Chromium, den Playwright hier mitbringt, kennt das Merkmal nicht.
+
+**Die Lösung.** §6 prüft jetzt die QUELLE statt die Seite und sagt in seinem Kommentar, warum. Dass die Regel auch WIRKT, steht als L203 offen.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Die Lehre.** §55.2 sagt „prüfe zuerst, ob sie überhaupt rot werden kann". Die Umkehrung fehlte mir: prüfe auch, ob sie überhaupt GRÜN werden kann. Eine Zusage, die den Zustand nicht herstellen kann, den sie prüft, ist eine Dauerbeschwerde.
+
+
+---
+
+## P71 · Der Wächter zerriss die Wähler und klagte dann die echten Regeln an
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** `test332` meldete 76 tote CSS-Erklärungen. Darunter Wähler, die es gar nicht geben kann: `#menueband)`, `select):focus-visible`, `:focus-visible)`.
+
+**Die falsche Vermutung.** Erst dachte ich, das seien Schreibfehler IM Stilblatt — eine überzählige Klammer irgendwo in `bausteine.css`. Ich habe nach `)` am Wähleranfang gesucht und nichts gefunden.
+
+**Wie es gefunden wurde.** Die Suche nach der schliessenden Klammer im Quelltext ging ins Leere. Erst da habe ich die Zeile im Lauf selbst gelesen: `r.selectorText.split(',')`.
+
+**Die Ursache.** Nicht jedes Komma trennt. In `:is(a,b)`, `:where()`, `:not()` und `:has()` steht es INNERHALB der Klammer. `split(',')` zerriss sie, und die Bruchstücke verloren Vorfahren und `!important` — der Lauf verglich sie mit echten Regeln und meldete die echten als tot.
+
+**Die Lösung.** Getrennt wird nur noch an einem Komma auf Klammertiefe null. Dreizehn der 76 Meldungen waren danach weg, ohne dass eine Zeile Stil angefasst wurde.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Die Lehre.** Zum dritten Mal an zwei Tagen dieselbe Sorte: ein Ausdruck, der eine gültige Schreibweise nicht kennt (E629, E631, jetzt hier). Und die Lehre darüber: eine Meldung eines Wächters ist ein BEFUND, keine Wahrheit. 17 % dieses Befunds waren das Messgerät. Wer ungeprüft repariert, baut die Seite nach dem Fehler des Prüfstands um.
+
+
+---
+
+## P72 · Der Wächter gegen Port-Kollisionen meldete grün und übersah sieben
+
+*2026-09-20 · gross*
+
+**Das Bild.** `test424` wurde in einem Stapel von sechzehn rot, an einer Zeile, die ihren eigenen Lastverlauf im Kommentar führt. `test400` — der Wächter GEGEN genau diese Sorte Fehlalarm — war grün.
+
+**Die falsche Vermutung.** Last. Der Kommentar der Zeile sagt selbst, dass sie im Stapel von elf durchlief und im Stapel von vierzehn brach; ich wollte die Zahl wieder anheben. Dann: mein eigener Bogen. Beides falsch.
+
+**Wie es gefunden wurde.** Beim Nachsehen, welchen Port test424 hält, stand dort nicht `const PORT = …`, sondern `server.listen(9624, '127.0.0.1', resolve)`. Und test400 liest `/PORT = (\d+)/`.
+
+**Die Ursache.** Acht Läufe schreiben ihre Portzahl direkt in den Aufruf. Für den Ausdruck waren sie unsichtbar — und damit sieben doppelt vergebene Ports, während der Wächter „kein Port ist zweimal vergeben" meldete.
+
+**Die Lösung.** Beide Schreibweisen lesen; `listen(0)` als richtig zählen statt als fehlend; und PRÜFEN, dass kein Lauf mit eigenem Server ohne erkannte Zahl bleibt. Die sieben jüngeren Läufe sind auf 9643–9649 umgezogen.
+
+**Warum keine Uhr.** Die Kollision ist zeitlos — sie wirkt nur, wenn zwei Läufe gleichzeitig laufen.
+
+**Die Lehre.** Zum vierten Mal an zwei Tagen ein Ausdruck, der eine gültige Schreibweise nicht kennt — aber der erste, der dabei etwas ÜBERSAH statt etwas zu erfinden. Und die Zahl in der Ausgabe („374 von 481") nannte die Lücke seit Monaten; eine Zahl, die eine Lücke NENNT, ersetzt keine Prüfung, die sie schliesst. Nebenbei blieb test424 auch allein und auf dem Stand von HEAD rot: ein achtzehnter roter Lauf, der nicht meiner ist.
+
+
+---
+
+## P73 · Die zuletzt gelesene Seite ging verloren, sobald das Fenster sich meldete
+
+*2026-09-20 · gross*
+
+**Das Bild.** `test424` war rot: „PDF page position survives reload (ist \"0\")". Nach dem Neuladen stand das Dokument wieder auf Seite 1 statt auf der zuletzt gelesenen.
+
+**Die falsche Vermutung.** Last im Stapel — die Zeile führt ihren eigenen Lastverlauf im Kommentar und war schon zweimal daran repariert worden. Dann: mein eigener Bogen. Beides falsch; der Lauf war auch allein und auf dem Stand von HEAD rot.
+
+**Wie es gefunden wurde.** Ein Haken auf `Store.setMeta`, der jeden Schreibvorgang auf `dokSeite:*` mit Wert und Aufrufweg festhält. Genau ein Schreibvorgang, Wert 0, Weg: seiteMerken ⟵ nachziehen ⟵ beiGroesse.
+
+**Die Ursache.** `nachziehen()` rechnet aus dem Rollstand, welche Seite in der Fenstermitte steht, und MERKT sie. Beim frisch geöffneten Dokument steht der Rollstand noch auf 0, während die gemerkte Seite erst im requestAnimationFrame angerollt wird. Eine Fenstermeldung in diesem Spalt beantwortet die Frage mit „Seite 1".
+
+**Die Lösung.** Eine Reihenfolge statt einer Wartezeit: `standGesetzt` fällt erst in dem rAF, der die gemerkte Seite anrollt. Davor schweigt der Beobachter. Und ein neuer Lauf, test540, der das Rennen STELLT statt es zu gewinnen.
+
+**Warum keine Uhr.** Die Zeiten stammen aus einem `performance.now()`-Haken in der Seite, nicht aus git — sie sind relativ und stehen deshalb nicht als Uhrzeit da.
+
+**Die Lehre.** Derselbe Haken, der den Fehler sichtbar machte, machte ihn beim zweiten Versuch unsichtbar: ein paar Millisekunden mehr Arbeit darin, und derselbe Durchgang lief 50 von 50. Ein Wächter, der ein Rennen zufällig gewinnt, ist keiner — er muss es stellen. Das ist die dritte Fassung von §55.2 an zwei Tagen: „kann er rot werden?", „kann er grün werden?", und jetzt „gewinnt er nur zufällig?".
+
+
+---
+
+## P74 · Der Textur-Wächter bestrafte die neue Linse
+
+*2026-09-20 · 🟡 klein*
+
+**Das Bild.** Beim Nachfahren der achtzehn ehemals roten Läufe war test435 rot: „… und genau zwei Filter (fein, grob) im ganzen Dokument — 4".
+
+**Die falsche Vermutung.** Die Textur legt ihre Filter jetzt doppelt an — also ein Fehler in textur.ts oder ein zweiter Halter.
+
+**Wie es gefunden wurde.** Die Meldung nennt die Zahl, nicht die Namen. Mit den Namen: ru-linse-ruhe, ru-linse-fahrt, ru-textur-fein, ru-textur-grob. Zwei davon sind meine Linse von derselben Nacht (E639).
+
+**Die Ursache.** Der Lauf zählte `document.querySelectorAll('filter')` — also ALLE SVG-Filter der Seite — und verlangte zwei. Die Zusage im Satz daneben lautete aber: die TEXTUR legt ihre zwei genau einmal an. Zwei verschiedene Aussagen.
+
+**Die Lösung.** Im Halter der Textur zählen statt im Dokument. Und daneben die Frage, um die es E440 wirklich ging: teilen sich zwei Filter eine Kennung? Diese Zahl wächst nicht mit dem Programm mit.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Die Lehre.** Vierte Fassung derselben Sorte an zwei Tagen (E629, E631, E642, E643): ein Ausdruck misst etwas anderes, als der Satz daneben behauptet. Diese hier war nicht falsch, sondern ZU WEIT — und ein zu weiter Wächter bestraft jede neue Funktion, die zufällig dasselbe Element benutzt. Und zum dritten Mal die Schablonen-Falle: ein Akzentzeichen im Kommentar INNERHALB von page.evaluate beendet die Zeichenkette; der Kopf der Datei warnt davor, und ich habe es trotzdem getan.
 

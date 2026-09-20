@@ -82,7 +82,23 @@ const hatAbschnitt = (quelle: string, nummer: number): boolean =>
      Eine Prüfung, die aus dem falschen Grund rot wird, ist so wenig wert
      wie eine, die aus dem falschen Grund grün ist (E168). Berichtigt wird
      deshalb die Prüfung und nicht die Doku — der Verweis stimmte. */
-  new RegExp('^\\s*/?\\*[\\s-]*' + nummer + ' · ', 'm').test(quelle);
+  new RegExp('^\\s*/?\\*[\\s-]*' + nummer + ' · ', 'm').test(quelle) ||
+  /* DIE VIERTE SCHREIBWEISE, gefunden am 19. September: die jüngeren Läufe
+     drucken ihre Abschnitte als `console.log('\\n§1 Vier Plätze …')` — mit
+     dem Paragraphenzeichen, aber OHNE den Mittelpunkt. Die drei Muster
+     darüber verlangen alle ein „ · " und sahen deshalb sechs Verweise als
+     leer an, die es sehr wohl gibt:
+
+         ENTSCHEIDUNGEN.md: test534 §1 · §2 · §3 · test535 §4
+                            test536 §6 · test506 §1
+
+     Es ist derselbe Fall wie oben bei test67, und er wird genauso
+     entschieden (E168): berichtigt wird die PRÜFUNG, nicht die Doku — die
+     Verweise stimmten.
+
+     Das Leerzeichen hinter der Zahl ist keine Zierde: ohne es würde ein
+     Verweis auf §1 auch von einem gedruckten `§12` erfüllt. */
+  new RegExp('\\\\n§' + nummer + '[ \\t]').test(quelle);
 
 /** Alle „testNNN"-Nennungen einer Datei, mit ihrer Abschnittsangabe. */
 type Verweis = { datei: string; name: string; abschnitte: number[]; roh: string };

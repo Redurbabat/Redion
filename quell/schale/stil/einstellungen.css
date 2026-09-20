@@ -130,7 +130,14 @@
 }
 .schalter i{
   position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%;
-  background:var(--text-dim); transition:transform .16s, background .16s; display:block;
+  /* KEIN EIGENER ÜBERGANG MEHR (E642). Hier stand
+     `transition:transform .16s, background .16s` — und galt seit dem
+     6. September nie: `studio.css:203` lädt später und setzt denselben
+     Übergang mit den Bewegungsmarken statt mit festen Zahlen. Zwei
+     Erklärungen für dasselbe, und die frühere kam nie zum Zug. Die
+     spätere ist auch die bessere: sie folgt `--motion-normal`, also auch
+     dem Wunsch nach weniger Bewegung. */
+  background:var(--text-dim); display:block;
 }
 .schalter.an{background:var(--accent)}
 .schalter.an i{transform:translateX(16px); background:#fff}

@@ -46,7 +46,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
-const PORT = 9628;
+const PORT = 9646;   // war 9628 — geteilt mit test428 (E643)
 const TYP: Record<string, string> = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.json': 'application/json',

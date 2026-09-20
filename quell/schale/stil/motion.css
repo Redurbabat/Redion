@@ -3,9 +3,11 @@
  * doku/ANIMATIONEN-ZUORDNUNG.md. Die bestehenden ru-funkel-Regeln bleiben.
  */
 #ai {
+  /* DIE BREITE STEHT IN `ki.css` (E642). Sie stand einmal hier und
+     überschrieb dort die 380 — eine Animationssammlung ist aber nicht der
+     Ort, an dem ein Bauteil seine Masse bekommt. Jetzt sagt `ki.css` 420,
+     und diese Datei sagt dazu nichts mehr. */
   --rmo-ease: cubic-bezier(.22, 1, .36, 1);
-  width: 420px;
-  flex-basis: 420px;
   min-height: 0;
 }
 #ai.open { animation: rmo-panel-in .32s var(--rmo-ease); }
@@ -142,7 +144,12 @@ body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt
    Hellmodus hat und Weiss dort verschwindet. */
 .rmo-sliders i::after { content: ''; position: absolute; width: 6px; height: 6px; top: -2.5px; left: 2px;
   border-radius: 50%; background: currentColor; box-sizing: border-box;
-  border: 1.5px solid var(--rmo-knauf-grund, var(--bg-card));
+  /* `--bg-card` DIREKT, nicht als Rückfall hinter `--rmo-knauf-grund`:
+     dieses Token gibt es nirgends, der Rückfall griff also immer. Ein
+     Rückfall, der immer greift, ist kein Rückfall, sondern ein zweiter
+     Name für denselben Wert — und er verspricht eine Einstellbarkeit,
+     die es nicht gibt (§39: nur Tokens benutzen, die es gibt). */
+  border: 1.5px solid var(--bg-card);
   box-shadow: 0 0 5px color-mix(in srgb, currentColor 60%, transparent);
   transition: transform .3s, box-shadow .3s; }
 .rmo-sliders i:nth-child(2)::after { left: 8px; }
@@ -159,7 +166,15 @@ body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt
 /* 3 + 10 — Lichtschlitz und kleiner Perspektivwechsel: echte Fach-/Statistikkarten. */
 .els-kachel, .stat-karte.lw-metrik {
   position: relative; overflow: hidden;
-  transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s, border-color .25s;
+  /* `background` MUSS MIT IN DIE LISTE (E642). Hier stand dieselbe Zeile
+     ohne sie — und weil `transition` EINE Eigenschaft ist, gewinnt die
+     spätere Liste ganz: der Übergang aus `bausteine.css:7938`
+     (`background`, `box-shadow`) galt seit dem 10. September nicht mehr,
+     und die Kachel wechselte ihre Fläche beim Überfahren hart statt
+     weich. Gefunden von `test332`, nicht vom Auge — ein Übergang, der
+     fehlt, sieht nicht kaputt aus, nur billig. */
+  transition: background var(--motion-fast,.14s) var(--ease-standard,ease),
+              transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s, border-color .25s;
 }
 .els-kachel::after, .stat-karte.lw-metrik::after {
   content: ''; position: absolute; pointer-events: none; inset: 0; opacity: 0;
@@ -182,7 +197,11 @@ body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt
   background: linear-gradient(115deg, transparent 25%, #ffffff18 45%, transparent 65%);
   background-size: 250% 100%; transition: opacity .25s;
 }
-.pf-karte:hover::after { opacity: 1; animation: rmo-shine 1.2s ease both; }
+/* `:focus-visible` DAZU (E633). Der Schlitz war nur über `:hover` zu
+   sehen — auf einem Tastgerät also gar nicht, und mit der Tastatur
+   auch nicht. Dieselbe Form wie bei `.els-kachel` zwölf Zeilen höher;
+   `test303` nennt so etwas eine Falle. */
+.pf-karte:is(:hover, :focus-visible)::after { opacity: 1; animation: rmo-shine 1.2s ease both; }
 .stat-karte.lw-metrik strong { display: block; animation: rmo-reveal .45s ease both; }
 /* Die Ziffernrolle aus der Statistik-Vorlage, mit dem vorhandenen Wert
  * als unveränderter Textquelle. Nur die dekorative Rolle bewegt sich. */

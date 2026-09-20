@@ -87,8 +87,34 @@ await pc.evaluate(() => {
         if (!(r instanceof CSSStyleRule)) continue;
         /* EIN WÄHLER MIT KOMMA SIND MEHRERE REGELN. `a, b { … }` und
            `b { … }` sind für `b` dieselbe Erklärung, und ohne dieses
-           Auftrennen bliebe genau das unsichtbar. */
-        for (const w of r.selectorText.split(',').map(x => x.trim()).filter(Boolean))
+           Auftrennen bliebe genau das unsichtbar.
+
+           ABER NICHT JEDES KOMMA TRENNT (E642, 20. September). `split(',')`
+           zerreisst auch die Kommas INNERHALB von `:is(…)`, `:where(…)`,
+           `:not(…)` und `:has(…)`. Aus
+
+               body[data-dokument="an"] :is(#topbar,#menueband){display:none}
+
+           wurden dabei zwei Bruchstücke: `body[…] :is(#topbar` und
+           `#menueband)`. Das zweite ist gar kein Wähler — es verlor den
+           Vorfahren UND das `!important` —, und der Lauf verglich es mit
+           der echten Regel `#menueband{display:flex}` und meldete sie als
+           tot. Sieben solcher Gespenster steckten in den 76 Meldungen vom
+           19. September, darunter `select):focus-visible` und
+           `:focus-visible)` — Zeichenketten, die nie ein Element treffen.
+
+           Gezählt wird jetzt die Klammertiefe: getrennt wird nur an einem
+           Komma, das auf Tiefe null steht. */
+        const teile: string[] = [];
+        let tiefe = 0, jetzt = '';
+        for (const z of r.selectorText) {
+          if (z === '(' || z === '[') tiefe++;
+          else if (z === ')' || z === ']') tiefe--;
+          if (z === ',' && tiefe === 0) { teile.push(jetzt); jetzt = ''; continue; }
+          jetzt += z;
+        }
+        teile.push(jetzt);
+        for (const w of teile.map(x => x.trim()).filter(Boolean))
           for (const eig of Array.from(r.style))
             alle.push({ datei, waehler: w, eigenschaft: eig,
                         wert: r.style.getPropertyValue(eig),

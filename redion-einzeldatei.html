@@ -2297,7 +2297,12 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
    KI-PANEL
    ========================================================================== */
 #ai{
-  width:380px; flex:0 0 380px; background:var(--bg-side);
+  /* 420, NICHT 380 (E642). Hier stand 380, und es galt seit dem
+     10. September nie: `motion.css` lädt später und setzt 420. Zwei Zahlen
+     für dieselbe Breite, und die frühere war ein Versprechen, das die Seite
+     nicht hielt — genau der Fall, den `test332` zählt. Die Breite steht
+     jetzt HIER, im Blatt des Bauteils, und nur hier. */
+  width:420px; flex:0 0 420px; background:var(--bg-side);
   border-left:1px solid var(--line); display:none; flex-direction:column;
 }
 #ai.open{display:flex}
@@ -3627,7 +3632,12 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
    sichtbar: WO man ist (der Prozentwert) und WOMIT man schiebt (die Hand).
    Ohne den Prozentwert weiss niemand, warum die Zeichnung plötzlich klein
    ist; ohne den Zeiger sieht die Hand aus wie ein Zeichenwerkzeug. */
-.wb-massstab{
+/* EINE REGEL FÜR BEIDE MASSSTÄBE (E637). Die Gedankenkarte hatte diese
+   Regel abgeschrieben und dabei `tabular-nums` verloren — genau das, wofür
+   sie hier steht: ohne gleichbreite Ziffern springt die Zahl bei jedem
+   Zoomschritt. Zwei Erklärungen für dieselbe Sache laufen auseinander,
+   und niemand sieht es im Code (§8, §39). */
+.wb-massstab, .gk-massstab{
   min-width:46px; padding:0 4px; text-align:center; font-size:11px; font-weight:600;
   color:var(--text-dim); font-variant-numeric:tabular-nums;
 }
@@ -3847,8 +3857,6 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   clip-path:polygon(14% 0, 86% 0, 100% 50%, 86% 100%, 14% 100%, 0 50%); }
 .gk-trenn{ width:1px; height:18px; background:var(--line); margin:0 5px; }
 .gk-zoom{ display:inline-flex; align-items:center; gap:2px; }
-.gk-massstab{ min-width:46px; text-align:center; font-size:11px; font-weight:600;
-              color:var(--text-dim); }
 
 .gk-buehne{ position:relative; overflow:hidden; touch-action:none; outline:none;
             background:var(--bg); }
@@ -3870,7 +3878,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
    Auskunft allein über die Farbe läuft, und „ausgewählt" ist eine Auskunft. */
 .gk-kn.on{ box-shadow:0 0 0 2px var(--bg-card), 0 0 0 4px var(--ast, var(--accent));
            font-weight:600; }
-.gk-kn.gk-wurzel{ font-size:16px; font-weight:600; padding:10px 16px;
+.gk-kn.gk-wurzel{ font-size:16px; font-weight:600; padding:10px var(--space-5);
                   border-radius:11px; background:var(--bg-input); max-width:260px; }
 .gk-txt{ outline:none; min-width:10px; }
 .gk-txt.gk-leer::before{ content:"Thema"; color:var(--text-faint); }
@@ -3950,7 +3958,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
    Ein unbekannter Wert in `data-form` trifft keinen dieser Wähler und
    bleibt damit still die runde Grundform (§18). */
 .gk-kn[data-form="kasten"]  { border-radius:3px; }
-.gk-kn[data-form="pille"]   { border-radius:999px; padding-inline:16px; }
+.gk-kn[data-form="pille"]   { border-radius:999px; padding-inline:var(--space-5); }
 .gk-kn[data-form="ellipse"] { border-radius:50%; padding:12px 22px; }
 
 .gk-kn[data-form="raute"], .gk-kn[data-form="sechseck"]{
@@ -4406,7 +4414,14 @@ html[data-theme="light"] .banner{color:#37352f}
 }
 .schalter i{
   position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%;
-  background:var(--text-dim); transition:transform .16s, background .16s; display:block;
+  /* KEIN EIGENER ÜBERGANG MEHR (E642). Hier stand
+     `transition:transform .16s, background .16s` — und galt seit dem
+     6. September nie: `studio.css:203` lädt später und setzt denselben
+     Übergang mit den Bewegungsmarken statt mit festen Zahlen. Zwei
+     Erklärungen für dasselbe, und die frühere kam nie zum Zug. Die
+     spätere ist auch die bessere: sie folgt `--motion-normal`, also auch
+     dem Wunsch nach weniger Bewegung. */
+  background:var(--text-dim); display:block;
 }
 .schalter.an{background:var(--accent)}
 .schalter.an i{transform:translateX(16px); background:#fff}
@@ -7768,12 +7783,22 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
      und einem Knopf. Am Rechner stimmt die Reihenfolge — dort ist alles
      gleichzeitig zu sehen. Nur am Telefon wird sie gedreht, und zwar mit
      `order`, nicht mit einer zweiten Baumstruktur: derselbe Inhalt, dieselbe
-     Reihenfolge für ein Vorleseprogramm, nur anders gestapelt. */
+     Reihenfolge für ein Vorleseprogramm, nur anders gestapelt.
+
+     NACHGEZOGEN AM 19. SEPTEMBER 2026 (E638). Drei der vier Ziele hat es nicht
+     mehr: `.lw-metrics` ist seit dem 6. September ein Kind der
+     Lernübersicht statt von `.lw-today`, `.lw-primary-grid` und `.lw-setup`
+     kommen im ganzen Quelltext nicht mehr vor. Übrig blieb `.lw-hero{order:4}`
+     gegen `*{order:5}` — und damit stand die Begrüssung wieder ganz oben,
+     genau der Zustand VOR E151. Die fünf Zeilen standen unverändert da; tot
+     war nicht die Regel, sondern das, worauf sie zeigte.
+     Die Leiter zeigt jetzt auf die Kinder, die es gibt. Die Reihenfolge ist
+     dieselbe wie 2026: zuerst die Handlung, dann die Arbeitsblöcke, zuletzt
+     die Begrüssung. */
   .lernwelt .lw-today>*{order:5}
-  .lernwelt .lw-today>.lw-metrics{order:1}
-  .lernwelt .lw-today>.lw-primary-grid{order:2}
-  .lernwelt .lw-today>.lw-setup{order:3}
-  .lernwelt .lw-today>.lw-hero{order:4}
+  .lernwelt .lw-today>.lw-next-step{order:1}
+  .lernwelt .lw-today>.lw-desk{order:2}
+  .lernwelt .lw-today>.lw-hero{order:3}
 
   .lernwelt .lw-hero{align-items:stretch;min-height:0;padding:20px 16px}
   .lernwelt .lw-hero h2{font-size:clamp(27px,8vw,37px)}
@@ -8471,9 +8496,11 @@ body.nh-zieht .nh-regal{ touch-action:none }
  * doku/ANIMATIONEN-ZUORDNUNG.md. Die bestehenden ru-funkel-Regeln bleiben.
  */
 #ai {
+  /* DIE BREITE STEHT IN `ki.css` (E642). Sie stand einmal hier und
+     überschrieb dort die 380 — eine Animationssammlung ist aber nicht der
+     Ort, an dem ein Bauteil seine Masse bekommt. Jetzt sagt `ki.css` 420,
+     und diese Datei sagt dazu nichts mehr. */
   --rmo-ease: cubic-bezier(.22, 1, .36, 1);
-  width: 420px;
-  flex-basis: 420px;
   min-height: 0;
 }
 #ai.open { animation: rmo-panel-in .32s var(--rmo-ease); }
@@ -8610,7 +8637,12 @@ body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt
    Hellmodus hat und Weiss dort verschwindet. */
 .rmo-sliders i::after { content: ''; position: absolute; width: 6px; height: 6px; top: -2.5px; left: 2px;
   border-radius: 50%; background: currentColor; box-sizing: border-box;
-  border: 1.5px solid var(--rmo-knauf-grund, var(--bg-card));
+  /* `--bg-card` DIREKT, nicht als Rückfall hinter `--rmo-knauf-grund`:
+     dieses Token gibt es nirgends, der Rückfall griff also immer. Ein
+     Rückfall, der immer greift, ist kein Rückfall, sondern ein zweiter
+     Name für denselben Wert — und er verspricht eine Einstellbarkeit,
+     die es nicht gibt (§39: nur Tokens benutzen, die es gibt). */
+  border: 1.5px solid var(--bg-card);
   box-shadow: 0 0 5px color-mix(in srgb, currentColor 60%, transparent);
   transition: transform .3s, box-shadow .3s; }
 .rmo-sliders i:nth-child(2)::after { left: 8px; }
@@ -8627,7 +8659,15 @@ body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt
 /* 3 + 10 — Lichtschlitz und kleiner Perspektivwechsel: echte Fach-/Statistikkarten. */
 .els-kachel, .stat-karte.lw-metrik {
   position: relative; overflow: hidden;
-  transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s, border-color .25s;
+  /* `background` MUSS MIT IN DIE LISTE (E642). Hier stand dieselbe Zeile
+     ohne sie — und weil `transition` EINE Eigenschaft ist, gewinnt die
+     spätere Liste ganz: der Übergang aus `bausteine.css:7938`
+     (`background`, `box-shadow`) galt seit dem 10. September nicht mehr,
+     und die Kachel wechselte ihre Fläche beim Überfahren hart statt
+     weich. Gefunden von `test332`, nicht vom Auge — ein Übergang, der
+     fehlt, sieht nicht kaputt aus, nur billig. */
+  transition: background var(--motion-fast,.14s) var(--ease-standard,ease),
+              transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s, border-color .25s;
 }
 .els-kachel::after, .stat-karte.lw-metrik::after {
   content: ''; position: absolute; pointer-events: none; inset: 0; opacity: 0;
@@ -8650,7 +8690,11 @@ body .bib-deckel[data-art="ordner"]:is(:hover, :focus-visible) .bib-deckel-blatt
   background: linear-gradient(115deg, transparent 25%, #ffffff18 45%, transparent 65%);
   background-size: 250% 100%; transition: opacity .25s;
 }
-.pf-karte:hover::after { opacity: 1; animation: rmo-shine 1.2s ease both; }
+/* `:focus-visible` DAZU (E633). Der Schlitz war nur über `:hover` zu
+   sehen — auf einem Tastgerät also gar nicht, und mit der Tastatur
+   auch nicht. Dieselbe Form wie bei `.els-kachel` zwölf Zeilen höher;
+   `test303` nennt so etwas eine Falle. */
+.pf-karte:is(:hover, :focus-visible)::after { opacity: 1; animation: rmo-shine 1.2s ease both; }
 .stat-karte.lw-metrik strong { display: block; animation: rmo-reveal .45s ease both; }
 /* Die Ziffernrolle aus der Statistik-Vorlage, mit dem vorhandenen Wert
  * als unveränderter Textquelle. Nur die dekorative Rolle bewegt sich. */
@@ -12216,14 +12260,21 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
  * ist der ANFANG der Seite in kleiner Schrift, genau wie im Heftregal — und
  * darüber, je nach Art, ein paar Linien, die das Papier andeuten.
  * ======================================================================== */
-/* EIN RASTER, KEIN UMBRUCH. Mit `flex-wrap` fiel der Listenknopf in eine
-   eigene Zeile, sobald „Dokumente" und „+ Neu" die Breite füllten — aus
-   einer Bank wurden zwei, und genau die zählt Redur. Das Raster sagt
-   stattdessen, WAS schrumpfen darf: der Titel. */
-.bib-dkopf{
-  display:grid; grid-template-columns:minmax(0,1fr) auto auto;
-  align-items:center; gap:6px 10px; margin:0 0 var(--space-4)
-}
+/* ══ DIE KOPFZEILE GEHÖRT DEM STUDIO-BLATT (E642) ═══════════════════════
+   Hier stand ein Raster mit dem Titel „EIN RASTER, KEIN UMBRUCH": es
+   sollte verhindern, dass der Listenknopf in eine eigene Zeile fällt.
+   Seit dem 6. September setzt `bibliothek-studio.css`
+   `display:flex;flex-wrap:wrap` und ordnet Krume, Ort und Importknopf
+   selbst über `order` und `flex-basis` — und weil es NACH dieser Datei
+   geladen wird, hat das Raster seither nichts mehr getan. Mit ihm jedes
+   `grid-row` und `grid-column` darunter: ein Raster ohne `display:grid`
+   ist eine Zeile, die aussieht, als tue sie etwas.
+   Die Sorge von damals ist damit nicht erledigt, sondern nur woanders
+   beantwortet — das Studio-Blatt legt Krume und Ort mit `flex-basis:100%`
+   auf eigene Zeilen und lässt Titel und Knöpfe auf einer. Nachgesehen im
+   Bild, nicht erinnert.
+   §8: ein Katalog für eine Sache. Was hier noch steht, ist nur das, was
+   das Studio-Blatt NICHT setzt. */
 /* DIE BROTKRUME DER ABLAGE (E380).
    Sie steht ÜBER dem Titel und über die ganze Breite — nicht daneben: der
    Weg kann lang werden, der Titel darf davon nicht schmaler werden. An der
@@ -12231,7 +12282,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
    Der Zurück-Pfeil ist der einzige Knopf, den man am Telefon oft trifft;
    er bekommt darum die volle Trefferfläche (§37). */
 .bib-krume{
-  grid-column:1 / -1; grid-row:1; min-width:0;
+  min-width:0;
   display:flex; align-items:center; gap:2px;
   overflow-x:auto; scrollbar-width:none; white-space:nowrap;
   /* DIE MARKEN HEISSEN `--text-dim`, `--text` UND `--bg-hover`.
@@ -12274,15 +12325,13 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 .bib-krume b{ flex:0 0 auto; padding:0 6px; color:var(--text); font-weight:600 }
 .bib-krume span{ flex:0 0 auto; opacity:.5 }
-.bib-dkopf:has(.bib-krume) h1{ grid-row:2 }
-.bib-dkopf:has(.bib-krume) .bib-neu{ grid-row:2 }
-.bib-dkopf:has(.bib-krume) .bib-form-knopf{ grid-row:2 }
-.bib-dkopf:has(.bib-krume) .bib-ort{ grid-row:3 }
-
+/* NUR NOCH DAS AUSLASSUNGSZEICHEN. Grösse, Laufweite und Mindestbreite
+   setzt `bibliothek-studio.css` (26px / -.7px / 120px, am Tablet 240px);
+   das Abschneiden mit „…" setzt es nicht — und ohne das hier würde der
+   Titel die Knöpfe aus der Zeile drücken statt zu schrumpfen. */
 .bib-dkopf h1{
-  grid-column:1; grid-row:1; min-width:0; margin:0;
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  font-size:27px; font-weight:760; letter-spacing:-.03em
+  margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-weight:760
 }
 /* Der Ort ist eine Auskunft mit einem Weg dahinter, keine Überschrift:
    „Kürzlich verwendet · 23 Dokumente ▾". Er steht unter dem Titel, weil er
@@ -12312,21 +12361,27 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 .bib-form-knopf:hover{ background:var(--bg-hover); color:var(--text) }
 
+/* Abstand und Aussenmass kommen aus `bibliothek-studio.css` (6px / 24px).
+   Hier bleibt, was dort fehlt: dass die Leiste eine Zeile ist und quer
+   geschoben werden kann, wenn die Arten nicht nebeneinander passen. */
 .bib-arten{
-  display:flex; gap:7px; margin:0 0 var(--space-5); overflow-x:auto;
-  scrollbar-width:none
+  display:flex; overflow-x:auto; scrollbar-width:none
 }
 .bib-arten::-webkit-scrollbar{ display:none }
+/* Polster, Rundung und Schriftgrösse setzt das Studio-Blatt. */
 .bib-arten button{
-  flex:none; min-height:34px; padding:0 14px; border:0; border-radius:999px;
-  background:var(--bg-card); color:var(--text-dim); font-size:13px; cursor:pointer
+  flex:none; min-height:34px; border:0;
+  background:var(--bg-card); color:var(--text-dim); cursor:pointer
 }
 .bib-arten button:hover{ background:var(--bg-hover); color:var(--text) }
 .bib-arten button.on{ background:var(--text); color:var(--bg); font-weight:620 }
 
+/* DASS es ein Raster ist, steht hier — WIE breit die Spalten sind, im
+   Studio-Blatt (155–200px, am Telefon zwei feste Spalten). `display:grid`
+   setzt es nicht, und ohne diese Zeile fiele das ganze Regal auseinander;
+   `notizhefte.css` baut auf derselben Klasse auf (E207). */
 .bib-gitter{
-  display:grid; grid-template-columns:repeat(auto-fill,minmax(148px,1fr));
-  gap:26px 20px; align-items:start
+  display:grid; align-items:start
 }
 /* Ein `<button>` zentriert seinen Inhalt senkrecht — auch mit `display:block`.
    Ohne diese Spalte begannen die Deckel einer Reihe auf verschiedenen Höhen,
@@ -12339,12 +12394,14 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-deckel-blatt{
   position:relative; display:block; overflow:hidden;
   aspect-ratio:3/4; margin:0 0 9px; padding:14px 11px 0;
-  border:1px solid var(--line); border-radius:6px;
-  background:var(--bg-card); box-shadow:var(--shadow-2);
+  border:1px solid var(--line);
+  /* Rundung und Schatten macht das Studio-Blatt zum Buchrücken:
+     `6px 12px 12px 6px` und zwei gestaffelte Schatten. Hier stand einmal
+     ein gleichmässiges `6px` mit `--shadow-2` — beides wirkungslos. */
+  background:var(--bg-card);
   color:var(--text-dim); font-size:8px; line-height:1.6
 }
 .bib-deckel:hover .bib-deckel-blatt{ box-shadow:var(--shadow-3) }
-.bib-deckel:active .bib-deckel-blatt{ transform:scale(.985) }
 /* Der Auslauf nach unten — dasselbe Papier wie im Heftregal. */
 /* DAS ECHTE BILD AUF DEM DECKEL (L61, E313).
    Es füllt das Blatt ganz aus und wird beschnitten statt verzerrt — ein
@@ -12403,8 +12460,8 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
    E227 bei der Zahl). */
 .bib-deckel-name b{
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
-  overflow:hidden; min-height:33px; min-width:0; overflow-wrap:break-word;
-  font-size:12.5px; font-weight:580; line-height:1.3; letter-spacing:-.005em
+  overflow:hidden; min-height:39px; min-width:0; overflow-wrap:break-word;
+  font-weight:580; letter-spacing:-.005em
 }
 .bib-deckel-mehr{
   margin-left:auto; flex:none; width:20px; height:20px; display:grid;
@@ -12413,7 +12470,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 .bib-deckel-mehr:hover{ background:var(--bg-hover); color:var(--text) }
 .bib-deckel small{
-  display:block; overflow:hidden; margin-top:2px; color:var(--text-faint);
+  display:block; overflow:hidden; margin-top:2px;
   font-size:11px; white-space:nowrap; text-overflow:ellipsis
 }
 /* ---- DIE GEZEICHNETEN DECKEL -------------------------------------------
@@ -12531,10 +12588,8 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 
 @media(max-width:760px){
-  .bib-gitter{ grid-template-columns:repeat(auto-fill,minmax(102px,1fr));
-               gap:20px 14px }
-  .bib-dkopf{ gap:6px 8px }
-  .bib-dkopf h1{ font-size:24px }
+  /* Spalten, Abstände und Titelgrösse am Telefon: alle drei stehen in
+     `bibliothek-studio.css` unter derselben Breite und gewinnen dort. */
   .bib-neu{ padding:0 17px 0 13px }
   /* GEMESSEN: `#page` gibt 28 px Polster, die Bibliothek noch einmal 16 —
      zusammen 88 von 390. Übrig blieben 302, und damit passten nur ZWEI
@@ -13309,7 +13364,12 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     display:flex; align-items:stretch; gap:2px;
     position:fixed; left:10px; right:10px; top:auto; z-index:401;
     bottom:calc(9px + env(safe-area-inset-bottom));
-    padding:5px 6px; border-radius:29px;
+    padding:5px 6px;
+    /* DER RADIUS STEHT IN `studio.css` (E642). Hier stand `29px` und galt
+       seit dem 6. September nie: `studio.css:224` setzt ihn als halbe
+       Leistenhöhe (`calc(var(--mobile-nav-height)/2)`), und dort steht
+       auch der Grund dafür. Eine zweite Zahl daneben war nur eine, die
+       auseinanderlaufen kann. */
     /* DER INHALT LÄUFT DAHINTER DURCH, also muss die Fläche tragen.
        `--bg-card` allein wäre auf einem hellen Regal zu durchsichtig;
        der Weichzeichner dahinter macht aus dem, was durchscheint, eine
@@ -13404,13 +13464,110 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     /* SEIT E236 STEHT SIE UNTEN und ist so hoch wie ein Weg, nicht wie
        eine Pille: 48 statt 56, und der Radius passt zu den Knöpfen. Der
        Abstand von oben ist das Polster der Leiste (5 px). */
-    position:absolute; left:0; top:5px; z-index:0;
+    position:absolute; left:0; top:5px;
     height:48px; width:0; border-radius:var(--radius-2xl);
-    background:var(--bg-hover);
     pointer-events:none; opacity:0;
+
+    /* ════════════════════════════════════════════════════════════════════
+     * SEIT E639 LIEGT SIE DARÜBER, NICHT DARUNTER — und das ist der ganze
+     * Unterschied zwischen einer Fläche und einer Linse.
+     *
+     * Hier stand `z-index:0`, mit dem Satz „sie liegt unter den Knöpfen".
+     * Das war richtig, solange sie eine FARBE war: eine farbige Fläche über
+     * dem Zeichen hätte es verdeckt. Eine Linse dagegen kann nur brechen,
+     * was hinter ihr liegt — unter den Knöpfen hat sie nichts zu tun.
+     *
+     * Sie nimmt trotzdem keine Berührung an (`pointer-events:none`), die
+     * Trefferfläche bleibt also der Knopf darunter (§37). Das ist keine
+     * Behauptung: `test539` fragt `elementFromPoint` in der Mitte des
+     * aktiven Reiters und will den Knopf zurück, nicht die Pille.
+     * ══════════════════════════════════════════════════════════════════ */
+    z-index:2;
+
+    /* DIE FLÄCHE BLEIBT DIESELBE MARKE, nur durchsichtiger. Ohne Brechung
+       (ältere Browser) sieht man genau das, was vorher hier stand — eine
+       ruhige Hervorhebung, nur leichter. Deshalb steht sie zuerst da. */
+    background:color-mix(in srgb,var(--bg-hover) 62%,transparent);
+    box-shadow:inset 0 1.6px .6px color-mix(in srgb,var(--text) 34%,transparent),
+               inset 0 -1.2px .6px color-mix(in srgb,var(--text) 10%,transparent),
+               inset 1.2px 0 .6px color-mix(in srgb,var(--text) 9%,transparent),
+               inset -1.2px 0 .6px color-mix(in srgb,var(--text) 9%,transparent);
+    -webkit-backdrop-filter:saturate(1.5) brightness(1.08);
+    backdrop-filter:saturate(1.5) brightness(1.08);
+
     transition:transform var(--motion-normal) var(--ease-standard),
                width var(--motion-normal) var(--ease-standard),
                opacity var(--motion-fast) linear;
+  }
+
+  /* DIE BRECHUNG, wo der Browser sie kann. Eigene Regel und nicht oben
+     dazugeschrieben: ein Browser, der `url()` in `backdrop-filter` nicht
+     kennt, verwirft NUR diese Zeile und behält die Fläche darüber. Stünde
+     beides in einer Regel, fiele beides weg. */
+  #handy-oben #ho-pille{
+    -webkit-backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+    backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+  }
+  /* WÄHREND DER FAHRT verzerrt sie stärker — wie Wasser, das man zieht.
+     Im Vorbild ist das der auffälligste Teil: die Zeichen, über die sie
+     läuft, werden mitgeschleift, statt still stehenzubleiben. */
+  #handy-oben #ho-pille.faehrt{
+    -webkit-backdrop-filter:url(#ru-linse-fahrt) saturate(1.55) brightness(1.13);
+    backdrop-filter:url(#ru-linse-fahrt) saturate(1.55) brightness(1.13);
+  }
+
+  /* DER GLANZRAND. Oben auf der Kapsel sitzt im Vorbild ein heller Bogen
+     mit einem feinen Farbschimmer — die Kante des Glases, die das Licht
+     zerlegt. Ein eigenes Element dafür, weil ein `box-shadow` keine Farbe
+     verlaufen lassen kann. */
+  #handy-oben #ho-pille::before{
+    content:""; position:absolute; inset:0; border-radius:inherit;
+    pointer-events:none;
+    background:linear-gradient(100deg,
+      rgba(120,255,205,0) 12%, rgba(120,255,210,.5) 26%,
+      rgba(255,255,255,.75) 42%, rgba(190,200,255,.5) 58%,
+      rgba(255,170,220,.35) 70%, rgba(255,255,255,0) 86%);
+    -webkit-mask:linear-gradient(180deg,#000 0,transparent 17%);
+    mask:linear-gradient(180deg,#000 0,transparent 17%);
+    opacity:.32;
+    transition:opacity var(--motion-normal) var(--ease-standard);
+  }
+  #handy-oben #ho-pille.faehrt::before{ opacity:.72 }
+
+  /* OHNE BEWEGUNG STEHT SIE STILL — UND BLEIBT SICHTBAR. Das ist genau die
+     Falle, vor der §55.2 warnt: eine Linse, die bei `reduce` einfach
+     verschwindet, hätte den aktiven Reiter unmarkiert gelassen, und
+     niemand hätte es gemerkt, weil die Prüfung „keine Bewegung" grün
+     gewesen wäre. Dieselbe Regel wie beim Schalter (E537/E635): die
+     Bewegung geht weg, das Bild bleibt. */
+  @media (prefers-reduced-motion:reduce){
+    #handy-oben #ho-pille{ transition:none }
+    #handy-oben #ho-pille.faehrt{
+      -webkit-backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+      backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+    }
+    #handy-oben #ho-pille::before,
+    #handy-oben #ho-pille.faehrt::before{ opacity:.32; transition:none }
+  }
+
+  /* OHNE DURCHSICHT GIBT ES KEIN GLAS — und trotzdem eine Auswahl.
+     Wer `prefers-reduced-transparency` gesetzt hat, hat einen Grund dafür:
+     durchscheinende Flächen sind für manche Augen anstrengend oder
+     unlesbar. Dann fällt BEIDES weg, Unschärfe und Brechung, und an ihre
+     Stelle tritt die volle Marke — dieselbe Antwort, die `studio.css` für
+     Menü, Finder und Auswahlleiste gibt und `pdf-studio.css` für die
+     Werkzeugleiste. Was NICHT wegfällt, ist die Fläche selbst: sonst
+     stünde der aktive Reiter unmarkiert da (§38). */
+  @media (prefers-reduced-transparency:reduce){
+    #handy-oben{ background:var(--bg-card);
+                 -webkit-backdrop-filter:none; backdrop-filter:none }
+    #handy-oben #ho-pille,
+    #handy-oben #ho-pille.faehrt{
+      background:var(--bg-hover);
+      -webkit-backdrop-filter:none; backdrop-filter:none;
+    }
+    #handy-oben #ho-pille::before,
+    #handy-oben #ho-pille.faehrt::before{ opacity:0 }
   }
   /* Beim ersten Setzen darf sie NICHT gleiten — sonst schiebt sie sich
      beim Öffnen der App von der linken Kante herein, und das sieht aus
@@ -14482,7 +14639,9 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 button[disabled]{opacity:.4; cursor:not-allowed}
 
 /* Reiter, geteilte Ansicht, Linkvorschau */
-#reiterleiste{display:flex; align-items:stretch; gap:2px; padding:4px 6px 0;
+/* DER ABSTAND STEHT IN `studio.css` (E642) — hier stand `gap:2px` und galt
+   nicht mehr. */
+#reiterleiste{display:flex; align-items:stretch; padding:4px 6px 0;
               background:var(--bg-side); border-bottom:1px solid var(--line);
               overflow-x:auto; flex:0 0 auto}
 /* DER AKTIVE REITER KLINKT IN DIE FLÄCHE EIN (E263, aus Amdion): drei
@@ -15835,9 +15994,47 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   background:var(--bg-hover); color:var(--text);
   box-shadow:inset 0 0 0 2px var(--accent)
 }
-/* 1 · DAS WERKZEUG. */
+/* ══ 1 · DAS WERKZEUG — DER GRUND SITZT, DER WECHSEL FLIEGT (E640) ═════════
+   Das Design-System verlangt: nicht zwei Flächen unabhängig aus- und
+   einblenden, sondern EINE, die sich vom alten zum neuen Zustand bewegt.
+
+   DER GRUND BLEIBT TROTZDEM AM KNOPF. Ein erster Entwurf legte eine
+   dauerhafte Fläche daneben, die zum gewählten Werkzeug wanderte — und
+   `test478` hat sie widerlegt: nach einem Farbklick stand sie 55 px neben
+   ihrem Werkzeug. Eine gespeicherte Stelle veraltet bei jedem Umbruch und
+   jedem Rollen; ein Grund am Knopf kann das gar nicht.
+
+   Bewegt wird deshalb nur der ÜBERGANG: `.bw-flug` ist eine kurzlebige
+   Fläche, die vom alten zum neuen Knopf fliegt und danach verschwindet.
+   Währenddessen hält der neue seinen Grund zurück (`.bw-wartet`), damit
+   nie zwei zugleich zu sehen sind. */
 .blatt-werk button[data-wz].on{
   background:var(--accent); color:var(--auf-accent); box-shadow:none
+}
+/* Solange die Fläche unterwegs ist, LEUCHTET DAS ZIEL SCHWACH VOR —
+   es wird nicht leer. Der erste Entwurf setzte hier `background:none`, und
+   `test478` hat ihn zu Recht rot gemacht: für die halbe Sekunde des Flugs
+   hätte der Zustand NUR in der Bewegung gestanden, und wer die Bewegung
+   nicht sieht, hätte gar nichts gesehen (§38). Jetzt ist die Fläche schon
+   da, nur leise, und der Flug macht sie laut.
+   NICHT die Schrift: sie bleibt, wie sie ist, sonst blitzt der Name auf. */
+.blatt-werk button[data-wz].on.bw-wartet{
+  background:color-mix(in srgb,var(--accent) 22%,transparent)
+}
+.bw-flug{
+  position:fixed; z-index:600; pointer-events:none;
+  border-radius:6px; background:var(--accent);
+  transition:left var(--motion-normal) var(--ease-standard),
+             top var(--motion-normal) var(--ease-standard),
+             width var(--motion-normal) var(--ease-standard),
+             height var(--motion-normal) var(--ease-standard);
+}
+/* OHNE BEWEGUNG FLIEGT NICHTS. Der Zustand ist trotzdem sofort richtig —
+   er hängt am Knopf und nicht am Flug. Genau das ist der Grund, warum der
+   Grund am Knopf geblieben ist (§38). */
+@media (prefers-reduced-motion:reduce){
+  .bw-flug{ display:none }
+  .blatt-werk button[data-wz].on.bw-wartet{ background:var(--accent) }
 }
 /* 3 · DER SCHALTER. `:is()` zählt so schwer wie sein schwerstes Glied —
    ein Attributwähler —, also (0,3,1) und damit über der Spielart. */
@@ -16703,14 +16900,14 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    fertigen Text. Ein `outline` liegt draussen und verschiebt nichts. */
 .blatt-schreiber{
   position:absolute; z-index:3; margin:0; box-sizing:border-box;
-  background:color-mix(in srgb, var(--accent, #2f7ed8) 7%, transparent);
-  border:0; outline:1.5px dashed color-mix(in srgb, var(--accent, #2f7ed8) 65%, transparent);
+  background:color-mix(in srgb, var(--accent) 7%, transparent);
+  border:0; outline:1.5px dashed color-mix(in srgb, var(--accent) 65%, transparent);
   outline-offset:0; border-radius:3px;
   resize:none; overflow:hidden; white-space:pre-wrap; overflow-wrap:break-word;
   caret-color:currentColor; -webkit-text-fill-color:currentColor;
   font-kerning:normal; touch-action:manipulation
 }
-.blatt-schreiber:focus{ outline:2px solid var(--accent, #2f7ed8) }
+.blatt-schreiber:focus{ outline:2px solid var(--accent) }
 /* Solange das Feld den Text zeigt, tritt der gezeichnete zurück — sonst
    stünde derselbe Satz zweimal übereinander. */
 .blatt-marken [data-sid][data-schreibt]{visibility:hidden}
@@ -17703,7 +17900,8 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .document-topbar button,.document-inspector button,.document-panel-header button{
   min-height:36px; border:1px solid var(--border); border-radius:8px;
   background:var(--bg); color:var(--text); cursor:pointer}
-.document-topbar button{padding:6px 10px}.document-position{margin-left:4px;font-weight:650}
+/* `margin-left` steht in `pdf-studio.css` (E642) und galt hier nie. */
+.document-topbar button{padding:6px 10px}.document-position{font-weight:650}
 /* E296 · DER TITEL STEHT IN DER KOPFZEILE, weil der Seitenkopf darueber
    weggefallen ist. Er nimmt den freien Platz (und schiebt damit Zoom,
    Inspector und Ausgang nach rechts, wofuer vorher `margin-left:auto` am
@@ -18158,7 +18356,9 @@ body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2
     min-height:320px;border-inline:0;border-radius:0}
   .document-topbar{min-height:52px;position:relative}.document-topbar button{min-width:var(--touch-min);min-height:var(--touch-min);padding:6px}
   .document-topbar button:last-child{font-size:0}.document-topbar button:last-child::after{content:'✕';font-size:18px}
-  .document-topbar input[type=range]{display:none}.document-zoom-label{margin-left:auto;min-width:40px}
+  /* `min-width` und `display` stehen für diese Breite in `pdf-studio.css`
+     (E642); hier galten sie nicht. */
+  .document-topbar input[type=range]{display:none}.document-zoom-label{margin-left:auto}
   .document-position{font-size:12px;white-space:nowrap;margin-right:auto}
   /* ZWEI DINGE FALLEN AM TELEFON WEG, und beide aus einem gemessenen Grund.
      Der TITEL, weil dort kein Platz fuer ihn ist: auf 390 px blieben ihm
@@ -18188,7 +18388,8 @@ body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2
   .document-topbar button[data-document-action="next"]{display:none}
   .document-title{display:block; flex:1 1 auto; min-width:60px;
     padding-inline:8px; font-size:13.5px}
-  .document-zoom-label{display:none}
+  /* `display` steht für diese Breite in `pdf-studio.css:103` (E642) und
+     sagt dort `inline` — das `none`, das hier stand, galt nie. */
   /* E384 · AM TELEFON NUR DER PFEIL. Gemessen mit dem Wort: die Leiste war
      411 px breit in einem 390 px breiten Fenster, und der Ausgang stand bei
      367..411 — also 21 px AUSSERHALB des Bildschirms. Der Knopf faellt damit
@@ -19328,8 +19529,11 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   display:flex; align-items:flex-start; gap:11px; min-height:var(--touch-min);
   padding:13px 14px; border:1px solid var(--line); border-radius:13px;
   background:var(--bg-card); color:var(--text); text-align:left; cursor:pointer;
-  transition:background var(--motion-fast,.14s) var(--ease-standard,ease),
-             box-shadow var(--motion-fast,.14s) var(--ease-standard,ease)
+  /* DER ÜBERGANG STEHT IN `motion.css` (E642). Er stand einmal hier und
+     galt seit dem 10. September nicht mehr: die spätere Datei setzt
+     `transition` ganz neu, und eine Liste ersetzt die andere. Statt zwei
+     Listen zu pflegen, die auseinanderlaufen, steht jetzt EINE dort —
+     mitsamt dem `background`, das dabei verlorengegangen war. */
 }
 .els-kachel:hover{ background:var(--bg-hover); box-shadow:var(--shadow-2) }
 /* Die grosse Kachel nimmt die ganze Zeile. Welche das ist, entscheidet das
@@ -20759,7 +20963,7 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
              border:1px solid var(--line); border-radius:14px;
              box-shadow:var(--shadow-4); overflow:hidden}
 .chr-kopf{display:flex; align-items:center; gap:12px; padding:14px 16px;
-          border-bottom:1px solid var(--line); background:var(--bg-2)}
+          border-bottom:1px solid var(--line); background:var(--bg-hover)}
 .chr-kopf h2{margin:0; font-size:20px; letter-spacing:.01em}
 .chr-kopf p{margin:0; flex:1; color:var(--text-dim); font-size:12.5px}
 .chr-kopf button{min-width:var(--touch-min); min-height:var(--touch-min);
@@ -20787,7 +20991,7 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
    nur Augen haben (§38); die Zahl daneben hat auch ein Vorleser. */
 .chr-raster{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:14px}
 .chr-graph{margin:0; padding:10px 12px; border:1px solid var(--line);
-           border-radius:10px; background:var(--bg-2)}
+           border-radius:10px; background:var(--bg-hover)}
 .chr-graph figcaption{font-size:12.5px; color:var(--text-dim); margin-bottom:6px}
 .chr-graph svg{width:100%; height:auto; display:block}
 .chr-balken{fill:var(--accent)}
@@ -20827,7 +21031,7 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
 .chr-titel{margin:0 0 8px; font-size:13.5px}
 .chr-hinweis{font-size:12.5px; color:var(--text-dim); font-style:italic}
 .chr-nachricht, .chr-problem{border:1px solid var(--line); border-radius:9px;
-                             padding:8px 11px; margin:0 0 7px; background:var(--bg-2)}
+                             padding:8px 11px; margin:0 0 7px; background:var(--bg-hover)}
 .chr-nachricht summary, .chr-problem summary{cursor:pointer; font-size:13px;
                                              display:flex; gap:8px; align-items:baseline;
                                              min-height:32px; align-content:center}
@@ -20842,7 +21046,7 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
          overflow-x:auto}
 .chr-tab th, .chr-tab td{border:1px solid var(--line); padding:5px 8px; text-align:left;
                          vertical-align:top}
-.chr-tab th{background:var(--bg-2); font-weight:600}
+.chr-tab th{background:var(--bg-hover); font-weight:600}
 .chr-plan li{font-size:13px; margin:4px 0}
 
 /* Wer keine Bewegung will, bekommt den Stapel flach und still — die
@@ -21295,16 +21499,29 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
      zweiter Zustand. */
   body[data-schale="premium"] #sidebar{ display: none }
 
+  /* ══ DIE ZEILEN STEHEN IN `studio.css` (E642) ═════════════════════════
+     Hier standen einmal vier Zeilen und die Plätze darin — und seit dem
+     6. September galt davon keine einzige: `studio.css:97-114` setzt für
+     dieselbe Hülle FÜNF Zeilen, weil oben der Studio-Balken dazugekommen
+     ist, und verteilt alle Plätze neu. Jede Zeile hier war eine Zahl, die
+     nie zum Zug kam.
+
+     `test332` hat alle sieben auf einmal gemeldet, und das ist die
+     eigentliche Auskunft: es war kein Versehen an einer Stelle, sondern
+     ein ganzes Raster, das ein späteres ersetzt hat, ohne dass das
+     frühere weggeräumt wurde. Wer die Premium-Schale lesen will, liest sie
+     jetzt in `studio.css`, an EINER Stelle.
+
+     Was hier bleibt, sind die SPALTEN — die setzt `studio.css` nicht. */
   body[data-schale="premium"] #main{
     display: grid;
     grid-template-columns: var(--kante-b) minmax(0, 1fr);
-    grid-template-rows: auto auto auto minmax(0, 1fr);
   }
-  body[data-schale="premium"] #main > #menueband{ grid-column: 1 / -1; grid-row: 1 }
-  body[data-schale="premium"] #main > #kante{ grid-column: 1; grid-row: 2 / -1 }
-  body[data-schale="premium"] #main > #reiterleiste{ grid-column: 2; grid-row: 2 }
-  body[data-schale="premium"] #main > #topbar{ grid-column: 2; grid-row: 3 }
-  body[data-schale="premium"] #main > #scroll{ grid-column: 2; grid-row: 4 }
+  body[data-schale="premium"] #main > #menueband{ grid-column: 1 / -1 }
+  body[data-schale="premium"] #main > #kante{ grid-column: 1 }
+  body[data-schale="premium"] #main > #reiterleiste{ grid-column: 2 }
+  body[data-schale="premium"] #main > #topbar{ grid-column: 2 }
+  body[data-schale="premium"] #main > #scroll{ grid-column: 2 }
 
   /* OHNE KANTE RÜCKT DER INHALT NACH LINKS. Sie kann zu sein (Strg + \),
      und dann sollen die 54 Pixel nicht als leerer Streifen stehenbleiben. */
@@ -21418,7 +21635,10 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
     display: flex; flex-direction: column;
     background: var(--bg-side);
     border-right: 1px solid var(--line);
-    box-shadow: var(--gold-shadow);
+    /* DER SCHATTEN STEHT IN `studio.css:128` (E642). Hier stand
+       `var(--gold-shadow)` und galt seit dem 6. September nicht mehr —
+       die spätere Datei setzt `var(--studio-elevation)`. Zwei Schatten
+       für dieselbe Lade, und der goldene war nie zu sehen. */
   }
   body[data-schale="premium"] #kanten-lade[hidden]{ display: none }
   .kl-kopf{
@@ -24830,7 +25050,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1191, inhalt: '2f94d3471e7a135c', gebaut: '2026-09-19T15:06:12.620Z' };
+const Stand = { fassung: 1222, inhalt: '43aa0830856fe699', gebaut: '2026-09-20T08:05:55.170Z' };
 window.Stand = Stand;
 
 </script>
@@ -49022,6 +49242,126 @@ window.Lader = Lader;
 
 </script>
 <script>
+/* ===== quell/schale/bedienung/linse.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/bedienung/linse.ts — die wandernde Glaslinse, genau einmal definiert
+ * ----------------------------------------------------------------------------
+ * ERZEUGT DARAUS WIRD `quell/schale/bedienung/linse.js`.
+ * Die Quelle ist DIESE Datei. `npm run bauen:ts` schreibt das .js; wer das
+ * .js bearbeitet, verliert die Änderung beim nächsten Bauen (test105).
+ * ----------------------------------------------------------------------------
+ * WOFÜR. Redur hat am 20. September zwei Bildschirmaufnahmen geschickt: die
+ * Apple-TV-App unter iOS 26 und GoodNotes. An der ersten hing sein Satz „ich
+ * will die untere Übergang haben". Was dort passiert, ist nicht ein Kasten,
+ * der springt, sondern eine LINSE, die wandert: sie vergrössert, was unter
+ * ihr liegt, zieht es beim Fahren mit, wirft an ihrer Oberkante einen
+ * Farbsaum und rastet am Ziel ein.
+ *
+ * Redion hatte die Hälfte davon schon. `#ho-pille` wandert seit E236 von
+ * Reiter zu Reiter, und der Grund steht dort: „ein Hintergrund, der springt,
+ * sagt ‚ein anderer Knopf' — einer, der wandert, sagt ‚derselbe Ort, weiter
+ * vorn'." Diese Datei fügt hinzu, was fehlte: das GLAS.
+ *
+ * ZWEI FILTER, NICHT EINER. Im Vorbild ist die Linse im Ruhezustand fast
+ * klar und erst während der Fahrt heftig — sie verzerrt, wenn sie sich
+ * bewegt, wie Wasser, das man zieht. Ein Filterwert lässt sich nicht
+ * animieren, also gibt es zwei und die Pille tauscht sie. Gemessen, nicht
+ * geschätzt: Ruhe verschiebt um 15, Fahrt um 24 Blattpunkte.
+ *
+ * WARUM EINE EIGENE DATEI — und nicht nur CSS: eine Brechung braucht
+ * `feDisplacementMap`, und das braucht einen `<filter id="…">`. Dieselbe
+ * Antwort wie bei der Textur (E462): GENAU EINMAL global definieren und dann
+ * referenzieren. Zwei Halter wären zwei gleiche Filter, und E440 hat am
+ * KI-Funken gezeigt, was passiert, wenn mehrere Instanzen sich eine ID
+ * teilen.
+ *
+ * DIE KARTE IST DER GANZE TRICK. `feDisplacementMap` liest ein Bild und
+ * verschiebt jeden Bildpunkt um das, was dort im roten (waagerecht) und
+ * grünen Kanal (senkrecht) steht. Grau — 128,128,128 — heisst „nicht
+ * verschieben". Unsere Karte läuft von Rot am linken Rand nach Schwarz am
+ * rechten und von Grün oben nach Schwarz unten; am Rand wird also nach
+ * innen gegriffen, in der Mitte gar nicht. Das ist eine Lupe.
+ *
+ * DER FARBSAUM entsteht danach: derselbe gebrochene Inhalt wird dreimal
+ * genommen, rot und blau um einen Hauch gegeneinander versetzt, und die
+ * drei Kanäle werden wieder zusammengelegt. Echtes Glas tut genau das,
+ * weil es Farben verschieden stark bricht.
+ * ==========================================================================*/
+const Linse = (() => {
+    const NS = 'http://www.w3.org/2000/svg';
+    const HALTER = 'ru-linse-halter';
+    const RUHE = 'ru-linse-ruhe';
+    const FAHRT = 'ru-linse-fahrt';
+    /* Die Karte als Bild. Sie wird auf die Grösse der Linse gezogen
+       (`preserveAspectRatio="none"`), die Zahlen hier sind also nur ein
+       Seitenverhältnis, keine Pixel. */
+    const KARTE = 'data:image/svg+xml;utf8,' + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='120' height='52'><defs>" +
+        "<linearGradient id='x' x1='0' y1='0' x2='1' y2='0'>" +
+        "<stop offset='0' stop-color='#f00'/><stop offset='1' stop-color='#000'/></linearGradient>" +
+        "<linearGradient id='y' x1='0' y1='0' x2='0' y2='1'>" +
+        "<stop offset='0' stop-color='#0f0'/><stop offset='1' stop-color='#000'/></linearGradient>" +
+        "</defs><rect width='120' height='52' fill='#808080'/>" +
+        "<rect width='120' height='52' fill='url(#x)' style='mix-blend-mode:screen'/>" +
+        "<rect width='120' height='52' fill='url(#y)' style='mix-blend-mode:screen'/></svg>");
+    const el = (name, werte) => {
+        const k = document.createElementNS(NS, name);
+        for (const [n, w] of Object.entries(werte))
+            k.setAttribute(n, w);
+        return k;
+    };
+    /** Ein Filter: Karte holen, weichzeichnen, damit verschieben, Farbsaum. */
+    const glas = (id, weich, verschub, saum) => {
+        /* DER FILTERBEREICH IST GENAU DAS ELEMENT. Mit einem grösseren Bereich
+           (etwa -30%/160%) läge die Karte verschoben über dem Glas, und heraus
+           käme ein dunkler Balken quer durch die Linse statt einer Brechung.
+           Am 20. September einmal gebaut und im Bild gesehen. */
+        const f = el('filter', {
+            id, x: '0%', y: '0%', width: '100%', height: '100%',
+            'color-interpolation-filters': 'sRGB'
+        });
+        f.append(el('feImage', { href: KARTE, x: '0%', y: '0%', width: '100%', height: '100%',
+            preserveAspectRatio: 'none', result: 'k' }), el('feGaussianBlur', { in: 'k', stdDeviation: weich, result: 'kw' }), el('feDisplacementMap', { in: 'SourceGraphic', in2: 'kw', scale: verschub,
+            xChannelSelector: 'R', yChannelSelector: 'G', result: 'g' }), el('feOffset', { in: 'g', dx: saum, result: 'vr' }), el('feOffset', { in: 'g', dx: '-' + saum, result: 'vb' }), el('feColorMatrix', { in: 'vr', type: 'matrix', result: 'kr',
+            values: '1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0' }), el('feColorMatrix', { in: 'g', type: 'matrix', result: 'kg',
+            values: '0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0' }), el('feColorMatrix', { in: 'vb', type: 'matrix', result: 'kb',
+            values: '0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0' }), el('feBlend', { in: 'kr', in2: 'kg', mode: 'screen', result: 'krg' }), el('feBlend', { in: 'krg', in2: 'kb', mode: 'screen' }));
+        return f;
+    };
+    /** Den Halter anlegen, falls es ihn noch nicht gibt. Mehrfach rufen ist
+     *  ausdrücklich erlaubt — der zweite Ruf tut nichts. */
+    const sicherstellen = () => {
+        if (document.getElementById(HALTER))
+            return;
+        const svg = document.createElementNS(NS, 'svg');
+        svg.setAttribute('id', HALTER);
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('focusable', 'false');
+        svg.setAttribute('width', '0');
+        svg.setAttribute('height', '0');
+        svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+        const defs = document.createElementNS(NS, 'defs');
+        /* ══ IM RUHEZUSTAND OPTISCH STILL (E641) ════════════════════════════
+         * Hier stand 15, und das war messbar zu viel: bei 15 wird das Zeichen
+         * unter der Linse sichtbar grösser. Das verbietet das Design-System
+         * ausdrücklich — „Do not scale labels/icons with the material blob;
+         * content should remain optically stable" —, und zwar mit gutem Grund:
+         * eine untere Leiste ist kein Schaustück, sondern der Weg, den man
+         * hundertmal am Tag geht.
+         * 8 war beim Nachsehen am 19. September als „nichts zu sehen"
+         * eingestuft worden. Genau das ist hier das Ziel: das Glas soll sich
+         * am Rand zeigen, nicht den Inhalt vergrössern. Die Fahrt bleibt bei
+         * 24 — dort erklärt die Verzerrung die Bewegung, und da gehört sie hin. */
+        defs.append(glas(RUHE, '9', '8', '0.18'), glas(FAHRT, '9', '24', '0.55'));
+        svg.append(defs);
+        document.body.append(svg);
+    };
+    return { HALTER, RUHE, FAHRT, sicherstellen };
+})();
+window.Linse = Linse;
+
+</script>
+<script>
 /* ===== quell/schale/bedienung/textur.js ===== */
 "use strict";
 /* ============================================================================
@@ -69263,6 +69603,113 @@ const Marken = (() => {
         }
         catch { /* dann ohne Zeichen */ }
         row.appendChild(tools);
+        /* ══ DER WECHSEL FLIEGT, DER ZUSTAND SITZT (E640) ═══════════════════
+         * Die Vorgabe des Design-Systems: nicht zwei Flächen unabhängig aus-
+         * und einblenden, sondern EINE, die sich vom alten zum neuen Zustand
+         * bewegt. Das Beispiel dort heisst wörtlich „Pen → Marker → Eraser".
+         *
+         * ERSTER ENTWURF, UND WARUM ER WEG IST. Zuerst lag eine dauerhafte
+         * Fläche neben den Knöpfen und wanderte zum gewählten. Sie sah richtig
+         * aus — und `test478` hat sie widerlegt: nach einem Farbklick stand sie
+         * 55 px neben ihrem Werkzeug, Überdeckung NULL. Der Grund war nicht EIN
+         * fehlender Auslöser, sondern die Bauform: eine Stelle, die einmal
+         * gerechnet und dann gespeichert wird, veraltet bei jedem Umbruch, bei
+         * jedem Rollen, bei jeder Breitenabfrage. Drei Formeln und fünf
+         * Auslöser später stand immer noch derselbe Wert da.
+         *
+         * JETZT TRÄGT DEN GRUND WIEDER DER KNOPF — er kann gar nicht verrutschen,
+         * weil er kein eigener Ort ist. Nur der WECHSEL bekommt eine Fläche:
+         * eine kurzlebige, die vom alten Knopf zum neuen fliegt und danach
+         * verschwindet. Währenddessen hält der neue seinen Grund zurück, damit
+         * nie zwei zugleich zu sehen sind.
+         *
+         * `position:fixed` und Bildschirmmasse: so gibt es keine Frage nach der
+         * Hülle, keinen Versatz, keine Rollung — genau die Fragen, an denen der
+         * erste Entwurf gescheitert ist.
+         * ══════════════════════════════════════════════════════════════════════*/
+        let wahlVorher = tools.querySelector('button[data-wz].on');
+        /* DIE LAUFENDE FLÄCHE, falls gerade eine unterwegs ist. Sie steht hier
+           und nicht in `wahlFliegen`, weil der NÄCHSTE Wechsel sie braucht. */
+        let flugJetzt = null;
+        const wahlFliegen = () => {
+            const neu = tools.querySelector('button[data-wz].on');
+            const alt = wahlVorher;
+            if (neu === alt)
+                return;
+            wahlVorher = neu;
+            if (!alt || !neu)
+                return;
+            /* Ohne Bewegung KEIN Flug — der Zustand ist trotzdem sofort richtig,
+               weil er am Knopf hängt und nicht am Flug (§38). */
+            if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+                return;
+            /* ══ UNTERBRECHEN, NICHT ANSTELLEN ═══════════════════════════════
+             * Wer schnell A → B → C tippt, soll EINE Fläche sehen, die ihre
+             * Richtung ändert — nicht zwei, die nebeneinander herfliegen. Die
+             * laufende wird deshalb dort abgeholt, wo sie GERADE ist
+             * (`getBoundingClientRect` gibt den gemalten Zwischenstand, nicht das
+             * Ziel), und die neue startet von dort. So geht die Stelle nicht
+             * verloren, und es springt nichts zurück.
+             * Ohne das lag hier eine Warteschlange, und das Design-System
+             * verbietet sie ausdrücklich. Gesehen beim Gegenlesen des eigenen
+             * Bogens, nicht im Bild — zwei Flächen sieht man erst, wenn man
+             * schnell genug tippt. */
+            const laeuft = flugJetzt?.getBoundingClientRect();
+            if (flugJetzt) {
+                flugJetzt.remove();
+                flugJetzt = null;
+            }
+            const von = laeuft && laeuft.width ? laeuft : alt.getBoundingClientRect();
+            const nach = neu.getBoundingClientRect();
+            if (!von.width || !nach.width)
+                return;
+            /* Kein Flug über null Weg — und keiner quer über eine umgebrochene
+               Leiste: was mehr als eine Zeile überspringt, wäre kein Weg mehr,
+               sondern ein Strich quer durchs Bild. */
+            if (Math.abs(von.left - nach.left) < 1 && Math.abs(von.top - nach.top) < 1)
+                return;
+            if (Math.abs(von.top - nach.top) > von.height * 1.5)
+                return;
+            const flug = document.createElement('i');
+            flug.className = 'bw-flug';
+            flug.setAttribute('aria-hidden', 'true');
+            flug.style.cssText =
+                'left:' + von.left + 'px;top:' + von.top + 'px;' +
+                    'width:' + von.width + 'px;height:' + von.height + 'px;';
+            document.body.append(flug);
+            flugJetzt = flug;
+            /* Wer vorher wartete, wartet nicht mehr: sonst bliebe ein
+               überholtes Ziel blass stehen. */
+            tools.querySelectorAll('.bw-wartet').forEach(k => k.classList.remove('bw-wartet'));
+            neu.classList.add('bw-wartet');
+            const fertig = () => {
+                flug.remove();
+                if (flugJetzt === flug)
+                    flugJetzt = null;
+                neu.classList.remove('bw-wartet');
+            };
+            /* Zwei Bilder warten, sonst gilt der Startwert als nie gemalt und es
+               gibt keinen Übergang — dieselbe Falle wie bei `#ho-pille` (E639). */
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                flug.style.left = nach.left + 'px';
+                flug.style.top = nach.top + 'px';
+                flug.style.width = nach.width + 'px';
+                flug.style.height = nach.height + 'px';
+            }));
+            flug.addEventListener('transitionend', fertig, { once: true });
+            /* EIN NETZ. Ein Übergang, der nie beginnt (Fenster im Hintergrund,
+               Bewegung aus), meldet auch kein Ende — dann bliebe der neue Knopf
+               für immer ohne Grund. */
+            setTimeout(fertig, 700);
+        };
+        try {
+            new MutationObserver(wahlFliegen).observe(tools, {
+                attributes: true, attributeFilter: ['class'], subtree: true
+            });
+        }
+        catch { /* ohne Beobachter wechselt der Grund ohne Flug — der Zustand
+                     stimmt trotzdem, weil er am Knopf hängt */
+        }
         if (extra) {
             const fixed = document.createElement('div');
             fixed.className = 'blatt-fest';
@@ -79121,17 +79568,87 @@ const ChronikDaten = {
         "name": "Redur Babat",
         "wer": [
             "Elektroberuf in der Schweiz — Schaltpläne, NIV, Minuterie, Wechselschaltung, Kreuzschaltung. Die Beispiele in seinen Bildern sind echte Prüfungsaufgaben, keine erfundenen.",
-            "Er arbeitet mit GoodNotes auf dem iPad und hält es Redion daneben. Wenn er ein Bild schickt, ist es fast immer GoodNotes — und er will nicht 'so ähnlich', sondern 1:1.",
+            "Er lernt neben der Arbeit: Berufsfachschule, Modulprüfungen, Lehrmittel als PDF. Redion ist für ihn zuerst ein Arbeitsgerät und erst danach ein Projekt — was er baut, benutzt er am selben Tag.",
+            "Er arbeitet mit GoodNotes auf dem iPad und hält es Redion daneben. Wenn er ein Bild schickt, ist es fast immer GoodNotes — und er will nicht „so ähnlich\", sondern 1:1.",
             "Sein Deutsch ist gesprochen, nicht geschrieben: schnell getippt, ohne Punkt, mit Tippfehlern. Der Inhalt ist dabei IMMER präzise. Wer die Rechtschreibung liest statt den Inhalt, versteht ihn falsch.",
-            "Er sagt sehr deutlich, wenn ihm etwas gefällt ('das sieht brutal gut aus') und ebenso deutlich, wenn etwas fehlt ('alter, wieso habe ich keinen Laserpointer').",
-            "Er will Tempo. 'Weiter', 'weiter ohne Pause', 'mache es sofort' kommen oft — und meinen: nicht fragen, machen.",
-            "Aber er will auch Ehrlichkeit. Er hat mehrfach Regeln gesetzt, die genau das erzwingen: nicht behaupten, die Gesamtsuite sei grün; nichts löschen ohne Rückfrage; Lücken aufschreiben statt verstecken."
+            "Er sagt sehr deutlich, wenn ihm etwas gefällt („das sieht brutal gut aus\") und ebenso deutlich, wenn etwas fehlt („alter, wieso habe ich keinen Laserpointer\").",
+            "Er will Tempo. „Weiter\", „weiter ohne Pause\", „mache es sofort\" kommen oft — und meinen: nicht fragen, machen.",
+            "Aber er will auch Ehrlichkeit. Er hat mehrfach Regeln gesetzt, die genau das erzwingen: nicht behaupten, die Gesamtsuite sei grün; nichts löschen ohne Rückfrage; Lücken aufschreiben statt verstecken.",
+            "Und er merkt, wenn etwas liegenbleibt. Die Chronik lag sechs Tage brach — seine Frage dazu war ein einziger Satz und kam, bevor jemand anders es bemerkt hätte."
         ],
         "wieMitIhmArbeiten": [
-            "SEINE SÄTZE SIND DER AUFTRAG, wörtlich. 'Strich Strich Strich, so nur Strich' heisst: zwei Zahlen im Muster, nicht vier. Er hat es zweimal gesagt — das war kein Versehen, das war Nachdruck.",
+            "SEINE SÄTZE SIND DER AUFTRAG, wörtlich. „Strich Strich Strich, so nur Strich\" heisst: zwei Zahlen im Muster, nicht vier. Er hat es zweimal gesagt — das war kein Versehen, das war Nachdruck.",
             "EIN BILD SCHLÄGT EINE BESCHREIBUNG. Wenn er eines schickt, ist die Antwort auch ein Bild.",
             "NICHT FRAGEN, WO ICH ES SELBST MESSEN KANN. Fragen nur, wo die Antwort das Ergebnis ändert und ich sie nicht messen kann (Beispiel: welcher Knopf genau, L139).",
-            "WAS ES KOSTET, GEHÖRT DAZU. Er nimmt Kosten in Kauf, wenn sie danebenstehen — und merkt es, wenn sie fehlen."
+            "WAS ES KOSTET, GEHÖRT DAZU. Er nimmt Kosten in Kauf, wenn sie danebenstehen — und merkt es, wenn sie fehlen.",
+            "EIN SATZ KANN MEHRERE AUFTRÄGE TRAGEN. „könntest du die xmind teil verbessern …\" waren vier: Griffe, Verbindungen löschen, Formen, Vorlagen. Wer nur den ersten baut, hat drei überhört.",
+            "WENN ER KORRIGIERT, KORRIGIERT ER DIE RICHTUNG, nicht das Detail. „stoppe deine arbeit sofort\" heisst nicht „mach es anders\", sondern „hör auf, bevor es mehr wird\".",
+            "WIEDERHERSTELLEN HEISST VOLLSTÄNDIG. „bringe es wieder komplett wie vorher mit Auge usw, mit Animationen, mit Bewegung, mit Anzeige, alles.\" Ungefähr zurück ist für ihn nicht zurück.",
+            "ER GIBT DIE ZAHLEN SELBST. 0,3 · 0,7 · 1,2 · 4,0 mm für die Striche, 36 px für die Kachel, der Zugangscode 733877. Wo er eine Zahl nennt, wird sie übernommen und nicht verbessert."
+        ],
+        "abschnitte": [
+            {
+                "titel": "In Zahlen — wie er schreibt",
+                "einleitung": "Gezählt über alle 95 aufgeschriebenen Nachrichten in dieser Chronik, nicht geschätzt.",
+                "punkte": [
+                    "**Kurz.** Die mittlere Nachricht hat 72 Zeichen. Die kürzeste sechs („weiter\"), die längste 1494 — und das war der Auftrag, diese Datei hier anzulegen.",
+                    "**In Schüben.** 33 Nachrichten an einem Tag (12. September), an drei anderen Tagen keine einzige. Er arbeitet nicht gleichmässig, sondern in Bögen.",
+                    "**Rund um die Uhr.** 16 Nachrichten vor 7 Uhr morgens, 48 zwischen 7 und 19 Uhr, 31 nach 19 Uhr. Die früheste um 00:10, die späteste um 23:25.",
+                    "**Das häufigste Wort nach „Redion\" (26x) ist „weiter\" (19x).** Danach kommen „alles\" (12x) und „klicke\" (10x) — Tempo, Vollständigkeit, und eine Hand, die etwas anfasst."
+                ],
+                "quelle": "chronik/chronik.json, alle Nachrichtenfelder, 19. September 2026"
+            },
+            {
+                "titel": "Woran er Qualität misst",
+                "einleitung": "Er beschreibt selten abstrakt. Er nennt ein Programm, und das Programm ist die Messlatte.",
+                "punkte": [
+                    "**PowerPoint** (11x genannt) für das Vortragen, **Word** (5x) für das Schreiben, **GoodNotes** (3x) für das Zeichnen, **XMind** (2x) für Gedankenkarten, **OneNote** (1x) für den freien Text, das **macOS-Dock** (1x) für die Bewegung.",
+                    "„Ich will das redion start wie goodnotes bein zeichenn ist, stark wie word beim text schreiben bearbeiten, start wie Powerpoint beim Präsentation\" — drei Messlatten in einem Satz. Daraus wurden die fünf Messlatten in E594.",
+                    "**1:1 ist wörtlich gemeint** (26 Stellen in ENTSCHEIDUNGEN.md). „So ähnlich\" ist für ihn ein anderes Ergebnis, nicht ein schlechteres.",
+                    "Ein Vorbild zu nennen ist bei ihm die kürzeste Form eines vollständigen Auftrags: Form, Bedienung und Erwartung in einem Wort."
+                ],
+                "quelle": "alle Nachrichten dieser Chronik und 459 Nennungen in ENTSCHEIDUNGEN.md"
+            },
+            {
+                "titel": "Wie er entscheidet",
+                "einleitung": "Er entscheidet selten viel, aber dann endgültig — und er entscheidet am Bild, nicht an der Beschreibung.",
+                "punkte": [
+                    "**Er entscheidet, nachdem er es gesehen hat.** E78 legte am 8. August eine React-Zielarchitektur fest; E80 widerrief sie am 9. August, nachdem der Rohbau dastand. Nicht die Idee hat ihn überzeugt oder nicht, sondern der Anblick.",
+                    "**Vier Marken in CLAUDE.md hat er selbst gesetzt** (3. September): §30 der volle Lauf in Stücken, §37 die 44 px mit ihrer Ausnahme, §46 rot zuerst, §55.3 ein Bild, wenn man etwas sehen kann. Alle vier sind Regeln über Ehrlichkeit, keine über Funktionen.",
+                    "**E521, am 9. September:** ein Zweig, ein Push, dann ein neuer. Eine Arbeitsregel, die er selbst formuliert hat, weil ein Zweig seinen Namen verliert, wenn er weiterwächst.",
+                    "**Er wählt zwischen Wegen, die ich vorlege** — „Sticky am Blattfuss\", „Verschieben, dann Rest ins Verzeichnis\" —, und er wählt schnell. Eine Auswahl mit drei benannten Wegen bekommt eine Antwort; eine offene Frage bekommt „mach\".",
+                    "**Was er nicht entscheidet, delegiert er ausdrücklich**: „arbeite an redion selbständig weiter\". Das ist kein Desinteresse, sondern Arbeitsteilung."
+                ],
+                "quelle": "ENTSCHEIDUNGEN.md (67 Stellen „Redur hat/entschied/…\"), CLAUDE.md, E78/E80/E521"
+            },
+            {
+                "titel": "Was ihn ärgert — und was daraus zu lernen war",
+                "einleitung": "Dreimal in zwei Wochen dieselbe Sorte Fehler, und jedes Mal habe ich sie gemacht, nicht er.",
+                "punkte": [
+                    "**Mitgenommenes.** Beim Umbau verschwand das Auge am Ordner — samt Animationen, um die es nie ging. „alter man du hast hier die augen wo links oben bei date war und du hast die alle animationen alter was ist das\". Vier Bögen Reparatur (E601–E604), und am nächsten Tag noch einmal (E608/E609).",
+                    "**Halb wiederhergestellt.** Seine Antwort darauf war nicht „mach es hübscher\", sondern „komplett wie vorher … alles\".",
+                    "**Behauptetes.** Er hat ausdrücklich verboten zu sagen, die Gesamtsuite sei grün, wenn sie nicht gelaufen ist. Am 19. September zeigte der erste volle Lauf seit PR #100, warum: 17 von 48 Stücken rot.",
+                    "**Liegengebliebenes.** „machst du ur.md oder nicht weil es ist seit 5 tagen nicht gemacht.\" Kein Vorwurf, eine Frage — aber sie kam, bevor ich es selbst gemerkt hatte."
+                ],
+                "quelle": "Tage 15.–19. September dieser Chronik"
+            },
+            {
+                "titel": "Was er gebaut haben will, und warum gerade das",
+                "einleitung": "Seine Wünsche sind nicht beliebig. Sie kommen aus zwei Leben, die beide dieselbe App benutzen.",
+                "punkte": [
+                    "**Aus der Schule:** Lernkarten aus dem eigenen PDF, Prüfungsplanung mit Countdown, Fehlertraining, Formelheft, Fachzeichen und Schutzleiter. Nichts davon hat Notion.",
+                    "**Aus dem Betrieb:** Schaltpläne, Materiallisten, Baustellen, Normen, Rechnungen.",
+                    "**Und daraus folgt local-first.** Seine Daten sind Prüfungen, Lohnabrechnungen und Kundenunterlagen — die Regel „Daten gehören dem Nutzer\" ist bei ihm kein Prinzip, sondern eine Anforderung.",
+                    "**Die Reihenfolge, in der er baut, ist die Reihenfolge, in der er es braucht.** Deshalb kommt Zeichnen vor Abgleich und Prüfungsplanung vor Cloudflare."
+                ],
+                "quelle": "LUECKEN.md, ENTSCHEIDUNGEN.md, die Bereiche unter src/bereiche/"
+            },
+            {
+                "titel": "Die kürzeste Zusammenfassung",
+                "punkte": [
+                    "**Schreib kurz, miss nach, zeig ein Bild, verlier nichts.** Alles andere in dieser Datei ist die ausführliche Fassung dieses Satzes."
+                ]
+            }
         ]
     },
     "arbeitsweise": {
@@ -80354,6 +80871,1136 @@ const ChronikDaten = {
                     "risiko": "keins an Daten. Absaetze mit gleichem Format bleiben EINE Marke — sonst haette der Editor statt eines Kastens lauter Zeilen. Die Hoehen kommen vom Zeichner selbst, nicht aus einer Schaetzung; die Gegenprobe mit Schaetzung misst 18 pt Abstand statt ueber 40, also Ueberlappung."
                 }
             ]
+        },
+        {
+            "datum": "2026-09-13",
+            "wochentag": "Sonntag",
+            "titel": "Zwei Bögen am PowerPoint-Einleser: die Drehung, und kein zweiter Zeichner",
+            "wasIchWeiss": "Teilweise. Die Commits und ihre Zeiten stehen in git und sind hier unverändert übernommen. Redurs WORTLAUT fehlt für diesen Tag im Gesprächsgedächtnis — die Sätze hier stehen zitiert in ENTSCHEIDUNGEN.md und sind von dort übernommen. Wo kein Zitat belegt ist, steht keines. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
+            "nachrichten": [],
+            "arbeit": [
+                {
+                    "was": "E563 — Drehung: `a:rot` wird gelesen und auf die Marke übertragen",
+                    "vonCommit": "(nach E562)",
+                    "bisCommit": "7d1142a",
+                    "zeitraum": "19:28",
+                    "dauer": "—",
+                    "pruefungen": "test511 mitgefahren"
+                },
+                {
+                    "was": "E564 — Kein fremder PowerPoint-Zeichner: die Folie benutzt den vorhandenen Blatt-Zeichner",
+                    "vonCommit": "7d1142a",
+                    "bisCommit": "cf01c36",
+                    "zeitraum": "19:53",
+                    "dauer": "ca. 25 min",
+                    "pruefungen": "test511"
+                }
+            ],
+            "zahlen": {
+                "commits": 2,
+                "entscheidungen": 2
+            },
+            "groesstesProblem": "Nicht überliefert. Der Tag hat zwei Böge und keinen dokumentierten Fehlschlag.",
+            "interessantesteAnfrage": "Nicht überliefert.",
+            "massnahmen": [
+                {
+                    "zeit": "19:53",
+                    "was": "Kein eigener Zeichner für Folien — die vorhandene Blatt-Maschine bekommt die Folieninhalte.",
+                    "warum": "§8: ein zweiter Zeichner für dieselbe Sache läuft mit dem ersten auseinander.",
+                    "risiko": "keins an Daten — Zeichnen."
+                }
+            ]
+        },
+        {
+            "datum": "2026-09-14",
+            "wochentag": "Montag",
+            "titel": "Vormittags Folien, abends das Zeichenstudio: die Stiftleiste, das Lineal und der Radierer",
+            "wasIchWeiss": "Teilweise. Die Commits und ihre Zeiten stehen in git und sind hier unverändert übernommen. Redurs WORTLAUT fehlt für diesen Tag im Gesprächsgedächtnis — die Sätze hier stehen zitiert in ENTSCHEIDUNGEN.md und sind von dort übernommen. Wo kein Zitat belegt ist, steht keines. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 18:00",
+                    "wortlaut": "Einheitliches SVG-Register nutzen; keine zweite lose Icon-Sammlung neben ihm.",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Die Zeichen kommen aus dem einen Register, das es schon gibt — keine zweite Sammlung daneben (§8).",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 18:30",
+                    "wortlaut": "der Knopf zeigt nicht ‚Formen', sondern WELCHE Form gerade gewählt ist — ein Dreieck, ein Pfeil, eine Kurve.",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Der Werkzeugknopf ist keine Beschriftung, sondern eine Anzeige: er zeigt den Zustand.",
+                    "besser": "",
+                    "besserePrompt": ""
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E565 — Tabellen als Gitter auf der Folie",
+                    "vonCommit": "cf01c36",
+                    "bisCommit": "3764f67",
+                    "zeitraum": "05:04",
+                    "dauer": "—",
+                    "pruefungen": "test511"
+                },
+                {
+                    "was": "E566 — Gefüllte Formen und die geerbte Textfarbe",
+                    "vonCommit": "3764f67",
+                    "bisCommit": "2b95054",
+                    "zeitraum": "07:32",
+                    "dauer": "—",
+                    "pruefungen": "test511 nachgezogen (b608903)"
+                },
+                {
+                    "was": "E567 — Die Schriftart",
+                    "vonCommit": "2b95054",
+                    "bisCommit": "c9ef40e",
+                    "zeitraum": "10:24",
+                    "dauer": "—",
+                    "pruefungen": "test511"
+                },
+                {
+                    "was": "E568 — Die Stiftleiste: eine laute Fläche statt sechs",
+                    "vonCommit": "c9ef40e",
+                    "bisCommit": "85e3dcf",
+                    "zeitraum": "18:14",
+                    "dauer": "ca. 4 h mit Pausen",
+                    "pruefungen": "Zeichenstudio-Läufe"
+                },
+                {
+                    "was": "E569 — Die Kurve war eine Sackgasse",
+                    "vonCommit": "85e3dcf",
+                    "bisCommit": "c83f6a1",
+                    "zeitraum": "18:46",
+                    "dauer": "ca. 30 min",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E570 — Die Leiste selbst ordnen",
+                    "vonCommit": "c83f6a1",
+                    "bisCommit": "0e83901",
+                    "zeitraum": "19:34",
+                    "dauer": "ca. 45 min",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E571 — Im Band selbst schieben",
+                    "vonCommit": "0e83901",
+                    "bisCommit": "d4a53c8",
+                    "zeitraum": "20:23",
+                    "dauer": "ca. 50 min",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "WIP E572 — Zeichenstudio-Zwischenstand und Uebergabe",
+                    "vonCommit": "d4a53c8",
+                    "bisCommit": "5d415d6",
+                    "zeitraum": "22:54",
+                    "dauer": "—",
+                    "pruefungen": "keine — ausdrücklich unfertig gesichert"
+                },
+                {
+                    "was": "E573 — Das Lineal, die Verlaufskapsel und die fehlenden Bahnen",
+                    "vonCommit": "5d415d6",
+                    "bisCommit": "4ac5575",
+                    "zeitraum": "22:55",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E574 — Das Lineal gehört auch dem Stift, die Pastelle dem Marker",
+                    "vonCommit": "4ac5575",
+                    "bisCommit": "5aa8876",
+                    "zeitraum": "23:19",
+                    "dauer": "ca. 25 min",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E575 — Was aufgeht, geht zu; was gleich bleibt, bleibt stehen",
+                    "vonCommit": "5aa8876",
+                    "bisCommit": "cda6f48",
+                    "zeitraum": "23:34",
+                    "dauer": "ca. 15 min",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E576 — Der Radierer: sichtbar, einfach, mit Gedächtnis",
+                    "vonCommit": "cda6f48",
+                    "bisCommit": "6a25d6c",
+                    "zeitraum": "23:44",
+                    "dauer": "ca. 10 min",
+                    "pruefungen": "—"
+                }
+            ],
+            "zahlen": {
+                "commits": 13,
+                "entscheidungen": 12
+            },
+            "groesstesProblem": "P49 fällt auf diesen Tag: mein Zeilenraster zerschnitt eine Zeile in zwei, weil ich nach Oberkanten gruppiert habe statt nach der Mitte. Die Messung meldete einen Umbruch, den das Bild nicht zeigte.",
+            "interessantesteAnfrage": "Die Stiftleiste — Redur wollte keine sechs Knöpfe, sondern EINE Fläche, die zeigt, was gewählt ist.",
+            "massnahmen": [
+                {
+                    "zeit": "22:54",
+                    "was": "Einen ausdrücklich UNFERTIGEN Stand als WIP gesichert, mit vollständiger Uebergabe in doku/.",
+                    "warum": "Ein halb gebautes Studio zu verschweigen und weiterzubauen hätte den nächsten Durchgang blind gemacht.",
+                    "risiko": "keins — nichts wurde als fertig behauptet."
+                }
+            ]
+        },
+        {
+            "datum": "2026-09-15",
+            "wochentag": "Dienstag",
+            "titel": "Der grösste Tag: 29 Commits — Zeichenstudio fertig, messungen.md angelegt, Word und PowerPoint gehen unverändert wieder heraus",
+            "wasIchWeiss": "Teilweise. Die Commits und ihre Zeiten stehen in git und sind hier unverändert übernommen. Redurs WORTLAUT fehlt für diesen Tag im Gesprächsgedächtnis — die Sätze hier stehen zitiert in ENTSCHEIDUNGEN.md und sind von dort übernommen. Wo kein Zitat belegt ist, steht keines. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 00:00",
+                    "wortlaut": "Macbook Dock Animationen … beim Wechseln",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Die Vergrösserung der Nachbarn beim Überfahren, wie im macOS-Dock.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 05:00",
+                    "wortlaut": "Zurück",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 10:00",
+                    "wortlaut": "passt schon",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 17:20",
+                    "wortlaut": "ich will das redion auch die anderen datein auch öffnen kann z.B. word und powerpoint daten … aber wichtig die originale datei wird immer geschützt",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 17:40",
+                    "wortlaut": "Ich will das redion start wie goodnotes bein zeichenn ist, stark wie word beim text schreiben bearbeiten, start wie Powerpoint beim Präsentation",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Drei Messlatten: beim Zeichnen GoodNotes, beim Schreiben Word, beim Vortragen PowerPoint.",
+                    "besser": "„Redion soll beim Zeichnen so stark sein wie GoodNotes, beim Schreiben wie Word und beim Präsentieren wie PowerPoint.\"",
+                    "besserePrompt": "Daraus wurden die fünf Messlatten in E594 — ein Satz, der als Prüfbedingung taugt, weil er Vergleiche nennt statt Wünsche."
+                },
+                {
+                    "zeit": "ca. 19:30",
+                    "wortlaut": "bei redion fehlt freier Text einfügen bei der PDF oder überhaupt — es sollte wie OneNote sein: wenn ich irgendwo klicke, sollte ich direkt Text schreiben",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 20:10",
+                    "wortlaut": "alter man du hast hier die augen wo links oben bei date war und du hast die alle animationen alter was ist das",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Beim Umbau war das Auge am Ordner verschwunden — mitsamt den Animationen, um die es nie ging.",
+                    "besser": "„Das Auge oben links am Ordner ist weg, und die Animationen auch. Bitte stell beides wieder her.\"",
+                    "besserePrompt": "Ärger ist ein Signal, keine Anweisung — die Anweisung steckte im nächsten Satz: „stoppe deine arbeit sofort\"."
+                },
+                {
+                    "zeit": "ca. 20:15",
+                    "wortlaut": "es sollte wie vorher sein — stoppe deine arbeit sofort",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht weiterbauen, sondern zuerst den alten Zustand zurückholen.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 20:16",
+                    "wortlaut": "nein die auge nicht weg",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Meine erste Reparatur hatte das Auge entfernt statt den Konflikt — falsche Richtung.",
+                    "besser": "",
+                    "besserePrompt": ""
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E577 — Was sich bewegt, ist das Zeichen",
+                    "vonCommit": "6a25d6c",
+                    "bisCommit": "0777e19",
+                    "zeitraum": "00:05",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "messungen.md angelegt — alle Messungen an einem Ort",
+                    "vonCommit": "0777e19",
+                    "bisCommit": "f2aeb93",
+                    "zeitraum": "00:10",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E578/E579 — Lesen heisst lesen, und die Kapsel nimmt nirgends teil",
+                    "vonCommit": "f2aeb93",
+                    "bisCommit": "b362734",
+                    "zeitraum": "04:56",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E580 — Was ausserhalb des Bildes steht, sagt sich selbst",
+                    "vonCommit": "b362734",
+                    "bisCommit": "c426693",
+                    "zeitraum": "05:05",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E581/E582 — Was Bedienung ist, gehört auf kein Papier",
+                    "vonCommit": "c426693",
+                    "bisCommit": "2d8ca7c",
+                    "zeitraum": "07:24",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E583/E584 — Die Kopie zeigt, was das Original zeigt",
+                    "vonCommit": "2d8ca7c",
+                    "bisCommit": "76be392",
+                    "zeitraum": "09:50",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E585 — Drei von vier Zahlen im Stilblatt waren Zierde",
+                    "vonCommit": "76be392",
+                    "bisCommit": "19d2694",
+                    "zeitraum": "10:10",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E586 — Ein Pfeil aus einer Schrift ist kein Zeichen",
+                    "vonCommit": "19d2694",
+                    "bisCommit": "6fd6030",
+                    "zeitraum": "10:27",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E587 — Zwei Striche in derselben Richtung sind ein Bild",
+                    "vonCommit": "6fd6030",
+                    "bisCommit": "9bf8804",
+                    "zeitraum": "13:37",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E588 — Die Tastatur schiebt das Dock nicht weg",
+                    "vonCommit": "9bf8804",
+                    "bisCommit": "b7d194e",
+                    "zeitraum": "13:47",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E589 — Neunzehn Zeichnungen, die nicht im Register standen",
+                    "vonCommit": "b7d194e",
+                    "bisCommit": "14b3d96",
+                    "zeitraum": "14:10",
+                    "dauer": "—",
+                    "pruefungen": "Registerlauf"
+                },
+                {
+                    "was": "E590 — Drei rote Läufe, und einer davon war ein echter Fehler",
+                    "vonCommit": "14b3d96",
+                    "bisCommit": "9b9a89e",
+                    "zeitraum": "14:34",
+                    "dauer": "ca. 25 min",
+                    "pruefungen": "drei Läufe, einer echt rot"
+                },
+                {
+                    "was": "E591 — Ein Lineal, dessen Griff man nicht erreicht, ist keines",
+                    "vonCommit": "9b9a89e",
+                    "bisCommit": "603028a",
+                    "zeitraum": "15:51",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E592 — Die Originaldatei geht unverändert wieder heraus",
+                    "vonCommit": "603028a",
+                    "bisCommit": "313aced",
+                    "zeitraum": "17:31",
+                    "dauer": "ca. 1,5 h",
+                    "pruefungen": "test525/test526 Rundreisen"
+                },
+                {
+                    "was": "E593 — Die Rückspur zum <a:t>",
+                    "vonCommit": "313aced",
+                    "bisCommit": "29086c8",
+                    "zeitraum": "17:39",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E594 — Die fünf Messlatten",
+                    "vonCommit": "29086c8",
+                    "bisCommit": "a26adfc",
+                    "zeitraum": "17:43",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E595 — Eine eingelesene .docx geht unverändert wieder heraus",
+                    "vonCommit": "a26adfc",
+                    "bisCommit": "e095907",
+                    "zeitraum": "19:00",
+                    "dauer": "—",
+                    "pruefungen": "test526"
+                },
+                {
+                    "was": "E597 — Direkt auf dem Blatt schreiben, wie in OneNote",
+                    "vonCommit": "e095907",
+                    "bisCommit": "8f580c9",
+                    "zeitraum": "19:40",
+                    "dauer": "—",
+                    "pruefungen": "test527"
+                },
+                {
+                    "was": "E599 — Der Feinschliff am freien Text",
+                    "vonCommit": "8f580c9",
+                    "bisCommit": "3bec815",
+                    "zeitraum": "19:54",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E601 — Das Auge sass auf dem Ordnerreiter",
+                    "vonCommit": "3bec815",
+                    "bisCommit": "5c1f757",
+                    "zeitraum": "20:15",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E602 — Nicht das Auge weicht, sondern der Reiter",
+                    "vonCommit": "5c1f757",
+                    "bisCommit": "5a07d8f",
+                    "zeitraum": "20:28",
+                    "dauer": "ca. 13 min",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E603 — Die Ordnerkarte verwandelt sich nicht mehr unter der Hand",
+                    "vonCommit": "5a07d8f",
+                    "bisCommit": "cc1f62d",
+                    "zeitraum": "20:42",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E604 — Die Ordnerkachel bleibt, wie sie in main steht",
+                    "vonCommit": "cc1f62d",
+                    "bisCommit": "fb65b34",
+                    "zeitraum": "20:50",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                }
+            ],
+            "zahlen": {
+                "commits": 29,
+                "entscheidungen": 26,
+                "pullRequests": "#86, #88, #89, #90, #91"
+            },
+            "groesstesProblem": "Das Auge am Ordner. Ich hatte es beim Umbau mitgenommen, ohne dass jemand darum gebeten hatte — Redurs Antwort kam in drei Nachrichten hintereinander und endete mit „stoppe deine arbeit sofort\". Die Reparatur brauchte danach vier Bögen (E601 bis E604), und die eigentliche Lehre steht in E609: wiederherstellen heisst VOLLSTAENDIG, nicht ungefähr.",
+            "interessantesteAnfrage": "„start wie goodnotes … stark wie word … start wie Powerpoint\" — drei Programme in einem Satz, und jedes meint einen anderen Teil von Redion. Daraus wurden die fünf Messlatten (E594).",
+            "massnahmen": [
+                {
+                    "zeit": "00:10",
+                    "was": "`messungen.md` angelegt.",
+                    "warum": "Die Zahlen lagen über ENTSCHEIDUNGEN, LUECKEN und Prüfläufe verstreut; eine Zahl ohne Datum und Methode ist keine Messung.",
+                    "risiko": "keins — Dokumentation."
+                },
+                {
+                    "zeit": "17:31",
+                    "was": "Die Originaldatei wird beim Einlesen IMMER behalten und geht unverändert wieder heraus.",
+                    "warum": "Redur: „die originale datei wird immer geschützt\". Jede Umwandlung ist verlustbehaftet — das Original ist die einzige Fassung, die es nicht ist.",
+                    "risiko": "§9/§13: das ist die Zusage, dass ein Import nie eine Einbahnstrasse ist. test525/526 fahren die Rundreise mit echten Bytes."
+                },
+                {
+                    "zeit": "20:28",
+                    "was": "Das Auge bleibt, der Reiter weicht aus.",
+                    "warum": "Redur: „nein die auge nicht weg\" — meine erste Reparatur hatte das Auge entfernt statt den Konflikt.",
+                    "risiko": "keins an Daten — Oberfläche."
+                }
+            ]
+        },
+        {
+            "datum": "2026-09-16",
+            "wochentag": "Mittwoch",
+            "titel": "Die Gedankenkarte entsteht, das Auge zieht an jeden Ordner, und das Schreibstudio wird ruhig",
+            "wasIchWeiss": "Teilweise. Die Commits und ihre Zeiten stehen in git und sind hier unverändert übernommen. Redurs WORTLAUT fehlt für diesen Tag im Gesprächsgedächtnis — die Sätze hier stehen zitiert in ENTSCHEIDUNGEN.md und sind von dort übernommen. Wo kein Zitat belegt ist, steht keines. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 04:30",
+                    "wortlaut": "Weiter an die frei text erstellen — also dort sollte, wenn ich klicke, wie Word direkt erstellen können.",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 05:40",
+                    "wortlaut": "Ich will bei Redion auch das XMind erstellen können.",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 06:00",
+                    "wortlaut": "wenn ich auf Ordner mit Maus gehe, sollte es sein [so] — mach die Augen weg und behalte nur so: wenn ich mit Maus drauf gehe, sollte sie mir zeigen, was drin ist",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Der Blick in den Ordner kommt beim Überfahren vom Deckel, nicht von einem eigenen Auge-Knopf.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 06:20",
+                    "wortlaut": "bringe es wieder komplett wie vorher mit Auge usw, mit Animationen, mit Bewegung, mit Anzeige, alles.",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Vollständig wiederherstellen — nicht ungefähr.",
+                    "besser": "„Stell bitte den vorherigen Stand vollständig wieder her: Auge, Animationen, Bewegung und Anzeige.\"",
+                    "besserePrompt": "Das Wort „komplett\" mit der Aufzählung dahinter ist genau richtig — es macht das Ergebnis prüfbar."
+                },
+                {
+                    "zeit": "ca. 09:10",
+                    "wortlaut": "und das ist nur bei Bibliothek — ich will überall, wenn ein Ordner erstellt wird, das haben.",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 13:00",
+                    "wortlaut": "hier sieht es sehr viel aus und haben nicht so viel Platz für Bearbeiten, und räume es auf",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 15:00",
+                    "wortlaut": "jedes Werkzeug trägt sein Wort unter dem Zeichen",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E605 — Ein Tipp auf leeres Papier schreibt schon",
+                    "vonCommit": "fb65b34",
+                    "bisCommit": "73ed00a",
+                    "zeitraum": "04:42",
+                    "dauer": "—",
+                    "pruefungen": "test527"
+                },
+                {
+                    "was": "E606 — Mehrere Formate in einem Textfeld überleben das Bearbeiten",
+                    "vonCommit": "73ed00a",
+                    "bisCommit": "bf6428b",
+                    "zeitraum": "05:14",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E607 — Die Gedankenkarte: XMind, aber im Block und ohne Konto",
+                    "vonCommit": "bf6428b",
+                    "bisCommit": "20bdbaf",
+                    "zeitraum": "05:47",
+                    "dauer": "ca. 35 min",
+                    "pruefungen": "test529 neu, 56 Zusagen, zwei Gegenproben einzeln rot gesehen"
+                },
+                {
+                    "was": "E608 — Das Auge am Ordner ist weg, der Blick kommt vom Deckel",
+                    "vonCommit": "20bdbaf",
+                    "bisCommit": "70cf450",
+                    "zeitraum": "06:02",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E609 — Die Ordnerkachel steht wieder genau wie vorher",
+                    "vonCommit": "70cf450",
+                    "bisCommit": "ca2a422",
+                    "zeitraum": "06:26",
+                    "dauer": "ca. 25 min",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E610 — Der Ablagename des Dienstes folgt dem Inhalt",
+                    "vonCommit": "ca2a422",
+                    "bisCommit": "5a1a5ab",
+                    "zeitraum": "08:43",
+                    "dauer": "—",
+                    "pruefungen": "test530 neu"
+                },
+                {
+                    "was": "E611 — Das Auge sitzt an jedem Ordner, nicht nur im Regal",
+                    "vonCommit": "5a1a5ab",
+                    "bisCommit": "3d83722",
+                    "zeitraum": "09:17",
+                    "dauer": "—",
+                    "pruefungen": "test531 neu"
+                },
+                {
+                    "was": "E612 — Das Schreibstudio wird ruhig: 301 px Bedienung werden weniger",
+                    "vonCommit": "3d83722",
+                    "bisCommit": "c955cd4",
+                    "zeitraum": "13:16",
+                    "dauer": "ca. 4 h",
+                    "pruefungen": "test532 neu — der Wächter, den L121 seit dem 3. September forderte"
+                },
+                {
+                    "was": "E613/E614 — Die Tafel als Behälter und das Wort unter dem Zeichen",
+                    "vonCommit": "c955cd4",
+                    "bisCommit": "(Tagesende)",
+                    "zeitraum": "ca. 15:00",
+                    "dauer": "—",
+                    "pruefungen": "test533 neu"
+                }
+            ],
+            "zahlen": {
+                "commits": 20,
+                "entscheidungen": 10,
+                "pullRequests": "#92 bis #99"
+            },
+            "groesstesProblem": "E608 und E609 am selben Morgen: Ich hatte das Auge entfernt, weil Redur „mach die Augen weg\" schrieb — und dabei die Animationen, die Bewegung und die Anzeige mitgenommen, um die es ihm nie ging. Seine Antwort war „bringe es wieder komplett wie vorher … alles\". Zweimal derselbe Fehler in zwei Tagen.",
+            "interessantesteAnfrage": "„Ich will bei Redion auch das XMind erstellen können\" — daraus wurde an einem Vormittag eine vollständige Blockart mit eigenem Zeichner, eigener Tastatur und 56 geprüften Zusagen.",
+            "massnahmen": [
+                {
+                    "zeit": "05:47",
+                    "was": "Die Gedankenkarte als BLOCKART, nicht als eigener Bereich.",
+                    "warum": "Eine Karte ist ein Inhalt einer Seite, kein Ort. So erbt sie Versionen, Rechte, Sicherung und Suche, ohne dass etwas davon zweimal gebaut wird (§8).",
+                    "risiko": "keins an Daten — ein neuer Blocktyp. Unbekannte Knoten werden beim Lesen aufgefangen statt gelöscht (§18)."
+                },
+                {
+                    "zeit": "09:17",
+                    "was": "Das Auge zieht an JEDEN Ordner statt nur in die Bibliothek.",
+                    "warum": "Redur: „ich will überall\". Eine Funktion, die nur an einer Stelle wirkt, sieht aus wie ein Fehler an allen anderen.",
+                    "risiko": "keins an Daten. test531 hält es fest."
+                }
+            ]
+        },
+        {
+            "datum": "2026-09-18",
+            "wochentag": "Freitag",
+            "titel": "W4: die Strichstärke sagt, wie dick sie ist — und die Kacheln bekommen ihren Namen",
+            "wasIchWeiss": "Teilweise. Die Commits und ihre Zeiten stehen in git und sind hier unverändert übernommen. Redurs WORTLAUT fehlt für diesen Tag im Gesprächsgedächtnis — die Sätze hier stehen zitiert in ENTSCHEIDUNGEN.md und sind von dort übernommen. Wo kein Zitat belegt ist, steht keines. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 07:10",
+                    "wortlaut": "Fein 0,3 mm · Mittel 0,7 mm · Markant 1,2 mm · Marker 4,0 mm",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Die vier Strichstärken mit ihren echten Millimetern, von Redur selbst vorgegeben.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 14:30",
+                    "wortlaut": "fünf benannte Stiftkacheln",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 14:40",
+                    "wortlaut": "Kachel 36 px",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Die Kachelhöhe, von ihm gemessen und vorgegeben.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 14:45",
+                    "wortlaut": "der Name wird abgeschnitten",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Der Name passte nicht in die Kachel — im Bild gesehen.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 18:00",
+                    "wortlaut": "Siehe Bildern, so will ich es haben.",
+                    "woher": "aus ENTSCHEIDUNGEN.md zitiert",
+                    "gemeint": "Das Bild ist der Auftrag, nicht die Beschreibung daneben.",
+                    "besser": "",
+                    "besserePrompt": "Ein Bild schlägt jede Beschreibung — und es ist prüfbar, weil man danebenhalten kann."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E615 — Der Stift öffnet den Blick in den Ordner (L180)",
+                    "vonCommit": "(nach E614)",
+                    "bisCommit": "(07:18)",
+                    "zeitraum": "07:18",
+                    "dauer": "—",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E616 — Die Strichstärke sagt, wie dick sie ist (W4, erster Teil)",
+                    "vonCommit": "(E615)",
+                    "bisCommit": "(07:32)",
+                    "zeitraum": "07:32",
+                    "dauer": "ca. 15 min",
+                    "pruefungen": "test533; Gegenprobe scheiterte zuerst an `noUnusedLocals` (§52.6)"
+                },
+                {
+                    "was": "E617 — Die Stiftkacheln tragen ihren Namen (W4, zweiter Teil)",
+                    "vonCommit": "(E616)",
+                    "bisCommit": "(14:57)",
+                    "zeitraum": "14:57",
+                    "dauer": "ca. 7 h mit Pausen",
+                    "pruefungen": "test533"
+                },
+                {
+                    "was": "E618 — Die Tafel wird ein Kasten (W4, dritter Teil)",
+                    "vonCommit": "(E617)",
+                    "bisCommit": "(18:19)",
+                    "zeitraum": "18:19",
+                    "dauer": "ca. 3,5 h",
+                    "pruefungen": "test533 54/54, vierzehn Zusagen neu, Gegenprobe rot gesehen (50/54)"
+                }
+            ],
+            "zahlen": {
+                "commits": 4,
+                "entscheidungen": 4
+            },
+            "groesstesProblem": "Zweimal hat das Bild die Arbeit korrigiert. Auf dem ersten standen die Millimeter als „0,4 mm0,8 mm 1,8 mm\" ineinander — `.blatt-strich` steht auf festen 30 px. Auf dem zweiten war der neue Kasten kaum zu sehen: `--bg-tief` gegen `--bg-card` sind drei Hundertstel Helligkeit.",
+            "interessantesteAnfrage": "„jedes Werkzeug trägt sein Wort unter dem Zeichen\" — ein Satz, der eine ganze Leiste umbaut.",
+            "massnahmen": [
+                {
+                    "zeit": "07:32",
+                    "was": "Die Millimeter stehen an der Kachel, nicht nur im Tooltip.",
+                    "warum": "Redur hat die vier Zahlen selbst vorgegeben. Eine Stärke, die man erst beim Ueberfahren erfährt, gibt es am Telefon nicht.",
+                    "risiko": "keins an Daten. `test533 §5d` misst seither, dass keine Zahl über ihre Kachel läuft."
+                },
+                {
+                    "zeit": "18:19",
+                    "was": "Rückbau an E614 einen Tag später: Werkzeuge und Zeilenbruch ziehen aus der Tafel zurück in die Leiste.",
+                    "warum": "Was für W2 richtig war, ist für W4 falsch — ein Kasten um die Werkzeugreihe wäre die ganze Leiste, keine Tafel.",
+                    "risiko": "Gering: die 51 Kindwähler blieben unberührt, weil das Zubehör in der Tafel geblieben ist."
+                }
+            ]
+        },
+        {
+            "datum": "2026-09-19",
+            "wochentag": "Samstag",
+            "titel": "Wo die Leiste steht, der Wächter für §5, die Gedankenkarte bekommt Griffe — und der erste volle Lauf seit PR #100 · und abends die achtzehn roten Läufe",
+            "wasIchWeiss": "Voller Wortlaut für diesen Tag: er liegt im Gespräch vor.",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 09:00",
+                    "wortlaut": "Die untere Dock sollte bleiben.",
+                    "woher": "aus ENTSCHEIDUNGEN.md (E619) zitiert",
+                    "gemeint": "Die untere Werkzeugleiste des Studios bleibt, wo sie ist — der neue Platz kommt dazu, nicht an ihre Stelle.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 11:00",
+                    "wortlaut": "Sticky am Blattfuss: sie wandert mit, solange das Blatt im Bild ist, und bleibt trotzdem beim Blatt.",
+                    "woher": "Antwort auf meine Frage (L187)",
+                    "gemeint": "Seine Antwort auf L187: die Leiste klebt am Fuss des Blattes, nicht am Fenster.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 14:00",
+                    "wortlaut": "Verschieben, dann Rest ins Verzeichnis",
+                    "woher": "Antwort auf meine Frage zu den 523 Querverweisen",
+                    "gemeint": "Seine Wahl zu den 523 Querverweisen: die grossen gemeinsamen Teile umziehen, der Rest wird eingefroren. Beim Nachmessen stellte sich heraus, dass die grossen Namen keine Helfer sind, sondern Bereichskerne — verschoben wurde deshalb nichts, und die Richtung bleibt offen (E626).",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 14:45",
+                    "wortlaut": "könntest du die xmind teil verbessern , so wenn ich oben mit taster oben link oder rechts oder unter klicke sollte dort diek eine verbingung erstelle ich sollte die verbung^dungen lösch es solte so vershideden vormmen haben fertigen vorlagen usw alle s$",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 16:30",
+                    "wortlaut": "Ich teste gerade Jev von TypeSafe AI und möchte herausfinden, wo Jev in Redion wirklich sinnvoll eingesetzt werden könnte.",
+                    "woher": "wörtlich aus dem Gespräch, gekürzt",
+                    "gemeint": "Nicht überliefert — der Satz steht in ENTSCHEIDUNGEN.md zitiert, sein Umfeld nicht.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 17:30",
+                    "wortlaut": "machst du ur.md oder nicht weil es ist seit 5 tagen nicht gemacht",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Die Chronik war seit dem 12. September nicht nachgetragen — sechs Arbeitstage fehlten.",
+                    "besser": "",
+                    "besserePrompt": "Die Frage war berechtigt und die Antwort war nein. Sie hat die Lücke geschlossen, die sonst weitergewachsen wäre."
+                },
+                {
+                    "zeit": "ca. 18:30",
+                    "wortlaut": "schrau es auch im claude md und überlader da die ur.md nicht vergennsern shau mal was die ur md genauer ist so wie bin ich mich konkrter analilzieren, e^wie arbeite ich, wieos und alles wirklich alles dort strukturiert dokumentieren scha mal wo dort sthe iund so",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Die Chronikregel gehört in CLAUDE.md — aber ohne die Datei aufzublähen. Und Teil I von UR.md soll ihn wirklich beschreiben: wie er arbeitet, warum, und woran man es sieht.",
+                    "besser": "„Trag die Chronikregel in CLAUDE.md ein (kurz) und mach Teil I von UR.md genauer: wie ich arbeite und warum.\"",
+                    "besserePrompt": "Zwei getrennte Aufträge in einem Satz. Getrennt gestellt wäre jeder in fünf Minuten beantwortet."
+                },
+                {
+                    "zeit": "ca. 19:50",
+                    "wortlaut": "Weiter an den offene teil von redion, scha mal was offen ist und arbeite an das",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Such dir selbst, was offen ist, und arbeite es ab.",
+                    "besser": "",
+                    "besserePrompt": "Genau richtig so. §46 beantwortet die Frage „was ist offen\" von allein: rot zuerst. Ein Auftrag, der die Reihenfolge der Regeln überlässt, ist besser als einer, der sie vorgibt."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E619-E621 — Wo die Leiste steht, und dass sie dort auch wirklich steht",
+                    "vonCommit": "(nach E618)",
+                    "bisCommit": "(11:17)",
+                    "zeitraum": "11:17",
+                    "dauer": "ca. 3 h",
+                    "pruefungen": "test534 neu, 50 Zusagen"
+                },
+                {
+                    "was": "E622-E624 — Die Strichprobe zeigt den Strich, und der Radierer hat eine Grösse",
+                    "vonCommit": "(E621)",
+                    "bisCommit": "(12:43)",
+                    "zeitraum": "12:43",
+                    "dauer": "ca. 1,5 h",
+                    "pruefungen": "test535 neu, 27 Zusagen"
+                },
+                {
+                    "was": "E625 — Der Dock-Effekt gilt auch ohne Studio (W5)",
+                    "vonCommit": "(E624)",
+                    "bisCommit": "(13:07)",
+                    "zeitraum": "13:07",
+                    "dauer": "ca. 25 min",
+                    "pruefungen": "test536 neu, 18 Zusagen"
+                },
+                {
+                    "was": "E626 — Bereiche bleiben getrennt: der Wächter, den §5 nie hatte (L150)",
+                    "vonCommit": "(E625)",
+                    "bisCommit": "(14:20)",
+                    "zeitraum": "14:20",
+                    "dauer": "ca. 1 h",
+                    "pruefungen": "test537 neu, 17 Zusagen, drei Gegenproben einzeln rot"
+                },
+                {
+                    "was": "E627/E628 — Die Gedankenkarte bekommt Griffe, Verbindungen, Formen und Vorlagen",
+                    "vonCommit": "(E626)",
+                    "bisCommit": "(15:08)",
+                    "zeitraum": "15:08",
+                    "dauer": "ca. 50 min",
+                    "pruefungen": "test538 neu, 53 Zusagen, vier Gegenproben einzeln rot"
+                },
+                {
+                    "was": "Der volle Lauf — alle 480 Prüfläufe in 48 Stücken, im eigenen Arbeitsbaum",
+                    "vonCommit": "(E628)",
+                    "bisCommit": "(läuft)",
+                    "zeitraum": "15:20 – 17:00",
+                    "dauer": "ca. 1,5 h",
+                    "pruefungen": "17 von 48 Stücken rot — der erste volle Lauf seit PR #100"
+                },
+                {
+                    "was": "Analyse: wo eine Entscheidungsschicht (Jev) in Redion Sinn ergäbe",
+                    "vonCommit": "—",
+                    "bisCommit": "—",
+                    "zeitraum": "16:30 – 17:20",
+                    "dauer": "ca. 50 min",
+                    "pruefungen": "keine — Analyse, kein Bau"
+                },
+                {
+                    "was": "E629 — Ein Name mit Typangabe ist derselbe Name",
+                    "vonCommit": "e03a94e",
+                    "bisCommit": "3b3160b",
+                    "zeitraum": "19:44 – 20:11",
+                    "dauer": "ca. 25 min",
+                    "pruefungen": "test537 nachgezogen; bereiche-bestand.json 1532 Zeilen geändert"
+                },
+                {
+                    "was": "E630 — Kein Lauf teilt mehr seinen Port, und §30 sagt, was ein Arbeitsbaum anders macht",
+                    "vonCommit": "3b3160b",
+                    "bisCommit": "e6b5993",
+                    "zeitraum": "20:11 – 22:22",
+                    "dauer": "ca. 2 h 10 min",
+                    "pruefungen": "test400 grün; vier Läufe umgezogen (525, 526, 530, 531)"
+                },
+                {
+                    "was": "E631 — Der Quelltext wird als Code gelesen, nicht als Prosa",
+                    "vonCommit": "e6b5993",
+                    "bisCommit": "08df5e7",
+                    "zeitraum": "22:22 – 22:35",
+                    "dauer": "ca. 13 min",
+                    "pruefungen": "test444, test483, test537, test87; neue Hilfe pruefungen/hilfe/quelltext.mts"
+                },
+                {
+                    "was": "E632 — Die Inventur zieht nach, und die Prüfung lernt die vierte Schreibweise",
+                    "vonCommit": "08df5e7",
+                    "bisCommit": "24d2b41",
+                    "zeitraum": "22:35 – 22:39",
+                    "dauer": "ca. 4 min",
+                    "pruefungen": "test164, test225"
+                },
+                {
+                    "was": "E633 — Nur Tokens, die es gibt",
+                    "vonCommit": "24d2b41",
+                    "bisCommit": "3030b42",
+                    "zeitraum": "22:39 – 22:57",
+                    "dauer": "ca. 18 min",
+                    "pruefungen": "test401 4/4, test412 27/27, test303 16/16"
+                },
+                {
+                    "was": "E634 — Zwei Zusagen, die den Stand von gestern halten",
+                    "vonCommit": "3030b42",
+                    "bisCommit": "0cdb38a",
+                    "zeitraum": "22:57 – 23:23",
+                    "dauer": "ca. 26 min",
+                    "pruefungen": "test285 27/27, test442 24/24"
+                },
+                {
+                    "was": "E635 — Wer im ersten Bild misst, misst das Anfangsbild",
+                    "vonCommit": "0cdb38a",
+                    "bisCommit": "(23:28)",
+                    "zeitraum": "23:23 – 23:28",
+                    "dauer": "ca. 5 min",
+                    "pruefungen": "test432 48/48, test435 44/44; zwei Gegenproben gefahren"
+                },
+                {
+                    "was": "E636 — Ein Prüflauf mit tausend Hertz",
+                    "vonCommit": "(23:28)",
+                    "bisCommit": "(23:32)",
+                    "zeitraum": "23:28 – 23:32",
+                    "dauer": "ca. 4 min",
+                    "pruefungen": "test449 16/16; Gegenprobe über kritzelTrifft gefahren"
+                },
+                {
+                    "was": "E637 — Erst nachsehen, dann eintragen (die Marken-Decken)",
+                    "vonCommit": "(23:32)",
+                    "bisCommit": "(23:37)",
+                    "zeitraum": "23:32 – 23:37",
+                    "dauer": "ca. 5 min",
+                    "pruefungen": "test362 18/18"
+                },
+                {
+                    "was": "E638 — Tot war nicht die Regel, sondern das, worauf sie zeigte",
+                    "vonCommit": "(23:37)",
+                    "bisCommit": "(23:56)",
+                    "zeitraum": "23:37 – 23:56",
+                    "dauer": "ca. 19 min",
+                    "pruefungen": "test217 27/27 (vorher 14/27); Gegenprobe traf y=1115 auf den Pixel"
+                }
+            ],
+            "zahlen": {
+                "commits": 15,
+                "entscheidungen": 20,
+                "neue Prüfläufe": 5,
+                "volle Läufe": 1,
+                "rote Läufe abgearbeitet": "17 von 18"
+            },
+            "groesstesProblem": "Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im Stück-Treiber konnte GAR NICHT rot werden: sie suchte nach „✗ testNNN\", der Orchestrator schreibt den Namen aber eingerückt und ohne Kreuz. Derselbe Fehler, den §55.2 beschreibt, diesmal in meinem eigenen Werkzeug.",
+            "interessantesteAnfrage": "„könntest du die xmind teil verbessern\" — vier Wünsche in einem Satz (Griffe, Verbindungen löschen, Formen, Vorlagen), und alle vier waren an einem Nachmittag gebaut und geprüft.",
+            "massnahmen": [
+                {
+                    "zeit": "11:17",
+                    "was": "Die Zeichenleiste bekommt fünf Plätze, einen Zug-Griff und eine Tastaturführung.",
+                    "warum": "Redur: „Die untere Dock sollte bleiben\" — und L187 war seine Entscheidung: Sticky am Blattfuss.",
+                    "risiko": "keins an Daten; der freie Platz wird als Prozentpaar gemerkt (§9)."
+                },
+                {
+                    "zeit": "14:20",
+                    "was": "Ein Verzeichnis der 523 Querverweise zwischen Bereichen, das nur schrumpfen darf.",
+                    "warum": "§5 Regel 1 ist [hart] und hatte neun Monate keinen Wächter. Verschoben wurde nichts: die grossen Namen sind die Kerne ihrer Bereiche, nicht gemeinsame Helfer — sie nach kern/ zu schieben hiesse §4 brechen.",
+                    "risiko": "Keins am Code. Die Richtung bleibt Redurs Entscheidung."
+                },
+                {
+                    "zeit": "15:08",
+                    "was": "Eine unbekannte Form an einem Knoten BLEIBT stehen, statt beim Lesen wegzufallen.",
+                    "warum": "Hier stand zuerst eine Prüfung gegen die Liste der bekannten Formen. Eine Karte aus einer neueren Fassung hätte ihre Sternform beim ersten Oeffnen verloren — still und endgültig (§18).",
+                    "risiko": "Das war die gefährliche Richtung, und sie ist behoben, bevor sie jemanden getroffen hat."
+                },
+                {
+                    "zeit": "15:20",
+                    "was": "Der volle Lauf fährt in einem eigenen Arbeitsbaum (git worktree), in Stücken zu zehn, mit Merkdatei.",
+                    "warum": "§30: ein voller Lauf dauert länger, als eine Sitzung sicher steht.",
+                    "risiko": "keins — er liest nur. `main` bewegt sich nicht, solange etwas rot ist (§46)."
+                },
+                {
+                    "zeit": "19:44 – 23:56",
+                    "was": "Die roten Läufe aus dem vollen Durchgang abgearbeitet: neun Bögen, zehn Entscheidungen.",
+                    "warum": "§46: rot zuerst, und `main` bewegt sich nicht, solange etwas rot ist.",
+                    "risiko": "Kein Produktcode ausser der order-Leiter in lernwelt.css (E638) und den Tokens (E633, E637)."
+                }
+            ]
+        },
+        {
+            "datum": "2026-09-20",
+            "wochentag": "Sonntag",
+            "titel": "Zwei Videos, eine Linse — und ein Design-System, das über den Bogen von gestern urteilt",
+            "wasIchWeiss": "Voller Wortlaut für diesen Tag: er liegt im Gespräch vor.",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 01:44",
+                    "wortlaut": "Was machst du jetzt",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Eine echte Zwischenfrage mitten in der Arbeit — er wollte wissen, woran ich gerade bin.",
+                    "besser": "",
+                    "besserePrompt": "Nichts zu verbessern. Die Frage hat gezeigt, dass ein Zwischenstand fehlte, ohne dass er ihn verlangen musste."
+                },
+                {
+                    "zeit": "ca. 01:46",
+                    "wortlaut": "Scha mal die 2 videos an und ich will bei der der 1 video die untere übergans haben und beid der godnotte so",
+                    "woher": "wörtlich aus dem Gespräch, mit zwei Bildschirmaufnahmen",
+                    "gemeint": "Aus Video 1 (Apple TV, iOS 26) der Übergang der unteren Leiste; aus Video 2 der GoodNotes-Zustand der Werkzeugleiste.",
+                    "besser": "",
+                    "besserePrompt": "Der Satz war knapp und die Videos genau — das ist die bessere Hälfte. Was gefehlt hat, war die Trennung: „aus Video 1 den Übergang, aus Video 2 den Werkzeug-Zustand\" hätte die Rückfrage gespart, die ich stellen musste."
+                },
+                {
+                    "zeit": "ca. 02:20",
+                    "wortlaut": "baue es in redion ein",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Nicht länger prüfen und vergleichen — einbauen.",
+                    "besser": "",
+                    "besserePrompt": "Richtig gesetzt. Ich hatte einen Prototyp ausserhalb von Redion gebaut und verglichen; der Satz hat den Übergang von „ansehen\" zu „bauen\" ausgelöst, bevor ich noch eine Runde gedreht habe."
+                },
+                {
+                    "zeit": "ca. 02:35",
+                    "wortlaut": "Für sämtliche UI-, UX-, Design-System-, Layout-, Motion-, Animation-, Responsive-, Accessibility- und Interaction-Entscheidungen MUSST du unseren Universal Design Skill als verbindliches Design-System verwenden",
+                    "woher": "wörtlich aus dem Gespräch (Auszug aus einem langen Auftrag)",
+                    "gemeint": "Ab jetzt gilt ein zweites Regelwerk neben CLAUDE.md — Redurbabat/UI-Kit, Master-Router skills/web-design/SKILL.md.",
+                    "besser": "",
+                    "besserePrompt": "Der Auftrag war vollständig und hat selbst gesagt, was bei einem Widerspruch gilt („Übernimm nicht blind eine generische Regel\"). Genau dieser Satz hat später entschieden, was ich ändere und was ich ihm vorlege. Ein Regelwerk ohne diesen Satz wäre gefährlicher gewesen als keines."
+                },
+                {
+                    "zeit": "ca. 03:30",
+                    "wortlaut": "Arbeiten ohne pause weiter",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Weitermachen, ohne auf Bestätigung zu warten.",
+                    "besser": "",
+                    "besserePrompt": ""
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "Die zwei Videos Bild für Bild gelesen (HEVC, 1284×2778) und die Linse ausserhalb von Redion nachgebaut",
+                    "vonCommit": "(nach E638)",
+                    "bisCommit": "(00:05)",
+                    "zeitraum": "01:50 – 00:05",
+                    "dauer": "ca. 2 h",
+                    "pruefungen": "keine — vier Fassungen gebaut, aufgenommen und verglichen"
+                },
+                {
+                    "was": "E639 — Die Pille wird eine Linse",
+                    "vonCommit": "0cdb38a",
+                    "bisCommit": "(00:31)",
+                    "zeitraum": "00:05 – 00:31",
+                    "dauer": "ca. 26 min",
+                    "pruefungen": "test539 neu (27 Zusagen), test114 87/87, 22 Wächter der Leiste; drei Gegenproben gefahren"
+                },
+                {
+                    "was": "Die Module des Design-Systems gelesen und gegen Redions Quelltext gehalten",
+                    "vonCommit": "—",
+                    "bisCommit": "—",
+                    "zeitraum": "00:15 – 01:05",
+                    "dauer": "ca. 50 min",
+                    "pruefungen": "83 Regeln geprüft: 44 erfüllt, 20 teilweise, 10 verletzt"
+                },
+                {
+                    "was": "E640 — Der Grund sitzt, der Wechsel fliegt (die Werkzeugleiste)",
+                    "vonCommit": "(00:31)",
+                    "bisCommit": "(01:26)",
+                    "zeitraum": "00:35 – 01:26",
+                    "dauer": "ca. 50 min",
+                    "pruefungen": "test539 47/47, test478 43/43, test522, test533 unverändert grün; Gegenprobe gefahren"
+                },
+                {
+                    "was": "E641 — Was das Design-System an der Linse auszusetzen hat",
+                    "vonCommit": "(01:26)",
+                    "bisCommit": "(01:52)",
+                    "zeitraum": "01:30 – 01:52",
+                    "dauer": "ca. 22 min",
+                    "pruefungen": "test539 §7 neu"
+                },
+                {
+                    "was": "E642 — Sechsundsiebzig tote CSS-Regeln, gezählt bis null",
+                    "vonCommit": "(01:52)",
+                    "bisCommit": "(02:35)",
+                    "zeitraum": "01:52 – 02:35",
+                    "dauer": "ca. 43 min",
+                    "pruefungen": "test332 (76 → 0) · 26 Nachbarläufe der Bibliothek und der Stilblätter"
+                },
+                {
+                    "was": "E643 — Der Wächter gegen Port-Kollisionen kannte nur eine Schreibweise",
+                    "vonCommit": "(02:35)",
+                    "bisCommit": "(03:05)",
+                    "zeitraum": "02:35 – 03:05",
+                    "dauer": "ca. 30 min",
+                    "pruefungen": "test400 (4/4, zwei Gegenproben) · die vierzehn betroffenen Läufe"
+                },
+                {
+                    "was": "E644 — Erst wiederherstellen, dann beobachten (die gemerkte PDF-Seite)",
+                    "vonCommit": "(03:05)",
+                    "bisCommit": "(03:30)",
+                    "zeitraum": "03:05 – 03:30",
+                    "dauer": "ca. 25 min",
+                    "pruefungen": "test540 neu (9/9, Gegenprobe rot gesehen) · test424 (50/50) · test395, test202, test386"
+                },
+                {
+                    "was": "E645 — Ein Wächter zählte das ganze Haus, gemeint war ein Zimmer",
+                    "vonCommit": "(03:30)",
+                    "bisCommit": "(offen)",
+                    "zeitraum": "03:30 –",
+                    "dauer": "laufend",
+                    "pruefungen": "test435 (45/45, zwei Gegenproben rot gesehen)"
+                }
+            ],
+            "zahlen": {
+                "commits": 2,
+                "entscheidungen": 7,
+                "neue Prüfläufe": 2,
+                "volle Läufe": 0
+            },
+            "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
+            "interessantesteAnfrage": "Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die über einen Bogen urteilt, der schon gepusht war — und sie hat gegen ihn entschieden: neun von zehn klaren Verstössen stammen aus E639, der Linse von vor einer Stunde. Dass Redur im selben Auftrag geschrieben hat „Übernimm nicht blind eine generische Regel\", ist der Grund, warum daraus kein Zurückrudern wurde, sondern drei Korrekturen und eine Frage an ihn.",
+            "massnahmen": [
+                {
+                    "zeit": "00:31",
+                    "was": "Die wandernde Pille der unteren Leiste bekommt echtes Glas: SVG-Brechung mit Farbsaum, zwei Filter für Ruhe und Fahrt.",
+                    "warum": "Redurs Video und seine Antwort „Mit echter Brechung (SVG)\" auf die Rückfrage.",
+                    "risiko": "keins an Daten. Ohne url()-Rückblende fällt nur die Brechung weg, die Fläche bleibt (test539 §4)."
+                },
+                {
+                    "zeit": "01:26",
+                    "was": "Die Werkzeugleiste bekommt einen fliegenden Wechsel statt zweier springender Flächen.",
+                    "warum": "Das Design-System: „Pen → Marker → Eraser\" als Beispiel für eine gemeinsame Materialfläche.",
+                    "risiko": "keins an Daten. Der Zustand hängt am Knopf und nicht am Flug — deshalb ist er auch ohne Bewegung richtig."
+                },
+                {
+                    "zeit": "01:40",
+                    "was": "Die Dehnung der Linse gilt nur noch zwischen Nachbarn, der Deckel fällt von 1,85 auf 1,18, und die Ruhe-Brechung von 15 auf 8.",
+                    "warum": "Drei Regeln des Design-Systems, die schlicht recht haben. Eine Brücke spannt sich zwischen Dingen, die sich fast berühren.",
+                    "risiko": "keins. Was bleibt, ist Redurs Entscheidung: ob über der Schrift überhaupt gebrochen werden darf."
+                }
+            ]
         }
     ],
     "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
@@ -81034,6 +82681,363 @@ const ChronikDaten = {
             "beweis": "31 gruen in test522, darunter die neue, staerkere Zusage: keine sichtbare Gruppe reisst ueber zwei Zeilen.",
             "lehre": "Zum vierten Mal in dieser Woche (P32, P41, P43, P46, P47) und zum ersten Mal nicht in einer Pruefdatei, sondern in der AUSWERTUNG: bevor ich einer Messung glaube, sehe ich mir an, wie sie zaehlt. Ein Raster, das eine Annahme enthaelt — hier: alle Elemente sind gleich hoch —, meldet den Bruch dieser Annahme als Befund ueber etwas ganz anderes. Und: dieselbe Messung hat danach einen ECHTEN Fehler gefunden. Ein kaputtes Messwerkzeug wegzuwerfen waere falsch gewesen; es zu reparieren war richtig.",
             "entscheidung": "E570"
+        },
+        {
+            "nr": "P50",
+            "datum": "2026-09-19",
+            "titel": "Die Leiste ging nach oben, als ich sie nach unten stellte",
+            "schwere": "mittel",
+            "symptom": "`position:sticky` mit `bottom` gesetzt — die Leiste stand danach auf y=335 statt am Blattfuss.",
+            "falscheVermutung": "Dass die Regel nicht greift, und ich habe an der Spezifität gesucht.",
+            "wieGefunden": "Nachgemessen statt nachgelesen: y blieb exakt gleich. Sticky mit `bottom` ZIEHT ein Element nach oben, wenn es sonst aus dem Bild liefe — es schiebt nie nach unten.",
+            "ursache": "Die Leiste stand in der Reihenfolge VOR dem Blatt. Sticky kann nur innerhalb des eigenen Elternteils wirken.",
+            "loesung": "`leisteEinordnen()` hängt die Reihe für den Platz „unten\" hinter das Papier, sonst als erstes Kind.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "test534 §1b vergleicht den Abstand jetzt gegen `orte['oben'].y` statt gegen eine lose Schranke von 400 px — die alte Zusage blieb bei 46 px Abstand grün.",
+            "lehre": "Eine Zusage mit einer runden Zahl als Schranke ist oft gar keine Zusage.",
+            "entscheidung": "E622"
+        },
+        {
+            "nr": "P51",
+            "datum": "2026-09-19",
+            "titel": "«unten in der Mitte» war zwei Pixel breit",
+            "schwere": "mittel",
+            "symptom": "Die Leiste fiel auf 2 px zusammen, sobald sie den Platz „unten\" bekam.",
+            "falscheVermutung": "Dass die Breite fehlt, und ich habe Breitenangaben gesucht.",
+            "wieGefunden": "Im Bild gesehen, dann gemessen: `container-type:inline-size` stand auf `.blatt-reihe` UND `.blatt-werk`.",
+            "ursache": "`container-type:inline-size` ist `contain:inline-size` — ein solches Element trägt zur Breite seines Elternteils NICHTS bei. Bei einem Elternteil, der sich nach seinem Inhalt richtet, bleibt dann nichts übrig.",
+            "loesung": "Für die frei stehenden Plätze wird `container-type:normal` gesetzt.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "test534 misst die Breite je Platz.",
+            "lehre": "Eine Eigenschaft, die man für Abfragen setzt, kann das Layout ändern.",
+            "entscheidung": "E620"
+        },
+        {
+            "nr": "P52",
+            "datum": "2026-09-19",
+            "titel": "Die Strichprobe war unsichtbar",
+            "schwere": "klein",
+            "symptom": "Die Probe sollte den echten Strich zeigen — auf dem Bild war nichts zu sehen.",
+            "falscheVermutung": "Dass sie gar nicht gezeichnet wird.",
+            "wieGefunden": "Kontrast gerechnet: rgb(17,17,17) auf rgb(32,32,32) = 1,2:1.",
+            "ursache": "Der Strich wurde in der Tintenfarbe auf die dunkle Leiste gemalt — ohne Papier darunter.",
+            "loesung": "Eine Papierfläche hinter die Probe (`box-shadow` in `--paper`). Danach 17,7:1.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "test535 misst den Kontrast, nicht das Vorhandensein.",
+            "lehre": "`getComputedStyle` sagt „opacity: 1\" auch dann, wenn man nichts sieht.",
+            "entscheidung": "E623"
+        },
+        {
+            "nr": "P53",
+            "datum": "2026-09-19",
+            "titel": "Der Radiererzweig war toter Code",
+            "schwere": "mittel",
+            "symptom": "Die drei Radiergrössen taten nichts.",
+            "falscheVermutung": "Dass die Knöpfe nicht ankommen.",
+            "wieGefunden": "Der Zweig lag INNERHALB von `if (target.dataset.act)`, und die Größenknöpfe tragen kein `data-act`.",
+            "ursache": "Eine Verzweigung an der falschen Stelle im Behandler.",
+            "loesung": "Der Zweig steht jetzt vor dem `data-act`-Block; die Markierung wird über `document.querySelectorAll` gesetzt, nicht nur am eigenen Blatt.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "test535 misst den Radius des `.blatt-radierkreis` (28 → 7,2), nicht die Klasse am Knopf.",
+            "lehre": "„Die Markierung wandert mit (5 → 5)\" — eine Zusage, die dieselbe Zahl zweimal liest, prüft nichts.",
+            "entscheidung": "E624"
+        },
+        {
+            "nr": "P54",
+            "datum": "2026-09-19",
+            "titel": "L150 behauptete das Gegenteil dessen, was gemessen war",
+            "schwere": "gross",
+            "symptom": "In LUECKEN.md stand seit Monaten „heute hält die Regel … es gibt keinen Querverweis\".",
+            "falscheVermutung": "Dass ich nur einen Wächter für einen sauberen Bestand schreiben muss.",
+            "wieGefunden": "Gemessen statt geglaubt: 523 Querverweise in 63 von 306 Bereichspaaren, über 61 fremde Namen.",
+            "ursache": "Die alte Messung suchte nach `import`-Zeilen. In `src/bereiche/` gibt es keine einzige — geladen wird über 208 `<script>`, geredet wird über globale Namen.",
+            "loesung": "Ein Verzeichnis (`bereiche-bestand.json`), das nur schrumpfen darf, und `test537`.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "Der Lauf zählt beide Wege, den Namen und `(window as any)`.",
+            "lehre": "Eine Lücke, die eine Behauptung über den Bestand enthält, gehört nachgemessen, bevor man sie schliesst.",
+            "entscheidung": "E626"
+        },
+        {
+            "nr": "P55",
+            "datum": "2026-09-19",
+            "titel": "Die vier Griffe erschienen gar nicht",
+            "schwere": "mittel",
+            "symptom": "Ein Knoten wurde gewählt — keine Griffe.",
+            "falscheVermutung": "Dass die CSS-Regeln fehlen.",
+            "wieGefunden": "test538 §1 gemessen: 0 statt 4.",
+            "ursache": "`wähle` zeichnet die Karte nicht neu, es setzt nur die Marke `on` um. Die Griffe entstanden im Zeichner — also erst bei der nächsten Aenderung.",
+            "loesung": "`griffeBauen()`, von beiden Wegen benutzt.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "test538 zählt die Griffe VOR dem ersten Klick — nach einem Klick bleibt die Zahl auch dann richtig, wenn der Zeichner sie an jeden Knoten hängt.",
+            "lehre": "Wer eine Zusage nach dem Ereignis misst, misst manchmal das Aufräumen statt die Sache.",
+            "entscheidung": "E628"
+        },
+        {
+            "nr": "P56",
+            "datum": "2026-09-19",
+            "titel": "Die Verbindung lief quer durch die Wurzel",
+            "schwere": "mittel",
+            "symptom": "Ein Klick auf die freie Verbindung wählte den Wurzelknoten.",
+            "falscheVermutung": "Dass der Klick am falschen Element hängt.",
+            "wieGefunden": "Den Kasten der Linie gemessen: 181 × 0 px. Sie lag vollständig hinter dem Wurzelknoten.",
+            "ursache": "Zwei Aeste links und rechts auf gleicher Höhe ergeben eine waagerechte Gerade — mitten durch alles, was dazwischen steht.",
+            "loesung": "Der Bogen weicht senkrecht zur Verbindung aus, weg von der Mitte der Karte.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "Danach 181 × 45 px, und `elementFromPoint` auf der Bogenmitte trifft `.gk-verb-fang`.",
+            "lehre": "Eine Linie mit Höhe null ist nicht unsichtbar — sie ist unerreichbar.",
+            "entscheidung": "E628"
+        },
+        {
+            "nr": "P57",
+            "datum": "2026-09-19",
+            "titel": "Die Entf-Taste lief ins Leere",
+            "schwere": "klein",
+            "symptom": "Verbindung angeklickt, markiert, Entf gedrückt — nichts geschah.",
+            "falscheVermutung": "Dass die Taste nicht ankommt.",
+            "wieGefunden": "`document.activeElement` gelesen: der Körper der Seite, nicht die Bühne.",
+            "ursache": "Ohne `preventDefault` nimmt der Browser nach dem Klick auf einen SVG-Pfad den Fokus wieder weg. Ein Knoten ist ein `div` und gibt ihn an die Bühne weiter; ein SVG-Pfad tut das nicht.",
+            "loesung": "`e.preventDefault()` im Verbindungszweig.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "test538 §4 löscht und holt zurück.",
+            "lehre": "Fokus ist kein Zustand, den man setzt — er ist einer, den man behält.",
+            "entscheidung": "E628"
+        },
+        {
+            "nr": "P58",
+            "datum": "2026-09-19",
+            "titel": "Der geschriebene Grund stand da, wo ihn niemand sucht",
+            "schwere": "klein",
+            "symptom": "`test402` meldete die Kartenleiste als Trefffläche ohne Begründung — obwohl sie ihre 44 px längst hatte.",
+            "falscheVermutung": "Dass die Fläche zu klein ist.",
+            "wieGefunden": "Den Lauf gelesen: er sucht acht Zeilen UEBER einer Regel und drei darunter. Der Kommentar stand DAHINTER.",
+            "ursache": "Nicht die Fläche war falsch, sondern der Ort ihres Belegs.",
+            "loesung": "Der Kommentar zieht vor die Regel; der zweite Treffer (`#ai .ki-quellschalter`, 32 px) war ein echter und bekam seinen Grund.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "test402 4/4.",
+            "lehre": "§37 verlangt den Grund „an Ort und Stelle\" — das ist wörtlich gemeint.",
+            "entscheidung": "E627"
+        },
+        {
+            "nr": "P59",
+            "datum": "2026-09-19",
+            "titel": "Meine eigene Rot-Erkennung konnte nicht rot werden",
+            "schwere": "gross",
+            "symptom": "Der Stück-Treiber meldete „rot bisher: 0\", während Stücke mit Ausgang 1 durchliefen.",
+            "falscheVermutung": "Dass die Stücke grün sind.",
+            "wieGefunden": "Der Ausgang stand in derselben Zeile daneben. Erst beim zweiten Hinsehen gelesen.",
+            "ursache": "Ich suchte nach `✗ testNNN`. Der Orchestrator schreibt aber „✗ 1 von 10 Läufen gescheitert:\" ohne Namen und darunter den Namen EINGERUECKT ohne Kreuz.",
+            "loesung": "Der Treiber zählt den Ausgang und hebt die Ausgabe jedes Stücks auf.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "Nach der Umstellung meldete dieselbe Datei 17 rote Stücke, die vorher unsichtbar waren.",
+            "lehre": "§55.2 gilt auch für Werkzeuge, die keine Prüfläufe sind. Wer eine Erkennung schreibt, prüft zuerst, ob sie überhaupt anschlagen KANN.",
+            "entscheidung": "—"
+        },
+        {
+            "nr": "P60",
+            "datum": "2026-09-19",
+            "titel": "Die Gesamtsuite war seit PR #100 nicht gelaufen",
+            "schwere": "gross",
+            "symptom": "17 von 48 Stücken rot, quer durch das ganze Projekt.",
+            "falscheVermutung": "Dass die Einzelbögen dieser Woche etwas gebrochen haben.",
+            "wieGefunden": "Die roten Stücke liegen in Bereichen, die diese Woche niemand angefasst hat. In ERLEDIGTE-AUFGABEN.md steht zehnmal hintereinander „Nicht geprüft: die Gesamtsuite\".",
+            "ursache": "Jeder Bogen war für sich sauber geprüft — nur eben nie gegen das Ganze. Erster bestätigter Einzelfund: `test164`, die Blocktypen-Inventur, rot seit E607, weil die Gedankenkarte nie in `doku/BLOCKTYPEN.md` eingetragen wurde.",
+            "loesung": "Nachlauf der 17 Stücke einzeln, mit aufgehobener Ausgabe, um die Namen zu bekommen.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "Stück 71–80 war im Nachlauf grün — entweder ein flockiger Lauf oder eine Wechselwirkung in der Reihenfolge. Das wird gemessen, nicht geraten.",
+            "lehre": "„Die zuständigen Prüfläufe\" (§30) sind das Minimum, nicht das Ziel. `main` bewegt sich deshalb erst nach einem vollen grünen Lauf (§46).",
+            "entscheidung": "—"
+        },
+        {
+            "nr": "P61",
+            "datum": "2026-09-19",
+            "titel": "Mein Wächter erfand eine Kopplung, die es nicht gab",
+            "schwere": "mittel",
+            "symptom": "`test537` meldete „bereiche/bloecke → FORMEN (bereiche/pdf)\" — die Gedankenkarte greife in den PDF-Bereich.",
+            "falscheVermutung": "Dass ich beim Bau der Gedankenkarte wirklich einen fremden Namen benutzt habe, und ich habe nach der Stelle gesucht.",
+            "wieGefunden": "Beide Stellen nebeneinandergelegt: `const FORMEN = [` im PDF, `const FORMEN: ReadonlyArray<…> = [` in der Karte. Der Katalog las `const NAME =` und liess die Typangabe nicht zu.",
+            "ursache": "Der Ausdruck im Namenskatalog kannte eine gültige Schreibweise nicht. Damit galt die EIGENE Liste nicht als Anmeldung — und ihre Benutzung sah aus wie ein Griff nach aussen.",
+            "loesung": "Zwischen Name und `=` darf eine Typangabe stehen. Dadurch bekommen 59 Namen erstmals einen Besitzer und zehn verlieren ihn (L193).",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "Gegenprobe mit einem echten Querverweis (`Chronik.oeffne(0)` in bereiche/bloecke): 126 Paare gegen 125, mit Namen. Danach entfernt, 17/17 grün.",
+            "lehre": "Eine erfundene Kopplung ist schlimmer als eine übersehene: die übersehene kostet Wachsamkeit, die erfundene kostet Arbeit an etwas, das es nicht gibt.",
+            "entscheidung": "E629"
+        },
+        {
+            "nr": "P62",
+            "datum": "2026-09-19",
+            "titel": "Meine Sicherungskopie nahm die falsche Datei",
+            "schwere": "gross",
+            "symptom": "Nach dem Zurückschreiben stand der Inhalt von `chronik.ts` in `blatt.ts`. Der Typecheck meldete „Cannot find name 'Blatt'\".",
+            "falscheVermutung": "Keine — der Fehler war sofort sichtbar. Gefährlich war er trotzdem.",
+            "wieGefunden": "`npm run typecheck` direkt nach dem Zurückschreiben. Ohne diesen Schritt wäre eine 320-Zeilen-Datei still überschrieben gewesen.",
+            "ursache": "`cp A || cp B` als Sicherung. Der erste Befehl gelang und legte die falsche Datei ab; der Oder-Zweig war nie dafür gedacht, die Quelle zu WÄHLEN.",
+            "loesung": "Aus dem letzten Commit zurückgeholt (`git checkout HEAD -- <datei>`), 320 Zeilen, Kopfzeile geprüft.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "Zeilenzahl und Kopfzeile wieder wie in HEAD, Typecheck grün, `git status` zeigt nur die zwei beabsichtigten Dateien.",
+            "lehre": "Ein Oder-Zweig, der eine Sicherung wählt, ist keine Sicherung: er sichert, was zuerst gelingt, nicht was gemeint war. Für eine Gegenprobe ist git die Sicherung — nicht eine Kopie daneben.",
+            "entscheidung": "E629"
+        },
+        {
+            "nr": "P63",
+            "datum": "2026-09-19",
+            "titel": "Meine Reparatur machte den Wächter blind, und er wurde dadurch grün",
+            "schwere": "gross",
+            "symptom": "`test444` klagte einen Kommentar an. Nach der Reparatur war er grün — und blieb grün, als ein echter Verstoss danebenstand.",
+            "falscheVermutung": "Dass grün nach der Reparatur bedeutet, die Reparatur sei richtig.",
+            "wieGefunden": "Die Gegenprobe nach §55.2: `Konten.darf('bearbeiten', page)` in echten Code eingesetzt. 13/13 grün — also fand der Lauf gar nichts mehr.",
+            "ursache": "Ich hatte `nurCode` genommen, und das leert auch Zeichenketten. Der Lauf verlangt als erstes Argument ein Wort in Anführungszeichen; aus `'bearbeiten'` wurde `''`, und das Muster traf nie wieder.",
+            "loesung": "`ohneKommentare`: nur die Prosa heraus, die Zeichenketten bleiben. Zeilentreu, weil der Lauf die Zeilennummer meldet.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "Mit der neuen Fassung: der eingesetzte Verstoss wird gemeldet, mit Datei und Zeile 330 — genau der Zeile, in der er stand. Nach dem Zurücknehmen wieder 13/13.",
+            "lehre": "Eine Reparatur an einem Wächter ist erst fertig, wenn er mit einem echten Verstoss rot wird. Grün nach der Reparatur beweist gar nichts — es kann heissen, dass er nichts mehr sieht.",
+            "entscheidung": "E631"
+        },
+        {
+            "nr": "P64",
+            "datum": "2026-09-19",
+            "titel": "Der Wächter klagte den Satz an, der von ihm handelt",
+            "schwere": "klein",
+            "symptom": "Eine Stunde nach der Reparatur war `test444` wieder rot, mit einer Fundstelle in `src/bereiche/chronik/daten.ts`.",
+            "falscheVermutung": "Dass die Reparatur nicht gegriffen hat.",
+            "wieGefunden": "Die gemeldete Zeile angesehen: es ist die Chronik, erzeugt als Daten — und sie BESCHREIBT seit einer Stunde genau diesen Fehlalarm, samt der Zeile, die ihn auslöste.",
+            "ursache": "Der Wächter sieht den Unterschied zwischen einer Sache und dem Reden über die Sache nicht. Und die Kommentare zu entfernen half nicht: das Zitat steht in einer Zeichenkette, und die müssen für diesen Lauf stehen bleiben.",
+            "loesung": "Nicht den Text verändern, sondern die Fundstelle prüfen: `inZeichenkette` zählt die unmaskierten Anführungszeichen links davon. Ein Aufruf im Code steht nicht in einem String.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "Gegenprobe nach der zweiten Reparatur: der eingesetzte Verstoss wird weiter gemeldet, Datei und Zeile stimmen. Zurückgenommen wieder 13/13.",
+            "lehre": "Wer einen Fehlalarm dokumentiert, schreibt die auslösende Zeile in den Bestand — und erzeugt damit den nächsten. Bei textlesenden Wächtern ist das Aufschreiben selbst eine Änderung am geprüften Stoff.",
+            "entscheidung": "E631"
+        },
+        {
+            "nr": "P65",
+            "datum": "2026-09-19",
+            "titel": "Zum zweiten Mal an einem Tag: das Aufschreiben erzeugte den nächsten Fehlalarm",
+            "schwere": "klein",
+            "symptom": "Kaum stand `test225` grün, war er wieder rot — Fundstelle: der Eintrag E632, den ich gerade darüber geschrieben hatte.",
+            "falscheVermutung": "Keine. Nach P64 habe ich es erwartet — und es trotzdem gemacht.",
+            "wieGefunden": "Der Lauf lief direkt nach dem Schreiben. Die gemeldete Fundstelle war meine eigene Zeile über die Gegenprobe.",
+            "ursache": "Die Gegenprobe stand mit Namen und Nummer im Text. Ein Wächter, der Verweise sucht, findet den Satz über den Verweis genauso wie den Verweis.",
+            "loesung": "Die Gegenprobe in Worten beschrieben statt in der Schreibweise, die der Lauf sucht.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "beweis": "Danach 11/11, und die eingebaute Gegenrichtung des Laufs blieb grün — der Ausdruck ist also nicht weich geworden.",
+            "lehre": "Bei textlesenden Wächtern ist das Aufschreiben eine Änderung am geprüften Stoff. Zweimal an einem Tag dieselbe Falle: einmal in der Chronik (P64), einmal in ENTSCHEIDUNGEN.md.",
+            "entscheidung": "E632"
+        },
+        {
+            "nr": "P66",
+            "datum": "2026-09-20",
+            "titel": "Die Linse zeigte gar keine Brechung — die Knöpfe lagen davor",
+            "schwere": "mittel",
+            "symptom": "Der erste Prototyp hatte den Filter, die Karte und den Farbsaum — und im Bild war nichts zu sehen.",
+            "falscheVermutung": "Der Filter ist falsch gebaut. Ich habe fünf Fassungen der Verschiebungskarte nebeneinandergestellt, bevor ich weitergesucht habe.",
+            "wieGefunden": "Beim Ansehen des Vergleichsbilds: das Glas war da, aber der Inhalt darunter unverändert.",
+            "ursache": "`backdrop-filter` bricht, was HINTER dem Element liegt. Die Knöpfe lagen davor (z-index 2 gegen 1) — es gab schlicht nichts zu brechen.",
+            "loesung": "Die Linse über die Knöpfe, `pointer-events:none` dazu. Die Trefferfläche bleibt der Knopf, und `test539 §1` hält es.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "lehre": "Eine Linse ist keine Fläche. Was eine Fläche verdeckt, muss unter ihr liegen; was eine Linse bricht, muss hinter ihr liegen — und das ist bei gestapelten Elementen genau umgekehrt."
+        },
+        {
+            "nr": "P67",
+            "datum": "2026-09-20",
+            "titel": "Ein dunkler Balken quer durch die Linse, in jeder Fassung an derselben Stelle",
+            "schwere": "klein",
+            "symptom": "Fünf verschiedene Filterfassungen, fünfmal derselbe dunkelblaue senkrechte Balken mitten im Glas.",
+            "falscheVermutung": "Der Farbsaum ist zu stark. Ich habe den Versatz dreimal verkleinert, ohne dass sich etwas änderte.",
+            "wieGefunden": "Dass der Balken in ALLEN Fassungen an derselben Stelle stand, obwohl die Fassungen verschieden stark verschoben — das passt zu keinem Farbsaum.",
+            "ursache": "Der Filterbereich stand auf `x=-30% width=160%`, damit der Saum am Rand nicht abschneidet. `feImage` misst aber in Anteilen des FILTERBEREICHS, nicht des Elements — die Karte lag um dreissig Prozent verschoben über dem Glas.",
+            "loesung": "Filterbereich genau das Element (`0% / 100%`). Der Saum darf am Rand abschneiden.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "lehre": "Wenn ein Fehler sich über alle Parameterfassungen NICHT ändert, liegt er nicht an den Parametern. Das ist ein billiges Ausschlussverfahren, und ich habe es zu spät angewandt."
+        },
+        {
+            "nr": "P68",
+            "datum": "2026-09-20",
+            "titel": "Ein Übergang ohne Anlass — und der Wächter hatte ihn ein halbes Jahr vorher beschrieben",
+            "schwere": "klein",
+            "symptom": "`test114` §17 wurde rot: „Beim Start steht die Pille sofort da, statt hereinzugleiten — sie glitt 1×\".",
+            "falscheVermutung": "Die `stumm`-Sperre greift nicht mehr. Ich habe sie zuerst gesucht, statt zu messen.",
+            "wieGefunden": "Mit `transitionstart` und dem gerechneten `transform` mitgeschrieben: bei 676 ms stand scaleX auf 1,309, bei 792 ms lief der Übergang.",
+            "ursache": "Beim Start läuft `pilleSchieben` zweimal; der zweite Ruf rückt die Pille um sechs Punkte. Die Sperre verdeckt das — aber nicht das Zurückfedern MEINER Dehnung 190 ms später, wenn die Sperre schon weg war.",
+            "loesung": "Die Dehnung läuft nicht mehr, solange `.stumm` liegt.",
+            "warumKeineUhr": "Zwei Uhren im Spiel, und genau ihre Entkopplung war der Fehler.",
+            "lehre": "Der Kommentar an der Sperre hatte es wörtlich vorhergesagt: „Der Schutz greift erst, wenn jemand oben Anfangswerte einträgt, die WIRKLICH gemalt werden.\" Ein Wächter, der ein halbes Jahr auf seinen Fall wartet, hat ihn bekommen — und ich habe den Kommentar gelesen, bevor ich den Fehler gebaut habe."
+        },
+        {
+            "nr": "P69",
+            "datum": "2026-09-20",
+            "titel": "Fünfmal gerechnet, fünfmal zu früh: die Bauform war falsch, nicht die Formel",
+            "schwere": "gross",
+            "symptom": "Die wandernde Fläche der Werkzeugleiste stand 55 px neben ihrem Werkzeug, Überdeckung null. `test478` meldete es.",
+            "falscheVermutung": "Drei nacheinander, und alle falsch: (1) ein Auslöser fehlt, (2) der Ursprung ist falsch berechnet, (3) die Hülle ist eine andere. Nach jedem Anlauf stand derselbe Wert da: --bx: 88px.",
+            "wieGefunden": "Erst ein Zähler im Element selbst — lief die Rechnung überhaupt? — brachte es: `laeufe: 5`. Sie war gelaufen, fünfmal, und jedes Mal zu früh.",
+            "ursache": "Danach rollte die Leiste zum Werkzeug (E356), brach um und klemmte Wörter weg. Eine gespeicherte Stelle veraltet bei jedem dieser Vorgänge.",
+            "loesung": "Die Bauform gedreht: der Grund bleibt am Knopf, nur der Wechsel bekommt eine kurzlebige Fläche in Bildschirmmassen. Keine Hülle, kein Versatz, keine Rollung.",
+            "warumKeineUhr": "Keine Uhr im Spiel — im Gegenteil, ein Zähler hätte die drei Fehlanläufe von Anfang an gespart.",
+            "lehre": "Wenn derselbe Wert drei Reparaturen überlebt, ist die Frage nicht mehr „warum ist er falsch\", sondern „läuft der Code überhaupt\". Und: wer Auslöser nachlegt, weiss nie, ob er alle hat. Der Beleg, dass die zweite Bauform die richtige war, kam umsonst — die drei Läufe, die den ersten widerlegt hatten, blieben UNVERÄNDERT grün."
+        },
+        {
+            "nr": "P70",
+            "datum": "2026-09-20",
+            "titel": "Eine Zusage, die nur rot werden kann, ist keine",
+            "schwere": "klein",
+            "symptom": "`test539` §6 prüfte „ohne Durchsicht kein Glas\" und war rot — die Seite meldete `prefers-reduced-transparency` als nicht gesetzt.",
+            "falscheVermutung": "Ich rufe `emulateMedia` an der falschen Stelle. Ich habe es am Kontext statt an der Seite versucht, dann mit dem Startschalter.",
+            "wieGefunden": "Ein Vierzeiler ohne Redion: Seite, Kontext und Startschalter, alle drei meldeten `false`.",
+            "ursache": "Der Chromium, den Playwright hier mitbringt, kennt das Merkmal nicht.",
+            "loesung": "§6 prüft jetzt die QUELLE statt die Seite und sagt in seinem Kommentar, warum. Dass die Regel auch WIRKT, steht als L203 offen.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "lehre": "§55.2 sagt „prüfe zuerst, ob sie überhaupt rot werden kann\". Die Umkehrung fehlte mir: prüfe auch, ob sie überhaupt GRÜN werden kann. Eine Zusage, die den Zustand nicht herstellen kann, den sie prüft, ist eine Dauerbeschwerde."
+        },
+        {
+            "nr": "P71",
+            "datum": "2026-09-20",
+            "titel": "Der Wächter zerriss die Wähler und klagte dann die echten Regeln an",
+            "schwere": "mittel",
+            "symptom": "`test332` meldete 76 tote CSS-Erklärungen. Darunter Wähler, die es gar nicht geben kann: `#menueband)`, `select):focus-visible`, `:focus-visible)`.",
+            "falscheVermutung": "Erst dachte ich, das seien Schreibfehler IM Stilblatt — eine überzählige Klammer irgendwo in `bausteine.css`. Ich habe nach `)` am Wähleranfang gesucht und nichts gefunden.",
+            "wieGefunden": "Die Suche nach der schliessenden Klammer im Quelltext ging ins Leere. Erst da habe ich die Zeile im Lauf selbst gelesen: `r.selectorText.split(',')`.",
+            "ursache": "Nicht jedes Komma trennt. In `:is(a,b)`, `:where()`, `:not()` und `:has()` steht es INNERHALB der Klammer. `split(',')` zerriss sie, und die Bruchstücke verloren Vorfahren und `!important` — der Lauf verglich sie mit echten Regeln und meldete die echten als tot.",
+            "loesung": "Getrennt wird nur noch an einem Komma auf Klammertiefe null. Dreizehn der 76 Meldungen waren danach weg, ohne dass eine Zeile Stil angefasst wurde.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "lehre": "Zum dritten Mal an zwei Tagen dieselbe Sorte: ein Ausdruck, der eine gültige Schreibweise nicht kennt (E629, E631, jetzt hier). Und die Lehre darüber: eine Meldung eines Wächters ist ein BEFUND, keine Wahrheit. 17 % dieses Befunds waren das Messgerät. Wer ungeprüft repariert, baut die Seite nach dem Fehler des Prüfstands um."
+        },
+        {
+            "nr": "P72",
+            "datum": "2026-09-20",
+            "titel": "Der Wächter gegen Port-Kollisionen meldete grün und übersah sieben",
+            "schwere": "gross",
+            "symptom": "`test424` wurde in einem Stapel von sechzehn rot, an einer Zeile, die ihren eigenen Lastverlauf im Kommentar führt. `test400` — der Wächter GEGEN genau diese Sorte Fehlalarm — war grün.",
+            "falscheVermutung": "Last. Der Kommentar der Zeile sagt selbst, dass sie im Stapel von elf durchlief und im Stapel von vierzehn brach; ich wollte die Zahl wieder anheben. Dann: mein eigener Bogen. Beides falsch.",
+            "wieGefunden": "Beim Nachsehen, welchen Port test424 hält, stand dort nicht `const PORT = …`, sondern `server.listen(9624, '127.0.0.1', resolve)`. Und test400 liest `/PORT = (\\d+)/`.",
+            "ursache": "Acht Läufe schreiben ihre Portzahl direkt in den Aufruf. Für den Ausdruck waren sie unsichtbar — und damit sieben doppelt vergebene Ports, während der Wächter „kein Port ist zweimal vergeben\" meldete.",
+            "loesung": "Beide Schreibweisen lesen; `listen(0)` als richtig zählen statt als fehlend; und PRÜFEN, dass kein Lauf mit eigenem Server ohne erkannte Zahl bleibt. Die sieben jüngeren Läufe sind auf 9643–9649 umgezogen.",
+            "warumKeineUhr": "Die Kollision ist zeitlos — sie wirkt nur, wenn zwei Läufe gleichzeitig laufen.",
+            "lehre": "Zum vierten Mal an zwei Tagen ein Ausdruck, der eine gültige Schreibweise nicht kennt — aber der erste, der dabei etwas ÜBERSAH statt etwas zu erfinden. Und die Zahl in der Ausgabe („374 von 481\") nannte die Lücke seit Monaten; eine Zahl, die eine Lücke NENNT, ersetzt keine Prüfung, die sie schliesst. Nebenbei blieb test424 auch allein und auf dem Stand von HEAD rot: ein achtzehnter roter Lauf, der nicht meiner ist."
+        },
+        {
+            "nr": "P73",
+            "datum": "2026-09-20",
+            "titel": "Die zuletzt gelesene Seite ging verloren, sobald das Fenster sich meldete",
+            "schwere": "gross",
+            "symptom": "`test424` war rot: „PDF page position survives reload (ist \\\"0\\\")\". Nach dem Neuladen stand das Dokument wieder auf Seite 1 statt auf der zuletzt gelesenen.",
+            "falscheVermutung": "Last im Stapel — die Zeile führt ihren eigenen Lastverlauf im Kommentar und war schon zweimal daran repariert worden. Dann: mein eigener Bogen. Beides falsch; der Lauf war auch allein und auf dem Stand von HEAD rot.",
+            "wieGefunden": "Ein Haken auf `Store.setMeta`, der jeden Schreibvorgang auf `dokSeite:*` mit Wert und Aufrufweg festhält. Genau ein Schreibvorgang, Wert 0, Weg: seiteMerken ⟵ nachziehen ⟵ beiGroesse.",
+            "ursache": "`nachziehen()` rechnet aus dem Rollstand, welche Seite in der Fenstermitte steht, und MERKT sie. Beim frisch geöffneten Dokument steht der Rollstand noch auf 0, während die gemerkte Seite erst im requestAnimationFrame angerollt wird. Eine Fenstermeldung in diesem Spalt beantwortet die Frage mit „Seite 1\".",
+            "loesung": "Eine Reihenfolge statt einer Wartezeit: `standGesetzt` fällt erst in dem rAF, der die gemerkte Seite anrollt. Davor schweigt der Beobachter. Und ein neuer Lauf, test540, der das Rennen STELLT statt es zu gewinnen.",
+            "warumKeineUhr": "Die Zeiten stammen aus einem `performance.now()`-Haken in der Seite, nicht aus git — sie sind relativ und stehen deshalb nicht als Uhrzeit da.",
+            "lehre": "Derselbe Haken, der den Fehler sichtbar machte, machte ihn beim zweiten Versuch unsichtbar: ein paar Millisekunden mehr Arbeit darin, und derselbe Durchgang lief 50 von 50. Ein Wächter, der ein Rennen zufällig gewinnt, ist keiner — er muss es stellen. Das ist die dritte Fassung von §55.2 an zwei Tagen: „kann er rot werden?\", „kann er grün werden?\", und jetzt „gewinnt er nur zufällig?\"."
+        },
+        {
+            "nr": "P74",
+            "datum": "2026-09-20",
+            "titel": "Der Textur-Wächter bestrafte die neue Linse",
+            "schwere": "klein",
+            "symptom": "Beim Nachfahren der achtzehn ehemals roten Läufe war test435 rot: „… und genau zwei Filter (fein, grob) im ganzen Dokument — 4\".",
+            "falscheVermutung": "Die Textur legt ihre Filter jetzt doppelt an — also ein Fehler in textur.ts oder ein zweiter Halter.",
+            "wieGefunden": "Die Meldung nennt die Zahl, nicht die Namen. Mit den Namen: ru-linse-ruhe, ru-linse-fahrt, ru-textur-fein, ru-textur-grob. Zwei davon sind meine Linse von derselben Nacht (E639).",
+            "ursache": "Der Lauf zählte `document.querySelectorAll('filter')` — also ALLE SVG-Filter der Seite — und verlangte zwei. Die Zusage im Satz daneben lautete aber: die TEXTUR legt ihre zwei genau einmal an. Zwei verschiedene Aussagen.",
+            "loesung": "Im Halter der Textur zählen statt im Dokument. Und daneben die Frage, um die es E440 wirklich ging: teilen sich zwei Filter eine Kennung? Diese Zahl wächst nicht mit dem Programm mit.",
+            "warumKeineUhr": "Keine Uhr im Spiel.",
+            "lehre": "Vierte Fassung derselben Sorte an zwei Tagen (E629, E631, E642, E643): ein Ausdruck misst etwas anderes, als der Satz daneben behauptet. Diese hier war nicht falsch, sondern ZU WEIT — und ein zu weiter Wächter bestraft jede neue Funktion, die zufällig dasselbe Element benutzt. Und zum dritten Mal die Schablonen-Falle: ein Akzentzeichen im Kommentar INNERHALB von page.evaluate beendet die Zeichenkette; der Kopf der Datei warnt davor, und ich habe es trotzdem getan."
         }
     ]
 };
@@ -84805,6 +86809,28 @@ const DocumentMode = (() => {
            Eine Sperre, keine feste Wartezeit: sie faellt, sobald das Rollen an
            der gewuenschten Stelle steht. */
         let springtZu = -1;
+        /* ══ ERST WIEDERHERSTELLEN, DANN BEOBACHTEN (E644, P73) ═══════════════
+           `nachziehen` rechnet aus dem Rollstand, welche Seite in der
+           Fenstermitte steht — und MERKT sie. Beim frisch geöffneten Dokument
+           steht der Rollstand aber noch auf 0, während die zuletzt gelesene
+           Seite erst im `requestAnimationFrame` weiter unten angerollt wird.
+           Wer in diesem Spalt eine Fenstergrösse meldet, bekommt von
+           `nachziehen` die Antwort „Seite 1" — und die ist dann gemerkt. Die
+           zuletzt gelesene Seite ist weg.
+    
+           GEMESSEN, nicht vermutet. Ein Haken auf `Store.setMeta` am
+           20. September zeigte genau einen Schreibvorgang und seinen Weg:
+    
+               seiteMerken ⟵ nachziehen ⟵ beiGroesse
+    
+           Auf einem Telefon reicht dafür das Drehen, am Rechner das Ziehen am
+           Fensterrand oder das Aufklappen der Seitenleiste.
+    
+           Diese Sperre ist deshalb keine Wartezeit, sondern eine Reihenfolge:
+           solange der gemerkte Stand nicht hergestellt ist, hat der Beobachter
+           nichts zu sagen. Sie fällt eine Bildauffrischung später — im
+           gleichen `rAF`, in dem die Wiederherstellung passiert. */
+        let standGesetzt = false;
         /* NUR DIE AKTIVE SEITE ZEIGT WERKZEUGE (Audit F03).
            Gemessen am 3. September: bei DREI PDF-Seiten standen DREI
            Werkzeugleisten im Dokument, jede mit eigenem Zustand — `test386` §2
@@ -84840,6 +86866,9 @@ const DocumentMode = (() => {
         };
         const nachziehen = () => {
             if (!center.isConnected)
+                return;
+            /* Vor der Wiederherstellung schweigt der Beobachter (E644, oben). */
+            if (!standGesetzt)
                 return;
             /* IN DER EINZELSEITE GIBT ES NICHTS NACHZUZIEHEN (E398). Die Seite
                wechselt dort nur ueber `‹ ›` und die Miniaturen, und beide gehen
@@ -84910,6 +86939,8 @@ const DocumentMode = (() => {
                die Marke. Gemessen: der Prueflauf wartete zwanzig Sekunden auf
                eine sichtbare Leiste, die es nicht gab. */
             aktivMarkieren();
+            /* AB HIER DARF BEOBACHTET WERDEN — und keine Zeile früher (E644). */
+            standGesetzt = true;
             nachziehen();
             thumbnails.querySelector('.document-thumbnail.is-selected')
                 ?.scrollIntoView({ block: 'nearest' });
@@ -162921,10 +164952,22 @@ const Seitenleiste = (() => {
      *      `getBoundingClientRect()` nähme, hätte die Pille an der richtigen
      *      Stelle des Bildschirms und an der falschen des Inhalts.
      */
+    /* `ReturnType<typeof setTimeout>` statt `number` oder `any`: im Browser
+       ist es eine Zahl, unter Node ein Objekt, und `npm run typecheck` sieht
+       beide Welten. Ein `any` wäre hier der bequeme Weg und genau der, den
+       §52.7 verbietet. */
+    let fahrtUhr;
+    let glasUhr;
     const pilleSchieben = (l, aktiv) => {
         const pille = l.querySelector('#ho-pille');
         if (!pille)
             return;
+        /* DAS GLAS BRAUCHT SEINEN FILTER. Er hängt einmal am Ende von `<body>`
+           (`linse.ts`, nach dem Muster der Textur aus E462). Ohne ihn bleibt
+           die Fläche stehen, wie sie vorher war — die Regel im Stilblatt ist
+           so gebaut, dass nur die Brechung wegfällt, nicht die Hervorhebung. */
+        if (typeof Linse !== 'undefined')
+            Linse.sicherstellen();
         /* „Mehr" und „Kompass" haben oben keinen Reiter (E42). Dann gehört
            auch keine Pille irgendwohin — sie bleibt, wo sie war, und
            verschwindet. Sie an den Anfang zu schieben wäre eine Aussage, und
@@ -162940,7 +164983,72 @@ const Seitenleiste = (() => {
             return; /* Leiste unsichtbar — am Rechner */
         if (!pilleGesetzt)
             pille.classList.add('stumm');
-        pille.style.transform = `translateX(${x}px)`;
+        /* ════════════════════════════════════════════════════════════════════
+         * DIE DEHNUNG IST DER WEG (E639, aus Redurs Video vom 20. September).
+         * Die Linse zieht sich beim Fahren in die Länge und fliesst ins Ziel,
+         * statt als starrer Kasten hinüberzurutschen. Wie weit sie sich dehnt,
+         * hängt davon ab, wie weit sie muss: ein Sprung über vier Reiter reisst
+         * sie weiter auseinander als einer über einen. Gedeckelt bei 1,85 —
+         * ohne Deckel verschluckte ein Sprung von ganz links nach ganz rechts
+         * die halbe Leiste.
+         *
+         * Kein Weg, keine Dehnung: wer denselben Reiter noch einmal antippt,
+         * soll keine Bewegung sehen, sondern nichts.
+         * ══════════════════════════════════════════════════════════════════ */
+        const vorher = Number(pille.dataset['x'] ?? NaN);
+        const weg = Number.isFinite(vorher) ? Math.abs(x - vorher) : 0;
+        pille.dataset['x'] = String(x);
+        /* NICHT WÄHREND DER STUMM-SPERRE (gemessen am 20. September). Beim Start
+           läuft `pilleSchieben` zweimal, und der zweite Ruf rückt die Pille um ein
+           paar Punkte. Solange `.stumm` liegt, sieht man davon nichts — von der
+           DEHNUNG aber doch: sie wurde gesetzt, während die Sperre galt, und fiel
+           190 ms später zurück, als die Sperre längst weg war. Ergebnis: ein
+           Übergang ohne Anlass, genau der, den `test114` §17 seit E236 verbietet.
+           Der Lauf hat ihn gefunden, und sein Kommentar hatte ihn vorhergesagt:
+           „Der Schutz greift erst, wenn jemand oben Anfangswerte einträgt, die
+           WIRKLICH gemalt werden." Genau das war die Dehnung. */
+        if (weg > 1 && pilleGesetzt && !pille.classList.contains('stumm')) {
+            /* ══ NUR ZWISCHEN NACHBARN, UND NUR EIN BISSCHEN (E641) ════════════
+             * Hier stand `Math.min(1.85, 1 + (weg / b) * 0.3)` — die Dehnung
+             * wuchs also mit dem Weg, und der weiteste Sprung der Leiste bekam
+             * die stärkste Verformung. Das Design-System verlangt das Gegenteil,
+             * an zwei Stellen:
+             *
+             *   „When source and destination directly touch or nearly touch, the
+             *    selection surface may visually stretch/bridge during travel …
+             *    Keep the bridge subtle and bounded."
+             *   „Disable deformation for long-distance navigation."
+             *
+             * Und das ist nicht Geschmack, sondern Sinn: eine Brücke spannt sich
+             * zwischen zwei Dingen, die sich fast berühren. Über vier Reiter
+             * hinweg ist sie keine Brücke mehr, sondern ein Schlauch, und die
+             * 85 % Überlänge von gestern waren in einer Arbeitsoberfläche
+             * ohnehin zu viel.
+             *
+             * Jetzt: EIN Reiter Abstand darf eine Brücke schlagen, mehr nicht.
+             * Gemessen wird in Reiterbreiten, damit die Regel auch dann gilt,
+             * wenn die Leiste einmal andere Masse bekommt. */
+            const reiter = weg / Math.max(1, b);
+            pille.style.setProperty('--dehnung', reiter <= 1.35 ? '1.18' : '1');
+            pille.classList.add('faehrt');
+            clearTimeout(fahrtUhr);
+            clearTimeout(glasUhr);
+            /* ZWEI UHREN, NICHT EINE. Die Dehnung löst sich nach einem knappen
+               Drittel des Weges — dann FLIESST die Linse ins Ziel, statt dort
+               anzukommen und erst danach schmal zu werden. Die Brechung bleibt
+               länger, damit sie mit dem Anhalten abklingt und nicht vorher. */
+            fahrtUhr = setTimeout(() => pille.style.setProperty('--dehnung', '1'), 190);
+            glasUhr = setTimeout(() => pille.classList.remove('faehrt'), 430);
+        }
+        else if (!pilleGesetzt) {
+            /* Beim ersten Setzen ausdrücklich flach — sonst stünde ein Wert von
+               einem früheren Leben der Seite noch drin. */
+            pille.style.setProperty('--dehnung', '1');
+            pille.classList.remove('faehrt');
+        }
+        /* `scaleX` steht MIT in der Verschiebung, nicht daneben: eine zweite
+           `transform`-Angabe im Stilblatt würde diese hier überschreiben. */
+        pille.style.transform = `translateX(${x}px) scaleX(var(--dehnung,1))`;
         pille.style.width = b + 'px';
         pille.style.top = y + 'px';
         pille.style.opacity = '1';

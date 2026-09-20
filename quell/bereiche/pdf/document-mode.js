@@ -3072,6 +3072,28 @@ const DocumentMode = (() => {
            Eine Sperre, keine feste Wartezeit: sie faellt, sobald das Rollen an
            der gewuenschten Stelle steht. */
         let springtZu = -1;
+        /* ══ ERST WIEDERHERSTELLEN, DANN BEOBACHTEN (E644, P73) ═══════════════
+           `nachziehen` rechnet aus dem Rollstand, welche Seite in der
+           Fenstermitte steht — und MERKT sie. Beim frisch geöffneten Dokument
+           steht der Rollstand aber noch auf 0, während die zuletzt gelesene
+           Seite erst im `requestAnimationFrame` weiter unten angerollt wird.
+           Wer in diesem Spalt eine Fenstergrösse meldet, bekommt von
+           `nachziehen` die Antwort „Seite 1" — und die ist dann gemerkt. Die
+           zuletzt gelesene Seite ist weg.
+    
+           GEMESSEN, nicht vermutet. Ein Haken auf `Store.setMeta` am
+           20. September zeigte genau einen Schreibvorgang und seinen Weg:
+    
+               seiteMerken ⟵ nachziehen ⟵ beiGroesse
+    
+           Auf einem Telefon reicht dafür das Drehen, am Rechner das Ziehen am
+           Fensterrand oder das Aufklappen der Seitenleiste.
+    
+           Diese Sperre ist deshalb keine Wartezeit, sondern eine Reihenfolge:
+           solange der gemerkte Stand nicht hergestellt ist, hat der Beobachter
+           nichts zu sagen. Sie fällt eine Bildauffrischung später — im
+           gleichen `rAF`, in dem die Wiederherstellung passiert. */
+        let standGesetzt = false;
         /* NUR DIE AKTIVE SEITE ZEIGT WERKZEUGE (Audit F03).
            Gemessen am 3. September: bei DREI PDF-Seiten standen DREI
            Werkzeugleisten im Dokument, jede mit eigenem Zustand — `test386` §2
@@ -3107,6 +3129,9 @@ const DocumentMode = (() => {
         };
         const nachziehen = () => {
             if (!center.isConnected)
+                return;
+            /* Vor der Wiederherstellung schweigt der Beobachter (E644, oben). */
+            if (!standGesetzt)
                 return;
             /* IN DER EINZELSEITE GIBT ES NICHTS NACHZUZIEHEN (E398). Die Seite
                wechselt dort nur ueber `‹ ›` und die Miniaturen, und beide gehen
@@ -3177,6 +3202,8 @@ const DocumentMode = (() => {
                die Marke. Gemessen: der Prueflauf wartete zwanzig Sekunden auf
                eine sichtbare Leiste, die es nicht gab. */
             aktivMarkieren();
+            /* AB HIER DARF BEOBACHTET WERDEN — und keine Zeile früher (E644). */
+            standGesetzt = true;
             nachziehen();
             thumbnails.querySelector('.document-thumbnail.is-selected')
                 ?.scrollIntoView({ block: 'nearest' });

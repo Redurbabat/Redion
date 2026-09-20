@@ -50,6 +50,8 @@ umgeschrieben, aber nicht umnummeriert.
 | `ENTSCHEIDUNGEN.md` | Warum wurde etwas so entschieden? (E1 … E369) |
 | `LUECKEN.md` | Was fehlt noch im Produkt? (L1 … L116) |
 | `messungen.md` | Was kam beim Nachmessen heraus? (Zahlen, vorher/nachher) |
+| `UR.md` | Wer ist Redur, wie wird hier gearbeitet, was geschah an welchem Tag? (§56) |
+| `PROBLEME.md` | Welche Fehler gab es, und wie wurden sie gefunden? (P1 … P60) |
 | `doku/ARCHITEKTUR.md` | Wie ist es aufgebaut? |
 | `doku/REDION-FORMAT.md` | Wie sieht eine `.redion`-Sicherung von innen aus? |
 | `doku/TYPESCRIPT-MIGRATION.md` | In welcher Reihenfolge wird migriert? |
@@ -139,6 +141,9 @@ zusammengehört.
 
 **Teil XII — Hinsehen**
 [55](#55-bilder-machen-nicht-nur-code-lesen) Bilder machen, nicht nur Code lesen
+
+**Teil XIII — Das Gedächtnis**
+[56](#56-die-chronik--hart) Die Chronik
 
 ---
 ---
@@ -883,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 480 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 482 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -943,6 +948,16 @@ am 19. September: 478.*
 die Vorlagen der Gedankenkarte (E628). Gezählt am 19. September, im selben
 Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 480.*
 
+*Und 481: `test539` — die Linse liegt über den Knöpfen und steht trotzdem
+niemandem im Weg (E639). Gezählt am 20. September, im selben Bogen: der Befehl
+sagt 481.*
+
+*Und 482: `test540` — die zuletzt gelesene Seite überlebt eine Fenstergrösse
+(E644). Er hält ein gestelltes Rennen: ohne die Sperre schreibt ein `resize`
+vor der Wiederherstellung die Seite 1 in den Merker, und die Stelle, an der
+man gestern aufgehört hat, ist weg. Gezählt am 20. September, im selben
+Bogen: der Befehl sagt 482.*
+
 ### Die Befehle
 
 ```txt
@@ -951,7 +966,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 480 Läufe
+npm run pruefen                      alle 482 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -970,6 +985,26 @@ geht nur das laufende Stück verloren, nicht die Stunde davor.
 Gefahren wird er in einem eigenen Arbeitsbaum (`git worktree`), damit im
 Hauptbaum weitergearbeitet werden kann, während er läuft. Das Vorspulen von
 `main` passiert dagegen **immer im Hauptbaum**.
+
+**Aber im Hauptbaum wird dabei kein Prüflauf gestartet.** Weitergearbeitet
+heisst: schreiben, lesen, bauen — nicht prüfen. Jede Suite hält einen festen
+Port; zwei Läufe mit derselben Zahl machen einander rot, und `test400` nennt
+den Fall vom 4. September beim Namen: ein ganzes Stück rot, und nichts daran
+war ein Fehler im Produkt. Am 19. September ist es wieder passiert, diesmal
+mir: vier Stücke waren im vollen Lauf rot und einzeln grün.
+
+**Und der Arbeitsbaum ist nicht der Hauptbaum.** Zwei Unterschiede, beide
+gemessen, beide können einen dateilesenden Lauf täuschen:
+
+```txt
+.git           im Arbeitsbaum eine DATEI (52 Bytes, „gitdir: …"), kein Ordner
+node_modules   muss von Hand verlinkt werden — ein Symlink, kein Ordner
+```
+
+`test270` filtert Ordnermuster mit `istOrdner && name === …` und meldete
+deshalb im Arbeitsbaum, `.git` und `node_modules` gingen mit ins Netz.
+`.assetsignore` schliesst beide korrekt aus. **Ein roter Lauf aus dem
+Arbeitsbaum wird im Hauptbaum nachgemessen, bevor jemand ihn repariert.**
 
 ### Wann welche Prüfung Pflicht ist
 
@@ -993,7 +1028,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 480 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 482 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
@@ -1027,6 +1062,7 @@ sucht, wo etwas geprüft wird, sucht im Quelltext, nicht in dieser Liste.
 | `LUECKEN.md` | was im Produkt fehlt (§35) |
 | `ENTSCHEIDUNGEN.md` | warum etwas so ist (§34) |
 | `messungen.md` | was gemessen wurde: Zahl, Fenster, Datum, Methode (§36, §55.2) |
+| `UR.md`, `PROBLEME.md` | das Gedächtnis — erzeugt aus `chronik/chronik.json` (§56) |
 | `CLOUDFLARE.md`, `SERVER-EINRICHTEN.md` | die Wolke einrichten |
 | `START-MIT-CLAUDE-CODE.md` | wie hier gearbeitet wird |
 | `doku/ARCHITEKTUR.md` | wie es aufgebaut ist |
@@ -2381,6 +2417,47 @@ Zwei Gründe, und der zweite ist der wichtigere:
 
 `bilder.mts` selbst gehört sehr wohl ins Verzeichnis. Es ist das Werkzeug,
 nicht das Ergebnis.
+
+---
+---
+
+# Teil XIII — Das Gedächtnis
+
+## 56. Die Chronik  **[hart]**
+
+`UR.md` und `PROBLEME.md` sind **erzeugt**. Die Quelle ist
+`chronik/chronik.json`; `node chronik.mts` schreibt daraus beide Dateien
+**und** die Ansicht in Redion (`src/bereiche/chronik/daten.ts`, danach
+`npm run bauen:ts`). Wer in die erzeugten Dateien schreibt, verliert es.
+
+**Nachgetragen wird am Ende eines Arbeitstages, nicht irgendwann.** Am
+19. September 2026 fehlten sechs Tage und 73 Commits, und gemerkt hat es
+Redur, nicht ich. Ein Gedächtnis mit Lücken ist schlechter als keines: es
+sieht vollständig aus.
+
+Was in einen Tag gehört:
+
+```txt
+nachrichten   Redurs Sätze WÖRTLICH, mit Uhrzeit — dazu: was gemeint war,
+              wie er es kürzer hätte sagen können, was ein besserer Prompt wäre
+arbeit        was gebaut wurde, von Commit bis Commit, Zeitraum, Dauer, Prüfläufe
+zahlen        Commits, Entscheidungen, neue Prüfläufe
+groesstesProblem · interessantesteAnfrage · massnahmen (Zeit · was · warum · Risiko)
+```
+
+Und ein Problem gehört nach `probleme`, mit **falscher Vermutung**, **wie
+gefunden**, **Ursache**, **Beweis** und **Lehre** — gerade die falsche
+Vermutung, denn sie ist der Teil, den man beim nächsten Mal wiedererkennt.
+
+**Die Uhr ist ehrlich oder sie fehlt.** Commit-Zeiten kommen aus git und
+sind genau. Abgeleitete Zeiten tragen ein „ca.". Ein Wortlaut, den niemand
+mehr hat, wird **nicht erfunden** — dann steht dort, woher das Zitat
+stammt, oder gar nichts (§35).
+
+**Teil I ist keine Nettigkeit, sondern Arbeitsgrundlage.** Wer Redurs
+Sätze falsch liest, baut das Falsche; deshalb steht dort gemessen, wie er
+schreibt, woran er Qualität misst und wie er entscheidet. Er hat am
+19. September ausdrücklich darum gebeten, dass dieser Teil genau ist.
 
 ---
 ---

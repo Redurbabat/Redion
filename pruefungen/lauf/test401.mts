@@ -63,8 +63,14 @@ for (const f of stile) {
 for (const f of quelle) {
   const t = fs.readFileSync(f, 'utf8');
   for (const m of t.matchAll(/setProperty\(\s*'(--[\w-]+)'/g)) if (m[1]) definiert.add(m[1]);
-  /* Zur Laufzeit gesetzte Tokens stehen als Inline-Stil im HTML. */
-  for (const m of t.matchAll(/style="(?:[^"]*;)?\s*(--[\w-]+)\s*:/g)) if (m[1]) definiert.add(m[1]);
+  /* Zur Laufzeit gesetzte Tokens stehen als Inline-Stil im HTML — und ein
+     Attribut kann MEHRERE tragen. Hier stand ein Ausdruck, der `[^"]*;`
+     gierig las und deshalb nur das LETZTE fand: aus
+     `style="--i:${i};--dick:${dick}px"` kam allein `--dick` an, und `--i`
+     galt als erfunden, obwohl die Zeile es setzt. Jetzt wird erst das
+     ganze Attribut genommen und dann jedes Token darin. */
+  for (const m of t.matchAll(/style="([^"]*)"/g))
+    for (const n of (m[1] ?? '').matchAll(/(--[\w-]+)\s*:/g)) if (n[1]) definiert.add(n[1]);
   for (const m of t.matchAll(/'(--[\w-]+)':/g)) if (m[1]) definiert.add(m[1]);
   for (const m of t.matchAll(/stil:\s*`(--[\w-]+)/g)) if (m[1]) definiert.add(m[1]);
 }

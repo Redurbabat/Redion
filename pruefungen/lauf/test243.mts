@@ -47,7 +47,7 @@ declare const Store: any; declare const Schaltplan: any; declare const Elektroar
 declare const Stromfluss: any; declare const Elektroaufgaben: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
-const PORT = 8963;
+const PORT = 9644;   // war 8963 — geteilt mit test205 (E643)
 
 const TYP: Record<string, string> = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',

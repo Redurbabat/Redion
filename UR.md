@@ -21,18 +21,84 @@ EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git un
 **Redur Babat**
 
 - Elektroberuf in der Schweiz — Schaltpläne, NIV, Minuterie, Wechselschaltung, Kreuzschaltung. Die Beispiele in seinen Bildern sind echte Prüfungsaufgaben, keine erfundenen.
-- Er arbeitet mit GoodNotes auf dem iPad und hält es Redion daneben. Wenn er ein Bild schickt, ist es fast immer GoodNotes — und er will nicht 'so ähnlich', sondern 1:1.
+- Er lernt neben der Arbeit: Berufsfachschule, Modulprüfungen, Lehrmittel als PDF. Redion ist für ihn zuerst ein Arbeitsgerät und erst danach ein Projekt — was er baut, benutzt er am selben Tag.
+- Er arbeitet mit GoodNotes auf dem iPad und hält es Redion daneben. Wenn er ein Bild schickt, ist es fast immer GoodNotes — und er will nicht „so ähnlich", sondern 1:1.
 - Sein Deutsch ist gesprochen, nicht geschrieben: schnell getippt, ohne Punkt, mit Tippfehlern. Der Inhalt ist dabei IMMER präzise. Wer die Rechtschreibung liest statt den Inhalt, versteht ihn falsch.
-- Er sagt sehr deutlich, wenn ihm etwas gefällt ('das sieht brutal gut aus') und ebenso deutlich, wenn etwas fehlt ('alter, wieso habe ich keinen Laserpointer').
-- Er will Tempo. 'Weiter', 'weiter ohne Pause', 'mache es sofort' kommen oft — und meinen: nicht fragen, machen.
+- Er sagt sehr deutlich, wenn ihm etwas gefällt („das sieht brutal gut aus") und ebenso deutlich, wenn etwas fehlt („alter, wieso habe ich keinen Laserpointer").
+- Er will Tempo. „Weiter", „weiter ohne Pause", „mache es sofort" kommen oft — und meinen: nicht fragen, machen.
 - Aber er will auch Ehrlichkeit. Er hat mehrfach Regeln gesetzt, die genau das erzwingen: nicht behaupten, die Gesamtsuite sei grün; nichts löschen ohne Rückfrage; Lücken aufschreiben statt verstecken.
+- Und er merkt, wenn etwas liegenbleibt. Die Chronik lag sechs Tage brach — seine Frage dazu war ein einziger Satz und kam, bevor jemand anders es bemerkt hätte.
 
 ### Wie mit ihm gearbeitet wird
 
-- SEINE SÄTZE SIND DER AUFTRAG, wörtlich. 'Strich Strich Strich, so nur Strich' heisst: zwei Zahlen im Muster, nicht vier. Er hat es zweimal gesagt — das war kein Versehen, das war Nachdruck.
+- SEINE SÄTZE SIND DER AUFTRAG, wörtlich. „Strich Strich Strich, so nur Strich" heisst: zwei Zahlen im Muster, nicht vier. Er hat es zweimal gesagt — das war kein Versehen, das war Nachdruck.
 - EIN BILD SCHLÄGT EINE BESCHREIBUNG. Wenn er eines schickt, ist die Antwort auch ein Bild.
 - NICHT FRAGEN, WO ICH ES SELBST MESSEN KANN. Fragen nur, wo die Antwort das Ergebnis ändert und ich sie nicht messen kann (Beispiel: welcher Knopf genau, L139).
 - WAS ES KOSTET, GEHÖRT DAZU. Er nimmt Kosten in Kauf, wenn sie danebenstehen — und merkt es, wenn sie fehlen.
+- EIN SATZ KANN MEHRERE AUFTRÄGE TRAGEN. „könntest du die xmind teil verbessern …" waren vier: Griffe, Verbindungen löschen, Formen, Vorlagen. Wer nur den ersten baut, hat drei überhört.
+- WENN ER KORRIGIERT, KORRIGIERT ER DIE RICHTUNG, nicht das Detail. „stoppe deine arbeit sofort" heisst nicht „mach es anders", sondern „hör auf, bevor es mehr wird".
+- WIEDERHERSTELLEN HEISST VOLLSTÄNDIG. „bringe es wieder komplett wie vorher mit Auge usw, mit Animationen, mit Bewegung, mit Anzeige, alles." Ungefähr zurück ist für ihn nicht zurück.
+- ER GIBT DIE ZAHLEN SELBST. 0,3 · 0,7 · 1,2 · 4,0 mm für die Striche, 36 px für die Kachel, der Zugangscode 733877. Wo er eine Zahl nennt, wird sie übernommen und nicht verbessert.
+
+### In Zahlen — wie er schreibt
+
+Gezählt über alle 95 aufgeschriebenen Nachrichten in dieser Chronik, nicht geschätzt.
+
+- **Kurz.** Die mittlere Nachricht hat 72 Zeichen. Die kürzeste sechs („weiter"), die längste 1494 — und das war der Auftrag, diese Datei hier anzulegen.
+- **In Schüben.** 33 Nachrichten an einem Tag (12. September), an drei anderen Tagen keine einzige. Er arbeitet nicht gleichmässig, sondern in Bögen.
+- **Rund um die Uhr.** 16 Nachrichten vor 7 Uhr morgens, 48 zwischen 7 und 19 Uhr, 31 nach 19 Uhr. Die früheste um 00:10, die späteste um 23:25.
+- **Das häufigste Wort nach „Redion" (26x) ist „weiter" (19x).** Danach kommen „alles" (12x) und „klicke" (10x) — Tempo, Vollständigkeit, und eine Hand, die etwas anfasst.
+
+*Gemessen: chronik/chronik.json, alle Nachrichtenfelder, 19. September 2026*
+
+### Woran er Qualität misst
+
+Er beschreibt selten abstrakt. Er nennt ein Programm, und das Programm ist die Messlatte.
+
+- **PowerPoint** (11x genannt) für das Vortragen, **Word** (5x) für das Schreiben, **GoodNotes** (3x) für das Zeichnen, **XMind** (2x) für Gedankenkarten, **OneNote** (1x) für den freien Text, das **macOS-Dock** (1x) für die Bewegung.
+- „Ich will das redion start wie goodnotes bein zeichenn ist, stark wie word beim text schreiben bearbeiten, start wie Powerpoint beim Präsentation" — drei Messlatten in einem Satz. Daraus wurden die fünf Messlatten in E594.
+- **1:1 ist wörtlich gemeint** (26 Stellen in ENTSCHEIDUNGEN.md). „So ähnlich" ist für ihn ein anderes Ergebnis, nicht ein schlechteres.
+- Ein Vorbild zu nennen ist bei ihm die kürzeste Form eines vollständigen Auftrags: Form, Bedienung und Erwartung in einem Wort.
+
+*Gemessen: alle Nachrichten dieser Chronik und 459 Nennungen in ENTSCHEIDUNGEN.md*
+
+### Wie er entscheidet
+
+Er entscheidet selten viel, aber dann endgültig — und er entscheidet am Bild, nicht an der Beschreibung.
+
+- **Er entscheidet, nachdem er es gesehen hat.** E78 legte am 8. August eine React-Zielarchitektur fest; E80 widerrief sie am 9. August, nachdem der Rohbau dastand. Nicht die Idee hat ihn überzeugt oder nicht, sondern der Anblick.
+- **Vier Marken in CLAUDE.md hat er selbst gesetzt** (3. September): §30 der volle Lauf in Stücken, §37 die 44 px mit ihrer Ausnahme, §46 rot zuerst, §55.3 ein Bild, wenn man etwas sehen kann. Alle vier sind Regeln über Ehrlichkeit, keine über Funktionen.
+- **E521, am 9. September:** ein Zweig, ein Push, dann ein neuer. Eine Arbeitsregel, die er selbst formuliert hat, weil ein Zweig seinen Namen verliert, wenn er weiterwächst.
+- **Er wählt zwischen Wegen, die ich vorlege** — „Sticky am Blattfuss", „Verschieben, dann Rest ins Verzeichnis" —, und er wählt schnell. Eine Auswahl mit drei benannten Wegen bekommt eine Antwort; eine offene Frage bekommt „mach".
+- **Was er nicht entscheidet, delegiert er ausdrücklich**: „arbeite an redion selbständig weiter". Das ist kein Desinteresse, sondern Arbeitsteilung.
+
+*Gemessen: ENTSCHEIDUNGEN.md (67 Stellen „Redur hat/entschied/…"), CLAUDE.md, E78/E80/E521*
+
+### Was ihn ärgert — und was daraus zu lernen war
+
+Dreimal in zwei Wochen dieselbe Sorte Fehler, und jedes Mal habe ich sie gemacht, nicht er.
+
+- **Mitgenommenes.** Beim Umbau verschwand das Auge am Ordner — samt Animationen, um die es nie ging. „alter man du hast hier die augen wo links oben bei date war und du hast die alle animationen alter was ist das". Vier Bögen Reparatur (E601–E604), und am nächsten Tag noch einmal (E608/E609).
+- **Halb wiederhergestellt.** Seine Antwort darauf war nicht „mach es hübscher", sondern „komplett wie vorher … alles".
+- **Behauptetes.** Er hat ausdrücklich verboten zu sagen, die Gesamtsuite sei grün, wenn sie nicht gelaufen ist. Am 19. September zeigte der erste volle Lauf seit PR #100, warum: 17 von 48 Stücken rot.
+- **Liegengebliebenes.** „machst du ur.md oder nicht weil es ist seit 5 tagen nicht gemacht." Kein Vorwurf, eine Frage — aber sie kam, bevor ich es selbst gemerkt hatte.
+
+*Gemessen: Tage 15.–19. September dieser Chronik*
+
+### Was er gebaut haben will, und warum gerade das
+
+Seine Wünsche sind nicht beliebig. Sie kommen aus zwei Leben, die beide dieselbe App benutzen.
+
+- **Aus der Schule:** Lernkarten aus dem eigenen PDF, Prüfungsplanung mit Countdown, Fehlertraining, Formelheft, Fachzeichen und Schutzleiter. Nichts davon hat Notion.
+- **Aus dem Betrieb:** Schaltpläne, Materiallisten, Baustellen, Normen, Rechnungen.
+- **Und daraus folgt local-first.** Seine Daten sind Prüfungen, Lohnabrechnungen und Kundenunterlagen — die Regel „Daten gehören dem Nutzer" ist bei ihm kein Prinzip, sondern eine Anforderung.
+- **Die Reihenfolge, in der er baut, ist die Reihenfolge, in der er es braucht.** Deshalb kommt Zeichnen vor Abgleich und Prüfungsplanung vor Cloudflare.
+
+*Gemessen: LUECKEN.md, ENTSCHEIDUNGEN.md, die Bereiche unter src/bereiche/*
+
+### Die kürzeste Zusammenfassung
+
+- **Schreib kurz, miss nach, zeig ein Bild, verlier nichts.** Alles andere in dieser Datei ist die ausführliche Fassung dieses Satzes.
 
 ---
 
@@ -1530,7 +1596,7 @@ Zweimal hat das Bild die Arbeit korrigiert. Auf dem ersten standen die Millimete
 | 07:32 | Die Millimeter stehen an der Kachel, nicht nur im Tooltip. | Redur hat die vier Zahlen selbst vorgegeben. Eine Stärke, die man erst beim Ueberfahren erfährt, gibt es am Telefon nicht. | keins an Daten. `test533 §5d` misst seither, dass keine Zahl über ihre Kachel läuft. |
 | 18:19 | Rückbau an E614 einen Tag später: Werkzeuge und Zeilenbruch ziehen aus der Tafel zurück in die Leiste. | Was für W2 richtig war, ist für W4 falsch — ein Kasten um die Werkzeugreihe wäre die ganze Leiste, keine Tafel. | Gering: die 51 Kindwähler blieben unberührt, weil das Zubehör in der Tafel geblieben ist. |
 
-### 2026-09-19 · Samstag — Wo die Leiste steht, der Wächter für §5, die Gedankenkarte bekommt Griffe — und der erste volle Lauf seit PR #100
+### 2026-09-19 · Samstag — Wo die Leiste steht, der Wächter für §5, die Gedankenkarte bekommt Griffe — und der erste volle Lauf seit PR #100 · und abends die achtzehn roten Läufe
 
 > Voller Wortlaut für diesen Tag: er liegt im Gespräch vor.
 
@@ -1604,6 +1670,28 @@ Zweimal hat das Bild die Arbeit korrigiert. Auf dem ersten standen die Millimete
 **Besserer Prompt:** Die Frage war berechtigt und die Antwort war nein. Sie hat die Lücke geschlossen, die sonst weitergewachsen wäre.
 
 
+**7 · ca. 18:30**
+
+> schrau es auch im claude md und überlader da die ur.md nicht vergennsern shau mal was die ur md genauer ist so wie bin ich mich konkrter analilzieren, e^wie arbeite ich, wieos und alles wirklich alles dort strukturiert dokumentieren scha mal wo dort sthe iund so
+
+**Gemeint:** Die Chronikregel gehört in CLAUDE.md — aber ohne die Datei aufzublähen. Und Teil I von UR.md soll ihn wirklich beschreiben: wie er arbeitet, warum, und woran man es sieht.
+
+**Besser geschrieben:** „Trag die Chronikregel in CLAUDE.md ein (kurz) und mach Teil I von UR.md genauer: wie ich arbeite und warum."
+
+**Besserer Prompt:** Zwei getrennte Aufträge in einem Satz. Getrennt gestellt wäre jeder in fünf Minuten beantwortet.
+
+
+**8 · ca. 19:50**
+
+> Weiter an den offene teil von redion, scha mal was offen ist und arbeite an das
+
+**Gemeint:** Such dir selbst, was offen ist, und arbeite es ab.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** Genau richtig so. §46 beantwortet die Frage „was ist offen" von allein: rot zuerst. Ein Auftrag, der die Reihenfolge der Regeln überlässt, ist besser als einer, der sie vorgibt.
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -1615,13 +1703,24 @@ Zweimal hat das Bild die Arbeit korrigiert. Auf dem ersten standen die Millimete
 | E627/E628 — Die Gedankenkarte bekommt Griffe, Verbindungen, Formen und Vorlagen | `(E626)` → `(15:08)` | 15:08 | ca. 50 min | test538 neu, 53 Zusagen, vier Gegenproben einzeln rot |
 | Der volle Lauf — alle 480 Prüfläufe in 48 Stücken, im eigenen Arbeitsbaum | `(E628)` → `(läuft)` | 15:20 – 17:00 | ca. 1,5 h | 17 von 48 Stücken rot — der erste volle Lauf seit PR #100 |
 | Analyse: wo eine Entscheidungsschicht (Jev) in Redion Sinn ergäbe | `—` → `—` | 16:30 – 17:20 | ca. 50 min | keine — Analyse, kein Bau |
+| E629 — Ein Name mit Typangabe ist derselbe Name | `e03a94e` → `3b3160b` | 19:44 – 20:11 | ca. 25 min | test537 nachgezogen; bereiche-bestand.json 1532 Zeilen geändert |
+| E630 — Kein Lauf teilt mehr seinen Port, und §30 sagt, was ein Arbeitsbaum anders macht | `3b3160b` → `e6b5993` | 20:11 – 22:22 | ca. 2 h 10 min | test400 grün; vier Läufe umgezogen (525, 526, 530, 531) |
+| E631 — Der Quelltext wird als Code gelesen, nicht als Prosa | `e6b5993` → `08df5e7` | 22:22 – 22:35 | ca. 13 min | test444, test483, test537, test87; neue Hilfe pruefungen/hilfe/quelltext.mts |
+| E632 — Die Inventur zieht nach, und die Prüfung lernt die vierte Schreibweise | `08df5e7` → `24d2b41` | 22:35 – 22:39 | ca. 4 min | test164, test225 |
+| E633 — Nur Tokens, die es gibt | `24d2b41` → `3030b42` | 22:39 – 22:57 | ca. 18 min | test401 4/4, test412 27/27, test303 16/16 |
+| E634 — Zwei Zusagen, die den Stand von gestern halten | `3030b42` → `0cdb38a` | 22:57 – 23:23 | ca. 26 min | test285 27/27, test442 24/24 |
+| E635 — Wer im ersten Bild misst, misst das Anfangsbild | `0cdb38a` → `(23:28)` | 23:23 – 23:28 | ca. 5 min | test432 48/48, test435 44/44; zwei Gegenproben gefahren |
+| E636 — Ein Prüflauf mit tausend Hertz | `(23:28)` → `(23:32)` | 23:28 – 23:32 | ca. 4 min | test449 16/16; Gegenprobe über kritzelTrifft gefahren |
+| E637 — Erst nachsehen, dann eintragen (die Marken-Decken) | `(23:32)` → `(23:37)` | 23:32 – 23:37 | ca. 5 min | test362 18/18 |
+| E638 — Tot war nicht die Regel, sondern das, worauf sie zeigte | `(23:37)` → `(23:56)` | 23:37 – 23:56 | ca. 19 min | test217 27/27 (vorher 14/27); Gegenprobe traf y=1115 auf den Pixel |
 
 #### Zahlen des Tages
 
-- **commits:** 5
-- **entscheidungen:** 10
+- **commits:** 15
+- **entscheidungen:** 20
 - **neue Prüfläufe:** 5
 - **volle Läufe:** 1
+- **rote Läufe abgearbeitet:** 17 von 18
 
 #### Das grösste Problem
 
@@ -1639,10 +1738,111 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 | 14:20 | Ein Verzeichnis der 523 Querverweise zwischen Bereichen, das nur schrumpfen darf. | §5 Regel 1 ist [hart] und hatte neun Monate keinen Wächter. Verschoben wurde nichts: die grossen Namen sind die Kerne ihrer Bereiche, nicht gemeinsame Helfer — sie nach kern/ zu schieben hiesse §4 brechen. | Keins am Code. Die Richtung bleibt Redurs Entscheidung. |
 | 15:08 | Eine unbekannte Form an einem Knoten BLEIBT stehen, statt beim Lesen wegzufallen. | Hier stand zuerst eine Prüfung gegen die Liste der bekannten Formen. Eine Karte aus einer neueren Fassung hätte ihre Sternform beim ersten Oeffnen verloren — still und endgültig (§18). | Das war die gefährliche Richtung, und sie ist behoben, bevor sie jemanden getroffen hat. |
 | 15:20 | Der volle Lauf fährt in einem eigenen Arbeitsbaum (git worktree), in Stücken zu zehn, mit Merkdatei. | §30: ein voller Lauf dauert länger, als eine Sitzung sicher steht. | keins — er liest nur. `main` bewegt sich nicht, solange etwas rot ist (§46). |
+| 19:44 – 23:56 | Die roten Läufe aus dem vollen Durchgang abgearbeitet: neun Bögen, zehn Entscheidungen. | §46: rot zuerst, und `main` bewegt sich nicht, solange etwas rot ist. | Kein Produktcode ausser der order-Leiter in lernwelt.css (E638) und den Tokens (E633, E637). |
+
+### 2026-09-20 · Sonntag — Zwei Videos, eine Linse — und ein Design-System, das über den Bogen von gestern urteilt
+
+> Voller Wortlaut für diesen Tag: er liegt im Gespräch vor.
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · ca. 01:44**
+
+> Was machst du jetzt
+
+**Gemeint:** Eine echte Zwischenfrage mitten in der Arbeit — er wollte wissen, woran ich gerade bin.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** Nichts zu verbessern. Die Frage hat gezeigt, dass ein Zwischenstand fehlte, ohne dass er ihn verlangen musste.
+
+
+**2 · ca. 01:46**
+
+> Scha mal die 2 videos an und ich will bei der der 1 video die untere übergans haben und beid der godnotte so
+
+**Gemeint:** Aus Video 1 (Apple TV, iOS 26) der Übergang der unteren Leiste; aus Video 2 der GoodNotes-Zustand der Werkzeugleiste.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** Der Satz war knapp und die Videos genau — das ist die bessere Hälfte. Was gefehlt hat, war die Trennung: „aus Video 1 den Übergang, aus Video 2 den Werkzeug-Zustand" hätte die Rückfrage gespart, die ich stellen musste.
+
+
+**3 · ca. 02:20**
+
+> baue es in redion ein
+
+**Gemeint:** Nicht länger prüfen und vergleichen — einbauen.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** Richtig gesetzt. Ich hatte einen Prototyp ausserhalb von Redion gebaut und verglichen; der Satz hat den Übergang von „ansehen" zu „bauen" ausgelöst, bevor ich noch eine Runde gedreht habe.
+
+
+**4 · ca. 02:35**
+
+> Für sämtliche UI-, UX-, Design-System-, Layout-, Motion-, Animation-, Responsive-, Accessibility- und Interaction-Entscheidungen MUSST du unseren Universal Design Skill als verbindliches Design-System verwenden
+
+**Gemeint:** Ab jetzt gilt ein zweites Regelwerk neben CLAUDE.md — Redurbabat/UI-Kit, Master-Router skills/web-design/SKILL.md.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** Der Auftrag war vollständig und hat selbst gesagt, was bei einem Widerspruch gilt („Übernimm nicht blind eine generische Regel"). Genau dieser Satz hat später entschieden, was ich ändere und was ich ihm vorlege. Ein Regelwerk ohne diesen Satz wäre gefährlicher gewesen als keines.
+
+
+**5 · ca. 03:30**
+
+> Arbeiten ohne pause weiter
+
+**Gemeint:** Weitermachen, ohne auf Bestätigung zu warten.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| Die zwei Videos Bild für Bild gelesen (HEVC, 1284×2778) und die Linse ausserhalb von Redion nachgebaut | `(nach E638)` → `(00:05)` | 01:50 – 00:05 | ca. 2 h | keine — vier Fassungen gebaut, aufgenommen und verglichen |
+| E639 — Die Pille wird eine Linse | `0cdb38a` → `(00:31)` | 00:05 – 00:31 | ca. 26 min | test539 neu (27 Zusagen), test114 87/87, 22 Wächter der Leiste; drei Gegenproben gefahren |
+| Die Module des Design-Systems gelesen und gegen Redions Quelltext gehalten | `—` → `—` | 00:15 – 01:05 | ca. 50 min | 83 Regeln geprüft: 44 erfüllt, 20 teilweise, 10 verletzt |
+| E640 — Der Grund sitzt, der Wechsel fliegt (die Werkzeugleiste) | `(00:31)` → `(01:26)` | 00:35 – 01:26 | ca. 50 min | test539 47/47, test478 43/43, test522, test533 unverändert grün; Gegenprobe gefahren |
+| E641 — Was das Design-System an der Linse auszusetzen hat | `(01:26)` → `(01:52)` | 01:30 – 01:52 | ca. 22 min | test539 §7 neu |
+| E642 — Sechsundsiebzig tote CSS-Regeln, gezählt bis null | `(01:52)` → `(02:35)` | 01:52 – 02:35 | ca. 43 min | test332 (76 → 0) · 26 Nachbarläufe der Bibliothek und der Stilblätter |
+| E643 — Der Wächter gegen Port-Kollisionen kannte nur eine Schreibweise | `(02:35)` → `(03:05)` | 02:35 – 03:05 | ca. 30 min | test400 (4/4, zwei Gegenproben) · die vierzehn betroffenen Läufe |
+| E644 — Erst wiederherstellen, dann beobachten (die gemerkte PDF-Seite) | `(03:05)` → `(03:30)` | 03:05 – 03:30 | ca. 25 min | test540 neu (9/9, Gegenprobe rot gesehen) · test424 (50/50) · test395, test202, test386 |
+| E645 — Ein Wächter zählte das ganze Haus, gemeint war ein Zimmer | `(03:30)` → `(offen)` | 03:30 – | laufend | test435 (45/45, zwei Gegenproben rot gesehen) |
+
+#### Zahlen des Tages
+
+- **commits:** 2
+- **entscheidungen:** 7
+- **neue Prüfläufe:** 2
+- **volle Läufe:** 0
+
+#### Das grösste Problem
+
+Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.
+
+#### Das Interessanteste, das Redur wollte
+
+Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die über einen Bogen urteilt, der schon gepusht war — und sie hat gegen ihn entschieden: neun von zehn klaren Verstössen stammen aus E639, der Linse von vor einer Stunde. Dass Redur im selben Auftrag geschrieben hat „Übernimm nicht blind eine generische Regel", ist der Grund, warum daraus kein Zurückrudern wurde, sondern drei Korrekturen und eine Frage an ihn.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| 00:31 | Die wandernde Pille der unteren Leiste bekommt echtes Glas: SVG-Brechung mit Farbsaum, zwei Filter für Ruhe und Fahrt. | Redurs Video und seine Antwort „Mit echter Brechung (SVG)" auf die Rückfrage. | keins an Daten. Ohne url()-Rückblende fällt nur die Brechung weg, die Fläche bleibt (test539 §4). |
+| 01:26 | Die Werkzeugleiste bekommt einen fliegenden Wechsel statt zweier springender Flächen. | Das Design-System: „Pen → Marker → Eraser" als Beispiel für eine gemeinsame Materialfläche. | keins an Daten. Der Zustand hängt am Knopf und nicht am Flug — deshalb ist er auch ohne Bewegung richtig. |
+| 01:40 | Die Dehnung der Linse gilt nur noch zwischen Nachbarn, der Deckel fällt von 1,85 auf 1,18, und die Ruhe-Brechung von 15 auf 8. | Drei Regeln des Design-Systems, die schlicht recht haben. Eine Brücke spannt sich zwischen Dingen, die sich fast berühren. | keins. Was bleibt, ist Redurs Entscheidung: ob über der Schrift überhaupt gebrochen werden darf. |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 60 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 74 Einträge.
 

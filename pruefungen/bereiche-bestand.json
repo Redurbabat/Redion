@@ -1,773 +1,761 @@
 {
-  "_was": "Querverweise zwischen Bereichen — CLAUDE.md §5 Regel 1 ist [hart].",
-  "_regel": "Dieses Verzeichnis darf nur SCHRUMPFEN. Es ist keine Erlaubnis, sondern eine Schuld. Ein neuer Eintrag heisst: ein Bereich fasst einen anderen an. Der Weg heraus steht in §5 — erst der Ereignisbus, dann gemeinsame Logik nach kern/, dann über register/ bekannt machen.",
-  "_woher": "E626, L150 — gemessen am 19. September 2026 mit test537.",
-  "_gesetzt": {
-    "paare": 127,
-    "treffer": 523
+ "_was": "Querverweise zwischen Bereichen — CLAUDE.md §5 Regel 1 ist [hart].",
+ "_regel": "Dieses Verzeichnis darf nur SCHRUMPFEN. Es ist keine Erlaubnis, sondern eine Schuld — aber eine geschrumpfte Zahl ist nur dann ein Fortschritt, wenn die Kopplung wirklich weg ist und nicht bloss unsichtbar wurde.",
+ "_woher": "E626, L150 — gemessen am 19. September 2026: zuerst 523 Treffer in 127 Paaren. Am selben Abend auf 517 in 125 gefallen, und NICHT weil eine Kopplung verschwunden wäre: der Namenskatalog erkannte `const X: Typ = …` nicht als Anmeldung (E629). Mit der Berichtigung gehören zehn Namen plötzlich mehreren Bereichen — und ein Name, der mehreren gehört, gehört keinem und wird nicht mehr gemeldet. Die zwei weggefallenen Einträge sind `ki → AUSLOESER → datenbanken` (2) und `wissen → ANSICHTEN → chronik` (4). Sie stehen weiter im Code; nur kann der Lauf sie niemandem mehr zuordnen. Siehe L193.",
+ "_gesetzt": {
+  "paare": 125,
+  "treffer": 517
+ },
+ "eintraege": [
+  {
+   "von": "bereiche/bloecke",
+   "name": "Blocks",
+   "zu": "bereiche/editor",
+   "zahl": 3
   },
-  "eintraege": [
-    {
-      "von": "bereiche/bloecke",
-      "name": "Blocks",
-      "zu": "bereiche/editor",
-      "zahl": 3
-    },
-    {
-      "von": "bereiche/bloecke",
-      "name": "Datenbank",
-      "zu": "bereiche/datenbanken",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/bloecke",
-      "name": "Formelheft",
-      "zu": "bereiche/elektro",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/bloecke",
-      "name": "Formula",
-      "zu": "bereiche/datenbanken",
-      "zahl": 8
-    },
-    {
-      "von": "bereiche/bloecke",
-      "name": "Marken",
-      "zu": "bereiche/pdf",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/bloecke",
-      "name": "Stromfluss",
-      "zu": "bereiche/elektro",
-      "zahl": 9
-    },
-    {
-      "von": "bereiche/dateien",
-      "name": "Bibliothek",
-      "zu": "bereiche/wissen",
-      "zahl": 3
-    },
-    {
-      "von": "bereiche/dateien",
-      "name": "Datenbank",
-      "zu": "bereiche/datenbanken",
-      "zahl": 9
-    },
-    {
-      "von": "bereiche/dateien",
-      "name": "Formula",
-      "zu": "bereiche/datenbanken",
-      "zahl": 7
-    },
-    {
-      "von": "bereiche/dateien",
-      "name": "Links",
-      "zu": "bereiche/wissen",
-      "zahl": 3
-    },
-    {
-      "von": "bereiche/dateien",
-      "name": "Marken",
-      "zu": "bereiche/pdf",
-      "zahl": 3
-    },
-    {
-      "von": "bereiche/dateien",
-      "name": "PdfEinlesen",
-      "zu": "bereiche/pdf",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/dateien",
-      "name": "Pflege",
-      "zu": "bereiche/einstellungen",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/dateien",
-      "name": "Schaltplan",
-      "zu": "bereiche/bloecke",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/dateien",
-      "name": "Werkzeuge",
-      "zu": "bereiche/wissen",
-      "zahl": 10
-    },
-    {
-      "von": "bereiche/datenbanken",
-      "name": "Austausch",
-      "zu": "bereiche/dateien",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/datenbanken",
-      "name": "Blocks",
-      "zu": "bereiche/editor",
-      "zahl": 3
-    },
-    {
-      "von": "bereiche/datenbanken",
-      "name": "Einstellungen",
-      "zu": "bereiche/einstellungen",
-      "zahl": 6
-    },
-    {
-      "von": "bereiche/datenbanken",
-      "name": "Kalender",
-      "zu": "bereiche/verbinden",
-      "zahl": 6
-    },
-    {
-      "von": "bereiche/datenbanken",
-      "name": "KI",
-      "zu": "bereiche/ki",
-      "zahl": 4
-    },
-    {
-      "von": "bereiche/datenbanken",
-      "name": "KiBau",
-      "zu": "bereiche/ki",
-      "zahl": 4
-    },
-    {
-      "von": "bereiche/datenbanken",
-      "name": "Kommentare",
-      "zu": "bereiche/kommentare",
-      "zahl": 7
-    },
-    {
-      "von": "bereiche/datenbanken",
-      "name": "Links",
-      "zu": "bereiche/wissen",
-      "zahl": 6
-    },
-    {
-      "von": "bereiche/datenbanken",
-      "name": "Meeting",
-      "zu": "bereiche/verbinden",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/datenbanken",
-      "name": "Pflege",
-      "zu": "bereiche/einstellungen",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/datenbanken",
-      "name": "Plan",
-      "zu": "bereiche/planen",
-      "zahl": 5
-    },
-    {
-      "von": "bereiche/datenbanken",
-      "name": "Produktwelten",
-      "zu": "bereiche/wissen",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/datenbanken",
-      "name": "Verbindungen",
-      "zu": "bereiche/verbinden",
-      "zahl": 8
-    },
-    {
-      "von": "bereiche/datenbanken",
-      "name": "Werkzeuge",
-      "zu": "bereiche/wissen",
-      "zahl": 31
-    },
-    {
-      "von": "bereiche/datenbanken",
-      "name": "WolkeFenster",
-      "zu": "bereiche/verbinden",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/datenbanken",
-      "name": "Zusatz",
-      "zu": "bereiche/bloecke",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/editor",
-      "name": "Datenbank",
-      "zu": "bereiche/datenbanken",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/editor",
-      "name": "Formula",
-      "zu": "bereiche/datenbanken",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/editor",
-      "name": "KI",
-      "zu": "bereiche/ki",
-      "zahl": 4
-    },
-    {
-      "von": "bereiche/editor",
-      "name": "Kommentare",
-      "zu": "bereiche/kommentare",
-      "zahl": 4
-    },
-    {
-      "von": "bereiche/editor",
-      "name": "Learning",
-      "zu": "bereiche/wissen",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/editor",
-      "name": "Links",
-      "zu": "bereiche/wissen",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/editor",
-      "name": "Werkzeuge",
-      "zu": "bereiche/wissen",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "Agent",
-      "zu": "bereiche/ki",
-      "zahl": 7
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "ANBIETER",
-      "zu": "bereiche/ki",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "Ansichten",
-      "zu": "bereiche/datenbanken",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "Blocks",
-      "zu": "bereiche/editor",
-      "zahl": 5
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "Clipper",
-      "zu": "bereiche/verbinden",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "Datenbank",
-      "zu": "bereiche/datenbanken",
-      "zahl": 6
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "Fassung",
-      "zu": "bereiche/vorlagen",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "Kalender",
-      "zu": "bereiche/verbinden",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "KI",
-      "zu": "bereiche/ki",
-      "zahl": 15
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "KiBuch",
-      "zu": "bereiche/ki",
-      "zahl": 7
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "Kontext",
-      "zu": "bereiche/ki",
-      "zahl": 9
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "Links",
-      "zu": "bereiche/wissen",
-      "zahl": 4
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "Mail",
-      "zu": "bereiche/verbinden",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "MCP",
-      "zu": "bereiche/ki",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "Meeting",
-      "zu": "bereiche/verbinden",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "Pruefsatz",
-      "zu": "bereiche/datenbanken",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "Spiegel",
-      "zu": "bereiche/datenbanken",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "Verbindungen",
-      "zu": "bereiche/verbinden",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/einstellungen",
-      "name": "Werkzeuge",
-      "zu": "bereiche/wissen",
-      "zahl": 13
-    },
-    {
-      "von": "bereiche/elektro",
-      "name": "Dateien",
-      "zu": "bereiche/dateien",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/elektro",
-      "name": "Schaltplan",
-      "zu": "bereiche/bloecke",
-      "zahl": 8
-    },
-    {
-      "von": "bereiche/elektro",
-      "name": "Werkzeuge",
-      "zu": "bereiche/wissen",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/erwaehnungen",
-      "name": "Links",
-      "zu": "bereiche/wissen",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/hilfe",
-      "name": "Werkzeuge",
-      "zu": "bereiche/wissen",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/ki",
-      "name": "AKTIONEN",
-      "zu": "bereiche/datenbanken",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/ki",
-      "name": "AUSLOESER",
-      "zu": "bereiche/datenbanken",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/ki",
-      "name": "BEDINGUNGEN",
-      "zu": "bereiche/datenbanken",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/ki",
-      "name": "Datenbank",
-      "zu": "bereiche/datenbanken",
-      "zahl": 16
-    },
-    {
-      "von": "bereiche/ki",
-      "name": "Einstellungen",
-      "zu": "bereiche/einstellungen",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/ki",
-      "name": "Formula",
-      "zu": "bereiche/datenbanken",
-      "zahl": 6
-    },
-    {
-      "von": "bereiche/ki",
-      "name": "Meeting",
-      "zu": "bereiche/verbinden",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/ki",
-      "name": "Verbindungen",
-      "zu": "bereiche/verbinden",
-      "zahl": 3
-    },
-    {
-      "von": "bereiche/pdf",
-      "name": "Blatt",
-      "zu": "bereiche/bloecke",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/pdf",
-      "name": "Dateien",
-      "zu": "bereiche/dateien",
-      "zahl": 29
-    },
-    {
-      "von": "bereiche/pdf",
-      "name": "Folienvorlagen",
-      "zu": "bereiche/vorlagen",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/pdf",
-      "name": "Formelheft",
-      "zu": "bereiche/elektro",
-      "zahl": 6
-    },
-    {
-      "von": "bereiche/pdf",
-      "name": "Learning",
-      "zu": "bereiche/wissen",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/pdf",
-      "name": "Links",
-      "zu": "bereiche/wissen",
-      "zahl": 6
-    },
-    {
-      "von": "bereiche/pdf",
-      "name": "Planflaeche",
-      "zu": "bereiche/bloecke",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/pdf",
-      "name": "Recognition",
-      "zu": "bereiche/dateien",
-      "zahl": 3
-    },
-    {
-      "von": "bereiche/pdf",
-      "name": "Werkzeuge",
-      "zu": "bereiche/wissen",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/planen",
-      "name": "Datenbank",
-      "zu": "bereiche/datenbanken",
-      "zahl": 4
-    },
-    {
-      "von": "bereiche/planen",
-      "name": "Learning",
-      "zu": "bereiche/wissen",
-      "zahl": 5
-    },
-    {
-      "von": "bereiche/planen",
-      "name": "Werkzeuge",
-      "zu": "bereiche/wissen",
-      "zahl": 4
-    },
-    {
-      "von": "bereiche/spreadsheet",
-      "name": "Austausch",
-      "zu": "bereiche/dateien",
-      "zahl": 4
-    },
-    {
-      "von": "bereiche/spreadsheet",
-      "name": "Einlesen",
-      "zu": "bereiche/dateien",
-      "zahl": 6
-    },
-    {
-      "von": "bereiche/verbinden",
-      "name": "Dateien",
-      "zu": "bereiche/dateien",
-      "zahl": 3
-    },
-    {
-      "von": "bereiche/verbinden",
-      "name": "Datenbank",
-      "zu": "bereiche/datenbanken",
-      "zahl": 21
-    },
-    {
-      "von": "bereiche/verbinden",
-      "name": "Formula",
-      "zu": "bereiche/datenbanken",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/verbinden",
-      "name": "KI",
-      "zu": "bereiche/ki",
-      "zahl": 3
-    },
-    {
-      "von": "bereiche/verbinden",
-      "name": "Spiegel",
-      "zu": "bereiche/datenbanken",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/verbinden",
-      "name": "Werkzeuge",
-      "zu": "bereiche/wissen",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/vorlagen",
-      "name": "Austausch",
-      "zu": "bereiche/dateien",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/vorlagen",
-      "name": "DocumentMode",
-      "zu": "bereiche/pdf",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/vorlagen",
-      "name": "Marken",
-      "zu": "bereiche/pdf",
-      "zahl": 3
-    },
-    {
-      "von": "bereiche/vorlagen",
-      "name": "Werkzeuge",
-      "zu": "bereiche/wissen",
-      "zahl": 4
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Ansichten",
-      "zu": "bereiche/datenbanken",
-      "zahl": 4
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "ANSICHTEN",
-      "zu": "bereiche/chronik",
-      "zahl": 4
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Api",
-      "zu": "bereiche/verbinden",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "ArchivImport",
-      "zu": "bereiche/dateien",
-      "zahl": 8
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Aussehen",
-      "zu": "bereiche/einstellungen",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Austausch",
-      "zu": "bereiche/dateien",
-      "zahl": 6
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Blocks",
-      "zu": "bereiche/editor",
-      "zahl": 3
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Dateien",
-      "zu": "bereiche/dateien",
-      "zahl": 12
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Datenbank",
-      "zu": "bereiche/datenbanken",
-      "zahl": 9
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Eingang",
-      "zu": "bereiche/verbinden",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Einlesen",
-      "zu": "bereiche/dateien",
-      "zahl": 3
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Erweiterung",
-      "zu": "bereiche/einstellungen",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Fassung",
-      "zu": "bereiche/vorlagen",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Formula",
-      "zu": "bereiche/datenbanken",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Galerie",
-      "zu": "bereiche/vorlagen",
-      "zahl": 9
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Kalender",
-      "zu": "bereiche/verbinden",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "KI",
-      "zu": "bereiche/ki",
-      "zahl": 4
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Marken",
-      "zu": "bereiche/pdf",
-      "zahl": 3
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Meeting",
-      "zu": "bereiche/verbinden",
-      "zahl": 4
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "NotionFormat",
-      "zu": "bereiche/dateien",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "PdfEinlesen",
-      "zu": "bereiche/pdf",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Pflege",
-      "zu": "bereiche/einstellungen",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Plan",
-      "zu": "bereiche/planen",
-      "zahl": 6
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Probelauf",
-      "zu": "bereiche/datenbanken",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Pruefsatz",
-      "zu": "bereiche/datenbanken",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Recognition",
-      "zu": "bereiche/dateien",
-      "zahl": 5
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Rundgang",
-      "zu": "bereiche/hilfe",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Schema",
-      "zu": "bereiche/datenbanken",
-      "zahl": 2
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Status",
-      "zu": "bereiche/hilfe",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Vergleich",
-      "zu": "bereiche/seiten",
-      "zahl": 3
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Vorrat",
-      "zu": "bereiche/datenbanken",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "Wissen",
-      "zu": "bereiche/hilfe",
-      "zahl": 1
-    },
-    {
-      "von": "bereiche/wissen",
-      "name": "WolkeFenster",
-      "zu": "bereiche/verbinden",
-      "zahl": 4
-    }
-  ]
+  {
+   "von": "bereiche/bloecke",
+   "name": "Datenbank",
+   "zu": "bereiche/datenbanken",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/bloecke",
+   "name": "Formelheft",
+   "zu": "bereiche/elektro",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/bloecke",
+   "name": "Formula",
+   "zu": "bereiche/datenbanken",
+   "zahl": 8
+  },
+  {
+   "von": "bereiche/bloecke",
+   "name": "Marken",
+   "zu": "bereiche/pdf",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/bloecke",
+   "name": "Stromfluss",
+   "zu": "bereiche/elektro",
+   "zahl": 9
+  },
+  {
+   "von": "bereiche/dateien",
+   "name": "Bibliothek",
+   "zu": "bereiche/wissen",
+   "zahl": 3
+  },
+  {
+   "von": "bereiche/dateien",
+   "name": "Datenbank",
+   "zu": "bereiche/datenbanken",
+   "zahl": 9
+  },
+  {
+   "von": "bereiche/dateien",
+   "name": "Formula",
+   "zu": "bereiche/datenbanken",
+   "zahl": 7
+  },
+  {
+   "von": "bereiche/dateien",
+   "name": "Links",
+   "zu": "bereiche/wissen",
+   "zahl": 3
+  },
+  {
+   "von": "bereiche/dateien",
+   "name": "Marken",
+   "zu": "bereiche/pdf",
+   "zahl": 3
+  },
+  {
+   "von": "bereiche/dateien",
+   "name": "PdfEinlesen",
+   "zu": "bereiche/pdf",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/dateien",
+   "name": "Pflege",
+   "zu": "bereiche/einstellungen",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/dateien",
+   "name": "Schaltplan",
+   "zu": "bereiche/bloecke",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/dateien",
+   "name": "Werkzeuge",
+   "zu": "bereiche/wissen",
+   "zahl": 10
+  },
+  {
+   "von": "bereiche/datenbanken",
+   "name": "Austausch",
+   "zu": "bereiche/dateien",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/datenbanken",
+   "name": "Blocks",
+   "zu": "bereiche/editor",
+   "zahl": 3
+  },
+  {
+   "von": "bereiche/datenbanken",
+   "name": "Einstellungen",
+   "zu": "bereiche/einstellungen",
+   "zahl": 6
+  },
+  {
+   "von": "bereiche/datenbanken",
+   "name": "Kalender",
+   "zu": "bereiche/verbinden",
+   "zahl": 6
+  },
+  {
+   "von": "bereiche/datenbanken",
+   "name": "KI",
+   "zu": "bereiche/ki",
+   "zahl": 4
+  },
+  {
+   "von": "bereiche/datenbanken",
+   "name": "KiBau",
+   "zu": "bereiche/ki",
+   "zahl": 4
+  },
+  {
+   "von": "bereiche/datenbanken",
+   "name": "Kommentare",
+   "zu": "bereiche/kommentare",
+   "zahl": 7
+  },
+  {
+   "von": "bereiche/datenbanken",
+   "name": "Links",
+   "zu": "bereiche/wissen",
+   "zahl": 6
+  },
+  {
+   "von": "bereiche/datenbanken",
+   "name": "Meeting",
+   "zu": "bereiche/verbinden",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/datenbanken",
+   "name": "Pflege",
+   "zu": "bereiche/einstellungen",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/datenbanken",
+   "name": "Plan",
+   "zu": "bereiche/planen",
+   "zahl": 5
+  },
+  {
+   "von": "bereiche/datenbanken",
+   "name": "Produktwelten",
+   "zu": "bereiche/wissen",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/datenbanken",
+   "name": "Verbindungen",
+   "zu": "bereiche/verbinden",
+   "zahl": 8
+  },
+  {
+   "von": "bereiche/datenbanken",
+   "name": "Werkzeuge",
+   "zu": "bereiche/wissen",
+   "zahl": 31
+  },
+  {
+   "von": "bereiche/datenbanken",
+   "name": "WolkeFenster",
+   "zu": "bereiche/verbinden",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/datenbanken",
+   "name": "Zusatz",
+   "zu": "bereiche/bloecke",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/editor",
+   "name": "Datenbank",
+   "zu": "bereiche/datenbanken",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/editor",
+   "name": "Formula",
+   "zu": "bereiche/datenbanken",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/editor",
+   "name": "KI",
+   "zu": "bereiche/ki",
+   "zahl": 4
+  },
+  {
+   "von": "bereiche/editor",
+   "name": "Kommentare",
+   "zu": "bereiche/kommentare",
+   "zahl": 4
+  },
+  {
+   "von": "bereiche/editor",
+   "name": "Learning",
+   "zu": "bereiche/wissen",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/editor",
+   "name": "Links",
+   "zu": "bereiche/wissen",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/editor",
+   "name": "Werkzeuge",
+   "zu": "bereiche/wissen",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "Agent",
+   "zu": "bereiche/ki",
+   "zahl": 7
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "ANBIETER",
+   "zu": "bereiche/ki",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "Ansichten",
+   "zu": "bereiche/datenbanken",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "Blocks",
+   "zu": "bereiche/editor",
+   "zahl": 5
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "Clipper",
+   "zu": "bereiche/verbinden",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "Datenbank",
+   "zu": "bereiche/datenbanken",
+   "zahl": 6
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "Fassung",
+   "zu": "bereiche/vorlagen",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "Kalender",
+   "zu": "bereiche/verbinden",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "KI",
+   "zu": "bereiche/ki",
+   "zahl": 15
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "KiBuch",
+   "zu": "bereiche/ki",
+   "zahl": 7
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "Kontext",
+   "zu": "bereiche/ki",
+   "zahl": 9
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "Links",
+   "zu": "bereiche/wissen",
+   "zahl": 4
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "Mail",
+   "zu": "bereiche/verbinden",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "MCP",
+   "zu": "bereiche/ki",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "Meeting",
+   "zu": "bereiche/verbinden",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "Pruefsatz",
+   "zu": "bereiche/datenbanken",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "Spiegel",
+   "zu": "bereiche/datenbanken",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "Verbindungen",
+   "zu": "bereiche/verbinden",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/einstellungen",
+   "name": "Werkzeuge",
+   "zu": "bereiche/wissen",
+   "zahl": 13
+  },
+  {
+   "von": "bereiche/elektro",
+   "name": "Dateien",
+   "zu": "bereiche/dateien",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/elektro",
+   "name": "Schaltplan",
+   "zu": "bereiche/bloecke",
+   "zahl": 8
+  },
+  {
+   "von": "bereiche/elektro",
+   "name": "Werkzeuge",
+   "zu": "bereiche/wissen",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/erwaehnungen",
+   "name": "Links",
+   "zu": "bereiche/wissen",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/hilfe",
+   "name": "Werkzeuge",
+   "zu": "bereiche/wissen",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/ki",
+   "name": "AKTIONEN",
+   "zu": "bereiche/datenbanken",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/ki",
+   "name": "BEDINGUNGEN",
+   "zu": "bereiche/datenbanken",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/ki",
+   "name": "Datenbank",
+   "zu": "bereiche/datenbanken",
+   "zahl": 16
+  },
+  {
+   "von": "bereiche/ki",
+   "name": "Einstellungen",
+   "zu": "bereiche/einstellungen",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/ki",
+   "name": "Formula",
+   "zu": "bereiche/datenbanken",
+   "zahl": 6
+  },
+  {
+   "von": "bereiche/ki",
+   "name": "Meeting",
+   "zu": "bereiche/verbinden",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/ki",
+   "name": "Verbindungen",
+   "zu": "bereiche/verbinden",
+   "zahl": 3
+  },
+  {
+   "von": "bereiche/pdf",
+   "name": "Blatt",
+   "zu": "bereiche/bloecke",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/pdf",
+   "name": "Dateien",
+   "zu": "bereiche/dateien",
+   "zahl": 29
+  },
+  {
+   "von": "bereiche/pdf",
+   "name": "Folienvorlagen",
+   "zu": "bereiche/vorlagen",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/pdf",
+   "name": "Formelheft",
+   "zu": "bereiche/elektro",
+   "zahl": 6
+  },
+  {
+   "von": "bereiche/pdf",
+   "name": "Learning",
+   "zu": "bereiche/wissen",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/pdf",
+   "name": "Links",
+   "zu": "bereiche/wissen",
+   "zahl": 6
+  },
+  {
+   "von": "bereiche/pdf",
+   "name": "Planflaeche",
+   "zu": "bereiche/bloecke",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/pdf",
+   "name": "Recognition",
+   "zu": "bereiche/dateien",
+   "zahl": 3
+  },
+  {
+   "von": "bereiche/pdf",
+   "name": "Werkzeuge",
+   "zu": "bereiche/wissen",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/planen",
+   "name": "Datenbank",
+   "zu": "bereiche/datenbanken",
+   "zahl": 4
+  },
+  {
+   "von": "bereiche/planen",
+   "name": "Learning",
+   "zu": "bereiche/wissen",
+   "zahl": 5
+  },
+  {
+   "von": "bereiche/planen",
+   "name": "Werkzeuge",
+   "zu": "bereiche/wissen",
+   "zahl": 4
+  },
+  {
+   "von": "bereiche/spreadsheet",
+   "name": "Austausch",
+   "zu": "bereiche/dateien",
+   "zahl": 4
+  },
+  {
+   "von": "bereiche/spreadsheet",
+   "name": "Einlesen",
+   "zu": "bereiche/dateien",
+   "zahl": 6
+  },
+  {
+   "von": "bereiche/verbinden",
+   "name": "Dateien",
+   "zu": "bereiche/dateien",
+   "zahl": 3
+  },
+  {
+   "von": "bereiche/verbinden",
+   "name": "Datenbank",
+   "zu": "bereiche/datenbanken",
+   "zahl": 21
+  },
+  {
+   "von": "bereiche/verbinden",
+   "name": "Formula",
+   "zu": "bereiche/datenbanken",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/verbinden",
+   "name": "KI",
+   "zu": "bereiche/ki",
+   "zahl": 3
+  },
+  {
+   "von": "bereiche/verbinden",
+   "name": "Spiegel",
+   "zu": "bereiche/datenbanken",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/verbinden",
+   "name": "Werkzeuge",
+   "zu": "bereiche/wissen",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/vorlagen",
+   "name": "Austausch",
+   "zu": "bereiche/dateien",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/vorlagen",
+   "name": "DocumentMode",
+   "zu": "bereiche/pdf",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/vorlagen",
+   "name": "Marken",
+   "zu": "bereiche/pdf",
+   "zahl": 3
+  },
+  {
+   "von": "bereiche/vorlagen",
+   "name": "Werkzeuge",
+   "zu": "bereiche/wissen",
+   "zahl": 4
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Ansichten",
+   "zu": "bereiche/datenbanken",
+   "zahl": 4
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Api",
+   "zu": "bereiche/verbinden",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "ArchivImport",
+   "zu": "bereiche/dateien",
+   "zahl": 8
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Aussehen",
+   "zu": "bereiche/einstellungen",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Austausch",
+   "zu": "bereiche/dateien",
+   "zahl": 6
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Blocks",
+   "zu": "bereiche/editor",
+   "zahl": 3
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Dateien",
+   "zu": "bereiche/dateien",
+   "zahl": 12
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Datenbank",
+   "zu": "bereiche/datenbanken",
+   "zahl": 9
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Eingang",
+   "zu": "bereiche/verbinden",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Einlesen",
+   "zu": "bereiche/dateien",
+   "zahl": 3
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Erweiterung",
+   "zu": "bereiche/einstellungen",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Fassung",
+   "zu": "bereiche/vorlagen",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Formula",
+   "zu": "bereiche/datenbanken",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Galerie",
+   "zu": "bereiche/vorlagen",
+   "zahl": 9
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Kalender",
+   "zu": "bereiche/verbinden",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "KI",
+   "zu": "bereiche/ki",
+   "zahl": 4
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Marken",
+   "zu": "bereiche/pdf",
+   "zahl": 3
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Meeting",
+   "zu": "bereiche/verbinden",
+   "zahl": 4
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "NotionFormat",
+   "zu": "bereiche/dateien",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "PdfEinlesen",
+   "zu": "bereiche/pdf",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Pflege",
+   "zu": "bereiche/einstellungen",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Plan",
+   "zu": "bereiche/planen",
+   "zahl": 6
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Probelauf",
+   "zu": "bereiche/datenbanken",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Pruefsatz",
+   "zu": "bereiche/datenbanken",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Recognition",
+   "zu": "bereiche/dateien",
+   "zahl": 5
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Rundgang",
+   "zu": "bereiche/hilfe",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Schema",
+   "zu": "bereiche/datenbanken",
+   "zahl": 2
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Status",
+   "zu": "bereiche/hilfe",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Vergleich",
+   "zu": "bereiche/seiten",
+   "zahl": 3
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Vorrat",
+   "zu": "bereiche/datenbanken",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "Wissen",
+   "zu": "bereiche/hilfe",
+   "zahl": 1
+  },
+  {
+   "von": "bereiche/wissen",
+   "name": "WolkeFenster",
+   "zu": "bereiche/verbinden",
+   "zahl": 4
+  }
+ ]
 }

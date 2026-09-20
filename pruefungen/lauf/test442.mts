@@ -139,7 +139,14 @@ const seiteId = await s.evaluate(async () => {
     const r = papier?.getBoundingClientRect();
     return { img: !!img && img.src.startsWith('blob:'), quer: !!r && r.width > r.height * 1.3, mini: document.querySelector('.document-thumbnails [data-document-index="1"] .document-thumbnail-label')?.textContent };
   });
-  p('Die Bildseite zeigt ihr Bild und steht quer; die Miniatur heisst „Bild · quer.png"', bild.img && bild.quer && bild.mini === 'Bild · quer.png', JSON.stringify(bild));
+  /* DIE NUMMER STEHT DAVOR, SEIT E547. Hier stand „Bild · quer.png" ohne
+     Nummer, und das war seit dem 10. September die falsche Erwartung: die
+     Folienliste stellt die laufende Nummer voran, weil bei 27 Folien niemand
+     Kästchen abzählt. test503 §3 verlangt sie ausdrücklich — wer sie hier aus
+     dem Produkt entfernte, machte jenen Lauf rot. Geprüft wird deshalb der
+     ganze Text mitsamt Nummer; der Name ohne Nummer steht weiterhin im
+     `aria-label` des Knopfes und wird eine Zeile höher geprüft. */
+  p('Die Bildseite zeigt ihr Bild und steht quer; die Miniatur heisst „2 · Bild · quer.png" (Nummer seit E547)', bild.img && bild.quer && bild.mini === '2 · Bild · quer.png', JSON.stringify(bild));
   /* DIE KOPIE EINER BILDSEITE BLEIBT NUTZERDATEI (E471). Eine PDF-Seite darf
      ihr Bild aus der Quelle zurückholen, eine Bildseite hat keine Quelle —
      mit `abgeleitet: true` wäre die Kopie nach dem Einspielen leer (§11). */

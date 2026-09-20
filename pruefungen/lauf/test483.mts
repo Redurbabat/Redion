@@ -198,9 +198,24 @@ console.log('\n§5 Sichtbar');
      ginge dort ins Leere, und was ein Reiter ohne Zeichen zeigt, entscheidet
      der Browser — meist das zuletzt gemerkte. Redur sah deshalb weiter das
      alte rote R. `bauen.mts` setzt die Bytes jetzt ein. */
+  /* EIN VERWEIS, KEIN SATZ ÜBER EINEN VERWEIS (E631).
+     Hier stand `einzeln.includes('oeffentlich/icons/')` — eine Suche im
+     rohen Text der ganzen Datei. Am 19. September meldete sie „1 Reste",
+     und dieser eine Rest war ein Satz der CHRONIK über genau diese
+     Entscheidung, eingebettet als Daten:
+
+         "was": "`oeffentlich/icons/marke.png` als einzige Quelle …"
+
+     Die Zusage meint den Browser: er darf nicht in einen Ordner greifen,
+     den die Einzeldatei nicht neben sich hat. Gesucht wird deshalb nach
+     dem, was der Browser LÄDT — `src=`, `href=`, `url(` —, nicht nach der
+     Zeichenfolge. Sonst macht jede künftige Chronikzeile, die einen Pfad
+     zitiert, diesen Lauf rot. */
+  const verweisMuster = /(?:\bsrc\s*=|\bhref\s*=|\burl\s*\()\s*["']?[^"')\s>]*oeffentlich\/icons\//g;
+  const echteVerweise = einzeln.match(verweisMuster) || [];
   p('Kein einziger Verweis mehr auf oeffentlich/icons/ in der Einzeldatei',
-    !einzeln.includes('oeffentlich/icons/'),
-    String((einzeln.match(/oeffentlich\/icons\//g) || []).length) + ' Reste');
+    echteVerweise.length === 0,
+    echteVerweise.length + ' Reste: ' + echteVerweise.slice(0, 3).join(' · '));
   p('Ihr Reitersymbol trägt seine Bytes selbst',
     /<link rel="icon"[^>]*href="data:image\/png;base64,[A-Za-z0-9+/=]{200,}"/.test(einzeln));
 

@@ -9098,3 +9098,425 @@ beim Schaltplan, der das kann (`elektro:planvorlagen`). Das ist bewusst so
 gelassen und keine vergessene Zeile: eine eigene Vorlagenliste ist ein
 eigener Speicherort mit eigener Sicherungsfrage (§11), und die gehört in
 einen eigenen Bogen.
+
+---
+
+## L193 · Ein Name, der mehreren Bereichen gehört, gehört im Wächter keinem — 19. September 2026
+
+`test537` ordnet einen globalen Namen dem Bereich zu, der ihn anmeldet.
+Steht derselbe Name in **zwei** Bereichen, gehört er nach der Regel des
+Laufs keinem — und jeder Zugriff darauf wird nicht mehr gemeldet.
+
+Das ist absichtlich so (eine Zuordnung, die geraten wäre, sagt nichts), aber
+es hat einen Preis, und der wurde am selben Abend sichtbar. Mit der
+Berichtigung des Katalogs (E629) bekommen 59 Namen zum ersten Mal einen
+Besitzer — und **zehn verlieren ihn**:
+
+```txt
+ANSICHTEN   chronik + wissen          REITER      wissen + register
+AUSLOESER   datenbanken + editor      STUFEN      spreadsheet + core + kern
+BEREICHE    einstellungen + elektro   WERKZEUGE   ki + pdf + register
+FORMEN      bloecke + dateien + pdf   M           elektro + core
+NAMEN       ki + core + schale        RANG        dateien + kern
+```
+
+Zwei Einträge sind dadurch aus dem Verzeichnis gefallen:
+
+```txt
+bereiche/ki     → AUSLOESER → bereiche/datenbanken   (2 Treffer)
+bereiche/wissen → ANSICHTEN → bereiche/chronik       (4 Treffer)
+```
+
+**Sie stehen weiter im Code.** Der Lauf kann sie nur niemandem mehr
+zuordnen. Das Verzeichnis ist von 127/523 auf 125/517 gefallen, und diese
+sechs Treffer sind **kein Fortschritt** — sie sind unsichtbar geworden.
+Genau deshalb steht es hier und im Kopf des Verzeichnisses.
+
+**Was helfen würde**, in der Reihenfolge des Aufwands:
+
+1. Die Zuordnung am ORT der Benutzung entscheiden statt am Namen: wer
+   `FORMEN` in `bereiche/pdf` benutzt und dort auch anmeldet, meint die
+   eigene. Nur ein Zugriff OHNE eigene Anmeldung im selben Bereich ist ein
+   Querverweis. Das fängt neun der zehn Fälle.
+2. Gleichnamige globale Namen überhaupt melden — zwei Bereiche mit
+   derselben Konstanten sind auch ohne Wächter eine Stolperstelle.
+3. Die Namen auseinanderziehen. Das ist die sauberste und die teuerste
+   Lösung, und sie gehört nicht in denselben Bogen wie der Wächter.
+
+---
+
+## L194 · Wie viele Wächter Prosa für Code halten, ist nicht gezählt — 19. September 2026
+
+An einem Tag haben **drei** Wächter etwas gemeldet, das es nicht gab, und
+jedes Mal stand der „Fund" in einem Satz: `test537` (E629), `test444` und
+`test483` (E631). Alle drei sind repariert; `pruefungen/hilfe/quelltext.mts`
+ist die gemeinsame Stelle.
+
+**Was nicht beantwortet ist: wie viele es noch gibt.**
+
+```txt
+196   Prüfläufe lesen eine Datei unter src/ oder quell/ als Text
+        (readFileSync + ein Pfad dorthin, gezählt am 19. September)
+  4   davon lesen sie durch quelltext.mts, also als Code
+```
+
+Die 196 sind eine **Obergrenze, keine Fehlerzahl.** Viele davon prüfen zu
+Recht den rohen Text: ob eine Datei eine Zeile enthält, ob ein erzeugtes
+`.js` zu seiner `.ts` passt, ob ein Name im Register steht. Ein Wächter ist
+nur dann anfällig, wenn er nach einem **Code-Muster** sucht — und das sagt
+die Zahl nicht.
+
+**Warum es trotzdem hier steht:** Die drei gefundenen Fälle waren nicht
+gesucht, sondern gestolpert. Ein vierter fällt beim nächsten vollen Lauf
+auf, oder er fällt nie auf und macht eine Zusage still wertlos.
+
+**Was zu tun wäre**, und zwar als eigener Bogen:
+
+1. Die 196 danach trennen, ob sie nach einer Zeichenfolge (harmlos) oder
+   nach einem Muster mit Klammern und Punkten (anfällig) suchen.
+2. Für die anfälligen je eine Gegenprobe schreiben, die einen echten
+   Verstoss einsetzt — die einzige Art, das zu beantworten (§55.2).
+3. Erst danach umstellen. Die Reihenfolge ist wichtig: die Gegenprobe zu
+   `test444` hat gezeigt, dass eine Reparatur einen Wächter **blind**
+   machen kann, ohne dass eine einzige Zeile rot wird.
+
+---
+
+## L195 · Die Blocktypen-Inventur behauptet, erzeugt zu sein — sie ist es nicht — 19. September 2026
+
+`doku/BLOCKTYPEN.md` beginnt mit dem Satz:
+
+> Diese Liste ist aus dem laufenden Register erzeugt (`Register.bloecke`),
+> nicht abgetippt.
+
+**Einen Erzeuger gibt es im ganzen Baum nicht.** Die Datei wird von Hand
+gepflegt, und `test164` ist das einzige, was sie zusammenhält.
+
+Genau deshalb konnte sie driften: Am 16. September kam die Gedankenkarte
+ins Register (E607), die Doku blieb auf 78 stehen, und der Lauf war drei
+Tage rot, ohne dass jemand ihn fuhr. Nachgetragen am 19. September (E632).
+
+**Zwei Wege, und beide sind vertretbar:**
+
+1. **Den Erzeuger wirklich bauen.** Ein kleines `.mts`, das die Tabelle aus
+   `src/register/bloecke.ts` schreibt — dann kann sie nie wieder abweichen.
+   Kosten: die Gruppenüberschriften und die drei erklärenden Abschnitte am
+   Ende („Bausteine ohne Menüeintrag", „Die sechs Kandidaten aus L19", „Die
+   alte Zählung") müssten erhalten bleiben; ein Erzeuger, der sie
+   überschreibt, macht die Datei ärmer.
+2. **Den Satz berichtigen.** Eine Zeile, und die Datei sagt die Wahrheit
+   über sich selbst: von Hand gepflegt, von `test164` gehalten.
+
+Der zweite Weg ist ehrlich und kostet nichts; der erste ist besser und
+kostet einen eigenen Bogen. Solange keiner gegangen ist, steht hier, dass
+der Kopf der Datei nicht stimmt.
+
+---
+
+## L196 · Die Zeitleiste der Chronik ragt aus ihrem Fenster — 19. September 2026
+
+Auf dem Bild vom 19. September (`bilder.mts chronik`) stehen die
+3D-Platten der Tage unten über den Rand des Chronik-Fensters hinaus: die
+vierte Platte ist angeschnitten, und sie liegt über dem erklärenden Satz
+„Zeiger darüber zeigt die Arbeit des Tages", von dem nur noch die ersten
+und letzten Wörter zu lesen sind.
+
+**Gefunden beim Nachsehen zu E633**, nicht gesucht — und deshalb hier und
+nicht im Bogen: die Ursache ist der 3D-Stapel (`--i` schiebt jede Platte
+um 70 px in die Tiefe und 84 px nach unten), nicht die Farbe, die E633
+angefasst hat.
+
+**Was zu klären ist:** ob der Stapel eine eigene Höhe bekommt, ob das
+Fenster mitwächst, oder ob die Platten bei vielen Tagen flacher gestapelt
+werden. Mit elf Tagen fällt es auf; mit dreissig wird der Satz darunter
+unlesbar.
+## L197 · Zwei Zehntel lang ist die Zählpille nicht zu treffen — 19. September 2026
+
+Der Auftritt der Ordnerkarte aus E537 malt die Zählpille mit
+`transform:scale(0)` und einer Verzögerung von 0,2 s, gehalten durch
+`animation-fill-mode:both` (`bausteine.css:8764`). In diesen zwei Zehnteln
+ist die Pille **0 × 0 Punkte gross** — nicht nur unsichtbar, sondern ohne
+Trefferfläche. Die Suchzeile daneben beginnt bei `width:30px` hinter
+`overflow:hidden` (`bausteine.css:8793`), ihr Eingabefeld ist dabei auf
+etwa null Punkte gequetscht.
+
+**Gefunden nicht am Bild, sondern am Prüflauf:** `test432` mass im selben
+Tick wie das Aufklappen und meldete „verdeckt", wo nichts verdeckte. Der
+Lauf wartet jetzt den Auftritt ab (E635) — die Lücke im Produkt bleibt
+davon unberührt und steht deshalb hier.
+
+**Wie schwer es wiegt.** Die Pille trägt `role="status"` und ist kein
+Bedienelement, §37 greift für sie nicht. Die Suchzeile ist ein `<label>`,
+und wer die Karte gerade erst aufgeklappt hat, tippt selten in derselben
+Fünftelsekunde hinein. Es ist eine dünne Stelle, kein Fehler.
+
+**Was zu klären ist:** ob der Auftritt statt `width` und `transform:scale(0)`
+mit `clip-path` und `opacity` gemalt wird. Dann stimmt die Trefferfläche ab
+dem ersten Bild, das Auge sieht dasselbe, und ein Prüflauf müsste gar nicht
+warten. Das wäre die bessere Lösung, aber sie ändert Redurs Auftritt, und
+das ist seine Entscheidung.
+
+## L198 · Ein Gekritzel wird am GEGLÄTTETEN Weg gemessen — 19. September 2026
+
+`istKritzel` (`src/bereiche/pdf/marken.ts:2606`) entscheidet über die Frage
+„ist dieser Zug ein Radiergekritzel oder ein Strich?" an der **Weglänge**:
+sie muss mindestens das 2,2-fache der Kastendiagonale betragen. Gemessen
+wird der Weg, der nach dem Glätter übrigbleibt.
+
+Seit E504 rechnet der Glätter in **Zeit** statt je Messpunkt
+(`src/core/ink/stroke.ts:286`). Damit hängt die geglättete Weglänge an der
+Meldefrequenz des Eingabegeräts: je dichter die Punkte zeitlich liegen,
+desto stärker wird gedämpft. Nachgerechnet für den schrägen Zickzack aus
+`test449`:
+
+```txt
+dt = 1 ms  (1000 Hz, nur ein Prüflauf)   Weg 1037 gegen Schwelle 1262  ✗
+dt = 4 ms  (240 Hz)                      Weg 1520 gegen Schwelle 1286  ✓
+dt = 8 ms  (120 Hz)                      Weg 1648 gegen Schwelle 1292  ✓
+dt = 16 ms (60 Hz)                       Weg 1357 gegen Schwelle 1279  ✓
+```
+
+**Kein Gerät erreicht heute den Auslöser** — 1000 Hz bei diesem Punktabstand
+wären rund 9500 Punkte je Sekunde. Und die Fehlrichtung ist die sichere: wer
+durchfällt, radiert **nicht**, sondern hinterlässt einen sichtbaren Strich,
+den ein Zurück wegnimmt. Der gefährliche Fall aus E476 — eine Marke ist weg,
+die nie überquert wurde — kann daraus nicht entstehen.
+
+**Aber bei 60 Hz beträgt die Reserve nur sechs Prozent.** Wer den Glätter das
+nächste Mal anfasst, verschiebt damit unbemerkt, ab wann ein Gekritzel eines
+ist.
+
+**Der Prüflauf misst inzwischen wie ein Gerät** (E636, `takt: 8` = 125 Hz).
+Damit ist der Lauf ehrlich — die Frage am Produkt bleibt offen und steht
+deshalb hier.
+
+**Was zu klären ist:** ob `istKritzel` am **rohen** Weg messen sollte statt
+am geglätteten. Der rohe Weg ist von der Meldefrequenz unabhängig; die
+Glättung ist eine Frage des Aussehens, nicht der Absicht. Das wäre ein
+Eingriff in eine Funktion, die Daten löscht, und gehört deshalb in einen
+eigenen Bogen mit eigener Gegenprobe (§30).
+
+## L199 · „Alles einpassen" lässt den linken Rand draussen — 19. September 2026
+
+Auf dem Bild vom 19. September (`bilder.mts gedankenkarte`, hell und dunkel
+gleichermassen) steht der Massstab auf **72 %** — die Karte wurde also
+eingepasst — und trotzdem ist der linke Knoten angeschnitten: von
+„Schutzklassen I bis III" fehlt das S, rechts bleibt dagegen ein Streifen
+frei.
+
+**Gefunden beim Nachsehen zu E637**, nicht gesucht.
+
+Die Rechnung in `einpassen` (`gedankenkarte.ts:1251`) sieht richtig aus: der
+Kasten kommt aus `maxX - minX + RAND * 2`, und `maxX` nimmt `o.x + m.w`, also
+die Breite der Knoten mit. Dass die Karte trotzdem links übersteht, heisst
+also: entweder misst `mass(id)` beim ersten Einpassen etwas anderes als
+später — Schrift noch nicht geladen, Umbruch noch nicht entschieden —, oder
+die Verschiebung `karte.sicht.x` und der Kasten rechnen mit verschiedenen
+Ursprüngen.
+
+**Nicht geraten, sondern gemessen werden muss:** `plan.breite`, `buehne`-Breite
+und `karte.sicht.x` zum Zeitpunkt des ersten Einpassens gegen dieselben Werte
+nach einem Druck auf ⤢. Stimmen die zweiten, ist es die Messung zum falschen
+Zeitpunkt; stimmen beide, ist es der Ursprung. Erst danach die Reparatur
+(§36, §55.2).
+
+**Wie schwer es wiegt:** man kann die Karte schieben, es geht also nichts
+verloren. Aber der erste Blick auf eine Gedankenkarte ist der, für den ⤢
+gebaut wurde, und ein angeschnittenes Wort im ersten Blick sieht aus wie ein
+Fehler — weil es einer ist.
+
+## L200 · Die vier Zahlen aus §31 stehen jetzt im Aufklapper — 19. September 2026
+
+§31 des Auftrags beschreibt das Telefonbild wörtlich so:
+
+```txt
+    18 Karten fällig
+    5 neue
+    2 Fehler
+
+    [ Lernen starten ]
+```
+
+Seit Redurs Umbau vom **6. September** (`4d3748e`, „Was ich geändert habe")
+stehen diese vier Zahlen nicht mehr auf dem Startbild, sondern in einem
+zugeklappten `<details class="lw-insights">` namens „Lernübersicht &
+Fortschritt". Der Umbau hat dazu einen eigenen Satz im Quelltext
+(`lernwelt.ts:1416`):
+
+> Eine klare Startfolge: Dokument öffnen, Lernrunde, dann der Tagesplan.
+> Auswertungen bleiben vollständig über native Details erreichbar.
+
+**Das ist keine Lücke, solange Redur es so will** — und einiges spricht
+dafür: die Zahl, um die es beim Öffnen geht, steht weiterhin gross auf der
+Karte mit dem Knopf („5 Karten für heute"), und vier Kacheln über dem
+Startknopf waren genau das, was E151 einmal unter die Falz gedrückt hat.
+
+**Offen ist nur, ob §31 damit als erfüllt gilt.** `doku/AUFTRAG-STAND.md`
+stand dafür bis heute auf ✅ und nannte einen Knopfnamen, den es seit dem
+6. September nicht mehr gibt; jetzt steht dort ◐ und dieser Verweis.
+
+**Was zu entscheiden ist (Redur):** entweder §31 gilt als erfüllt, weil die
+Zahl des Tages oben steht und die Aufschlüsselung einen Griff entfernt ist —
+dann wird die Zeile in `AUFTRAG-STAND.md` wieder ✅ und diese Lücke
+GESCHLOSSEN. Oder die vier gehören aufs Startbild, dann wandert `.lw-metrics`
+aus dem `<details>` heraus und wird in der `order`-Leiter mit aufgeführt.
+Beides ist in einer Sitzung gemacht; die Frage ist, was er sehen will.
+
+## L201 · Der Hauptknopf der Lernwelt ist schwarz statt violett — 19. September 2026
+
+Auf dem Telefonbild vom 19. September (`bilder.mts heute handy`) sieht
+„Lernen starten →" aus wie der Nebenknopf „Lernplan ansehen" darunter: fast
+schwarz, mit dünnem Rand. Der Knopf daneben im Dokumentenstudio
+(„Dokumente öffnen") ist dagegen leuchtend violett.
+
+**Gemessen** im Browser, nicht geschätzt:
+
+```txt
+Lernen starten →    background-image: none          background-color: rgb(16,16,16)
+Dokumente öffnen    background-image: linear-gradient(rgb(109,74,255), …)
+--accent            #6d4aff
+--haupt-flaeche     linear-gradient(180deg, #6d4aff, color-mix(…))
+```
+
+Die Tokens sind also da und richtig. Von den Regeln, die auf den Knopf
+passen, ist die letzte diese (`bausteine.css`):
+
+```css
+.lernwelt button.is-primary.ru-funkel{background:var(--ru-funkel-farbe)}
+```
+
+Der Funkel-Schmuck legt seine eigene Fläche über die Hauptfläche. Ob
+`--ru-funkel-farbe` dabei zu dunkel ist oder gar nicht aufgelöst wird, ist
+**noch nicht gemessen** — das ist der erste Schritt vor jeder Reparatur (§36).
+
+**Warum es zählt:** §38 verlangt, dass Information nicht nur über Farbe
+läuft — hier läuft sie über *gar nichts*: Haupt- und Nebenknopf sind optisch
+gleich, und der Nebenknopf steht darunter, also am Daumen. Wer schnell tippt,
+öffnet den Lernplan statt zu lernen.
+
+## L202 · Am Telefon rollt die Werkzeugleiste, statt aufzuklappen — 20. September 2026
+
+GoodNotes zeigt am aktiven Werkzeug ein kleines Aufklapp-Zeichen; dahinter
+liegen seine Einstellungen. Redion braucht das am **Rechner** nicht — dort
+stehen sie ohnehin in der Zeile darunter, ohne einen Klick.
+
+**Am Telefon ist es anders.** Gemessen bei E396 (4. September, 390 × 844, im
+Dokumentmodus mit einem A4-Blatt):
+
+```txt
+dreizehn Werkzeuge, alle 44 px hoch (§37 stimmt)
+Leiste 368 px breit, Inhalt 636 px
+sieben Werkzeuge stehen im Bild, sechs erst nach einem Wisch
+```
+
+Dazu kommt das Zubehör des gewählten Werkzeugs in derselben rollenden Zeile.
+Wer den Stift einstellen will, wischt — und wer wischt, verliert die Stelle,
+an der er war. E356 hat das entschärft („die Leiste rollt zum Werkzeug"),
+aber nicht gelöst.
+
+**Was zu klären ist:** ob das Zubehör am Telefon aus der Zeile herausgeht und
+als Blatt von unten kommt, angestossen vom Werkzeug selbst — dann trüge das
+aktive Werkzeug mit Recht ein Aufklapp-Zeichen, und die Zeile hielte nur noch
+die dreizehn. Das ist ein eigener Bogen mit eigener Messung: er ändert, wo
+jede Einstellung wohnt, und Redur zeichnet auf dem Telefon.
+
+**Was es NICHT sein darf:** das Aufklapp-Zeichen ohne das Blatt. Ein Zeichen,
+das etwas verspricht, das schon offen daneben steht, ist Zierde — und das
+Design-System nennt es beim Namen: *„placeholder controls presented as
+complete features."*
+
+## L203 · Ob „keine Durchsicht" wirkt, ist ungemessen — 20. September 2026
+
+`bausteine.css` hat seit E639 eine Regel für `prefers-reduced-transparency`:
+die untere Leiste gibt ihr Glas ab, die Linse ihre Brechung, und an ihre
+Stelle tritt die volle Marke — damit der aktive Reiter markiert bleibt (§38).
+
+**Dass die Regel dasteht, ist geprüft. Dass sie wirkt, nicht.** Am
+20. September nachgemessen:
+
+```txt
+page.emulateMedia({ reducedTransparency: 'reduce' })   matches → false
+Start mit --force-prefers-reduced-transparency          matches → false
+```
+
+Der Chromium, den Playwright hier mitbringt, kennt das Merkmal nicht. Eine
+Zusage, die den Zustand nicht herstellen kann, den sie prüft, wäre immer rot —
+und das ist kein Wächter, sondern eine Dauerbeschwerde (§55.2). `test539` §6
+prüft deshalb die QUELLE: dass die Regel da ist und das Richtige sagt.
+
+**Was zu klären ist:** ob ein neuerer Chromium das Merkmal kennt. Dann wird
+§6 von einer Quellenprüfung zu einer echten Messung — und erst dann ist die
+Zusage „ohne Durchsicht bleibt die Auswahl sichtbar" belegt statt behauptet.
+
+Dasselbe gilt für die drei älteren Regeln derselben Art:
+`studio.css:233` (Menü, Finder, Auswahlleiste), `pdf-studio.css:107` (die
+Werkzeugleiste) und `bausteine.css:8467` (die Textur). Keine von ihnen ist je
+gegen eine Seite gemessen worden.
+
+## L204 · Die Auswahl fängt bei jedem Wechsel wieder bei null an — 20. September 2026
+
+Das Design-System verlangt für schnelle Wechsel zweierlei:
+
+> Preserve velocity during rapid changes and target the newest selection
+> instead of completing stale animations.
+
+**Die zweite Hälfte ist erfüllt.** Wer A → B → C tippt, sieht die neueste
+Wahl: beide Uhren werden gelöscht, nichts steht in einer Schlange, und im
+Studio wird die fliegende Fläche dort abgeholt, wo sie gerade ist (E640).
+
+**Die erste nicht.** Beide Stellen bewegen sich mit einem CSS-Übergang, und
+ein Übergang kennt keine Geschwindigkeit: wird er mitten im Lauf auf ein
+neues Ziel gesetzt, beginnt er wieder bei Tempo null. Auf dem Bildschirm
+sieht das aus, als bliebe die Fläche kurz stehen, bevor sie weiterzieht —
+bei ruhigem Tippen unsichtbar, bei schnellem spürbar.
+
+**Was es bräuchte:** die Web Animations API. `element.animate()` gibt die
+laufende Bewegung als Objekt zurück; ihre aktuelle Geschwindigkeit lässt sich
+auslesen und als Anfangswert der nächsten mitgeben. Betroffen wären
+`pilleSchieben` (`seitenleiste.ts`) und `wahlFliegen` (`marken.ts`) — zwei
+Stellen, dieselbe Rechnung, also gehört sie in EINEN Helfer (§8).
+
+**Warum es nicht nebenbei geht:** die Geschwindigkeit muss gemessen werden,
+nicht geschätzt, und eine Feder ohne Messung ist eine Zahl, die jemand
+hingeschrieben hat. Dazu kommt `prefers-reduced-motion`, das bei
+`element.animate()` von Hand behandelt werden muss — CSS nimmt einem das ab,
+JavaScript nicht. Eigener Bogen, eigene Gegenprobe.
+
+---
+
+## L205 · 382 Prüfläufe vergeben ihren Port von Hand — 20. September 2026
+
+Jeder Prüflauf startet einen eigenen kleinen Webserver. **382 von 481**
+schreiben die Portnummer als feste Zahl in die Datei:
+
+```ts
+const PORT = 9645;
+```
+
+Zwei Läufe mit derselben Zahl können nie nebeneinander laufen — und genau
+das ist an zwei Tagen zweimal passiert (E405 am 4. September, E643 am
+20. September, zusammen elf Kollisionen). Der Wächter `test400` findet sie
+jetzt zuverlässig, aber er behebt nur die Folge: **die Ursache ist, dass die
+Zahl von Hand vergeben wird.**
+
+**Sechs Läufe machen es schon richtig** — `test492`, `test524`, `test527`,
+`test528`, `test529`, `test538`:
+
+```ts
+await new Promise<void>(done => server.listen(0, '127.0.0.1', done));
+const port = (server.address() as { port: number }).port;
+```
+
+`listen(0)` heisst „such du dir einen freien". Zwei solche Läufe können sich
+**gar nicht** in die Quere kommen, und niemand muss eine Liste führen.
+
+**Warum es nicht in diesem Bogen erledigt ist:** 382 Dateien anzufassen,
+während achtzehn Prüfläufe rot sind, ist die falsche Reihenfolge (§46). Und
+es ist nicht ganz mechanisch: jeder Lauf baut seine Adressen aus `PORT`, und
+wer die Konstante erst nach dem `listen` kennt, muss die Reihenfolge im Kopf
+der Datei umstellen. Bei 382 Dateien ist ein Fehler darin teurer als die
+Kollisionen, die er verhindern soll.
+
+**Der kleine Schritt, der jederzeit geht:** jeder NEUE Lauf nimmt `listen(0)`.
+Dann schrumpft die Liste von selbst, statt zu wachsen. Das steht seit E643
+auch im Kommentar von `test400`, wo es gelesen wird.

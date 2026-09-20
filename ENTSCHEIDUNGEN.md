@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-606 Entscheidungen, E1 bis E628 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+623 Entscheidungen, E1 bis E645 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -671,6 +671,23 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E626** — Bereiche bleiben getrennt, und jetzt weiss es jemand: §5 Regel 1 hatte seit ihrer Niederschrift keinen Wächter (L150), und der Satz „der Wächter dafür ist test87" stimmte nicht. Gemessen sind es **523 Querverweise in 63 Bereichspaaren** — L150s „es gibt keinen Querverweis" war falsch. Verschoben wird nichts (die grossen Namen sind die Kerne ihrer Bereiche, nicht gemeinsame Helfer); stattdessen ein Verzeichnis, das nur schrumpfen darf, und ein Lauf, der jeden NEUEN Verweis rot macht — auch den über `(window as any)` (`test537`)
 * **E627** — Ein Grund gilt nur, wo der Lauf ihn sucht: `test402` war rot, obwohl die Trefffläche der Gedankenkarte ihre 44 px längst hatte — ihr Beleg stand HINTER der Regel statt darüber, ausserhalb des Fensters, das der Lauf liest. Der Kommentar zieht um; der zweite Treffer (`#ai .ki-quellschalter`, 32 px) war ein echter und bekommt seinen geschriebenen Grund (§37)
 * **E628** — Die Gedankenkarte bekommt Griffe, Verbindungen, Formen und Vorlagen (Redurs Bestellung): vier Griffe am gewählten Thema, die tippend ein Thema anlegen und ziehend eine freie Verbindung ziehen; Verbindungen mit Spitze, gestrichelt gegen den Ast, wählbar und löschbar; sechs Formen, bei denen `rund` nichts in die Daten schreibt und eine unbekannte Form STEHEN BLEIBT (§18); sechs fertige Vorlagen, die vor dem Überschreiben fragen — aber nur, wenn etwas auf dem Spiel steht. Vier Fehler fand erst das Hinsehen, darunter eine Verbindung, die als 181 × 0 px grosse Linie quer durch die Wurzel lief (`test538`, 53 Zusicherungen)
+* **E629** — Ein Name mit Typangabe ist derselbe Name: `test537` erkannte `const X: Typ = …` nicht als Anmeldung und meldete deshalb die EIGENE Formenliste der Gedankenkarte als Griff in den PDF-Bereich. Ein Wächter, der eine Schreibweise nicht kennt, erfindet eine Kopplung — schlimmer als eine übersehene, weil jemand danach eine Arbeit macht, die es nicht gibt. Mit der Berichtigung bekommen 59 Namen erstmals einen Besitzer und zehn verlieren ihn (L193)
+* **E630** — Kein Lauf teilt mehr seinen Port: vier doppelt vergebene Zahlen aufgelöst (die jüngeren Läufe weichen, weil die älteren mit ihrer Zahl in der Doku stehen). Dazu zwei Sätze in §30, die gefehlt haben: im Hauptbaum wird kein Prüflauf gestartet, während ein voller Lauf im Arbeitsbaum läuft — und ein Arbeitsbaum ist nicht der Hauptbaum, weil dort `.git` eine Datei und `node_modules` ein Symlink ist
+* **E631** — Der Quelltext wird als Code gelesen, nicht als Prosa: `nurCode` lag zweimal wortgleich im Baum (mit dem Satz „wiederverwenden, nicht nachbauen" über der zweiten Kopie) und zog jetzt nach `pruefungen/hilfe/quelltext.mts` um. `test444` und `test483` klagten je einen SATZ an. Und die Gegenprobe hat die erste Reparatur widerlegt: wer die Zeichenketten mitleert, macht einen Wächter blind, der nach einer Zeichenkette sucht
+* **E632** — Die Inventur zieht nach, und die Prüfung lernt die vierte Schreibweise: `doku/BLOCKTYPEN.md` fehlte die Gedankenkarte seit E607 (drei Tage, 78 gegen 79). `test225` dagegen hatte recht zu melden und unrecht im Grund: die sechs Verweise stimmen, nur drucken die jüngeren Läufe ihre Abschnitte als `§1 Titel` ohne den Mittelpunkt
+* **E633** — Nur Tokens, die es gibt: `--bg-2` (viermal, seit E514 als falsch benannt bekannt) wird `--bg-hover`, `var(--accent, #2f7ed8)` verliert den festen Hellwert, `--rmo-knauf-grund` weicht dem Token, auf das es ohnehin immer zurückfiel. Dazu die Falle `.pf-karte` — ein Lichtschlitz nur über `:hover` — und ein vierter Sammler-Fehler: `--i` galt als erfunden, weil der Ausdruck in `style="--i:…;--dick:…"` nur das LETZTE Token fand
+* **E634** — Zwei Zusagen, die den Stand von gestern halten: `test285` verlangte GENAU EINE gezeichnete Seite, seit dem Lesemass (E464) sind es zwei — denselben Fund hat `test395` §7 am 7. September gemacht (E467) und wurde nachgezogen, dieser Punkt nicht. `test442` verlangte die Miniatur ohne Nummer, die seit E547 davorsteht und die `test503` §3 ausdrücklich einfordert. Beide Male hätte eine Reparatur AM PRODUKT den Schwesterlauf rot gemacht
+* **E635** — Wer im ersten Bild misst, misst das Anfangsbild: `test432` mass im selben Tick wie das Aufklappen — seit E537 haben Zählpille und Suchzeile einen Auftritt mit `animation-fill-mode:both`, und `both` hält sie bis dahin auf `scale(0)` und `width:30px`. Nicht verdeckt, sondern noch nicht da. Dazu `test435`, der die Deckung `.85` aus E462 festhielt, obwohl E537 sie auf `.4` gesetzt hat — und der in §6 ausgerechnet die ÜBERSCHRIEBENE Regel als die gültige bescheinigte
+* **E636** — Ein Prüflauf mit tausend Hertz: `test449` feuerte seine Zeigerpunkte in einer Schleife, also mit `dt = 1 ms`. Der Glätter rechnet seit E504 in ZEIT — bei 1 ms dämpft er doppelt so stark wie bei einem echten Stift, der schräge Zickzack schrumpfte von 1716 auf 1037 Weg und fiel unter die Schwelle von `istKritzel`. Der Zug war damit kein Gekritzel mehr, es wurde NICHTS gelöscht — und die zentrale Zusage über die zwei unbeteiligten Marken war grün, weil gar nichts geschah. Der Lauf taktet jetzt mit 8 ms (125 Hz)
+* **E637** — Erst nachsehen, dann eintragen: die sechs Marken-Decken waren gewachsen, und Redur hat entschieden, erst die Stellen zu suchen. Alle zehn liegen in `werkzeuge.css`, alle aus E607 und E628. Sieben haben eine andere Aufgabe als ihre gleichnamige Marke; zwei Polster bekommen `--space-5`, und die rohe 46 war eine Abschrift von `.wb-massstab`, die dabei `tabular-nums` verloren hatte — beide Massstäbe teilen sich jetzt eine Regel. Zwei Zahlen hinunter, zwei hinauf, jede einzeln begründet in `messungen.md`
+* **E638** — Tot war nicht die Regel, sondern das, worauf sie zeigte: die fünf `order`-Zeilen aus E151 standen Zeichen für Zeichen unverändert da — aber drei ihrer vier Ziele hat Redurs Umbau vom 6. September abgeschafft. Übrig blieb `.lw-hero{order:4}` gegen `*{order:5}`, und damit stand die Begrüssung wieder ganz oben und „Lernen starten" bei y = 1115 in einem 844 px hohen Bild. Eine Regel, deren Selektor ins Leere greift, sieht im Quelltext aus wie am ersten Tag. Dazu drei Messfehler im Lauf selbst, darunter ein Schmuck-`<span>`, das vor jedem Namen stand
+* **E639** — Die Pille wird eine Linse: Redurs Video (Apple TV, iOS 26) zeigt keine Fläche, die springt, sondern eine, die BRICHT — sie vergrössert, zieht die Zeichen mit, wirft einen Farbsaum und dehnt sich in Laufrichtung. Redion hatte die wandernde Pille seit E236 schon; sie hat Glas bekommen. Die eine Zeile, an der alles hing: sie lag auf `z-index:0`, UNTER den Knöpfen — eine Linse kann aber nur brechen, was hinter ihr liegt. Dazu der Fund von `test114` §17, dessen Kommentar ein halbes Jahr vorher aufgeschrieben hatte, wann er scharf wird
+* **E640** — Der Grund sitzt, der Wechsel fliegt: das Design-System verlangt EINE Fläche, die sich bewegt, statt zweier, die auf- und abtauchen — Beispiel dort wörtlich „Pen → Marker → Eraser". Der erste Entwurf übernahm die Bauform von `#ho-pille`: eine dauerhafte Fläche, die wandert. `test478` hat sie widerlegt — 55 px neben ihrem Werkzeug, Überdeckung null. Drei Formeln und fünf Auslöser später stand immer noch derselbe Wert da; ein Zähler im Element zeigte, dass die Rechnung fünfmal gelaufen und jedes Mal ZU FRÜH war. Eine gespeicherte Stelle veraltet bei jedem Umbruch, jedem Rollen, jeder Breitenabfrage. Jetzt bleibt der Grund am Knopf, und nur der Wechsel bekommt eine kurzlebige Fläche in Bildschirmmassen
+* **E641** — Was das Design-System an der Linse auszusetzen hat: das am 20. September nachgereichte Regelwerk (`Redurbabat/UI-Kit`) urteilt auch über den Bogen von gestern, und neun von zehn klaren Verstössen stammen aus E639. Drei davon sind geändert: gedehnt wird nur noch zwischen NACHBARN (E639 dehnte um so stärker, je weiter der Sprung — das Gegenteil der Regel), der Deckel fällt von 1,85 auf 1,18, und die Ruhe-Brechung von 15 auf 8, damit die Schrift im Ruhezustand optisch still steht. Der vierte — ob über Schrift überhaupt gebrochen werden darf — gehört Redur
+* **E642** — Sechsundsiebzig Regeln, die nie zum Zug kamen: der erste volle Lauf seit PR #100 meldete 76 tote CSS-Erklärungen; dreizehn davon gab es gar nicht (`split(',')` zerriss die Kommas in `:is()` und erfand Wähler wie `#menueband)`), die übrigen 63 waren echt. Eine davon war eine Absicht, die nie wirkte: `motion.css` hatte die Übergangsliste der Kachel ersetzt und dabei `background` verloren — zehn Tage harter Flächenwechsel, den kein Auge meldete. Die letzten 35 sind die Bibliothek, die seit PR #56 zweimal gestaltet ist (§8): das Studio-Blatt gewinnt durchweg, also gehört ihm, was es setzt
+* **E643** — Der Wächter gegen Port-Kollisionen kannte nur eine Schreibweise: `test400` las `PORT = N` und war blind für `listen(9624, …)` — acht Läufe schreiben so, und sieben Ports waren dadurch doppelt vergeben, während der Wächter grün meldete. Zum vierten Mal an zwei Tagen ein Ausdruck, der eine gültige Schreibweise nicht kennt (E629, E631, E642) — und der erste, der dabei etwas ÜBERSAH statt etwas zu erfinden. Er prüft jetzt auch, dass er keinen Lauf übersieht, und `listen(0)` gilt als die bessere Antwort statt als fehlende Zahl
+* **E644** — Erst wiederherstellen, dann beobachten: die zuletzt gelesene PDF-Seite ging verloren, sobald zwischen dem Öffnen und dem Anrollen eine Fenstergrösse gemeldet wurde — `nachziehen()` las den Rollstand 0, schloss auf „Seite 1" und MERKTE das. Auf dem Telefon reicht dafür das Drehen. `test424` prüfte es schon, aber als Wettlauf: derselbe Durchgang lief mit ein paar Millisekunden mehr Arbeit grün. `test540` stellt das Rennen, statt es zu gewinnen
+* **E645** — Ein Wächter zählte das ganze Haus, gemeint war ein Zimmer: `test435` §3 zählte ALLE SVG-Filter der Seite und verlangte zwei — das war zufällig wahr, bis die Linse der unteren Leiste (E639) zwei eigene mitbrachte. Gezählt wird jetzt im Halter der Textur, und daneben steht die Frage, um die es E440 wirklich ging: teilen sich zwei Filter eine Kennung? Diese Zahl wächst nicht mit dem Programm mit
 
 ---
 
@@ -51273,3 +51290,1596 @@ Zusicherung misst jetzt VOR dem ersten Klick (§55.2).
 Zweimal stand dabei `noUnusedLocals` im Weg (§52.6): `if (false)` liess den
 Zweig nicht mehr bauen, weil zwei Konstanten damit unbenutzt waren. Eine
 Gegenprobe, die nicht baut, ist keine.
+
+---
+
+## E629 — Ein Name mit Typangabe ist derselbe Name
+
+**Entscheidung:** Der Namenskatalog in `test537` erkennt eine Anmeldung auch
+dann, wenn zwischen Name und `=` eine Typangabe steht.
+
+```txt
+vorher   /^[ \t]*(?:const|let|var)[ \t]+([A-Z]\w*)[ \t]*=/
+nachher  /^[ \t]*(?:const|let|var)[ \t]+([A-Z]\w*)[ \t]*(?::[^=\n]+)?=/
+```
+
+**Der Fund.** Einen Tag nach dem Bau meldete der Lauf:
+
+```txt
+✗ Kein Bereich fasst einen neuen anderen an
+    bereiche/bloecke → FORMEN (bereiche/pdf)
+```
+
+Die Gedankenkarte hatte aus E628 ihre **eigene** Formenliste bekommen:
+
+```ts
+const FORMEN: ReadonlyArray<readonly [string, string]> = [ … ]
+```
+
+Der Katalog las `const NAME =` und liess die Typangabe nicht zu. Damit galt
+die eigene Liste nicht als Anmeldung — und ihre Benutzung sah aus wie der
+Griff in eine gleichnamige Liste im PDF-Bereich.
+
+**Warum das schlimmer ist als eine übersehene Kopplung:** Eine übersehene
+kostet Wachsamkeit. Eine **erfundene** kostet Arbeit — jemand hätte
+angefangen, eine Kopplung aufzulösen, die es nie gab. Ein Wächter, der eine
+Schreibweise nicht kennt, ist nicht streng, sondern falsch.
+
+**Was es kostet.** 59 Namen bekommen zum ersten Mal einen Besitzer; zehn
+verlieren ihn, weil sie in mehreren Bereichen angemeldet sind. Das
+Verzeichnis fällt von 127/523 auf 125/517 — und zwei dieser Einträge sind
+**nicht verschwunden, sondern unsichtbar geworden** (`ki → AUSLOESER →
+datenbanken` und `wissen → ANSICHTEN → chronik`). Das steht im Kopf des
+Verzeichnisses, im Kopf des Laufs und als **L193**.
+
+**Die Alternative** wäre gewesen, die eigene Liste umzubenennen und den
+Ausdruck stehen zu lassen. Das hätte diesen einen Fall geheilt und den
+Fehler behalten: jede künftige typisierte Konstante hätte dieselbe falsche
+Meldung erzeugt.
+
+**Gegenprobe.** `Chronik.oeffne(0)` in `bereiche/bloecke` eingesetzt — der
+Lauf meldet 126 Paare gegen 125 und nennt das Paar beim Namen. Wieder
+entfernt, 17 von 17 grün.
+
+**Und ein eigener Fehler in derselben Stunde, weil er hierher gehört:** Die
+Sicherungskopie für diese Gegenprobe war ein `cp A || cp B`. Der erste
+Befehl gelang — und legte die FALSCHE Datei als Sicherung ab. Beim
+Zurückschreiben stand danach der Inhalt von `chronik.ts` in `blatt.ts`.
+Aufgefallen ist es am Typecheck (`Cannot find name 'Blatt'`), zurückgeholt
+aus dem letzten Commit. Ein Oder-Zweig, der eine Sicherung wählt, ist keine
+Sicherung: er sichert, was zuerst gelingt, nicht was gemeint war.
+
+---
+
+## E630 — Kein Lauf teilt mehr seinen Port
+
+**Entscheidung:** Die vier doppelt vergebenen Portzahlen sind aufgelöst; die
+**jüngeren** Läufe weichen.
+
+```txt
+test530  9530 → 9638      test525  9625 → 9640
+test531  9531 → 9639      test526  9626 → 9641
+```
+
+Warum die jüngeren: `test407` und `test408` stehen mit ihrer Zahl in
+ENTSCHEIDUNGEN.md und ERLEDIGTE-AUFGABEN.md. Ein Protokoll, dessen Zahl
+nicht mehr stimmt, ist schlechter als eine umgezogene Suite.
+
+**Der Anlass.** Der erste volle Lauf seit PR #100 meldete 17 von 48 Stücken
+rot. Vier davon waren einzeln **grün** — und der Kopf von `test400` nennt
+denselben Fall vom 4. September: „Ein Ergebnis, das aus dem falschen Grund
+rot ist, ist schlimmer als eines, das grün lügt."
+
+**Und zwei Sätze in §30, die gefehlt haben:**
+
+1. **Im Hauptbaum wird kein Prüflauf gestartet**, während ein voller Lauf im
+   Arbeitsbaum läuft. Genau das habe ich getan.
+2. **Ein Arbeitsbaum ist nicht der Hauptbaum.** Dort ist `.git` eine Datei
+   (52 Bytes) und `node_modules` ein Symlink. `test270` filtert Ordnermuster
+   mit `istOrdner` und meldete deshalb, beide gingen mit ins Netz —
+   `.assetsignore` schliesst sie korrekt aus. **Nachgemessen im Hauptbaum:
+   `test270` ist grün.** Von 17 nachgemessenen Läufen war er der einzige.
+
+---
+
+## E631 — Der Quelltext wird als Code gelesen, nicht als Prosa
+
+**Entscheidung:** `pruefungen/hilfe/quelltext.mts` ist die eine Stelle für
+das Lesen von Quelltext. Vier Wächter benutzen sie.
+
+```txt
+nurCode              Kommentare und Zeichenketten leer
+ohneSchablonen       zusätzlich der Inhalt der Backticks
+nurEchterCode        beides
+ohneKommentare       NUR die Kommentare, zeilentreu — Zeichenketten bleiben
+nurCodeZeilentreu    wie nurCode, aber jede Zeile bleibt ihre Zeile
+```
+
+**Der Anlass: drei erfundene Meldungen an einem Tag.**
+
+```txt
+test537   die eigene Formenliste der Gedankenkarte     (E629)
+test444   ein KOMMENTAR, der über Rechte spricht
+test483   ein Satz der CHRONIK über E525, eingebettet als Daten
+```
+
+Eine erfundene Meldung ist schlimmer als eine übersehene: die übersehene
+kostet Wachsamkeit, die erfundene kostet Arbeit an etwas, das es nicht gibt.
+Und drei davon in einem vollen Lauf erziehen dazu, Rot zu überlesen.
+
+**`nurCode` lag schon zweimal wortgleich im Baum** — und über der zweiten
+Kopie stand „wiederverwenden, nicht nachbauen (§8)". Eine Kopie mit diesem
+Satz darüber ist genau der Katalog, den §8 verbietet.
+
+### Was die Gegenprobe widerlegt hat
+
+Die erste Reparatur von `test444` nahm `nurCode`. Der Lauf wurde grün — und
+blieb grün, **als ein echter Verstoss danebenstand**:
+
+```ts
+const _gegenprobe = (page: any) => Konten.darf('bearbeiten', page);
+```
+
+Der Grund: dieser Lauf verlangt als erstes Argument ein Wort in
+Anführungszeichen, und `nurCode` macht aus `'bearbeiten'` ein `''`. Der
+Wächter fand nichts mehr — auch nichts Echtes. **Er war nicht repariert,
+er war blind.**
+
+Deshalb `ohneKommentare`: nur die Prosa heraus, die Zeichenketten bleiben.
+Wer nach einem Muster sucht, in dem eine Zeichenkette vorkommt, nimmt diese
+Fassung; wer nach einem Namen sucht, der auch in Prosa stehen kann, nimmt
+`nurCode`.
+
+**Zeilentreu**, weil `test444` die Zeilennummer meldet. Ein Entferner, der
+einen Blockkommentar durch ein Leerzeichen ersetzt, schiebt jede spätere
+Fundstelle um dessen Länge nach oben. Gemessen in der Gegenprobe: der
+Verstoss stand auf Zeile 330, gemeldet wurde 330.
+
+**Und `test483` sucht jetzt nach Verweisen statt nach Zeichenfolgen** —
+`src=`, `href=`, `url(`. Die Zusage meint den Browser, nicht den Text: er
+darf nicht in einen Ordner greifen, den die Einzeldatei nicht neben sich
+hat. Sonst macht jede künftige Chronikzeile, die einen Pfad zitiert, den
+Lauf rot.
+
+### Und der dritte Fall kam aus dieser Entscheidung selbst
+
+Kaum stand `test444` grün, war er wieder rot — mit einer neuen Fundstelle:
+
+```txt
+src/bereiche/chronik/daten.ts:3078 → page
+```
+
+`daten.ts` ist erzeugt und trägt die Chronik als **Daten**. Und die Chronik
+beschreibt seit einer Stunde diesen Fehlalarm, samt der Zeile, die ihn
+auslöste. Der Wächter klagte den Satz an, der von ihm handelt.
+
+`ohneKommentare` kann das nicht fangen — die Zeichenketten müssen ja stehen
+bleiben. Also wird nicht der Text verändert, sondern die **Fundstelle
+geprüft**: `inZeichenkette(zeile, stelle)` zählt die unmaskierten
+Anführungszeichen links davon; eine ungerade Zahl heisst „mittendrin". Ein
+Aufruf im Code steht nicht in einem String, ein Zitat in erzeugten Daten
+schon.
+
+Dreimal an einem Tag derselbe Fehler, und der dritte entstand beim
+Aufschreiben des zweiten. Das ist kein Zufall, sondern die Eigenschaft
+dieser Sorte Wächter: **sie sehen den Unterschied zwischen einer Sache und
+dem Reden über die Sache nicht.**
+
+**Gemessen.** `test87` 173/173 · `test537` 17/17 · `test444` 13/13 ·
+`test483` 25/25. Drei Gegenproben einzeln rot gesehen und zurückgenommen —
+die zu `test444` zweimal, vor und nach der zweiten Reparatur.
+
+---
+
+## E632 — Die Inventur zieht nach, und die Prüfung lernt die vierte Schreibweise
+
+Zwei rote Läufe, zwei verschiedene Ursachen — und genau darin liegt der
+Punkt dieses Eintrags: **der eine war ein Fehler in der Doku, der andere
+einer in der Prüfung.** Wer beide gleich behandelt, verdirbt einen davon.
+
+### `test164` — die Doku hatte unrecht
+
+`doku/BLOCKTYPEN.md` führte 78 Blockarten, das Register 79. Es fehlte
+`mindmap`, die Gedankenkarte aus **E607** vom 16. September. Der Lauf war
+drei Tage rot, und niemand hat ihn in dieser Zeit gefahren — der Bogen, der
+die Blockart baute, fuhr `test529` und seine Nachbarn, nicht die Inventur.
+
+Nachgetragen: `mindmap` in der Gruppe Wissen (6 → 7), Stand 78 → 79.
+
+**Was dabei auffiel und hier stehen bleibt:** Die Datei behauptet in ihrem
+Kopf, sie sei „aus dem laufenden Register erzeugt". **Einen Erzeuger gibt es
+nicht** — sie wird von Hand gepflegt. Die Behauptung ist der Grund, warum
+sie driften konnte, ohne dass jemand stutzte. Das ist eine eigene Arbeit und
+steht als Lücke, nicht als Nebensatz.
+
+### `test225` — die Prüfung hatte unrecht
+
+Sechs Verweise galten als „ins Leere zeigend":
+
+```txt
+ENTSCHEIDUNGEN.md: test534 §1 · §2 · §3 · test535 §4 · test536 §6 · test506 §1
+```
+
+**Alle sechs gibt es.** `hatAbschnitt` kannte drei Schreibweisen, und alle
+drei verlangen ein „ · " hinter der Zahl. Die jüngeren Läufe drucken ihre
+Abschnitte aber als `console.log('\n§1 Vier Plätze …')` — mit dem
+Paragraphenzeichen und ohne Mittelpunkt.
+
+Entschieden wird das wie schon einmal bei `test67` (**E168**): **berichtigt
+wird die Prüfung, nicht die Doku** — die Verweise stimmten. Eine Prüfung,
+die aus dem falschen Grund rot wird, ist so wenig wert wie eine, die aus
+dem falschen Grund grün ist.
+
+Das Leerzeichen hinter der Zahl im neuen Muster ist keine Zierde: ohne es
+erfüllte ein gedrucktes `§12` auch einen Verweis auf `§1`.
+
+**Gegenprobe:** einen Verweis auf einen Abschnitt siebenundsiebzig
+eingesetzt, den es in jenem Lauf nicht gibt — gemeldet, mit Namen. Wieder
+entfernt, 11/11 grün. Und die eingebaute Gegenrichtung (jener Lauf hat
+einen dritten und einen achten Abschnitt, aber keinen neunundneunzigsten)
+bleibt grün: der neue Ausdruck macht den Lauf nicht weich.
+
+**Und die Gegenprobe musste dafür umgeschrieben werden** — beim ersten Mal
+stand sie hier mit Namen und Nummer, und `test225` meldete prompt einen
+Verweis ins Leere. Es ist dieselbe Falle wie bei `test444` am selben Tag
+(P64): **wer einen Fehlalarm dokumentiert, schreibt die auslösende Zeile in
+den Bestand.** Bei Wächtern, die Text lesen, ist das Aufschreiben selbst
+eine Änderung am geprüften Stoff.
+
+**Gemessen.** `test164` 6/6 · `test225` 11/11.
+
+---
+
+## E633 — Nur Tokens, die es gibt
+
+Bogen 4. Vier Befunde in drei Läufen, und wieder war einer davon der
+Wächter selbst.
+
+### `--bg-2` gibt es nicht — und das steht seit E514 in derselben Datei
+
+Viermal stand `background:var(--bg-2)` in den `.chr-*`-Regeln. Das Token
+ist nie definiert worden; die Fläche blieb also **ganz aus**, und niemand
+hat es gemerkt, weil ein ungültiges `var()` die Eigenschaft still
+verwirft. `bausteine.css:7686` sagt sogar, wie es heisst:
+
+> `--gefahr` und `--bg-hover`, nicht `--danger` und `--bg-2`
+
+Jetzt `--bg-hover`. **Im Bild nachgesehen** (§55.3): die vier Kacheln der
+Chronik-Übersicht haben wieder eine Fläche und heben sich vom Blatt ab.
+CLAUDE.md §39 nennt genau diesen Fall — „`--akzent`, `--flaeche-2` und
+`--bg-2` wurden je zweimal erfunden und waren je zweimal unsichtbar".
+
+### Ein Rückfall, der immer greift, ist kein Rückfall
+
+`var(--accent, #2f7ed8)` an drei Stellen: `--accent` ist in `hell.css` und
+`dunkel.css` definiert, der feste Hellwert konnte also nie zum Zug kommen.
+Er ist toter Text und verspricht eine Sicherheit, die er nicht gibt —
+schlimmer, im Dunkelmodus wäre er die falsche Farbe, falls er je griffe.
+
+Dasselbe bei `--rmo-knauf-grund`: das Token gibt es nirgends, der Rückfall
+`var(--bg-card)` griff **immer**. Jetzt steht `var(--bg-card)` direkt da.
+
+### Die Falle `.pf-karte`
+
+Ein Lichtschlitz, sichtbar nur über `:hover` — auf einem Tastgerät also gar
+nicht, mit der Tastatur auch nicht. `test303` nennt so etwas eine Falle und
+hat neun davon gefunden, als er entstand. Diese hier ist die zehnte, und
+die Lösung stand zwölf Zeilen höher: `.els-kachel:is(:hover,
+:focus-visible)`. Dieselbe Form bekommt die Karte.
+
+### Und der vierte Sammler-Fehler des Tages
+
+`--i` galt als erfunden. Gesetzt wird es in `chronik.ts`:
+
+```ts
+`<div class="chr-platte" style="--i:${i};--dick:${dick}px">`
+```
+
+Der Ausdruck im Lauf las `style="(?:[^"]*;)?\s*(--[\w-]+)\s*:` — gierig,
+und deshalb fand er nur das **letzte** Token vor einem Semikolon. Aus dem
+Attribut oben kam allein `--dick` an. Jetzt wird erst das ganze Attribut
+genommen und dann jedes Token darin.
+
+Das ist der vierte Wächter an einem Tag, der etwas gemeldet hat, das es
+nicht gab (E629, E631 zweimal, jetzt E633). Sie haben nichts gemeinsam
+ausser der Form: **ein Ausdruck, der eine gültige Schreibweise nicht
+kennt.**
+
+**Gemessen.** `test401` 4/4 · `test412` 27/27 · `test303` 16/16.
+---
+
+## E634 — Zwei Zusagen, die den Stand von gestern halten
+
+Bogen 5 der roten Läufe. Zwei rote Punkte, ein gemeinsamer Befund: **nicht
+das Produkt ist gewandert, die Erwartung ist stehengeblieben.** In beiden
+Fällen hält ein Schwesterlauf längst das Gegenteil fest — wer hier „das
+Produkt repariert" hätte, hätte jenen Lauf rot gemacht.
+
+### `test285` — genau eine Seite, seit dem Lesemass sind es zwei
+
+Der Punkt hiess „Gezeichnet ist aber nur die erste — der Rest wartet auf den
+Blick" und verlangte die Zahl **1**. Gemessen werden **2**.
+
+Gewandert ist nicht die Vorausschau, sondern die Blatthöhe. `nachziehen`
+zeichnet seit je, was in `scrollTop − clientHeight` bis
+`scrollTop + 2 × clientHeight` fällt (`document-mode.ts:2981`). Seit E464 ist
+ein Blatt auf 980 px gedeckelt (`--pdf-paper-max`), eine A4-Seite also rund
+1387 px hoch; die zweite Bühne beginnt bei etwa 1441 und liegt damit im
+Fenster. Bei achtzig Seiten sind es weiterhin zwei — die Zusage von E299
+(„was man nicht sieht, wird nicht gezeichnet") ist unberührt.
+
+**Genau diesen Fund gab es schon.** E467 hat ihn am 7. September gemacht und
+`test395` §7 nachgezogen; dort steht seitdem wörtlich „nur die in Reichweite
+(eins oder zwei)". `test285` stellt dieselbe Frage und wurde übersehen. Er
+sagt jetzt dasselbe.
+
+**Die obere Schranke bleibt bei 2**, und das ist der ganze Punkt: `>= 1` allein
+kann nicht mehr rot werden, auch nicht, wenn eines Tages alle vier gezeichnet
+werden. Ein Wächter, der nicht rot werden kann, ist keiner (§55.2).
+
+### `test442` — die Miniatur ohne Nummer, die es seit E547 nicht mehr gibt
+
+Der Punkt verglich den Text der Miniatur auf Gleichheit mit „Bild · quer.png".
+Dastehen tut „2 · Bild · quer.png".
+
+Die Nummer ist **gewollt** und steht in E547 Punkt 3: „bei 27 Folien zählt
+niemand Kästchen ab". `test503` §3 verlangt sie ausdrücklich — und warnt in
+seinem eigenen Kommentar vor genau der Falle, in die `test442` getappt ist:
+
+> AUF „ENTHÄLT", NICHT AUF „IST GLEICH". Der erste Entwurf verglich auf
+> Gleichheit — und mit der Nummer davor heisst die Zeile „1 · A4-Blatt", also
+> nicht gleich, also grün.
+
+`test442` vergleicht weiter auf Gleichheit, aber auf den **ganzen** Text
+mitsamt Nummer. Der Name ohne Nummer wird eine Zeile höher geprüft
+(`sourceLabel`) und steht unverändert im `aria-label` des Knopfes
+(`document-mode.ts:1105`) — für Vorleser gibt es die Nummer also gar nicht.
+
+### Was die Alternative gewesen wäre
+
+Die Nummer aus `document-mode.ts:1146` wieder entfernen und die Vorausschau
+in `nachziehen` von zwei Bildhöhen auf eine verkleinern. Beides hätte den
+roten Punkt grün gemacht **und je einen anderen Lauf rot** — test503 §3 und,
+beim Rollen, test285s eigene Gegenprobe „Beim Rollen kommen weitere Seiten
+dazu". Das ist der Preis, den diese Sorte Reparatur immer hat: sie
+verschiebt die Farbe, statt sie wegzunehmen.
+
+### Was es kostet
+
+Zwei Läufe halten ab jetzt einen Stand, den zwei andere Läufe schon hielten
+— die Doppelung ist gewollt, sie prüft dieselbe Sache von zwei Seiten. Der
+Preis ist, dass beim nächsten Wandern **vier** Stellen nachzuziehen sind.
+Deshalb steht in beiden jetzt die Nummer der Entscheidung daneben, die den
+Stand gesetzt hat (E464/E467 und E547), statt nur einer Zahl.
+
+**Gemessen.** `test285` 27/27 · `test442` 24/24. Vorher: `test285` 26/27,
+`test442` 23/24.
+---
+
+## E635 — Wer im ersten Bild misst, misst das Anfangsbild
+
+Bogen 6 der roten Läufe. Zwei Läufe, ein gemeinsamer Urheber: **E537 vom
+12. September**, der Abend vor der Sechstagewoche. Beide Läufe liefen bei
+E537 nicht mit (geprüft wurden damals `test493` bis `test496`), und beide
+halten seitdem den Stand von davor.
+
+### `test432` — nicht verdeckt, sondern noch nicht da
+
+Zwei Punkte sagten „Die Suchzeile ist nicht von den Blättern verdeckt" und
+„Der Zähler auch nicht", und beide waren rot. Verdeckt war nichts.
+
+E537 hat beiden Elementen einen Auftritt gegeben. Die Zählpille wächst aus
+`transform:scale(0)` heraus, **mit 0,2 s Verzögerung**; die Suchzeile wächst
+aus `width:30px` hinter `overflow:hidden`. Beide Auftritte tragen
+`animation-fill-mode:both` — und `both` heisst: **vor dem ersten Bild gilt
+das Anfangsbild.** `klappen(true)` ist synchron und kehrt sofort zurück; der
+Lauf mass im selben Tick. Die Pille war da 0 × 0 Punkte gross, die Suchzeile
+30 Punkte breit. `elementFromPoint` griff beide Male daneben.
+
+Der Lauf wartet jetzt 700 ms. Nicht `getAnimations().finished`: der
+Hinweispfeil winkt mit `infinite`, das hätte nie aufgelöst.
+
+**Und er sagt ab jetzt, was davorliegt.** Diese zwei Punkte waren die
+einzigen ihres Abschnitts ohne Meldungstext — sie sagten „verdeckt" und
+verschwiegen, wovon. Die Gegenprobe zeigt den Unterschied:
+
+> `✗ Die Suchzeile ist nicht von den Blättern verdeckt — davor liegt ru-fach-blaetter, breit 180`
+
+Das ist eine Zeile Aufwand und beim nächsten Mal eine Stunde.
+
+### `test435` — die Zahl von E462, festgehalten bis heute
+
+`p('Der Verlauf liegt nur am eingeschalteten Schalter', … > 0.5 …)`. Die `0.5`
+ist gegen die `.85` aus E462 geschrieben. E537 hat den Verlauf auf `.4`
+gesetzt und `mix-blend-mode:screen` dazugegeben, und der Grund steht wörtlich
+an der Regel in `einstellungen.css`:
+
+> Deshalb auch .4 statt .85 — bei voller Deckung stände der weisse Griff auf
+> hellem Violett, und das waren gemessen 1,6:1 statt der 5,15:1, für die die
+> Farbe gewählt wurde (E199).
+
+Die `.4` ist also nicht „weniger Verlauf", sondern die Zahl, die zur Mischung
+gehört. **Deshalb hält der Lauf jetzt beide zusammen** — `opacity === 0.4`
+UND `mixBlendMode === 'screen'`. Einzeln wäre jede von beiden falsch: `.4`
+ohne `screen` wäre zu blass, `screen` ohne die Zahl gäbe es nicht zu prüfen.
+
+### Der Fund, der nicht rot war
+
+In §6 stand dieser Punkt, und er war grün:
+
+```ts
+p('Der Schalter-Verlauf steht in einstellungen.css, nicht in einem neuen Blatt',
+  /\.schalter\.an::before\{opacity:\.85; animation:ez-schalter-dreh/.test(…));
+```
+
+Die Zeile, die er findet, gibt es wirklich — und sie **gilt nicht**.
+`einstellungen.css:228` überschreibt sie neunundsechzig Zeilen später bei
+gleicher Stärke. Der Lauf bescheinigte damit eine Deckung von `.85`, während
+die Seite `.4` malt, und blieb grün, während §2 genau daran rot wurde.
+
+**Das ist schlimmer als ein roter Punkt.** Ein roter Punkt sagt „sieh nach".
+Dieser sagte „alles in Ordnung" über etwas, das die Seite nicht tut. Er prüft
+jetzt beide Zeilen und ausdrücklich ihre **Reihenfolge** — dass die wirksame
+unter der ersten steht.
+
+Dasselbe Paar meldet übrigens `test332` als tote Regel (`.schalter i`,
+`einstellungen.css` gegen `studio.css`). Zwei Läufe, derselbe Befund, aus zwei
+Richtungen.
+
+### Die Gegenproben
+
+Beide am 19. September gefahren, beide rot (§55.2, §50):
+
+```txt
+.ru-fach-blaetter  inset:0 → inset:-200px 0 0 0, z-index:20 → 900
+  ✗ Die Suchzeile ist nicht von den Blättern verdeckt — davor liegt ru-fach-blaetter
+  ✗ Der Zähler auch nicht — davor liegt ru-fach-blaetter
+
+.schalter.an::before  mix-blend-mode:screen entfernt
+  ✗ Der Verlauf liegt nur am eingeschalteten Schalter — 0.4 (normal) / 0
+  ✗ … und die Deckung, die WIRKT, steht im selben Blatt darunter
+```
+
+Die erste ist die wichtigere: sie beweist, dass das Warten den Wächter nicht
+entschärft hat. Ein Lauf, der wartet, bis alles gut aussieht, prüft nichts —
+dieser hier findet die Verdeckung auch nach dem Warten.
+
+### Was die Alternative gewesen wäre
+
+Den Auftritt im Produkt ändern: `clip-path` statt `width`, `opacity` statt
+`transform:scale(0)`. Dann stimmte die Trefferfläche ab dem ersten Bild, das
+Auge sähe dasselbe, und kein Lauf müsste warten. Das ist die bessere Lösung
+— aber sie ändert Redurs Auftritt aus E537, und der Nebenbefund dahinter
+(zwei Zehntel ohne Trefferfläche) ist eine dünne Stelle, kein Fehler. Er steht
+als **L197** in `LUECKEN.md`, wo er gefunden werden kann, wenn jemand den
+Auftritt ohnehin anfasst.
+
+### Was es kostet
+
+700 ms je Lauf von `test432`. Und die Erkenntnis, die teurer war: **ein Lauf,
+der eine überschriebene Regel als die gültige ausweist, ist ein falscher
+Zeuge.** Das ist der fünfte Fall dieser Woche, in dem ein Wächter etwas über
+die Seite sagte, das die Seite nicht tut (E629, E631 zweimal, E633, jetzt
+E635) — nur war dieser der erste, der dabei **grün** blieb.
+
+**Gemessen.** `test432` 48/48 · `test435` 44/44. Vorher 46/48 und 41/43.
+
+---
+
+## E636 — Ein Prüflauf mit tausend Hertz
+
+Bogen 7 der roten Läufe, und der einzige, bei dem ein grüner Punkt schlimmer
+war als die zwei roten.
+
+### Was rot war
+
+```txt
+✗ Die Marke AUF dem Weg ist weg — ["drauf","daneben","daneben2","c85cc834"]
+✗ … und das Gekritzel selbst wurde kein Strich — ["drauf","daneben","daneben2","c85cc834"]
+```
+
+Nach dem Gekritzel stand **alles** noch da, das Gekritzel eingeschlossen. Es
+war nichts gelöscht worden.
+
+### Was grün war, und warum das schlimmer ist
+
+Dazwischen, unberührt grün:
+
+```txt
+✓ Die zwei daneben stehen noch — sie wurden nie überquert
+```
+
+**Das ist die zentrale Zusage dieses Laufs.** E476 hatte gefunden, dass
+`kritzelTrifft` nach dem KASTEN des Gekritzels fragte statt nach dem ZUG —
+wer schräg über die Seite kritzelte, spannte einen Kasten über die halbe
+Seite auf, und alles darin war weg, auch was handbreit daneben stand. §1
+prüft genau diesen Datenverlust.
+
+Und §1 war grün, weil **gar nichts gelöscht wurde.** Ein Wächter gegen
+Datenverlust, der grün ist, weil die Funktion nicht mehr läuft, ist kein
+Wächter. Er ist die Sorte Zusage, vor der §55.2 warnt: eine Prüfung, die
+immer „passt schon" sagt, ist keine Prüfung.
+
+### Die Ursache liegt zwei Stufen vor `kritzelTrifft`
+
+Nicht `kritzelTrifft` war falsch — die Funktion wurde gar nicht erst
+gerufen. Das Tor davor ist `istKritzel` (`marken.ts:2606`): ein Zug gilt als
+Gekritzel, wenn sein **Weg** mindestens das 2,2-fache seiner Kastendiagonale
+misst. Gemessen wird der Weg NACH dem Glätter.
+
+Und der Glätter rechnet seit **E504** (8. September) in Zeit statt je
+Messpunkt:
+
+```ts
+const tau = MESS_MS * (1 - gemessen) / gemessen;   // stroke.ts:286
+const alpha = ms / (ms + tau);
+```
+
+`ms` ist `dt` aus `marken.ts:2341`, und das kommt aus `event.timeStamp`. Der
+Prüflauf feuerte alle 189 Punkte in **einer synchronen Schleife** — die
+Zeitstempel lagen Mikrosekunden auseinander, `Math.max(1, …)` machte daraus
+`dt = 1`. Bei 1 ms wird α = 0,418 statt 0,92: **doppelt so starke Glättung je
+Punkt.** Die Zacke von ±18 Punkten kam als ±10 an.
+
+Nachgerechnet, mit den Zahlen dieses Laufs:
+
+```txt
+dt = 1 ms  (1000 Hz, nur dieser Lauf)   Weg 1037 gegen Schwelle 1262   ✗
+dt = 4 ms  (240 Hz)                     Weg 1520 gegen Schwelle 1286   ✓
+dt = 8 ms  (120 Hz)                     Weg 1648 gegen Schwelle 1292   ✓
+dt = 16 ms (60 Hz)                      Weg 1357 gegen Schwelle 1279   ✓
+```
+
+**Nur der Prüflauf fällt durch.** 1 ms bei diesem Punktabstand wären rund
+9500 Punkte je Sekunde; echte Stifte melden 60 bis 240 Hz. §2 dieses Laufs
+blieb grün, weil sein waagerechtes Gekritzel 170 % Reserve hat — §1s schräger
+Zug war mit 32 % der einzige Grenzfall im Haus.
+
+### Die Entscheidung: der Lauf bekommt einen Takt, nicht der Zickzack mehr Zacken
+
+`zug()` kennt jetzt `takt`, und die drei Gekritzel dieses Laufs setzen
+`takt: 8` — 125 Hz, mitten im Feld echter Geräte.
+
+**Die Alternative** wäre gewesen, den Zickzack dichter zu machen (`PITCH`
+12→8, `SUB` 4→6), bis er auch bei 1000 Hz durchkommt. Das wäre billiger
+gewesen — und falsch: es hätte die Zahlen so lange verschoben, bis sie unter
+einer Bedingung passen, die kein Gerät herstellt. Der nächste Griff an den
+Glätter hätte dieselbe Reserve wieder aufgebraucht, und niemand hätte
+gewusst, warum. CLAUDE.md §30 sagt es kürzer: **keine Mocks, wenn die echte
+App geprüft werden kann** — und ein Zeigergerät, das taktet, ist näher an der
+echten App als eines, das es nicht tut.
+
+**Nicht angefasst** wurden `2.2 * diag` in `istKritzel` und `KRITZEL_NAH = 6`.
+Beide Zahlen sind gegen echte Geräte gemessen; sie zu lockern, um einen
+erfundenen 1000-Hz-Zug zu bedienen, machte genau den Datenverlust wieder
+wahrscheinlicher, gegen den E476 gebaut wurde.
+
+### Die Gegenprobe
+
+Nicht die naheliegende — Takt wieder weg, das war der rote Lauf selbst —,
+sondern die, die zählt: **fängt §1 den Fund aus E476 wieder?**
+
+`kritzelTrifft` auf den Stand vor E476 zurückgedreht, sodass der Kasten
+entscheidet und nicht der Zug; dann `npm run bauen:ts`, dann der Lauf:
+
+```txt
+✗ Die zwei daneben stehen noch — sie wurden nie überquert — []
+```
+
+Leer. **Alle** Marken weg, auch die zwei, die der Zug nie berührt hat. Das
+ist der Datenverlust aus E476, und §1 sieht ihn wieder. Vorher sah er ihn
+nicht, weil er nichts sah.
+
+### Was offen bleibt
+
+`istKritzel` misst am geglätteten Weg. Damit hängt die Frage „ist das ein
+Gekritzel?" an der Meldefrequenz des Eingabegeräts, und bei 60 Hz beträgt die
+Reserve sechs Prozent. Kein Fehler heute, aber eine dünne Stelle — **L198**.
+
+### Was es kostet
+
+Rund vier Sekunden je Lauf: drei Züge à 189 Punkte à 8 ms. Dafür misst der
+Lauf, was ein Stift tut, statt was eine Schleife tut.
+
+**Gemessen.** `test449` 16/16, vorher 14/16. Gegenprobe rot. `npm run stand`
+unverändert (v1200, `1817321f7b3929c3`).
+
+---
+
+## E637 — Erst nachsehen, dann eintragen
+
+Bogen 8 der roten Läufe, und der einzige, bei dem Redur die Reihenfolge
+selbst gesetzt hat. `test362` meldete sechs Zahlen gegen die Decke:
+
+```txt
+ist   {16:272, 22:85, 28:64, 44:54, 46:16, 56:14}
+soll  {16:266, 22:83, 28:63, 44:54, 46:15, 56:14}
+```
+
+Die naheliegende Reparatur ist eine Zeile: die Decke nachtragen, Lauf grün,
+weiter. Redur hat **erst nachsehen, dann entscheiden** gesagt, und das ist
+der Unterschied zwischen einer Decke und einer Zahl.
+
+### Was die Decke ist
+
+`marken-decke.json` hält fest, wie oft sechs Zahlen ROH in den Stildateien
+stehen, für die es eine Telefonmarke gibt. Der Lauf sagt selbst, warum es ein
+Verzeichnis ist und kein Verbot: *„ein Zeichen, das zufällig 44 px misst,
+meint keine Trefferfläche. Ein Verbot wäre also entweder unehrlich oder
+unerfüllbar."* Und er prüft auf GENAU GLEICH, nicht auf höchstens — damit
+auch das Schrumpfen auffällt.
+
+Die Richtung ist trotzdem eine: **hinunter.** Eine Decke, die bei jedem Fund
+mitwächst, ist keine.
+
+### Was das Nachsehen ergeben hat
+
+Der ganze Zuwachs steckt in **einer** Datei — `werkzeuge.css` — und in
+**zwei** Bögen: E607 und E628, beide die Gedankenkarte, beide von mir.
+Zehn Stellen, jede einzeln geprüft; die Tabelle steht in `messungen.md`.
+
+Der Massstab dafür steht in `marken.css:40` und ist der eigentliche Punkt:
+
+> Gleiche Zahl bedeutet nur dann dieselbe Marke, wenn sie dieselbe
+> **Aufgabe** hat.
+
+Eine Schriftgrösse von 16 px ist kein Blattradius. Ein Werkzeugknopf von
+28 px ist kein Seitenrand am Telefon. Ein Polster von 22 px, das den Text in
+eine Ellipse bringt, ist kein Telefonrand. Sieben der zehn sind in diesem
+Sinn sauber — und zwei von ihnen holen die Trefferfläche ausdrücklich aus der
+Marke (`.gk-leiste button::after{height:var(--touch-min)}`), was das Gegenteil
+von Schlamperei ist.
+
+### Drei waren es nicht
+
+**Zwei Polster hatten eine Stufe.** `padding:10px 16px` und
+`padding-inline:16px` sind Abstände, und `grund.css:44` führt `--space-5: 16px`
+seit jeher. Sie heissen jetzt so. Das ist §39 wörtlich: gemeinsame Tokens
+nutzen — und nur die, die es gibt.
+
+**Und die 46 war eine Abschrift.** `.gk-massstab` — die Prozentanzeige der
+Gedankenkarte — war Zeile für Zeile von `.wb-massstab` abgeschrieben, der des
+Whiteboards, die seit E138 vierzig Zeilen darüber steht. Dabei ist genau die
+Eigenschaft verlorengegangen, für die es die Regel gibt:
+
+```css
+font-variant-numeric:tabular-nums;
+```
+
+Ohne sie springt die Zahl bei jedem Zoomschritt, weil `1` schmaler ist als
+`7`. Das ist der Grund, aus dem die Whiteboard-Regel sie trägt, und die
+Abschrift hat ihn nicht mitgenommen — die Sorte Fehler, die §8 meint, wenn es
+doppelte Kataloge verbietet: *„Ein zweiter Katalog für dasselbe läuft mit dem
+ersten auseinander, und niemand merkt, welcher gilt."*
+
+Beide teilen sich jetzt eine Regel. Die Gedankenkarte hat damit gleichbreite
+Ziffern bekommen, und die rohe 46 ist von selbst verschwunden.
+
+### Das Ergebnis
+
+```txt
+46px   16 → 15    eine Regel statt zweier Abschriften
+16px  272 → 270   zwei Polster auf --space-5
+22px   83 → 85    bleibt, mit Grund
+28px   63 → 64    bleibt, mit Grund
+```
+
+Zwei Zahlen hinunter, zwei hinauf. **Die Decke steigt** — das ist die
+Ausnahme, und deshalb steht in `messungen.md` jede der sieben verbliebenen
+rohen Zahlen mit ihrer Zeile und ihrem Urteil. Wer sie später senken will,
+muss nicht noch einmal suchen.
+
+### Was die Alternative gewesen war
+
+Die Decke ohne Nachsehen auf `{16:272, …, 46:16}` setzen. Das wäre in einer
+Minute grün gewesen — und die abgeschriebene Massstabsregel stünde noch da,
+mitsamt der springenden Zahl, die kein Prüflauf je gefunden hätte. Die
+zweite Alternative wäre gewesen, alle zehn rohen Zahlen zu ersetzen. Auch
+falsch: für 22 und 28 gibt es keine Stufe, und eine Marke zu erfinden, um
+eine Zahl loszuwerden, ist genau das, wovor §39 warnt.
+
+### Nebenbei gefunden
+
+Beim Bild zu diesem Bogen (§55.3) steht der Massstab auf 72 % — die Karte ist
+also eingepasst — und der linke Knoten ist trotzdem angeschnitten. Das ist
+nicht dieser Bogen und steht als **L199** in `LUECKEN.md`, mitsamt der
+Messung, die vor einer Reparatur zu machen ist.
+
+**Gemessen.** `test362` 18/18, vorher 17/18. `node bauen.mts` neu, weil
+`werkzeuge.css` im Grundstock liegt.
+
+---
+
+## E638 — Tot war nicht die Regel, sondern das, worauf sie zeigte
+
+Bogen 9 der roten Läufe, und der einzige mit einem echten Produktfehler.
+`test217` war mit **13 von 27** Punkten rot — der grösste rote Lauf des Tages.
+
+### Der Fund
+
+```txt
+✗ Er heisst „Tagesrunde starten" — ist "Lernen starten →"
+✗ Er steht ganz im ersten Bild — y = 1115 von 844
+```
+
+Am **6. September** hat Redur die Heute-Ansicht umgebaut (`4d3748e`, „Was ich
+geändert habe"): ein Dokumentenstudio kam dazu, die Karte mit dem Startknopf
+heisst seitdem `.lw-next-step`, die vier Kennzahlen wanderten in einen
+Aufklapper, und der Knopf bekam den Namen, den §31 ihm im Auftragsbild selbst
+gibt — „Lernen starten".
+
+**Die fünf CSS-Zeilen aus E151 hat er dabei nicht angefasst.** Sie standen
+Zeichen für Zeichen unverändert da:
+
+```css
+.lernwelt .lw-today>*{order:5}
+.lernwelt .lw-today>.lw-metrics{order:1}
+.lernwelt .lw-today>.lw-primary-grid{order:2}
+.lernwelt .lw-today>.lw-setup{order:3}
+.lernwelt .lw-today>.lw-hero{order:4}
+```
+
+Drei der vier Ziele gibt es nicht mehr. `.lw-primary-grid` und `.lw-setup`
+kommen im ganzen Quelltext nicht ein einziges Mal vor; `.lw-metrics` ist kein
+Kind von `.lw-today` mehr. Was wirkt, ist damit nur noch `.lw-hero{order:4}`
+gegen `*{order:5}` — **die Begrüssung steht wieder ganz oben, genau der
+Zustand vor E151.** Der 619 px hohe Dokumenten-Block schiebt den Startknopf
+auf y = 1115, in ein Bild, das 844 px hoch ist.
+
+**Das ist die Lehre, und sie ist neu.** Eine tote Regel sieht man: sie steht
+da und tut nichts (das ist `test332`). Eine Regel, deren **Selektor** ins
+Leere greift, sieht im Quelltext aus wie am ersten Tag — der Code ist
+unverändert, die Wirkung ist weg, und der Fehler entsteht in einer ganz
+anderen Datei als der, in der er steht.
+
+### Was gebaut wurde
+
+Die Leiter zeigt jetzt auf die Kinder, die es gibt, in der Reihenfolge von
+2026: zuerst die Handlung, dann die Arbeitsblöcke, zuletzt die Begrüssung.
+
+```css
+.lernwelt .lw-today>*{order:5}
+.lernwelt .lw-today>.lw-next-step{order:1}
+.lernwelt .lw-today>.lw-desk{order:2}
+.lernwelt .lw-today>.lw-hero{order:3}
+```
+
+**Gemessen im Browser**, auf 390 × 844:
+
+```txt
+                       vorher            nachher
+.lw-next-step          y = 1174          y =  119
+.lw-desk               y = 1511          y =  455
+.lw-hero               y =  119          y = 1113
+„Lernen starten →"     y = 1115          y =  296
+```
+
+**Im Bild nachgesehen** (§55.3): das erste Telefonbild ist jetzt „Ein guter
+nächster Schritt · 5 Karten für heute · [ Lernen starten → ]". Genau das
+Bild, das §31 beschreibt.
+
+### Und drei Messfehler im Lauf selbst
+
+`test217` mass auf drei Wegen daneben, und zwei davon hätten ihn auch nach
+der Reparatur rot gelassen:
+
+1. **`.lw-focus-card`** — die Karte, gegen die er mass, gibt es seit dem
+   6. September nicht mehr. Der Lauf mass `null` und verglich `undefined`
+   gegen `undefined`. Jetzt `.lw-next-step`.
+2. **Zwei `.lw-metrics`** stehen in der Lernübersicht: „Heute auf einen
+   Blick" und die Lernroutine darunter (Level, Minuten, Tage). Ohne
+   `aria-label` im Wähler kamen acht Karten statt vier.
+3. **Der Lichtschmuck** (`data-rmo`) legt jeder Kennzahl einen
+   `<span class="rmo-pfad">` als ERSTES Kind unter. `querySelector('span')`
+   fand also den Schmuck und nicht den Namen — jeder Name war leer, und vier
+   Punkte waren aus dem falschen Grund rot. Jetzt wird das erste `<span>`
+   ohne `aria-hidden` genommen.
+
+Der dritte ist der siebte Fall dieser Woche, in dem ein Wächter etwas über
+die Seite sagte, das die Seite nicht tut.
+
+### Die Gegenprobe
+
+Ein Ziel der Leiter auf einen Namen gesetzt, den es nicht gibt
+(`.lw-gibtesnicht`), dann der Lauf:
+
+```txt
+✗ Er steht ganz im ersten Bild — y = 1115 von 844
+```
+
+**Auf den Pixel derselbe Wert wie im roten Lauf.** Damit ist der Befund
+nicht erklärt, sondern bewiesen: ein Selektor ins Leere erzeugt genau diesen
+Fehler.
+
+### Was NICHT gemacht wurde
+
+Die vier Kennzahlen bleiben im Aufklapper. §31s Bild zeigt sie auf dem
+Startbild — aber Redur hat sie mit einem geschriebenen Grund dorthin gelegt
+(„Auswertungen bleiben vollständig über native Details erreichbar"), und die
+Zahl, um die es beim Öffnen geht, steht gross auf der Karte mit dem Knopf.
+Das rückgängig zu machen wäre gewesen, seinen Umbau ohne Rückfrage zu
+drehen. Es steht als **L200** offen, und `doku/AUFTRAG-STAND.md` sagt §31
+jetzt ◐ statt ✅ — dort stand bis heute ein Knopfname, den es seit zwei
+Wochen nicht mehr gibt.
+
+Nebenbei aus dem Bild: der Hauptknopf ist schwarz statt violett, weil
+`.lernwelt button.is-primary.ru-funkel` die Hauptfläche überschreibt — mit
+Messwerten als **L201**.
+
+**Gemessen.** `test217` 27/27, vorher 14/27. Gegenprobe rot mit y = 1115.
+`node bauen.mts` neu, weil `lernwelt.css` im Grundstock liegt.
+
+---
+
+## E639 — Die Pille wird eine Linse
+
+Redur hat am 20. September zwei Bildschirmaufnahmen geschickt — die Apple-TV-App
+unter iOS 26 und GoodNotes — und dazu: *„ich will bei der 1 video die untere
+übergans haben und bei der GoodNotes so."* Dieser Eintrag ist die erste Hälfte:
+der Übergang unten.
+
+### Was im Video wirklich passiert
+
+Nicht eine Fläche, die springt, und auch nicht eine, die bloss gleitet. Bild für
+Bild aus der Aufnahme gelesen (15 Bilder je Sekunde, Ausschnitt der Leiste):
+
+```txt
+· sie VERGRÖSSERT, was unter ihr liegt — das Zeichen im Ziel wird grösser
+· sie ZIEHT MIT: die Zeichen, über die sie läuft, werden in ihre Richtung
+  geschleift, statt still stehenzubleiben
+· an ihrer Oberkante liegt ein FARBSAUM, grün nach violett — echtes Glas
+  bricht Farben verschieden stark
+· sie DEHNT SICH in Laufrichtung und wölbt sich über die Leiste hinaus
+· am Ziel RASTET sie ein, und die Dehnung löst sich, bevor sie ankommt
+```
+
+### Redion hatte die Hälfte davon schon
+
+`#ho-pille` wandert seit **E236** von Reiter zu Reiter, und der Grund steht dort
+so gut, dass er hier noch einmal stehen soll:
+
+> Ein Hintergrund, der springt, sagt „ein anderer Knopf" — einer, der wandert,
+> sagt „derselbe Ort, weiter vorn".
+
+Gebaut wurde also nichts Zweites daneben (§8). Die vorhandene Pille hat Glas
+bekommen.
+
+### Die eine Zeile, an der alles hing
+
+Die Pille lag auf `z-index:0`, **unter** den Knöpfen, mit dem Satz „sie liegt
+unter den Knöpfen". Das war richtig, solange sie eine FARBE war: eine farbige
+Fläche über dem Zeichen hätte es verdeckt.
+
+Eine Linse kann aber nur brechen, was HINTER ihr liegt. Unter den Knöpfen hat
+sie nichts zu tun — und genau das zeigte der erste Versuch: gar keine Brechung,
+obwohl der Filter stimmte. Sie liegt jetzt auf `z-index:2`, über den Knöpfen,
+und nimmt weiterhin keine Berührung an. Die Trefferfläche bleibt der Knopf
+darunter (§37); das ist keine Behauptung, `elementFromPoint` in der Mitte des
+aktiven Reiters gibt den Knopf zurück.
+
+### Wie die Brechung gemacht ist
+
+`src/schale/bedienung/linse.ts`, nach dem Muster der Textur (E462): **ein**
+Halter, **einmal** am Ende von `<body>`, zwei Filter darin. E440 hat am
+KI-Funken gezeigt, was passiert, wenn mehrere Instanzen sich eine ID teilen.
+
+Der Kern ist eine Verschiebungskarte. `feDisplacementMap` liest ein Bild und
+schiebt jeden Bildpunkt um das, was dort im roten (waagerecht) und grünen Kanal
+(senkrecht) steht; Grau — 128,128,128 — heisst „nicht verschieben". Unsere Karte
+läuft von Rot links nach Schwarz rechts und von Grün oben nach Schwarz unten: am
+Rand wird nach innen gegriffen, in der Mitte gar nicht. Das ist eine Lupe.
+
+Der Farbsaum kommt danach: derselbe gebrochene Inhalt dreimal, rot und blau um
+einen Hauch gegeneinander versetzt, die drei Kanäle mit `screen` wieder
+zusammengelegt.
+
+**Zwei Filter, nicht einer.** Im Vorbild ist die Linse in Ruhe fast klar und erst
+während der Fahrt heftig. Ein Filterwert lässt sich nicht animieren, also gibt es
+zwei und die Pille tauscht sie über eine Klasse.
+
+```txt
+Ruhe    weich 9   Verschiebung 15   Saum 0,22
+Fahrt   weich 9   Verschiebung 24   Saum 0,55
+```
+
+Die Zahlen sind nicht geschätzt. Fünf Varianten nebeneinander gebaut, aufgenommen
+und angesehen; bei Verschiebung 46 verdoppelten sich die Zeichen und der Saum
+wurde ein grelles RGB-Gitter, bei 8 sah man nichts.
+
+### Der Filterbereich ist genau das Element
+
+Der erste Anlauf setzte `x="-30%" width="160%"`, damit der Farbsaum nicht am Rand
+abschneidet. Ergebnis: die Karte lag um dreissig Prozent verschoben über dem
+Glas, und heraus kam ein dunkler Balken quer durch die Linse statt einer
+Brechung. `feImage` misst in Anteilen des FILTERBEREICHS, nicht des Elements.
+Jetzt `0% / 100%`, und der Saum darf am Rand abschneiden.
+
+### Die Dehnung ist der Weg
+
+Wie weit sich die Linse dehnt, hängt davon ab, wie weit sie muss:
+`1 + Weg / Reiterbreite × 0,3`, gedeckelt bei 1,85. Ohne Deckel verschluckte ein
+Sprung von ganz links nach ganz rechts die halbe Leiste.
+
+Zwei Uhren lösen sie wieder: die Dehnung nach 190 ms — dann FLIESST die Linse ins
+Ziel, statt dort anzukommen und erst danach schmal zu werden —, die Brechung nach
+430 ms, damit sie mit dem Anhalten abklingt und nicht vorher.
+
+### Was `test114` gefunden hat, bevor ein Mensch es sah
+
+Der Lauf wurde rot: *„Beim Start steht die Pille sofort da, statt hereinzugleiten
+— sie glitt 1×"*. Nachgemessen mit `transitionstart` und dem gerechneten
+`transform`:
+
+```txt
+t=676 ms   opacity     scaleX = 1,309   ← die Dehnung stand schon
+t=792 ms   transform   scaleX = 1,212   ← der Übergang, den niemand wollte
+t=1008 ms  opacity     scaleX = 1
+```
+
+Beim Start läuft `pilleSchieben` zweimal, und der zweite Ruf rückt die Pille um
+sechs Punkte. Solange `.stumm` liegt, sieht man davon nichts — von der DEHNUNG
+aber doch: sie wurde gesetzt, während die Sperre galt, und fiel 190 ms später
+zurück, als die Sperre längst weg war. Ein Übergang ohne Anlass, genau der, den
+E236 verboten hat.
+
+**Der Kommentar an der Sperre hatte das vorhergesagt**, Wort für Wort:
+
+> Der Schutz greift also erst, wenn jemand oben Anfangswerte einträgt, die
+> WIRKLICH gemalt werden.
+
+Die Dehnung war genau das. Sie läuft jetzt nicht mehr, solange `.stumm` liegt.
+Ein Wächter, der ein halbes Jahr auf seinen Fall gewartet hat, hat ihn bekommen.
+
+### Ohne Bewegung, ohne Brechung
+
+`prefers-reduced-motion` nimmt die Bewegung weg und lässt das Bild stehen —
+dieselbe Regel wie beim Schalter (E537/E635). Die Falle davor ist ausdrücklich
+benannt: eine Linse, die bei `reduce` verschwindet, liesse den aktiven Reiter
+unmarkiert, und die Prüfung „keine Bewegung" wäre trotzdem grün (§55.2).
+
+Wo `backdrop-filter:url()` fehlt, fällt **nur die Brechung** weg. Die Fläche
+darüber steht in einer eigenen Regel und bleibt — sichtbar ist dann genau das,
+was vorher da war, eine ruhige Hervorhebung, nur leichter.
+
+### Was noch aussteht
+
+Redur hat am 20. September ein verbindliches Design-System nachgereicht
+(`Redurbabat/UI-Kit`, `skills/web-design/SKILL.md`). Dessen Module zu Federn,
+Unterbrechbarkeit und Glas werden gerade ausgewertet. Was dieser Bogen mit
+CSS-`transition` macht, **erhält keine Geschwindigkeit** bei einem schnellen
+A→B→C→A; verlangt das System das, wird umgebaut. Und die zweite Hälfte von
+Redurs Satz — GoodNotes — ist noch gar nicht angefasst.
+
+**Gemessen.** `test114` 87/87 (vorher 86/87), `npm run typecheck` grün, Bild
+angesehen (§55.3).
+
+---
+
+## E640 — Der Grund sitzt, der Wechsel fliegt
+
+Die zweite Hälfte von Redurs Satz vom 20. September: *„und bei der GoodNotes
+so."* Dazu kam am selben Tag ein verbindliches Design-System
+(`Redurbabat/UI-Kit`, `skills/web-design/SKILL.md`) mit einer Vorgabe, die
+genau hierher zeigt:
+
+> Nicht zwei Buttons unabhängig aus- und einblenden. Wenn semantisch sinnvoll,
+> soll sich stattdessen eine gemeinsame aktive Materialfläche räumlich vom
+> alten zum neuen Zustand bewegen.
+
+Und als Beispiel steht dort wörtlich: **Pen → Marker → Eraser**.
+
+### Was Redion schon hatte — und das ist viel
+
+Bevor etwas gebaut wurde, ein Blick auf die Leiste:
+
+```txt
+data-tool an der Leiste     steuert, welche Zubehörgruppe erscheint
+aria-pressed am Knopf       sagt den Zustand, nicht nur eine Klasse (Audit F04)
+::after mit --touch-min     44 px Trefffläche, ohne das Zeichen zu vergrössern
+Dock-Vergrösserung          der Nachbar wächst mit (E625)
+Wort unter dem Zeichen      am Rechner (E614), weggeklemmt wo es eng ist
+gezeichnete Zeichen         seit E515, auf Redurs „nehme die Symbole 1:1"
+```
+
+Gefehlt hat genau eine Sache: `.blatt-werk button[data-wz].on` trug
+`background:var(--accent)` **am Knopf**. Wer von „Stift" auf „Marker" ging, sah
+zwei Dinge — eine Fläche, die verschwindet, und eine, die auftaucht.
+
+### Der erste Entwurf, und warum er weg ist
+
+Naheliegend war, die Bauform von `#ho-pille` zu übernehmen: eine dauerhafte
+Fläche neben den Knöpfen, die zum gewählten wandert. Sie war schnell gebaut,
+sah im Bild richtig aus, und `test539` §5 bestätigte sie: **13 verschiedene
+Orte über 49 Bilder.**
+
+Dann wurde `test478` rot: *„Der Zustand steht nicht nur in der Bewegung (§38)"*.
+Die Fläche stand **55 px neben ihrem Werkzeug**, Überdeckung NULL.
+
+Die Suche danach ist der eigentliche Wert dieses Eintrags, denn sie ging
+dreimal in die falsche Richtung:
+
+```txt
+1. Verdacht   „ein Auslöser fehlt"   → Beobachter auf class + childList + subtree
+   Ergebnis   immer noch --bx: 88px
+2. Verdacht   „falscher Ursprung"    → gegen die Leiste gerechnet statt offsetLeft
+   Ergebnis   immer noch --bx: 88px
+3. Verdacht   „falsche Hülle"        → gegen `offsetParent` gerechnet, Rand abgezogen
+   Ergebnis   immer noch --bx: 88px
+```
+
+Erst ein Zähler im Element — *lief die Rechnung überhaupt?* — brachte es
+heraus: **fünf Läufe**, und trotzdem stand der alte Wert da. Die Rechnung war
+also nicht falsch und nicht ungerufen; sie war **zu früh**. Danach rollte die
+Leiste zum Werkzeug (E356), brach um, klemmte Wörter weg — und die gespeicherte
+Stelle war Geschichte.
+
+**Das ist kein fehlender Auslöser, das ist die Bauform.** Eine Stelle, die
+einmal gerechnet und dann gespeichert wird, veraltet bei jedem Umbruch, bei
+jedem Rollen, bei jeder Breitenabfrage. Man kann Auslöser nachlegen, bis man
+alle hat — aber man weiss nie, ob man alle hat.
+
+Warum es unten an der Telefonleiste (E236, E639) trotzdem trägt: dort sind die
+fünf Reiter `flex:1 1 0`, die Leiste bricht nicht um und klemmt nichts weg. Die
+Bauform ist nicht falsch, sie passt nur nicht auf eine Leiste mit dreizehn
+Werkzeugen, Zubehör, Umbruch und Rollung.
+
+### Was jetzt steht
+
+**Der Grund bleibt am Knopf** — er kann gar nicht verrutschen, weil er kein
+eigener Ort ist. Nur der **Wechsel** bekommt eine Fläche: `.bw-flug`, eine
+kurzlebige, `position:fixed`, in Bildschirmmassen, die vom alten Knopf zum
+neuen fliegt und danach verschwindet. Keine Hülle, kein Versatz, keine
+Rollung — genau die drei Fragen, an denen der erste Entwurf gescheitert ist.
+
+Währenddessen **leuchtet das Ziel schwach vor** statt leer zu sein
+(`color-mix(… 22%)`). Auch das hat `test478` erzwungen: der erste Anlauf setzte
+dort `background:none`, und für die halbe Sekunde des Flugs hätte der Zustand
+NUR in der Bewegung gestanden. Wer die Bewegung nicht sieht, hätte gar nichts
+gesehen (§38).
+
+Dazu drei Netze, die jeder Flug braucht:
+
+```txt
+zwei Bilder warten     sonst gilt der Startwert als nie gemalt — kein Übergang
+                       (dieselbe Falle wie bei #ho-pille, E639)
+Zeile überspringen     ein Flug quer über eine umgebrochene Leiste wäre kein
+                       Weg, sondern ein Strich durchs Bild
+setTimeout(700)        ein Übergang, der nie beginnt (Fenster im Hintergrund),
+                       meldet auch kein Ende — sonst bliebe das Ziel ewig blass
+```
+
+### Gemessen
+
+```txt
+mit Flug      13 Orte über 49 Bilder, 253 px → 816 px
+ohne Flug     „Eine Fläche ist geflogen — 0 Bilder lang" (Gegenprobe, rot)
+```
+
+Und die drei Läufe, die den ersten Entwurf widerlegt haben, sind
+**unverändert** grün: `test478` 43/43, `test522`, `test533`. Das ist der beste
+Beleg dafür, dass die zweite Bauform die richtige ist — sie braucht keine
+angepasste Prüfung.
+
+### Was NICHT gebaut wurde, und warum
+
+Im Video trägt das aktive Werkzeug ein kleines **Aufklapp-Zeichen** für seine
+Einstellungen. Redion braucht es am Rechner nicht: die Einstellungen stehen
+bereits in der Zeile darunter, ohne einen Klick. Ein Zeichen dafür zu malen,
+hiesse etwas zu versprechen, das schon erfüllt ist — das Design-System nennt
+genau das unter seinen Anti-Mustern: *„placeholder controls presented as
+complete features."*
+
+Sinn bekäme es erst am **Telefon**, wo dreizehn Werkzeuge plus Zubehör 636 px
+Inhalt in einer 368 px breiten Leiste sind (E396). Das ist ein eigener Bogen
+mit eigener Messung — **L202**.
+
+**Gemessen.** `test539` 42/42, Gegenprobe rot. `test478` 43/43, `test522`,
+`test533` unverändert grün. `npm run typecheck` grün. Bild angesehen (§55.3).
+
+---
+
+## E641 — Was das Design-System an der Linse auszusetzen hat
+
+Redur hat am 20. September ein verbindliches Design-System nachgereicht
+(`Redurbabat/UI-Kit`, `skills/web-design/SKILL.md`) — **nachdem** E639 die
+Linse gebaut hatte. Die Module dazu wurden gelesen und gegen Redions echten
+Quelltext gehalten. Ergebnis:
+
+```txt
+83 Regeln geprüft
+44 erfüllt
+20 teilweise
+10 klar verletzt   ← und neun davon stammen aus E639, dem Bogen von gestern
+ 9 nicht berührt
+```
+
+Das ist der unangenehme Teil eines verbindlichen Systems: es urteilt auch
+über das, was man gestern für gelungen hielt.
+
+### Die drei Punkte, die stimmen — und geändert sind
+
+**1 · Dehnen ist für Nachbarn.** E639 rechnete
+`min(1.85, 1 + Weg/Breite × 0,3)`: je WEITER der Sprung, desto stärker die
+Verformung. Das System sagt es zweimal und beide Male anders herum:
+
+> When source and destination directly touch or nearly touch, the selection
+> surface may visually stretch/bridge during travel … Keep the bridge subtle
+> and bounded.
+
+> Disable deformation for long-distance navigation.
+
+Und das ist kein Geschmack, sondern Sinn. Eine **Brücke** spannt sich
+zwischen zwei Dingen, die sich fast berühren. Über vier Reiter hinweg ist sie
+keine Brücke mehr, sondern ein Schlauch. Jetzt: ein Reiter Abstand darf eine
+Brücke schlagen, mehr nicht.
+
+**2 · 85 % Überlänge sind keine dezente Verformung.**
+
+> Keep deformation subtle. Preserve recognizable control boundaries and avoid
+> cartoon-like elasticity in professional/productivity UI.
+
+Der Deckel lag bei 1,85. Jetzt 1,18, und nur zwischen Nachbarn.
+
+**3 · Im Ruhezustand soll der Inhalt still stehen.**
+
+> Do not scale labels/icons with the material blob; content should remain
+> optically stable.
+
+Die Ruhe-Brechung stand auf Verschiebung 15 — bei der Messung vom
+19. September ausdrücklich als „das Zeichen wird grösser" notiert. Jetzt 8,
+was bei derselben Messung „nichts zu sehen" hiess. Das ist genau das Ziel:
+das Glas zeigt sich am RAND, es vergrössert nicht den Inhalt. Die **Fahrt**
+bleibt bei 24 — dort erklärt die Verzerrung die Bewegung, und da gehört sie
+hin.
+
+### Der Punkt, der Redur gehört
+
+> For mobile bottom navigation, avoid excessive liquid distortion; labels and
+> icons must remain legible throughout.
+
+Ob über der Schrift einer unteren Leiste überhaupt gebrochen werden darf, ist
+die Frage, um die es in Redurs Video ging. Sein eigener Auftrag sagt dazu:
+*„Wenn eine bestehende REDION-Regel und der Universal Skill miteinander
+kollidieren, analysiere zuerst den konkreten Produktkontext. Übernimm nicht
+blind eine generische Regel."*
+
+Mit den drei Änderungen oben ist die Schrift im Ruhezustand optisch still und
+nur während der halben Sekunde der Fahrt verzerrt. Damit rückt Redion sehr
+nahe an „legible throughout", ohne den Übergang aufzugeben, den Redur wollte.
+**Die Entscheidung, ob das reicht, ist seine** und steht nicht hier.
+
+### Der Punkt, der noch offen ist
+
+> Preserve velocity during rapid changes and target the newest selection
+> instead of completing stale animations.
+
+Die zweite Hälfte ist erfüllt — die neueste Wahl gewinnt, beide Uhren werden
+gelöscht, nichts steht in einer Schlange. Die erste nicht: ein CSS-Übergang
+setzt bei A → B → A wieder bei Tempo null an. Dafür braucht es die Web
+Animations API, und das ist ein eigener Bogen — **L204**.
+
+### Gegenprobe
+
+`test539` §7 misst die Dehnung während der Fahrt und verlangt beides: zum
+Nachbarn eine Brücke, über vier Reiter keine. Ohne die Unterscheidung wäre
+einer der beiden Punkte immer rot — ein Wächter, der nicht beide Seiten
+prüft, hält nur eine.
+
+**Gemessen.** `test539` · `test114` · die Wächter der unteren Leiste.
+
+---
+
+## E642 — Sechsundsiebzig Regeln, die nie zum Zug kamen
+
+`test332` ist seit E340 der Wächter gegen die vierte Variante von L111:
+**dieselbe Erklärung in zwei Dateien, und die frühere kommt nie dran.**
+Am 19. September meldete er beim ersten vollen Lauf seit PR #100
+**76 tote Erklärungen**. Dieser Bogen bringt sie auf null.
+
+Die Zahlen des Wegs, nach jeder Gruppe nachgemessen mit
+`node pruefungen/alle.mts 332`:
+
+```txt
+76 → 63 → 51 → 43 → 37 → 35 → 0
+```
+
+### Zuerst: dreizehn davon gab es gar nicht
+
+Der erste Schritt war nicht eine Reparatur, sondern eine **Gegenfrage an den
+Wächter** — und sie war berechtigt. `test332` trennte Wähler mit
+
+```js
+r.selectorText.split(',')
+```
+
+Das ist falsch, sobald ein Komma INNERHALB von `:is()`, `:where()`, `:not()`
+oder `:has()` steht. Aus
+
+```css
+body[data-dokument="an"] :is(#topbar,#menueband){ display:none !important }
+```
+
+wurden zwei Bruchstücke: `body[…] :is(#topbar` und `#menueband)`. Das zweite
+ist gar kein Wähler — es hat den Vorfahren verloren UND das `!important` —,
+und der Lauf verglich es mit der echten Regel `#menueband{display:flex}` und
+meldete **sie** als tot. `select):focus-visible` und `:focus-visible)` waren
+zwei weitere solche Gespenster: Zeichenketten, die nie ein Element treffen.
+
+Gezählt wird jetzt die Klammertiefe; getrennt wird nur an einem Komma auf
+Tiefe null. **Dreizehn der 76 Meldungen waren danach weg**, ohne dass eine
+einzige Zeile Stil angefasst wurde.
+
+Das ist die Lehre, die über diesen Bogen hinausgeht und schon E629 und E631
+trug: **eine Meldung eines Wächters ist ein Befund, keine Wahrheit.** Wer
+sie ungeprüft repariert, baut die Seite nach dem Fehler des Prüfstands um.
+
+### Dann: was wirklich tot war
+
+Die übrigen 63 waren echt, und sie zerfielen in zwei Sorten — genau die
+zwei, die der Plan vorhergesagt hat.
+
+**Sorte 1 · eine überflüssige Zeile.** Die spätere Datei sagt dasselbe
+besser, die frühere sagt es nur noch für die Akten:
+
+| Was | Früher (tot) | Es gilt |
+|---|---|---|
+| `#ai` Breite | `ki.css`: 380px | `motion.css`: 420px |
+| `.schalter i` Übergang | `einstellungen.css`: feste `.16s` | `studio.css`: Bewegungsmarken |
+| `#handy-oben` Rundung | `bausteine.css`: 29px | `studio.css` |
+| `#reiterleiste` Abstand | `bausteine.css`: `gap:2px` | `studio.css` |
+| `.document-position` | `bausteine.css`: `margin-left` | `pdf-studio.css` |
+| `.document-zoom-label` | `bausteine.css`, zwei Breiten | `pdf-studio.css` |
+| `#kanten-lade` Schatten | `premium.css`: `--gold-shadow` | `studio.css`: `--studio-elevation` |
+| Premium-Hülle, 7 Zeilen | `premium.css`: vier Rasterzeilen | `studio.css`: fünf |
+| Die Bibliothek, 35 Stück | `bausteine.css` | `bibliothek-studio.css` |
+
+Bei zweien war die Reparatur nicht „löschen", sondern **umziehen**: Die
+Breite des KI-Fensters gehört in `ki.css`, nicht in eine Animationssammlung
+— also steht dort jetzt 420 und `motion.css` sagt dazu nichts mehr. Die
+Premium-Hülle hat ihre sieben Zeilen an `studio.css` abgegeben, weil dort
+seit dem 6. September die fünfte Zeile für den Studio-Balken steht; hier
+blieben nur die Spalten.
+
+**Sorte 2 · eine Absicht, die nie gewirkt hat.** Davon gab es genau eine,
+und sie ist der Grund, warum dieser Wächter sein Geld wert ist:
+
+```css
+/* motion.css — so stand es seit dem 10. September */
+.els-kachel, .stat-karte.lw-metrik{
+  transition: transform .35s …, box-shadow .35s, border-color .25s;
+}
+```
+
+`transition` ist EINE Eigenschaft. Die spätere Liste gewinnt ganz — also
+galt die frühere aus `bausteine.css` nicht mehr, und in ihr stand
+`background`. Zehn Tage lang wechselte die Kachel beim Überfahren ihre
+Fläche **hart statt weich**. Niemandem ist es aufgefallen, und das ist
+folgerichtig: ein fehlender Übergang sieht nicht kaputt aus, nur billig.
+`background` steht jetzt mit in der Liste.
+
+### Die Bibliothek ist ein Fall für sich
+
+Die letzten 35 waren **eine** Sache, kein Dutzend. Redur hat am
+6. September mit PR #56 `bibliothek-studio.css` gebaut — 101 Zeilen, die
+das Regal zu echten Buchdeckeln machen. Das Blatt lädt nach `bausteine.css`
+und gewinnt seither bei jeder Eigenschaft, die beide setzen: Kopfzeile,
+Artenleiste, Spaltenbreite, Rundung, Schatten, Schriftgrösse, Zeilenhöhe.
+
+Das ist §8 in freier Wildbahn: **zwei Kataloge für dasselbe Bauteil.** Der
+Bogen führt sie nicht zusammen — er sagt, wem was gehört, und räumt beim
+Verlierer weg, was er nur noch behauptet:
+
+* Was das Studio-Blatt setzt, steht **nur** noch dort.
+* Was es nicht setzt, bleibt in `bausteine.css` — und steht nun mit einem
+  Satz dabei, warum es bleibt: `display:grid` für das Regal (das Studio
+  setzt nur die Spaltenbreite, und `notizhefte.css` baut auf derselben
+  Klasse auf, E207), das Auslassungszeichen am Titel, das Querschieben der
+  Artenleiste.
+
+Eine Zeile verdient eine eigene Erwähnung, weil sie zeigt, dass eine tote
+Regel Nachbarn hat:
+
+```css
+.bib-deckel-name b{ min-height:33px }   /* für 12,5px / 1,3 gerechnet */
+```
+
+Die 33 waren zwei Zeilen Name — **bei der alten Schrift**. Das Studio-Blatt
+setzt 13px bei 1,5, also 19,5px je Zeile. Der Wächter sieht das nicht
+(`min-height` setzt das Studio-Blatt nicht, es ist also keine Doppelung),
+aber die Zahl war trotzdem falsch geworden. Gemessen, nicht gerechnet:
+
+```txt
+min-height:33px   kurzer Name 33 px · langer Name 39 px   → 6 px Versatz
+min-height:39px   kurzer Name 39 px · langer Name 39 px   → bündig
+```
+
+Jetzt 39. Das ist keine neue Absicht, sondern dieselbe von damals, auf die
+heutige Schrift nachgezogen.
+
+### Was es kostet
+
+`test332` ist ab jetzt ein Wächter mit einer Null, und jede neue Doppelung
+macht ihn rot — auch eine absichtliche. Wer künftig in einer späteren Datei
+etwas überschreiben WILL, muss es in der früheren wegnehmen statt es
+stehenzulassen. Das ist genau die Absicht: eine Erklärung, die überschrieben
+wird, ist keine Erklärung, sondern eine Behauptung über den Zustand der App.
+
+**Die Alternative** wäre ein Verzeichnis erlaubter Doppelungen gewesen, wie
+es `js-bestand.json` oder `bereiche-bestand.json` führen. Dagegen spricht,
+was E340 schon beim Bau des Laufs geschrieben hat: bei Breiten gibt es
+gewollte Ausnahmen, **hier nicht**. Zwei Erklärungen für dasselbe in zwei
+Dateien sind immer ein Versehen. Ein Verzeichnis hätte das Versehen nur
+verwaltet.
+
+**Gemessen.** `test332` (76 → 0) · die Bild-Gegenprobe der Bibliothek vor
+und nach dem Aufräumen: kein Pixel Unterschied, denn jede entfernte Zeile
+war schon vorher wirkungslos.
+
+---
+
+## E643 — Der Wächter gegen Port-Kollisionen kannte nur eine Schreibweise
+
+`test400` ist seit E405 der Wächter, der verhindert, dass zwei Prüfläufe
+sich einen Port teilen. Der Grund steht in seinem eigenen Kopf: am
+4. September war ein ganzes Stück eines vollen Laufs rot, **und nichts daran
+war ein Fehler im Produkt**. Ein Ergebnis, das aus dem falschen Grund rot
+ist, ist schlimmer als eines, das grün lügt.
+
+Am 20. September hat dieser Wächter selbst sieben Kollisionen durchgelassen.
+
+### Wie es aufgefallen ist
+
+`test424` wurde in einem Stapel von sechzehn an einer Zeile rot, die ihren
+eigenen Lastverlauf im Kommentar führt („DREISSIG SEKUNDEN, NICHT
+FUENFZEHN"). Beim Nachsehen, welchen Port der Lauf hält, stand da nicht
+`const PORT = …`, sondern:
+
+```ts
+await new Promise<void>(resolve => server.listen(9624, '127.0.0.1', resolve));
+```
+
+Und `test400` las:
+
+```ts
+const m = roh.match(/PORT = (\d+)/);
+```
+
+Acht Läufe schreiben ihre Zahl direkt in den Aufruf. Für den Ausdruck waren
+sie unsichtbar — und damit auch **sieben doppelt vergebene Ports**, gemessen
+mit einem Ausdruck, der beide Schreibweisen kennt:
+
+```txt
+8799: test31  + test130      9629: test429 + test519
+8963: test205 + test243      9630: test430 + test520
+9624: test424 + test514      9631: test437 + test521
+9628: test428 + test518
+```
+
+Vier andere hatte Bogen 1 am selben Tag von Hand gefunden und aufgelöst.
+Diese sieben standen daneben und wurden nicht gesehen, **weil der Wächter
+sagte, es gebe keine.**
+
+### Das ist zum vierten Mal dieselbe Sorte
+
+An zwei Tagen viermal: ein Ausdruck, der eine gültige Schreibweise nicht
+kennt, und ein Wächter, der daraufhin das Falsche behauptet.
+
+```txt
+E629    test537 kannte `const X: Typ = …` nicht        → erfand eine Kopplung
+E631    test444 las einen Kommentar als Code           → erfand einen Verstoss
+E642    test332 zerriss die Kommas in `:is(…)`         → erfand tote Regeln
+E643    test400 kannte `listen(9624, …)` nicht         → übersah sieben Kollisionen
+```
+
+Die ersten drei **erfanden** etwas, dieser hier **übersah** etwas. Das ist
+der gefährlichere Fehler: eine erfundene Meldung kostet Arbeit, eine
+übersehene kostet Vertrauen in einen ganzen vollen Lauf.
+
+### Was geändert ist
+
+**1 · Alle Schreibweisen.** `PORT = N`, `PORT: number = N`, `listen(N, …)`.
+
+**2 · `listen(0)` zählt als richtig, nicht als fehlend.** Sechs Läufe
+(`test492`, `test524`, `test527`, `test528`, `test529`, `test538`) lassen
+sich den Port vom Rechner geben. Die können **gar nicht** kollidieren, und
+das ist die bessere Antwort auf das ganze Problem — nicht eine weitere
+Zahl von Hand zu vergeben. Wer einen neuen Lauf schreibt, nimmt diesen Weg.
+
+**3 · Der Wächter muss wissen, was er nicht sieht.** Seine Ausgabe sagte
+schon immer „374 von 481 Läufen halten einen festen Port", und niemand hat
+gefragt, was mit den übrigen 107 ist. Jetzt ist es eine Prüfung: **jeder
+Lauf, der einen eigenen Server startet, nennt entweder eine Zahl oder
+`listen(0)`.** Eine dritte Schreibweise macht die Zeile rot, statt lautlos
+ein Loch zu lassen.
+
+**4 · Und er liest Code, nicht Prosa.** Beim ersten Bauen meldete er
+prompt „9624: test400 + test424" — die Tabelle oben steht in seinem eigenen
+Kopfkommentar. Zum dritten Mal an zwei Tagen hat das Aufschreiben den
+nächsten Fehlalarm erzeugt (E631, E633). Er benutzt jetzt `nurCode` aus
+`pruefungen/hilfe/quelltext.mts` — die eine Stelle, nicht eine Kopie (§8).
+Eine vierte Fassung derselben Lehre kam gleich hinterher: er zählte sich
+selbst als `listen(0)`, weil die Worte in seiner **Ausgabezeile** stehen und
+`nurCode` Schablonen mit Absicht stehen lässt. Dort half kein Entferner,
+sondern nur die richtige Reihenfolge der Fragen: erst „gibt es überhaupt
+einen Server?", dann „welche Zahl?".
+
+### Die sieben sind umgezogen
+
+Dieselbe Regel wie in Bogen 1: **der jüngere Lauf weicht**, der ältere behält
+seine Zahl.
+
+```txt
+test130 → 9643    test518 → 9646    test520 → 9648
+test243 → 9644    test519 → 9647    test521 → 9649
+test514 → 9645
+```
+
+### Was es kostet
+
+Die Ports werden weiterhin von Hand vergeben, und der Vorrat ist endlich.
+**Die Alternative** wäre gewesen, alle 382 Läufe auf `listen(0)` umzustellen.
+Dagegen spricht nichts Grundsätzliches — es ist nur ein eigener Bogen: jeder
+Lauf baut seine Adressen aus `PORT`, und 382 Dateien anzufassen, während
+achtzehn Läufe rot sind, ist die falsche Reihenfolge (§46). Es steht als
+**L205** offen.
+
+**Gemessen.** `test400` (4 von 4, mit zwei Gegenproben: eine
+wiedereingesetzte Kollision wird gefunden, eine unbekannte Schreibweise
+macht rot) · die vierzehn betroffenen Läufe einzeln.
+
+---
+
+## E644 — Erst wiederherstellen, dann beobachten
+
+Seit E349 öffnet Redion ein Dokument dort, wo man es verlassen hat — der
+Satz dazu steht im Quelltext: *„GoodNotes öffnet ein Dokument dort, wo man
+es verlassen hat; hier begann jedes Öffnen bei Seite 1."* Gemerkt wird je
+Dokument als Meta unter `dokSeite:<id>`.
+
+Am 20. September war die Zusage gebrochen, und zwar seit wann, weiss
+niemand: `test424` prüfte sie über einen Weg, der das Ergebnis dem Zufall
+überliess.
+
+### Der Befund
+
+`test424` war rot — allein, im Stapel, auf dem Zweig und auf `main`. Ein
+Haken auf `Store.setMeta` zeigte den Weg und genau einen Schreibvorgang:
+
+```txt
+direkt nach dem Blättern   meta=1  aktiv=1
+vor dem Zurück ins Regal   meta=1  aktiv=1
+nach der Bildmatrix        meta=1  aktiv=null
+nach dem letzten Öffnen    meta=0  aktiv=0      ← hier
+
+seiteMerken ⟵ nachziehen ⟵ beiGroesse
+```
+
+`nachziehen()` rechnet aus dem Rollstand, welche Seite in der Fenstermitte
+steht, und **merkt** sie. Beim frisch geöffneten Dokument steht der Rollstand
+aber noch auf 0, während die zuletzt gelesene Seite erst im
+`requestAnimationFrame` angerollt wird. Wer in diesen Spalt eine
+Fenstergrösse meldet, bekommt die Antwort „Seite 1" — und die ist dann
+gemerkt.
+
+**Was das für einen Menschen heisst:** ein Skript auf Seite 40 zuklappen,
+das Telefon drehen, und Redion beginnt wieder bei Seite 1. Am Rechner reicht
+das Ziehen am Fensterrand oder das Aufklappen der Seitenleiste.
+
+### Und warum der alte Wächter es nicht halten konnte
+
+Derselbe Haken, der den Fehler sichtbar machte, machte ihn beim zweiten
+Versuch unsichtbar: mit ein paar Millisekunden mehr Arbeit darin lief
+derselbe Durchgang grün, 50 von 50. Das ist kein Messfehler, sondern die
+Natur der Sache — es ist ein **Wettlauf**, und `test424` hat ihn manchmal
+gewonnen.
+
+> Ein Wächter, der ein Rennen zufällig gewinnt, ist keiner.
+
+`test540` stellt das Rennen deshalb: das Fenster meldet seine neue Grösse
+ausdrücklich, bevor der `rAF` laufen kann. Damit ist die Zusage nicht mehr
+eine Frage der Maschine, auf der geprüft wird.
+
+### Die Reparatur ist eine Reihenfolge, keine Wartezeit
+
+```ts
+let standGesetzt = false;          // erst wiederherstellen …
+…
+const nachziehen = (): void => {
+  if (!center.isConnected) return;
+  if (!standGesetzt) return;       // … dann beobachten
+```
+
+und im selben `rAF`, in dem die gemerkte Seite angerollt wird, fällt die
+Sperre — eine Bildauffrischung später, nicht nach einer geschätzten Zahl von
+Millisekunden.
+
+**Die Alternative** wäre gewesen, `beiGroesse` nach jedem Fensterwechsel
+wieder auf `state.index` zu rollen. Das hätte den Fehler auch behoben und
+wäre für sich genommen sogar wünschenswert (bei einer neuen Breite ändern
+sich alle Seitenhöhen, und heute driftet die Ansicht dabei). Dagegen
+spricht, dass es **mehr** ändert als den Fehler: wer mitten auf Seite 3
+liest und das Fenster zieht, würde an deren Oberkante geschnappt. Eine
+Reparatur, die nebenbei das Rollverhalten ändert, ist keine Reparatur,
+sondern ein zweiter Bogen (§45: nicht mehrere Themen vermischen).
+
+**Was es kostet:** eine Bildauffrischung lang zeichnet das faule Zeichnen
+nicht nach. Gemessen ist das dieselbe Auffrischung, in der die Seiten
+ohnehin erst ihre Höhe bekommen — es gibt in diesem Spalt nichts zu
+zeichnen, was hinterher nicht gezeichnet würde.
+
+**Gemessen.** `test540` (9 von 9; Gegenprobe: mit `if (false && …)` statt
+der Sperre sind genau die drei Zeilen wieder rot, die den Fehler
+beschreiben) · `test424` · `test395`, `test202`, `test386` — die Läufe, die
+am faulen Zeichnen und an der Seitenzahl hängen.
+
+---
+
+## E645 — Ein Wächter zählte das ganze Haus, gemeint war ein Zimmer
+
+`test435` §3 hält seit E462 fest, dass die Textur ihre zwei SVG-Filter
+**genau einmal** anlegt — auch wenn man sie viermal legt. Gemessen hat er
+das so:
+
+```js
+const filter = document.querySelectorAll('filter').length;   // === 2
+```
+
+Das ist nicht dieselbe Aussage. Es heisst: **„es gibt in ganz Redion genau
+zwei SVG-Filter."** Am 19. September war das zufällig wahr. Am 20. kam die
+Linse der unteren Leiste dazu (E639, zwei Filter), und die Zeile wurde rot —
+ohne dass an der Textur irgendetwas falsch war.
+
+**Das ist die vierte Fassung derselben Sorte an zwei Tagen** (E629, E631,
+E642, E643): ein Ausdruck, der etwas anderes misst, als der Satz daneben
+behauptet. Diesmal ist sie besonders lehrreich, weil der Wächter dadurch
+**jede neue Funktion bestraft**, die einen Filter mitbringt — er war nicht
+falsch, er war zu weit.
+
+### Was geändert ist
+
+**1 · Im Halter zählen, nicht im Dokument.**
+
+```js
+const filter = document.querySelectorAll('#' + Textur.HALTER + ' filter').length;
+```
+
+Damit steht da, was gemeint war, und die Linse ist keine Störung mehr.
+
+**2 · Und die Frage stellen, um die es E440 wirklich ging.** Am KI-Funken
+teilten sich zwei Instanzen eine Filter-ID, und die zweite gewann. Genau das
+prüft jetzt eine eigene Zeile:
+
+```js
+const ids = Array.from(document.querySelectorAll('filter')).map(f => f.id).filter(Boolean);
+const doppelt = ids.filter((x, i) => ids.indexOf(x) !== i);
+```
+
+Diese Zahl bleibt richtig, **egal wie viele Bauteile eigene Filter
+mitbringen** — sie wächst nicht mit dem Programm, sondern hält eine
+Eigenschaft. Das ist der Unterschied zwischen einer Zusage und einer
+Momentaufnahme.
+
+### Beide Gegenproben rot gesehen (§50)
+
+```txt
+ein dritter Filter im Halter        →  ✗ „… genau zwei Filter in ihrem Halter — 3"
+ein zweiter `ru-textur-fein`        →  ✗ „… teilen sich eine Kennung — ru-textur-fein
+                                          — alle: ru-linse-ruhe, ru-linse-fahrt,
+                                            ru-textur-fein, ru-textur-grob, ru-textur-fein"
+beides zurückgenommen               →  ✓ 45/45
+```
+
+### Und eine Falle, die zum dritten Mal zuschlug
+
+Der Kommentar, den ich an die Stelle schrieb, steht **innerhalb** einer
+Schablone (`page.evaluate(\`…\`)`). Ein Akzentzeichen darin beendet die
+Zeichenkette mitten im Satz — Node meldete `ERR_INVALID_TYPESCRIPT_SYNTAX`
+an einer Stelle, die wie Prosa aussieht. Der Kopf der Datei warnt davor, und
+ich habe es trotzdem getan. Der Kommentar steht jetzt ohne Akzentzeichen da
+und sagt selbst, warum.
+
+**Was es kostet:** nichts. Die alte Zeile hat nie etwas gehalten, was die
+neuen zwei nicht besser halten.
+
+**Gemessen.** `test435` (45/45, zwei Gegenproben) · `test539` (die Linse) ·
+`test87`.

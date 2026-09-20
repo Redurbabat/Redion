@@ -41,6 +41,7 @@ import { dirname as _ordner, resolve as _loese, join as _dazu, relative as _rela
          extname as _endung } from 'node:path';
 import { readFileSync as _lies, readdirSync as _liste, existsSync as _da } from 'node:fs';
 import { ROLLEN as SERVER, darf as serverDarf } from '../../server/kern.ts';
+import { nurCode } from '../hilfe/quelltext.mts';
 
 const WURZEL = _loese(_ordner(_alsPfad(import.meta.url)), '../..');
 
@@ -142,11 +143,10 @@ console.log('\n— Die Grenze aus A1 und A2 —');
    liess die Prüfung „schale.js bindet alle drei" fehlschlagen, obwohl alle
    drei dastanden. Ein Entferner, der mehr wegnimmt als er soll, macht eine
    Prüfung nicht strenger, sondern blind. */
-const nurCode = (text: string) => text
-  .replace(/\/\*[\s\S]*?\*\//g, ' ')
-  .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ')
-  .replace(/'(?:[^'\\\n]|\\.)*'/g, "''")
-  .replace(/"(?:[^"\\\n]|\\.)*"/g, '""');
+/* Die Fassung steht jetzt in `pruefungen/hilfe/quelltext.mts` — sie lag
+   zweimal wortgleich im Baum, und über der zweiten Kopie stand
+   „wiederverwenden, nicht nachbauen (§8)". Der Kommentar darüber ist
+   mit umgezogen; er erklärt, warum Schablonen stehen bleiben. */
 
 ['seitenleiste.js', 'kopfleiste.js', 'inhaltsflaeche.js'].forEach(datei => {
   const code = nurCode(_lies(_dazu(WURZEL, 'quell/schale/aufbau', datei), 'utf8'));

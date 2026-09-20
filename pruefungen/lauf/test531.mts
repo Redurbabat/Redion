@@ -37,7 +37,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
-const PORT = 9531;
+/* 9639 UND NICHT 9531 (E630). Die Zahl war doppelt vergeben — sie gehörte
+   schon einem älteren Lauf, und dessen Port steht in ENTSCHEIDUNGEN.md.
+   Zwei Läufe mit derselben Zahl können nie nebeneinander laufen, und ein
+   Ergebnis, das aus dem falschen Grund rot ist, ist schlimmer als eines,
+   das grün lügt (test400). */
+const PORT = 9639;
 
 const TYPEN: Record<string, string> = { '.html': 'text/html', '.js': 'text/javascript',
   '.css': 'text/css', '.png': 'image/png', '.webmanifest': 'application/manifest+json',

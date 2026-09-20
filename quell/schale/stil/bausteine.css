@@ -688,14 +688,21 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
  * ist der ANFANG der Seite in kleiner Schrift, genau wie im Heftregal — und
  * darüber, je nach Art, ein paar Linien, die das Papier andeuten.
  * ======================================================================== */
-/* EIN RASTER, KEIN UMBRUCH. Mit `flex-wrap` fiel der Listenknopf in eine
-   eigene Zeile, sobald „Dokumente" und „+ Neu" die Breite füllten — aus
-   einer Bank wurden zwei, und genau die zählt Redur. Das Raster sagt
-   stattdessen, WAS schrumpfen darf: der Titel. */
-.bib-dkopf{
-  display:grid; grid-template-columns:minmax(0,1fr) auto auto;
-  align-items:center; gap:6px 10px; margin:0 0 var(--space-4)
-}
+/* ══ DIE KOPFZEILE GEHÖRT DEM STUDIO-BLATT (E642) ═══════════════════════
+   Hier stand ein Raster mit dem Titel „EIN RASTER, KEIN UMBRUCH": es
+   sollte verhindern, dass der Listenknopf in eine eigene Zeile fällt.
+   Seit dem 6. September setzt `bibliothek-studio.css`
+   `display:flex;flex-wrap:wrap` und ordnet Krume, Ort und Importknopf
+   selbst über `order` und `flex-basis` — und weil es NACH dieser Datei
+   geladen wird, hat das Raster seither nichts mehr getan. Mit ihm jedes
+   `grid-row` und `grid-column` darunter: ein Raster ohne `display:grid`
+   ist eine Zeile, die aussieht, als tue sie etwas.
+   Die Sorge von damals ist damit nicht erledigt, sondern nur woanders
+   beantwortet — das Studio-Blatt legt Krume und Ort mit `flex-basis:100%`
+   auf eigene Zeilen und lässt Titel und Knöpfe auf einer. Nachgesehen im
+   Bild, nicht erinnert.
+   §8: ein Katalog für eine Sache. Was hier noch steht, ist nur das, was
+   das Studio-Blatt NICHT setzt. */
 /* DIE BROTKRUME DER ABLAGE (E380).
    Sie steht ÜBER dem Titel und über die ganze Breite — nicht daneben: der
    Weg kann lang werden, der Titel darf davon nicht schmaler werden. An der
@@ -703,7 +710,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
    Der Zurück-Pfeil ist der einzige Knopf, den man am Telefon oft trifft;
    er bekommt darum die volle Trefferfläche (§37). */
 .bib-krume{
-  grid-column:1 / -1; grid-row:1; min-width:0;
+  min-width:0;
   display:flex; align-items:center; gap:2px;
   overflow-x:auto; scrollbar-width:none; white-space:nowrap;
   /* DIE MARKEN HEISSEN `--text-dim`, `--text` UND `--bg-hover`.
@@ -746,15 +753,13 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 .bib-krume b{ flex:0 0 auto; padding:0 6px; color:var(--text); font-weight:600 }
 .bib-krume span{ flex:0 0 auto; opacity:.5 }
-.bib-dkopf:has(.bib-krume) h1{ grid-row:2 }
-.bib-dkopf:has(.bib-krume) .bib-neu{ grid-row:2 }
-.bib-dkopf:has(.bib-krume) .bib-form-knopf{ grid-row:2 }
-.bib-dkopf:has(.bib-krume) .bib-ort{ grid-row:3 }
-
+/* NUR NOCH DAS AUSLASSUNGSZEICHEN. Grösse, Laufweite und Mindestbreite
+   setzt `bibliothek-studio.css` (26px / -.7px / 120px, am Tablet 240px);
+   das Abschneiden mit „…" setzt es nicht — und ohne das hier würde der
+   Titel die Knöpfe aus der Zeile drücken statt zu schrumpfen. */
 .bib-dkopf h1{
-  grid-column:1; grid-row:1; min-width:0; margin:0;
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  font-size:27px; font-weight:760; letter-spacing:-.03em
+  margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-weight:760
 }
 /* Der Ort ist eine Auskunft mit einem Weg dahinter, keine Überschrift:
    „Kürzlich verwendet · 23 Dokumente ▾". Er steht unter dem Titel, weil er
@@ -784,21 +789,27 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 .bib-form-knopf:hover{ background:var(--bg-hover); color:var(--text) }
 
+/* Abstand und Aussenmass kommen aus `bibliothek-studio.css` (6px / 24px).
+   Hier bleibt, was dort fehlt: dass die Leiste eine Zeile ist und quer
+   geschoben werden kann, wenn die Arten nicht nebeneinander passen. */
 .bib-arten{
-  display:flex; gap:7px; margin:0 0 var(--space-5); overflow-x:auto;
-  scrollbar-width:none
+  display:flex; overflow-x:auto; scrollbar-width:none
 }
 .bib-arten::-webkit-scrollbar{ display:none }
+/* Polster, Rundung und Schriftgrösse setzt das Studio-Blatt. */
 .bib-arten button{
-  flex:none; min-height:34px; padding:0 14px; border:0; border-radius:999px;
-  background:var(--bg-card); color:var(--text-dim); font-size:13px; cursor:pointer
+  flex:none; min-height:34px; border:0;
+  background:var(--bg-card); color:var(--text-dim); cursor:pointer
 }
 .bib-arten button:hover{ background:var(--bg-hover); color:var(--text) }
 .bib-arten button.on{ background:var(--text); color:var(--bg); font-weight:620 }
 
+/* DASS es ein Raster ist, steht hier — WIE breit die Spalten sind, im
+   Studio-Blatt (155–200px, am Telefon zwei feste Spalten). `display:grid`
+   setzt es nicht, und ohne diese Zeile fiele das ganze Regal auseinander;
+   `notizhefte.css` baut auf derselben Klasse auf (E207). */
 .bib-gitter{
-  display:grid; grid-template-columns:repeat(auto-fill,minmax(148px,1fr));
-  gap:26px 20px; align-items:start
+  display:grid; align-items:start
 }
 /* Ein `<button>` zentriert seinen Inhalt senkrecht — auch mit `display:block`.
    Ohne diese Spalte begannen die Deckel einer Reihe auf verschiedenen Höhen,
@@ -811,12 +822,14 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-deckel-blatt{
   position:relative; display:block; overflow:hidden;
   aspect-ratio:3/4; margin:0 0 9px; padding:14px 11px 0;
-  border:1px solid var(--line); border-radius:6px;
-  background:var(--bg-card); box-shadow:var(--shadow-2);
+  border:1px solid var(--line);
+  /* Rundung und Schatten macht das Studio-Blatt zum Buchrücken:
+     `6px 12px 12px 6px` und zwei gestaffelte Schatten. Hier stand einmal
+     ein gleichmässiges `6px` mit `--shadow-2` — beides wirkungslos. */
+  background:var(--bg-card);
   color:var(--text-dim); font-size:8px; line-height:1.6
 }
 .bib-deckel:hover .bib-deckel-blatt{ box-shadow:var(--shadow-3) }
-.bib-deckel:active .bib-deckel-blatt{ transform:scale(.985) }
 /* Der Auslauf nach unten — dasselbe Papier wie im Heftregal. */
 /* DAS ECHTE BILD AUF DEM DECKEL (L61, E313).
    Es füllt das Blatt ganz aus und wird beschnitten statt verzerrt — ein
@@ -875,8 +888,8 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
    E227 bei der Zahl). */
 .bib-deckel-name b{
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
-  overflow:hidden; min-height:33px; min-width:0; overflow-wrap:break-word;
-  font-size:12.5px; font-weight:580; line-height:1.3; letter-spacing:-.005em
+  overflow:hidden; min-height:39px; min-width:0; overflow-wrap:break-word;
+  font-weight:580; letter-spacing:-.005em
 }
 .bib-deckel-mehr{
   margin-left:auto; flex:none; width:20px; height:20px; display:grid;
@@ -885,7 +898,7 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 .bib-deckel-mehr:hover{ background:var(--bg-hover); color:var(--text) }
 .bib-deckel small{
-  display:block; overflow:hidden; margin-top:2px; color:var(--text-faint);
+  display:block; overflow:hidden; margin-top:2px;
   font-size:11px; white-space:nowrap; text-overflow:ellipsis
 }
 /* ---- DIE GEZEICHNETEN DECKEL -------------------------------------------
@@ -1003,10 +1016,8 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 
 @media(max-width:760px){
-  .bib-gitter{ grid-template-columns:repeat(auto-fill,minmax(102px,1fr));
-               gap:20px 14px }
-  .bib-dkopf{ gap:6px 8px }
-  .bib-dkopf h1{ font-size:24px }
+  /* Spalten, Abstände und Titelgrösse am Telefon: alle drei stehen in
+     `bibliothek-studio.css` unter derselben Breite und gewinnen dort. */
   .bib-neu{ padding:0 17px 0 13px }
   /* GEMESSEN: `#page` gibt 28 px Polster, die Bibliothek noch einmal 16 —
      zusammen 88 von 390. Übrig blieben 302, und damit passten nur ZWEI
@@ -1781,7 +1792,12 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     display:flex; align-items:stretch; gap:2px;
     position:fixed; left:10px; right:10px; top:auto; z-index:401;
     bottom:calc(9px + env(safe-area-inset-bottom));
-    padding:5px 6px; border-radius:29px;
+    padding:5px 6px;
+    /* DER RADIUS STEHT IN `studio.css` (E642). Hier stand `29px` und galt
+       seit dem 6. September nie: `studio.css:224` setzt ihn als halbe
+       Leistenhöhe (`calc(var(--mobile-nav-height)/2)`), und dort steht
+       auch der Grund dafür. Eine zweite Zahl daneben war nur eine, die
+       auseinanderlaufen kann. */
     /* DER INHALT LÄUFT DAHINTER DURCH, also muss die Fläche tragen.
        `--bg-card` allein wäre auf einem hellen Regal zu durchsichtig;
        der Weichzeichner dahinter macht aus dem, was durchscheint, eine
@@ -1876,13 +1892,110 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     /* SEIT E236 STEHT SIE UNTEN und ist so hoch wie ein Weg, nicht wie
        eine Pille: 48 statt 56, und der Radius passt zu den Knöpfen. Der
        Abstand von oben ist das Polster der Leiste (5 px). */
-    position:absolute; left:0; top:5px; z-index:0;
+    position:absolute; left:0; top:5px;
     height:48px; width:0; border-radius:var(--radius-2xl);
-    background:var(--bg-hover);
     pointer-events:none; opacity:0;
+
+    /* ════════════════════════════════════════════════════════════════════
+     * SEIT E639 LIEGT SIE DARÜBER, NICHT DARUNTER — und das ist der ganze
+     * Unterschied zwischen einer Fläche und einer Linse.
+     *
+     * Hier stand `z-index:0`, mit dem Satz „sie liegt unter den Knöpfen".
+     * Das war richtig, solange sie eine FARBE war: eine farbige Fläche über
+     * dem Zeichen hätte es verdeckt. Eine Linse dagegen kann nur brechen,
+     * was hinter ihr liegt — unter den Knöpfen hat sie nichts zu tun.
+     *
+     * Sie nimmt trotzdem keine Berührung an (`pointer-events:none`), die
+     * Trefferfläche bleibt also der Knopf darunter (§37). Das ist keine
+     * Behauptung: `test539` fragt `elementFromPoint` in der Mitte des
+     * aktiven Reiters und will den Knopf zurück, nicht die Pille.
+     * ══════════════════════════════════════════════════════════════════ */
+    z-index:2;
+
+    /* DIE FLÄCHE BLEIBT DIESELBE MARKE, nur durchsichtiger. Ohne Brechung
+       (ältere Browser) sieht man genau das, was vorher hier stand — eine
+       ruhige Hervorhebung, nur leichter. Deshalb steht sie zuerst da. */
+    background:color-mix(in srgb,var(--bg-hover) 62%,transparent);
+    box-shadow:inset 0 1.6px .6px color-mix(in srgb,var(--text) 34%,transparent),
+               inset 0 -1.2px .6px color-mix(in srgb,var(--text) 10%,transparent),
+               inset 1.2px 0 .6px color-mix(in srgb,var(--text) 9%,transparent),
+               inset -1.2px 0 .6px color-mix(in srgb,var(--text) 9%,transparent);
+    -webkit-backdrop-filter:saturate(1.5) brightness(1.08);
+    backdrop-filter:saturate(1.5) brightness(1.08);
+
     transition:transform var(--motion-normal) var(--ease-standard),
                width var(--motion-normal) var(--ease-standard),
                opacity var(--motion-fast) linear;
+  }
+
+  /* DIE BRECHUNG, wo der Browser sie kann. Eigene Regel und nicht oben
+     dazugeschrieben: ein Browser, der `url()` in `backdrop-filter` nicht
+     kennt, verwirft NUR diese Zeile und behält die Fläche darüber. Stünde
+     beides in einer Regel, fiele beides weg. */
+  #handy-oben #ho-pille{
+    -webkit-backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+    backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+  }
+  /* WÄHREND DER FAHRT verzerrt sie stärker — wie Wasser, das man zieht.
+     Im Vorbild ist das der auffälligste Teil: die Zeichen, über die sie
+     läuft, werden mitgeschleift, statt still stehenzubleiben. */
+  #handy-oben #ho-pille.faehrt{
+    -webkit-backdrop-filter:url(#ru-linse-fahrt) saturate(1.55) brightness(1.13);
+    backdrop-filter:url(#ru-linse-fahrt) saturate(1.55) brightness(1.13);
+  }
+
+  /* DER GLANZRAND. Oben auf der Kapsel sitzt im Vorbild ein heller Bogen
+     mit einem feinen Farbschimmer — die Kante des Glases, die das Licht
+     zerlegt. Ein eigenes Element dafür, weil ein `box-shadow` keine Farbe
+     verlaufen lassen kann. */
+  #handy-oben #ho-pille::before{
+    content:""; position:absolute; inset:0; border-radius:inherit;
+    pointer-events:none;
+    background:linear-gradient(100deg,
+      rgba(120,255,205,0) 12%, rgba(120,255,210,.5) 26%,
+      rgba(255,255,255,.75) 42%, rgba(190,200,255,.5) 58%,
+      rgba(255,170,220,.35) 70%, rgba(255,255,255,0) 86%);
+    -webkit-mask:linear-gradient(180deg,#000 0,transparent 17%);
+    mask:linear-gradient(180deg,#000 0,transparent 17%);
+    opacity:.32;
+    transition:opacity var(--motion-normal) var(--ease-standard);
+  }
+  #handy-oben #ho-pille.faehrt::before{ opacity:.72 }
+
+  /* OHNE BEWEGUNG STEHT SIE STILL — UND BLEIBT SICHTBAR. Das ist genau die
+     Falle, vor der §55.2 warnt: eine Linse, die bei `reduce` einfach
+     verschwindet, hätte den aktiven Reiter unmarkiert gelassen, und
+     niemand hätte es gemerkt, weil die Prüfung „keine Bewegung" grün
+     gewesen wäre. Dieselbe Regel wie beim Schalter (E537/E635): die
+     Bewegung geht weg, das Bild bleibt. */
+  @media (prefers-reduced-motion:reduce){
+    #handy-oben #ho-pille{ transition:none }
+    #handy-oben #ho-pille.faehrt{
+      -webkit-backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+      backdrop-filter:url(#ru-linse-ruhe) saturate(1.5) brightness(1.08);
+    }
+    #handy-oben #ho-pille::before,
+    #handy-oben #ho-pille.faehrt::before{ opacity:.32; transition:none }
+  }
+
+  /* OHNE DURCHSICHT GIBT ES KEIN GLAS — und trotzdem eine Auswahl.
+     Wer `prefers-reduced-transparency` gesetzt hat, hat einen Grund dafür:
+     durchscheinende Flächen sind für manche Augen anstrengend oder
+     unlesbar. Dann fällt BEIDES weg, Unschärfe und Brechung, und an ihre
+     Stelle tritt die volle Marke — dieselbe Antwort, die `studio.css` für
+     Menü, Finder und Auswahlleiste gibt und `pdf-studio.css` für die
+     Werkzeugleiste. Was NICHT wegfällt, ist die Fläche selbst: sonst
+     stünde der aktive Reiter unmarkiert da (§38). */
+  @media (prefers-reduced-transparency:reduce){
+    #handy-oben{ background:var(--bg-card);
+                 -webkit-backdrop-filter:none; backdrop-filter:none }
+    #handy-oben #ho-pille,
+    #handy-oben #ho-pille.faehrt{
+      background:var(--bg-hover);
+      -webkit-backdrop-filter:none; backdrop-filter:none;
+    }
+    #handy-oben #ho-pille::before,
+    #handy-oben #ho-pille.faehrt::before{ opacity:0 }
   }
   /* Beim ersten Setzen darf sie NICHT gleiten — sonst schiebt sie sich
      beim Öffnen der App von der linken Kante herein, und das sieht aus
@@ -2954,7 +3067,9 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 button[disabled]{opacity:.4; cursor:not-allowed}
 
 /* Reiter, geteilte Ansicht, Linkvorschau */
-#reiterleiste{display:flex; align-items:stretch; gap:2px; padding:4px 6px 0;
+/* DER ABSTAND STEHT IN `studio.css` (E642) — hier stand `gap:2px` und galt
+   nicht mehr. */
+#reiterleiste{display:flex; align-items:stretch; padding:4px 6px 0;
               background:var(--bg-side); border-bottom:1px solid var(--line);
               overflow-x:auto; flex:0 0 auto}
 /* DER AKTIVE REITER KLINKT IN DIE FLÄCHE EIN (E263, aus Amdion): drei
@@ -4307,9 +4422,47 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   background:var(--bg-hover); color:var(--text);
   box-shadow:inset 0 0 0 2px var(--accent)
 }
-/* 1 · DAS WERKZEUG. */
+/* ══ 1 · DAS WERKZEUG — DER GRUND SITZT, DER WECHSEL FLIEGT (E640) ═════════
+   Das Design-System verlangt: nicht zwei Flächen unabhängig aus- und
+   einblenden, sondern EINE, die sich vom alten zum neuen Zustand bewegt.
+
+   DER GRUND BLEIBT TROTZDEM AM KNOPF. Ein erster Entwurf legte eine
+   dauerhafte Fläche daneben, die zum gewählten Werkzeug wanderte — und
+   `test478` hat sie widerlegt: nach einem Farbklick stand sie 55 px neben
+   ihrem Werkzeug. Eine gespeicherte Stelle veraltet bei jedem Umbruch und
+   jedem Rollen; ein Grund am Knopf kann das gar nicht.
+
+   Bewegt wird deshalb nur der ÜBERGANG: `.bw-flug` ist eine kurzlebige
+   Fläche, die vom alten zum neuen Knopf fliegt und danach verschwindet.
+   Währenddessen hält der neue seinen Grund zurück (`.bw-wartet`), damit
+   nie zwei zugleich zu sehen sind. */
 .blatt-werk button[data-wz].on{
   background:var(--accent); color:var(--auf-accent); box-shadow:none
+}
+/* Solange die Fläche unterwegs ist, LEUCHTET DAS ZIEL SCHWACH VOR —
+   es wird nicht leer. Der erste Entwurf setzte hier `background:none`, und
+   `test478` hat ihn zu Recht rot gemacht: für die halbe Sekunde des Flugs
+   hätte der Zustand NUR in der Bewegung gestanden, und wer die Bewegung
+   nicht sieht, hätte gar nichts gesehen (§38). Jetzt ist die Fläche schon
+   da, nur leise, und der Flug macht sie laut.
+   NICHT die Schrift: sie bleibt, wie sie ist, sonst blitzt der Name auf. */
+.blatt-werk button[data-wz].on.bw-wartet{
+  background:color-mix(in srgb,var(--accent) 22%,transparent)
+}
+.bw-flug{
+  position:fixed; z-index:600; pointer-events:none;
+  border-radius:6px; background:var(--accent);
+  transition:left var(--motion-normal) var(--ease-standard),
+             top var(--motion-normal) var(--ease-standard),
+             width var(--motion-normal) var(--ease-standard),
+             height var(--motion-normal) var(--ease-standard);
+}
+/* OHNE BEWEGUNG FLIEGT NICHTS. Der Zustand ist trotzdem sofort richtig —
+   er hängt am Knopf und nicht am Flug. Genau das ist der Grund, warum der
+   Grund am Knopf geblieben ist (§38). */
+@media (prefers-reduced-motion:reduce){
+  .bw-flug{ display:none }
+  .blatt-werk button[data-wz].on.bw-wartet{ background:var(--accent) }
 }
 /* 3 · DER SCHALTER. `:is()` zählt so schwer wie sein schwerstes Glied —
    ein Attributwähler —, also (0,3,1) und damit über der Spielart. */
@@ -5175,14 +5328,14 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    fertigen Text. Ein `outline` liegt draussen und verschiebt nichts. */
 .blatt-schreiber{
   position:absolute; z-index:3; margin:0; box-sizing:border-box;
-  background:color-mix(in srgb, var(--accent, #2f7ed8) 7%, transparent);
-  border:0; outline:1.5px dashed color-mix(in srgb, var(--accent, #2f7ed8) 65%, transparent);
+  background:color-mix(in srgb, var(--accent) 7%, transparent);
+  border:0; outline:1.5px dashed color-mix(in srgb, var(--accent) 65%, transparent);
   outline-offset:0; border-radius:3px;
   resize:none; overflow:hidden; white-space:pre-wrap; overflow-wrap:break-word;
   caret-color:currentColor; -webkit-text-fill-color:currentColor;
   font-kerning:normal; touch-action:manipulation
 }
-.blatt-schreiber:focus{ outline:2px solid var(--accent, #2f7ed8) }
+.blatt-schreiber:focus{ outline:2px solid var(--accent) }
 /* Solange das Feld den Text zeigt, tritt der gezeichnete zurück — sonst
    stünde derselbe Satz zweimal übereinander. */
 .blatt-marken [data-sid][data-schreibt]{visibility:hidden}
@@ -6175,7 +6328,8 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .document-topbar button,.document-inspector button,.document-panel-header button{
   min-height:36px; border:1px solid var(--border); border-radius:8px;
   background:var(--bg); color:var(--text); cursor:pointer}
-.document-topbar button{padding:6px 10px}.document-position{margin-left:4px;font-weight:650}
+/* `margin-left` steht in `pdf-studio.css` (E642) und galt hier nie. */
+.document-topbar button{padding:6px 10px}.document-position{font-weight:650}
 /* E296 · DER TITEL STEHT IN DER KOPFZEILE, weil der Seitenkopf darueber
    weggefallen ist. Er nimmt den freien Platz (und schiebt damit Zoom,
    Inspector und Ausgang nach rechts, wofuer vorher `margin-left:auto` am
@@ -6630,7 +6784,9 @@ body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2
     min-height:320px;border-inline:0;border-radius:0}
   .document-topbar{min-height:52px;position:relative}.document-topbar button{min-width:var(--touch-min);min-height:var(--touch-min);padding:6px}
   .document-topbar button:last-child{font-size:0}.document-topbar button:last-child::after{content:'✕';font-size:18px}
-  .document-topbar input[type=range]{display:none}.document-zoom-label{margin-left:auto;min-width:40px}
+  /* `min-width` und `display` stehen für diese Breite in `pdf-studio.css`
+     (E642); hier galten sie nicht. */
+  .document-topbar input[type=range]{display:none}.document-zoom-label{margin-left:auto}
   .document-position{font-size:12px;white-space:nowrap;margin-right:auto}
   /* ZWEI DINGE FALLEN AM TELEFON WEG, und beide aus einem gemessenen Grund.
      Der TITEL, weil dort kein Platz fuer ihn ist: auf 390 px blieben ihm
@@ -6660,7 +6816,8 @@ body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2
   .document-topbar button[data-document-action="next"]{display:none}
   .document-title{display:block; flex:1 1 auto; min-width:60px;
     padding-inline:8px; font-size:13.5px}
-  .document-zoom-label{display:none}
+  /* `display` steht für diese Breite in `pdf-studio.css:103` (E642) und
+     sagt dort `inline` — das `none`, das hier stand, galt nie. */
   /* E384 · AM TELEFON NUR DER PFEIL. Gemessen mit dem Wort: die Leiste war
      411 px breit in einem 390 px breiten Fenster, und der Ausgang stand bei
      367..411 — also 21 px AUSSERHALB des Bildschirms. Der Knopf faellt damit
@@ -7800,8 +7957,11 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   display:flex; align-items:flex-start; gap:11px; min-height:var(--touch-min);
   padding:13px 14px; border:1px solid var(--line); border-radius:13px;
   background:var(--bg-card); color:var(--text); text-align:left; cursor:pointer;
-  transition:background var(--motion-fast,.14s) var(--ease-standard,ease),
-             box-shadow var(--motion-fast,.14s) var(--ease-standard,ease)
+  /* DER ÜBERGANG STEHT IN `motion.css` (E642). Er stand einmal hier und
+     galt seit dem 10. September nicht mehr: die spätere Datei setzt
+     `transition` ganz neu, und eine Liste ersetzt die andere. Statt zwei
+     Listen zu pflegen, die auseinanderlaufen, steht jetzt EINE dort —
+     mitsamt dem `background`, das dabei verlorengegangen war. */
 }
 .els-kachel:hover{ background:var(--bg-hover); box-shadow:var(--shadow-2) }
 /* Die grosse Kachel nimmt die ganze Zeile. Welche das ist, entscheidet das
@@ -9231,7 +9391,7 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
              border:1px solid var(--line); border-radius:14px;
              box-shadow:var(--shadow-4); overflow:hidden}
 .chr-kopf{display:flex; align-items:center; gap:12px; padding:14px 16px;
-          border-bottom:1px solid var(--line); background:var(--bg-2)}
+          border-bottom:1px solid var(--line); background:var(--bg-hover)}
 .chr-kopf h2{margin:0; font-size:20px; letter-spacing:.01em}
 .chr-kopf p{margin:0; flex:1; color:var(--text-dim); font-size:12.5px}
 .chr-kopf button{min-width:var(--touch-min); min-height:var(--touch-min);
@@ -9259,7 +9419,7 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
    nur Augen haben (§38); die Zahl daneben hat auch ein Vorleser. */
 .chr-raster{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:14px}
 .chr-graph{margin:0; padding:10px 12px; border:1px solid var(--line);
-           border-radius:10px; background:var(--bg-2)}
+           border-radius:10px; background:var(--bg-hover)}
 .chr-graph figcaption{font-size:12.5px; color:var(--text-dim); margin-bottom:6px}
 .chr-graph svg{width:100%; height:auto; display:block}
 .chr-balken{fill:var(--accent)}
@@ -9299,7 +9459,7 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
 .chr-titel{margin:0 0 8px; font-size:13.5px}
 .chr-hinweis{font-size:12.5px; color:var(--text-dim); font-style:italic}
 .chr-nachricht, .chr-problem{border:1px solid var(--line); border-radius:9px;
-                             padding:8px 11px; margin:0 0 7px; background:var(--bg-2)}
+                             padding:8px 11px; margin:0 0 7px; background:var(--bg-hover)}
 .chr-nachricht summary, .chr-problem summary{cursor:pointer; font-size:13px;
                                              display:flex; gap:8px; align-items:baseline;
                                              min-height:32px; align-content:center}
@@ -9314,7 +9474,7 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
          overflow-x:auto}
 .chr-tab th, .chr-tab td{border:1px solid var(--line); padding:5px 8px; text-align:left;
                          vertical-align:top}
-.chr-tab th{background:var(--bg-2); font-weight:600}
+.chr-tab th{background:var(--bg-hover); font-weight:600}
 .chr-plan li{font-size:13px; margin:4px 0}
 
 /* Wer keine Bewegung will, bekommt den Stapel flach und still — die

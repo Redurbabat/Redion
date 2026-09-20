@@ -2679,3 +2679,455 @@ test538   53 von 53 grün      Griffe, Verbindungen, Formen, Vorlagen
 test529   56 von 56 grün      die Karte selbst, unverändert
 test402    4 von  4 grün      Trefflächen (E627)
 ```
+
+---
+
+## Die sechs Marken-Decken, nachgemessen — 19. September 2026 (E637)
+
+`test362` meldete: `{16:272, 22:85, 28:64, 44:54, 46:16, 56:14}` gegen die
+Decke `{16:266, 22:83, 28:63, 44:54, 46:15, 56:14}`. Redur hatte entschieden:
+**erst nachsehen, dann entscheiden** — also nicht nachtragen, sondern die
+Stellen suchen.
+
+### Wo der Zuwachs steckt
+
+Gezählt je Datei, gegen `9b9a89e` (den Stand, an dem die Decke zuletzt
+geschrieben wurde):
+
+```txt
+16px   werkzeuge.css    29 → 35   (+6)     alle anderen 21 Dateien: unverändert
+22px   werkzeuge.css     7 →  9   (+2)
+28px   werkzeuge.css     9 → 10   (+1)
+46px   werkzeuge.css     3 →  4   (+1)
+44px   —                          (+0)
+56px   —                          (+0)
+```
+
+**Restlos in einer Datei, und restlos aus zwei Bögen:** E607 (die
+Gedankenkarte, 16. September) und E628 (Griffe, Formen, Vorlagen,
+19. September). Keine Gegenbewegung anderswo.
+
+### Die zehn Stellen, je eine Zeile, je ein Urteil
+
+```txt
+ Zeile  Zahl  was es ist                       Marke dieser Zahl        Urteil
+ 1325   28px  Breite eines Werkzeugknopfs      --mobile-gutter          andere Aufgabe
+ 1364   46px  min-width der Zoomanzeige        (keine — 46 ist der      aufgelöst
+                                                verworfene Wert)
+ 1387   16px  Schriftgrösse der Wurzel         --sheet-radius           andere Aufgabe
+ 1387   16px  waagerechtes Polster             --sheet-radius           → --space-5
+ 1416   16px  Breite des Griffels              --sheet-radius           andere Aufgabe
+ 1416   16px  Höhe des Griffels                --sheet-radius           andere Aufgabe
+ 1467   16px  Polster der Pillenform           --sheet-radius           → --space-5
+ 1468   22px  Polster der Ellipse              --mobile-gutter-small    andere Aufgabe
+ 1473   22px  Polster des Sechsecks            --mobile-gutter-small    andere Aufgabe
+ 1502   16px  Schriftgrösse am Telefon         --sheet-radius           andere Aufgabe
+```
+
+Der Massstab für „andere Aufgabe" steht in `marken.css:40`: *„Gleiche Zahl
+bedeutet nur dann dieselbe Marke, wenn sie dieselbe Aufgabe hat."* Eine
+Schriftgrösse ist keine Blattgeometrie, ein Knopf ist kein Seitenrand, ein
+Formpolster ist kein Telefonrand.
+
+### Die 46 hatte Vorrang — und war unschuldig
+
+E372 hat `--mobile-topbar` von falschen 46 auf die gemessenen 56 gesetzt; die
+46 steht seitdem als Fangzaun in der Decke. Die neue 46 ist `min-width` der
+Zoom-Prozentanzeige und eine wörtliche Abschrift von `.wb-massstab`
+(Whiteboard, seit E138). Kein `--mobile-topbar` in derselben Datei, kein
+Telefonbalken in Sichtweite.
+
+Die Abschrift war trotzdem ein Fehler, nur ein anderer: sie hatte
+`font-variant-numeric:tabular-nums` verloren — genau das, wofür die Regel da
+ist. Beide teilen sich jetzt eine Regel.
+
+### Was daraus wurde
+
+```txt
+46px   16 → 15    eine Regel für beide Massstäbe statt zweier Abschriften
+16px  272 → 270   zwei Polster benutzen --space-5 (grund.css:44), das es gibt
+22px   85         bleibt — kein Token für 22, und es ist kein Seitenrand
+28px   64         bleibt — Knopfbreite, die Trefffläche holt --touch-min
+```
+
+Neue Decke: `{16:270, 22:85, 28:64, 44:54, 46:15, 56:14}`. **Zwei nach unten,
+zwei nach oben.** `test362` 18/18.
+
+Dass eine Decke steigt, ist die Ausnahme und steht deshalb hier mit jeder
+einzelnen Zeile. Wer sie später senken will, findet oben, welche sieben
+Zahlen noch roh dastehen und warum.
+
+---
+
+## Die wandernde Linse — 20. September 2026 (E639)
+
+Redurs Video (Apple TV, iOS 26) Bild für Bild gelesen, dann nachgebaut und
+gegeneinandergehalten. Alle Zahlen sind gemessen, keine geschätzt.
+
+### Was das Vorbild tut
+
+Aufnahme mit 15 Bildern je Sekunde, Ausschnitt der Leiste (1284 × 420 aus
+1284 × 2778), Fahrt von „Mediathek" nach „Apple TV":
+
+```txt
+Dauer der Fahrt          rund 0,45 s
+Dehnung in der Mitte     die Kapsel überspannt etwa 2,5 Reiter
+Farbsaum                 grün → weiss → violett, nur an der Oberkante
+Wölbung                  die Kapsel ragt über den oberen Rand der Leiste
+```
+
+### Die fünf Varianten, die ich nebeneinander gebaut habe
+
+Gemessen an derselben Leiste mit fünf Reitern, dunkles Thema, 390 px breit:
+
+```txt
+Verschiebung   Sicht
+  8            nichts zu sehen
+ 15            das Zeichen wird grösser, der Name bleibt lesbar   ← Ruhe
+ 24            die Nachbarzeichen werden mitgezogen               ← Fahrt
+ 46            die Zeichen VERDOPPELN sich, der Saum wird ein RGB-Gitter
+ 70            unlesbar
+```
+
+```txt
+Farbsaum       Sicht
+ 0,22          ein Hauch an der Kante                             ← Ruhe
+ 0,55          sichtbar, aber nicht bunt                          ← Fahrt
+ 1,6           harte rote und blaue Doppelkanten
+ 3,6           Kirmes
+```
+
+### Der Fehler, der wie ein Balken aussah
+
+Erster Anlauf mit `x="-30%" width="160%"` am Filter, damit der Saum am Rand
+nicht abschneidet:
+
+```txt
+gesehen     ein dunkelblauer senkrechter Balken quer durch die Linse,
+            in JEDER Variante an derselben Stelle
+Ursache     `feImage` misst in Anteilen des FILTERBEREICHS, nicht des
+            Elements — die Karte lag um 30 % verschoben über dem Glas
+behoben     x="0%" width="100%"; der Saum darf am Rand abschneiden
+```
+
+### Der Übergang ohne Anlass
+
+`test114` §17 wurde rot. Nachgemessen mit `transitionstart` und dem
+gerechneten `transform` beim Start der App:
+
+```txt
+t = 676 ms    opacity     scaleX = 1,309   ← die Dehnung stand schon
+t = 792 ms    transform   scaleX = 1,212   ← der Übergang, den niemand wollte
+t = 1008 ms   opacity     scaleX = 1
+```
+
+Beim Start läuft `pilleSchieben` zweimal; der zweite Ruf rückt die Pille um
+**sechs Punkte**. Die `stumm`-Sperre verdeckt das — aber nicht das
+Zurückfedern der Dehnung 190 ms später, wenn die Sperre schon weg ist.
+
+### Die drei Gegenproben
+
+```txt
+`pointer-events:none` entfernt   → elementFromPoint gibt "ho-pille" statt "knopf"
+Wächterzeile in linse.ts weg     → 5 Halter, 5 Ruhe-Filter, 5 Fahrt-Filter
+die zwei CSS-Regeln vereint      → „und die beiden sind NICHT dieselbe Regel" rot
+```
+
+Die zweite ist die lehrreichste: `sicherstellen()` wird bei jedem Reiterwechsel
+gerufen, und ohne die eine Zeile wächst der Halterstapel mit jedem Tipp. Das ist
+der Fehler aus E440, nur an einer neuen Stelle.
+
+### Was der Lauf hält
+
+```txt
+test539    27 von 27 grün    die Linse (neu)
+test114    87 von 87 grün    die gleitende Pille, seit E236
+22 Läufe   alle grün         jeder, der `#handy-oben` oder `#ho-pille` anfasst
+```
+
+---
+
+## Der Wechsel im Werkzeugsystem — 20. September 2026 (E640)
+
+### Die Bauform, die nicht getragen hat
+
+Erster Entwurf: eine dauerhafte Fläche neben den Knöpfen, die zum gewählten
+wandert — dieselbe wie `#ho-pille` unten. Gemessen sah sie gut aus:
+
+```txt
+13 verschiedene Orte über 49 Bilder, 253 px → 816 px
+```
+
+Dann `test478`: die Fläche stand **55 px neben ihrem Werkzeug**,
+Überdeckung 0. Die Suche danach, in der Reihenfolge, in der sie lief:
+
+```txt
+Verdacht                  Massnahme                              --bx danach
+ein Auslöser fehlt        Beobachter auf class+childList+subtree     88 px
+falscher Ursprung         gegen die Leiste statt offsetLeft          88 px
+falsche Hülle             gegen offsetParent, Rand abgezogen         88 px
+```
+
+Erst ein Zähler im Element brachte es heraus: `laeufe: 5`. Die Rechnung war
+gelaufen — fünfmal — und jedes Mal **zu früh**. Danach rollte die Leiste zum
+Werkzeug (E356) und brach um.
+
+```txt
+Knopf auf dem Bildschirm    467 px
+Fläche auf dem Bildschirm   412 px
+gespeicherte Stelle          88 px   (richtig gewesen, bevor die Leiste rollte)
+richtige Stelle             143 px
+```
+
+### Die Bauform, die trägt
+
+```txt
+mit Flug      13 Orte über 49 Bilder
+ohne Flug     „Eine Fläche ist geflogen — 0 Bilder lang"   (Gegenprobe, rot)
+```
+
+Und der Beleg, der zählt: **die drei Läufe, die den ersten Entwurf widerlegt
+haben, sind unverändert grün.** `test478` 43/43, `test522`, `test533` — keine
+angepasste Zusage, keine nachgezogene Erwartung.
+
+### Was nicht messbar war
+
+```txt
+page.emulateMedia({ reducedTransparency: 'reduce' })   matches → false
+Start mit --force-prefers-reduced-transparency          matches → false
+```
+
+Der Chromium dieses Projekts kennt `prefers-reduced-transparency` nicht.
+`test539` §6 prüft deshalb die Quelle statt die Seite, und das steht als
+**L203** — samt der drei älteren Regeln derselben Art, die nie gemessen
+wurden.
+
+---
+
+## Die Linse nach dem Design-System — 20. September 2026 (E641)
+
+83 Regeln aus den Modulen des nachgereichten Design-Systems, gegen Redions
+echten Quelltext gehalten:
+
+```txt
+44 erfüllt
+20 teilweise
+10 klar verletzt   ← neun davon aus E639, dem Bogen von derselben Nacht
+ 9 nicht berührt
+```
+
+### Was geändert wurde
+
+```txt
+                        E639                         E641
+Dehnung                 1 + Weg/Breite × 0,3         1,18 zum Nachbarn
+                        (wächst mit dem Weg)         1,00 sonst
+Deckel                  1,85                         1,18
+Ruhe-Brechung           Verschiebung 15              8
+Fahrt-Brechung          24                           24 (unverändert)
+```
+
+Die 15 waren am 19. September ausdrücklich als „das Zeichen wird grösser"
+notiert, die 8 als „nichts zu sehen". Genau das ist jetzt das Ziel: das Glas
+zeigt sich am Rand, es vergrössert nicht den Inhalt.
+
+### Die Gegenprobe kam umsonst
+
+`test539` §7 wurde geschrieben, bevor die Änderung gebaut war — und lief im
+grossen Durchgang gegen den ALTEN Stand:
+
+```txt
+✗ … und sie bleibt bescheiden (keine Gummiband-Oberfläche) — Dehnung 1.3085
+✗ Über vier Reiter wird NICHT gedehnt — Dehnung 1.85
+```
+
+Das sind auf die Nachkommastelle die Werte der alten Formel. Nach dem Bauen:
+50/50. Ein Wächter, der rot war, bevor er grün wurde, ohne dass jemand ihn
+dafür verstümmeln musste (§50).
+
+### Was bleibt
+
+60 von 61 Wächtern der Werkzeugleiste waren im selben Durchgang grün — der
+eine rote war §7 selbst.
+
+---
+
+## 20. September 2026 — Sechsundsiebzig tote CSS-Regeln, gezählt bis null
+
+**Methode.** `node pruefungen/alle.mts 332`. Der Lauf liest die CSSOM im
+echten Browser, in der Reihenfolge, in der `index.html` die Blätter lädt —
+keine selbstgebaute Spezifitätsrechnung (E340). Gemessen nach jeder Gruppe,
+nicht am Ende hochgerechnet.
+
+```txt
+Stand                                          tote Erklärungen
+──────────────────────────────────────────────────────────────
+19. September, erster voller Lauf seit PR #100       76
+nach dem Klammer-Trennen im Wächter selbst           63   (−13 Gespenster)
+nach #ai, .schalter i, .els-kachel                   51
+nach #handy-oben, #reiterleiste                      43
+nach .document-position, .document-zoom-label        37
+nach premium.css (7 Rasterzeilen) und #kanten-lade   35
+nach der Bibliothek (bausteine ↔ bibliothek-studio)   0
+```
+
+**Die dreizehn Gespenster sind die wichtigste Zahl der Liste.** Sie waren
+kein Produktfehler, sondern ein Fehler im Messgerät: `selectorText.split(',')`
+zerriss die Kommas innerhalb von `:is()`, `:where()`, `:not()` und `:has()`.
+Was dabei herauskam, waren Bruchstücke wie
+
+```txt
+body[data-dokument="an"] :is(#topbar      ← verlor die schliessende Klammer
+#menueband)                               ← verlor Vorfahren UND !important
+select):focus-visible
+:focus-visible)
+```
+
+Zeichenketten, die nie ein Element treffen. Der Lauf verglich sie mit echten
+Regeln und meldete **die echten** als tot. Anteil am Befund: **17 %.**
+
+### Die eine echte Regression darunter
+
+```txt
+.els-kachel  Überfahren, Flächenwechsel
+   10. September – 20. September    HART   (motion.css ersetzte die Liste
+                                            und verlor `background`)
+   ab 20. September                 WEICH  var(--motion-fast) = .14s
+```
+
+Zehn Tage. Kein Auge hat es gemeldet — ein fehlender Übergang sieht nicht
+kaputt aus.
+
+### Der Deckelname: eine Zahl, die eine Schrift überlebt hat
+
+`.bib-deckel-name b{min-height:33px}` war für 12,5px bei Zeilenhöhe 1,3
+gerechnet. `bibliothek-studio.css` setzt seit dem 6. September 13px bei 1,5
+— also 19,5px je Zeile, 39px für zwei. Gemessen im Browser mit einem kurzen
+und einem langen Namen nebeneinander:
+
+```txt
+min-height:33px    kurz 33 px · lang 39 px    →  6 px Versatz
+min-height:39px    kurz 39 px · lang 39 px    →  bündig
+```
+
+Der Wächter konnte das nicht sehen: `min-height` setzt das Studio-Blatt gar
+nicht, es ist also keine Doppelung. Die Zahl war trotzdem falsch geworden.
+**Eine tote Regel hat Nachbarn** — wer sie wegräumt, sieht sie.
+
+### Bild-Gegenprobe
+
+`node bilder.mts bibliothek rechner` vor und nach dem Aufräumen der 35
+Bibliotheks-Erklärungen: **kein sichtbarer Unterschied** — was zu erwarten
+war, denn jede entfernte Zeile war vorher schon wirkungslos. Genau das ist
+der Beleg, dass entfernt und nicht verändert wurde.
+
+---
+
+## 20. September 2026 — Elf Prüfläufe teilten sich einen Port, sieben unbemerkt
+
+**Methode.** Alle 481 Dateien unter `pruefungen/lauf/` gelesen, Kommentare
+und Zeichenketten mit `nurCode` entfernt, dann nach **beiden** Schreibweisen
+gesucht: `PORT = N` und `listen(N, …)`.
+
+```txt
+                                          alter Ausdruck    beide Schreibweisen
+Läufe insgesamt                                  481                481
+davon mit eigenem Server                           —                387
+davon mit erkannter Portzahl                     374                382
+davon mit listen(0) (Rechner wählt)                —                  6
+davon für den Wächter unsichtbar                 107                  0
+doppelt vergebene Ports                            0                  7
+```
+
+**Die 107 waren nie eine Frage.** Der Lauf gab seit E405 die Zeile
+„374 von 481 Läufen halten einen festen Port" aus, und niemand hat gefragt,
+was mit den übrigen ist. Eine Zahl, die eine Lücke NENNT, ersetzt keine
+Prüfung, die sie schliesst.
+
+### Die sieben, die niemand sah
+
+```txt
+8799: test31  + test130      9629: test429 + test519
+8963: test205 + test243      9630: test430 + test520
+9624: test424 + test514      9631: test437 + test521
+9628: test428 + test518
+```
+
+Vier weitere hatte Bogen 1 am selben Tag von Hand gefunden (9530, 9531,
+9625, 9626) — zusammen **elf** an einem Tag, in einem Bestand, über den ein
+grüner Wächter wachte.
+
+### Die Gegenproben
+
+```txt
+test514 zurück auf 9624 gesetzt   →  ✗ „9624: test424 + test514"
+test514 auf `const HAFEN = 9645`  →  ✗ „Jeder Lauf … zeigt seinen Port — test514"
+beides zurückgenommen             →  ✓ 4 von 4
+```
+
+Ein Wächter, der beide Male rot war, bevor er grün wurde (§50).
+
+### Und zwei Fehlalarme beim Bauen, beide durch das Aufschreiben
+
+```txt
+1. Die Tabelle oben steht im Kopfkommentar von test400
+   → gemeldet: „9624: test400 + test424"      Lösung: nurCode (§8, eine Stelle)
+2. „listen(0)" steht in der Ausgabezeile des Laufs, in einer Schablone
+   → gezählt: 7 × listen(0) statt 6           Lösung: erst fragen, OB es
+                                              einen Server gibt, dann welche Zahl
+```
+
+Die zweite ist die lehrreichere: `nurCode` lässt Schablonen mit Absicht
+stehen, weil in `${…}` echter Code steht. Dort hilft kein Entferner, sondern
+nur die richtige Reihenfolge der Fragen.
+
+---
+
+## 20. September 2026 — Die zuletzt gelesene Seite, und ein Wächter, der ein Rennen gewann
+
+**Methode.** Ein Haken auf `Store.setMeta`, der jeden Schreibvorgang auf
+`dokSeite:*` mit Zeit, Wert und Aufrufweg festhält, im Ablauf von
+`test424`.
+
+```txt
+Stelle                        meta   aktiv   scrollTop
+────────────────────────────────────────────────────────
+direkt nach dem Blättern         1     "1"           0
+vor dem Zurück ins Regal         1     "1"          18
+nach der Bildmatrix              1    null        null
+nach dem letzten Öffnen          0     "0"           0   ← verloren
+nach dem Neuladen                0     "0"           0
+```
+
+Genau **ein** Schreibvorgang, und sein Weg:
+
+```txt
+seiteMerken ⟵ nachziehen ⟵ beiGroesse
+```
+
+### Der Haken hat den Fehler beim zweiten Mal weggemessen
+
+```txt
+Durchgang 1   Haken mit Zeit + Wert + Stapel        ✗ 49/50, meta=0
+Durchgang 2   Haken zusätzlich mit Buehnen-Geometrie ✓ 50/50, keine Schreibung
+```
+
+Dieselbe Datei, derselbe Rechner, ein paar Millisekunden mehr Arbeit im
+Haken. **Das ist die eigentliche Messung dieses Bogens:** die Zusage hing
+nicht am Code, sondern am Zufall. Deshalb prüft `test540` sie nicht mehr über
+einen Umweg, sondern stellt das Rennen — `window.dispatchEvent(new
+Event('resize'))` vor dem `requestAnimationFrame`.
+
+### Nach der Reparatur
+
+```txt
+                                 ohne Sperre   mit Sperre
+gemerkte Seite nach dem resize        0             1
+aktive Bühne                         "0"           "1"
+scrollTop                             0          1441
+```
+
+Die Gegenprobe lief über `if (false && !standGesetzt) return;` — die Sperre
+ausgeschaltet, die Konstante aber weiter benutzt, damit `noUnusedLocals` den
+Bau nicht abbricht (§52.6). Ergebnis: genau die drei Zeilen wieder rot, die
+den Fehler beschreiben, und keine vierte.
