@@ -1024,31 +1024,18 @@ da „0 → 0" und „KEINE FASSUNG", ohne die Eindeutigkeitsprüfung kommt der
 Fehler aus E650 wörtlich zurück — „Die Leitung liegt. Das Kabel bleibt."
 Gezählt am 20. September, im selben Bogen: der Befehl sagt 490.*
 
-*Und 497: `test555` — „Erinnerung" führt zu einer Erinnerung (E666). Er
-hält einen Eintrag, der eine Zeichenkette schrieb, während die ganze
-Erinnerungsmaschine danebenstand. Zwei seiner Zusagen waren im ersten
-Anlauf grün, WEIL nichts lief — `undefined` enthält kein „@remind", und
-`undefined === undefined` ist wahr. Gezählt am 20. September: 497.*
+*Und 491: `test549` — die Lückenliste sagt die Wahrheit über sich selbst
+(E658). Er ist der erste Lauf, der eine DOKU-Datei hält: 33 offene Lücken
+standen unter „Anhang B · Was erledigt ist", fünf Überschriften sagten
+„abgearbeitet" statt GESCHLOSSEN, und die Datei zählte sich selbst falsch.
+Er liest nur eine Datei — kein Browser, kein Port —, darf also neben einem
+vollen Lauf gefahren werden. Gezählt am 20. September: der Befehl sagt 491.*
 
-*Und 496: `test554` — was abgehakt wird, zählt in der Wochenrückschau
-(E663). Sie rechnete mit einem Feld, das niemand schrieb: wer eine Woche
-lang Aufgaben abhakte, sah am Sonntag lauter Nullen. Gezählt am
-20. September: 496.*
-
-*Und 495: `test553` — der Sweep nennt den Schuldigen, nicht sein ganzes
-Stück (E662). Er prüft die Zerlegung von `volllauf.mts` mit der ECHTEN
-Bilanz vom 20. September: zehn rote Läufe gemeldet, einer war es. Die Lehre
-daraus gehört in diesen Abschnitt, weil sie ihn selbst betrifft — ein
-Werkzeug, das Prüfläufe auswertet, ist ungeprüft, bis es einen Wächter hat.
-Gezählt am 20. September: 495.*
-
-*Und 494: `test552` — ein abgekündigtes Modell sagt, dass es das Modell ist
-(E661). Er hält Redurs Groq-404 vom 20. September mit dem echten
-Fehlerkörper fest. Bemerkenswert war die Gegenprobe: die erste war FALSCH,
-nicht der Code — `false && A || B` lässt `B` übrig, der Zweig lief weiter,
-und der grüne Lauf sah kurz nach einem zu schwachen Wächter aus. Eine
-Gegenprobe ist ein Stück Code wie jedes andere. Gezählt am 20. September:
-494.*
+*Und 492: `test550` — die Doku zählt, was da ist (E659). Er hält §30s
+eigenen Satz („sie wird nicht geschätzt, sie wird gezählt") und §34s
+„beides: Verzeichnis und Text". Er wurde gegen den Stand rot, den ER SELBST
+erzeugt hatte: 492 Dateien, 491 in der Doku — die Drift, die §30 seit einem
+Jahr beklagt, im Abstand von Minuten. Gezählt am 20. September: 492.*
 
 *Und 493: `test551` — die Tabellenwerkzeuge sind am Telefon zu treffen
 (E660). Er misst die GERENDERTE Box im Browser, und genau darin liegt sein
@@ -1058,18 +1045,31 @@ Innenabstand und Schriftgrösse. Eine Messung, die nicht messen KANN, was
 sie behauptet, sagt immer „passt schon" (L206). Gezählt am 20. September:
 493.*
 
-*Und 492: `test550` — die Doku zählt, was da ist (E659). Er hält §30s
-eigenen Satz („sie wird nicht geschätzt, sie wird gezählt") und §34s
-„beides: Verzeichnis und Text". Er wurde gegen den Stand rot, den ER SELBST
-erzeugt hatte: 492 Dateien, 491 in der Doku — die Drift, die §30 seit einem
-Jahr beklagt, im Abstand von Minuten. Gezählt am 20. September: 492.*
+*Und 494: `test552` — ein abgekündigtes Modell sagt, dass es das Modell ist
+(E661). Er hält Redurs Groq-404 vom 20. September mit dem echten
+Fehlerkörper fest. Bemerkenswert war die Gegenprobe: die erste war FALSCH,
+nicht der Code — `false && A || B` lässt `B` übrig, der Zweig lief weiter,
+und der grüne Lauf sah kurz nach einem zu schwachen Wächter aus. Eine
+Gegenprobe ist ein Stück Code wie jedes andere. Gezählt am 20. September:
+494.*
 
-*Und 491: `test549` — die Lückenliste sagt die Wahrheit über sich selbst
-(E658). Er ist der erste Lauf, der eine DOKU-Datei hält: 33 offene Lücken
-standen unter „Anhang B · Was erledigt ist", fünf Überschriften sagten
-„abgearbeitet" statt GESCHLOSSEN, und die Datei zählte sich selbst falsch.
-Er liest nur eine Datei — kein Browser, kein Port —, darf also neben einem
-vollen Lauf gefahren werden. Gezählt am 20. September: der Befehl sagt 491.*
+*Und 495: `test553` — der Sweep nennt den Schuldigen, nicht sein ganzes
+Stück (E662). Er prüft die Zerlegung von `volllauf.mts` mit der ECHTEN
+Bilanz vom 20. September: zehn rote Läufe gemeldet, einer war es. Die Lehre
+daraus gehört in diesen Abschnitt, weil sie ihn selbst betrifft — ein
+Werkzeug, das Prüfläufe auswertet, ist ungeprüft, bis es einen Wächter hat.
+Gezählt am 20. September: 495.*
+
+*Und 496: `test554` — was abgehakt wird, zählt in der Wochenrückschau
+(E663). Sie rechnete mit einem Feld, das niemand schrieb: wer eine Woche
+lang Aufgaben abhakte, sah am Sonntag lauter Nullen. Gezählt am
+20. September: 496.*
+
+*Und 497: `test555` — „Erinnerung" führt zu einer Erinnerung (E666). Er
+hält einen Eintrag, der eine Zeichenkette schrieb, während die ganze
+Erinnerungsmaschine danebenstand. Zwei seiner Zusagen waren im ersten
+Anlauf grün, WEIL nichts lief — `undefined` enthält kein „@remind", und
+`undefined === undefined` ist wahr. Gezählt am 20. September: 497.*
 
 ### Die Befehle
 
