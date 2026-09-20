@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-641 Entscheidungen, E1 bis E661 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+642 Entscheidungen, E1 bis E662 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -704,6 +704,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E659** — Die Doku zählt, was da ist: ein Wächter für §30s eigenen Satz („sie wird nicht geschätzt, sie wird gezählt") und für §34s „beides: Verzeichnis und Text". Er wurde gegen den Stand rot, den er selbst erzeugt hatte — 492 Dateien, 491 in der Doku. Vier Anläufe der Messung waren vorher zu eng und meldeten je eine erfundene Zahl; `ENTSCHEIDUNGEN.md` kennt drei Überschriftsformen, und die Regel, die hält, setzt keine voraus. Wächter `test550`.
 * **E660** — Die Tabellenwerkzeuge sind am Telefon zu treffen: sieben Knöpfe à 26 px waren dort der EINZIGE Weg, eine Spalte anzulegen — die Griffe daneben messen 7 px und brauchen ein `mouseover`, das ein Daumen nicht erzeugt. Jetzt 44 px unter `@media(hover:none)`, am Rechner unverändert schlank. Und der Fund über den Fund: `test402` konnte das nie sehen, weil er nur DEKLARIERTE Höhen liest — 26 px aus Innenabstand und Schriftgrösse sind für ihn unsichtbar (L206). Wächter `test551`.
 * **E661** — Der Anbieter hat immer recht, und die Modellliste wird erfragt: Groq mustert `llama-3.3-70b-versatile` aus, Redion führt es weiter und meldet dazu „Die Adresse gibt es nicht" — die Adresse war in Ordnung, das Modell war weg, und der Anbieter sagte das wörtlich. Jetzt führt SEIN Satz die Meldung an, die Statustabelle bleibt für den, der schweigt, und `modelleHolen` fragt `/models`. Das tote Modell ist gestrichen; ein Ersatz wird nicht geraten (§56). Wächter `test552`.
+* **E662** — Der Sweep nennt den Schuldigen, nicht sein ganzes Stück: keine Stunde nach seinem ersten Einsatz meldete `volllauf.mts` zehn rote Läufe, wo einer war. `alle.mts` schreibt seine Bilanz auf zwei Zeilen — die erste hat das ✗ und keine Nummer, die zweite die Nummer und kein ✗. Die Zerlegung fand nichts und fiel auf „ganzes Stück rot" zurück. Der Rückfall bleibt (er erfindet keinen Schuldigen), er wird nur schwerer getroffen. Wächter `test553`.
 
 ---
 
@@ -54169,6 +54170,69 @@ Modell-Zweig fehlt der Weg nach vorn, ohne den ganzen Umbau steht wieder
 `||`, also blieb `B` übrig und der Zweig lief weiter. Der Lauf blieb grün
 und ich hielt das kurz für einen zu schwachen Wächter. Eine Gegenprobe ist
 ein Stück Code wie jedes andere und kann genauso falsch sein.
+
+
+## E662 — Der Sweep nennt den Schuldigen, nicht sein ganzes Stück
+
+**Was wurde entschieden?** Die Zerlegung in `volllauf.mts` liest zuerst die
+Bilanz von `alle.mts` („✗ N von M Läufen gescheitert:" und darunter die
+Namen) und erst danach einzelne Zeilen. Der Rückfall auf „das ganze Stück
+ist rot" bleibt — er wird nur schwerer getroffen. Und was nicht zum Stück
+gehört, macht keinen fremden Lauf rot.
+
+**Warum?** Keine Stunde nach seinem ersten Einsatz meldete das Werkzeug:
+
+```txt
+→ ROT: 266 267 268 270 272 273 274 275 276 277
+```
+
+Im Protokoll darüber stand:
+
+```txt
+✗ 1 von 10 Läufen gescheitert:
+    test270
+```
+
+**Einer.** Die erste Fassung suchte je ZEILE nach einem ✗ **und** einer
+Testnummer. `alle.mts` schreibt seine Bilanz aber auf zwei Zeilen: die
+erste trägt das Zeichen und keine Nummer, die zweite die Nummer und kein
+Zeichen. Also fand sie nichts.
+
+**Der Rückfall war richtig, und er bleibt.** „Kein Treffer, aber der Prozess
+war rot" heisst: es ist unklar, welcher es war — dann lieber neun zu viel
+als einer zu wenig, und keiner erfunden (§56). Falsch war nur, ihn so
+leicht auszulösen: neun grüne Läufe in der roten Liste verstecken den
+einen, auf den es ankommt, und §46 („rot zuerst") schickt einen auf neun
+falsche Fährten.
+
+**Was dabei auffiel und nicht in diesen Bogen gehört.** Der eine echte rote
+Lauf ist `test270` mit der Meldung
+
+```txt
+✗ In der Wurzel geht nichts ins Netz, was dort nicht hingehört —
+  [".git","node_modules"]
+```
+
+Das ist wörtlich das Artefakt, das §30 beschreibt: im Arbeitsbaum ist `.git`
+eine DATEI und `node_modules` ein Symlink, und `test270` filtert
+Ordnermuster mit `istOrdner && name === …`. `.assetsignore` schliesst beide
+korrekt aus. §30 sagt dazu: **ein roter Lauf aus dem Arbeitsbaum wird im
+Hauptbaum nachgemessen, bevor jemand ihn repariert** — das steht aus,
+solange der Sweep läuft, und wird danach getan.
+
+**Warum die Funktion jetzt exportiert wird.** Ein Wächter, der den ganzen
+Sweep lostritt, um eine Zerlegung zu prüfen, wäre keiner. `volllauf.mts`
+führt seine Arbeit deshalb nur aus, wenn es direkt gestartet wurde; wird es
+importiert, gibt es nur `roteAus` her.
+
+**Der Wächter.** `test553`, sechs Messungen, mit der **echten** Bilanz vom
+20. September als Eingabe. Gegenprobe: die alte Ein-Zeilen-Regel eingesetzt
+→ genau das beobachtete Symptom, `[266 … 277]` statt `[270]`.
+
+**Die Lehre**, und sie ist neu in der Sammlung dieses Tages: ein Werkzeug,
+das Prüfläufe auswertet, ist selbst ungeprüft, bis es einen Wächter hat.
+Dieses hier war zwei Stunden alt und hat in seinem ersten Ernstfall
+danebengegriffen.
 
 ## E123 — Titel                     die heutige Form
 =====  /  E123 — Titel  /  =====    ein Banner zwischen zwei Linien

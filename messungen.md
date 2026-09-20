@@ -3909,3 +3909,48 @@ alter Wurf zurück                    ✗ „Die Adresse gibt es nicht"
 ```
 
 Kein Bild: hier ist ein Satz zu lesen, keine Fläche zu sehen (§55.3).
+
+---
+
+## 20. September 2026 — Der erste Ernstfall des Sweep-Werkzeugs (E662, `test553`)
+
+Zwei Stunden nach seinem Bau meldete `volllauf.mts`:
+
+```txt
+→ ROT: 266 267 268 270 272 273 274 275 276 277
+```
+
+Im Protokoll darüber:
+
+```txt
+✗ 1 von 10 Läufen gescheitert:
+    test270
+```
+
+Zehn gemeldet, einer war es. Die Zerlegung suchte je ZEILE nach ✗ **und**
+Nummer; die Bilanz steht auf zwei Zeilen, und keine trägt beides.
+
+```txt
+                        vorher              nachher
+echte Bilanz            [266 … 277]         [270]
+drei Rote               [266 … 277]         [266,270,277]
+Lauf meldet sich selbst gefunden            gefunden
+Ausgabe schweigt        ganzes Stück        ganzes Stück (unverändert)
+fremder Name (test100)  test100 wäre rot    ganzes Stück, kein fremder Lauf
+```
+
+Der Rückfall auf „ganzes Stück" ist Absicht und bleibt: lieber neun zu viel
+als einer zu wenig, und keiner erfunden (§56). Falsch war nur, ihn so leicht
+auszulösen.
+
+### Gegenprobe
+
+Die alte Ein-Zeilen-Regel eingesetzt → genau das beobachtete Symptom,
+`[266 … 277]` statt `[270]`.
+
+### Der eine echte rote Lauf
+
+`test270` mit `✗ In der Wurzel geht nichts ins Netz … [".git","node_modules"]`
+— wörtlich das Artefakt, das §30 beschreibt (im Arbeitsbaum ist `.git` eine
+Datei und `node_modules` ein Symlink). **Nachzumessen im Hauptbaum**, sobald
+der Sweep durch ist; vorher wird daran nichts repariert.

@@ -25147,7 +25147,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1257, inhalt: '17875f415a45fc86', gebaut: '2026-09-20T18:47:40.592Z' };
+const Stand = { fassung: 1258, inhalt: 'c967a0842d6df5a4', gebaut: '2026-09-20T18:58:06.504Z' };
 window.Stand = Stand;
 
 </script>
@@ -82594,12 +82594,20 @@ const ChronikDaten = {
                     "zeitraum": "ca. 20:20 –",
                     "dauer": "laufend",
                     "pruefungen": "test552 (15/15, zwei Gegenproben), test550 (8/8)"
+                },
+                {
+                    "was": "E662 — volllauf.mts nennt den Schuldigen statt sein ganzes Stück",
+                    "vonCommit": "(offen)",
+                    "bisCommit": "(offen)",
+                    "zeitraum": "ca. 20:55 –",
+                    "dauer": "laufend",
+                    "pruefungen": "test553 (6/6, Gegenprobe gefahren), test550 (8/8)"
                 }
             ],
             "zahlen": {
                 "commits": 2,
-                "entscheidungen": 19,
-                "neue Prüfläufe": 11,
+                "entscheidungen": 20,
+                "neue Prüfläufe": 12,
                 "volle Läufe": 0
             },
             "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -83909,6 +83917,18 @@ const ChronikDaten = {
             "ursache": "Eine Gegenprobe wird schnell hingeschrieben, weil sie ja nur wegnehmen soll. Sie ist trotzdem Code.",
             "beweis": "Mit if (modellWeg) zu if (false) wurden genau zwei Zusagen rot, die richtigen.",
             "lehre": "Eine Gegenprobe ist ein Stück Code wie jedes andere und kann genauso falsch sein. Ein grüner Lauf nach einer Gegenprobe heisst zuerst: die Gegenprobe ansehen."
+        },
+        {
+            "nr": "P95",
+            "datum": "2026-09-20",
+            "titel": "Das Werkzeug für die Prüfläufe war selbst ungeprüft",
+            "schwere": "mittel",
+            "symptom": "volllauf.mts meldete zehn rote Läufe (266 bis 277), tatsächlich war einer rot: test270.",
+            "falscheVermutung": "Beim Lesen der Meldung zuerst: ein ganzes Stück ist gescheitert, also vermutlich eine Portkollision oder der Arbeitsbaum. Es war die Auswertung.",
+            "wieGefunden": "Ins Protokoll gesehen statt in die Zusammenfassung. Dort stand die Bilanz von alle.mts auf zwei Zeilen: das Zeichen oben, der Name darunter.",
+            "ursache": "Die Zerlegung suchte je ZEILE nach einem Kreuz UND einer Testnummer. Keine der beiden Zeilen trägt beides, also fand sie nichts und fiel auf das ganze Stück zurück.",
+            "beweis": "Gegenprobe mit der alten Regel: genau das beobachtete Symptom, [266 bis 277] statt [270].",
+            "lehre": "Ein Werkzeug, das Prüfläufe auswertet, ist selbst ungeprüft, bis es einen Wächter hat. Dieses war zwei Stunden alt und hat in seinem ersten Ernstfall danebengegriffen. Und: der vorsichtige Rückfall war richtig — er hat nur die echte Spur unter neun falschen begraben."
         }
     ]
 };

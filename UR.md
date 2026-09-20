@@ -1894,12 +1894,13 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 | E659 — test550: die Doku zählt, was da ist | `(offen)` → `(offen)` | ca. 19:20 – | laufend | test550 (8/8, Gegenprobe gefahren), test549 · der volle Lauf läuft weiter im Arbeitsbaum |
 | E660 — Tabellenwerkzeuge am Telefon: 26 px werden 44 px | `(offen)` → `(offen)` | ca. 19:50 – | laufend | test551 (9/9), test402, test549 (6/6), test550 (8/8) |
 | E661 — Groqs 404: der Anbieter hat immer recht, und die Modellliste wird erfragt | `(offen)` → `(offen)` | ca. 20:20 – | laufend | test552 (15/15, zwei Gegenproben), test550 (8/8) |
+| E662 — volllauf.mts nennt den Schuldigen statt sein ganzes Stück | `(offen)` → `(offen)` | ca. 20:55 – | laufend | test553 (6/6, Gegenprobe gefahren), test550 (8/8) |
 
 #### Zahlen des Tages
 
 - **commits:** 2
-- **entscheidungen:** 19
-- **neue Prüfläufe:** 11
+- **entscheidungen:** 20
+- **neue Prüfläufe:** 12
 - **volle Läufe:** 0
 
 #### Das grösste Problem
@@ -1922,5 +1923,5 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 94 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 95 Einträge.
 

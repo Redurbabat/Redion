@@ -108,6 +108,7 @@ sind der teuerste Teil und der lehrreichste.
 | P92 | 2026-09-20 | Fast eine zweite Werkzeugzeile gebaut, die es schon gab | niedrig | — |
 | P93 | 2026-09-20 | Die eigene Erklärung vor die des Anbieters gestellt | 🟠 mittel | — |
 | P94 | 2026-09-20 | Die Gegenprobe war falsch, nicht der Code | niedrig | — |
+| P95 | 2026-09-20 | Das Werkzeug für die Prüfläufe war selbst ungeprüft | 🟠 mittel | — |
 
 ---
 
@@ -2075,4 +2076,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Mit if (modellWeg) zu if (false) wurden genau zwei Zusagen rot, die richtigen.
 
 **Die Lehre.** Eine Gegenprobe ist ein Stück Code wie jedes andere und kann genauso falsch sein. Ein grüner Lauf nach einer Gegenprobe heisst zuerst: die Gegenprobe ansehen.
+
+
+---
+
+## P95 · Das Werkzeug für die Prüfläufe war selbst ungeprüft
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** volllauf.mts meldete zehn rote Läufe (266 bis 277), tatsächlich war einer rot: test270.
+
+**Die falsche Vermutung.** Beim Lesen der Meldung zuerst: ein ganzes Stück ist gescheitert, also vermutlich eine Portkollision oder der Arbeitsbaum. Es war die Auswertung.
+
+**Wie es gefunden wurde.** Ins Protokoll gesehen statt in die Zusammenfassung. Dort stand die Bilanz von alle.mts auf zwei Zeilen: das Zeichen oben, der Name darunter.
+
+**Die Ursache.** Die Zerlegung suchte je ZEILE nach einem Kreuz UND einer Testnummer. Keine der beiden Zeilen trägt beides, also fand sie nichts und fiel auf das ganze Stück zurück.
+
+**Der Beweis.** Gegenprobe mit der alten Regel: genau das beobachtete Symptom, [266 bis 277] statt [270].
+
+**Die Lehre.** Ein Werkzeug, das Prüfläufe auswertet, ist selbst ungeprüft, bis es einen Wächter hat. Dieses war zwei Stunden alt und hat in seinem ersten Ernstfall danebengegriffen. Und: der vorsichtige Rückfall war richtig — er hat nur die echte Spur unter neun falschen begraben.
 

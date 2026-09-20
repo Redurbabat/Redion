@@ -1,5 +1,36 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E662 · Der Sweep nennt den Schuldigen, nicht sein ganzes Stück
+
+**Der Ernstfall.** Zwei Stunden nach seinem Bau meldete `volllauf.mts` zehn
+rote Läufe (266 bis 277). Im Protokoll darüber stand „✗ 1 von 10 Läufen
+gescheitert: test270". Einer.
+
+**Die Ursache.** Die Zerlegung suchte je ZEILE nach einem ✗ UND einer
+Testnummer. `alle.mts` schreibt seine Bilanz auf zwei Zeilen — die erste
+trägt das Zeichen, die zweite den Namen. Also fand sie nichts und fiel auf
+„das ganze Stück ist rot" zurück.
+
+**Was bleibt.** Der Rückfall. Er erfindet keinen Schuldigen (§56), und
+lieber neun zu viel als einer zu wenig. Falsch war nur, ihn so leicht
+auszulösen: neun grüne Läufe verstecken den einen, auf den es ankommt.
+
+**Gebaut.** Die Bilanz wird zuerst gelesen, einzelne ✗-Zeilen danach, und
+was nicht zum Stück gehört, macht keinen fremden Lauf rot. `volllauf.mts`
+arbeitet nur noch, wenn es direkt gestartet wurde — importiert gibt es nur
+`roteAus` her, damit ein Wächter es prüfen kann, ohne den Sweep loszutreten.
+
+**Geprüft.** `test553` neu, sechs Messungen, mit der ECHTEN Bilanz vom
+20. September als Eingabe. Gegenprobe: die alte Regel eingesetzt → genau
+das beobachtete Symptom.
+
+**Offen.** Der eine echte rote Lauf ist `test270` mit dem Artefakt, das §30
+beschreibt (`.git` als Datei, `node_modules` als Symlink im Arbeitsbaum).
+Er wird im Hauptbaum nachgemessen, sobald der Sweep durch ist — vorher wird
+daran nichts repariert.
+
+---
+
 ## 20. September 2026 · E661 · Groqs 404 — der Anbieter hat immer recht
 
 **Redurs Meldung.** „Groq antwortet mit 404. Die Adresse gibt es nicht

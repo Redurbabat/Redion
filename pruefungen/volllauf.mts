@@ -40,6 +40,10 @@ const PRUEF = dirname(fileURLToPath(import.meta.url));
 const WURZEL = join(PRUEF, '..');
 const MERK = join(PRUEF, '.volllauf-stand.json');
 
+/* NUR LAUFEN, WENN DIREKT GESTARTET. Sonst könnte `test553` die Zerlegung
+   oben nicht prüfen, ohne den ganzen Sweep loszutreten. */
+const alsWerkzeug = /volllauf\.mts$/.test(process.argv[1] ?? '');
+
 const args = process.argv.slice(2);
 const vonVorne = args.includes('--neu');
 const nurStand = args.includes('--stand');
@@ -109,10 +113,12 @@ const bericht = (): void => {
   if (gesamt) console.log('  gelaufen   ' + Math.round(gesamt / 60) + ' min');
 };
 
-if (nurStand) { bericht(); process.exit(0); }
+if (alsWerkzeug && nurStand) { bericht(); process.exit(0); }
 
-if (vonVorne && existsSync(MERK)) unlinkSync(MERK);
-standSchreiben(stand);
+if (alsWerkzeug) {
+  if (vonVorne && existsSync(MERK)) unlinkSync(MERK);
+  standSchreiben(stand);
+}
 
 /** Ein Stück fahren: `alle.mts` mit den Nummern, Ausgabe durchreichen. */
 const stueckFahren = (teil: number[]): Promise<{ code: number; text: string }> =>
@@ -125,19 +131,58 @@ const stueckFahren = (teil: number[]): Promise<{ code: number; text: string }> =
     kind.on('close', code => fertig({ code: code ?? 1, text }));
   });
 
-/** Welche Nummern in der Ausgabe rot waren — aus dem Text, nicht geraten. */
-const roteAus = (text: string, teil: number[]): number[] => {
+/**
+ * Welche Nummern in der Ausgabe rot waren — aus dem Text, nicht geraten.
+ *
+ * WARUM DIESE FUNKTION EINEN EIGENEN WÄCHTER HAT (E662). Die erste Fassung
+ * suchte je ZEILE nach einem ✗ UND einer Testnummer. `alle.mts` schreibt
+ * seine Bilanz aber auf zwei Zeilen:
+ *
+ *     ✗ 1 von 10 Läufen gescheitert:
+ *         test270
+ *
+ * Die erste hat das Zeichen und keine Nummer, die zweite die Nummer und kein
+ * Zeichen. Also fand sie nichts, fiel auf „das ganze Stück ist rot" zurück
+ * und meldete zehn rote Läufe, wo einer war. Neun Unschuldige, und die
+ * echte Spur mittendrin.
+ *
+ * Der Rückfall war richtig — er erfindet keinen Schuldigen (§56). Falsch war
+ * nur, ihn so leicht auszulösen.
+ */
+export const roteAus = (text: string, teil: number[]): number[] => {
   const rot = new Set<number>();
-  for (const zeile of text.split('\n')) {
-    /* `alle.mts` schreibt je Lauf eine Zeile mit ✓ oder ✗ und dem Dateinamen. */
-    if (!/✗|FEHLER|fehlgeschlagen/i.test(zeile)) continue;
-    const m = zeile.match(/test(\d+)/);
-    if (m && m[1]) rot.add(Number(m[1]));
+  const zeilen = text.split('\n');
+
+  /* 1 · Die Bilanz am Ende: „✗ N von M Läufen gescheitert:" und darunter
+         die Namen, eingerückt, einer je Zeile. Das ist die genaue Quelle. */
+  for (let i = 0; i < zeilen.length; i++) {
+    if (!/von\s+\d+\s+Läufen\s+gescheitert/i.test(zeilen[i] ?? '')) continue;
+    for (let k = i + 1; k < zeilen.length; k++) {
+      const z = zeilen[k] ?? '';
+      if (!/^\s+\S/.test(z)) break;           /* die Aufzählung ist zu Ende */
+      const m = /test(\d+)/.exec(z);
+      if (m && m[1]) rot.add(Number(m[1]));
+    }
   }
-  /* Kein Treffer, aber der Prozess war rot? Dann ist unklar, WELCHER es war —
-     also gilt das ganze Stück als rot, statt still einen davon zu erfinden. */
-  return rot.size ? [...rot] : teil.slice();
+
+  /* 2 · Sonst je Zeile: manche Läufe melden sich selbst mit ✗ und Namen. */
+  if (!rot.size) {
+    for (const zeile of zeilen) {
+      if (!/✗|FEHLER|fehlgeschlagen/i.test(zeile)) continue;
+      const m = /test(\d+)/.exec(zeile);
+      if (m && m[1]) rot.add(Number(m[1]));
+    }
+  }
+
+  /* 3 · Kein Treffer, aber der Prozess war rot? Dann ist unklar, WELCHER es
+         war — also gilt das ganze Stück als rot, statt still einen davon zu
+         erfinden. Der Rückfall bleibt; er ist jetzt nur schwerer zu treffen. */
+  const nurAusDemStueck = [...rot].filter(n => teil.includes(n));
+  return nurAusDemStueck.length ? nurAusDemStueck : teil.slice();
 };
+
+if (!alsWerkzeug) { /* importiert — nur die Zerlegung hergeben */ }
+else {
 
 bericht();
 
@@ -181,3 +226,5 @@ console.log('\n' + (stand.rot.length
     'node pruefungen/alle.mts ' + stand.rot.join(' ')
   : 'GRÜN. `main` darf vorgespult werden (§46) — im Hauptbaum.'));
 process.exit(stand.rot.length ? 1 : 0);
+
+}
