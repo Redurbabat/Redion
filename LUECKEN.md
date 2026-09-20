@@ -9393,3 +9393,62 @@ Der Funkel-Schmuck legt seine eigene Fläche über die Hauptfläche. Ob
 läuft — hier läuft sie über *gar nichts*: Haupt- und Nebenknopf sind optisch
 gleich, und der Nebenknopf steht darunter, also am Daumen. Wer schnell tippt,
 öffnet den Lernplan statt zu lernen.
+
+## L202 · Am Telefon rollt die Werkzeugleiste, statt aufzuklappen — 20. September 2026
+
+GoodNotes zeigt am aktiven Werkzeug ein kleines Aufklapp-Zeichen; dahinter
+liegen seine Einstellungen. Redion braucht das am **Rechner** nicht — dort
+stehen sie ohnehin in der Zeile darunter, ohne einen Klick.
+
+**Am Telefon ist es anders.** Gemessen bei E396 (4. September, 390 × 844, im
+Dokumentmodus mit einem A4-Blatt):
+
+```txt
+dreizehn Werkzeuge, alle 44 px hoch (§37 stimmt)
+Leiste 368 px breit, Inhalt 636 px
+sieben Werkzeuge stehen im Bild, sechs erst nach einem Wisch
+```
+
+Dazu kommt das Zubehör des gewählten Werkzeugs in derselben rollenden Zeile.
+Wer den Stift einstellen will, wischt — und wer wischt, verliert die Stelle,
+an der er war. E356 hat das entschärft („die Leiste rollt zum Werkzeug"),
+aber nicht gelöst.
+
+**Was zu klären ist:** ob das Zubehör am Telefon aus der Zeile herausgeht und
+als Blatt von unten kommt, angestossen vom Werkzeug selbst — dann trüge das
+aktive Werkzeug mit Recht ein Aufklapp-Zeichen, und die Zeile hielte nur noch
+die dreizehn. Das ist ein eigener Bogen mit eigener Messung: er ändert, wo
+jede Einstellung wohnt, und Redur zeichnet auf dem Telefon.
+
+**Was es NICHT sein darf:** das Aufklapp-Zeichen ohne das Blatt. Ein Zeichen,
+das etwas verspricht, das schon offen daneben steht, ist Zierde — und das
+Design-System nennt es beim Namen: *„placeholder controls presented as
+complete features."*
+
+## L203 · Ob „keine Durchsicht" wirkt, ist ungemessen — 20. September 2026
+
+`bausteine.css` hat seit E639 eine Regel für `prefers-reduced-transparency`:
+die untere Leiste gibt ihr Glas ab, die Linse ihre Brechung, und an ihre
+Stelle tritt die volle Marke — damit der aktive Reiter markiert bleibt (§38).
+
+**Dass die Regel dasteht, ist geprüft. Dass sie wirkt, nicht.** Am
+20. September nachgemessen:
+
+```txt
+page.emulateMedia({ reducedTransparency: 'reduce' })   matches → false
+Start mit --force-prefers-reduced-transparency          matches → false
+```
+
+Der Chromium, den Playwright hier mitbringt, kennt das Merkmal nicht. Eine
+Zusage, die den Zustand nicht herstellen kann, den sie prüft, wäre immer rot —
+und das ist kein Wächter, sondern eine Dauerbeschwerde (§55.2). `test539` §6
+prüft deshalb die QUELLE: dass die Regel da ist und das Richtige sagt.
+
+**Was zu klären ist:** ob ein neuerer Chromium das Merkmal kennt. Dann wird
+§6 von einer Quellenprüfung zu einer echten Messung — und erst dann ist die
+Zusage „ohne Durchsicht bleibt die Auswahl sichtbar" belegt statt behauptet.
+
+Dasselbe gilt für die drei älteren Regeln derselben Art:
+`studio.css:233` (Menü, Finder, Auswahlleiste), `pdf-studio.css:107` (die
+Werkzeugleiste) und `bausteine.css:8467` (die Textur). Keine von ihnen ist je
+gegen eine Seite gemessen worden.

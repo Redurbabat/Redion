@@ -7123,6 +7123,113 @@ const Marken = (() => {
         }
         catch { /* dann ohne Zeichen */ }
         row.appendChild(tools);
+        /* ══ DER WECHSEL FLIEGT, DER ZUSTAND SITZT (E640) ═══════════════════
+         * Die Vorgabe des Design-Systems: nicht zwei Flächen unabhängig aus-
+         * und einblenden, sondern EINE, die sich vom alten zum neuen Zustand
+         * bewegt. Das Beispiel dort heisst wörtlich „Pen → Marker → Eraser".
+         *
+         * ERSTER ENTWURF, UND WARUM ER WEG IST. Zuerst lag eine dauerhafte
+         * Fläche neben den Knöpfen und wanderte zum gewählten. Sie sah richtig
+         * aus — und `test478` hat sie widerlegt: nach einem Farbklick stand sie
+         * 55 px neben ihrem Werkzeug, Überdeckung NULL. Der Grund war nicht EIN
+         * fehlender Auslöser, sondern die Bauform: eine Stelle, die einmal
+         * gerechnet und dann gespeichert wird, veraltet bei jedem Umbruch, bei
+         * jedem Rollen, bei jeder Breitenabfrage. Drei Formeln und fünf
+         * Auslöser später stand immer noch derselbe Wert da.
+         *
+         * JETZT TRÄGT DEN GRUND WIEDER DER KNOPF — er kann gar nicht verrutschen,
+         * weil er kein eigener Ort ist. Nur der WECHSEL bekommt eine Fläche:
+         * eine kurzlebige, die vom alten Knopf zum neuen fliegt und danach
+         * verschwindet. Währenddessen hält der neue seinen Grund zurück, damit
+         * nie zwei zugleich zu sehen sind.
+         *
+         * `position:fixed` und Bildschirmmasse: so gibt es keine Frage nach der
+         * Hülle, keinen Versatz, keine Rollung — genau die Fragen, an denen der
+         * erste Entwurf gescheitert ist.
+         * ══════════════════════════════════════════════════════════════════════*/
+        let wahlVorher = tools.querySelector('button[data-wz].on');
+        /* DIE LAUFENDE FLÄCHE, falls gerade eine unterwegs ist. Sie steht hier
+           und nicht in `wahlFliegen`, weil der NÄCHSTE Wechsel sie braucht. */
+        let flugJetzt = null;
+        const wahlFliegen = () => {
+            const neu = tools.querySelector('button[data-wz].on');
+            const alt = wahlVorher;
+            if (neu === alt)
+                return;
+            wahlVorher = neu;
+            if (!alt || !neu)
+                return;
+            /* Ohne Bewegung KEIN Flug — der Zustand ist trotzdem sofort richtig,
+               weil er am Knopf hängt und nicht am Flug (§38). */
+            if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+                return;
+            /* ══ UNTERBRECHEN, NICHT ANSTELLEN ═══════════════════════════════
+             * Wer schnell A → B → C tippt, soll EINE Fläche sehen, die ihre
+             * Richtung ändert — nicht zwei, die nebeneinander herfliegen. Die
+             * laufende wird deshalb dort abgeholt, wo sie GERADE ist
+             * (`getBoundingClientRect` gibt den gemalten Zwischenstand, nicht das
+             * Ziel), und die neue startet von dort. So geht die Stelle nicht
+             * verloren, und es springt nichts zurück.
+             * Ohne das lag hier eine Warteschlange, und das Design-System
+             * verbietet sie ausdrücklich. Gesehen beim Gegenlesen des eigenen
+             * Bogens, nicht im Bild — zwei Flächen sieht man erst, wenn man
+             * schnell genug tippt. */
+            const laeuft = flugJetzt?.getBoundingClientRect();
+            if (flugJetzt) {
+                flugJetzt.remove();
+                flugJetzt = null;
+            }
+            const von = laeuft && laeuft.width ? laeuft : alt.getBoundingClientRect();
+            const nach = neu.getBoundingClientRect();
+            if (!von.width || !nach.width)
+                return;
+            /* Kein Flug über null Weg — und keiner quer über eine umgebrochene
+               Leiste: was mehr als eine Zeile überspringt, wäre kein Weg mehr,
+               sondern ein Strich quer durchs Bild. */
+            if (Math.abs(von.left - nach.left) < 1 && Math.abs(von.top - nach.top) < 1)
+                return;
+            if (Math.abs(von.top - nach.top) > von.height * 1.5)
+                return;
+            const flug = document.createElement('i');
+            flug.className = 'bw-flug';
+            flug.setAttribute('aria-hidden', 'true');
+            flug.style.cssText =
+                'left:' + von.left + 'px;top:' + von.top + 'px;' +
+                    'width:' + von.width + 'px;height:' + von.height + 'px;';
+            document.body.append(flug);
+            flugJetzt = flug;
+            /* Wer vorher wartete, wartet nicht mehr: sonst bliebe ein
+               überholtes Ziel blass stehen. */
+            tools.querySelectorAll('.bw-wartet').forEach(k => k.classList.remove('bw-wartet'));
+            neu.classList.add('bw-wartet');
+            const fertig = () => {
+                flug.remove();
+                if (flugJetzt === flug)
+                    flugJetzt = null;
+                neu.classList.remove('bw-wartet');
+            };
+            /* Zwei Bilder warten, sonst gilt der Startwert als nie gemalt und es
+               gibt keinen Übergang — dieselbe Falle wie bei `#ho-pille` (E639). */
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                flug.style.left = nach.left + 'px';
+                flug.style.top = nach.top + 'px';
+                flug.style.width = nach.width + 'px';
+                flug.style.height = nach.height + 'px';
+            }));
+            flug.addEventListener('transitionend', fertig, { once: true });
+            /* EIN NETZ. Ein Übergang, der nie beginnt (Fenster im Hintergrund,
+               Bewegung aus), meldet auch kein Ende — dann bliebe der neue Knopf
+               für immer ohne Grund. */
+            setTimeout(fertig, 700);
+        };
+        try {
+            new MutationObserver(wahlFliegen).observe(tools, {
+                attributes: true, attributeFilter: ['class'], subtree: true
+            });
+        }
+        catch { /* ohne Beobachter wechselt der Grund ohne Flug — der Zustand
+                     stimmt trotzdem, weil er am Knopf hängt */
+        }
         if (extra) {
             const fixed = document.createElement('div');
             fixed.className = 'blatt-fest';

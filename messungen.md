@@ -2844,3 +2844,60 @@ test539    27 von 27 grün    die Linse (neu)
 test114    87 von 87 grün    die gleitende Pille, seit E236
 22 Läufe   alle grün         jeder, der `#handy-oben` oder `#ho-pille` anfasst
 ```
+
+---
+
+## Der Wechsel im Werkzeugsystem — 20. September 2026 (E640)
+
+### Die Bauform, die nicht getragen hat
+
+Erster Entwurf: eine dauerhafte Fläche neben den Knöpfen, die zum gewählten
+wandert — dieselbe wie `#ho-pille` unten. Gemessen sah sie gut aus:
+
+```txt
+13 verschiedene Orte über 49 Bilder, 253 px → 816 px
+```
+
+Dann `test478`: die Fläche stand **55 px neben ihrem Werkzeug**,
+Überdeckung 0. Die Suche danach, in der Reihenfolge, in der sie lief:
+
+```txt
+Verdacht                  Massnahme                              --bx danach
+ein Auslöser fehlt        Beobachter auf class+childList+subtree     88 px
+falscher Ursprung         gegen die Leiste statt offsetLeft          88 px
+falsche Hülle             gegen offsetParent, Rand abgezogen         88 px
+```
+
+Erst ein Zähler im Element brachte es heraus: `laeufe: 5`. Die Rechnung war
+gelaufen — fünfmal — und jedes Mal **zu früh**. Danach rollte die Leiste zum
+Werkzeug (E356) und brach um.
+
+```txt
+Knopf auf dem Bildschirm    467 px
+Fläche auf dem Bildschirm   412 px
+gespeicherte Stelle          88 px   (richtig gewesen, bevor die Leiste rollte)
+richtige Stelle             143 px
+```
+
+### Die Bauform, die trägt
+
+```txt
+mit Flug      13 Orte über 49 Bilder
+ohne Flug     „Eine Fläche ist geflogen — 0 Bilder lang"   (Gegenprobe, rot)
+```
+
+Und der Beleg, der zählt: **die drei Läufe, die den ersten Entwurf widerlegt
+haben, sind unverändert grün.** `test478` 43/43, `test522`, `test533` — keine
+angepasste Zusage, keine nachgezogene Erwartung.
+
+### Was nicht messbar war
+
+```txt
+page.emulateMedia({ reducedTransparency: 'reduce' })   matches → false
+Start mit --force-prefers-reduced-transparency          matches → false
+```
+
+Der Chromium dieses Projekts kennt `prefers-reduced-transparency` nicht.
+`test539` §6 prüft deshalb die Quelle statt die Seite, und das steht als
+**L203** — samt der drei älteren Regeln derselben Art, die nie gemessen
+wurden.

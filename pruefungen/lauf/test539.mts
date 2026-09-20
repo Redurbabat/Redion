@@ -18,6 +18,10 @@
  *      Linse, die bei `prefers-reduced-motion` verschwindet, liesse den
  *      aktiven Reiter unmarkiert — und die Prüfung „keine Bewegung" wäre
  *      trotzdem grün.
+ *   §5 IM STUDIO FLIEGT DER WECHSEL. Der Grund sitzt am Knopf und kann
+ *      nicht verrutschen; nur der Übergang bekommt eine kurzlebige Fläche,
+ *      die von Stift zu Radierer fliegt (E640). Unten ist es Glas, dort
+ *      eine gefüllte Fläche — der Satz dahinter ist derselbe.
  *   §4 DIE FLÄCHE ÜBERLEBT OHNE BRECHUNG. Wo `backdrop-filter:url()` fehlt,
  *      darf NUR die Brechung wegfallen. Deshalb stehen Fläche und Brechung in
  *      zwei Regeln und nicht in einer.
@@ -33,7 +37,7 @@
  *   node pruefungen/lauf/test539.mts
  * ==========================================================================*/
 import { chromium } from 'playwright';
-declare const Store: any;
+declare const Store: any; declare const App: any;
 import http from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import fs from 'node:fs';
@@ -73,11 +77,24 @@ const fehler: string[] = [];
 
 /** Ein Telefon mit der unteren Leiste. Ohne `isMobile` bleibt sie versteckt —
  *  `#handy-oben{display:none}` gilt bis zur Telefonbreite. */
-const telefon = async (ruhig: boolean) => {
+const telefon = async (ruhig: boolean, ohneDurchsicht = false) => {
   const s = await browser.newPage({
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
     ...(ruhig ? { reducedMotion: 'reduce' as const } : {})
   });
+  /* `prefers-reduced-transparency` gibt es nicht als Kontext-Option, wohl
+     aber über `emulateMedia`. Ohne diesen Weg liesse sich der Fall gar nicht
+     prüfen — und eine Regel, die niemand prüft, ist eine Absicht. */
+  if (ohneDurchsicht) {
+    /* Die LAUFZEIT kann `reducedTransparency` — nachgeprüft, nicht vermutet.
+       Die mitgelieferten Typen von Playwright 1.56 kennen es noch nicht.
+       Deshalb genau diese eine Erweiterung und kein `any` über die ganze
+       Seite (§52.7): fällt das Merkmal eines Tages weg, sagt es der
+       Typprüfer hier und nicht irgendwo im Lauf. */
+    type Medien = Parameters<typeof s.emulateMedia>[0] &
+      { reducedTransparency?: 'reduce' | 'no-preference' };
+    await s.emulateMedia({ reducedTransparency: 'reduce' } as Medien);
+  }
   s.on('pageerror', e => fehler.push(String(e.message).slice(0, 140)));
   await s.goto(`http://localhost:${PORT}/index.html`);
   await s.waitForTimeout(2600);
@@ -225,6 +242,170 @@ console.log('\n§4 Quellen: zwei Regeln, nicht eine — und die Quelle ist TypeS
   /* Der Halter wird EINMAL gebaut — die Zeile, die das hält. */
   p('`sicherstellen` kehrt um, wenn es den Halter schon gibt',
     /if \(document\.getElementById\(HALTER\)\) return;/.test(lies('src/schale/bedienung/linse.ts')));
+}
+
+/* ═══ §6 Ohne Durchsicht: geprüft an der Quelle, nicht an der Seite ════════*/
+console.log('\n§6 Ohne Durchsicht: kein Glas, aber eine Auswahl');
+{
+  /* ─── WARUM HIER DIE QUELLE GEPRÜFT WIRD UND NICHT DIE SEITE ─────────────
+     Am 20. September nachgemessen: der Chromium dieses Projekts kennt
+     `prefers-reduced-transparency` NICHT. Weder `emulateMedia` noch der
+     Startschalter `--force-prefers-reduced-transparency` bringen
+     `matchMedia(...).matches` auf `true` — beides ausprobiert, beides
+     `false`.
+
+     Eine Zusage, die den Zustand nicht herstellen kann, den sie prüft, wäre
+     also IMMER rot. Das wäre kein Wächter, sondern eine Dauerbeschwerde
+     (§55.2). Geprüft wird deshalb, dass die Regel DASTEHT und das Richtige
+     sagt — weniger, als ich wollte, aber wahr. Dass sie auch wirkt, ist
+     ungemessen und steht als L203 in `LUECKEN.md`. */
+  const css = lies('quell/schale/stil/bausteine.css');
+  const block = css.split('prefers-reduced-transparency:reduce)')[1] || '';
+  const bis = block.slice(0, 900);
+  p('Es gibt eine Regel für „keine Durchsicht"', block.length > 0);
+  p('Die Leiste gibt ihr Glas ab', /#handy-oben\{[^}]*backdrop-filter:none/.test(bis), bis.slice(0, 120));
+  p('Die Linse auch — in Ruhe wie in Fahrt',
+    /#ho-pille,\s*\n?\s*#handy-oben #ho-pille\.faehrt\{[\s\S]{0,220}?backdrop-filter:none/.test(bis));
+  /* DAS IST DER PUNKT. Ohne ihn stünde „kein Glas" auch dann, wenn die
+     Auswahl ganz verschwände — und der aktive Reiter wäre unmarkiert (§38). */
+  p('… aber die Fläche bleibt: die Regel setzt einen Grund',
+    /#ho-pille,[\s\S]{0,260}?background:var\(--bg-hover\)/.test(bis), bis.slice(0, 200));
+  p('Und der Glanzrand geht aus — er ist reines Glas',
+    /#ho-pille::before,[\s\S]{0,140}?opacity:0/.test(bis));
+}
+
+/* ═══ §5 Im Studio wandert sie auch — und springt nicht ═════════════════════*/
+console.log('\n§5 Die Werkzeugwahl wandert von Stift zu Radierer, statt zu springen');
+{
+  /* DIESELBE BAUFORM, ZWEITER ORT (E640). Unten ist es Glas, hier eine
+     gefüllte Fläche — aber der Satz dahinter ist derselbe: EIN Ding, das
+     sich bewegt, statt zweier, die auftauchen und verschwinden. Deshalb
+     steht die Prüfung hier und nicht in einer eigenen Suite: was an zwei
+     Stellen verschieden geprüft wird, läuft auseinander (§8). */
+  const pg = await browser.newPage({ viewport: { width: 1400, height: 900 } });
+  pg.on('pageerror', e => fehler.push(String(e.message).slice(0, 140)));
+  await pg.goto(`http://localhost:${PORT}/index.html`);
+  await pg.waitForFunction('typeof Store !== "undefined" && typeof App !== "undefined"');
+  await pg.waitForTimeout(900);
+  await pg.evaluate(async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung')
+      .forEach(n => n.remove());
+    const seite = Store.addPage(null, { text: 'Wanderprobe', icon: '🧭' });
+    /* BREIT, damit die Leiste ihre volle Zeile hat (Behälterabfrage, E359). */
+    Store.updateBlock(seite.id, { wide: true });
+    const blatt = Store.addBlock(seite.id, 'blatt', {
+      text: '', papier: 'punkte', blattBreite: 595.28, blattHoehe: 841.89,
+      raumVersion: 1, marken: []
+    });
+    Store.addBlock(blatt.id, 'text', { text: '' });
+    await Store.flush();
+    App.oeffne(seite.id);
+    await new Promise(f => setTimeout(f, 1100));
+  });
+  await pg.waitForTimeout(500);
+
+  const ruhe = await pg.evaluate(() => {
+    const a2 = document.querySelector<HTMLElement>('.blatt-werk button[data-wz].on');
+    return {
+      werkzeug: a2?.dataset['wz'] || '',
+      /* IM RUHEZUSTAND TRÄGT DEN GRUND DER KNOPF. Das ist der Kern der
+         Bauform: eine gespeicherte Stelle daneben veraltet bei jedem
+         Umbruch — ein Grund am Knopf kann das gar nicht. */
+      grund: a2 ? getComputedStyle(a2).backgroundColor : '',
+      /* Und es fliegt nichts herum, wenn nichts passiert. */
+      fluege: document.querySelectorAll('.bw-flug').length
+    };
+  });
+  /* FRISCH GEÖFFNET GILT „Schreiben", nicht der Stift — nachgesehen, nicht
+     angenommen. Der erste Entwurf dieser Zeile stand auf „stift" und war
+     aus genau diesem Grund rot. */
+  gleich('Im Ruhezustand gilt „Schreiben"', ruhe.werkzeug, 'schreiben');
+  p('Der Knopf trägt seinen Grund selbst',
+    !/rgba\(0, 0, 0, 0\)|transparent/.test(ruhe.grund), ruhe.grund);
+  gleich('Und es fliegt nichts herum', ruhe.fluege, 0);
+
+  /* JETZT DER PUNKT DES ABSCHNITTS: der Weg dazwischen. Beim Wechsel fliegt
+     EINE Fläche vom alten zum neuen Werkzeug. Gezählt werden die
+     verschiedenen Orte, die sie unterwegs einnimmt — springt sie, ist es
+     einer; wandert sie, sind es viele. Die Schwelle steht bewusst niedrig:
+     unter Volllast der ganzen Suite malt der Browser wenige Bilder, und
+     daran soll kein Punkt scheitern (die Lehre aus `test114` §17). */
+  await pg.evaluate(() => {
+    (globalThis as any).__flug = { orte: [] as number[], gesehen: 0, wartet: 0 };
+    const takt = () => {
+      const f = document.querySelector<HTMLElement>('.bw-flug');
+      if (f) {
+        (globalThis as any).__flug.gesehen++;
+        (globalThis as any).__flug.orte.push(Math.round(f.getBoundingClientRect().left));
+      }
+      if (document.querySelector('.blatt-werk .bw-wartet'))
+        (globalThis as any).__flug.wartet++;
+      requestAnimationFrame(takt);
+    };
+    takt();
+  });
+  await pg.click('.blatt-werk [data-wz="radierer"]').catch(() => {});
+  await pg.waitForTimeout(900);
+  const weg = await pg.evaluate(() => {
+    const a2 = document.querySelector<HTMLElement>('.blatt-werk button[data-wz].on')!;
+    const f = (globalThis as any).__flug;
+    const einzig = [...new Set(f.orte as number[])];
+    return {
+      werkzeug: a2.dataset['wz'], gesehen: f.gesehen, wartet: f.wartet,
+      orte: einzig.length,
+      spanne: einzig.length ? Math.max(...einzig) - Math.min(...einzig) : 0,
+      /* Danach ist die Fläche WEG und der Grund wieder am Knopf. */
+      uebrig: document.querySelectorAll('.bw-flug').length,
+      grund: getComputedStyle(a2).backgroundColor,
+      wartetNoch: document.querySelectorAll('.blatt-werk .bw-wartet').length
+    };
+  });
+  gleich('Nach dem Klick gilt der Radierer', weg.werkzeug, 'radierer');
+  p('Eine Fläche ist geflogen', weg.gesehen > 0, `${weg.gesehen} Bilder lang`);
+  p('… und hat UNTERWEGS Stellen eingenommen, statt zu springen',
+    weg.orte >= 3, `${weg.orte} verschiedene Orte über ${weg.spanne} px`);
+  p('… das Ziel hat solange schwach vorgeleuchtet (§38)', weg.wartet > 0,
+    `${weg.wartet} Bilder lang`);
+  gleich('Danach ist keine Fläche mehr übrig', weg.uebrig, 0);
+  gleich('… und keiner wartet mehr', weg.wartetNoch, 0);
+  p('Der Grund sitzt wieder am Werkzeug',
+    !/rgba\(0, 0, 0, 0\)|transparent/.test(weg.grund), weg.grund);
+
+  /* ── SCHNELL HINTEREINANDER: EINE FLÄCHE, NICHT DREI ──────────────────
+     Wer A → B → C tippt, soll EINE Fläche sehen, die ihre Richtung ändert.
+     Eine Warteschlange verbietet das Design-System ausdrücklich, und ohne
+     diesen Punkt merkt es niemand: zwei Flächen nebeneinander sieht man
+     erst, wenn man schnell genug tippt. Gezählt wird die HÖCHSTZAHL
+     gleichzeitiger Flächen über alle Bilder. */
+  await pg.evaluate(() => {
+    (globalThis as any).__viele = 0;
+    const takt = () => {
+      const n = document.querySelectorAll('.bw-flug').length;
+      if (n > (globalThis as any).__viele) (globalThis as any).__viele = n;
+      requestAnimationFrame(takt);
+    };
+    takt();
+  });
+  for (const wz of ['stift', 'marker', 'select']) {
+    await pg.click(`.blatt-werk [data-wz="${wz}"]`).catch(() => {});
+    await pg.waitForTimeout(60);
+  }
+  await pg.waitForTimeout(900);
+  const schnell = await pg.evaluate(() => ({
+    hoechstens: (globalThis as any).__viele as number,
+    uebrig: document.querySelectorAll('.bw-flug').length,
+    wartet: document.querySelectorAll('.blatt-werk .bw-wartet').length,
+    werkzeug: document.querySelector<HTMLElement>('.blatt-werk button[data-wz].on')?.dataset['wz'],
+    markiert: document.querySelectorAll('.blatt-werk button[data-wz].on').length
+  }));
+  p('Drei Wechsel schnell hintereinander: nie mehr als EINE Fläche unterwegs',
+    schnell.hoechstens <= 1, `höchstens ${schnell.hoechstens} gleichzeitig`);
+  gleich('Am Ende gilt das zuletzt Getippte', schnell.werkzeug, 'select');
+  gleich('… und zwar genau eines', schnell.markiert, 1);
+  gleich('Nichts fliegt mehr', schnell.uebrig, 0);
+  gleich('Und niemand leuchtet mehr blass vor', schnell.wartet, 0);
+  await pg.close();
 }
 
 p('Keine Fehler auf den Seiten', fehler.length === 0, fehler.slice(0, 3).join(' | '));

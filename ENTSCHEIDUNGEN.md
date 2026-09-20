@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-617 Entscheidungen, E1 bis E639 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+618 Entscheidungen, E1 bis E640 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -682,6 +682,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E637** — Erst nachsehen, dann eintragen: die sechs Marken-Decken waren gewachsen, und Redur hat entschieden, erst die Stellen zu suchen. Alle zehn liegen in `werkzeuge.css`, alle aus E607 und E628. Sieben haben eine andere Aufgabe als ihre gleichnamige Marke; zwei Polster bekommen `--space-5`, und die rohe 46 war eine Abschrift von `.wb-massstab`, die dabei `tabular-nums` verloren hatte — beide Massstäbe teilen sich jetzt eine Regel. Zwei Zahlen hinunter, zwei hinauf, jede einzeln begründet in `messungen.md`
 * **E638** — Tot war nicht die Regel, sondern das, worauf sie zeigte: die fünf `order`-Zeilen aus E151 standen Zeichen für Zeichen unverändert da — aber drei ihrer vier Ziele hat Redurs Umbau vom 6. September abgeschafft. Übrig blieb `.lw-hero{order:4}` gegen `*{order:5}`, und damit stand die Begrüssung wieder ganz oben und „Lernen starten" bei y = 1115 in einem 844 px hohen Bild. Eine Regel, deren Selektor ins Leere greift, sieht im Quelltext aus wie am ersten Tag. Dazu drei Messfehler im Lauf selbst, darunter ein Schmuck-`<span>`, das vor jedem Namen stand
 * **E639** — Die Pille wird eine Linse: Redurs Video (Apple TV, iOS 26) zeigt keine Fläche, die springt, sondern eine, die BRICHT — sie vergrössert, zieht die Zeichen mit, wirft einen Farbsaum und dehnt sich in Laufrichtung. Redion hatte die wandernde Pille seit E236 schon; sie hat Glas bekommen. Die eine Zeile, an der alles hing: sie lag auf `z-index:0`, UNTER den Knöpfen — eine Linse kann aber nur brechen, was hinter ihr liegt. Dazu der Fund von `test114` §17, dessen Kommentar ein halbes Jahr vorher aufgeschrieben hatte, wann er scharf wird
+* **E640** — Der Grund sitzt, der Wechsel fliegt: das Design-System verlangt EINE Fläche, die sich bewegt, statt zweier, die auf- und abtauchen — Beispiel dort wörtlich „Pen → Marker → Eraser". Der erste Entwurf übernahm die Bauform von `#ho-pille`: eine dauerhafte Fläche, die wandert. `test478` hat sie widerlegt — 55 px neben ihrem Werkzeug, Überdeckung null. Drei Formeln und fünf Auslöser später stand immer noch derselbe Wert da; ein Zähler im Element zeigte, dass die Rechnung fünfmal gelaufen und jedes Mal ZU FRÜH war. Eine gespeicherte Stelle veraltet bei jedem Umbruch, jedem Rollen, jeder Breitenabfrage. Jetzt bleibt der Grund am Knopf, und nur der Wechsel bekommt eine kurzlebige Fläche in Bildschirmmassen
 
 ---
 
@@ -52246,3 +52247,126 @@ Redurs Satz — GoodNotes — ist noch gar nicht angefasst.
 
 **Gemessen.** `test114` 87/87 (vorher 86/87), `npm run typecheck` grün, Bild
 angesehen (§55.3).
+
+---
+
+## E640 — Der Grund sitzt, der Wechsel fliegt
+
+Die zweite Hälfte von Redurs Satz vom 20. September: *„und bei der GoodNotes
+so."* Dazu kam am selben Tag ein verbindliches Design-System
+(`Redurbabat/UI-Kit`, `skills/web-design/SKILL.md`) mit einer Vorgabe, die
+genau hierher zeigt:
+
+> Nicht zwei Buttons unabhängig aus- und einblenden. Wenn semantisch sinnvoll,
+> soll sich stattdessen eine gemeinsame aktive Materialfläche räumlich vom
+> alten zum neuen Zustand bewegen.
+
+Und als Beispiel steht dort wörtlich: **Pen → Marker → Eraser**.
+
+### Was Redion schon hatte — und das ist viel
+
+Bevor etwas gebaut wurde, ein Blick auf die Leiste:
+
+```txt
+data-tool an der Leiste     steuert, welche Zubehörgruppe erscheint
+aria-pressed am Knopf       sagt den Zustand, nicht nur eine Klasse (Audit F04)
+::after mit --touch-min     44 px Trefffläche, ohne das Zeichen zu vergrössern
+Dock-Vergrösserung          der Nachbar wächst mit (E625)
+Wort unter dem Zeichen      am Rechner (E614), weggeklemmt wo es eng ist
+gezeichnete Zeichen         seit E515, auf Redurs „nehme die Symbole 1:1"
+```
+
+Gefehlt hat genau eine Sache: `.blatt-werk button[data-wz].on` trug
+`background:var(--accent)` **am Knopf**. Wer von „Stift" auf „Marker" ging, sah
+zwei Dinge — eine Fläche, die verschwindet, und eine, die auftaucht.
+
+### Der erste Entwurf, und warum er weg ist
+
+Naheliegend war, die Bauform von `#ho-pille` zu übernehmen: eine dauerhafte
+Fläche neben den Knöpfen, die zum gewählten wandert. Sie war schnell gebaut,
+sah im Bild richtig aus, und `test539` §5 bestätigte sie: **13 verschiedene
+Orte über 49 Bilder.**
+
+Dann wurde `test478` rot: *„Der Zustand steht nicht nur in der Bewegung (§38)"*.
+Die Fläche stand **55 px neben ihrem Werkzeug**, Überdeckung NULL.
+
+Die Suche danach ist der eigentliche Wert dieses Eintrags, denn sie ging
+dreimal in die falsche Richtung:
+
+```txt
+1. Verdacht   „ein Auslöser fehlt"   → Beobachter auf class + childList + subtree
+   Ergebnis   immer noch --bx: 88px
+2. Verdacht   „falscher Ursprung"    → gegen die Leiste gerechnet statt offsetLeft
+   Ergebnis   immer noch --bx: 88px
+3. Verdacht   „falsche Hülle"        → gegen `offsetParent` gerechnet, Rand abgezogen
+   Ergebnis   immer noch --bx: 88px
+```
+
+Erst ein Zähler im Element — *lief die Rechnung überhaupt?* — brachte es
+heraus: **fünf Läufe**, und trotzdem stand der alte Wert da. Die Rechnung war
+also nicht falsch und nicht ungerufen; sie war **zu früh**. Danach rollte die
+Leiste zum Werkzeug (E356), brach um, klemmte Wörter weg — und die gespeicherte
+Stelle war Geschichte.
+
+**Das ist kein fehlender Auslöser, das ist die Bauform.** Eine Stelle, die
+einmal gerechnet und dann gespeichert wird, veraltet bei jedem Umbruch, bei
+jedem Rollen, bei jeder Breitenabfrage. Man kann Auslöser nachlegen, bis man
+alle hat — aber man weiss nie, ob man alle hat.
+
+Warum es unten an der Telefonleiste (E236, E639) trotzdem trägt: dort sind die
+fünf Reiter `flex:1 1 0`, die Leiste bricht nicht um und klemmt nichts weg. Die
+Bauform ist nicht falsch, sie passt nur nicht auf eine Leiste mit dreizehn
+Werkzeugen, Zubehör, Umbruch und Rollung.
+
+### Was jetzt steht
+
+**Der Grund bleibt am Knopf** — er kann gar nicht verrutschen, weil er kein
+eigener Ort ist. Nur der **Wechsel** bekommt eine Fläche: `.bw-flug`, eine
+kurzlebige, `position:fixed`, in Bildschirmmassen, die vom alten Knopf zum
+neuen fliegt und danach verschwindet. Keine Hülle, kein Versatz, keine
+Rollung — genau die drei Fragen, an denen der erste Entwurf gescheitert ist.
+
+Währenddessen **leuchtet das Ziel schwach vor** statt leer zu sein
+(`color-mix(… 22%)`). Auch das hat `test478` erzwungen: der erste Anlauf setzte
+dort `background:none`, und für die halbe Sekunde des Flugs hätte der Zustand
+NUR in der Bewegung gestanden. Wer die Bewegung nicht sieht, hätte gar nichts
+gesehen (§38).
+
+Dazu drei Netze, die jeder Flug braucht:
+
+```txt
+zwei Bilder warten     sonst gilt der Startwert als nie gemalt — kein Übergang
+                       (dieselbe Falle wie bei #ho-pille, E639)
+Zeile überspringen     ein Flug quer über eine umgebrochene Leiste wäre kein
+                       Weg, sondern ein Strich durchs Bild
+setTimeout(700)        ein Übergang, der nie beginnt (Fenster im Hintergrund),
+                       meldet auch kein Ende — sonst bliebe das Ziel ewig blass
+```
+
+### Gemessen
+
+```txt
+mit Flug      13 Orte über 49 Bilder, 253 px → 816 px
+ohne Flug     „Eine Fläche ist geflogen — 0 Bilder lang" (Gegenprobe, rot)
+```
+
+Und die drei Läufe, die den ersten Entwurf widerlegt haben, sind
+**unverändert** grün: `test478` 43/43, `test522`, `test533`. Das ist der beste
+Beleg dafür, dass die zweite Bauform die richtige ist — sie braucht keine
+angepasste Prüfung.
+
+### Was NICHT gebaut wurde, und warum
+
+Im Video trägt das aktive Werkzeug ein kleines **Aufklapp-Zeichen** für seine
+Einstellungen. Redion braucht es am Rechner nicht: die Einstellungen stehen
+bereits in der Zeile darunter, ohne einen Klick. Ein Zeichen dafür zu malen,
+hiesse etwas zu versprechen, das schon erfüllt ist — das Design-System nennt
+genau das unter seinen Anti-Mustern: *„placeholder controls presented as
+complete features."*
+
+Sinn bekäme es erst am **Telefon**, wo dreizehn Werkzeuge plus Zubehör 636 px
+Inhalt in einer 368 px breiten Leiste sind (E396). Das ist ein eigener Bogen
+mit eigener Messung — **L202**.
+
+**Gemessen.** `test539` 42/42, Gegenprobe rot. `test478` 43/43, `test522`,
+`test533` unverändert grün. `npm run typecheck` grün. Bild angesehen (§55.3).
