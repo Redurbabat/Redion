@@ -101,6 +101,8 @@ sind der teuerste Teil und der lehrreichste.
 | P85 | 2026-09-20 | Eine Regel, die nur galt, weil es die Handlung nicht gab | 🟠 mittel | — |
 | P86 | 2026-09-20 | Eine Erfolgsmeldung ist kein Erfolg | 🟠 mittel | — |
 | P87 | 2026-09-20 | Derselbe Fehler, zwei Bögen später, an einer anderen Stelle | 🟠 mittel | — |
+| P88 | 2026-09-20 | Die Lückenliste war selbst der stille Fehler | 🟠 mittel | — |
+| P89 | 2026-09-20 | Der Titel ist nicht der Status | niedrig | — |
 
 ---
 
@@ -1935,4 +1937,42 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Gegenprobe mit abgehängter Prüfung: von zwei gleichlautenden Blöcken wurde der erste geändert, der zweite nicht — und im Satz mit zwei „Das Kabel" traf es das erste.
 
 **Die Lehre.** Ein reparierter Fehler ist nicht erledigt, sondern bekannt. Wer kurz danach etwas Ähnliches baut, hat den billigsten Moment, ihn gar nicht erst entstehen zu lassen — und die Gegenprobe zeigt, dass die Vorkehrung nicht dekorativ ist.
+
+
+---
+
+## P88 · Die Lückenliste war selbst der stille Fehler
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** 33 offene Lücken standen unterhalb der Überschrift „Anhang B · Was erledigt ist". Wer von oben liest, hält sie für erledigt.
+
+**Die falsche Vermutung.** Dass es ein Formatierungsproblem ist. Es ist das Gegenteil dessen, wofür die Datei da ist: §35 sagt „eine bekannte Lücke ist besser als ein stiller Fehler", und hier war eine bekannte Lücke ZU einem stillen Fehler geworden.
+
+**Wie es gefunden wurde.** Die Warnung stand schon in der Datei — jemand hatte es gefunden und das Umsortieren vertagt, „während achtzehn Läufe rot waren" (§46). Die sind weg; also nachgemessen und repariert.
+
+**Die Ursache.** Der Anhang endete mit seiner letzten Tabelle, und alles Spätere wurde ans Dateiende geschrieben. Eine Datei wächst über ihre Gliederung hinaus, und niemand merkt den Tag, an dem es passiert.
+
+**Der Beweis.** `test549` gegen den alten Stand: 3/6, mit „33 offene Lücken lesen sich von oben wie erledigt", fünf fremden Schlusswörtern und „genannt 103/53/50 · gemessen 101/52/49".
+
+**Die Lehre.** Auch eine Doku-Datei kann einen Wächter haben. Der hier liest nur Text, braucht keinen Browser und läuft in einer Sekunde — es gab keinen Grund, ihn nicht schon vor einem Jahr zu schreiben.
+
+
+---
+
+## P89 · Der Titel ist nicht der Status
+
+*2026-09-20 · niedrig*
+
+**Das Bild.** Der neue Wächter hielt L181 („Das Lineal steht zweimal, sobald ‚Zeichnen' offen ist") für einen Eintrag mit dem Status „offen" — und im selben Lauf das Datum „20. September 2026" für die Zählung „20/2026/103".
+
+**Die falsche Vermutung.** Dass ein Suchwort reicht, um einen Zustand zu erkennen.
+
+**Wie es gefunden wurde.** Beide Male war der Lauf ROT — und sagte etwas anderes, als er mass. Aufgefallen beim Lesen der eigenen Ausgabe, nicht beim Schreiben des Codes.
+
+**Die Ursache.** Ein Wort kommt in einer Überschrift vor, ohne dort etwas zu bedeuten. Die Regel muss sagen, WO sie zählt, nicht nur WAS.
+
+**Der Beweis.** Nach der Korrektur: dieselbe Datei, dieselben Einträge, andere Zahl — 51 statt 52 offene.
+
+**Die Lehre.** Vierter und fünfter Fall nach test544, test545 und test548. Eine Messung, die den Titel für den Status hält, misst den Titel. Ein roter Lauf ist noch kein Beweis, und ein grüner erst recht nicht.
 

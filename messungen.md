@@ -3721,3 +3721,45 @@ wurde.
 
 `bilder/kiTextTor-rechner-hell.png` — das Tor zeigt jetzt den Wortlaut
 vorher und nachher statt „höchstens ein gespeichertes Objekt" (§55.3).
+
+---
+
+## 20. September 2026 — Die Lückenliste über sich selbst (E658, `test549`)
+
+Gezählt mit `node pruefungen/lauf/test549.mts`, nicht geschätzt:
+
+```txt
+                              vorher        nachher
+Einträge                      101           101
+offen                         52            51
+geschlossen                   49            50
+offen UNTER „Anhang B"        33            0
+fremde Schlusswörter          5             0
+Datei nennt sich selbst       103/53/50     101/51/50   (gemessen: stimmt)
+```
+
+Der eine Wanderer zwischen „offen" und „geschlossen" ist `L157`: die
+Überschrift sagte „GELANDET", was kein Wort dieser Datei ist.
+
+### Das Verschieben, und wie es gegengeprüft wurde
+
+```txt
+Datei in Blöcke zerlegt                   109 Blöcke
+Gegenprobe vor jeder Bewegung             Zusammensetzen ist byte-gleich
+gewandert                                 33 Blöcke · 6816 Zeilen
+Gegenprobe nach der Bewegung              jeder Block genau einmal
+Zeilen vorher/nachher                     9566 → 9585 (+19 neue Überschrift)
+```
+
+### Und zweimal hat der Wächter zuerst sich selbst korrigiert
+
+```txt
+1. Anlauf   „offen" im TITEL von L181 als Status gelesen
+2. Anlauf   „genannt 20/2026/103" — die ersten Zahlen waren das Datum
+```
+
+Beide Male war er rot und sagte das Falsche. Vierter und fünfter Fall nach
+`test544`, `test545` und `test548`. **Eine Messung, die den Titel für den
+Status hält, misst den Titel.**
+
+Kein Bild: hier ist nichts zu sehen, hier ist zu zählen (§55.3).

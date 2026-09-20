@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-634 Entscheidungen, E1 bis E656 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+636 Entscheidungen, E1 bis E658 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -699,6 +699,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E654** — Die KI darf löschen, aber nie ohne ein ausdrückliches Ja: Redurs Satz „alles machen kann ausser ohne meine bestetigung etwas löschen" ist eine eigene Rechteklasse, keine strengere Stufe von `bearbeiten`. Vorher kannte der Agentenkatalog zwei Rechte (`lesen`, `bearbeiten`) und kein Löschwerkzeug — die Regel war nur Abwesenheit. Jetzt: `seiteLoeschen` mit `recht: "loeschen"`, und ein Tor in der SCHLEIFE (nicht im Werkzeug), das für jedes künftige Löschwerkzeug gilt. Drei Dinge, die beim Bearbeiten richtig sind, gelten dort nicht: `fragenModus() === "nie"`, „für diesen Lauf erlauben" und `darfAllein` unbeaufsichtigt. Gelöscht wird in den Papierkorb, nie endgültig (§43). Wächter `test546`.
 * **E655** — Lernkarten, PDF und Tabellen: Redurs erste Hälfte („lernkarten erstellen pdf elssen, tabelas"). Drei neue Agentenwerkzeuge, die nur anlegen und lesen — sie fallen nicht unter das Tor aus E654, und deshalb durften sie im selben Zug kommen. `karteikartenAnlegen` legt echte `flashcard`-Blöcke an, die `Learning.cards()` auch findet (der alte Schnellbefehl schrieb nur Text ins Chatfenster); `pdfLesen` gibt den Wortlaut einer bestimmten Seitenspanne aus `suchtext` (E107) statt ihn über die Suche zu streifen; `tabelleAnlegen` baut einen `table`-Block mit `rows`, den der Editor zeichnet. Alle drei tragen `herkunft: "ki"` und damit den Streifen aus E307. Wächter `test547`.
 * **E656** — Die KI bearbeitet Text, und das Alte bleibt holbar: `textBearbeiten` ist das erste Werkzeug, das BESTEHENDEN Text anfasst. Zwei Vorkehrungen machen den Unterschied zu einem `String.replace` — vor dem Schreiben eine Fassung „vor KI-Änderung" (unabhängig vom Schalter `autoVersionen` und von der Vier-Minuten-Sperre), und „genau einmal oder gar nicht": kommt die Stelle mehrfach vor, wird nichts geändert und die Zahl genannt (die Lehre aus E650, zwei Bögen alt). Der geänderte Block trägt danach `herkunft: "ki"`. Wächter `test548`.
+* **E657** — Der volle Lauf bekommt ein Werkzeug: `pruefungen/volllauf.mts` fährt alle Läufe in Stücken, merkt nach JEDEM Stück, wie weit er ist, und verträgt eine Liste, die sich unterwegs ändert. §30 beschrieb diese Arbeitsweise seit dem 3. September — es gab sie nur als Handgriff, und beim vorletzten vollen Lauf ist genau das schiefgegangen.
+* **E658** — Die Lückenliste sagt die Wahrheit über sich selbst: 33 OFFENE Lücken standen unterhalb der Überschrift „Anhang B · Was erledigt ist" — wer von oben las, hielt sie für erledigt (§35). Sie stehen jetzt oben unter „Weitere offene Lücken"; das Verschieben ist byteweise gegengeprüft. Dazu: ein Wort für „zu" statt fünf (GESCHLOSSEN, wie §35 es nennt), und die selbstgenannte Zahl stimmt wieder. Wächter `test549`.
 
 ---
 
@@ -53874,3 +53876,112 @@ Fassung abgehängt              „0 → 0" und „KEINE FASSUNG" — der alte
 Eindeutigkeitsprüfung abgehängt „Die Leitung liegt. Das Kabel bleibt."
                                — der E650-Fehler, wörtlich zurück
 ```
+
+
+## E657 — Der volle Lauf bekommt ein Werkzeug
+
+**Was wurde entschieden?** `pruefungen/volllauf.mts` — der volle Prüflauf in
+Stücken, wiederaufnehmbar, mit einer Merkdatei.
+
+**Warum?** §30 beschreibt diese Arbeitsweise seit dem 3. September 2026, und
+Redur hat sie selbst entschieden. Es gab sie nur als **Handgriff**: zehn
+Nummern abtippen, warten, die nächsten zehn abtippen — und im Kopf behalten,
+wo man war. Beim vorletzten vollen Lauf ist genau das schiefgegangen.
+
+Eine Arbeitsweise, die in einer Regel steht und nirgends im Werkzeugkasten,
+wird beim dritten Mal anders gemacht.
+
+**Drei Dinge, die das Werkzeug ausdrücklich tut:**
+
+```txt
+nach JEDEM Stück schreiben   sonst wäre bei einem Abbruch genau das
+                             verloren, wogegen die Merkdatei gebaut ist
+Liste darf wachsen           ein Prüflauf, der mitten im Sweep entsteht,
+                             gehört dazu und ist noch nicht fertig
+kein Schuldiger erfunden     sagt ein Stück rot, ohne dass die Ausgabe den
+                             Lauf nennt, gilt das GANZE Stück als rot
+```
+
+Der dritte ist der, über den man leicht hinwegliest. Ein Werkzeug, das aus
+einem roten Stück irgendeinen Lauf herausrät, schickt den nächsten Menschen
+auf die falsche Fährte.
+
+**Was war die Alternative?** Ein Bash-Einzeiler mit `xargs`. Dagegen steht
+§54 (keine neue Sprache ohne Eintrag in E28) und der Umstand, dass genau die
+Merkdatei fehlen würde, um die es geht.
+
+**Was kostet es?** 170 Zeilen und eine Datei in `.gitignore`.
+
+**Der Fund des ersten Versuchs** steht jetzt in §30, weil er sich
+wiederholen wird: ein `git worktree` enthält, was **eingecheckt** ist. Ein
+Werkzeug, das noch im Hauptbaum liegt, gibt es dort nicht — der erste
+Anlauf scheiterte nach vier Sekunden mit `Cannot find module`.
+
+
+## E658 — Die Lückenliste sagt die Wahrheit über sich selbst
+
+**Was wurde entschieden?** Die offenen Lücken stehen oben, die geschlossenen
+unten, und „geschlossen" heisst überall dasselbe Wort.
+
+**Warum?** §35 ist **[hart]** und begründet sich selbst:
+
+> Eine bekannte Lücke ist besser als ein stiller Fehler.
+
+Gemessen am 20. September, vor dem Bogen:
+
+```txt
+101 Einträge · 52 offen · 49 geschlossen
+33 davon OFFEN und unterhalb von „Anhang B · Was erledigt ist"
+5  Überschriften mit „abgearbeitet", „erledigt" oder „GELANDET"
+die Datei nannte sich selbst 103 / 53 / 50
+```
+
+Eine Lückenliste, die offene Punkte unter „Was erledigt ist" führt, ist
+selbst der stille Fehler, gegen den sie geschrieben wurde. Wer von oben
+liest, hält sie für erledigt.
+
+**Das stand schon in der Datei.** Jemand hatte es gefunden und das
+Umsortieren vertagt — mit der Begründung, eine 9500-Zeilen-Datei
+umzustellen, „während achtzehn Läufe rot waren", sei die falsche
+Reihenfolge (§46). Das war richtig. Die achtzehn sind weg.
+
+**Wie verschoben wurde.** Nicht von Hand. Die Datei wird in Blöcke zerlegt
+(L-Überschrift bis zur nächsten L- oder Ebene-1-Überschrift), und **bevor**
+irgendetwas bewegt wird, muss das Zusammensetzen der Blöcke die Datei
+byteweise reproduzieren. Danach: jeder Block genau einmal in der neuen
+Ordnung, gegengeprüft über einen Abgleich der Blocktexte. 6816 Zeilen sind
+gewandert; keine ist verlorengegangen (§43).
+
+**Warum die 33 nicht einsortiert wurden.** Sie stehen in einem eigenen
+Abschnitt „Weitere offene Lücken · in der Reihenfolge ihres Fundes" und
+nicht in den vier Dringlichkeitsstufen oben. Welche Lücke wie dringend ist,
+ist eine Entscheidung je Eintrag, und die gehört Redur. Eine falsche
+Einsortierung wäre derselbe stille Fehler in neu.
+
+**Ein Wort für „zu".** §35 nennt es: GESCHLOSSEN. Fünf Überschriften sagten
+etwas anderes; drei Wörter für dieselbe Sache heissen, dass niemand zählen
+kann. Der alte Wortlaut steht, wo er etwas trug, in Klammern daneben
+(`L157 … — GESCHLOSSEN (gelandet)`).
+
+**Und die Überschrift „Hier endet Anhang B"** heisst jetzt „Anhang C ·
+Geschlossene Lücken in der Reihenfolge ihres Fundes". Eine Überschrift, die
+sagt, was AUFHÖRT, sagt nichts über die siebenundsechzig Einträge, die ihr
+folgen.
+
+**Der Wächter.** `test549`, sechs Messungen, gegen den alten Stand 3/6. Er
+liest nur eine Datei — kein Browser, kein Port —, darf also auch neben einem
+vollen Lauf gefahren werden.
+
+**Und er hat zuerst sich selbst korrigiert, zweimal.** Der erste Anlauf
+hielt das Wort „offen" im TITEL von L181 für eine Statusangabe. Der zweite
+verglich „genannt 20/2026/103" gegen „gemessen 101/52/49" — die ersten
+beiden Zahlen waren das Datum im selben Satz. Beide Male war der Lauf rot
+und sagte das Falsche. Das ist derselbe Fund wie bei `test544` und
+`test545`, und er hört nicht auf, wahr zu sein: **eine Messung, die den
+Titel für den Status hält, misst den Titel.**
+
+**Was dieser Bogen NICHT entschieden hat.** `L52` heisst
+`~~Zwei Willkommensdialoge~~ — die Prüfseite bleibt offen`: durchgestrichen,
+also geschlossen, mit einem offenen Rest im Titel. Nach der Regel zählt er
+als zu. Ob der Rest eine eigene Nummer bekommt, ist eine inhaltliche Frage
+und gehört Redur — sie steht hier, damit sie nicht untergeht (§35).

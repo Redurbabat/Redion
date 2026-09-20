@@ -2514,12 +2514,20 @@ const ChronikDaten = {
                     "zeitraum": "ca. 18:15 –",
                     "dauer": "laufend",
                     "pruefungen": "test548 (17/17, zwei Gegenproben gefahren), test547, test546, test291, test281, test286, test87, test105, test109"
+                },
+                {
+                    "was": "E657/E658 — volllauf.mts, und die Lückenliste sagt die Wahrheit über sich selbst",
+                    "vonCommit": "(offen)",
+                    "bisCommit": "(offen)",
+                    "zeitraum": "ca. 18:45 –",
+                    "dauer": "laufend",
+                    "pruefungen": "test549 (6/6, Gegenprobe gefahren), test105, test109, test87 · dazu läuft der volle Lauf im Arbeitsbaum"
                 }
             ],
             "zahlen": {
                 "commits": 2,
-                "entscheidungen": 14,
-                "neue Prüfläufe": 7,
+                "entscheidungen": 16,
+                "neue Prüfläufe": 8,
                 "volle Läufe": 0
             },
             "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -3745,6 +3753,30 @@ const ChronikDaten = {
             "ursache": "Ein Modell plant eine Ersetzung aus dem, was es GELESEN hat, und liest nicht, wie oft etwas dasteht. Die Eindeutigkeit ist deshalb keine Eingabeprüfung, sondern ein Teil der Aufgabe.",
             "beweis": "Gegenprobe mit abgehängter Prüfung: von zwei gleichlautenden Blöcken wurde der erste geändert, der zweite nicht — und im Satz mit zwei „Das Kabel\" traf es das erste.",
             "lehre": "Ein reparierter Fehler ist nicht erledigt, sondern bekannt. Wer kurz danach etwas Ähnliches baut, hat den billigsten Moment, ihn gar nicht erst entstehen zu lassen — und die Gegenprobe zeigt, dass die Vorkehrung nicht dekorativ ist."
+        },
+        {
+            "nr": "P88",
+            "datum": "2026-09-20",
+            "titel": "Die Lückenliste war selbst der stille Fehler",
+            "schwere": "mittel",
+            "symptom": "33 offene Lücken standen unterhalb der Überschrift „Anhang B · Was erledigt ist\". Wer von oben liest, hält sie für erledigt.",
+            "falscheVermutung": "Dass es ein Formatierungsproblem ist. Es ist das Gegenteil dessen, wofür die Datei da ist: §35 sagt „eine bekannte Lücke ist besser als ein stiller Fehler\", und hier war eine bekannte Lücke ZU einem stillen Fehler geworden.",
+            "wieGefunden": "Die Warnung stand schon in der Datei — jemand hatte es gefunden und das Umsortieren vertagt, „während achtzehn Läufe rot waren\" (§46). Die sind weg; also nachgemessen und repariert.",
+            "ursache": "Der Anhang endete mit seiner letzten Tabelle, und alles Spätere wurde ans Dateiende geschrieben. Eine Datei wächst über ihre Gliederung hinaus, und niemand merkt den Tag, an dem es passiert.",
+            "beweis": "`test549` gegen den alten Stand: 3/6, mit „33 offene Lücken lesen sich von oben wie erledigt\", fünf fremden Schlusswörtern und „genannt 103/53/50 · gemessen 101/52/49\".",
+            "lehre": "Auch eine Doku-Datei kann einen Wächter haben. Der hier liest nur Text, braucht keinen Browser und läuft in einer Sekunde — es gab keinen Grund, ihn nicht schon vor einem Jahr zu schreiben."
+        },
+        {
+            "nr": "P89",
+            "datum": "2026-09-20",
+            "titel": "Der Titel ist nicht der Status",
+            "schwere": "niedrig",
+            "symptom": "Der neue Wächter hielt L181 („Das Lineal steht zweimal, sobald ‚Zeichnen' offen ist\") für einen Eintrag mit dem Status „offen\" — und im selben Lauf das Datum „20. September 2026\" für die Zählung „20/2026/103\".",
+            "falscheVermutung": "Dass ein Suchwort reicht, um einen Zustand zu erkennen.",
+            "wieGefunden": "Beide Male war der Lauf ROT — und sagte etwas anderes, als er mass. Aufgefallen beim Lesen der eigenen Ausgabe, nicht beim Schreiben des Codes.",
+            "ursache": "Ein Wort kommt in einer Überschrift vor, ohne dort etwas zu bedeuten. Die Regel muss sagen, WO sie zählt, nicht nur WAS.",
+            "beweis": "Nach der Korrektur: dieselbe Datei, dieselben Einträge, andere Zahl — 51 statt 52 offene.",
+            "lehre": "Vierter und fünfter Fall nach test544, test545 und test548. Eine Messung, die den Titel für den Status hält, misst den Titel. Ein roter Lauf ist noch kein Beweis, und ein grüner erst recht nicht."
         }
     ]
 };

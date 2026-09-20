@@ -1,5 +1,44 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E657/E658 · Ein Werkzeug für den vollen Lauf, und eine ehrliche Lückenliste
+
+**E657 — der volle Lauf bekommt ein Werkzeug.** §30 beschreibt seit dem
+3. September, wie er gefahren wird: in Stücken, wiederaufnehmbar, mit einer
+Merkdatei. Es gab das nur als Handgriff — zehn Nummern abtippen, warten,
+die nächsten zehn, und im Kopf behalten, wo man war. Beim vorletzten vollen
+Lauf ist genau das schiefgegangen. `pruefungen/volllauf.mts` schreibt nach
+JEDEM Stück, verträgt eine Liste, die unterwegs wächst, und erfindet
+keinen Schuldigen, wenn ein Stück rot ist, ohne dass die Ausgabe den Lauf
+nennt. Der erste Versuch scheiterte nach vier Sekunden an etwas, das jetzt
+in §30 steht: ein Arbeitsbaum enthält, was eingecheckt ist.
+
+**E658 — die Lückenliste sagt die Wahrheit über sich selbst.** 33 OFFENE
+Lücken standen unterhalb von „Anhang B · Was erledigt ist"; wer von oben
+las, hielt sie für erledigt. Das ist der stille Fehler, gegen den §35
+geschrieben ist — in der Datei, die ihn verhindern soll. Dazu fünf
+Überschriften mit „abgearbeitet", „erledigt" oder „GELANDET" statt des
+einen Wortes, das §35 nennt, und eine selbstgenannte Zahl (103/53/50), die
+um zwei danebenlag.
+
+Verschoben wurde nicht von Hand: die Datei wird in 109 Blöcke zerlegt, und
+BEVOR etwas bewegt wird, muss das Zusammensetzen byteweise die alte Datei
+ergeben. 6816 Zeilen sind gewandert, keine verloren (§43).
+
+**Geprüft.** `test549` neu, sechs Messungen, gegen den alten Stand 3/6.
+Gegenprobe: ein offener Eintrag ans Dateiende gehängt → Abschnitt 2 wird
+rot. Er liest nur eine Datei — kein Browser, kein Port —, darf also neben
+einem vollen Lauf laufen. `test105`, `test109`, `test87` grün.
+
+**Zweimal hat der Wächter zuerst sich selbst korrigiert:** „offen" im TITEL
+von L181 als Status gelesen, und das Datum im Selbstzähl-Satz für die
+Zählung gehalten. Beide Male rot und beide Male das Falsche gesagt.
+
+**Offen und Redurs Entscheidung:** `L52` ist durchgestrichen und trägt im
+Titel „die Prüfseite bleibt offen". Nach der Regel zählt er als geschlossen.
+Ob der Rest eine eigene Nummer bekommt, ist inhaltlich und gehört ihm.
+
+---
+
 ## 20. September 2026 · E656 · Text ändern, ohne den alten Stand zu verlieren
 
 **Redurs „usw."** Umschreiben, kürzen, übersetzen ging nur über das

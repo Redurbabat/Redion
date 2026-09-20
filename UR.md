@@ -1879,12 +1879,13 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 | E654 — Die KI darf löschen, aber nie ohne ein ausdrückliches Ja | `(offen)` → `(offen)` | ca. 17:15 – | laufend | test546 (13/13, Gegenprobe gefahren), test291, test281, test286, test301, test87, test105, test109 |
 | E655 — Lernkarten, PDF und Tabellen: die drei Werkzeuge, die Redur genannt hat | `(offen)` → `(offen)` | ca. 17:45 – | laufend | test547 (18/18, Gegenprobe gefahren), test546, test291, test281, test286, test87, test105, test109 |
 | E656 — textBearbeiten: das erste Werkzeug, das bestehenden Text anfasst | `(offen)` → `(offen)` | ca. 18:15 – | laufend | test548 (17/17, zwei Gegenproben gefahren), test547, test546, test291, test281, test286, test87, test105, test109 |
+| E657/E658 — volllauf.mts, und die Lückenliste sagt die Wahrheit über sich selbst | `(offen)` → `(offen)` | ca. 18:45 – | laufend | test549 (6/6, Gegenprobe gefahren), test105, test109, test87 · dazu läuft der volle Lauf im Arbeitsbaum |
 
 #### Zahlen des Tages
 
 - **commits:** 2
-- **entscheidungen:** 14
-- **neue Prüfläufe:** 7
+- **entscheidungen:** 16
+- **neue Prüfläufe:** 8
 - **volle Läufe:** 0
 
 #### Das grösste Problem
@@ -1907,5 +1908,5 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 87 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 89 Einträge.
 
