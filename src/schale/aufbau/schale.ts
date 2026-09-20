@@ -4099,12 +4099,21 @@ const App = (() => {
     /* Den Reiter setzt `Bibliothek.oeffne()` selbst — dort gehört er hin,
        weil das Regal auch vom Start, aus dem Mehr-Blatt und über einen
        Verweis aufgeht und die Markierung jedes Mal stimmen muss. */
+    /* Erst die gemeinsame Dock-Fläche auf das getippte Ziel schicken.
+       Der eigentliche Bildschirmaufbau folgt im nächsten Frame. So kann der
+       Browser mindestens einen sichtbaren Compositor-Frame der Reise zeigen,
+       bevor die neue Ansicht synchron DOM aufbaut. */
+    const dockWechsel = (reiterId: string, oeffnen: () => void) => {
+      Seitenleiste.reiter(reiterId);
+      handyLeiste();
+      requestAnimationFrame(() => oeffnen());
+    };
     an('hl-dok', () => { PWA.schubladeZu && PWA.schubladeZu();
-                         Bibliothek.oeffne(); handyLeiste(); });
+                         dockWechsel('dokumente', () => { Bibliothek.oeffne(); handyLeiste(); }); });
     an('hl-start', () => { PWA.schubladeZu && PWA.schubladeZu();
-                           Produktwelten.lernen('heute'); handyLeiste(); });
+                           dockWechsel('start', () => { Produktwelten.lernen('heute'); handyLeiste(); }); });
     an('hl-lernen', () => { PWA.schubladeZu && PWA.schubladeZu();
-                            Produktwelten.lernen('lernen'); handyLeiste(); });
+                            dockWechsel('lernen', () => { Produktwelten.lernen('lernen'); handyLeiste(); }); });
     /* HIER STAND `an('hl-seiten', …)` — bis E280 (L86).
        Der Knopf war seit E236 in keinem Markup mehr; die Zeile blieb als
        Erklärung stehen, „bis Redur sagt, dass der Weg wirklich weg soll".
@@ -4118,7 +4127,7 @@ const App = (() => {
        33-px-Zeilen. Genau davon ist das R-Blatt weggekommen (E38); ein
        Reiter, der sie wieder hereinholt, macht die Hälfte davon rückgängig. */
     an('hl-bespr', () => { PWA.schubladeZu && PWA.schubladeZu();
-                           Produktwelten.planung(); handyLeiste(); });
+                           dockWechsel('bespr', () => { Produktwelten.planung(); handyLeiste(); }); });
     /* `hu-ki`, `hu-suche` und `hu-neu` gab es in der schwebenden Leiste
        unten. Sie ist mit E236 weggefallen — zwei Leisten am unteren Rand
        wären eine zu viel gewesen. Die drei Wege sind nicht weg:
@@ -4150,7 +4159,7 @@ const App = (() => {
        in Mehr und ist damit keinen Griff weiter weg als vorher.
        `reiter('mehr')`, nicht `'start'`: die Pille oben liest ihn. */
     an('hl-mehr', () => { PWA.schubladeZu && PWA.schubladeZu();
-                          Seitenleiste.reiter('mehr'); Ansichten.mehr(); handyLeiste(); });
+                          dockWechsel('mehr', () => { Ansichten.mehr(); handyLeiste(); }); });
     an('btn-suche-handy', () => suche());
     /* HIER STAND `an('btn-suche-mitte', …)` — bis E272.
        Den Knopf gibt es seit dem Wegfall der grossen Suchbox nicht mehr.
