@@ -4365,18 +4365,28 @@ const App = (() => {
         /* Den Reiter setzt `Bibliothek.oeffne()` selbst — dort gehört er hin,
            weil das Regal auch vom Start, aus dem Mehr-Blatt und über einen
            Verweis aufgeht und die Markierung jedes Mal stimmen muss. */
+        /* Die Dock-Absicht wird vor dem schweren Bildschirmaufbau sichtbar.
+           So kann SelectionFlow seine compositorfähige Bahn starten, bevor
+           Bibliothek/Lernwelt synchron DOM aufbauen. */
+        const dockAbsicht = (id) => {
+            Seitenleiste.reiter(id);
+            handyLeiste();
+        };
         an('hl-dok', () => {
             PWA.schubladeZu && PWA.schubladeZu();
+            dockAbsicht('dokumente');
             Bibliothek.oeffne();
             handyLeiste();
         });
         an('hl-start', () => {
             PWA.schubladeZu && PWA.schubladeZu();
+            dockAbsicht('start');
             Produktwelten.lernen('heute');
             handyLeiste();
         });
         an('hl-lernen', () => {
             PWA.schubladeZu && PWA.schubladeZu();
+            dockAbsicht('lernen');
             Produktwelten.lernen('lernen');
             handyLeiste();
         });
@@ -4394,6 +4404,7 @@ const App = (() => {
            Reiter, der sie wieder hereinholt, macht die Hälfte davon rückgängig. */
         an('hl-bespr', () => {
             PWA.schubladeZu && PWA.schubladeZu();
+            dockAbsicht('bespr');
             Produktwelten.planung();
             handyLeiste();
         });
@@ -4429,7 +4440,7 @@ const App = (() => {
            `reiter('mehr')`, nicht `'start'`: die Pille oben liest ihn. */
         an('hl-mehr', () => {
             PWA.schubladeZu && PWA.schubladeZu();
-            Seitenleiste.reiter('mehr');
+            dockAbsicht('mehr');
             Ansichten.mehr();
             handyLeiste();
         });
