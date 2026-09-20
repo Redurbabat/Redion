@@ -2514,12 +2514,20 @@
           "zeitraum": "ca. 18:45 –",
           "dauer": "laufend",
           "pruefungen": "test549 (6/6, Gegenprobe gefahren), test105, test109, test87 · dazu läuft der volle Lauf im Arbeitsbaum"
+        },
+        {
+          "was": "E659 — test550: die Doku zählt, was da ist",
+          "vonCommit": "(offen)",
+          "bisCommit": "(offen)",
+          "zeitraum": "ca. 19:20 –",
+          "dauer": "laufend",
+          "pruefungen": "test550 (8/8, Gegenprobe gefahren), test549 · der volle Lauf läuft weiter im Arbeitsbaum"
         }
       ],
       "zahlen": {
         "commits": 2,
-        "entscheidungen": 16,
-        "neue Prüfläufe": 8,
+        "entscheidungen": 17,
+        "neue Prüfläufe": 9,
         "volle Läufe": 0
       },
       "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -3769,6 +3777,18 @@
       "ursache": "Ein Wort kommt in einer Überschrift vor, ohne dort etwas zu bedeuten. Die Regel muss sagen, WO sie zählt, nicht nur WAS.",
       "beweis": "Nach der Korrektur: dieselbe Datei, dieselben Einträge, andere Zahl — 51 statt 52 offene.",
       "lehre": "Vierter und fünfter Fall nach test544, test545 und test548. Eine Messung, die den Titel für den Status hält, misst den Titel. Ein roter Lauf ist noch kein Beweis, und ein grüner erst recht nicht."
+    },
+    {
+      "nr": "P90",
+      "datum": "2026-09-20",
+      "titel": "Vier Anläufe, vier erfundene Zahlen — und die Datei war immer in Ordnung",
+      "schwere": "niedrig",
+      "symptom": "Eine Prüfung von ENTSCHEIDUNGEN.md meldete nacheinander 351, dann 253, dann 203 Index-Einträge ohne Text. Es klang jedes Mal nach einem ernsten Fund.",
+      "falscheVermutung": "Dass die Datei kaputt ist. Sie war es nie: 638 von 638 Einträgen haben ihren Text.",
+      "wieGefunden": "Nach dem dritten Mal nicht repariert, sondern die MESSUNG angesehen. ENTSCHEIDUNGEN.md kennt drei Überschriftsformen — `## E123`, einen Banner zwischen zwei ===-Zeilen, und einen Titel mit === darunter, der über zwei Zeilen laufen kann. Jede engere Regel übersah eine davon.",
+      "ursache": "Eine gewachsene Datei benutzt die Form, die zur Zeit ihres Eintrags üblich war. Wer sie mit der HEUTIGEN Form misst, misst das Alter, nicht den Inhalt.",
+      "beweis": "Die Regel, die keine Form voraussetzt — eine Zeile, die mit der Nummer BEGINNT und ein Trennzeichen trägt —, findet 638 von 638.",
+      "lehre": "Bei der dritten Zahl, die nach einem Fund aussieht, ist der Prüfer verdächtig, nicht die Datei. Dazu: zwei weitere „Funde\" dieses Bogens standen bereits als Erklärung in der Datei — nachlesen ist billiger als nachbessern."
     }
   ]
 }

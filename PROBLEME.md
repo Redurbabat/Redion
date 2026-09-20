@@ -103,6 +103,7 @@ sind der teuerste Teil und der lehrreichste.
 | P87 | 2026-09-20 | Derselbe Fehler, zwei Bögen später, an einer anderen Stelle | 🟠 mittel | — |
 | P88 | 2026-09-20 | Die Lückenliste war selbst der stille Fehler | 🟠 mittel | — |
 | P89 | 2026-09-20 | Der Titel ist nicht der Status | niedrig | — |
+| P90 | 2026-09-20 | Vier Anläufe, vier erfundene Zahlen — und die Datei war immer in Ordnung | niedrig | — |
 
 ---
 
@@ -1975,4 +1976,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Nach der Korrektur: dieselbe Datei, dieselben Einträge, andere Zahl — 51 statt 52 offene.
 
 **Die Lehre.** Vierter und fünfter Fall nach test544, test545 und test548. Eine Messung, die den Titel für den Status hält, misst den Titel. Ein roter Lauf ist noch kein Beweis, und ein grüner erst recht nicht.
+
+
+---
+
+## P90 · Vier Anläufe, vier erfundene Zahlen — und die Datei war immer in Ordnung
+
+*2026-09-20 · niedrig*
+
+**Das Bild.** Eine Prüfung von ENTSCHEIDUNGEN.md meldete nacheinander 351, dann 253, dann 203 Index-Einträge ohne Text. Es klang jedes Mal nach einem ernsten Fund.
+
+**Die falsche Vermutung.** Dass die Datei kaputt ist. Sie war es nie: 638 von 638 Einträgen haben ihren Text.
+
+**Wie es gefunden wurde.** Nach dem dritten Mal nicht repariert, sondern die MESSUNG angesehen. ENTSCHEIDUNGEN.md kennt drei Überschriftsformen — `## E123`, einen Banner zwischen zwei ===-Zeilen, und einen Titel mit === darunter, der über zwei Zeilen laufen kann. Jede engere Regel übersah eine davon.
+
+**Die Ursache.** Eine gewachsene Datei benutzt die Form, die zur Zeit ihres Eintrags üblich war. Wer sie mit der HEUTIGEN Form misst, misst das Alter, nicht den Inhalt.
+
+**Der Beweis.** Die Regel, die keine Form voraussetzt — eine Zeile, die mit der Nummer BEGINNT und ein Trennzeichen trägt —, findet 638 von 638.
+
+**Die Lehre.** Bei der dritten Zahl, die nach einem Fund aussieht, ist der Prüfer verdächtig, nicht die Datei. Dazu: zwei weitere „Funde" dieses Bogens standen bereits als Erklärung in der Datei — nachlesen ist billiger als nachbessern.
 

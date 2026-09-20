@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-636 Entscheidungen, E1 bis E658 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+639 Entscheidungen, E1 bis E659 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -701,6 +701,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E656** — Die KI bearbeitet Text, und das Alte bleibt holbar: `textBearbeiten` ist das erste Werkzeug, das BESTEHENDEN Text anfasst. Zwei Vorkehrungen machen den Unterschied zu einem `String.replace` — vor dem Schreiben eine Fassung „vor KI-Änderung" (unabhängig vom Schalter `autoVersionen` und von der Vier-Minuten-Sperre), und „genau einmal oder gar nicht": kommt die Stelle mehrfach vor, wird nichts geändert und die Zahl genannt (die Lehre aus E650, zwei Bögen alt). Der geänderte Block trägt danach `herkunft: "ki"`. Wächter `test548`.
 * **E657** — Der volle Lauf bekommt ein Werkzeug: `pruefungen/volllauf.mts` fährt alle Läufe in Stücken, merkt nach JEDEM Stück, wie weit er ist, und verträgt eine Liste, die sich unterwegs ändert. §30 beschrieb diese Arbeitsweise seit dem 3. September — es gab sie nur als Handgriff, und beim vorletzten vollen Lauf ist genau das schiefgegangen.
 * **E658** — Die Lückenliste sagt die Wahrheit über sich selbst: 33 OFFENE Lücken standen unterhalb der Überschrift „Anhang B · Was erledigt ist" — wer von oben las, hielt sie für erledigt (§35). Sie stehen jetzt oben unter „Weitere offene Lücken"; das Verschieben ist byteweise gegengeprüft. Dazu: ein Wort für „zu" statt fünf (GESCHLOSSEN, wie §35 es nennt), und die selbstgenannte Zahl stimmt wieder. Wächter `test549`.
+* **E659** — Die Doku zählt, was da ist: ein Wächter für §30s eigenen Satz („sie wird nicht geschätzt, sie wird gezählt") und für §34s „beides: Verzeichnis und Text". Er wurde gegen den Stand rot, den er selbst erzeugt hatte — 492 Dateien, 491 in der Doku. Vier Anläufe der Messung waren vorher zu eng und meldeten je eine erfundene Zahl; `ENTSCHEIDUNGEN.md` kennt drei Überschriftsformen, und die Regel, die hält, setzt keine voraus. Wächter `test550`.
 
 ---
 
@@ -53985,3 +53986,69 @@ Titel für den Status hält, misst den Titel.**
 also geschlossen, mit einem offenen Rest im Titel. Nach der Regel zählt er
 als zu. Ob der Rest eine eigene Nummer bekommt, ist eine inhaltliche Frage
 und gehört Redur — sie steht hier, damit sie nicht untergeht (§35).
+
+
+## E659 — Die Doku zählt, was da ist
+
+**Was wurde entschieden?** `test550` prüft die Zahlen, die die
+Dokumentation über sich selbst nennt.
+
+**Warum?** Weil §30 seinen eigenen Satz nicht halten konnte:
+
+> Sie wird nicht geschätzt, sie wird gezählt:
+> `ls pruefungen/lauf/test*.mts | wc -l`
+
+Die Zahl stand einmal **hundertfünfzehn** Läufe daneben. Beim nächsten
+Nachzählen achtundzwanzig. Beim übernächsten einen — und dieser eine war
+schon vorher falsch, ohne dass es jemand merkte. Der Satz „im selben Bogen
+nachziehen" steht inzwischen fünfzehnmal in §30. Was fehlte, war nie die
+Absicht, sondern die Prüfung.
+
+**Und er hat sofort funktioniert.** Beim ersten Lauf stand da:
+
+```txt
+gezählt: 492 Dateien unter pruefungen/lauf/
+§30 „Heute sind es N Läufe": 491
+```
+
+Er wurde rot gegen den Stand, den **er selbst** erzeugt hatte — die Datei
+`test550.mts` ist die 492. Das ist die Drift, die §30 seit einem Jahr
+beklagt, im Abstand von Minuten und diesmal mit Beleg.
+
+Dazu fand er `636 Entscheidungen`, wo 638 dastanden, und beim Nachziehen
+erwischte er mich beim Vorgreifen: `639 … E659` geschrieben, bevor es E659
+gab.
+
+**Die schwierige Stelle ist das Zählen selbst.** `ENTSCHEIDUNGEN.md` kennt
+mindestens drei Überschriftsformen für dieselbe Sache:
+
+```txt
+## E123 — Titel                     die heutige Form
+=====  /  E123 — Titel  /  =====    ein Banner zwischen zwei Linien
+E123 — Titel  /  =====              ein Titel mit Linie darunter,
+                                    der auch über zwei Zeilen läuft
+```
+
+**Vier Anläufe sind daran nacheinander gescheitert** und meldeten je eine
+Zahl, die nach einem Fehler aussah: 351 fehlende Einträge, dann 253, dann
+203. Es war jedes Mal der Prüfer, nicht die Datei. Die Regel, die hält,
+setzt keine Form voraus: *eine Zeile, die MIT der Nummer beginnt und ein
+Trennzeichen trägt, ist eine Überschrift; alles andere ist eine Erwähnung.*
+Damit: 638 Index-Zeilen, 638 Überschriften, keine Abweichung.
+
+**Was dabei KEIN Fund war, obwohl es zweimal danach aussah.** E198, E199,
+E222 und E269 werden im Text zitiert und haben keinen Eintrag — das steht
+seit langem in Zeile 35 der Datei, ausdrücklich und mit Grund. Der Wächter
+prüft deshalb nicht, ob es Lücken gibt (die darf es), sondern ob jede
+Lücke **oben genannt** ist. Eine unerklärte Lücke ist ein Verweis ins
+Leere; eine erklärte ist eine Entscheidung.
+
+**Was war die Alternative?** Die Zahlen automatisch einsetzen lassen, wie
+`dienststand.mts` es für den Dienststand tut (E361). Dagegen spricht, dass
+diese Zahlen in Fliesstext stehen, der um sie herum argumentiert — „die
+Zahl stand hier bis zum 12. September auf 323". Ein Programm, das darin
+Zahlen ersetzt, schreibt Geschichte um. Prüfen ja, schreiben nein.
+
+**Was kostet es?** Ein Lauf ohne Browser, der in einer Sekunde durch ist.
+Er darf deshalb auch neben einem vollen Lauf gefahren werden — §30 meint
+die Ports, und dieser hält keinen.

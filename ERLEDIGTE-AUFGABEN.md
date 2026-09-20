@@ -1,5 +1,39 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E659 · Die Doku zählt, was da ist
+
+**Der Anlass.** §30 sagt über die Zahl der Prüfläufe: „Sie wird nicht
+geschätzt, sie wird gezählt." Sie stand einmal hundertfünfzehn Läufe
+daneben, dann achtundzwanzig, dann einen — und dieser eine war schon vorher
+falsch. Der Satz „im selben Bogen nachziehen" steht fünfzehnmal in §30. Was
+fehlte, war nie die Absicht, sondern die Prüfung.
+
+**Gebaut.** `test550` prüft die drei Stellen in CLAUDE.md gegen die echte
+Dateizahl, das Verzeichnis von ENTSCHEIDUNGEN.md gegen seinen Text (§34),
+die selbstgenannte Zahl gegen die gezählte, und ob jede Lücke in der
+Nummernfolge oben erklärt ist.
+
+**Er hat sofort funktioniert** — gegen den Stand, den er selbst erzeugt
+hatte: 492 Dateien, 491 in der Doku, weil `test550.mts` die 492. ist. Und
+beim Nachziehen erwischte er mich beim Vorgreifen: „639 … E659" geschrieben,
+bevor es E659 gab.
+
+**Die schwierige Stelle war das Zählen.** ENTSCHEIDUNGEN.md kennt drei
+Überschriftsformen; vier Anläufe meldeten nacheinander 351, 253 und 203
+fehlende Einträge — jedes Mal der Prüfer, nie die Datei. Die Regel, die
+hält, setzt keine Form voraus.
+
+**Zwei Funde lösten sich beim Lesen auf:** dass E198/E199/E222/E269 ohne
+Eintrag zitiert werden (steht seit langem in Zeile 35, mit Grund), und dass
+Index und Text auseinanderliefen (638 von 638, stimmt). Beides steht hier,
+weil das Nicht-Erfinden zur Arbeit gehört.
+
+**Geprüft.** `test550` 8/8, gegen den alten Stand 4/8. Gegenprobe: eine der
+drei Zahlen verstellt → genau diese eine Zeile wird rot. Kein Browser, kein
+Port — er darf neben dem vollen Lauf laufen.
+
+---
+
 ## 20. September 2026 · E657/E658 · Ein Werkzeug für den vollen Lauf, und eine ehrliche Lückenliste
 
 **E657 — der volle Lauf bekommt ein Werkzeug.** §30 beschreibt seit dem

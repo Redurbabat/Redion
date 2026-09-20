@@ -3763,3 +3763,53 @@ Beide Male war er rot und sagte das Falsche. Vierter und fünfter Fall nach
 Status hält, misst den Titel.**
 
 Kein Bild: hier ist nichts zu sehen, hier ist zu zählen (§55.3).
+
+---
+
+## 20. September 2026 — Was die Doku über sich selbst behauptet (E659, `test550`)
+
+Der Wächter wurde gegen den Stand rot, den **er selbst** erzeugt hatte:
+
+```txt
+gezählt: 492 Dateien unter pruefungen/lauf/
+§30 „Heute sind es N Läufe":     491
+§30 Befehlsblock „alle N Läufe": 491
+§31 „Von N Läufen":              491
+ENTSCHEIDUNGEN.md nennt sich     636   ·  gezählt 638
+```
+
+`test550.mts` ist die 492. Datei — die Drift, die §30 seit einem Jahr
+beklagt, im Abstand von Minuten und diesmal mit Beleg.
+
+### Vier Anläufe, vier erfundene Zahlen
+
+`ENTSCHEIDUNGEN.md` kennt drei Überschriftsformen für dieselbe Sache. Was
+die Messung nacheinander meldete, bevor sie stimmte:
+
+```txt
+nur `## E123`                     351 Einträge ohne Text
++ Banner zwischen zwei ===        253
++ Titel mit === darunter          203
++ Titel über zwei Zeilen            0   ← die Datei war immer in Ordnung
+```
+
+Die Regel, die hält, setzt **keine Form voraus**: eine Zeile, die mit der
+Nummer beginnt und ein Trennzeichen trägt, ist eine Überschrift. Alles
+andere ist eine Erwähnung.
+
+### Und zwei „Funde", die beim Lesen verschwanden
+
+```txt
+E198/E199/E222/E269 zitiert, ohne Eintrag   → steht seit langem in Zeile 35
+ENTSCHEIDUNGEN.md Index ≠ Text              → 638 von 638, stimmt
+```
+
+Deshalb prüft der Lauf nicht, ob es Lücken GIBT (die darf es), sondern ob
+jede Lücke oben GENANNT ist.
+
+### Gegenprobe
+
+Eine der drei Zahlen in CLAUDE.md auf 480 gesetzt: genau diese eine Zeile
+wird rot, die beiden anderen bleiben grün. Drei Stellen, drei Messungen.
+
+Kein Bild: hier ist zu zählen, nicht zu sehen (§55.3).
