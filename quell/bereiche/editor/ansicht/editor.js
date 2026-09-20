@@ -2941,6 +2941,21 @@ const Blocks = (() => {
         ct.textContent = (ct.textContent || '').replace(/\/[^\/]*$/, '');
         Store.updateBlock(block.id, { text: ct.textContent });
         const b = Store.getBlock(block.id) || block;
+        /* TRÄGT DER REGISTEREINTRAG SELBST EINE HANDLUNG? (E666)
+           Dann gilt sie, und der Editor muss nichts über sie wissen. §5 nennt
+           das den dritten Weg — „über `register/` bekannt machen" —, und er ist
+           hier der einzige, der keinen neuen Querverweis schafft: `Register` ist
+           kein Bereich, `Werkzeuge` wäre einer.
+    
+           Der Reihenfolge nach VOR allem anderen, damit ein Eintrag, der es
+           besser weiss, nicht erst durch die Sonderfälle unten muss. */
+        const eintrag = (Register?.bloecke?.alle?.() || [])
+            .find((x) => x && x.aktion === was && typeof x.tun === 'function');
+        if (eintrag) {
+            const seite = Store.getBlock(App.aktuelleSeite());
+            eintrag.tun(seite || b);
+            return;
+        }
         const griff = document.querySelector(`.blk[data-bid="${b.id}"] .handles button[data-act="menu"]`);
         if (was === 'turn' || was === 'color') {
             /* Beide öffnen dasselbe Untermenü wie am Blockgriff — kein zweiter Weg,

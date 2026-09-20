@@ -25147,7 +25147,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1262, inhalt: 'd521dafcac360846', gebaut: '2026-09-20T19:51:35.524Z' };
+const Stand = { fassung: 1264, inhalt: '35a2c0556176a0f8', gebaut: '2026-09-20T20:03:15.109Z' };
 window.Stand = Stand;
 
 </script>
@@ -37780,8 +37780,56 @@ Register.bloecke = (() => {
             kurz: '@', cmd: ['mention', 'erwaehnen', 'erwaehnung'] },
         { id: 'a-date', name: 'Datum einfügen', icon: '📆', zeichen: 'calendar', gruppe: 'Aktionen', aktion: 'date',
             kurz: '@Datum', cmd: ['date', 'datum', 'heute', 'today'] },
+        /* ── DER EINE EINTRAG MIT EINER HANDLUNG (E666) ────────────────────────
+           Die Hilfeseite sagt „`@remind` + Datum → Erinnerung ✅". Getan hat er
+           bis zum 20. September 2026 genau eins: `@remind ` in den Text
+           schreiben. Für `mention` und `date` ist das richtig — „@" öffnet ein
+           Menü, das ohnehin am Tippen hängt. Für `remind` gibt es dieses Menü
+           nicht: NIRGENDS im Programm wird `@remind` gelesen. §47, und zwar die
+           stille Hälfte.
+    
+           Dabei ist alles da: `Werkzeuge.erinnerungSetzen(seite)` öffnet den
+           Dialog mit Zeitpunkt und Text, schreibt nach `erinnerungen`, fragt
+           nach der Benachrichtigungserlaubnis und legt bei vorhandenem Server
+           einen Weckruf (E54). Es fehlte der Draht.
+    
+           WARUM ER HIER LIEGT UND NICHT IM EDITOR. `bereiche/editor` fasst
+           `Werkzeuge` heute GENAU EINMAL an; `bereiche-bestand.json` führt
+           diesen einen Treffer, und das Verzeichnis darf nur schrumpfen
+           (§5 Regel 1). §5 nennt für diesen Fall den dritten Weg: „Über
+           `register/` bekannt machen." Das Muster steht schon in
+           `register/menueband.ts:701` — `tun` mit einem `kann()` davor.
+    
+           `zeigen()` ist kein Beiwerk: fehlt der Bereich `wissen`, zeigt sich
+           der Eintrag gar nicht erst, statt einen Knopf anzubieten, der nichts
+           kann. */
         { id: 'a-remind', name: 'Erinnerung', icon: '⏰', zeichen: 'clock', gruppe: 'Aktionen', aktion: 'remind',
-            kurz: '@remind', cmd: ['reminder', 'remind', 'erinnerung'] },
+            kurz: '@remind', cmd: ['reminder', 'remind', 'erinnerung'],
+            /* Der Aufrufer schreibt den Namen HIN, statt ihn als Zeichenkette
+               nachzuschlagen — der einzige Weg dorthin wäre `eval` (§20). Fehlt
+               das Modul, wirft der Zugriff, und das heisst hier schlicht „nein". */
+            zeigen: () => {
+                try {
+                    return typeof Werkzeuge?.erinnerungSetzen === 'function';
+                }
+                catch {
+                    return false;
+                }
+            },
+            tun: (seite) => {
+                try {
+                    const p2 = seite || (typeof App !== 'undefined'
+                        ? Store.getBlock(App.aktuelleSeite()) : null);
+                    if (!p2) {
+                        UI.toast('Erst eine Seite öffnen');
+                        return;
+                    }
+                    Werkzeuge.erinnerungSetzen(p2);
+                }
+                catch {
+                    UI.toast('Erinnerungen sind in dieser Fassung nicht geladen');
+                }
+            } },
         { id: 'a-emoji', name: 'Emoji', icon: '🙂', zeichen: 'smile', gruppe: 'Aktionen', aktion: 'emoji',
             kurz: ':', cmd: ['emoji', 'smiley'] },
         { id: 'a-komm', name: 'Kommentar', icon: '💬', zeichen: 'comment', gruppe: 'Aktionen', aktion: 'komm',
@@ -82635,12 +82683,20 @@ const ChronikDaten = {
                     "zeitraum": "17:57 – 21:50",
                     "dauer": "107 min Lauf plus Nacharbeit",
                     "pruefungen": "490 Läufe: 487 grün, 3 rot (test270 Arbeitsbaum-Artefakt, test403 zu enges Fenster, test537 Verzeichnis). test270 im Hauptbaum nachgemessen: 77 ok, 0 offen."
+                },
+                {
+                    "was": "E666 — Erinnerung fuehrt zu einer Erinnerung, ueber das Register statt ueber den Editor",
+                    "vonCommit": "(offen)",
+                    "bisCommit": "(offen)",
+                    "zeitraum": "ca. 22:15 –",
+                    "dauer": "laufend",
+                    "pruefungen": "test555 (12/12, Gegenprobe), test537 (unveraendert 518), test87, test105, test109, test95-100 alle gruen"
                 }
             ],
             "zahlen": {
                 "commits": 2,
-                "entscheidungen": 23,
-                "neue Prüfläufe": 13,
+                "entscheidungen": 24,
+                "neue Prüfläufe": 14,
                 "volle Läufe": 1
             },
             "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -83998,6 +84054,18 @@ const ChronikDaten = {
             "ursache": "ohneSchablonen wirft ganze Schablonen weg, damit deutsche Prosa in Backticks nicht mitzählt (E626, 88 Falschtreffer). Dabei fliegen auch echte Aufrufe heraus: ein ${Name.methode(x)} in einer Schablone ist ein Aufruf, kein Text.",
             "beweis": "Über alle 86 Dateien in src/bereiche gemessen: 7907 Aufrufe nach nurCode, 7641 nach ohneSchablonen — 266 verdeckt, 3,4 Prozent, davon 136 allein in editor.ts.",
             "lehre": "Ein Wächter, der zu viel wegfiltert, meldet nicht zu viel, sondern zu wenig — und seine Zahl sieht dabei genauso fest aus. Das Verzeichnis wurde NICHT angehoben: eine Zahl zu erhöhen, weil die Messung besser wurde, ist etwas anderes als eine neue Kopplung, und der Unterschied muss sichtbar bleiben. Die Wahl steht als L207 bei Redur."
+        },
+        {
+            "nr": "P99",
+            "datum": "2026-09-20",
+            "titel": "Ein Menuepunkt, der eine Zeichenkette schreibt, waehrend die Maschine danebensteht",
+            "schwere": "mittel",
+            "symptom": "Der Slash-Eintrag Erinnerung schrieb @remind in den Text und war fertig. Die Hilfeseite sagt dazu ein Haekchen.",
+            "falscheVermutung": "Dass Erinnerungen noch gar nicht gebaut sind. Sie sind seit E54 vollstaendig da — Dialog, Liste, Geraete-Meldung, Weckruf am Server.",
+            "wieGefunden": "Gesucht, wer @remind liest: niemand. Das Muster mention und date schreibt auch nur ein Zeichen, aber dort haengt ein Menue am Tippen. Bei remind gibt es keines.",
+            "ursache": "Der Eintrag wurde nach dem Vorbild von mention und date gebaut, ohne zu pruefen, ob es das Menue dahinter gibt.",
+            "beweis": "test555 gegen den alten Stand 2/12: kein tun am Eintrag, kein Dialog, keine Erinnerung in der Liste.",
+            "lehre": "Wer einen Eintrag nach dem Vorbild eines anderen baut, uebernimmt auch dessen Voraussetzungen. Und: der Draht gehoert ins Register, wenn ein Bereich einen anderen braucht — das ist §5s dritter Weg, und er kostet keinen Querverweis."
         }
     ]
 };
@@ -96159,6 +96227,21 @@ const Blocks = (() => {
         ct.textContent = (ct.textContent || '').replace(/\/[^\/]*$/, '');
         Store.updateBlock(block.id, { text: ct.textContent });
         const b = Store.getBlock(block.id) || block;
+        /* TRÄGT DER REGISTEREINTRAG SELBST EINE HANDLUNG? (E666)
+           Dann gilt sie, und der Editor muss nichts über sie wissen. §5 nennt
+           das den dritten Weg — „über `register/` bekannt machen" —, und er ist
+           hier der einzige, der keinen neuen Querverweis schafft: `Register` ist
+           kein Bereich, `Werkzeuge` wäre einer.
+    
+           Der Reihenfolge nach VOR allem anderen, damit ein Eintrag, der es
+           besser weiss, nicht erst durch die Sonderfälle unten muss. */
+        const eintrag = (Register?.bloecke?.alle?.() || [])
+            .find((x) => x && x.aktion === was && typeof x.tun === 'function');
+        if (eintrag) {
+            const seite = Store.getBlock(App.aktuelleSeite());
+            eintrag.tun(seite || b);
+            return;
+        }
         const griff = document.querySelector(`.blk[data-bid="${b.id}"] .handles button[data-act="menu"]`);
         if (was === 'turn' || was === 'color') {
             /* Beide öffnen dasselbe Untermenü wie am Blockgriff — kein zweiter Weg,

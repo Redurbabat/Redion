@@ -4064,3 +4064,45 @@ Das Verzeichnis wurde NICHT angehoben. Die drei Wege und ihre Kosten stehen
 als **L207**; §5 sagt selbst, dass die Richtung Redur gehört. Bis dahin
 bleibt `test537` rot und `main` steht (§46) — eine rote Zahl, die auf eine
 Entscheidung wartet, ist besser als eine grüne, die nicht stimmt.
+
+---
+
+## 20. September 2026 — „Erinnerung" war eine Zeichenkette (E666, `test555`)
+
+```txt
+                                vorher                  nachher
+Registereintrag a-remind        nur Name + Aktion       + tun + zeigen
+Slash „Erinnerung"              schreibt „@remind "     öffnet den Dialog
+Text des Blocks danach          „@remind "              „"
+Erinnerungen in der Liste       0                       1
+Querverweise (test537)          518                     518  ← unverändert
+```
+
+Die letzte Zeile ist der Punkt: der Draht liegt im **Register** (§5 dritter
+Weg) und nicht im Editor. `bereiche/editor → Werkzeuge` steht bei 1 und darf
+nicht wachsen; `Register` ist kein Bereich.
+
+Nirgends im Programm wurde `@remind` gelesen — gesucht, nicht angenommen.
+Die Maschine dahinter (`Werkzeuge.erinnerungSetzen`, Liste, Geräte-Meldung,
+Weckruf am Server) stand seit E54 vollständig da.
+
+### Gegenprobe
+
+`tun` umbenannt → genau die drei Zusagen werden rot, die an der Handlung
+hängen; „den Eintrag gibt es" bleibt grün.
+
+### Und zwei Zusagen waren im ersten Anlauf grün, weil nichts lief
+
+```txt
+!String(undefined).includes('@remind')   → true
+undefined === undefined                  → true
+```
+
+Beide prüfen jetzt zuerst, ob der Schritt überhaupt stattgefunden hat.
+Vierter Fall nach `test544`, `test549` und `test550`.
+
+### Was der Lauf nicht beweist
+
+Dass `zeigen()` bei fehlendem Modul „nein" sagt. `Werkzeuge` hängt nicht am
+Fenster (E207) und lässt sich von aussen nicht verstecken. Gemessen ist nur,
+dass es nicht wirft — der Rest hält am `try/catch`. Steht so im Lauf.

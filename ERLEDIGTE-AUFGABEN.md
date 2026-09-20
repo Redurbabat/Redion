@@ -1,5 +1,36 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E666 · „Erinnerung" führt zu einer Erinnerung
+
+**Der Fund.** Der Slash-Eintrag „Erinnerung ⏰" schrieb `@remind ` in den
+Text — und **nirgends im Programm wird `@remind` gelesen**. Die Hilfeseite
+sagt dazu ein Häkchen. §47, die stille Hälfte: kein Fehler, keine Meldung,
+nur nichts.
+
+**Dabei war alles da.** `Werkzeuge.erinnerungSetzen` mit Dialog, Liste,
+Geräte-Meldung und Weckruf am Server steht seit E54. Erreichbar war es nur
+über das Seitenmenü. Es fehlte der Draht, nicht die Maschine.
+
+**Gebaut — und zwar im Register.** Der nächstliegende Weg wäre ein
+`if (was === 'remind') Werkzeuge.…` im Editor gewesen. Das wäre ein NEUER
+Querverweis: `bereiche/editor → Werkzeuge` steht bei 1 und darf nicht
+wachsen (§5 Regel 1). §5 nennt für genau diesen Fall den dritten Weg —
+„über `register/` bekannt machen" —, und das Muster steht schon in
+`register/menueband.ts:701`. Gemessen nach dem Bogen: **518 Treffer,
+unverändert.**
+
+**Geprüft.** `test555` neu, zwölf Messungen, gegen den alten Stand 2/12.
+Gegenprobe: `tun` umbenannt → genau die Zusagen werden rot, die daran
+hängen. `test537` unverändert, `test87`, `test105`, `test109` grün, dazu die
+sechs Speicherläufe `test95`–`test100` nach der `updateBlock`-Änderung aus
+E663 — alle grün.
+
+**Zwei Zusagen waren im ersten Anlauf grün, weil nichts lief**
+(`undefined === undefined`). Beide prüfen jetzt zuerst, ob der Schritt
+stattgefunden hat. Und was der Lauf NICHT beweist, steht in ihm drin.
+
+---
+
 ## 20. September 2026 · Der volle Lauf, und E665
 
 **Der volle Lauf.** 490 Läufe in 49 Stücken, 107 Minuten, im eigenen

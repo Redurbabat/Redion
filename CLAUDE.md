@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 496 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 497 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1024,6 +1024,12 @@ da „0 → 0" und „KEINE FASSUNG", ohne die Eindeutigkeitsprüfung kommt der
 Fehler aus E650 wörtlich zurück — „Die Leitung liegt. Das Kabel bleibt."
 Gezählt am 20. September, im selben Bogen: der Befehl sagt 490.*
 
+*Und 497: `test555` — „Erinnerung" führt zu einer Erinnerung (E666). Er
+hält einen Eintrag, der eine Zeichenkette schrieb, während die ganze
+Erinnerungsmaschine danebenstand. Zwei seiner Zusagen waren im ersten
+Anlauf grün, WEIL nichts lief — `undefined` enthält kein „@remind", und
+`undefined === undefined` ist wahr. Gezählt am 20. September: 497.*
+
 *Und 496: `test554` — was abgehakt wird, zählt in der Wochenrückschau
 (E663). Sie rechnete mit einem Feld, das niemand schrieb: wer eine Woche
 lang Aufgaben abhakte, sah am Sonntag lauter Nullen. Gezählt am
@@ -1073,7 +1079,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 496 Läufe
+npm run pruefen                      alle 497 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1160,7 +1166,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 496 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 497 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

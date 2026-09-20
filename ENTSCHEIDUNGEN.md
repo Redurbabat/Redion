@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-645 Entscheidungen, E1 bis E665 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+646 Entscheidungen, E1 bis E666 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -708,6 +708,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E663** — Was abgehakt wird, zählt in der Wochenrückschau: sie rechnet mit `erledigtAm`, und NIEMAND schrieb das Feld für Blöcke — wer eine Woche lang Aufgaben abhakte, sah am Sonntag eine leere Rückschau und ein Tagesdiagramm aus Nullen. Der Stempel sitzt jetzt in `Store.updateBlock` statt an sechs Kästchen (§8), und der Altbestand zählt über `edited` mit, wie die Datenbankzeilen es längst tun. Wächter `test554`.
 * **E664** — Ein Wächter, der an der Reihenfolge im Block scheitert: `test403` prüfte „steht das `remove` in einem `finally`", indem er zwei Zeilen zurücksah. E652 schob zwei Zeilen dazwischen — dasselbe `finally`, dieselbe Zusage, und der volle Lauf wurde rot. Jetzt wird der umschliessende Block wirklich gesucht (Klammern zählend nach oben).
 * **E665** — Ein Griff statt zwei: `test537` meldete einen neuen Querverweis, weil die Einstellungsseite für den Probelauf erst `KI.modelleHolen(id)` und dann `KI.modelleVon(id)[0]` rief. Der Wächter hatte recht, und zwar doppelt — „holen und dann das erste nehmen" ist eine Prozedur der KI, nicht Wissen der Einstellungsseite. Jetzt `KI.modellWaehlen(id)`, ein Satz. Dabei gemessen: `ohneSchablonen` verdeckt **266 echte Aufrufe** im Bestand (L207).
+* **E666** — „Erinnerung" führt zu einer Erinnerung: der Slash-Eintrag schrieb `@remind ` in den Text, und NIRGENDS im Programm wurde `@remind` gelesen — während `Werkzeuge.erinnerungSetzen` samt Dialog, Liste und Geräte-Meldung längst dastand. Der Draht liegt im REGISTER (§5 dritter Weg) und nicht im Editor: `bereiche/editor → Werkzeuge` steht bei 1, und das Verzeichnis darf nur schrumpfen. Nach dem Bogen: unverändert 518 Treffer. Wächter `test555`.
 
 ---
 
@@ -54410,6 +54411,75 @@ Redur. `test537` bleibt deshalb rot bei 518 gegen 517, `main` bleibt stehen
 Kosten: den einen Eintrag als Korrektur anheben; den Filter genauer machen
 und das Verzeichnis einmal auf die Wahrheit setzen; oder die Kopplung
 `ki → Einstellungen` wirklich auflösen.
+
+
+## E666 — „Erinnerung" führt zu einer Erinnerung
+
+**Was wurde entschieden?** Der Registereintrag `a-remind` bekommt eine
+eigene Handlung (`tun`) mit einem `zeigen()` davor. Der Editor fragt bei
+jeder Slash-Aktion **zuerst das Register**; trägt der Eintrag eine Handlung,
+gilt sie.
+
+**Warum?** Die Hilfeseite sagt zu:
+
+```txt
+| `@remind` + Datum | Erinnerung | ✅ |
+```
+
+Getan hat der Eintrag genau eins (`editor.ts:2857`):
+
+```js
+const AUSLOESER = { mention: '@', date: '@', remind: '@remind ', emoji: ':' };
+```
+
+Für `mention` und `date` ist das richtig — „@" öffnet ein Menü, das ohnehin
+am Tippen hängt. Für `remind` gibt es dieses Menü **nicht**: nirgends im
+Programm wird `@remind` gelesen. Der Eintrag schrieb die Zeichenkette in
+den Text und war fertig. §47, und zwar die stille Hälfte: kein Fehler,
+keine Meldung, nur nichts.
+
+**Dabei war alles da.** `Werkzeuge.erinnerungSetzen(seite)` öffnet einen
+Dialog mit Zeitpunkt und Text, schreibt nach `Store.setMeta('erinnerungen')`,
+fragt nach der Benachrichtigungserlaubnis und legt bei vorhandenem Server
+einen Weckruf (E54). Erreichbar war das nur über das Seitenmenü. Es fehlte
+der Draht, nicht die Maschine.
+
+### Warum der Draht im Register liegt
+
+Der nächstliegende Weg wäre ein `if (was === 'remind') Werkzeuge.erinnerungSetzen(…)`
+im Editor. Das wäre ein **neuer Querverweis**: `bereiche/editor → Werkzeuge`
+steht in `bereiche-bestand.json` bei **1**, und das Verzeichnis darf nur
+schrumpfen (§5 Regel 1).
+
+§5 nennt für genau diesen Fall den dritten Weg: *„Über `register/` bekannt
+machen."* Das Muster gibt es schon — `register/menueband.ts:701` trägt
+`tun: () => Werkzeuge.journal()` mit einem `kann()` davor. Der Blockeintrag
+bekommt dasselbe.
+
+Gemessen nach dem Bogen: **518 Treffer, unverändert.** Der Editor fragt
+`Register`, und `Register` ist kein Bereich. Das ist kein Trick um den
+Zähler herum, sondern die Antwort, die die Architektur für „ein Bereich
+braucht etwas von einem anderen" vorsieht.
+
+**`zeigen()` ist kein Beiwerk.** Fehlt der Bereich `wissen`, zeigt sich der
+Eintrag gar nicht erst — statt einen Knopf anzubieten, der nichts kann. Der
+Zugriff steht in einem `try/catch`, weil die Module Konstanten im
+Skript-Bereich sind und ein fehlender Name wirft (E207).
+
+**Der Wächter.** `test555`, zwölf Messungen, gegen den alten Stand 2/12.
+Gegenprobe: `tun` umbenannt → genau die Zusagen werden rot, die an der
+Handlung hängen.
+
+**Und zwei seiner Zusagen waren im ersten Anlauf grün, weil nichts lief.**
+`!String(undefined).includes('@remind')` ist wahr, und
+`undefined === undefined` auch. Beide prüfen jetzt zuerst, ob der Schritt
+überhaupt stattgefunden hat. Derselbe Fund wie bei `test544`, `test549` und
+`test550` — eine Zusage, die auf `undefined` grün wird, misst nichts.
+
+**Was der Lauf NICHT beweist**, und das steht in ihm drin: dass `zeigen()`
+bei fehlendem Modul „nein" sagt. `Werkzeuge` hängt nicht am Fenster
+(E207), also lässt es sich von aussen nicht verstecken. Gemessen ist nur,
+dass `zeigen()` nicht wirft; den Rest hält der `try/catch`.
 
 ## E123 — Titel                     die heutige Form
 =====  /  E123 — Titel  /  =====    ein Banner zwischen zwei Linien

@@ -2577,12 +2577,20 @@ const ChronikDaten = {
      "zeitraum": "17:57 – 21:50",
      "dauer": "107 min Lauf plus Nacharbeit",
      "pruefungen": "490 Läufe: 487 grün, 3 rot (test270 Arbeitsbaum-Artefakt, test403 zu enges Fenster, test537 Verzeichnis). test270 im Hauptbaum nachgemessen: 77 ok, 0 offen."
+    },
+    {
+     "was": "E666 — Erinnerung fuehrt zu einer Erinnerung, ueber das Register statt ueber den Editor",
+     "vonCommit": "(offen)",
+     "bisCommit": "(offen)",
+     "zeitraum": "ca. 22:15 –",
+     "dauer": "laufend",
+     "pruefungen": "test555 (12/12, Gegenprobe), test537 (unveraendert 518), test87, test105, test109, test95-100 alle gruen"
     }
    ],
    "zahlen": {
     "commits": 2,
-    "entscheidungen": 23,
-    "neue Prüfläufe": 13,
+    "entscheidungen": 24,
+    "neue Prüfläufe": 14,
     "volle Läufe": 1
    },
    "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -3940,6 +3948,18 @@ const ChronikDaten = {
    "ursache": "ohneSchablonen wirft ganze Schablonen weg, damit deutsche Prosa in Backticks nicht mitzählt (E626, 88 Falschtreffer). Dabei fliegen auch echte Aufrufe heraus: ein ${Name.methode(x)} in einer Schablone ist ein Aufruf, kein Text.",
    "beweis": "Über alle 86 Dateien in src/bereiche gemessen: 7907 Aufrufe nach nurCode, 7641 nach ohneSchablonen — 266 verdeckt, 3,4 Prozent, davon 136 allein in editor.ts.",
    "lehre": "Ein Wächter, der zu viel wegfiltert, meldet nicht zu viel, sondern zu wenig — und seine Zahl sieht dabei genauso fest aus. Das Verzeichnis wurde NICHT angehoben: eine Zahl zu erhöhen, weil die Messung besser wurde, ist etwas anderes als eine neue Kopplung, und der Unterschied muss sichtbar bleiben. Die Wahl steht als L207 bei Redur."
+  },
+  {
+   "nr": "P99",
+   "datum": "2026-09-20",
+   "titel": "Ein Menuepunkt, der eine Zeichenkette schreibt, waehrend die Maschine danebensteht",
+   "schwere": "mittel",
+   "symptom": "Der Slash-Eintrag Erinnerung schrieb @remind in den Text und war fertig. Die Hilfeseite sagt dazu ein Haekchen.",
+   "falscheVermutung": "Dass Erinnerungen noch gar nicht gebaut sind. Sie sind seit E54 vollstaendig da — Dialog, Liste, Geraete-Meldung, Weckruf am Server.",
+   "wieGefunden": "Gesucht, wer @remind liest: niemand. Das Muster mention und date schreibt auch nur ein Zeichen, aber dort haengt ein Menue am Tippen. Bei remind gibt es keines.",
+   "ursache": "Der Eintrag wurde nach dem Vorbild von mention und date gebaut, ohne zu pruefen, ob es das Menue dahinter gibt.",
+   "beweis": "test555 gegen den alten Stand 2/12: kein tun am Eintrag, kein Dialog, keine Erinnerung in der Liste.",
+   "lehre": "Wer einen Eintrag nach dem Vorbild eines anderen baut, uebernimmt auch dessen Voraussetzungen. Und: der Draht gehoert ins Register, wenn ein Bereich einen anderen braucht — das ist §5s dritter Weg, und er kostet keinen Querverweis."
   }
  ]
 } as const;

@@ -112,6 +112,7 @@ sind der teuerste Teil und der lehrreichste.
 | P96 | 2026-09-20 | Eine Auswertung, die mit einem Feld rechnet, das niemand schreibt | 🟠 mittel | — |
 | P97 | 2026-09-20 | Ein Wächter, der an der Reihenfolge im Block scheitert | niedrig | — |
 | P98 | 2026-09-20 | Das Verzeichnis der Querverweise zählt zu wenig | 🟠 mittel | — |
+| P99 | 2026-09-20 | Ein Menuepunkt, der eine Zeichenkette schreibt, waehrend die Maschine danebensteht | 🟠 mittel | — |
 
 ---
 
@@ -2155,4 +2156,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Über alle 86 Dateien in src/bereiche gemessen: 7907 Aufrufe nach nurCode, 7641 nach ohneSchablonen — 266 verdeckt, 3,4 Prozent, davon 136 allein in editor.ts.
 
 **Die Lehre.** Ein Wächter, der zu viel wegfiltert, meldet nicht zu viel, sondern zu wenig — und seine Zahl sieht dabei genauso fest aus. Das Verzeichnis wurde NICHT angehoben: eine Zahl zu erhöhen, weil die Messung besser wurde, ist etwas anderes als eine neue Kopplung, und der Unterschied muss sichtbar bleiben. Die Wahl steht als L207 bei Redur.
+
+
+---
+
+## P99 · Ein Menuepunkt, der eine Zeichenkette schreibt, waehrend die Maschine danebensteht
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Der Slash-Eintrag Erinnerung schrieb @remind in den Text und war fertig. Die Hilfeseite sagt dazu ein Haekchen.
+
+**Die falsche Vermutung.** Dass Erinnerungen noch gar nicht gebaut sind. Sie sind seit E54 vollstaendig da — Dialog, Liste, Geraete-Meldung, Weckruf am Server.
+
+**Wie es gefunden wurde.** Gesucht, wer @remind liest: niemand. Das Muster mention und date schreibt auch nur ein Zeichen, aber dort haengt ein Menue am Tippen. Bei remind gibt es keines.
+
+**Die Ursache.** Der Eintrag wurde nach dem Vorbild von mention und date gebaut, ohne zu pruefen, ob es das Menue dahinter gibt.
+
+**Der Beweis.** test555 gegen den alten Stand 2/12: kein tun am Eintrag, kein Dialog, keine Erinnerung in der Liste.
+
+**Die Lehre.** Wer einen Eintrag nach dem Vorbild eines anderen baut, uebernimmt auch dessen Voraussetzungen. Und: der Draht gehoert ins Register, wenn ein Bereich einen anderen braucht — das ist §5s dritter Weg, und er kostet keinen Querverweis.
 
