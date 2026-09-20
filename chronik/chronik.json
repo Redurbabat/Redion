@@ -2333,6 +2333,13 @@
           "gemeint": "Weitermachen, ohne auf Bestätigung zu warten.",
           "besser": "",
           "besserePrompt": ""
+        },
+        {
+          "zeit": "10:12",
+          "wortlaut": "Densk du ist das so gut? 1. Nur eine gemeinsame Selection-Pill für den gesamten Dock. … 7. Direktes Scrubbing testen.",
+          "gemeint": "Eine Bildschirmaufnahme der unteren Leiste, sieben Punkte Kritik und ein fertig formulierter Auftrag an Claude Code — mit den Namen der Skill-Module, die zu benutzen sind.",
+          "kuerzer": "Der Auftrag war schon so kurz, wie er sein konnte. Das Wertvolle daran ist die Aufnahme: ohne sie hätte ich den Fehler nicht gefunden, weil er am Rechner gar nicht auftritt.",
+          "besserer Prompt": "Nichts zu verbessern. Die Kombination aus Aufnahme, eigener Beobachtung und dem Hinweis auf die zuständigen Regelmodule ist die beste Form, in der eine Gestaltungsaufgabe hier ankommen kann — sie gibt das SYMPTOM, die VERMUTUNG und den MASSSTAB getrennt."
         }
       ],
       "arbeit": [
@@ -2403,16 +2410,24 @@
         {
           "was": "E645 — Ein Wächter zählte das ganze Haus, gemeint war ein Zimmer",
           "vonCommit": "(03:30)",
-          "bisCommit": "(offen)",
-          "zeitraum": "03:30 –",
-          "dauer": "laufend",
+          "bisCommit": "(08:10)",
+          "zeitraum": "03:30 – 08:10",
+          "dauer": "ca. 15 min Arbeit, dann Pause",
           "pruefungen": "test435 (45/45, zwei Gegenproben rot gesehen)"
+        },
+        {
+          "was": "E646 — Die Fläche wandert auch dann, wenn der Hauptfaden arbeitet",
+          "vonCommit": "(08:15)",
+          "bisCommit": "(offen)",
+          "zeitraum": "08:15 –",
+          "dauer": "laufend",
+          "pruefungen": "test541 neu (23/23, Gegenprobe rot gesehen) · test539 · test114 §17 · test435 · test105, test109, test87, test270, test332, test126, test483"
         }
       ],
       "zahlen": {
         "commits": 2,
-        "entscheidungen": 7,
-        "neue Prüfläufe": 2,
+        "entscheidungen": 8,
+        "neue Prüfläufe": 3,
         "volle Läufe": 0
       },
       "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -3474,6 +3489,32 @@
       "loesung": "Im Halter der Textur zählen statt im Dokument. Und daneben die Frage, um die es E440 wirklich ging: teilen sich zwei Filter eine Kennung? Diese Zahl wächst nicht mit dem Programm mit.",
       "warumKeineUhr": "Keine Uhr im Spiel.",
       "lehre": "Vierte Fassung derselben Sorte an zwei Tagen (E629, E631, E642, E643): ein Ausdruck misst etwas anderes, als der Satz daneben behauptet. Diese hier war nicht falsch, sondern ZU WEIT — und ein zu weiter Wächter bestraft jede neue Funktion, die zufällig dasselbe Element benutzt. Und zum dritten Mal die Schablonen-Falle: ein Akzentzeichen im Kommentar INNERHALB von page.evaluate beendet die Zeichenkette; der Kopf der Datei warnt davor, und ich habe es trotzdem getan."
+    },
+    {
+      "nr": "P75",
+      "datum": "2026-09-20",
+      "titel": "Die Bewegung war da und kam nicht an",
+      "schwere": "gross",
+      "symptom": "Redurs Aufnahme der unteren Leiste zeigt vier Reiterwechsel und viermal einen einzigen Bildsprung über 140 bis 209 Pixel. Auf dem Telefon wandert die Auswahlfläche nicht.",
+      "falscheVermutung": "Zuerst: es gibt gar keine wandernde Fläche, sondern fünf eigene. Falsch — es gibt genau eine, seit E236. Dann: die SVG-Glasbrechung (E639) frisst die Bilder. Auch falsch: mit und ohne Filter dasselbe Ergebnis (5 gegen 4 Orte bei achtfacher Drosselung).",
+      "wieGefunden": "Dieselbe Fassung am Rechner gemessen: 16 bis 21 Zwischenorte. Also lag es nicht am Code, sondern an der Maschine — und mit `Emulation.setCPUThrottlingRate` liess sich der Unterschied herstellen: nur die beiden Wechsel, die einen ganzen Bildschirm neu aufbauen, brechen ein.",
+      "ursache": "`width` stand in der Übergangsliste. Eine Bewegung, die Layout animiert, läuft auf dem Hauptfaden und kann nicht vorankommen, während dort ein Bildschirm entsteht. Sie springt beim nächsten Bild dorthin, wo ihre Uhr inzwischen steht.",
+      "loesung": "Die Bewegung auf `transform` allein, als Federbahn über `element.animate()` (SelectionFlow). Damit darf sie auf den Compositor. Im ersten Bild: 11 % des Weges statt 31 %.",
+      "warumKeineUhr": "Die Zeiten stammen aus der Aufnahme (50 Bilder je Sekunde) und sind auf das Bild genau.",
+      "lehre": "Zwei falsche Vermutungen nacheinander, und beide klangen gut. Die erste kam aus dem Bild („sieht aus wie zwei Flächen\"), die zweite aus dem eigenen Bogen von gestern („der neue Filter wird es sein\"). Was beide widerlegt hat, war dieselbe Frage: WO tritt es auf und wo nicht? Ein Fehler, der am Rechner nicht auftritt, ist ein Fehler über Zeit, nicht über Code."
+    },
+    {
+      "nr": "P76",
+      "datum": "2026-09-20",
+      "titel": "Eine Feder, die auf ihr eigenes Ziel neu gestartet wird, verliert ihren Schwung",
+      "schwere": "klein",
+      "symptom": "`test541` §6 mass die Dehnung zum Nachbarn: 1,000 statt der gerechneten 1,175. Die Fläche dehnte sich nie.",
+      "falscheVermutung": "Die Rechnung im Modul stimmt nicht — Vorzeichen, Einheiten, oder der Deckel greift zu früh.",
+      "wieGefunden": "Nachgerechnet stimmte alles: bei 72 px Abstand und ω = 0,033 ist das Höchsttempo 0,87 px/ms, mal 0,2 macht 1,175. Also musste der Aufruf falsch ankommen, nicht die Formel.",
+      "ursache": "`handyLeiste()` läuft je Tipp ZWEIMAL — einmal aus dem Klick, einmal aus dem Ereignis `redion:schauplatz`. Der zweite Ruf traf die laufende Feder; weil `dataset.x` da schon umgeschrieben war, kam er mit „kein Nachbar\" und startete die Bahn neu.",
+      "loesung": "Wer schon dorthin unterwegs ist, wird nicht neu gestartet. Eine Zeile: die Prüfung auf das gleiche Ziel gilt jetzt auch für die laufende Bewegung.",
+      "warumKeineUhr": "Keine Uhr im Spiel.",
+      "lehre": "Ein Modul, das mehrfach mit demselben Ziel gerufen wird, ist der Normalfall, nicht der Sonderfall — eine Oberfläche ruft ihre Zeichner gern zweimal. Wer eine Bewegung baut, muss „nochmal dasselbe\" als NICHTS behandeln, nicht als neuen Anlass."
     }
   ]
 }

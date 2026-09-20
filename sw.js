@@ -34,11 +34,11 @@ const ich = self;
 /** Der Name der Ablage. Muss `KONSTANTEN.ABLAGE_NAME` gleichen — siehe
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
-const VERSION = 'notizen-v1222';
+const VERSION = 'notizen-v1227';
 /** Der Stempel über den Grundstock — geschrieben von `dienststand.mts`,
  *  von Hand nicht anfassen. Er steht NEBEN der Nummer, nicht in ihr:
  *  `test143` prüft an `VERSION` die Form `notizen-v<Zahl>`. */
-const INHALT = '43aa0830856fe699';
+const INHALT = 'a2f3a5437a4de79b';
 /* DER ABLAGENAME FOLGT DEM INHALT, NICHT DER NUMMER (E610).
    Hier stand `const ABLAGE = VERSION;`. Solange die Nummer nur steigt, geht
    das gut — sie steigt aber nicht immer: ein `git revert` nimmt sw.ts und
@@ -147,6 +147,7 @@ const GRUNDSTOCK = [
     './quell/schale/bedienung/merkzeichen.js',
     './quell/schale/bedienung/lader.js',
     './quell/schale/bedienung/linse.js',
+    './quell/schale/bedienung/selection-flow.js',
     './quell/schale/bedienung/textur.js',
     './quell/schale/bedienung/staffelei.js',
     './quell/schale/bedienung/geste.js',

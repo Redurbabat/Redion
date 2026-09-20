@@ -88,6 +88,8 @@ sind der teuerste Teil und der lehrreichste.
 | P72 | 2026-09-20 | Der Wächter gegen Port-Kollisionen meldete grün und übersah sieben | gross | — |
 | P73 | 2026-09-20 | Die zuletzt gelesene Seite ging verloren, sobald das Fenster sich meldete | gross | — |
 | P74 | 2026-09-20 | Der Textur-Wächter bestrafte die neue Linse | 🟡 klein | — |
+| P75 | 2026-09-20 | Die Bewegung war da und kam nicht an | gross | — |
+| P76 | 2026-09-20 | Eine Feder, die auf ihr eigenes Ziel neu gestartet wird, verliert ihren Schwung | 🟡 klein | — |
 
 ---
 
@@ -1659,4 +1661,46 @@ sind der teuerste Teil und der lehrreichste.
 **Warum keine Uhr.** Keine Uhr im Spiel.
 
 **Die Lehre.** Vierte Fassung derselben Sorte an zwei Tagen (E629, E631, E642, E643): ein Ausdruck misst etwas anderes, als der Satz daneben behauptet. Diese hier war nicht falsch, sondern ZU WEIT — und ein zu weiter Wächter bestraft jede neue Funktion, die zufällig dasselbe Element benutzt. Und zum dritten Mal die Schablonen-Falle: ein Akzentzeichen im Kommentar INNERHALB von page.evaluate beendet die Zeichenkette; der Kopf der Datei warnt davor, und ich habe es trotzdem getan.
+
+
+---
+
+## P75 · Die Bewegung war da und kam nicht an
+
+*2026-09-20 · gross*
+
+**Das Bild.** Redurs Aufnahme der unteren Leiste zeigt vier Reiterwechsel und viermal einen einzigen Bildsprung über 140 bis 209 Pixel. Auf dem Telefon wandert die Auswahlfläche nicht.
+
+**Die falsche Vermutung.** Zuerst: es gibt gar keine wandernde Fläche, sondern fünf eigene. Falsch — es gibt genau eine, seit E236. Dann: die SVG-Glasbrechung (E639) frisst die Bilder. Auch falsch: mit und ohne Filter dasselbe Ergebnis (5 gegen 4 Orte bei achtfacher Drosselung).
+
+**Wie es gefunden wurde.** Dieselbe Fassung am Rechner gemessen: 16 bis 21 Zwischenorte. Also lag es nicht am Code, sondern an der Maschine — und mit `Emulation.setCPUThrottlingRate` liess sich der Unterschied herstellen: nur die beiden Wechsel, die einen ganzen Bildschirm neu aufbauen, brechen ein.
+
+**Die Ursache.** `width` stand in der Übergangsliste. Eine Bewegung, die Layout animiert, läuft auf dem Hauptfaden und kann nicht vorankommen, während dort ein Bildschirm entsteht. Sie springt beim nächsten Bild dorthin, wo ihre Uhr inzwischen steht.
+
+**Die Lösung.** Die Bewegung auf `transform` allein, als Federbahn über `element.animate()` (SelectionFlow). Damit darf sie auf den Compositor. Im ersten Bild: 11 % des Weges statt 31 %.
+
+**Warum keine Uhr.** Die Zeiten stammen aus der Aufnahme (50 Bilder je Sekunde) und sind auf das Bild genau.
+
+**Die Lehre.** Zwei falsche Vermutungen nacheinander, und beide klangen gut. Die erste kam aus dem Bild („sieht aus wie zwei Flächen"), die zweite aus dem eigenen Bogen von gestern („der neue Filter wird es sein"). Was beide widerlegt hat, war dieselbe Frage: WO tritt es auf und wo nicht? Ein Fehler, der am Rechner nicht auftritt, ist ein Fehler über Zeit, nicht über Code.
+
+
+---
+
+## P76 · Eine Feder, die auf ihr eigenes Ziel neu gestartet wird, verliert ihren Schwung
+
+*2026-09-20 · 🟡 klein*
+
+**Das Bild.** `test541` §6 mass die Dehnung zum Nachbarn: 1,000 statt der gerechneten 1,175. Die Fläche dehnte sich nie.
+
+**Die falsche Vermutung.** Die Rechnung im Modul stimmt nicht — Vorzeichen, Einheiten, oder der Deckel greift zu früh.
+
+**Wie es gefunden wurde.** Nachgerechnet stimmte alles: bei 72 px Abstand und ω = 0,033 ist das Höchsttempo 0,87 px/ms, mal 0,2 macht 1,175. Also musste der Aufruf falsch ankommen, nicht die Formel.
+
+**Die Ursache.** `handyLeiste()` läuft je Tipp ZWEIMAL — einmal aus dem Klick, einmal aus dem Ereignis `redion:schauplatz`. Der zweite Ruf traf die laufende Feder; weil `dataset.x` da schon umgeschrieben war, kam er mit „kein Nachbar" und startete die Bahn neu.
+
+**Die Lösung.** Wer schon dorthin unterwegs ist, wird nicht neu gestartet. Eine Zeile: die Prüfung auf das gleiche Ziel gilt jetzt auch für die laufende Bewegung.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Die Lehre.** Ein Modul, das mehrfach mit demselben Ziel gerufen wird, ist der Normalfall, nicht der Sonderfall — eine Oberfläche ruft ihre Zeichner gern zweimal. Wer eine Bewegung baut, muss „nochmal dasselbe" als NICHTS behandeln, nicht als neuen Anlass.
 

@@ -160,7 +160,7 @@ console.log('\n§1 Die Linse liegt über den Knöpfen — und im Weg steht sie t
 }
 
 /* ═══ §2 Der Filter liegt genau einmal im Dokument ══════════════════════════*/
-console.log('\n§2 Ein Halter, zwei Filter, und kein zweiter Satz davon');
+console.log('\n§2 Ein Halter, EIN Filter, und kein zweiter Satz davon');
 {
   const s = await telefon(false);
   const m = await s.evaluate(() => {
@@ -170,6 +170,7 @@ console.log('\n§2 Ein Halter, zwei Filter, und kein zweiter Satz davon');
       halter: halter.length,
       ruhe: document.querySelectorAll('filter#ru-linse-ruhe').length,
       fahrt: document.querySelectorAll('filter#ru-linse-fahrt').length,
+      alleLinsen: document.querySelectorAll('#ru-linse-halter filter').length,
       /* Der Halter darf kein Vorleseprogramm aufhalten und keine Fläche
          kosten — dieselbe Auflage wie beim Texturhalter (E462). */
       stumm: halter[0]?.getAttribute('aria-hidden'),
@@ -179,11 +180,29 @@ console.log('\n§2 Ein Halter, zwei Filter, und kein zweiter Satz davon');
     };
   });
   gleich('Genau ein Halter', m.halter, 1);
-  gleich('Genau ein Ruhe-Filter', m.ruhe, 1);
   gleich('Genau ein Fahrt-Filter', m.fahrt, 1);
+  /* ══ UND KEINEN RUHE-FILTER MEHR (E646) ════════════════════════════════
+     Hier stand „Genau ein Ruhe-Filter". Seit die Fläche im Stillstand
+     nicht mehr bricht, ruft ihn kein Stilblatt mehr — ein Filter, den
+     niemand nennt, ist eine Zeile, die aussieht, als täte sie etwas.
+     Diese Zeile hält fest, dass er nicht zurückkommt, ohne dass jemand es
+     merkt. */
+  gleich('Und keinen Ruhe-Filter mehr — er wurde von niemandem gerufen', m.ruhe, 0);
+  gleich('Der Halter hält genau diesen einen Filter', m.alleLinsen, 1);
   gleich('Der Halter ist für Vorleser unsichtbar', m.stumm, 'true');
   gleich('… und ohne Höhe', m.hoch, 0);
-  p('Die Linse ruft den Ruhe-Filter', /ru-linse-ruhe/.test(m.filterAmGlas), m.filterAmGlas);
+  /* ══ IM RUHEZUSTAND WIRD NICHT GEBROCHEN (E646) ════════════════════════
+     Hier stand „Die Linse ruft den Ruhe-Filter". Seit E646 tut sie das
+     nicht mehr: die Brechung lief bisher auch im Stillstand und machte aus
+     der Fläche einen hellen Ring — Redurs Punkt 5 („weniger wie eine
+     umrandete einzelne Taste"). Sie läuft jetzt nur während der Fahrt.
+
+     GLAS BLEIBT SIE TROTZDEM, und genau das wird hier geprüft: ohne
+     `saturate`/`brightness` wäre sie eine gewöhnliche Fläche, und die
+     Zusage aus E639 („eine Linse, keine Farbe") wäre still verlorengegangen. */
+  p('Im Ruhezustand bricht sie nicht', !/url\(/.test(m.filterAmGlas), m.filterAmGlas);
+  p('… tastet den Hintergrund aber weiter ab',
+    /saturate/.test(m.filterAmGlas) && /brightness/.test(m.filterAmGlas), m.filterAmGlas);
   await s.close();
 }
 
@@ -226,14 +245,22 @@ console.log('\n§4 Quellen: zwei Regeln, nicht eine — und die Quelle ist TypeS
      Stünde die Fläche in derselben, fiele sie mit weg — und der aktive Reiter
      hätte gar keine Markierung mehr. */
   const flaeche = /#handy-oben #ho-pille\{[^}]*background:color-mix\(/.test(css);
-  const brechung = /#handy-oben #ho-pille\{[\s\S]{0,200}?backdrop-filter:url\(#ru-linse-ruhe\)/.test(css);
+  /* SEIT E646 STEHT DIE BRECHUNG NUR NOCH AN `.faehrt` — die Regel „Fläche
+     und Brechung nicht in derselben Regel" gilt damit erst recht, und sie
+     wird hier weiter geprüft: ein Browser ohne `url()` in `backdrop-filter`
+     verwirft die Fahrt-Regel und behält die Fläche. */
   const zusammen = /#handy-oben #ho-pille\{[^}]*background:color-mix\([^}]*url\(#ru-linse/.test(css);
   p('Die Fläche steht in einer eigenen Regel', flaeche);
-  p('Die Brechung steht in einer eigenen Regel', brechung);
-  p('… und die beiden sind NICHT dieselbe Regel', !zusammen);
+  p('Die Brechung steht NICHT in derselben Regel wie die Fläche', !zusammen);
   p('Die Fahrt hat ihre eigene Regel', /#ho-pille\.faehrt\{[\s\S]{0,160}?url\(#ru-linse-fahrt\)/.test(css));
-  p('Ohne Bewegung fällt die Fahrt-Brechung auf die Ruhe zurück',
-    /prefers-reduced-motion:reduce\)\{[\s\S]{0,700}?#ho-pille\.faehrt\{[\s\S]{0,180}?url\(#ru-linse-ruhe\)/.test(css));
+  /* OHNE BEWEGUNG FÄLLT DIE FAHRT-BRECHUNG WEG — auf dieselbe Fläche wie
+     im Ruhezustand, und die trägt seit E646 gar kein `url()` mehr. Vorher
+     stand hier `url(#ru-linse-ruhe)`; das wäre jetzt eine Brechung, die es
+     im Ruhezustand nicht gibt. */
+  const ohneBewegung = css.match(/prefers-reduced-motion:reduce\)\{[\s\S]{0,900}?#ho-pille\.faehrt\{([\s\S]{0,260}?)\}/);
+  p('Ohne Bewegung fällt die Fahrt-Brechung weg',
+    !!ohneBewegung && !/url\(/.test(ohneBewegung[1] ?? '') && /saturate/.test(ohneBewegung[1] ?? ''),
+    (ohneBewegung?.[1] ?? 'nicht gefunden').slice(0, 120));
 
   p('linse: die Quelle ist TypeScript, das .js ist erzeugt',
     fs.existsSync(path.join(WURZEL, 'src/schale/bedienung/linse.ts')) &&
@@ -268,9 +295,17 @@ console.log('\n§7 Die Brücke spannt sich zwischen Nachbarn — nicht über vie
     await s.evaluate(() => {
       (globalThis as any).__dehn = [];
       const p2 = document.getElementById('ho-pille');
+      /* ══ DIE DEHNUNG STECKT IM `transform` (E646) ══════════════════════
+         Hier wurde `--dehnung` gelesen. Seit E646 rechnet `SelectionFlow`
+         die Dehnung in die Keyframes hinein — eine benutzerdefinierte
+         Eigenschaft in der Bahn zöge die ganze Bewegung zurück auf den
+         Hauptfaden, und genau das sollte sie ja verlassen. Gelesen wird
+         deshalb der erste Wert der Matrix, und das ist scaleX. */
       const takt = () => {
-        if (p2) (globalThis as any).__dehn.push(
-          Number(getComputedStyle(p2).getPropertyValue('--dehnung')) || 1);
+        if (p2) {
+          const m2 = getComputedStyle(p2).transform.match(/matrix\(([-\d.]+)/);
+          (globalThis as any).__dehn.push(m2 ? Number(m2[1]) : 1);
+        }
         requestAnimationFrame(takt);
       };
       takt();

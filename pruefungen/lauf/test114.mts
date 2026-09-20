@@ -1267,14 +1267,17 @@ console.log('\n17 · Die Pille unter den Reitern gleitet, statt zu springen');
 const spurSeite = await browser.newPage({
   viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true
 });
-await spurSeite.addInitScript(() => {
-  (globalThis as any).__pilleFlog = 0;
-  document.addEventListener('transitionstart', (e) => {
-    const t = e.target as Element | null;
-    if (t && t.id === 'ho-pille' && (e as TransitionEvent).propertyName === 'transform')
-      (globalThis as any).__pilleFlog++;
-  }, true);
-});
+/* ══ DER ZÄHLER LIEST EINE ZAHL AM ELEMENT (E646) ═════════════════════════
+   Hier hing ein Horcher auf `transitionstart` mit `propertyName === 'transform'`.
+   Seit E646 fährt die Fläche nicht mehr über eine CSS-Transition, sondern über
+   `element.animate()` — und die Web-Animations-Schnittstelle kennt kein
+   `transitionstart`. Der Zähler wäre also für immer 0 geblieben: grün aus dem
+   falschen Grund, genau die Sorte, vor der §55.2 warnt.
+
+   `SelectionFlow` zählt deshalb selbst: `data-fluege` am Element steigt bei
+   jeder ANGEFAHRENEN Bewegung, nicht bei jedem gesetzten Ort. Das ist
+   dasselbe Mass wie vorher und hängt an keinem Malen — der Grund, aus dem
+   §17 schon einmal von Bildern auf Ereignisse umgestellt wurde. */
 await spurSeite.goto(`http://localhost:${PORT}/index.html`);
 await spurSeite.waitForTimeout(2600);
 
@@ -1282,7 +1285,7 @@ const spur = await spurSeite.evaluate(() => {
   const an = document.querySelector<HTMLElement>('#handy-oben button.an');
   const pl = document.getElementById('ho-pille');
   return {
-    flog: (globalThis as any).__pilleFlog as number,
+    flog: Number(document.getElementById('ho-pille')?.dataset['fluege'] ?? 0),
     aktivX: an ? Math.round(an.getBoundingClientRect().left) : -1,
     aktivB: an ? Math.round(an.getBoundingClientRect().width) : -1,
     aktivGrund: an ? getComputedStyle(an).backgroundColor : '',
@@ -1330,10 +1333,16 @@ const flug = await spurSeite.evaluate(async () => {
   document.getElementById('hl-bespr')!.click();
   /* Die Transition entsteht mit dem Stilwechsel — kurz darauf ist sie
      als Animation sichtbar. Bis zu 600 ms darauf warten, dann aufgeben. */
+  /* IRGENDEINE laufende Bewegung, nicht ausgerechnet eine CSS-Transition
+     (E646). Hier stand `a instanceof CSSTransition && a.transitionProperty
+     === 'transform'` — das prüfte das WERKZEUG statt die Zusage. Seit die
+     Fläche über `element.animate()` fährt, gäbe es keinen solchen Eintrag
+     mehr, und der Punkt wäre rot geworden, ohne dass sich an der Sache
+     etwas verschlechtert hätte. Rot werden kann er weiterhin: wer der
+     Fläche die Bewegung ganz nimmt, bekommt gar keinen Eintrag. */
   let unterwegs = false;
   for (let i = 0; i < 30 && !unterwegs; i++) {
-    unterwegs = pl.getAnimations().some(a =>
-      a instanceof CSSTransition && a.transitionProperty === 'transform');
+    unterwegs = pl.getAnimations().length > 0;
     if (!unterwegs) await new Promise(f => setTimeout(f, 20));
   }
   const ziel = () => Math.round(

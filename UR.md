@@ -1803,6 +1803,17 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 **Besserer Prompt:** 
 
 
+**6 · 10:12**
+
+> Densk du ist das so gut? 1. Nur eine gemeinsame Selection-Pill für den gesamten Dock. … 7. Direktes Scrubbing testen.
+
+**Gemeint:** Eine Bildschirmaufnahme der unteren Leiste, sieben Punkte Kritik und ein fertig formulierter Auftrag an Claude Code — mit den Namen der Skill-Module, die zu benutzen sind.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -1815,13 +1826,14 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 | E642 — Sechsundsiebzig tote CSS-Regeln, gezählt bis null | `(01:52)` → `(02:35)` | 01:52 – 02:35 | ca. 43 min | test332 (76 → 0) · 26 Nachbarläufe der Bibliothek und der Stilblätter |
 | E643 — Der Wächter gegen Port-Kollisionen kannte nur eine Schreibweise | `(02:35)` → `(03:05)` | 02:35 – 03:05 | ca. 30 min | test400 (4/4, zwei Gegenproben) · die vierzehn betroffenen Läufe |
 | E644 — Erst wiederherstellen, dann beobachten (die gemerkte PDF-Seite) | `(03:05)` → `(03:30)` | 03:05 – 03:30 | ca. 25 min | test540 neu (9/9, Gegenprobe rot gesehen) · test424 (50/50) · test395, test202, test386 |
-| E645 — Ein Wächter zählte das ganze Haus, gemeint war ein Zimmer | `(03:30)` → `(offen)` | 03:30 – | laufend | test435 (45/45, zwei Gegenproben rot gesehen) |
+| E645 — Ein Wächter zählte das ganze Haus, gemeint war ein Zimmer | `(03:30)` → `(08:10)` | 03:30 – 08:10 | ca. 15 min Arbeit, dann Pause | test435 (45/45, zwei Gegenproben rot gesehen) |
+| E646 — Die Fläche wandert auch dann, wenn der Hauptfaden arbeitet | `(08:15)` → `(offen)` | 08:15 – | laufend | test541 neu (23/23, Gegenprobe rot gesehen) · test539 · test114 §17 · test435 · test105, test109, test87, test270, test332, test126, test483 |
 
 #### Zahlen des Tages
 
 - **commits:** 2
-- **entscheidungen:** 7
-- **neue Prüfläufe:** 2
+- **entscheidungen:** 8
+- **neue Prüfläufe:** 3
 - **volle Läufe:** 0
 
 #### Das grösste Problem
@@ -1844,5 +1856,5 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 74 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 76 Einträge.
 

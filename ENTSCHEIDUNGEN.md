@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-623 Entscheidungen, E1 bis E645 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+624 Entscheidungen, E1 bis E646 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -688,6 +688,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E643** — Der Wächter gegen Port-Kollisionen kannte nur eine Schreibweise: `test400` las `PORT = N` und war blind für `listen(9624, …)` — acht Läufe schreiben so, und sieben Ports waren dadurch doppelt vergeben, während der Wächter grün meldete. Zum vierten Mal an zwei Tagen ein Ausdruck, der eine gültige Schreibweise nicht kennt (E629, E631, E642) — und der erste, der dabei etwas ÜBERSAH statt etwas zu erfinden. Er prüft jetzt auch, dass er keinen Lauf übersieht, und `listen(0)` gilt als die bessere Antwort statt als fehlende Zahl
 * **E644** — Erst wiederherstellen, dann beobachten: die zuletzt gelesene PDF-Seite ging verloren, sobald zwischen dem Öffnen und dem Anrollen eine Fenstergrösse gemeldet wurde — `nachziehen()` las den Rollstand 0, schloss auf „Seite 1" und MERKTE das. Auf dem Telefon reicht dafür das Drehen. `test424` prüfte es schon, aber als Wettlauf: derselbe Durchgang lief mit ein paar Millisekunden mehr Arbeit grün. `test540` stellt das Rennen, statt es zu gewinnen
 * **E645** — Ein Wächter zählte das ganze Haus, gemeint war ein Zimmer: `test435` §3 zählte ALLE SVG-Filter der Seite und verlangte zwei — das war zufällig wahr, bis die Linse der unteren Leiste (E639) zwei eigene mitbrachte. Gezählt wird jetzt im Halter der Textur, und daneben steht die Frage, um die es E440 wirklich ging: teilen sich zwei Filter eine Kennung? Diese Zahl wächst nicht mit dem Programm mit
+* **E646** — Die Fläche wandert auch dann, wenn der Hauptfaden arbeitet: Redurs Aufnahme zeigte vier Wechsel und viermal EIN Bild für 190 bis 210 Pixel; am Rechner wanderte dieselbe Fassung über 16 bis 21 Orte. Schuld war `width` in der Übergangsliste — wer Layout animiert, bleibt auf dem Hauptfaden, und der baut beim Reiterwechsel gerade einen Bildschirm auf. Die Bewegung fährt jetzt als Federbahn über `element.animate()` auf `transform` allein (`SelectionFlow`, der Helfer, den L204 verlangt hat), mit erhaltener Geschwindigkeit beim Umlenken. Im ersten Bild: 11 % des Weges statt 31 %. Scrubbing wurde NICHT gebaut, und zwar aus Redurs eigenem Vorbehalt: ein Reiterwechsel kostet unter Last 0,8 bis 1,5 Sekunden
 
 ---
 
@@ -52883,3 +52884,172 @@ neuen zwei nicht besser halten.
 
 **Gemessen.** `test435` (45/45, zwei Gegenproben) · `test539` (die Linse) ·
 `test87`.
+
+---
+
+## E646 — Die Fläche wandert auch dann, wenn der Hauptfaden arbeitet
+
+Redur hat am 20. September um 10:12 Uhr eine Aufnahme der unteren Leiste
+geschickt und gefragt: *„Denkst du ist das so gut?"* — dazu sieben Punkte
+und einen fertigen Auftrag.
+
+**Die Antwort ist nein, und sie ist messbar.** Aus seiner Aufnahme, Bild für
+Bild bei 60 Bildern je Sekunde, der Ort der Auswahlfläche:
+
+```txt
+Dokumente → Heute    2,717 s: x = 127 px   →   2,733 s: x = 318 px
+Heute → Lernen       4,333 s: x = 369 px   →   4,350 s: x = 578 px
+Lernen → Termine     5,617 s: x = 602 px   →   5,633 s: x = 742 px
+Termine → Mehr       7,083 s: x = 842 px   →   7,100 s: x = 1013 px
+```
+
+Vier Wechsel, viermal **ein einziges Bild** für 190 bis 210 Pixel. Auf dem
+Telefon wandert dort nichts.
+
+### Und dann das Überraschende
+
+Dieselbe Fassung im Browser gemessen: **16 bis 21 Zwischenorte** je Wechsel.
+Die Bewegung war also da und kam nur nicht an. Mit gedrosselter Rechen-
+leistung (`Emulation.setCPUThrottlingRate`) wurde sichtbar, warum:
+
+```txt
+                 Drossel 1×   Drossel 4×   Drossel 8×
+„Heute"             16 Orte      7 Orte       5 Orte
+„Lernen"            17 Orte      9 Orte       5 Orte
+„Termine"           17 Orte     17 Orte      17 Orte
+```
+
+Nur die beiden schweren Bildschirme brechen ein — und das ist der Hinweis:
+„Heute" und „Lernen" bauen beim Wechsel einen ganzen Bildschirm neu auf.
+
+**Meine erste Vermutung war falsch.** Ich hielt die SVG-Brechung der Linse
+(E639) für den Fresser und habe sie abgeschaltet: 5 Orte → 4 Orte. Kein
+Unterschied. Der Filter war unschuldig.
+
+Schuld war `width` in der Übergangsliste:
+
+```css
+transition: transform var(--motion-normal) …,
+            width     var(--motion-normal) …,     ← hier
+            opacity   var(--motion-fast) linear;
+```
+
+**Eine Bewegung, die Layout animiert, bleibt auf dem Hauptfaden.** Sie kann
+nicht vorankommen, während dort ein Bildschirm entsteht — und springt beim
+nächsten Bild dorthin, wo ihre Uhr inzwischen steht. Genau das steht im
+Design-System, `implementation/high-refresh-motion.md`:
+
+> Prefer transform and opacity for frequent motion. Minimize synchronous
+> layout reads/writes … **A nominal short duration does not guarantee smooth
+> motion.**
+
+### Was gebaut wurde: `SelectionFlow`
+
+Eine neue Datei, `src/schale/bedienung/selection-flow.ts`. Sie bewegt eine
+Fläche über `element.animate()` mit lauter `transform`-Keyframes — damit darf
+die Bewegung auf den Compositor, und der malt weiter, während der Hauptfaden
+arbeitet.
+
+**Sie ist kein zweiter Katalog, sondern der Helfer, den L204 verlangt hat**:
+dieselbe Rechnung wird an zwei Stellen gebraucht (die Pille der unteren
+Leiste und die fliegende Fläche der Studio-Werkzeugleiste, E640), und L204
+sagt wörtlich „zwei Stellen, dieselbe Rechnung, also gehört sie in EINEN
+Helfer (§8)". Die Werkzeugleiste zieht in einem eigenen Bogen nach.
+
+**Die Feder ist kritisch gedämpft** (ζ = 1), also ohne Überschwingen —
+`recipes/spring-profiles.md` nennt das Profil „snappy-control", und
+`continuous-material-selection.md` verlangt „avoid large overshoot in
+productivity UI". Eine untere Leiste ist der Weg, den man hundertmal am Tag
+geht; sie darf nicht wippen.
+
+```txt
+x(t) = (x₀ + (v₀ + ω·x₀)·t) · e^(−ω·t)
+ω = 0,033 /ms   →   Abklingen auf ein halbes Prozent nach 230 ms
+```
+
+Die Bahn wird EINMAL ausgerechnet und als Keyframes übergeben. Eine Feder je
+Bild in JavaScript zu rechnen wäre wieder Hauptfaden — genau der Fehler, den
+diese Datei behebt.
+
+### Der Unterschied in einer Zahl
+
+```txt
+                        im ERSTEN Bild zurückgelegt
+alte Kurve                     31 %
+Feder (E646)                   11 %
+```
+
+Das ist der ganze Unterschied zwischen „sie springt und zittert nach" und
+„sie fährt los". Die alte Kurve legte 72 % des Weges in den ersten 50 ms
+zurück und kroch die restlichen 250 ms.
+
+### Redurs sieben Punkte, einzeln
+
+**1 · Eine gemeinsame Fläche.** War schon so — es gibt genau eine `#ho-pille`,
+und kein Knopf bringt einen eigenen Hintergrund mit (`test114` §17 hält das
+seit E236). Was fehlte, war nicht die Fläche, sondern dass man sie wandern
+SIEHT. Erledigt, und `test541` §1 misst es nach.
+
+**2 · Räumliche Kontinuität, Dehnung beim Beschleunigen.** Die Dehnung hängt
+jetzt am Tempo statt an einer Uhr: sie beginnt bei null, wächst mit der
+Geschwindigkeit und fällt beim Ankommen von selbst zurück. Gedeckelt bei
+1,18 und nur zwischen Nachbarn (E641, Redurs eigene Entscheidung).
+
+**3 · Velocity erhalten, keine Warteschlange.** Beim Umlenken werden Ort UND
+Tempo aus der Federformel gelesen und in die neue Bahn übernommen. `test541`
+§3 tippt A → B → C → A und misst: nie mehr als eine Animation, und die
+Umlenkung beginnt dort, wo die Fläche steht.
+
+**4 · Icon und Text koppeln.** Gelöst ohne JavaScript: der ANKOMMENDE Reiter
+bekommt `transition-delay:130ms`, der abgebende nicht — er verliert `.an` und
+damit die Verzögerung. Die Farbe setzt also ein, wenn die Fläche den grössten
+Teil des Weges hinter sich hat. `continuous-material-selection.md`:
+„destination icon may gain emphasis as the material arrives; source emphasis
+may crossfade out."
+
+**5 · Weniger Taste, mehr Linse.** Die Brechung lief bisher AUCH im
+Ruhezustand und machte aus der Fläche einen hellen Ring. Sie läuft jetzt nur
+noch während der Fahrt. Glas bleibt sie trotzdem: sie tastet den Hintergrund
+ab, hat ihren Lichtsaum oben und ihren Ton — was wegfällt, ist nur das
+Verzerren, und es kommt zurück, sobald es etwas erklärt.
+`recipes/glass-morphing.md`: „Blur is supporting material, not the animation
+itself."
+
+**6 · Das Dock ruhiger.** Vier Innenschatten zogen einen Ring rund um die
+Fläche; geblieben sind die zwei, die echtes Glas auch hätte (Licht von oben,
+ein Hauch Rückwurf von unten). Dazu kam ein Fund: `#handy-oben > button.an`
+und `.an b` standen **zweimal wortgleich** in derselben Abfrage. Die frühere
+hat nie etwas getan. `test332` konnte das nicht melden — er findet nur
+ANDERE Werte für dieselbe Eigenschaft, und zwei identische Regeln sind für
+ihn zweimal dasselbe.
+
+**7 · Direktes Scrubbing — NEIN, und zwar aus seinem eigenen Vorbehalt.**
+Redur hat die Bedingung selbst mitgeliefert: *„Für Navigation nur einsetzen,
+wenn dabei nicht versehentlich teure Seitenwechsel ausgelöst werden."* Die
+Messung beantwortet das: ein Reiterwechsel kostet unter Last 0,8 bis 1,5
+Sekunden Bildschirmaufbau. Wer mit dem Finger über die Leiste fährt, löst
+drei davon aus. Das Design-System sagt dasselbe,
+`continuous-material-selection.md`: „Do not add scrub behavior to ordinary
+navigation when accidental destination changes would be costly." Also nicht
+gebaut — und hier steht, warum, damit die Frage nicht in einem halben Jahr
+wiederkommt.
+
+### Was es kostet
+
+Die Breite wird nicht mehr bewegt, sondern gesetzt. Das geht nur, weil alle
+fünf Wege gleich breit sind (`flex:1 1 0`, gemessen 70 px bei 390 px
+Fensterbreite). **Eine Voraussetzung, die niemand misst, ist eine Annahme** —
+`test541` §1 misst sie deshalb mit. Bekäme die Leiste je ungleich breite Wege,
+wird der Lauf rot und sagt, warum.
+
+**Die Alternative** wäre gewesen, die Feder je Bild in JavaScript zu rechnen
+(`requestAnimationFrame`). Das gäbe echte Physik statt einer abgetasteten
+Bahn und erlaubte auch Scrubbing. Dagegen spricht genau das Messergebnis
+dieses Bogens: eine Bewegung, die je Bild JavaScript braucht, steht still,
+wenn der Hauptfaden arbeitet — und das tut er beim Reiterwechsel immer.
+
+**Gemessen.** `test541` neu (23 von 23; Gegenprobe gegen den alten Stand: drei
+Zeilen rot, darunter „31 % von 215px im ersten Bild") · `test114` §17 ·
+`test539` · `test435` · `test87` · `test105` · `test109` · `test332`.
+Dazu ein Film des Dock unter 4-facher Drosselung: vorher 5 Orte, nachher 9
+bis 10 Orte bei 25 Bildern je Sekunde Aufnahme.
