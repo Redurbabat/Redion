@@ -1048,6 +1048,31 @@ deshalb **in Stücken und wiederaufnehmbar** gefahren: zehn Läufe je Stück,
 eine Merkdatei hält fest, welche Stücke fertig sind. Bricht die Sitzung ab,
 geht nur das laufende Stück verloren, nicht die Stunde davor.
 
+**Und dafür gibt es seit dem 20. September ein Werkzeug** (E657). Vorher war
+dieser Absatz ein Handgriff: zehn Nummern abtippen, warten, die nächsten
+zehn abtippen — und im Kopf behalten, wo man war. Genau das ist beim
+vorletzten vollen Lauf schiefgegangen.
+
+```txt
+node pruefungen/volllauf.mts            weitermachen, wo es aufhörte
+node pruefungen/volllauf.mts --neu      von vorne, Merkdatei verwerfen
+node pruefungen/volllauf.mts --stand    nur sagen, wie weit es ist
+node pruefungen/volllauf.mts --rot      nur die roten Läufe wiederholen
+node pruefungen/volllauf.mts --stueck 5 Stückgrösse ändern (Vorgabe 10)
+```
+
+Die Merkdatei heisst `pruefungen/.volllauf-stand.json` und steht in
+`.gitignore`: sie sagt, wie weit DIESER Rechner gekommen ist. Geschrieben
+wird sie **nach jedem Stück**, nicht am Ende — sonst wäre bei einem Abbruch
+genau das verloren, wogegen sie gebaut wurde. Und sie verträgt eine Liste,
+die sich unterwegs ändert: ein Prüflauf, der mitten im Sweep entsteht,
+gehört dazu und ist noch nicht fertig.
+
+**Der Arbeitsbaum braucht den Commit.** Ein `git worktree` enthält, was
+eingecheckt ist — ein Werkzeug, das noch im Hauptbaum liegt, gibt es dort
+nicht. Der erste Versuch am 20. September scheiterte genau daran, nach
+vier Sekunden: `Cannot find module …/pruefungen/volllauf.mts`.
+
 Gefahren wird er in einem eigenen Arbeitsbaum (`git worktree`), damit im
 Hauptbaum weitergearbeitet werden kann, während er läuft. Das Vorspulen von
 `main` passiert dagegen **immer im Hauptbaum**.

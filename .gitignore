@@ -35,3 +35,8 @@ bilder/
 .dev.vars
 .dev.vars.*
 *.log
+
+# Die Merkdatei des vollen Laufs (§30). Sie sagt, wie weit DIESER Rechner
+# gekommen ist — auf einem anderen ist sie falsch, und im Verzeichnis wäre
+# sie eine Quelle von Konflikten ohne jeden Nutzen.
+pruefungen/.volllauf-stand.json
