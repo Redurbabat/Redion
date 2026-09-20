@@ -1340,6 +1340,30 @@ Die Prüfung hätte für immer grün gesagt.
 |---|---|---|
 | S1 | Die Ausgangsschlange konnte eine Millisekunde zerschneiden: `edited <= marke` schloss den Rest **für immer** aus. Der Satz stand auf dem Gerät und kam nie in der Wolke an — kein Fehler, keine Meldung | `test113` |
 
+# Hier endet Anhang B
+
+**Gemessen am 20. September 2026:** die Datei führt 103 Lücken, 53 offene und
+50 geschlossene. **35 der offenen stehen unterhalb der Überschrift „Anhang B ·
+Was erledigt ist"** — nicht IN ihren Tabellen, sondern dahinter: der Anhang
+endet mit seiner letzten Tabelle, und alles Spätere wurde einfach ans
+Dateiende geschrieben.
+
+Wer von oben liest, hält sie deshalb für erledigt. Das ist genau die Sorte
+stiller Fehler, gegen die es diese Datei überhaupt gibt (§35) — und sie
+stand hier, seit die Datei über ihren Anhang hinausgewachsen ist.
+
+**Was ab hier folgt, sind Lücken wie oben**, in der Reihenfolge, in der sie
+entstanden sind. Offen und geschlossen stehen gemischt; **was gilt, sagt die
+Überschrift des Eintrags** — durchgestrichen und „GESCHLOSSEN" heisst zu,
+alles andere heisst offen.
+
+*(Umsortieren wäre die bessere Antwort und ist ein eigener Bogen: eine
+9500-Zeilen-Datei umzustellen, während achtzehn Läufe rot waren, ist die
+falsche Reihenfolge — §46. Bis dahin ist eine geschriebene Warnung besser
+als eine stille Falle.)*
+
+---
+
 ## L33 · ~~Erinnerungen, wenn Redion geschlossen ist~~ — GESCHLOSSEN (E54)
 
 **Stand** — ✅ mit Server (8. August, E54); ohne Server melden sie sich
@@ -9468,13 +9492,11 @@ Federbahn, die EINMAL ausgerechnet und als Keyframes übergeben wird — denn
 eine Feder, die je Bild JavaScript braucht, steht genau dann still, wenn der
 Hauptfaden arbeitet, und das tut er beim Reiterwechsel immer (E646).
 
-**Was offen bleibt:** `wahlFliegen` in `marken.ts` (die Werkzeugleiste des
-Schreibstudios, E640) benutzt den Helfer noch nicht. Eigener Bogen — der
-Helfer steht bereit, und sein Kopf sagt, wie.
+**Und seit E647 auch für die Werkzeugleiste.** `wahlFliegen` in `marken.ts`
+benutzt `SelectionFlow.fliege()` — dieselbe Feder, als FLIP auf `transform`
+gerechnet. Damit ist dieser Eintrag ganz geschlossen.
 
----
-
-## L204-alt · Der Wortlaut von vorhin, zum Nachlesen
+### Was hier stand — zum Nachlesen
 
 Das Design-System verlangt für schnelle Wechsel zweierlei:
 

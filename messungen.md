@@ -3229,3 +3229,34 @@ Knopfbreiten bei 390 px Fenster:  [70, 70, 70, 70, 70]
 ```
 
 Nur deshalb muss die Breite nicht animiert werden. `test541` §1 misst es mit.
+
+---
+
+## 20. September 2026 — Was in `LUECKEN.md` wirklich steht
+
+**Methode.** Jede Überschrift der Form `## L<Nummer> · …` gelesen, als
+geschlossen gezählt, wenn sie durchgestrichen ist oder „GESCHLOSSEN" trägt.
+Dazu die Zeilennummer gegen den Beginn von „Anhang B · Was erledigt ist"
+gehalten.
+
+```txt
+Lücken insgesamt                                      103
+davon offen                                            53
+davon geschlossen                                      50
+offene, die UNTERHALB von „Anhang B" stehen            35
+```
+
+Die 35 stehen nicht IN den Tabellen des Anhangs, sondern dahinter: der
+Anhang endet mit seiner letzten Tabelle, und alles Spätere wurde ans
+Dateiende geschrieben. Wer von oben liest, hält sie für erledigt.
+
+Seit heute steht dort eine Überschrift „Hier endet Anhang B" mit genau
+diesen Zahlen. Umsortieren ist ein eigener Bogen; bis dahin ist eine
+geschriebene Warnung besser als eine stille Falle (§35).
+
+**Nebenbei:** die im Plan vom 19. September vermuteten doppelten Nummern
+L117–L120 gibt es nicht. Gezählt sind null doppelte Nummern — `L8` und `L8b`
+sind zwei verschiedene Einträge, und der Ausdruck, der sie als Doppelung
+meldete, war zu grob (`^## L[0-9]+` trifft `L8` auch in `L8b`). Zum fünften
+Mal an zwei Tagen ein Ausdruck, der etwas anderes misst, als der Satz
+daneben behauptet.
