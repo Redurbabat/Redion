@@ -98,7 +98,7 @@
  * ==========================================================================*/
 const SelectionFlow = (() => {
     /** Wie schnell die Feder ausläuft, je Millisekunde. Siehe Kopf. */
-    const OMEGA = 0.033;
+    const OMEGA = 0.026;
     /** Abgetastet wird alle 8 ms — bei 120 Hz knapp ein Wert je Bild. */
     const SCHRITT = 8;
     /** Nach 7,6/ω ist sie auf ein halbes Prozent herunter. */
@@ -109,9 +109,9 @@ const SelectionFlow = (() => {
      * deformation subtle. Preserve recognizable control boundaries and avoid
      * cartoon-like elasticity in professional/productivity UI."
      */
-    const DEHNUNG_MAX = 0.18;
+    const DEHNUNG_MAX = 0.24;
     /** Aus Geschwindigkeit (px/ms) wird Dehnung. 0,2 · 0,88 px/ms ≈ 0,18. */
-    const DEHNUNG_JE_TEMPO = 0.2;
+    const DEHNUNG_JE_TEMPO = 0.24;
     const laeufe = new WeakMap();
     const ruhig = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     /** Abstand zum Ziel nach `t` Millisekunden. */
