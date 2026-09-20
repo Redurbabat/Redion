@@ -2048,7 +2048,7 @@ const ChronikDaten = {
   {
    "datum": "2026-09-19",
    "wochentag": "Samstag",
-   "titel": "Wo die Leiste steht, der Wächter für §5, die Gedankenkarte bekommt Griffe — und der erste volle Lauf seit PR #100",
+   "titel": "Wo die Leiste steht, der Wächter für §5, die Gedankenkarte bekommt Griffe — und der erste volle Lauf seit PR #100 · und abends die achtzehn roten Läufe",
    "wasIchWeiss": "Voller Wortlaut für diesen Tag: er liegt im Gespräch vor.",
    "nachrichten": [
     {
@@ -2098,6 +2098,22 @@ const ChronikDaten = {
      "gemeint": "Die Chronik war seit dem 12. September nicht nachgetragen — sechs Arbeitstage fehlten.",
      "besser": "",
      "besserePrompt": "Die Frage war berechtigt und die Antwort war nein. Sie hat die Lücke geschlossen, die sonst weitergewachsen wäre."
+    },
+    {
+     "zeit": "ca. 18:30",
+     "wortlaut": "schrau es auch im claude md und überlader da die ur.md nicht vergennsern shau mal was die ur md genauer ist so wie bin ich mich konkrter analilzieren, e^wie arbeite ich, wieos und alles wirklich alles dort strukturiert dokumentieren scha mal wo dort sthe iund so",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Die Chronikregel gehört in CLAUDE.md — aber ohne die Datei aufzublähen. Und Teil I von UR.md soll ihn wirklich beschreiben: wie er arbeitet, warum, und woran man es sieht.",
+     "besser": "„Trag die Chronikregel in CLAUDE.md ein (kurz) und mach Teil I von UR.md genauer: wie ich arbeite und warum.\"",
+     "besserePrompt": "Zwei getrennte Aufträge in einem Satz. Getrennt gestellt wäre jeder in fünf Minuten beantwortet."
+    },
+    {
+     "zeit": "ca. 19:50",
+     "wortlaut": "Weiter an den offene teil von redion, scha mal was offen ist und arbeite an das",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Such dir selbst, was offen ist, und arbeite es ab.",
+     "besser": "",
+     "besserePrompt": "Genau richtig so. §46 beantwortet die Frage „was ist offen\" von allein: rot zuerst. Ein Auftrag, der die Reihenfolge der Regeln überlässt, ist besser als einer, der sie vorgibt."
     }
    ],
    "arbeit": [
@@ -2156,13 +2172,94 @@ const ChronikDaten = {
      "zeitraum": "16:30 – 17:20",
      "dauer": "ca. 50 min",
      "pruefungen": "keine — Analyse, kein Bau"
+    },
+    {
+     "was": "E629 — Ein Name mit Typangabe ist derselbe Name",
+     "vonCommit": "e03a94e",
+     "bisCommit": "3b3160b",
+     "zeitraum": "19:44 – 20:11",
+     "dauer": "ca. 25 min",
+     "pruefungen": "test537 nachgezogen; bereiche-bestand.json 1532 Zeilen geändert"
+    },
+    {
+     "was": "E630 — Kein Lauf teilt mehr seinen Port, und §30 sagt, was ein Arbeitsbaum anders macht",
+     "vonCommit": "3b3160b",
+     "bisCommit": "e6b5993",
+     "zeitraum": "20:11 – 22:22",
+     "dauer": "ca. 2 h 10 min",
+     "pruefungen": "test400 grün; vier Läufe umgezogen (525, 526, 530, 531)"
+    },
+    {
+     "was": "E631 — Der Quelltext wird als Code gelesen, nicht als Prosa",
+     "vonCommit": "e6b5993",
+     "bisCommit": "08df5e7",
+     "zeitraum": "22:22 – 22:35",
+     "dauer": "ca. 13 min",
+     "pruefungen": "test444, test483, test537, test87; neue Hilfe pruefungen/hilfe/quelltext.mts"
+    },
+    {
+     "was": "E632 — Die Inventur zieht nach, und die Prüfung lernt die vierte Schreibweise",
+     "vonCommit": "08df5e7",
+     "bisCommit": "24d2b41",
+     "zeitraum": "22:35 – 22:39",
+     "dauer": "ca. 4 min",
+     "pruefungen": "test164, test225"
+    },
+    {
+     "was": "E633 — Nur Tokens, die es gibt",
+     "vonCommit": "24d2b41",
+     "bisCommit": "3030b42",
+     "zeitraum": "22:39 – 22:57",
+     "dauer": "ca. 18 min",
+     "pruefungen": "test401 4/4, test412 27/27, test303 16/16"
+    },
+    {
+     "was": "E634 — Zwei Zusagen, die den Stand von gestern halten",
+     "vonCommit": "3030b42",
+     "bisCommit": "0cdb38a",
+     "zeitraum": "22:57 – 23:23",
+     "dauer": "ca. 26 min",
+     "pruefungen": "test285 27/27, test442 24/24"
+    },
+    {
+     "was": "E635 — Wer im ersten Bild misst, misst das Anfangsbild",
+     "vonCommit": "0cdb38a",
+     "bisCommit": "(23:28)",
+     "zeitraum": "23:23 – 23:28",
+     "dauer": "ca. 5 min",
+     "pruefungen": "test432 48/48, test435 44/44; zwei Gegenproben gefahren"
+    },
+    {
+     "was": "E636 — Ein Prüflauf mit tausend Hertz",
+     "vonCommit": "(23:28)",
+     "bisCommit": "(23:32)",
+     "zeitraum": "23:28 – 23:32",
+     "dauer": "ca. 4 min",
+     "pruefungen": "test449 16/16; Gegenprobe über kritzelTrifft gefahren"
+    },
+    {
+     "was": "E637 — Erst nachsehen, dann eintragen (die Marken-Decken)",
+     "vonCommit": "(23:32)",
+     "bisCommit": "(23:37)",
+     "zeitraum": "23:32 – 23:37",
+     "dauer": "ca. 5 min",
+     "pruefungen": "test362 18/18"
+    },
+    {
+     "was": "E638 — Tot war nicht die Regel, sondern das, worauf sie zeigte",
+     "vonCommit": "(23:37)",
+     "bisCommit": "(23:56)",
+     "zeitraum": "23:37 – 23:56",
+     "dauer": "ca. 19 min",
+     "pruefungen": "test217 27/27 (vorher 14/27); Gegenprobe traf y=1115 auf den Pixel"
     }
    ],
    "zahlen": {
-    "commits": 5,
-    "entscheidungen": 10,
+    "commits": 15,
+    "entscheidungen": 20,
     "neue Prüfläufe": 5,
-    "volle Läufe": 1
+    "volle Läufe": 1,
+    "rote Läufe abgearbeitet": "17 von 18"
    },
    "groesstesProblem": "Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im Stück-Treiber konnte GAR NICHT rot werden: sie suchte nach „✗ testNNN\", der Orchestrator schreibt den Namen aber eingerückt und ohne Kreuz. Derselbe Fehler, den §55.2 beschreibt, diesmal in meinem eigenen Werkzeug.",
    "interessantesteAnfrage": "„könntest du die xmind teil verbessern\" — vier Wünsche in einem Satz (Griffe, Verbindungen löschen, Formen, Vorlagen), und alle vier waren an einem Nachmittag gebaut und geprüft.",
@@ -2190,6 +2287,130 @@ const ChronikDaten = {
      "was": "Der volle Lauf fährt in einem eigenen Arbeitsbaum (git worktree), in Stücken zu zehn, mit Merkdatei.",
      "warum": "§30: ein voller Lauf dauert länger, als eine Sitzung sicher steht.",
      "risiko": "keins — er liest nur. `main` bewegt sich nicht, solange etwas rot ist (§46)."
+    },
+    {
+     "zeit": "19:44 – 23:56",
+     "was": "Die roten Läufe aus dem vollen Durchgang abgearbeitet: neun Bögen, zehn Entscheidungen.",
+     "warum": "§46: rot zuerst, und `main` bewegt sich nicht, solange etwas rot ist.",
+     "risiko": "Kein Produktcode ausser der order-Leiter in lernwelt.css (E638) und den Tokens (E633, E637)."
+    }
+   ]
+  },
+  {
+   "datum": "2026-09-20",
+   "wochentag": "Sonntag",
+   "titel": "Zwei Videos, eine Linse — und ein Design-System, das über den Bogen von gestern urteilt",
+   "wasIchWeiss": "Voller Wortlaut für diesen Tag: er liegt im Gespräch vor.",
+   "nachrichten": [
+    {
+     "zeit": "ca. 01:44",
+     "wortlaut": "Was machst du jetzt",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Eine echte Zwischenfrage mitten in der Arbeit — er wollte wissen, woran ich gerade bin.",
+     "besser": "",
+     "besserePrompt": "Nichts zu verbessern. Die Frage hat gezeigt, dass ein Zwischenstand fehlte, ohne dass er ihn verlangen musste."
+    },
+    {
+     "zeit": "ca. 01:46",
+     "wortlaut": "Scha mal die 2 videos an und ich will bei der der 1 video die untere übergans haben und beid der godnotte so",
+     "woher": "wörtlich aus dem Gespräch, mit zwei Bildschirmaufnahmen",
+     "gemeint": "Aus Video 1 (Apple TV, iOS 26) der Übergang der unteren Leiste; aus Video 2 der GoodNotes-Zustand der Werkzeugleiste.",
+     "besser": "",
+     "besserePrompt": "Der Satz war knapp und die Videos genau — das ist die bessere Hälfte. Was gefehlt hat, war die Trennung: „aus Video 1 den Übergang, aus Video 2 den Werkzeug-Zustand\" hätte die Rückfrage gespart, die ich stellen musste."
+    },
+    {
+     "zeit": "ca. 02:20",
+     "wortlaut": "baue es in redion ein",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Nicht länger prüfen und vergleichen — einbauen.",
+     "besser": "",
+     "besserePrompt": "Richtig gesetzt. Ich hatte einen Prototyp ausserhalb von Redion gebaut und verglichen; der Satz hat den Übergang von „ansehen\" zu „bauen\" ausgelöst, bevor ich noch eine Runde gedreht habe."
+    },
+    {
+     "zeit": "ca. 02:35",
+     "wortlaut": "Für sämtliche UI-, UX-, Design-System-, Layout-, Motion-, Animation-, Responsive-, Accessibility- und Interaction-Entscheidungen MUSST du unseren Universal Design Skill als verbindliches Design-System verwenden",
+     "woher": "wörtlich aus dem Gespräch (Auszug aus einem langen Auftrag)",
+     "gemeint": "Ab jetzt gilt ein zweites Regelwerk neben CLAUDE.md — Redurbabat/UI-Kit, Master-Router skills/web-design/SKILL.md.",
+     "besser": "",
+     "besserePrompt": "Der Auftrag war vollständig und hat selbst gesagt, was bei einem Widerspruch gilt („Übernimm nicht blind eine generische Regel\"). Genau dieser Satz hat später entschieden, was ich ändere und was ich ihm vorlege. Ein Regelwerk ohne diesen Satz wäre gefährlicher gewesen als keines."
+    },
+    {
+     "zeit": "ca. 03:30",
+     "wortlaut": "Arbeiten ohne pause weiter",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Weitermachen, ohne auf Bestätigung zu warten.",
+     "besser": "",
+     "besserePrompt": ""
+    }
+   ],
+   "arbeit": [
+    {
+     "was": "Die zwei Videos Bild für Bild gelesen (HEVC, 1284×2778) und die Linse ausserhalb von Redion nachgebaut",
+     "vonCommit": "(nach E638)",
+     "bisCommit": "(00:05)",
+     "zeitraum": "01:50 – 00:05",
+     "dauer": "ca. 2 h",
+     "pruefungen": "keine — vier Fassungen gebaut, aufgenommen und verglichen"
+    },
+    {
+     "was": "E639 — Die Pille wird eine Linse",
+     "vonCommit": "0cdb38a",
+     "bisCommit": "(00:31)",
+     "zeitraum": "00:05 – 00:31",
+     "dauer": "ca. 26 min",
+     "pruefungen": "test539 neu (27 Zusagen), test114 87/87, 22 Wächter der Leiste; drei Gegenproben gefahren"
+    },
+    {
+     "was": "Die Module des Design-Systems gelesen und gegen Redions Quelltext gehalten",
+     "vonCommit": "—",
+     "bisCommit": "—",
+     "zeitraum": "00:15 – 01:05",
+     "dauer": "ca. 50 min",
+     "pruefungen": "83 Regeln geprüft: 44 erfüllt, 20 teilweise, 10 verletzt"
+    },
+    {
+     "was": "E640 — Der Grund sitzt, der Wechsel fliegt (die Werkzeugleiste)",
+     "vonCommit": "(00:31)",
+     "bisCommit": "(01:26)",
+     "zeitraum": "00:35 – 01:26",
+     "dauer": "ca. 50 min",
+     "pruefungen": "test539 47/47, test478 43/43, test522, test533 unverändert grün; Gegenprobe gefahren"
+    },
+    {
+     "was": "E641 — Was das Design-System an der Linse auszusetzen hat",
+     "vonCommit": "(01:26)",
+     "bisCommit": "(offen)",
+     "zeitraum": "01:30 –",
+     "dauer": "laufend",
+     "pruefungen": "test539 §7 neu"
+    }
+   ],
+   "zahlen": {
+    "commits": 2,
+    "entscheidungen": 3,
+    "neue Prüfläufe": 1,
+    "volle Läufe": 0
+   },
+   "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
+   "interessantesteAnfrage": "Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die über einen Bogen urteilt, der schon gepusht war — und sie hat gegen ihn entschieden: neun von zehn klaren Verstössen stammen aus E639, der Linse von vor einer Stunde. Dass Redur im selben Auftrag geschrieben hat „Übernimm nicht blind eine generische Regel\", ist der Grund, warum daraus kein Zurückrudern wurde, sondern drei Korrekturen und eine Frage an ihn.",
+   "massnahmen": [
+    {
+     "zeit": "00:31",
+     "was": "Die wandernde Pille der unteren Leiste bekommt echtes Glas: SVG-Brechung mit Farbsaum, zwei Filter für Ruhe und Fahrt.",
+     "warum": "Redurs Video und seine Antwort „Mit echter Brechung (SVG)\" auf die Rückfrage.",
+     "risiko": "keins an Daten. Ohne url()-Rückblende fällt nur die Brechung weg, die Fläche bleibt (test539 §4)."
+    },
+    {
+     "zeit": "01:26",
+     "was": "Die Werkzeugleiste bekommt einen fliegenden Wechsel statt zweier springender Flächen.",
+     "warum": "Das Design-System: „Pen → Marker → Eraser\" als Beispiel für eine gemeinsame Materialfläche.",
+     "risiko": "keins an Daten. Der Zustand hängt am Knopf und nicht am Flug — deshalb ist er auch ohne Bewegung richtig."
+    },
+    {
+     "zeit": "01:40",
+     "was": "Die Dehnung der Linse gilt nur noch zwischen Nachbarn, der Deckel fällt von 1,85 auf 1,18, und die Ruhe-Brechung von 15 auf 8.",
+     "warum": "Drei Regeln des Design-Systems, die schlicht recht haben. Eine Brücke spannt sich zwischen Dingen, die sich fast berühren.",
+     "risiko": "keins. Was bleibt, ist Redurs Entscheidung: ob über der Schrift überhaupt gebrochen werden darf."
     }
    ]
   }
@@ -3112,6 +3333,71 @@ const ChronikDaten = {
    "beweis": "Danach 11/11, und die eingebaute Gegenrichtung des Laufs blieb grün — der Ausdruck ist also nicht weich geworden.",
    "lehre": "Bei textlesenden Wächtern ist das Aufschreiben eine Änderung am geprüften Stoff. Zweimal an einem Tag dieselbe Falle: einmal in der Chronik (P64), einmal in ENTSCHEIDUNGEN.md.",
    "entscheidung": "E632"
+  },
+  {
+   "nr": "P66",
+   "datum": "2026-09-20",
+   "titel": "Die Linse zeigte gar keine Brechung — die Knöpfe lagen davor",
+   "schwere": "mittel",
+   "symptom": "Der erste Prototyp hatte den Filter, die Karte und den Farbsaum — und im Bild war nichts zu sehen.",
+   "falscheVermutung": "Der Filter ist falsch gebaut. Ich habe fünf Fassungen der Verschiebungskarte nebeneinandergestellt, bevor ich weitergesucht habe.",
+   "wieGefunden": "Beim Ansehen des Vergleichsbilds: das Glas war da, aber der Inhalt darunter unverändert.",
+   "ursache": "`backdrop-filter` bricht, was HINTER dem Element liegt. Die Knöpfe lagen davor (z-index 2 gegen 1) — es gab schlicht nichts zu brechen.",
+   "loesung": "Die Linse über die Knöpfe, `pointer-events:none` dazu. Die Trefferfläche bleibt der Knopf, und `test539 §1` hält es.",
+   "warumKeineUhr": "Keine Uhr im Spiel.",
+   "lehre": "Eine Linse ist keine Fläche. Was eine Fläche verdeckt, muss unter ihr liegen; was eine Linse bricht, muss hinter ihr liegen — und das ist bei gestapelten Elementen genau umgekehrt."
+  },
+  {
+   "nr": "P67",
+   "datum": "2026-09-20",
+   "titel": "Ein dunkler Balken quer durch die Linse, in jeder Fassung an derselben Stelle",
+   "schwere": "klein",
+   "symptom": "Fünf verschiedene Filterfassungen, fünfmal derselbe dunkelblaue senkrechte Balken mitten im Glas.",
+   "falscheVermutung": "Der Farbsaum ist zu stark. Ich habe den Versatz dreimal verkleinert, ohne dass sich etwas änderte.",
+   "wieGefunden": "Dass der Balken in ALLEN Fassungen an derselben Stelle stand, obwohl die Fassungen verschieden stark verschoben — das passt zu keinem Farbsaum.",
+   "ursache": "Der Filterbereich stand auf `x=-30% width=160%`, damit der Saum am Rand nicht abschneidet. `feImage` misst aber in Anteilen des FILTERBEREICHS, nicht des Elements — die Karte lag um dreissig Prozent verschoben über dem Glas.",
+   "loesung": "Filterbereich genau das Element (`0% / 100%`). Der Saum darf am Rand abschneiden.",
+   "warumKeineUhr": "Keine Uhr im Spiel.",
+   "lehre": "Wenn ein Fehler sich über alle Parameterfassungen NICHT ändert, liegt er nicht an den Parametern. Das ist ein billiges Ausschlussverfahren, und ich habe es zu spät angewandt."
+  },
+  {
+   "nr": "P68",
+   "datum": "2026-09-20",
+   "titel": "Ein Übergang ohne Anlass — und der Wächter hatte ihn ein halbes Jahr vorher beschrieben",
+   "schwere": "klein",
+   "symptom": "`test114` §17 wurde rot: „Beim Start steht die Pille sofort da, statt hereinzugleiten — sie glitt 1×\".",
+   "falscheVermutung": "Die `stumm`-Sperre greift nicht mehr. Ich habe sie zuerst gesucht, statt zu messen.",
+   "wieGefunden": "Mit `transitionstart` und dem gerechneten `transform` mitgeschrieben: bei 676 ms stand scaleX auf 1,309, bei 792 ms lief der Übergang.",
+   "ursache": "Beim Start läuft `pilleSchieben` zweimal; der zweite Ruf rückt die Pille um sechs Punkte. Die Sperre verdeckt das — aber nicht das Zurückfedern MEINER Dehnung 190 ms später, wenn die Sperre schon weg war.",
+   "loesung": "Die Dehnung läuft nicht mehr, solange `.stumm` liegt.",
+   "warumKeineUhr": "Zwei Uhren im Spiel, und genau ihre Entkopplung war der Fehler.",
+   "lehre": "Der Kommentar an der Sperre hatte es wörtlich vorhergesagt: „Der Schutz greift erst, wenn jemand oben Anfangswerte einträgt, die WIRKLICH gemalt werden.\" Ein Wächter, der ein halbes Jahr auf seinen Fall wartet, hat ihn bekommen — und ich habe den Kommentar gelesen, bevor ich den Fehler gebaut habe."
+  },
+  {
+   "nr": "P69",
+   "datum": "2026-09-20",
+   "titel": "Fünfmal gerechnet, fünfmal zu früh: die Bauform war falsch, nicht die Formel",
+   "schwere": "gross",
+   "symptom": "Die wandernde Fläche der Werkzeugleiste stand 55 px neben ihrem Werkzeug, Überdeckung null. `test478` meldete es.",
+   "falscheVermutung": "Drei nacheinander, und alle falsch: (1) ein Auslöser fehlt, (2) der Ursprung ist falsch berechnet, (3) die Hülle ist eine andere. Nach jedem Anlauf stand derselbe Wert da: --bx: 88px.",
+   "wieGefunden": "Erst ein Zähler im Element selbst — lief die Rechnung überhaupt? — brachte es: `laeufe: 5`. Sie war gelaufen, fünfmal, und jedes Mal zu früh.",
+   "ursache": "Danach rollte die Leiste zum Werkzeug (E356), brach um und klemmte Wörter weg. Eine gespeicherte Stelle veraltet bei jedem dieser Vorgänge.",
+   "loesung": "Die Bauform gedreht: der Grund bleibt am Knopf, nur der Wechsel bekommt eine kurzlebige Fläche in Bildschirmmassen. Keine Hülle, kein Versatz, keine Rollung.",
+   "warumKeineUhr": "Keine Uhr im Spiel — im Gegenteil, ein Zähler hätte die drei Fehlanläufe von Anfang an gespart.",
+   "lehre": "Wenn derselbe Wert drei Reparaturen überlebt, ist die Frage nicht mehr „warum ist er falsch\", sondern „läuft der Code überhaupt\". Und: wer Auslöser nachlegt, weiss nie, ob er alle hat. Der Beleg, dass die zweite Bauform die richtige war, kam umsonst — die drei Läufe, die den ersten widerlegt hatten, blieben UNVERÄNDERT grün."
+  },
+  {
+   "nr": "P70",
+   "datum": "2026-09-20",
+   "titel": "Eine Zusage, die nur rot werden kann, ist keine",
+   "schwere": "klein",
+   "symptom": "`test539` §6 prüfte „ohne Durchsicht kein Glas\" und war rot — die Seite meldete `prefers-reduced-transparency` als nicht gesetzt.",
+   "falscheVermutung": "Ich rufe `emulateMedia` an der falschen Stelle. Ich habe es am Kontext statt an der Seite versucht, dann mit dem Startschalter.",
+   "wieGefunden": "Ein Vierzeiler ohne Redion: Seite, Kontext und Startschalter, alle drei meldeten `false`.",
+   "ursache": "Der Chromium, den Playwright hier mitbringt, kennt das Merkmal nicht.",
+   "loesung": "§6 prüft jetzt die QUELLE statt die Seite und sagt in seinem Kommentar, warum. Dass die Regel auch WIRKT, steht als L203 offen.",
+   "warumKeineUhr": "Keine Uhr im Spiel.",
+   "lehre": "§55.2 sagt „prüfe zuerst, ob sie überhaupt rot werden kann\". Die Umkehrung fehlte mir: prüfe auch, ob sie überhaupt GRÜN werden kann. Eine Zusage, die den Zustand nicht herstellen kann, den sie prüft, ist eine Dauerbeschwerde."
   }
  ]
 } as const;

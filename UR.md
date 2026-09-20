@@ -1596,7 +1596,7 @@ Zweimal hat das Bild die Arbeit korrigiert. Auf dem ersten standen die Millimete
 | 07:32 | Die Millimeter stehen an der Kachel, nicht nur im Tooltip. | Redur hat die vier Zahlen selbst vorgegeben. Eine Stärke, die man erst beim Ueberfahren erfährt, gibt es am Telefon nicht. | keins an Daten. `test533 §5d` misst seither, dass keine Zahl über ihre Kachel läuft. |
 | 18:19 | Rückbau an E614 einen Tag später: Werkzeuge und Zeilenbruch ziehen aus der Tafel zurück in die Leiste. | Was für W2 richtig war, ist für W4 falsch — ein Kasten um die Werkzeugreihe wäre die ganze Leiste, keine Tafel. | Gering: die 51 Kindwähler blieben unberührt, weil das Zubehör in der Tafel geblieben ist. |
 
-### 2026-09-19 · Samstag — Wo die Leiste steht, der Wächter für §5, die Gedankenkarte bekommt Griffe — und der erste volle Lauf seit PR #100
+### 2026-09-19 · Samstag — Wo die Leiste steht, der Wächter für §5, die Gedankenkarte bekommt Griffe — und der erste volle Lauf seit PR #100 · und abends die achtzehn roten Läufe
 
 > Voller Wortlaut für diesen Tag: er liegt im Gespräch vor.
 
@@ -1670,6 +1670,28 @@ Zweimal hat das Bild die Arbeit korrigiert. Auf dem ersten standen die Millimete
 **Besserer Prompt:** Die Frage war berechtigt und die Antwort war nein. Sie hat die Lücke geschlossen, die sonst weitergewachsen wäre.
 
 
+**7 · ca. 18:30**
+
+> schrau es auch im claude md und überlader da die ur.md nicht vergennsern shau mal was die ur md genauer ist so wie bin ich mich konkrter analilzieren, e^wie arbeite ich, wieos und alles wirklich alles dort strukturiert dokumentieren scha mal wo dort sthe iund so
+
+**Gemeint:** Die Chronikregel gehört in CLAUDE.md — aber ohne die Datei aufzublähen. Und Teil I von UR.md soll ihn wirklich beschreiben: wie er arbeitet, warum, und woran man es sieht.
+
+**Besser geschrieben:** „Trag die Chronikregel in CLAUDE.md ein (kurz) und mach Teil I von UR.md genauer: wie ich arbeite und warum."
+
+**Besserer Prompt:** Zwei getrennte Aufträge in einem Satz. Getrennt gestellt wäre jeder in fünf Minuten beantwortet.
+
+
+**8 · ca. 19:50**
+
+> Weiter an den offene teil von redion, scha mal was offen ist und arbeite an das
+
+**Gemeint:** Such dir selbst, was offen ist, und arbeite es ab.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** Genau richtig so. §46 beantwortet die Frage „was ist offen" von allein: rot zuerst. Ein Auftrag, der die Reihenfolge der Regeln überlässt, ist besser als einer, der sie vorgibt.
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -1681,13 +1703,24 @@ Zweimal hat das Bild die Arbeit korrigiert. Auf dem ersten standen die Millimete
 | E627/E628 — Die Gedankenkarte bekommt Griffe, Verbindungen, Formen und Vorlagen | `(E626)` → `(15:08)` | 15:08 | ca. 50 min | test538 neu, 53 Zusagen, vier Gegenproben einzeln rot |
 | Der volle Lauf — alle 480 Prüfläufe in 48 Stücken, im eigenen Arbeitsbaum | `(E628)` → `(läuft)` | 15:20 – 17:00 | ca. 1,5 h | 17 von 48 Stücken rot — der erste volle Lauf seit PR #100 |
 | Analyse: wo eine Entscheidungsschicht (Jev) in Redion Sinn ergäbe | `—` → `—` | 16:30 – 17:20 | ca. 50 min | keine — Analyse, kein Bau |
+| E629 — Ein Name mit Typangabe ist derselbe Name | `e03a94e` → `3b3160b` | 19:44 – 20:11 | ca. 25 min | test537 nachgezogen; bereiche-bestand.json 1532 Zeilen geändert |
+| E630 — Kein Lauf teilt mehr seinen Port, und §30 sagt, was ein Arbeitsbaum anders macht | `3b3160b` → `e6b5993` | 20:11 – 22:22 | ca. 2 h 10 min | test400 grün; vier Läufe umgezogen (525, 526, 530, 531) |
+| E631 — Der Quelltext wird als Code gelesen, nicht als Prosa | `e6b5993` → `08df5e7` | 22:22 – 22:35 | ca. 13 min | test444, test483, test537, test87; neue Hilfe pruefungen/hilfe/quelltext.mts |
+| E632 — Die Inventur zieht nach, und die Prüfung lernt die vierte Schreibweise | `08df5e7` → `24d2b41` | 22:35 – 22:39 | ca. 4 min | test164, test225 |
+| E633 — Nur Tokens, die es gibt | `24d2b41` → `3030b42` | 22:39 – 22:57 | ca. 18 min | test401 4/4, test412 27/27, test303 16/16 |
+| E634 — Zwei Zusagen, die den Stand von gestern halten | `3030b42` → `0cdb38a` | 22:57 – 23:23 | ca. 26 min | test285 27/27, test442 24/24 |
+| E635 — Wer im ersten Bild misst, misst das Anfangsbild | `0cdb38a` → `(23:28)` | 23:23 – 23:28 | ca. 5 min | test432 48/48, test435 44/44; zwei Gegenproben gefahren |
+| E636 — Ein Prüflauf mit tausend Hertz | `(23:28)` → `(23:32)` | 23:28 – 23:32 | ca. 4 min | test449 16/16; Gegenprobe über kritzelTrifft gefahren |
+| E637 — Erst nachsehen, dann eintragen (die Marken-Decken) | `(23:32)` → `(23:37)` | 23:32 – 23:37 | ca. 5 min | test362 18/18 |
+| E638 — Tot war nicht die Regel, sondern das, worauf sie zeigte | `(23:37)` → `(23:56)` | 23:37 – 23:56 | ca. 19 min | test217 27/27 (vorher 14/27); Gegenprobe traf y=1115 auf den Pixel |
 
 #### Zahlen des Tages
 
-- **commits:** 5
-- **entscheidungen:** 10
+- **commits:** 15
+- **entscheidungen:** 20
 - **neue Prüfläufe:** 5
 - **volle Läufe:** 1
+- **rote Läufe abgearbeitet:** 17 von 18
 
 #### Das grösste Problem
 
@@ -1705,10 +1738,107 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 | 14:20 | Ein Verzeichnis der 523 Querverweise zwischen Bereichen, das nur schrumpfen darf. | §5 Regel 1 ist [hart] und hatte neun Monate keinen Wächter. Verschoben wurde nichts: die grossen Namen sind die Kerne ihrer Bereiche, nicht gemeinsame Helfer — sie nach kern/ zu schieben hiesse §4 brechen. | Keins am Code. Die Richtung bleibt Redurs Entscheidung. |
 | 15:08 | Eine unbekannte Form an einem Knoten BLEIBT stehen, statt beim Lesen wegzufallen. | Hier stand zuerst eine Prüfung gegen die Liste der bekannten Formen. Eine Karte aus einer neueren Fassung hätte ihre Sternform beim ersten Oeffnen verloren — still und endgültig (§18). | Das war die gefährliche Richtung, und sie ist behoben, bevor sie jemanden getroffen hat. |
 | 15:20 | Der volle Lauf fährt in einem eigenen Arbeitsbaum (git worktree), in Stücken zu zehn, mit Merkdatei. | §30: ein voller Lauf dauert länger, als eine Sitzung sicher steht. | keins — er liest nur. `main` bewegt sich nicht, solange etwas rot ist (§46). |
+| 19:44 – 23:56 | Die roten Läufe aus dem vollen Durchgang abgearbeitet: neun Bögen, zehn Entscheidungen. | §46: rot zuerst, und `main` bewegt sich nicht, solange etwas rot ist. | Kein Produktcode ausser der order-Leiter in lernwelt.css (E638) und den Tokens (E633, E637). |
+
+### 2026-09-20 · Sonntag — Zwei Videos, eine Linse — und ein Design-System, das über den Bogen von gestern urteilt
+
+> Voller Wortlaut für diesen Tag: er liegt im Gespräch vor.
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · ca. 01:44**
+
+> Was machst du jetzt
+
+**Gemeint:** Eine echte Zwischenfrage mitten in der Arbeit — er wollte wissen, woran ich gerade bin.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** Nichts zu verbessern. Die Frage hat gezeigt, dass ein Zwischenstand fehlte, ohne dass er ihn verlangen musste.
+
+
+**2 · ca. 01:46**
+
+> Scha mal die 2 videos an und ich will bei der der 1 video die untere übergans haben und beid der godnotte so
+
+**Gemeint:** Aus Video 1 (Apple TV, iOS 26) der Übergang der unteren Leiste; aus Video 2 der GoodNotes-Zustand der Werkzeugleiste.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** Der Satz war knapp und die Videos genau — das ist die bessere Hälfte. Was gefehlt hat, war die Trennung: „aus Video 1 den Übergang, aus Video 2 den Werkzeug-Zustand" hätte die Rückfrage gespart, die ich stellen musste.
+
+
+**3 · ca. 02:20**
+
+> baue es in redion ein
+
+**Gemeint:** Nicht länger prüfen und vergleichen — einbauen.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** Richtig gesetzt. Ich hatte einen Prototyp ausserhalb von Redion gebaut und verglichen; der Satz hat den Übergang von „ansehen" zu „bauen" ausgelöst, bevor ich noch eine Runde gedreht habe.
+
+
+**4 · ca. 02:35**
+
+> Für sämtliche UI-, UX-, Design-System-, Layout-, Motion-, Animation-, Responsive-, Accessibility- und Interaction-Entscheidungen MUSST du unseren Universal Design Skill als verbindliches Design-System verwenden
+
+**Gemeint:** Ab jetzt gilt ein zweites Regelwerk neben CLAUDE.md — Redurbabat/UI-Kit, Master-Router skills/web-design/SKILL.md.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** Der Auftrag war vollständig und hat selbst gesagt, was bei einem Widerspruch gilt („Übernimm nicht blind eine generische Regel"). Genau dieser Satz hat später entschieden, was ich ändere und was ich ihm vorlege. Ein Regelwerk ohne diesen Satz wäre gefährlicher gewesen als keines.
+
+
+**5 · ca. 03:30**
+
+> Arbeiten ohne pause weiter
+
+**Gemeint:** Weitermachen, ohne auf Bestätigung zu warten.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| Die zwei Videos Bild für Bild gelesen (HEVC, 1284×2778) und die Linse ausserhalb von Redion nachgebaut | `(nach E638)` → `(00:05)` | 01:50 – 00:05 | ca. 2 h | keine — vier Fassungen gebaut, aufgenommen und verglichen |
+| E639 — Die Pille wird eine Linse | `0cdb38a` → `(00:31)` | 00:05 – 00:31 | ca. 26 min | test539 neu (27 Zusagen), test114 87/87, 22 Wächter der Leiste; drei Gegenproben gefahren |
+| Die Module des Design-Systems gelesen und gegen Redions Quelltext gehalten | `—` → `—` | 00:15 – 01:05 | ca. 50 min | 83 Regeln geprüft: 44 erfüllt, 20 teilweise, 10 verletzt |
+| E640 — Der Grund sitzt, der Wechsel fliegt (die Werkzeugleiste) | `(00:31)` → `(01:26)` | 00:35 – 01:26 | ca. 50 min | test539 47/47, test478 43/43, test522, test533 unverändert grün; Gegenprobe gefahren |
+| E641 — Was das Design-System an der Linse auszusetzen hat | `(01:26)` → `(offen)` | 01:30 – | laufend | test539 §7 neu |
+
+#### Zahlen des Tages
+
+- **commits:** 2
+- **entscheidungen:** 3
+- **neue Prüfläufe:** 1
+- **volle Läufe:** 0
+
+#### Das grösste Problem
+
+Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.
+
+#### Das Interessanteste, das Redur wollte
+
+Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die über einen Bogen urteilt, der schon gepusht war — und sie hat gegen ihn entschieden: neun von zehn klaren Verstössen stammen aus E639, der Linse von vor einer Stunde. Dass Redur im selben Auftrag geschrieben hat „Übernimm nicht blind eine generische Regel", ist der Grund, warum daraus kein Zurückrudern wurde, sondern drei Korrekturen und eine Frage an ihn.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| 00:31 | Die wandernde Pille der unteren Leiste bekommt echtes Glas: SVG-Brechung mit Farbsaum, zwei Filter für Ruhe und Fahrt. | Redurs Video und seine Antwort „Mit echter Brechung (SVG)" auf die Rückfrage. | keins an Daten. Ohne url()-Rückblende fällt nur die Brechung weg, die Fläche bleibt (test539 §4). |
+| 01:26 | Die Werkzeugleiste bekommt einen fliegenden Wechsel statt zweier springender Flächen. | Das Design-System: „Pen → Marker → Eraser" als Beispiel für eine gemeinsame Materialfläche. | keins an Daten. Der Zustand hängt am Knopf und nicht am Flug — deshalb ist er auch ohne Bewegung richtig. |
+| 01:40 | Die Dehnung der Linse gilt nur noch zwischen Nachbarn, der Deckel fällt von 1,85 auf 1,18, und die Ruhe-Brechung von 15 auf 8. | Drei Regeln des Design-Systems, die schlicht recht haben. Eine Brücke spannt sich zwischen Dingen, die sich fast berühren. | keins. Was bleibt, ist Redurs Entscheidung: ob über der Schrift überhaupt gebrochen werden darf. |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 65 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 70 Einträge.
 

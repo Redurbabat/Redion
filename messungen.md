@@ -2901,3 +2901,51 @@ Der Chromium dieses Projekts kennt `prefers-reduced-transparency` nicht.
 `test539` §6 prüft deshalb die Quelle statt die Seite, und das steht als
 **L203** — samt der drei älteren Regeln derselben Art, die nie gemessen
 wurden.
+
+---
+
+## Die Linse nach dem Design-System — 20. September 2026 (E641)
+
+83 Regeln aus den Modulen des nachgereichten Design-Systems, gegen Redions
+echten Quelltext gehalten:
+
+```txt
+44 erfüllt
+20 teilweise
+10 klar verletzt   ← neun davon aus E639, dem Bogen von derselben Nacht
+ 9 nicht berührt
+```
+
+### Was geändert wurde
+
+```txt
+                        E639                         E641
+Dehnung                 1 + Weg/Breite × 0,3         1,18 zum Nachbarn
+                        (wächst mit dem Weg)         1,00 sonst
+Deckel                  1,85                         1,18
+Ruhe-Brechung           Verschiebung 15              8
+Fahrt-Brechung          24                           24 (unverändert)
+```
+
+Die 15 waren am 19. September ausdrücklich als „das Zeichen wird grösser"
+notiert, die 8 als „nichts zu sehen". Genau das ist jetzt das Ziel: das Glas
+zeigt sich am Rand, es vergrössert nicht den Inhalt.
+
+### Die Gegenprobe kam umsonst
+
+`test539` §7 wurde geschrieben, bevor die Änderung gebaut war — und lief im
+grossen Durchgang gegen den ALTEN Stand:
+
+```txt
+✗ … und sie bleibt bescheiden (keine Gummiband-Oberfläche) — Dehnung 1.3085
+✗ Über vier Reiter wird NICHT gedehnt — Dehnung 1.85
+```
+
+Das sind auf die Nachkommastelle die Werte der alten Formel. Nach dem Bauen:
+50/50. Ein Wächter, der rot war, bevor er grün wurde, ohne dass jemand ihn
+dafür verstümmeln musste (§50).
+
+### Was bleibt
+
+60 von 61 Wächtern der Werkzeugleiste waren im selben Durchgang grün — der
+eine rote war §7 selbst.

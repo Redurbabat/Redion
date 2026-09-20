@@ -79,6 +79,11 @@ sind der teuerste Teil und der lehrreichste.
 | P63 | 2026-09-19 | Meine Reparatur machte den Wächter blind, und er wurde dadurch grün | gross | E631 |
 | P64 | 2026-09-19 | Der Wächter klagte den Satz an, der von ihm handelt | 🟡 klein | E631 |
 | P65 | 2026-09-19 | Zum zweiten Mal an einem Tag: das Aufschreiben erzeugte den nächsten Fehlalarm | 🟡 klein | E632 |
+| P66 | 2026-09-20 | Die Linse zeigte gar keine Brechung — die Knöpfe lagen davor | 🟠 mittel | — |
+| P67 | 2026-09-20 | Ein dunkler Balken quer durch die Linse, in jeder Fassung an derselben Stelle | 🟡 klein | — |
+| P68 | 2026-09-20 | Ein Übergang ohne Anlass — und der Wächter hatte ihn ein halbes Jahr vorher beschrieben | 🟡 klein | — |
+| P69 | 2026-09-20 | Fünfmal gerechnet, fünfmal zu früh: die Bauform war falsch, nicht die Formel | gross | — |
+| P70 | 2026-09-20 | Eine Zusage, die nur rot werden kann, ist keine | 🟡 klein | — |
 
 ---
 
@@ -1461,4 +1466,109 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Danach 11/11, und die eingebaute Gegenrichtung des Laufs blieb grün — der Ausdruck ist also nicht weich geworden.
 
 **Die Lehre.** Bei textlesenden Wächtern ist das Aufschreiben eine Änderung am geprüften Stoff. Zweimal an einem Tag dieselbe Falle: einmal in der Chronik (P64), einmal in ENTSCHEIDUNGEN.md.
+
+
+---
+
+## P66 · Die Linse zeigte gar keine Brechung — die Knöpfe lagen davor
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Der erste Prototyp hatte den Filter, die Karte und den Farbsaum — und im Bild war nichts zu sehen.
+
+**Die falsche Vermutung.** Der Filter ist falsch gebaut. Ich habe fünf Fassungen der Verschiebungskarte nebeneinandergestellt, bevor ich weitergesucht habe.
+
+**Wie es gefunden wurde.** Beim Ansehen des Vergleichsbilds: das Glas war da, aber der Inhalt darunter unverändert.
+
+**Die Ursache.** `backdrop-filter` bricht, was HINTER dem Element liegt. Die Knöpfe lagen davor (z-index 2 gegen 1) — es gab schlicht nichts zu brechen.
+
+**Die Lösung.** Die Linse über die Knöpfe, `pointer-events:none` dazu. Die Trefferfläche bleibt der Knopf, und `test539 §1` hält es.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Die Lehre.** Eine Linse ist keine Fläche. Was eine Fläche verdeckt, muss unter ihr liegen; was eine Linse bricht, muss hinter ihr liegen — und das ist bei gestapelten Elementen genau umgekehrt.
+
+
+---
+
+## P67 · Ein dunkler Balken quer durch die Linse, in jeder Fassung an derselben Stelle
+
+*2026-09-20 · 🟡 klein*
+
+**Das Bild.** Fünf verschiedene Filterfassungen, fünfmal derselbe dunkelblaue senkrechte Balken mitten im Glas.
+
+**Die falsche Vermutung.** Der Farbsaum ist zu stark. Ich habe den Versatz dreimal verkleinert, ohne dass sich etwas änderte.
+
+**Wie es gefunden wurde.** Dass der Balken in ALLEN Fassungen an derselben Stelle stand, obwohl die Fassungen verschieden stark verschoben — das passt zu keinem Farbsaum.
+
+**Die Ursache.** Der Filterbereich stand auf `x=-30% width=160%`, damit der Saum am Rand nicht abschneidet. `feImage` misst aber in Anteilen des FILTERBEREICHS, nicht des Elements — die Karte lag um dreissig Prozent verschoben über dem Glas.
+
+**Die Lösung.** Filterbereich genau das Element (`0% / 100%`). Der Saum darf am Rand abschneiden.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Die Lehre.** Wenn ein Fehler sich über alle Parameterfassungen NICHT ändert, liegt er nicht an den Parametern. Das ist ein billiges Ausschlussverfahren, und ich habe es zu spät angewandt.
+
+
+---
+
+## P68 · Ein Übergang ohne Anlass — und der Wächter hatte ihn ein halbes Jahr vorher beschrieben
+
+*2026-09-20 · 🟡 klein*
+
+**Das Bild.** `test114` §17 wurde rot: „Beim Start steht die Pille sofort da, statt hereinzugleiten — sie glitt 1×".
+
+**Die falsche Vermutung.** Die `stumm`-Sperre greift nicht mehr. Ich habe sie zuerst gesucht, statt zu messen.
+
+**Wie es gefunden wurde.** Mit `transitionstart` und dem gerechneten `transform` mitgeschrieben: bei 676 ms stand scaleX auf 1,309, bei 792 ms lief der Übergang.
+
+**Die Ursache.** Beim Start läuft `pilleSchieben` zweimal; der zweite Ruf rückt die Pille um sechs Punkte. Die Sperre verdeckt das — aber nicht das Zurückfedern MEINER Dehnung 190 ms später, wenn die Sperre schon weg war.
+
+**Die Lösung.** Die Dehnung läuft nicht mehr, solange `.stumm` liegt.
+
+**Warum keine Uhr.** Zwei Uhren im Spiel, und genau ihre Entkopplung war der Fehler.
+
+**Die Lehre.** Der Kommentar an der Sperre hatte es wörtlich vorhergesagt: „Der Schutz greift erst, wenn jemand oben Anfangswerte einträgt, die WIRKLICH gemalt werden." Ein Wächter, der ein halbes Jahr auf seinen Fall wartet, hat ihn bekommen — und ich habe den Kommentar gelesen, bevor ich den Fehler gebaut habe.
+
+
+---
+
+## P69 · Fünfmal gerechnet, fünfmal zu früh: die Bauform war falsch, nicht die Formel
+
+*2026-09-20 · gross*
+
+**Das Bild.** Die wandernde Fläche der Werkzeugleiste stand 55 px neben ihrem Werkzeug, Überdeckung null. `test478` meldete es.
+
+**Die falsche Vermutung.** Drei nacheinander, und alle falsch: (1) ein Auslöser fehlt, (2) der Ursprung ist falsch berechnet, (3) die Hülle ist eine andere. Nach jedem Anlauf stand derselbe Wert da: --bx: 88px.
+
+**Wie es gefunden wurde.** Erst ein Zähler im Element selbst — lief die Rechnung überhaupt? — brachte es: `laeufe: 5`. Sie war gelaufen, fünfmal, und jedes Mal zu früh.
+
+**Die Ursache.** Danach rollte die Leiste zum Werkzeug (E356), brach um und klemmte Wörter weg. Eine gespeicherte Stelle veraltet bei jedem dieser Vorgänge.
+
+**Die Lösung.** Die Bauform gedreht: der Grund bleibt am Knopf, nur der Wechsel bekommt eine kurzlebige Fläche in Bildschirmmassen. Keine Hülle, kein Versatz, keine Rollung.
+
+**Warum keine Uhr.** Keine Uhr im Spiel — im Gegenteil, ein Zähler hätte die drei Fehlanläufe von Anfang an gespart.
+
+**Die Lehre.** Wenn derselbe Wert drei Reparaturen überlebt, ist die Frage nicht mehr „warum ist er falsch", sondern „läuft der Code überhaupt". Und: wer Auslöser nachlegt, weiss nie, ob er alle hat. Der Beleg, dass die zweite Bauform die richtige war, kam umsonst — die drei Läufe, die den ersten widerlegt hatten, blieben UNVERÄNDERT grün.
+
+
+---
+
+## P70 · Eine Zusage, die nur rot werden kann, ist keine
+
+*2026-09-20 · 🟡 klein*
+
+**Das Bild.** `test539` §6 prüfte „ohne Durchsicht kein Glas" und war rot — die Seite meldete `prefers-reduced-transparency` als nicht gesetzt.
+
+**Die falsche Vermutung.** Ich rufe `emulateMedia` an der falschen Stelle. Ich habe es am Kontext statt an der Seite versucht, dann mit dem Startschalter.
+
+**Wie es gefunden wurde.** Ein Vierzeiler ohne Redion: Seite, Kontext und Startschalter, alle drei meldeten `false`.
+
+**Die Ursache.** Der Chromium, den Playwright hier mitbringt, kennt das Merkmal nicht.
+
+**Die Lösung.** §6 prüft jetzt die QUELLE statt die Seite und sagt in seinem Kommentar, warum. Dass die Regel auch WIRKT, steht als L203 offen.
+
+**Warum keine Uhr.** Keine Uhr im Spiel.
+
+**Die Lehre.** §55.2 sagt „prüfe zuerst, ob sie überhaupt rot werden kann". Die Umkehrung fehlte mir: prüfe auch, ob sie überhaupt GRÜN werden kann. Eine Zusage, die den Zustand nicht herstellen kann, den sie prüft, ist eine Dauerbeschwerde.
 

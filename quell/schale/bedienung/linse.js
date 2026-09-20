@@ -96,7 +96,18 @@ const Linse = (() => {
         svg.setAttribute('height', '0');
         svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
         const defs = document.createElementNS(NS, 'defs');
-        defs.append(glas(RUHE, '9', '15', '0.22'), glas(FAHRT, '9', '24', '0.55'));
+        /* ══ IM RUHEZUSTAND OPTISCH STILL (E641) ════════════════════════════
+         * Hier stand 15, und das war messbar zu viel: bei 15 wird das Zeichen
+         * unter der Linse sichtbar grösser. Das verbietet das Design-System
+         * ausdrücklich — „Do not scale labels/icons with the material blob;
+         * content should remain optically stable" —, und zwar mit gutem Grund:
+         * eine untere Leiste ist kein Schaustück, sondern der Weg, den man
+         * hundertmal am Tag geht.
+         * 8 war beim Nachsehen am 19. September als „nichts zu sehen"
+         * eingestuft worden. Genau das ist hier das Ziel: das Glas soll sich
+         * am Rand zeigen, nicht den Inhalt vergrössern. Die Fahrt bleibt bei
+         * 24 — dort erklärt die Verzerrung die Bewegung, und da gehört sie hin. */
+        defs.append(glas(RUHE, '9', '8', '0.18'), glas(FAHRT, '9', '24', '0.55'));
         svg.append(defs);
         document.body.append(svg);
     };

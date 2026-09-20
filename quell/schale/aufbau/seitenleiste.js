@@ -321,7 +321,28 @@ const Seitenleiste = (() => {
            „Der Schutz greift erst, wenn jemand oben Anfangswerte einträgt, die
            WIRKLICH gemalt werden." Genau das war die Dehnung. */
         if (weg > 1 && pilleGesetzt && !pille.classList.contains('stumm')) {
-            pille.style.setProperty('--dehnung', String(Math.min(1.85, 1 + (weg / Math.max(1, b)) * 0.3)));
+            /* ══ NUR ZWISCHEN NACHBARN, UND NUR EIN BISSCHEN (E641) ════════════
+             * Hier stand `Math.min(1.85, 1 + (weg / b) * 0.3)` — die Dehnung
+             * wuchs also mit dem Weg, und der weiteste Sprung der Leiste bekam
+             * die stärkste Verformung. Das Design-System verlangt das Gegenteil,
+             * an zwei Stellen:
+             *
+             *   „When source and destination directly touch or nearly touch, the
+             *    selection surface may visually stretch/bridge during travel …
+             *    Keep the bridge subtle and bounded."
+             *   „Disable deformation for long-distance navigation."
+             *
+             * Und das ist nicht Geschmack, sondern Sinn: eine Brücke spannt sich
+             * zwischen zwei Dingen, die sich fast berühren. Über vier Reiter
+             * hinweg ist sie keine Brücke mehr, sondern ein Schlauch, und die
+             * 85 % Überlänge von gestern waren in einer Arbeitsoberfläche
+             * ohnehin zu viel.
+             *
+             * Jetzt: EIN Reiter Abstand darf eine Brücke schlagen, mehr nicht.
+             * Gemessen wird in Reiterbreiten, damit die Regel auch dann gilt,
+             * wenn die Leiste einmal andere Masse bekommt. */
+            const reiter = weg / Math.max(1, b);
+            pille.style.setProperty('--dehnung', reiter <= 1.35 ? '1.18' : '1');
             pille.classList.add('faehrt');
             clearTimeout(fahrtUhr);
             clearTimeout(glasUhr);

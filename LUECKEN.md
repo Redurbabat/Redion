@@ -9452,3 +9452,32 @@ Dasselbe gilt für die drei älteren Regeln derselben Art:
 `studio.css:233` (Menü, Finder, Auswahlleiste), `pdf-studio.css:107` (die
 Werkzeugleiste) und `bausteine.css:8467` (die Textur). Keine von ihnen ist je
 gegen eine Seite gemessen worden.
+
+## L204 · Die Auswahl fängt bei jedem Wechsel wieder bei null an — 20. September 2026
+
+Das Design-System verlangt für schnelle Wechsel zweierlei:
+
+> Preserve velocity during rapid changes and target the newest selection
+> instead of completing stale animations.
+
+**Die zweite Hälfte ist erfüllt.** Wer A → B → C tippt, sieht die neueste
+Wahl: beide Uhren werden gelöscht, nichts steht in einer Schlange, und im
+Studio wird die fliegende Fläche dort abgeholt, wo sie gerade ist (E640).
+
+**Die erste nicht.** Beide Stellen bewegen sich mit einem CSS-Übergang, und
+ein Übergang kennt keine Geschwindigkeit: wird er mitten im Lauf auf ein
+neues Ziel gesetzt, beginnt er wieder bei Tempo null. Auf dem Bildschirm
+sieht das aus, als bliebe die Fläche kurz stehen, bevor sie weiterzieht —
+bei ruhigem Tippen unsichtbar, bei schnellem spürbar.
+
+**Was es bräuchte:** die Web Animations API. `element.animate()` gibt die
+laufende Bewegung als Objekt zurück; ihre aktuelle Geschwindigkeit lässt sich
+auslesen und als Anfangswert der nächsten mitgeben. Betroffen wären
+`pilleSchieben` (`seitenleiste.ts`) und `wahlFliegen` (`marken.ts`) — zwei
+Stellen, dieselbe Rechnung, also gehört sie in EINEN Helfer (§8).
+
+**Warum es nicht nebenbei geht:** die Geschwindigkeit muss gemessen werden,
+nicht geschätzt, und eine Feder ohne Messung ist eine Zahl, die jemand
+hingeschrieben hat. Dazu kommt `prefers-reduced-motion`, das bei
+`element.animate()` von Hand behandelt werden muss — CSS nimmt einem das ab,
+JavaScript nicht. Eigener Bogen, eigene Gegenprobe.

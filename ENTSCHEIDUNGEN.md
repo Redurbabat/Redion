@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-618 Entscheidungen, E1 bis E640 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+619 Entscheidungen, E1 bis E641 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -683,6 +683,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E638** — Tot war nicht die Regel, sondern das, worauf sie zeigte: die fünf `order`-Zeilen aus E151 standen Zeichen für Zeichen unverändert da — aber drei ihrer vier Ziele hat Redurs Umbau vom 6. September abgeschafft. Übrig blieb `.lw-hero{order:4}` gegen `*{order:5}`, und damit stand die Begrüssung wieder ganz oben und „Lernen starten" bei y = 1115 in einem 844 px hohen Bild. Eine Regel, deren Selektor ins Leere greift, sieht im Quelltext aus wie am ersten Tag. Dazu drei Messfehler im Lauf selbst, darunter ein Schmuck-`<span>`, das vor jedem Namen stand
 * **E639** — Die Pille wird eine Linse: Redurs Video (Apple TV, iOS 26) zeigt keine Fläche, die springt, sondern eine, die BRICHT — sie vergrössert, zieht die Zeichen mit, wirft einen Farbsaum und dehnt sich in Laufrichtung. Redion hatte die wandernde Pille seit E236 schon; sie hat Glas bekommen. Die eine Zeile, an der alles hing: sie lag auf `z-index:0`, UNTER den Knöpfen — eine Linse kann aber nur brechen, was hinter ihr liegt. Dazu der Fund von `test114` §17, dessen Kommentar ein halbes Jahr vorher aufgeschrieben hatte, wann er scharf wird
 * **E640** — Der Grund sitzt, der Wechsel fliegt: das Design-System verlangt EINE Fläche, die sich bewegt, statt zweier, die auf- und abtauchen — Beispiel dort wörtlich „Pen → Marker → Eraser". Der erste Entwurf übernahm die Bauform von `#ho-pille`: eine dauerhafte Fläche, die wandert. `test478` hat sie widerlegt — 55 px neben ihrem Werkzeug, Überdeckung null. Drei Formeln und fünf Auslöser später stand immer noch derselbe Wert da; ein Zähler im Element zeigte, dass die Rechnung fünfmal gelaufen und jedes Mal ZU FRÜH war. Eine gespeicherte Stelle veraltet bei jedem Umbruch, jedem Rollen, jeder Breitenabfrage. Jetzt bleibt der Grund am Knopf, und nur der Wechsel bekommt eine kurzlebige Fläche in Bildschirmmassen
+* **E641** — Was das Design-System an der Linse auszusetzen hat: das am 20. September nachgereichte Regelwerk (`Redurbabat/UI-Kit`) urteilt auch über den Bogen von gestern, und neun von zehn klaren Verstössen stammen aus E639. Drei davon sind geändert: gedehnt wird nur noch zwischen NACHBARN (E639 dehnte um so stärker, je weiter der Sprung — das Gegenteil der Regel), der Deckel fällt von 1,85 auf 1,18, und die Ruhe-Brechung von 15 auf 8, damit die Schrift im Ruhezustand optisch still steht. Der vierte — ob über Schrift überhaupt gebrochen werden darf — gehört Redur
 
 ---
 
@@ -52370,3 +52371,94 @@ mit eigener Messung — **L202**.
 
 **Gemessen.** `test539` 42/42, Gegenprobe rot. `test478` 43/43, `test522`,
 `test533` unverändert grün. `npm run typecheck` grün. Bild angesehen (§55.3).
+
+---
+
+## E641 — Was das Design-System an der Linse auszusetzen hat
+
+Redur hat am 20. September ein verbindliches Design-System nachgereicht
+(`Redurbabat/UI-Kit`, `skills/web-design/SKILL.md`) — **nachdem** E639 die
+Linse gebaut hatte. Die Module dazu wurden gelesen und gegen Redions echten
+Quelltext gehalten. Ergebnis:
+
+```txt
+83 Regeln geprüft
+44 erfüllt
+20 teilweise
+10 klar verletzt   ← und neun davon stammen aus E639, dem Bogen von gestern
+ 9 nicht berührt
+```
+
+Das ist der unangenehme Teil eines verbindlichen Systems: es urteilt auch
+über das, was man gestern für gelungen hielt.
+
+### Die drei Punkte, die stimmen — und geändert sind
+
+**1 · Dehnen ist für Nachbarn.** E639 rechnete
+`min(1.85, 1 + Weg/Breite × 0,3)`: je WEITER der Sprung, desto stärker die
+Verformung. Das System sagt es zweimal und beide Male anders herum:
+
+> When source and destination directly touch or nearly touch, the selection
+> surface may visually stretch/bridge during travel … Keep the bridge subtle
+> and bounded.
+
+> Disable deformation for long-distance navigation.
+
+Und das ist kein Geschmack, sondern Sinn. Eine **Brücke** spannt sich
+zwischen zwei Dingen, die sich fast berühren. Über vier Reiter hinweg ist sie
+keine Brücke mehr, sondern ein Schlauch. Jetzt: ein Reiter Abstand darf eine
+Brücke schlagen, mehr nicht.
+
+**2 · 85 % Überlänge sind keine dezente Verformung.**
+
+> Keep deformation subtle. Preserve recognizable control boundaries and avoid
+> cartoon-like elasticity in professional/productivity UI.
+
+Der Deckel lag bei 1,85. Jetzt 1,18, und nur zwischen Nachbarn.
+
+**3 · Im Ruhezustand soll der Inhalt still stehen.**
+
+> Do not scale labels/icons with the material blob; content should remain
+> optically stable.
+
+Die Ruhe-Brechung stand auf Verschiebung 15 — bei der Messung vom
+19. September ausdrücklich als „das Zeichen wird grösser" notiert. Jetzt 8,
+was bei derselben Messung „nichts zu sehen" hiess. Das ist genau das Ziel:
+das Glas zeigt sich am RAND, es vergrössert nicht den Inhalt. Die **Fahrt**
+bleibt bei 24 — dort erklärt die Verzerrung die Bewegung, und da gehört sie
+hin.
+
+### Der Punkt, der Redur gehört
+
+> For mobile bottom navigation, avoid excessive liquid distortion; labels and
+> icons must remain legible throughout.
+
+Ob über der Schrift einer unteren Leiste überhaupt gebrochen werden darf, ist
+die Frage, um die es in Redurs Video ging. Sein eigener Auftrag sagt dazu:
+*„Wenn eine bestehende REDION-Regel und der Universal Skill miteinander
+kollidieren, analysiere zuerst den konkreten Produktkontext. Übernimm nicht
+blind eine generische Regel."*
+
+Mit den drei Änderungen oben ist die Schrift im Ruhezustand optisch still und
+nur während der halben Sekunde der Fahrt verzerrt. Damit rückt Redion sehr
+nahe an „legible throughout", ohne den Übergang aufzugeben, den Redur wollte.
+**Die Entscheidung, ob das reicht, ist seine** und steht nicht hier.
+
+### Der Punkt, der noch offen ist
+
+> Preserve velocity during rapid changes and target the newest selection
+> instead of completing stale animations.
+
+Die zweite Hälfte ist erfüllt — die neueste Wahl gewinnt, beide Uhren werden
+gelöscht, nichts steht in einer Schlange. Die erste nicht: ein CSS-Übergang
+setzt bei A → B → A wieder bei Tempo null an. Dafür braucht es die Web
+Animations API, und das ist ein eigener Bogen — **L204**.
+
+### Gegenprobe
+
+`test539` §7 misst die Dehnung während der Fahrt und verlangt beides: zum
+Nachbarn eine Brücke, über vier Reiter keine. Ohne die Unterscheidung wäre
+einer der beiden Punkte immer rot — ein Wächter, der nicht beide Seiten
+prüft, hält nur eine.
+
+**Gemessen.** `test539` · `test114` · die Wächter der unteren Leiste.

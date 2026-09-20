@@ -18,6 +18,9 @@
  *      Linse, die bei `prefers-reduced-motion` verschwindet, liesse den
  *      aktiven Reiter unmarkiert — und die Prüfung „keine Bewegung" wäre
  *      trotzdem grün.
+ *   §7 GEDEHNT WIRD NUR ZWISCHEN NACHBARN (E641). Eine Brücke spannt sich
+ *      zwischen Dingen, die sich fast berühren; über vier Reiter hinweg
+ *      wäre sie ein Schlauch.
  *   §5 IM STUDIO FLIEGT DER WECHSEL. Der Grund sitzt am Knopf und kann
  *      nicht verrutschen; nur der Übergang bekommt eine kurzlebige Fläche,
  *      die von Stift zu Radierer fliegt (E640). Unten ist es Glas, dort
@@ -242,6 +245,53 @@ console.log('\n§4 Quellen: zwei Regeln, nicht eine — und die Quelle ist TypeS
   /* Der Halter wird EINMAL gebaut — die Zeile, die das hält. */
   p('`sicherstellen` kehrt um, wenn es den Halter schon gibt',
     /if \(document\.getElementById\(HALTER\)\) return;/.test(lies('src/schale/bedienung/linse.ts')));
+}
+
+/* ═══ §7 Gedehnt wird nur zwischen Nachbarn ════════════════════════════════*/
+console.log('\n§7 Die Brücke spannt sich zwischen Nachbarn — nicht über vier Reiter');
+{
+  /* ─── WARUM DAS EINE REGEL IST UND KEIN GESCHMACK ────────────────────────
+     Das Design-System sagt es an zwei Stellen: dehnen darf sich die Fläche
+     zwischen Zielen, die sich fast berühren, und bei weiten Wegen gar
+     nicht. Eine Brücke spannt sich zwischen zwei Dingen, die nah
+     beieinander liegen; über vier Reiter hinweg ist sie keine Brücke mehr.
+     E639 hatte es genau umgekehrt — je weiter der Sprung, desto stärker
+     die Dehnung —, und der weiteste Weg der Leiste bekam die grösste
+     Verformung. E641 hat es gedreht. */
+  const s = await telefon(false);
+  const messen = async (vonNr: number, nachNr: number) => {
+    await s.evaluate((nr) => {
+      const k = document.querySelectorAll<HTMLElement>('#handy-oben button')[nr];
+      k?.click();
+    }, vonNr);
+    await s.waitForTimeout(700);
+    await s.evaluate(() => {
+      (globalThis as any).__dehn = [];
+      const p2 = document.getElementById('ho-pille');
+      const takt = () => {
+        if (p2) (globalThis as any).__dehn.push(
+          Number(getComputedStyle(p2).getPropertyValue('--dehnung')) || 1);
+        requestAnimationFrame(takt);
+      };
+      takt();
+    });
+    await s.evaluate((nr) => {
+      const k = document.querySelectorAll<HTMLElement>('#handy-oben button')[nr];
+      k?.click();
+    }, nachNr);
+    await s.waitForTimeout(500);
+    return await s.evaluate(() =>
+      Math.max(...((globalThis as any).__dehn as number[])));
+  };
+  /* Nachbar: Reiter 0 → 1. */
+  const nah = await messen(0, 1);
+  /* Weit: Reiter 0 → 4, der weiteste Weg, den diese Leiste hat. */
+  const fern = await messen(0, 4);
+  p('Zum Nachbarn spannt sich eine Brücke', nah > 1.05, `Dehnung ${nah}`);
+  p('… und sie bleibt bescheiden (keine Gummiband-Oberfläche)', nah <= 1.3,
+    `Dehnung ${nah}`);
+  p('Über vier Reiter wird NICHT gedehnt', fern <= 1.001, `Dehnung ${fern}`);
+  await s.close();
 }
 
 /* ═══ §6 Ohne Durchsicht: geprüft an der Quelle, nicht an der Seite ════════*/
