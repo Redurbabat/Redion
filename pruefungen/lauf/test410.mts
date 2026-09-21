@@ -149,7 +149,29 @@ p('Keine Deklaration ohne Semikolon vor der nächsten', treffer.length === 0,
 const einzel = path.join(WURZEL, 'redion-einzeldatei.html');
 if (fs.existsSync(einzel)) {
   const roh = fs.readFileSync(einzel, 'utf8');
-  const stilBloecke = [...roh.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map(m => m[1] ?? '');
+  /* ══ NUR EIN `<style>` AM ZEILENANFANG IST EINES (E671) ══════════════════
+     Hier stand dasselbe ohne `^` und `m` — und damit fing dieser Lauf jedes
+     `<style>` ein, das irgendwo im Fliesstext eines Kommentars vorkommt.
+     Genau eines gibt es: die Sanitizer-Doku zählt die verbotenen Tags auf
+     („· <script>, <style>, <iframe>, <object> …"). Von dort schluckte der
+     nicht-gierige Ausdruck **5,3 MB** bis zum nächsten `</style>` — quer
+     durch den ganzen eingebetteten JavaScript-Bestand.
+
+     Aufgefallen ist es erst, als in der Chronik ein deutscher Satz stand,
+     der wie CSS aussieht: „Die 26 px entstehen aus font-size:12px und
+     padding:3px 9px." (P97). Der Lauf meldete ihn als tote Deklaration —
+     eine Messung, die Prosa für Code hält.
+
+     `bauen.mts` schreibt jeden echten Stilblock an den Zeilenanfang: auf
+     `<style>` folgt sofort ein Zeilenumbruch und die Kopfzeile mit dem
+     Dateinamen. Das ist der Unterschied, und er ist gemessen: 21 echte
+     Blöcke statt 25.
+
+     (Der Anfang dieses Kommentars zitierte die Bau-Zeile wörtlich — mit
+     ihrem Kommentar-Ende darin. Damit schloss sich dieser Kommentar
+     selbst, und Node sagte `ERR_INVALID_TYPESCRIPT_SYNTAX`. Derselbe
+     Fehler wie die runde Klammer im PDF-Text von test177.) */
+  const stilBloecke = [...roh.matchAll(/^<style[^>]*>([\s\S]*?)<\/style>/gm)].map(m => m[1] ?? '');
   p('Die Einzeldatei trägt Stil', stilBloecke.length > 0, String(stilBloecke.length));
   const inEinzel = stilBloecke.flatMap(b => findeFehler(b));
   p('Und auch dort keine tote Deklaration', inEinzel.length === 0,

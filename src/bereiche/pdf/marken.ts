@@ -5171,6 +5171,18 @@ const Marken = (() => {
       button('abdeck') +
       button('zettel') +
       button('text') +
+      /* „TEXT ÄNDERN" STEHT NEBEN „TEXT" (E670/E671), und dass es hier von
+         Hand stehen MUSS, ist der Fund des vollen Laufs vom 21. September:
+         diese Leiste wird aufgezählt, nicht aus `WERKZEUGE` gebaut. Das
+         Studio-Band daneben baut sie aus dem Katalog — also hatte das neue
+         Werkzeug dort einen Knopf und hier keinen, zwei Tage lang
+         unbemerkt. `test523` hat es gehalten: „13 statt 14, textfix fehlt".
+
+         Warum die Aufzählung trotzdem bleibt: der Formen-Knopf ist kein
+         `button(…)`, sondern trägt das Zeichen der zuletzt gewählten Form
+         (E515). Eine Schleife über den Katalog müsste ihn als Sonderfall
+         kennen — und dann wäre die Schleife die Aufzählung mit Umweg. */
+      button('textfix') +
       button('zeichen') +
       /* DIE ELEMENTE (E494): steht neben dem Fachzeichen, weil es dieselbe
          Bewegung ist — ein Tipp setzt etwas Fertiges. Nachgemessen passt der

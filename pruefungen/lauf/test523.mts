@@ -184,8 +184,10 @@ const feld = await pg.evaluate(() => {
     })()
   };
 });
-gleich('Zwei Blöcke: dreizehn Werkzeuge, zwölf Gruppen',
-  [feld?.bloecke, feld?.werkzeuge, feld?.gruppen], [2, 13, 12]);
+/* Dreizehn waren es bis zum 21. September 2026; „Text ändern" (E670) ist
+   das vierzehnte. Die Gruppen sind unberührt geblieben. */
+gleich('Zwei Blöcke: vierzehn Werkzeuge, zwölf Gruppen',
+  [feld?.bloecke, feld?.werkzeuge, feld?.gruppen], [2, 14, 12]);
 
 /* ======================================================================== */
 console.log('\n2 · §37 und §38: jeder Pfeil ist ein Fingerziel und hat einen Namen');

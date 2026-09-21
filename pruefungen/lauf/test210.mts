@@ -371,8 +371,12 @@ if (rollen) {
    Zahl, die ihren Zuwachs zuverlässig meldet — an niemanden, weil niemand
    den vollen Lauf fährt. E465, E512, E513, und hier E512 noch einmal.
    Vier Bögen, vier ungehörte Meldungen. */
-gleich('Die sechzehn Knöpfe der Zeichenleiste stehen da (dreizehn Werkzeuge, ···, Zurück, Vor)',
-  rollen.zeichenleiste, 16);
+/* SECHZEHN WAREN ES BIS ZUM 21. SEPTEMBER 2026 (dreizehn Werkzeuge, ···,
+   Zurück, Vor). Mit „Text ändern" (`textfix`, E670) sind es siebzehn. Die
+   Zahl steht hier von Hand, und das ist ihr Sinn: ein Knopf, der unbemerkt
+   dazukommt, macht diesen Lauf rot. */
+gleich('Die siebzehn Knöpfe der Zeichenleiste stehen da (vierzehn Werkzeuge, ···, Zurück, Vor)',
+  rollen.zeichenleiste, 17);
   gleich('Und keines ist auf Breite null gesetzt', rollen.ohneBreite, 0);
   p('Sie nimmt mehr als ein Drittel der Fensterbreite',
     rollen.breit >= 290, `${rollen.breit} von 390 px`);

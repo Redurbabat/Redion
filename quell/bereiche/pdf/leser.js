@@ -316,6 +316,25 @@ const PdfLeser = (() => {
         }
         return beste;
     };
-    return { oeffne, BREITE_PX, TEXT_MAX, lageVonBlock, stueckBei };
+    /**
+     * Die offenen Quellen loslassen.
+     *
+     * pdf.js hält je Dokument einen Arbeiter; ein neuer Aufbau des
+     * Schreibstudios gab sie bisher selbst frei (E468, `griffeSchliessen`).
+     * Seit der Speicher HIER steht, gehört auch das Loslassen hierher —
+     * sonst hätte der eine Speicher zwei Besitzer.
+     *
+     * Die Lagen gehen mit: sie hängen an einer Quelle, und eine Seite, deren
+     * Quelle getauscht wurde, behielte sonst die Kästen von gestern.
+     */
+    const quellenSchliessen = () => {
+        griffe.forEach(g => { void g.then(x => { try {
+            x?.schliessen?.();
+        }
+        catch { /* egal */ } }); });
+        griffe.clear();
+        lagen.clear();
+    };
+    return { oeffne, BREITE_PX, TEXT_MAX, lageVonBlock, stueckBei, quellenSchliessen };
 })();
 window.PdfLeser = PdfLeser;

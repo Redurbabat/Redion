@@ -77,7 +77,9 @@ try{
      Zähler. Die falsche Zahl liess ihn an Prüfung 8 STERBEN, und alles
      danach — Stiftpunkt, Originalbytes, Ausgabe — lief nie mehr. Eine Zahl
      ohne Nachzug kostet hier nicht eine Zusage, sondern den halben Lauf. */
-  check('Dreizehn echte Zeichenwerkzeuge',await page.locator('[data-document-tool] svg').count()===13);
+  /* Dreizehn waren es bis zum 21. September 2026; „Text ändern"
+     (`textfix`, E670) ist das vierzehnte. */
+  check('Vierzehn echte Zeichenwerkzeuge',await page.locator('[data-document-tool] svg').count()===14);
   const identity=await page.evaluate<any>(`(() => {const p=Store.getBlock(App.aktuelleSeite());const b=DocumentMode.documentsIn(p)[0];return {page:p.id,block:b.id,source:b.quelleId,image:b.bildDateiId};})()`);
   const originalBytes=await page.evaluate<number[]>(`Dateien.alsBlob(${JSON.stringify(identity.source)}).then(b=>b.arrayBuffer()).then(b=>Array.from(new Uint8Array(b)))`);
   const ink=page.locator('.document-stage[data-aktiv] .blatt-marken');

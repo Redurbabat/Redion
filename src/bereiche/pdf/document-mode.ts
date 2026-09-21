@@ -372,13 +372,22 @@ const DocumentMode = (() => {
     setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 2000);
   };
 
-  /* Die offenen PDF-Quellen der Suche (E468), je Quelle ein Griff. Ein
-     neuer Aufbau schliesst die alten — pdf.js haelt sonst je Dokument
+  /* Die offenen PDF-Quellen der Suche (E468), je Quelle ein Griff — und
+     seit E671 steht dieser Speicher in `leser.ts`, nicht mehr hier.
+
+     WARUM ER UMGEZOGEN IST. E670 brauchte dieselbe Rechnung ein zweites
+     Mal (das Werkzeug „Text ändern" sucht das Wort unter dem Zeiger) und
+     legte sie in `leser.ts` ab — ohne die hiesige mitzunehmen. Damit gab
+     es zwei Speicher für dieselbe Sache, und genau davor warnt §8. Der
+     volle Lauf hat es an einer anderen Stelle sichtbar gemacht: `test537`
+     zählte einen Querverweis MEHR, weil `Dateien.alsBlob` plötzlich an
+     zwei Stellen stand.
+
+     Das Loslassen bleibt hier ausgelöst, aber es wird dort getan: ein
+     neuer Aufbau gibt die Quellen frei, sonst hält pdf.js je Dokument
      einen Arbeiter. */
-  const griffe = new Map<string, Promise<any>>();
   const griffeSchliessen = (): void => {
-    griffe.forEach(g => { void g.then(x => { try { x?.schliessen?.(); } catch { /* egal */ } }); });
-    griffe.clear();
+    try { PdfLeser?.quellenSchliessen?.(); } catch { /* egal */ }
   };
 
   /* ── DER NACHTRAG DER VERWEISE (E477, L133) ──────────────────────────────
@@ -2170,32 +2179,15 @@ const DocumentMode = (() => {
     let treffer: Treffer[] = [];
     let trefferNr = -1;
     let suchLauf = 0;
-    const lagen = new Map<string, Promise<any[]>>();
-    const griffVon = (quelleId: string): Promise<any> => {
-      let g = griffe.get(quelleId);
-      if (!g) {
-        g = (async () => {
-          if (typeof PdfLeser === 'undefined' || typeof Dateien === 'undefined') return null;
-          const roh = await Dateien.alsBlob(quelleId);
-          if (!roh) return null;
-          return PdfLeser.oeffne(new Uint8Array(await roh.arrayBuffer()));
-        })().catch(() => null);
-        griffe.set(quelleId, g);
-      }
-      return g;
-    };
-    const lageVon = (block: any): Promise<any[]> => {
-      let l = lagen.get(block.id);
-      if (!l) {
-        l = (async () => {
-          if (block.type !== 'pdfseite' || !block.quelleId) return [];
-          const griff = await griffVon(String(block.quelleId));
-          return griff ? griff.textMitLage(Number(block.nr) || 1) : [];
-        })().catch(() => []);
-        lagen.set(block.id, l);
-      }
-      return l;
-    };
+    /* EINE RECHNUNG, NICHT ZWEI (§8, E671). Hier standen `griffVon` und
+       `lageVon` — Wort für Wort dasselbe, was seit E670 in `leser.ts`
+       steht. Der Unterschied ist nicht Geschmack: zwei Speicher für
+       dieselbe Sache öffnen dieselbe PDF zweimal, und wer einen von
+       beiden leert, leert den anderen nicht. */
+    const lageVon = (block: any): Promise<any[]> =>
+      (typeof PdfLeser !== 'undefined' && typeof PdfLeser.lageVonBlock === 'function')
+        ? PdfLeser.lageVonBlock(block)
+        : Promise.resolve([]);
     const norm = (s: unknown): string => String(s || '').toLowerCase();
     const vereint = (k: Kasten[]): Kasten => {
       const x0 = Math.min(...k.map(r => r.x)), y0 = Math.min(...k.map(r => r.y));

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-650 Entscheidungen, E1 bis E670 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+651 Entscheidungen, E1 bis E671 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -713,6 +713,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E668** — Fett ist ein Schalter, und Strg+B nimmt denselben Weg: `umschliesse` stempelte nur (`****Wort****`, gezeichnet als sichtbares `**Wort**`), und `editor.ts` hatte eine ZWEITE Fassung, die `ct.textContent` zurückschrieb — den GEZEICHNETEN Text. Strg+B in `Ein **fetter** Satz` machte daraus `Ein fetter **Satz**`: die vorhandene Auszeichnung gelöscht, ohne Meldung. §8 wörtlich, und der Grund, warum E650 nur den halben Weg erreichte. Dazu: `*` ist die halbe `**` — Kursiv auf fettem Wort ergibt `***fetter***`, nicht `*fetter*`. Wächter `test557`.
 * **E669** — Die angemeldeten Geräte gibt es jetzt wirklich: die Einstellungen versprachen „Die Liste und der Freigabe-Code stehen im Wolke-Fenster" — den Code gab es, die Liste nicht. `sitzungen` hält `geraet`, `angelegt` und `bis`, seit es die Tabelle gibt; geschrieben, nie gelesen. Neu: `GET /konto/geraete`, `POST /konto/geraete/weg`, das Gerätefenster. Hinaus geht ein STÜCK des Abdrucks, nie der Token (§42); ein fremdes Konto ist nicht gefiltert, sondern gar nicht erst in der Menge, in der gesucht wird; eine Marke bekommt die Liste nicht (§26). Aus dem Bild kam dazu: die Knöpfe massen 18 px — auch im Markenfenster nebenan (§37, §45). Wächter `test558`.
 * **E670** — Den Text einer PDF ändern, ohne die PDF anzufassen: Redurs Frage vom 21. September. Neues Werkzeug „Text ändern" — auf ein Wort tippen, ändern, fertig. Die Änderung ist eine MARKE (Deckel in Papierfarbe + neuer Text auf derselben Grundlinie), also rückgängig, versioniert, in der Sicherung und im ausgegebenen PDF; das Original bleibt Byte für Byte, und `test559` misst das mit einer SHA-256-Summe. Was es NICHT kann, steht im Werkzeugtitel: der Text fliesst nicht. `stueckBei`/`lageVonBlock` in `leser.ts` statt einer zweiten Rechnung im Studio (§8). Zwei Funde bestehender Wächter: `inkText/inkText = 100 %` (E515-Regel) und die Werkzeugzahl 13→14. Wächter `test559`.
+* **E671** — Was der erste volle Lauf seit elf Bögen gefunden hat: 501 Läufe, 491 grün, 10 rot, 112 min. Im Hauptbaum nachgemessen waren es ACHT (test270 und test440 sind Artefakte des Arbeitsbaums, §30). Sieben der acht waren meine letzten drei Bögen. Zwei Entscheidungen: der Speicher der PDF-Quellen steht nur noch in `leser.ts` (E670 hatte einen zweiten stehenlassen — `test537` fand ihn über die Querverweiszahl), und die Blatt-Werkzeugleiste bleibt eine Aufzählung (der Formen-Knopf trägt das Zeichen der zuletzt gewählten Form, E515). Der echte Fund: „Text ändern" hatte im Studio einen Knopf und auf dem Blatt keinen. Der Messfehler: `test410` las ein `<style>` aus einem Kommentar und von dort 5,3 MB JavaScript als Stilblatt.
 
 ---
 
@@ -54830,3 +54831,55 @@ Schnittstelle aus dem Gedächtnis geschrieben statt nachgeschlagen.
 als Seite eingelesen" und „Die abgelegte Quelle ist Byte für Byte die
 hereingegebene" halten den Zustand, der SCHON gut war, und müssen es auch
 nach diesem Bogen noch tun.
+
+
+## E671 — Was der erste volle Lauf seit elf Bögen gefunden hat
+
+**Was wurde entschieden?** Acht rote Läufe abgearbeitet, und zwar jeder an
+seiner Ursache statt an seiner Zahl. Die Messungen stehen in
+`messungen.md`; hier stehen die zwei Entscheidungen, die dabei fielen.
+
+**1 · Der Speicher der PDF-Quellen steht in `leser.ts`, und nur dort.**
+E670 legte `lageVonBlock`/`stueckBei` dort ab — und liess die gleichlautende
+Rechnung im Schreibstudio stehen (`griffe`, `lagen`, `griffVon`, `lageVon`).
+Zwei Speicher für dieselbe Sache: dieselbe PDF wäre zweimal geöffnet
+worden, und wer einen leert, leert den anderen nicht.
+
+Sichtbar wurde es nicht an der Oberfläche, sondern an `test537`: die Zahl
+der Querverweise stieg um eins, weil `Dateien.alsBlob` plötzlich an zwei
+Stellen stand. Ein Wächter für die Architektur hat einen Fehler im
+Zwischenspeicher gefunden — dafür ist er nicht gebaut, und genau deshalb
+ist er etwas wert.
+
+Das Loslassen zieht mit um: `quellenSchliessen()` steht jetzt neben dem
+Speicher, ausgelöst wird es weiterhin vom Studio, wenn es neu aufbaut.
+
+**2 · Die Blatt-Werkzeugleiste bleibt eine Aufzählung.** Sie wird Knopf für
+Knopf hingeschrieben; das Studio-Band daneben baut aus dem Katalog. Deshalb
+hatte „Text ändern" dort einen Knopf und hier keinen, zwei Tage lang.
+
+Der naheliegende Schluss wäre: beide aus dem Katalog bauen. Dagegen spricht
+der Formen-Knopf. Er ist kein `button(…)`, sondern trägt das Zeichen der
+ZULETZT GEWÄHLTEN Form (E515) — eine Schleife müsste ihn als Sonderfall
+kennen, und dann wäre die Schleife die Aufzählung mit Umweg. Also bleibt
+die Aufzählung, und `test523` bleibt ihr Wächter: er gleicht die gemerkte
+Ordnung gegen den Katalog ab und wird rot, sobald beide auseinandergehen.
+
+**Was war die Alternative zu beidem?** Die Zahlen in den Läufen hochsetzen
+und weitergehen. Bei `test210`, `test437` und `test523`s Zählung ist das
+auch genau richtig — ein neues Werkzeug IST ein Knopf mehr, und die Zahl
+steht dort von Hand, damit jemand hinsieht. Bei den anderen fünf wäre es
+das Zudecken eines Fehlers gewesen.
+
+**Was kostet es?** Nichts, was nicht ohnehin fällig war.
+
+**Und eine Lehre über Wächter**, die hier zum zweiten Mal in einer Woche
+auftaucht: `test410` meldete eine tote CSS-Deklaration, die ein deutscher
+Satz in der Chronik war — „Die 26 px entstehen aus `font-size:12px` und
+`padding:3px 9px`". Sein Ausdruck fing ein `<style>` aus einem Kommentar
+ein und las von dort 5,3 MB JavaScript als Stilblatt. Eine Messung, die
+Prosa für Code hält, sagt irgendwann etwas Falsches — und zwar erst dann,
+wenn jemand einen Satz schreibt, der wie Code aussieht.
+
+**Geprüft:** `node pruefungen/alle.mts 210 270 290 362 410 437 440 523 537`
+→ acht grün, `test537` bleibt bei 518 gegen 517 (L207, Redurs Entscheidung).

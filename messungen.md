@@ -4106,3 +4106,67 @@ Vierter Fall nach `test544`, `test549` und `test550`.
 Dass `zeigen()` bei fehlendem Modul „nein" sagt. `Werkzeuge` hängt nicht am
 Fenster (E207) und lässt sich von aussen nicht verstecken. Gemessen ist nur,
 dass es nicht wirft — der Rest hält am `try/catch`. Steht so im Lauf.
+
+---
+
+## Voller Prüflauf auf `09ac7f8` — 21. September 2026
+
+Der erste volle Lauf seit `74bde43` (20. September, 17:56). Gefahren im
+eigenen Arbeitsbaum mit `node pruefungen/volllauf.mts --neu`, während im
+Hauptbaum **kein** Prüflauf lief (§30).
+
+```txt
+Läufe      501
+grün       491
+ROT         10   210 270 290 362 410 437 440 523 524 537
+gelaufen   112 min
+```
+
+### Im Hauptbaum nachgemessen: acht statt zehn
+
+§30 verlangt genau das, und es hat sich wieder gelohnt:
+
+| Lauf | im Arbeitsbaum | im Hauptbaum |
+|---|---|---|
+| `test270` | rot | **grün** — `.git` ist dort eine Datei, `node_modules` ein Symlink |
+| `test440` | rot | **grün** — dieselbe Ursache |
+| die anderen acht | rot | rot |
+
+Zwei von zehn waren Artefakte der Messumgebung. Wer sie ohne Nachmessung
+„repariert" hätte, hätte am Produkt etwas geändert, das nichts hatte.
+
+### Und sieben der acht waren meine eigenen letzten drei Bögen
+
+| Lauf | was er hielt | Ursache |
+|---|---|---|
+| `test210` | 17 Knöpfe statt 16 | neues Werkzeug (E670) |
+| `test523` | 14 Werkzeuge statt 13 — und `textfix` fehlte in der DOM-Folge | **echter Fund**, siehe unten |
+| `test437` | 14 Zeichenwerkzeuge statt 13 | neues Werkzeug |
+| `test290` | Präfix `wo` nicht im Verzeichnis | `.wo-zeilenknopf` (E669) |
+| `test362` | `56` zum fünfzehnten Mal roh im CSS | `min-width:56px` (E667) |
+| `test410` | „tote Deklaration" in der Einzeldatei | **Messfehler**, siehe unten |
+| `test537` | 519 statt 517 Treffer | ein zweiter Speicher (E670), jetzt weg |
+
+**Der echte Fund steckte in `test523`.** Die Blatt-Werkzeugleiste wird von
+Hand aufgezählt (`button('text') + button('zeichen') + …`), das Studio-Band
+daneben baut sie aus dem Katalog. Also hatte „Text ändern" im Studio einen
+Knopf und auf dem Blatt keinen — zwei Tage lang, und gesehen hat es kein
+Mensch, sondern ein Lauf, der die Ordnung gegen den Katalog abgleicht.
+
+**Der Messfehler steckte in `test410`.** Sein Ausdruck
+`/<style[^>]*>([\s\S]*?)<\/style>/g` fing das `<style>` aus einem
+**Kommentar** ein — die Sanitizer-Doku zählt die verbotenen Tags auf — und
+schluckte von dort **5,3 MB** bis zum nächsten `</style>`. Aufgefallen ist
+es erst, als in der Chronik ein deutscher Satz stand, der wie CSS aussieht:
+„Die 26 px entstehen aus `font-size:12px` und `padding:3px 9px`" (P97).
+Mit `^` und `m` sind es 21 echte Blöcke statt 25.
+
+### Danach
+
+```txt
+node pruefungen/alle.mts 210 270 290 362 410 437 440 523 537
+✗ 1 von 9 Läufen gescheitert: test537
+```
+
+`test537` bleibt bei **518 gegen 517** — genau dem Stand vor diesen drei
+Bögen. Das ist **L207**, und die Richtung gehört Redur.

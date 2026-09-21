@@ -3411,7 +3411,11 @@ table.stab td:focus, table.stab th:focus{box-shadow:inset 0 0 0 2px var(--accent
 @media (max-width:760px){
   #findbar{ left:10px; right:10px; top:52px; gap:2px; padding:6px 8px; }
   #findbar input{ width:auto; flex:1 1 0; min-width:0 }
-  #findbar .n{ min-width:56px; flex:0 0 auto }
+  /* `7ch` statt 56px: der Zähler sagt höchstens „12 von 12" — neun
+     Zeichen —, und in Zeichenbreiten gemessen wächst er mit der
+     Schrift mit. Die rohe 56 wäre ausserdem die fünfzehnte ihrer Art
+     gewesen; `marken-decke.json` darf nur schrumpfen (test362). */
+  #findbar .n{ min-width:7ch; flex:0 0 auto }
 }
 
 /* --- Fokus-Modus ---------------------------------------------------------------------------------- */
@@ -25180,7 +25184,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1272, inhalt: '94f9c131520b8291', gebaut: '2026-09-21T10:22:32.614Z' };
+const Stand = { fassung: 1274, inhalt: '9fed8434fba3c043', gebaut: '2026-09-21T12:52:21.229Z' };
 window.Stand = Stand;
 
 </script>
@@ -68606,6 +68610,18 @@ const Marken = (() => {
                 button('abdeck') +
                 button('zettel') +
                 button('text') +
+                /* „TEXT ÄNDERN" STEHT NEBEN „TEXT" (E670/E671), und dass es hier von
+                   Hand stehen MUSS, ist der Fund des vollen Laufs vom 21. September:
+                   diese Leiste wird aufgezählt, nicht aus `WERKZEUGE` gebaut. Das
+                   Studio-Band daneben baut sie aus dem Katalog — also hatte das neue
+                   Werkzeug dort einen Knopf und hier keinen, zwei Tage lang
+                   unbemerkt. `test523` hat es gehalten: „13 statt 14, textfix fehlt".
+          
+                   Warum die Aufzählung trotzdem bleibt: der Formen-Knopf ist kein
+                   `button(…)`, sondern trägt das Zeichen der zuletzt gewählten Form
+                   (E515). Eine Schleife über den Katalog müsste ihn als Sonderfall
+                   kennen — und dann wäre die Schleife die Aufzählung mit Umweg. */
+                button('textfix') +
                 button('zeichen') +
                 /* DIE ELEMENTE (E494): steht neben dem Fachzeichen, weil es dieselbe
                    Bewegung ist — ein Tipp setzt etwas Fertiges. Nachgemessen passt der
@@ -71103,7 +71119,26 @@ const PdfLeser = (() => {
         }
         return beste;
     };
-    return { oeffne, BREITE_PX, TEXT_MAX, lageVonBlock, stueckBei };
+    /**
+     * Die offenen Quellen loslassen.
+     *
+     * pdf.js hält je Dokument einen Arbeiter; ein neuer Aufbau des
+     * Schreibstudios gab sie bisher selbst frei (E468, `griffeSchliessen`).
+     * Seit der Speicher HIER steht, gehört auch das Loslassen hierher —
+     * sonst hätte der eine Speicher zwei Besitzer.
+     *
+     * Die Lagen gehen mit: sie hängen an einer Quelle, und eine Seite, deren
+     * Quelle getauscht wurde, behielte sonst die Kästen von gestern.
+     */
+    const quellenSchliessen = () => {
+        griffe.forEach(g => { void g.then(x => { try {
+            x?.schliessen?.();
+        }
+        catch { /* egal */ } }); });
+        griffe.clear();
+        lagen.clear();
+    };
+    return { oeffne, BREITE_PX, TEXT_MAX, lageVonBlock, stueckBei, quellenSchliessen };
 })();
 window.PdfLeser = PdfLeser;
 
@@ -85627,16 +85662,25 @@ const DocumentMode = (() => {
         a.click();
         setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 2000);
     };
-    /* Die offenen PDF-Quellen der Suche (E468), je Quelle ein Griff. Ein
-       neuer Aufbau schliesst die alten — pdf.js haelt sonst je Dokument
+    /* Die offenen PDF-Quellen der Suche (E468), je Quelle ein Griff — und
+       seit E671 steht dieser Speicher in `leser.ts`, nicht mehr hier.
+  
+       WARUM ER UMGEZOGEN IST. E670 brauchte dieselbe Rechnung ein zweites
+       Mal (das Werkzeug „Text ändern" sucht das Wort unter dem Zeiger) und
+       legte sie in `leser.ts` ab — ohne die hiesige mitzunehmen. Damit gab
+       es zwei Speicher für dieselbe Sache, und genau davor warnt §8. Der
+       volle Lauf hat es an einer anderen Stelle sichtbar gemacht: `test537`
+       zählte einen Querverweis MEHR, weil `Dateien.alsBlob` plötzlich an
+       zwei Stellen stand.
+  
+       Das Loslassen bleibt hier ausgelöst, aber es wird dort getan: ein
+       neuer Aufbau gibt die Quellen frei, sonst hält pdf.js je Dokument
        einen Arbeiter. */
-    const griffe = new Map();
     const griffeSchliessen = () => {
-        griffe.forEach(g => { void g.then(x => { try {
-            x?.schliessen?.();
+        try {
+            PdfLeser?.quellenSchliessen?.();
         }
-        catch { /* egal */ } }); });
-        griffe.clear();
+        catch { /* egal */ }
     };
     /* ── DER NACHTRAG DER VERWEISE (E477, L133) ──────────────────────────────
        Seiten, die VOR E473 eingelesen wurden, tragen kein `verweise`-Feld.
@@ -87478,35 +87522,14 @@ const DocumentMode = (() => {
         let treffer = [];
         let trefferNr = -1;
         let suchLauf = 0;
-        const lagen = new Map();
-        const griffVon = (quelleId) => {
-            let g = griffe.get(quelleId);
-            if (!g) {
-                g = (async () => {
-                    if (typeof PdfLeser === 'undefined' || typeof Dateien === 'undefined')
-                        return null;
-                    const roh = await Dateien.alsBlob(quelleId);
-                    if (!roh)
-                        return null;
-                    return PdfLeser.oeffne(new Uint8Array(await roh.arrayBuffer()));
-                })().catch(() => null);
-                griffe.set(quelleId, g);
-            }
-            return g;
-        };
-        const lageVon = (block) => {
-            let l = lagen.get(block.id);
-            if (!l) {
-                l = (async () => {
-                    if (block.type !== 'pdfseite' || !block.quelleId)
-                        return [];
-                    const griff = await griffVon(String(block.quelleId));
-                    return griff ? griff.textMitLage(Number(block.nr) || 1) : [];
-                })().catch(() => []);
-                lagen.set(block.id, l);
-            }
-            return l;
-        };
+        /* EINE RECHNUNG, NICHT ZWEI (§8, E671). Hier standen `griffVon` und
+           `lageVon` — Wort für Wort dasselbe, was seit E670 in `leser.ts`
+           steht. Der Unterschied ist nicht Geschmack: zwei Speicher für
+           dieselbe Sache öffnen dieselbe PDF zweimal, und wer einen von
+           beiden leert, leert den anderen nicht. */
+        const lageVon = (block) => (typeof PdfLeser !== 'undefined' && typeof PdfLeser.lageVonBlock === 'function')
+            ? PdfLeser.lageVonBlock(block)
+            : Promise.resolve([]);
         const norm = (s) => String(s || '').toLowerCase();
         const vereint = (k) => {
             const x0 = Math.min(...k.map(r => r.x)), y0 = Math.min(...k.map(r => r.y));
