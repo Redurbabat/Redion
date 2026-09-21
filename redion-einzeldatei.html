@@ -15483,6 +15483,17 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .wolke-blatt button.wo-wahl{ display:block; width:auto; flex:1 1 190px;
   text-align:left; padding:8px 11px; font-size:12px; line-height:1.45 }
 .wolke-blatt button.wo-wahl>span{ display:block }
+/* DER KNOPF AM ENDE EINER ZEILE (E669). „Zurückziehen" und „Abmelden"
+   standen als blosser Text da — gemessen 18 px hoch, und das ist auch
+   für einen Nebenweg zu wenig (§37 erlaubt 32 px, mit Grund). Wer ein
+   Gerät abmeldet oder eine Marke zurückzieht, tut etwas Endgültiges;
+   das darf man nicht danebentreffen. Gemessen wird die gerenderte Box,
+   nicht diese Zeile (L206) — `test558` hält sie. */
+.wo-zeilenknopf{ min-height:var(--touch-min); padding:0 12px; font-size:12.5px;
+  border:1px solid var(--line); border-radius:8px; background:none;
+  color:var(--text-dim); cursor:pointer; white-space:nowrap }
+.wo-zeilenknopf:hover{ background:var(--bg-hover); color:var(--text) }
+
 /* Der Schliessen-Kreuz oben gehört zur Kopfzeile und nicht dazu. */
 .wolke-blatt .fh button{ border:none; background:none; padding:4px;
   min-height:0 }
@@ -25169,7 +25180,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1267, inhalt: '448f07fa1f2a4625', gebaut: '2026-09-21T04:18:17.512Z' };
+const Stand = { fassung: 1269, inhalt: 'ea428c7b077249f9', gebaut: '2026-09-21T04:51:37.326Z' };
 window.Stand = Stand;
 
 </script>
@@ -152776,6 +152787,11 @@ const Wolke = (() => {
      * ======================================================================*/
     const markeAnlegen = (name, rechte, tage) => ruf('/marken', { m: 'POST', k: { name, bereich: bereich(), rechte, tage } });
     const markenListe = () => ruf('/marken');
+    /* Die angemeldeten Geräte (E669). Dieselbe Bauart wie die Marken daneben:
+       ein Weg zum Lesen, einer zum Zurückziehen. Was hier „kennung" heisst,
+       ist ein Stück des Abdrucks — nie der Token (§42). */
+    const geraeteListe = () => ruf('/konto/geraete');
+    const geraetWeg = (kennung) => ruf('/konto/geraete/weg', { m: 'POST', k: { kennung } });
     const markeWeg = (kennung) => ruf('/marken/' + kennung, { m: 'DELETE' });
     /* ========================================================================
      * 9 · START
@@ -152821,7 +152837,8 @@ const Wolke = (() => {
         hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, zuSchicken, seiteVon,
         geteiltSetzen, istGeteilt, freigeben, freigaben,
         veroeffentlichen, zurueckziehen,
-        markeAnlegen, markenListe, markeWeg, ruf, start };
+        markeAnlegen, markenListe, markeWeg, geraeteListe, geraetWeg,
+        ruf, start };
 })();
 window.Wolke = Wolke;
 
@@ -152983,6 +153000,10 @@ const WolkeFenster = (() => {
                 if (was === 'schluessel') {
                     await schluesselFragen();
                     await zeichne();
+                }
+                if (was === 'geraete') {
+                    o.remove();
+                    geraeteFenster();
                 }
                 if (was === 'marken') {
                     o.remove();
@@ -153210,6 +153231,7 @@ const WolkeFenster = (() => {
                 'Einspielen weitergehen soll."'
             : ' class="prim"') + '>Jetzt abgleichen</button>' +
             '<button data-a="freigeben">Anderes Gerät freigeben</button>' +
+            '<button data-a="geraete">Angemeldete Geräte</button>' +
             '<button data-a="marken">Marken</button>' +
             '</div>' +
             (Wolke.hatSchluessel()
@@ -153599,6 +153621,96 @@ const WolkeFenster = (() => {
     /* ========================================================================
      * 5 · MARKEN
      * ======================================================================*/
+    /* ══ DIE ANGEMELDETEN GERÄTE (E669) ══════════════════════════════════════
+     * In den Einstellungen stand unter „Angemeldete Geräte" der Satz „Die
+     * Liste und der Freigabe-Code stehen im Wolke-Fenster". Den Code gab es.
+     * Die Liste nicht — dieses Fenster zeigte eine einzige Zeile, „Gerät:
+     * <dieses hier>", und das ist ein Spiegel, kein Verzeichnis.
+     *
+     * Der Server wusste es die ganze Zeit: `sitzungen` hält `geraet`,
+     * `angelegt` und `bis`, seit es die Tabelle gibt. Drei Spalten, die
+     * geschrieben und nie gelesen wurden.
+     *
+     * Das EIGENE Gerät steht oben und trägt eine Marke — es abzumelden ist
+     * erlaubt, aber es ist dasselbe wie Abmelden, und das soll man sehen,
+     * bevor man drückt. */
+    const geraeteFenster = async () => {
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        o.innerHTML = '<div class="finder" style="width:min(620px,95vw)">' +
+            '<div class="fh">💻 Angemeldete Geräte<button class="icon-btn" data-a="zu">✕</button></div>' +
+            '<div class="res" id="wo-geraete" style="padding:18px">Wird geladen …</div></div>';
+        document.body.appendChild(o);
+        const datum = (x) => {
+            if (!x)
+                return '';
+            const d = new Date(x);
+            return isNaN(d.getTime()) ? '' : d.toLocaleDateString('de-CH');
+        };
+        const zeichne = async () => {
+            let liste = { geraete: [] };
+            let schiefging = '';
+            try {
+                liste = await Wolke.geraeteListe();
+            }
+            catch (e) {
+                schiefging = e instanceof Error ? e.message : String(e);
+            }
+            const feld = o.querySelector('#wo-geraete');
+            if (!feld)
+                return;
+            const alle = Array.isArray(liste.geraete) ? liste.geraete : [];
+            feld.innerHTML =
+                '<div style="font-size:12.5px; color:var(--text-dim); line-height:1.65; margin-bottom:16px">' +
+                    'Jede Anmeldung ist eine Sitzung. Wer ein Gerät zurückzieht, meldet es ab — ' +
+                    'die Notizen auf jenem Gerät bleiben, nur der Abgleich hört auf.</div>' +
+                    (schiefging
+                        ? '<div style="font-size:12.5px;color:var(--gefahr);line-height:1.6">' +
+                            esc(schiefging) + '</div>'
+                        : alle.length
+                            ? alle.map((x) => '<div style="display:flex;gap:10px;align-items:center;padding:9px 2px;' +
+                                'border-top:1px solid var(--line);font-size:13px">' +
+                                '<div style="flex:1"><b>' + esc(x.geraet || 'Unbekanntes Gerät') + '</b>' +
+                                (x.aktuell ? ' <span class="ez-grau" style="font-size:11.5px">· dieses Gerät</span>' : '') +
+                                '<div style="font-size:11.5px;color:var(--text-faint)">' +
+                                (datum(x.angelegt) ? 'angemeldet am ' + esc(datum(x.angelegt)) : 'angemeldet') +
+                                (datum(x.bis) ? ' · läuft ab am ' + esc(datum(x.bis)) : '') +
+                                '</div></div>' +
+                                '<button class="wo-zeilenknopf" data-weg="' + esc(x.kennung) + '"' +
+                                (x.aktuell ? ' data-selbst="1"' : '') + '>' +
+                                (x.aktuell ? 'Abmelden' : 'Zurückziehen') + '</button>' +
+                                '</div>').join('')
+                            : '<div style="font-size:12.5px;color:var(--text-faint)">' +
+                                'Nur dieses Gerät — oder der Server kennt noch keine Sitzung.</div>');
+        };
+        o.addEventListener('click', async (e) => {
+            if (e.target === o || elVon(e)?.closest('[data-a="zu"]')) {
+                o.remove();
+                return;
+            }
+            const weg = elVon(e)?.closest('[data-weg]');
+            if (!weg)
+                return;
+            /* Das eigene Gerät zurückzuziehen heisst abmelden. Wer das aus einer
+               Liste heraus tut, meint meistens ein anderes — also einmal fragen. */
+            if (weg.dataset.selbst && !confirm('Das ist dieses Gerät. Zurückziehen heisst abmelden.\n\n' +
+                'Deine Notizen bleiben hier — nur der Abgleich hört auf. Fortfahren?'))
+                return;
+            try {
+                await Wolke.geraetWeg(weg.dataset.weg);
+                if (weg.dataset.selbst) {
+                    o.remove();
+                    location.reload();
+                    return;
+                }
+                await zeichne();
+            }
+            catch (err) {
+                UI.toast(err instanceof Error ? err.message : String(err));
+            }
+        });
+        await zeichne();
+    };
     const markenFenster = async () => {
         const o = document.createElement('div');
         o.className = 'overlay';
@@ -153641,7 +153753,11 @@ const WolkeFenster = (() => {
                                 : ' · nie benutzt') +
                             (x.bis ? ' · bis ' + esc(new Date(x.bis).toLocaleDateString('de-CH')) : '') +
                             '</div></div>' +
-                            '<button data-weg="' + esc(x.kennung) + '" style="font-size:12px">Zurückziehen</button>' +
+                            /* DIE NACHBARSTELLE (§45, E669). Derselbe Knopf, dasselbe Mass:
+                               er stand hier mit `font-size:12px` und sonst nichts, also
+                               18 px hoch. Eine Marke zurückzuziehen ist so endgültig wie
+                               ein Gerät abzumelden. */
+                            '<button class="wo-zeilenknopf" data-weg="' + esc(x.kennung) + '">Zurückziehen</button>' +
                             '</div>').join('')
                         : '<div style="font-size:12.5px;color:var(--text-faint)">Noch keine Marke.</div>');
         };
@@ -153685,7 +153801,7 @@ const WolkeFenster = (() => {
        eine Attrappe laufen lassen kann. Vier Ausgänge, die ein Mensch nur zu
        sehen bekommt, wenn sein Server gerade halb eingerichtet ist — genau die
        Sorte Weg, die ohne Prüflauf jahrelang falsch bleibt. */
-    return { dialog, teilenFenster, markenFenster, codeFenster, schluesselFragen,
+    return { dialog, teilenFenster, markenFenster, geraeteFenster, codeFenster, schluesselFragen,
         serverPruefen };
 })();
 window.WolkeFenster = WolkeFenster;

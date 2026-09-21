@@ -530,6 +530,66 @@ const kontoWeg = async (a: any, ablage: any, umwelt: any, t: any, m: any, k: any
     return await sitzungGeben(ablage, konto.id, 'über ' + anbieter, zurueck);
   }
 
+  /* --- Die angemeldeten Geräte (E669) ----------------------------------
+     `sitzungen` hält `geraet`, `angelegt` und `bis`, seit es die Tabelle
+     gibt — geschrieben von `sitzungGeben`, gelesen von niemandem. Die
+     Einstellungen versprachen derweil „Die Liste und der Freigabe-Code
+     stehen im Wolke-Fenster"; den Code gab es, die Liste nicht.
+
+     WAS HINAUSGEHT UND WAS NICHT. Der Token liegt ohnehin nur als
+     Abdruck in der Ablage (`abdruck`, §40). Hinaus geht davon ein
+     STÜCK — sechzehn Zeichen, genug, um ein Gerät eindeutig zu
+     benennen, und zu wenig, um irgendetwas damit zu tun. Der ganze
+     Abdruck geht nicht hinaus: er wäre nicht gefährlich, aber er ist
+     auch nicht nötig, und was nicht nötig ist, bleibt am Server.
+
+     EINE MARKE BEKOMMT SIE NICHT. Die Geräteliste beantwortet die Frage
+     „wer ist alles ich?" — das ist eine Frage des Menschen am Konto,
+     nicht eines Programms mit einem Schlüssel (§26). */
+  if (was === 'geraete') {
+    const wer = await werFragt(ablage, kopf);
+    if (!wer) return fehler(401, 'unauthorized', 'Nicht angemeldet.');
+    if (wer.marke) return fehler(403, 'restricted_resource',
+      'Die Geräteliste gehört dem Menschen am Konto, nicht einem Programm.');
+
+    const meine = await ablage.finde('sitzungen', { kontoId: wer.konto.id });
+    const heute = jetzt();
+    const lebende = meine.filter((s: any) => !s.bis || s.bis >= heute);
+
+    if (!t[2] && m === 'GET') {
+      /* Das eigene Gerät zuerst, danach das zuletzt angemeldete. Wer die
+         Liste öffnet, sucht meistens sich selbst — und gleich danach das
+         fremde Gerät, an das er sich nicht erinnert. */
+      const geraete = lebende.map((s: any) => ({
+        kennung: String(s.token || '').slice(0, 16),
+        geraet:  s.geraet || 'Unbekanntes Gerät',
+        angelegt: s.angelegt || '',
+        bis: s.bis || '',
+        aktuell: !!(wer.sitzung && wer.sitzung.token === s.token)
+      })).sort((x: any, y: any) => (y.aktuell ? 1 : 0) - (x.aktuell ? 1 : 0)
+                                  || String(y.angelegt).localeCompare(String(x.angelegt)));
+      return antwort(200, { geraete }, { 'Access-Control-Allow-Origin': '*' });
+    }
+
+    /* --- Ein Gerät abmelden ------------------------------------------
+       Gesucht wird NUR unter den eigenen Sitzungen. Eine Kennung, die zu
+       einem fremden Konto gehört, findet hier deshalb nichts — nicht,
+       weil sie abgelehnt wird, sondern weil sie gar nicht erst in der
+       Menge liegt, in der gesucht wird. Das ist der sichere Weg herum:
+       ein Filter, der vergessen werden kann, wäre der unsichere. */
+    if (t[2] === 'weg' && m === 'POST') {
+      const gesucht = String((k && k.kennung) || '').trim().toLowerCase();
+      if (gesucht.length < 8) return fehler(400, 'validation_error',
+        'Es fehlt die Kennung des Geräts.');
+      const ziel = meine.find((s: any) => String(s.token || '').startsWith(gesucht));
+      if (!ziel) return fehler(404, 'object_not_found',
+        'Dieses Gerät hängt nicht an deinem Konto.');
+      await ablage.weg('sitzungen', { token: ziel.token });
+      return antwort(200, { ok: true, geraet: ziel.geraet || '' },
+        { 'Access-Control-Allow-Origin': '*' });
+    }
+  }
+
   return fehler(404, 'object_not_found', 'Unbekannter Kontoweg: ' + (was || ''));
 };
 

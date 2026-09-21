@@ -8269,6 +8269,42 @@ Die Prüfung hätte für immer grün gesagt.
 |---|---|---|
 | S1 | Die Ausgangsschlange konnte eine Millisekunde zerschneiden: `edited <= marke` schloss den Rest **für immer** aus. Der Satz stand auf dem Gerät und kam nie in der Wolke an — kein Fehler, keine Meldung | `test113` |
 
+---
+
+## L208 · ~~Die Einstellungen versprachen eine Geräteliste, die es nicht gab~~ — GESCHLOSSEN
+
+**Gefunden am 21. September 2026, geschlossen am selben Tag (E669).**
+
+In den Einstellungen stand unter „Angemeldete Geräte" der Satz:
+
+> „Die Liste und der Freigabe-Code stehen im Wolke-Fenster"
+
+Den Freigabe-Code gab es. **Die Liste nicht.** Das Wolke-Fenster zeigte eine
+einzige Zeile — „Gerät: <dieses hier>" —, und das ist ein Spiegel, kein
+Verzeichnis. Wer wissen wollte, ob noch ein altes Telefon an seinem Konto
+hängt, erfuhr es nirgends; wer eines abmelden wollte, konnte es nicht.
+
+**Der Server wusste es die ganze Zeit.** `sitzungen` hält `geraet`,
+`angelegt` und `bis`, seit es die Tabelle gibt — drei Spalten, die
+`sitzungGeben` schreibt und niemand las. Es fehlte nur der Weg, sie zu
+erfragen.
+
+Das ist §47 in seiner leisesten Form: nicht „im README versprechen, was
+nicht läuft", sondern es in der Oberfläche versprechen, wo es noch
+glaubwürdiger klingt — und wo es niemandem auffällt, weil die Stelle, an
+der man nachsähe, genau die fehlende ist.
+
+**Geschlossen mit:** `GET /konto/geraete` und `POST /konto/geraete/weg` am
+Server, dem Gerätefenster im Wolke-Fenster, und `test558` mit 28 Zusagen.
+Gegen den alten Stand war er rot mit 0 von 18.
+
+**Und was dabei nebenbei herauskam:** die Knöpfe „Zurückziehen" und
+„Abmelden" massen **18 px**. Nicht 44, nicht die 32 eines Nebenwegs — und
+zwar in beiden Fenstern, denn das Markenfenster nebenan baut dieselbe Zeile
+(§45: die Nachbarstelle ansehen). Gemessen wurde die gerenderte Box, nicht
+eine Zeile im Stilblatt (L206).
+
+
 # Anhang C · Geschlossene Lücken in der Reihenfolge ihres Fundes
 
 *(Hier stand bis zum 20. September „Hier endet Anhang B" — eine Überschrift,
@@ -8276,7 +8312,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 20. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 103 Lücken, 53 offene und 50 geschlossene. Der Befehl dazu ist
+Datei führt 104 Lücken, 53 offene und 51 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

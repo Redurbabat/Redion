@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 499 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 500 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1093,6 +1093,17 @@ Knopf, nicht die Taste. Gegen den alten Stand war er rot mit 8 von 13.
 Gezählt am 21. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
 wc -l` sagt 499.*
 
+*Und 500: `test558` — die angemeldeten Geräte gibt es wirklich (E669). Die
+Einstellungen versprachen „Die Liste … steht im Wolke-Fenster"; dort stand
+eine Zeile mit DIESEM Gerät. Gegen den alten Stand war er rot mit 0 von 18
+— und sechs seiner Zusagen waren im ersten Anlauf GRÜN, weil die Liste leer
+war: eine leere Liste enthält kein fremdes Konto und keinen Token, und zwei
+Kennungen aus null Einträgen sind auch verschieden (§55.2). Seine beste
+Gegenprobe gilt dem Escapen: ohne `esc()` zerreisst ein `<script>` im
+Gerätenamen die Zeile — statt zwei Knöpfen steht einer da. Gezählt am
+21. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+500.*
+
 ### Die Befehle
 
 ```txt
@@ -1101,7 +1112,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 499 Läufe
+npm run pruefen                      alle 500 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1188,7 +1199,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 499 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 500 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-648 Entscheidungen, E1 bis E668 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+649 Entscheidungen, E1 bis E669 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -711,6 +711,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E666** — „Erinnerung" führt zu einer Erinnerung: der Slash-Eintrag schrieb `@remind ` in den Text, und NIRGENDS im Programm wurde `@remind` gelesen — während `Werkzeuge.erinnerungSetzen` samt Dialog, Liste und Geräte-Meldung längst dastand. Der Draht liegt im REGISTER (§5 dritter Weg) und nicht im Editor: `bereiche/editor → Werkzeuge` steht bei 1, und das Verzeichnis darf nur schrumpfen. Nach dem Bogen: unverändert 518 Treffer. Wächter `test555`.
 * **E667** — Strg+F findet vier Stellen und zeigte eine: die Seitensuche markierte jede Fundstelle, rollte zur ERSTEN und schrieb „12 Treffer" — zu den elf anderen gab es keinen Weg, denn ihr `keydown` kannte nur `Escape`. Jetzt Enter vor, Umschalt+Enter zurück, ‹ und › als 44-px-Knöpfe (§37), Zähler „2 von 4" statt „4 Treffer" (§38), und ein Ring statt einer Wand. Das BILD fand dazu, was kein Lauf sah: am Telefon lief das Suchfeld links aus dem Bild (`-90 … 368` bei 390 px), weil die zwei neuen Knöpfe die Leiste auf 458 px verbreiterten (§55.1). Wächter `test556`.
 * **E668** — Fett ist ein Schalter, und Strg+B nimmt denselben Weg: `umschliesse` stempelte nur (`****Wort****`, gezeichnet als sichtbares `**Wort**`), und `editor.ts` hatte eine ZWEITE Fassung, die `ct.textContent` zurückschrieb — den GEZEICHNETEN Text. Strg+B in `Ein **fetter** Satz` machte daraus `Ein fetter **Satz**`: die vorhandene Auszeichnung gelöscht, ohne Meldung. §8 wörtlich, und der Grund, warum E650 nur den halben Weg erreichte. Dazu: `*` ist die halbe `**` — Kursiv auf fettem Wort ergibt `***fetter***`, nicht `*fetter*`. Wächter `test557`.
+* **E669** — Die angemeldeten Geräte gibt es jetzt wirklich: die Einstellungen versprachen „Die Liste und der Freigabe-Code stehen im Wolke-Fenster" — den Code gab es, die Liste nicht. `sitzungen` hält `geraet`, `angelegt` und `bis`, seit es die Tabelle gibt; geschrieben, nie gelesen. Neu: `GET /konto/geraete`, `POST /konto/geraete/weg`, das Gerätefenster. Hinaus geht ein STÜCK des Abdrucks, nie der Token (§42); ein fremdes Konto ist nicht gefiltert, sondern gar nicht erst in der Menge, in der gesucht wird; eine Marke bekommt die Liste nicht (§26). Aus dem Bild kam dazu: die Knöpfe massen 18 px — auch im Markenfenster nebenan (§37, §45). Wächter `test558`.
 
 ---
 
@@ -54661,3 +54662,78 @@ Stelle sich nicht sicher bestimmen lässt, wird weiterhin nicht geraten.
 **Wächter `test557`**, 13 Zusagen. Gegen den alten Stand war er rot mit
 8 von 13, und zwei seiner Zeilen sagen alles: `Ein schlichter ****Satz****`
 und `Ein fetter **Satz**`.
+
+
+## E669 — Die angemeldeten Geräte gibt es jetzt wirklich
+
+**Was wurde entschieden?** Der Server bekommt zwei Wege — `GET
+/konto/geraete` und `POST /konto/geraete/weg` —, und das Wolke-Fenster
+bekommt die Liste, die die Einstellungen seit Langem versprechen.
+
+**Warum?** Weil in den Einstellungen unter „Angemeldete Geräte" stand:
+„Die Liste und der Freigabe-Code stehen im Wolke-Fenster." Den Code gab es.
+Die Liste nicht — das Fenster zeigte eine einzige Zeile, „Gerät: <dieses
+hier>", und das ist ein Spiegel, kein Verzeichnis.
+
+Das ist §47 in seiner leisesten Form. „Im README versprechen, was nicht
+läuft" steht dort als eigene Zeile; es in der **Oberfläche** zu versprechen
+ist dasselbe, nur glaubwürdiger — und es fällt niemandem auf, weil die
+Stelle, an der man nachsähe, genau die fehlende ist.
+
+**Und der Server wusste es die ganze Zeit.** `sitzungen` hält `geraet`,
+`angelegt` und `bis`, seit es die Tabelle gibt. `sitzungGeben` schreibt
+alle drei; gelesen hat sie niemand. Es fehlte kein Datenmodell, sondern
+eine Frage.
+
+**Was hinausgeht und was nicht (§40, §42).** Der Token liegt ohnehin nur
+als Abdruck in der Ablage. Hinaus geht davon ein **Stück** — sechzehn
+Zeichen, genug, um ein Gerät eindeutig zu benennen, und zu wenig, um damit
+etwas zu tun. Der ganze Abdruck geht nicht hinaus: er wäre nicht
+gefährlich, aber er ist auch nicht nötig, und was nicht nötig ist, bleibt
+am Server.
+
+**Wie das fremde Konto ausgeschlossen wird.** Nicht durch einen Vergleich,
+sondern durch die Menge: gesucht wird ausschliesslich unter den Sitzungen
+des eigenen Kontos. Eine fremde Kennung findet dort nichts — nicht, weil
+sie abgelehnt wird, sondern weil sie gar nicht erst in der Menge liegt, in
+der gesucht wird. Ein Filter, den man vergessen kann, wäre der unsichere
+Weg herum.
+
+**Eine Marke bekommt die Liste nicht.** Sie beantwortet die Frage „wer ist
+alles ich?" — das ist eine Frage des Menschen am Konto, nicht eines
+Programms mit einem Schlüssel (§26).
+
+**Was war die Alternative?** Den Satz in den Einstellungen streichen und
+ehrlich schreiben, dass es keine Liste gibt. Das wäre §33 genügt und §24
+nicht: „der Nutzer entscheidet, wo seine Daten liegen" heisst auch, dass er
+wissen muss, welche Geräte an seinem Konto hängen. Ein altes Telefon, das
+niemand mehr hat und das weiter abgleicht, ist genau der Fall, für den es
+eine Liste braucht.
+
+**Was kostet es?** Zwei Wege am Server, ein Fenster, ein Knopf. Und ein
+zweiter Weg, sich abzumelden — das eigene Gerät steht mit in der Liste.
+Weil das aus einer Liste heraus leicht zu verwechseln ist, fragt es einmal
+nach, bevor es passiert.
+
+**Zwei Funde am Rande, beide aus dem Bild (§55.3):**
+
+1. Die Knöpfe „Zurückziehen" und „Abmelden" massen **18 px**. Nicht 44,
+   nicht die 32, die §37 einem Nebenweg mit geschriebenem Grund erlaubt —
+   und ein Knopf, der ein Gerät abmeldet, ist nichts, was man danebentreffen
+   soll. Gemessen wurde die **gerenderte** Box, nicht eine Zeile im
+   Stilblatt (L206).
+2. Dieselbe Zeile baut das **Markenfenster** nebenan, mit demselben Mass.
+   §45 nennt es den zweitteuersten wiederkehrenden Fehler dieses Projekts:
+   „eine Sache an einer Stelle reparieren und die Nachbarstelle nicht
+   ansehen." Beide haben jetzt `.wo-zeilenknopf`.
+
+**Wächter `test558`**, 28 Zusagen, ohne festen Port (L205). Gegen den alten
+Stand war er rot mit **0 von 18** — und die ersten sechs davon waren im
+ersten Anlauf **grün, weil die Liste leer war**: eine leere Liste enthält
+kein fremdes Konto, keinen Token, und zwei Kennungen aus null Einträgen
+sind auch verschieden. §55.2, zum wiederholten Mal in diesem Monat.
+
+**Die überzeugendste Gegenprobe** war aber die zum Escapen: ohne `esc()`
+um den Gerätenamen zerreisst ein `<script>` im Namen die ganze Zeile —
+statt zwei Knöpfen stand einer da, und der Klick fand nichts mehr. §19 ist
+hier keine Theorie: der Gerätename kommt vom Server und ist Nutzertext.

@@ -3873,6 +3873,17 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .wolke-blatt button.wo-wahl{ display:block; width:auto; flex:1 1 190px;
   text-align:left; padding:8px 11px; font-size:12px; line-height:1.45 }
 .wolke-blatt button.wo-wahl>span{ display:block }
+/* DER KNOPF AM ENDE EINER ZEILE (E669). „Zurückziehen" und „Abmelden"
+   standen als blosser Text da — gemessen 18 px hoch, und das ist auch
+   für einen Nebenweg zu wenig (§37 erlaubt 32 px, mit Grund). Wer ein
+   Gerät abmeldet oder eine Marke zurückzieht, tut etwas Endgültiges;
+   das darf man nicht danebentreffen. Gemessen wird die gerenderte Box,
+   nicht diese Zeile (L206) — `test558` hält sie. */
+.wo-zeilenknopf{ min-height:var(--touch-min); padding:0 12px; font-size:12.5px;
+  border:1px solid var(--line); border-radius:8px; background:none;
+  color:var(--text-dim); cursor:pointer; white-space:nowrap }
+.wo-zeilenknopf:hover{ background:var(--bg-hover); color:var(--text) }
+
 /* Der Schliessen-Kreuz oben gehört zur Kopfzeile und nicht dazu. */
 .wolke-blatt .fh button{ border:none; background:none; padding:4px;
   min-height:0 }

@@ -977,6 +977,30 @@ const ANSICHTEN: Record<string, {
   },
 
 
+  /* --- Die angemeldeten Geräte (E669) -------------------------------------
+     Die Einstellungen versprachen „Die Liste … steht im Wolke-Fenster";
+     dort stand eine einzige Zeile mit DIESEM Gerät. Der Server wird hier
+     durch einen Stellvertreter ersetzt — zu sehen ist das Fenster. */
+  geraete: {
+    titel: 'Angemeldete Geräte im Wolke-Fenster',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      (Wolke as any).geraeteListe = async () => ({ geraete: [
+        { kennung: 'aaaabbbbccccdddd', geraet: 'Arbeitsrechner · Firefox',
+          angelegt: '2026-09-01T10:00:00.000Z', bis: '2026-10-01T10:00:00.000Z', aktuell: true },
+        { kennung: '1111222233334444', geraet: 'iPhone · Safari',
+          angelegt: '2026-08-20T08:30:00.000Z', bis: '2026-09-19T08:30:00.000Z', aktuell: false },
+        { kennung: '5555666677778888', geraet: 'Altes Notebook',
+          angelegt: '2026-06-02T19:05:00.000Z', bis: '2026-07-02T19:05:00.000Z', aktuell: false }
+      ] });
+      await WolkeFenster.geraeteFenster();
+      await new Promise(r => setTimeout(r, 450));
+    }
+  },
+
+
   papier: {
     titel: 'Die Papiervorlagen am A4-Blatt',
     bauen: async () => {
