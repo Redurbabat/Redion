@@ -2538,6 +2538,44 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  spitze: {
+    titel: 'Der Füller läuft spitz aus (E673)',
+    /* Vier Zeilen, jede mit einer Welle, einem Haken und einem Punkt:
+       Füller fein, Füller breit, Pinsel, Bleistift. Die ersten drei
+       müssen an beiden Enden spitz auslaufen, der Bleistift nicht — und
+       der Punkt muss ein Punkt bleiben (test561 §3).
+         node bilder.mts spitze */
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('zeichnen:stift', 'fueller');
+      const seite = Store.addPage(null, { text: 'Die Spitze', icon: '🖋' });
+      const marken: any[] = [];
+      const zeile = (y: number, stil: string, farbe: string, breite: number, k: string): void => {
+        /* Die Welle: 121 Punkte über 360 pt, Druck leicht → fest → leicht. */
+        marken.push({ id: k + 'w', art: 'stift', stil, farbe, breite,
+          pts: Array.from({ length: 121 }, (_v, i) => [60 + i * 3, y + Math.sin(i / 120 * Math.PI * 3) * 20]),
+          pressure: Array.from({ length: 121 }, (_v, i) => Math.round((0.35 + 0.45 * Math.sin(i / 120 * Math.PI)) * 100) / 100) });
+        /* Der Haken: 12 pt, und der Punkt: 2 pt. */
+        marken.push({ id: k + 'h', art: 'stift', stil, farbe, breite,
+          pts: Array.from({ length: 13 }, (_v, i) => [450 + i, y - 6 + i * 0.9]),
+          pressure: Array.from({ length: 13 }, () => 0.6) });
+        marken.push({ id: k + 'p', art: 'stift', stil, farbe, breite,
+          pts: Array.from({ length: 5 }, (_v, i) => [490 + i * 0.5, y]),
+          pressure: Array.from({ length: 5 }, () => 0.6) });
+      };
+      zeile(90, 'fueller', '#1a1a1a', 2.4, 'a');
+      zeile(170, 'fueller', '#1f4fa8', 5, 'b');
+      zeile(250, 'pinsel', '#b8312f', 2.4, 'c');
+      zeile(330, 'bleistift', '#333333', 2.4, 'd');
+      Store.addBlock(seite.id, 'blatt', { text: '', papier: 'liniert',
+        blattBreite: 595.28, blattHoehe: 400, raumVersion: 1, marken });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+    }
+  },
+
   laser: {
     titel: 'Der Laserpointer: zeigen statt schreiben (E512)',
     bauen: async () => {

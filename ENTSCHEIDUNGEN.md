@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-652 Entscheidungen, E1 bis E672 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+653 Entscheidungen, E1 bis E673 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -715,6 +715,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E670** — Den Text einer PDF ändern, ohne die PDF anzufassen: Redurs Frage vom 21. September. Neues Werkzeug „Text ändern" — auf ein Wort tippen, ändern, fertig. Die Änderung ist eine MARKE (Deckel in Papierfarbe + neuer Text auf derselben Grundlinie), also rückgängig, versioniert, in der Sicherung und im ausgegebenen PDF; das Original bleibt Byte für Byte, und `test559` misst das mit einer SHA-256-Summe. Was es NICHT kann, steht im Werkzeugtitel: der Text fliesst nicht. `stueckBei`/`lageVonBlock` in `leser.ts` statt einer zweiten Rechnung im Studio (§8). Zwei Funde bestehender Wächter: `inkText/inkText = 100 %` (E515-Regel) und die Werkzeugzahl 13→14. Wächter `test559`.
 * **E671** — Was der erste volle Lauf seit elf Bögen gefunden hat: 501 Läufe, 491 grün, 10 rot, 112 min. Im Hauptbaum nachgemessen waren es ACHT (test270 und test440 sind Artefakte des Arbeitsbaums, §30). Sieben der acht waren meine letzten drei Bögen. Zwei Entscheidungen: der Speicher der PDF-Quellen steht nur noch in `leser.ts` (E670 hatte einen zweiten stehenlassen — `test537` fand ihn über die Querverweiszahl), und die Blatt-Werkzeugleiste bleibt eine Aufzählung (der Formen-Knopf trägt das Zeichen der zuletzt gewählten Form, E515). Der echte Fund: „Text ändern" hatte im Studio einen Knopf und auf dem Blatt keinen. Der Messfehler: `test410` las ein `<style>` aus einem Kommentar und von dort 5,3 MB JavaScript als Stilblatt.
 * **E672** — Ein Ordner hat eine Farbe, und man kann sie wechseln: Redurs Wunsch vom 21. September. Kein neues Feld (`color`, §52.8), kein zweiter Wähler (`Notebook.farbMenue` mit `danach`), eine Whitelist (`Farben.kennung`/`Farben.marke`). Die Farbe steht am Reiter und Körper des gezeichneten Ordners (`--ordner-farbe`), am Fach, in der Seitenleiste und im Ablagebaum. Der Fund beim Bauen: die Rücken-Regel der Hefte kam am Ordner mit 0 px heraus, die Farbe fiel auf `currentColor` — der Wächter misst deshalb den Reiter Kanal für Kanal gegen `--c-blue`. Wächter `test560`.
+* **E673** — Der Füller läuft spitz aus: Redurs „gleich wie GoodNotes" vom 21. September, erster Bogen. Bis dahin waren beide Kappen Halbkreise in voller Breite — jeder Buchstabe endete mit einem Klecks. EINE Kurve (`InkGeometry.spitzeFaktor`, Weglänge statt Punktzahl), EINE Stelle für die halben Breiten (`halbeBreiten`, Bildschirm und PDF — vorher zwei Abschriften, derselbe Fund wie E623), die Spitze als Feld im Register `STIFTE` (§8). Nass nur vom Anfang her, trocken an beiden Enden; kurze Striche bekommen eine kurze Spitze, damit ein Punkt ein Punkt bleibt. Kein Druckwert wird angefasst (§9). Wächter `test561`.
 
 ---
 
@@ -54957,3 +54958,103 @@ Hexwerte.
 Stand war er rot mit **9 von 26** — und drei der neun grünen hielten
 den Zustand, der schon gut war (kein Attribut ohne Farbe, nichts im
 Markup, keine Ausnahme).
+
+---
+
+## E673 — Der Füller läuft spitz aus
+
+**Redur, 21. September 2026 (wörtlich):** „ich will das du die stift und
+heichenb verbessern, und gleich wie goodnotes machen".
+
+**Was wurde entschieden?** Füller und Pinsel setzen mit der Spitze auf und
+laufen beim Abheben aus — wie in GoodNotes. Das ist der erste Bogen zu
+Redurs Satz; die Reihenfolge stand fest, bevor eine Zeile geschrieben
+wurde: zwei Leser haben den Stiftweg und die Werkzeuge gelesen (nur
+gelesen, kein Prüflauf daneben, §30), und beide nannten die Verjüngung an
+erster Stelle, weil sie das ist, was man beim ersten „e" **sieht**, ohne
+zu messen.
+
+**Was war?** `InkGeometry.outline` und `Feder.d()` schliessen den Umriss
+vorn und hinten mit einem `A`-Bogen, dessen Radius die halbe Breite des
+ersten und des letzten Punkts ist. `druckFaktor` liess den Füller nie
+unter 55 % seiner Grundbreite fallen, und `pointerup` schreibt den
+letzten Druck fort (E376) — ein Stift, der abhebt, meldet 0, und 0 wäre
+falsch. Zusammen hiess das: jeder Strich beginnt und endet mit einem
+runden Klecks in voller Breite. `grep -i 'taper|verjüng'` über
+`stroke.ts`, `geometry.ts`, `marken.ts` traf nur Kommentare.
+
+**Wie es gebaut ist — drei Entscheidungen, keine davon still:**
+
+1. **Eine Kurve, nicht zwei.** `InkGeometry.spitzeFaktor(weg, laenge, min)`
+   geht quadratisch auslaufend von `min` bei Weglänge 0 auf 1 bei
+   `laenge`. Gemessen wird **Weglänge**, nicht Punktzahl — sonst hinge
+   die Spitze an der Abtastrate des Stifts, und ein 240-Hz-Stift hätte
+   eine viermal kürzere Feder als ein 60-Hz-Finger (die Lehre aus E504).
+   Der nasse Strich nimmt dieselbe Kurve vom Anfang her (`nassSpitze`,
+   ein Faktor auf `halbeBreite`); das Ende kennt er nicht, bis die Hand
+   abhebt — dann baut `finish` den Knoten aus der Marke neu, und die
+   zweite Spitze steht. `test561 §6` hält genau das: nass Anfang 0,3,
+   Ende 1,2; trocken 0,3 und 0,3.
+2. **Eine Stelle für die halben Breiten.** Sie standen **zweimal**,
+   zeichengleich — in `zeichneMarke` für den Bildschirm und in
+   `alsAnnotation` für das PDF. E623 hatte dasselbe bei der Deckung
+   gefunden. Mit der Spitze wären es zwei Rechnungen geworden, die
+   auseinanderlaufen können, ohne dass ein Lauf es merkt. Jetzt heisst
+   sie `halbeBreiten(mark, points)`: Grundbreite, Druckkurve, Neigung,
+   Spitze — und `test561 §1` misst den Bildschirm-Bogen gegen die
+   PDF-Kontur (0,3 gegen 0,6/2).
+3. **Die Spitze steht im Register.** `STIFTE` trägt `spitze: 0.25` am
+   Füller und `0.12` am Pinsel; wer keine hat, setzt mit voller Breite
+   auf — der Bleistift (Graphit hat keine Feder), der Schutzleiter (eine
+   Leitung hat eine Stärke, E490), die Linien ohnehin. Ein `if (stil ===
+   'fueller')` im Zeichner wäre der Sonderfall, den §5 Regel 3 verbietet.
+
+**Kurze Striche — und der Fund, den nur das Bild zeigte (§55.1).** Ein
+i-Punkt ist zwei Punkte lang; eine Spitze von fünf Punkten je Ende hätte
+ihn zum Splitter gemacht. Der erste Stand kürzte deshalb den **Weg** der
+Spitze auf höchstens 40 % der Strichlänge je Ende, und `test561 §3` war
+damit grün: der 2-pt-Punkt des 2,4-pt-Füllers blieb in der Mitte 2,4
+breit. Dann kam das Bild — und der Punkt des **5-pt-Füllers** stand als
+senkrechter Splitter da: zwei Punkte lang, fünf hoch, an beiden Enden auf
+ein Viertel gespitzt. Die Spitze war kurz, aber immer noch spitz. Ein
+Strich, der kürzer ist als seine Feder, ist ein Klecks, keine Feder.
+Seither wird die Spitze auch **stumpfer**, je weniger von zwei ganzen
+Federn in den Strich passt (`anteil = gesamt / (2·laenge)`, die
+Untergrenze wandert von `min` auf 1). Der Wächter hat das erst nach dem
+Bild bekommen — zwei Zusagen, rot am alten Stand mit „Anfang 1.25 gegen
+Mitte 5", jetzt 4,66 gegen 5 beim Punkt und 2,96 gegen 5 beim 12-pt-Haken,
+der trotzdem sichtbar ausläuft.
+
+**Was NICHT angefasst wird — und warum.** Kein Druckwert. Die Spitze ist
+ein Aussehen; `pressure` bleibt, was der Sensor gemeldet hat (`test561
+§6` liest den gespeicherten Druck nach dem Abheben: 0,5 überall). Und
+kein neues Feld an der Marke: alter Bestand mit `stil: 'fueller'` wird
+seit E673 **auch** spitz gezeichnet. Das ist eine sichtbare Änderung an
+vorhandenen Seiten, und sie ist bewusst: die Alternative — ein Feld
+`spitze: true` nur an neuen Marken — hätte eine Seite von gestern und
+eine von heute mit zwei Federn geschrieben, nebeneinander, für immer. Die
+Daten sind byteweise dieselben; was sich ändert, ist, wie eine Feder
+aussieht, wie bei der Deckung (E623) und den Farbtokens (§39).
+
+**Was war die Alternative?** Die Spitze in `seiten`/`versatz` selbst zu
+bauen (die Stelle, die die Kontur rechnet). Dagegen: `test366 §1`
+verlangt, dass `Feder.d()` zeichengleich mit `outline` ist — bei
+gleichen Punkten und gleichen halben Breiten. Wer die Breite **vor**
+beiden anfasst, lässt diese Zusage stehen; wer sie **in** beiden anfasst,
+schreibt sie zweimal. Deshalb ist die Spitze ein Faktor auf `halb`, und
+`test366` blieb grün, ohne dass eine Zeile daran geändert wurde.
+
+**Was kostet es?** Eine Weglängensumme je Strich (O(n), einmal beim
+Zeichnen), ein Faktor je Punkt im nassen Strich. Und die Untergrenze von
+`druckFaktor` (55 %) ist noch da: sie gilt für die **Mitte** des Strichs,
+und dort war sie nie das Problem. Ob sie sinken soll (mehr Ausdruck bei
+leichter Hand) ist die Kennlinienfrage, die der Leser als Lücke 3 nennt —
+ein eigener Bogen, weil er alte Striche in der Mitte verändert.
+
+**Wächter `test561`**, 24 Zusagen, ohne festen Port. Gegen den alten
+Stand war er rot mit **13 von 22** und hat die Zahl wörtlich gedruckt,
+um die es geht: „Anfang 2.4 gegen Mitte 2.4 · Bögen [1.2,1.2]". Die
+Gegenprobe — `spitzeFaktor` gibt 1 zurück — macht sieben Zusagen rot,
+darunter die nasse. Die zwei Zusagen zum breiten Punkt kamen nach dem
+Bild dazu und waren gegen den ersten Stand rot (22 von 24). Bild:
+`node bilder.mts spitze`.

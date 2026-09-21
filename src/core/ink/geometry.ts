@@ -140,6 +140,57 @@ const InkGeometry = (() => {
     return { links, rechts, anfang: halb(0), ende: halb(n - 1) };
   };
 
+  /* ══ DIE SPITZE (E673) ═══════════════════════════════════════════════════
+     Ein Füller setzt nicht mit voller Breite auf und hört nicht mit voller
+     Breite auf: die Feder berührt das Papier mit der Spitze, die Tinte
+     läuft an, und beim Abheben läuft sie aus. Bis E673 waren beide Kappen
+     Halbkreise in VOLLER Breite — `outline` und `Feder.d()` ziehen den
+     Bogen mit dem Radius der ersten und der letzten halben Breite. Jeder
+     Buchstabe endete mit einem runden Klecks, und das war der Unterschied
+     zu GoodNotes, den man beim ersten „e" sieht, ohne zu messen.
+
+     `spitzeFaktor` ist EINE Kurve für den nassen und den trockenen Strich:
+     von `min` bei Weglänge 0 auf 1 bei Weglänge `laenge`, quadratisch
+     auslaufend — schnell dicker, dann sanft. Gemessen wird WEGLÄNGE, nicht
+     Punktzahl: sonst hinge die Spitze an der Abtastrate des Stifts (E504).
+     Der nasse Strich kennt nur seinen Anfang und nimmt die Kurve dort;
+     `verjuengen` legt sie an BEIDE Enden eines fertigen Strichs — und
+     kürzt sie bei kurzen Strichen, damit ein Punkt ein Punkt bleibt und
+     kein Splitter wird. Die halben Breiten sind ein AUSSEHEN; was der
+     Sensor an Druck gemeldet hat, bleibt in der Marke unverändert (§9). */
+  const spitzeFaktor = (weg: number, laenge: number, min: number): number => {
+    if (!(laenge > 0) || !(min < 1) || !(weg < laenge)) return 1;
+    const t = Math.max(0, weg / laenge);
+    return min + (1 - min) * t * (2 - t);
+  };
+  const verjuengen = (raw: unknown, halfWidths: number[], min: number, laenge: number): number[] => {
+    const input = points(raw);
+    const n = input.length;
+    const halb = (i: number): number => {
+      const w = Number(halfWidths[Math.min(i, halfWidths.length - 1)]);
+      return Number.isFinite(w) ? w : 1;
+    };
+    const aus = Array.from({ length: n }, (_q, i) => halb(i));
+    if (n < 3 || !(min < 1) || !(laenge > 0)) return aus;
+    const weg: number[] = [0];
+    for (let i = 1; i < n; i++) {
+      weg.push(weg[i - 1]! + Math.hypot(input[i]![0] - input[i - 1]![0], input[i]![1] - input[i - 1]![1]));
+    }
+    const gesamt = weg[n - 1]!;
+    /* Ein kurzer Strich bekommt eine kurze UND eine stumpfere Spitze. Der
+       Weg je Ende ist höchstens 40 % der Strichlänge, damit ein Fünftel in
+       der Mitte voll bleibt — und die Spitze selbst wird umso stumpfer, je
+       weniger von zwei ganzen Federn in den Strich passt: ein Strich, der
+       kürzer ist als seine Feder, ist ein Klecks, keine Feder. Das Bild
+       hat es gezeigt (§55.1): mit dem 5-pt-Füller war ein 2-pt-Punkt ein
+       senkrechter Splitter, weil die Spitze zwar kurz, aber immer noch
+       auf ein Viertel spitz war. */
+    const anteil = Math.min(1, gesamt / (2 * laenge));
+    const stumpf = 1 - (1 - min) * anteil;
+    const l = Math.min(laenge, gesamt * 0.4);
+    return aus.map((h, i) => h * spitzeFaktor(weg[i]!, l, stumpf) * spitzeFaktor(gesamt - weg[i]!, l, stumpf));
+  };
+
   const outline = (raw: unknown, halfWidths: number[]): string => {
     const kanten = seiten(raw, halfWidths);
     if (!kanten) return '';
@@ -992,7 +1043,8 @@ const InkGeometry = (() => {
     return mark;
   };
 
-  return { points, simplify, simplifyIndices, densify, outline, outlinePunkte, path, rectangle, bounds, move, intersects,
+  return { points, simplify, simplifyIndices, densify, outline, outlinePunkte, spitzeFaktor, verjuengen,
+    path, rectangle, bounds, move, intersects,
     distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale, rotate,
     textWidth, textLines, textLayout, LINIEN, SCHRIFTEN, schriftStapel, gemessenAn,
     /* Seit E474: der aufrechte Kasten der Marke OHNE ihre Drehung, ihre

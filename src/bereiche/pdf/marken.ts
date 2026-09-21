@@ -139,9 +139,15 @@ const Marken = (() => {
      Breite dem Druck folgt: der Fueller massvoll, der Pinsel kraeftig.
      Alte Marken ohne `stil` bleiben, wie sie waren (§53.3). */
   const STIFTE = [
-    { id: 'fueller', name: 'Füller', zeichen: '🖋', sym: 'penFountain' },
+    /* `spitze` (E673): auf wie viel seiner Breite der Strich an Anfang und
+       Ende ausläuft — der Füller auf ein Viertel, der Pinsel auf ein
+       Achtel. Wer keine `spitze` hat, setzt mit voller Breite auf: der
+       Bleistift (Graphit hat keine Feder), der Schutzleiter (eine Leitung
+       hat eine Stärke, E490), und die Linien ohnehin. Die Zahl steht HIER,
+       im Register, nicht als Sonderfall im Zeichner (§8). */
+    { id: 'fueller', name: 'Füller', zeichen: '🖋', sym: 'penFountain', spitze: 0.25 },
     { id: 'kugel',   name: 'Kugelschreiber', zeichen: '🖊', sym: 'penBall' },
-    { id: 'pinsel',  name: 'Pinsel', zeichen: '🖌', sym: 'penBrush' },
+    { id: 'pinsel',  name: 'Pinsel', zeichen: '🖌', sym: 'penBrush', spitze: 0.12 },
     /* DER BLEISTIFT (E465), wie GoodNotes' Pencil: duenn, leicht
        durchscheinend, mit koerniger Kante — die Flaeche des Fuellers,
        nur schmaler und mit 72 % Deckung. Er steht am Ende der Reihe,
@@ -743,6 +749,37 @@ const Marken = (() => {
   /** Die drei Stifte, die als FLAECHE gezeichnet werden (der Kugelschreiber ist die Linie). */
   const FLAECHEN_STIFTE = new Set(['fueller', 'pinsel', 'bleistift']);
 
+  /* ══ DIE SPITZE EINES STIFTS (E673) ══════════════════════════════════════
+     `spitzeVon` liest das Register: 1 heisst „keine Spitze", und genau das
+     bekommt jeder Stift, der keine eingetragen hat. `spitzeLaenge` ist der
+     Weg, über den die Feder auf volle Breite kommt — gut das Doppelte der
+     Grundbreite, mindestens 3 pt, höchstens 12: bei 2,4 pt sind das gut
+     fünf Punkte, ein knapper Millimeter Feder. */
+  const spitzeVon = (stil: string): number => {
+    const s = (STIFTE as readonly { id: string; spitze?: number }[]).find(x => x.id === stil);
+    const v = Number(s?.spitze);
+    return Number.isFinite(v) && v > 0 && v < 1 ? v : 1;
+  };
+  const spitzeLaenge = (base: number): number => Math.max(3, Math.min(12, base * 2.2));
+
+  /* ══ DIE HALBEN BREITEN EINES FLÄCHENSTRICHS — EINE STELLE (E673) ═══════
+     Sie standen ZWEIMAL, zeichengleich: in `zeichneMarke` für den
+     Bildschirm und in `alsAnnotation` für das PDF — derselbe Fund wie bei
+     `deckungVon` (E623). Mit der Spitze wären es zwei Rechnungen geworden,
+     die auseinanderlaufen können, ohne dass ein Lauf es merkt. Jetzt eine:
+     Grundbreite, Druckkurve, Neigung, Spitze. Eine Marke ohne `neigung`
+     ist alter Bestand oder mit der Maus gezogen — dann ist die Neigung
+     überall 0 (§9: rückwärts denken). */
+  const halbeBreiten = (mark: any, points: number[][]): number[] => {
+    const base = Math.max(0.5, Number(mark?.breite) || BREITEN[1]);
+    const stil = String(mark?.stil || '');
+    const druck: number[] = Array.isArray(mark?.pressure) ? mark.pressure.map(Number) : [];
+    const neig: number[] = Array.isArray(mark?.neigung) ? mark.neigung.map(Number) : [];
+    const halb = points.map((_p, i) => base / 2 * druckFaktor(stil,
+      druck[i] ?? druck[druck.length - 1] ?? 0.5, neig[i] ?? neig[neig.length - 1] ?? 0));
+    return InkGeometry.verjuengen(points, halb, spitzeVon(stil), spitzeLaenge(base));
+  };
+
   const svg = (name: string, attributes: Record<string, unknown> = {}): SVGElement => {
     const element = document.createElementNS(NS, name);
     Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, String(value)));
@@ -818,15 +855,14 @@ const Marken = (() => {
     const punkte = InkGeometry.points(mark.pts);
     const base = Math.max(0.5, Number(mark.breite) || BREITEN[1]);
     const flaeche = mark.art === 'stift' && FLAECHEN_STIFTE.has(String(mark.stil));
-    const druck: number[] = Array.isArray(mark.pressure) ? mark.pressure.map(Number) : [];
     /* DIE NEIGUNG GEHT MIT INS PDF (E507). Ohne sie käme ein schattierter
        Bleistiftstrich dünner heraus, als er auf dem Bildschirm aussah —
        und der Export soll zeigen, was dasteht. */
     const neig: number[] = Array.isArray(mark.neigung) ? mark.neigung.map(Number) : [];
+    /* Die halben Breiten kommen seit E673 aus `halbeBreiten` — derselben
+       Rechnung wie am Bildschirm, mit der Spitze. */
     const kontur = flaeche && punkte.length >= 3
-      ? InkGeometry.outlinePunkte(punkte, punkte.map((_p, i) =>
-          base / 2 * druckFaktor(String(mark.stil), druck[i] ?? druck[druck.length - 1] ?? 0.5,
-            neig[i] ?? neig[neig.length - 1] ?? 0)))
+      ? InkGeometry.outlinePunkte(punkte, halbeBreiten(mark, punkte))
       : null;
     return {
       striche: [punkte.map(q => [q[0], q[1]])],
@@ -1360,15 +1396,11 @@ const Marken = (() => {
       /* DER STRICH ALS FLAECHE (E351): links und rechts der Mittellinie eine
          Kontur, deren Abstand dem Druck folgt. Ohne Druckwerte je Punkt
          (alter Bestand) bleibt es beim gleichmaessigen Strich unten. */
-      const base = Math.max(0.5, Number(mark.breite) || BREITEN[1]);
-      const druck: number[] = Array.isArray(mark.pressure) ? mark.pressure.map(Number) : [];
-      /* Eine Marke ohne `neigung` ist alter Bestand oder mit der Maus
-         gezogen — dann ist die Neigung überall 0, und es kommt heraus,
-         was vorher herauskam (§9: rückwärts denken). */
+      /* Die halben Breiten — Druck, Neigung, Spitze — kommen seit E673
+         aus `halbeBreiten`, derselben Rechnung wie im PDF-Export. `neig`
+         bleibt hier nur für die Deckung des Bleistifts. */
       const neig: number[] = Array.isArray(mark.neigung) ? mark.neigung.map(Number) : [];
-      const neigBei = (i: number): number => neig[i] ?? neig[neig.length - 1] ?? 0;
-      const halb = points.map((_p, i) => base / 2 * druckFaktor(String(mark.stil),
-        druck[i] ?? druck[druck.length - 1] ?? 0.5, neigBei(i)));
+      const halb = halbeBreiten(mark, points);
       element = svg('path', { d: InkGeometry.outline(points, halb), fill: color, stroke: color,
         'stroke-width': 0.25, 'stroke-linejoin': 'round' });
       if (mark.stil === 'pinsel') element.setAttribute('opacity', String(deckungVon(art, 'pinsel')));
@@ -1706,6 +1738,9 @@ const Marken = (() => {
        der Knoten einmal ganz neu gebaut statt sein `d` gesetzt. */
     let nassFlaeche = false;
     let bildWunsch = 0;
+    /* Der Weg, den der laufende Strich seit dem Aufsetzen zurückgelegt hat
+       (E673) — daran hängt die Spitze des nassen Strichs. */
+    let wegNass = 0;
     let selection = new Set<string>();
     let selectDrag: any = null;
     const historyUndo: any[][] = [];
@@ -2412,6 +2447,7 @@ const Marken = (() => {
       const druck = druckGlatt ? druckGlatt(drucken) : drucken;
       const last = running.pts[running.pts.length - 1];
       if (last && Math.abs(last[0] - point[0]) < 0.6 && Math.abs(last[1] - point[1]) < 0.6) return;
+      if (last) wegNass += Math.hypot(point[0] - last[0], point[1] - last[1]);
       running.pts.push(point);
       running.pressure.push(druck);
       /* Die Neigung wandert Punkt für Punkt mit — aber nur, wenn der Stift
@@ -2425,7 +2461,7 @@ const Marken = (() => {
         running.ruhePunkt = [point[0], point[1]];
         running.bewegtUm = Date.now();
       }
-      feder?.punkt(point, halbeBreite(running, druck));
+      feder?.punkt(point, halbeBreite(running, druck) * nassSpitze());
     };
 
     /* Die halbe Strichbreite an einer Stelle — dieselbe Rechnung, die
@@ -2442,6 +2478,16 @@ const Marken = (() => {
       const n = Number(neig[neig.length - 1]);
       return base / 2 * druckFaktor(String(mark?.stil || ''), druck,
         Number.isFinite(n) && n > 0 ? n : 0);
+    };
+    /* DIE SPITZE DES NASSEN STRICHS (E673): dieselbe Kurve wie beim
+       trockenen (`InkGeometry.spitzeFaktor`), aber nur vom Anfang her —
+       das Ende kennt der Strich erst, wenn die Hand abhebt; dann baut
+       `finish` den Knoten aus der Marke neu, und `halbeBreiten` legt die
+       zweite Spitze an. Was hier steht, wird gezeichnet, nie gespeichert. */
+    const nassSpitze = (): number => {
+      if (!running) return 1;
+      const base = Math.max(0.5, Number(running.breite) || BREITEN[1]);
+      return InkGeometry.spitzeFaktor(wegNass, spitzeLaenge(base), spitzeVon(String(running.stil || '')));
     };
 
     /* ---- EIN BILD JE BILD, NICHT JE EREIGNIS (E376) ----------------------
@@ -2484,7 +2530,7 @@ const Marken = (() => {
     const nassenSchwanz = (event: PointerEvent, um?: (e: PointerEvent) => [number, number] | null): void => {
       if (!feder || !running || ruler.constrained()) return;
       const druck = running.pressure[running.pressure.length - 1] ?? 0.5;
-      const halb = halbeBreite(running, druck);
+      const halb = halbeBreite(running, druck) * nassSpitze();
       let pts: number[][] = [];
       const vom = typeof (event as any).getPredictedEvents === 'function'
         ? (event as any).getPredictedEvents() as PointerEvent[] : [];
@@ -3909,7 +3955,8 @@ const Marken = (() => {
         druckGlatt = InkStroke.druckGlaetter(p0);
         letzteZeit = Number(event.timeStamp) || 0;
         feder = new InkStroke.Feder();
-        feder.punkt(point, halbeBreite(running, p0));
+        wegNass = 0;
+        feder.punkt(point, halbeBreite(running, p0) * nassSpitze());
         nassFlaeche = false;
         runningNode = zeichneMarke({ ...running, pts: [point, point], pressure: [p0, p0] });
       } else {
