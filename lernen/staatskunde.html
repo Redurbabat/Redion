@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Staatskunde — Leben in der Schweiz</title>
+<!--
+  DER VORLÄUFIGE STAATSKUNDE-TRAINER (E677, 21. September 2026).
+  Doppelklicken und lernen — kein Bauschritt, kein Server (§5, Ziel 5).
+  Die Lernmaschine ist src/bereiche/wissen/staatskunde-trainer.ts, der
+  Inhalt src/bereiche/wissen/staatskunde-inhalt.ts; beide laufen hier
+  ohne den Rest von Redion. Der Fortschritt liegt vorläufig im Speicher
+  dieser Seite im Browser; sobald der Trainer im Lernzentrum wohnt, im
+  Meta-Fach von Redion. Das Stilblatt steht so lange hier, bis es unter
+  quell/schale/stil/ ein Zuhause hat (Präfix sk-).
+-->
+<style>
+  :root {
+    --sk-bg: #f4f4f1; --sk-karte: #ffffff; --sk-text: #1b1b1b; --sk-dim: #5c5c5c; --sk-faint: #8a8a8a;
+    --sk-linie: #d9d9d4; --sk-akzent: #2f6fd1; --sk-akzent-text: #ffffff;
+    --sk-gruen: #1f7a3a; --sk-gruen-bg: #d9efe0; --sk-rot: #b8312f; --sk-rot-bg: #f6dada;
+    --sk-gelb-bg: #fff4c2; --sk-touch: 44px; --sk-radius: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --sk-bg: #17181a; --sk-karte: #222428; --sk-text: #ececec; --sk-dim: #b5b5b5; --sk-faint: #8a8a8a;
+      --sk-linie: #3a3c41; --sk-akzent: #6a9cf0; --sk-akzent-text: #101215;
+      --sk-gruen: #7ed49a; --sk-gruen-bg: #1e3a29; --sk-rot: #f08a88; --sk-rot-bg: #43201f; --sk-gelb-bg: #3b3520;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--sk-bg); color: var(--sk-text);
+    font: 17px/1.5 -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  #trainer { max-width: 720px; margin: 0 auto; padding: 16px 16px 48px; }
+  .sk-titel { font-size: 26px; line-height: 1.2; margin: 8px 0 6px; }
+  .sk-unter, .sk-klein, .sk-quelle { color: var(--sk-faint); font-size: 14px; }
+  .sk-h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: var(--sk-dim); margin: 22px 0 8px; }
+  .sk-reihe { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
+  .sk-knopf { min-height: var(--sk-touch); padding: 10px 16px; border-radius: 10px; border: 1px solid var(--sk-linie);
+    background: var(--sk-karte); color: var(--sk-text); font: inherit; font-weight: 600; cursor: pointer; text-align: left; }
+  .sk-knopf:focus-visible, .sk-antwort:focus-visible, .sk-luecke:focus-visible, .sk-feld:focus-visible { outline: 3px solid var(--sk-akzent); outline-offset: 2px; }
+  .sk-haupt { background: var(--sk-akzent); color: var(--sk-akzent-text); border-color: var(--sk-akzent); }
+  .sk-leise { background: none; border-color: transparent; color: var(--sk-dim); font-weight: 500; }
+  .sk-ja { background: var(--sk-gruen); border-color: var(--sk-gruen); color: #fff; }
+  .sk-nein { background: var(--sk-rot-bg); border-color: var(--sk-rot); color: var(--sk-rot); }
+  .sk-thema { flex: 1 1 200px; }
+  .sk-boxen { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 14px 0 6px; }
+  .sk-box { background: var(--sk-karte); border: 1px solid var(--sk-linie); border-radius: 10px; padding: 10px 6px; text-align: center; }
+  .sk-box-zahl { font-size: 24px; font-weight: 700; line-height: 1.1; }
+  .sk-box-name { font-size: 13px; color: var(--sk-dim); }
+  .sk-box-tage { font-size: 11px; color: var(--sk-faint); }
+  .sk-box-1 .sk-box-zahl { color: var(--sk-rot); }
+  .sk-box-5 .sk-box-zahl { color: var(--sk-gruen); }
+  .sk-faellig { margin: 8px 0 4px; }
+  /* Die Karte */
+  .sk-karte { background: var(--sk-karte); border: 1px solid var(--sk-linie); border-radius: var(--sk-radius); padding: 16px; margin-top: 8px; }
+  .sk-kopf { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 13px; color: var(--sk-dim); margin-bottom: 8px; }
+  .sk-zaehler { font-weight: 700; color: var(--sk-text); }
+  .sk-tag { background: var(--sk-bg); border-radius: 999px; padding: 2px 10px; }
+  .sk-tag-box { background: var(--sk-gelb-bg); }
+  .sk-quelle { margin-left: auto; }
+  .sk-frage { font-size: 21px; line-height: 1.35; margin: 8px 0 4px; font-weight: 600; }
+  .sk-nummer { color: var(--sk-akzent); }
+  .sk-anweisung { color: var(--sk-dim); margin: 0 0 12px; }
+  .sk-antworten { display: flex; flex-direction: column; gap: 10px; }
+  .sk-antwort { display: flex; align-items: flex-start; gap: 12px; min-height: var(--sk-touch); padding: 12px 14px;
+    border: 2px solid var(--sk-linie); border-radius: 10px; background: var(--sk-karte); color: var(--sk-text);
+    font: inherit; text-align: left; cursor: pointer; }
+  .sk-kasten { flex: 0 0 auto; width: 22px; height: 22px; margin-top: 2px; border: 2px solid var(--sk-dim); border-radius: 5px; background: var(--sk-karte); position: relative; }
+  .sk-antwort[aria-pressed="true"] { border-color: var(--sk-akzent); }
+  .sk-antwort[aria-pressed="true"] .sk-kasten::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; font-weight: 800; font-size: 16px; line-height: 1; }
+  .sk-buchstabe { font-weight: 700; color: var(--sk-dim); flex: 0 0 auto; }
+  .sk-antwort.sk-richtig { background: var(--sk-gruen-bg); border-color: var(--sk-gruen); color: var(--sk-gruen); font-weight: 600; }
+  .sk-antwort.sk-falsch { background: var(--sk-rot-bg); border-color: var(--sk-rot); color: var(--sk-rot); font-weight: 600; }
+  .sk-antwort.sk-fehlt { border-color: var(--sk-gruen); border-style: dashed; color: var(--sk-gruen); }
+  .sk-antwort:disabled { cursor: default; opacity: 1; }
+  .sk-antwort:disabled:not(.sk-richtig):not(.sk-falsch):not(.sk-fehlt) { color: var(--sk-faint); }
+  .sk-feld { width: 100%; min-height: 110px; padding: 12px; border: 2px solid var(--sk-linie); border-radius: 10px; font: inherit; background: var(--sk-bg); color: var(--sk-text); resize: vertical; }
+  .sk-frage-luecke { font-weight: 500; }
+  .sk-luecke { font: inherit; font-weight: 700; min-height: var(--sk-touch); padding: 4px 10px; margin: 0 4px; border: 2px solid var(--sk-akzent); border-radius: 8px; background: var(--sk-bg); color: var(--sk-text); max-width: 100%; }
+  .sk-luecke.sk-richtig { border-color: var(--sk-gruen); background: var(--sk-gruen-bg); }
+  .sk-luecke.sk-falsch { border-color: var(--sk-rot); background: var(--sk-rot-bg); }
+  .sk-fuss { margin-top: 14px; }
+  .sk-gut { color: var(--sk-gruen); font-weight: 600; }
+  .sk-schlecht { color: var(--sk-rot); font-weight: 600; }
+  .sk-loesung { background: var(--sk-gruen-bg); border-left: 4px solid var(--sk-gruen); border-radius: 8px; padding: 10px 14px; margin-top: 12px; }
+  .sk-loesung-kopf { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--sk-gruen); font-weight: 700; }
+  .sk-loesung ul { margin: 6px 0 0; padding-left: 20px; }
+  .sk-loesung p { margin: 6px 0 0; }
+  .sk-hinweis { color: var(--sk-dim); font-size: 14px; }
+  .sk-gross { font-size: 20px; }
+  @media (max-width: 480px) {
+    #trainer { padding: 10px 12px 40px; }
+    .sk-titel { font-size: 22px; }
+    .sk-frage { font-size: 19px; }
+    .sk-box-tage { display: none; }
+    .sk-quelle { margin-left: 0; flex-basis: 100%; }
+  }
+</style>
+</head>
+<body>
+<main id="trainer" aria-live="polite"></main>
+<script src="../quell/bereiche/wissen/staatskunde-inhalt.js"></script>
+<script src="../quell/bereiche/wissen/staatskunde-trainer.js"></script>
+<script>
+  (function () {
+    var wurzel = document.getElementById('trainer');
+    if (!wurzel || typeof StaatskundeTrainer === 'undefined') return;
+    StaatskundeTrainer.mount(wurzel);
+  })();
+</script>
+</body>
+</html>
