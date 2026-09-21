@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-654 Entscheidungen, E1 bis E674 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+655 Entscheidungen, E1 bis E675 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -717,6 +717,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E672** — Ein Ordner hat eine Farbe, und man kann sie wechseln: Redurs Wunsch vom 21. September. Kein neues Feld (`color`, §52.8), kein zweiter Wähler (`Notebook.farbMenue` mit `danach`), eine Whitelist (`Farben.kennung`/`Farben.marke`). Die Farbe steht am Reiter und Körper des gezeichneten Ordners (`--ordner-farbe`), am Fach, in der Seitenleiste und im Ablagebaum. Der Fund beim Bauen: die Rücken-Regel der Hefte kam am Ordner mit 0 px heraus, die Farbe fiel auf `currentColor` — der Wächter misst deshalb den Reiter Kanal für Kanal gegen `--c-blue`. Wächter `test560`.
 * **E673** — Der Füller läuft spitz aus: Redurs „gleich wie GoodNotes" vom 21. September, erster Bogen. Bis dahin waren beide Kappen Halbkreise in voller Breite — jeder Buchstabe endete mit einem Klecks. EINE Kurve (`InkGeometry.spitzeFaktor`, Weglänge statt Punktzahl), EINE Stelle für die halben Breiten (`halbeBreiten`, Bildschirm und PDF — vorher zwei Abschriften, derselbe Fund wie E623), die Spitze als Feld im Register `STIFTE` (§8). Nass nur vom Anfang her, trocken an beiden Enden; kurze Striche bekommen eine kurze Spitze, damit ein Punkt ein Punkt bleibt. Kein Druckwert wird angefasst (§9). Wächter `test561`.
 * **E674** — Jedes Werkzeug merkt sich Farbe und Stärke: Redurs „gleich wie GoodNotes", zweiter Bogen. `color` und `width` waren EINE Variable für Stift, Marker, Formen, Zettel, Text — der Marker gelb und breit, und der Stift schrieb danach gelb und breit; auf einer gewöhnlichen Seite wurde die Farbe gar nicht gemerkt. Jetzt EIN Meta (`zeichnen:werkzeugwerte`), je Werkzeug Farbe und Stärke, in der Zeichenschicht an einer Stelle (`setzeWerkzeug`/`setzeFarbe`/`setzeStrich`), frisch gelesen und geprüft (§19). Die Auswahl hat keine eigene Tinte: was man mit ihr wählt, gilt dem Stift danach (E353) — `test345 §4` hat das gegen den ersten Stand gefunden. Die Nachbarstelle (§45): das Studio setzte erst die Dokumentfarbe, dann das Werkzeug — und der Wechsel hätte die Farbe sofort wieder überschrieben. Wächter `test562`.
+* **E675** — Ein Stift, der kurz 0 meldet, bleibt ein Stift: Lücke 9 des Stiftweg-Lesers. `druckAus` entschied je Meldung; eine 0 mitten im Stiftstrich hiess „kein Sensor", und der Tempo-Ersatz sprang ein — 0,6 beim ersten Mal, bei leichter Hand (0,2) ein Punkt dreimal so breit, den niemand gedrückt hatte. Jetzt behält ein Stift, der schon Druck gemeldet hat, seinen letzten Sensorwert; nur ein Stift, der NIE Druck meldet, bekommt den Ersatz und sagt in `druckArt` ehrlich „tempo". Wächter `test563`.
 
 ---
 
@@ -55160,3 +55161,60 @@ war er rot mit **11 von 19**; die Gegenprobe — `setzeWerkzeug` lädt nichts
 zur Auswahl kamen dazu, nachdem `test345` rot war. Bild: `node bilder.mts
 werkzeugwerte` — Marker Grün/Fein, Stift Rot/Breit, und nach dem Wechsel
 zurück steht die Leiste auf Rot/Breit.
+
+---
+
+## E675 — Ein Stift, der kurz 0 meldet, bleibt ein Stift
+
+**Redur, 21. September 2026 (wörtlich):** „ich will das du die stift und
+heichenb verbessern, und gleich wie goodnotes machen".
+
+**Was wurde entschieden?** Ein Stift, der im Strich schon Druck gemeldet
+hat, behält bei einer Meldung mit 0 seinen letzten Sensorwert. Nur ein
+Stift, der **nie** Druck meldet — einer ohne Sensor —, bekommt den
+Tempo-Ersatz aus E351, und dann steht in `druckArt` „tempo", nicht
+„stift".
+
+**Was war?** Der Leser des Stiftwegs hat es als Lücke 9 aus dem Code
+gelesen, mit dem Vermerk „Vermutung, nicht gemessen". `druckAus`
+entschied **je Meldung**: `pointerType === 'pen' && pressure > 0` hiess
+Sensor, alles andere hiess Tempo-Ersatz. Meldet ein Stift mitten im
+Strich eine 0 — am Rand des Sensors, beim Umgreifen, ein Aussetzer im
+Treiber —, sprang für diese Meldung der Ersatz ein: 0,6 beim ersten Mal
+(der Zweig hat noch keinen Vorgänger), danach aus der Geschwindigkeit.
+`test563 §1` hat die Vermutung gemessen: ein Strich mit leichter Hand
+(0,2) und drei Aussetzern trug einen gespeicherten Druck von **0,47**,
+und die Fläche des Füllers war an der Stelle **×1,38** so breit — ein
+Buckel, den niemand gedrückt hatte. Der 3er-Median (E376) fängt einen
+einzelnen Ausreisser; zwei hintereinander gehen durch.
+
+**Wie es gebaut ist.** Eine Variable, `sensorZuletzt`: der letzte Druck,
+den der Sensor **dieses** Strichs gemeldet hat, `null` beim Aufsetzen —
+gesetzt **vor** dem ersten `druckAus`, sonst erbte der Strich den
+Sensorwert des vorigen. Eine 0 vom Stift gibt diesen Wert zurück, wenn es
+ihn gibt; gibt es ihn nicht, ist der Stift ein Stift ohne Sensor, und der
+Tempo-Zweig läuft wie für einen Finger. Beim Absetzen sagt `druckArt`
+„stift" nur noch, wenn `sensorZuletzt` je gesetzt war. Kein neues Feld an
+der Marke, kein anderes Format (§9): `pressure` bleibt, was es ist, es
+enthält nur keine erfundenen Werte mehr.
+
+**Was war die Alternative?** Den Median auf fünf Werte verlängern.
+Dagegen: er hätte Paare gefangen und Drillinge nicht, und er hätte auch
+**echte** Druckwechsel geglättet — ein Füller, der auf eine Spitze
+zuläuft, wäre stumpfer geworden. Der Aussetzer ist kein Ausreisser im
+Signal, er ist das **Fehlen** eines Signals; das gehört an der Quelle
+behandelt, nicht im Filter.
+
+**Was kostet es?** Nichts Messbares — ein Vergleich je Meldung. Und eine
+Änderung, die man in `druckArt` sehen wird: ein Stift ohne Sensor sagt
+jetzt „tempo". `test475 §5` hält „stift" für den Stift mit Sensor und
+„tempo" für die Maus; beides bleibt.
+
+**Kein Bild** (§55.3): das ist reines Messen. Der Wächter druckt die
+Zahlen, um die es geht.
+
+**Wächter `test563`**, 13 Zusagen, ohne festen Port. Gegen den alten
+Stand war er rot mit **10 von 13** — „[0.47]" und „×1.38" —, und mit
+„ist `stift`, soll `tempo`" für den Stift ohne Sensor. Die Gegenprobe
+(die Zeile, die den Sensorwert fortschreibt, abgehängt) macht die zwei
+Zusagen des Buckels wieder rot.

@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 504 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 505 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1149,6 +1149,15 @@ gutschrieb. Sechzehn Nachbarn zu fahren war kein Ritual. Gezählt am
 21. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
 504.*
 
+*Und 505: `test563` — ein Stift, der kurz 0 meldet, bleibt ein Stift
+(E675). Er hat eine Vermutung des Lesers gemessen, die als „nicht gemessen"
+im Befund stand: ein Strich mit leichter Hand (0,2) und drei Aussetzern
+trug einen Druck von 0,47 und einen Buckel von ×1,38 — der Tempo-Ersatz für
+Maus und Finger war mitten im Stiftstrich eingesprungen. Gegen den alten
+Stand rot mit 10 von 13; kein Bild, weil es reines Messen ist (§55.3).
+Gezählt am 21. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 505.*
+
 ### Die Befehle
 
 ```txt
@@ -1157,7 +1166,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 504 Läufe
+npm run pruefen                      alle 505 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1244,7 +1253,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 504 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 505 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

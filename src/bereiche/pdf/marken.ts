@@ -1784,6 +1784,9 @@ const Marken = (() => {
        einen Strich verlängern, der selbst schon hinterherläuft. Drei, weil
        `InkStroke.vorhersage` an dreien erkennt, ob die Richtung kippt. */
     let rohDrei: number[][] = [];
+    /* Der letzte Druck, den der SENSOR gemeldet hat (E675) — `null`, solange
+       der laufende Strich noch keinen gesehen hat. */
+    let sensorZuletzt: number | null = null;
     /* Ob der laufende Strich gerade als FLAECHE gezeichnet wird (Fueller,
        Pinsel ab drei Punkten) oder als Linie. Wechselt er die Bauart, wird
        der Knoten einmal ganz neu gebaut statt sein `d` gesetzt. */
@@ -2382,8 +2385,21 @@ const Marken = (() => {
        kein Ruckeln der Maus als Zittern im Strich landet. Der Wert landet
        im selben Feld `pressure`: kein zweites Format, keine Migration. */
     const druckAus = (event: PointerEvent, point: number[]): number => {
-      const echt = event.pointerType === 'pen' && Number(event.pressure) > 0;
-      if (echt || !running) return pressureOf(event);
+      const stift = event.pointerType === 'pen';
+      if (stift && Number(event.pressure) > 0) {
+        sensorZuletzt = pressureOf(event);
+        return sensorZuletzt;
+      }
+      /* EIN STIFT, DER KURZ 0 MELDET, BLEIBT EIN STIFT (E675). Bis hierher
+         entschied jede Meldung für sich: 0 hiess „kein Sensor", und der
+         Tempo-Ersatz sprang ein — mitten im Strich, mit 0,6 beim ersten
+         Mal. Wer mit leichter Hand (0,2) schrieb, bekam an der Stelle einen
+         Punkt, dreimal so breit, den niemand gedrückt hatte. Ein Stift, der
+         schon Druck gemeldet hat, behält jetzt seinen letzten Sensorwert;
+         nur ein Stift, der NIE Druck meldet, bekommt den Ersatz — und sagt
+         dann in `druckArt` ehrlich „tempo". */
+      if (stift && sensorZuletzt !== null) return sensorZuletzt;
+      if (!running) return pressureOf(event);
       const jetzt = Number(event.timeStamp) || 0;
       const z = running.zuletzt as { t: number; p: number[]; d: number } | undefined;
       let druck = 0.6;
@@ -2944,7 +2960,10 @@ const Marken = (() => {
          Winkel normalisieren, aber die Herkunft nicht vergessen. Ein Wort
          am Strich kostet nichts und beantwortet die Frage für immer. */
       if (mark.art === 'stift' || mark.art === 'marker')
-        mark.druckArt = mark.zeigerArt === 'pen' ? 'stift' : 'tempo';
+        /* „stift" nur, wenn der Sensor wirklich etwas gemeldet hat (E675);
+           ein Stift ohne Sensor hat seine Werte aus dem Tempo, wie ein
+           Finger — und so soll es dastehen. */
+        mark.druckArt = mark.zeigerArt === 'pen' && sensorZuletzt !== null ? 'stift' : 'tempo';
       delete mark.zeigerArt;
       /* DIE NEIGUNG NUR, WENN SIE GEMELDET WURDE. `-1` heisst „kein
          Sensor"; ein Feld voller Nullen wäre eine Behauptung über den
@@ -3995,6 +4014,9 @@ const Marken = (() => {
         /* DIE NEIGUNG WIRD MITGESCHRIEBEN (E507) — vorerst in ein Feld, das
            es beim Absetzen nur behält, wenn wirklich etwas darin steht. */
         running.neigung = [neigungAus(e)];
+        /* Der Sensor dieses Strichs hat noch nichts gemeldet (E675) — VOR
+           dem ersten `druckAus`, sonst erbt er den letzten Strich. */
+        sensorZuletzt = null;
         running.pressure.push(druckAus(event, point));
         const p0 = running.pressure[0];
         /* DER AUFSETZPUNKT GEHT UNGEGLAETTET DURCH (E376): ein Strich, der
