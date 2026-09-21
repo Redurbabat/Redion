@@ -2152,18 +2152,23 @@ const DocumentMode = (() => {
     const applyPen = (stand: HTMLElement): void => {
       if (!state.toolsOpen || !canAnnotate || !stand.isConnected) return;
       const toolbar = stand.querySelector<HTMLElement>('.blatt-werk');
-      if (toolbar && !toolbar.dataset.documentPenReady) {
-        toolbar.dataset.documentPenReady = 'true';
-        Array.from(toolbar.querySelectorAll<HTMLButtonElement>('[data-c]')).find(b => b.dataset.c === penColor)?.click();
-        Array.from(toolbar.querySelectorAll<HTMLButtonElement>('[data-b]')).find(b => Number(b.dataset.b) === penWidth)?.click();
-      }
       /* DIE HAND IST KEIN STIFT (E468): seit „Lesen" die Schicht auf die Hand
          stellt, stuende sonst beim naechsten „Annotieren" wieder die Hand —
          und die Zeichenleiste bliebe zu (sie zeigt sich nur bei einem
          Zeichenwerkzeug). Dann lieber der Stift. */
       const key = drawingTools.some(([tool]) => tool === penTool) && penTool !== 'schreiben' ? penTool : 'stift';
-      if (toolbar?.dataset.tool === key) return;
-      toolbar?.querySelector<HTMLButtonElement>('[data-wz="' + key + '"]')?.click();
+      /* ERST DAS WERKZEUG, DANN FARBE UND STÄRKE (E674). Seit jedes Werkzeug
+         seine Farbe merkt, holte ein Werkzeugwechsel NACH dem Setzen der
+         Dokumentfarbe die gemerkte Stiftfarbe zurück — die Dokumentfarbe
+         war gesetzt und im selben Atemzug wieder weg. Die Nachbarstelle
+         (§45), gefunden beim Lesen, nicht beim Messen. */
+      if (toolbar && toolbar.dataset.tool !== key)
+        toolbar.querySelector<HTMLButtonElement>('[data-wz="' + key + '"]')?.click();
+      if (toolbar && !toolbar.dataset.documentPenReady) {
+        toolbar.dataset.documentPenReady = 'true';
+        Array.from(toolbar.querySelectorAll<HTMLButtonElement>('[data-c]')).find(b => b.dataset.c === penColor)?.click();
+        Array.from(toolbar.querySelectorAll<HTMLButtonElement>('[data-b]')).find(b => Number(b.dataset.b) === penWidth)?.click();
+      }
     };
 
     /* ══ SUCHEN IM DOKUMENT UND DIE VERWEISE DER PDF (E468) ══════════════════

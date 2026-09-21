@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-653 Entscheidungen, E1 bis E673 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+654 Entscheidungen, E1 bis E674 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -716,6 +716,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E671** — Was der erste volle Lauf seit elf Bögen gefunden hat: 501 Läufe, 491 grün, 10 rot, 112 min. Im Hauptbaum nachgemessen waren es ACHT (test270 und test440 sind Artefakte des Arbeitsbaums, §30). Sieben der acht waren meine letzten drei Bögen. Zwei Entscheidungen: der Speicher der PDF-Quellen steht nur noch in `leser.ts` (E670 hatte einen zweiten stehenlassen — `test537` fand ihn über die Querverweiszahl), und die Blatt-Werkzeugleiste bleibt eine Aufzählung (der Formen-Knopf trägt das Zeichen der zuletzt gewählten Form, E515). Der echte Fund: „Text ändern" hatte im Studio einen Knopf und auf dem Blatt keinen. Der Messfehler: `test410` las ein `<style>` aus einem Kommentar und von dort 5,3 MB JavaScript als Stilblatt.
 * **E672** — Ein Ordner hat eine Farbe, und man kann sie wechseln: Redurs Wunsch vom 21. September. Kein neues Feld (`color`, §52.8), kein zweiter Wähler (`Notebook.farbMenue` mit `danach`), eine Whitelist (`Farben.kennung`/`Farben.marke`). Die Farbe steht am Reiter und Körper des gezeichneten Ordners (`--ordner-farbe`), am Fach, in der Seitenleiste und im Ablagebaum. Der Fund beim Bauen: die Rücken-Regel der Hefte kam am Ordner mit 0 px heraus, die Farbe fiel auf `currentColor` — der Wächter misst deshalb den Reiter Kanal für Kanal gegen `--c-blue`. Wächter `test560`.
 * **E673** — Der Füller läuft spitz aus: Redurs „gleich wie GoodNotes" vom 21. September, erster Bogen. Bis dahin waren beide Kappen Halbkreise in voller Breite — jeder Buchstabe endete mit einem Klecks. EINE Kurve (`InkGeometry.spitzeFaktor`, Weglänge statt Punktzahl), EINE Stelle für die halben Breiten (`halbeBreiten`, Bildschirm und PDF — vorher zwei Abschriften, derselbe Fund wie E623), die Spitze als Feld im Register `STIFTE` (§8). Nass nur vom Anfang her, trocken an beiden Enden; kurze Striche bekommen eine kurze Spitze, damit ein Punkt ein Punkt bleibt. Kein Druckwert wird angefasst (§9). Wächter `test561`.
+* **E674** — Jedes Werkzeug merkt sich Farbe und Stärke: Redurs „gleich wie GoodNotes", zweiter Bogen. `color` und `width` waren EINE Variable für Stift, Marker, Formen, Zettel, Text — der Marker gelb und breit, und der Stift schrieb danach gelb und breit; auf einer gewöhnlichen Seite wurde die Farbe gar nicht gemerkt. Jetzt EIN Meta (`zeichnen:werkzeugwerte`), je Werkzeug Farbe und Stärke, in der Zeichenschicht an einer Stelle (`setzeWerkzeug`/`setzeFarbe`/`setzeStrich`), frisch gelesen und geprüft (§19). Die Auswahl hat keine eigene Tinte: was man mit ihr wählt, gilt dem Stift danach (E353) — `test345 §4` hat das gegen den ersten Stand gefunden. Die Nachbarstelle (§45): das Studio setzte erst die Dokumentfarbe, dann das Werkzeug — und der Wechsel hätte die Farbe sofort wieder überschrieben. Wächter `test562`.
 
 ---
 
@@ -55058,3 +55059,104 @@ Gegenprobe — `spitzeFaktor` gibt 1 zurück — macht sieben Zusagen rot,
 darunter die nasse. Die zwei Zusagen zum breiten Punkt kamen nach dem
 Bild dazu und waren gegen den ersten Stand rot (22 von 24). Bild:
 `node bilder.mts spitze`.
+
+---
+
+## E674 — Jedes Werkzeug merkt sich Farbe und Stärke
+
+**Redur, 21. September 2026 (wörtlich):** „ich will das du die stift und
+heichenb verbessern, und gleich wie goodnotes machen".
+
+**Was wurde entschieden?** Stift, Marker, Formen, Zettel und Text merken
+sich je ihre Farbe und ihre Stärke — auf jeder Seite, über das Neuladen
+hinweg. Wer mit gelbem, breitem Marker markiert und mit schwarzem, feinem
+Stift schreibt, wechselt nur noch das Werkzeug. Das ist der zweite Bogen
+zu Redurs Satz und, nach dem Leser der Werkzeuge, „die häufigste
+Handbewegung des Tages und die grösste Reibung gegenüber GoodNotes".
+
+**Was war?** `color` und `width` waren in `schicht()` **eine** Variable
+für alles. Der Marker auf Gelb/Breit, zurück zum Stift — und der Stift
+schrieb gelb und breit. `test562 §1` hat es gegen den alten Stand
+gedruckt: „Zurück beim Stift zeigt die Leiste wieder Rot und Breit — ist
+`{farbe: #3aa757, breite: 1.2}`". Dazu kam, dass auf einer gewöhnlichen
+Seite **gar nichts** gemerkt wurde: nach dem Neuladen stand Schwarz/Mittel.
+Im Studio gab es ein Gedächtnis je **Dokument** (`dokTinte:`/`dokStrich:`,
+E468) — das ist eines für die Seite, keines für den Stift.
+
+**Wie es gebaut ist:**
+
+1. **Ein Meta-Schlüssel, `zeichnen:werkzeugwerte`**, je Werkzeug `{farbe,
+   breite}`. Die Formen teilen sich einen Eintrag, weil sie sich seit E375
+   einen Knopf teilen (`istForm` → `formen`). Die Hand merkt sich nichts.
+   Kein neues Feld an einer Marke, keine Migration (§9); ein Meta reist in
+   `.json` und `.redion` mit wie die Farbsätze (E486).
+2. **An einer Stelle, in der Zeichenschicht.** `setzeFarbe` und
+   `setzeStrich` schreiben dem geführten Werkzeug gut; `setzeWerkzeug`
+   schreibt dem alten gut und lädt das neue. Jeder Weg zur Farbe — Tupfer,
+   eigene Farbe, Farbsatz (E501), Menüband über `Zeichenziel.setzeFarbe` —
+   läuft durch diese zwei Funktionen, also merkt jeder. Und die Schicht
+   sagt es dem Kern (`Zeichenziel.uebernehmeFarbe/-Strich`), damit die
+   Leiste den Tupfer leuchten lässt, der wirklich gilt — sonst stünde oben
+   Grün und unten käme Rot.
+3. **Frisch gelesen, nicht abgeschrieben.** Eine Seite kann drei Blätter
+   tragen, jedes mit eigener Schicht. Würde jede Schicht das Meta einmal
+   beim Aufbau lesen, wüsste Blatt B nichts von dem, was auf Blatt A
+   gewählt wurde. Deshalb liest `setzeWerkzeug` beim Wechsel aus dem Meta.
+4. **Geprüft, bevor es gilt (§19).** Eine Farbe ist `#rrggbb`, eine Stärke
+   liegt zwischen 0,5 und 12 (der Regler, E438); ein Schlüssel ist ein
+   Werkzeugname aus Kleinbuchstaben. `test562 §4` schreibt
+   `javascript:alert(1)` und 999 hinein — der Stift steht danach auf
+   Schwarz/Mittel, der Marker nimmt die gültige Farbe und lässt die
+   ungültige Stärke liegen.
+5. **Ein Werkzeug ohne Gedächtnis übernimmt, was an ist** — wie bisher.
+   Wer noch nie einen Zettel gefärbt hat, bekommt beim ersten Zettel die
+   Stiftfarbe, keine Überraschung (`test562 §5`).
+6. **Die Auswahl hat keine eigene Tinte.** Das hat nicht der neue Wächter
+   gefunden, sondern ein alter: `test345 §4` wurde rot — „Der nächste
+   Strich nimmt die zuletzt gewählte Farbe — ist `#111111`, soll
+   `#d64545`". E353 verspricht: wer drei Striche wählt und Rot antippt,
+   färbt die drei um **und zeichnet danach rot weiter**. Der erste Stand
+   von E674 schrieb das Rot der Auswahl gut, und der Stift holte sich beim
+   Zurückwechseln sein altes Schwarz. Jetzt haben Hand, Auswahl, Radierer,
+   Laser und Bild keinen Eintrag; eine Farbe, die unter ihnen gewählt
+   wird, geht an das **letzte Zeichenwerkzeug** — das, zu dem man
+   zurückkehrt. `test562 §6` hält beides: Rot mit der Auswahl gewählt
+   steht danach am Stift; war zuletzt der Marker dran, bekommt der Marker
+   das Grün, und der Stift bleibt rot.
+
+**Die Nachbarstelle (§45), gefunden beim Lesen.** Das Studio setzt beim
+Öffnen eines Dokuments die Dokumentfarbe und -stärke, indem `applyPen`
+die Tupfer der Leiste anklickt — und wählte danach das Werkzeug. Mit
+E674 hätte der Werkzeugwechsel die gerade gesetzte Dokumentfarbe sofort
+mit der gemerkten Stiftfarbe überschrieben: gesetzt und im selben Atemzug
+weg. Die Reihenfolge ist jetzt umgekehrt — erst das Werkzeug, dann Farbe
+und Stärke. Beide Gedächtnisse bleiben: das Dokument sagt, womit man hier
+zuletzt geschrieben hat; das Werkzeug sagt, was es sonst trägt.
+
+**Was war die Alternative?** Das Gedächtnis in der Leiste (`leiste()`)
+statt in der Schicht. Dagegen: die Leiste ist eine von zwei Anzeigen
+(Menüband, E-Leiste), und die Farbe kommt auch ohne Leiste an — über
+`Zeichenziel.setzeFarbe`. Ein Gedächtnis in der Anzeige wüsste davon
+nichts. Und: die Werte je Werkzeug in `Zeichenziel` (kern/) zu halten.
+Dagegen: der Kern kennt Werkzeuge nur als Namen; was ein Werkzeug ist und
+welche sich einen Knopf teilen, weiss die Schicht.
+
+**Was kostet es?** Ein `getMeta` je Werkzeugwechsel und ein `setMeta` je
+Farb- oder Stärkewahl. Und eine Änderung des Verhaltens, die man einmal
+bemerken wird: wer bisher gewohnt war, dass der Stift die Markerfarbe
+„mitnimmt", muss sie einmal je Werkzeug setzen — danach nie wieder.
+
+**Was NICHT dazugekommen ist — und warum.** Keine Stiftplätze (drei
+Ein-Tipp-Knöpfe für Stift+Farbe+Stärke). E498 hat sie abgelehnt, und
+LUECKEN.md hält fest, warum: die Zubehörzeile ist bei 596 px mit vierzehn
+Knöpfen voll, und die Farbsätze (E486/E501) können mehr. Der Leser der
+Werkzeuge hat einen Weg ohne zweiten Katalog vorgeschlagen (drei Farbsätze
+als „angeheftet" kennzeichnen). Das ist Redurs Entscheidung, nicht meine —
+E498 ist seine.
+
+**Wächter `test562`**, 24 Zusagen, ohne festen Port. Gegen den alten Stand
+war er rot mit **11 von 19**; die Gegenprobe — `setzeWerkzeug` lädt nichts
+— macht acht Zusagen rot, darunter die nach dem Neuladen. Die fünf Zusagen
+zur Auswahl kamen dazu, nachdem `test345` rot war. Bild: `node bilder.mts
+werkzeugwerte` — Marker Grün/Fein, Stift Rot/Breit, und nach dem Wechsel
+zurück steht die Leiste auf Rot/Breit.

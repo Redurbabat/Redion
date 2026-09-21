@@ -1612,6 +1612,57 @@ const Marken = (() => {
     let tool = 'schreiben';
     let color: string = FARBEN[0];
     let width: number = BREITEN[1];
+    /* ══ JEDES WERKZEUG MERKT SICH FARBE UND STÄRKE (E674) ══════════════════
+       Wie in GoodNotes: der Marker bleibt gelb und breit, der Stift schwarz
+       und fein, egal, wie oft man tauscht. Bis E674 waren `color` und
+       `width` EINE Variable für alles — wer den Marker gelb gemacht hatte
+       und zum Stift zurückging, schrieb gelb weiter. Und auf einer
+       gewöhnlichen Seite wurde die Farbe GAR NICHT gemerkt.
+
+       Das Gedächtnis liegt in EINEM Meta-Schlüssel, je Werkzeug Farbe und
+       Stärke; die Formen teilen sich einen Eintrag (`istForm`, E375), weil
+       sie sich auch einen Knopf teilen. Gelesen wird beim Wechsel FRISCH
+       aus dem Meta, nicht aus einer Abschrift je Schicht — eine Seite kann
+       drei Blätter tragen, und alle sollen dasselbe wissen. Und was aus
+       dem Meta kommt, wird geprüft, bevor es gilt (§19): eine Farbe ist
+       `#rrggbb`, eine Stärke liegt im Bereich des Reglers. */
+    const WERKZEUGWERTE = 'zeichnen:werkzeugwerte';
+    type Werkzeugwert = { farbe?: string; breite?: number };
+    /* WERKZEUGE OHNE EIGENE TINTE: die Hand, die Auswahl, der Radierer, der
+       Laser, das Bild. Sie haben keinen Eintrag — eine Farbe, die man mit
+       der Auswahl wählt, gilt der Auswahl UND dem Stift danach (E353), also
+       wird sie dem LETZTEN Zeichenwerkzeug gutgeschrieben. `test345 §4` hat
+       das gegen den ersten Stand von E674 gefunden: die Farbe stand bei
+       der Auswahl, und der Stift holte sich sein altes Schwarz zurück. */
+    const OHNE_TINTE = new Set(['schreiben', 'select', 'radierer', 'laser', 'bild']);
+    const werkzeugGruppe = (wz: string): string =>
+      istForm(wz) ? 'formen' : OHNE_TINTE.has(String(wz)) ? '' : String(wz || '');
+    /** Das Zeichenwerkzeug, das zuletzt geführt hat — dem schreibt die Auswahl gut. */
+    let letzteGruppe = '';
+    const werkzeugwerteLesen = (): Record<string, Werkzeugwert> => {
+      const aus: Record<string, Werkzeugwert> = {};
+      if (typeof Store === 'undefined') return aus;
+      const roh = Store.getMeta(WERKZEUGWERTE);
+      if (!roh || typeof roh !== 'object') return aus;
+      for (const [k, v] of Object.entries(roh as Record<string, unknown>)) {
+        if (!/^[a-z]+$/.test(k) || !v || typeof v !== 'object') continue;
+        const e: Werkzeugwert = {};
+        const f = String((v as { farbe?: unknown }).farbe || '').toLowerCase();
+        if (/^#[0-9a-f]{6}$/.test(f)) e.farbe = f;
+        const b = Number((v as { breite?: unknown }).breite);
+        if (Number.isFinite(b) && b >= 0.5 && b <= 12) e.breite = b;
+        if (e.farbe !== undefined || e.breite !== undefined) aus[k] = e;
+      }
+      return aus;
+    };
+    /** Was am Werkzeug gerade an ist, ihm gutschreiben. Die Hand merkt sich nichts. */
+    const werkzeugwertMerken = (): void => {
+      const g = werkzeugGruppe(tool) || letzteGruppe;
+      if (!g || typeof Store === 'undefined') return;
+      const alle = werkzeugwerteLesen();
+      alle[g] = { farbe: color, breite: width };
+      try { Store.setMeta(WERKZEUGWERTE, alle); } catch { /* nur diese Sitzung */ }
+    };
     let radierModus: string = radierModusLesen();
     /* HANDBALLEN-SCHUTZ (E354): sobald ein Stift die Flaeche beruehrt hat,
        zeichnen Finger vier Sekunden lang nicht — sie rollen. So darf die
@@ -4275,7 +4326,31 @@ const Marken = (() => {
     const setzeWerkzeug = (next: string): void => {
       /* Wer das Werkzeug wechselt, hat den Satz zu Ende geschrieben (E597). */
       if (schreiber) schreiberSchliessen();
-      finish(); tool = next;
+      finish();
+      /* JEDES WERKZEUG BEHÄLT SEINS (E674): dem alten wird gutgeschrieben,
+         was an war; das neue holt sich, was es hatte. Ein Werkzeug, das noch
+         nichts gemerkt hat, übernimmt, was gerade an ist — wie bisher, keine
+         Überraschung. Und die Leiste erfährt es über den Kern, damit oben
+         der Tupfer leuchtet, der wirklich gilt. */
+      const vorher = werkzeugGruppe(tool);
+      werkzeugwertMerken();
+      tool = next;
+      const nachher = werkzeugGruppe(next);
+      if (nachher && nachher !== vorher) {
+        letzteGruppe = nachher;
+        const w = werkzeugwerteLesen()[nachher];
+        if (w) {
+          if (w.farbe !== undefined) color = w.farbe;
+          if (w.breite !== undefined) width = w.breite;
+          if (typeof Zeichenziel !== 'undefined') {
+            try {
+              Zeichenziel.uebernehme(steuerung, next);
+              Zeichenziel.uebernehmeFarbe(steuerung, color);
+              Zeichenziel.uebernehmeStrich(steuerung, width);
+            } catch { /* ohne Kern geht es wie bisher */ }
+          }
+        }
+      }
       if (tool !== 'select') { selection.clear(); renderSelection(); }
       flaeche.style.pointerEvents = tool === 'schreiben' ? 'none' : 'auto';
       flaeche.setAttribute('data-tool', tool);
@@ -4286,6 +4361,7 @@ const Marken = (() => {
        um — und zeichnet danach rot weiter. Ein Schritt im Verlauf. */
     const setzeFarbe = (next: string): void => {
       color = next;
+      werkzeugwertMerken();
       /* Wer gerade schreibt, meint den Kasten unter seinem Zeiger (E599). */
       if (schreiber && schreiberUmformen({ farbe: next })) return;
       if (!selection.size) return;
@@ -4304,6 +4380,7 @@ const Marken = (() => {
     };
     const setzeStrich = (next: number): void => {
       width = next;
+      werkzeugwertMerken();
       if (!selection.size) return;
       const before = snapshot();
       for (let i = 0; i < marks.length; i++) {

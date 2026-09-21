@@ -2576,6 +2576,40 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  werkzeugwerte: {
+    titel: 'Jedes Werkzeug merkt sich Farbe und Stärke (E674)',
+    /* Der Marker war Grün und Fein, der Stift Rot und Breit — und nach dem
+       Wechsel zurück zum Stift zeigt die Leiste Rot und Breit, nicht das,
+       was der Marker zuletzt hatte. Beide Striche liegen auf dem Blatt.
+         node bilder.mts werkzeugwerte */
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('zeichnen:stift', 'fueller');
+      Store.setMeta('zeichnen:werkzeugwerte', {
+        stift: { farbe: '#d64545', breite: 5 },
+        marker: { farbe: '#3aa757', breite: 1.2 }
+      });
+      const seite = Store.addPage(null, { text: 'Skript', icon: '🖍' });
+      Store.addBlock(seite.id, 'blatt', { text: '', papier: 'liniert',
+        blattBreite: 595.28, blattHoehe: 300, raumVersion: 1, marken: [
+          { id: 'm1', art: 'marker', farbe: '#3aa757', breite: 1.2,
+            pts: [[70, 96], [330, 96]], pressure: [0.5, 0.5] },
+          { id: 's1', art: 'stift', stil: 'fueller', farbe: '#d64545', breite: 5,
+            pts: Array.from({ length: 61 }, (_v, i) => [70 + i * 4, 150 + Math.sin(i / 60 * Math.PI * 2) * 18]),
+            pressure: Array.from({ length: 61 }, () => 0.5) }
+        ] });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+      /* Marker wählen, dann zurück zum Stift — die Leiste muss Rot/Breit zeigen. */
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="marker"]')?.click();
+      await new Promise(r => setTimeout(r, 300));
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
   laser: {
     titel: 'Der Laserpointer: zeigen statt schreiben (E512)',
     bauen: async () => {

@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 503 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 504 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1136,6 +1136,19 @@ NACH dem Bild: der Punkt des 5-pt-Füllers stand als senkrechter Splitter da
 Gezählt am 21. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
 wc -l` sagt 503.*
 
+*Und 504: `test562` — jedes Werkzeug merkt sich Farbe und Stärke (E674).
+Gegen den alten Stand war er rot mit 11 von 19 und hat die Handbewegung
+gedruckt, um die es geht: „Zurück beim Stift zeigt die Leiste wieder Rot und
+Breit — ist Grün/Fein". Seine Nachbarstelle fand das LESEN, nicht das
+Messen: das Studio setzte erst die Dokumentfarbe und dann das Werkzeug, und
+mit dem neuen Gedächtnis hätte der Wechsel die Farbe im selben Atemzug
+wieder überschrieben (§45). Und einen zweiten Fund machte ein ALTER Wächter:
+`test345 §4` wurde rot, weil E353 „mit der Auswahl Rot wählen, danach rot
+weiterzeichnen" verspricht und der erste Stand das Rot der Auswahl
+gutschrieb. Sechzehn Nachbarn zu fahren war kein Ritual. Gezählt am
+21. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+504.*
+
 ### Die Befehle
 
 ```txt
@@ -1144,7 +1157,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 503 Läufe
+npm run pruefen                      alle 504 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1231,7 +1244,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 503 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 504 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
