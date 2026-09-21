@@ -61,6 +61,31 @@ const Farben = (() => {
         '#e255a1': 'Magenta', '#ffdc49': 'Gelb', '#9b9a97': 'Grau',
     };
     const nachHex = (wert) => HEX[String(wert || '').toLowerCase()] || 'Eigene Farbe';
-    return { name, alle, nachHex };
+    /**
+     * Die Kennung, wenn es eine bekannte Deckelfarbe ist — sonst ''.
+     *
+     * Das ist die WHITELIST (§19): was hier nicht steht, wird nie zu einem
+     * Attribut und nie zu einem Token. `default` ist keine Deckelfarbe —
+     * ein Ordner ohne Farbe trägt gar keine, statt „Standard" zu heissen.
+     * Bis E672 stand diese Prüfung privat in `notebook.ts` (`farbeVon`);
+     * mit dem zweiten und dritten Nutzer gehört sie hierher.
+     */
+    const kennung = (wert) => {
+        const t = String(wert || '');
+        return t !== 'default' && Object.prototype.hasOwnProperty.call(NAMEN, t) ? t : '';
+    };
+    /**
+     * Die Attribute für eine gefärbte Kachel oder Zeile — als Zeichenkette
+     * zum Einsetzen ins Markup, mit führendem Leerzeichen; leer ohne Farbe.
+     *
+     * `data-farbe` ist die Marke fürs Stilblatt, die Variable trägt den Wert.
+     * Escapen ist nicht nötig, weil nur eine Kennung aus `NAMEN` hierher
+     * kommt — genau deshalb läuft alles durch `kennung`.
+     */
+    const marke = (wert, variable = '--deckel-farbe') => {
+        const k = kennung(wert);
+        return k ? ` data-farbe="${k}" style="${variable}:var(--c-${k})"` : '';
+    };
+    return { name, alle, nachHex, kennung, marke };
 })();
 window.Farben = Farben;

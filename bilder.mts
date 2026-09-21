@@ -1044,6 +1044,34 @@ const ANSICHTEN: Record<string, {
   },
 
 
+  /* --- Ordnerfarben (E672) ---------------------------------------------------
+     Vier Ordner, vier Farben, einer ohne — nebeneinander im Regal. Was das
+     Bild zeigen soll: die Farbe sitzt auf Körper UND Reiter des gezeichneten
+     Ordners, nicht an einem Rücken; und der farblose behält die Akzentfarbe. */
+  ordnerfarbe: {
+    titel: 'Ordner mit Farben in der Bibliothek',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      Store.setMeta('bibForm', 'deckel');
+      Store.setMeta('bibOrdner', '');
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const ordner: Array<[string, string]> = [
+        ['Elektrotechnik', 'blue'], ['Arbeitssicherheit', 'red'],
+        ['Werkstatt', 'orange'], ['Prüfungen', 'green'], ['Sonstiges', '']];
+      for (const [name, farbe] of ordner) {
+        const o = Store.addPage(null, { text: name, icon: '\u{1F4C1}' });
+        Store.addPage(o.id, { text: 'Kapitel 1' });
+        Store.addPage(o.id, { text: 'Kapitel 2' });
+        if (farbe) Store.updateBlock(o.id, { color: farbe });
+      }
+      await Store.flush();
+      Bibliothek.oeffne();
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
+
   papier: {
     titel: 'Die Papiervorlagen am A4-Blatt',
     bauen: async () => {

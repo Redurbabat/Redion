@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-651 Entscheidungen, E1 bis E671 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+652 Entscheidungen, E1 bis E672 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -714,6 +714,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E669** — Die angemeldeten Geräte gibt es jetzt wirklich: die Einstellungen versprachen „Die Liste und der Freigabe-Code stehen im Wolke-Fenster" — den Code gab es, die Liste nicht. `sitzungen` hält `geraet`, `angelegt` und `bis`, seit es die Tabelle gibt; geschrieben, nie gelesen. Neu: `GET /konto/geraete`, `POST /konto/geraete/weg`, das Gerätefenster. Hinaus geht ein STÜCK des Abdrucks, nie der Token (§42); ein fremdes Konto ist nicht gefiltert, sondern gar nicht erst in der Menge, in der gesucht wird; eine Marke bekommt die Liste nicht (§26). Aus dem Bild kam dazu: die Knöpfe massen 18 px — auch im Markenfenster nebenan (§37, §45). Wächter `test558`.
 * **E670** — Den Text einer PDF ändern, ohne die PDF anzufassen: Redurs Frage vom 21. September. Neues Werkzeug „Text ändern" — auf ein Wort tippen, ändern, fertig. Die Änderung ist eine MARKE (Deckel in Papierfarbe + neuer Text auf derselben Grundlinie), also rückgängig, versioniert, in der Sicherung und im ausgegebenen PDF; das Original bleibt Byte für Byte, und `test559` misst das mit einer SHA-256-Summe. Was es NICHT kann, steht im Werkzeugtitel: der Text fliesst nicht. `stueckBei`/`lageVonBlock` in `leser.ts` statt einer zweiten Rechnung im Studio (§8). Zwei Funde bestehender Wächter: `inkText/inkText = 100 %` (E515-Regel) und die Werkzeugzahl 13→14. Wächter `test559`.
 * **E671** — Was der erste volle Lauf seit elf Bögen gefunden hat: 501 Läufe, 491 grün, 10 rot, 112 min. Im Hauptbaum nachgemessen waren es ACHT (test270 und test440 sind Artefakte des Arbeitsbaums, §30). Sieben der acht waren meine letzten drei Bögen. Zwei Entscheidungen: der Speicher der PDF-Quellen steht nur noch in `leser.ts` (E670 hatte einen zweiten stehenlassen — `test537` fand ihn über die Querverweiszahl), und die Blatt-Werkzeugleiste bleibt eine Aufzählung (der Formen-Knopf trägt das Zeichen der zuletzt gewählten Form, E515). Der echte Fund: „Text ändern" hatte im Studio einen Knopf und auf dem Blatt keinen. Der Messfehler: `test410` las ein `<style>` aus einem Kommentar und von dort 5,3 MB JavaScript als Stilblatt.
+* **E672** — Ein Ordner hat eine Farbe, und man kann sie wechseln: Redurs Wunsch vom 21. September. Kein neues Feld (`color`, §52.8), kein zweiter Wähler (`Notebook.farbMenue` mit `danach`), eine Whitelist (`Farben.kennung`/`Farben.marke`). Die Farbe steht am Reiter und Körper des gezeichneten Ordners (`--ordner-farbe`), am Fach, in der Seitenleiste und im Ablagebaum. Der Fund beim Bauen: die Rücken-Regel der Hefte kam am Ordner mit 0 px heraus, die Farbe fiel auf `currentColor` — der Wächter misst deshalb den Reiter Kanal für Kanal gegen `--c-blue`. Wächter `test560`.
 
 ---
 
@@ -54883,3 +54884,76 @@ wenn jemand einen Satz schreibt, der wie Code aussieht.
 
 **Geprüft:** `node pruefungen/alle.mts 210 270 290 362 410 437 440 523 537`
 → acht grün, `test537` bleibt bei 518 gegen 517 (L207, Redurs Entscheidung).
+
+
+## E672 — Ein Ordner hat eine Farbe, und man kann sie wechseln
+
+**Redur, 21. September 2026 (wörtlich):** „ich sollte die ordner farben
+wählen können und farben wecheln können".
+
+**Was wurde entschieden?** Ordner bekommen eine wählbare Farbe — in der
+Bibliothek und in den Notizheften (Fächer) —, und die Farbe steht überall,
+wo der Ordner steht: auf dem Deckel, in der Seitenleiste, im Ablagebaum.
+
+**Was es schon gab, und warum das die Form vorgab.** Die Notizhefte haben
+seit E406 ein „Farbe …"-Menü — für **Hefte**. Das Feld heisst `color` und
+existiert an jedem Block (§52.8); die Palette sind die neun Kennungen aus
+`Farben`; die Farbe steht als Rücken links am Deckel. Drei Dinge waren
+damit entschieden, bevor eine Zeile geschrieben wurde:
+
+1. **Kein neues Feld.** `color` ist da, wandert in Sicherung und Abgleich,
+   und ein zweites Feld „ordnerFarbe" daneben wäre §8 und §53.3 zugleich.
+2. **Kein zweiter Wähler.** `farbMenue` war privat in `notebook.ts` und
+   rief danach das Regal neu. Es steht jetzt im Rückgabeobjekt und nimmt
+   ein `danach` — die Bibliothek ruft denselben Wähler und zeichnet danach
+   sich selbst. Dieselben neun Felder, dieselben Namen (§38), dasselbe
+   Häkchen.
+3. **Eine Whitelist.** `farbeVon` prüfte im Notizheft, ob ein Wert eine
+   bekannte Kennung ist. Mit dem dritten und vierten Nutzer wanderte die
+   Prüfung nach `Farben.kennung` — und dazu `Farben.marke`, das aus einer
+   Kennung die Attribute macht. Beides ohne `esc`, weil nur eine Kennung
+   aus der Liste je hindurchkommt; `test560 §5` schiebt `"><b>x</b>`
+   hinein und misst, dass nichts davon im Markup landet (§19).
+
+**Der Fund beim Bauen, den nur das Messen zeigte.** Die Regel der Hefte
+(`border-left:5px solid var(--deckel-farbe)`) griff am Ordner nicht: der
+gezeichnete Ordnerdeckel (E601) setzt `border:0`, und die Kante kam mit
+**0 px** heraus, die Farbe fiel auf `currentColor` zurück — `rgb(167, 167,
+167)`, das Grau des Fliesstexts. Der erste Wächter hatte genau das
+gemessen und war rot; ohne ihn hätte ich ein Attribut gesetzt und es für
+gezeichnet gehalten.
+
+Ein Ordner hat keinen Rücken. Sein Deckel **ist** Körper und Reiter,
+beide aus der Akzentfarbe. Also bekommt er eine eigene Variable —
+`--ordner-farbe`, ohne Wahl der Akzent, mit Wahl die Wahl —, und Körper,
+Reiter und der aufgefächerte Körper in `motion.css` lesen sie. Der Wächter
+misst seither den **Reiter** (`::after`) und vergleicht ihn Kanal für Kanal
+mit `--c-blue`, `--c-red`, `--c-green`; nicht „anders als vorher", sondern
+„genau diese".
+
+**Wo die Farbe steht:**
+
+| Ort | Wie |
+|---|---|
+| Bibliothek, Deckel | Reiter und Körper des Ordners (`--ordner-farbe`) |
+| Notizhefte, Fach | dieselbe Kachel, dieselbe Regel |
+| Heft | der Rücken links, wie seit E406 |
+| Seitenleiste | ein 3-px-Rücken als Innenschatten, damit nichts rutscht |
+| Ablagebaum | dasselbe am Knoten (`Baumansicht` kennt jetzt `farbe`, noch einmal durch die Whitelist) |
+
+**Was war die Alternative?** Ein Farbwähler direkt am Deckel (Klick auf
+den Reiter). Dagegen spricht §37: der Reiter ist 13 % der Deckelhöhe, und
+ein Ziel, das man beim Öffnen streift, ist ein falscher Klick. Das Menü
+hat 44 px, und die Felder haben seit E406 einen vergrösserten
+Treffbereich — `test560 §6` misst ihn am Telefon mit `elementFromPoint`
+20 px über und unter der Mitte.
+
+**Was kostet es?** Einen Menüeintrag an zwei Stellen, eine Variable, drei
+CSS-Regeln, zwei Helfer. Und ein gefärbter Ordner ist im Dunkelmodus so
+gefärbt wie im hellen — die Kennungen zeigen auf die Tokens, nicht auf
+Hexwerte.
+
+**Wächter `test560`**, 27 Zusagen, ohne festen Port. Gegen den alten
+Stand war er rot mit **9 von 26** — und drei der neun grünen hielten
+den Zustand, der schon gut war (kein Attribut ohne Farbe, nichts im
+Markup, keine Ausnahme).

@@ -1111,6 +1111,9 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 }
 .row:hover{background:var(--bg-hover); color:var(--text)}
 .row.on{background:var(--bg-hover); color:var(--text); font-weight:500}
+/* Die Ordnerfarbe in der Seitenleiste (E672) — derselbe Rücken wie im
+   Ablagebaum, als Innenschatten, damit nichts rutscht. */
+.row[data-farbe]{box-shadow:inset 3px 0 0 var(--zeilen-farbe)}
 .row .tw{
   width:18px; height:20px; display:grid; place-items:center; flex:0 0 18px;
   color:var(--text-faint); font-size:9px; border-radius:3px;
@@ -8649,7 +8652,9 @@ body.nh-zieht .nh-regal{ touch-action:none }
 body .bib-deckel[data-art="ordner"] .bib-deckel-blatt::before {
   inset: 34% 4% 8%; z-index: 3; opacity: 1;
   transform-origin: 50% 100%;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 85%, white), var(--accent));
+  /* `--ordner-farbe` statt `--accent` (E672): ohne Wahl dasselbe wie vorher,
+     mit Wahl die Farbe des Ordners. */
+  background: linear-gradient(145deg, color-mix(in srgb, var(--ordner-farbe) 85%, white), var(--ordner-farbe));
   box-shadow: inset 0 1px 0 #ffffff50, 0 6px 12px #0002;
   transition: transform .5s cubic-bezier(.22,1,.36,1);
 }
@@ -12444,6 +12449,15 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   color:var(--text-dim); font-size:8px; line-height:1.6
 }
 .bib-deckel:hover .bib-deckel-blatt{ box-shadow:var(--shadow-3) }
+/* DIE FARBE EINES ORDNERS (E672). Der Rücken links ist dieselbe Sprache
+   wie bei den Heften (notizhefte.css, E406) — nur galt die Regel dort nur
+   im Regal, und ein Bibliotheksordner mit `color` stand farblos da. Jetzt
+   EINE Regel für Deckel, Fach und Ordner. Ein ORDNER bekommt dazu einen
+   Hauch der Farbe ins Papier: ein Ordner ist eine Fläche, kein Heft mit
+   Rücken, und eine 5-px-Kante allein sieht man in einem Gitter aus
+   zwanzig Deckeln nicht. `color-mix` steht seit dem Gold-Satz in
+   dunkel.css im Projekt. */
+.bib-deckel[data-farbe] .bib-deckel-blatt{ border-left:5px solid var(--deckel-farbe) }
 /* Der Auslauf nach unten — dasselbe Papier wie im Heftregal. */
 /* DAS ECHTE BILD AUF DEM DECKEL (L61, E313).
    Es füllt das Blatt ganz aus und wird beschnitten statt verzerrt — ein
@@ -12617,16 +12631,26 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
     repeating-linear-gradient(transparent 0 8px, var(--line) 8px 9px)
       14% 44%/72% 40% no-repeat
 }
+/* DIE FARBE DES ORDNERS IST DER ORDNER SELBST (E672). Der gezeichnete
+   Deckel (E601) hat keinen Rücken, den man färben könnte — er IST Körper
+   und Reiter, beide aus der Akzentfarbe. Gemessen, bevor es hier stand:
+   die 5-px-Kante der Hefte kam an einem Ordner mit `border:0` und 0 px
+   heraus, die Farbe fiel auf `currentColor` zurück (rgb 167 167 167). Also
+   bekommt der Ordner eine eigene Variable: ohne Wahl die Akzentfarbe, mit
+   Wahl die gewählte — und Körper wie Reiter lesen sie, hier und in
+   motion.css. */
+.bib-deckel[data-art="ordner"]{ --ordner-farbe:var(--accent) }
+.bib-deckel[data-art="ordner"][data-farbe]{ --ordner-farbe:var(--deckel-farbe) }
 .bib-deckel[data-art="ordner"] .bib-deckel-blatt{
   border:0; box-shadow:none; background:none
 }
 .bib-deckel[data-art="ordner"] .bib-deckel-blatt::before{
   content:""; position:absolute; inset:16% 4% 8%;
-  border-radius:4px 12px 12px 12px; background:var(--accent); opacity:.85
+  border-radius:4px 12px 12px 12px; background:var(--ordner-farbe); opacity:.85
 }
 .bib-deckel[data-art="ordner"] .bib-deckel-blatt::after{
   content:""; position:absolute; left:4%; top:8%; width:44%; height:13%;
-  border-radius:4px 8px 0 0; background:var(--accent); opacity:.85
+  border-radius:4px 8px 0 0; background:var(--ordner-farbe); opacity:.85
 }
 
 @media(max-width:760px){
@@ -20773,6 +20797,9 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 .ru-baum-zeile:hover{background:var(--bg-hover)}
 .ru-baum-zeile[aria-selected="true"]{background:var(--accent-schwach);color:var(--accent-text)}
 .ru-baum-zeile[aria-disabled="true"]{opacity:.45}
+/* Die Ordnerfarbe am Knoten (E672): ein Rücken links, als Innenschatten,
+   damit die Zeile nicht um drei Pixel rutscht. */
+.ru-baum-zeile[data-farbe]{box-shadow:inset 3px 0 0 var(--baum-farbe)}
 .ru-baum-zeile:focus-visible{outline:2px solid var(--accent-text);outline-offset:1px}
 .ru-baum-knick{display:grid;place-items:center;width:20px;height:24px;padding:0;border:0;color:var(--text-dim);background:transparent;font:inherit;line-height:1}
 .ru-baum-knick:empty{opacity:0}
@@ -25057,7 +25084,32 @@ const Farben = (() => {
         '#e255a1': 'Magenta', '#ffdc49': 'Gelb', '#9b9a97': 'Grau',
     };
     const nachHex = (wert) => HEX[String(wert || '').toLowerCase()] || 'Eigene Farbe';
-    return { name, alle, nachHex };
+    /**
+     * Die Kennung, wenn es eine bekannte Deckelfarbe ist — sonst ''.
+     *
+     * Das ist die WHITELIST (§19): was hier nicht steht, wird nie zu einem
+     * Attribut und nie zu einem Token. `default` ist keine Deckelfarbe —
+     * ein Ordner ohne Farbe trägt gar keine, statt „Standard" zu heissen.
+     * Bis E672 stand diese Prüfung privat in `notebook.ts` (`farbeVon`);
+     * mit dem zweiten und dritten Nutzer gehört sie hierher.
+     */
+    const kennung = (wert) => {
+        const t = String(wert || '');
+        return t !== 'default' && Object.prototype.hasOwnProperty.call(NAMEN, t) ? t : '';
+    };
+    /**
+     * Die Attribute für eine gefärbte Kachel oder Zeile — als Zeichenkette
+     * zum Einsetzen ins Markup, mit führendem Leerzeichen; leer ohne Farbe.
+     *
+     * `data-farbe` ist die Marke fürs Stilblatt, die Variable trägt den Wert.
+     * Escapen ist nicht nötig, weil nur eine Kennung aus `NAMEN` hierher
+     * kommt — genau deshalb läuft alles durch `kennung`.
+     */
+    const marke = (wert, variable = '--deckel-farbe') => {
+        const k = kennung(wert);
+        return k ? ` data-farbe="${k}" style="${variable}:var(--c-${k})"` : '';
+    };
+    return { name, alle, nachHex, kennung, marke };
 })();
 window.Farben = Farben;
 
@@ -25184,7 +25236,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1275, inhalt: '6f516ddab82e3343', gebaut: '2026-09-21T13:16:52.261Z' };
+const Stand = { fassung: 1277, inhalt: 'f6794cc320ea3522', gebaut: '2026-09-21T14:47:38.441Z' };
 window.Stand = Stand;
 
 </script>
@@ -48083,6 +48135,15 @@ const Baumansicht = (() => {
                         zeile.setAttribute('aria-disabled', 'true');
                     zeile.tabIndex = gewaehlt === k.id ? 0 : -1;
                     zeile.style.setProperty('--baum-ebene', String(ebene - 1));
+                    /* DIE FARBE DES KNOTENS (E672) — noch einmal durch die Whitelist,
+                       auch wenn der Aufrufer sie schon geprüft hat: dieser Baum ist
+                       eine gemeinsame Ansicht, und der nächste Aufrufer prüft
+                       vielleicht nicht. */
+                    const farbe = typeof Farben !== 'undefined' && Farben.kennung ? Farben.kennung(k.farbe) : '';
+                    if (farbe) {
+                        zeile.dataset['farbe'] = farbe;
+                        zeile.style.setProperty('--baum-farbe', 'var(--c-' + farbe + ')');
+                    }
                     /* EIN `span`, KEIN `button`. Der Knick ist Zierat am Treeitem: die
                        Zeile selbst ist das Bedienelement (Klick, Pfeiltasten, Enter),
                        und der Klick auf den Knick wird über `closest()` an der Zeile
@@ -155284,7 +155345,10 @@ const Bibliothek = (() => {
             ? `<img class="bib-deckel-bild" data-vorschau="${esc(datei)}" alt="" loading="lazy">`
             : (tinte || (MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : ''));
         const wann = wannText(p.zuletztGeoeffnet || p.edited || p.created);
-        const deckel = `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}" ` +
+        const deckel = `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}"` +
+            /* DIE FARBE DES ORDNERS (E672) — dieselbe Marke wie beim Heft und
+               beim Fach; das Stilblatt kennt eine Regel für alle drei. */
+            Farben.marke(p.color) + ' ' +
             `title="${esc(p.text || 'Ohne Titel')}">` +
             `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}${tinte ? ' hat-tinte' : ''}">` +
             '<i class="bib-papier" aria-hidden="true"></i>' +
@@ -155563,10 +155627,14 @@ const Bibliothek = (() => {
                 .slice()
                 .sort(sortiere)
                 .map(k => bauen(k, weiter));
+            const farbe = Farben.kennung(p.color);
             return {
                 id,
                 name: String(p.text || 'Ohne Titel'),
                 zeichen: kinder.length || p.heftArt === 'fach' ? 'pages' : 'page',
+                /* Die Ordnerfarbe wandert in den Baum (E672): wer einen Ordner blau
+                   macht, will ihn ÜBERALL blau sehen, nicht nur als Deckel. */
+                ...(farbe ? { farbe } : {}),
                 ...(kinder.length ? { kinder } : {})
             };
         };
@@ -155942,6 +156010,10 @@ const Bibliothek = (() => {
                     `<button data-a="stern"><span class="mi">${p.favorite ? '\u2605' : '\u2606'}</span>` +
                     (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten') + '</button>' +
                     '<button data-a="umbenennen"><span class="mi">\u270e</span>Umbenennen</button>' +
+                    /* „FARBE …" (E672): derselbe Wähler wie in den Notizheften, nur mit
+                       einem anderen `danach` — hier wird die Bibliothek neu gezeichnet. */
+                    (typeof Notebook !== 'undefined' && typeof Notebook.farbMenue === 'function'
+                        ? '<button data-a="farbe"><span class="mi">\u25cf</span>Farbe \u2026</button>' : '') +
                     '<div class="sep"></div>' +
                     '<button data-a="papierkorb"><span class="mi">\u2327</span>In den Papierkorb</button>', Math.min(r.left, innerWidth - 230), r.bottom + 4);
                 m.addEventListener('click', ev => {
@@ -155960,6 +156032,10 @@ const Bibliothek = (() => {
                     }
                     if (a === 'stern') {
                         Store.updateBlock(p.id, { favorite: !p.favorite });
+                    }
+                    if (a === 'farbe') {
+                        Notebook.farbMenue(k, p.id, () => App.zeichneSeite());
+                        return;
                     }
                     if (a === 'umbenennen') {
                         /* Umbenannt wird auf der Seite selbst — ein zweites Eingabefeld
@@ -160961,10 +161037,9 @@ const Notebook = (() => {
        Auswahl: ein Heftdeckel kennt kein „Standard". */
     const FARBEN = ['gray', 'brown', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'red']
         .map(id => ({ id, name: Farben.name(id) }));
-    const farbeVon = (p) => {
-        const wert = String(p?.color || '');
-        return FARBEN.some(f => f.id === wert) ? wert : '';
-    };
+    /* Die Whitelist steht seit E672 in `Farben.kennung` — dieselbe für
+       Hefte, Fächer, Bibliotheksordner, Seitenleiste und Ablagebaum. */
+    const farbeVon = (p) => Farben.kennung(p?.color);
     /* ------------------------------------------------------------------ *
      * Öffnen und Anlegen
      * ------------------------------------------------------------------ */
@@ -161097,9 +161172,15 @@ const Notebook = (() => {
         Store.updateBlock(id, { favorite: !p.favorite });
         renderShelf();
     };
-    const setzeFarbe = (id, farbe) => {
-        Store.updateBlock(id, { color: FARBEN.some(f => f.id === farbe) ? farbe : '' });
-        renderShelf();
+    /* `danach` (E672): die Bibliothek ruft denselben Wähler für ihre Ordner
+       und will danach SICH neu zeichnen, nicht das Regal. Ohne Angabe bleibt
+       es beim Regal — so, wie die Hefte es seit E406 tun. */
+    const setzeFarbe = (id, farbe, danach) => {
+        Store.updateBlock(id, { color: Farben.kennung(farbe) });
+        if (danach)
+            danach();
+        else
+            renderShelf();
     };
     /** Verschlüsseln aus dem Regal. NACH dem erfolgreichen Sperren wird
      *  `heftArt:'heft'` gesetzt — die Kinder sind dann Chiffretext, und
@@ -161220,7 +161301,11 @@ const Notebook = (() => {
     /** Die Fach-Karte: Redions gezeichnete Ordner-Mappe (`data-art="ordner"`
      *  aus der Bibliotheks-Anatomie) mit Symbol und ehrlicher Zählung. */
     const fachCard = (f) => {
-        const deckel = `<button class="bib-deckel" data-fach="${esc(f.id)}" data-art="ordner" ` +
+        const deckel = `<button class="bib-deckel" data-fach="${esc(f.id)}" data-art="ordner"` +
+            /* DIE FARBE DES FACHS (E672) — dasselbe Feld und dieselbe Marke wie
+               beim Heft darunter. `Farben.marke` gibt nur bekannte Kennungen
+               heraus, deshalb steht hier kein `esc` (es gäbe nichts zu escapen). */
+            Farben.marke(f.color) + ' ' +
             `aria-label="Fach öffnen: ${esc(f.text || 'Ohne Namen')}">` +
             `<span class="bib-deckel-blatt is-leer">` +
             `<span class="nh-fach-icon" aria-hidden="true">${esc(f.icon || '🗂')}</span></span>` +
@@ -161550,7 +161635,12 @@ const Notebook = (() => {
             setTimeout(() => App.erstellenWeg(was), 60);
         });
     };
-    const farbMenue = (anker, id) => {
+    /* ══ DER FARBWÄHLER — EINER FÜR ALLE (E672) ═══════════════════════════
+       Er stand hier für Hefte. Fächer hatten ihn nicht, Bibliotheksordner
+       auch nicht — und ein zweiter Wähler daneben wäre §8. Deshalb steht er
+       im Rückgabeobjekt, und die Bibliothek ruft ihn mit ihrem eigenen
+       `danach`. Dieselben neun Felder, dieselben Namen, dasselbe Häkchen. */
+    const farbMenue = (anker, id, danach) => {
         const p = Store.getBlock(id);
         if (!p)
             return;
@@ -161567,7 +161657,7 @@ const Notebook = (() => {
             if (!b)
                 return;
             m.remove();
-            setzeFarbe(id, String(b.dataset['farbe'] || ''));
+            setzeFarbe(id, String(b.dataset['farbe'] || ''), danach);
         });
     };
     const fachwahlMenue = (anker, heftId) => {
@@ -161689,6 +161779,10 @@ const Notebook = (() => {
         const m = UI.menu(`<button data-k="auf">Öffnen</button>` +
             (kannBlick ? `<button data-k="blick"><span class="mi">⌕</span>Blick hinein</button>` : '') +
             `<button data-k="name">Umbenennen</button>` +
+            /* „FARBE …" AUCH AM FACH (E672). Die Hefte hatten es seit E406, das
+               Fach daneben nicht — Redur, 21. September: „ich sollte die ordner
+               farben wählen können und farben wechseln können". */
+            `<button data-k="farbe">Farbe …</button>` +
             `<div class="sep"></div>` +
             `<button data-k="korb">In den Papierkorb</button>`, Math.min(r.left - 140, innerWidth - 240), r.bottom + 4);
         m.addEventListener('click', (e) => {
@@ -161698,6 +161792,8 @@ const Notebook = (() => {
             m.remove();
             if (b.dataset['k'] === 'auf')
                 return openFach(id);
+            if (b.dataset['k'] === 'farbe')
+                return farbMenue(anker, id);
             if (b.dataset['k'] === 'blick')
                 return Bibliothek.blickHinein(f, anker.getBoundingClientRect(), false, (ziel) => openFach(ziel));
             if (b.dataset['k'] === 'name') {
@@ -162085,6 +162181,8 @@ const Notebook = (() => {
     /* Die Regeln kommen mit heraus, damit ein Prüflauf sie OHNE Fenster
        messen kann — dieselbe Trennung wie bei `Wissensluecken.sammeln`. */
     return { oeffnen, open: oeffnen, resume, render,
+        /* Der Farbwähler nach aussen (E672) — für die Ordner der Bibliothek. */
+        farbMenue,
         istFach, isNotebook, faecher, alleFaecher, unterFaecher, fachWeg,
         fachHefte, loseHefte, fachInhaltSatz, FACH_TIEFE,
         ziehenAblegen,
@@ -168303,6 +168401,13 @@ const Seitenleiste = (() => {
         const r = document.createElement('div');
         r.className = 'row' + (p.id === aktuelleSeite() ? ' on' : '');
         r.draggable = true;
+        /* DIE ORDNERFARBE IN DER SEITENLEISTE (E672) — als schmaler Rücken
+           links, wie am Deckel. Nur bekannte Kennungen (`Farben.kennung`). */
+        const zeilenFarbe = typeof Farben !== 'undefined' && Farben.kennung ? Farben.kennung(p.color) : '';
+        if (zeilenFarbe) {
+            r.dataset['farbe'] = zeilenFarbe;
+            r.style.setProperty('--zeilen-farbe', 'var(--c-' + zeilenFarbe + ')');
+        }
         const kinder = Store.childrenOf(p.id).filter((k) => k.type === 'page' && !k.archiviert);
         const offen = !!p.aufgeklappt;
         const tw = document.createElement('div');

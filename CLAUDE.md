@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 501 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 502 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1116,6 +1116,14 @@ das neue Werkzeug das T von „Text schreiben" mittrug, und derselbe Lauf
 zählte dreizehn Werkzeuge, wo vierzehn standen. Gezählt am 21. September:
 `ls pruefungen/lauf/test*.mts | wc -l` sagt 501.*
 
+*Und 502: `test560` — ein Ordner hat eine Farbe, und man kann sie wechseln
+(E672). Gegen den alten Stand war er rot mit 9 von 26. Sein wichtigster
+Beitrag kam NACH dem Bauen: die Rücken-Regel der Hefte kam am gezeichneten
+Ordner mit 0 px heraus, und die Farbe fiel auf `currentColor` zurück —
+`rgb(167, 167, 167)`. Ein Attribut war gesetzt, gezeichnet war nichts. Seither
+misst er den Reiter des Ordners Kanal für Kanal gegen `--c-blue`. Gezählt am
+21. September: `ls pruefungen/lauf/test*.mts | wc -l` sagt 502.*
+
 ### Die Befehle
 
 ```txt
@@ -1124,7 +1132,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 501 Läufe
+npm run pruefen                      alle 502 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1211,7 +1219,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 501 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 502 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
