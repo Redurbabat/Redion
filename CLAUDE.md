@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 498 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 499 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1081,6 +1081,18 @@ Fensterbreite, und sichtbar war davon ein „r" (§55.1). Gezählt am
 20. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
 498.*
 
+*Und 499: `test557` — Fett ist ein Schalter, und Strg+B nimmt denselben
+Weg (E668). Er hat zwei Dinge gefunden, und das zweite wiegt schwerer als
+das erste: `umschliesse` gab es ZWEIMAL, und die Fassung in `editor.ts`
+speicherte `ct.textContent` zurück — den GEZEICHNETEN Text. Strg+B in einem
+Block `Ein **fetter** Satz` machte daraus `Ein fetter **Satz**`; die
+vorhandene Auszeichnung war weg, ohne Meldung. Derselbe Handgriff über den
+Knopf ergab `Ein **fetter** **Satz**`. Genau davor warnt §8, und genau
+deshalb hat E650s Reparatur nur die Hälfte erreicht — `test542` prüfte den
+Knopf, nicht die Taste. Gegen den alten Stand war er rot mit 8 von 13.
+Gezählt am 21. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 499.*
+
 ### Die Befehle
 
 ```txt
@@ -1089,7 +1101,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 498 Läufe
+npm run pruefen                      alle 499 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1176,7 +1188,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 498 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 499 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

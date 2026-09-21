@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-647 Entscheidungen, E1 bis E667 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+648 Entscheidungen, E1 bis E668 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -710,6 +710,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E665** — Ein Griff statt zwei: `test537` meldete einen neuen Querverweis, weil die Einstellungsseite für den Probelauf erst `KI.modelleHolen(id)` und dann `KI.modelleVon(id)[0]` rief. Der Wächter hatte recht, und zwar doppelt — „holen und dann das erste nehmen" ist eine Prozedur der KI, nicht Wissen der Einstellungsseite. Jetzt `KI.modellWaehlen(id)`, ein Satz. Dabei gemessen: `ohneSchablonen` verdeckt **266 echte Aufrufe** im Bestand (L207).
 * **E666** — „Erinnerung" führt zu einer Erinnerung: der Slash-Eintrag schrieb `@remind ` in den Text, und NIRGENDS im Programm wurde `@remind` gelesen — während `Werkzeuge.erinnerungSetzen` samt Dialog, Liste und Geräte-Meldung längst dastand. Der Draht liegt im REGISTER (§5 dritter Weg) und nicht im Editor: `bereiche/editor → Werkzeuge` steht bei 1, und das Verzeichnis darf nur schrumpfen. Nach dem Bogen: unverändert 518 Treffer. Wächter `test555`.
 * **E667** — Strg+F findet vier Stellen und zeigte eine: die Seitensuche markierte jede Fundstelle, rollte zur ERSTEN und schrieb „12 Treffer" — zu den elf anderen gab es keinen Weg, denn ihr `keydown` kannte nur `Escape`. Jetzt Enter vor, Umschalt+Enter zurück, ‹ und › als 44-px-Knöpfe (§37), Zähler „2 von 4" statt „4 Treffer" (§38), und ein Ring statt einer Wand. Das BILD fand dazu, was kein Lauf sah: am Telefon lief das Suchfeld links aus dem Bild (`-90 … 368` bei 390 px), weil die zwei neuen Knöpfe die Leiste auf 458 px verbreiterten (§55.1). Wächter `test556`.
+* **E668** — Fett ist ein Schalter, und Strg+B nimmt denselben Weg: `umschliesse` stempelte nur (`****Wort****`, gezeichnet als sichtbares `**Wort**`), und `editor.ts` hatte eine ZWEITE Fassung, die `ct.textContent` zurückschrieb — den GEZEICHNETEN Text. Strg+B in `Ein **fetter** Satz` machte daraus `Ein fetter **Satz**`: die vorhandene Auszeichnung gelöscht, ohne Meldung. §8 wörtlich, und der Grund, warum E650 nur den halben Weg erreichte. Dazu: `*` ist die halbe `**` — Kursiv auf fettem Wort ergibt `***fetter***`, nicht `*fetter*`. Wächter `test557`.
 
 ---
 
@@ -54581,3 +54582,82 @@ Weg stehenzubleiben.
 tut nichts" und „unter 44 px: ✕ (13×24)". Der Telefon-Teil kam **nach**
 dem Bild dazu und war noch einmal rot: „sie reicht von -90 bis 368 in
 einem 390 px breiten Fenster".
+
+
+## E668 — Fett ist ein Schalter, und Strg+B nimmt denselben Weg
+
+**Was wurde entschieden?** Zwei Dinge in einem Bogen, weil sie dieselbe
+Zeile betreffen:
+
+1. `umschliesse` **schaltet** die Marke, statt sie nur zu stempeln. Liegt
+   sie schon um die Auswahl, kommt sie weg.
+2. Die **zweite** Fassung von `umschliesse` in `editor.ts` ist weg. Strg+B,
+   Strg+I, Strg+U, Strg+E und Strg+Umschalt+S gehen jetzt durch die Fassung
+   der Auswahlleiste — dieselbe, die der Knopf ruft (§8).
+
+**Warum der Schalter?** Weil Fett in jedem Textprogramm der Welt ein
+Schalter ist. Hier war es ein Stempel: wer ein fettes Wort markierte und
+noch einmal drückte, bekam `****Wort****`. Und das ist nicht nur hässlich —
+gezeichnet wird daraus `**Wort**` als **sichtbarer Text**. Die Marke steht
+dann mitten im Absatz, und wer sie loswerden will, muss sie von Hand
+löschen.
+
+Bei Kursiv war es schlimmer und leiser: aus `*Satz*` wurde durch ein
+zweites Strg+I nicht `**Satz**`-mit-Sternen, sondern **fett**. Eine Taste,
+die „kursiv" heisst, machte fett.
+
+**Warum der zweite Punkt der teurere ist.** `editor.ts` hatte eine eigene
+Fassung, und sie arbeitete ganz anders:
+
+```js
+r.insertNode(document.createTextNode(marke + txt + marke));
+Store.updateBlock(blk.dataset.bid, { text: ct.textContent });
+```
+
+`ct.textContent` ist der **gezeichnete** Text. In einem Block
+`Ein **fetter** Satz` steht dort `Ein fetter Satz` — ohne Sterne. Wer
+irgendwo in diesem Block Strg+B drückte, speicherte den gezeichneten Text
+zurück und **löschte damit jede Auszeichnung, die der Block vorher hatte.**
+Kein Absturz, keine Meldung. Gemessen in `test557`:
+
+```txt
+vorher:  Ein **fetter** Satz
+Strg+B auf „Satz"
+nachher: Ein fetter **Satz**        ← das alte Fett ist weg
+über den Knopf: Ein **fetter** **Satz**
+```
+
+Derselbe Handgriff, zwei Ergebnisse — je nachdem, ob man die Maus oder die
+Tastatur benutzt. Das ist §8 wörtlich: „Ein zweiter Katalog für dasselbe
+läuft mit dem ersten auseinander, und niemand merkt, welcher gilt."
+
+**Und es erklärt eine Lücke in E650.** Der Fund vom 20. September — 
+`String.replace` trifft das erste statt des markierten Vorkommens — wurde in
+`auswahlleiste.ts` repariert. Die zweite Fassung kannte niemand, also blieb
+sie, wie sie war. Ein Wächter, der nur einen von zwei Wegen misst, sagt
+„grün" über die halbe Wahrheit; `test542` prüfte den Knopf, nicht die Taste.
+
+**Der Fall, der sorgfältig macht: `*` ist die halbe `**`.** In
+`Ein **fetter** Satz` steht vor „fetter" ein `*` und dahinter auch. Wer das
+beim Abschalten von Kursiv für die Kursiv-Marke hielte, machte `*fetter*`
+daraus und löschte das Fett. Deshalb zwei zusätzliche Zeilen: eine einzelne
+`*` gilt nur, wenn daneben keine zweite steht. Strg+I auf einem fetten Wort
+ergibt weiterhin `***fetter***`, also fett UND kursiv — und nicht kursiv
+STATT fett.
+
+**Was war die Alternative?** Die Fassung in `editor.ts` stehenlassen und
+nur den Schalter einbauen. Dann wären es zwei Schalter gewesen, die
+verschieden schalten — der Fehler von E650 noch einmal, nur mit mehr Code.
+Und das Löschen der Auszeichnung wäre geblieben.
+
+**Was kostet es?** Die Tastatur ruft jetzt über `Auswahl` statt direkt. Das
+ist ein Sprung mehr und ein `typeof`-Schutz davor; dafür gibt es die
+Auszeichnung nur noch einmal im Programm.
+
+**Was es NICHT tut:** Es schaltet an der gefundenen Stelle, nicht über eine
+Suche. Der Restfall aus E650 Weg 3 bleibt, wie er ist — eine Auswahl, deren
+Stelle sich nicht sicher bestimmen lässt, wird weiterhin nicht geraten.
+
+**Wächter `test557`**, 13 Zusagen. Gegen den alten Stand war er rot mit
+8 von 13, und zwei seiner Zeilen sagen alles: `Ein schlichter ****Satz****`
+und `Ein fetter **Satz**`.

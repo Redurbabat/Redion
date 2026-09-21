@@ -2044,23 +2044,30 @@ const Blocks = (() => {
     });
   };
 
-  /* --- Textauszeichnung um die Auswahl legen ------------------------------ */
-  const umschliesse = (marke: any) => {
-    const s = getSelection();
-    if (!s || !s.rangeCount) return;
-    const txt = s.toString();
-    if (!txt) return;
-    const r = s.getRangeAt(0);
-    r.deleteContents();
-    r.insertNode(document.createTextNode(marke + txt + marke));
-    /* Änderung sichern */
-    const ct = r.startContainer.parentElement?.closest('.ct');
-    if (ct) {
-      const blk = ct.closest<HTMLElement>('.blk');
-      if (!blk || !blk.dataset.bid) return;
-      Store.updateBlock(blk.dataset.bid, { text: ct.textContent });
-      App.zeichneSeite(blk.dataset.bid, 'ende');
-    }
+  /* --- Textauszeichnung um die Auswahl legen ------------------------------
+   * EIN KATALOG, NICHT ZWEI (§8, E668). Hier stand eine eigene Fassung von
+   * `umschliesse`, und sie machte etwas anderes als die der Auswahlleiste:
+   *
+   *     r.insertNode(document.createTextNode(marke + txt + marke));
+   *     Store.updateBlock(blk.dataset.bid, { text: ct.textContent });
+   *
+   * `ct.textContent` ist der GEZEICHNETE Text. In einem Block
+   * `Ein **fetter** Satz` steht dort `Ein fetter Satz` — ohne Sterne. Wer
+   * irgendwo in diesem Block Strg+B drückte, speicherte den gezeichneten
+   * Text zurück und löschte damit jede Auszeichnung, die der Block vorher
+   * hatte. Gemessen in `test557`: aus `Ein **fetter** Satz` wurde
+   * `Ein fetter **Satz**`.
+   *
+   * Und weil es zwei Fassungen waren, hat E650s Reparatur (die richtige
+   * Stelle treffen) nur eine von beiden erreicht — genau das, wovor §8
+   * warnt: „läuft mit dem ersten auseinander, und niemand merkt, welcher
+   * gilt."
+   *
+   * Der Knopf der Auswahlleiste und die Taste gehen deshalb jetzt
+   * denselben Weg. */
+  const umschliesse = (marke: string) => {
+    if (typeof Auswahl === 'undefined' || typeof Auswahl.umschliesse !== 'function') return;
+    Auswahl.umschliesse(marke);
   };
 
   /* ========================================================================

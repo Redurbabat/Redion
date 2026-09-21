@@ -25169,7 +25169,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1266, inhalt: '6599b935b6c0e82e', gebaut: '2026-09-20T20:20:27.899Z' };
+const Stand = { fassung: 1267, inhalt: '448f07fa1f2a4625', gebaut: '2026-09-21T04:18:17.512Z' };
 window.Stand = Stand;
 
 </script>
@@ -95430,26 +95430,31 @@ const Blocks = (() => {
             gezogen = null;
         });
     };
-    /* --- Textauszeichnung um die Auswahl legen ------------------------------ */
+    /* --- Textauszeichnung um die Auswahl legen ------------------------------
+     * EIN KATALOG, NICHT ZWEI (§8, E668). Hier stand eine eigene Fassung von
+     * `umschliesse`, und sie machte etwas anderes als die der Auswahlleiste:
+     *
+     *     r.insertNode(document.createTextNode(marke + txt + marke));
+     *     Store.updateBlock(blk.dataset.bid, { text: ct.textContent });
+     *
+     * `ct.textContent` ist der GEZEICHNETE Text. In einem Block
+     * `Ein **fetter** Satz` steht dort `Ein fetter Satz` — ohne Sterne. Wer
+     * irgendwo in diesem Block Strg+B drückte, speicherte den gezeichneten
+     * Text zurück und löschte damit jede Auszeichnung, die der Block vorher
+     * hatte. Gemessen in `test557`: aus `Ein **fetter** Satz` wurde
+     * `Ein fetter **Satz**`.
+     *
+     * Und weil es zwei Fassungen waren, hat E650s Reparatur (die richtige
+     * Stelle treffen) nur eine von beiden erreicht — genau das, wovor §8
+     * warnt: „läuft mit dem ersten auseinander, und niemand merkt, welcher
+     * gilt."
+     *
+     * Der Knopf der Auswahlleiste und die Taste gehen deshalb jetzt
+     * denselben Weg. */
     const umschliesse = (marke) => {
-        const s = getSelection();
-        if (!s || !s.rangeCount)
+        if (typeof Auswahl === 'undefined' || typeof Auswahl.umschliesse !== 'function')
             return;
-        const txt = s.toString();
-        if (!txt)
-            return;
-        const r = s.getRangeAt(0);
-        r.deleteContents();
-        r.insertNode(document.createTextNode(marke + txt + marke));
-        /* Änderung sichern */
-        const ct = r.startContainer.parentElement?.closest('.ct');
-        if (ct) {
-            const blk = ct.closest('.blk');
-            if (!blk || !blk.dataset.bid)
-                return;
-            Store.updateBlock(blk.dataset.bid, { text: ct.textContent });
-            App.zeichneSeite(blk.dataset.bid, 'ende');
-        }
+        Auswahl.umschliesse(marke);
     };
     /* ========================================================================
      * BLOCK-OPERATIONEN
@@ -114340,7 +114345,32 @@ const Auswahl = (() => {
             return text;
         return text.slice(0, i) + ersatz + text.slice(i + gewaehlt.length);
     };
-    /** Legt Marken um die Auswahl — genau wie Notions Strg + B. */
+    /* ══ LIEGT DIE MARKE SCHON DRUM HERUM? (E668) ═══════════════════════════
+     * Fett war ein Stempel und kein Schalter: wer ein fettes Wort markierte
+     * und noch einmal auf Fett drückte, bekam `****Wort****`. Gezeichnet wird
+     * daraus `**Wort**` als sichtbarer Text — die Marke steht dann IM Absatz.
+     *
+     * Geprüft wird an der gefundenen Stelle, nicht mit einer Suche: steht
+     * unmittelbar davor und dahinter die Marke, ist sie schon da.
+     *
+     * DER FALL, DER EINEN SORGFÄLTIG MACHT: `*` ist die halbe `**`. In
+     * `Ein **fetter** Satz` steht vor „fetter" ein `*` und dahinter auch —
+     * wer das für Kursiv hielte, würde beim Abschalten `*fetter*` daraus
+     * machen und das FETT löschen. Deshalb die zwei Zeilen darunter: eine
+     * einzelne `*` gilt nur, wenn daneben keine zweite steht. */
+    const istUmschlossen = (text, i, laenge, marke) => {
+        if (i < marke.length)
+            return false;
+        if (text.slice(i - marke.length, i) !== marke)
+            return false;
+        if (text.slice(i + laenge, i + laenge + marke.length) !== marke)
+            return false;
+        if (marke === '*' && (text[i - 2] === '*' || text[i + laenge + 1] === '*'))
+            return false;
+        return true;
+    };
+    /** Legt Marken um die Auswahl — oder nimmt sie weg, wenn sie schon da
+     *  sind. Ein Schalter, wie in jedem Textprogramm (E668). */
     const umschliesse = (marke) => {
         const txt = getSelection()?.toString() ?? '';
         if (!txt)
@@ -114348,7 +114378,11 @@ const Auswahl = (() => {
         const b = markierterBlock();
         if (!b)
             return;
-        const neu = tauscheDort(b.text || '', txt, marke + txt + marke);
+        const alt = b.text || '';
+        const i = stelleImText(alt, txt);
+        const neu = (i >= 0 && istUmschlossen(alt, i, txt.length, marke))
+            ? alt.slice(0, i - marke.length) + txt + alt.slice(i + txt.length + marke.length)
+            : tauscheDort(alt, txt, marke + txt + marke);
         Store.updateBlock(b.id, { text: neu });
         App.zeichneSeite(b.id, 'ende');
         weg();
