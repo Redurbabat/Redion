@@ -2573,24 +2573,80 @@ const ChronikDaten = {
                 {
                     "was": "Voller Lauf (490 Läufe, 107 min) und E665 — ein Griff statt zwei",
                     "vonCommit": "74bde43",
-                    "bisCommit": "(offen)",
+                    "bisCommit": "0c8331d",
                     "zeitraum": "17:57 – 21:50",
                     "dauer": "107 min Lauf plus Nacharbeit",
                     "pruefungen": "490 Läufe: 487 grün, 3 rot (test270 Arbeitsbaum-Artefakt, test403 zu enges Fenster, test537 Verzeichnis). test270 im Hauptbaum nachgemessen: 77 ok, 0 offen."
                 },
                 {
                     "was": "E666 — Erinnerung fuehrt zu einer Erinnerung, ueber das Register statt ueber den Editor",
-                    "vonCommit": "(offen)",
-                    "bisCommit": "(offen)",
-                    "zeitraum": "ca. 22:15 –",
-                    "dauer": "laufend",
+                    "vonCommit": "54f3d62",
+                    "bisCommit": "0416204",
+                    "zeitraum": "19:52 – 20:03",
+                    "dauer": "11 min",
                     "pruefungen": "test555 (12/12, Gegenprobe), test537 (unveraendert 518), test87, test105, test109, test95-100 alle gruen"
+                },
+                {
+                    "was": "E660 — die Tabellenwerkzeuge sind am Telefon zu treffen (26 px statt 44)",
+                    "vonCommit": "0c8331d",
+                    "bisCommit": "b918aa8",
+                    "zeitraum": "18:27 – 18:39",
+                    "dauer": "12 min",
+                    "pruefungen": "test551 (neu, 9 Zusagen), test303, test402"
+                },
+                {
+                    "was": "E661 — Groqs 404: ein abgekündigtes Modell sagt, dass es das Modell ist",
+                    "vonCommit": "b918aa8",
+                    "bisCommit": "a75c58c",
+                    "zeitraum": "18:39 – 18:48",
+                    "dauer": "9 min",
+                    "pruefungen": "test552 (neu, 15 Zusagen). Die erste Gegenprobe war FALSCH, nicht der Code."
+                },
+                {
+                    "was": "E662 — der Sweep nennt den Schuldigen, nicht sein ganzes Stück",
+                    "vonCommit": "a75c58c",
+                    "bisCommit": "79b94f6",
+                    "zeitraum": "18:48 – 18:58",
+                    "dauer": "10 min",
+                    "pruefungen": "test553 (neu, 6 Zusagen) gegen die echte Bilanz: zehn rote Läufe gemeldet, einer war es."
+                },
+                {
+                    "was": "E663/E664 — die Wochenrückschau zählt wieder (erledigtAm), und ein Wächter sieht den Block",
+                    "vonCommit": "79b94f6",
+                    "bisCommit": "88e6a7d",
+                    "zeitraum": "18:58 – 19:21",
+                    "dauer": "23 min",
+                    "pruefungen": "test554 (neu, 11 Zusagen). Das Feld wurde an SECHS Stellen geschrieben — der Stempel sitzt deshalb in updateBlock."
+                },
+                {
+                    "was": "E665 — ein Griff statt zwei (modellWaehlen), und was der Wächter dabei verriet",
+                    "vonCommit": "88e6a7d",
+                    "bisCommit": "54f3d62",
+                    "zeitraum": "19:21 – 19:52",
+                    "dauer": "31 min",
+                    "pruefungen": "test537: einer der zwei zusätzlichen Treffer war meiner und ist weg; der andere ist L207."
+                },
+                {
+                    "was": "§30: die Zählungen stehen wieder in ihrer Reihenfolge (490, dann 497, 496 … war rückwärts)",
+                    "vonCommit": "0416204",
+                    "bisCommit": "1f646a6",
+                    "zeitraum": "20:03 – 20:11",
+                    "dauer": "8 min",
+                    "pruefungen": "test550 8/8 — er blieb dabei GRÜN: er prüft die Zahlen, nicht ihre Reihenfolge."
+                },
+                {
+                    "was": "E667 — Strg+F findet vier Stellen und zeigte eine",
+                    "vonCommit": "1f646a6",
+                    "bisCommit": "1795b40",
+                    "zeitraum": "20:11 – 20:21",
+                    "dauer": "10 min",
+                    "pruefungen": "test556 (neu, 22 Zusagen; vorher 5/17). Die letzten fünf Zusagen kamen aus dem BILD: am Telefon lief das Suchfeld links aus dem Bild (-90 … 368 bei 390 px)."
                 }
             ],
             "zahlen": {
-                "commits": 2,
-                "entscheidungen": 24,
-                "neue Prüfläufe": 14,
+                "commits": 38,
+                "entscheidungen": 23,
+                "neue Prüfläufe": 18,
                 "volle Läufe": 1
             },
             "groesstesProblem": "Der erste Entwurf für die Werkzeugleiste hat nicht getragen, und ich habe drei Anläufe gebraucht, um zu merken, dass nicht die Rechnung falsch war, sondern die Bauform. Eine dauerhafte Fläche, die ihre Stelle speichert, veraltet bei jedem Umbruch der Leiste. Ich habe Auslöser nachgelegt (class, childList, subtree), die Formel zweimal umgeschrieben (gegen die Leiste, gegen offsetParent) — und der Wert blieb bei 88 px. Erst ein Zähler im Element zeigte: die Rechnung war fünfmal gelaufen und jedes Mal zu früh. Die Lehre ist unbequem: wer Auslöser nachlegt, weiss nie, ob er alle hat.",
@@ -2613,6 +2669,92 @@ const ChronikDaten = {
                     "was": "Die Dehnung der Linse gilt nur noch zwischen Nachbarn, der Deckel fällt von 1,85 auf 1,18, und die Ruhe-Brechung von 15 auf 8.",
                     "warum": "Drei Regeln des Design-Systems, die schlicht recht haben. Eine Brücke spannt sich zwischen Dingen, die sich fast berühren.",
                     "risiko": "keins. Was bleibt, ist Redurs Entscheidung: ob über der Schrift überhaupt gebrochen werden darf."
+                }
+            ]
+        },
+        {
+            "datum": "2026-09-21",
+            "wochentag": "Montag",
+            "titel": "Fett wird ein Schalter, die Geräte bekommen ihre Liste — und der Text einer PDF lässt sich ändern",
+            "wasIchWeiss": "Ein kurzer Tag mit drei Bögen, und in allen dreien hat ein BESTEHENDER Wächter oder ein BILD etwas gefunden, bevor ich hinsah. `main` steht weiter still (§46): test537 bleibt rot bei 518 gegen 517, und die Richtung dafür gehört Redur (L207).",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 03:45",
+                    "wortlaut": "Weiter",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Weitermachen mit den offenen Funden aus der Bestandsaufnahme.",
+                    "besser": "",
+                    "besserePrompt": "Nichts zu verbessern — ein Wort, das eine Liste abarbeitet, die schon steht."
+                },
+                {
+                    "zeit": "ca. 04:30",
+                    "wortlaut": "Weiter",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Dasselbe.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 05:00",
+                    "wortlaut": "Weiter ohne pause , können wir so was machen das wenn ich eine pdf hochlade das ich die pdf selbst direk bearbeiten kann also die text direk",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Eine echte Produktfrage mitten im Weiterarbeiten: den Text einer hochgeladenen PDF direkt ändern können.",
+                    "besser": "",
+                    "besserePrompt": "Nichts zu verbessern. Die Frage war präzise genug, um das Richtige zu bauen — und wichtig war nicht der Wortlaut, sondern dass ICH den Unterschied zwischen „die PDF umschreiben“ und „die Stelle zudecken und neu schreiben“ von selbst hinschreibe, statt ihn zu verschweigen."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E668 — Fett ist ein Schalter, und Strg+B nimmt denselben Weg",
+                    "vonCommit": "1795b40",
+                    "bisCommit": "10aed71",
+                    "zeitraum": "ca. 03:50 – 04:21",
+                    "dauer": "ca. 31 min",
+                    "pruefungen": "test557 (neu, 13 Zusagen; vorher 8/13), test542 10/10, test87, test105, test109"
+                },
+                {
+                    "was": "E669 — die angemeldeten Geräte gibt es jetzt wirklich (zwei Server-Wege, ein Fenster)",
+                    "vonCommit": "10aed71",
+                    "bisCommit": "a3a994b",
+                    "zeitraum": "04:21 – 04:54",
+                    "dauer": "33 min",
+                    "pruefungen": "test558 (neu, 28 Zusagen; vorher 0/18), test120 21/21, test75, test76, test303, test401, test402"
+                },
+                {
+                    "was": "E670 — den Text einer PDF ändern, ohne die PDF anzufassen",
+                    "vonCommit": "a3a994b",
+                    "bisCommit": "dc4c129",
+                    "zeitraum": "ca. 05:00 – 07:52",
+                    "dauer": "ca. 172 min",
+                    "pruefungen": "test559 (neu, 18 Zusagen; vorher 4/18), test480 60/60, test441 42/42, test87, test105, test109"
+                }
+            ],
+            "zahlen": {
+                "commits": 3,
+                "entscheidungen": 3,
+                "neue Prüfläufe": 3,
+                "volle Läufe": 0
+            },
+            "groesstesProblem": "Fünf Minuten Stille beim ersten Lauf von test559: `alsSeiten` bekam `PdfEinlesen.OHNE_FRAGE` als Vorgabe — das ist aber die ZAHL 30 und kein Schalter „ohne Frage“. Der Layout-Dialog stand und wartete auf einen Menschen, den es im Prüflauf nicht gibt. E21 wörtlich: eine Schnittstelle aus dem Gedächtnis geschrieben statt nachgeschlagen — und diesmal hat der Name der Konstanten mich dabei aktiv in die Irre geführt.",
+            "interessantesteAnfrage": "Redurs PDF-Frage. Sie war die erste des Monats, bei der die richtige Antwort ein JA MIT GRENZE war: die Stelle zudecken und neu schreiben geht, den Inhaltsstrom der PDF neu setzen nicht. Die Grenze steht jetzt im Werkzeugtitel, im Code und in §4 des Prüflaufs — nicht, weil sie gut ist, sondern damit niemand später glaubt, es sei anders gedacht gewesen.",
+            "massnahmen": [
+                {
+                    "zeit": "04:21",
+                    "was": "Die zweite Fassung von `umschliesse` in editor.ts entfernt; die Tastatur geht jetzt über die Auswahlleiste.",
+                    "warum": "Sie speicherte `ct.textContent` zurück — den GEZEICHNETEN Text — und löschte damit jede vorhandene Auszeichnung des Blocks. §8 wörtlich.",
+                    "risiko": "Gering: ein Sprung mehr, mit `typeof`-Schutz davor. test542 und test557 halten beide Wege."
+                },
+                {
+                    "zeit": "04:54",
+                    "was": "Zwei neue Server-Wege: `GET /konto/geraete`, `POST /konto/geraete/weg`.",
+                    "warum": "Die Einstellungen versprachen eine Liste, die es nicht gab; `sitzungen` hielt `geraet`, `angelegt`, `bis` seit dem ersten Tag ungelesen.",
+                    "risiko": "Hinaus geht nur ein Stück des Abdrucks, nie der Token. Ein fremdes Konto ist nicht gefiltert, sondern liegt gar nicht erst in der Menge, in der gesucht wird — der sichere Weg herum."
+                },
+                {
+                    "zeit": "07:52",
+                    "was": "Neue Markenart `textfix` und das Werkzeug „Text ändern“.",
+                    "warum": "Redurs Frage. Die Änderung ist eine Marke: rückgängig, versioniert, in der Sicherung — und das Original bleibt Byte für Byte.",
+                    "risiko": "Der Text fliesst nicht, und die Schrift ist eine ähnliche. Beides steht im Werkzeugtitel und wird von test559 §4 festgehalten."
                 }
             ]
         }
@@ -3960,6 +4102,42 @@ const ChronikDaten = {
             "ursache": "Der Eintrag wurde nach dem Vorbild von mention und date gebaut, ohne zu pruefen, ob es das Menue dahinter gibt.",
             "beweis": "test555 gegen den alten Stand 2/12: kein tun am Eintrag, kein Dialog, keine Erinnerung in der Liste.",
             "lehre": "Wer einen Eintrag nach dem Vorbild eines anderen baut, uebernimmt auch dessen Voraussetzungen. Und: der Draht gehoert ins Register, wenn ein Bereich einen anderen braucht — das ist §5s dritter Weg, und er kostet keinen Querverweis."
+        },
+        {
+            "nr": "P100",
+            "datum": "2026-09-21",
+            "titel": "Dieselbe Funktion zweimal — und E650 reparierte nur die eine",
+            "schwere": "hoch",
+            "symptom": "Strg+B in einem Block `Ein **fetter** Satz` machte daraus `Ein fetter **Satz**`. Die vorhandene Auszeichnung war weg, ohne Absturz und ohne Meldung. Über den Knopf der Auswahlleiste kam `Ein **fetter** **Satz**` heraus.",
+            "falscheVermutung": "Dass Fett nur nicht abschaltbar ist — ein Schönheitsfehler (`****Wort****`). Der zweite Fund lag darunter.",
+            "wieGefunden": "Beim Lesen von `umschliesse` fiel auf, dass es den Namen ZWEIMAL gibt: einmal in auswahlleiste.ts (E650 repariert) und einmal in editor.ts, an der Tastatur.",
+            "ursache": "Die Fassung in editor.ts schrieb `ct.textContent` zurück — den gezeichneten Text ohne Markdown-Zeichen.",
+            "beweis": "test557 gegen den alten Stand 8/13, mit beiden Zeilen im Klartext: `Ein schlichter ****Satz****` und `Ein fetter **Satz**`.",
+            "lehre": "§8 wörtlich: ein zweiter Katalog läuft mit dem ersten auseinander, und niemand merkt, welcher gilt. Und die Folge für Wächter: test542 prüfte den KNOPF — ein Lauf, der nur einen von zwei Wegen misst, sagt grün über die halbe Wahrheit."
+        },
+        {
+            "nr": "P101",
+            "datum": "2026-09-21",
+            "titel": "Sechs Zusagen grün, weil die Liste leer war",
+            "schwere": "mittel",
+            "symptom": "Der erste Anlauf von test558 stand bei 6/18 gegen einen Server-Weg, den es gar nicht gab. Grün waren unter anderem „Das fremde Konto steht NICHT darin“ und „Kein roher Token geht hinaus“.",
+            "falscheVermutung": "Dass sechs Zusagen schon halten, was sie sagen. Eine leere Liste enthält kein fremdes Konto und keinen Token, und zwei Kennungen aus null Einträgen sind auch verschieden.",
+            "wieGefunden": "Beim Lesen der roten Ausgabe: der Weg antwortete 404, und trotzdem standen sechs Häkchen da.",
+            "ursache": "Jede dieser Zusagen prüfte eine EIGENSCHAFT der Liste, ohne vorher zu verlangen, dass es eine gibt.",
+            "beweis": "Nach dem Härten: 0/18 gegen denselben Stand.",
+            "lehre": "§55.2, zum wiederholten Mal in diesem Monat: wer eine Prüfung schreibt, prüft zuerst, ob sie rot werden KANN. Eine Zusage über eine Menge braucht die Menge als Vorbedingung."
+        },
+        {
+            "nr": "P102",
+            "datum": "2026-09-21",
+            "titel": "OHNE_FRAGE ist die Zahl 30",
+            "schwere": "mittel",
+            "symptom": "Der erste Lauf von test559 gab fünf Minuten lang keine einzige Zeile aus und starb am Zeitlimit.",
+            "falscheVermutung": "Zuerst: der Prüfserver liefert pdf.js nicht aus (falsche MIME-Typen für .mjs/.wasm). Dann: der Browser ist abgestürzt. Beides war falsch.",
+            "wieGefunden": "Nachgesehen, was `PdfEinlesen.OHNE_FRAGE` ist: `const OHNE_FRAGE = 30` — die Seitenzahl, ab der gefragt wird. Als `vorgabe` übergeben hat eine Zahl keine Felder, also fiel `alsSeiten` in den Dialog-Zweig.",
+            "ursache": "Ein Konstantenname, der wie ein Schalter klingt, und ein Aufruf aus dem Gedächtnis statt nachgeschlagen (E21).",
+            "beweis": "Mit `{ anordnung: 'untereinander', ueberGrenze: 'alle' }` lief derselbe Lauf durch und war 4/18 rot — also messbar.",
+            "lehre": "Ein Dialog ohne Menschen wartet ewig. Und: der teuerste wiederkehrende Fehler dieses Projekts hat heute einen neuen Weg gefunden — nicht die Signatur war falsch erinnert, sondern die BEDEUTUNG eines Namens."
         }
     ]
 };

@@ -1896,14 +1896,21 @@ Der volle Lauf. 17 von 48 Stücken sind rot — und meine erste Rot-Erkennung im
 | E661 — Groqs 404: der Anbieter hat immer recht, und die Modellliste wird erfragt | `(offen)` → `(offen)` | ca. 20:20 – | laufend | test552 (15/15, zwei Gegenproben), test550 (8/8) |
 | E662 — volllauf.mts nennt den Schuldigen statt sein ganzes Stück | `(offen)` → `(offen)` | ca. 20:55 – | laufend | test553 (6/6, Gegenprobe gefahren), test550 (8/8) |
 | E663/E664 — die Wochenrückschau zählt wieder, und test403 sieht den ganzen Block | `(offen)` → `(offen)` | ca. 21:20 – | laufend | test554 (11/11, zwei Gegenproben), test403 (22/22, Gegenprobe), test550 (8/8) |
-| Voller Lauf (490 Läufe, 107 min) und E665 — ein Griff statt zwei | `74bde43` → `(offen)` | 17:57 – 21:50 | 107 min Lauf plus Nacharbeit | 490 Läufe: 487 grün, 3 rot (test270 Arbeitsbaum-Artefakt, test403 zu enges Fenster, test537 Verzeichnis). test270 im Hauptbaum nachgemessen: 77 ok, 0 offen. |
-| E666 — Erinnerung fuehrt zu einer Erinnerung, ueber das Register statt ueber den Editor | `(offen)` → `(offen)` | ca. 22:15 – | laufend | test555 (12/12, Gegenprobe), test537 (unveraendert 518), test87, test105, test109, test95-100 alle gruen |
+| Voller Lauf (490 Läufe, 107 min) und E665 — ein Griff statt zwei | `74bde43` → `0c8331d` | 17:57 – 21:50 | 107 min Lauf plus Nacharbeit | 490 Läufe: 487 grün, 3 rot (test270 Arbeitsbaum-Artefakt, test403 zu enges Fenster, test537 Verzeichnis). test270 im Hauptbaum nachgemessen: 77 ok, 0 offen. |
+| E666 — Erinnerung fuehrt zu einer Erinnerung, ueber das Register statt ueber den Editor | `54f3d62` → `0416204` | 19:52 – 20:03 | 11 min | test555 (12/12, Gegenprobe), test537 (unveraendert 518), test87, test105, test109, test95-100 alle gruen |
+| E660 — die Tabellenwerkzeuge sind am Telefon zu treffen (26 px statt 44) | `0c8331d` → `b918aa8` | 18:27 – 18:39 | 12 min | test551 (neu, 9 Zusagen), test303, test402 |
+| E661 — Groqs 404: ein abgekündigtes Modell sagt, dass es das Modell ist | `b918aa8` → `a75c58c` | 18:39 – 18:48 | 9 min | test552 (neu, 15 Zusagen). Die erste Gegenprobe war FALSCH, nicht der Code. |
+| E662 — der Sweep nennt den Schuldigen, nicht sein ganzes Stück | `a75c58c` → `79b94f6` | 18:48 – 18:58 | 10 min | test553 (neu, 6 Zusagen) gegen die echte Bilanz: zehn rote Läufe gemeldet, einer war es. |
+| E663/E664 — die Wochenrückschau zählt wieder (erledigtAm), und ein Wächter sieht den Block | `79b94f6` → `88e6a7d` | 18:58 – 19:21 | 23 min | test554 (neu, 11 Zusagen). Das Feld wurde an SECHS Stellen geschrieben — der Stempel sitzt deshalb in updateBlock. |
+| E665 — ein Griff statt zwei (modellWaehlen), und was der Wächter dabei verriet | `88e6a7d` → `54f3d62` | 19:21 – 19:52 | 31 min | test537: einer der zwei zusätzlichen Treffer war meiner und ist weg; der andere ist L207. |
+| §30: die Zählungen stehen wieder in ihrer Reihenfolge (490, dann 497, 496 … war rückwärts) | `0416204` → `1f646a6` | 20:03 – 20:11 | 8 min | test550 8/8 — er blieb dabei GRÜN: er prüft die Zahlen, nicht ihre Reihenfolge. |
+| E667 — Strg+F findet vier Stellen und zeigte eine | `1f646a6` → `1795b40` | 20:11 – 20:21 | 10 min | test556 (neu, 22 Zusagen; vorher 5/17). Die letzten fünf Zusagen kamen aus dem BILD: am Telefon lief das Suchfeld links aus dem Bild (-90 … 368 bei 390 px). |
 
 #### Zahlen des Tages
 
-- **commits:** 2
-- **entscheidungen:** 24
-- **neue Prüfläufe:** 14
+- **commits:** 38
+- **entscheidungen:** 23
+- **neue Prüfläufe:** 18
 - **volle Läufe:** 1
 
 #### Das grösste Problem
@@ -1922,9 +1929,81 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 | 01:26 | Die Werkzeugleiste bekommt einen fliegenden Wechsel statt zweier springender Flächen. | Das Design-System: „Pen → Marker → Eraser" als Beispiel für eine gemeinsame Materialfläche. | keins an Daten. Der Zustand hängt am Knopf und nicht am Flug — deshalb ist er auch ohne Bewegung richtig. |
 | 01:40 | Die Dehnung der Linse gilt nur noch zwischen Nachbarn, der Deckel fällt von 1,85 auf 1,18, und die Ruhe-Brechung von 15 auf 8. | Drei Regeln des Design-Systems, die schlicht recht haben. Eine Brücke spannt sich zwischen Dingen, die sich fast berühren. | keins. Was bleibt, ist Redurs Entscheidung: ob über der Schrift überhaupt gebrochen werden darf. |
 
+### 2026-09-21 · Montag — Fett wird ein Schalter, die Geräte bekommen ihre Liste — und der Text einer PDF lässt sich ändern
+
+> Ein kurzer Tag mit drei Bögen, und in allen dreien hat ein BESTEHENDER Wächter oder ein BILD etwas gefunden, bevor ich hinsah. `main` steht weiter still (§46): test537 bleibt rot bei 518 gegen 517, und die Richtung dafür gehört Redur (L207).
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · ca. 03:45**
+
+> Weiter
+
+**Gemeint:** Weitermachen mit den offenen Funden aus der Bestandsaufnahme.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** Nichts zu verbessern — ein Wort, das eine Liste abarbeitet, die schon steht.
+
+
+**2 · ca. 04:30**
+
+> Weiter
+
+**Gemeint:** Dasselbe.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**3 · ca. 05:00**
+
+> Weiter ohne pause , können wir so was machen das wenn ich eine pdf hochlade das ich die pdf selbst direk bearbeiten kann also die text direk
+
+**Gemeint:** Eine echte Produktfrage mitten im Weiterarbeiten: den Text einer hochgeladenen PDF direkt ändern können.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** Nichts zu verbessern. Die Frage war präzise genug, um das Richtige zu bauen — und wichtig war nicht der Wortlaut, sondern dass ICH den Unterschied zwischen „die PDF umschreiben“ und „die Stelle zudecken und neu schreiben“ von selbst hinschreibe, statt ihn zu verschweigen.
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E668 — Fett ist ein Schalter, und Strg+B nimmt denselben Weg | `1795b40` → `10aed71` | ca. 03:50 – 04:21 | ca. 31 min | test557 (neu, 13 Zusagen; vorher 8/13), test542 10/10, test87, test105, test109 |
+| E669 — die angemeldeten Geräte gibt es jetzt wirklich (zwei Server-Wege, ein Fenster) | `10aed71` → `a3a994b` | 04:21 – 04:54 | 33 min | test558 (neu, 28 Zusagen; vorher 0/18), test120 21/21, test75, test76, test303, test401, test402 |
+| E670 — den Text einer PDF ändern, ohne die PDF anzufassen | `a3a994b` → `dc4c129` | ca. 05:00 – 07:52 | ca. 172 min | test559 (neu, 18 Zusagen; vorher 4/18), test480 60/60, test441 42/42, test87, test105, test109 |
+
+#### Zahlen des Tages
+
+- **commits:** 3
+- **entscheidungen:** 3
+- **neue Prüfläufe:** 3
+- **volle Läufe:** 0
+
+#### Das grösste Problem
+
+Fünf Minuten Stille beim ersten Lauf von test559: `alsSeiten` bekam `PdfEinlesen.OHNE_FRAGE` als Vorgabe — das ist aber die ZAHL 30 und kein Schalter „ohne Frage“. Der Layout-Dialog stand und wartete auf einen Menschen, den es im Prüflauf nicht gibt. E21 wörtlich: eine Schnittstelle aus dem Gedächtnis geschrieben statt nachgeschlagen — und diesmal hat der Name der Konstanten mich dabei aktiv in die Irre geführt.
+
+#### Das Interessanteste, das Redur wollte
+
+Redurs PDF-Frage. Sie war die erste des Monats, bei der die richtige Antwort ein JA MIT GRENZE war: die Stelle zudecken und neu schreiben geht, den Inhaltsstrom der PDF neu setzen nicht. Die Grenze steht jetzt im Werkzeugtitel, im Code und in §4 des Prüflaufs — nicht, weil sie gut ist, sondern damit niemand später glaubt, es sei anders gedacht gewesen.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| 04:21 | Die zweite Fassung von `umschliesse` in editor.ts entfernt; die Tastatur geht jetzt über die Auswahlleiste. | Sie speicherte `ct.textContent` zurück — den GEZEICHNETEN Text — und löschte damit jede vorhandene Auszeichnung des Blocks. §8 wörtlich. | Gering: ein Sprung mehr, mit `typeof`-Schutz davor. test542 und test557 halten beide Wege. |
+| 04:54 | Zwei neue Server-Wege: `GET /konto/geraete`, `POST /konto/geraete/weg`. | Die Einstellungen versprachen eine Liste, die es nicht gab; `sitzungen` hielt `geraet`, `angelegt`, `bis` seit dem ersten Tag ungelesen. | Hinaus geht nur ein Stück des Abdrucks, nie der Token. Ein fremdes Konto ist nicht gefiltert, sondern liegt gar nicht erst in der Menge, in der gesucht wird — der sichere Weg herum. |
+| 07:52 | Neue Markenart `textfix` und das Werkzeug „Text ändern“. | Redurs Frage. Die Änderung ist eine Marke: rückgängig, versioniert, in der Sicherung — und das Original bleibt Byte für Byte. | Der Text fliesst nicht, und die Schrift ist eine ähnliche. Beides steht im Werkzeugtitel und wird von test559 §4 festgehalten. |
+
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 99 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 102 Einträge.
 

@@ -113,6 +113,9 @@ sind der teuerste Teil und der lehrreichste.
 | P97 | 2026-09-20 | Ein Wächter, der an der Reihenfolge im Block scheitert | niedrig | — |
 | P98 | 2026-09-20 | Das Verzeichnis der Querverweise zählt zu wenig | 🟠 mittel | — |
 | P99 | 2026-09-20 | Ein Menuepunkt, der eine Zeichenkette schreibt, waehrend die Maschine danebensteht | 🟠 mittel | — |
+| P100 | 2026-09-21 | Dieselbe Funktion zweimal — und E650 reparierte nur die eine | hoch | — |
+| P101 | 2026-09-21 | Sechs Zusagen grün, weil die Liste leer war | 🟠 mittel | — |
+| P102 | 2026-09-21 | OHNE_FRAGE ist die Zahl 30 | 🟠 mittel | — |
 
 ---
 
@@ -2175,4 +2178,61 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** test555 gegen den alten Stand 2/12: kein tun am Eintrag, kein Dialog, keine Erinnerung in der Liste.
 
 **Die Lehre.** Wer einen Eintrag nach dem Vorbild eines anderen baut, uebernimmt auch dessen Voraussetzungen. Und: der Draht gehoert ins Register, wenn ein Bereich einen anderen braucht — das ist §5s dritter Weg, und er kostet keinen Querverweis.
+
+
+---
+
+## P100 · Dieselbe Funktion zweimal — und E650 reparierte nur die eine
+
+*2026-09-21 · hoch*
+
+**Das Bild.** Strg+B in einem Block `Ein **fetter** Satz` machte daraus `Ein fetter **Satz**`. Die vorhandene Auszeichnung war weg, ohne Absturz und ohne Meldung. Über den Knopf der Auswahlleiste kam `Ein **fetter** **Satz**` heraus.
+
+**Die falsche Vermutung.** Dass Fett nur nicht abschaltbar ist — ein Schönheitsfehler (`****Wort****`). Der zweite Fund lag darunter.
+
+**Wie es gefunden wurde.** Beim Lesen von `umschliesse` fiel auf, dass es den Namen ZWEIMAL gibt: einmal in auswahlleiste.ts (E650 repariert) und einmal in editor.ts, an der Tastatur.
+
+**Die Ursache.** Die Fassung in editor.ts schrieb `ct.textContent` zurück — den gezeichneten Text ohne Markdown-Zeichen.
+
+**Der Beweis.** test557 gegen den alten Stand 8/13, mit beiden Zeilen im Klartext: `Ein schlichter ****Satz****` und `Ein fetter **Satz**`.
+
+**Die Lehre.** §8 wörtlich: ein zweiter Katalog läuft mit dem ersten auseinander, und niemand merkt, welcher gilt. Und die Folge für Wächter: test542 prüfte den KNOPF — ein Lauf, der nur einen von zwei Wegen misst, sagt grün über die halbe Wahrheit.
+
+
+---
+
+## P101 · Sechs Zusagen grün, weil die Liste leer war
+
+*2026-09-21 · 🟠 mittel*
+
+**Das Bild.** Der erste Anlauf von test558 stand bei 6/18 gegen einen Server-Weg, den es gar nicht gab. Grün waren unter anderem „Das fremde Konto steht NICHT darin“ und „Kein roher Token geht hinaus“.
+
+**Die falsche Vermutung.** Dass sechs Zusagen schon halten, was sie sagen. Eine leere Liste enthält kein fremdes Konto und keinen Token, und zwei Kennungen aus null Einträgen sind auch verschieden.
+
+**Wie es gefunden wurde.** Beim Lesen der roten Ausgabe: der Weg antwortete 404, und trotzdem standen sechs Häkchen da.
+
+**Die Ursache.** Jede dieser Zusagen prüfte eine EIGENSCHAFT der Liste, ohne vorher zu verlangen, dass es eine gibt.
+
+**Der Beweis.** Nach dem Härten: 0/18 gegen denselben Stand.
+
+**Die Lehre.** §55.2, zum wiederholten Mal in diesem Monat: wer eine Prüfung schreibt, prüft zuerst, ob sie rot werden KANN. Eine Zusage über eine Menge braucht die Menge als Vorbedingung.
+
+
+---
+
+## P102 · OHNE_FRAGE ist die Zahl 30
+
+*2026-09-21 · 🟠 mittel*
+
+**Das Bild.** Der erste Lauf von test559 gab fünf Minuten lang keine einzige Zeile aus und starb am Zeitlimit.
+
+**Die falsche Vermutung.** Zuerst: der Prüfserver liefert pdf.js nicht aus (falsche MIME-Typen für .mjs/.wasm). Dann: der Browser ist abgestürzt. Beides war falsch.
+
+**Wie es gefunden wurde.** Nachgesehen, was `PdfEinlesen.OHNE_FRAGE` ist: `const OHNE_FRAGE = 30` — die Seitenzahl, ab der gefragt wird. Als `vorgabe` übergeben hat eine Zahl keine Felder, also fiel `alsSeiten` in den Dialog-Zweig.
+
+**Die Ursache.** Ein Konstantenname, der wie ein Schalter klingt, und ein Aufruf aus dem Gedächtnis statt nachgeschlagen (E21).
+
+**Der Beweis.** Mit `{ anordnung: 'untereinander', ueberGrenze: 'alle' }` lief derselbe Lauf durch und war 4/18 rot — also messbar.
+
+**Die Lehre.** Ein Dialog ohne Menschen wartet ewig. Und: der teuerste wiederkehrende Fehler dieses Projekts hat heute einen neuen Weg gefunden — nicht die Signatur war falsch erinnert, sondern die BEDEUTUNG eines Namens.
 
