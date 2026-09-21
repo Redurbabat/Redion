@@ -8125,6 +8125,105 @@ Bis dahin ist `test537` rot und `main` bewegt sich nicht (§46). Das ist
 Absicht: eine rote Zahl, die auf eine Entscheidung wartet, ist besser als
 eine grüne, die nicht stimmt.
 
+## L209 · Der Stift gegen GoodNotes — was nach E673, E674 und E675 offen bleibt
+
+**Gefunden am 21. September 2026**, beim Lesen für Redurs Satz „die stift
+und zeichnen verbessern, und gleich wie goodnotes machen". Zwei Leser
+haben den Stiftweg (`stroke.ts`, `geometry.ts`, `marken.ts`) und die
+Werkzeuge gelesen — nur gelesen, kein Prüflauf daneben (§30). Drei Bögen
+sind gelandet: die Spitze (E673), Farbe und Stärke je Werkzeug (E674), der
+Sensor-Aussetzer (E675). Das hier ist der Rest, damit er nicht in einem
+Gesprächsprotokoll verschwindet (§35). Die GoodNotes-Seite jedes Punktes
+stammt aus dem Kenntnisstand der Leser, nicht aus dem Repo — wo Redur
+anderes sieht, gilt sein Bild.
+
+**Am Strich selbst:**
+
+1. **Das Tempo wirkt beim echten Stift nicht auf die Breite.** Der
+   Tempo→Breite-Weg ist nur der Druck-ERSATZ für Maus und Finger
+   (`druckAus`); ein Stift mit Sensor bekommt reinen Sensordruck, und eine
+   schnell gezogene Verbindungslinie ist so dick wie ein langsam gesetzter
+   Bogen. GoodNotes' Füller wird auch mit dem Pencil schneller dünner. Der
+   Faktor müsste beim Aufsetzen in `pressure` eingerechnet werden (kein
+   neues Feld, §9) — dann sagt `druckArt: 'stift'` nur die halbe Wahrheit;
+   besser ein drittes Wort. Wächter: `test343` bleibt grün; neu: gleicher
+   Druck, doppeltes Tempo → schmaler.
+2. **Die Druckkennlinie ist eine Gerade, und Kugelschreiber wie Marker
+   haben EINE Breite je Strich aus dem Mittelwert**, die `nassZeichnen`
+   jedes Bild neu setzt — der Anfang eines Kugelschreiberstrichs wird
+   nachträglich dicker oder dünner. Ein `d^0,7` oder eine Tabelle mit
+   Schwerpunkt bei 0,3…0,6 gäbe der leichten Hand mehr Ausdruck; für Kugel
+   und Marker gehört der Druck aus `strokeWidth` heraus (wie GoodNotes'
+   Ball pen) oder beim Aufsetzen festgehalten. **Beides ändert, wie ALTE
+   Striche in der Mitte aussehen** (`strokeWidth` liest `pressure` des
+   Bestands) — das ist eine Entscheidung von Redur, kein Bogen (§9, §34).
+3. **Scharfe Kehren im Umriss haben kein Gelenk** — Vermutung aus
+   `seiten`/`versatz`, nicht gemessen. Bei einer Kehre um ~180° ist die
+   Normale aus prev→next beliebig, und die Innenkante kreuzt sich selbst.
+   Erst messen: `outlinePunkte` auf einen 30°-Zickzack, Selbstschnitte
+   zählen (reines Rechnen). Wenn > 0: an Kehren einen kleinen Halbkreis
+   einfügen; `Feder` muss dann bis n−3 offen halten (`test366 §1`).
+4. **Der Glätter rundet Ecken.** Er ist ein Filter erster Ordnung mit
+   tempoabhängigem Cutoff, ohne Kehren-Reset — an der Spitze eines „M"
+   schleift er ab, was die Vorhersage (`KEHRE`) schon erkennt. Klein: im
+   `glaetter` denselben Kehren-Test wie in `vorhersage`, an ROHEN Punkten
+   und über eine Mindeststrecke (nicht Punktzahl — sonst zittert es bei
+   240 Hz, E504). Wächter: `test366 §3`, `test472`, `test449` (Kritzel
+   misst am geglätteten Weg, L198).
+5. **Der nasse Strich lebt im selben SVG wie alle Marken** — je Bild wird
+   der ganze Pfad neu gerastert, keine Canvas-Ebene. GoodNotes zeichnet den
+   nassen Strich auf eine eigene Ebene. Erst messen (§36): Performance-
+   Marks um `nassZeichnen` auf einer Seite mit 300 Marken und einem
+   800-Punkte-Strich; erst wenn ein Bild > 8 ms braucht, ein `<canvas>`
+   nur für den nassen Strich. Architekturentscheid → E-Eintrag.
+6. **Formsprung beim Absetzen durch die RDP-Ausdünnung** — unbewiesen.
+   `finish` wirft Punkte weg (Toleranz 0,55…1,4 pt) und zeichnet den Umriss
+   neu; kein Lauf vergleicht nass gegen trocken NACH der Ausdünnung. Ein
+   Lauf mit Hausdorff-Distanz der Konturen, Grenze ~0,3 pt; wenn rot: die
+   Druck-Extrema als Pflichtpunkte behalten — RDP kennt nur die Lage.
+7. **Pinsel ist nur ein steilerer Füller; der Marker hat keine Keilspitze.**
+   `azimuthAngle`, `twist`, `tangentialPressure` liest niemand (siehe
+   auch L59 Neigung, E507). Nachrangig gegenüber 1–6.
+
+**An den Werkzeugen:**
+
+8. **Drei Stiftplätze in der Leiste** (Stift + Farbe + Stärke als EIN
+   Knopf, langes Drücken sichert). **E498 hat Stift-Favoriten abgelehnt**,
+   und der Grund steht oben in dieser Datei: die Zubehörzeile ist bei
+   596 px mit vierzehn Knöpfen voll, und die Farbsätze (E486/E501) können
+   mehr. Der Leser schlägt einen Weg ohne zweiten Katalog vor — drei
+   Farbsätze als „angeheftet" kennzeichnen (Feld `platz` am vorhandenen
+   Satz) und in der Stilreihe zeigen, die nur beim Stift steht. Das wäre
+   eine Rücknahme von E498, und die gehört Redur.
+9. **Eigene Farbe nur über den Browser-Farbwähler** (`input type="color"`,
+   am iPad das System-Blatt). Kein Hex-Feld, kein Gitter. Klein: ein
+   Eintrag „Hex eingeben" über `Dialog.frage` (Prüfung `/^#[0-9a-f]{6}$/`
+   liegt in `farbenRein`) plus ein festes Gitter aus den zehn
+   `LEITER`-Farben zuerst (sie sind der Katalog, §8). `test458` erweitern.
+10. **Radiermodus nur im Rundlauf** (fünf Modi über EINEN Knopf, der
+    weiterschaltet) und kein „danach zurück zum Stift". Fünf Knöpfe mit
+    `aria-pressed` in der Gruppe `radierer` (wie `LASER` und `FORMEN`),
+    dazu ein Haken `zeichnen:radiererzurueck`. `test344 §6` erweitern.
+    Am Rechner steht die Radierer-Gruppe nur beim Radierer und hätte
+    Platz — nachzumessen (§55.2).
+11. **Auswahl-Menü an der Auswahl** (schwebend über dem Kasten), nicht
+    nur in der Leiste — am Telefon weit weg vom Finger. Über
+    `InkMenu.open` mit denselben `data-act`-Knöpfen, kein zweiter Katalog.
+12. **Lineal-Zustand wird nicht gemerkt** (`lineal` startet auf jeder
+    Seite `false`), und das Lineal sagt die Länge des Zugs nicht.
+13. **Handballenschutz nicht einstellbar** (4 s fest; kein Schalter für
+    Linkshänder oder „aus").
+14. **Zwischenablage überlebt die Sitzung nicht und geht nicht ins
+    System** (kein `image/png` beim Kopieren).
+15. **Handschrift → Text** bleibt bewusst offen (§21, kein lokales
+    Modell) — steht schon weiter oben, hier nur der Vollständigkeit halber.
+
+**Was davon zuerst, ist Redurs Wahl.** Zwei Punkte brauchen sein Wort,
+bevor eine Zeile geschrieben wird: 2 (verändert alte Striche) und 8
+(nimmt E498 zurück). Die übrigen sind Bögen wie E673–E675: Wächter zuerst,
+rot sehen, reparieren, Gegenprobe, Bild, wo es eines gibt.
+
+
 # Anhang A · Was gemessen wurde
 
 Diese Zahlen sind die Grundlage für mehrere Lücken. Sie stehen hier, damit
@@ -8312,7 +8411,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 20. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 104 Lücken, 53 offene und 51 geschlossene. Der Befehl dazu ist
+Datei führt 105 Lücken, 54 offene und 51 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt
