@@ -2675,8 +2675,8 @@ const ChronikDaten = {
         {
             "datum": "2026-09-21",
             "wochentag": "Montag",
-            "titel": "Fett wird ein Schalter, die Geräte bekommen ihre Liste — und der Text einer PDF lässt sich ändern",
-            "wasIchWeiss": "Ein kurzer Tag mit drei Bögen, und in allen dreien hat ein BESTEHENDER Wächter oder ein BILD etwas gefunden, bevor ich hinsah. `main` steht weiter still (§46): test537 bleibt rot bei 518 gegen 517, und die Richtung dafür gehört Redur (L207).",
+            "titel": "Fett wird ein Schalter, die Geräte bekommen ihre Liste, der Text einer PDF lässt sich ändern — und am Nachmittag der Stift: Spitze, Gedächtnis, Aussetzer, Ecke",
+            "wasIchWeiss": "Ein langer Tag mit zehn Bögen. Vormittags drei (E668–E670), dann der erste volle Lauf seit elf Bögen (E671, 491/501 grün, 8 echte Rote, 7 davon aus meinen eigenen Bögen), die Ordnerfarben (E672) und am Nachmittag Redurs Satz zum Stift: „gleich wie goodnotes machen“. Dafür zwei Leser (nur lesen, kein Prüflauf daneben, §30), dann vier Bögen am Strich — die Spitze (E673), Farbe und Stärke je Werkzeug (E674), der Sensor-Aussetzer (E675), die Ecke im Glätter (E676) — und L209 mit dem Rest. `main` steht weiter still (§46): test537 bleibt rot bei 518 gegen 517, und die Richtung gehört Redur (L207).",
             "nachrichten": [
                 {
                     "zeit": "ca. 03:45",
@@ -2701,6 +2701,46 @@ const ChronikDaten = {
                     "gemeint": "Eine echte Produktfrage mitten im Weiterarbeiten: den Text einer hochgeladenen PDF direkt ändern können.",
                     "besser": "",
                     "besserePrompt": "Nichts zu verbessern. Die Frage war präzise genug, um das Richtige zu bauen — und wichtig war nicht der Wortlaut, sondern dass ICH den Unterschied zwischen „die PDF umschreiben“ und „die Stelle zudecken und neu schreiben“ von selbst hinschreibe, statt ihn zu verschweigen."
+                },
+                {
+                    "zeit": "ca. 08:00",
+                    "wortlaut": "Weiter",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Weitermachen — die Chronik für den 20. und den Morgen nachtragen, dann der volle Lauf.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 10:30",
+                    "wortlaut": "Weiter",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Dasselbe; der volle Lauf lief im Arbeitsbaum.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 13:20",
+                    "wortlaut": "Weiter",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Dasselbe.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "ca. 13:25",
+                    "wortlaut": "Weiter ohne pause ich will das du die stift und heichenb verbessern, und gleich wie goodnotes machen udn ich sollte die ordner parben wählen können und farben wecheln können",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Zwei Wünsche in einem Satz: (1) den Stift und das Zeichnen auf GoodNotes-Niveau bringen; (2) Ordner sollen eine wählbare, wechselbare Farbe haben. Der zweite war klein und klar (E672), der erste ist ein Programm — deshalb zuerst zwei Leser, dann Bögen.",
+                    "besser": "Der Stift soll sich anfühlen wie in GoodNotes — fang mit dem an, was man beim Schreiben zuerst sieht. Und Ordner brauchen eine Farbe, die ich wechseln kann.",
+                    "besserePrompt": "Was genau ihm bei GoodNotes fehlt, hätte den Weg verkürzt: „die Striche enden wie Kleckse“ oder „der Marker vergisst seine Farbe“ wäre je ein Bogen gewesen. Ohne das haben die Leser die Liste gemacht — fünfzehn Punkte, davon vier gebaut und zwei, die seine Entscheidung brauchen (L209)."
+                },
+                {
+                    "zeit": "ca. 17:15",
+                    "wortlaut": "Weiter ohne pause",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Nicht anhalten, nicht fragen — weiter durch die Liste.",
+                    "besser": "",
+                    "besserePrompt": "Nichts zu verbessern. Die zwei Fragen, die seine Entscheidung brauchen, stehen trotzdem im Bericht — „ohne Pause“ heisst nicht „ohne ihn“."
                 }
             ],
             "arbeit": [
@@ -2727,16 +2767,80 @@ const ChronikDaten = {
                     "zeitraum": "ca. 05:00 – 07:52",
                     "dauer": "ca. 172 min",
                     "pruefungen": "test559 (neu, 18 Zusagen; vorher 4/18), test480 60/60, test441 42/42, test87, test105, test109"
+                },
+                {
+                    "was": "Chronik: der 20. zu Ende geschrieben, der 21. nachgetragen",
+                    "vonCommit": "dc4c129",
+                    "bisCommit": "09ac7f8",
+                    "zeitraum": "ca. 08:00 – 10:24",
+                    "dauer": "ca. 144 min (mit dem vollen Lauf im Arbeitsbaum daneben)",
+                    "pruefungen": "—"
+                },
+                {
+                    "was": "E671 — was der erste volle Lauf seit elf Bögen gefunden hat (491/501, 10 rot gemeldet, 8 echt, 7 aus eigenen Bögen; 1 bleibt: L207)",
+                    "vonCommit": "09ac7f8",
+                    "bisCommit": "af2706c",
+                    "zeitraum": "ca. 10:24 – 13:16",
+                    "dauer": "ca. 172 min",
+                    "pruefungen": "volllauf.mts in Stücken; danach die Roten einzeln im Hauptbaum nachgemessen"
+                },
+                {
+                    "was": "E672 — ein Ordner hat eine Farbe, und man kann sie wechseln",
+                    "vonCommit": "5bdd829",
+                    "bisCommit": "9ea57e7",
+                    "zeitraum": "13:16 – 14:47",
+                    "dauer": "91 min",
+                    "pruefungen": "test560 (neu, 27 Zusagen; vorher 9/26), test531, test290, test401, test402, test362, test87, test105, test109, test114"
+                },
+                {
+                    "was": "E673 — der Füller läuft spitz aus (eine Kurve, eine Stelle für Bildschirm und PDF, die Spitze im Register)",
+                    "vonCommit": "9ea57e7",
+                    "bisCommit": "c22a2ab",
+                    "zeitraum": "14:47 – 15:07 (Leser ab ca. 14:30)",
+                    "dauer": "ca. 40 min",
+                    "pruefungen": "test561 (neu, 24 Zusagen; vorher 13/22, nach dem Bild 22/24), test343, test366, test438, test475, test535, test480, test87, test105, test109, test550"
+                },
+                {
+                    "was": "E674 — jedes Werkzeug merkt sich Farbe und Stärke (Meta zeichnen:werkzeugwerte; die Auswahl hat keine eigene Tinte, E353)",
+                    "vonCommit": "c22a2ab",
+                    "bisCommit": "0d003b0",
+                    "zeitraum": "15:07 – 18:00",
+                    "dauer": "ca. 173 min (darin ein Container-Neustart und das Warten auf sechzehn Nachbarn)",
+                    "pruefungen": "test562 (neu, 24 Zusagen; vorher 11/19), test345 (rot am ersten Stand → Regel), 343 438 458 470 477 480 524 535 344 346 461 87 105 109"
+                },
+                {
+                    "was": "E675 — ein Stift, der kurz 0 meldet, bleibt ein Stift",
+                    "vonCommit": "0d003b0",
+                    "bisCommit": "80baff2",
+                    "zeitraum": "ca. 17:30 – 18:06 (Wächter vor dem E674-Commit geschrieben, Patch bis dahin aus dem Baum genommen)",
+                    "dauer": "ca. 36 min",
+                    "pruefungen": "test563 (neu, 13 Zusagen; vorher 10/13), 475 343 561 562 345 366 472 105 109 550"
+                },
+                {
+                    "was": "L209 — der Stift gegen GoodNotes: was nach E673–E675 offen bleibt (fünfzehn Punkte, zwei brauchen Redur)",
+                    "vonCommit": "80baff2",
+                    "bisCommit": "e123eb1",
+                    "zeitraum": "18:06",
+                    "dauer": "ca. 10 min",
+                    "pruefungen": "test549 (Zählsatz 105/54/51)"
+                },
+                {
+                    "was": "E676 — der Glätter hält die Ecke, und sie überlebt Absetzen und Umriss (drei Stellen, drei Gegenproben)",
+                    "vonCommit": "e123eb1",
+                    "bisCommit": "04b8c4d",
+                    "zeitraum": "ca. 18:10 – 18:45",
+                    "dauer": "ca. 35 min",
+                    "pruefungen": "test564 (neu, 11 Zusagen; §1–§3 vorher 6/8, §4 vorher 9/11), 21 Nachbarn grün (366 472 449 343 345 474 478 561 562 563 535 480 438 475 105 109 550 189 346 527 564)"
                 }
             ],
             "zahlen": {
-                "commits": 3,
-                "entscheidungen": 3,
-                "neue Prüfläufe": 3,
-                "volle Läufe": 0
+                "commits": 12,
+                "entscheidungen": 10,
+                "neue Prüfläufe": 8,
+                "volle Läufe": 1
             },
-            "groesstesProblem": "Fünf Minuten Stille beim ersten Lauf von test559: `alsSeiten` bekam `PdfEinlesen.OHNE_FRAGE` als Vorgabe — das ist aber die ZAHL 30 und kein Schalter „ohne Frage“. Der Layout-Dialog stand und wartete auf einen Menschen, den es im Prüflauf nicht gibt. E21 wörtlich: eine Schnittstelle aus dem Gedächtnis geschrieben statt nachgeschlagen — und diesmal hat der Name der Konstanten mich dabei aktiv in die Irre geführt.",
-            "interessantesteAnfrage": "Redurs PDF-Frage. Sie war die erste des Monats, bei der die richtige Antwort ein JA MIT GRENZE war: die Stelle zudecken und neu schreiben geht, den Inhaltsstrom der PDF neu setzen nicht. Die Grenze steht jetzt im Werkzeugtitel, im Code und in §4 des Prüflaufs — nicht, weil sie gut ist, sondern damit niemand später glaubt, es sei anders gedacht gewesen.",
+            "groesstesProblem": "Der Punkt des breiten Füllers. Nach E673 war test561 grün — 22 von 22 —, und das Bild zeigte einen senkrechten Splitter, wo ein Klecks sein musste: der 2-pt-Punkt eines 5-pt-Füllers, an beiden Enden auf ein Viertel gespitzt. Der Lauf hatte nur den 2,4-pt-Füller gemessen. Eine Zusage, die den Fall nicht enthält, kann ihn nicht halten (§55.1) — und den Fall kannte ich erst, als ich ihn sah. Zweitgrösstes: eine Gegenprobe, die gar nicht lief. Der `sed`, der die Eckenerkennung abhängen sollte, hängte einen `//`-Kommentar an die Zeile und schluckte damit die öffnende Klammer — der Lauf brach mit einem Syntaxfehler ab, und mein `grep` auf „bestanden“ druckte NICHTS. Aufgefallen ist es nur, weil nichts dastand. Eine Gegenprobe ist ein Stück Code wie jedes andere (E661), und eine, die nicht baut, ist keine (§52.6).",
+            "interessantesteAnfrage": "„gleich wie goodnotes machen“ — ein Satz ohne Liste. Die Versuchung war, das Erstbeste zu bauen. Stattdessen zwei Leser, die nur lasen (kein Prüflauf daneben, §30) und je eine Liste mit Belegen brachten: der Strichweg mit neun Lücken, die Werkzeuge mit neun. Daraus vier Bögen in der Reihenfolge dessen, was man beim Schreiben ZUERST sieht — die Spitze, das Gedächtnis, der Buckel, die Ecke — und ein L-Eintrag mit dem Rest. Und ein alter Wächter (test345) hat dabei einen Konflikt zwischen zwei Entscheidungen gefunden, E353 und E674, den kein neuer gesehen hätte.",
             "massnahmen": [
                 {
                     "zeit": "04:21",
@@ -2755,6 +2859,42 @@ const ChronikDaten = {
                     "was": "Neue Markenart `textfix` und das Werkzeug „Text ändern“.",
                     "warum": "Redurs Frage. Die Änderung ist eine Marke: rückgängig, versioniert, in der Sicherung — und das Original bleibt Byte für Byte.",
                     "risiko": "Der Text fliesst nicht, und die Schrift ist eine ähnliche. Beides steht im Werkzeugtitel und wird von test559 §4 festgehalten."
+                },
+                {
+                    "zeit": "14:47",
+                    "was": "E672 gelandet: Farbe an Ordnern und Fächern über denselben Wähler wie an Heften",
+                    "warum": "Redurs zweiter Wunsch war klein und klar; zuerst das Klare",
+                    "risiko": "gering — Feld `color` gab es, Whitelist über `Farben.kennung`"
+                },
+                {
+                    "zeit": "ca. 14:30",
+                    "was": "Workflow mit fünf Lesern gestartet, nur lesen; zwei fertig, einer am Sitzungslimit gescheitert, der Rest mit dem Container-Neustart",
+                    "warum": "„gleich wie GoodNotes“ ist keine Aufgabe, sondern ein Programm — erst die Liste, dann die Bögen",
+                    "risiko": "Leser können Vermutungen als Befunde ausgeben — deshalb steht bei jedem Punkt, was gemessen und was vermutet ist"
+                },
+                {
+                    "zeit": "15:07",
+                    "was": "E673: Spitze als Faktor auf die halben Breiten, nicht in `seiten`/`versatz`",
+                    "warum": "test366 §1 verlangt Zeichengleichheit von Feder und outline — vor beiden anfassen statt in beiden",
+                    "risiko": "alte Füllerstriche sehen anders aus (spitz); bewusst, in E673 begründet"
+                },
+                {
+                    "zeit": "18:00",
+                    "was": "E674: Gedächtnis in der Zeichenschicht, nicht in der Leiste; Auswahl ohne eigene Tinte",
+                    "warum": "jeder Weg zur Farbe läuft durch setzeFarbe/setzeStrich; test345 hat den Konflikt mit E353 gezeigt",
+                    "risiko": "wer gewohnt war, dass der Stift die Markerfarbe mitnimmt, setzt sie einmal je Werkzeug"
+                },
+                {
+                    "zeit": "18:06",
+                    "was": "E675 vor dem E674-Commit geschrieben, den Patch bis zum Commit aus dem Baum genommen (Skript e675.py)",
+                    "warum": "ein Commit, ein Ziel (§43) — beide Bögen sassen in marken.ts",
+                    "risiko": "gering, das Skript ist umkehrbar und wurde zweimal gefahren"
+                },
+                {
+                    "zeit": "ca. 19:00",
+                    "was": "E676: nach 8/8 grün das Bild angesehen, die gespeicherten Punkte sondiert, zwei weitere Stellen repariert (finish, stueck) und §4 als Browser-Teil an test564 gehängt",
+                    "warum": "der Wächter hielt den Glätter, das Bild zeigte die Marke — die Ecke ging DAHINTER verloren (§55.1)",
+                    "risiko": "das Bogenstück ändert, wie jede scharfe Ecke gezeichnet wird, auch im Bestand; test366 §1 (zeichengleich) und die PDF-Kontur (outlinePunkte, unverändert) halten es"
                 }
             ]
         }
@@ -4138,6 +4278,42 @@ const ChronikDaten = {
             "ursache": "Ein Konstantenname, der wie ein Schalter klingt, und ein Aufruf aus dem Gedächtnis statt nachgeschlagen (E21).",
             "beweis": "Mit `{ anordnung: 'untereinander', ueberGrenze: 'alle' }` lief derselbe Lauf durch und war 4/18 rot — also messbar.",
             "lehre": "Ein Dialog ohne Menschen wartet ewig. Und: der teuerste wiederkehrende Fehler dieses Projekts hat heute einen neuen Weg gefunden — nicht die Signatur war falsch erinnert, sondern die BEDEUTUNG eines Namens."
+        },
+        {
+            "nr": "P103",
+            "datum": "2026-09-21",
+            "titel": "Der Punkt des breiten Füllers war ein Splitter — und der Wächter grün",
+            "schwere": "mittel",
+            "symptom": "Nach E673 zeigte das Bild einen senkrechten Strich, wo ein 2-pt-Punkt mit dem 5-pt-Füller stehen sollte; test561 stand auf 22/22.",
+            "falscheVermutung": "„Kurze Striche bekommen eine kurze Spitze“ reicht — wenn der WEG der Spitze mit dem Strich schrumpft, bleibt ein Punkt ein Punkt.",
+            "wieGefunden": "node bilder.mts spitze — die vierte Zeile des Bildes (§55.1). Der Lauf hatte nur den 2,4-pt-Füller gemessen; dort ist ein 2-pt-Punkt breiter als lang und fällt nicht auf.",
+            "ursache": "Die Spitze war kurz, aber immer noch spitz: `spitzeFaktor` lief auch bei einem 2 pt langen Strich auf `min` (0,25) — bei 5 pt Breite ein Splitter von 1,25 pt Rand bei 5 pt Mitte.",
+            "beweis": "test561 §3, neu: „Punkt (2 pt) mit 5-pt-Füller: Anfang 1.25 · Mitte 5“ — rot; nach der Reparatur (die Spitze wird stumpfer, je weniger von zwei Federn in den Strich passt) 4,66 gegen 5.",
+            "lehre": "Ein Wächter hält nur die Fälle, die er enthält. Wer eine Regel für „kurze Striche“ schreibt, misst sie mit dem BREITESTEN Stift, nicht mit dem, der gerade da war — und sieht das Bild, bevor er grün sagt."
+        },
+        {
+            "nr": "P104",
+            "datum": "2026-09-21",
+            "titel": "Eine Gegenprobe, die gar nicht lief",
+            "schwere": "mittel",
+            "symptom": "Beim Abhängen der Eckenerkennung (E676) druckte der Prüflauf weder ✗ noch „bestanden“ — die Zeile war leer.",
+            "falscheVermutung": "Ein `sed`, der `if (…)` in `if (false && …) // GEGENPROBE` verwandelt, ist harmlos.",
+            "wieGefunden": "Der `grep` auf „✗|bestanden“ gab NICHTS aus. Nicht rot, nicht grün — leer. Erst das fiel auf.",
+            "ursache": "Der angehängte `//`-Kommentar schluckte die öffnende Klammer `{` derselben Zeile; `stroke.js` hatte einen Syntaxfehler, `eval` warf, der Lauf brach vor der ersten Zusage ab.",
+            "beweis": "Zweiter Anlauf ohne Kommentar (`< KEHRE` → `< -2`): 6 von 8, „2,62 px“ — die erwarteten zwei Zusagen rot.",
+            "lehre": "Eine Gegenprobe ist ein Stück Code wie jedes andere (E661) und muss BAUEN (§52.6). Und ein Wächter, dessen Ausgabe leer ist, hat nichts gehalten — leer ist nicht grün."
+        },
+        {
+            "nr": "P105",
+            "datum": "2026-09-21",
+            "titel": "Der Glätter hielt die Ecke, die Marke nicht — acht gleichmässige Punkte statt der Ecken",
+            "schwere": "mittel",
+            "symptom": "Nach E676 zeigte das Bild ein „M“ mit spitzen Gipfeln und einem runden Tal; test564 stand auf 8/8.",
+            "falscheVermutung": "Wenn der Glätter die Ecke trifft, steht sie auch in der Marke — der Rest des Wegs (Absetzen, Umriss) ist nur Zeichnen.",
+            "wieGefunden": "node bilder.mts ecke, dann eine Sonde auf die gespeicherten Punkte: 8 Punkte, gleichmässig, das Tal 23,7 px neben dem nächsten.",
+            "ursache": "`finish` (E115): hat RDP weniger als acht Stützpunkte übrig, nimm acht gleichmässige — ANSTELLE der RDP-Punkte. RDP hatte die fünf Ecken behalten, die Regel warf sie weg. Dahinter noch der Umriss: eine Q-Kurve durch jede Ecke, 5,12 px daneben.",
+            "beweis": "test564 §4 vorher „[4.24, 23.71, 11.5]“ (Mittellinie) und „[15.19, 23.68, 20.37]“ (Umriss); nachher [0,0,0] und [0.71,0.29,0.8]. Gegenprobe A (acht ersetzen): 23,72; Gegenprobe B (Stück ohne Ecke): 5,12.",
+            "lehre": "Ein Wächter am Kern beweist den Kern. Was der Nutzer sieht, entsteht drei Stationen später — und jede kann verlieren, was die vorige gehalten hat. Deshalb §55.3: ein Bild, wenn man etwas sehen kann; und der Wächter folgt der Sache bis dorthin, wo man sie sieht."
         }
     ]
 };

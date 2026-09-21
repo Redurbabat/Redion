@@ -1929,9 +1929,9 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 | 01:26 | Die Werkzeugleiste bekommt einen fliegenden Wechsel statt zweier springender Flächen. | Das Design-System: „Pen → Marker → Eraser" als Beispiel für eine gemeinsame Materialfläche. | keins an Daten. Der Zustand hängt am Knopf und nicht am Flug — deshalb ist er auch ohne Bewegung richtig. |
 | 01:40 | Die Dehnung der Linse gilt nur noch zwischen Nachbarn, der Deckel fällt von 1,85 auf 1,18, und die Ruhe-Brechung von 15 auf 8. | Drei Regeln des Design-Systems, die schlicht recht haben. Eine Brücke spannt sich zwischen Dingen, die sich fast berühren. | keins. Was bleibt, ist Redurs Entscheidung: ob über der Schrift überhaupt gebrochen werden darf. |
 
-### 2026-09-21 · Montag — Fett wird ein Schalter, die Geräte bekommen ihre Liste — und der Text einer PDF lässt sich ändern
+### 2026-09-21 · Montag — Fett wird ein Schalter, die Geräte bekommen ihre Liste, der Text einer PDF lässt sich ändern — und am Nachmittag der Stift: Spitze, Gedächtnis, Aussetzer, Ecke
 
-> Ein kurzer Tag mit drei Bögen, und in allen dreien hat ein BESTEHENDER Wächter oder ein BILD etwas gefunden, bevor ich hinsah. `main` steht weiter still (§46): test537 bleibt rot bei 518 gegen 517, und die Richtung dafür gehört Redur (L207).
+> Ein langer Tag mit zehn Bögen. Vormittags drei (E668–E670), dann der erste volle Lauf seit elf Bögen (E671, 491/501 grün, 8 echte Rote, 7 davon aus meinen eigenen Bögen), die Ordnerfarben (E672) und am Nachmittag Redurs Satz zum Stift: „gleich wie goodnotes machen“. Dafür zwei Leser (nur lesen, kein Prüflauf daneben, §30), dann vier Bögen am Strich — die Spitze (E673), Farbe und Stärke je Werkzeug (E674), der Sensor-Aussetzer (E675), die Ecke im Glätter (E676) — und L209 mit dem Rest. `main` steht weiter still (§46): test537 bleibt rot bei 518 gegen 517, und die Richtung gehört Redur (L207).
 
 
 #### Was Redur geschrieben hat
@@ -1970,6 +1970,61 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 **Besserer Prompt:** Nichts zu verbessern. Die Frage war präzise genug, um das Richtige zu bauen — und wichtig war nicht der Wortlaut, sondern dass ICH den Unterschied zwischen „die PDF umschreiben“ und „die Stelle zudecken und neu schreiben“ von selbst hinschreibe, statt ihn zu verschweigen.
 
 
+**4 · ca. 08:00**
+
+> Weiter
+
+**Gemeint:** Weitermachen — die Chronik für den 20. und den Morgen nachtragen, dann der volle Lauf.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**5 · ca. 10:30**
+
+> Weiter
+
+**Gemeint:** Dasselbe; der volle Lauf lief im Arbeitsbaum.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**6 · ca. 13:20**
+
+> Weiter
+
+**Gemeint:** Dasselbe.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**7 · ca. 13:25**
+
+> Weiter ohne pause ich will das du die stift und heichenb verbessern, und gleich wie goodnotes machen udn ich sollte die ordner parben wählen können und farben wecheln können
+
+**Gemeint:** Zwei Wünsche in einem Satz: (1) den Stift und das Zeichnen auf GoodNotes-Niveau bringen; (2) Ordner sollen eine wählbare, wechselbare Farbe haben. Der zweite war klein und klar (E672), der erste ist ein Programm — deshalb zuerst zwei Leser, dann Bögen.
+
+**Besser geschrieben:** Der Stift soll sich anfühlen wie in GoodNotes — fang mit dem an, was man beim Schreiben zuerst sieht. Und Ordner brauchen eine Farbe, die ich wechseln kann.
+
+**Besserer Prompt:** Was genau ihm bei GoodNotes fehlt, hätte den Weg verkürzt: „die Striche enden wie Kleckse“ oder „der Marker vergisst seine Farbe“ wäre je ein Bogen gewesen. Ohne das haben die Leser die Liste gemacht — fünfzehn Punkte, davon vier gebaut und zwei, die seine Entscheidung brauchen (L209).
+
+
+**8 · ca. 17:15**
+
+> Weiter ohne pause
+
+**Gemeint:** Nicht anhalten, nicht fragen — weiter durch die Liste.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** Nichts zu verbessern. Die zwei Fragen, die seine Entscheidung brauchen, stehen trotzdem im Bericht — „ohne Pause“ heisst nicht „ohne ihn“.
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -1977,21 +2032,29 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 | E668 — Fett ist ein Schalter, und Strg+B nimmt denselben Weg | `1795b40` → `10aed71` | ca. 03:50 – 04:21 | ca. 31 min | test557 (neu, 13 Zusagen; vorher 8/13), test542 10/10, test87, test105, test109 |
 | E669 — die angemeldeten Geräte gibt es jetzt wirklich (zwei Server-Wege, ein Fenster) | `10aed71` → `a3a994b` | 04:21 – 04:54 | 33 min | test558 (neu, 28 Zusagen; vorher 0/18), test120 21/21, test75, test76, test303, test401, test402 |
 | E670 — den Text einer PDF ändern, ohne die PDF anzufassen | `a3a994b` → `dc4c129` | ca. 05:00 – 07:52 | ca. 172 min | test559 (neu, 18 Zusagen; vorher 4/18), test480 60/60, test441 42/42, test87, test105, test109 |
+| Chronik: der 20. zu Ende geschrieben, der 21. nachgetragen | `dc4c129` → `09ac7f8` | ca. 08:00 – 10:24 | ca. 144 min (mit dem vollen Lauf im Arbeitsbaum daneben) | — |
+| E671 — was der erste volle Lauf seit elf Bögen gefunden hat (491/501, 10 rot gemeldet, 8 echt, 7 aus eigenen Bögen; 1 bleibt: L207) | `09ac7f8` → `af2706c` | ca. 10:24 – 13:16 | ca. 172 min | volllauf.mts in Stücken; danach die Roten einzeln im Hauptbaum nachgemessen |
+| E672 — ein Ordner hat eine Farbe, und man kann sie wechseln | `5bdd829` → `9ea57e7` | 13:16 – 14:47 | 91 min | test560 (neu, 27 Zusagen; vorher 9/26), test531, test290, test401, test402, test362, test87, test105, test109, test114 |
+| E673 — der Füller läuft spitz aus (eine Kurve, eine Stelle für Bildschirm und PDF, die Spitze im Register) | `9ea57e7` → `c22a2ab` | 14:47 – 15:07 (Leser ab ca. 14:30) | ca. 40 min | test561 (neu, 24 Zusagen; vorher 13/22, nach dem Bild 22/24), test343, test366, test438, test475, test535, test480, test87, test105, test109, test550 |
+| E674 — jedes Werkzeug merkt sich Farbe und Stärke (Meta zeichnen:werkzeugwerte; die Auswahl hat keine eigene Tinte, E353) | `c22a2ab` → `0d003b0` | 15:07 – 18:00 | ca. 173 min (darin ein Container-Neustart und das Warten auf sechzehn Nachbarn) | test562 (neu, 24 Zusagen; vorher 11/19), test345 (rot am ersten Stand → Regel), 343 438 458 470 477 480 524 535 344 346 461 87 105 109 |
+| E675 — ein Stift, der kurz 0 meldet, bleibt ein Stift | `0d003b0` → `80baff2` | ca. 17:30 – 18:06 (Wächter vor dem E674-Commit geschrieben, Patch bis dahin aus dem Baum genommen) | ca. 36 min | test563 (neu, 13 Zusagen; vorher 10/13), 475 343 561 562 345 366 472 105 109 550 |
+| L209 — der Stift gegen GoodNotes: was nach E673–E675 offen bleibt (fünfzehn Punkte, zwei brauchen Redur) | `80baff2` → `e123eb1` | 18:06 | ca. 10 min | test549 (Zählsatz 105/54/51) |
+| E676 — der Glätter hält die Ecke, und sie überlebt Absetzen und Umriss (drei Stellen, drei Gegenproben) | `e123eb1` → `04b8c4d` | ca. 18:10 – 18:45 | ca. 35 min | test564 (neu, 11 Zusagen; §1–§3 vorher 6/8, §4 vorher 9/11), 21 Nachbarn grün (366 472 449 343 345 474 478 561 562 563 535 480 438 475 105 109 550 189 346 527 564) |
 
 #### Zahlen des Tages
 
-- **commits:** 3
-- **entscheidungen:** 3
-- **neue Prüfläufe:** 3
-- **volle Läufe:** 0
+- **commits:** 12
+- **entscheidungen:** 10
+- **neue Prüfläufe:** 8
+- **volle Läufe:** 1
 
 #### Das grösste Problem
 
-Fünf Minuten Stille beim ersten Lauf von test559: `alsSeiten` bekam `PdfEinlesen.OHNE_FRAGE` als Vorgabe — das ist aber die ZAHL 30 und kein Schalter „ohne Frage“. Der Layout-Dialog stand und wartete auf einen Menschen, den es im Prüflauf nicht gibt. E21 wörtlich: eine Schnittstelle aus dem Gedächtnis geschrieben statt nachgeschlagen — und diesmal hat der Name der Konstanten mich dabei aktiv in die Irre geführt.
+Der Punkt des breiten Füllers. Nach E673 war test561 grün — 22 von 22 —, und das Bild zeigte einen senkrechten Splitter, wo ein Klecks sein musste: der 2-pt-Punkt eines 5-pt-Füllers, an beiden Enden auf ein Viertel gespitzt. Der Lauf hatte nur den 2,4-pt-Füller gemessen. Eine Zusage, die den Fall nicht enthält, kann ihn nicht halten (§55.1) — und den Fall kannte ich erst, als ich ihn sah. Zweitgrösstes: eine Gegenprobe, die gar nicht lief. Der `sed`, der die Eckenerkennung abhängen sollte, hängte einen `//`-Kommentar an die Zeile und schluckte damit die öffnende Klammer — der Lauf brach mit einem Syntaxfehler ab, und mein `grep` auf „bestanden“ druckte NICHTS. Aufgefallen ist es nur, weil nichts dastand. Eine Gegenprobe ist ein Stück Code wie jedes andere (E661), und eine, die nicht baut, ist keine (§52.6).
 
 #### Das Interessanteste, das Redur wollte
 
-Redurs PDF-Frage. Sie war die erste des Monats, bei der die richtige Antwort ein JA MIT GRENZE war: die Stelle zudecken und neu schreiben geht, den Inhaltsstrom der PDF neu setzen nicht. Die Grenze steht jetzt im Werkzeugtitel, im Code und in §4 des Prüflaufs — nicht, weil sie gut ist, sondern damit niemand später glaubt, es sei anders gedacht gewesen.
+„gleich wie goodnotes machen“ — ein Satz ohne Liste. Die Versuchung war, das Erstbeste zu bauen. Stattdessen zwei Leser, die nur lasen (kein Prüflauf daneben, §30) und je eine Liste mit Belegen brachten: der Strichweg mit neun Lücken, die Werkzeuge mit neun. Daraus vier Bögen in der Reihenfolge dessen, was man beim Schreiben ZUERST sieht — die Spitze, das Gedächtnis, der Buckel, die Ecke — und ein L-Eintrag mit dem Rest. Und ein alter Wächter (test345) hat dabei einen Konflikt zwischen zwei Entscheidungen gefunden, E353 und E674, den kein neuer gesehen hätte.
 
 #### Massnahmen an den Daten
 
@@ -2000,10 +2063,16 @@ Redurs PDF-Frage. Sie war die erste des Monats, bei der die richtige Antwort ein
 | 04:21 | Die zweite Fassung von `umschliesse` in editor.ts entfernt; die Tastatur geht jetzt über die Auswahlleiste. | Sie speicherte `ct.textContent` zurück — den GEZEICHNETEN Text — und löschte damit jede vorhandene Auszeichnung des Blocks. §8 wörtlich. | Gering: ein Sprung mehr, mit `typeof`-Schutz davor. test542 und test557 halten beide Wege. |
 | 04:54 | Zwei neue Server-Wege: `GET /konto/geraete`, `POST /konto/geraete/weg`. | Die Einstellungen versprachen eine Liste, die es nicht gab; `sitzungen` hielt `geraet`, `angelegt`, `bis` seit dem ersten Tag ungelesen. | Hinaus geht nur ein Stück des Abdrucks, nie der Token. Ein fremdes Konto ist nicht gefiltert, sondern liegt gar nicht erst in der Menge, in der gesucht wird — der sichere Weg herum. |
 | 07:52 | Neue Markenart `textfix` und das Werkzeug „Text ändern“. | Redurs Frage. Die Änderung ist eine Marke: rückgängig, versioniert, in der Sicherung — und das Original bleibt Byte für Byte. | Der Text fliesst nicht, und die Schrift ist eine ähnliche. Beides steht im Werkzeugtitel und wird von test559 §4 festgehalten. |
+| 14:47 | E672 gelandet: Farbe an Ordnern und Fächern über denselben Wähler wie an Heften | Redurs zweiter Wunsch war klein und klar; zuerst das Klare | gering — Feld `color` gab es, Whitelist über `Farben.kennung` |
+| ca. 14:30 | Workflow mit fünf Lesern gestartet, nur lesen; zwei fertig, einer am Sitzungslimit gescheitert, der Rest mit dem Container-Neustart | „gleich wie GoodNotes“ ist keine Aufgabe, sondern ein Programm — erst die Liste, dann die Bögen | Leser können Vermutungen als Befunde ausgeben — deshalb steht bei jedem Punkt, was gemessen und was vermutet ist |
+| 15:07 | E673: Spitze als Faktor auf die halben Breiten, nicht in `seiten`/`versatz` | test366 §1 verlangt Zeichengleichheit von Feder und outline — vor beiden anfassen statt in beiden | alte Füllerstriche sehen anders aus (spitz); bewusst, in E673 begründet |
+| 18:00 | E674: Gedächtnis in der Zeichenschicht, nicht in der Leiste; Auswahl ohne eigene Tinte | jeder Weg zur Farbe läuft durch setzeFarbe/setzeStrich; test345 hat den Konflikt mit E353 gezeigt | wer gewohnt war, dass der Stift die Markerfarbe mitnimmt, setzt sie einmal je Werkzeug |
+| 18:06 | E675 vor dem E674-Commit geschrieben, den Patch bis zum Commit aus dem Baum genommen (Skript e675.py) | ein Commit, ein Ziel (§43) — beide Bögen sassen in marken.ts | gering, das Skript ist umkehrbar und wurde zweimal gefahren |
+| ca. 19:00 | E676: nach 8/8 grün das Bild angesehen, die gespeicherten Punkte sondiert, zwei weitere Stellen repariert (finish, stueck) und §4 als Browser-Teil an test564 gehängt | der Wächter hielt den Glätter, das Bild zeigte die Marke — die Ecke ging DAHINTER verloren (§55.1) | das Bogenstück ändert, wie jede scharfe Ecke gezeichnet wird, auch im Bestand; test366 §1 (zeichengleich) und die PDF-Kontur (outlinePunkte, unverändert) halten es |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 102 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 105 Einträge.
 

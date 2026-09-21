@@ -116,6 +116,9 @@ sind der teuerste Teil und der lehrreichste.
 | P100 | 2026-09-21 | Dieselbe Funktion zweimal — und E650 reparierte nur die eine | hoch | — |
 | P101 | 2026-09-21 | Sechs Zusagen grün, weil die Liste leer war | 🟠 mittel | — |
 | P102 | 2026-09-21 | OHNE_FRAGE ist die Zahl 30 | 🟠 mittel | — |
+| P103 | 2026-09-21 | Der Punkt des breiten Füllers war ein Splitter — und der Wächter grün | 🟠 mittel | — |
+| P104 | 2026-09-21 | Eine Gegenprobe, die gar nicht lief | 🟠 mittel | — |
+| P105 | 2026-09-21 | Der Glätter hielt die Ecke, die Marke nicht — acht gleichmässige Punkte statt der Ecken | 🟠 mittel | — |
 
 ---
 
@@ -2235,4 +2238,61 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Mit `{ anordnung: 'untereinander', ueberGrenze: 'alle' }` lief derselbe Lauf durch und war 4/18 rot — also messbar.
 
 **Die Lehre.** Ein Dialog ohne Menschen wartet ewig. Und: der teuerste wiederkehrende Fehler dieses Projekts hat heute einen neuen Weg gefunden — nicht die Signatur war falsch erinnert, sondern die BEDEUTUNG eines Namens.
+
+
+---
+
+## P103 · Der Punkt des breiten Füllers war ein Splitter — und der Wächter grün
+
+*2026-09-21 · 🟠 mittel*
+
+**Das Bild.** Nach E673 zeigte das Bild einen senkrechten Strich, wo ein 2-pt-Punkt mit dem 5-pt-Füller stehen sollte; test561 stand auf 22/22.
+
+**Die falsche Vermutung.** „Kurze Striche bekommen eine kurze Spitze“ reicht — wenn der WEG der Spitze mit dem Strich schrumpft, bleibt ein Punkt ein Punkt.
+
+**Wie es gefunden wurde.** node bilder.mts spitze — die vierte Zeile des Bildes (§55.1). Der Lauf hatte nur den 2,4-pt-Füller gemessen; dort ist ein 2-pt-Punkt breiter als lang und fällt nicht auf.
+
+**Die Ursache.** Die Spitze war kurz, aber immer noch spitz: `spitzeFaktor` lief auch bei einem 2 pt langen Strich auf `min` (0,25) — bei 5 pt Breite ein Splitter von 1,25 pt Rand bei 5 pt Mitte.
+
+**Der Beweis.** test561 §3, neu: „Punkt (2 pt) mit 5-pt-Füller: Anfang 1.25 · Mitte 5“ — rot; nach der Reparatur (die Spitze wird stumpfer, je weniger von zwei Federn in den Strich passt) 4,66 gegen 5.
+
+**Die Lehre.** Ein Wächter hält nur die Fälle, die er enthält. Wer eine Regel für „kurze Striche“ schreibt, misst sie mit dem BREITESTEN Stift, nicht mit dem, der gerade da war — und sieht das Bild, bevor er grün sagt.
+
+
+---
+
+## P104 · Eine Gegenprobe, die gar nicht lief
+
+*2026-09-21 · 🟠 mittel*
+
+**Das Bild.** Beim Abhängen der Eckenerkennung (E676) druckte der Prüflauf weder ✗ noch „bestanden“ — die Zeile war leer.
+
+**Die falsche Vermutung.** Ein `sed`, der `if (…)` in `if (false && …) // GEGENPROBE` verwandelt, ist harmlos.
+
+**Wie es gefunden wurde.** Der `grep` auf „✗|bestanden“ gab NICHTS aus. Nicht rot, nicht grün — leer. Erst das fiel auf.
+
+**Die Ursache.** Der angehängte `//`-Kommentar schluckte die öffnende Klammer `{` derselben Zeile; `stroke.js` hatte einen Syntaxfehler, `eval` warf, der Lauf brach vor der ersten Zusage ab.
+
+**Der Beweis.** Zweiter Anlauf ohne Kommentar (`< KEHRE` → `< -2`): 6 von 8, „2,62 px“ — die erwarteten zwei Zusagen rot.
+
+**Die Lehre.** Eine Gegenprobe ist ein Stück Code wie jedes andere (E661) und muss BAUEN (§52.6). Und ein Wächter, dessen Ausgabe leer ist, hat nichts gehalten — leer ist nicht grün.
+
+
+---
+
+## P105 · Der Glätter hielt die Ecke, die Marke nicht — acht gleichmässige Punkte statt der Ecken
+
+*2026-09-21 · 🟠 mittel*
+
+**Das Bild.** Nach E676 zeigte das Bild ein „M“ mit spitzen Gipfeln und einem runden Tal; test564 stand auf 8/8.
+
+**Die falsche Vermutung.** Wenn der Glätter die Ecke trifft, steht sie auch in der Marke — der Rest des Wegs (Absetzen, Umriss) ist nur Zeichnen.
+
+**Wie es gefunden wurde.** node bilder.mts ecke, dann eine Sonde auf die gespeicherten Punkte: 8 Punkte, gleichmässig, das Tal 23,7 px neben dem nächsten.
+
+**Die Ursache.** `finish` (E115): hat RDP weniger als acht Stützpunkte übrig, nimm acht gleichmässige — ANSTELLE der RDP-Punkte. RDP hatte die fünf Ecken behalten, die Regel warf sie weg. Dahinter noch der Umriss: eine Q-Kurve durch jede Ecke, 5,12 px daneben.
+
+**Der Beweis.** test564 §4 vorher „[4.24, 23.71, 11.5]“ (Mittellinie) und „[15.19, 23.68, 20.37]“ (Umriss); nachher [0,0,0] und [0.71,0.29,0.8]. Gegenprobe A (acht ersetzen): 23,72; Gegenprobe B (Stück ohne Ecke): 5,12.
+
+**Die Lehre.** Ein Wächter am Kern beweist den Kern. Was der Nutzer sieht, entsteht drei Stationen später — und jede kann verlieren, was die vorige gehalten hat. Deshalb §55.3: ein Bild, wenn man etwas sehen kann; und der Wächter folgt der Sache bis dorthin, wo man sie sieht.
 
