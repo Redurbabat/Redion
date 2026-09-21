@@ -296,6 +296,25 @@ const Marken = (() => {
         { id: 'zettel', zeichen: '🗒', sym: 'inkNote', name: 'Haftnotiz',
             titel: 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn' },
         { id: 'text', zeichen: 'T', sym: 'inkText', name: 'Text', titel: 'Textanmerkung' },
+        /* ══ TEXT ÄNDERN (E670) ════════════════════════════════════════════════
+           Redur, 21. September: „können wir so was machen das wenn ich eine pdf
+           hochlade das ich die pdf selbst direk bearbeiten kann also die text
+           direk".
+    
+           WAS DAS WERKZEUG TUT: auf ein Wort tippen, das Wort steht im Feld, es
+           ändern, fertig. WAS ES NICHT TUT: die PDF umschreiben. Die Änderung
+           ist eine MARKE — sie deckt die alte Stelle zu und schreibt die neue
+           darüber, an derselben Stelle, in derselben Höhe. Das Original bleibt
+           Byte für Byte, wie `leser.ts` es verspricht, und die Änderung ist
+           rückgängig zu machen, versioniert und in der Sicherung.
+    
+           Der Preis steht im Namen: „ändern", nicht „setzen". Ein längeres Wort
+           wird LÄNGER — es schiebt den Rest der Zeile nicht weiter. Ein
+           Textfluss über die Seite hinweg wäre etwas anderes und viel mehr
+           (siehe E670). */
+        { id: 'textfix', zeichen: '✏', sym: 'inkTextFix', name: 'Text ändern',
+            titel: 'Ein Wort der PDF antippen und überschreiben — die alte Stelle wird zugedeckt, '
+                + 'das Original bleibt unberührt' },
         { id: 'zeichen', zeichen: '⚡', sym: 'inkSymbol', name: 'Fachzeichen', titel: 'Ein elektrotechnisches Symbol auf die Seite setzen' },
         /* DIE ELEMENTE (E494): dieselbe Bewegung wie beim Fachzeichen — ein Tipp
            setzt etwas Fertiges —, nur kommt es nicht aus dem Register, sondern
@@ -1145,6 +1164,49 @@ const Marken = (() => {
                 'dominant-baseline': 'alphabetic'
             });
             element.textContent = String(mark.text || '').replace(/[\r\n]+/g, ' ');
+        }
+        else if (art === 'textfix') {
+            /* ══ DIE GEÄNDERTE STELLE (E670) ═══════════════════════════════════
+               Zwei Dinge in einer Marke, und sie gehören zusammen: der Deckel
+               über dem alten Wort und das neue darüber. Getrennt wären es zwei
+               Marken, die man einzeln verschieben, einzeln löschen und damit
+               auseinanderbringen könnte — und ein Deckel ohne Text ist ein Loch
+               im Dokument.
+      
+               DIE FLÄCHE IST DIE PAPIERFARBE, nicht Weiss: ein Scan ist selten
+               weiss, und ein weisser Fleck auf grauem Papier sieht aus wie ein
+               Fehler. `grund` kommt vom Werkzeug, das beim Setzen an der Stelle
+               nachsieht; fehlt es, bleibt Weiss der ehrliche Rückfall.
+      
+               DER TEXT SITZT AUF DER GRUNDLINIE des alten Stücks. `y + h` ist
+               genau dort, wo pdf.js die Grundlinie gemeldet hat (`textMitLage`
+               legt den Kasten von der Grundlinie aus nach oben). */
+            const box = InkGeometry.rectangle([Number(mark.kasten?.x) || 0, Number(mark.kasten?.y) || 0], [(Number(mark.kasten?.x) || 0) + (Number(mark.kasten?.w) || 0),
+                (Number(mark.kasten?.y) || 0) + (Number(mark.kasten?.h) || 0)]);
+            const gruppe = svg('g', {});
+            /* Ein Hauch grösser als das alte Wort: Buchstaben mit Unterlänge
+               ragen über den gemeldeten Kasten, und ein stehengebliebenes „g"
+               verrät die ganze Änderung. */
+            const luft = Math.max(0.6, box.height * 0.12);
+            gruppe.appendChild(svg('rect', {
+                x: box.x - luft, y: box.y - luft,
+                width: box.width + luft * 2, height: box.height + luft * 2,
+                fill: String(mark.grund || '#ffffff'), stroke: 'none'
+            }));
+            const hoehe = Math.max(4, box.height);
+            const wort = svg('text', {
+                x: box.x, y: box.y + hoehe, fill: color,
+                'font-size': hoehe,
+                'font-family': schriftStapel(mark.schrift), 'font-weight': mark.fett ? 700 : 400,
+                'dominant-baseline': 'alphabetic'
+            });
+            wort.setAttribute('xml:space', 'preserve');
+            wort.textContent = String(mark.text || '').replace(/[\r\n]+/g, ' ');
+            gruppe.appendChild(wort);
+            gruppe.setAttribute('data-sid', idOf(mark));
+            gruppe.setAttribute('data-ink-art', art);
+            gruppe.setAttribute('data-kasten', '1');
+            return gruppe;
         }
         else if (art === 'line' && points.length >= 2) {
             element = svg('line', { x1: points[0][0], y1: points[0][1],
@@ -3596,6 +3658,111 @@ const Marken = (() => {
             redraw();
             commit(before);
         };
+        /* ══ TEXT DER PDF ÄNDERN (E670) ═══════════════════════════════════════
+         * Redurs Frage vom 21. September war: „wenn ich eine pdf hochlade das
+         * ich die pdf selbst direk bearbeiten kann also die text direk".
+         *
+         * WAS HIER WIRKLICH PASSIERT, und es steht so auch am Werkzeug: die
+         * PDF wird NICHT umgeschrieben. Sie bleibt Byte für Byte, wie
+         * `leser.ts` es verspricht. Geändert wird das, was man SIEHT — mit
+         * einer Marke, die die alte Stelle zudeckt und die neue darüber
+         * schreibt, an derselben Stelle, in derselben Höhe.
+         *
+         * Der Unterschied ist keine Wortklauberei. Er bedeutet:
+         *   · rückgängig, versioniert, löschbar wie jede Marke
+         *   · in der Sicherung und im ausgegebenen PDF
+         *   · und das Original ist jederzeit noch das Original
+         *
+         * WAS ES NICHT KANN, und das gehört an dieselbe Stelle: der Text
+         * FLIESST NICHT. Ein längeres Wort wird länger und schiebt den Rest
+         * der Zeile nicht weiter; ein kürzeres lässt eine Lücke. Dafür müsste
+         * man den Inhaltsstrom der PDF neu setzen, mit ihren eingebetteten
+         * Schriften — das ist ein eigenes Projekt und nicht dieses.
+         */
+        const grundFarbeBei = (x, y) => {
+            try {
+                const raum = flaeche.parentElement;
+                const bild = raum?.querySelector('img.pdfs-bild');
+                if (!bild || !bild.naturalWidth || !bild.naturalHeight)
+                    return '#ffffff';
+                /* Blattpunkte → Bildpunkte. Gelesen wird ein Stück ÜBER der Zeile:
+                   mitten im Wort träfe man die Schrift und bekäme Schwarz — und
+                   ein schwarzer Deckel ist schlimmer als ein falsch weisser. */
+                const px = Math.round((x / breite) * bild.naturalWidth);
+                const py = Math.round((Math.max(0, y - 2) / hoehe) * bild.naturalHeight);
+                const leinwand = document.createElement('canvas');
+                leinwand.width = 1;
+                leinwand.height = 1;
+                const stift = leinwand.getContext('2d', { willReadFrequently: true });
+                if (!stift)
+                    return '#ffffff';
+                stift.drawImage(bild, px, py, 1, 1, 0, 0, 1, 1);
+                const d = stift.getImageData(0, 0, 1, 1).data;
+                const hex = (n) => Math.max(0, Math.min(255, n | 0)).toString(16).padStart(2, '0');
+                return '#' + hex(d[0] ?? 255) + hex(d[1] ?? 255) + hex(d[2] ?? 255);
+            }
+            catch {
+                /* Ein getaintes oder halb geladenes Bild ist kein Grund zu scheitern. */
+                return '#ffffff';
+            }
+        };
+        const textAendern = async (point, targetId = '') => {
+            const platz = targetId
+                ? marks.findIndex(mark => idOf(mark) === targetId && mark.art === 'textfix') : -1;
+            const vorhanden = platz >= 0 ? marks[platz] : null;
+            if (vorhanden?.gesperrt) {
+                UI.toast('Diese Änderung ist gesperrt — erst entsperren.');
+                return;
+            }
+            /* Eine schon geänderte Stelle noch einmal ändern: dann ist der
+               Kasten längst bekannt, und die Quelle wird gar nicht gebraucht. */
+            if (vorhanden) {
+                const neu = await Dialog.mehrzeilig('Geänderte Stelle — im Original stand „' + String(vorhanden.alt || '') + '"', String(vorhanden.text || ''));
+                if (neu === null)
+                    return;
+                const before = snapshot();
+                /* Leer heisst „nur zudecken" und nicht „weg": wer eine Stelle
+                   schwärzen will, soll das können, ohne dass der Deckel mitgeht. */
+                ersetze(platz, { ...vorhanden, text: neu });
+                redraw();
+                commit(before);
+                return;
+            }
+            if (block?.type !== 'pdfseite' || !block?.quelleId) {
+                UI.toast('Das geht nur auf einer PDF-Seite — ein leeres Blatt hat keinen Text zum Ändern.');
+                return;
+            }
+            if (typeof PdfLeser === 'undefined' || typeof PdfLeser.stueckBei !== 'function') {
+                UI.toast('Der PDF-Leser fehlt — ohne ihn gibt es keine Textebene.');
+                return;
+            }
+            const st = await PdfLeser.stueckBei(block, point[0] ?? 0, point[1] ?? 0, 3);
+            if (!st) {
+                /* DIESER SATZ IST WICHTIGER, ALS ER AUSSIEHT. Ein eingescanntes
+                   Blatt hat KEINE Textebene — dort ist jedes Wort ein Bild, und
+                   kein Werkzeug der Welt findet darin ein Wort. Wer das nicht
+                   erfährt, hält das Werkzeug für kaputt. */
+                UI.toast('An dieser Stelle findet sich kein PDF-Text. '
+                    + 'Bei einem Scan ohne Texterkennung gibt es keinen.');
+                return;
+            }
+            const neu = await Dialog.mehrzeilig('Diese Stelle ändern', String(st.s || ''));
+            if (neu === null)
+                return;
+            if (neu === String(st.s || ''))
+                return; /* nichts geändert, nichts zu merken */
+            const before = snapshot();
+            marks.push({
+                id: frischeId(), art: 'textfix',
+                kasten: { x: st.x, y: st.y, w: st.w, h: st.h },
+                alt: String(st.s || ''), text: neu,
+                farbe: '#000000',
+                grund: grundFarbeBei(st.x, st.y),
+                schrift: schrift.familie, fett: schrift.fett
+            });
+            redraw();
+            commit(before);
+        };
         /**
          * Ein Fachzeichen setzen (Punkt 42).
          *
@@ -3902,6 +4069,11 @@ const Marken = (() => {
             if (tool === 'zettel' && targetId &&
                 marks.some(mark => idOf(mark) === targetId && mark.art === 'zettel')) {
                 void zettelText(targetId);
+                return;
+            }
+            /* Text der PDF ändern (E670): ein Tipp auf ein Wort. */
+            if (tool === 'textfix') {
+                void textAendern(point, targetId);
                 return;
             }
             if (tool === 'zeichen') {

@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 500 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 501 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1104,6 +1104,18 @@ Gerätenamen die Zeile — statt zwei Knöpfen steht einer da. Gezählt am
 21. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
 500.*
 
+*Und 501: `test559` — den Text einer PDF ändern, ohne die PDF anzufassen
+(E670). Er hält Redurs Frage vom 21. September und die Grenze, die zur
+Antwort gehört: die Änderung ist eine Marke, und das Original bleibt Byte
+für Byte — gemessen mit einer SHA-256-Summe über die abgelegte Quelle.
+Gegen den alten Stand war er rot mit 4 von 18, und die vier grünen waren
+keine Zufallstreffer: sie halten, was schon gut war. Dieser Bogen ist
+ausserdem der, in dem ZWEI BESTEHENDE Wächter etwas gefunden haben, bevor
+ein Mensch hinsah: `test480 §7b` druckte `inkText/inkText = 100 %`, weil
+das neue Werkzeug das T von „Text schreiben" mittrug, und derselbe Lauf
+zählte dreizehn Werkzeuge, wo vierzehn standen. Gezählt am 21. September:
+`ls pruefungen/lauf/test*.mts | wc -l` sagt 501.*
+
 ### Die Befehle
 
 ```txt
@@ -1112,7 +1124,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 500 Läufe
+npm run pruefen                      alle 501 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1199,7 +1211,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 500 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 501 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

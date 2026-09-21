@@ -237,6 +237,85 @@ const PdfLeser = (() => {
         catch { /* egal */ } };
         return { seiten: doc.numPages, geometrie, alsBild, text, textMitLage, verweise, schliessen };
     };
-    return { oeffne, BREITE_PX, TEXT_MAX };
+    /* ══ DIE TEXTEBENE EINER SEITE, EINMAL GERECHNET (E670) ═══════════════════
+     * `textMitLage` braucht die QUELLE — also die ganze PDF im Speicher. Das
+     * darf nicht zweimal passieren, und schon gar nicht bei jedem Klick.
+     *
+     * Bis hierher hielt das Schreibstudio seine eigene Rechnung (`lagen`,
+     * `griffe` in `document-mode.ts`), weil nur die Suche sie brauchte. Seit
+     * es ein Werkzeug gibt, das ein WORT unter dem Zeiger sucht, braucht sie
+     * ein Zweiter — und zwei Rechnungen derselben Sache laufen auseinander
+     * (§8). Sie steht deshalb hier, wo pdf.js ohnehin wohnt.
+     *
+     * ZWEI SPEICHER, BEIDE ABSICHTLICH:
+     *   `griffe`  eine offene PDF je Quelle — das Teure
+     *   `lagen`   die Stücke je Block — das oft Gefragte
+     * Beide leben für die Sitzung. Eine Quelle wird nicht geschlossen: wer
+     * einmal in einem Skript blättert, blättert weiter, und ein Griff, der
+     * bei jedem Klick neu aufgeht, ist die langsamere Wahl (§36). */
+    const griffe = new Map();
+    const lagen = new Map();
+    const griffVon = (quelleId) => {
+        let g = griffe.get(quelleId);
+        if (!g) {
+            g = (async () => {
+                if (typeof Dateien === 'undefined')
+                    return null;
+                const roh = await Dateien.alsBlob(quelleId);
+                if (!roh)
+                    return null;
+                return oeffne(new Uint8Array(await roh.arrayBuffer()));
+            })().catch(() => null);
+            griffe.set(quelleId, g);
+        }
+        return g;
+    };
+    /**
+     * Die Textstücke einer PDF-Seite mit ihrer Lage in Blattpunkten.
+     *
+     * Leer für alles, was keine PDF-Seite ist oder seine Quelle verloren hat
+     * — und das ist kein Fehler, sondern der Normalfall für ein leeres Blatt.
+     */
+    const lageVonBlock = (block) => {
+        const id = String(block?.id || '');
+        if (!id)
+            return Promise.resolve([]);
+        let l = lagen.get(id);
+        if (!l) {
+            l = (async () => {
+                if (!block || block.type !== 'pdfseite' || !block.quelleId)
+                    return [];
+                const griff = await griffVon(String(block.quelleId));
+                return griff ? griff.textMitLage(Number(block.nr) || 1) : [];
+            })().catch(() => []);
+            lagen.set(id, l);
+        }
+        return l;
+    };
+    /**
+     * Das Textstück an dieser Stelle — oder `null`.
+     *
+     * `nah` gibt eine Toleranz in Blattpunkten: ein Zeiger trifft eine
+     * 9 Punkt hohe Zeile selten genau, und ein Werkzeug, das nur bei einem
+     * Volltreffer reagiert, fühlt sich kaputt an. Getroffen wird das
+     * KLEINSTE passende Stück — bei zwei übereinanderliegenden gewinnt das
+     * engere, sonst nähme ein Kasten über dem ganzen Absatz jedes Wort.
+     */
+    const stueckBei = async (block, x, y, nah = 2) => {
+        const stuecke = await lageVonBlock(block);
+        let beste = null;
+        for (const st of stuecke) {
+            if (!st || typeof st.s !== 'string' || !st.s.trim())
+                continue;
+            if (x < st.x - nah || x > st.x + st.w + nah)
+                continue;
+            if (y < st.y - nah || y > st.y + st.h + nah)
+                continue;
+            if (!beste || st.w * st.h < beste.w * beste.h)
+                beste = st;
+        }
+        return beste;
+    };
+    return { oeffne, BREITE_PX, TEXT_MAX, lageVonBlock, stueckBei };
 })();
 window.PdfLeser = PdfLeser;

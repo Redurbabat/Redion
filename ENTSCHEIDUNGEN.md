@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-649 Entscheidungen, E1 bis E669 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+650 Entscheidungen, E1 bis E670 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -712,6 +712,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E667** — Strg+F findet vier Stellen und zeigte eine: die Seitensuche markierte jede Fundstelle, rollte zur ERSTEN und schrieb „12 Treffer" — zu den elf anderen gab es keinen Weg, denn ihr `keydown` kannte nur `Escape`. Jetzt Enter vor, Umschalt+Enter zurück, ‹ und › als 44-px-Knöpfe (§37), Zähler „2 von 4" statt „4 Treffer" (§38), und ein Ring statt einer Wand. Das BILD fand dazu, was kein Lauf sah: am Telefon lief das Suchfeld links aus dem Bild (`-90 … 368` bei 390 px), weil die zwei neuen Knöpfe die Leiste auf 458 px verbreiterten (§55.1). Wächter `test556`.
 * **E668** — Fett ist ein Schalter, und Strg+B nimmt denselben Weg: `umschliesse` stempelte nur (`****Wort****`, gezeichnet als sichtbares `**Wort**`), und `editor.ts` hatte eine ZWEITE Fassung, die `ct.textContent` zurückschrieb — den GEZEICHNETEN Text. Strg+B in `Ein **fetter** Satz` machte daraus `Ein fetter **Satz**`: die vorhandene Auszeichnung gelöscht, ohne Meldung. §8 wörtlich, und der Grund, warum E650 nur den halben Weg erreichte. Dazu: `*` ist die halbe `**` — Kursiv auf fettem Wort ergibt `***fetter***`, nicht `*fetter*`. Wächter `test557`.
 * **E669** — Die angemeldeten Geräte gibt es jetzt wirklich: die Einstellungen versprachen „Die Liste und der Freigabe-Code stehen im Wolke-Fenster" — den Code gab es, die Liste nicht. `sitzungen` hält `geraet`, `angelegt` und `bis`, seit es die Tabelle gibt; geschrieben, nie gelesen. Neu: `GET /konto/geraete`, `POST /konto/geraete/weg`, das Gerätefenster. Hinaus geht ein STÜCK des Abdrucks, nie der Token (§42); ein fremdes Konto ist nicht gefiltert, sondern gar nicht erst in der Menge, in der gesucht wird; eine Marke bekommt die Liste nicht (§26). Aus dem Bild kam dazu: die Knöpfe massen 18 px — auch im Markenfenster nebenan (§37, §45). Wächter `test558`.
+* **E670** — Den Text einer PDF ändern, ohne die PDF anzufassen: Redurs Frage vom 21. September. Neues Werkzeug „Text ändern" — auf ein Wort tippen, ändern, fertig. Die Änderung ist eine MARKE (Deckel in Papierfarbe + neuer Text auf derselben Grundlinie), also rückgängig, versioniert, in der Sicherung und im ausgegebenen PDF; das Original bleibt Byte für Byte, und `test559` misst das mit einer SHA-256-Summe. Was es NICHT kann, steht im Werkzeugtitel: der Text fliesst nicht. `stueckBei`/`lageVonBlock` in `leser.ts` statt einer zweiten Rechnung im Studio (§8). Zwei Funde bestehender Wächter: `inkText/inkText = 100 %` (E515-Regel) und die Werkzeugzahl 13→14. Wächter `test559`.
 
 ---
 
@@ -54737,3 +54738,95 @@ sind auch verschieden. §55.2, zum wiederholten Mal in diesem Monat.
 um den Gerätenamen zerreisst ein `<script>` im Namen die ganze Zeile —
 statt zwei Knöpfen stand einer da, und der Klick fand nichts mehr. §19 ist
 hier keine Theorie: der Gerätename kommt vom Server und ist Nutzertext.
+
+
+## E670 — Den Text einer PDF ändern, ohne die PDF anzufassen
+
+**Redur, 21. September 2026:** „können wir so was machen das wenn ich eine
+pdf hochlade das ich die pdf selbst direk bearbeiten kann also die text
+direk"
+
+**Was wurde entschieden?** Ja — mit einem Werkzeug „Text ändern": auf ein
+Wort der PDF tippen, das Wort steht im Feld, ändern, fertig. Und mit einer
+Grenze, die im Namen des Werkzeugs steht und in seinem Titel: die PDF wird
+dabei **nicht umgeschrieben.**
+
+**Der Unterschied, und warum er keine Wortklauberei ist.** „Die PDF selbst
+bearbeiten" heisst wörtlich: ihren Inhaltsstrom neu setzen, mit ihren
+eingebetteten Schriften, und den Absatz neu umbrechen. Das können drei
+Programme der Welt richtig, und es ist ein eigenes Projekt.
+
+Was jedes andere Programm stattdessen tut — und was hier gebaut ist: die
+Stelle **zudecken** und die neue darüberschreiben, an derselben Stelle, in
+derselben Höhe, auf derselben Grundlinie. Die Änderung ist damit eine
+**Marke**, und daraus folgt alles Gute:
+
+- rückgängig und versioniert wie jeder Strich (§15)
+- in der `.redion`-Sicherung und im ausgegebenen PDF
+- **und das Original bleibt Byte für Byte das Original** — `leser.ts` sagt
+  das seit dem ersten Tag zu („Zurückgeschrieben wird nie"), und `test559`
+  misst es jetzt mit einer SHA-256-Summe über die abgelegte Quelle.
+
+**Was es nicht kann, und das steht an derselben Stelle wie das, was es
+kann.** Der Text **fliesst nicht.** Ein längeres Wort wird länger, statt
+den Rest der Zeile zu schieben; ein kürzeres lässt eine Lücke. Und die
+Schrift ist nicht die eingebettete der PDF, sondern eine ähnliche — ein
+Zeichen-für-Zeichen-Abgleich bräuchte Schrift-Einbettung.
+
+Beides ist im Werkzeug-Titel, in `marken.ts` und in §4 des Prüflaufs
+festgehalten. Nicht, weil es gut ist, sondern damit niemand später glaubt,
+es sei anders gedacht gewesen (§33: keine falschen Versprechen).
+
+**Wie das Wort unter dem Zeiger gefunden wird.** `textMitLage` in
+`leser.ts` gibt es seit E468 — jedes Textstück der Seite mit seinem Kasten
+in Blattpunkten, im selben Raum wie die Marken. Es lag da und wurde nur von
+der Suche benutzt. Dazu kommt jetzt `lageVonBlock` und `stueckBei`: ein
+Speicher je Quelle, einer je Seite, und die Frage „was steht hier?".
+
+**Warum das in `leser.ts` steht und nicht im Schreibstudio.** Das Studio
+hatte seine eigene Rechnung (`griffe`, `lagen`) für die Suche. Ein zweiter
+Rufer hätte eine zweite gebraucht — und zwei Rechnungen derselben Sache
+laufen auseinander (§8). Sie steht deshalb dort, wo pdf.js ohnehin wohnt.
+
+**Die Fläche ist die Papierfarbe, nicht Weiss.** Ein Scan ist selten weiss,
+und ein weisser Fleck auf grauem Papier sieht aus wie ein Fehler. Gelesen
+wird ein Bildpunkt knapp ÜBER der Zeile — mitten im Wort träfe man die
+Schrift und bekäme Schwarz, und ein schwarzer Deckel wäre schlimmer als ein
+falsch weisser.
+
+**Was war die Alternative?** Zwei getrennte Marken — ein Abdeckband und
+eine Textmarke. Dagegen spricht, dass man sie einzeln verschieben, einzeln
+radieren und damit auseinanderbringen könnte: ein Deckel ohne Text ist ein
+Loch im Dokument, und ein Text ohne Deckel steht doppelt da. Eine Marke,
+zwei Elemente.
+
+**Was kostet es?** Ein Werkzeug mehr in der Leiste (das vierzehnte), eine
+Markenart mehr, und beim ersten Tipp auf einer Seite das Öffnen der Quelle.
+
+**Und was ein Scan nicht hergibt.** Ein eingescanntes Blatt hat keine
+Textebene — dort ist jedes Wort ein Bild, und kein Werkzeug findet darin
+ein Wort. Das Werkzeug sagt es dann, statt stumm zu bleiben: „Bei einem
+Scan ohne Texterkennung gibt es keinen." Wer das nicht erfährt, hält das
+Werkzeug für kaputt.
+
+**Zwei Funde beim Bauen, beide von bestehenden Wächtern:**
+
+1. `test480 §7b` — das neue Werkzeug trug `inkText` mit, dasselbe T wie
+   „Text schreiben". Der Lauf druckte `inkText/inkText = 100 %` und hielt
+   die Regel aus E515 (kein Paar über 60 %). Ohne ihn hätte es zwei
+   gleiche Knöpfe nebeneinander gegeben, und gesehen hätte es niemand.
+   Das neue Zeichen `inkTextFix` misst gegen das ähnlichste Paar 52 %.
+2. Derselbe Lauf zählt die Werkzeuge — dreizehn, von Hand geschrieben.
+   Jetzt vierzehn, von Hand nachgezogen. Genau dafür steht die Zahl dort.
+
+**Und ein Fehler von mir**, der fünf Minuten Stille kostete: `alsSeiten`
+bekam `PdfEinlesen.OHNE_FRAGE` als Vorgabe — das ist aber **die Zahl 30**
+und kein Schalter „ohne Frage". Der Layout-Dialog stand und wartete auf
+einen Menschen, den es im Prüflauf nicht gibt. E21, wörtlich: eine
+Schnittstelle aus dem Gedächtnis geschrieben statt nachgeschlagen.
+
+**Wächter `test559`**, 18 Zusagen. Gegen den alten Stand war er rot mit
+**4 von 18** — und die vier grünen waren keine Zufallstreffer: „Die PDF ist
+als Seite eingelesen" und „Die abgelegte Quelle ist Byte für Byte die
+hereingegebene" halten den Zustand, der SCHON gut war, und müssen es auch
+nach diesem Bogen noch tun.

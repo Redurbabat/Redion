@@ -410,7 +410,7 @@ console.log('\n§7 Sechs Stifte, sechs Bilder');
   await s.close();
 }
 
-/* ══ §7b Dreizehn Werkzeuge, dreizehn Bilder ═══════════════════════════════
+/* ══ §7b Vierzehn Werkzeuge, vierzehn Bilder ═══════════════════════════════
  *
  * DIESELBE METHODE WIE §7, AUF DIE ANDERE LISTE. §7 misst `Marken.STIFTE` —
  * die sechs Stiftarten. Die dreizehn WERKZEUGE daneben hat bis zum
@@ -429,7 +429,7 @@ console.log('\n§7 Sechs Stifte, sechs Bilder');
  * bekommen, hiesse zwei Dinge auf einmal zu tun — und wenn danach etwas rot
  * ist, weiss niemand, welches davon (§45).
  * ------------------------------------------------------------------------ */
-console.log('\n§7b Dreizehn Werkzeuge, dreizehn Bilder');
+console.log('\n§7b Vierzehn Werkzeuge, vierzehn Bilder');
 {
   const s = await mitBlatt();
   const GRENZE = 60;
@@ -472,7 +472,13 @@ console.log('\n§7b Dreizehn Werkzeuge, dreizehn Bilder');
   })()`) as string) as { namen: string[]; leer: string[];
                          paare: Array<{ p: string; gleich: number }> };
 
-  gleich('Dreizehn Werkzeuge, dreizehn verschiedene Zeichen', new Set(r.namen).size, 13);
+  /* DREIZEHN WAREN ES BIS ZUM 21. SEPTEMBER 2026. „Text ändern“
+     (`textfix`, E670) ist das vierzehnte. Die Zahl steht hier von Hand und
+     wird von Hand nachgezogen — genau das ist ihr Sinn: ein Werkzeug, das
+     unbemerkt dazukommt, macht diesen Lauf rot, und dann sieht jemand hin.
+     Beim ersten Anlauf hat er auch gleich etwas gefunden: das neue Werkzeug
+     trug `inkText` mit, und §7b druckte `inkText/inkText = 100 %`. */
+  gleich('Vierzehn Werkzeuge, vierzehn verschiedene Zeichen', new Set(r.namen).size, 14);
   p('… und jedes hat wirklich Tinte auf dem Raster',
     r.leer.length === 0, JSON.stringify(r.leer));
   const schlimmstes = r.paare[0];

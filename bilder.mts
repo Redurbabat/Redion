@@ -1001,6 +1001,49 @@ const ANSICHTEN: Record<string, {
   },
 
 
+  /* --- Text der PDF ändern (E670) ------------------------------------------
+     Auf dem Bild steht dieselbe Seite zweimal nicht: links, was die PDF
+     sagt, gibt es nicht als zweites Bild. Zu sehen ist die GEÄNDERTE Seite
+     — „B16" ist „C16", „1,5 mm2" ist „2,5 mm2", und der Prüfer heisst
+     anders. Was zählt: es sieht nicht nach Korrektur aus, sondern nach
+     Dokument. Genau das ist der Anspruch. */
+  pdftext: {
+    titel: 'Text einer PDF ändern — die Seite danach',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const roh = atob('JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvUGFnZXMgL0NvdW50IDEgL0tpZHMgWzQgMCBSXSA+PgplbmRvYmoKMiAwIG9iago8PCAvVHlwZSAvRm9udCAvU3VidHlwZSAvVHlwZTEgL0Jhc2VGb250IC9IZWx2ZXRpY2EgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL0xlbmd0aCAyNTggPj4Kc3RyZWFtCkJUIC9GMSAyMiBUZiA2MCA3NTAgVGQgKFBydWVmcHJvdG9rb2xsIFdlcmtzdGF0dCkgVGogRVQKQlQgL0YxIDE2IFRmIDYwIDY5MCBUZCAoU2ljaGVydW5nOiBCMTYpIFRqIEVUCkJUIC9GMSAxNiBUZiA2MCA2NjAgVGQgKExlaXRlcnF1ZXJzY2huaXR0OiAxLDUgbW0yKSBUaiBFVApCVCAvRjEgMTYgVGYgNjAgNjMwIFRkIChQcnVlZmVyOiBNLiBNdXN0ZXIpIFRqIEVUCkJUIC9GMSAxNiBUZiA2MCA2MDAgVGQgKERhdHVtOiAxMi4wMy4yMDI2KSBUaiBFVAplbmRzdHJlYW0KZW5kb2JqCjQgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAxIDAgUiAvTWVkaWFCb3ggWzAgMCA1OTUgODQyXSAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSAyIDAgUiA+PiA+PiAvQ29udGVudHMgMyAwIFIgPj4KZW5kb2JqCjUgMCBvYmoKPDwgL1R5cGUgL0NhdGFsb2cgL1BhZ2VzIDEgMCBSID4+CmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA2NiAwMDAwMCBuIAowMDAwMDAwMTM2IDAwMDAwIG4gCjAwMDAwMDA0NDUgMDAwMDAgbiAKMDAwMDAwMDU3MSAwMDAwMCBuIAp0cmFpbGVyCjw8IC9TaXplIDYgL1Jvb3QgNSAwIFIgPj4Kc3RhcnR4cmVmCjYyMAolJUVPRgo=');
+      const bytes = new Uint8Array(roh.length);
+      for (let i = 0; i < roh.length; i++) bytes[i] = roh.charCodeAt(i);
+      const seite = Store.addPage(null, { text: 'Prüfprotokoll' });
+      await PdfEinlesen.alsSeiten(
+        new File([bytes], 'pruefprotokoll.pdf', { type: 'application/pdf' }),
+        seite.id, { anordnung: 'untereinander', ueberGrenze: 'alle' });
+      await new Promise(r => setTimeout(r, 900));
+      const blatt = Store.childrenOf(seite.id).find((b: any) => b && b.type === 'pdfseite');
+      if (blatt) {
+        const stuecke = await PdfLeser.lageVonBlock(Store.getBlock(blatt.id));
+        const setze = (suche: string, neuerText: string) => {
+          const st = stuecke.find((x: any) => String(x.s || '').includes(suche));
+          if (!st) return null;
+          return { id: 'fix-' + suche.replace(/\W/g, ''), art: 'textfix',
+                   kasten: { x: st.x, y: st.y, w: st.w, h: st.h },
+                   alt: st.s, text: neuerText, farbe: '#000000', grund: '#ffffff' };
+        };
+        const marken = [
+          setze('B16', 'Sicherung: C16'),
+          setze('1,5 mm', 'Leiterquerschnitt: 2,5 mm2'),
+          setze('M. Muster', 'Prüfer: R. Babat')
+        ].filter(Boolean);
+        Store.updateBlock(blatt.id, { marken });
+      }
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1200));
+    }
+  },
+
+
   papier: {
     titel: 'Die Papiervorlagen am A4-Blatt',
     bauen: async () => {
