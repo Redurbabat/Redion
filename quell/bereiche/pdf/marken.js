@@ -3275,8 +3275,17 @@ const Marken = (() => {
                     /* Ein langer, beim Neuzeichnen geschlossener Strich darf nicht wie
                        eine bloss konstruierte Zweipunktlinie aussehen (E115). Acht
                        Stuetzpunkte halten Verlauf und Druck, auch wenn er fast gerade war. */
-                    if (original.length >= 8 && indizes.length < 8)
-                        indizes = Array.from({ length: 8 }, (_value, index) => Math.round(index * (original.length - 1) / 7));
+                    if (original.length >= 8 && indizes.length < 8) {
+                        /* DIE ECKEN BLEIBEN (E676). Bis E676 standen hier acht
+                           GLEICHMÄSSIGE Stützpunkte ANSTELLE der Stützpunkte von RDP —
+                           für einen fast geraden Strich einerlei, für ein „M" fatal:
+                           RDP hatte die fünf Ecken behalten, und diese Zeile warf sie
+                           weg. Das Bild zeigte ein rundes Tal, 23,7 px neben dem
+                           nächsten gespeicherten Punkt (test564 §4). Jetzt kommen die
+                           acht zu den Ecken DAZU. */
+                        const gleichmaessig = Array.from({ length: 8 }, (_value, index) => Math.round(index * (original.length - 1) / 7));
+                        indizes = Array.from(new Set([...indizes, ...gleichmaessig])).sort((a, b) => a - b);
+                    }
                     /* DIE NEIGUNG WIRD MIT NEU INDIZIERT (E507). Das Vereinfachen wirft
                        Stützpunkte weg; wer nur `pts` und `pressure` mitnimmt, lässt
                        `neigung` in der alten Länge stehen — und ab da gehört

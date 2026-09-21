@@ -2610,6 +2610,59 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  ecke: {
+    titel: 'Der Glätter hält die Ecke (E676)',
+    /* Ein langsam gezogenes „M" und ein „W" mit dem Stift — echte
+       Zeigerereignisse, 2 px je 16 ms, damit der Glätter so stark mittelt
+       wie bei einer langsamen Hand. Die Spitzen müssen Spitzen sein.
+         node bilder.mts ecke */
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('zeichnen:stift', 'fueller');
+      Store.setMeta('zeichnen:werkzeugwerte', { stift: { farbe: '#1a1a1a', breite: 2.4 } });
+      const seite = Store.addPage(null, { text: 'Die Ecke', icon: '🖋' });
+      Store.addBlock(seite.id, 'blatt', { text: '', papier: 'liniert',
+        blattBreite: 595.28, blattHoehe: 320, raumVersion: 1, marken: [] });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.click();
+      await new Promise(r => setTimeout(r, 300));
+      const svg = document.querySelector<SVGSVGElement>('.blatt-marken');
+      if (!svg) return;
+      const ctm = svg.getScreenCTM();
+      if (!ctm) return;
+      const zu = (x: number, y: number) => { const pt = svg.createSVGPoint(); pt.x = x; pt.y = y; const c = pt.matrixTransform(ctm); return { clientX: c.x, clientY: c.y }; };
+      const ev = (typ: string, x: number, y: number) => new PointerEvent(typ, { ...zu(x, y), pointerType: 'pen',
+        pressure: typ === 'pointerup' ? 0 : 0.5, isPrimary: true, button: 0, buttons: typ === 'pointerup' ? 0 : 1,
+        pointerId: 7, bubbles: true, cancelable: true });
+      const zug = async (ecken: number[][]): Promise<void> => {
+        const pts: number[][] = [];
+        for (let e = 0; e < ecken.length - 1; e++) {
+          const [ax, ay] = ecken[e]!, [bx, by] = ecken[e + 1]!;
+          const n = Math.round(Math.hypot(bx! - ax!, by! - ay!) / 2);
+          for (let i = 0; i < n; i++) pts.push([ax! + (bx! - ax!) * i / n, ay! + (by! - ay!) * i / n]);
+        }
+        pts.push(ecken[ecken.length - 1]!);
+        svg.dispatchEvent(ev('pointerdown', pts[0]![0]!, pts[0]![1]!));
+        for (let i = 1; i < pts.length; i++) {
+          await new Promise(r => setTimeout(r, 16));
+          svg.dispatchEvent(ev('pointermove', pts[i]![0]!, pts[i]![1]!));
+        }
+        const l = pts[pts.length - 1]!;
+        svg.dispatchEvent(ev('pointerup', l[0]!, l[1]!));
+        await new Promise(r => setTimeout(r, 250));
+      };
+      /* Ein „M" (unten-oben-unten-oben-unten) und ein „W" daneben. */
+      await zug([[80, 220], [80, 120], [120, 200], [160, 120], [160, 220]]);
+      await zug([[220, 120], [245, 220], [270, 150], [295, 220], [320, 120]]);
+      /* Und ein Zickzack, wie ihn test564 misst. */
+      await zug([[380, 220], [405, 150], [430, 220], [455, 150], [480, 220], [505, 150]]);
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
   laser: {
     titel: 'Der Laserpointer: zeigen statt schreiben (E512)',
     bauen: async () => {

@@ -87,6 +87,31 @@ const InkGeometry = (() => {
                 out.push(i);
         return out;
     };
+    /* ══ EIN BOGENSTUECK, DAS EINE ECKE KENNT (E676) ═════════════════════════
+       Der Weg von Stuetzpunkt zu Stuetzpunkt ist eine Q-Kurve ueber die
+       Mittelpunkte: der Punkt ist Kontrollpunkt, der Mittelpunkt zum naechsten
+       das Ende. Das rundet — auch eine ECKE, die der Glaetter gerade erst
+       gehalten hat (E676): bei 24 px Abstand der Nachbarn laeuft die Kurve
+       fuenf Pixel neben der Spitze eines „M" vorbei. Kippt die Richtung an
+       einem Punkt (cos < ECKE_COS, dieselbe Schwelle wie `KEHRE` in
+       stroke.ts), geht der Weg deshalb als Gerade DURCH den Punkt und als
+       Gerade weiter zum Mittelpunkt. Die Feder (stroke.ts) ruft dieses
+       Stueck fuer ihre eingefrorenen Teile — eine Rechnung, damit
+       `test366 §1` (zeichengleich) gilt, ohne dass sie zweimal dasteht. */
+    const ECKE_COS = 0.55;
+    const stueck = (prev, p, next) => {
+        const mx = Math.round((p[0] + next[0]) * 50) / 100;
+        const my = Math.round((p[1] + next[1]) * 50) / 100;
+        if (prev) {
+            const ax = p[0] - prev[0], ay = p[1] - prev[1];
+            const bx = next[0] - p[0], by = next[1] - p[1];
+            const la = Math.hypot(ax, ay), lb = Math.hypot(bx, by);
+            if (la > 0.3 && lb > 0.3 && (ax * bx + ay * by) / (la * lb) < ECKE_COS) {
+                return ` L${p[0]} ${p[1]} L${mx} ${my}`;
+            }
+        }
+        return ` Q${p[0]} ${p[1]} ${mx} ${my}`;
+    };
     /** Eine Seite des Umrisses als geglaettete Kurve (ohne das fuehrende M). */
     const seite = (input) => {
         if (input.length < 2)
@@ -94,13 +119,8 @@ const InkGeometry = (() => {
         if (input.length === 2)
             return ` L${input[1][0]} ${input[1][1]}`;
         let output = '';
-        for (let i = 1; i < input.length - 1; i++) {
-            const middle = [
-                Math.round((input[i][0] + input[i + 1][0]) * 50) / 100,
-                Math.round((input[i][1] + input[i + 1][1]) * 50) / 100
-            ];
-            output += ` Q${input[i][0]} ${input[i][1]} ${middle[0]} ${middle[1]}`;
-        }
+        for (let i = 1; i < input.length - 1; i++)
+            output += stueck(input[i - 1], input[i], input[i + 1]);
         const last = input[input.length - 1];
         return output + ` L${last[0]} ${last[1]}`;
     };
@@ -271,13 +291,9 @@ const InkGeometry = (() => {
         if (input.length === 2)
             return `M${input[0][0]} ${input[0][1]} L${input[1][0]} ${input[1][1]}`;
         let output = `M${input[0][0]} ${input[0][1]}`;
-        for (let i = 1; i < input.length - 1; i++) {
-            const middle = [
-                Math.round((input[i][0] + input[i + 1][0]) * 50) / 100,
-                Math.round((input[i][1] + input[i + 1][1]) * 50) / 100
-            ];
-            output += ` Q${input[i][0]} ${input[i][1]} ${middle[0]} ${middle[1]}`;
-        }
+        /* Auch die Linie kennt die Ecke (E676) — dasselbe Stueck wie der Umriss. */
+        for (let i = 1; i < input.length - 1; i++)
+            output += stueck(input[i - 1], input[i], input[i + 1]);
         const last = input[input.length - 1];
         return output + ` L${last[0]} ${last[1]}`;
     };
@@ -1101,6 +1117,7 @@ const InkGeometry = (() => {
         return mark;
     };
     return { points, simplify, simplifyIndices, densify, outline, outlinePunkte, spitzeFaktor, verjuengen,
+        stueck, ECKE_COS,
         path, rectangle, bounds, move, intersects,
         distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale, rotate,
         textWidth, textLines, textLayout, LINIEN, SCHRIFTEN, schriftStapel, gemessenAn,

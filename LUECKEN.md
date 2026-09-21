@@ -8163,13 +8163,12 @@ anderes sieht, gilt sein Bild.
    Erst messen: `outlinePunkte` auf einen 30°-Zickzack, Selbstschnitte
    zählen (reines Rechnen). Wenn > 0: an Kehren einen kleinen Halbkreis
    einfügen; `Feder` muss dann bis n−3 offen halten (`test366 §1`).
-4. **Der Glätter rundet Ecken.** Er ist ein Filter erster Ordnung mit
-   tempoabhängigem Cutoff, ohne Kehren-Reset — an der Spitze eines „M"
-   schleift er ab, was die Vorhersage (`KEHRE`) schon erkennt. Klein: im
-   `glaetter` denselben Kehren-Test wie in `vorhersage`, an ROHEN Punkten
-   und über eine Mindeststrecke (nicht Punktzahl — sonst zittert es bei
-   240 Hz, E504). Wächter: `test366 §3`, `test472`, `test449` (Kritzel
-   misst am geglätteten Weg, L198).
+4. ~~**Der Glätter rundet Ecken.**~~ **Erledigt am 21. September (E676,
+   `test564`).** Er war ein Filter erster Ordnung ohne Kehren-Reset — an
+   der Spitze eines langsam gezogenen „M" 2,62 px daneben. Jetzt merkt er
+   sich die Richtung über eine feste Strecke (2,5 px, nicht Punkte — E504)
+   und gibt an der Kehre die Ecke selbst zurück: 0 px, bei 60 und 240 Hz
+   gleich. `test366 §3`, `test472` und `test449` (L198) blieben grün.
 5. **Der nasse Strich lebt im selben SVG wie alle Marken** — je Bild wird
    der ganze Pfad neu gerastert, keine Canvas-Ebene. GoodNotes zeichnet den
    nassen Strich auf eine eigene Ebene. Erst messen (§36): Performance-

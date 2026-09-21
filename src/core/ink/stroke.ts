@@ -69,15 +69,12 @@ const InkStroke = (() => {
   };
 
   /* Der Mittelpunkt zweier Punkte, gerundet wie in `seite()`. */
-  const mitte = (a: StrokePoint, b: StrokePoint): StrokePoint => [
-    Math.round((a[0] + b[0]) * 50) / 100,
-    Math.round((a[1] + b[1]) * 50) / 100
-  ];
 
-  const qStueck = (a: StrokePoint, b: StrokePoint): string => {
-    const m = mitte(a, b);
-    return ` Q${a[0]} ${a[1]} ${m[0]} ${m[1]}`;
-  };
+  /* Seit E676 kennt das Stueck die Ecke — und es steht in `InkGeometry`,
+     damit Feder und `outline` dieselbe Rechnung nehmen (test366 §1).
+     `vorher` ist der Punkt davor; ohne ihn (am Anfang) ist es die Q-Kurve. */
+  const qStueck = (vorher: StrokePoint | null | undefined, a: StrokePoint, b: StrokePoint): string =>
+    (globalThis as any).InkGeometry.stueck(vorher ?? null, a, b);
 
   /* ===================================================================== *
    * 1 · DIE FEDER — ein Umriss, der waechst
@@ -166,7 +163,7 @@ const InkStroke = (() => {
          letzten zwei, weshalb `fest` nie weiter reicht als n-2. */
       const grenze = Math.min(this.fest, Math.max(0, n - 2));
       let linksTeil = this.linksFest.slice(0, grenze).join('');
-      for (let i = Math.max(1, grenze); i <= n - 2; i++) linksTeil += qStueck(links[i]!, links[i + 1]!);
+      for (let i = Math.max(1, grenze); i <= n - 2; i++) linksTeil += qStueck(links[i - 1], links[i]!, links[i + 1]!);
       if (n === 2) linksTeil = ` L${links[1]![0]} ${links[1]![1]}`;
       else linksTeil += ` L${links[n - 1]![0]} ${links[n - 1]![1]}`;
 
@@ -177,7 +174,7 @@ const InkStroke = (() => {
         rechtsTeil = ` L${rechts[0]![0]} ${rechts[0]![1]}`;
       } else {
         const spaet: string[] = [];
-        for (let j = n - 2; j >= Math.max(1, grenze); j--) spaet.push(qStueck(rechts[j]!, rechts[j - 1]!));
+        for (let j = n - 2; j >= Math.max(1, grenze); j--) spaet.push(qStueck(rechts[j + 1], rechts[j]!, rechts[j - 1]!));
         rechtsTeil = spaet.join('') + this.rechtsFest.slice(1, Math.max(1, grenze)).reverse().join('') +
           ` L${rechts[0]![0]} ${rechts[0]![1]}`;
       }
@@ -203,7 +200,7 @@ const InkStroke = (() => {
       if (n === 2) return `M${pts[0]![0]} ${pts[0]![1]} L${pts[1]![0]} ${pts[1]![1]}`;
       const grenze = Math.min(this.linieFest.length, Math.max(0, n - 2));
       let aus = `M${pts[0]![0]} ${pts[0]![1]}` + this.linieFest.slice(0, grenze).join('');
-      for (let i = Math.max(1, grenze); i < n - 1; i++) aus += qStueck(pts[i]!, pts[i + 1]!);
+      for (let i = Math.max(1, grenze); i < n - 1; i++) aus += qStueck(pts[i - 1], pts[i]!, pts[i + 1]!);
       return aus + ` L${pts[n - 1]![0]} ${pts[n - 1]![1]}`;
     }
 
@@ -221,12 +218,12 @@ const InkStroke = (() => {
       }
       /* Ein Bogenstueck bei i braucht die Kontur von i und i+1. */
       for (let i = Math.max(1, this.fest); i <= n - 3; i++) {
-        this.linksFest[i] = qStueck(this.links[i]!, this.links[i + 1]!);
-        this.rechtsFest[i] = qStueck(this.rechts[i]!, this.rechts[i - 1]!);
+        this.linksFest[i] = qStueck(this.links[i - 1], this.links[i]!, this.links[i + 1]!);
+        this.rechtsFest[i] = qStueck(this.rechts[i + 1], this.rechts[i]!, this.rechts[i - 1]!);
       }
       this.fest = Math.max(this.fest, Math.max(0, n - 2));
       for (let i = Math.max(1, this.linieFest.length); i <= n - 3; i++) {
-        this.linieFest[i] = qStueck(this.pts[i]!, this.pts[i + 1]!);
+        this.linieFest[i] = qStueck(this.pts[i - 1], this.pts[i]!, this.pts[i + 1]!);
       }
       if (this.linieFest.length < Math.max(0, n - 2)) this.linieFest.length = Math.max(0, n - 2);
     }
@@ -273,6 +270,23 @@ const InkStroke = (() => {
      Punkt. Sie stehen unveraendert da — diese Zahl sagt nur, WOBEI sie
      galten, und macht sie damit auf jede andere Rate uebertragbar. */
   const MESS_MS = 16;
+  /* ── DIE ECKE (E676) ────────────────────────────────────────────────────
+   * Ein Filter, der mittelt, kennt keine Ecke: an der Spitze eines „M"
+   * laeuft er weiter in die alte Richtung, waehrend die Hand schon
+   * zurueckkommt, und rundet ab, was spitz gemeint war. Die Vorhersage
+   * erkennt die Kehre seit E376 (`KEHRE`), der Glaetter nicht — gemessen
+   * in `test564`: 2,62 px neben der Spitze eines langsam gezogenen „M".
+   *
+   * Jetzt merkt er sich die RICHTUNG der Hand — gemessen ueber eine feste
+   * STRECKE, nicht ueber Punkte: bei 240 Hz liegen die Meldungen viermal
+   * dichter, und ein Zittern von 0,4 px darf keine Richtung sein (E504,
+   * dieselbe Lehre). Kippt die Richtung (cos < KEHRE), ist die Ecke der
+   * rohe Punkt seit dem letzten Anker, der am weitesten in der ALTEN
+   * Richtung lag; dorthin springt der Filter, bevor er weitermittelt.
+   * Ein sanfter Bogen kippt nie um mehr als ein paar Grad je Strecke und
+   * bleibt, was er war.
+   * ---------------------------------------------------------------------- */
+  const ECKE_SCHRITT = 2.5;     /* px — ab dieser Strecke gilt eine Richtung als gemessen */
 
   type Glaetter = {
     /** Naechster Punkt herein, geglaetteter Punkt heraus. `dt` in ms. */
@@ -295,11 +309,40 @@ const InkStroke = (() => {
        EINGABE ist es die Geschwindigkeit, die die Hand wirklich hat. */
     let vx = endlich(start[0]);
     let vy = endlich(start[1]);
+    /* Die Ecke (E676): der Anker der letzten Richtungsmessung, die
+       gemessene Richtung (0/0 = noch keine) und die rohen Punkte seither. */
+    let ax = vx, ay = vy;
+    let rx = 0, ry = 0;
+    let seitAnker: StrokePoint[] = [];
     return (p: StrokePoint, dt: number): StrokePoint => {
       const px = endlich(p[0]), py = endlich(p[1]);
       const ms = Math.max(1, Number.isFinite(dt) ? dt : 16);
       const tempo = Math.hypot(px - vx, py - vy) / ms;
       vx = px; vy = py;
+      seitAnker.push([px, py]);
+      if (seitAnker.length > 64) seitAnker.shift();
+      const sx = px - ax, sy = py - ay;
+      const sl = Math.hypot(sx, sy);
+      if (sl >= ECKE_SCHRITT) {
+        const nx = sx / sl, ny = sy / sl;
+        if ((rx !== 0 || ry !== 0) && nx * rx + ny * ry < KEHRE) {
+          let ecke = seitAnker[0]!, weit = -Infinity;
+          for (const q of seitAnker) {
+            const v = (q[0] - ax) * rx + (q[1] - ay) * ry;
+            if (v > weit) { weit = v; ecke = q; }
+          }
+          x = ecke[0]; y = ecke[1];
+          rx = nx; ry = ny; ax = px; ay = py;
+          seitAnker = [[px, py]];
+          /* Die Ecke SELBST ist der Punkt dieser Meldung — kein Mittel aus
+             Ecke und Hand. Gemittelt laege sie bei 60 Hz 1,4 px und bei
+             240 Hz 0,3 px neben der Spitze (gemessen), also wieder an der
+             Abtastrate; so liegt sie im Strich, bei jeder Rate gleich. */
+          return [x, y];
+        }
+        rx = nx; ry = ny; ax = px; ay = py;
+        seitAnker = [[px, py]];
+      }
       const teil = Math.min(1, tempo / TEMPO_VOLL);
       const gemessen = ALPHA_LANGSAM + (ALPHA_SCHNELL - ALPHA_LANGSAM) * teil;
       /* ── ZEIT, NICHT MESSUNGEN (E504) ────────────────────────────────────

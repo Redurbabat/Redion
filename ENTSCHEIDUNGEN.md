@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-655 Entscheidungen, E1 bis E675 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+656 Entscheidungen, E1 bis E676 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -718,6 +718,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E673** — Der Füller läuft spitz aus: Redurs „gleich wie GoodNotes" vom 21. September, erster Bogen. Bis dahin waren beide Kappen Halbkreise in voller Breite — jeder Buchstabe endete mit einem Klecks. EINE Kurve (`InkGeometry.spitzeFaktor`, Weglänge statt Punktzahl), EINE Stelle für die halben Breiten (`halbeBreiten`, Bildschirm und PDF — vorher zwei Abschriften, derselbe Fund wie E623), die Spitze als Feld im Register `STIFTE` (§8). Nass nur vom Anfang her, trocken an beiden Enden; kurze Striche bekommen eine kurze Spitze, damit ein Punkt ein Punkt bleibt. Kein Druckwert wird angefasst (§9). Wächter `test561`.
 * **E674** — Jedes Werkzeug merkt sich Farbe und Stärke: Redurs „gleich wie GoodNotes", zweiter Bogen. `color` und `width` waren EINE Variable für Stift, Marker, Formen, Zettel, Text — der Marker gelb und breit, und der Stift schrieb danach gelb und breit; auf einer gewöhnlichen Seite wurde die Farbe gar nicht gemerkt. Jetzt EIN Meta (`zeichnen:werkzeugwerte`), je Werkzeug Farbe und Stärke, in der Zeichenschicht an einer Stelle (`setzeWerkzeug`/`setzeFarbe`/`setzeStrich`), frisch gelesen und geprüft (§19). Die Auswahl hat keine eigene Tinte: was man mit ihr wählt, gilt dem Stift danach (E353) — `test345 §4` hat das gegen den ersten Stand gefunden. Die Nachbarstelle (§45): das Studio setzte erst die Dokumentfarbe, dann das Werkzeug — und der Wechsel hätte die Farbe sofort wieder überschrieben. Wächter `test562`.
 * **E675** — Ein Stift, der kurz 0 meldet, bleibt ein Stift: Lücke 9 des Stiftweg-Lesers. `druckAus` entschied je Meldung; eine 0 mitten im Stiftstrich hiess „kein Sensor", und der Tempo-Ersatz sprang ein — 0,6 beim ersten Mal, bei leichter Hand (0,2) ein Punkt dreimal so breit, den niemand gedrückt hatte. Jetzt behält ein Stift, der schon Druck gemeldet hat, seinen letzten Sensorwert; nur ein Stift, der NIE Druck meldet, bekommt den Ersatz und sagt in `druckArt` ehrlich „tempo". Wächter `test563`.
+* **E676** — Der Glätter hält die Ecke: Lücke 6 des Stiftweg-Lesers (L209 Punkt 4). Der Filter erster Ordnung mittelte durch die Spitze eines langsam gezogenen „M" hindurch — 2,62 px daneben, gemessen. Jetzt merkt er sich die Richtung der Hand über eine feste STRECKE (2,5 px, nicht Punkte — E504) und springt, wenn sie kippt (`KEHRE`), auf den rohen Punkt, der am weitesten in der alten Richtung lag: die Ecke selbst, bei 60 und 240 Hz gleich (0 px). Und das Bild fand zwei weitere Stellen, an denen die Ecke danach verlorenging: `finish` ersetzte bei weniger als acht RDP-Stützpunkten die Ecken durch acht gleichmässige (E115) — jetzt kommen sie dazu —, und der Umriss zog durch jede Ecke eine Q-Kurve — jetzt geht `InkGeometry.stueck` an einer Kehre als Gerade durch den Punkt, in Feder und `outline` gleich. Wächter `test564`, §1–§3 ohne Browser, §4 mit.
 
 ---
 
@@ -55218,3 +55219,101 @@ Stand war er rot mit **10 von 13** — „[0.47]" und „×1.38" —, und mit
 „ist `stift`, soll `tempo`" für den Stift ohne Sensor. Die Gegenprobe
 (die Zeile, die den Sensorwert fortschreibt, abgehängt) macht die zwei
 Zusagen des Buckels wieder rot.
+
+---
+
+## E676 — Der Glätter hält die Ecke
+
+**Redur, 21. September 2026 (wörtlich):** „ich will das du die stift und
+heichenb verbessern, und gleich wie goodnotes machen".
+
+**Was wurde entschieden?** Der Glätter der Handschrift (`InkStroke.glaetter`)
+merkt sich die Richtung der Hand und lässt eine Ecke eine Ecke sein: kippt
+die Richtung, liegt die Spitze im Strich — nicht daneben. Das ist Lücke 6
+des Stiftweg-Lesers und Punkt 4 in L209; der vierte Bogen zu Redurs Satz.
+
+**Was war?** Ein Filter erster Ordnung mittelt (E376, E504): bei langsamer
+Hand stark, damit das Zittern verschwindet. Ein Filter, der mittelt, kennt
+keine Ecke — an der Spitze eines „M" läuft er weiter in die alte Richtung,
+während die Hand schon zurückkommt, und rundet ab, was spitz gemeint war.
+Die Vorhersage erkennt die Kehre seit E376 (`KEHRE`, „kippt die Richtung,
+wird nicht geraten"); der Glätter wusste nichts davon. `test564 §1` hat es
+gemessen: ein Zickzack mit drei Spitzen, langsam gezogen (0,125 px/ms),
+kam geglättet **2,62 px** neben jede Spitze zu liegen — bei 240 Hz 2,23.
+
+**Wie es gebaut ist — und die zwei Fehler, die der Wächter unterwegs
+gefunden hat:**
+
+1. **Die Richtung wird über eine Strecke gemessen, nicht über Punkte.**
+   `ECKE_SCHRITT = 2,5 px`: erst wenn die Hand so weit vom letzten Anker
+   weg ist, gilt eine Richtung als gemessen. Bei 240 Hz liegen die
+   Meldungen viermal dichter, und ein Zittern von 0,4 px darf keine
+   Richtung sein — dieselbe Lehre wie E504, nur an einer anderen Stelle.
+   `test564 §2` fährt das Zittersignal aus `test366 §3` hindurch: weiter
+   fünfmal kleiner, kein einziger falscher Sprung. Und ein „U" mit 40 px
+   Radius wird nicht für eine Ecke gehalten: die zweite Differenz des
+   geglätteten Wegs (0,031) liegt bei der des rohen (0,027).
+2. **Die Ecke ist der rohe Punkt, der am weitesten in der ALTEN Richtung
+   lag** — nicht der Anker (der liegt bis zu 2,5 px davor) und nicht der
+   aktuelle Punkt (der liegt 2,5 px dahinter). Dafür hält der Glätter die
+   rohen Punkte seit dem Anker, höchstens 64.
+3. **Die Ecke selbst ist der Punkt dieser Meldung.** Der erste Stand
+   sprang auf die Ecke und mittelte dann wie gewohnt zur Hand weiter — und
+   `test564 §3` war rot: bei 60 Hz lag der Strich 1,41 px neben der Spitze,
+   bei 240 Hz 0,3. Der Rest des Mittelns hing wieder an der Abtastrate,
+   genau das, was E504 abgestellt hatte. Seither gibt der Glätter an der
+   Kehre die Ecke unverändert zurück; die nächste Meldung mittelt von dort
+   weiter. Ergebnis: 0 px, bei beiden Raten.
+
+**Was war die Alternative?** Ein vollständiger 1-Euro-Filter (Casiez) mit
+`mincutoff` und `beta`. Er ist an Kehren schneller, aber er kennt sie
+ebenso wenig — er wird nur weniger träge, wenn die Hand schnell ist. Die
+Spitze eines langsam geschriebenen „M" ist nicht schnell. Und er hätte
+`test366 §3`, `test472` und L198 (`istKritzel` misst am geglätteten Weg)
+alle drei neu einmessen lassen. Der Kehren-Sprung ändert nichts an dem,
+was zwischen zwei Ecken passiert.
+
+**Was kostet es?** Je Meldung eine Wurzel und ein Vergleich; an einer
+Kehre eine Schleife über höchstens 64 Punkte. Und `test449`: das
+Kritzel-Löschen misst Richtungswechsel am geglätteten Weg (L198) — ein
+Kritzel hat jetzt schärfere Ecken, und der Lauf blieb grün; gefahren, nicht
+angenommen.
+
+**Und dann das Bild (§55.1).** `test564` stand auf 8 von 8, und das Bild
+zeigte ein „M" mit spitzen Gipfeln und einem **runden Tal**. Der Glätter
+hatte alle drei Ecken getroffen — gemessen —, und die Marke hatte sie
+trotzdem nicht. Eine Sonde auf die gespeicherten Punkte: **acht Punkte,
+gleichmässig verteilt**, das Tal 23,7 px neben dem nächsten. Zwei weitere
+Stellen, an denen eine Ecke verlorengeht, nachdem der Glätter sie
+gehalten hat:
+
+4. **Beim Absetzen.** `finish` dünnt mit RDP aus und hielt seit E115 eine
+   Regel: hat RDP weniger als acht Stützpunkte übrig, nimm acht
+   **gleichmässige** — damit ein langer, fast gerader Strich beim
+   Neuzeichnen nicht wie eine konstruierte Zweipunktlinie aussieht. Für
+   ein „M" ist das fatal: RDP hatte genau die fünf Ecken behalten, und
+   die Regel warf sie weg. Die Gipfel waren nur deshalb spitz, weil zwei
+   der acht zufällig in ihrer Nähe lagen. Jetzt kommen die acht zu den
+   Ecken **dazu** (Vereinigung, sortiert): dreizehn Punkte, jede Ecke
+   bei 0 px.
+5. **Im Umriss.** Der Weg von Stützpunkt zu Stützpunkt ist eine Q-Kurve
+   über die Mittelpunkte — der Punkt ist Kontrollpunkt, der Mittelpunkt
+   zum nächsten das Ende. Das rundet jede Ecke: bei 24 px Abstand der
+   Nachbarn läuft die Kurve **5,12 px** neben dem Tal vorbei (Gegenprobe
+   B). `InkGeometry.stueck(prev, p, next)` kennt seither die Kehre
+   (`ECKE_COS`, dieselbe Schwelle wie `KEHRE`) und geht dort als Gerade
+   **durch** den Punkt und als Gerade weiter zum Mittelpunkt. Die Feder
+   ruft dasselbe Stück für ihre eingefrorenen Teile — eine Rechnung, und
+   `test366 §1` (zeichengleich) blieb grün, ohne dass eine Zeile daran
+   geändert wurde. Der Umriss liegt jetzt 0,29–0,8 px neben den Ecken,
+   und näher als eine halbe Breite kann er nicht.
+
+**Wächter `test564`**, 11 Zusagen. §1–§3 laufen ohne Browser und ohne
+Port; §4 zieht das „M" mit echten Zeigerereignissen auf ein Blatt und
+verfolgt die Ecke bis zur Marke und bis zum gezeichneten Umriss. Gegen den
+alten Stand rot mit **6 von 8** — „2,62 px" —; §4 gegen den Stand nach dem
+Glätter rot mit „[4.24, 23.71, 11.5]" und „[15.19, 23.68, 20.37]". Drei
+Gegenproben, jede rot an ihrer Stelle: die Kehre nie erkannt (2,62), die
+acht ersetzen wieder (23,72), das Stück kennt keine Ecke (5,12). Bild:
+`node bilder.mts ecke` — ein „M", ein „W" und ein Zickzack, langsam mit
+dem Stift gezogen.

@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 505 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 506 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1158,6 +1158,17 @@ Stand rot mit 10 von 13; kein Bild, weil es reines Messen ist (§55.3).
 Gezählt am 21. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
 wc -l` sagt 505.*
 
+*Und 506: `test564` — der Glätter hält die Ecke (E676). §1–§3 laufen ohne
+Browser, wie `test366`, und waren gegen den alten Stand rot mit 6 von 8:
+„2,62 px" neben der Spitze eines langsam gezogenen „M". Sein erster Fund
+kam gegen den ERSTEN Reparaturstand: 1,41 px bei 60 Hz, 0,3 bei 240 Hz —
+die Ecke hing wieder an der Abtastrate. Sein zweiter kam aus dem BILD: bei
+8 von 8 grün zeigte das „M" ein rundes Tal, weil `finish` die Ecken beim
+Absetzen durch acht gleichmässige Punkte ersetzte (23,7 px daneben) und der
+Umriss durch jede Ecke eine Q-Kurve zog (5,1 px). §4 verfolgt die Ecke
+seither bis aufs Papier. Gezählt am 21. September, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 506.*
+
 ### Die Befehle
 
 ```txt
@@ -1166,7 +1177,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 505 Läufe
+npm run pruefen                      alle 506 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1253,7 +1264,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 505 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 506 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
