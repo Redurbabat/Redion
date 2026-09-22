@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-659 Entscheidungen, E1 bis E679 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+660 Entscheidungen, E1 bis E680 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -722,6 +722,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E677** — Der Trainer wohnt im Lernzentrum: Redurs „flüssige lern app im redion … die app nicht getrennt" ist eine ANSICHT der Lernwelt (`trainer`) über gewöhnlichen Lernkarten, kein zweiter Speicher. Eine Aufgabe ist ein `flashcard`-Block mit einem Feld `quiz` (`mc` mit mehreren richtigen Antworten wie in der Prüfung, `schreiben` mit Musterlösung und Note, `luecke` getippt und nachsichtig verglichen); der Fortschritt geht allein über `WissenDienst.planen` in `sr`, und die fünf Boxen sind eine Ableitung daraus (neu, sonst `min(5, wdh+1)`). Falsches kommt in derselben Runde nach drei Karten noch einmal. Das Kapitel „Staatskunde — Leben in der Schweiz" ist eine Vorlage (`staatskunde-kapitel`), die sieben Prüfungsfragen des Lehrers wörtlich und zuoberst; `Register.vorlagen.bauen` baut seither auch gemeldete Vorlagen, nicht nur die der Galerie. Wächter `test565`, Bilder `node bilder.mts trainer trainerFrage trainerLuecke`. Der vorläufige Trainer (`lernen/staatskunde.html`) bleibt bis zu Redurs Wort stehen (L210).
 * **E678** — Der Streifen zur neuen Fassung steht unten: Redur, 22. September, „die neu laden buton unten bringen". `UI.banner` kennt neben der Art eine Lage (`info unten`): `top:auto; bottom:0`, am Telefon `bottom:var(--hunten)` — dieselbe Marke wie die Schublade, also genau über der unteren Leiste. Warnung und Fehler bleiben oben. Der Knopf „Jetzt laden" ist ein Knopf mit 44 px (`banner-tat`), vorher ein unterstrichenes Wort von 23 px. Wächter `test566`, Bild `node bilder.mts fassung`.
 * **E679** — Der Trainer kennt zwei Kapitel: Redur, 22. September, „erstelle mir direkt lerne quiz im redion für kapitel 5,6,7 … beschriftet mit nummern, seiten im nin compact, wie im test". `nin-quiz.ts` meldet die Vorlage `nin-kapitel-5-7` (106 Aufgaben, 34 Prüfungsfragen aus zwei Probeprüfungen mit Nummer und Punkten, jede Karte mit Seite in der NIN Compact). Der Trainer findet Kapitel über `Register.vorlagen` (`trainer: true`), nimmt Themennamen von der Karte (`quiz.topic`) und trennt die Kapitel in der Übersicht (`quiz.kapitel`); die Prüfungsrunde je Kapitel. Wächter `test567`, Bilder `node bilder.mts trainerNin trainerNinFrage`.
+* **E680** — Die Antworten werden bei jeder Anzeige gemischt: Redur, 22. September, „wieso ist immer die ersten 3 richtig es sollte nicht so sein random keine muster“. Gespeichert stehen die richtigen Antworten meist zuerst; der Trainer zeigte sie so. Jetzt mischt `zeige` die Plätze, `data-tr-option` bleibt der gespeicherte Platz, die Buchstaben folgen der Anzeige, die Auswertung dem Speicher. Wächter `test567 §8` (18 von 18 am gespeicherten Platz → rot).
 
 ---
 
@@ -55543,3 +55544,42 @@ für Lücken den ganzen Text. Nachbarn test565 (angepasst: „Staatskunde wird
 nicht mehr angeboten" statt „nichts wird angeboten"), 105, 109, 537, 550,
 549, 87, 362, 401, 402. Bilder: `node bilder.mts trainerNin
 trainerNinFrage`, Rechner und Telefon.
+---
+
+## E680 — Die Antworten werden bei jeder Anzeige gemischt
+
+**Datum:** 22. September 2026 · **Wächter:** `test567 §8`
+
+**Redur:** „alter wieso ist immer die ersten 3 richtig es sollte nicht so
+sein random keine muster“.
+
+**Was war.** In `nin-quiz.ts` und `staatskunde-inhalt.ts` stehen die
+richtigen Antworten einer Ankreuzaufgabe meist zuerst und die falsche
+zuletzt (`richtig: [0, 1, 2]`, 28 von 36 NIN-Aufgaben). Das ist beim
+Schreiben bequem und beim Lernen tödlich: wer es einmal gesehen hat,
+kreuzt a) b) c) an und lernt nichts. Der Trainer zeigte die Antworten in
+der gespeicherten Reihenfolge. Gemessen: bei 18 Ankreuzkarten stand die
+falsche Antwort 18-mal genau dort, wo sie gespeichert war.
+
+**Was wurde entschieden?** Der Trainer mischt die Plätze bei **jeder
+Anzeige** (`mischen`, dieselbe Funktion wie für die Runde). Das Kästchen
+trägt weiter den gespeicherten Platz (`data-tr-option`), damit die
+Auswertung gegen `optionen[i].richtig` unverändert bleibt; die Buchstaben
+a) bis d) folgen der Anzeige. Die Daten bleiben, wie sie sind — die
+Reihenfolge auf der Seite ist Nutzerdatum und darf so stehen.
+
+**Was war die Alternative?** Die Daten umsortieren: ein Muster gegen ein
+anderes tauschen, und jede Karte, die ein Mensch später anlegt, hätte das
+Problem wieder. Oder einmal je Karte fest mischen (mit der Kennung als
+Saat): dann sieht man beim dritten Mal wieder dasselbe Bild.
+
+**Was kostet es?** Die Wächter müssen das Urteil je gespeichertem Platz
+lesen, nicht je Anzeigeplatz (`test565` angepasst). Und das Bild
+`trainerNinFrage` zeigt bei jedem Lauf eine andere Ordnung — so soll es
+sein.
+
+**Wächter `test567 §8`**, fünf Zusagen: bei zwanzig Karten steht die
+falsche Antwort gespeichert meist zuletzt, angezeigt aber an mindestens
+drei verschiedenen Plätzen; Buchstaben folgen der Anzeige; alle Richtigen
+über den gespeicherten Platz angekreuzt heisst „Richtig.“. Gegen den alten
+Stand rot: „[3,3,3,3,3,3,3,3,1,3,3,3,3,1,1,1,3,3]“.

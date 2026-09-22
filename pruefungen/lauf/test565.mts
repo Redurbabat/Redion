@@ -224,9 +224,12 @@ const mc = await seite.evaluate(async () => {
   runde?.querySelector<HTMLInputElement>('input[data-tr-option="0"]')?.click();
   wurzel().querySelector<HTMLElement>('[data-tr-pruefen]')?.click();
   await pause(150);
-  const klassen = Array.from(wurzel().querySelectorAll<HTMLElement>('.lw-trainer-option')).map(o =>
-    o.classList.contains('is-richtig') ? 'richtig' : o.classList.contains('is-falsch') ? 'falsch' : o.classList.contains('is-fehlt') ? 'fehlt' : '-');
-  const worte = Array.from(wurzel().querySelectorAll<HTMLElement>('.lw-trainer-option-wort')).map(o => o.textContent);
+  /* Seit E680 sind die Antworten gemischt: das Urteil wird je GESPEICHERTEM Platz gelesen. */
+  const nachPlatz = (f: (o: HTMLElement) => string) => Array.from(wurzel().querySelectorAll<HTMLElement>('.lw-trainer-option'))
+    .map(o => [Number(o.querySelector<HTMLInputElement>('input')?.dataset['trOption']), f(o)] as [number, string])
+    .sort((a, b) => a[0] - b[0]).map(x => x[1]);
+  const klassen = nachPlatz(o => o.classList.contains('is-richtig') ? 'richtig' : o.classList.contains('is-falsch') ? 'falsch' : o.classList.contains('is-fehlt') ? 'fehlt' : '-');
+  const worte = nachPlatz(o => o.querySelector('.lw-trainer-option-wort')?.textContent || '');
   const ergebnis1 = wurzel().querySelector('.lw-trainer-ergebnis')?.textContent || '';
   const gesperrt = Array.from(wurzel().querySelectorAll<HTMLInputElement>('input[data-tr-option]')).every(i => i.disabled);
   wurzel().querySelector<HTMLElement>('[data-tr-weiter]')?.click();

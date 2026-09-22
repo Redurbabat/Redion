@@ -26,6 +26,8 @@
  *      Lehrer ausgewertet.
  *   7  Kapitel- und Themennamen aus einer Karte gehen durch `esc` (§19).
  *   8  Am Telefon: 44 px auf den Knöpfen, kein Querrollen (§37).
+ *   9  Die Antworten sind bei jeder Anzeige gemischt (E680): gespeichert
+ *      steht die falsche meist zuletzt, angezeigt nicht.
  *
  *   node pruefungen/lauf/test567.mts
  * ==========================================================================*/
@@ -282,6 +284,48 @@ console.log('    ' + JSON.stringify(handy));
 p('Alle Knöpfe der Übersicht messen mindestens 44 px', handy.knoepfe > 10 && handy.klein.length === 0, JSON.stringify(handy.klein));
 p('Kein Querrollen', handy.breit <= handy.fenster, handy.breit + ' > ' + handy.fenster);
 p('Keine Seitenfehler', fehler.length === 0, fehler.join(' | '));
+
+/* ---------------------------------------------------------------------- */
+console.log('\n8 · Die Antworten sind gemischt — kein Muster „die ersten drei sind richtig" (E680)');
+await seite.setViewportSize({ width: 1280, height: 900 });
+const mischung = await seite.evaluate(async () => {
+  const w = { Store, Trainer, NinQuiz, Produktwelten } as any;
+  const pause = (ms: number) => new Promise(r => setTimeout(r, ms));
+  w.Produktwelten.lernen('trainer');
+  await pause(500);
+  const wurzel = () => document.querySelector<HTMLElement>('.lernwelt')!;
+  wurzel().querySelector<HTMLElement>('[data-tr-start="art"][data-art="mc"]')?.click();
+  await pause(300);
+  /* Zwanzig Ankreuzkarten ansehen: wo steht die (erste) falsche Antwort auf dem Bildschirm? */
+  const plaetze: number[] = []; const gespeichert: number[] = []; let buchstabenOk = true; let zuordnungOk = true;
+  for (let i = 0; i < 20; i++) {
+    const r = wurzel().querySelector<HTMLElement>('.lw-trainer-runde');
+    if (!r || r.dataset['trKind'] !== 'mc') break;
+    const k = w.Store.getBlock(r.dataset['trId'] || '');
+    const labels = Array.from(r.querySelectorAll<HTMLElement>('.lw-trainer-option'));
+    labels.forEach((l, platz) => {
+      const orig = Number(l.querySelector<HTMLInputElement>('input')?.dataset['trOption']);
+      if (!(l.textContent || '').trim().startsWith('abcdefgh'[platz] + ')')) buchstabenOk = false;
+      if (!(l.textContent || '').includes(k.quiz.optionen[orig].text)) zuordnungOk = false;
+    });
+    const falschGespeichert = (k.quiz.optionen as any[]).findIndex(o => !o.richtig);
+    const falschAngezeigt = labels.findIndex(l => Number(l.querySelector<HTMLInputElement>('input')?.dataset['trOption']) === falschGespeichert);
+    if (falschGespeichert >= 0) { gespeichert.push(falschGespeichert); plaetze.push(falschAngezeigt); }
+    /* Alle richtigen ankreuzen — über den gespeicherten Platz — und prüfen: muss „Richtig." sein. */
+    (k.quiz.optionen as any[]).forEach((o, j) => { if (o.richtig) r.querySelector<HTMLInputElement>(`input[data-tr-option="${j}"]`)?.click(); });
+    r.querySelector<HTMLElement>('[data-tr-pruefen]')?.click(); await pause(80);
+    if (!/^Richtig\./.test(wurzel().querySelector('.lw-trainer-ergebnis')?.textContent || '')) zuordnungOk = false;
+    wurzel().querySelector<HTMLElement>('[data-tr-weiter]')?.click(); await pause(120);
+  }
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  return { n: plaetze.length, plaetze, gespeichert, buchstabenOk, zuordnungOk };
+});
+console.log('    falsche Antwort gespeichert an ' + JSON.stringify(mischung.gespeichert) + ' · angezeigt an ' + JSON.stringify(mischung.plaetze));
+p('Zwanzig Ankreuzkarten gesehen', mischung.n >= 15, String(mischung.n));
+p('Gespeichert steht die falsche Antwort meist zuletzt — genau das Muster', mischung.gespeichert.filter((x: number) => x === 3).length >= mischung.n * 0.6);
+p('Angezeigt steht sie NICHT immer am selben Platz', new Set(mischung.plaetze).size >= 3, JSON.stringify(mischung.plaetze));
+p('Die Buchstaben a) b) c) d) folgen der Anzeige', mischung.buchstabenOk);
+p('Text und Auswertung folgen dem gespeicherten Platz — alle Richtigen angekreuzt heisst „Richtig."', mischung.zuordnungOk);
 
 await browser.close();
 server.close();

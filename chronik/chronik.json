@@ -2997,6 +2997,14 @@
           "gemeint": "Der Stoff der drei Kapitelblätter soll als Lernquiz in Redion selbst stehen — nicht als PDF daneben. Mit Aufgabennummern und Punkten wie auf dem Prüfungsblatt, mit der Seitenzahl in der NIN Compact an jeder Aufgabe, und in allen Formen, die auch der Lehrer verwendet: Ankreuzen, Schreiben, Lücken.",
           "besser": "Bau die Kapitel 5, 6 und 7 als zweites Trainer-Kapitel: Aufgaben mit Nummer, Punkten und Seitenzahl, als Multiple Choice, Schreiben und Lücke.",
           "besserePrompt": "Der Satz hat alles Nötige gesagt — „wie im test\" war die wichtigste Angabe, weil er damit die zwei Probeprüfungen meinte, die wir vorher aus seinen echten Tests abgeleitet hatten. Offen blieb nur, ob das zweite Kapitel NEBEN der Staatskunde stehen soll; das war es."
+        },
+        {
+          "zeit": "ca. 19:30",
+          "wortlaut": "alter wieso ist immer die ersten 3 richtig es sollte nicht so sein random keine muster",
+          "woher": "wörtlich aus dem Gespräch",
+          "gemeint": "Bei den Ankreuzaufgaben stehen die richtigen Antworten immer vorne (a, b, c) und die falsche hinten. Das ist ein Muster, mit dem man ohne Wissen richtig ankreuzt. Die Reihenfolge soll zufällig sein.",
+          "besser": "Misch die Antworten bei jeder Frage — im Moment sind immer die ersten drei richtig.",
+          "besserePrompt": "Passt so. Er hat es beim ersten Üben gesehen, ich beim Schreiben von 36 Aufgaben nicht — genau der Blick, den §55 meint."
         }
       ],
       "arbeit": [
@@ -3023,15 +3031,23 @@
           "zeitraum": "ca. 18:30 – 19:15",
           "dauer": "ca. 45 min",
           "pruefungen": "test567 (neu, 34 Zusagen; ohne Skripteinträge 8 rot und Abbruch; erster gebauter Stand 33/34; Gegenprobe 31/34), Nachbarn 565 (angepasst) 105 109 537 550 549 87 362 401 402"
+        },
+        {
+          "was": "E680 — die Antworten werden bei jeder Anzeige gemischt; test565 liest das Urteil je gespeichertem Platz; test567 §8 misst das Muster",
+          "vonCommit": "d7e15f7",
+          "bisCommit": "(dieser Bogen)",
+          "zeitraum": "ca. 19:30 – 19:50",
+          "dauer": "ca. 20 min",
+          "pruefungen": "test567 (39 Zusagen; gegen den alten Stand rot: die falsche Antwort 18 von 18 am gespeicherten Platz), test565 54/54"
         }
       ],
       "zahlen": {
-        "commits": 5,
-        "entscheidungen": 3,
+        "commits": 6,
+        "entscheidungen": 4,
         "neue Prüfläufe": 3,
         "volle Läufe": 0
       },
-      "groesstesProblem": "Die Reihenfolge der Prüfungsfragen. test565 war gegen den ersten Stand bei 53 von 54, und die rote Zeile hiess „wortgleich=false“: Trainer.karten() sortierte nach created, die Vorlage legt alle 57 Karten in derselben Millisekunde an, und die Seite war nach Thema gruppiert — Frage 5 (Gewaltentrennung) kam vor Frage 4 (Parlament). Ohne den Vergleich Zeichen für Zeichen mit dem Inhalt hätte niemand es gesehen: Karte 1 war Frage 1, und das sah richtig aus (P106).",
+      "groesstesProblem": "Die Reihenfolge der Prüfungsfragen. test565 war gegen den ersten Stand bei 53 von 54, und die rote Zeile hiess „wortgleich=false“: Trainer.karten() sortierte nach created, die Vorlage legt alle 57 Karten in derselben Millisekunde an, und die Seite war nach Thema gruppiert — Frage 5 (Gewaltentrennung) kam vor Frage 4 (Parlament). Ohne den Vergleich Zeichen für Zeichen mit dem Inhalt hätte niemand es gesehen: Karte 1 war Frage 1, und das sah richtig aus (P106). — Und am Abend ein zweites, kleiner, aber lehrreicher: 36 Ankreuzaufgaben geschrieben, in 28 davon die richtigen Antworten zuerst und die falsche zuletzt. Ich habe es beim Schreiben nicht gesehen, Redur beim ersten Üben sofort: „immer die ersten 3 richtig“. Ein Muster in den Daten ist ein Fehler im Produkt, wenn das Produkt die Daten so zeigt (E680).",
       "interessantesteAnfrage": "„die app nicht getrennt“ — ein halber Satz, der die ganze Architektur entschieden hat. Nicht eine Seite neben Redion, nicht ein eigener Speicher, sondern eine Ansicht über den Lernkarten, die es schon gibt: ein Feld `quiz` an der Karte, der Fortschritt über dieselbe Rechnung wie die Tagesrunde, die Boxen als Ableitung. Was er beschrieben hat, sind Leitner-Boxen — er hat sie nur nicht so genannt. — Und am Abend ihr Gegenstück: „erstelle mir direkt lerne quiz im redion\". Der ganze Tag war Prüfungsvorbereitung auf Papier gewesen: eine markierte NIN Compact, Reiter, Randnotizen, zwei Probeprüfungen. Der Satz hat das alles in die App geholt — und damit die Frage gestellt, die E677 offengelassen hatte: Was ist ein Kapitel, wenn es zwei davon gibt?",
       "massnahmen": [
         {
