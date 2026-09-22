@@ -74,10 +74,31 @@ const Trainer = (() => {
         const t = new Date(String(f)).getTime();
         return !Number.isFinite(t) || t <= Date.now();
     };
+    /* Der Name eines Themas steht an der Karte (`quiz.topic`), nicht in einem
+       Inhaltsmodul: der Trainer kennt kein Kapitel beim Namen (E679). */
     const themaName = (id) => {
-        const inhalt = globalThis.StaatskundeInhalt;
-        const t = inhalt?.THEMEN?.find?.((x) => x.id === id);
-        return t?.name || id;
+        const k = karten().find(x => String(x.quiz.thema || '') === id && typeof x.quiz.topic === 'string' && x.quiz.topic);
+        return k ? String(k.quiz.topic) : id;
+    };
+    /** Zu welchem Kapitel eine Karte gehört — Karten aus E677 tragen das Feld noch nicht. */
+    const kapitelVon = (k) => String(k?.quiz?.kapitel || 'Staatskunde — Leben in der Schweiz');
+    /** Eine Prüfungsfrage: ausdrücklich so markiert — oder eine Schreibaufgabe, die es nicht ausdrücklich verneint (E677). */
+    const istPruefung = (k) => k.quiz.pruefung === true || (k.quiz.kind === 'schreiben' && k.quiz.pruefung !== false);
+    /** Die Vorlagen, die ein Kapitel für den Trainer bauen (`trainer: true`), und ob es schon eine Seite daraus gibt. */
+    const kapitelVorlagen = () => {
+        const reg = globalThis.Register;
+        let alle = [];
+        try {
+            alle = reg?.vorlagen?.alle?.() || [];
+        }
+        catch {
+            alle = [];
+        }
+        const bloecke = (typeof Store !== 'undefined' && Store.cache?.blocks) ? Object.values(Store.cache.blocks) : [];
+        return alle.filter(v => v && v.trainer === true && typeof v.id === 'string').map(v => ({
+            id: String(v.id), name: String(v.name || v.id),
+            angelegt: bloecke.some(b => b && b.type === 'page' && b.alive !== false && b.vorlage === v.id)
+        }));
     };
     const artName = (kind) => kind === 'mc' ? 'Multiple Choice' : kind === 'schreiben' ? 'Schreiben' : 'Lücke';
     const frageVon = (k) => {
@@ -103,7 +124,11 @@ const Trainer = (() => {
     const aufgabenVon = (name) => {
         const alle = karten();
         if (name === 'pruefung')
-            return alle.filter(k => (k.quiz.kind === 'mc' && k.quiz.pruefung === true) || k.quiz.kind === 'schreiben');
+            return alle.filter(istPruefung);
+        if (name.startsWith('pruefung:'))
+            return alle.filter(k => istPruefung(k) && kapitelVon(k) === name.slice(9));
+        if (name.startsWith('kapitel:'))
+            return alle.filter(k => kapitelVon(k) === name.slice(8));
         if (name.startsWith('thema:'))
             return alle.filter(k => String(k.quiz.thema || '') === name.slice(6));
         if (name.startsWith('art:'))
@@ -112,7 +137,7 @@ const Trainer = (() => {
     };
     /** Die Reihenfolge einer Runde: Fällige zuerst, schwächste Box zuerst; die Prüfung in Seitenreihenfolge. */
     const warteschlange = (name, aufgaben) => {
-        if (name === 'pruefung')
+        if (name === 'pruefung' || name.startsWith('pruefung:'))
             return aufgaben;
         const faellig = mischen(aufgaben.filter(istFaellig)).sort((a, b) => boxRang(a) - boxRang(b));
         const rest = mischen(aufgaben.filter(k => !istFaellig(k))).sort((a, b) => boxRang(a) - boxRang(b));
@@ -171,31 +196,49 @@ const Trainer = (() => {
             return;
         zustand.runde = null;
         const alle = karten();
+        /* Kapitel, die es als Vorlage gibt und noch nicht als Seite: ein Knopf je
+           Kapitel — auch dann, wenn schon eines liegt (E679). */
+        const offen = kapitelVorlagen().filter(v => !v.angelegt);
+        const anlegen = offen.length
+            ? `<h3 class="lw-trainer-h3">Kapitel anlegen</h3><div class="lw-trainer-reihe">${offen.map((v, i) => knopf(`Kapitel «${v.name}» anlegen`, `data-tr-anlegen="${esc(v.id)}"`, i === 0 && !alle.length ? 'is-primary' : '')).join('')}</div>
+        <p class="lw-trainer-hinweis">Ein Kapitel wird als Seite mit Lernkarten angelegt — du kannst jede Karte dort lesen und ändern.</p>`
+            : '';
         if (!alle.length) {
             ziel.innerHTML = `<section class="lw-trainer-start"><header class="lw-section-head"><h2>${sym('medal')}Trainer</h2>
         <p>Boxen, Auswahl-, Schreib- und Lückenaufgaben — Kapitel für Kapitel. Noch liegt kein Kapitel hier.</p></header>
-        <div class="lw-trainer-reihe">${knopf('Kapitel «Staatskunde — Leben in der Schweiz» anlegen', 'data-tr-anlegen', 'is-primary')}</div>
-        <p class="lw-trainer-hinweis">Das Kapitel wird als Seite mit Lernkarten angelegt — du kannst jede Karte dort lesen und ändern.</p></section>`;
+        ${anlegen}</section>`;
             fuelle();
             return;
         }
         const faellig = alle.filter(istFaellig).length;
         const gemerkt = gemerkteRunde();
-        const themen = Array.from(new Set(alle.map(k => String(k.quiz.thema || '')).filter(Boolean)));
-        const pruefung = aufgabenVon('pruefung').length;
+        const kapitel = Array.from(new Set(alle.map(kapitelVon)));
+        /* Je Kapitel: die Prüfung der Reihe nach, dann die Themen. */
+        const kapitelBloecke = kapitel.map(kap => {
+            const zu = alle.filter(k => kapitelVon(k) === kap);
+            const themen = Array.from(new Set(zu.map(k => String(k.quiz.thema || '')).filter(Boolean)));
+            const pruefung = aufgabenVon('pruefung:' + kap).length;
+            const sitztKap = zu.filter(k => boxRang(k) >= 4).length;
+            return `<section class="lw-trainer-kapitel" data-tr-kapitel="${esc(kap)}"><h3 class="lw-trainer-h3">${esc(kap)} · ${sitztKap}/${zu.length} sitzen</h3>
+        <div class="lw-trainer-reihe">
+          ${knopf(`Lernen — ${zu.length} Aufgaben`, `data-tr-start="kapitel" data-kapitel="${esc(kap)}"`)}
+          ${pruefung ? knopf(`Prüfung üben — ${pruefung} Fragen der Reihe nach`, `data-tr-start="pruefung" data-kapitel="${esc(kap)}"`) : ''}
+        </div>
+        ${themen.length ? `<div class="lw-trainer-reihe">${themen.map(t => {
+                const zuT = zu.filter(k => String(k.quiz.thema || '') === t);
+                const sitzt = zuT.filter(k => boxRang(k) >= 4).length;
+                return knopf(`${themaName(t)} · ${sitzt}/${zuT.length} sitzen`, `data-tr-start="thema" data-thema="${esc(t)}"`);
+            }).join('')}</div>` : ''}</section>`;
+        }).join('');
         ziel.innerHTML = `<section class="lw-trainer-start">
       <header class="lw-section-head"><h2>${sym('medal')}Trainer</h2>
         <p>${alle.length} Aufgaben · ${faellig ? `<b>${faellig}</b> heute fällig` : 'heute nichts fällig — alles sitzt'}${gemerkt ? ` · eine Runde ist angefangen (Karte ${gemerkt.index + 1} von ${gemerkt.reihenfolge.length})` : ''}</p></header>
       ${boxenZeile(alle)}
       <div class="lw-trainer-reihe">
-        ${knopf(gemerkt && gemerkt.name === 'lernen' ? 'Runde fortsetzen' : (faellig ? 'Lernen — Fällige zuerst' : 'Lernen'), 'data-tr-start="lernen"', 'is-primary')}
-        ${knopf(`Prüfung üben — ${pruefung} Fragen der Reihe nach`, 'data-tr-start="pruefung"')}
+        ${knopf(gemerkt && gemerkt.name === 'lernen' ? 'Runde fortsetzen' : (faellig ? 'Lernen — Fällige zuerst' : 'Lernen — alle Kapitel'), 'data-tr-start="lernen"', 'is-primary')}
       </div>
-      ${themen.length ? `<h3 class="lw-trainer-h3">Nach Thema</h3><div class="lw-trainer-reihe">${themen.map(t => {
-            const zu = alle.filter(k => String(k.quiz.thema || '') === t);
-            const sitzt = zu.filter(k => boxRang(k) >= 4).length;
-            return knopf(`${themaName(t)} · ${sitzt}/${zu.length} sitzen`, `data-tr-start="thema" data-thema="${esc(t)}"`);
-        }).join('')}</div>` : ''}
+      ${kapitelBloecke}
+      ${anlegen}
       <h3 class="lw-trainer-h3">Nach Aufgabenform</h3>
       <div class="lw-trainer-reihe">
         ${knopf('Nur Multiple Choice', 'data-tr-start="art" data-art="mc"')}
@@ -239,12 +282,13 @@ const Trainer = (() => {
     const kopf = (k) => {
         const r = zustand.runde;
         const b = boxVon(k);
-        return `<header class="lw-session-head lw-trainer-kopf"><div><p>${esc(r.name === 'pruefung' ? 'Prüfung üben' : 'Lernen')}</p>
+        return `<header class="lw-session-head lw-trainer-kopf"><div><p>${esc(r.name.startsWith('pruefung') ? 'Prüfung üben' : 'Lernen')}</p>
       <h2>Karte ${r.index + 1} von ${r.reihenfolge.length}</h2></div>${knopf('Beenden', 'data-tr-ende')}</header>
       <progress max="${r.reihenfolge.length}" value="${r.index}" aria-label="Fortschritt der Runde"></progress>
       <div class="lw-trainer-marken"><span class="lw-trainer-marke">${esc(themaName(String(k.quiz.thema || '')))}</span>
       <span class="lw-trainer-marke">${esc(artName(String(k.quiz.kind)))}</span>
       <span class="lw-trainer-marke lw-trainer-marke-box">${b === 'neu' ? 'Neu' : 'Box ' + b}</span>
+      ${k.quiz.nummer && k.quiz.kind !== 'schreiben' ? `<span class="lw-trainer-marke lw-trainer-nummer">${esc(k.quiz.nummer)}</span>` : ''}
       ${k.quiz.quelle ? `<span class="lw-trainer-quelle">${esc(k.quiz.quelle)}</span>` : ''}</div>`;
     };
     const zeige = () => {
@@ -330,7 +374,7 @@ const Trainer = (() => {
         else
             r.falsch++;
         const id = String(k.id);
-        if (note < NOTE_RICHTIG && r.name !== 'pruefung' && (r.nochmal[id] || 0) < NOCHMAL_HOECHSTENS) {
+        if (note < NOTE_RICHTIG && !r.name.startsWith('pruefung') && (r.nochmal[id] || 0) < NOCHMAL_HOECHSTENS) {
             r.nochmal[id] = (r.nochmal[id] || 0) + 1;
             r.reihenfolge.splice(Math.min(r.reihenfolge.length, r.index + 1 + NOCHMAL_NACH), 0, id);
         }
@@ -442,8 +486,9 @@ const Trainer = (() => {
         e.preventDefault();
         if (el.hasAttribute('data-tr-anlegen')) {
             const reg = globalThis.Register;
+            const id = el.getAttribute('data-tr-anlegen') || kapitelVorlagen().find(v => !v.angelegt)?.id || 'staatskunde-kapitel';
             try {
-                reg?.vorlagen?.bauen?.('staatskunde-kapitel');
+                reg?.vorlagen?.bauen?.(id);
             }
             catch { /* ohne Vorlage */ }
             start();
@@ -454,7 +499,9 @@ const Trainer = (() => {
             if (art === 'lernen')
                 rundeStarten('lernen');
             else if (art === 'pruefung')
-                rundeStarten('pruefung');
+                rundeStarten(el.dataset['kapitel'] ? 'pruefung:' + el.dataset['kapitel'] : 'pruefung');
+            else if (art === 'kapitel')
+                rundeStarten('kapitel:' + (el.dataset['kapitel'] || ''));
             else if (art === 'thema')
                 rundeStarten('thema:' + (el.dataset['thema'] || ''));
             else if (art === 'art')
@@ -551,7 +598,7 @@ const Trainer = (() => {
         angemeldet = true;
         start();
     };
-    return { render, abmelden, karten, boxVon, istFaellig, warteschlange, aufgabenVon, normal,
+    return { render, abmelden, karten, boxVon, istFaellig, warteschlange, aufgabenVon, normal, kapitelVon, kapitelVorlagen,
         BOXEN, RUNDE_HOECHSTENS, NOCHMAL_NACH, NOCHMAL_HOECHSTENS, NOTE_RICHTIG, NOTE_FALSCH };
 })();
 window.Trainer = Trainer;

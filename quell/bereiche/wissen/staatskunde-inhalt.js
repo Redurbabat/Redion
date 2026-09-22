@@ -310,7 +310,7 @@ const StaatskundeInhalt = (() => {
        Seite in jede Sicherung (§9, §17). */
     const themaName = (id) => THEMEN.find(t => t.id === id)?.name || id;
     const karteVon = (a) => {
-        const gemeinsam = { thema: a.thema, topic: themaName(a.thema), quelle: a.quelle };
+        const gemeinsam = { kapitel: 'Staatskunde — Leben in der Schweiz', thema: a.thema, topic: themaName(a.thema), quelle: a.quelle };
         if (a.art === 'mc') {
             const quiz = { kind: 'mc', ...gemeinsam,
                 optionen: a.antworten.map((text, i) => ({ text, richtig: a.richtig.includes(i) })) };
@@ -352,7 +352,7 @@ const StaatskundeInhalt = (() => {
     };
     if (typeof Register !== 'undefined' && Register.vorlagen && Register.vorlagen.melde) {
         Register.vorlagen.melde({
-            id: 'staatskunde-kapitel', icon: '🇨🇭', name: 'Staatskunde — Leben in der Schweiz',
+            id: 'staatskunde-kapitel', icon: '🇨🇭', name: 'Staatskunde — Leben in der Schweiz', trainer: true,
             text: 'Kapitel 6 des Lehrmittels als Lernkarten für den Trainer: Prüfungsfragen, Verstanden-Fragen, Multiple Choice und Lücken.',
             quelle: 'Allgemeinbildung, Ausgabe Basel, S. 155–160', bauen: alsSeite
         });

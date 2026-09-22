@@ -3330,6 +3330,62 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* --- Der Trainer mit zwei Kapiteln (E679) ------------------------------
+     Die Übersicht mit Staatskunde und NIN Kap. 5–7 nebeneinander, und eine
+     Ankreuzfrage der NIN-Prüfung mit Nummer, Punkten und Seite. */
+  trainerNin: {
+    titel: 'Der Trainer: zwei Kapitel, je mit Prüfung und Themen',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      w.Produktwelten.lernen('trainer');
+      await new Promise(r => setTimeout(r, 700));
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-anlegen="staatskunde-kapitel"]')?.click();
+      await new Promise(r => setTimeout(r, 700));
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-anlegen="nin-kapitel-5-7"]')?.click();
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+  trainerNinFrage: {
+    titel: 'Der Trainer: Frage 5 der Probeprüfung 1, angekreuzt und geprüft',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      w.Produktwelten.lernen('trainer');
+      await new Promise(r => setTimeout(r, 700));
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-anlegen="nin-kapitel-5-7"]')?.click();
+      await new Promise(r => setTimeout(r, 900));
+      const kap = document.querySelector<HTMLElement>('.lernwelt .lw-trainer-kapitel[data-tr-kapitel^="Regeln"]');
+      kap?.querySelector<HTMLElement>('[data-tr-start="pruefung"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+      /* Bis zur Ankreuzfrage 5: Schreiben aufdecken und mit „Gut" bewerten, die Lücke lösen. */
+      for (let i = 0; i < 6; i++) {
+        const r = document.querySelector<HTMLElement>('.lernwelt .lw-trainer-runde');
+        if (!r || r.dataset['trKind'] === 'mc') break;
+        if (r.dataset['trKind'] === 'schreiben') {
+          r.querySelector<HTMLElement>('[data-tr-aufdecken]')?.click(); await new Promise(x => setTimeout(x, 100));
+          document.querySelector<HTMLElement>('.lernwelt [data-tr-rate="3"]')?.click();
+        } else {
+          const k = Store.getBlock(r.dataset['trId'] || '');
+          const feld = r.querySelector<HTMLInputElement>('[data-tr-luecke]');
+          if (feld && k) feld.value = String(k.quiz.loesungen[0]);
+          r.querySelector<HTMLElement>('[data-tr-pruefen]')?.click(); await new Promise(x => setTimeout(x, 100));
+          document.querySelector<HTMLElement>('.lernwelt [data-tr-weiter]')?.click();
+        }
+        await new Promise(x => setTimeout(x, 200));
+      }
+      /* a) und d) ankreuzen: a) richtig, c) gefehlt, d) falsch. */
+      document.querySelector<HTMLInputElement>('.lernwelt input[data-tr-option="0"]')?.click();
+      document.querySelector<HTMLInputElement>('.lernwelt input[data-tr-option="3"]')?.click();
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-pruefen]')?.click();
+      await new Promise(r => setTimeout(r, 300));
+    }
+  },
+
   /* --- Der Streifen zur neuen Fassung (E678) ------------------------------
      Er wird gezeigt, wie pwa.ts ihn bestellt — ohne Service Worker, der
      meldet sich nur über https. Unten, am Telefon über der Leiste. */

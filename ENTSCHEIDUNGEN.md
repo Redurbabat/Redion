@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-658 Entscheidungen, E1 bis E678 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+659 Entscheidungen, E1 bis E679 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -721,6 +721,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E676** — Der Glätter hält die Ecke: Lücke 6 des Stiftweg-Lesers (L209 Punkt 4). Der Filter erster Ordnung mittelte durch die Spitze eines langsam gezogenen „M" hindurch — 2,62 px daneben, gemessen. Jetzt merkt er sich die Richtung der Hand über eine feste STRECKE (2,5 px, nicht Punkte — E504) und springt, wenn sie kippt (`KEHRE`), auf den rohen Punkt, der am weitesten in der alten Richtung lag: die Ecke selbst, bei 60 und 240 Hz gleich (0 px). Und das Bild fand zwei weitere Stellen, an denen die Ecke danach verlorenging: `finish` ersetzte bei weniger als acht RDP-Stützpunkten die Ecken durch acht gleichmässige (E115) — jetzt kommen sie dazu —, und der Umriss zog durch jede Ecke eine Q-Kurve — jetzt geht `InkGeometry.stueck` an einer Kehre als Gerade durch den Punkt, in Feder und `outline` gleich. Wächter `test564`, §1–§3 ohne Browser, §4 mit.
 * **E677** — Der Trainer wohnt im Lernzentrum: Redurs „flüssige lern app im redion … die app nicht getrennt" ist eine ANSICHT der Lernwelt (`trainer`) über gewöhnlichen Lernkarten, kein zweiter Speicher. Eine Aufgabe ist ein `flashcard`-Block mit einem Feld `quiz` (`mc` mit mehreren richtigen Antworten wie in der Prüfung, `schreiben` mit Musterlösung und Note, `luecke` getippt und nachsichtig verglichen); der Fortschritt geht allein über `WissenDienst.planen` in `sr`, und die fünf Boxen sind eine Ableitung daraus (neu, sonst `min(5, wdh+1)`). Falsches kommt in derselben Runde nach drei Karten noch einmal. Das Kapitel „Staatskunde — Leben in der Schweiz" ist eine Vorlage (`staatskunde-kapitel`), die sieben Prüfungsfragen des Lehrers wörtlich und zuoberst; `Register.vorlagen.bauen` baut seither auch gemeldete Vorlagen, nicht nur die der Galerie. Wächter `test565`, Bilder `node bilder.mts trainer trainerFrage trainerLuecke`. Der vorläufige Trainer (`lernen/staatskunde.html`) bleibt bis zu Redurs Wort stehen (L210).
 * **E678** — Der Streifen zur neuen Fassung steht unten: Redur, 22. September, „die neu laden buton unten bringen". `UI.banner` kennt neben der Art eine Lage (`info unten`): `top:auto; bottom:0`, am Telefon `bottom:var(--hunten)` — dieselbe Marke wie die Schublade, also genau über der unteren Leiste. Warnung und Fehler bleiben oben. Der Knopf „Jetzt laden" ist ein Knopf mit 44 px (`banner-tat`), vorher ein unterstrichenes Wort von 23 px. Wächter `test566`, Bild `node bilder.mts fassung`.
+* **E679** — Der Trainer kennt zwei Kapitel: Redur, 22. September, „erstelle mir direkt lerne quiz im redion für kapitel 5,6,7 … beschriftet mit nummern, seiten im nin compact, wie im test". `nin-quiz.ts` meldet die Vorlage `nin-kapitel-5-7` (106 Aufgaben, 34 Prüfungsfragen aus zwei Probeprüfungen mit Nummer und Punkten, jede Karte mit Seite in der NIN Compact). Der Trainer findet Kapitel über `Register.vorlagen` (`trainer: true`), nimmt Themennamen von der Karte (`quiz.topic`) und trennt die Kapitel in der Übersicht (`quiz.kapitel`); die Prüfungsrunde je Kapitel. Wächter `test567`, Bilder `node bilder.mts trainerNin trainerNinFrage`.
 
 ---
 
@@ -55479,3 +55480,66 @@ ihrem Anfang.
 `.banner.unten` genommen — rot an denselben Stellen. Nachbarn test319
 (die `info`-Regel), 332, 362, 401, 402, 87. Bild: `node bilder.mts
 fassung`, Rechner und Telefon.
+
+---
+
+## E679 — Der Trainer kennt zwei Kapitel: NIN Kap. 5, 6, 7
+
+**Datum:** 22. September 2026 · **Wächter:** `test567`
+
+**Redur:** „erstelle mir direkt lerne ouiz im redio für kapitel 5,6,7 und
+bei der regel der tecnik und alles beschriftet mit nummern , seitem im
+nincopmak , wie im test und noch multilichos fragen screibenu usw alles".
+
+**Was war.** Der Trainer (E677) kannte genau ein Kapitel, und zwar beim
+Namen: `themaName` las `StaatskundeInhalt.THEMEN`, der Knopf „Kapitel
+anlegen" baute fest `staatskunde-kapitel`, und er erschien nur, solange
+gar keine Karte lag. Ein zweites Kapitel hätte man nicht anlegen können,
+und wenn doch, hätten seine Themen ohne Namen dagestanden und seine
+Prüfungsfragen wären mit den Staatskunde-Fragen in einer Runde gelandet.
+
+**Was wurde entschieden?**
+
+1. **Der Inhalt ist eine zweite Vorlage, kein zweiter Weg.**
+   `nin-quiz.ts` baut wie `staatskunde-inhalt.ts` eine Seite mit
+   `flashcard`-Blöcken und dem Feld `quiz`. 106 Aufgaben aus den drei
+   Kapitelblättern (5.1, 6.1, 7.1–7.6), der NIN Compact 2024, den Folien
+   des Lehrers und der NEV: 34 Prüfungsfragen aus den zwei Probeprüfungen
+   (gebaut nach dem Muster der echten Tests 200329 und 260602), jede mit
+   Nummer und Punkten („Probeprüfung 2 · Nr. 260923 · 6 · 1 Pt."), dazu
+   72 Themenaufgaben in den drei Formen. Jede Karte nennt ihre Seite.
+2. **Der Trainer kennt kein Kapitel beim Namen.** Kapitel sind Vorlagen
+   mit `trainer: true` in `Register.vorlagen`; `kapitelVorlagen()` sagt,
+   welche schon als Seite liegen (`vorlage === id`). Die Übersicht bietet
+   jedes fehlende an, auch wenn eines liegt. Der Themenname kommt von der
+   Karte (`quiz.topic`), das Kapitel auch (`quiz.kapitel`); Karten aus
+   E677 ohne das Feld heissen weiter „Staatskunde — Leben in der Schweiz".
+3. **Die Übersicht trennt die Kapitel.** Je Kapitel ein Abschnitt mit
+   „Lernen" (`kapitel:…`), „Prüfung üben" (`pruefung:…`) und den Themen.
+   Eine Prüfungsfrage ist, was `pruefung: true` trägt — oder eine
+   Schreibaufgabe, die es nicht ausdrücklich verneint, damit E677
+   unverändert 7 + 13 zählt. Die NIN-Themenaufgaben in Schreibform tragen
+   `pruefung: false`; so zählt die NIN-Prüfung 34, nicht 60.
+4. **Nummer und Punkte stehen an jeder Prüfungsfrage**, auch bei
+   Ankreuzen und Lücke (vorher nur beim Schreiben), als Marke im Kopf.
+
+**Was war die Alternative?** Die NIN-Aufgaben ins Staatskunde-Modul
+schreiben: ein Modul für zwei Fächer, und der dritte Inhalt hätte es
+wieder aufgemacht. Oder ein Kapitel-Register: ein zweiter Katalog neben
+`Register.vorlagen` (§8). Die Marke `trainer: true` an der Vorlage kostet
+ein Feld und keinen Katalog.
+
+**Was kostet es?** Das Feld `kapitel` an neuen Karten; alte Karten ohne
+das Feld fallen auf den Staatskunde-Namen zurück — gemessen in `test567`
+(20 Fragen wie in E677). Und die Namensfrage: `nin-quiz.ts` heisst
+englisch (§53), `staatskunde-inhalt.ts` vom Vortag deutsch. Beide bleiben,
+bis sie ohnehin angefasst werden (§53.3, Grenze 2).
+
+**Wächter `test567`**, 34 Zusagen. Gegen den Stand ohne die zwei
+Skripteinträge rot mit 8 und Abbruch; gegen den ersten gebauten Stand 33
+von 34 — rot war der Wächter selbst: eine Lücke liegt als `{{Lösung}}` im
+Text, `splitCard` gibt dafür nicht die Frage; der Vergleich nimmt seither
+für Lücken den ganzen Text. Nachbarn test565 (angepasst: „Staatskunde wird
+nicht mehr angeboten" statt „nichts wird angeboten"), 105, 109, 537, 550,
+549, 87, 362, 401, 402. Bilder: `node bilder.mts trainerNin
+trainerNinFrage`, Rechner und Telefon.
