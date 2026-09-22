@@ -2160,9 +2160,9 @@ Der Punkt des breiten Füllers. Nach E673 war test561 grün — 22 von 22 —, u
 | ca. 19:00 | E676: nach 8/8 grün das Bild angesehen, die gespeicherten Punkte sondiert, zwei weitere Stellen repariert (finish, stueck) und §4 als Browser-Teil an test564 gehängt | der Wächter hielt den Glätter, das Bild zeigte die Marke — die Ecke ging DAHINTER verloren (§55.1) | das Bogenstück ändert, wie jede scharfe Ecke gezeichnet wird, auch im Bestand; test366 §1 (zeichengleich) und die PDF-Kontur (outlinePunkte, unverändert) halten es |
 | ca. 20:30 | Erst die vorläufige Seite gebaut und gepusht, dann die Anbindung begonnen (trainer.ts) und zwei Bauer für Wächter und Anbindung gestartet | Redur muss heute lernen — eine einfache Fassung sofort ist mehr wert als eine vollständige morgen | die vorläufige Seite ist ein zweiter Trainer mit eigenem Stand in localStorage (§8) — steht als L210 Punkt 2, bis er weg darf |
 
-### 2026-09-22 · Dienstag — Der Trainer wohnt im Lernzentrum — und der Streifen zur neuen Fassung wandert nach unten
+### 2026-09-22 · Dienstag — Der Trainer wohnt im Lernzentrum, der Streifen wandert nach unten — und der Trainer lernt ein zweites Kapitel
 
-> Ein Bogen, über Nacht begonnen: die beiden Bauer vom Abend waren an der Sitzungsgrenze gescheitert, ohne eine Zeile zu ändern, also alles von Hand in der Reihenfolge von §30 — zuerst test565, rot (1 von 21, dann Abbruch), dann die Anbindung: der Inhalt als Vorlage, der Rückfall in Register.vorlagen.bauen, die Ansicht „trainer“ in der Lernwelt mit Kachel und Unterreiter, die Route, zwei Skripteinträge, der Stil. Gegen den ersten gebauten Stand 53 von 54 — die rote Zeile war ein Fund (P106: Frage 5 vor Frage 4, weil 57 Karten in derselben Millisekunde entstehen). Gegenprobe rot an zwei Stellen, dann 54 von 54. Bilder am Rechner und am Telefon. `main` steht weiter still (L207 wartet auf Redur). Danach ein kleiner Bogen auf Redurs Wort: der Hinweis „Es liegt eine neue Fassung bereit“ lag über der Kopfleiste, jetzt unten, am Telefon über der Leiste, mit einem 44-px-Knopf (E678, test566).
+> Ein Bogen, über Nacht begonnen: die beiden Bauer vom Abend waren an der Sitzungsgrenze gescheitert, ohne eine Zeile zu ändern, also alles von Hand in der Reihenfolge von §30 — zuerst test565, rot (1 von 21, dann Abbruch), dann die Anbindung: der Inhalt als Vorlage, der Rückfall in Register.vorlagen.bauen, die Ansicht „trainer“ in der Lernwelt mit Kachel und Unterreiter, die Route, zwei Skripteinträge, der Stil. Gegen den ersten gebauten Stand 53 von 54 — die rote Zeile war ein Fund (P106: Frage 5 vor Frage 4, weil 57 Karten in derselben Millisekunde entstehen). Gegenprobe rot an zwei Stellen, dann 54 von 54. Bilder am Rechner und am Telefon. `main` steht weiter still (L207 wartet auf Redur). Danach ein kleiner Bogen auf Redurs Wort: der Hinweis „Es liegt eine neue Fassung bereit“ lag über der Kopfleiste, jetzt unten, am Telefon über der Leiste, mit einem 44-px-Knopf (E678, test566). — Und am Abend ein dritter Bogen, aus einer Prüfungsvorbereitung heraus: Redur schreibt am 23. September eine Prüfung über die NIN-Kapitel 5, 6 und 7 (Regeln der Technik). Den ganzen Tag über haben wir seine NIN Compact vorbereitet (markierte PDF, Reiter, rote Randnotizen, zwei Probeprüfungen nach dem Muster seiner zwei echten Tests). Dann: „erstelle mir direkt lerne quiz im redion". Also wurde der Stoff zum zweiten Kapitel des Trainers — und der Trainer musste dafür erst lernen, dass es mehr als ein Kapitel geben kann (E679, test567).
 
 
 #### Was Redur geschrieben hat
@@ -2190,18 +2190,30 @@ Der Punkt des breiten Füllers. Nach E673 war test561 grün — 22 von 22 —, u
 **Besserer Prompt:** Passt so — ein Satz, ein Ort, ein Bogen. Offen blieb nur, ob am Telefon über oder unter der Leiste; „über“ ist die einzige Fassung, bei der die Reiter zu treffen bleiben.
 
 
+**3 · ca. 18:30**
+
+> erstelle mir direkt lerne ouiz im redio für kapitel 5,6,7 und bei der regel der tecnik und alles beschriftet mit nummern , seitem im nincopmak , wie im test und noch multilichos fragen screibenu usw alles
+
+**Gemeint:** Der Stoff der drei Kapitelblätter soll als Lernquiz in Redion selbst stehen — nicht als PDF daneben. Mit Aufgabennummern und Punkten wie auf dem Prüfungsblatt, mit der Seitenzahl in der NIN Compact an jeder Aufgabe, und in allen Formen, die auch der Lehrer verwendet: Ankreuzen, Schreiben, Lücken.
+
+**Besser geschrieben:** Bau die Kapitel 5, 6 und 7 als zweites Trainer-Kapitel: Aufgaben mit Nummer, Punkten und Seitenzahl, als Multiple Choice, Schreiben und Lücke.
+
+**Besserer Prompt:** Der Satz hat alles Nötige gesagt — „wie im test" war die wichtigste Angabe, weil er damit die zwei Probeprüfungen meinte, die wir vorher aus seinen echten Tests abgeleitet hatten. Offen blieb nur, ob das zweite Kapitel NEBEN der Staatskunde stehen soll; das war es.
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
 |---|---|---|---|---|
 | E677 — der Trainer wohnt im Lernzentrum: trainer.ts (Boxen aus sr, Runde im Meta-Fach, MC/Schreiben/Lücke), staatskunde-inhalt.ts als Vorlage, Register.vorlagen.bauen mit Rückfall, Lernwelt-Ansicht + Kachel, Route, Skripteinträge, Stil, drei Bildziele, E677/L210/§30 | `f7f47c7` → `3cdc1f8` | ca. 04:50 – 06:10 | ca. 1 h 20 min | test565 (neu, 54 Zusagen; vorher 1/21 mit Abbruch; erster Stand 53/54; Gegenprobe 52/54), Nachbarn 32 87 105 109 143 206 217 222 272 290 362 401 402 484 537 547 549 550 481 |
 | E678 — der Streifen zur neuen Fassung steht unten: UI.banner kennt die Lage „unten“ (am Telefon über der Leiste, --hunten), der Knopf ist ein 44-px-Knopf (banner-tat) statt eines unterstrichenen Worts | `5c49465` → `bcaeb55` | ca. 06:20 – 06:45 | ca. 25 min | test566 (neu, 11 Zusagen; vorher 5/11; Gegenprobe 9/11), Nachbarn 87 319 332 362 401 402 (362 einmal rot: ein rohes 16px → --space-4) |
+| E679 — der Trainer kennt zwei Kapitel: nin-quiz.ts (106 Aufgaben aus den Kapitelblättern 5.1, 6.1, 7.1–7.6, der NIN Compact 2024, den Folien des Lehrers und der NEV; 34 davon Prüfungsfragen mit Nummer und Punkten), Trainer findet Kapitel über Register.vorlagen statt über einen Namen im Code, Übersicht je Kapitel, zwei Skripteinträge, Stil, zwei Bildziele, E679/§30 | `0db1cc1` → `(dieser Bogen)` | ca. 18:30 – 19:15 | ca. 45 min | test567 (neu, 34 Zusagen; ohne Skripteinträge 8 rot und Abbruch; erster gebauter Stand 33/34; Gegenprobe 31/34), Nachbarn 565 (angepasst) 105 109 537 550 549 87 362 401 402 |
 
 #### Zahlen des Tages
 
-- **commits:** 4
-- **entscheidungen:** 2
-- **neue Prüfläufe:** 2
+- **commits:** 5
+- **entscheidungen:** 3
+- **neue Prüfläufe:** 3
 - **volle Läufe:** 0
 
 #### Das grösste Problem
@@ -2210,7 +2222,7 @@ Die Reihenfolge der Prüfungsfragen. test565 war gegen den ersten Stand bei 53 v
 
 #### Das Interessanteste, das Redur wollte
 
-„die app nicht getrennt“ — ein halber Satz, der die ganze Architektur entschieden hat. Nicht eine Seite neben Redion, nicht ein eigener Speicher, sondern eine Ansicht über den Lernkarten, die es schon gibt: ein Feld `quiz` an der Karte, der Fortschritt über dieselbe Rechnung wie die Tagesrunde, die Boxen als Ableitung. Was er beschrieben hat, sind Leitner-Boxen — er hat sie nur nicht so genannt.
+„die app nicht getrennt“ — ein halber Satz, der die ganze Architektur entschieden hat. Nicht eine Seite neben Redion, nicht ein eigener Speicher, sondern eine Ansicht über den Lernkarten, die es schon gibt: ein Feld `quiz` an der Karte, der Fortschritt über dieselbe Rechnung wie die Tagesrunde, die Boxen als Ableitung. Was er beschrieben hat, sind Leitner-Boxen — er hat sie nur nicht so genannt. — Und am Abend ihr Gegenstück: „erstelle mir direkt lerne quiz im redion". Der ganze Tag war Prüfungsvorbereitung auf Papier gewesen: eine markierte NIN Compact, Reiter, Randnotizen, zwei Probeprüfungen. Der Satz hat das alles in die App geholt — und damit die Frage gestellt, die E677 offengelassen hatte: Was ist ein Kapitel, wenn es zwei davon gibt?
 
 #### Massnahmen an den Daten
 
@@ -2222,6 +2234,8 @@ Die Reihenfolge der Prüfungsfragen. test565 war gegen den ersten Stand bei 53 v
 | ca. 05:40 | ladeBereichsdaten lässt die Trainer-Ansicht aus | das zweite zeichnen nach dem Laden hätte den Trainer mitten in der Runde neu aufgesetzt | keines — der Trainer braucht keine Bereichsdaten |
 | ca. 06:00 | Die vorläufige Seite stehen gelassen und als L210 Punkt 2 eingetragen | §43: nichts löschen ohne Rückfrage — Redur hat sie ausdrücklich gewollt | zwei Trainer mit demselben Inhalt, bis er entscheidet |
 | ca. 06:25 | Nur den Fassungs-Streifen nach unten gelegt (Lage als zweite Klasse), Warnung und Fehler bleiben oben | eine Fehlermeldung unten läge am Telefon hinter der Tastatur; ein Hinweis, der warten kann, gehört nicht über die Suche | keines gemessen — test566 hält beide Lagen |
+| ca. 18:40 | Die Kapitel des Trainers über Register.vorlagen (`trainer: true`) finden lassen, statt eine zweite Kennung in den Trainer zu schreiben | §8 — ein zweiter Katalog für dasselbe läuft mit dem ersten auseinander. Die Vorlage weiss ohnehin, wie ihr Kapitel heisst und ob eine Seite daraus liegt | keines: Vorlagen ohne die Marke bleiben gewöhnliche Vorlagen; die Staatskunde hat sie bekommen, sonst wäre ihr eigenes Kapitel verschwunden |
+| ca. 18:55 | Eine Prüfungsfrage ist `pruefung: true` ODER eine Schreibaufgabe ohne ausdrückliches `pruefung: false` | E677 zählt seine 13 Verstanden-Fragen zur Prüfungsrunde, ohne sie zu markieren. Eine strengere Regel hätte die Staatskunde still von 20 auf 7 Fragen gekürzt | die NIN-Themenaufgaben in Schreibform müssen `pruefung: false` tragen — test567 misst beide Zahlen (20 und 34), damit das nicht wieder auseinanderläuft |
 
 ---
 

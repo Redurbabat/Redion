@@ -2971,8 +2971,8 @@
     {
       "datum": "2026-09-22",
       "wochentag": "Dienstag",
-      "titel": "Der Trainer wohnt im Lernzentrum — und der Streifen zur neuen Fassung wandert nach unten",
-      "wasIchWeiss": "Ein Bogen, über Nacht begonnen: die beiden Bauer vom Abend waren an der Sitzungsgrenze gescheitert, ohne eine Zeile zu ändern, also alles von Hand in der Reihenfolge von §30 — zuerst test565, rot (1 von 21, dann Abbruch), dann die Anbindung: der Inhalt als Vorlage, der Rückfall in Register.vorlagen.bauen, die Ansicht „trainer“ in der Lernwelt mit Kachel und Unterreiter, die Route, zwei Skripteinträge, der Stil. Gegen den ersten gebauten Stand 53 von 54 — die rote Zeile war ein Fund (P106: Frage 5 vor Frage 4, weil 57 Karten in derselben Millisekunde entstehen). Gegenprobe rot an zwei Stellen, dann 54 von 54. Bilder am Rechner und am Telefon. `main` steht weiter still (L207 wartet auf Redur). Danach ein kleiner Bogen auf Redurs Wort: der Hinweis „Es liegt eine neue Fassung bereit“ lag über der Kopfleiste, jetzt unten, am Telefon über der Leiste, mit einem 44-px-Knopf (E678, test566).",
+      "titel": "Der Trainer wohnt im Lernzentrum, der Streifen wandert nach unten — und der Trainer lernt ein zweites Kapitel",
+      "wasIchWeiss": "Ein Bogen, über Nacht begonnen: die beiden Bauer vom Abend waren an der Sitzungsgrenze gescheitert, ohne eine Zeile zu ändern, also alles von Hand in der Reihenfolge von §30 — zuerst test565, rot (1 von 21, dann Abbruch), dann die Anbindung: der Inhalt als Vorlage, der Rückfall in Register.vorlagen.bauen, die Ansicht „trainer“ in der Lernwelt mit Kachel und Unterreiter, die Route, zwei Skripteinträge, der Stil. Gegen den ersten gebauten Stand 53 von 54 — die rote Zeile war ein Fund (P106: Frage 5 vor Frage 4, weil 57 Karten in derselben Millisekunde entstehen). Gegenprobe rot an zwei Stellen, dann 54 von 54. Bilder am Rechner und am Telefon. `main` steht weiter still (L207 wartet auf Redur). Danach ein kleiner Bogen auf Redurs Wort: der Hinweis „Es liegt eine neue Fassung bereit“ lag über der Kopfleiste, jetzt unten, am Telefon über der Leiste, mit einem 44-px-Knopf (E678, test566). — Und am Abend ein dritter Bogen, aus einer Prüfungsvorbereitung heraus: Redur schreibt am 23. September eine Prüfung über die NIN-Kapitel 5, 6 und 7 (Regeln der Technik). Den ganzen Tag über haben wir seine NIN Compact vorbereitet (markierte PDF, Reiter, rote Randnotizen, zwei Probeprüfungen nach dem Muster seiner zwei echten Tests). Dann: „erstelle mir direkt lerne quiz im redion\". Also wurde der Stoff zum zweiten Kapitel des Trainers — und der Trainer musste dafür erst lernen, dass es mehr als ein Kapitel geben kann (E679, test567).",
       "nachrichten": [
         {
           "zeit": "ca. 05:00",
@@ -2989,6 +2989,14 @@
           "gemeint": "Der Streifen mit „Jetzt laden“, der bei einer neuen Fassung erscheint, soll unten am Bildschirm stehen statt oben über der Kopfleiste.",
           "besser": "Zeig den Hinweis auf eine neue Fassung unten, nicht oben.",
           "besserePrompt": "Passt so — ein Satz, ein Ort, ein Bogen. Offen blieb nur, ob am Telefon über oder unter der Leiste; „über“ ist die einzige Fassung, bei der die Reiter zu treffen bleiben."
+        },
+        {
+          "zeit": "ca. 18:30",
+          "wortlaut": "erstelle mir direkt lerne ouiz im redio für kapitel 5,6,7 und bei der regel der tecnik und alles beschriftet mit nummern , seitem im nincopmak , wie im test und noch multilichos fragen screibenu usw alles",
+          "woher": "wörtlich aus dem Gespräch",
+          "gemeint": "Der Stoff der drei Kapitelblätter soll als Lernquiz in Redion selbst stehen — nicht als PDF daneben. Mit Aufgabennummern und Punkten wie auf dem Prüfungsblatt, mit der Seitenzahl in der NIN Compact an jeder Aufgabe, und in allen Formen, die auch der Lehrer verwendet: Ankreuzen, Schreiben, Lücken.",
+          "besser": "Bau die Kapitel 5, 6 und 7 als zweites Trainer-Kapitel: Aufgaben mit Nummer, Punkten und Seitenzahl, als Multiple Choice, Schreiben und Lücke.",
+          "besserePrompt": "Der Satz hat alles Nötige gesagt — „wie im test\" war die wichtigste Angabe, weil er damit die zwei Probeprüfungen meinte, die wir vorher aus seinen echten Tests abgeleitet hatten. Offen blieb nur, ob das zweite Kapitel NEBEN der Staatskunde stehen soll; das war es."
         }
       ],
       "arbeit": [
@@ -3007,16 +3015,24 @@
           "zeitraum": "ca. 06:20 – 06:45",
           "dauer": "ca. 25 min",
           "pruefungen": "test566 (neu, 11 Zusagen; vorher 5/11; Gegenprobe 9/11), Nachbarn 87 319 332 362 401 402 (362 einmal rot: ein rohes 16px → --space-4)"
+        },
+        {
+          "was": "E679 — der Trainer kennt zwei Kapitel: nin-quiz.ts (106 Aufgaben aus den Kapitelblättern 5.1, 6.1, 7.1–7.6, der NIN Compact 2024, den Folien des Lehrers und der NEV; 34 davon Prüfungsfragen mit Nummer und Punkten), Trainer findet Kapitel über Register.vorlagen statt über einen Namen im Code, Übersicht je Kapitel, zwei Skripteinträge, Stil, zwei Bildziele, E679/§30",
+          "vonCommit": "0db1cc1",
+          "bisCommit": "(dieser Bogen)",
+          "zeitraum": "ca. 18:30 – 19:15",
+          "dauer": "ca. 45 min",
+          "pruefungen": "test567 (neu, 34 Zusagen; ohne Skripteinträge 8 rot und Abbruch; erster gebauter Stand 33/34; Gegenprobe 31/34), Nachbarn 565 (angepasst) 105 109 537 550 549 87 362 401 402"
         }
       ],
       "zahlen": {
-        "commits": 4,
-        "entscheidungen": 2,
-        "neue Prüfläufe": 2,
+        "commits": 5,
+        "entscheidungen": 3,
+        "neue Prüfläufe": 3,
         "volle Läufe": 0
       },
       "groesstesProblem": "Die Reihenfolge der Prüfungsfragen. test565 war gegen den ersten Stand bei 53 von 54, und die rote Zeile hiess „wortgleich=false“: Trainer.karten() sortierte nach created, die Vorlage legt alle 57 Karten in derselben Millisekunde an, und die Seite war nach Thema gruppiert — Frage 5 (Gewaltentrennung) kam vor Frage 4 (Parlament). Ohne den Vergleich Zeichen für Zeichen mit dem Inhalt hätte niemand es gesehen: Karte 1 war Frage 1, und das sah richtig aus (P106).",
-      "interessantesteAnfrage": "„die app nicht getrennt“ — ein halber Satz, der die ganze Architektur entschieden hat. Nicht eine Seite neben Redion, nicht ein eigener Speicher, sondern eine Ansicht über den Lernkarten, die es schon gibt: ein Feld `quiz` an der Karte, der Fortschritt über dieselbe Rechnung wie die Tagesrunde, die Boxen als Ableitung. Was er beschrieben hat, sind Leitner-Boxen — er hat sie nur nicht so genannt.",
+      "interessantesteAnfrage": "„die app nicht getrennt“ — ein halber Satz, der die ganze Architektur entschieden hat. Nicht eine Seite neben Redion, nicht ein eigener Speicher, sondern eine Ansicht über den Lernkarten, die es schon gibt: ein Feld `quiz` an der Karte, der Fortschritt über dieselbe Rechnung wie die Tagesrunde, die Boxen als Ableitung. Was er beschrieben hat, sind Leitner-Boxen — er hat sie nur nicht so genannt. — Und am Abend ihr Gegenstück: „erstelle mir direkt lerne quiz im redion\". Der ganze Tag war Prüfungsvorbereitung auf Papier gewesen: eine markierte NIN Compact, Reiter, Randnotizen, zwei Probeprüfungen. Der Satz hat das alles in die App geholt — und damit die Frage gestellt, die E677 offengelassen hatte: Was ist ein Kapitel, wenn es zwei davon gibt?",
       "massnahmen": [
         {
           "zeit": "ca. 04:50",
@@ -3053,6 +3069,18 @@
           "was": "Nur den Fassungs-Streifen nach unten gelegt (Lage als zweite Klasse), Warnung und Fehler bleiben oben",
           "warum": "eine Fehlermeldung unten läge am Telefon hinter der Tastatur; ein Hinweis, der warten kann, gehört nicht über die Suche",
           "risiko": "keines gemessen — test566 hält beide Lagen"
+        },
+        {
+          "zeit": "ca. 18:40",
+          "was": "Die Kapitel des Trainers über Register.vorlagen (`trainer: true`) finden lassen, statt eine zweite Kennung in den Trainer zu schreiben",
+          "warum": "§8 — ein zweiter Katalog für dasselbe läuft mit dem ersten auseinander. Die Vorlage weiss ohnehin, wie ihr Kapitel heisst und ob eine Seite daraus liegt",
+          "risiko": "keines: Vorlagen ohne die Marke bleiben gewöhnliche Vorlagen; die Staatskunde hat sie bekommen, sonst wäre ihr eigenes Kapitel verschwunden"
+        },
+        {
+          "zeit": "ca. 18:55",
+          "was": "Eine Prüfungsfrage ist `pruefung: true` ODER eine Schreibaufgabe ohne ausdrückliches `pruefung: false`",
+          "warum": "E677 zählt seine 13 Verstanden-Fragen zur Prüfungsrunde, ohne sie zu markieren. Eine strengere Regel hätte die Staatskunde still von 20 auf 7 Fragen gekürzt",
+          "risiko": "die NIN-Themenaufgaben in Schreibform müssen `pruefung: false` tragen — test567 misst beide Zahlen (20 und 34), damit das nicht wieder auseinanderläuft"
         }
       ]
     }

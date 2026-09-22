@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 508 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 509 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1189,6 +1189,19 @@ ein Warnstreifen bleibt oben. Gegen den alten Stand rot mit 5 von 11 —
 „top 0 · bottom 45" und „85 × 23" für den Knopf. Gezählt am 22. September,
 im selben Bogen: der Befehl sagt 508.*
 
+*Und 509: `test567` — der Trainer kennt zwei Kapitel (E679). Redurs Satz
+vom 22. September, „erstelle mir direkt lerne quiz im redion für kapitel
+5,6,7 … alles beschriftet mit nummern, seiten im nin compact, wie im test",
+in 34 Zusagen: die NIN-Kapitel 5, 6, 7 als Vorlage `nin-kapitel-5-7` mit
+106 Aufgaben, davon 34 Prüfungsfragen mit Nummer, Punkten und Seite; der
+Trainer findet seine Kapitel über `Register.vorlagen` (`trainer: true`)
+statt über einen Namen im Code, und die Übersicht trennt sie. Gegen den
+Stand ohne Skripteinträge rot mit 8 Zusagen und Abbruch; gegen den ersten
+gebauten Stand 33 von 34 — die rote Zeile war der Vergleich im Wächter
+selbst (eine Lücke steht als `{{Lösung}}` im Text, nicht als Frage vor
+„::"), nicht das Produkt. Gezählt am 22. September, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 509.*
+
 ### Die Befehle
 
 ```txt
@@ -1197,7 +1210,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 508 Läufe
+npm run pruefen                      alle 509 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1284,7 +1297,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 508 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 509 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

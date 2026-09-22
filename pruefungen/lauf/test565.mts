@@ -183,7 +183,8 @@ const angelegt = await seite.evaluate(async () => {
     arten: arten(karten), artenSoll: arten(inhalt), typen: Array.from(new Set(karten.map((k: any) => k.type))),
     pruefung: pruefung.length, wortgleich,
     lueckeText: String(luecke?.text || ''), lueckeGeteilt: luecke ? w.Learning.splitCard(luecke) : null,
-    anlegenWeg: !wurzel?.querySelector('[data-tr-anlegen]'),
+    /* Seit E679 bleibt das Anlegen für ANDERE Kapitel stehen — nur Staatskunde ist weg. */
+    anlegenWeg: !wurzel?.querySelector('[data-tr-anlegen="staatskunde-kapitel"]'),
     neuBox: Number(wurzel?.querySelector('.lw-trainer-box[data-box="neu"] .lw-trainer-box-zahl')?.textContent),
     quelle: karten.every((k: any) => typeof k.quiz.quelle === 'string' && k.quiz.quelle.length > 0),
     thema: karten.every((k: any) => typeof k.quiz.thema === 'string' && k.quiz.thema.length > 0)
@@ -199,7 +200,7 @@ p('Die sieben Prüfungsfragen stehen Wort für Wort, in der Reihenfolge des Lehr
 p('Eine Lücke ist als {{Lücke}} gespeichert — auch die klassische Lernrunde versteht sie',
   /\{\{[^}]+\}\}/.test(angelegt.lueckeText) && Array.isArray(angelegt.lueckeGeteilt) && String(angelegt.lueckeGeteilt[1]).length > 0 && !/noch keine Antwort/.test(String(angelegt.lueckeGeteilt[1])));
 p('Jede Karte nennt Thema und Seite', angelegt.quelle && angelegt.thema);
-p('Danach bietet die Übersicht das Anlegen nicht mehr an', angelegt.anlegenWeg);
+p('Danach bietet die Übersicht das Anlegen von Staatskunde nicht mehr an', angelegt.anlegenWeg);
 p('Alle Karten liegen in „Neu"', angelegt.neuBox === angelegt.soll, String(angelegt.neuBox));
 
 /* ---------------------------------------------------------------------- */

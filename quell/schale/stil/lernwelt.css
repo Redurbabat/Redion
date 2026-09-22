@@ -1488,6 +1488,9 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
 .lernwelt .lw-trainer-h3{margin:6px 0 0;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--text-dim)}
 .lernwelt .lw-trainer-hinweis{margin:0;color:var(--text-dim);font-size:12px;line-height:1.5}
 .lernwelt .lw-trainer-reihe{display:flex;flex-wrap:wrap;gap:8px}
+/* Ein Abschnitt je Kapitel (E679): Rahmen der Lernwelt, darin Prüfung und Themen. */
+.lernwelt .lw-trainer-kapitel{display:grid;gap:8px;padding:var(--space-4);border:1px solid var(--line);border-radius:var(--lw-radius-sm);background:var(--lw-panel)}
+.lernwelt .lw-trainer-kapitel>.lw-trainer-h3{margin:0}
 .lernwelt .lw-trainer-reihe button{
   min-height:var(--lw-touch);padding:var(--space-3) var(--space-4);border:1px solid var(--line);
   border-radius:var(--lw-radius-sm);background:var(--lw-panel);font-size:13px;font-weight:680;text-align:left
