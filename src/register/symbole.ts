@@ -119,6 +119,20 @@ Register.symbole = (() => {
        Ein T braucht keinen Rahmen. Es IST der Buchstabe, und damit teilt es
        mit einem Bild im Rahmen fast nichts mehr. */
     inkText: '<path d="M3.8 7V4.4h16.4V7"/><path d="M12 4.4v15.2"/><path d="M8.4 19.6h7.2"/>',
+    /* ══ TEXT ÄNDERN (E670) ════════════════════════════════════════════════
+       Der erste Anlauf nahm `inkText` mit — dasselbe T für „Text schreiben"
+       und „Text ändern". `test480 §7b` hat es sofort gehalten und die Zahl
+       hingeschrieben: `inkText/inkText = 100 %`. Die Regel aus E515 (kein
+       Paar über 60 %) ist genau für diesen Fall da, und sie hat gewirkt,
+       ohne dass jemand hinsehen musste.
+
+       Das Bild sagt, was das Werkzeug tut: zwei Textzeilen, und die Zeile
+       dazwischen ist zugedeckt und neu geschrieben — deshalb der gefüllte
+       Riegel und der Stift daneben. */
+    inkTextFix: '<path d="M3.4 5.2h17.2"/>' +
+      '<rect x="3.4" y="9" width="9.6" height="4.6" rx="1.2"/>' +
+      '<path d="M3.4 18h8"/>' +
+      '<path d="m15.8 18.4 1-3.2 4.4-4.4 2.2 2.2-4.4 4.4z"/>',
     inkShapes: '<path d="m7 3 5 8H2z"/><circle cx="17" cy="7" r="4"/><rect x="4" y="15" width="7" height="6" rx="1"/><circle cx="18" cy="18" r="3"/>',
 
     /* ══ DIE WERKZEUGE DER ZEICHENLEISTE (E515) ═════════════════════════════

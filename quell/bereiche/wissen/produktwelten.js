@@ -72,7 +72,7 @@ const Produktwelten = (() => {
             return null;
         const welt = sichereWelt(treffer[1]);
         const erlaubte = welt === 'lernen'
-            ? new Set(['heute', 'lernen', 'lernweg', 'fehler', 'pruefungen', 'schule', 'uni', 'arbeit', 'fortschritt'])
+            ? new Set(['heute', 'lernen', 'lernweg', 'fehler', 'pruefungen', 'schule', 'uni', 'arbeit', 'fortschritt', 'trainer'])
             : new Set(['start', 'seiten', 'dateien', 'projekte', 'uebersicht', 'bibliothek',
                 'aufgaben', 'kalender', 'datenbanken', 'whiteboards', 'wiki', 'vorlagen']);
         return erlaubte.has(treffer[2]) ? { welt, ansicht: treffer[2] } : null;

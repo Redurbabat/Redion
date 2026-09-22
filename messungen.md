@@ -3813,3 +3813,360 @@ Eine der drei Zahlen in CLAUDE.md auf 480 gesetzt: genau diese eine Zeile
 wird rot, die beiden anderen bleiben grün. Drei Stellen, drei Messungen.
 
 Kein Bild: hier ist zu zählen, nicht zu sehen (§55.3).
+
+---
+
+## 20. September 2026 — Tabellenwerkzeuge am Telefon (E660, `test551`)
+
+Gemessen auf 390 × 844 mit echtem Touch (`hasTouch`, sonst greift
+`@media(hover:none)` nicht):
+
+```txt
+                        vorher      nachher
+.stab-tools button      7 × 26 px   7 × 44 px
+.stab-griff.x/.y        7 px        7 px  (der Rechnerweg, unverändert)
+am Rechner (1280 px)    26 px       26 px  (bleibt schlank — geprüft)
+```
+
+Die Knöpfe tun dabei weiterhin, was sie sagen:
+
+```txt
+Spalte +   [3,3,3] → [4,4,4]     in JEDER Zeile
+Zeile +    3 → 4 Zeilen
+Inhalt     „Querschnitt" / „1,5 mm²" unverändert
+```
+
+### Der Fund über dem Fund
+
+`test402` hält §37 seit langem und hat diese sieben Knöpfe **nie gesehen**:
+
+```js
+const h = body.match(/(?<!max-)(?:min-)?height\s*:\s*(\d+)px/);
+```
+
+Er sucht nach `height`/`min-height` im Stilblatt. Die 26 px kamen aus
+`font-size:12px` und `padding:3px 9px` — nirgends stand eine Höhe. Deshalb
+stand die Regel auch nicht in `masse-bestand.json`: nie gesehen, nie
+eingetragen. Steht als **L206**.
+
+### Und was ich zuerst falsch gebaut hätte
+
+Der erste Wächter suchte nach `.stab-daumen` — einer Werkzeugzeile, die ich
+für den Daumen bauen wollte. `.stab-tools` gibt es seit langem, und **L108
+hat sie am Telefon schon sichtbar gemacht**. Der fertige Wächter wurde
+weggeworfen und neu geschrieben; das ist billiger als die zweite Zeile
+(§8, §45 Schritt 1).
+
+---
+
+## 20. September 2026 — Groqs 404 (E661, `test552`)
+
+Redurs Meldung, wörtlich, und was daran falsch war:
+
+```txt
+Groq antwortet mit 404. Die Adresse gibt es nicht (object_not_found).
+{"error":{"message":"The model `llama-3.3-70b-versatile` does not exist …",
+ "code":"model_not_found"}}
+```
+
+Die Adresse war in Ordnung — Groq hat sie beantwortet. Das Modell war weg,
+und der Anbieter sagte es wörtlich.
+
+```txt
+                          vorher                    nachher
+führender Satz            Statustabelle (falsch)    der Satz des Anbieters
+Hinweis, was zu tun ist   keiner                    „wähle ein anderes Modell"
+404 ohne Körper           Statustabelle             Statustabelle (unverändert)
+Modellliste               fest im Programm          /models beim Anbieter
+Rückfall ohne Netz        —                         die eingebaute Liste
+gefiltert                 —                         whisper/tts/embed/guard
+```
+
+Gemessen mit abgehängtem `fetch` und genau Groqs Körper:
+
+```txt
+gerufen   https://api.groq.com/openai/v1/models
+zurück    ["llama-neu-70b","llama-neu-8b"]   (whisper-gross-v3 gefiltert)
+Netzfehler → geworfen: false, Menü nimmt die eingebaute Liste
+```
+
+### Zwei Gegenproben — und die erste war falsch
+
+```txt
+1. Versuch   const modellWeg = false && A || B     → blieb GRÜN
+```
+
+`&&` bindet stärker als `||`, also blieb `B` übrig und der Zweig lief
+weiter. Der grüne Lauf sah kurz nach einem zu schwachen Wächter aus. **Eine
+Gegenprobe ist ein Stück Code wie jedes andere und kann genauso falsch
+sein.**
+
+Richtig gefahren:
+
+```txt
+`if (modellWeg)` → `if (false)`     ✗ sagt nicht, was zu tun ist
+alter Wurf zurück                    ✗ „Die Adresse gibt es nicht"
+```
+
+Kein Bild: hier ist ein Satz zu lesen, keine Fläche zu sehen (§55.3).
+
+---
+
+## 20. September 2026 — Der erste Ernstfall des Sweep-Werkzeugs (E662, `test553`)
+
+Zwei Stunden nach seinem Bau meldete `volllauf.mts`:
+
+```txt
+→ ROT: 266 267 268 270 272 273 274 275 276 277
+```
+
+Im Protokoll darüber:
+
+```txt
+✗ 1 von 10 Läufen gescheitert:
+    test270
+```
+
+Zehn gemeldet, einer war es. Die Zerlegung suchte je ZEILE nach ✗ **und**
+Nummer; die Bilanz steht auf zwei Zeilen, und keine trägt beides.
+
+```txt
+                        vorher              nachher
+echte Bilanz            [266 … 277]         [270]
+drei Rote               [266 … 277]         [266,270,277]
+Lauf meldet sich selbst gefunden            gefunden
+Ausgabe schweigt        ganzes Stück        ganzes Stück (unverändert)
+fremder Name (test100)  test100 wäre rot    ganzes Stück, kein fremder Lauf
+```
+
+Der Rückfall auf „ganzes Stück" ist Absicht und bleibt: lieber neun zu viel
+als einer zu wenig, und keiner erfunden (§56). Falsch war nur, ihn so leicht
+auszulösen.
+
+### Gegenprobe
+
+Die alte Ein-Zeilen-Regel eingesetzt → genau das beobachtete Symptom,
+`[266 … 277]` statt `[270]`.
+
+### Der eine echte rote Lauf
+
+`test270` mit `✗ In der Wurzel geht nichts ins Netz … [".git","node_modules"]`
+— wörtlich das Artefakt, das §30 beschreibt (im Arbeitsbaum ist `.git` eine
+Datei und `node_modules` ein Symlink). **Nachzumessen im Hauptbaum**, sobald
+der Sweep durch ist; vorher wird daran nichts repariert.
+
+---
+
+## 20. September 2026 — Die Wochenrückschau zählte nie (E663, `test554`)
+
+```txt
+                            vorher      nachher
+erledigtAm nach dem Haken   null        gesetzt
+in der Rückschau            nein        ja
+heute im Tagesdiagramm      0           1
+Haken zurück → erledigtAm   —           null, nicht mehr gezählt
+Altbestand (ohne Datum)     unsichtbar  über `edited` gezählt
+```
+
+Wer `erledigtAm` schrieb, vorher: **niemand** für Blöcke. Einziger Schreiber
+im ganzen Programm war der ICS-Import (`kalender.ts:211`).
+
+`checked` wird an **sechs** Stellen geschrieben — Kästchen, Tastenkürzel,
+Markdown-Kürzel, Befehlspalette, Schnittstelle, PWA. Deshalb sitzt der
+Stempel in `Store.updateBlock`, wo alle sechs durchgehen.
+
+### Zwei Gegenproben
+
+```txt
+Stempel abgehängt   erledigtAm bleibt null — die Rückschau zählt dann nur
+                    noch ungefähr, über `edited`
+Rückfall abgehängt  Altbestand wieder unsichtbar
+```
+
+---
+
+## 20. September 2026 — Ein zu kleines Fenster (E664, `test403`)
+
+Der volle Lauf meldete:
+
+```txt
+✗ Beide stehen in einem finally — [false,true]
+```
+
+Der Code war richtig. Der Wächter sah **zwei Zeilen** zurück:
+
+```js
+const davor = alle.slice(Math.max(0, i - 2), i + 1).join(' ');
+```
+
+E652 hatte zwei Zeilen in dasselbe `finally` geschoben — `zustand.abbruch`
+und `sendenKnopf(false)`. Damit rutschte das `remove` auf Position 3.
+
+```txt
+finally {            ← Zeile i-3, ausserhalb des Fensters
+  zustand.abbruch = null;
+  sendenKnopf(false);
+  ziel.classList.remove('ki-schreibt');   ← Zeile i
+```
+
+Jetzt wird der Blockkopf gesucht, Klammern zählend nach oben. Gegenprobe:
+ein `remove` aus seinem `finally` geholt → wieder `[false,true]`.
+
+Dieselbe Redewendung kommt in keinem der übrigen 495 Läufe vor — gesucht,
+nicht angenommen.
+
+---
+
+## 20. September 2026 — Was das Bereichs-Verzeichnis nicht sieht (E665, L207)
+
+Der erste volle Lauf seit E626 machte `test537` rot: **518 gegen 517**, bei
+unverändert 125 Paaren. Welche zwei Treffer dazugekommen waren:
+
+```txt
+MEHR  bereiche/einstellungen | KI            | bereiche/ki             15 → 16
+MEHR  bereiche/ki            | Einstellungen | bereiche/einstellungen   1 → 2
+```
+
+Der erste war meiner (E661: zwei Griffe statt eines) und ist mit E665 weg —
+519 → 518.
+
+Der zweite ist **kein neuer Aufruf**. `Einstellungen.oeffne('schluessel')`
+steht seit E500 im KI-Fenster. Dieselbe Datei, durch denselben Filter:
+
+```txt
+                      roh   nach ohneSchablonen
+Fassung von E626       2            1
+heute                  2            2
+```
+
+Er war für den Wächter unsichtbar, weil `ohneSchablonen` ihn für Text in
+einer Schablone hielt.
+
+### Wie viel sonst noch unsichtbar ist
+
+Über alle 86 Dateien in `src/bereiche/`:
+
+```txt
+Aufrufe nach nurCode:              7907
+davon nach ohneSchablonen:         7641
+verdeckt:                           266   (3,4 %)
+
+  136  editor/ansicht/editor.ts       (457 → 321)
+   30  wissen/werkzeuge.ts            (471 → 441)
+   26  einstellungen/ansicht/seite.ts (215 → 189)
+   21  datenbanken/steuerung.ts      (1119 → 1098)
+```
+
+**Die 517 sind ein Mindestwert, kein Stand.** `${Datenbank.name(x)}` in
+einer Schablone ist ein Aufruf, kein Text.
+
+Das Verzeichnis wurde NICHT angehoben. Die drei Wege und ihre Kosten stehen
+als **L207**; §5 sagt selbst, dass die Richtung Redur gehört. Bis dahin
+bleibt `test537` rot und `main` steht (§46) — eine rote Zahl, die auf eine
+Entscheidung wartet, ist besser als eine grüne, die nicht stimmt.
+
+---
+
+## 20. September 2026 — „Erinnerung" war eine Zeichenkette (E666, `test555`)
+
+```txt
+                                vorher                  nachher
+Registereintrag a-remind        nur Name + Aktion       + tun + zeigen
+Slash „Erinnerung"              schreibt „@remind "     öffnet den Dialog
+Text des Blocks danach          „@remind "              „"
+Erinnerungen in der Liste       0                       1
+Querverweise (test537)          518                     518  ← unverändert
+```
+
+Die letzte Zeile ist der Punkt: der Draht liegt im **Register** (§5 dritter
+Weg) und nicht im Editor. `bereiche/editor → Werkzeuge` steht bei 1 und darf
+nicht wachsen; `Register` ist kein Bereich.
+
+Nirgends im Programm wurde `@remind` gelesen — gesucht, nicht angenommen.
+Die Maschine dahinter (`Werkzeuge.erinnerungSetzen`, Liste, Geräte-Meldung,
+Weckruf am Server) stand seit E54 vollständig da.
+
+### Gegenprobe
+
+`tun` umbenannt → genau die drei Zusagen werden rot, die an der Handlung
+hängen; „den Eintrag gibt es" bleibt grün.
+
+### Und zwei Zusagen waren im ersten Anlauf grün, weil nichts lief
+
+```txt
+!String(undefined).includes('@remind')   → true
+undefined === undefined                  → true
+```
+
+Beide prüfen jetzt zuerst, ob der Schritt überhaupt stattgefunden hat.
+Vierter Fall nach `test544`, `test549` und `test550`.
+
+### Was der Lauf nicht beweist
+
+Dass `zeigen()` bei fehlendem Modul „nein" sagt. `Werkzeuge` hängt nicht am
+Fenster (E207) und lässt sich von aussen nicht verstecken. Gemessen ist nur,
+dass es nicht wirft — der Rest hält am `try/catch`. Steht so im Lauf.
+
+---
+
+## Voller Prüflauf auf `09ac7f8` — 21. September 2026
+
+Der erste volle Lauf seit `74bde43` (20. September, 17:56). Gefahren im
+eigenen Arbeitsbaum mit `node pruefungen/volllauf.mts --neu`, während im
+Hauptbaum **kein** Prüflauf lief (§30).
+
+```txt
+Läufe      501
+grün       491
+ROT         10   210 270 290 362 410 437 440 523 524 537
+gelaufen   112 min
+```
+
+### Im Hauptbaum nachgemessen: acht statt zehn
+
+§30 verlangt genau das, und es hat sich wieder gelohnt:
+
+| Lauf | im Arbeitsbaum | im Hauptbaum |
+|---|---|---|
+| `test270` | rot | **grün** — `.git` ist dort eine Datei, `node_modules` ein Symlink |
+| `test440` | rot | **grün** — dieselbe Ursache |
+| die anderen acht | rot | rot |
+
+Zwei von zehn waren Artefakte der Messumgebung. Wer sie ohne Nachmessung
+„repariert" hätte, hätte am Produkt etwas geändert, das nichts hatte.
+
+### Und sieben der acht waren meine eigenen letzten drei Bögen
+
+| Lauf | was er hielt | Ursache |
+|---|---|---|
+| `test210` | 17 Knöpfe statt 16 | neues Werkzeug (E670) |
+| `test523` | 14 Werkzeuge statt 13 — und `textfix` fehlte in der DOM-Folge | **echter Fund**, siehe unten |
+| `test437` | 14 Zeichenwerkzeuge statt 13 | neues Werkzeug |
+| `test290` | Präfix `wo` nicht im Verzeichnis | `.wo-zeilenknopf` (E669) |
+| `test362` | `56` zum fünfzehnten Mal roh im CSS | `min-width:56px` (E667) |
+| `test410` | „tote Deklaration" in der Einzeldatei | **Messfehler**, siehe unten |
+| `test537` | 519 statt 517 Treffer | ein zweiter Speicher (E670), jetzt weg |
+
+**Der echte Fund steckte in `test523`.** Die Blatt-Werkzeugleiste wird von
+Hand aufgezählt (`button('text') + button('zeichen') + …`), das Studio-Band
+daneben baut sie aus dem Katalog. Also hatte „Text ändern" im Studio einen
+Knopf und auf dem Blatt keinen — zwei Tage lang, und gesehen hat es kein
+Mensch, sondern ein Lauf, der die Ordnung gegen den Katalog abgleicht.
+
+**Der Messfehler steckte in `test410`.** Sein Ausdruck
+`/<style[^>]*>([\s\S]*?)<\/style>/g` fing das `<style>` aus einem
+**Kommentar** ein — die Sanitizer-Doku zählt die verbotenen Tags auf — und
+schluckte von dort **5,3 MB** bis zum nächsten `</style>`. Aufgefallen ist
+es erst, als in der Chronik ein deutscher Satz stand, der wie CSS aussieht:
+„Die 26 px entstehen aus `font-size:12px` und `padding:3px 9px`" (P97).
+Mit `^` und `m` sind es 21 echte Blöcke statt 25.
+
+### Danach
+
+```txt
+node pruefungen/alle.mts 210 270 290 362 410 437 440 523 537
+✗ 1 von 9 Läufen gescheitert: test537
+```
+
+`test537` bleibt bei **518 gegen 517** — genau dem Stand vor diesen drei
+Bögen. Das ist **L207**, und die Richtung gehört Redur.

@@ -122,8 +122,56 @@ Register.bloecke = (() => {
             kurz: '@', cmd: ['mention', 'erwaehnen', 'erwaehnung'] },
         { id: 'a-date', name: 'Datum einfügen', icon: '📆', zeichen: 'calendar', gruppe: 'Aktionen', aktion: 'date',
             kurz: '@Datum', cmd: ['date', 'datum', 'heute', 'today'] },
+        /* ── DER EINE EINTRAG MIT EINER HANDLUNG (E666) ────────────────────────
+           Die Hilfeseite sagt „`@remind` + Datum → Erinnerung ✅". Getan hat er
+           bis zum 20. September 2026 genau eins: `@remind ` in den Text
+           schreiben. Für `mention` und `date` ist das richtig — „@" öffnet ein
+           Menü, das ohnehin am Tippen hängt. Für `remind` gibt es dieses Menü
+           nicht: NIRGENDS im Programm wird `@remind` gelesen. §47, und zwar die
+           stille Hälfte.
+    
+           Dabei ist alles da: `Werkzeuge.erinnerungSetzen(seite)` öffnet den
+           Dialog mit Zeitpunkt und Text, schreibt nach `erinnerungen`, fragt
+           nach der Benachrichtigungserlaubnis und legt bei vorhandenem Server
+           einen Weckruf (E54). Es fehlte der Draht.
+    
+           WARUM ER HIER LIEGT UND NICHT IM EDITOR. `bereiche/editor` fasst
+           `Werkzeuge` heute GENAU EINMAL an; `bereiche-bestand.json` führt
+           diesen einen Treffer, und das Verzeichnis darf nur schrumpfen
+           (§5 Regel 1). §5 nennt für diesen Fall den dritten Weg: „Über
+           `register/` bekannt machen." Das Muster steht schon in
+           `register/menueband.ts:701` — `tun` mit einem `kann()` davor.
+    
+           `zeigen()` ist kein Beiwerk: fehlt der Bereich `wissen`, zeigt sich
+           der Eintrag gar nicht erst, statt einen Knopf anzubieten, der nichts
+           kann. */
         { id: 'a-remind', name: 'Erinnerung', icon: '⏰', zeichen: 'clock', gruppe: 'Aktionen', aktion: 'remind',
-            kurz: '@remind', cmd: ['reminder', 'remind', 'erinnerung'] },
+            kurz: '@remind', cmd: ['reminder', 'remind', 'erinnerung'],
+            /* Der Aufrufer schreibt den Namen HIN, statt ihn als Zeichenkette
+               nachzuschlagen — der einzige Weg dorthin wäre `eval` (§20). Fehlt
+               das Modul, wirft der Zugriff, und das heisst hier schlicht „nein". */
+            zeigen: () => {
+                try {
+                    return typeof Werkzeuge?.erinnerungSetzen === 'function';
+                }
+                catch {
+                    return false;
+                }
+            },
+            tun: (seite) => {
+                try {
+                    const p2 = seite || (typeof App !== 'undefined'
+                        ? Store.getBlock(App.aktuelleSeite()) : null);
+                    if (!p2) {
+                        UI.toast('Erst eine Seite öffnen');
+                        return;
+                    }
+                    Werkzeuge.erinnerungSetzen(p2);
+                }
+                catch {
+                    UI.toast('Erinnerungen sind in dieser Fassung nicht geladen');
+                }
+            } },
         { id: 'a-emoji', name: 'Emoji', icon: '🙂', zeichen: 'smile', gruppe: 'Aktionen', aktion: 'emoji',
             kurz: ':', cmd: ['emoji', 'smiley'] },
         { id: 'a-komm', name: 'Kommentar', icon: '💬', zeichen: 'comment', gruppe: 'Aktionen', aktion: 'komm',

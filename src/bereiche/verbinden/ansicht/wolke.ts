@@ -132,6 +132,7 @@ const WolkeFenster = (() => {
         if (was === 'sichern')    { await App.sicherungSpeichern(); }
         if (was === 'loeschen')   { o.remove(); loeschenFenster(); }
         if (was === 'schluessel') { await schluesselFragen(); await zeichne(); }
+        if (was === 'geraete')    { o.remove(); geraeteFenster(); }
         if (was === 'marken')     { o.remove(); markenFenster(); }
         if (was === 'adresse') {
           const neu = await UI.frage('Adresse des Servers',
@@ -366,6 +367,7 @@ const WolkeFenster = (() => {
             'Einspielen weitergehen soll."'
           : ' class="prim"') + '>Jetzt abgleichen</button>' +
         '<button data-a="freigeben">Anderes Gerät freigeben</button>' +
+        '<button data-a="geraete">Angemeldete Geräte</button>' +
         '<button data-a="marken">Marken</button>' +
       '</div>' +
 
@@ -734,6 +736,85 @@ const WolkeFenster = (() => {
   /* ========================================================================
    * 5 · MARKEN
    * ======================================================================*/
+  /* ══ DIE ANGEMELDETEN GERÄTE (E669) ══════════════════════════════════════
+   * In den Einstellungen stand unter „Angemeldete Geräte" der Satz „Die
+   * Liste und der Freigabe-Code stehen im Wolke-Fenster". Den Code gab es.
+   * Die Liste nicht — dieses Fenster zeigte eine einzige Zeile, „Gerät:
+   * <dieses hier>", und das ist ein Spiegel, kein Verzeichnis.
+   *
+   * Der Server wusste es die ganze Zeit: `sitzungen` hält `geraet`,
+   * `angelegt` und `bis`, seit es die Tabelle gibt. Drei Spalten, die
+   * geschrieben und nie gelesen wurden.
+   *
+   * Das EIGENE Gerät steht oben und trägt eine Marke — es abzumelden ist
+   * erlaubt, aber es ist dasselbe wie Abmelden, und das soll man sehen,
+   * bevor man drückt. */
+  const geraeteFenster = async (): Promise<void> => {
+    const o = document.createElement('div');
+    o.className = 'overlay';
+    o.innerHTML = '<div class="finder" style="width:min(620px,95vw)">' +
+      '<div class="fh">💻 Angemeldete Geräte<button class="icon-btn" data-a="zu">✕</button></div>' +
+      '<div class="res" id="wo-geraete" style="padding:18px">Wird geladen …</div></div>';
+    document.body.appendChild(o);
+
+    const datum = (x: any): string => {
+      if (!x) return '';
+      const d = new Date(x);
+      return isNaN(d.getTime()) ? '' : d.toLocaleDateString('de-CH');
+    };
+
+    const zeichne = async () => {
+      let liste: { geraete: any[] } = { geraete: [] };
+      let schiefging = '';
+      try { liste = await Wolke.geraeteListe(); }
+      catch (e) { schiefging = e instanceof Error ? e.message : String(e); }
+      const feld = o.querySelector('#wo-geraete');
+      if (!feld) return;
+      const alle = Array.isArray(liste.geraete) ? liste.geraete : [];
+      feld.innerHTML =
+        '<div style="font-size:12.5px; color:var(--text-dim); line-height:1.65; margin-bottom:16px">' +
+          'Jede Anmeldung ist eine Sitzung. Wer ein Gerät zurückzieht, meldet es ab — ' +
+          'die Notizen auf jenem Gerät bleiben, nur der Abgleich hört auf.</div>' +
+        (schiefging
+          ? '<div style="font-size:12.5px;color:var(--gefahr);line-height:1.6">' +
+            esc(schiefging) + '</div>'
+          : alle.length
+            ? alle.map((x: any) =>
+                '<div style="display:flex;gap:10px;align-items:center;padding:9px 2px;' +
+                'border-top:1px solid var(--line);font-size:13px">' +
+                '<div style="flex:1"><b>' + esc(x.geraet || 'Unbekanntes Gerät') + '</b>' +
+                (x.aktuell ? ' <span class="ez-grau" style="font-size:11.5px">· dieses Gerät</span>' : '') +
+                '<div style="font-size:11.5px;color:var(--text-faint)">' +
+                  (datum(x.angelegt) ? 'angemeldet am ' + esc(datum(x.angelegt)) : 'angemeldet') +
+                  (datum(x.bis) ? ' · läuft ab am ' + esc(datum(x.bis)) : '') +
+                '</div></div>' +
+                '<button class="wo-zeilenknopf" data-weg="' + esc(x.kennung) + '"' +
+                  (x.aktuell ? ' data-selbst="1"' : '') + '>' +
+                  (x.aktuell ? 'Abmelden' : 'Zurückziehen') + '</button>' +
+                '</div>').join('')
+            : '<div style="font-size:12.5px;color:var(--text-faint)">' +
+              'Nur dieses Gerät — oder der Server kennt noch keine Sitzung.</div>');
+    };
+
+    o.addEventListener('click', async (e) => {
+      if (e.target === o || elVon(e)?.closest<HTMLElement>('[data-a="zu"]')) { o.remove(); return; }
+      const weg = elVon(e)?.closest<HTMLElement>('[data-weg]');
+      if (!weg) return;
+      /* Das eigene Gerät zurückzuziehen heisst abmelden. Wer das aus einer
+         Liste heraus tut, meint meistens ein anderes — also einmal fragen. */
+      if (weg.dataset.selbst && !confirm(
+            'Das ist dieses Gerät. Zurückziehen heisst abmelden.\n\n' +
+            'Deine Notizen bleiben hier — nur der Abgleich hört auf. Fortfahren?')) return;
+      try {
+        await Wolke.geraetWeg(weg.dataset.weg);
+        if (weg.dataset.selbst) { o.remove(); location.reload(); return; }
+        await zeichne();
+      } catch (err) { UI.toast(err instanceof Error ? err.message : String(err)); }
+    });
+
+    await zeichne();
+  };
+
   const markenFenster = async (): Promise<void> => {
     const o = document.createElement('div');
     o.className = 'overlay';
@@ -773,7 +854,11 @@ const WolkeFenster = (() => {
                          : ' · nie benutzt') +
               (x.bis ? ' · bis ' + esc(new Date(x.bis).toLocaleDateString('de-CH')) : '') +
               '</div></div>' +
-              '<button data-weg="' + esc(x.kennung) + '" style="font-size:12px">Zurückziehen</button>' +
+              /* DIE NACHBARSTELLE (§45, E669). Derselbe Knopf, dasselbe Mass:
+                 er stand hier mit `font-size:12px` und sonst nichts, also
+                 18 px hoch. Eine Marke zurückzuziehen ist so endgültig wie
+                 ein Gerät abzumelden. */
+              '<button class="wo-zeilenknopf" data-weg="' + esc(x.kennung) + '">Zurückziehen</button>' +
               '</div>').join('')
           : '<div style="font-size:12.5px;color:var(--text-faint)">Noch keine Marke.</div>');
     };
@@ -807,7 +892,7 @@ const WolkeFenster = (() => {
      eine Attrappe laufen lassen kann. Vier Ausgänge, die ein Mensch nur zu
      sehen bekommt, wenn sein Server gerade halb eingerichtet ist — genau die
      Sorte Weg, die ohne Prüflauf jahrelang falsch bleibt. */
-  return { dialog, teilenFenster, markenFenster, codeFenster, schluesselFragen,
+  return { dialog, teilenFenster, markenFenster, geraeteFenster, codeFenster, schluesselFragen,
            serverPruefen };
 })();
 

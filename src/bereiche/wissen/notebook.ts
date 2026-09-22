@@ -298,10 +298,9 @@ const Notebook = (() => {
   const FARBEN: ReadonlyArray<{ id: string; name: string }> =
     ['gray', 'brown', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'red']
       .map(id => ({ id, name: Farben.name(id) }));
-  const farbeVon = (p: any): string => {
-    const wert = String(p?.color || '');
-    return FARBEN.some(f => f.id === wert) ? wert : '';
-  };
+  /* Die Whitelist steht seit E672 in `Farben.kennung` — dieselbe für
+     Hefte, Fächer, Bibliotheksordner, Seitenleiste und Ablagebaum. */
+  const farbeVon = (p: any): string => Farben.kennung(p?.color);
 
   /* ------------------------------------------------------------------ *
    * Öffnen und Anlegen
@@ -434,9 +433,12 @@ const Notebook = (() => {
     renderShelf();
   };
 
-  const setzeFarbe = (id: string, farbe: string): void => {
-    Store.updateBlock(id, { color: FARBEN.some(f => f.id === farbe) ? farbe : '' });
-    renderShelf();
+  /* `danach` (E672): die Bibliothek ruft denselben Wähler für ihre Ordner
+     und will danach SICH neu zeichnen, nicht das Regal. Ohne Angabe bleibt
+     es beim Regal — so, wie die Hefte es seit E406 tun. */
+  const setzeFarbe = (id: string, farbe: string, danach?: () => void): void => {
+    Store.updateBlock(id, { color: Farben.kennung(farbe) });
+    if (danach) danach(); else renderShelf();
   };
 
   /** Verschlüsseln aus dem Regal. NACH dem erfolgreichen Sperren wird
@@ -560,7 +562,11 @@ const Notebook = (() => {
    *  aus der Bibliotheks-Anatomie) mit Symbol und ehrlicher Zählung. */
   const fachCard = (f: any): string => {
     const deckel =
-      `<button class="bib-deckel" data-fach="${esc(f.id)}" data-art="ordner" ` +
+      `<button class="bib-deckel" data-fach="${esc(f.id)}" data-art="ordner"` +
+      /* DIE FARBE DES FACHS (E672) — dasselbe Feld und dieselbe Marke wie
+         beim Heft darunter. `Farben.marke` gibt nur bekannte Kennungen
+         heraus, deshalb steht hier kein `esc` (es gäbe nichts zu escapen). */
+      Farben.marke(f.color) + ' ' +
       `aria-label="Fach öffnen: ${esc(f.text || 'Ohne Namen')}">` +
       `<span class="bib-deckel-blatt is-leer">` +
       `<span class="nh-fach-icon" aria-hidden="true">${esc(f.icon || '🗂')}</span></span>` +
@@ -912,7 +918,12 @@ const Notebook = (() => {
     });
   };
 
-  const farbMenue = (anker: HTMLElement, id: string): void => {
+  /* ══ DER FARBWÄHLER — EINER FÜR ALLE (E672) ═══════════════════════════
+     Er stand hier für Hefte. Fächer hatten ihn nicht, Bibliotheksordner
+     auch nicht — und ein zweiter Wähler daneben wäre §8. Deshalb steht er
+     im Rückgabeobjekt, und die Bibliothek ruft ihn mit ihrem eigenen
+     `danach`. Dieselben neun Felder, dieselben Namen, dasselbe Häkchen. */
+  const farbMenue = (anker: HTMLElement, id: string, danach?: () => void): void => {
     const p = Store.getBlock(id);
     if (!p) return;
     const jetzt = farbeVon(p);
@@ -930,7 +941,7 @@ const Notebook = (() => {
       const b = (e.target as Element).closest<HTMLElement>('[data-farbe]');
       if (!b) return;
       m.remove();
-      setzeFarbe(id, String(b.dataset['farbe'] || ''));
+      setzeFarbe(id, String(b.dataset['farbe'] || ''), danach);
     });
   };
 
@@ -1039,6 +1050,10 @@ const Notebook = (() => {
       `<button data-k="auf">Öffnen</button>` +
       (kannBlick ? `<button data-k="blick"><span class="mi">⌕</span>Blick hinein</button>` : '') +
       `<button data-k="name">Umbenennen</button>` +
+      /* „FARBE …" AUCH AM FACH (E672). Die Hefte hatten es seit E406, das
+         Fach daneben nicht — Redur, 21. September: „ich sollte die ordner
+         farben wählen können und farben wechseln können". */
+      `<button data-k="farbe">Farbe …</button>` +
       `<div class="sep"></div>` +
       `<button data-k="korb">In den Papierkorb</button>`,
       Math.min(r.left - 140, innerWidth - 240), r.bottom + 4);
@@ -1047,6 +1062,7 @@ const Notebook = (() => {
       if (!b) return;
       m.remove();
       if (b.dataset['k'] === 'auf') return openFach(id);
+      if (b.dataset['k'] === 'farbe') return farbMenue(anker, id);
       if (b.dataset['k'] === 'blick')
         return Bibliothek.blickHinein(f, anker.getBoundingClientRect(), false,
           (ziel: string) => openFach(ziel));
@@ -1392,6 +1408,8 @@ const Notebook = (() => {
   /* Die Regeln kommen mit heraus, damit ein Prüflauf sie OHNE Fenster
      messen kann — dieselbe Trennung wie bei `Wissensluecken.sammeln`. */
   return { oeffnen, open: oeffnen, resume, render,
+           /* Der Farbwähler nach aussen (E672) — für die Ordner der Bibliothek. */
+           farbMenue,
            istFach, isNotebook, faecher, alleFaecher, unterFaecher, fachWeg,
            fachHefte, loseHefte, fachInhaltSatz, FACH_TIEFE,
            ziehenAblegen,

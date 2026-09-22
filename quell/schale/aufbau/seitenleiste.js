@@ -1143,6 +1143,13 @@ const Seitenleiste = (() => {
         const r = document.createElement('div');
         r.className = 'row' + (p.id === aktuelleSeite() ? ' on' : '');
         r.draggable = true;
+        /* DIE ORDNERFARBE IN DER SEITENLEISTE (E672) — als schmaler Rücken
+           links, wie am Deckel. Nur bekannte Kennungen (`Farben.kennung`). */
+        const zeilenFarbe = typeof Farben !== 'undefined' && Farben.kennung ? Farben.kennung(p.color) : '';
+        if (zeilenFarbe) {
+            r.dataset['farbe'] = zeilenFarbe;
+            r.style.setProperty('--zeilen-farbe', 'var(--c-' + zeilenFarbe + ')');
+        }
         const kinder = Store.childrenOf(p.id).filter((k) => k.type === 'page' && !k.archiviert);
         const offen = !!p.aufgeklappt;
         const tw = document.createElement('div');

@@ -61,7 +61,16 @@ Register.vorlagen = (() => {
             return null;
         }
         try {
-            return (typeof Galerie !== 'undefined') ? Galerie.bauen(id) : (v.bauen && v.bauen());
+            const ausGalerie = (typeof Galerie !== 'undefined') ? Galerie.bauen(id) : null;
+            if (ausGalerie)
+                return ausGalerie;
+            /* EINE GEMELDETE VORLAGE BAUT SICH SELBST (E677). `melde` gab es seit
+               jeher, doch `bauen` fragte nur die Galerie — und die kennt nur ihre
+               eigene Liste: eine Vorlage aus einem Bereich stand im Register und
+               war trotzdem nicht baubar. Den Vermerk „stammt aus Vorlage X" setzt
+               Fassung, damit auch diese Seiten später ein Update bekommen. */
+            const s = v.bauen ? v.bauen() : null;
+            return (s && typeof Fassung !== 'undefined' && Fassung.markiere) ? Fassung.markiere(s, id) : s;
         }
         catch (e) {
             const grund = e instanceof Error ? e.message : String(e);

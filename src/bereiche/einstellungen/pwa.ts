@@ -62,8 +62,13 @@ const PWA = (() => {
             /* Hier stand `neueFassung = neu;` in eine Variable, die niemand
                je gelesen hat — der Knopf unten arbeitet direkt mit `neu`.
                Die Variable ist mit weggefallen. */
+            /* UNTEN, NICHT OBEN (E678). Redur, 22. September: „Kannst du die
+               neu laden buton unten bringen". Der Streifen lag über der
+               Kopfleiste mit Suche und Menü; jetzt liegt er am unteren Rand
+               und am Telefon über der Leiste — und der Knopf ist ein Knopf
+               (44 px, §37), kein unterstrichenes Wort. */
             const b = UI.banner('Es liegt eine neue Fassung bereit. ' +
-              '<button id="pwa-neu" style="text-decoration:underline">Jetzt laden</button>', 'info');
+              '<button id="pwa-neu" class="banner-tat">Jetzt laden</button>', 'info unten');
             b.querySelector('#pwa-neu')?.addEventListener('click', () => {
               neu.postMessage('aktualisieren');
               location.reload();

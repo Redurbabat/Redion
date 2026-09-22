@@ -392,6 +392,36 @@ const ANSICHTEN: Record<string, {
      darüber der Strich, der jetzt hält, was er zeigt. Am Rechner wäre das
      Bild sinnlos — dort klappt `#btn-ai` in der Kopfleiste auf und zu.
        node bilder.mts kiBlatt handy */
+  /* --- Die Tabellenwerkzeuge am Telefon (E660) ----------------------------
+     Zu sehen ist der Unterschied, den keine Zahl allein zeigt: sieben Knöpfe,
+     die ein Daumen trifft, unter einer Tabelle auf 390 px.
+       node bilder.mts tabelleDaumen handy */
+  tabelleDaumen: {
+    titel: 'Tabellenwerkzeuge am Telefon — 44 px (E660)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Kabelquerschnitte', icon: '⚡' });
+      Store.addBlock(s.id, 'table', { rows: [
+        ['Querschnitt', 'Strom', 'Absicherung'],
+        ['1,5 mm²', '16 A', 'B16'],
+        ['2,5 mm²', '20 A', 'B20'],
+        ['4 mm²', '25 A', 'B25']], kopfZeile: true });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 450));
+      /* Am Rechner hält `@media(hover:none)` die Leiste blass; für das Bild
+         wird sie eingeblendet, damit zu sehen ist, was ein Telefon zeigt. */
+      const l = document.querySelector('#page .stab-tools') as HTMLElement | null;
+      if (l) { l.style.opacity = '1'; l.style.gap = '8px';
+               l.querySelectorAll('button').forEach(b => {
+                 (b as HTMLElement).style.minHeight = '44px';
+                 (b as HTMLElement).style.padding = '0 14px';
+                 (b as HTMLElement).style.fontSize = '13.5px'; }); }
+      await new Promise(f => setTimeout(f, 200));
+    }
+  },
+
   /* --- Das Tor vor einer Textänderung (E656) ------------------------------
      Was Redur sieht, bevor ein Satz umgeschrieben wird: die Stelle vorher
      und nachher, im Klartext. „Höchstens ein gespeichertes Objekt" stand da
@@ -911,6 +941,136 @@ const ANSICHTEN: Record<string, {
       await new Promise(r => setTimeout(r, 200));
     }
   },
+
+  /* --- Suchen auf der Seite (E667) ---------------------------------------
+     Die Leiste hatte Feld, Zahl und Kreuz — und keinen Weg zur zweiten
+     Fundstelle. Auf dem Bild ist zu sehen, was der Zähler jetzt sagt
+     („2 von 4") und dass die aktive Stelle einen Rahmen trägt, nicht nur
+     eine andere Farbe (§38). */
+  suchen: {
+    titel: 'Suchen auf der Seite — zweite von vier Stellen',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const seite = Store.addPage(null, { text: 'Kabelkunde' });
+      for (let i = 1; i <= 4; i++) {
+        Store.addBlock(seite.id, 'text',
+          { text: 'Stelle ' + i + ': der Schutzleiter ist grün-gelb und wird zuerst angeklemmt.' });
+        Store.addBlock(seite.id, 'text', { text: 'Fuelltext '.repeat(14) });
+      }
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 500));
+    },
+    dann: async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown',
+        { key: 'f', ctrlKey: true, bubbles: true, cancelable: true }));
+      await new Promise(r => setTimeout(r, 250));
+      const feld = document.querySelector('#findbar input') as HTMLInputElement | null;
+      if (!feld) return;
+      feld.value = 'Schutzleiter';
+      feld.dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise(r => setTimeout(r, 350));
+      (document.querySelector('#findbar [data-a="vor"]') as HTMLElement | null)?.click();
+      await new Promise(r => setTimeout(r, 500));
+    }
+  },
+
+
+  /* --- Die angemeldeten Geräte (E669) -------------------------------------
+     Die Einstellungen versprachen „Die Liste … steht im Wolke-Fenster";
+     dort stand eine einzige Zeile mit DIESEM Gerät. Der Server wird hier
+     durch einen Stellvertreter ersetzt — zu sehen ist das Fenster. */
+  geraete: {
+    titel: 'Angemeldete Geräte im Wolke-Fenster',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      (Wolke as any).geraeteListe = async () => ({ geraete: [
+        { kennung: 'aaaabbbbccccdddd', geraet: 'Arbeitsrechner · Firefox',
+          angelegt: '2026-09-01T10:00:00.000Z', bis: '2026-10-01T10:00:00.000Z', aktuell: true },
+        { kennung: '1111222233334444', geraet: 'iPhone · Safari',
+          angelegt: '2026-08-20T08:30:00.000Z', bis: '2026-09-19T08:30:00.000Z', aktuell: false },
+        { kennung: '5555666677778888', geraet: 'Altes Notebook',
+          angelegt: '2026-06-02T19:05:00.000Z', bis: '2026-07-02T19:05:00.000Z', aktuell: false }
+      ] });
+      await WolkeFenster.geraeteFenster();
+      await new Promise(r => setTimeout(r, 450));
+    }
+  },
+
+
+  /* --- Text der PDF ändern (E670) ------------------------------------------
+     Auf dem Bild steht dieselbe Seite zweimal nicht: links, was die PDF
+     sagt, gibt es nicht als zweites Bild. Zu sehen ist die GEÄNDERTE Seite
+     — „B16" ist „C16", „1,5 mm2" ist „2,5 mm2", und der Prüfer heisst
+     anders. Was zählt: es sieht nicht nach Korrektur aus, sondern nach
+     Dokument. Genau das ist der Anspruch. */
+  pdftext: {
+    titel: 'Text einer PDF ändern — die Seite danach',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const roh = atob('JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvUGFnZXMgL0NvdW50IDEgL0tpZHMgWzQgMCBSXSA+PgplbmRvYmoKMiAwIG9iago8PCAvVHlwZSAvRm9udCAvU3VidHlwZSAvVHlwZTEgL0Jhc2VGb250IC9IZWx2ZXRpY2EgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL0xlbmd0aCAyNTggPj4Kc3RyZWFtCkJUIC9GMSAyMiBUZiA2MCA3NTAgVGQgKFBydWVmcHJvdG9rb2xsIFdlcmtzdGF0dCkgVGogRVQKQlQgL0YxIDE2IFRmIDYwIDY5MCBUZCAoU2ljaGVydW5nOiBCMTYpIFRqIEVUCkJUIC9GMSAxNiBUZiA2MCA2NjAgVGQgKExlaXRlcnF1ZXJzY2huaXR0OiAxLDUgbW0yKSBUaiBFVApCVCAvRjEgMTYgVGYgNjAgNjMwIFRkIChQcnVlZmVyOiBNLiBNdXN0ZXIpIFRqIEVUCkJUIC9GMSAxNiBUZiA2MCA2MDAgVGQgKERhdHVtOiAxMi4wMy4yMDI2KSBUaiBFVAplbmRzdHJlYW0KZW5kb2JqCjQgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAxIDAgUiAvTWVkaWFCb3ggWzAgMCA1OTUgODQyXSAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSAyIDAgUiA+PiA+PiAvQ29udGVudHMgMyAwIFIgPj4KZW5kb2JqCjUgMCBvYmoKPDwgL1R5cGUgL0NhdGFsb2cgL1BhZ2VzIDEgMCBSID4+CmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA2NiAwMDAwMCBuIAowMDAwMDAwMTM2IDAwMDAwIG4gCjAwMDAwMDA0NDUgMDAwMDAgbiAKMDAwMDAwMDU3MSAwMDAwMCBuIAp0cmFpbGVyCjw8IC9TaXplIDYgL1Jvb3QgNSAwIFIgPj4Kc3RhcnR4cmVmCjYyMAolJUVPRgo=');
+      const bytes = new Uint8Array(roh.length);
+      for (let i = 0; i < roh.length; i++) bytes[i] = roh.charCodeAt(i);
+      const seite = Store.addPage(null, { text: 'Prüfprotokoll' });
+      await PdfEinlesen.alsSeiten(
+        new File([bytes], 'pruefprotokoll.pdf', { type: 'application/pdf' }),
+        seite.id, { anordnung: 'untereinander', ueberGrenze: 'alle' });
+      await new Promise(r => setTimeout(r, 900));
+      const blatt = Store.childrenOf(seite.id).find((b: any) => b && b.type === 'pdfseite');
+      if (blatt) {
+        const stuecke = await PdfLeser.lageVonBlock(Store.getBlock(blatt.id));
+        const setze = (suche: string, neuerText: string) => {
+          const st = stuecke.find((x: any) => String(x.s || '').includes(suche));
+          if (!st) return null;
+          return { id: 'fix-' + suche.replace(/\W/g, ''), art: 'textfix',
+                   kasten: { x: st.x, y: st.y, w: st.w, h: st.h },
+                   alt: st.s, text: neuerText, farbe: '#000000', grund: '#ffffff' };
+        };
+        const marken = [
+          setze('B16', 'Sicherung: C16'),
+          setze('1,5 mm', 'Leiterquerschnitt: 2,5 mm2'),
+          setze('M. Muster', 'Prüfer: R. Babat')
+        ].filter(Boolean);
+        Store.updateBlock(blatt.id, { marken });
+      }
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1200));
+    }
+  },
+
+
+  /* --- Ordnerfarben (E672) ---------------------------------------------------
+     Vier Ordner, vier Farben, einer ohne — nebeneinander im Regal. Was das
+     Bild zeigen soll: die Farbe sitzt auf Körper UND Reiter des gezeichneten
+     Ordners, nicht an einem Rücken; und der farblose behält die Akzentfarbe. */
+  ordnerfarbe: {
+    titel: 'Ordner mit Farben in der Bibliothek',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      Store.setMeta('bibForm', 'deckel');
+      Store.setMeta('bibOrdner', '');
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const ordner: Array<[string, string]> = [
+        ['Elektrotechnik', 'blue'], ['Arbeitssicherheit', 'red'],
+        ['Werkstatt', 'orange'], ['Prüfungen', 'green'], ['Sonstiges', '']];
+      for (const [name, farbe] of ordner) {
+        const o = Store.addPage(null, { text: name, icon: '\u{1F4C1}' });
+        Store.addPage(o.id, { text: 'Kapitel 1' });
+        Store.addPage(o.id, { text: 'Kapitel 2' });
+        if (farbe) Store.updateBlock(o.id, { color: farbe });
+      }
+      await Store.flush();
+      Bibliothek.oeffne();
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
 
   papier: {
     titel: 'Die Papiervorlagen am A4-Blatt',
@@ -2378,6 +2538,131 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  spitze: {
+    titel: 'Der Füller läuft spitz aus (E673)',
+    /* Vier Zeilen, jede mit einer Welle, einem Haken und einem Punkt:
+       Füller fein, Füller breit, Pinsel, Bleistift. Die ersten drei
+       müssen an beiden Enden spitz auslaufen, der Bleistift nicht — und
+       der Punkt muss ein Punkt bleiben (test561 §3).
+         node bilder.mts spitze */
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('zeichnen:stift', 'fueller');
+      const seite = Store.addPage(null, { text: 'Die Spitze', icon: '🖋' });
+      const marken: any[] = [];
+      const zeile = (y: number, stil: string, farbe: string, breite: number, k: string): void => {
+        /* Die Welle: 121 Punkte über 360 pt, Druck leicht → fest → leicht. */
+        marken.push({ id: k + 'w', art: 'stift', stil, farbe, breite,
+          pts: Array.from({ length: 121 }, (_v, i) => [60 + i * 3, y + Math.sin(i / 120 * Math.PI * 3) * 20]),
+          pressure: Array.from({ length: 121 }, (_v, i) => Math.round((0.35 + 0.45 * Math.sin(i / 120 * Math.PI)) * 100) / 100) });
+        /* Der Haken: 12 pt, und der Punkt: 2 pt. */
+        marken.push({ id: k + 'h', art: 'stift', stil, farbe, breite,
+          pts: Array.from({ length: 13 }, (_v, i) => [450 + i, y - 6 + i * 0.9]),
+          pressure: Array.from({ length: 13 }, () => 0.6) });
+        marken.push({ id: k + 'p', art: 'stift', stil, farbe, breite,
+          pts: Array.from({ length: 5 }, (_v, i) => [490 + i * 0.5, y]),
+          pressure: Array.from({ length: 5 }, () => 0.6) });
+      };
+      zeile(90, 'fueller', '#1a1a1a', 2.4, 'a');
+      zeile(170, 'fueller', '#1f4fa8', 5, 'b');
+      zeile(250, 'pinsel', '#b8312f', 2.4, 'c');
+      zeile(330, 'bleistift', '#333333', 2.4, 'd');
+      Store.addBlock(seite.id, 'blatt', { text: '', papier: 'liniert',
+        blattBreite: 595.28, blattHoehe: 400, raumVersion: 1, marken });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+    }
+  },
+
+  werkzeugwerte: {
+    titel: 'Jedes Werkzeug merkt sich Farbe und Stärke (E674)',
+    /* Der Marker war Grün und Fein, der Stift Rot und Breit — und nach dem
+       Wechsel zurück zum Stift zeigt die Leiste Rot und Breit, nicht das,
+       was der Marker zuletzt hatte. Beide Striche liegen auf dem Blatt.
+         node bilder.mts werkzeugwerte */
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('zeichnen:stift', 'fueller');
+      Store.setMeta('zeichnen:werkzeugwerte', {
+        stift: { farbe: '#d64545', breite: 5 },
+        marker: { farbe: '#3aa757', breite: 1.2 }
+      });
+      const seite = Store.addPage(null, { text: 'Skript', icon: '🖍' });
+      Store.addBlock(seite.id, 'blatt', { text: '', papier: 'liniert',
+        blattBreite: 595.28, blattHoehe: 300, raumVersion: 1, marken: [
+          { id: 'm1', art: 'marker', farbe: '#3aa757', breite: 1.2,
+            pts: [[70, 96], [330, 96]], pressure: [0.5, 0.5] },
+          { id: 's1', art: 'stift', stil: 'fueller', farbe: '#d64545', breite: 5,
+            pts: Array.from({ length: 61 }, (_v, i) => [70 + i * 4, 150 + Math.sin(i / 60 * Math.PI * 2) * 18]),
+            pressure: Array.from({ length: 61 }, () => 0.5) }
+        ] });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+      /* Marker wählen, dann zurück zum Stift — die Leiste muss Rot/Breit zeigen. */
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="marker"]')?.click();
+      await new Promise(r => setTimeout(r, 300));
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
+  ecke: {
+    titel: 'Der Glätter hält die Ecke (E676)',
+    /* Ein langsam gezogenes „M" und ein „W" mit dem Stift — echte
+       Zeigerereignisse, 2 px je 16 ms, damit der Glätter so stark mittelt
+       wie bei einer langsamen Hand. Die Spitzen müssen Spitzen sein.
+         node bilder.mts ecke */
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('zeichnen:stift', 'fueller');
+      Store.setMeta('zeichnen:werkzeugwerte', { stift: { farbe: '#1a1a1a', breite: 2.4 } });
+      const seite = Store.addPage(null, { text: 'Die Ecke', icon: '🖋' });
+      Store.addBlock(seite.id, 'blatt', { text: '', papier: 'liniert',
+        blattBreite: 595.28, blattHoehe: 320, raumVersion: 1, marken: [] });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1300));
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.click();
+      await new Promise(r => setTimeout(r, 300));
+      const svg = document.querySelector<SVGSVGElement>('.blatt-marken');
+      if (!svg) return;
+      const ctm = svg.getScreenCTM();
+      if (!ctm) return;
+      const zu = (x: number, y: number) => { const pt = svg.createSVGPoint(); pt.x = x; pt.y = y; const c = pt.matrixTransform(ctm); return { clientX: c.x, clientY: c.y }; };
+      const ev = (typ: string, x: number, y: number) => new PointerEvent(typ, { ...zu(x, y), pointerType: 'pen',
+        pressure: typ === 'pointerup' ? 0 : 0.5, isPrimary: true, button: 0, buttons: typ === 'pointerup' ? 0 : 1,
+        pointerId: 7, bubbles: true, cancelable: true });
+      const zug = async (ecken: number[][]): Promise<void> => {
+        const pts: number[][] = [];
+        for (let e = 0; e < ecken.length - 1; e++) {
+          const [ax, ay] = ecken[e]!, [bx, by] = ecken[e + 1]!;
+          const n = Math.round(Math.hypot(bx! - ax!, by! - ay!) / 2);
+          for (let i = 0; i < n; i++) pts.push([ax! + (bx! - ax!) * i / n, ay! + (by! - ay!) * i / n]);
+        }
+        pts.push(ecken[ecken.length - 1]!);
+        svg.dispatchEvent(ev('pointerdown', pts[0]![0]!, pts[0]![1]!));
+        for (let i = 1; i < pts.length; i++) {
+          await new Promise(r => setTimeout(r, 16));
+          svg.dispatchEvent(ev('pointermove', pts[i]![0]!, pts[i]![1]!));
+        }
+        const l = pts[pts.length - 1]!;
+        svg.dispatchEvent(ev('pointerup', l[0]!, l[1]!));
+        await new Promise(r => setTimeout(r, 250));
+      };
+      /* Ein „M" (unten-oben-unten-oben-unten) und ein „W" daneben. */
+      await zug([[80, 220], [80, 120], [120, 200], [160, 120], [160, 220]]);
+      await zug([[220, 120], [245, 220], [270, 150], [295, 220], [320, 120]]);
+      /* Und ein Zickzack, wie ihn test564 misst. */
+      await zug([[380, 220], [405, 150], [430, 220], [455, 150], [480, 220], [505, 150]]);
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
   laser: {
     titel: 'Der Laserpointer: zeigen statt schreiben (E512)',
     bauen: async () => {
@@ -2984,6 +3269,79 @@ const ANSICHTEN: Record<string, {
       Store.setMeta('heft:zuletzt', p.id);
       w.Notebook.resume();
       await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
+  /* --- Der Trainer (E677) ------------------------------------------------
+     Zwei Zustände: die Übersicht mit den sechs Boxen nach dem Anlegen des
+     Kapitels, und eine Prüfungsfrage nach dem Prüfen — richtig, falsch und
+     gefehlt als Wort und Farbe an jeder Antwort. */
+  trainer: {
+    titel: 'Der Trainer: Boxen und Runden nach dem Anlegen des Kapitels',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      w.Produktwelten.lernen('trainer');
+      await new Promise(r => setTimeout(r, 700));
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-anlegen]')?.click();
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+  trainerFrage: {
+    titel: 'Der Trainer: eine Prüfungsfrage, geprüft — richtig, gefehlt, falsch',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      w.Produktwelten.lernen('trainer');
+      await new Promise(r => setTimeout(r, 700));
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-anlegen]')?.click();
+      await new Promise(r => setTimeout(r, 700));
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-start="pruefung"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+      /* a) und c) ankreuzen — bei Frage 1 sind alle vier richtig: zwei
+         richtig, zwei gefehlt. */
+      document.querySelector<HTMLInputElement>('.lernwelt input[data-tr-option="0"]')?.click();
+      document.querySelector<HTMLInputElement>('.lernwelt input[data-tr-option="2"]')?.click();
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-pruefen]')?.click();
+      await new Promise(r => setTimeout(r, 300));
+    }
+  },
+  trainerLuecke: {
+    titel: 'Der Trainer: eine Lücke im Satz, falsch getippt',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      w.Produktwelten.lernen('trainer');
+      await new Promise(r => setTimeout(r, 700));
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-anlegen]')?.click();
+      await new Promise(r => setTimeout(r, 700));
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-start="art"][data-art="luecke"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+      const feld = document.querySelector<HTMLInputElement>('.lernwelt [data-tr-luecke]');
+      if (feld) feld.value = 'Republik';
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-pruefen]')?.click();
+      await new Promise(r => setTimeout(r, 300));
+    }
+  },
+
+  /* --- Der Streifen zur neuen Fassung (E678) ------------------------------
+     Er wird gezeigt, wie pwa.ts ihn bestellt — ohne Service Worker, der
+     meldet sich nur über https. Unten, am Telefon über der Leiste. */
+  fassung: {
+    titel: 'Der Streifen „neue Fassung" liegt unten, am Telefon über der Leiste',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      w.UI.banner('Es liegt eine neue Fassung bereit. <button id="pwa-neu" class="banner-tat">Jetzt laden</button>', 'info unten');
+      await new Promise(r => setTimeout(r, 300));
     }
   },
 

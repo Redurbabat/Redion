@@ -1007,7 +1007,10 @@ const Bibliothek = (() => {
             ? `<img class="bib-deckel-bild" data-vorschau="${esc(datei)}" alt="" loading="lazy">`
             : (tinte || (MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : ''));
         const wann = wannText(p.zuletztGeoeffnet || p.edited || p.created);
-        const deckel = `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}" ` +
+        const deckel = `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}"` +
+            /* DIE FARBE DES ORDNERS (E672) — dieselbe Marke wie beim Heft und
+               beim Fach; das Stilblatt kennt eine Regel für alle drei. */
+            Farben.marke(p.color) + ' ' +
             `title="${esc(p.text || 'Ohne Titel')}">` +
             `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}${tinte ? ' hat-tinte' : ''}">` +
             '<i class="bib-papier" aria-hidden="true"></i>' +
@@ -1286,10 +1289,14 @@ const Bibliothek = (() => {
                 .slice()
                 .sort(sortiere)
                 .map(k => bauen(k, weiter));
+            const farbe = Farben.kennung(p.color);
             return {
                 id,
                 name: String(p.text || 'Ohne Titel'),
                 zeichen: kinder.length || p.heftArt === 'fach' ? 'pages' : 'page',
+                /* Die Ordnerfarbe wandert in den Baum (E672): wer einen Ordner blau
+                   macht, will ihn ÜBERALL blau sehen, nicht nur als Deckel. */
+                ...(farbe ? { farbe } : {}),
                 ...(kinder.length ? { kinder } : {})
             };
         };
@@ -1665,6 +1672,10 @@ const Bibliothek = (() => {
                     `<button data-a="stern"><span class="mi">${p.favorite ? '\u2605' : '\u2606'}</span>` +
                     (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten') + '</button>' +
                     '<button data-a="umbenennen"><span class="mi">\u270e</span>Umbenennen</button>' +
+                    /* „FARBE …" (E672): derselbe Wähler wie in den Notizheften, nur mit
+                       einem anderen `danach` — hier wird die Bibliothek neu gezeichnet. */
+                    (typeof Notebook !== 'undefined' && typeof Notebook.farbMenue === 'function'
+                        ? '<button data-a="farbe"><span class="mi">\u25cf</span>Farbe \u2026</button>' : '') +
                     '<div class="sep"></div>' +
                     '<button data-a="papierkorb"><span class="mi">\u2327</span>In den Papierkorb</button>', Math.min(r.left, innerWidth - 230), r.bottom + 4);
                 m.addEventListener('click', ev => {
@@ -1683,6 +1694,10 @@ const Bibliothek = (() => {
                     }
                     if (a === 'stern') {
                         Store.updateBlock(p.id, { favorite: !p.favorite });
+                    }
+                    if (a === 'farbe') {
+                        Notebook.farbMenue(k, p.id, () => App.zeichneSeite());
+                        return;
                     }
                     if (a === 'umbenennen') {
                         /* Umbenannt wird auf der Seite selbst — ein zweites Eingabefeld

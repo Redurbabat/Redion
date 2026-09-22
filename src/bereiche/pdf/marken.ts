@@ -139,9 +139,15 @@ const Marken = (() => {
      Breite dem Druck folgt: der Fueller massvoll, der Pinsel kraeftig.
      Alte Marken ohne `stil` bleiben, wie sie waren (§53.3). */
   const STIFTE = [
-    { id: 'fueller', name: 'Füller', zeichen: '🖋', sym: 'penFountain' },
+    /* `spitze` (E673): auf wie viel seiner Breite der Strich an Anfang und
+       Ende ausläuft — der Füller auf ein Viertel, der Pinsel auf ein
+       Achtel. Wer keine `spitze` hat, setzt mit voller Breite auf: der
+       Bleistift (Graphit hat keine Feder), der Schutzleiter (eine Leitung
+       hat eine Stärke, E490), und die Linien ohnehin. Die Zahl steht HIER,
+       im Register, nicht als Sonderfall im Zeichner (§8). */
+    { id: 'fueller', name: 'Füller', zeichen: '🖋', sym: 'penFountain', spitze: 0.25 },
     { id: 'kugel',   name: 'Kugelschreiber', zeichen: '🖊', sym: 'penBall' },
-    { id: 'pinsel',  name: 'Pinsel', zeichen: '🖌', sym: 'penBrush' },
+    { id: 'pinsel',  name: 'Pinsel', zeichen: '🖌', sym: 'penBrush', spitze: 0.12 },
     /* DER BLEISTIFT (E465), wie GoodNotes' Pencil: duenn, leicht
        durchscheinend, mit koerniger Kante — die Flaeche des Fuellers,
        nur schmaler und mit 72 % Deckung. Er steht am Ende der Reihe,
@@ -309,6 +315,25 @@ const Marken = (() => {
     { id: 'zettel', zeichen: '🗒', sym: 'inkNote', name: 'Haftnotiz',
       titel: 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn' },
     { id: 'text', zeichen: 'T', sym: 'inkText', name: 'Text', titel: 'Textanmerkung' },
+    /* ══ TEXT ÄNDERN (E670) ════════════════════════════════════════════════
+       Redur, 21. September: „können wir so was machen das wenn ich eine pdf
+       hochlade das ich die pdf selbst direk bearbeiten kann also die text
+       direk".
+
+       WAS DAS WERKZEUG TUT: auf ein Wort tippen, das Wort steht im Feld, es
+       ändern, fertig. WAS ES NICHT TUT: die PDF umschreiben. Die Änderung
+       ist eine MARKE — sie deckt die alte Stelle zu und schreibt die neue
+       darüber, an derselben Stelle, in derselben Höhe. Das Original bleibt
+       Byte für Byte, wie `leser.ts` es verspricht, und die Änderung ist
+       rückgängig zu machen, versioniert und in der Sicherung.
+
+       Der Preis steht im Namen: „ändern", nicht „setzen". Ein längeres Wort
+       wird LÄNGER — es schiebt den Rest der Zeile nicht weiter. Ein
+       Textfluss über die Seite hinweg wäre etwas anderes und viel mehr
+       (siehe E670). */
+    { id: 'textfix', zeichen: '✏', sym: 'inkTextFix', name: 'Text ändern',
+      titel: 'Ein Wort der PDF antippen und überschreiben — die alte Stelle wird zugedeckt, '
+        + 'das Original bleibt unberührt' },
     { id: 'zeichen', zeichen: '⚡', sym: 'inkSymbol', name: 'Fachzeichen', titel: 'Ein elektrotechnisches Symbol auf die Seite setzen' },
     /* DIE ELEMENTE (E494): dieselbe Bewegung wie beim Fachzeichen — ein Tipp
        setzt etwas Fertiges —, nur kommt es nicht aus dem Register, sondern
@@ -724,6 +749,37 @@ const Marken = (() => {
   /** Die drei Stifte, die als FLAECHE gezeichnet werden (der Kugelschreiber ist die Linie). */
   const FLAECHEN_STIFTE = new Set(['fueller', 'pinsel', 'bleistift']);
 
+  /* ══ DIE SPITZE EINES STIFTS (E673) ══════════════════════════════════════
+     `spitzeVon` liest das Register: 1 heisst „keine Spitze", und genau das
+     bekommt jeder Stift, der keine eingetragen hat. `spitzeLaenge` ist der
+     Weg, über den die Feder auf volle Breite kommt — gut das Doppelte der
+     Grundbreite, mindestens 3 pt, höchstens 12: bei 2,4 pt sind das gut
+     fünf Punkte, ein knapper Millimeter Feder. */
+  const spitzeVon = (stil: string): number => {
+    const s = (STIFTE as readonly { id: string; spitze?: number }[]).find(x => x.id === stil);
+    const v = Number(s?.spitze);
+    return Number.isFinite(v) && v > 0 && v < 1 ? v : 1;
+  };
+  const spitzeLaenge = (base: number): number => Math.max(3, Math.min(12, base * 2.2));
+
+  /* ══ DIE HALBEN BREITEN EINES FLÄCHENSTRICHS — EINE STELLE (E673) ═══════
+     Sie standen ZWEIMAL, zeichengleich: in `zeichneMarke` für den
+     Bildschirm und in `alsAnnotation` für das PDF — derselbe Fund wie bei
+     `deckungVon` (E623). Mit der Spitze wären es zwei Rechnungen geworden,
+     die auseinanderlaufen können, ohne dass ein Lauf es merkt. Jetzt eine:
+     Grundbreite, Druckkurve, Neigung, Spitze. Eine Marke ohne `neigung`
+     ist alter Bestand oder mit der Maus gezogen — dann ist die Neigung
+     überall 0 (§9: rückwärts denken). */
+  const halbeBreiten = (mark: any, points: number[][]): number[] => {
+    const base = Math.max(0.5, Number(mark?.breite) || BREITEN[1]);
+    const stil = String(mark?.stil || '');
+    const druck: number[] = Array.isArray(mark?.pressure) ? mark.pressure.map(Number) : [];
+    const neig: number[] = Array.isArray(mark?.neigung) ? mark.neigung.map(Number) : [];
+    const halb = points.map((_p, i) => base / 2 * druckFaktor(stil,
+      druck[i] ?? druck[druck.length - 1] ?? 0.5, neig[i] ?? neig[neig.length - 1] ?? 0));
+    return InkGeometry.verjuengen(points, halb, spitzeVon(stil), spitzeLaenge(base));
+  };
+
   const svg = (name: string, attributes: Record<string, unknown> = {}): SVGElement => {
     const element = document.createElementNS(NS, name);
     Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, String(value)));
@@ -799,15 +855,14 @@ const Marken = (() => {
     const punkte = InkGeometry.points(mark.pts);
     const base = Math.max(0.5, Number(mark.breite) || BREITEN[1]);
     const flaeche = mark.art === 'stift' && FLAECHEN_STIFTE.has(String(mark.stil));
-    const druck: number[] = Array.isArray(mark.pressure) ? mark.pressure.map(Number) : [];
     /* DIE NEIGUNG GEHT MIT INS PDF (E507). Ohne sie käme ein schattierter
        Bleistiftstrich dünner heraus, als er auf dem Bildschirm aussah —
        und der Export soll zeigen, was dasteht. */
     const neig: number[] = Array.isArray(mark.neigung) ? mark.neigung.map(Number) : [];
+    /* Die halben Breiten kommen seit E673 aus `halbeBreiten` — derselben
+       Rechnung wie am Bildschirm, mit der Spitze. */
     const kontur = flaeche && punkte.length >= 3
-      ? InkGeometry.outlinePunkte(punkte, punkte.map((_p, i) =>
-          base / 2 * druckFaktor(String(mark.stil), druck[i] ?? druck[druck.length - 1] ?? 0.5,
-            neig[i] ?? neig[neig.length - 1] ?? 0)))
+      ? InkGeometry.outlinePunkte(punkte, halbeBreiten(mark, punkte))
       : null;
     return {
       striche: [punkte.map(q => [q[0], q[1]])],
@@ -1158,6 +1213,48 @@ const Marken = (() => {
         'dominant-baseline': 'alphabetic'
       });
       element.textContent = String(mark.text || '').replace(/[\r\n]+/g, ' ');
+    } else if (art === 'textfix') {
+      /* ══ DIE GEÄNDERTE STELLE (E670) ═══════════════════════════════════
+         Zwei Dinge in einer Marke, und sie gehören zusammen: der Deckel
+         über dem alten Wort und das neue darüber. Getrennt wären es zwei
+         Marken, die man einzeln verschieben, einzeln löschen und damit
+         auseinanderbringen könnte — und ein Deckel ohne Text ist ein Loch
+         im Dokument.
+
+         DIE FLÄCHE IST DIE PAPIERFARBE, nicht Weiss: ein Scan ist selten
+         weiss, und ein weisser Fleck auf grauem Papier sieht aus wie ein
+         Fehler. `grund` kommt vom Werkzeug, das beim Setzen an der Stelle
+         nachsieht; fehlt es, bleibt Weiss der ehrliche Rückfall.
+
+         DER TEXT SITZT AUF DER GRUNDLINIE des alten Stücks. `y + h` ist
+         genau dort, wo pdf.js die Grundlinie gemeldet hat (`textMitLage`
+         legt den Kasten von der Grundlinie aus nach oben). */
+      const box = InkGeometry.rectangle(
+        [Number(mark.kasten?.x) || 0, Number(mark.kasten?.y) || 0],
+        [(Number(mark.kasten?.x) || 0) + (Number(mark.kasten?.w) || 0),
+         (Number(mark.kasten?.y) || 0) + (Number(mark.kasten?.h) || 0)]);
+      const gruppe = svg('g', {});
+      /* Ein Hauch grösser als das alte Wort: Buchstaben mit Unterlänge
+         ragen über den gemeldeten Kasten, und ein stehengebliebenes „g"
+         verrät die ganze Änderung. */
+      const luft = Math.max(0.6, box.height * 0.12);
+      gruppe.appendChild(svg('rect', {
+        x: box.x - luft, y: box.y - luft,
+        width: box.width + luft * 2, height: box.height + luft * 2,
+        fill: String(mark.grund || '#ffffff'), stroke: 'none' }));
+      const hoehe = Math.max(4, box.height);
+      const wort = svg('text', {
+        x: box.x, y: box.y + hoehe, fill: color,
+        'font-size': hoehe,
+        'font-family': schriftStapel(mark.schrift), 'font-weight': mark.fett ? 700 : 400,
+        'dominant-baseline': 'alphabetic' });
+      wort.setAttribute('xml:space', 'preserve');
+      wort.textContent = String(mark.text || '').replace(/[\r\n]+/g, ' ');
+      gruppe.appendChild(wort);
+      gruppe.setAttribute('data-sid', idOf(mark));
+      gruppe.setAttribute('data-ink-art', art);
+      gruppe.setAttribute('data-kasten', '1');
+      return gruppe;
     } else if (art === 'line' && points.length >= 2) {
       element = svg('line', { x1: points[0]![0], y1: points[0]![1],
         x2: points[1]![0], y2: points[1]![1] });
@@ -1299,15 +1396,11 @@ const Marken = (() => {
       /* DER STRICH ALS FLAECHE (E351): links und rechts der Mittellinie eine
          Kontur, deren Abstand dem Druck folgt. Ohne Druckwerte je Punkt
          (alter Bestand) bleibt es beim gleichmaessigen Strich unten. */
-      const base = Math.max(0.5, Number(mark.breite) || BREITEN[1]);
-      const druck: number[] = Array.isArray(mark.pressure) ? mark.pressure.map(Number) : [];
-      /* Eine Marke ohne `neigung` ist alter Bestand oder mit der Maus
-         gezogen — dann ist die Neigung überall 0, und es kommt heraus,
-         was vorher herauskam (§9: rückwärts denken). */
+      /* Die halben Breiten — Druck, Neigung, Spitze — kommen seit E673
+         aus `halbeBreiten`, derselben Rechnung wie im PDF-Export. `neig`
+         bleibt hier nur für die Deckung des Bleistifts. */
       const neig: number[] = Array.isArray(mark.neigung) ? mark.neigung.map(Number) : [];
-      const neigBei = (i: number): number => neig[i] ?? neig[neig.length - 1] ?? 0;
-      const halb = points.map((_p, i) => base / 2 * druckFaktor(String(mark.stil),
-        druck[i] ?? druck[druck.length - 1] ?? 0.5, neigBei(i)));
+      const halb = halbeBreiten(mark, points);
       element = svg('path', { d: InkGeometry.outline(points, halb), fill: color, stroke: color,
         'stroke-width': 0.25, 'stroke-linejoin': 'round' });
       if (mark.stil === 'pinsel') element.setAttribute('opacity', String(deckungVon(art, 'pinsel')));
@@ -1519,6 +1612,57 @@ const Marken = (() => {
     let tool = 'schreiben';
     let color: string = FARBEN[0];
     let width: number = BREITEN[1];
+    /* ══ JEDES WERKZEUG MERKT SICH FARBE UND STÄRKE (E674) ══════════════════
+       Wie in GoodNotes: der Marker bleibt gelb und breit, der Stift schwarz
+       und fein, egal, wie oft man tauscht. Bis E674 waren `color` und
+       `width` EINE Variable für alles — wer den Marker gelb gemacht hatte
+       und zum Stift zurückging, schrieb gelb weiter. Und auf einer
+       gewöhnlichen Seite wurde die Farbe GAR NICHT gemerkt.
+
+       Das Gedächtnis liegt in EINEM Meta-Schlüssel, je Werkzeug Farbe und
+       Stärke; die Formen teilen sich einen Eintrag (`istForm`, E375), weil
+       sie sich auch einen Knopf teilen. Gelesen wird beim Wechsel FRISCH
+       aus dem Meta, nicht aus einer Abschrift je Schicht — eine Seite kann
+       drei Blätter tragen, und alle sollen dasselbe wissen. Und was aus
+       dem Meta kommt, wird geprüft, bevor es gilt (§19): eine Farbe ist
+       `#rrggbb`, eine Stärke liegt im Bereich des Reglers. */
+    const WERKZEUGWERTE = 'zeichnen:werkzeugwerte';
+    type Werkzeugwert = { farbe?: string; breite?: number };
+    /* WERKZEUGE OHNE EIGENE TINTE: die Hand, die Auswahl, der Radierer, der
+       Laser, das Bild. Sie haben keinen Eintrag — eine Farbe, die man mit
+       der Auswahl wählt, gilt der Auswahl UND dem Stift danach (E353), also
+       wird sie dem LETZTEN Zeichenwerkzeug gutgeschrieben. `test345 §4` hat
+       das gegen den ersten Stand von E674 gefunden: die Farbe stand bei
+       der Auswahl, und der Stift holte sich sein altes Schwarz zurück. */
+    const OHNE_TINTE = new Set(['schreiben', 'select', 'radierer', 'laser', 'bild']);
+    const werkzeugGruppe = (wz: string): string =>
+      istForm(wz) ? 'formen' : OHNE_TINTE.has(String(wz)) ? '' : String(wz || '');
+    /** Das Zeichenwerkzeug, das zuletzt geführt hat — dem schreibt die Auswahl gut. */
+    let letzteGruppe = '';
+    const werkzeugwerteLesen = (): Record<string, Werkzeugwert> => {
+      const aus: Record<string, Werkzeugwert> = {};
+      if (typeof Store === 'undefined') return aus;
+      const roh = Store.getMeta(WERKZEUGWERTE);
+      if (!roh || typeof roh !== 'object') return aus;
+      for (const [k, v] of Object.entries(roh as Record<string, unknown>)) {
+        if (!/^[a-z]+$/.test(k) || !v || typeof v !== 'object') continue;
+        const e: Werkzeugwert = {};
+        const f = String((v as { farbe?: unknown }).farbe || '').toLowerCase();
+        if (/^#[0-9a-f]{6}$/.test(f)) e.farbe = f;
+        const b = Number((v as { breite?: unknown }).breite);
+        if (Number.isFinite(b) && b >= 0.5 && b <= 12) e.breite = b;
+        if (e.farbe !== undefined || e.breite !== undefined) aus[k] = e;
+      }
+      return aus;
+    };
+    /** Was am Werkzeug gerade an ist, ihm gutschreiben. Die Hand merkt sich nichts. */
+    const werkzeugwertMerken = (): void => {
+      const g = werkzeugGruppe(tool) || letzteGruppe;
+      if (!g || typeof Store === 'undefined') return;
+      const alle = werkzeugwerteLesen();
+      alle[g] = { farbe: color, breite: width };
+      try { Store.setMeta(WERKZEUGWERTE, alle); } catch { /* nur diese Sitzung */ }
+    };
     let radierModus: string = radierModusLesen();
     /* HANDBALLEN-SCHUTZ (E354): sobald ein Stift die Flaeche beruehrt hat,
        zeichnen Finger vier Sekunden lang nicht — sie rollen. So darf die
@@ -1640,11 +1784,17 @@ const Marken = (() => {
        einen Strich verlängern, der selbst schon hinterherläuft. Drei, weil
        `InkStroke.vorhersage` an dreien erkennt, ob die Richtung kippt. */
     let rohDrei: number[][] = [];
+    /* Der letzte Druck, den der SENSOR gemeldet hat (E675) — `null`, solange
+       der laufende Strich noch keinen gesehen hat. */
+    let sensorZuletzt: number | null = null;
     /* Ob der laufende Strich gerade als FLAECHE gezeichnet wird (Fueller,
        Pinsel ab drei Punkten) oder als Linie. Wechselt er die Bauart, wird
        der Knoten einmal ganz neu gebaut statt sein `d` gesetzt. */
     let nassFlaeche = false;
     let bildWunsch = 0;
+    /* Der Weg, den der laufende Strich seit dem Aufsetzen zurückgelegt hat
+       (E673) — daran hängt die Spitze des nassen Strichs. */
+    let wegNass = 0;
     let selection = new Set<string>();
     let selectDrag: any = null;
     const historyUndo: any[][] = [];
@@ -2235,8 +2385,21 @@ const Marken = (() => {
        kein Ruckeln der Maus als Zittern im Strich landet. Der Wert landet
        im selben Feld `pressure`: kein zweites Format, keine Migration. */
     const druckAus = (event: PointerEvent, point: number[]): number => {
-      const echt = event.pointerType === 'pen' && Number(event.pressure) > 0;
-      if (echt || !running) return pressureOf(event);
+      const stift = event.pointerType === 'pen';
+      if (stift && Number(event.pressure) > 0) {
+        sensorZuletzt = pressureOf(event);
+        return sensorZuletzt;
+      }
+      /* EIN STIFT, DER KURZ 0 MELDET, BLEIBT EIN STIFT (E675). Bis hierher
+         entschied jede Meldung für sich: 0 hiess „kein Sensor", und der
+         Tempo-Ersatz sprang ein — mitten im Strich, mit 0,6 beim ersten
+         Mal. Wer mit leichter Hand (0,2) schrieb, bekam an der Stelle einen
+         Punkt, dreimal so breit, den niemand gedrückt hatte. Ein Stift, der
+         schon Druck gemeldet hat, behält jetzt seinen letzten Sensorwert;
+         nur ein Stift, der NIE Druck meldet, bekommt den Ersatz — und sagt
+         dann in `druckArt` ehrlich „tempo". */
+      if (stift && sensorZuletzt !== null) return sensorZuletzt;
+      if (!running) return pressureOf(event);
       const jetzt = Number(event.timeStamp) || 0;
       const z = running.zuletzt as { t: number; p: number[]; d: number } | undefined;
       let druck = 0.6;
@@ -2351,6 +2514,7 @@ const Marken = (() => {
       const druck = druckGlatt ? druckGlatt(drucken) : drucken;
       const last = running.pts[running.pts.length - 1];
       if (last && Math.abs(last[0] - point[0]) < 0.6 && Math.abs(last[1] - point[1]) < 0.6) return;
+      if (last) wegNass += Math.hypot(point[0] - last[0], point[1] - last[1]);
       running.pts.push(point);
       running.pressure.push(druck);
       /* Die Neigung wandert Punkt für Punkt mit — aber nur, wenn der Stift
@@ -2364,7 +2528,7 @@ const Marken = (() => {
         running.ruhePunkt = [point[0], point[1]];
         running.bewegtUm = Date.now();
       }
-      feder?.punkt(point, halbeBreite(running, druck));
+      feder?.punkt(point, halbeBreite(running, druck) * nassSpitze());
     };
 
     /* Die halbe Strichbreite an einer Stelle — dieselbe Rechnung, die
@@ -2381,6 +2545,16 @@ const Marken = (() => {
       const n = Number(neig[neig.length - 1]);
       return base / 2 * druckFaktor(String(mark?.stil || ''), druck,
         Number.isFinite(n) && n > 0 ? n : 0);
+    };
+    /* DIE SPITZE DES NASSEN STRICHS (E673): dieselbe Kurve wie beim
+       trockenen (`InkGeometry.spitzeFaktor`), aber nur vom Anfang her —
+       das Ende kennt der Strich erst, wenn die Hand abhebt; dann baut
+       `finish` den Knoten aus der Marke neu, und `halbeBreiten` legt die
+       zweite Spitze an. Was hier steht, wird gezeichnet, nie gespeichert. */
+    const nassSpitze = (): number => {
+      if (!running) return 1;
+      const base = Math.max(0.5, Number(running.breite) || BREITEN[1]);
+      return InkGeometry.spitzeFaktor(wegNass, spitzeLaenge(base), spitzeVon(String(running.stil || '')));
     };
 
     /* ---- EIN BILD JE BILD, NICHT JE EREIGNIS (E376) ----------------------
@@ -2423,7 +2597,7 @@ const Marken = (() => {
     const nassenSchwanz = (event: PointerEvent, um?: (e: PointerEvent) => [number, number] | null): void => {
       if (!feder || !running || ruler.constrained()) return;
       const druck = running.pressure[running.pressure.length - 1] ?? 0.5;
-      const halb = halbeBreite(running, druck);
+      const halb = halbeBreite(running, druck) * nassSpitze();
       let pts: number[][] = [];
       const vom = typeof (event as any).getPredictedEvents === 'function'
         ? (event as any).getPredictedEvents() as PointerEvent[] : [];
@@ -2786,7 +2960,10 @@ const Marken = (() => {
          Winkel normalisieren, aber die Herkunft nicht vergessen. Ein Wort
          am Strich kostet nichts und beantwortet die Frage für immer. */
       if (mark.art === 'stift' || mark.art === 'marker')
-        mark.druckArt = mark.zeigerArt === 'pen' ? 'stift' : 'tempo';
+        /* „stift" nur, wenn der Sensor wirklich etwas gemeldet hat (E675);
+           ein Stift ohne Sensor hat seine Werte aus dem Tempo, wie ein
+           Finger — und so soll es dastehen. */
+        mark.druckArt = mark.zeigerArt === 'pen' && sensorZuletzt !== null ? 'stift' : 'tempo';
       delete mark.zeigerArt;
       /* DIE NEIGUNG NUR, WENN SIE GEMELDET WURDE. `-1` heisst „kein
          Sensor"; ein Feld voller Nullen wäre eine Behauptung über den
@@ -2896,9 +3073,18 @@ const Marken = (() => {
           /* Ein langer, beim Neuzeichnen geschlossener Strich darf nicht wie
              eine bloss konstruierte Zweipunktlinie aussehen (E115). Acht
              Stuetzpunkte halten Verlauf und Druck, auch wenn er fast gerade war. */
-          if (original.length >= 8 && indizes.length < 8)
-            indizes = Array.from({ length: 8 }, (_value, index) =>
+          if (original.length >= 8 && indizes.length < 8) {
+            /* DIE ECKEN BLEIBEN (E676). Bis E676 standen hier acht
+               GLEICHMÄSSIGE Stützpunkte ANSTELLE der Stützpunkte von RDP —
+               für einen fast geraden Strich einerlei, für ein „M" fatal:
+               RDP hatte die fünf Ecken behalten, und diese Zeile warf sie
+               weg. Das Bild zeigte ein rundes Tal, 23,7 px neben dem
+               nächsten gespeicherten Punkt (test564 §4). Jetzt kommen die
+               acht zu den Ecken DAZU. */
+            const gleichmaessig = Array.from({ length: 8 }, (_value, index) =>
               Math.round(index * (original.length - 1) / 7));
+            indizes = Array.from(new Set([...indizes, ...gleichmaessig])).sort((a, b) => a - b);
+          }
           /* DIE NEIGUNG WIRD MIT NEU INDIZIERT (E507). Das Vereinfachen wirft
              Stützpunkte weg; wer nur `pts` und `pressure` mitnimmt, lässt
              `neigung` in der alten Länge stehen — und ab da gehört
@@ -3376,6 +3562,109 @@ const Marken = (() => {
       redraw(); commit(before);
     };
 
+    /* ══ TEXT DER PDF ÄNDERN (E670) ═══════════════════════════════════════
+     * Redurs Frage vom 21. September war: „wenn ich eine pdf hochlade das
+     * ich die pdf selbst direk bearbeiten kann also die text direk".
+     *
+     * WAS HIER WIRKLICH PASSIERT, und es steht so auch am Werkzeug: die
+     * PDF wird NICHT umgeschrieben. Sie bleibt Byte für Byte, wie
+     * `leser.ts` es verspricht. Geändert wird das, was man SIEHT — mit
+     * einer Marke, die die alte Stelle zudeckt und die neue darüber
+     * schreibt, an derselben Stelle, in derselben Höhe.
+     *
+     * Der Unterschied ist keine Wortklauberei. Er bedeutet:
+     *   · rückgängig, versioniert, löschbar wie jede Marke
+     *   · in der Sicherung und im ausgegebenen PDF
+     *   · und das Original ist jederzeit noch das Original
+     *
+     * WAS ES NICHT KANN, und das gehört an dieselbe Stelle: der Text
+     * FLIESST NICHT. Ein längeres Wort wird länger und schiebt den Rest
+     * der Zeile nicht weiter; ein kürzeres lässt eine Lücke. Dafür müsste
+     * man den Inhaltsstrom der PDF neu setzen, mit ihren eingebetteten
+     * Schriften — das ist ein eigenes Projekt und nicht dieses.
+     */
+    const grundFarbeBei = (x: number, y: number): string => {
+      try {
+        const raum = flaeche.parentElement as HTMLElement | null;
+        const bild = raum?.querySelector('img.pdfs-bild') as HTMLImageElement | null;
+        if (!bild || !bild.naturalWidth || !bild.naturalHeight) return '#ffffff';
+        /* Blattpunkte → Bildpunkte. Gelesen wird ein Stück ÜBER der Zeile:
+           mitten im Wort träfe man die Schrift und bekäme Schwarz — und
+           ein schwarzer Deckel ist schlimmer als ein falsch weisser. */
+        const px = Math.round((x / breite) * bild.naturalWidth);
+        const py = Math.round((Math.max(0, y - 2) / hoehe) * bild.naturalHeight);
+        const leinwand = document.createElement('canvas');
+        leinwand.width = 1; leinwand.height = 1;
+        const stift = leinwand.getContext('2d', { willReadFrequently: true });
+        if (!stift) return '#ffffff';
+        stift.drawImage(bild, px, py, 1, 1, 0, 0, 1, 1);
+        const d = stift.getImageData(0, 0, 1, 1).data;
+        const hex = (n: number) => Math.max(0, Math.min(255, n | 0)).toString(16).padStart(2, '0');
+        return '#' + hex(d[0] ?? 255) + hex(d[1] ?? 255) + hex(d[2] ?? 255);
+      } catch {
+        /* Ein getaintes oder halb geladenes Bild ist kein Grund zu scheitern. */
+        return '#ffffff';
+      }
+    };
+
+    const textAendern = async (point: number[], targetId = ''): Promise<void> => {
+      const platz = targetId
+        ? marks.findIndex(mark => idOf(mark) === targetId && mark.art === 'textfix') : -1;
+      const vorhanden = platz >= 0 ? marks[platz] : null;
+      if (vorhanden?.gesperrt) {
+        UI.toast('Diese Änderung ist gesperrt — erst entsperren.'); return;
+      }
+
+      /* Eine schon geänderte Stelle noch einmal ändern: dann ist der
+         Kasten längst bekannt, und die Quelle wird gar nicht gebraucht. */
+      if (vorhanden) {
+        const neu = await Dialog.mehrzeilig(
+          'Geänderte Stelle — im Original stand „' + String(vorhanden.alt || '') + '"',
+          String(vorhanden.text || ''));
+        if (neu === null) return;
+        const before = snapshot();
+        /* Leer heisst „nur zudecken" und nicht „weg": wer eine Stelle
+           schwärzen will, soll das können, ohne dass der Deckel mitgeht. */
+        ersetze(platz, { ...vorhanden, text: neu });
+        redraw(); commit(before);
+        return;
+      }
+
+      if (block?.type !== 'pdfseite' || !block?.quelleId) {
+        UI.toast('Das geht nur auf einer PDF-Seite — ein leeres Blatt hat keinen Text zum Ändern.');
+        return;
+      }
+      if (typeof PdfLeser === 'undefined' || typeof PdfLeser.stueckBei !== 'function') {
+        UI.toast('Der PDF-Leser fehlt — ohne ihn gibt es keine Textebene.');
+        return;
+      }
+      const st = await PdfLeser.stueckBei(block, point[0] ?? 0, point[1] ?? 0, 3);
+      if (!st) {
+        /* DIESER SATZ IST WICHTIGER, ALS ER AUSSIEHT. Ein eingescanntes
+           Blatt hat KEINE Textebene — dort ist jedes Wort ein Bild, und
+           kein Werkzeug der Welt findet darin ein Wort. Wer das nicht
+           erfährt, hält das Werkzeug für kaputt. */
+        UI.toast('An dieser Stelle findet sich kein PDF-Text. '
+          + 'Bei einem Scan ohne Texterkennung gibt es keinen.');
+        return;
+      }
+
+      const neu = await Dialog.mehrzeilig('Diese Stelle ändern', String(st.s || ''));
+      if (neu === null) return;
+      if (neu === String(st.s || '')) return;   /* nichts geändert, nichts zu merken */
+
+      const before = snapshot();
+      marks.push({
+        id: frischeId(), art: 'textfix',
+        kasten: { x: st.x, y: st.y, w: st.w, h: st.h },
+        alt: String(st.s || ''), text: neu,
+        farbe: '#000000',
+        grund: grundFarbeBei(st.x, st.y),
+        schrift: schrift.familie, fett: schrift.fett
+      });
+      redraw(); commit(before);
+    };
+
     /**
      * Ein Fachzeichen setzen (Punkt 42).
      *
@@ -3641,6 +3930,8 @@ const Marken = (() => {
         void zettelText(targetId);
         return;
       }
+      /* Text der PDF ändern (E670): ein Tipp auf ein Wort. */
+      if (tool === 'textfix') { void textAendern(point, targetId); return; }
       if (tool === 'zeichen') { void setzeZeichen(point, targetId); return; }
       /* Die Elemente-Bibliothek (E494): ein Tipp stempelt, wie beim Fachzeichen. */
       if (tool === 'elemente') { void setzeElement(point); return; }
@@ -3732,6 +4023,9 @@ const Marken = (() => {
         /* DIE NEIGUNG WIRD MITGESCHRIEBEN (E507) — vorerst in ein Feld, das
            es beim Absetzen nur behält, wenn wirklich etwas darin steht. */
         running.neigung = [neigungAus(e)];
+        /* Der Sensor dieses Strichs hat noch nichts gemeldet (E675) — VOR
+           dem ersten `druckAus`, sonst erbt er den letzten Strich. */
+        sensorZuletzt = null;
         running.pressure.push(druckAus(event, point));
         const p0 = running.pressure[0];
         /* DER AUFSETZPUNKT GEHT UNGEGLAETTET DURCH (E376): ein Strich, der
@@ -3743,7 +4037,8 @@ const Marken = (() => {
         druckGlatt = InkStroke.druckGlaetter(p0);
         letzteZeit = Number(event.timeStamp) || 0;
         feder = new InkStroke.Feder();
-        feder.punkt(point, halbeBreite(running, p0));
+        wegNass = 0;
+        feder.punkt(point, halbeBreite(running, p0) * nassSpitze());
         nassFlaeche = false;
         runningNode = zeichneMarke({ ...running, pts: [point, point], pressure: [p0, p0] });
       } else {
@@ -4062,7 +4357,31 @@ const Marken = (() => {
     const setzeWerkzeug = (next: string): void => {
       /* Wer das Werkzeug wechselt, hat den Satz zu Ende geschrieben (E597). */
       if (schreiber) schreiberSchliessen();
-      finish(); tool = next;
+      finish();
+      /* JEDES WERKZEUG BEHÄLT SEINS (E674): dem alten wird gutgeschrieben,
+         was an war; das neue holt sich, was es hatte. Ein Werkzeug, das noch
+         nichts gemerkt hat, übernimmt, was gerade an ist — wie bisher, keine
+         Überraschung. Und die Leiste erfährt es über den Kern, damit oben
+         der Tupfer leuchtet, der wirklich gilt. */
+      const vorher = werkzeugGruppe(tool);
+      werkzeugwertMerken();
+      tool = next;
+      const nachher = werkzeugGruppe(next);
+      if (nachher && nachher !== vorher) {
+        letzteGruppe = nachher;
+        const w = werkzeugwerteLesen()[nachher];
+        if (w) {
+          if (w.farbe !== undefined) color = w.farbe;
+          if (w.breite !== undefined) width = w.breite;
+          if (typeof Zeichenziel !== 'undefined') {
+            try {
+              Zeichenziel.uebernehme(steuerung, next);
+              Zeichenziel.uebernehmeFarbe(steuerung, color);
+              Zeichenziel.uebernehmeStrich(steuerung, width);
+            } catch { /* ohne Kern geht es wie bisher */ }
+          }
+        }
+      }
       if (tool !== 'select') { selection.clear(); renderSelection(); }
       flaeche.style.pointerEvents = tool === 'schreiben' ? 'none' : 'auto';
       flaeche.setAttribute('data-tool', tool);
@@ -4073,6 +4392,7 @@ const Marken = (() => {
        um — und zeichnet danach rot weiter. Ein Schritt im Verlauf. */
     const setzeFarbe = (next: string): void => {
       color = next;
+      werkzeugwertMerken();
       /* Wer gerade schreibt, meint den Kasten unter seinem Zeiger (E599). */
       if (schreiber && schreiberUmformen({ farbe: next })) return;
       if (!selection.size) return;
@@ -4091,6 +4411,7 @@ const Marken = (() => {
     };
     const setzeStrich = (next: number): void => {
       width = next;
+      werkzeugwertMerken();
       if (!selection.size) return;
       const before = snapshot();
       for (let i = 0; i < marks.length; i++) {
@@ -5005,6 +5326,18 @@ const Marken = (() => {
       button('abdeck') +
       button('zettel') +
       button('text') +
+      /* „TEXT ÄNDERN" STEHT NEBEN „TEXT" (E670/E671), und dass es hier von
+         Hand stehen MUSS, ist der Fund des vollen Laufs vom 21. September:
+         diese Leiste wird aufgezählt, nicht aus `WERKZEUGE` gebaut. Das
+         Studio-Band daneben baut sie aus dem Katalog — also hatte das neue
+         Werkzeug dort einen Knopf und hier keinen, zwei Tage lang
+         unbemerkt. `test523` hat es gehalten: „13 statt 14, textfix fehlt".
+
+         Warum die Aufzählung trotzdem bleibt: der Formen-Knopf ist kein
+         `button(…)`, sondern trägt das Zeichen der zuletzt gewählten Form
+         (E515). Eine Schleife über den Katalog müsste ihn als Sonderfall
+         kennen — und dann wäre die Schleife die Aufzählung mit Umweg. */
+      button('textfix') +
       button('zeichen') +
       /* DIE ELEMENTE (E494): steht neben dem Fachzeichen, weil es dieselbe
          Bewegung ist — ein Tipp setzt etwas Fertiges. Nachgemessen passt der

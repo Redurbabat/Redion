@@ -440,6 +440,24 @@ const Store = (() => {
   const updateBlock = (id: string, patch: any) => {
     const b = cache.blocks[id];
     if (!b) return null;
+    /* WANN ETWAS FERTIG WURDE, GEHÖRT NEBEN „IST ES FERTIG" (E663).
+       Die Wochenrückschau rechnet mit `erledigtAm` (`planen/dienst.ts:235`),
+       und niemand hat es je geschrieben: das Kästchen im Editor setzte nur
+       `checked`. Wer eine Woche lang Aufgaben abhakte, sah am Sonntag eine
+       leere Rückschau und ein Tagesdiagramm aus Nullen — kein Fehler, keine
+       Meldung, immer null.
+
+       DIE REGEL STEHT HIER UND NICHT AM KÄSTCHEN, weil `checked` an SECHS
+       Stellen geschrieben wird: Kästchen, Tastenkürzel, Markdown-Kürzel,
+       die Befehlspalette, die Schnittstelle und der PWA-Weg. Sechs Kopien
+       derselben Zeile wären fünf Gelegenheiten, sie zu vergessen (§8).
+       Hier geht jeder dieser Wege durch.
+
+       Und der Haken zurück nimmt das Datum mit: eine wieder geöffnete
+       Aufgabe ist nicht erledigt. */
+    if (patch && 'checked' in patch && b.type === 'todo')
+      patch = Object.assign({}, patch,
+        { erledigtAm: patch.checked ? now() : null });
     Object.assign(b, patch, { edited: now(), geaendertVon: getMeta('nutzer', '') || 'Ich' });
     save('blocks', b);
     return b;

@@ -1560,25 +1560,70 @@ const App = (() => {
     oeffne(t.page.id);
   };
 
-  /** Suchen auf der offenen Seite — Strg + F. */
+  /** Suchen auf der offenen Seite — Strg + F.
+   *
+   *  SEIT E667 GEHT ES AUCH ZUR ZWEITEN STELLE. Vorher markierte diese
+   *  Leiste jede Fundstelle, rollte zur ERSTEN und schrieb „12 Treffer" —
+   *  und zu den elf anderen gab es keinen Weg. Eine Zahl, die elf Orte
+   *  nennt und einen zeigt, ist dasselbe Versprechen wie ein README, das
+   *  etwas ankündigt, das nicht läuft (§47).
+   *
+   *  Die Geste ist die des Schreibstudios (E468) und die jedes Browsers:
+   *  Enter vor, Umschalt+Enter zurück, ‹ und › als Knöpfe, Escape zu. Sie
+   *  läuft um — hinter der letzten Stelle steht wieder die erste, und das
+   *  ist der Unterschied zwischen einem Ring und einer Wand.
+   *
+   *  Die aktive Stelle trägt `.aktiv` und nicht nur eine andere Farbe: §38
+   *  verbietet Information allein über Farbe, und der Zähler sagt sie
+   *  deshalb noch einmal in Worten — „2 von 4". */
   const seitenSuche = () => {
     const alt = document.getElementById('findbar');
     if (alt) { alt.remove(); zeichneSeite(); return; }
     const bar = document.createElement('div');
     bar.id = 'findbar';
-    bar.innerHTML = '<input placeholder="Auf dieser Seite suchen …"><span class="n"></span>' +
-                    '<button data-a="zu">✕</button>';
+    bar.setAttribute('role', 'search');
+    bar.innerHTML =
+      '<input placeholder="Auf dieser Seite suchen …" aria-label="Auf dieser Seite suchen">' +
+      '<span class="n" aria-live="polite"></span>' +
+      '<button data-a="zurueck" aria-label="Vorige Stelle (Umschalt+Enter)" title="Vorige Stelle">‹</button>' +
+      '<button data-a="vor" aria-label="Nächste Stelle (Enter)" title="Nächste Stelle">›</button>' +
+      '<button data-a="zu" aria-label="Suche schliessen (Escape)" title="Suche schliessen">✕</button>';
     document.body.appendChild(bar);
     const inp = bar.querySelector<HTMLInputElement>('input');
     if (!inp) return;
     const n = bar.querySelector<HTMLElement>('.n');
     if (!n) return;
 
+    /* Die Fundstellen in der Reihenfolge, in der sie auf der Seite stehen,
+       und die, bei der man gerade ist. Beides lebt nur, solange die Leiste
+       steht — `zeichneSeite()` baut den Text ohnehin neu. */
+    let stellen: HTMLElement[] = [];
+    let bei = 0;
+
+    const zeige = (rollen: boolean) => {
+      stellen.forEach(m => m.classList.remove('aktiv'));
+      if (!stellen.length) { n.textContent = inp.value.trim() ? 'nichts' : ''; return; }
+      if (bei < 0) bei = stellen.length - 1;
+      if (bei >= stellen.length) bei = 0;
+      const jetzt = stellen[bei];
+      if (!jetzt) return;
+      jetzt.classList.add('aktiv');
+      n.textContent = (bei + 1) + ' von ' + stellen.length;
+      if (rollen) jetzt.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    };
+
+    /* Ein Ring, keine Wand: hinter der letzten Stelle kommt die erste. */
+    const gehe = (richtung: number) => {
+      if (!stellen.length) return;
+      bei = (bei + richtung + stellen.length) % stellen.length;
+      zeige(true);
+    };
+
     const suchen = () => {
       document.querySelectorAll('#page mark').forEach(m => m.replaceWith(...m.childNodes));
+      stellen = []; bei = 0;
       const q = inp.value.trim();
       if (!q) { n.textContent = ''; return; }
-      let anzahl = 0;
       const seitenKasten = document.getElementById('page');
       if (!seitenKasten) return;
       const lauf = document.createTreeWalker(seitenKasten, NodeFilter.SHOW_TEXT);
@@ -1592,17 +1637,23 @@ const App = (() => {
         const mark = document.createElement('mark');
         mark.textContent = nach.nodeValue;
         nach.replaceWith(mark);
-        if (!anzahl) mark.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        anzahl++;
+        stellen.push(mark);
       });
-      n.textContent = anzahl ? anzahl + ' Treffer' : 'nichts';
+      zeige(true);
     };
     inp.addEventListener('input', suchen);
     inp.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { bar.remove(); zeichneSeite(); }
+      if (e.key === 'Escape') { bar.remove(); zeichneSeite(); return; }
+      if (e.key === 'Enter') { e.preventDefault(); gehe(e.shiftKey ? -1 : 1); }
     });
     bar.addEventListener('click', e => {
-      if (elVon(e)?.closest<HTMLElement>('[data-a="zu"]')) { bar.remove(); zeichneSeite(); }
+      const knopf = elVon(e)?.closest<HTMLElement>('[data-a]');
+      if (!knopf) return;
+      const was = knopf.dataset.a;
+      if (was === 'zu') { bar.remove(); zeichneSeite(); return; }
+      /* Nach dem Klick gehört die Schreibmarke wieder ins Feld — sonst
+         landet das nächste Enter auf dem Knopf statt in der Suche. */
+      if (was === 'vor' || was === 'zurueck') { gehe(was === 'vor' ? 1 : -1); inp.focus(); }
     });
     inp.focus();
   };

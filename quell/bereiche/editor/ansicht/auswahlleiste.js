@@ -140,7 +140,32 @@ const Auswahl = (() => {
             return text;
         return text.slice(0, i) + ersatz + text.slice(i + gewaehlt.length);
     };
-    /** Legt Marken um die Auswahl — genau wie Notions Strg + B. */
+    /* ══ LIEGT DIE MARKE SCHON DRUM HERUM? (E668) ═══════════════════════════
+     * Fett war ein Stempel und kein Schalter: wer ein fettes Wort markierte
+     * und noch einmal auf Fett drückte, bekam `****Wort****`. Gezeichnet wird
+     * daraus `**Wort**` als sichtbarer Text — die Marke steht dann IM Absatz.
+     *
+     * Geprüft wird an der gefundenen Stelle, nicht mit einer Suche: steht
+     * unmittelbar davor und dahinter die Marke, ist sie schon da.
+     *
+     * DER FALL, DER EINEN SORGFÄLTIG MACHT: `*` ist die halbe `**`. In
+     * `Ein **fetter** Satz` steht vor „fetter" ein `*` und dahinter auch —
+     * wer das für Kursiv hielte, würde beim Abschalten `*fetter*` daraus
+     * machen und das FETT löschen. Deshalb die zwei Zeilen darunter: eine
+     * einzelne `*` gilt nur, wenn daneben keine zweite steht. */
+    const istUmschlossen = (text, i, laenge, marke) => {
+        if (i < marke.length)
+            return false;
+        if (text.slice(i - marke.length, i) !== marke)
+            return false;
+        if (text.slice(i + laenge, i + laenge + marke.length) !== marke)
+            return false;
+        if (marke === '*' && (text[i - 2] === '*' || text[i + laenge + 1] === '*'))
+            return false;
+        return true;
+    };
+    /** Legt Marken um die Auswahl — oder nimmt sie weg, wenn sie schon da
+     *  sind. Ein Schalter, wie in jedem Textprogramm (E668). */
     const umschliesse = (marke) => {
         const txt = getSelection()?.toString() ?? '';
         if (!txt)
@@ -148,7 +173,11 @@ const Auswahl = (() => {
         const b = markierterBlock();
         if (!b)
             return;
-        const neu = tauscheDort(b.text || '', txt, marke + txt + marke);
+        const alt = b.text || '';
+        const i = stelleImText(alt, txt);
+        const neu = (i >= 0 && istUmschlossen(alt, i, txt.length, marke))
+            ? alt.slice(0, i - marke.length) + txt + alt.slice(i + txt.length + marke.length)
+            : tauscheDort(alt, txt, marke + txt + marke);
         Store.updateBlock(b.id, { text: neu });
         App.zeichneSeite(b.id, 'ende');
         weg();

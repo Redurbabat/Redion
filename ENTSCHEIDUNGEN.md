@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-639 Entscheidungen, E1 bis E659 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+658 Entscheidungen, E1 bis E678 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -702,6 +702,25 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E657** — Der volle Lauf bekommt ein Werkzeug: `pruefungen/volllauf.mts` fährt alle Läufe in Stücken, merkt nach JEDEM Stück, wie weit er ist, und verträgt eine Liste, die sich unterwegs ändert. §30 beschrieb diese Arbeitsweise seit dem 3. September — es gab sie nur als Handgriff, und beim vorletzten vollen Lauf ist genau das schiefgegangen.
 * **E658** — Die Lückenliste sagt die Wahrheit über sich selbst: 33 OFFENE Lücken standen unterhalb der Überschrift „Anhang B · Was erledigt ist" — wer von oben las, hielt sie für erledigt (§35). Sie stehen jetzt oben unter „Weitere offene Lücken"; das Verschieben ist byteweise gegengeprüft. Dazu: ein Wort für „zu" statt fünf (GESCHLOSSEN, wie §35 es nennt), und die selbstgenannte Zahl stimmt wieder. Wächter `test549`.
 * **E659** — Die Doku zählt, was da ist: ein Wächter für §30s eigenen Satz („sie wird nicht geschätzt, sie wird gezählt") und für §34s „beides: Verzeichnis und Text". Er wurde gegen den Stand rot, den er selbst erzeugt hatte — 492 Dateien, 491 in der Doku. Vier Anläufe der Messung waren vorher zu eng und meldeten je eine erfundene Zahl; `ENTSCHEIDUNGEN.md` kennt drei Überschriftsformen, und die Regel, die hält, setzt keine voraus. Wächter `test550`.
+* **E660** — Die Tabellenwerkzeuge sind am Telefon zu treffen: sieben Knöpfe à 26 px waren dort der EINZIGE Weg, eine Spalte anzulegen — die Griffe daneben messen 7 px und brauchen ein `mouseover`, das ein Daumen nicht erzeugt. Jetzt 44 px unter `@media(hover:none)`, am Rechner unverändert schlank. Und der Fund über den Fund: `test402` konnte das nie sehen, weil er nur DEKLARIERTE Höhen liest — 26 px aus Innenabstand und Schriftgrösse sind für ihn unsichtbar (L206). Wächter `test551`.
+* **E661** — Der Anbieter hat immer recht, und die Modellliste wird erfragt: Groq mustert `llama-3.3-70b-versatile` aus, Redion führt es weiter und meldet dazu „Die Adresse gibt es nicht" — die Adresse war in Ordnung, das Modell war weg, und der Anbieter sagte das wörtlich. Jetzt führt SEIN Satz die Meldung an, die Statustabelle bleibt für den, der schweigt, und `modelleHolen` fragt `/models`. Das tote Modell ist gestrichen; ein Ersatz wird nicht geraten (§56). Wächter `test552`.
+* **E662** — Der Sweep nennt den Schuldigen, nicht sein ganzes Stück: keine Stunde nach seinem ersten Einsatz meldete `volllauf.mts` zehn rote Läufe, wo einer war. `alle.mts` schreibt seine Bilanz auf zwei Zeilen — die erste hat das ✗ und keine Nummer, die zweite die Nummer und kein ✗. Die Zerlegung fand nichts und fiel auf „ganzes Stück rot" zurück. Der Rückfall bleibt (er erfindet keinen Schuldigen), er wird nur schwerer getroffen. Wächter `test553`.
+* **E663** — Was abgehakt wird, zählt in der Wochenrückschau: sie rechnet mit `erledigtAm`, und NIEMAND schrieb das Feld für Blöcke — wer eine Woche lang Aufgaben abhakte, sah am Sonntag eine leere Rückschau und ein Tagesdiagramm aus Nullen. Der Stempel sitzt jetzt in `Store.updateBlock` statt an sechs Kästchen (§8), und der Altbestand zählt über `edited` mit, wie die Datenbankzeilen es längst tun. Wächter `test554`.
+* **E664** — Ein Wächter, der an der Reihenfolge im Block scheitert: `test403` prüfte „steht das `remove` in einem `finally`", indem er zwei Zeilen zurücksah. E652 schob zwei Zeilen dazwischen — dasselbe `finally`, dieselbe Zusage, und der volle Lauf wurde rot. Jetzt wird der umschliessende Block wirklich gesucht (Klammern zählend nach oben).
+* **E665** — Ein Griff statt zwei: `test537` meldete einen neuen Querverweis, weil die Einstellungsseite für den Probelauf erst `KI.modelleHolen(id)` und dann `KI.modelleVon(id)[0]` rief. Der Wächter hatte recht, und zwar doppelt — „holen und dann das erste nehmen" ist eine Prozedur der KI, nicht Wissen der Einstellungsseite. Jetzt `KI.modellWaehlen(id)`, ein Satz. Dabei gemessen: `ohneSchablonen` verdeckt **266 echte Aufrufe** im Bestand (L207).
+* **E666** — „Erinnerung" führt zu einer Erinnerung: der Slash-Eintrag schrieb `@remind ` in den Text, und NIRGENDS im Programm wurde `@remind` gelesen — während `Werkzeuge.erinnerungSetzen` samt Dialog, Liste und Geräte-Meldung längst dastand. Der Draht liegt im REGISTER (§5 dritter Weg) und nicht im Editor: `bereiche/editor → Werkzeuge` steht bei 1, und das Verzeichnis darf nur schrumpfen. Nach dem Bogen: unverändert 518 Treffer. Wächter `test555`.
+* **E667** — Strg+F findet vier Stellen und zeigte eine: die Seitensuche markierte jede Fundstelle, rollte zur ERSTEN und schrieb „12 Treffer" — zu den elf anderen gab es keinen Weg, denn ihr `keydown` kannte nur `Escape`. Jetzt Enter vor, Umschalt+Enter zurück, ‹ und › als 44-px-Knöpfe (§37), Zähler „2 von 4" statt „4 Treffer" (§38), und ein Ring statt einer Wand. Das BILD fand dazu, was kein Lauf sah: am Telefon lief das Suchfeld links aus dem Bild (`-90 … 368` bei 390 px), weil die zwei neuen Knöpfe die Leiste auf 458 px verbreiterten (§55.1). Wächter `test556`.
+* **E668** — Fett ist ein Schalter, und Strg+B nimmt denselben Weg: `umschliesse` stempelte nur (`****Wort****`, gezeichnet als sichtbares `**Wort**`), und `editor.ts` hatte eine ZWEITE Fassung, die `ct.textContent` zurückschrieb — den GEZEICHNETEN Text. Strg+B in `Ein **fetter** Satz` machte daraus `Ein fetter **Satz**`: die vorhandene Auszeichnung gelöscht, ohne Meldung. §8 wörtlich, und der Grund, warum E650 nur den halben Weg erreichte. Dazu: `*` ist die halbe `**` — Kursiv auf fettem Wort ergibt `***fetter***`, nicht `*fetter*`. Wächter `test557`.
+* **E669** — Die angemeldeten Geräte gibt es jetzt wirklich: die Einstellungen versprachen „Die Liste und der Freigabe-Code stehen im Wolke-Fenster" — den Code gab es, die Liste nicht. `sitzungen` hält `geraet`, `angelegt` und `bis`, seit es die Tabelle gibt; geschrieben, nie gelesen. Neu: `GET /konto/geraete`, `POST /konto/geraete/weg`, das Gerätefenster. Hinaus geht ein STÜCK des Abdrucks, nie der Token (§42); ein fremdes Konto ist nicht gefiltert, sondern gar nicht erst in der Menge, in der gesucht wird; eine Marke bekommt die Liste nicht (§26). Aus dem Bild kam dazu: die Knöpfe massen 18 px — auch im Markenfenster nebenan (§37, §45). Wächter `test558`.
+* **E670** — Den Text einer PDF ändern, ohne die PDF anzufassen: Redurs Frage vom 21. September. Neues Werkzeug „Text ändern" — auf ein Wort tippen, ändern, fertig. Die Änderung ist eine MARKE (Deckel in Papierfarbe + neuer Text auf derselben Grundlinie), also rückgängig, versioniert, in der Sicherung und im ausgegebenen PDF; das Original bleibt Byte für Byte, und `test559` misst das mit einer SHA-256-Summe. Was es NICHT kann, steht im Werkzeugtitel: der Text fliesst nicht. `stueckBei`/`lageVonBlock` in `leser.ts` statt einer zweiten Rechnung im Studio (§8). Zwei Funde bestehender Wächter: `inkText/inkText = 100 %` (E515-Regel) und die Werkzeugzahl 13→14. Wächter `test559`.
+* **E671** — Was der erste volle Lauf seit elf Bögen gefunden hat: 501 Läufe, 491 grün, 10 rot, 112 min. Im Hauptbaum nachgemessen waren es ACHT (test270 und test440 sind Artefakte des Arbeitsbaums, §30). Sieben der acht waren meine letzten drei Bögen. Zwei Entscheidungen: der Speicher der PDF-Quellen steht nur noch in `leser.ts` (E670 hatte einen zweiten stehenlassen — `test537` fand ihn über die Querverweiszahl), und die Blatt-Werkzeugleiste bleibt eine Aufzählung (der Formen-Knopf trägt das Zeichen der zuletzt gewählten Form, E515). Der echte Fund: „Text ändern" hatte im Studio einen Knopf und auf dem Blatt keinen. Der Messfehler: `test410` las ein `<style>` aus einem Kommentar und von dort 5,3 MB JavaScript als Stilblatt.
+* **E672** — Ein Ordner hat eine Farbe, und man kann sie wechseln: Redurs Wunsch vom 21. September. Kein neues Feld (`color`, §52.8), kein zweiter Wähler (`Notebook.farbMenue` mit `danach`), eine Whitelist (`Farben.kennung`/`Farben.marke`). Die Farbe steht am Reiter und Körper des gezeichneten Ordners (`--ordner-farbe`), am Fach, in der Seitenleiste und im Ablagebaum. Der Fund beim Bauen: die Rücken-Regel der Hefte kam am Ordner mit 0 px heraus, die Farbe fiel auf `currentColor` — der Wächter misst deshalb den Reiter Kanal für Kanal gegen `--c-blue`. Wächter `test560`.
+* **E673** — Der Füller läuft spitz aus: Redurs „gleich wie GoodNotes" vom 21. September, erster Bogen. Bis dahin waren beide Kappen Halbkreise in voller Breite — jeder Buchstabe endete mit einem Klecks. EINE Kurve (`InkGeometry.spitzeFaktor`, Weglänge statt Punktzahl), EINE Stelle für die halben Breiten (`halbeBreiten`, Bildschirm und PDF — vorher zwei Abschriften, derselbe Fund wie E623), die Spitze als Feld im Register `STIFTE` (§8). Nass nur vom Anfang her, trocken an beiden Enden; kurze Striche bekommen eine kurze Spitze, damit ein Punkt ein Punkt bleibt. Kein Druckwert wird angefasst (§9). Wächter `test561`.
+* **E674** — Jedes Werkzeug merkt sich Farbe und Stärke: Redurs „gleich wie GoodNotes", zweiter Bogen. `color` und `width` waren EINE Variable für Stift, Marker, Formen, Zettel, Text — der Marker gelb und breit, und der Stift schrieb danach gelb und breit; auf einer gewöhnlichen Seite wurde die Farbe gar nicht gemerkt. Jetzt EIN Meta (`zeichnen:werkzeugwerte`), je Werkzeug Farbe und Stärke, in der Zeichenschicht an einer Stelle (`setzeWerkzeug`/`setzeFarbe`/`setzeStrich`), frisch gelesen und geprüft (§19). Die Auswahl hat keine eigene Tinte: was man mit ihr wählt, gilt dem Stift danach (E353) — `test345 §4` hat das gegen den ersten Stand gefunden. Die Nachbarstelle (§45): das Studio setzte erst die Dokumentfarbe, dann das Werkzeug — und der Wechsel hätte die Farbe sofort wieder überschrieben. Wächter `test562`.
+* **E675** — Ein Stift, der kurz 0 meldet, bleibt ein Stift: Lücke 9 des Stiftweg-Lesers. `druckAus` entschied je Meldung; eine 0 mitten im Stiftstrich hiess „kein Sensor", und der Tempo-Ersatz sprang ein — 0,6 beim ersten Mal, bei leichter Hand (0,2) ein Punkt dreimal so breit, den niemand gedrückt hatte. Jetzt behält ein Stift, der schon Druck gemeldet hat, seinen letzten Sensorwert; nur ein Stift, der NIE Druck meldet, bekommt den Ersatz und sagt in `druckArt` ehrlich „tempo". Wächter `test563`.
+* **E676** — Der Glätter hält die Ecke: Lücke 6 des Stiftweg-Lesers (L209 Punkt 4). Der Filter erster Ordnung mittelte durch die Spitze eines langsam gezogenen „M" hindurch — 2,62 px daneben, gemessen. Jetzt merkt er sich die Richtung der Hand über eine feste STRECKE (2,5 px, nicht Punkte — E504) und springt, wenn sie kippt (`KEHRE`), auf den rohen Punkt, der am weitesten in der alten Richtung lag: die Ecke selbst, bei 60 und 240 Hz gleich (0 px). Und das Bild fand zwei weitere Stellen, an denen die Ecke danach verlorenging: `finish` ersetzte bei weniger als acht RDP-Stützpunkten die Ecken durch acht gleichmässige (E115) — jetzt kommen sie dazu —, und der Umriss zog durch jede Ecke eine Q-Kurve — jetzt geht `InkGeometry.stueck` an einer Kehre als Gerade durch den Punkt, in Feder und `outline` gleich. Wächter `test564`, §1–§3 ohne Browser, §4 mit.
+* **E677** — Der Trainer wohnt im Lernzentrum: Redurs „flüssige lern app im redion … die app nicht getrennt" ist eine ANSICHT der Lernwelt (`trainer`) über gewöhnlichen Lernkarten, kein zweiter Speicher. Eine Aufgabe ist ein `flashcard`-Block mit einem Feld `quiz` (`mc` mit mehreren richtigen Antworten wie in der Prüfung, `schreiben` mit Musterlösung und Note, `luecke` getippt und nachsichtig verglichen); der Fortschritt geht allein über `WissenDienst.planen` in `sr`, und die fünf Boxen sind eine Ableitung daraus (neu, sonst `min(5, wdh+1)`). Falsches kommt in derselben Runde nach drei Karten noch einmal. Das Kapitel „Staatskunde — Leben in der Schweiz" ist eine Vorlage (`staatskunde-kapitel`), die sieben Prüfungsfragen des Lehrers wörtlich und zuoberst; `Register.vorlagen.bauen` baut seither auch gemeldete Vorlagen, nicht nur die der Galerie. Wächter `test565`, Bilder `node bilder.mts trainer trainerFrage trainerLuecke`. Der vorläufige Trainer (`lernen/staatskunde.html`) bleibt bis zu Redurs Wort stehen (L210).
+* **E678** — Der Streifen zur neuen Fassung steht unten: Redur, 22. September, „die neu laden buton unten bringen". `UI.banner` kennt neben der Art eine Lage (`info unten`): `top:auto; bottom:0`, am Telefon `bottom:var(--hunten)` — dieselbe Marke wie die Schublade, also genau über der unteren Leiste. Warnung und Fehler bleiben oben. Der Knopf „Jetzt laden" ist ein Knopf mit 44 px (`banner-tat`), vorher ein unterstrichenes Wort von 23 px. Wächter `test566`, Bild `node bilder.mts fassung`.
 
 ---
 
@@ -54023,6 +54042,457 @@ gab.
 mindestens drei Überschriftsformen für dieselbe Sache:
 
 ```txt
+
+## E660 — Die Tabellenwerkzeuge sind am Telefon zu treffen
+
+**Was wurde entschieden?** Die Werkzeugzeile der einfachen Tabelle bekommt
+unter `@media(hover:none)` 44 px hohe Knöpfe. Am Rechner bleibt sie schlank.
+
+**Warum?** §37 ist **[hart im Kern]**, und am Telefon sind diese sieben
+Knöpfe der **einzige** Weg, eine Spalte oder Zeile anzulegen. Gemessen:
+
+```txt
+.stab-tools button    7 von 7 Knöpfen 26 px hoch
+.stab-griff.x/.y      7 px — und erst nach einem `mouseover` sichtbar
+```
+
+26 px ist weder die harte 44 noch die 32 eines Nebenwegs, und der
+geschriebene Grund, den §37 für einen Nebenweg verlangt, stand auch nicht
+daneben.
+
+**Was ich zuerst falsch vermutet habe — und der Grund, warum §45 Schritt 1
+existiert.** Die 7-px-Griffe sahen nach „am Telefon geht gar nichts" aus,
+und ich war dabei, eine zweite Werkzeugzeile für den Daumen zu bauen. Es
+gibt sie schon: `.stab-tools` mit sieben Knöpfen, und **L108 hat sie am
+Telefon längst sichtbar gemacht** (`@media(hover:none){ .stab-tools{opacity:1} }`,
+gefunden von `test303` als neunter Fall). Eine zweite Zeile daneben wäre
+ein zweiter Katalog gewesen (§8) — und der teuerste wiederkehrende Fehler
+dieses Projekts ist laut §45 genau dieser: etwas aus dem Gedächtnis bauen,
+statt nachzusehen.
+
+Der fertig geschriebene Wächter für die erfundene zweite Zeile wurde
+weggeworfen und neu geschrieben. Das ist billiger als die Zeile.
+
+**Warum nicht einfach die Griffe vergrössern?** Sie liegen ÜBER der
+Tabelle, und `.stab-wrap` hat 12 px Platz darüber. Eine 44-px-Trefffläche
+ragte 32 px in die erste Zeile hinein und schluckte jeden Klick, der in
+eine Zelle gehört. Die Fläche kann dort nicht wachsen, ohne etwas anderes
+kaputtzumachen — §37 nennt für genau diesen Fall den zweiten Weg: kein
+Desktop-only, also ein eigener Weg für den Daumen. Den gab es; er war nur
+zu klein.
+
+**Warum am Rechner NICHT 44 px?** Eine Maus trifft 26 px genauer als ein
+Daumen 44, und eine hohe Leiste unter jeder Tabelle wäre dort nur laut.
+`test551` misst beide Seiten — die Zusage ist, dass der Rechner schlank
+BLEIBT, nicht nur dass das Telefon gross wird.
+
+**Was es kostet:** drei Reihen statt zwei unter der Tabelle am Telefon. Das
+ist der Preis, und §37 hat ihn entschieden.
+
+### Der Fund über dem Fund
+
+`test402` hält §37 seit langem — und **konnte diesen Fall nie sehen**. Er
+sucht in den Stilblättern nach `height` und `min-height`:
+
+```js
+const h = body.match(/(?<!max-)(?:min-)?height\s*:\s*(\d+)px/);
+```
+
+Die 26 px kamen aus `font-size:12px` und `padding:3px 9px` — nirgends stand
+eine Höhe. Deshalb stand die Regel auch nicht in `masse-bestand.json`: er
+hat sie nie gesehen, also nie eingetragen.
+
+Das ist derselbe Fund wie in §55.2, an einer anderen Stelle: **eine Messung,
+die nicht messen KANN, was sie behauptet, sagt immer „passt schon".** Dort
+war es `scrollWidth` gegen `clientWidth` bei einem Flex-Element, hier eine
+Textsuche gegen eine gerechnete Höhe.
+
+`test551` misst die gerenderte Box im echten Browser — für diese eine
+Stelle. Was fehlt, ist derselbe Blick auf alle Hauptwege; das steht als
+**L206** in `LUECKEN.md`, statt hier als Versprechen (§35).
+
+
+## E661 — Der Anbieter hat immer recht, und die Modellliste wird erfragt
+
+**Was wurde entschieden?** Drei Dinge, die zusammengehören:
+
+1. Sagt ein Anbieter im Fehlerkörper, was schiefging, steht **sein** Satz in
+   der Meldung. Die Statustabelle bleibt die Antwort für den, der schweigt.
+2. `modelleHolen(id)` fragt den Anbieter unter `/models`, was er heute
+   anbietet; das Ergebnis wird gemerkt und im Menü gezeigt.
+3. Die eingebaute Liste ist ab jetzt ein **Rückfall**, keine Wahrheit.
+
+**Warum?** Redur am 20. September 2026, wörtlich aus seinem Fenster:
+
+```txt
+⚠ Groq antwortet mit 404. Die Adresse gibt es nicht (object_not_found).
+{"error":{"message":"The model `llama-3.3-70b-versatile` does not exist or
+you do not have access to it.","type":"invalid_request_error",
+"code":"model_not_found"}}
+```
+
+**Zwei Fehler in einer Zeile, und der erste ist der teure.** „Die Adresse
+gibt es nicht" ist falsch: die Adresse gab es sehr wohl, Groq hat sie
+beantwortet. Es war das MODELL, das ausgemustert wurde — und Groq sagt das
+wörtlich, mit `code: model_not_found`. Redion hatte den Satz in der Hand
+und stellte trotzdem seine eigene, falsche Erklärung davor.
+
+Wer sie liest, sucht am falschen Ort: an der URL, am Schlüssel, an der
+Firewall. Eine Meldung, die in die falsche Richtung zeigt, ist schlimmer
+als eine nackte Zahl (§47 dem Sinn nach: sie verspricht eine Erklärung, die
+nicht stimmt).
+
+**Warum die Tabelle trotzdem bleibt.** Eine Statuszahl hat mehrere
+Ursachen, und der Anbieter kennt die richtige — aber nicht jeder schickt
+eine. Ein kaputter Proxy, eine leere 502, ein Gateway ohne Körper: dort ist
+`FEHLERTEXT` genau richtig. Die Regel ist deshalb nicht „Tabelle weg",
+sondern **„wer redet, hat recht"**.
+
+**Der zweite Fehler: die Liste veraltet still.** `ANBIETER` führt seine
+Modelle als Text im Programm. Groq mustert aus, die Liste merkt es nie —
+bis jemand eine 404 bekommt. Für Ollama fragt Redion längst nach, was da
+ist (`sucheOllamaJetzt`); für die Wolke stand dieselbe Frage nie. Alle
+OpenAI-artigen Anbieter haben `/models` unter derselben Wurzel, Anthropic
+ebenso.
+
+Gefragt wird an zwei Stellen: beim Probelauf nach dem Hinterlegen eines
+Schlüssels (dort wird er ohnehin das erste Mal benutzt) und über „Modelle
+erneut holen" im Modellmenü. Der Knopf sagt danach, was herauskam — auch
+wenn es nichts war; ein Knopf, der schweigend nichts tut, ist die
+heimtückischere Hälfte von §47.
+
+**Was NICHT geraten wurde.** `llama-3.3-70b-versatile` ist aus der
+eingebauten Liste gestrichen — es ist belegt tot. Was an seine Stelle
+getreten ist, weiss Groq und nicht ich, also steht dort nichts Erfundenes
+(§56: ein Wortlaut, den niemand hat, wird nicht erfunden). Übrig bleibt
+`llama-3.1-8b-instant` als Rückfall, und `modelleHolen` holt beim ersten
+Gebrauch die echte Liste.
+
+**Was im Preisverzeichnis stehen bleibt.** `kosten.ts` führt
+`llama-3.3-70b-versatile` weiter mit 0/0. Das ist Absicht: dort werden
+BEREITS GELAUFENE Aufrufe nachgeschlagen, und ein gestrichener Eintrag
+machte alte Abrechnungszeilen unlesbar.
+
+**Was gefiltert wird.** Groq führt Whisper und TTS in derselben Liste. Sie
+beantworten keine Frage und gehören nicht in ein Chat-Menü.
+
+**Der Wächter.** `test552`, fünfzehn Messungen, gegen den alten Stand 4/15,
+mit Groqs echtem Fehlerkörper. Zwei Gegenproben, beide gefahren: ohne den
+Modell-Zweig fehlt der Weg nach vorn, ohne den ganzen Umbau steht wieder
+„Die Adresse gibt es nicht" da.
+
+**Und die erste Gegenprobe war falsch, nicht der Code.** Ich hatte
+`const modellWeg = false && A || B` geschrieben — `&&` bindet stärker als
+`||`, also blieb `B` übrig und der Zweig lief weiter. Der Lauf blieb grün
+und ich hielt das kurz für einen zu schwachen Wächter. Eine Gegenprobe ist
+ein Stück Code wie jedes andere und kann genauso falsch sein.
+
+
+## E662 — Der Sweep nennt den Schuldigen, nicht sein ganzes Stück
+
+**Was wurde entschieden?** Die Zerlegung in `volllauf.mts` liest zuerst die
+Bilanz von `alle.mts` („✗ N von M Läufen gescheitert:" und darunter die
+Namen) und erst danach einzelne Zeilen. Der Rückfall auf „das ganze Stück
+ist rot" bleibt — er wird nur schwerer getroffen. Und was nicht zum Stück
+gehört, macht keinen fremden Lauf rot.
+
+**Warum?** Keine Stunde nach seinem ersten Einsatz meldete das Werkzeug:
+
+```txt
+→ ROT: 266 267 268 270 272 273 274 275 276 277
+```
+
+Im Protokoll darüber stand:
+
+```txt
+✗ 1 von 10 Läufen gescheitert:
+    test270
+```
+
+**Einer.** Die erste Fassung suchte je ZEILE nach einem ✗ **und** einer
+Testnummer. `alle.mts` schreibt seine Bilanz aber auf zwei Zeilen: die
+erste trägt das Zeichen und keine Nummer, die zweite die Nummer und kein
+Zeichen. Also fand sie nichts.
+
+**Der Rückfall war richtig, und er bleibt.** „Kein Treffer, aber der Prozess
+war rot" heisst: es ist unklar, welcher es war — dann lieber neun zu viel
+als einer zu wenig, und keiner erfunden (§56). Falsch war nur, ihn so
+leicht auszulösen: neun grüne Läufe in der roten Liste verstecken den
+einen, auf den es ankommt, und §46 („rot zuerst") schickt einen auf neun
+falsche Fährten.
+
+**Was dabei auffiel und nicht in diesen Bogen gehört.** Der eine echte rote
+Lauf ist `test270` mit der Meldung
+
+```txt
+✗ In der Wurzel geht nichts ins Netz, was dort nicht hingehört —
+  [".git","node_modules"]
+```
+
+Das ist wörtlich das Artefakt, das §30 beschreibt: im Arbeitsbaum ist `.git`
+eine DATEI und `node_modules` ein Symlink, und `test270` filtert
+Ordnermuster mit `istOrdner && name === …`. `.assetsignore` schliesst beide
+korrekt aus. §30 sagt dazu: **ein roter Lauf aus dem Arbeitsbaum wird im
+Hauptbaum nachgemessen, bevor jemand ihn repariert** — das steht aus,
+solange der Sweep läuft, und wird danach getan.
+
+**Warum die Funktion jetzt exportiert wird.** Ein Wächter, der den ganzen
+Sweep lostritt, um eine Zerlegung zu prüfen, wäre keiner. `volllauf.mts`
+führt seine Arbeit deshalb nur aus, wenn es direkt gestartet wurde; wird es
+importiert, gibt es nur `roteAus` her.
+
+**Der Wächter.** `test553`, sechs Messungen, mit der **echten** Bilanz vom
+20. September als Eingabe. Gegenprobe: die alte Ein-Zeilen-Regel eingesetzt
+→ genau das beobachtete Symptom, `[266 … 277]` statt `[270]`.
+
+**Die Lehre**, und sie ist neu in der Sammlung dieses Tages: ein Werkzeug,
+das Prüfläufe auswertet, ist selbst ungeprüft, bis es einen Wächter hat.
+Dieses hier war zwei Stunden alt und hat in seinem ersten Ernstfall
+danebengegriffen.
+
+
+## E663 — Was abgehakt wird, zählt in der Wochenrückschau
+
+**Was wurde entschieden?** `Store.updateBlock` stempelt `erledigtAm`, wenn
+ein `todo`-Block abgehakt wird, und räumt es weg, wenn der Haken zurückgeht.
+Die Wochenrückschau rechnet für Blöcke zusätzlich mit `edited` als Rückfall
+— wie sie es für Datenbankzeilen längst tut.
+
+**Warum?** Die Rückschau filtert so (`planen/dienst.ts:235`):
+
+```js
+const erledigt = alle.filter(a => a.fertig && a.erledigtAm && inWoche(a.erledigtAm));
+```
+
+Sie braucht `erledigtAm`. Für Blöcke stand dort `b.erledigtAm || null` — und
+**nichts im ganzen Programm schrieb dieses Feld für Blöcke.** Gezählt, nicht
+vermutet: der einzige Schreiber war der ICS-Import (`kalender.ts:211`). Das
+Kästchen im Editor tat genau eins:
+
+```js
+Store.updateBlock(block.id, { checked: cb.checked });
+```
+
+Wer eine Woche lang Aufgaben abhakte, sah am Sonntag eine **leere**
+Rückschau und ein Tagesdiagramm aus Nullen. Kein Fehler, keine Meldung —
+die heimtückischere Hälfte von §47: etwas zeigt eine Zahl, und die Zahl ist
+immer null.
+
+**Und es war inkonsequent.** Zwanzig Zeilen tiefer rechnen Datenbankzeilen
+mit `r.erledigtAm || r.edited`. Für sie gab es den Rückfall, für Blöcke
+nicht — zwei Wege für dieselbe Frage, und der eine antwortete immer null
+(§8).
+
+**Warum der Stempel in `Store.updateBlock` sitzt und nicht am Kästchen.**
+`checked` wird an **sechs** Stellen geschrieben: Kästchen, Tastenkürzel,
+Markdown-Kürzel, Befehlspalette, Schnittstelle und der PWA-Weg. Sechs
+Kopien derselben Zeile wären fünf Gelegenheiten, sie zu vergessen. Hier
+geht jeder dieser Wege durch, und jeder künftige auch.
+
+**Warum der Rückfall auf `edited` trotzdem bleibt.** Jede Aufgabe, die VOR
+diesem Bogen abgehakt wurde, hat `checked` und kein Datum. Ohne Rückfall
+wäre sie für immer unsichtbar. `edited` ist nicht genau — es wandert bei
+jeder Bearbeitung —, aber es ist das, was der Bestand hat, und eine
+ungefähre Woche ist mehr wert als eine leere. Für alles ab jetzt ist der
+Stempel genau.
+
+**Was war die Alternative?** Eine Migration, die für alle abgehakten Blöcke
+`erledigtAm = edited` schreibt. Sie hätte dasselbe Ergebnis, aber sie
+verändert Nutzerdaten für eine Anzeige — und §9 sagt, dass eine
+Speicheränderung ohne Not keine gute Idee ist. Der Rückfall beim Lesen
+kostet nichts und lügt nicht.
+
+**Der Wächter.** `test554`, elf Messungen, gegen den alten Stand 7/11.
+Zwei Gegenproben: ohne den Stempel bleibt `erledigtAm` leer (die Rückschau
+zählt dann nur noch ungefähr, über `edited`), ohne den Rückfall ist der
+Altbestand für immer weg.
+
+
+## E664 — Ein Wächter, der an der Reihenfolge im Block scheitert
+
+**Was wurde entschieden?** `test403` sucht den umschliessenden Block
+wirklich, statt zwei Zeilen zurückzusehen.
+
+**Warum?** Er hält eine gute Zusage: jedes `classList.remove('ki-schreibt')`
+muss in einem `finally` stehen, damit der Schimmer auch nach einem Fehler
+verschwindet. Gemessen hat er sie so:
+
+```js
+const davor = alle.slice(Math.max(0, i - 2), i + 1).join(' ');
+return /finally/.test(davor);
+```
+
+Das hielt, solange das `remove` die erste Zeile im Block war. In **E652**
+kamen `zustand.abbruch = null` und `sendenKnopf(false)` davor — dasselbe
+`finally`, dieselbe Zusage, und der volle Lauf meldete:
+
+```txt
+✗ Beide stehen in einem finally — [false,true]
+```
+
+Der Code war richtig, das Fensterchen war zu klein. **Ein Wächter, der an
+der Reihenfolge innerhalb eines Blocks scheitert, prüft die Reihenfolge und
+nicht den Block.**
+
+**Wie jetzt gemessen wird.** Von der Zeile aus nach oben, Klammern zählend:
+eine `}` betritt einen Block, eine `{` verlässt ihn. Wo die Zählung unter
+null geht, steht der Kopf des Blocks, in dem die Zeile liegt — und der muss
+`finally` heissen. Das ist unempfindlich gegen alles, was innerhalb des
+Blocks passiert, und bleibt empfindlich gegen das, worum es geht.
+
+**Gegenprobe.** Ein `remove` aus seinem `finally` herausgenommen → wieder
+`[false,true]`. Die Zusage hält, die Messung ist nur nicht mehr
+kitzlig.
+
+**Was dabei nicht gefunden wurde:** dieselbe Redewendung
+(`slice(Math.max(0, i - …))`) kommt in keinem anderen der 496 Läufe vor.
+Gesucht, nicht angenommen.
+
+
+## E665 — Ein Griff statt zwei, und was der Wächter dabei verriet
+
+**Was wurde entschieden?** Die Einstellungsseite ruft für den Probelauf
+`KI.modellWaehlen(id)` — einen Satz statt zweier Griffe.
+
+**Warum?** Der erste volle Lauf meldete `test537` rot:
+
+```txt
+✗ Und die Zahl der Treffer auch nicht — 519 gegen 517
+```
+
+Kein NEUES Paar (die Struktur von §5 Regel 1 hielt), aber zwei Treffer mehr.
+Nachgemessen, welche:
+
+```txt
+MEHR  bereiche/einstellungen | KI          | bereiche/ki            15 → 16
+MEHR  bereiche/ki            | Einstellungen | bereiche/einstellungen 1 → 2
+```
+
+**Der erste war meiner.** E661 hatte in der Einstellungsseite
+`KI.anbieter(id).modelle[0]` durch `await KI.modelleHolen(id)` **und**
+`KI.modelleVon(id)[0]` ersetzt — zwei Griffe statt einem. Der Wächter hatte
+recht, und zwar doppelt: „erst holen, dann das erste nehmen" ist eine
+Prozedur der KI und nichts, was die Einstellungsseite wissen muss. Ein
+Griff, ein Satz. 519 → 518.
+
+**Der zweite war nicht neu.** `Einstellungen.oeffne('schluessel')` im
+KI-Fenster gibt es seit **E500**. Nachgemessen an der Fassung, in der das
+Verzeichnis gesetzt wurde:
+
+```txt
+roh                  alt 2 · neu 2
+nach dem Filtern     alt 1 · neu 2
+```
+
+Beide Aufrufe standen immer da. Einer war für den Wächter **unsichtbar**,
+weil `ohneSchablonen` ihn für Text in einer Schablone hielt; mein Umbau des
+Menüs in E661 hat ihn hervorgeholt. Es ist also kein neuer Querverweis,
+sondern ein alter, der endlich gezählt wird.
+
+### Und damit die eigentliche Nachricht
+
+Wenn ein Aufruf so verschwinden kann, wie viele verschwinden sonst noch?
+Gemessen über alle 86 Dateien in `src/bereiche/`:
+
+```txt
+Aufrufe nach nurCode:              7907
+davon nach ohneSchablonen:         7641
+von der Schablonenregel verdeckt:   266   (3,4 %)
+
+  136  src/bereiche/editor/ansicht/editor.ts   (457 → 321)
+   30  src/bereiche/wissen/werkzeuge.ts        (471 → 441)
+   26  src/bereiche/einstellungen/ansicht/seite.ts (215 → 189)
+   21  src/bereiche/datenbanken/steuerung.ts  (1119 → 1098)
+```
+
+**Die 517 sind also ein Mindestwert, kein Stand.** Die Regel dahinter ist
+richtig — E626 hat `ohneSchablonen` eingeführt, weil 88 Treffer aus
+deutscher Prosa in Backticks mitgezählt wurden. Aber sie wirft zu viel weg:
+`${Datenbank.name(x)}` in einer Schablone ist ein echter Aufruf, kein Text.
+Der genauere Filter nähme nur die Textteile heraus und liesse `${…}` stehen.
+
+**Was hier NICHT getan wurde.** Das Verzeichnis wurde nicht angehoben. §5
+sagt, es darf nur schrumpfen — „es ist keine Erlaubnis, sondern eine
+Schuld". Eine Zahl zu erhöhen, weil die Messung besser geworden ist, ist
+etwas anderes als eine neue Kopplung; aber der Unterschied muss sichtbar
+bleiben, sonst verrottet die Regel. §5 sagt selbst: die Richtung gehört
+Redur. `test537` bleibt deshalb rot bei 518 gegen 517, `main` bleibt stehen
+(§46), und die Frage steht als **L207** in `LUECKEN.md`.
+
+**Die drei Wege, aus denen Redur wählen kann**, stehen dort mit ihren
+Kosten: den einen Eintrag als Korrektur anheben; den Filter genauer machen
+und das Verzeichnis einmal auf die Wahrheit setzen; oder die Kopplung
+`ki → Einstellungen` wirklich auflösen.
+
+
+## E666 — „Erinnerung" führt zu einer Erinnerung
+
+**Was wurde entschieden?** Der Registereintrag `a-remind` bekommt eine
+eigene Handlung (`tun`) mit einem `zeigen()` davor. Der Editor fragt bei
+jeder Slash-Aktion **zuerst das Register**; trägt der Eintrag eine Handlung,
+gilt sie.
+
+**Warum?** Die Hilfeseite sagt zu:
+
+```txt
+| `@remind` + Datum | Erinnerung | ✅ |
+```
+
+Getan hat der Eintrag genau eins (`editor.ts:2857`):
+
+```js
+const AUSLOESER = { mention: '@', date: '@', remind: '@remind ', emoji: ':' };
+```
+
+Für `mention` und `date` ist das richtig — „@" öffnet ein Menü, das ohnehin
+am Tippen hängt. Für `remind` gibt es dieses Menü **nicht**: nirgends im
+Programm wird `@remind` gelesen. Der Eintrag schrieb die Zeichenkette in
+den Text und war fertig. §47, und zwar die stille Hälfte: kein Fehler,
+keine Meldung, nur nichts.
+
+**Dabei war alles da.** `Werkzeuge.erinnerungSetzen(seite)` öffnet einen
+Dialog mit Zeitpunkt und Text, schreibt nach `Store.setMeta('erinnerungen')`,
+fragt nach der Benachrichtigungserlaubnis und legt bei vorhandenem Server
+einen Weckruf (E54). Erreichbar war das nur über das Seitenmenü. Es fehlte
+der Draht, nicht die Maschine.
+
+### Warum der Draht im Register liegt
+
+Der nächstliegende Weg wäre ein `if (was === 'remind') Werkzeuge.erinnerungSetzen(…)`
+im Editor. Das wäre ein **neuer Querverweis**: `bereiche/editor → Werkzeuge`
+steht in `bereiche-bestand.json` bei **1**, und das Verzeichnis darf nur
+schrumpfen (§5 Regel 1).
+
+§5 nennt für genau diesen Fall den dritten Weg: *„Über `register/` bekannt
+machen."* Das Muster gibt es schon — `register/menueband.ts:701` trägt
+`tun: () => Werkzeuge.journal()` mit einem `kann()` davor. Der Blockeintrag
+bekommt dasselbe.
+
+Gemessen nach dem Bogen: **518 Treffer, unverändert.** Der Editor fragt
+`Register`, und `Register` ist kein Bereich. Das ist kein Trick um den
+Zähler herum, sondern die Antwort, die die Architektur für „ein Bereich
+braucht etwas von einem anderen" vorsieht.
+
+**`zeigen()` ist kein Beiwerk.** Fehlt der Bereich `wissen`, zeigt sich der
+Eintrag gar nicht erst — statt einen Knopf anzubieten, der nichts kann. Der
+Zugriff steht in einem `try/catch`, weil die Module Konstanten im
+Skript-Bereich sind und ein fehlender Name wirft (E207).
+
+**Der Wächter.** `test555`, zwölf Messungen, gegen den alten Stand 2/12.
+Gegenprobe: `tun` umbenannt → genau die Zusagen werden rot, die an der
+Handlung hängen.
+
+**Und zwei seiner Zusagen waren im ersten Anlauf grün, weil nichts lief.**
+`!String(undefined).includes('@remind')` ist wahr, und
+`undefined === undefined` auch. Beide prüfen jetzt zuerst, ob der Schritt
+überhaupt stattgefunden hat. Derselbe Fund wie bei `test544`, `test549` und
+`test550` — eine Zusage, die auf `undefined` grün wird, misst nichts.
+
+**Was der Lauf NICHT beweist**, und das steht in ihm drin: dass `zeigen()`
+bei fehlendem Modul „nein" sagt. `Werkzeuge` hängt nicht am Fenster
+(E207), also lässt es sich von aussen nicht verstecken. Gemessen ist nur,
+dass `zeigen()` nicht wirft; den Rest hält der `try/catch`.
+
 ## E123 — Titel                     die heutige Form
 =====  /  E123 — Titel  /  =====    ein Banner zwischen zwei Linien
 E123 — Titel  /  =====              ein Titel mit Linie darunter,
@@ -54052,3 +54522,960 @@ Zahlen ersetzt, schreibt Geschichte um. Prüfen ja, schreiben nein.
 **Was kostet es?** Ein Lauf ohne Browser, der in einer Sekunde durch ist.
 Er darf deshalb auch neben einem vollen Lauf gefahren werden — §30 meint
 die Ports, und dieser hält keinen.
+
+
+## E667 — Strg+F findet vier Stellen und zeigte eine
+
+**Was wurde entschieden?** Die Suche auf der offenen Seite (`seitenSuche`
+in `src/schale/aufbau/schale.ts`) bekommt, was jeder Browser seit zwanzig
+Jahren hat: Enter zur nächsten Fundstelle, Umschalt+Enter zur vorigen,
+zwei Knöpfe ‹ und › für dieselbe Sache, und einen Zähler, der sagt, die
+wievielte gerade gilt — „2 von 4" statt „4 Treffer".
+
+**Warum?** Weil der alte Zähler ein Versprechen war, das die Leiste nicht
+einlöste. Sie markierte jede Fundstelle mit `<mark>`, rollte zur **ersten**
+(`if (!anzahl) mark.scrollIntoView(…)`) und schrieb die Zahl. Zu den
+anderen gab es keinen Weg: das `keydown` am Feld kannte genau eine Taste,
+`Escape`; Enter fiel durch. Wer auf einer langen Seite „12 Treffer" las,
+bekam einen — und musste die übrigen elf mit dem Auge suchen.
+
+Das ist derselbe Fehler wie „im README versprechen, was nicht läuft"
+(§47), nur im Kleinen: eine Zahl behauptet zwölf Orte und liefert einen.
+
+**Und daneben stand die Lösung schon.** Die Suchleiste des Schreibstudios
+kann das seit E468 — Feld, Zahl, ‹ und ›, Enter vor, Umschalt+Enter
+zurück. Dieselbe Geste, zwei Häuser, und in einem ging sie nicht.
+
+**Was war die Alternative?** Die Studio-Leiste auch für die Seite
+benutzen. Dagegen spricht, dass sie auf einem ganz anderen Fundament
+steht: ihre Treffer liegen **nicht** im DOM, sondern als Seite + Kasten in
+Blattpunkten, damit auch ungezeichnete Seiten gefunden werden. Die
+Seitensuche arbeitet auf `<mark>`-Elementen im gezeichneten Text. Eine
+gemeinsame Leiste hätte zwei Datenmodelle in einem Griff vereinigen
+müssen — viel Arbeit, um zwei Pfeile zu sparen. Geteilt wird deshalb die
+**Geste**, nicht der Code.
+
+**Ein Ring, keine Wand.** Hinter der letzten Stelle kommt wieder die
+erste. Das ist keine Bequemlichkeit: wer bei Stelle 4 von 4 steht und
+weiterdrückt, will von vorn — und eine Taste, die nichts tut, sieht aus
+wie eine kaputte Taste.
+
+**Die aktive Stelle trägt `.aktiv`, nicht nur eine andere Farbe.** §38
+verbietet Information allein über Farbe; deshalb ein Rahmen (eine Form)
+**und** der Zähler, der es in Worten sagt.
+
+**Was das Bild gefunden hat, und kein Prüflauf.** §55.3 verlangt ein Bild,
+wo es etwas zu sehen gibt — und darauf stand am Telefon vom Suchfeld genau
+ein Buchstabe: „r". Die Leiste steht `position:fixed; right:22px`; mit
+Feld, Zahl und Kreuz war sie 310 px breit und passte auf 390 px knapp. Die
+zwei neuen Knöpfe machten 458 daraus, und das **Feld, in das man tippt**,
+lief links aus dem Bild. Gemessen: `-90 … 368` in einem 390 px breiten
+Fenster. Unter 760 px spannt die Leiste jetzt über die Breite
+(`left:10px; right:10px`), und das Feld gibt seine feste Breite auf.
+
+Das ist genau der Fall aus §55.1 — „am Telefon stand die halbe
+Werkzeugleiste ausserhalb des Bildes" — und er ist zum zweiten Mal
+passiert, weil ein Mass wuchs und niemand nachsah. Der Wächter misst es
+jetzt in Zahlen.
+
+**Und die Knöpfe messen 44 px** (§37). Das Kreuz mass 13×24 — die einzige
+Stelle der Leiste, die man je treffen musste, und sie war kleiner als
+jeder Nebenweg. Die Studio-Leiste setzt seit E468 `min-height:
+var(--touch-min)`; hier steht jetzt dasselbe.
+
+**Was kostet es?** Zwei Knöpfe mehr in einer Leiste und 60 statt 38 px
+Höhe am Rechner. Dafür ist die Suche zu Ende gedacht, statt auf halbem
+Weg stehenzubleiben.
+
+**Wächter `test556`**, 22 Zusagen. Gegen den alten Stand war er rot mit
+5 von 17 — darunter die Zeilen, um die es geht: „aktiv bleibt 0 — Enter
+tut nichts" und „unter 44 px: ✕ (13×24)". Der Telefon-Teil kam **nach**
+dem Bild dazu und war noch einmal rot: „sie reicht von -90 bis 368 in
+einem 390 px breiten Fenster".
+
+
+## E668 — Fett ist ein Schalter, und Strg+B nimmt denselben Weg
+
+**Was wurde entschieden?** Zwei Dinge in einem Bogen, weil sie dieselbe
+Zeile betreffen:
+
+1. `umschliesse` **schaltet** die Marke, statt sie nur zu stempeln. Liegt
+   sie schon um die Auswahl, kommt sie weg.
+2. Die **zweite** Fassung von `umschliesse` in `editor.ts` ist weg. Strg+B,
+   Strg+I, Strg+U, Strg+E und Strg+Umschalt+S gehen jetzt durch die Fassung
+   der Auswahlleiste — dieselbe, die der Knopf ruft (§8).
+
+**Warum der Schalter?** Weil Fett in jedem Textprogramm der Welt ein
+Schalter ist. Hier war es ein Stempel: wer ein fettes Wort markierte und
+noch einmal drückte, bekam `****Wort****`. Und das ist nicht nur hässlich —
+gezeichnet wird daraus `**Wort**` als **sichtbarer Text**. Die Marke steht
+dann mitten im Absatz, und wer sie loswerden will, muss sie von Hand
+löschen.
+
+Bei Kursiv war es schlimmer und leiser: aus `*Satz*` wurde durch ein
+zweites Strg+I nicht `**Satz**`-mit-Sternen, sondern **fett**. Eine Taste,
+die „kursiv" heisst, machte fett.
+
+**Warum der zweite Punkt der teurere ist.** `editor.ts` hatte eine eigene
+Fassung, und sie arbeitete ganz anders:
+
+```js
+r.insertNode(document.createTextNode(marke + txt + marke));
+Store.updateBlock(blk.dataset.bid, { text: ct.textContent });
+```
+
+`ct.textContent` ist der **gezeichnete** Text. In einem Block
+`Ein **fetter** Satz` steht dort `Ein fetter Satz` — ohne Sterne. Wer
+irgendwo in diesem Block Strg+B drückte, speicherte den gezeichneten Text
+zurück und **löschte damit jede Auszeichnung, die der Block vorher hatte.**
+Kein Absturz, keine Meldung. Gemessen in `test557`:
+
+```txt
+vorher:  Ein **fetter** Satz
+Strg+B auf „Satz"
+nachher: Ein fetter **Satz**        ← das alte Fett ist weg
+über den Knopf: Ein **fetter** **Satz**
+```
+
+Derselbe Handgriff, zwei Ergebnisse — je nachdem, ob man die Maus oder die
+Tastatur benutzt. Das ist §8 wörtlich: „Ein zweiter Katalog für dasselbe
+läuft mit dem ersten auseinander, und niemand merkt, welcher gilt."
+
+**Und es erklärt eine Lücke in E650.** Der Fund vom 20. September — 
+`String.replace` trifft das erste statt des markierten Vorkommens — wurde in
+`auswahlleiste.ts` repariert. Die zweite Fassung kannte niemand, also blieb
+sie, wie sie war. Ein Wächter, der nur einen von zwei Wegen misst, sagt
+„grün" über die halbe Wahrheit; `test542` prüfte den Knopf, nicht die Taste.
+
+**Der Fall, der sorgfältig macht: `*` ist die halbe `**`.** In
+`Ein **fetter** Satz` steht vor „fetter" ein `*` und dahinter auch. Wer das
+beim Abschalten von Kursiv für die Kursiv-Marke hielte, machte `*fetter*`
+daraus und löschte das Fett. Deshalb zwei zusätzliche Zeilen: eine einzelne
+`*` gilt nur, wenn daneben keine zweite steht. Strg+I auf einem fetten Wort
+ergibt weiterhin `***fetter***`, also fett UND kursiv — und nicht kursiv
+STATT fett.
+
+**Was war die Alternative?** Die Fassung in `editor.ts` stehenlassen und
+nur den Schalter einbauen. Dann wären es zwei Schalter gewesen, die
+verschieden schalten — der Fehler von E650 noch einmal, nur mit mehr Code.
+Und das Löschen der Auszeichnung wäre geblieben.
+
+**Was kostet es?** Die Tastatur ruft jetzt über `Auswahl` statt direkt. Das
+ist ein Sprung mehr und ein `typeof`-Schutz davor; dafür gibt es die
+Auszeichnung nur noch einmal im Programm.
+
+**Was es NICHT tut:** Es schaltet an der gefundenen Stelle, nicht über eine
+Suche. Der Restfall aus E650 Weg 3 bleibt, wie er ist — eine Auswahl, deren
+Stelle sich nicht sicher bestimmen lässt, wird weiterhin nicht geraten.
+
+**Wächter `test557`**, 13 Zusagen. Gegen den alten Stand war er rot mit
+8 von 13, und zwei seiner Zeilen sagen alles: `Ein schlichter ****Satz****`
+und `Ein fetter **Satz**`.
+
+
+## E669 — Die angemeldeten Geräte gibt es jetzt wirklich
+
+**Was wurde entschieden?** Der Server bekommt zwei Wege — `GET
+/konto/geraete` und `POST /konto/geraete/weg` —, und das Wolke-Fenster
+bekommt die Liste, die die Einstellungen seit Langem versprechen.
+
+**Warum?** Weil in den Einstellungen unter „Angemeldete Geräte" stand:
+„Die Liste und der Freigabe-Code stehen im Wolke-Fenster." Den Code gab es.
+Die Liste nicht — das Fenster zeigte eine einzige Zeile, „Gerät: <dieses
+hier>", und das ist ein Spiegel, kein Verzeichnis.
+
+Das ist §47 in seiner leisesten Form. „Im README versprechen, was nicht
+läuft" steht dort als eigene Zeile; es in der **Oberfläche** zu versprechen
+ist dasselbe, nur glaubwürdiger — und es fällt niemandem auf, weil die
+Stelle, an der man nachsähe, genau die fehlende ist.
+
+**Und der Server wusste es die ganze Zeit.** `sitzungen` hält `geraet`,
+`angelegt` und `bis`, seit es die Tabelle gibt. `sitzungGeben` schreibt
+alle drei; gelesen hat sie niemand. Es fehlte kein Datenmodell, sondern
+eine Frage.
+
+**Was hinausgeht und was nicht (§40, §42).** Der Token liegt ohnehin nur
+als Abdruck in der Ablage. Hinaus geht davon ein **Stück** — sechzehn
+Zeichen, genug, um ein Gerät eindeutig zu benennen, und zu wenig, um damit
+etwas zu tun. Der ganze Abdruck geht nicht hinaus: er wäre nicht
+gefährlich, aber er ist auch nicht nötig, und was nicht nötig ist, bleibt
+am Server.
+
+**Wie das fremde Konto ausgeschlossen wird.** Nicht durch einen Vergleich,
+sondern durch die Menge: gesucht wird ausschliesslich unter den Sitzungen
+des eigenen Kontos. Eine fremde Kennung findet dort nichts — nicht, weil
+sie abgelehnt wird, sondern weil sie gar nicht erst in der Menge liegt, in
+der gesucht wird. Ein Filter, den man vergessen kann, wäre der unsichere
+Weg herum.
+
+**Eine Marke bekommt die Liste nicht.** Sie beantwortet die Frage „wer ist
+alles ich?" — das ist eine Frage des Menschen am Konto, nicht eines
+Programms mit einem Schlüssel (§26).
+
+**Was war die Alternative?** Den Satz in den Einstellungen streichen und
+ehrlich schreiben, dass es keine Liste gibt. Das wäre §33 genügt und §24
+nicht: „der Nutzer entscheidet, wo seine Daten liegen" heisst auch, dass er
+wissen muss, welche Geräte an seinem Konto hängen. Ein altes Telefon, das
+niemand mehr hat und das weiter abgleicht, ist genau der Fall, für den es
+eine Liste braucht.
+
+**Was kostet es?** Zwei Wege am Server, ein Fenster, ein Knopf. Und ein
+zweiter Weg, sich abzumelden — das eigene Gerät steht mit in der Liste.
+Weil das aus einer Liste heraus leicht zu verwechseln ist, fragt es einmal
+nach, bevor es passiert.
+
+**Zwei Funde am Rande, beide aus dem Bild (§55.3):**
+
+1. Die Knöpfe „Zurückziehen" und „Abmelden" massen **18 px**. Nicht 44,
+   nicht die 32, die §37 einem Nebenweg mit geschriebenem Grund erlaubt —
+   und ein Knopf, der ein Gerät abmeldet, ist nichts, was man danebentreffen
+   soll. Gemessen wurde die **gerenderte** Box, nicht eine Zeile im
+   Stilblatt (L206).
+2. Dieselbe Zeile baut das **Markenfenster** nebenan, mit demselben Mass.
+   §45 nennt es den zweitteuersten wiederkehrenden Fehler dieses Projekts:
+   „eine Sache an einer Stelle reparieren und die Nachbarstelle nicht
+   ansehen." Beide haben jetzt `.wo-zeilenknopf`.
+
+**Wächter `test558`**, 28 Zusagen, ohne festen Port (L205). Gegen den alten
+Stand war er rot mit **0 von 18** — und die ersten sechs davon waren im
+ersten Anlauf **grün, weil die Liste leer war**: eine leere Liste enthält
+kein fremdes Konto, keinen Token, und zwei Kennungen aus null Einträgen
+sind auch verschieden. §55.2, zum wiederholten Mal in diesem Monat.
+
+**Die überzeugendste Gegenprobe** war aber die zum Escapen: ohne `esc()`
+um den Gerätenamen zerreisst ein `<script>` im Namen die ganze Zeile —
+statt zwei Knöpfen stand einer da, und der Klick fand nichts mehr. §19 ist
+hier keine Theorie: der Gerätename kommt vom Server und ist Nutzertext.
+
+
+## E670 — Den Text einer PDF ändern, ohne die PDF anzufassen
+
+**Redur, 21. September 2026:** „können wir so was machen das wenn ich eine
+pdf hochlade das ich die pdf selbst direk bearbeiten kann also die text
+direk"
+
+**Was wurde entschieden?** Ja — mit einem Werkzeug „Text ändern": auf ein
+Wort der PDF tippen, das Wort steht im Feld, ändern, fertig. Und mit einer
+Grenze, die im Namen des Werkzeugs steht und in seinem Titel: die PDF wird
+dabei **nicht umgeschrieben.**
+
+**Der Unterschied, und warum er keine Wortklauberei ist.** „Die PDF selbst
+bearbeiten" heisst wörtlich: ihren Inhaltsstrom neu setzen, mit ihren
+eingebetteten Schriften, und den Absatz neu umbrechen. Das können drei
+Programme der Welt richtig, und es ist ein eigenes Projekt.
+
+Was jedes andere Programm stattdessen tut — und was hier gebaut ist: die
+Stelle **zudecken** und die neue darüberschreiben, an derselben Stelle, in
+derselben Höhe, auf derselben Grundlinie. Die Änderung ist damit eine
+**Marke**, und daraus folgt alles Gute:
+
+- rückgängig und versioniert wie jeder Strich (§15)
+- in der `.redion`-Sicherung und im ausgegebenen PDF
+- **und das Original bleibt Byte für Byte das Original** — `leser.ts` sagt
+  das seit dem ersten Tag zu („Zurückgeschrieben wird nie"), und `test559`
+  misst es jetzt mit einer SHA-256-Summe über die abgelegte Quelle.
+
+**Was es nicht kann, und das steht an derselben Stelle wie das, was es
+kann.** Der Text **fliesst nicht.** Ein längeres Wort wird länger, statt
+den Rest der Zeile zu schieben; ein kürzeres lässt eine Lücke. Und die
+Schrift ist nicht die eingebettete der PDF, sondern eine ähnliche — ein
+Zeichen-für-Zeichen-Abgleich bräuchte Schrift-Einbettung.
+
+Beides ist im Werkzeug-Titel, in `marken.ts` und in §4 des Prüflaufs
+festgehalten. Nicht, weil es gut ist, sondern damit niemand später glaubt,
+es sei anders gedacht gewesen (§33: keine falschen Versprechen).
+
+**Wie das Wort unter dem Zeiger gefunden wird.** `textMitLage` in
+`leser.ts` gibt es seit E468 — jedes Textstück der Seite mit seinem Kasten
+in Blattpunkten, im selben Raum wie die Marken. Es lag da und wurde nur von
+der Suche benutzt. Dazu kommt jetzt `lageVonBlock` und `stueckBei`: ein
+Speicher je Quelle, einer je Seite, und die Frage „was steht hier?".
+
+**Warum das in `leser.ts` steht und nicht im Schreibstudio.** Das Studio
+hatte seine eigene Rechnung (`griffe`, `lagen`) für die Suche. Ein zweiter
+Rufer hätte eine zweite gebraucht — und zwei Rechnungen derselben Sache
+laufen auseinander (§8). Sie steht deshalb dort, wo pdf.js ohnehin wohnt.
+
+**Die Fläche ist die Papierfarbe, nicht Weiss.** Ein Scan ist selten weiss,
+und ein weisser Fleck auf grauem Papier sieht aus wie ein Fehler. Gelesen
+wird ein Bildpunkt knapp ÜBER der Zeile — mitten im Wort träfe man die
+Schrift und bekäme Schwarz, und ein schwarzer Deckel wäre schlimmer als ein
+falsch weisser.
+
+**Was war die Alternative?** Zwei getrennte Marken — ein Abdeckband und
+eine Textmarke. Dagegen spricht, dass man sie einzeln verschieben, einzeln
+radieren und damit auseinanderbringen könnte: ein Deckel ohne Text ist ein
+Loch im Dokument, und ein Text ohne Deckel steht doppelt da. Eine Marke,
+zwei Elemente.
+
+**Was kostet es?** Ein Werkzeug mehr in der Leiste (das vierzehnte), eine
+Markenart mehr, und beim ersten Tipp auf einer Seite das Öffnen der Quelle.
+
+**Und was ein Scan nicht hergibt.** Ein eingescanntes Blatt hat keine
+Textebene — dort ist jedes Wort ein Bild, und kein Werkzeug findet darin
+ein Wort. Das Werkzeug sagt es dann, statt stumm zu bleiben: „Bei einem
+Scan ohne Texterkennung gibt es keinen." Wer das nicht erfährt, hält das
+Werkzeug für kaputt.
+
+**Zwei Funde beim Bauen, beide von bestehenden Wächtern:**
+
+1. `test480 §7b` — das neue Werkzeug trug `inkText` mit, dasselbe T wie
+   „Text schreiben". Der Lauf druckte `inkText/inkText = 100 %` und hielt
+   die Regel aus E515 (kein Paar über 60 %). Ohne ihn hätte es zwei
+   gleiche Knöpfe nebeneinander gegeben, und gesehen hätte es niemand.
+   Das neue Zeichen `inkTextFix` misst gegen das ähnlichste Paar 52 %.
+2. Derselbe Lauf zählt die Werkzeuge — dreizehn, von Hand geschrieben.
+   Jetzt vierzehn, von Hand nachgezogen. Genau dafür steht die Zahl dort.
+
+**Und ein Fehler von mir**, der fünf Minuten Stille kostete: `alsSeiten`
+bekam `PdfEinlesen.OHNE_FRAGE` als Vorgabe — das ist aber **die Zahl 30**
+und kein Schalter „ohne Frage". Der Layout-Dialog stand und wartete auf
+einen Menschen, den es im Prüflauf nicht gibt. E21, wörtlich: eine
+Schnittstelle aus dem Gedächtnis geschrieben statt nachgeschlagen.
+
+**Wächter `test559`**, 18 Zusagen. Gegen den alten Stand war er rot mit
+**4 von 18** — und die vier grünen waren keine Zufallstreffer: „Die PDF ist
+als Seite eingelesen" und „Die abgelegte Quelle ist Byte für Byte die
+hereingegebene" halten den Zustand, der SCHON gut war, und müssen es auch
+nach diesem Bogen noch tun.
+
+
+## E671 — Was der erste volle Lauf seit elf Bögen gefunden hat
+
+**Was wurde entschieden?** Acht rote Läufe abgearbeitet, und zwar jeder an
+seiner Ursache statt an seiner Zahl. Die Messungen stehen in
+`messungen.md`; hier stehen die zwei Entscheidungen, die dabei fielen.
+
+**1 · Der Speicher der PDF-Quellen steht in `leser.ts`, und nur dort.**
+E670 legte `lageVonBlock`/`stueckBei` dort ab — und liess die gleichlautende
+Rechnung im Schreibstudio stehen (`griffe`, `lagen`, `griffVon`, `lageVon`).
+Zwei Speicher für dieselbe Sache: dieselbe PDF wäre zweimal geöffnet
+worden, und wer einen leert, leert den anderen nicht.
+
+Sichtbar wurde es nicht an der Oberfläche, sondern an `test537`: die Zahl
+der Querverweise stieg um eins, weil `Dateien.alsBlob` plötzlich an zwei
+Stellen stand. Ein Wächter für die Architektur hat einen Fehler im
+Zwischenspeicher gefunden — dafür ist er nicht gebaut, und genau deshalb
+ist er etwas wert.
+
+Das Loslassen zieht mit um: `quellenSchliessen()` steht jetzt neben dem
+Speicher, ausgelöst wird es weiterhin vom Studio, wenn es neu aufbaut.
+
+**2 · Die Blatt-Werkzeugleiste bleibt eine Aufzählung.** Sie wird Knopf für
+Knopf hingeschrieben; das Studio-Band daneben baut aus dem Katalog. Deshalb
+hatte „Text ändern" dort einen Knopf und hier keinen, zwei Tage lang.
+
+Der naheliegende Schluss wäre: beide aus dem Katalog bauen. Dagegen spricht
+der Formen-Knopf. Er ist kein `button(…)`, sondern trägt das Zeichen der
+ZULETZT GEWÄHLTEN Form (E515) — eine Schleife müsste ihn als Sonderfall
+kennen, und dann wäre die Schleife die Aufzählung mit Umweg. Also bleibt
+die Aufzählung, und `test523` bleibt ihr Wächter: er gleicht die gemerkte
+Ordnung gegen den Katalog ab und wird rot, sobald beide auseinandergehen.
+
+**Was war die Alternative zu beidem?** Die Zahlen in den Läufen hochsetzen
+und weitergehen. Bei `test210`, `test437` und `test523`s Zählung ist das
+auch genau richtig — ein neues Werkzeug IST ein Knopf mehr, und die Zahl
+steht dort von Hand, damit jemand hinsieht. Bei den anderen fünf wäre es
+das Zudecken eines Fehlers gewesen.
+
+**Was kostet es?** Nichts, was nicht ohnehin fällig war.
+
+**Und eine Lehre über Wächter**, die hier zum zweiten Mal in einer Woche
+auftaucht: `test410` meldete eine tote CSS-Deklaration, die ein deutscher
+Satz in der Chronik war — „Die 26 px entstehen aus `font-size:12px` und
+`padding:3px 9px`". Sein Ausdruck fing ein `<style>` aus einem Kommentar
+ein und las von dort 5,3 MB JavaScript als Stilblatt. Eine Messung, die
+Prosa für Code hält, sagt irgendwann etwas Falsches — und zwar erst dann,
+wenn jemand einen Satz schreibt, der wie Code aussieht.
+
+**Geprüft:** `node pruefungen/alle.mts 210 270 290 362 410 437 440 523 537`
+→ acht grün, `test537` bleibt bei 518 gegen 517 (L207, Redurs Entscheidung).
+
+
+## E672 — Ein Ordner hat eine Farbe, und man kann sie wechseln
+
+**Redur, 21. September 2026 (wörtlich):** „ich sollte die ordner farben
+wählen können und farben wecheln können".
+
+**Was wurde entschieden?** Ordner bekommen eine wählbare Farbe — in der
+Bibliothek und in den Notizheften (Fächer) —, und die Farbe steht überall,
+wo der Ordner steht: auf dem Deckel, in der Seitenleiste, im Ablagebaum.
+
+**Was es schon gab, und warum das die Form vorgab.** Die Notizhefte haben
+seit E406 ein „Farbe …"-Menü — für **Hefte**. Das Feld heisst `color` und
+existiert an jedem Block (§52.8); die Palette sind die neun Kennungen aus
+`Farben`; die Farbe steht als Rücken links am Deckel. Drei Dinge waren
+damit entschieden, bevor eine Zeile geschrieben wurde:
+
+1. **Kein neues Feld.** `color` ist da, wandert in Sicherung und Abgleich,
+   und ein zweites Feld „ordnerFarbe" daneben wäre §8 und §53.3 zugleich.
+2. **Kein zweiter Wähler.** `farbMenue` war privat in `notebook.ts` und
+   rief danach das Regal neu. Es steht jetzt im Rückgabeobjekt und nimmt
+   ein `danach` — die Bibliothek ruft denselben Wähler und zeichnet danach
+   sich selbst. Dieselben neun Felder, dieselben Namen (§38), dasselbe
+   Häkchen.
+3. **Eine Whitelist.** `farbeVon` prüfte im Notizheft, ob ein Wert eine
+   bekannte Kennung ist. Mit dem dritten und vierten Nutzer wanderte die
+   Prüfung nach `Farben.kennung` — und dazu `Farben.marke`, das aus einer
+   Kennung die Attribute macht. Beides ohne `esc`, weil nur eine Kennung
+   aus der Liste je hindurchkommt; `test560 §5` schiebt `"><b>x</b>`
+   hinein und misst, dass nichts davon im Markup landet (§19).
+
+**Der Fund beim Bauen, den nur das Messen zeigte.** Die Regel der Hefte
+(`border-left:5px solid var(--deckel-farbe)`) griff am Ordner nicht: der
+gezeichnete Ordnerdeckel (E601) setzt `border:0`, und die Kante kam mit
+**0 px** heraus, die Farbe fiel auf `currentColor` zurück — `rgb(167, 167,
+167)`, das Grau des Fliesstexts. Der erste Wächter hatte genau das
+gemessen und war rot; ohne ihn hätte ich ein Attribut gesetzt und es für
+gezeichnet gehalten.
+
+Ein Ordner hat keinen Rücken. Sein Deckel **ist** Körper und Reiter,
+beide aus der Akzentfarbe. Also bekommt er eine eigene Variable —
+`--ordner-farbe`, ohne Wahl der Akzent, mit Wahl die Wahl —, und Körper,
+Reiter und der aufgefächerte Körper in `motion.css` lesen sie. Der Wächter
+misst seither den **Reiter** (`::after`) und vergleicht ihn Kanal für Kanal
+mit `--c-blue`, `--c-red`, `--c-green`; nicht „anders als vorher", sondern
+„genau diese".
+
+**Wo die Farbe steht:**
+
+| Ort | Wie |
+|---|---|
+| Bibliothek, Deckel | Reiter und Körper des Ordners (`--ordner-farbe`) |
+| Notizhefte, Fach | dieselbe Kachel, dieselbe Regel |
+| Heft | der Rücken links, wie seit E406 |
+| Seitenleiste | ein 3-px-Rücken als Innenschatten, damit nichts rutscht |
+| Ablagebaum | dasselbe am Knoten (`Baumansicht` kennt jetzt `farbe`, noch einmal durch die Whitelist) |
+
+**Was war die Alternative?** Ein Farbwähler direkt am Deckel (Klick auf
+den Reiter). Dagegen spricht §37: der Reiter ist 13 % der Deckelhöhe, und
+ein Ziel, das man beim Öffnen streift, ist ein falscher Klick. Das Menü
+hat 44 px, und die Felder haben seit E406 einen vergrösserten
+Treffbereich — `test560 §6` misst ihn am Telefon mit `elementFromPoint`
+20 px über und unter der Mitte.
+
+**Was kostet es?** Einen Menüeintrag an zwei Stellen, eine Variable, drei
+CSS-Regeln, zwei Helfer. Und ein gefärbter Ordner ist im Dunkelmodus so
+gefärbt wie im hellen — die Kennungen zeigen auf die Tokens, nicht auf
+Hexwerte.
+
+**Wächter `test560`**, 27 Zusagen, ohne festen Port. Gegen den alten
+Stand war er rot mit **9 von 26** — und drei der neun grünen hielten
+den Zustand, der schon gut war (kein Attribut ohne Farbe, nichts im
+Markup, keine Ausnahme).
+
+---
+
+## E673 — Der Füller läuft spitz aus
+
+**Redur, 21. September 2026 (wörtlich):** „ich will das du die stift und
+heichenb verbessern, und gleich wie goodnotes machen".
+
+**Was wurde entschieden?** Füller und Pinsel setzen mit der Spitze auf und
+laufen beim Abheben aus — wie in GoodNotes. Das ist der erste Bogen zu
+Redurs Satz; die Reihenfolge stand fest, bevor eine Zeile geschrieben
+wurde: zwei Leser haben den Stiftweg und die Werkzeuge gelesen (nur
+gelesen, kein Prüflauf daneben, §30), und beide nannten die Verjüngung an
+erster Stelle, weil sie das ist, was man beim ersten „e" **sieht**, ohne
+zu messen.
+
+**Was war?** `InkGeometry.outline` und `Feder.d()` schliessen den Umriss
+vorn und hinten mit einem `A`-Bogen, dessen Radius die halbe Breite des
+ersten und des letzten Punkts ist. `druckFaktor` liess den Füller nie
+unter 55 % seiner Grundbreite fallen, und `pointerup` schreibt den
+letzten Druck fort (E376) — ein Stift, der abhebt, meldet 0, und 0 wäre
+falsch. Zusammen hiess das: jeder Strich beginnt und endet mit einem
+runden Klecks in voller Breite. `grep -i 'taper|verjüng'` über
+`stroke.ts`, `geometry.ts`, `marken.ts` traf nur Kommentare.
+
+**Wie es gebaut ist — drei Entscheidungen, keine davon still:**
+
+1. **Eine Kurve, nicht zwei.** `InkGeometry.spitzeFaktor(weg, laenge, min)`
+   geht quadratisch auslaufend von `min` bei Weglänge 0 auf 1 bei
+   `laenge`. Gemessen wird **Weglänge**, nicht Punktzahl — sonst hinge
+   die Spitze an der Abtastrate des Stifts, und ein 240-Hz-Stift hätte
+   eine viermal kürzere Feder als ein 60-Hz-Finger (die Lehre aus E504).
+   Der nasse Strich nimmt dieselbe Kurve vom Anfang her (`nassSpitze`,
+   ein Faktor auf `halbeBreite`); das Ende kennt er nicht, bis die Hand
+   abhebt — dann baut `finish` den Knoten aus der Marke neu, und die
+   zweite Spitze steht. `test561 §6` hält genau das: nass Anfang 0,3,
+   Ende 1,2; trocken 0,3 und 0,3.
+2. **Eine Stelle für die halben Breiten.** Sie standen **zweimal**,
+   zeichengleich — in `zeichneMarke` für den Bildschirm und in
+   `alsAnnotation` für das PDF. E623 hatte dasselbe bei der Deckung
+   gefunden. Mit der Spitze wären es zwei Rechnungen geworden, die
+   auseinanderlaufen können, ohne dass ein Lauf es merkt. Jetzt heisst
+   sie `halbeBreiten(mark, points)`: Grundbreite, Druckkurve, Neigung,
+   Spitze — und `test561 §1` misst den Bildschirm-Bogen gegen die
+   PDF-Kontur (0,3 gegen 0,6/2).
+3. **Die Spitze steht im Register.** `STIFTE` trägt `spitze: 0.25` am
+   Füller und `0.12` am Pinsel; wer keine hat, setzt mit voller Breite
+   auf — der Bleistift (Graphit hat keine Feder), der Schutzleiter (eine
+   Leitung hat eine Stärke, E490), die Linien ohnehin. Ein `if (stil ===
+   'fueller')` im Zeichner wäre der Sonderfall, den §5 Regel 3 verbietet.
+
+**Kurze Striche — und der Fund, den nur das Bild zeigte (§55.1).** Ein
+i-Punkt ist zwei Punkte lang; eine Spitze von fünf Punkten je Ende hätte
+ihn zum Splitter gemacht. Der erste Stand kürzte deshalb den **Weg** der
+Spitze auf höchstens 40 % der Strichlänge je Ende, und `test561 §3` war
+damit grün: der 2-pt-Punkt des 2,4-pt-Füllers blieb in der Mitte 2,4
+breit. Dann kam das Bild — und der Punkt des **5-pt-Füllers** stand als
+senkrechter Splitter da: zwei Punkte lang, fünf hoch, an beiden Enden auf
+ein Viertel gespitzt. Die Spitze war kurz, aber immer noch spitz. Ein
+Strich, der kürzer ist als seine Feder, ist ein Klecks, keine Feder.
+Seither wird die Spitze auch **stumpfer**, je weniger von zwei ganzen
+Federn in den Strich passt (`anteil = gesamt / (2·laenge)`, die
+Untergrenze wandert von `min` auf 1). Der Wächter hat das erst nach dem
+Bild bekommen — zwei Zusagen, rot am alten Stand mit „Anfang 1.25 gegen
+Mitte 5", jetzt 4,66 gegen 5 beim Punkt und 2,96 gegen 5 beim 12-pt-Haken,
+der trotzdem sichtbar ausläuft.
+
+**Was NICHT angefasst wird — und warum.** Kein Druckwert. Die Spitze ist
+ein Aussehen; `pressure` bleibt, was der Sensor gemeldet hat (`test561
+§6` liest den gespeicherten Druck nach dem Abheben: 0,5 überall). Und
+kein neues Feld an der Marke: alter Bestand mit `stil: 'fueller'` wird
+seit E673 **auch** spitz gezeichnet. Das ist eine sichtbare Änderung an
+vorhandenen Seiten, und sie ist bewusst: die Alternative — ein Feld
+`spitze: true` nur an neuen Marken — hätte eine Seite von gestern und
+eine von heute mit zwei Federn geschrieben, nebeneinander, für immer. Die
+Daten sind byteweise dieselben; was sich ändert, ist, wie eine Feder
+aussieht, wie bei der Deckung (E623) und den Farbtokens (§39).
+
+**Was war die Alternative?** Die Spitze in `seiten`/`versatz` selbst zu
+bauen (die Stelle, die die Kontur rechnet). Dagegen: `test366 §1`
+verlangt, dass `Feder.d()` zeichengleich mit `outline` ist — bei
+gleichen Punkten und gleichen halben Breiten. Wer die Breite **vor**
+beiden anfasst, lässt diese Zusage stehen; wer sie **in** beiden anfasst,
+schreibt sie zweimal. Deshalb ist die Spitze ein Faktor auf `halb`, und
+`test366` blieb grün, ohne dass eine Zeile daran geändert wurde.
+
+**Was kostet es?** Eine Weglängensumme je Strich (O(n), einmal beim
+Zeichnen), ein Faktor je Punkt im nassen Strich. Und die Untergrenze von
+`druckFaktor` (55 %) ist noch da: sie gilt für die **Mitte** des Strichs,
+und dort war sie nie das Problem. Ob sie sinken soll (mehr Ausdruck bei
+leichter Hand) ist die Kennlinienfrage, die der Leser als Lücke 3 nennt —
+ein eigener Bogen, weil er alte Striche in der Mitte verändert.
+
+**Wächter `test561`**, 24 Zusagen, ohne festen Port. Gegen den alten
+Stand war er rot mit **13 von 22** und hat die Zahl wörtlich gedruckt,
+um die es geht: „Anfang 2.4 gegen Mitte 2.4 · Bögen [1.2,1.2]". Die
+Gegenprobe — `spitzeFaktor` gibt 1 zurück — macht sieben Zusagen rot,
+darunter die nasse. Die zwei Zusagen zum breiten Punkt kamen nach dem
+Bild dazu und waren gegen den ersten Stand rot (22 von 24). Bild:
+`node bilder.mts spitze`.
+
+---
+
+## E674 — Jedes Werkzeug merkt sich Farbe und Stärke
+
+**Redur, 21. September 2026 (wörtlich):** „ich will das du die stift und
+heichenb verbessern, und gleich wie goodnotes machen".
+
+**Was wurde entschieden?** Stift, Marker, Formen, Zettel und Text merken
+sich je ihre Farbe und ihre Stärke — auf jeder Seite, über das Neuladen
+hinweg. Wer mit gelbem, breitem Marker markiert und mit schwarzem, feinem
+Stift schreibt, wechselt nur noch das Werkzeug. Das ist der zweite Bogen
+zu Redurs Satz und, nach dem Leser der Werkzeuge, „die häufigste
+Handbewegung des Tages und die grösste Reibung gegenüber GoodNotes".
+
+**Was war?** `color` und `width` waren in `schicht()` **eine** Variable
+für alles. Der Marker auf Gelb/Breit, zurück zum Stift — und der Stift
+schrieb gelb und breit. `test562 §1` hat es gegen den alten Stand
+gedruckt: „Zurück beim Stift zeigt die Leiste wieder Rot und Breit — ist
+`{farbe: #3aa757, breite: 1.2}`". Dazu kam, dass auf einer gewöhnlichen
+Seite **gar nichts** gemerkt wurde: nach dem Neuladen stand Schwarz/Mittel.
+Im Studio gab es ein Gedächtnis je **Dokument** (`dokTinte:`/`dokStrich:`,
+E468) — das ist eines für die Seite, keines für den Stift.
+
+**Wie es gebaut ist:**
+
+1. **Ein Meta-Schlüssel, `zeichnen:werkzeugwerte`**, je Werkzeug `{farbe,
+   breite}`. Die Formen teilen sich einen Eintrag, weil sie sich seit E375
+   einen Knopf teilen (`istForm` → `formen`). Die Hand merkt sich nichts.
+   Kein neues Feld an einer Marke, keine Migration (§9); ein Meta reist in
+   `.json` und `.redion` mit wie die Farbsätze (E486).
+2. **An einer Stelle, in der Zeichenschicht.** `setzeFarbe` und
+   `setzeStrich` schreiben dem geführten Werkzeug gut; `setzeWerkzeug`
+   schreibt dem alten gut und lädt das neue. Jeder Weg zur Farbe — Tupfer,
+   eigene Farbe, Farbsatz (E501), Menüband über `Zeichenziel.setzeFarbe` —
+   läuft durch diese zwei Funktionen, also merkt jeder. Und die Schicht
+   sagt es dem Kern (`Zeichenziel.uebernehmeFarbe/-Strich`), damit die
+   Leiste den Tupfer leuchten lässt, der wirklich gilt — sonst stünde oben
+   Grün und unten käme Rot.
+3. **Frisch gelesen, nicht abgeschrieben.** Eine Seite kann drei Blätter
+   tragen, jedes mit eigener Schicht. Würde jede Schicht das Meta einmal
+   beim Aufbau lesen, wüsste Blatt B nichts von dem, was auf Blatt A
+   gewählt wurde. Deshalb liest `setzeWerkzeug` beim Wechsel aus dem Meta.
+4. **Geprüft, bevor es gilt (§19).** Eine Farbe ist `#rrggbb`, eine Stärke
+   liegt zwischen 0,5 und 12 (der Regler, E438); ein Schlüssel ist ein
+   Werkzeugname aus Kleinbuchstaben. `test562 §4` schreibt
+   `javascript:alert(1)` und 999 hinein — der Stift steht danach auf
+   Schwarz/Mittel, der Marker nimmt die gültige Farbe und lässt die
+   ungültige Stärke liegen.
+5. **Ein Werkzeug ohne Gedächtnis übernimmt, was an ist** — wie bisher.
+   Wer noch nie einen Zettel gefärbt hat, bekommt beim ersten Zettel die
+   Stiftfarbe, keine Überraschung (`test562 §5`).
+6. **Die Auswahl hat keine eigene Tinte.** Das hat nicht der neue Wächter
+   gefunden, sondern ein alter: `test345 §4` wurde rot — „Der nächste
+   Strich nimmt die zuletzt gewählte Farbe — ist `#111111`, soll
+   `#d64545`". E353 verspricht: wer drei Striche wählt und Rot antippt,
+   färbt die drei um **und zeichnet danach rot weiter**. Der erste Stand
+   von E674 schrieb das Rot der Auswahl gut, und der Stift holte sich beim
+   Zurückwechseln sein altes Schwarz. Jetzt haben Hand, Auswahl, Radierer,
+   Laser und Bild keinen Eintrag; eine Farbe, die unter ihnen gewählt
+   wird, geht an das **letzte Zeichenwerkzeug** — das, zu dem man
+   zurückkehrt. `test562 §6` hält beides: Rot mit der Auswahl gewählt
+   steht danach am Stift; war zuletzt der Marker dran, bekommt der Marker
+   das Grün, und der Stift bleibt rot.
+
+**Die Nachbarstelle (§45), gefunden beim Lesen.** Das Studio setzt beim
+Öffnen eines Dokuments die Dokumentfarbe und -stärke, indem `applyPen`
+die Tupfer der Leiste anklickt — und wählte danach das Werkzeug. Mit
+E674 hätte der Werkzeugwechsel die gerade gesetzte Dokumentfarbe sofort
+mit der gemerkten Stiftfarbe überschrieben: gesetzt und im selben Atemzug
+weg. Die Reihenfolge ist jetzt umgekehrt — erst das Werkzeug, dann Farbe
+und Stärke. Beide Gedächtnisse bleiben: das Dokument sagt, womit man hier
+zuletzt geschrieben hat; das Werkzeug sagt, was es sonst trägt.
+
+**Was war die Alternative?** Das Gedächtnis in der Leiste (`leiste()`)
+statt in der Schicht. Dagegen: die Leiste ist eine von zwei Anzeigen
+(Menüband, E-Leiste), und die Farbe kommt auch ohne Leiste an — über
+`Zeichenziel.setzeFarbe`. Ein Gedächtnis in der Anzeige wüsste davon
+nichts. Und: die Werte je Werkzeug in `Zeichenziel` (kern/) zu halten.
+Dagegen: der Kern kennt Werkzeuge nur als Namen; was ein Werkzeug ist und
+welche sich einen Knopf teilen, weiss die Schicht.
+
+**Was kostet es?** Ein `getMeta` je Werkzeugwechsel und ein `setMeta` je
+Farb- oder Stärkewahl. Und eine Änderung des Verhaltens, die man einmal
+bemerken wird: wer bisher gewohnt war, dass der Stift die Markerfarbe
+„mitnimmt", muss sie einmal je Werkzeug setzen — danach nie wieder.
+
+**Was NICHT dazugekommen ist — und warum.** Keine Stiftplätze (drei
+Ein-Tipp-Knöpfe für Stift+Farbe+Stärke). E498 hat sie abgelehnt, und
+LUECKEN.md hält fest, warum: die Zubehörzeile ist bei 596 px mit vierzehn
+Knöpfen voll, und die Farbsätze (E486/E501) können mehr. Der Leser der
+Werkzeuge hat einen Weg ohne zweiten Katalog vorgeschlagen (drei Farbsätze
+als „angeheftet" kennzeichnen). Das ist Redurs Entscheidung, nicht meine —
+E498 ist seine.
+
+**Wächter `test562`**, 24 Zusagen, ohne festen Port. Gegen den alten Stand
+war er rot mit **11 von 19**; die Gegenprobe — `setzeWerkzeug` lädt nichts
+— macht acht Zusagen rot, darunter die nach dem Neuladen. Die fünf Zusagen
+zur Auswahl kamen dazu, nachdem `test345` rot war. Bild: `node bilder.mts
+werkzeugwerte` — Marker Grün/Fein, Stift Rot/Breit, und nach dem Wechsel
+zurück steht die Leiste auf Rot/Breit.
+
+---
+
+## E675 — Ein Stift, der kurz 0 meldet, bleibt ein Stift
+
+**Redur, 21. September 2026 (wörtlich):** „ich will das du die stift und
+heichenb verbessern, und gleich wie goodnotes machen".
+
+**Was wurde entschieden?** Ein Stift, der im Strich schon Druck gemeldet
+hat, behält bei einer Meldung mit 0 seinen letzten Sensorwert. Nur ein
+Stift, der **nie** Druck meldet — einer ohne Sensor —, bekommt den
+Tempo-Ersatz aus E351, und dann steht in `druckArt` „tempo", nicht
+„stift".
+
+**Was war?** Der Leser des Stiftwegs hat es als Lücke 9 aus dem Code
+gelesen, mit dem Vermerk „Vermutung, nicht gemessen". `druckAus`
+entschied **je Meldung**: `pointerType === 'pen' && pressure > 0` hiess
+Sensor, alles andere hiess Tempo-Ersatz. Meldet ein Stift mitten im
+Strich eine 0 — am Rand des Sensors, beim Umgreifen, ein Aussetzer im
+Treiber —, sprang für diese Meldung der Ersatz ein: 0,6 beim ersten Mal
+(der Zweig hat noch keinen Vorgänger), danach aus der Geschwindigkeit.
+`test563 §1` hat die Vermutung gemessen: ein Strich mit leichter Hand
+(0,2) und drei Aussetzern trug einen gespeicherten Druck von **0,47**,
+und die Fläche des Füllers war an der Stelle **×1,38** so breit — ein
+Buckel, den niemand gedrückt hatte. Der 3er-Median (E376) fängt einen
+einzelnen Ausreisser; zwei hintereinander gehen durch.
+
+**Wie es gebaut ist.** Eine Variable, `sensorZuletzt`: der letzte Druck,
+den der Sensor **dieses** Strichs gemeldet hat, `null` beim Aufsetzen —
+gesetzt **vor** dem ersten `druckAus`, sonst erbte der Strich den
+Sensorwert des vorigen. Eine 0 vom Stift gibt diesen Wert zurück, wenn es
+ihn gibt; gibt es ihn nicht, ist der Stift ein Stift ohne Sensor, und der
+Tempo-Zweig läuft wie für einen Finger. Beim Absetzen sagt `druckArt`
+„stift" nur noch, wenn `sensorZuletzt` je gesetzt war. Kein neues Feld an
+der Marke, kein anderes Format (§9): `pressure` bleibt, was es ist, es
+enthält nur keine erfundenen Werte mehr.
+
+**Was war die Alternative?** Den Median auf fünf Werte verlängern.
+Dagegen: er hätte Paare gefangen und Drillinge nicht, und er hätte auch
+**echte** Druckwechsel geglättet — ein Füller, der auf eine Spitze
+zuläuft, wäre stumpfer geworden. Der Aussetzer ist kein Ausreisser im
+Signal, er ist das **Fehlen** eines Signals; das gehört an der Quelle
+behandelt, nicht im Filter.
+
+**Was kostet es?** Nichts Messbares — ein Vergleich je Meldung. Und eine
+Änderung, die man in `druckArt` sehen wird: ein Stift ohne Sensor sagt
+jetzt „tempo". `test475 §5` hält „stift" für den Stift mit Sensor und
+„tempo" für die Maus; beides bleibt.
+
+**Kein Bild** (§55.3): das ist reines Messen. Der Wächter druckt die
+Zahlen, um die es geht.
+
+**Wächter `test563`**, 13 Zusagen, ohne festen Port. Gegen den alten
+Stand war er rot mit **10 von 13** — „[0.47]" und „×1.38" —, und mit
+„ist `stift`, soll `tempo`" für den Stift ohne Sensor. Die Gegenprobe
+(die Zeile, die den Sensorwert fortschreibt, abgehängt) macht die zwei
+Zusagen des Buckels wieder rot.
+
+---
+
+## E676 — Der Glätter hält die Ecke
+
+**Redur, 21. September 2026 (wörtlich):** „ich will das du die stift und
+heichenb verbessern, und gleich wie goodnotes machen".
+
+**Was wurde entschieden?** Der Glätter der Handschrift (`InkStroke.glaetter`)
+merkt sich die Richtung der Hand und lässt eine Ecke eine Ecke sein: kippt
+die Richtung, liegt die Spitze im Strich — nicht daneben. Das ist Lücke 6
+des Stiftweg-Lesers und Punkt 4 in L209; der vierte Bogen zu Redurs Satz.
+
+**Was war?** Ein Filter erster Ordnung mittelt (E376, E504): bei langsamer
+Hand stark, damit das Zittern verschwindet. Ein Filter, der mittelt, kennt
+keine Ecke — an der Spitze eines „M" läuft er weiter in die alte Richtung,
+während die Hand schon zurückkommt, und rundet ab, was spitz gemeint war.
+Die Vorhersage erkennt die Kehre seit E376 (`KEHRE`, „kippt die Richtung,
+wird nicht geraten"); der Glätter wusste nichts davon. `test564 §1` hat es
+gemessen: ein Zickzack mit drei Spitzen, langsam gezogen (0,125 px/ms),
+kam geglättet **2,62 px** neben jede Spitze zu liegen — bei 240 Hz 2,23.
+
+**Wie es gebaut ist — und die zwei Fehler, die der Wächter unterwegs
+gefunden hat:**
+
+1. **Die Richtung wird über eine Strecke gemessen, nicht über Punkte.**
+   `ECKE_SCHRITT = 2,5 px`: erst wenn die Hand so weit vom letzten Anker
+   weg ist, gilt eine Richtung als gemessen. Bei 240 Hz liegen die
+   Meldungen viermal dichter, und ein Zittern von 0,4 px darf keine
+   Richtung sein — dieselbe Lehre wie E504, nur an einer anderen Stelle.
+   `test564 §2` fährt das Zittersignal aus `test366 §3` hindurch: weiter
+   fünfmal kleiner, kein einziger falscher Sprung. Und ein „U" mit 40 px
+   Radius wird nicht für eine Ecke gehalten: die zweite Differenz des
+   geglätteten Wegs (0,031) liegt bei der des rohen (0,027).
+2. **Die Ecke ist der rohe Punkt, der am weitesten in der ALTEN Richtung
+   lag** — nicht der Anker (der liegt bis zu 2,5 px davor) und nicht der
+   aktuelle Punkt (der liegt 2,5 px dahinter). Dafür hält der Glätter die
+   rohen Punkte seit dem Anker, höchstens 64.
+3. **Die Ecke selbst ist der Punkt dieser Meldung.** Der erste Stand
+   sprang auf die Ecke und mittelte dann wie gewohnt zur Hand weiter — und
+   `test564 §3` war rot: bei 60 Hz lag der Strich 1,41 px neben der Spitze,
+   bei 240 Hz 0,3. Der Rest des Mittelns hing wieder an der Abtastrate,
+   genau das, was E504 abgestellt hatte. Seither gibt der Glätter an der
+   Kehre die Ecke unverändert zurück; die nächste Meldung mittelt von dort
+   weiter. Ergebnis: 0 px, bei beiden Raten.
+
+**Was war die Alternative?** Ein vollständiger 1-Euro-Filter (Casiez) mit
+`mincutoff` und `beta`. Er ist an Kehren schneller, aber er kennt sie
+ebenso wenig — er wird nur weniger träge, wenn die Hand schnell ist. Die
+Spitze eines langsam geschriebenen „M" ist nicht schnell. Und er hätte
+`test366 §3`, `test472` und L198 (`istKritzel` misst am geglätteten Weg)
+alle drei neu einmessen lassen. Der Kehren-Sprung ändert nichts an dem,
+was zwischen zwei Ecken passiert.
+
+**Was kostet es?** Je Meldung eine Wurzel und ein Vergleich; an einer
+Kehre eine Schleife über höchstens 64 Punkte. Und `test449`: das
+Kritzel-Löschen misst Richtungswechsel am geglätteten Weg (L198) — ein
+Kritzel hat jetzt schärfere Ecken, und der Lauf blieb grün; gefahren, nicht
+angenommen.
+
+**Und dann das Bild (§55.1).** `test564` stand auf 8 von 8, und das Bild
+zeigte ein „M" mit spitzen Gipfeln und einem **runden Tal**. Der Glätter
+hatte alle drei Ecken getroffen — gemessen —, und die Marke hatte sie
+trotzdem nicht. Eine Sonde auf die gespeicherten Punkte: **acht Punkte,
+gleichmässig verteilt**, das Tal 23,7 px neben dem nächsten. Zwei weitere
+Stellen, an denen eine Ecke verlorengeht, nachdem der Glätter sie
+gehalten hat:
+
+4. **Beim Absetzen.** `finish` dünnt mit RDP aus und hielt seit E115 eine
+   Regel: hat RDP weniger als acht Stützpunkte übrig, nimm acht
+   **gleichmässige** — damit ein langer, fast gerader Strich beim
+   Neuzeichnen nicht wie eine konstruierte Zweipunktlinie aussieht. Für
+   ein „M" ist das fatal: RDP hatte genau die fünf Ecken behalten, und
+   die Regel warf sie weg. Die Gipfel waren nur deshalb spitz, weil zwei
+   der acht zufällig in ihrer Nähe lagen. Jetzt kommen die acht zu den
+   Ecken **dazu** (Vereinigung, sortiert): dreizehn Punkte, jede Ecke
+   bei 0 px.
+5. **Im Umriss.** Der Weg von Stützpunkt zu Stützpunkt ist eine Q-Kurve
+   über die Mittelpunkte — der Punkt ist Kontrollpunkt, der Mittelpunkt
+   zum nächsten das Ende. Das rundet jede Ecke: bei 24 px Abstand der
+   Nachbarn läuft die Kurve **5,12 px** neben dem Tal vorbei (Gegenprobe
+   B). `InkGeometry.stueck(prev, p, next)` kennt seither die Kehre
+   (`ECKE_COS`, dieselbe Schwelle wie `KEHRE`) und geht dort als Gerade
+   **durch** den Punkt und als Gerade weiter zum Mittelpunkt. Die Feder
+   ruft dasselbe Stück für ihre eingefrorenen Teile — eine Rechnung, und
+   `test366 §1` (zeichengleich) blieb grün, ohne dass eine Zeile daran
+   geändert wurde. Der Umriss liegt jetzt 0,29–0,8 px neben den Ecken,
+   und näher als eine halbe Breite kann er nicht.
+
+**Wächter `test564`**, 11 Zusagen. §1–§3 laufen ohne Browser und ohne
+Port; §4 zieht das „M" mit echten Zeigerereignissen auf ein Blatt und
+verfolgt die Ecke bis zur Marke und bis zum gezeichneten Umriss. Gegen den
+alten Stand rot mit **6 von 8** — „2,62 px" —; §4 gegen den Stand nach dem
+Glätter rot mit „[4.24, 23.71, 11.5]" und „[15.19, 23.68, 20.37]". Drei
+Gegenproben, jede rot an ihrer Stelle: die Kehre nie erkannt (2,62), die
+acht ersetzen wieder (23,72), das Stück kennt keine Ecke (5,12). Bild:
+`node bilder.mts ecke` — ein „M", ein „W" und ein Zickzack, langsam mit
+dem Stift gezogen.
+
+---
+
+## E677 — Der Trainer wohnt im Lernzentrum
+
+**Datum:** 22. September 2026 (begonnen am 21.) · **Wächter:** `test565`
+
+**Redur, 21. September:** „jetzt will ich eien flüssige lern app im redion
+bauen nicht die karten sollte im berichen sein sondern direk eine appp dort
+… ich will so boxsen haben die ich weiss sollte selten vor komen und die
+ich nicht weiss mehrmals auch schriben und multiplichos und versuche
+möglichst die text 1:1 von buch seiten nehmen". Mitten im Bogen: „also es
+sollte direk mit redion verbunden sein die app nicht getrennt, und du
+kannst die bestse lern methoder dort setzt". Und weil er sofort lernen
+musste: „Ich brauche eien provisoriche momentan … und wenn du es die
+provisoriche gamvht hast pusche es auf github" — das war `f7f47c7`
+(`lernen/staatskunde.html`), am selben Abend.
+
+**Was wurde entschieden?** Der Trainer ist eine **Ansicht der Lernwelt**
+(`trainer`, in der Gruppe „Lernen", Route `#welt-lernen-trainer`, eine
+fünfte Kachel im Lernzentrum) — und er hat **keinen eigenen Speicher**.
+
+1. **Eine Aufgabe ist eine Lernkarte.** Ein `flashcard`-Block auf einer
+   Seite, `text` wie immer („Frage :: Antwort" oder ein Satz mit
+   `{{Lücke}}`), dazu ein Feld `quiz`, das sagt, wie gefragt wird:
+   `kind: 'mc'` mit `optionen: [{ text, richtig }]` (mehrere richtig, wie in
+   der Prüfung: „Kreuzen Sie die richtige(n) Antwort(en) an"),
+   `kind: 'schreiben'` mit `musterloesung` und `nummer` (6.1–6.13),
+   `kind: 'luecke'` mit `loesungen` (mehrere Schreibweisen). Jede Karte
+   nennt `thema`, `quelle` (die Buchseite) und `topic`, damit die
+   Themenkurven der Lernwelt sie mitzählen. `Learning.cards()` findet sie,
+   die klassische Lernrunde versteht sie (die Lücke über `{{…}}`), und sie
+   reisen in `.json`, `.redion`, in die Wolke und in den zweiten Tab, ohne
+   dass der Trainer etwas dafür tut (§9, §17).
+2. **Der Fortschritt geht über `WissenDienst.planen`** — dieselbe Rechnung
+   (SM-2 oder FSRS, je nach Schalter), die Tagesrunde, Fehlertraining und
+   Kennzahlen lesen. Ein Ankreuztreffer ist Note 3 („Gut"), nicht 4: er hebt
+   die Leichtigkeit nicht. Falsch ist Note 1.
+3. **Die Boxen sind eine Ableitung**, kein zweiter Plan: ohne `sr` ist eine
+   Karte „neu", sonst ist ihre Box `min(5, sr.wdh + 1)` — wie oft sie
+   zuletzt hintereinander gewusst wurde. So bekommt Redur, was er
+   beschrieben hat: was sitzt, kommt selten (SM-2 setzt Tage und Wochen),
+   was nicht sitzt, sofort wieder. Und in **derselben Runde** kommt eine
+   falsch beantwortete Karte nach drei anderen noch einmal, höchstens
+   zweimal — nicht in der Prüfungsrunde, die hält die Reihenfolge des
+   Lehrers.
+4. **Die angefangene Runde liegt im Meta-Fach** (`lernen:<aktor>:runde`),
+   nicht in `localStorage`: Escape oder „Beenden" verliert nichts, ein
+   Neuladen auch nicht.
+5. **Das Kapitel ist eine Vorlage** (`staatskunde-kapitel`, gemeldet aus
+   `staatskunde-inhalt.ts`). Ein Klick legt die Seite an: zuoberst die
+   sieben Prüfungsfragen des Lehrers in seiner Reihenfolge, dann je Thema
+   die Verstanden-Fragen mit den Lösungen aus dem Lösungsheft und die
+   Aufgaben aus den Buchseiten. Nutzerdaten — sichtbar, veränderbar,
+   sicherbar. Der Trainer kennt kein Kapitel beim Namen; er nimmt jede
+   Lernkarte mit `quiz`.
+6. **`Register.vorlagen.bauen` baut auch gemeldete Vorlagen.** `melde` gab
+   es seit jeher, doch `bauen` fragte nur die Galerie — eine Vorlage aus
+   einem Bereich stand im Register und war trotzdem nicht baubar. Jetzt:
+   erst die Galerie, sonst das eigene `bauen`, und `Fassung.markiere` setzt
+   den Vermerk, damit auch diese Seiten ein Update bekommen können.
+
+**Warum so?** Weil Redur es so gesagt hat — „nicht getrennt" — und weil es
+die einzige Fassung ist, die §9 und §51 hält: eine Karte, die im Trainer
+sitzt, sitzt überall. Ein eigener Speicher (die vorläufige Seite hält den
+Stand in `localStorage`) wäre ein zweiter Katalog derselben Wahrheit (§8),
+und er ginge bei jeder Sicherung verloren.
+
+**Was war die Alternative?**
+
+- *Die vorläufige Seite ausbauen.* Sie läuft ohne Redion, hält den Stand
+  im Browser und kennt keine Sicherung. Gut für einen Abend, falsch für
+  ein Produkt.
+- *Ein eigener Blocktyp `aufgabe`.* Dann hätte die klassische Lernrunde die
+  Karten nicht gesehen, und jeder Leser von `flashcard` (Lernwelt, KI,
+  Export) hätte einen zweiten Typ lernen müssen. Ein Feld an der Karte
+  kostet nichts; ein Typ kostet überall.
+- *Boxen als eigenes Feld speichern.* Zwei Wahrheiten über dieselbe Karte
+  — `sr.wdh` und `box` — die auseinanderlaufen, sobald die Tagesrunde eine
+  Karte bewertet, die der Trainer auch kennt.
+
+**Was kostet es?** Eine zwölfte Ansicht in der Lernwelt (fünf Unterreiter
+statt vier in der Gruppe „Lernen"; die vier Reiter, die `test206` zählt,
+bleiben vier). Zwei Skripte mehr in `index.html` und im `GRUNDSTOCK`
+(`dienststand` hat die Fassung angehoben). Der Trainer hängt einen
+Tastenhorcher ans Dokument — die Lernwelt meldet ihn beim Zeichnen einer
+anderen Ansicht und beim Abmelden ab, und `ladeBereichsdaten` lässt die
+Trainer-Ansicht aus, weil ein zweites `zeichnen` nach dem Laden ihn mitten
+in der Runde neu aufgesetzt hätte. `quiz` ist für ältere Fassungen ein
+unbekanntes Feld: sie zeigen die Karte als „Frage :: richtige Antworten",
+was stimmt.
+
+**Wie es gebaut wurde — und was dabei herauskam.** Zwei Bauer sollten
+Wächter und Anbindung parallel schreiben; beide scheiterten an der
+Sitzungsgrenze, ohne eine Zeile zu ändern. Also von Hand, in der
+Reihenfolge von §30: zuerst `test565`, rot gegen den alten Stand (**1 von
+21**, dann Abbruch, weil es den Inhalt nicht gab), dann die Anbindung.
+Gegen den ersten gebauten Stand **53 von 54** — und die eine rote Zeile war
+ein Fund: „7 Prüfungsfragen, wortgleich=false". `Trainer.karten()` sortierte
+nach `created`, die Vorlage legt 57 Karten in derselben Millisekunde an, und
+die Seite gruppierte nach Thema — Frage 5 (Gewaltentrennung) stand vor
+Frage 4 (Parlament). Jetzt liest der Trainer die Seite in **Seitenreihenfolge**
+(Elternblock, Stelle in `content`), und die Vorlage legt die sieben
+Prüfungsfragen zuoberst ab (P106). Gegenprobe (§55.2): `NOCHMAL_HOECHSTENS`
+auf 0 und ein `esc` entfernt — rot an genau den zwei Stellen, „[1,-1,1]"
+und „img: true, escaped: false", 52 von 54; zurückgedreht, 54 von 54.
+Nachbarn: test206 217 222 272 290 143 537 105 109 362 401 402 547 87 32 484
+549 550. Bilder: `node bilder.mts trainer trainerFrage trainerLuecke`,
+Rechner und Telefon.
+
+**Was offen bleibt** steht in L210: der Rest des Lösungshefts (6.14–6.41 und
+die anderen Kapitel — Redur: „die anderen machst du später"), das Schicksal
+der vorläufigen Seite und die Nebenfunde der Leser.
+
+---
+
+## E678 — Der Streifen zur neuen Fassung steht unten
+
+**Datum:** 22. September 2026 · **Wächter:** `test566`
+
+**Redur:** „Kannst du die neu laden buton unten bringen , wenn eine neu
+version kommt dort sollte es unter sein".
+
+**Was war.** `pwa.ts` meldet eine neue Fassung des Dienst-Arbeiters über
+`UI.banner(…, 'info')`, und `.banner` liegt seit jeher fest oben
+(`top:0`) — über der Kopfleiste mit Suche, Menü und dem PDF-Knopf, dem
+wichtigsten Rand des Bildschirms. Für eine Warnung oder einen Fehler ist
+das richtig: die müssen sofort gesehen werden. Ein Hinweis, der warten
+kann, gehört nicht dorthin. Und der Knopf darin war ein unterstrichenes
+Wort im Stil-Attribut, gemessen 85 × 23 px (§37 verlangt 44).
+
+**Was wurde entschieden?**
+
+1. **Eine Lage neben der Art.** `UI.banner` setzt die Klassen aus dem
+   zweiten Argument; `'info unten'` ergibt `banner info unten`. Keine neue
+   Schnittstelle, kein zweiter Streifen — die eine Regel `.banner.unten`
+   dreht `top:auto; bottom:0`, der Schatten wirft nach oben.
+2. **Am Telefon über der Leiste**, nicht darauf: `bottom:var(--hunten)`,
+   dieselbe Marke, mit der die Schublade über der Leiste endet (9 px +
+   `--mobile-nav-height` + `safe-area`). Gemessen: der Streifen endet bei
+   775, die Leiste beginnt bei 775.
+3. **Der Knopf ist ein Knopf.** `banner-tat`: 44 px hoch, Akzentfläche,
+   Schrift `--auf-accent`. Das Stil-Attribut im Markup ist weg.
+4. **Nur die neue Fassung wandert.** `warn` und `fehler` bleiben oben —
+   `test566` misst beides.
+
+**Was war die Alternative?** Alle Streifen nach unten: dann läge eine
+Fehlermeldung am Telefon hinter der Tastatur. Oder eine eigene Karte für
+die Fassung: ein zweiter Katalog für dasselbe (§8).
+
+**Was kostet es?** Sieben Zeilen Stil und eine Klasse. Ein Streifen unten
+deckt am Rechner nichts ab, was man bedient; am Telefon liegt er über
+dem Inhalt, wie vorher oben — nur über dem Ende der Seite statt über
+ihrem Anfang.
+
+**Wächter `test566`**, 11 Zusagen, gegen den alten Stand rot mit 5 von 11
+(„top 0 · bottom 45", Knopf „85 × 23"). Gegenprobe: die Lage aus
+`.banner.unten` genommen — rot an denselben Stellen. Nachbarn test319
+(die `info`-Regel), 332, 362, 401, 402, 87. Bild: `node bilder.mts
+fassung`, Rechner und Telefon.

@@ -83,6 +83,9 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 }
 .row:hover{background:var(--bg-hover); color:var(--text)}
 .row.on{background:var(--bg-hover); color:var(--text); font-weight:500}
+/* Die Ordnerfarbe in der Seitenleiste (E672) — derselbe Rücken wie im
+   Ablagebaum, als Innenschatten, damit nichts rutscht. */
+.row[data-farbe]{box-shadow:inset 3px 0 0 var(--zeilen-farbe)}
 .row .tw{
   width:18px; height:20px; display:grid; place-items:center; flex:0 0 18px;
   color:var(--text-faint); font-size:9px; border-radius:3px;

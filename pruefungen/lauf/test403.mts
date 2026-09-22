@@ -304,12 +304,45 @@ const nimmt = (TS.match(/classList\.remove\('ki-schreibt'\)/g) ?? []).length;
 p('Der Schimmer wird zweimal gesetzt', setzt === 2, String(setzt));
 p('Und genauso oft wieder genommen', nimmt === setzt, `${nimmt} zu ${setzt}`);
 
-/* Jedes `remove` muss in einem `finally` stehen. Gemessen wird das Wort
-   davor — im Quelltext, nicht im Gedächtnis. */
+/* Jedes `remove` muss in einem `finally` stehen.
+ *
+ * WIE GEMESSEN WIRD, UND WARUM NICHT MEHR „ZWEI ZEILEN DAVOR" (E664).
+ * Die erste Fassung sah zwei Zeilen zurück und suchte das Wort `finally`.
+ * Das hielt, solange das `remove` die erste Zeile im Block war. In E652 kamen
+ * `zustand.abbruch = null` und `sendenKnopf(false)` davor — dasselbe
+ * `finally`, dieselbe Zusage, und der Lauf wurde rot:
+ *
+ *     ✗ Beide stehen in einem finally — [false,true]
+ *
+ * Der Code war richtig, das Fensterchen war zu klein. Ein Wächter, der an
+ * der REIHENFOLGE innerhalb eines Blocks scheitert, prüft die Reihenfolge
+ * und nicht den Block.
+ *
+ * Jetzt wird der umschliessende Block wirklich gesucht: von der Zeile aus
+ * nach oben, Klammern zählend. Wo die Zählung negativ wird, steht der Kopf
+ * des Blocks, in dem die Zeile liegt — und der muss `finally` heissen. */
+const kopfDesBlocks = (alle: string[], i: number): string => {
+  let tiefe = 0;
+  for (let k = i; k >= 0; k--) {
+    const z = alle[k] ?? '';
+    /* Von unten nach oben: eine `}` betritt einen Block, eine `{` verlässt
+       ihn. Die Zeile selbst zählt ab ihrem Anfang mit. */
+    for (let c = z.length - 1; c >= 0; c--) {
+      if (k === i && c >= z.indexOf('classList')) continue;
+      const zeichen = z[c];
+      if (zeichen === '}') tiefe++;
+      else if (zeichen === '{') {
+        if (tiefe === 0) return z;      /* das ist unser Blockkopf */
+        tiefe--;
+      }
+    }
+  }
+  return '';
+};
+
 const imFinally = TS.split('\n').map((z, i, alle) => {
   if (!/classList\.remove\('ki-schreibt'\)/.test(z)) return null;
-  const davor = (alle.slice(Math.max(0, i - 2), i + 1)).join(' ');
-  return /finally/.test(davor);
+  return /finally/.test(kopfDesBlocks(alle, i));
 }).filter(v => v !== null);
 p('Beide stehen in einem finally', imFinally.length === 2 && imFinally.every(Boolean),
   JSON.stringify(imFinally));

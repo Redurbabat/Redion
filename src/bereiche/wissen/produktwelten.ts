@@ -12,7 +12,7 @@ const Produktwelten = (() => {
   type Welt = 'lernen' | 'workspace';
   type Lernansicht = 'heute' | 'lernen' | 'lernweg' | 'pfad' | 'fehler' |
     'pruefungen' | 'noten' | 'stundenplan' | 'schule' | 'ausbildung' | 'uni' |
-    'arbeit' | 'fortschritt';
+    'arbeit' | 'fortschritt' | 'trainer';
   type Arbeitsansicht = 'start' | 'uebersicht' | 'seiten' | 'bibliothek' |
     'aufgaben' | 'kalender' | 'datenbanken' | 'whiteboards' | 'projekte' |
     'dateien' | 'wiki' | 'vorlagen';
@@ -83,7 +83,7 @@ const Produktwelten = (() => {
     if (!treffer) return null;
     const welt = sichereWelt(treffer[1]);
     const erlaubte = welt === 'lernen'
-      ? new Set(['heute', 'lernen', 'lernweg', 'fehler', 'pruefungen', 'schule', 'uni', 'arbeit', 'fortschritt'])
+      ? new Set(['heute', 'lernen', 'lernweg', 'fehler', 'pruefungen', 'schule', 'uni', 'arbeit', 'fortschritt', 'trainer'])
       : new Set(['start', 'seiten', 'dateien', 'projekte', 'uebersicht', 'bibliothek',
                  'aufgaben', 'kalender', 'datenbanken', 'whiteboards', 'wiki', 'vorlagen']);
     return erlaubte.has(treffer[2] as string) ? { welt, ansicht: treffer[2] as string } : null;

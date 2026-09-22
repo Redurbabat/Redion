@@ -830,6 +830,15 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   color:var(--text-dim); font-size:8px; line-height:1.6
 }
 .bib-deckel:hover .bib-deckel-blatt{ box-shadow:var(--shadow-3) }
+/* DIE FARBE EINES ORDNERS (E672). Der Rücken links ist dieselbe Sprache
+   wie bei den Heften (notizhefte.css, E406) — nur galt die Regel dort nur
+   im Regal, und ein Bibliotheksordner mit `color` stand farblos da. Jetzt
+   EINE Regel für Deckel, Fach und Ordner. Ein ORDNER bekommt dazu einen
+   Hauch der Farbe ins Papier: ein Ordner ist eine Fläche, kein Heft mit
+   Rücken, und eine 5-px-Kante allein sieht man in einem Gitter aus
+   zwanzig Deckeln nicht. `color-mix` steht seit dem Gold-Satz in
+   dunkel.css im Projekt. */
+.bib-deckel[data-farbe] .bib-deckel-blatt{ border-left:5px solid var(--deckel-farbe) }
 /* Der Auslauf nach unten — dasselbe Papier wie im Heftregal. */
 /* DAS ECHTE BILD AUF DEM DECKEL (L61, E313).
    Es füllt das Blatt ganz aus und wird beschnitten statt verzerrt — ein
@@ -1003,16 +1012,26 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
     repeating-linear-gradient(transparent 0 8px, var(--line) 8px 9px)
       14% 44%/72% 40% no-repeat
 }
+/* DIE FARBE DES ORDNERS IST DER ORDNER SELBST (E672). Der gezeichnete
+   Deckel (E601) hat keinen Rücken, den man färben könnte — er IST Körper
+   und Reiter, beide aus der Akzentfarbe. Gemessen, bevor es hier stand:
+   die 5-px-Kante der Hefte kam an einem Ordner mit `border:0` und 0 px
+   heraus, die Farbe fiel auf `currentColor` zurück (rgb 167 167 167). Also
+   bekommt der Ordner eine eigene Variable: ohne Wahl die Akzentfarbe, mit
+   Wahl die gewählte — und Körper wie Reiter lesen sie, hier und in
+   motion.css. */
+.bib-deckel[data-art="ordner"]{ --ordner-farbe:var(--accent) }
+.bib-deckel[data-art="ordner"][data-farbe]{ --ordner-farbe:var(--deckel-farbe) }
 .bib-deckel[data-art="ordner"] .bib-deckel-blatt{
   border:0; box-shadow:none; background:none
 }
 .bib-deckel[data-art="ordner"] .bib-deckel-blatt::before{
   content:""; position:absolute; inset:16% 4% 8%;
-  border-radius:4px 12px 12px 12px; background:var(--accent); opacity:.85
+  border-radius:4px 12px 12px 12px; background:var(--ordner-farbe); opacity:.85
 }
 .bib-deckel[data-art="ordner"] .bib-deckel-blatt::after{
   content:""; position:absolute; left:4%; top:8%; width:44%; height:13%;
-  border-radius:4px 8px 0 0; background:var(--accent); opacity:.85
+  border-radius:4px 8px 0 0; background:var(--ordner-farbe); opacity:.85
 }
 
 @media(max-width:760px){
@@ -3873,6 +3892,17 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .wolke-blatt button.wo-wahl{ display:block; width:auto; flex:1 1 190px;
   text-align:left; padding:8px 11px; font-size:12px; line-height:1.45 }
 .wolke-blatt button.wo-wahl>span{ display:block }
+/* DER KNOPF AM ENDE EINER ZEILE (E669). „Zurückziehen" und „Abmelden"
+   standen als blosser Text da — gemessen 18 px hoch, und das ist auch
+   für einen Nebenweg zu wenig (§37 erlaubt 32 px, mit Grund). Wer ein
+   Gerät abmeldet oder eine Marke zurückzieht, tut etwas Endgültiges;
+   das darf man nicht danebentreffen. Gemessen wird die gerenderte Box,
+   nicht diese Zeile (L206) — `test558` hält sie. */
+.wo-zeilenknopf{ min-height:var(--touch-min); padding:0 12px; font-size:12.5px;
+  border:1px solid var(--line); border-radius:8px; background:none;
+  color:var(--text-dim); cursor:pointer; white-space:nowrap }
+.wo-zeilenknopf:hover{ background:var(--bg-hover); color:var(--text) }
+
 /* Der Schliessen-Kreuz oben gehört zur Kopfzeile und nicht dazu. */
 .wolke-blatt .fh button{ border:none; background:none; padding:4px;
   min-height:0 }
@@ -9148,6 +9178,9 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 .ru-baum-zeile:hover{background:var(--bg-hover)}
 .ru-baum-zeile[aria-selected="true"]{background:var(--accent-schwach);color:var(--accent-text)}
 .ru-baum-zeile[aria-disabled="true"]{opacity:.45}
+/* Die Ordnerfarbe am Knoten (E672): ein Rücken links, als Innenschatten,
+   damit die Zeile nicht um drei Pixel rutscht. */
+.ru-baum-zeile[data-farbe]{box-shadow:inset 3px 0 0 var(--baum-farbe)}
 .ru-baum-zeile:focus-visible{outline:2px solid var(--accent-text);outline-offset:1px}
 .ru-baum-knick{display:grid;place-items:center;width:20px;height:24px;padding:0;border:0;color:var(--text-dim);background:transparent;font:inherit;line-height:1}
 .ru-baum-knick:empty{opacity:0}

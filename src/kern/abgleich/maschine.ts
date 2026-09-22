@@ -1126,6 +1126,12 @@ const Wolke = (() => {
   const markeAnlegen = (name: string, rechte: any, tage: any) =>
     ruf('/marken', { m: 'POST', k: { name, bereich: bereich(), rechte, tage } });
   const markenListe = () => ruf('/marken');
+  /* Die angemeldeten Geräte (E669). Dieselbe Bauart wie die Marken daneben:
+     ein Weg zum Lesen, einer zum Zurückziehen. Was hier „kennung" heisst,
+     ist ein Stück des Abdrucks — nie der Token (§42). */
+  const geraeteListe = () => ruf('/konto/geraete');
+  const geraetWeg = (kennung: any) =>
+    ruf('/konto/geraete/weg', { m: 'POST', k: { kennung } });
   const markeWeg = (kennung: any) => ruf('/marken/' + kennung, { m: 'DELETE' });
 
   /* ========================================================================
@@ -1168,7 +1174,8 @@ const Wolke = (() => {
            hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, zuSchicken, seiteVon,
            geteiltSetzen, istGeteilt, freigeben, freigaben,
            veroeffentlichen, zurueckziehen,
-           markeAnlegen, markenListe, markeWeg, ruf, start };
+           markeAnlegen, markenListe, markeWeg, geraeteListe, geraetWeg,
+           ruf, start };
 })();
 
 (window as any).Wolke = Wolke;

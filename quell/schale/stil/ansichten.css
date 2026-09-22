@@ -244,6 +244,23 @@ table.grid tr.unterzeile td{background:var(--bg-side)}
 .banner span{flex:1}
 .banner button{opacity:.7; font-size:15px; padding:0 6px}
 .banner button:hover{opacity:1}
+/* UNTEN STATT OBEN (E678). Redur, 22. September 2026: „Kannst du die neu
+   laden buton unten bringen, wenn eine neue Version kommt". Der Streifen
+   zur neuen Fassung lag über der Kopfleiste mit Suche und Menü — der
+   wichtigste Rand des Bildschirms, für einen Hinweis, der warten kann.
+   `unten` ist eine zweite Klasse neben `info`; Warnung und Fehler bleiben
+   oben, wo man sie sofort sieht. Am Telefon liegt er ÜBER der unteren
+   Leiste (`--hunten`, dieselbe Marke wie die Schublade), nicht darauf.
+   Der Knopf darin ist ein Knopf, 44 px (§37) — vorher ein unterstrichenes
+   Wort, 23 px hoch. Wächter: test566. */
+.banner.unten{top:auto; bottom:0; box-shadow:0 -2px 10px rgba(0,0,0,.25)}
+.banner .banner-tat{
+  opacity:1; min-height:var(--touch-min); padding:0 var(--space-4); border-radius:8px;
+  background:var(--accent); color:var(--auf-accent); font-size:13.5px; font-weight:700
+}
+@media(max-width:760px){
+  .banner.unten{bottom:var(--hunten)}
+}
 .banner.warn{background:var(--b-yellow); color:var(--text)}
 .banner.fehler{background:var(--b-red); color:var(--text)}
 /* `.banner.info` STEHT NICHT HIER, sondern in `bausteine.css`. Das ist

@@ -104,6 +104,22 @@ sind der teuerste Teil und der lehrreichste.
 | P88 | 2026-09-20 | Die Lückenliste war selbst der stille Fehler | 🟠 mittel | — |
 | P89 | 2026-09-20 | Der Titel ist nicht der Status | niedrig | — |
 | P90 | 2026-09-20 | Vier Anläufe, vier erfundene Zahlen — und die Datei war immer in Ordnung | niedrig | — |
+| P91 | 2026-09-20 | Ein Wächter, der die Höhe nicht sehen kann, die er prüft | 🟠 mittel | — |
+| P92 | 2026-09-20 | Fast eine zweite Werkzeugzeile gebaut, die es schon gab | niedrig | — |
+| P93 | 2026-09-20 | Die eigene Erklärung vor die des Anbieters gestellt | 🟠 mittel | — |
+| P94 | 2026-09-20 | Die Gegenprobe war falsch, nicht der Code | niedrig | — |
+| P95 | 2026-09-20 | Das Werkzeug für die Prüfläufe war selbst ungeprüft | 🟠 mittel | — |
+| P96 | 2026-09-20 | Eine Auswertung, die mit einem Feld rechnet, das niemand schreibt | 🟠 mittel | — |
+| P97 | 2026-09-20 | Ein Wächter, der an der Reihenfolge im Block scheitert | niedrig | — |
+| P98 | 2026-09-20 | Das Verzeichnis der Querverweise zählt zu wenig | 🟠 mittel | — |
+| P99 | 2026-09-20 | Ein Menuepunkt, der eine Zeichenkette schreibt, waehrend die Maschine danebensteht | 🟠 mittel | — |
+| P100 | 2026-09-21 | Dieselbe Funktion zweimal — und E650 reparierte nur die eine | hoch | — |
+| P101 | 2026-09-21 | Sechs Zusagen grün, weil die Liste leer war | 🟠 mittel | — |
+| P102 | 2026-09-21 | OHNE_FRAGE ist die Zahl 30 | 🟠 mittel | — |
+| P103 | 2026-09-21 | Der Punkt des breiten Füllers war ein Splitter — und der Wächter grün | 🟠 mittel | — |
+| P104 | 2026-09-21 | Eine Gegenprobe, die gar nicht lief | 🟠 mittel | — |
+| P105 | 2026-09-21 | Der Glätter hielt die Ecke, die Marke nicht — acht gleichmässige Punkte statt der Ecken | 🟠 mittel | — |
+| P106 | 2026-09-22 | Frage 5 kam vor Frage 4 — 57 Karten in derselben Millisekunde, sortiert nach created | 🟠 mittel | — |
 
 ---
 
@@ -1995,4 +2011,308 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Die Regel, die keine Form voraussetzt — eine Zeile, die mit der Nummer BEGINNT und ein Trennzeichen trägt —, findet 638 von 638.
 
 **Die Lehre.** Bei der dritten Zahl, die nach einem Fund aussieht, ist der Prüfer verdächtig, nicht die Datei. Dazu: zwei weitere „Funde" dieses Bogens standen bereits als Erklärung in der Datei — nachlesen ist billiger als nachbessern.
+
+
+---
+
+## P91 · Ein Wächter, der die Höhe nicht sehen kann, die er prüft
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** test402 hält §37 (44 px auf den Hauptwegen) und war jahrelang grün, während sieben Knöpfe unter jeder Tabelle 26 px hoch waren.
+
+**Die falsche Vermutung.** Dass ein grüner §37-Wächter heisst, die Trefflächen stimmen.
+
+**Wie es gefunden wurde.** Beim Nachmessen im Browser für E660: 7 von 7 Knöpfen 26 px. Danach im Wächter nachgesehen, warum er schweigt — er sucht height/min-height im Stilblatt, und dort stand keine Höhe.
+
+**Die Ursache.** Die 26 px entstehen aus font-size:12px und padding:3px 9px. Eine Textsuche im CSS kann eine gerechnete Höhe nicht sehen; deshalb stand die Regel auch nie im Verzeichnis masse-bestand.json.
+
+**Der Beweis.** test551 misst die gerenderte Box: vorher 7 × 26 px, nachher 7 × 44 px — bei unverändert grünem test402.
+
+**Die Lehre.** Dasselbe wie §55.2, an anderer Stelle: eine Messung, die nicht messen KANN, was sie behauptet, sagt immer, es passe schon. Und: ein grüner Wächter ist eine Aussage über das, was er misst, nicht über die Regel, die er im Namen trägt.
+
+
+---
+
+## P92 · Fast eine zweite Werkzeugzeile gebaut, die es schon gab
+
+*2026-09-20 · niedrig*
+
+**Das Bild.** Ein fertig geschriebener Wächter suchte nach .stab-daumen — einer Werkzeugzeile, die ich für das Telefon bauen wollte.
+
+**Die falsche Vermutung.** Dass es am Telefon keinen Weg zu den Tabellenbefehlen gibt, weil die Griffe 7 px messen und ein mouseover brauchen.
+
+**Wie es gefunden wurde.** Beim Lesen der Stelle, an der die Griffe entstehen — zwanzig Zeilen weiter stand .stab-tools mit sieben Knöpfen, und im Stilblatt die Regel aus L108, die sie am Telefon sichtbar macht.
+
+**Die Ursache.** §45 Schritt 1 übersprungen: die Datei an der interessanten Stelle gelesen, nicht zu Ende.
+
+**Der Beweis.** Der Wächter wurde weggeworfen und neu geschrieben; der echte Fund war 26 px statt 44, nicht dass es nichts gibt.
+
+**Die Lehre.** Der teuerste wiederkehrende Fehler dieses Projekts ist laut §45, etwas aus dem Gedächtnis zu bauen statt nachzuschlagen. Einen Wächter wegzuwerfen ist billiger als einen zweiten Katalog zu pflegen (§8).
+
+
+---
+
+## P93 · Die eigene Erklärung vor die des Anbieters gestellt
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Redion meldete: Groq antwortet mit 404. Die Adresse gibt es nicht. Dahinter stand Groqs eigener Satz, dass das MODELL nicht mehr existiert.
+
+**Die falsche Vermutung.** Beim Lesen der Meldung zuerst: die URL sei falsch oder der Schlüssel abgelaufen. Beides war in Ordnung.
+
+**Wie es gefunden wurde.** Redur hat die Meldung wörtlich geschickt — darin stand code: model_not_found. Die Ursache war also mitgeliefert und wurde von der eigenen Tabelle verdeckt.
+
+**Die Ursache.** FEHLERTEXT ordnet jeder Statuszahl genau einen Satz zu. Eine Zahl hat aber mehrere Ursachen, und 404 heisst bei einem Chat-Dienst fast immer: das Modell, nicht die Adresse.
+
+**Der Beweis.** Gegenprobe mit dem alten Wurf: Die Adresse gibt es nicht (object_not_found) steht wieder da, obwohl der Körper die Wahrheit enthält.
+
+**Die Lehre.** Wer redet, hat recht. Eine eigene Erklärung gehört dorthin, wo der andere schweigt — nicht davor. Und eine Meldung, die in die falsche Richtung zeigt, kostet mehr Zeit als gar keine.
+
+
+---
+
+## P94 · Die Gegenprobe war falsch, nicht der Code
+
+*2026-09-20 · niedrig*
+
+**Das Bild.** Eine Gegenprobe sollte den neuen Zweig abhängen, und der Lauf blieb grün. Kurz sah es nach einem zu schwachen Wächter aus.
+
+**Die falsche Vermutung.** Dass der Wächter die Stelle nicht wirklich misst.
+
+**Wie es gefunden wurde.** Die eingesetzte Zeile gelesen: const modellWeg = false && A || B. In JavaScript bindet && stärker als ||, also blieb B übrig und der Zweig lief weiter.
+
+**Die Ursache.** Eine Gegenprobe wird schnell hingeschrieben, weil sie ja nur wegnehmen soll. Sie ist trotzdem Code.
+
+**Der Beweis.** Mit if (modellWeg) zu if (false) wurden genau zwei Zusagen rot, die richtigen.
+
+**Die Lehre.** Eine Gegenprobe ist ein Stück Code wie jedes andere und kann genauso falsch sein. Ein grüner Lauf nach einer Gegenprobe heisst zuerst: die Gegenprobe ansehen.
+
+
+---
+
+## P95 · Das Werkzeug für die Prüfläufe war selbst ungeprüft
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** volllauf.mts meldete zehn rote Läufe (266 bis 277), tatsächlich war einer rot: test270.
+
+**Die falsche Vermutung.** Beim Lesen der Meldung zuerst: ein ganzes Stück ist gescheitert, also vermutlich eine Portkollision oder der Arbeitsbaum. Es war die Auswertung.
+
+**Wie es gefunden wurde.** Ins Protokoll gesehen statt in die Zusammenfassung. Dort stand die Bilanz von alle.mts auf zwei Zeilen: das Zeichen oben, der Name darunter.
+
+**Die Ursache.** Die Zerlegung suchte je ZEILE nach einem Kreuz UND einer Testnummer. Keine der beiden Zeilen trägt beides, also fand sie nichts und fiel auf das ganze Stück zurück.
+
+**Der Beweis.** Gegenprobe mit der alten Regel: genau das beobachtete Symptom, [266 bis 277] statt [270].
+
+**Die Lehre.** Ein Werkzeug, das Prüfläufe auswertet, ist selbst ungeprüft, bis es einen Wächter hat. Dieses war zwei Stunden alt und hat in seinem ersten Ernstfall danebengegriffen. Und: der vorsichtige Rückfall war richtig — er hat nur die echte Spur unter neun falschen begraben.
+
+
+---
+
+## P96 · Eine Auswertung, die mit einem Feld rechnet, das niemand schreibt
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Die Wochenrückschau zeigte eine leere Liste und ein Tagesdiagramm aus Nullen, obwohl Aufgaben abgehakt waren.
+
+**Die falsche Vermutung.** Dass die Rückschau falsch rechnet oder das Datum falsch vergleicht.
+
+**Wie es gefunden wurde.** Gezählt, wer das Feld schreibt: im ganzen Programm genau eine Stelle, der ICS-Import. Das Kästchen im Editor schrieb nur checked.
+
+**Die Ursache.** Das Feld wurde beim Lesen eingeplant und beim Schreiben vergessen. Zwanzig Zeilen tiefer hatten Datenbankzeilen längst einen Rückfall auf edited — Blöcke nicht.
+
+**Der Beweis.** test554 gegen den alten Stand: in der Rückschau false, insgesamt 0 erledigte, Tagesdiagramm 0.
+
+**Die Lehre.** Wer eine Auswertung baut, prüft nicht nur, ob sie richtig rechnet, sondern ob irgendjemand ihre Eingabe schreibt. Und: der Stempel gehört an die eine Stelle, durch die alle sechs Schreibwege gehen, nicht an jeden einzelnen.
+
+
+---
+
+## P97 · Ein Wächter, der an der Reihenfolge im Block scheitert
+
+*2026-09-20 · niedrig*
+
+**Das Bild.** test403 meldete im vollen Lauf: Beide stehen in einem finally — [false,true]. Der Code stand korrekt in einem finally.
+
+**Die falsche Vermutung.** Dass beim Umbau des KI-Chats (E652) ein remove aus dem finally gerutscht ist.
+
+**Wie es gefunden wurde.** Die Stelle angesehen: das remove stand im finally, nur nicht mehr als erste Zeile. Der Wächter sah zwei Zeilen zurück.
+
+**Die Ursache.** E652 hat zwei Zeilen in dasselbe finally geschoben. Die Messung prüfte damit die Reihenfolge innerhalb des Blocks statt den Block.
+
+**Der Beweis.** Nach dem Umbau auf Klammernzählen: 22 von 22 grün, und die Gegenprobe (ein remove aus dem finally geholt) wird wieder rot.
+
+**Die Lehre.** Eine Messung, die von der Reihenfolge im Block abhängt, meldet Umbauten als Fehler. Das kostet beim nächsten vollen Lauf genau so viel Zeit wie ein echter Fund — und erzieht dazu, rote Läufe für Rauschen zu halten.
+
+
+---
+
+## P98 · Das Verzeichnis der Querverweise zählt zu wenig
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** test537 wurde rot: 519 gegen 517 Treffer, bei unverändert 125 Paaren. Es sah nach zwei neuen Kopplungen aus.
+
+**Die falsche Vermutung.** Dass beide neu sind. Einer war meiner (E661, zwei Griffe statt eines). Der zweite steht seit E500 im Code.
+
+**Wie es gefunden wurde.** Die alte Fassung der Datei durch denselben Filter geschickt: roh 2 Treffer, nach ohneSchablonen 1. Der Aufruf war immer da und für den Wächter unsichtbar.
+
+**Die Ursache.** ohneSchablonen wirft ganze Schablonen weg, damit deutsche Prosa in Backticks nicht mitzählt (E626, 88 Falschtreffer). Dabei fliegen auch echte Aufrufe heraus: ein ${Name.methode(x)} in einer Schablone ist ein Aufruf, kein Text.
+
+**Der Beweis.** Über alle 86 Dateien in src/bereiche gemessen: 7907 Aufrufe nach nurCode, 7641 nach ohneSchablonen — 266 verdeckt, 3,4 Prozent, davon 136 allein in editor.ts.
+
+**Die Lehre.** Ein Wächter, der zu viel wegfiltert, meldet nicht zu viel, sondern zu wenig — und seine Zahl sieht dabei genauso fest aus. Das Verzeichnis wurde NICHT angehoben: eine Zahl zu erhöhen, weil die Messung besser wurde, ist etwas anderes als eine neue Kopplung, und der Unterschied muss sichtbar bleiben. Die Wahl steht als L207 bei Redur.
+
+
+---
+
+## P99 · Ein Menuepunkt, der eine Zeichenkette schreibt, waehrend die Maschine danebensteht
+
+*2026-09-20 · 🟠 mittel*
+
+**Das Bild.** Der Slash-Eintrag Erinnerung schrieb @remind in den Text und war fertig. Die Hilfeseite sagt dazu ein Haekchen.
+
+**Die falsche Vermutung.** Dass Erinnerungen noch gar nicht gebaut sind. Sie sind seit E54 vollstaendig da — Dialog, Liste, Geraete-Meldung, Weckruf am Server.
+
+**Wie es gefunden wurde.** Gesucht, wer @remind liest: niemand. Das Muster mention und date schreibt auch nur ein Zeichen, aber dort haengt ein Menue am Tippen. Bei remind gibt es keines.
+
+**Die Ursache.** Der Eintrag wurde nach dem Vorbild von mention und date gebaut, ohne zu pruefen, ob es das Menue dahinter gibt.
+
+**Der Beweis.** test555 gegen den alten Stand 2/12: kein tun am Eintrag, kein Dialog, keine Erinnerung in der Liste.
+
+**Die Lehre.** Wer einen Eintrag nach dem Vorbild eines anderen baut, uebernimmt auch dessen Voraussetzungen. Und: der Draht gehoert ins Register, wenn ein Bereich einen anderen braucht — das ist §5s dritter Weg, und er kostet keinen Querverweis.
+
+
+---
+
+## P100 · Dieselbe Funktion zweimal — und E650 reparierte nur die eine
+
+*2026-09-21 · hoch*
+
+**Das Bild.** Strg+B in einem Block `Ein **fetter** Satz` machte daraus `Ein fetter **Satz**`. Die vorhandene Auszeichnung war weg, ohne Absturz und ohne Meldung. Über den Knopf der Auswahlleiste kam `Ein **fetter** **Satz**` heraus.
+
+**Die falsche Vermutung.** Dass Fett nur nicht abschaltbar ist — ein Schönheitsfehler (`****Wort****`). Der zweite Fund lag darunter.
+
+**Wie es gefunden wurde.** Beim Lesen von `umschliesse` fiel auf, dass es den Namen ZWEIMAL gibt: einmal in auswahlleiste.ts (E650 repariert) und einmal in editor.ts, an der Tastatur.
+
+**Die Ursache.** Die Fassung in editor.ts schrieb `ct.textContent` zurück — den gezeichneten Text ohne Markdown-Zeichen.
+
+**Der Beweis.** test557 gegen den alten Stand 8/13, mit beiden Zeilen im Klartext: `Ein schlichter ****Satz****` und `Ein fetter **Satz**`.
+
+**Die Lehre.** §8 wörtlich: ein zweiter Katalog läuft mit dem ersten auseinander, und niemand merkt, welcher gilt. Und die Folge für Wächter: test542 prüfte den KNOPF — ein Lauf, der nur einen von zwei Wegen misst, sagt grün über die halbe Wahrheit.
+
+
+---
+
+## P101 · Sechs Zusagen grün, weil die Liste leer war
+
+*2026-09-21 · 🟠 mittel*
+
+**Das Bild.** Der erste Anlauf von test558 stand bei 6/18 gegen einen Server-Weg, den es gar nicht gab. Grün waren unter anderem „Das fremde Konto steht NICHT darin“ und „Kein roher Token geht hinaus“.
+
+**Die falsche Vermutung.** Dass sechs Zusagen schon halten, was sie sagen. Eine leere Liste enthält kein fremdes Konto und keinen Token, und zwei Kennungen aus null Einträgen sind auch verschieden.
+
+**Wie es gefunden wurde.** Beim Lesen der roten Ausgabe: der Weg antwortete 404, und trotzdem standen sechs Häkchen da.
+
+**Die Ursache.** Jede dieser Zusagen prüfte eine EIGENSCHAFT der Liste, ohne vorher zu verlangen, dass es eine gibt.
+
+**Der Beweis.** Nach dem Härten: 0/18 gegen denselben Stand.
+
+**Die Lehre.** §55.2, zum wiederholten Mal in diesem Monat: wer eine Prüfung schreibt, prüft zuerst, ob sie rot werden KANN. Eine Zusage über eine Menge braucht die Menge als Vorbedingung.
+
+
+---
+
+## P102 · OHNE_FRAGE ist die Zahl 30
+
+*2026-09-21 · 🟠 mittel*
+
+**Das Bild.** Der erste Lauf von test559 gab fünf Minuten lang keine einzige Zeile aus und starb am Zeitlimit.
+
+**Die falsche Vermutung.** Zuerst: der Prüfserver liefert pdf.js nicht aus (falsche MIME-Typen für .mjs/.wasm). Dann: der Browser ist abgestürzt. Beides war falsch.
+
+**Wie es gefunden wurde.** Nachgesehen, was `PdfEinlesen.OHNE_FRAGE` ist: `const OHNE_FRAGE = 30` — die Seitenzahl, ab der gefragt wird. Als `vorgabe` übergeben hat eine Zahl keine Felder, also fiel `alsSeiten` in den Dialog-Zweig.
+
+**Die Ursache.** Ein Konstantenname, der wie ein Schalter klingt, und ein Aufruf aus dem Gedächtnis statt nachgeschlagen (E21).
+
+**Der Beweis.** Mit `{ anordnung: 'untereinander', ueberGrenze: 'alle' }` lief derselbe Lauf durch und war 4/18 rot — also messbar.
+
+**Die Lehre.** Ein Dialog ohne Menschen wartet ewig. Und: der teuerste wiederkehrende Fehler dieses Projekts hat heute einen neuen Weg gefunden — nicht die Signatur war falsch erinnert, sondern die BEDEUTUNG eines Namens.
+
+
+---
+
+## P103 · Der Punkt des breiten Füllers war ein Splitter — und der Wächter grün
+
+*2026-09-21 · 🟠 mittel*
+
+**Das Bild.** Nach E673 zeigte das Bild einen senkrechten Strich, wo ein 2-pt-Punkt mit dem 5-pt-Füller stehen sollte; test561 stand auf 22/22.
+
+**Die falsche Vermutung.** „Kurze Striche bekommen eine kurze Spitze“ reicht — wenn der WEG der Spitze mit dem Strich schrumpft, bleibt ein Punkt ein Punkt.
+
+**Wie es gefunden wurde.** node bilder.mts spitze — die vierte Zeile des Bildes (§55.1). Der Lauf hatte nur den 2,4-pt-Füller gemessen; dort ist ein 2-pt-Punkt breiter als lang und fällt nicht auf.
+
+**Die Ursache.** Die Spitze war kurz, aber immer noch spitz: `spitzeFaktor` lief auch bei einem 2 pt langen Strich auf `min` (0,25) — bei 5 pt Breite ein Splitter von 1,25 pt Rand bei 5 pt Mitte.
+
+**Der Beweis.** test561 §3, neu: „Punkt (2 pt) mit 5-pt-Füller: Anfang 1.25 · Mitte 5“ — rot; nach der Reparatur (die Spitze wird stumpfer, je weniger von zwei Federn in den Strich passt) 4,66 gegen 5.
+
+**Die Lehre.** Ein Wächter hält nur die Fälle, die er enthält. Wer eine Regel für „kurze Striche“ schreibt, misst sie mit dem BREITESTEN Stift, nicht mit dem, der gerade da war — und sieht das Bild, bevor er grün sagt.
+
+
+---
+
+## P104 · Eine Gegenprobe, die gar nicht lief
+
+*2026-09-21 · 🟠 mittel*
+
+**Das Bild.** Beim Abhängen der Eckenerkennung (E676) druckte der Prüflauf weder ✗ noch „bestanden“ — die Zeile war leer.
+
+**Die falsche Vermutung.** Ein `sed`, der `if (…)` in `if (false && …) // GEGENPROBE` verwandelt, ist harmlos.
+
+**Wie es gefunden wurde.** Der `grep` auf „✗|bestanden“ gab NICHTS aus. Nicht rot, nicht grün — leer. Erst das fiel auf.
+
+**Die Ursache.** Der angehängte `//`-Kommentar schluckte die öffnende Klammer `{` derselben Zeile; `stroke.js` hatte einen Syntaxfehler, `eval` warf, der Lauf brach vor der ersten Zusage ab.
+
+**Der Beweis.** Zweiter Anlauf ohne Kommentar (`< KEHRE` → `< -2`): 6 von 8, „2,62 px“ — die erwarteten zwei Zusagen rot.
+
+**Die Lehre.** Eine Gegenprobe ist ein Stück Code wie jedes andere (E661) und muss BAUEN (§52.6). Und ein Wächter, dessen Ausgabe leer ist, hat nichts gehalten — leer ist nicht grün.
+
+
+---
+
+## P105 · Der Glätter hielt die Ecke, die Marke nicht — acht gleichmässige Punkte statt der Ecken
+
+*2026-09-21 · 🟠 mittel*
+
+**Das Bild.** Nach E676 zeigte das Bild ein „M“ mit spitzen Gipfeln und einem runden Tal; test564 stand auf 8/8.
+
+**Die falsche Vermutung.** Wenn der Glätter die Ecke trifft, steht sie auch in der Marke — der Rest des Wegs (Absetzen, Umriss) ist nur Zeichnen.
+
+**Wie es gefunden wurde.** node bilder.mts ecke, dann eine Sonde auf die gespeicherten Punkte: 8 Punkte, gleichmässig, das Tal 23,7 px neben dem nächsten.
+
+**Die Ursache.** `finish` (E115): hat RDP weniger als acht Stützpunkte übrig, nimm acht gleichmässige — ANSTELLE der RDP-Punkte. RDP hatte die fünf Ecken behalten, die Regel warf sie weg. Dahinter noch der Umriss: eine Q-Kurve durch jede Ecke, 5,12 px daneben.
+
+**Der Beweis.** test564 §4 vorher „[4.24, 23.71, 11.5]“ (Mittellinie) und „[15.19, 23.68, 20.37]“ (Umriss); nachher [0,0,0] und [0.71,0.29,0.8]. Gegenprobe A (acht ersetzen): 23,72; Gegenprobe B (Stück ohne Ecke): 5,12.
+
+**Die Lehre.** Ein Wächter am Kern beweist den Kern. Was der Nutzer sieht, entsteht drei Stationen später — und jede kann verlieren, was die vorige gehalten hat. Deshalb §55.3: ein Bild, wenn man etwas sehen kann; und der Wächter folgt der Sache bis dorthin, wo man sie sieht.
+
+
+---
+
+## P106 · Frage 5 kam vor Frage 4 — 57 Karten in derselben Millisekunde, sortiert nach created
+
+*2026-09-22 · 🟠 mittel*
+
+**Das Bild.** test565 §3 gegen den ersten Stand: „7 Prüfungsfragen, wortgleich=false“ — Karte 1 war Frage 1, die Prüfungsrunde sah richtig aus.
+
+**Die falsche Vermutung.** Nach `created` sortiert stehen die Karten in der Reihenfolge, in der die Vorlage sie angelegt hat.
+
+**Wie es gefunden wurde.** Der Wächter vergleicht die sieben Prüfungsfragen Zeichen für Zeichen und in der Reihenfolge des Lehrers mit dem Inhalt — nicht nur die erste.
+
+**Die Ursache.** Die Vorlage legt alle 57 Karten in derselben Millisekunde an; `created` ist für alle gleich, `localeCompare` gibt 0, und die Sortierung fällt auf die Reihenfolge von `Object.values(Store.cache.blocks)` zurück. Dazu war die Seite nach Thema gruppiert: p5 (Gewaltentrennung) stand vor p4 (Parlament).
+
+**Der Beweis.** test565 §3 rot (wortgleich=false); nach dem Umbau — Seitenreihenfolge über Elternblock und Stelle in `content`, Prüfungsfragen zuoberst — 54/54.
+
+**Die Lehre.** Ein Zeitstempel ordnet nichts, was gleichzeitig entsteht. Die Reihenfolge, die zählt, ist die, die der Mensch sieht und ändern kann — die Seite. Und ein Wächter, der nur den ersten Fall prüft, hätte hier „passt schon“ gesagt (§55.2).
 

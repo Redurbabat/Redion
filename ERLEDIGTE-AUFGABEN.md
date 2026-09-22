@@ -1,5 +1,195 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 20. September 2026 · E666 · „Erinnerung" führt zu einer Erinnerung
+
+**Der Fund.** Der Slash-Eintrag „Erinnerung ⏰" schrieb `@remind ` in den
+Text — und **nirgends im Programm wird `@remind` gelesen**. Die Hilfeseite
+sagt dazu ein Häkchen. §47, die stille Hälfte: kein Fehler, keine Meldung,
+nur nichts.
+
+**Dabei war alles da.** `Werkzeuge.erinnerungSetzen` mit Dialog, Liste,
+Geräte-Meldung und Weckruf am Server steht seit E54. Erreichbar war es nur
+über das Seitenmenü. Es fehlte der Draht, nicht die Maschine.
+
+**Gebaut — und zwar im Register.** Der nächstliegende Weg wäre ein
+`if (was === 'remind') Werkzeuge.…` im Editor gewesen. Das wäre ein NEUER
+Querverweis: `bereiche/editor → Werkzeuge` steht bei 1 und darf nicht
+wachsen (§5 Regel 1). §5 nennt für genau diesen Fall den dritten Weg —
+„über `register/` bekannt machen" —, und das Muster steht schon in
+`register/menueband.ts:701`. Gemessen nach dem Bogen: **518 Treffer,
+unverändert.**
+
+**Geprüft.** `test555` neu, zwölf Messungen, gegen den alten Stand 2/12.
+Gegenprobe: `tun` umbenannt → genau die Zusagen werden rot, die daran
+hängen. `test537` unverändert, `test87`, `test105`, `test109` grün, dazu die
+sechs Speicherläufe `test95`–`test100` nach der `updateBlock`-Änderung aus
+E663 — alle grün.
+
+**Zwei Zusagen waren im ersten Anlauf grün, weil nichts lief**
+(`undefined === undefined`). Beide prüfen jetzt zuerst, ob der Schritt
+stattgefunden hat. Und was der Lauf NICHT beweist, steht in ihm drin.
+
+---
+
+## 20. September 2026 · Der volle Lauf, und E665
+
+**Der volle Lauf.** 490 Läufe in 49 Stücken, 107 Minuten, im eigenen
+Arbeitsbaum auf `74bde43`. **487 grün, 3 rot** — und keiner der drei war
+ein Produktfehler:
+
+| Lauf | was er meldete | was es war |
+|---|---|---|
+| `test270` | `[".git","node_modules"]` gehen ins Netz | das Arbeitsbaum-Artefakt aus §30. Im HAUPTBAUM nachgemessen: 77 ok, 0 offen. |
+| `test403` | „Beide stehen in einem finally — [false,true]" | zu enges Fenster, E664 |
+| `test537` | 518 gegen 517 Treffer | einer meiner (E665), einer seit E500 unsichtbar (L207) |
+
+Dazu 27 mitmarkierte Unschuldige durch den Werkzeugfehler aus E662 — der
+ist repariert, bevor er ein zweites Mal irreführt.
+
+**E665 — ein Griff statt zwei.** `test537` meldete einen neuen Querverweis,
+weil E661 in der Einstellungsseite `KI.modelleHolen(id)` UND
+`KI.modelleVon(id)[0]` rief. Der Wächter hatte recht, und zwar doppelt:
+„holen und dann das erste nehmen" ist eine Prozedur der KI, nicht Wissen
+der Einstellungsseite. Jetzt `KI.modellWaehlen(id)` — 519 → 518.
+
+**Und was dabei herauskam.** Der zweite Treffer ist kein neuer Aufruf:
+`Einstellungen.oeffne('schluessel')` steht seit E500 im KI-Fenster und war
+für den Wächter unsichtbar, weil `ohneSchablonen` ihn für Text hielt.
+Nachgemessen über alle 86 Dateien: **266 echte Aufrufe (3,4 %) werden
+verdeckt**, allein 136 in `editor.ts`. Die 517 sind ein Mindestwert, kein
+Stand.
+
+**Das Verzeichnis wurde NICHT angehoben.** Die drei Wege stehen mit ihren
+Kosten als **L207**; §5 sagt selbst, dass die Richtung Redur gehört. Bis
+dahin bleibt `test537` rot und `main` steht (§46).
+
+---
+
+## 20. September 2026 · E663/E664 · Die Rückschau zählt wieder, und ein Wächter sieht den ganzen Block
+
+**E663 — was abgehakt wird, zählt.** Die Wochenrückschau rechnet mit
+`erledigtAm`, und für Blöcke schrieb das Feld **niemand**: der einzige
+Schreiber im ganzen Programm war der ICS-Import. Wer eine Woche lang
+Aufgaben abhakte, sah am Sonntag eine leere Rückschau und ein Tagesdiagramm
+aus Nullen — kein Fehler, keine Meldung, immer null (§47).
+
+Der Stempel sitzt jetzt in `Store.updateBlock`, weil `checked` an sechs
+Stellen geschrieben wird und sechs Kopien fünf Gelegenheiten zum Vergessen
+wären (§8). Der Haken zurück nimmt das Datum mit. Und der Altbestand zählt
+über `edited` mit — dieselbe Regel, die Datenbankzeilen zwanzig Zeilen
+tiefer längst hatten.
+
+**E664 — ein zu kleines Fenster.** Der volle Lauf meldete „Beide stehen in
+einem finally — [false,true]". Der Code war richtig: `test403` sah zwei
+Zeilen zurück, und E652 hatte zwei Zeilen in dasselbe `finally` geschoben.
+Ein Wächter, der an der Reihenfolge innerhalb eines Blocks scheitert, prüft
+die Reihenfolge und nicht den Block. Jetzt wird der Blockkopf gesucht,
+Klammern zählend nach oben.
+
+**Geprüft.** `test554` neu, elf Messungen, gegen den alten Stand 7/11, mit
+zwei Gegenproben. `test403` 22/22 mit eigener Gegenprobe (ein `remove` aus
+seinem `finally` geholt → wieder rot). `test550` 8/8.
+
+**Nachgesehen, nicht angenommen:** dieselbe Redewendung
+`slice(Math.max(0, i - …))` kommt in keinem der übrigen 495 Läufe vor.
+
+---
+
+## 20. September 2026 · E662 · Der Sweep nennt den Schuldigen, nicht sein ganzes Stück
+
+**Der Ernstfall.** Zwei Stunden nach seinem Bau meldete `volllauf.mts` zehn
+rote Läufe (266 bis 277). Im Protokoll darüber stand „✗ 1 von 10 Läufen
+gescheitert: test270". Einer.
+
+**Die Ursache.** Die Zerlegung suchte je ZEILE nach einem ✗ UND einer
+Testnummer. `alle.mts` schreibt seine Bilanz auf zwei Zeilen — die erste
+trägt das Zeichen, die zweite den Namen. Also fand sie nichts und fiel auf
+„das ganze Stück ist rot" zurück.
+
+**Was bleibt.** Der Rückfall. Er erfindet keinen Schuldigen (§56), und
+lieber neun zu viel als einer zu wenig. Falsch war nur, ihn so leicht
+auszulösen: neun grüne Läufe verstecken den einen, auf den es ankommt.
+
+**Gebaut.** Die Bilanz wird zuerst gelesen, einzelne ✗-Zeilen danach, und
+was nicht zum Stück gehört, macht keinen fremden Lauf rot. `volllauf.mts`
+arbeitet nur noch, wenn es direkt gestartet wurde — importiert gibt es nur
+`roteAus` her, damit ein Wächter es prüfen kann, ohne den Sweep loszutreten.
+
+**Geprüft.** `test553` neu, sechs Messungen, mit der ECHTEN Bilanz vom
+20. September als Eingabe. Gegenprobe: die alte Regel eingesetzt → genau
+das beobachtete Symptom.
+
+**Offen.** Der eine echte rote Lauf ist `test270` mit dem Artefakt, das §30
+beschreibt (`.git` als Datei, `node_modules` als Symlink im Arbeitsbaum).
+Er wird im Hauptbaum nachgemessen, sobald der Sweep durch ist — vorher wird
+daran nichts repariert.
+
+---
+
+## 20. September 2026 · E661 · Groqs 404 — der Anbieter hat immer recht
+
+**Redurs Meldung.** „Groq antwortet mit 404. Die Adresse gibt es nicht
+(object_not_found)" — gefolgt von Groqs eigenem Satz, dass das MODELL
+`llama-3.3-70b-versatile` nicht mehr existiert.
+
+**Der Fund.** Die Adresse gab es sehr wohl; Groq hat sie beantwortet.
+Redion hatte die richtige Erklärung in der Hand und stellte seine eigene,
+falsche davor. Wer sie liest, sucht an der URL, am Schlüssel, an der
+Firewall — überall ausser am Modell.
+
+**Gebaut.** Sagt der Anbieter etwas, führt SEIN Satz die Meldung an; die
+Statustabelle bleibt für den, der schweigt (leere 502, kaputter Proxy).
+Bei `model_not_found` kommt dazu, was zu tun ist. Und `modelleHolen` fragt
+den Anbieter unter `/models`, was er heute anbietet — beim Probelauf nach
+dem Hinterlegen eines Schlüssels und über „Modelle erneut holen" im Menü.
+Die eingebaute Liste ist ab jetzt ein Rückfall, keine Wahrheit.
+
+**Was nicht geraten wurde.** Das tote Modell ist gestrichen. Was an seine
+Stelle getreten ist, weiss Groq und nicht ich (§56). Im Preisverzeichnis
+bleibt es stehen — dort werden bereits gelaufene Aufrufe nachgeschlagen.
+
+**Geprüft.** `test552` neu, 15 Messungen mit Groqs echtem Fehlerkörper,
+gegen den alten Stand 4/15. Zwei Gegenproben — und die erste war FALSCH,
+nicht der Code: `false && A || B` lässt `B` übrig. Eine Gegenprobe ist ein
+Stück Code wie jedes andere.
+
+---
+
+## 20. September 2026 · E660 · Die Tabellenwerkzeuge sind am Telefon zu treffen
+
+**Der Fund.** Am Telefon sind die sieben Knöpfe unter einer Tabelle der
+EINZIGE Weg, eine Spalte oder Zeile anzulegen — die Griffe daneben messen
+7 px und stehen erst nach einem `mouseover` da, den ein Daumen nicht
+erzeugt. Die Knöpfe waren 26 px hoch: weder die harte 44 noch die 32 eines
+Nebenwegs, und ohne den geschriebenen Grund, den §37 dafür verlangt.
+
+**Gebaut.** 44 px unter `@media(hover:none)`, dort wo L108 schon steht —
+kein zweiter Katalog. Am Rechner bleibt es bei 26 px, und `test551` misst
+auch das: eine Maus trifft genauer, und eine hohe Leiste unter jeder
+Tabelle wäre dort nur laut.
+
+**Was ich zuerst falsch gebaut hätte.** Ich war dabei, eine zweite
+Werkzeugzeile für den Daumen zu schreiben — `.stab-tools` gibt es seit
+langem, und L108 hat sie am Telefon längst sichtbar gemacht. Der fertig
+geschriebene Wächter dafür wurde weggeworfen und neu geschrieben. §45
+Schritt 1 heisst „bestehenden Code lesen", und er ist der Schritt, der am
+häufigsten fehlt.
+
+**Der Fund über dem Fund.** `test402` hält dieselbe Regel und konnte diese
+Knöpfe nie sehen: er sucht `height`/`min-height` im Stilblatt, und die 26 px
+kamen aus Innenabstand und Schriftgrösse. Eine Messung, die nicht messen
+KANN, was sie behauptet, sagt immer „passt schon" — eingetragen als L206,
+statt hier versprochen (§35).
+
+**Geprüft.** `test551` neu, 9 Messungen, gegen den alten Stand 8/9 mit
+genau der einen roten Zeile („7 von 7 unter 44 px"). `test402` grün,
+`test549` 6/6, `test550` 8/8 — die beiden Doku-Wächter haben im selben Bogen
+zugeschlagen, als L206 und `test551` die Zahlen verschoben.
+
+**Bild.** `bilder/tabelleDaumen-handy-dunkel.png` (§55.3).
+
+---
+
 ## 20. September 2026 · E659 · Die Doku zählt, was da ist
 
 **Der Anlass.** §30 sagt über die Zahl der Prüfläufe: „Sie wird nicht

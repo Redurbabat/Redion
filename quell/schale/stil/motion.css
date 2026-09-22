@@ -114,7 +114,9 @@
 body .bib-deckel[data-art="ordner"] .bib-deckel-blatt::before {
   inset: 34% 4% 8%; z-index: 3; opacity: 1;
   transform-origin: 50% 100%;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 85%, white), var(--accent));
+  /* `--ordner-farbe` statt `--accent` (E672): ohne Wahl dasselbe wie vorher,
+     mit Wahl die Farbe des Ordners. */
+  background: linear-gradient(145deg, color-mix(in srgb, var(--ordner-farbe) 85%, white), var(--ordner-farbe));
   box-shadow: inset 0 1px 0 #ffffff50, 0 6px 12px #0002;
   transition: transform .5s cubic-bezier(.22,1,.36,1);
 }

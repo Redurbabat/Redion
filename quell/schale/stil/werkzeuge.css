@@ -898,8 +898,34 @@ table.stab td:focus, table.stab th:focus{box-shadow:inset 0 0 0 2px var(--accent
   display:flex; align-items:center; gap:8px; padding:7px 10px;
 }
 #findbar input{background:none; border:none; outline:none; font-size:14px; width:210px; color:var(--text)}
-#findbar .n{font-size:12px; color:var(--text-faint); min-width:52px}
+#findbar .n{font-size:12px; color:var(--text-faint); min-width:62px; text-align:center}
+/* E667: DIE KNOEPFE DER SUCHE SIND EIN HAUPTWEG (§37). Das Kreuz mass
+   13×24 px — und die Suchleiste des Schreibstudios setzt seit E468
+   `min-height:var(--touch-min)`. Dieselbe Geste, dasselbe Mass. */
+#findbar button{
+  min-width:var(--touch-min); min-height:var(--touch-min);
+  display:grid; place-items:center; font-size:17px; line-height:1;
+  background:none; border:none; border-radius:7px; color:var(--text-dim); cursor:pointer;
+}
+#findbar button:hover{background:var(--bg-hover); color:var(--text)}
 #page mark{background:#ffdc4966; color:inherit; border-radius:2px}
+/* DIE STELLE, BEI DER MAN GERADE IST. Nicht nur eine andere Farbe (§38):
+   der Rahmen ist eine Form, und der Zähler sagt es daneben in Worten. */
+#page mark.aktiv{background:#ff9e2c99; outline:2px solid var(--accent); outline-offset:1px}
+/* AM TELEFON SPANNT DIE LEISTE ÜBER DIE BREITE (E667). Mit Feld, Zahl,
+   Kreuz war sie 310 px breit und passte knapp; mit den zwei Pfeilen sind
+   es 458, und `right:22px` schob das SUCHFELD links aus dem Bild — auf dem
+   Bildschirmfoto stand davon ein „r" (§55.1, §37). Das Feld gibt hier seine
+   feste Breite auf und nimmt, was nach den drei Knöpfen übrig ist. */
+@media (max-width:760px){
+  #findbar{ left:10px; right:10px; top:52px; gap:2px; padding:6px 8px; }
+  #findbar input{ width:auto; flex:1 1 0; min-width:0 }
+  /* `7ch` statt 56px: der Zähler sagt höchstens „12 von 12" — neun
+     Zeichen —, und in Zeichenbreiten gemessen wächst er mit der
+     Schrift mit. Die rohe 56 wäre ausserdem die fünfzehnte ihrer Art
+     gewesen; `marken-decke.json` darf nur schrumpfen (test362). */
+  #findbar .n{ min-width:7ch; flex:0 0 auto }
+}
 
 /* --- Fokus-Modus ---------------------------------------------------------------------------------- */
 /* SEIT E272 PHASE F AUCH DIE NEUE SCHALE. Der Fokusmodus versteckte
@@ -1291,7 +1317,23 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
  * acht schon zu waren — genau dafür ist er da.
  * ==========================================================================*/
 @media(hover:none){
-  .stab-wrap .stab-tools{opacity:1}
+  .stab-wrap .stab-tools{opacity:1; gap:8px}
+
+  /* 44 px TREFFFLÄCHE (§37, E660). HAUPTWEG, kein Nebenweg: am Telefon sind
+     diese sieben Knöpfe der EINZIGE Weg, eine Spalte oder Zeile anzulegen —
+     die Griffe daneben messen 7 px und stehen erst nach einem `mouseover`
+     da, den ein Daumen nicht erzeugt.
+
+     Gemessen vor E660: 7 von 7 Knöpfen 26 px hoch. Das ist weder die harte
+     44 noch die 32 eines Nebenwegs, und ein geschriebener Grund stand auch
+     nicht daneben.
+
+     NUR HIER, nicht am Rechner: dort trifft eine Maus 26 px genauer als ein
+     Daumen 44, und eine hohe Leiste unter jeder Tabelle wäre nur laut.
+     `test551` misst beide Seiten. */
+  .stab-wrap .stab-tools button{
+    min-height:var(--touch-min); padding:0 14px; font-size:13.5px;
+  }
 }
 
 /* ==========================================================================

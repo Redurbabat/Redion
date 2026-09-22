@@ -1480,8 +1480,18 @@ const Einstellungen = (() => {
       try {
         KI.zustand.quelle = 'wolke';
         KI.zustand.anbieter = id;
-        KI.zustand.modell = id === 'eigen'
-          ? Store.getMeta('api:eigenModell', 'lokal') : KI.anbieter(id).modelle[0];
+        /* ZUERST FRAGEN, WAS ES GIBT (E661). Die eingebaute Liste veraltet
+           still: Redur bekam am 20. September eine 404 für
+           `llama-3.3-70b-versatile`, weil Groq es ausgemustert hatte und
+           die Liste im Programm es noch führte. Der Probelauf ist der
+           natürliche Ort dafür — hier wird der Schlüssel ohnehin das erste
+           Mal benutzt. Geht es schief, gilt die eingebaute Liste weiter.
+
+           EIN GRIFF, NICHT ZWEI (E665). „Holen und dann das erste nehmen"
+           ist eine Prozedur der KI; diese Seite braucht nur das Ergebnis.
+           `test537` hat den zweiten Griff als neuen Querverweis gemeldet,
+           und er hatte recht (§5 Regel 1). */
+        KI.zustand.modell = await KI.modellWaehlen(id);
         let antwort = '';
         for await (const t of KI.wolkeFragen(
           [{ role: 'user', content: 'Antworte nur mit dem Wort: bereit' }], KI.zustand.modell)) antwort += t;

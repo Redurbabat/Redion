@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 492 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 508 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1024,18 +1024,170 @@ da „0 → 0" und „KEINE FASSUNG", ohne die Eindeutigkeitsprüfung kommt der
 Fehler aus E650 wörtlich zurück — „Die Leitung liegt. Das Kabel bleibt."
 Gezählt am 20. September, im selben Bogen: der Befehl sagt 490.*
 
-*Und 492: `test550` — die Doku zählt, was da ist (E659). Er hält §30s
-eigenen Satz („sie wird nicht geschätzt, sie wird gezählt") und §34s
-„beides: Verzeichnis und Text". Er wurde gegen den Stand rot, den ER SELBST
-erzeugt hatte: 492 Dateien, 491 in der Doku — die Drift, die §30 seit einem
-Jahr beklagt, im Abstand von Minuten. Gezählt am 20. September: 492.*
-
 *Und 491: `test549` — die Lückenliste sagt die Wahrheit über sich selbst
 (E658). Er ist der erste Lauf, der eine DOKU-Datei hält: 33 offene Lücken
 standen unter „Anhang B · Was erledigt ist", fünf Überschriften sagten
 „abgearbeitet" statt GESCHLOSSEN, und die Datei zählte sich selbst falsch.
 Er liest nur eine Datei — kein Browser, kein Port —, darf also neben einem
 vollen Lauf gefahren werden. Gezählt am 20. September: der Befehl sagt 491.*
+
+*Und 492: `test550` — die Doku zählt, was da ist (E659). Er hält §30s
+eigenen Satz („sie wird nicht geschätzt, sie wird gezählt") und §34s
+„beides: Verzeichnis und Text". Er wurde gegen den Stand rot, den ER SELBST
+erzeugt hatte: 492 Dateien, 491 in der Doku — die Drift, die §30 seit einem
+Jahr beklagt, im Abstand von Minuten. Gezählt am 20. September: 492.*
+
+*Und 493: `test551` — die Tabellenwerkzeuge sind am Telefon zu treffen
+(E660). Er misst die GERENDERTE Box im Browser, und genau darin liegt sein
+Wert: `test402` hält dieselbe Regel über eine Textsuche nach `height:` in
+den Stilblättern und konnte die 26 px deshalb nie sehen — sie kamen aus
+Innenabstand und Schriftgrösse. Eine Messung, die nicht messen KANN, was
+sie behauptet, sagt immer „passt schon" (L206). Gezählt am 20. September:
+493.*
+
+*Und 494: `test552` — ein abgekündigtes Modell sagt, dass es das Modell ist
+(E661). Er hält Redurs Groq-404 vom 20. September mit dem echten
+Fehlerkörper fest. Bemerkenswert war die Gegenprobe: die erste war FALSCH,
+nicht der Code — `false && A || B` lässt `B` übrig, der Zweig lief weiter,
+und der grüne Lauf sah kurz nach einem zu schwachen Wächter aus. Eine
+Gegenprobe ist ein Stück Code wie jedes andere. Gezählt am 20. September:
+494.*
+
+*Und 495: `test553` — der Sweep nennt den Schuldigen, nicht sein ganzes
+Stück (E662). Er prüft die Zerlegung von `volllauf.mts` mit der ECHTEN
+Bilanz vom 20. September: zehn rote Läufe gemeldet, einer war es. Die Lehre
+daraus gehört in diesen Abschnitt, weil sie ihn selbst betrifft — ein
+Werkzeug, das Prüfläufe auswertet, ist ungeprüft, bis es einen Wächter hat.
+Gezählt am 20. September: 495.*
+
+*Und 496: `test554` — was abgehakt wird, zählt in der Wochenrückschau
+(E663). Sie rechnete mit einem Feld, das niemand schrieb: wer eine Woche
+lang Aufgaben abhakte, sah am Sonntag lauter Nullen. Gezählt am
+20. September: 496.*
+
+*Und 497: `test555` — „Erinnerung" führt zu einer Erinnerung (E666). Er
+hält einen Eintrag, der eine Zeichenkette schrieb, während die ganze
+Erinnerungsmaschine danebenstand. Zwei seiner Zusagen waren im ersten
+Anlauf grün, WEIL nichts lief — `undefined` enthält kein „@remind", und
+`undefined === undefined` ist wahr. Gezählt am 20. September: 497.*
+
+*Und 498: `test556` — Strg+F findet vier Stellen und zeigte eine (E667).
+Die Leiste markierte alles, rollte zur ERSTEN und schrieb „4 Treffer"; ihr
+`keydown` kannte genau eine Taste, und die hiess `Escape`. Gegen den alten
+Stand war er rot mit 5 von 17 — „aktiv bleibt 0 — Enter tut nichts". Seine
+letzten fünf Zusagen hat aber nicht er gefunden, sondern das BILD: am
+Telefon lief das Suchfeld links aus dem Bild, `-90 … 368` bei 390 px
+Fensterbreite, und sichtbar war davon ein „r" (§55.1). Gezählt am
+20. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+498.*
+
+*Und 499: `test557` — Fett ist ein Schalter, und Strg+B nimmt denselben
+Weg (E668). Er hat zwei Dinge gefunden, und das zweite wiegt schwerer als
+das erste: `umschliesse` gab es ZWEIMAL, und die Fassung in `editor.ts`
+speicherte `ct.textContent` zurück — den GEZEICHNETEN Text. Strg+B in einem
+Block `Ein **fetter** Satz` machte daraus `Ein fetter **Satz**`; die
+vorhandene Auszeichnung war weg, ohne Meldung. Derselbe Handgriff über den
+Knopf ergab `Ein **fetter** **Satz**`. Genau davor warnt §8, und genau
+deshalb hat E650s Reparatur nur die Hälfte erreicht — `test542` prüfte den
+Knopf, nicht die Taste. Gegen den alten Stand war er rot mit 8 von 13.
+Gezählt am 21. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 499.*
+
+*Und 500: `test558` — die angemeldeten Geräte gibt es wirklich (E669). Die
+Einstellungen versprachen „Die Liste … steht im Wolke-Fenster"; dort stand
+eine Zeile mit DIESEM Gerät. Gegen den alten Stand war er rot mit 0 von 18
+— und sechs seiner Zusagen waren im ersten Anlauf GRÜN, weil die Liste leer
+war: eine leere Liste enthält kein fremdes Konto und keinen Token, und zwei
+Kennungen aus null Einträgen sind auch verschieden (§55.2). Seine beste
+Gegenprobe gilt dem Escapen: ohne `esc()` zerreisst ein `<script>` im
+Gerätenamen die Zeile — statt zwei Knöpfen steht einer da. Gezählt am
+21. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+500.*
+
+*Und 501: `test559` — den Text einer PDF ändern, ohne die PDF anzufassen
+(E670). Er hält Redurs Frage vom 21. September und die Grenze, die zur
+Antwort gehört: die Änderung ist eine Marke, und das Original bleibt Byte
+für Byte — gemessen mit einer SHA-256-Summe über die abgelegte Quelle.
+Gegen den alten Stand war er rot mit 4 von 18, und die vier grünen waren
+keine Zufallstreffer: sie halten, was schon gut war. Dieser Bogen ist
+ausserdem der, in dem ZWEI BESTEHENDE Wächter etwas gefunden haben, bevor
+ein Mensch hinsah: `test480 §7b` druckte `inkText/inkText = 100 %`, weil
+das neue Werkzeug das T von „Text schreiben" mittrug, und derselbe Lauf
+zählte dreizehn Werkzeuge, wo vierzehn standen. Gezählt am 21. September:
+`ls pruefungen/lauf/test*.mts | wc -l` sagt 501.*
+
+*Und 502: `test560` — ein Ordner hat eine Farbe, und man kann sie wechseln
+(E672). Gegen den alten Stand war er rot mit 9 von 26. Sein wichtigster
+Beitrag kam NACH dem Bauen: die Rücken-Regel der Hefte kam am gezeichneten
+Ordner mit 0 px heraus, und die Farbe fiel auf `currentColor` zurück —
+`rgb(167, 167, 167)`. Ein Attribut war gesetzt, gezeichnet war nichts. Seither
+misst er den Reiter des Ordners Kanal für Kanal gegen `--c-blue`. Gezählt am
+21. September: `ls pruefungen/lauf/test*.mts | wc -l` sagt 502.*
+
+*Und 503: `test561` — der Füller läuft spitz aus (E673). Gegen den alten
+Stand war er rot mit 13 von 22 und hat die Zahl gedruckt, um die es geht:
+„Anfang 2.4 gegen Mitte 2.4 · Bögen [1.2,1.2]" — beide Kappen in voller
+Breite, jeder Buchstabe ein Klecks. Er misst die PDF-Kontur GEGEN den
+Bildschirm-Bogen, weil die halben Breiten vorher an zwei Stellen standen
+(derselbe Fund wie E623), und er misst den NASSEN Strich, bevor die Hand
+abhebt: Anfang spitz, Ende noch voll. Und zwei seiner 24 Zusagen kamen erst
+NACH dem Bild: der Punkt des 5-pt-Füllers stand als senkrechter Splitter da
+— der Lauf war grün, weil er nur den 2,4-pt-Füller gemessen hatte (§55.1).
+Gezählt am 21. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 503.*
+
+*Und 504: `test562` — jedes Werkzeug merkt sich Farbe und Stärke (E674).
+Gegen den alten Stand war er rot mit 11 von 19 und hat die Handbewegung
+gedruckt, um die es geht: „Zurück beim Stift zeigt die Leiste wieder Rot und
+Breit — ist Grün/Fein". Seine Nachbarstelle fand das LESEN, nicht das
+Messen: das Studio setzte erst die Dokumentfarbe und dann das Werkzeug, und
+mit dem neuen Gedächtnis hätte der Wechsel die Farbe im selben Atemzug
+wieder überschrieben (§45). Und einen zweiten Fund machte ein ALTER Wächter:
+`test345 §4` wurde rot, weil E353 „mit der Auswahl Rot wählen, danach rot
+weiterzeichnen" verspricht und der erste Stand das Rot der Auswahl
+gutschrieb. Sechzehn Nachbarn zu fahren war kein Ritual. Gezählt am
+21. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+504.*
+
+*Und 505: `test563` — ein Stift, der kurz 0 meldet, bleibt ein Stift
+(E675). Er hat eine Vermutung des Lesers gemessen, die als „nicht gemessen"
+im Befund stand: ein Strich mit leichter Hand (0,2) und drei Aussetzern
+trug einen Druck von 0,47 und einen Buckel von ×1,38 — der Tempo-Ersatz für
+Maus und Finger war mitten im Stiftstrich eingesprungen. Gegen den alten
+Stand rot mit 10 von 13; kein Bild, weil es reines Messen ist (§55.3).
+Gezählt am 21. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 505.*
+
+*Und 506: `test564` — der Glätter hält die Ecke (E676). §1–§3 laufen ohne
+Browser, wie `test366`, und waren gegen den alten Stand rot mit 6 von 8:
+„2,62 px" neben der Spitze eines langsam gezogenen „M". Sein erster Fund
+kam gegen den ERSTEN Reparaturstand: 1,41 px bei 60 Hz, 0,3 bei 240 Hz —
+die Ecke hing wieder an der Abtastrate. Sein zweiter kam aus dem BILD: bei
+8 von 8 grün zeigte das „M" ein rundes Tal, weil `finish` die Ecken beim
+Absetzen durch acht gleichmässige Punkte ersetzte (23,7 px daneben) und der
+Umriss durch jede Ecke eine Q-Kurve zog (5,1 px). §4 verfolgt die Ecke
+seither bis aufs Papier. Gezählt am 21. September, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 506.*
+
+*Und 507: `test565` — der Trainer wohnt im Lernzentrum (E677). Er hält
+Redurs Satz „die app nicht getrennt": der Trainer ist eine Ansicht der
+Lernwelt über gewöhnlichen Lernkarten, seine Boxen sind eine Ableitung aus
+`sr`, und `localStorage` bleibt leer. Gegen den alten Stand rot mit 1 von
+21, dann Abbruch, weil es den Inhalt nicht gab. Sein Fund kam gegen den
+ERSTEN gebauten Stand: „7 Prüfungsfragen, wortgleich=false" — 57 Karten in
+derselben Millisekunde angelegt, und `created` allein brachte Frage 5 vor
+Frage 4 (P106). Gegenprobe rot an genau zwei Stellen: „[1,-1,1]" (die
+falsche Karte kommt nicht wieder) und „img: true" (kein `esc`). Gezählt am
+22. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l`
+sagt 507.*
+
+*Und 508: `test566` — der Streifen zur neuen Fassung steht unten (E678).
+Redurs Satz vom 22. September, „die neu laden buton unten bringen", in
+elf Messungen: am Rechner endet der Streifen am unteren Rand, am Telefon
+genau an der Oberkante der Leiste (775 = 775), der Knopf misst 44 px, und
+ein Warnstreifen bleibt oben. Gegen den alten Stand rot mit 5 von 11 —
+„top 0 · bottom 45" und „85 × 23" für den Knopf. Gezählt am 22. September,
+im selben Bogen: der Befehl sagt 508.*
 
 ### Die Befehle
 
@@ -1045,7 +1197,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 492 Läufe
+npm run pruefen                      alle 508 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1132,7 +1284,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 492 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 508 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

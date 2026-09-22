@@ -87,6 +87,31 @@ const InkGeometry = (() => {
                 out.push(i);
         return out;
     };
+    /* ══ EIN BOGENSTUECK, DAS EINE ECKE KENNT (E676) ═════════════════════════
+       Der Weg von Stuetzpunkt zu Stuetzpunkt ist eine Q-Kurve ueber die
+       Mittelpunkte: der Punkt ist Kontrollpunkt, der Mittelpunkt zum naechsten
+       das Ende. Das rundet — auch eine ECKE, die der Glaetter gerade erst
+       gehalten hat (E676): bei 24 px Abstand der Nachbarn laeuft die Kurve
+       fuenf Pixel neben der Spitze eines „M" vorbei. Kippt die Richtung an
+       einem Punkt (cos < ECKE_COS, dieselbe Schwelle wie `KEHRE` in
+       stroke.ts), geht der Weg deshalb als Gerade DURCH den Punkt und als
+       Gerade weiter zum Mittelpunkt. Die Feder (stroke.ts) ruft dieses
+       Stueck fuer ihre eingefrorenen Teile — eine Rechnung, damit
+       `test366 §1` (zeichengleich) gilt, ohne dass sie zweimal dasteht. */
+    const ECKE_COS = 0.55;
+    const stueck = (prev, p, next) => {
+        const mx = Math.round((p[0] + next[0]) * 50) / 100;
+        const my = Math.round((p[1] + next[1]) * 50) / 100;
+        if (prev) {
+            const ax = p[0] - prev[0], ay = p[1] - prev[1];
+            const bx = next[0] - p[0], by = next[1] - p[1];
+            const la = Math.hypot(ax, ay), lb = Math.hypot(bx, by);
+            if (la > 0.3 && lb > 0.3 && (ax * bx + ay * by) / (la * lb) < ECKE_COS) {
+                return ` L${p[0]} ${p[1]} L${mx} ${my}`;
+            }
+        }
+        return ` Q${p[0]} ${p[1]} ${mx} ${my}`;
+    };
     /** Eine Seite des Umrisses als geglaettete Kurve (ohne das fuehrende M). */
     const seite = (input) => {
         if (input.length < 2)
@@ -94,13 +119,8 @@ const InkGeometry = (() => {
         if (input.length === 2)
             return ` L${input[1][0]} ${input[1][1]}`;
         let output = '';
-        for (let i = 1; i < input.length - 1; i++) {
-            const middle = [
-                Math.round((input[i][0] + input[i + 1][0]) * 50) / 100,
-                Math.round((input[i][1] + input[i + 1][1]) * 50) / 100
-            ];
-            output += ` Q${input[i][0]} ${input[i][1]} ${middle[0]} ${middle[1]}`;
-        }
+        for (let i = 1; i < input.length - 1; i++)
+            output += stueck(input[i - 1], input[i], input[i + 1]);
         const last = input[input.length - 1];
         return output + ` L${last[0]} ${last[1]}`;
     };
@@ -143,6 +163,58 @@ const InkGeometry = (() => {
             rechts.push([r2(input[i][0] + ty * w), r2(input[i][1] - tx * w)]);
         }
         return { links, rechts, anfang: halb(0), ende: halb(n - 1) };
+    };
+    /* ══ DIE SPITZE (E673) ═══════════════════════════════════════════════════
+       Ein Füller setzt nicht mit voller Breite auf und hört nicht mit voller
+       Breite auf: die Feder berührt das Papier mit der Spitze, die Tinte
+       läuft an, und beim Abheben läuft sie aus. Bis E673 waren beide Kappen
+       Halbkreise in VOLLER Breite — `outline` und `Feder.d()` ziehen den
+       Bogen mit dem Radius der ersten und der letzten halben Breite. Jeder
+       Buchstabe endete mit einem runden Klecks, und das war der Unterschied
+       zu GoodNotes, den man beim ersten „e" sieht, ohne zu messen.
+  
+       `spitzeFaktor` ist EINE Kurve für den nassen und den trockenen Strich:
+       von `min` bei Weglänge 0 auf 1 bei Weglänge `laenge`, quadratisch
+       auslaufend — schnell dicker, dann sanft. Gemessen wird WEGLÄNGE, nicht
+       Punktzahl: sonst hinge die Spitze an der Abtastrate des Stifts (E504).
+       Der nasse Strich kennt nur seinen Anfang und nimmt die Kurve dort;
+       `verjuengen` legt sie an BEIDE Enden eines fertigen Strichs — und
+       kürzt sie bei kurzen Strichen, damit ein Punkt ein Punkt bleibt und
+       kein Splitter wird. Die halben Breiten sind ein AUSSEHEN; was der
+       Sensor an Druck gemeldet hat, bleibt in der Marke unverändert (§9). */
+    const spitzeFaktor = (weg, laenge, min) => {
+        if (!(laenge > 0) || !(min < 1) || !(weg < laenge))
+            return 1;
+        const t = Math.max(0, weg / laenge);
+        return min + (1 - min) * t * (2 - t);
+    };
+    const verjuengen = (raw, halfWidths, min, laenge) => {
+        const input = points(raw);
+        const n = input.length;
+        const halb = (i) => {
+            const w = Number(halfWidths[Math.min(i, halfWidths.length - 1)]);
+            return Number.isFinite(w) ? w : 1;
+        };
+        const aus = Array.from({ length: n }, (_q, i) => halb(i));
+        if (n < 3 || !(min < 1) || !(laenge > 0))
+            return aus;
+        const weg = [0];
+        for (let i = 1; i < n; i++) {
+            weg.push(weg[i - 1] + Math.hypot(input[i][0] - input[i - 1][0], input[i][1] - input[i - 1][1]));
+        }
+        const gesamt = weg[n - 1];
+        /* Ein kurzer Strich bekommt eine kurze UND eine stumpfere Spitze. Der
+           Weg je Ende ist höchstens 40 % der Strichlänge, damit ein Fünftel in
+           der Mitte voll bleibt — und die Spitze selbst wird umso stumpfer, je
+           weniger von zwei ganzen Federn in den Strich passt: ein Strich, der
+           kürzer ist als seine Feder, ist ein Klecks, keine Feder. Das Bild
+           hat es gezeigt (§55.1): mit dem 5-pt-Füller war ein 2-pt-Punkt ein
+           senkrechter Splitter, weil die Spitze zwar kurz, aber immer noch
+           auf ein Viertel spitz war. */
+        const anteil = Math.min(1, gesamt / (2 * laenge));
+        const stumpf = 1 - (1 - min) * anteil;
+        const l = Math.min(laenge, gesamt * 0.4);
+        return aus.map((h, i) => h * spitzeFaktor(weg[i], l, stumpf) * spitzeFaktor(gesamt - weg[i], l, stumpf));
     };
     const outline = (raw, halfWidths) => {
         const kanten = seiten(raw, halfWidths);
@@ -219,13 +291,9 @@ const InkGeometry = (() => {
         if (input.length === 2)
             return `M${input[0][0]} ${input[0][1]} L${input[1][0]} ${input[1][1]}`;
         let output = `M${input[0][0]} ${input[0][1]}`;
-        for (let i = 1; i < input.length - 1; i++) {
-            const middle = [
-                Math.round((input[i][0] + input[i + 1][0]) * 50) / 100,
-                Math.round((input[i][1] + input[i + 1][1]) * 50) / 100
-            ];
-            output += ` Q${input[i][0]} ${input[i][1]} ${middle[0]} ${middle[1]}`;
-        }
+        /* Auch die Linie kennt die Ecke (E676) — dasselbe Stueck wie der Umriss. */
+        for (let i = 1; i < input.length - 1; i++)
+            output += stueck(input[i - 1], input[i], input[i + 1]);
         const last = input[input.length - 1];
         return output + ` L${last[0]} ${last[1]}`;
     };
@@ -1048,7 +1116,9 @@ const InkGeometry = (() => {
             mark.breiteBox = Math.max(24, r2(Number(mark.breiteBox) * Math.abs(lx)));
         return mark;
     };
-    return { points, simplify, simplifyIndices, densify, outline, outlinePunkte, path, rectangle, bounds, move, intersects,
+    return { points, simplify, simplifyIndices, densify, outline, outlinePunkte, spitzeFaktor, verjuengen,
+        stueck, ECKE_COS,
+        path, rectangle, bounds, move, intersects,
         distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale, rotate,
         textWidth, textLines, textLayout, LINIEN, SCHRIFTEN, schriftStapel, gemessenAn,
         /* Seit E474: der aufrechte Kasten der Marke OHNE ihre Drehung, ihre

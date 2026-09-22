@@ -97,9 +97,17 @@ const KI = (() => {
      * „frei" heisst: es gibt ein kostenloses Kontingent ohne Kreditkarte.
      * ----------------------------------------------------------------------*/
     const ANBIETER = [
+        /* DIE MODELLNAMEN HIER SIND EIN RÜCKFALL, KEINE WAHRHEIT (E661).
+           Ein Anbieter mustert Modelle aus, ohne dass dieses Programm es
+           erfährt: Redur bekam am 20. September 2026 eine 404 für
+           `llama-3.3-70b-versatile`, das hier an erster Stelle stand und
+           deshalb als Vorgabe gewählt wurde. Es ist gestrichen — was an seine
+           Stelle getreten ist, weiss der Anbieter, nicht ich, und geraten wird
+           hier nichts (§56). `modelleHolen` fragt ihn; diese Liste hält nur
+           das Menü am Leben, solange niemand gefragt hat. */
         { id: 'groq', name: 'Groq', frei: true,
             url: 'https://api.groq.com/openai/v1/chat/completions',
-            modelle: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'gemma2-9b-it'],
+            modelle: ['llama-3.1-8b-instant'],
             woher: 'console.groq.com/keys',
             hinweis: 'Kostenloses Kontingent, sehr schnell' },
         { id: 'openrouter', name: 'OpenRouter', frei: true,
@@ -174,6 +182,49 @@ const KI = (() => {
         504: 'Der Anbieter hat zu lange gebraucht (gateway_timeout).'
     };
     /**
+     * Was in der Meldung steht — und WARUM nicht einfach die Tabelle.
+     *
+     * Redur, 20. September 2026, aus seinem Fenster:
+     *
+     *   „⚠ Groq antwortet mit 404. Die Adresse gibt es nicht (object_not_found).
+     *    {"error":{"message":"The model `llama-3.3-70b-versatile` does not exist
+     *    …","code":"model_not_found"}}"
+     *
+     * Die Adresse gab es sehr wohl — Groq hat sie beantwortet. Es war das
+     * MODELL, das ausgemustert wurde, und der Anbieter sagte das wörtlich.
+     * Redion hatte den Satz in der Hand und stellte trotzdem seine eigene,
+     * falsche Erklärung davor. Wer sie liest, sucht am falschen Ort.
+     *
+     * EINE STATUSZAHL HAT MEHRERE URSACHEN, der Anbieter kennt die richtige.
+     * Also gilt: sagt er etwas, gilt SEIN Satz. Die Tabelle bleibt die
+     * Antwort für den, der schweigt — und das ist der häufigere Fall bei
+     * einem kaputten Proxy oder einer leeren 502.
+     */
+    const fehlerSatz = (status, koerper) => {
+        let meldung = '', code = '';
+        try {
+            const d = JSON.parse(koerper || '{}');
+            const e = d && (d.error || d.detail || d);
+            meldung = String((e && (e.message || e.msg)) || '').trim();
+            code = String((e && (e.code || e.type)) || '').trim();
+        }
+        catch { /* kein JSON — dann eben die Tabelle */ }
+        if (!meldung)
+            return (FEHLERTEXT[status] || 'unbekannter Fehler') +
+                (koerper ? ' ' + koerper.slice(0, 180) : '');
+        /* DER HÄUFIGSTE FALL BEKOMMT EINEN WEG, NICHT NUR EINEN BEFUND. Ein
+           Anbieter mustert Modelle aus; die eingebaute Liste merkt es nie.
+           „Das Modell gibt es nicht mehr" ohne „und so kommst du weiter" ist
+           eine halbe Auskunft. */
+        const modellWeg = /model_not_found/i.test(code) ||
+            /does not exist|has been deprecated|decommissioned|no longer/i.test(meldung);
+        if (modellWeg)
+            return 'Dieses Modell gibt es beim Anbieter nicht mehr. ' + meldung +
+                ' — wähle im KI-Fenster ein anderes Modell; „Modelle erneut holen" fragt ' +
+                'den Anbieter, was er heute anbietet.';
+        return meldung;
+    };
+    /**
      * fetch mit Wiederholung. Gibt die Antwort zurück, sobald sie brauchbar ist.
      * @param {object} opt  versuche, basis (ms), beiWartezeit (Rückmeldung)
      */
@@ -216,6 +267,104 @@ const KI = (() => {
      * Fragt einen Wolken-Anbieter. Streamt Stück für Stück, damit die Antwort
      * genauso erscheint wie bei den lokalen Modellen.
      */
+    /* ========================================================================
+     * DEN ANBIETER FRAGEN, WAS ER HAT (E661)
+     * ------------------------------------------------------------------------
+     * `ANBIETER` führt seine Modelle als Text im Programm. Groq mustert
+     * Modelle aus, und die Liste merkt es nie — bis jemand eine 404 bekommt.
+     * Für Ollama fragt Redion längst nach, was da ist (`sucheOllamaJetzt`);
+     * für die Wolke stand dieselbe Frage nie.
+     *
+     * Alle OpenAI-artigen Anbieter haben `/models` unter derselben Wurzel wie
+     * `/chat/completions`. Anthropic ebenso, unter `/v1/models`.
+     *
+     * DIE EINGEBAUTE LISTE BLEIBT — als Rückfall, nicht als Wahrheit. Ohne
+     * Netz, ohne Schlüssel oder bei einem Anbieter ohne `/models` steht
+     * immer noch etwas im Menü; ein leeres Menü wäre schlimmer als ein
+     * veraltetes.
+     * ======================================================================*/
+    /** Die Adresse der Modell-Liste zu einer Chat-Adresse. */
+    const modellAdresse = (url) => {
+        if (!url)
+            return '';
+        if (/\/chat\/completions\/?$/.test(url))
+            return url.replace(/\/chat\/completions\/?$/, '/models');
+        if (/\/messages\/?$/.test(url))
+            return url.replace(/\/messages\/?$/, '/models');
+        return url.replace(/\/+$/, '') + '/models';
+    };
+    /**
+     * Holt die Modelle beim Anbieter und merkt sie. Gibt `null` zurück, wenn
+     * es nicht geht — und wirft dabei NICHT: wer im Menü auf „erneut holen"
+     * drückt, soll kein rotes Fenster bekommen, sondern die alte Liste.
+     */
+    const modelleHolen = async (id) => {
+        try {
+            const a = anbieter(id);
+            const key = schluessel(a.id);
+            const url = modellAdresse(a.id === 'eigen' ? Store.getMeta('api:eigenUrl', '') : a.url);
+            if (!url)
+                return null;
+            /* DERSELBE KOPF WIE BEIM FRAGEN, nicht ein zweiter daneben (§8).
+               Und er geht an DIESE Adresse und an keine andere (§21, §42). */
+            const kopf = { 'Content-Type': 'application/json' };
+            if (a.id === 'anthropic') {
+                kopf['x-api-key'] = key;
+                kopf['anthropic-version'] = '2023-06-01';
+                kopf['anthropic-dangerous-direct-browser-access'] = 'true';
+            }
+            else if (key) {
+                kopf['Authorization'] = 'Bearer ' + key;
+            }
+            const r = await fetch(url, { method: 'GET', headers: kopf });
+            if (!r.ok)
+                return null;
+            const d = await r.json();
+            const roh = Array.isArray(d?.data) ? d.data : (Array.isArray(d?.models) ? d.models : []);
+            const liste = roh
+                .map((m) => String(m?.id || m?.name || '')).filter(Boolean)
+                /* WAS NICHT REDEN KANN, GEHÖRT NICHT IN EIN CHAT-MENÜ. Groq führt
+                   Whisper und TTS in derselben Liste; sie beantworten keine Frage. */
+                .filter((n) => !/whisper|tts|embed|guard|moderat|vision-ocr/i.test(n))
+                .sort();
+            if (!liste.length)
+                return null;
+            Store.setMeta('ki:modelle:' + a.id, liste);
+            return liste;
+        }
+        catch {
+            /* Kein Netz, kein JSON, kein `/models` — die eingebaute Liste gilt. */
+            return null;
+        }
+    };
+    /**
+     * Ein Modell für diesen Anbieter — frisch erfragt, sonst das Eingebaute.
+     *
+     * WARUM DAS HIER STEHT UND NICHT IN DEN EINSTELLUNGEN (E665). Dort stand
+     * erst `KI.anbieter(id).modelle[0]`, dann wollte ich
+     * `await KI.modelleHolen(id)` und `KI.modelleVon(id)[0]` schreiben — zwei
+     * Griffe statt einem. `test537` hat es gemeldet: ein Querverweis mehr
+     * zwischen zwei Bereichen, und das Verzeichnis darf nur schrumpfen
+     * (§5 Regel 1).
+     *
+     * Der Wächter hatte recht, und zwar doppelt: „erst holen, dann das erste
+     * nehmen" ist eine Prozedur der KI und keine Sache, die die
+     * Einstellungsseite wissen muss. Ein Griff, ein Satz.
+     */
+    const modellWaehlen = async (id) => {
+        if (id === 'eigen')
+            return Store.getMeta('api:eigenModell', 'lokal');
+        await modelleHolen(id);
+        return modelleVon(id)[0] || '';
+    };
+    /** Was das Menü zeigt: was der Anbieter zuletzt sagte, sonst das Eingebaute. */
+    const modelleVon = (id) => {
+        const gemerkt = Store.getMeta('ki:modelle:' + id, null);
+        if (Array.isArray(gemerkt) && gemerkt.length)
+            return gemerkt;
+        const a = anbieter(id);
+        return Array.isArray(a.modelle) ? a.modelle : [];
+    };
     const wolkeFragen = async function* (nachrichten, modell, signal, 
     /* WOHIN DIE GEZÄHLTE TOKENZAHL GEHT (L104, E319).
        Ein Generator liefert Textstücke; die Abrechnung
@@ -256,8 +405,7 @@ const KI = (() => {
         const r = await holen(url, { method: 'POST', headers: kopf, body: JSON.stringify(koerper), signal: signal ?? null }, { beiWartezeit: (sek, nr, code) => UI.toast(`${a.name}: ${code} — neuer Versuch ${nr + 1} in ${sek} s`) });
         if (!r.ok) {
             const txt = await r.text().catch(() => '');
-            throw new Error(a.name + ' antwortet mit ' + r.status + '. ' +
-                (FEHLERTEXT[r.status] || '') + ' ' + txt.slice(0, 180));
+            throw new Error(a.name + ' antwortet mit ' + r.status + '. ' + fehlerSatz(r.status, txt));
         }
         if (!r.body)
             throw new Error('Die Antwort hat keinen Inhalt.');
@@ -806,7 +954,8 @@ const KI = (() => {
             mitSchluessel.forEach(a => {
                 const modelle = a.id === 'eigen'
                     ? [Store.getMeta('api:eigenModell', 'lokal')]
-                    : a.modelle;
+                    /* Was der Anbieter zuletzt gesagt hat, sonst das Eingebaute (E661). */
+                    : modelleVon(a.id);
                 modelle.forEach(mo => {
                     const an = zustand.quelle === 'wolke' && zustand.anbieter === a.id && zustand.modell === mo;
                     html += `<button data-q="wolke" data-a="${a.id}" data-m="${esc(mo)}" ${an ? 'class="on"' : ''}>` +
@@ -816,8 +965,12 @@ const KI = (() => {
                 });
             });
         }
-        html += '<hr><button data-q="check"><span class="mi">⟳</span>Erneut nach Ollama suchen</button>' +
-            '<button data-q="schluessel"><span class="mi">🔑</span>Schlüssel hinterlegen …</button>';
+        html += '<hr><button data-q="check"><span class="mi">⟳</span>Erneut nach Ollama suchen</button>';
+        /* Nur zeigen, wo es etwas zu holen gibt — ein Knopf ohne Schlüssel
+           könnte nichts tun und wäre genau das, was §47 verbietet. */
+        if (mitSchluessel.some(a => a.id !== 'eigen'))
+            html += '<button data-q="modelle"><span class="mi">☁</span>Modelle erneut holen</button>';
+        html += '<button data-q="schluessel"><span class="mi">🔑</span>Schlüssel hinterlegen …</button>';
         const m = UI.menu(html, Math.max(10, r.right - 300), r.bottom + 6);
         m.addEventListener('click', async (e) => {
             const b = elVon(e)?.closest('button[data-q]');
@@ -827,6 +980,21 @@ const KI = (() => {
                 m.remove();
                 start();
                 UI.toast('Suche nach Ollama …');
+                return;
+            }
+            /* JEDEN ANBIETER MIT SCHLÜSSEL FRAGEN, was er heute anbietet (E661).
+               Der Knopf sagt danach, was herauskam — auch wenn es nichts war:
+               ein Knopf, der schweigend nichts tut, ist die heimtückischere
+               Hälfte von §47. */
+            if (b.dataset.q === 'modelle') {
+                m.remove();
+                UI.toast('Frage die Anbieter nach ihren Modellen …');
+                const ziele = ANBIETER.filter(a => a.id !== 'eigen' && schluessel(a.id));
+                const erg = await Promise.all(ziele.map(a => modelleHolen(a.id)));
+                const gut = erg.filter(Boolean).length;
+                UI.toast(gut
+                    ? gut + ' von ' + ziele.length + ' Anbietern haben geantwortet — die Liste ist aktuell.'
+                    : 'Kein Anbieter hat geantwortet. Es bleibt bei der eingebauten Liste.');
                 return;
             }
             if (b.dataset.q === 'schluessel') {
@@ -2484,6 +2652,7 @@ const KI = (() => {
         quellenKarte, quellenLeiste, seitenKontext, SYSTEM,
         SCHREIB_BEFEHLE, schreibMenue, schreibLauf, alsBloeckeEinfuegen,
         ANBIETER, anbieter, wolkeFragen, holen, FEHLERTEXT, WIEDERHOLBAR,
+        modelleHolen, modelleVon, modellWaehlen, fehlerSatz,
         datenbankAuswerten, frageKurz, zustand, modellMenue,
         seitenleiste, chatBaum, verlauf, neuerChat, chatOeffnen, chatsLesen,
         chatsGruppiert, chatSichern,

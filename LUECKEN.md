@@ -8031,6 +8031,248 @@ Kollisionen, die er verhindern soll.
 Dann schrumpft die Liste von selbst, statt zu wachsen. Das steht seit E643
 auch im Kommentar von `test400`, wo es gelesen wird.
 
+
+---
+
+## L206 · `test402` sieht nur deklarierte Höhen, nicht gerenderte
+
+**Gefunden am 20. September 2026 beim Bogen E660.**
+
+`test402` hält §37 („44 px auf den Hauptwegen") über eine Textsuche in den
+Stilblättern:
+
+```js
+const h = body.match(/(?<!max-)(?:min-)?height\s*:\s*(\d+)px/);
+```
+
+Er findet also nur, was als `height` oder `min-height` **dasteht**. Die
+Werkzeugzeile der einfachen Tabelle war 26 px hoch, ohne dass irgendwo eine
+Höhe stand:
+
+```css
+.stab-tools button{ font-size:12px; padding:3px 9px; … }
+```
+
+12 px Schrift, zweimal 3 px Innenabstand, zwei Ränder — gerendert 26 px.
+Für `test402` unsichtbar, und deshalb stand die Regel auch nicht in
+`masse-bestand.json`: er hat sie nie gesehen, also nie eingetragen.
+
+**Das ist derselbe Fund wie in §55.2**, nur an einer anderen Stelle: eine
+Messung, die nicht messen KANN, was sie behauptet, sagt immer „passt schon".
+Dort war es `scrollWidth` gegen `clientWidth` bei einem Flex-Element, hier
+ist es eine Textsuche gegen eine gerechnete Höhe.
+
+**Was heute dagegen hilft:** `test551` misst die gerenderte Box im echten
+Browser — für die Tabellenwerkzeuge. Das ist eine Stelle, nicht alle.
+
+**Was fehlt:** ein Lauf, der die Trefflächen der Hauptwege am Telefon
+allesamt im Browser nachmisst, statt sie in den Stilblättern zu suchen.
+`test402` bleibt trotzdem nützlich: er ist in einer Sekunde durch und fängt
+den offensichtlichen Fall (`height:30px`) schon beim Schreiben ab. Die zwei
+Prüfungen schliessen einander nicht aus — die zweite fehlt.
+
+
+---
+
+## L207 · Das Bereichs-Verzeichnis zählt zu wenig — und Redur entscheidet, was daraus folgt
+
+**Gefunden am 20. September 2026 beim ersten vollen Lauf seit E626.**
+
+`test537` hält §5 Regel 1 über `pruefungen/bereiche-bestand.json`: 125 Paare,
+517 Treffer, und das Verzeichnis darf nur schrumpfen. Der Lauf wurde rot mit
+518 gegen 517. Nachgemessen ist der eine zusätzliche Treffer **kein neuer
+Querverweis**, sondern ein alter aus E500, den der Wächter bisher nicht sehen
+konnte:
+
+```txt
+Einstellungen.oeffne('schluessel')   in src/bereiche/ki/dienst.ts
+  in der Fassung, als das Verzeichnis gesetzt wurde:  roh 2 · gefiltert 1
+  heute:                                              roh 2 · gefiltert 2
+```
+
+`ohneSchablonen` hatte ihn für Text in einer Schablone gehalten. Ein Umbau
+des Menüs (E661) hat ihn hervorgeholt.
+
+**Wie viel sonst noch verdeckt ist**, gemessen über alle 86 Dateien in
+`src/bereiche/`:
+
+```txt
+Aufrufe nach nurCode:              7907
+davon nach ohneSchablonen:         7641
+verdeckt:                           266   (3,4 %)
+
+  136  editor/ansicht/editor.ts       (457 → 321)
+   30  wissen/werkzeuge.ts            (471 → 441)
+   26  einstellungen/ansicht/seite.ts (215 → 189)
+   21  datenbanken/steuerung.ts      (1119 → 1098)
+```
+
+**Die 517 sind ein Mindestwert, kein Stand.** Die Regel dahinter ist richtig
+— E626 hat `ohneSchablonen` eingeführt, weil 88 Treffer aus deutscher Prosa
+in Backticks mitzählten. Sie wirft nur zu viel weg: `${Datenbank.name(x)}`
+in einer Schablone ist ein Aufruf, kein Text.
+
+**Drei Wege, und die Wahl gehört Redur** (§5 sagt es selbst: „Offen ist damit
+die Richtung, und sie gehört Redur"):
+
+| Weg | was er kostet |
+|---|---|
+| **A** Den einen Eintrag von 1 auf 2 korrigieren, mit Grund im Verzeichnis | eine Zeile. Die Zahl bleibt weich, und das Verzeichnis lernt, dass Anheben manchmal geht — genau die Aufweichung, gegen die es gebaut ist. |
+| **B** Den Filter genauer machen (nur Textteile weg, `${…}` bleibt) und das Verzeichnis EINMAL auf die Wahrheit setzen | ein halber Tag, ein sprunghaft höherer Stand (bis +266), und danach zählt der Wächter wirklich. Die Schuld wird grösser, weil sie sichtbar wird — nicht weil sie wächst. |
+| **C** `ki → Einstellungen` wirklich auflösen | der Menüpunkt „Schlüssel hinterlegen …" müsste über Bus oder Register gehen. Löst EINEN Fall und lässt die 266 stehen. |
+
+Bis dahin ist `test537` rot und `main` bewegt sich nicht (§46). Das ist
+Absicht: eine rote Zahl, die auf eine Entscheidung wartet, ist besser als
+eine grüne, die nicht stimmt.
+
+## L210 · Der Trainer nach E677 — was offen bleibt
+
+**Gefunden am 22. September 2026**, beim Bau von E677. Der Trainer wohnt
+im Lernzentrum (`test565`, 54 Zusagen); das hier ist, was nicht in den
+Bogen gehörte oder Redurs Wort braucht (§35, §43).
+
+1. **Der Rest des Lösungshefts.** Kapitel 6 hat die Verstanden-Fragen
+   6.1–6.41; im Trainer stehen 6.1–6.13, weil nur die Seiten 155–160 im
+   Test drankommen. Redur, 21. September: „nehemn was wir brauch nur für
+   momentan aber die anderen machst du später legen das im lügen md". Die
+   Lösungen 6.14–6.41 und die übrigen Kapitel liegen als Text vor
+   (`Lehrmittel_Lösungen18.pdf`); zu jedem braucht es die Buchseiten, sonst
+   gibt es die Frage nur als Nummer. Weg: je Kapitel eine Vorlage
+   (`<kapitel>-kapitel`), derselbe Bau wie `staatskunde-kapitel`.
+2. **Die vorläufige Seite ist ein zweiter Trainer.** `lernen/staatskunde.html`
+   und `src/bereiche/wissen/staatskunde-trainer.ts` (Commit `f7f47c7`)
+   halten denselben Inhalt mit eigener Lernmaschine und eigenem Stand in
+   `localStorage` — genau der doppelte Katalog, den §8 verbietet. Sie bleiben
+   stehen, bis Redur sagt, dass sie weg dürfen (§43: nichts löschen ohne
+   Rückfrage). Danach beide Dateien samt `quell/…/staatskunde-trainer.js`
+   entfernen und diese Zeile schliessen.
+3. **Die Route kennt Noten und Stundenplan nicht.** `routeAusHash` in
+   `produktwelten.ts` erlaubt `#welt-lernen-<ansicht>` nur für eine feste
+   Liste — `noten` und `stundenplan` fehlen darin seit E241/E243, `trainer`
+   kam mit E677 dazu. Wer einen Link auf die Noten teilt, landet auf
+   „Heute". Ein Wort je Ansicht; dazu ein Wächter, der die Liste gegen
+   `Lernwelt.ansichten` hält, damit die nächste Ansicht nicht wieder
+   vergessen wird.
+4. **`test105` hält nur `src/core`.** Nachgesehen: `ausfuehrbar('src/core')`.
+   Für `src/bereiche/**` gibt es keinen Lauf, der sagt, ob das gebaute `.js`
+   zur `.ts` passt — `trainer.ts` und `staatskunde-inhalt.ts` sind also
+   nur so aktuell wie der letzte `npm run bauen:ts`. Der Lauf müsste
+   `src/` ganz lesen (ohne `types/`).
+5. **`WissenDienst.heute` rechnet in UTC.** `new Date().toISOString()
+   .slice(0, 10)` — in der Schweiz wechselt der Lerntag damit um 01:00
+   beziehungsweise 02:00, nicht um Mitternacht. Wer um halb eins lernt,
+   zählt für gestern. Ein Leser hat es gemeldet, nachgesehen stimmt es;
+   nicht gemessen ist, wer die Funktion alles liest (Tagesziel, Streak,
+   Wochenrückschau) — erst zählen, dann eine Zeile.
+6. **Im Trainer lässt sich eine Karte nicht ändern.** Wer einen Tippfehler
+   in einer Frage sieht, geht auf die Seite und ändert ihn dort — das
+   stimmt mit §2 (die Seite ist die Wahrheit), aber ein „Karte öffnen" am
+   Kopf der Karte fehlt.
+7. **Die KI legt Karten ohne `quiz` an.** `karteikartenAnlegen` (E655)
+   schreibt „Frage :: Antwort"; der Trainer sieht solche Karten nicht, weil
+   er nur Karten mit `quiz` nimmt. Entweder nimmt der Trainer jede
+   Lernkarte (als `schreiben` mit der Antwort als Musterlösung), oder das
+   Werkzeug lernt die drei Formen. Das erste ist eine Zeile und
+   wahrscheinlich das Richtige — Redurs Wort.
+
+## L209 · Der Stift gegen GoodNotes — was nach E673, E674 und E675 offen bleibt
+
+**Gefunden am 21. September 2026**, beim Lesen für Redurs Satz „die stift
+und zeichnen verbessern, und gleich wie goodnotes machen". Zwei Leser
+haben den Stiftweg (`stroke.ts`, `geometry.ts`, `marken.ts`) und die
+Werkzeuge gelesen — nur gelesen, kein Prüflauf daneben (§30). Drei Bögen
+sind gelandet: die Spitze (E673), Farbe und Stärke je Werkzeug (E674), der
+Sensor-Aussetzer (E675). Das hier ist der Rest, damit er nicht in einem
+Gesprächsprotokoll verschwindet (§35). Die GoodNotes-Seite jedes Punktes
+stammt aus dem Kenntnisstand der Leser, nicht aus dem Repo — wo Redur
+anderes sieht, gilt sein Bild.
+
+**Am Strich selbst:**
+
+1. **Das Tempo wirkt beim echten Stift nicht auf die Breite.** Der
+   Tempo→Breite-Weg ist nur der Druck-ERSATZ für Maus und Finger
+   (`druckAus`); ein Stift mit Sensor bekommt reinen Sensordruck, und eine
+   schnell gezogene Verbindungslinie ist so dick wie ein langsam gesetzter
+   Bogen. GoodNotes' Füller wird auch mit dem Pencil schneller dünner. Der
+   Faktor müsste beim Aufsetzen in `pressure` eingerechnet werden (kein
+   neues Feld, §9) — dann sagt `druckArt: 'stift'` nur die halbe Wahrheit;
+   besser ein drittes Wort. Wächter: `test343` bleibt grün; neu: gleicher
+   Druck, doppeltes Tempo → schmaler.
+2. **Die Druckkennlinie ist eine Gerade, und Kugelschreiber wie Marker
+   haben EINE Breite je Strich aus dem Mittelwert**, die `nassZeichnen`
+   jedes Bild neu setzt — der Anfang eines Kugelschreiberstrichs wird
+   nachträglich dicker oder dünner. Ein `d^0,7` oder eine Tabelle mit
+   Schwerpunkt bei 0,3…0,6 gäbe der leichten Hand mehr Ausdruck; für Kugel
+   und Marker gehört der Druck aus `strokeWidth` heraus (wie GoodNotes'
+   Ball pen) oder beim Aufsetzen festgehalten. **Beides ändert, wie ALTE
+   Striche in der Mitte aussehen** (`strokeWidth` liest `pressure` des
+   Bestands) — das ist eine Entscheidung von Redur, kein Bogen (§9, §34).
+3. **Scharfe Kehren im Umriss haben kein Gelenk** — Vermutung aus
+   `seiten`/`versatz`, nicht gemessen. Bei einer Kehre um ~180° ist die
+   Normale aus prev→next beliebig, und die Innenkante kreuzt sich selbst.
+   Erst messen: `outlinePunkte` auf einen 30°-Zickzack, Selbstschnitte
+   zählen (reines Rechnen). Wenn > 0: an Kehren einen kleinen Halbkreis
+   einfügen; `Feder` muss dann bis n−3 offen halten (`test366 §1`).
+4. ~~**Der Glätter rundet Ecken.**~~ **Erledigt am 21. September (E676,
+   `test564`).** Er war ein Filter erster Ordnung ohne Kehren-Reset — an
+   der Spitze eines langsam gezogenen „M" 2,62 px daneben. Jetzt merkt er
+   sich die Richtung über eine feste Strecke (2,5 px, nicht Punkte — E504)
+   und gibt an der Kehre die Ecke selbst zurück: 0 px, bei 60 und 240 Hz
+   gleich. `test366 §3`, `test472` und `test449` (L198) blieben grün.
+5. **Der nasse Strich lebt im selben SVG wie alle Marken** — je Bild wird
+   der ganze Pfad neu gerastert, keine Canvas-Ebene. GoodNotes zeichnet den
+   nassen Strich auf eine eigene Ebene. Erst messen (§36): Performance-
+   Marks um `nassZeichnen` auf einer Seite mit 300 Marken und einem
+   800-Punkte-Strich; erst wenn ein Bild > 8 ms braucht, ein `<canvas>`
+   nur für den nassen Strich. Architekturentscheid → E-Eintrag.
+6. **Formsprung beim Absetzen durch die RDP-Ausdünnung** — unbewiesen.
+   `finish` wirft Punkte weg (Toleranz 0,55…1,4 pt) und zeichnet den Umriss
+   neu; kein Lauf vergleicht nass gegen trocken NACH der Ausdünnung. Ein
+   Lauf mit Hausdorff-Distanz der Konturen, Grenze ~0,3 pt; wenn rot: die
+   Druck-Extrema als Pflichtpunkte behalten — RDP kennt nur die Lage.
+7. **Pinsel ist nur ein steilerer Füller; der Marker hat keine Keilspitze.**
+   `azimuthAngle`, `twist`, `tangentialPressure` liest niemand (siehe
+   auch L59 Neigung, E507). Nachrangig gegenüber 1–6.
+
+**An den Werkzeugen:**
+
+8. **Drei Stiftplätze in der Leiste** (Stift + Farbe + Stärke als EIN
+   Knopf, langes Drücken sichert). **E498 hat Stift-Favoriten abgelehnt**,
+   und der Grund steht oben in dieser Datei: die Zubehörzeile ist bei
+   596 px mit vierzehn Knöpfen voll, und die Farbsätze (E486/E501) können
+   mehr. Der Leser schlägt einen Weg ohne zweiten Katalog vor — drei
+   Farbsätze als „angeheftet" kennzeichnen (Feld `platz` am vorhandenen
+   Satz) und in der Stilreihe zeigen, die nur beim Stift steht. Das wäre
+   eine Rücknahme von E498, und die gehört Redur.
+9. **Eigene Farbe nur über den Browser-Farbwähler** (`input type="color"`,
+   am iPad das System-Blatt). Kein Hex-Feld, kein Gitter. Klein: ein
+   Eintrag „Hex eingeben" über `Dialog.frage` (Prüfung `/^#[0-9a-f]{6}$/`
+   liegt in `farbenRein`) plus ein festes Gitter aus den zehn
+   `LEITER`-Farben zuerst (sie sind der Katalog, §8). `test458` erweitern.
+10. **Radiermodus nur im Rundlauf** (fünf Modi über EINEN Knopf, der
+    weiterschaltet) und kein „danach zurück zum Stift". Fünf Knöpfe mit
+    `aria-pressed` in der Gruppe `radierer` (wie `LASER` und `FORMEN`),
+    dazu ein Haken `zeichnen:radiererzurueck`. `test344 §6` erweitern.
+    Am Rechner steht die Radierer-Gruppe nur beim Radierer und hätte
+    Platz — nachzumessen (§55.2).
+11. **Auswahl-Menü an der Auswahl** (schwebend über dem Kasten), nicht
+    nur in der Leiste — am Telefon weit weg vom Finger. Über
+    `InkMenu.open` mit denselben `data-act`-Knöpfen, kein zweiter Katalog.
+12. **Lineal-Zustand wird nicht gemerkt** (`lineal` startet auf jeder
+    Seite `false`), und das Lineal sagt die Länge des Zugs nicht.
+13. **Handballenschutz nicht einstellbar** (4 s fest; kein Schalter für
+    Linkshänder oder „aus").
+14. **Zwischenablage überlebt die Sitzung nicht und geht nicht ins
+    System** (kein `image/png` beim Kopieren).
+15. **Handschrift → Text** bleibt bewusst offen (§21, kein lokales
+    Modell) — steht schon weiter oben, hier nur der Vollständigkeit halber.
+
+**Was davon zuerst, ist Redurs Wahl.** Zwei Punkte brauchen sein Wort,
+bevor eine Zeile geschrieben wird: 2 (verändert alte Striche) und 8
+(nimmt E498 zurück). Die übrigen sind Bögen wie E673–E675: Wächter zuerst,
+rot sehen, reparieren, Gegenprobe, Bild, wo es eines gibt.
+
+
 # Anhang A · Was gemessen wurde
 
 Diese Zahlen sind die Grundlage für mehrere Lücken. Sie stehen hier, damit
@@ -8175,14 +8417,50 @@ Die Prüfung hätte für immer grün gesagt.
 |---|---|---|
 | S1 | Die Ausgangsschlange konnte eine Millisekunde zerschneiden: `edited <= marke` schloss den Rest **für immer** aus. Der Satz stand auf dem Gerät und kam nie in der Wolke an — kein Fehler, keine Meldung | `test113` |
 
+---
+
+## L208 · ~~Die Einstellungen versprachen eine Geräteliste, die es nicht gab~~ — GESCHLOSSEN
+
+**Gefunden am 21. September 2026, geschlossen am selben Tag (E669).**
+
+In den Einstellungen stand unter „Angemeldete Geräte" der Satz:
+
+> „Die Liste und der Freigabe-Code stehen im Wolke-Fenster"
+
+Den Freigabe-Code gab es. **Die Liste nicht.** Das Wolke-Fenster zeigte eine
+einzige Zeile — „Gerät: <dieses hier>" —, und das ist ein Spiegel, kein
+Verzeichnis. Wer wissen wollte, ob noch ein altes Telefon an seinem Konto
+hängt, erfuhr es nirgends; wer eines abmelden wollte, konnte es nicht.
+
+**Der Server wusste es die ganze Zeit.** `sitzungen` hält `geraet`,
+`angelegt` und `bis`, seit es die Tabelle gibt — drei Spalten, die
+`sitzungGeben` schreibt und niemand las. Es fehlte nur der Weg, sie zu
+erfragen.
+
+Das ist §47 in seiner leisesten Form: nicht „im README versprechen, was
+nicht läuft", sondern es in der Oberfläche versprechen, wo es noch
+glaubwürdiger klingt — und wo es niemandem auffällt, weil die Stelle, an
+der man nachsähe, genau die fehlende ist.
+
+**Geschlossen mit:** `GET /konto/geraete` und `POST /konto/geraete/weg` am
+Server, dem Gerätefenster im Wolke-Fenster, und `test558` mit 28 Zusagen.
+Gegen den alten Stand war er rot mit 0 von 18.
+
+**Und was dabei nebenbei herauskam:** die Knöpfe „Zurückziehen" und
+„Abmelden" massen **18 px**. Nicht 44, nicht die 32 eines Nebenwegs — und
+zwar in beiden Fenstern, denn das Markenfenster nebenan baut dieselbe Zeile
+(§45: die Nachbarstelle ansehen). Gemessen wurde die gerenderte Box, nicht
+eine Zeile im Stilblatt (L206).
+
+
 # Anhang C · Geschlossene Lücken in der Reihenfolge ihres Fundes
 
 *(Hier stand bis zum 20. September „Hier endet Anhang B" — eine Überschrift,
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 20. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 101 Lücken, 51 offene und 50 geschlossene. Der Befehl dazu ist
+**Gemessen am 22. September 2026, nachgezählt statt fortgeschrieben:** die
+Datei führt 106 Lücken, 55 offene und 51 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt
