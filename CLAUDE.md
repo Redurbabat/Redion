@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 506 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 507 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1169,6 +1169,18 @@ Umriss durch jede Ecke eine Q-Kurve zog (5,1 px). §4 verfolgt die Ecke
 seither bis aufs Papier. Gezählt am 21. September, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 506.*
 
+*Und 507: `test565` — der Trainer wohnt im Lernzentrum (E677). Er hält
+Redurs Satz „die app nicht getrennt": der Trainer ist eine Ansicht der
+Lernwelt über gewöhnlichen Lernkarten, seine Boxen sind eine Ableitung aus
+`sr`, und `localStorage` bleibt leer. Gegen den alten Stand rot mit 1 von
+21, dann Abbruch, weil es den Inhalt nicht gab. Sein Fund kam gegen den
+ERSTEN gebauten Stand: „7 Prüfungsfragen, wortgleich=false" — 57 Karten in
+derselben Millisekunde angelegt, und `created` allein brachte Frage 5 vor
+Frage 4 (P106). Gegenprobe rot an genau zwei Stellen: „[1,-1,1]" (die
+falsche Karte kommt nicht wieder) und „img: true" (kein `esc`). Gezählt am
+22. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l`
+sagt 507.*
+
 ### Die Befehle
 
 ```txt
@@ -1177,7 +1189,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 506 Läufe
+npm run pruefen                      alle 507 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1264,7 +1276,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 506 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 507 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

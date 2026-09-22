@@ -26,7 +26,11 @@ const Lernwelt = (() => {
         { id: 'schule', icon: 'learn', name: 'Schule / Ausbildung' },
         { id: 'uni', icon: 'building', name: 'Uni' },
         { id: 'arbeit', icon: 'briefcase', name: 'Arbeit' },
-        { id: 'fortschritt', icon: 'chart', name: 'Fortschritt' }
+        { id: 'fortschritt', icon: 'chart', name: 'Fortschritt' },
+        /* DER TRAINER (E677): Boxen, Multiple Choice, Schreiben und Lücken über
+           Lernkarten mit `quiz`. Er zeichnet sich selbst (`Trainer.render`) in
+           den Platz, den `trainerAnsicht` freihält. */
+        { id: 'trainer', icon: 'checkCircle', name: 'Trainer' }
     ];
     /**
      * NEUN REITER WAREN ZU VIELE (E206).
@@ -50,7 +54,7 @@ const Lernwelt = (() => {
     const REITER = [
         { id: 'heute', icon: 'today', name: 'Heute' },
         { id: 'lernen', icon: 'cards', name: 'Lernen',
-            unter: ['lernen', 'lernweg', 'fehler', 'fortschritt'] },
+            unter: ['lernen', 'trainer', 'lernweg', 'fehler', 'fortschritt'] },
         /* NOTEN GEHÖREN NEBEN DIE PRÜFUNGEN (E241). Redur: „es sollte meine
            Schule alles begleiten, Noten, Lernen, Lernziele". Die Schulvorlage
            legte das Notenheft seit E139 an — gerechnet hat damit niemand. */
@@ -641,6 +645,10 @@ const Lernwelt = (() => {
         ? { limit: 24 }
         : { bereichIds: [zustand.bereichId], limit: 24 };
     const ladeBereichsdaten = () => {
+        /* Der Trainer braucht keine Bereichsdaten — und ein zweites `zeichnen`
+           nach dem Laden würde ihn mitten in der Runde neu aufsetzen (E677). */
+        if (zustand.ansicht === 'trainer')
+            return;
         const api = lebensbereiche();
         if (!api)
             return;
@@ -1364,6 +1372,15 @@ const Lernwelt = (() => {
                         ? '<button type="button" data-lw-train="exam">Üben · ' + passend.length + '</button>'
                         : '<button type="button" data-lw-nav="pruefungen">Prüfungen öffnen</button>') +
                     '</article>';
+            })() +
+            /* DER TRAINER ALS FÜNFTE KACHEL (E677) — quer über die Reihe, weil er
+               anders ist als die vier: keine Runde aus dem Bestand, sondern ein
+               Kapitel mit Boxen. Ohne Karten sagt der Knopf, was er tut. */
+            (() => {
+                const anzahl = typeof Trainer !== 'undefined' ? Trainer.karten().length : 0;
+                return '<article class="lw-trainer-kachel">' + zeichenSpan('checkCircle') + '<h3>Trainer</h3>' +
+                    '<p>Boxen, Multiple Choice, Schreiben und Lücken — Kapitel für Kapitel, jede Karte eine Lernkarte.</p>' +
+                    '<button type="button" data-lw-nav="trainer">' + (anzahl ? 'Üben · ' + anzahl : 'Kapitel anlegen') + '</button></article>';
             })() +
             '</div>' +
             '<div class="lw-dashboard-grid">' +
@@ -2335,6 +2352,13 @@ const Lernwelt = (() => {
             sektion('Monatsverlauf', historie(liste(stats.logs), 30), spiel.monat + ' Wiederholungen im Monat') +
             '</div><aside class="lw-note"><strong>So wird gerechnet</strong><p>Eine begonnene Karte zählt halb, ab zwei erfolgreichen Wiederholungen stabil. Ein Fehler setzt die Wiederholungsstufe wie im bestehenden SM-2-Verfahren zurück. Aktivitäts-XP verändert diese Zahl nie.</p></aside></div>';
     };
+    /* DER TRAINER ZEICHNET SICH SELBST (E677). Die Lernwelt gibt ihm nur den
+       Platz; nach `zeichnen` ruft sie `Trainer.render` hinein. So bleibt der
+       Trainer eine eigene Datei mit eigenem Zustand (eine laufende Runde), und
+       die Lernwelt muss nichts davon wissen — sie hält nur die Ansicht. */
+    const trainerAnsicht = () => typeof Trainer !== 'undefined'
+        ? '<div class="lw-trainer" id="lw-trainer"></div>'
+        : '<section class="lw-empty"><h2>Der Trainer ist nicht geladen</h2><p>quell/bereiche/wissen/trainer.js fehlt.</p></section>';
     const ansichtsInhalt = () => {
         if (zustand.training)
             return trainingAnsicht();
@@ -2352,6 +2376,7 @@ const Lernwelt = (() => {
             case 'uni': return uniAnsicht();
             case 'arbeit': return arbeitAnsicht();
             case 'fortschritt': return fortschrittAnsicht();
+            case 'trainer': return trainerAnsicht();
         }
         return heuteAnsicht();
     };
@@ -2411,6 +2436,15 @@ const Lernwelt = (() => {
         else
             timerStoppen();
         reiterRollstand();
+        /* Den Trainer in seinen Platz zeichnen — oder abmelden, wenn die Ansicht
+           eine andere ist: sein Tastenhorcher hängt am Dokument (E677). */
+        if (typeof Trainer !== 'undefined') {
+            const platz = zustand.ansicht === 'trainer' ? root.querySelector('#lw-trainer') : null;
+            if (platz)
+                Trainer.render(platz, { aktor: aktor().id });
+            else
+                Trainer.abmelden();
+        }
         ladeBereichsdaten();
     };
     /**
@@ -2980,6 +3014,8 @@ const Lernwelt = (() => {
     const abmelden = () => {
         timerStoppen();
         zustand.generation++;
+        if (typeof Trainer !== 'undefined')
+            Trainer.abmelden();
         if (zustand.root) {
             zustand.root.removeEventListener('click', klick);
             zustand.root.removeEventListener('change', aenderung);

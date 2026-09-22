@@ -3272,6 +3272,64 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* --- Der Trainer (E677) ------------------------------------------------
+     Zwei Zustände: die Übersicht mit den sechs Boxen nach dem Anlegen des
+     Kapitels, und eine Prüfungsfrage nach dem Prüfen — richtig, falsch und
+     gefehlt als Wort und Farbe an jeder Antwort. */
+  trainer: {
+    titel: 'Der Trainer: Boxen und Runden nach dem Anlegen des Kapitels',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      w.Produktwelten.lernen('trainer');
+      await new Promise(r => setTimeout(r, 700));
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-anlegen]')?.click();
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+  trainerFrage: {
+    titel: 'Der Trainer: eine Prüfungsfrage, geprüft — richtig, gefehlt, falsch',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      w.Produktwelten.lernen('trainer');
+      await new Promise(r => setTimeout(r, 700));
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-anlegen]')?.click();
+      await new Promise(r => setTimeout(r, 700));
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-start="pruefung"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+      /* a) und c) ankreuzen — bei Frage 1 sind alle vier richtig: zwei
+         richtig, zwei gefehlt. */
+      document.querySelector<HTMLInputElement>('.lernwelt input[data-tr-option="0"]')?.click();
+      document.querySelector<HTMLInputElement>('.lernwelt input[data-tr-option="2"]')?.click();
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-pruefen]')?.click();
+      await new Promise(r => setTimeout(r, 300));
+    }
+  },
+  trainerLuecke: {
+    titel: 'Der Trainer: eine Lücke im Satz, falsch getippt',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      w.Produktwelten.lernen('trainer');
+      await new Promise(r => setTimeout(r, 700));
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-anlegen]')?.click();
+      await new Promise(r => setTimeout(r, 700));
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-start="art"][data-art="luecke"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+      const feld = document.querySelector<HTMLInputElement>('.lernwelt [data-tr-luecke]');
+      if (feld) feld.value = 'Republik';
+      document.querySelector<HTMLElement>('.lernwelt [data-tr-pruefen]')?.click();
+      await new Promise(r => setTimeout(r, 300));
+    }
+  },
+
   tabelleLeer: {
     titel: 'Der leere Zustand',
     bauen: () => {

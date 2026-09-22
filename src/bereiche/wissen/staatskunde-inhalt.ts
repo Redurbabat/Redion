@@ -317,7 +317,61 @@ const StaatskundeInhalt = (() => {
       loesung: ['Lausanne'] },
   ];
 
-  return { THEMEN, AUFGABEN };
+  /* ── DAS KAPITEL ALS SEITE (E677) ────────────────────────────────────────
+     Der Trainer hat keinen eigenen Speicher: jede Aufgabe wird eine
+     gewöhnliche Lernkarte (`type: 'flashcard'`) auf einer Seite, mit dem
+     Feld `quiz`, das sagt, wie gefragt wird. `text` bleibt „Frage :: Antwort"
+     beziehungsweise „Satz mit {{Lücke}}" — so versteht auch die klassische
+     Lernrunde jede Karte, und `Learning.cards()` zählt sie mit. Der
+     Fortschritt landet über `WissenDienst.planen` in `sr` und reist mit der
+     Seite in jede Sicherung (§9, §17). */
+  const themaName = (id: string): string => THEMEN.find(t => t.id === id)?.name || id;
+
+  const karteVon = (a: Aufgabe): Record<string, unknown> => {
+    const gemeinsam = { thema: a.thema, topic: themaName(a.thema), quelle: a.quelle };
+    if (a.art === 'mc') {
+      const quiz: Record<string, unknown> = { kind: 'mc', ...gemeinsam,
+        optionen: a.antworten.map((text, i) => ({ text, richtig: a.richtig.includes(i) })) };
+      if (a.pruefung) quiz['pruefung'] = true;
+      return { text: a.frage + ' :: ' + a.richtig.map(i => a.antworten[i]).join('; '), quiz };
+    }
+    if (a.art === 'schreiben') {
+      const quiz: Record<string, unknown> = { kind: 'schreiben', ...gemeinsam, musterloesung: a.loesung.slice() };
+      if (a.nummer) quiz['nummer'] = a.nummer;
+      if (a.hinweis) quiz['hinweis'] = a.hinweis;
+      return { text: a.frage + ' :: ' + a.loesung.join(' · '), quiz };
+    }
+    return { text: a.frage.replace('___', '{{' + (a.loesung[0] || '') + '}}'),
+             quiz: { kind: 'luecke', ...gemeinsam, loesungen: a.loesung.slice() } };
+  };
+
+  /** Legt das Kapitel als Seite mit Lernkarten an — Nutzerdaten, sichtbar, veränderbar. */
+  const alsSeite = (): any => {
+    const seite = Store.addPage(null, { text: 'Staatskunde — Leben in der Schweiz', icon: '🇨🇭' });
+    Store.addBlock(seite.id, 'text', { text: 'Kapitel 6 „Leben in der Schweiz" aus «Allgemeinbildung, Ausgabe Basel», S. 155–160. ' +
+      'Jede Karte hier ist eine Aufgabe des Trainers (Lernzentrum → Trainer): die sieben Prüfungsfragen des Lehrers, ' +
+      'die Verstanden-Fragen 6.1–6.13 mit den Lösungen aus dem Lösungsheft und Aufgaben aus den Buchseiten. Du kannst jede Karte lesen und ändern.' });
+    /* Die sieben Prüfungsfragen zuerst und in der Reihenfolge des Lehrers —
+       nicht nach Thema verteilt: die Prüfungsrunde liest die Seite von oben
+       nach unten, und Frage 5 (Gewaltentrennung) käme sonst vor Frage 4. */
+    Store.addBlock(seite.id, 'h2', { text: 'Die Prüfungsfragen des Lehrers · 1–7 von 21' });
+    for (const a of AUFGABEN) if (a.art === 'mc' && a.pruefung) Store.addBlock(seite.id, 'flashcard', karteVon(a));
+    for (const t of THEMEN) {
+      Store.addBlock(seite.id, 'h2', { text: t.name + ' · ' + t.seite });
+      for (const a of AUFGABEN) if (a.thema === t.id && !(a.art === 'mc' && a.pruefung)) Store.addBlock(seite.id, 'flashcard', karteVon(a));
+    }
+    return seite;
+  };
+
+  if (typeof Register !== 'undefined' && Register.vorlagen && Register.vorlagen.melde) {
+    Register.vorlagen.melde({
+      id: 'staatskunde-kapitel', icon: '🇨🇭', name: 'Staatskunde — Leben in der Schweiz',
+      text: 'Kapitel 6 des Lehrmittels als Lernkarten für den Trainer: Prüfungsfragen, Verstanden-Fragen, Multiple Choice und Lücken.',
+      quelle: 'Allgemeinbildung, Ausgabe Basel, S. 155–160', bauen: alsSeite
+    });
+  }
+
+  return { THEMEN, AUFGABEN, karteVon, alsSeite };
 })();
 
 (window as any).StaatskundeInhalt = StaatskundeInhalt;

@@ -8125,6 +8125,56 @@ Bis dahin ist `test537` rot und `main` bewegt sich nicht (§46). Das ist
 Absicht: eine rote Zahl, die auf eine Entscheidung wartet, ist besser als
 eine grüne, die nicht stimmt.
 
+## L210 · Der Trainer nach E677 — was offen bleibt
+
+**Gefunden am 22. September 2026**, beim Bau von E677. Der Trainer wohnt
+im Lernzentrum (`test565`, 54 Zusagen); das hier ist, was nicht in den
+Bogen gehörte oder Redurs Wort braucht (§35, §43).
+
+1. **Der Rest des Lösungshefts.** Kapitel 6 hat die Verstanden-Fragen
+   6.1–6.41; im Trainer stehen 6.1–6.13, weil nur die Seiten 155–160 im
+   Test drankommen. Redur, 21. September: „nehemn was wir brauch nur für
+   momentan aber die anderen machst du später legen das im lügen md". Die
+   Lösungen 6.14–6.41 und die übrigen Kapitel liegen als Text vor
+   (`Lehrmittel_Lösungen18.pdf`); zu jedem braucht es die Buchseiten, sonst
+   gibt es die Frage nur als Nummer. Weg: je Kapitel eine Vorlage
+   (`<kapitel>-kapitel`), derselbe Bau wie `staatskunde-kapitel`.
+2. **Die vorläufige Seite ist ein zweiter Trainer.** `lernen/staatskunde.html`
+   und `src/bereiche/wissen/staatskunde-trainer.ts` (Commit `f7f47c7`)
+   halten denselben Inhalt mit eigener Lernmaschine und eigenem Stand in
+   `localStorage` — genau der doppelte Katalog, den §8 verbietet. Sie bleiben
+   stehen, bis Redur sagt, dass sie weg dürfen (§43: nichts löschen ohne
+   Rückfrage). Danach beide Dateien samt `quell/…/staatskunde-trainer.js`
+   entfernen und diese Zeile schliessen.
+3. **Die Route kennt Noten und Stundenplan nicht.** `routeAusHash` in
+   `produktwelten.ts` erlaubt `#welt-lernen-<ansicht>` nur für eine feste
+   Liste — `noten` und `stundenplan` fehlen darin seit E241/E243, `trainer`
+   kam mit E677 dazu. Wer einen Link auf die Noten teilt, landet auf
+   „Heute". Ein Wort je Ansicht; dazu ein Wächter, der die Liste gegen
+   `Lernwelt.ansichten` hält, damit die nächste Ansicht nicht wieder
+   vergessen wird.
+4. **`test105` hält nur `src/core`.** Nachgesehen: `ausfuehrbar('src/core')`.
+   Für `src/bereiche/**` gibt es keinen Lauf, der sagt, ob das gebaute `.js`
+   zur `.ts` passt — `trainer.ts` und `staatskunde-inhalt.ts` sind also
+   nur so aktuell wie der letzte `npm run bauen:ts`. Der Lauf müsste
+   `src/` ganz lesen (ohne `types/`).
+5. **`WissenDienst.heute` rechnet in UTC.** `new Date().toISOString()
+   .slice(0, 10)` — in der Schweiz wechselt der Lerntag damit um 01:00
+   beziehungsweise 02:00, nicht um Mitternacht. Wer um halb eins lernt,
+   zählt für gestern. Ein Leser hat es gemeldet, nachgesehen stimmt es;
+   nicht gemessen ist, wer die Funktion alles liest (Tagesziel, Streak,
+   Wochenrückschau) — erst zählen, dann eine Zeile.
+6. **Im Trainer lässt sich eine Karte nicht ändern.** Wer einen Tippfehler
+   in einer Frage sieht, geht auf die Seite und ändert ihn dort — das
+   stimmt mit §2 (die Seite ist die Wahrheit), aber ein „Karte öffnen" am
+   Kopf der Karte fehlt.
+7. **Die KI legt Karten ohne `quiz` an.** `karteikartenAnlegen` (E655)
+   schreibt „Frage :: Antwort"; der Trainer sieht solche Karten nicht, weil
+   er nur Karten mit `quiz` nimmt. Entweder nimmt der Trainer jede
+   Lernkarte (als `schreiben` mit der Antwort als Musterlösung), oder das
+   Werkzeug lernt die drei Formen. Das erste ist eine Zeile und
+   wahrscheinlich das Richtige — Redurs Wort.
+
 ## L209 · Der Stift gegen GoodNotes — was nach E673, E674 und E675 offen bleibt
 
 **Gefunden am 21. September 2026**, beim Lesen für Redurs Satz „die stift
@@ -8409,8 +8459,8 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 20. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 105 Lücken, 54 offene und 51 geschlossene. Der Befehl dazu ist
+**Gemessen am 22. September 2026, nachgezählt statt fortgeschrieben:** die
+Datei führt 106 Lücken, 55 offene und 51 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

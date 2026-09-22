@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-656 Entscheidungen, E1 bis E676 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+657 Entscheidungen, E1 bis E677 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -719,6 +719,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E674** — Jedes Werkzeug merkt sich Farbe und Stärke: Redurs „gleich wie GoodNotes", zweiter Bogen. `color` und `width` waren EINE Variable für Stift, Marker, Formen, Zettel, Text — der Marker gelb und breit, und der Stift schrieb danach gelb und breit; auf einer gewöhnlichen Seite wurde die Farbe gar nicht gemerkt. Jetzt EIN Meta (`zeichnen:werkzeugwerte`), je Werkzeug Farbe und Stärke, in der Zeichenschicht an einer Stelle (`setzeWerkzeug`/`setzeFarbe`/`setzeStrich`), frisch gelesen und geprüft (§19). Die Auswahl hat keine eigene Tinte: was man mit ihr wählt, gilt dem Stift danach (E353) — `test345 §4` hat das gegen den ersten Stand gefunden. Die Nachbarstelle (§45): das Studio setzte erst die Dokumentfarbe, dann das Werkzeug — und der Wechsel hätte die Farbe sofort wieder überschrieben. Wächter `test562`.
 * **E675** — Ein Stift, der kurz 0 meldet, bleibt ein Stift: Lücke 9 des Stiftweg-Lesers. `druckAus` entschied je Meldung; eine 0 mitten im Stiftstrich hiess „kein Sensor", und der Tempo-Ersatz sprang ein — 0,6 beim ersten Mal, bei leichter Hand (0,2) ein Punkt dreimal so breit, den niemand gedrückt hatte. Jetzt behält ein Stift, der schon Druck gemeldet hat, seinen letzten Sensorwert; nur ein Stift, der NIE Druck meldet, bekommt den Ersatz und sagt in `druckArt` ehrlich „tempo". Wächter `test563`.
 * **E676** — Der Glätter hält die Ecke: Lücke 6 des Stiftweg-Lesers (L209 Punkt 4). Der Filter erster Ordnung mittelte durch die Spitze eines langsam gezogenen „M" hindurch — 2,62 px daneben, gemessen. Jetzt merkt er sich die Richtung der Hand über eine feste STRECKE (2,5 px, nicht Punkte — E504) und springt, wenn sie kippt (`KEHRE`), auf den rohen Punkt, der am weitesten in der alten Richtung lag: die Ecke selbst, bei 60 und 240 Hz gleich (0 px). Und das Bild fand zwei weitere Stellen, an denen die Ecke danach verlorenging: `finish` ersetzte bei weniger als acht RDP-Stützpunkten die Ecken durch acht gleichmässige (E115) — jetzt kommen sie dazu —, und der Umriss zog durch jede Ecke eine Q-Kurve — jetzt geht `InkGeometry.stueck` an einer Kehre als Gerade durch den Punkt, in Feder und `outline` gleich. Wächter `test564`, §1–§3 ohne Browser, §4 mit.
+* **E677** — Der Trainer wohnt im Lernzentrum: Redurs „flüssige lern app im redion … die app nicht getrennt" ist eine ANSICHT der Lernwelt (`trainer`) über gewöhnlichen Lernkarten, kein zweiter Speicher. Eine Aufgabe ist ein `flashcard`-Block mit einem Feld `quiz` (`mc` mit mehreren richtigen Antworten wie in der Prüfung, `schreiben` mit Musterlösung und Note, `luecke` getippt und nachsichtig verglichen); der Fortschritt geht allein über `WissenDienst.planen` in `sr`, und die fünf Boxen sind eine Ableitung daraus (neu, sonst `min(5, wdh+1)`). Falsches kommt in derselben Runde nach drei Karten noch einmal. Das Kapitel „Staatskunde — Leben in der Schweiz" ist eine Vorlage (`staatskunde-kapitel`), die sieben Prüfungsfragen des Lehrers wörtlich und zuoberst; `Register.vorlagen.bauen` baut seither auch gemeldete Vorlagen, nicht nur die der Galerie. Wächter `test565`, Bilder `node bilder.mts trainer trainerFrage trainerLuecke`. Der vorläufige Trainer (`lernen/staatskunde.html`) bleibt bis zu Redurs Wort stehen (L210).
 
 ---
 
@@ -55317,3 +55318,116 @@ Gegenproben, jede rot an ihrer Stelle: die Kehre nie erkannt (2,62), die
 acht ersetzen wieder (23,72), das Stück kennt keine Ecke (5,12). Bild:
 `node bilder.mts ecke` — ein „M", ein „W" und ein Zickzack, langsam mit
 dem Stift gezogen.
+
+---
+
+## E677 — Der Trainer wohnt im Lernzentrum
+
+**Datum:** 22. September 2026 (begonnen am 21.) · **Wächter:** `test565`
+
+**Redur, 21. September:** „jetzt will ich eien flüssige lern app im redion
+bauen nicht die karten sollte im berichen sein sondern direk eine appp dort
+… ich will so boxsen haben die ich weiss sollte selten vor komen und die
+ich nicht weiss mehrmals auch schriben und multiplichos und versuche
+möglichst die text 1:1 von buch seiten nehmen". Mitten im Bogen: „also es
+sollte direk mit redion verbunden sein die app nicht getrennt, und du
+kannst die bestse lern methoder dort setzt". Und weil er sofort lernen
+musste: „Ich brauche eien provisoriche momentan … und wenn du es die
+provisoriche gamvht hast pusche es auf github" — das war `f7f47c7`
+(`lernen/staatskunde.html`), am selben Abend.
+
+**Was wurde entschieden?** Der Trainer ist eine **Ansicht der Lernwelt**
+(`trainer`, in der Gruppe „Lernen", Route `#welt-lernen-trainer`, eine
+fünfte Kachel im Lernzentrum) — und er hat **keinen eigenen Speicher**.
+
+1. **Eine Aufgabe ist eine Lernkarte.** Ein `flashcard`-Block auf einer
+   Seite, `text` wie immer („Frage :: Antwort" oder ein Satz mit
+   `{{Lücke}}`), dazu ein Feld `quiz`, das sagt, wie gefragt wird:
+   `kind: 'mc'` mit `optionen: [{ text, richtig }]` (mehrere richtig, wie in
+   der Prüfung: „Kreuzen Sie die richtige(n) Antwort(en) an"),
+   `kind: 'schreiben'` mit `musterloesung` und `nummer` (6.1–6.13),
+   `kind: 'luecke'` mit `loesungen` (mehrere Schreibweisen). Jede Karte
+   nennt `thema`, `quelle` (die Buchseite) und `topic`, damit die
+   Themenkurven der Lernwelt sie mitzählen. `Learning.cards()` findet sie,
+   die klassische Lernrunde versteht sie (die Lücke über `{{…}}`), und sie
+   reisen in `.json`, `.redion`, in die Wolke und in den zweiten Tab, ohne
+   dass der Trainer etwas dafür tut (§9, §17).
+2. **Der Fortschritt geht über `WissenDienst.planen`** — dieselbe Rechnung
+   (SM-2 oder FSRS, je nach Schalter), die Tagesrunde, Fehlertraining und
+   Kennzahlen lesen. Ein Ankreuztreffer ist Note 3 („Gut"), nicht 4: er hebt
+   die Leichtigkeit nicht. Falsch ist Note 1.
+3. **Die Boxen sind eine Ableitung**, kein zweiter Plan: ohne `sr` ist eine
+   Karte „neu", sonst ist ihre Box `min(5, sr.wdh + 1)` — wie oft sie
+   zuletzt hintereinander gewusst wurde. So bekommt Redur, was er
+   beschrieben hat: was sitzt, kommt selten (SM-2 setzt Tage und Wochen),
+   was nicht sitzt, sofort wieder. Und in **derselben Runde** kommt eine
+   falsch beantwortete Karte nach drei anderen noch einmal, höchstens
+   zweimal — nicht in der Prüfungsrunde, die hält die Reihenfolge des
+   Lehrers.
+4. **Die angefangene Runde liegt im Meta-Fach** (`lernen:<aktor>:runde`),
+   nicht in `localStorage`: Escape oder „Beenden" verliert nichts, ein
+   Neuladen auch nicht.
+5. **Das Kapitel ist eine Vorlage** (`staatskunde-kapitel`, gemeldet aus
+   `staatskunde-inhalt.ts`). Ein Klick legt die Seite an: zuoberst die
+   sieben Prüfungsfragen des Lehrers in seiner Reihenfolge, dann je Thema
+   die Verstanden-Fragen mit den Lösungen aus dem Lösungsheft und die
+   Aufgaben aus den Buchseiten. Nutzerdaten — sichtbar, veränderbar,
+   sicherbar. Der Trainer kennt kein Kapitel beim Namen; er nimmt jede
+   Lernkarte mit `quiz`.
+6. **`Register.vorlagen.bauen` baut auch gemeldete Vorlagen.** `melde` gab
+   es seit jeher, doch `bauen` fragte nur die Galerie — eine Vorlage aus
+   einem Bereich stand im Register und war trotzdem nicht baubar. Jetzt:
+   erst die Galerie, sonst das eigene `bauen`, und `Fassung.markiere` setzt
+   den Vermerk, damit auch diese Seiten ein Update bekommen können.
+
+**Warum so?** Weil Redur es so gesagt hat — „nicht getrennt" — und weil es
+die einzige Fassung ist, die §9 und §51 hält: eine Karte, die im Trainer
+sitzt, sitzt überall. Ein eigener Speicher (die vorläufige Seite hält den
+Stand in `localStorage`) wäre ein zweiter Katalog derselben Wahrheit (§8),
+und er ginge bei jeder Sicherung verloren.
+
+**Was war die Alternative?**
+
+- *Die vorläufige Seite ausbauen.* Sie läuft ohne Redion, hält den Stand
+  im Browser und kennt keine Sicherung. Gut für einen Abend, falsch für
+  ein Produkt.
+- *Ein eigener Blocktyp `aufgabe`.* Dann hätte die klassische Lernrunde die
+  Karten nicht gesehen, und jeder Leser von `flashcard` (Lernwelt, KI,
+  Export) hätte einen zweiten Typ lernen müssen. Ein Feld an der Karte
+  kostet nichts; ein Typ kostet überall.
+- *Boxen als eigenes Feld speichern.* Zwei Wahrheiten über dieselbe Karte
+  — `sr.wdh` und `box` — die auseinanderlaufen, sobald die Tagesrunde eine
+  Karte bewertet, die der Trainer auch kennt.
+
+**Was kostet es?** Eine zwölfte Ansicht in der Lernwelt (fünf Unterreiter
+statt vier in der Gruppe „Lernen"; die vier Reiter, die `test206` zählt,
+bleiben vier). Zwei Skripte mehr in `index.html` und im `GRUNDSTOCK`
+(`dienststand` hat die Fassung angehoben). Der Trainer hängt einen
+Tastenhorcher ans Dokument — die Lernwelt meldet ihn beim Zeichnen einer
+anderen Ansicht und beim Abmelden ab, und `ladeBereichsdaten` lässt die
+Trainer-Ansicht aus, weil ein zweites `zeichnen` nach dem Laden ihn mitten
+in der Runde neu aufgesetzt hätte. `quiz` ist für ältere Fassungen ein
+unbekanntes Feld: sie zeigen die Karte als „Frage :: richtige Antworten",
+was stimmt.
+
+**Wie es gebaut wurde — und was dabei herauskam.** Zwei Bauer sollten
+Wächter und Anbindung parallel schreiben; beide scheiterten an der
+Sitzungsgrenze, ohne eine Zeile zu ändern. Also von Hand, in der
+Reihenfolge von §30: zuerst `test565`, rot gegen den alten Stand (**1 von
+21**, dann Abbruch, weil es den Inhalt nicht gab), dann die Anbindung.
+Gegen den ersten gebauten Stand **53 von 54** — und die eine rote Zeile war
+ein Fund: „7 Prüfungsfragen, wortgleich=false". `Trainer.karten()` sortierte
+nach `created`, die Vorlage legt 57 Karten in derselben Millisekunde an, und
+die Seite gruppierte nach Thema — Frage 5 (Gewaltentrennung) stand vor
+Frage 4 (Parlament). Jetzt liest der Trainer die Seite in **Seitenreihenfolge**
+(Elternblock, Stelle in `content`), und die Vorlage legt die sieben
+Prüfungsfragen zuoberst ab (P106). Gegenprobe (§55.2): `NOCHMAL_HOECHSTENS`
+auf 0 und ein `esc` entfernt — rot an genau den zwei Stellen, „[1,-1,1]"
+und „img: true, escaped: false", 52 von 54; zurückgedreht, 54 von 54.
+Nachbarn: test206 217 222 272 290 143 537 105 109 362 401 402 547 87 32 484
+549 550. Bilder: `node bilder.mts trainer trainerFrage trainerLuecke`,
+Rechner und Telefon.
+
+**Was offen bleibt** steht in L210: der Rest des Lösungshefts (6.14–6.41 und
+die anderen Kapitel — Redur: „die anderen machst du später"), das Schicksal
+der vorläufigen Seite und die Nebenfunde der Leser.
