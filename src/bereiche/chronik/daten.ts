@@ -2675,8 +2675,8 @@ const ChronikDaten = {
   {
    "datum": "2026-09-21",
    "wochentag": "Montag",
-   "titel": "Fett wird ein Schalter, die Geräte bekommen ihre Liste, der Text einer PDF lässt sich ändern — und am Nachmittag der Stift: Spitze, Gedächtnis, Aussetzer, Ecke",
-   "wasIchWeiss": "Ein langer Tag mit zehn Bögen. Vormittags drei (E668–E670), dann der erste volle Lauf seit elf Bögen (E671, 491/501 grün, 8 echte Rote, 7 davon aus meinen eigenen Bögen), die Ordnerfarben (E672) und am Nachmittag Redurs Satz zum Stift: „gleich wie goodnotes machen“. Dafür zwei Leser (nur lesen, kein Prüflauf daneben, §30), dann vier Bögen am Strich — die Spitze (E673), Farbe und Stärke je Werkzeug (E674), der Sensor-Aussetzer (E675), die Ecke im Glätter (E676) — und L209 mit dem Rest. `main` steht weiter still (§46): test537 bleibt rot bei 518 gegen 517, und die Richtung gehört Redur (L207).",
+   "titel": "Fett wird ein Schalter, die Geräte bekommen ihre Liste, der Text einer PDF lässt sich ändern — und am Nachmittag der Stift: Spitze, Gedächtnis, Aussetzer, Ecke — und am Abend die Staatskunde",
+   "wasIchWeiss": "Ein langer Tag mit zehn Bögen. Vormittags drei (E668–E670), dann der erste volle Lauf seit elf Bögen (E671, 491/501 grün, 8 echte Rote, 7 davon aus meinen eigenen Bögen), die Ordnerfarben (E672) und am Nachmittag Redurs Satz zum Stift: „gleich wie goodnotes machen“. Dafür zwei Leser (nur lesen, kein Prüflauf daneben, §30), dann vier Bögen am Strich — die Spitze (E673), Farbe und Stärke je Werkzeug (E674), der Sensor-Aussetzer (E675), die Ecke im Glätter (E676) — und L209 mit dem Rest. `main` steht weiter still (§46): test537 bleibt rot bei 518 gegen 517, und die Richtung gehört Redur (L207). Am Abend kam ein neues Thema: Redur schickte Bilder von sieben Prüfungsfragen, den Buchseiten 155–160 («Allgemeinbildung, Ausgabe Basel», Kapitel 6 „Leben in der Schweiz“) und das Lösungsheft und wollte „eine flüssige lern app im redion … nicht getrennt“. Weil er sofort lernen musste, zuerst eine vorläufige Seite (f7f47c7, 20:54); der Trainer im Lernzentrum folgte am 22. (E677).",
    "nachrichten": [
     {
      "zeit": "ca. 03:45",
@@ -2741,6 +2741,70 @@ const ChronikDaten = {
      "gemeint": "Nicht anhalten, nicht fragen — weiter durch die Liste.",
      "besser": "",
      "besserePrompt": "Nichts zu verbessern. Die zwei Fragen, die seine Entscheidung brauchen, stehen trotzdem im Bericht — „ohne Pause“ heisst nicht „ohne ihn“."
+    },
+    {
+     "zeit": "ca. 19:00",
+     "wortlaut": "Warte ich schike dir nich mehr bildern und du muss lern karte für mich erstellen, ich sage dir wie es sein sollte warte",
+     "woher": "wörtlich aus dem Gespräch (mit fünf Bildern von Prüfungsfragen)",
+     "gemeint": "Themenwechsel: nicht mehr der Stift, sondern Lernkarten für seinen Test. Und: erst alles sammeln, dann bauen — „warte“ steht dreimal an diesem Abend.",
+     "besser": "Ich schicke dir jetzt nacheinander die Prüfungsfragen und die Buchseiten. Fang noch nicht an — ich sage dir am Schluss, wie die Karten aussehen sollen.",
+     "besserePrompt": "Das „warte“ war genau richtig: ohne die Buchseiten wären die Karten aus dem Gedächtnis entstanden (§45, E21)."
+    },
+    {
+     "zeit": "ca. 19:05",
+     "wortlaut": "Die 7 fragen sollteb 1:1 dirt sein und die verstanden fragen auch warte noch",
+     "woher": "wörtlich aus dem Gespräch (mit den Fragen 5–7 und den Seiten 155/156)",
+     "gemeint": "Die sieben Prüfungsfragen des Lehrers und die „Verstanden?“-Fragen des Buches sollen Wort für Wort übernommen werden — keine Umformulierung.",
+     "besser": "Die sieben Prüfungsfragen und die Verstanden-Fragen aus dem Buch bitte wörtlich übernehmen.",
+     "besserePrompt": "Das „1:1“ hat den Bau bestimmt: test565 vergleicht seither Frage, Antworten und Lösung Zeichen für Zeichen mit dem Inhalt."
+    },
+    {
+     "zeit": "ca. 19:15",
+     "wortlaut": "Gebe mir welche seiten hast du",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Eine Bestandsaufnahme: welche Buchseiten sind schon da, welche fehlen noch.",
+     "besser": "Welche Seiten hast du jetzt schon?",
+     "besserePrompt": "So wie er ist — eine Kontrollfrage, die Lücken sichtbar macht, bevor gebaut wird."
+    },
+    {
+     "zeit": "ca. 19:30",
+     "wortlaut": "jetzt gebe mir alles was du hast",
+     "woher": "wörtlich aus dem Gespräch (nach zweimal „warte noch“ mit den Seiten 157–160 und den Verstanden-Fragen 6.1–6.13)",
+     "gemeint": "Die Sammlung ist vollständig; jetzt soll die Zusammenfassung des Gelesenen kommen.",
+     "besser": "Jetzt zeig mir, was du alles hast.",
+     "besserePrompt": "Passt so."
+    },
+    {
+     "zeit": "ca. 19:40",
+     "wortlaut": "das ist alles das ich für den test lernen muss und der lehrern nimmt die 7 fragen die ich dir geschik hbae 1:1 so und auch die von buch sind die verstanden fragen, jetzt will ich eien flüssige lern app im redion bauen nicht die karten sollte im berichen sein sondern direk eine appp dort , kannst du das machen , ich will so boxsen haben die ich weiss sollte selten vor komen und die ich nicht weiss mehrmals auch schriben und multiplichos und versuche möglichst die text 1:1 von buch seiten nehmen und ich gebe dir die lösungen für ales fragen und du legst loss warte erste mal",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Der Auftrag: eine Lern-App IN Redion (nicht nur Karten in einem Bereich), mit Boxen — Gewusstes selten, Nichtgewusstes mehrmals —, mit Schreib- und Multiple-Choice-Aufgaben, Texte wörtlich aus dem Buch. Die Lösungen kommen noch.",
+     "besser": "Bau mir in Redion einen Trainer für dieses Kapitel: Boxen (was ich kann, kommt selten; was ich nicht kann, mehrmals), Multiple Choice wie in der Prüfung und Schreibaufgaben mit Musterlösung. Texte wörtlich aus dem Buch. Die Lösungen schicke ich gleich.",
+     "besserePrompt": "Er hat das Lernverfahren selbst beschrieben (Leitner-Boxen), ohne es so zu nennen — das hat E677 zur Ableitung aus `sr` gemacht statt zu einem zweiten Speicher."
+    },
+    {
+     "zeit": "ca. 19:50",
+     "wortlaut": "Das ist die lösungen und nehemn was wir brauch nur für momentan aber die anderen machst du später legen das im lügen md",
+     "woher": "wörtlich aus dem Gespräch (mit der PDF Lehrmittel_Lösungen18.pdf)",
+     "gemeint": "Das ganze Lösungsheft ist da; jetzt nur die Lösungen zu 6.1–6.13 einbauen, den Rest als Lücke in LUECKEN.md eintragen (er schreibt „lügen md“).",
+     "besser": "Hier das Lösungsheft. Nimm jetzt nur, was wir für den Test brauchen; den Rest trag in LUECKEN.md ein.",
+     "besserePrompt": "Genau so ist es gelaufen: 6.1–6.13 im Trainer, 6.14–6.41 und die anderen Kapitel als L210 Punkt 1."
+    },
+    {
+     "zeit": "ca. 20:10",
+     "wortlaut": "also es sollte direk mit redion verbunden sein die app nicht getrennt, und du kannst die bestse lern methoder dort setzt",
+     "woher": "wörtlich aus dem Gespräch, mitten im Bau",
+     "gemeint": "Kein eigenes Programm neben Redion: der Trainer gehört in die App, an die vorhandenen Daten. Das Lernverfahren darf ich wählen.",
+     "besser": "Der Trainer soll Teil von Redion sein, nicht eine Seite daneben. Welche Lernmethode, entscheidest du.",
+     "besserePrompt": "Der Satz hat die Architektur entschieden (E677): Lernkarten mit `quiz`, Fortschritt über `WissenDienst.planen`, eine Ansicht der Lernwelt."
+    },
+    {
+     "zeit": "ca. 20:30",
+     "wortlaut": "Ich brauche eien provisoriche momentan kannst du es machen und wenn die agend weiter sind baue es vommständig ich muss jetzt lernen erstellejet für provisorin nicht so eine komolet po sonder etwas das ich gut lernen kann aber sobald agends fertig sind mache es weiter und wenn du es die provisoriche gamvht hast pusche es auf github",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Zuerst etwas Einfaches, mit dem er heute Abend lernen kann — und sofort auf GitHub. Die vollständige Fassung danach, sobald die Bauer fertig sind.",
+     "besser": "Mach mir zuerst eine einfache Fassung, mit der ich heute lernen kann, und push sie. Die vollständige baust du danach.",
+     "besserePrompt": "Die Reihenfolge war richtig: f7f47c7 (die vorläufige Seite, 20:54) kam vor E677. Was dabei entstand, ist ein zweiter Trainer — L210 Punkt 2 nennt ihn, damit er nicht bleibt."
     }
    ],
    "arbeit": [
@@ -2831,10 +2895,18 @@ const ChronikDaten = {
      "zeitraum": "ca. 18:10 – 18:45",
      "dauer": "ca. 35 min",
      "pruefungen": "test564 (neu, 11 Zusagen; §1–§3 vorher 6/8, §4 vorher 9/11), 21 Nachbarn grün (366 472 449 343 345 474 478 561 562 563 535 480 438 475 105 109 550 189 346 527 564)"
+    },
+    {
+     "was": "Staatskunde-Trainer, vorläufiger Stand: lernen/staatskunde.html mit eigener Lernmaschine (staatskunde-trainer.ts) und dem Inhalt (staatskunde-inhalt.ts: 7 Prüfungsfragen, 6.1–6.13, 37 Aufgaben aus den Buchseiten)",
+     "vonCommit": "efe2647",
+     "bisCommit": "f7f47c7",
+     "zeitraum": "ca. 19:00 – 20:55",
+     "dauer": "ca. 1 h 55 min (davon ca. 40 min Lesen der Bilder und des Lösungshefts)",
+     "pruefungen": "keiner — die vorläufige Seite läuft ohne Redion; Bilder mit einem Wegwerf-Skript angesehen (§55.3)"
     }
    ],
    "zahlen": {
-    "commits": 12,
+    "commits": 13,
     "entscheidungen": 10,
     "neue Prüfläufe": 8,
     "volle Läufe": 1
@@ -2895,6 +2967,78 @@ const ChronikDaten = {
      "was": "E676: nach 8/8 grün das Bild angesehen, die gespeicherten Punkte sondiert, zwei weitere Stellen repariert (finish, stueck) und §4 als Browser-Teil an test564 gehängt",
      "warum": "der Wächter hielt den Glätter, das Bild zeigte die Marke — die Ecke ging DAHINTER verloren (§55.1)",
      "risiko": "das Bogenstück ändert, wie jede scharfe Ecke gezeichnet wird, auch im Bestand; test366 §1 (zeichengleich) und die PDF-Kontur (outlinePunkte, unverändert) halten es"
+    },
+    {
+     "zeit": "ca. 20:30",
+     "was": "Erst die vorläufige Seite gebaut und gepusht, dann die Anbindung begonnen (trainer.ts) und zwei Bauer für Wächter und Anbindung gestartet",
+     "warum": "Redur muss heute lernen — eine einfache Fassung sofort ist mehr wert als eine vollständige morgen",
+     "risiko": "die vorläufige Seite ist ein zweiter Trainer mit eigenem Stand in localStorage (§8) — steht als L210 Punkt 2, bis er weg darf"
+    }
+   ]
+  },
+  {
+   "datum": "2026-09-22",
+   "wochentag": "Dienstag",
+   "titel": "Der Trainer wohnt im Lernzentrum",
+   "wasIchWeiss": "Ein Bogen, über Nacht begonnen: die beiden Bauer vom Abend waren an der Sitzungsgrenze gescheitert, ohne eine Zeile zu ändern, also alles von Hand in der Reihenfolge von §30 — zuerst test565, rot (1 von 21, dann Abbruch), dann die Anbindung: der Inhalt als Vorlage, der Rückfall in Register.vorlagen.bauen, die Ansicht „trainer“ in der Lernwelt mit Kachel und Unterreiter, die Route, zwei Skripteinträge, der Stil. Gegen den ersten gebauten Stand 53 von 54 — die rote Zeile war ein Fund (P106: Frage 5 vor Frage 4, weil 57 Karten in derselben Millisekunde entstehen). Gegenprobe rot an zwei Stellen, dann 54 von 54. Bilder am Rechner und am Telefon. `main` steht weiter still (L207 wartet auf Redur).",
+   "nachrichten": [
+    {
+     "zeit": "ca. 05:00",
+     "wortlaut": "Weiter",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Weiter mit E677 — die Bauer waren fertig (gescheitert), der Hauptfaden soll übernehmen.",
+     "besser": "Mach weiter.",
+     "besserePrompt": "Passt so."
+    }
+   ],
+   "arbeit": [
+    {
+     "was": "E677 — der Trainer wohnt im Lernzentrum: trainer.ts (Boxen aus sr, Runde im Meta-Fach, MC/Schreiben/Lücke), staatskunde-inhalt.ts als Vorlage, Register.vorlagen.bauen mit Rückfall, Lernwelt-Ansicht + Kachel, Route, Skripteinträge, Stil, drei Bildziele, E677/L210/§30",
+     "vonCommit": "f7f47c7",
+     "bisCommit": "3cdc1f8",
+     "zeitraum": "ca. 04:50 – 06:10",
+     "dauer": "ca. 1 h 20 min",
+     "pruefungen": "test565 (neu, 54 Zusagen; vorher 1/21 mit Abbruch; erster Stand 53/54; Gegenprobe 52/54), Nachbarn 32 87 105 109 143 206 217 222 272 290 362 401 402 484 537 547 549 550 481"
+    }
+   ],
+   "zahlen": {
+    "commits": 2,
+    "entscheidungen": 1,
+    "neue Prüfläufe": 1,
+    "volle Läufe": 0
+   },
+   "groesstesProblem": "Die Reihenfolge der Prüfungsfragen. test565 war gegen den ersten Stand bei 53 von 54, und die rote Zeile hiess „wortgleich=false“: Trainer.karten() sortierte nach created, die Vorlage legt alle 57 Karten in derselben Millisekunde an, und die Seite war nach Thema gruppiert — Frage 5 (Gewaltentrennung) kam vor Frage 4 (Parlament). Ohne den Vergleich Zeichen für Zeichen mit dem Inhalt hätte niemand es gesehen: Karte 1 war Frage 1, und das sah richtig aus (P106).",
+   "interessantesteAnfrage": "„die app nicht getrennt“ — ein halber Satz, der die ganze Architektur entschieden hat. Nicht eine Seite neben Redion, nicht ein eigener Speicher, sondern eine Ansicht über den Lernkarten, die es schon gibt: ein Feld `quiz` an der Karte, der Fortschritt über dieselbe Rechnung wie die Tagesrunde, die Boxen als Ableitung. Was er beschrieben hat, sind Leitner-Boxen — er hat sie nur nicht so genannt.",
+   "massnahmen": [
+    {
+     "zeit": "ca. 04:50",
+     "was": "Die gescheiterten Bauer nicht neu gestartet, sondern selbst gebaut — Wächter zuerst, rot gesehen, dann die Anbindung",
+     "warum": "beide waren an der Sitzungsgrenze; ein zweiter Anlauf hätte dasselbe gekostet, und §30 verlangt die Reihenfolge ohnehin",
+     "risiko": "keines — nichts war angefasst"
+    },
+    {
+     "zeit": "ca. 05:20",
+     "was": "Die Prüfungsfragen zuoberst auf die Seite und Trainer.karten() in Seitenreihenfolge statt nach created",
+     "warum": "P106 — 57 Karten in derselben Millisekunde, und die Seite ist das, was der Mensch sieht und ändern kann",
+     "risiko": "wer Karten auf der Seite umsortiert, ändert die Prüfungsreihenfolge — das ist gewollt"
+    },
+    {
+     "zeit": "ca. 05:30",
+     "was": "Register.vorlagen.bauen baut gemeldete Vorlagen selbst, wenn die Galerie sie nicht kennt, und lässt Fassung den Vermerk setzen",
+     "warum": "melde gab es, bauen ignorierte es — eine gemeldete Vorlage war nicht baubar",
+     "risiko": "die elf Galerie-Vorlagen nehmen weiter den alten Weg (erst Galerie); test504/509 halten das Register"
+    },
+    {
+     "zeit": "ca. 05:40",
+     "was": "ladeBereichsdaten lässt die Trainer-Ansicht aus",
+     "warum": "das zweite zeichnen nach dem Laden hätte den Trainer mitten in der Runde neu aufgesetzt",
+     "risiko": "keines — der Trainer braucht keine Bereichsdaten"
+    },
+    {
+     "zeit": "ca. 06:00",
+     "was": "Die vorläufige Seite stehen gelassen und als L210 Punkt 2 eingetragen",
+     "warum": "§43: nichts löschen ohne Rückfrage — Redur hat sie ausdrücklich gewollt",
+     "risiko": "zwei Trainer mit demselben Inhalt, bis er entscheidet"
     }
    ]
   }
@@ -4314,6 +4458,18 @@ const ChronikDaten = {
    "ursache": "`finish` (E115): hat RDP weniger als acht Stützpunkte übrig, nimm acht gleichmässige — ANSTELLE der RDP-Punkte. RDP hatte die fünf Ecken behalten, die Regel warf sie weg. Dahinter noch der Umriss: eine Q-Kurve durch jede Ecke, 5,12 px daneben.",
    "beweis": "test564 §4 vorher „[4.24, 23.71, 11.5]“ (Mittellinie) und „[15.19, 23.68, 20.37]“ (Umriss); nachher [0,0,0] und [0.71,0.29,0.8]. Gegenprobe A (acht ersetzen): 23,72; Gegenprobe B (Stück ohne Ecke): 5,12.",
    "lehre": "Ein Wächter am Kern beweist den Kern. Was der Nutzer sieht, entsteht drei Stationen später — und jede kann verlieren, was die vorige gehalten hat. Deshalb §55.3: ein Bild, wenn man etwas sehen kann; und der Wächter folgt der Sache bis dorthin, wo man sie sieht."
+  },
+  {
+   "nr": "P106",
+   "datum": "2026-09-22",
+   "titel": "Frage 5 kam vor Frage 4 — 57 Karten in derselben Millisekunde, sortiert nach created",
+   "schwere": "mittel",
+   "symptom": "test565 §3 gegen den ersten Stand: „7 Prüfungsfragen, wortgleich=false“ — Karte 1 war Frage 1, die Prüfungsrunde sah richtig aus.",
+   "falscheVermutung": "Nach `created` sortiert stehen die Karten in der Reihenfolge, in der die Vorlage sie angelegt hat.",
+   "wieGefunden": "Der Wächter vergleicht die sieben Prüfungsfragen Zeichen für Zeichen und in der Reihenfolge des Lehrers mit dem Inhalt — nicht nur die erste.",
+   "ursache": "Die Vorlage legt alle 57 Karten in derselben Millisekunde an; `created` ist für alle gleich, `localeCompare` gibt 0, und die Sortierung fällt auf die Reihenfolge von `Object.values(Store.cache.blocks)` zurück. Dazu war die Seite nach Thema gruppiert: p5 (Gewaltentrennung) stand vor p4 (Parlament).",
+   "beweis": "test565 §3 rot (wortgleich=false); nach dem Umbau — Seitenreihenfolge über Elternblock und Stelle in `content`, Prüfungsfragen zuoberst — 54/54.",
+   "lehre": "Ein Zeitstempel ordnet nichts, was gleichzeitig entsteht. Die Reihenfolge, die zählt, ist die, die der Mensch sieht und ändern kann — die Seite. Und ein Wächter, der nur den ersten Fall prüft, hätte hier „passt schon“ gesagt (§55.2)."
   }
  ]
 } as const;

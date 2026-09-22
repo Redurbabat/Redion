@@ -1929,9 +1929,9 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 | 01:26 | Die Werkzeugleiste bekommt einen fliegenden Wechsel statt zweier springender Flächen. | Das Design-System: „Pen → Marker → Eraser" als Beispiel für eine gemeinsame Materialfläche. | keins an Daten. Der Zustand hängt am Knopf und nicht am Flug — deshalb ist er auch ohne Bewegung richtig. |
 | 01:40 | Die Dehnung der Linse gilt nur noch zwischen Nachbarn, der Deckel fällt von 1,85 auf 1,18, und die Ruhe-Brechung von 15 auf 8. | Drei Regeln des Design-Systems, die schlicht recht haben. Eine Brücke spannt sich zwischen Dingen, die sich fast berühren. | keins. Was bleibt, ist Redurs Entscheidung: ob über der Schrift überhaupt gebrochen werden darf. |
 
-### 2026-09-21 · Montag — Fett wird ein Schalter, die Geräte bekommen ihre Liste, der Text einer PDF lässt sich ändern — und am Nachmittag der Stift: Spitze, Gedächtnis, Aussetzer, Ecke
+### 2026-09-21 · Montag — Fett wird ein Schalter, die Geräte bekommen ihre Liste, der Text einer PDF lässt sich ändern — und am Nachmittag der Stift: Spitze, Gedächtnis, Aussetzer, Ecke — und am Abend die Staatskunde
 
-> Ein langer Tag mit zehn Bögen. Vormittags drei (E668–E670), dann der erste volle Lauf seit elf Bögen (E671, 491/501 grün, 8 echte Rote, 7 davon aus meinen eigenen Bögen), die Ordnerfarben (E672) und am Nachmittag Redurs Satz zum Stift: „gleich wie goodnotes machen“. Dafür zwei Leser (nur lesen, kein Prüflauf daneben, §30), dann vier Bögen am Strich — die Spitze (E673), Farbe und Stärke je Werkzeug (E674), der Sensor-Aussetzer (E675), die Ecke im Glätter (E676) — und L209 mit dem Rest. `main` steht weiter still (§46): test537 bleibt rot bei 518 gegen 517, und die Richtung gehört Redur (L207).
+> Ein langer Tag mit zehn Bögen. Vormittags drei (E668–E670), dann der erste volle Lauf seit elf Bögen (E671, 491/501 grün, 8 echte Rote, 7 davon aus meinen eigenen Bögen), die Ordnerfarben (E672) und am Nachmittag Redurs Satz zum Stift: „gleich wie goodnotes machen“. Dafür zwei Leser (nur lesen, kein Prüflauf daneben, §30), dann vier Bögen am Strich — die Spitze (E673), Farbe und Stärke je Werkzeug (E674), der Sensor-Aussetzer (E675), die Ecke im Glätter (E676) — und L209 mit dem Rest. `main` steht weiter still (§46): test537 bleibt rot bei 518 gegen 517, und die Richtung gehört Redur (L207). Am Abend kam ein neues Thema: Redur schickte Bilder von sieben Prüfungsfragen, den Buchseiten 155–160 («Allgemeinbildung, Ausgabe Basel», Kapitel 6 „Leben in der Schweiz“) und das Lösungsheft und wollte „eine flüssige lern app im redion … nicht getrennt“. Weil er sofort lernen musste, zuerst eine vorläufige Seite (f7f47c7, 20:54); der Trainer im Lernzentrum folgte am 22. (E677).
 
 
 #### Was Redur geschrieben hat
@@ -2025,6 +2025,94 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 **Besserer Prompt:** Nichts zu verbessern. Die zwei Fragen, die seine Entscheidung brauchen, stehen trotzdem im Bericht — „ohne Pause“ heisst nicht „ohne ihn“.
 
 
+**9 · ca. 19:00**
+
+> Warte ich schike dir nich mehr bildern und du muss lern karte für mich erstellen, ich sage dir wie es sein sollte warte
+
+**Gemeint:** Themenwechsel: nicht mehr der Stift, sondern Lernkarten für seinen Test. Und: erst alles sammeln, dann bauen — „warte“ steht dreimal an diesem Abend.
+
+**Besser geschrieben:** Ich schicke dir jetzt nacheinander die Prüfungsfragen und die Buchseiten. Fang noch nicht an — ich sage dir am Schluss, wie die Karten aussehen sollen.
+
+**Besserer Prompt:** Das „warte“ war genau richtig: ohne die Buchseiten wären die Karten aus dem Gedächtnis entstanden (§45, E21).
+
+
+**10 · ca. 19:05**
+
+> Die 7 fragen sollteb 1:1 dirt sein und die verstanden fragen auch warte noch
+
+**Gemeint:** Die sieben Prüfungsfragen des Lehrers und die „Verstanden?“-Fragen des Buches sollen Wort für Wort übernommen werden — keine Umformulierung.
+
+**Besser geschrieben:** Die sieben Prüfungsfragen und die Verstanden-Fragen aus dem Buch bitte wörtlich übernehmen.
+
+**Besserer Prompt:** Das „1:1“ hat den Bau bestimmt: test565 vergleicht seither Frage, Antworten und Lösung Zeichen für Zeichen mit dem Inhalt.
+
+
+**11 · ca. 19:15**
+
+> Gebe mir welche seiten hast du
+
+**Gemeint:** Eine Bestandsaufnahme: welche Buchseiten sind schon da, welche fehlen noch.
+
+**Besser geschrieben:** Welche Seiten hast du jetzt schon?
+
+**Besserer Prompt:** So wie er ist — eine Kontrollfrage, die Lücken sichtbar macht, bevor gebaut wird.
+
+
+**12 · ca. 19:30**
+
+> jetzt gebe mir alles was du hast
+
+**Gemeint:** Die Sammlung ist vollständig; jetzt soll die Zusammenfassung des Gelesenen kommen.
+
+**Besser geschrieben:** Jetzt zeig mir, was du alles hast.
+
+**Besserer Prompt:** Passt so.
+
+
+**13 · ca. 19:40**
+
+> das ist alles das ich für den test lernen muss und der lehrern nimmt die 7 fragen die ich dir geschik hbae 1:1 so und auch die von buch sind die verstanden fragen, jetzt will ich eien flüssige lern app im redion bauen nicht die karten sollte im berichen sein sondern direk eine appp dort , kannst du das machen , ich will so boxsen haben die ich weiss sollte selten vor komen und die ich nicht weiss mehrmals auch schriben und multiplichos und versuche möglichst die text 1:1 von buch seiten nehmen und ich gebe dir die lösungen für ales fragen und du legst loss warte erste mal
+
+**Gemeint:** Der Auftrag: eine Lern-App IN Redion (nicht nur Karten in einem Bereich), mit Boxen — Gewusstes selten, Nichtgewusstes mehrmals —, mit Schreib- und Multiple-Choice-Aufgaben, Texte wörtlich aus dem Buch. Die Lösungen kommen noch.
+
+**Besser geschrieben:** Bau mir in Redion einen Trainer für dieses Kapitel: Boxen (was ich kann, kommt selten; was ich nicht kann, mehrmals), Multiple Choice wie in der Prüfung und Schreibaufgaben mit Musterlösung. Texte wörtlich aus dem Buch. Die Lösungen schicke ich gleich.
+
+**Besserer Prompt:** Er hat das Lernverfahren selbst beschrieben (Leitner-Boxen), ohne es so zu nennen — das hat E677 zur Ableitung aus `sr` gemacht statt zu einem zweiten Speicher.
+
+
+**14 · ca. 19:50**
+
+> Das ist die lösungen und nehemn was wir brauch nur für momentan aber die anderen machst du später legen das im lügen md
+
+**Gemeint:** Das ganze Lösungsheft ist da; jetzt nur die Lösungen zu 6.1–6.13 einbauen, den Rest als Lücke in LUECKEN.md eintragen (er schreibt „lügen md“).
+
+**Besser geschrieben:** Hier das Lösungsheft. Nimm jetzt nur, was wir für den Test brauchen; den Rest trag in LUECKEN.md ein.
+
+**Besserer Prompt:** Genau so ist es gelaufen: 6.1–6.13 im Trainer, 6.14–6.41 und die anderen Kapitel als L210 Punkt 1.
+
+
+**15 · ca. 20:10**
+
+> also es sollte direk mit redion verbunden sein die app nicht getrennt, und du kannst die bestse lern methoder dort setzt
+
+**Gemeint:** Kein eigenes Programm neben Redion: der Trainer gehört in die App, an die vorhandenen Daten. Das Lernverfahren darf ich wählen.
+
+**Besser geschrieben:** Der Trainer soll Teil von Redion sein, nicht eine Seite daneben. Welche Lernmethode, entscheidest du.
+
+**Besserer Prompt:** Der Satz hat die Architektur entschieden (E677): Lernkarten mit `quiz`, Fortschritt über `WissenDienst.planen`, eine Ansicht der Lernwelt.
+
+
+**16 · ca. 20:30**
+
+> Ich brauche eien provisoriche momentan kannst du es machen und wenn die agend weiter sind baue es vommständig ich muss jetzt lernen erstellejet für provisorin nicht so eine komolet po sonder etwas das ich gut lernen kann aber sobald agends fertig sind mache es weiter und wenn du es die provisoriche gamvht hast pusche es auf github
+
+**Gemeint:** Zuerst etwas Einfaches, mit dem er heute Abend lernen kann — und sofort auf GitHub. Die vollständige Fassung danach, sobald die Bauer fertig sind.
+
+**Besser geschrieben:** Mach mir zuerst eine einfache Fassung, mit der ich heute lernen kann, und push sie. Die vollständige baust du danach.
+
+**Besserer Prompt:** Die Reihenfolge war richtig: f7f47c7 (die vorläufige Seite, 20:54) kam vor E677. Was dabei entstand, ist ein zweiter Trainer — L210 Punkt 2 nennt ihn, damit er nicht bleibt.
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -2040,10 +2128,11 @@ Das nachgereichte Design-System. Es ist die erste Regel in diesem Projekt, die �
 | E675 — ein Stift, der kurz 0 meldet, bleibt ein Stift | `0d003b0` → `80baff2` | ca. 17:30 – 18:06 (Wächter vor dem E674-Commit geschrieben, Patch bis dahin aus dem Baum genommen) | ca. 36 min | test563 (neu, 13 Zusagen; vorher 10/13), 475 343 561 562 345 366 472 105 109 550 |
 | L209 — der Stift gegen GoodNotes: was nach E673–E675 offen bleibt (fünfzehn Punkte, zwei brauchen Redur) | `80baff2` → `e123eb1` | 18:06 | ca. 10 min | test549 (Zählsatz 105/54/51) |
 | E676 — der Glätter hält die Ecke, und sie überlebt Absetzen und Umriss (drei Stellen, drei Gegenproben) | `e123eb1` → `04b8c4d` | ca. 18:10 – 18:45 | ca. 35 min | test564 (neu, 11 Zusagen; §1–§3 vorher 6/8, §4 vorher 9/11), 21 Nachbarn grün (366 472 449 343 345 474 478 561 562 563 535 480 438 475 105 109 550 189 346 527 564) |
+| Staatskunde-Trainer, vorläufiger Stand: lernen/staatskunde.html mit eigener Lernmaschine (staatskunde-trainer.ts) und dem Inhalt (staatskunde-inhalt.ts: 7 Prüfungsfragen, 6.1–6.13, 37 Aufgaben aus den Buchseiten) | `efe2647` → `f7f47c7` | ca. 19:00 – 20:55 | ca. 1 h 55 min (davon ca. 40 min Lesen der Bilder und des Lösungshefts) | keiner — die vorläufige Seite läuft ohne Redion; Bilder mit einem Wegwerf-Skript angesehen (§55.3) |
 
 #### Zahlen des Tages
 
-- **commits:** 12
+- **commits:** 13
 - **entscheidungen:** 10
 - **neue Prüfläufe:** 8
 - **volle Läufe:** 1
@@ -2069,10 +2158,61 @@ Der Punkt des breiten Füllers. Nach E673 war test561 grün — 22 von 22 —, u
 | 18:00 | E674: Gedächtnis in der Zeichenschicht, nicht in der Leiste; Auswahl ohne eigene Tinte | jeder Weg zur Farbe läuft durch setzeFarbe/setzeStrich; test345 hat den Konflikt mit E353 gezeigt | wer gewohnt war, dass der Stift die Markerfarbe mitnimmt, setzt sie einmal je Werkzeug |
 | 18:06 | E675 vor dem E674-Commit geschrieben, den Patch bis zum Commit aus dem Baum genommen (Skript e675.py) | ein Commit, ein Ziel (§43) — beide Bögen sassen in marken.ts | gering, das Skript ist umkehrbar und wurde zweimal gefahren |
 | ca. 19:00 | E676: nach 8/8 grün das Bild angesehen, die gespeicherten Punkte sondiert, zwei weitere Stellen repariert (finish, stueck) und §4 als Browser-Teil an test564 gehängt | der Wächter hielt den Glätter, das Bild zeigte die Marke — die Ecke ging DAHINTER verloren (§55.1) | das Bogenstück ändert, wie jede scharfe Ecke gezeichnet wird, auch im Bestand; test366 §1 (zeichengleich) und die PDF-Kontur (outlinePunkte, unverändert) halten es |
+| ca. 20:30 | Erst die vorläufige Seite gebaut und gepusht, dann die Anbindung begonnen (trainer.ts) und zwei Bauer für Wächter und Anbindung gestartet | Redur muss heute lernen — eine einfache Fassung sofort ist mehr wert als eine vollständige morgen | die vorläufige Seite ist ein zweiter Trainer mit eigenem Stand in localStorage (§8) — steht als L210 Punkt 2, bis er weg darf |
+
+### 2026-09-22 · Dienstag — Der Trainer wohnt im Lernzentrum
+
+> Ein Bogen, über Nacht begonnen: die beiden Bauer vom Abend waren an der Sitzungsgrenze gescheitert, ohne eine Zeile zu ändern, also alles von Hand in der Reihenfolge von §30 — zuerst test565, rot (1 von 21, dann Abbruch), dann die Anbindung: der Inhalt als Vorlage, der Rückfall in Register.vorlagen.bauen, die Ansicht „trainer“ in der Lernwelt mit Kachel und Unterreiter, die Route, zwei Skripteinträge, der Stil. Gegen den ersten gebauten Stand 53 von 54 — die rote Zeile war ein Fund (P106: Frage 5 vor Frage 4, weil 57 Karten in derselben Millisekunde entstehen). Gegenprobe rot an zwei Stellen, dann 54 von 54. Bilder am Rechner und am Telefon. `main` steht weiter still (L207 wartet auf Redur).
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · ca. 05:00**
+
+> Weiter
+
+**Gemeint:** Weiter mit E677 — die Bauer waren fertig (gescheitert), der Hauptfaden soll übernehmen.
+
+**Besser geschrieben:** Mach weiter.
+
+**Besserer Prompt:** Passt so.
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E677 — der Trainer wohnt im Lernzentrum: trainer.ts (Boxen aus sr, Runde im Meta-Fach, MC/Schreiben/Lücke), staatskunde-inhalt.ts als Vorlage, Register.vorlagen.bauen mit Rückfall, Lernwelt-Ansicht + Kachel, Route, Skripteinträge, Stil, drei Bildziele, E677/L210/§30 | `f7f47c7` → `3cdc1f8` | ca. 04:50 – 06:10 | ca. 1 h 20 min | test565 (neu, 54 Zusagen; vorher 1/21 mit Abbruch; erster Stand 53/54; Gegenprobe 52/54), Nachbarn 32 87 105 109 143 206 217 222 272 290 362 401 402 484 537 547 549 550 481 |
+
+#### Zahlen des Tages
+
+- **commits:** 2
+- **entscheidungen:** 1
+- **neue Prüfläufe:** 1
+- **volle Läufe:** 0
+
+#### Das grösste Problem
+
+Die Reihenfolge der Prüfungsfragen. test565 war gegen den ersten Stand bei 53 von 54, und die rote Zeile hiess „wortgleich=false“: Trainer.karten() sortierte nach created, die Vorlage legt alle 57 Karten in derselben Millisekunde an, und die Seite war nach Thema gruppiert — Frage 5 (Gewaltentrennung) kam vor Frage 4 (Parlament). Ohne den Vergleich Zeichen für Zeichen mit dem Inhalt hätte niemand es gesehen: Karte 1 war Frage 1, und das sah richtig aus (P106).
+
+#### Das Interessanteste, das Redur wollte
+
+„die app nicht getrennt“ — ein halber Satz, der die ganze Architektur entschieden hat. Nicht eine Seite neben Redion, nicht ein eigener Speicher, sondern eine Ansicht über den Lernkarten, die es schon gibt: ein Feld `quiz` an der Karte, der Fortschritt über dieselbe Rechnung wie die Tagesrunde, die Boxen als Ableitung. Was er beschrieben hat, sind Leitner-Boxen — er hat sie nur nicht so genannt.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| ca. 04:50 | Die gescheiterten Bauer nicht neu gestartet, sondern selbst gebaut — Wächter zuerst, rot gesehen, dann die Anbindung | beide waren an der Sitzungsgrenze; ein zweiter Anlauf hätte dasselbe gekostet, und §30 verlangt die Reihenfolge ohnehin | keines — nichts war angefasst |
+| ca. 05:20 | Die Prüfungsfragen zuoberst auf die Seite und Trainer.karten() in Seitenreihenfolge statt nach created | P106 — 57 Karten in derselben Millisekunde, und die Seite ist das, was der Mensch sieht und ändern kann | wer Karten auf der Seite umsortiert, ändert die Prüfungsreihenfolge — das ist gewollt |
+| ca. 05:30 | Register.vorlagen.bauen baut gemeldete Vorlagen selbst, wenn die Galerie sie nicht kennt, und lässt Fassung den Vermerk setzen | melde gab es, bauen ignorierte es — eine gemeldete Vorlage war nicht baubar | die elf Galerie-Vorlagen nehmen weiter den alten Weg (erst Galerie); test504/509 halten das Register |
+| ca. 05:40 | ladeBereichsdaten lässt die Trainer-Ansicht aus | das zweite zeichnen nach dem Laden hätte den Trainer mitten in der Runde neu aufgesetzt | keines — der Trainer braucht keine Bereichsdaten |
+| ca. 06:00 | Die vorläufige Seite stehen gelassen und als L210 Punkt 2 eingetragen | §43: nichts löschen ohne Rückfrage — Redur hat sie ausdrücklich gewollt | zwei Trainer mit demselben Inhalt, bis er entscheidet |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 105 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 106 Einträge.
 

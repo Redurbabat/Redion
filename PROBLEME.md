@@ -119,6 +119,7 @@ sind der teuerste Teil und der lehrreichste.
 | P103 | 2026-09-21 | Der Punkt des breiten Füllers war ein Splitter — und der Wächter grün | 🟠 mittel | — |
 | P104 | 2026-09-21 | Eine Gegenprobe, die gar nicht lief | 🟠 mittel | — |
 | P105 | 2026-09-21 | Der Glätter hielt die Ecke, die Marke nicht — acht gleichmässige Punkte statt der Ecken | 🟠 mittel | — |
+| P106 | 2026-09-22 | Frage 5 kam vor Frage 4 — 57 Karten in derselben Millisekunde, sortiert nach created | 🟠 mittel | — |
 
 ---
 
@@ -2295,4 +2296,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** test564 §4 vorher „[4.24, 23.71, 11.5]“ (Mittellinie) und „[15.19, 23.68, 20.37]“ (Umriss); nachher [0,0,0] und [0.71,0.29,0.8]. Gegenprobe A (acht ersetzen): 23,72; Gegenprobe B (Stück ohne Ecke): 5,12.
 
 **Die Lehre.** Ein Wächter am Kern beweist den Kern. Was der Nutzer sieht, entsteht drei Stationen später — und jede kann verlieren, was die vorige gehalten hat. Deshalb §55.3: ein Bild, wenn man etwas sehen kann; und der Wächter folgt der Sache bis dorthin, wo man sie sieht.
+
+
+---
+
+## P106 · Frage 5 kam vor Frage 4 — 57 Karten in derselben Millisekunde, sortiert nach created
+
+*2026-09-22 · 🟠 mittel*
+
+**Das Bild.** test565 §3 gegen den ersten Stand: „7 Prüfungsfragen, wortgleich=false“ — Karte 1 war Frage 1, die Prüfungsrunde sah richtig aus.
+
+**Die falsche Vermutung.** Nach `created` sortiert stehen die Karten in der Reihenfolge, in der die Vorlage sie angelegt hat.
+
+**Wie es gefunden wurde.** Der Wächter vergleicht die sieben Prüfungsfragen Zeichen für Zeichen und in der Reihenfolge des Lehrers mit dem Inhalt — nicht nur die erste.
+
+**Die Ursache.** Die Vorlage legt alle 57 Karten in derselben Millisekunde an; `created` ist für alle gleich, `localeCompare` gibt 0, und die Sortierung fällt auf die Reihenfolge von `Object.values(Store.cache.blocks)` zurück. Dazu war die Seite nach Thema gruppiert: p5 (Gewaltentrennung) stand vor p4 (Parlament).
+
+**Der Beweis.** test565 §3 rot (wortgleich=false); nach dem Umbau — Seitenreihenfolge über Elternblock und Stelle in `content`, Prüfungsfragen zuoberst — 54/54.
+
+**Die Lehre.** Ein Zeitstempel ordnet nichts, was gleichzeitig entsteht. Die Reihenfolge, die zählt, ist die, die der Mensch sieht und ändern kann — die Seite. Und ein Wächter, der nur den ersten Fall prüft, hätte hier „passt schon“ gesagt (§55.2).
 
