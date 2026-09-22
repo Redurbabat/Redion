@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-657 Entscheidungen, E1 bis E677 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+658 Entscheidungen, E1 bis E678 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -720,6 +720,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E675** — Ein Stift, der kurz 0 meldet, bleibt ein Stift: Lücke 9 des Stiftweg-Lesers. `druckAus` entschied je Meldung; eine 0 mitten im Stiftstrich hiess „kein Sensor", und der Tempo-Ersatz sprang ein — 0,6 beim ersten Mal, bei leichter Hand (0,2) ein Punkt dreimal so breit, den niemand gedrückt hatte. Jetzt behält ein Stift, der schon Druck gemeldet hat, seinen letzten Sensorwert; nur ein Stift, der NIE Druck meldet, bekommt den Ersatz und sagt in `druckArt` ehrlich „tempo". Wächter `test563`.
 * **E676** — Der Glätter hält die Ecke: Lücke 6 des Stiftweg-Lesers (L209 Punkt 4). Der Filter erster Ordnung mittelte durch die Spitze eines langsam gezogenen „M" hindurch — 2,62 px daneben, gemessen. Jetzt merkt er sich die Richtung der Hand über eine feste STRECKE (2,5 px, nicht Punkte — E504) und springt, wenn sie kippt (`KEHRE`), auf den rohen Punkt, der am weitesten in der alten Richtung lag: die Ecke selbst, bei 60 und 240 Hz gleich (0 px). Und das Bild fand zwei weitere Stellen, an denen die Ecke danach verlorenging: `finish` ersetzte bei weniger als acht RDP-Stützpunkten die Ecken durch acht gleichmässige (E115) — jetzt kommen sie dazu —, und der Umriss zog durch jede Ecke eine Q-Kurve — jetzt geht `InkGeometry.stueck` an einer Kehre als Gerade durch den Punkt, in Feder und `outline` gleich. Wächter `test564`, §1–§3 ohne Browser, §4 mit.
 * **E677** — Der Trainer wohnt im Lernzentrum: Redurs „flüssige lern app im redion … die app nicht getrennt" ist eine ANSICHT der Lernwelt (`trainer`) über gewöhnlichen Lernkarten, kein zweiter Speicher. Eine Aufgabe ist ein `flashcard`-Block mit einem Feld `quiz` (`mc` mit mehreren richtigen Antworten wie in der Prüfung, `schreiben` mit Musterlösung und Note, `luecke` getippt und nachsichtig verglichen); der Fortschritt geht allein über `WissenDienst.planen` in `sr`, und die fünf Boxen sind eine Ableitung daraus (neu, sonst `min(5, wdh+1)`). Falsches kommt in derselben Runde nach drei Karten noch einmal. Das Kapitel „Staatskunde — Leben in der Schweiz" ist eine Vorlage (`staatskunde-kapitel`), die sieben Prüfungsfragen des Lehrers wörtlich und zuoberst; `Register.vorlagen.bauen` baut seither auch gemeldete Vorlagen, nicht nur die der Galerie. Wächter `test565`, Bilder `node bilder.mts trainer trainerFrage trainerLuecke`. Der vorläufige Trainer (`lernen/staatskunde.html`) bleibt bis zu Redurs Wort stehen (L210).
+* **E678** — Der Streifen zur neuen Fassung steht unten: Redur, 22. September, „die neu laden buton unten bringen". `UI.banner` kennt neben der Art eine Lage (`info unten`): `top:auto; bottom:0`, am Telefon `bottom:var(--hunten)` — dieselbe Marke wie die Schublade, also genau über der unteren Leiste. Warnung und Fehler bleiben oben. Der Knopf „Jetzt laden" ist ein Knopf mit 44 px (`banner-tat`), vorher ein unterstrichenes Wort von 23 px. Wächter `test566`, Bild `node bilder.mts fassung`.
 
 ---
 
@@ -55431,3 +55432,50 @@ Rechner und Telefon.
 **Was offen bleibt** steht in L210: der Rest des Lösungshefts (6.14–6.41 und
 die anderen Kapitel — Redur: „die anderen machst du später"), das Schicksal
 der vorläufigen Seite und die Nebenfunde der Leser.
+
+---
+
+## E678 — Der Streifen zur neuen Fassung steht unten
+
+**Datum:** 22. September 2026 · **Wächter:** `test566`
+
+**Redur:** „Kannst du die neu laden buton unten bringen , wenn eine neu
+version kommt dort sollte es unter sein".
+
+**Was war.** `pwa.ts` meldet eine neue Fassung des Dienst-Arbeiters über
+`UI.banner(…, 'info')`, und `.banner` liegt seit jeher fest oben
+(`top:0`) — über der Kopfleiste mit Suche, Menü und dem PDF-Knopf, dem
+wichtigsten Rand des Bildschirms. Für eine Warnung oder einen Fehler ist
+das richtig: die müssen sofort gesehen werden. Ein Hinweis, der warten
+kann, gehört nicht dorthin. Und der Knopf darin war ein unterstrichenes
+Wort im Stil-Attribut, gemessen 85 × 23 px (§37 verlangt 44).
+
+**Was wurde entschieden?**
+
+1. **Eine Lage neben der Art.** `UI.banner` setzt die Klassen aus dem
+   zweiten Argument; `'info unten'` ergibt `banner info unten`. Keine neue
+   Schnittstelle, kein zweiter Streifen — die eine Regel `.banner.unten`
+   dreht `top:auto; bottom:0`, der Schatten wirft nach oben.
+2. **Am Telefon über der Leiste**, nicht darauf: `bottom:var(--hunten)`,
+   dieselbe Marke, mit der die Schublade über der Leiste endet (9 px +
+   `--mobile-nav-height` + `safe-area`). Gemessen: der Streifen endet bei
+   775, die Leiste beginnt bei 775.
+3. **Der Knopf ist ein Knopf.** `banner-tat`: 44 px hoch, Akzentfläche,
+   Schrift `--auf-accent`. Das Stil-Attribut im Markup ist weg.
+4. **Nur die neue Fassung wandert.** `warn` und `fehler` bleiben oben —
+   `test566` misst beides.
+
+**Was war die Alternative?** Alle Streifen nach unten: dann läge eine
+Fehlermeldung am Telefon hinter der Tastatur. Oder eine eigene Karte für
+die Fassung: ein zweiter Katalog für dasselbe (§8).
+
+**Was kostet es?** Sieben Zeilen Stil und eine Klasse. Ein Streifen unten
+deckt am Rechner nichts ab, was man bedient; am Telefon liegt er über
+dem Inhalt, wie vorher oben — nur über dem Ende der Seite statt über
+ihrem Anfang.
+
+**Wächter `test566`**, 11 Zusagen, gegen den alten Stand rot mit 5 von 11
+(„top 0 · bottom 45", Knopf „85 × 23"). Gegenprobe: die Lage aus
+`.banner.unten` genommen — rot an denselben Stellen. Nachbarn test319
+(die `info`-Regel), 332, 362, 401, 402, 87. Bild: `node bilder.mts
+fassung`, Rechner und Telefon.

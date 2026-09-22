@@ -888,7 +888,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 507 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 508 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1181,6 +1181,14 @@ falsche Karte kommt nicht wieder) und „img: true" (kein `esc`). Gezählt am
 22. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l`
 sagt 507.*
 
+*Und 508: `test566` — der Streifen zur neuen Fassung steht unten (E678).
+Redurs Satz vom 22. September, „die neu laden buton unten bringen", in
+elf Messungen: am Rechner endet der Streifen am unteren Rand, am Telefon
+genau an der Oberkante der Leiste (775 = 775), der Knopf misst 44 px, und
+ein Warnstreifen bleibt oben. Gegen den alten Stand rot mit 5 von 11 —
+„top 0 · bottom 45" und „85 × 23" für den Knopf. Gezählt am 22. September,
+im selben Bogen: der Befehl sagt 508.*
+
 ### Die Befehle
 
 ```txt
@@ -1189,7 +1197,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 507 Läufe
+npm run pruefen                      alle 508 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1276,7 +1284,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 507 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 508 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

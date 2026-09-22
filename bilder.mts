@@ -3330,6 +3330,21 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* --- Der Streifen zur neuen Fassung (E678) ------------------------------
+     Er wird gezeigt, wie pwa.ts ihn bestellt — ohne Service Worker, der
+     meldet sich nur über https. Unten, am Telefon über der Leiste. */
+  fassung: {
+    titel: 'Der Streifen „neue Fassung" liegt unten, am Telefon über der Leiste',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      w.UI.banner('Es liegt eine neue Fassung bereit. <button id="pwa-neu" class="banner-tat">Jetzt laden</button>', 'info unten');
+      await new Promise(r => setTimeout(r, 300));
+    }
+  },
+
   tabelleLeer: {
     titel: 'Der leere Zustand',
     bauen: () => {
