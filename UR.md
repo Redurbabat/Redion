@@ -2160,9 +2160,9 @@ Der Punkt des breiten Füllers. Nach E673 war test561 grün — 22 von 22 —, u
 | ca. 19:00 | E676: nach 8/8 grün das Bild angesehen, die gespeicherten Punkte sondiert, zwei weitere Stellen repariert (finish, stueck) und §4 als Browser-Teil an test564 gehängt | der Wächter hielt den Glätter, das Bild zeigte die Marke — die Ecke ging DAHINTER verloren (§55.1) | das Bogenstück ändert, wie jede scharfe Ecke gezeichnet wird, auch im Bestand; test366 §1 (zeichengleich) und die PDF-Kontur (outlinePunkte, unverändert) halten es |
 | ca. 20:30 | Erst die vorläufige Seite gebaut und gepusht, dann die Anbindung begonnen (trainer.ts) und zwei Bauer für Wächter und Anbindung gestartet | Redur muss heute lernen — eine einfache Fassung sofort ist mehr wert als eine vollständige morgen | die vorläufige Seite ist ein zweiter Trainer mit eigenem Stand in localStorage (§8) — steht als L210 Punkt 2, bis er weg darf |
 
-### 2026-09-22 · Dienstag — Der Trainer wohnt im Lernzentrum
+### 2026-09-22 · Dienstag — Der Trainer wohnt im Lernzentrum — und der Streifen zur neuen Fassung wandert nach unten
 
-> Ein Bogen, über Nacht begonnen: die beiden Bauer vom Abend waren an der Sitzungsgrenze gescheitert, ohne eine Zeile zu ändern, also alles von Hand in der Reihenfolge von §30 — zuerst test565, rot (1 von 21, dann Abbruch), dann die Anbindung: der Inhalt als Vorlage, der Rückfall in Register.vorlagen.bauen, die Ansicht „trainer“ in der Lernwelt mit Kachel und Unterreiter, die Route, zwei Skripteinträge, der Stil. Gegen den ersten gebauten Stand 53 von 54 — die rote Zeile war ein Fund (P106: Frage 5 vor Frage 4, weil 57 Karten in derselben Millisekunde entstehen). Gegenprobe rot an zwei Stellen, dann 54 von 54. Bilder am Rechner und am Telefon. `main` steht weiter still (L207 wartet auf Redur).
+> Ein Bogen, über Nacht begonnen: die beiden Bauer vom Abend waren an der Sitzungsgrenze gescheitert, ohne eine Zeile zu ändern, also alles von Hand in der Reihenfolge von §30 — zuerst test565, rot (1 von 21, dann Abbruch), dann die Anbindung: der Inhalt als Vorlage, der Rückfall in Register.vorlagen.bauen, die Ansicht „trainer“ in der Lernwelt mit Kachel und Unterreiter, die Route, zwei Skripteinträge, der Stil. Gegen den ersten gebauten Stand 53 von 54 — die rote Zeile war ein Fund (P106: Frage 5 vor Frage 4, weil 57 Karten in derselben Millisekunde entstehen). Gegenprobe rot an zwei Stellen, dann 54 von 54. Bilder am Rechner und am Telefon. `main` steht weiter still (L207 wartet auf Redur). Danach ein kleiner Bogen auf Redurs Wort: der Hinweis „Es liegt eine neue Fassung bereit“ lag über der Kopfleiste, jetzt unten, am Telefon über der Leiste, mit einem 44-px-Knopf (E678, test566).
 
 
 #### Was Redur geschrieben hat
@@ -2179,17 +2179,29 @@ Der Punkt des breiten Füllers. Nach E673 war test561 grün — 22 von 22 —, u
 **Besserer Prompt:** Passt so.
 
 
+**2 · ca. 06:20**
+
+> Kannst du die neu laden buton unten bringen , wenn eine neu version kommt dort sollte es unter sein
+
+**Gemeint:** Der Streifen mit „Jetzt laden“, der bei einer neuen Fassung erscheint, soll unten am Bildschirm stehen statt oben über der Kopfleiste.
+
+**Besser geschrieben:** Zeig den Hinweis auf eine neue Fassung unten, nicht oben.
+
+**Besserer Prompt:** Passt so — ein Satz, ein Ort, ein Bogen. Offen blieb nur, ob am Telefon über oder unter der Leiste; „über“ ist die einzige Fassung, bei der die Reiter zu treffen bleiben.
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
 |---|---|---|---|---|
 | E677 — der Trainer wohnt im Lernzentrum: trainer.ts (Boxen aus sr, Runde im Meta-Fach, MC/Schreiben/Lücke), staatskunde-inhalt.ts als Vorlage, Register.vorlagen.bauen mit Rückfall, Lernwelt-Ansicht + Kachel, Route, Skripteinträge, Stil, drei Bildziele, E677/L210/§30 | `f7f47c7` → `3cdc1f8` | ca. 04:50 – 06:10 | ca. 1 h 20 min | test565 (neu, 54 Zusagen; vorher 1/21 mit Abbruch; erster Stand 53/54; Gegenprobe 52/54), Nachbarn 32 87 105 109 143 206 217 222 272 290 362 401 402 484 537 547 549 550 481 |
+| E678 — der Streifen zur neuen Fassung steht unten: UI.banner kennt die Lage „unten“ (am Telefon über der Leiste, --hunten), der Knopf ist ein 44-px-Knopf (banner-tat) statt eines unterstrichenen Worts | `5c49465` → `bcaeb55` | ca. 06:20 – 06:45 | ca. 25 min | test566 (neu, 11 Zusagen; vorher 5/11; Gegenprobe 9/11), Nachbarn 87 319 332 362 401 402 (362 einmal rot: ein rohes 16px → --space-4) |
 
 #### Zahlen des Tages
 
-- **commits:** 2
-- **entscheidungen:** 1
-- **neue Prüfläufe:** 1
+- **commits:** 4
+- **entscheidungen:** 2
+- **neue Prüfläufe:** 2
 - **volle Läufe:** 0
 
 #### Das grösste Problem
@@ -2209,6 +2221,7 @@ Die Reihenfolge der Prüfungsfragen. test565 war gegen den ersten Stand bei 53 v
 | ca. 05:30 | Register.vorlagen.bauen baut gemeldete Vorlagen selbst, wenn die Galerie sie nicht kennt, und lässt Fassung den Vermerk setzen | melde gab es, bauen ignorierte es — eine gemeldete Vorlage war nicht baubar | die elf Galerie-Vorlagen nehmen weiter den alten Weg (erst Galerie); test504/509 halten das Register |
 | ca. 05:40 | ladeBereichsdaten lässt die Trainer-Ansicht aus | das zweite zeichnen nach dem Laden hätte den Trainer mitten in der Runde neu aufgesetzt | keines — der Trainer braucht keine Bereichsdaten |
 | ca. 06:00 | Die vorläufige Seite stehen gelassen und als L210 Punkt 2 eingetragen | §43: nichts löschen ohne Rückfrage — Redur hat sie ausdrücklich gewollt | zwei Trainer mit demselben Inhalt, bis er entscheidet |
+| ca. 06:25 | Nur den Fassungs-Streifen nach unten gelegt (Lage als zweite Klasse), Warnung und Fehler bleiben oben | eine Fehlermeldung unten läge am Telefon hinter der Tastatur; ein Hinweis, der warten kann, gehört nicht über die Suche | keines gemessen — test566 hält beide Lagen |
 
 ---
 

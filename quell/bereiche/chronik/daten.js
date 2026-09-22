@@ -2979,8 +2979,8 @@ const ChronikDaten = {
         {
             "datum": "2026-09-22",
             "wochentag": "Dienstag",
-            "titel": "Der Trainer wohnt im Lernzentrum",
-            "wasIchWeiss": "Ein Bogen, über Nacht begonnen: die beiden Bauer vom Abend waren an der Sitzungsgrenze gescheitert, ohne eine Zeile zu ändern, also alles von Hand in der Reihenfolge von §30 — zuerst test565, rot (1 von 21, dann Abbruch), dann die Anbindung: der Inhalt als Vorlage, der Rückfall in Register.vorlagen.bauen, die Ansicht „trainer“ in der Lernwelt mit Kachel und Unterreiter, die Route, zwei Skripteinträge, der Stil. Gegen den ersten gebauten Stand 53 von 54 — die rote Zeile war ein Fund (P106: Frage 5 vor Frage 4, weil 57 Karten in derselben Millisekunde entstehen). Gegenprobe rot an zwei Stellen, dann 54 von 54. Bilder am Rechner und am Telefon. `main` steht weiter still (L207 wartet auf Redur).",
+            "titel": "Der Trainer wohnt im Lernzentrum — und der Streifen zur neuen Fassung wandert nach unten",
+            "wasIchWeiss": "Ein Bogen, über Nacht begonnen: die beiden Bauer vom Abend waren an der Sitzungsgrenze gescheitert, ohne eine Zeile zu ändern, also alles von Hand in der Reihenfolge von §30 — zuerst test565, rot (1 von 21, dann Abbruch), dann die Anbindung: der Inhalt als Vorlage, der Rückfall in Register.vorlagen.bauen, die Ansicht „trainer“ in der Lernwelt mit Kachel und Unterreiter, die Route, zwei Skripteinträge, der Stil. Gegen den ersten gebauten Stand 53 von 54 — die rote Zeile war ein Fund (P106: Frage 5 vor Frage 4, weil 57 Karten in derselben Millisekunde entstehen). Gegenprobe rot an zwei Stellen, dann 54 von 54. Bilder am Rechner und am Telefon. `main` steht weiter still (L207 wartet auf Redur). Danach ein kleiner Bogen auf Redurs Wort: der Hinweis „Es liegt eine neue Fassung bereit“ lag über der Kopfleiste, jetzt unten, am Telefon über der Leiste, mit einem 44-px-Knopf (E678, test566).",
             "nachrichten": [
                 {
                     "zeit": "ca. 05:00",
@@ -2989,6 +2989,14 @@ const ChronikDaten = {
                     "gemeint": "Weiter mit E677 — die Bauer waren fertig (gescheitert), der Hauptfaden soll übernehmen.",
                     "besser": "Mach weiter.",
                     "besserePrompt": "Passt so."
+                },
+                {
+                    "zeit": "ca. 06:20",
+                    "wortlaut": "Kannst du die neu laden buton unten bringen , wenn eine neu version kommt dort sollte es unter sein",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Der Streifen mit „Jetzt laden“, der bei einer neuen Fassung erscheint, soll unten am Bildschirm stehen statt oben über der Kopfleiste.",
+                    "besser": "Zeig den Hinweis auf eine neue Fassung unten, nicht oben.",
+                    "besserePrompt": "Passt so — ein Satz, ein Ort, ein Bogen. Offen blieb nur, ob am Telefon über oder unter der Leiste; „über“ ist die einzige Fassung, bei der die Reiter zu treffen bleiben."
                 }
             ],
             "arbeit": [
@@ -2999,12 +3007,20 @@ const ChronikDaten = {
                     "zeitraum": "ca. 04:50 – 06:10",
                     "dauer": "ca. 1 h 20 min",
                     "pruefungen": "test565 (neu, 54 Zusagen; vorher 1/21 mit Abbruch; erster Stand 53/54; Gegenprobe 52/54), Nachbarn 32 87 105 109 143 206 217 222 272 290 362 401 402 484 537 547 549 550 481"
+                },
+                {
+                    "was": "E678 — der Streifen zur neuen Fassung steht unten: UI.banner kennt die Lage „unten“ (am Telefon über der Leiste, --hunten), der Knopf ist ein 44-px-Knopf (banner-tat) statt eines unterstrichenen Worts",
+                    "vonCommit": "5c49465",
+                    "bisCommit": "bcaeb55",
+                    "zeitraum": "ca. 06:20 – 06:45",
+                    "dauer": "ca. 25 min",
+                    "pruefungen": "test566 (neu, 11 Zusagen; vorher 5/11; Gegenprobe 9/11), Nachbarn 87 319 332 362 401 402 (362 einmal rot: ein rohes 16px → --space-4)"
                 }
             ],
             "zahlen": {
-                "commits": 2,
-                "entscheidungen": 1,
-                "neue Prüfläufe": 1,
+                "commits": 4,
+                "entscheidungen": 2,
+                "neue Prüfläufe": 2,
                 "volle Läufe": 0
             },
             "groesstesProblem": "Die Reihenfolge der Prüfungsfragen. test565 war gegen den ersten Stand bei 53 von 54, und die rote Zeile hiess „wortgleich=false“: Trainer.karten() sortierte nach created, die Vorlage legt alle 57 Karten in derselben Millisekunde an, und die Seite war nach Thema gruppiert — Frage 5 (Gewaltentrennung) kam vor Frage 4 (Parlament). Ohne den Vergleich Zeichen für Zeichen mit dem Inhalt hätte niemand es gesehen: Karte 1 war Frage 1, und das sah richtig aus (P106).",
@@ -3039,6 +3055,12 @@ const ChronikDaten = {
                     "was": "Die vorläufige Seite stehen gelassen und als L210 Punkt 2 eingetragen",
                     "warum": "§43: nichts löschen ohne Rückfrage — Redur hat sie ausdrücklich gewollt",
                     "risiko": "zwei Trainer mit demselben Inhalt, bis er entscheidet"
+                },
+                {
+                    "zeit": "ca. 06:25",
+                    "was": "Nur den Fassungs-Streifen nach unten gelegt (Lage als zweite Klasse), Warnung und Fehler bleiben oben",
+                    "warum": "eine Fehlermeldung unten läge am Telefon hinter der Tastatur; ein Hinweis, der warten kann, gehört nicht über die Suche",
+                    "risiko": "keines gemessen — test566 hält beide Lagen"
                 }
             ]
         }
