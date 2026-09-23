@@ -1,5 +1,20 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 23. September 2026 · E681 · Farben, Freitext und Stiftzubehör
+
+- GitHub abgeglichen: `main` bei `552b7a23`, zuletzt aktualisierter
+  Arbeitsbranch bei `a196b65d`; neuer Branch `codex/dokument-stift-freitext`.
+- Direkte Palette mit benannten Markerfarben, transparenter Papier-Vorschau,
+  Hex-Eingabe, Systemfarbwähler und bestehenden Farbsätzen.
+- Farbwahl im offenen Freitext erhält Entwurf und Cursor; Abbruch verliert
+  nichts. Kompositions-Escape bleibt beim Eingabesystem.
+- Texteingaben bündeln die Geometriearbeit pro Bild. Die aufgeklappte
+  Zubehörleiste zeigt nur Gruppen des aktiven Werkzeugs.
+- L209 Punkt 9 geschlossen; alte Striche, Werkzeugvorlieben, Farbsätze und
+  eigene Leistenordnung bleiben erhalten. Details und Grenzen in E681.
+- Neuer Wächter `test568`: alter Stand rot, umgesetzt 29 Zusagen grün.
+  Screenshots lokal in `bilder/`; kein Push und keine Veröffentlichung.
+
 ## 20. September 2026 · E666 · „Erinnerung" führt zu einer Erinnerung
 
 **Der Fund.** Der Slash-Eintrag „Erinnerung ⏰" schrieb `@remind ` in den

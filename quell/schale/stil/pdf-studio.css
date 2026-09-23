@@ -330,7 +330,9 @@ body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display
 @media (prefers-reduced-motion:reduce){.folienband-klapp{transition:none}}
 .document-studio[data-ink-options="open"] .blatt-werk{max-height:240px;flex-wrap:wrap!important;overflow:auto;width:min(850px,calc(100vw - 32px))}
 /* Die Klappe der freien Staerke (E465 Nachtrag) bleibt auch hier zu, bis die gewaehlte Stufe ein zweites Mal getippt wird — `.auf` zeigt sie dann in der Zeile. */
-.document-studio[data-ink-options="open"] .blatt-werk > .blatt-tafel > [data-gruppe]:not(.blatt-staerke){display:inline-flex!important}
+/* E681: Auch aufgeklappt bleibt Zubehör beim gewählten Werkzeug. Die
+   Grundregeln in bausteine.css bestimmen die Gruppen; Einrichten und
+   Verlauf werden oben bereits nur im geschlossenen Zustand ausgeblendet. */
 body[data-dokument="an"] .document-studio .blatt-marken[data-stift="an"]{touch-action:none}
 body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{touch-action:pan-x pan-y pinch-zoom}
 @media(max-width:760px){

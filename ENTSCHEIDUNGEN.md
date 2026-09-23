@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-659 Entscheidungen, E1 bis E679 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+661 Entscheidungen, E1 bis E681 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -722,8 +722,11 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E677** — Der Trainer wohnt im Lernzentrum: Redurs „flüssige lern app im redion … die app nicht getrennt" ist eine ANSICHT der Lernwelt (`trainer`) über gewöhnlichen Lernkarten, kein zweiter Speicher. Eine Aufgabe ist ein `flashcard`-Block mit einem Feld `quiz` (`mc` mit mehreren richtigen Antworten wie in der Prüfung, `schreiben` mit Musterlösung und Note, `luecke` getippt und nachsichtig verglichen); der Fortschritt geht allein über `WissenDienst.planen` in `sr`, und die fünf Boxen sind eine Ableitung daraus (neu, sonst `min(5, wdh+1)`). Falsches kommt in derselben Runde nach drei Karten noch einmal. Das Kapitel „Staatskunde — Leben in der Schweiz" ist eine Vorlage (`staatskunde-kapitel`), die sieben Prüfungsfragen des Lehrers wörtlich und zuoberst; `Register.vorlagen.bauen` baut seither auch gemeldete Vorlagen, nicht nur die der Galerie. Wächter `test565`, Bilder `node bilder.mts trainer trainerFrage trainerLuecke`. Der vorläufige Trainer (`lernen/staatskunde.html`) bleibt bis zu Redurs Wort stehen (L210).
 * **E678** — Der Streifen zur neuen Fassung steht unten: Redur, 22. September, „die neu laden buton unten bringen". `UI.banner` kennt neben der Art eine Lage (`info unten`): `top:auto; bottom:0`, am Telefon `bottom:var(--hunten)` — dieselbe Marke wie die Schublade, also genau über der unteren Leiste. Warnung und Fehler bleiben oben. Der Knopf „Jetzt laden" ist ein Knopf mit 44 px (`banner-tat`), vorher ein unterstrichenes Wort von 23 px. Wächter `test566`, Bild `node bilder.mts fassung`.
 * **E679** — Der Trainer kennt zwei Kapitel: Redur, 22. September, „erstelle mir direkt lerne quiz im redion für kapitel 5,6,7 … beschriftet mit nummern, seiten im nin compact, wie im test". `nin-quiz.ts` meldet die Vorlage `nin-kapitel-5-7` (106 Aufgaben, 34 Prüfungsfragen aus zwei Probeprüfungen mit Nummer und Punkten, jede Karte mit Seite in der NIN Compact). Der Trainer findet Kapitel über `Register.vorlagen` (`trainer: true`), nimmt Themennamen von der Karte (`quiz.topic`) und trennt die Kapitel in der Übersicht (`quiz.kapitel`); die Prüfungsrunde je Kapitel. Wächter `test567`, Bilder `node bilder.mts trainerNin trainerNinFrage`.
+* **E680** — Die Antworten werden bei jeder Anzeige gemischt: Redur, 22. September, „wieso ist immer die ersten 3 richtig es sollte nicht so sein random keine muster“. Gespeichert stehen die richtigen Antworten meist zuerst; der Trainer zeigte sie so. Jetzt mischt `zeige` die Plätze, `data-tr-option` bleibt der gespeicherte Platz, die Buchstaben folgen der Anzeige, die Auswertung dem Speicher. Wächter `test567 §8` (18 von 18 am gespeicherten Platz → rot).
 
 ---
+
+* **E681** — Direkte Farbwahl und unterbrechungsfreier Freitext: benannte Stift-/Markerpalette, Hex-Feld, echte Deckung in der Vorschau, dieselbe Farbaktion wie im Dock. Textentwurf und Cursor überleben den Farbwähler; Eingabegeometrie höchstens einmal pro Bild, IME-Escape beendet nicht den Text. Auch aufgeklappt bleibt Zubehör werkzeugbezogen. Bestehende Marken, Farbsätze, Werkzeuggedächtnis und eigene Ordnung bleiben. Wächter `test568`, Nachbarn `test458`, `test515`, `test524`, `test527` und Stiftregressionen.
 
 ## Grundregel
 
@@ -55543,3 +55546,104 @@ für Lücken den ganzen Text. Nachbarn test565 (angepasst: „Staatskunde wird
 nicht mehr angeboten" statt „nichts wird angeboten"), 105, 109, 537, 550,
 549, 87, 362, 401, 402. Bilder: `node bilder.mts trainerNin
 trainerNinFrage`, Rechner und Telefon.
+---
+
+## E680 — Die Antworten werden bei jeder Anzeige gemischt
+
+**Datum:** 22. September 2026 · **Wächter:** `test567 §8`
+
+**Redur:** „alter wieso ist immer die ersten 3 richtig es sollte nicht so
+sein random keine muster“.
+
+**Was war.** In `nin-quiz.ts` und `staatskunde-inhalt.ts` stehen die
+richtigen Antworten einer Ankreuzaufgabe meist zuerst und die falsche
+zuletzt (`richtig: [0, 1, 2]`, 28 von 36 NIN-Aufgaben). Das ist beim
+Schreiben bequem und beim Lernen tödlich: wer es einmal gesehen hat,
+kreuzt a) b) c) an und lernt nichts. Der Trainer zeigte die Antworten in
+der gespeicherten Reihenfolge. Gemessen: bei 18 Ankreuzkarten stand die
+falsche Antwort 18-mal genau dort, wo sie gespeichert war.
+
+**Was wurde entschieden?** Der Trainer mischt die Plätze bei **jeder
+Anzeige** (`mischen`, dieselbe Funktion wie für die Runde). Das Kästchen
+trägt weiter den gespeicherten Platz (`data-tr-option`), damit die
+Auswertung gegen `optionen[i].richtig` unverändert bleibt; die Buchstaben
+a) bis d) folgen der Anzeige. Die Daten bleiben, wie sie sind — die
+Reihenfolge auf der Seite ist Nutzerdatum und darf so stehen.
+
+**Was war die Alternative?** Die Daten umsortieren: ein Muster gegen ein
+anderes tauschen, und jede Karte, die ein Mensch später anlegt, hätte das
+Problem wieder. Oder einmal je Karte fest mischen (mit der Kennung als
+Saat): dann sieht man beim dritten Mal wieder dasselbe Bild.
+
+**Was kostet es?** Die Wächter müssen das Urteil je gespeichertem Platz
+lesen, nicht je Anzeigeplatz (`test565` angepasst). Und das Bild
+`trainerNinFrage` zeigt bei jedem Lauf eine andere Ordnung — so soll es
+sein.
+
+**Wächter `test567 §8`**, fünf Zusagen: bei zwanzig Karten steht die
+falsche Antwort gespeichert meist zuletzt, angezeigt aber an mindestens
+drei verschiedenen Plätzen; Buchstaben folgen der Anzeige; alle Richtigen
+über den gespeicherten Platz angekreuzt heisst „Richtig.“. Gegen den alten
+Stand rot: „[3,3,3,3,3,3,3,3,1,3,3,3,3,1,1,1,3,3]“.
+
+---
+
+## E681 — Farbe direkt wählen und im Freitext weiterschreiben
+
+**Datum:** 23. September 2026 · **Wächter:** `test568`
+
+**Auftrag.** Den aktuellen GitHub-Stand prüfen, im Dokumentbereich Zeichnen,
+Stiftfarben, Markieren, Freitext und Zubehörordnung verbessern. Basis ist
+`a196b65d` vom zuletzt aktualisierten Remote-Branch; `origin/main` steht bei
+`552b7a23`. Eigener Arbeitsbranch: `codex/dokument-stift-freitext`.
+
+**Entscheidung.** „+“ bei den Tupfern öffnet ohne Zwischendialog eine
+`InkMenu`-Palette. Die fünf Grundfarben bleiben, der Marker erhält sechs
+benannte Farbvorschläge. Dazu kommen die vorhandenen vier zuletzt benutzten
+Farben, ein strikt geprüftes `#rrggbb`-Feld und der Systemfarbwähler. Eine
+Vorschau zeigt dieselbe Deckung wie der Zeichner, auf Papierweiss statt
+auf dem dunklen Dock. Farbsätze und Stifteinstellungen bleiben in ihrer
+bisherigen Verwaltung erreichbar — kein neuer Speicher, kein Favoritenkatalog.
+
+Die Palette löst dieselbe Tupferaktion aus wie die Leiste. Der erste Entwurf
+setzte nur die Ink-Farbe: Die Strichprobe blieb violett, obwohl der neue
+Marker gelb zeichnete; nach Neuladen wurde die Dokumentvorliebe schwarz
+(beim Marker gelb dargestellt). Bildkontrolle und ergänzte Zusagen in
+`test568` machten das sichtbar. Der gemeinsame Klickweg aktualisiert jetzt
+Zeichner, Probe und Dokumentvorliebe zusammen.
+
+**Freitext.** Fokuswechsel zur Farbpalette halten den Entwurf offen und
+merken die Einfügestelle. Übernehmen und Escape führen dorthin zurück;
+Aussenklick übernimmt den Entwurf, ohne Fokus zurückzustehlen. Das gilt
+auch für den Popover-Ersatzweg. Während einer Eingabekomposition beendet
+Escape nicht die Notiz. Mehrere `input`-Ereignisse im selben Bild bündeln
+ihre Geometriearbeit in einem `requestAnimationFrame`; Schliessen räumt den
+ausstehenden Auftrag auf. Der Text selbst wächst weiterhin sofort nativ.
+
+**Zubehör.** Die aufgeklappte Studioleiste erzwingt nicht mehr die Anzeige
+aller fremden Gruppen. Die vorhandene Zuordnung Werkzeug → Zubehör bleibt
+auch dort gültig. Einrichten und eigene Reihenfolge bleiben verfügbar.
+
+**Alternative und Kosten.** Nur den Browserfarbwähler zu behalten wäre
+kleiner, böte aber weder transparente Vorschau noch direktes Hex. Eine
+komplett neue Zeichenengine wäre ein anderer Auftrag mit Risiken für alte
+Striche. Hier kommen ein kleines UI-Feld, ein optionaler Abschlussrückruf
+in `InkMenu` und flüchtiger Textfokuszustand hinzu. Keine Datenmigration,
+keine neue Abhängigkeit, keine Cloud, kein neuer Querverweis zwischen Bereichen.
+
+**Beleg und Grenzen.** Der erste neue Wächter war gegen den alten Stand
+rot (kein direktes Farbfeld). Im gebauten Stand hält `test568` 29 Zusagen:
+Text/Cursor/Farbe, Komposition, Abbruch, Ersatz-Popover, echte Markerfarbe,
+Strichprobe, Neuladen, passendes Zubehör, 44-px-Treffflächen und 320/390-px-
+Fenster. 20 synchrone Eingaben lösen genau eine Geometrielesung aus.
+Screenshots aus der echten App liegen lokal unter
+`bilder/stift-farben-rechner.png` und `bilder/stift-farben-handy.png`.
+Das ist keine gemessene Apple-Pencil-/Surface-Latenz und keine Veränderung
+der bestehenden Druckkurve; die offenen Strichfragen in L209 bleiben offen.
+
+**Bestehender Prüfungsfehler:** `test537` bleibt bei 518 gegen 517 rot,
+genau wie in einer frischen Extraktion der GitHub-Basis `a196b65d`.
+L207 bleibt offen; kein Aufweichen des Bereichs-Verzeichnisses. Typprüfung,
+TypeScript-Bau und Einzeldatei-Bau sind erfolgreich. Der Einzeldatei-Bau
+zieht auch die bisher dort fehlenden Änderungen der GitHub-Basis nach;
+deshalb ist dessen erzeugter Unterschied grösser als dieser UI-Bogen.

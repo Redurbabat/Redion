@@ -1,5 +1,36 @@
 # MESSUNGEN.md — was wirklich gemessen wurde
 
+## 23. September 2026 · E681 · Farbwahl und Schreibfluss
+
+**Methode:** Playwright/Chromium, eigener lokaler Dateiserver, frisch
+angelegtes Testheft, keine Nutzerdokumente. `node pruefungen/lauf/test568.mts`.
+Rechner 1440 × 960; schmale Fenster 390 × 844 und 320 × 844 mit reduzierter
+Bewegung. Die schmalen Fenster sind kein Test auf physischer Touch-Hardware.
+
+| Messung | Ergebnis |
+|---|---|
+| Direkte Palette nach einem Klick, alter Stand | fehlt, neuer Wächter rot |
+| Neuer Stand | 29/29 Zusagen grün |
+| 20 synchrone Eingabeereignisse | genau 1 Geometrielesung im nächsten Bild |
+| Marker-Vorschau | Deckung 0,32 wie der vorhandene Zeichner |
+| Neues Gelb | `#ffcf33` an echter Marke, Strichprobe und nach Neuladen |
+| Ungültiges Hex | Übernehmen gesperrt, `aria-invalid=true`, Erklärung sichtbar |
+| Text nach Formatieren an Position 0 | `Wichtig: Meine Notiz`, dieselbe Textmarke |
+| Palette bei 320/390 px | vollständig im Fenster, Farbauswahl mindestens 44 × 44 px |
+| Laufzeitfehler | 0 |
+
+**Gefundener Zwischenfehler:** Der erste Palettenentwurf aktualisierte
+die Strichprobe und Dokumentvorliebe nicht. Am echten Screenshot erkannt,
+durch zusätzliche rote Zusagen gehalten, über den bestehenden Tupfer-Klickweg
+behoben. Bestehende Druck-/Glättungsalgorithmen unverändert; keine behauptete
+Millisekundenverbesserung auf einem echten Stifttablet.
+
+**Abgrenzung des Altfehlers:** `test537` meldet 518 Querverweise gegen
+517 erlaubte. Derselbe Lauf wurde in einer frischen temporären Extraktion
+von `a196b65d` (unveränderte GitHub-Basis) ausgeführt: ebenfalls 518/517,
+16 Zusagen grün, 1 rot. Das ist der schon dokumentierte Befund L207; das
+Verzeichnis wurde weder erweitert noch der Wächter abgeschwächt.
+
 Diese Datei hält **Zahlen** fest, keine Absichten. Sie ist das Gegenstück zu
 `ENTSCHEIDUNGEN.md` (warum etwas so ist) und `LUECKEN.md` (was fehlt): hier
 steht, **was beim Nachsehen herauskam** — vorher und nachher, mit der

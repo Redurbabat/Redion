@@ -312,9 +312,14 @@ const Trainer = (() => {
         let rumpf = '';
         if (kind === 'mc') {
             const optionen = Array.isArray(k.quiz.optionen) ? k.quiz.optionen : [];
+            /* Die Antworten werden bei JEDER Anzeige gemischt (E680). Gespeichert
+               stehen die richtigen meist zuerst — wer das einmal gesehen hat,
+               kreuzt a) b) c) an und lernt nichts. `data-tr-option` bleibt der
+               gespeicherte Platz, die Buchstaben folgen der Anzeige. */
+            const reihenfolge = mischen(optionen.map((_, i) => i));
             rumpf = `<h3 class="lw-trainer-frage">${esc(frageVon(k))}</h3>
         <p class="lw-trainer-anweisung">Kreuzen Sie die richtige(n) Antwort(en) an.</p>
-        <div class="lw-trainer-optionen">${optionen.map((o, i) => `<label class="lw-trainer-option"><input type="checkbox" data-tr-option="${i}"><span class="lw-trainer-option-text"><b>${'abcdefgh'[i] ?? ''})</b> ${esc(o.text)}</span></label>`).join('')}</div>
+        <div class="lw-trainer-optionen">${reihenfolge.map((i, platz) => `<label class="lw-trainer-option"><input type="checkbox" data-tr-option="${i}"><span class="lw-trainer-option-text"><b>${'abcdefgh'[platz] ?? ''})</b> ${esc(optionen[i]?.text ?? '')}</span></label>`).join('')}</div>
         <div class="lw-trainer-ergebnis" aria-live="polite"></div>
         <div class="lw-rating lw-trainer-fuss">${knopf('Prüfen', 'data-tr-pruefen', 'is-primary')}</div>`;
         }

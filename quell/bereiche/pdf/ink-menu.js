@@ -37,7 +37,7 @@ const InkMenu = (() => {
             node.remove();
         });
     };
-    const open = (anchor, title, build) => {
+    const open = (anchor, title, build, onClose) => {
         closeAll('weg');
         const panel = document.createElement('div');
         panel.className = 'blatt-popover';
@@ -126,6 +126,7 @@ const InkMenu = (() => {
                 if (warum === 'escape' || warum === 'knopf')
                     anchor.focus({ preventScroll: true });
             }
+            onClose?.(warum);
         }
         document.body.append(panel);
         position();

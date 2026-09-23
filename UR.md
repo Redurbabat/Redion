@@ -2201,6 +2201,17 @@ Der Punkt des breiten Füllers. Nach E673 war test561 grün — 22 von 22 —, u
 **Besserer Prompt:** Der Satz hat alles Nötige gesagt — „wie im test" war die wichtigste Angabe, weil er damit die zwei Probeprüfungen meinte, die wir vorher aus seinen echten Tests abgeleitet hatten. Offen blieb nur, ob das zweite Kapitel NEBEN der Staatskunde stehen soll; das war es.
 
 
+**4 · ca. 19:30**
+
+> alter wieso ist immer die ersten 3 richtig es sollte nicht so sein random keine muster
+
+**Gemeint:** Bei den Ankreuzaufgaben stehen die richtigen Antworten immer vorne (a, b, c) und die falsche hinten. Das ist ein Muster, mit dem man ohne Wissen richtig ankreuzt. Die Reihenfolge soll zufällig sein.
+
+**Besser geschrieben:** Misch die Antworten bei jeder Frage — im Moment sind immer die ersten drei richtig.
+
+**Besserer Prompt:** Passt so. Er hat es beim ersten Üben gesehen, ich beim Schreiben von 36 Aufgaben nicht — genau der Blick, den §55 meint.
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -2208,17 +2219,18 @@ Der Punkt des breiten Füllers. Nach E673 war test561 grün — 22 von 22 —, u
 | E677 — der Trainer wohnt im Lernzentrum: trainer.ts (Boxen aus sr, Runde im Meta-Fach, MC/Schreiben/Lücke), staatskunde-inhalt.ts als Vorlage, Register.vorlagen.bauen mit Rückfall, Lernwelt-Ansicht + Kachel, Route, Skripteinträge, Stil, drei Bildziele, E677/L210/§30 | `f7f47c7` → `3cdc1f8` | ca. 04:50 – 06:10 | ca. 1 h 20 min | test565 (neu, 54 Zusagen; vorher 1/21 mit Abbruch; erster Stand 53/54; Gegenprobe 52/54), Nachbarn 32 87 105 109 143 206 217 222 272 290 362 401 402 484 537 547 549 550 481 |
 | E678 — der Streifen zur neuen Fassung steht unten: UI.banner kennt die Lage „unten“ (am Telefon über der Leiste, --hunten), der Knopf ist ein 44-px-Knopf (banner-tat) statt eines unterstrichenen Worts | `5c49465` → `bcaeb55` | ca. 06:20 – 06:45 | ca. 25 min | test566 (neu, 11 Zusagen; vorher 5/11; Gegenprobe 9/11), Nachbarn 87 319 332 362 401 402 (362 einmal rot: ein rohes 16px → --space-4) |
 | E679 — der Trainer kennt zwei Kapitel: nin-quiz.ts (106 Aufgaben aus den Kapitelblättern 5.1, 6.1, 7.1–7.6, der NIN Compact 2024, den Folien des Lehrers und der NEV; 34 davon Prüfungsfragen mit Nummer und Punkten), Trainer findet Kapitel über Register.vorlagen statt über einen Namen im Code, Übersicht je Kapitel, zwei Skripteinträge, Stil, zwei Bildziele, E679/§30 | `0db1cc1` → `(dieser Bogen)` | ca. 18:30 – 19:15 | ca. 45 min | test567 (neu, 34 Zusagen; ohne Skripteinträge 8 rot und Abbruch; erster gebauter Stand 33/34; Gegenprobe 31/34), Nachbarn 565 (angepasst) 105 109 537 550 549 87 362 401 402 |
+| E680 — die Antworten werden bei jeder Anzeige gemischt; test565 liest das Urteil je gespeichertem Platz; test567 §8 misst das Muster | `d7e15f7` → `(dieser Bogen)` | ca. 19:30 – 19:50 | ca. 20 min | test567 (39 Zusagen; gegen den alten Stand rot: die falsche Antwort 18 von 18 am gespeicherten Platz), test565 54/54 |
 
 #### Zahlen des Tages
 
-- **commits:** 5
-- **entscheidungen:** 3
+- **commits:** 6
+- **entscheidungen:** 4
 - **neue Prüfläufe:** 3
 - **volle Läufe:** 0
 
 #### Das grösste Problem
 
-Die Reihenfolge der Prüfungsfragen. test565 war gegen den ersten Stand bei 53 von 54, und die rote Zeile hiess „wortgleich=false“: Trainer.karten() sortierte nach created, die Vorlage legt alle 57 Karten in derselben Millisekunde an, und die Seite war nach Thema gruppiert — Frage 5 (Gewaltentrennung) kam vor Frage 4 (Parlament). Ohne den Vergleich Zeichen für Zeichen mit dem Inhalt hätte niemand es gesehen: Karte 1 war Frage 1, und das sah richtig aus (P106).
+Die Reihenfolge der Prüfungsfragen. test565 war gegen den ersten Stand bei 53 von 54, und die rote Zeile hiess „wortgleich=false“: Trainer.karten() sortierte nach created, die Vorlage legt alle 57 Karten in derselben Millisekunde an, und die Seite war nach Thema gruppiert — Frage 5 (Gewaltentrennung) kam vor Frage 4 (Parlament). Ohne den Vergleich Zeichen für Zeichen mit dem Inhalt hätte niemand es gesehen: Karte 1 war Frage 1, und das sah richtig aus (P106). — Und am Abend ein zweites, kleiner, aber lehrreicher: 36 Ankreuzaufgaben geschrieben, in 28 davon die richtigen Antworten zuerst und die falsche zuletzt. Ich habe es beim Schreiben nicht gesehen, Redur beim ersten Üben sofort: „immer die ersten 3 richtig“. Ein Muster in den Daten ist ein Fehler im Produkt, wenn das Produkt die Daten so zeigt (E680).
 
 #### Das Interessanteste, das Redur wollte
 

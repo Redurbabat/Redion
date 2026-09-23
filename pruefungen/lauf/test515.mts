@@ -245,9 +245,14 @@ console.log('\n§5 Und Redion kann es jetzt selbst — der Knopf in der Zeichenl
     return b ? Math.round(b.getBoundingClientRect().width) : -1;
   });
   gleich('Vor „···" ist er eingeklappt (wie `fett` auch)', vorher, 0);
+  /* E681: Schrift gehört zum Textwerkzeug, nicht zu jeder offenen
+     Zubehörtafel. Erst den Text wählen; der echte Knopf bleibt geprüft. */
   await seite.evaluate(() =>
     document.querySelector<HTMLElement>('[data-document-action="ink-options"]')?.click());
   await seite.waitForTimeout(400);
+  /* Folien haben ein eigenes oberes Band. Im geöffneten Zubehör liegt der
+     gemeinsame Werkzeugknopf tatsächlich sichtbar, nicht dessen PDF-Kopie. */
+  await seite.locator('.blatt-werk [data-wz="text"]').click();
   const knopf = await seite.evaluate(() => {
     const b = document.querySelector<HTMLButtonElement>('[data-act="ausricht"]');
     if (!b) return { da: false, jetzt: '', breite: 0, hoehe: 0, sichtbar: false, imBild: false };

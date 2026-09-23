@@ -37,7 +37,8 @@ const InkMenu = (() => {
     });
   };
 
-  const open = (anchor: HTMLElement, title: string, build: (body: HTMLElement, close: () => void) => void): void => {
+  const open = (anchor: HTMLElement, title: string, build: (body: HTMLElement, close: () => void) => void,
+    onClose?: (reason: Grund) => void): void => {
     closeAll('weg');
     const panel = document.createElement('div');
     panel.className = 'blatt-popover';
@@ -111,6 +112,7 @@ const InkMenu = (() => {
            nichts zurück: die Umgebung ist fort, da gibt es kein Zurück. */
         if (warum === 'escape' || warum === 'knopf') anchor.focus({ preventScroll: true });
       }
+      onClose?.(warum);
     }
 
     document.body.append(panel); position();
