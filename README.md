@@ -1211,6 +1211,19 @@ nichts in der Sicherung. Er ist ein Finger, kein Stift.
 Fünf Farben und drei Strichbreiten stehen vorn; dazu kommen bis zu vier
 eigene Farben und ein Regler von 0,5 bis 12.
 
+Das **+ bei den Farben** öffnet direkt eine Palette: benannte Grundfarben,
+sechs Markerfarben mit transparenter Vorschau auf Papier, zuletzt verwendete
+Farben, Hex-Eingabe und Systemfarbwähler. Unter „Farbsätze &
+Stifteinstellungen“ bleiben deine gesicherten Einstellungen erreichbar.
+Einen Farbtupfer auswählen wirkt sofort; eigene Farben aus Hex-Eingabe oder
+Systemfarbwähler erst mit „Farbe übernehmen“.
+
+Mit **Text** aufs Blatt tippen und direkt schreiben. Beim Öffnen der
+Farbpalette bleibt der Entwurf erhalten; nach Übernehmen oder Escape
+geht es an derselben Cursorstelle weiter. Strg/Cmd + Enter oder Escape
+beendet die Notiz. Auch unter **···** zeigt das Dokumentstudio nur Zubehör
+zum aktiven Werkzeug; „Einrichten“ bleibt zum eigenen Ordnen verfügbar.
+
 Die Werkzeugleiste oben schaltet zwischen „Schreiben" und den Ink-Werkzeugen um. Beim
 Schreiben geht der Zeiger an der Zeichenschicht vorbei, beim Malen liegt sie
 darüber — man markiert also nicht versehentlich Text, während man zeichnet.

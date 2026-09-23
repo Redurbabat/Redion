@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-660 Entscheidungen, E1 bis E680 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+661 Entscheidungen, E1 bis E681 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -725,6 +725,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E680** — Die Antworten werden bei jeder Anzeige gemischt: Redur, 22. September, „wieso ist immer die ersten 3 richtig es sollte nicht so sein random keine muster“. Gespeichert stehen die richtigen Antworten meist zuerst; der Trainer zeigte sie so. Jetzt mischt `zeige` die Plätze, `data-tr-option` bleibt der gespeicherte Platz, die Buchstaben folgen der Anzeige, die Auswertung dem Speicher. Wächter `test567 §8` (18 von 18 am gespeicherten Platz → rot).
 
 ---
+
+* **E681** — Direkte Farbwahl und unterbrechungsfreier Freitext: benannte Stift-/Markerpalette, Hex-Feld, echte Deckung in der Vorschau, dieselbe Farbaktion wie im Dock. Textentwurf und Cursor überleben den Farbwähler; Eingabegeometrie höchstens einmal pro Bild, IME-Escape beendet nicht den Text. Auch aufgeklappt bleibt Zubehör werkzeugbezogen. Bestehende Marken, Farbsätze, Werkzeuggedächtnis und eigene Ordnung bleiben. Wächter `test568`, Nachbarn `test458`, `test515`, `test524`, `test527` und Stiftregressionen.
 
 ## Grundregel
 
@@ -55583,3 +55585,65 @@ falsche Antwort gespeichert meist zuletzt, angezeigt aber an mindestens
 drei verschiedenen Plätzen; Buchstaben folgen der Anzeige; alle Richtigen
 über den gespeicherten Platz angekreuzt heisst „Richtig.“. Gegen den alten
 Stand rot: „[3,3,3,3,3,3,3,3,1,3,3,3,3,1,1,1,3,3]“.
+
+---
+
+## E681 — Farbe direkt wählen und im Freitext weiterschreiben
+
+**Datum:** 23. September 2026 · **Wächter:** `test568`
+
+**Auftrag.** Den aktuellen GitHub-Stand prüfen, im Dokumentbereich Zeichnen,
+Stiftfarben, Markieren, Freitext und Zubehörordnung verbessern. Basis ist
+`a196b65d` vom zuletzt aktualisierten Remote-Branch; `origin/main` steht bei
+`552b7a23`. Eigener Arbeitsbranch: `codex/dokument-stift-freitext`.
+
+**Entscheidung.** „+“ bei den Tupfern öffnet ohne Zwischendialog eine
+`InkMenu`-Palette. Die fünf Grundfarben bleiben, der Marker erhält sechs
+benannte Farbvorschläge. Dazu kommen die vorhandenen vier zuletzt benutzten
+Farben, ein strikt geprüftes `#rrggbb`-Feld und der Systemfarbwähler. Eine
+Vorschau zeigt dieselbe Deckung wie der Zeichner, auf Papierweiss statt
+auf dem dunklen Dock. Farbsätze und Stifteinstellungen bleiben in ihrer
+bisherigen Verwaltung erreichbar — kein neuer Speicher, kein Favoritenkatalog.
+
+Die Palette löst dieselbe Tupferaktion aus wie die Leiste. Der erste Entwurf
+setzte nur die Ink-Farbe: Die Strichprobe blieb violett, obwohl der neue
+Marker gelb zeichnete; nach Neuladen wurde die Dokumentvorliebe schwarz
+(beim Marker gelb dargestellt). Bildkontrolle und ergänzte Zusagen in
+`test568` machten das sichtbar. Der gemeinsame Klickweg aktualisiert jetzt
+Zeichner, Probe und Dokumentvorliebe zusammen.
+
+**Freitext.** Fokuswechsel zur Farbpalette halten den Entwurf offen und
+merken die Einfügestelle. Übernehmen und Escape führen dorthin zurück;
+Aussenklick übernimmt den Entwurf, ohne Fokus zurückzustehlen. Das gilt
+auch für den Popover-Ersatzweg. Während einer Eingabekomposition beendet
+Escape nicht die Notiz. Mehrere `input`-Ereignisse im selben Bild bündeln
+ihre Geometriearbeit in einem `requestAnimationFrame`; Schliessen räumt den
+ausstehenden Auftrag auf. Der Text selbst wächst weiterhin sofort nativ.
+
+**Zubehör.** Die aufgeklappte Studioleiste erzwingt nicht mehr die Anzeige
+aller fremden Gruppen. Die vorhandene Zuordnung Werkzeug → Zubehör bleibt
+auch dort gültig. Einrichten und eigene Reihenfolge bleiben verfügbar.
+
+**Alternative und Kosten.** Nur den Browserfarbwähler zu behalten wäre
+kleiner, böte aber weder transparente Vorschau noch direktes Hex. Eine
+komplett neue Zeichenengine wäre ein anderer Auftrag mit Risiken für alte
+Striche. Hier kommen ein kleines UI-Feld, ein optionaler Abschlussrückruf
+in `InkMenu` und flüchtiger Textfokuszustand hinzu. Keine Datenmigration,
+keine neue Abhängigkeit, keine Cloud, kein neuer Querverweis zwischen Bereichen.
+
+**Beleg und Grenzen.** Der erste neue Wächter war gegen den alten Stand
+rot (kein direktes Farbfeld). Im gebauten Stand hält `test568` 29 Zusagen:
+Text/Cursor/Farbe, Komposition, Abbruch, Ersatz-Popover, echte Markerfarbe,
+Strichprobe, Neuladen, passendes Zubehör, 44-px-Treffflächen und 320/390-px-
+Fenster. 20 synchrone Eingaben lösen genau eine Geometrielesung aus.
+Screenshots aus der echten App liegen lokal unter
+`bilder/stift-farben-rechner.png` und `bilder/stift-farben-handy.png`.
+Das ist keine gemessene Apple-Pencil-/Surface-Latenz und keine Veränderung
+der bestehenden Druckkurve; die offenen Strichfragen in L209 bleiben offen.
+
+**Bestehender Prüfungsfehler:** `test537` bleibt bei 518 gegen 517 rot,
+genau wie in einer frischen Extraktion der GitHub-Basis `a196b65d`.
+L207 bleibt offen; kein Aufweichen des Bereichs-Verzeichnisses. Typprüfung,
+TypeScript-Bau und Einzeldatei-Bau sind erfolgreich. Der Einzeldatei-Bau
+zieht auch die bisher dort fehlenden Änderungen der GitHub-Basis nach;
+deshalb ist dessen erzeugter Unterschied grösser als dieser UI-Bogen.

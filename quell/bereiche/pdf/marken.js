@@ -3448,6 +3448,25 @@ const Marken = (() => {
             return { text, laeufe };
         };
         let schreiber = null;
+        let writerRange = null;
+        let writerFrame = 0;
+        /* E681: Ein Formatwechsel darf weder den Entwurf noch die Einfügestelle
+           verlieren. Nur ausdrücklich zurückkehren — nie nach einem Aussenklick. */
+        const resumeWriting = () => {
+            if (!schreiber?.feld.isConnected)
+                return;
+            schreiber.feld.focus({ preventScroll: true });
+            if (writerRange && schreiber.feld.contains(writerRange.commonAncestorContainer)) {
+                const selection = getSelection();
+                selection?.removeAllRanges();
+                selection?.addRange(writerRange);
+            }
+        };
+        const scheduleWriterLayout = () => {
+            if (writerFrame)
+                return;
+            writerFrame = requestAnimationFrame(() => { writerFrame = 0; schreiberLegen(); });
+        };
         /**
          * Der Text, den eine Textmarke WIRKLICH zeigt.
          *
@@ -3558,6 +3577,9 @@ const Marken = (() => {
             /* ZUERST ABMELDEN: `feld.remove()` löst `blur` aus, und das käme sonst
                genau hier wieder herein. */
             schreiber = null;
+            cancelAnimationFrame(writerFrame);
+            writerFrame = 0;
+            writerRange = null;
             offen.beobachter?.disconnect();
             const gelesen = feldLesen(offen.feld);
             const text = gelesen.text;
@@ -3691,7 +3713,9 @@ const Marken = (() => {
             }
             schreiber = { feld, ziel: vorhanden ? idOf(vorhanden) : '', before, entwurf, beobachter };
             schreiberLegen();
-            feld.addEventListener('input', () => schreiberLegen());
+            /* Das Feld wächst selbst; die Blattgeometrie höchstens einmal pro Bild
+               lesen, auch wenn mehrere Eingabeereignisse zusammen ankommen. */
+            feld.addEventListener('input', scheduleWriterLayout);
             /* ══ EINGEFÜGT WIRD NUR REINER TEXT (§19, E606) ══════════════════════
                Ein `contenteditable` nimmt sonst alles, was in der Zwischenablage
                liegt — samt Elementen, Stilen und allem, was daran hängt. Der
@@ -3720,16 +3744,28 @@ const Marken = (() => {
                 + ' [data-act], [data-wz], [data-document-action], [data-document-tool]';
             feld.addEventListener('blur', event => {
                 const ziel = event.relatedTarget;
+                const selection = getSelection();
+                writerRange = selection?.rangeCount && feld.contains(selection.getRangeAt(0).commonAncestorContainer)
+                    ? selection.getRangeAt(0).cloneRange() : null;
+                if (ziel?.closest('.blatt-color-panel, .blatt-popover:has(.blatt-color-panel)'))
+                    return;
                 if (ziel && typeof ziel.closest === 'function' && ziel.closest(LEISTEN)) {
                     setTimeout(() => {
-                        if (schreiber && schreiber.feld === feld && feld.isConnected)
-                            feld.focus({ preventScroll: true });
+                        if (schreiber && schreiber.feld === feld && feld.isConnected
+                            && !document.querySelector('.blatt-color-panel'))
+                            resumeWriting();
                     }, 0);
                     return;
                 }
                 schreiberSchliessen();
             });
             feld.addEventListener('keydown', event => {
+                /* E681: Escape/Enter gehören während einer Texteingabekomposition
+                   dem Eingabesystem, nicht dem Abschliessen der ganzen Notiz. */
+                if (event.isComposing) {
+                    event.stopPropagation();
+                    return;
+                }
                 /* ESCAPE BEENDET UND BEHÄLT. In OneNote verlässt Escape den Kasten;
                    es wirft ihn nicht weg. Und es darf nicht weiter nach oben laufen,
                    sonst schliesst derselbe Tastendruck das ganze Studio (E302). */
@@ -4918,7 +4954,7 @@ const Marken = (() => {
         const formenAn = () => formen;
         const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, setzeRadierModus, radierModusVon, copySelection, paste, marken: marks,
             undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn, setzeFormen, formenAn, bildEinfuegen,
-            setzeSchrift, schriftVon,
+            setzeSchrift, schriftVon, resumeWriting, finishWriting: schreiberSchliessen,
             /* E466: Auswahl wie GoodNotes. */
             cutSelection, nachVorn, nachHinten, sperren, gesperrtGewaehlt,
             /* E468: ein Verweis an der Auswahl. */
@@ -5956,10 +5992,9 @@ const Marken = (() => {
           
                    Der Weg heraus ist der, den GoodNotes ohnehin geht: dort führt EIN
                    Farbknopf in ein Feld, in dem sowohl der Farbwähler als auch die
-                   Paletten stehen. Also hier auch — „+" öffnet die Wahl, ihr erster
-                   Eintrag ist der Farbwähler. Ein Tipp mehr für eine eigene Farbe,
-                   kein Tipp mehr für die fünf festen und die eigenen Tupfer, und die
-                   Leiste bleibt bei zwei Zeilen. */
+                   Paletten stehen. Seit E681 öffnet „+“ direkt die Palette samt
+                   Hex-Feld; die Verwaltung der Farbsätze liegt darin. Die festen
+                   und eigenen Tupfer bleiben ohne zusätzlichen Tipp erreichbar. */
                 '<button class="blatt-farbe-neu" data-act="farbe" data-gruppe="farbe" ' +
                 'title="Farben — eine eigene wählen oder Farbsätze sichern, laden, zurücksetzen" ' +
                 'aria-label="Farben: eigene Farbe wählen oder Farbsätze">+</button>' +
@@ -6493,11 +6528,11 @@ const Marken = (() => {
             if (aktiv)
                 tools.querySelectorAll('.blatt-farbe').forEach(node => node.classList.toggle('on', node.dataset.c === aktiv));
         };
-        /* DER DIALOG HINTER DEM „+" (E486).
+        /* DIE FARBSATZ-VERWALTUNG (E486, seit E681 hinter der direkten Palette).
     
            Sein erster Eintrag ist der Farbwähler — der Weg, den E351 gebaut hat
-           und der hier ein Tipp tiefer liegt als vorher. Der Grund steht oben am
-           Knopf: die Zubehörzeile fasst keinen fünfzehnten Knopf.
+           und der als alternativer Zugang erhalten bleibt. Der häufige Weg
+           führt jetzt direkt über die Palette, ohne diesen Verwaltungsdialog.
     
            DREI SACHEN AN IHM SIND ABSICHT:
     
@@ -6538,6 +6573,132 @@ const Marken = (() => {
             feld.addEventListener('change', uebernehmen, { once: true });
             feld.addEventListener('cancel', () => feld.remove(), { once: true });
             feld.click();
+        };
+        /* E681: Farbe ist ein direkter Griff. Die fünf bisherigen Tupfer und
+           gespeicherten Sätze bleiben; die Markerpalette gilt nur für neue
+           Entscheidungen, niemals rückwirkend für vorhandene Marken. */
+        const openColorPanel = (anchor) => {
+            const tool = String(Zeichenziel.werkzeugVon(controls) || 'stift');
+            const marker = tool === 'marker';
+            const palette = marker ? [
+                ['#ffcf33', 'Sonnengelb'], ['#79cf8b', 'Mintgrün'], ['#65c9ed', 'Himmelblau'],
+                ['#ed91be', 'Rosé'], ['#b39aef', 'Lavendel'], ['#f3aa66', 'Apricot']
+            ] : FARBEN.map(value => [value, FARBNAMEN[value] || value]);
+            InkMenu.open(anchor, marker ? 'Markerfarben' : 'Stift- & Textfarben', (body, close) => {
+                body.classList.add('blatt-color-panel');
+                body.dataset.colorTool = tool;
+                let selected = String(Zeichenziel.farbeVon(controls) || FARBEN[0]).toLowerCase();
+                if (marker && selected === FARBEN[0])
+                    selected = MARKER_FARBE;
+                const preview = document.createElement('div');
+                preview.className = 'blatt-color-preview';
+                const sample = document.createElement('span');
+                sample.textContent = marker ? 'Text bleibt lesbar' : 'Meine Notiz';
+                const ink = document.createElement('i');
+                ink.setAttribute('aria-hidden', 'true');
+                ink.style.opacity = String(deckungVon(tool, stiftJetzt()));
+                preview.append(sample, ink);
+                const caption = document.createElement('p');
+                caption.className = 'blatt-color-caption';
+                caption.textContent = marker ? 'Markieren · transparente Tinte auf Papier' : 'Schreiben & Zeichnen';
+                body.append(preview, caption);
+                const apply = (value) => {
+                    if (!/^#[0-9a-f]{6}$/.test(value))
+                        return;
+                    const recent = eigeneFarbeMerken(value);
+                    tupferZeigen(recent, value);
+                    /* Derselbe Weg wie die Leiste: trägt auch die Strichprobe und
+                       die Dokumentvorliebe nach. Ein zweiter Setzer vergässe beides. */
+                    tools.querySelector(`.blatt-farbe[data-c="${value}"]`)?.click();
+                    markiere();
+                    close();
+                };
+                const addSwatches = (colors, label) => {
+                    const grid = document.createElement('div');
+                    grid.className = 'blatt-color-grid';
+                    grid.setAttribute('role', 'group');
+                    grid.setAttribute('aria-label', label);
+                    for (const [value, name] of colors) {
+                        if (!value)
+                            continue;
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.dataset.inkColor = value;
+                        button.setAttribute('aria-label', `${name} ${value}`);
+                        button.setAttribute('aria-pressed', String(value === selected));
+                        const swatch = document.createElement('i');
+                        swatch.style.background = value;
+                        swatch.setAttribute('aria-hidden', 'true');
+                        const text = document.createElement('span');
+                        text.textContent = name || value;
+                        button.append(swatch, text);
+                        button.onclick = () => apply(value);
+                        grid.append(button);
+                    }
+                    body.append(grid);
+                };
+                addSwatches(palette, marker ? 'Markerpalette' : 'Grundfarben');
+                const recent = eigeneFarben().filter(value => !palette.some(([color]) => color === value));
+                if (recent.length) {
+                    const label = document.createElement('p');
+                    label.className = 'blatt-color-caption';
+                    label.textContent = 'Zuletzt verwendet';
+                    body.append(label);
+                    addSwatches(recent.map(value => [value, value]), 'Zuletzt verwendete Farben');
+                }
+                const form = document.createElement('form');
+                form.className = 'blatt-color-custom';
+                const label = document.createElement('label');
+                label.textContent = 'Hex-Farbe';
+                const hex = document.createElement('input');
+                hex.type = 'text';
+                hex.value = selected;
+                hex.setAttribute('aria-label', 'Hex-Farbe');
+                hex.autocomplete = 'off';
+                hex.spellcheck = false;
+                hex.maxLength = 7;
+                label.append(hex);
+                const picker = document.createElement('input');
+                picker.type = 'color';
+                picker.value = selected;
+                picker.setAttribute('aria-label', 'Systemfarbwähler');
+                const error = document.createElement('span');
+                error.className = 'blatt-color-error';
+                error.setAttribute('role', 'status');
+                const submit = document.createElement('button');
+                submit.type = 'submit';
+                submit.textContent = 'Farbe übernehmen';
+                const update = () => {
+                    const value = hex.value.trim().toLowerCase();
+                    const valid = /^#[0-9a-f]{6}$/.test(value);
+                    hex.setAttribute('aria-invalid', String(!valid));
+                    submit.disabled = !valid;
+                    error.textContent = valid ? '' : 'Bitte # und sechs Hex-Zeichen eingeben.';
+                    if (valid) {
+                        selected = value;
+                        picker.value = value;
+                        ink.style.background = value;
+                    }
+                };
+                hex.addEventListener('input', update);
+                picker.addEventListener('input', () => { hex.value = picker.value; update(); });
+                form.addEventListener('submit', event => { event.preventDefault(); if (!submit.disabled)
+                    apply(selected); });
+                form.append(label, picker, error, submit);
+                body.append(form);
+                update();
+                const manage = document.createElement('button');
+                manage.type = 'button';
+                manage.dataset.colorSets = 'true';
+                manage.textContent = 'Farbsätze & Stifteinstellungen …';
+                manage.onclick = () => { close(); controls.finishWriting?.(); void farbenDialog(); };
+                body.append(manage);
+            }, reason => {
+                if (reason === 'knopf' || reason === 'escape')
+                    controls.resumeWriting?.();
+                else if (reason === 'aussen')
+                    controls.finishWriting?.();
+            });
         };
         /**
          * Die Auswahl als Element ablegen (E494).
@@ -7370,7 +7531,7 @@ const Marken = (() => {
                     return;
                 }
                 if (target.dataset.act === 'farbe') {
-                    void farbenDialog();
+                    openColorPanel(target);
                     return;
                 }
                 /* DIE SCHRIFT (E360): Familie im Kreis, Groesse eine Stufe, Fett
