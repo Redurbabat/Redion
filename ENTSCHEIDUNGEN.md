@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-667 Entscheidungen, E1 bis E687 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+668 Entscheidungen, E1 bis E688 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -730,6 +730,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E685** — Die zwei Fassungs-Wiederherstellungen gehen denselben Weg wie der Verlauf: `Vergleich.dialog` („Ganze Fassung zurückholen") und `Werkzeuge.versionen` („Fassung wiederherstellen") rufen `Store.baumAbgleichen` — `test569` §13/§14, 48 Zusagen
 * **E686** — Das Whiteboard trägt seine Raumfassung und rechnet über die Matrix: `raumVersion: 1` an jedem gespeicherten Brett, `punkt()` über `SheetSpace.umrechner` (Bogen 3, Redur: „ja whiteboard eine raumversion") — und die Messung, dass die Handformel für achsenparallele Skalierung gar nicht falsch war (`test570`)
 * **E687** — Die drei Flächen teilen EINEN Verlauf: `GfxHistory.erstelle(tiefe)` in `src/core/gfx/history.ts` ersetzt die drei Stapelpaare aus JSON-Abbildern in Whiteboard, Gedankenkarte und Planfläche (Audit D1, Bogen 4) — der Kern gibt das Abbild zurück, das Einsetzen bleibt bei der Fläche; Marken (E378) und Seitenverlauf (E684) bleiben eigen (`test571`)
+* **E688** — Die Startdecke steigt von 2700 auf 2850 KB, mit gezählter Begründung wie E613: 127 KB in neun Tagen sind das Produkt (Studio, Trainer, Gedankenkarte), nicht eine Bibliothek — und zwei Posten davon sind Lerninhalt statt Code (L216, Frage an Redur)
 
 ---
 
@@ -56054,3 +56055,51 @@ Reihenfolge in `index.html` fest.
 **Nachbarn:** `test209`, `test568`, `test529`, `test538`, `test238`,
 `test239`, `test240`, `test263`, `test105`, `test109`, `test537`,
 `test550`, `test225`, `test87`.
+
+---
+
+## E688 — Die Startdecke steigt auf 2850 KB, und zwei Posten darin sind Inhalt, kein Code
+
+**Datum:** 25. September 2026 · **Wächter:** `test388 §5` (19 Zusagen) ·
+**Messung:** `messungen.md`, Abschnitt zur Startnutzlast vom 25. September
+
+**Was war.** `test388 §5` war rot: der Start holt 2711 KB (gzip) über 238
+Dateien, die Decke stand seit E613 auf 2700. Gefunden als Nachbar von
+Bogen 4 (E687) — nicht, weil jemand hinsah. Bogen 4 selbst trägt 2 KB bei;
+vor ihm stand die Zahl bei 2709, die Decke war also schon gerissen, und
+niemand hatte den Lauf seit Tagen gefahren. Das ist §51 aus `messungen.md`
+zum zweiten Mal, nur neun statt zwölf Tage.
+
+**Was gezählt wurde.** 127 KB seit `bef8c3f` (E613): Studio +18,9,
+`bausteine.css` +12,3, NIN-Quiz 12,2 neu, Trainer 8,9 neu, Gedankenkarte
++7,7, Staatskunde-Inhalt 7,3 neu, KI-Agenten +6,6, Dock-Welle 6,5 neu,
+Linse 4,5 neu — der Rest sind 200 Dateien um weniger als 4 KB. Das ist
+das Produkt der Tage E614 bis E687, keine zurückgekehrte Bibliothek.
+
+**Was entschieden wurde.**
+
+1. **Die Decke steigt auf 2850** — 139 KB Luft, so viel wie neun Tage
+   Arbeit gebraucht haben. Nicht auf 3000: dann läge sie 237 KB unter der
+   pdf.js-Grenze (2711 + 526 = 3237) und ein halbes pdf.js passte hinein.
+   Die zweite Zusage in §5 („die Decke kann überhaupt reissen") hält das
+   weiter. Der Grund steht im Kopf des Laufs, wie E613 es vorgemacht hat:
+   sie darf wachsen, wenn jemand einen Grund aufschreibt.
+2. **Nicht sofort nachgeladen** werden die zwei Inhaltsposten
+   (`nin-quiz.js`, `staatskunde-inhalt.js`, 19,5 KB). Sie sind der Fall der
+   Chronik aus E613 — aber der Trainer findet seine Kapitel über
+   `Register.vorlagen` beim Start (E679), und 19,5 KB brächten die Zahl
+   nur auf 2692: beim nächsten Bogen wäre sie wieder gerissen. Das steht
+   als **L216** mit der Frage an Redur, ob Lerninhalte grundsätzlich erst
+   beim Öffnen kommen sollen.
+3. **`test388` gehört in die Nachbarliste jedes Bogens, der eine
+   Skriptdatei hinzufügt.** Das ist keine Regel in CLAUDE.md, sondern ein
+   Satz hier — E687 hätte ihn gebraucht.
+
+**Die Alternative** wäre gewesen, die Decke stehen zu lassen und Inhalt
+nachzuladen. Das hätte die Zahl unter 2700 gebracht und die Frage nach
+dem Register nebenbei entschieden, ohne Redur — und die Decke wäre in
+Tagen wieder rot. Eine Decke, die bei jedem Bogen reisst, wird zum
+Rauschen; das ist E613s eigener Satz.
+
+**Preis.** Die Zusage ist 150 KB weicher. Was sie weiter hält: eine
+Bibliothek kommt nicht unbemerkt zurück, und die Chronik bleibt draussen.

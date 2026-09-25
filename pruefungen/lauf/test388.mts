@@ -235,10 +235,47 @@ p('`bauen.mts` bricht wirklich ab, wenn sie fehlt',
  * rund 115 KB für gewöhnliche Arbeit und bleibt 526 KB unter dem Punkt, an
  * dem eine ganze Bibliothek zurückkäme — das prüft die zweite Zusicherung
  * darunter, und sie ist der Grund, warum die Zahl nicht grosszügig sein darf.
+ *
+ * ── UND NEUN TAGE SPÄTER WAR SIE WIEDER GERISSEN (E688, 25. September) ────
+ *
+ * Gefunden, weil dieser Lauf nach Bogen 4 des Plattform-Audits (E687) als
+ * Nachbar lief — nicht, weil jemand die Decke im Auge hatte. Bogen 4 selbst
+ * bringt 2 KB (history.js); gerissen war sie schon davor:
+ *
+ *     16. September   232 Dateien   2585 KB   ← Decke 2700 gesetzt
+ *     25. September   238 Dateien   2711 KB   ← 11 KB drüber, 2 davon E687
+ *
+ * WOHER DIE 127 KB KAMEN (gzip Stufe 6, gegen bef8c3f, Skripte und
+ * Stilblätter aus index.html):
+ *
+ *     pdf/marken.js               +18,9 KB   Zeichenstudio (E673–E676)
+ *     schale/stil/bausteine.css   +12,3 KB
+ *     wissen/nin-quiz.js     neu   12,2 KB   Lerninhalt (E679)
+ *     wissen/trainer.js      neu    8,9 KB   Trainer (E677)
+ *     bloecke/gedankenkarte.js     +7,7 KB   Griffe, Formen, Vorlagen (E628)
+ *     wissen/staatskunde-inhalt.js neu 7,3 KB   Lerninhalt (E677)
+ *     ki/agenten.js                +6,6 KB
+ *     bedienung/selection-flow.js neu 6,5 KB   Dock-Welle (E646)
+ *     bedienung/linse.js     neu    4,5 KB
+ *     … und 200 Dateien um weniger als 4 KB
+ *
+ * Das ist wieder das Produkt, keine Bibliothek. Aber zwei Posten sind
+ * INHALT, kein Code: `nin-quiz.js` und `staatskunde-inhalt.js` (zusammen
+ * 19,5 KB) sind Lernstoff, den nur sieht, wer den Trainer öffnet — derselbe
+ * Fall wie die Chronik in E613. Sie stehen als L216 offen; ob sie nachgeladen
+ * werden, entscheidet Redur, weil der Trainer seine Kapitel heute über
+ * `Register.vorlagen` beim Start findet (E679).
+ *
+ * ── DIE DECKE STEHT DESHALB AUF 2850 ─────────────────────────────────────
+ *
+ * 139 KB Luft — was neun Tage Arbeit zuletzt gebraucht haben, nicht mehr.
+ * Und 387 KB unter dem Punkt, an dem pdf.js unbemerkt zurückkäme (2711 +
+ * 526 = 3237); die zweite Zusicherung hält das weiter. Wer sie das nächste
+ * Mal anhebt, zählt vorher wie hier — und sieht zuerst nach L216.
  * ======================================================================== */
 console.log('\n5 · Was der Start holt, hat eine Decke');
 const kb = Math.round(beimStart.reduce((s, g) => s + g.bytes, 0) / 1024);
-const DECKE = 2700;   /* 16. September 2026, gemessen — siehe oben */
+const DECKE = 2850;   /* 25. September 2026, gemessen — siehe oben (E688); davor 2700 seit E613 */
 p(`Der Start holt ${kb} KB (gzip) über ${beimStart.length} Dateien — Decke ${DECKE} KB`,
   kb <= DECKE, `${kb} KB`);
 p('Und die Decke kann überhaupt reissen — pdf.js allein wären 526 KB mehr',

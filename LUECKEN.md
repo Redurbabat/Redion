@@ -8317,6 +8317,34 @@ die Sammlung nur an nicht-verknüpfte Blöcke hängen — mit Wächter.
 
 ---
 
+## L216 · Lerninhalte im Startweg — 19,5 KB Lernstoff bei jedem Start, für einen Bildschirm, den nicht jeder öffnet — 25. September 2026
+
+**Gemessen, nicht vermutet** (`messungen.md`, E688): `test388 §5` war
+wieder gerissen, 2711 KB gegen 2700. Von den 127 KB seit E613 sind zwei
+Posten Inhalt statt Code — `quell/bereiche/wissen/nin-quiz.js` (12,2 KB
+gzip, die NIN-Kapitel 5–7 aus E679) und
+`quell/bereiche/wissen/staatskunde-inhalt.js` (7,3 KB, E677). Beide werden
+beim Start geladen und geparst, ob jemand den Trainer öffnet oder nicht.
+Genau dafür hat E613 die Chronik aus dem Startweg genommen
+(`chronik/laden.js` holt sie nach, wie pdf.js in `test388 §2/§3`).
+
+**Warum es nicht einfach nachgezogen wurde:** der Trainer findet seine
+Kapitel beim Start über `Register.vorlagen` (`trainer: true`, E679,
+`test567`). Nachladen hiesse: das Register kennt die Kapitel dem Namen
+nach, der Inhalt kommt beim Öffnen — eine Änderung am Register-Eintrag
+(§8), nicht nur am Laden. Und 19,5 KB brächten die Zahl nur auf 2692 —
+die Decke wäre beim nächsten Bogen wieder gerissen. Deshalb steht die
+Decke seit E688 auf 2850, und diese Lücke bleibt offen.
+
+**Die Frage an Redur:** sollen Lerninhalte (und künftige Kapitel — jedes
+NIN-Kapitel sind rund 4 KB gzip) grundsätzlich erst beim Öffnen des
+Trainers kommen? Wenn ja: ein Bogen mit `wissen/lerninhalt-laden.ts` nach
+dem Muster von E613, einem Registereintrag, der nur Name und Umfang trägt,
+und einer Zusage in `test388 §5` („Lerninhalte werden beim Start nicht
+geholt"), die gegen den heutigen Stand rot ist.
+
+---
+
 ## L209 · Der Stift gegen GoodNotes — was nach E673, E674 und E675 offen bleibt
 
 **Gefunden am 21. September 2026**, beim Lesen für Redurs Satz „die stift
@@ -8602,7 +8630,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 25. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 111 Lücken, 59 offene und 52 geschlossene. Der Befehl dazu ist
+Datei führt 112 Lücken, 60 offene und 52 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

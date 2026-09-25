@@ -1,5 +1,19 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 25. September 2026 · E688 · Die Startdecke, neun Tage später
+
+**Der Fund.** `test388 §5` rot als Nachbar von Bogen 4: 2711 KB gegen 2700
+— gerissen schon vor Bogen 4 (2709), der selbst 2 KB bringt. **Gezählt:**
+127 KB seit E613, davon Studio +19, `bausteine.css` +12, NIN-Quiz 12 neu,
+Trainer 9 neu, Gedankenkarte +8, Staatskunde 7 neu (`messungen.md`).
+
+**Entschieden.** Decke auf 2850 mit Begründung im Kopf des Laufs (wie
+E613); die zwei Inhaltsposten (19,5 KB Lernstoff) als L216 mit der Frage an
+Redur, ob Lerninhalte erst beim Öffnen kommen. `test388` 19/19, `test549`,
+`test550`, `test225`.
+
+---
+
 ## 25. September 2026 · E687 · Die drei Flächen teilen EINEN Verlauf
 
 **Audit D1, Bogen 4.** Whiteboard, Gedankenkarte und Planfläche hielten je

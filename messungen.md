@@ -4260,3 +4260,58 @@ nach Strg+Z + Neuladen gleich       da         = derselbe Block   4096   nein
 ```
 
 Die Zeile, um die es ging — „Fassungen 1 / 0" — heisst jetzt „1 / 1".
+
+---
+
+## §62 · Die Startnutzlast, neun Tage später — woher die 127 KB kamen (E688, 25. September 2026)
+
+`test388 §5` war wieder rot: **2711 KB über 238 Dateien**, Decke 2700.
+Gefunden als Nachbar von Bogen 4 (E687), nicht durch Hinsehen — derselbe
+Fehler wie in §51, nur neun statt zwölf Tage lang. Bogen 4 selbst bringt
+2 KB (`core/gfx/history.js`); vor ihm stand die Zahl bei 2709.
+
+**Am laufenden Programm gemessen** (`node pruefungen/lauf/test388.mts`):
+
+```txt
+16. September   232 Dateien   2585 KB     Decke damals gesetzt: 2700
+25. September   238 Dateien   2711 KB     ← rot, 11 KB drüber
+```
+
+**Die Aufteilung der 127 KB** (gzip Stufe 6 über alle `<script src>` und
+`<link rel=stylesheet>` aus `index.html`, gegen `bef8c3f`, den Commit von
+E613; Werkzeug: `startlast.cjs` im Arbeitsverzeichnis der Sitzung, nicht im
+Repo — es ist eine Rechnung, keine Prüfung):
+
+```txt
+6 NEUE Dateien          ~41 KB
+gewachsene Dateien      ~86 KB
+```
+
+Die neun grössten Posten:
+
+```txt
+gewachsen  quell/bereiche/pdf/marken.js               +18,9 KB   Zeichenstudio (E673–E676)
+gewachsen  quell/schale/stil/bausteine.css            +12,3 KB
+neu        quell/bereiche/wissen/nin-quiz.js           12,2 KB   Lerninhalt (E679)
+neu        quell/bereiche/wissen/trainer.js             8,9 KB   Trainer (E677)
+gewachsen  quell/bereiche/bloecke/arten/gedankenkarte.js +7,7 KB  Griffe, Formen, Vorlagen (E628)
+neu        quell/bereiche/wissen/staatskunde-inhalt.js  7,3 KB   Lerninhalt (E677)
+gewachsen  quell/bereiche/ki/agenten.js                +6,6 KB
+neu        quell/schale/bedienung/selection-flow.js     6,5 KB   Dock-Welle (E646)
+neu        quell/schale/bedienung/linse.js              4,5 KB
+```
+
+Alles Übrige: rund 200 Dateien um je weniger als 4 KB.
+
+**Urteil.** Wieder das Produkt, keine Bibliothek — aber zwei Posten sind
+Inhalt, kein Code: `nin-quiz.js` und `staatskunde-inhalt.js`, zusammen
+19,5 KB, Lernstoff, den nur sieht, wer den Trainer öffnet. Das ist der Fall
+der Chronik aus E613. Sie stehen als **L216** offen; nachladen würde sie
+gerade unter die alte Decke bringen (2711 − 19,5 = 2692) und beim nächsten
+Bogen wäre sie wieder gerissen — deshalb steigt die Decke trotzdem.
+
+**Die Decke steht seit E688 auf 2850**: 139 KB Luft, so viel wie neun Tage
+Arbeit zuletzt gebraucht haben; 387 KB unter dem Punkt, an dem pdf.js
+unbemerkt zurückkäme (2711 + 526 = 3237). Nach der Änderung:
+`test388` 19/19.
+
