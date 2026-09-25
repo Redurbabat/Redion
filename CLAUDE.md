@@ -894,7 +894,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 511 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 512 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1231,6 +1231,16 @@ beweist (§55.2) — und setzt die Marke, damit sie überhaupt schreiben würde.
 Gezählt am 25. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
 wc -l` sagt 511.*
 
+*Und 512: `test570` — das Whiteboard trägt seine Raumfassung und rechnet
+über die Matrix (E686). Sein wichtigster Beitrag ist ein Abschnitt, der
+NICHT rot wurde: `scale(0.8)` am Elternteil war mit der alten Handformel
+grün, weil der `viewBox` aus demselben Kasten kommt und sich der Faktor
+kürzt — der Audit hatte das Gegenteil behauptet. Erst `rotate(180deg)`
+trennte Formel und Matrix („ist 394,168 soll 312,192"). Eine Prüfung, die
+wider Erwarten grün bleibt, ist ein Fund über die Behauptung (§55.2).
+Gezählt am 25. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 512.*
+
 ### Die Befehle
 
 ```txt
@@ -1239,7 +1249,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 511 Läufe
+npm run pruefen                      alle 512 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1326,7 +1336,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 511 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 512 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

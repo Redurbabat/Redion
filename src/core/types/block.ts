@@ -69,6 +69,25 @@ export interface RedionBlock {
   dateiId?: string;
   /** Ab wann der Block im Papierkorb sichtbar ist — Grundlage der Schonfrist. */
   papierkorbSichtbarSeit?: ISODateTime;
+
+  /* Die räumlichen Blockarten (E681 hat gezählt, dass keine davon einen Typ
+   * hatte). Feldnamen wie gespeichert; die Formen selbst bleiben `unknown`,
+   * bis ihr Format in doku/REDION-FORMAT.md steht und ein Wächter es hält. */
+  /** Whiteboard: die Formen (art stift|linie|pfeil|rechteck|ellipse|notiz|text|bild|verbindung). */
+  shapes?: unknown[];
+  /** Whiteboard: Ausschnitt in Flächenpunkten und Massstab (E138). */
+  sicht?: { x: number; y: number; z: number };
+  /** Whiteboard, Gedankenkarte: Höhe des Kastens in CSS-Pixeln. */
+  hoehe?: number;
+  /** Deutung der räumlichen Zahlen. Blatt/PDF-Seite: SheetSpace.RAUM_VERSION;
+   *  Whiteboard: 1 = CSS-Pixel bei Massstab 1 (E686). Fehlt = 1. */
+  raumVersion?: number;
+  /** Gedankenkarte (E607): Knoten und Ausschnitt. */
+  karte?: unknown;
+  /** Schaltplan (E?): Plan mit teile/leitungen/texte/ebenen. */
+  plan?: unknown;
+  /** Blatt und PDF-Seite: die Marken der Zeichenschicht (E125). */
+  marken?: unknown[];
 }
 
 /**

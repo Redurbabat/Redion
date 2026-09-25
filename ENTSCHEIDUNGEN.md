@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-665 Entscheidungen, E1 bis E685 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+666 Entscheidungen, E1 bis E686 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -728,6 +728,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E683** — Fremder Code darf in Redion, wenn er Redion verbessert: nie PDFs, Bilder oder Geheimnisse an Dritte, vorher Redur fragen, jedes Stück in `FREMDCODE.md` — Redurs Regel vom 25. September, dazu die Zählung (pdf.js eingepackt, WebLLM vom CDN, sonst nichts)
 * **E684** — Rückgängig ändert Inhalt, nicht Identität: `Store.baumAbgleichen` gleicht eine Seite über die Kennung mit dem Schnappschuss ab — Papierkorb statt Purge, Unterseiten und Zeilen als Blätter, kein Stempel ohne Unterschied; `Verlauf.anwenden` zieht um, `test569` mit 36 Zusagen (L212 GESCHLOSSEN)
 * **E685** — Die zwei Fassungs-Wiederherstellungen gehen denselben Weg wie der Verlauf: `Vergleich.dialog` („Ganze Fassung zurückholen") und `Werkzeuge.versionen` („Fassung wiederherstellen") rufen `Store.baumAbgleichen` — `test569` §13/§14, 48 Zusagen
+* **E686** — Das Whiteboard trägt seine Raumfassung und rechnet über die Matrix: `raumVersion: 1` an jedem gespeicherten Brett, `punkt()` über `SheetSpace.umrechner` (Bogen 3, Redur: „ja whiteboard eine raumversion") — und die Messung, dass die Handformel für achsenparallele Skalierung gar nicht falsch war (`test570`)
 
 ---
 
@@ -55912,3 +55913,65 @@ Fassung, ihr neuer Block bleibt, die Sicherung ist angelegt. Gegenprobe:
 beide Stellen auf den alten Weg zurück → sechs Zusagen rot (Kennung,
 Fassung, Inneres — je Dialog). Nachbarn: `test98` (Der Verlauf, 23 ok),
 `test538`, `test548`, `test188`, `test105`.
+
+## E686 — Das Whiteboard trägt seine Raumfassung und rechnet über die Matrix
+
+**Datum:** 25. September 2026 · **Wächter:** `test570` (12 Zusagen) ·
+**Bogen 3** aus E681, von Redur freigegeben („für die 3. ja whiteboard
+eine raumversion")
+
+**Was war.** Das Blatt trägt seit E125 `raumVersion` — die Deutungsmarke
+seiner Zahlen. Das Whiteboard nicht: seine `shapes` sind CSS-Pixel bei
+Massstab 1, und wer die Deutung je änderte, verschöbe jede alte Fläche
+still (`space.ts`, Kopf, nennt genau das). Dazu rechnete `punkt()` den
+Zeiger mit der Handformel `sicht.x + (e.clientX - r.left) / sicht.z` —
+eine von drei Formeln neben der einen Matrix (Audit D2).
+
+**Was entschieden wurde.**
+
+1. **`raumVersion: 1`** wird mit jedem Speichern geschrieben (`sichern`,
+   `sichtSichern`), nicht beim Laden: ein Brett, das nur angesehen wird,
+   bleibt byteweise, wie es war. **Ein Brett ohne das Feld ist Fassung 1**
+   — die Deutung, die es immer hatte (§9, rückwärts denken). Die Zahlen
+   selbst ändern sich nicht; das Feld ist eine Marke, keine Wanderung.
+2. **`punkt()` geht über `SheetSpace.umrechner`** (E511) — mit der alten
+   Formel als Rückfall, wenn das SVG keine Matrix hat (nicht im Dokument).
+   Ergebnis wie bisher auf ganze Flächenpunkte gerundet, damit die
+   gespeicherten Zahlen ihre Form behalten.
+3. **Typen** für die räumlichen Felder in `src/core/types/block.ts`
+   (`shapes`, `sicht`, `hoehe`, `raumVersion`, `karte`, `plan`, `marken` —
+   die Formen selbst noch `unknown`, bis ihr Format steht) und ein Absatz
+   „Whiteboard-Formen" in `doku/REDION-FORMAT.md` — beides fehlte (Leser B,
+   G).
+
+**Was die Messung gelehrt hat — und was der Audit falsch behauptet hatte.**
+D2 sagte, die Handformel kenne keine CSS-Verwandlung, und `test570 §3`
+sollte das mit `scale(0.8)` am Elternteil rot zeigen. **Es war grün.** Der
+Grund: `ausschnitt()` rechnet den `viewBox` aus demselben verwandelten
+Kasten (`getBoundingClientRect`), und der Faktor kürzt sich heraus — für
+jede achsenparallele Skalierung sind Formel und Matrix gleich. Erst eine
+Drehung trennt sie: unter `rotate(180deg)` setzte die Formel das Rechteck
+an die gespiegelte Stelle (`ist 394,168 soll 312,192`). Der Grund für den
+Umzug ist also **§8** — eine Umrechnung für alle Flächen statt vier — und
+die Drehung, nicht der Alltag. Der Audit (2.3 D2, 2.6 R3) bleibt als
+Zählung richtig und als Fehlerbehauptung fürs Whiteboard zu scharf; das
+steht jetzt dort und hier.
+
+**Wächter `test570`**: altes Brett lädt unverändert und ohne Feld; wer
+zeichnet, schreibt `raumVersion: 1`, die alte Form bleibt byteweise;
+`scale(0.8)` bleibt richtig; `rotate(180deg)` wird richtig; nach zweimal
+Vergrössern passen Zeiger und Zahl. Gegen den alten Bau rot mit 3 von 12
+(Feld ×2, Drehung). Gegenprobe: Handformel zurück → die Drehung wieder rot.
+Nachbarn: `test209` (E138/E144, hält Flächenkoordinaten nach dem
+Schieben), `test206`, `test428`, `test568`, `test105`, `test109`,
+`test537`, `test550`, `test87`.
+
+**Nicht getan, mit Absicht:** Planfläche (`ortAus`, eigene Formel mit
+`plan.breite / r.width`) und Gedankenkarte (misst statt zu rechnen) — je
+ein eigener kleiner Bogen mit eigenem Wächter, derselbe Weg (§43).
+
+**Preis.** Ein Feld mehr an jedem Brett, das ab jetzt gespeichert wird
+(acht Bytes); ein Aufruf von `getScreenCTM` je Zeigerereignis — E511 hat
+gemessen, dass das beim Zeichnen ins Gewicht fallen kann; das Whiteboard
+ruft `punkt()` je Ereignis einmal, nicht je Punkt eines Bündels, also
+bleibt es bei einer Matrix je Ereignis.

@@ -1,5 +1,23 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 25. September 2026 · E686 · Das Whiteboard trägt seine Raumfassung und rechnet über die Matrix
+
+**Redur:** „für die 3. ja whiteboard eine raumversion". **Gebaut:**
+`raumVersion: 1` mit jedem Speichern (ein Brett ohne Feld ist Fassung 1),
+`punkt()` über `SheetSpace.umrechner` mit der alten Formel als Rückfall,
+Typen für `shapes`/`sicht`/`hoehe`/`raumVersion`/`karte`/`plan`/`marken`,
+ein Absatz in `doku/REDION-FORMAT.md`.
+
+**Geprüft — und dabei etwas gelernt.** `test570` (12 Zusagen) sollte mit
+`scale(0.8)` die Handformel rot zeigen; sie war grün, weil sich der Faktor
+über den `viewBox` herauskürzt. Erst `rotate(180deg)` trennt Formel und
+Matrix. Der Audit war an der Stelle zu scharf — berichtigt in E686 und im
+Audit. Gegenprobe (Formel zurück): Drehung rot. Nachbarn `test209`,
+`test206`, `test428`, `test568`, `test105`, `test109`, `test537`, `test550`,
+`test87`.
+
+---
+
 ## 25. September 2026 · E685 · Die zwei Fassungs-Wiederherstellungen gehen denselben Weg
 
 **Der Fund.** `fassungen.ts:327` und `werkzeuge.ts:902` — „Ganze Fassung

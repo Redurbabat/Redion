@@ -64,6 +64,15 @@ const Zusatz = (() => {
      * ======================================================================*/
     const whiteboard = (block) => {
         const daten = block.shapes ? JSON.parse(JSON.stringify(block.shapes)) : [];
+        /* DIE RAUMFASSUNG (E686). Die Zahlen in `shapes` sind Flächenpunkte:
+           CSS-Pixel bei Massstab 1, Ursprung links oben der ungeschobenen Fläche.
+           Das Blatt trägt seit E125 `raumVersion`, das Whiteboard bis E686 nichts
+           — und ohne Fassung wäre jede spätere Änderung der Deutung eine stille
+           Verschiebung jeder alten Fläche (`space.ts`, Kopf). Ein Brett OHNE das
+           Feld ist Fassung 1: genau die Deutung, die es immer hatte (§9,
+           rückwärts denken). Geschrieben wird das Feld mit jedem Speichern, nicht
+           beim Laden — ein Brett, das nur angesehen wird, bleibt unverändert. */
+        const RAUM_VERSION = 1;
         let werkzeug = 'stift';
         let farbe = PALETTE[0]?.[0] ?? '#529cca';
         const hoehe = block.hoehe || 380;
@@ -192,7 +201,7 @@ const Zusatz = (() => {
             if (vor)
                 vor.disabled = !vorStapel.length;
         };
-        const sichern = () => Store.updateBlock(block.id, { shapes: daten });
+        const sichern = () => Store.updateBlock(block.id, { shapes: daten, raumVersion: RAUM_VERSION });
         /* Der Ausschnitt in Formkoordinaten. Solange der Kasten noch nicht im
            Dokument hängt, misst der Browser 0 — dann rechnen wir mit einer
            Ersatzbreite und zeichnen beim ersten Anblick neu (ResizeObserver
@@ -510,17 +519,29 @@ const Zusatz = (() => {
                 out.push(zeile.trim());
             return out.slice(0, 8);
         };
-        /* VON BILDSCHIRM AUF FLÄCHE. Vorher war beides dasselbe; mit Ausschnitt
-           und Massstab ist es das nicht mehr, und ohne diese Umrechnung landete
-           jeder Strich an der falschen Stelle, sobald man einmal geschoben hat. */
+        /* VON BILDSCHIRM AUF FLÄCHE — ÜBER DIE MATRIX (E686). Bis E686 stand hier
+           die Handformel `sicht.x + (e.clientX - r.left) / sicht.z`. Sie war nicht
+           falsch: weil `ausschnitt()` den viewBox aus demselben Kasten rechnet,
+           kürzt sich jede achsenparallele Skalierung heraus — gemessen mit
+           `scale(0.8)` am Elternteil, grün (test570 §3). Erst eine Drehung trennt
+           Formel und Matrix (§3b). Der Grund für den Umzug ist §8: eine
+           Umrechnung für alle Flächen (`SheetSpace.umrechner`, E511), nicht vier.
+           Die Matrix kennt Rollstand, Zoom und jede CSS-Verwandlung darüber.
+           Fällt sie aus (Fläche nicht im Dokument), bleibt die alte Formel als
+           Rückfall — dann wird nicht geraten, sondern wie bisher gerechnet. */
         const punkt = (e) => {
+            const ueberMatrix = (typeof SheetSpace !== 'undefined' && SheetSpace.umrechner)
+                ? SheetSpace.umrechner(flaeche)(e) : null;
+            if (ueberMatrix)
+                return [Math.round(ueberMatrix[0]), Math.round(ueberMatrix[1])];
             const r = flaeche.getBoundingClientRect();
             return [Math.round(sicht.x + (e.clientX - r.left) / sicht.z),
                 Math.round(sicht.y + (e.clientY - r.top) / sicht.z)];
         };
         const sichtSichern = () => Store.updateBlock(block.id, {
             sicht: { x: Math.round(sicht.x), y: Math.round(sicht.y),
-                z: Math.round(sicht.z * 100) / 100 }
+                z: Math.round(sicht.z * 100) / 100 },
+            raumVersion: RAUM_VERSION
         });
         /* Vergrössern um den festgehaltenen Punkt: was unter dem Finger liegt,
            bleibt unter dem Finger. Ohne Mittelpunkt springt das Bild bei jedem

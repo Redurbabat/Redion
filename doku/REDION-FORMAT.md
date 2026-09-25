@@ -254,6 +254,18 @@ Gelöschtes.
 Dieselbe Regel gilt für den Abgleich mit dem Server: Abgeleitetes wandert
 nicht hinauf.
 
+**Whiteboard-Formen** (E138, E686): ein `whiteboard`-Block trägt `shapes`
+(eine Liste von Formen: `art` ∈ stift, linie, pfeil, rechteck, ellipse,
+notiz, text, bild, verbindung; Stift mit `pts: [[x, y], …]`, Kästen mit
+`x, y, w, h` — `w`/`h` dürfen negativ sein —, Bilder mit `dateiId`,
+Verbindungen mit `von`/`nach` als Form-Kennungen), `sicht` (`x, y, z` —
+Ausschnitt in Flächenpunkten und Massstab), `hoehe` (CSS-Pixel des
+Kastens) und seit E686 `raumVersion`. Die Zahlen sind **Flächenpunkte**:
+CSS-Pixel bei Massstab 1, Ursprung links oben der ungeschobenen Fläche —
+keine PDF-Punkte wie beim Blatt. `raumVersion: 1` ist diese Deutung; ein
+Block ohne das Feld ist Fassung 1. Wer die Deutung je ändert, hebt die
+Zahl an und wandelt beim Lesen — nie stillschweigend.
+
 ---
 
 ## Einspielen
