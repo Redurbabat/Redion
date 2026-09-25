@@ -2249,9 +2249,198 @@ Die Reihenfolge der Prüfungsfragen. test565 war gegen den ersten Stand bei 53 v
 | ca. 18:40 | Die Kapitel des Trainers über Register.vorlagen (`trainer: true`) finden lassen, statt eine zweite Kennung in den Trainer zu schreiben | §8 — ein zweiter Katalog für dasselbe läuft mit dem ersten auseinander. Die Vorlage weiss ohnehin, wie ihr Kapitel heisst und ob eine Seite daraus liegt | keines: Vorlagen ohne die Marke bleiben gewöhnliche Vorlagen; die Staatskunde hat sie bekommen, sonst wäre ihr eigenes Kapitel verschwunden |
 | ca. 18:55 | Eine Prüfungsfrage ist `pruefung: true` ODER eine Schreibaufgabe ohne ausdrückliches `pruefung: false` | E677 zählt seine 13 Verstanden-Fragen zur Prüfungsrunde, ohne sie zu markieren. Eine strengere Regel hätte die Staatskunde still von 20 auf 7 Fragen gekürzt | die NIN-Themenaufgaben in Schreibform müssen `pruefung: false` tragen — test567 misst beide Zahlen (20 und 34), damit das nicht wieder auseinanderläuft |
 
+### 2026-09-25 · Freitag — Der Plattform-Audit — und aus zwei Messungen darin werden drei Bögen, bevor der Audit fertig ist
+
+> Redur legt AFFiNE und SiYuan als Archive in ein Release und schickt einen Master-Prompt: erst lesen, dann ein kleinster Schritt; GFX-Kern, Plugin-SDK, Katalog, CLI. Elf Leser je System und zwei für die Referenzen — auf vier Kernen laufen zwei gleichzeitig, die Sache dauert Stunden, und Redur fragt zu Recht nach der Zeit. Statt zu warten habe ich selbst gelesen und zwei Dinge im Browser GEMESSEN, die kein Leser hätte behaupten dürfen: Strg+Z im Schaltplan und auf dem Blatt nimmt zweimal zurück (Block und Seitenverlauf), und der Seitenverlauf gibt beim Zurücknehmen jedem Block der Seite eine neue Kennung. Daraus wurden am selben Tag E682 (eine Zeile in der Schale, die Taste fürs Whiteboard, test568) und — nach einer zweiten Sonde, die zeigte, dass eine Unterseite dabei ihre Fassung verliert (1 → 0) — E684/E685 (Store.baumAbgleichen: abgleichen statt abreissen, test569 mit 48 Zusagen, entworfen von drei Entwürfen und zwei Richtern). Dazwischen hat Redur vier Dinge entschieden: die Reihenfolge, raumVersion fürs Whiteboard, die Fremdcode-Regel (E683, FREMDCODE.md, §57) und, mit einem Bild von AFFiNEs Edgeless-Leiste, das Ziel W6 — „integriere alles zusammen“: eine Leiste, ein Verlauf, ein Raum für alle Flächen. Die Karte (doku/karte/, karte.mts) ist auf seinen Wunsch entstanden, damit niemand die 156 000 Zeilen zweimal lesen muss. Der Audit ist in zwei Teilen gelandet; die Gegenprüfer für fünf Systeme und der Vollständigkeitsprüfer scheiterten an der Sitzungsgrenze — das steht so im Audit, und die Vollständigkeitsprüfung habe ich von Hand nachgeholt (29 von 53 Ordnern gelesen).
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · ca. 15:40**
+
+> github.com/Redurbabat/Lern/releases/tag/redions es ist das die daten legen hier schau mal das an und frage mich wenn du mir etwas fragen kannst
+
+**Gemeint:** Die zwei Referenz-Archive liegen im Release; sieh sie dir an und frag, statt zu raten.
+
+**Besser geschrieben:** Im Release liegen AFFiNE und SiYuan. Lies sie als Referenz, und frag mich, bevor du entscheidest.
+
+**Besserer Prompt:** Der Master-Prompt selbst war sehr gut — Prioritäten, Verbote, Berichtsform. Was gefehlt hat: dass CLAUDE.md gewinnt, wo beide sich widersprechen (L30). Das musste ich selbst setzen.
+
+
+**2 · ca. 15:55**
+
+> weiter
+
+**Gemeint:** Mach den Audit.
+
+**Besser geschrieben:** Passt so.
+
+**Besserer Prompt:** Passt so.
+
+
+**3 · ca. 16:16**
+
+> was machts du mit 25 agends hahaha
+
+**Gemeint:** Warum so viele Agenten — und dauert das nicht ewig?
+
+**Besser geschrieben:** Wozu 25 Agenten? Wie lange dauert das?
+
+**Besserer Prompt:** Die Frage war richtig. Sie hat mich dazu gebracht, die Gegenprüfung zu kürzen und selbst zu messen, statt zu warten.
+
+
+**4 · ca. 16:20**
+
+> was denks du wie lange wird das daueren
+
+**Gemeint:** Eine ehrliche Schätzung, bitte.
+
+**Besser geschrieben:** Wie lange noch?
+
+**Besserer Prompt:** Passt so — und die Antwort darauf muss eine Zahl mit Rechnung sein, nicht „bald“.
+
+
+**5 · ca. 16:21**
+
+> erstelle dabei eine obsidein/graphy datei damit du nicht jedes mal alles daten nue lesen musstest verstanden
+
+**Gemeint:** Halte das Gelesene als verlinkte Notizen fest (Obsidian, Graph), damit die nächste Sitzung nicht wieder alles liest.
+
+**Besser geschrieben:** Leg aus den Befunden einen Obsidian-Ordner mit verlinkten Notizen an, damit du beim nächsten Mal nicht alles neu lesen musst.
+
+**Besserer Prompt:** Genau das ist doku/karte/ geworden — erzeugt aus karte.json, mit einem Graph, dessen Kanten aus den Befunden gerechnet sind.
+
+
+**6 · ca. 16:25**
+
+> könntest du alles wirklich alles von affine im redion nehmnen
+
+**Gemeint:** Kann Redion AFFiNE komplett übernehmen?
+
+**Besser geschrieben:** Könnten wir AFFiNE komplett in Redion übernehmen?
+
+**Besserer Prompt:** Die ehrliche Antwort war Nein — andere App (Yjs, React/Lit, eigener Server). Die bessere Frage kam eine halbe Stunde später mit dem Bild: WAS genau gefällt dir daran.
+
+
+**7 · ca. 16:38**
+
+> ja mach so weiter wie du vorschlägst und für die 3. ja whiteboard eine raumversion
+
+**Gemeint:** Reihenfolge wie vorgeschlagen (Strg+Z, dann Kennungen, dann raumVersion, dann gemeinsamer Verlauf); und ja zur raumVersion.
+
+**Besser geschrieben:** Mach es in deiner Reihenfolge. Und ja: das Whiteboard bekommt eine raumVersion.
+
+**Besserer Prompt:** Passt so.
+
+
+**8 · ca. 16:53**
+
+> ich will so was haben wie die affine schau mal es nach
+
+**Gemeint:** So eine Werkzeugleiste will ich; sieh nach, wie sie gebaut ist.
+
+**Besser geschrieben:** So eine Leiste will ich für Redion — schau nach, wie AFFiNE sie baut.
+
+**Besserer Prompt:** Das Bild war der beste Teil der Anfrage: ein Bild sagt, WAS gefällt. Daraus wurde W6.
+
+
+**9 · ca. 17:02**
+
+> integriere alles zusammen
+
+**Gemeint:** Nicht eine Leiste fürs Whiteboard, sondern eine für alle Flächen — Whiteboard, Gedankenkarte, Schaltplan, Blatt.
+
+**Besser geschrieben:** Eine Leiste für alle Flächen, nicht nur fürs Whiteboard.
+
+**Besserer Prompt:** Drei Wörter, die das Ziel des GFX-Kerns von der sichtbaren Seite her benennen. So verstanden und in W6 und Audit 2.5 festgehalten.
+
+
+**10 · ca. 17:10**
+
+> aktuele status
+
+**Gemeint:** Wo stehen wir?
+
+**Besser geschrieben:** Status?
+
+**Besserer Prompt:** Passt so.
+
+
+**11 · ca. 17:13**
+
+> ja offnen oder was ist die pro und contra
+
+**Gemeint:** L30 öffnen — aber erst Pro und Contra.
+
+**Besser geschrieben:** Was spricht dafür und dagegen, L30 zu öffnen?
+
+**Besserer Prompt:** Passt so — die Frage nach Pro und Contra vor der Entscheidung ist genau richtig.
+
+
+**12 · ca. 17:17**
+
+> also redion kann fremnden code haben wenn es redion verbessert wird, und so nicht das die pdf oder bilder oder geheimnisse daten an die driete anbiter geht , und ausserdem nehem fremde coden es ist keine proble aber bevor du etwas fremnes nimmst frage mich und ausserdem muss fremncode.md erstellen damit ich was was mir gehört und was fremd ist und was wird es im redion verbessser
+
+**Gemeint:** Vier Sätze: Fremdcode ja, wenn er Redion verbessert; nichts geht an Dritte; vorher fragen; FREMDCODE.md führt, was fremd ist und was es bringt.
+
+**Besser geschrieben:** Fremder Code darf rein, wenn er Redion besser macht und keine PDFs, Bilder oder Geheimnisse an Dritte gehen. Frag mich vorher. Und führe eine FREMDCODE.md: was gehört mir, was ist fremd, was bringt es.
+
+**Besserer Prompt:** Das ist eine vollständige Regel — sie steht jetzt wörtlich in FREMDCODE.md und als §57. Was offen blieb: ob das auch für Plugins gilt, die ein Nutzer einspielt (Sandbox).
+
+
+**13 · ca. 20:30**
+
+> Weiter
+> Weiter
+
+**Gemeint:** Nach der Sitzungsgrenze: mach weiter.
+
+**Besser geschrieben:** Passt so.
+
+**Besserer Prompt:** Passt so.
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E681 Teil 1 — Plattform-Audit: GFX-Bestand (fünf Systeme, vier Rückgängig-Stapel, drei Zeigerumrechnungen), zehn belegte Duplikate, zwei Sonden (Strg+Z doppelt; Kennungen wechseln), Fragen an Redur; die Karte (karte.mts, karte.json, doku/karte/) mit drei Lesern; L211, L212; FREMD-Lizenzen geprüft | `a196b65` → `58af180` | ca. 15:45 – 16:31 | ca. 45 min | test549, test225, test550, typecheck; zwei Sonden im Scratchpad (kein Prüflauf) |
+| E682 — Strg+Z gehört der Fläche: test568 (26 Zusagen, rot 13/25 gegen den alten Stand, Gegenprobe rot), eine Zeile in schale.ts (defaultPrevented für z/y), Whiteboard mit Taste, Fokusrahmen; Bild | `58af180` → `446266f` | ca. 16:31 – 16:47 | ca. 16 min Bau, Nachbarn liefen länger | test568 neu; Nachbarn 238 239 240 263 345 209 529 538 87 537 105 109 — 537 mit dem bekannten 518/517 (L207), 105 fand einen Typfehler im Wächter (446266f) |
+| L212 Punkt 2 nachgemessen (Bild überlebt; Unterseite verliert Kennung und Fassung 1 → 0); W6 aus Redurs Bild; test569 rot eingecheckt VOR der Reparatur (§30); E683 Fremdcode-Regel mit FREMDCODE.md, §57 und der Zählung (pdf.js eingepackt, WebLLM vom CDN) | `446266f` → `c26094a` | ca. 16:47 – 17:20 | ca. 33 min | test549, test550, test225; zwei Sonden |
+| E684 — Rückgängig ändert Inhalt, nicht Identität: Entwurfs-Panel (drei Entwürfe, zwei Richter), Store.baumAbgleichen (~170 Zeilen), Verlauf.anwenden mit locked-Wache, tempo.ts; test569 auf 36 Zusagen; vier Gegenproben (21/1/2/3 rot); L212 GESCHLOSSEN, L213–L215; messungen nach dem Bau (Fassungen 1 → 1) | `c26094a` → `03f0c4a` | ca. 16:51 – 17:35 (Panel 31 min im Hintergrund) | ca. 45 min | test569; Nachbarn 70 188 568 226 229 265 48 89 96 100 105 109 537 550 — dreizehn grün, 537 wie gehabt |
+| E685 — die zwei Fassungs-Wiederherstellungen über baumAbgleichen; test569 §13/§14 (48 Zusagen), Gegenprobe sechs rot; danach E681 Teil 2: §4 CLI/MCP, §5 aus karte.json gerendert, R5–R15, Anhang D (eigene Vollständigkeitsprüfung), L30 um E683 ergänzt; Karte mit allen dreizehn Lesern | `03f0c4a` → `47fb1c8` | ca. 17:38 – 17:45 und 20:25 – 20:37 (dazwischen Sitzungsgrenze) | ca. 20 min Arbeit | test569; Nachbarn 98 538 548 188 105; test549, test550, test225; node karte.mts --pruefen |
+
+#### Zahlen des Tages
+
+- **commits:** 13
+- **entscheidungen:** 5
+- **neue Prüfläufe:** 2
+- **volle Läufe:** 0
+
+#### Das grösste Problem
+
+Der Seitenverlauf löschte die Fassungen von Unterseiten. Nicht der Whiteboard-Kern, nicht die Leiste — ein Strg+Z auf der Elternseite, und die geplante Fassung der Unterseite war weg (1 → 0), ihre Kennung neu, der Favorit tot. Das stand seit jeher als Tatsache in test70 („die Blöcke bekommen neue IDs“), und niemand hatte gefragt, was das kostet. Gefunden hat es keine Lesung, sondern die zweite Sonde, die ich nur gefahren habe, weil die erste (Bild überlebt) zu gut aussah, um die Frage zu schliessen. — Daneben, kleiner: die Sitzungsgrenze des Rechners hat zehn Gegenprüfer und den Vollständigkeitsprüfer des Audits stumm scheitern lassen; das steht jetzt im Audit, und die Vollständigkeit habe ich von Hand geprüft.
+
+#### Das Interessanteste, das Redur wollte
+
+„integriere alles zusammen“ — drei Wörter, auf ein Bild hin. Das Bild zeigte AFFiNEs Edgeless-Leiste; ich hatte sie fürs Whiteboard eingeordnet, und Redur meinte: für alle Flächen. Damit war das Ziel des GFX-Kerns von der sichtbaren Seite her benannt, genauer als der Master-Prompt es konnte: eine Leiste, ein Verlauf, ein Raum — und jeder der drei Datenbögen des Tages ist ein Stück davon.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| ca. 16:20 | Den Audit-Workflow gestoppt und mit gekürzter Gegenprüfung (zwei je System, niedriger Aufwand) wieder aufgenommen; die drei fertigen Leser aus dem Zwischenspeicher | Bei zwei gleichzeitigen Agenten hätte die volle Gegenprüfung (~60 Prüfer) länger gedauert als die Lesung selbst | zwei laufende Leser gingen verloren und liefen neu (~10 min) |
+| ca. 16:00 | Selbst gelesen und zwei Sonden im Browser gefahren, statt auf die Leser zu warten | §55.2: eine Behauptung über Strg+Z ist keine Messung; und die Zeit war da | keines — Sonden im Scratchpad, kein Produktcode |
+| ca. 16:57 | test569 rot eingecheckt, bevor eine Zeile Reparatur stand | §30 verlangt die Reihenfolge, und ein Wächter, der nie rot war, ist eine Behauptung (§50); dazu die Ehrlichkeit gegenüber dem Stop-Hook | ein roter Lauf auf dem Zweig für vierzig Minuten; main bewegt sich ohnehin nicht |
+| ca. 16:51 | Ein Entwurfs-Panel (drei Blickwinkel, zwei Richter) für die Verlauf-Reparatur statt direkt zu bauen | Ablage und Abgleich sind §9/§25 — die Richter fanden Dinge, die ich allein nicht gesehen hätte (Unterseite als Blatt, Felder löschen, kein Stempel ohne Unterschied, locked) | 31 Minuten Wartezeit, in denen der Wächter entstand |
+| ca. 17:05 | Vier Gegenproben je gebaut und gefahren, nicht nur eine | Vier Zusagen, vier Stellen — jede Gegenprobe soll genau ihre Zeile rot machen (21/1/2/3) | ~6 min Bauen |
+| ca. 16:22 | Die Karte als erzeugte Doku aus karte.json (wie die Chronik), nicht von Hand | Redurs Wunsch, und eine Karte, die jemand von Hand pflegt, lügt beim nächsten Mal | die erste Fassung malte „genannt“ als „benutzt“ (P107) — beim Lesen des eigenen Graphen gefunden |
+| ca. 17:15 | Bei Redurs Frage „alles von AFFiNE?“ Nein gesagt und die Gegenfrage gestellt, was ihm gefällt | §2, §6, §47, §51 — und weil „alles“ meist ein Bild im Kopf ist, kein Plan | keines; das Bild kam eine halbe Stunde später |
+
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 106 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 110 Einträge.
 

@@ -3099,6 +3099,212 @@
           "risiko": "die NIN-Themenaufgaben in Schreibform müssen `pruefung: false` tragen — test567 misst beide Zahlen (20 und 34), damit das nicht wieder auseinanderläuft"
         }
       ]
+    },
+    {
+      "datum": "2026-09-25",
+      "wochentag": "Freitag",
+      "titel": "Der Plattform-Audit — und aus zwei Messungen darin werden drei Bögen, bevor der Audit fertig ist",
+      "wasIchWeiss": "Redur legt AFFiNE und SiYuan als Archive in ein Release und schickt einen Master-Prompt: erst lesen, dann ein kleinster Schritt; GFX-Kern, Plugin-SDK, Katalog, CLI. Elf Leser je System und zwei für die Referenzen — auf vier Kernen laufen zwei gleichzeitig, die Sache dauert Stunden, und Redur fragt zu Recht nach der Zeit. Statt zu warten habe ich selbst gelesen und zwei Dinge im Browser GEMESSEN, die kein Leser hätte behaupten dürfen: Strg+Z im Schaltplan und auf dem Blatt nimmt zweimal zurück (Block und Seitenverlauf), und der Seitenverlauf gibt beim Zurücknehmen jedem Block der Seite eine neue Kennung. Daraus wurden am selben Tag E682 (eine Zeile in der Schale, die Taste fürs Whiteboard, test568) und — nach einer zweiten Sonde, die zeigte, dass eine Unterseite dabei ihre Fassung verliert (1 → 0) — E684/E685 (Store.baumAbgleichen: abgleichen statt abreissen, test569 mit 48 Zusagen, entworfen von drei Entwürfen und zwei Richtern). Dazwischen hat Redur vier Dinge entschieden: die Reihenfolge, raumVersion fürs Whiteboard, die Fremdcode-Regel (E683, FREMDCODE.md, §57) und, mit einem Bild von AFFiNEs Edgeless-Leiste, das Ziel W6 — „integriere alles zusammen“: eine Leiste, ein Verlauf, ein Raum für alle Flächen. Die Karte (doku/karte/, karte.mts) ist auf seinen Wunsch entstanden, damit niemand die 156 000 Zeilen zweimal lesen muss. Der Audit ist in zwei Teilen gelandet; die Gegenprüfer für fünf Systeme und der Vollständigkeitsprüfer scheiterten an der Sitzungsgrenze — das steht so im Audit, und die Vollständigkeitsprüfung habe ich von Hand nachgeholt (29 von 53 Ordnern gelesen).",
+      "nachrichten": [
+        {
+          "zeit": "ca. 15:40",
+          "wortlaut": "github.com/Redurbabat/Lern/releases/tag/redions es ist das die daten legen hier schau mal das an und frage mich wenn du mir etwas fragen kannst",
+          "woher": "wörtlich aus dem Gespräch, danach der lange Master-Prompt „REDION PLATFORM AUDIT“",
+          "gemeint": "Die zwei Referenz-Archive liegen im Release; sieh sie dir an und frag, statt zu raten.",
+          "besser": "Im Release liegen AFFiNE und SiYuan. Lies sie als Referenz, und frag mich, bevor du entscheidest.",
+          "besserePrompt": "Der Master-Prompt selbst war sehr gut — Prioritäten, Verbote, Berichtsform. Was gefehlt hat: dass CLAUDE.md gewinnt, wo beide sich widersprechen (L30). Das musste ich selbst setzen."
+        },
+        {
+          "zeit": "ca. 15:55",
+          "wortlaut": "weiter",
+          "woher": "wörtlich",
+          "gemeint": "Mach den Audit.",
+          "besser": "Passt so.",
+          "besserePrompt": "Passt so."
+        },
+        {
+          "zeit": "ca. 16:16",
+          "wortlaut": "was machts du mit 25 agends hahaha",
+          "woher": "wörtlich",
+          "gemeint": "Warum so viele Agenten — und dauert das nicht ewig?",
+          "besser": "Wozu 25 Agenten? Wie lange dauert das?",
+          "besserePrompt": "Die Frage war richtig. Sie hat mich dazu gebracht, die Gegenprüfung zu kürzen und selbst zu messen, statt zu warten."
+        },
+        {
+          "zeit": "ca. 16:20",
+          "wortlaut": "was denks du wie lange wird das daueren",
+          "woher": "wörtlich",
+          "gemeint": "Eine ehrliche Schätzung, bitte.",
+          "besser": "Wie lange noch?",
+          "besserePrompt": "Passt so — und die Antwort darauf muss eine Zahl mit Rechnung sein, nicht „bald“."
+        },
+        {
+          "zeit": "ca. 16:21",
+          "wortlaut": "erstelle dabei eine obsidein/graphy datei damit du nicht jedes mal alles daten nue lesen musstest verstanden",
+          "woher": "wörtlich",
+          "gemeint": "Halte das Gelesene als verlinkte Notizen fest (Obsidian, Graph), damit die nächste Sitzung nicht wieder alles liest.",
+          "besser": "Leg aus den Befunden einen Obsidian-Ordner mit verlinkten Notizen an, damit du beim nächsten Mal nicht alles neu lesen musst.",
+          "besserePrompt": "Genau das ist doku/karte/ geworden — erzeugt aus karte.json, mit einem Graph, dessen Kanten aus den Befunden gerechnet sind."
+        },
+        {
+          "zeit": "ca. 16:25",
+          "wortlaut": "könntest du alles wirklich alles von affine im redion nehmnen",
+          "woher": "wörtlich",
+          "gemeint": "Kann Redion AFFiNE komplett übernehmen?",
+          "besser": "Könnten wir AFFiNE komplett in Redion übernehmen?",
+          "besserePrompt": "Die ehrliche Antwort war Nein — andere App (Yjs, React/Lit, eigener Server). Die bessere Frage kam eine halbe Stunde später mit dem Bild: WAS genau gefällt dir daran."
+        },
+        {
+          "zeit": "ca. 16:38",
+          "wortlaut": "ja mach so weiter wie du vorschlägst und für die 3. ja whiteboard eine raumversion",
+          "woher": "wörtlich",
+          "gemeint": "Reihenfolge wie vorgeschlagen (Strg+Z, dann Kennungen, dann raumVersion, dann gemeinsamer Verlauf); und ja zur raumVersion.",
+          "besser": "Mach es in deiner Reihenfolge. Und ja: das Whiteboard bekommt eine raumVersion.",
+          "besserePrompt": "Passt so."
+        },
+        {
+          "zeit": "ca. 16:53",
+          "wortlaut": "ich will so was haben wie die affine schau mal es nach",
+          "woher": "wörtlich, mit einem Bild von AFFiNEs Edgeless-Werkzeugleiste",
+          "gemeint": "So eine Werkzeugleiste will ich; sieh nach, wie sie gebaut ist.",
+          "besser": "So eine Leiste will ich für Redion — schau nach, wie AFFiNE sie baut.",
+          "besserePrompt": "Das Bild war der beste Teil der Anfrage: ein Bild sagt, WAS gefällt. Daraus wurde W6."
+        },
+        {
+          "zeit": "ca. 17:02",
+          "wortlaut": "integriere alles zusammen",
+          "woher": "wörtlich",
+          "gemeint": "Nicht eine Leiste fürs Whiteboard, sondern eine für alle Flächen — Whiteboard, Gedankenkarte, Schaltplan, Blatt.",
+          "besser": "Eine Leiste für alle Flächen, nicht nur fürs Whiteboard.",
+          "besserePrompt": "Drei Wörter, die das Ziel des GFX-Kerns von der sichtbaren Seite her benennen. So verstanden und in W6 und Audit 2.5 festgehalten."
+        },
+        {
+          "zeit": "ca. 17:10",
+          "wortlaut": "aktuele status",
+          "woher": "wörtlich",
+          "gemeint": "Wo stehen wir?",
+          "besser": "Status?",
+          "besserePrompt": "Passt so."
+        },
+        {
+          "zeit": "ca. 17:13",
+          "wortlaut": "ja offnen oder was ist die pro und contra",
+          "woher": "wörtlich",
+          "gemeint": "L30 öffnen — aber erst Pro und Contra.",
+          "besser": "Was spricht dafür und dagegen, L30 zu öffnen?",
+          "besserePrompt": "Passt so — die Frage nach Pro und Contra vor der Entscheidung ist genau richtig."
+        },
+        {
+          "zeit": "ca. 17:17",
+          "wortlaut": "also redion kann fremnden code haben wenn es redion verbessert wird, und so nicht das die pdf oder bilder oder geheimnisse daten an die driete anbiter geht , und ausserdem nehem fremde coden es ist keine proble aber bevor du etwas fremnes nimmst frage mich und ausserdem muss fremncode.md erstellen damit ich was was mir gehört und was fremd ist und was wird es im redion verbessser",
+          "woher": "wörtlich",
+          "gemeint": "Vier Sätze: Fremdcode ja, wenn er Redion verbessert; nichts geht an Dritte; vorher fragen; FREMDCODE.md führt, was fremd ist und was es bringt.",
+          "besser": "Fremder Code darf rein, wenn er Redion besser macht und keine PDFs, Bilder oder Geheimnisse an Dritte gehen. Frag mich vorher. Und führe eine FREMDCODE.md: was gehört mir, was ist fremd, was bringt es.",
+          "besserePrompt": "Das ist eine vollständige Regel — sie steht jetzt wörtlich in FREMDCODE.md und als §57. Was offen blieb: ob das auch für Plugins gilt, die ein Nutzer einspielt (Sandbox)."
+        },
+        {
+          "zeit": "ca. 20:30",
+          "wortlaut": "Weiter\nWeiter",
+          "woher": "wörtlich",
+          "gemeint": "Nach der Sitzungsgrenze: mach weiter.",
+          "besser": "Passt so.",
+          "besserePrompt": "Passt so."
+        }
+      ],
+      "arbeit": [
+        {
+          "was": "E681 Teil 1 — Plattform-Audit: GFX-Bestand (fünf Systeme, vier Rückgängig-Stapel, drei Zeigerumrechnungen), zehn belegte Duplikate, zwei Sonden (Strg+Z doppelt; Kennungen wechseln), Fragen an Redur; die Karte (karte.mts, karte.json, doku/karte/) mit drei Lesern; L211, L212; FREMD-Lizenzen geprüft",
+          "vonCommit": "a196b65",
+          "bisCommit": "58af180",
+          "zeitraum": "ca. 15:45 – 16:31",
+          "dauer": "ca. 45 min",
+          "pruefungen": "test549, test225, test550, typecheck; zwei Sonden im Scratchpad (kein Prüflauf)"
+        },
+        {
+          "was": "E682 — Strg+Z gehört der Fläche: test568 (26 Zusagen, rot 13/25 gegen den alten Stand, Gegenprobe rot), eine Zeile in schale.ts (defaultPrevented für z/y), Whiteboard mit Taste, Fokusrahmen; Bild",
+          "vonCommit": "58af180",
+          "bisCommit": "446266f",
+          "zeitraum": "ca. 16:31 – 16:47",
+          "dauer": "ca. 16 min Bau, Nachbarn liefen länger",
+          "pruefungen": "test568 neu; Nachbarn 238 239 240 263 345 209 529 538 87 537 105 109 — 537 mit dem bekannten 518/517 (L207), 105 fand einen Typfehler im Wächter (446266f)"
+        },
+        {
+          "was": "L212 Punkt 2 nachgemessen (Bild überlebt; Unterseite verliert Kennung und Fassung 1 → 0); W6 aus Redurs Bild; test569 rot eingecheckt VOR der Reparatur (§30); E683 Fremdcode-Regel mit FREMDCODE.md, §57 und der Zählung (pdf.js eingepackt, WebLLM vom CDN)",
+          "vonCommit": "446266f",
+          "bisCommit": "c26094a",
+          "zeitraum": "ca. 16:47 – 17:20",
+          "dauer": "ca. 33 min",
+          "pruefungen": "test549, test550, test225; zwei Sonden"
+        },
+        {
+          "was": "E684 — Rückgängig ändert Inhalt, nicht Identität: Entwurfs-Panel (drei Entwürfe, zwei Richter), Store.baumAbgleichen (~170 Zeilen), Verlauf.anwenden mit locked-Wache, tempo.ts; test569 auf 36 Zusagen; vier Gegenproben (21/1/2/3 rot); L212 GESCHLOSSEN, L213–L215; messungen nach dem Bau (Fassungen 1 → 1)",
+          "vonCommit": "c26094a",
+          "bisCommit": "03f0c4a",
+          "zeitraum": "ca. 16:51 – 17:35 (Panel 31 min im Hintergrund)",
+          "dauer": "ca. 45 min",
+          "pruefungen": "test569; Nachbarn 70 188 568 226 229 265 48 89 96 100 105 109 537 550 — dreizehn grün, 537 wie gehabt"
+        },
+        {
+          "was": "E685 — die zwei Fassungs-Wiederherstellungen über baumAbgleichen; test569 §13/§14 (48 Zusagen), Gegenprobe sechs rot; danach E681 Teil 2: §4 CLI/MCP, §5 aus karte.json gerendert, R5–R15, Anhang D (eigene Vollständigkeitsprüfung), L30 um E683 ergänzt; Karte mit allen dreizehn Lesern",
+          "vonCommit": "03f0c4a",
+          "bisCommit": "47fb1c8",
+          "zeitraum": "ca. 17:38 – 17:45 und 20:25 – 20:37 (dazwischen Sitzungsgrenze)",
+          "dauer": "ca. 20 min Arbeit",
+          "pruefungen": "test569; Nachbarn 98 538 548 188 105; test549, test550, test225; node karte.mts --pruefen"
+        }
+      ],
+      "zahlen": {
+        "commits": 13,
+        "entscheidungen": 5,
+        "neue Prüfläufe": 2,
+        "volle Läufe": 0
+      },
+      "groesstesProblem": "Der Seitenverlauf löschte die Fassungen von Unterseiten. Nicht der Whiteboard-Kern, nicht die Leiste — ein Strg+Z auf der Elternseite, und die geplante Fassung der Unterseite war weg (1 → 0), ihre Kennung neu, der Favorit tot. Das stand seit jeher als Tatsache in test70 („die Blöcke bekommen neue IDs“), und niemand hatte gefragt, was das kostet. Gefunden hat es keine Lesung, sondern die zweite Sonde, die ich nur gefahren habe, weil die erste (Bild überlebt) zu gut aussah, um die Frage zu schliessen. — Daneben, kleiner: die Sitzungsgrenze des Rechners hat zehn Gegenprüfer und den Vollständigkeitsprüfer des Audits stumm scheitern lassen; das steht jetzt im Audit, und die Vollständigkeit habe ich von Hand geprüft.",
+      "interessantesteAnfrage": "„integriere alles zusammen“ — drei Wörter, auf ein Bild hin. Das Bild zeigte AFFiNEs Edgeless-Leiste; ich hatte sie fürs Whiteboard eingeordnet, und Redur meinte: für alle Flächen. Damit war das Ziel des GFX-Kerns von der sichtbaren Seite her benannt, genauer als der Master-Prompt es konnte: eine Leiste, ein Verlauf, ein Raum — und jeder der drei Datenbögen des Tages ist ein Stück davon.",
+      "massnahmen": [
+        {
+          "zeit": "ca. 16:20",
+          "was": "Den Audit-Workflow gestoppt und mit gekürzter Gegenprüfung (zwei je System, niedriger Aufwand) wieder aufgenommen; die drei fertigen Leser aus dem Zwischenspeicher",
+          "warum": "Bei zwei gleichzeitigen Agenten hätte die volle Gegenprüfung (~60 Prüfer) länger gedauert als die Lesung selbst",
+          "risiko": "zwei laufende Leser gingen verloren und liefen neu (~10 min)"
+        },
+        {
+          "zeit": "ca. 16:00",
+          "was": "Selbst gelesen und zwei Sonden im Browser gefahren, statt auf die Leser zu warten",
+          "warum": "§55.2: eine Behauptung über Strg+Z ist keine Messung; und die Zeit war da",
+          "risiko": "keines — Sonden im Scratchpad, kein Produktcode"
+        },
+        {
+          "zeit": "ca. 16:57",
+          "was": "test569 rot eingecheckt, bevor eine Zeile Reparatur stand",
+          "warum": "§30 verlangt die Reihenfolge, und ein Wächter, der nie rot war, ist eine Behauptung (§50); dazu die Ehrlichkeit gegenüber dem Stop-Hook",
+          "risiko": "ein roter Lauf auf dem Zweig für vierzig Minuten; main bewegt sich ohnehin nicht"
+        },
+        {
+          "zeit": "ca. 16:51",
+          "was": "Ein Entwurfs-Panel (drei Blickwinkel, zwei Richter) für die Verlauf-Reparatur statt direkt zu bauen",
+          "warum": "Ablage und Abgleich sind §9/§25 — die Richter fanden Dinge, die ich allein nicht gesehen hätte (Unterseite als Blatt, Felder löschen, kein Stempel ohne Unterschied, locked)",
+          "risiko": "31 Minuten Wartezeit, in denen der Wächter entstand"
+        },
+        {
+          "zeit": "ca. 17:05",
+          "was": "Vier Gegenproben je gebaut und gefahren, nicht nur eine",
+          "warum": "Vier Zusagen, vier Stellen — jede Gegenprobe soll genau ihre Zeile rot machen (21/1/2/3)",
+          "risiko": "~6 min Bauen"
+        },
+        {
+          "zeit": "ca. 16:22",
+          "was": "Die Karte als erzeugte Doku aus karte.json (wie die Chronik), nicht von Hand",
+          "warum": "Redurs Wunsch, und eine Karte, die jemand von Hand pflegt, lügt beim nächsten Mal",
+          "risiko": "die erste Fassung malte „genannt“ als „benutzt“ (P107) — beim Lesen des eigenen Graphen gefunden"
+        },
+        {
+          "zeit": "ca. 17:15",
+          "was": "Bei Redurs Frage „alles von AFFiNE?“ Nein gesagt und die Gegenfrage gestellt, was ihm gefällt",
+          "warum": "§2, §6, §47, §51 — und weil „alles“ meist ein Bild im Kopf ist, kein Plan",
+          "risiko": "keines; das Bild kam eine halbe Stunde später"
+        }
+      ]
     }
   ],
   "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
@@ -4528,6 +4734,54 @@
       "ursache": "Die Vorlage legt alle 57 Karten in derselben Millisekunde an; `created` ist für alle gleich, `localeCompare` gibt 0, und die Sortierung fällt auf die Reihenfolge von `Object.values(Store.cache.blocks)` zurück. Dazu war die Seite nach Thema gruppiert: p5 (Gewaltentrennung) stand vor p4 (Parlament).",
       "beweis": "test565 §3 rot (wortgleich=false); nach dem Umbau — Seitenreihenfolge über Elternblock und Stelle in `content`, Prüfungsfragen zuoberst — 54/54.",
       "lehre": "Ein Zeitstempel ordnet nichts, was gleichzeitig entsteht. Die Reihenfolge, die zählt, ist die, die der Mensch sieht und ändern kann — die Seite. Und ein Wächter, der nur den ersten Fall prüft, hätte hier „passt schon“ gesagt (§55.2)."
+    },
+    {
+      "nr": "P107",
+      "datum": "2026-09-25",
+      "titel": "Der Graph der Karte malte „genannt“ als „benutzt“",
+      "schwere": "klein",
+      "symptom": "In doku/karte/Redion.md zeigte ein Pfeil vom Whiteboard auf SheetSpace und InkGeometry — beides benutzt das Whiteboard NICHT, das war gerade der Befund.",
+      "falscheVermutung": "Wenn ein Befund einen Kern nennt, benutzt das System ihn.",
+      "wieGefunden": "Beim Lesen des ersten erzeugten Graphen: der Pfeil widersprach dem Satz daneben („InkGeometry — NICHT genutzt“).",
+      "ursache": "Die Kante wurde aus jedem Vorkommen des Namens im Befund gerechnet, auch aus Sätzen mit „NICHT genutzt“.",
+      "beweis": "Nach der Trennung in „benutzt“ (gemeinsamGenutzt/Schnittstellen ohne Verneinung) und „nur genannt“ zeigt das Whiteboard auf Store, Register, Dateien — und SheetSpace/InkGeometry stehen unter „nur genannt“.",
+      "lehre": "Ein gerechneter Graph ist eine Behauptung wie jede andere; man liest ihn gegen den Text, aus dem er kommt, bevor man ihn zeigt."
+    },
+    {
+      "nr": "P108",
+      "datum": "2026-09-25",
+      "titel": "Strg+Z nahm zweimal zurück — der Block und die ganze Seite",
+      "schwere": "mittel",
+      "symptom": "Im Schaltplan: Teil gesetzt, Strg+Z — drei Teile wie vorher, Meldung „Rückgängig“, Block neu gezeichnet, neue Kennung. Auf dem Blatt: ein Strich weg, der alte Block existiert nicht mehr.",
+      "falscheVermutung": "Wer preventDefault ruft, hat die Taste.",
+      "wieGefunden": "Aus dem Lesen (schale.ts hört am Dokument ohne Blick auf defaultPrevented; Planfläche und Marken ohne stopPropagation) eine Sonde gebaut und gefahren — Ausgabe wörtlich im Audit 2.4.",
+      "ursache": "Der Dokument-Horcher der Schale rief bei jedem Strg+Z Verlauf.zurueck(); der Seitenverlauf riss die Seite ab und baute sie neu.",
+      "beweis": "test568 gegen den alten Stand rot 13/25; nach einer Zeile in der Schale 26/26; Gegenprobe (Zeile raus) wieder rot.",
+      "lehre": "Eine Taste hat zwei Enden. Wer die eine Hälfte liest, sieht die Doppelung nicht — messen, mit dem Fokus dort, wo der Mensch ihn hätte."
+    },
+    {
+      "nr": "P109",
+      "datum": "2026-09-25",
+      "titel": "Der Seitenverlauf gab jedem Block neue Kennungen — und löschte die Fassungen der Unterseiten",
+      "schwere": "hoch",
+      "symptom": "Strg+Z auf der Elternseite: Unterseite a8da9eea… → a7ecec08…, Fassungen 1 → 0, Favorit zeigt auf die alte Kennung. Ein Bild dagegen überlebte (Dateisatz umgehängt).",
+      "falscheVermutung": "Wenn das Bild überlebt, ist der Kennungswechsel eine Schönheitsfrage.",
+      "wieGefunden": "Die zweite Sonde — mit einer Unterseite statt eines Bildes — nur gefahren, weil die erste zu beruhigend war.",
+      "ursache": "Verlauf.anwenden = kinderLeeren (purgeBlock je Kind: Grabsteine, purgeAnhaenge löscht versions) + baumEinfuegen („immer mit frischen IDs“). Eine Unterseite ist ein Kind der Seite.",
+      "beweis": "test569 gegen den alten Stand rot 10/20; mit Store.baumAbgleichen 36/36 (später 48/48); Sonde nach dem Bau: Fassungen 1 → 1, Kennung gleich. Vier Gegenproben rot an ihren Stellen.",
+      "lehre": "Ein Zurück, das abreisst und neu baut, ist kein Zurück, sondern ein Ersatz — und alles, was an der Identität hing, hängt dann an nichts. Die richtige Messung ist die mit dem Ding, das am meisten zu verlieren hat (Fassungen), nicht die mit dem, das am meisten Angst macht (Bytes)."
+    },
+    {
+      "nr": "P110",
+      "datum": "2026-09-25",
+      "titel": "Ein Commit ohne seinen Inhalt — das Schreibskript war an einem Anführungszeichen gescheitert",
+      "schwere": "klein",
+      "symptom": "Commit 680d19d hiess „L212 Punkt 2 nachgemessen: … Unterseite …“, enthielt aber nur die Bild-Sonde in messungen.md; L212 und der Audit waren unverändert.",
+      "falscheVermutung": "Wenn das Python-Skript und der Commit in derselben Befehlskette stehen, enthält der Commit, was das Skript schreiben sollte.",
+      "wieGefunden": "Die Fehlermeldung stand über dem Commit-Erfolg: SyntaxError, unterminated string literal — die Doku benutzt „…\" mit einem ASCII-Anführungszeichen als Schlusszeichen, und das schloss meine Zeichenkette.",
+      "ursache": "Ein Parsefehler bricht das ganze Skript ab, bevor die erste Zeile läuft; `&&` hinter einem Heredoc-Python prüft nur den Exit — und den hatte ich nicht geprüft, weil die nächste Zeile ohne && folgte.",
+      "beweis": "Nachtrag f014fa3 mit den drei fehlenden Änderungen; danach test549 6/6.",
+      "lehre": "Zeichenketten mit Redions Anführungszeichen nur in dreifachen Anführungszeichen schreiben — und ein Commit gehört hinter ein `&&`, nicht hinter ein Zeilenende."
     }
   ]
 }

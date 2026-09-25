@@ -120,6 +120,10 @@ sind der teuerste Teil und der lehrreichste.
 | P104 | 2026-09-21 | Eine Gegenprobe, die gar nicht lief | 🟠 mittel | — |
 | P105 | 2026-09-21 | Der Glätter hielt die Ecke, die Marke nicht — acht gleichmässige Punkte statt der Ecken | 🟠 mittel | — |
 | P106 | 2026-09-22 | Frage 5 kam vor Frage 4 — 57 Karten in derselben Millisekunde, sortiert nach created | 🟠 mittel | — |
+| P107 | 2026-09-25 | Der Graph der Karte malte „genannt“ als „benutzt“ | 🟡 klein | — |
+| P108 | 2026-09-25 | Strg+Z nahm zweimal zurück — der Block und die ganze Seite | 🟠 mittel | — |
+| P109 | 2026-09-25 | Der Seitenverlauf gab jedem Block neue Kennungen — und löschte die Fassungen der Unterseiten | hoch | — |
+| P110 | 2026-09-25 | Ein Commit ohne seinen Inhalt — das Schreibskript war an einem Anführungszeichen gescheitert | 🟡 klein | — |
 
 ---
 
@@ -2315,4 +2319,80 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** test565 §3 rot (wortgleich=false); nach dem Umbau — Seitenreihenfolge über Elternblock und Stelle in `content`, Prüfungsfragen zuoberst — 54/54.
 
 **Die Lehre.** Ein Zeitstempel ordnet nichts, was gleichzeitig entsteht. Die Reihenfolge, die zählt, ist die, die der Mensch sieht und ändern kann — die Seite. Und ein Wächter, der nur den ersten Fall prüft, hätte hier „passt schon“ gesagt (§55.2).
+
+
+---
+
+## P107 · Der Graph der Karte malte „genannt“ als „benutzt“
+
+*2026-09-25 · 🟡 klein*
+
+**Das Bild.** In doku/karte/Redion.md zeigte ein Pfeil vom Whiteboard auf SheetSpace und InkGeometry — beides benutzt das Whiteboard NICHT, das war gerade der Befund.
+
+**Die falsche Vermutung.** Wenn ein Befund einen Kern nennt, benutzt das System ihn.
+
+**Wie es gefunden wurde.** Beim Lesen des ersten erzeugten Graphen: der Pfeil widersprach dem Satz daneben („InkGeometry — NICHT genutzt“).
+
+**Die Ursache.** Die Kante wurde aus jedem Vorkommen des Namens im Befund gerechnet, auch aus Sätzen mit „NICHT genutzt“.
+
+**Der Beweis.** Nach der Trennung in „benutzt“ (gemeinsamGenutzt/Schnittstellen ohne Verneinung) und „nur genannt“ zeigt das Whiteboard auf Store, Register, Dateien — und SheetSpace/InkGeometry stehen unter „nur genannt“.
+
+**Die Lehre.** Ein gerechneter Graph ist eine Behauptung wie jede andere; man liest ihn gegen den Text, aus dem er kommt, bevor man ihn zeigt.
+
+
+---
+
+## P108 · Strg+Z nahm zweimal zurück — der Block und die ganze Seite
+
+*2026-09-25 · 🟠 mittel*
+
+**Das Bild.** Im Schaltplan: Teil gesetzt, Strg+Z — drei Teile wie vorher, Meldung „Rückgängig“, Block neu gezeichnet, neue Kennung. Auf dem Blatt: ein Strich weg, der alte Block existiert nicht mehr.
+
+**Die falsche Vermutung.** Wer preventDefault ruft, hat die Taste.
+
+**Wie es gefunden wurde.** Aus dem Lesen (schale.ts hört am Dokument ohne Blick auf defaultPrevented; Planfläche und Marken ohne stopPropagation) eine Sonde gebaut und gefahren — Ausgabe wörtlich im Audit 2.4.
+
+**Die Ursache.** Der Dokument-Horcher der Schale rief bei jedem Strg+Z Verlauf.zurueck(); der Seitenverlauf riss die Seite ab und baute sie neu.
+
+**Der Beweis.** test568 gegen den alten Stand rot 13/25; nach einer Zeile in der Schale 26/26; Gegenprobe (Zeile raus) wieder rot.
+
+**Die Lehre.** Eine Taste hat zwei Enden. Wer die eine Hälfte liest, sieht die Doppelung nicht — messen, mit dem Fokus dort, wo der Mensch ihn hätte.
+
+
+---
+
+## P109 · Der Seitenverlauf gab jedem Block neue Kennungen — und löschte die Fassungen der Unterseiten
+
+*2026-09-25 · hoch*
+
+**Das Bild.** Strg+Z auf der Elternseite: Unterseite a8da9eea… → a7ecec08…, Fassungen 1 → 0, Favorit zeigt auf die alte Kennung. Ein Bild dagegen überlebte (Dateisatz umgehängt).
+
+**Die falsche Vermutung.** Wenn das Bild überlebt, ist der Kennungswechsel eine Schönheitsfrage.
+
+**Wie es gefunden wurde.** Die zweite Sonde — mit einer Unterseite statt eines Bildes — nur gefahren, weil die erste zu beruhigend war.
+
+**Die Ursache.** Verlauf.anwenden = kinderLeeren (purgeBlock je Kind: Grabsteine, purgeAnhaenge löscht versions) + baumEinfuegen („immer mit frischen IDs“). Eine Unterseite ist ein Kind der Seite.
+
+**Der Beweis.** test569 gegen den alten Stand rot 10/20; mit Store.baumAbgleichen 36/36 (später 48/48); Sonde nach dem Bau: Fassungen 1 → 1, Kennung gleich. Vier Gegenproben rot an ihren Stellen.
+
+**Die Lehre.** Ein Zurück, das abreisst und neu baut, ist kein Zurück, sondern ein Ersatz — und alles, was an der Identität hing, hängt dann an nichts. Die richtige Messung ist die mit dem Ding, das am meisten zu verlieren hat (Fassungen), nicht die mit dem, das am meisten Angst macht (Bytes).
+
+
+---
+
+## P110 · Ein Commit ohne seinen Inhalt — das Schreibskript war an einem Anführungszeichen gescheitert
+
+*2026-09-25 · 🟡 klein*
+
+**Das Bild.** Commit 680d19d hiess „L212 Punkt 2 nachgemessen: … Unterseite …“, enthielt aber nur die Bild-Sonde in messungen.md; L212 und der Audit waren unverändert.
+
+**Die falsche Vermutung.** Wenn das Python-Skript und der Commit in derselben Befehlskette stehen, enthält der Commit, was das Skript schreiben sollte.
+
+**Wie es gefunden wurde.** Die Fehlermeldung stand über dem Commit-Erfolg: SyntaxError, unterminated string literal — die Doku benutzt „…" mit einem ASCII-Anführungszeichen als Schlusszeichen, und das schloss meine Zeichenkette.
+
+**Die Ursache.** Ein Parsefehler bricht das ganze Skript ab, bevor die erste Zeile läuft; `&&` hinter einem Heredoc-Python prüft nur den Exit — und den hatte ich nicht geprüft, weil die nächste Zeile ohne && folgte.
+
+**Der Beweis.** Nachtrag f014fa3 mit den drei fehlenden Änderungen; danach test549 6/6.
+
+**Die Lehre.** Zeichenketten mit Redions Anführungszeichen nur in dreifachen Anführungszeichen schreiben — und ein Commit gehört hinter ein `&&`, nicht hinter ein Zeilenende.
 
