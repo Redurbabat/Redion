@@ -4226,3 +4226,24 @@ der Dateisatz wird auf den neuen Block umgehängt und die Bytes bleiben —
 der Anspruch (`dateiAnspruch`) greift, bevor der Purge die Datei löst. Was
 bleibt, ist die Kennung selbst (und mit ihr Grabsteine und Neuanlagen für
 den Abgleich, Verweise von aussen) — siehe die zweite Sonde darunter.
+
+## 25. September 2026 — Und eine Unterseite? Kennung weg, Fassungen weg, Favorit tot (Bogen 2, L212 Punkt 2)
+
+Dieselbe Sonde mit einer UNTERSEITE als Kind der Seite: eigener Text, eine
+geplante Fassung (`Store.versionSpeichern(kind.id, 'geplant')`), ein
+Favorit (`meta.favoriten = [kind.id]`). Zwei Textänderungen an der
+Elternseite, Strg+Z, 2,5 s warten.
+
+```txt
+                       Unterseite   alte lebt  Fassungen (alt / neu)  Favorit zeigt auf   Inhalt
+Ausgang                a8da9eea…    ja         1 / —                  die Unterseite      da
+nach Strg+Z (2,5 s)    a7ecec08…    NEIN       0 / 0                  die ALTE Kennung    da
+```
+
+Lesart: der Text der Unterseite überlebt, sonst nichts — **die Fassung ist
+gelöscht** (`purgeAnhaenge` räumt `versions` je gepurgtem Block, und eine
+Unterseite ist ein Kind der Seite), die Kennung ist neu, und jeder Verweis
+von aussen (Favorit, Link, „zuletzt geöffnet", Erwähnung) zeigt auf einen
+Block, den es nicht mehr gibt. Ein Strg+Z auf der Elternseite löscht also
+den Verlauf der Unterseite. Das ist §15 in seiner einfachsten Form
+verletzt, und es ist der Grund, warum Bogen 2 vor `raumVersion` kommt.

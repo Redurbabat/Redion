@@ -425,7 +425,7 @@ gemeinsam genutzt · Duplikate · Doku-Stand · Risiken · kleinster Schritt)*
 
 | Nr. | Risiko | Woher | Was fehlt |
 |---|---|---|---|
-| R1 | Seitenverlauf vergibt frische Kennungen und purgt die alten Blöcke — Anhänge, Verweise, Grabsteine für den Abgleich | 2.4 (gemessen), `indexdb.ts:2508`, `verlauf.ts:58-67`, `test70.mts:351-352` | ein Wächter „Kennungen überleben Strg+Z", eine Messung mit Anhang, eine Entscheidung (E174 als Vorbild) |
+| R1 | Seitenverlauf vergibt frische Kennungen und purgt die alten Blöcke. **Nachgemessen (messungen.md, 25. September):** ein Bild überlebt (Dateisatz wird umgehängt); eine **Unterseite** verliert Kennung und Fassungen (1 → 0), ein Favorit zeigt ins Leere | 2.4 (gemessen), `indexdb.ts:2508`, `verlauf.ts:58-67`, `test70.mts:351-352`, zwei Sonden | ein Wächter „Kennungen und Fassungen überleben Strg+Z", `Verlauf.anwenden`, das abgleicht statt purgt — Bogen 2, von Redur freigegeben |
 | R2 | Strg+Z doppelt (Block + Seite) in Planfläche und Marken; Whiteboard ohne Taste | 2.4 (gemessen) | test568 + eine Zeile in der Schale (2.7) |
 | R3 | Whiteboard-Koordinaten ohne `raumVersion` | `space.ts:26-30`, `zeichenflaeche.ts` | vor jeder Formeländerung eine Version |
 | R4 | `esc` 54× ohne Apostroph | D5 | ein Helfer, ein Wächter (test87 prüft heute `esc` an einer Stelle) |

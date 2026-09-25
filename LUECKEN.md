@@ -8235,10 +8235,18 @@ Schale lässt eine Taste liegen, die ein Block schon genommen hat
 (`defaultPrevented`), und das Whiteboard hat seine Taste. Die Lücke bleibt
 für Punkt 2 offen.
 
-**Was fehlt:** für 2 eine Messung mit Anhang (überlebt ein Bild ein
-Strg+Z auf einer Textseite?) und dann `Verlauf.anwenden`, das Kennungen
-behält, statt zu purgen und neu anzulegen — der nächste Bogen (E681,
-Reihenfolge 2). Redur hat die Reihenfolge am 25. September freigegeben.
+**Gemessen am 25. September (messungen.md):** ein Bild überlebt — der
+Dateisatz wird auf den neuen Block umgehängt, die Bytes bleiben. Eine
+**Unterseite** überlebt nicht als sie selbst: neue Kennung, ihre geplante
+Fassung ist gelöscht (1 → 0), ein Favorit zeigt auf die alte Kennung.
+Ein Strg+Z auf der Elternseite löscht den Verlauf der Unterseite (§15).
+
+**Was fehlt:** `Verlauf.anwenden`, das Kennungen behält — abgleichen statt
+purgen und neu anlegen —, ein Wächter, der die Unterseite mit Fassung und
+Favorit hält, und derselbe Blick auf die fünf anderen Stellen mit
+`kinderLeeren` + `baumEinfuegen` (fassungen.ts, werkzeuge.ts ×2, dienst.ts,
+wissensseiten.ts). Der nächste Bogen (E681, Reihenfolge 2); Redur hat die
+Reihenfolge am 25. September freigegeben.
 
 ---
 
