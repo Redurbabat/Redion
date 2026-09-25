@@ -50,7 +50,11 @@ type System = {
 };
 type Reference = { key: string; name: string; lizenz: string; befund: Record<string, unknown> };
 type Core = { name: string; datei: string; was: string };
-type Map = { stand: string; head: string; hinweis: string; systeme: System[]; referenzen: Reference[]; kerne: Core[] };
+/* Ein Thema ist eine Karte QUER durch die Systeme — eine Frage, die mehrere
+   Systeme zugleich betrifft (die vier Werkzeugleisten für W6). Sie hängt an
+   keinem System und an keinem Kern; sie hat einen Stand und eine Quelle. */
+type Topic = { key: string; name: string; stand: string; quelle: string; abschnitte: Array<{ titel: string; punkte: string[] }> };
+type Map = { stand: string; head: string; hinweis: string; systeme: System[]; referenzen: Reference[]; kerne: Core[]; themen?: Topic[] };
 
 const map: Map = JSON.parse(fs.readFileSync(SOURCE, 'utf8'));
 
@@ -156,6 +160,11 @@ const overview = (): string => {
   if (map.referenzen.length) {
     lines.push(`## Die Referenzen (nur gelesen, nichts übernommen)\n`);
     for (const r of map.referenzen) lines.push(`- [[referenz-${r.key}|${r.name}]] — ${r.lizenz}`);
+    lines.push('');
+  }
+  if (map.themen?.length) {
+    lines.push(`## Die Themen (quer durch die Systeme)\n`);
+    for (const t of map.themen) lines.push(`- [[thema-${t.key}|${esc(t.name)}]] — Stand ${t.stand}, ${t.quelle}`);
     lines.push('');
   }
   lines.push(`## Wie die Karte gepflegt wird\n`);
@@ -277,12 +286,32 @@ const referenceNote = (r: Reference): string => {
   return L.join('\n');
 };
 
+/* --- Eine Notiz je Thema -------------------------------------------------- */
+const topicNote = (t: Topic): string => {
+  const L: string[] = [];
+  L.push(header('doku/karte/karte.json'));
+  L.push('---');
+  L.push(`tags: [redion, thema, ${t.key}]`);
+  L.push(`stand: ${t.stand}`);
+  L.push('---\n');
+  L.push(`# ${t.name}\n`);
+  L.push(`Stand ${t.stand} · Quelle: ${t.quelle}. Jeder Punkt trägt Datei:Zeile vom Tag des Standes; wer später liest, prüft die Zeile, nicht den Satz.\n`);
+  for (const a of t.abschnitte) {
+    L.push(`## ${a.titel}\n`);
+    for (const x of a.punkte) L.push(`- ${x}`);
+    L.push('');
+  }
+  L.push(`Zurück zur [[Redion|Übersicht]].\n`);
+  return L.join('\n');
+};
+
 /* --- Schreiben oder prüfen ------------------------------------------------ */
 const files = new Map<string, string>();
 files.set('Redion.md', overview());
 for (const s of map.systeme) files.set(`${s.key}.md`, systemNote(s));
 for (const k of map.kerne) files.set(`kern-${slug(k.name)}.md`, coreNote(k));
 for (const r of map.referenzen) files.set(`referenz-${r.key}.md`, referenceNote(r));
+for (const t of map.themen ?? []) files.set(`thema-${t.key}.md`, topicNote(t));
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 let stale = 0;

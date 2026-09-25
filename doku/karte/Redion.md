@@ -153,6 +153,10 @@ graph LR
 - [[referenz-siyuan|SiYuan]] — AGPL-3.0 — keine Codeübernahme möglich
 - [[referenz-affine|AFFiNE / BlockSuite]] — MIT (blocksuite, framework/std); packages/backend unter eigener Lizenz — nicht übernommen
 
+## Die Themen (quer durch die Systeme)
+
+- [[thema-werkzeugleisten|Die vier Werkzeugleisten — das „Vorher" für W6]] — Stand 25. September 2026, ein Leser für Bogen 5 (E681-Karte, Zeilen am HEAD 0b19a34 nachgesehen)
+
 ## Wie die Karte gepflegt wird
 
 Quelle ist `doku/karte/karte.json`; `node karte.mts` schreibt alle Notizen neu, `node karte.mts --pruefen` sagt nur, ob sie stimmen. Ein neuer Befund kommt ins JSON, nicht in eine Notiz. Wer ein System umbaut, trägt es dort nach — sonst lügt die Karte beim nächsten Mal.
