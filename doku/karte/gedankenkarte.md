@@ -6,7 +6,7 @@
 ---
 tags: [redion, system, gedankenkarte]
 stand: 25. September 2026
-head: a196b65
+head: 1b89c01
 ---
 
 # C · Gedankenkarte (Mindmap)
@@ -82,16 +82,18 @@ Kein eigenes IndexedDB-Fach, kein eigener Bereich: die Karte ist ein gewöhnlich
 
 ## Duplikate — je mit zwei Stellen und Zitat
 
-Führen zu: [[zeichenflaeche|B · Whiteboard / Zeichenfläche]] · elektro
+Führen zu: [[zeichenflaeche|B · Whiteboard / Zeichenfläche]] · [[elektro|F · Schaltplan, Fachzeichen, Elektro]]
 
-1. **SVG-Elementhelfer `sv(name, attrs)` mit createElementNS + setAttribute-Schleife**
+1. **SVG-Elementhelfer `sv(name, attrs)` mit createElementNS + setAttribute-Schleife** — **gegengeprüft: bestätigt**
    - hier: `src/bereiche/bloecke/arten/gedankenkarte.ts:113-118`
    - dort: `src/bereiche/bloecke/arten/zeichenflaeche.ts:31-36`
    - Beleg: hier: `const NS = 'http://www.w3.org/2000/svg'; const sv = (name: string, attrs: Record<string, unknown> = {}): SVGElement => { const e = document.createElementNS(NS, name); Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, String(v)));` — dort: `const NS = 'http://www.w3.org/2000/svg'; const sv = (name: string, attrs: Record<string, unknown> = {}) => { const e = document.createElementNS(NS, name); Object.entries<any>(attrs).forEach(([k, v]) => e.setAttribute(k, String(v)));`
-2. **`farbeVon(i)` — Palettenzugriff mit doppeltem Modulo auf ein [Farbe, Name]-Paar (E414)**
+   - Urteil: Widerlegungsversuch gescheitert: beide (und marken.ts:783) lösen exakt dieselbe Aufgabe — ein SVG-Element im SVG-Namensraum anlegen und flache Attribute als String setzen. Keine Einheiten, Koordinaten oder Sonderfälle; die Funktion ist reines DOM-Bauen ohne fachliche Logik und damit genau das, was CLAUDE.md §5 Regel 1 Weg 2 („gemeinsame Logik nach kern/") meint. Eine gemeinsame Funktion z. B. in src/core/helpers/svg.ts (globaler Name wie die übrigen Helfer, da es in src/bereiche/ keine `import`-Zeilen gibt, §5) wäre ohne Verhaltensänderung möglich; die strengere Typisierung aus gedankenkarte.ts (`Record<string, unknown>`, Rückgabe `SVGElement`) sollte dabei die `any`-Fassung ersetzen (§52.7). Zu beachten: neue Skriptdatei braucht zwei Einträge — `<script>` in index.html und `GRUNDSTOCK` in src/dienst/sw.ts (§28) — und die Ladereihenfolge muss vor zeichenflaeche.ts/gedankenkarte.ts/marken.ts liegen; test105/test109 sind zuständig.
+2. **`farbeVon(i)` — Palettenzugriff mit doppeltem Modulo auf ein [Farbe, Name]-Paar (E414)** — **gegengeprüft: bestätigt**
    - hier: `src/bereiche/bloecke/arten/gedankenkarte.ts:156-157`
    - dort: `src/bereiche/bloecke/arten/zeichenflaeche.ts:67-68`
    - Beleg: hier: `PALETTE[((i % PALETTE.length) + PALETTE.length) % PALETTE.length]?.[0] ?? '#2f8ab5'` — dort: `PALETTE[((i % PALETTE.length) + PALETTE.length) % PALETTE.length]?.[0] ?? '#529cca'` (nur der Rückfallwert unterscheidet sich)
+   - Urteil: Beide Stellen lösen dieselbe Aufgabe: „gib den Farbwert (Index 0 des [Farbe, Name]-Paars) an Stelle i, zyklisch und auch für negative i, mit Rückfall". Der Algorithmus ist zeichengleich; der Gedankenkarte-Kommentar (Z.129-131) sagt ausdrücklich, dass er den Whiteboard-Helfer nachbaut. Keine Stelle ruft die andere auf: beide sind `const` in je einer eigenen IIFE (`Gedankenkarte = (() => {…` Z.104 bzw. `Zusatz`), nach aussen nur als Feld der Rückgabe (gedankenkarte.ts:1593, zeichenflaeche.ts:1537); ein fremder Aufrufer findet sich nur für Zusatz.farbeVon in src/bereiche/datenbanken/steuerung.ts:3961. Die anderen `farbeVon` im Projekt (notebook.ts:303, schaltplan.ts:486, marken.ts:6084) sind namensgleich, aber andere Signaturen/Aufgaben. Kein Widerlegungsgrund gefunden — die Eingaben (Index) und die Ausgabe (Hex-String) sind identisch, es gibt keine anderen Einheiten oder Koordinaten. Der Unterschied liegt ausschliesslich in den DATEN (zwei verschiedene Paletten, zwei verschiedene Rückfallfarben), nicht in der Logik.
 3. **`uid()` — 'präfix' + Ids.short() mit performance.now-Rückfall**
    - hier: `src/bereiche/bloecke/arten/gedankenkarte.ts:159-161`
    - dort: `src/bereiche/bloecke/arten/schaltplan.ts:184-186`

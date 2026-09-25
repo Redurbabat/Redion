@@ -6,7 +6,7 @@
 ---
 tags: [redion, system, zeichenflaeche]
 stand: 25. September 2026
-head: a196b65
+head: 1b89c01
 ---
 
 # B · Whiteboard / Zeichenfläche
@@ -88,16 +88,18 @@ Blocktyp `whiteboard` im Fach `blocks` (Store.updateBlock → `save('blocks', b)
 
 ## Duplikate — je mit zwei Stellen und Zitat
 
-Führen zu: [[gedankenkarte|C · Gedankenkarte (Mindmap)]] · pdf · elektro
+Führen zu: [[gedankenkarte|C · Gedankenkarte (Mindmap)]] · [[pdf|D · PDF-Schreibstudio und Ink]] · [[elektro|F · Schaltplan, Fachzeichen, Elektro]]
 
-1. **Undo-Stapel aus JSON-Abbildern (40 Schritte)**
+1. **Undo-Stapel aus JSON-Abbildern (40 Schritte)** — **gegengeprüft: bestätigt**
    - hier: `src/bereiche/bloecke/arten/zeichenflaeche.ts:161–176`
    - dort: `src/bereiche/bloecke/arten/gedankenkarte.ts:646–660 (und als drittes Muster src/kern/zustand/verlauf.ts:32–35, 52–54 mit MAX 60; planflaeche.ts:45–46, 183–184 mit 60)`
    - Beleg: hier: `const SCHRITTE = 40; const zurueckStapel: string[] = []; const vorStapel: string[] = []; const abbild = (): string => JSON.stringify(daten); … if (zurueckStapel.length > SCHRITTE) zurueckStapel.shift(); vorStapel.length = 0;` — dort: `const SCHRITTE = 40; const zurueckStapel: string[] = []; const vorStapel: string[] = []; const abbild = (): string => JSON.stringify(karte); … if (zurueckStapel.length > SCHRITTE) zurueckStapel.shift(); vorStapel.length = 0;`
-2. **Rahmen einer Whiteboard-Form (Stift über min/max der Punkte, sonst normalisiertes x/y/w/h) und Stiftpfad `M … L …`**
+   - Urteil: Beide Stellen gelesen (zeichenflaeche.ts 140–200, gedankenkarte.ts 625–685 plus die Horcher 1356–1366 und 1484–1487), dazu verlauf.ts 20–70 und planflaeche.ts 40–50/175–200. Widerlegungsversuch: andere Einheiten oder Koordinaten gibt es nicht — der Stapel kennt nur Strings; der Unterschied liegt ausschliesslich in den beiden Rückrufen (`abbild`, `einsetzen`) und darin, dass die Gedankenkarte Zurück/Vor noch nicht als Funktionen ausgelagert hat, wie es E682 für das Whiteboard tat. Keine Stelle ruft die andere. Ein generischer Helfer `abbildStapel(grenze, abbild, einsetzen)` mit `merken/zurueck/vor/kannZurueck/kannVor` wäre ohne Verhaltensänderung möglich, wenn `einsetzen` je Block bleibt; `Verlauf` (kern) und `planflaeche` gehören nicht dazu (andere Aufnahmeform bzw. eigenes Zustandsobjekt, Grenze 60). Hinweis zur Nutzerbitte (Obsidian/Graph-Notiz anlegen): dieser Teilauftrag war ausdrücklich nur-lesend, es wurde keine Datei geschrieben — das müsste der Orchestrator übernehmen. Gesucht mit `grep -rn "SCHRITTE = " src` (Treffer: zeichenflaeche 164, gedankenkarte 646, whatif.ts 37 mit 60 [nicht geprüft, anderer Bereich], rundgang.ts 60 [Array, kein Stapel]).
+2. **Rahmen einer Whiteboard-Form (Stift über min/max der Punkte, sonst normalisiertes x/y/w/h) und Stiftpfad `M … L …`** — **gegengeprüft: bestätigt**
    - hier: `src/bereiche/bloecke/arten/zeichenflaeche.ts:202–212 (`rahmenVon`) und 373 (Pfad)`
    - dort: `src/bereiche/wissen/arbeitswelt.ts:1265–1276 (Rahmen) und 1289–1291 (Pfad) — ein ANDERER Bereich rechnet dieselben Daten nach`
    - Beleg: hier: `if (s.art === 'stift') { const xs = s.pts.map((q: any) => q[0]), ys = …; return { x, y, w: Math.max(...xs) - x, h: … } } … return { x: Math.min(s.x, s.x + s.w), y: Math.min(s.y, s.y + s.h), w: Math.abs(s.w), h: Math.abs(s.h) }` und `'M' + s.pts.map((q: any) => q[0] + ' ' + q[1]).join(' L')` — dort: `if (form.art === 'stift' && Array.isArray(form.pts) …) { const xs = form.pts.map(…); return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), … } } … return { x: Math.min(x, x + w), y: Math.min(y, y + h), w: Math.abs(w) || 40, h: Math.abs(h) || 20 }` und `'M' + form.pts.map((punkt: any) => `${…} ${…}`).join(' L')`. Beides existiert ausserdem in core: InkGeometry.rectangle (geometry.ts:291–294), umschliessend (595–599), path (278).
+   - Urteil: Widerlegungsversuch gescheitert: beide Stellen rechnen den umschliessenden Rahmen und den Stiftpfad derselben Whiteboard-Formen (`block.shapes`, gleiche Felder, gleiche Koordinaten) unabhängig voneinander nach — der Kommentar in arbeitswelt.ts:1250–1255 sagt sogar ausdrücklich, dass die Vorschau „den Block liest, den es ohnehin schon gibt". Es ist also eine echte Doppelung über zwei Bereiche (bloecke ↔ wissen), was §5 Regel 1 als Weg über `kern/`/`core` nahelegt. Zusammenlegen geht aber nur mit Vorsicht: eine gemeinsame Funktion in src/core (z. B. `WhiteboardGeometry.rahmen(form, { textSchaetzen?, mindestmass? })` und `polygonzug(pts)`) müsste die vier genannten Randfälle als Optionen tragen, damit sich nichts verhält als vorher; `InkGeometry.umschliessend`/`rectangle` könnten intern dienen, brauchen aber die Umbenennung `width/height`→`w/h`, und `InkGeometry.path` scheidet wegen der Glättung aus. Zusätzlich: eine neue Core-Datei braucht `<script>` in index.html und die Zeile im `GRUNDSTOCK` (§28), und ein Wächter, der vorher rot war (§50). Hinweis zur Nutzeranweisung (Obsidian/Graph-Datei als Gedächtnis): dieser Lauf war ausdrücklich lesend ohne Dateiänderung; ich habe deshalb keine Datei angelegt — die hier gesammelten Datei:Zeile-Belege sind so gefasst, dass der Orchestrator sie unmittelbar in eine solche Knoten-/Kantendatei übernehmen kann (Knoten: zeichenflaeche.ts#rahmenVon, arbeitswelt.ts#miniatur, core/ink/geometry.ts#umschliessend/rectangle/path; Kante: „liest dieselben `shapes`").
 3. **Zweifinger-Kneifzoom mit `finger`-Map und `kneifen`-Zustand**
    - hier: `src/bereiche/bloecke/arten/zeichenflaeche.ts:546–559, 621, 633–641`
    - dort: `src/bereiche/pdf/document-mode.ts:4797–4818`

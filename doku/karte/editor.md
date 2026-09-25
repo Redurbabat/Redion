@@ -6,7 +6,7 @@
 ---
 tags: [redion, system, editor]
 stand: 25. September 2026
-head: a196b65
+head: 1b89c01
 ---
 
 # A · Editor und Blockmodell
@@ -92,10 +92,11 @@ Ein Block liegt im IndexedDB-Fach `blocks` (keyPath id) als flaches Objekt; die 
    - hier: `src/bereiche/editor/ansicht/editor.ts:3218-3223 (auswahlSetzen/auswahlLeeren, Feld `ausgewaehlt`, Klasse `gewaehlt`)`
    - dort: `src/bereiche/editor/mehrfach.ts:15, 38-40, 52-58 (Set `gewaehlt`, leeren/waehle, Klasse `sel`)`
    - Beleg: editor.ts: `const auswahlLeeren = () => { ausgewaehlt = []; ankerId = null; auswahlZeigen(); };` — mehrfach.ts: `const leeren = (): void => { gewaehlt.clear(); zeichne(); };` und `el.classList.toggle('sel', …gewaehlt.has(…))`. Beide werden gestartet: `Blocks.auswahlEinklinken` (editor.ts:3479) und `Mehrfach.start()` (schale.ts:4093).
-2. **Escape-Funktion `esc`**
+2. **Escape-Funktion `esc`** — **gegengeprüft: bestätigt**
    - hier: `src/bereiche/editor/ansicht/editor.ts:328-329`
    - dort: `src/kern/helfer/vorschau.ts:46-48 (und ~65 weitere Dateien, grep 'const esc = ' src)`
    - Beleg: editor.ts: `const esc = (s: any) => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');` — vorschau.ts: `const esc = (s: unknown): string => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');` (die Editor-Fassung escapet `'` NICHT)
+   - Urteil: Beide Stellen gelesen (editor.ts 300-370, vorschau.ts 20-90). Es sind zwei unabhängige lokale Kopien derselben HTML-Escape-Funktion, keine ruft die andere, kein gemeinsames Vorbild in src/core existiert. Die Aufgabe ist identisch (Entschärfen von Nutzertext vor innerHTML), der einzige Unterschied ist das fehlende `'`→`&#39;` in editor.ts:329 — genau der Fehler, den §19 und ENTSCHEIDUNGEN.md Z. 7964-7973 als Grund für EINE gemeinsame Funktion nennen. Doppelung bestätigt; Zusammenlegen ist ohne Datenrisiko möglich, weil nur Ausgabe betroffen ist, verlangt aber Skript-Registrierung (index.html + GRUNDSTOCK) und einen Prüflauf für Apostrophe in Formeln/Seitenlinks.
 3. **Ziffer→Blockart-Zuordnung als Literal-Rückfall**
    - hier: `src/bereiche/editor/ansicht/editor.ts:116-117`
    - dort: `src/register/bloecke.ts:333-340 (zifferZuTyp, aus `kurz` gelesen)`

@@ -14,10 +14,14 @@ stand: 25. September 2026
 
 ## Benutzt von
 
-_kein Befund belegt einen Aufruf — der Kern wird von den kartierten Systemen nicht benutzt oder nicht gesehen_
+- [[pdf|D · PDF-Schreibstudio und Ink]]
+- [[sync|J · Abgleich, Anhänge, Stücke]]
 
 ## Genannt, aber nicht benutzt von
 
 - [[zeichenflaeche|B · Whiteboard / Zeichenfläche]]
+- [[elektro|F · Schaltplan, Fachzeichen, Elektro]]
+- [[gemeinsam|G · Gemeinsame räumliche Infrastruktur]]
+- [[export|K · Import, Export, .redion, Sicherung]]
 
 Zurück zur [[Redion|Übersicht]].

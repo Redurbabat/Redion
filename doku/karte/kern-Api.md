@@ -14,6 +14,7 @@ stand: 25. September 2026
 
 ## Benutzt von
 
-_kein Befund belegt einen Aufruf — der Kern wird von den kartierten Systemen nicht benutzt oder nicht gesehen_
+- [[register|H · Register, Erweiterungspunkte, Automationen]]
+- [[mcp|I · MCP, Server-API, CLI-Vorläufer]]
 
 Zurück zur [[Redion|Übersicht]].

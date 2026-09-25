@@ -14,6 +14,6 @@ stand: 25. September 2026
 
 ## Benutzt von
 
-_kein Befund belegt einen Aufruf — der Kern wird von den kartierten Systemen nicht benutzt oder nicht gesehen_
+- [[folien|E · Präsentationen / Folien]]
 
 Zurück zur [[Redion|Übersicht]].

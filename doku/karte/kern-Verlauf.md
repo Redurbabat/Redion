@@ -15,10 +15,16 @@ stand: 25. September 2026
 ## Benutzt von
 
 - [[editor|A · Editor und Blockmodell]]
+- [[gemeinsam|G · Gemeinsame räumliche Infrastruktur]]
+- [[export|K · Import, Export, .redion, Sicherung]]
 
 ## Genannt, aber nicht benutzt von
 
 - [[zeichenflaeche|B · Whiteboard / Zeichenfläche]]
 - [[gedankenkarte|C · Gedankenkarte (Mindmap)]]
+- [[pdf|D · PDF-Schreibstudio und Ink]]
+- [[elektro|F · Schaltplan, Fachzeichen, Elektro]]
+- [[register|H · Register, Erweiterungspunkte, Automationen]]
+- [[mcp|I · MCP, Server-API, CLI-Vorläufer]]
 
 Zurück zur [[Redion|Übersicht]].

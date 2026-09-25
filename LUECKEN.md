@@ -1117,6 +1117,21 @@ und sie fällt hier genauso aus. Nicht gebaut, mit Grund, nicht vergessen.
 
 **25. August 2026 — entschieden statt offengelassen (E181).**
 
+**25. September 2026 — die Regel dahinter hat Redur geändert (E683, §57,
+`FREMDCODE.md`):** fremder Code darf in Redion, wenn er Redion verbessert,
+nichts hinausschickt und Redur vorher gefragt wurde. Für Erweiterungen, die
+ein **Nutzer** einspielt, bleibt die Sandbox-Bedingung unten stehen — Redur
+hat diesen Code nicht gesehen. Der Weg, wie er im Plattform-Audit
+vorgeschlagen ist (`doku/REDION-PLATTFORM-AUDIT.md` 3.2, 7): **erst Pakete
+aus Daten** (Vorlagen, Quiz-Kapitel, Fachzeichen, Formeln über die
+vorhandenen Register — kein Code, keine Sandbox nötig), **dann
+Code-Erweiterungen nur in der Sandbox** (eigener Ursprung, Nachrichten
+über `/v1/`, Rechte je Erweiterung, Widerruf), Katalog erst, wenn der
+Server steht. Und vorher: das Erweiterungsfenster, das es heute schon gibt
+(`src/bereiche/einstellungen/erweiterungen.ts`, `new Function` im selben
+Ursprung — Audit R5), in die Register zurückführen. Diese Lücke bleibt
+offen, bis das steht.
+
 Diese Zeile stand als Wunschliste da, ohne einen Satz dazu, ob sie überhaupt
 zu Redion passt. Sie tut es nicht ohne Weiteres:
 

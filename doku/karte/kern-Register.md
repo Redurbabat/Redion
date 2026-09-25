@@ -17,5 +17,16 @@ stand: 25. September 2026
 - [[editor|A · Editor und Blockmodell]]
 - [[zeichenflaeche|B · Whiteboard / Zeichenfläche]]
 - [[gedankenkarte|C · Gedankenkarte (Mindmap)]]
+- [[pdf|D · PDF-Schreibstudio und Ink]]
+- [[folien|E · Präsentationen / Folien]]
+- [[elektro|F · Schaltplan, Fachzeichen, Elektro]]
+- [[gemeinsam|G · Gemeinsame räumliche Infrastruktur]]
+- [[register|H · Register, Erweiterungspunkte, Automationen]]
+- [[mcp|I · MCP, Server-API, CLI-Vorläufer]]
+- [[sync|J · Abgleich, Anhänge, Stücke]]
+
+## Genannt, aber nicht benutzt von
+
+- [[export|K · Import, Export, .redion, Sicherung]]
 
 Zurück zur [[Redion|Übersicht]].

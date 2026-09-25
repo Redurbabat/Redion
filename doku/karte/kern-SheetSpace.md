@@ -14,10 +14,12 @@ stand: 25. September 2026
 
 ## Benutzt von
 
-_kein Befund belegt einen Aufruf — der Kern wird von den kartierten Systemen nicht benutzt oder nicht gesehen_
+- [[pdf|D · PDF-Schreibstudio und Ink]]
+- [[folien|E · Präsentationen / Folien]]
 
 ## Genannt, aber nicht benutzt von
 
 - [[zeichenflaeche|B · Whiteboard / Zeichenfläche]]
+- [[gemeinsam|G · Gemeinsame räumliche Infrastruktur]]
 
 Zurück zur [[Redion|Übersicht]].

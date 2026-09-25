@@ -5,7 +5,7 @@
 
 # Redion — die Karte des Quelltexts
 
-Stand 25. September 2026 · HEAD `a196b65` · 3 Systeme · 12 gemeinsame Kerne · 0 Referenzen
+Stand 25. September 2026 · HEAD `1b89c01` · 11 Systeme · 12 gemeinsame Kerne · 2 Referenzen
 
 Gebaut beim Plattform-Audit (doku/REDION-PLATTFORM-AUDIT.md). Jeder Befund trägt Datei:Zeile; was ein Leser nicht fand, steht als „nicht gefunden“ da. Die Karte ersetzt das Lesen nicht — sie sagt, WO man lesen muss.
 
@@ -30,6 +30,14 @@ graph LR
   editor["A · Editor und Blockmodell"]
   zeichenflaeche["B · Whiteboard / Zeichenfläche"]
   gedankenkarte["C · Gedankenkarte (Mindmap)"]
+  pdf["D · PDF-Schreibstudio und Ink"]
+  folien["E · Präsentationen / Folien"]
+  elektro["F · Schaltplan, Fachzeichen, Elektro"]
+  gemeinsam["G · Gemeinsame räumliche Infrastruktur"]
+  register["H · Register, Erweiterungspunkte, Automationen"]
+  mcp["I · MCP, Server-API, CLI-Vorläufer"]
+  sync["J · Abgleich, Anhänge, Stücke"]
+  export["K · Import, Export, .redion, Sicherung"]
   editor --> Store
   editor --> Verlauf
   editor --> Register
@@ -43,6 +51,63 @@ graph LR
   gedankenkarte --> Register
   gedankenkarte -.-> zeichenflaeche
   gedankenkarte -.-> elektro
+  pdf --> SheetSpace
+  pdf --> InkGeometry
+  pdf --> InkShapes
+  pdf --> InkStroke
+  pdf --> Store
+  pdf --> Register
+  pdf --> Ereignis
+  pdf --> Dateien
+  pdf -.-> gemeinsam
+  pdf -.-> zeichenflaeche
+  pdf -.-> elektro
+  folien --> SheetSpace
+  folien --> InkGeometry
+  folien --> Folien
+  folien --> Store
+  folien --> Register
+  folien --> Dateien
+  folien -.-> sync
+  folien -.-> pdf
+  elektro --> Store
+  elektro --> Register
+  elektro --> Dateien
+  elektro -.-> gemeinsam
+  elektro -.-> zeichenflaeche
+  gemeinsam --> InkGeometry
+  gemeinsam --> InkShapes
+  gemeinsam --> InkStroke
+  gemeinsam --> Store
+  gemeinsam --> Verlauf
+  gemeinsam --> Register
+  gemeinsam --> SelectionFlow
+  gemeinsam -.-> zeichenflaeche
+  gemeinsam -.-> elektro
+  gemeinsam -.-> gedankenkarte
+  register --> Store
+  register --> Register
+  register --> Api
+  register -.-> gemeinsam
+  register -.-> mcp
+  mcp --> Store
+  mcp --> Register
+  mcp --> Dateien
+  mcp --> Api
+  mcp -.-> gemeinsam
+  sync --> Store
+  sync --> Register
+  sync --> Ereignis
+  sync --> Dateien
+  sync -.-> gemeinsam
+  sync -.-> mcp
+  export --> Store
+  export --> Verlauf
+  export --> Dateien
+  export -.-> pdf
+  export -.-> editor
+  export -.-> gemeinsam
+  export -.-> sync
 ```
 
 ## Die Systeme
@@ -52,23 +117,36 @@ graph LR
 | [[editor|A · Editor und Blockmodell]] | `editor.ts`, `auswahlleiste.ts`, `mehrfach.ts` +6 | 21 | 5 | [[kern-Store|Store]], [[kern-Verlauf|Verlauf]], [[kern-Register|Register]] |
 | [[zeichenflaeche|B · Whiteboard / Zeichenfläche]] | `zeichenflaeche.ts`, `werkzeuge.css`, `editor.ts` +9 | 7 | 6 | [[kern-Store|Store]], [[kern-Register|Register]], [[kern-Dateien|Dateien]] |
 | [[gedankenkarte|C · Gedankenkarte (Mindmap)]] | `gedankenkarte.ts`, `werkzeuge.css`, `bloecke.ts` +4 | 4 | 7 | [[kern-Store|Store]], [[kern-Register|Register]] |
+| [[pdf|D · PDF-Schreibstudio und Ink]] | `marken.ts`, `document-mode.ts`, `seite.ts` +9 | 24 | 6 | [[kern-SheetSpace|SheetSpace]], [[kern-InkGeometry|InkGeometry]], [[kern-InkShapes|InkShapes]], [[kern-InkStroke|InkStroke]], [[kern-Store|Store]], [[kern-Register|Register]], [[kern-Ereignis|Ereignis]], [[kern-Dateien|Dateien]] |
+| [[folien|E · Präsentationen / Folien]] | `folien.ts`, `folien.ts`, `einlesen.ts` +7 | 30 | 5 | [[kern-SheetSpace|SheetSpace]], [[kern-InkGeometry|InkGeometry]], [[kern-Folien|Folien]], [[kern-Store|Store]], [[kern-Register|Register]], [[kern-Dateien|Dateien]] |
+| [[elektro|F · Schaltplan, Fachzeichen, Elektro]] | `schaltplan.ts`, `planflaeche.ts`, `fachzeichen.ts` +8 | 21 | 5 | [[kern-Store|Store]], [[kern-Register|Register]], [[kern-Dateien|Dateien]] |
+| [[gemeinsam|G · Gemeinsame räumliche Infrastruktur]] | `selection-flow.ts`, `geometry.ts`, `shapes.ts` +7 | 36 | 11 | [[kern-InkGeometry|InkGeometry]], [[kern-InkShapes|InkShapes]], [[kern-InkStroke|InkStroke]], [[kern-Store|Store]], [[kern-Verlauf|Verlauf]], [[kern-Register|Register]], [[kern-SelectionFlow|SelectionFlow]] |
+| [[register|H · Register, Erweiterungspunkte, Automationen]] | `befehle.ts`, `bloecke.ts`, `eigenschaften.ts` +27 | 28 | 8 | [[kern-Store|Store]], [[kern-Register|Register]], [[kern-Api|Api]] |
+| [[mcp|I · MCP, Server-API, CLI-Vorläufer]] | `schnittstelle.ts`, `sw.ts`, `befehle.ts` +21 | 33 | 8 | [[kern-Store|Store]], [[kern-Register|Register]], [[kern-Dateien|Dateien]], [[kern-Api|Api]] |
+| [[sync|J · Abgleich, Anhänge, Stücke]] | `maschine.ts`, `zusammenfuehren.ts`, `ablage.ts` +7 | 20 | 6 | [[kern-Store|Store]], [[kern-Register|Register]], [[kern-Ereignis|Ereignis]], [[kern-Dateien|Dateien]] |
+| [[export|K · Import, Export, .redion, Sicherung]] | `indexdb.ts`, `schale.ts`, `umzuege.ts` +15 | 43 | 7 | [[kern-Store|Store]], [[kern-Verlauf|Verlauf]], [[kern-Dateien|Dateien]] |
 
 ## Die gemeinsamen Kerne
 
 | Kern | Datei | benutzt von |
 |---|---|---|
-| [[kern-SheetSpace|SheetSpace]] | `src/core/sheet/space.ts` | — (kein Befund belegt einen Aufruf) |
-| [[kern-InkGeometry|InkGeometry]] | `src/core/ink/geometry.ts` | — (kein Befund belegt einen Aufruf) |
-| [[kern-InkShapes|InkShapes]] | `src/core/ink/shapes.ts` | — (kein Befund belegt einen Aufruf) |
-| [[kern-InkStroke|InkStroke]] | `src/core/ink/stroke.ts` | — (kein Befund belegt einen Aufruf) |
-| [[kern-Folien|Folien]] | `src/core/slides/folien.ts` | — (kein Befund belegt einen Aufruf) |
-| [[kern-Store|Store]] | `src/kern/ablage/indexdb.ts` | [[editor|A · Editor und Blockmodell]], [[zeichenflaeche|B · Whiteboard / Zeichenfläche]], [[gedankenkarte|C · Gedankenkarte (Mindmap)]] |
-| [[kern-Verlauf|Verlauf]] | `src/kern/zustand/verlauf.ts` | [[editor|A · Editor und Blockmodell]] |
-| [[kern-Register|Register]] | `src/register/*.ts` | [[editor|A · Editor und Blockmodell]], [[zeichenflaeche|B · Whiteboard / Zeichenfläche]], [[gedankenkarte|C · Gedankenkarte (Mindmap)]] |
-| [[kern-SelectionFlow|SelectionFlow]] | `src/schale/bedienung/selection-flow.ts` | — (kein Befund belegt einen Aufruf) |
-| [[kern-Ereignis|Ereignis]] | `src/kern/ereignisse/bus.ts` | — (kein Befund belegt einen Aufruf) |
-| [[kern-Dateien|Dateien]] | `src/bereiche/dateien/ablage.ts` | [[zeichenflaeche|B · Whiteboard / Zeichenfläche]] |
-| [[kern-Api|Api]] | `src/bereiche/verbinden/schnittstelle.ts` | — (kein Befund belegt einen Aufruf) |
+| [[kern-SheetSpace|SheetSpace]] | `src/core/sheet/space.ts` | [[pdf|D · PDF-Schreibstudio und Ink]], [[folien|E · Präsentationen / Folien]] |
+| [[kern-InkGeometry|InkGeometry]] | `src/core/ink/geometry.ts` | [[pdf|D · PDF-Schreibstudio und Ink]], [[folien|E · Präsentationen / Folien]], [[gemeinsam|G · Gemeinsame räumliche Infrastruktur]] |
+| [[kern-InkShapes|InkShapes]] | `src/core/ink/shapes.ts` | [[pdf|D · PDF-Schreibstudio und Ink]], [[gemeinsam|G · Gemeinsame räumliche Infrastruktur]] |
+| [[kern-InkStroke|InkStroke]] | `src/core/ink/stroke.ts` | [[pdf|D · PDF-Schreibstudio und Ink]], [[gemeinsam|G · Gemeinsame räumliche Infrastruktur]] |
+| [[kern-Folien|Folien]] | `src/core/slides/folien.ts` | [[folien|E · Präsentationen / Folien]] |
+| [[kern-Store|Store]] | `src/kern/ablage/indexdb.ts` | [[editor|A · Editor und Blockmodell]], [[zeichenflaeche|B · Whiteboard / Zeichenfläche]], [[gedankenkarte|C · Gedankenkarte (Mindmap)]], [[pdf|D · PDF-Schreibstudio und Ink]], [[folien|E · Präsentationen / Folien]], [[elektro|F · Schaltplan, Fachzeichen, Elektro]], [[gemeinsam|G · Gemeinsame räumliche Infrastruktur]], [[register|H · Register, Erweiterungspunkte, Automationen]], [[mcp|I · MCP, Server-API, CLI-Vorläufer]], [[sync|J · Abgleich, Anhänge, Stücke]], [[export|K · Import, Export, .redion, Sicherung]] |
+| [[kern-Verlauf|Verlauf]] | `src/kern/zustand/verlauf.ts` | [[editor|A · Editor und Blockmodell]], [[gemeinsam|G · Gemeinsame räumliche Infrastruktur]], [[export|K · Import, Export, .redion, Sicherung]] |
+| [[kern-Register|Register]] | `src/register/*.ts` | [[editor|A · Editor und Blockmodell]], [[zeichenflaeche|B · Whiteboard / Zeichenfläche]], [[gedankenkarte|C · Gedankenkarte (Mindmap)]], [[pdf|D · PDF-Schreibstudio und Ink]], [[folien|E · Präsentationen / Folien]], [[elektro|F · Schaltplan, Fachzeichen, Elektro]], [[gemeinsam|G · Gemeinsame räumliche Infrastruktur]], [[register|H · Register, Erweiterungspunkte, Automationen]], [[mcp|I · MCP, Server-API, CLI-Vorläufer]], [[sync|J · Abgleich, Anhänge, Stücke]] |
+| [[kern-SelectionFlow|SelectionFlow]] | `src/schale/bedienung/selection-flow.ts` | [[gemeinsam|G · Gemeinsame räumliche Infrastruktur]] |
+| [[kern-Ereignis|Ereignis]] | `src/kern/ereignisse/bus.ts` | [[pdf|D · PDF-Schreibstudio und Ink]], [[sync|J · Abgleich, Anhänge, Stücke]] |
+| [[kern-Dateien|Dateien]] | `src/bereiche/dateien/ablage.ts` | [[zeichenflaeche|B · Whiteboard / Zeichenfläche]], [[pdf|D · PDF-Schreibstudio und Ink]], [[folien|E · Präsentationen / Folien]], [[elektro|F · Schaltplan, Fachzeichen, Elektro]], [[mcp|I · MCP, Server-API, CLI-Vorläufer]], [[sync|J · Abgleich, Anhänge, Stücke]], [[export|K · Import, Export, .redion, Sicherung]] |
+| [[kern-Api|Api]] | `src/bereiche/verbinden/schnittstelle.ts` | [[register|H · Register, Erweiterungspunkte, Automationen]], [[mcp|I · MCP, Server-API, CLI-Vorläufer]] |
+
+## Die Referenzen (nur gelesen, nichts übernommen)
+
+- [[referenz-siyuan|SiYuan]] — AGPL-3.0 — keine Codeübernahme möglich
+- [[referenz-affine|AFFiNE / BlockSuite]] — MIT (blocksuite, framework/std); packages/backend unter eigener Lizenz — nicht übernommen
 
 ## Wie die Karte gepflegt wird
 
