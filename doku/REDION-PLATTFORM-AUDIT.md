@@ -64,6 +64,12 @@ sie ist aber weder geschehen noch geplant — die beiden dienen als
 Vorlage. Die Archive liegen ausserhalb des Verzeichnisses und kommen nicht
 hinein (§1, §42 sinngemäss: fremder Quelltext ist kein Redion-Quelltext).
 
+*Nachtrag vom selben Tag:* Redur hat die Regel dazu entschieden (E683,
+§57, `FREMDCODE.md`) — fremder Code darf herein, wenn er Redion
+verbessert, nichts hinausschickt und Redur vorher gefragt wurde. Für
+diesen Audit ändert das nichts: genommen wurde nichts, und vor jeder
+Übernahme steht jetzt die Frage.
+
 **Methode.** Elf Leser je System und zwei für die Referenzen, jeder Befund
 mit `Datei:Zeile`; je System die ersten zwei gemeldeten Duplikate
 gegengeprüft von einem Leser, der sie widerlegen sollte (die übrigen stehen

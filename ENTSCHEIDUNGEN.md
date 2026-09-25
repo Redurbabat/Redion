@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-662 Entscheidungen, E1 bis E682 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+663 Entscheidungen, E1 bis E683 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -725,6 +725,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E680** — Die Antworten werden bei jeder Anzeige gemischt: Redur, 22. September, „wieso ist immer die ersten 3 richtig es sollte nicht so sein random keine muster“. Gespeichert stehen die richtigen Antworten meist zuerst; der Trainer zeigte sie so. Jetzt mischt `zeige` die Plätze, `data-tr-option` bleibt der gespeicherte Platz, die Buchstaben folgen der Anzeige, die Auswertung dem Speicher. Wächter `test567 §8` (18 von 18 am gespeicherten Platz → rot).
 * **E681** — Vor dem Umbau die Karte: der Plattform-Audit vom 25. September — `doku/REDION-PLATTFORM-AUDIT.md`, die erzeugte Karte `doku/karte/` (`karte.mts`), AFFiNE und SiYuan nur als Massstab, und der erste Schritt ist ein Wächter und eine Zeile (L212), kein Kern
 * **E682** — Strg+Z gehört der Fläche, die es genommen hat: die Schale lässt eine Taste liegen, die ein Block schon genommen hat (`defaultPrevented`), und das Whiteboard bekommt seine Taste — der erste Bogen nach dem Plattform-Audit (L212 Punkt 1, `test568`)
+* **E683** — Fremder Code darf in Redion, wenn er Redion verbessert: nie PDFs, Bilder oder Geheimnisse an Dritte, vorher Redur fragen, jedes Stück in `FREMDCODE.md` — Redurs Regel vom 25. September, dazu die Zählung (pdf.js eingepackt, WebLLM vom CDN, sonst nichts)
 
 ---
 
@@ -55718,3 +55719,55 @@ der nächste Bogen (E681, Reihenfolge 2).
 
 **Preis.** Ein fokussierbarer Kasten mehr in der Tab-Reihenfolge einer
 Seite; ein Fokusrahmen, den es vorher nicht gab.
+
+## E683 — Fremder Code darf in Redion, wenn er Redion verbessert
+
+**Datum:** 25. September 2026 · **Datei:** `FREMDCODE.md` · **Regel:** CLAUDE.md §57
+
+**Redur:** „also redion kann fremnden code haben wenn es redion verbessert
+wird, und so nicht das die pdf oder bilder oder geheimnisse daten an die
+driete anbiter geht , und ausserdem nehem fremde coden es ist keine proble
+aber bevor du etwas fremnes nimmst frage mich und ausserdem muss
+fremncode.md erstellen damit ich was was mir gehört und was fremd ist und
+was wird es im redion verbessser" — die Antwort auf die Frage nach L30
+(E681, Frage 1) und auf die Pro-und-Contra-Liste dazu.
+
+**Was entschieden wurde.** Vier Sätze, in `FREMDCODE.md` und §57:
+
+1. Fremder Code darf herein, wenn er Redion verbessert.
+2. Nie gehen PDFs, Bilder oder Geheimnisse an Dritte — nicht durch Redion,
+   nicht durch fremden Code in Redion.
+3. Vor jeder Übernahme wird Redur gefragt. Jedes Mal, nicht pauschal.
+4. Jedes fremde Stück steht in `FREMDCODE.md`: Herkunft, Fassung, Lizenz,
+   was es verbessert, was daran geändert ist, welcher Wächter es hält.
+
+**Was das an bestehenden Entscheidungen ändert — und was nicht.**
+E181/L30 argumentierten: „Fremder Code im selben Fenster sieht alles."
+Das bleibt wahr, und §19/§47 bleiben stehen — aber die Schlussfolgerung
+„also nie" ist nicht mehr Redurs Wille. Die Grenze liegt jetzt bei
+Absicht (verbessert es Redion?), Datenfluss (geht nichts hinaus?) und
+Zustimmung (hat Redur Ja gesagt?). Ein **Plugin-System für Dritte** ist
+damit noch nicht entschieden: dort wählt nicht Redur den Code, sondern
+ein Nutzer — die Sandbox-Bedingungen aus L30 gelten für diesen Fall
+unverändert, und die Frage B aus dem Gespräch („eng öffnen: erst Pakete
+aus Daten, Sandbox-Plugins später") steht noch offen. §6 (kein Framework)
+und §54 (kein neues JavaScript von Hand) bleiben, wie sie sind: ein
+fremdes Stück kommt als eingepackte, geprüfte Bytes (wie pdf.js) oder als
+TypeScript-Quelle mit Herkunftsvermerk, nicht als handgeschriebene `.js`.
+
+**Die Zählung**, damit die Datei mit der Wahrheit beginnt: `find . -iname
+"LICENSE*"` ausser `node_modules` → eine Datei (`quell/fremd/pdfjs/
+LIZENZ.txt`); `grep -rn "esm.run\|unpkg\|jsdelivr\|cdn" src index.html` →
+eine Zeile (`ki/dienst.ts`, WebLLM von `esm.run`). Also: **pdf.js**
+(`pdfjs-dist` 6.2.108, Apache-2.0, eingepackt, `test177` rechnet die
+Prüfsummen nach — E389) und **WebLLM** (Apache-2.0, zur Laufzeit vom CDN,
+ohne Fassung, ohne Prüfsumme). Sonst nichts; keine Laufzeit-Abhängigkeit
+in `package.json`. AFFiNE und SiYuan: gelesen, nichts genommen (E681).
+
+**Was dabei auffiel** und als offene Frage in `FREMDCODE.md` steht: WebLLM
+ist das einzige fremde Stück ohne festgenagelte Fassung. Entweder
+einpacken wie pdf.js (mehrere Megabyte) oder die Fassung im Pfad
+festnageln. Bis Redur entscheidet, bleibt es.
+
+**Preis.** Eine Datei mehr, die stimmen muss; eine Frage mehr vor jeder
+Übernahme. Der Gewinn: Redur sieht auf einer Seite, was ihm gehört.

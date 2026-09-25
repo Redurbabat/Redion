@@ -57,6 +57,7 @@ umgeschrieben, aber nicht umnummeriert.
 | `doku/TYPESCRIPT-MIGRATION.md` | In welcher Reihenfolge wird migriert? |
 | `doku/REDION-PLATTFORM-AUDIT.md` | Was ist da, was ist doppelt, was ist der kleinste nächste Schritt? (E681) |
 | `doku/karte/` | Wo liegt was, und was hängt woran? Erzeugt aus `karte.json` mit `node karte.mts` |
+| `FREMDCODE.md` | Was gehört Redur, was ist fremd, und was bringt es? (§57, E683) |
 
 ---
 
@@ -146,6 +147,9 @@ zusammengehört.
 
 **Teil XIII — Das Gedächtnis**
 [56](#56-die-chronik--hart) Die Chronik
+
+**Teil XIV — Fremdes**
+[57](#57-fremder-code--hart) Fremder Code
 
 ---
 ---
@@ -1362,6 +1366,7 @@ sucht, wo etwas geprüft wird, sucht im Quelltext, nicht in dieser Liste.
 | `doku/TYPESCRIPT-MIGRATION.md` | die Reihenfolge der Migration |
 | `doku/REDION-PLATTFORM-AUDIT.md` | der Bestand vor dem Plattform-Umbau: Systeme, Duplikate, Messungen (E681) |
 | `doku/karte/` | die Karte des Quelltexts — **erzeugt** aus `doku/karte/karte.json` mit `node karte.mts`; wer sie ändert, ändert das JSON |
+| `FREMDCODE.md` | jedes fremde Stück Code: Herkunft, Fassung, Lizenz, Nutzen, Änderungen, Wächter (§57) |
 
 Regeln:
 
@@ -2752,6 +2757,39 @@ stammt, oder gar nichts (§35).
 Sätze falsch liest, baut das Falsche; deshalb steht dort gemessen, wie er
 schreibt, woran er Qualität misst und wie er entscheidet. Er hat am
 19. September ausdrücklich darum gebeten, dass dieser Teil genau ist.
+
+---
+---
+
+# Teil XIV — Fremdes
+
+## 57. Fremder Code  **[hart]**
+
+Redur, 25. September 2026 (E683): **Fremder Code darf in Redion, wenn er
+Redion verbessert.** Mit drei Bedingungen, die keine Abwägung kennen:
+
+- **Nichts geht hinaus.** Kein fremdes Stück schickt PDFs, Bilder oder
+  Geheimnisse an Dritte — auch nicht „nur zum Prüfen", auch nicht
+  „anonymisiert". Was das täte, kommt nicht herein, egal wie viel es
+  verbessert (§21, §42).
+- **Vorher fragen.** Bevor etwas Fremdes genommen wird, wird Redur
+  gefragt — jedes Stück, jedes Mal. Kein pauschales Ja.
+- **Vorher eintragen.** Jedes fremde Stück steht in `FREMDCODE.md`:
+  Herkunft, Fassung, Lizenz, was es verbessert, was daran geändert ist,
+  welcher Wächter es hält. Ein fremdes Stück ohne Eintrag ist ein Fehler.
+
+Was bleibt: §6 (kein Framework ohne eigene Entscheidung), §54 (kein
+handgeschriebenes JavaScript — Fremdes kommt eingepackt und geprüft wie
+pdf.js, oder als TypeScript mit Herkunftsvermerk), §19/§20 (kein `eval`,
+kein Fremdcode aus Formeln). Lizenzen: MIT, BSD, Apache-2.0, ISC mit
+Namensnennung; GPL/AGPL nur mit eigener Lizenzentscheidung in
+`ENTSCHEIDUNGEN.md`; ohne Lizenz nie. Fremdes aus dem Netz zur Laufzeit
+nur mit festgenagelter Fassung — WebLLM ist die eine Ausnahme, die vor
+dieser Regel entstand und in `FREMDCODE.md` als offene Frage steht.
+
+Ein **Plugin-System für Dritte** ist damit nicht entschieden (L30): dort
+wählt ein Nutzer den Code, nicht Redur — die Sandbox-Bedingungen aus L30
+gelten dafür weiter.
 
 ---
 ---

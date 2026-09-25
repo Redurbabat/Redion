@@ -1,4 +1,4 @@
-/* Suite 569 — Der Seitenverlauf behält, was ihm nicht gehört (E683, L212 Punkt 2)
+/* Suite 569 — Der Seitenverlauf behält, was ihm nicht gehört (E684, L212 Punkt 2)
  * ============================================================================
  * GEMESSEN AM 25. SEPTEMBER 2026 (messungen.md): ein Strg+Z auf einer Seite
  * baute die Seite neu — `Store.kinderLeeren` purgte jedes Kind,
