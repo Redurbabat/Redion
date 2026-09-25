@@ -4170,3 +4170,37 @@ node pruefungen/alle.mts 210 270 290 362 410 437 440 523 537
 
 `test537` bleibt bei **518 gegen 517** — genau dem Stand vor diesen drei
 Bögen. Das ist **L207**, und die Richtung gehört Redur.
+
+## 25. September 2026 — Strg+Z nimmt zweimal zurück (Plattform-Audit, L212)
+
+Zwei Sonden im Scratchpad, Chromium über `file://…/index.html`, Fenster
+1280 × 900, Aufbau wie `test238` (Schaltplan) und `test345` (Blatt). Keine
+Prüfläufe des Bestands; der Wächter daraus heisst test568.
+
+**Schaltplan:** zwei Teile, ein drittes über die Palette gesetzt, 800 ms
+gewartet (Zaun des Seitenverlaufs: 700 ms), Fokus `.sp-wrap`, Strg+Z.
+
+```txt
+                 domTeile  storeTeile  blockId      Element   Toast
+Ausgang               2         2      b04888d1…   alt       —
+Teil gesetzt          3         3      b04888d1…   alt       —
+nach Strg+Z           3         3      eb6edc4f…   NEU       „Rückgängig"
+zweites Teil          4         4      eb6edc4f…   alt2      —
+nach ↶-Knopf          3         3      eb6edc4f…   alt2      kein neuer
+```
+
+**Blatt:** Stift, zwei Striche 800 ms auseinander, Strg+Z auf `.blatt-marken`.
+
+```txt
+                 domMarken  alter Block lebt  blockId      Element   Toast
+zwei Striche          2         ja            ff683223…   alt       —
+nach Strg+Z           1         NEIN          24ba45cf…   NEU       „Rückgängig"
+```
+
+Lesart: der Block nimmt seinen Schritt zurück UND die Schale den
+Seitenverlauf (`schale.ts:3252` → `Verlauf.zurueck()`, kein Blick auf
+`defaultPrevented`); `Verlauf.anwenden` purgt die Kinder und setzt sie mit
+frischen Kennungen wieder ein (`indexdb.ts:2508`). Welcher Stand am Ende
+steht, hängt am 700-ms-Zaun — im Schaltplan blieb das gesetzte Teil, auf dem
+Blatt ging ein Strich. Ausgabe wörtlich in `doku/REDION-PLATTFORM-AUDIT.md`
+2.4.

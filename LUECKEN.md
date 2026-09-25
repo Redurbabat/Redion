@@ -8175,6 +8175,69 @@ Bogen gehörte oder Redurs Wort braucht (§35, §43).
    Werkzeug lernt die drei Formen. Das erste ist eine Zeile und
    wahrscheinlich das Richtige — Redurs Wort.
 
+## L211 · `test537` sieht `(globalThis as any)` nicht — 25. September 2026
+
+**Gefunden am 25. September 2026**, beim Plattform-Audit
+(`doku/REDION-PLATTFORM-AUDIT.md`, 2.2). Der Bereichswächter aus E626 kennt
+zwei Wege, auf denen ein Bereich einen anderen anfasst: den Namen
+(`Datenbank.oeffne(…)`) und den Umweg über `(window as any).Name`
+(`test537.mts:164, 185`). Es gibt einen dritten, und der ist ihm unsichtbar:
+
+```txt
+(globalThis as any).Dateien.ablegen(…)      zeichenflaeche.ts:257, 271  bloecke → dateien
+(globalThis as any).Kalender…               datenbanken → …             5 Stellen
+(globalThis as any).Bibliothek…             wissen → …                  4 Stellen
+```
+
+Gezählt am 25. September: **32 Stellen** in `src/bereiche/` greifen so in
+einen fremden Bereich (`grep -rno "(globalThis as any)\.[A-Z][a-zA-Z]*"
+src/bereiche`). Keine davon steht in `pruefungen/bereiche-bestand.json`. Das
+ist kein neuer Verstoss — es sind alte —, aber ein Verzeichnis, das „nur
+schrumpfen" darf, zählt zu wenig, wenn ein ganzer Weg fehlt; dieselbe Sorte
+Fund wie L207.
+
+**Was fehlt:** `test537` um `globalThis` erweitern, den Bestand einmal
+nachziehen (er wächst dabei — das ist die Wahrheit, keine Verschlechterung)
+und L191 daneben stehen lassen: der Griff ins fremde Markup bleibt der vierte
+Weg, den niemand prüft.
+
+---
+
+## L212 · Strg+Z nimmt zweimal zurück — und der Seitenverlauf vergibt neue Kennungen — 25. September 2026
+
+**Gefunden am 25. September 2026**, gemessen mit zwei Sonden im laufenden
+Programm (Ausgabe wörtlich in `doku/REDION-PLATTFORM-AUDIT.md`, 2.4).
+
+**1 · Zweimal zurück.** `Planflaeche` (`planflaeche.ts:1017`) und `Marken`
+(`marken.ts:4325`) nehmen Strg+Z mit `preventDefault()`, aber ohne
+`stopPropagation()`. Der Horcher der Schale hängt am Dokument
+(`schale.ts:3178`) und fragt nicht, ob jemand die Taste schon genommen hat;
+bei `z` ruft er `Verlauf.zurueck()` (Z. 3252). Ergebnis im Schaltplan: ein
+gesetztes Teil, Strg+Z — und es sind wieder drei Teile, Meldung
+„Rückgängig", Block neu gezeichnet. Auf dem Blatt: 2 → 1 Striche, aber der
+alte Block existiert nicht mehr, sein 100er-Verlauf (E378) ist weg. Die
+Gedankenkarte macht es richtig (`stopPropagation`, Z. 1482); das Whiteboard
+hat gar keine Taste.
+
+**2 · Neue Kennungen.** `Verlauf.anwenden` (`verlauf.ts:58-67`) leert die
+Seite mit `Store.kinderLeeren` — das ist `purgeBlock` je Kind — und setzt den
+Baum mit `Store.baumEinfuegen` wieder ein, „immer mit frischen IDs"
+(`indexdb.ts:2508`). Gemessen: `b04888d1…` → `eb6edc4f…`. `test70.mts:351`
+hält das als Tatsache fest; keinen Wächter gibt es für das Gegenteil. Was
+dabei mitläuft, ist gelesen, nicht gemessen: Grabsteine für den Abgleich
+(E254) je Block, Versionen weg, Anhänge über `purgeAnhaenge` mit
+`dateiAnspruch()` — ob ein Bild ein Strg+Z sicher überlebt, hängt an der
+Reihenfolge dieser Kette. E174 hat für den Markdown-Rundlauf entschieden,
+dass Kennungen bleiben; für den Verlauf steht die Entscheidung nicht.
+
+**Was fehlt:** ein neuer Wächter, der beides rot hält; für 1 eine
+Zeile in der Schale („eine Taste, die ein Block schon genommen hat, nimmt
+die Schale nicht noch einmal") — Bogen 1 nach dem Audit; für 2 eine
+Entscheidung Redurs (Audit, Frage 3) und eine Messung mit Anhang, bevor
+jemand `baumEinfuegen` anfasst.
+
+---
+
 ## L209 · Der Stift gegen GoodNotes — was nach E673, E674 und E675 offen bleibt
 
 **Gefunden am 21. September 2026**, beim Lesen für Redurs Satz „die stift
@@ -8459,8 +8522,8 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 22. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 106 Lücken, 55 offene und 51 geschlossene. Der Befehl dazu ist
+**Gemessen am 25. September 2026, nachgezählt statt fortgeschrieben:** die
+Datei führt 108 Lücken, 57 offene und 51 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

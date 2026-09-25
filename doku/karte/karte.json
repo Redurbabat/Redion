@@ -1,0 +1,972 @@
+{
+ "stand": "25. September 2026",
+ "head": "a196b65",
+ "hinweis": "Gebaut beim Plattform-Audit (doku/REDION-PLATTFORM-AUDIT.md). Jeder Befund trägt Datei:Zeile; was ein Leser nicht fand, steht als „nicht gefunden“ da. Die Karte ersetzt das Lesen nicht — sie sagt, WO man lesen muss.",
+ "systeme": [
+  {
+   "key": "editor",
+   "name": "A · Editor und Blockmodell",
+   "system": "A · Editor und Blockmodell — Block-Editor (`Blocks`), Auswahlleiste (`Auswahl`), Mehrfachauswahl (`Mehrfach`), Blockregister (`Register.bloecke`), Blockmodell in `Store` (`src/kern/ablage/indexdb.ts`), Seiten-Undo (`Verlauf`). Ohne die räumlichen Arten unter `src/bereiche/bloecke/arten/`. Hinweis: `src/bereiche/bloecke/` enthält NUR den Ordner `arten/` (zeichenflaeche, gedankenkarte, blatt, schaltplan, planflaeche) — einen nicht-räumlichen Teil gibt es dort nicht (`ls src/bereiche/bloecke/` → nur `arten`).",
+   "hauptdateien": [
+    {
+     "pfad": "/home/user/Redion/src/bereiche/editor/ansicht/editor.ts",
+     "rolle": "Der Block-Editor `Blocks`: Katalog aus dem Register (Z.41 `Register.bloecke.alle()`), Einbettdienste DIENSTE (Z.51), Markdown-Leser/Schreiber mdLesen/mdEinsetzen (Z.177/275), render(block) mit switch(block.type) (Z.430-985, default Z.985 = unbekannter Typ wird als Textfeld gezeichnet, nicht gelöscht), bindeEditor (Tastatur, Drag&Drop, Slash) (Z.1568), umwandeln (Z.2077), Block-Operationen einruecken/ausruecken/verschiebe/lege/dupliziere (Z.2151-2232), Slash-Menü (Z.2667), Block-Handle-Menü (Z.2962), Mehrfachauswahl auswahl* (Z.3178-3479); Export Z.3550-3564",
+     "zeilen": 3565
+    },
+    {
+     "pfad": "/home/user/Redion/src/bereiche/editor/ansicht/auswahlleiste.ts",
+     "rolle": "`Auswahl`: schwebende Textauszeichnungsleiste über markiertem Text; stelleImText (Z.113) trifft die markierte Stelle statt des ersten Vorkommens (E650); umschliesse/linkSetzen sind seit E668 der EINE Weg auch für Strg+B (editor.ts:2068-2071 delegiert)",
+     "zeilen": 357
+    },
+    {
+     "pfad": "/home/user/Redion/src/bereiche/editor/mehrfach.ts",
+     "rolle": "`Mehrfach`: zweite, ältere Mehrfachauswahl (Set gewaehlt, Z.15), aus notion.js herausgelöst; einziger Aufrufer schale.ts:4093 (`Mehrfach.start()`)",
+     "zeilen": 160
+    },
+    {
+     "pfad": "/home/user/Redion/src/register/bloecke.ts",
+     "rolle": "`Register.bloecke`: EINGEBAUT (Z.35-222, Blockarten + Aktionen a-*), NUR_NAME für pdfseite/zeichenflaeche/spalte/database/tabelle (Z.250-265), melde/nimmZurueck/alle/benannt/eines/zuMarkdown/zifferZuTyp/ueberschriften/suche (Z.313-362). `melde()` hat in src/ keinen Aufrufer (grep 'bloecke.melde' src → leer); nur test86/test272 rufen es",
+     "zeilen": 363
+    },
+    {
+     "pfad": "/home/user/Redion/src/kern/ablage/indexdb.ts",
+     "rolle": "`Store`: addBlock (Z.391), updateBlock (Z.440), trashBlock (Z.470), restoreBlock (Z.489), purgeBlock (Z.539), childrenOf (Z.762, filtert alive), rohSetzen (Z.958, für Abgleich, ohne edited-Stempel), baum/baumEinfuegen/kinderLeeren (Z.2483/2503/2567), Versionsverlauf versionSpeichern/versionen (Z.2658/2695); Export Z.3042-3070",
+     "zeilen": 3071
+    },
+    {
+     "pfad": "/home/user/Redion/src/kern/zustand/verlauf.ts",
+     "rolle": "`Verlauf`: Rückgängig/Wiederholen als zwei Stapel ganzer Seiten-Bäume (MAX 60, Zaun 700 ms), hängt sich per Monkeypatch an Store.updateBlock/addBlock/trashBlock/purgeBlock/setProp/addDatabase/addRow (Z.100-108)",
+     "zeilen": 112
+    },
+    {
+     "pfad": "/home/user/Redion/src/core/types/block.ts",
+     "rolle": "Typen RedionBlock/RedionRow/RedionPage/RedionVersion — Feldnamen wie gespeichert (created, edited, erstelltVon, alive, parentTable)",
+     "zeilen": 115
+    },
+    {
+     "pfad": "/home/user/Redion/src/core/types/id.ts",
+     "rolle": "ID/BlockId/PageId/CollectionId als string-Aliasse (bewusst nicht branded, Z.12-16), Result<T>",
+     "zeilen": 62
+    },
+    {
+     "pfad": "/home/user/Redion/src/core/helpers/ids.ts",
+     "rolle": "`Ids.long()` = UUID (crypto.randomUUID) für alles Gespeicherte, `Ids.short()` für Spaltenschlüssel (nie rein numerisch, E96)",
+     "zeilen": 80
+    }
+   ],
+   "datenmodell": "Ein Block liegt im IndexedDB-Fach `blocks` (keyPath id) als flaches Objekt; die Kinder sind NUR Kennungen in `content`, keine Objekte. Genau die Felder, die `addBlock` schreibt (indexdb.ts:391-405): `id` (uid() → Ids.long(), Z.374-375), `type` ('text' Vorgabe), `text: ''`, `content: []`, `parentId`, `parentTable: 'block'`, `color: ''`, `created`/`edited` (ISO, `now()` Z.379), `erstelltVon` (getMeta('nutzer') || 'Ich'), `alive: true` — dann `Object.assign(…, patch)`: ein Patch legt sich ÜBER die Vorgaben, also darf ein Aufrufer eine Kennung mitgeben (E174 nutzt das). Danach wird der Block in `parent.content` eingehängt (Z.409-414) und der Elternblock bekommt `edited` (elternGeaendert Z.426-430) — sonst sähe der Abgleich die neue Reihenfolge nie. `updateBlock` (Z.440-465) setzt `edited` und `geaendertVon`, und schreibt bei `todo` `erledigtAm` (E663). Papierkorb = `alive:false` + `trashedAt` + aus `content` des Elternteils entfernt (trashBlock Z.470-486); `purgeBlock` löscht endgültig samt Kindern, Versionen und Anhängen asynchron (Z.539-570). Zeilen einer Datenbank sind derselbe Satz mit `parentTable:'collection'` und Spaltenwerten unter `props` (core/types/block.ts:75-80). Optionale Felder laut Typ (block.ts:59-70): icon, collectionId, aktiveView, dateiId, papierkorbSichtbarSeit; im Editor zusätzlich gelesen: `herkunft` (editor.ts:450-456), `stil` (Z.489), `open`, `checked`, `audioRef` (Z.988), `gesperrt` an der Seite (Z.470-471), `locked` (verlauf.ts:39). Der Baum-Schnappschuss `Store.baum(id)` (indexdb.ts:2483-2500) kopiert rekursiv (Tiefe ≤ 40), ersetzt `content` durch `kinder` und hängt bei Datenbankblöcken `collection`, `views`, `rows` an; `baumEinfuegen` (Z.2502-2565) setzt ihn „immer mit frischen IDs“ wieder ein (`delete patch.id`, Z.2508). Versionen: Fach `versions` (Z.103-104), `RedionVersion` mit vollem Teilbaum `daten` (block.ts:107-115), ausgedünnt nach Frisch/Tag/Monat-Regel (Z.2600-2615). Die Blockart selbst ist im Register beschrieben (register/bloecke.ts:18-27: id, name, icon, zeichen, gruppe, cmd, kurz, md, ph, stufe, nurName) — das Register beschreibt, es zeichnet nicht (Z.28-30).",
+   "schnittstellen": [
+    {
+     "name": "Blocks",
+     "datei": "src/bereiche/editor/ansicht/editor.ts:3550-3564",
+     "art": "global",
+     "beschreibung": "TYPEN, typ, render, bindeEditor, umwandeln, umwandelnMenue, inline, esc, cursorAnsEnde, slashMenue, slashAktion, aktionAmEnde, alleToggles, einfuegenAmEnde, dupliziere, verschiebe, lege, blockVerschiebenNach, seitenPicker, blockMenue, datenbankWaehlen, knopfAusfuehren, eineAktion, AKTIONS_NAMEN, DIENSTE, einbettungsAdresse, auswahl* (17 Funktionen), mdLesen, mdEinsetzen, mdIstStruktur, sprachName, auswahl(). Fremde Bereiche greifen darauf zu: bloecke (3), datenbanken (3), einstellungen (5), wissen (3) laut pruefungen/bereiche-bestand.json"
+    },
+    {
+     "name": "Auswahl",
+     "datei": "src/bereiche/editor/ansicht/auswahlleiste.ts",
+     "art": "global",
+     "beschreibung": "umschliesse(marke), linkSetzen, Leiste zeigen/verstecken; editor.ts:2068-2071 ruft `Auswahl.umschliesse` für Strg+B/I/U/E/Shift+S (Z.1936-1940)"
+    },
+    {
+     "name": "Mehrfach",
+     "datei": "src/bereiche/editor/mehrfach.ts:154-155",
+     "art": "global",
+     "beschreibung": "start, waehle, leeren, hat, ids, bereich, schmal — nur `Mehrfach.start()` wird von aussen gerufen (schale.ts:4093)"
+    },
+    {
+     "name": "Register.bloecke",
+     "datei": "src/register/bloecke.ts:360-362",
+     "art": "register",
+     "beschreibung": "alle, benannt, eines, gruppen, inGruppe, zuMarkdown, ueberschriften, zifferZuTyp, suche, melde, nimmZurueck, vonAussen, anzahl. `alle()` gibt IMMER dieselbe Liste (Z.267-271), der Editor hält sie ab Z.41 fest"
+    },
+    {
+     "name": "Store (Blockteil)",
+     "datei": "src/kern/ablage/indexdb.ts:3042-3070",
+     "art": "global",
+     "beschreibung": "addBlock, getBlock, updateBlock, trashBlock, restoreBlock, purgeBlock, childrenOf, baum, baumEinfuegen, kinderLeeren, rohSetzen, versionSpeichern, versionen, versionLoeschen, on(fn)"
+    },
+    {
+     "name": "Verlauf",
+     "datei": "src/kern/zustand/verlauf.ts:108-112",
+     "art": "global",
+     "beschreibung": "start, merke(erzwingen), zurueck, vor, leeren. Gerufen von schale.ts:697 (Menü), schale.ts:3252/3256 (Strg+Z / Strg+Umschalt+Z bzw. Strg+Y), register/menueband.ts:785/790 (v-undo/v-redo)"
+    },
+    {
+     "name": "Ereignisse.melde",
+     "datei": "src/bereiche/editor/ansicht/editor.ts (1 Aufruf), indexdb.ts:367-368 (ablageGeladen)",
+     "art": "ereignis",
+     "beschreibung": "Ereignisbus aus kern/ereignisse; der Editor meldet genau einmal, sonst redet er über Globale und `App.zeichneSeite()` (71 Aufrufe)"
+    },
+    {
+     "name": "Store.on / notify",
+     "datei": "src/kern/ablage/indexdb.ts:535, 3069",
+     "art": "ereignis",
+     "beschreibung": "Ablage meldet 'purge', 'pages' u.a. an Horcher (notify); Verlauf hängt sich stattdessen per Monkeypatch an die Store-Funktionen (verlauf.ts:100-108)"
+    },
+    {
+     "name": "Zeichenziel.ruf('undo'|'redo'|'deleteSelection')",
+     "datei": "src/kern/helfer/zeichenziel.ts:377-382",
+     "art": "funktion",
+     "beschreibung": "Der ZWEITE Undo-Pfad: reicht an die Steuerung der zuletzt berührten Zeichenfläche (Marken) weiter; menueband.ts:486-492 ruft ihn, menueband.ts:771-776 erklärt die zwei Zurück-Knöpfe"
+    }
+   ],
+   "geometrie": {
+    "point": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "editor.ts:1235-1239 (clientX für Spaltengriff), 2016-2017 (clientY beim Drop), 1965-1967 (Fake-Anker aus clientX/Y); auswahlleiste.ts:201-222 (Leiste positionieren) — rohe Zahlen, kein Point-Typ; core/ink/geometry.ts und core/orb/geometry.ts werden nicht benutzt (kein Treffer in editor/)"
+    },
+    "rect": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "getBoundingClientRect direkt: editor.ts:1236-1237, 1550, 2016, 2668, 2963, 3343; auswahlleiste.ts:201, 222, 287, 293"
+    },
+    "bounds": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "nicht gefunden (grep getBoundingClientRect/bounds in src/bereiche/editor) — Blöcke fliessen im DOM, es gibt keine Hülle"
+    },
+    "transform": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "nicht gefunden in src/bereiche/editor (grep transform/matrix)"
+    },
+    "viewport": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "editor.ts:1550 (`top < 140` für aktive Überschrift im Inhaltsverzeichnis); mehrfach.ts:48-51 und editor.ts:3193 matchMedia(max-width) — keine Viewport-Abstraktion"
+    },
+    "zoom": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "nicht gefunden (grep zoom/scale in src/bereiche/editor)"
+    },
+    "pan": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "nicht gefunden; Scrollen ist Browser-Scroll (App.zeigeBlock)"
+    },
+    "selection": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "ZWEIMAL: editor.ts `ausgewaehlt`/`ankerId` + auswahlSetzen/auswahlBis/auswahlZeigen (Z.3181-3233) UND mehrfach.ts Set `gewaehlt` + waehle/bereich (Z.15, 52-60); Textauswahl via getSelection in auswahlleiste.ts:27-40"
+    },
+    "hitTest": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "DOM-basiert: `elVon(e)?.closest('.blk')` (editor.ts:28-29, 1992-2026); Ober-/Unterhälfte beim Drop: `(e.clientY - r.top) > r.height/2` (editor.ts:2016-2017); Auswahlleiste findet den Block über Range.startContainer.closest('.blk') (auswahlleiste.ts:31-40)"
+    },
+    "snap": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "nicht gefunden (grep snap/einrast in src/bereiche/editor)"
+    },
+    "resizeHandles": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "editor.ts:1233-1247 — ein Griff am Bild, pointerdown/pointermove, Breite in Prozent (10-100) geklemmt"
+    },
+    "rotation": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "nicht gefunden in src/bereiche/editor"
+    },
+    "group": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "Baumstruktur statt Gruppe: content/parentId (indexdb.ts:391-414), columns/columns3 mit Kind-Spalten (register/bloecke.ts:88-89, test176), einruecken/ausruecken (editor.ts:2151-2180)"
+    },
+    "connector": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "nicht gefunden; Verweise sind Blocktypen pageref/synced/linkeddb (register/bloecke.ts:91-93), keine Geometrie"
+    },
+    "frame": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "nicht gefunden; das nächste ist `blatt` (bloecke/arten, ausserhalb dieses Systems)"
+    },
+    "zOrder": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "nur als Reihenfolge in `content` (indexdb.ts:411-412, verschiebe editor.ts:2181, lege 2192); keine z-Achse"
+    },
+    "undo": {
+     "vorhanden": true,
+     "eigen": false,
+     "wo": "gemeinsam: kern/zustand/verlauf.ts (Seiten-Schnappschuss, 60 Schritte); editor.ts ruft `Verlauf.merke` 2× (grep). Zweiter Pfad für Zeichenflächen über kern/helfer/zeichenziel.ts:377 → Marken (100 Schritte, AUFGABEN.md:886)"
+    },
+    "pointerNormalisierung": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "nicht vorhanden: gemischt pointerdown (editor.ts:1233), mousedown (1991, 3544; auswahlleiste.ts:252, 342), HTML5 dragstart/dragover/drop (1999-2021); touch nur über CSS-Breite (mehrfach.ts:48, editor.ts:3193). Am Telefon gibt es kein Ziehen (E84)"
+    }
+   },
+   "tests": [
+    {
+     "lauf": "test39",
+     "was": "Slash-Befehle und Tastenkürzel: jedes Kürzel wird getippt und das Ergebnis abgelesen (test39.mts:186)"
+    },
+    {
+     "lauf": "test65",
+     "was": "Mehrfachauswahl im Editor: Blöcke wählen, Leiste erscheint ab zwei, Aktionen (test65.mts: 'Sechs Blöcke stehen auf der Seite', 'Bei einem noch keine Leiste')"
+    },
+    {
+     "lauf": "test66",
+     "was": "Tabellenblock/Markdown-Lesen: Zahl aus [[\"80\"]], zwei Stücke werden eins, Fett verliert die Marke"
+    },
+    {
+     "lauf": "test70",
+     "was": "Transaktionen; §13 (Z.344-366): EIN Rückgängig holt beide Befehle zurück — und dokumentiert, dass die Blöcke danach NEUE IDs haben (Z.351-352)"
+    },
+    {
+     "lauf": "test86 / test272",
+     "was": "Register.bloecke.melde/nimmZurueck: Anmelden einer Blockart von aussen (einzige Aufrufer von melde)"
+    },
+    {
+     "lauf": "test97",
+     "was": "Papierkorb-Versprechen: Undo holt einen gelöschten Block zurück, solange das Fenster offen ist (test97.mts:17)"
+    },
+    {
+     "lauf": "test111",
+     "was": "Blosses Öffnen einer Seite darf nichts speichern und keinen Undo-Schritt erzeugen (LUECKEN.md:8375, T3)"
+    },
+    {
+     "lauf": "test132",
+     "was": "Zeile für Zeile jedes Markdown-Kürzel tippen (L20)"
+    },
+    {
+     "lauf": "test139",
+     "was": "src/core/types gegen echte Sicherung und Register prüfen — RedionBlock-Felder stimmen mit addBlock überein"
+    },
+    {
+     "lauf": "test142",
+     "was": "Register sind die zentrale Wahrheit: jede Blockart im Editor kommt aus Register.bloecke"
+    },
+    {
+     "lauf": "test158",
+     "was": "Mehrfachauswahl-Einstieg: Esc, Umschalt-/Strg-Klick, Alt+Umschalt+Klick (§7)"
+    },
+    {
+     "lauf": "test162",
+     "was": "Markdown-Tabelle beim Einfügen wird Tabellenblock (E88)"
+    },
+    {
+     "lauf": "test164",
+     "was": "doku/BLOCKTYPEN.md hält Schritt mit Register.bloecke (L195: die Doku ist NICHT erzeugt)"
+    },
+    {
+     "lauf": "test176",
+     "was": "Enter in einer Spalte legt kein neues Spaltenkind an (columns-Block)"
+    },
+    {
+     "lauf": "test179",
+     "was": "Strg+Umschalt+C legt Blockadresse #block=<kennung> ab — Kennungen als Adresse"
+    },
+    {
+     "lauf": "test188",
+     "was": "E114: `rows` einer einfachen Tabelle überlebt Store.baum/baumEinfuegen — auch über Verlauf.zurueck (Z.109-124)"
+    },
+    {
+     "lauf": "test191 / test192",
+     "was": "Jede Blockart ist über den Menschenweg (Schrägstrich, Name, Enter) benutzbar (E119/E170)"
+    },
+    {
+     "lauf": "test194",
+     "was": "Produktmodule am Telefon: Fokus, Tastatur-Rand, Blatt hinter simulierter Tastatur"
+    },
+    {
+     "lauf": "test542",
+     "was": "Auswahlleiste trifft die markierte Stelle, nicht das erste Vorkommen (E650)"
+    },
+    {
+     "lauf": "test557",
+     "was": "Fett ist ein Schalter, Strg+B geht denselben Weg wie der Knopf; Auszeichnungen gehen nicht verloren (E668)"
+    },
+    {
+     "lauf": "test537",
+     "was": "bereiche-bestand.json: der Editor fasst KI(4), Kommentare(4), Formula(2), Datenbank(1), Learning(1), Links(1), Werkzeuge(1) an und darf nicht mehr werden"
+    }
+   ],
+   "gemeinsamGenutzt": [
+    "src/kern/ablage/indexdb.ts — `Store`: updateBlock (65×), getBlock (58×), trashBlock (16×), addBlock (13×), childrenOf (11×), purgeBlock (8×), baum/baumEinfuegen (je 6×), getMeta, getCollection, addPage, addRow, addView, addDatabase, rowsOf, pathOf, now (gezählt per grep über editor.ts, mehrfach.ts, auswahlleiste.ts)",
+    "src/register/bloecke.ts — `Register.bloecke.alle()` (editor.ts:41), `zifferZuTyp` (Z.113-115), `eines` (5 Treffer)",
+    "src/kern/zustand/verlauf.ts — `Verlauf.merke` (2×)",
+    "src/kern/einstellung/konstanten.ts — `KONSTANTEN.TELEFON_BREITE` (mehrfach.ts:50; editor.ts 1×)",
+    "src/register/textstile.ts — `Textstile.klassen/SCHRIFTEN/GROESSEN` (editor.ts:489)",
+    "src/kern/ereignisse — `Ereignisse.melde` (1×)",
+    "src/schale — `App.zeichneSeite` (71×, schale.ts:941), `App.aktuelleSeite` (19×), `App.oeffne` (11×), `UI.toast` (39×), `UI.menu`, `UI.banner`, `UI.emojiWaehlen`, `Menue.menu`, `Farben.name/alle`, `Ablage.kopiere/kopiereJetzt`",
+    "src/core/helpers/ids.ts — indirekt über Store.uid → Ids.long() (indexdb.ts:374-375)",
+    "NICHT benutzt: src/core/ink/geometry.ts, src/core/orb/geometry.ts, kern/helfer/rollrand.ts, kern/helfer/zeichenziel.ts (kein Treffer in src/bereiche/editor)"
+   ],
+   "duplikate": [
+    {
+     "was": "Zwei Mehrfachauswahl-Zustände für dieselben `.blk`-Elemente",
+     "hier": "src/bereiche/editor/ansicht/editor.ts:3218-3223 (auswahlSetzen/auswahlLeeren, Feld `ausgewaehlt`, Klasse `gewaehlt`)",
+     "dort": "src/bereiche/editor/mehrfach.ts:15, 38-40, 52-58 (Set `gewaehlt`, leeren/waehle, Klasse `sel`)",
+     "beleg": "editor.ts: `const auswahlLeeren = () => { ausgewaehlt = []; ankerId = null; auswahlZeigen(); };` — mehrfach.ts: `const leeren = (): void => { gewaehlt.clear(); zeichne(); };` und `el.classList.toggle('sel', …gewaehlt.has(…))`. Beide werden gestartet: `Blocks.auswahlEinklinken` (editor.ts:3479) und `Mehrfach.start()` (schale.ts:4093)."
+    },
+    {
+     "was": "Escape-Funktion `esc`",
+     "hier": "src/bereiche/editor/ansicht/editor.ts:328-329",
+     "dort": "src/kern/helfer/vorschau.ts:46-48 (und ~65 weitere Dateien, grep 'const esc = ' src)",
+     "beleg": "editor.ts: `const esc = (s: any) => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');` — vorschau.ts: `const esc = (s: unknown): string => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&#39;');` (die Editor-Fassung escapet `'` NICHT)"
+    },
+    {
+     "was": "Ziffer→Blockart-Zuordnung als Literal-Rückfall",
+     "hier": "src/bereiche/editor/ansicht/editor.ts:116-117",
+     "dort": "src/register/bloecke.ts:333-340 (zifferZuTyp, aus `kurz` gelesen)",
+     "beleg": "editor.ts: `: { '0':'text','1':'h1','2':'h2','3':'h3','4':'todo','5':'bullet','6':'number','7':'toggle','8':'code','9':'page' }` — bloecke.ts: `const m = /^Ctrl\\+Shift\\+([0-9])$/.exec(String(x.kurz ?? '')); if (m && m[1]) raus[m[1]] = x.id;`. Der Kommentar Z.109-112 sagt selbst, es waren vier Kopien; eine ist als Rückfall geblieben."
+    },
+    {
+     "was": "Telefon-Erkennung über max-width",
+     "hier": "src/bereiche/editor/ansicht/editor.ts:3193 und src/bereiche/editor/mehrfach.ts:48-51",
+     "dort": "src/kern/einstellung/app.ts:70-74 (istTelefon mit KONSTANTEN.TELEFON_BREITE + pointer:coarse)",
+     "beleg": "editor.ts: `window.matchMedia('(max-width: 760px)').matches ? 1 : 2` (Zahl hart) — app.ts: `const grenze = … KONSTANTEN.TELEFON_BREITE : 760; … return window.innerWidth <= grenze || (grob && window.innerHeight <= 500);`"
+    },
+    {
+     "was": "Zwei Listen umwandelbarer Blocktypen in einer Datei",
+     "hier": "src/bereiche/editor/ansicht/editor.ts:120-121 (UMWANDELBAR)",
+     "dort": "src/bereiche/editor/ansicht/editor.ts:3325-3326 (EINFACHE_TYPEN)",
+     "beleg": "`const UMWANDELBAR = ['text','h1','h2','h3','todo','bullet','number','toggle','quote','callout','code','equation','flashcard','page'];` gegen `const EINFACHE_TYPEN = ['text','h1','h2','h3','todo','bullet','number','toggle','quote','callout','code'];` — Einzelblock darf nach equation/flashcard/page, Mehrfachauswahl nicht."
+    }
+   ],
+   "dokuStand": "AUFGABEN.md: kein eigener Abschnitt zum Editor/Blockmodell (Überschriften Z.43-1241: Cloudflare, Telefon, Auftragsmaschine, PDF/GoodNotes, UI-System, Office O1-O7, Werkzeugtafel W1-W5); Z.886 erwähnt „100 Schritte rückgängig“ der Markenschicht (Zeichnen, nicht Editor). LUECKEN.md offen (Überschrift ohne GESCHLOSSEN): L3 „Der Spreadsheet-Block“ (Z.171), L20 „Markdown- und Tastenkürzel“ (Z.739, Rest sind Browser-unmögliche Funktionen), L174 „Die Auswahl-Werkzeugleiste ist breiter als das Fenster“ (Z.7201 — betrifft die Zeichen-Auswahl, nicht auswahlleiste.ts), L195 „Die Blocktypen-Inventur behauptet, erzeugt zu sein — sie ist es nicht“ (Z.7726, doku/BLOCKTYPEN.md wird von Hand gepflegt, test164 hält sie), L41 „Der Weg zu einem Baustein ist nicht der Baustein“ (Z.1218, Reste via E170), L191 dritter Kopplungsweg ohne Zuordnung (Z.7581), L150 Bereiche-Querverweise (Z.7545, E626: editor→7 fremde Namen). Geschlossen: L19 Blocktypen (Z.720), L40 Markdown-Rundlauf/Kennungen (Z.8687, E174), L160, L204 (E646). ENTSCHEIDUNGEN.md (grep Überschriften): E29 Tabellenblock (Z.2083), E59 Markdown beide Richtungen (Z.3879), E84 Mehrfachauswahl am Telefon (Z.6061), E88 Markdown-Tabellen (Z.6284), E114 `rows` zweierlei (Z.8128), E119 Frage an jede Blockart (Z.8528), E170 Weg zu einer Blockart (Z.12289), E174 Kennungen überleben Quelltext-Rundlauf (Z.12711), E175 Kennung ist keine Abfrage (Z.12787), E540 „eine Folie ist ein Blatt, kein neuer Blocktyp“ (Z.586 Verzeichnis, Z.43333), E607 Gedankenkarte (Z.49113), E626 Bereiche getrennt (Z.51021), E650 String.replace trifft das erste Vorkommen (Z.53393), E668 Fett ist ein Schalter (Z.54599); Z.8163 verortet Strg+Z in verlauf.ts. ERLEDIGTE-AUFGABEN.md: E650 (Z.479), E663/E664 (Z.68), E646/E647 (Z.566). Keine offene L-/E-Nummer, die einen Undo je Block/Zeichen oder die Kennungsänderung beim Rückgängig benennt — nur test70.mts:351-352 hält es als Tatsache fest.",
+   "risiken": [
+    "Rückgängig ändert Kennungen: `Verlauf.anwenden` (verlauf.ts:57-62) ruft `Store.kinderLeeren` (purgeBlock aller Kinder, indexdb.ts:2567-2572) und `Store.baumEinfuegen` („immer mit frischen IDs“, Z.2502, `delete patch.id` Z.2508). Nach einem Strg+Z zeigen `#block=`-Verweise (E105/test179), Kommentare und Abgleichs-Grabsteine auf tote Kennungen; test70.mts:351-352 vergleicht deshalb bewusst nur Text. Eine gemeinsame Undo-Schicht darf dieses Verhalten nicht übernehmen — sie müsste Kennungen erhalten (addBlock nimmt `id` im patch, E174).",
+    "Der Undo geht über `purgeBlock` — endgültig, mit asynchronem Aufräumen der Anhänge (indexdb.ts:539-560). Ein Undo auf einer Seite mit Datei-Blöcken kann `purgeAnhaenge` anstossen, obwohl der Block gleich neu angelegt wird (nicht gemessen; Hypothese aus dem Code).",
+    "Zwei Undo-Systeme mit zwei Knöpfen (menueband.ts:771-790): `Verlauf` (ganze Seite, 60 Schritte, 700-ms-Zaun) und Marken-Undo je Zeichenfläche über `Zeichenziel.ruf` (zeichenziel.ts:377). Strg+Z in schale.ts:3252 ruft immer `Verlauf.zurueck()` — welche Fläche gemeint ist, entscheidet nur der Fokus. Eine gemeinsame Schicht muss beide zusammenführen oder die Weiche explizit machen.",
+    "`Verlauf.start` patcht Store-Funktionen zur Laufzeit (verlauf.ts:100-108). Wer `Store.addBlock` an eine gemeinsame Schicht weiterreicht oder die Ladereihenfolge ändert (index.html:579 indexdb vor 633 verlauf), verliert den Hook still.",
+    "Das Register wird EINMAL beim Laden geholt (`const TYPEN = Register.bloecke.alle()`, editor.ts:41; bloecke.ts:267-271 gibt bewusst dieselbe Liste) und danach mutiert (`TYPEN.push` der Einbettdienste, editor.ts:93-96). Ein Register-Ersatz, der Kopien liefert, macht später gemeldete Arten unsichtbar.",
+    "Feldnamen sind Daten: `created/edited/erstelltVon/alive/parentTable/content` (block.ts:9-24). Eine gemeinsame Block-Schicht mit englischen Feldern wäre eine Datenmigration, nicht ein Umbau.",
+    "Zwei Tabs: `updateBlock` schreibt `edited` und `save` an jeder Stelle; `rohSetzen` (indexdb.ts:958-967) ist der Weg des Abgleichs ohne Stempel. Eine gemeinsame Schicht, die alles über `updateBlock` schickt, füttert den Abgleich mit sich selbst (Kommentar Z.949-952).",
+    "Unbekannte Blocktypen werden als Textfeld gezeichnet (render default, editor.ts:985) und bleiben erhalten (§18). Eine typisierte Union der Blockarten in einer gemeinsamen Schicht würde das brechen — Column-Typ bleibt deshalb `string` (§52.9).",
+    "523 Querverweise (E626): der Editor fasst 7 fremde Namen an, vier Bereiche fassen `Blocks` an (bereiche-bestand.json). Jede neue gemeinsame Schicht, die aus einem Bereich heraus gerufen wird statt aus kern/, macht test537 rot."
+   ],
+   "kleinsterSchritt": "Einen Prüflauf schreiben, der misst, ob Blockkennungen ein `Verlauf.zurueck()` überleben (heute: nein, test70.mts:351-352), und ihn rot sehen. Dann `baumEinfuegen` um einen Schalter „Kennungen behalten“ erweitern (indexdb.ts:2508: `delete patch.id` nur, wenn die Kennung noch lebt) und `Verlauf.anwenden` (verlauf.ts:57-62) damit rufen — genau der Weg, den E174 für den Markdown-Rundlauf schon gegangen ist. Keine neue Schicht, keine Feldumbenennung, eine Datei plus ein Wächter; Nachbarstellen prüfen: dupliziere (editor.ts:2223) und Alt-Drop (Z.2033) wollen weiterhin FRISCHE Kennungen."
+  },
+  {
+   "key": "zeichenflaeche",
+   "name": "B · Whiteboard / Zeichenfläche",
+   "system": "B · Whiteboard / Zeichenfläche — Blocktyp `whiteboard`, gebaut in `Zusatz.whiteboard()` (src/bereiche/bloecke/arten/zeichenflaeche.ts:73–799): ein SVG mit `viewBox` als Ausschnitt über frei liegenden Formen. Antwort auf die Kernfrage: komplett EIGENE Geometrie. Die Datei enthält keinen einzigen Aufruf von `InkGeometry`, `InkShapes`, `InkStroke`, `SheetSpace` oder `Verlauf` (grep über zeichenflaeche.ts: 0 Treffer). `core/ink/geometry.ts` wurde in E125 (ENTSCHEIDUNGEN.md:8975–8990) bewusst NEBEN dieser Fläche gebaut („Sie zu importieren hätte zwei unvereinbare Wahrheiten über dieselbe Geometrie geschaffen“; „spätere Flächen dürfen den neutralen Kern verwenden“), und `core/sheet/space.ts:11–33` zitiert die Zeigerumrechnung des Whiteboards wörtlich als das Muster, das es ersetzt. Daneben führt das Register noch einen Blocktyp `zeichenflaeche` (src/register/bloecke.ts:208, `nurName:true`) — ein reiner Name; in src/ rendert ihn niemand (grep `'zeichenflaeche'`: nur register/bloecke.ts:208 und kern/helfer/vorschau.ts:196, 309; kein `case` in editor.ts).",
+   "hauptdateien": [
+    {
+     "pfad": "/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts",
+     "rolle": "Quelle. IIFE `Zusatz` mit fünf Teilen (Whiteboard, Diagramm, Tabelle, Mathematik, Syntax-Einfärbung; Kopf Z. 9–17). Das Whiteboard ist Teil 1 (Z. 73–799): Werkzeugleiste (105–146), `rahmenVon`/`randPunkt` (202–224), `male()` mit viewBox (226–262), Formen zeichnen (353–470), `punkt()` Bildschirm→Fläche (494–498), `massstab`/`insBild` (507–536), Zeiger-Ereignisse mit Kneifen/Hand/Zeiger/Griff (548–692), Rad-Zoom (741–747), Höhengriff (720–733), PNG-Export `alsBild` (802–830). Export: `(window as any).Zusatz = Zusatz` (1513).",
+     "zeilen": 1513
+    },
+    {
+     "pfad": "/home/user/Redion/quell/schale/stil/werkzeuge.css",
+     "rolle": "Stil: `.wb`, `.wb-tools`, `.wb-farbe`, `.wb-sep` (763–782), `.wb-flaeche` mit `touch-action:none` (783), `.wb-griff` (784–785); `.wb-massstab, .gk-massstab` seit E637 EINE Regel (1175)."
+    },
+    {
+     "pfad": "/home/user/Redion/src/bereiche/editor/ansicht/editor.ts",
+     "rolle": "Aufrufstelle: `case 'whiteboard': box.appendChild(Zusatz.whiteboard(block))` (898–900)."
+    },
+    {
+     "pfad": "/home/user/Redion/src/register/bloecke.ts",
+     "rolle": "Registereintrag `{ id:'whiteboard', name:'Whiteboard', icon:'🖍', gruppe:'Wissen', cmd:['whiteboard','zeichnen','canvas','skizze'] }` (96); daneben `{ id:'zeichenflaeche', name:'Zeichenfläche', nurName:true }` (208)."
+    },
+    {
+     "pfad": "/home/user/Redion/src/bereiche/wissen/arbeitswelt.ts",
+     "rolle": "Der „eigene Bereich“ aus E138: Ansicht `whiteboards` (17, 215), Schnellaktion `new-whiteboard` (1049, 1333), und `miniatur(blockId)` (1261–1300), die `block.shapes` direkt liest und mit eigener Rahmen- und Pfadrechnung klein zeichnet."
+    },
+    {
+     "pfad": "/home/user/Redion/src/core/ink/geometry.ts",
+     "rolle": "Der neutrale Geometriekern (E125): `points, simplify, densify, outline, path, rectangle, bounds, move, intersects, distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, union, scale, rotate, textLayout, ecken, drehung …` (Rückgabe 1061–1069; `(window as any).InkGeometry` 1071). Nutzer: pdf/marken.ts (79 Treffer), pdf/document-mode.ts (9), dateien/recognition.ts, dateien/einlesen.ts, chronik/daten.ts — NICHT zeichenflaeche.ts.",
+     "zeilen": 1071
+    },
+    {
+     "pfad": "/home/user/Redion/src/core/ink/shapes.ts",
+     "rolle": "Formerkennung `recognize(pts)` → line/ellipse/rectangle/triangle (63, 276); kennt weder Store noch DOM (Kopf 8–14). Nutzer: pdf/marken.ts, kern/helfer/vorschau.ts, chronik/daten.ts — nicht das Whiteboard.",
+     "zeilen": 279
+    },
+    {
+     "pfad": "/home/user/Redion/src/core/ink/stroke.ts",
+     "rolle": "Der nasse Strich (E376): `Feder, glaetter, druckGlaetter, vorhersage` (488). Nutzer: pdf/marken.ts — nicht das Whiteboard.",
+     "zeilen": 493
+    },
+    {
+     "pfad": "/home/user/Redion/src/core/ink/thumbnail.ts",
+     "rolle": "Deckel eines handbeschriebenen Blattes (E374): `deckel, farbeSicher, ausduennen, hatInhalt` (147). Für `marken`, nicht für `shapes`.",
+     "zeilen": 151
+    },
+    {
+     "pfad": "/home/user/Redion/src/core/sheet/space.ts",
+     "rolle": "Der Blattraum: `zuBlatt(svg, e)` über `getScreenCTM` (56–59), `umrechner`, `A4_BREITE/HOEHE`, `RAUM_VERSION` (162). Kopf 11–33 nennt die rohe `clientX - r.left`-Rechnung der Zeichenfläche als das Problem. Nutzer: pdf/marken.ts, pdf/seite.ts, pdf/document-mode.ts, pdf/einlesen.ts, wissen/notebook.ts, dateien/recognition.ts — nicht das Whiteboard.",
+     "zeilen": 165
+    },
+    {
+     "pfad": "/home/user/Redion/src/kern/zustand/verlauf.ts",
+     "rolle": "Gemeinsames Rückgängig auf Seitenebene: zwei Stapel, MAX 60, 700-ms-Zaun (32–55); `start()` umwickelt `Store.updateBlock/addBlock/…` und ruft `merke` (96–104); `(window as any).Verlauf` (113). Das Whiteboard nutzt ihn nicht, wird aber von ihm erfasst (siehe Risiken).",
+     "zeilen": 113
+    },
+    {
+     "pfad": "/home/user/Redion/index.html",
+     "rolle": "Ladereihenfolge: core/ink/geometry.js, shapes.js, stroke.js, thumbnail.js (499–503) vor bereiche/bloecke/arten/zeichenflaeche.js (584)."
+    }
+   ],
+   "datenmodell": "Blocktyp `whiteboard` im Fach `blocks` (Store.updateBlock → `save('blocks', b)`, src/kern/ablage/indexdb.ts:440–462). Drei Zusatzfelder am Block, alle untypisiert (in src/core/types/block.ts:46–73 gibt es weder `shapes` noch `sicht` noch `hoehe` — nicht gefunden): (1) `block.shapes`: Liste von Formen, beim Öffnen tief kopiert (zeichenflaeche.ts:74), gespeichert mit `Store.updateBlock(block.id, { shapes: daten })` (178). Eine Form: `{ id: Store.uid().slice(0, 8), art, farbe, … }` mit `art` ∈ stift (`pts: [[x,y],…]`, 610), linie/pfeil/rechteck/ellipse (`x,y,w,h`, 611; `w`/`h` dürfen negativ sein, normalisiert in 210–211 und 399–401), notiz (`x,y,w:170,h:110,text`, 600), text (`x,y,text`, 601), bild (`x,y,w,h,dateiId`, 289–291 — die Datei liegt in `Dateien.ablegen(datei, { blockId })`, also in den Fächern dateien/stuecke, §14-konform laut Kommentar 421–429), verbindung (`von, nach` = Form-Kennungen, 574). (2) `block.sicht = { x, y, z }` — Ausschnitt in Formkoordinaten und Massstab, Grenzen 0,1…4 (91–97), gespeichert gerundet (498–501); ohne `sicht` gilt 0/0 bei 1 = das Bild von vor E138 (Kommentar 82–90). (3) `block.hoehe` (Vorgabe 380, 76; Griff schreibt 731). Der Undo-Stapel liegt NUR im Arbeitsspeicher (161–176, E144). Koordinaten sind CSS-Pixel bei Massstab 1, keine Blattpunkte; es gibt keine `raumVersion` (space.ts:30–33 hält genau das gegen die Zeichenfläche fest). Zweiter Leser derselben Daten: arbeitswelt.ts:1263 (`block.shapes`). `doku/REDION-FORMAT.md` und `doku/ARCHITEKTUR.md` kennen weder `shapes` noch das Whiteboard (grep leer — nicht gefunden).",
+   "schnittstellen": [
+    {
+     "name": "Zusatz.whiteboard(block) → HTMLElement",
+     "datei": "src/bereiche/bloecke/arten/zeichenflaeche.ts:73, 1509–1513",
+     "art": "global",
+     "beschreibung": "Baut den Block; einziger Aufrufer editor.ts:899. `Zusatz.PALETTE`/`Zusatz.farbeVon` werden zusätzlich von datenbanken/steuerung.ts:3961 genutzt (im Bereichsbestand als datenbanken→Zusatz→bloecke, bereiche-bestand.json:190–195)."
+    },
+    {
+     "name": "Register.bloecke 'whiteboard'",
+     "datei": "src/register/bloecke.ts:96",
+     "art": "register",
+     "beschreibung": "Blockart mit Slash-Befehlen; Menüband legt ihn an: `Blocks.einfuegenAmEnde('whiteboard')` (src/register/menueband.ts:500)."
+    },
+    {
+     "name": "Store.updateBlock / Store.uid",
+     "datei": "src/kern/ablage/indexdb.ts:440, 374",
+     "art": "funktion",
+     "beschreibung": "Persistenz von shapes/sicht/hoehe (zeichenflaeche.ts:178, 498, 731) und Kennungen (289, 574, 600–601, 609–610)."
+    },
+    {
+     "name": "UI.toast",
+     "datei": "src/schale/ueberlagerung/ui.ts",
+     "art": "funktion",
+     "beschreibung": "Hinweise (zeichenflaeche.ts:271, 570–571, 823)."
+    },
+    {
+     "name": "(globalThis as any).Dateien.adresse / .ablegen",
+     "datei": "src/bereiche/bloecke/arten/zeichenflaeche.ts:257, 271 → definiert src/bereiche/dateien/ablage.ts:483",
+     "art": "global",
+     "beschreibung": "Bereich→Bereich-Griff (bloecke→dateien) über `globalThis`. test537 prüft nur `(window as any)` (pruefungen/lauf/test537.mts:185) und der Bestand kennt kein bloecke→Dateien (bereiche-bestand.json, Einträge von bereiche/bloecke: Blocks, Datenbank, Formelheft, Formula, Marken, Stromfluss)."
+    },
+    {
+     "name": "DOM-Vertrag: `.wb`, `.wb-flaeche`, `[data-wz]`, `[data-a]`, `[data-c]`, `.wb-eingabe`, `.wb-massstab`, `[data-sid]`",
+     "datei": "src/bereiche/bloecke/arten/zeichenflaeche.ts:104–146, 148, 254, 310, 380",
+     "art": "global",
+     "beschreibung": "Von test209 und test206 abgegriffen. ACHTUNG: `data-wz` trägt auch die Markenleiste (`.blatt-werk [data-wz=…]`, src/bereiche/pdf/marken.ts:529, 557) — gleicher Attributname, anderes System."
+    },
+    {
+     "name": "block.shapes (Datenschnittstelle)",
+     "datei": "src/bereiche/wissen/arbeitswelt.ts:1263",
+     "art": "funktion",
+     "beschreibung": "Die Arbeitswelt liest die Formen direkt aus dem Block für die Miniatur — ohne Funktion des Whiteboards."
+    },
+    {
+     "name": "Ereignisbus / Zeichenziel",
+     "datei": "src/kern/ereignisse/bus.ts, src/kern/helfer/zeichenziel.ts",
+     "art": "ereignis",
+     "beschreibung": "NICHT genutzt: zeichenflaeche.ts hat keinen `Ereignis`/`Zeichenziel`/`dispatch`-Aufruf (grep leer). `Zeichenziel.melde` ruft nur pdf/marken.ts — der Reiter „Zeichnen“ des Menübands kennt das Whiteboard deshalb nicht (L64, LUECKEN.md:1586–1610)."
+    }
+   ],
+   "geometrie": {
+    "point": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "zeichenflaeche.ts:496–497 `[number, number]`-Tupel; `pts` je Stiftstrich (610, 665). InkGeometry.points (geometry.ts:23) ungenutzt."
+    },
+    "rect": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "zeichenflaeche.ts:202–212 `rahmenVon` → `{x,y,w,h}`; Normalisierung negativer Breite 210–211, 399–401. InkGeometry.rectangle (geometry.ts:291–294, `{x,y,width,height}`) ungenutzt."
+    },
+    "bounds": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "zeichenflaeche.ts:202–212 je Form (Text nur geschätzt: `length * 8`, 209) und Vereinigung in `insBild` 523–527. InkGeometry.bounds/union (geometry.ts:625, 962) ungenutzt."
+    },
+    "transform": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "Nur über `viewBox` (zeichenflaeche.ts:227–228) und die Umkehrrechnung in `punkt()` 494–498; keine Matrix. SheetSpace.zuBlatt/umrechner (space.ts:56–59) ungenutzt."
+    },
+    "viewport": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "`sicht {x,y,z}` 91–97, `ausschnitt()` 190–195 (Ersatzbreite 900 solange ungemessen), ResizeObserver 738–755, gespeichert 498–501 (E138)."
+    },
+    "zoom": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "`massstab(neuZ, haltX, haltY)` um den Haltepunkt 507–517; Knöpfe ×1,25 (704–705), Rad ×1,12 ohne Strg (741–747), Kneifen (548–559, 633–641), „alles ins Bild“ 520–536; Grenzen 0,1–4 (95). Globaler Zoom in E277 gestrichen (ENTSCHEIDUNGEN.md:21338–21339)."
+    },
+    "pan": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "Werkzeug `hand`: `schiebt` 563–566, Bewegung 642–647, Sichern beim Loslassen 654. Kein Leertaste-/Zweifinger-Schieben; zwei Finger sind immer Zoom (551–559)."
+    },
+    "selection": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "Genau EINE Kennung `gewaehlt` (543), gesetzt im Zeiger 592–594, gelöscht beim Werkzeugwechsel 757. Kein Mehrfach, kein Lasso, kein Rahmen; InkGeometry.insidePolygon (936) ungenutzt."
+    },
+    "hitTest": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "Über den DOM: `e.target.dataset.sid` (568, 578, 592); dafür `pointer-events: all` an Rechteck/Ellipse (412, 461) und 16-px-Fangpfad unter Linien (384–390, E144). Rechnerisch nur die Griffnähe 586–590. InkGeometry.distanceToPolyline/touchesCircle (738, 814) ungenutzt."
+    },
+    "snap": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "Nicht gefunden: grep `rasten|snap|einrast` in zeichenflaeche.ts leer; das `pattern` in 229 ist nur ein sichtbares Raster. Einrasten gibt es in der Planfläche (`Schaltplan.rasten`, schaltplan.ts:86; planflaeche.ts:143)."
+    },
+    "resizeHandles": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "EIN Griff rechts unten, `GRIFF = 9` (544), gezeichnet nur für die gewählte Form 244–256, Treffer 586–590, Ziehen von der linken oberen Ecke 650–660, Mindestmass 8; ohne Seitenverhältnis (L54, LUECKEN.md:9086–9091). InkGeometry.scale (1018) ungenutzt."
+    },
+    "rotation": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "Nicht gefunden (grep `rotate|dreh` in zeichenflaeche.ts leer). InkGeometry.rotate/drehePunkte/ecken (geometry.ts:679, 587, 617) stehen bereit."
+    },
+    "group": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "Keine Gruppierung in den Daten; `sv('g')` (391, 396) ist nur SVG-Verpackung eines Fangpfads mit dem Strich."
+    },
+    "connector": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "`art:'verbindung'` mit `von/nach` (572–579), gezeichnet 353–367, Randpunkt-Rechnung `randPunkt` 216–224, Radierer nimmt hängende Verbindungen mit (582–585). Miniatur lässt sie weg (arbeitswelt.ts:1264; L54 Rest)."
+    },
+    "frame": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "Kein Rahmen-/Frame-Objekt; nur die Blockhöhe über `.wb-griff` (149–153, 720–733)."
+    },
+    "zOrder": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "Nur Feldreihenfolge plus Regel „Verbindungen zuerst“ (238–241). Kein „nach vorn/hinten“ (grep leer)."
+    },
+    "undo": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "JSON-Abbild-Stapel, `SCHRITTE = 40`, `zurueckStapel/vorStapel/abbild/merken/einsetzen/standZeigen` (161–176), Knöpfe 693–702, Kritzler nimmt seinen Schritt mit (669–676). Der gemeinsame `Verlauf` (kern/zustand/verlauf.ts) wird nicht gerufen — greift aber von aussen (Risiken)."
+    },
+    "pointerNormalisierung": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "`punkt(e)` aus `getBoundingClientRect` (494–498), `finger`-Map je pointerId (546, 550, 632), `setPointerCapture` (549), up/cancel/leave → `fertig` (690–692). Keine Unterscheidung `pointerType`, kein Druck, keine coalesced events. SheetSpace.zuBlatt (space.ts:56) ungenutzt."
+    }
+   },
+   "tests": [
+    {
+     "lauf": "pruefungen/lauf/test209.mts (Suite 175)",
+     "was": "Der eigentliche Wächter (E138/E144): Ausschnitt breit wie der Kasten (115), Schieben und Neuladen (136–150), Rechteck in Flächen- statt Bildschirmkoordinaten (177–182), Zoom (199), „alles ins Bild“ (222–226), Bild mit `dateiId` (261–279), Verbindung folgt der Form (319–337), Whiteboard-Bereich mit Miniatur (378–383), Telefon (454–456), Leiste ≥ 18 Knöpfe (471), Zurück/Vor (511–541), Schreibfeld statt prompt (569–577), Griff vergrössert (607), keine Browserfehler (625)."
+    },
+    {
+     "lauf": "pruefungen/lauf/test206.mts",
+     "was": "Arbeitswelt: Schnellaktion `new-whiteboard` legt einen `whiteboard`-Block an und zeichnet `.wb` (382–407)."
+    },
+    {
+     "lauf": "pruefungen/lauf/test428.mts",
+     "was": "Ein `whiteboard`-Block mit `shapes:[]` überlebt Navigation, Wiederherstellung und Themenwechsel unverändert (50, 101)."
+    },
+    {
+     "lauf": "pruefungen/lauf/test187.mts",
+     "was": "Markdown-Export fragt `mdTraegt(b)`; keine zweite Blockartliste mit `'whiteboard'` im Code (312–317)."
+    },
+    {
+     "lauf": "pruefungen/lauf/test33.mts",
+     "was": "`zeichenflaeche` ist eine Nur-Name-Blockart, nicht einfügbar (323, 343)."
+    },
+    {
+     "lauf": "pruefungen/lauf/test114.mts, test214.mts",
+     "was": "`whiteboards` ist eine Ansicht der Arbeitswelt (114:1677, 214:63)."
+    },
+    {
+     "lauf": "Hinweis zu den übrigen ~55 Treffern von `grep -l`",
+     "was": "test177/178/189/242–267/343–368/386/438–480/502/522–564 treffen `.blatt-werk [data-wz=…]` — die Markenschicht von Blatt/PDF, nicht das Whiteboard. Gleicher Attributname, anderes System."
+    }
+   ],
+   "gemeinsamGenutzt": [
+    "src/kern/ablage/indexdb.ts — `Store.updateBlock` (440), `Store.uid` (374)",
+    "src/schale/ueberlagerung/ui.ts — `UI.toast`",
+    "src/register/bloecke.ts:96 — Blockart-Eintrag; src/register/menueband.ts:500 — Anlegen",
+    "quell/schale/stil/werkzeuge.css:763–785, 1175 — Stil (gemeinsame Regel `.wb-massstab, .gk-massstab` seit E637)",
+    "src/kern/helfer/vorschau.ts:196 — kennt `whiteboard`/`zeichenflaeche` als Arten ohne Text (Miniaturen), ohne dass das Whiteboard es ruft",
+    "NICHT genutzt, obwohl vorhanden: src/core/ink/geometry.ts (rectangle 291, bounds 625, union 962, scale 1018, rotate 679, distanceToPolyline 738, insidePolygon 936), src/core/ink/shapes.ts (recognize 63), src/core/sheet/space.ts (zuBlatt 56), src/kern/zustand/verlauf.ts (merke/zurueck/vor 107–111), src/kern/helfer/zeichenziel.ts (melde 402), src/kern/ereignisse/bus.ts",
+    "Bereich→Bereich statt kern: `(globalThis as any).Dateien` (zeichenflaeche.ts:257, 271 → bereiche/dateien/ablage.ts:483)"
+   ],
+   "duplikate": [
+    {
+     "was": "Undo-Stapel aus JSON-Abbildern (40 Schritte)",
+     "hier": "src/bereiche/bloecke/arten/zeichenflaeche.ts:161–176",
+     "dort": "src/bereiche/bloecke/arten/gedankenkarte.ts:646–660 (und als drittes Muster src/kern/zustand/verlauf.ts:32–35, 52–54 mit MAX 60; planflaeche.ts:45–46, 183–184 mit 60)",
+     "beleg": "hier: `const SCHRITTE = 40; const zurueckStapel: string[] = []; const vorStapel: string[] = []; const abbild = (): string => JSON.stringify(daten); … if (zurueckStapel.length > SCHRITTE) zurueckStapel.shift(); vorStapel.length = 0;` — dort: `const SCHRITTE = 40; const zurueckStapel: string[] = []; const vorStapel: string[] = []; const abbild = (): string => JSON.stringify(karte); … if (zurueckStapel.length > SCHRITTE) zurueckStapel.shift(); vorStapel.length = 0;`"
+    },
+    {
+     "was": "Rahmen einer Whiteboard-Form (Stift über min/max der Punkte, sonst normalisiertes x/y/w/h) und Stiftpfad `M … L …`",
+     "hier": "src/bereiche/bloecke/arten/zeichenflaeche.ts:202–212 (`rahmenVon`) und 373 (Pfad)",
+     "dort": "src/bereiche/wissen/arbeitswelt.ts:1265–1276 (Rahmen) und 1289–1291 (Pfad) — ein ANDERER Bereich rechnet dieselben Daten nach",
+     "beleg": "hier: `if (s.art === 'stift') { const xs = s.pts.map((q: any) => q[0]), ys = …; return { x, y, w: Math.max(...xs) - x, h: … } } … return { x: Math.min(s.x, s.x + s.w), y: Math.min(s.y, s.y + s.h), w: Math.abs(s.w), h: Math.abs(s.h) }` und `'M' + s.pts.map((q: any) => q[0] + ' ' + q[1]).join(' L')` — dort: `if (form.art === 'stift' && Array.isArray(form.pts) …) { const xs = form.pts.map(…); return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), … } } … return { x: Math.min(x, x + w), y: Math.min(y, y + h), w: Math.abs(w) || 40, h: Math.abs(h) || 20 }` und `'M' + form.pts.map((punkt: any) => `${…} ${…}`).join(' L')`. Beides existiert ausserdem in core: InkGeometry.rectangle (geometry.ts:291–294), umschliessend (595–599), path (278)."
+    },
+    {
+     "was": "Zweifinger-Kneifzoom mit `finger`-Map und `kneifen`-Zustand",
+     "hier": "src/bereiche/bloecke/arten/zeichenflaeche.ts:546–559, 621, 633–641",
+     "dort": "src/bereiche/pdf/document-mode.ts:4797–4818",
+     "beleg": "hier: `const finger = new Map<number, { x: number; y: number }>(); let kneifen: { abstand: number; z: number } | null = null; … kneifen = { abstand: Math.hypot(dx, dy) || 1, z: sicht.z }; … if (finger.size < 2) kneifen = null;` — dort: `const finger = new Map<number, [number, number]>(); let kneifen: { abstand: number; zoom: number } | null = null; … kneifen = { abstand: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, zoom: state.zoom }; … if (finger.size < 2) kneifen = null;`"
+    },
+    {
+     "was": "Höhengriff am Block, der `hoehe` schreibt",
+     "hier": "src/bereiche/bloecke/arten/zeichenflaeche.ts:720–733",
+     "dort": "src/bereiche/bloecke/arten/gedankenkarte.ts:1559–1572",
+     "beleg": "hier: `const start = e.clientY, h0 = flaeche.getBoundingClientRect().height; const zug = (ev) => { const h = Math.max(180, Math.min(1200, h0 + ev.clientY - start)); … }; const stop = () => { … Store.updateBlock(block.id, { hoehe: Math.round(flaeche.getBoundingClientRect().height) }); }` — dort: `const startY = e.clientY; const vonH = buehne.getBoundingClientRect().height; const zug = (ev) => { const neu = Math.max(220, Math.round(vonH + (ev.clientY - startY))); … }; const aus = () => { … Store.updateBlock(block.id, { hoehe: Math.round(buehne.getBoundingClientRect().height) }); }`"
+    },
+    {
+     "was": "Bildschirmpunkt → Flächenkoordinaten",
+     "hier": "src/bereiche/bloecke/arten/zeichenflaeche.ts:494–498 (`punkt`)",
+     "dort": "src/core/sheet/space.ts:56–59 (`zuBlatt`, über getScreenCTM) und src/bereiche/bloecke/arten/planflaeche.ts:136–144 (`ortAus`)",
+     "beleg": "hier: `const r = flaeche.getBoundingClientRect(); return [Math.round(sicht.x + (e.clientX - r.left) / sicht.z), …]` — space.ts:13–16 zitiert wörtlich: `const r = flaeche.getBoundingClientRect(); return [Math.round(e.clientX - r.left), Math.round(e.clientY - r.top)];` als „die vorhandene Zeichenfläche rechnet in rohen Bildschirmpunkten“; planflaeche.ts:141: `const x = (e.clientX - r.left) * sx;`"
+    },
+    {
+     "was": "Rad-Zoom am Block (mit abweichendem Verhalten)",
+     "hier": "src/bereiche/bloecke/arten/zeichenflaeche.ts:741–747",
+     "dort": "src/bereiche/bloecke/arten/gedankenkarte.ts:1466–1470",
+     "beleg": "hier: `flaeche.addEventListener('wheel', (e: WheelEvent) => { e.preventDefault(); massstab(sicht.z * (e.deltaY < 0 ? 1.12 : 1 / 1.12), …) }, { passive: false })` (jedes Rad zoomt, die Seite rollt nicht) — dort: `buehne.addEventListener('wheel', e => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); zoomen(e.deltaY < 0 ? 1.1 : 1 / 1.1); }, { passive: false })` (nur mit Strg)."
+    }
+   ],
+   "dokuStand": "AUFGABEN.md: kein offener Eintrag zu Whiteboard/Zeichenfläche/Zusatz (grep -i: nur 243 und 1154, beide zur PDF-Zeichenfläche; 699 nennt L115-Rest). LUECKEN.md: L54 (9059) „grösstenteils geschlossen“ — OFFEN bleiben: Miniatur zeichnet keine Verbindungen (9093–9096) und der Griff hält bei Bildern kein Seitenverhältnis (9086–9091); L115 Punkt 1 (4346, 4358–4359) OFFEN als Rest: „die Zeichenfläche des Whiteboards (`zeichenflaeche.ts`) hat ihren eigenen Radierer, der weiter eine Form je Tipp nimmt“; L179 (7316) offen für die Gedankenkarte, mit dem Whiteboard-PNG als Vorbild; L191 (7581) offen: der Markup-Kopplungsweg wird nicht geprüft; L64 (1586) GESCHLOSSEN via Zeichenziel — nur für die Markenschicht; L61 Punkt 2 (1524) durchgestrichen. ENTSCHEIDUNGEN.md: E125 (8975) core/ink neben der Zeichenfläche, kein Import; E138 (9467) Ausschnitt/Zoom/Pan/Verbindungen/Bilder/eigener Bereich; E144 (9880) Undo-Stapel, Schreibfeld, Griff, pointer-events, Fangpfad; E277 (21305, Zeile 21338–21339) globaler Zoom gestrichen, Whiteboard behält eigenen; E637 (51975–51985) `.gk-massstab` war Abschrift von `.wb-massstab` → eine Regel; E626/E629 (51021, 51331) Bereichswächter — der Griff über `(globalThis as any).Dateien` fehlt darin. ERLEDIGTE-AUFGABEN.md:3034 „§22 Whiteboard fertig machen — L54, E144“; 3151 „Whiteboard mit 12 Werkzeugen und PNG-Export (test209: 55/55)“; 2096 „keinen PDF-zu-Whiteboard-Import“. doku/ARCHITEKTUR.md und doku/REDION-FORMAT.md: weder `shapes` noch Whiteboard noch core/ink erwähnt (nicht gefunden). Letzte Commits an der Datei: E500 (2026-09-08), E469, E431, E414, E387 (git log --follow).",
+   "risiken": [
+    "Zwei Rückgängig-Systeme übereinander: `Verlauf.start()` umwickelt `Store.updateBlock` (kern/zustand/verlauf.ts:96–104), also legt JEDES `sichern()`/`sichtSichern()` des Whiteboards (zeichenflaeche.ts:178, 498) zusätzlich ein Seitenabbild in den Seitenverlauf (700-ms-Zaun). Strg+Z geht in der Schale immer an `Verlauf.zurueck()` (schale/aufbau/schale.ts:3252; der Handler ab 3178 prüft nur `strg`, kein Eingabefeld-Wächter — `schreibtGerade` 3960–3964 wird erst bei 3976 benutzt) und baut die ganze Seite neu (`Store.kinderLeeren` + `baumEinfuegen`, verlauf.ts:62–64) — der 40-Schritte-Stapel des Blocks ist danach weg. Eine gemeinsame Schicht muss festlegen, welches Zurück gilt.",
+    "Datenform ohne Typ und ohne Versionsmarke: `shapes`, `sicht`, `hoehe` fehlen in src/core/types/block.ts (46–73); Koordinaten sind CSS-Pixel bei z=1 mit möglicherweise negativem `w/h` (210–211, 399–401), während InkGeometry `{x,y,width,height}` positiv erwartet (geometry.ts:291–294) und die Markenschicht in PDF-Punkten mit `raumVersion` rechnet (space.ts:30–33). Jede Umstellung der Bedeutung wäre eine stille Verschiebung alter Boards; Boards OHNE `sicht` müssen weiter bei 0/0 und z=1 erscheinen (82–97, test209:150).",
+    "Zwei Leser derselben Daten: arbeitswelt.ts:1263–1300 liest `block.shapes` und rechnet Rahmen/Pfade selbst nach. Wer die Form ändert (Feldnamen, Pfadformat), muss beide Stellen und test209:378–383 mitnehmen.",
+    "Kennungen: Form-IDs sind 8 Zeichen aus `Store.uid().slice(0, 8)` (289, 574, 600–601, 609–610) und werden von `verbindung.von/nach` referenziert; Bilder hängen über `dateiId` an der Dateiablage (291, 421–437). Import/Abgleich/Ersetzen darf beides nicht umschreiben (§13, §14) — eine `.json`-Sicherung ohne Anhänge zeigt korrekt „Bild fehlt“ (437), das muss so bleiben.",
+    "Bereichsgrenze: das Whiteboard greift über `(globalThis as any).Dateien` (257, 271) in bereiche/dateien; test537 sieht nur `(window as any)` (test537.mts:185), der Bestand führt kein bloecke→Dateien. Wandert Geometrie nach core/kern, darf dort keine Abhängigkeit auf `Dateien`/`Store`/`UI` entstehen (§4: kern kennt keinen Bereich).",
+    "Gestenverhalten ist Produktverhalten: Rad ohne Strg zoomt (741–747; test209:199), zwei Finger sind immer Zoom und werfen einen angefangenen Strich weg (551–559), der Griff wird absichtlich erst beim Loslassen gezeichnet (594–606, E144 §5: `male()` leert `innerHTML` und löst sonst `pointercancel`). Ein gemeinsamer Gestenkern muss diese drei Zusagen halten, sonst wird test209 rot oder — schlimmer — grün bei anderem Verhalten.",
+    "Namensraum: `data-wz` wird von Whiteboard (105–121) UND Markenleiste (marken.ts:529, 557) benutzt; ~55 Prüfläufe selektieren `.blatt-werk [data-wz=…]`. Ein gemeinsames Werkzeugregister darf den Attributnamen nicht global umdeuten. Zeichenziel/Menüband kennen das Whiteboard nicht (L64) — es anzumelden ändert das Verhalten des Reiters „Zeichnen“ für alle Flächen.",
+    "Bild-Export `alsBild` (802–830) verlässt sich darauf, dass alles im SVG liegt (L179 nennt das als Vorteil gegenüber der Gedankenkarte); eine Schicht, die Formen als HTML zeichnet, bricht den PNG-Knopf."
+   ],
+   "kleinsterSchritt": "Erst die Form benennen, dann eine Rechnung tauschen: (1) In src/core/types/ einen reinen Typ `WhiteboardShape`/`WhiteboardView` für `shapes`/`sicht`/`hoehe` anlegen (noEmit, ändert nichts an Daten; Feldnamen bleiben wie gespeichert, §53.3) und `doku/REDION-FORMAT.md` um den Absatz „Whiteboard-Formen“ ergänzen — beides fehlt heute (block.ts:46–73, REDION-FORMAT.md grep leer). (2) Dann als erste Code-Änderung `punkt()` (zeichenflaeche.ts:494–498) auf `SheetSpace.zuBlatt(flaeche, e)` umstellen: weil `viewBox` bereits `sicht.x sicht.y w/z h/z` ist (227–228), liefert die CTM-Rechnung dieselben Formkoordinaten, aber ohne den Fehler aus space.ts:17–22 (Rollstand, CSS-Transform); Wächter ist test209 §3 „Es liegt in Flächenkoordinaten, nicht in Bildschirmkoordinaten“ (182) plus eine Gegenprobe mit einer CSS-Transform über dem Block, die mit der alten Rechnung rot wird (§55.2). Kein Undo-, Kneif- oder Rahmen-Umbau in diesem Bogen — die stehen als Duplikate oben und kommen je als eigener Zweig (§43: eine Änderung = ein Ziel)."
+  },
+  {
+   "key": "gedankenkarte",
+   "name": "C · Gedankenkarte (Mindmap)",
+   "system": "C · Gedankenkarte (Mindmap) — Blockart `mindmap`, globaler Name `Gedankenkarte`, CSS-Namensraum `gk-`",
+   "hauptdateien": [
+    {
+     "pfad": "/home/user/Redion/src/bereiche/bloecke/arten/gedankenkarte.ts",
+     "rolle": "Die ganze Gedankenkarte: Modell (GkKnoten/GkVerbindung/GkKarte, Z. 48–103), Palette/Formen/Vorlagen (Z. 123–260), leseKarte (Z. 291), baum (Z. 376), aufbauen = Layout ohne DOM (Z. 430), zeichne = Leiste, Bühne, Griffe, Verbindungen, Rückgängig, Zoom/Pan, Tastatur (Z. 533–1590). Export: { zeichne, leseKarte, neueKarte, aufbauen, baum, PALETTE, farbeVon } (Z. 1593), global (window as any).Gedankenkarte (Z. 1596)",
+     "zeilen": 1596
+    },
+    {
+     "pfad": "/home/user/Redion/quell/schale/stil/werkzeuge.css",
+     "rolle": "Stil der Karte, Namensraum gk- (Z. 1340–1556): Schichten .gk-buehne/.gk-welt/.gk-linien (Kopf Z. 1340–1352), Griffe .gk-griffel (Z. 1461–1473, Telefon Z. 1551–1554), Verbindungen .gk-verb-fang/.gk-verb-linie/.gk-spitze (Z. 1490–1497), Formen über [data-form] (Z. 1511–1538). Kein src-Gegenstück: CSS liegt nur unter quell/ (git ls-files zeigt nur quell/schale/stil/werkzeuge.css)",
+     "zeilen": 0
+    },
+    {
+     "pfad": "/home/user/Redion/src/register/bloecke.ts",
+     "rolle": "Registereintrag { id:'mindmap', name:'Gedankenkarte', icon:'🧠', gruppe:'Wissen', cmd:[…'xmind'…], ph:'Zentrales Thema' } (Z. 97–99)"
+    },
+    {
+     "pfad": "/home/user/Redion/src/bereiche/editor/ansicht/editor.ts",
+     "rolle": "Einziger Aufrufer: case 'mindmap': box.appendChild(Gedankenkarte.zeichne(block)) (Z. 904–905)"
+    },
+    {
+     "pfad": "/home/user/Redion/src/kern/helfer/vorschau.ts",
+     "rolle": "'mindmap' in TRAEGT_KEINEN_TEXT — Miniatur zeichnet für die Karte keinen Textstreifen (Z. 195–196)"
+    },
+    {
+     "pfad": "/home/user/Redion/index.html",
+     "rolle": "<script src=\"quell/bereiche/bloecke/arten/gedankenkarte.js\" defer> (Z. 585); dazu GRUNDSTOCK-Eintrag in src/dienst/sw.ts Z. 171"
+    },
+    {
+     "pfad": "/home/user/Redion/bilder.mts",
+     "rolle": "Bildansichten gedankenkarte (Z. 1770), gkformen (Z. 4181), gkvorlagen (Z. 4229)"
+    }
+   ],
+   "datenmodell": "Kein eigenes IndexedDB-Fach, kein eigener Bereich: die Karte ist ein gewöhnlicher Block vom Typ `mindmap` im Fach `blocks` und hängt komplett am Feld `block.karte` (E607, ENTSCHEIDUNGEN.md:49121–49124: „Kein eigener Bereich, kein eigenes Fach in IndexedDB, kein eigenes Dateiformat — die Karte liegt als Feld `karte` am Block\"). Geschrieben wird ausschliesslich über `Store.updateBlock(block.id, { karte: JSON.parse(JSON.stringify(karte)) })` (gedankenkarte.ts:662–664), aufgerufen aus `aendere` (Z. 667–673), `einsetzen` (Z. 675), `zoomen` (Z. 1239), `einpassen` (Z. 1282) und dem Schiebe-Ende (Z. 1455). Die Höhe des Kastens steht daneben als `block.hoehe` (Z. 543, Z. 1570). Format von `karte` (Typ GkKarte, Z. 85–90): `knoten: GkKnoten[]` mit { id, text, eltern: string|null, seite?: 'links'|'rechts', farbe?: '#hex', zu?: true, form?: string } (Z. 48–56) — Baum über `eltern`, Wurzel fest 'w' (Z. 176, 264); `verbindungen: GkVerbindung[]` mit { id, von, zu } als zweite flache Liste neben dem Baum (Z. 79–83, Begründung Z. 58–78); `aufbau: string` (immer 'karte'); `sicht: { x, y, z }` (Viewport; z in [0.2, 4], Z. 366–370). Regeln: `rund` als Form wird NIE gespeichert (formSetzen löscht das Feld, Z. 1158; Kommentar Z. 141–144); unbekannte Formen bleiben beim Lesen erhalten, nur die Gestalt des Wertes wird geprüft `/^[a-z][a-z0-9-]{0,23}$/` (Z. 314–321, §18); Verbindungen ohne beide Enden oder doppelte Paare fallen beim Lesen still weg (Z. 331–353); kaputte Eltern-Zeiger/Ringe hängen sich an die Wurzel (baum, Z. 376–413). Kennungen: 'gk' + Ids.short() (Z. 159–161). Kein Eintrag `karte`/`hoehe` in src/core/types/block.ts (Z. 61–70 kennen nur icon, collectionId, aktiveView, dateiId, papierkorbSichtbarSeit) — das Feld ist im zentralen Typ nicht deklariert; `leseKarte(block: any)`.",
+   "schnittstellen": [
+    {
+     "name": "Gedankenkarte",
+     "datei": "src/bereiche/bloecke/arten/gedankenkarte.ts:1593-1596",
+     "art": "global",
+     "beschreibung": "(window as any).Gedankenkarte = { zeichne(block): HTMLElement, leseKarte(block): GkKarte, neueKarte(titel?), aufbauen(karte, masse): GkAufbau, baum(karte), PALETTE, farbeVon(i) }"
+    },
+    {
+     "name": "Register.bloecke Eintrag 'mindmap'",
+     "datei": "src/register/bloecke.ts:97-99",
+     "art": "register",
+     "beschreibung": "Blockart in Gruppe Wissen, Slash-Befehle gedankenkarte/mindmap/xmind/karte/brainstorm…, Platzhalter 'Zentrales Thema'"
+    },
+    {
+     "name": "editor.ts case 'mindmap'",
+     "datei": "src/bereiche/editor/ansicht/editor.ts:904-905",
+     "art": "funktion",
+     "beschreibung": "Der Editor ruft Gedankenkarte.zeichne(block) — Querverweis Bereich editor → bloecke über globalen Namen (der Weg, den test537 in bereiche-bestand.json führt)"
+    },
+    {
+     "name": "Store.updateBlock",
+     "datei": "src/kern/ablage/indexdb.ts:440",
+     "art": "funktion",
+     "beschreibung": "Einziger Schreibweg: { karte } bzw. { hoehe } als Patch am Block"
+    },
+    {
+     "name": "UI.toast / UI.menu",
+     "datei": "src/schale/ueberlagerung/ui.ts:30-41",
+     "art": "global",
+     "beschreibung": "Hinweise (Z. 1050, 1126, 1141, 1151…) und das Vorlagenmenü (vorlagenMenue, Z. 1317–1332)"
+    },
+    {
+     "name": "Dialog.wahl",
+     "datei": "src/schale/ueberlagerung/dialog.ts:121",
+     "art": "global",
+     "beschreibung": "Rückfrage vor dem Ersetzen durch eine Vorlage (gedankenkarte.ts:1295–1306)"
+    },
+    {
+     "name": "Ids.short",
+     "datei": "src/core/helpers/ids.ts:69,118",
+     "art": "global",
+     "beschreibung": "Kennungen der Knoten/Verbindungen, mit Rückfall auf performance.now (gedankenkarte.ts:159–161)"
+    },
+    {
+     "name": "Zeiger-/Tastenereignisse an .gk-buehne",
+     "datei": "src/bereiche/bloecke/arten/gedankenkarte.ts:1373-1556",
+     "art": "ereignis",
+     "beschreibung": "pointerdown (Griff-Tipp/Zug, Verbindung wählen, Knoten wählen, Fläche schieben), dblclick, wheel+Strg, keydown (Tab/Enter/F2/Leer/Entf/Pfeile/Strg+Z), keypress, paste, focusout"
+    }
+   ],
+   "geometrie": {
+    "point": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "type GkOrt = { x, y } (gedankenkarte.ts:93); core/ink/geometry.ts hat InkPoint = [number, number] (Z. 15) — nicht benutzt"
+    },
+    "rect": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "GkOrt + GkMass { w, h } getrennt (Z. 92–93); Knoten-Kasten aus offsetWidth/offsetHeight gemessen (Z. 902)"
+    },
+    "bounds": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "aufbauen: minX/minY/maxX/maxY über alle Orte, breite/hoehe = max−min + RAND*2 (Z. 512–527)"
+    },
+    "transform": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "sichtAnwenden: welt.style.transform = translate(−sicht.x, −sicht.y) scale(sicht.z) (Z. 856–861); keine Matrix, keine Umrechnung Bildschirm→Welt (Zeigerorte werden nur relativ verschoben)"
+    },
+    "viewport": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "karte.sicht { x, y, z } im Block (Z. 89); einpassen (Z. 1251–1284) mit LESBAR-Untergrenze 0.72 (Z. 424); insBild (Z. 1213–1226)"
+    },
+    "zoom": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "zoomen(faktor) um die Bühnenmitte, Grenzen 0.2–4 (Z. 1228–1240); Knöpfe ×1.25 (Z. 1349–1350), Strg+Rad ×1.1 (Z. 1466–1470)"
+    },
+    "pan": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "pointerdown auf leerer Fläche: sicht.x = vonX − (clientX − startX) (Z. 1441–1458); Ausgleich der Wurzelwanderung beim Wachsen (Z. 915–922)"
+    },
+    "selection": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "gewaehlt (Knoten) XOR gewaehlteVerb (Verbindung) (Z. 535–540); waehle (Z. 1198–1211); Einzelauswahl, keine Mehrfach-/Rahmenauswahl"
+    },
+    "hitTest": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "Kein eigenes Rechnen: DOM-Treffer über e.target.closest('.gk-kn'/'.gk-verb'/'.gk-griffel') (Z. 1379, 1414, 1430) und document.elementFromPoint beim Zug (Z. 1387–1392); breite unsichtbare Fangfläche .gk-verb-fang stroke-width:14 (werkzeuge.css:1490)"
+    },
+    "snap": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "nicht gefunden (grep snap/raster in gedankenkarte.ts); der Aufbau setzt Orte, es gibt kein freies Verschieben, also nichts zu fangen"
+    },
+    "resizeHandles": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "Nur ein Griff für die Höhe des Blocks: .gk-griff, pointerdown → block.hoehe (Z. 640–644, 1558–1573). Knoten selbst haben keine Grössengriffe (Grösse kommt aus dem Text)"
+    },
+    "rotation": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "nicht gefunden (grep rotat in gedankenkarte.ts)"
+    },
+    "group": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "nicht vorhanden; Gruppen/Grenzen sind offene Lücke L177 (LUECKEN.md:7260–7285). Der Baum (eltern) ist keine Gruppe im Sinne einer Geometrie-Primitive"
+    },
+    "connector": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "Zwei Sorten, beide eigen: Ast-Bogen `bogen` (kubische Bézier Kante→Kante, Z. 787–800) und freie Verbindung `verbBogen` (nächste Kanten, Normale weg von der Kartenmitte, Ausbuchtung 60–110 px, Pfeilspitze über <marker id=gk-spitze>, Z. 819–854, 945–970); Modell GkVerbindung { id, von, zu } (Z. 79–83); anlegen/löschen verbinden/verbindungWeg (Z. 1125–1153)"
+    },
+    "frame": {
+     "vorhanden": false,
+     "eigen": false,
+     "wo": "nicht vorhanden (L177 „Grenze“)"
+    },
+    "zOrder": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "Fest durch Zeichenreihenfolge: SVG .gk-linien unten, Knoten-DIVs darüber (werkzeuge.css:1349–1351); freie Verbindungen werden zuletzt ins SVG gehängt, also über den Ästen (Z. 941–944); Griffe z-index:2 (werkzeuge.css:1461). Keine nutzerseitige Reihenfolge"
+    },
+    "undo": {
+     "vorhanden": true,
+     "eigen": true,
+     "wo": "Eigener Stapel aus JSON-Abbildern: SCHRITTE=40, zurueckStapel/vorStapel, abbild = JSON.stringify(karte) (Z. 646–680); Knöpfe ↶/↷ (Z. 1355–1368) und Strg+Z/Strg+Shift+Z (Z. 1481–1488). Nicht persistiert, kein gemeinsamer Undo aus kern/"
+    },
+    "pointerNormalisierung": {
+     "vorhanden": false,
+     "eigen": true,
+     "wo": "Nur clientX/clientY roh und Differenzen (Z. 1385, 1441–1447); keine Umrechnung in Weltkoordinaten (nicht nötig, Knoten werden nicht frei bewegt); keine Druck-/Pointertyp-Behandlung; Tipp-vs-Zug-Schwelle 6 px selbst gerechnet (Z. 1394)"
+    }
+   },
+   "tests": [
+    {
+     "lauf": "pruefungen/lauf/test529.mts",
+     "was": "Suite 529 (E607), 56 Zusicherungen: Blockart im Register und Slash-Menü, Aufbau misst statt schätzt (Linie beginnt an der gemessenen Kante), Tab/Enter/Entf/Zurück/Zuklappen, kaputte Daten (Ring, Eltern ins Leere) landen an der Wurzel, Farben erben, Karte springt nicht beim Wachsen nach links, 44-px-Leiste, §19-Escapen, echte .redion-Runde (Z. 1–40)"
+    },
+    {
+     "lauf": "pruefungen/lauf/test538.mts",
+     "was": "Suite 538 (E628), 53 Zusicherungen: vier Griffe nur am gewählten Knoten, Tipp legt Thema an, Zug macht Verbindung, Verbindung wählen/löschen/zurückholen, Unsinn (selbst, doppelt, Ast-Kante) abgelehnt, Verbindung ins Nichts fällt beim Lesen weg, sechs Formen mit rund=kein Feld und unbekannte Form bleibt, sichtbare Linie unterscheidet gewählt nicht nur über Farbe, sechs Vorlagen rundreisefest durch leseKarte, Rückfrage nur bei nicht-leerer Karte (Z. 1–36)"
+    },
+    {
+     "lauf": "pruefungen/lauf/test537.mts",
+     "was": "Bereichs-Wächter (§5 Regel 1): nennt die Gedankenkarte nur als Fund — die eigene FORMEN-Liste mit Typangabe galt fälschlich als Griff in bereiche/pdf (Z. 58–70, 155–162); prüft die Karte nicht selbst"
+    },
+    {
+     "lauf": "pruefungen/lauf/test86.mts",
+     "was": "Nur Namenskollision: meldet testweise eine Datenbank-ANSICHT 'mindmap' an Register.ansichten (Z. 151–157) — nichts mit der Blockart zu tun"
+    }
+   ],
+   "gemeinsamGenutzt": [
+    "Store.updateBlock aus src/kern/ablage/indexdb.ts:440 — einziger Schreibweg für karte und hoehe (gedankenkarte.ts:663, 1570)",
+    "Ids.short aus src/core/helpers/ids.ts:69 (global Z. 118) — Kennungen der Knoten und Verbindungen (gedankenkarte.ts:159–161)",
+    "UI.toast und UI.menu aus src/schale/ueberlagerung/ui.ts:30–33 — Hinweise und Vorlagenmenü",
+    "Dialog.wahl aus src/schale/ueberlagerung/dialog.ts:121 — Rückfrage vor dem Ersetzen durch eine Vorlage (gedankenkarte.ts:1295)",
+    "Register.bloecke (src/register/bloecke.ts:97) — Anmeldung der Blockart; keine weitere Register-Nutzung (Formen und Vorlagen sind NICHT im Register, sondern lokale Listen, Z. 147, 199)",
+    "NICHT benutzt: src/core/ink/geometry.ts (InkPoint/InkBounds, simplify, distanceToSegment) — die Karte rechnet Bounds, Bézier und Ausweich-Normale selbst; src/core/helpers/colors.ts — die Palette ist lokal (Z. 123–127)"
+   ],
+   "duplikate": [
+    {
+     "was": "SVG-Elementhelfer `sv(name, attrs)` mit createElementNS + setAttribute-Schleife",
+     "hier": "src/bereiche/bloecke/arten/gedankenkarte.ts:113-118",
+     "dort": "src/bereiche/bloecke/arten/zeichenflaeche.ts:31-36",
+     "beleg": "hier: `const NS = 'http://www.w3.org/2000/svg'; const sv = (name: string, attrs: Record<string, unknown> = {}): SVGElement => { const e = document.createElementNS(NS, name); Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, String(v)));` — dort: `const NS = 'http://www.w3.org/2000/svg'; const sv = (name: string, attrs: Record<string, unknown> = {}) => { const e = document.createElementNS(NS, name); Object.entries<any>(attrs).forEach(([k, v]) => e.setAttribute(k, String(v)));`"
+    },
+    {
+     "was": "`farbeVon(i)` — Palettenzugriff mit doppeltem Modulo auf ein [Farbe, Name]-Paar (E414)",
+     "hier": "src/bereiche/bloecke/arten/gedankenkarte.ts:156-157",
+     "dort": "src/bereiche/bloecke/arten/zeichenflaeche.ts:67-68",
+     "beleg": "hier: `PALETTE[((i % PALETTE.length) + PALETTE.length) % PALETTE.length]?.[0] ?? '#2f8ab5'` — dort: `PALETTE[((i % PALETTE.length) + PALETTE.length) % PALETTE.length]?.[0] ?? '#529cca'` (nur der Rückfallwert unterscheidet sich)"
+    },
+    {
+     "was": "`uid()` — 'präfix' + Ids.short() mit performance.now-Rückfall",
+     "hier": "src/bereiche/bloecke/arten/gedankenkarte.ts:159-161",
+     "dort": "src/bereiche/bloecke/arten/schaltplan.ts:184-186",
+     "beleg": "hier: `(typeof Ids !== 'undefined' && Ids.short) ? 'gk' + Ids.short() : 'gk' + Math.floor(performance.now() * 1000).toString(36)` — dort: `(typeof Ids !== 'undefined' && Ids.short) ? 'sp' + Ids.short() : 'sp' + Math.floor(performance.now() * 1000).toString(36)`"
+    },
+    {
+     "was": "`zahl(wert, ersatz)` — endliche Zahl oder Ersatz",
+     "hier": "src/bereiche/bloecke/arten/gedankenkarte.ts:167-168",
+     "dort": "src/bereiche/bloecke/arten/zeichenflaeche.ts:88-89",
+     "beleg": "beide wörtlich: `const zahl = (wert: unknown, ersatz: number): number => typeof wert === 'number' && Number.isFinite(wert) ? wert : ersatz;`"
+    },
+    {
+     "was": "Rückgängig-Stapel aus JSON-Abbildern (SCHRITTE=40, zurueckStapel/vorStapel, abbild, merken mit shift)",
+     "hier": "src/bereiche/bloecke/arten/gedankenkarte.ts:646-660",
+     "dort": "src/bereiche/bloecke/arten/zeichenflaeche.ts:164-172",
+     "beleg": "hier: `const SCHRITTE = 40; const zurueckStapel: string[] = []; const vorStapel: string[] = []; const abbild = (): string => JSON.stringify(karte); … zurueckStapel.push(abbild()); if (zurueckStapel.length > SCHRITTE) zurueckStapel.shift(); vorStapel.length = 0;` — dort: `const SCHRITTE = 40; const zurueckStapel: string[] = []; const vorStapel: string[] = []; const abbild = (): string => JSON.stringify(daten); … zurueckStapel.push(abbild()); if (zurueckStapel.length > SCHRITTE) zurueckStapel.shift(); vorStapel.length = 0;` (planflaeche.ts:174–186 hat eine dritte Fassung mit Grenze 60)"
+    },
+    {
+     "was": "Höhen-Griff des Blocks: pointerdown → Höhe ziehen → Store.updateBlock({ hoehe })",
+     "hier": "src/bereiche/bloecke/arten/gedankenkarte.ts:1559-1573",
+     "dort": "src/bereiche/bloecke/arten/zeichenflaeche.ts:792-805",
+     "beleg": "hier: `griff.title = 'Höhe ziehen'` (Z. 642) … `Store.updateBlock(block.id, { hoehe: Math.round(buehne.getBoundingClientRect().height) })` — dort: `griff.title = 'Höhe ziehen'` (Z. 148) … `Store.updateBlock(block.id, { hoehe: Math.round(flaeche.getBoundingClientRect().height) })`"
+    },
+    {
+     "was": "`esc()` — lokale Escape-Funktion statt eines gemeinsamen Helfers",
+     "hier": "src/bereiche/bloecke/arten/gedankenkarte.ts:106-111",
+     "dort": "src/bereiche/bloecke/arten/zeichenflaeche.ts und ~20 weitere (grep 'const esc = (s' in src/: editor.ts:328, raster.ts:76, elektro/start.ts:27 …)",
+     "beleg": "hier: `const esc = (s: unknown): string => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')…` — z. B. src/bereiche/elektro/start.ts:27: `const esc = (s: unknown): string => String(s ?? '')` mit derselben Kette; kein Export in src/core/helpers (grep 'export.*esc' dort leer)"
+    }
+   ],
+   "dokuStand": "AUFGABEN.md: kein Treffer für gedankenkarte/mindmap (grep -i leer). ERLEDIGTE-AUFGABEN.md:669–706: Eintrag „19. September 2026 · E628 · Die Gedankenkarte bekommt Griffe, Verbindungen, Formen und Vorlagen\" (test538 53/53, test529 56/56, Bilder gkformen/gkvorlagen; „Nicht geprüft: die Gesamtsuite\"); Z. 713 (E627: die 44 px der gk-Leiste über ::after). LUECKEN.md offen: L177 Marker, Notizen und Grenzen fehlen (Z. 7260); L178 keine fremden Formate (XMind/FreeMind/OPML…) lesen oder schreiben (Z. 7287); L179 nicht als Bild speicherbar — Preis der HTML-Knoten (Z. 7316); L192 Eine Verbindung kann nichts sagen — kein `verbindungen[i].text`, und eigene Karten lassen sich nicht als Vorlage sichern (Z. 7614–7643); L193 FORMEN gehört mehreren Bereichen (bloecke + dateien + pdf) — Wächter-Frage (Z. 7645, Tabelle Z. 16); L199 „Alles einpassen\" lässt den linken Rand draussen, Massstab 72 %, S von „Schutzklassen\" fehlt, verweist auf einpassen (gedankenkarte.ts:1251) (Z. 7840–7868). GESCHLOSSEN: L176 Querverbindungen (Z. 9614, durch E628, Rest lebt als L192). ENTSCHEIDUNGEN.md: E607 (Z. 49113, Bau: Block statt Bereich, HTML-Knoten/SVG-Linien), E628 (Z. 51184, Griffe/Verbindungen/Formen/Vorlagen, §37-Grund 16/28 px), E627 (Z. 51147, test402-Grund), E629 (Z. 51331, „Ein Name mit Typangabe ist derselbe Name\" — der FORMEN-Fehlalarm von test537), E632 (Z. 51509, BLOCKTYPEN.md fehlte mindmap), E637 (Z. 51924, Marken-Decken in werkzeuge.css, .gk-massstab teilt Regel mit .wb-massstab, werkzeuge.css:1175). messungen.md: §43/§44 (Z. 1678, 1709) und §61 (Z. 2622). doku/CSS-NAMENSRAEUME.md:173: `gk 40 werkzeuge.css`; doku/BLOCKTYPEN.md:82: `mindmap | Gedankenkarte`.",
+   "risiken": [
+    "Das Feld `karte` ist der gesamte Zustand und nicht im zentralen Blocktyp deklariert (src/core/types/block.ts:61–70 kennt es nicht; leseKarte nimmt `block: any`). Eine gemeinsame Schicht, die den Blocktyp strenger fasst, darf `karte`, `hoehe` und darin `knoten/verbindungen/aufbau/sicht` nicht umbenennen (§53.3 Grenze 1) — jede gespeicherte Karte und jede .redion würde unlesbar.",
+    "`rund` ist die Form OHNE Feld (gedankenkarte.ts:141–144, 1158). Eine gemeinsame Formen-/Shape-Schicht, die jedem Knoten immer eine Form schreibt, ändert stillschweigend alle Bestandsblöcke und macht `test538 §7` rot.",
+    "Unbekannte Formen müssen erhalten bleiben (Z. 314–321, §18). Ein gemeinsamer Formenkatalog mit Whitelist (wie er in test538 als Gegenprobe rot gesehen wurde) löscht Daten neuerer Fassungen.",
+    "Die Wurzelkennung ist fest 'w' (Z. 176, 264, 289); eine gemeinsame ID-Vergabe, die sie würfelt, bricht Auswahl und Vorlagen-Rundreise (test538 §9).",
+    "Das Layout ist ein automatischer Baum-Aufbau ohne freie Knotenpositionen (aufbauen, Z. 430–527): es gibt keine gespeicherten Knotenorte. Eine gemeinsame Canvas-Schicht mit freiem Verschieben/Snap/Resize hätte hier nichts zu speichern und würde ein neues Feld (Orte) einführen — das ist eine Modelländerung mit Migrationsfrage, kein Refactor.",
+    "Die Knoten sind HTML, nicht SVG (E607, Kopf Z. 18–31; L179 als Preis). Eine gemeinsame SVG-Zeichenschicht (wie zeichenflaeche/schaltplan) würde die gemessene Textbreite wieder durch eine Schätzung ersetzen — genau das, was test529 §3 rot sieht (12 px daneben).",
+    "Der Viewport `sicht` wird beim ersten Öffnen NICHT gespeichert (mussEinpassen, Z. 549–553); eine gemeinsame Viewport-Schicht, die beim Anwenden sichert, ändert Blöcke beim blossen Ansehen (Kommentar Z. 550–553) und macht den Abgleich unruhig.",
+    "Undo hält JSON-Abbilder nur im Arbeitsspeicher (Z. 646–660). Eine gemeinsame Undo-Schicht darf den Verlauf nicht in den Block schreiben (derselbe Grund in zeichenflaeche.ts:160–163).",
+    "Verbindungen ohne beide Enden fallen beim LESEN weg (Z. 331–340) und werden beim nächsten Sichern nicht mehr geschrieben — ein gemeinsamer Connector-Speicher mit strengerer Validierung darf nicht härter sein, sonst verschwinden Verbindungen zu zugeklappten Ästen (die bleiben absichtlich in den Daten, Z. 962–966).",
+    "Bereichsgrenze: editor.ts:905 ruft `Gedankenkarte` über den globalen Namen; test537 führt das in pruefungen/bereiche-bestand.json, das nur schrumpfen darf. Jede neue gemeinsame Schicht muss nach kern/ oder core/, nicht in einen Nachbarbereich, sonst wird test537 rot.",
+    "L199 ist offen: einpassen (Z. 1251) schneidet links an. Wer die Viewport-Rechnung in eine gemeinsame Schicht zieht, nimmt den Fehler mit oder muss ihn zuerst messen (L199 verlangt Messung vor Reparatur)."
+   ],
+   "kleinsterSchritt": "Die vier wörtlich gleichen Kleinhelfer aus gedankenkarte.ts und zeichenflaeche.ts/schaltplan.ts — `sv` (Z. 113–118 ↔ zeichenflaeche.ts:31–36), `zahl` (Z. 167–168 ↔ zeichenflaeche.ts:88–89), `farbeVon`-Modulo (Z. 156–157 ↔ zeichenflaeche.ts:67–68) und `uid` mit Präfix (Z. 159–161 ↔ schaltplan.ts:184–186) — in einen Helfer unter src/kern/helfer/ (oder src/core/helpers/) ziehen, ohne ein Datenfeld anzufassen; dann test529, test538, test537 (bereiche-bestand darf nicht wachsen) und test105/test109 fahren. Alles andere (Formen, Verbindungen, Viewport, Undo) hängt an gespeicherten Feldern und braucht zuerst eine Entscheidung zu L192/L199."
+  }
+ ],
+ "referenzen": [],
+ "kerne": [
+  {
+   "name": "SheetSpace",
+   "datei": "src/core/sheet/space.ts",
+   "was": "der Blattraum: A4 in Punkten, viewBox, getScreenCTM-Umrechner (E511), raumVersion, Drehung (E467)"
+  },
+  {
+   "name": "InkGeometry",
+   "datei": "src/core/ink/geometry.ts",
+   "was": "Geometrie ohne DOM: points, bounds, rectangle, move, drehung, union, textLayout, insidePolygon, path, outline"
+  },
+  {
+   "name": "InkShapes",
+   "datei": "src/core/ink/shapes.ts",
+   "was": "Formerkennung aus Strichen"
+  },
+  {
+   "name": "InkStroke",
+   "datei": "src/core/ink/stroke.ts",
+   "was": "Vorhersage, Glätter, Druckglätter, Feder"
+  },
+  {
+   "name": "Folien",
+   "datei": "src/core/slides/folien.ts",
+   "was": "Folienteilung, rein, ohne DOM (E540/E544)"
+  },
+  {
+   "name": "Store",
+   "datei": "src/kern/ablage/indexdb.ts",
+   "was": "die Ablage: Blöcke, Datenbanken, Ansichten, Meta, Versionen; baum/baumEinfuegen/kinderLeeren"
+  },
+  {
+   "name": "Verlauf",
+   "datei": "src/kern/zustand/verlauf.ts",
+   "was": "Seitenverlauf: zwei Stapel ganzer Seitenbäume, MAX 60, 700-ms-Zaun, umwickelt Store-Methoden"
+  },
+  {
+   "name": "Register",
+   "datei": "src/register/*.ts",
+   "was": "die 17 Kataloge; 16 davon mit melde()"
+  },
+  {
+   "name": "SelectionFlow",
+   "datei": "src/schale/bedienung/selection-flow.ts",
+   "was": "die Auswahl der Auswahlleiste (E646/E650), L204 offen für die Flächen"
+  },
+  {
+   "name": "Ereignis",
+   "datei": "src/kern/ereignisse/bus.ts",
+   "was": "der Ereignisbus: horche/einmal/melde/frage, 59 Arten — Schalter ereignisbus auf aus"
+  },
+  {
+   "name": "Dateien",
+   "datei": "src/bereiche/dateien/ablage.ts",
+   "was": "Anhänge stückweise (dateien/stuecke) — ein Bereich, kein Kern, aber von anderen Bereichen gegriffen"
+  },
+  {
+   "name": "Api",
+   "datei": "src/bereiche/verbinden/schnittstelle.ts",
+   "was": "die /v1/-Schnittstelle in Notions Form, im Browser beantwortet"
+  }
+ ]
+}

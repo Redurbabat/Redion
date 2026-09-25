@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-660 Entscheidungen, E1 bis E680 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+661 Entscheidungen, E1 bis E681 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -723,6 +723,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E678** — Der Streifen zur neuen Fassung steht unten: Redur, 22. September, „die neu laden buton unten bringen". `UI.banner` kennt neben der Art eine Lage (`info unten`): `top:auto; bottom:0`, am Telefon `bottom:var(--hunten)` — dieselbe Marke wie die Schublade, also genau über der unteren Leiste. Warnung und Fehler bleiben oben. Der Knopf „Jetzt laden" ist ein Knopf mit 44 px (`banner-tat`), vorher ein unterstrichenes Wort von 23 px. Wächter `test566`, Bild `node bilder.mts fassung`.
 * **E679** — Der Trainer kennt zwei Kapitel: Redur, 22. September, „erstelle mir direkt lerne quiz im redion für kapitel 5,6,7 … beschriftet mit nummern, seiten im nin compact, wie im test". `nin-quiz.ts` meldet die Vorlage `nin-kapitel-5-7` (106 Aufgaben, 34 Prüfungsfragen aus zwei Probeprüfungen mit Nummer und Punkten, jede Karte mit Seite in der NIN Compact). Der Trainer findet Kapitel über `Register.vorlagen` (`trainer: true`), nimmt Themennamen von der Karte (`quiz.topic`) und trennt die Kapitel in der Übersicht (`quiz.kapitel`); die Prüfungsrunde je Kapitel. Wächter `test567`, Bilder `node bilder.mts trainerNin trainerNinFrage`.
 * **E680** — Die Antworten werden bei jeder Anzeige gemischt: Redur, 22. September, „wieso ist immer die ersten 3 richtig es sollte nicht so sein random keine muster“. Gespeichert stehen die richtigen Antworten meist zuerst; der Trainer zeigte sie so. Jetzt mischt `zeige` die Plätze, `data-tr-option` bleibt der gespeicherte Platz, die Buchstaben folgen der Anzeige, die Auswertung dem Speicher. Wächter `test567 §8` (18 von 18 am gespeicherten Platz → rot).
+* **E681** — Vor dem Umbau die Karte: der Plattform-Audit vom 25. September — `doku/REDION-PLATTFORM-AUDIT.md`, die erzeugte Karte `doku/karte/` (`karte.mts`), AFFiNE und SiYuan nur als Massstab, und der erste Schritt ist ein Wächter und eine Zeile (L212), kein Kern
 
 ---
 
@@ -55583,3 +55584,77 @@ falsche Antwort gespeichert meist zuletzt, angezeigt aber an mindestens
 drei verschiedenen Plätzen; Buchstaben folgen der Anzeige; alle Richtigen
 über den gespeicherten Platz angekreuzt heisst „Richtig.“. Gegen den alten
 Stand rot: „[3,3,3,3,3,3,3,3,1,3,3,3,3,1,1,1,3,3]“.
+
+
+## E681 — Vor dem Umbau die Karte: der Plattform-Audit, und was er entschieden hat
+
+**Datum:** 25. September 2026 · **Wächter:** keiner am Code — dieser Eintrag
+ändert keine Zeile Produkt. `test549` hält die neuen Lücken L211 und L212,
+`node karte.mts --pruefen` hält die Karte.
+
+**Redur:** „github.com/Redurbabat/Lern/releases/tag/redions es ist das die
+daten legen hier schau mal das an und frage mich wenn du mir etwas fragen
+kannst" — dazu der Master-Prompt „REDION PLATFORM AUDIT" (erst lesen, dann
+ein kleinster Schritt; Prioritäten GFX-Kern, Plugin-SDK, Katalog, CLI). Später
+am Tag: „was machts du mit 25 agends hahaha" · „was denks du wie lange wird
+das daueren" · „erstelle dabei eine obsidein/graphy datei damit du nicht
+jedes mal alles daten nue lesen musstest verstanden" · „könntest du alles
+wirklich alles von affine im redion nehmnen".
+
+**Was entschieden wurde.**
+
+1. **Der Audit steht in `doku/REDION-PLATTFORM-AUDIT.md`**, nach dem Vorbild
+   von `doku/REDION-STUDY-SUITE-AUDIT.md`. Der Auftrag nannte den Namen in
+   der Wurzel „oder, falls Redions Dokumentationsregeln keine neue Datei
+   erlauben, an die vorgesehene Stelle" — die vorgesehene Stelle für so
+   etwas ist `doku/` (§32). Der Name bleibt der des Auftrags.
+2. **Die Referenzen bleiben Referenzen.** AFFiNE (`blocksuite` MIT,
+   `packages/backend` eigene Lizenz) und SiYuan (AGPL-3.0) wurden gelesen,
+   nichts wurde übernommen, die Archive liegen nicht im Repository. Redurs
+   Frage „alles von AFFiNE nehmen" ist mit Nein beantwortet — nicht wegen
+   der Lizenz, sondern weil es eine andere App ist: Yjs-Dokumente statt
+   Blöcke in IndexedDB, React/Lit/Vite statt Doppelklick, ein eigener
+   Server. Das bricht §2, §6, §47 und läuft auf die Datenwanderung hinaus,
+   vor der §51 steht. Was übernommen wird, sind **Muster**, und die kommen
+   als Redion-Bögen auf Redions Blöcken — welche, entscheidet Redur.
+3. **Die Karte ist erzeugt, nicht geschrieben.** `doku/karte/karte.json`
+   ist die Quelle (die Befunde der Leser, je mit Datei:Zeile),
+   `karte.mts` der Schreiber, `doku/karte/*.md` die Ausgabe — eine Notiz
+   je System, eine je gemeinsamem Kern, eine Übersicht mit Graph. Dieselbe
+   Regel wie bei der Chronik (§56): wer in eine Notiz schreibt, verliert
+   es. **Die Kanten des Graphen werden gerechnet:** ein Pfeil heisst „der
+   Befund belegt, dass dieses System jenen Kern benutzt"; was ein Befund
+   nur nennt („InkGeometry — NICHT genutzt"), steht als zweite Liste in der
+   Notiz. Die erste Fassung malte für beides einen Pfeil und hätte das
+   Whiteboard als Nutzer von `SheetSpace` gezeigt — das Gegenteil des
+   Befunds. Obsidian kann den Ordner als Vault öffnen; GitHub zeichnet den
+   Mermaid-Graph.
+4. **Der erste Schritt nach dem Audit ist kein Kern.** Zwei Messungen
+   (Audit 2.4) zeigen, dass Strg+Z in Planfläche und Marken doppelt
+   zurücknimmt — der Block seinen Schritt, die Schale den Seitenverlauf —
+   und dass der Seitenverlauf dabei jedem Block der Seite eine neue Kennung
+   gibt. Der kleinste sinnvolle Schritt ist deshalb ein neuer Wächter
+   und eine Zeile in der Schale (L212 Punkt 1); der gemeinsame
+   Abbild-Verlauf (Duplikat D1) und die Zeigerumrechnung über `SheetSpace`
+   (D2, vorher `raumVersion` fürs Whiteboard) folgen als eigene Bögen
+   (§43: eine Änderung, ein Ziel).
+5. **L30 bleibt stehen**, bis Redur entscheidet. Ein Plugin-SDK ist
+   Priorität 2 des Auftrags und widerspricht E181 im Entschluss, nicht in
+   der Sache. Das ist Frage 1 des Audits.
+
+**Die Alternative** war, direkt `src/core/gfx/` anzulegen und die vier
+Rückgängig-Stapel dorthin zu ziehen. Verworfen für den ersten Bogen: der
+nächste Fehler liegt nicht im fehlenden Kern, sondern im Zusammenspiel der
+vorhandenen Verläufe — und den hält kein Kern, den hält ein Wächter.
+
+**Der Preis.** Ein Nachmittag Lesen ohne eine Zeile Produktcode. Eine
+dritte erzeugte Dokumentation (nach `UR.md`/`PROBLEME.md`), die gepflegt
+werden will: wer ein System umbaut, trägt es in `karte.json` nach, sonst
+lügt die Karte beim nächsten Mal. Dafür gibt es `--pruefen`.
+
+**Wie gelesen wurde.** Elf Leser je System und zwei für die Referenzen,
+parallel, jeder Befund mit Datei:Zeile, jedes Duplikat mit zwei Stellen und
+Zitat, die ersten zwei je System gegengeprüft von einem Leser, der sie
+widerlegen sollte. Dazu zwei eigene Sonden im laufenden Programm. Der
+Rechner hat vier Kerne, also liefen immer zwei Leser gleichzeitig — Redurs
+„25 agends" waren die Summe, nicht die Gleichzeitigkeit.

@@ -55,6 +55,8 @@ umgeschrieben, aber nicht umnummeriert.
 | `doku/ARCHITEKTUR.md` | Wie ist es aufgebaut? |
 | `doku/REDION-FORMAT.md` | Wie sieht eine `.redion`-Sicherung von innen aus? |
 | `doku/TYPESCRIPT-MIGRATION.md` | In welcher Reihenfolge wird migriert? |
+| `doku/REDION-PLATTFORM-AUDIT.md` | Was ist da, was ist doppelt, was ist der kleinste nächste Schritt? (E681) |
+| `doku/karte/` | Wo liegt was, und was hängt woran? Erzeugt aus `karte.json` mit `node karte.mts` |
 
 ---
 
@@ -1337,6 +1339,8 @@ sucht, wo etwas geprüft wird, sucht im Quelltext, nicht in dieser Liste.
 | `doku/ARCHITEKTUR.md` | wie es aufgebaut ist |
 | `doku/REDION-FORMAT.md` | das `.redion`-Format von innen |
 | `doku/TYPESCRIPT-MIGRATION.md` | die Reihenfolge der Migration |
+| `doku/REDION-PLATTFORM-AUDIT.md` | der Bestand vor dem Plattform-Umbau: Systeme, Duplikate, Messungen (E681) |
+| `doku/karte/` | die Karte des Quelltexts — **erzeugt** aus `doku/karte/karte.json` mit `node karte.mts`; wer sie ändert, ändert das JSON |
 
 Regeln:
 
