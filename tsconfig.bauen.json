@@ -66,6 +66,7 @@
     "src/core/electrical/**/*.ts",
     "src/core/security/**/*.ts",
     "src/core/sheet/**/*.ts",
+    "src/core/gfx/**/*.ts",
     "src/core/spreadsheet/**/*.ts",
     "src/core/import/**/*.ts",
     "src/core/export/**/*.ts",

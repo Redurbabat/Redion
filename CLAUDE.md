@@ -894,7 +894,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 512 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 513 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1241,6 +1241,17 @@ wider Erwarten grün bleibt, ist ein Fund über die Behauptung (§55.2).
 Gezählt am 25. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
 wc -l` sagt 512.*
 
+*Und 513: `test571` — die drei Flächen teilen EINEN Verlauf (E687).
+`GfxHistory` im Kern ersetzt drei Paare von Stapeln, die in Whiteboard,
+Gedankenkarte und Planfläche dieselben acht Zeilen dreimal hielten; der
+Lauf braucht für den Kern keinen Browser (wie `test366`) und liest für
+die Übernahme das GEBAUTE JavaScript, nicht die Quelle. Gegen den alten
+Stand rot mit 8 Zusagen (die Datei gab es nicht, kein Nehmer). Sein erster
+Fund galt dem Kern selbst: `Number(0) || 40` machte aus „Tiefe 0" eine
+Tiefe 40. Gegenprobe rot an zwei Stellen — „merken leert das Wiederholen
+— {zurueck:3, vor:1}". Gezählt am 25. September, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 513.*
+
 ### Die Befehle
 
 ```txt
@@ -1249,7 +1260,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 512 Läufe
+npm run pruefen                      alle 513 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1336,7 +1347,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 512 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 513 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

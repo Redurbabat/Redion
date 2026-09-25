@@ -63,7 +63,7 @@ const PATH_OWNERS: Array<[RegExp, string]> = [
   [/bloecke\/arten\/blatt|bereiche\/pdf/, 'pdf'],
   [/core\/slides|vorlagen\/folien/, 'folien'],
   [/bereiche\/editor|register\/bloecke|core\/types/, 'editor'],
-  [/core\/ink|core\/sheet|selection-flow|kern\/zustand\/verlauf|kern\/ablage\/befehle|kern\/ereignisse/, 'gemeinsam'],
+  [/core\/ink|core\/sheet|core\/gfx|selection-flow|kern\/zustand\/verlauf|kern\/ablage\/befehle|kern\/ereignisse/, 'gemeinsam'],
   [/kern\/abgleich|bereiche\/dateien/, 'sync'],
   [/kern\/ablage\/(format|archiveImport|ausgeben|einlesen|umzuege)|core\/import|core\/export/, 'export'],
   [/bereiche\/verbinden|^server\/|\/server\//, 'mcp'],

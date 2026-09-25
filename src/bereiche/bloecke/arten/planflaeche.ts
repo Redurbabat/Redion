@@ -42,9 +42,8 @@ const Planflaeche = (() => {
       /** Beim Leitungziehen: der Anfangspunkt. */
       von?: { x: number; y: number; teil?: string; nr?: string };
     };
-    /** Rückgängig und Wiederholen — je ein Stapel von Plan-Abzügen. */
-    zurueck: string[];
-    vorwaerts: string[];
+    /** Rückgängig und Wiederholen — der Abbild-Verlauf aus dem Kern (E687), 60 Schritte. */
+    verlauf: ReturnType<typeof GfxHistory.erstelle>;
     zeigeAnschluesse: boolean;
     zeigeNummern: boolean;
     zeigeRaster: boolean;
@@ -160,7 +159,7 @@ const Planflaeche = (() => {
       auswahl: new Set<string>(),
       gewaehltesZeichen: '',
       zieht: null,
-      zurueck: [], vorwaerts: [],
+      verlauf: GfxHistory.erstelle(60),
       zeigeAnschluesse: true,
       zeigeNummern: false,
       zeigeRaster: true,
@@ -179,25 +178,19 @@ const Planflaeche = (() => {
       if (typeof Store !== 'undefined' && block && block.id)
         Store.updateBlock(block.id, { plan: z.plan });
       else if (block) block.plan = z.plan;
-      if (merken) {
-        z.zurueck.push(vorher);
-        if (z.zurueck.length > 60) z.zurueck.shift();
-        z.vorwaerts.length = 0;
-      }
+      if (merken) z.verlauf.merken(vorher);
       male();
     };
 
     const zurueck = (): void => {
-      const vorher = z.zurueck.pop();
-      if (!vorher) return;
-      z.vorwaerts.push(abzug());
+      const vorher = z.verlauf.zurueck(abzug());
+      if (vorher === null) return;
       z.plan = JSON.parse(vorher);
       aendere(() => {}, false);
     };
     const vorwaerts = (): void => {
-      const naechster = z.vorwaerts.pop();
-      if (!naechster) return;
-      z.zurueck.push(abzug());
+      const naechster = z.verlauf.vor(abzug());
+      if (naechster === null) return;
       z.plan = JSON.parse(naechster);
       aendere(() => {}, false);
     };
@@ -253,8 +246,8 @@ const Planflaeche = (() => {
         `<button class="sp-heft${heftOffen() ? ' an' : ''}" data-a="heft" ` +
         `title="Formelheft — beim Zeichnen nachschlagen und rechnen" ` +
         `aria-pressed="${heftOffen()}" aria-label="Formelheft">📐</button>` +
-        `<button data-a="zurueck" title="Rückgängig" aria-label="Rückgängig"${z.zurueck.length ? '' : ' disabled'}>↶</button>` +
-        `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.vorwaerts.length ? '' : ' disabled'}>↷</button>` +
+        `<button data-a="zurueck" title="Rückgängig" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>↶</button>` +
+        `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>↷</button>` +
         `<button data-a="mehr" title="Mehr" aria-label="Mehr">…</button></span>`;
     };
 

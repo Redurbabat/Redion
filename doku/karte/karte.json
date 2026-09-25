@@ -591,11 +591,12 @@
     "quell/schale/stil/werkzeuge.css:763–785, 1175 — Stil (gemeinsame Regel `.wb-massstab, .gk-massstab` seit E637)",
     "src/kern/helfer/vorschau.ts:196 — kennt `whiteboard`/`zeichenflaeche` als Arten ohne Text (Miniaturen), ohne dass das Whiteboard es ruft",
     "NICHT genutzt, obwohl vorhanden: src/core/ink/geometry.ts (rectangle 291, bounds 625, union 962, scale 1018, rotate 679, distanceToPolyline 738, insidePolygon 936), src/core/ink/shapes.ts (recognize 63), src/core/sheet/space.ts (zuBlatt 56), src/kern/zustand/verlauf.ts (merke/zurueck/vor 107–111), src/kern/helfer/zeichenziel.ts (melde 402), src/kern/ereignisse/bus.ts",
-    "Bereich→Bereich statt kern: `(globalThis as any).Dateien` (zeichenflaeche.ts:257, 271 → bereiche/dateien/ablage.ts:483)"
+    "Bereich→Bereich statt kern: `(globalThis as any).Dateien` (zeichenflaeche.ts:257, 271 → bereiche/dateien/ablage.ts:483)",
+    "NACHGETRAGEN (E687, 25. September abends): src/core/gfx/history.ts — `GfxHistory.erstelle(40)` hält den Rückgängig-Stapel; zeichenflaeche.ts ruft `verlauf.merken/zurueck/vor/letztenVerwerfen/kannZurueck/kannVor`, das Einsetzen bleibt hier (`einsetzen`). Wächter test571."
    ],
    "duplikate": [
     {
-     "was": "Undo-Stapel aus JSON-Abbildern (40 Schritte)",
+     "was": "Undo-Stapel aus JSON-Abbildern (40 Schritte) — GESCHLOSSEN mit E687: alle drei Flächen rufen `GfxHistory.erstelle(tiefe)` (src/core/gfx/history.ts), Wächter test571",
      "hier": "src/bereiche/bloecke/arten/zeichenflaeche.ts:161–176",
      "dort": "src/bereiche/bloecke/arten/gedankenkarte.ts:646–660 (und als drittes Muster src/kern/zustand/verlauf.ts:32–35, 52–54 mit MAX 60; planflaeche.ts:45–46, 183–184 mit 60)",
      "beleg": "hier: `const SCHRITTE = 40; const zurueckStapel: string[] = []; const vorStapel: string[] = []; const abbild = (): string => JSON.stringify(daten); … if (zurueckStapel.length > SCHRITTE) zurueckStapel.shift(); vorStapel.length = 0;` — dort: `const SCHRITTE = 40; const zurueckStapel: string[] = []; const vorStapel: string[] = []; const abbild = (): string => JSON.stringify(karte); … if (zurueckStapel.length > SCHRITTE) zurueckStapel.shift(); vorStapel.length = 0;`",
@@ -856,7 +857,8 @@
     "UI.toast und UI.menu aus src/schale/ueberlagerung/ui.ts:30–33 — Hinweise und Vorlagenmenü",
     "Dialog.wahl aus src/schale/ueberlagerung/dialog.ts:121 — Rückfrage vor dem Ersetzen durch eine Vorlage (gedankenkarte.ts:1295)",
     "Register.bloecke (src/register/bloecke.ts:97) — Anmeldung der Blockart; keine weitere Register-Nutzung (Formen und Vorlagen sind NICHT im Register, sondern lokale Listen, Z. 147, 199)",
-    "NICHT benutzt: src/core/ink/geometry.ts (InkPoint/InkBounds, simplify, distanceToSegment) — die Karte rechnet Bounds, Bézier und Ausweich-Normale selbst; src/core/helpers/colors.ts — die Palette ist lokal (Z. 123–127)"
+    "NICHT benutzt: src/core/ink/geometry.ts (InkPoint/InkBounds, simplify, distanceToSegment) — die Karte rechnet Bounds, Bézier und Ausweich-Normale selbst; src/core/helpers/colors.ts — die Palette ist lokal (Z. 123–127)",
+    "NACHGETRAGEN (E687, 25. September abends): src/core/gfx/history.ts — `GfxHistory.erstelle(40)`; Knöpfe und Strg+Z rufen `verlauf.zurueck(abbild())`/`verlauf.vor(abbild())` und setzen selbst ein. Wächter test571."
    ],
    "duplikate": [
     {
@@ -2075,7 +2077,8 @@
     "UI.toast/menu/frage/banner (src/schale/ueberlagerung/ui.ts:41) und App.zeigeSonder/oeffne/kuerzlich (start.ts)",
     "Fremde Bereiche laut pruefungen/bereiche-bestand.json: bloecke -> elektro (Formelheft 2, Stromfluss 9; Z. 22-46), elektro -> bloecke (Schaltplan 8; Z. 358-362), elektro -> dateien (Dateien 2), elektro -> wissen (Werkzeuge 1), dateien -> Schaltplan 2 (Z. 90-93), pdf -> Formelheft 6 / Planflaeche 2 (Z. 444-465)",
     "Stil: quell/schale/stil/bausteine.css:7044-7136 (.sp-wrap, .sp-buehne, .sp-flaeche touch-action:none)",
-    "NICHT benutzt, obwohl vorhanden: src/core/ink/geometry.ts (drehePunkte Z. 587, bounds Z. 625, distanceToSegment Z. 27), src/core/sheet/space.ts (zuBlatt/umrechner über getScreenCTM), Kern-Verlauf für Undo, Ereignisbus"
+    "NICHT benutzt, obwohl vorhanden: src/core/ink/geometry.ts (drehePunkte Z. 587, bounds Z. 625, distanceToSegment Z. 27), src/core/sheet/space.ts (zuBlatt/umrechner über getScreenCTM), Kern-Verlauf für Undo, Ereignisbus",
+    "NACHGETRAGEN (E687, 25. September abends): src/core/gfx/history.ts — die Planfläche hält `z.verlauf = GfxHistory.erstelle(60)` statt `zurueck[]/vorwaerts[]`; `aendere` ruft `merken(vorher)`, `zurueck/vorwaerts` rufen `verlauf.zurueck(abzug())`/`vor(abzug())`. Wächter test571."
    ],
    "duplikate": [
     {
@@ -2340,7 +2343,7 @@
     "undo": {
      "vorhanden": true,
      "eigen": true,
-     "wo": "kern: Verlauf (verlauf.ts:29, Seitenabbild MAX 60, merke Z. 46-56) und Transaktion → Verlauf.merke (befehle.ts:215). Trotzdem vier eigene Stapel aus JSON-Abbildern: marken.ts:2022-2031 historyUndo/historyRedo; zeichenflaeche.ts:164-166 (SCHRITTE 40); gedankenkarte.ts:646-660 (SCHRITTE 40); planflaeche.ts:176-196 (60). Strg+Z: planflaeche.ts:1017, Whiteboard seit E682 (zeichenflaeche.ts:178-185, test568 §3); der Seitenverlauf gibt beim Zurücknehmen allen Blöcken neue Kennungen (AUDIT Punkt 4, E682)."
+     "wo": "kern: Verlauf (verlauf.ts:29, Seitenabbild MAX 60, merke Z. 46-56) und Transaktion → Verlauf.merke (befehle.ts:215). Trotzdem vier eigene Stapel aus JSON-Abbildern: marken.ts:2022-2031 historyUndo/historyRedo; zeichenflaeche.ts:164-166 (SCHRITTE 40); gedankenkarte.ts:646-660 (SCHRITTE 40); planflaeche.ts:176-196 (60). Strg+Z: planflaeche.ts:1017, Whiteboard seit E682 (zeichenflaeche.ts:178-185, test568 §3); der Seitenverlauf gibt beim Zurücknehmen allen Blöcken neue Kennungen (AUDIT Punkt 4, E682). NACHGETRAGEN (E687, 25. September abends): von den vier eigenen Stapeln sind drei EINER geworden — src/core/gfx/history.ts `GfxHistory.erstelle(tiefe)`, gerufen von zeichenflaeche.ts (40), gedankenkarte.ts (40), planflaeche.ts (60); nur marken.ts (E378, flache Abbilder) bleibt eigen, mit Grund. Wächter test571."
     },
     "pointerNormalisierung": {
      "vorhanden": true,
@@ -4684,6 +4687,11 @@
    "name": "Api",
    "datei": "src/bereiche/verbinden/schnittstelle.ts",
    "was": "die /v1/-Schnittstelle in Notions Form, im Browser beantwortet"
+  },
+  {
+   "name": "GfxHistory",
+   "datei": "src/core/gfx/history.ts",
+   "was": "der Flächen-Verlauf: zwei Stapel aus Abbildern (Strings) mit Tiefe als Parameter; gibt das Abbild zurück, setzt nie selbst ein (E687)"
   }
  ]
 }

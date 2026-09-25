@@ -74,7 +74,7 @@ Blocktyp `whiteboard` im Fach `blocks` (Store.updateBlock → `save('blocks', b)
 
 ## Gemeinsam genutzt
 
-**Benutzt:** [[kern-Store|Store]] · [[kern-Register|Register]] · [[kern-Dateien|Dateien]]
+**Benutzt:** [[kern-Store|Store]] · [[kern-Register|Register]] · [[kern-Dateien|Dateien]] · [[kern-GfxHistory|GfxHistory]]
 
 **Nur genannt, nicht benutzt:** [[kern-SheetSpace|SheetSpace]] · [[kern-InkGeometry|InkGeometry]] · [[kern-Verlauf|Verlauf]] · [[kern-Ereignis|Ereignis]] — der Befund sagt, warum.
 
@@ -85,12 +85,13 @@ Blocktyp `whiteboard` im Fach `blocks` (Store.updateBlock → `save('blocks', b)
 - src/kern/helfer/vorschau.ts:196 — kennt `whiteboard`/`zeichenflaeche` als Arten ohne Text (Miniaturen), ohne dass das Whiteboard es ruft
 - NICHT genutzt, obwohl vorhanden: src/core/ink/geometry.ts (rectangle 291, bounds 625, union 962, scale 1018, rotate 679, distanceToPolyline 738, insidePolygon 936), src/core/ink/shapes.ts (recognize 63), src/core/sheet/space.ts (zuBlatt 56), src/kern/zustand/verlauf.ts (merke/zurueck/vor 107–111), src/kern/helfer/zeichenziel.ts (melde 402), src/kern/ereignisse/bus.ts
 - Bereich→Bereich statt kern: `(globalThis as any).Dateien` (zeichenflaeche.ts:257, 271 → bereiche/dateien/ablage.ts:483)
+- NACHGETRAGEN (E687, 25. September abends): src/core/gfx/history.ts — `GfxHistory.erstelle(40)` hält den Rückgängig-Stapel; zeichenflaeche.ts ruft `verlauf.merken/zurueck/vor/letztenVerwerfen/kannZurueck/kannVor`, das Einsetzen bleibt hier (`einsetzen`). Wächter test571.
 
 ## Duplikate — je mit zwei Stellen und Zitat
 
 Führen zu: [[gedankenkarte|C · Gedankenkarte (Mindmap)]] · [[pdf|D · PDF-Schreibstudio und Ink]] · [[elektro|F · Schaltplan, Fachzeichen, Elektro]]
 
-1. **Undo-Stapel aus JSON-Abbildern (40 Schritte)** — **gegengeprüft: bestätigt**
+1. **Undo-Stapel aus JSON-Abbildern (40 Schritte) — GESCHLOSSEN mit E687: alle drei Flächen rufen `GfxHistory.erstelle(tiefe)` (src/core/gfx/history.ts), Wächter test571** — **gegengeprüft: bestätigt**
    - hier: `src/bereiche/bloecke/arten/zeichenflaeche.ts:161–176`
    - dort: `src/bereiche/bloecke/arten/gedankenkarte.ts:646–660 (und als drittes Muster src/kern/zustand/verlauf.ts:32–35, 52–54 mit MAX 60; planflaeche.ts:45–46, 183–184 mit 60)`
    - Beleg: hier: `const SCHRITTE = 40; const zurueckStapel: string[] = []; const vorStapel: string[] = []; const abbild = (): string => JSON.stringify(daten); … if (zurueckStapel.length > SCHRITTE) zurueckStapel.shift(); vorStapel.length = 0;` — dort: `const SCHRITTE = 40; const zurueckStapel: string[] = []; const vorStapel: string[] = []; const abbild = (): string => JSON.stringify(karte); … if (zurueckStapel.length > SCHRITTE) zurueckStapel.shift(); vorStapel.length = 0;`

@@ -79,7 +79,7 @@ Blocktyp `schaltplan` (src/register/bloecke.ts:100, Gruppe Wissen). Der Plan lie
 
 ## Gemeinsam genutzt
 
-**Benutzt:** [[kern-Store|Store]] · [[kern-Register|Register]] · [[kern-Dateien|Dateien]]
+**Benutzt:** [[kern-Store|Store]] · [[kern-Register|Register]] · [[kern-Dateien|Dateien]] · [[kern-GfxHistory|GfxHistory]]
 
 **Nur genannt, nicht benutzt:** [[kern-Verlauf|Verlauf]] · [[kern-Ereignis|Ereignis]] — der Befund sagt, warum.
 
@@ -93,6 +93,7 @@ Blocktyp `schaltplan` (src/register/bloecke.ts:100, Gruppe Wissen). Der Plan lie
 - Fremde Bereiche laut pruefungen/bereiche-bestand.json: bloecke -> elektro (Formelheft 2, Stromfluss 9; Z. 22-46), elektro -> bloecke (Schaltplan 8; Z. 358-362), elektro -> dateien (Dateien 2), elektro -> wissen (Werkzeuge 1), dateien -> Schaltplan 2 (Z. 90-93), pdf -> Formelheft 6 / Planflaeche 2 (Z. 444-465)
 - Stil: quell/schale/stil/bausteine.css:7044-7136 (.sp-wrap, .sp-buehne, .sp-flaeche touch-action:none)
 - NICHT benutzt, obwohl vorhanden: src/core/ink/geometry.ts (drehePunkte Z. 587, bounds Z. 625, distanceToSegment Z. 27), src/core/sheet/space.ts (zuBlatt/umrechner über getScreenCTM), Kern-Verlauf für Undo, Ereignisbus
+- NACHGETRAGEN (E687, 25. September abends): src/core/gfx/history.ts — die Planfläche hält `z.verlauf = GfxHistory.erstelle(60)` statt `zurueck[]/vorwaerts[]`; `aendere` ruft `merken(vorher)`, `zurueck/vorwaerts` rufen `verlauf.zurueck(abzug())`/`vor(abzug())`. Wächter test571.
 
 ## Duplikate — je mit zwei Stellen und Zitat
 

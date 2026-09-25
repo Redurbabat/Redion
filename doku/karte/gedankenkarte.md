@@ -69,7 +69,7 @@ Kein eigenes IndexedDB-Fach, kein eigener Bereich: die Karte ist ein gewöhnlich
 
 ## Gemeinsam genutzt
 
-**Benutzt:** [[kern-Store|Store]] · [[kern-Register|Register]]
+**Benutzt:** [[kern-Store|Store]] · [[kern-Register|Register]] · [[kern-GfxHistory|GfxHistory]]
 
 **Nur genannt, nicht benutzt:** [[kern-Verlauf|Verlauf]] — der Befund sagt, warum.
 
@@ -79,6 +79,7 @@ Kein eigenes IndexedDB-Fach, kein eigener Bereich: die Karte ist ein gewöhnlich
 - Dialog.wahl aus src/schale/ueberlagerung/dialog.ts:121 — Rückfrage vor dem Ersetzen durch eine Vorlage (gedankenkarte.ts:1295)
 - Register.bloecke (src/register/bloecke.ts:97) — Anmeldung der Blockart; keine weitere Register-Nutzung (Formen und Vorlagen sind NICHT im Register, sondern lokale Listen, Z. 147, 199)
 - NICHT benutzt: src/core/ink/geometry.ts (InkPoint/InkBounds, simplify, distanceToSegment) — die Karte rechnet Bounds, Bézier und Ausweich-Normale selbst; src/core/helpers/colors.ts — die Palette ist lokal (Z. 123–127)
+- NACHGETRAGEN (E687, 25. September abends): src/core/gfx/history.ts — `GfxHistory.erstelle(40)`; Knöpfe und Strg+Z rufen `verlauf.zurueck(abbild())`/`verlauf.vor(abbild())` und setzen selbst ein. Wächter test571.
 
 ## Duplikate — je mit zwei Stellen und Zitat
 

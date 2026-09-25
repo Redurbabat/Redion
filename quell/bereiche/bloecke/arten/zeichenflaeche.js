@@ -156,14 +156,13 @@ const Zusatz = (() => {
            Seite neu lädt, hat seine Zeichnung, aber keine Schrittfolge; das ist
            die ehrlichere Grenze, als den Block mit Verlauf aufzublähen. */
         const SCHRITTE = 40;
-        const zurueckStapel = [];
-        const vorStapel = [];
+        /* DER STAPEL SELBST WOHNT IM KERN (E687): `GfxHistory` — dieselbe Regel
+           für Whiteboard, Gedankenkarte und Planfläche, hier nur noch mit der
+           Tiefe von E144. */
+        const verlauf = GfxHistory.erstelle(SCHRITTE);
         const abbild = () => JSON.stringify(daten);
         const merken = () => {
-            zurueckStapel.push(abbild());
-            if (zurueckStapel.length > SCHRITTE)
-                zurueckStapel.shift();
-            vorStapel.length = 0;
+            verlauf.merken(abbild());
             standZeigen();
         };
         const einsetzen = (roh) => {
@@ -176,19 +175,19 @@ const Zusatz = (() => {
            und nahm den SEITENVERLAUF zurück, der die Seite neu baut und jedem
            Block eine frische Kennung gibt (test568 §3). */
         const schrittZurueck = () => {
-            if (!zurueckStapel.length)
+            const vorher = verlauf.zurueck(abbild());
+            if (vorher === null)
                 return;
-            vorStapel.push(abbild());
-            einsetzen(zurueckStapel.pop());
+            einsetzen(vorher);
             standZeigen();
             male();
             sichern();
         };
         const schrittVor = () => {
-            if (!vorStapel.length)
+            const naechster = verlauf.vor(abbild());
+            if (naechster === null)
                 return;
-            zurueckStapel.push(abbild());
-            einsetzen(vorStapel.pop());
+            einsetzen(naechster);
             standZeigen();
             male();
             sichern();
@@ -197,9 +196,9 @@ const Zusatz = (() => {
             const zurueck = w.querySelector('[data-a="zurueck"]');
             const vor = w.querySelector('[data-a="vor"]');
             if (zurueck)
-                zurueck.disabled = !zurueckStapel.length;
+                zurueck.disabled = !verlauf.kannZurueck();
             if (vor)
-                vor.disabled = !vorStapel.length;
+                vor.disabled = !verlauf.kannVor();
         };
         const sichern = () => Store.updateBlock(block.id, { shapes: daten, raumVersion: RAUM_VERSION });
         /* Der Ausschnitt in Formkoordinaten. Solange der Kasten noch nicht im
@@ -812,7 +811,7 @@ const Zusatz = (() => {
                     /* Und mit dem Kritzler auch den Schritt: sonst läge ein Abbild auf
                        dem Stapel, das genau denselben Stand beschreibt — `↶` täte dann
                        einmal scheinbar nichts. */
-                    zurueckStapel.pop();
+                    verlauf.letztenVerwerfen();
                     standZeigen();
                 }
                 aktiv = null;

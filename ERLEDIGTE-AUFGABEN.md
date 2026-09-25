@@ -1,5 +1,24 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 25. September 2026 · E687 · Die drei Flächen teilen EINEN Verlauf
+
+**Audit D1, Bogen 4.** Whiteboard, Gedankenkarte und Planfläche hielten je
+ein Paar Stapel aus JSON-Abbildern, dieselben acht Zeilen dreimal.
+**Gebaut:** `src/core/gfx/history.ts` — `GfxHistory.erstelle(tiefe)`,
+ohne DOM und ohne Store; der Kern gibt das Abbild zurück, die Fläche setzt
+es ein. Drei Umzüge (40/40/60 bleiben), 41 Zeilen dazu, 51 weg; der erste
+Ordner des GFX-Kerns. Marken (E378) und Seitenverlauf (E684) bleiben eigen.
+
+**Geprüft.** `test571` (24 Zusagen, Kern ohne Browser, Übernahme im
+gebauten JavaScript): gegen den alten Stand rot mit 8; erster Fund im Kern
+selbst (`Number(0) || 40` → Tiefe 40 statt 1); Gegenprobe „merken leert das
+Wiederholen nicht" → zwei rot. Nachbarn `test209`, `test568`, `test529`,
+`test538`, `test238–240`, `test263`, `test105`, `test109`, `test537`,
+`test550`, `test225`, `test87`. Kein Bild: nichts Sichtbares hat sich
+geändert (§55.3).
+
+---
+
 ## 25. September 2026 · E686 · Das Whiteboard trägt seine Raumfassung und rechnet über die Matrix
 
 **Redur:** „für die 3. ja whiteboard eine raumversion". **Gebaut:**

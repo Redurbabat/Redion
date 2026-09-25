@@ -109,7 +109,7 @@ const Planflaeche = (() => {
             auswahl: new Set(),
             gewaehltesZeichen: '',
             zieht: null,
-            zurueck: [], vorwaerts: [],
+            verlauf: GfxHistory.erstelle(60),
             zeigeAnschluesse: true,
             zeigeNummern: false,
             zeigeRaster: true,
@@ -127,27 +127,21 @@ const Planflaeche = (() => {
                 Store.updateBlock(block.id, { plan: z.plan });
             else if (block)
                 block.plan = z.plan;
-            if (merken) {
-                z.zurueck.push(vorher);
-                if (z.zurueck.length > 60)
-                    z.zurueck.shift();
-                z.vorwaerts.length = 0;
-            }
+            if (merken)
+                z.verlauf.merken(vorher);
             male();
         };
         const zurueck = () => {
-            const vorher = z.zurueck.pop();
-            if (!vorher)
+            const vorher = z.verlauf.zurueck(abzug());
+            if (vorher === null)
                 return;
-            z.vorwaerts.push(abzug());
             z.plan = JSON.parse(vorher);
             aendere(() => { }, false);
         };
         const vorwaerts = () => {
-            const naechster = z.vorwaerts.pop();
-            if (!naechster)
+            const naechster = z.verlauf.vor(abzug());
+            if (naechster === null)
                 return;
-            z.zurueck.push(abzug());
             z.plan = JSON.parse(naechster);
             aendere(() => { }, false);
         };
@@ -198,8 +192,8 @@ const Planflaeche = (() => {
                     `<button class="sp-heft${heftOffen() ? ' an' : ''}" data-a="heft" ` +
                     `title="Formelheft — beim Zeichnen nachschlagen und rechnen" ` +
                     `aria-pressed="${heftOffen()}" aria-label="Formelheft">📐</button>` +
-                    `<button data-a="zurueck" title="Rückgängig" aria-label="Rückgängig"${z.zurueck.length ? '' : ' disabled'}>↶</button>` +
-                    `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.vorwaerts.length ? '' : ' disabled'}>↷</button>` +
+                    `<button data-a="zurueck" title="Rückgängig" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>↶</button>` +
+                    `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>↷</button>` +
                     `<button data-a="mehr" title="Mehr" aria-label="Mehr">…</button></span>`;
         };
         /* --- Der Fuss: Ebenen und Auswahl ------------------------------------ */

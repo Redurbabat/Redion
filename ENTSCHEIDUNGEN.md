@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-666 Entscheidungen, E1 bis E686 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+667 Entscheidungen, E1 bis E687 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -729,6 +729,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E684** — Rückgängig ändert Inhalt, nicht Identität: `Store.baumAbgleichen` gleicht eine Seite über die Kennung mit dem Schnappschuss ab — Papierkorb statt Purge, Unterseiten und Zeilen als Blätter, kein Stempel ohne Unterschied; `Verlauf.anwenden` zieht um, `test569` mit 36 Zusagen (L212 GESCHLOSSEN)
 * **E685** — Die zwei Fassungs-Wiederherstellungen gehen denselben Weg wie der Verlauf: `Vergleich.dialog` („Ganze Fassung zurückholen") und `Werkzeuge.versionen` („Fassung wiederherstellen") rufen `Store.baumAbgleichen` — `test569` §13/§14, 48 Zusagen
 * **E686** — Das Whiteboard trägt seine Raumfassung und rechnet über die Matrix: `raumVersion: 1` an jedem gespeicherten Brett, `punkt()` über `SheetSpace.umrechner` (Bogen 3, Redur: „ja whiteboard eine raumversion") — und die Messung, dass die Handformel für achsenparallele Skalierung gar nicht falsch war (`test570`)
+* **E687** — Die drei Flächen teilen EINEN Verlauf: `GfxHistory.erstelle(tiefe)` in `src/core/gfx/history.ts` ersetzt die drei Stapelpaare aus JSON-Abbildern in Whiteboard, Gedankenkarte und Planfläche (Audit D1, Bogen 4) — der Kern gibt das Abbild zurück, das Einsetzen bleibt bei der Fläche; Marken (E378) und Seitenverlauf (E684) bleiben eigen (`test571`)
 
 ---
 
@@ -55975,3 +55976,81 @@ ein eigener kleiner Bogen mit eigenem Wächter, derselbe Weg (§43).
 gemessen, dass das beim Zeichnen ins Gewicht fallen kann; das Whiteboard
 ruft `punkt()` je Ereignis einmal, nicht je Punkt eines Bündels, also
 bleibt es bei einer Matrix je Ereignis.
+
+---
+
+## E687 — Die drei Flächen teilen EINEN Verlauf: `GfxHistory` im Kern
+
+**Datum:** 25. September 2026 · **Wächter:** `test571` (24 Zusagen) ·
+**Bogen 4** aus E681, von Redur freigegeben („ja mach so weiter wie du
+vorschlägst") — Audit-Duplikat **D1**
+
+**Was war.** Whiteboard (`zeichenflaeche.ts:174–200`), Gedankenkarte
+(`gedankenkarte.ts:646–660`) und Planfläche (`planflaeche.ts`,
+`Zustand.zurueck/vorwaerts`) hielten je ein Paar Stapel aus
+JSON-Abbildern — und dieselben acht Zeilen dreimal: vor jeder Änderung das
+Abbild auf den Zurück-Stapel, bei Überlauf das älteste weg, den
+Vor-Stapel leeren; beim Zurücknehmen den Stand von jetzt auf den Vor-Stapel
+und das oberste Abbild einsetzen. Zwei mit 40 Schritten, eine mit 60. Wer
+den Sonderfall des Kritzlers (den letzten Schritt verwerfen, weil er
+nichts geändert hat) oder die Kappe anfasste, fasste eine Stelle an und
+vergass zwei — der zweitteuerste Fehler dieses Projekts (§45).
+
+**Was entschieden wurde.**
+
+1. **Eine Datei im Kern:** `src/core/gfx/history.ts`, englisch benannt,
+   ohne DOM, ohne `Store`, ohne Wissen über Formen. `GfxHistory.erstelle(tiefe)`
+   gibt `merken(abbild)`, `zurueck(jetzt)`, `vor(jetzt)`,
+   `letztenVerwerfen()`, `leeren()`, `kannZurueck()`, `kannVor()`,
+   `stand()` zurück. Ein Abbild ist ein String — der Kern kennt nur den
+   Stapel, nicht seinen Inhalt.
+2. **Der Kern gibt zurück, die Fläche setzt ein.** `zurueck(jetzt)`
+   liefert das ältere Abbild oder `null`; das Einsetzen bleibt bei der
+   Fläche, die weiss, wie sie sich zeichnet. So bleibt der Kern frei von
+   Rückrufen und Bereichen — derselbe Schnitt wie bei `InkGeometry`
+   (E125): rechnen ja, zeichnen nie.
+3. **Die Tiefe ist ein Parameter, und die Zahlen bleiben:** Whiteboard 40,
+   Gedankenkarte 40, Planfläche 60. Kein Verhalten hat sich geändert —
+   41 Zeilen dazu, 51 weg, drei Umzüge. Der Vor-Stapel trägt keine Kappe;
+   er kann nie tiefer werden als der Zurück-Stapel, aus dem er gefüllt wird.
+4. **Wer NICHT umzieht, mit Grund.** Die Marken (`pdf/marken.ts`, E378)
+   halten flache Abbilder und vergleichen vor dem Merken — anderes Ziel,
+   bessere Fassung; sie folgen in einem eigenen Bogen oder gar nicht. Der
+   Seitenverlauf (`kern/zustand/verlauf.ts`) bleibt, was er ist: ganze
+   Seitenbäume, 700-ms-Zaun, seit E684 mit erhaltenen Kennungen. Ein
+   Flächenverlauf ist ein String; ein Seitenverlauf ist ein Baum.
+5. **`src/core/gfx/` ist neu** — und ist der Ordner, den Audit 2.5 für
+   den GFX-Kern vorsieht. Die gemeinsame Werkzeugleiste (W6, Bogen 5) kommt
+   dorthin, nicht in einen Bereich. Angemeldet an drei Stellen:
+   `tsconfig.bauen.json` (`include`, test105), `index.html` nach
+   `space.js` und vor den drei Flächen, `GRUNDSTOCK` in `sw.ts` (§28).
+
+**Was der Wächter gefunden hat.** `test571` braucht für den Kern keinen
+Browser (wie `test366` für den Strich): er lädt das GEBAUTE
+`history.js` und befragt es; für die Übernahme liest er das gebaute
+JavaScript der drei Flächen, nicht ihre Quelle — was gebaut ist, läuft.
+Gegen den alten Stand rot mit 8 Zusagen (die Datei gab es nicht, kein
+Nehmer). Sein erster Fund galt dem Kern selbst: `Number(tiefe) || 40`
+machte aus einer Tiefe 0 eine Tiefe 40 — wer 0 sagt, bekommt seither 1,
+und nur was gar keine Zahl ist, fällt auf 40 zurück. **Gegenprobe:**
+`merken` leert den Vor-Stapel nicht → zwei rot („merken leert das
+Wiederholen — {zurueck:3, vor:1}" und „letztenVerwerfen nimmt nur den
+Zurück-Schritt"). Zurückgedreht, 24 von 24.
+
+**Die Alternativen.** (a) Den Seitenverlauf für alle nehmen — nein: er
+merkt ganze Bäume mit Zaun, eine Fläche merkt sich selbst je Handgriff, und
+E684 hat gerade erst gezeigt, was sein Einsetzen alles anfasst. (b) Eine
+Klasse mit Rückrufen `abbild()`/`einsetzen()` im Kern — nein: dann kennt
+der Kern die Fläche, und drei Rückrufe sind nicht weniger Kopplung als
+drei Aufrufer. Der Rückgabewert genügt.
+
+**Preis.** Eine Skriptdatei mehr in der Startnutzlast (97 Zeilen Quelle,
+rund ein Kilobyte gebaut) und eine Ladereihenfolge, die stimmen muss:
+`history.js` vor den drei Flächen. Es gibt keinen `typeof`-Wächter, weil
+alle drei den Verlauf unbedingt brauchen — ein fehlender Kern wäre kein
+Rückfall, sondern ein Fehler beim Start, und `test571` hält die
+Reihenfolge in `index.html` fest.
+
+**Nachbarn:** `test209`, `test568`, `test529`, `test538`, `test238`,
+`test239`, `test240`, `test263`, `test105`, `test109`, `test537`,
+`test550`, `test225`, `test87`.

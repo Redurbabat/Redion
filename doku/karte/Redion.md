@@ -5,7 +5,7 @@
 
 # Redion — die Karte des Quelltexts
 
-Stand 25. September 2026 · HEAD `1b89c01` · 11 Systeme · 12 gemeinsame Kerne · 2 Referenzen
+Stand 25. September 2026 · HEAD `1b89c01` · 11 Systeme · 13 gemeinsame Kerne · 2 Referenzen
 
 Gebaut beim Plattform-Audit (doku/REDION-PLATTFORM-AUDIT.md). Jeder Befund trägt Datei:Zeile; was ein Leser nicht fand, steht als „nicht gefunden“ da. Die Karte ersetzt das Lesen nicht — sie sagt, WO man lesen muss. Nachgetragen wird in karte.json, nicht in den Notizen — zuletzt E686 (Whiteboard).
 
@@ -27,6 +27,7 @@ graph LR
   Ereignis[("Ereignis")]
   Dateien[("Dateien")]
   Api[("Api")]
+  GfxHistory[("GfxHistory")]
   editor["A · Editor und Blockmodell"]
   zeichenflaeche["B · Whiteboard / Zeichenfläche"]
   gedankenkarte["C · Gedankenkarte (Mindmap)"]
@@ -44,11 +45,13 @@ graph LR
   zeichenflaeche --> Store
   zeichenflaeche --> Register
   zeichenflaeche --> Dateien
+  zeichenflaeche --> GfxHistory
   zeichenflaeche -.-> gedankenkarte
   zeichenflaeche -.-> pdf
   zeichenflaeche -.-> elektro
   gedankenkarte --> Store
   gedankenkarte --> Register
+  gedankenkarte --> GfxHistory
   gedankenkarte -.-> zeichenflaeche
   gedankenkarte -.-> elektro
   pdf --> SheetSpace
@@ -73,6 +76,7 @@ graph LR
   elektro --> Store
   elektro --> Register
   elektro --> Dateien
+  elektro --> GfxHistory
   elektro -.-> gemeinsam
   elektro -.-> zeichenflaeche
   gemeinsam --> InkGeometry
@@ -115,11 +119,11 @@ graph LR
 | Notiz | Hauptdateien | Prüfläufe | Duplikate | nutzt |
 |---|---|---|---|---|
 | [[editor|A · Editor und Blockmodell]] | `editor.ts`, `auswahlleiste.ts`, `mehrfach.ts` +6 | 21 | 5 | [[kern-Store|Store]], [[kern-Verlauf|Verlauf]], [[kern-Register|Register]] |
-| [[zeichenflaeche|B · Whiteboard / Zeichenfläche]] | `zeichenflaeche.ts`, `werkzeuge.css`, `editor.ts` +9 | 7 | 6 | [[kern-Store|Store]], [[kern-Register|Register]], [[kern-Dateien|Dateien]] |
-| [[gedankenkarte|C · Gedankenkarte (Mindmap)]] | `gedankenkarte.ts`, `werkzeuge.css`, `bloecke.ts` +4 | 4 | 7 | [[kern-Store|Store]], [[kern-Register|Register]] |
+| [[zeichenflaeche|B · Whiteboard / Zeichenfläche]] | `zeichenflaeche.ts`, `werkzeuge.css`, `editor.ts` +9 | 7 | 6 | [[kern-Store|Store]], [[kern-Register|Register]], [[kern-Dateien|Dateien]], [[kern-GfxHistory|GfxHistory]] |
+| [[gedankenkarte|C · Gedankenkarte (Mindmap)]] | `gedankenkarte.ts`, `werkzeuge.css`, `bloecke.ts` +4 | 4 | 7 | [[kern-Store|Store]], [[kern-Register|Register]], [[kern-GfxHistory|GfxHistory]] |
 | [[pdf|D · PDF-Schreibstudio und Ink]] | `marken.ts`, `document-mode.ts`, `seite.ts` +9 | 24 | 6 | [[kern-SheetSpace|SheetSpace]], [[kern-InkGeometry|InkGeometry]], [[kern-InkShapes|InkShapes]], [[kern-InkStroke|InkStroke]], [[kern-Store|Store]], [[kern-Register|Register]], [[kern-Ereignis|Ereignis]], [[kern-Dateien|Dateien]] |
 | [[folien|E · Präsentationen / Folien]] | `folien.ts`, `folien.ts`, `einlesen.ts` +7 | 30 | 5 | [[kern-SheetSpace|SheetSpace]], [[kern-InkGeometry|InkGeometry]], [[kern-Folien|Folien]], [[kern-Store|Store]], [[kern-Register|Register]], [[kern-Dateien|Dateien]] |
-| [[elektro|F · Schaltplan, Fachzeichen, Elektro]] | `schaltplan.ts`, `planflaeche.ts`, `fachzeichen.ts` +8 | 21 | 5 | [[kern-Store|Store]], [[kern-Register|Register]], [[kern-Dateien|Dateien]] |
+| [[elektro|F · Schaltplan, Fachzeichen, Elektro]] | `schaltplan.ts`, `planflaeche.ts`, `fachzeichen.ts` +8 | 21 | 5 | [[kern-Store|Store]], [[kern-Register|Register]], [[kern-Dateien|Dateien]], [[kern-GfxHistory|GfxHistory]] |
 | [[gemeinsam|G · Gemeinsame räumliche Infrastruktur]] | `selection-flow.ts`, `geometry.ts`, `shapes.ts` +7 | 36 | 11 | [[kern-InkGeometry|InkGeometry]], [[kern-InkShapes|InkShapes]], [[kern-InkStroke|InkStroke]], [[kern-Store|Store]], [[kern-Verlauf|Verlauf]], [[kern-Register|Register]], [[kern-SelectionFlow|SelectionFlow]] |
 | [[register|H · Register, Erweiterungspunkte, Automationen]] | `befehle.ts`, `bloecke.ts`, `eigenschaften.ts` +27 | 28 | 8 | [[kern-Store|Store]], [[kern-Register|Register]], [[kern-Api|Api]] |
 | [[mcp|I · MCP, Server-API, CLI-Vorläufer]] | `schnittstelle.ts`, `sw.ts`, `befehle.ts` +21 | 33 | 8 | [[kern-Store|Store]], [[kern-Register|Register]], [[kern-Dateien|Dateien]], [[kern-Api|Api]] |
@@ -142,6 +146,7 @@ graph LR
 | [[kern-Ereignis|Ereignis]] | `src/kern/ereignisse/bus.ts` | [[pdf|D · PDF-Schreibstudio und Ink]], [[sync|J · Abgleich, Anhänge, Stücke]] |
 | [[kern-Dateien|Dateien]] | `src/bereiche/dateien/ablage.ts` | [[zeichenflaeche|B · Whiteboard / Zeichenfläche]], [[pdf|D · PDF-Schreibstudio und Ink]], [[folien|E · Präsentationen / Folien]], [[elektro|F · Schaltplan, Fachzeichen, Elektro]], [[mcp|I · MCP, Server-API, CLI-Vorläufer]], [[sync|J · Abgleich, Anhänge, Stücke]], [[export|K · Import, Export, .redion, Sicherung]] |
 | [[kern-Api|Api]] | `src/bereiche/verbinden/schnittstelle.ts` | [[register|H · Register, Erweiterungspunkte, Automationen]], [[mcp|I · MCP, Server-API, CLI-Vorläufer]] |
+| [[kern-GfxHistory|GfxHistory]] | `src/core/gfx/history.ts` | [[zeichenflaeche|B · Whiteboard / Zeichenfläche]], [[gedankenkarte|C · Gedankenkarte (Mindmap)]], [[elektro|F · Schaltplan, Fachzeichen, Elektro]] |
 
 ## Die Referenzen (nur gelesen, nichts übernommen)
 

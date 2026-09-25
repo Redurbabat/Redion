@@ -172,13 +172,13 @@ const Zusatz = (() => {
        Seite neu lädt, hat seine Zeichnung, aber keine Schrittfolge; das ist
        die ehrlichere Grenze, als den Block mit Verlauf aufzublähen. */
     const SCHRITTE = 40;
-    const zurueckStapel: string[] = [];
-    const vorStapel: string[] = [];
+    /* DER STAPEL SELBST WOHNT IM KERN (E687): `GfxHistory` — dieselbe Regel
+       für Whiteboard, Gedankenkarte und Planfläche, hier nur noch mit der
+       Tiefe von E144. */
+    const verlauf = GfxHistory.erstelle(SCHRITTE);
     const abbild = (): string => JSON.stringify(daten);
     const merken = (): void => {
-      zurueckStapel.push(abbild());
-      if (zurueckStapel.length > SCHRITTE) zurueckStapel.shift();
-      vorStapel.length = 0;
+      verlauf.merken(abbild());
       standZeigen();
     };
     const einsetzen = (roh: string): void => {
@@ -191,22 +191,22 @@ const Zusatz = (() => {
        und nahm den SEITENVERLAUF zurück, der die Seite neu baut und jedem
        Block eine frische Kennung gibt (test568 §3). */
     const schrittZurueck = (): void => {
-      if (!zurueckStapel.length) return;
-      vorStapel.push(abbild());
-      einsetzen(zurueckStapel.pop() as string);
+      const vorher = verlauf.zurueck(abbild());
+      if (vorher === null) return;
+      einsetzen(vorher);
       standZeigen(); male(); sichern();
     };
     const schrittVor = (): void => {
-      if (!vorStapel.length) return;
-      zurueckStapel.push(abbild());
-      einsetzen(vorStapel.pop() as string);
+      const naechster = verlauf.vor(abbild());
+      if (naechster === null) return;
+      einsetzen(naechster);
       standZeigen(); male(); sichern();
     };
     const standZeigen = (): void => {
       const zurueck = w.querySelector<HTMLButtonElement>('[data-a="zurueck"]');
       const vor = w.querySelector<HTMLButtonElement>('[data-a="vor"]');
-      if (zurueck) zurueck.disabled = !zurueckStapel.length;
-      if (vor) vor.disabled = !vorStapel.length;
+      if (zurueck) zurueck.disabled = !verlauf.kannZurueck();
+      if (vor) vor.disabled = !verlauf.kannVor();
     };
 
     const sichern = () => Store.updateBlock(block.id, { shapes: daten, raumVersion: RAUM_VERSION });
@@ -761,7 +761,7 @@ const Zusatz = (() => {
           /* Und mit dem Kritzler auch den Schritt: sonst läge ein Abbild auf
              dem Stapel, das genau denselben Stand beschreibt — `↶` täte dann
              einmal scheinbar nichts. */
-          zurueckStapel.pop();
+          verlauf.letztenVerwerfen();
           standZeigen();
         }
         aktiv = null; sichern(); male();
