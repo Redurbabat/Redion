@@ -1058,7 +1058,7 @@ Ungemessen ist ausserdem, ob PowerPoint die `.pptx`, die Redion heute
 schreibt, überhaupt öffnet (`LUECKEN.md:2708`).
 
 
-## Die Werkzeugtafel (W1 … W5)
+## Die Werkzeugtafel (W1 … W6)
 
 Redur, 14. September 2026, mit fünf Bildern eines fertigen Entwurfs:
 **„Siehe Bildern, so will ich es haben."** Und einen Satz später:
@@ -1237,6 +1237,39 @@ Studio stand der Platz-Knopf da, ohne wirken zu können (L185).
 Fensters. Drei Wege stehen dort, und die Wahl ist Redurs.
 
 ---
+
+- **W6 · Die Whiteboard-Leiste nach dem Edgeless-Vorbild.** Redur,
+  25. September 2026, mit einem Bild von AFFiNEs Edgeless-Werkzeugleiste:
+  „ich will so was haben wie die affine schau mal es nach".
+
+  **Nachgesehen** (`blocksuite/affine/widgets/edgeless-toolbar/`, MIT, nur
+  gelesen — E681): zwei Gruppen in EINER schwebenden Leiste unten. Links
+  die **Quick Tools** (36 px, Abstand 10: Auswahl, Rahmen, Verbinder,
+  Link), rechts die **Senior Tools** (je 96 px breit, blätterbar mit
+  ‹ ›: Notiz-/Text-Karten, Stift, Radierer, Formen), die man **auf die
+  Fläche zieht** (`draggable/`); ein **Slide-Menü** je Werkzeug (Formen,
+  Farbe); **Kürzel-Hinweise** (`^`) im Icon; ein **dichter Modus**
+  (`data-dense-quick/senior`), wenn das Fenster schmal ist; 64 px
+  Sicherheitsabstand zum Rand.
+
+  **Was Redion daraus baut** — den Aufbau, nicht die Bilder und nicht den
+  Code (§2, E681 Punkt 2):
+  1. Die Werkzeuge des Whiteboards werden **Register-Einträge**
+     (`register/`-Katalog, §5 Regel 3: Kennung, Name, Kürzel, Gruppe
+     quick/senior, Zeichnung als SVG im Redion-Stil wie die Fachzeichen) —
+     damit Gedankenkarte und Planfläche dieselbe Leiste bekommen können.
+  2. Eine schwebende Leiste **unten im Kasten**, zwei Gruppen, die rechte
+     blätterbar; Untermenü klappt nach oben; Werkzeug auf die Fläche
+     ziehen legt die Form dort ab.
+  3. Kürzel über `Register.tasten` (V, H, P, E, S …), der Hinweis steht im
+     Icon; Strg+Z bleibt beim Kasten (E682).
+  4. Am Telefon: 44 px (§37), dichter Modus statt Überlauf, Abstand zur
+     unteren Redion-Leiste (E646, `test541`).
+
+  **Reihenfolge:** nach den drei Datenbögen aus E681 (Kennungen im
+  Verlauf, `raumVersion`, gemeinsamer Verlauf) als Bogen 5 — es sei denn,
+  Redur zieht es vor. Mit Bildern am Rechner und am Telefon (§55.3), und
+  mit einem Wächter, der die Leiste misst, nicht liest (L206).
 
 ## ~~Rot, und älter als der Zweig — `test402`~~ — ERLEDIGT am 19. September (E627)
 
