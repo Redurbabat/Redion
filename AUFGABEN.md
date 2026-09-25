@@ -1266,10 +1266,18 @@ Fensters. Drei Wege stehen dort, und die Wahl ist Redurs.
   4. Am Telefon: 44 px (§37), dichter Modus statt Überlauf, Abstand zur
      unteren Redion-Leiste (E646, `test541`).
 
+  **Redur, 25. September, dazu: „integriere alles zusammen".** Also nicht
+  eine Leiste fürs Whiteboard, sondern EINE für alle Flächen — Whiteboard,
+  Gedankenkarte, Planfläche, Blatt/PDF — aus demselben Register, mit
+  demselben Verlauf (Bogen 4) und demselben Raum (Bogen 3). Die
+  Markenleiste des Studios (E512, E625, E674) ist dabei der Bestand, der
+  am meisten kann; sie wird nicht ersetzt, sondern die anderen holen zu
+  ihr auf, und was sie gemeinsam haben, wandert nach `src/core/gfx/`.
+
   **Reihenfolge:** nach den drei Datenbögen aus E681 (Kennungen im
-  Verlauf, `raumVersion`, gemeinsamer Verlauf) als Bogen 5 — es sei denn,
-  Redur zieht es vor. Mit Bildern am Rechner und am Telefon (§55.3), und
-  mit einem Wächter, der die Leiste misst, nicht liest (L206).
+  Verlauf, `raumVersion`, gemeinsamer Verlauf) als Bogen 5. Mit Bildern am
+  Rechner und am Telefon (§55.3), und mit einem Wächter, der die Leiste
+  misst, nicht liest (L206).
 
 ## ~~Rot, und älter als der Zweig — `test402`~~ — ERLEDIGT am 19. September (E627)
 

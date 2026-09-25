@@ -313,6 +313,16 @@ auf Blöcken in IndexedDB, und der Auftrag setzt CRDT zuletzt.
 Sonderwegen:** `SheetSpace` für alle Flächen, ein Verlauf für alle Flächen,
 eine Tastenregel. Alles drei liegt schon halb da.
 
+**Und die sichtbare Seite davon** hat Redur am 25. September mit einem
+Bild von AFFiNEs Edgeless-Leiste benannt („ich will so was haben wie die
+affine" · „integriere alles zusammen"): **eine** Werkzeugleiste für alle
+Flächen, aus einem Register (§5 Regel 3), mit Kürzeln, Untermenüs, Ziehen
+auf die Fläche und einem dichten Modus fürs Telefon — `AUFGABEN.md` W6.
+Der Kern bekommt damit einen Ort, `src/core/gfx/`, und vier Bewohner in
+dieser Reihenfolge: der Verlauf (Bogen 4), der Raum (heute `core/sheet/`,
+Bogen 3 bindet das Whiteboard an), die Werkzeuge (Bogen 5), die Tasten
+(E682 hat die Regel, das Register die Kürzel).
+
 ### 2.6 Datenrisiken je System
 
 | System | Risiko | Grad |
