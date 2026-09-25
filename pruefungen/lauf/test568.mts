@@ -256,7 +256,7 @@ try {
     await pg.waitForTimeout(500);
     const danach = await stand(pg, 'text', 'body');
     p('Der Seitenverlauf geht einen Schritt zurück', danach.block?.text === 'Zwei', 'text=' + JSON.stringify(danach.block?.text));
-    p('… und sagt es', danach.toasts.some(t => /Rückgängig/.test(t)), JSON.stringify(danach.toasts));
+    p('… und sagt es', (danach.toasts as string[]).some((t: string) => /Rückgängig/.test(t)), JSON.stringify(danach.toasts));
     await ktx.close();
   }
 
