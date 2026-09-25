@@ -2712,6 +2712,16 @@ IMMER etwas verlangt, wird nicht mehr gelesen. Zwanzig Bilder von
 unveränderten Seiten machen das eine Bild unsichtbar, auf dem die
 Werkzeugleiste aus dem Bild ragt.
 
+Und Redur hat es am 25. September 2026 noch einmal gesagt, damit es nicht
+zur Auslegungssache wird: „Könntest du mir von jeder Änderung, die du im
+Redion machst, wenn es etwas im Website ändert, mir alles fotografieren und
+schicken." Also: **jede** Änderung, die auf dem Bildschirm etwas ändert,
+bekommt ihre Bilder — alle Zustände, Rechner und Telefon —, und sie werden
+**geschickt**, nicht nur abgelegt. Was nichts am Bildschirm ändert (ein
+Kern, ein Verlauf, eine Umrechnung), bekommt seine Messung. Die Grenze
+zwischen beidem entscheidet nicht die Bequemlichkeit, sondern die Frage:
+sieht man es?
+
 ### 55.4 Die Bilder gehen nie auf GitHub
 
 `bilder/` steht in `.gitignore`. Bildschirmfotos sind Arbeitsmaterial, keine
