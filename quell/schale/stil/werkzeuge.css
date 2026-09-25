@@ -761,6 +761,8 @@ a.bl:hover{color:var(--text)}
 
 /* --- Whiteboard ---------------------------------------------------------------------------- */
 .wb{width:100%; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:8px 0}
+/* Der Kasten nimmt seit E682 die Tastatur (Strg+Z) — ein Fokus, den man sieht (§38), dieselbe Regel wie .sp-wrap */
+.wb:focus-visible{box-shadow:0 0 0 2px var(--accent); outline:none}
 .wb-tools{
   display:flex; align-items:center; gap:2px; padding:6px 8px; flex-wrap:wrap;
   border-bottom:1px solid var(--line); background:var(--bg-card);

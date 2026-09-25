@@ -3249,6 +3249,13 @@ const App = (() => {
       if (k === '[') { e.preventDefault(); zurueck(); return; }
       if (k === ']') { e.preventDefault(); vorwaerts(); return; }
       if (k === 'f' && !e.shiftKey) { e.preventDefault(); seitenSuche(); return; }
+      /* EINE TASTE, DIE EIN BLOCK SCHON GENOMMEN HAT, NIMMT DIE SCHALE NICHT
+         NOCH EINMAL (E682, L212). Planfläche, Marken, Whiteboard und
+         Gedankenkarte haben eigene Verläufe und nehmen Strg+Z selbst; die
+         Taste läuft trotzdem bis hierher. Gemessen am 25. September: der
+         Block nahm seinen Schritt zurück UND der Seitenverlauf baute die
+         Seite neu — mit frischen Kennungen für jeden Block (test568). */
+      if (e.defaultPrevented && (k === 'z' || k === 'y')) return;
       if (k === 'z' && !e.shiftKey) { e.preventDefault(); Verlauf.zurueck(); return; }
       /* Strg+Y ist Wiederholen — Strg+Umschalt+Y gehört den Favoriten,
          deshalb hier ausdrücklich ohne Umschalt. */

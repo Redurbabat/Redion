@@ -161,6 +161,29 @@ const Zusatz = (() => {
             daten.length = 0;
             JSON.parse(roh).forEach((form) => daten.push(form));
         };
+        /* ZURÜCK UND VOR SIND JE EINE FUNKTION, weil zwei Wege sie rufen — der
+           Knopf und die Taste. Bis E682 stand der Schritt nur im Klick-Horcher,
+           und das Whiteboard hatte gar keine Taste: Strg+Z fiel zur Schale durch
+           und nahm den SEITENVERLAUF zurück, der die Seite neu baut und jedem
+           Block eine frische Kennung gibt (test568 §3). */
+        const schrittZurueck = () => {
+            if (!zurueckStapel.length)
+                return;
+            vorStapel.push(abbild());
+            einsetzen(zurueckStapel.pop());
+            standZeigen();
+            male();
+            sichern();
+        };
+        const schrittVor = () => {
+            if (!vorStapel.length)
+                return;
+            zurueckStapel.push(abbild());
+            einsetzen(vorStapel.pop());
+            standZeigen();
+            male();
+            sichern();
+        };
         const standZeigen = () => {
             const zurueck = w.querySelector('[data-a="zurueck"]');
             const vor = w.querySelector('[data-a="vor"]');
@@ -548,7 +571,32 @@ const Zusatz = (() => {
         let aktiv = null, verschiebt = null, schiebt = null, groesst = null;
         const finger = new Map();
         let kneifen = null;
+        /* DIE TASTE GEHÖRT DER FLÄCHE (E682). Der Kasten ist fokussierbar wie
+           `.sp-wrap` der Planfläche; wer auf die Fläche tippt, hat danach die
+           Tastatur hier. `preventDefault` sagt der Schale, dass die Taste genommen
+           ist — sie fragt seit E682 danach, statt den Seitenverlauf zu bewegen.
+           Im Schreibfeld einer Textform gilt das nicht: dort gehört Strg+Z dem
+           Feld. */
+        w.tabIndex = 0;
+        w.addEventListener('keydown', (e) => {
+            const ziel = e.target;
+            if (ziel && (ziel.tagName === 'INPUT' || ziel.tagName === 'TEXTAREA' || ziel.isContentEditable))
+                return;
+            const strg = e.ctrlKey || e.metaKey;
+            if (!strg)
+                return;
+            const taste = e.key.toLowerCase();
+            if (taste === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                schrittZurueck();
+            }
+            else if ((taste === 'z' && e.shiftKey) || (taste === 'y' && !e.shiftKey)) {
+                e.preventDefault();
+                schrittVor();
+            }
+        });
         flaeche.addEventListener('pointerdown', (e) => {
+            w.focus({ preventScroll: true });
             flaeche.setPointerCapture(e.pointerId);
             finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (finger.size === 2) {
@@ -814,20 +862,10 @@ const Zusatz = (() => {
             const a = elVon(e)?.closest('[data-a]');
             if (!a)
                 return;
-            if (a.dataset.a === 'zurueck' && zurueckStapel.length) {
-                vorStapel.push(abbild());
-                einsetzen(zurueckStapel.pop());
-                standZeigen();
-                male();
-                sichern();
-            }
-            if (a.dataset.a === 'vor' && vorStapel.length) {
-                zurueckStapel.push(abbild());
-                einsetzen(vorStapel.pop());
-                standZeigen();
-                male();
-                sichern();
-            }
+            if (a.dataset.a === 'zurueck')
+                schrittZurueck();
+            if (a.dataset.a === 'vor')
+                schrittVor();
             if (a.dataset.a === 'leeren') {
                 if (!daten.length || confirm('Die ganze Zeichenfläche leeren?')) {
                     merken();

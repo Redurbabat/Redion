@@ -8230,11 +8230,15 @@ dabei mitläuft, ist gelesen, nicht gemessen: Grabsteine für den Abgleich
 Reihenfolge dieser Kette. E174 hat für den Markdown-Rundlauf entschieden,
 dass Kennungen bleiben; für den Verlauf steht die Entscheidung nicht.
 
-**Was fehlt:** ein neuer Wächter, der beides rot hält; für 1 eine
-Zeile in der Schale („eine Taste, die ein Block schon genommen hat, nimmt
-die Schale nicht noch einmal") — Bogen 1 nach dem Audit; für 2 eine
-Entscheidung Redurs (Audit, Frage 3) und eine Messung mit Anhang, bevor
-jemand `baumEinfuegen` anfasst.
+**Punkt 1 ist erledigt — 25. September 2026, E682, `test568`:** die
+Schale lässt eine Taste liegen, die ein Block schon genommen hat
+(`defaultPrevented`), und das Whiteboard hat seine Taste. Die Lücke bleibt
+für Punkt 2 offen.
+
+**Was fehlt:** für 2 eine Messung mit Anhang (überlebt ein Bild ein
+Strg+Z auf einer Textseite?) und dann `Verlauf.anwenden`, das Kennungen
+behält, statt zu purgen und neu anzulegen — der nächste Bogen (E681,
+Reihenfolge 2). Redur hat die Reihenfolge am 25. September freigegeben.
 
 ---
 

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-661 Entscheidungen, E1 bis E681 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+662 Entscheidungen, E1 bis E682 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -724,6 +724,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E679** — Der Trainer kennt zwei Kapitel: Redur, 22. September, „erstelle mir direkt lerne quiz im redion für kapitel 5,6,7 … beschriftet mit nummern, seiten im nin compact, wie im test". `nin-quiz.ts` meldet die Vorlage `nin-kapitel-5-7` (106 Aufgaben, 34 Prüfungsfragen aus zwei Probeprüfungen mit Nummer und Punkten, jede Karte mit Seite in der NIN Compact). Der Trainer findet Kapitel über `Register.vorlagen` (`trainer: true`), nimmt Themennamen von der Karte (`quiz.topic`) und trennt die Kapitel in der Übersicht (`quiz.kapitel`); die Prüfungsrunde je Kapitel. Wächter `test567`, Bilder `node bilder.mts trainerNin trainerNinFrage`.
 * **E680** — Die Antworten werden bei jeder Anzeige gemischt: Redur, 22. September, „wieso ist immer die ersten 3 richtig es sollte nicht so sein random keine muster“. Gespeichert stehen die richtigen Antworten meist zuerst; der Trainer zeigte sie so. Jetzt mischt `zeige` die Plätze, `data-tr-option` bleibt der gespeicherte Platz, die Buchstaben folgen der Anzeige, die Auswertung dem Speicher. Wächter `test567 §8` (18 von 18 am gespeicherten Platz → rot).
 * **E681** — Vor dem Umbau die Karte: der Plattform-Audit vom 25. September — `doku/REDION-PLATTFORM-AUDIT.md`, die erzeugte Karte `doku/karte/` (`karte.mts`), AFFiNE und SiYuan nur als Massstab, und der erste Schritt ist ein Wächter und eine Zeile (L212), kein Kern
+* **E682** — Strg+Z gehört der Fläche, die es genommen hat: die Schale lässt eine Taste liegen, die ein Block schon genommen hat (`defaultPrevented`), und das Whiteboard bekommt seine Taste — der erste Bogen nach dem Plattform-Audit (L212 Punkt 1, `test568`)
 
 ---
 
@@ -55658,3 +55659,62 @@ Zitat, die ersten zwei je System gegengeprüft von einem Leser, der sie
 widerlegen sollte. Dazu zwei eigene Sonden im laufenden Programm. Der
 Rechner hat vier Kerne, also liefen immer zwei Leser gleichzeitig — Redurs
 „25 agends" waren die Summe, nicht die Gleichzeitigkeit.
+
+## E682 — Strg+Z gehört der Fläche, die es genommen hat
+
+**Datum:** 25. September 2026 · **Wächter:** `test568` (26 Zusagen) ·
+**Lücke:** L212 Punkt 1
+
+**Redur:** „ja mach so weiter wie du vorschlägst und für die 3. ja
+whiteboard eine raumversion" — die Freigabe für die Reihenfolge aus dem
+Audit (E681, Frage 2). Das hier ist der erste Bogen davon.
+
+**Was war.** Gemessen im Audit (2.4): `Planflaeche` (`planflaeche.ts:1017`)
+und `Marken` (`marken.ts:4325`) nehmen Strg+Z mit `preventDefault()`, aber
+ohne `stopPropagation()`; die Schale hört am Dokument (`schale.ts`,
+`tasten()`) und rief bei jedem Strg+Z `Verlauf.zurueck()`. Ergebnis: der
+Block nahm seinen Schritt zurück UND der Seitenverlauf baute die Seite neu
+— `Store.kinderLeeren` purgt jedes Kind, `baumEinfuegen` setzt es mit
+frischer Kennung wieder ein. Im Schaltplan blieb das gesetzte Teil stehen
+(der Seitenverlauf holte den Stand von NACH dem Setzen zurück), auf dem
+Blatt ging ein Strich, und in beiden Fällen war der alte Block weg, sein
+eigener Verlauf mit ihm. Das Whiteboard hatte gar keine Taste — bei ihm
+war jedes Strg+Z ein Seitenverlauf.
+
+**Was entschieden wurde.**
+
+1. **Die Schale fragt, ob die Taste schon genommen ist.** Eine Zeile vor
+   den Verlaufstasten: `if (e.defaultPrevented && (k === 'z' || k === 'y'))
+   return;`. Nur für z und y — die übrigen Kürzel bleiben, wie sie waren
+   (§43: eine Änderung, ein Ziel). Warum nicht `stopPropagation` in jedem
+   Block? Weil dann JEDER künftige Block daran denken müsste; die Regel
+   „handled ist handled" gehört an die eine Stelle, die den Rückfall macht.
+   Die Gedankenkarte stoppt weiterhin selbst (E607) — doppelt sicher ist
+   hier nicht falsch.
+2. **Das Whiteboard bekommt die Taste.** `w.tabIndex = 0`, Fokus beim
+   Aufsetzen des Zeigers, ein `keydown` am Kasten: Strg+Z zurück,
+   Strg+Umschalt+Z und Strg+Y vor — über dieselben zwei Funktionen
+   `schrittZurueck`/`schrittVor`, die auch die Knöpfe rufen (§8: ein Weg).
+   Im Schreibfeld einer Textform gilt das nicht; dort gehört Strg+Z dem
+   Feld. Der Fokus ist sichtbar (`.wb:focus-visible`, §38), dieselbe Regel
+   wie `.sp-wrap`.
+3. **Nicht angefasst:** Planfläche und Marken. Sie tun schon das Richtige;
+   nur die Schale tat es doppelt.
+
+**Wächter `test568`**, fünf Abschnitte: Schaltplan (Teil setzen, Strg+Z →
+weg, Kennung gleich, Element gleich, kein Toast), Blatt (zwei Striche →
+einer, Block lebt), Whiteboard (Rechteck → weg → Strg+Umschalt+Z → wieder
+da), Gedankenkarte (war richtig, bleibt richtig — zwei Schritte für Anlegen
+und Text), und ein Textblock, an dem KEIN Block die Taste nimmt: dort geht
+der Seitenverlauf weiterhin zurück und sagt „Rückgängig". Der letzte
+Abschnitt ist der wichtigste gegen die Überreparatur. Gegen `a196b65` rot
+mit 13 von 25; Gegenprobe: die eine Zeile in der Schale raus → §1 bis §3
+rot.
+
+**Was das nicht löst.** L212 Punkt 2: der Seitenverlauf vergibt beim
+Zurücknehmen frische Kennungen. Das trifft jetzt nur noch, wen die Schale
+wirklich zurücknimmt — den Textblock, jede Seite ohne Fläche — und bleibt
+der nächste Bogen (E681, Reihenfolge 2).
+
+**Preis.** Ein fokussierbarer Kasten mehr in der Tab-Reihenfolge einer
+Seite; ein Fokusrahmen, den es vorher nicht gab.

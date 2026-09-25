@@ -325,6 +325,10 @@ eine Tastenregel. Alles drei liegt schon halb da.
 
 ### 2.7 Der kleinste nächste Schritt — in der Form von §26
 
+> **Erledigt am 25. September 2026 (E682, `test568`).** Redur hat die
+> Reihenfolge freigegeben; der Rest dieses Abschnitts ist der Plan, wie er
+> vor dem Bogen stand.
+
 ```txt
 Problem        Strg+Z in Planfläche und Marken nimmt zweimal zurück (2.4).
 Bereiche       bloecke (planflaeche), pdf (marken), schale (Horcher); das
