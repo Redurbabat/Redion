@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-663 Entscheidungen, E1 bis E683 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+664 Entscheidungen, E1 bis E684 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -726,6 +726,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E681** — Vor dem Umbau die Karte: der Plattform-Audit vom 25. September — `doku/REDION-PLATTFORM-AUDIT.md`, die erzeugte Karte `doku/karte/` (`karte.mts`), AFFiNE und SiYuan nur als Massstab, und der erste Schritt ist ein Wächter und eine Zeile (L212), kein Kern
 * **E682** — Strg+Z gehört der Fläche, die es genommen hat: die Schale lässt eine Taste liegen, die ein Block schon genommen hat (`defaultPrevented`), und das Whiteboard bekommt seine Taste — der erste Bogen nach dem Plattform-Audit (L212 Punkt 1, `test568`)
 * **E683** — Fremder Code darf in Redion, wenn er Redion verbessert: nie PDFs, Bilder oder Geheimnisse an Dritte, vorher Redur fragen, jedes Stück in `FREMDCODE.md` — Redurs Regel vom 25. September, dazu die Zählung (pdf.js eingepackt, WebLLM vom CDN, sonst nichts)
+* **E684** — Rückgängig ändert Inhalt, nicht Identität: `Store.baumAbgleichen` gleicht eine Seite über die Kennung mit dem Schnappschuss ab — Papierkorb statt Purge, Unterseiten und Zeilen als Blätter, kein Stempel ohne Unterschied; `Verlauf.anwenden` zieht um, `test569` mit 36 Zusagen (L212 GESCHLOSSEN)
 
 ---
 
@@ -55771,3 +55772,102 @@ festnageln. Bis Redur entscheidet, bleibt es.
 
 **Preis.** Eine Datei mehr, die stimmen muss; eine Frage mehr vor jeder
 Übernahme. Der Gewinn: Redur sieht auf einer Seite, was ihm gehört.
+
+## E684 — Rückgängig ändert Inhalt, nicht Identität
+
+**Datum:** 25. September 2026 · **Wächter:** `test569` (36 Zusagen) ·
+**Lücke:** L212 GESCHLOSSEN · **Bogen 2** aus E681, von Redur freigegeben
+(„ja mach so weiter wie du vorschlägst")
+
+**Was war.** `Verlauf.anwenden` (`src/kern/zustand/verlauf.ts`) stellte
+eine Seite so wieder her: `Store.kinderLeeren` — das ist `purgeBlock` je
+Kind: Grabsteine für den Abgleich (E254), Fassungen weg, Anhänge geprüft —
+und danach `Store.baumEinfuegen`, „immer mit frischen IDs". Gemessen
+(messungen.md, 25. September): eine Unterseite bekam durch ein Strg+Z auf
+der Elternseite eine neue Kennung, ihre geplante Fassung war gelöscht
+(1 → 0), ein Favorit zeigte auf die alte Kennung. `test70.mts:351` hielt
+das seit jeher als Tatsache fest; kein Wächter hielt das Gegenteil.
+
+**Wie entschieden wurde.** Drei unabhängige Entwürfe (kleinster Eingriff ·
+Datensicherheit zuerst · eine Funktion für alle sechs Stellen), zwei
+Richter mit den Blickwinkeln Ablage/Fassungen und Abgleich/zweites Gerät.
+Beide Richter setzten dasselbe zusammen, und so ist es gebaut:
+
+1. **Eine eigene Ablagefunktion** `Store.baumAbgleichen(pageId, daten)`
+   neben `baum`/`baumEinfuegen`/`kinderLeeren` — kein Schalter an
+   `baumEinfuegen`, das mit 18 Aufrufern frische Kennungen liefern MUSS
+   (duplizieren, einfügen, Vorlagen). `baumEinfuegen` und `kinderLeeren`
+   sind byteweise unverändert.
+2. **Über die Kennung:** was in beiden steht, wird an Ort und Stelle auf
+   das Bild gesetzt — Felder aus dem Bild, fehlende Felder gelöscht (sonst
+   überlebte ein Haken das Strg+Z, weil `Object.assign` nichts löscht),
+   `alive: true`; **gestempelt und gespeichert nur bei Unterschied** —
+   sonst trüge jedes Strg+Z die ganze Seite zum Server, und Gerät B bekäme
+   dreissig „Änderungen" für eine. Was nur auf der Seite steht → Papierkorb
+   (`trashBlock`), nie Purge. Was nur im Bild steht → aus dem Papierkorb
+   zurück (`restoreBlock`), sonst neu **mit der alten Kennung** (`addBlock`
+   nimmt sie aus dem Patch, E174), Grabstein zurück (`blockGrabsteinWeg`,
+   E254), `edited` jetzt — sonst trüge `zuSchicken` ihn nie hoch (E250).
+   `wolkeVersion` bleibt die des Bestands.
+3. **Unterseiten und Zeilen sind Blätter.** Eine Unterseite hat ihren
+   eigenen Verlauf (§15); der Abgleich fasst nur ihr Dasein und ihren
+   Platz an, nie ihr Inneres. Sonst nähme ein Strg+Z auf der Elternseite
+   eine Sperre ohne Passwort weg (`locked` fehlt im älteren Bild) und
+   überschriebe mit `edited = now()`, was ein zweites Gerät seither in der
+   Unterseite geschrieben hat — der Server nimmt das an, weil niemand
+   Versionen erhöht. Nur eine Unterseite, die es gar nicht mehr gibt, wird
+   samt Bild wieder angelegt. **Sichtbare Folge:** Strg+Z auf der
+   Elternseite setzt den Inhalt einer Unterseite nicht mehr zurück (§11).
+4. **Datenbanken:** Sammlung und vorhandene Ansichten werden per
+   Feldabgleich gesetzt, fehlende mit alter Kennung angelegt, **keine
+   Ansicht wird gelöscht** (der Abgleich kann das nicht ausdrücken;
+   eine später angelegte bleibt hinten in `viewIds`); Zeilen nur im
+   Dasein: neue in den Papierkorb, fehlende zurück. Verknüpfte Ansichten:
+   Finger weg (Spiegel von `purgeTief`).
+5. **Reihenfolge ist Teil der Zusage:** erst alle Sätze, dann die Kanten
+   (`content` je Behälter, nur bei Unterschied), dann weglegen.
+6. **Eine gesperrte Seite rührt der Verlauf nicht an** — `momentaufnahme`
+   schützte nur die offene Seite, der Stapel kann eine tragen, die seither
+   gesperrt wurde. Eine Zeile in `anwenden`.
+7. **Nur `Verlauf` zieht um.** Die zwei Fassungs-Wiederherstellungen
+   (`fassungen.ts:327`, `werkzeuge.ts:902`) haben denselben Fehler und
+   dasselbe Bildformat — sie kommen als nächster kleiner Bogen mit eigenem
+   Wächter, weil eine Fassung Wochen alt sein kann und dann Kennungen
+   trägt, deren Grabstein längst drüben ist. `entsperren`
+   (`werkzeuge.ts:1008`) erst, wenn L213 gemessen ist. `ausMarkdown`
+   (`dienst.ts:455`) bewusst nie: E174 hat dort seine eigene Regel.
+
+**Bekannte Grenze, die Redur entscheiden soll:** ein Block, der seit dem
+Bild auf eine ANDERE Seite gezogen wurde, wird nicht zurückgeholt (das
+wäre eine stille Löschung für die, die dort arbeiten), sondern wie bisher
+als Kopie mit frischer Kennung angelegt. Zwei Blöcke, eine Datei — der
+`dateiAnspruch` (E171) deckt es, schön ist es nicht.
+
+**Gemessen nach dem Bau** (dieselben Sonden wie vorher): Unterseite —
+Kennung gleich, Fassungen 1 → 1, Favorit gültig; Bild — Kennung gleich,
+Dateisatz zeigt auf denselben Block, 4096 Bytes.
+
+**Wächter `test569`, 36 Zusagen in zwölf Abschnitten:** Unterseite, Bild
+(auch nach Neuladen), Papierkorb statt Nichts, alte Kennung zurück, kein
+Purge (über `Store.on` gezählt — die Merkliste des Abgleichs bleibt ohne
+Wolke leer, deshalb steht `wolkeMarkeHoch` im Aufbau, sonst könnte
+„Merkliste leer" nie rot werden), Strg+Y, Datenbank (Sammlung, Ansichten,
+drei Zeilen, vierte im Papierkorb, Haken weg), `table`-Zellen (E114),
+kein Stempel ohne Unterschied, Idempotenz, Unterseite als Blatt,
+gesperrte Seite. Gegen `446266f` rot mit 10 von 20 (eingecheckt als
+`7e6d45e`, bevor eine Zeile Reparatur stand — §30). Vier Gegenproben, je
+gebaut und gefahren: der alte Weg zurück, fehlende Felder nicht löschen,
+immer stempeln, Purge statt Papierkorb.
+
+**Was die Richter nebenbei fanden** und als Lücken steht: L213 (`sperren`
+rechnet den Dateianspruch NACH dem Purge — löscht Sperren einer Seite mit
+Bild die Bytes?), L214 (`baumEinfuegen` übernimmt `edited`/`created` aus
+dem Knoten — schickt der Abgleich Duplikate je hoch?), L215 (`baum` hängt
+die Sammlung auch an verknüpfte Ansichten; Duplizieren kopiert die
+Datenbank). Alles gelesen, nichts gemessen — deshalb Lücken, keine
+Entscheidungen.
+
+**Preis.** Der Papierkorb füllt sich: jeder zurückgenommene neue Block
+liegt dort dreissig Tage. Umkehrbar statt endgültig ist die Wahl von §46;
+ob Undo-Reste im Papierkorb eine eigene Kennzeichnung brauchen, ist eine
+Frage an Redur. Und ~170 Zeilen in `indexdb.ts`, die stimmen müssen.

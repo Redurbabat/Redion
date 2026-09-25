@@ -4247,3 +4247,16 @@ von aussen (Favorit, Link, „zuletzt geöffnet", Erwähnung) zeigt auf einen
 Block, den es nicht mehr gibt. Ein Strg+Z auf der Elternseite löscht also
 den Verlauf der Unterseite. Das ist §15 in seiner einfachsten Form
 verletzt, und es ist der Grund, warum Bogen 2 vor `raumVersion` kommt.
+
+### Nachgemessen nach E684 (dieselben zwei Sonden)
+
+```txt
+                       Unterseite   alte lebt  Fassungen (alt / neu)  Favorit zeigt auf   Inhalt
+nach Strg+Z (2,5 s)    1d18fc4d…    JA         1 / 1                  die Unterseite      da
+                       (dieselbe Kennung wie vor dem Strg+Z)
+
+                       Bild-Block   Dateisatz  satz.blockId       Bytes  verwaist
+nach Strg+Z + Neuladen gleich       da         = derselbe Block   4096   nein
+```
+
+Die Zeile, um die es ging — „Fassungen 1 / 0" — heisst jetzt „1 / 1".

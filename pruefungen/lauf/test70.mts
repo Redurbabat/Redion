@@ -348,8 +348,10 @@ const pruef = (n: any, ist: any, soll: any) => {
     const c = Store.addBlock(s.id, 'text', { text: 'Zwei' });
     App.oeffne(s.id);
     await new Promise(r => setTimeout(r, 500));
-    /* Nach dem Rueckgaengigmachen wird der Teilbaum neu aufgebaut — die
-       Bloecke bekommen neue IDs. Verglichen wird deshalb der Text. */
+    /* Bis E684 wurde der Teilbaum beim Rueckgaengigmachen neu aufgebaut und
+       die Bloecke bekamen neue IDs — deshalb vergleicht dieser Lauf den Text.
+       Seit E684 bleiben die Kennungen (test569 haelt das); der Vergleich
+       ueber den Text bleibt richtig und wird nicht angefasst. */
     const texte = () => Store.childrenOf(s.id).map((y: any) => y.text);
     Transaktion.ausfuehren([
       { id: a.id, table: 'block', path: ['text'], command: 'set', args: 'X' },

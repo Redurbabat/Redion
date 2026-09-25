@@ -1,5 +1,95 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 25. September 2026 · E684 · Rückgängig ändert Inhalt, nicht Identität
+
+**Der Fund.** Gemessen beim Plattform-Audit: ein Strg+Z auf der Elternseite
+gab einer Unterseite eine neue Kennung, löschte ihre geplante Fassung
+(1 → 0) und liess einen Favoriten ins Leere zeigen. `Verlauf.anwenden` riss
+die Seite ab (`kinderLeeren` = Purge je Kind) und baute sie mit frischen
+Kennungen neu (`baumEinfuegen`). `test70` hielt das seit jeher als Tatsache
+fest.
+
+**Wie entschieden.** Drei unabhängige Entwürfe, zwei Richter (Ablage,
+Abgleich) — beide setzten dasselbe zusammen: eine eigene Funktion
+`Store.baumAbgleichen`, Abgleich über die Kennung, Papierkorb statt Purge,
+Unterseiten und Zeilen als Blätter, kein Stempel ohne Unterschied, keine
+Ansicht wird gelöscht. Nur `Verlauf` zieht um; die Fassungen folgen als
+eigener kleiner Bogen.
+
+**Geprüft.** `test569` — eingecheckt als rot (10 von 20), BEVOR eine Zeile
+Reparatur stand (§30); mit E684 36 Zusagen in zwölf Abschnitten. Vier
+Gegenproben, je gebaut und gefahren: alter Weg zurück → 21 rot; fehlende
+Felder nicht löschen → genau der Haken rot; immer stempeln; Purge statt
+Papierkorb. Nachbarn: `test70`, `test188`, `test568`, `test226`, `test229`,
+`test265`, `test48`, `test89`, `test96`, `test100`, `test105`, `test109`,
+`test537`, `test550`. Dieselben zwei Sonden wie vorher: Fassungen 1 → 1.
+
+**Nebenfunde der Richter** als L213–L215 eingetragen: gelesen, nicht
+gemessen — Sperren rechnet den Dateianspruch nach dem Purge; `baumEinfuegen`
+übernimmt `edited`; `baum` hängt die Sammlung an verknüpfte Ansichten.
+
+---
+
+## 25. September 2026 · E683 · Fremder Code darf in Redion, wenn er Redion verbessert
+
+**Redurs Regel**, wörtlich in `FREMDCODE.md` und als CLAUDE.md §57: fremder
+Code ja, wenn er Redion verbessert; nie PDFs, Bilder oder Geheimnisse an
+Dritte; vorher Redur fragen; jedes Stück in `FREMDCODE.md`. **Die Zählung**,
+damit die Datei mit der Wahrheit beginnt: pdf.js (eingepackt, 6.2.108,
+Apache-2.0, `test177`) und WebLLM (zur Laufzeit vom CDN, ohne Fassung —
+offene Frage), sonst nichts. AFFiNE und SiYuan gelesen, nichts genommen.
+
+---
+
+## 25. September 2026 · E682 · Strg+Z gehört der Fläche, die es genommen hat
+
+**Der Fund.** Strg+Z in Planfläche und auf dem Blatt nahm zweimal zurück:
+der Block seinen Schritt, die Schale den ganzen Seitenverlauf — Meldung
+„Rückgängig", Block neu gezeichnet, neue Kennung. Das Whiteboard hatte gar
+keine Taste. Gemessen mit zwei Sonden, bevor eine Zeile geändert wurde.
+
+**Gebaut.** Eine Zeile in der Schale: eine Taste, die ein Block schon
+genommen hat (`defaultPrevented`), nimmt die Schale nicht noch einmal —
+nur für z und y. Das Whiteboard bekommt seine Taste über dieselben zwei
+Funktionen wie seine Knöpfe, einen fokussierbaren Kasten und einen Fokus,
+den man sieht (§38).
+
+**Geprüft.** `test568`, 26 Zusagen: Schaltplan, Blatt, Whiteboard,
+Gedankenkarte (zwei Schritte für Anlegen und Text — das hat den Wächter
+selbst belehrt) und ein Textblock, an dem die Schale weiterhin zurücknehmen
+MUSS. Gegen den alten Stand rot mit 13 von 25; Gegenprobe (Zeile raus) rot.
+Zwölf Nachbarn grün; `test105` fand einen Typfehler im Wächter selbst.
+Bild: Whiteboard nach Strg+Z → Strg+Umschalt+Z mit Fokusrahmen.
+
+---
+
+## 25. September 2026 · E681 · Der Plattform-Audit — Teil 1 und die Karte
+
+**Der Auftrag.** Redurs Master-Prompt: erst lesen, dann ein kleinster
+Schritt; GFX-Kern, Plugin-SDK, Katalog, CLI. Elf Leser je System, zwei für
+die Referenzen (AFFiNE MIT, SiYuan AGPL — nur gelesen), je zwei Duplikate
+gegengeprüft.
+
+**Was herauskam** (`doku/REDION-PLATTFORM-AUDIT.md`): Redion hat schon
+einen halben GFX-Kern (`SheetSpace`, `InkGeometry`, `InkShapes`,
+`InkStroke`, `Folien`), den nur die PDF-Schicht benutzt; vier eigene
+Rückgängig-Stapel nach demselben Muster; drei eigene Zeigerumrechnungen;
+`esc` 68-mal, 54-mal ohne Apostroph; `test537` sieht `(globalThis as any)`
+nicht (L211). Und zwei Messungen, aus denen E682 und E684 wurden.
+
+**Die Karte** (`doku/karte/`, Redur: „erstelle dabei eine obsidein/graphy
+datei"): `karte.json` als Quelle, `karte.mts` als Schreiber, eine Notiz je
+System und je Kern, ein Graph, dessen Kanten aus den Befunden gerechnet
+sind — benutzt, nicht nur genannt. Die erste Fassung hatte beides gleich
+gemalt; der Fehler steht in E681.
+
+**Offen daraus:** Teil 2 (die Kapitel A–S aus den Lesern), W6 (die
+Werkzeugleiste nach dem Edgeless-Vorbild, für alle Flächen — „integriere
+alles zusammen"), Bogen 3 (`raumVersion` fürs Whiteboard, von Redur
+freigegeben), Bogen 4 (der gemeinsame Verlauf).
+
+---
+
 ## 20. September 2026 · E666 · „Erinnerung" führt zu einer Erinnerung
 
 **Der Fund.** Der Slash-Eintrag „Erinnerung ⏰" schrieb `@remind ` in den

@@ -1220,14 +1220,16 @@ erste Anlauf des Wächters erwartete einen. Gezählt am 25. September, im
 selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 510.*
 
 *Und 511: `test569` — der Seitenverlauf behält, was ihm nicht gehört
-(L212 Punkt 2). Er steht hier, bevor die Reparatur steht, und zwar mit
-Absicht: §30 sagt „zuerst ein Prüflauf, dann die Reparatur", und dieser ist
-gegen `446266f` rot mit 10 von 20 — die Unterseite wechselt die Kennung,
-ihre Fassung ist weg, drei Purges auf zwei Schritten zurück. Sein §5 zählt
-die Purges über `Store.on`, weil die Merkliste des Abgleichs ohne Wolke
-leer bleibt und ein leerer Zähler nichts beweist (§55.2). Gezählt am
-25. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l`
-sagt 511.*
+(E684, L212 Punkt 2). Er stand eingecheckt, bevor die Reparatur stand, und
+zwar mit Absicht: §30 sagt „zuerst ein Prüflauf, dann die Reparatur", und
+er war gegen `446266f` rot mit 10 von 20 — die Unterseite wechselte die
+Kennung, ihre Fassung war weg, drei Purges auf zwei Schritten zurück. Mit
+E684 hält er 36 Zusagen in zwölf Abschnitten; vier Gegenproben haben ihn
+wieder rot gemacht. Sein §5 zählt die Purges über `Store.on`, weil die
+Merkliste des Abgleichs ohne Wolke leer bleibt und ein leerer Zähler nichts
+beweist (§55.2) — und setzt die Marke, damit sie überhaupt schreiben würde.
+Gezählt am 25. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 511.*
 
 ### Die Befehle
 

@@ -29,6 +29,17 @@
  *   5  Kein Purge auf dem Weg zurück (gezählt über `Store.on`), und keine
  *      Grabsteine für Blöcke, die noch da sind.
  *   6  Wiederholen (Strg+Y) geht denselben Weg zurück, Kennungen gleich.
+ *   7  Datenbank auf der Seite: Sammlung, Ansicht und drei Zeilen behalten
+ *      ihre Kennungen; eine danach angelegte Zeile liegt im Papierkorb; eine
+ *      danach angelegte Ansicht bleibt (Ansichten werden nie gelöscht); ein
+ *      danach gesetzter Haken ist weg; die Zahl der Sammlungen ist gleich.
+ *   8  Ein `table`-Block behält seine Zellen (E114).
+ *   9  Wer sich nicht geändert hat, wird nicht gestempelt — sonst trüge jedes
+ *      Strg+Z die ganze Seite zum Server.
+ *  10  Zweimal dasselbe Bild bewegt nichts (Idempotenz, §10).
+ *  11  Eine Unterseite ist ein Blatt: was seit dem Bild IN ihr geschrieben
+ *      wurde, bleibt.
+ *  12  Eine inzwischen gesperrte Seite rührt der Verlauf nicht an.
  *
  * GEGEN DEN ALTEN STAND (446266f) rot in §1, §2, §4, §5: Kennungen wechseln,
  * Fassungen fehlen, Grabsteine liegen.
@@ -170,6 +181,10 @@ try {
       const bleibt = Store.addBlock(s.id, 'text', { text: 'bleibt' });
       const geht = Store.addBlock(s.id, 'text', { text: 'wird gelöscht' });
       Store.setMeta('wolkeBloeckeWeg', []);
+      /* Mit Marke schreibt `blockGrabstein` — ohne sie nie (indexdb.ts), und
+         „Merkliste leer" könnte gegen keinen Stand rot werden. Die Marke
+         allein löst keinen Netzruf aus: `abgleichen` verlangt `angemeldet()`. */
+      Store.setMeta('wolkeMarkeHoch', '2000-01-01T00:00:00.000Z');
       /* Ohne Wolke sammelt die Merkliste nichts (E254: „Nur-Lokal-Nutzer
          sammeln nichts an") — also zählen wir die Purges selbst. */
       (window as any).__purges = 0;
@@ -219,6 +234,136 @@ try {
     }, ids);
     p('Strg+Y löscht ihn wieder', wieder.gehtWeg && !wieder.texte.includes('wird gelöscht'), JSON.stringify(wieder.texte));
     p('Der bleibende Block hat immer noch seine Kennung', wieder.bleibtGleich);
+    await ktx.close();
+  }
+
+  /* ── §7 + §8 + §9: Datenbank, Tabelle, Stempel ─────────────────────────── */
+  console.log('\n7 · Datenbank: Kennungen bleiben, Neues geht in den Papierkorb, Ansichten bleiben');
+  {
+    const { ktx, pg } = await frisch();
+    const ids = await pg.evaluate(async () => {
+      const s = Store.addPage(null, { text: 'Datenbankseite' });
+      const t = Store.addBlock(s.id, 'text', { text: 'Eins' });
+      const todo = Store.addBlock(s.id, 'todo', { text: 'offen' });
+      const tab = Store.addBlock(s.id, 'table', { text: '', rows: [['Jahr', 'Wert'], ['2026', '19']] });
+      const db = Store.addDatabase(s.id, 'Probe');
+      const zeilen = [1, 2, 3].map(n => Store.addRow(db.collectionId, { title: 'Zeile ' + n }).id);
+      await Store.flush(); App.zeichneBaum(); App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 900));
+      document.querySelectorAll('#rg-willkommen, .overlay').forEach(x => x.remove());
+      return { seite: s.id, text: t.id, todo: todo.id, tab: tab.id, block: db.block.id, coll: db.collectionId, view: db.viewId, zeilen,
+               sammlungen: Object.keys(Store.cache.collections).length };
+    });
+    await pg.waitForTimeout(800);
+    /* Nach dem Bild: eine Zeile, eine Ansicht, ein Haken, ein Text. */
+    const danach = await pg.evaluate((x: any) => {
+      Store.updateBlock(x.text, { text: 'Zwei' });
+      const z4 = Store.addRow(x.coll, { title: 'Zeile 4' }).id;
+      const v2 = Store.addView(x.coll, 'board', 'Tafel')?.id ?? null;
+      Store.updateBlock(x.todo, { checked: true });
+      const tabVorher = Store.getBlock(x.tab).edited;
+      return { z4, v2, tabVorher };
+    }, ids);
+    await pg.waitForTimeout(800);
+    await pg.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); });
+    await pg.keyboard.press('Control+z');
+    await pg.waitForTimeout(1500);
+    const r = await pg.evaluate((x: any) => {
+      const kinder = Store.childrenOf(x.seite) as any[];
+      const dbBlock = kinder.find(k => k.type === 'database' || k.collectionId === x.coll);
+      const coll = Store.cache.collections[x.coll];
+      const tab = Store.getBlock(x.tab);
+      const todo = Store.getBlock(x.todo);
+      const z4 = Store.getBlock(x.z4);
+      return {
+        texte: kinder.filter(k => k.type === 'text').map(k => k.text),
+        blockId: dbBlock?.id ?? null, collDa: !!coll, viewIds: coll?.viewIds ?? [],
+        zeilenLeben: x.zeilen.every((id: string) => Store.getBlock(id)?.alive === true),
+        z4Alive: z4 ? z4.alive : 'weg', z4Da: !!z4,
+        sammlungen: Object.keys(Store.cache.collections).length,
+        tabRows: JSON.stringify(tab?.rows ?? null), tabEdited: tab?.edited ?? null,
+        todoChecked: todo?.checked ?? null, todoErledigt: todo?.erledigtAm ?? null,
+      };
+    }, { ...ids, z4: danach.z4 });
+    p('Der Text ist zurückgenommen', JSON.stringify(r.texte) === '["Eins"]', JSON.stringify(r.texte));
+    p('Der Datenbank-Block behält seine Kennung', r.blockId === ids.block, `${ids.block.slice(0, 8)}… → ${String(r.blockId).slice(0, 8)}…`);
+    p('Die Sammlung ist dieselbe', r.collDa && r.sammlungen === ids.sammlungen, `sammlungen ${ids.sammlungen} → ${r.sammlungen}`);
+    p('Die alte Ansicht steht vorn, die neue bleibt hinten', r.viewIds[0] === ids.view && (danach.v2 ? r.viewIds.includes(danach.v2) : true), JSON.stringify(r.viewIds.map((v: string) => v.slice(0, 8))));
+    p('Die drei Zeilen leben mit ihren Kennungen', r.zeilenLeben);
+    p('Die vierte Zeile liegt im Papierkorb, nicht im Nichts', r.z4Da && r.z4Alive === false, JSON.stringify({ da: r.z4Da, alive: r.z4Alive }));
+    p('Der Haken nach dem Bild ist weg', !r.todoChecked && !r.todoErledigt, JSON.stringify({ checked: r.todoChecked, erledigtAm: r.todoErledigt }));
+    console.log('\n8 · Die Tabelle behält ihre Zellen (E114)');
+    p('rows unverändert', r.tabRows === JSON.stringify([['Jahr', 'Wert'], ['2026', '19']]), r.tabRows);
+    console.log('\n9 · Wer sich nicht geändert hat, wird nicht gestempelt');
+    p('Die Tabelle trägt denselben Stempel wie vorher', r.tabEdited === danach.tabVorher, `${danach.tabVorher} → ${r.tabEdited}`);
+    console.log('\n10 · Zweimal dasselbe Bild bewegt nichts');
+    const idem = await pg.evaluate((x: any) => {
+      const bild = Store.baum(x.seite);
+      const vorher = (Store.childrenOf(x.seite) as any[]).map(k => k.id + ':' + k.edited).join('|');
+      const a = Store.baumAbgleichen(x.seite, bild);
+      const b = Store.baumAbgleichen(x.seite, bild);
+      const nachher = (Store.childrenOf(x.seite) as any[]).map(k => k.id + ':' + k.edited).join('|');
+      return { a, b, gleich: vorher === nachher };
+    }, ids);
+    p('Der Abgleich mit dem eigenen Bild schreibt nichts', idem.gleich && idem.a?.gesetzt === 0 && idem.a?.weggelegt === 0 && idem.b?.gesetzt === 0, JSON.stringify(idem));
+    await ktx.close();
+  }
+
+  /* ── §11 Unterseite ist ein Blatt ─────────────────────────────────────── */
+  console.log('\n11 · Was seit dem Bild in der Unterseite geschrieben wurde, bleibt');
+  {
+    const { ktx, pg } = await frisch();
+    const ids = await pg.evaluate(async () => {
+      const eltern = Store.addPage(null, { text: 'Eltern' });
+      const t = Store.addBlock(eltern.id, 'text', { text: 'Eins' });
+      const kind = Store.addPage(eltern.id, { text: 'Unterseite' });
+      Store.addBlock(kind.id, 'text', { text: 'alt' });
+      await Store.flush(); App.zeichneBaum(); App.oeffne(eltern.id);
+      await new Promise(f => setTimeout(f, 900));
+      document.querySelectorAll('#rg-willkommen, .overlay').forEach(x => x.remove());
+      return { eltern: eltern.id, text: t.id, kind: kind.id };
+    });
+    await pg.waitForTimeout(800);
+    await pg.evaluate((x: any) => { Store.updateBlock(x.text, { text: 'Zwei' }); Store.addBlock(x.kind, 'text', { text: 'neu in der Unterseite' }); Store.updateBlock(x.kind, { text: 'Unterseite, umbenannt' }); }, ids);
+    await pg.waitForTimeout(800);
+    await pg.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); });
+    await pg.keyboard.press('Control+z');
+    await pg.waitForTimeout(1500);
+    const r = await pg.evaluate((x: any) => ({
+      texte: (Store.childrenOf(x.eltern) as any[]).filter(k => k.type === 'text').map(k => k.text),
+      innen: (Store.childrenOf(x.kind) as any[]).map(k => k.text),
+      titel: Store.getBlock(x.kind)?.text, kennung: !!Store.getBlock(x.kind),
+    }), ids);
+    p('Die Elternseite ist zurückgenommen', JSON.stringify(r.texte) === '["Eins"]', JSON.stringify(r.texte));
+    p('Die Unterseite lebt mit ihrer Kennung', r.kennung);
+    p('Ihr neuer Block ist noch da', r.innen.includes('neu in der Unterseite'), JSON.stringify(r.innen));
+    p('Ihr neuer Titel auch', r.titel === 'Unterseite, umbenannt', JSON.stringify(r.titel));
+    await ktx.close();
+  }
+
+  /* ── §12 Gesperrte Seite ─────────────────────────────────────────────── */
+  console.log('\n12 · Eine inzwischen gesperrte Seite rührt der Verlauf nicht an');
+  {
+    const { ktx, pg } = await frisch();
+    const ids = await pg.evaluate(async () => {
+      const s = Store.addPage(null, { text: 'Bald gesperrt' });
+      const t = Store.addBlock(s.id, 'text', { text: 'Eins' });
+      await Store.flush(); App.zeichneBaum(); App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 900));
+      document.querySelectorAll('#rg-willkommen, .overlay').forEach(x => x.remove());
+      return { seite: s.id, text: t.id };
+    });
+    await pg.waitForTimeout(800);
+    await pg.evaluate((x: any) => { Store.updateBlock(x.text, { text: 'Zwei' }); }, ids);
+    await pg.waitForTimeout(800);
+    await pg.evaluate((x: any) => { Store.updateBlock(x.seite, { locked: true }); }, ids);
+    await pg.waitForTimeout(800);
+    await pg.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); });
+    await pg.keyboard.press('Control+z');
+    await pg.waitForTimeout(1200);
+    const r = await pg.evaluate((x: any) => ({ locked: Store.getBlock(x.seite)?.locked, text: Store.getBlock(x.text)?.text }), ids);
+    p('Die Sperre steht noch', r.locked === true, JSON.stringify(r));
+    p('Der Inhalt ist unangetastet', r.text === 'Zwei', JSON.stringify(r));
     await ktx.close();
   }
 

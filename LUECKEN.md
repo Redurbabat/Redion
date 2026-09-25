@@ -8203,7 +8203,7 @@ Weg, den niemand prüft.
 
 ---
 
-## L212 · Strg+Z nimmt zweimal zurück — und der Seitenverlauf vergibt neue Kennungen — 25. September 2026
+## L212 · ~~Strg+Z nimmt zweimal zurück — und der Seitenverlauf vergibt neue Kennungen~~ — GESCHLOSSEN am 25. September 2026 (Punkt 1 E682/`test568`, Punkt 2 E684/`test569`)
 
 **Gefunden am 25. September 2026**, gemessen mit zwei Sonden im laufenden
 Programm (Ausgabe wörtlich in `doku/REDION-PLATTFORM-AUDIT.md`, 2.4).
@@ -8241,12 +8241,64 @@ Dateisatz wird auf den neuen Block umgehängt, die Bytes bleiben. Eine
 Fassung ist gelöscht (1 → 0), ein Favorit zeigt auf die alte Kennung.
 Ein Strg+Z auf der Elternseite löscht den Verlauf der Unterseite (§15).
 
-**Was fehlt:** `Verlauf.anwenden`, das Kennungen behält — abgleichen statt
-purgen und neu anlegen —, ein Wächter, der die Unterseite mit Fassung und
-Favorit hält, und derselbe Blick auf die fünf anderen Stellen mit
-`kinderLeeren` + `baumEinfuegen` (fassungen.ts, werkzeuge.ts ×2, dienst.ts,
-wissensseiten.ts). Der nächste Bogen (E681, Reihenfolge 2); Redur hat die
-Reihenfolge am 25. September freigegeben.
+**Punkt 2 ist erledigt — 25. September 2026, E684, `test569` (36 Zusagen):**
+`Store.baumAbgleichen` gleicht über die Kennung ab, Papierkorb statt Purge,
+Unterseiten und Zeilen als Blätter; nach dem Bau: Unterseite Kennung gleich,
+Fassungen 1 → 1, Favorit gültig. **Damit ist die Lücke geschlossen.** Was
+davon offen bleibt, hat eigene Nummern: die zwei Fassungs-Wiederherstellungen
+(`fassungen.ts:327`, `werkzeuge.ts:902`) gehen noch den alten Weg — nächster
+kleiner Bogen —, und L213 bis L215 stehen darunter.
+
+---
+
+## L213 · Sperren rechnet den Dateianspruch NACH dem Purge — gehen die Bytes eines Bildes mit? — 25. September 2026
+
+**Gelesen, nicht gemessen** — von den Richtern des Bogens E684. `sperren`
+(`src/bereiche/wissen/werkzeuge.ts:991`) ruft `Store.kinderLeeren`, also
+`purgeBlock` je Kind. `purgeBlock` (`indexdb.ts`) rechnet `dateiAnspruch()`
+erst NACH `purgeTief` — wenn die Kinder der gesperrten Seite schon aus dem
+Zwischenspeicher sind. Nach dieser Lesart hat dann niemand mehr Anspruch
+auf ein Bild der Seite: `purgeAnhaenge` löst die Stücke und meldet dem
+Server die Datei als weg. Entsperren legt die Blöcke aus dem Chiffrat
+wieder an — mit einer `dateiId`, hinter der keine Bytes mehr liegen.
+
+Wenn das stimmt, ist es §9 und §51 in einem Satz: **Sperren einer Seite
+mit Bild löscht das Bild.** Wenn es nicht stimmt, gehört der Grund daneben.
+Erst messen (eine Sonde wie in messungen.md, 25. September: Seite mit Bild
+sperren, entsperren, Bytes zählen), dann entscheiden — und bis dahin fasst
+kein Bogen `sperren`/`entsperren` an (E684 Punkt 7).
+
+---
+
+## L214 · `baumEinfuegen` übernimmt `edited` und `created` aus dem Knoten — 25. September 2026
+
+**Gelesen, nicht gemessen.** `baumEinfuegen` (`indexdb.ts`) löscht aus dem
+Knoten nur `id`, `kinder`, `collection`, `views`, `content`; `addBlock`
+lässt den Patch gewinnen. Ein dupliziertes, eingefügtes oder aus einer
+Vorlage gesetztes Stück trägt damit den `edited`-Stempel des Originals —
+und `zuSchicken` (`maschine.ts`) fragt nach `edited > wolkeMarkeHoch`. Ist
+das Original älter als die Marke, käme das Duplikat nie zum Server: lokal
+da, drüben nie. Dieselbe Falle wie E250/L73, nur eine Ebene tiefer.
+
+**Was fehlt:** eine Messung mit gesetzter Marke (`Abgleich.zuSchicken()`
+enthält das Duplikat?), dann — wenn es stimmt — `delete patch.edited` an
+der einen Stelle und ein Wächter, der ein Duplikat mit frischem Stempel
+verlangt (`test226` als Nachbar).
+
+---
+
+## L215 · `baum` hängt die Sammlung auch an verknüpfte Ansichten — Duplizieren kopiert die Datenbank — 25. September 2026
+
+**Gelesen, nicht gemessen.** `baum` (`indexdb.ts`) prüft nur
+`x.collectionId`, nicht `verknuepft`; `baumEinfuegen` legt bei
+`k.collection` eine NEUE Sammlung samt Ansichten und Zeilen an. Ein
+dupliziertes verknüpftes Datenbank-Fenster (`verknuepft: true`, E?) müsste
+damit eine Kopie der ganzen Datenbank erzeugen statt eines zweiten
+Fensters auf dieselbe. `purgeTief` kennt die Ausnahme (`!b.verknuepft`),
+`baum`/`baumEinfuegen` nicht.
+
+**Was fehlt:** duplizieren, Sammlungen zählen; wenn es stimmt, in `baum`
+die Sammlung nur an nicht-verknüpfte Blöcke hängen — mit Wächter.
 
 ---
 
@@ -8535,7 +8587,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 25. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 108 Lücken, 57 offene und 51 geschlossene. Der Befehl dazu ist
+Datei führt 111 Lücken, 59 offene und 52 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

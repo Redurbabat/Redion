@@ -23,6 +23,16 @@
  * `sperre` verhindert das Naheliegende: Zurücknehmen schreibt in den Speicher,
  * der Speicher ruft `merke`, und das Zurückgenommene stünde sofort wieder als
  * Schritt im Stapel.
+ *
+ * ─── RÜCKGÄNGIG ÄNDERT INHALT, NICHT IDENTITÄT (E684) ───────────────────
+ *
+ * Ein Schnappschuss ist ein Zustand — aber zurückgesetzt wird über die
+ * KENNUNG: `Store.baumAbgleichen` setzt jeden Block, den es noch gibt, an
+ * Ort und Stelle auf das Bild, legt weg, was nur hier stand (Papierkorb),
+ * und holt mit alter Kennung zurück, was nur im Bild steht. Unterseiten und
+ * Zeilen sind dabei Blätter: ihr Dasein und ihr Platz, nie ihr Inneres.
+ * Vorher wurde die Seite abgerissen und neu gebaut; test569 hält, was das
+ * kostete.
  * ==========================================================================*/
 const Verlauf = (() => {
     const zurueckStapel = [];
@@ -62,8 +72,17 @@ const Verlauf = (() => {
             sperre = false;
             return;
         }
-        Store.kinderLeeren(m.pageId);
-        (m.daten.kinder || []).forEach((k) => Store.baumEinfuegen(k, m.pageId));
+        /* Eine gesperrte Seite rührt der Verlauf nicht an — `momentaufnahme`
+           schützt nur die OFFENE Seite, der Stapel kann eine tragen, die seither
+           gesperrt wurde (E684). */
+        if (p.locked) {
+            sperre = false;
+            return;
+        }
+        /* ABGLEICHEN, NICHT ABREISSEN (E684, L212). Bis hierher stand hier
+           `kinderLeeren` + `baumEinfuegen`: jedes Kind gepurgt, jedes mit frischer
+           Kennung neu — eine Unterseite verlor dabei Kennung und Fassungen. */
+        Store.baumAbgleichen(m.pageId, m.daten);
         Store.updateBlock(m.pageId, { text: m.daten.text, icon: m.daten.icon });
         if (App.aktuelleSeite() !== m.pageId)
             App.oeffne(m.pageId);
