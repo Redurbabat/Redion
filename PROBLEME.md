@@ -124,6 +124,9 @@ sind der teuerste Teil und der lehrreichste.
 | P108 | 2026-09-25 | Strg+Z nahm zweimal zurück — der Block und die ganze Seite | 🟠 mittel | — |
 | P109 | 2026-09-25 | Der Seitenverlauf gab jedem Block neue Kennungen — und löschte die Fassungen der Unterseiten | hoch | — |
 | P110 | 2026-09-25 | Ein Commit ohne seinen Inhalt — das Schreibskript war an einem Anführungszeichen gescheitert | 🟡 klein | — |
+| P111 | 2026-09-25 | Eine Prüfung, die wider Erwarten grün blieb — der Audit hatte die Handformel für falsch erklärt | 🟡 klein | — |
+| P112 | 2026-09-25 | Tiefe 0 wurde zu Tiefe 40 — `Number(x) || 40` hält 0 für „nichts gesagt“ | 🟡 klein | — |
+| P113 | 2026-09-25 | Die Startdecke war sechs Tage lang gerissen, und kein Bogen hatte den Lauf als Nachbarn | 🟡 klein | — |
 
 ---
 
@@ -2395,4 +2398,61 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Nachtrag f014fa3 mit den drei fehlenden Änderungen; danach test549 6/6.
 
 **Die Lehre.** Zeichenketten mit Redions Anführungszeichen nur in dreifachen Anführungszeichen schreiben — und ein Commit gehört hinter ein `&&`, nicht hinter ein Zeilenende.
+
+
+---
+
+## P111 · Eine Prüfung, die wider Erwarten grün blieb — der Audit hatte die Handformel für falsch erklärt
+
+*2026-09-25 · 🟡 klein*
+
+**Das Bild.** test570 §3 sollte mit scale(0.8) am Elternteil zeigen, dass die Handformel des Whiteboards (sicht.x + (clientX - left) / sicht.z) vom Ergebnis der Matrix abweicht. Sie war grün: beide Rechnungen gaben dieselben Zahlen.
+
+**Die falsche Vermutung.** Drei Formeln für Bildschirm → Raum, eine Matrix — also rechnen die Formeln bei jeder Transformation des Elternteils falsch (Audit D2, R3).
+
+**Wie es gefunden wurde.** Der Wächter lief gegen den ALTEN Stand und blieb an der Stelle grün, an der er rot sein sollte (§50: ein Wächter muss rot gewesen sein). Erst rotate(180deg) trennte Formel und Matrix: „ist 394,168 soll 312,192“.
+
+**Die Ursache.** Der viewBox des SVG wird aus demselben Kasten gerechnet, den getBoundingClientRect liefert; bei achsenparalleler Skalierung kürzt sich der Faktor heraus. Falsch wird die Formel nur bei Drehung oder Scherung.
+
+**Der Beweis.** test570 §3 (scale) grün und §3b (rotate) rot gegen den alten Stand; mit der Matrix beide grün. Audit D2 und E686 berichtigt.
+
+**Die Lehre.** Eine Behauptung im Audit ist eine Vermutung, bis ein Wächter sie rot gezeigt hat. Und ein Wächter, der grün bleibt, wo er rot sein sollte, ist kein zu schwacher Wächter, sondern ein Fund über die Behauptung (§55.2).
+
+
+---
+
+## P112 · Tiefe 0 wurde zu Tiefe 40 — `Number(x) || 40` hält 0 für „nichts gesagt“
+
+*2026-09-25 · 🟡 klein*
+
+**Das Bild.** test571: „Die Tiefe ist mindestens 1“ rot — GfxHistory.erstelle(0).stand().tiefe war 40, nicht 1.
+
+**Die falsche Vermutung.** `Number(tiefe) || 40` sei die Vorgabe für „keine Zahl angegeben“.
+
+**Wie es gefunden wurde.** Der Wächter, im selben Bogen wie der Kern geschrieben; der Kern war vor dem Wächter falsch, und der Lauf hat es beim ersten Mal gedruckt.
+
+**Die Ursache.** `||` behandelt 0 wie undefined. Wer 0 sagt, meint 0 — und bekommt seither die Untergrenze 1; nur was gar keine Zahl ist (Number.isFinite falsch), fällt auf 40 zurück.
+
+**Der Beweis.** test571 24/24 nach der Änderung; die Zusage prüft erstelle(0) → 1, erstelle(-5) → 1, erstelle() → 40.
+
+**Die Lehre.** Vorgaben mit `??` oder Number.isFinite setzen, nie mit `||`, wenn 0 ein gültiger Wert ist.
+
+
+---
+
+## P113 · Die Startdecke war sechs Tage lang gerissen, und kein Bogen hatte den Lauf als Nachbarn
+
+*2026-09-25 · 🟡 klein*
+
+**Das Bild.** test388 §5: „Der Start holt 2711 KB (gzip) über 238 Dateien — Decke 2700 KB“. Rot nach Bogen 4 (E687), der 2 KB beiträgt; vor ihm stand die Zahl bei 2709.
+
+**Die falsche Vermutung.** Die Nachbarliste eines Bogens — die Läufe, die dieselben Dateien lesen — findet, was der Bogen kaputt macht. Eine Decke über das GANZE hat aber keine Datei, die man anfasst; sie ist niemandes Nachbar.
+
+**Wie es gefunden wurde.** Nicht wegen der Decke: test388 trägt die Zusage „die Chronik wird beim Start nicht geholt“ (E613) und lief deshalb nach dem Chronik-Nachtrag. Im vollen Lauf vom 19. September war er noch grün; zwischen dem 19. und dem 25. hat niemand ihn gefahren.
+
+**Die Ursache.** 127 KB in neun Tagen — Studio, Trainer, NIN-Quiz, Gedankenkarte, Dock-Welle — und kein voller Lauf seit dem 19. September (§46: main bewegt sich erst nach einem grünen).
+
+**Der Beweis.** Messung gegen bef8c3f in messungen.md §62; danach Decke 2850 und test388 19/19.
+
+**Die Lehre.** Jeder Bogen, der eine Skriptdatei zu index.html hinzufügt, fährt test388. Und die Decke ist ein Grund mehr, den vollen Lauf nicht länger als eine Woche liegen zu lassen — sie kann nur dort reissen, wo sie gefahren wird.
 

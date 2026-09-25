@@ -2251,7 +2251,7 @@ Die Reihenfolge der Prüfungsfragen. test565 war gegen den ersten Stand bei 53 v
 
 ### 2026-09-25 · Freitag — Der Plattform-Audit — und aus zwei Messungen darin werden drei Bögen, bevor der Audit fertig ist
 
-> Redur legt AFFiNE und SiYuan als Archive in ein Release und schickt einen Master-Prompt: erst lesen, dann ein kleinster Schritt; GFX-Kern, Plugin-SDK, Katalog, CLI. Elf Leser je System und zwei für die Referenzen — auf vier Kernen laufen zwei gleichzeitig, die Sache dauert Stunden, und Redur fragt zu Recht nach der Zeit. Statt zu warten habe ich selbst gelesen und zwei Dinge im Browser GEMESSEN, die kein Leser hätte behaupten dürfen: Strg+Z im Schaltplan und auf dem Blatt nimmt zweimal zurück (Block und Seitenverlauf), und der Seitenverlauf gibt beim Zurücknehmen jedem Block der Seite eine neue Kennung. Daraus wurden am selben Tag E682 (eine Zeile in der Schale, die Taste fürs Whiteboard, test568) und — nach einer zweiten Sonde, die zeigte, dass eine Unterseite dabei ihre Fassung verliert (1 → 0) — E684/E685 (Store.baumAbgleichen: abgleichen statt abreissen, test569 mit 48 Zusagen, entworfen von drei Entwürfen und zwei Richtern). Dazwischen hat Redur vier Dinge entschieden: die Reihenfolge, raumVersion fürs Whiteboard, die Fremdcode-Regel (E683, FREMDCODE.md, §57) und, mit einem Bild von AFFiNEs Edgeless-Leiste, das Ziel W6 — „integriere alles zusammen“: eine Leiste, ein Verlauf, ein Raum für alle Flächen. Die Karte (doku/karte/, karte.mts) ist auf seinen Wunsch entstanden, damit niemand die 156 000 Zeilen zweimal lesen muss. Der Audit ist in zwei Teilen gelandet; die Gegenprüfer für fünf Systeme und der Vollständigkeitsprüfer scheiterten an der Sitzungsgrenze — das steht so im Audit, und die Vollständigkeitsprüfung habe ich von Hand nachgeholt (29 von 53 Ordnern gelesen).
+> Redur legt AFFiNE und SiYuan als Archive in ein Release und schickt einen Master-Prompt: erst lesen, dann ein kleinster Schritt; GFX-Kern, Plugin-SDK, Katalog, CLI. Elf Leser je System und zwei für die Referenzen — auf vier Kernen laufen zwei gleichzeitig, die Sache dauert Stunden, und Redur fragt zu Recht nach der Zeit. Statt zu warten habe ich selbst gelesen und zwei Dinge im Browser GEMESSEN, die kein Leser hätte behaupten dürfen: Strg+Z im Schaltplan und auf dem Blatt nimmt zweimal zurück (Block und Seitenverlauf), und der Seitenverlauf gibt beim Zurücknehmen jedem Block der Seite eine neue Kennung. Daraus wurden am selben Tag E682 (eine Zeile in der Schale, die Taste fürs Whiteboard, test568) und — nach einer zweiten Sonde, die zeigte, dass eine Unterseite dabei ihre Fassung verliert (1 → 0) — E684/E685 (Store.baumAbgleichen: abgleichen statt abreissen, test569 mit 48 Zusagen, entworfen von drei Entwürfen und zwei Richtern). Dazwischen hat Redur vier Dinge entschieden: die Reihenfolge, raumVersion fürs Whiteboard, die Fremdcode-Regel (E683, FREMDCODE.md, §57) und, mit einem Bild von AFFiNEs Edgeless-Leiste, das Ziel W6 — „integriere alles zusammen“: eine Leiste, ein Verlauf, ein Raum für alle Flächen. Die Karte (doku/karte/, karte.mts) ist auf seinen Wunsch entstanden, damit niemand die 156 000 Zeilen zweimal lesen muss. Der Audit ist in zwei Teilen gelandet; die Gegenprüfer für fünf Systeme und der Vollständigkeitsprüfer scheiterten an der Sitzungsgrenze — das steht so im Audit, und die Vollständigkeitsprüfung habe ich von Hand nachgeholt (29 von 53 Ordnern gelesen). Am Abend, nach der Sitzungsgrenze: E686 (Raumfassung fürs Whiteboard) und E687 (ein Verlauf für drei Flächen — der erste Ordner des GFX-Kerns), dazu Redurs Satz, dass jede sichtbare Änderung fotografiert und GESCHICKT wird (§55.3). Vier Bögen an einem Tag, jeder mit einem Wächter, der rot war.
 
 
 #### Was Redur geschrieben hat
@@ -2401,6 +2401,18 @@ Die Reihenfolge der Prüfungsfragen. test565 war gegen den ersten Stand bei 53 v
 **Besserer Prompt:** Passt so.
 
 
+**14 · ca. 20:45 (vor 20:49, dem Commit, der den Satz in §55.3 schrieb)**
+
+> Wie sieht die aktuele status ?
+> Könntest du mir jon jäder änderung die du im redion machst wenn es etwas im websete ändert mir alles fotografieren und schicken
+
+**Gemeint:** Zwei Dinge: ein Stand — und eine Regel: jede Änderung, die man auf der Seite sehen kann, wird fotografiert, und die Bilder werden ihm geschickt, nicht nur abgelegt.
+
+**Besser geschrieben:** Status? Und: Jede sichtbare Änderung fotografieren und mir die Bilder schicken.
+
+**Besserer Prompt:** Die Regel ist vollständig und steht seit 6054089 wörtlich in §55.3. Offen bleibt nur die Frage, die §55.3 schon beantwortet: reine Logik (Kern, Verlauf, ZIP) bekommt eine Messung statt eines Bildes — so auch E687 heute Abend.
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -2410,12 +2422,15 @@ Die Reihenfolge der Prüfungsfragen. test565 war gegen den ersten Stand bei 53 v
 | L212 Punkt 2 nachgemessen (Bild überlebt; Unterseite verliert Kennung und Fassung 1 → 0); W6 aus Redurs Bild; test569 rot eingecheckt VOR der Reparatur (§30); E683 Fremdcode-Regel mit FREMDCODE.md, §57 und der Zählung (pdf.js eingepackt, WebLLM vom CDN) | `446266f` → `c26094a` | ca. 16:47 – 17:20 | ca. 33 min | test549, test550, test225; zwei Sonden |
 | E684 — Rückgängig ändert Inhalt, nicht Identität: Entwurfs-Panel (drei Entwürfe, zwei Richter), Store.baumAbgleichen (~170 Zeilen), Verlauf.anwenden mit locked-Wache, tempo.ts; test569 auf 36 Zusagen; vier Gegenproben (21/1/2/3 rot); L212 GESCHLOSSEN, L213–L215; messungen nach dem Bau (Fassungen 1 → 1) | `c26094a` → `03f0c4a` | ca. 16:51 – 17:35 (Panel 31 min im Hintergrund) | ca. 45 min | test569; Nachbarn 70 188 568 226 229 265 48 89 96 100 105 109 537 550 — dreizehn grün, 537 wie gehabt |
 | E685 — die zwei Fassungs-Wiederherstellungen über baumAbgleichen; test569 §13/§14 (48 Zusagen), Gegenprobe sechs rot; danach E681 Teil 2: §4 CLI/MCP, §5 aus karte.json gerendert, R5–R15, Anhang D (eigene Vollständigkeitsprüfung), L30 um E683 ergänzt; Karte mit allen dreizehn Lesern | `03f0c4a` → `47fb1c8` | ca. 17:38 – 17:45 und 20:25 – 20:37 (dazwischen Sitzungsgrenze) | ca. 20 min Arbeit | test569; Nachbarn 98 538 548 188 105; test549, test550, test225; node karte.mts --pruefen |
+| E686 — Bogen 3: raumVersion: 1 mit jedem Speichern des Whiteboards, punkt() über SheetSpace.umrechner mit der Handformel als Rückfall, Typen für shapes/sicht/hoehe/raumVersion/karte/plan/marken, Absatz in REDION-FORMAT.md; test570 (12 Zusagen) — und der Fund, dass scale(0.8) die Handformel NICHT rot macht (Audit D2 berichtigt). Danach Redurs Bild-Satz in §55.3. | `cb3b551` → `6054089` | ca. 20:40 – 20:49 | ca. 10 min am Stück (der Bogen selbst lag davor im Bogen-2-Fenster) | test570; Nachbarn 209 206 428 568 105 109 537 550 87 |
+| E687 — Bogen 4: src/core/gfx/history.ts (GfxHistory.erstelle), drei Umzüge (Whiteboard 40, Gedankenkarte 40, Planfläche 60), Anmeldung in tsconfig.bauen.json/index.html/GRUNDSTOCK, test571 (24 Zusagen, Kern ohne Browser, Übernahme im gebauten JS), Gegenprobe zwei rot; CLAUDE.md §30 auf 513, Audit D1, Karte mit Kern GfxHistory | `6054089` → `cc49db2` | ca. 20:49 – 21:02 | ca. 15 min | test571; Nachbarn 209 568 529 538 238 239 240 263 105 109 550 225 87 — grün; 537 wie gehabt (518/517, L207) |
+| E688 — die Startdecke, neun Tage später: test388 §5 rot (2711 KB gegen 2700), gemessen gegen bef8c3f (127 KB, neun Posten), Decke auf 2850 mit Begründung im Kopf des Laufs, L216 (Lerninhalte im Startweg, Frage an Redur), messungen.md §62 | `cc49db2` → `c5b2ba4` | 21:02 – 21:09 | ca. 20 min, davon die Hälfte Messen | test388 19/19; test549, test550, test225 |
 
 #### Zahlen des Tages
 
-- **commits:** 13
-- **entscheidungen:** 5
-- **neue Prüfläufe:** 2
+- **commits:** 18
+- **entscheidungen:** 8
+- **neue Prüfläufe:** 4
 - **volle Läufe:** 0
 
 #### Das grösste Problem
@@ -2437,10 +2452,14 @@ Der Seitenverlauf löschte die Fassungen von Unterseiten. Nicht der Whiteboard-K
 | ca. 17:05 | Vier Gegenproben je gebaut und gefahren, nicht nur eine | Vier Zusagen, vier Stellen — jede Gegenprobe soll genau ihre Zeile rot machen (21/1/2/3) | ~6 min Bauen |
 | ca. 16:22 | Die Karte als erzeugte Doku aus karte.json (wie die Chronik), nicht von Hand | Redurs Wunsch, und eine Karte, die jemand von Hand pflegt, lügt beim nächsten Mal | die erste Fassung malte „genannt“ als „benutzt“ (P107) — beim Lesen des eigenen Graphen gefunden |
 | ca. 17:15 | Bei Redurs Frage „alles von AFFiNE?“ Nein gesagt und die Gegenfrage gestellt, was ihm gefällt | §2, §6, §47, §51 — und weil „alles“ meist ein Bild im Kopf ist, kein Plan | keines; das Bild kam eine halbe Stunde später |
+| ca. 20:47 | Den Audit an D2 berichtigt, statt den grünen Abschnitt von test570 zu streichen | scale(0.8) war mit der Handformel grün — der viewBox kommt aus demselben Kasten, der Faktor kürzt sich; die Behauptung „drei Formeln, eine davon falsch“ war zu scharf, das Duplikat bleibt trotzdem eines (§8) | keines am Produkt; am Vertrauen in den Audit schon — deshalb steht die Berichtigung dort und in E686, nicht nur hier |
+| ca. 20:49 | Redurs Bild-Satz als Regel in §55.3 geschrieben, nicht nur befolgt | §56: was Redur wörtlich sagt, gehört dorthin, wo beim nächsten Mal gelesen wird — eine Regel im Gedächtnis eines Gesprächs ist nach der nächsten Sitzungsgrenze weg | keines |
+| ca. 21:00 | Kein Bild zu E687, sondern die Messung (24 Zusagen, Gegenprobe zwei rot) | §55.3, wie Redur ihn am 3. September entschieden hat: ein Bild, wenn man etwas sehen kann — der Verlauf ist reines Rechnen, auf dem Bildschirm hat sich nichts geändert | wenn ein Umzug doch etwas Sichtbares geändert hätte (Knopf-Zustand), sähe es niemand — deshalb prüft test571 kannZurueck/kannVor, und test529/test538/test209 fahren die Knöpfe |
+| ca. 21:10 | Die Decke angehoben statt Inhalt nachzuladen — und die Frage nach dem Nachladen an Redur gegeben (L216) | 19,5 KB Lernstoff brächten die Zahl nur auf 2692, beim nächsten Bogen wäre sie wieder rot; und der Trainer findet seine Kapitel über das Register (E679) — das ist eine Register-Entscheidung, keine Ladeoptimierung | die Zusage ist 150 KB weicher; was sie hält, ist die Bibliotheksgrenze (pdf.js), nicht die Feinheit |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 110 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 113 Einträge.
 

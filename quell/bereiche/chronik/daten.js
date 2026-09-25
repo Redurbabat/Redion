@@ -3112,7 +3112,7 @@ const ChronikDaten = {
             "datum": "2026-09-25",
             "wochentag": "Freitag",
             "titel": "Der Plattform-Audit — und aus zwei Messungen darin werden drei Bögen, bevor der Audit fertig ist",
-            "wasIchWeiss": "Redur legt AFFiNE und SiYuan als Archive in ein Release und schickt einen Master-Prompt: erst lesen, dann ein kleinster Schritt; GFX-Kern, Plugin-SDK, Katalog, CLI. Elf Leser je System und zwei für die Referenzen — auf vier Kernen laufen zwei gleichzeitig, die Sache dauert Stunden, und Redur fragt zu Recht nach der Zeit. Statt zu warten habe ich selbst gelesen und zwei Dinge im Browser GEMESSEN, die kein Leser hätte behaupten dürfen: Strg+Z im Schaltplan und auf dem Blatt nimmt zweimal zurück (Block und Seitenverlauf), und der Seitenverlauf gibt beim Zurücknehmen jedem Block der Seite eine neue Kennung. Daraus wurden am selben Tag E682 (eine Zeile in der Schale, die Taste fürs Whiteboard, test568) und — nach einer zweiten Sonde, die zeigte, dass eine Unterseite dabei ihre Fassung verliert (1 → 0) — E684/E685 (Store.baumAbgleichen: abgleichen statt abreissen, test569 mit 48 Zusagen, entworfen von drei Entwürfen und zwei Richtern). Dazwischen hat Redur vier Dinge entschieden: die Reihenfolge, raumVersion fürs Whiteboard, die Fremdcode-Regel (E683, FREMDCODE.md, §57) und, mit einem Bild von AFFiNEs Edgeless-Leiste, das Ziel W6 — „integriere alles zusammen“: eine Leiste, ein Verlauf, ein Raum für alle Flächen. Die Karte (doku/karte/, karte.mts) ist auf seinen Wunsch entstanden, damit niemand die 156 000 Zeilen zweimal lesen muss. Der Audit ist in zwei Teilen gelandet; die Gegenprüfer für fünf Systeme und der Vollständigkeitsprüfer scheiterten an der Sitzungsgrenze — das steht so im Audit, und die Vollständigkeitsprüfung habe ich von Hand nachgeholt (29 von 53 Ordnern gelesen).",
+            "wasIchWeiss": "Redur legt AFFiNE und SiYuan als Archive in ein Release und schickt einen Master-Prompt: erst lesen, dann ein kleinster Schritt; GFX-Kern, Plugin-SDK, Katalog, CLI. Elf Leser je System und zwei für die Referenzen — auf vier Kernen laufen zwei gleichzeitig, die Sache dauert Stunden, und Redur fragt zu Recht nach der Zeit. Statt zu warten habe ich selbst gelesen und zwei Dinge im Browser GEMESSEN, die kein Leser hätte behaupten dürfen: Strg+Z im Schaltplan und auf dem Blatt nimmt zweimal zurück (Block und Seitenverlauf), und der Seitenverlauf gibt beim Zurücknehmen jedem Block der Seite eine neue Kennung. Daraus wurden am selben Tag E682 (eine Zeile in der Schale, die Taste fürs Whiteboard, test568) und — nach einer zweiten Sonde, die zeigte, dass eine Unterseite dabei ihre Fassung verliert (1 → 0) — E684/E685 (Store.baumAbgleichen: abgleichen statt abreissen, test569 mit 48 Zusagen, entworfen von drei Entwürfen und zwei Richtern). Dazwischen hat Redur vier Dinge entschieden: die Reihenfolge, raumVersion fürs Whiteboard, die Fremdcode-Regel (E683, FREMDCODE.md, §57) und, mit einem Bild von AFFiNEs Edgeless-Leiste, das Ziel W6 — „integriere alles zusammen“: eine Leiste, ein Verlauf, ein Raum für alle Flächen. Die Karte (doku/karte/, karte.mts) ist auf seinen Wunsch entstanden, damit niemand die 156 000 Zeilen zweimal lesen muss. Der Audit ist in zwei Teilen gelandet; die Gegenprüfer für fünf Systeme und der Vollständigkeitsprüfer scheiterten an der Sitzungsgrenze — das steht so im Audit, und die Vollständigkeitsprüfung habe ich von Hand nachgeholt (29 von 53 Ordnern gelesen). Am Abend, nach der Sitzungsgrenze: E686 (Raumfassung fürs Whiteboard) und E687 (ein Verlauf für drei Flächen — der erste Ordner des GFX-Kerns), dazu Redurs Satz, dass jede sichtbare Änderung fotografiert und GESCHICKT wird (§55.3). Vier Bögen an einem Tag, jeder mit einem Wächter, der rot war.",
             "nachrichten": [
                 {
                     "zeit": "ca. 15:40",
@@ -3217,6 +3217,14 @@ const ChronikDaten = {
                     "gemeint": "Nach der Sitzungsgrenze: mach weiter.",
                     "besser": "Passt so.",
                     "besserePrompt": "Passt so."
+                },
+                {
+                    "zeit": "ca. 20:45 (vor 20:49, dem Commit, der den Satz in §55.3 schrieb)",
+                    "wortlaut": "Wie sieht die aktuele status ?\nKönntest du mir jon jäder änderung die du im redion machst wenn es etwas im websete ändert mir alles fotografieren und schicken",
+                    "woher": "wörtlich",
+                    "gemeint": "Zwei Dinge: ein Stand — und eine Regel: jede Änderung, die man auf der Seite sehen kann, wird fotografiert, und die Bilder werden ihm geschickt, nicht nur abgelegt.",
+                    "besser": "Status? Und: Jede sichtbare Änderung fotografieren und mir die Bilder schicken.",
+                    "besserePrompt": "Die Regel ist vollständig und steht seit 6054089 wörtlich in §55.3. Offen bleibt nur die Frage, die §55.3 schon beantwortet: reine Logik (Kern, Verlauf, ZIP) bekommt eine Messung statt eines Bildes — so auch E687 heute Abend."
                 }
             ],
             "arbeit": [
@@ -3259,12 +3267,36 @@ const ChronikDaten = {
                     "zeitraum": "ca. 17:38 – 17:45 und 20:25 – 20:37 (dazwischen Sitzungsgrenze)",
                     "dauer": "ca. 20 min Arbeit",
                     "pruefungen": "test569; Nachbarn 98 538 548 188 105; test549, test550, test225; node karte.mts --pruefen"
+                },
+                {
+                    "was": "E686 — Bogen 3: raumVersion: 1 mit jedem Speichern des Whiteboards, punkt() über SheetSpace.umrechner mit der Handformel als Rückfall, Typen für shapes/sicht/hoehe/raumVersion/karte/plan/marken, Absatz in REDION-FORMAT.md; test570 (12 Zusagen) — und der Fund, dass scale(0.8) die Handformel NICHT rot macht (Audit D2 berichtigt). Danach Redurs Bild-Satz in §55.3.",
+                    "vonCommit": "cb3b551",
+                    "bisCommit": "6054089",
+                    "zeitraum": "ca. 20:40 – 20:49",
+                    "dauer": "ca. 10 min am Stück (der Bogen selbst lag davor im Bogen-2-Fenster)",
+                    "pruefungen": "test570; Nachbarn 209 206 428 568 105 109 537 550 87"
+                },
+                {
+                    "was": "E687 — Bogen 4: src/core/gfx/history.ts (GfxHistory.erstelle), drei Umzüge (Whiteboard 40, Gedankenkarte 40, Planfläche 60), Anmeldung in tsconfig.bauen.json/index.html/GRUNDSTOCK, test571 (24 Zusagen, Kern ohne Browser, Übernahme im gebauten JS), Gegenprobe zwei rot; CLAUDE.md §30 auf 513, Audit D1, Karte mit Kern GfxHistory",
+                    "vonCommit": "6054089",
+                    "bisCommit": "cc49db2",
+                    "zeitraum": "ca. 20:49 – 21:02",
+                    "dauer": "ca. 15 min",
+                    "pruefungen": "test571; Nachbarn 209 568 529 538 238 239 240 263 105 109 550 225 87 — grün; 537 wie gehabt (518/517, L207)"
+                },
+                {
+                    "was": "E688 — die Startdecke, neun Tage später: test388 §5 rot (2711 KB gegen 2700), gemessen gegen bef8c3f (127 KB, neun Posten), Decke auf 2850 mit Begründung im Kopf des Laufs, L216 (Lerninhalte im Startweg, Frage an Redur), messungen.md §62",
+                    "vonCommit": "cc49db2",
+                    "bisCommit": "c5b2ba4",
+                    "zeitraum": "21:02 – 21:09",
+                    "dauer": "ca. 20 min, davon die Hälfte Messen",
+                    "pruefungen": "test388 19/19; test549, test550, test225"
                 }
             ],
             "zahlen": {
-                "commits": 13,
-                "entscheidungen": 5,
-                "neue Prüfläufe": 2,
+                "commits": 18,
+                "entscheidungen": 8,
+                "neue Prüfläufe": 4,
                 "volle Läufe": 0
             },
             "groesstesProblem": "Der Seitenverlauf löschte die Fassungen von Unterseiten. Nicht der Whiteboard-Kern, nicht die Leiste — ein Strg+Z auf der Elternseite, und die geplante Fassung der Unterseite war weg (1 → 0), ihre Kennung neu, der Favorit tot. Das stand seit jeher als Tatsache in test70 („die Blöcke bekommen neue IDs“), und niemand hatte gefragt, was das kostet. Gefunden hat es keine Lesung, sondern die zweite Sonde, die ich nur gefahren habe, weil die erste (Bild überlebt) zu gut aussah, um die Frage zu schliessen. — Daneben, kleiner: die Sitzungsgrenze des Rechners hat zehn Gegenprüfer und den Vollständigkeitsprüfer des Audits stumm scheitern lassen; das steht jetzt im Audit, und die Vollständigkeit habe ich von Hand geprüft.",
@@ -3311,6 +3343,30 @@ const ChronikDaten = {
                     "was": "Bei Redurs Frage „alles von AFFiNE?“ Nein gesagt und die Gegenfrage gestellt, was ihm gefällt",
                     "warum": "§2, §6, §47, §51 — und weil „alles“ meist ein Bild im Kopf ist, kein Plan",
                     "risiko": "keines; das Bild kam eine halbe Stunde später"
+                },
+                {
+                    "zeit": "ca. 20:47",
+                    "was": "Den Audit an D2 berichtigt, statt den grünen Abschnitt von test570 zu streichen",
+                    "warum": "scale(0.8) war mit der Handformel grün — der viewBox kommt aus demselben Kasten, der Faktor kürzt sich; die Behauptung „drei Formeln, eine davon falsch“ war zu scharf, das Duplikat bleibt trotzdem eines (§8)",
+                    "risiko": "keines am Produkt; am Vertrauen in den Audit schon — deshalb steht die Berichtigung dort und in E686, nicht nur hier"
+                },
+                {
+                    "zeit": "ca. 20:49",
+                    "was": "Redurs Bild-Satz als Regel in §55.3 geschrieben, nicht nur befolgt",
+                    "warum": "§56: was Redur wörtlich sagt, gehört dorthin, wo beim nächsten Mal gelesen wird — eine Regel im Gedächtnis eines Gesprächs ist nach der nächsten Sitzungsgrenze weg",
+                    "risiko": "keines"
+                },
+                {
+                    "zeit": "ca. 21:00",
+                    "was": "Kein Bild zu E687, sondern die Messung (24 Zusagen, Gegenprobe zwei rot)",
+                    "warum": "§55.3, wie Redur ihn am 3. September entschieden hat: ein Bild, wenn man etwas sehen kann — der Verlauf ist reines Rechnen, auf dem Bildschirm hat sich nichts geändert",
+                    "risiko": "wenn ein Umzug doch etwas Sichtbares geändert hätte (Knopf-Zustand), sähe es niemand — deshalb prüft test571 kannZurueck/kannVor, und test529/test538/test209 fahren die Knöpfe"
+                },
+                {
+                    "zeit": "ca. 21:10",
+                    "was": "Die Decke angehoben statt Inhalt nachzuladen — und die Frage nach dem Nachladen an Redur gegeben (L216)",
+                    "warum": "19,5 KB Lernstoff brächten die Zahl nur auf 2692, beim nächsten Bogen wäre sie wieder rot; und der Trainer findet seine Kapitel über das Register (E679) — das ist eine Register-Entscheidung, keine Ladeoptimierung",
+                    "risiko": "die Zusage ist 150 KB weicher; was sie hält, ist die Bibliotheksgrenze (pdf.js), nicht die Feinheit"
                 }
             ]
         }
@@ -4790,6 +4846,42 @@ const ChronikDaten = {
             "ursache": "Ein Parsefehler bricht das ganze Skript ab, bevor die erste Zeile läuft; `&&` hinter einem Heredoc-Python prüft nur den Exit — und den hatte ich nicht geprüft, weil die nächste Zeile ohne && folgte.",
             "beweis": "Nachtrag f014fa3 mit den drei fehlenden Änderungen; danach test549 6/6.",
             "lehre": "Zeichenketten mit Redions Anführungszeichen nur in dreifachen Anführungszeichen schreiben — und ein Commit gehört hinter ein `&&`, nicht hinter ein Zeilenende."
+        },
+        {
+            "nr": "P111",
+            "datum": "2026-09-25",
+            "titel": "Eine Prüfung, die wider Erwarten grün blieb — der Audit hatte die Handformel für falsch erklärt",
+            "schwere": "klein",
+            "symptom": "test570 §3 sollte mit scale(0.8) am Elternteil zeigen, dass die Handformel des Whiteboards (sicht.x + (clientX - left) / sicht.z) vom Ergebnis der Matrix abweicht. Sie war grün: beide Rechnungen gaben dieselben Zahlen.",
+            "falscheVermutung": "Drei Formeln für Bildschirm → Raum, eine Matrix — also rechnen die Formeln bei jeder Transformation des Elternteils falsch (Audit D2, R3).",
+            "wieGefunden": "Der Wächter lief gegen den ALTEN Stand und blieb an der Stelle grün, an der er rot sein sollte (§50: ein Wächter muss rot gewesen sein). Erst rotate(180deg) trennte Formel und Matrix: „ist 394,168 soll 312,192“.",
+            "ursache": "Der viewBox des SVG wird aus demselben Kasten gerechnet, den getBoundingClientRect liefert; bei achsenparalleler Skalierung kürzt sich der Faktor heraus. Falsch wird die Formel nur bei Drehung oder Scherung.",
+            "beweis": "test570 §3 (scale) grün und §3b (rotate) rot gegen den alten Stand; mit der Matrix beide grün. Audit D2 und E686 berichtigt.",
+            "lehre": "Eine Behauptung im Audit ist eine Vermutung, bis ein Wächter sie rot gezeigt hat. Und ein Wächter, der grün bleibt, wo er rot sein sollte, ist kein zu schwacher Wächter, sondern ein Fund über die Behauptung (§55.2)."
+        },
+        {
+            "nr": "P112",
+            "datum": "2026-09-25",
+            "titel": "Tiefe 0 wurde zu Tiefe 40 — `Number(x) || 40` hält 0 für „nichts gesagt“",
+            "schwere": "klein",
+            "symptom": "test571: „Die Tiefe ist mindestens 1“ rot — GfxHistory.erstelle(0).stand().tiefe war 40, nicht 1.",
+            "falscheVermutung": "`Number(tiefe) || 40` sei die Vorgabe für „keine Zahl angegeben“.",
+            "wieGefunden": "Der Wächter, im selben Bogen wie der Kern geschrieben; der Kern war vor dem Wächter falsch, und der Lauf hat es beim ersten Mal gedruckt.",
+            "ursache": "`||` behandelt 0 wie undefined. Wer 0 sagt, meint 0 — und bekommt seither die Untergrenze 1; nur was gar keine Zahl ist (Number.isFinite falsch), fällt auf 40 zurück.",
+            "beweis": "test571 24/24 nach der Änderung; die Zusage prüft erstelle(0) → 1, erstelle(-5) → 1, erstelle() → 40.",
+            "lehre": "Vorgaben mit `??` oder Number.isFinite setzen, nie mit `||`, wenn 0 ein gültiger Wert ist."
+        },
+        {
+            "nr": "P113",
+            "datum": "2026-09-25",
+            "titel": "Die Startdecke war sechs Tage lang gerissen, und kein Bogen hatte den Lauf als Nachbarn",
+            "schwere": "klein",
+            "symptom": "test388 §5: „Der Start holt 2711 KB (gzip) über 238 Dateien — Decke 2700 KB“. Rot nach Bogen 4 (E687), der 2 KB beiträgt; vor ihm stand die Zahl bei 2709.",
+            "falscheVermutung": "Die Nachbarliste eines Bogens — die Läufe, die dieselben Dateien lesen — findet, was der Bogen kaputt macht. Eine Decke über das GANZE hat aber keine Datei, die man anfasst; sie ist niemandes Nachbar.",
+            "wieGefunden": "Nicht wegen der Decke: test388 trägt die Zusage „die Chronik wird beim Start nicht geholt“ (E613) und lief deshalb nach dem Chronik-Nachtrag. Im vollen Lauf vom 19. September war er noch grün; zwischen dem 19. und dem 25. hat niemand ihn gefahren.",
+            "ursache": "127 KB in neun Tagen — Studio, Trainer, NIN-Quiz, Gedankenkarte, Dock-Welle — und kein voller Lauf seit dem 19. September (§46: main bewegt sich erst nach einem grünen).",
+            "beweis": "Messung gegen bef8c3f in messungen.md §62; danach Decke 2850 und test388 19/19.",
+            "lehre": "Jeder Bogen, der eine Skriptdatei zu index.html hinzufügt, fährt test388. Und die Decke ist ein Grund mehr, den vollen Lauf nicht länger als eine Woche liegen zu lassen — sie kann nur dort reissen, wo sie gefahren wird."
         }
     ]
 };
