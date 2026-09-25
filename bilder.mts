@@ -1767,6 +1767,44 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  schaltplan: {
+    /* Der Stromkreis ist der aus test263 (senkrechte Zweige, keine Leitung
+       überbrückt einen Anschluss). Das Bild zeigt die Planfläche mit ihrer
+       eigenen Werkzeugleiste — das „Vorher" für W6 (25. September 2026). */
+    titel: 'Der Schaltplan: Planfläche mit eigener Werkzeugleiste, ein kleiner Stromkreis',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Schaltplan Übung 3', icon: '⚡' });
+      const b = Store.addBlock(seite.id, 'schaltplan', { text: 'Schaltplan' });
+      const plan: any = Schaltplan.neuerPlan('stromlauf-aufgeloest');
+      plan.teile = []; plan.leitungen = []; plan.texte = [];
+      const teil = (zeichen: string, bmk: string, x: number, y: number) => {
+        const t: any = { id: 't' + plan.teile.length, zeichen, x, y, drehung: 0,
+                         gespiegelt: false, bmk, nummern: {}, gruppe: '', ebene: 'plan' };
+        plan.teile.push(t); return t;
+      };
+      const q = teil('wechselspannung', 'G1', 40, 120);
+      const s = teil('ch-schema0', 'S1', 240, 20);
+      const h = teil('lampe', 'E1', 230, 120);
+      const ort = (t: any, nr: string) => {
+        const a = Schaltplan.anschluesseVon(t).find((x: any) => x.nr === nr);
+        if (!a) throw new Error(`Anschluss ${nr} fehlt an ${t.zeichen}`);
+        return { x: a.x, y: a.y };
+      };
+      const leitung = (punkte: any[], a: any, an: string, b2: any, bn: string) =>
+        plan.leitungen.push({ id: 'l' + plan.leitungen.length, ebene: 'plan',
+          punkte, vonTeil: a.id, vonNr: an, nachTeil: b2.id, nachNr: bn });
+      leitung([ort(q, 'L'), { x: 70, y: 20 }, ort(s, '3')], q, 'L', s, '3');
+      leitung([ort(s, '4'), ort(h, 'X1')], s, '4', h, 'X1');
+      leitung([ort(h, 'X2'), ort(q, 'N')], h, 'X2', q, 'N');
+      Store.updateBlock(b.id, { plan });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
   gedankenkarte: {
     titel: 'Die Gedankenkarte — zentrales Thema, Äste nach beiden Seiten (E607)',
     bauen: async () => {
