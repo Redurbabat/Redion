@@ -324,8 +324,11 @@ const Vergleich = (() => {
         if (!confirm('Die ganze Seite auf diese Fassung zurücksetzen? ' +
                      'Der jetzige Stand wird vorher gesichert.')) return;
         await Store.versionSpeichern(p.id, 'vor Wiederherstellung');
-        Store.kinderLeeren(p.id);
-        (v.daten.kinder || []).forEach((k: any) => Store.baumEinfuegen(k, p.id));
+        /* ABGLEICHEN, NICHT ABREISSEN (E685, wie E684 im Verlauf): bis
+           hierher purgte `kinderLeeren` jedes Kind und `baumEinfuegen` legte
+           es mit frischer Kennung neu an — eine Unterseite verlor dabei
+           Kennung und Fassungen. */
+        Store.baumAbgleichen(p.id, v.daten);
         Store.updateBlock(p.id, { text: v.daten.text, icon: v.daten.icon });
         o.remove();
         App.zeichneBaum(); App.zeichneSeite();

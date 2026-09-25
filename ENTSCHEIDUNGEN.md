@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-664 Entscheidungen, E1 bis E684 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+665 Entscheidungen, E1 bis E685 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -727,6 +727,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E682** — Strg+Z gehört der Fläche, die es genommen hat: die Schale lässt eine Taste liegen, die ein Block schon genommen hat (`defaultPrevented`), und das Whiteboard bekommt seine Taste — der erste Bogen nach dem Plattform-Audit (L212 Punkt 1, `test568`)
 * **E683** — Fremder Code darf in Redion, wenn er Redion verbessert: nie PDFs, Bilder oder Geheimnisse an Dritte, vorher Redur fragen, jedes Stück in `FREMDCODE.md` — Redurs Regel vom 25. September, dazu die Zählung (pdf.js eingepackt, WebLLM vom CDN, sonst nichts)
 * **E684** — Rückgängig ändert Inhalt, nicht Identität: `Store.baumAbgleichen` gleicht eine Seite über die Kennung mit dem Schnappschuss ab — Papierkorb statt Purge, Unterseiten und Zeilen als Blätter, kein Stempel ohne Unterschied; `Verlauf.anwenden` zieht um, `test569` mit 36 Zusagen (L212 GESCHLOSSEN)
+* **E685** — Die zwei Fassungs-Wiederherstellungen gehen denselben Weg wie der Verlauf: `Vergleich.dialog` („Ganze Fassung zurückholen") und `Werkzeuge.versionen` („Fassung wiederherstellen") rufen `Store.baumAbgleichen` — `test569` §13/§14, 48 Zusagen
 
 ---
 
@@ -55871,3 +55872,43 @@ Entscheidungen.
 liegt dort dreissig Tage. Umkehrbar statt endgültig ist die Wahl von §46;
 ob Undo-Reste im Papierkorb eine eigene Kennzeichnung brauchen, ist eine
 Frage an Redur. Und ~170 Zeilen in `indexdb.ts`, die stimmen müssen.
+
+## E685 — Die zwei Fassungs-Wiederherstellungen gehen denselben Weg wie der Verlauf
+
+**Datum:** 25. September 2026 · **Wächter:** `test569 §13, §14` (jetzt 48
+Zusagen) · **Nachtrag zu E684**
+
+**Was war.** `fassungen.ts:327` („Ganze Fassung zurückholen" im Vergleich)
+und `werkzeuge.ts:902` („Fassung wiederherstellen" im Versionsverlauf)
+standen Zeile für Zeile so da wie `Verlauf.anwenden` vor E684:
+`kinderLeeren` + `baumEinfuegen`. Also dasselbe: wer eine Fassung der
+Elternseite zurückholte, löschte die Fassungen aller Unterseiten und gab
+ihnen neue Kennungen — und das bei einem Vorgang, der „Der jetzige Stand
+wird vorher gesichert" verspricht.
+
+**Was entschieden wurde.** Beide Stellen rufen `Store.baumAbgleichen(p.id,
+v.daten)`; das Bildformat ist dasselbe (`versionSpeichern` legt `baum()`
+ab). Die Sicherung „vor Wiederherstellung" bleibt davor. Sichtbare Folge
+wie in E684 Punkt 3: eine Unterseite wird im Dasein und Platz, nicht in
+ihrem Inneren zurückgesetzt — was seit der Fassung in ihr geschrieben
+wurde, bleibt (§15: sie hat ihren eigenen Verlauf).
+
+**Warum ein eigener, kleiner Bogen** und nicht Teil von E684: eine Fassung
+kann Wochen alt sein und Kennungen tragen, deren Grabstein längst beim
+Server ist. `baumAbgleichen` legt sie mit alter Kennung und frischem
+`edited` wieder an, `blockGrabsteinWeg` räumt einen liegengebliebenen
+Grabstein — der Server nimmt eine Wieder-Anlage an (server/kern.ts prüft
+Version und Zeit, nicht Herkunft). Gelesen, mit zwei Geräten nicht
+gemessen; das gehört zu L213–L215 in den Zwei-Geräte-Blick.
+
+**Nicht angefasst:** `entsperren` (`werkzeuge.ts:1008`) — erst, wenn L213
+gemessen ist. `ausMarkdown` (`dienst.ts:455`) nie (E174).
+
+**Wächter.** `test569` §13 und §14 fahren beide Dialoge wirklich
+(`Werkzeuge.versionen(p)` mit Klick auf `button[data-v]`,
+`Vergleich.dialog(p, id)` mit Klick auf `[data-a="alles"]`, `confirm`
+ersetzt): Elternseite auf der Fassung, Unterseite behält Kennung und
+Fassung, ihr neuer Block bleibt, die Sicherung ist angelegt. Gegenprobe:
+beide Stellen auf den alten Weg zurück → sechs Zusagen rot (Kennung,
+Fassung, Inneres — je Dialog). Nachbarn: `test98` (Der Verlauf, 23 ok),
+`test538`, `test548`, `test188`, `test105`.

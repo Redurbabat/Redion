@@ -1,5 +1,19 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 25. September 2026 · E685 · Die zwei Fassungs-Wiederherstellungen gehen denselben Weg
+
+**Der Fund.** `fassungen.ts:327` und `werkzeuge.ts:902` — „Ganze Fassung
+zurückholen" und „Fassung wiederherstellen" — standen Zeile für Zeile so da
+wie der Verlauf vor E684. Beide löschten die Fassungen der Unterseiten.
+
+**Gebaut.** Zwei Aufrufe von `Store.baumAbgleichen`, sonst nichts.
+
+**Geprüft.** `test569` §13/§14 fahren beide Dialoge wirklich (Klick, `confirm`
+ersetzt); 48 Zusagen. Gegenprobe: alter Weg zurück → sechs rot. Nachbarn
+`test98`, `test538`, `test548`, `test188`, `test105` grün.
+
+---
+
 ## 25. September 2026 · E684 · Rückgängig ändert Inhalt, nicht Identität
 
 **Der Fund.** Gemessen beim Plattform-Audit: ein Strg+Z auf der Elternseite
@@ -22,7 +36,9 @@ Gegenproben, je gebaut und gefahren: alter Weg zurück → 21 rot; fehlende
 Felder nicht löschen → genau der Haken rot; immer stempeln; Purge statt
 Papierkorb. Nachbarn: `test70`, `test188`, `test568`, `test226`, `test229`,
 `test265`, `test48`, `test89`, `test96`, `test100`, `test105`, `test109`,
-`test537`, `test550`. Dieselben zwei Sonden wie vorher: Fassungen 1 → 1.
+`test537`, `test550` — dreizehn grün, `test537` mit dem bekannten Stand
+518 gegen 517 (L207, vor und nach dem Bogen gleich). Dieselben zwei
+Sonden wie vorher: Fassungen 1 → 1.
 
 **Nebenfunde der Richter** als L213–L215 eingetragen: gelesen, nicht
 gemessen — Sperren rechnet den Dateianspruch nach dem Purge; `baumEinfuegen`

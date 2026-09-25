@@ -1224,8 +1224,8 @@ selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 510.*
 zwar mit Absicht: §30 sagt „zuerst ein Prüflauf, dann die Reparatur", und
 er war gegen `446266f` rot mit 10 von 20 — die Unterseite wechselte die
 Kennung, ihre Fassung war weg, drei Purges auf zwei Schritten zurück. Mit
-E684 hält er 36 Zusagen in zwölf Abschnitten; vier Gegenproben haben ihn
-wieder rot gemacht. Sein §5 zählt die Purges über `Store.on`, weil die
+E684 hält er 36 Zusagen in zwölf Abschnitten, mit E685 48 in vierzehn (die
+zwei Fassungs-Dialoge); fünf Gegenproben haben ihn wieder rot gemacht. Sein §5 zählt die Purges über `Store.on`, weil die
 Merkliste des Abgleichs ohne Wolke leer bleibt und ein leerer Zähler nichts
 beweist (§55.2) — und setzt die Marke, damit sie überhaupt schreiben würde.
 Gezählt am 25. September, im selben Bogen: `ls pruefungen/lauf/test*.mts |

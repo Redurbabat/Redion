@@ -8244,10 +8244,10 @@ Ein Strg+Z auf der Elternseite löscht den Verlauf der Unterseite (§15).
 **Punkt 2 ist erledigt — 25. September 2026, E684, `test569` (36 Zusagen):**
 `Store.baumAbgleichen` gleicht über die Kennung ab, Papierkorb statt Purge,
 Unterseiten und Zeilen als Blätter; nach dem Bau: Unterseite Kennung gleich,
-Fassungen 1 → 1, Favorit gültig. **Damit ist die Lücke geschlossen.** Was
-davon offen bleibt, hat eigene Nummern: die zwei Fassungs-Wiederherstellungen
-(`fassungen.ts:327`, `werkzeuge.ts:902`) gehen noch den alten Weg — nächster
-kleiner Bogen —, und L213 bis L215 stehen darunter.
+Fassungen 1 → 1, Favorit gültig. **Damit ist die Lücke geschlossen.** Die
+zwei Fassungs-Wiederherstellungen (`fassungen.ts:327`, `werkzeuge.ts:902`)
+gehen seit E685 denselben Weg (`test569` §13/§14). Was davon offen bleibt,
+hat eigene Nummern: L213 bis L215 darunter.
 
 ---
 

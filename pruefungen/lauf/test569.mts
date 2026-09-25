@@ -40,6 +40,11 @@
  *  11  Eine Unterseite ist ein Blatt: was seit dem Bild IN ihr geschrieben
  *      wurde, bleibt.
  *  12  Eine inzwischen gesperrte Seite rührt der Verlauf nicht an.
+ *  13  „Fassung wiederherstellen" (Versionsverlauf, `Werkzeuge.versionen`)
+ *      geht denselben Weg: Unterseite behält Kennung und Fassung, was seit
+ *      der Fassung in ihr stand, bleibt; die Sicherung „vor Wiederherstellung"
+ *      wird angelegt (E685).
+ *  14  „Ganze Fassung zurückholen" (Vergleich, `Vergleich.dialog`) ebenso.
  *
  * GEGEN DEN ALTEN STAND (446266f) rot in §1, §2, §4, §5: Kennungen wechseln,
  * Fassungen fehlen, Grabsteine liegen.
@@ -364,6 +369,61 @@ try {
     const r = await pg.evaluate((x: any) => ({ locked: Store.getBlock(x.seite)?.locked, text: Store.getBlock(x.text)?.text }), ids);
     p('Die Sperre steht noch', r.locked === true, JSON.stringify(r));
     p('Der Inhalt ist unangetastet', r.text === 'Zwei', JSON.stringify(r));
+    await ktx.close();
+  }
+
+  /* ── §13 + §14: die zwei Fassungs-Wiederherstellungen (E685) ─────────── */
+  for (const weg of ['versionen', 'vergleich'] as const) {
+    console.log(weg === 'versionen'
+      ? '\n13 · Fassung wiederherstellen (Versionsverlauf) behält die Unterseite'
+      : '\n14 · Ganze Fassung zurückholen (Vergleich) ebenso');
+    const { ktx, pg } = await frisch();
+    const ids = await pg.evaluate(async () => {
+      const eltern = Store.addPage(null, { text: 'Fassungen' });
+      const t = Store.addBlock(eltern.id, 'text', { text: 'Eins' });
+      const kind = Store.addPage(eltern.id, { text: 'Unterseite' });
+      Store.addBlock(kind.id, 'text', { text: 'alt' });
+      await Store.versionSpeichern(kind.id, 'geplant');
+      await Store.versionSpeichern(eltern.id, 'von Hand');
+      const fassung = (await Store.versionen(eltern.id))[0]?.id ?? null;
+      await Store.flush(); App.zeichneBaum(); App.oeffne(eltern.id);
+      await new Promise(f => setTimeout(f, 900));
+      document.querySelectorAll('#rg-willkommen, .overlay').forEach(x => x.remove());
+      return { eltern: eltern.id, text: t.id, kind: kind.id, fassung };
+    });
+    p('Vorher: die Fassung der Elternseite ist gespeichert', !!ids.fassung);
+    await pg.evaluate((x: any) => {
+      Store.updateBlock(x.text, { text: 'Zwei' });
+      Store.addBlock(x.kind, 'text', { text: 'neu in der Unterseite' });
+      (window as any).confirm = () => true;
+    }, ids);
+    await pg.waitForTimeout(300);
+    if (weg === 'versionen') {
+      await pg.evaluate((x: any) => { void Werkzeuge.versionen(Store.getBlock(x.eltern)); }, ids);
+      await pg.waitForSelector(`.overlay button[data-v="${ids.fassung}"]`);
+      await pg.click(`.overlay button[data-v="${ids.fassung}"]`);
+    } else {
+      await pg.evaluate((x: any) => { void Vergleich.dialog(Store.getBlock(x.eltern), x.fassung); }, ids);
+      await pg.waitForSelector('.overlay [data-a="alles"]');
+      await pg.click('.overlay [data-a="alles"]');
+    }
+    await pg.waitForTimeout(1200);
+    const r = await pg.evaluate(async (x: any) => {
+      const kinder = Store.childrenOf(x.eltern) as any[];
+      const unter = kinder.find(k => k.type === 'page');
+      return {
+        texte: kinder.filter(k => k.type === 'text').map(k => k.text),
+        unterId: unter?.id ?? null,
+        fassungenKind: (await Store.versionen(x.kind)).length,
+        innen: unter ? (Store.childrenOf(unter.id) as any[]).map(k => k.text) : null,
+        sicherung: (await Store.versionen(x.eltern)).some((v: any) => v.anlass === 'vor Wiederherstellung'),
+      };
+    }, ids);
+    p('Die Elternseite steht auf der Fassung', JSON.stringify(r.texte) === '["Eins"]', JSON.stringify(r.texte));
+    p('Die Unterseite behält ihre Kennung', r.unterId === ids.kind, `${ids.kind.slice(0, 8)}… → ${String(r.unterId).slice(0, 8)}…`);
+    p('Ihre Fassung ist noch da', r.fassungenKind === 1, 'fassungen=' + r.fassungenKind);
+    p('Was seit der Fassung in ihr stand, bleibt', Array.isArray(r.innen) && r.innen.includes('neu in der Unterseite'), JSON.stringify(r.innen));
+    p('Die Sicherung „vor Wiederherstellung" wurde angelegt', r.sicherung);
     await ktx.close();
   }
 
