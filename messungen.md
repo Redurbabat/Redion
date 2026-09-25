@@ -4204,3 +4204,25 @@ frischen Kennungen wieder ein (`indexdb.ts:2508`). Welcher Stand am Ende
 steht, hängt am 700-ms-Zaun — im Schaltplan blieb das gesetzte Teil, auf dem
 Blatt ging ein Strich. Ausgabe wörtlich in `doku/REDION-PLATTFORM-AUDIT.md`
 2.4.
+
+## 25. September 2026 — Überlebt ein Bild ein Strg+Z auf einer Textseite? (Bogen 2, L212 Punkt 2)
+
+Sonde im Scratchpad, Chromium über `file://`, 1280 × 900. Eine Seite mit
+einem Textblock und einem `image`-Block, dessen Datei (4096 Bytes,
+`probe.png`) über `Dateien.ablegen(blob, { blockId })` in der Ablage liegt;
+zwei Textänderungen 800 ms auseinander, Strg+Z ohne fokussierten Block,
+dann 2,5 s warten, dann neu laden.
+
+```txt
+                       Bild-Block   dateiId gleich  Dateisatz  satz.blockId     Bytes  verwaist
+Ausgang                c884b9db…    —               da         = Bild-Block     4096   nein
+gleich nach Strg+Z     782d93c4…    ja              da         = NEUER Block    4096   nein
+2,5 s später           782d93c4…    ja              da         = NEUER Block    4096   nein
+nach Neuladen          782d93c4…    ja              da         = NEUER Block    4096   nein
+```
+
+Lesart: **das Bild überlebt.** Der Block bekommt eine neue Kennung, aber
+der Dateisatz wird auf den neuen Block umgehängt und die Bytes bleiben —
+der Anspruch (`dateiAnspruch`) greift, bevor der Purge die Datei löst. Was
+bleibt, ist die Kennung selbst (und mit ihr Grabsteine und Neuanlagen für
+den Abgleich, Verweise von aussen) — siehe die zweite Sonde darunter.
