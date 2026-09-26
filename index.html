@@ -66,6 +66,12 @@
 <link rel="stylesheet" href="quell/schale/stil/lernwelt.css">
 <link rel="stylesheet" href="quell/schale/stil/notizhefte.css">
 <link rel="stylesheet" href="quell/schale/stil/motion.css">
+<!-- Die drei Ansichten einer Seite (E690). Ein Bauteil-Blatt, also VOR
+     bausteine.css — die Kaskade der Stilblätter darf nicht zurückspringen
+     (test87: Werte, Gerüst, Bauteile, bausteine, Schale). Dass die Fläche
+     trotzdem gegen die Telefonränder aus bausteine.css gewinnt, macht
+     nicht die Reihenfolge, sondern die Spezifität; warum, steht im Blatt. -->
+<link rel="stylesheet" href="quell/schale/stil/seitenansichten.css">
 <link rel="stylesheet" href="quell/schale/stil/bausteine.css">
 <!-- DIE PREMIUM-SCHALE (E272). Sie steht ABSICHTLICH als letzte: sie ordnet,
      was die Blätter darüber gebaut haben, und muss deshalb gewinnen. Alles
@@ -548,6 +554,7 @@
 <script src="quell/register/menueband.js" defer></script>
 <script src="quell/register/tasten.js" defer></script>
 <script src="quell/register/werkzeuge.js" defer></script>
+<script src="quell/register/seitenansichten.js" defer></script>
 <script src="quell/register/einstellungen.js" defer></script>
 <script src="quell/register/formeln.js" defer></script>
 <script src="quell/register/vorlagen.js" defer></script>
@@ -716,11 +723,13 @@
 <script src="quell/schale/aufbau/ruhig.js" defer></script>
 <script src="quell/schale/aufbau/seitenleiste.js" defer></script>
 <script src="quell/schale/aufbau/kopfleiste.js" defer></script>
+<script src="quell/schale/aufbau/seitenansicht.js" defer></script>
 <script src="quell/schale/aufbau/menueband.js" defer></script>
 <script src="quell/schale/aufbau/backstage.js" defer></script>
 <script src="quell/schale/aufbau/context-rail.js" defer></script>
 <script src="quell/schale/aufbau/studio.js" defer></script>
 <script src="quell/schale/aufbau/inhaltsflaeche.js" defer></script>
+<script src="quell/schale/aufbau/seitenflaeche.js" defer></script>
 <script src="quell/schale/aufbau/schale.js" defer></script>
 <script src="quell/start.js" defer></script>
 <!-- Notnagel: Wenn die Skripte fehlen (z. B. weil nur index.html kopiert

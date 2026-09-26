@@ -266,6 +266,27 @@ keine PDF-Punkte wie beim Blatt. `raumVersion: 1` ist diese Deutung; ein
 Block ohne das Feld ist Fassung 1. Wer die Deutung je ändert, hebt die
 Zahl an und wandelt beim Lesen — nie stillschweigend.
 
+**Die Ansicht einer Seite** (E690): ein Seitenblock darf `seitenAnsicht`
+tragen — `'seite'`, `'flaeche'` oder `'redion'`. **Ein Block ohne das Feld
+ist nicht kaputt, sondern von gestern**, und er bekommt die Redion-Ansicht:
+Cover, Symbol, Titel, Werkzeugzeile, also genau das, was jede Seite vor E690
+gezeigt hat. Eine ältere Fassung von Redion liest eine Sicherung mit dem
+Feld ohne Schaden — sie kennt es nicht und zeigt die Seite wie immer.
+
+Dazu kommt `flaecheNotiz` mit `{ x, y, w, raumVersion }`: wo der Kasten mit
+dem Seitentext auf der Fläche liegt und wie breit er ist. Die Zahlen sind
+**Flächenpunkte** wie beim Whiteboard — CSS-Pixel bei Massstab 1, Ursprung
+links oben —, und `raumVersion: 1` ist diese Deutung; fehlt das Feld, gilt
+Fassung 1. Fehlt `flaecheNotiz` ganz, rechnet Redion eine Vorgabe aus der
+Fenstergrösse; gespeichert wird sie erst, wenn jemand den Kasten wirklich
+verschiebt.
+
+**Was NICHT in der Sicherung steht:** der Ausschnitt der Fläche (wohin man
+gerade sieht und wie weit gezoomt ist). Er liegt in `meta` unter
+`flaeche:<Seitenkennung>`, weil er zum Gerät gehört und nicht zum Dokument —
+ein Blick am Telefon darf die Fläche am Rechner nicht verschieben. AFFiNE
+legt ihn aus demselben Grund in den `localStorage`.
+
 ---
 
 ## Einspielen

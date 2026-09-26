@@ -1822,6 +1822,79 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* ------------------------------------------------------------------------
+     DIE DREI ANSICHTEN EINER SEITE (E690, 26. September 2026)
+     Redur wollte AFFiNEs zwei eins zu eins und dazu unsere eigene. Drei Ziele,
+     weil §55.3 ALLE Zustände verlangt und eine Ansicht ohne Bild eine
+     Behauptung wäre.
+
+     JEDES BAUT DIESELBE SEITE NEU, und das ist kein Versehen: `bauen` wird in
+     die Seite hineingereicht, eine Node-Konstante ist darin nicht erreichbar
+     (siehe die Anmerkung am Katalog oben). Ein gemeinsamer Helfer wäre in
+     Node erreichbar und im Browser undefiniert — genau der Fehler, der beim
+     Whiteboard-Bogen schon einmal passiert ist.
+     ----------------------------------------------------------------------*/
+  ansichtRedion: {
+    titel: 'Ansicht „Redion" — unsere eigene: Cover, Symbol, Titel, Werkzeugzeile',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Wärmepumpe — Notizen', icon: '🔥',
+        cover: 'linear-gradient(160deg,#7fd4d0,#e8c9b0)' });
+      Store.addBlock(seite.id, 'heading', { text: 'Was zu prüfen ist' });
+      Store.addBlock(seite.id, 'text', { text: 'Vorlauftemperatur, Volumenstrom und die Spreizung an beiden Fühlern — dazu die Jahresarbeitszahl aus dem Zählerstand.' });
+      Store.addBlock(seite.id, 'todo', { text: 'Fühler am Rücklauf nachziehen' });
+      Store.addBlock(seite.id, 'text', { text: 'Der Verdichter läuft laut Protokoll 4,2 Stunden am Tag.' });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 800));
+    }
+  },
+  ansichtSeite: {
+    titel: 'Ansicht „Seite" — AFFiNEs `page`: Symbol und Titel, kein Cover, keine Werkzeugzeile',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Wärmepumpe — Notizen', icon: '🔥',
+        cover: 'linear-gradient(160deg,#7fd4d0,#e8c9b0)' });
+      Store.addBlock(seite.id, 'heading', { text: 'Was zu prüfen ist' });
+      Store.addBlock(seite.id, 'text', { text: 'Vorlauftemperatur, Volumenstrom und die Spreizung an beiden Fühlern — dazu die Jahresarbeitszahl aus dem Zählerstand.' });
+      Store.addBlock(seite.id, 'todo', { text: 'Fühler am Rücklauf nachziehen' });
+      Store.addBlock(seite.id, 'text', { text: 'Der Verdichter läuft laut Protokoll 4,2 Stunden am Tag.' });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 800));
+    },
+    dann: async () => {
+      const knopf = document.querySelector<HTMLElement>('.pg-ansichten [data-seg-wahl="seite"]');
+      knopf?.click();
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+  ansichtFlaeche: {
+    titel: 'Ansicht „Fläche" — AFFiNEs `edgeless`: Punktraster, der Text als Kasten darauf',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Wärmepumpe — Notizen', icon: '🔥',
+        cover: 'linear-gradient(160deg,#7fd4d0,#e8c9b0)' });
+      Store.addBlock(seite.id, 'heading', { text: 'Was zu prüfen ist' });
+      Store.addBlock(seite.id, 'text', { text: 'Vorlauftemperatur, Volumenstrom und die Spreizung an beiden Fühlern — dazu die Jahresarbeitszahl aus dem Zählerstand.' });
+      Store.addBlock(seite.id, 'todo', { text: 'Fühler am Rücklauf nachziehen' });
+      Store.addBlock(seite.id, 'text', { text: 'Der Verdichter läuft laut Protokoll 4,2 Stunden am Tag.' });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 800));
+    },
+    dann: async () => {
+      const knopf = document.querySelector<HTMLElement>('.pg-ansichten [data-seg-wahl="flaeche"]');
+      knopf?.click();
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
   schaltplan: {
     /* Der Stromkreis ist der aus test263 (senkrechte Zweige, keine Leitung
        überbrückt einen Anschluss). Das Bild zeigt die Planfläche mit ihrer

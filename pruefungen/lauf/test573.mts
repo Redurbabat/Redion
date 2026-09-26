@@ -35,6 +35,27 @@
  * GEGEN DEN ALTEN STAND ist alles ab §1 rot: es gibt weder das Feld noch
  * den Umschalter.
  *
+ * DREI NAMEN HAT DIESER LAUF UNTERWEGS GEÄNDERT, und jeder Grund steht hier,
+ * damit niemand denkt, der Wächter sei dem Bau nachgezogen worden (§55.2).
+ * Die ZUSAGEN sind dieselben geblieben; nur wie man sie erfragt, hat sich
+ * geändert:
+ *
+ *   1. `Ansichten.ARTEN` → `Register.seitenansichten.ARTEN`. Der Name
+ *      `Ansichten` ist seit Langem der Dienst der DATENBANK-Ansichten
+ *      (`bereiche/datenbanken/ansichten/dienst.ts:13`, global :894), und
+ *      `Register.ansichten` ist deren Katalog. Ein zweiter Katalog unter
+ *      demselben Namen ist genau der Fall, vor dem §8 warnt.
+ *   2. Das Feld `ansicht` → `seitenAnsicht`. `FORMEN.ansicht`
+ *      (`kern/ablage/formen.ts:119`) ist die Form eines Eintrags im Fach
+ *      `views`, und Datenbankblöcke tragen `aktiveView`. Ein drittes
+ *      „ansicht" daneben wäre beim Lesen nicht zu unterscheiden (§53.6).
+ *   3. `[data-ansicht]` mit `aria-pressed` → `[data-seg-wahl]` mit
+ *      `aria-checked`. Drei sich ausschliessende Möglichkeiten sind eine
+ *      RADIOGRUPPE, nicht drei Schalter — und Redion hat dafür seit E441-
+ *      Umfeld ein bewachtes Bauteil (`schale/bedienung/segment.ts`,
+ *      test425/427/429), das bis zu diesem Bogen an keiner Stelle benutzt
+ *      war. Ein eigener Umschalter daneben wäre der vierte.
+ *
  *   node pruefungen/alle.mts 573
  * ==========================================================================*/
 import { chromium } from 'playwright';
@@ -100,10 +121,19 @@ const seite = () => pg.evaluate((id: string) => JSON.parse(JSON.stringify(Store.
  * ======================================================================== */
 console.log('\n1 · Das Feld `ansicht`');
 const roh = await seite();
-p('Eine frische Seite trägt noch kein `ansicht` — oder die Redion-Ansicht',
-  roh.ansicht === undefined || roh.ansicht === 'redion', String(roh.ansicht));
-const werte = await pg.evaluate(() => (window as any).Ansichten?.ARTEN ?? null);
-p('Es gibt einen Katalog der Ansichten (`Ansichten.ARTEN`)', Array.isArray(werte), JSON.stringify(werte));
+p('Eine frische Seite trägt noch kein `seitenAnsicht` — oder die Redion-Ansicht',
+  roh.seitenAnsicht === undefined || roh.seitenAnsicht === 'redion', String(roh.seitenAnsicht));
+/* UND DAS FEHLENDE FELD MUSS AUCH SO AUSSEHEN. Die Zeile darüber prüft nur,
+   dass nichts geschrieben WURDE — das ist die halbe Zusage. Die andere
+   Hälfte ist, was ein Mensch dann SIEHT: die Redion-Ansicht mit ihrem
+   Cover-Knopf. Die Gegenprobe (`?? k.ARTEN[0].id` statt `?? k.VORGABE`)
+   liess die erste Zeile grün und wäre hier rot — jede bestehende Seite
+   dieser App hätte ihr Cover verloren, ohne dass ein Byte geschrieben wird
+   (§9). */
+p('Und ohne Feld sieht man die Redion-Ansicht — Cover-Knopf da',
+  await pg.evaluate(() => !!document.querySelector('.pg-tools [data-a="cover"]')));
+const werte = await pg.evaluate(() => (window as any).Register?.seitenansichten?.ARTEN ?? null);
+p('Es gibt einen Katalog der Ansichten (`Register.seitenansichten.ARTEN`)', Array.isArray(werte), JSON.stringify(werte));
 gleich('Und er kennt genau drei: Seite, Fläche, Redion',
   Array.isArray(werte) ? werte.map((a: any) => a.id).sort() : werte, ['flaeche', 'redion', 'seite']);
 
@@ -114,13 +144,13 @@ console.log('\n2 · Der Umschalter');
 const schalter = await pg.evaluate(() => {
   const s = document.querySelector('.pg-ansichten');
   if (!s) return { da: false };
-  const kn = [...s.querySelectorAll<HTMLElement>('[data-ansicht]')];
+  const kn = [...s.querySelectorAll<HTMLElement>('[data-seg-wahl]')];
   const r = s.getBoundingClientRect();
   const page = document.querySelector('#page')?.getBoundingClientRect();
   return {
     da: true,
-    knoepfe: kn.map(b => b.dataset.ansicht ?? '?'),
-    gedrueckt: kn.filter(b => b.getAttribute('aria-pressed') === 'true').map(b => b.dataset.ansicht),
+    knoepfe: kn.map(b => b.dataset.segWahl ?? '?'),
+    gedrueckt: kn.filter(b => b.getAttribute('aria-checked') === 'true').map(b => b.dataset.segWahl),
     ohneNamen: kn.filter(b => !(b.getAttribute('aria-label') || b.title || (b.textContent ?? '').trim())).length,
     oben: !!page && r.top <= page.top + 2,
     lage: `${Math.round(r.top)} gegen Seite ${Math.round(page?.top ?? -1)}`
@@ -136,16 +166,16 @@ p('Er steht OBEN, nicht mitten auf der Seite', schalter.oben === true, schalter.
  * §3 · Umschalten wechselt UND merkt
  * ======================================================================== */
 console.log('\n3 · Umschalten und merken');
-await pg.click('.pg-ansichten [data-ansicht="seite"]');
+await pg.click('.pg-ansichten [data-seg-wahl="seite"]');
 await pg.waitForTimeout(400);
-gleich('Nach dem Klick steht „seite" an der Seite', (await seite()).ansicht, 'seite');
+gleich('Nach dem Klick steht „seite" an der Seite', (await seite()).seitenAnsicht, 'seite');
 p('Und der Knopf ist gedrückt',
-  await pg.evaluate(() => document.querySelector('.pg-ansichten [data-ansicht="seite"]')?.getAttribute('aria-pressed') === 'true'));
+  await pg.evaluate(() => document.querySelector('.pg-ansichten [data-seg-wahl="seite"]')?.getAttribute('aria-checked') === 'true'));
 /* Neu öffnen: die Ansicht muss bleiben, sonst ist sie nur eine Laune. */
 await pg.evaluate((id: string) => { App.oeffne(id); }, ids.seite);
 await pg.waitForTimeout(500);
 p('Wer die Seite wieder öffnet, ist da, wo er war',
-  await pg.evaluate(() => document.querySelector('.pg-ansichten [data-ansicht="seite"]')?.getAttribute('aria-pressed') === 'true'));
+  await pg.evaluate(() => document.querySelector('.pg-ansichten [data-seg-wahl="seite"]')?.getAttribute('aria-checked') === 'true'));
 
 /* ==========================================================================
  * §5 · „Seite" ist die schlanke (AFFiNEs page)
@@ -154,14 +184,24 @@ p('Wer die Seite wieder öffnet, ist da, wo er war',
  * dort gar nicht) und keine Werkzeugzeile.
  * ======================================================================== */
 console.log('\n5 · Die Ansicht „Seite"');
+/* DER TITEL HEISST HIER `#title`, NICHT `.pg-title`. Der erste Anlauf dieses
+   Abschnitts suchte nach AFFiNEs Namen und war gegen einen richtig gebauten
+   Stand rot — ein Wächter, der nach einem Wähler sucht, den es im Produkt
+   nicht gibt, misst nichts (L206). Nachgesehen in `kopfleiste.ts:236-238`:
+   `<div id="title" role="heading" aria-level="1" contenteditable>`. Geprüft
+   wird deshalb der echte Wähler UND dass der Titel der Seite darin steht —
+   ein leeres Feld wäre auch „ein Titel". */
 const alsSeite = await pg.evaluate(() => ({
-  titel: !!document.querySelector('.pg-title, #page h1, .pg-titel'),
+  titel: (() => {
+    const t = document.querySelector<HTMLElement>('#title[role="heading"]');
+    return !!t && (t.textContent ?? '').includes('Drei Ansichten');
+  })(),
   cover: !!document.querySelector('.pg-tools [data-a="cover"]'),
   werkzeugzeile: !!document.querySelector('.pg-tools'),
   raster: !!document.querySelector('.pg-flaeche'),
   text: (document.querySelector('#page')?.textContent ?? '')
 }));
-p('Sie zeigt einen Titel', alsSeite.titel === true);
+p('Sie zeigt den Titel der Seite (`#title`, §38 mit `role=heading`)', alsSeite.titel === true);
 p('Aber KEINE Werkzeugzeile', alsSeite.werkzeugzeile === false);
 p('Und keinen Cover-Knopf', alsSeite.cover === false);
 p('Und kein Flächenraster', alsSeite.raster === false);
@@ -171,7 +211,7 @@ p('Der Absatz steht da', alsSeite.text.includes(TEXT));
  * §6 · „Fläche" ist die Leinwand (AFFiNEs edgeless)
  * ======================================================================== */
 console.log('\n6 · Die Ansicht „Fläche"');
-await pg.click('.pg-ansichten [data-ansicht="flaeche"]');
+await pg.click('.pg-ansichten [data-seg-wahl="flaeche"]');
 await pg.waitForTimeout(500);
 const alsFlaeche = await pg.evaluate(() => {
   const f = document.querySelector('.pg-flaeche');
@@ -194,7 +234,7 @@ p('Der Absatz ist auch hier zu finden', alsFlaeche.text.includes(TEXT));
  * §4 · „Redion" ist unsere eigene — die mit dem Cover
  * ======================================================================== */
 console.log('\n4 · Die Ansicht „Redion"');
-await pg.click('.pg-ansichten [data-ansicht="redion"]');
+await pg.click('.pg-ansichten [data-seg-wahl="redion"]');
 await pg.waitForTimeout(500);
 const alsRedion = await pg.evaluate(() => ({
   cover: !!document.querySelector('.pg-tools [data-a="cover"]'),
@@ -227,9 +267,9 @@ await pg.close();
 console.log('\n8 · Am Telefon');
 const { pg: handy } = await bauen(390, 844);
 const klein = await handy.evaluate(() => {
-  const kn = [...document.querySelectorAll<HTMLElement>('.pg-ansichten [data-ansicht]')];
+  const kn = [...document.querySelectorAll<HTMLElement>('.pg-ansichten [data-seg-wahl]')];
   const masse = kn.map(b => { const r = b.getBoundingClientRect();
-    return { id: b.dataset.ansicht ?? '?', w: Math.round(r.width), h: Math.round(r.height) }; });
+    return { id: b.dataset.segWahl ?? '?', w: Math.round(r.width), h: Math.round(r.height) }; });
   return {
     anzahl: masse.length,
     zuKlein: masse.filter(m => m.h < 44 || m.w < 44),

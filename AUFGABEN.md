@@ -1058,52 +1058,43 @@ Ungemessen ist ausserdem, ob PowerPoint die `.pptx`, die Redion heute
 schreibt, überhaupt öffnet (`LUECKEN.md:2708`).
 
 
-## Die drei Ansichten einer Seite (A1) — OFFEN, die Wahl gehört Redur
+## Die drei Ansichten einer Seite (A1) — Bogen 1 ist gelandet (E690)
 
-Redur, 26. September 2026, mit einem Bild von AFFiNEs Kopfzeile: „bei der
-affine haben wir das es wechsel die ansichten und ich will dort auch die
-beide und plus von unsere aktuelle stand also mit cover usw also dort
-3 bereiche — aber zuerst lies, was die anderen 2 Bereiche bei AFFiNE
-machen."
+Redur, 26. September 2026, zuerst mit einem Bild von AFFiNEs Kopfzeile und
+der Anweisung „aber zuerst lies, was die anderen 2 Bereiche bei AFFiNE
+machen" — dann, nachdem der Befund vorlag: **„ich will die 2 von affine 1:1
+haben auch alles komplett wie es aussehn also wirklich komplett so und noch
+eine 3 für die aktuelle Redion damit wir es auch haben verstanden die 3 ist
+von uns erfunden."**
 
-**Nachgelesen** (Archiv, MIT, nur gelesen; alles mit Datei:Zeile in
-`doku/karte/thema-ansichten.md`): AFFiNE hat GENAU ZWEI Modi, `page` und
-`edgeless`, und es sind zwei Ansichten DESSELBEN Dokuments. Je Notizblock
-entscheidet ein Feld mit drei Werten (`both`/`doc`/`edgeless`), wo er
-erscheint; verloren geht beim Wechseln nichts. Umgeschaltet wird per Klick
-oder Alt+S, Scrollstand und Zoom werden getrennt gemerkt, und der
-Umschalter ändert NICHT, welcher Modus beim nächsten Öffnen kommt. Ein
-Cover-Bild wie in Notion gibt es dort **nicht** — nur ein Icon.
+**Gelandet ist damit** (E690, `test573`, 30 Zusagen): der Katalog
+`Register.seitenansichten`, das Feld `seitenAnsicht` am Seitenblock (kein
+Feld = die Redion-Ansicht, §9), der Umschalter auf dem vorhandenen
+`Segment` als erstes Element der Seite, die Ansicht „Seite" (AFFiNEs `page`:
+Symbol und Titel, kein Cover, keine Werkzeugzeile) und die Ansicht „Fläche"
+(AFFiNEs `edgeless`: Punktraster, Schieben, Zoomen 10–600 %, „ins Bild
+holen", der Seitentext als verschiebbarer Kasten mit eigener Kopfzeile).
 
-**Redions Stand:**
+**A1b — was auf der Fläche noch fehlt (L219).** Zeichnen (Stift, Formen,
+Verbinder), mehrere Kästen, Rückgängig fürs Verschieben, Mehrfachauswahl.
+Der Weg dafür steht in L219: eine SVG-Ebene INNERHALB derselben bewegten
+Ebene wie der Kasten — dann teilen sich Tinte und Kasten einen `transform`,
+und es gibt keine zweite Umrechnung (derselbe Fehler wie E623 und E686).
+Werkzeuge kommen aus `Register.werkzeuge` (E689), Rückgängig aus
+`GfxHistory` (E687). Ein Bogen mit Bild.
 
-| Bereich | heute |
-|---|---|
-| Seite | da, und reicher als AFFiNEs: Cover, Symbol, Titel, Volle Breite, Schrift, Vorlage, KI (`kopfleiste.ts:301-309`) |
-| Dokument | da, heisst „Dokumentmodus" (E126): Miniaturen, Arbeitsfläche, Inspector — aber als Knopf in der Werkzeugzeile, nicht als Umschalter oben |
-| Fläche | fehlt als ANSICHT |
+**A1c — die offene Frage, und sie gehört Redur.** Soll die Fläche
+irgendwann AFFiNEs Vollausbau bekommen — JEDER Block trägt Platz und „wo
+erscheinen" (`displayMode: both | doc | edgeless`), so dass einzelne Absätze
+aus der Seite auf die Fläche gezogen werden können? Das ist der ehrliche
+1:1-Weg und eine Änderung an jedem Block (gutmütige Vorgabe wie bei
+`raumVersion`: kein Feld = wie bisher). Heute liegt die ganze Seite als EIN
+Kasten auf der Fläche; dieser Weg versperrt den anderen nicht.
 
-**Der Unterschied, auf den es ankommt:** Redions Whiteboard ist ein Block
-IN der Seite; AFFiNEs Fläche ist ein Blick AUF die Seite. Dort geht das,
-weil eine Notiz zugleich Seiteninhalt und Canvas-Element ist
-(`NoteBlockModel extends GfxCompatible(BlockModel)`). Redions Blöcke hängen
-in `content` der Seite und haben keinen Platz.
-
-**Die Frage an Redur — zwei Wege, und beide zugleich wäre §8:**
-
-- **(a) AFFiNEs Weg.** Jeder Block bekommt zwei Felder: seinen Platz auf der
-  Fläche und „wo erscheinen" (Seite / Fläche / beides). Gutmütige Vorgabe
-  wie bei `raumVersion`: kein Feld = genau wie bisher (§9, rückwärts
-  denken). Grösser, aber dafür ist Text auf der Fläche echter Editor-Text
-  mit Suche, Verlauf, Fassungen und Export.
-- **(b) Der kleine Weg.** Die Fläche ist ein Whiteboard über der ganzen
-  Seite, auf dem der Seiteninhalt als EIN Kasten liegt. Ein Bogen, keine
-  Datenfrage an den Blöcken.
-
-Dazu offen: soll der Umschalter oben neben den Titel (wie im Bild), dorthin,
-wo heute Pfeile und Seitenname stehen? Und tritt der „Dokumentmodus" dann
-als dritter Knopf daneben, mit seiner heutigen Regel (nur sichtbar, wenn
-die Seite wirklich ein Blatt oder eine PDF enthält)?
+**A1d — und eine kleinere Frage.** Der „Dokumentmodus" (E126) ist heute ein
+Knopf in der Werkzeugzeile und damit eine VIERTE Ansicht, die nicht im
+Umschalter steht. Soll er als vierter Knopf dazu — sichtbar nur, wenn die
+Seite wirklich ein Blatt oder eine PDF enthält, wie heute?
 
 ---
 

@@ -1,5 +1,60 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 26. September 2026 · E690 · Drei Ansichten einer Seite (A1, Bogen 1)
+
+**Redur:** zuerst „bei der affine haben wir das es wechsel die ansichten …
+aber zuerst liess was die ander 2 bereicht machen bi affine" — und danach
+„ich will die 2 von affine 1:1 haben auch alles komplet wie es ausehn …
+und noch eien 3 für die aktuele redion … die 3 is von uns erfunden".
+
+**Zuerst gelesen.** Der Befund steht mit Datei und Zeile in
+`doku/karte/thema-ansichten.md`: AFFiNE hat GENAU ZWEI Modi, es sind zwei
+Blicke auf dasselbe Dokument — und ein Cover gibt es dort gar nicht. Ohne
+das Lesen wäre eine dritte Betriebsart entstanden, wo AFFiNE eine Ansicht
+hat.
+
+**Gebaut:** `Register.seitenansichten` (der Katalog, §5 Regel 3), das Feld
+`seitenAnsicht` am Seitenblock (kein Feld = die Redion-Ansicht, §9), der
+Umschalter auf dem vorhandenen `Segment` (Radiogruppe, seit E441-Umfeld
+gebaut und bis heute nirgends benutzt), die Ansicht „Seite" (Symbol und
+Titel, kein Cover, keine Werkzeugzeile) und die Ansicht „Fläche"
+(Punktraster, Schieben, Zoomen 10–600 %, Kneifen, „ins Bild holen", der
+Seitentext als verschiebbarer Kasten, dessen Kopf Symbol und Titel
+ÜBERNIMMT statt sie nachzubauen).
+
+**Drei Namen bewusst NICHT genommen** (§8): `Ansichten` ist der Dienst der
+Datenbankansichten, `Register.ansichten` deren Katalog, `FORMEN.ansicht` die
+Form eines `views`-Eintrags.
+
+**Gemessen** (`messungen.md` §64): am Telefon Fläche 332 → 584 px hoch,
+278 → 390 px breit, „ins Bild holen" 31 % → 98 %. Alle drei Zahlen kamen vom
+BILD, nicht vom Wächter (§55.1). Und ein vierter Fund, der nichts meldete:
+`(window as any).App` gibt es nicht — `const App` in einem gewöhnlichen
+`<script>` ist eine globale lexikalische Bindung, kein Feld von `window`;
+das Feld wurde geschrieben, der Bildschirm blieb stehen.
+
+**Geprüft.** `test573` (31 Zusagen), eingecheckt rot vor dem Bau, danach
+30/30 — und die Gegenprobe (`?? k.ARTEN[0].id` statt `?? k.VORGABE`) hat ihn
+wieder rot gemacht und dabei eine Lücke IM WÄCHTER gezeigt: er prüfte nur,
+dass nichts geschrieben wurde, nicht, was man dann sieht. Die Zusage „ohne
+Feld sieht man die Redion-Ansicht" kam deshalb dazu (jetzt 31).
+
+Nachbarn grün: `test285`, `test385`, `test391`, `test393`, `test221`,
+`test272`, `test277`, `test40`, `test67`, `test114`, `test37`, `test402`,
+`test332`, `test139`, `test425`, `test427`, `test429`, `test209`, `test70`,
+`test105`, `test109`, `test87`, `test290`, `test315`, `test549`, `test550`.
+
+**Zwei Zahlen nachgezogen, die vor diesem Bogen falsch waren:**
+`marken-decke.json` (28 px: 64 → 65, 46 px: 15 → 14 — beide aus E689, der
+Lauf stand rot) und die Hauptdatei des `pg-`-Namensraums
+(`doku/CSS-NAMENSRAEUME.md`: bausteine.css → seitenansichten.css, 47
+Vorkommen, mit Begründung im Text).
+
+**Neue Lücke:** L219 — auf der Fläche kann man noch nicht zeichnen; die
+Werkzeugleiste zeigt deshalb zwei Werkzeuge und nicht zwölf (§32).
+
+---
+
 ## 26. September 2026 · E689 · EINE Werkzeugleiste für alle Flächen (W6, Bogen 5a)
 
 **Redur:** „ich will so was haben wie die affine" · „integriere alles

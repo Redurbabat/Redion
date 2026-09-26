@@ -980,10 +980,21 @@ const App = (() => {
       return;
     }
 
-    wrap.className = p.wide ? 'wide' : '';
+    /* WELCHE DER DREI ANSICHTEN (E690). Sie steht am Block unter
+       `seitenAnsicht`; kein Feld heisst 'redion' — also genau das, was diese
+       Seite immer gezeigt hat (§9). */
+    const ansicht = typeof Seitenansicht !== 'undefined' ? Seitenansicht.art(p) : 'redion';
+    wrap.className = (p.wide || ansicht === 'flaeche' ? 'wide' : '') +
+                     (ansicht === 'flaeche' ? ' flaeche-page' : '');
     document.body.dataset.font = p.font || 'default';
     document.body.dataset.small = p.small ? '1' : '';
     wrap.innerHTML = '';
+
+    /* DER UMSCHALTER STEHT VOR ALLEM ANDEREN. Er gehört keiner der drei
+       Ansichten, sondern der Seite — und muss deshalb auch dann da sein,
+       wenn der Kopf gleich abbricht (verschlüsselte Seite): sonst wäre die
+       Ansicht einer gesperrten Seite nicht mehr wechselbar. */
+    if (typeof Seitenansicht !== 'undefined') Seitenansicht.schalter(wrap, p);
 
     if (!Kopfleiste.zeichne(wrap, p)) { zeichneCrumbs(); return; }
 
@@ -1026,7 +1037,16 @@ const App = (() => {
          liegen, bis der Tab zuging. Jede Seitenzeichnung laeuft hier
          durch — Regal, „Normale Seite", ein anderer Ort. */
       DocumentMode.freigeben?.();
-      Inhaltsflaeche.zeichne(wrap, p);
+      if (ansicht === 'flaeche' && typeof Seitenflaeche !== 'undefined') {
+        /* DIE FLÄCHE IST DER KÖRPER, NICHT EIN KASTEN DARIN (wie E296 beim
+           Dokument). Der Kopf bleibt aber stehen — anders als im
+           Dokumentmodus, der ihn wegräumt: `Seitenflaeche` hängt Symbol und
+           Titel in den Kopf des Kastens um, und der Umschalter muss oben
+           bleiben, damit man wieder herauskommt. */
+        Seitenflaeche.zeichne(wrap, p);
+      } else {
+        Inhaltsflaeche.zeichne(wrap, p);
+      }
     }
 
     zeichneCrumbs();

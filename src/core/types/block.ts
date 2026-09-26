@@ -88,6 +88,20 @@ export interface RedionBlock {
   plan?: unknown;
   /** Blatt und PDF-Seite: die Marken der Zeichenschicht (E125). */
   marken?: unknown[];
+
+  /* Die drei Ansichten einer Seite (E690). Nur an Seitenblöcken.
+   * FEHLT HÄUFIGER, ALS ES DA IST — und genau das ist die Vorgabe: kein Feld
+   * heisst 'redion', also das, was Redion immer gezeigt hat (§9). Wer hier
+   * einen Vorgabewert hinschreibt, behauptet etwas über Millionen Blöcke,
+   * die ihn nicht tragen. */
+  /** Welcher der drei Blicke gilt: 'seite' | 'flaeche' | 'redion'. */
+  seitenAnsicht?: string;
+  /** Wo der Kasten mit dem Seitentext auf der Fläche liegt, in
+   *  Flächeneinheiten bei Massstab 1 (`raumVersion` nach dem Muster aus E686).
+   *  Der AUSSCHNITT gehört nicht hierher — er steht in `meta` unter
+   *  `flaeche:<seite>`, weil ein Blick am Telefon die Fläche am Rechner nicht
+   *  verschieben darf. */
+  flaecheNotiz?: { x: number; y: number; w: number; raumVersion?: number };
 }
 
 /**

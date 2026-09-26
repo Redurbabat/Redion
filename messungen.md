@@ -4350,3 +4350,61 @@ Decke 2850 seit E688. Die zwei neuen Dateien kosten zusammen rund 5 KB.
 
 **Untere Leiste am Telefon:** Leiste 796…866, `#handy-oben` 775…835 — sie
 überdecken sich im Ruhezustand um 39 px (L217).
+
+---
+
+## §64 · Die drei Ansichten einer Seite (E690, 26. September 2026)
+
+Gemessen mit `node bilder.mts ansichtSeite|ansichtFlaeche|ansichtRedion` und
+`playwright` am gerenderten Kasten, nicht im Stilblatt (L206).
+
+**Was in welcher Ansicht steht** (dieselbe Seite, nur der Schalter bewegt):
+
+```txt
+                        Seite      Fläche     Redion
+Cover                   nein       nein       ja
+Symbol + Titel          ja         im Kasten  ja
+Werkzeugzeile .pg-tools nein       nein       ja
+Punktraster             nein       ja         nein
+Text im Speicher        gleich     gleich     gleich   (test573 §7)
+```
+
+**Der Umschalter**, Rechner 1300 × 950 und Telefon 390 × 844:
+
+```txt
+                        Rechner              Telefon
+Knöpfe                  3                    3
+je Knopf                ~96 × 44 px          ~96 × 44 px   (§37 hart)
+ausserhalb des Bildes   0                    0
+gedrückt zugleich       genau 1 (aria-checked)
+```
+
+**Die Fläche, und was das Hinsehen daran gefunden hat.** Drei Zahlen, jede
+vorher/nachher, alle am Telefon 390 × 844:
+
+```txt
+                              ERSTER STAND        NACH DEM BILD
+Höhe der Fläche               332 px              584 px
+Breite der Fläche             278 px (in 390)     390 px
+„ins Bild holen"              31 %                98 %
+Werkzeugleiste                auf dem Kasten      am unteren Rand
+```
+
+- **332 statt 584:** `#page{height:100%}` hat nichts zu messen, solange
+  `#scroll` nur `flex:1` ist — die Prozentzahl fiel auf `auto` zurück, übrig
+  blieb die `min-height` der Fläche. Als Spalte (`display:flex`) wächst das
+  Kind ohne Prozentzahl.
+- **278 statt 390:** `#page` trägt `margin:0 auto`, und ein Flex-Element mit
+  automatischen Rändern auf der Querachse wird NICHT gedehnt. 56 px Luft auf
+  jeder Seite, und die Leinwand endete mitten im Bild.
+- **31 % statt 98 %:** mit fester Kastenbreite 760 ist auf einem 390 px
+  breiten Gerät jede Rechnung richtig und jedes Ergebnis unlesbar. Die
+  VORGABE richtet sich jetzt nach dem Fenster (`min(760, Fenster − 40)`);
+  eine GESPEICHERTE Breite nicht — die gehört dem Dokument.
+
+**Und eine Zahl, die vorher falsch war** (`pruefungen/marken-decke.json`):
+28 px stand auf 64 und ist 65, 46 px stand auf 15 und ist 14. Beide Deltas
+stammen aus E689 (`.gfx-tb-farben button` 28 × 28, `.wb-massstab` 46 → 40) —
+`test362` stand seit dem 26. September früh rot, und gemerkt hat es erst der
+Nachbarlauf dieses Bogens. Eine Decke, die nicht nachgezogen wird, ist eine
+Zahl.

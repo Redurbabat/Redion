@@ -11827,6 +11827,208 @@ body .rmo-liquid::after {
    dieses Übergangs bei 1e-06 s, also aus. `test500 §3b` misst es. */
 
 </style>
+<!-- Die drei Ansichten einer Seite (E690). Ein Bauteil-Blatt, also VOR
+     bausteine.css — die Kaskade der Stilblätter darf nicht zurückspringen
+     (test87: Werte, Gerüst, Bauteile, bausteine, Schale). Dass die Fläche
+     trotzdem gegen die Telefonränder aus bausteine.css gewinnt, macht
+     nicht die Reihenfolge, sondern die Spezifität; warum, steht im Blatt. -->
+<style>
+/* ===== quell/schale/stil/seitenansichten.css ===== */
+/* ============================================================================
+   SEITENANSICHTEN — DER UMSCHALTER UND DIE FLÄCHE (E690)
+   ----------------------------------------------------------------------------
+   Redur, 26. September 2026: „ich will die 2 von affine 1:1 haben auch alles
+   komplett wie es aussehn … und noch eine 3 für die aktuelle Redion".
+
+   Drei Blicke auf EINE Seite:
+
+       seite     Symbol und Titel, sonst nichts — AFFiNEs `page`
+       flaeche   Punktraster, der Text als Kasten darauf — AFFiNEs `edgeless`
+       redion    Cover, Symbol, Titel, Werkzeugzeile — unsere eigene
+
+   WARUM HIER `#main` VOR DEM WÄHLER STEHT. Die Fläche muss die Seitenränder
+   AUFHEBEN, und die stehen am Telefon in `bausteine.css:222-228` als
+   `#page.wide:not(.produkt-welt)` — ein Kennzeichen und zwei Klassen, denn
+   `:not(…)` zählt wie eine. Gleichstand mit `#page.wide.flaeche-page`, und
+   bei Gleichstand entscheidet die Reihenfolge.
+
+   Der erste Anlauf hängte dieses Blatt deshalb HINTER `bausteine.css` — und
+   `test87` wurde zu Recht rot: die Kaskade der Stilblätter (Werte, Gerüst,
+   Bauteile, bausteine, Schale) darf nicht zurückspringen, und ein
+   Bauteil-Blatt am Ende tut genau das. Ein Blatt an die falsche Stufe zu
+   hängen, um eine Zahl zu gewinnen, wäre der Anfang vom Ende dieser Ordnung.
+   Also gewinnt hier die Spezifität statt der Reihenfolge: `#main #page…` ist
+   ein Kennzeichen mehr und schlägt die Telefonregel, wo immer das Blatt
+   hängt.
+
+   TOKENS: nur die, die es gibt (§39). Nachgesehen in `grund.css` und
+   `bausteine.css`: --line, --bg-card, --bg-side, --text, --text-dim,
+   --accent, --touch-min, --radius-lg, --schatten-schwebend, --hunten,
+   --space-5 (16px).
+
+   UND OHNE RÜCKFALLWERTE. `var(--radius-lg, 12px)` sieht vorsichtig aus und
+   ist es nicht: den Token GIBT es, der zweite Wert wirkt also nie — er zählt
+   aber in `pruefungen/marken-decke.json` als rohe Zahl mit (test362 §7) und
+   behauptet nebenbei, der Token sei unsicher. Wo ein Token da ist, steht er
+   allein.
+   ==========================================================================*/
+
+/* ----------------------------------------------------------------------------
+   1 · DER UMSCHALTER
+   Er steht als erstes Element IN der Seite (über dem Cover), weil am Telefon
+   in `#topbar` genau zwei Knöpfe sichtbar bleiben dürfen (test40) — dort wäre
+   für drei kein Platz. Die Knopfmasse kommen aus `.ru-seg-wahl`
+   (`bausteine.css`, min-height: var(--touch-min)); hier steht nur, wo die
+   Gruppe sitzt.
+   --------------------------------------------------------------------------*/
+.pg-ansichten{
+  display:flex; align-items:center;
+  padding:14px 0 10px;
+}
+/* Ein Umschalter, der auf jeder Seite ins Auge sticht, ist auf jeder Seite im
+   Weg. Er wird deutlich, sobald die Maus in der Nähe ist — und ist mit der
+   Tastatur immer voll da (`:focus-within`), sonst wäre er für den, der nicht
+   mit der Maus kommt, unsichtbar. */
+.pg-ansichten .ru-seg{opacity:.62; transition:opacity .15s ease}
+#page:hover .pg-ansichten .ru-seg,
+.pg-ansichten:focus-within .ru-seg{opacity:1}
+
+/* ----------------------------------------------------------------------------
+   2 · DIE SEITE ALS FLÄCHE
+   `#page` wird hier vom Textblatt zur Leinwand: kein Rand, keine Maximalbreite,
+   volle Höhe, und `#scroll` rollt nicht mehr — die Fläche schiebt sich selbst.
+   --------------------------------------------------------------------------*/
+/* ZWEI WÄHLER FÜR DIESELBE REGEL, und der zweite ist kein Schmuck.
+   `bausteine.css:222-228` setzt am Telefon `#page.wide:not(.produkt-welt)`
+   — das sind EIN Kennzeichen und ZWEI Klassen (`:not(…)` zählt wie eine),
+   also mehr als `#page.flaeche-page`. Gemessen war die Folge ein
+   `padding-bottom` von 253 px mitten in der Leinwand und eine Fläche von
+   330 px statt 560. Ein späteres Blatt allein genügt eben nicht: bei
+   ungleicher Spezifität gewinnt die Zahl, nicht die Reihenfolge. */
+#main #page.flaeche-page,
+#main #page.wide.flaeche-page{
+  max-width:none; padding:0;
+  display:flex; flex-direction:column; min-height:0; flex:1 1 auto;
+  /* `margin:0` IST HIER PFLICHT, nicht Kosmetik. `#page` trägt
+     `margin:0 auto` (aufbau.css:142) — und ein Flex-Element mit
+     automatischen Rändern auf der Querachse wird NICHT gedehnt. Gemessen:
+     278 px breit in einem 390 px breiten Fenster, 56 px Luft auf jeder
+     Seite, und die Leinwand endete mitten im Bild. Mit `width:100%` und
+     ohne `auto` füllt sie. */
+  margin:0; width:100%;
+}
+#main #page.flaeche-page .pg-ansichten{padding:10px var(--space-5)}
+/* `#scroll` WIRD ZUR SPALTE, und das ist der Unterschied zwischen einer
+   Leinwand und einem Streifen. Erster Anlauf: `#page{height:100%}`. Am
+   Rechner sah es richtig aus, am Telefon war die Fläche 332 px hoch in einem
+   560 px hohen Feld, und die Werkzeugleiste lag mitten auf dem Kasten —
+   gefunden auf dem BILD, nicht vom Wächter (§55.1). Der Grund: `#scroll` ist
+   `flex:1` und hat damit eine GEBRAUCHTE, aber keine festgelegte Höhe; ein
+   `height:100%` am Kind hat nichts, woran es sich messen könnte, und fiel auf
+   `auto` zurück — übrig blieb die `min-height` der Fläche. Als Spalte braucht
+   es keine Prozentzahl: das Kind wächst. */
+#main:has(> #scroll > #page.flaeche-page) #scroll{
+  overflow:hidden; display:flex; flex-direction:column;
+}
+
+.pg-flaeche{
+  position:relative; flex:1 1 auto; min-height:320px; overflow:hidden;
+  background-color:var(--bg-side);
+  /* DAS PUNKTRASTER — wie AFFiNEs `radial-gradient` (edgeless-root-block).
+     Grösse und Lage setzt JavaScript, damit es mit Zoom und Schub wandert;
+     stünden sie hier, wäre das Raster beim Zoomen stehen geblieben und die
+     Fläche hätte sich unter einem festen Muster bewegt. */
+  background-image:radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0);
+  background-size:20px 20px;
+  touch-action:none;
+}
+.pg-flaeche[data-wz="hand"]{cursor:grab}
+.pg-flaeche[data-wz="hand"]:active{cursor:grabbing}
+
+/* Die bewegliche Ebene. `transform-origin` MUSS oben links liegen: die ganze
+   Umrechnung in `seitenflaeche.ts` rechnet mit einer Ecke als Nullpunkt, und
+   der Standard wäre die Mitte. */
+.pg-fl-sicht{
+  position:absolute; inset:0;
+  transform-origin:0 0;
+  will-change:transform;
+}
+
+/* ----------------------------------------------------------------------------
+   3 · DER KASTEN MIT DEM SEITENTEXT
+   AFFiNEs Notiz auf der Fläche: eigener Kopf mit Emoji und Titel, weisser
+   Körper, weicher Schatten.
+   --------------------------------------------------------------------------*/
+.pg-fl-notiz{
+  position:absolute;
+  background:var(--bg-card); border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--schatten-schwebend);
+}
+.pg-fl-kopf{
+  display:flex; align-items:center; gap:8px;
+  padding:8px 12px; border-bottom:1px solid var(--line);
+  /* 34 px, und das ist mit Grund KEIN Fingerziel nach §37: der Kopf ist kein
+     Knopf, sondern die Kante, an der man den Kasten zieht — und die volle
+     Breite des Kastens (760 px) ist als Griff grösser als jeder Knopf. Wer
+     hier 44 px setzte, schöbe den Text um zehn Pixel nach unten, ohne dass
+     irgendetwas leichter zu treffen wäre. */
+  min-height:34px;
+  cursor:grab; user-select:none;
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  background:var(--bg-side);
+}
+.pg-fl-kopf:active{cursor:grabbing}
+/* Symbol und Titel sind UMGEZOGEN, nicht nachgebaut (siehe seitenflaeche.ts).
+   Sie tragen deshalb ihre Seitenmasse mit — 70 px Emoji und 40 px Titel, was
+   im Kopf eines Kastens absurd wäre. Hier stehen die Masse des Kastens. */
+.pg-fl-kopf .pg-icon{
+  font-size:18px; line-height:1; margin:0; cursor:pointer;
+}
+.pg-fl-kopf #title,
+.pg-fl-kopf .pg-fl-name{
+  font-size:14.5px; font-weight:650; line-height:1.3; margin:0;
+  flex:1 1 auto; min-width:0;
+  color:var(--text); outline:none;
+}
+.pg-fl-griff{margin-left:auto; color:var(--text-dim); font-size:13px}
+.pg-fl-koerper{padding:14px 20px 26px}
+/* Auf der Fläche gibt es keinen Aussenrand, an dem ein Cover kleben könnte —
+   und der Kasten ist der Rand. Ein Cover mit -96 px Rand ragte sonst über
+   ihn hinaus. */
+.pg-fl-koerper .cover{margin:0; border-radius:8px}
+
+/* ----------------------------------------------------------------------------
+   4 · DIE WERKZEUGLEISTE DER FLÄCHE
+   Das Bauteil ist `core/gfx/toolbar.ts` (E689) und bringt seine Masse mit;
+   hier steht nur, WO es hängt. Am Telefon über der unteren Leiste, sonst
+   stünde es dahinter (L217 gilt für die Flächen-Blöcke, hier ist es gleich
+   richtig gemacht).
+   --------------------------------------------------------------------------*/
+.pg-flaeche .gfx-tb-sockel{
+  position:absolute; left:50%; transform:translateX(-50%);
+  bottom:18px; z-index:6; max-width:calc(100% - 24px);
+}
+.pg-fl-massstab{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:52px; padding:0 6px;
+  font-size:12.5px; font-weight:650; color:var(--text-dim);
+  font-variant-numeric:tabular-nums;
+}
+@media(max-width:760px){
+  /* KEIN `--hunten` HIER. `#scroll` trägt am Telefon schon
+     `padding-bottom: calc(var(--hunten) + 24px)` (bausteine.css:2257) — die
+     Fläche endet also bereits über der unteren Leiste. Wer hier noch einmal
+     `--hunten` addiert, schiebt die Werkzeugleiste um eine Leistenhöhe zu
+     hoch, mitten auf den Kasten. Gemessen und auf dem Bild gesehen. */
+  .pg-flaeche .gfx-tb-sockel{bottom:12px}
+  /* Am Telefon ist der Kasten schmaler als die gemerkte Breite — nicht durch
+     eine zweite Zahl in JavaScript, sondern hier: die gespeicherte Breite
+     bleibt, was sie ist, und der Bildschirm zeigt sie kleiner. */
+  #main #page.flaeche-page .pg-ansichten{padding:8px 12px}
+}
+
+</style>
 <style>
 /* ===== quell/schale/stil/bausteine.css ===== */
 /* ============================================================================
@@ -25448,7 +25650,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1326, inhalt: 'd63c50f9804e8dc3', gebaut: '2026-09-26T06:45:47.654Z' };
+const Stand = { fassung: 1332, inhalt: '3b88b94cff8298c5', gebaut: '2026-09-26T08:13:15.960Z' };
 window.Stand = Stand;
 
 </script>
@@ -40672,6 +40874,85 @@ Register.werkzeuge = (() => {
         return raus;
     };
     return { melde, holen, alle, ids, auswahl };
+})();
+
+</script>
+<script>
+/* ===== quell/register/seitenansichten.js ===== */
+"use strict";
+/* ============================================================================
+ * register/seitenansichten.ts — der Katalog der drei Blicke auf EINE Seite
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/register/seitenansichten.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/register/seitenansichten.js`; `pruefungen/lauf/test105.mts`
+ * meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * Redur, 26. September 2026, mit einem Bild von AFFiNEs Kopfzeile: „bei der
+ * affine haben wir das es wechsel die ansichten und ich will dort auch die
+ * beide und plus von unsere aktuelle stand also mit cover usw also dort
+ * 3 bereiche" — und danach, als die Frage geklärt war: „ich will die 2 von
+ * affine 1:1 haben auch alles komplett wie es aussehn … und noch eine 3 für
+ * die aktuelle Redion damit wir es auch haben; die 3 ist von uns erfunden".
+ *
+ * NACHGELESEN, BEVOR GEBAUT WURDE (`doku/karte/thema-ansichten.md`): AFFiNE
+ * hat GENAU ZWEI Modi — `page` und `edgeless` —, und es sind zwei Ansichten
+ * DESSELBEN Dokuments, nicht zwei Dokumente. Was oft für einen dritten
+ * gehalten wird, ist keiner: Präsentation ist ein Werkzeug der Fläche,
+ * Journal eine Eigenschaft, „All docs" eine Liste.
+ *
+ * WARUM NICHT `Ansichten` UND WARUM NICHT `ansicht`. Beide Namen sind hier
+ * längst vergeben, und das ist genau der Fall, vor dem §8 warnt:
+ *
+ *     `Ansichten`              der Dienst der DATENBANK-Ansichten
+ *                              (`bereiche/datenbanken/ansichten/dienst.ts:13`,
+ *                              global seit :894)
+ *     `Register.ansichten`     der Katalog der zwölf Datenbankansichten
+ *     `FORMEN.ansicht`         die Form eines Eintrags im Fach `views`
+ *                              (`kern/ablage/formen.ts:119`)
+ *
+ * Ein zweiter Katalog unter demselben Namen liefe mit dem ersten auseinander,
+ * und niemand sähe, welcher gilt. Deshalb `Register.seitenansichten` — und am
+ * Block das Feld `seitenAnsicht`, nicht `ansicht`.
+ *
+ * WAS HIER NICHT STEHT: was eine Ansicht ZEICHNET. Ein Register beschreibt,
+ * es zeichnet nicht (`register/formeln.ts`, Z.17). Der Umschalter steht in
+ * `schale/aufbau/seitenansicht.ts`, die Leinwand in
+ * `schale/aufbau/seitenflaeche.ts`, der Seitenkopf bleibt in `kopfleiste.ts`.
+ * ==========================================================================*/
+window.Register = window.Register || {};
+Register.seitenansichten = (() => {
+    /* Die Reihenfolge ist die des Umschalters, und sie ist AFFiNEs: zuerst die
+       Seite, dann die Fläche. Unsere eigene steht hinten — nicht, weil sie
+       weniger wert ist, sondern weil die zwei vorderen zusammengehören und ein
+       Fremdkörper zwischen ihnen die Ordnung zerschlägt. */
+    const ARTEN = [
+        {
+            id: 'seite', name: 'Seite',
+            titel: 'Seite — schlank wie AFFiNEs `page`: Symbol, Titel, Text. Kein Cover, keine Werkzeugzeile.',
+            zeichen: 'page', herkunft: 'affine'
+        },
+        {
+            id: 'flaeche', name: 'Fläche',
+            titel: 'Fläche — die Leinwand wie AFFiNEs `edgeless`: Punktraster, der Seitentext als Kasten darauf, schieben und zoomen.',
+            zeichen: 'grid', herkunft: 'affine'
+        },
+        {
+            id: 'redion', name: 'Redion',
+            titel: 'Redion — unsere eigene: Cover, Symbol, Titel und die Werkzeugzeile. Das, was Redion immer gezeigt hat.',
+            zeichen: 'image', herkunft: 'redion'
+        }
+    ];
+    /* DIE VORGABE IST DIE UNSERE, UND DAS IST EINE DATENREGEL (§9).
+       Ein Seitenblock OHNE das Feld ist nicht kaputt, sondern von gestern — und
+       er muss genau das sehen, was er immer gesehen hat. Dasselbe Muster wie
+       `raumVersion` beim Whiteboard (E686) und wie `dokumentModus === undefined`
+       beim ersten Einlesen einer PDF. Wer diese Zeile auf 'seite' stellt,
+       nimmt jeder bestehenden Seite ihr Cover, ohne ein Byte zu ändern. */
+    const VORGABE = 'redion';
+    const holen = (id) => ARTEN.find(a => a.id === id) ?? null;
+    const ids = () => ARTEN.map(a => a.id);
+    return { ARTEN, VORGABE, holen, ids };
 })();
 
 </script>
@@ -172415,8 +172696,25 @@ const Kopfleiste = (() => {
      * Gibt `false` zurück, wenn danach Schluss ist — siehe Punkt 2 oben.
      * ----------------------------------------------------------------------*/
     const zeichne = (wrap, p) => {
+        /* WELCHE DER DREI ANSICHTEN GILT (E690). Der Kopf ist die Stelle, an der
+           sich die drei unterscheiden — deshalb steht die Frage hier und nicht
+           dreimal weiter unten:
+    
+               redion    Cover, Symbol, Titel, Werkzeugzeile — wie immer
+               seite     Symbol und Titel, sonst nichts (AFFiNEs `page` hat
+                         weder Cover noch Werkzeugzeile; nachgelesen in
+                         `doku/karte/thema-ansichten.md`)
+               flaeche   Symbol und Titel werden gezeichnet und von
+                         `Seitenflaeche` in den Kopf des Kastens UMGEHÄNGT —
+                         nicht nachgebaut (siehe dort)
+    
+           Symbol, Titel und der Sperrhinweis laufen in ALLEN drei: an ihnen
+           hängen der Fenstertitel, der Sperrbildschirm und `menueband.ts:121`
+           („ist überhaupt eine Seite offen?"). */
+        const art = typeof Seitenansicht !== 'undefined' ? Seitenansicht.art(p) : 'redion';
+        const eigen = art === 'redion';
         /* Cover */
-        if (p.cover) {
+        if (p.cover && eigen) {
             const c = document.createElement('div');
             c.className = 'cover';
             const textur = texturVon(String(p.cover));
@@ -172508,7 +172806,7 @@ const Kopfleiste = (() => {
             return false;
         }
         /* Werkzeugzeile */
-        if (!p.ohneTools) {
+        if (!p.ohneTools && eigen) {
             const tools = document.createElement('div');
             tools.className = 'pg-tools';
             tools.innerHTML =
@@ -172672,6 +172970,108 @@ const Kopfleiste = (() => {
     return { binde, zeichne, pfad, coverWaehlen };
 })();
 window.Kopfleiste = Kopfleiste;
+
+</script>
+<script>
+/* ===== quell/schale/aufbau/seitenansicht.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/aufbau/seitenansicht.ts — der Umschalter über der Seite
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/schale/aufbau/seitenansicht.ts`. `npm run bauen:ts`
+ * schreibt daraus `quell/schale/aufbau/seitenansicht.js`; `test105` meldet es
+ * vorher.
+ * ----------------------------------------------------------------------------
+ * DREI BLICKE AUF EINE SEITE, nicht drei Seiten (E690). Der Katalog steht in
+ * `register/seitenansichten.ts`; hier steht, wie man wechselt und was der
+ * Wechsel am Block ändert.
+ *
+ * DREI DINGE, DIE DARAN LEICHT SCHIEFGEHEN
+ *
+ * 1. DAS FEHLENDE FELD IST DER NORMALFALL. Jede Seite, die es heute gibt,
+ *    trägt kein `seitenAnsicht` — und muss weiter das zeigen, was sie immer
+ *    gezeigt hat. `art()` fällt deshalb auf `Register.seitenansichten.VORGABE`
+ *    ('redion') zurück, nicht auf den ersten Eintrag des Katalogs (das wäre
+ *    'seite', und damit wären über Nacht alle Cover weg). §9.
+ *
+ * 2. DER UMSCHALTER GEHÖRT NICHT IN DIE KOPFZEILE. AFFiNE hat ihn dort, und
+ *    der erste Entwurf wollte es nachbauen — `test40` hält aber fest, dass am
+ *    Telefon in `#topbar` GENAU zwei Knöpfe sichtbar sind (Zurück und
+ *    Seitenmenü), und `test573 §8` verlangt drei Umschaltknöpfe à 44 px auch
+ *    am Telefon. Beides zugleich geht nicht. Er steht deshalb als erstes
+ *    Element IN der Seite, also unter der Brotkrume — auf dem Bildschirm
+ *    dieselbe Ecke wie bei AFFiNE, nur eine Zeile tiefer.
+ *
+ * 3. ER IST KEINE EIGENE KNOPFREIHE. `schale/bedienung/segment.ts` gibt es
+ *    seit E441-Umfeld, es ist von `test425`, `test427` und `test429` bewacht
+ *    (Radiogruppe, roving tabindex, sichtbarer Fokus, Markierung nicht nur
+ *    über Farbe) — und es war bis heute an keiner einzigen Stelle benutzt.
+ *    Eine zweite Knopfreihe daneben zu bauen wäre §8 in Reinform.
+ *    Darum trägt der gewählte Knopf `aria-checked`, nicht `aria-pressed`:
+ *    drei sich ausschliessende Möglichkeiten sind eine Radiogruppe, nicht
+ *    drei Schalter.
+ * ==========================================================================*/
+const Seitenansicht = (() => {
+    /* BEIDE NAMEN SIND GLOBALE `const`, NICHT FELDER VON `window` — und das ist
+       die Falle, in die dieser Bogen gelaufen ist (siehe die Chronik zum 26. September). `Register` wird
+       ausdrücklich an `window` gehängt, `App` nicht: `const App = (() => …)()`
+       in einem gewöhnlichen `<script>` legt eine globale LEXIKALISCHE Bindung
+       an, und die steht nicht unter `window`. `(window as any).App?.zeichneSeite?.()`
+       war deshalb still wirkungslos — das Feld wurde geschrieben, der Bildschirm
+       blieb stehen, und kein Fehler kam. Deshalb hier der bare Name mit
+       `typeof`-Prüfung, genau wie `document-mode.ts:626` es tut. */
+    const katalog = () => (typeof Register !== 'undefined' ? Register.seitenansichten : null) ?? null;
+    /** Welche Ansicht gilt — mit der gutmütigen Vorgabe aus Punkt 1. */
+    const art = (p) => {
+        const k = katalog();
+        if (!k)
+            return 'redion';
+        return k.holen(p?.seitenAnsicht)?.id ?? k.VORGABE;
+    };
+    /** Setzen und neu zeichnen. Ein Griff, wie `volleBreite` (E283, test277). */
+    const setze = (p, id) => {
+        const k = katalog();
+        if (!p?.id || !k?.holen(id))
+            return;
+        if (art(p) === id)
+            return;
+        Store.updateBlock(p.id, { seitenAnsicht: id });
+        if (typeof App !== 'undefined')
+            App.zeichneSeite();
+    };
+    /**
+     * Der Umschalter, als erstes Element der Seite.
+     *
+     * Er wird bei JEDER Seitenzeichnung neu gebaut — wie der ganze Seitenkopf.
+     * Ein Umschalter, der stehen bleibt und seinen Zustand nachträgt, wäre ein
+     * zweiter Zustand neben dem Block, und der ginge irgendwann auseinander.
+     */
+    const schalter = (wrap, p) => {
+        const k = katalog();
+        if (!k || typeof Segment === 'undefined')
+            return;
+        const halter = document.createElement('div');
+        halter.className = 'pg-ansichten';
+        const griff = Segment.bauen({
+            name: 'Ansicht dieser Seite',
+            wahlen: k.ARTEN.map((a) => ({ id: a.id, name: a.name, zeichen: a.zeichen })),
+            gewaehlt: art(p),
+            gewechselt: (id) => setze(p, id)
+        });
+        /* Der Titel steht am KNOPF, nicht an der Gruppe: er erklärt eine Wahl,
+           und `Segment` kennt nur Namen und Kurzform. */
+        for (const a of k.ARTEN) {
+            const b = griff.element.querySelector(`[data-seg-wahl="${a.id}"]`);
+            if (b)
+                b.title = a.titel;
+        }
+        halter.appendChild(griff.element);
+        wrap.appendChild(halter);
+    };
+    return { art, setze, schalter };
+})();
+window.Seitenansicht = Seitenansicht;
 
 </script>
 <script>
@@ -175967,6 +176367,374 @@ window.Inhaltsflaeche = Inhaltsflaeche;
 
 </script>
 <script>
+/* ===== quell/schale/aufbau/seitenflaeche.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/aufbau/seitenflaeche.ts — die Seite als Leinwand (AFFiNEs `edgeless`)
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/schale/aufbau/seitenflaeche.ts`. `npm run bauen:ts`
+ * schreibt daraus `quell/schale/aufbau/seitenflaeche.js`; `test105` meldet es
+ * vorher.
+ * ----------------------------------------------------------------------------
+ * NACHGELESEN, DANN GEBAUT (`doku/karte/thema-ansichten.md`). AFFiNEs Fläche
+ * ist kein zweites Dokument, sondern ein Blick auf dasselbe: Punktraster,
+ * darin ein `gfx-viewport`, und der Seitentext steht darin als
+ * verschiebbarer Kasten mit eigener Kopfzeile (Emoji, Titel, Einklappen).
+ * Gezoomt wird von 10 % bis 600 %; Ausschnitt und Zoom werden GETRENNT vom
+ * Scrollstand der Seite gemerkt.
+ *
+ * WAS HIER 1:1 IST: das Punktraster, der Kasten mit Kopfzeile an einer
+ * gemerkten Stelle, Schieben, Zoomen, „ins Bild passen", der Prozentwert
+ * unten, und dass der Wechsel KEINEN Text anfasst.
+ *
+ * WAS HIER NOCH NICHT IST — und es steht als Lücke geschrieben, nicht als
+ * Versprechen (§32, L219): auf der Fläche ZEICHNEN (Stift, Formen,
+ * Verbinder) und mehrere Kästen. Die Werkzeugleiste zeigt deshalb genau die
+ * zwei Werkzeuge, die wirklich etwas tun — Zeiger und Hand. Eine Leiste mit
+ * zwölf Knöpfen, von denen zehn nichts bewirken, wäre die schlechtere Antwort.
+ *
+ * DIE DREI STELLEN, AN DENEN ES LEICHT SCHIEFGEHT
+ *
+ * 1. ZWEI ZAHLENWELTEN. Alles, was der Mensch sieht, ist Bildschirm;
+ *    alles, was gespeichert wird, ist Fläche. Die Umrechnung steht EINMAL
+ *    hier (`ausFlaeche`/`inFlaeche`) — derselbe Fehler wie E623 und E686
+ *    entstand beide Male dadurch, dass sie an zwei Stellen stand.
+ *
+ * 2. DER AUSSCHNITT IST KEIN INHALT. Wo man gerade hinsieht, gehört nicht
+ *    in den Block — sonst verschiebt ein Blick am Telefon die Fläche am
+ *    Rechner. Er liegt in `meta` unter `flaeche:<seite>`, so wie AFFiNE ihn
+ *    in den `localStorage` legt. Die STELLE des Kastens gehört dagegen zum
+ *    Dokument und steht am Block (`flaecheNotiz`, mit `raumVersion` nach dem
+ *    Muster aus E686).
+ *
+ * 3. DER TEXT WIRD NICHT KOPIERT. Im Kasten steht derselbe Aufruf, der die
+ *    normale Seite füllt — `Inhaltsflaeche.zeichne`. Wer hier eine zweite
+ *    Zeichnung baut, hat zwei Editoren, und einer von beiden ist immer der
+ *    veraltete.
+ * ==========================================================================*/
+const Seitenflaeche = (() => {
+    /** Zoomgrenzen und Schritt wie in AFFiNE (`framework/std/src/gfx/viewport.ts`). */
+    const ZOOM_MIN = 0.1;
+    const ZOOM_MAX = 6.0;
+    /** Das Raster in Flächeneinheiten — 20, wie AFFiNEs Punktabstand. */
+    const RASTER = 20;
+    /** Die Fassung der Zahlen am Block. Eine spätere Umstellung erkennt daran,
+     *  was sie vor sich hat, statt zu raten (E686). */
+    const RAUM_VERSION = 1;
+    /** Vorgabebreite des Kastens, wenn die Seite noch keine hat.
+     *  SIE RICHTET SICH NACH DEM FENSTER, und das ist eine Lehre vom Telefon:
+     *  mit festen 760 rechnete „ins Bild holen" auf 390 px Breite einen
+     *  Massstab von 31 % aus — der Kasten war da, lesbar war er nicht. Eine
+     *  VORGABE darf sich am Gerät orientieren; eine gespeicherte Breite nicht
+     *  (die gehört dem Dokument und wäre sonst auf jedem Gerät eine andere). */
+    const vorgabeBreite = () => Math.min(760, Math.max(280, (window.innerWidth || 760) - 40));
+    const zahl = (roh, ersatz) => {
+        const n = Number(roh);
+        return Number.isFinite(n) ? n : ersatz;
+    };
+    /* ------------------------------------------------------------------------
+     * Der Ausschnitt lebt in `meta`, nicht am Block (Punkt 2 oben).
+     * ----------------------------------------------------------------------*/
+    const sichtSchluessel = (id) => 'flaeche:' + id;
+    const sichtLesen = (id) => {
+        const roh = Store.getMeta(sichtSchluessel(id), null);
+        if (!roh || typeof roh !== 'object')
+            return null;
+        const s = roh;
+        if (!Number.isFinite(Number(s['z'])))
+            return null;
+        return { x: zahl(s['x'], 0), y: zahl(s['y'], 0), z: zahl(s['z'], 1) };
+    };
+    const sichtSchreiben = (id, s) => {
+        Store.setMeta(sichtSchluessel(id), { x: s.x, y: s.y, z: s.z });
+    };
+    /* ------------------------------------------------------------------------
+     * Die Stelle des Kastens gehört zum Dokument.
+     * ----------------------------------------------------------------------*/
+    const notizLesen = (p) => {
+        const roh = p?.flaecheNotiz;
+        if (!roh || typeof roh !== 'object')
+            return { x: 0, y: 0, w: vorgabeBreite() };
+        return {
+            x: zahl(roh.x, 0), y: zahl(roh.y, 0),
+            /* Ein Kasten unter 240 wäre nicht mehr lesbar; die Zahl schützt vor
+               einer kaputten Sicherung, nicht vor dem Menschen. */
+            w: Math.max(240, zahl(roh.w, vorgabeBreite()))
+        };
+    };
+    const notizSchreiben = (p, ort) => {
+        Store.updateBlock(p.id, {
+            flaecheNotiz: { x: Math.round(ort.x), y: Math.round(ort.y), w: Math.round(ort.w), raumVersion: RAUM_VERSION }
+        });
+    };
+    /* ========================================================================
+     * Zeichnen
+     * ======================================================================*/
+    const zeichne = (wrap, p) => {
+        const flaeche = document.createElement('div');
+        flaeche.className = 'pg-flaeche';
+        flaeche.setAttribute('role', 'application');
+        flaeche.setAttribute('aria-label', 'Fläche der Seite ' + (p.text || 'Ohne Titel'));
+        /* Die bewegliche Ebene. Alles darin rechnet in Flächeneinheiten; der
+           `transform` macht daraus Bildschirm (Punkt 1 oben). */
+        const ebene = document.createElement('div');
+        ebene.className = 'pg-fl-sicht';
+        flaeche.appendChild(ebene);
+        /* --- Der Kasten, in dem der Seitentext steht ------------------------ */
+        const ort = notizLesen(p);
+        const kasten = document.createElement('div');
+        kasten.className = 'pg-fl-notiz';
+        kasten.style.left = ort.x + 'px';
+        kasten.style.top = ort.y + 'px';
+        kasten.style.width = ort.w + 'px';
+        const kopf = document.createElement('div');
+        kopf.className = 'pg-fl-kopf';
+        /* DER KOPF DES KASTENS IST DER SEITENKOPF — UMGEZOGEN, NICHT NACHGEBAUT.
+           AFFiNEs Notiz trägt auf der Fläche Emoji und Titel in einer eigenen
+           Zeile (`edgeless-note-header.tsx:22-60`). Nachbauen hiesse hier: ein
+           zweites Titelfeld, das dieselbe Seite schreibt — und eines von beiden
+           wäre immer das veraltete (§8).
+    
+           Stattdessen wandern die zwei Knoten, die `Kopfleiste.zeichne` gerade
+           angelegt hat, mit allen ihren Zuhörern hierher. Das hält auch etwas
+           am Leben, das niemand vermuten würde: `menueband.ts:121` fragt
+           `!!document.getElementById('title')`, um zu wissen, ob überhaupt eine
+           Seite offen ist. Ohne `#title` wäre auf der Fläche das halbe Menüband
+           aus. */
+        const symAlt = wrap.querySelector('.pg-icon');
+        const titelAlt = wrap.querySelector('#title');
+        if (symAlt)
+            kopf.appendChild(symAlt);
+        if (titelAlt)
+            kopf.appendChild(titelAlt);
+        if (!symAlt) {
+            const sym = document.createElement('span');
+            sym.className = 'pg-icon';
+            sym.setAttribute('aria-hidden', 'true');
+            sym.textContent = p.icon || '📄';
+            kopf.appendChild(sym);
+        }
+        if (!titelAlt) {
+            const name = document.createElement('div');
+            name.className = 'pg-fl-name';
+            name.textContent = p.text || 'Ohne Titel';
+            kopf.appendChild(name);
+        }
+        const griffHinweis = document.createElement('span');
+        griffHinweis.className = 'pg-fl-griff';
+        griffHinweis.setAttribute('aria-hidden', 'true');
+        griffHinweis.title = 'Ziehen verschiebt den Kasten';
+        griffHinweis.textContent = '⠿';
+        kopf.appendChild(griffHinweis);
+        kasten.appendChild(kopf);
+        const koerper = document.createElement('div');
+        koerper.className = 'pg-fl-koerper';
+        kasten.appendChild(koerper);
+        ebene.appendChild(kasten);
+        /* DERSELBE AUFRUF WIE AUF DER NORMALEN SEITE (Punkt 3 oben). */
+        Inhaltsflaeche.zeichne(koerper, p);
+        wrap.appendChild(flaeche);
+        /* ======================================================================
+         * Ausschnitt, Raster, Umrechnung
+         * ====================================================================*/
+        let sicht = sichtLesen(p.id) ?? { x: 0, y: 0, z: 1 };
+        let werkzeug = 'zeiger';
+        const stellen = (merken = true) => {
+            const z = sicht.z;
+            ebene.style.transform = `translate(${sicht.x}px, ${sicht.y}px) scale(${z})`;
+            /* Das Raster wandert und wächst mit — genau das macht aus einer Fläche
+               eine Fläche und nicht eine Seite mit Punkten darauf. */
+            flaeche.style.backgroundSize = `${RASTER * z}px ${RASTER * z}px`;
+            flaeche.style.backgroundPosition = `${sicht.x}px ${sicht.y}px`;
+            const anzeige = flaeche.querySelector('.pg-fl-massstab');
+            if (anzeige)
+                anzeige.textContent = Math.round(z * 100) + ' %';
+            if (merken)
+                sichtSchreiben(p.id, sicht);
+        };
+        /** Bildschirm → Fläche. */
+        const inFlaeche = (sx, sy) => {
+            const k = flaeche.getBoundingClientRect();
+            return { x: (sx - k.left - sicht.x) / sicht.z, y: (sy - k.top - sicht.y) / sicht.z };
+        };
+        /** Zoomen und dabei den Punkt unter dem Finger festhalten. */
+        const massstab = (neu, haltX, haltY) => {
+            const z = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, neu));
+            const k = flaeche.getBoundingClientRect();
+            const sx = haltX === undefined ? k.width / 2 : haltX - k.left;
+            const sy = haltY === undefined ? k.height / 2 : haltY - k.top;
+            /* Der Punkt in Flächeneinheiten, der unter dem Finger bleiben soll. */
+            const fx = (sx - sicht.x) / sicht.z;
+            const fy = (sy - sicht.y) / sicht.z;
+            sicht = { x: sx - fx * z, y: sy - fy * z, z };
+            stellen();
+        };
+        /** Alles ins Bild holen — AFFiNEs „Fit to screen". */
+        const passend = () => {
+            const k = flaeche.getBoundingClientRect();
+            /* `offsetWidth/Height` sind LAYOUT-Masse und vom `transform` unberührt —
+               also schon Flächeneinheiten. Mit `getBoundingClientRect` wären sie
+               mit z multipliziert, und die Rechnung liefe im Kreis. */
+            const w = kasten.offsetWidth || vorgabeBreite();
+            const h = kasten.offsetHeight || 400;
+            if (!k.width || !k.height)
+                return;
+            const rand = 24;
+            /* UNTEN STEHT DIE WERKZEUGLEISTE. Ohne diesen Streifen rechnet „ins
+               Bild holen" den Kasten mittig und legt seine untere Hälfte hinter
+               die Leiste — auf dem Telefon war genau das zu sehen. */
+            const leisteHoch = 84;
+            const nutzHoehe = Math.max(120, k.height - leisteHoch - rand);
+            const z = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.min(1, (k.width - rand * 2) / w, (nutzHoehe - rand) / h)));
+            sicht = {
+                z,
+                x: (k.width - w * z) / 2 - ort.x * z,
+                y: Math.max(rand, (nutzHoehe - h * z) / 2) - ort.y * z
+            };
+            stellen();
+        };
+        /* ======================================================================
+         * Die Werkzeugleiste — dieselbe wie auf jeder anderen Fläche (E689)
+         * ====================================================================*/
+        const massstabZeigen = document.createElement('b');
+        massstabZeigen.className = 'pg-fl-massstab';
+        massstabZeigen.setAttribute('aria-live', 'polite');
+        massstabZeigen.textContent = '100 %';
+        const leiste = GfxToolbar.erstelle({
+            klasse: 'pg-fl-tools',
+            beschriftung: 'Werkzeuge der Fläche',
+            werkzeuge: Register.werkzeuge.auswahl(['zeiger', 'hand']),
+            aktiv: 'zeiger',
+            aktionen: [
+                { id: 'kleiner', name: 'Kleiner', titel: 'Kleiner (Strg + Rad)', sym: 'minus' },
+                { id: 'groesser', name: 'Grösser', titel: 'Grösser (Strg + Rad)', sym: 'plus' },
+                { id: 'passend', name: 'Ins Bild', titel: 'Alles ins Bild holen', sym: 'maximize' }
+            ],
+            zusatz: { groesser: massstabZeigen },
+            aufWerkzeug: (id) => {
+                werkzeug = id;
+                flaeche.dataset['wz'] = id;
+            },
+            aufAktion: (id) => {
+                if (id === 'kleiner')
+                    massstab(sicht.z / 1.25);
+                if (id === 'groesser')
+                    massstab(sicht.z * 1.25);
+                if (id === 'passend')
+                    passend();
+            }
+        });
+        flaeche.appendChild(leiste.element);
+        flaeche.dataset['wz'] = werkzeug;
+        if (typeof Register !== 'undefined' && Register.symbole)
+            Register.symbole.fuelle(leiste.element);
+        /* ======================================================================
+         * Schieben, Ziehen, Zoomen
+         * ====================================================================*/
+        /** Was gerade unter dem Finger passiert. */
+        let zug = null;
+        const finger = new Map();
+        let kneifen = null;
+        const beginnt = (e) => {
+            finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (finger.size === 2) {
+                const [a, b] = [...finger.values()];
+                if (a && b)
+                    kneifen = { abstand: Math.hypot(a.x - b.x, a.y - b.y), z: sicht.z };
+                zug = null;
+                return;
+            }
+            const ziel = e.target instanceof Element ? e.target : null;
+            /* AM KOPF ZIEHT MAN DEN KASTEN, sonst die Fläche. Der Körper des
+               Kastens gehört dem Text: wer darin zieht, markiert Worte. */
+            if (ziel?.closest('.pg-fl-kopf') && werkzeug === 'zeiger') {
+                zug = { art: 'kasten', sx: e.clientX, sy: e.clientY, ax: ort.x, ay: ort.y };
+            }
+            else if (ziel?.closest('.gfx-tb-sockel')) {
+                return;
+            }
+            else if (werkzeug === 'hand' || e.button === 1 || !ziel?.closest('.pg-fl-notiz')) {
+                zug = { art: 'flaeche', sx: e.clientX, sy: e.clientY, ax: sicht.x, ay: sicht.y };
+            }
+            if (zug)
+                flaeche.setPointerCapture(e.pointerId);
+        };
+        const bewegt = (e) => {
+            if (finger.has(e.pointerId))
+                finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (kneifen && finger.size === 2) {
+                const [a, b] = [...finger.values()];
+                if (!a || !b)
+                    return;
+                const jetzt = Math.hypot(a.x - b.x, a.y - b.y);
+                if (kneifen.abstand > 0)
+                    massstab(kneifen.z * (jetzt / kneifen.abstand), (a.x + b.x) / 2, (a.y + b.y) / 2);
+                return;
+            }
+            if (!zug)
+                return;
+            const dx = e.clientX - zug.sx;
+            const dy = e.clientY - zug.sy;
+            if (zug.art === 'flaeche') {
+                sicht = { x: zug.ax + dx, y: zug.ay + dy, z: sicht.z };
+                stellen(false);
+            }
+            else {
+                /* Der Kasten wandert in FLÄCHENEINHEITEN, also geteilt durch z —
+                   ohne das läuft er bei 50 % Zoom doppelt so weit wie der Finger. */
+                ort.x = zug.ax + dx / sicht.z;
+                ort.y = zug.ay + dy / sicht.z;
+                kasten.style.left = ort.x + 'px';
+                kasten.style.top = ort.y + 'px';
+            }
+        };
+        const endet = (e) => {
+            finger.delete(e.pointerId);
+            if (finger.size < 2)
+                kneifen = null;
+            if (!zug)
+                return;
+            if (zug.art === 'flaeche')
+                sichtSchreiben(p.id, sicht);
+            else
+                notizSchreiben(p, ort);
+            zug = null;
+        };
+        flaeche.addEventListener('pointerdown', beginnt);
+        flaeche.addEventListener('pointermove', bewegt);
+        flaeche.addEventListener('pointerup', endet);
+        flaeche.addEventListener('pointercancel', endet);
+        /* Rad schiebt, Strg + Rad zoomt — wie in AFFiNE und im Whiteboard. */
+        flaeche.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (e.ctrlKey || e.metaKey) {
+                massstab(sicht.z * (e.deltaY < 0 ? 1.12 : 1 / 1.12), e.clientX, e.clientY);
+                return;
+            }
+            sicht = { x: sicht.x - e.deltaX, y: sicht.y - e.deltaY, z: sicht.z };
+            stellen();
+        }, { passive: false });
+        /* Beim ERSTEN Öffnen ins Bild holen; danach steht, wo der Mensch war.
+           `requestAnimationFrame`, weil die Höhe des Kastens erst nach dem
+           Zeichnen bekannt ist — vorher wäre `offsetHeight` null und der
+           Zoomfaktor eine Erfindung. */
+        if (sichtLesen(p.id))
+            stellen(false);
+        else
+            requestAnimationFrame(() => passend());
+        stellen(false);
+        /* Die Umrechnung steht bereit, auch wenn heute nur der Kasten sie
+           braucht — der nächste Bogen (zeichnen auf der Fläche) rechnet mit
+           derselben Formel, nicht mit einer zweiten. */
+        void inFlaeche;
+    };
+    return { zeichne };
+})();
+window.Seitenflaeche = Seitenflaeche;
+
+</script>
+<script>
 /* ===== quell/schale/aufbau/schale.js ===== */
 "use strict";
 /* ============================================================================
@@ -177029,10 +177797,21 @@ const App = (() => {
             zeichneCrumbs();
             return;
         }
-        wrap.className = p.wide ? 'wide' : '';
+        /* WELCHE DER DREI ANSICHTEN (E690). Sie steht am Block unter
+           `seitenAnsicht`; kein Feld heisst 'redion' — also genau das, was diese
+           Seite immer gezeigt hat (§9). */
+        const ansicht = typeof Seitenansicht !== 'undefined' ? Seitenansicht.art(p) : 'redion';
+        wrap.className = (p.wide || ansicht === 'flaeche' ? 'wide' : '') +
+            (ansicht === 'flaeche' ? ' flaeche-page' : '');
         document.body.dataset.font = p.font || 'default';
         document.body.dataset.small = p.small ? '1' : '';
         wrap.innerHTML = '';
+        /* DER UMSCHALTER STEHT VOR ALLEM ANDEREN. Er gehört keiner der drei
+           Ansichten, sondern der Seite — und muss deshalb auch dann da sein,
+           wenn der Kopf gleich abbricht (verschlüsselte Seite): sonst wäre die
+           Ansicht einer gesperrten Seite nicht mehr wechselbar. */
+        if (typeof Seitenansicht !== 'undefined')
+            Seitenansicht.schalter(wrap, p);
         if (!Kopfleiste.zeichne(wrap, p)) {
             zeichneCrumbs();
             return;
@@ -177079,7 +177858,17 @@ const App = (() => {
                liegen, bis der Tab zuging. Jede Seitenzeichnung laeuft hier
                durch — Regal, „Normale Seite", ein anderer Ort. */
             DocumentMode.freigeben?.();
-            Inhaltsflaeche.zeichne(wrap, p);
+            if (ansicht === 'flaeche' && typeof Seitenflaeche !== 'undefined') {
+                /* DIE FLÄCHE IST DER KÖRPER, NICHT EIN KASTEN DARIN (wie E296 beim
+                   Dokument). Der Kopf bleibt aber stehen — anders als im
+                   Dokumentmodus, der ihn wegräumt: `Seitenflaeche` hängt Symbol und
+                   Titel in den Kopf des Kastens um, und der Umschalter muss oben
+                   bleiben, damit man wieder herauskommt. */
+                Seitenflaeche.zeichne(wrap, p);
+            }
+            else {
+                Inhaltsflaeche.zeichne(wrap, p);
+            }
         }
         zeichneCrumbs();
         streifenZeichnen();

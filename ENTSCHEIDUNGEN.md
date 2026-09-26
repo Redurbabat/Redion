@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-669 Entscheidungen, E1 bis E689 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+670 Entscheidungen, E1 bis E690 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -732,6 +732,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E687** — Die drei Flächen teilen EINEN Verlauf: `GfxHistory.erstelle(tiefe)` in `src/core/gfx/history.ts` ersetzt die drei Stapelpaare aus JSON-Abbildern in Whiteboard, Gedankenkarte und Planfläche (Audit D1, Bogen 4) — der Kern gibt das Abbild zurück, das Einsetzen bleibt bei der Fläche; Marken (E378) und Seitenverlauf (E684) bleiben eigen (`test571`)
 * **E688** — Die Startdecke steigt von 2700 auf 2850 KB, mit gezählter Begründung wie E613: 127 KB in neun Tagen sind das Produkt (Studio, Trainer, Gedankenkarte), nicht eine Bibliothek — und zwei Posten davon sind Lerninhalt statt Code (L216, Frage an Redur)
 * **E689** — EINE Werkzeugleiste für alle Flächen: der Katalog `Register.werkzeuge` (22 Werkzeuge, §8) und das Kernbauteil `GfxToolbar` (`src/core/gfx/toolbar.ts`), auf das zuerst das Whiteboard umzieht — schwebende Kapsel UNTER der Fläche (§37 hart), Strichzeichen statt Emoji, Untermenü nach oben, am Telefon 44 px und rollend statt umbrechend (`test572`, Redur: „integriere alles zusammen")
+* **E690** — Drei Ansichten einer Seite, umschaltbar oben: AFFiNEs `page` und `edgeless` so nah am Original, wie unsere Technik es zulässt, dazu „Redion" als dritte mit Cover und Werkzeugzeile — Katalog `Register.seitenansichten`, Feld `seitenAnsicht` am Block (kein Feld = Redion, §9), Umschalter auf dem vorhandenen `Segment` statt einer vierten Knopfreihe (§8), die Fläche als Punktraster mit dem Seitentext als verschiebbarem Kasten (`test573`, Redur: „ich will die 2 von affine 1:1 haben")
 
 ---
 
@@ -56187,3 +56188,125 @@ weiter.
 **Nachbarn:** `test209` (nachgezogen, siehe dort), `test568`, `test570`,
 `test571`, `test290`, `test402`, `test105`, `test109`, `test388`, `test266`,
 `test438`, `test537`, `test550`, `test87`.
+
+---
+
+## E690 — Drei Ansichten einer Seite: AFFiNEs zwei, und unsere dritte
+
+**Datum:** 26. September 2026 · **Wächter:** `test573` (30 Zusagen) ·
+Redur, mit einem Bild von AFFiNEs Kopfzeile: „bei der affine haben wir das
+es wechsel die ansichten und ich will dort auch die beide und plus von
+unsere aktuelle stand also mit cover usw also dort 3 bereiche aber zuerst
+liess was die ander 2 bereicht machen bi affine" — und, nachdem gelesen war:
+„ich will die 2 von affine 1:1 haben auch alles komplett wie es aussehn also
+wirklich komplett so und noch eine 3 für die aktuelle Redion damit wir es
+auch haben verstanden die 3 ist von uns erfunden"
+
+**Zuerst gelesen, dann gebaut.** Redurs erster Satz enthielt eine
+Arbeitsanweisung — „aber zuerst liess was die anderen 2 Bereiche machen bei
+AFFiNE" —, und sie hat den Bogen verändert. Der Befund steht in
+`doku/karte/thema-ansichten.md`, mit Datei und Zeile: AFFiNE hat GENAU ZWEI
+Modi (`type DocMode = 'edgeless' | 'page'`), es sind zwei Blicke auf
+DASSELBE Dokument, und was oft für einen dritten gehalten wird, ist keiner
+(Präsentation ist ein Werkzeug der Fläche, Journal eine Eigenschaft). Ohne
+das Lesen wäre hier eine dritte Betriebsart entstanden, wo AFFiNE eine
+Ansicht hat — und der wichtigste Fund wäre unbemerkt geblieben: **ein Cover
+gibt es dort gar nicht.** Redion ist an dieser Stelle reicher als das
+Vorbild, und genau deshalb ergibt die dritte Ansicht Sinn.
+
+**Was entschieden wurde.**
+
+1. **Drei Ansichten, ein Dokument.** `Register.seitenansichten` (§5 Regel 3)
+   führt `seite`, `flaeche`, `redion`. Keine Ansicht kopiert Inhalt, keine
+   löscht welchen; `test573 §7` misst das am Block, nicht am Bildschirm.
+
+2. **Das Feld heisst `seitenAnsicht`, und sein Fehlen ist die Vorgabe.**
+   Ein Block ohne das Feld sieht genau das, was er immer gesehen hat
+   (`VORGABE = 'redion'`) — dasselbe Muster wie `raumVersion` (E686) und
+   `dokumentModus === undefined`. Stünde dort `'seite'`, wäre über Nacht
+   jedes Cover dieser App weg, ohne dass ein Byte geschrieben wurde (§9).
+
+3. **Drei Namen, die NICHT genommen wurden**, und das ist §8 in der Praxis:
+   `Ansichten` ist der Dienst der Datenbank-Ansichten, `Register.ansichten`
+   deren Katalog, `FORMEN.ansicht` die Form eines `views`-Eintrags. Ein
+   zweiter Katalog unter demselben Namen liefe mit dem ersten auseinander,
+   und niemand sähe, welcher gilt. Also `Register.seitenansichten` und
+   `seitenAnsicht`.
+
+4. **Der Umschalter ist das vorhandene `Segment`.** `schale/bedienung/
+   segment.ts` gibt es seit E441-Umfeld — Radiogruppe, roving tabindex,
+   sichtbarer Fokus, Markierung nicht nur über Farbe, bewacht von `test425`,
+   `test427`, `test429` — und es war an KEINER Stelle des Produkts benutzt.
+   Eine eigene Knopfreihe daneben wäre die vierte gewesen. Deshalb trägt der
+   gewählte Knopf `aria-checked` und nicht `aria-pressed`: drei sich
+   ausschliessende Möglichkeiten sind eine Radiogruppe, keine drei Schalter.
+
+5. **Er steht IN der Seite, nicht in der Kopfzeile.** AFFiNE hat ihn oben im
+   Fenster, und der erste Entwurf wollte das nachbauen. `test40` hält aber
+   fest, dass am Telefon in `#topbar` genau zwei Knöpfe sichtbar sein dürfen
+   (Zurück, Seitenmenü), und `test573 §8` verlangt drei Umschaltknöpfe à
+   44 px auch dort. Beides zugleich geht nicht. Er steht deshalb als erstes
+   Element der Seite — auf dem Bildschirm dieselbe Ecke, eine Zeile tiefer.
+
+6. **Die Fläche ist eine Leinwand, kein Kasten in der Seite.** `.pg-flaeche`
+   trägt AFFiNEs Punktraster (`radial-gradient`, das mit Zoom und Schub
+   wandert), darin eine Ebene mit `transform`, darin der Seitentext als
+   Kasten mit eigener Kopfzeile. Zoom 10 %–600 % in Schritten von 25 wie
+   dort, Rad schiebt, Strg+Rad zoomt, zwei Finger kneifen, „ins Bild holen"
+   rechnet den Massstab.
+
+7. **Symbol und Titel ziehen UM, sie werden nicht nachgebaut.** Der Kopf des
+   Kastens übernimmt die zwei Knoten, die `Kopfleiste.zeichne` eben angelegt
+   hat, mitsamt ihren Zuhörern. Ein zweites Titelfeld wäre ein zweiter
+   Schreiber auf dieselbe Seite (§8) — und es hätte etwas gebrochen, das
+   niemand vermutet: `menueband.ts:121` fragt `!!document.getElementById(
+   'title')`, um zu wissen, ob überhaupt eine Seite offen ist.
+
+8. **Die Werkzeugleiste zeigt zwei Werkzeuge, nicht zwölf.** Zeiger und
+   Hand, dazu Kleiner/Massstab/Grösser/Ins Bild. Auf der Fläche zeichnen
+   kann man noch nicht; eine Leiste mit zehn Knöpfen, die nichts bewirken,
+   wäre ein falsches Versprechen (§32). Die Lücke steht als **L219**
+   geschrieben, nicht als Absicht.
+
+**Was daran NICHT 1:1 ist, und warum.** Der Code kann es nicht sein: AFFiNE
+steht auf React, Lit und Yjs, Redion auf keinem davon, und §6 verbietet den
+Wechsel. Übernommen sind Aussehen und Verhalten, selbst gebaut. Und §2 sagt
+„eine eigene App, keine Kopie" — Redur hat für diese eine Stelle ausdrücklich
+das Gegenteil verlangt, und das steht hier, statt dass die Regel
+stillschweigend gebrochen wird. Die dritte Ansicht ist die Antwort darauf:
+Redion übernimmt AFFiNEs zwei und behält die eigene daneben.
+
+**Die Alternativen.** (a) Jeder Block bekommt Platz und „wo erscheinen" wie
+AFFiNEs `displayMode` — das ist der ehrliche Vollausbau und eine
+Datenmigration an jedem Block; er bleibt möglich, weil die Fläche heute
+schon über ein eigenes Feld rechnet. (b) Die Fläche als Whiteboard-BLOCK in
+der Seite — das gibt es längst (`zeichenflaeche`) und ist genau nicht, was
+Redur wollte: ein Kasten IN der Seite, kein Blick AUF sie. (c) Den
+Umschalter in `#topbar` — siehe Punkt 5.
+
+**Preis.** Drei Skriptdateien und ein Stilblatt mehr. Zwei neue Felder am
+Seitenblock (`seitenAnsicht`, `flaecheNotiz`) — beide optional, beide mit
+gutmütiger Vorgabe, beide in `src/core/types/block.ts` und
+`doku/REDION-FORMAT.md` beschrieben. Der Umschalter steht auf JEDER Seite
+über dem Cover; er ist bei .62 Deckkraft still und wird auf Mauskontakt und
+bei Tastaturfokus voll sichtbar.
+
+**Drei Funde, die nur das Hinsehen gemacht hat** (§55.1). Am Telefon war die
+Fläche 332 px hoch in einem 560 px hohen Feld und die Werkzeugleiste lag
+mitten auf dem Kasten: `#page{height:100%}` hat nichts zum Messen, wenn
+`#scroll` nur `flex:1` ist. Dann war sie 278 px breit in 390 px — ein
+Flex-Element mit `margin:0 auto` wird auf der Querachse NICHT gedehnt. Und
+„ins Bild holen" rechnete 31 %: mit fester Kastenbreite 760 ist auf einem
+Telefon jede Rechnung richtig und das Ergebnis unlesbar.
+
+**Und ein Fehler, der nichts gemeldet hat.** `(window as any).App?.
+zeichneSeite?.()` tut still nichts: `const App = (() => …)()` in einem
+gewöhnlichen `<script>` ist eine globale LEXIKALISCHE Bindung und steht
+nicht unter `window`. Das Feld wurde geschrieben, der Bildschirm blieb
+stehen, kein Fehler kam. Gefunden hat es eine Sonde, nicht der Wächter —
+der war rot, sagte aber „es gibt keine Fläche", und das klang nach einem
+fehlenden Zweig.
+
+**Nachbarn:** `test285`, `test221`, `test272`, `test277`, `test40`,
+`test67`, `test362`, `test402`, `test332`, `test139`, `test425`, `test87`,
+`test105`, `test109`, `test550`.

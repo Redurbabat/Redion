@@ -894,7 +894,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 514 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 515 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1266,6 +1266,22 @@ Sockel schnitt es ab. Seither fragt §9 mit `elementFromPoint`, was an der
 Stelle WIRKLICH liegt (§55.1). Gezählt am 26. September, im selben Bogen:
 `ls pruefungen/lauf/test*.mts | wc -l` sagt 514.*
 
+*Und 515: `test573` — drei Ansichten einer Seite, umschaltbar oben (E690).
+Redurs Satz vom 26. September, „ich will die 2 von affine 1:1 haben auch
+alles komplett wie es aussehn … und noch eine 3 für die aktuelle Redion", in
+30 Zusagen. Er ist der erste Wächter dieses Jahres, der DREI Namen des
+Produkts geändert hat, ohne eine Zusage anzufassen — und jeder Grund steht
+in seinem Kopf: `Ansichten` war der Dienst der Datenbankansichten, `ansicht`
+die Form eines `views`-Eintrags, und drei sich ausschliessende Knöpfe sind
+eine Radiogruppe (`aria-checked`), keine drei Schalter. Rot war er zweimal
+aus dem richtigen Grund und einmal aus dem falschen: er suchte den Titel
+unter AFFiNEs Namen `.pg-title`, den es in Redion nicht gibt — eine Prüfung,
+die nach einem Wähler sucht, der nirgends steht, misst nichts (L206). Seine
+beste Zeile stand nicht im Lauf, sondern auf dem BILD: am Telefon war die
+Fläche 332 px hoch in einem 560 px hohen Feld und die Werkzeugleiste lag
+mitten auf dem Kasten (§55.1). Gezählt am 26. September, im selben Bogen:
+`ls pruefungen/lauf/test*.mts | wc -l` sagt 515.*
+
 ### Die Befehle
 
 ```txt
@@ -1274,7 +1290,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 514 Läufe
+npm run pruefen                      alle 515 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1361,7 +1377,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 514 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 515 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

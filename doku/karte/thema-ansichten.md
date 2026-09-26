@@ -5,12 +5,12 @@
 
 ---
 tags: [redion, thema, ansichten]
-stand: 26. September 2026
+stand: 26. September 2026 (nach E690)
 ---
 
 # Die Ansichten eines Dokuments — AFFiNEs zwei, Redions zwei, und die dritte
 
-Stand 26. September 2026 · Quelle: ein Leser im AFFiNE-Archiv (MIT, nur gelesen) auf Redurs Frage hin: „bei der affine haben wir das es wechsel die ansichten und ich will dort auch die beide und plus von unsere aktuelle stand also mit cover usw also dort 3 bereiche". Jeder Punkt trägt Datei:Zeile vom Tag des Standes; wer später liest, prüft die Zeile, nicht den Satz.
+Stand 26. September 2026 (nach E690) · Quelle: ein Leser im AFFiNE-Archiv (MIT, nur gelesen) auf Redurs Frage hin: „bei der affine haben wir das es wechsel die ansichten und ich will dort auch die beide und plus von unsere aktuelle stand also mit cover usw also dort 3 bereiche". Jeder Punkt trägt Datei:Zeile vom Tag des Standes; wer später liest, prüft die Zeile, nicht den Satz.
 
 ## Die Kurzform
 
@@ -50,12 +50,21 @@ Stand 26. September 2026 · Quelle: ein Leser im AFFiNE-Archiv (MIT, nur gelesen
 - (i) öffnet den Dialog `doc-info`: Eigenschaftstabelle, Datenbank-Rückverweise, Links (`desktop/dialogs/doc-info/info-modal.tsx:97-150`).
 - Präsentieren steht nur im Flächen-Modus und erst ab 400 px Breite (`use-header-responsive.ts:18`).
 
-## Redions Stand daneben — und was fehlt
+## Redions Stand daneben — vor E690
 
 - SEITE: da, und reicher als AFFiNEs. Cover, Symbol, Titel, Sperrhinweis, Werkzeugzeile (`schale/aufbau/kopfleiste.ts:9-18`, Knöpfe :301-309: Cover, Volle Breite, Dokumentmodus, Rechner, Schrift, Vorlage, Mit KI).
 - DOKUMENT: da, heisst „Dokumentmodus" (E126, `bereiche/pdf/document-mode.ts:9`). Miniaturen links, Arbeitsfläche, Inspector rechts; `available()` nur wenn die Seite wirklich `pdfseite`- oder `blatt`-Blöcke enthält (:609), `active()` liest `page.dokumentModus` (:610), `toggle()` schreibt es an den Block (:623-627). Der Schalter steht in der WERKZEUGZEILE unter dem Titel, nicht oben als Umschalter.
 - FLÄCHE: fehlt als Ansicht. Redions Whiteboard, Gedankenkarte und Schaltplan sind BLÖCKE IN der Seite (`register/bloecke.ts:95-100`), kein Blick AUF die Seite. Das ist der ganze Unterschied.
 - Die Datenfrage dahinter (§9, §17): AFFiNEs Fläche geht, weil eine Notiz zugleich Seiteninhalt und Canvas-Element ist (`NoteBlockModel extends GfxCompatible(BlockModel)`, `note-model.ts:119-121`). Redions Blöcke hängen in `content` der Seite und haben keinen Platz. Eine Fläche über die Seite braucht also ein Feld für den Platz und eines dafür, wo ein Block erscheinen soll.
 - OFFEN, und es gehört Redur: (a) AFFiNEs Weg — jeder Block bekommt Platz und „wo erscheinen" (gutmütige Vorgabe wie bei `raumVersion`: kein Feld = wie bisher); oder (b) der kleine Weg — die Fläche ist ein Whiteboard über der ganzen Seite, auf dem der Seiteninhalt als EIN Kasten liegt. Beides zugleich wäre §8.
+
+## Was daraus geworden ist (E690, 26. September 2026)
+
+- Gebaut sind DREI Ansichten je Seite, umschaltbar oben: `seite` (AFFiNEs `page`), `flaeche` (AFFiNEs `edgeless`) und `redion` (unsere eigene, mit Cover und Werkzeugzeile). Katalog: `src/register/seitenansichten.ts`; Wächter `test573` mit 30 Zusagen.
+- NICHT `Ansichten` und NICHT `ansicht`: beide Namen waren vergeben (Dienst der Datenbankansichten, `FORMEN.ansicht`). Der Katalog heisst `Register.seitenansichten`, das Feld am Block `seitenAnsicht` — und sein FEHLEN ist die Vorgabe (`redion`), damit jede bestehende Seite zeigt, was sie immer zeigte (§9).
+- Der Umschalter ist kein neues Bauteil: `schale/bedienung/segment.ts` gab es seit E441-Umfeld, bewacht von test425/427/429 und an keiner Stelle benutzt. Deshalb `aria-checked` (Radiogruppe), nicht `aria-pressed`.
+- Er steht IN der Seite, nicht in `#topbar`: `test40` lässt am Telefon dort genau zwei Knöpfe zu, und drei Umschaltknöpfe à 44 px passen nicht dazu.
+- Die Fläche ist HTML unter einem `transform`, keine SVG-Fläche: Punktraster als `radial-gradient` mit mitwanderndem `background-size`, der Seitentext als Kasten, in dessen Kopf Symbol und Titel UMZIEHEN (nicht nachgebaut — sonst gäbe es zwei Schreiber auf dieselbe Seite, und `menueband.ts:121` verlöre seinen `#title`).
+- Offen bleibt der Vollausbau: zeichnen auf der Fläche, mehrere Kästen, und AFFiNEs `displayMode` je Block (L219, A1b/A1c). Heute liegt die ganze Seite als EIN Kasten darauf.
 
 Zurück zur [[Redion|Übersicht]].

@@ -159,7 +159,7 @@ graph LR
 ## Die Themen (quer durch die Systeme)
 
 - [[thema-werkzeugleisten|Die vier Werkzeugleisten — das „Vorher" für W6]] — Stand 25. September 2026, ein Leser für Bogen 5 (E681-Karte, Zeilen am HEAD 0b19a34 nachgesehen)
-- [[thema-ansichten|Die Ansichten eines Dokuments — AFFiNEs zwei, Redions zwei, und die dritte]] — Stand 26. September 2026, ein Leser im AFFiNE-Archiv (MIT, nur gelesen) auf Redurs Frage hin: „bei der affine haben wir das es wechsel die ansichten und ich will dort auch die beide und plus von unsere aktuelle stand also mit cover usw also dort 3 bereiche"
+- [[thema-ansichten|Die Ansichten eines Dokuments — AFFiNEs zwei, Redions zwei, und die dritte]] — Stand 26. September 2026 (nach E690), ein Leser im AFFiNE-Archiv (MIT, nur gelesen) auf Redurs Frage hin: „bei der affine haben wir das es wechsel die ansichten und ich will dort auch die beide und plus von unsere aktuelle stand also mit cover usw also dort 3 bereiche"
 
 ## Wie die Karte gepflegt wird
 
