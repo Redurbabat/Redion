@@ -166,6 +166,28 @@ const Seitenflaeche = (() => {
         }
         return raus;
     };
+    /* ------------------------------------------------------------------------
+     * DIE FORMEN AUF DER FLAECHE (E693, L219)
+     * --------------------------------------------------------------------------
+     * DASSELBE FORMAT WIE DAS WHITEBOARD, und das ist eine Datenentscheidung,
+     * keine Bequemlichkeit: `shapes` steht so in jedem Whiteboard, ist in
+     * `doku/REDION-FORMAT.md` beschrieben und wird vom selben Zeichner im Kern
+     * gemalt (`GfxShapes`). Ein zweites Format haette bedeutet, dass eine
+     * Sicherung zwei Formate kennen muss und jeder spaetere Leser zweimal
+     * hinsehen. Gezeichnet wird also hier wie dort.
+     * ----------------------------------------------------------------------*/
+    const formenLesen = (p) => Array.isArray(p?.shapes) ? p.shapes : [];
+    const formenSchreiben = (p, formen) => {
+        /* Keine leere Liste stehen lassen: wer die letzte Form wegradiert, hat
+         * keine Zeichnung - nicht eine leere. Ein `shapes: []` in einer Sicherung
+         * wuerde behaupten, hier sei einmal etwas gewesen, und `raumVersion` ohne
+         * Formen deutet einen Raum, den niemand benutzt (§9, doku/REDION-FORMAT.md). */
+        if (!formen.length) {
+            Store.feldWeg(p.id, 'shapes', 'raumVersion');
+            return;
+        }
+        Store.updateBlock(p.id, { shapes: formen, raumVersion: RAUM_VERSION });
+    };
     /* ========================================================================
      * DIE DREI GRIFFE — sie wirken auch, wenn die Fläche gar nicht gezeichnet
      * ist.
@@ -276,6 +298,30 @@ const Seitenflaeche = (() => {
         const ebene = document.createElement('div');
         ebene.className = 'pg-fl-sicht';
         flaeche.appendChild(ebene);
+        /* ======================================================================
+         * DIE TINTE — eine SVG-Lage IN derselben bewegten Ebene wie die Kaesten
+         * ----------------------------------------------------------------------
+         * IN der Ebene, nicht daneben: so teilen sich Tinte und Kaesten EINEN
+         * `transform`, und es gibt keine zweite Umrechnung. Genau daran ist es
+         * zweimal schiefgegangen (E623 halbe Strichbreiten an zwei Stellen, E686
+         * Handformel gegen Matrix); L219 hat es deshalb als Bedingung
+         * aufgeschrieben, bevor eine Zeile entstand.
+         *
+         * `overflow: visible` statt eines riesigen Kastens: die Formen liegen in
+         * Flaecheneinheiten um den Ursprung herum, und ein SVG von 1x1 zeigt sie
+         * trotzdem alle. Ein Kasten von 40 000 Punkten waere dieselbe Sache mit
+         * einer Zahl, die irgendwann jemand fuer eine Grenze haelt.
+         *
+         * `pointer-events: none` an der ganzen Lage: die Tinte faengt keinen
+         * Griff. Wer in den Kasten tippt, trifft den Text; wer daneben tippt,
+         * schiebt die Flaeche. Der Radierer sucht seine Form deshalb rechnend,
+         * nicht ueber das getroffene Element - das ist ehrlicher, weil ein
+         * Strich von 2,5 Punkten ohnehin kein Fingerziel ist. */
+        const tinte = GfxShapes.sv('svg', { width: 1, height: 1, class: 'pg-fl-tinte' });
+        const tinteDefs = GfxShapes.sv('defs');
+        GfxShapes.pfeilMarke(tinteDefs, 'pfl' + String(p.id).slice(0, 6));
+        tinte.appendChild(tinteDefs);
+        ebene.appendChild(tinte);
         const kaesten = [];
         const kastenBauen = (plan) => {
             const b = plan.block;
@@ -457,6 +503,13 @@ const Seitenflaeche = (() => {
             const mitte = inFlaeche(k.left + k.width / 2, k.top + k.height / 3);
             return { x: Math.round(mitte.x - BLOCK_BREITE / 2), y: Math.round(mitte.y) };
         };
+        /* Die Formen stehen HIER und nicht erst beim Malen weiter unten:
+           `passend` rechnet sie mit, und eine Konstante, die erst nach ihrem
+           ersten Leser entsteht, ist eine zeitliche Falle - sie geht gut, bis
+           jemand den einen Aufruf vorzieht. */
+        let formen = formenLesen(p).slice();
+        let farbe = GfxShapes.PALETTE[0]?.[0] ?? '#529cca';
+        let aktiv = null;
         /** Zoomen und dabei den Punkt unter dem Finger festhalten. */
         const massstab = (neu, haltX, haltY) => {
             const z = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, neu));
@@ -492,6 +545,20 @@ const Seitenflaeche = (() => {
                 x1 = Math.max(x1, plan.ort.x + bw);
                 y1 = Math.max(y1, plan.ort.y + bh);
             }
+            /* UND DIE TINTE GEHOERT DAZU (E693). Zweimal in zwei Boegen hat das
+               Bild dieselbe Luecke gezeigt: erst rechnete „ins Bild holen" nur mit
+               dem Seitenkasten und liess die Bloecke draussen (E691), dann nur mit
+               den Kaesten und liess die Formen draussen. Ein Knopf, der die
+               Haelfte im Dunkeln laesst, ist ein falsches Versprechen (§32). */
+            for (const form of formen) {
+                const r = GfxShapes.rahmenVon(form);
+                if (!Number.isFinite(r.x) || !Number.isFinite(r.y))
+                    continue;
+                x0 = Math.min(x0, r.x);
+                y0 = Math.min(y0, r.y);
+                x1 = Math.max(x1, r.x + r.w);
+                y1 = Math.max(y1, r.y + r.h);
+            }
             if (!Number.isFinite(x0)) {
                 x0 = ort.x;
                 y0 = ort.y;
@@ -517,6 +584,67 @@ const Seitenflaeche = (() => {
             stellen();
         };
         /* ======================================================================
+         * MALEN
+         * ----------------------------------------------------------------------
+         * Die Formen liegen am Seitenblock unter `shapes` - dasselbe Feld und
+         * dasselbe Format wie im Whiteboard, gezeichnet vom selben Kern.
+         * ====================================================================*/
+        /** Die Tinte neu malen. Der `<defs>`-Knoten bleibt stehen - er traegt
+         *  die Pfeilspitze, und wer ihn mit wegraeumt, nimmt jedem Pfeil die
+         *  Spitze, ohne dass sich an den Formen etwas geaendert haette. */
+        const malen = () => {
+            [...tinte.childNodes].forEach(k => { if (k !== tinteDefs)
+                tinte.removeChild(k); });
+            for (const form of formen)
+                tinte.appendChild(GfxShapes.zeichne(form, { pfeilMarke: 'pfl' + String(p.id).slice(0, 6) }));
+        };
+        /* Der Verlauf kommt aus dem Kern (E687) - derselbe wie im Whiteboard,
+           in der Gedankenkarte und auf der Planflaeche. */
+        const verlauf = GfxHistory.erstelle();
+        /* Der Kern merkt sich ZEICHENKETTEN, keine Objekte - deshalb hier
+           `JSON.stringify` und beim Zuruecknehmen `JSON.parse`. Eine Kopie als
+           Objekt waere schneller und traegt dafuer das Risiko, dass zwei
+           Staende heimlich dieselbe Liste teilen. */
+        const abbild = () => JSON.stringify(formen);
+        const merken = () => verlauf.merken(abbild());
+        const sichern = () => { formenSchreiben(p, formen); malen(); };
+        const schrittZurueck = () => {
+            const vorher = verlauf.zurueck(abbild());
+            if (vorher === null)
+                return;
+            formen = JSON.parse(vorher);
+            sichern();
+        };
+        const schrittVor = () => {
+            const nachher = verlauf.vor(abbild());
+            if (nachher === null)
+                return;
+            formen = JSON.parse(nachher);
+            sichern();
+        };
+        /** Welche Form liegt an dieser Stelle? Gerechnet, nicht ueber das
+         *  getroffene Element: die Tinte nimmt keine Griffe an (siehe oben), und
+         *  ein Strich von 2,5 Punkten waere ohnehin kein Fingerziel. */
+        const formAn = (fx, fy, radius) => {
+            for (let i = formen.length - 1; i >= 0; i--) {
+                const form = formen[i];
+                if (form?.art === 'stift') {
+                    const pts = Array.isArray(form.pts) ? form.pts : [];
+                    if (pts.some((q) => Math.hypot(Number(q?.[0]) - fx, Number(q?.[1]) - fy) <= radius))
+                        return form;
+                    continue;
+                }
+                const r = GfxShapes.rahmenVon(form);
+                if (fx >= r.x - radius && fx <= r.x + r.w + radius &&
+                    fy >= r.y - radius && fy <= r.y + r.h + radius)
+                    return form;
+            }
+            return null;
+        };
+        const MALWERKZEUGE = ['stift', 'linie', 'pfeil', 'rechteck', 'ellipse'];
+        const maltGerade = () => MALWERKZEUGE.includes(werkzeug) || werkzeug === 'radierer';
+        malen();
+        /* ======================================================================
          * Die Werkzeugleiste — dieselbe wie auf jeder anderen Fläche (E689)
          * ====================================================================*/
         const massstabZeigen = document.createElement('b');
@@ -526,19 +654,49 @@ const Seitenflaeche = (() => {
         const leiste = GfxToolbar.erstelle({
             klasse: 'pg-fl-tools',
             beschriftung: 'Werkzeuge der Fläche',
-            werkzeuge: Register.werkzeuge.auswahl(['zeiger', 'hand']),
+            /* Sechs Werkzeuge mehr als in E690, und jedes TUT etwas - genau das
+               war die Bedingung aus L219: eine Leiste mit Knoepfen, die nichts
+               bewirken, waere ein falsches Versprechen (Paragraph 32). */
+            werkzeuge: Register.werkzeuge.auswahl(['zeiger', 'hand', 'stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'radierer']),
             aktiv: 'zeiger',
             aktionen: [
+                { id: 'farbe', name: 'Farbe', titel: 'Farbe der Formen', sym: 'palette',
+                    menue: true, kapsel: 'werkzeuge' },
+                { id: 'zurueck', name: 'Rückgängig', titel: 'Rückgängig (Strg + Z)', sym: 'undo' },
                 { id: 'kleiner', name: 'Kleiner', titel: 'Kleiner (Strg + Rad)', sym: 'minus' },
                 { id: 'groesser', name: 'Grösser', titel: 'Grösser (Strg + Rad)', sym: 'plus' },
                 { id: 'passend', name: 'Ins Bild', titel: 'Alles ins Bild holen', sym: 'maximize' }
             ],
             zusatz: { groesser: massstabZeigen },
+            /* Das Farbmenue baut die Flaeche, der Kern zeigt es - dasselbe Muster
+               wie im Whiteboard (E689). Jeder Tupfer traegt seinen NAMEN, weil
+               Paragraph 38 keine Auskunft allein ueber Farbe zulaesst. */
+            menue: (id) => {
+                if (id !== 'farbe')
+                    return null;
+                const kasten = document.createElement('div');
+                kasten.className = 'gfx-tb-farben';
+                for (const [wert, name] of GfxShapes.PALETTE) {
+                    const k = document.createElement('button');
+                    k.type = 'button';
+                    k.dataset['c'] = wert;
+                    k.title = name;
+                    k.setAttribute('aria-label', name);
+                    k.style.background = wert;
+                    if (wert === farbe)
+                        k.classList.add('an');
+                    k.addEventListener('click', () => { farbe = wert; leiste.schliesse(); });
+                    kasten.appendChild(k);
+                }
+                return kasten;
+            },
             aufWerkzeug: (id) => {
                 werkzeug = id;
                 flaeche.dataset['wz'] = id;
             },
             aufAktion: (id) => {
+                if (id === 'zurueck')
+                    schrittZurueck();
                 if (id === 'kleiner')
                     massstab(sicht.z / 1.25);
                 if (id === 'groesser')
@@ -569,6 +727,42 @@ const Seitenflaeche = (() => {
                 return;
             }
             const ziel = e.target instanceof Element ? e.target : null;
+            /* MIT EINEM MALWERKZEUG WIRD GEMALT - ausser ueber der Leiste und
+               ausser im Kasten, denn dort gehoert der Zug dem Text. Genau
+               deshalb liegt die Tinte auch ohne Griffe da: waere sie greifbar,
+               muesste hier eine zweite Regel stehen, welche Lage gewinnt. */
+            if (maltGerade() && !ziel?.closest('.gfx-tb-sockel') && !ziel?.closest('.pg-fl-notiz')) {
+                const punkt = inFlaeche(e.clientX, e.clientY);
+                /* `setPointerCapture` WIRFT, wenn es den Zeiger nicht gibt - und ein
+                   Wurf hier bricht den ganzen Handgriff ab, bevor die erste Form
+                   entsteht. Das passiert nicht nur im Pruefstand: ein Zeiger, der
+                   zwischen `pointerdown` und dieser Zeile schon wieder weg ist
+                   (schneller Tipp, verlorener Stift, ein zweiter Finger), reicht.
+                   Das Fangen ist eine Bequemlichkeit - ohne es endet der Strich,
+                   wenn der Finger die Flaeche verlaesst -, kein Grund zum Abbruch. */
+                try {
+                    flaeche.setPointerCapture(e.pointerId);
+                }
+                catch { /* egal */ }
+                merken();
+                if (werkzeug === 'radierer') {
+                    const treffer = formAn(punkt.x, punkt.y, 12 / sicht.z);
+                    if (treffer) {
+                        formen = formen.filter(x => x !== treffer);
+                        sichern();
+                    }
+                    else
+                        verlauf.letztenVerwerfen();
+                    aktiv = { art: 'radieren' };
+                    return;
+                }
+                aktiv = werkzeug === 'stift'
+                    ? { id: Store.uid().slice(0, 8), art: 'stift', pts: [[punkt.x, punkt.y]], farbe }
+                    : { id: Store.uid().slice(0, 8), art: werkzeug, x: punkt.x, y: punkt.y, w: 0, h: 0, farbe };
+                formen.push(aktiv);
+                malen();
+                return;
+            }
             /* AM KOPF ZIEHT MAN DEN KASTEN, sonst die Fläche. Der Körper des
                Kastens gehört dem Text: wer darin zieht, markiert Worte. */
             if (ziel?.closest('.pg-fl-menue')) {
@@ -596,6 +790,25 @@ const Seitenflaeche = (() => {
         const bewegt = (e) => {
             if (finger.has(e.pointerId))
                 finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (aktiv) {
+                const punkt = inFlaeche(e.clientX, e.clientY);
+                if (aktiv.art === 'radieren') {
+                    const treffer = formAn(punkt.x, punkt.y, 12 / sicht.z);
+                    if (treffer) {
+                        formen = formen.filter(x => x !== treffer);
+                        sichern();
+                    }
+                    return;
+                }
+                if (aktiv.art === 'stift')
+                    aktiv.pts.push([punkt.x, punkt.y]);
+                else {
+                    aktiv.w = punkt.x - aktiv.x;
+                    aktiv.h = punkt.y - aktiv.y;
+                }
+                malen();
+                return;
+            }
             if (kneifen && finger.size === 2) {
                 const [a, b] = [...finger.values()];
                 if (!a || !b)
@@ -639,6 +852,24 @@ const Seitenflaeche = (() => {
             finger.delete(e.pointerId);
             if (finger.size < 2)
                 kneifen = null;
+            if (aktiv) {
+                const fertig = aktiv;
+                aktiv = null;
+                if (fertig.art === 'radieren')
+                    return;
+                /* EIN TIPP IST KEINE FORM. Ohne diese Zeile bleibt bei jedem Klick
+                   ein Punkt oder ein Rechteck von null Punkten liegen - unsichtbar,
+                   aber in der Sicherung. Dieselbe Regel hat das Whiteboard. */
+                const klein = fertig.art === 'stift'
+                    ? fertig.pts.length < 2
+                    : Math.abs(fertig.w) < 4 && Math.abs(fertig.h) < 4;
+                if (klein) {
+                    formen = formen.filter(x => x !== fertig);
+                    verlauf.letztenVerwerfen();
+                }
+                sichern();
+                return;
+            }
             if (!zug)
                 return;
             const jetzt = zug;
@@ -660,6 +891,29 @@ const Seitenflaeche = (() => {
             }
             jetzt.plan.merken(jetzt.plan.ort);
         };
+        /* DIE TASTE GEHOERT DER FLAECHE (E682). Derselbe Griff wie im
+           Whiteboard: die Flaeche ist fokussierbar, nimmt Strg+Z selbst und
+           sagt der Schale mit `preventDefault`, dass die Taste genommen ist -
+           sonst nimmt der Block seinen Schritt zurueck UND der Seitenverlauf
+           baut die Seite neu, mit frischen Kennungen fuer jeden Block
+           (test568). Im Text gilt das nicht: dort gehoert Strg+Z dem Feld. */
+        flaeche.tabIndex = 0;
+        flaeche.addEventListener('keydown', (e) => {
+            const ziel = e.target;
+            if (ziel && (ziel.tagName === 'INPUT' || ziel.tagName === 'TEXTAREA' || ziel.isContentEditable))
+                return;
+            if (!(e.ctrlKey || e.metaKey))
+                return;
+            const taste = e.key.toLowerCase();
+            if (taste === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                schrittZurueck();
+            }
+            else if ((taste === 'z' && e.shiftKey) || (taste === 'y' && !e.shiftKey)) {
+                e.preventDefault();
+                schrittVor();
+            }
+        });
         flaeche.addEventListener('pointerdown', beginnt);
         flaeche.addEventListener('pointermove', bewegt);
         flaeche.addEventListener('pointerup', endet);

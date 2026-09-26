@@ -8387,42 +8387,39 @@ geschrieben, aber auch nicht nachträglich entfernt (§43).
 
 ---
 
-## L219 · Auf der Fläche kann man noch nicht zeichnen — 26. September 2026
+## L219 · Was der Fläche noch fehlt — Zeichnen GESCHLOSSEN am 26. September 2026 (E693)
 
-**Seit E690 gibt es die Ansicht „Fläche"** (AFFiNEs `edgeless`): Punktraster,
-Schieben, Zoomen von 10 % bis 600 %, „ins Bild holen", und der Seitentext
-liegt als verschiebbarer Kasten mit eigener Kopfzeile darauf. Was AFFiNE
-dort AUSSERDEM kann, kann Redion dort noch nicht:
+**Seit E690** gibt es die Ansicht „Fläche", **seit E691** darf jeder Block
+darauf liegen, und **seit E693** kann man darauf zeichnen: Stift, Linie,
+Pfeil, Rechteck, Ellipse, Radierer, Farbmenü und Strg+Z — mit demselben
+Formenzeichner wie das Whiteboard (`core/gfx/shapes.ts`) und demselben Feld
+`shapes` am Block.
 
 ```txt
-✗  zeichnen        Stift, Formen, Verbinder, Rahmen auf der Fläche
-✗  mehrere Kästen  eine zweite Notiz, die NUR auf der Fläche steht
-                   (AFFiNEs `displayMode: 'edgeless'`)
-✗  Rückgängig      das Verschieben des Kastens hat keinen Verlauf
-✗  auswählen       mehrere Dinge zugleich, Rahmen aufziehen
-◐  Werkzeugleiste  zeigt zwei Werkzeuge (Zeiger, Hand) und die Zoomknöpfe
+✅  zeichnen        Stift, Linie, Pfeil, Rechteck, Ellipse (E693)
+✅  radieren        nimmt genau eine Form weg (E693)
+✅  Rückgängig      aus `GfxHistory` im Kern, gehört der Fläche (E682/E693)
+✅  Farben          die acht des Whiteboards, mit Namen für den Vorleser
+✅  mehrere Kästen  jeder Block darf einen haben (E691)
+✗   auswählen       eine gezeichnete Form anfassen, verschieben, löschen
+✗   beschriften     Text auf der Fläche, Haftnotizen
+✗   Verbinder       zwei Formen aneinanderhängen
+✗   Bilder          ein Bild auf die Fläche legen
 ```
 
-**Warum die Leiste nur zwei Werkzeuge zeigt.** Weil genau zwei wirklich
-etwas tun. Zwölf Knöpfe aufzureihen, von denen zehn nichts bewirken, wäre
-ein falsches Versprechen (§32) — und es sähe einem fertigen Produkt
-ähnlicher, als es eines wäre. Der Katalog dafür steht längst bereit
-(`Register.werkzeuge`, E689); es fehlt die Zeichenschicht unter dem Kasten.
+**Was noch fehlt, kann das Whiteboard längst** — Auswählen, Verschieben,
+Grösse ändern, Text, Haftnotiz, Verbinder, Bild. Der Zeichner dafür steht
+seit E693 im Kern; was fehlt, ist die BEDIENUNG, und die liegt im
+Whiteboard in rund sechshundert Zeilen (Auswahlrahmen, Griffe,
+Verbindungslogik). Sie in den Kern zu holen ist der nächste Schritt dieser
+Reihe — dasselbe Muster wie `GfxHistory`, `GfxToolbar`, `GfxShapes`, und
+der grösste Brocken davon.
 
-**Was dafür nötig ist**, und das ist der Grund, warum es ein eigener Bogen
-ist: eine SVG-Ebene INNERHALB derselben bewegten Ebene wie der Kasten (dann
-teilen sich Tinte und Kasten einen `transform`, und es gibt keine zweite
-Umrechnung — derselbe Fehler wie E623 und E686), dazu `GfxHistory` aus dem
-Kern (E687) für Rückgängig und ein Feld an der Seite für die Formen.
-
-**Die offene Frage, und sie gehört Redur** (sie stand schon in
-`doku/karte/thema-ansichten.md` und ist mit E690 nicht beantwortet, sondern
-aufgeschoben): soll die Fläche irgendwann AFFiNEs Vollausbau bekommen — JEDER
-Block trägt Platz und „wo erscheinen" (`displayMode`), so dass man einzelne
-Absätze aus der Seite auf die Fläche ziehen kann? Das ist der ehrliche 1:1-Weg
-und eine Änderung an jedem Block. Oder bleibt es beim Kasten, auf dem die
-ganze Seite steht, und die Fläche bekommt daneben Zeichnung und weitere
-Notizen? Heute ist der zweite Weg gebaut, und er versperrt den ersten nicht.
+**Und eine kleine Folge, die kein Fehler ist, aber auffällt:** eine Seite
+mit Zeichnung taucht in der Flächen-Übersicht der Arbeitswelt nicht auf.
+Die listet Blöcke vom Typ `whiteboard` und `blatt`
+(`wissen/arbeitswelt.ts:738-748`), nicht Seiten mit `shapes`. Wer seine
+Zeichnungen dort sucht, findet die auf Seiten nicht.
 
 ---
 
@@ -8760,7 +8757,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 26. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 116 Lücken, 63 offene und 53 geschlossene. Der Befehl dazu ist
+Datei führt 116 Lücken, 62 offene und 54 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

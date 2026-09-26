@@ -12086,6 +12086,31 @@ body .rmo-liquid::after {
   .pg-fl-kopf{min-height:var(--touch-min); padding:4px 6px 4px 12px}
 }
 
+/* ----------------------------------------------------------------------------
+   6 · DIE TINTE (E693, L219)
+   Eine SVG-Lage IN derselben bewegten Ebene wie die Kästen — so teilen sich
+   Tinte und Kasten EINEN `transform`, und es gibt keine zweite Umrechnung.
+   --------------------------------------------------------------------------*/
+.pg-fl-tinte{
+  position:absolute; left:0; top:0;
+  /* 1 × 1 und `overflow:visible`: die Formen liegen in Flächeneinheiten um
+     den Ursprung, und ein winziges SVG zeigt sie trotzdem alle. Ein Kasten
+     von 40 000 Punkten wäre dieselbe Sache mit einer Zahl, die irgendwann
+     jemand für eine Grenze hält. */
+  overflow:visible;
+  /* DIE TINTE FÄNGT KEINEN GRIFF. Wer in den Kasten tippt, trifft den Text;
+     wer daneben tippt, schiebt die Fläche. Der Radierer sucht seine Form
+     deshalb rechnend — ein Strich von 2,5 Punkten ist ohnehin kein
+     Fingerziel (§37). */
+  pointer-events:none;
+  color:var(--text);
+}
+/* Die Malwerkzeuge zeigen ein Kreuz statt des Greifers. */
+.pg-flaeche[data-wz="stift"], .pg-flaeche[data-wz="linie"],
+.pg-flaeche[data-wz="pfeil"], .pg-flaeche[data-wz="rechteck"],
+.pg-flaeche[data-wz="ellipse"]{cursor:crosshair}
+.pg-flaeche[data-wz="radierer"]{cursor:cell}
+
 </style>
 <style>
 /* ===== quell/schale/stil/bausteine.css ===== */
@@ -25708,7 +25733,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1351, inhalt: 'c05aa7f3d55db50b', gebaut: '2026-09-26T09:34:38.653Z' };
+const Stand = { fassung: 1362, inhalt: '3d81c63bd7c0c814', gebaut: '2026-09-26T10:11:43.301Z' };
 window.Stand = Stand;
 
 </script>
@@ -26704,6 +26729,246 @@ const GfxHistory = (() => {
     return { erstelle };
 })();
 window.GfxHistory = GfxHistory;
+
+</script>
+<script>
+/* ===== quell/core/gfx/shapes.js ===== */
+"use strict";
+/* ============================================================================
+ * core/gfx/shapes.ts — EIN Zeichner für die Formen aller Flächen
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/gfx/shapes.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/core/gfx/shapes.js`; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * WARUM ER IM KERN STEHT (E693). Das Whiteboard zeichnet Formen seit E138,
+ * und mit E690 bekam die Seite eine eigene Fläche. Der zweite Zeichner wäre
+ * eine Kopie von hundertzwanzig Zeilen gewesen — und zwei Kopien derselben
+ * Zeichnung laufen auseinander. Man sieht es nicht beim Lesen, sondern
+ * irgendwann daran, dass ein Pfeil auf der einen Fläche eine Spitze hat und
+ * auf der anderen nicht (§8). Dasselbe Muster wie `GfxHistory` (E687) und
+ * `GfxToolbar` (E689): was zwei Flächen gemeinsam haben, wohnt hier.
+ *
+ * ER KENNT KEINE FLÄCHE. Kein `Store`, kein `Register`, kein `App`, keine
+ * Dateiablage, keine Klassennamen einer Fläche. Was er über die Welt wissen
+ * muss, bekommt er als Angabe mit — die Kennung der Pfeilmarke und, für
+ * Bilder, eine Funktion, die eine Adresse liefert. `test575 §1` hält das.
+ *
+ * DAS FORMAT IST DAS BESTEHENDE. Die Felder stehen so in jedem Whiteboard
+ * und in `doku/REDION-FORMAT.md`; sie zu ändern wäre eine Datenmigration
+ * (§53.3). Deshalb auch `farbe`, `pts` und `art` statt englischer Namen.
+ * ==========================================================================*/
+const GfxShapes = (() => {
+    /* DIE ACHT FARBEN EINER FLAECHE (E693, aus dem Whiteboard hierher).
+       Eine Liste von PAAREN [Farbe, Name] - der Name steht darin, weil
+       Paragraph 38 sagt, dass keine Auskunft nur ueber Farbe laufen darf: der
+       Knopf im Farbmenue braucht ein Wort fuer den Vorleser. Die Werte sind
+       die des Whiteboards seit E414; sie zu aendern hiesse, bestehende
+       Zeichnungen umzufaerben. */
+    const PALETTE = [
+        ['#529cca', 'Blau'], ['#4dab9a', 'Gruen'], ['#ffa344', 'Orange'],
+        ['#ff7369', 'Rot'], ['#9a6dd7', 'Violett'], ['#e255a1', 'Rosa'],
+        ['#ffdc49', 'Gelb'], ['#9b9a97', 'Grau'],
+    ];
+    const NS = 'http://www.w3.org/2000/svg';
+    const sv = (name, attrs = {}) => {
+        const el = document.createElementNS(NS, name);
+        for (const [k, v] of Object.entries(attrs))
+            el.setAttribute(k, String(v));
+        return el;
+    };
+    const zahl = (roh, ersatz = 0) => {
+        const n = Number(roh);
+        return Number.isFinite(n) ? n : ersatz;
+    };
+    /* ------------------------------------------------------------------------
+     * Der Platzbedarf einer Form — für „alles ins Bild" und für Verbindungen.
+     * Jede Art rechnet anders, und `text` lässt sich nur schätzen; das reicht,
+     * weil beides nur Anhaltspunkte braucht.
+     * ----------------------------------------------------------------------*/
+    const rahmenVon = (s) => {
+        if (s?.art === 'stift') {
+            const pts = Array.isArray(s.pts) ? s.pts : [];
+            if (!pts.length)
+                return { x: 0, y: 0, w: 0, h: 0 };
+            const xs = pts.map((q) => zahl(q?.[0])), ys = pts.map((q) => zahl(q?.[1]));
+            const x = Math.min(...xs), y = Math.min(...ys);
+            return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
+        }
+        if (s?.art === 'text')
+            return { x: zahl(s.x), y: zahl(s.y) - 14,
+                w: Math.max(20, String(s.text || '').length * 8), h: 20 };
+        const x = zahl(s?.x), y = zahl(s?.y), w = zahl(s?.w), h = zahl(s?.h);
+        return { x: Math.min(x, x + w), y: Math.min(y, y + h), w: Math.abs(w), h: Math.abs(h) };
+    };
+    /** Der Text einer Haftnotiz auf Zeilen verteilt. */
+    const zeilenUmbruch = (text, breite) => {
+        const proZeile = Math.max(6, Math.floor(breite / 7.4));
+        const worte = String(text).split(/\s+/);
+        const out = [];
+        let zeile = '';
+        worte.forEach(x => {
+            if ((zeile + ' ' + x).trim().length > proZeile) {
+                out.push(zeile.trim());
+                zeile = x;
+            }
+            else
+                zeile += ' ' + x;
+        });
+        if (zeile.trim())
+            out.push(zeile.trim());
+        return out.slice(0, 8);
+    };
+    /**
+     * Die Pfeilspitze anlegen — einmal je Fläche, in deren `<defs>`.
+     *
+     * Sie muss eine EIGENE Kennung je Fläche haben: zwei Flächen im selben
+     * Dokument teilen sich sonst einen Marker, und wer die erste entfernt,
+     * nimmt der zweiten die Spitze mit.
+     */
+    const pfeilMarke = (defs, kennung, farbe = 'context-stroke') => {
+        /* DIE ZAHLEN SIND DIE DES WHITEBOARDS, nicht schönere. Ein Umzug in den
+           Kern darf das Aussehen nicht ändern — sonst ist es kein Umzug,
+           sondern eine stille Gestaltungsänderung, die niemand bestellt hat.
+           `context-stroke` färbt die Spitze wie den Strich, an dem sie hängt. */
+        const m = sv('marker', {
+            id: kennung, markerWidth: 9, markerHeight: 9,
+            refX: 8, refY: 3, orient: 'auto'
+        });
+        m.appendChild(sv('path', { d: 'M0,0 L9,3 L0,6 z', fill: farbe }));
+        defs.appendChild(m);
+        return m;
+    };
+    /**
+     * Eine Form als SVG.
+     *
+     * Gibt IMMER ein Element zurück, auch bei einer unbekannten Art — dann
+     * eine leere Gruppe. Eine unbekannte Art ist der Block eines Menschen mit
+     * einer neueren Fassung (§18: unbekannte Blocktypen nicht löschen); sie
+     * darf nichts zeichnen, aber auch nichts werfen.
+     */
+    const zeichne = (s, o = {}) => {
+        if (!s || typeof s !== 'object')
+            return sv('g');
+        const strich = o.strich ?? 2.5;
+        const farbe = String(s.farbe || 'currentColor');
+        if (s.art === 'stift' || s.art === 'linie' || s.art === 'pfeil') {
+            const pts = Array.isArray(s.pts) ? s.pts : [];
+            const d = s.art === 'stift'
+                ? (pts.length ? 'M' + pts.map((q) => zahl(q?.[0]) + ' ' + zahl(q?.[1])).join(' L') : '')
+                : `M${zahl(s.x)} ${zahl(s.y)} L${zahl(s.x) + zahl(s.w)} ${zahl(s.y) + zahl(s.h)}`;
+            const p = sv('path', {
+                d, stroke: farbe, 'stroke-width': strich, fill: 'none',
+                'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+            });
+            if (s.art === 'pfeil' && o.pfeilMarke)
+                p.setAttribute('marker-end', `url(#${o.pfeilMarke})`);
+            p.dataset.sid = s.id;
+            /* EIN STRICH IST ZWEIEINHALB PIXEL BREIT — mit dem Finger trifft man
+               ihn nicht. Darunter liegt deshalb derselbe Pfad noch einmal, 16 px
+               breit und durchsichtig: er fängt den Griff, malt aber nichts. */
+            const fang = sv('path', {
+                d, stroke: 'transparent', 'stroke-width': 16,
+                fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+            });
+            fang.dataset.sid = s.id;
+            const gruppe = sv('g');
+            gruppe.appendChild(fang);
+            gruppe.appendChild(p);
+            return gruppe;
+        }
+        if (s.art === 'rechteck' || s.art === 'notiz') {
+            const g = sv('g');
+            const x = Math.min(zahl(s.x), zahl(s.x) + zahl(s.w));
+            const y = Math.min(zahl(s.y), zahl(s.y) + zahl(s.h));
+            const r = sv('rect', {
+                x, y, width: Math.abs(zahl(s.w)), height: Math.abs(zahl(s.h)),
+                rx: s.art === 'notiz' ? 3 : 5,
+                fill: s.art === 'notiz' ? farbe : 'none', stroke: farbe, 'stroke-width': 2,
+                'fill-opacity': s.art === 'notiz' ? .85 : 1,
+                /* EIN RECHTECK OHNE FÜLLUNG NIMMT KEINE KLICKS AN (E144). SVG trifft
+                   standardmässig nur, was GEMALT ist — bei `fill: none` ist das
+                   allein der zwei Pixel breite Strich. „Auswählen und verschieben"
+                   ging deshalb nur, wenn man die Kante traf; in der Mitte griff man
+                   durch die Form hindurch ins Raster. Gemessen mit
+                   `elementFromPoint` mitten im Rechteck: es kam der Hintergrund
+                   zurück, nicht die Form. */
+                'pointer-events': 'all'
+            });
+            r.dataset.sid = s.id;
+            g.appendChild(r);
+            if (s.text) {
+                const t = sv('text', {
+                    x: x + 10, y: y + 22,
+                    fill: s.art === 'notiz' ? '#1c1c1c' : farbe, 'font-size': 14
+                });
+                zeilenUmbruch(String(s.text), Math.abs(zahl(s.w)) - 18).forEach((z, i) => {
+                    const ts = sv('tspan', { x: x + 10, dy: i ? 18 : 0 });
+                    ts.textContent = z;
+                    t.appendChild(ts);
+                });
+                g.appendChild(t);
+            }
+            return g;
+        }
+        if (s.art === 'bild') {
+            /* DAS BILD LIEGT IN DER DATEIABLAGE, NICHT IN DEN FORMEN (§14). In
+               `shapes` steht nur die Kennung; die Adresse holt die Fläche und
+               reicht sie herein. Ein Bild als Data-URL in `shapes` wäre der kurze
+               Weg gewesen — er bläht jeden Block, jede Sicherung und jeden
+               Versionsstand um die volle Bildgrösse auf. */
+            const dateiId = String(s.dateiId || '');
+            const bekannt = o.bildAdresse ? o.bildAdresse(dateiId) : null;
+            if (bekannt === undefined && dateiId)
+                o.bildHolen?.(dateiId);
+            const rahmen = {
+                x: Math.min(zahl(s.x), zahl(s.x) + zahl(s.w)),
+                y: Math.min(zahl(s.y), zahl(s.y) + zahl(s.h)),
+                w: Math.abs(zahl(s.w)) || 160, h: Math.abs(zahl(s.h)) || 120
+            };
+            if (!bekannt) {
+                const platz = sv('g');
+                platz.appendChild(sv('rect', { x: rahmen.x, y: rahmen.y, width: rahmen.w, height: rahmen.h,
+                    rx: 5, fill: 'none', stroke: farbe, 'stroke-width': 2,
+                    'stroke-dasharray': '5 4' }));
+                const wort = sv('text', { x: rahmen.x + rahmen.w / 2, y: rahmen.y + rahmen.h / 2,
+                    fill: farbe, 'font-size': 13, 'text-anchor': 'middle' });
+                wort.textContent = bekannt === null ? 'Bild fehlt' : 'Bild lädt …';
+                platz.appendChild(wort);
+                platz.dataset.sid = s.id;
+                return platz;
+            }
+            const bild = sv('image', { x: rahmen.x, y: rahmen.y, width: rahmen.w, height: rahmen.h,
+                preserveAspectRatio: 'xMidYMid meet' });
+            bild.setAttribute('href', bekannt);
+            bild.dataset.sid = s.id;
+            return bild;
+        }
+        if (s.art === 'ellipse') {
+            const e = sv('ellipse', {
+                cx: zahl(s.x) + zahl(s.w) / 2, cy: zahl(s.y) + zahl(s.h) / 2,
+                rx: Math.abs(zahl(s.w) / 2), ry: Math.abs(zahl(s.h) / 2),
+                fill: 'none', stroke: farbe, 'stroke-width': 2,
+                'pointer-events': 'all' /* wie beim Rechteck, siehe dort */
+            });
+            e.dataset.sid = s.id;
+            return e;
+        }
+        if (s.art === 'text') {
+            const t = sv('text', { x: zahl(s.x), y: zahl(s.y), fill: farbe,
+                'font-size': 17, 'font-weight': 500 });
+            t.textContent = String(s.text || '');
+            t.dataset.sid = s.id;
+            return t;
+        }
+        /* Unbekannte Art: nichts zeichnen, nichts werfen (§18). */
+        const leer = sv('g');
+        leer.dataset.sid = s.id;
+        return leer;
+    };
+    return { zeichne, rahmenVon, zeilenUmbruch, pfeilMarke, sv, PALETTE };
+})();
+window.GfxShapes = GfxShapes;
 
 </script>
 <script>
@@ -60994,11 +61259,11 @@ const Zusatz = (() => {
     /* DIE FARBE BRAUCHT EINEN NAMEN. Ein Feld, das nur farbig ist, sagt einem
        Vorleseprogramm gar nichts und jemandem mit Farbsehschwäche zu wenig —
        §38: keine Information nur über Farbe. */
-    const PALETTE = [
-        ['#529cca', 'Blau'], ['#4dab9a', 'Grün'], ['#ffa344', 'Orange'],
-        ['#ff7369', 'Rot'], ['#9a6dd7', 'Violett'], ['#e255a1', 'Rosa'],
-        ['#ffdc49', 'Gelb'], ['#9b9a97', 'Grau'],
-    ];
+    /* Die acht Farben stehen seit E693 im Kern (`core/gfx/shapes.ts`): die
+       Seitenflaeche braucht dieselben, und zwei Listen liefen auseinander
+       (Paragraph 8). Der Name bleibt, damit die sechs Diagrammstellen und das
+       Farbmenue unveraendert weiterlesen. */
+    const PALETTE = GfxShapes.PALETTE;
     /* --------------------------------------------------------------------------
      * DIE FARBE AN STELLE i — UND WARUM ES DIESEN HELFER GIBT (E414)
      *
@@ -61261,20 +61526,10 @@ const Zusatz = (() => {
             const hoch = r.height > 4 ? r.height : hoehe;
             return { x: sicht.x, y: sicht.y, w: breite / sicht.z, h: hoch / sicht.z };
         };
-        /* Der Platzbedarf einer Form — für „alles ins Bild" und für die
-           Verbindungen. Jede Art rechnet anders, und `text` lässt sich nur
-           schätzen; das reicht, weil beides nur Anhaltspunkte braucht. */
-        const rahmenVon = (s) => {
-            if (s.art === 'stift') {
-                const xs = s.pts.map((q) => q[0]), ys = s.pts.map((q) => q[1]);
-                const x = Math.min(...xs), y = Math.min(...ys);
-                return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
-            }
-            if (s.art === 'text')
-                return { x: s.x, y: s.y - 14, w: Math.max(20, String(s.text || '').length * 8), h: 20 };
-            return { x: Math.min(s.x, s.x + s.w), y: Math.min(s.y, s.y + s.h),
-                w: Math.abs(s.w), h: Math.abs(s.h) };
-        };
+        /* Der Platzbedarf einer Form. Seit E693 rechnet ihn der Kern
+           (`core/gfx/shapes.ts`): dieselbe Rechnung staende sonst auch auf der
+           Seitenflaeche, und zwei Fassungen laufen auseinander (Paragraph 8). */
+        const rahmenVon = (s) => GfxShapes.rahmenVon(s);
         /* Wo eine Verbindung den Rand ihrer Form trifft. Ohne das steckte die
            Pfeilspitze mitten in der Haftnotiz. */
         const randPunkt = (rahmen, zielX, zielY) => {
@@ -61294,10 +61549,10 @@ const Zusatz = (() => {
             raster.appendChild(sv('circle', { cx: 1, cy: 1, r: 1, fill: 'currentColor', opacity: .18 }));
             const defs = sv('defs');
             defs.appendChild(raster);
-            const spitze = sv('marker', { id: 'p' + block.id.slice(0, 6), markerWidth: 9, markerHeight: 9,
-                refX: 8, refY: 3, orient: 'auto' });
-            spitze.appendChild(sv('path', { d: 'M0,0 L9,3 L0,6 z', fill: 'context-stroke' }));
-            defs.appendChild(spitze);
+            /* Die Pfeilspitze kommt seit E693 aus dem Kern - dieselben Zahlen,
+               nur an einer Stelle. Die Kennung bleibt je Flaeche eigen, sonst
+               naehme das Entfernen der einen der anderen die Spitze mit. */
+            GfxShapes.pfeilMarke(defs, 'p' + block.id.slice(0, 6));
             flaeche.appendChild(defs);
             flaeche.appendChild(sv('rect', { x: feld.x, y: feld.y, width: feld.w, height: feld.h,
                 fill: `url(#r${block.id.slice(0, 6)})` }));
@@ -61442,131 +61697,22 @@ const Zusatz = (() => {
             p.dataset.sid = s.id;
             return p;
         };
-        const formZeichnen = (s) => {
-            if (s.art === 'stift' || s.art === 'linie' || s.art === 'pfeil') {
-                const p = sv('path', {
-                    d: s.art === 'stift'
-                        ? 'M' + s.pts.map((q) => q[0] + ' ' + q[1]).join(' L')
-                        : `M${s.x} ${s.y} L${s.x + s.w} ${s.y + s.h}`,
-                    stroke: s.farbe, 'stroke-width': 2.5, fill: 'none',
-                    'stroke-linecap': 'round', 'stroke-linejoin': 'round'
-                });
-                if (s.art === 'pfeil')
-                    p.setAttribute('marker-end', `url(#p${block.id.slice(0, 6)})`);
-                p.dataset.sid = s.id;
-                /* EIN STRICH IST ZWEIEINHALB PIXEL BREIT — mit dem Finger trifft man
-                   ihn nicht. Darunter liegt deshalb derselbe Pfad noch einmal, 16 px
-                   breit und durchsichtig: er fängt den Griff, malt aber nichts. */
-                const fang = sv('path', {
-                    d: p.getAttribute('d') || '', stroke: 'transparent', 'stroke-width': 16,
-                    fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round'
-                });
-                fang.dataset.sid = s.id;
-                const gruppe = sv('g');
-                gruppe.appendChild(fang);
-                gruppe.appendChild(p);
-                return gruppe;
-            }
-            if (s.art === 'rechteck' || s.art === 'notiz') {
-                const g = sv('g');
-                const r = sv('rect', {
-                    x: Math.min(s.x, s.x + s.w), y: Math.min(s.y, s.y + s.h),
-                    width: Math.abs(s.w), height: Math.abs(s.h), rx: s.art === 'notiz' ? 3 : 5,
-                    fill: s.art === 'notiz' ? s.farbe : 'none', stroke: s.farbe, 'stroke-width': 2,
-                    'fill-opacity': s.art === 'notiz' ? .85 : 1,
-                    /* EIN RECHTECK OHNE FÜLLUNG NIMMT KEINE KLICKS AN (E144). SVG
-                       trifft standardmässig nur, was GEMALT ist — bei `fill: none` ist
-                       das allein der zwei Pixel breite Strich. „Auswählen und
-                       verschieben" ging deshalb nur, wenn man die Kante traf; in der
-                       Mitte griff man durch die Form hindurch ins Raster.
-                       Gemessen mit `elementFromPoint` mitten im Rechteck: es kam der
-                       Hintergrund zurück, nicht die Form. */
-                    'pointer-events': 'all'
-                });
-                r.dataset.sid = s.id;
-                g.appendChild(r);
-                if (s.text) {
-                    const t = sv('text', {
-                        x: Math.min(s.x, s.x + s.w) + 10, y: Math.min(s.y, s.y + s.h) + 22,
-                        fill: s.art === 'notiz' ? '#1c1c1c' : s.farbe, 'font-size': 14
-                    });
-                    zeilenUmbruch(s.text, Math.abs(s.w) - 18).forEach((z, i) => {
-                        const ts = sv('tspan', { x: Math.min(s.x, s.x + s.w) + 10, dy: i ? 18 : 0 });
-                        ts.textContent = z;
-                        t.appendChild(ts);
-                    });
-                    g.appendChild(t);
-                }
-                return g;
-            }
-            if (s.art === 'bild') {
-                /* DAS BILD LIEGT IN DER DATEIABLAGE, NICHT IN DEN FORMEN (§14).
-                   In `shapes` steht nur die Kennung; die Adresse ist ein Blob-Link,
-                   den erst `Dateien.adresse()` herausgibt — und das dauert. Solange
-                   sie fehlt, steht ein Platzhalter da und `male()` wird einmal
-                   nachgeholt, sobald die Adresse kommt.
-        
-                   Ein Bild als Data-URL in `shapes` wäre der kurze Weg gewesen. Er
-                   bläht jeden Block, jede Sicherung und jeden Versionsstand um die
-                   volle Bildgrösse auf — genau das, was §14 verbietet. */
-                const bekannt = bildAdressen.get(String(s.dateiId || ''));
-                if (bekannt === undefined && s.dateiId)
-                    bildHolen(String(s.dateiId));
-                const rahmen = {
-                    x: Math.min(s.x, s.x + s.w), y: Math.min(s.y, s.y + s.h),
-                    w: Math.abs(s.w) || 160, h: Math.abs(s.h) || 120
-                };
-                if (!bekannt) {
-                    const platz = sv('g');
-                    platz.appendChild(sv('rect', { x: rahmen.x, y: rahmen.y, width: rahmen.w, height: rahmen.h,
-                        rx: 5, fill: 'none', stroke: s.farbe, 'stroke-width': 2,
-                        'stroke-dasharray': '5 4' }));
-                    const wort = sv('text', { x: rahmen.x + rahmen.w / 2, y: rahmen.y + rahmen.h / 2,
-                        fill: s.farbe, 'font-size': 13, 'text-anchor': 'middle' });
-                    wort.textContent = bekannt === null ? 'Bild fehlt' : 'Bild lädt …';
-                    platz.appendChild(wort);
-                    platz.dataset.sid = s.id;
-                    return platz;
-                }
-                const bild = sv('image', { x: rahmen.x, y: rahmen.y, width: rahmen.w, height: rahmen.h,
-                    preserveAspectRatio: 'xMidYMid meet' });
-                bild.setAttribute('href', bekannt);
-                bild.dataset.sid = s.id;
-                return bild;
-            }
-            if (s.art === 'ellipse') {
-                const e = sv('ellipse', {
-                    cx: s.x + s.w / 2, cy: s.y + s.h / 2,
-                    rx: Math.abs(s.w / 2), ry: Math.abs(s.h / 2),
-                    fill: 'none', stroke: s.farbe, 'stroke-width': 2,
-                    'pointer-events': 'all' /* wie beim Rechteck, siehe dort */
-                });
-                e.dataset.sid = s.id;
-                return e;
-            }
-            /* text */
-            const t = sv('text', { x: s.x, y: s.y, fill: s.farbe, 'font-size': 17, 'font-weight': 500 });
-            t.textContent = s.text || '';
-            t.dataset.sid = s.id;
-            return t;
-        };
-        const zeilenUmbruch = (text, breite) => {
-            const proZeile = Math.max(6, Math.floor(breite / 7.4));
-            const worte = String(text).split(/\s+/);
-            const out = [];
-            let zeile = '';
-            worte.forEach(x => {
-                if ((zeile + ' ' + x).trim().length > proZeile) {
-                    out.push(zeile.trim());
-                    zeile = x;
-                }
-                else
-                    zeile += ' ' + x;
-            });
-            if (zeile.trim())
-                out.push(zeile.trim());
-            return out.slice(0, 8);
-        };
+        /* DER ZEICHNER STEHT IM KERN (E693). Hier standen hundertzwanzig
+           Zeilen, die jede Art in SVG uebersetzen - Stift, Linie, Pfeil,
+           Rechteck, Haftnotiz, Bild, Ellipse, Text. Mit E690 bekam die Seite
+           eine eigene Flaeche, und die zweite Kopie waere genau der Fall, vor
+           dem Paragraph 8 warnt: man sieht das Auseinanderlaufen nicht beim
+           Lesen, sondern irgendwann daran, dass ein Pfeil hier eine Spitze hat
+           und dort nicht.
+    
+           Was der Kern nicht wissen kann, bekommt er mit: die Kennung der
+           Pfeilmarke DIESER Flaeche und den Weg zu einer Bildadresse
+           (Paragraph 14 - in `shapes` steht nur die Kennung, nie das Bild). */
+        const formZeichnen = (s) => GfxShapes.zeichne(s, {
+            pfeilMarke: 'p' + block.id.slice(0, 6),
+            bildAdresse: (id) => bildAdressen.get(id),
+            bildHolen: (id) => bildHolen(id)
+        });
         /* VON BILDSCHIRM AUF FLÄCHE — ÜBER DIE MATRIX (E686). Bis E686 stand hier
            die Handformel `sicht.x + (e.clientX - r.left) / sicht.z`. Sie war nicht
            falsch: weil `ausschnitt()` den viewBox aus demselben Kasten rechnet,
@@ -85826,6 +85972,13 @@ const ChronikDaten = {
                     "woher": "wörtlich aus dem Gespräch",
                     "gemeint": "Die drei Nebenwirkungen, die du gerade als Lücke aufgeschrieben hast, sollen nicht stehen bleiben.",
                     "besser": "Derselbe Satz. Er ist die beste Art, eine frisch geschriebene Lücke zu behandeln: sofort, solange der Kopf noch drin ist."
+                },
+                {
+                    "zeit": "ca. 12:00",
+                    "wortlaut": "weiter",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Such dir die nächste Arbeit selbst und mach sie. Kein neues Ziel, sondern das Vertrauen, dass die Liste offener Lücken für sich spricht.",
+                    "besser": "Derselbe Satz — wenn eine Lückenliste geführt wird, ist er genau richtig. Wäre keine da, wäre „weiter mit was?\" die ehrlichere Antwort gewesen."
                 }
             ],
             "arbeit": [
@@ -85859,16 +86012,23 @@ const ChronikDaten = {
                 },
                 {
                     "was": "E692 · L220 geschlossen — und ein Kürzel, das nie ankam",
-                    "vonBis": "637eeb6 → offen",
-                    "zeitraum": "11:10–…",
+                    "vonBis": "637eeb6 → bcd4647",
+                    "zeitraum": "11:10–11:55",
                     "dauer": "ca. 45 min",
                     "pruefungen": "test574 von 50 auf 60 Zusagen; §10–§12 vor der Reparatur rot (vier Zeilen), zwei Gegenproben rot; Nachbarn test111, test112, test161, test396, test428, test65, test110, test132, test133"
+                },
+                {
+                    "was": "E693 · Auf der Fläche zeichnen — mit einem Zeichner statt zwei (A1b, L219 zur Hälfte)",
+                    "vonBis": "bcd4647 → offen",
+                    "zeitraum": "12:00–…",
+                    "dauer": "ca. 2 h",
+                    "pruefungen": "test575 neu, 40 Zusagen in elf Abschnitten, dreimal rot gesehen (Tinte eine Ebene höher, ein Flächenname im Kern, feldWeg wieder heraus); Nachbarn test573, test574, test538, test570, test571, test572, test105, test109, test87, test550 alle grün"
                 }
             ],
             "zahlen": {
-                "commits": 7,
-                "entscheidungen": 4,
-                "neuePruefläufe": 3
+                "commits": 8,
+                "entscheidungen": 5,
+                "neuePruefläufe": 4
             },
             "groesstesProblem": "Zweimal am selben Tag `(window as any).App?.zeichneSeite?.()` geschrieben — und zweimal hat es still nichts getan. `const App = (() => …)()` in einem gewöhnlichen <script> legt eine globale LEXIKALISCHE Bindung an, und die steht nicht unter `window`. Das Feld wurde geschrieben, der Bildschirm blieb stehen, kein Fehler kam. Beim ersten Mal sah es aus wie ein fehlender Zweig, beim zweiten wie ein fehlender Kasten. Gefunden hat es beide Male eine Sonde, nicht der Wächter — der war rot, sagte aber das Falsche.",
             "interessantesteAnfrage": "„aber zuerst liess was die ander 2 bereicht machen bi affine“ — eine Arbeitsanweisung mitten in einem Wunsch. Sie hat den Bogen verändert: ohne das Lesen wäre eine dritte Betriebsart entstanden, wo AFFiNE eine Ansicht hat, und der wichtigste Fund wäre unbemerkt geblieben — ein Cover gibt es dort gar nicht.",
@@ -85890,6 +86050,12 @@ const ChronikDaten = {
                     "was": "Vier Leser gleichzeitig statt eines, während der Bau parallel lief",
                     "warum": "drei ihrer Funde hätte der Bau nicht von selbst gemacht",
                     "risiko": "Zeit"
+                },
+                {
+                    "zeit": "ca. 13:40",
+                    "was": "Beim Schreiben von doku/REDION-FORMAT.md den eigenen Satz nachgeprüft — und ihn falsch gefunden: die Seitenfläche liess ein leeres `shapes` stehen. Reparatur mit `Store.feldWeg`, dazu test575 §11 mit Gegenprobe.",
+                    "warum": "Eine Doku, die verspricht, was der Code nicht hält, ist schlimmer als keine (§32, §33). Und §30 will den Wächter vor der Reparatur — hier kam er unmittelbar danach, weil der Fund aus dem Schreiben stammte, nicht aus einem Lauf.",
+                    "risiko": "Keines für Daten: das Feld wird nur entfernt, wenn die Liste leer ist. Ein Leser, der `shapes` erwartet, fand vorher `[]` und findet jetzt nichts — beides heisst „keine Zeichnung\"."
                 }
             ]
         }
@@ -177024,6 +177190,28 @@ const Seitenflaeche = (() => {
         }
         return raus;
     };
+    /* ------------------------------------------------------------------------
+     * DIE FORMEN AUF DER FLAECHE (E693, L219)
+     * --------------------------------------------------------------------------
+     * DASSELBE FORMAT WIE DAS WHITEBOARD, und das ist eine Datenentscheidung,
+     * keine Bequemlichkeit: `shapes` steht so in jedem Whiteboard, ist in
+     * `doku/REDION-FORMAT.md` beschrieben und wird vom selben Zeichner im Kern
+     * gemalt (`GfxShapes`). Ein zweites Format haette bedeutet, dass eine
+     * Sicherung zwei Formate kennen muss und jeder spaetere Leser zweimal
+     * hinsehen. Gezeichnet wird also hier wie dort.
+     * ----------------------------------------------------------------------*/
+    const formenLesen = (p) => Array.isArray(p?.shapes) ? p.shapes : [];
+    const formenSchreiben = (p, formen) => {
+        /* Keine leere Liste stehen lassen: wer die letzte Form wegradiert, hat
+         * keine Zeichnung - nicht eine leere. Ein `shapes: []` in einer Sicherung
+         * wuerde behaupten, hier sei einmal etwas gewesen, und `raumVersion` ohne
+         * Formen deutet einen Raum, den niemand benutzt (§9, doku/REDION-FORMAT.md). */
+        if (!formen.length) {
+            Store.feldWeg(p.id, 'shapes', 'raumVersion');
+            return;
+        }
+        Store.updateBlock(p.id, { shapes: formen, raumVersion: RAUM_VERSION });
+    };
     /* ========================================================================
      * DIE DREI GRIFFE — sie wirken auch, wenn die Fläche gar nicht gezeichnet
      * ist.
@@ -177134,6 +177322,30 @@ const Seitenflaeche = (() => {
         const ebene = document.createElement('div');
         ebene.className = 'pg-fl-sicht';
         flaeche.appendChild(ebene);
+        /* ======================================================================
+         * DIE TINTE — eine SVG-Lage IN derselben bewegten Ebene wie die Kaesten
+         * ----------------------------------------------------------------------
+         * IN der Ebene, nicht daneben: so teilen sich Tinte und Kaesten EINEN
+         * `transform`, und es gibt keine zweite Umrechnung. Genau daran ist es
+         * zweimal schiefgegangen (E623 halbe Strichbreiten an zwei Stellen, E686
+         * Handformel gegen Matrix); L219 hat es deshalb als Bedingung
+         * aufgeschrieben, bevor eine Zeile entstand.
+         *
+         * `overflow: visible` statt eines riesigen Kastens: die Formen liegen in
+         * Flaecheneinheiten um den Ursprung herum, und ein SVG von 1x1 zeigt sie
+         * trotzdem alle. Ein Kasten von 40 000 Punkten waere dieselbe Sache mit
+         * einer Zahl, die irgendwann jemand fuer eine Grenze haelt.
+         *
+         * `pointer-events: none` an der ganzen Lage: die Tinte faengt keinen
+         * Griff. Wer in den Kasten tippt, trifft den Text; wer daneben tippt,
+         * schiebt die Flaeche. Der Radierer sucht seine Form deshalb rechnend,
+         * nicht ueber das getroffene Element - das ist ehrlicher, weil ein
+         * Strich von 2,5 Punkten ohnehin kein Fingerziel ist. */
+        const tinte = GfxShapes.sv('svg', { width: 1, height: 1, class: 'pg-fl-tinte' });
+        const tinteDefs = GfxShapes.sv('defs');
+        GfxShapes.pfeilMarke(tinteDefs, 'pfl' + String(p.id).slice(0, 6));
+        tinte.appendChild(tinteDefs);
+        ebene.appendChild(tinte);
         const kaesten = [];
         const kastenBauen = (plan) => {
             const b = plan.block;
@@ -177315,6 +177527,13 @@ const Seitenflaeche = (() => {
             const mitte = inFlaeche(k.left + k.width / 2, k.top + k.height / 3);
             return { x: Math.round(mitte.x - BLOCK_BREITE / 2), y: Math.round(mitte.y) };
         };
+        /* Die Formen stehen HIER und nicht erst beim Malen weiter unten:
+           `passend` rechnet sie mit, und eine Konstante, die erst nach ihrem
+           ersten Leser entsteht, ist eine zeitliche Falle - sie geht gut, bis
+           jemand den einen Aufruf vorzieht. */
+        let formen = formenLesen(p).slice();
+        let farbe = GfxShapes.PALETTE[0]?.[0] ?? '#529cca';
+        let aktiv = null;
         /** Zoomen und dabei den Punkt unter dem Finger festhalten. */
         const massstab = (neu, haltX, haltY) => {
             const z = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, neu));
@@ -177350,6 +177569,20 @@ const Seitenflaeche = (() => {
                 x1 = Math.max(x1, plan.ort.x + bw);
                 y1 = Math.max(y1, plan.ort.y + bh);
             }
+            /* UND DIE TINTE GEHOERT DAZU (E693). Zweimal in zwei Boegen hat das
+               Bild dieselbe Luecke gezeigt: erst rechnete „ins Bild holen" nur mit
+               dem Seitenkasten und liess die Bloecke draussen (E691), dann nur mit
+               den Kaesten und liess die Formen draussen. Ein Knopf, der die
+               Haelfte im Dunkeln laesst, ist ein falsches Versprechen (§32). */
+            for (const form of formen) {
+                const r = GfxShapes.rahmenVon(form);
+                if (!Number.isFinite(r.x) || !Number.isFinite(r.y))
+                    continue;
+                x0 = Math.min(x0, r.x);
+                y0 = Math.min(y0, r.y);
+                x1 = Math.max(x1, r.x + r.w);
+                y1 = Math.max(y1, r.y + r.h);
+            }
             if (!Number.isFinite(x0)) {
                 x0 = ort.x;
                 y0 = ort.y;
@@ -177375,6 +177608,67 @@ const Seitenflaeche = (() => {
             stellen();
         };
         /* ======================================================================
+         * MALEN
+         * ----------------------------------------------------------------------
+         * Die Formen liegen am Seitenblock unter `shapes` - dasselbe Feld und
+         * dasselbe Format wie im Whiteboard, gezeichnet vom selben Kern.
+         * ====================================================================*/
+        /** Die Tinte neu malen. Der `<defs>`-Knoten bleibt stehen - er traegt
+         *  die Pfeilspitze, und wer ihn mit wegraeumt, nimmt jedem Pfeil die
+         *  Spitze, ohne dass sich an den Formen etwas geaendert haette. */
+        const malen = () => {
+            [...tinte.childNodes].forEach(k => { if (k !== tinteDefs)
+                tinte.removeChild(k); });
+            for (const form of formen)
+                tinte.appendChild(GfxShapes.zeichne(form, { pfeilMarke: 'pfl' + String(p.id).slice(0, 6) }));
+        };
+        /* Der Verlauf kommt aus dem Kern (E687) - derselbe wie im Whiteboard,
+           in der Gedankenkarte und auf der Planflaeche. */
+        const verlauf = GfxHistory.erstelle();
+        /* Der Kern merkt sich ZEICHENKETTEN, keine Objekte - deshalb hier
+           `JSON.stringify` und beim Zuruecknehmen `JSON.parse`. Eine Kopie als
+           Objekt waere schneller und traegt dafuer das Risiko, dass zwei
+           Staende heimlich dieselbe Liste teilen. */
+        const abbild = () => JSON.stringify(formen);
+        const merken = () => verlauf.merken(abbild());
+        const sichern = () => { formenSchreiben(p, formen); malen(); };
+        const schrittZurueck = () => {
+            const vorher = verlauf.zurueck(abbild());
+            if (vorher === null)
+                return;
+            formen = JSON.parse(vorher);
+            sichern();
+        };
+        const schrittVor = () => {
+            const nachher = verlauf.vor(abbild());
+            if (nachher === null)
+                return;
+            formen = JSON.parse(nachher);
+            sichern();
+        };
+        /** Welche Form liegt an dieser Stelle? Gerechnet, nicht ueber das
+         *  getroffene Element: die Tinte nimmt keine Griffe an (siehe oben), und
+         *  ein Strich von 2,5 Punkten waere ohnehin kein Fingerziel. */
+        const formAn = (fx, fy, radius) => {
+            for (let i = formen.length - 1; i >= 0; i--) {
+                const form = formen[i];
+                if (form?.art === 'stift') {
+                    const pts = Array.isArray(form.pts) ? form.pts : [];
+                    if (pts.some((q) => Math.hypot(Number(q?.[0]) - fx, Number(q?.[1]) - fy) <= radius))
+                        return form;
+                    continue;
+                }
+                const r = GfxShapes.rahmenVon(form);
+                if (fx >= r.x - radius && fx <= r.x + r.w + radius &&
+                    fy >= r.y - radius && fy <= r.y + r.h + radius)
+                    return form;
+            }
+            return null;
+        };
+        const MALWERKZEUGE = ['stift', 'linie', 'pfeil', 'rechteck', 'ellipse'];
+        const maltGerade = () => MALWERKZEUGE.includes(werkzeug) || werkzeug === 'radierer';
+        malen();
+        /* ======================================================================
          * Die Werkzeugleiste — dieselbe wie auf jeder anderen Fläche (E689)
          * ====================================================================*/
         const massstabZeigen = document.createElement('b');
@@ -177384,19 +177678,49 @@ const Seitenflaeche = (() => {
         const leiste = GfxToolbar.erstelle({
             klasse: 'pg-fl-tools',
             beschriftung: 'Werkzeuge der Fläche',
-            werkzeuge: Register.werkzeuge.auswahl(['zeiger', 'hand']),
+            /* Sechs Werkzeuge mehr als in E690, und jedes TUT etwas - genau das
+               war die Bedingung aus L219: eine Leiste mit Knoepfen, die nichts
+               bewirken, waere ein falsches Versprechen (Paragraph 32). */
+            werkzeuge: Register.werkzeuge.auswahl(['zeiger', 'hand', 'stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'radierer']),
             aktiv: 'zeiger',
             aktionen: [
+                { id: 'farbe', name: 'Farbe', titel: 'Farbe der Formen', sym: 'palette',
+                    menue: true, kapsel: 'werkzeuge' },
+                { id: 'zurueck', name: 'Rückgängig', titel: 'Rückgängig (Strg + Z)', sym: 'undo' },
                 { id: 'kleiner', name: 'Kleiner', titel: 'Kleiner (Strg + Rad)', sym: 'minus' },
                 { id: 'groesser', name: 'Grösser', titel: 'Grösser (Strg + Rad)', sym: 'plus' },
                 { id: 'passend', name: 'Ins Bild', titel: 'Alles ins Bild holen', sym: 'maximize' }
             ],
             zusatz: { groesser: massstabZeigen },
+            /* Das Farbmenue baut die Flaeche, der Kern zeigt es - dasselbe Muster
+               wie im Whiteboard (E689). Jeder Tupfer traegt seinen NAMEN, weil
+               Paragraph 38 keine Auskunft allein ueber Farbe zulaesst. */
+            menue: (id) => {
+                if (id !== 'farbe')
+                    return null;
+                const kasten = document.createElement('div');
+                kasten.className = 'gfx-tb-farben';
+                for (const [wert, name] of GfxShapes.PALETTE) {
+                    const k = document.createElement('button');
+                    k.type = 'button';
+                    k.dataset['c'] = wert;
+                    k.title = name;
+                    k.setAttribute('aria-label', name);
+                    k.style.background = wert;
+                    if (wert === farbe)
+                        k.classList.add('an');
+                    k.addEventListener('click', () => { farbe = wert; leiste.schliesse(); });
+                    kasten.appendChild(k);
+                }
+                return kasten;
+            },
             aufWerkzeug: (id) => {
                 werkzeug = id;
                 flaeche.dataset['wz'] = id;
             },
             aufAktion: (id) => {
+                if (id === 'zurueck')
+                    schrittZurueck();
                 if (id === 'kleiner')
                     massstab(sicht.z / 1.25);
                 if (id === 'groesser')
@@ -177427,6 +177751,42 @@ const Seitenflaeche = (() => {
                 return;
             }
             const ziel = e.target instanceof Element ? e.target : null;
+            /* MIT EINEM MALWERKZEUG WIRD GEMALT - ausser ueber der Leiste und
+               ausser im Kasten, denn dort gehoert der Zug dem Text. Genau
+               deshalb liegt die Tinte auch ohne Griffe da: waere sie greifbar,
+               muesste hier eine zweite Regel stehen, welche Lage gewinnt. */
+            if (maltGerade() && !ziel?.closest('.gfx-tb-sockel') && !ziel?.closest('.pg-fl-notiz')) {
+                const punkt = inFlaeche(e.clientX, e.clientY);
+                /* `setPointerCapture` WIRFT, wenn es den Zeiger nicht gibt - und ein
+                   Wurf hier bricht den ganzen Handgriff ab, bevor die erste Form
+                   entsteht. Das passiert nicht nur im Pruefstand: ein Zeiger, der
+                   zwischen `pointerdown` und dieser Zeile schon wieder weg ist
+                   (schneller Tipp, verlorener Stift, ein zweiter Finger), reicht.
+                   Das Fangen ist eine Bequemlichkeit - ohne es endet der Strich,
+                   wenn der Finger die Flaeche verlaesst -, kein Grund zum Abbruch. */
+                try {
+                    flaeche.setPointerCapture(e.pointerId);
+                }
+                catch { /* egal */ }
+                merken();
+                if (werkzeug === 'radierer') {
+                    const treffer = formAn(punkt.x, punkt.y, 12 / sicht.z);
+                    if (treffer) {
+                        formen = formen.filter(x => x !== treffer);
+                        sichern();
+                    }
+                    else
+                        verlauf.letztenVerwerfen();
+                    aktiv = { art: 'radieren' };
+                    return;
+                }
+                aktiv = werkzeug === 'stift'
+                    ? { id: Store.uid().slice(0, 8), art: 'stift', pts: [[punkt.x, punkt.y]], farbe }
+                    : { id: Store.uid().slice(0, 8), art: werkzeug, x: punkt.x, y: punkt.y, w: 0, h: 0, farbe };
+                formen.push(aktiv);
+                malen();
+                return;
+            }
             /* AM KOPF ZIEHT MAN DEN KASTEN, sonst die Fläche. Der Körper des
                Kastens gehört dem Text: wer darin zieht, markiert Worte. */
             if (ziel?.closest('.pg-fl-menue')) {
@@ -177454,6 +177814,25 @@ const Seitenflaeche = (() => {
         const bewegt = (e) => {
             if (finger.has(e.pointerId))
                 finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (aktiv) {
+                const punkt = inFlaeche(e.clientX, e.clientY);
+                if (aktiv.art === 'radieren') {
+                    const treffer = formAn(punkt.x, punkt.y, 12 / sicht.z);
+                    if (treffer) {
+                        formen = formen.filter(x => x !== treffer);
+                        sichern();
+                    }
+                    return;
+                }
+                if (aktiv.art === 'stift')
+                    aktiv.pts.push([punkt.x, punkt.y]);
+                else {
+                    aktiv.w = punkt.x - aktiv.x;
+                    aktiv.h = punkt.y - aktiv.y;
+                }
+                malen();
+                return;
+            }
             if (kneifen && finger.size === 2) {
                 const [a, b] = [...finger.values()];
                 if (!a || !b)
@@ -177497,6 +177876,24 @@ const Seitenflaeche = (() => {
             finger.delete(e.pointerId);
             if (finger.size < 2)
                 kneifen = null;
+            if (aktiv) {
+                const fertig = aktiv;
+                aktiv = null;
+                if (fertig.art === 'radieren')
+                    return;
+                /* EIN TIPP IST KEINE FORM. Ohne diese Zeile bleibt bei jedem Klick
+                   ein Punkt oder ein Rechteck von null Punkten liegen - unsichtbar,
+                   aber in der Sicherung. Dieselbe Regel hat das Whiteboard. */
+                const klein = fertig.art === 'stift'
+                    ? fertig.pts.length < 2
+                    : Math.abs(fertig.w) < 4 && Math.abs(fertig.h) < 4;
+                if (klein) {
+                    formen = formen.filter(x => x !== fertig);
+                    verlauf.letztenVerwerfen();
+                }
+                sichern();
+                return;
+            }
             if (!zug)
                 return;
             const jetzt = zug;
@@ -177518,6 +177915,29 @@ const Seitenflaeche = (() => {
             }
             jetzt.plan.merken(jetzt.plan.ort);
         };
+        /* DIE TASTE GEHOERT DER FLAECHE (E682). Derselbe Griff wie im
+           Whiteboard: die Flaeche ist fokussierbar, nimmt Strg+Z selbst und
+           sagt der Schale mit `preventDefault`, dass die Taste genommen ist -
+           sonst nimmt der Block seinen Schritt zurueck UND der Seitenverlauf
+           baut die Seite neu, mit frischen Kennungen fuer jeden Block
+           (test568). Im Text gilt das nicht: dort gehoert Strg+Z dem Feld. */
+        flaeche.tabIndex = 0;
+        flaeche.addEventListener('keydown', (e) => {
+            const ziel = e.target;
+            if (ziel && (ziel.tagName === 'INPUT' || ziel.tagName === 'TEXTAREA' || ziel.isContentEditable))
+                return;
+            if (!(e.ctrlKey || e.metaKey))
+                return;
+            const taste = e.key.toLowerCase();
+            if (taste === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                schrittZurueck();
+            }
+            else if ((taste === 'z' && e.shiftKey) || (taste === 'y' && !e.shiftKey)) {
+                e.preventDefault();
+                schrittVor();
+            }
+        });
         flaeche.addEventListener('pointerdown', beginnt);
         flaeche.addEventListener('pointermove', bewegt);
         flaeche.addEventListener('pointerup', endet);

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-672 Entscheidungen, E1 bis E692 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+673 Entscheidungen, E1 bis E693 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -735,6 +735,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E690** — Drei Ansichten einer Seite, umschaltbar oben: AFFiNEs `page` und `edgeless` so nah am Original, wie unsere Technik es zulässt, dazu „Redion" als dritte mit Cover und Werkzeugzeile — Katalog `Register.seitenansichten`, Feld `seitenAnsicht` am Block (kein Feld = Redion, §9), Umschalter auf dem vorhandenen `Segment` statt einer vierten Knopfreihe (§8), die Fläche als Punktraster mit dem Seitentext als verschiebbarem Kasten (`test573`, Redur: „ich will die 2 von affine 1:1 haben")
 * **E691** — Der Vollausbau der Fläche: JEDER Block kann seinen eigenen Platz bekommen (`flaecheOrt`) und sagen, wo er erscheint (`sichtbarIn`: beides | seite | flaeche) — AFFiNEs `displayMode` eine Stufe feiner, weil dort die Notiz die kleinste Einheit ist und hier der Block; gezogen wird mit dem vorhandenen Editor-Ziehen (§8), am Telefon über die Hebe-Geste aus E83, und ein unlesbarer Platz zählt als KEIN Platz, damit kein Block verschwindet (`test574`, Redur: „ja mach den vollausbau, jeder block auf die fläche ziehbar")
 * **E692** — L220 geschlossen: die drei Handgriffe, die mit der ungefilterten Geschwisterliste rechneten — Rücktaste springt zum SICHTBAREN Vorgänger, Strg+Umschalt+Pfeil springt ÜBER den unsichtbaren Nachbarn (`splice` statt Tausch), und die laufende Nummer einer Liste wird gezählt und weitergereicht statt an den Block geschrieben; dabei gefunden: das Verschieben war seit je unerreichbar, weil die Pfeilnavigation davor stand und umkehrte (`test574 §10–§12`)
+* **E693** — Auf der Fläche zeichnen, mit EINEM Formenzeichner: `core/gfx/shapes.ts` bekommt den Zeichner, den Rahmen und die acht Farben, das Whiteboard zieht darauf um (136 Zeilen weniger), und die Seitenfläche bekommt eine Tinten-Lage IN derselben bewegten Ebene wie die Kästen — acht Werkzeuge, Radierer, Farbmenü, Strg+Z aus `GfxHistory`, gespeichert im bestehenden Feld `shapes` (`test575`, Redur: „weiter")
 
 ---
 
@@ -56497,3 +56498,98 @@ aber auch nicht nachträglich entfernt (§43: nichts löschen ohne Rückfrage).
 
 **Nachbarn:** `test574`, `test111`, `test112`, `test161`, `test396`,
 `test428`, `test65`, `test110`, `test132`, `test133`.
+
+---
+
+## E693 — Auf der Fläche zeichnen, und ein Zeichner statt zwei
+
+**Datum:** 26. September 2026 · **Wächter:** `test575` (40 Zusagen) ·
+Redur: **„weiter"** — nach E692, und in L219 stand, was der Fläche seit E690
+fehlte.
+
+**Die Reihenfolge war die Entscheidung.** Die Fläche brauchte einen
+Formenzeichner, und das Whiteboard hatte längst einen: hundertzwanzig
+Zeilen, die jede Art in SVG übersetzen. Ihn zu kopieren wäre der kurze Weg
+gewesen und genau der Fall, vor dem §8 warnt — zwei Fassungen derselben
+Zeichnung laufen auseinander, und man sieht es nicht beim Lesen, sondern
+irgendwann daran, dass ein Pfeil auf der einen Fläche eine Spitze hat und
+auf der anderen nicht. Also zuerst der Umzug in den Kern, dann die neue
+Fläche darauf. Dasselbe Muster wie `GfxHistory` (E687) und `GfxToolbar`
+(E689).
+
+**Was entschieden wurde.**
+
+1. **`core/gfx/shapes.ts` — `GfxShapes`.** Zeichner (`zeichne`), Platzbedarf
+   (`rahmenVon`), Zeilenumbruch, Pfeilspitze und die acht Farben. Er kennt
+   keine Fläche: kein `Store`, kein `Register`, kein `App`, keine
+   Dateiablage. Was er über die Welt wissen muss, bekommt er als Angabe —
+   die Kennung der Pfeilmarke und einen Weg zu einer Bildadresse (§14: in
+   `shapes` steht nur die Kennung, nie das Bild). `test575 §1` hält das.
+
+2. **Das Whiteboard zieht um.** 136 Zeilen weniger, und die Zahlen der
+   Pfeilspitze sind die seinen geblieben — ein Umzug darf das Aussehen nicht
+   ändern, sonst ist es kein Umzug, sondern eine stille
+   Gestaltungsänderung.
+
+3. **Die Tinte liegt IN der bewegten Ebene**, nicht daneben. Damit teilen
+   sich Tinte und Kästen EINEN `transform`, und es gibt keine zweite
+   Umrechnung — genau daran ist es zweimal schiefgegangen (E623, E686), und
+   L219 hatte es deshalb als Bedingung aufgeschrieben. `test575 §4b` misst
+   es nicht am Quelltext, sondern an der Bewegung: beim Zoomen schrumpft die
+   Tinte um denselben Faktor wie der Kasten.
+
+4. **Dasselbe Feld und dasselbe Format wie das Whiteboard** (`shapes` am
+   Block, mit `raumVersion`). Ein zweites Format hätte bedeutet, dass eine
+   Sicherung zwei kennen muss und jeder spätere Leser zweimal hinsieht.
+   **Aber ein leeres Feld bleibt nicht stehen.** Wer die letzte Form
+   wegradiert, hat keine Zeichnung — nicht eine leere. `shapes: []` würde in
+   einer Sicherung behaupten, hier sei einmal etwas gewesen, und
+   `raumVersion` ohne Formen deutet einen Raum, den niemand benutzt. Beide
+   Felder werden mit `Store.feldWeg` entfernt, derselbe Griff wie bei
+   `flaecheOrt` (E691). Gefunden hat es nicht ein Bild und kein Wächter,
+   sondern das Schreiben von `doku/REDION-FORMAT.md`: der Satz, den die Doku
+   versprechen sollte, war noch nicht wahr. `test575 §11` hält ihn seither,
+   und die Gegenprobe druckt beide Felder als vorhanden aus.
+
+5. **Die Tinte fängt keinen Griff** (`pointer-events: none`). Wer in den
+   Kasten tippt, trifft den Text; wer daneben tippt, schiebt die Fläche. Der
+   Radierer sucht seine Form deshalb RECHNEND — ehrlicher, als einen 2,5
+   Punkte breiten Strich zum Fingerziel zu erklären (§37).
+
+6. **Acht Werkzeuge, und jedes tut etwas.** Zeiger, Hand, Radierer, Stift,
+   Linie, Pfeil, Rechteck, Ellipse — dazu Farbmenü und Rückgängig. Das war
+   die Bedingung aus L219: eine Leiste mit Knöpfen, die nichts bewirken,
+   wäre ein falsches Versprechen (§32). In E690 zeigte sie zwei.
+
+7. **Strg+Z gehört der Fläche** (E682, derselbe Griff wie im Whiteboard:
+   fokussierbar, eigener Verlauf, `preventDefault`), und im Text gilt es
+   nicht — dort gehört die Taste dem Feld.
+
+**Und was das BILD zum zweiten Mal in zwei Bögen gefunden hat** (§55.1):
+„Ins Bild holen" rechnete erst nur mit dem Seitenkasten und liess die
+herausgezogenen Blöcke draussen (E691), dann nur mit den Kästen und liess
+die Formen draussen — auf dem Bild hing eine Ellipse rechts über der Kante,
+während der Knopf „ins Bild" hiess. Jetzt umfasst die Rechnung Kästen UND
+Formen, und `test575 §4c` hält es.
+
+**Ein Fund am Rande, der kein Prüfstandsfehler war.** `setPointerCapture`
+wirft, wenn es den Zeiger nicht mehr gibt — und der Wurf brach den ganzen
+Handgriff ab, bevor die erste Form entstand. Das trifft nicht nur den
+Prüflauf: ein schneller Tipp, ein verlorener Stift, ein zweiter Finger
+reichen. Das Fangen ist eine Bequemlichkeit, kein Grund zum Abbruch; es
+steht jetzt in `try`.
+
+**Die Alternativen.** (a) Den Zeichner kopieren — kurz, und §8 in Reinform.
+(b) Ein eigenes Format für die Seitenfläche — dann müsste jede Sicherung
+zwei kennen. (c) Die Tinte als eigene Ebene neben den Kästen mit eigener
+Umrechnung — die Gegenprobe zeigt, was daraus wird: „Tinte ×1.000 · Kasten
+×0.800".
+
+**Preis.** Eine Skriptdatei mehr im Startweg. Auf der Fläche kann man
+zeichnen, aber Formen noch nicht auswählen, verschieben oder beschriften —
+das kann das Whiteboard, und es steht als Rest in L219. Und eine Seite mit
+Zeichnung taucht in der Flächen-Übersicht der Arbeitswelt nicht auf: die
+listet Blöcke vom Typ `whiteboard` und `blatt`, nicht Seiten.
+
+**Nachbarn:** `test575`, `test573`, `test574`, `test538`, `test570`,
+`test571`, `test572`, `test105`, `test109`, `test87`, `test550`.

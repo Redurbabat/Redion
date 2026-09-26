@@ -249,3 +249,28 @@
   .pg-fl-menue{width:var(--touch-min); height:var(--touch-min); font-size:18px}
   .pg-fl-kopf{min-height:var(--touch-min); padding:4px 6px 4px 12px}
 }
+
+/* ----------------------------------------------------------------------------
+   6 · DIE TINTE (E693, L219)
+   Eine SVG-Lage IN derselben bewegten Ebene wie die Kästen — so teilen sich
+   Tinte und Kasten EINEN `transform`, und es gibt keine zweite Umrechnung.
+   --------------------------------------------------------------------------*/
+.pg-fl-tinte{
+  position:absolute; left:0; top:0;
+  /* 1 × 1 und `overflow:visible`: die Formen liegen in Flächeneinheiten um
+     den Ursprung, und ein winziges SVG zeigt sie trotzdem alle. Ein Kasten
+     von 40 000 Punkten wäre dieselbe Sache mit einer Zahl, die irgendwann
+     jemand für eine Grenze hält. */
+  overflow:visible;
+  /* DIE TINTE FÄNGT KEINEN GRIFF. Wer in den Kasten tippt, trifft den Text;
+     wer daneben tippt, schiebt die Fläche. Der Radierer sucht seine Form
+     deshalb rechnend — ein Strich von 2,5 Punkten ist ohnehin kein
+     Fingerziel (§37). */
+  pointer-events:none;
+  color:var(--text);
+}
+/* Die Malwerkzeuge zeigen ein Kreuz statt des Greifers. */
+.pg-flaeche[data-wz="stift"], .pg-flaeche[data-wz="linie"],
+.pg-flaeche[data-wz="pfeil"], .pg-flaeche[data-wz="rechteck"],
+.pg-flaeche[data-wz="ellipse"]{cursor:crosshair}
+.pg-flaeche[data-wz="radierer"]{cursor:cell}

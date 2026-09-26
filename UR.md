@@ -2548,6 +2548,17 @@ Zwei Bögen, zwei Wächter, beide rot eingecheckt, beide mit Gegenproben. Und ei
 **Besserer Prompt:** 
 
 
+**8 · ca. 12:00**
+
+> weiter
+
+**Gemeint:** Such dir die nächste Arbeit selbst und mach sie. Kein neues Ziel, sondern das Vertrauen, dass die Liste offener Lücken für sich spricht.
+
+**Besser geschrieben:** Derselbe Satz — wenn eine Lückenliste geführt wird, ist er genau richtig. Wäre keine da, wäre „weiter mit was?" die ehrlichere Antwort gewesen.
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -2556,13 +2567,14 @@ Zwei Bögen, zwei Wächter, beide rot eingecheckt, beide mit Gegenproben. Und ei
 | Gelesen: AFFiNEs zwei Ansichten — Karte-Thema und die offene Frage als A1 | `` → `` | 06:51–07:31 | ca. 40 min | keine — ein Leser und eine Karte-Notiz, jeder Punkt mit Datei:Zeile |
 | E690 · Drei Ansichten einer Seite (A1) | `` → `` | 07:38–08:15 | ca. 40 min | test573 rot eingecheckt (7 Zeilen rot), danach 31/31; eine Gegenprobe rot, die zugleich eine Lücke IM Wächter zeigte; 27 Nachbarn grün |
 | E691 · Der Vollausbau der Fläche (A1c) | `` → `` | 08:25–… | ca. 2 h | test574 rot eingecheckt (14 ok, 25 rot), danach 50/50; zwei Gegenproben rot; vier Leser parallel vor dem Bau; 21 Nachbarn grün |
-| E692 · L220 geschlossen — und ein Kürzel, das nie ankam | `` → `` | 11:10–… | ca. 45 min | test574 von 50 auf 60 Zusagen; §10–§12 vor der Reparatur rot (vier Zeilen), zwei Gegenproben rot; Nachbarn test111, test112, test161, test396, test428, test65, test110, test132, test133 |
+| E692 · L220 geschlossen — und ein Kürzel, das nie ankam | `` → `` | 11:10–11:55 | ca. 45 min | test574 von 50 auf 60 Zusagen; §10–§12 vor der Reparatur rot (vier Zeilen), zwei Gegenproben rot; Nachbarn test111, test112, test161, test396, test428, test65, test110, test132, test133 |
+| E693 · Auf der Fläche zeichnen — mit einem Zeichner statt zwei (A1b, L219 zur Hälfte) | `` → `` | 12:00–… | ca. 2 h | test575 neu, 40 Zusagen in elf Abschnitten, dreimal rot gesehen (Tinte eine Ebene höher, ein Flächenname im Kern, feldWeg wieder heraus); Nachbarn test573, test574, test538, test570, test571, test572, test105, test109, test87, test550 alle grün |
 
 #### Zahlen des Tages
 
-- **commits:** 7
-- **entscheidungen:** 4
-- **neuePruefläufe:** 3
+- **commits:** 8
+- **entscheidungen:** 5
+- **neuePruefläufe:** 4
 
 #### Das grösste Problem
 
@@ -2579,6 +2591,7 @@ Zweimal am selben Tag `(window as any).App?.zeichneSeite?.()` geschrieben — un
 | ca. 06:05 | Dreizehn Bilder aller vier Flächen nachgeschickt und `schaltplan` als fehlendes Bildziel ergänzt | Redurs Vorwurf war berechtigt (§55.3) | keines |
 | ca. 07:00 | Ein Leser ins AFFiNE-Archiv, bevor gebaut wurde | Redur hat es ausdrücklich verlangt | keines — nur gelesen (§57) |
 | ca. 08:50 | Vier Leser gleichzeitig statt eines, während der Bau parallel lief | drei ihrer Funde hätte der Bau nicht von selbst gemacht | Zeit |
+| ca. 13:40 | Beim Schreiben von doku/REDION-FORMAT.md den eigenen Satz nachgeprüft — und ihn falsch gefunden: die Seitenfläche liess ein leeres `shapes` stehen. Reparatur mit `Store.feldWeg`, dazu test575 §11 mit Gegenprobe. | Eine Doku, die verspricht, was der Code nicht hält, ist schlimmer als keine (§32, §33). Und §30 will den Wächter vor der Reparatur — hier kam er unmittelbar danach, weil der Fund aus dem Schreiben stammte, nicht aus einem Lauf. | Keines für Daten: das Feld wird nur entfernt, wenn die Liste leer ist. Ein Leser, der `shapes` erwartet, fand vorher `[]` und findet jetzt nichts — beides heisst „keine Zeichnung". |
 
 ---
 

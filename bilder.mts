@@ -1962,6 +1962,55 @@ const ANSICHTEN: Record<string, {
       await new Promise(r => setTimeout(r, 900));
     }
   },
+  /* ------------------------------------------------------------------------
+     AUF DER FLAECHE ZEICHNEN (E693, 26. September 2026)
+     Redur: „weiter" - und in L219 stand, was der Flaeche fehlte. Zwei Bilder:
+     die Formen auf der Leinwand, und die Leiste mit allen acht Werkzeugen.
+     ----------------------------------------------------------------------*/
+  flaecheTinte: {
+    titel: 'Auf der Fläche zeichnen — Stift, Pfeil, Rechteck und Ellipse neben den Kästen',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Wärmepumpe — Notizen', icon: '🔥',
+        seitenAnsicht: 'flaeche' });
+      Store.addBlock(seite.id, 'heading', { text: 'Was zu prüfen ist' });
+      Store.addBlock(seite.id, 'text', { text: 'Vorlauftemperatur, Volumenstrom und die Spreizung an beiden Fühlern.' });
+      const b3 = Store.addBlock(seite.id, 'todo', { text: 'Fühler am Rücklauf nachziehen' });
+      Store.updateBlock(b3.id, { flaecheOrt: { x: 840, y: 300, w: 320, raumVersion: 1 } });
+      /* Formen wie von Hand gezogen - dasselbe Format wie im Whiteboard. */
+      Store.updateBlock(seite.id, { raumVersion: 1, shapes: [
+        { id: 'f1', art: 'stift', farbe: '#ff7369',
+          pts: [[820, 120], [860, 96], [910, 128], [960, 88], [1010, 120]] },
+        { id: 'f2', art: 'pfeil', x: 700, y: 210, w: 150, h: 96, farbe: '#529cca' },
+        { id: 'f3', art: 'rechteck', x: 820, y: 170, w: 260, h: 96, farbe: '#4dab9a' },
+        { id: 'f4', art: 'ellipse', x: 1120, y: 300, w: 170, h: 110, farbe: '#9a6dd7' }
+      ] });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+  flaecheWerkzeuge: {
+    titel: 'Die Werkzeugleiste der Fläche — acht Werkzeuge, und jedes tut etwas',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Werkzeuge', icon: '✏️', seitenAnsicht: 'flaeche' });
+      Store.addBlock(seite.id, 'text', { text: 'Stift, Linie, Pfeil, Rechteck, Ellipse, Radierer.' });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    },
+    dann: async () => {
+      document.querySelector<HTMLElement>('.pg-flaeche .gfx-tb-sockel [data-wz="stift"]')?.click();
+      await new Promise(r => setTimeout(r, 200));
+      document.querySelector<HTMLElement>('.pg-flaeche .gfx-tb-sockel [data-menue="farbe"]')?.click();
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
   schaltplan: {
     /* Der Stromkreis ist der aus test263 (senkrechte Zweige, keine Leitung
        überbrückt einen Anschluss). Das Bild zeigt die Planfläche mit ihrer

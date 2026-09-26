@@ -1,5 +1,66 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 26. September 2026 · E693 · Auf der Fläche zeichnen — mit einem Zeichner statt zwei (A1b)
+
+**Redur:** „weiter."
+
+**Gebaut:** `src/core/gfx/shapes.ts` — `GfxShapes` mit `zeichne`,
+`rahmenVon`, `zeilenUmbruch`, `pfeilMarke`, `sv` und den acht Farben. Er
+kennt keine Fläche: kein `Store`, kein `Register`, kein `App`, keine
+Dateiablage; was er über die Welt wissen muss, bekommt er als Angabe.
+Darauf ist zuerst das Whiteboard umgezogen (136 Zeilen weniger, 24 dazu),
+und dann hat die Seitenfläche ihre Tintenebene bekommen — acht Werkzeuge,
+Farbmenü, rechnender Radierer, Rückgängig über `GfxHistory`, Strg+Z nach
+E682-Mechanik, gespeichert im bestehenden Feld `shapes`.
+
+**Die Reihenfolge war die Entscheidung.** Den Zeichner des Whiteboards zu
+kopieren wäre der kurze Weg gewesen und genau der Fall, vor dem §8 warnt:
+zwei Fassungen derselben Zeichnung laufen auseinander, und man sieht es
+nicht beim Lesen, sondern irgendwann daran, dass ein Pfeil auf einer Fläche
+eine Spitze hat und auf der anderen nicht. Also erst der Umzug in den Kern,
+dann die neue Fläche darauf — dasselbe Muster wie `GfxHistory` (E687) und
+`GfxToolbar` (E689).
+
+**Die Bedingung aus L219, gemessen statt gelesen.** Die Tinte liegt IN der
+bewegten Ebene, nicht daneben; damit teilen Tinte und Kästen EINEN
+`transform` und es gibt keine zweite Umrechnung — daran ist es zweimal
+schiefgegangen (E623, E686). `test575 §4b` misst das an der Bewegung, nicht
+am Quelltext, und die Gegenprobe druckt die Zeile, um die es geht: „Tinte
+×1.000 · Kasten ×0.800".
+
+**Und zum zweiten Mal in zwei Bögen hat das BILD dieselbe Lücke gezeigt**
+(§55.1): „Ins Bild holen" rechnete in E690 nur mit dem Seitenkasten und
+liess die herausgezogenen Blöcke draussen, dann nur mit den Kästen und liess
+die Formen draussen — auf dem Bild hing eine Ellipse rechts über der Kante,
+während der Knopf „ins Bild" hiess.
+
+**Ein Fund am Rande, der kein Prüfstandsfehler war.** `setPointerCapture`
+wirft, wenn es den Zeiger nicht mehr gibt, und der Wurf brach den ganzen
+Handgriff ab, bevor die erste Form entstand. Das trifft nicht nur den
+Prüflauf: ein schneller Tipp, ein verlorener Stift, ein zweiter Finger
+reichen. Das Fangen ist eine Bequemlichkeit, kein Grund zum Abbruch.
+
+**Und ein Fund beim SCHREIBEN der Doku.** `doku/REDION-FORMAT.md` sollte
+versprechen, dass ein Seitenblock ohne Zeichnung kein `shapes` trägt —
+nachgesehen war es nicht wahr, eine leere Liste blieb stehen und mit ihr
+eine `raumVersion` ohne Formen. Beide werden jetzt mit `Store.feldWeg`
+entfernt, derselbe Griff wie bei `flaecheOrt` (E691). Eine Doku, die man
+ehrlich schreibt, ist auch ein Wächter.
+
+**Geprüft.** `test575` neu mit 40 Zusagen in elf Abschnitten, dreimal rot
+gesehen (die Tinte eine Ebene höher, `GfxShapes` mit einem Flächennamen
+darin, `feldWeg` wieder heraus). Nachbarn grün: `test573`, `test574`,
+`test538`, `test570`, `test571`, `test572`, `test105`, `test109`, `test87`,
+`test550`.
+
+**L219 ist damit zur Hälfte GESCHLOSSEN.** Was bleibt, steht dort:
+auswählen, verschieben, beschriften und verbinden auf der Fläche — rund 600
+Zeilen Bedienung, die heute nur das Whiteboard hat. Und eine Seite mit
+Zeichnung taucht in der Flächen-Übersicht der Arbeitswelt nicht auf: die
+listet `whiteboard` und `blatt`, nicht Seiten.
+
+---
+
 ## 26. September 2026 · E692 · L220 geschlossen — und ein Kürzel, das nie ankam
 
 **Redur:** „mach L220 auch noch."

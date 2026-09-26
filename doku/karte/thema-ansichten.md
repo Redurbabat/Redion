@@ -5,12 +5,12 @@
 
 ---
 tags: [redion, thema, ansichten]
-stand: 26. September 2026 (nach E691)
+stand: 26. September 2026 (nach E693)
 ---
 
 # Die Ansichten eines Dokuments — AFFiNEs zwei, Redions zwei, und die dritte
 
-Stand 26. September 2026 (nach E691) · Quelle: ein Leser im AFFiNE-Archiv (MIT, nur gelesen) auf Redurs Frage hin: „bei der affine haben wir das es wechsel die ansichten und ich will dort auch die beide und plus von unsere aktuelle stand also mit cover usw also dort 3 bereiche". Jeder Punkt trägt Datei:Zeile vom Tag des Standes; wer später liest, prüft die Zeile, nicht den Satz.
+Stand 26. September 2026 (nach E693) · Quelle: ein Leser im AFFiNE-Archiv (MIT, nur gelesen) auf Redurs Frage hin: „bei der affine haben wir das es wechsel die ansichten und ich will dort auch die beide und plus von unsere aktuelle stand also mit cover usw also dort 3 bereiche". Jeder Punkt trägt Datei:Zeile vom Tag des Standes; wer später liest, prüft die Zeile, nicht den Satz.
 
 ## Die Kurzform
 
@@ -76,5 +76,16 @@ Stand 26. September 2026 (nach E691) · Quelle: ein Leser im AFFiNE-Archiv (MIT,
 - Kein zweiter Ziehmechanismus (§8): der Editor zieht Blöcke seit Langem (HTML5 am Griff `⋮⋮`) und reicht die Kennung jetzt über `dataTransfer` heraus. Am Telefon, wo die Griffe ausgeblendet sind, führt der Weg über das Blockmenü und die Hebe-Geste aus E83.
 - Der Name `sichtbarIn` statt `zeigen`: `zeigen` ist in dieser App schon 41-mal als Rückruf `zeigen: () => boolean` an Register-Einträgen vergeben. Dieselbe Kollision hat einen Bogen vorher `ansicht` zu `seitenAnsicht` gemacht (E690).
 - Offen bleibt L219 (zeichnen auf der Fläche) und L220 (drei Nebenwirkungen des Filterns: Rücktaste, Strg+Umschalt+Pfeil und die Nummer `b.nr` in der Sicherung).
+
+## Zeichnen auf der Fläche (E693, 26. September 2026)
+
+- Die Fläche hat jetzt eine Tintenebene: ein `<svg class="pg-fl-tinte">` INNERHALB der bewegten Ebene, also unter demselben `transform` wie die Kästen — sonst wandert die Tinte mit Faktor 1,0, während die Kästen mit 0,8 wandern (die Gegenprobe von `test575` druckt genau das: „Tinte ×1.000 · Kasten ×0.800").
+- Kein zweites Formenformat (§8): `block.shapes` auf der Seite ist dasselbe Format wie im Whiteboard — `{id, art:"stift", pts:[[x,y],…], farbe}` und `{id, art:"linie"|"pfeil"|"rechteck"|"ellipse", x, y, w, h, farbe}` — und derselbe Zeichner malt es.
+- Dafür ist EIN Dienst entstanden und das Whiteboard darauf umgezogen: `GfxShapes` (`src/core/gfx/shapes.ts`) mit `zeichne/rahmenVon/zeilenUmbruch/pfeilMarke/sv/PALETTE`. `zeichenflaeche.ts` wurde dabei 136 Zeilen kürzer; es kamen 24 dazu (die Haken für Bildadressen und das Nachladen). `test575 §1` liest das GEBAUTE JavaScript und lässt darin kein `wb-`, `gk-`, `sp-`, `pg-fl`, `Store`, `Register`, `App`, `Dateien` zu.
+- Acht Werkzeuge auf der Fläche (Zeiger, Hand, Stift, Linie, Pfeil, Rechteck, Ellipse, Radierer) plus Farbmenü — aus `Register.werkzeuge` über `GfxToolbar`, wie das Whiteboard seit E689.
+- Der Radierer fragt die GERECHNETE Treffbarkeit, nicht einen Bildschirmpunkt: eine Sonde mit einem festen Punkt wäre nach dem ersten Verschieben des Ausschnitts falsch, ohne rot zu werden (L206-Sorte).
+- Strg+Z gehört der Fläche, solange der Zeiger darauf ist (E682-Mechanik: `tabIndex=0`, eigenes keydown, `preventDefault`; `schale.ts` weicht bei `e.defaultPrevented`). Der Verlauf ist `GfxHistory.erstelle()`, die Abbilder sind Zeichenketten (`JSON.stringify(formen)`).
+- Am Block steht neben `shapes` eine `raumVersion` — dieselbe Marke wie im Whiteboard, damit ein Ausschnitt aus einer älteren Fassung nicht als Platzangabe gelesen wird (§9).
+- Offen bleibt der Rest von L219: auswählen, verschieben, beschriften und verbinden auf der Fläche — rund 600 Zeilen Bedienung, die heute nur das Whiteboard hat.
 
 Zurück zur [[Redion|Übersicht]].

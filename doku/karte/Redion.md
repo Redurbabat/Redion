@@ -5,7 +5,7 @@
 
 # Redion — die Karte des Quelltexts
 
-Stand 25. September 2026 · HEAD `1b89c01` · 11 Systeme · 14 gemeinsame Kerne · 2 Referenzen
+Stand 25. September 2026 · HEAD `1b89c01` · 11 Systeme · 15 gemeinsame Kerne · 2 Referenzen
 
 Gebaut beim Plattform-Audit (doku/REDION-PLATTFORM-AUDIT.md). Jeder Befund trägt Datei:Zeile; was ein Leser nicht fand, steht als „nicht gefunden“ da. Die Karte ersetzt das Lesen nicht — sie sagt, WO man lesen muss. Nachgetragen wird in karte.json, nicht in den Notizen — zuletzt E686 (Whiteboard).
 
@@ -29,6 +29,7 @@ graph LR
   Api[("Api")]
   GfxHistory[("GfxHistory")]
   GfxToolbar[("GfxToolbar")]
+  GfxShapes[("GfxShapes")]
   editor["A · Editor und Blockmodell"]
   zeichenflaeche["B · Whiteboard / Zeichenfläche"]
   gedankenkarte["C · Gedankenkarte (Mindmap)"]
@@ -150,6 +151,7 @@ graph LR
 | [[kern-Api|Api]] | `src/bereiche/verbinden/schnittstelle.ts` | [[register|H · Register, Erweiterungspunkte, Automationen]], [[mcp|I · MCP, Server-API, CLI-Vorläufer]] |
 | [[kern-GfxHistory|GfxHistory]] | `src/core/gfx/history.ts` | [[zeichenflaeche|B · Whiteboard / Zeichenfläche]], [[gedankenkarte|C · Gedankenkarte (Mindmap)]], [[elektro|F · Schaltplan, Fachzeichen, Elektro]] |
 | [[kern-GfxToolbar|GfxToolbar]] | `src/core/gfx/toolbar.ts` | [[zeichenflaeche|B · Whiteboard / Zeichenfläche]] |
+| [[kern-GfxShapes|GfxShapes]] | `src/core/gfx/shapes.ts` | — (kein Befund belegt einen Aufruf) |
 
 ## Die Referenzen (nur gelesen, nichts übernommen)
 
@@ -159,7 +161,7 @@ graph LR
 ## Die Themen (quer durch die Systeme)
 
 - [[thema-werkzeugleisten|Die vier Werkzeugleisten — das „Vorher" für W6]] — Stand 25. September 2026, ein Leser für Bogen 5 (E681-Karte, Zeilen am HEAD 0b19a34 nachgesehen)
-- [[thema-ansichten|Die Ansichten eines Dokuments — AFFiNEs zwei, Redions zwei, und die dritte]] — Stand 26. September 2026 (nach E691), ein Leser im AFFiNE-Archiv (MIT, nur gelesen) auf Redurs Frage hin: „bei der affine haben wir das es wechsel die ansichten und ich will dort auch die beide und plus von unsere aktuelle stand also mit cover usw also dort 3 bereiche"
+- [[thema-ansichten|Die Ansichten eines Dokuments — AFFiNEs zwei, Redions zwei, und die dritte]] — Stand 26. September 2026 (nach E693), ein Leser im AFFiNE-Archiv (MIT, nur gelesen) auf Redurs Frage hin: „bei der affine haben wir das es wechsel die ansichten und ich will dort auch die beide und plus von unsere aktuelle stand also mit cover usw also dort 3 bereiche"
 
 ## Wie die Karte gepflegt wird
 

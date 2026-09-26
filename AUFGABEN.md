@@ -1075,20 +1075,26 @@ Symbol und Titel, kein Cover, keine Werkzeugzeile) und die Ansicht „Fläche"
 (AFFiNEs `edgeless`: Punktraster, Schieben, Zoomen 10–600 %, „ins Bild
 holen", der Seitentext als verschiebbarer Kasten mit eigener Kopfzeile).
 
-**A1b — was auf der Fläche noch fehlt (L219).** Zeichnen (Stift, Formen,
-Verbinder), mehrere Kästen, Rückgängig fürs Verschieben, Mehrfachauswahl.
-Der Weg dafür steht in L219: eine SVG-Ebene INNERHALB derselben bewegten
-Ebene wie der Kasten — dann teilen sich Tinte und Kasten einen `transform`,
-und es gibt keine zweite Umrechnung (derselbe Fehler wie E623 und E686).
-Werkzeuge kommen aus `Register.werkzeuge` (E689), Rückgängig aus
-`GfxHistory` (E687). Ein Bogen mit Bild.
+**A1b — zur Hälfte gelandet (E693, `test575`, 40 Zusagen).** Redur am
+26. September: „weiter." Gezeichnet wird jetzt auf der Fläche: acht
+Werkzeuge, Farbmenü, Radierer, Rückgängig — die Tinte liegt IN derselben
+bewegten Ebene wie die Kästen, also teilen sie einen `transform` (die
+Bedingung aus L219, gemessen in `test575 §4b`). Dafür ist `GfxShapes`
+(`src/core/gfx/shapes.ts`) entstanden und das Whiteboard darauf umgezogen —
+EIN Formenzeichner statt zwei (§8).
+
+**Offen daraus bleibt der Rest von L219:** Formen auf der Fläche auswählen,
+verschieben, beschriften und verbinden — rund 600 Zeilen Bedienung, die
+heute nur das Whiteboard hat, plus Mehrfachauswahl. Und eine Seite mit
+Zeichnung taucht in der Flächen-Übersicht der Arbeitswelt nicht auf: die
+listet `whiteboard` und `blatt`, nicht Seiten.
 
 **A1c — gelandet (E691, `test574`, 50 Zusagen).** Redur am 26. September:
 „ja mach den vollausbau, jeder block auf die fläche ziehbar." Jeder Block
 trägt jetzt `flaecheOrt` und `sichtbarIn`; gezogen wird mit dem vorhandenen
 Editor-Ziehen, am Telefon über das Blockmenü. Offen daraus: **L220** (drei
-Nebenwirkungen des Ausblendens) und weiterhin **L219** (auf der Fläche
-zeichnen).
+Nebenwirkungen des Ausblendens, mit E692 GESCHLOSSEN) und **L219**, dessen
+Zeichen-Hälfte E693 erledigt hat.
 
 **A1d — und eine kleinere Frage.** Der „Dokumentmodus" (E126) ist heute ein
 Knopf in der Werkzeugzeile und damit eine VIERTE Ansicht, die nicht im

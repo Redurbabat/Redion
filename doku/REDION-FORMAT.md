@@ -314,6 +314,25 @@ Drei Dinge, die eine ältere Fassung oder ein fremdes Werkzeug wissen sollte:
   verschiebt — wer eine Sicherung vergleicht, sieht bei einem reinen
   Sichtbarkeitswechsel genau ein geändertes Feld.
 
+**Und auf der Fläche einer Seite darf gezeichnet werden** (E693). Ein
+Seitenblock trägt dann `shapes` und `raumVersion` — **dieselben Felder mit
+derselben Bedeutung wie ein `whiteboard`-Block** (oben). Das ist kein
+zweites Format und keine Ähnlichkeit, sondern dieselbe Liste, gelesen und
+gezeichnet von derselben Stelle (`GfxShapes` in `src/core/gfx/shapes.ts`).
+Auf der Seitenfläche entstehen heute fünf der Arten — `stift`, `linie`,
+`pfeil`, `rechteck`, `ellipse` —; die übrigen (`notiz`, `text`, `bild`,
+`verbindung`) liest sie, weil das Whiteboard sie schreibt.
+
+Zwei Dinge dazu:
+
+- **Ein Seitenblock ohne `shapes` hat keine Zeichnung**, nicht eine leere.
+  Das Feld wird gelöscht, wenn die letzte Form verschwindet, statt als `[]`
+  stehen zu bleiben — eine Sicherung soll nicht behaupten, hier sei etwas
+  gewesen.
+- **`raumVersion` gilt für beides**: für `flaecheNotiz`/`flaecheOrt` und für
+  die Formen. Die Zahlen liegen im selben Flächenraum, also gibt es auch nur
+  eine Deutung je Block.
+
 ---
 
 ## Einspielen

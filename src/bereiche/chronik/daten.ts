@@ -3424,6 +3424,13 @@ const ChronikDaten = {
      "woher": "wörtlich aus dem Gespräch",
      "gemeint": "Die drei Nebenwirkungen, die du gerade als Lücke aufgeschrieben hast, sollen nicht stehen bleiben.",
      "besser": "Derselbe Satz. Er ist die beste Art, eine frisch geschriebene Lücke zu behandeln: sofort, solange der Kopf noch drin ist."
+    },
+    {
+     "zeit": "ca. 12:00",
+     "wortlaut": "weiter",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Such dir die nächste Arbeit selbst und mach sie. Kein neues Ziel, sondern das Vertrauen, dass die Liste offener Lücken für sich spricht.",
+     "besser": "Derselbe Satz — wenn eine Lückenliste geführt wird, ist er genau richtig. Wäre keine da, wäre „weiter mit was?\" die ehrlichere Antwort gewesen."
     }
    ],
    "arbeit": [
@@ -3457,16 +3464,23 @@ const ChronikDaten = {
     },
     {
      "was": "E692 · L220 geschlossen — und ein Kürzel, das nie ankam",
-     "vonBis": "637eeb6 → offen",
-     "zeitraum": "11:10–…",
+     "vonBis": "637eeb6 → bcd4647",
+     "zeitraum": "11:10–11:55",
      "dauer": "ca. 45 min",
      "pruefungen": "test574 von 50 auf 60 Zusagen; §10–§12 vor der Reparatur rot (vier Zeilen), zwei Gegenproben rot; Nachbarn test111, test112, test161, test396, test428, test65, test110, test132, test133"
+    },
+    {
+     "was": "E693 · Auf der Fläche zeichnen — mit einem Zeichner statt zwei (A1b, L219 zur Hälfte)",
+     "vonBis": "bcd4647 → offen",
+     "zeitraum": "12:00–…",
+     "dauer": "ca. 2 h",
+     "pruefungen": "test575 neu, 40 Zusagen in elf Abschnitten, dreimal rot gesehen (Tinte eine Ebene höher, ein Flächenname im Kern, feldWeg wieder heraus); Nachbarn test573, test574, test538, test570, test571, test572, test105, test109, test87, test550 alle grün"
     }
    ],
    "zahlen": {
-    "commits": 7,
-    "entscheidungen": 4,
-    "neuePruefläufe": 3
+    "commits": 8,
+    "entscheidungen": 5,
+    "neuePruefläufe": 4
    },
    "groesstesProblem": "Zweimal am selben Tag `(window as any).App?.zeichneSeite?.()` geschrieben — und zweimal hat es still nichts getan. `const App = (() => …)()` in einem gewöhnlichen <script> legt eine globale LEXIKALISCHE Bindung an, und die steht nicht unter `window`. Das Feld wurde geschrieben, der Bildschirm blieb stehen, kein Fehler kam. Beim ersten Mal sah es aus wie ein fehlender Zweig, beim zweiten wie ein fehlender Kasten. Gefunden hat es beide Male eine Sonde, nicht der Wächter — der war rot, sagte aber das Falsche.",
    "interessantesteAnfrage": "„aber zuerst liess was die ander 2 bereicht machen bi affine“ — eine Arbeitsanweisung mitten in einem Wunsch. Sie hat den Bogen verändert: ohne das Lesen wäre eine dritte Betriebsart entstanden, wo AFFiNE eine Ansicht hat, und der wichtigste Fund wäre unbemerkt geblieben — ein Cover gibt es dort gar nicht.",
@@ -3488,6 +3502,12 @@ const ChronikDaten = {
      "was": "Vier Leser gleichzeitig statt eines, während der Bau parallel lief",
      "warum": "drei ihrer Funde hätte der Bau nicht von selbst gemacht",
      "risiko": "Zeit"
+    },
+    {
+     "zeit": "ca. 13:40",
+     "was": "Beim Schreiben von doku/REDION-FORMAT.md den eigenen Satz nachgeprüft — und ihn falsch gefunden: die Seitenfläche liess ein leeres `shapes` stehen. Reparatur mit `Store.feldWeg`, dazu test575 §11 mit Gegenprobe.",
+     "warum": "Eine Doku, die verspricht, was der Code nicht hält, ist schlimmer als keine (§32, §33). Und §30 will den Wächter vor der Reparatur — hier kam er unmittelbar danach, weil der Fund aus dem Schreiben stammte, nicht aus einem Lauf.",
+     "risiko": "Keines für Daten: das Feld wird nur entfernt, wenn die Liste leer ist. Ein Leser, der `shapes` erwartet, fand vorher `[]` und findet jetzt nichts — beides heisst „keine Zeichnung\"."
     }
    ]
   }

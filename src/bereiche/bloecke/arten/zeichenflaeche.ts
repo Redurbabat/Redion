@@ -38,11 +38,11 @@ const Zusatz = (() => {
   /* DIE FARBE BRAUCHT EINEN NAMEN. Ein Feld, das nur farbig ist, sagt einem
      Vorleseprogramm gar nichts und jemandem mit Farbsehschwäche zu wenig —
      §38: keine Information nur über Farbe. */
-  const PALETTE: ReadonlyArray<[string, string]> = [
-    ['#529cca', 'Blau'], ['#4dab9a', 'Grün'], ['#ffa344', 'Orange'],
-    ['#ff7369', 'Rot'],  ['#9a6dd7', 'Violett'], ['#e255a1', 'Rosa'],
-    ['#ffdc49', 'Gelb'], ['#9b9a97', 'Grau'],
-  ];
+  /* Die acht Farben stehen seit E693 im Kern (`core/gfx/shapes.ts`): die
+     Seitenflaeche braucht dieselben, und zwei Listen liefen auseinander
+     (Paragraph 8). Der Name bleibt, damit die sechs Diagrammstellen und das
+     Farbmenue unveraendert weiterlesen. */
+  const PALETTE: ReadonlyArray<[string, string]> = GfxShapes.PALETTE;
 
   /* --------------------------------------------------------------------------
    * DIE FARBE AN STELLE i — UND WARUM ES DIESEN HELFER GIBT (E414)
@@ -307,20 +307,10 @@ const Zusatz = (() => {
       return { x: sicht.x, y: sicht.y, w: breite / sicht.z, h: hoch / sicht.z };
     };
 
-    /* Der Platzbedarf einer Form — für „alles ins Bild" und für die
-       Verbindungen. Jede Art rechnet anders, und `text` lässt sich nur
-       schätzen; das reicht, weil beides nur Anhaltspunkte braucht. */
-    const rahmenVon = (s: any): { x: number; y: number; w: number; h: number } => {
-      if (s.art === 'stift') {
-        const xs = s.pts.map((q: any) => q[0]), ys = s.pts.map((q: any) => q[1]);
-        const x = Math.min(...xs), y = Math.min(...ys);
-        return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
-      }
-      if (s.art === 'text')
-        return { x: s.x, y: s.y - 14, w: Math.max(20, String(s.text || '').length * 8), h: 20 };
-      return { x: Math.min(s.x, s.x + s.w), y: Math.min(s.y, s.y + s.h),
-               w: Math.abs(s.w), h: Math.abs(s.h) };
-    };
+    /* Der Platzbedarf einer Form. Seit E693 rechnet ihn der Kern
+       (`core/gfx/shapes.ts`): dieselbe Rechnung staende sonst auch auf der
+       Seitenflaeche, und zwei Fassungen laufen auseinander (Paragraph 8). */
+    const rahmenVon = (s: any) => GfxShapes.rahmenVon(s);
 
     /* Wo eine Verbindung den Rand ihrer Form trifft. Ohne das steckte die
        Pfeilspitze mitten in der Haftnotiz. */
@@ -341,10 +331,10 @@ const Zusatz = (() => {
       raster.appendChild(sv('circle', { cx: 1, cy: 1, r: 1, fill: 'currentColor', opacity: .18 }));
       const defs = sv('defs');
       defs.appendChild(raster);
-      const spitze = sv('marker', { id: 'p' + block.id.slice(0, 6), markerWidth: 9, markerHeight: 9,
-                                    refX: 8, refY: 3, orient: 'auto' });
-      spitze.appendChild(sv('path', { d: 'M0,0 L9,3 L0,6 z', fill: 'context-stroke' }));
-      defs.appendChild(spitze);
+      /* Die Pfeilspitze kommt seit E693 aus dem Kern - dieselben Zahlen,
+         nur an einer Stelle. Die Kennung bleibt je Flaeche eigen, sonst
+         naehme das Entfernen der einen der anderen die Spitze mit. */
+      GfxShapes.pfeilMarke(defs, 'p' + block.id.slice(0, 6));
       flaeche.appendChild(defs);
       flaeche.appendChild(sv('rect', { x: feld.x, y: feld.y, width: feld.w, height: feld.h,
                                        fill: `url(#r${block.id.slice(0, 6)})` }));
@@ -480,124 +470,22 @@ const Zusatz = (() => {
       return p;
     };
 
-    const formZeichnen = (s: any) => {
-      if (s.art === 'stift' || s.art === 'linie' || s.art === 'pfeil') {
-        const p = sv('path', {
-          d: s.art === 'stift'
-            ? 'M' + s.pts.map((q: any) => q[0] + ' ' + q[1]).join(' L')
-            : `M${s.x} ${s.y} L${s.x + s.w} ${s.y + s.h}`,
-          stroke: s.farbe, 'stroke-width': 2.5, fill: 'none',
-          'stroke-linecap': 'round', 'stroke-linejoin': 'round'
-        });
-        if (s.art === 'pfeil') p.setAttribute('marker-end', `url(#p${block.id.slice(0, 6)})`);
-        p.dataset.sid = s.id;
-        /* EIN STRICH IST ZWEIEINHALB PIXEL BREIT — mit dem Finger trifft man
-           ihn nicht. Darunter liegt deshalb derselbe Pfad noch einmal, 16 px
-           breit und durchsichtig: er fängt den Griff, malt aber nichts. */
-        const fang = sv('path', {
-          d: p.getAttribute('d') || '', stroke: 'transparent', 'stroke-width': 16,
-          fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round'
-        });
-        fang.dataset.sid = s.id;
-        const gruppe = sv('g');
-        gruppe.appendChild(fang);
-        gruppe.appendChild(p);
-        return gruppe;
-      }
-      if (s.art === 'rechteck' || s.art === 'notiz') {
-        const g = sv('g');
-        const r = sv('rect', {
-          x: Math.min(s.x, s.x + s.w), y: Math.min(s.y, s.y + s.h),
-          width: Math.abs(s.w), height: Math.abs(s.h), rx: s.art === 'notiz' ? 3 : 5,
-          fill: s.art === 'notiz' ? s.farbe : 'none', stroke: s.farbe, 'stroke-width': 2,
-          'fill-opacity': s.art === 'notiz' ? .85 : 1,
-          /* EIN RECHTECK OHNE FÜLLUNG NIMMT KEINE KLICKS AN (E144). SVG
-             trifft standardmässig nur, was GEMALT ist — bei `fill: none` ist
-             das allein der zwei Pixel breite Strich. „Auswählen und
-             verschieben" ging deshalb nur, wenn man die Kante traf; in der
-             Mitte griff man durch die Form hindurch ins Raster.
-             Gemessen mit `elementFromPoint` mitten im Rechteck: es kam der
-             Hintergrund zurück, nicht die Form. */
-          'pointer-events': 'all'
-        });
-        r.dataset.sid = s.id;
-        g.appendChild(r);
-        if (s.text) {
-          const t = sv('text', {
-            x: Math.min(s.x, s.x + s.w) + 10, y: Math.min(s.y, s.y + s.h) + 22,
-            fill: s.art === 'notiz' ? '#1c1c1c' : s.farbe, 'font-size': 14
-          });
-          zeilenUmbruch(s.text, Math.abs(s.w) - 18).forEach((z, i) => {
-            const ts = sv('tspan', { x: Math.min(s.x, s.x + s.w) + 10, dy: i ? 18 : 0 });
-            ts.textContent = z;
-            t.appendChild(ts);
-          });
-          g.appendChild(t);
-        }
-        return g;
-      }
-      if (s.art === 'bild') {
-        /* DAS BILD LIEGT IN DER DATEIABLAGE, NICHT IN DEN FORMEN (§14).
-           In `shapes` steht nur die Kennung; die Adresse ist ein Blob-Link,
-           den erst `Dateien.adresse()` herausgibt — und das dauert. Solange
-           sie fehlt, steht ein Platzhalter da und `male()` wird einmal
-           nachgeholt, sobald die Adresse kommt.
+    /* DER ZEICHNER STEHT IM KERN (E693). Hier standen hundertzwanzig
+       Zeilen, die jede Art in SVG uebersetzen - Stift, Linie, Pfeil,
+       Rechteck, Haftnotiz, Bild, Ellipse, Text. Mit E690 bekam die Seite
+       eine eigene Flaeche, und die zweite Kopie waere genau der Fall, vor
+       dem Paragraph 8 warnt: man sieht das Auseinanderlaufen nicht beim
+       Lesen, sondern irgendwann daran, dass ein Pfeil hier eine Spitze hat
+       und dort nicht.
 
-           Ein Bild als Data-URL in `shapes` wäre der kurze Weg gewesen. Er
-           bläht jeden Block, jede Sicherung und jeden Versionsstand um die
-           volle Bildgrösse auf — genau das, was §14 verbietet. */
-        const bekannt = bildAdressen.get(String(s.dateiId || ''));
-        if (bekannt === undefined && s.dateiId) bildHolen(String(s.dateiId));
-        const rahmen = {
-          x: Math.min(s.x, s.x + s.w), y: Math.min(s.y, s.y + s.h),
-          w: Math.abs(s.w) || 160, h: Math.abs(s.h) || 120
-        };
-        if (!bekannt) {
-          const platz = sv('g');
-          platz.appendChild(sv('rect', { x: rahmen.x, y: rahmen.y, width: rahmen.w, height: rahmen.h,
-                                         rx: 5, fill: 'none', stroke: s.farbe, 'stroke-width': 2,
-                                         'stroke-dasharray': '5 4' }));
-          const wort = sv('text', { x: rahmen.x + rahmen.w / 2, y: rahmen.y + rahmen.h / 2,
-                                    fill: s.farbe, 'font-size': 13, 'text-anchor': 'middle' });
-          wort.textContent = bekannt === null ? 'Bild fehlt' : 'Bild lädt …';
-          platz.appendChild(wort);
-          platz.dataset.sid = s.id;
-          return platz;
-        }
-        const bild = sv('image', { x: rahmen.x, y: rahmen.y, width: rahmen.w, height: rahmen.h,
-                                   preserveAspectRatio: 'xMidYMid meet' });
-        bild.setAttribute('href', bekannt);
-        bild.dataset.sid = s.id;
-        return bild;
-      }
-      if (s.art === 'ellipse') {
-        const e = sv('ellipse', {
-          cx: s.x + s.w / 2, cy: s.y + s.h / 2,
-          rx: Math.abs(s.w / 2), ry: Math.abs(s.h / 2),
-          fill: 'none', stroke: s.farbe, 'stroke-width': 2,
-          'pointer-events': 'all'   /* wie beim Rechteck, siehe dort */
-        });
-        e.dataset.sid = s.id;
-        return e;
-      }
-      /* text */
-      const t = sv('text', { x: s.x, y: s.y, fill: s.farbe, 'font-size': 17, 'font-weight': 500 });
-      t.textContent = s.text || '';
-      t.dataset.sid = s.id;
-      return t;
-    };
-
-    const zeilenUmbruch = (text: string, breite: number) => {
-      const proZeile = Math.max(6, Math.floor(breite / 7.4));
-      const worte = String(text).split(/\s+/);
-      const out = []; let zeile = '';
-      worte.forEach(x => {
-        if ((zeile + ' ' + x).trim().length > proZeile) { out.push(zeile.trim()); zeile = x; }
-        else zeile += ' ' + x;
-      });
-      if (zeile.trim()) out.push(zeile.trim());
-      return out.slice(0, 8);
-    };
+       Was der Kern nicht wissen kann, bekommt er mit: die Kennung der
+       Pfeilmarke DIESER Flaeche und den Weg zu einer Bildadresse
+       (Paragraph 14 - in `shapes` steht nur die Kennung, nie das Bild). */
+    const formZeichnen = (s: any) => GfxShapes.zeichne(s, {
+      pfeilMarke: 'p' + block.id.slice(0, 6),
+      bildAdresse: (id: string) => bildAdressen.get(id),
+      bildHolen: (id: string) => bildHolen(id)
+    });
 
     /* VON BILDSCHIRM AUF FLÄCHE — ÜBER DIE MATRIX (E686). Bis E686 stand hier
        die Handformel `sicht.x + (e.clientX - r.left) / sicht.z`. Sie war nicht

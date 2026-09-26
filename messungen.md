@@ -4496,3 +4496,66 @@ Liste ganz OHNE versteckte Blöcke bewegte vorher ebenfalls nichts —
 `["X","Y","Z"]` vor und nach dem Druck. Die Pfeilnavigation stand im selben
 Behandler davor und kehrte um, sobald der Cursor am Ende stand. Das Kürzel
 steht seit Langem im Blockmenü.
+
+---
+
+## §67 · Auf der Fläche zeichnen (E693, 26. September 2026)
+
+**Der Umzug in den Kern**, gezählt mit `git diff --stat`:
+
+```txt
+                                        vorher      nachher
+zeichenflaeche.ts (Whiteboard)          —           136 Zeilen weniger
+core/gfx/shapes.ts                      gibt es nicht   ~250 Zeilen
+Fassungen des Formenzeichners           1 (nur Whiteboard)   1 (im Kern, zwei Leser)
+Fassungen der Farbpalette               1               1 (im Kern)
+```
+
+**Die Bedingung aus L219, gemessen** — Tinte und Kasten teilen einen
+`transform`, also schrumpfen sie beim Zoomen gleich:
+
+```txt
+                        RICHTIG (Tinte in der Ebene)   GEGENPROBE (daneben)
+Kasten beim Zoomen      ×0,800                          ×0,800
+Tinte beim Zoomen       ×0,800                          ×1,000
+```
+
+**„Ins Bild holen", zum zweiten Mal in zwei Bögen nachgebessert:**
+
+```txt
+E690   rechnete nur mit dem Seitenkasten   → Blöcke hingen draussen (E691)
+E691   rechnete mit allen Kästen           → Formen hingen draussen (E693)
+E693   rechnet mit Kästen UND Formen       → nichts hängt draussen
+```
+
+**Die Werkzeugleiste der Fläche:**
+
+```txt
+                E690        E693
+Werkzeuge       2           8  (Zeiger, Hand, Radierer, Stift, Linie,
+                               Pfeil, Rechteck, Ellipse)
+Aktionen        3           5  (Farbe, Rückgängig, −, Massstab, +, Ins Bild)
+am Telefon      44 px       44 px  je Knopf
+```
+
+**Und eine Zeile, die nicht nur den Prüfstand betraf:**
+`setPointerCapture` wirft, wenn es den Zeiger nicht mehr gibt, und der Wurf
+brach den Handgriff ab, bevor die erste Form entstand — ein schneller Tipp,
+ein verlorener Stift oder ein zweiter Finger reichen dafür. Gemessen am
+Telefon: ohne `try` entstand bei einem synthetischen Fingerstrich keine
+einzige Form, mit `try` die erwartete.
+
+**Nachtrag: ein leeres Feld, gefunden beim Schreiben der Doku.**
+`doku/REDION-FORMAT.md` sollte versprechen, dass ein Seitenblock ohne
+Zeichnung kein `shapes` trägt. Nachgesehen war es nicht wahr — die leere
+Liste blieb stehen. Gemessen am Telefon, letzte Form wegradiert:
+
+```txt
+                       VORHER                    NACHHER
+Feld `shapes`          [] (vorhanden)            nicht vorhanden
+Feld `raumVersion`     1 (vorhanden)             nicht vorhanden
+test575                37 ok                     40 ok
+```
+
+Die Gegenprobe (die eine Zeile `Store.feldWeg` wieder heraus) druckt
+`{"hatShapes":true,"hatRaum":true}` und macht zwei Zusagen rot.

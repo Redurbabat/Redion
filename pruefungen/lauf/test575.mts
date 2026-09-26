@@ -37,6 +37,8 @@
  *       Text, nicht die Zeichnung.
  *   §9  Am Telefon misst jedes Werkzeug 44 px, und der Finger zeichnet.
  *   §10 Nichts geht verloren: der Text der Seite ist unverändert.
+ *   §11 Wer die letzte Form wegradiert, hat KEINE Zeichnung — kein leeres
+ *       `shapes`, keine `raumVersion` ohne Formen (§9).
  *
  * GEGEN DEN STAND VON E692 ist alles rot: es gibt weder den Kern noch die
  * Tinte.
@@ -201,11 +203,110 @@ p('Die Kästen haben x, y, w, h — dasselbe Format wie im Whiteboard',
   JSON.stringify(alleFormen?.[3]));
 
 /* ==========================================================================
+ * §4b · Tinte und Kasten teilen EINEN transform
+ * --------------------------------------------------------------------------
+ * Das ist die Bedingung, die L219 aufgeschrieben hat, bevor eine Zeile
+ * entstand: die Tinte liegt IN derselben bewegten Ebene wie die Kaesten.
+ * Laege sie daneben, braeuchte es eine zweite Umrechnung — und genau daran
+ * ist es zweimal schiefgegangen (E623, E686). Gemessen wird nicht der
+ * Quelltext, sondern die Bewegung: beim Zoomen muss die Tinte denselben
+ * Faktor mitmachen wie der Kasten.
+ * ======================================================================== */
+console.log('\n4b · Tinte und Kasten bewegen sich gemeinsam');
+const vorZoom = await pg.evaluate(() => {
+  const t = document.querySelector('.pg-fl-tinte [data-sid]')?.getBoundingClientRect();
+  const k = document.querySelector('.pg-fl-notiz')?.getBoundingClientRect();
+  return t && k ? { t: { x: t.left, y: t.top, w: t.width }, k: { x: k.left, y: k.top, w: k.width } } : null;
+});
+await pg.evaluate(() => {
+  document.querySelector<HTMLElement>('.pg-flaeche .gfx-tb-sockel [data-a="kleiner"]')?.click();
+});
+await pg.waitForTimeout(300);
+const nachZoom = await pg.evaluate(() => {
+  const t = document.querySelector('.pg-fl-tinte [data-sid]')?.getBoundingClientRect();
+  const k = document.querySelector('.pg-fl-notiz')?.getBoundingClientRect();
+  return t && k ? { t: { x: t.left, y: t.top, w: t.width }, k: { x: k.left, y: k.top, w: k.width } } : null;
+});
+p('Vor und nach dem Zoomen ist beides messbar', !!vorZoom && !!nachZoom);
+if (vorZoom && nachZoom) {
+  const faktorTinte = nachZoom.t.w / (vorZoom.t.w || 1);
+  const faktorKasten = nachZoom.k.w / (vorZoom.k.w || 1);
+  p('Die Tinte schrumpft um denselben Faktor wie der Kasten',
+    Math.abs(faktorTinte - faktorKasten) < 0.02,
+    `Tinte ×${faktorTinte.toFixed(3)} · Kasten ×${faktorKasten.toFixed(3)}`);
+  p('Und sie ist wirklich kleiner geworden — sonst misst der Abschnitt nichts',
+    faktorTinte < 0.95, String(faktorTinte.toFixed(3)));
+}
+await pg.evaluate(() => {
+  document.querySelector<HTMLElement>('.pg-flaeche .gfx-tb-sockel [data-a="groesser"]')?.click();
+});
+await pg.waitForTimeout(300);
+
+/* ==========================================================================
+ * §4c · „Ins Bild holen" holt auch die Tinte
+ * --------------------------------------------------------------------------
+ * Zweimal in zwei Boegen hat das BILD dieselbe Luecke gezeigt (§55.1): erst
+ * rechnete der Knopf nur mit dem Seitenkasten und liess die herausgezogenen
+ * Bloecke draussen (E691), dann nur mit den Kaesten und liess die Formen
+ * draussen. Diese Zusage haelt beides.
+ * ======================================================================== */
+console.log('\n4c · Ins Bild holen mit Tinte');
+await pg.evaluate(() => {
+  const s = (Store.getBlock(document.querySelector('.pg-flaeche') ? '' : '') as any);
+  void s;
+});
+await pg.evaluate((id: string) => {
+  const b: any = Store.getBlock(id);
+  const formen = Array.isArray(b?.shapes) ? b.shapes.slice() : [];
+  formen.push({ id: 'weit', art: 'rechteck', x: 2200, y: 1500, w: 200, h: 120, farbe: '#4dab9a' });
+  Store.updateBlock(id, { shapes: formen });
+  App.zeichneSeite();
+}, ids.seite);
+await pg.waitForTimeout(500);
+await pg.evaluate(() => {
+  document.querySelector<HTMLElement>('.pg-flaeche .gfx-tb-sockel [data-a="passend"]')?.click();
+});
+await pg.waitForTimeout(450);
+const allesDrin = await pg.evaluate(() => {
+  const f = document.querySelector('.pg-flaeche')!.getBoundingClientRect();
+  const draussen = [...document.querySelectorAll('.pg-fl-tinte [data-sid]')].filter(el => {
+    const r = (el as SVGGraphicsElement).getBoundingClientRect();
+    return r.width > 0 && (r.left < f.left - 2 || r.right > f.right + 2 || r.bottom > f.bottom + 2);
+  });
+  return { formen: document.querySelectorAll('.pg-fl-tinte [data-sid]').length, draussen: draussen.length };
+});
+p('Es liegen Formen auf der Fläche', allesDrin.formen > 0, String(allesDrin.formen));
+p('Nach „Ins Bild" liegt keine davon ausserhalb',
+  allesDrin.draussen === 0, `${allesDrin.draussen} draussen`);
+await pg.evaluate((id: string) => {
+  const b: any = Store.getBlock(id);
+  Store.updateBlock(id, { shapes: (b?.shapes ?? []).filter((x: any) => x.id !== 'weit') });
+  App.zeichneSeite();
+}, ids.seite);
+await pg.waitForTimeout(450);
+
+/* ==========================================================================
  * §5 · Der Radierer nimmt GENAU eine Form
  * ======================================================================== */
 console.log('\n5 · Der Radierer');
 await werkzeug('radierer');
-await ziehen([120, 300], [130, 310], 2);
+/* DIE STELLE WIRD GEMESSEN, NICHT ANGENOMMEN. Der erste Anlauf radierte auf
+   einem festen Bildschirmpunkt — und §4c hatte den Ausschnitt inzwischen
+   verschoben, also lag dort nichts mehr. Ein Prüflauf, der eine Stelle
+   auswendig kennt, misst ab der nächsten Änderung etwas anderes. */
+const stiftBox = await pg.evaluate((id: string) => {
+  const el = document.querySelector(`.pg-fl-tinte [data-sid="${id}"]`);
+  const r = el?.getBoundingClientRect();
+  return r ? { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) } : null;
+}, (await formen())?.[0]?.id ?? '');
+p('Der Stiftstrich ist auf dem Bild zu finden', !!stiftBox, JSON.stringify(stiftBox));
+if (stiftBox) {
+  await pg.mouse.move(stiftBox.x, stiftBox.y);
+  await pg.mouse.down();
+  await pg.mouse.move(stiftBox.x + 6, stiftBox.y + 6, { steps: 2 });
+  await pg.mouse.up();
+  await pg.waitForTimeout(300);
+}
 const nachRadieren = await formen();
 gleich('Eine Form weniger', Array.isArray(nachRadieren) ? nachRadieren.length : -1, 4);
 p('Und zwar der Stiftstrich, nicht ein Nachbar',
@@ -270,7 +371,7 @@ await pg.close();
  * §9 · Am Telefon (§37)
  * ======================================================================== */
 console.log('\n9 · Am Telefon');
-const { pg: handy } = await bauen(390, 844);
+const { pg: handy, ids: ids2 } = await bauen(390, 844);
 const masse = await handy.evaluate(() =>
   [...document.querySelectorAll<HTMLElement>('.pg-flaeche .gfx-tb-sockel [data-wz]')]
     .map(b => { const r = b.getBoundingClientRect();
@@ -300,6 +401,48 @@ await handy.evaluate(([x, y]: number[]) => {
 await handy.waitForTimeout(400);
 p('Der Finger zeichnet',
   await handy.evaluate(() => document.querySelectorAll('.pg-fl-tinte [data-sid]').length > 0));
+
+/* ==========================================================================
+ * §11 · Keine leere Liste stehen lassen
+ * --------------------------------------------------------------------------
+ * `shapes: []` in einer Sicherung behauptet, hier sei einmal etwas gewesen,
+ * und `raumVersion` ohne Formen deutet einen Raum, den niemand benutzt. Wer
+ * die letzte Form wegradiert, hat KEINE Zeichnung — nicht eine leere (§9,
+ * doku/REDION-FORMAT.md). Dieselbe Regel wie bei `flaecheOrt` (E691).
+ * ======================================================================== */
+console.log('\n11 · Die letzte Form weg');
+await handy.evaluate(() => {
+  document.querySelector<HTMLElement>('.pg-flaeche .gfx-tb-sockel [data-wz="radierer"]')?.click();
+});
+await handy.waitForTimeout(200);
+/* Die Stelle wird GEMESSEN, nicht angenommen — dieselbe Lehre wie in §5. */
+const strichBox = await handy.evaluate(() => {
+  const el = document.querySelector('.pg-fl-tinte [data-sid]');
+  const r = el?.getBoundingClientRect();
+  return r ? { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) } : null;
+});
+p('Der Strich ist am Telefon zu finden', !!strichBox, JSON.stringify(strichBox));
+if (strichBox) {
+  await handy.evaluate(([x, y]: number[]) => {
+    const f = document.querySelector('.pg-flaeche') as HTMLElement;
+    const schick = (art: string, px: number, py: number) => f.dispatchEvent(
+      new PointerEvent(art, { bubbles: true, cancelable: true, pointerId: 8,
+                              pointerType: 'touch', clientX: px, clientY: py, isPrimary: true }));
+    schick('pointerdown', x as number, y as number);
+    schick('pointermove', (x as number) + 5, (y as number) + 5);
+    schick('pointerup', (x as number) + 5, (y as number) + 5);
+  }, [strichBox.x, strichBox.y]);
+  await handy.waitForTimeout(400);
+}
+const leerDanach = await handy.evaluate((id: string) => {
+  const b = Store.getBlock(id) as any;
+  return { hatShapes: 'shapes' in (b ?? {}), hatRaum: 'raumVersion' in (b ?? {}) };
+}, ids2.seite);
+p('Kein leeres `shapes` bleibt stehen', leerDanach.hatShapes === false,
+  JSON.stringify(leerDanach));
+p('Und keine `raumVersion` ohne Formen', leerDanach.hatRaum === false,
+  JSON.stringify(leerDanach));
+
 await handy.close();
 
 await browser.close();

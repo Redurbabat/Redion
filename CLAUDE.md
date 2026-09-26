@@ -894,7 +894,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 516 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 517 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1298,6 +1298,24 @@ führten Überschriften auf, die auf der Seite gar nicht stehen. Gezählt am
 26. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
 516.*
 
+*Und 517: `test575` — auf der Fläche zeichnen, mit EINEM Formenzeichner
+(E693). Seine erste Hälfte ist ein Wächter über eine Architektur, nicht über
+eine Funktion: `core/gfx/shapes.ts` darf keine Fläche kennen (kein `wb-`,
+`gk-`, `sp-`, `pg-fl`, kein `Store`, `Register`, `App`, `Dateien`) — geprüft
+über `nurCode`, sonst meldete er den eigenen Kopfkommentar, wie `test572` es
+im ersten Anlauf tat. Seine zwei besten Zusagen hat aber wieder nicht er
+gefunden: das BILD zeigte zum zweiten Mal in zwei Bögen dieselbe Lücke —
+„ins Bild holen" rechnete erst ohne die herausgezogenen Blöcke (E691), dann
+ohne die Formen. Und sein §4b misst, was L219 zur Bedingung gemacht hatte:
+Tinte und Kasten schrumpfen beim Zoomen um denselben Faktor, weil sie EINEN
+`transform` teilen. Die Gegenprobe (die Tinte eine Ebene höher) druckt
+„Tinte ×1.000 · Kasten ×0.800". Und sein §11 ist nachträglich dazugekommen,
+weil das SCHREIBEN der Doku ihn verlangte: `doku/REDION-FORMAT.md` sollte
+versprechen, dass ein Seitenblock ohne Zeichnung kein `shapes` trägt — und
+das war noch nicht wahr, eine leere Liste blieb stehen. Eine Doku, die man
+ehrlich schreibt, ist auch ein Wächter. Gezählt am 26. September, im selben
+Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 517.*
+
 ### Die Befehle
 
 ```txt
@@ -1306,7 +1324,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 516 Läufe
+npm run pruefen                      alle 517 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1393,7 +1411,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 516 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 517 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
