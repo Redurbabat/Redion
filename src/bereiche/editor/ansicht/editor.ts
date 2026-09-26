@@ -427,7 +427,16 @@ const Blocks = (() => {
   };
 
   /** Baut das DOM für einen Block samt Kindern. */
-  const render = (block: any, tiefe = 0) => {
+  /**
+   * @param nr Die laufende Nummer einer Nummernliste — von dem gezählt, der
+   *        die Liste ZEICHNET, nicht am Block gespeichert (E692, L220).
+   *        Vorher stand sie als `b.nr` im Block im Arbeitsspeicher und
+   *        wanderte über `exportAll` in jede Sicherung; seit E691 zählte sie
+   *        über die gefilterte Liste, und dieselbe Seite konnte je nach
+   *        zuletzt gezeichneter Ansicht eine andere Zahl sichern. Ein
+   *        Anzeigewert gehört nicht in die Daten (§9).
+   */
+  const render = (block: any, tiefe = 0, nr = 0) => {
     const t = typ(block.type);
     const el = document.createElement('div');
     el.className = 'blk b-' + block.type;
@@ -543,7 +552,11 @@ const Blocks = (() => {
       case 'number': {
         const mk = document.createElement('div');
         mk.className = 'mk';
-        mk.textContent = (block.nr || 1) + '.';
+        /* Ohne übergebene Zahl steht „1." da — so war es für verschachtelte
+           Nummernlisten schon immer, denn gezählt wurde nur auf der
+           obersten Ebene. Diese Grenze bleibt, wo sie war; sie wandert nur
+           nicht mehr in die Sicherung. */
+        mk.textContent = (nr || 1) + '.';
         box.appendChild(mk);
         box.appendChild(machText());
         break;
@@ -1775,10 +1788,15 @@ const Blocks = (() => {
           if (!eltern) return;
           const idx = eltern.content.indexOf(b.id);
           if (idx <= 0) return;
-          const vorher = Store.getBlock(eltern.content[idx - 1]);
+          /* Der Vorgänger, den man auch SIEHT (E692, L220). Gibt es keinen,
+             geschieht nichts — genau wie bei `idx <= 0` eine Zeile höher:
+             lieber eine Taste, die nichts tut, als ein Block, der weg ist
+             und ein Cursor, der ins Leere zeigt. */
+          const vorher = nachbarImText(eltern, idx, -1);
+          if (!vorher) return;
           Store.trashBlock(b.id);
           Store.purgeBlock(b.id);
-          App.zeichneSeite(vorher ? vorher.id : null, 'ende');
+          App.zeichneSeite(vorher.block.id, 'ende');
           return;
         }
       }
@@ -1791,14 +1809,27 @@ const Blocks = (() => {
         return;
       }
 
-      /* Pfeil hoch/runter zwischen Blöcken */
-      if (e.key === 'ArrowUp' && amAnfang(ct)) {
+    /* Pfeil hoch/runter zwischen Blöcken.
+     *
+     * OHNE STRG — UND DAS IST EINE REPARATUR, KEIN SCHMUCK (E692).
+     * Diese zwei Zweige standen VOR „Strg+Shift+Pfeil: Block verschieben"
+     * und kehrten mit `return` um. Steht der Cursor am Anfang (für ↑) oder
+     * am Ende (für ↓) — und in einem einzeiligen Block ist er fast immer
+     * beides —, kam das Verschieben nie an. Das Blockmenü schreibt
+     * „Ctrl+Shift+↑" daneben, und die Taste tat nichts: ein falsches
+     * Versprechen (§32) und ein Knopf, der schweigend nichts bewirkt (§47).
+     *
+     * Gefunden hat es `test574 §11`, der eigentlich etwas anderes messen
+     * wollte — dass das Verschieben den unsichtbaren Nachbarn überspringt.
+     * Es bewegte sich gar nichts, und die Daten waren unverändert. */
+      const nurPfeil = !(e.ctrlKey || e.metaKey);
+      if (e.key === 'ArrowUp' && amAnfang(ct) && nurPfeil) {
         const alle = [...wurzel.querySelectorAll('.ct')];
         const i = alle.indexOf(ct);
         if (i > 0) { e.preventDefault(); cursorAnsEnde(alle[i - 1]); }
         return;
       }
-      if (e.key === 'ArrowDown' && amEnde(ct)) {
+      if (e.key === 'ArrowDown' && amEnde(ct) && nurPfeil) {
         const alle = [...wurzel.querySelectorAll('.ct')];
         const i = alle.indexOf(ct);
         if (i >= 0 && i < alle.length - 1) { e.preventDefault(); alle[i + 1].focus(); }
@@ -2198,14 +2229,59 @@ const Blocks = (() => {
     App.zeichneSeite(b.id, 'ende');
   };
 
+  /**
+   * Der nächste Geschwisterblock, der auf der SEITE auch wirklich steht.
+   *
+   * WOZU (E692, L220). Seit E691 kann ein Block auf „nur Fläche" stehen und
+   * wird im Text nicht gezeichnet. Zwei Handgriffe rechneten trotzdem mit
+   * `eltern.content[idx ± 1]` — der ungefilterten Liste:
+   *
+   *   Rücktaste am Anfang eines leeren Blocks setzte den Fokus auf einen
+   *   Block, den es auf dieser Seite gar nicht gibt. Der Cursor sprang
+   *   nirgendwohin, und der gelöschte Block war trotzdem weg.
+   *
+   *   Strg+Umschalt+Pfeil tauschte mit dem unsichtbaren Nachbarn: die DATEN
+   *   änderten sich, auf dem Bildschirm bewegte sich nichts, und zweimal
+   *   drücken sprang dann über ihn.
+   *
+   * Beides ist kein Datenverlust — es ist eine Taste, die schweigend nichts
+   * tut (§47), und das ist die heimtückischere Sorte.
+   *
+   * DIE FRAGE „erscheint er?" WIRD NICHT HIER BEANTWORTET, sondern im
+   * Register (§8, `Register.seitenansichten.zeigtIn`). Hier steht nur der
+   * Weg durch die Liste.
+   *
+   * @param schritt −1 für den Vorgänger, +1 für den Nachfolger.
+   * @returns Block und Stelle in `content`, oder `null`.
+   */
+  const nachbarImText = (eltern: any, idx: number, schritt: number)
+    : { block: any; idx: number } | null => {
+    const zeigtIn = (typeof Register !== 'undefined' && (Register as any).seitenansichten)
+      ? (Register as any).seitenansichten.zeigtIn
+      : () => true;
+    const liste: string[] = eltern?.content || [];
+    for (let i = idx + schritt; i >= 0 && i < liste.length; i += schritt) {
+      const k = Store.getBlock(liste[i]);
+      if (k && k.alive !== false && zeigtIn(k, 'seite')) return { block: k, idx: i };
+    }
+    return null;
+  };
+
   const verschiebe = (b: any, richtung: any) => {
     const eltern = Store.getBlock(b.parentId);
     if (!eltern) return;
     const i = eltern.content.indexOf(b.id);
-    const j = i + richtung;
-    if (j < 0 || j >= eltern.content.length) return;
-    [eltern.content[i], eltern.content[j]] = [eltern.content[j], eltern.content[i]];
-    Store.updateBlock(eltern.id, { content: eltern.content });
+    if (i < 0) return;
+    /* ÜBER den unsichtbaren Nachbarn, nicht mit ihm. Und `splice` statt
+       Tausch: bei einem Sprung über mehrere Stellen würde ein Tausch den
+       Block am Ziel rückwärts über dieselben Stellen werfen — die übrigen
+       sollen aber stehen bleiben, wo sie sind. */
+    const ziel = nachbarImText(eltern, i, richtung < 0 ? -1 : 1);
+    if (!ziel) return;
+    const liste = eltern.content.slice();
+    liste.splice(i, 1);
+    liste.splice(ziel.idx, 0, b.id);
+    Store.updateBlock(eltern.id, { content: liste });
     App.zeichneSeite(b.id, 'ende');
   };
 

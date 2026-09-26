@@ -4467,3 +4467,32 @@ falschen Grund rot — einmal, weil er `contextmenu` schickte, das unter
 760 px ausdrücklich unterdrückt wird (E83), und einmal, weil er 400 ms nach
 dem Loslassen tippte, während der Fänger aus E83 die Klick-Nachzügler noch
 800 ms schluckt. Beide Male sah es aus wie ein Fehler im Produkt.
+
+---
+
+## §66 · L220 geschlossen (E692, 26. September 2026)
+
+Gemessen mit `test574 §10–§12`, je gegen den Stand vor der Reparatur.
+
+```txt
+                                    VORHER              NACHHER
+Rücktaste, Vorgänger versteckt
+  Fokus danach                      in keinem Block     im sichtbaren Vorgänger
+  gelöschter Block                  weg                 weg
+  versteckter Nachbar               lebt                lebt
+
+Strg+Umschalt+↓, Nachbar versteckt
+  Bildschirm nach EINEM Druck       A, C  (nichts)      C, A
+  Daten                             unverändert         A hinter C
+  versteckter Block                 bleibt              bleibt
+
+Nummernliste
+  am Block gespeichert              nr = 1, 2, 3        kein Feld
+  auf dem Bild                      1. 2. 3.            1. 2. 3.
+```
+
+**Und die Zahl, die den vierten Fund belegt:** `Strg+Umschalt+↓` in einer
+Liste ganz OHNE versteckte Blöcke bewegte vorher ebenfalls nichts —
+`["X","Y","Z"]` vor und nach dem Druck. Die Pfeilnavigation stand im selben
+Behandler davor und kehrte um, sobald der Cursor am Ende stand. Das Kürzel
+steht seit Langem im Blockmenü.

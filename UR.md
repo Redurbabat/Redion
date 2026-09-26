@@ -2457,7 +2457,7 @@ Der Seitenverlauf löschte die Fassungen von Unterseiten. Nicht der Whiteboard-K
 | ca. 21:00 | Kein Bild zu E687, sondern die Messung (24 Zusagen, Gegenprobe zwei rot) | §55.3, wie Redur ihn am 3. September entschieden hat: ein Bild, wenn man etwas sehen kann — der Verlauf ist reines Rechnen, auf dem Bildschirm hat sich nichts geändert | wenn ein Umzug doch etwas Sichtbares geändert hätte (Knopf-Zustand), sähe es niemand — deshalb prüft test571 kannZurueck/kannVor, und test529/test538/test209 fahren die Knöpfe |
 | ca. 21:10 | Die Decke angehoben statt Inhalt nachzuladen — und die Frage nach dem Nachladen an Redur gegeben (L216) | 19,5 KB Lernstoff brächten die Zahl nur auf 2692, beim nächsten Bogen wäre sie wieder rot; und der Trainer findet seine Kapitel über das Register (E679) — das ist eine Register-Entscheidung, keine Ladeoptimierung | die Zusage ist 150 KB weicher; was sie hält, ist die Bibliotheksgrenze (pdf.js), nicht die Feinheit |
 
-### 2026-09-26 · Samstag — Drei Ansichten für eine Seite — und dann der Vollausbau: jeder Block darf auf die Fläche
+### 2026-09-26 · Samstag — Drei Ansichten für eine Seite, der Vollausbau — und ein Kürzel, das seit Langem nie ankam
 
 > Der Tag begann mit einem Vorwurf, und er war berechtigt: „Wo sind deine fotos ich habe nicht nichts bekommen.“ Vier Bögen lang hatte ich nichts geschickt — richtig war nur, dass drei davon nichts am Bildschirm änderten; der vierte tat es, und den hatte ich verschwiegen. Danach kam W6 Bogen 5a zu Ende (E689: EIN Katalog der Werkzeuge, EINE Leiste im Kern, das Whiteboard zuerst darauf) — und aus einem Bild von AFFiNEs Kopfzeile wurde der Rest des Tages.
 
@@ -2537,6 +2537,17 @@ Zwei Bögen, zwei Wächter, beide rot eingecheckt, beide mit Gegenproben. Und ei
 **Besserer Prompt:** 
 
 
+**7 · ca. 11:10**
+
+> mach L220 auch noch
+
+**Gemeint:** Die drei Nebenwirkungen, die du gerade als Lücke aufgeschrieben hast, sollen nicht stehen bleiben.
+
+**Besser geschrieben:** Derselbe Satz. Er ist die beste Art, eine frisch geschriebene Lücke zu behandeln: sofort, solange der Kopf noch drin ist.
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -2545,11 +2556,12 @@ Zwei Bögen, zwei Wächter, beide rot eingecheckt, beide mit Gegenproben. Und ei
 | Gelesen: AFFiNEs zwei Ansichten — Karte-Thema und die offene Frage als A1 | `` → `` | 06:51–07:31 | ca. 40 min | keine — ein Leser und eine Karte-Notiz, jeder Punkt mit Datei:Zeile |
 | E690 · Drei Ansichten einer Seite (A1) | `` → `` | 07:38–08:15 | ca. 40 min | test573 rot eingecheckt (7 Zeilen rot), danach 31/31; eine Gegenprobe rot, die zugleich eine Lücke IM Wächter zeigte; 27 Nachbarn grün |
 | E691 · Der Vollausbau der Fläche (A1c) | `` → `` | 08:25–… | ca. 2 h | test574 rot eingecheckt (14 ok, 25 rot), danach 50/50; zwei Gegenproben rot; vier Leser parallel vor dem Bau; 21 Nachbarn grün |
+| E692 · L220 geschlossen — und ein Kürzel, das nie ankam | `` → `` | 11:10–… | ca. 45 min | test574 von 50 auf 60 Zusagen; §10–§12 vor der Reparatur rot (vier Zeilen), zwei Gegenproben rot; Nachbarn test111, test112, test161, test396, test428, test65, test110, test132, test133 |
 
 #### Zahlen des Tages
 
-- **commits:** 6
-- **entscheidungen:** 3
+- **commits:** 7
+- **entscheidungen:** 4
 - **neuePruefläufe:** 3
 
 #### Das grösste Problem
@@ -2572,5 +2584,5 @@ Zweimal am selben Tag `(window as any).App?.zeichneSeite?.()` geschrieben — un
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 115 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 116 Einträge.
 

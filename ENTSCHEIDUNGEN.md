@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-671 Entscheidungen, E1 bis E691 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+672 Entscheidungen, E1 bis E692 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -734,6 +734,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E689** — EINE Werkzeugleiste für alle Flächen: der Katalog `Register.werkzeuge` (22 Werkzeuge, §8) und das Kernbauteil `GfxToolbar` (`src/core/gfx/toolbar.ts`), auf das zuerst das Whiteboard umzieht — schwebende Kapsel UNTER der Fläche (§37 hart), Strichzeichen statt Emoji, Untermenü nach oben, am Telefon 44 px und rollend statt umbrechend (`test572`, Redur: „integriere alles zusammen")
 * **E690** — Drei Ansichten einer Seite, umschaltbar oben: AFFiNEs `page` und `edgeless` so nah am Original, wie unsere Technik es zulässt, dazu „Redion" als dritte mit Cover und Werkzeugzeile — Katalog `Register.seitenansichten`, Feld `seitenAnsicht` am Block (kein Feld = Redion, §9), Umschalter auf dem vorhandenen `Segment` statt einer vierten Knopfreihe (§8), die Fläche als Punktraster mit dem Seitentext als verschiebbarem Kasten (`test573`, Redur: „ich will die 2 von affine 1:1 haben")
 * **E691** — Der Vollausbau der Fläche: JEDER Block kann seinen eigenen Platz bekommen (`flaecheOrt`) und sagen, wo er erscheint (`sichtbarIn`: beides | seite | flaeche) — AFFiNEs `displayMode` eine Stufe feiner, weil dort die Notiz die kleinste Einheit ist und hier der Block; gezogen wird mit dem vorhandenen Editor-Ziehen (§8), am Telefon über die Hebe-Geste aus E83, und ein unlesbarer Platz zählt als KEIN Platz, damit kein Block verschwindet (`test574`, Redur: „ja mach den vollausbau, jeder block auf die fläche ziehbar")
+* **E692** — L220 geschlossen: die drei Handgriffe, die mit der ungefilterten Geschwisterliste rechneten — Rücktaste springt zum SICHTBAREN Vorgänger, Strg+Umschalt+Pfeil springt ÜBER den unsichtbaren Nachbarn (`splice` statt Tausch), und die laufende Nummer einer Liste wird gezählt und weitergereicht statt an den Block geschrieben; dabei gefunden: das Verschieben war seit je unerreichbar, weil die Pfeilnavigation davor stand und umkehrte (`test574 §10–§12`)
 
 ---
 
@@ -56427,3 +56428,72 @@ Filterns stehen als **L220** geschrieben statt still zu bleiben.
 **Nachbarn:** `test573`, `test285`, `test294`, `test301`, `test96`,
 `test100`, `test139`, `test105`, `test109`, `test87`, `test290`, `test550`,
 `test31`, `test46`, `test65`, `test158`, `test395`, `test247`.
+
+---
+
+## E692 — L220 geschlossen, und ein Kürzel, das nie ankam
+
+**Datum:** 26. September 2026 · **Wächter:** `test574 §10–§12` (zehn neue
+Zusagen, 60 im ganzen Lauf) · Redur: **„mach L220 auch noch."**
+
+**Was war.** E691 hat das Ausblenden gebracht, und L220 hat am selben Tag
+drei Stellen aufgeschrieben, die weiter mit der UNGEFILTERTEN
+Geschwisterliste rechneten. Keine verliert Daten; alle drei sind Tasten, die
+schweigend nichts tun — und das ist die heimtückischere Sorte (§47).
+
+**Was entschieden wurde.**
+
+1. **Ein Weg durch die Liste, eine Frage nach der Sichtbarkeit.**
+   `nachbarImText(eltern, idx, schritt)` in `editor.ts` läuft die
+   Geschwister ab und fragt bei jedem `Register.seitenansichten.zeigtIn` —
+   die Regel steht also weiterhin an EINER Stelle (§8), hier steht nur der
+   Weg.
+
+2. **Rücktaste springt zum sichtbaren Vorgänger.** Gibt es keinen, geschieht
+   nichts — genau wie bei „ich bin schon der erste". Lieber eine Taste, die
+   nichts tut, als ein Block, der weg ist, und ein Cursor, der auf etwas
+   zeigt, das auf dieser Seite nicht gezeichnet wird.
+
+3. **Verschieben springt ÜBER den unsichtbaren Nachbarn** — mit `splice`
+   statt eines Tauschs. Bei einem Sprung über mehrere Stellen würde ein
+   Tausch den Block am Ziel rückwärts über dieselben Stellen werfen; die
+   übrigen sollen aber stehen bleiben.
+
+4. **Die laufende Nummer ist ein Anzeigewert und wandert nicht mehr in die
+   Daten.** `b.nr = nr` schrieb sie in den Block im Arbeitsspeicher, und
+   `exportAll` serialisiert `cache.blocks` — also stand sie in jeder
+   `.redion`. Seit E691 zählte sie über die gefilterte Liste; dieselbe Seite
+   hätte je nach zuletzt gezeichneter Ansicht eine andere Zahl gesichert.
+   Jetzt zählt die Inhaltsfläche und reicht die Zahl an `Blocks.render`
+   weiter. Gelesen wird `block.nr` nirgends mehr.
+
+**Und der Fund, der nicht auf der Liste stand.** `test574 §11` wollte messen,
+dass das Verschieben den unsichtbaren Nachbarn überspringt — und es bewegte
+sich GAR NICHTS, auch in den Daten nicht. Der Grund steht zwölf Zeilen höher
+im selben Tastenbehandler: die Pfeilnavigation zwischen Blöcken
+(`ArrowUp` am Anfang, `ArrowDown` am Ende) stand VOR „Strg+Shift+Pfeil:
+Block verschieben" und kehrte mit `return` um. In einem einzeiligen Block
+ist der Cursor fast immer am Anfang UND am Ende — das Kürzel war also
+praktisch nie erreichbar, obwohl das Blockmenü „Ctrl+Shift+↑" daneben
+schreibt. Ein falsches Versprechen (§32) und ein Knopf, der schweigend
+nichts bewirkt (§47), seit die Zeilen nebeneinander stehen.
+
+Die Reparatur ist eine Bedingung: die Pfeilnavigation gilt nur ohne
+Strg/Cmd. `test574 §11` hält seither BEIDES — den Sonderfall mit dem
+versteckten Nachbarn und den Normalfall ohne einen.
+
+**Die Alternativen.** (a) L220 stehen lassen: drei bekannte Lücken, die
+niemand sieht, bis jemand etwas ausblendet. (b) Den Nachbarn beim Ausblenden
+verschieben wie AFFiNE — dann gäbe es keine unsichtbaren Nachbarn, aber eine
+Datenänderung bei jedem Umschalten (in E691 verworfen). (c) Für die Nummer
+ein eigenes Feld mit Bereinigung beim Import — mehr Aufwand für einen Wert,
+den nur eine Zeile liest.
+
+**Preis.** `Blocks.render` hat einen dritten Parameter. Verschachtelte
+Nummernlisten zeigen weiter „1." — diese Grenze gab es vorher auch, sie
+wandert nur nicht mehr in die Sicherung. Und alte Blöcke tragen ihr `nr`
+noch als totes Feld; es wird nicht mehr gelesen und nicht mehr geschrieben,
+aber auch nicht nachträglich entfernt (§43: nichts löschen ohne Rückfrage).
+
+**Nachbarn:** `test574`, `test111`, `test112`, `test161`, `test396`,
+`test428`, `test65`, `test110`, `test132`, `test133`.

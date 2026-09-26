@@ -1,5 +1,37 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 26. September 2026 · E692 · L220 geschlossen — und ein Kürzel, das nie ankam
+
+**Redur:** „mach L220 auch noch."
+
+**Gebaut:** `nachbarImText` im Editor — ein Weg durch die Geschwisterliste,
+der bei jedem Schritt `Register.seitenansichten.zeigtIn` fragt (§8: die Regel
+bleibt an einer Stelle). Damit springt die Rücktaste zum SICHTBAREN
+Vorgänger, und Strg+Umschalt+Pfeil springt ÜBER den unsichtbaren Nachbarn —
+mit `splice` statt Tausch, damit die übrigen stehen bleiben. Dazu: die
+laufende Nummer einer Liste wird beim Zeichnen gezählt und an
+`Blocks.render(b, tiefe, nr)` weitergereicht, statt als `b.nr` in den Block
+und damit in jede Sicherung zu wandern.
+
+**Der Fund, der nicht auf der Liste stand.** Der neue Abschnitt wollte messen,
+dass das Verschieben den unsichtbaren Nachbarn überspringt — und es bewegte
+sich GAR NICHTS, auch in den Daten nicht. Zwölf Zeilen höher im selben
+Tastenbehandler steht die Pfeilnavigation zwischen Blöcken, und sie kehrte
+mit `return` um, sobald der Cursor am Anfang (für ↑) oder am Ende (für ↓)
+stand. In einem einzeiligen Block ist er fast immer beides: das Kürzel, das
+das Blockmenü als „Ctrl+Shift+↑" verspricht, war praktisch nie erreichbar.
+Die Reparatur ist eine Bedingung — die Navigation gilt nur ohne Strg/Cmd.
+
+**Geprüft.** `test574` von 50 auf 60 Zusagen; §10–§12 waren gegen den Stand
+vor der Reparatur rot (vier Zeilen), und zwei Gegenproben machen sie wieder
+rot: die Bedingung zurücknehmen und den Nachbarn wieder ungefiltert nehmen.
+
+**L220 ist damit GESCHLOSSEN** (mit Beleg, nicht gelöscht — §35). Was offen
+bleibt, steht dort: verschachtelte Nummernlisten zeigen weiter „1.", und
+alte Blöcke tragen ihr `nr` noch als totes Feld.
+
+---
+
 ## 26. September 2026 · E691 · Der Vollausbau der Fläche (A1c)
 
 **Redur:** „ja mach den vollausbau, jeder block auf die fläche ziehbar."

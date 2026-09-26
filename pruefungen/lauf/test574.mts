@@ -551,6 +551,141 @@ gleich('Und ist leer', leer.bloecke, 0);
 p('Er sagt, wofür er da ist (§38)', leer.sagt === true);
 await handy.close();
 
+/* ==========================================================================
+ * §10 · Die Rücktaste springt zum SICHTBAREN Vorgänger (L220 Punkt 1)
+ * --------------------------------------------------------------------------
+ * `editor.ts` nahm `eltern.content[idx - 1]` — die ungefilterte
+ * Geschwisterliste. Steht der Vorgänger auf „nur Fläche", zeigt der Fokus
+ * danach auf ein `[data-bid]`, das auf dieser Seite gar nicht gezeichnet
+ * ist: der Cursor springt nirgendwohin, und der eben gelöschte Block ist
+ * trotzdem weg. Kein Datenverlust — aber eine Taste, die schweigend nichts
+ * tut (§47).
+ * ======================================================================== */
+console.log('\n10 · Rücktaste und der unsichtbare Vorgänger');
+const { pg: pg2 } = await bauen(1300, 950, 'redion');
+const rt = await pg2.evaluate(async ([texte]: [string[]]) => {
+  const s = Store.addPage(null, { text: 'Rücktaste' });
+  const a = Store.addBlock(s.id, 'text', { text: texte[0] });
+  const b = Store.addBlock(s.id, 'text', { text: texte[1] });
+  Store.updateBlock(b.id, { sichtbarIn: 'flaeche' });
+  const c = Store.addBlock(s.id, 'text', { text: '' });
+  await Store.flush(); App.oeffne(s.id);
+  await new Promise(f => setTimeout(f, 700));
+  return { seite: s.id, sichtbar: a.id, versteckt: b.id, leer: c.id };
+}, [TEXTE] as [string[]]);
+await pg2.waitForTimeout(300);
+await pg2.click(`.blk[data-bid="${rt.leer}"] .ct`);
+await pg2.keyboard.press('Backspace');
+await pg2.waitForTimeout(450);
+const nachRt = await pg2.evaluate(([leer, sichtbar, versteckt]: string[]) => {
+  const aktiv = document.activeElement as HTMLElement | null;
+  const imBlock = aktiv?.closest<HTMLElement>('.blk')?.dataset['bid'] ?? null;
+  return {
+    leerWeg: !Store.getBlock(leer as string) || Store.getBlock(leer as string)?.alive === false,
+    fokusAuf: imBlock,
+    erwartet: sichtbar,
+    versteckteLebt: Store.getBlock(versteckt as string)?.alive !== false,
+    fokusGezeichnet: !!imBlock && !!document.querySelector(`#page .blk[data-bid="${imBlock}"]`)
+  };
+}, [rt.leer, rt.sichtbar, rt.versteckt] as string[]);
+p('Der leere Block ist weg', nachRt.leerWeg === true);
+p('Der versteckte Nachbar lebt weiter', nachRt.versteckteLebt === true);
+gleich('Der Fokus steht im SICHTBAREN Vorgänger, nicht im versteckten',
+  nachRt.fokusAuf, nachRt.erwartet);
+p('Und der Block mit dem Fokus ist auch wirklich gezeichnet',
+  nachRt.fokusGezeichnet === true, String(nachRt.fokusAuf));
+
+/* ==========================================================================
+ * §11 · Verschieben springt ÜBER den unsichtbaren Nachbarn (L220 Punkt 2)
+ * --------------------------------------------------------------------------
+ * `verschiebe()` tauschte `content[i]` mit `content[i + richtung]`. Ist der
+ * Nachbar ausgeblendet, ändern sich die DATEN, und auf dem Bildschirm
+ * bewegt sich nichts; zweimal drücken sprang dann über ihn. Jetzt springt
+ * ein Druck über ihn — und die Reihenfolge der übrigen bleibt.
+ * ======================================================================== */
+console.log('\n11 · Verschieben über den unsichtbaren Nachbarn');
+const vs = await pg2.evaluate(async () => {
+  const s = Store.addPage(null, { text: 'Verschieben' });
+  const a = Store.addBlock(s.id, 'text', { text: 'A' });
+  const h = Store.addBlock(s.id, 'text', { text: 'H' });
+  const c = Store.addBlock(s.id, 'text', { text: 'C' });
+  Store.updateBlock(h.id, { sichtbarIn: 'flaeche' });
+  await Store.flush(); App.oeffne(s.id);
+  await new Promise(f => setTimeout(f, 700));
+  return { seite: s.id, a: a.id, h: h.id, c: c.id };
+});
+await pg2.waitForTimeout(300);
+const sichtbarVorher = await pg2.evaluate(() =>
+  [...document.querySelectorAll('#page .blk .ct')].map(e => (e.textContent ?? '').trim())
+    .filter(t => ['A', 'H', 'C'].includes(t)));
+gleich('Gezeichnet sind zwei: A und C', sichtbarVorher, ['A', 'C']);
+await pg2.click(`.blk[data-bid="${vs.a}"] .ct`);
+await pg2.keyboard.press('Control+Shift+ArrowDown');
+await pg2.waitForTimeout(450);
+const nachVs = await pg2.evaluate(([seite, a, h, c]: string[]) => {
+  const inhalt = Store.getBlock(seite as string)?.content ?? [];
+  const name: Record<string, string> = { [a as string]: 'A', [h as string]: 'H', [c as string]: 'C' };
+  return {
+    daten: inhalt.map((x: string) => name[x] ?? '?'),
+    gezeichnet: [...document.querySelectorAll('#page .blk .ct')]
+      .map(e => (e.textContent ?? '').trim()).filter(t => ['A', 'H', 'C'].includes(t))
+  };
+}, [vs.seite, vs.a, vs.h, vs.c] as string[]);
+gleich('EIN Druck bringt A hinter C — auf dem Bildschirm sichtbar',
+  nachVs.gezeichnet, ['C', 'A']);
+p('Und der versteckte Block steht weiter in der Liste',
+  nachVs.daten.includes('H'), JSON.stringify(nachVs.daten));
+
+/* UND DIE TASTE WIRKT ÜBERHAUPT — ohne einen versteckten Block weit und
+   breit. Das ist der Fund, den dieser Abschnitt nebenbei gemacht hat
+   (E692): die Pfeilnavigation stand VOR dem Verschieben und kehrte um,
+   sobald der Cursor am Ende stand — in einem einzeiligen Block also
+   immer. Das Blockmenü versprach „Ctrl+Shift+↑", und die Taste tat
+   nichts. Diese Zusage hält die Reparatur an ihrer eigenen Stelle fest,
+   nicht nur im Sonderfall mit einem unsichtbaren Nachbarn. */
+const ohne = await pg2.evaluate(async () => {
+  const s = Store.addPage(null, { text: 'Nur drei' });
+  const ids = ['X', 'Y', 'Z'].map(t => Store.addBlock(s.id, 'text', { text: t }));
+  await Store.flush(); App.oeffne(s.id);
+  await new Promise(f => setTimeout(f, 700));
+  return { erste: ids[0]!.id };
+});
+await pg2.waitForTimeout(250);
+await pg2.click(`.blk[data-bid="${ohne.erste}"] .ct`);
+await pg2.keyboard.press('Control+Shift+ArrowDown');
+await pg2.waitForTimeout(400);
+gleich('Strg+Umschalt+↓ verschiebt auch ohne versteckte Nachbarn',
+  await pg2.evaluate(() => [...document.querySelectorAll('#page .blk .ct')]
+    .map(e => (e.textContent ?? '').trim()).filter(t => ['X', 'Y', 'Z'].includes(t))),
+  ['Y', 'X', 'Z']);
+
+/* ==========================================================================
+ * §12 · Die laufende Nummer steht nicht mehr AM BLOCK (L220 Punkt 3)
+ * --------------------------------------------------------------------------
+ * `b.nr` wurde beim Zeichnen in den Block im Arbeitsspeicher geschrieben und
+ * wanderte über `exportAll` in jede Sicherung. Seit E691 zählt die Nummer
+ * über die GEFILTERTE Liste — dieselbe Seite konnte also je nach zuletzt
+ * gezeichneter Ansicht eine andere `nr` sichern. Ein Anzeigewert gehört
+ * nicht in die Daten.
+ * ======================================================================== */
+console.log('\n12 · Die Nummer ist kein Feld');
+const nr = await pg2.evaluate(async () => {
+  const s = Store.addPage(null, { text: 'Nummern zwei' });
+  const n = ['Eins', 'Zwei', 'Drei'].map(t => Store.addBlock(s.id, 'number', { text: t }));
+  await Store.flush(); App.oeffne(s.id);
+  await new Promise(f => setTimeout(f, 700));
+  return { seite: s.id, ids: n.map(x => x.id) };
+});
+await pg2.waitForTimeout(300);
+const nrStand = await pg2.evaluate(([ids]: [string[]]) => ({
+  amBlock: (ids as string[]).map(i => (Store.getBlock(i) as any)?.nr ?? null),
+  aufDemBild: [...document.querySelectorAll('#page .blk.b-number .mk')]
+    .map(e => (e.textContent ?? '').trim())
+}), [nr.ids] as [string[]]);
+gleich('Auf dem Bild stehen 1. 2. 3.', nrStand.aufDemBild, ['1.', '2.', '3.']);
+gleich('Am Block steht KEINE Nummer', nrStand.amBlock, [null, null, null]);
+await pg2.close();
+
 await browser.close();
 server.close();
 console.log(`\n${ok} ok, ${weg} rot`);

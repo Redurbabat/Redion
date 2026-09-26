@@ -129,6 +129,7 @@ sind der teuerste Teil und der lehrreichste.
 | P113 | 2026-09-25 | Die Startdecke war sechs Tage lang gerissen, und kein Bogen hatte den Lauf als Nachbarn | 🟡 klein | — |
 | P114 | 2026-09-26 | `window.App` gibt es nicht — und der optionale Zugriff schluckt es | 🟠 mittel | — |
 | P115 | 2026-09-26 | Ein Wächter, der eine Absicht misst, die es nicht gibt | 🟠 mittel | — |
+| P116 | 2026-09-26 | Ein Tastenkürzel, das im Menü steht und nie erreichbar war | 🟠 mittel | — |
 
 ---
 
@@ -2495,4 +2496,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Mit `touchstart`, 750 ms Warten und `touchend` ging das Menü auf; nach weiteren 900 ms wirkte der Klick — ohne eine Zeile am Produkt.
 
 **Die Lehre.** Eine Prüfung muss den Weg fahren, den der Mensch auf DIESEM Gerät hat, nicht den, den sie vom anderen kennt. Und wenn eine Zusage rot ist, lautet die erste Frage nicht „was ist am Produkt kaputt“, sondern „misst der Lauf überhaupt, was er behauptet“ (L206).
+
+
+---
+
+## P116 · Ein Tastenkürzel, das im Menü steht und nie erreichbar war
+
+*2026-09-26 · 🟠 mittel*
+
+**Das Bild.** Strg+Umschalt+↑/↓ verschiebt keinen Block. Nichts bewegt sich, auch nicht in den Daten — und das Blockmenü schreibt das Kürzel daneben.
+
+**Die falsche Vermutung.** Die neue Sprungregel über unsichtbare Nachbarn ist falsch gebaut; oder der Prüflauf schickt die Taste am falschen Element.
+
+**Wie es gefunden wurde.** Eine Sonde zeigte, dass `Register.seitenansichten.zeigtIn` da war, der Fokus im richtigen `.ct` stand, der versteckte Block korrekt als unsichtbar galt — und `content` der Seite trotzdem unverändert blieb. Also lief `verschiebe` gar nicht.
+
+**Die Ursache.** Im selben Tastenbehandler steht zwölf Zeilen höher die Pfeilnavigation zwischen Blöcken: `if (e.key === 'ArrowUp' && amAnfang(ct)) { … return; }` und dasselbe für `ArrowDown` am Ende. Beide prüfen die Modifikatoren NICHT und kehren mit `return` um. In einem einzeiligen Block ist der Cursor fast immer am Anfang UND am Ende — das Verschieben war damit praktisch nie erreichbar.
+
+**Der Beweis.** `test574 §11` in einer Liste ganz ohne versteckte Blöcke: ["X","Y","Z"] vor und nach `Control+Shift+ArrowDown`. Mit der Bedingung `!(e.ctrlKey || e.metaKey)` an den zwei Navigationszweigen: ["Y","X","Z"].
+
+**Die Lehre.** Zwei Zweige für dieselbe Taste in einer Datei sind eine Reihenfolge, keine Alternative — wer den zweiten schreibt, muss den ersten lesen (§45). Und: ein Kürzel, das in einem Menü steht, gehört bewacht; sonst ist die Beschriftung eine Behauptung (§32). Gefunden hat es ein Prüflauf, der etwas ganz anderes messen wollte.
 

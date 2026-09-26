@@ -182,10 +182,17 @@ const Inhaltsflaeche = (() => {
     const sichtbar = kinder.filter((b: any) =>
       zeigtIn(b, wo) && !(wo === 'flaeche' && ortLesbar(b.flaecheOrt)));
 
+    /* DIE NUMMER WIRD GEZÄHLT UND WEITERGEREICHT, NICHT GESPEICHERT
+       (E692, L220). Hier stand `b.nr = nr` — das schrieb einen reinen
+       Anzeigewert in den Block im Arbeitsspeicher, und `exportAll`
+       serialisiert `cache.blocks`, also wanderte er in jede `.redion`.
+       Seit E691 zählt die Nummer über die GEFILTERTE Liste; dieselbe Seite
+       hätte je nach zuletzt gezeichneter Ansicht eine andere Zahl
+       gesichert. */
     let nr = 0;
     sichtbar.forEach((b: any) => {
-      if (b.type === 'number') { nr++; b.nr = nr; } else nr = 0;
-      wrap.appendChild(Blocks.render(b));
+      if (b.type === 'number') nr++; else nr = 0;
+      wrap.appendChild(Blocks.render(b, 0, nr));
     });
 
     /* Rückverweise unter der Seite — aber nicht im Kasten auf der Leinwand.

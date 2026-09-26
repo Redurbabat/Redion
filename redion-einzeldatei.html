@@ -25708,7 +25708,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1346, inhalt: 'fd570ee8e35319a7', gebaut: '2026-09-26T09:04:31.745Z' };
+const Stand = { fassung: 1351, inhalt: 'c05aa7f3d55db50b', gebaut: '2026-09-26T09:34:38.653Z' };
 window.Stand = Stand;
 
 </script>
@@ -85775,7 +85775,7 @@ const ChronikDaten = {
         {
             "datum": "2026-09-26",
             "wochentag": "Samstag",
-            "titel": "Drei Ansichten für eine Seite — und dann der Vollausbau: jeder Block darf auf die Fläche",
+            "titel": "Drei Ansichten für eine Seite, der Vollausbau — und ein Kürzel, das seit Langem nie ankam",
             "wasIchWeiss": "Der Tag begann mit einem Vorwurf, und er war berechtigt: „Wo sind deine fotos ich habe nicht nichts bekommen.“ Vier Bögen lang hatte ich nichts geschickt — richtig war nur, dass drei davon nichts am Bildschirm änderten; der vierte tat es, und den hatte ich verschwiegen. Danach kam W6 Bogen 5a zu Ende (E689: EIN Katalog der Werkzeuge, EINE Leiste im Kern, das Whiteboard zuerst darauf) — und aus einem Bild von AFFiNEs Kopfzeile wurde der Rest des Tages.\n\nRedur wollte die Ansichten, aber mit einer Bedingung vorneweg: „aber zuerst liess was die ander 2 bereicht machen bi affine“. Das Lesen hat den Bogen verändert: AFFiNE hat GENAU ZWEI Modi, es sind zwei Blicke auf dasselbe Dokument, und ein Cover gibt es dort gar nicht — Redion ist an der Stelle reicher als das Vorbild, und genau deshalb ergab die dritte Ansicht Sinn. E690 hat sie gebaut: der Katalog `Register.seitenansichten`, das Feld `seitenAnsicht` am Block (kein Feld = die Redion-Ansicht), der Umschalter auf dem seit Monaten gebauten und nie benutzten `Segment`, und die Fläche als Leinwand mit dem Seitentext als Kasten. Drei Fehler daran fand nicht der Wächter, sondern das BILD, alle drei am Telefon: die Fläche war 332 px hoch statt 584, dann 278 px breit statt 390, und „ins Bild holen“ rechnete 31 %.\n\nDann die Frage am Ende von E690, und sie gehörte Redur: Vollausbau oder nicht? Seine Antwort: „ja mach den vollausbau, jeder block auf die fläche ziehbar.“ Diesmal habe ich vier Leser gleichzeitig geschickt, bevor eine Zeile entstand — und drei ihrer Funde stehen im Ergebnis: der Feldname (`zeigen` ist in dieser App 41-mal als Register-Rückruf vergeben, also heisst es `sichtbarIn`), eine Regel, die zweimal dastand („ist der Platz lesbar?“), und zwei Leser der Kinderliste, an die niemand gedacht hatte — Gliederungsstreifen und Inhaltsverzeichnis führten Überschriften auf, die auf der Seite gar nicht stehen.\n\nZwei Bögen, zwei Wächter, beide rot eingecheckt, beide mit Gegenproben. Und einmal hat Redur mich mitten im Anlauf angehalten — „was willst du machen“ —, weil ich zu arbeiten begonnen hatte, statt den Plan in fünf Zeilen hinzuschreiben.",
             "nachrichten": [
                 {
@@ -85819,6 +85819,13 @@ const ChronikDaten = {
                     "woher": "wörtlich aus dem Gespräch",
                     "gemeint": "Der Plan stimmt, leg los.",
                     "besser": "—"
+                },
+                {
+                    "zeit": "ca. 11:10",
+                    "wortlaut": "mach L220 auch noch",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Die drei Nebenwirkungen, die du gerade als Lücke aufgeschrieben hast, sollen nicht stehen bleiben.",
+                    "besser": "Derselbe Satz. Er ist die beste Art, eine frisch geschriebene Lücke zu behandeln: sofort, solange der Kopf noch drin ist."
                 }
             ],
             "arbeit": [
@@ -85849,11 +85856,18 @@ const ChronikDaten = {
                     "zeitraum": "08:25–…",
                     "dauer": "ca. 2 h",
                     "pruefungen": "test574 rot eingecheckt (14 ok, 25 rot), danach 50/50; zwei Gegenproben rot; vier Leser parallel vor dem Bau; 21 Nachbarn grün"
+                },
+                {
+                    "was": "E692 · L220 geschlossen — und ein Kürzel, das nie ankam",
+                    "vonBis": "637eeb6 → offen",
+                    "zeitraum": "11:10–…",
+                    "dauer": "ca. 45 min",
+                    "pruefungen": "test574 von 50 auf 60 Zusagen; §10–§12 vor der Reparatur rot (vier Zeilen), zwei Gegenproben rot; Nachbarn test111, test112, test161, test396, test428, test65, test110, test132, test133"
                 }
             ],
             "zahlen": {
-                "commits": 6,
-                "entscheidungen": 3,
+                "commits": 7,
+                "entscheidungen": 4,
                 "neuePruefläufe": 3
             },
             "groesstesProblem": "Zweimal am selben Tag `(window as any).App?.zeichneSeite?.()` geschrieben — und zweimal hat es still nichts getan. `const App = (() => …)()` in einem gewöhnlichen <script> legt eine globale LEXIKALISCHE Bindung an, und die steht nicht unter `window`. Das Feld wurde geschrieben, der Bildschirm blieb stehen, kein Fehler kam. Beim ersten Mal sah es aus wie ein fehlender Zweig, beim zweiten wie ein fehlender Kasten. Gefunden hat es beide Male eine Sonde, nicht der Wächter — der war rot, sagte aber das Falsche.",
@@ -87415,6 +87429,18 @@ const ChronikDaten = {
             "ursache": "Der Wächter hat den Weg des RECHNERS am Telefon gefahren und die vorhandene Geste gar nicht angefasst. Zweimal war er rot, und zweimal lag es an ihm.",
             "beweis": "Mit `touchstart`, 750 ms Warten und `touchend` ging das Menü auf; nach weiteren 900 ms wirkte der Klick — ohne eine Zeile am Produkt.",
             "lehre": "Eine Prüfung muss den Weg fahren, den der Mensch auf DIESEM Gerät hat, nicht den, den sie vom anderen kennt. Und wenn eine Zusage rot ist, lautet die erste Frage nicht „was ist am Produkt kaputt“, sondern „misst der Lauf überhaupt, was er behauptet“ (L206)."
+        },
+        {
+            "nr": "P116",
+            "datum": "2026-09-26",
+            "titel": "Ein Tastenkürzel, das im Menü steht und nie erreichbar war",
+            "schwere": "mittel",
+            "symptom": "Strg+Umschalt+↑/↓ verschiebt keinen Block. Nichts bewegt sich, auch nicht in den Daten — und das Blockmenü schreibt das Kürzel daneben.",
+            "falscheVermutung": "Die neue Sprungregel über unsichtbare Nachbarn ist falsch gebaut; oder der Prüflauf schickt die Taste am falschen Element.",
+            "wieGefunden": "Eine Sonde zeigte, dass `Register.seitenansichten.zeigtIn` da war, der Fokus im richtigen `.ct` stand, der versteckte Block korrekt als unsichtbar galt — und `content` der Seite trotzdem unverändert blieb. Also lief `verschiebe` gar nicht.",
+            "ursache": "Im selben Tastenbehandler steht zwölf Zeilen höher die Pfeilnavigation zwischen Blöcken: `if (e.key === 'ArrowUp' && amAnfang(ct)) { … return; }` und dasselbe für `ArrowDown` am Ende. Beide prüfen die Modifikatoren NICHT und kehren mit `return` um. In einem einzeiligen Block ist der Cursor fast immer am Anfang UND am Ende — das Verschieben war damit praktisch nie erreichbar.",
+            "beweis": "`test574 §11` in einer Liste ganz ohne versteckte Blöcke: [\"X\",\"Y\",\"Z\"] vor und nach `Control+Shift+ArrowDown`. Mit der Bedingung `!(e.ctrlKey || e.metaKey)` an den zwei Navigationszweigen: [\"Y\",\"X\",\"Z\"].",
+            "lehre": "Zwei Zweige für dieselbe Taste in einer Datei sind eine Reihenfolge, keine Alternative — wer den zweiten schreibt, muss den ersten lesen (§45). Und: ein Kürzel, das in einem Menü steht, gehört bewacht; sonst ist die Beschriftung eine Behauptung (§32). Gefunden hat es ein Prüflauf, der etwas ganz anderes messen wollte."
         }
     ]
 };
@@ -97046,7 +97072,16 @@ const Blocks = (() => {
         spiele(zeitmarkenSpieler);
     };
     /** Baut das DOM für einen Block samt Kindern. */
-    const render = (block, tiefe = 0) => {
+    /**
+     * @param nr Die laufende Nummer einer Nummernliste — von dem gezählt, der
+     *        die Liste ZEICHNET, nicht am Block gespeichert (E692, L220).
+     *        Vorher stand sie als `b.nr` im Block im Arbeitsspeicher und
+     *        wanderte über `exportAll` in jede Sicherung; seit E691 zählte sie
+     *        über die gefilterte Liste, und dieselbe Seite konnte je nach
+     *        zuletzt gezeichneter Ansicht eine andere Zahl sichern. Ein
+     *        Anzeigewert gehört nicht in die Daten (§9).
+     */
+    const render = (block, tiefe = 0, nr = 0) => {
         const t = typ(block.type);
         const el = document.createElement('div');
         el.className = 'blk b-' + block.type;
@@ -97155,7 +97190,11 @@ const Blocks = (() => {
             case 'number': {
                 const mk = document.createElement('div');
                 mk.className = 'mk';
-                mk.textContent = (block.nr || 1) + '.';
+                /* Ohne übergebene Zahl steht „1." da — so war es für verschachtelte
+                   Nummernlisten schon immer, denn gezählt wurde nur auf der
+                   obersten Ebene. Diese Grenze bleibt, wo sie war; sie wandert nur
+                   nicht mehr in die Sicherung. */
+                mk.textContent = (nr || 1) + '.';
                 box.appendChild(mk);
                 box.appendChild(machText());
                 break;
@@ -98429,10 +98468,16 @@ const Blocks = (() => {
                     const idx = eltern.content.indexOf(b.id);
                     if (idx <= 0)
                         return;
-                    const vorher = Store.getBlock(eltern.content[idx - 1]);
+                    /* Der Vorgänger, den man auch SIEHT (E692, L220). Gibt es keinen,
+                       geschieht nichts — genau wie bei `idx <= 0` eine Zeile höher:
+                       lieber eine Taste, die nichts tut, als ein Block, der weg ist
+                       und ein Cursor, der ins Leere zeigt. */
+                    const vorher = nachbarImText(eltern, idx, -1);
+                    if (!vorher)
+                        return;
                     Store.trashBlock(b.id);
                     Store.purgeBlock(b.id);
-                    App.zeichneSeite(vorher ? vorher.id : null, 'ende');
+                    App.zeichneSeite(vorher.block.id, 'ende');
                     return;
                 }
             }
@@ -98445,8 +98490,21 @@ const Blocks = (() => {
                     einruecken(b);
                 return;
             }
-            /* Pfeil hoch/runter zwischen Blöcken */
-            if (e.key === 'ArrowUp' && amAnfang(ct)) {
+            /* Pfeil hoch/runter zwischen Blöcken.
+             *
+             * OHNE STRG — UND DAS IST EINE REPARATUR, KEIN SCHMUCK (E692).
+             * Diese zwei Zweige standen VOR „Strg+Shift+Pfeil: Block verschieben"
+             * und kehrten mit `return` um. Steht der Cursor am Anfang (für ↑) oder
+             * am Ende (für ↓) — und in einem einzeiligen Block ist er fast immer
+             * beides —, kam das Verschieben nie an. Das Blockmenü schreibt
+             * „Ctrl+Shift+↑" daneben, und die Taste tat nichts: ein falsches
+             * Versprechen (§32) und ein Knopf, der schweigend nichts bewirkt (§47).
+             *
+             * Gefunden hat es `test574 §11`, der eigentlich etwas anderes messen
+             * wollte — dass das Verschieben den unsichtbaren Nachbarn überspringt.
+             * Es bewegte sich gar nichts, und die Daten waren unverändert. */
+            const nurPfeil = !(e.ctrlKey || e.metaKey);
+            if (e.key === 'ArrowUp' && amAnfang(ct) && nurPfeil) {
                 const alle = [...wurzel.querySelectorAll('.ct')];
                 const i = alle.indexOf(ct);
                 if (i > 0) {
@@ -98455,7 +98513,7 @@ const Blocks = (() => {
                 }
                 return;
             }
-            if (e.key === 'ArrowDown' && amEnde(ct)) {
+            if (e.key === 'ArrowDown' && amEnde(ct) && nurPfeil) {
                 const alle = [...wurzel.querySelectorAll('.ct')];
                 const i = alle.indexOf(ct);
                 if (i >= 0 && i < alle.length - 1) {
@@ -98911,16 +98969,61 @@ const Blocks = (() => {
         Store.updateBlock(b.id, { parentId: gross.id });
         App.zeichneSeite(b.id, 'ende');
     };
+    /**
+     * Der nächste Geschwisterblock, der auf der SEITE auch wirklich steht.
+     *
+     * WOZU (E692, L220). Seit E691 kann ein Block auf „nur Fläche" stehen und
+     * wird im Text nicht gezeichnet. Zwei Handgriffe rechneten trotzdem mit
+     * `eltern.content[idx ± 1]` — der ungefilterten Liste:
+     *
+     *   Rücktaste am Anfang eines leeren Blocks setzte den Fokus auf einen
+     *   Block, den es auf dieser Seite gar nicht gibt. Der Cursor sprang
+     *   nirgendwohin, und der gelöschte Block war trotzdem weg.
+     *
+     *   Strg+Umschalt+Pfeil tauschte mit dem unsichtbaren Nachbarn: die DATEN
+     *   änderten sich, auf dem Bildschirm bewegte sich nichts, und zweimal
+     *   drücken sprang dann über ihn.
+     *
+     * Beides ist kein Datenverlust — es ist eine Taste, die schweigend nichts
+     * tut (§47), und das ist die heimtückischere Sorte.
+     *
+     * DIE FRAGE „erscheint er?" WIRD NICHT HIER BEANTWORTET, sondern im
+     * Register (§8, `Register.seitenansichten.zeigtIn`). Hier steht nur der
+     * Weg durch die Liste.
+     *
+     * @param schritt −1 für den Vorgänger, +1 für den Nachfolger.
+     * @returns Block und Stelle in `content`, oder `null`.
+     */
+    const nachbarImText = (eltern, idx, schritt) => {
+        const zeigtIn = (typeof Register !== 'undefined' && Register.seitenansichten)
+            ? Register.seitenansichten.zeigtIn
+            : () => true;
+        const liste = eltern?.content || [];
+        for (let i = idx + schritt; i >= 0 && i < liste.length; i += schritt) {
+            const k = Store.getBlock(liste[i]);
+            if (k && k.alive !== false && zeigtIn(k, 'seite'))
+                return { block: k, idx: i };
+        }
+        return null;
+    };
     const verschiebe = (b, richtung) => {
         const eltern = Store.getBlock(b.parentId);
         if (!eltern)
             return;
         const i = eltern.content.indexOf(b.id);
-        const j = i + richtung;
-        if (j < 0 || j >= eltern.content.length)
+        if (i < 0)
             return;
-        [eltern.content[i], eltern.content[j]] = [eltern.content[j], eltern.content[i]];
-        Store.updateBlock(eltern.id, { content: eltern.content });
+        /* ÜBER den unsichtbaren Nachbarn, nicht mit ihm. Und `splice` statt
+           Tausch: bei einem Sprung über mehrere Stellen würde ein Tausch den
+           Block am Ziel rückwärts über dieselben Stellen werfen — die übrigen
+           sollen aber stehen bleiben, wo sie sind. */
+        const ziel = nachbarImText(eltern, i, richtung < 0 ? -1 : 1);
+        if (!ziel)
+            return;
+        const liste = eltern.content.slice();
+        liste.splice(i, 1);
+        liste.splice(ziel.idx, 0, b.id);
+        Store.updateBlock(eltern.id, { content: liste });
         App.zeichneSeite(b.id, 'ende');
     };
     const lege = (quelleId, zielId, danach = false) => {
@@ -176723,15 +176826,20 @@ const Inhaltsflaeche = (() => {
             ? Register.seitenansichten.ortLesbar
             : (o) => !!o;
         const sichtbar = kinder.filter((b) => zeigtIn(b, wo) && !(wo === 'flaeche' && ortLesbar(b.flaecheOrt)));
+        /* DIE NUMMER WIRD GEZÄHLT UND WEITERGEREICHT, NICHT GESPEICHERT
+           (E692, L220). Hier stand `b.nr = nr` — das schrieb einen reinen
+           Anzeigewert in den Block im Arbeitsspeicher, und `exportAll`
+           serialisiert `cache.blocks`, also wanderte er in jede `.redion`.
+           Seit E691 zählt die Nummer über die GEFILTERTE Liste; dieselbe Seite
+           hätte je nach zuletzt gezeichneter Ansicht eine andere Zahl
+           gesichert. */
         let nr = 0;
         sichtbar.forEach((b) => {
-            if (b.type === 'number') {
+            if (b.type === 'number')
                 nr++;
-                b.nr = nr;
-            }
             else
                 nr = 0;
-            wrap.appendChild(Blocks.render(b));
+            wrap.appendChild(Blocks.render(b, 0, nr));
         });
         /* Rückverweise unter der Seite — aber nicht im Kasten auf der Leinwand.
            Dort sind sie kein Fuss der Seite, sondern eine Liste mitten im Bild,

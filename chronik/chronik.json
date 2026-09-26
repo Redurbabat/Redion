@@ -3365,7 +3365,7 @@
     {
       "datum": "2026-09-26",
       "wochentag": "Samstag",
-      "titel": "Drei Ansichten für eine Seite — und dann der Vollausbau: jeder Block darf auf die Fläche",
+      "titel": "Drei Ansichten für eine Seite, der Vollausbau — und ein Kürzel, das seit Langem nie ankam",
       "wasIchWeiss": "Der Tag begann mit einem Vorwurf, und er war berechtigt: „Wo sind deine fotos ich habe nicht nichts bekommen.“ Vier Bögen lang hatte ich nichts geschickt — richtig war nur, dass drei davon nichts am Bildschirm änderten; der vierte tat es, und den hatte ich verschwiegen. Danach kam W6 Bogen 5a zu Ende (E689: EIN Katalog der Werkzeuge, EINE Leiste im Kern, das Whiteboard zuerst darauf) — und aus einem Bild von AFFiNEs Kopfzeile wurde der Rest des Tages.\n\nRedur wollte die Ansichten, aber mit einer Bedingung vorneweg: „aber zuerst liess was die ander 2 bereicht machen bi affine“. Das Lesen hat den Bogen verändert: AFFiNE hat GENAU ZWEI Modi, es sind zwei Blicke auf dasselbe Dokument, und ein Cover gibt es dort gar nicht — Redion ist an der Stelle reicher als das Vorbild, und genau deshalb ergab die dritte Ansicht Sinn. E690 hat sie gebaut: der Katalog `Register.seitenansichten`, das Feld `seitenAnsicht` am Block (kein Feld = die Redion-Ansicht), der Umschalter auf dem seit Monaten gebauten und nie benutzten `Segment`, und die Fläche als Leinwand mit dem Seitentext als Kasten. Drei Fehler daran fand nicht der Wächter, sondern das BILD, alle drei am Telefon: die Fläche war 332 px hoch statt 584, dann 278 px breit statt 390, und „ins Bild holen“ rechnete 31 %.\n\nDann die Frage am Ende von E690, und sie gehörte Redur: Vollausbau oder nicht? Seine Antwort: „ja mach den vollausbau, jeder block auf die fläche ziehbar.“ Diesmal habe ich vier Leser gleichzeitig geschickt, bevor eine Zeile entstand — und drei ihrer Funde stehen im Ergebnis: der Feldname (`zeigen` ist in dieser App 41-mal als Register-Rückruf vergeben, also heisst es `sichtbarIn`), eine Regel, die zweimal dastand („ist der Platz lesbar?“), und zwei Leser der Kinderliste, an die niemand gedacht hatte — Gliederungsstreifen und Inhaltsverzeichnis führten Überschriften auf, die auf der Seite gar nicht stehen.\n\nZwei Bögen, zwei Wächter, beide rot eingecheckt, beide mit Gegenproben. Und einmal hat Redur mich mitten im Anlauf angehalten — „was willst du machen“ —, weil ich zu arbeiten begonnen hatte, statt den Plan in fünf Zeilen hinzuschreiben.",
       "nachrichten": [
         {
@@ -3409,6 +3409,13 @@
           "woher": "wörtlich aus dem Gespräch",
           "gemeint": "Der Plan stimmt, leg los.",
           "besser": "—"
+        },
+        {
+          "zeit": "ca. 11:10",
+          "wortlaut": "mach L220 auch noch",
+          "woher": "wörtlich aus dem Gespräch",
+          "gemeint": "Die drei Nebenwirkungen, die du gerade als Lücke aufgeschrieben hast, sollen nicht stehen bleiben.",
+          "besser": "Derselbe Satz. Er ist die beste Art, eine frisch geschriebene Lücke zu behandeln: sofort, solange der Kopf noch drin ist."
         }
       ],
       "arbeit": [
@@ -3439,11 +3446,18 @@
           "zeitraum": "08:25–…",
           "dauer": "ca. 2 h",
           "pruefungen": "test574 rot eingecheckt (14 ok, 25 rot), danach 50/50; zwei Gegenproben rot; vier Leser parallel vor dem Bau; 21 Nachbarn grün"
+        },
+        {
+          "was": "E692 · L220 geschlossen — und ein Kürzel, das nie ankam",
+          "vonBis": "637eeb6 → offen",
+          "zeitraum": "11:10–…",
+          "dauer": "ca. 45 min",
+          "pruefungen": "test574 von 50 auf 60 Zusagen; §10–§12 vor der Reparatur rot (vier Zeilen), zwei Gegenproben rot; Nachbarn test111, test112, test161, test396, test428, test65, test110, test132, test133"
         }
       ],
       "zahlen": {
-        "commits": 6,
-        "entscheidungen": 3,
+        "commits": 7,
+        "entscheidungen": 4,
         "neuePruefläufe": 3
       },
       "groesstesProblem": "Zweimal am selben Tag `(window as any).App?.zeichneSeite?.()` geschrieben — und zweimal hat es still nichts getan. `const App = (() => …)()` in einem gewöhnlichen <script> legt eine globale LEXIKALISCHE Bindung an, und die steht nicht unter `window`. Das Feld wurde geschrieben, der Bildschirm blieb stehen, kein Fehler kam. Beim ersten Mal sah es aus wie ein fehlender Zweig, beim zweiten wie ein fehlender Kasten. Gefunden hat es beide Male eine Sonde, nicht der Wächter — der war rot, sagte aber das Falsche.",
@@ -5005,6 +5019,18 @@
       "ursache": "Der Wächter hat den Weg des RECHNERS am Telefon gefahren und die vorhandene Geste gar nicht angefasst. Zweimal war er rot, und zweimal lag es an ihm.",
       "beweis": "Mit `touchstart`, 750 ms Warten und `touchend` ging das Menü auf; nach weiteren 900 ms wirkte der Klick — ohne eine Zeile am Produkt.",
       "lehre": "Eine Prüfung muss den Weg fahren, den der Mensch auf DIESEM Gerät hat, nicht den, den sie vom anderen kennt. Und wenn eine Zusage rot ist, lautet die erste Frage nicht „was ist am Produkt kaputt“, sondern „misst der Lauf überhaupt, was er behauptet“ (L206)."
+    },
+    {
+      "nr": "P116",
+      "datum": "2026-09-26",
+      "titel": "Ein Tastenkürzel, das im Menü steht und nie erreichbar war",
+      "schwere": "mittel",
+      "symptom": "Strg+Umschalt+↑/↓ verschiebt keinen Block. Nichts bewegt sich, auch nicht in den Daten — und das Blockmenü schreibt das Kürzel daneben.",
+      "falscheVermutung": "Die neue Sprungregel über unsichtbare Nachbarn ist falsch gebaut; oder der Prüflauf schickt die Taste am falschen Element.",
+      "wieGefunden": "Eine Sonde zeigte, dass `Register.seitenansichten.zeigtIn` da war, der Fokus im richtigen `.ct` stand, der versteckte Block korrekt als unsichtbar galt — und `content` der Seite trotzdem unverändert blieb. Also lief `verschiebe` gar nicht.",
+      "ursache": "Im selben Tastenbehandler steht zwölf Zeilen höher die Pfeilnavigation zwischen Blöcken: `if (e.key === 'ArrowUp' && amAnfang(ct)) { … return; }` und dasselbe für `ArrowDown` am Ende. Beide prüfen die Modifikatoren NICHT und kehren mit `return` um. In einem einzeiligen Block ist der Cursor fast immer am Anfang UND am Ende — das Verschieben war damit praktisch nie erreichbar.",
+      "beweis": "`test574 §11` in einer Liste ganz ohne versteckte Blöcke: [\"X\",\"Y\",\"Z\"] vor und nach `Control+Shift+ArrowDown`. Mit der Bedingung `!(e.ctrlKey || e.metaKey)` an den zwei Navigationszweigen: [\"Y\",\"X\",\"Z\"].",
+      "lehre": "Zwei Zweige für dieselbe Taste in einer Datei sind eine Reihenfolge, keine Alternative — wer den zweiten schreibt, muss den ersten lesen (§45). Und: ein Kürzel, das in einem Menü steht, gehört bewacht; sonst ist die Beschriftung eine Behauptung (§32). Gefunden hat es ein Prüflauf, der etwas ganz anderes messen wollte."
     }
   ]
 }
