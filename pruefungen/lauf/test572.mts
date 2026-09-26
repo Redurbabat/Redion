@@ -41,6 +41,9 @@
  *       `.wb-massstab` — daran hängen test209, test568, test570.
  *   §11 Strichzeichen statt Emoji, und jeder Knopf sagt einem Vorleser,
  *       was er ist (§38, `register/symbole.ts` Kopf).
+ *   §12 Und was ein Mensch liest, kommt aus dem Katalog: `Marken.WERKZEUGE`
+ *       IST der Katalogeintrag, und jeder Name im Menüband steht im Katalog
+ *       oder in `Marken.FORMEN` (E694, L218).
  *
  * GEGEN DEN ALTEN STAND ist alles ab §1 rot: es gibt weder
  * `core/gfx/toolbar.js` noch `register/werkzeuge.js`, und die Leiste des
@@ -136,26 +139,62 @@ if (R) {
 }
 
 /* ==========================================================================
- * §3 · Der Katalog läuft nicht mit dem Studio auseinander (§8)
+ * §3 · EINE Liste, nicht drei (§8, L218)
  * --------------------------------------------------------------------------
- * `Marken.WERKZEUGE` (marken.ts:301–360) ist die Liste, die die Studioleiste
- * baut; sie zieht erst in 5b um (L217). Bis dahin gilt: was dort steht, steht
- * mit demselben Namen im Register. Sonst hätte ein Werkzeug zwei Namen — der
- * Fehler, den `test266` schon einmal gefunden hat („Abdecken"/„Abdeckband").
+ * Bis Bogen 5b hielt dieser Abschnitt zwei Listen im Gleichlauf: was in
+ * `Marken.WERKZEUGE` stand, musste mit demselben Namen im Register stehen.
+ * Das war die richtige Zusage, solange es zwei Listen GAB — aber eine Zusage
+ * über einen Zustand, den §8 verbietet.
+ *
+ * Seit E694 gibt es nur noch eine. Der Abschnitt prüft deshalb jetzt das
+ * Stärkere: dass die zwei Abschriften WEG sind und niemand sie
+ * zurückschreibt.
+ *
+ *   marken.ts      hielt 14 Werkzeuge mit Kennung, Zeichen, Symbol, Name, Titel
+ *   menueband.ts   hielt 13 Vierertupel [id, Name, Zeichen, Hinweis] — neun
+ *                  davon Studiowerkzeuge, vier aus `Marken.FORMEN`
+ *
+ * Gemessen wird am QUELLTEXT (die Abschrift darf nicht wiederkommen) UND am
+ * laufenden Programm (die Namen, die ein Mensch sieht, kommen aus dem
+ * Katalog).
  * ======================================================================== */
-console.log('\n3 · Register und Studio sagen dasselbe');
-if (R) {
-  const markenTs = lies('src/bereiche/pdf/marken.ts');
-  const block = markenTs.slice(markenTs.indexOf('const WERKZEUGE = ['), markenTs.indexOf('] as const;', markenTs.indexOf('const WERKZEUGE = [')));
-  const paare = [...block.matchAll(/id: '([a-z]+)'[\s\S]{0,400}?name: '([^']+)'/g)].map(m => [m[1], m[2]]);
-  p('Die Studioliste ist lesbar', paare.length >= 14, `${paare.length} Einträge`);
-  const schief = paare.filter(([id, name]) => {
-    const w = R.holen(id!);
-    return !w || w.name !== name;
-  });
-  p('Jede Studio-Kennung steht mit demselben Namen im Register',
-    schief.length === 0, schief.map(([id, n]) => `${id}: „${n}" fehlt oder heisst anders`).join(' · '));
-}
+console.log('\n3 · Eine Liste, nicht drei');
+const markenTs = lies('src/bereiche/pdf/marken.ts');
+const bandTs = lies('src/register/menueband.ts');
+p('`marken.ts` gibt es', markenTs.length > 1000, `${markenTs.length} Zeichen`);
+
+/* Die Abschrift im Studio: ein `const WERKZEUGE = [` mit Objektliteralen,
+   die `name:` tragen. Gezählt wird im CODE, nicht im Rohtext — sonst zählte
+   der Kopfkommentar mit, der beschreibt, was hier NICHT mehr stehen darf
+   (derselbe Fehler wie in §1). */
+const markenCode = nurCode(markenTs);
+const studioBlock = (() => {
+  const i = markenCode.indexOf('const WERKZEUGE = [');
+  if (i < 0) return '';
+  const j = markenCode.indexOf('];', i);
+  return j < 0 ? markenCode.slice(i) : markenCode.slice(i, j);
+})();
+p('`marken.ts` hält KEINE eigene Werkzeugliste mehr',
+  studioBlock === '' || !/name\s*:/.test(studioBlock),
+  studioBlock ? `${(studioBlock.match(/id\s*:/g) ?? []).length} Einträge mit Feldern` : 'kein Block');
+p('Und holt sie aus dem Katalog', /Register\.werkzeuge\.(auswahl|alle|holen)/.test(markenCode),
+  'kein `Register.werkzeuge.…` in marken.ts');
+
+/* Die Abschrift im Menüband: Vierertupel mit Namen. Danach darf dort nur noch
+   eine Liste von KENNUNGEN stehen — eine Reihenfolge ist keine zweite
+   Wahrheit, ein Name schon. */
+const bandCode = nurCode(bandTs);
+const bandBlock = (() => {
+  const i = bandCode.indexOf('const WERKZEUGE');
+  if (i < 0) return '';
+  const j = bandCode.indexOf('];', i);
+  return j < 0 ? bandCode.slice(i) : bandCode.slice(i, j);
+})();
+p('`menueband.ts` hält nur noch Kennungen, keine Namen',
+  bandBlock !== '' && !/,\s*''\s*,/.test(bandBlock),
+  bandBlock.replace(/\s+/g, ' ').slice(0, 160));
+p('Und holt Name und Zeichen aus dem Katalog',
+  /Register\.werkzeuge\.holen/.test(bandCode), 'kein `Register.werkzeuge.holen` im Menüband');
 
 /* ==========================================================================
  * §4 · Angemeldet an beiden Stellen (§28)
@@ -403,6 +442,76 @@ p('Und die Leiste selbst bleibt im Kasten', klein.leisteDrin === true);
 p('Die Leiste bleibt eine Zeile (sie rollt, statt umzubrechen)', klein.zeilen === 1,
   `${klein.zeilen} Zeilen bei ${klein.anzahl} Knöpfen, ${klein.hoehe} px hoch`);
 await handy.close();
+
+/* ==========================================================================
+ * §12 · Was ein Mensch liest, kommt aus dem Katalog (§8, L218)
+ * --------------------------------------------------------------------------
+ * §3 misst den Quelltext: die Abschriften sind weg. Hier wird gemessen, was
+ * daraus im LAUFENDEN Programm wird — denn eine Datei, die aus dem Katalog
+ * liest und daneben etwas anderes anzeigt, hätte nichts gewonnen.
+ *
+ * Zwei Kataloge sind erlaubt, und das ist kein Widerspruch zu §8: die vier
+ * Formen des Menübands (`line`, `arrow`, `rectangle`, `ellipse`) sind KEINE
+ * Werkzeuge des Studios, sondern Einträge aus `Marken.FORMEN` — im Studio
+ * liegen sie unter dem einen Knopf `formen`. Ihre Kennungen stehen so in
+ * jeder gespeicherten Marke (§53.3) und dürfen sich nicht in die deutschen
+ * Flächen-Kennungen `linie`/`pfeil`/`rechteck`/`ellipse` verwandeln.
+ * ======================================================================== */
+console.log('\n12 · Die Namen kommen aus dem Katalog');
+const pgk = await bauen(1400, 950);
+/* EIN ECHTES BLATT, KEIN GESTELLTES ZIEL (§30: keine Mocks, wo die echte App
+   geprueft werden kann). Der Reiter „Zeichnen" zeigt seine Werkzeuge nur,
+   wenn `Zeichenziel.da()` wahr ist - und das meldet das Studio, wenn ein
+   Blatt offen liegt. Der erste Anlauf mass ohne Blatt und fand null
+   Werkzeuge; das sah nach einem Fund aus und war nur eine fehlende Seite. */
+await pgk.evaluate(async () => {
+  const s = Store.addPage(null, { text: 'Blatt fuer das Band' });
+  Store.addBlock(s.id, 'blatt', { text: '', blattBreite: 595.28, blattHoehe: 841.89,
+                                  raumVersion: 1, marken: [] });
+  await Store.flush(); App.zeichneBaum(); App.oeffne(s.id);
+  await new Promise(f => setTimeout(f, 900));
+});
+await pgk.waitForTimeout(400);
+const katalog = await pgk.evaluate(() => {
+  const reg = (id: string) => (Register as any).werkzeuge.holen(id);
+  const form = (id: string) => ((Marken as any).FORMEN ?? []).find((f: any) => f.id === id);
+  /* `inReiter` gibt GRUPPEN zurueck (`{gruppe, eintraege}`), keine flache
+     Liste - der erste Anlauf filterte darauf nach `e.id` und fand null. Ein
+     Waechter, der eine Form annimmt statt sie nachzusehen, ist aus dem
+     falschen Grund rot (L206). */
+  const band = (Register as any).menueband.inReiter('zeichnen')
+    .filter((g: any) => g.gruppe === 'Werkzeug')
+    .flatMap((g: any) => g.eintraege ?? [])
+    .map((e: any) => ({ id: String(e.id).replace(/^wz-/, ''), name: e.name, zeichen: e.zeichen }));
+  return {
+    studio: ((Marken as any).WERKZEUGE ?? []).map((w: any) => ({ id: w.id, name: w.name })),
+    studioSchief: ((Marken as any).WERKZEUGE ?? []).filter((w: any) => {
+      const r = reg(w.id); return !r || r.name !== w.name || r.zeichen !== w.zeichen;
+    }).map((w: any) => w.id),
+    band,
+    /* BEIDE Kataloge werden gefragt, nicht der erste, der antwortet.
+       `ellipse` gibt es ZWEIMAL: als Flaechenwerkzeug (`◯`) und als
+       Studio-Form (`○`). Ein `reg(id) ?? form(id)` haette die Form
+       stillschweigend durch das Werkzeug ersetzt - und der Waechter waere
+       rot geworden, obwohl das Band recht hat. */
+    bandSchief: band.filter((e: any) => {
+      const kandidaten = [reg(e.id), form(e.id)].filter(Boolean);
+      return !kandidaten.some((q: any) => q.name === e.name && q.zeichen === e.zeichen);
+    }).map((e: any) => e.id)
+  };
+});
+p('`Marken.WERKZEUGE` gibt es weiter — andere Stellen lesen es',
+  katalog.studio.length === 14, `${katalog.studio.length} Einträge`);
+p('Und jeder Eintrag IST der Katalogeintrag (Name und Zeichen)',
+  katalog.studioSchief.length === 0, katalog.studioSchief.join(', '));
+p('Das Menüband zeigt 13 Werkzeuge', katalog.band.length === 13, `${katalog.band.length}`);
+p('Und jeder Name dort steht im Katalog oder in `Marken.FORMEN`',
+  katalog.bandSchief.length === 0, katalog.bandSchief.join(', '));
+/* Die Formkennungen bleiben englisch — sie stehen so in gespeicherten Marken. */
+p('Die vier Formen heissen weiter `line`, `arrow`, `rectangle`, `ellipse`',
+  ['line', 'arrow', 'rectangle', 'ellipse'].every(id => katalog.band.some((e: any) => e.id === id)),
+  katalog.band.map((e: any) => e.id).join(','));
+await pgk.close();
 
 await browser.close();
 server.close();
