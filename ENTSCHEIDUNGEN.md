@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-670 Entscheidungen, E1 bis E690 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+671 Entscheidungen, E1 bis E691 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -733,6 +733,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E688** — Die Startdecke steigt von 2700 auf 2850 KB, mit gezählter Begründung wie E613: 127 KB in neun Tagen sind das Produkt (Studio, Trainer, Gedankenkarte), nicht eine Bibliothek — und zwei Posten davon sind Lerninhalt statt Code (L216, Frage an Redur)
 * **E689** — EINE Werkzeugleiste für alle Flächen: der Katalog `Register.werkzeuge` (22 Werkzeuge, §8) und das Kernbauteil `GfxToolbar` (`src/core/gfx/toolbar.ts`), auf das zuerst das Whiteboard umzieht — schwebende Kapsel UNTER der Fläche (§37 hart), Strichzeichen statt Emoji, Untermenü nach oben, am Telefon 44 px und rollend statt umbrechend (`test572`, Redur: „integriere alles zusammen")
 * **E690** — Drei Ansichten einer Seite, umschaltbar oben: AFFiNEs `page` und `edgeless` so nah am Original, wie unsere Technik es zulässt, dazu „Redion" als dritte mit Cover und Werkzeugzeile — Katalog `Register.seitenansichten`, Feld `seitenAnsicht` am Block (kein Feld = Redion, §9), Umschalter auf dem vorhandenen `Segment` statt einer vierten Knopfreihe (§8), die Fläche als Punktraster mit dem Seitentext als verschiebbarem Kasten (`test573`, Redur: „ich will die 2 von affine 1:1 haben")
+* **E691** — Der Vollausbau der Fläche: JEDER Block kann seinen eigenen Platz bekommen (`flaecheOrt`) und sagen, wo er erscheint (`sichtbarIn`: beides | seite | flaeche) — AFFiNEs `displayMode` eine Stufe feiner, weil dort die Notiz die kleinste Einheit ist und hier der Block; gezogen wird mit dem vorhandenen Editor-Ziehen (§8), am Telefon über die Hebe-Geste aus E83, und ein unlesbarer Platz zählt als KEIN Platz, damit kein Block verschwindet (`test574`, Redur: „ja mach den vollausbau, jeder block auf die fläche ziehbar")
 
 ---
 
@@ -56310,3 +56311,119 @@ fehlenden Zweig.
 **Nachbarn:** `test285`, `test221`, `test272`, `test277`, `test40`,
 `test67`, `test362`, `test402`, `test332`, `test139`, `test425`, `test87`,
 `test105`, `test109`, `test550`.
+
+---
+
+## E691 — Der Vollausbau der Fläche: jeder Block bekommt einen Platz
+
+**Datum:** 26. September 2026 · **Wächter:** `test574` (50 Zusagen in elf
+Abschnitten) · Redur, nach der Frage am Ende von E690: **„ja mach den
+vollausbau, jeder block auf die fläche ziehbar."**
+
+**Was war.** E690 hat die Fläche gebaut, und die ganze Seite lag darauf als
+EIN Kasten. Das war die kleine Hälfte von AFFiNEs Modell: dort trägt jeder
+Inhalt seinen Platz und ein Feld dafür, wo er erscheint. Die Frage stand am
+Ende von E690 offen und gehörte Redur; er hat sie mit einem Satz
+beantwortet.
+
+**Vier Leser, bevor eine Zeile entstand.** Die Bögen davor haben gezeigt,
+was das Nachschlagen wert ist (§45: der teuerste wiederkehrende Fehler ist,
+eine Schnittstelle aus dem Gedächtnis zu schreiben). Diesmal lasen vier
+Leser gleichzeitig: AFFiNEs `displayMode`, Redions vorhandenes Block-Ziehen,
+wer ausser der Inhaltsfläche noch die Kinder einer Seite liest, und welche
+Wächter daran hängen. **Drei ihrer Funde stehen im Ergebnis**, und keinen
+davon hätte der Bau von selbst gemacht — sie stehen unten unter „Was die
+Leser geändert haben".
+
+**Was entschieden wurde.**
+
+1. **Der BLOCK ist die Einheit, nicht die Notiz.** AFFiNE kann einen
+   einzelnen Absatz nicht auf die Fläche legen — `affine:paragraph` hat gar
+   kein `xywh`; wer es versucht, bekommt eine neue Notiz drumherum
+   (nachgelesen). Redur wollte ausdrücklich den Block. Also trägt jeder
+   Block die zwei Felder.
+
+2. **Zwei Felder, beide optional, beide mit gutmütiger Vorgabe (§9).**
+   `flaecheOrt` = { x, y, w, raumVersion } (E686-Muster); `sichtbarIn` =
+   'beides' | 'seite' | 'flaeche'. Kein `flaecheOrt` heisst „steht im
+   Seitenkasten", kein `sichtbarIn` heisst „steht überall".
+
+3. **Das Feld heisst `sichtbarIn`, nicht `zeigen`.** `zeigen` gibt es in
+   dieser App schon 41-mal als Rückruf `zeigen: () => boolean` an
+   Register-Einträgen. Wer `b.zeigen` liest, hält es für eine Funktion.
+   Dieselbe Kollision hat einen Bogen vorher `ansicht` zu `seitenAnsicht`
+   gemacht (E690) — und diesmal hat sie ein Leser gefunden, bevor ein Byte
+   gespeichert war.
+
+4. **Kein zweiter Ziehmechanismus (§8).** Der Editor kann Blöcke seit
+   Langem ziehen (HTML5, am Griff `⋮⋮`, `editor.ts:1999-2056`). Er reicht
+   die Kennung jetzt über `dataTransfer` heraus (`application/x-redion-block`),
+   und die Fläche liest sie beim Ablegen. Über einem Kasten gehört der Zug
+   weiter dem Editor — dort ordnet er zwischen zwei Blöcke ein, dieselbe
+   Geste wie auf der normalen Seite.
+
+5. **Am Telefon über das Blockmenü.** Dort sind die Griffe ausgeblendet
+   (`ki.css:182`), und HTML5-Ziehen kennt keine Finger. Der Eintrag „Auf die
+   Fläche legen" steht deshalb im Blockmenü, das am Telefon über die
+   Hebe-Geste aus E83 aufgeht. Ohne ihn gäbe es den Vollausbau am Telefon
+   nicht — und §37 sagt, das Telefon ist der Normalfall.
+
+6. **Ausblenden versteckt, es löscht nicht.** `sichtbarIn: 'flaeche'` nimmt
+   den Block aus der Textansicht, aus dem Gliederungsstreifen und aus dem
+   Inhaltsverzeichnis — er bleibt am Leben, behält seinen Text, steht
+   weiter in `content` und reist in jeder Sicherung mit. Der Kasten sagt es
+   mit einem WORT („nicht auf der Seite"), nicht nur mit einer Farbe (§38).
+
+7. **Die Reihenfolge bleibt, wo sie ist.** AFFiNE VERSCHIEBT den Block in
+   der Kinderliste, wenn man ihn ein- oder ausblendet, damit die
+   Lesereihenfolge stimmt (`change-note-display-mode.ts:26-53`) — eine echte
+   Datenänderung mit Rückgängig-Streifen. Redion filtert nur und lässt
+   `content` unangetastet: ein wieder eingeblendeter Block steht an seiner
+   alten Stelle, und ein Abgleich sieht keine Änderung, wo keine ist (§25).
+   **Das ist die bewusste Abweichung vom Vorbild.**
+
+8. **Ein unlesbarer Platz ist KEIN Platz.** AFFiNE fängt ein kaputtes `xywh`
+   ab und macht `[0,0,0,0]` daraus; die Notiz sitzt danach unsichtbar im
+   Ursprung (`framework/global/src/gfx/xywh.ts:20-29`). §9 verlangt das
+   Gegenteil. Hier bleibt der Block dann im Text — sichtbar, verschiebbar,
+   nicht verloren — und die Konsole sagt, warum.
+
+9. **`Store.feldWeg`** — neu im Kern. `updateBlock(id, { feld: undefined })`
+   lässt den SCHLÜSSEL stehen; für IndexedDB und für `'feld' in block` ist
+   das ein Feld, nur für `JSON.stringify` keines. §9 ruht darauf, dass „kein
+   Feld" wirklich kein Feld ist.
+
+**Was die Leser geändert haben.**
+
+- **Der Name** (Punkt 3) — sonst hiesse das Feld heute `zeigen`.
+- **Eine Regel, die zweimal dastand.** „Ist der Platz lesbar?" wurde in
+  `inhaltsflaeche.ts` und in `seitenflaeche.ts` je einmal beantwortet, und
+  der Kommentar gab es selbst zu („beide müssen dieselbe Antwort geben").
+  Antworteten sie je verschieden, wäre ein Block NIRGENDS. Jetzt steht sie
+  einmal im Register (§8).
+- **Zwei Leser der Kinderliste, die niemand auf dem Zettel hatte.** Der
+  Gliederungsstreifen am Rand und der Inhaltsverzeichnis-Block führten
+  Überschriften auf, die auf der Seite gar nicht gezeichnet werden — und
+  ihr Klick sucht ein `[data-bid]`, das es dort nicht gibt: ein Knopf, der
+  schweigend nichts tut (§47). Beide fragen jetzt.
+
+**Und was das BILD geändert hat** (§55.1): „Ins Bild holen" rechnete nur
+mit dem Seitenkasten. Auf dem Bild hingen die zwei herausgezogenen Blöcke
+rechts ausserhalb, während die Leiste „100 %" meldete. Jetzt umfasst die
+Rechnung alle Kästen, und `test574 §3b` hält es.
+
+**Die Alternativen.** (a) Die Notiz als Einheit wie AFFiNE — weniger Felder,
+aber genau nicht das, was Redur wollte. (b) Verschieben statt filtern wie
+AFFiNEs „Display in Page" — mehr Treue zum Vorbild, dafür eine Datenänderung
+bei jedem Umschalten und ein Abgleichfall (§25). (c) Nur die Position ohne
+`sichtbarIn` — dann läge jeder herausgezogene Block doppelt vor Augen, im
+Text und auf der Fläche, ohne Weg dazwischen.
+
+**Preis.** Zwei Felder mehr am Block, ein Feld mehr im Kern (`feldWeg`), und
+der Editor kennt jetzt die Fläche über einen globalen Namen. Auf der Fläche
+gezeichnet wird weiterhin nicht (L219), und drei kleine Nebenwirkungen des
+Filterns stehen als **L220** geschrieben statt still zu bleiben.
+
+**Nachbarn:** `test573`, `test285`, `test294`, `test301`, `test96`,
+`test100`, `test139`, `test105`, `test109`, `test87`, `test290`, `test550`,
+`test31`, `test46`, `test65`, `test158`, `test395`, `test247`.

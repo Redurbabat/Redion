@@ -191,3 +191,61 @@
      bleibt, was sie ist, und der Bildschirm zeigt sie kleiner. */
   #main #page.flaeche-page .pg-ansichten{padding:8px 12px}
 }
+
+/* ----------------------------------------------------------------------------
+   5 · DER VOLLAUSBAU: EIN KASTEN JE BLOCK (E691)
+   Redur, 26. September 2026: „ja mach den vollausbau, jeder block auf die
+   fläche ziehbar." Seither ist der Seitenkasten nur noch einer von vielen.
+   --------------------------------------------------------------------------*/
+/* Ein Blockkasten ist schlanker als der Seitenkasten: sein Kopf sagt die
+   Blockart, nicht den Seitentitel. */
+.pg-fl-notiz[data-fl-block] .pg-fl-koerper{padding:10px 14px 14px}
+.pg-fl-notiz[data-fl-block] .pg-fl-kopf .pg-icon{font-size:14px}
+.pg-fl-notiz[data-fl-block] .pg-fl-name{
+  font-size:12.5px; font-weight:600; color:var(--text-dim);
+  text-transform:none; letter-spacing:.01em;
+}
+/* Auf der Fläche gibt es keine Griffe am Block: der Kasten IST der Griff. */
+.pg-fl-notiz[data-fl-block] .blk > .handles{display:none}
+.pg-fl-notiz[data-fl-block] .blk{padding-left:0}
+
+/* „nicht auf der Seite" — ein WORT, keine Farbe allein (§38). */
+.pg-fl-versteckt{
+  flex:none; padding:2px 7px; border-radius:999px;
+  background:var(--bg-hover); color:var(--text-dim);
+  font-size:11px; font-weight:600; white-space:nowrap;
+}
+
+/* Der Menüknopf im Kopf. Am Telefon ist er der einzige Weg zurück in den
+   Text — deshalb dort die volle Trefferfläche aus §37, am Rechner reicht
+   ein kleiner Knopf neben einem 34 px hohen Kopf. */
+.pg-fl-menue{
+  flex:none; margin-left:auto;
+  display:inline-flex; align-items:center; justify-content:center;
+  width:26px; height:26px; border:0; border-radius:6px;
+  background:none; color:var(--text-dim);
+  font-size:15px; line-height:1; cursor:pointer;
+}
+.pg-fl-menue:hover{background:var(--bg-hover); color:var(--text)}
+.pg-fl-menue:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+/* Der Griff `⠿` stand bis E691 rechts aussen; jetzt steht dort das Menü,
+   und der ganze Kopf bleibt die Ziehfläche. Zwei Dinge rechts aussen wären
+   am Telefon nebeneinander 88 px in einem 334 px breiten Kasten. */
+.pg-fl-griff{display:none}
+
+/* Der leere Seitenkasten sagt, wofür er noch da ist. */
+.pg-fl-leer{
+  padding:18px 4px; color:var(--text-dim);
+  font-size:13px; line-height:1.5; text-align:center;
+}
+
+/* Ziehen: wohin es geht, sieht man VORHER. */
+.pg-flaeche.pg-fl-nimmt{box-shadow:inset 0 0 0 2px var(--accent)}
+.pg-fl-notiz.pg-fl-ziel{outline:2px solid var(--accent); outline-offset:2px}
+.pg-fl-notiz.pg-fl-zurueck{opacity:.55}
+
+@media(max-width:760px){
+  /* §37: der einzige Weg zurück in den Text braucht die volle Fläche. */
+  .pg-fl-menue{width:var(--touch-min); height:var(--touch-min); font-size:18px}
+  .pg-fl-kopf{min-height:var(--touch-min); padding:4px 6px 4px 12px}
+}

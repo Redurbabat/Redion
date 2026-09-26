@@ -1895,6 +1895,73 @@ const ANSICHTEN: Record<string, {
       await new Promise(r => setTimeout(r, 700));
     }
   },
+  /* ------------------------------------------------------------------------
+     DER VOLLAUSBAU DER FLÄCHE (E691, 26. September 2026)
+     Redur: „ja mach den vollausbau, jeder block auf die fläche ziehbar."
+     Drei Zustände, weil §55.3 ALLE verlangt: Kästen nebeneinander, ein
+     ausgeblendeter Block, und der leere Seitenkasten.
+     ----------------------------------------------------------------------*/
+  flaecheBloecke: {
+    titel: 'Vollausbau — zwei Blöcke liegen als eigene Kästen auf der Fläche',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Wärmepumpe — Notizen', icon: '🔥',
+        seitenAnsicht: 'flaeche' });
+      const b1 = Store.addBlock(seite.id, 'heading', { text: 'Was zu prüfen ist' });
+      const b2 = Store.addBlock(seite.id, 'text', { text: 'Vorlauftemperatur, Volumenstrom und die Spreizung an beiden Fühlern.' });
+      const b3 = Store.addBlock(seite.id, 'todo', { text: 'Fühler am Rücklauf nachziehen' });
+      const b4 = Store.addBlock(seite.id, 'text', { text: 'Verdichter: 4,2 Stunden am Tag laut Protokoll.' });
+      void b1; void b2;
+      Store.updateBlock(b3.id, { flaecheOrt: { x: 820, y: 40, w: 340, raumVersion: 1 } });
+      Store.updateBlock(b4.id, { flaecheOrt: { x: 820, y: 210, w: 340, raumVersion: 1 } });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+  flaecheVersteckt: {
+    titel: 'Vollausbau — ein Kasten steht NUR auf der Fläche („nicht auf der Seite")',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Wärmepumpe — Notizen', icon: '🔥',
+        seitenAnsicht: 'flaeche' });
+      const b1 = Store.addBlock(seite.id, 'heading', { text: 'Was zu prüfen ist' });
+      const b2 = Store.addBlock(seite.id, 'text', { text: 'Vorlauftemperatur, Volumenstrom und die Spreizung an beiden Fühlern.' });
+      const b3 = Store.addBlock(seite.id, 'todo', { text: 'Fühler am Rücklauf nachziehen' });
+      const b4 = Store.addBlock(seite.id, 'text', { text: 'Verdichter: 4,2 Stunden am Tag laut Protokoll.' });
+      void b1; void b2;
+      Store.updateBlock(b3.id, { flaecheOrt: { x: 820, y: 60, w: 340, raumVersion: 1 },
+                                 sichtbarIn: 'flaeche' });
+      void b4;
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+  flaecheLeer: {
+    titel: 'Vollausbau — alles liegt draussen, der Seitenkasten sagt, wofür er noch da ist',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Wärmepumpe — Notizen', icon: '🔥',
+        seitenAnsicht: 'flaeche' });
+      const b1 = Store.addBlock(seite.id, 'heading', { text: 'Was zu prüfen ist' });
+      const b2 = Store.addBlock(seite.id, 'text', { text: 'Vorlauftemperatur, Volumenstrom und die Spreizung an beiden Fühlern.' });
+      const b3 = Store.addBlock(seite.id, 'todo', { text: 'Fühler am Rücklauf nachziehen' });
+      const b4 = Store.addBlock(seite.id, 'text', { text: 'Verdichter: 4,2 Stunden am Tag laut Protokoll.' });
+      void b1; void b2;
+      [b1, b2, b3, b4].forEach((b, i) => Store.updateBlock(b.id,
+        { flaecheOrt: { x: 780 + (i % 2) * 380, y: 40 + Math.floor(i / 2) * 200, w: 340, raumVersion: 1 } }));
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
   schaltplan: {
     /* Der Stromkreis ist der aus test263 (senkrechte Zweige, keine Leitung
        überbrückt einen Anschluss). Das Bild zeigt die Planfläche mit ihrer

@@ -287,6 +287,33 @@ gerade sieht und wie weit gezoomt ist). Er liegt in `meta` unter
 ein Blick am Telefon darf die Fläche am Rechner nicht verschieben. AFFiNE
 legt ihn aus demselben Grund in den `localStorage`.
 
+**Jeder Block darf auf der Fläche liegen** (E691). Zwei Felder, beide an
+einem gewöhnlichen Block, beide optional:
+
+```txt
+flaecheOrt   { x, y, w, raumVersion }        wo er auf der Fläche liegt
+sichtbarIn   'beides' | 'seite' | 'flaeche'  wo er erscheint
+```
+
+Die Zahlen sind **Flächenpunkte** wie beim Whiteboard (CSS-Pixel bei
+Massstab 1, Ursprung links oben), `raumVersion: 1` ist diese Deutung. Und
+wieder gilt: **kein Feld heisst „wie bisher"** — ohne `flaecheOrt` steht
+der Block im Seitenkasten, ohne `sichtbarIn` steht er überall.
+
+Drei Dinge, die eine ältere Fassung oder ein fremdes Werkzeug wissen sollte:
+
+- **Ein Block mit `sichtbarIn: 'flaeche'` ist NICHT gelöscht.** Er steht in
+  `content` seines Elternteils, ist `alive`, hat seinen Text und reist
+  vollständig mit. Nur gezeichnet wird er in der Textansicht nicht. Wer
+  `sichtbarIn` nicht kennt, zeigt ihn — das ist der richtige Rückfall.
+- **Ein unlesbarer `flaecheOrt` zählt als kein Ort.** Redion lässt den
+  Block dann im Text stehen, statt ihn still in den Ursprung zu setzen
+  (§9). Eine Sicherung mit kaputten Zahlen verliert also keinen Inhalt.
+- **Die Reihenfolge in `content` ändert sich beim Aus- und Einblenden
+  nicht.** Das ist die bewusste Abweichung von AFFiNE, das den Block dabei
+  verschiebt — wer eine Sicherung vergleicht, sieht bei einem reinen
+  Sichtbarkeitswechsel genau ein geändertes Feld.
+
 ---
 
 ## Einspielen

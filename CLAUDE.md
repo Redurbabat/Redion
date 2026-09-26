@@ -894,7 +894,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 515 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 516 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1282,6 +1282,22 @@ Fläche 332 px hoch in einem 560 px hohen Feld und die Werkzeugleiste lag
 mitten auf dem Kasten (§55.1). Gezählt am 26. September, im selben Bogen:
 `ls pruefungen/lauf/test*.mts | wc -l` sagt 515.*
 
+*Und 516: `test574` — jeder Block auf die Fläche (E691). Redurs Satz vom
+26. September, „ja mach den vollausbau, jeder block auf die fläche ziehbar",
+in 50 Zusagen über elf Abschnitte. Er ist der erste Lauf dieses Projekts,
+der eine GESTE fährt statt eines Klicks: am Telefon sind die Griffe `⋮⋮`
+ausgeblendet (`ki.css:182`), also schickt er `touchstart`, wartet 750 ms und
+lässt los — die Hebe-Geste aus E83. Zweimal war er dabei aus dem FALSCHEN
+Grund rot: einmal schickte er `contextmenu`, das unter 760 px ausdrücklich
+unterdrückt wird, und einmal tippte er 400 ms nach dem Loslassen, während
+der Fänger aus E83 die Klick-Nachzügler noch 800 ms schluckt. Beide Male
+sah es aus wie ein Fehler im Produkt. Seine zwei besten Zusagen hat nicht
+er gefunden, sondern das BILD und ein LESER: „ins Bild holen" rechnete nur
+mit dem Seitenkasten, und Gliederungsstreifen wie Inhaltsverzeichnis
+führten Überschriften auf, die auf der Seite gar nicht stehen. Gezählt am
+26. September, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+516.*
+
 ### Die Befehle
 
 ```txt
@@ -1290,7 +1306,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 515 Läufe
+npm run pruefen                      alle 516 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1377,7 +1393,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 515 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 516 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

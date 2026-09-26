@@ -1083,13 +1083,12 @@ und es gibt keine zweite Umrechnung (derselbe Fehler wie E623 und E686).
 Werkzeuge kommen aus `Register.werkzeuge` (E689), Rückgängig aus
 `GfxHistory` (E687). Ein Bogen mit Bild.
 
-**A1c — die offene Frage, und sie gehört Redur.** Soll die Fläche
-irgendwann AFFiNEs Vollausbau bekommen — JEDER Block trägt Platz und „wo
-erscheinen" (`displayMode: both | doc | edgeless`), so dass einzelne Absätze
-aus der Seite auf die Fläche gezogen werden können? Das ist der ehrliche
-1:1-Weg und eine Änderung an jedem Block (gutmütige Vorgabe wie bei
-`raumVersion`: kein Feld = wie bisher). Heute liegt die ganze Seite als EIN
-Kasten auf der Fläche; dieser Weg versperrt den anderen nicht.
+**A1c — gelandet (E691, `test574`, 50 Zusagen).** Redur am 26. September:
+„ja mach den vollausbau, jeder block auf die fläche ziehbar." Jeder Block
+trägt jetzt `flaecheOrt` und `sichtbarIn`; gezogen wird mit dem vorhandenen
+Editor-Ziehen, am Telefon über das Blockmenü. Offen daraus: **L220** (drei
+Nebenwirkungen des Ausblendens) und weiterhin **L219** (auf der Fläche
+zeichnen).
 
 **A1d — und eine kleinere Frage.** Der „Dokumentmodus" (E126) ist heute ein
 Knopf in der Werkzeugzeile und damit eine VIERTE Ansicht, die nicht im

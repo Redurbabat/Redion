@@ -5,12 +5,12 @@
 
 ---
 tags: [redion, thema, ansichten]
-stand: 26. September 2026 (nach E690)
+stand: 26. September 2026 (nach E691)
 ---
 
 # Die Ansichten eines Dokuments — AFFiNEs zwei, Redions zwei, und die dritte
 
-Stand 26. September 2026 (nach E690) · Quelle: ein Leser im AFFiNE-Archiv (MIT, nur gelesen) auf Redurs Frage hin: „bei der affine haben wir das es wechsel die ansichten und ich will dort auch die beide und plus von unsere aktuelle stand also mit cover usw also dort 3 bereiche". Jeder Punkt trägt Datei:Zeile vom Tag des Standes; wer später liest, prüft die Zeile, nicht den Satz.
+Stand 26. September 2026 (nach E691) · Quelle: ein Leser im AFFiNE-Archiv (MIT, nur gelesen) auf Redurs Frage hin: „bei der affine haben wir das es wechsel die ansichten und ich will dort auch die beide und plus von unsere aktuelle stand also mit cover usw also dort 3 bereiche". Jeder Punkt trägt Datei:Zeile vom Tag des Standes; wer später liest, prüft die Zeile, nicht den Satz.
 
 ## Die Kurzform
 
@@ -66,5 +66,15 @@ Stand 26. September 2026 (nach E690) · Quelle: ein Leser im AFFiNE-Archiv (MIT,
 - Er steht IN der Seite, nicht in `#topbar`: `test40` lässt am Telefon dort genau zwei Knöpfe zu, und drei Umschaltknöpfe à 44 px passen nicht dazu.
 - Die Fläche ist HTML unter einem `transform`, keine SVG-Fläche: Punktraster als `radial-gradient` mit mitwanderndem `background-size`, der Seitentext als Kasten, in dessen Kopf Symbol und Titel UMZIEHEN (nicht nachgebaut — sonst gäbe es zwei Schreiber auf dieselbe Seite, und `menueband.ts:121` verlöre seinen `#title`).
 - Offen bleibt der Vollausbau: zeichnen auf der Fläche, mehrere Kästen, und AFFiNEs `displayMode` je Block (L219, A1b/A1c). Heute liegt die ganze Seite als EIN Kasten darauf.
+
+## Der Vollausbau (E691, 26. September 2026)
+
+- Redur: „ja mach den vollausbau, jeder block auf die fläche ziehbar." Seither trägt JEDER Block zwei optionale Felder: `flaecheOrt` ({x,y,w,raumVersion}) und `sichtbarIn` ('beides' | 'seite' | 'flaeche'). Wächter: `test574`, 50 Zusagen.
+- AFFiNE kann das NICHT auf Blockebene: `affine:paragraph` hat kein `xywh`, die Notiz ist dort die kleinste Einheit, und wer einen Absatz hinauszieht, bekommt eine neue Notiz drumherum. Redion ist an dieser Stelle feiner als das Vorbild.
+- Die bewusste Abweichung: AFFiNEs „Display in Page" VERSCHIEBT den Block in der Kinderliste (`change-note-display-mode.ts:26-53`), damit die Lesereihenfolge stimmt — eine echte Datenänderung mit Rückgängig-Streifen. Redion filtert nur; `content` bleibt unangetastet, ein wieder eingeblendeter Block steht an seiner alten Stelle, und der Abgleich sieht keine Änderung, wo keine ist (§25).
+- Strenger als das Vorbild: ein kaputtes `xywh` wird in AFFiNE still zu `[0,0,0,0]` (`framework/global/src/gfx/xywh.ts:20-29`), die Notiz sitzt unsichtbar im Ursprung. Hier zählt ein unlesbarer Platz als KEIN Platz — der Block bleibt im Text (§9).
+- Kein zweiter Ziehmechanismus (§8): der Editor zieht Blöcke seit Langem (HTML5 am Griff `⋮⋮`) und reicht die Kennung jetzt über `dataTransfer` heraus. Am Telefon, wo die Griffe ausgeblendet sind, führt der Weg über das Blockmenü und die Hebe-Geste aus E83.
+- Der Name `sichtbarIn` statt `zeigen`: `zeigen` ist in dieser App schon 41-mal als Rückruf `zeigen: () => boolean` an Register-Einträgen vergeben. Dieselbe Kollision hat einen Bogen vorher `ansicht` zu `seitenAnsicht` gemacht (E690).
+- Offen bleibt L219 (zeichnen auf der Fläche) und L220 (drei Nebenwirkungen des Filterns: Rücktaste, Strg+Umschalt+Pfeil und die Nummer `b.nr` in der Sicherung).
 
 Zurück zur [[Redion|Übersicht]].

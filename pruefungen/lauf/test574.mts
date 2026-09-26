@@ -13,7 +13,7 @@
  * DIE ZWEI FELDER, und beide fehlen im Normalfall:
  *
  *     flaecheOrt   { x, y, w, raumVersion }   wo der Block auf der Fläche liegt
- *     zeigen       'beides' | 'seite' | 'flaeche'   wo er erscheint
+ *     sichtbarIn   'beides' | 'seite' | 'flaeche'   wo er erscheint
  *
  * WAS DIESER LAUF HÄLT
  *
@@ -26,7 +26,7 @@
  *       wandern in FLÄCHENEINHEITEN mit (nicht in Bildschirmpixeln).
  *   §4  Zurück. Wer den Kasten in den Seitenkasten zieht, hat den Block
  *       wieder im Text — `flaecheOrt` ist weg, nicht auf null.
- *   §5  Ausblenden. `zeigen: 'flaeche'` versteckt den Block in den
+ *   §5  Ausblenden. `sichtbarIn: 'flaeche'` versteckt den Block in den
  *       Seitenansichten. Der Block bleibt am Leben, behält seinen Text und
  *       steht weiter in `content` des Elternteils. Der Kasten sagt es mit
  *       einem Wort, nicht nur mit einer Farbe (§38).
@@ -83,7 +83,11 @@ const TEXTE = ['Erster Absatz', 'Zweiter Absatz', 'Dritter Absatz'];
 
 /** Eine Seite mit drei Absätzen, offen in der gewünschten Ansicht. */
 const bauen = async (breite: number, hoehe: number, ansicht: string) => {
-  const pg = await browser.newPage({ viewport: { width: breite, height: hoehe } });
+  /* MIT FINGER, wenn es ein Telefon ist. Die Hebe-Geste (E83) hängt an
+     `touchstart`/`touchend`; ohne `hasTouch` gibt es im Prüfstand keine
+     Berührung, und der Abschnitt wäre grün, weil nichts passiert (§55.2). */
+  const pg = await browser.newPage({
+    viewport: { width: breite, height: hoehe }, hasTouch: breite <= 760 });
   await pg.goto(`http://127.0.0.1:${PORT}/index.html`);
   await pg.waitForFunction(() => typeof App !== 'undefined' && !!document.querySelector('#page')?.firstElementChild);
   const ids = await pg.evaluate(async ([texte, art]: [string[], string]) => {
@@ -111,7 +115,7 @@ console.log('\n1 · Die Felder und ihre Vorgaben');
 const frisch = await block(0);
 p('Ein frischer Block trägt kein `flaecheOrt`', frisch?.flaecheOrt === undefined,
   JSON.stringify(frisch?.flaecheOrt));
-p('… und kein `zeigen`', frisch?.zeigen === undefined, String(frisch?.zeigen));
+p('… und kein `sichtbarIn`', frisch?.sichtbarIn === undefined, String(frisch?.sichtbarIn));
 const werte = await pg.evaluate(() => (window as any).Register?.seitenansichten?.ZEIGEN ?? null);
 gleich('Der Katalog kennt die drei Orte', Array.isArray(werte) ? [...werte].sort() : werte,
   ['beides', 'flaeche', 'seite']);
@@ -129,10 +133,6 @@ gleich('Alle drei stehen ohne Feld im Seitenkasten', imKasten, 3);
  * keine Finger.
  * ======================================================================== */
 console.log('\n2 · Ziehen: aus dem Text auf die Fläche');
-const zielPunkt = await pg.evaluate(() => {
-  const f = document.querySelector('.pg-flaeche')!.getBoundingClientRect();
-  return { x: Math.round(f.left + f.width * 0.72), y: Math.round(f.top + 80) };
-});
 await pg.hover(`.blk[data-bid="${ids.bloecke[1]}"]`, { timeout: 3000 }).catch(() => null);
 await pg.dragAndDrop(
   `.blk[data-bid="${ids.bloecke[1]}"] .handles button[data-act="menu"]`,
@@ -191,6 +191,44 @@ nahe('60 Bildschirmpixel sind 60/z Flächeneinheiten in y',
   Number(nachher.y) - Number(vorher.y), 60 / (massstab || 1), 12);
 
 /* ==========================================================================
+ * §3b · „Ins Bild holen" holt ALLES ins Bild
+ * --------------------------------------------------------------------------
+ * Gefunden auf dem BILD, nicht vom Wächter (§55.1): der erste Stand rechnete
+ * nur mit dem Seitenkasten. Die zwei herausgezogenen Blöcke hingen rechts
+ * ausserhalb, während die Leiste „100 %" meldete und der Knopf „Ins Bild"
+ * hiess. Ein Knopf, der die Hälfte im Dunkeln lässt, ist ein falsches
+ * Versprechen (§32).
+ * ======================================================================== */
+console.log('\n3b · Ins Bild holen');
+await pg.evaluate((id: string) => {
+  const b = Store.getBlock(id);
+  (window as any).Seitenflaeche?.aufFlaeche?.(b, { x: 1400, y: 700 });
+}, ids.bloecke[2] as string).catch(() => null);
+await pg.waitForTimeout(400);
+await pg.evaluate(() => {
+  document.querySelector<HTMLElement>('.pg-flaeche .gfx-tb-sockel [data-a="passend"]')?.click();
+});
+await pg.waitForTimeout(450);
+const imBild = await pg.evaluate(() => {
+  const f = document.querySelector('.pg-flaeche')!.getBoundingClientRect();
+  return [...document.querySelectorAll<HTMLElement>('.pg-fl-notiz')].map(k => {
+    const r = k.getBoundingClientRect();
+    return {
+      was: k.dataset['flSeite'] ? 'Seite' : 'Block',
+      drin: r.left >= f.left - 2 && r.right <= f.right + 2 && r.top >= f.top - 2,
+      lage: `${Math.round(r.left)}…${Math.round(r.right)} in ${Math.round(f.left)}…${Math.round(f.right)}`
+    };
+  });
+});
+gleich('Es liegen drei Kästen auf der Fläche', imBild.length, 3);
+p('Nach „Ins Bild" ist jeder davon zu sehen', imBild.every(k => k.drin),
+  imBild.filter(k => !k.drin).map(k => k.was + ' ' + k.lage).join(' · '));
+/* Und wieder aufräumen, damit §4 mit demselben Stand weiterrechnet. */
+await pg.evaluate((id: string) => { Store.feldWeg(id, 'flaecheOrt'); App.zeichneSeite(); },
+  ids.bloecke[2] as string);
+await pg.waitForTimeout(400);
+
+/* ==========================================================================
  * §4 · Zurück in den Text
  * --------------------------------------------------------------------------
  * `flaecheOrt` muss WEG sein, nicht auf null: ein Feld mit `null` ist etwas
@@ -228,7 +266,7 @@ p('Es gibt „auf der Seite ausblenden"',
 await pg.evaluate(() => document.querySelector<HTMLElement>('.menu button[data-a="fl-verstecken"]')?.click());
 await pg.waitForTimeout(450);
 const versteckt = await block(2);
-gleich('Der Block steht auf „nur Fläche"', versteckt?.zeigen, 'flaeche');
+gleich('Der Block steht auf „nur Fläche"', versteckt?.sichtbarIn, 'flaeche');
 p('Er lebt', versteckt?.alive !== false, String(versteckt?.alive));
 gleich('Und behält seinen Text', versteckt?.text, TEXTE[2]);
 p('Der Kasten sagt es mit einem Wort, nicht nur mit einer Farbe (§38)',
@@ -255,16 +293,100 @@ for (const art of ['redion', 'seite']) {
 }
 
 /* ==========================================================================
+ * §5b · Was nicht im Text steht, steht auch nicht in seiner Gliederung
+ * --------------------------------------------------------------------------
+ * Gefunden nicht am Bildschirm, sondern beim Nachsehen, WER ausser der
+ * Inhaltsfläche noch die Kinder einer Seite liest. Zwei taten es ohne zu
+ * fragen: der Gliederungsstreifen am Rand (`inhaltsflaeche.ts:84`) und der
+ * Inhaltsverzeichnis-Block (`editor.ts:1479`). Beide hätten eine Überschrift
+ * aufgeführt, die auf der Seite gar nicht gezeichnet wird — und der Klick
+ * darauf sucht ein `[data-bid]`, das es dort nicht gibt: ein Knopf, der
+ * schweigend nichts tut (§47).
+ * ======================================================================== */
+console.log('\n5b · Gliederung und Inhaltsverzeichnis');
+const gl = await pg.evaluate(async () => {
+  const s = Store.addPage(null, { text: 'Gliederung' });
+  const h = ['Erstens', 'Zweitens', 'Drittens', 'Viertens']
+    .map(t => Store.addBlock(s.id, 'h2', { text: t }));
+  Store.addBlock(s.id, 'toc', { text: '' });
+  await Store.flush();
+  App.oeffne(s.id);
+  await new Promise(f => setTimeout(f, 700));
+  return { seite: s.id, versteckt: h[2]!.id };
+});
+await pg.waitForTimeout(300);
+const vorher2 = await pg.evaluate(() => ({
+  streifen: document.querySelectorAll('.gl-strich, .gliederung a, #gliederung a').length,
+  toc: [...document.querySelectorAll('.toc-liste a, .toc-liste [data-bid], .toc-liste div')]
+    .map(e => (e.textContent ?? '').trim()).filter(Boolean)
+}));
+await pg.evaluate((id: string) => { Store.updateBlock(id, { sichtbarIn: 'flaeche' }); App.zeichneSeite(); },
+  gl.versteckt);
+await pg.waitForTimeout(500);
+const nachher2 = await pg.evaluate(() => ({
+  gezeichnet: [...document.querySelectorAll('#page .blk .ct')].map(e => (e.textContent ?? '').trim()),
+  toc: [...document.querySelectorAll('.toc-liste a, .toc-liste [data-bid], .toc-liste div')]
+    .map(e => (e.textContent ?? '').trim()).filter(Boolean)
+}));
+p('Das Inhaltsverzeichnis kannte die Überschrift vorher',
+  vorher2.toc.some(t => t.includes('Drittens')), JSON.stringify(vorher2.toc));
+p('Die versteckte Überschrift ist im Text weg',
+  !nachher2.gezeichnet.some(t => t.includes('Drittens')));
+p('Und sie steht auch nicht mehr im Inhaltsverzeichnis',
+  !nachher2.toc.some(t => t.includes('Drittens')), JSON.stringify(nachher2.toc));
+p('Die anderen drei stehen weiter darin',
+  ['Erstens', 'Zweitens', 'Viertens'].every(t => nachher2.toc.some(x => x.includes(t))),
+  JSON.stringify(nachher2.toc));
+/* Zurück zur Seite des Laufs, damit §6 weiterrechnen kann. */
+await pg.evaluate((id: string) => { App.oeffne(id); }, ids.seite);
+await pg.waitForTimeout(500);
+
+/* ==========================================================================
  * §6 · Die Reihenfolge im Text bleibt
  * ======================================================================== */
 console.log('\n6 · Die Reihenfolge');
-await pg.evaluate((id: string) => { Store.updateBlock(id, { zeigen: 'beides' }); App.zeichneSeite(); },
+await pg.evaluate((id: string) => { Store.updateBlock(id, { sichtbarIn: 'beides' }); App.zeichneSeite(); },
   ids.bloecke[2] as string);
 await pg.waitForTimeout(450);
 gleich('Wieder eingeblendet steht er an seiner alten Stelle',
   await pg.evaluate(() => [...document.querySelectorAll('#page .blk .ct')]
     .map(e => (e.textContent ?? '').trim()).filter(t => t.startsWith('Erster') || t.startsWith('Zweiter') || t.startsWith('Dritter')),
   ), TEXTE);
+
+/* ==========================================================================
+ * §6b · Ein kaputter Ort verliert keinen Block (§9)
+ * --------------------------------------------------------------------------
+ * Gelesen im AFFiNE-Archiv, bevor es hier gebaut wurde: dort wird ein
+ * kaputtes `xywh` abgefangen, in die Konsole geschrieben und zu `[0,0,0,0]`
+ * — die Notiz sitzt danach unsichtbar im Ursprung
+ * (`framework/global/src/gfx/xywh.ts:20-29`). §9 sagt das Gegenteil:
+ * kaputte Daten abfangen, statt sie still wirken zu lassen. Ein unlesbarer
+ * Ort zählt deshalb als KEIN Ort, und der Block steht wieder im Text.
+ * ======================================================================== */
+console.log('\n6b · Ein kaputter Ort');
+await pg.evaluate((id: string) => {
+  Store.updateBlock(id, { flaecheOrt: { x: 'kaputt', y: null, w: 380 } });
+  App.zeichneSeite();
+}, ids.bloecke[0] as string);
+await pg.waitForTimeout(400);
+await pg.evaluate(() => {
+  document.querySelector<HTMLElement>('.pg-ansichten [data-seg-wahl="flaeche"]')?.click();
+});
+await pg.waitForTimeout(500);
+const kaputt = await pg.evaluate((id: string) => ({
+  eigenerKasten: !!document.querySelector(`.pg-fl-notiz[data-fl-block="${id}"]`),
+  imSeitenkasten: !!document.querySelector(`.pg-fl-notiz[data-fl-seite] .blk[data-bid="${id}"]`),
+  lebt: Store.getBlock(id)?.alive !== false,
+  text: Store.getBlock(id)?.text ?? null
+}), ids.bloecke[0] as string);
+p('Ein unlesbarer Ort macht KEINEN eigenen Kasten', kaputt.eigenerKasten === false);
+p('Der Block steht stattdessen im Seitenkasten — sichtbar, nicht verloren',
+  kaputt.imSeitenkasten === true);
+p('Und er lebt mit seinem Text', kaputt.lebt === true && kaputt.text === TEXTE[0],
+  String(kaputt.text));
+await pg.evaluate((id: string) => { Store.feldWeg(id, 'flaecheOrt'); App.zeichneSeite(); },
+  ids.bloecke[0] as string);
+await pg.waitForTimeout(350);
 
 /* ==========================================================================
  * §7 · Nichts geht verloren (§9)
@@ -278,6 +400,53 @@ const alle = await pg.evaluate(([s, bs]: [string, string[]]) => ({
 gleich('Alle drei Texte stehen unverändert im Speicher', alle.texte, TEXTE);
 gleich('Alle drei leben', alle.leben, [true, true, true]);
 gleich('Und alle drei hängen an der Seite', alle.kinder.length, 3);
+
+/* ==========================================================================
+ * §7b · Zwei Nebenwirkungen des Filterns, die niemand bestellt hat
+ * --------------------------------------------------------------------------
+ * Beides kam aus dem Nachsehen, nicht aus dem Bildschirm: wer eine Liste
+ * filtert, ändert die NUMMERN darin, und wer den Fuss der Seite weglässt,
+ * lässt ihn weg. Zwei Zusagen, damit beides nicht still kippt.
+ * ======================================================================== */
+console.log('\n7b · Nummern und Fuss');
+const liste = await pg.evaluate(async () => {
+  const s = Store.addPage(null, { text: 'Nummern' });
+  const n = ['Eins', 'Zwei', 'Drei'].map(t => Store.addBlock(s.id, 'number', { text: t }));
+  await Store.flush(); App.oeffne(s.id);
+  await new Promise(f => setTimeout(f, 700));
+  return { seite: s.id, mitte: n[1]!.id };
+});
+await pg.waitForTimeout(250);
+await pg.evaluate((id: string) => { Store.updateBlock(id, { sichtbarIn: 'flaeche' }); App.zeichneSeite(); },
+  liste.mitte);
+await pg.waitForTimeout(450);
+/* OHNE DIE GRIFFE. `textContent` eines Blockkastens beginnt mit „+⋮⋮" —
+   das sind die zwei Knöpfe links, die der Mensch nicht liest. Der erste
+   Anlauf prüfte `/^1/` gegen „+⋮⋮1.Eins" und meldete einen Fehler, den es
+   nicht gab: die Nummerierung war die ganze Zeit richtig. */
+const nummern = await pg.evaluate(() =>
+  [...document.querySelectorAll<HTMLElement>('#page .blk')]
+    .map(b => (b.textContent ?? '').replace(/^[+⋮\s]*/, '').trim())
+    .filter(t => /Eins|Zwei|Drei/.test(t)));
+p('Die Nummernliste zählt ohne Loch weiter — 1 und 2, nicht 1 und 3',
+  nummern.length === 2 && /^1/.test(nummern[0] ?? '') && /^2/.test(nummern[1] ?? ''),
+  JSON.stringify(nummern));
+
+await pg.evaluate((id: string) => { App.oeffne(id); }, ids.seite);
+await pg.waitForTimeout(500);
+const fuss = await pg.evaluate(() => ({
+  imText: !!document.querySelector('#page .backlinks, #page .rueckverweise, #page .links-fuss')
+}));
+await pg.evaluate(() => {
+  document.querySelector<HTMLElement>('.pg-ansichten [data-seg-wahl="flaeche"]')?.click();
+});
+await pg.waitForTimeout(500);
+const fussFl = await pg.evaluate(() => ({
+  aufFlaeche: !!document.querySelector('.pg-fl-notiz .backlinks, .pg-fl-notiz .rueckverweise, .pg-fl-notiz .links-fuss')
+}));
+p('Der Fuss der Seite steht nicht im Kasten auf der Leinwand',
+  fussFl.aufFlaeche === false, JSON.stringify({ ...fuss, ...fussFl }));
+
 await pg.close();
 
 /* ==========================================================================
@@ -294,31 +463,71 @@ p('Der Griff `⋮⋮` ist am Telefon wirklich aus (die Voraussetzung dieses Absc
     const h = document.querySelector('.blk > .handles');
     return !!h && getComputedStyle(h).display === 'none';
   }));
+/* DER WEG AM TELEFON IST DIE HEBE-GESTE (E83), nicht der Rechtsklick: der
+   wird unter 760 px ausdrücklich unterdrückt (`editor.ts:1955`), weil dort
+   das lange Drücken der Geste gehört. Wer hier `contextmenu` schickt, misst
+   eine Absicht, die es nicht gibt — der erste Anlauf dieses Abschnitts hat
+   genau das getan und den Bau zu Unrecht rot gemeldet.
+   Lange drücken OHNE Bewegung heisst laut E83: beim Loslassen kommt das
+   Menü. */
 await handy.evaluate((id: string) => {
-  const b = document.querySelector<HTMLElement>(`.blk[data-bid="${id}"]`);
-  b?.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true }));
+  const el = document.querySelector<HTMLElement>(`.blk[data-bid="${id}"] .ct`)
+          ?? document.querySelector<HTMLElement>(`.blk[data-bid="${id}"]`);
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  const x = r.left + 20, y = r.top + Math.min(12, r.height / 2);
+  const finger = new Touch({ identifier: 1, target: el, clientX: x, clientY: y,
+                             pageX: x, pageY: y, radiusX: 8, radiusY: 8, force: 1 });
+  el.dispatchEvent(new TouchEvent('touchstart',
+    { bubbles: true, cancelable: true, touches: [finger], targetTouches: [finger], changedTouches: [finger] }));
+  (window as any).__finger = { el, finger };
 }, hIds.bloecke[0] as string).catch(() => null);
-await handy.waitForTimeout(300);
+await handy.waitForTimeout(750);
+await handy.evaluate(() => {
+  const s = (window as any).__finger;
+  if (!s) return;
+  s.el.dispatchEvent(new TouchEvent('touchend',
+    { bubbles: true, cancelable: true, touches: [], targetTouches: [], changedTouches: [s.finger] }));
+}).catch(() => null);
+await handy.waitForTimeout(400);
 const wegDa = await handy.evaluate(() => !!document.querySelector('.menu button[data-a="flaeche"]'));
-p('Es gibt einen zweiten Weg auf die Fläche, ohne Griff', wegDa === true);
+p('Die Hebe-Geste öffnet das Blockmenü, und darin steht der Weg auf die Fläche', wegDa === true);
+/* ERST WARTEN, DANN TIPPEN. Nach einer Berührung schluckt der Fänger aus
+   E83 (Fund 2) die Klick-Nachzügler 800 ms lang, damit das Menü das
+   Loslassen überlebt. Wer innerhalb dieser Zeit klickt, klickt ins Leere —
+   der erste Anlauf tat es nach 400 ms und meldete „der Weg wirkt nicht",
+   obwohl er wirkte. */
+await handy.waitForTimeout(900);
 await handy.evaluate(() => document.querySelector<HTMLElement>('.menu button[data-a="flaeche"]')?.click());
-await handy.waitForTimeout(450);
+await handy.waitForTimeout(500);
 p('Und er hat gewirkt',
   await handy.evaluate((id: string) => !!Store.getBlock(id)?.flaecheOrt, hIds.bloecke[0] as string));
 await handy.evaluate(() => {
   document.querySelector<HTMLElement>('.pg-ansichten [data-seg-wahl="flaeche"]')?.click();
 });
 await handy.waitForTimeout(600);
+/* ZWEI MASSE, UND SIE SIND NICHT DASSELBE. Alles auf der Leinwand hängt am
+   `transform: scale(z)` — die GERENDERTE Box ist also 44 × z und bei 98 %
+   Massstab 43 px. Das ist keine Verletzung von §37, sondern das Wesen einer
+   Fläche: bei 50 % ist auch der Text halb so gross, und in AFFiNE ebenso.
+   Gemessen wird deshalb die LAYOUT-Box (`offsetWidth/Height`, vom
+   `transform` unberührt) — dort muss der Knopf seine 44 px haben —, und die
+   gerenderte Box wird danebengedruckt, damit die Zahl nicht verschwindet. */
 const griff = await handy.evaluate((id: string) => {
   const g = document.querySelector<HTMLElement>(`.pg-fl-notiz[data-fl-block="${id}"] .pg-fl-kopf button[data-a="menu"]`);
   if (!g) return null;
   const r = g.getBoundingClientRect();
-  return { w: Math.round(r.width), h: Math.round(r.height), raus: r.right > innerWidth + 1 };
+  return {
+    w: g.offsetWidth, h: g.offsetHeight,
+    bild: `${Math.round(r.width)}×${Math.round(r.height)}`,
+    raus: r.right > innerWidth + 1 || r.left < -1
+  };
 }, hIds.bloecke[0] as string);
 p('Der Menüknopf des Kastens ist da', !!griff, JSON.stringify(griff));
-p('Er misst 44 px (§37)', !!griff && griff.w >= 44 && griff.h >= 44,
-  griff ? `${griff.w}×${griff.h}` : '—');
-p('Und steht im Bild', !!griff && griff.raus === false);
+p('Er misst 44 px im Aufbau (§37; auf dem Bild mal Massstab)',
+  !!griff && griff.w >= 44 && griff.h >= 44,
+  griff ? `${griff.w}×${griff.h} Aufbau, ${griff.bild} gerendert` : '—');
+p('Und der Kasten steht im Bild, nicht daneben', !!griff && griff.raus === false);
 
 /* ==========================================================================
  * §9 · Der Seitenkasten bleibt, auch leer

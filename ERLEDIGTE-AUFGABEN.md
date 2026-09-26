@@ -1,5 +1,54 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 26. September 2026 · E691 · Der Vollausbau der Fläche (A1c)
+
+**Redur:** „ja mach den vollausbau, jeder block auf die fläche ziehbar."
+
+**Zuerst vier Leser, dann eine Zeile Code.** AFFiNEs `displayMode`, Redions
+vorhandenes Block-Ziehen, wer ausser der Inhaltsfläche noch die Kinder einer
+Seite liest, und welche Wächter daran hängen — parallel, jeder mit
+Datei:Zeile. Drei ihrer Funde stehen im Ergebnis, und keinen davon hätte
+der Bau von selbst gemacht.
+
+**Gebaut:** zwei optionale Felder an JEDEM Block — `flaecheOrt`
+({x,y,w,raumVersion}) und `sichtbarIn` ('beides' | 'seite' | 'flaeche') —,
+ein Kasten je Block auf der Fläche, Ziehen aus dem Text mit dem VORHANDENEN
+Editor-Ziehen (§8, die Kennung reist über `dataTransfer`), der Rückweg durch
+Ziehen in den Seitenkasten, „Auf der Seite ausblenden" mit Wort statt Farbe
+(§38), der Weg am Telefon über das Blockmenü und die Hebe-Geste aus E83,
+und `Store.feldWeg` im Kern, damit „kein Feld" wirklich kein Feld ist.
+
+**Drei Entscheidungen gegen das Vorbild**, jede begründet in E691: der BLOCK
+ist die Einheit (AFFiNE kann nur die Notiz); die Reihenfolge in `content`
+bleibt unangetastet (AFFiNE verschiebt); ein unlesbarer Platz zählt als kein
+Platz (AFFiNE macht still `[0,0,0,0]` daraus).
+
+**Was die Leser geändert haben:** der Feldname (`zeigen` ist 41-mal als
+Register-Rückruf vergeben → `sichtbarIn`), eine Regel, die zweimal dastand
+(„ist der Platz lesbar?" — jetzt einmal im Register), und zwei Leser der
+Kinderliste, die niemand auf dem Zettel hatte: Gliederungsstreifen und
+Inhaltsverzeichnis führten Überschriften auf, die auf der Seite gar nicht
+stehen.
+
+**Was das Bild geändert hat** (§55.1): „Ins Bild holen" rechnete nur mit dem
+Seitenkasten — die herausgezogenen Blöcke hingen ausserhalb, während die
+Leiste „100 %" meldete.
+
+**Geprüft.** `test574`, rot eingecheckt vor dem Bau (e388949), danach 50/50.
+Zwei Gegenproben, beide rot: den Sichtbarkeitsfilter heraus (6 Zusagen rot)
+und `ortLesbar` auf „immer wahr" (2 rot). Zweimal war der Lauf selbst aus
+dem falschen Grund rot — `contextmenu` am Telefon (unterdrückt seit E83) und
+ein Tipp 400 ms nach dem Loslassen (der Fänger schluckt 800 ms).
+
+Nachbarn grün: `test573`, `test285`, `test105`, `test109`, `test87`,
+`test294`, `test301`, `test96`, `test100`, `test139`.
+
+**Neue Lücke:** L220 — drei Nebenwirkungen des Ausblendens (Rücktaste,
+Strg+Umschalt+Pfeil, `b.nr` in der Sicherung). Keine verliert Daten, alle
+drei sind „der Bildschirm bewegt sich nicht, und niemand sagt warum".
+
+---
+
 ## 26. September 2026 · E690 · Drei Ansichten einer Seite (A1, Bogen 1)
 
 **Redur:** zuerst „bei der affine haben wir das es wechsel die ansichten …

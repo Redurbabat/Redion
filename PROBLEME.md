@@ -127,6 +127,8 @@ sind der teuerste Teil und der lehrreichste.
 | P111 | 2026-09-25 | Eine Prüfung, die wider Erwarten grün blieb — der Audit hatte die Handformel für falsch erklärt | 🟡 klein | — |
 | P112 | 2026-09-25 | Tiefe 0 wurde zu Tiefe 40 — `Number(x) || 40` hält 0 für „nichts gesagt“ | 🟡 klein | — |
 | P113 | 2026-09-25 | Die Startdecke war sechs Tage lang gerissen, und kein Bogen hatte den Lauf als Nachbarn | 🟡 klein | — |
+| P114 | 2026-09-26 | `window.App` gibt es nicht — und der optionale Zugriff schluckt es | 🟠 mittel | — |
+| P115 | 2026-09-26 | Ein Wächter, der eine Absicht misst, die es nicht gibt | 🟠 mittel | — |
 
 ---
 
@@ -2455,4 +2457,42 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Messung gegen bef8c3f in messungen.md §62; danach Decke 2850 und test388 19/19.
 
 **Die Lehre.** Jeder Bogen, der eine Skriptdatei zu index.html hinzufügt, fährt test388. Und die Decke ist ein Grund mehr, den vollen Lauf nicht länger als eine Woche liegen zu lassen — sie kann nur dort reissen, wo sie gefahren wird.
+
+
+---
+
+## P114 · `window.App` gibt es nicht — und der optionale Zugriff schluckt es
+
+*2026-09-26 · 🟠 mittel*
+
+**Das Bild.** Ein Klick schreibt das Feld an den Block, und der Bildschirm bleibt stehen. Keine Meldung, kein Fehler in der Konsole.
+
+**Die falsche Vermutung.** Der Zweig, der die neue Ansicht zeichnet, fehlt — oder der Kasten wird nicht gebaut.
+
+**Wie es gefunden wurde.** Mit einer Sonde im Browser: `typeof (window as any).App` sagte `undefined`, während `typeof App` in derselben Seite `object` sagte.
+
+**Die Ursache.** `const App = (() => …)()` in einem gewöhnlichen <script> legt eine globale LEXIKALISCHE Bindung an. Die steht im globalen Geltungsbereich, aber NICHT als Feld von `window` — anders als `var` und anders als eine ausdrückliche Zuweisung. `(window as any).App?.zeichneSeite?.()` ist damit ein optionaler Zugriff auf `undefined`: er tut nichts und meldet nichts.
+
+**Der Beweis.** Sonde vom 26. September: `art() sagt: { art: 'redion', feld: undefined, hatZeichne: 'undefined' }` — und derselbe Aufruf über den baren Namen wirkte sofort.
+
+**Die Lehre.** Ein `?.` auf einen globalen Namen ist kein Schutz, sondern ein Schalldämpfer. Wer prüfen will, ob es etwas gibt, schreibt `typeof X !== 'undefined'`. Und: dieselbe Zeile ist an EINEM Tag zweimal entstanden — ein Fehler, der sich wiederholt, gehört in den Code kommentiert, nicht nur in den Kopf.
+
+
+---
+
+## P115 · Ein Wächter, der eine Absicht misst, die es nicht gibt
+
+*2026-09-26 · 🟠 mittel*
+
+**Das Bild.** `test574 §8` meldete zweimal „am Telefon gibt es keinen Weg auf die Fläche“ — obwohl es ihn gab.
+
+**Die falsche Vermutung.** Der Menüeintrag fehlt, oder der Griff wirkt am Telefon nicht.
+
+**Wie es gefunden wurde.** Beim Nachlesen der Stelle, die der Lauf ansprach: `editor.ts:1955` unterdrückt `contextmenu` unter 760 px ausdrücklich — dort gehört das lange Drücken der Hebe-Geste (E83). Und Fund 2 von E83 sagt, dass der Fänger die Klick-Nachzügler nach einer Berührung 800 ms schluckt; der Lauf tippte nach 400 ms.
+
+**Die Ursache.** Der Wächter hat den Weg des RECHNERS am Telefon gefahren und die vorhandene Geste gar nicht angefasst. Zweimal war er rot, und zweimal lag es an ihm.
+
+**Der Beweis.** Mit `touchstart`, 750 ms Warten und `touchend` ging das Menü auf; nach weiteren 900 ms wirkte der Klick — ohne eine Zeile am Produkt.
+
+**Die Lehre.** Eine Prüfung muss den Weg fahren, den der Mensch auf DIESEM Gerät hat, nicht den, den sie vom anderen kennt. Und wenn eine Zusage rot ist, lautet die erste Frage nicht „was ist am Produkt kaputt“, sondern „misst der Lauf überhaupt, was er behauptet“ (L206).
 

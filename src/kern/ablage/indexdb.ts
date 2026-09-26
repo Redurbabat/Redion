@@ -463,6 +463,31 @@ const Store = (() => {
     return b;
   };
 
+  /**
+   * Ein Feld ganz entfernen — nicht auf `undefined` setzen.
+   *
+   * WARUM ES DAS BRAUCHT (E691). `updateBlock(id, { feld: undefined })` geht
+   * durch `Object.assign` und lässt den SCHLÜSSEL stehen, nur mit dem Wert
+   * `undefined`. Für IndexedDB ist das ein Feld; für `'feld' in block` ist
+   * es eines; nur für `JSON.stringify` ist es keines. Und genau darauf ruht
+   * §9: „kein Feld heisst wie bisher". Ein Block, der ein `flaecheOrt` mit
+   * `undefined` trägt, sagt etwas anderes als einer, der keines hat — und
+   * der Unterschied fällt erst auf, wenn eine Sicherung ihn verliert und
+   * das Neuladen sich anders verhält als das Fenster davor.
+   *
+   * @param felder Namen der Felder. Fehlende werden still übergangen.
+   */
+  const feldWeg = (id: string, ...felder: string[]) => {
+    const b = cache.blocks[id];
+    if (!b) return null;
+    let etwas = false;
+    for (const f of felder) if (f in b) { delete b[f]; etwas = true; }
+    if (!etwas) return b;
+    Object.assign(b, { edited: now(), geaendertVon: getMeta('nutzer', '') || 'Ich' });
+    save('blocks', b);
+    return b;
+  };
+
   /** Verschiebt einen Block in den Papierkorb — wie in Notion erst 'alive: false'. */
   const trashBlock = (id: string) => {
     const b = cache.blocks[id];
@@ -3276,7 +3301,7 @@ const Store = (() => {
 
   return {
     load, uid, now, cache, istDemo: () => DEMO,
-    addBlock, getBlock, updateBlock, trashBlock, restoreBlock, purgeBlock, childrenOf,
+    addBlock, getBlock, updateBlock, feldWeg, trashBlock, restoreBlock, purgeBlock, childrenOf,
     purgeAnhaenge, dateiAnspruch, papierkorbBloecke, papierkorbAufraeumen, papierkorbBaldWeg,
     addPage, rootPages, trashed, favorites, pathOf,
     addDatabase, getCollection, getView, updateCollection, updateView, addView, removeView,

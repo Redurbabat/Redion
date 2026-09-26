@@ -81,6 +81,84 @@ Register.seitenansichten = (() => {
     }
   ];
 
+  /* ------------------------------------------------------------------------
+   * WO EIN BLOCK ERSCHEINT (E691) — AFFiNEs `NoteDisplayMode`, eine Stufe
+   * feiner.
+   * --------------------------------------------------------------------------
+   * Redur, 26. September 2026: „ja mach den vollausbau, jeder block auf die
+   * fläche ziehbar." AFFiNE kennt dasselbe Feld, aber an der NOTIZ
+   * (`affine/model/src/consts/note.ts:38-42`, Werte `both` | `doc` |
+   * `edgeless`); dort ist die Notiz die kleinste Einheit auf der Fläche.
+   * Hier ist es der Block — genau das, was Redur gesagt hat.
+   *
+   * DIE WERTE SIND DATENWÖRTER (§53.3). Sie stehen so am Block und damit in
+   * jeder Sicherung; sie zu übersetzen wäre eine Datenmigration.
+   *
+   * UND DAS FELD HEISST `sichtbarIn`, NICHT `zeigen`. Der erste Entwurf
+   * nannte es `zeigen` — und `zeigen` gibt es in dieser App schon 41-mal:
+   * als Rückruf `zeigen: () => boolean` an Register-Einträgen
+   * (`register/befehle.ts:95`, `navigation.ts:443`, `context.ts:160`,
+   * `menueband.ts:851` und weitere). Wer `b.zeigen` liest, hält es für eine
+   * Funktion. Dieselbe Kollision hat einen Bogen vorher `ansicht` zu
+   * `seitenAnsicht` gemacht (E690, `test573`-Kopf); hier gilt dieselbe
+   * Regel — im Zweifel nachsehen, nicht raten (§53.6).
+   *
+   *     beides    im Text UND auf der Fläche      (die Vorgabe)
+   *     seite     nur im Text                      (nicht auf der Fläche)
+   *     flaeche   nur auf der Fläche               (AFFiNEs „Hidden on page")
+   *
+   * UND DAS FEHLEN IST WIEDER DIE VORGABE. Ein Block ohne `zeigen` ist nicht
+   * kaputt, sondern von gestern — und steht überall, wo er immer stand.
+   * ----------------------------------------------------------------------*/
+  const ZEIGEN = ['beides', 'seite', 'flaeche'] as const;
+  const ZEIGEN_VORGABE = 'beides';
+
+  /**
+   * Erscheint dieser Block in dieser Ansicht?
+   *
+   * EINE STELLE, NICHT SECHS. Die Frage wird im Text gestellt (zeichnet die
+   * Inhaltsfläche ihn?), auf der Fläche (bekommt er einen Kasten?) und in
+   * jedem Werkzeug, das beides unterscheidet. Stünde sie mehrfach im Code,
+   * liefe sie auseinander — und eine Ansicht zeigte einen Block, den die
+   * andere versteckt, ohne dass jemand sagen könnte, welche recht hat (§8).
+   *
+   * @param block Irgendein Block. `null` zählt als „nein".
+   * @param wo    'seite' für jede Textansicht (seite/redion), 'flaeche' für
+   *              die Leinwand.
+   */
+  const zeigtIn = (block: unknown, wo: 'seite' | 'flaeche'): boolean => {
+    if (!block || typeof block !== 'object') return false;
+    const roh = (block as Record<string, unknown>)['sichtbarIn'];
+    const wert = (ZEIGEN as readonly string[]).includes(String(roh))
+      ? String(roh) : ZEIGEN_VORGABE;
+    return wert === 'beides' || wert === wo;
+  };
+
+  /**
+   * Ist der Platz eines Blocks auf der Fläche lesbar?
+   *
+   * WARUM DIE FRAGE HIER STEHT UND NICHT ZWEIMAL DANEBEN. Sie wurde im
+   * ersten Entwurf an zwei Stellen beantwortet — in `inhaltsflaeche.ts`
+   * („soll er im Seitenkasten stehen?") und in `seitenflaeche.ts` („soll er
+   * einen eigenen Kasten bekommen?"). Zwei Fassungen derselben Regel, und
+   * der Kommentar gab es selbst zu: „beide müssen dieselbe Antwort geben".
+   * Genau davor warnt §8. Antworten sie je verschieden, ist ein Block
+   * NIRGENDS — weder im Kasten noch auf der Fläche —, ohne dass etwas
+   * gelöscht wurde.
+   *
+   * UND SIE IST STRENGER ALS AFFiNE. Dort wird ein kaputtes `xywh`
+   * abgefangen und still zu `[0,0,0,0]`; die Notiz sitzt danach unsichtbar
+   * im Ursprung (`framework/global/src/gfx/xywh.ts:20-29`, nachgelesen).
+   * §9 sagt das Gegenteil: kaputte Daten abfangen, statt sie still wirken
+   * zu lassen. Ein unlesbarer Platz zählt deshalb als KEIN Platz — der
+   * Block bleibt im Text, wo man ihn sieht.
+   */
+  const ortLesbar = (roh: unknown): boolean => {
+    if (!roh || typeof roh !== 'object') return false;
+    const o = roh as Record<string, unknown>;
+    return Number.isFinite(Number(o['x'])) && Number.isFinite(Number(o['y']));
+  };
+
   /* DIE VORGABE IST DIE UNSERE, UND DAS IST EINE DATENREGEL (§9).
      Ein Seitenblock OHNE das Feld ist nicht kaputt, sondern von gestern — und
      er muss genau das sehen, was er immer gesehen hat. Dasselbe Muster wie
@@ -94,5 +172,5 @@ Register.seitenansichten = (() => {
 
   const ids = (): string[] => ARTEN.map(a => a.id);
 
-  return { ARTEN, VORGABE, holen, ids };
+  return { ARTEN, VORGABE, ZEIGEN, ZEIGEN_VORGABE, zeigtIn, ortLesbar, holen, ids };
 })();

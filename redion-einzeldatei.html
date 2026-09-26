@@ -12028,6 +12028,64 @@ body .rmo-liquid::after {
   #main #page.flaeche-page .pg-ansichten{padding:8px 12px}
 }
 
+/* ----------------------------------------------------------------------------
+   5 · DER VOLLAUSBAU: EIN KASTEN JE BLOCK (E691)
+   Redur, 26. September 2026: „ja mach den vollausbau, jeder block auf die
+   fläche ziehbar." Seither ist der Seitenkasten nur noch einer von vielen.
+   --------------------------------------------------------------------------*/
+/* Ein Blockkasten ist schlanker als der Seitenkasten: sein Kopf sagt die
+   Blockart, nicht den Seitentitel. */
+.pg-fl-notiz[data-fl-block] .pg-fl-koerper{padding:10px 14px 14px}
+.pg-fl-notiz[data-fl-block] .pg-fl-kopf .pg-icon{font-size:14px}
+.pg-fl-notiz[data-fl-block] .pg-fl-name{
+  font-size:12.5px; font-weight:600; color:var(--text-dim);
+  text-transform:none; letter-spacing:.01em;
+}
+/* Auf der Fläche gibt es keine Griffe am Block: der Kasten IST der Griff. */
+.pg-fl-notiz[data-fl-block] .blk > .handles{display:none}
+.pg-fl-notiz[data-fl-block] .blk{padding-left:0}
+
+/* „nicht auf der Seite" — ein WORT, keine Farbe allein (§38). */
+.pg-fl-versteckt{
+  flex:none; padding:2px 7px; border-radius:999px;
+  background:var(--bg-hover); color:var(--text-dim);
+  font-size:11px; font-weight:600; white-space:nowrap;
+}
+
+/* Der Menüknopf im Kopf. Am Telefon ist er der einzige Weg zurück in den
+   Text — deshalb dort die volle Trefferfläche aus §37, am Rechner reicht
+   ein kleiner Knopf neben einem 34 px hohen Kopf. */
+.pg-fl-menue{
+  flex:none; margin-left:auto;
+  display:inline-flex; align-items:center; justify-content:center;
+  width:26px; height:26px; border:0; border-radius:6px;
+  background:none; color:var(--text-dim);
+  font-size:15px; line-height:1; cursor:pointer;
+}
+.pg-fl-menue:hover{background:var(--bg-hover); color:var(--text)}
+.pg-fl-menue:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+/* Der Griff `⠿` stand bis E691 rechts aussen; jetzt steht dort das Menü,
+   und der ganze Kopf bleibt die Ziehfläche. Zwei Dinge rechts aussen wären
+   am Telefon nebeneinander 88 px in einem 334 px breiten Kasten. */
+.pg-fl-griff{display:none}
+
+/* Der leere Seitenkasten sagt, wofür er noch da ist. */
+.pg-fl-leer{
+  padding:18px 4px; color:var(--text-dim);
+  font-size:13px; line-height:1.5; text-align:center;
+}
+
+/* Ziehen: wohin es geht, sieht man VORHER. */
+.pg-flaeche.pg-fl-nimmt{box-shadow:inset 0 0 0 2px var(--accent)}
+.pg-fl-notiz.pg-fl-ziel{outline:2px solid var(--accent); outline-offset:2px}
+.pg-fl-notiz.pg-fl-zurueck{opacity:.55}
+
+@media(max-width:760px){
+  /* §37: der einzige Weg zurück in den Text braucht die volle Fläche. */
+  .pg-fl-menue{width:var(--touch-min); height:var(--touch-min); font-size:18px}
+  .pg-fl-kopf{min-height:var(--touch-min); padding:4px 6px 4px 12px}
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/bausteine.css ===== */
@@ -25650,7 +25708,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1332, inhalt: '3b88b94cff8298c5', gebaut: '2026-09-26T08:13:15.960Z' };
+const Stand = { fassung: 1346, inhalt: 'fd570ee8e35319a7', gebaut: '2026-09-26T09:04:31.745Z' };
 window.Stand = Stand;
 
 </script>
@@ -40943,6 +41001,83 @@ Register.seitenansichten = (() => {
             zeichen: 'image', herkunft: 'redion'
         }
     ];
+    /* ------------------------------------------------------------------------
+     * WO EIN BLOCK ERSCHEINT (E691) — AFFiNEs `NoteDisplayMode`, eine Stufe
+     * feiner.
+     * --------------------------------------------------------------------------
+     * Redur, 26. September 2026: „ja mach den vollausbau, jeder block auf die
+     * fläche ziehbar." AFFiNE kennt dasselbe Feld, aber an der NOTIZ
+     * (`affine/model/src/consts/note.ts:38-42`, Werte `both` | `doc` |
+     * `edgeless`); dort ist die Notiz die kleinste Einheit auf der Fläche.
+     * Hier ist es der Block — genau das, was Redur gesagt hat.
+     *
+     * DIE WERTE SIND DATENWÖRTER (§53.3). Sie stehen so am Block und damit in
+     * jeder Sicherung; sie zu übersetzen wäre eine Datenmigration.
+     *
+     * UND DAS FELD HEISST `sichtbarIn`, NICHT `zeigen`. Der erste Entwurf
+     * nannte es `zeigen` — und `zeigen` gibt es in dieser App schon 41-mal:
+     * als Rückruf `zeigen: () => boolean` an Register-Einträgen
+     * (`register/befehle.ts:95`, `navigation.ts:443`, `context.ts:160`,
+     * `menueband.ts:851` und weitere). Wer `b.zeigen` liest, hält es für eine
+     * Funktion. Dieselbe Kollision hat einen Bogen vorher `ansicht` zu
+     * `seitenAnsicht` gemacht (E690, `test573`-Kopf); hier gilt dieselbe
+     * Regel — im Zweifel nachsehen, nicht raten (§53.6).
+     *
+     *     beides    im Text UND auf der Fläche      (die Vorgabe)
+     *     seite     nur im Text                      (nicht auf der Fläche)
+     *     flaeche   nur auf der Fläche               (AFFiNEs „Hidden on page")
+     *
+     * UND DAS FEHLEN IST WIEDER DIE VORGABE. Ein Block ohne `zeigen` ist nicht
+     * kaputt, sondern von gestern — und steht überall, wo er immer stand.
+     * ----------------------------------------------------------------------*/
+    const ZEIGEN = ['beides', 'seite', 'flaeche'];
+    const ZEIGEN_VORGABE = 'beides';
+    /**
+     * Erscheint dieser Block in dieser Ansicht?
+     *
+     * EINE STELLE, NICHT SECHS. Die Frage wird im Text gestellt (zeichnet die
+     * Inhaltsfläche ihn?), auf der Fläche (bekommt er einen Kasten?) und in
+     * jedem Werkzeug, das beides unterscheidet. Stünde sie mehrfach im Code,
+     * liefe sie auseinander — und eine Ansicht zeigte einen Block, den die
+     * andere versteckt, ohne dass jemand sagen könnte, welche recht hat (§8).
+     *
+     * @param block Irgendein Block. `null` zählt als „nein".
+     * @param wo    'seite' für jede Textansicht (seite/redion), 'flaeche' für
+     *              die Leinwand.
+     */
+    const zeigtIn = (block, wo) => {
+        if (!block || typeof block !== 'object')
+            return false;
+        const roh = block['sichtbarIn'];
+        const wert = ZEIGEN.includes(String(roh))
+            ? String(roh) : ZEIGEN_VORGABE;
+        return wert === 'beides' || wert === wo;
+    };
+    /**
+     * Ist der Platz eines Blocks auf der Fläche lesbar?
+     *
+     * WARUM DIE FRAGE HIER STEHT UND NICHT ZWEIMAL DANEBEN. Sie wurde im
+     * ersten Entwurf an zwei Stellen beantwortet — in `inhaltsflaeche.ts`
+     * („soll er im Seitenkasten stehen?") und in `seitenflaeche.ts` („soll er
+     * einen eigenen Kasten bekommen?"). Zwei Fassungen derselben Regel, und
+     * der Kommentar gab es selbst zu: „beide müssen dieselbe Antwort geben".
+     * Genau davor warnt §8. Antworten sie je verschieden, ist ein Block
+     * NIRGENDS — weder im Kasten noch auf der Fläche —, ohne dass etwas
+     * gelöscht wurde.
+     *
+     * UND SIE IST STRENGER ALS AFFiNE. Dort wird ein kaputtes `xywh`
+     * abgefangen und still zu `[0,0,0,0]`; die Notiz sitzt danach unsichtbar
+     * im Ursprung (`framework/global/src/gfx/xywh.ts:20-29`, nachgelesen).
+     * §9 sagt das Gegenteil: kaputte Daten abfangen, statt sie still wirken
+     * zu lassen. Ein unlesbarer Platz zählt deshalb als KEIN Platz — der
+     * Block bleibt im Text, wo man ihn sieht.
+     */
+    const ortLesbar = (roh) => {
+        if (!roh || typeof roh !== 'object')
+            return false;
+        const o = roh;
+        return Number.isFinite(Number(o['x'])) && Number.isFinite(Number(o['y']));
+    };
     /* DIE VORGABE IST DIE UNSERE, UND DAS IST EINE DATENREGEL (§9).
        Ein Seitenblock OHNE das Feld ist nicht kaputt, sondern von gestern — und
        er muss genau das sehen, was er immer gesehen hat. Dasselbe Muster wie
@@ -40952,7 +41087,7 @@ Register.seitenansichten = (() => {
     const VORGABE = 'redion';
     const holen = (id) => ARTEN.find(a => a.id === id) ?? null;
     const ids = () => ARTEN.map(a => a.id);
-    return { ARTEN, VORGABE, holen, ids };
+    return { ARTEN, VORGABE, ZEIGEN, ZEIGEN_VORGABE, zeigtIn, ortLesbar, holen, ids };
 })();
 
 </script>
@@ -53648,6 +53783,36 @@ const Store = (() => {
         save('blocks', b);
         return b;
     };
+    /**
+     * Ein Feld ganz entfernen — nicht auf `undefined` setzen.
+     *
+     * WARUM ES DAS BRAUCHT (E691). `updateBlock(id, { feld: undefined })` geht
+     * durch `Object.assign` und lässt den SCHLÜSSEL stehen, nur mit dem Wert
+     * `undefined`. Für IndexedDB ist das ein Feld; für `'feld' in block` ist
+     * es eines; nur für `JSON.stringify` ist es keines. Und genau darauf ruht
+     * §9: „kein Feld heisst wie bisher". Ein Block, der ein `flaecheOrt` mit
+     * `undefined` trägt, sagt etwas anderes als einer, der keines hat — und
+     * der Unterschied fällt erst auf, wenn eine Sicherung ihn verliert und
+     * das Neuladen sich anders verhält als das Fenster davor.
+     *
+     * @param felder Namen der Felder. Fehlende werden still übergangen.
+     */
+    const feldWeg = (id, ...felder) => {
+        const b = cache.blocks[id];
+        if (!b)
+            return null;
+        let etwas = false;
+        for (const f of felder)
+            if (f in b) {
+                delete b[f];
+                etwas = true;
+            }
+        if (!etwas)
+            return b;
+        Object.assign(b, { edited: now(), geaendertVon: getMeta('nutzer', '') || 'Ich' });
+        save('blocks', b);
+        return b;
+    };
     /** Verschiebt einen Block in den Papierkorb — wie in Notion erst 'alive: false'. */
     const trashBlock = (id) => {
         const b = cache.blocks[id];
@@ -56570,7 +56735,7 @@ const Store = (() => {
     };
     return {
         load, uid, now, cache, istDemo: () => DEMO,
-        addBlock, getBlock, updateBlock, trashBlock, restoreBlock, purgeBlock, childrenOf,
+        addBlock, getBlock, updateBlock, feldWeg, trashBlock, restoreBlock, purgeBlock, childrenOf,
         purgeAnhaenge, dateiAnspruch, papierkorbBloecke, papierkorbAufraeumen, papierkorbBaldWeg,
         addPage, rootPages, trashed, favorites, pathOf,
         addDatabase, getCollection, getView, updateCollection, updateView, addView, removeView,
@@ -85606,6 +85771,113 @@ const ChronikDaten = {
                     "risiko": "die Zusage ist 150 KB weicher; was sie hält, ist die Bibliotheksgrenze (pdf.js), nicht die Feinheit"
                 }
             ]
+        },
+        {
+            "datum": "2026-09-26",
+            "wochentag": "Samstag",
+            "titel": "Drei Ansichten für eine Seite — und dann der Vollausbau: jeder Block darf auf die Fläche",
+            "wasIchWeiss": "Der Tag begann mit einem Vorwurf, und er war berechtigt: „Wo sind deine fotos ich habe nicht nichts bekommen.“ Vier Bögen lang hatte ich nichts geschickt — richtig war nur, dass drei davon nichts am Bildschirm änderten; der vierte tat es, und den hatte ich verschwiegen. Danach kam W6 Bogen 5a zu Ende (E689: EIN Katalog der Werkzeuge, EINE Leiste im Kern, das Whiteboard zuerst darauf) — und aus einem Bild von AFFiNEs Kopfzeile wurde der Rest des Tages.\n\nRedur wollte die Ansichten, aber mit einer Bedingung vorneweg: „aber zuerst liess was die ander 2 bereicht machen bi affine“. Das Lesen hat den Bogen verändert: AFFiNE hat GENAU ZWEI Modi, es sind zwei Blicke auf dasselbe Dokument, und ein Cover gibt es dort gar nicht — Redion ist an der Stelle reicher als das Vorbild, und genau deshalb ergab die dritte Ansicht Sinn. E690 hat sie gebaut: der Katalog `Register.seitenansichten`, das Feld `seitenAnsicht` am Block (kein Feld = die Redion-Ansicht), der Umschalter auf dem seit Monaten gebauten und nie benutzten `Segment`, und die Fläche als Leinwand mit dem Seitentext als Kasten. Drei Fehler daran fand nicht der Wächter, sondern das BILD, alle drei am Telefon: die Fläche war 332 px hoch statt 584, dann 278 px breit statt 390, und „ins Bild holen“ rechnete 31 %.\n\nDann die Frage am Ende von E690, und sie gehörte Redur: Vollausbau oder nicht? Seine Antwort: „ja mach den vollausbau, jeder block auf die fläche ziehbar.“ Diesmal habe ich vier Leser gleichzeitig geschickt, bevor eine Zeile entstand — und drei ihrer Funde stehen im Ergebnis: der Feldname (`zeigen` ist in dieser App 41-mal als Register-Rückruf vergeben, also heisst es `sichtbarIn`), eine Regel, die zweimal dastand („ist der Platz lesbar?“), und zwei Leser der Kinderliste, an die niemand gedacht hatte — Gliederungsstreifen und Inhaltsverzeichnis führten Überschriften auf, die auf der Seite gar nicht stehen.\n\nZwei Bögen, zwei Wächter, beide rot eingecheckt, beide mit Gegenproben. Und einmal hat Redur mich mitten im Anlauf angehalten — „was willst du machen“ —, weil ich zu arbeiten begonnen hatte, statt den Plan in fünf Zeilen hinzuschreiben.",
+            "nachrichten": [
+                {
+                    "zeit": "ca. 06:00",
+                    "wortlaut": "Wo sind deine fotos ich habe nicht nichts bekomemn",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Du hast zugesagt, jede sichtbare Änderung zu fotografieren und zu schicken — und nichts kam.",
+                    "besser": "Derselbe Satz. Er war genau richtig: kurz, überprüfbar, und er hat einen echten Verstoss getroffen."
+                },
+                {
+                    "zeit": "ca. 07:05",
+                    "wortlaut": "bei der affine haben wir das es wechseldie ansichten und ich will dort auch die beide und plus von unsere aktulel stan haben also die mit covar usw also dort 3 bereicht aber zuerst liess was die ander 2 bereicht bereicht machen bi affine",
+                    "woher": "wörtlich aus dem Gespräch, mit einem Bild von AFFiNEs Kopfzeile",
+                    "gemeint": "Drei umschaltbare Ansichten je Seite: AFFiNEs zwei und unsere eigene mit dem Cover. Aber lies ZUERST, was AFFiNEs zwei tun.",
+                    "besser": "Ich will drei Ansichten je Seite: AFFiNEs beide plus unsere mit Cover. Lies zuerst nach, was AFFiNEs zwei genau machen, und sag es mir, bevor du baust."
+                },
+                {
+                    "zeit": "ca. 07:35",
+                    "wortlaut": "ich will die 2 von affine 1;1 haben auch alles komplet wie es ausehn also wirklich komlet so und noch eien 3 für die aktuele redion damit wir es auch haben verstanden die 3 is von und erfunden t",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "AFFiNEs zwei Ansichten eins zu eins im Aussehen; die dritte ist unsere eigene Erfindung.",
+                    "besser": "Bau AFFiNEs zwei so, dass sie aussehen wie dort. Die dritte ist unsere eigene."
+                },
+                {
+                    "zeit": "ca. 08:30",
+                    "wortlaut": "ja mach den vollausbau, jeder block auf die fläche ziehbar",
+                    "woher": "wörtlich aus dem Gespräch, als Antwort auf die Frage am Ende von E690",
+                    "gemeint": "Nicht die ganze Seite als ein Kasten, sondern jeder einzelne Block mit eigenem Platz.",
+                    "besser": "Derselbe Satz — er beantwortet genau die gestellte Frage und sagt dazu, welche der zwei Möglichkeiten gemeint ist."
+                },
+                {
+                    "zeit": "ca. 08:35",
+                    "wortlaut": "was willst du machen",
+                    "woher": "wörtlich aus dem Gespräch, mitten in meinem Anlauf",
+                    "gemeint": "Sag mir den Plan, bevor du anfängst.",
+                    "besser": "Derselbe Satz. Er hat mich zu Recht angehalten."
+                },
+                {
+                    "zeit": "ca. 08:40",
+                    "wortlaut": "ja mach",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Der Plan stimmt, leg los.",
+                    "besser": "—"
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E689 · EINE Werkzeugleiste für alle Flächen (W6, Bogen 5a)",
+                    "vonBis": "e0988e6 → f2b0b9a",
+                    "zeitraum": "06:24–06:51",
+                    "dauer": "ca. 30 min",
+                    "pruefungen": "test572 (51 Zusagen, gegen den alten Stand rot mit 20), test209 nachgezogen; zwölf Nachbarn grün"
+                },
+                {
+                    "was": "Gelesen: AFFiNEs zwei Ansichten — Karte-Thema und die offene Frage als A1",
+                    "vonBis": "f2b0b9a → fd1a778",
+                    "zeitraum": "06:51–07:31",
+                    "dauer": "ca. 40 min",
+                    "pruefungen": "keine — ein Leser und eine Karte-Notiz, jeder Punkt mit Datei:Zeile"
+                },
+                {
+                    "was": "E690 · Drei Ansichten einer Seite (A1)",
+                    "vonBis": "43432e1 → 4d7436d",
+                    "zeitraum": "07:38–08:15",
+                    "dauer": "ca. 40 min",
+                    "pruefungen": "test573 rot eingecheckt (7 Zeilen rot), danach 31/31; eine Gegenprobe rot, die zugleich eine Lücke IM Wächter zeigte; 27 Nachbarn grün"
+                },
+                {
+                    "was": "E691 · Der Vollausbau der Fläche (A1c)",
+                    "vonBis": "e388949 → offen",
+                    "zeitraum": "08:25–…",
+                    "dauer": "ca. 2 h",
+                    "pruefungen": "test574 rot eingecheckt (14 ok, 25 rot), danach 50/50; zwei Gegenproben rot; vier Leser parallel vor dem Bau; 21 Nachbarn grün"
+                }
+            ],
+            "zahlen": {
+                "commits": 6,
+                "entscheidungen": 3,
+                "neuePruefläufe": 3
+            },
+            "groesstesProblem": "Zweimal am selben Tag `(window as any).App?.zeichneSeite?.()` geschrieben — und zweimal hat es still nichts getan. `const App = (() => …)()` in einem gewöhnlichen <script> legt eine globale LEXIKALISCHE Bindung an, und die steht nicht unter `window`. Das Feld wurde geschrieben, der Bildschirm blieb stehen, kein Fehler kam. Beim ersten Mal sah es aus wie ein fehlender Zweig, beim zweiten wie ein fehlender Kasten. Gefunden hat es beide Male eine Sonde, nicht der Wächter — der war rot, sagte aber das Falsche.",
+            "interessantesteAnfrage": "„aber zuerst liess was die ander 2 bereicht machen bi affine“ — eine Arbeitsanweisung mitten in einem Wunsch. Sie hat den Bogen verändert: ohne das Lesen wäre eine dritte Betriebsart entstanden, wo AFFiNE eine Ansicht hat, und der wichtigste Fund wäre unbemerkt geblieben — ein Cover gibt es dort gar nicht.",
+            "massnahmen": [
+                {
+                    "zeit": "ca. 06:05",
+                    "was": "Dreizehn Bilder aller vier Flächen nachgeschickt und `schaltplan` als fehlendes Bildziel ergänzt",
+                    "warum": "Redurs Vorwurf war berechtigt (§55.3)",
+                    "risiko": "keines"
+                },
+                {
+                    "zeit": "ca. 07:00",
+                    "was": "Ein Leser ins AFFiNE-Archiv, bevor gebaut wurde",
+                    "warum": "Redur hat es ausdrücklich verlangt",
+                    "risiko": "keines — nur gelesen (§57)"
+                },
+                {
+                    "zeit": "ca. 08:50",
+                    "was": "Vier Leser gleichzeitig statt eines, während der Bau parallel lief",
+                    "warum": "drei ihrer Funde hätte der Bau nicht von selbst gemacht",
+                    "risiko": "Zeit"
+                }
+            ]
         }
     ],
     "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
@@ -87119,6 +87391,30 @@ const ChronikDaten = {
             "ursache": "127 KB in neun Tagen — Studio, Trainer, NIN-Quiz, Gedankenkarte, Dock-Welle — und kein voller Lauf seit dem 19. September (§46: main bewegt sich erst nach einem grünen).",
             "beweis": "Messung gegen bef8c3f in messungen.md §62; danach Decke 2850 und test388 19/19.",
             "lehre": "Jeder Bogen, der eine Skriptdatei zu index.html hinzufügt, fährt test388. Und die Decke ist ein Grund mehr, den vollen Lauf nicht länger als eine Woche liegen zu lassen — sie kann nur dort reissen, wo sie gefahren wird."
+        },
+        {
+            "nr": "P114",
+            "datum": "2026-09-26",
+            "titel": "`window.App` gibt es nicht — und der optionale Zugriff schluckt es",
+            "schwere": "mittel",
+            "symptom": "Ein Klick schreibt das Feld an den Block, und der Bildschirm bleibt stehen. Keine Meldung, kein Fehler in der Konsole.",
+            "falscheVermutung": "Der Zweig, der die neue Ansicht zeichnet, fehlt — oder der Kasten wird nicht gebaut.",
+            "wieGefunden": "Mit einer Sonde im Browser: `typeof (window as any).App` sagte `undefined`, während `typeof App` in derselben Seite `object` sagte.",
+            "ursache": "`const App = (() => …)()` in einem gewöhnlichen <script> legt eine globale LEXIKALISCHE Bindung an. Die steht im globalen Geltungsbereich, aber NICHT als Feld von `window` — anders als `var` und anders als eine ausdrückliche Zuweisung. `(window as any).App?.zeichneSeite?.()` ist damit ein optionaler Zugriff auf `undefined`: er tut nichts und meldet nichts.",
+            "beweis": "Sonde vom 26. September: `art() sagt: { art: 'redion', feld: undefined, hatZeichne: 'undefined' }` — und derselbe Aufruf über den baren Namen wirkte sofort.",
+            "lehre": "Ein `?.` auf einen globalen Namen ist kein Schutz, sondern ein Schalldämpfer. Wer prüfen will, ob es etwas gibt, schreibt `typeof X !== 'undefined'`. Und: dieselbe Zeile ist an EINEM Tag zweimal entstanden — ein Fehler, der sich wiederholt, gehört in den Code kommentiert, nicht nur in den Kopf."
+        },
+        {
+            "nr": "P115",
+            "datum": "2026-09-26",
+            "titel": "Ein Wächter, der eine Absicht misst, die es nicht gibt",
+            "schwere": "mittel",
+            "symptom": "`test574 §8` meldete zweimal „am Telefon gibt es keinen Weg auf die Fläche“ — obwohl es ihn gab.",
+            "falscheVermutung": "Der Menüeintrag fehlt, oder der Griff wirkt am Telefon nicht.",
+            "wieGefunden": "Beim Nachlesen der Stelle, die der Lauf ansprach: `editor.ts:1955` unterdrückt `contextmenu` unter 760 px ausdrücklich — dort gehört das lange Drücken der Hebe-Geste (E83). Und Fund 2 von E83 sagt, dass der Fänger die Klick-Nachzügler nach einer Berührung 800 ms schluckt; der Lauf tippte nach 400 ms.",
+            "ursache": "Der Wächter hat den Weg des RECHNERS am Telefon gefahren und die vorhandene Geste gar nicht angefasst. Zweimal war er rot, und zweimal lag es an ihm.",
+            "beweis": "Mit `touchstart`, 750 ms Warten und `touchend` ging das Menü auf; nach weiteren 900 ms wirkte der Klick — ohne eine Zeile am Produkt.",
+            "lehre": "Eine Prüfung muss den Weg fahren, den der Mensch auf DIESEM Gerät hat, nicht den, den sie vom anderen kennt. Und wenn eine Zusage rot ist, lautet die erste Frage nicht „was ist am Produkt kaputt“, sondern „misst der Lauf überhaupt, was er behauptet“ (L206)."
         }
     ]
 };
@@ -97833,6 +98129,15 @@ const Blocks = (() => {
             Store.childrenOf(id).forEach((k) => {
                 if (k.type === 'page')
                     return; /* Unterseiten haben ihr eigenes */
+                /* UND WAS NICHT IM TEXT STEHT, STEHT NICHT IM VERZEICHNIS (E691).
+                   Ein Eintrag für eine Überschrift auf „nur Fläche" wäre doppelt
+                   falsch: er verspricht eine Stelle, die auf dieser Seite nicht
+                   gezeichnet ist, und sein Klick sucht `[data-bid=…]`, findet
+                   nichts und tut nichts — ein Knopf, der schweigend nichts bewirkt
+                   (§47, derselbe Fall wie E277). */
+                if (typeof Register !== 'undefined' && Register.seitenansichten &&
+                    !Register.seitenansichten.zeigtIn(k, 'seite'))
+                    return;
                 const stufe2 = TOC_STUFEN[k.type];
                 if (stufe2)
                     gefunden.push({ block: k, stufe: stufe2 });
@@ -98401,6 +98706,16 @@ const Blocks = (() => {
             if (blk) {
                 gezogen = blk.dataset.bid;
                 blk.style.opacity = '.4';
+                /* DIE KENNUNG REIST MIT (E691). Bis hierher wusste nur diese Datei,
+                   was gerade gezogen wird — `gezogen` ist eine Variable in dieser
+                   Schliessung. Die Fläche liegt ausserhalb des Editors und kann sie
+                   nicht sehen; ohne diese zwei Zeilen bräuchte sie ein eigenes
+                   Ziehen, und das wäre der zweite Mechanismus, vor dem §8 warnt.
+                   Der eigene MIME-Name, damit ein Zug aus einem anderen Programm
+                   nicht versehentlich als Block gelesen wird. */
+                e.dataTransfer?.setData('application/x-redion-block', String(blk.dataset.bid ?? ''));
+                if (e.dataTransfer)
+                    e.dataTransfer.effectAllowed = 'move';
             }
         });
         wurzel.addEventListener('dragend', (e) => {
@@ -99473,6 +99788,20 @@ const Blocks = (() => {
             '<button data-a="up"><span class="mi">↑</span>Nach oben<span class="ms">Ctrl+Shift+↑</span></button>' +
             '<button data-a="down"><span class="mi">↓</span>Nach unten<span class="ms">Ctrl+Shift+↓</span></button>' +
             '<button data-a="moveto"><span class="mi">➦</span>Verschieben nach …</button>' +
+            /* DER WEG AUF DIE FLÄCHE OHNE GRIFF (E691). Am Rechner zieht man den
+               Block am `⋮⋮` auf die Leinwand; am Telefon ist dieser Griff
+               ausgeblendet (`ki.css:182`), und HTML5-Ziehen kennt ohnehin keine
+               Finger. Ohne diesen Eintrag gäbe es den Vollausbau am Telefon
+               nicht — und §37 sagt, das Telefon ist der Normalfall. */
+            /* „VON DER FLÄCHE NEHMEN", nicht „zurück in den Text": dieses Menü geht
+               in der TEXTansicht auf, und dort steht der Block ja bereits im Text
+               (solange er nicht ausgeblendet ist). Die Beschriftung sagt, was
+               wirklich geschieht — sein Platz auf der Fläche fällt weg. Auf der
+               Fläche selbst heisst derselbe Griff „Zurück in den Text", und dort
+               stimmt es. */
+            (b.flaecheOrt
+                ? '<button data-a="flaeche"><span class="mi">▤</span>Von der Fläche nehmen</button>'
+                : '<button data-a="flaeche"><span class="mi">▦</span>Auf die Fläche legen</button>') +
             '<hr>' +
             '<button data-a="copy"><span class="mi">⎘</span>Text kopieren<span class="ms">Ctrl+C</span></button>' +
             '<button data-a="cut"><span class="mi">✂</span>Ausschneiden<span class="ms">Ctrl+X</span></button>' +
@@ -99602,6 +99931,15 @@ const Blocks = (() => {
             }
             if (a === 'moveto') {
                 Blocks.blockVerschiebenNach(b);
+            }
+            if (a === 'flaeche') {
+                const fl = window.Seitenflaeche;
+                if (!fl)
+                    return;
+                if (b.flaecheOrt)
+                    fl.zurueckInText(b);
+                else
+                    fl.aufFlaeche(b);
             }
             if (a === 'ai')
                 KI.blockAktion('ai-edit', b);
@@ -176287,8 +176625,16 @@ const Inhaltsflaeche = (() => {
         const stufen = (typeof Register !== 'undefined' && Register.bloecke?.ueberschriften)
             ? Register.bloecke.ueberschriften()
             : { h1: 1, h2: 2, h3: 3 };
+        /* WAS NICHT IM TEXT STEHT, GEHÖRT NICHT IN SEINE GLIEDERUNG (E691).
+           Der Streifen ist ein Bauteil der TEXTansicht: er zeigt, wo man in der
+           rollenden Seite ist. Eine Überschrift, die auf „nur Fläche" steht,
+           wird dort nicht gezeichnet — ein Strich dafür führte zu einer Stelle,
+           die es nicht gibt. Gefunden hat das ein Leser beim Nachsehen, wer
+           ausser der Inhaltsfläche noch die Kinder einer Seite liest. */
+        const zeigtIn = (typeof Register !== 'undefined' && Register.seitenansichten)
+            ? Register.seitenansichten.zeigtIn : () => true;
         const kopfzeilen = Store.childrenOf(seite.id)
-            .filter((b) => stufen[b.type] && (b.text || '').trim());
+            .filter((b) => stufen[b.type] && (b.text || '').trim() && zeigtIn(b, 'seite'));
         if (kopfzeilen.length < 3)
             return;
         /* `#main` und `#scroll` gehören zur Schale. Fehlt eines, wird hier kein
@@ -176336,19 +176682,49 @@ const Inhaltsflaeche = (() => {
                 '<div style="font-size:17px; margin-bottom:6px">Noch keine Seite geöffnet</div>' +
                 '<div style="font-size:14px">Links auf <b>+</b> klicken oder <b>Strg + N</b> drücken</div></div>';
     };
-    /* Wiki-Verzeichnis, Blöcke, Rückverweise — in dieser Folge. */
-    const zeichne = (wrap, p) => {
+    /**
+     * Wiki-Verzeichnis, Blöcke, Rückverweise — in dieser Folge.
+     *
+     * @param wo Für welche Seite des Umschalters gezeichnet wird (E691):
+     *        `'seite'` ist der Text (Vorgabe, also alle bisherigen Aufrufer),
+     *        `'flaeche'` der Seitenkasten auf der Leinwand. Ein Block kann in
+     *        einem von beiden stehen, in beiden oder — wenn er seinen eigenen
+     *        Kasten hat — im Kasten gar nicht mehr.
+     */
+    const zeichne = (wrap, p, wo = 'seite') => {
         /* Wiki-Verzeichnis */
         if (p.wiki)
             Werkzeuge.wikiIndex(p, wrap);
         /* Blöcke */
         const kinder = Store.childrenOf(p.id);
+        /* DIESE PRÜFUNG STEHT VOR DEM FILTERN, UND DAS IST KEIN ZUFALL (E691).
+           Sie legt einen leeren Textblock an, wenn eine Seite gar keine Kinder
+           hat. Stünde sie NACH dem Filtern, legte sie bei jeder Zeichnung einen
+           neuen an, sobald alle Blöcke einer Seite auf „nur Fläche" stehen —
+           eine Seite, die sich beim Ansehen selbst vollschreibt. Gezählt wird
+           also, was da IST, nicht, was man gerade sieht (§9). */
         if (!kinder.length && !p.gesperrt) {
             const b = Store.addBlock(p.id, 'text');
             kinder.push(b);
         }
+        /* WO ERSCHEINT DIESER BLOCK? Die Frage wird einmal im Register
+           beantwortet (§8, `Register.seitenansichten.zeigtIn`), nicht hier.
+           Dazu die eine Regel, die nur die Fläche betrifft: ein Block mit
+           eigenem Ort liegt dort als eigener Kasten und nicht noch einmal im
+           Seitenkasten. */
+        const zeigtIn = (typeof Register !== 'undefined' && Register.seitenansichten)
+            ? Register.seitenansichten.zeigtIn
+            : () => true;
+        /* EIN UNLESBARER ORT IST KEIN ORT (§9) — und die Frage wird EINMAL
+           beantwortet, im Register, nicht hier und nochmal auf der Fläche (§8).
+           Antworteten die zwei Stellen je verschieden, wäre ein Block nirgends:
+           aus dem Seitenkasten gefiltert und ohne eigenen Kasten. */
+        const ortLesbar = (typeof Register !== 'undefined' && Register.seitenansichten)
+            ? Register.seitenansichten.ortLesbar
+            : (o) => !!o;
+        const sichtbar = kinder.filter((b) => zeigtIn(b, wo) && !(wo === 'flaeche' && ortLesbar(b.flaecheOrt)));
         let nr = 0;
-        kinder.forEach((b) => {
+        sichtbar.forEach((b) => {
             if (b.type === 'number') {
                 nr++;
                 b.nr = nr;
@@ -176357,8 +176733,12 @@ const Inhaltsflaeche = (() => {
                 nr = 0;
             wrap.appendChild(Blocks.render(b));
         });
-        /* Rückverweise unter der Seite */
-        if (!p.ohneRueck)
+        /* Rückverweise unter der Seite — aber nicht im Kasten auf der Leinwand.
+           Dort sind sie kein Fuss der Seite, sondern eine Liste mitten im Bild,
+           und sie machen den Kasten um ihre Höhe länger, ohne etwas zu zeigen,
+           was auf eine Fläche gehört. AFFiNE zeigt sie im Edgeless ebenfalls
+           nicht. */
+        if (!p.ohneRueck && wo === 'seite')
             Links.fusszeile(p, wrap);
     };
     return { binde, zeichne, leer, streifen: streifenZeichnen };
@@ -176388,11 +176768,24 @@ window.Inhaltsflaeche = Inhaltsflaeche;
  * gemerkten Stelle, Schieben, Zoomen, „ins Bild passen", der Prozentwert
  * unten, und dass der Wechsel KEINEN Text anfasst.
  *
+ * DER VOLLAUSBAU (E691). Redur, 26. September: „ja mach den vollausbau,
+ * jeder block auf die fläche ziehbar." Seither ist der Seitenkasten nicht
+ * mehr der einzige: JEDER Block kann seinen eigenen Ort bekommen und wird
+ * dann sein eigener Kasten. Zwei Felder tragen das, beide am Block, beide
+ * optional (§9):
+ *
+ *     flaecheOrt   { x, y, w, raumVersion }        wo er liegt
+ *     zeigen       'beides' | 'seite' | 'flaeche'  wo er erscheint
+ *
+ * Das ist AFFiNEs `displayMode` (`affine/model/src/consts/note.ts:38-42`),
+ * eine Stufe feiner: dort ist die NOTIZ die kleinste Einheit auf der
+ * Fläche, hier der BLOCK.
+ *
  * WAS HIER NOCH NICHT IST — und es steht als Lücke geschrieben, nicht als
  * Versprechen (§32, L219): auf der Fläche ZEICHNEN (Stift, Formen,
- * Verbinder) und mehrere Kästen. Die Werkzeugleiste zeigt deshalb genau die
- * zwei Werkzeuge, die wirklich etwas tun — Zeiger und Hand. Eine Leiste mit
- * zwölf Knöpfen, von denen zehn nichts bewirken, wäre die schlechtere Antwort.
+ * Verbinder). Die Werkzeugleiste zeigt deshalb genau die zwei Werkzeuge,
+ * die wirklich etwas tun — Zeiger und Hand. Eine Leiste mit zwölf Knöpfen,
+ * von denen zehn nichts bewirken, wäre die schlechtere Antwort.
  *
  * DIE DREI STELLEN, AN DENEN ES LEICHT SCHIEFGEHT
  *
@@ -176429,6 +176822,11 @@ const Seitenflaeche = (() => {
      *  VORGABE darf sich am Gerät orientieren; eine gespeicherte Breite nicht
      *  (die gehört dem Dokument und wäre sonst auf jedem Gerät eine andere). */
     const vorgabeBreite = () => Math.min(760, Math.max(280, (window.innerWidth || 760) - 40));
+    /** Wohin ein neuer Kasten gehört, wenn die Fläche gerade zu sehen ist —
+     *  in die Mitte des Ausschnitts, wie AFFiNEs Notiz-Werkzeug. Gesetzt von
+     *  `zeichne`, geleert, sobald eine andere Seite gezeichnet wird: eine
+     *  Mitte von gestern ist schlechter als gar keine. */
+    let vorschlag = null;
     const zahl = (roh, ersatz) => {
         const n = Number(roh);
         return Number.isFinite(n) ? n : ersatz;
@@ -176468,10 +176866,157 @@ const Seitenflaeche = (() => {
             flaecheNotiz: { x: Math.round(ort.x), y: Math.round(ort.y), w: Math.round(ort.w), raumVersion: RAUM_VERSION }
         });
     };
+    /* ------------------------------------------------------------------------
+     * Der Ort EINES BLOCKS auf der Fläche (E691)
+     * --------------------------------------------------------------------------
+     * Dasselbe Format wie beim Seitenkasten, nur an einem beliebigen Block —
+     * und mit einer Vorgabebreite, die schmaler ist: ein einzelner Absatz
+     * braucht keine 760 Punkte, und vier Kästen nebeneinander passen sonst auf
+     * keinen Bildschirm.
+     * ----------------------------------------------------------------------*/
+    const BLOCK_BREITE = 380;
+    /** Ist der Platz lesbar? Die Antwort steht EINMAL im Register (§8) —
+     *  siehe dort, warum sie dort steht und nicht zweimal hier. */
+    const ortLesbar = (roh) => (typeof Register !== 'undefined' && Register.seitenansichten)
+        ? Register.seitenansichten.ortLesbar(roh)
+        : !!roh;
+    const blockOrt = (b) => {
+        const roh = b?.flaecheOrt;
+        if (!ortLesbar(roh))
+            return { x: 0, y: 0, w: BLOCK_BREITE };
+        return {
+            x: zahl(roh.x, 0), y: zahl(roh.y, 0),
+            w: Math.max(160, zahl(roh.w, BLOCK_BREITE))
+        };
+    };
+    const blockOrtSchreiben = (b, ort) => {
+        Store.updateBlock(b.id, {
+            flaecheOrt: {
+                x: Math.round(ort.x), y: Math.round(ort.y), w: Math.round(ort.w),
+                raumVersion: RAUM_VERSION
+            }
+        });
+    };
+    /** Welche Blöcke einer Seite liegen als eigener Kasten auf der Fläche? */
+    const eigeneKaesten = (p) => {
+        const zeigtIn = (typeof Register !== 'undefined' && Register.seitenansichten)
+            ? Register.seitenansichten.zeigtIn : () => true;
+        const raus = [];
+        for (const b of Store.childrenOf(p.id)) {
+            if (!b || !b.flaecheOrt || !zeigtIn(b, 'flaeche'))
+                continue;
+            if (!ortLesbar(b.flaecheOrt)) {
+                /* Nicht still übergehen: der Block steht danach im Seitenkasten,
+                   und wer die Konsole ansieht, weiss auch, warum. */
+                console.warn('Redion: Block „' + String(b.id) +
+                    '" hat einen unlesbaren `flaecheOrt` und bleibt im Text.', b.flaecheOrt);
+                continue;
+            }
+            raus.push(b);
+        }
+        return raus;
+    };
+    /* ========================================================================
+     * DIE DREI GRIFFE — sie wirken auch, wenn die Fläche gar nicht gezeichnet
+     * ist.
+     * --------------------------------------------------------------------------
+     * Das ist kein Zufall, sondern der Grund, warum sie hier stehen und nicht
+     * mitten im Zeichnen: der Weg über das Blockmenü (`editor.ts`, der einzige
+     * Weg am Telefon) wird in der REDION-Ansicht benutzt, wo es keine Leinwand
+     * gibt. Ein Griff, der eine gezeichnete Fläche braucht, wäre dort tot.
+     * ======================================================================*/
+    /**
+     * Einen Block auf die Fläche legen.
+     *
+     * @param ort Wohin, in Flächeneinheiten. Ohne Angabe sucht die Funktion
+     *        selbst eine Stelle — und zwar in dieser Reihenfolge: die Mitte
+     *        des gerade sichtbaren Ausschnitts (wie AFFiNEs Notiz-Werkzeug),
+     *        sonst, wenn keine Fläche gezeichnet ist, gerechnet neben oder
+     *        unter dem Seitenkasten. Sie rät dabei nicht — sie zählt, was
+     *        schon liegt.
+     */
+    /* `App`, NICHT `(window as any).App` — und das steht hier, weil derselbe
+       Fehler in diesem Bogen ZWEIMAL passiert ist. `const App = (() => …)()`
+       in einem gewöhnlichen `<script>` legt eine globale LEXIKALISCHE Bindung
+       an; die steht nicht unter `window`. Der optionale Zugriff schluckt es
+       still: das Feld wird geschrieben, der Bildschirm bleibt stehen, kein
+       Fehler kommt. Beim ersten Mal (E690) sah es aus wie ein fehlender
+       Zweig, beim zweiten wie ein fehlender Kasten. */
+    const aufFlaeche = (b, ort) => {
+        if (!b?.id)
+            return;
+        const seite = Store.getBlock(b.parentId);
+        if (!seite)
+            return;
+        let stelle = ort;
+        if (!stelle && vorschlag)
+            stelle = vorschlag();
+        if (!stelle) {
+            /* KEINE FLÄCHE GEZEICHNET — also rechnen statt sehen. Der Weg über
+               das Blockmenü wird in der Redion-Ansicht benutzt, wo es keine
+               Leinwand gibt; dann gibt es auch keinen Ausschnitt, in dessen Mitte
+               man legen könnte.
+      
+               RECHTS ODER DARUNTER, je nach Gerät. Der erste Stand legte immer
+               rechts neben den Seitenkasten — auf einem 390 px breiten Telefon
+               heisst das x = 410, und der Kasten lag ausserhalb des Bildes. Der
+               Wächter hat es gemeldet („steht im Bild — rot"), bevor ein Mensch
+               hinsah. Die STELLE ist Daten und bleibt, wo sie hingeschrieben
+               wird; dass ihre Vorgabe vom Gerät abhängt, ist dasselbe Zugeständnis
+               wie bei der Vorgabebreite in E690 — man legt etwas dorthin, wo der
+               Mensch es sehen kann. */
+            const sk = notizLesen(seite);
+            const schon = eigeneKaesten(seite).length;
+            const eng = (window.innerWidth || 1200) < 900;
+            stelle = eng
+                ? { x: sk.x, y: sk.y + 420 + schon * 150 }
+                : { x: sk.x + sk.w + 60, y: sk.y + schon * 150 };
+        }
+        blockOrtSchreiben(b, { x: stelle.x, y: stelle.y, w: blockOrt(b).w });
+        if (typeof App !== 'undefined')
+            App.zeichneSeite();
+    };
+    /**
+     * Zurück in den Text.
+     *
+     * `feldWeg` und nicht `updateBlock(id, { flaecheOrt: undefined })`: das
+     * zweite liesse den Schlüssel stehen, und §9 ruht darauf, dass „kein
+     * Feld" wirklich kein Feld ist (siehe `indexdb.ts`, `feldWeg`).
+     *
+     * Und `sichtbarIn` wird mit aufgeräumt: ein Block, der wieder im Text
+     * steht, aber auf „nur Fläche" stünde, wäre nirgends zu sehen — der
+     * Mensch hätte ihn zurückgeholt und sähe nichts.
+     */
+    const zurueckInText = (b) => {
+        if (!b?.id)
+            return;
+        if (String(b.sichtbarIn) === 'flaeche')
+            Store.updateBlock(b.id, { sichtbarIn: 'beides' });
+        Store.feldWeg(b.id, 'flaecheOrt');
+        if (typeof App !== 'undefined')
+            App.zeichneSeite();
+    };
+    /** Wo der Block erscheinen soll — 'beides' | 'seite' | 'flaeche'. */
+    const setzeZeigen = (b, wert) => {
+        const kat = (typeof Register !== 'undefined') ? Register.seitenansichten : null;
+        if (!b?.id || !kat || !kat.ZEIGEN.includes(wert))
+            return;
+        /* 'beides' ist die Vorgabe — und eine Vorgabe schreibt man nicht hin.
+           Sonst trüge jeder je einmal umgeschaltete Block für immer ein Feld,
+           das nichts sagt, und jede Sicherung würde grösser, ohne mehr zu
+           wissen (§9). */
+        if (wert === kat.ZEIGEN_VORGABE)
+            Store.feldWeg(b.id, 'sichtbarIn');
+        else
+            Store.updateBlock(b.id, { sichtbarIn: wert });
+        if (typeof App !== 'undefined')
+            App.zeichneSeite();
+    };
     /* ========================================================================
      * Zeichnen
      * ======================================================================*/
     const zeichne = (wrap, p) => {
+        vorschlag = null;
         const flaeche = document.createElement('div');
         flaeche.className = 'pg-flaeche';
         flaeche.setAttribute('role', 'application');
@@ -176481,59 +177026,156 @@ const Seitenflaeche = (() => {
         const ebene = document.createElement('div');
         ebene.className = 'pg-fl-sicht';
         flaeche.appendChild(ebene);
-        /* --- Der Kasten, in dem der Seitentext steht ------------------------ */
+        const kaesten = [];
+        const kastenBauen = (plan) => {
+            const b = plan.block;
+            const kasten = document.createElement('div');
+            kasten.className = 'pg-fl-notiz';
+            if (plan.art === 'seite')
+                kasten.dataset['flSeite'] = '1';
+            else
+                kasten.dataset['flBlock'] = String(b.id);
+            kasten.style.left = plan.ort.x + 'px';
+            kasten.style.top = plan.ort.y + 'px';
+            kasten.style.width = plan.ort.w + 'px';
+            const kopf = document.createElement('div');
+            kopf.className = 'pg-fl-kopf';
+            if (plan.art === 'seite') {
+                /* DER KOPF DES SEITENKASTENS IST DER SEITENKOPF — UMGEZOGEN, NICHT
+                   NACHGEBAUT. AFFiNEs Notiz trägt auf der Fläche Emoji und Titel in
+                   einer eigenen Zeile (`edgeless-note-header.tsx:22-60`). Nachbauen
+                   hiesse hier: ein zweites Titelfeld, das dieselbe Seite schreibt —
+                   und eines von beiden wäre immer das veraltete (§8).
+        
+                   Stattdessen wandern die zwei Knoten, die `Kopfleiste.zeichne`
+                   gerade angelegt hat, mit allen ihren Zuhörern hierher. Das hält
+                   auch etwas am Leben, das niemand vermuten würde:
+                   `menueband.ts:121` fragt `!!document.getElementById('title')`, um
+                   zu wissen, ob überhaupt eine Seite offen ist. Ohne `#title` wäre
+                   auf der Fläche das halbe Menüband aus. */
+                const symAlt = wrap.querySelector('.pg-icon');
+                const titelAlt = wrap.querySelector('#title');
+                if (symAlt)
+                    kopf.appendChild(symAlt);
+                if (titelAlt)
+                    kopf.appendChild(titelAlt);
+                if (!symAlt) {
+                    const sym = document.createElement('span');
+                    sym.className = 'pg-icon';
+                    sym.setAttribute('aria-hidden', 'true');
+                    sym.textContent = b.icon || '📄';
+                    kopf.appendChild(sym);
+                }
+                if (!titelAlt) {
+                    const name = document.createElement('div');
+                    name.className = 'pg-fl-name';
+                    name.textContent = b.text || 'Ohne Titel';
+                    kopf.appendChild(name);
+                }
+            }
+            else {
+                /* Ein Blockkasten sagt, WAS er ist — nicht, was drinsteht. Der Text
+                   steht einen Zentimeter tiefer; ihn im Kopf zu wiederholen wäre
+                   doppelt und bei einem langen Absatz eine abgeschnittene Zeile. */
+                const typ = (typeof Register !== 'undefined' && Register.bloecke?.eines)
+                    ? Register.bloecke.eines(b.type) : null;
+                const sym = document.createElement('span');
+                sym.className = 'pg-icon';
+                sym.setAttribute('aria-hidden', 'true');
+                sym.textContent = b.icon || typ?.icon || '¶';
+                const name = document.createElement('div');
+                name.className = 'pg-fl-name';
+                name.textContent = typ?.name || 'Block';
+                kopf.append(sym, name);
+                /* „Nicht auf der Seite" — in WORTEN, nicht nur in einer Farbe (§38).
+                   AFFiNE setzt dafür ein durchgestrichenes Auge
+                   (`edgeless-auto-connect/src/index.ts:265-268`); ein Zeichen
+                   allein sagt einem Vorleseprogramm nichts. */
+                if (String(b.sichtbarIn) === 'flaeche') {
+                    const hin = document.createElement('span');
+                    hin.className = 'pg-fl-versteckt';
+                    hin.textContent = 'nicht auf der Seite';
+                    kopf.appendChild(hin);
+                }
+            }
+            /* Der Menüknopf. Am Telefon ist er der EINZIGE Weg zurück — dort gibt
+               es kein Rechtsklickmenü und keinen Griff (§37). */
+            const menue = document.createElement('button');
+            menue.type = 'button';
+            menue.className = 'pg-fl-menue';
+            menue.dataset['a'] = 'menu';
+            menue.title = 'Was mit diesem Kasten geschehen soll';
+            menue.setAttribute('aria-label', plan.art === 'seite' ? 'Menü des Seitenkastens' : 'Menü dieses Kastens');
+            menue.textContent = '⋯';
+            kopf.appendChild(menue);
+            menue.addEventListener('click', (e) => { e.stopPropagation(); kastenMenue(menue, plan); });
+            kasten.appendChild(kopf);
+            const koerper = document.createElement('div');
+            koerper.className = 'pg-fl-koerper';
+            kasten.appendChild(koerper);
+            if (plan.art === 'seite') {
+                /* DERSELBE AUFRUF WIE AUF DER NORMALEN SEITE, nur mit dem anderen
+                   Ort (E691). Wer hier eine zweite Zeichnung baut, hat zwei
+                   Editoren, und einer von beiden ist immer der veraltete. */
+                Inhaltsflaeche.zeichne(koerper, b, 'flaeche');
+                if (!koerper.querySelector('.blk')) {
+                    /* EIN LEERER SEITENKASTEN BLEIBT STEHEN, und er sagt, wofür.
+                       Verschwände er, gäbe es kein Ziel mehr für den Rückweg — wer
+                       alle Blöcke herausgezogen hat, käme nie wieder hinein. */
+                    const leer = document.createElement('div');
+                    leer.className = 'pg-fl-leer';
+                    leer.textContent = 'Alles liegt auf der Fläche. Einen Kasten hierher ziehen bringt ihn zurück in den Text.';
+                    koerper.appendChild(leer);
+                }
+            }
+            else {
+                koerper.appendChild(Blocks.render(b));
+            }
+            kaesten.push({ el: kasten, plan });
+            ebene.appendChild(kasten);
+            return kasten;
+        };
+        /* --- Das Menü eines Kastens ---------------------------------------- */
+        const kastenMenue = (anker, plan) => {
+            const r = anker.getBoundingClientRect();
+            const b = plan.block;
+            const nurFlaeche = String(b.sichtbarIn) === 'flaeche';
+            const html = plan.art === 'seite'
+                ? '<button data-a="fl-passend"><span class="mi">⛶</span>Alles ins Bild holen</button>'
+                : '<button data-a="fl-zurueck"><span class="mi">▤</span>Zurück in den Text</button>' +
+                    (nurFlaeche
+                        ? '<button data-a="fl-zeigen"><span class="mi">👁</span>Auf der Seite wieder zeigen</button>'
+                        : '<button data-a="fl-verstecken"><span class="mi">🚫</span>Auf der Seite ausblenden</button>');
+            const menu = UI.menu(html, Math.min(r.left, innerWidth - 260), r.bottom + 4);
+            menu.addEventListener('click', (e) => {
+                const btn = e.target instanceof Element
+                    ? e.target.closest('button[data-a]') : null;
+                if (!btn)
+                    return;
+                menu.remove();
+                if (btn.dataset['a'] === 'fl-passend')
+                    passend();
+                if (btn.dataset['a'] === 'fl-zurueck')
+                    zurueckInText(b);
+                if (btn.dataset['a'] === 'fl-verstecken')
+                    setzeZeigen(b, 'flaeche');
+                if (btn.dataset['a'] === 'fl-zeigen')
+                    setzeZeigen(b, 'beides');
+            });
+        };
+        /* --- Der Seitenkasten, dann die einzelnen ---------------------------- */
         const ort = notizLesen(p);
-        const kasten = document.createElement('div');
-        kasten.className = 'pg-fl-notiz';
-        kasten.style.left = ort.x + 'px';
-        kasten.style.top = ort.y + 'px';
-        kasten.style.width = ort.w + 'px';
-        const kopf = document.createElement('div');
-        kopf.className = 'pg-fl-kopf';
-        /* DER KOPF DES KASTENS IST DER SEITENKOPF — UMGEZOGEN, NICHT NACHGEBAUT.
-           AFFiNEs Notiz trägt auf der Fläche Emoji und Titel in einer eigenen
-           Zeile (`edgeless-note-header.tsx:22-60`). Nachbauen hiesse hier: ein
-           zweites Titelfeld, das dieselbe Seite schreibt — und eines von beiden
-           wäre immer das veraltete (§8).
-    
-           Stattdessen wandern die zwei Knoten, die `Kopfleiste.zeichne` gerade
-           angelegt hat, mit allen ihren Zuhörern hierher. Das hält auch etwas
-           am Leben, das niemand vermuten würde: `menueband.ts:121` fragt
-           `!!document.getElementById('title')`, um zu wissen, ob überhaupt eine
-           Seite offen ist. Ohne `#title` wäre auf der Fläche das halbe Menüband
-           aus. */
-        const symAlt = wrap.querySelector('.pg-icon');
-        const titelAlt = wrap.querySelector('#title');
-        if (symAlt)
-            kopf.appendChild(symAlt);
-        if (titelAlt)
-            kopf.appendChild(titelAlt);
-        if (!symAlt) {
-            const sym = document.createElement('span');
-            sym.className = 'pg-icon';
-            sym.setAttribute('aria-hidden', 'true');
-            sym.textContent = p.icon || '📄';
-            kopf.appendChild(sym);
+        const kasten = kastenBauen({
+            art: 'seite', block: p, ort,
+            merken: (neu) => { ort.x = neu.x; ort.y = neu.y; notizSchreiben(p, neu); }
+        });
+        for (const b of eigeneKaesten(p)) {
+            const bo = blockOrt(b);
+            kastenBauen({
+                art: 'block', block: b, ort: bo,
+                merken: (neu) => { bo.x = neu.x; bo.y = neu.y; blockOrtSchreiben(b, neu); }
+            });
         }
-        if (!titelAlt) {
-            const name = document.createElement('div');
-            name.className = 'pg-fl-name';
-            name.textContent = p.text || 'Ohne Titel';
-            kopf.appendChild(name);
-        }
-        const griffHinweis = document.createElement('span');
-        griffHinweis.className = 'pg-fl-griff';
-        griffHinweis.setAttribute('aria-hidden', 'true');
-        griffHinweis.title = 'Ziehen verschiebt den Kasten';
-        griffHinweis.textContent = '⠿';
-        kopf.appendChild(griffHinweis);
-        kasten.appendChild(kopf);
-        const koerper = document.createElement('div');
-        koerper.className = 'pg-fl-koerper';
-        kasten.appendChild(koerper);
-        ebene.appendChild(kasten);
-        /* DERSELBE AUFRUF WIE AUF DER NORMALEN SEITE (Punkt 3 oben). */
-        Inhaltsflaeche.zeichne(koerper, p);
         wrap.appendChild(flaeche);
         /* ======================================================================
          * Ausschnitt, Raster, Umrechnung
@@ -176558,6 +177200,13 @@ const Seitenflaeche = (() => {
             const k = flaeche.getBoundingClientRect();
             return { x: (sx - k.left - sicht.x) / sicht.z, y: (sy - k.top - sicht.y) / sicht.z };
         };
+        /* Solange DIESE Fläche zu sehen ist, landet ein neuer Kasten in der
+           Mitte des Ausschnitts — wie AFFiNEs Notiz-Werkzeug. */
+        vorschlag = () => {
+            const k = flaeche.getBoundingClientRect();
+            const mitte = inFlaeche(k.left + k.width / 2, k.top + k.height / 3);
+            return { x: Math.round(mitte.x - BLOCK_BREITE / 2), y: Math.round(mitte.y) };
+        };
         /** Zoomen und dabei den Punkt unter dem Finger festhalten. */
         const massstab = (neu, haltX, haltY) => {
             const z = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, neu));
@@ -176573,11 +177222,34 @@ const Seitenflaeche = (() => {
         /** Alles ins Bild holen — AFFiNEs „Fit to screen". */
         const passend = () => {
             const k = flaeche.getBoundingClientRect();
-            /* `offsetWidth/Height` sind LAYOUT-Masse und vom `transform` unberührt —
-               also schon Flächeneinheiten. Mit `getBoundingClientRect` wären sie
-               mit z multipliziert, und die Rechnung liefe im Kreis. */
-            const w = kasten.offsetWidth || vorgabeBreite();
-            const h = kasten.offsetHeight || 400;
+            /* ALLES heisst ALLE KÄSTEN (E691). Der erste Stand rechnete nur mit
+               dem Seitenkasten — und auf dem Bild hingen die zwei
+               herausgezogenen Blöcke rechts ausserhalb, während die Leiste
+               „100 %" meldete und der Knopf „ins Bild holen" hiess. Gefunden hat
+               das nicht der Wächter, sondern das Bild (§55.1); seither hält
+               `test574 §3b` es fest.
+      
+               `offsetWidth/Height` sind LAYOUT-Masse und vom `transform`
+               unberührt — also schon Flächeneinheiten. Mit
+               `getBoundingClientRect` wären sie mit z multipliziert, und die
+               Rechnung liefe im Kreis. */
+            let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+            for (const { el, plan } of kaesten) {
+                const bw = el.offsetWidth || plan.ort.w || vorgabeBreite();
+                const bh = el.offsetHeight || 200;
+                x0 = Math.min(x0, plan.ort.x);
+                y0 = Math.min(y0, plan.ort.y);
+                x1 = Math.max(x1, plan.ort.x + bw);
+                y1 = Math.max(y1, plan.ort.y + bh);
+            }
+            if (!Number.isFinite(x0)) {
+                x0 = ort.x;
+                y0 = ort.y;
+                x1 = x0 + vorgabeBreite();
+                y1 = y0 + 400;
+            }
+            const w = Math.max(1, x1 - x0);
+            const h = Math.max(1, y1 - y0);
             if (!k.width || !k.height)
                 return;
             const rand = 24;
@@ -176589,8 +177261,8 @@ const Seitenflaeche = (() => {
             const z = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.min(1, (k.width - rand * 2) / w, (nutzHoehe - rand) / h)));
             sicht = {
                 z,
-                x: (k.width - w * z) / 2 - ort.x * z,
-                y: Math.max(rand, (nutzHoehe - h * z) / 2) - ort.y * z
+                x: (k.width - w * z) / 2 - x0 * z,
+                y: Math.max(rand, (nutzHoehe - h * z) / 2) - y0 * z
             };
             stellen();
         };
@@ -176632,7 +177304,8 @@ const Seitenflaeche = (() => {
         /* ======================================================================
          * Schieben, Ziehen, Zoomen
          * ====================================================================*/
-        /** Was gerade unter dem Finger passiert. */
+        /** Was gerade unter dem Finger passiert. Bei `kasten` steht dabei,
+         *  WELCHER — seit E691 sind es mehrere. */
         let zug = null;
         const finger = new Map();
         let kneifen = null;
@@ -176648,8 +177321,18 @@ const Seitenflaeche = (() => {
             const ziel = e.target instanceof Element ? e.target : null;
             /* AM KOPF ZIEHT MAN DEN KASTEN, sonst die Fläche. Der Körper des
                Kastens gehört dem Text: wer darin zieht, markiert Worte. */
-            if (ziel?.closest('.pg-fl-kopf') && werkzeug === 'zeiger') {
-                zug = { art: 'kasten', sx: e.clientX, sy: e.clientY, ax: ort.x, ay: ort.y };
+            if (ziel?.closest('.pg-fl-menue')) {
+                return;
+            }
+            else if (ziel?.closest('.pg-fl-kopf') && werkzeug === 'zeiger') {
+                const el = ziel.closest('.pg-fl-notiz');
+                const eintrag = kaesten.find(k => k.el === el);
+                if (el && eintrag) {
+                    zug = {
+                        art: 'kasten', sx: e.clientX, sy: e.clientY,
+                        ax: eintrag.plan.ort.x, ay: eintrag.plan.ort.y, el, plan: eintrag.plan
+                    };
+                }
             }
             else if (ziel?.closest('.gfx-tb-sockel')) {
                 return;
@@ -176680,14 +177363,27 @@ const Seitenflaeche = (() => {
                 sicht = { x: zug.ax + dx, y: zug.ay + dy, z: sicht.z };
                 stellen(false);
             }
-            else {
+            else if (zug.el && zug.plan) {
                 /* Der Kasten wandert in FLÄCHENEINHEITEN, also geteilt durch z —
                    ohne das läuft er bei 50 % Zoom doppelt so weit wie der Finger. */
-                ort.x = zug.ax + dx / sicht.z;
-                ort.y = zug.ay + dy / sicht.z;
-                kasten.style.left = ort.x + 'px';
-                kasten.style.top = ort.y + 'px';
+                zug.plan.ort.x = zug.ax + dx / sicht.z;
+                zug.plan.ort.y = zug.ay + dy / sicht.z;
+                zug.el.style.left = zug.plan.ort.x + 'px';
+                zug.el.style.top = zug.plan.ort.y + 'px';
+                /* ÜBER DEM SEITENKASTEN HEISST: zurück in den Text. Der Kasten
+                   darunter leuchtet, solange man darüber schwebt — sonst wäre das
+                   Loslassen eine Überraschung. */
+                if (zug.plan.art === 'block') {
+                    const drueber = ueberSeitenkasten(e.clientX, e.clientY);
+                    kasten.classList.toggle('pg-fl-ziel', drueber);
+                    zug.el.classList.toggle('pg-fl-zurueck', drueber);
+                }
             }
+        };
+        /** Liegt dieser Bildschirmpunkt über dem Seitenkasten? */
+        const ueberSeitenkasten = (sx, sy) => {
+            const r = kasten.getBoundingClientRect();
+            return sx >= r.left && sx <= r.right && sy >= r.top && sy <= r.bottom;
         };
         const endet = (e) => {
             finger.delete(e.pointerId);
@@ -176695,16 +177391,78 @@ const Seitenflaeche = (() => {
                 kneifen = null;
             if (!zug)
                 return;
-            if (zug.art === 'flaeche')
-                sichtSchreiben(p.id, sicht);
-            else
-                notizSchreiben(p, ort);
+            const jetzt = zug;
             zug = null;
+            if (jetzt.art === 'flaeche') {
+                sichtSchreiben(p.id, sicht);
+                return;
+            }
+            if (!jetzt.plan)
+                return;
+            kasten.classList.remove('pg-fl-ziel');
+            jetzt.el?.classList.remove('pg-fl-zurueck');
+            /* Losgelassen über dem Seitenkasten: der Block gehört wieder in den
+               Text. Das ist der Rückweg, den §9 verlangt — was auf die Fläche
+               kann, muss auch zurück. */
+            if (jetzt.plan.art === 'block' && ueberSeitenkasten(e.clientX, e.clientY)) {
+                zurueckInText(jetzt.plan.block);
+                return;
+            }
+            jetzt.plan.merken(jetzt.plan.ort);
         };
         flaeche.addEventListener('pointerdown', beginnt);
         flaeche.addEventListener('pointermove', bewegt);
         flaeche.addEventListener('pointerup', endet);
         flaeche.addEventListener('pointercancel', endet);
+        /* ======================================================================
+         * EINEN BLOCK AUS DEM TEXT AUF DIE FLÄCHE ZIEHEN (E691)
+         * ----------------------------------------------------------------------
+         * Das Ziehen selbst gehört dem Editor — er kann es seit Langem
+         * (`editor.ts:1990-2045`, HTML5 mit `draggable` am Griff `⋮⋮`). Hier
+         * steht nur das ABLEGEN. Einen zweiten Ziehmechanismus daneben zu bauen
+         * wäre genau das, wovor §8 warnt; darum reicht der Editor die Kennung
+         * seit diesem Bogen über `dataTransfer` heraus, und die Fläche liest
+         * sie.
+         *
+         * DER EIGENE MIME-NAME ist kein Schmuck: ohne ihn nähme die Fläche auch
+         * eine Datei oder einen Text aus einem anderen Fenster für einen Block.
+         * ====================================================================*/
+        const istBlockZug = (e) => !!e.dataTransfer && [...e.dataTransfer.types].includes('application/x-redion-block');
+        flaeche.addEventListener('dragover', (e) => {
+            if (!istBlockZug(e))
+                return;
+            e.preventDefault();
+            if (e.dataTransfer)
+                e.dataTransfer.dropEffect = 'move';
+            /* Nur wo der Block WIRKLICH landen würde. Über einem Kasten ordnet
+               der Editor ihn ein, und dann wäre ein leuchtender Rand eine
+               Lüge. */
+            const ueberKasten = e.target instanceof Element && !!e.target.closest('.pg-fl-notiz');
+            flaeche.classList.toggle('pg-fl-nimmt', !ueberKasten);
+        });
+        flaeche.addEventListener('dragleave', (e) => {
+            if (e.target === flaeche)
+                flaeche.classList.remove('pg-fl-nimmt');
+        });
+        flaeche.addEventListener('drop', (e) => {
+            flaeche.classList.remove('pg-fl-nimmt');
+            if (!istBlockZug(e))
+                return;
+            const id = e.dataTransfer?.getData('application/x-redion-block') ?? '';
+            const b = id ? Store.getBlock(id) : null;
+            if (!b)
+                return;
+            /* ÜBER EINEM KASTEN GEHÖRT DER ZUG DEM EDITOR. Dort ordnet er den
+               Block zwischen zwei andere — dieselbe Geste, die sie auf der
+               normalen Seite hat. Deshalb hier KEIN `stopPropagation`: der
+               Zuhörer des Editors liegt eine Ebene höher und soll drankommen. */
+            if (e.target instanceof Element && e.target.closest('.pg-fl-notiz'))
+                return;
+            e.preventDefault();
+            e.stopPropagation();
+            const fp = inFlaeche(e.clientX, e.clientY);
+            aufFlaeche(b, { x: Math.round(fp.x), y: Math.round(fp.y) });
+        });
         /* Rad schiebt, Strg + Rad zoomt — wie in AFFiNE und im Whiteboard. */
         flaeche.addEventListener('wheel', (e) => {
             e.preventDefault();
@@ -176724,12 +177482,8 @@ const Seitenflaeche = (() => {
         else
             requestAnimationFrame(() => passend());
         stellen(false);
-        /* Die Umrechnung steht bereit, auch wenn heute nur der Kasten sie
-           braucht — der nächste Bogen (zeichnen auf der Fläche) rechnet mit
-           derselben Formel, nicht mit einer zweiten. */
-        void inFlaeche;
     };
-    return { zeichne };
+    return { zeichne, aufFlaeche, zurueckInText, setzeZeigen };
 })();
 window.Seitenflaeche = Seitenflaeche;
 

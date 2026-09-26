@@ -1478,6 +1478,14 @@ const Blocks = (() => {
       if (tiefe > 6) return;
       Store.childrenOf(id).forEach((k: any) => {
         if (k.type === 'page') return;              /* Unterseiten haben ihr eigenes */
+        /* UND WAS NICHT IM TEXT STEHT, STEHT NICHT IM VERZEICHNIS (E691).
+           Ein Eintrag für eine Überschrift auf „nur Fläche" wäre doppelt
+           falsch: er verspricht eine Stelle, die auf dieser Seite nicht
+           gezeichnet ist, und sein Klick sucht `[data-bid=…]`, findet
+           nichts und tut nichts — ein Knopf, der schweigend nichts bewirkt
+           (§47, derselbe Fall wie E277). */
+        if (typeof Register !== 'undefined' && (Register as any).seitenansichten &&
+            !(Register as any).seitenansichten.zeigtIn(k, 'seite')) return;
         const stufe2 = (TOC_STUFEN as Record<string, number>)[k.type];
         if (stufe2) gefunden.push({ block: k, stufe: stufe2 });
         if (['toggle','toggle-h1','toggle-h2','toggle-h3','callout','columns','columns3',
@@ -1998,7 +2006,19 @@ const Blocks = (() => {
     });
     wurzel.addEventListener('dragstart', (e: any) => {
       const blk = elVon(e)?.closest<HTMLElement>('.blk');
-      if (blk) { gezogen = blk.dataset.bid; blk.style.opacity = '.4'; }
+      if (blk) {
+        gezogen = blk.dataset.bid;
+        blk.style.opacity = '.4';
+        /* DIE KENNUNG REIST MIT (E691). Bis hierher wusste nur diese Datei,
+           was gerade gezogen wird — `gezogen` ist eine Variable in dieser
+           Schliessung. Die Fläche liegt ausserhalb des Editors und kann sie
+           nicht sehen; ohne diese zwei Zeilen bräuchte sie ein eigenes
+           Ziehen, und das wäre der zweite Mechanismus, vor dem §8 warnt.
+           Der eigene MIME-Name, damit ein Zug aus einem anderen Programm
+           nicht versehentlich als Block gelesen wird. */
+        e.dataTransfer?.setData('application/x-redion-block', String(blk.dataset.bid ?? ''));
+        if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+      }
     });
     wurzel.addEventListener('dragend', (e: any) => {
       const blk = elVon(e)?.closest<HTMLElement>('.blk');
@@ -2994,6 +3014,20 @@ const Blocks = (() => {
       '<button data-a="up"><span class="mi">↑</span>Nach oben<span class="ms">Ctrl+Shift+↑</span></button>' +
       '<button data-a="down"><span class="mi">↓</span>Nach unten<span class="ms">Ctrl+Shift+↓</span></button>' +
       '<button data-a="moveto"><span class="mi">➦</span>Verschieben nach …</button>' +
+      /* DER WEG AUF DIE FLÄCHE OHNE GRIFF (E691). Am Rechner zieht man den
+         Block am `⋮⋮` auf die Leinwand; am Telefon ist dieser Griff
+         ausgeblendet (`ki.css:182`), und HTML5-Ziehen kennt ohnehin keine
+         Finger. Ohne diesen Eintrag gäbe es den Vollausbau am Telefon
+         nicht — und §37 sagt, das Telefon ist der Normalfall. */
+      /* „VON DER FLÄCHE NEHMEN", nicht „zurück in den Text": dieses Menü geht
+         in der TEXTansicht auf, und dort steht der Block ja bereits im Text
+         (solange er nicht ausgeblendet ist). Die Beschriftung sagt, was
+         wirklich geschieht — sein Platz auf der Fläche fällt weg. Auf der
+         Fläche selbst heisst derselbe Griff „Zurück in den Text", und dort
+         stimmt es. */
+      (b.flaecheOrt
+        ? '<button data-a="flaeche"><span class="mi">▤</span>Von der Fläche nehmen</button>'
+        : '<button data-a="flaeche"><span class="mi">▦</span>Auf die Fläche legen</button>') +
       '<hr>' +
       '<button data-a="copy"><span class="mi">⎘</span>Text kopieren<span class="ms">Ctrl+C</span></button>' +
       '<button data-a="cut"><span class="mi">✂</span>Ausschneiden<span class="ms">Ctrl+X</span></button>' +
@@ -3115,6 +3149,12 @@ const Blocks = (() => {
       }
       if (a === 'moveto') {
         Blocks.blockVerschiebenNach(b);
+      }
+      if (a === 'flaeche') {
+        const fl = (window as any).Seitenflaeche;
+        if (!fl) return;
+        if (b.flaecheOrt) fl.zurueckInText(b);
+        else fl.aufFlaeche(b);
       }
       if (a === 'ai')  KI.blockAktion('ai-edit', b);
       if (a === 'del') { Store.trashBlock(b.id); Store.purgeBlock(b.id); App.zeichneSeite(); }

@@ -4408,3 +4408,62 @@ stammen aus E689 (`.gfx-tb-farben button` 28 × 28, `.wb-massstab` 46 → 40) �
 `test362` stand seit dem 26. September früh rot, und gemerkt hat es erst der
 Nachbarlauf dieses Bogens. Eine Decke, die nicht nachgezogen wird, ist eine
 Zahl.
+
+---
+
+## §65 · Der Vollausbau der Fläche (E691, 26. September 2026)
+
+Gemessen mit `test574` (50 Zusagen) und `node bilder.mts flaecheBloecke |
+flaecheVersteckt | flaecheLeer`.
+
+**Was ein Block trägt, und wie oft er es trägt:**
+
+```txt
+                        frisch      auf der Fläche   ausgeblendet
+flaecheOrt              fehlt       {x,y,w,rv:1}     {x,y,w,rv:1}
+sichtbarIn              fehlt       fehlt            'flaeche'
+im Seitenkasten         ja          nein             nein
+in der Textansicht      ja          ja               NEIN
+in `content` der Seite  ja          ja               ja
+alive                   true        true             true
+```
+
+**Das Verschieben rechnet in Flächeneinheiten** — gemessen bei 51 %
+Massstab, nicht bei 100 %: bei 1 sähe ein Umrechnungsfehler genauso aus wie
+keiner (derselbe Grund wie E686).
+
+```txt
+Bildschirm        Fläche (gemessen)     erwartet 1/z
+120 px in x       235                   235,3
+60 px in y        118                   117,6
+```
+
+**„Ins Bild holen", vorher und nachher** (Rechner 1400 × 950, drei Kästen,
+einer davon bei x = 1400):
+
+```txt
+                        ERSTER STAND        NACH DEM BILD
+gerechnet über          nur Seitenkasten    alle Kästen
+Massstab                100 %               90 %
+Kästen im Bild          1 von 3             3 von 3
+```
+
+**Am Telefon (390 × 844):**
+
+```txt
+Griff `⋮⋮` am Block         display:none  (ki.css:182)
+Weg auf die Fläche          Hebe-Geste (E83) → Blockmenü → „Auf die Fläche legen"
+Menüknopf des Kastens       44 × 44 px im Aufbau, 43 × 43 gerendert bei 98 %
+neuer Kasten liegt          unter dem Seitenkasten, nicht rechts daneben
+```
+
+Die zwei Masse sind nicht dasselbe, und das ist kein Mangel: auf einer
+Leinwand hängt ALLES am `transform: scale(z)`. Bei 50 % ist auch der Text
+halb so gross. Gemessen wird deshalb die Layout-Box; die gerenderte steht
+zum Vergleich daneben.
+
+**Und zwei Zahlen aus dem Prüfstand selbst:** zweimal war `test574` aus dem
+falschen Grund rot — einmal, weil er `contextmenu` schickte, das unter
+760 px ausdrücklich unterdrückt wird (E83), und einmal, weil er 400 ms nach
+dem Loslassen tippte, während der Fänger aus E83 die Klick-Nachzügler noch
+800 ms schluckt. Beide Male sah es aus wie ein Fehler im Produkt.

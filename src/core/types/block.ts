@@ -102,6 +102,23 @@ export interface RedionBlock {
    *  `flaeche:<seite>`, weil ein Blick am Telefon die Fläche am Rechner nicht
    *  verschieben darf. */
   flaecheNotiz?: { x: number; y: number; w: number; raumVersion?: number };
+
+  /* Der Vollausbau der Fläche (E691). An JEDEM Block, nicht nur an Seiten —
+   * Redur: „jeder block auf die fläche ziehbar".
+   *
+   * Auch diese zwei fehlen häufiger, als sie da sind, und das ist die
+   * Vorgabe: kein `flaecheOrt` heisst „steht im Seitenkasten", kein
+   * `zeigen` heisst „steht überall" (§9). */
+  /** Wo der Block auf der Fläche liegt, in Flächeneinheiten bei Massstab 1.
+   *  `raumVersion` nach dem Muster aus E686; fehlt sie, gilt Fassung 1. */
+  flaecheOrt?: { x: number; y: number; w?: number; raumVersion?: number };
+  /** Wo er erscheint: 'beides' (Vorgabe) | 'seite' | 'flaeche'.
+   *  Das Gegenstück zu AFFiNEs `displayMode` — Werte deutsch, weil sie so
+   *  gespeichert werden (§53.3). NICHT mit `alive` verwechseln: ein Block,
+   *  der in einer Ansicht nicht erscheint, ist nicht gelöscht.
+   *  Und NICHT `zeigen`: den Namen tragen schon 41 Register-Rückrufe
+   *  (`zeigen: () => boolean`), siehe `register/seitenansichten.ts`. */
+  sichtbarIn?: string;
 }
 
 /**

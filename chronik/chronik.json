@@ -3361,6 +3361,113 @@
           "risiko": "die Zusage ist 150 KB weicher; was sie hält, ist die Bibliotheksgrenze (pdf.js), nicht die Feinheit"
         }
       ]
+    },
+    {
+      "datum": "2026-09-26",
+      "wochentag": "Samstag",
+      "titel": "Drei Ansichten für eine Seite — und dann der Vollausbau: jeder Block darf auf die Fläche",
+      "wasIchWeiss": "Der Tag begann mit einem Vorwurf, und er war berechtigt: „Wo sind deine fotos ich habe nicht nichts bekommen.“ Vier Bögen lang hatte ich nichts geschickt — richtig war nur, dass drei davon nichts am Bildschirm änderten; der vierte tat es, und den hatte ich verschwiegen. Danach kam W6 Bogen 5a zu Ende (E689: EIN Katalog der Werkzeuge, EINE Leiste im Kern, das Whiteboard zuerst darauf) — und aus einem Bild von AFFiNEs Kopfzeile wurde der Rest des Tages.\n\nRedur wollte die Ansichten, aber mit einer Bedingung vorneweg: „aber zuerst liess was die ander 2 bereicht machen bi affine“. Das Lesen hat den Bogen verändert: AFFiNE hat GENAU ZWEI Modi, es sind zwei Blicke auf dasselbe Dokument, und ein Cover gibt es dort gar nicht — Redion ist an der Stelle reicher als das Vorbild, und genau deshalb ergab die dritte Ansicht Sinn. E690 hat sie gebaut: der Katalog `Register.seitenansichten`, das Feld `seitenAnsicht` am Block (kein Feld = die Redion-Ansicht), der Umschalter auf dem seit Monaten gebauten und nie benutzten `Segment`, und die Fläche als Leinwand mit dem Seitentext als Kasten. Drei Fehler daran fand nicht der Wächter, sondern das BILD, alle drei am Telefon: die Fläche war 332 px hoch statt 584, dann 278 px breit statt 390, und „ins Bild holen“ rechnete 31 %.\n\nDann die Frage am Ende von E690, und sie gehörte Redur: Vollausbau oder nicht? Seine Antwort: „ja mach den vollausbau, jeder block auf die fläche ziehbar.“ Diesmal habe ich vier Leser gleichzeitig geschickt, bevor eine Zeile entstand — und drei ihrer Funde stehen im Ergebnis: der Feldname (`zeigen` ist in dieser App 41-mal als Register-Rückruf vergeben, also heisst es `sichtbarIn`), eine Regel, die zweimal dastand („ist der Platz lesbar?“), und zwei Leser der Kinderliste, an die niemand gedacht hatte — Gliederungsstreifen und Inhaltsverzeichnis führten Überschriften auf, die auf der Seite gar nicht stehen.\n\nZwei Bögen, zwei Wächter, beide rot eingecheckt, beide mit Gegenproben. Und einmal hat Redur mich mitten im Anlauf angehalten — „was willst du machen“ —, weil ich zu arbeiten begonnen hatte, statt den Plan in fünf Zeilen hinzuschreiben.",
+      "nachrichten": [
+        {
+          "zeit": "ca. 06:00",
+          "wortlaut": "Wo sind deine fotos ich habe nicht nichts bekomemn",
+          "woher": "wörtlich aus dem Gespräch",
+          "gemeint": "Du hast zugesagt, jede sichtbare Änderung zu fotografieren und zu schicken — und nichts kam.",
+          "besser": "Derselbe Satz. Er war genau richtig: kurz, überprüfbar, und er hat einen echten Verstoss getroffen."
+        },
+        {
+          "zeit": "ca. 07:05",
+          "wortlaut": "bei der affine haben wir das es wechseldie ansichten und ich will dort auch die beide und plus von unsere aktulel stan haben also die mit covar usw also dort 3 bereicht aber zuerst liess was die ander 2 bereicht bereicht machen bi affine",
+          "woher": "wörtlich aus dem Gespräch, mit einem Bild von AFFiNEs Kopfzeile",
+          "gemeint": "Drei umschaltbare Ansichten je Seite: AFFiNEs zwei und unsere eigene mit dem Cover. Aber lies ZUERST, was AFFiNEs zwei tun.",
+          "besser": "Ich will drei Ansichten je Seite: AFFiNEs beide plus unsere mit Cover. Lies zuerst nach, was AFFiNEs zwei genau machen, und sag es mir, bevor du baust."
+        },
+        {
+          "zeit": "ca. 07:35",
+          "wortlaut": "ich will die 2 von affine 1;1 haben auch alles komplet wie es ausehn also wirklich komlet so und noch eien 3 für die aktuele redion damit wir es auch haben verstanden die 3 is von und erfunden t",
+          "woher": "wörtlich aus dem Gespräch",
+          "gemeint": "AFFiNEs zwei Ansichten eins zu eins im Aussehen; die dritte ist unsere eigene Erfindung.",
+          "besser": "Bau AFFiNEs zwei so, dass sie aussehen wie dort. Die dritte ist unsere eigene."
+        },
+        {
+          "zeit": "ca. 08:30",
+          "wortlaut": "ja mach den vollausbau, jeder block auf die fläche ziehbar",
+          "woher": "wörtlich aus dem Gespräch, als Antwort auf die Frage am Ende von E690",
+          "gemeint": "Nicht die ganze Seite als ein Kasten, sondern jeder einzelne Block mit eigenem Platz.",
+          "besser": "Derselbe Satz — er beantwortet genau die gestellte Frage und sagt dazu, welche der zwei Möglichkeiten gemeint ist."
+        },
+        {
+          "zeit": "ca. 08:35",
+          "wortlaut": "was willst du machen",
+          "woher": "wörtlich aus dem Gespräch, mitten in meinem Anlauf",
+          "gemeint": "Sag mir den Plan, bevor du anfängst.",
+          "besser": "Derselbe Satz. Er hat mich zu Recht angehalten."
+        },
+        {
+          "zeit": "ca. 08:40",
+          "wortlaut": "ja mach",
+          "woher": "wörtlich aus dem Gespräch",
+          "gemeint": "Der Plan stimmt, leg los.",
+          "besser": "—"
+        }
+      ],
+      "arbeit": [
+        {
+          "was": "E689 · EINE Werkzeugleiste für alle Flächen (W6, Bogen 5a)",
+          "vonBis": "e0988e6 → f2b0b9a",
+          "zeitraum": "06:24–06:51",
+          "dauer": "ca. 30 min",
+          "pruefungen": "test572 (51 Zusagen, gegen den alten Stand rot mit 20), test209 nachgezogen; zwölf Nachbarn grün"
+        },
+        {
+          "was": "Gelesen: AFFiNEs zwei Ansichten — Karte-Thema und die offene Frage als A1",
+          "vonBis": "f2b0b9a → fd1a778",
+          "zeitraum": "06:51–07:31",
+          "dauer": "ca. 40 min",
+          "pruefungen": "keine — ein Leser und eine Karte-Notiz, jeder Punkt mit Datei:Zeile"
+        },
+        {
+          "was": "E690 · Drei Ansichten einer Seite (A1)",
+          "vonBis": "43432e1 → 4d7436d",
+          "zeitraum": "07:38–08:15",
+          "dauer": "ca. 40 min",
+          "pruefungen": "test573 rot eingecheckt (7 Zeilen rot), danach 31/31; eine Gegenprobe rot, die zugleich eine Lücke IM Wächter zeigte; 27 Nachbarn grün"
+        },
+        {
+          "was": "E691 · Der Vollausbau der Fläche (A1c)",
+          "vonBis": "e388949 → offen",
+          "zeitraum": "08:25–…",
+          "dauer": "ca. 2 h",
+          "pruefungen": "test574 rot eingecheckt (14 ok, 25 rot), danach 50/50; zwei Gegenproben rot; vier Leser parallel vor dem Bau; 21 Nachbarn grün"
+        }
+      ],
+      "zahlen": {
+        "commits": 6,
+        "entscheidungen": 3,
+        "neuePruefläufe": 3
+      },
+      "groesstesProblem": "Zweimal am selben Tag `(window as any).App?.zeichneSeite?.()` geschrieben — und zweimal hat es still nichts getan. `const App = (() => …)()` in einem gewöhnlichen <script> legt eine globale LEXIKALISCHE Bindung an, und die steht nicht unter `window`. Das Feld wurde geschrieben, der Bildschirm blieb stehen, kein Fehler kam. Beim ersten Mal sah es aus wie ein fehlender Zweig, beim zweiten wie ein fehlender Kasten. Gefunden hat es beide Male eine Sonde, nicht der Wächter — der war rot, sagte aber das Falsche.",
+      "interessantesteAnfrage": "„aber zuerst liess was die ander 2 bereicht machen bi affine“ — eine Arbeitsanweisung mitten in einem Wunsch. Sie hat den Bogen verändert: ohne das Lesen wäre eine dritte Betriebsart entstanden, wo AFFiNE eine Ansicht hat, und der wichtigste Fund wäre unbemerkt geblieben — ein Cover gibt es dort gar nicht.",
+      "massnahmen": [
+        {
+          "zeit": "ca. 06:05",
+          "was": "Dreizehn Bilder aller vier Flächen nachgeschickt und `schaltplan` als fehlendes Bildziel ergänzt",
+          "warum": "Redurs Vorwurf war berechtigt (§55.3)",
+          "risiko": "keines"
+        },
+        {
+          "zeit": "ca. 07:00",
+          "was": "Ein Leser ins AFFiNE-Archiv, bevor gebaut wurde",
+          "warum": "Redur hat es ausdrücklich verlangt",
+          "risiko": "keines — nur gelesen (§57)"
+        },
+        {
+          "zeit": "ca. 08:50",
+          "was": "Vier Leser gleichzeitig statt eines, während der Bau parallel lief",
+          "warum": "drei ihrer Funde hätte der Bau nicht von selbst gemacht",
+          "risiko": "Zeit"
+        }
+      ]
     }
   ],
   "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
@@ -4874,6 +4981,30 @@
       "ursache": "127 KB in neun Tagen — Studio, Trainer, NIN-Quiz, Gedankenkarte, Dock-Welle — und kein voller Lauf seit dem 19. September (§46: main bewegt sich erst nach einem grünen).",
       "beweis": "Messung gegen bef8c3f in messungen.md §62; danach Decke 2850 und test388 19/19.",
       "lehre": "Jeder Bogen, der eine Skriptdatei zu index.html hinzufügt, fährt test388. Und die Decke ist ein Grund mehr, den vollen Lauf nicht länger als eine Woche liegen zu lassen — sie kann nur dort reissen, wo sie gefahren wird."
+    },
+    {
+      "nr": "P114",
+      "datum": "2026-09-26",
+      "titel": "`window.App` gibt es nicht — und der optionale Zugriff schluckt es",
+      "schwere": "mittel",
+      "symptom": "Ein Klick schreibt das Feld an den Block, und der Bildschirm bleibt stehen. Keine Meldung, kein Fehler in der Konsole.",
+      "falscheVermutung": "Der Zweig, der die neue Ansicht zeichnet, fehlt — oder der Kasten wird nicht gebaut.",
+      "wieGefunden": "Mit einer Sonde im Browser: `typeof (window as any).App` sagte `undefined`, während `typeof App` in derselben Seite `object` sagte.",
+      "ursache": "`const App = (() => …)()` in einem gewöhnlichen <script> legt eine globale LEXIKALISCHE Bindung an. Die steht im globalen Geltungsbereich, aber NICHT als Feld von `window` — anders als `var` und anders als eine ausdrückliche Zuweisung. `(window as any).App?.zeichneSeite?.()` ist damit ein optionaler Zugriff auf `undefined`: er tut nichts und meldet nichts.",
+      "beweis": "Sonde vom 26. September: `art() sagt: { art: 'redion', feld: undefined, hatZeichne: 'undefined' }` — und derselbe Aufruf über den baren Namen wirkte sofort.",
+      "lehre": "Ein `?.` auf einen globalen Namen ist kein Schutz, sondern ein Schalldämpfer. Wer prüfen will, ob es etwas gibt, schreibt `typeof X !== 'undefined'`. Und: dieselbe Zeile ist an EINEM Tag zweimal entstanden — ein Fehler, der sich wiederholt, gehört in den Code kommentiert, nicht nur in den Kopf."
+    },
+    {
+      "nr": "P115",
+      "datum": "2026-09-26",
+      "titel": "Ein Wächter, der eine Absicht misst, die es nicht gibt",
+      "schwere": "mittel",
+      "symptom": "`test574 §8` meldete zweimal „am Telefon gibt es keinen Weg auf die Fläche“ — obwohl es ihn gab.",
+      "falscheVermutung": "Der Menüeintrag fehlt, oder der Griff wirkt am Telefon nicht.",
+      "wieGefunden": "Beim Nachlesen der Stelle, die der Lauf ansprach: `editor.ts:1955` unterdrückt `contextmenu` unter 760 px ausdrücklich — dort gehört das lange Drücken der Hebe-Geste (E83). Und Fund 2 von E83 sagt, dass der Fänger die Klick-Nachzügler nach einer Berührung 800 ms schluckt; der Lauf tippte nach 400 ms.",
+      "ursache": "Der Wächter hat den Weg des RECHNERS am Telefon gefahren und die vorhandene Geste gar nicht angefasst. Zweimal war er rot, und zweimal lag es an ihm.",
+      "beweis": "Mit `touchstart`, 750 ms Warten und `touchend` ging das Menü auf; nach weiteren 900 ms wirkte der Klick — ohne eine Zeile am Produkt.",
+      "lehre": "Eine Prüfung muss den Weg fahren, den der Mensch auf DIESEM Gerät hat, nicht den, den sie vom anderen kennt. Und wenn eine Zusage rot ist, lautet die erste Frage nicht „was ist am Produkt kaputt“, sondern „misst der Lauf überhaupt, was er behauptet“ (L206)."
     }
   ]
 }

@@ -81,8 +81,16 @@ const Inhaltsflaeche = (() => {
     const stufen = (typeof Register !== 'undefined' && Register.bloecke?.ueberschriften)
       ? Register.bloecke.ueberschriften()
       : { h1: 1, h2: 2, h3: 3 };
+    /* WAS NICHT IM TEXT STEHT, GEHÖRT NICHT IN SEINE GLIEDERUNG (E691).
+       Der Streifen ist ein Bauteil der TEXTansicht: er zeigt, wo man in der
+       rollenden Seite ist. Eine Überschrift, die auf „nur Fläche" steht,
+       wird dort nicht gezeichnet — ein Strich dafür führte zu einer Stelle,
+       die es nicht gibt. Gefunden hat das ein Leser beim Nachsehen, wer
+       ausser der Inhaltsfläche noch die Kinder einer Seite liest. */
+    const zeigtIn = (typeof Register !== 'undefined' && (Register as any).seitenansichten)
+      ? (Register as any).seitenansichten.zeigtIn : () => true;
     const kopfzeilen = Store.childrenOf(seite.id)
-      .filter((b: any) => stufen[b.type] && (b.text || '').trim());
+      .filter((b: any) => stufen[b.type] && (b.text || '').trim() && zeigtIn(b, 'seite'));
     if (kopfzeilen.length < 3) return;
 
     /* `#main` und `#scroll` gehören zur Schale. Fehlt eines, wird hier kein
@@ -131,25 +139,61 @@ const Inhaltsflaeche = (() => {
         '<div style="font-size:14px">Links auf <b>+</b> klicken oder <b>Strg + N</b> drücken</div></div>';
   };
 
-  /* Wiki-Verzeichnis, Blöcke, Rückverweise — in dieser Folge. */
-  const zeichne = (wrap: HTMLElement, p: any): void => {
+  /**
+   * Wiki-Verzeichnis, Blöcke, Rückverweise — in dieser Folge.
+   *
+   * @param wo Für welche Seite des Umschalters gezeichnet wird (E691):
+   *        `'seite'` ist der Text (Vorgabe, also alle bisherigen Aufrufer),
+   *        `'flaeche'` der Seitenkasten auf der Leinwand. Ein Block kann in
+   *        einem von beiden stehen, in beiden oder — wenn er seinen eigenen
+   *        Kasten hat — im Kasten gar nicht mehr.
+   */
+  const zeichne = (wrap: HTMLElement, p: any, wo: 'seite' | 'flaeche' = 'seite'): void => {
     /* Wiki-Verzeichnis */
     if (p.wiki) Werkzeuge.wikiIndex(p, wrap);
 
     /* Blöcke */
     const kinder = Store.childrenOf(p.id);
+    /* DIESE PRÜFUNG STEHT VOR DEM FILTERN, UND DAS IST KEIN ZUFALL (E691).
+       Sie legt einen leeren Textblock an, wenn eine Seite gar keine Kinder
+       hat. Stünde sie NACH dem Filtern, legte sie bei jeder Zeichnung einen
+       neuen an, sobald alle Blöcke einer Seite auf „nur Fläche" stehen —
+       eine Seite, die sich beim Ansehen selbst vollschreibt. Gezählt wird
+       also, was da IST, nicht, was man gerade sieht (§9). */
     if (!kinder.length && !p.gesperrt) {
       const b = Store.addBlock(p.id, 'text');
       kinder.push(b);
     }
+    /* WO ERSCHEINT DIESER BLOCK? Die Frage wird einmal im Register
+       beantwortet (§8, `Register.seitenansichten.zeigtIn`), nicht hier.
+       Dazu die eine Regel, die nur die Fläche betrifft: ein Block mit
+       eigenem Ort liegt dort als eigener Kasten und nicht noch einmal im
+       Seitenkasten. */
+    const zeigtIn = (typeof Register !== 'undefined' && (Register as any).seitenansichten)
+      ? (Register as any).seitenansichten.zeigtIn
+      : () => true;
+    /* EIN UNLESBARER ORT IST KEIN ORT (§9) — und die Frage wird EINMAL
+       beantwortet, im Register, nicht hier und nochmal auf der Fläche (§8).
+       Antworteten die zwei Stellen je verschieden, wäre ein Block nirgends:
+       aus dem Seitenkasten gefiltert und ohne eigenen Kasten. */
+    const ortLesbar = (typeof Register !== 'undefined' && (Register as any).seitenansichten)
+      ? (Register as any).seitenansichten.ortLesbar
+      : (o: unknown) => !!o;
+    const sichtbar = kinder.filter((b: any) =>
+      zeigtIn(b, wo) && !(wo === 'flaeche' && ortLesbar(b.flaecheOrt)));
+
     let nr = 0;
-    kinder.forEach((b: any) => {
+    sichtbar.forEach((b: any) => {
       if (b.type === 'number') { nr++; b.nr = nr; } else nr = 0;
       wrap.appendChild(Blocks.render(b));
     });
 
-    /* Rückverweise unter der Seite */
-    if (!p.ohneRueck) Links.fusszeile(p, wrap);
+    /* Rückverweise unter der Seite — aber nicht im Kasten auf der Leinwand.
+       Dort sind sie kein Fuss der Seite, sondern eine Liste mitten im Bild,
+       und sie machen den Kasten um ihre Höhe länger, ohne etwas zu zeigen,
+       was auf eine Fläche gehört. AFFiNE zeigt sie im Edgeless ebenfalls
+       nicht. */
+    if (!p.ohneRueck && wo === 'seite') Links.fusszeile(p, wrap);
   };
 
   return { binde, zeichne, leer, streifen: streifenZeichnen };

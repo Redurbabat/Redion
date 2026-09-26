@@ -8340,6 +8340,47 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L220 · Drei Nebenwirkungen des Ausblendens — 26. September 2026
+
+**Seit E691** kann ein Block auf „nur Fläche" stehen (`sichtbarIn:
+'flaeche'`) und wird dann in der Textansicht nicht gezeichnet. Drei Stellen
+rechnen weiter mit der UNGEFILTERTEN Geschwisterliste. Keine davon
+verliert Daten; alle drei sind Fälle von „der Bildschirm bewegt sich
+nicht, und niemand sagt warum". Gefunden hat sie ein Leser beim Nachsehen,
+nicht ein Mensch beim Benutzen.
+
+```txt
+1  Rücktaste am Anfang eines leeren Blocks nimmt eltern.content[idx-1] und
+   setzt den Fokus dorthin (editor.ts:1763-1774). Steht der Vorgänger auf
+   „nur Fläche", zeigt der Fokus auf ein [data-bid], das auf dieser Seite
+   nicht gezeichnet ist — der Cursor springt nirgendwohin.
+
+2  Strg+Umschalt+↑/↓ (verschiebe(), editor.ts:2193-2202) tauscht zwei
+   Plätze in eltern.content. Ist der Nachbar ausgeblendet, ändern sich die
+   DATEN und auf dem Bildschirm bewegt sich nichts; zweimal drücken
+   springt dann über den unsichtbaren Block.
+
+3  `b.nr` (die laufende Nummer einer Nummernliste) wird beim Zeichnen in
+   den Block im Arbeitsspeicher GESCHRIEBEN (inhaltsflaeche.ts) und
+   wandert über `exportAll` in jede .redion. Seit E691 zählt sie über die
+   GEFILTERTE Liste — dieselbe Seite kann also je nach zuletzt gezeichneter
+   Ansicht eine andere `nr` sichern. Es ist ein Anzeigewert, kein Inhalt,
+   und er wird beim nächsten Zeichnen überschrieben; schön ist es nicht.
+```
+
+**Was daran heute richtig ist:** die Nummerierung auf dem Bildschirm zählt
+ohne Loch weiter (1, 2 statt 1, 3) — das hält `test574 §7b`. Und der Fuss
+der Seite (Rückverweise) steht bewusst nicht im Kasten auf der Leinwand;
+auch das hält §7b.
+
+**Was fehlt:** Punkt 1 und 2 brauchen je eine Zeile, die den nächsten
+SICHTBAREN Nachbarn sucht statt des nächsten in `content` — und eine
+Zusage dafür. Punkt 3 gehört gelöst, indem `nr` gar nicht erst am Block
+landet, sondern am Element; das ist ein eigener kleiner Bogen, weil
+`editor.ts:546` es von dort liest.
+
+---
+
 ## L219 · Auf der Fläche kann man noch nicht zeichnen — 26. September 2026
 
 **Seit E690 gibt es die Ansicht „Fläche"** (AFFiNEs `edgeless`): Punktraster,
@@ -8713,7 +8754,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 26. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 115 Lücken, 63 offene und 52 geschlossene. Der Befehl dazu ist
+Datei führt 116 Lücken, 64 offene und 52 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt
