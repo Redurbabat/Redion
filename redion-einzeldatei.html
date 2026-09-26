@@ -25733,7 +25733,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1362, inhalt: '3d81c63bd7c0c814', gebaut: '2026-09-26T10:11:43.301Z' };
+const Stand = { fassung: 1366, inhalt: '823b6a67e41666a8', gebaut: '2026-09-26T16:24:47.383Z' };
 window.Stand = Stand;
 
 </script>
@@ -40105,21 +40105,64 @@ Register.menueband = (() => {
             zeigen: flaecheDa
         }));
     };
+    /* ══ DIE WERKZEUGE DES BANDES — EINE FOLGE, KEINE LISTE (E212, E694) ═════
+       Hier standen dreizehn Vierertupel `[Kennung, Name, Zeichen, Hinweis]`,
+       und daneben hielt `marken.ts` vierzehn Werkzeuge mit denselben Namen.
+       Dass beide auseinanderlaufen, ist keine Vermutung: als „Abdecken" im
+       Studio einmal still zu „Abdeckband" wurde, sagte das Band weiter
+       „Abdecken" (`test266 §1`). Genau davor warnt §8.
+  
+       JETZT STEHT HIER NUR NOCH, WELCHE UND IN WELCHER REIHENFOLGE. Name,
+       Zeichen und Beschreibung kommen aus dem Katalog; `test572 §3` lässt in
+       dieser Datei keinen Namen mehr zu.
+  
+       ZWEI QUELLEN, UND DAS IST KEIN WIDERSPRUCH ZU §8. Neun Kennungen sind
+       Werkzeuge des Studios (`Register.werkzeuge`); vier sind FORMEN
+       (`Marken.FORMEN`) — im Studio liegen sie unter dem einen Knopf
+       `formen`, im Band stehen sie einzeln, weil dort kein Untermenü
+       aufgeht. Sie sind verschiedene Dinge, keine zwei Fassungen desselben.
+  
+       UND DIE QUELLE MUSS DABEISTEHEN, nicht erraten werden: die Kennung
+       `ellipse` gibt es ZWEIMAL — als Flächenwerkzeug (`◯`) und als
+       Studio-Form (`○`). Ein „erst im Register nachsehen, sonst bei den
+       Formen" hätte hier still das falsche Zeichen gezeigt. Deshalb sagt
+       jede Zeile, wohin sie gehört. */
     const WERKZEUGE = [
-        ['schreiben', 'Schreiben', '✎', 'Die Zeichenschicht ist durchlässig — Text bleibt anfassbar'],
-        ['stift', 'Stift', '🖍', 'Freihand mit geglätteter Linie'],
-        ['marker', 'Marker', '▰', 'Transparenter Marker zum Hervorheben'],
-        ['line', 'Linie', '╱', 'Gerade Linie'],
-        ['arrow', 'Pfeil', '→', 'Pfeil'],
-        ['rectangle', 'Rechteck', '□', 'Rechteck'],
-        ['ellipse', 'Ellipse', '○', 'Ellipse'],
-        ['abdeck', 'Abdecken', '▬', 'Abdeckband — Antippen im Schreiben-Modus deckt auf'],
-        ['zettel', 'Haftnotiz', '🗒', 'Einen Zettel aufziehen und beschriften'],
-        ['text', 'Text', 'T', 'Textanmerkung auf der Fläche'],
-        ['zeichen', 'Fachzeichen', '⚡', 'Ein elektrotechnisches Zeichen setzen'],
-        ['select', 'Auswahl', '⌖', 'Marken auswählen, gemeinsam bewegen oder löschen'],
-        ['radierer', 'Radieren', '⌫', 'Eine Marke entfernen']
+        ['schreiben', 'werkzeug'],
+        ['stift', 'werkzeug'],
+        ['marker', 'werkzeug'],
+        ['line', 'form'],
+        ['arrow', 'form'],
+        ['rectangle', 'form'],
+        ['ellipse', 'form'],
+        ['abdeck', 'werkzeug'],
+        ['zettel', 'werkzeug'],
+        ['text', 'werkzeug'],
+        ['zeichen', 'werkzeug'],
+        ['select', 'werkzeug'],
+        ['radierer', 'werkzeug']
     ];
+    /** Name, Zeichen und Beschreibung einer Kennung — aus dem Katalog, der
+     *  dafür zuständig ist. Findet sie keiner, wird die Zeile AUSGELASSEN und
+     *  gemeldet, nicht mit der Kennung als Namen gezeigt: ein Knopf, der
+     *  `rectangle` heisst, ist schlimmer als einer, den es nicht gibt
+     *  (dieselbe Regel wie in `Register.werkzeuge.auswahl`). */
+    const bandWerkzeug = (id, woher) => {
+        try {
+            const q = woher === 'form'
+                ? (Marken.FORMEN ?? []).find((f) => f.id === id)
+                : Register.werkzeuge.holen(id);
+            if (!q) {
+                console.warn(`menueband: Werkzeug „${id}" steht in keinem Katalog.`);
+                return null;
+            }
+            return { name: String(q.name), zeichen: String(q.zeichen),
+                hinweis: String(q.titel ?? q.name) };
+        }
+        catch {
+            return null;
+        }
+    };
     /* DIE FLÄCHENKNÖPFE SIND NUR GROSS, SOLANGE KEINE FLÄCHE DA IST.
   
        „Blatt einfügen" ist das Wichtigste, bevor man eines hat — danach sind
@@ -40150,9 +40193,11 @@ Register.menueband = (() => {
            moeglicherweise `undefined`. Eine Zeile Typ statt einer Stunde
            Suche. */
         /* Die Werkzeuge selbst — nur, wenn eine Flaeche da ist (`zeigen`). */
-        ...WERKZEUGE.map(([id, name, zeichen, hinweis]) => ({
+        ...WERKZEUGE.map(([id, woher]) => ({ id, w: bandWerkzeug(id, woher) }))
+            .filter((x) => x.w !== null)
+            .map(({ id, w }) => ({
             reiter: 'zeichnen', gruppe: 'Werkzeug', id: 'wz-' + String(id),
-            name: String(name), zeichen: String(zeichen), hinweis: String(hinweis),
+            name: w.name, zeichen: w.zeichen, hinweis: w.hinweis,
             tun: () => { if (!Zeichenziel.setze(id))
                 UI.toast('Erst eine Zeichenfläche öffnen'); },
             /* WELCHES WERKZEUG IST AN? Ohne diese Zeile stand im Band nichts
@@ -65282,82 +65327,45 @@ const Marken = (() => {
         '#111111': 'Schwarz', '#d64545': 'Rot', '#2f7ed8': 'Blau',
         '#3aa757': 'Grün', '#e0a419': 'Gelb'
     };
-    /* ══ DIE WERKZEUGE, EINMAL AUFGESCHRIEBEN (E490) ════════════════════════
-       Bis hierher standen Kennung, Zeichen, Wort und Beschreibung jedes
+    /* ══ DIE WERKZEUGE — EINE BESTELLUNG, KEINE LISTE (E490, E694) ══════════
+       Bis E490 standen Kennung, Zeichen, Wort und Beschreibung jedes
        Werkzeugs als Aufruf in der Zeile, die die Leiste baut — nirgends
-       sonst. Wer sie woanders brauchte (die Liste der gesperrten Marken im
-       Inspector braucht genau diese Wörter), hätte sie abgeschrieben, und
-       eine Abschrift läuft weg (§8).
+       sonst. E490 zog sie hierher zusammen, und das war richtig, solange
+       diese Datei die einzige Leserin war.
+  
+       SEIT E689 IST SIE ES NICHT MEHR. `Register.werkzeuge` hält denselben
+       Satz für alle Flächen, und damit standen dieselben vierzehn Werkzeuge
+       an zwei Stellen — genau der Fall, vor dem §8 warnt, und wörtlich der
+       Fehler, den `test266` einmal gefunden hat, als „Abdecken" hier still
+       zu „Abdeckband" wurde und im Menüband nicht.
+  
+       HIER STEHT DESHALB NUR NOCH DIE REIHENFOLGE. Sie gehört dem Studio:
+       `ordnungAbgleichen` (unten) lässt den Nutzer sie umstellen und braucht
+       eine Ausgangsfolge. Ein Name, ein Zeichen oder ein Titel gehört NICHT
+       mehr hierher; wer eines ändern will, ändert `src/register/werkzeuge.ts`.
+       `test572 §3` hält das — er lässt in dieser Datei keine Liste mit
+       `name:` mehr zu.
   
        DIE KENNUNG IST DIE MARKENART. `art: tool` beim Zeichnen macht aus dem
-       Werkzeug `abdeck` die Marke `abdeck` — deshalb steht hier auch das
-       Wort für eine fertige Marke. Was E489 gekostet hat, ist genau der
-       Unterschied zwischen dieser Kennung und der eines Radiermodus.
+       Werkzeug `abdeck` die Marke `abdeck`. Was E489 gekostet hat, ist genau
+       der Unterschied zwischen dieser Kennung und der eines Radiermodus —
+       und es ist der Grund, warum die Kennungen hier deutsch aussehen und es
+       bleiben (§53.3: ein Feldname ist ein Datenwort).
   
        `formen` ist kein Werkzeug, sondern ein Knopf für sieben (E375). Er
-       steht in der Reihenfolge mit, damit die Leiste an EINER Liste hängt,
+       steht in der Bestellung mit, damit die Leiste an EINER Folge hängt,
        und wird beim Bauen eigens behandelt; die Formen selbst stehen in
-       `FORMEN`. */
-    const WERKZEUGE = [
-        { id: 'schreiben', zeichen: '✎', sym: 'inkHand', name: 'Schreiben', titel: 'Schreiben — die Zeichenschicht ist durchlässig' },
-        { id: 'select', zeichen: '⌖', sym: 'inkLasso', name: 'Auswahl', titel: 'Marken auswählen, gemeinsam bewegen oder löschen' },
-        { id: 'stift', zeichen: '🖍', sym: 'inkPen', name: 'Stift', titel: 'Freihand mit geglätteter Linie' },
-        { id: 'marker', zeichen: '▰', sym: 'inkMarker', name: 'Marker', titel: 'Transparenter Marker' },
-        { id: 'formen', zeichen: '□', sym: 'inkShapes', name: 'Form', titel: 'Formen — welche, steht darunter' },
-        /* „Abdecken", NICHT „Abdeckband" (Fund des breiten Laufs nach E496).
-           Als die Werkzeugliste hierher zusammengezogen wurde, bekam dieser
-           Knopf im Vorbeigehen einen neuen Namen — und stand danach anders da
-           als im Menüband (`register/menueband.ts`), das weiter „Abdecken"
-           sagte. Ein Werkzeug mit zwei Namen ist genau das, wovor §8 warnt.
-           `test266 §1` hat es gehalten; nur hat den Lauf niemand gefahren. */
-        { id: 'abdeck', zeichen: '▬', sym: 'inkCover', name: 'Abdecken',
-            titel: 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf' },
-        { id: 'zettel', zeichen: '🗒', sym: 'inkNote', name: 'Haftnotiz',
-            titel: 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn' },
-        { id: 'text', zeichen: 'T', sym: 'inkText', name: 'Text', titel: 'Textanmerkung' },
-        /* ══ TEXT ÄNDERN (E670) ════════════════════════════════════════════════
-           Redur, 21. September: „können wir so was machen das wenn ich eine pdf
-           hochlade das ich die pdf selbst direk bearbeiten kann also die text
-           direk".
-    
-           WAS DAS WERKZEUG TUT: auf ein Wort tippen, das Wort steht im Feld, es
-           ändern, fertig. WAS ES NICHT TUT: die PDF umschreiben. Die Änderung
-           ist eine MARKE — sie deckt die alte Stelle zu und schreibt die neue
-           darüber, an derselben Stelle, in derselben Höhe. Das Original bleibt
-           Byte für Byte, wie `leser.ts` es verspricht, und die Änderung ist
-           rückgängig zu machen, versioniert und in der Sicherung.
-    
-           Der Preis steht im Namen: „ändern", nicht „setzen". Ein längeres Wort
-           wird LÄNGER — es schiebt den Rest der Zeile nicht weiter. Ein
-           Textfluss über die Seite hinweg wäre etwas anderes und viel mehr
-           (siehe E670). */
-        { id: 'textfix', zeichen: '✏', sym: 'inkTextFix', name: 'Text ändern',
-            titel: 'Ein Wort der PDF antippen und überschreiben — die alte Stelle wird zugedeckt, '
-                + 'das Original bleibt unberührt' },
-        { id: 'zeichen', zeichen: '⚡', sym: 'inkSymbol', name: 'Fachzeichen', titel: 'Ein elektrotechnisches Symbol auf die Seite setzen' },
-        /* DIE ELEMENTE (E494): dieselbe Bewegung wie beim Fachzeichen — ein Tipp
-           setzt etwas Fertiges —, nur kommt es nicht aus dem Register, sondern
-           aus dem, was der Nutzer selbst gezeichnet und gesichert hat. */
-        { id: 'elemente', zeichen: '⭐', sym: 'inkStamp', name: 'Elemente',
-            titel: 'Ein gesichertes Element setzen — sichern über die Auswahl («Als Element»)' },
-        { id: 'bild', zeichen: '🖼', sym: 'inkImage', name: 'Bild',
-            titel: 'Ein Foto, ein GIF oder eine Seite aus einer PDF auf das Blatt legen — '
-                + 'danach verschieben, ziehen und drehen wie jede Marke' },
-        { id: 'radierer', zeichen: '⌫', sym: 'inkEraser', name: 'Radieren',
-            titel: 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker' },
-        /* ══ DER LASERPOINTER (E512) ═══════════════════════════════════════════
-           Redur, 8. September: „alter, wieso habe ich keinen Laserpointer?"
-    
-           Es GAB einen — aber nur im Vollbild-Präsentationsmodus (E493), und
-           dort findet ihn niemand, der gerade an einer Seite steht und etwas
-           zeigen will. Jetzt ist er ein Werkzeug wie jedes andere.
-    
-           ER SCHREIBT NICHTS. Kein Eintrag in `marks`, kein Schritt im
-           Verlauf, nichts in der Sicherung — er ist ein Finger, kein Stift.
-           Das ist die ganze Zusage dieses Werkzeugs, und `test480` hält sie. */
-        { id: 'laser', zeichen: '⦿', sym: 'inkLaser', name: 'Laserpointer',
-            titel: 'Zeigen, nicht schreiben — der Strahl verblasst von selbst und wird nie gespeichert' }
-    ];
+       `FORMEN` — mit eigenen, ENGLISCHEN Kennungen, weil sie so in jeder
+       gespeicherten Marke stehen. */
+    /* DER TYP IST ANGESCHRIEBEN, weil `Register` ein `any` ist (global.d.ts).
+       Ohne diese Zeile wuerde `WERKZEUGE` zu `any[]`, und das faellt nicht
+       hier auf, sondern zwei Dateien weiter: `document-mode.ts:2036` liest
+       `Marken.WERKZEUGE` und bekaeme lauter implizite `any` (E572). Ein
+       verlorener Typ wandert (§52.7). */
+    const WERKZEUGE = Register.werkzeuge.auswahl([
+        'schreiben', 'select', 'stift', 'marker', 'formen', 'abdeck', 'zettel',
+        'text', 'textfix', 'zeichen', 'elemente', 'bild', 'radierer', 'laser'
+    ]);
     /* ZWEI ARTEN, WIE IN GOODNOTES: ein Punkt, der mitgeht, oder eine Linie,
        die hinter ihm herläuft und verblasst. */
     const LASER = [
@@ -85979,6 +85987,13 @@ const ChronikDaten = {
                     "woher": "wörtlich aus dem Gespräch",
                     "gemeint": "Such dir die nächste Arbeit selbst und mach sie. Kein neues Ziel, sondern das Vertrauen, dass die Liste offener Lücken für sich spricht.",
                     "besser": "Derselbe Satz — wenn eine Lückenliste geführt wird, ist er genau richtig. Wäre keine da, wäre „weiter mit was?\" die ehrlichere Antwort gewesen."
+                },
+                {
+                    "zeit": "ca. 14:15",
+                    "wortlaut": "Weiter",
+                    "woher": "wörtlich aus dem Gespräch",
+                    "gemeint": "Nächste Arbeit selbst wählen und machen — zum zweiten Mal an diesem Tag.",
+                    "besser": "Derselbe Satz. Er funktioniert, solange AUFGABEN.md und LUECKEN.md stimmen; der ganze Aufwand, den beide kosten, wird genau in diesem Moment zurückgezahlt."
                 }
             ],
             "arbeit": [
@@ -86019,15 +86034,22 @@ const ChronikDaten = {
                 },
                 {
                     "was": "E693 · Auf der Fläche zeichnen — mit einem Zeichner statt zwei (A1b, L219 zur Hälfte)",
-                    "vonBis": "bcd4647 → offen",
-                    "zeitraum": "12:00–…",
+                    "vonBis": "bcd4647 → 387ca8e",
+                    "zeitraum": "12:00–14:10",
                     "dauer": "ca. 2 h",
                     "pruefungen": "test575 neu, 40 Zusagen in elf Abschnitten, dreimal rot gesehen (Tinte eine Ebene höher, ein Flächenname im Kern, feldWeg wieder heraus); Nachbarn test573, test574, test538, test570, test571, test572, test105, test109, test87, test550 alle grün"
+                },
+                {
+                    "was": "E694 · Eine Werkzeugliste statt drei (Bogen 5b, L218 GESCHLOSSEN)",
+                    "vonBis": "387ca8e → offen",
+                    "zeitraum": "14:15–…",
+                    "dauer": "ca. 1 h 15 min",
+                    "pruefungen": "test572 von 51 auf 59 Zusagen; §3 gegen den alten Stand rot mit vier Zeilen, Gegenprobe rot mit „abdeck\"; §12 neu; Nachbarn test266, test267, test268, test272, test274, test277, test282, test286, test289 und die Studio-Läufe"
                 }
             ],
             "zahlen": {
-                "commits": 8,
-                "entscheidungen": 5,
+                "commits": 10,
+                "entscheidungen": 6,
                 "neuePruefläufe": 4
             },
             "groesstesProblem": "Zweimal am selben Tag `(window as any).App?.zeichneSeite?.()` geschrieben — und zweimal hat es still nichts getan. `const App = (() => …)()` in einem gewöhnlichen <script> legt eine globale LEXIKALISCHE Bindung an, und die steht nicht unter `window`. Das Feld wurde geschrieben, der Bildschirm blieb stehen, kein Fehler kam. Beim ersten Mal sah es aus wie ein fehlender Zweig, beim zweiten wie ein fehlender Kasten. Gefunden hat es beide Male eine Sonde, nicht der Wächter — der war rot, sagte aber das Falsche.",
@@ -86056,6 +86078,12 @@ const ChronikDaten = {
                     "was": "Beim Schreiben von doku/REDION-FORMAT.md den eigenen Satz nachgeprüft — und ihn falsch gefunden: die Seitenfläche liess ein leeres `shapes` stehen. Reparatur mit `Store.feldWeg`, dazu test575 §11 mit Gegenprobe.",
                     "warum": "Eine Doku, die verspricht, was der Code nicht hält, ist schlimmer als keine (§32, §33). Und §30 will den Wächter vor der Reparatur — hier kam er unmittelbar danach, weil der Fund aus dem Schreiben stammte, nicht aus einem Lauf.",
                     "risiko": "Keines für Daten: das Feld wird nur entfernt, wenn die Liste leer ist. Ein Leser, der `shapes` erwartet, fand vorher `[]` und findet jetzt nichts — beides heisst „keine Zeichnung\"."
+                },
+                {
+                    "zeit": "ca. 14:40",
+                    "was": "`test572 §12` zweimal aus dem FALSCHEN Grund rot gesehen und beide Gründe als Kommentar in den Lauf geschrieben: `inReiter` gibt Gruppen zurück, keine flache Liste; und der Reiter „Zeichnen\" zeigt ohne offenes Blatt gar keine Werkzeuge.",
+                    "warum": "Beide Male stand da „0 Werkzeuge\", und beide Male sah es nach einem Produktfehler aus. Ein Wächter, der eine Form annimmt statt sie nachzusehen, misst etwas anderes als er behauptet (L206).",
+                    "risiko": "Keines — es sind Kommentare und ein echtes Blatt statt eines gestellten Ziels (§30: keine Mocks, wo die echte App geprüft werden kann)."
                 }
             ]
         }
@@ -87607,6 +87635,18 @@ const ChronikDaten = {
             "ursache": "Im selben Tastenbehandler steht zwölf Zeilen höher die Pfeilnavigation zwischen Blöcken: `if (e.key === 'ArrowUp' && amAnfang(ct)) { … return; }` und dasselbe für `ArrowDown` am Ende. Beide prüfen die Modifikatoren NICHT und kehren mit `return` um. In einem einzeiligen Block ist der Cursor fast immer am Anfang UND am Ende — das Verschieben war damit praktisch nie erreichbar.",
             "beweis": "`test574 §11` in einer Liste ganz ohne versteckte Blöcke: [\"X\",\"Y\",\"Z\"] vor und nach `Control+Shift+ArrowDown`. Mit der Bedingung `!(e.ctrlKey || e.metaKey)` an den zwei Navigationszweigen: [\"Y\",\"X\",\"Z\"].",
             "lehre": "Zwei Zweige für dieselbe Taste in einer Datei sind eine Reihenfolge, keine Alternative — wer den zweiten schreibt, muss den ersten lesen (§45). Und: ein Kürzel, das in einem Menü steht, gehört bewacht; sonst ist die Beschriftung eine Behauptung (§32). Gefunden hat es ein Prüflauf, der etwas ganz anderes messen wollte."
+        },
+        {
+            "nr": "P117",
+            "datum": "2026-09-26",
+            "titel": "Eine Kennung, zwei Bedeutungen: `ellipse`",
+            "schwere": "klein",
+            "symptom": "Der neue Wächter über die Namen im Menüband war rot mit genau einer Kennung: `ellipse`. Die zwölf anderen stimmten.",
+            "falscheVermutung": "Das Menüband zeigt einen falschen Namen — der Wächter hat einen echten Anzeigefehler gefunden.",
+            "wieGefunden": "`test572 §12` vergleicht jeden Namen im Reiter „Zeichnen\" mit dem Katalog. Er suchte mit `reg(id) ?? form(id)` — erst im Werkzeugregister, sonst bei den Studio-Formen.",
+            "ursache": "Die Kennung gibt es ZWEIMAL. `Register.werkzeuge` führt das Flächenwerkzeug `ellipse` (Zeichen `◯`, deutscher Kennungsraum neben `linie`, `pfeil`, `rechteck`); `Marken.FORMEN` führt die Studio-Form `ellipse` (Zeichen `○`, englischer Raum neben `line`, `arrow`, `rectangle`). Drei Paare trennt die Sprache, das vierte nicht — also antwortete das Register zuerst, mit dem falschen Zeichen.",
+            "beweis": "`reg('ellipse').zeichen` = `◯`, `form('ellipse').zeichen` = `○`. Das Band zeigte `○` und hatte recht; rot war der Wächter.",
+            "lehre": "Ein Kennungsraum endet nicht an der Sprache, in der er gedacht ist. Wo zwei Kataloge nebeneinander liegen, muss die HERKUNFT dabeistehen — geraten wird sie genau so lange richtig, bis zwei Wörter gleich geschrieben werden. Seither sagt im Menüband jede Zeile, aus welchem Katalog sie kommt, und der Wächter fragt beide statt des ersten, der antwortet."
         }
     ]
 };

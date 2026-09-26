@@ -5,12 +5,12 @@
 
 ---
 tags: [redion, thema, werkzeugleisten]
-stand: 25. September 2026
+stand: 26. September 2026 (nach E694)
 ---
 
 # Die vier Werkzeugleisten — das „Vorher" für W6
 
-Stand 25. September 2026 · Quelle: ein Leser für Bogen 5 (E681-Karte, Zeilen am HEAD 0b19a34 nachgesehen). Jeder Punkt trägt Datei:Zeile vom Tag des Standes; wer später liest, prüft die Zeile, nicht den Satz.
+Stand 26. September 2026 (nach E694) · Quelle: ein Leser für Bogen 5 (E681-Karte, Zeilen am HEAD 0b19a34 nachgesehen). Jeder Punkt trägt Datei:Zeile vom Tag des Standes; wer später liest, prüft die Zeile, nicht den Satz.
 
 ## Bilanz in vier Sätzen
 
@@ -91,5 +91,16 @@ Stand 25. September 2026 · Quelle: ein Leser für Bogen 5 (E681-Karte, Zeilen a
 - Heute weichen aus: `#scroll{padding-bottom:calc(var(--hunten) + 24px)}` (2257); Schublade, Streifen, schwebende Knöpfe über `--hunten` (274, 4033–4046, 7973; ansichten.css 262); versteckt bei `body.schreibt` (2697) und im Dokumentmodus (6485, pdf-studio.css:115).
 - Whiteboard-, Karten- und Schaltplanleiste sitzen INLINE oben im Block und rollen mit der Seite — sie brauchen nur das `#scroll`-Polster. Studio-Dock `.blatt-reihe`: `position:fixed; bottom:calc(var(--visual-bottom,0px) + max(14px, env(safe-area-inset-bottom))); z-index:80` (pdf-studio.css:240; `--visual-bottom` schreibt `kern/einstellung/app.ts` gegen die Bildschirmtastatur); Papier `padding-bottom` 110/100 (225, 388); Verlaufskapsel am Telefon `bottom:calc(var(--visual-bottom) + 84px)` (382–386).
 - UNGEPRÜFTES RISIKO: Leiste „unten" auf der gewöhnlichen Seite ist `position:sticky; bottom:10px; z-index:6` (bausteine.css 4829–4838) und rutscht am Telefon womöglich unter `#handy-oben` (401). Kein Wächter; test534 §7 prüft nur das Ziehen.
+
+## Eine Liste statt drei (E694, 26. September 2026)
+
+- Die Bilanz von oben („Es gibt KEIN Werkzeugregister … der einzige Katalog ist `Marken.WERKZEUGE`, und `register/menueband.ts` führt einen zweiten, kürzeren") ist damit erledigt: es gibt EINEN Katalog, und die zwei Abschriften sind weg.
+- `marken.ts` hält nur noch die Reihenfolge der vierzehn Kennungen und ruft `Register.werkzeuge.auswahl([…])`. Die Reihenfolge gehört dorthin, weil `ordnungAbgleichen` den Nutzer sie umstellen lässt; Name, Zeichen und Titel nicht mehr.
+- `menueband.ts` hält eine Folge MIT HERKUNFT — `['abdeck','werkzeug']`, `['line','form']` — und holt Name, Zeichen und Hinweis über `bandWerkzeug(id, woher)` aus `Register.werkzeuge` bzw. `Marken.FORMEN`.
+- Warum die Herkunft dabeisteht statt geraten wird: die Kennung `ellipse` gibt es ZWEIMAL — Flächenwerkzeug `◯` (deutscher Raum neben `linie`, `pfeil`, `rechteck`) und Studio-Form `○` (englischer Raum, weil sie so in jeder Marke steht, §53.3). Drei Paare trennt die Sprache, das vierte nicht.
+- `Marken.WERKZEUGE` bleibt als NAME stehen und ist jetzt eine Sicht auf den Katalog — `document-mode.ts:2036` (E572), der Inspector und `ordnungAbgleichen` lesen weiter dasselbe Feld. Der Typ ist in `marken.ts` angeschrieben (`GfxWerkzeug[]`), weil `Register` ein `any` ist: ohne die Zeile wären die impliziten `any` zwei Dateien weiter aufgeschlagen.
+- Lazy gelesen, nicht beim Laden: `werkzeuge.js` steht in `index.html` NACH `menueband.js` (557 gegen 555) — dieselbe Lage wie bei `Marken.FARBEN`, das dort seit je erst beim Zeichnen des Bandes gefragt wird.
+- Wächter: `test572 §3` (Quelltext: keine Liste mit `name:` mehr in `marken.ts`, keine Namen im Band) und `test572 §12` (Laufzeit: jeder Name im Band steht in einem der beiden Kataloge). Gegen den alten Stand rot mit vier Zeilen; Gegenprobe rot mit `abdeck`.
+- NOCH NICHT umgezogen: Gedankenkarte und Planfläche (5c/5d) sowie die Tasten der Flächen (5e).
 
 Zurück zur [[Redion|Übersicht]].

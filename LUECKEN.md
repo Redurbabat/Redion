@@ -8423,25 +8423,45 @@ Zeichnungen dort sucht, findet die auf Seiten nicht.
 
 ---
 
-## L218 · Zwei Werkzeuglisten, bis das Studio umzieht — 26. September 2026
+## L218 · Drei Werkzeuglisten für eine Sache — GESCHLOSSEN (E694, 26. September 2026)
 
-**Seit E689 gibt es den Katalog** (`Register.werkzeuge`, 22 Einträge), und
-das Whiteboard liest daraus. Das Studio liest weiter seine eigene Liste
-(`Marken.WERKZEUGE`, `marken.ts:301–360`), und das Menüband eine dritte
-(`register/menueband.ts:422–436`, 13 Kennungen; ohne textfix, elemente,
-bild, laser). Drei Listen für eine Sache — genau das, wovor §8 warnt.
+**Der Zustand war:** seit E689 gab es den Katalog (`Register.werkzeuge`, 22
+Einträge), und das Whiteboard las daraus. Das Studio las weiter seine eigene
+Liste (`Marken.WERKZEUGE`, 14 Einträge mit Kennung, Zeichen, Symbol, Name,
+Titel), und das Menüband eine dritte (`register/menueband.ts`, 13 Vierertupel
+`[Kennung, Name, Zeichen, Hinweis]`). Drei Listen für eine Sache — genau das,
+wovor §8 warnt, und in diesem Projekt keine Vermutung: als „Abdecken" im
+Studio einmal still zu „Abdeckband" wurde, sagte das Menüband weiter
+„Abdecken" (`test266 §1`).
 
-**Warum sie noch stehen:** die Studioleiste hängt an 66 Prüfdateien, das
-Menüband an 44; beides umzuhängen ist ein eigener Bogen mit eigenem Bild
-(5b). Bis dahin hält `test572 §3` die Namen im Gleichlauf: jede Kennung aus
-`Marken.WERKZEUGE` steht mit DEMSELBEN Namen im Register. Das ist die
-Zusage, die `test266` schon einmal gerettet hat, als „Abdecken" still zu
-„Abdeckband" wurde.
+**GESCHLOSSEN mit E694.** Das Studio hält nur noch die REIHENFOLGE der
+vierzehn Kennungen und ruft `Register.werkzeuge.auswahl([…])`; die
+Reihenfolge gehört wirklich dorthin, weil `ordnungAbgleichen` den Nutzer sie
+umstellen lässt. Das Menüband hält eine Folge mit Herkunft
+(`['abdeck','werkzeug']`, `['line','form']`) und holt Name, Zeichen und
+Hinweis aus dem zuständigen Katalog. `Marken.WERKZEUGE` bleibt als NAME
+stehen — es ist jetzt eine Sicht auf den Katalog, damit `document-mode.ts`
+(E572), der Inspector und `ordnungAbgleichen` weiter dasselbe Feld lesen.
 
-**Was fehlt:** Bogen 5b — `Marken.WERKZEUGE = Register.werkzeuge.auswahl(…)`
-und `menueband.WERKZEUGE` aus dem Register, mit Bild des Reiters
-„Zeichnen" und den 44 Band-Läufen als Beweis.
+**Der Beleg:** `test572 §3` prüft jetzt nicht mehr, dass zwei Listen dasselbe
+sagen, sondern dass die zwei Abschriften WEG sind — gemessen am Quelltext, in
+`nurCode`, damit der Kopfkommentar nicht mitzählt. Gegen den Stand davor war
+er rot mit vier Zeilen. `test572 §12` misst dazu das laufende Programm; seine
+Gegenprobe (einen Namen von Hand zurückschreiben) druckt genau den
+historischen Fehler: `abdeck`.
 
+**Was dabei herauskam und vorher niemand wusste:** die Kennung `ellipse` gibt
+es **zweimal** — als Flächenwerkzeug (`◯`, deutscher Kennungsraum neben
+`linie`, `pfeil`, `rechteck`) und als Studio-Form (`○`, englischer
+Kennungsraum, weil sie so in jeder gespeicherten Marke steht, §53.3). Die drei
+anderen kollidieren nicht, weil die Sprachen verschieden sind. Deshalb sagt im
+Menüband jede Zeile, aus welchem Katalog sie kommt, statt „erst hier, sonst
+dort" zu raten.
+
+**Was NICHT dazugehört und offen bleibt:** Gedankenkarte und Planfläche haben
+ihre Werkzeuge weiter im Code (Bogen 5c/5d), und die Tasten der Flächen sind
+in `Register.werkzeuge` noch nicht eingetragen (5e) — ein Hinweis auf eine
+Taste, die nichts tut, wäre ein falsches Versprechen (§32).
 ---
 
 ## L216 · Lerninhalte im Startweg — 19,5 KB Lernstoff bei jedem Start, für einen Bildschirm, den nicht jeder öffnet — 25. September 2026
@@ -8757,7 +8777,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 26. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 116 Lücken, 62 offene und 54 geschlossene. Der Befehl dazu ist
+Datei führt 116 Lücken, 61 offene und 55 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

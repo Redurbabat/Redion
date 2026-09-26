@@ -279,6 +279,48 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* ── EIN KATALOG STATT DREI (E694, L218) ──────────────────────────────
+     Zwei Bilder für einen Umzug, der NICHTS aussehen soll: der Reiter
+     „Zeichnen" holt Name und Zeichen jetzt aus `Register.werkzeuge` bzw.
+     `Marken.FORMEN`, die Studioleiste aus demselben Katalog. Ein Umzug, der
+     das Aussehen ändert, ist kein Umzug (§55.3: man sieht es, also gibt es
+     ein Bild). */
+  bandZeichnen: {
+    titel: 'Menüband — Reiter „Zeichnen" über einem Blatt (E694)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('bandZu', false);
+      Store.setMeta('bandZu:welt', false);
+      Store.setMeta('bandReiter', 'zeichnen');
+
+      const s = Store.addPage(null, { text: 'Blatt zum Zeichnen' });
+      Store.addBlock(s.id, 'blatt', { text: '', blattBreite: 595.28,
+                                      blattHoehe: 841.89, raumVersion: 1, marken: [] });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 900));
+      (window as any).Menueband?.zeichne?.();
+      await new Promise(f => setTimeout(f, 300));
+    }
+  },
+
+  studioLeiste: {
+    titel: 'Die Studioleiste — vierzehn Werkzeuge aus dem Katalog (E694)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('bandZu', true);
+
+      const s = Store.addPage(null, { text: 'Blatt mit Werkzeugen' });
+      Store.addBlock(s.id, 'blatt', { text: '', blattBreite: 595.28,
+                                      blattHoehe: 841.89, raumVersion: 1, marken: [] });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 1100));
+    }
+  },
+
   schaleMehr: {
     titel: 'Die Schale — die Mehr-Lade des Reiters offen',
     bauen: async () => {

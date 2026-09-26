@@ -1,5 +1,62 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 26. September 2026 · E694 · Eine Werkzeugliste statt drei (Bogen 5b, L218)
+
+**Redur:** „Weiter."
+
+**Gebaut:** die zwei Abschriften sind weg. `marken.ts` hält nur noch die
+REIHENFOLGE der vierzehn Kennungen und ruft `Register.werkzeuge.auswahl([…])`;
+`menueband.ts` hält eine Folge mit Herkunft (`['abdeck','werkzeug']`,
+`['line','form']`) und holt Name, Zeichen und Hinweis über
+`bandWerkzeug(id, woher)` aus dem zuständigen Katalog. `Marken.WERKZEUGE`
+bleibt als NAME stehen — es ist jetzt eine Sicht auf den Katalog, damit
+`document-mode.ts` (E572), der Inspector und `ordnungAbgleichen` weiter
+dasselbe Feld lesen.
+
+**Warum überhaupt.** Drei Listen für eine Sache ist §8 in Reinform, und in
+diesem Projekt keine Vermutung: als „Abdecken" im Studio einmal still zu
+„Abdeckband" wurde, sagte das Menüband weiter „Abdecken" (`test266 §1`).
+
+**Der Fund, den niemand gesucht hat.** Die Kennung **`ellipse` gibt es
+zweimal** — als Flächenwerkzeug (`◯`, deutscher Kennungsraum neben `linie`,
+`pfeil`, `rechteck`) und als Studio-Form (`○`, englischer Raum neben `line`,
+`arrow`, `rectangle`). Drei Paare trennt die Sprache, das vierte nicht. Ein
+naheliegendes „erst im Register nachsehen, sonst bei den Formen" hätte im
+Band still das falsche Zeichen gezeigt, ohne dass etwas kaputtgegangen wäre
+ausser der Anzeige. Deshalb sagt jetzt jede Zeile, aus welchem Katalog sie
+kommt. Gefunden hat es der Wächter, bevor eine Zeile repariert war — und die
+erste Vermutung war, das Band habe unrecht. Es hatte recht (P117).
+
+**Und ein Typ, der zwei Dateien weiter aufgeschlagen wäre.** `Register` ist
+ein `any` (`global.d.ts`), also wäre `WERKZEUGE` zu `any[]` geworden — und
+das fällt nicht in `marken.ts` auf, sondern in `document-mode.ts:2036`, das
+`Marken.WERKZEUGE` liest (E572): fünf implizite `any` in einer fremden Datei.
+Eine Zeile `: GfxWerkzeug[]` statt einer Stunde Suche (§52.7).
+
+**Geprüft.** `test572` von 51 auf 59 Zusagen. §3 misst jetzt das Stärkere als
+vorher — nicht mehr, dass zwei Listen dasselbe sagen, sondern dass die zwei
+Abschriften weg sind; gegen den Stand davor rot mit vier Zeilen. §12 ist neu
+und misst das laufende Programm; seine Gegenprobe (einen Namen von Hand
+zurückschreiben) druckt genau den historischen Fehler: `abdeck`. Nachbarn
+grün: `test266`, `test267`, `test268`, `test272`, `test274`, `test277`,
+`test282`, `test286`, `test289` und die Studio-Läufe.
+
+**Zweimal war der neue Abschnitt aus dem FALSCHEN Grund rot**, und beides
+steht jetzt als Kommentar im Lauf: `inReiter` gibt GRUPPEN zurück, keine
+flache Liste; und der Reiter „Zeichnen" zeigt ohne offenes Blatt gar keine
+Werkzeuge, weil `Zeichenziel.da()` falsch ist. Beide Male stand da „0
+Werkzeuge", und beide Male sah es nach einem Produktfehler aus.
+
+**Die Bilder zeigen nichts Neues, und das ist die Zusage.** Ein Umzug, der
+das Aussehen ändert, ist kein Umzug. Was sich wirklich ändert, sind zwei
+Hinweistexte im Band: sie kommen jetzt aus den Titeln des Katalogs und sind
+dadurch länger.
+
+**L218 ist GESCHLOSSEN** (mit Beleg, nicht gelöscht — §35). Offen bleiben
+Gedankenkarte und Planfläche (5c/5d) und die Tasten der Flächen (5e).
+
+---
+
 ## 26. September 2026 · E693 · Auf der Fläche zeichnen — mit einem Zeichner statt zwei (A1b)
 
 **Redur:** „weiter."

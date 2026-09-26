@@ -130,6 +130,7 @@ sind der teuerste Teil und der lehrreichste.
 | P114 | 2026-09-26 | `window.App` gibt es nicht — und der optionale Zugriff schluckt es | 🟠 mittel | — |
 | P115 | 2026-09-26 | Ein Wächter, der eine Absicht misst, die es nicht gibt | 🟠 mittel | — |
 | P116 | 2026-09-26 | Ein Tastenkürzel, das im Menü steht und nie erreichbar war | 🟠 mittel | — |
+| P117 | 2026-09-26 | Eine Kennung, zwei Bedeutungen: `ellipse` | 🟡 klein | — |
 
 ---
 
@@ -2515,4 +2516,23 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** `test574 §11` in einer Liste ganz ohne versteckte Blöcke: ["X","Y","Z"] vor und nach `Control+Shift+ArrowDown`. Mit der Bedingung `!(e.ctrlKey || e.metaKey)` an den zwei Navigationszweigen: ["Y","X","Z"].
 
 **Die Lehre.** Zwei Zweige für dieselbe Taste in einer Datei sind eine Reihenfolge, keine Alternative — wer den zweiten schreibt, muss den ersten lesen (§45). Und: ein Kürzel, das in einem Menü steht, gehört bewacht; sonst ist die Beschriftung eine Behauptung (§32). Gefunden hat es ein Prüflauf, der etwas ganz anderes messen wollte.
+
+
+---
+
+## P117 · Eine Kennung, zwei Bedeutungen: `ellipse`
+
+*2026-09-26 · 🟡 klein*
+
+**Das Bild.** Der neue Wächter über die Namen im Menüband war rot mit genau einer Kennung: `ellipse`. Die zwölf anderen stimmten.
+
+**Die falsche Vermutung.** Das Menüband zeigt einen falschen Namen — der Wächter hat einen echten Anzeigefehler gefunden.
+
+**Wie es gefunden wurde.** `test572 §12` vergleicht jeden Namen im Reiter „Zeichnen" mit dem Katalog. Er suchte mit `reg(id) ?? form(id)` — erst im Werkzeugregister, sonst bei den Studio-Formen.
+
+**Die Ursache.** Die Kennung gibt es ZWEIMAL. `Register.werkzeuge` führt das Flächenwerkzeug `ellipse` (Zeichen `◯`, deutscher Kennungsraum neben `linie`, `pfeil`, `rechteck`); `Marken.FORMEN` führt die Studio-Form `ellipse` (Zeichen `○`, englischer Raum neben `line`, `arrow`, `rectangle`). Drei Paare trennt die Sprache, das vierte nicht — also antwortete das Register zuerst, mit dem falschen Zeichen.
+
+**Der Beweis.** `reg('ellipse').zeichen` = `◯`, `form('ellipse').zeichen` = `○`. Das Band zeigte `○` und hatte recht; rot war der Wächter.
+
+**Die Lehre.** Ein Kennungsraum endet nicht an der Sprache, in der er gedacht ist. Wo zwei Kataloge nebeneinander liegen, muss die HERKUNFT dabeistehen — geraten wird sie genau so lange richtig, bis zwei Wörter gleich geschrieben werden. Seither sagt im Menüband jede Zeile, aus welchem Katalog sie kommt, und der Wächter fragt beide statt des ersten, der antwortet.
 

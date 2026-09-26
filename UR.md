@@ -2559,6 +2559,17 @@ Zwei Bögen, zwei Wächter, beide rot eingecheckt, beide mit Gegenproben. Und ei
 **Besserer Prompt:** 
 
 
+**9 · ca. 14:15**
+
+> Weiter
+
+**Gemeint:** Nächste Arbeit selbst wählen und machen — zum zweiten Mal an diesem Tag.
+
+**Besser geschrieben:** Derselbe Satz. Er funktioniert, solange AUFGABEN.md und LUECKEN.md stimmen; der ganze Aufwand, den beide kosten, wird genau in diesem Moment zurückgezahlt.
+
+**Besserer Prompt:** 
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -2568,12 +2579,13 @@ Zwei Bögen, zwei Wächter, beide rot eingecheckt, beide mit Gegenproben. Und ei
 | E690 · Drei Ansichten einer Seite (A1) | `` → `` | 07:38–08:15 | ca. 40 min | test573 rot eingecheckt (7 Zeilen rot), danach 31/31; eine Gegenprobe rot, die zugleich eine Lücke IM Wächter zeigte; 27 Nachbarn grün |
 | E691 · Der Vollausbau der Fläche (A1c) | `` → `` | 08:25–… | ca. 2 h | test574 rot eingecheckt (14 ok, 25 rot), danach 50/50; zwei Gegenproben rot; vier Leser parallel vor dem Bau; 21 Nachbarn grün |
 | E692 · L220 geschlossen — und ein Kürzel, das nie ankam | `` → `` | 11:10–11:55 | ca. 45 min | test574 von 50 auf 60 Zusagen; §10–§12 vor der Reparatur rot (vier Zeilen), zwei Gegenproben rot; Nachbarn test111, test112, test161, test396, test428, test65, test110, test132, test133 |
-| E693 · Auf der Fläche zeichnen — mit einem Zeichner statt zwei (A1b, L219 zur Hälfte) | `` → `` | 12:00–… | ca. 2 h | test575 neu, 40 Zusagen in elf Abschnitten, dreimal rot gesehen (Tinte eine Ebene höher, ein Flächenname im Kern, feldWeg wieder heraus); Nachbarn test573, test574, test538, test570, test571, test572, test105, test109, test87, test550 alle grün |
+| E693 · Auf der Fläche zeichnen — mit einem Zeichner statt zwei (A1b, L219 zur Hälfte) | `` → `` | 12:00–14:10 | ca. 2 h | test575 neu, 40 Zusagen in elf Abschnitten, dreimal rot gesehen (Tinte eine Ebene höher, ein Flächenname im Kern, feldWeg wieder heraus); Nachbarn test573, test574, test538, test570, test571, test572, test105, test109, test87, test550 alle grün |
+| E694 · Eine Werkzeugliste statt drei (Bogen 5b, L218 GESCHLOSSEN) | `` → `` | 14:15–… | ca. 1 h 15 min | test572 von 51 auf 59 Zusagen; §3 gegen den alten Stand rot mit vier Zeilen, Gegenprobe rot mit „abdeck"; §12 neu; Nachbarn test266, test267, test268, test272, test274, test277, test282, test286, test289 und die Studio-Läufe |
 
 #### Zahlen des Tages
 
-- **commits:** 8
-- **entscheidungen:** 5
+- **commits:** 10
+- **entscheidungen:** 6
 - **neuePruefläufe:** 4
 
 #### Das grösste Problem
@@ -2592,10 +2604,11 @@ Zweimal am selben Tag `(window as any).App?.zeichneSeite?.()` geschrieben — un
 | ca. 07:00 | Ein Leser ins AFFiNE-Archiv, bevor gebaut wurde | Redur hat es ausdrücklich verlangt | keines — nur gelesen (§57) |
 | ca. 08:50 | Vier Leser gleichzeitig statt eines, während der Bau parallel lief | drei ihrer Funde hätte der Bau nicht von selbst gemacht | Zeit |
 | ca. 13:40 | Beim Schreiben von doku/REDION-FORMAT.md den eigenen Satz nachgeprüft — und ihn falsch gefunden: die Seitenfläche liess ein leeres `shapes` stehen. Reparatur mit `Store.feldWeg`, dazu test575 §11 mit Gegenprobe. | Eine Doku, die verspricht, was der Code nicht hält, ist schlimmer als keine (§32, §33). Und §30 will den Wächter vor der Reparatur — hier kam er unmittelbar danach, weil der Fund aus dem Schreiben stammte, nicht aus einem Lauf. | Keines für Daten: das Feld wird nur entfernt, wenn die Liste leer ist. Ein Leser, der `shapes` erwartet, fand vorher `[]` und findet jetzt nichts — beides heisst „keine Zeichnung". |
+| ca. 14:40 | `test572 §12` zweimal aus dem FALSCHEN Grund rot gesehen und beide Gründe als Kommentar in den Lauf geschrieben: `inReiter` gibt Gruppen zurück, keine flache Liste; und der Reiter „Zeichnen" zeigt ohne offenes Blatt gar keine Werkzeuge. | Beide Male stand da „0 Werkzeuge", und beide Male sah es nach einem Produktfehler aus. Ein Wächter, der eine Form annimmt statt sie nachzusehen, misst etwas anderes als er behauptet (L206). | Keines — es sind Kommentare und ein echtes Blatt statt eines gestellten Ziels (§30: keine Mocks, wo die echte App geprüft werden kann). |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 116 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 117 Einträge.
 

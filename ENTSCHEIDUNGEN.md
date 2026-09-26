@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-673 Entscheidungen, E1 bis E693 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+674 Entscheidungen, E1 bis E694 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -736,6 +736,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E691** — Der Vollausbau der Fläche: JEDER Block kann seinen eigenen Platz bekommen (`flaecheOrt`) und sagen, wo er erscheint (`sichtbarIn`: beides | seite | flaeche) — AFFiNEs `displayMode` eine Stufe feiner, weil dort die Notiz die kleinste Einheit ist und hier der Block; gezogen wird mit dem vorhandenen Editor-Ziehen (§8), am Telefon über die Hebe-Geste aus E83, und ein unlesbarer Platz zählt als KEIN Platz, damit kein Block verschwindet (`test574`, Redur: „ja mach den vollausbau, jeder block auf die fläche ziehbar")
 * **E692** — L220 geschlossen: die drei Handgriffe, die mit der ungefilterten Geschwisterliste rechneten — Rücktaste springt zum SICHTBAREN Vorgänger, Strg+Umschalt+Pfeil springt ÜBER den unsichtbaren Nachbarn (`splice` statt Tausch), und die laufende Nummer einer Liste wird gezählt und weitergereicht statt an den Block geschrieben; dabei gefunden: das Verschieben war seit je unerreichbar, weil die Pfeilnavigation davor stand und umkehrte (`test574 §10–§12`)
 * **E693** — Auf der Fläche zeichnen, mit EINEM Formenzeichner: `core/gfx/shapes.ts` bekommt den Zeichner, den Rahmen und die acht Farben, das Whiteboard zieht darauf um (136 Zeilen weniger), und die Seitenfläche bekommt eine Tinten-Lage IN derselben bewegten Ebene wie die Kästen — acht Werkzeuge, Radierer, Farbmenü, Strg+Z aus `GfxHistory`, gespeichert im bestehenden Feld `shapes` (`test575`, Redur: „weiter")
+* **E694** — Eine Werkzeugliste statt drei: `Marken.WERKZEUGE` und `menueband.WERKZEUGE` holen Name, Zeichen und Hinweis aus `Register.werkzeuge` bzw. `Marken.FORMEN`; das Studio hält nur noch die Reihenfolge, das Band eine Folge mit Herkunft — und dabei kam heraus, dass es die Kennung `ellipse` ZWEIMAL gibt (Flächenwerkzeug `◯`, Studio-Form `○`) (`test572`, L218 GESCHLOSSEN)
 
 ---
 
@@ -56593,3 +56594,104 @@ listet Blöcke vom Typ `whiteboard` und `blatt`, nicht Seiten.
 
 **Nachbarn:** `test575`, `test573`, `test574`, `test538`, `test570`,
 `test571`, `test572`, `test105`, `test109`, `test87`, `test550`.
+
+---
+
+## E694 — Eine Werkzeugliste statt drei, und eine Kennung, die es zweimal gibt
+
+**Datum:** 26. September 2026 · **Wächter:** `test572` (59 Zusagen) ·
+Redur: **„weiter"** — L218 stand seit E689 als Lücke da.
+
+**Der Zustand, der repariert wurde.** E689 hat `Register.werkzeuge`
+angelegt und das Whiteboard darauf umgezogen. Die zwei älteren Listen
+blieben stehen, und das war ausdrücklich so aufgeschrieben — aber es hiess,
+dass dieselben vierzehn Werkzeuge an zwei Stellen standen und dreizehn
+davon an einer dritten:
+
+```txt
+Register.werkzeuge      22 Einträge   der Katalog (E689)
+Marken.WERKZEUGE        14 Einträge   Kennung, Zeichen, Symbol, Name, Titel
+menueband.WERKZEUGE     13 Vierertupel [Kennung, Name, Zeichen, Hinweis]
+```
+
+Dass so etwas auseinanderläuft, ist in diesem Projekt keine Vermutung,
+sondern Erfahrung: als „Abdecken" im Studio einmal still zu „Abdeckband"
+wurde, sagte das Menüband weiter „Abdecken" (`test266 §1`). Genau davor
+warnt §8.
+
+**Was entschieden wurde.**
+
+1. **Das Studio bestellt, es führt keine Liste.** `marken.ts` hält nur noch
+   die REIHENFOLGE der vierzehn Kennungen und ruft
+   `Register.werkzeuge.auswahl([…])`. Die Reihenfolge gehört wirklich dorthin:
+   `ordnungAbgleichen` lässt den Nutzer sie umstellen und braucht eine
+   Ausgangsfolge. Ein Name, ein Zeichen oder ein Titel gehört nicht mehr
+   dorthin.
+
+2. **Das Menüband hält eine Folge mit Herkunft**, nicht dreizehn Namen:
+   `['abdeck', 'werkzeug']`, `['line', 'form']`. Name, Zeichen und Hinweis
+   holt `bandWerkzeug(id, woher)` aus dem zuständigen Katalog.
+
+3. **`Marken.WERKZEUGE` bleibt als Name stehen.** Es ist jetzt eine Sicht
+   auf den Katalog, kein eigener Bestand — `document-mode.ts` (E572), die
+   Liste der gesperrten Marken im Inspector und `ordnungAbgleichen` lesen
+   weiter dasselbe Feld. Ein Umzug, der zwanzig Aufrufer umschreibt, ist
+   kein Umzug, sondern ein zweiter Bogen (§45).
+
+4. **Zwei Kataloge bleiben zwei Kataloge.** Vier der dreizehn Bandeinträge
+   sind keine Werkzeuge, sondern FORMEN (`Marken.FORMEN`): im Studio liegen
+   `line`, `arrow`, `rectangle`, `ellipse` unter dem einen Knopf `formen`,
+   im Band stehen sie einzeln, weil dort kein Untermenü aufgeht. Sie in
+   `Register.werkzeuge` zu schieben hätte das Studio falsch beschrieben.
+
+**Der Fund, der die Herkunft in Punkt 2 nötig gemacht hat.** Die Kennung
+**`ellipse` gibt es zweimal** — als Flächenwerkzeug im Katalog (`◯`,
+deutscher Kennungsraum neben `linie`, `pfeil`, `rechteck`) und als
+Studio-Form (`○`, englischer Kennungsraum, weil sie so in jeder
+gespeicherten Marke steht). Die drei anderen kollidieren nicht, weil die
+Sprachen verschieden sind; bei `ellipse` sind sie es nicht. Ein naheliegendes
+„erst im Register nachsehen, sonst bei den Formen" hätte deshalb im Band
+still das falsche Zeichen gezeigt — und `Zeichenziel.setze('ellipse')`
+hätte weiter gestimmt, sodass nichts kaputtgegangen wäre ausser der
+Anzeige. Genau die Sorte Fehler, die niemand meldet.
+
+Gefunden hat ihn der Wächter, bevor eine Zeile repariert war: `test575`s
+Schwester `test572 §12` war rot mit `ellipse`, und die erste Vermutung war,
+dass das Band unrecht hat. Es hatte recht.
+
+**Und zweimal war der neue Abschnitt aus dem FALSCHEN Grund rot** — beides
+steht jetzt als Kommentar im Lauf, weil es die nächste Messung sonst
+wiederholt:
+
+- `Register.menueband.inReiter(…)` gibt **Gruppen** zurück
+  (`{gruppe, eintraege}`), keine flache Liste. Der Filter nach `e.id` fand
+  null Werkzeuge.
+- Der Reiter „Zeichnen" zeigt seine Werkzeuge nur, wenn `Zeichenziel.da()`
+  wahr ist — und das meldet das Studio, wenn ein **Blatt** offen liegt. Ein
+  Whiteboard meldet es nicht. Gemessen wurde wieder null; das sah nach einem
+  Fund aus und war eine fehlende Seite.
+
+**Die Alternativen.** (a) Alles so lassen und `test572 §3` die zwei Listen
+weiter im Gleichlauf halten — das hält den Zustand, statt ihn zu beenden,
+und §8 ist hart. (b) Die sieben FORMEN mit in `Register.werkzeuge` nehmen —
+dann stünde im Katalog, das Studio habe zwanzig Werkzeuge, und das stimmt
+nicht. (c) Das Menüband die Namen selbst behalten lassen und nur das Studio
+umziehen — die Hälfte der Lücke, und die Hälfte, die schon einmal
+auseinandergelaufen ist.
+
+**Preis.** `menueband.ts` liest jetzt zwei fremde Namen lazy
+(`Register.werkzeuge`, `Marken.FORMEN`) — beide erst beim Zeichnen des
+Bandes, wie `Marken.FARBEN` es dort seit je tut; `werkzeuge.js` steht in
+`index.html` NACH `menueband.js`, und genau deshalb darf der Zugriff nicht
+beim Laden passieren. Findet ein Katalog eine Kennung nicht, fällt die
+Zeile weg und meldet sich in der Konsole, statt als Knopf mit dem Namen
+`rectangle` dazustehen.
+
+Und die Hinweistexte im Band sind jetzt die Titel aus dem Katalog. Zwei
+davon sind dadurch länger geworden („Radieren — über Marken streichen; der
+Knopf daneben wählt Ganz, Teil oder Marker" statt „Eine Marke entfernen").
+Das ist die Folge von EINER Quelle und war die Absicht.
+
+**Nachbarn:** `test572`, `test266`, `test267`, `test268`, `test272`,
+`test274`, `test277`, `test282`, `test286`, `test289`, `test480`, `test505`,
+`test506`, `test508`, `test546`, `test559`, `test105`, `test109`, `test87`.

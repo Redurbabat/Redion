@@ -1283,15 +1283,21 @@ Fensters. Drei Wege stehen dort, und die Wahl ist Redurs.
 
 ---
 
-- **W6 · Die eine Werkzeugleiste — Bogen 5a ist gelandet (E689).**
+- **W6 · Die eine Werkzeugleiste — 5a und 5b sind gelandet (E689, E694).**
   Gebaut: `Register.werkzeuge` (22 Werkzeuge) und `GfxToolbar`
   (`src/core/gfx/toolbar.ts`); das Whiteboard zieht darauf um, mit
   schwebender Kapsel unter der Fläche, Strichzeichen, Untermenüs und 44 px
-  am Telefon (`test572`, 51 Zusagen). **Offen bleiben vier Bögen:**
+  am Telefon. Und seit E694 lesen auch Studio und Menüband daraus — es gibt
+  EINE Liste, nicht drei (`test572`, 59 Zusagen). **Offen bleiben drei
+  Bögen:**
 
-  - **5b · Ein Katalog statt drei.** `Marken.WERKZEUGE` und
-    `menueband.WERKZEUGE` lesen aus dem Register (L218); Bild des Reiters
-    „Zeichnen", die 66 Studio- und 44 Band-Läufe als Beweis.
+  - **5b · Ein Katalog statt drei — GELANDET (E694, L218 GESCHLOSSEN).**
+    `marken.ts` hält nur noch die Reihenfolge und ruft
+    `Register.werkzeuge.auswahl([…])`; `menueband.ts` hält eine Folge mit
+    Herkunft und holt Name, Zeichen und Hinweis aus dem zuständigen
+    Katalog. Dabei kam heraus, dass es die Kennung `ellipse` ZWEIMAL gibt
+    (Flächenwerkzeug `◯`, Studio-Form `○`) — deshalb steht die Herkunft in
+    jeder Zeile, statt geraten zu werden (P117).
   - **5c · Die Gedankenkarte** auf `GfxToolbar` — sie ist eine
     Aktionsleiste ohne aktives Werkzeug, also mit `werkzeuge: []` und ihren
     fünf Aktionen; `test529 §12` misst dann echte 44-px-Boxen.

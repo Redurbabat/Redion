@@ -3431,6 +3431,13 @@ const ChronikDaten = {
      "woher": "wörtlich aus dem Gespräch",
      "gemeint": "Such dir die nächste Arbeit selbst und mach sie. Kein neues Ziel, sondern das Vertrauen, dass die Liste offener Lücken für sich spricht.",
      "besser": "Derselbe Satz — wenn eine Lückenliste geführt wird, ist er genau richtig. Wäre keine da, wäre „weiter mit was?\" die ehrlichere Antwort gewesen."
+    },
+    {
+     "zeit": "ca. 14:15",
+     "wortlaut": "Weiter",
+     "woher": "wörtlich aus dem Gespräch",
+     "gemeint": "Nächste Arbeit selbst wählen und machen — zum zweiten Mal an diesem Tag.",
+     "besser": "Derselbe Satz. Er funktioniert, solange AUFGABEN.md und LUECKEN.md stimmen; der ganze Aufwand, den beide kosten, wird genau in diesem Moment zurückgezahlt."
     }
    ],
    "arbeit": [
@@ -3471,15 +3478,22 @@ const ChronikDaten = {
     },
     {
      "was": "E693 · Auf der Fläche zeichnen — mit einem Zeichner statt zwei (A1b, L219 zur Hälfte)",
-     "vonBis": "bcd4647 → offen",
-     "zeitraum": "12:00–…",
+     "vonBis": "bcd4647 → 387ca8e",
+     "zeitraum": "12:00–14:10",
      "dauer": "ca. 2 h",
      "pruefungen": "test575 neu, 40 Zusagen in elf Abschnitten, dreimal rot gesehen (Tinte eine Ebene höher, ein Flächenname im Kern, feldWeg wieder heraus); Nachbarn test573, test574, test538, test570, test571, test572, test105, test109, test87, test550 alle grün"
+    },
+    {
+     "was": "E694 · Eine Werkzeugliste statt drei (Bogen 5b, L218 GESCHLOSSEN)",
+     "vonBis": "387ca8e → offen",
+     "zeitraum": "14:15–…",
+     "dauer": "ca. 1 h 15 min",
+     "pruefungen": "test572 von 51 auf 59 Zusagen; §3 gegen den alten Stand rot mit vier Zeilen, Gegenprobe rot mit „abdeck\"; §12 neu; Nachbarn test266, test267, test268, test272, test274, test277, test282, test286, test289 und die Studio-Läufe"
     }
    ],
    "zahlen": {
-    "commits": 8,
-    "entscheidungen": 5,
+    "commits": 10,
+    "entscheidungen": 6,
     "neuePruefläufe": 4
    },
    "groesstesProblem": "Zweimal am selben Tag `(window as any).App?.zeichneSeite?.()` geschrieben — und zweimal hat es still nichts getan. `const App = (() => …)()` in einem gewöhnlichen <script> legt eine globale LEXIKALISCHE Bindung an, und die steht nicht unter `window`. Das Feld wurde geschrieben, der Bildschirm blieb stehen, kein Fehler kam. Beim ersten Mal sah es aus wie ein fehlender Zweig, beim zweiten wie ein fehlender Kasten. Gefunden hat es beide Male eine Sonde, nicht der Wächter — der war rot, sagte aber das Falsche.",
@@ -3508,6 +3522,12 @@ const ChronikDaten = {
      "was": "Beim Schreiben von doku/REDION-FORMAT.md den eigenen Satz nachgeprüft — und ihn falsch gefunden: die Seitenfläche liess ein leeres `shapes` stehen. Reparatur mit `Store.feldWeg`, dazu test575 §11 mit Gegenprobe.",
      "warum": "Eine Doku, die verspricht, was der Code nicht hält, ist schlimmer als keine (§32, §33). Und §30 will den Wächter vor der Reparatur — hier kam er unmittelbar danach, weil der Fund aus dem Schreiben stammte, nicht aus einem Lauf.",
      "risiko": "Keines für Daten: das Feld wird nur entfernt, wenn die Liste leer ist. Ein Leser, der `shapes` erwartet, fand vorher `[]` und findet jetzt nichts — beides heisst „keine Zeichnung\"."
+    },
+    {
+     "zeit": "ca. 14:40",
+     "was": "`test572 §12` zweimal aus dem FALSCHEN Grund rot gesehen und beide Gründe als Kommentar in den Lauf geschrieben: `inReiter` gibt Gruppen zurück, keine flache Liste; und der Reiter „Zeichnen\" zeigt ohne offenes Blatt gar keine Werkzeuge.",
+     "warum": "Beide Male stand da „0 Werkzeuge\", und beide Male sah es nach einem Produktfehler aus. Ein Wächter, der eine Form annimmt statt sie nachzusehen, misst etwas anderes als er behauptet (L206).",
+     "risiko": "Keines — es sind Kommentare und ein echtes Blatt statt eines gestellten Ziels (§30: keine Mocks, wo die echte App geprüft werden kann)."
     }
    ]
   }
@@ -5059,6 +5079,18 @@ const ChronikDaten = {
    "ursache": "Im selben Tastenbehandler steht zwölf Zeilen höher die Pfeilnavigation zwischen Blöcken: `if (e.key === 'ArrowUp' && amAnfang(ct)) { … return; }` und dasselbe für `ArrowDown` am Ende. Beide prüfen die Modifikatoren NICHT und kehren mit `return` um. In einem einzeiligen Block ist der Cursor fast immer am Anfang UND am Ende — das Verschieben war damit praktisch nie erreichbar.",
    "beweis": "`test574 §11` in einer Liste ganz ohne versteckte Blöcke: [\"X\",\"Y\",\"Z\"] vor und nach `Control+Shift+ArrowDown`. Mit der Bedingung `!(e.ctrlKey || e.metaKey)` an den zwei Navigationszweigen: [\"Y\",\"X\",\"Z\"].",
    "lehre": "Zwei Zweige für dieselbe Taste in einer Datei sind eine Reihenfolge, keine Alternative — wer den zweiten schreibt, muss den ersten lesen (§45). Und: ein Kürzel, das in einem Menü steht, gehört bewacht; sonst ist die Beschriftung eine Behauptung (§32). Gefunden hat es ein Prüflauf, der etwas ganz anderes messen wollte."
+  },
+  {
+   "nr": "P117",
+   "datum": "2026-09-26",
+   "titel": "Eine Kennung, zwei Bedeutungen: `ellipse`",
+   "schwere": "klein",
+   "symptom": "Der neue Wächter über die Namen im Menüband war rot mit genau einer Kennung: `ellipse`. Die zwölf anderen stimmten.",
+   "falscheVermutung": "Das Menüband zeigt einen falschen Namen — der Wächter hat einen echten Anzeigefehler gefunden.",
+   "wieGefunden": "`test572 §12` vergleicht jeden Namen im Reiter „Zeichnen\" mit dem Katalog. Er suchte mit `reg(id) ?? form(id)` — erst im Werkzeugregister, sonst bei den Studio-Formen.",
+   "ursache": "Die Kennung gibt es ZWEIMAL. `Register.werkzeuge` führt das Flächenwerkzeug `ellipse` (Zeichen `◯`, deutscher Kennungsraum neben `linie`, `pfeil`, `rechteck`); `Marken.FORMEN` führt die Studio-Form `ellipse` (Zeichen `○`, englischer Raum neben `line`, `arrow`, `rectangle`). Drei Paare trennt die Sprache, das vierte nicht — also antwortete das Register zuerst, mit dem falschen Zeichen.",
+   "beweis": "`reg('ellipse').zeichen` = `◯`, `form('ellipse').zeichen` = `○`. Das Band zeigte `○` und hatte recht; rot war der Wächter.",
+   "lehre": "Ein Kennungsraum endet nicht an der Sprache, in der er gedacht ist. Wo zwei Kataloge nebeneinander liegen, muss die HERKUNFT dabeistehen — geraten wird sie genau so lange richtig, bis zwei Wörter gleich geschrieben werden. Seither sagt im Menüband jede Zeile, aus welchem Katalog sie kommt, und der Wächter fragt beide statt des ersten, der antwortet."
   }
  ]
 } as const;

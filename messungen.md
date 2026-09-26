@@ -4559,3 +4559,52 @@ test575                37 ok                     40 ok
 
 Die Gegenprobe (die eine Zeile `Store.feldWeg` wieder heraus) druckt
 `{"hatShapes":true,"hatRaum":true}` und macht zwei Zusagen rot.
+
+---
+
+## §68 · Eine Werkzeugliste statt drei (E694, 26. September 2026)
+
+**Der Bestand vorher und nachher**, gezählt im Quelltext:
+
+```txt
+                        VORHER                      NACHHER
+Register.werkzeuge      22 Einträge (Katalog)       22 Einträge (Katalog)
+Marken.WERKZEUGE        14 Objektliterale mit       14 Kennungen als
+                        id, zeichen, sym, name,     Reihenfolge
+                        titel  (≈ 4280 Zeichen)     (≈ 190 Zeichen)
+menueband.WERKZEUGE     13 Vierertupel              13 Paare
+                        [id, Name, Zeichen,         [id, 'werkzeug'|'form']
+                        Hinweis]
+Namen im Programm       an 3 Stellen geschrieben    an 1 Stelle
+```
+
+**Die Kollision, die dabei sichtbar wurde.** Die Kennung `ellipse` steht in
+zwei Kennungsräumen:
+
+```txt
+Register.werkzeuge  'linie'  'pfeil'  'rechteck'  'ellipse'   Zeichen ◯
+Marken.FORMEN       'line'   'arrow'  'rectangle' 'ellipse'   Zeichen ○
+```
+
+Drei Paare sind durch die Sprache getrennt, das vierte nicht. Ein
+`holen(id) ?? form(id)` hätte im Menüband still `◯` statt `○` gezeigt.
+
+**Der Wächter, gemessen:**
+
+```txt
+                    VOR der Reparatur   NACH der Reparatur   Gegenprobe
+test572             55 ok, 4 rot        59 ok, 0 rot         58 ok, 1 rot
+```
+
+Die Gegenprobe ist ein von Hand zurückgeschriebener Name
+(`id === 'abdeck' ? 'Abdeckband' : …`) und druckt genau den historischen
+Fehler aus `test266`: `abdeck`.
+
+**Zwei Messungen, die aus dem falschen Grund null ergaben** (beide jetzt als
+Kommentar im Lauf):
+
+```txt
+inReiter('zeichnen') gefiltert nach e.id           0 Werkzeuge  (gibt GRUPPEN zurück)
+gemessen ohne offenes Blatt                        0 Werkzeuge  (Zeichenziel.da() = false)
+gemessen mit Blatt, Gruppe 'Werkzeug'             13 Werkzeuge  ✓
+```
