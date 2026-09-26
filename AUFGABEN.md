@@ -1058,6 +1058,55 @@ Ungemessen ist ausserdem, ob PowerPoint die `.pptx`, die Redion heute
 schreibt, überhaupt öffnet (`LUECKEN.md:2708`).
 
 
+## Die drei Ansichten einer Seite (A1) — OFFEN, die Wahl gehört Redur
+
+Redur, 26. September 2026, mit einem Bild von AFFiNEs Kopfzeile: „bei der
+affine haben wir das es wechsel die ansichten und ich will dort auch die
+beide und plus von unsere aktuelle stand also mit cover usw also dort
+3 bereiche — aber zuerst lies, was die anderen 2 Bereiche bei AFFiNE
+machen."
+
+**Nachgelesen** (Archiv, MIT, nur gelesen; alles mit Datei:Zeile in
+`doku/karte/thema-ansichten.md`): AFFiNE hat GENAU ZWEI Modi, `page` und
+`edgeless`, und es sind zwei Ansichten DESSELBEN Dokuments. Je Notizblock
+entscheidet ein Feld mit drei Werten (`both`/`doc`/`edgeless`), wo er
+erscheint; verloren geht beim Wechseln nichts. Umgeschaltet wird per Klick
+oder Alt+S, Scrollstand und Zoom werden getrennt gemerkt, und der
+Umschalter ändert NICHT, welcher Modus beim nächsten Öffnen kommt. Ein
+Cover-Bild wie in Notion gibt es dort **nicht** — nur ein Icon.
+
+**Redions Stand:**
+
+| Bereich | heute |
+|---|---|
+| Seite | da, und reicher als AFFiNEs: Cover, Symbol, Titel, Volle Breite, Schrift, Vorlage, KI (`kopfleiste.ts:301-309`) |
+| Dokument | da, heisst „Dokumentmodus" (E126): Miniaturen, Arbeitsfläche, Inspector — aber als Knopf in der Werkzeugzeile, nicht als Umschalter oben |
+| Fläche | fehlt als ANSICHT |
+
+**Der Unterschied, auf den es ankommt:** Redions Whiteboard ist ein Block
+IN der Seite; AFFiNEs Fläche ist ein Blick AUF die Seite. Dort geht das,
+weil eine Notiz zugleich Seiteninhalt und Canvas-Element ist
+(`NoteBlockModel extends GfxCompatible(BlockModel)`). Redions Blöcke hängen
+in `content` der Seite und haben keinen Platz.
+
+**Die Frage an Redur — zwei Wege, und beide zugleich wäre §8:**
+
+- **(a) AFFiNEs Weg.** Jeder Block bekommt zwei Felder: seinen Platz auf der
+  Fläche und „wo erscheinen" (Seite / Fläche / beides). Gutmütige Vorgabe
+  wie bei `raumVersion`: kein Feld = genau wie bisher (§9, rückwärts
+  denken). Grösser, aber dafür ist Text auf der Fläche echter Editor-Text
+  mit Suche, Verlauf, Fassungen und Export.
+- **(b) Der kleine Weg.** Die Fläche ist ein Whiteboard über der ganzen
+  Seite, auf dem der Seiteninhalt als EIN Kasten liegt. Ein Bogen, keine
+  Datenfrage an den Blöcken.
+
+Dazu offen: soll der Umschalter oben neben den Titel (wie im Bild), dorthin,
+wo heute Pfeile und Seitenname stehen? Und tritt der „Dokumentmodus" dann
+als dritter Knopf daneben, mit seiner heutigen Regel (nur sichtbar, wenn
+die Seite wirklich ein Blatt oder eine PDF enthält)?
+
+---
+
 ## Die Werkzeugtafel (W1 … W6)
 
 Redur, 14. September 2026, mit fünf Bildern eines fertigen Entwurfs:
