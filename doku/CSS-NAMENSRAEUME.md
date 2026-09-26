@@ -23,7 +23,7 @@ L90 hält seither fest, dass das nicht die Lücke ist:
 > ins Leere, und der Fehler sieht wieder nicht wie ein Fehler aus — er sieht
 > aus wie ein Stil, den man nicht bestellt hat.
 
-Es sind nicht vierzig. Es sind **159** — gezählt, nicht fortgeschrieben.
+Es sind nicht vierzig. Es sind **160** — gezählt, nicht fortgeschrieben.
 
 *Hier stand 144, und das war schon vor diesem Durchgang falsch: das
 Verzeichnis trug 158 Einträge. Die Zahl im Fliesstext prüft `test290`
@@ -170,6 +170,7 @@ frei     10  einstellungen.css
 fv        9  einstellungen.css
 fx        5  bausteine.css
 gal       6  einstellungen.css
+gfx       17  werkzeuge.css
 gk       40  werkzeuge.css
 hat       6  notizhefte.css
 hk       12  bausteine.css

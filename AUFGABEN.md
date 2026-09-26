@@ -1238,7 +1238,28 @@ Fensters. Drei Wege stehen dort, und die Wahl ist Redurs.
 
 ---
 
-- **W6 · Die Whiteboard-Leiste nach dem Edgeless-Vorbild.** Redur,
+- **W6 · Die eine Werkzeugleiste — Bogen 5a ist gelandet (E689).**
+  Gebaut: `Register.werkzeuge` (22 Werkzeuge) und `GfxToolbar`
+  (`src/core/gfx/toolbar.ts`); das Whiteboard zieht darauf um, mit
+  schwebender Kapsel unter der Fläche, Strichzeichen, Untermenüs und 44 px
+  am Telefon (`test572`, 51 Zusagen). **Offen bleiben vier Bögen:**
+
+  - **5b · Ein Katalog statt drei.** `Marken.WERKZEUGE` und
+    `menueband.WERKZEUGE` lesen aus dem Register (L218); Bild des Reiters
+    „Zeichnen", die 66 Studio- und 44 Band-Läufe als Beweis.
+  - **5c · Die Gedankenkarte** auf `GfxToolbar` — sie ist eine
+    Aktionsleiste ohne aktives Werkzeug, also mit `werkzeuge: []` und ihren
+    fünf Aktionen; `test529 §12` misst dann echte 44-px-Boxen.
+  - **5d · Die Planfläche** — `zeigen/leitung/text/radieren` werden
+    Register-Einträge; `.sp-wz` und `.sp-start` bleiben als Wähler, die
+    Palette bleibt, wo sie ist.
+  - **5e · Kürzel, Ziehen, dichter Modus** — Tasten aus dem Katalog über
+    `Register.tasten` (und davor die eine Zeile in `marken.ts:7248`, die
+    `defaultPrevented` nicht prüft), Werkzeug auf die Fläche ziehen,
+    Blättern mit ‹ ›, und das echte Schweben über der Fläche, sobald
+    `insBild()` den Sockel abzieht.
+
+  Der ursprüngliche Auftrag, zum Nachlesen — Redur,
   25. September 2026, mit einem Bild von AFFiNEs Edgeless-Werkzeugleiste:
   „ich will so was haben wie die affine schau mal es nach".
 

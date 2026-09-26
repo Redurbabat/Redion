@@ -63,6 +63,20 @@ const lies = (rel: string): string => {
   const f = path.join(WURZEL, rel);
   return fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
 };
+/** Nur der CODE, ohne Kommentare und Zeichenketten.
+ *
+ *  DIESER HELFER IST EIN FUND DIESES BOGENS. Der erste Anlauf von §1 las den
+ *  Rohtext und war rot mit „wb-, gk-, sp-, blatt-" — gefunden im KOPF des
+ *  Kernbauteils, wo wörtlich steht, dass es diese Namen nicht kennt. Ein
+ *  Wächter, der einen Kommentar für Code hält, meldet genau die Sorgfalt als
+ *  Verstoss, die er erzwingen soll (derselbe Fehler wie in test444, siehe den
+ *  Plan „Rot zuerst"). */
+const nurCode = (quelle: string): string => quelle
+  .replace(/\/\*[\s\S]*?\*\//g, ' ')
+  .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ')
+  .replace(/'(?:[^'\\\n]|\\.)*'/g, "''")
+  .replace(/"(?:[^"\\\n]|\\.)*"/g, '""')
+  .replace(/`(?:[^`\\]|\\.)*`/g, '``');
 
 /* ==========================================================================
  * §1 · Der Kern kennt keinen Bereich (§5)
@@ -74,11 +88,12 @@ const lies = (rel: string): string => {
 console.log('\n1 · Der Kern kennt keinen Bereich');
 const kernJs = lies('quell/core/gfx/toolbar.js');
 p('Es gibt `quell/core/gfx/toolbar.js`', kernJs.length > 500, `${kernJs.length} Zeichen`);
+const kernCode = nurCode(kernJs);
 const verboten = ['wb-', 'gk-', 'sp-', 'blatt-', 'whiteboard', 'Gedankenkarte', 'Planflaeche', 'Marken.'];
-const gefunden = verboten.filter(w => kernJs.includes(w));
+const gefunden = verboten.filter(w => kernCode.includes(w));
 p('Und er nennt keine Fläche beim Namen', gefunden.length === 0, gefunden.join(', '));
 for (const name of ['Register.', 'Store.', 'App.', 'UI.', 'Dialog.']) {
-  p(`Er ruft ${name.replace('.', '')} nicht`, !kernJs.includes(name));
+  p(`Er ruft ${name.replace('.', '')} nicht`, !kernCode.includes(name));
 }
 p('Er meldet sich als `GfxToolbar` an', /window as any\)\.GfxToolbar|\.GfxToolbar\s*=/.test(kernJs));
 
@@ -101,7 +116,9 @@ if (regJs) {
 p('`Register.werkzeuge` steht bereit', !!R && typeof R.alle === 'function');
 if (R) {
   const alle = R.alle();
-  p('Es kennt mindestens 26 Werkzeuge (12 Fläche + 14 Studio)', alle.length >= 26, `${alle.length}`);
+  /* 12 + 14 − 4: `stift`, `text`, `bild` und `radierer` gehören beiden Flächen
+     und stehen deshalb EINMAL im Katalog (gezählt beim Schreiben, nicht geschätzt). */
+  p('Es kennt 22 Werkzeuge — 12 Fläche + 14 Studio, vier davon geteilt', alle.length === 22, `${alle.length}`);
   const stift = R.holen('stift');
   p('Ein Eintrag hat Kennung, Name, Zeichen, Symbol und Gruppe',
     !!stift && !!stift.name && !!stift.zeichen && !!stift.sym && /^(quick|senior)$/.test(stift.gruppe),
@@ -234,12 +251,16 @@ const zeilen = await rechner.evaluate(() => {
     zeilen: oben.size,
     knoepfe: knoepfe.length,
     raus: knoepfe.filter(b => b.getBoundingClientRect().right > kasten.right + 1).length,
-    hoehe: Math.round(document.querySelector('.wb-tools')!.getBoundingClientRect().height)
+    hoehe: Math.round(document.querySelector('.wb-tools')!.getBoundingClientRect().height),
+    kapsel: Math.round(document.querySelector('.gfx-tb-haupt')!.getBoundingClientRect().height),
+    rollt: (() => { const s = document.querySelector('.gfx-tb-roller') as HTMLElement; return s.scrollWidth > s.clientWidth + 1; })()
   };
 });
 p('Die Knöpfe stehen in EINER Zeile', zeilen.zeilen === 1, `${zeilen.zeilen} Zeilen, ${zeilen.knoepfe} Knöpfe`);
-p('Die Leiste ist höchstens 56 px hoch', zeilen.hoehe <= 56, `${zeilen.hoehe} px`);
+p('Die Kapsel ist höchstens 44 px hoch', zeilen.kapsel <= 44, `Kapsel ${zeilen.kapsel} px, Sockel ${zeilen.hoehe} px`);
+p('Und der ganze Sockel höchstens 64 px', zeilen.hoehe <= 64, `${zeilen.hoehe} px`);
 p('Kein Knopf steht ausserhalb des Kastens', zeilen.raus === 0, `${zeilen.raus} draussen`);
+p('Und am Rechner muss niemand rollen — alles passt', zeilen.rollt === false);
 
 /* ==========================================================================
  * §8 · Genau ein Werkzeug ist gewählt (§38)
@@ -273,12 +294,23 @@ const menue = await rechner.evaluate(async () => {
   const m = document.querySelector<HTMLElement>('.gfx-tb-menue');
   if (!m) return { da: true, offen: false };
   const mr = m.getBoundingClientRect(), kr = knopf.getBoundingClientRect();
+  /* NICHT NUR DIE LAGE, SONDERN OB MAN ES SIEHT. Der erste Stand dieses
+     Bogens hatte das Menü genau richtig gesetzt — und ein rollender Vorfahr
+     schnitt es ab; gemessen war alles grün, auf dem Bild war nichts (§55.1).
+     elementFromPoint fragt den Browser, was an der Stelle WIRKLICH liegt. */
+  const tupfer = m.querySelector('button');
+  const tr = tupfer?.getBoundingClientRect();
+  const getroffen = tr ? document.elementFromPoint(tr.left + tr.width / 2, tr.top + tr.height / 2) : null;
   return { da: true, offen: true, nachOben: mr.bottom <= kr.top + 2,
+    trefferImMenue: !!getroffen && m.contains(getroffen),
+    wasLiegtDa: (getroffen as HTMLElement | null)?.className ?? '(nichts)',
     masse: `Menü ${Math.round(mr.top)}…${Math.round(mr.bottom)} · Knopf ${Math.round(kr.top)}` };
 });
 p('Es gibt einen Knopf mit Untermenü', menue.da === true);
 p('Und es klappt auf', menue.offen === true);
 p('Es klappt NACH OBEN auf', menue.nachOben === true, menue.masse ?? '');
+p('Und man kann wirklich hineintippen — nichts schneidet es ab',
+  menue.trefferImMenue === true, 'an der Stelle liegt: ' + (menue.wasLiegtDa ?? ''));
 await rechner.keyboard.press('Escape');
 await rechner.waitForTimeout(150);
 p('Escape schliesst es (§38)',
@@ -342,14 +374,32 @@ const klein = await handy.evaluate(() => {
   return {
     zuKlein: masse.filter(m => m.h < 44 || m.w < 44),
     anzahl: masse.length,
-    raus: kn.filter(b => { const r = b.getBoundingClientRect(); return r.right > kasten.right + 1 || r.left < kasten.left - 1; }).length,
+    letzterErreichbar: (() => {
+      const s = document.querySelector('.gfx-tb-roller') as HTMLElement;
+      s.scrollLeft = s.scrollWidth;
+      const letzter = kn[kn.length - 1]!.getBoundingClientRect();
+      const sr = s.getBoundingClientRect();
+      const gut = letzter.right <= sr.right + 1 && letzter.left >= sr.left - 1;
+      s.scrollLeft = 0;
+      return gut;
+    })(),
+    leisteDrin: (() => {
+      const s = document.querySelector('.wb-tools')!.getBoundingClientRect();
+      return s.left >= kasten.left - 1 && s.right <= kasten.right + 1;
+    })(),
+    rollMasse: (() => { const s = document.querySelector('.gfx-tb-roller') as HTMLElement;
+      return `Inhalt ${Math.round(s.scrollWidth)} px in ${Math.round(s.clientWidth)} px`; })(),
     zeilen: new Set(kn.map(b => Math.round(b.getBoundingClientRect().top))).size,
     hoehe: Math.round(leiste.height)
   };
 });
 p('Jeder sichtbare Knopf misst 44 px (gerenderte Box)', klein.zuKlein.length === 0,
   klein.zuKlein.map(m => `${m.id} ${m.w}×${m.h}`).join(' · '));
-p('Kein Knopf ragt aus dem Kasten', klein.raus === 0, `${klein.raus} draussen`);
+/* AM TELEFON ROLLT DIE LEISTE (E356, wie die Studioleiste). „Steht ausserhalb
+   des Kastens" ist dort kein Fehler, sondern der Zustand vor dem Rollen —
+   gemessen wird deshalb, ob man JEDEN Knopf erreichen kann. */
+p('Der letzte Knopf ist durch Rollen erreichbar', klein.letzterErreichbar === true, klein.rollMasse ?? '');
+p('Und die Leiste selbst bleibt im Kasten', klein.leisteDrin === true);
 p('Die Leiste bleibt eine Zeile (sie rollt, statt umzubrechen)', klein.zeilen === 1,
   `${klein.zeilen} Zeilen bei ${klein.anzahl} Knöpfen, ${klein.hoehe} px hoch`);
 await handy.close();

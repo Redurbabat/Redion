@@ -19,6 +19,14 @@ Stand 25. September 2026 · Quelle: ein Leser für Bogen 5 (E681-Karte, Zeilen a
 - Es gibt KEIN Werkzeugregister — weder in `src/core/` noch in `src/register/`. Der einzige Katalog ist `Marken.WERKZEUGE` (`pdf/marken.ts:301–360`), und `register/menueband.ts:422–436` führt einen zweiten, kürzeren (13 ids; ohne triangle, roundrect, curve, textfix, elemente, bild, laser) — gegen §8.
 - `Register.tasten` ist eine Übersichtsliste, die nichts ausführt; nur die Gruppe „Blatt und PDF" (52–58) ist gefüllt, nichts in `src/` ruft `tasten.melde`.
 
+## Was sich seit E689 geändert hat (26. September 2026)
+
+- Es gibt jetzt EINEN Katalog: `Register.werkzeuge` (`src/register/werkzeuge.ts`, 22 Einträge = 12 Fläche + 14 Studio, vier geteilt) mit `melde/holen/alle/ids/auswahl`.
+- Und EIN Bauteil: `GfxToolbar.erstelle` (`src/core/gfx/toolbar.ts`) — quick/senior, Untermenü nach oben, ein Tabstopp mit Pfeilen, `setzeWerkzeug/setzeGesperrt/schliesse/zerstoere`; kennt keine Fläche (test572 §1 liest das gebaute JS).
+- Das Whiteboard ist umgezogen: `.wb-tools` ist die Zusatzklasse an `.gfx-tb-sockel`, darin `.gfx-tb-roller` mit zwei Kapseln (`.gfx-tb-haupt`, `.gfx-tb-neben`); Farben und „…" sind Untermenüs; CSS `quell/schale/stil/werkzeuge.css`, Namensraum `gfx`.
+- NOCH NICHT umgezogen: Studio (`Marken.WERKZEUGE`), Menüband (`menueband.WERKZEUGE`), Gedankenkarte, Planfläche — L218 und AUFGABEN W6 5b–5e.
+- Zwei neue Lücken: L217 (am Telefon liegt die Leiste im Ruhezustand hinter `#handy-oben`, gemessen 39 px Überdeckung), L218 (drei Werkzeuglisten, gehalten von test572 §3).
+
 ## Whiteboard — src/bereiche/bloecke/arten/zeichenflaeche.ts
 
 - `Zusatz.whiteboard(block)` Z.73–875 (Export 1557; gerufen aus `editor/ansicht/editor.ts:898–899`). Leiste als HTML-String 114–150: Wurzel `.wb`, Leiste `.wb-tools`, Knöpfe `[data-wz]`, Farben `.wb-farbe[data-c]`, `.wb-sep`, `.wb-zoom` mit `.wb-massstab`, Aktionen `[data-a]`; Fläche `.wb-flaeche` (SVG), `.wb-griff`, `.wb-eingabe`, `.wb-griffpunkt`. Klick 804–837.

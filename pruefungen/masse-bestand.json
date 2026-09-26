@@ -195,11 +195,6 @@
    "datei": "werkzeuge.css",
    "wahl": ".btn.klein",
    "px": 28
-  },
-  {
-   "datei": "werkzeuge.css",
-   "wahl": ".wb-tools button",
-   "px": 26
   }
  ]
 }

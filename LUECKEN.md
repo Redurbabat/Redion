@@ -8317,6 +8317,50 @@ die Sammlung nur an nicht-verknüpfte Blöcke hängen — mit Wächter.
 
 ---
 
+## L217 · Am Telefon steht die Werkzeugleiste im Ruhezustand hinter der unteren Leiste — 26. September 2026
+
+**Gemessen, und auf dem Bild zu sehen** (E689, Bogen 5a): bei 390×844 px
+liegt die Leiste des Whiteboards nach dem Öffnen bei 796…866 px, die untere
+Leiste der Schale (`#handy-oben`) bei 775…835 — sie überdecken sich um
+39 px. Man kommt mit einem Wisch heran (`#scroll` hält `--hunten` = 93 px am
+Ende frei), aber im ersten Bild sieht man von der Leiste nur den oberen Rand.
+
+**Warum es kein einfacher Fix war.** Naheliegend wäre `position:sticky;
+bottom:var(--hunten)` am Sockel — aber `.wb` trägt `overflow:hidden` (für
+die runden Ecken und den SVG-Schnitt), und damit ist `.wb` selbst der
+Haltebereich: sticky hätte nichts, woran es kleben könnte. Die andere
+Antwort wäre, die untere Leiste beim Zeichnen auszublenden, wie es der
+Dokumentmodus tut (`bausteine.css:6485`) — das ist eine Entscheidung über
+die Schale, nicht über eine Blockart, und gehört Redur.
+
+**Was fehlt:** die Wahl zwischen (a) so lassen (jede Zeile im Fluss kann
+hinter der Leiste liegen, das ist der Preis einer festen unteren Leiste),
+(b) `.wb` ohne `overflow:hidden` und dann sticky, (c) die untere Leiste
+ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
+
+---
+
+## L218 · Zwei Werkzeuglisten, bis das Studio umzieht — 26. September 2026
+
+**Seit E689 gibt es den Katalog** (`Register.werkzeuge`, 22 Einträge), und
+das Whiteboard liest daraus. Das Studio liest weiter seine eigene Liste
+(`Marken.WERKZEUGE`, `marken.ts:301–360`), und das Menüband eine dritte
+(`register/menueband.ts:422–436`, 13 Kennungen; ohne textfix, elemente,
+bild, laser). Drei Listen für eine Sache — genau das, wovor §8 warnt.
+
+**Warum sie noch stehen:** die Studioleiste hängt an 66 Prüfdateien, das
+Menüband an 44; beides umzuhängen ist ein eigener Bogen mit eigenem Bild
+(5b). Bis dahin hält `test572 §3` die Namen im Gleichlauf: jede Kennung aus
+`Marken.WERKZEUGE` steht mit DEMSELBEN Namen im Register. Das ist die
+Zusage, die `test266` schon einmal gerettet hat, als „Abdecken" still zu
+„Abdeckband" wurde.
+
+**Was fehlt:** Bogen 5b — `Marken.WERKZEUGE = Register.werkzeuge.auswahl(…)`
+und `menueband.WERKZEUGE` aus dem Register, mit Bild des Reiters
+„Zeichnen" und den 44 Band-Läufen als Beweis.
+
+---
+
 ## L216 · Lerninhalte im Startweg — 19,5 KB Lernstoff bei jedem Start, für einen Bildschirm, den nicht jeder öffnet — 25. September 2026
 
 **Gemessen, nicht vermutet** (`messungen.md`, E688): `test388 §5` war
@@ -8630,7 +8674,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 25. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 112 Lücken, 60 offene und 52 geschlossene. Der Befehl dazu ist
+Datei führt 114 Lücken, 62 offene und 52 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

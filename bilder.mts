@@ -1767,6 +1767,61 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  /* Die neue Leiste in ihren Zuständen (E689, W6). Zwei Ziele mehr, weil ein
+     Untermenü nur auf einem Bild zu sehen ist, auf dem es offen ist (§55.3).
+     Sie bauen ihre Fläche selbst: `bauen` läuft im Browser und kennt
+     `ANSICHTEN` nicht — daran ist der erste Anlauf gescheitert. */
+  whiteboardFarben: {
+    titel: 'Die Werkzeugleiste mit offenem Farbmenue (E689)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Projektskizze', icon: '🖍' });
+      Store.addBlock(seite.id, 'whiteboard', {
+        text: 'Whiteboard', hoehe: 460,
+        shapes: [
+          { id: 'k1', art: 'notiz', x: 70, y: 60, w: 190, h: 110, farbe: '#529cca', text: 'Aufnahme im Unterricht' },
+          { id: 'k2', art: 'notiz', x: 380, y: 200, w: 190, h: 110, farbe: '#4dab9a', text: 'Karten daraus erzeugen' },
+          { id: 'v1', art: 'verbindung', von: 'k1', nach: 'k2', farbe: '#9b9a97' },
+          { id: 's1', art: 'stift', farbe: '#ff7369', pts: [[120, 250], [160, 300], [210, 260], [260, 320], [310, 270]] }
+        ]
+      });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    },
+    dann: async () => {
+      document.querySelector<HTMLElement>('.wb-tools [data-menue="farbe"]')?.click();
+      await new Promise(r => setTimeout(r, 280));
+    }
+  },
+  whiteboardMehr: {
+    titel: 'Die Werkzeugleiste mit offenem Mehr-Menue (E689)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Projektskizze', icon: '🖍' });
+      Store.addBlock(seite.id, 'whiteboard', {
+        text: 'Whiteboard', hoehe: 460,
+        shapes: [
+          { id: 'k1', art: 'notiz', x: 70, y: 60, w: 190, h: 110, farbe: '#529cca', text: 'Aufnahme im Unterricht' },
+          { id: 'k2', art: 'notiz', x: 380, y: 200, w: 190, h: 110, farbe: '#4dab9a', text: 'Karten daraus erzeugen' },
+          { id: 'v1', art: 'verbindung', von: 'k1', nach: 'k2', farbe: '#9b9a97' },
+          { id: 's1', art: 'stift', farbe: '#ff7369', pts: [[120, 250], [160, 300], [210, 260], [260, 320], [310, 270]] }
+        ]
+      });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    },
+    dann: async () => {
+      document.querySelector<HTMLElement>('.wb-tools [data-menue="mehr"]')?.click();
+      await new Promise(r => setTimeout(r, 280));
+    }
+  },
+
   schaltplan: {
     /* Der Stromkreis ist der aus test263 (senkrechte Zweige, keine Leitung
        überbrückt einen Anschluss). Das Bild zeigt die Planfläche mit ihrer

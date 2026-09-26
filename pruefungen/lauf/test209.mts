@@ -463,13 +463,33 @@ const leiste = await handy.evaluate(async () => {
   App.oeffne(seiten.parentId);
   await new Promise(r => setTimeout(r, 800));
   const knoepfe = [...document.querySelectorAll<HTMLElement>('.wb-tools button')];
+  /* NACHGEZOGEN AM 26. SEPTEMBER 2026 (E689). Bis dahin stand hier
+     `right > innerWidth` — „kein Werkzeug steht ausserhalb des Bildes". Das
+     war richtig, solange die Leiste UMBRACH: was nicht in die Zeile passte,
+     kam in die naechste, und was darueber hinausging, war weg.
+
+     Seit E689 rollt sie waagrecht, wie die Studioleiste seit E356. Ein Knopf
+     RECHTS AUSSERHALB ist dort kein Fehler, sondern der Zustand vor dem
+     Rollen; gemessen wurden 11 von 19, und alle elf sind mit einem Wisch da.
+     Die Zusage lautet deshalb neu: die Leiste selbst bleibt im Kasten, und
+     jeder Knopf ist erreichbar. `test572 §7` misst dasselbe am 390-px-Geraet
+     und dazu die 44 px je Knopf. */
+  const roller = document.querySelector('.gfx-tb-roller') as HTMLElement | null;
+  const leisteR = document.querySelector('.wb-tools')?.getBoundingClientRect();
+  if (roller) roller.scrollLeft = roller.scrollWidth;
+  const letzter = knoepfe[knoepfe.length - 1]?.getBoundingClientRect();
+  const rr = roller?.getBoundingClientRect();
+  const erreichbar = !!letzter && !!rr && letzter.right <= rr.right + 1;
+  if (roller) roller.scrollLeft = 0;
   return {
     knoepfe: knoepfe.length,
-    raus: knoepfe.filter(k => k.getBoundingClientRect().right > innerWidth + 1).length
+    raus: (leisteR && leisteR.right > innerWidth + 1) ? 1 : 0,
+    erreichbar
   };
 });
 p('Die Werkzeugleiste ist vollständig da', leiste.knoepfe >= 18, `${leiste.knoepfe} Knöpfe`);
-gleich('Und kein Werkzeug steht ausserhalb des Bildes', leiste.raus, 0);
+p('Und die Leiste selbst bleibt im Bild', leiste.raus === 0, `${leiste.raus} draussen`)
+p('Jeder Knopf ist durch Rollen erreichbar (E689)', (leiste as any).erreichbar === true)
 
 /* ==========================================================================
  * §10 · Zurück, Vorwärts, Schreiben und Grösse ändern (E144, L54)

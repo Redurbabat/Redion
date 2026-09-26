@@ -1,0 +1,291 @@
+"use strict";
+/* ============================================================================
+ * core/gfx/toolbar.ts — EINE Werkzeugleiste für alle Flächen
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/gfx/toolbar.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/core/gfx/toolbar.js`; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * Der dritte Bewohner des GFX-Kerns, nach dem Verlauf (`history.ts`, E687) und
+ * dem Raum (`core/sheet/space.ts`). Redur, 25. September 2026, mit einem Bild
+ * von AFFiNEs Edgeless-Leiste: „ich will so was haben wie die affine" —
+ * „integriere alles zusammen".
+ *
+ * WAS DAS BAUTEIL IST: ein Zeichner für Leisten. Es bekommt Werkzeuge und
+ * Aktionen als Daten, baut daraus Knöpfe, hält fest, welches Werkzeug gewählt
+ * ist, öffnet Untermenüs und führt die Tastatur. Mehr nicht.
+ *
+ * WAS ES NICHT IST — und das ist der Grund, warum es hier liegen darf (§5):
+ * Es kennt keine Fläche. Kein `wb-`, kein `gk-`, kein `sp-`, kein `blatt-`,
+ * kein `Store`, kein `Register`, kein `App`. Was ein Werkzeug TUT, weiss nur
+ * die Fläche, die es ausführt; dieses Bauteil ruft dafür einen Rückruf. Und
+ * die Strichzeichen füllt der AUFRUFER ein (`Register.symbole.fuelle`) — der
+ * Kern schreibt nur `data-sym` an die Stelle, an der eines hingehört.
+ * `test572 §1` liest das gebaute JavaScript und hält das fest.
+ *
+ * ── DREI ENTSCHEIDUNGEN, DIE MAN IM BILD SIEHT ─────────────────────────────
+ *
+ * 1 · ZWEI KAPSELN IN EINEM SOCKEL. Gemessen: ein Whiteboard-Kasten auf einer
+ *     gewöhnlichen Seite ist 708 px breit (`#page` mit `max-width:900` und
+ *     96 px Rand). Zwölf Werkzeuge, acht Farben, vier Zoomknöpfe und vier
+ *     Aktionen passen dort in EINE Kapsel nicht — gerechnet 714 px bei 708.
+ *     Also trägt die linke Kapsel die Werkzeuge, die rechte Zoom, Verlauf und
+ *     „…". Das ist zugleich AFFiNEs Aufteilung, dort nur als zweite Pille
+ *     links unten.
+ *
+ * 2 · DIE LEISTE ROLLT, SIE BLÄTTERT NICHT. AFFiNE blättert die rechte Gruppe
+ *     mit ‹ ›. Redion hat für schmale Fenster schon eine Antwort, und zwar
+ *     eine erprobte: die Studioleiste rollt waagrecht (E356, `test393` hält
+ *     die Verlaufsknöpfe dabei am Rand fest). Zwei Antworten auf dieselbe
+ *     Frage wären eine zu viel (§8). Blättern kann in Bogen 5e dazukommen,
+ *     wenn es jemand vermisst.
+ *
+ * 3 · KEIN `position:fixed`. Die Leiste sitzt IM Kasten ihrer Fläche und
+ *     rollt mit der Seite. Eine feste Leiste läge am Telefon unter
+ *     `#handy-oben` (z-index 401, `bausteine.css:1729`) — und §37 verlangt
+ *     ohnehin, dass eine Werkzeugleiste nicht verdeckt, was sie bedient.
+ * ==========================================================================*/
+const GfxToolbar = (() => {
+    const esc = (wert) => String(wert ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    const erstelle = (o) => {
+        const werkzeuge = (o.werkzeuge || []).filter(w => w && w.id);
+        const aktionen = (o.aktionen || []).filter(a => a && a.id);
+        let aktiv = o.aktiv || werkzeuge[0]?.id || '';
+        let offenesMenue = null;
+        const wurzel = document.createElement('div');
+        wurzel.className = 'gfx-tb-sockel' + (o.klasse ? ' ' + o.klasse : '');
+        /* DER ROLLER IST EINE EIGENE EBENE, und das ist kein Schmuck.
+           Erster Anlauf: der Sockel selbst rollte (overflow-x:auto). Das Menue lag
+           darin — und CSS macht aus `overflow-x:auto` mit `overflow-y:visible`
+           beidseitig `auto`: das Menue war GEMESSEN an der richtigen Stelle
+           (148 x 80 px ueber dem Knopf, im Kasten) und auf dem Bild trotzdem nicht
+           da, weil der Sockel es abschnitt. Gefunden hat das nicht der Waechter,
+           sondern das Bild (§55.1). Jetzt rollt eine Ebene tiefer, und das Menue
+           haengt am Sockel darueber. */
+        const roller = document.createElement('div');
+        roller.className = 'gfx-tb-roller';
+        const leiste = document.createElement('div');
+        leiste.className = 'gfx-tb gfx-tb-haupt';
+        leiste.setAttribute('role', 'toolbar');
+        leiste.setAttribute('aria-label', o.beschriftung || 'Werkzeuge');
+        const neben = document.createElement('div');
+        neben.className = 'gfx-tb gfx-tb-neben';
+        /** Ein Knopf: Strichzeichen aus `data-sym`, Name für den Vorleser (§38).
+         *  Das Textzeichen bleibt als Rückfall darin, falls kein Symbol da ist —
+         *  ein leerer Knopf wäre schlimmer als ein Emoji. */
+        const knopf = (teil, art, menue = false) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.dataset[art === 'wz' ? 'wz' : 'a'] = teil.id;
+            if (menue)
+                b.dataset.menue = teil.id;
+            b.title = teil.titel || teil.name;
+            b.setAttribute('aria-label', teil.name);
+            b.tabIndex = -1;
+            b.innerHTML = teil.sym
+                ? `<span class="zeichen" data-sym="${esc(teil.sym)}" aria-hidden="true"></span>`
+                : `<span class="zeichen" aria-hidden="true">${esc(teil.zeichen ?? '')}</span>`;
+            return b;
+        };
+        /* --- Die Werkzeuge: quick links, senior rechts, ein Strich dazwischen --- */
+        const quick = werkzeuge.filter(w => w.gruppe === 'quick');
+        const senior = werkzeuge.filter(w => w.gruppe !== 'quick');
+        const gruppe = (klasse) => {
+            const g = document.createElement('div');
+            g.className = 'gfx-tb-gruppe ' + klasse;
+            return g;
+        };
+        const trenner = () => {
+            const t = document.createElement('span');
+            t.className = 'gfx-tb-trenn';
+            t.setAttribute('aria-hidden', 'true');
+            return t;
+        };
+        const gQuick = gruppe('gfx-tb-quick');
+        for (const w of quick) {
+            const b = knopf(w, 'wz');
+            b.setAttribute('aria-pressed', String(w.id === aktiv));
+            if (w.id === aktiv)
+                b.classList.add('on');
+            gQuick.append(b);
+        }
+        const gSenior = gruppe('gfx-tb-senior');
+        for (const w of senior) {
+            const b = knopf(w, 'wz');
+            b.setAttribute('aria-pressed', String(w.id === aktiv));
+            if (w.id === aktiv)
+                b.classList.add('on');
+            gSenior.append(b);
+        }
+        if (quick.length)
+            leiste.append(gQuick);
+        if (quick.length && senior.length)
+            leiste.append(trenner());
+        if (senior.length)
+            leiste.append(gSenior);
+        /* --- Die Aktionen ------------------------------------------------------ */
+        const inWerkzeuge = aktionen.filter(a => a.kapsel === 'werkzeuge');
+        const inNeben = aktionen.filter(a => a.kapsel !== 'werkzeuge');
+        const setzeAktionen = (liste, ziel) => {
+            for (const a of liste) {
+                const vor = o.zusatz?.[a.id];
+                if (vor)
+                    ziel.append(vor);
+                const b = knopf(a, 'a', a.menue === true);
+                if (a.gesperrt)
+                    b.disabled = true;
+                ziel.append(b);
+            }
+        };
+        if (inWerkzeuge.length) {
+            leiste.append(trenner());
+            setzeAktionen(inWerkzeuge, leiste);
+        }
+        setzeAktionen(inNeben, neben);
+        roller.append(leiste);
+        if (neben.childNodes.length)
+            roller.append(neben);
+        wurzel.append(roller);
+        /* --- Das Untermenü ------------------------------------------------------
+           Es klappt NACH OBEN auf. Nach unten wäre es ausserhalb des Kastens —
+           die Leiste sitzt schon an dessen unterem Rand —, und am Telefon läge es
+           hinter der unteren Leiste der Schale. */
+        const menueZu = () => {
+            wurzel.querySelector('.gfx-tb-menue')?.remove();
+            wurzel.querySelectorAll('[data-menue]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+            offenesMenue = null;
+        };
+        const menueAuf = (id, ausloeser) => {
+            const inhalt = o.menue?.(id);
+            if (!inhalt)
+                return;
+            menueZu();
+            const m = document.createElement('div');
+            m.className = 'gfx-tb-menue';
+            m.setAttribute('role', 'group');
+            m.append(inhalt);
+            wurzel.append(m);
+            offenesMenue = id;
+            ausloeser.setAttribute('aria-expanded', 'true');
+            /* Waagrecht am Auslöser ausrichten und in den Kasten klemmen. */
+            const wr = wurzel.getBoundingClientRect(), ar = ausloeser.getBoundingClientRect();
+            const mb = m.getBoundingClientRect();
+            const links = Math.max(0, Math.min(wr.width - mb.width, ar.left - wr.left + ar.width / 2 - mb.width / 2));
+            m.style.left = Math.round(links) + 'px';
+        };
+        /* --- Klicks ------------------------------------------------------------ */
+        const beiKlick = (e) => {
+            const ziel = e.target;
+            if (!ziel)
+                return;
+            const mn = ziel.closest('[data-menue]');
+            if (mn && wurzel.contains(mn)) {
+                const id = mn.dataset.menue ?? '';
+                if (offenesMenue === id)
+                    menueZu();
+                else
+                    menueAuf(id, mn);
+                return;
+            }
+            const wz = ziel.closest('[data-wz]');
+            if (wz && wurzel.contains(wz)) {
+                menueZu();
+                const id = wz.dataset.wz ?? '';
+                const teil = werkzeuge.find(w => w.id === id);
+                if (teil?.haelt !== false)
+                    setzeWerkzeug(id);
+                o.aufWerkzeug?.(id);
+                return;
+            }
+            const ak = ziel.closest('[data-a]');
+            if (ak && wurzel.contains(ak)) {
+                const id = ak.dataset.a ?? '';
+                /* Ein Klick IM Untermenü schliesst es — er hat ja gewirkt. */
+                if (ziel.closest('.gfx-tb-menue'))
+                    menueZu();
+                o.aufAktion?.(id);
+            }
+        };
+        wurzel.addEventListener('click', beiKlick);
+        /* --- Tastatur: EIN Tabstopp, Pfeile führen (§38) ------------------------
+           Dieselbe Regel wie in der Studioleiste (`marken.ts`, „roving tabindex"):
+           die Leiste ist EIN Halt beim Tabben, drinnen bewegen Pfeile. Sonst
+           braucht man dreissig Tabs, um an der Leiste vorbeizukommen. */
+        const knoepfe = () => [...wurzel.querySelectorAll('button')]
+            .filter(b => !b.disabled && b.offsetParent !== null && !b.closest('.gfx-tb-menue'));
+        const tabstoppSetzen = () => {
+            const liste = knoepfe();
+            const gewaehlt = liste.find(b => b.dataset.wz === aktiv) ?? liste[0];
+            for (const b of liste)
+                b.tabIndex = b === gewaehlt ? 0 : -1;
+        };
+        const beiTaste = (e) => {
+            if (e.key === 'Escape' && offenesMenue) {
+                menueZu();
+                e.stopPropagation();
+                e.preventDefault();
+                return;
+            }
+            if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'Home' && e.key !== 'End')
+                return;
+            const liste = knoepfe();
+            const jetzt = liste.indexOf(document.activeElement);
+            if (jetzt < 0)
+                return;
+            e.preventDefault();
+            const naechster = e.key === 'Home' ? 0
+                : e.key === 'End' ? liste.length - 1
+                    : e.key === 'ArrowRight' ? (jetzt + 1) % liste.length
+                        : (jetzt - 1 + liste.length) % liste.length;
+            const b = liste[naechster];
+            if (!b)
+                return;
+            for (const x of liste)
+                x.tabIndex = x === b ? 0 : -1;
+            b.focus();
+        };
+        wurzel.addEventListener('keydown', beiTaste);
+        /* Ein Klick irgendwo sonst schliesst das Menü. Ein Menü, das offen bleibt,
+           während man weiterzeichnet, verdeckt genau das, was man gerade tut. */
+        const beiAussen = (e) => {
+            if (!offenesMenue)
+                return;
+            const z = e.target;
+            if (z && !wurzel.contains(z))
+                menueZu();
+        };
+        document.addEventListener('pointerdown', beiAussen, true);
+        /* --- Was die Fläche von aussen darf ------------------------------------ */
+        const setzeWerkzeug = (id) => {
+            aktiv = id;
+            wurzel.querySelectorAll('[data-wz]').forEach(b => {
+                const an = b.dataset.wz === id;
+                b.classList.toggle('on', an);
+                b.setAttribute('aria-pressed', String(an));
+            });
+            tabstoppSetzen();
+        };
+        const setzeGesperrt = (id, ja) => {
+            const b = wurzel.querySelector(`[data-a="${CSS.escape(id)}"]`);
+            if (b)
+                b.disabled = ja;
+        };
+        const zerstoere = () => {
+            document.removeEventListener('pointerdown', beiAussen, true);
+            wurzel.remove();
+        };
+        tabstoppSetzen();
+        return {
+            element: wurzel,
+            setzeWerkzeug,
+            setzeGesperrt,
+            schliesse: menueZu,
+            istOffen: () => offenesMenue,
+            zerstoere
+        };
+    };
+    return { erstelle };
+})();
+window.GfxToolbar = GfxToolbar;

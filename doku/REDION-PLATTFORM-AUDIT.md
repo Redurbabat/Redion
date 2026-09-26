@@ -317,7 +317,7 @@ AFFiNE als Massstab (`blocksuite/framework/std/src/gfx/`, nur Struktur):
 | Geometrie (model) | `InkGeometry`, `InkShapes` | — (Whiteboard/Schaltplan nutzen sie nicht, brauchen sie heute auch kaum) |
 | Verlauf (history) | vier eigene Stapel + `Verlauf` | **ein** Stapel je Fläche, der mit der Seite zusammenarbeitet |
 | Auswahl (selection) | `SelectionFlow` (`schale/bedienung/selection-flow.ts`, 373) für die Auswahlleiste; Marken haben eigene Auswahl | eine Auswahl für Flächen — offen als L204 |
-| Werkzeug (tool) | je Fläche eigene Werkzeugleiste; E674 merkt Farbe/Stärke je Werkzeug (Marken) | — |
+| Werkzeug (tool) | **seit E689: `Register.werkzeuge` (22) und `GfxToolbar` im Kern; das Whiteboard zieht darauf um** — Studio, Gedankenkarte und Planfläche folgen (5b–5d) | — |
 | Ebenen (layer) | Schaltplan `ebenen`, Marken Reihenfolge = Stapel | nicht nötig als Kern |
 | Tastatur | vier Horcher (D3) | **eine Regel** |
 

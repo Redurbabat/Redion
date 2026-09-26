@@ -759,29 +759,104 @@ a.bl:hover{color:var(--text)}
   border:1px solid var(--line); border-radius:6px; outline:none; color:var(--text); font-size:13.5px;
 }
 
+/* --- Die gemeinsame Werkzeugleiste (E689, `core/gfx/toolbar.ts`) ---------------------------- */
+/* EIN Namensraum für alle Flächen: `gfx-tb-`. Whiteboard, Gedankenkarte,
+   Planfläche und später das Studio zeichnen dieselbe Leiste; die Fläche gibt
+   nur eine Zusatzklasse dazu (`.wb-tools`), damit ihre Wächter ihren Wähler
+   behalten. Zwei Kapseln in einem Sockel: links die Werkzeuge, rechts Zoom,
+   Verlauf und „…" — gerechnet passen zwölf Werkzeuge und beides zusammen bei
+   708 px Kastenbreite nicht in eine Kapsel. */
+/* ZWEI EBENEN, UND DER GRUND IST GEMESSEN: der Sockel darf NICHT rollen.
+   `overflow-x:auto` macht aus `overflow-y:visible` beidseitig `auto` — das
+   Untermenue lag dann an der richtigen Stelle und war trotzdem abgeschnitten
+   (gefunden auf dem Bild, nicht im Waechter; §55.1). Der Sockel traegt deshalb
+   nur das Menue, gerollt wird eine Ebene tiefer. */
+.gfx-tb-sockel{ position:relative; padding:7px 0 9px }
+.gfx-tb-roller{
+  display:flex; align-items:center; justify-content:safe center; gap:6px;
+  flex-wrap:nowrap; padding:0 4px;
+  /* SIE ROLLT, SIE BRICHT NICHT UM. Am Telefon ist das Redions erprobte
+     Antwort auf zu wenig Platz (E356, die Studioleiste); ein Umbruch machte
+     aus einer Leiste drei Zeilen und aus dem Block einen Turm. */
+  overflow-x:auto; scrollbar-width:none;
+}
+.gfx-tb-roller::-webkit-scrollbar{display:none}
+.gfx-tb{
+  display:flex; align-items:center; gap:2px; flex:0 0 auto;
+  padding:3px 5px; border-radius:var(--radius-xl);
+  background:var(--bg-card); border:1px solid var(--line);
+  box-shadow:var(--schatten-schwebend);
+}
+.gfx-tb-gruppe{display:flex; align-items:center; gap:2px}
+/* 44 px TREFFFLAECHE (§37, Hauptweg). Der Knopf ist 30 px GROSS und 44 px
+   TREFFBAR: die Flaeche darunter waechst ueber ihn hinaus (Regel gleich
+   darunter), waagerecht stehen die Nachbarn dicht daneben. Am Telefon ist der
+   Knopf selbst 44 px — dort reicht eine unsichtbare Flaeche nicht, weil man
+   sehen muss, wohin man tippt (Media Query unten). */
+.gfx-tb button{
+  width:30px; height:30px; border-radius:var(--radius-md);
+  color:var(--text-dim); display:grid; place-items:center;
+  position:relative; flex:0 0 auto;
+}
+.gfx-tb button svg{width:18px; height:18px}
+/* 44 px TREFFFLÄCHE am Rechner (§37, Hauptweg). Sie wächst über den Knopf
+   hinaus, ohne ihn zu vergrössern — am Telefon ist der Knopf selbst 44 px,
+   weil eine unsichtbare Fläche dort nicht reicht: man sieht, wohin man tippt. */
+.gfx-tb button::after{
+  content:""; position:absolute; left:0; right:0; top:50%;
+  height:var(--touch-min); transform:translateY(-50%);
+}
+.gfx-tb button:hover:not(:disabled){background:var(--bg-hover); color:var(--text)}
+.gfx-tb button.on{background:var(--accent); color:var(--auf-accent)}
+.gfx-tb button:disabled{opacity:.38}
+.gfx-tb button:focus-visible{box-shadow:0 0 0 2px var(--accent); outline:none}
+.gfx-tb-trenn{width:1px; height:18px; background:var(--line); margin:0 2px; flex:0 0 auto}
+/* Der Farbknopf trägt die gewählte Farbe als Strich unter dem Zeichen —
+   „keine Information nur über Farbe" (§38) gilt für den ZUSTAND des Knopfes;
+   welche Farbe gewählt ist, steht zusätzlich im Namen jedes Tupfers. */
+.gfx-tb [data-menue="farbe"]::before{
+  content:""; position:absolute; left:50%; bottom:3px; transform:translateX(-50%);
+  width:14px; height:3px; border-radius:2px; background:var(--wb-farbe, var(--accent));
+}
+/* Das Untermenü klappt NACH OBEN — die Leiste sitzt am unteren Rand des
+   Kastens, nach unten wäre es draussen. */
+.gfx-tb-menue{
+  position:absolute; bottom:calc(100% - 6px); z-index:6;
+  background:var(--bg-card); border:1px solid var(--line);
+  border-radius:var(--radius-lg); box-shadow:var(--schatten-schwebend); padding:8px;
+}
+.gfx-tb-farben{display:grid; grid-template-columns:repeat(4, auto); gap:6px}
+/* 44 px TREFFFLAECHE (§37): der Tupfer ist 28 px und traegt seine Flaeche als
+   `inset:-8px` darunter — 28 + 16 = 44. Ein Farbtupfer, der wirklich 44 px
+   misst, sieht aus wie ein Knopf und nicht wie eine Farbe. */
+.gfx-tb-farben button{
+  width:28px; height:28px; border-radius:50%; border:2px solid transparent; position:relative;
+}
+.gfx-tb-farben button::after{content:""; position:absolute; inset:-8px}
+.gfx-tb-farben button.on{border-color:var(--text)}
+.gfx-tb-liste{display:flex; flex-direction:column; min-width:172px}
+.gfx-tb-liste button{
+  text-align:left; padding:9px 12px; border-radius:var(--radius-md);
+  font-size:13.5px; white-space:nowrap; color:var(--text);
+}
+.gfx-tb-liste button:hover{background:var(--bg-hover)}
+
+@media (max-width:760px){
+  /* §37: 44 px auf den Hauptwegen — und zwar als GERENDERTE Box, nicht als
+     unsichtbares `::after` (L206: eine Messung, die nicht messen kann, sagt
+     immer „passt schon"). */
+  .gfx-tb button{width:var(--touch-min); height:var(--touch-min); border-radius:var(--radius-lg)}
+  .gfx-tb button svg{width:21px; height:21px}
+  .gfx-tb-sockel{padding:8px 0 10px}
+  .gfx-tb-roller{justify-content:flex-start; gap:6px; padding:0 12px}
+  .gfx-tb-farben button{width:36px; height:36px}
+  .gfx-tb-liste button{min-height:var(--touch-min)}
+}
+
 /* --- Whiteboard ---------------------------------------------------------------------------- */
 .wb{width:100%; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:8px 0}
 /* Der Kasten nimmt seit E682 die Tastatur (Strg+Z) — ein Fokus, den man sieht (§38), dieselbe Regel wie .sp-wrap */
 .wb:focus-visible{box-shadow:0 0 0 2px var(--accent); outline:none}
-.wb-tools{
-  display:flex; align-items:center; gap:2px; padding:6px 8px; flex-wrap:wrap;
-  border-bottom:1px solid var(--line); background:var(--bg-card);
-}
-.wb-tools button{
-  width:28px; height:26px; border-radius:5px; font-size:14px; color:var(--text-dim);
-  display:grid; place-items:center;
- position:relative;}
-/* 44 px TREFFFLÄCHE (§37, E406). HAUPTWEG: Die Werkzeuge des Whiteboards; man greift sie ständig.
-   Sie wächst nur nach oben und unten — waagerecht stehen die
-   Nachbarn, und eine Fläche, die sie überdeckt, macht es
-   schlimmer statt besser. */
-.wb-tools button::after{content:""; position:absolute; left:0; right:0; top:50%; height:var(--touch-min); transform:translateY(-50%);}
-.wb-tools button:hover{background:var(--bg-hover); color:var(--text)}
-.wb-tools button.on{background:var(--accent); color:var(--auf-accent)}
-.wb-tools .wb-farbe{width:17px; height:17px; border-radius:50%; border:2px solid transparent; position:relative;}
-.wb-tools .wb-farbe::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:var(--touch-min); transform:translateY(-50%);}
-.wb-tools .wb-farbe.on{border-color:var(--text)}
-.wb-sep{width:1px; height:18px; background:var(--line); margin:0 5px}
 .wb-flaeche{display:block; width:100%; touch-action:none; color:var(--text-faint); cursor:crosshair}
 .wb-griff{height:9px; cursor:ns-resize; background:var(--bg-card); border-top:1px solid var(--line)}
 .wb-griff:hover{background:var(--bg-hover)}
@@ -1175,10 +1250,9 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
    Zoomschritt. Zwei Erklärungen für dieselbe Sache laufen auseinander,
    und niemand sieht es im Code (§8, §39). */
 .wb-massstab, .gk-massstab{
-  min-width:46px; padding:0 4px; text-align:center; font-size:11px; font-weight:600;
+  min-width:40px; padding:0 4px; text-align:center; font-size:11px; font-weight:600;
   color:var(--text-dim); font-variant-numeric:tabular-nums;
 }
-.wb-zoom{display:inline-flex;align-items:center;gap:2px}
 .wb.wb-schiebt .wb-flaeche{cursor:grab}
 .wb.wb-schiebt .wb-flaeche:active{cursor:grabbing}
 

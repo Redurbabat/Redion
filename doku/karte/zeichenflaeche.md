@@ -74,7 +74,7 @@ Blocktyp `whiteboard` im Fach `blocks` (Store.updateBlock → `save('blocks', b)
 
 ## Gemeinsam genutzt
 
-**Benutzt:** [[kern-Store|Store]] · [[kern-Register|Register]] · [[kern-Dateien|Dateien]] · [[kern-GfxHistory|GfxHistory]]
+**Benutzt:** [[kern-Store|Store]] · [[kern-Register|Register]] · [[kern-Dateien|Dateien]] · [[kern-GfxHistory|GfxHistory]] · [[kern-GfxToolbar|GfxToolbar]]
 
 **Nur genannt, nicht benutzt:** [[kern-SheetSpace|SheetSpace]] · [[kern-InkGeometry|InkGeometry]] · [[kern-Verlauf|Verlauf]] · [[kern-Ereignis|Ereignis]] — der Befund sagt, warum.
 
@@ -86,6 +86,7 @@ Blocktyp `whiteboard` im Fach `blocks` (Store.updateBlock → `save('blocks', b)
 - NICHT genutzt, obwohl vorhanden: src/core/ink/geometry.ts (rectangle 291, bounds 625, union 962, scale 1018, rotate 679, distanceToPolyline 738, insidePolygon 936), src/core/ink/shapes.ts (recognize 63), src/core/sheet/space.ts (zuBlatt 56), src/kern/zustand/verlauf.ts (merke/zurueck/vor 107–111), src/kern/helfer/zeichenziel.ts (melde 402), src/kern/ereignisse/bus.ts
 - Bereich→Bereich statt kern: `(globalThis as any).Dateien` (zeichenflaeche.ts:257, 271 → bereiche/dateien/ablage.ts:483)
 - NACHGETRAGEN (E687, 25. September abends): src/core/gfx/history.ts — `GfxHistory.erstelle(40)` hält den Rückgängig-Stapel; zeichenflaeche.ts ruft `verlauf.merken/zurueck/vor/letztenVerwerfen/kannZurueck/kannVor`, das Einsetzen bleibt hier (`einsetzen`). Wächter test571.
+- NACHGETRAGEN (E689, 26. September): die Leiste kommt aus `src/core/gfx/toolbar.ts` (`GfxToolbar.erstelle`), die Werkzeuge aus `Register.werkzeuge` (22 Einträge, `src/register/werkzeuge.ts`), die Zeichen aus `Register.symbole.fuelle`. Der HTML-String mit 28 Knöpfen ist weg; `.wb-tools` lebt als Zusatzklasse an der Wurzel weiter, damit test209/568/570 ihren Wähler behalten. Wächter test572.
 
 ## Duplikate — je mit zwei Stellen und Zitat
 

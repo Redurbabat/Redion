@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-668 Entscheidungen, E1 bis E688 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+669 Entscheidungen, E1 bis E689 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -731,6 +731,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E686** — Das Whiteboard trägt seine Raumfassung und rechnet über die Matrix: `raumVersion: 1` an jedem gespeicherten Brett, `punkt()` über `SheetSpace.umrechner` (Bogen 3, Redur: „ja whiteboard eine raumversion") — und die Messung, dass die Handformel für achsenparallele Skalierung gar nicht falsch war (`test570`)
 * **E687** — Die drei Flächen teilen EINEN Verlauf: `GfxHistory.erstelle(tiefe)` in `src/core/gfx/history.ts` ersetzt die drei Stapelpaare aus JSON-Abbildern in Whiteboard, Gedankenkarte und Planfläche (Audit D1, Bogen 4) — der Kern gibt das Abbild zurück, das Einsetzen bleibt bei der Fläche; Marken (E378) und Seitenverlauf (E684) bleiben eigen (`test571`)
 * **E688** — Die Startdecke steigt von 2700 auf 2850 KB, mit gezählter Begründung wie E613: 127 KB in neun Tagen sind das Produkt (Studio, Trainer, Gedankenkarte), nicht eine Bibliothek — und zwei Posten davon sind Lerninhalt statt Code (L216, Frage an Redur)
+* **E689** — EINE Werkzeugleiste für alle Flächen: der Katalog `Register.werkzeuge` (22 Werkzeuge, §8) und das Kernbauteil `GfxToolbar` (`src/core/gfx/toolbar.ts`), auf das zuerst das Whiteboard umzieht — schwebende Kapsel UNTER der Fläche (§37 hart), Strichzeichen statt Emoji, Untermenü nach oben, am Telefon 44 px und rollend statt umbrechend (`test572`, Redur: „integriere alles zusammen")
 
 ---
 
@@ -56103,3 +56104,86 @@ Rauschen; das ist E613s eigener Satz.
 
 **Preis.** Die Zusage ist 150 KB weicher. Was sie weiter hält: eine
 Bibliothek kommt nicht unbemerkt zurück, und die Chronik bleibt draussen.
+
+---
+
+## E689 — EINE Werkzeugleiste für alle Flächen: Katalog, Kernbauteil, Whiteboard zuerst
+
+**Datum:** 26. September 2026 · **Wächter:** `test572` (51 Zusagen) ·
+**Bogen 5a** von W6 · Redur, 25. September, mit einem Bild von AFFiNEs
+Edgeless-Leiste: „ich will so was haben wie die affine schau mal es nach" —
+und einen Satz später: „integriere alles zusammen"
+
+**Was war.** Vier Flächen, vier Werkzeugleisten, vier Klassenpräfixe
+(`.wb-`, `.gk-`, `.sp-`, `.blatt-`), vier Klick-Handler — und im Kern kein
+Werkzeugbegriff (gemessen, `doku/karte/thema-werkzeugleisten.md`). Der
+einzige Katalog stand im Studio (`Marken.WERKZEUGE`, 14 Werkzeuge), ein
+zweiter, kürzerer im Menüband (13, ohne textfix, elemente, bild, laser) —
+genau der Fall, vor dem §8 warnt. Die Whiteboard-Leiste war ein HTML-String
+mit 28 Knöpfen, davon sieben mit Emoji; gemessen 67 px in drei Zeilen am
+Rechner, 95 px in vier am Telefon, jeder Knopf 28×26 px.
+
+**Was entschieden wurde.**
+
+1. **Der Katalog zuerst** (`src/register/werkzeuge.ts`, §5 Regel 3). 22
+   Einträge: die zwölf der Fläche und die vierzehn des Studios — vier
+   gehören beiden (`stift`, `text`, `bild`, `radierer`) und stehen EINMAL
+   darin, mit dem Namen, den das Studio heute zeigt. Die Kennung ist ein
+   **Datenwort** (§53.3): sie steht so in `meta` unter
+   `zeichnen:werkzeugwerte` und `zeichnen:ordnung` an jedem Gerät. Zwei
+   Gruppen wie bei AFFiNE, aber als Regel statt als Liste: `quick` sind die
+   Werkzeuge, die mit dem UMGEHEN, was da ist; `senior` die, die etwas Neues
+   setzen.
+2. **Das Bauteil in den Kern** (`src/core/gfx/toolbar.ts`, dritter Bewohner
+   nach `GfxHistory` und `SheetSpace`). Es kennt keine Fläche — kein `wb-`,
+   kein `Store`, kein `Register`; die Werkzeuge kommen als Daten, die
+   Handgriffe als Rückrufe, die Strichzeichen füllt der Aufrufer.
+   `test572 §1` liest das gebaute JavaScript und hält das fest.
+3. **Die Leiste steht UNTER der Fläche, nicht darüber.** AFFiNEs Leiste
+   schwebt über dem Blatt; §37 sagt hart das Gegenteil („darf nicht
+   verdecken, was sie bedient"), und `test209` setzt den Zeiger bis 20 px an
+   den unteren Rand — eine schwebende Leiste finge den Druck ab. Das Bild
+   bleibt dasselbe: gerundete Kapsel, eigener Grund, eigener Schatten, unten
+   in der Mitte.
+4. **Zwei Kapseln in einem Sockel.** Gerechnet und gemessen: zwölf
+   Werkzeuge, acht Farben, vier Zoomknöpfe und vier Aktionen passen bei 708
+   px Kastenbreite nicht in eine Kapsel. Links die Werkzeuge, rechts Zoom,
+   Verlauf und „…"; die acht Farben klappen als Untermenü auf.
+5. **Sie rollt, sie blättert nicht.** AFFiNE blättert die rechte Gruppe mit
+   ‹ ›. Redion hat für zu wenig Platz schon eine erprobte Antwort: die
+   Studioleiste rollt waagrecht (E356, `test393`). Zwei Antworten auf
+   dieselbe Frage wären eine zu viel (§8). Blättern kann in 5e dazukommen.
+6. **`Marken.WERKZEUGE` zieht NICHT in diesem Bogen um.** Der Katalog führt
+   die vierzehn Studio-Werkzeuge schon mit, aber die Studioleiste liest
+   weiter ihre eigene Liste — sie hängt an 66 Prüfdateien, und ein Bogen
+   hat ein Ziel (§43). Bis dahin hält `test572 §3` beide im Gleichlauf:
+   jede Kennung dort steht mit DEMSELBEN Namen hier. Genau das hat
+   `test266` einmal gefunden, als „Abdecken" still zu „Abdeckband" wurde
+   (L218).
+
+**Was das Bild gefunden hat und kein Wächter (§55.1).** Der erste gebaute
+Stand hatte das Farbmenü GEMESSEN genau richtig: 148×80 px, über dem Knopf,
+im Kasten — und auf dem Bildschirm war nichts. Der Sockel rollte
+(`overflow-x:auto`), und CSS macht daraus beidseitig `auto`: die Höhe war
+abgeschnitten. Seither rollt eine Ebene tiefer (`.gfx-tb-roller`), das Menü
+hängt am Sockel darüber, und §9 fragt mit `elementFromPoint`, was an der
+Stelle WIRKLICH liegt. Die Gegenprobe (Roller zurück an den Sockel) macht
+genau diese Zusage wieder rot.
+
+**Die Alternativen.** (a) Erst die Leiste, Katalog später — dann hätten
+Gedankenkarte und Planfläche in 5c/5d nichts zum Lesen, und der Katalog
+wäre eine Liste im Whiteboard. (b) Erst den Bestand des Studios in den Kern
+ziehen (Lagen, Ziehen, Ordnen, Werkzeugwerte) — das ist der grösste Brocken
+und berührt 66 Prüfdateien; er kommt in 5d, wenn drei Flächen zeigen, was
+wirklich gemeinsam ist. (c) Die Leiste über die Fläche schweben lassen wie
+AFFiNE — bricht §37.
+
+**Preis.** Zwei Skriptdateien mehr in der Startnutzlast (gemessen: 2780 von
+2850 KB, E688s Decke hält). Die Leiste ist am Rechner 698 px breit bei 706
+px Platz — acht Pixel Luft; wird der Kasten schmaler, rollt sie. Und die
+Farben stehen nicht mehr als acht Tupfer in der Reihe, sondern einen Tipp
+weiter.
+
+**Nachbarn:** `test209` (nachgezogen, siehe dort), `test568`, `test570`,
+`test571`, `test290`, `test402`, `test105`, `test109`, `test388`, `test266`,
+`test438`, `test537`, `test550`, `test87`.

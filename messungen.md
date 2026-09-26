@@ -4315,3 +4315,38 @@ Arbeit zuletzt gebraucht haben; 387 KB unter dem Punkt, an dem pdf.js
 unbemerkt zurückkäme (2711 + 526 = 3237). Nach der Änderung:
 `test388` 19/19.
 
+---
+
+## §63 · Die Werkzeugleiste des Whiteboards, vorher und nachher (E689, 26. September 2026)
+
+Gemessen im Browser mit Playwright (`.wb` auf einer gewöhnlichen Seite,
+gerenderte Boxen, nicht Stilblatt-Text — L206):
+
+```txt
+                        VORHER (HTML-String)      NACHHER (GfxToolbar)
+Rechner 1300 px
+  Kasten `.wb`          708 px                    708 px
+  Leiste                706 × 67 px, 3 Zeilen     706 × 54 px, 1 Zeile
+  Kapsel                — (keine)                 38 px hoch
+  Knöpfe                27, je 28 × 26 px          19, je 30 × 30 px
+  Farben                8 Tupfer à 17 × 17 px      im Untermenü, 28 px + 8 px Fläche
+  Platzbedarf           —                         698 px bei 706 px (8 px Luft)
+
+Telefon 390 px
+  Kasten `.wb`          334 px                    334 px
+  Leiste                95 px, 4 Zeilen           70 px, 1 Zeile (rollt)
+  Knöpfe                28 × 26 px                44 × 44 px  (§37)
+  Inhalt / Sichtfenster  —                        980 px in 332 px
+```
+
+**Die 44 px sind neu und echt.** Vorher lagen sie in einem `::after`, das
+niemand sieht und `test402` nicht messen kann (L206); der Knopf selbst mass
+26 px. Am Telefon ist jetzt der KNOPF 44 px, am Rechner bleibt er 30 px mit
+44 px Trefffläche darunter — und der Grund steht über der Regel, wie §37 es
+verlangt.
+
+**Startnutzlast nach dem Bogen:** 2780 KB über 241 Dateien (gzip Stufe 6),
+Decke 2850 seit E688. Die zwei neuen Dateien kosten zusammen rund 5 KB.
+
+**Untere Leiste am Telefon:** Leiste 796…866, `#handy-oben` 775…835 — sie
+überdecken sich im Ruhezustand um 39 px (L217).

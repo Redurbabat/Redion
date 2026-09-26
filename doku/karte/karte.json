@@ -592,7 +592,8 @@
     "src/kern/helfer/vorschau.ts:196 — kennt `whiteboard`/`zeichenflaeche` als Arten ohne Text (Miniaturen), ohne dass das Whiteboard es ruft",
     "NICHT genutzt, obwohl vorhanden: src/core/ink/geometry.ts (rectangle 291, bounds 625, union 962, scale 1018, rotate 679, distanceToPolyline 738, insidePolygon 936), src/core/ink/shapes.ts (recognize 63), src/core/sheet/space.ts (zuBlatt 56), src/kern/zustand/verlauf.ts (merke/zurueck/vor 107–111), src/kern/helfer/zeichenziel.ts (melde 402), src/kern/ereignisse/bus.ts",
     "Bereich→Bereich statt kern: `(globalThis as any).Dateien` (zeichenflaeche.ts:257, 271 → bereiche/dateien/ablage.ts:483)",
-    "NACHGETRAGEN (E687, 25. September abends): src/core/gfx/history.ts — `GfxHistory.erstelle(40)` hält den Rückgängig-Stapel; zeichenflaeche.ts ruft `verlauf.merken/zurueck/vor/letztenVerwerfen/kannZurueck/kannVor`, das Einsetzen bleibt hier (`einsetzen`). Wächter test571."
+    "NACHGETRAGEN (E687, 25. September abends): src/core/gfx/history.ts — `GfxHistory.erstelle(40)` hält den Rückgängig-Stapel; zeichenflaeche.ts ruft `verlauf.merken/zurueck/vor/letztenVerwerfen/kannZurueck/kannVor`, das Einsetzen bleibt hier (`einsetzen`). Wächter test571.",
+    "NACHGETRAGEN (E689, 26. September): die Leiste kommt aus `src/core/gfx/toolbar.ts` (`GfxToolbar.erstelle`), die Werkzeuge aus `Register.werkzeuge` (22 Einträge, `src/register/werkzeuge.ts`), die Zeichen aus `Register.symbole.fuelle`. Der HTML-String mit 28 Knöpfen ist weg; `.wb-tools` lebt als Zusatzklasse an der Wurzel weiter, damit test209/568/570 ihren Wähler behalten. Wächter test572."
    ],
    "duplikate": [
     {
@@ -4692,6 +4693,11 @@
    "name": "GfxHistory",
    "datei": "src/core/gfx/history.ts",
    "was": "der Flächen-Verlauf: zwei Stapel aus Abbildern (Strings) mit Tiefe als Parameter; gibt das Abbild zurück, setzt nie selbst ein (E687)"
+  },
+  {
+   "name": "GfxToolbar",
+   "datei": "src/core/gfx/toolbar.ts",
+   "was": "die gemeinsame Werkzeugleiste: Knöpfe aus Werkzeugdaten, quick/senior, Untermenü nach oben, ein Tabstopp mit Pfeilen — kennt keine Fläche (E689)"
   }
  ],
  "themen": [
@@ -4708,6 +4714,16 @@
       "Geteilt heute: `GfxHistory` (drei von vier, das Studio hält `historyUndo` mit 100 selbst), `Zeichenziel` (nur Studio und Menüband), der 44-px-Trick `button::after` (`.wb-` und `.gk-`).",
       "Es gibt KEIN Werkzeugregister — weder in `src/core/` noch in `src/register/`. Der einzige Katalog ist `Marken.WERKZEUGE` (`pdf/marken.ts:301–360`), und `register/menueband.ts:422–436` führt einen zweiten, kürzeren (13 ids; ohne triangle, roundrect, curve, textfix, elemente, bild, laser) — gegen §8.",
       "`Register.tasten` ist eine Übersichtsliste, die nichts ausführt; nur die Gruppe „Blatt und PDF\" (52–58) ist gefüllt, nichts in `src/` ruft `tasten.melde`."
+     ]
+    },
+    {
+     "titel": "Was sich seit E689 geändert hat (26. September 2026)",
+     "punkte": [
+      "Es gibt jetzt EINEN Katalog: `Register.werkzeuge` (`src/register/werkzeuge.ts`, 22 Einträge = 12 Fläche + 14 Studio, vier geteilt) mit `melde/holen/alle/ids/auswahl`.",
+      "Und EIN Bauteil: `GfxToolbar.erstelle` (`src/core/gfx/toolbar.ts`) — quick/senior, Untermenü nach oben, ein Tabstopp mit Pfeilen, `setzeWerkzeug/setzeGesperrt/schliesse/zerstoere`; kennt keine Fläche (test572 §1 liest das gebaute JS).",
+      "Das Whiteboard ist umgezogen: `.wb-tools` ist die Zusatzklasse an `.gfx-tb-sockel`, darin `.gfx-tb-roller` mit zwei Kapseln (`.gfx-tb-haupt`, `.gfx-tb-neben`); Farben und „…\" sind Untermenüs; CSS `quell/schale/stil/werkzeuge.css`, Namensraum `gfx`.",
+      "NOCH NICHT umgezogen: Studio (`Marken.WERKZEUGE`), Menüband (`menueband.WERKZEUGE`), Gedankenkarte, Planfläche — L218 und AUFGABEN W6 5b–5e.",
+      "Zwei neue Lücken: L217 (am Telefon liegt die Leiste im Ruhezustand hinter `#handy-oben`, gemessen 39 px Überdeckung), L218 (drei Werkzeuglisten, gehalten von test572 §3)."
      ]
     },
     {

@@ -894,7 +894,7 @@ im `GRUNDSTOCK`.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 513 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 514 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1252,6 +1252,20 @@ Tiefe 40. Gegenprobe rot an zwei Stellen — „merken leert das Wiederholen
 — {zurueck:3, vor:1}". Gezählt am 25. September, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 513.*
 
+*Und 514: `test572` — EINE Werkzeugleiste für alle Flächen (E689). Redurs
+Satz vom 25. September, „integriere alles zusammen": ein Katalog
+(`Register.werkzeuge`, 22 Werkzeuge), ein Bauteil im Kern
+(`core/gfx/toolbar.ts`), und das Whiteboard zieht als erste Fläche darauf um.
+Gegen den alten Stand rot mit 20 von 39 und den Zahlen, um die es geht: am
+Rechner drei Zeilen und 67 px, am Telefon vier Zeilen und 95 px, Köpfe
+28×26 statt der 44 px aus §37. Sein wichtigster Abschnitt kam aber nicht aus
+dem Kopf, sondern aus dem BILD: das Farbmenü lag gemessen genau richtig
+(148×80 px über dem Knopf, im Kasten) und war auf dem Bildschirm nicht da —
+`overflow-x:auto` macht aus `overflow-y:visible` beidseitig `auto`, und der
+Sockel schnitt es ab. Seither fragt §9 mit `elementFromPoint`, was an der
+Stelle WIRKLICH liegt (§55.1). Gezählt am 26. September, im selben Bogen:
+`ls pruefungen/lauf/test*.mts | wc -l` sagt 514.*
+
 ### Die Befehle
 
 ```txt
@@ -1260,7 +1274,7 @@ npx playwright install chromium      einmalig
 npm run typecheck                    Typen (ändert nichts, prüft alles)
 npm run bauen:ts                     src/**.ts  →  quell/**.js
 npm run pruefen -- --schnell         ohne die Messläufe (Dauer ungemessen)
-npm run pruefen                      alle 513 Läufe
+npm run pruefen                      alle 514 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 node bauen.mts                       redion-einzeldatei.html
 npm run stand                        prüft den Dienststand nach
@@ -1347,7 +1361,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 513 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 514 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

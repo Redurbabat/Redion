@@ -99,45 +99,137 @@ const Zusatz = (() => {
         let verbindeVon = null;
         const w = document.createElement('div');
         w.className = 'wb';
-        w.innerHTML =
-            '<div class="wb-tools">' +
-                [['zeiger', '⭠', 'Auswählen und verschieben'],
-                    ['hand', '✋', 'Fläche schieben'],
-                    ['stift', '✎', 'Freihand zeichnen'],
-                    ['linie', '╱', 'Linie'],
-                    ['pfeil', '→', 'Pfeil'],
-                    ['rechteck', '▭', 'Rechteck'],
-                    ['ellipse', '◯', 'Ellipse'],
-                    ['notiz', '🗒', 'Haftnotiz'],
-                    ['text', 'T', 'Text'],
-                    ['bild', '🖼', 'Bild einfügen'],
-                    ['verbindung', '⇢', 'Zwei Formen verbinden'],
-                    ['radierer', '⌫', 'Radierer']]
-                    .map(([id, ico, titel]) => `<button data-wz="${id}" title="${titel}"${id === 'stift' ? ' class="on"' : ''}>${ico}</button>`).join('') +
-                '<span class="wb-sep"></span>' +
-                PALETTE.map(([c, n]) => `<button class="wb-farbe" data-c="${c}" ` +
-                    `style="background:${c}" title="${n}" aria-label="Farbe ${n}"></button>`).join('') +
-                '<span class="wb-sep"></span>' +
-                /* DIE VIER ZOOMKNÖPFE SIND EINE GRUPPE, kein loser Haufen. Am
-                   Telefon bricht die Leiste in drei Zeilen um, und ohne diese
-                   Klammer stand gemessen „−" am Ende der zweiten Zeile und „＋"
-                   am Anfang der dritten — zwei Hälften eines Reglers, getrennt
-                   durch einen Zeilenumbruch. */
-                '<span class="wb-zoom">' +
-                '<button data-a="kleiner" title="Verkleinern">−</button>' +
-                '<b class="wb-massstab" aria-live="polite">100 %</b>' +
-                '<button data-a="groesser" title="Vergrössern">＋</button>' +
-                '<button data-a="passend" title="Alles ins Bild holen">⤢</button>' +
-                '</span>' +
-                '<span class="wb-sep"></span>' +
-                '<button data-a="zurueck" title="Schritt zurück" disabled>↶</button>' +
-                '<button data-a="vor" title="Schritt vorwärts" disabled>↷</button>' +
-                '<button data-a="leeren" title="Alles löschen">🗑</button>' +
-                '<button data-a="png" title="Als Bild speichern">⭳</button>' +
-                '</div>';
+        /* ══ DIE LEISTE KOMMT AUS DEM KERN (E689, W6, Bogen 5a) ═══════════════
+           Hier stand ein HTML-String mit 28 Knöpfen: zwölf Werkzeuge, acht Farben,
+           vier Zoomknöpfe, vier Aktionen — und sieben davon trugen ein Emoji.
+           Gemessen war die Leiste am Rechner 67 px hoch in DREI Zeilen, am Telefon
+           95 px in VIER, und jeder Knopf mass 28 × 26 statt der 44 px aus §37 (die
+           44 lagen in einem `::after`, das man nicht sieht und nicht misst — L206).
+    
+           Jetzt baut `GfxToolbar` (core/gfx/toolbar.ts) die Leiste, und die
+           Werkzeuge kommen aus `Register.werkzeuge` — derselbe Katalog, aus dem
+           später Gedankenkarte, Planfläche und Studio lesen. Redur, 25. September:
+           „integriere alles zusammen".
+    
+           WAS HIER BLEIBT: die Wähler, an denen die Wächter hängen — `.wb-tools`
+           (als Zusatzklasse an der Wurzel), `[data-wz]`, `[data-a]`,
+           `.wb-massstab`, `.wb-farbe[data-c]`. Ein Umzug, der die Wächter
+           mitnimmt, ist kein Umzug, sondern ein Neubau (§30). */
+        const massstabZeigen = document.createElement('b');
+        massstabZeigen.className = 'wb-massstab';
+        massstabZeigen.setAttribute('aria-live', 'polite');
+        massstabZeigen.textContent = '100 %';
+        /** Die zwölf Werkzeuge dieser Fläche, in ihrer Reihenfolge. Was sie
+         *  heissen und wie sie aussehen, steht im Register; was sie TUN, steht
+         *  hier — ein Register beschreibt, es zeichnet nicht. */
+        const WERKZEUG_IDS = ['zeiger', 'hand', 'verbindung', 'radierer',
+            'stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'notiz', 'text', 'bild'];
+        /** Die acht Farben klappen als Untermenü auf, statt als acht Tupfer in der
+         *  Reihe zu stehen. Gerechnet passten Werkzeuge UND Farben bei 708 px
+         *  Kastenbreite nicht in eine Zeile; und eine Farbe wählt man seltener,
+         *  als man das Werkzeug wechselt. */
+        const farbMenue = () => {
+            const kasten = document.createElement('div');
+            kasten.className = 'gfx-tb-farben';
+            for (const [c, n] of PALETTE) {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'wb-farbe' + (c === farbe ? ' on' : '');
+                b.dataset.c = c;
+                b.style.background = c;
+                b.title = n;
+                b.setAttribute('aria-label', 'Farbe ' + n);
+                kasten.append(b);
+            }
+            return kasten;
+        };
+        /** „…" trägt, was man selten und nie versehentlich tut. */
+        const mehrMenue = () => {
+            const kasten = document.createElement('div');
+            kasten.className = 'gfx-tb-liste';
+            for (const [id, name] of [['leeren', 'Alles löschen'], ['png', 'Als Bild speichern']]) {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.dataset.a = id;
+                b.textContent = name;
+                kasten.append(b);
+            }
+            return kasten;
+        };
+        const leiste = GfxToolbar.erstelle({
+            werkzeuge: Register.werkzeuge.auswahl(WERKZEUG_IDS),
+            aktionen: [
+                { id: 'farbe', name: 'Farbe', titel: 'Farbe wählen', sym: 'palette', menue: true, kapsel: 'werkzeuge' },
+                { id: 'kleiner', name: 'Verkleinern', sym: 'minus' },
+                { id: 'groesser', name: 'Vergrössern', sym: 'plus' },
+                { id: 'passend', name: 'Alles ins Bild', titel: 'Alles ins Bild holen', sym: 'maximize' },
+                { id: 'zurueck', name: 'Schritt zurück', sym: 'undo', gesperrt: true },
+                { id: 'vor', name: 'Schritt vorwärts', sym: 'redo', gesperrt: true },
+                { id: 'mehr', name: 'Mehr', titel: 'Alles löschen, als Bild speichern', sym: 'dots', menue: true }
+            ],
+            /* Der Massstab steht ZWISCHEN Minus und Plus — die drei sind ein Regler,
+               kein Haufen (derselbe Grund wie bei der alten `.wb-zoom`-Klammer). */
+            zusatz: { groesser: massstabZeigen },
+            aktiv: werkzeug,
+            klasse: 'wb-tools',
+            beschriftung: 'Werkzeuge der Zeichenfläche',
+            menue: (id) => id === 'farbe' ? farbMenue() : id === 'mehr' ? mehrMenue() : null,
+            aufWerkzeug: (id) => {
+                werkzeug = id;
+                verbindeVon = null;
+                /* Der Griff gehört zum Zeiger. Bleibt er beim Wechsel stehen, sieht
+                   die Fläche aus, als wäre noch etwas ausgewählt. */
+                if (werkzeug !== 'zeiger')
+                    gewaehlt = null;
+                w.classList.toggle('wb-schiebt', werkzeug === 'hand');
+                male();
+            },
+            aufAktion: (id) => {
+                if (id === 'zurueck')
+                    schrittZurueck();
+                if (id === 'vor')
+                    schrittVor();
+                if (id === 'leeren') {
+                    if (!daten.length || confirm('Die ganze Zeichenfläche leeren?')) {
+                        merken();
+                        daten.length = 0;
+                        male();
+                        sichern();
+                    }
+                }
+                if (id === 'kleiner')
+                    massstab(sicht.z / 1.25);
+                if (id === 'groesser')
+                    massstab(sicht.z * 1.25);
+                if (id === 'passend')
+                    insBild();
+                if (id === 'png')
+                    alsBild(flaeche, hoehe);
+            }
+        });
         const flaeche = sv('svg', { class: 'wb-flaeche', width: '100%', height: hoehe });
         flaeche.style.height = hoehe + 'px';
         w.appendChild(flaeche);
+        /* DIE LEISTE STEHT UNTER DER FLÄCHE (§37, hart: „Die Werkzeugleiste darf
+           nicht verdecken, was sie bedient"). AFFiNEs Leiste schwebt über dem
+           Blatt; Redions Regel sagt das Gegenteil, und `test209` setzt den Zeiger
+           bis 20 px an den unteren Rand — eine schwebende Leiste finge den Druck
+           ab. Das Bild bleibt trotzdem dasselbe: gerundet, eigener Grund, eigener
+           Schatten, unten in der Mitte. */
+        w.appendChild(leiste.element);
+        leiste.element.style.setProperty('--wb-farbe', farbe);
+        Register.symbole.fuelle(leiste.element);
+        /* Die Farben tragen `data-c`, kein `data-wz` und kein `data-a` — der Kern
+           kennt sie also nicht, und das ist richtig: eine Farbe ist kein Werkzeug. */
+        leiste.element.addEventListener('click', (e) => {
+            const c = e.target?.closest('[data-c]');
+            if (!c || !leiste.element.contains(c))
+                return;
+            farbe = c.dataset.c ?? farbe;
+            leiste.element.style.setProperty('--wb-farbe', farbe);
+            leiste.element.querySelectorAll('.wb-farbe').forEach(b => b.classList.toggle('on', b === c));
+            leiste.schliesse();
+        });
         const griff = document.createElement('div');
         griff.className = 'wb-griff';
         griff.title = 'Höhe ziehen';
@@ -193,12 +285,8 @@ const Zusatz = (() => {
             sichern();
         };
         const standZeigen = () => {
-            const zurueck = w.querySelector('[data-a="zurueck"]');
-            const vor = w.querySelector('[data-a="vor"]');
-            if (zurueck)
-                zurueck.disabled = !verlauf.kannZurueck();
-            if (vor)
-                vor.disabled = !verlauf.kannVor();
+            leiste.setzeGesperrt('zurueck', !verlauf.kannZurueck());
+            leiste.setzeGesperrt('vor', !verlauf.kannVor());
         };
         const sichern = () => Store.updateBlock(block.id, { shapes: daten, raumVersion: RAUM_VERSION });
         /* Der Ausschnitt in Formkoordinaten. Solange der Kasten noch nicht im
@@ -858,51 +946,9 @@ const Zusatz = (() => {
             const r = flaeche.getBoundingClientRect();
             massstab(sicht.z * (e.deltaY < 0 ? 1.12 : 1 / 1.12), sicht.x + (e.clientX - r.left) / sicht.z, sicht.y + (e.clientY - r.top) / sicht.z);
         }, { passive: false });
-        /* --- Werkzeugleiste -------------------------------------------------- */
-        w.querySelector('.wb-tools')?.addEventListener('click', e => {
-            const wz = elVon(e)?.closest('[data-wz]');
-            if (wz) {
-                werkzeug = wz.dataset.wz ?? werkzeug;
-                verbindeVon = null;
-                if (werkzeug !== 'zeiger')
-                    gewaehlt = null;
-                w.classList.toggle('wb-schiebt', werkzeug === 'hand');
-                w.querySelectorAll('[data-wz]').forEach(b => b.classList.toggle('on', b === wz));
-                /* Der Griff gehört zum Zeiger. Bleibt er beim Wechsel stehen, sieht
-                   die Fläche aus, als wäre noch etwas ausgewählt. */
-                male();
-                return;
-            }
-            const c = elVon(e)?.closest('[data-c]');
-            if (c) {
-                farbe = c.dataset.c ?? farbe;
-                w.querySelectorAll('.wb-farbe').forEach(b => b.classList.toggle('on', b === c));
-                return;
-            }
-            const a = elVon(e)?.closest('[data-a]');
-            if (!a)
-                return;
-            if (a.dataset.a === 'zurueck')
-                schrittZurueck();
-            if (a.dataset.a === 'vor')
-                schrittVor();
-            if (a.dataset.a === 'leeren') {
-                if (!daten.length || confirm('Die ganze Zeichenfläche leeren?')) {
-                    merken();
-                    daten.length = 0;
-                    male();
-                    sichern();
-                }
-            }
-            if (a.dataset.a === 'kleiner')
-                massstab(sicht.z / 1.25);
-            if (a.dataset.a === 'groesser')
-                massstab(sicht.z * 1.25);
-            if (a.dataset.a === 'passend')
-                insBild();
-            if (a.dataset.a === 'png')
-                alsBild(flaeche, hoehe);
-        });
+        /* Die Werkzeugleiste horcht selbst (E689): `GfxToolbar` verteilt die
+           Klicks an `aufWerkzeug` und `aufAktion` weiter oben. Hier stand dafür
+           ein eigener Horcher mit drei `closest`-Zweigen. */
         /* --- Höhe ziehen ----------------------------------------------------- */
         griff.addEventListener('pointerdown', e => {
             e.preventDefault();

@@ -1,5 +1,31 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 26. September 2026 · E689 · EINE Werkzeugleiste für alle Flächen (W6, Bogen 5a)
+
+**Redur:** „ich will so was haben wie die affine" · „integriere alles
+zusammen". **Gebaut:** der Katalog `Register.werkzeuge` (22 Werkzeuge, davon
+vier von Fläche und Studio geteilt), das Kernbauteil `GfxToolbar`
+(`src/core/gfx/toolbar.ts`, kennt keine Fläche), drei neue Strichzeichen —
+und das Whiteboard als erste Fläche darauf: schwebende Kapsel unter der
+Fläche, Strichzeichen statt Emoji, Farben und „…" als Untermenü, am Telefon
+44 px und rollend.
+
+**Gemessen** (`messungen.md` §63): am Rechner 3 Zeilen × 67 px → 1 Zeile
+× 54 px; am Telefon 4 Zeilen × 95 px → 1 Zeile × 70 px; Knöpfe 28×26 →
+30×30 (Rechner) und 44×44 (Telefon).
+
+**Geprüft.** `test572` (51 Zusagen), gegen den alten Stand rot mit 20.
+Gegenprobe: den Roller zurück an den Sockel → „man kann wirklich
+hineintippen" rot. **Und das Bild hat gefunden, was kein Wächter hatte:** das
+Farbmenü lag gemessen richtig und war abgeschnitten (§55.1) — seither fragt
+der Lauf mit `elementFromPoint`. `test209` nachgezogen (die Leiste rollt,
+E356-Vorbild). Nachbarn `test568`, `test570`, `test571`, `test290`,
+`test402`, `test105`, `test109`, `test388`, `test266`, `test438`, `test550`,
+`test87` grün; `test537` wie gehabt (L207). Neue Lücken: L217 (untere Leiste
+am Telefon), L218 (drei Werkzeuglisten bis 5b).
+
+---
+
 ## 25. September 2026 · E688 · Die Startdecke, neun Tage später
 
 **Der Fund.** `test388 §5` rot als Nachbar von Bogen 4: 2711 KB gegen 2700
